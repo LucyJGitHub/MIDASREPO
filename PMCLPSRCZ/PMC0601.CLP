@@ -1,0 +1,54 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas PM Notepad Maintenance')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Portfolio Management Module                     */
+/*                                                                   */
+/*       PMC0601  - PM NOTEPAD MAINTENANCE (NON GROUP JOB)           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. S01486             Date 12Jul94              */
+/*                      049421             Date 18Jan93              */
+/*                      049467             DATE 18JAN93              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       S01486 - Private Banking Upgrade to Release 10              */
+/*       049421  -  HEADER BOX STANDARDISATION                       */
+/*       049467  -  RECOMPILED FOR RELEASE 3 PTF 02                  */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RETC &CUST &PTFR)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2001')
+/**/
+             DCL        VAR(&RETC) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CUST) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&PTFR) TYPE(*CHAR) LEN(4)
+/**/
+/* PERFORM FILE OVERRIDES                                            */
+/*********** OVRDBF     FILE(PMPORXXX) TOFILE(PMPORTPP) SHARE(*NO)      S01486*/
+             OVRDBF     FILE(PMPORXXX) TOFILE(PMPORTPD) SHARE(*NO)    /*S01486*/
+/**/
+             CALL       PGM(PM0601) PARM(&RETC &CUST &PTFR)
+/**/
+             DLTOVR     FILE(PMPORXXX)
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+             ENDPGM

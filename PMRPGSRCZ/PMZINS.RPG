@@ -1,0 +1,498 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Securities Interest Calculation (Sch)')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Portfolio Management Module                          *
+      *                                                               *
+      *  PMZINS - SECURITIES INTEREST CALCULATION  (SCH)              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 226449             Date 24Jun15               *
+      *                 CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSE037             Date 29Apr02               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 06Dec01               *
+      *                 180707             Date 25Jul00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 11Oct00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP137             Date 07Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPL002             Date 08Mar99               *
+      *                 130862             Date 18Oct98               *
+      *                 CSE005             Date 04Feb97               *
+      *                 CPM005             Date 14Nov96               *
+      *                 CPM004             DATE 07FEB96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *           (Recompile)                                         *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input     *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+      *           (recompilation due to change to ZNCD/ZLCD/ZACCR).   *
+      *  180707 - No Position Settlements generated. Recompile over   *
+      *           changes in /COPY ZNCDZ3.                            *
+      *  CSD006 - Recompiled over changed SECTYD.                     *
+      *  CSE023 - Treaty Withholding Tax (SECTYD)                     *
+      *  CAP137 - Conversion of SE Security inputs into modular       *
+      *           structure to use as APIs (SECTYD)                   *
+      *  CPL002 - Midas-Plato Interface (Recompiled)                 *
+      *  130862 - Recompiled over ZLCDZ1 & ZDAYSZ2 changes.           *
+      *  CSE005 - Effect of holidays on FRN Coupon Dates              *
+      *           (recompilation due to change to ZNCD/ZLCD/ZACCR).   *
+      *  CPM005 - Private Banking Phase 2  - Recompile only           *
+      *           Focus Group Changes upgraded to DBA                 *
+      *  CPM004 - Bank Portfolios                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FBKPOS   IF  E           K        DISK
+     FSECED   IF  E           K        DISK
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E                    ZF29   14  32  5 0             29TH FEB ARRAY
+     E**  Copyright array.
+     E                    CPY@    1   1 80
+     ISEDEVDF
+     I              RECI                            RECISD
+     I              NMCY                            NMCYSD
+     ISNDEVDF
+     I              RECI                            RECISD
+     I/COPY ZSRSRC,ZYLDZ1
+     I##SECT    E DSSECTYD
+     I                                      183 230 CDDS
+     I                                      183 230 CD
+     I                                      231 242 CRDS
+     I                                      231 242 CR
+     I##INVT    E DSINVTPD
+     I              RECI                            IRECI
+     I              LCD                             ILCD
+     I              CHTP                            ICHTP
+     I              TNLU                            ITNLU
+     I              NDEC                            INDEC                                     CSE037
+     I/COPY WNCPYSRC,PMZINSI001
+     C**********************************************************************
+     C*
+     C* COPYRIGHT
+     C                     MOVEACPY@      CPY2@  80
+      *
+      * Parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ##SECT
+     C                     PARM           ##INVT
+     C                     PARM           ##SESN 10
+     C                     PARM           ##BRCH  3
+     C                     PARM           ##BOOK  2
+     C                     PARM           ##MRKT  1
+     C                     PARM           ##TVDA  1
+     C                     PARM           ##IDAT  50
+     C                     PARM           ##INT  150
+     C                     PARM           ##DAYS  50
+     C                     PARM           ##LCD   50
+     C                     PARM           ##NCD   50
+     C                     PARM           ##CDP   10
+     C                     PARM           ##FULL  1
+     C                     PARM           ##RETC  6
+     C/COPY WNCPYSRC,PMZINSC001
+      *
+      **  Terminate program
+      *
+     C           ##RETC    IFEQ '*CLOSE'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *
+      ** Initialize fields
+      *
+     C                     Z-ADD*ZERO     ##INT
+     C                     Z-ADD*ZERO     ##DAYS
+     C                     Z-ADD*ZERO     ##LCD
+     C                     Z-ADD*ZERO     ##NCD
+      *
+     C                     MOVE '0'       *IN98
+     C                     Z-ADD##CDP     ZCDP
+      *
+      * Key Lists
+      *
+     C           ##SEVK    KLIST
+     C                     KFLD           ##SESN
+     C                     KFLD           ZZLCD
+     C                     KFLD           ##TYP   2
+     C           ##BPSK    KLIST
+     C                     KFLD           ##SESN
+     C                     KFLD           ##BRCH
+     C                     KFLD           ##BOOK
+     C                     KFLD           ##MRKT
+     C                     KFLD           ##TVDA
+     C                     KFLD           ZZLCD
+     C           ##BPSP    KLIST
+     C                     KFLD           ##SESN
+     C                     KFLD           ##BRCH
+     C                     KFLD           ##BOOK
+     C                     KFLD           ##MRKT
+     C                     KFLD           ##TVDA
+      *
+      ** Determine Next and Last Coupon Dates
+      *
+     C                     EXSR DETDAT
+      *
+      ** Interest Calculation
+      *
+     C           ##IDAT    IFNE ##LCD
+     C                     EXSR INTCAL
+     C                     END
+      *
+      ** Return
+      *
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      ** Determine Next and Last Coupon Dates
+      *****************************************************************
+     C           DETDAT    BEGSR
+      *
+      ** Use the maturity date if the calculation date is beyond it
+      *
+     C           ##IDAT    IFGT MATY
+     C                     Z-ADDMATY      ##IDAT
+     C                     END
+      *
+      ** Determine the next coupon date
+      *
+     C                     Z-ADD##IDAT    ECD     50
+     C                     EXSR ZNCD
+      *
+      ** Set the accrual Indicator
+      *
+     C           ##IDAT    IFEQ NCD
+     C                     MOVEL'F'       ##ACIN  1
+     C                     ELSE
+     C                     MOVEL'C'       ##ACIN
+     C                     END
+      *
+      ** Determine the last coupon date (prior to the next coupon date)
+      *
+     C           ##ACIN    IFEQ 'F'
+     C           ##FULL    ANDNE'Y'
+     C                     Z-ADD##IDAT    ZZLCD
+     C                     ELSE
+     C           NCD       SUB  1         ZECD
+     C                     EXSR ZLCD
+     C                     END
+      *
+      ** Last coupon date
+      *
+     C                     Z-ADDZZLCD     LCPN
+      *
+      ** Last and Next Coupon Dates for Return
+      *
+     C                     Z-ADDZZLCD     ##LCD
+     C                     Z-ADDNCD       ##NCD
+     C                     ENDSR
+     C**********************************************************************
+     C/SPACE 5
+     C**********************************************************************
+      ** Interest Calculation
+     C**********************************************************************
+     C           INTCAL    BEGSR
+     C*
+     C** SET GREATER THAN LIMITS ON LF/BKPOS
+     C*
+     C           ##BPSK    SETGTBKPOSDF
+     C*
+     C** READ PREVIOUS EQUAL FROM LF/BKPOSDF
+     C*
+     C           ##BPSP    REDPEBKPOSDF                  91
+     C*
+     C** SET THE NOMINAL
+     C*
+     C           *IN91     IFEQ '0'
+     C           NPSN      SUB  ECNP      ZAMT
+     C                     ELSE
+     C                     Z-ADD0         ZAMT
+     C                     END
+     C*
+     C** SET THE FIELDS FOR ZRATE
+     C*
+     C                     Z-ADDCPDP      ZPPCP
+     C                     Z-ADDSFPP      ZSFPP
+     C                     MOVE PPDI      ZPPDI
+     C                     Z-ADDCPNR      ZCPNR
+     C                     Z-ADDCFCT      ZCFCT
+     C                     MOVE PROT      ZPROT
+     C*
+     C** ACCESS LF/SECED  USING A KEY OF SECURITY, LAST COUPON DATE
+     C** AND EVENT TYPE EQUAL TO 'CP'
+     C*
+     C                     MOVEL'CP'      ##TYP
+     C           ##SEVK    CHAINSECED                91
+     C*
+     C** IF A LAST COUPON DATE EVENT IS READ ABOVE,
+     C** THEN SET THE FIELDS USED BY ZRATE
+     C*
+     C           *IN91     IFEQ '0'
+     C                     Z-ADDSNCR      ZCPNR
+     C                     Z-ADDSNCF      ZCFCT
+     C                     Z-ADDSNCP      ZPPCP
+     C                     END
+     C*
+     C** SET START OF INTEREST PERIOD DATE EQUAL TO THE COUPON DATE
+     C*
+     C                     Z-ADDZZLCD     ZSDATE
+     C*
+     C** SET GREATER THAN LIMITS ON LF/SECED
+     C*
+     C           ##SEVK    SETGTSECED
+     C*
+     C** READ FROM LF/SECED
+     C*
+     C           ##SESN    READESECED                    91
+     C*
+     C** READ UNTIL THE EVENT HAS AN EVENT TYPE EQUAL TO 'PP' 'MP' OR 'IR'
+     C*
+     C           *IN91     DOWEQ'0'
+     C           SDET      ANDNE'PP'
+     C           SDET      ANDNE'MP'
+     C           SDET      ANDNE'IR'
+     C           ##SESN    READESECED                    91
+     C                     END
+     C*
+     C** SET GREATER THAN LIMITS ON LF/BKPOS
+     C*
+     C           ##BPSK    SETGTBKPOSDF
+     C*
+     C** READ EQUAL FROM LF/BKPOS
+     C*
+     C           ##BPSP    READEBKPOSDF                  92
+     C*
+     C** DO WHILE NOT END OF FILE ON LF/SECED
+     C** AND NOT END OF FILE ON LF/BKPOS
+     C*
+     C           *IN91     DOWEQ'0'
+     C           *IN92     OREQ '0'
+     C*
+     C** IF NOT END OF FILE ON LF/SECED
+     C*
+     C           *IN91     IFEQ '0'
+     C*
+     C** IF NOT END OF FILE ON LF/BKPOS AND THE EVENT DATE
+     C** FROM LF/SECED  IS LESS THAN OR EQUAL TO THE POSITION DATE
+     C** FROM LF/BKPOS  OR END OF FILE ON LF/BKPOS
+     C*
+     C           *IN92     IFEQ '0'
+     C           SDED      ANDLEBPPD
+     C           SDED      ANDLT##IDAT
+     C           *IN92     OREQ '1'
+     C           SDED      ANDLT##IDAT
+     C*
+     C** SET THE END OF INTEREST PERIOD DATE EQUAL TO THE EVENT
+     C** DATE FROM LF/SECED
+     C*
+     C                     Z-ADDSDED      ZEDATE
+     C*
+     C** EXECUTE ZRATE TO GET THE EFFECTIVE
+     C** INTEREST RATE FOR THE PERIOD
+     C*
+     C                     EXSR ZRATE
+     C*
+     C** EXECUTE ZACCR TO CALCULATE THE INTEREST
+     C** FOR THE PERIOD
+     C*
+     C                     EXSR ZACCR
+     C*
+     C** ADD TO THE TOTAL ACCRUED INTEREST
+     C*
+     C                     ADD  ZACCRD    ##INT
+     C*
+     C** ADD TO THE TOTAL NUMBER OF DAYS
+     C*
+     C                     ADD  ZDDAYS    ##DAYS
+     C*
+     C** SET THE START OF INTEREST PERIOD DATE EQUAL TO THE
+     C** EVENT DATE FROM LF/SECED
+     C*
+     C                     Z-ADDSDED      ZSDATE
+     C*
+     C** SET THE FIELDS USED BY ZRATE
+     C*
+     C                     Z-ADDSDNC      ZCPNR
+     C                     Z-ADDSDCP      ZCFCT
+     C                     MOVE SDTP      ZPPCP
+     C*
+     C** READ EQUAL FROM LF/SECED  WITH THE SECURITY SHORTNAME
+     C*
+     C           ##SESN    READESECED                    91
+     C*
+     C** READ UNTIL THE EVENT HAS AN EVENT TYPE SDET EQUAL TO 'PP' 'MP' OR 'IR'
+     C*
+     C           *IN91     DOWEQ'0'
+     C           SDET      ANDNE'PP'
+     C           SDET      ANDNE'MP'
+     C           SDET      ANDNE'IR'
+     C           ##SESN    READESECED                    91
+     C                     END
+     C*
+     C** ELSE, IF EVENT DATE FROM LF/SECED  IS GREATER THAN OR
+     C** EQUAL TO THE TO DATE PARAMETER, TREAT AS END OF FILE ON LF/SECED
+     C*
+     C                     ELSE
+     C           SDED      IFGE ##IDAT
+     C                     MOVE '1'       *IN91
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C** IF NOT END OF FILE ON LF/BKPOSDF
+     C*
+     C           *IN92     IFEQ '0'
+     C*
+     C** IF NOT END OF FILE ON LF/SECED  AND THE POSITION DATE FROM
+     C** LF/BKPOS IS LESS THAN THE EVENT DATE FROM LF/SECED
+     C** OR END OF FILE ON LF/SECED
+     C*
+     C           *IN91     IFEQ '0'
+     C           BPPD      ANDLTSDED
+     C           BPPD      ANDLT##IDAT
+     C           *IN91     OREQ '1'
+     C           BPPD      ANDLT##IDAT
+     C*
+     C** SET THE END OF INTEREST PERIOD DATE EQUAL TO THE
+     C** POSITION DATE FROM LF/BKPOSDF
+     C*
+     C                     Z-ADDBPPD      ZEDATE
+     C*
+     C** EXECUTE ZRATE TO GET THE EFFECTIVE
+     C** INTEREST RATE FOR THE PERIOD
+     C*
+     C                     EXSR ZRATE
+     C*
+     C** EXECUTE ZACCR TO CALCULATE THE INTEREST
+     C** FOR THE PERIOD
+     C                     EXSR ZACCR
+     C*
+     C** ADD TO THE TOTAL ACCRUED INTEREST
+     C*
+     C                     ADD  ZACCRD    ##INT
+     C*
+     C** ADD TO THE TOTAL NUMBER OF DAYS
+     C*
+     C                     ADD  ZDDAYS    ##DAYS
+     C*
+     C** SET THE START OF INTEREST PERIOD DATE EQUAL TO THE
+     C** POSITION DATE FROM LF/BKPOSDF
+     C*
+     C                     Z-ADDBPPD      ZSDATE
+     C*
+     C** SET THE NOMINAL
+     C*
+     C           NPSN      SUB  ECNP      ZAMT
+     C*
+     C** READ EQUAL FROM LF/BKPOS
+     C*
+     C           ##BPSP    READEBKPOSDF                  92
+     C*
+     C** ELSE, IF POSITION DATE FROM LF/BKPOS IS GREATER THAN OR EQUAL
+     C** TO THE TO DATE PARAMETER, TREAT AS END OF FILE ON LF/BKPOS
+     C*
+     C                     ELSE
+     C           BPPD      IFGE ##IDAT
+     C                     MOVE '1'       *IN92
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** SET THE END OF INTEREST PERIOD DATE EQUAL TO THE TO DATE
+     C*
+     C                     Z-ADD##IDAT    ZEDATE
+     C*
+     C** EXECUTE ZRATE TO GET THE EFFECTIVE
+     C** INTEREST RATE FOR THE PERIOD
+     C*
+     C                     EXSR ZRATE
+     C*
+     C** EXECUTE ZACCR TO CALCULATE THE INTEREST
+     C** FOR THE PERIOD
+     C*
+     C                     EXSR ZACCR
+     C*
+     C** ADD TO THE TOTAL ACCRUED INTEREST
+     C*
+     C                     ADD  ZACCRD    ##INT
+     C*
+     C** ADD TO THE TOTAL NUMBER OF DAYS
+     C*
+     C                     ADD  ZDDAYS    ##DAYS
+     C*
+     C           EINTCA    ENDSR
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C                     SETON                     LR
+     C                     DUMP
+     C                     MOVEL'*ERROR'  ##RETC
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+     C/COPY ZSRSRC,ZACCRZ1
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDAYSZ2
+     C/SPACE 5
+     C/COPY ZSRSRC,ZNCDZ3
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDYYRZ3
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/SPACE 5
+     C/COPY ZSRSRC,ZLCDZ1
+     C/SPACE 5
+     C/COPY ZSRSRC,ZRATEZ1
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**  CPY@
+(c) Finastra International Limited 2001

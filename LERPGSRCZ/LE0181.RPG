@@ -1,0 +1,2405 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Outstanding loans by facility enquiry')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *     LE0181 - OUTSTANDING LOANS BY FACILITY ENQUIRY            *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD053295           Date 13Apr19               *
+      *  Prev Amend No. MD050139           Date 23Mar18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
+      *                 MD031845           Date 12Jul17               *
+      *                 MD045010           Date 05Apr17               *
+      *                 CGL184             Date 07Dec16               *
+      *                 CLE141A            Date 28Apr16               *
+      *                 CLE141             Date 01Mar16               *
+      *                 MD021960           Date 22Aug13               *
+      *                 MD021635           Date 07Aug13               *
+      *                 AR830785           Date 07May13               *
+      *                 AR811339A          Date 11Aug11               *
+      *                 AR996895           Date 25Nov12               *
+      *                 264060             Date 01Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 AR787620           Date 10Jun11               *
+      *                 CLE064             Date 06Dec10               *
+      *                 AR583389           Date 09Aug10               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG22930           Date 19Feb08               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246141             Date 26Mar07               *
+      *                 245082             Date 30Jan07               *
+      *                 164847             Date 30Nov06               *
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242286             Date 25Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 27Apr05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CIR013             Date 25Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 188368             Date 04May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163949             Date 07Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 159495             Date 21Apr99               *
+      *                 157736             Date 07Apr99               *
+      *                 155147             Date 18Feb99               *
+      *                 147830             Date 17Dec98               *
+      *                 136625             Date 16Jun98               *
+      *                 143510             Date 29Sep98               *
+     F*                 121768             DATE 19Feb98               *
+     F*                 126017             DATE 17Nov97               *
+     F*                 128954             Date 05Feb98               *
+     F*                 125469             Date 17Nov97               *
+     F*                 123853             Date 13Oct97               *
+     F*                 097885             DATE 31JAN97               *
+     F*                 CLE004             DATE 02Dec96               *
+     F*                 095244             DATE 01NOV95               *
+     F*                 095238             DATE 31OCT95               *
+     F*                          066550       DATE 04FEB94               *
+     F*                          S01392       DATE 14SEP92               *S01392
+     F*                          S01311       DATE 18JAN91               *
+     F*                                                                  *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD053295 - Lending loan with Interest Calculation Basis      *
+      *             method 3 (30/360) has wrong interest payment      *
+      *             amount for month of March (Recompile)             *
+      *  MD050139- AOSARDR0 called every time causing performance     *
+      *            issue. Recompile due to changes in /COPY           *
+      *            ZFREQ/ZFRQ*.                                       *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *      
+      *  MD031845 - Reduce SDINT by 1 and increase SAINT by 3.        *
+      *           - Recompile due to change in LE0181FM.              *
+      *  MD045010 - Component LEC06A 10008 looping during COB caused  *
+      *             by CGL184. Recompile due to changes in ZFRQB3.    *
+      *  CGL184 - New Frequencies for Account Statements (Recompile)  *
+      *  CLE141A - CLE141 Change Control 1                            *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions - Phase 2                      *
+      *  MD021960 - Matured loans with active PDCLs is not displayed  *
+      *             when the current principal amount of the PDCLs    *
+      *             is equal to zero. Removed part of 264060 that     *
+      *             conditions if CPAMX <> 0.                         *
+      *  MD021635 - Wrong accrued interest                            *
+      *  AR830785 - Recompiled due to changes in core hook RULE78Z1.  *
+      *             (Child: AR830786)                                 *
+      *  AR811339A - Wrong outsatinding interest. Apply fix AR732752  *
+      *  AR732752 - Incorrect outstanding interest for old BV loans   *
+      *             with interest payment frequency and input on      *
+      *             rundate. Amended program to consider only those   *
+      *             newly entered BV loans. (Child: AR732753)         *
+      *  AR996895 - Incorrect acrrual interest calculation            *
+      *             (Child: AR996897) (Recompile)                     *
+      *  264060 - P2: CLE134 Original loan has disappeared after COB  *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,LEH00415                                 *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  AR583389 - Incorrect outstanding interest for a backvalued   *
+      *             loan with interest payment frequency and interest *
+      *             capitalised. Amended program to consider interest *
+      *             capitalised in the calculation of outstanding     *
+      *             interest upon loan input.                         *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *            to Midas Plus (Recompile)                          *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  BUG22930 - Accrued Interest to date amount is not correct in *
+      *             outstanding loan by facility                      *
+      *  246141 - Recompiled due to changes in ZINTDYZ2               *
+      *  245082 - Loans with first and last day accrual should be     *
+      *           treated as first day accruals until maturity        *
+      *           date.  Then add one day on the maturity date.       *
+      *           Patterned after fix 235784 from Release 4.          *
+      *  164847 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  BUG12990 - Recompiled due to changes in ZINTDYZ2/ZINTDYZ2LE  *
+      *  242286 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndication Manager                                 *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over GLINTC and ZINTDY.                   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  188368 - Use RUND instead of IACD as basis in computing for  *
+      *           the daily interest amount.                          *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CIR004 - Dealing Calculation Method Change.                  *
+      *         - Recompiled due to GLINTC and ZINTDY changes         *
+      *  163949 - Recompiled due to changes in LE0181FM.              *
+      *  159495 - Fix Rolldown and Rollup                             *
+      *  157736 - Participation Sold cannot be viewed against the     *
+      *           participant facility.                               *
+      *  155147 - 'Prime' should be set to 'Prmry' to avoid confusion.*
+      *  147830 - New narrative on sfl display. Loans identified as   *
+      *           Prime,Intnl,Part or Risk. This replaces branch if   *
+      *           multibranching.                                     *
+      *  136625 - Loans by Facility Enquiry and Loans by Participant  *
+      *           Facility looks identical.                           *
+      *  143510 - Shows extra one day in interest amount computation. *
+      *           Applied fix 065277 to ignore First Day Accrual ind. *
+     F*  121768 - Recompile over changed GLINTCZ1                     *
+     F*  126017 - Correction to interest calculation for calculation  *
+     F*           basis 6 in SR/GLINTC. Add SR/ZDAT10                 *
+     F*  128954 - Call new pgm LE0212 for CLE004 instead of LE0210    *
+     F*  125469 - All parts linked to all participant facilities      *
+     F*           are shown                                           *
+     F*  123853 - Participant facility by prime facility enquiry      *
+     F*           option 2 does not show any loans.                   *
+     F*  097885 - Recompiled for wrong calculation of number of day   *
+     F*           interest (ZINTDYZ2).                                *
+     F*  CLE004 - Customer Lending Enhancements - Syndications.       *
+     F*  095244 - Recompiled for Calculation method 3                 *
+     F*  095238 - Recompiled for Calculation method 3                 *
+     F*    066550 - GLINTC has had historical problems and inaccuracies  *
+     F*             and is now externaly descibed and changed to use     *
+     F*             ZINTDYZ1. See document atached to error no on GEMS   *
+     A*     S01392  -  JAPANESE SUB MODULE ENHANCEMENTS                  *S01392
+     F*     S01311  -  EXPOSURE MANAGEMENT ENQUIRIES                     *
+     F*                New program created to replace LE0180             *
+     F*                                                                  *
+     F********************************************************************
+     FLE0181FMCF  E                    WORKSTN
+     F                                        RRN   KSFILE LE0181S1
+     FLEREF   IF  E           K        DISK         KINFSR *PSSR
+     FCLOAN   IF  E           K        DISK         KINFSR *PSSR
+     F            CLOANHHF                          KIGNORE
+     F************CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FFCLTY   IF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+     FSDCURRPDIF  E                    DISK         KINFSR *PSSR      UC
+     FLELOANL7IF  E           K        DISK         KINFSR *PSSR          125469
+     F            CLOANCLF                          KRENAMELOANL7         125469
+     FLEPDUEL2IF  E           K        DISK         KINFSR *PSSR                              264060
+     FLELOANLZIF  E           K        DISK         KINFSR *PSSR                              264060
+     F            CLOANCLF                          KRENAMELOANLZ                             264060
+      /EJECT
+     F/COPY WNCPYSRC,LE0181F001
+     F********************************************************************
+     F*                                                                  *
+     F* INDICATORS                                                       *
+     F*                                                                  *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*       06      LINKED ENQUIRY                                     *
+     F*       18      ROLLUP                                             *
+     F*       19      ROLLDOWN                                           *
+     F*       20      MULTI-BRANCHING (DISPLAYS BRANCH ON SCREEN)        *
+     F*       21      NON-DISPLAY ALL FIELDS ON SCREEN                   *
+     F*       24      NON-DISPLAY BRANCH ON SUBFILE RECORD               *
+     F*       28      STOP ACCRUALS INDICATOR ON                         *
+     F*       30      GENERAL ERROR IN VALIDATION                        *
+     F*       31      ERROR IN VALIDATION OF CUSTOMER                    *
+     F*       32      ERROR IN VALIDATION OF BRANCH                      *
+     F*       33      ERROR IN VALIDATION OF FACILITY                    *
+     F*       41-43   SUBFILE INDICATORS                                 *
+     F*       45      ROLLUP ENABLED                                     *
+     F*       46      ROLLDOWN ENABLED                                   *
+     F*       60      END OF FILE                                        *
+     F*       61      DATABASE ERROR                                     *
+     F*       62      CHAIN FAIL ON FCLTY                                *
+     F*       63      READC INDICATOR ON SUBFILE                         *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+     F* SUBROUTINES                                                      *
+     F*                                                                  *
+     F*    CCYARR - SET UP CURRENCY ARRAYS                               *
+     F*    CCYDEP - ACCESS CURRENCY DECIMAL PLACES                       *
+     F*    CMDSR  - PROCESS COMMAND KEYS                                 *
+     F*    DKLIST - SET UP KEY LISTS                                     *
+     F*    FILLSF - FILL SUBFILE                                         *
+     F*    INIT   - INITIAL PROCESSING                                   *
+     F*    PROINP - PROCESS SCREEN INPUT                                 *
+     F*    PROSEL - PROCESS SELECTION                                    *
+     F*    READLV - READ LIVE RECORD FROM LEREF                          *
+     F*    READPT - READ LIVE RECORD FROM LELOANL7                       *125469
+     F*    RETSR  - END OF PROGRAM PROCESSING                            *
+     F*    ROLDWN - PROCESS ROLLDOWN                                     *
+     F*    SELECT - DETERMINE IF RECORD TO BE SELECTED                   *
+     F*    SFREC  - SET UP SUBFILE RECORD                                *
+     F*    VALID  - VALIDATE SCREEN INPUT                                *
+     F*    *PSSR  - ERROR PROCESSING                                     *
+     F*                                                                  *
+     F*    GLINTC - CALCULATE INTEREST                                   *
+     F*    ZDATE2 - CONVERT DAY NUMBER TO DDMMMYY FORMAT                 *
+     F*    ZSEDIT - EDIT NUMERIC FIELD FOR OUTPUT                        *
+     F*    ZSAVE  - SAVE BIT SETTINGS AND SET OFF INDICATORS             *
+     F*    ZRSTOR - RESTORE INDICATORS                                   *
+     F*                                                                  *
+     F********************************************************************
+      /EJECT
+     E                    XCYA      150  3               CURRENCY CODES
+     E                    XDPA      150  1 0             CURRENCY DP
+     E*
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    MES     1  11 79               MESSAGES
+     E                    BRTTLA  1   1 40               BR TITLE (ALL)
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE9Z1                                               066550
+     E/COPY ZSRSRC,ZFREQBZ1                                                                   CLE028
+     E/COPY ZSRSRC,ZHOLE                                                                      CLE028
+      /EJECT
+     ILEREFD1F
+     I* CUSTOMER/FACILITY/LOAN REFERENCE
+     I              RECI                            RECIR
+     I              CNUM                            CNUMR
+     ILOANLZ                                                                                  264060
+      *                                                                                       264060
+      ** Midas LE Customer lending loans by LNRF                                              264060
+      *                                                                                       264060
+     I              RECI                            RECIX                                     264060
+     I              BRCA                            BRCAX                                     264060
+     I              LNRF                            LNRFX                                     264060
+     I              CNUM                            CNUMX                                     264060
+     I              CPAM                            CPAMX                                     264060
+     I*
+     ILEPDUED0                                                                                264060
+      *                                                                                       264060
+      ** Midas LE Customer lending loans by LNRF                                              264060
+      *                                                                                       264060
+     I              YTKPACL                         YKPACL                                    264060
+     I              YTKPABR                         YKPABR                                    264060
+     I              YTKPAAC                         YKPAAC                                    264060
+     I              YTKPASE                         YKPASE                                    264060
+     I              YTKPACY                         YKPACY                                    264060
+     I              YTKIACL                         YKIACL                                    264060
+     I              YTKIABR                         YKIABR                                    264060
+     I              YTKIAAC                         YKIAAC                                    264060
+     I              YTKIASE                         YKIASE                                    264060
+     I              YTKIACY                         YKIACY                                    264060
+     I*                                                                                       264060
+     ICLOANCLF
+     I* LOAN DETAILS
+     I              BRCA                            BRCAL
+     I/COPY WNCPYSRC,LE0181I001
+      *                                                                   125469
+     ILOANL7                                                              125469
+     I              RECI                            RECIL                 125469
+     I*
+     ILDA        UDS                            256
+     I* LOCAL DATA AREA
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IRUNDT       DS
+     I* DATA AREA RUNDAT
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I*
+     IZMUSER      DS                             17
+     I* DATA AREA OF MENU USER
+     I                                       11  13 DFTBR
+     I                                       17  17 BNKAUT
+     I*
+     ISDGELR    E DSSDGELRPD
+     I* GENERAL LEDGER DETAILS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* BANK DETAILS
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I*  EXTERNAL DS FOR BRANCH CODE DETAILS
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+     I* CUSTOMER DETAILS
+     I*
+     ISCSAR     E DSSCSARDPD
+     I* SWITCHABLE FEATURE DETAILS
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     IEMSDS     E DSEMDTA
+     I* LINK ENQUIRY DATA AREA
+     I                                      141 146 CUSTNO
+     I                                      147 149 BRANCH
+     I                                      150 152 FACTYP
+     I                                      153 154 FACSEQ
+     I                                      155 155 PARTIC                123853
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+      *                                                                                       CLE141
+     ICCYPI       DS                                                                          CLE141
+     I                                        1   3 C1PI                                      CLE141
+     I                                        4   6 C2PI                                      CLE141
+     I                                        7   9 C3PI                                      CLE141
+     I                                       10  12 C4PI                                      CLE141
+     I                                       13  15 C5PI                                      CLE141
+     I                                       16  18 C6PI                                      CLE141
+     I                                       19  21 C7PI                                      CLE141
+     I                                       22  24 C8PI                                      CLE141
+     I                                       25  27 C9PI                                      CLE141
+     I                                       28  30 C0PI                                      CLE141
+      *                                                                                       CLE141
+     ILOCPI       DS                                                                          CLE141
+     I                                        1   3 L1PI                                      CLE141
+     I                                        4   6 L2PI                                      CLE141
+     I                                        7   9 L3PI                                      CLE141
+     I                                       10  12 L4PI                                      CLE141
+     I                                       13  15 L5PI                                      CLE141
+     I                                       16  18 L6PI                                      CLE141
+     I                                       19  21 L7PI                                      CLE141
+     I                                       22  24 L8PI                                      CLE141
+     I                                       25  27 L9PI                                      CLE141
+     I                                       28  30 L0PI                                      CLE141
+      *                                                                                       CLE141
+     I/COPY WNCPYSRC,LE0181I002
+     I*
+      /COPY ZSRSRC,ZSEDITZ2
+     I/COPY ZSRSRC,ZINTDYZ1                                               066550
+     I/COPY ZSRSRC,ZDATE9Z2                                               066550
+     I/COPY ZSRSRC,ZDAT10Z1                                               126017
+     I/COPY ZSRSRC,ZHOLI                                                                      CLE028
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    MAIN - MAIN PROCESSING                                        *
+     C*                                                                  *
+     C*    CALLS: INIT   - INITIAL PROCESSING                            *
+     C*           VALID  - VALIDATE SCREEN INPUT                         *
+     C*           FILLSF - FILL SUBFILE                                  *
+     C*           PROINP - PROCESS SCREEN INPUT                          *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C* FIRST CYCLE
+     C*
+     C           FIRSTC    IFNE 'Y'
+     C                     EXSR INIT
+     C                     END
+     C*
+     C* WRITE HEADINGS (21 ON TO NON-DISPLAY CUSTOMER ETC)
+     C*
+     C                     SETON                     21
+     C                     WRITELE0181F0
+     C*
+     C* CLEAR SUBFILE IN PREPARATION FOR NEW CUSTOMER/BRANCH ETC
+     C*
+     C                     MOVEA'001'     *IN,41
+     C                     Z-ADD*ZERO     RRN
+     C                     WRITELE0181C1
+     C                     MOVEA'011'     *IN,41
+     C*
+     C* RESET TOP OF THIS PAGE LOAN NUMBER
+     C*
+     C/COPY WNCPYSRC,LE0181C008
+     C**********           Z-ADD*ZERO     #LNNO   60                                          CLE148
+     C                     MOVEL*BLANKS   #LNNO   6                                           CLE148
+     C/COPY WNCPYSRC,LE0181C009
+     C*
+     C* IF FIRST CYCLE AND PROGRAM REQUESTED FROM MENU, DISPLAY SCREEN
+     C* PROMPTS
+     C*
+     C           FIRSTC    IFNE 'Y'
+     C           MODID     ANDNE'LE'
+     C                     EXFMTLE0181C1
+     C                     END
+     C*
+     C                     MOVE 'Y'       FIRSTC  1
+     C*
+     C* VALIDATE INPUT
+     C*
+     C                     EXSR VALID
+     C*
+     C* DO WHILE INPUT INVALID
+     C*
+     C           *IN30     DOWEQ'1'
+     C*
+     C* WRITE SUBFILE SCREEN
+     C*
+     C                     EXFMTLE0181C1
+     C*
+     C* VALIDATE INPUT
+     C*
+     C                     EXSR VALID
+     C*
+     C                     END
+     C*
+     C* SAVE SCREEN INPUT FIELDS
+     C*
+     C                     MOVE SCUST     SSCUST 10
+     C                     MOVE SBRCD     SSBRCD  3
+     C                     MOVE SFACT     SSFACT  3
+     C                     MOVE SFCNO     SSFCNO  2
+     C*
+     C* WRITE HEADINGS (21 SET OFF TO DISPLAY CUSTOMER ETC)
+     C*
+     C                     SETOF                     21
+     C                     WRITELE0181F0
+     C*
+     C* FILL NEXT PAGE OF SUBFILE
+     C*
+     C                     EXSR FILLSF
+     C*
+     C* DO WHILE F1, F3, F12 NOT TAKEN
+     C*
+     C           RTNDWF    DOWEQ*BLANK
+     C*
+     C* WRITE SUBFILE SCREEN
+     C*
+     C                     EXFMTLE0181C1
+     C                     SETOF                     30
+     C*
+     C* PROCESS SCREEN INPUT
+     C*
+     C                     EXSR PROINP
+     C*
+     C                     END
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    INIT - INITIAL PROCESSING                                     *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - MAIN PROCESSING                           *
+     C*    CALLS:     DKLIST - SET UP KEY LISTS                          *
+     C*               CCYARR - SET UP CURRENCY ARRAYS                    *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+      *                                                                   136625
+     C           *ENTRY    PLIST                                          136625
+     C                     PARM           PTYPE   4                       136625
+      *                                                                   136625
+     C           PTYPE     IFEQ 'OSLF'                                    136625
+     C                     MOVE '0'       *IN23                           136625
+     C                     ELSE                                           136625
+     C                     MOVE '1'       *IN23                           136625
+     C                     ENDIF                                          136625
+     C*
+     C* KEY LISTS
+     C*
+     C                     EXSR DKLIST
+     C*
+     C                     Z-ADD11        #COUNT  20
+     C*
+     C* ACCESS THE DATA AREAS RUNDAT & ZMUSER
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   RUNDT
+     C                     IN   ZMUSER
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     20
+     C                     END
+     C*
+     C* SETUP CURRENCY ARRAYS
+     C*
+     C                     EXSR CCYARR
+     C*
+     C* ACCESS GENERAL LEDGER DETAILS
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C* ACCESS BANK DETAILS
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C* CHECK SYSTEM DATE FORMAT
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+     C* SET UP EDIT CODE FOR ZSEDIT
+     C*
+     C***********          MOVE 'J'       ZECODE                          147830
+      *                                                                   CLE004
+      **  Determine if Customer Lending Enhancements - Syndications       CLE004
+      **  feature is installed                                            CLE004
+      *                                                                   CLE004
+     C                     CALL 'AOSARDR0'                                CLE004
+     C                     PARM *BLANKS   @RTCD                           CLE004
+     C                     PARM '*KEY   ' @OPTN                           CLE004
+     C                     PARM 'CLE004'  @SARD   6                       CLE004
+     C           SCSAR     PARM SCSAR     DSFDY                           CLE004
+     C           @RTCD     IFEQ *BLANKS                                   CLE004
+     C                     MOVE 'Y'       CLE004  1                       CLE004
+     C                     ELSE                                           CLE004
+     C                     MOVE 'N'       CLE004                          CLE004
+     C           @RTCD     IFNE '*NRF    '                                CLE004
+     C           *LOCK     IN   LDA                                       CLE004
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE004
+     C                     Z-ADD5         DBASE            * DBERR 05 *   CLE004
+     C                     MOVEL'CLE004'  DBKEY            ************   CLE004
+     C                     OUT  LDA                                       CLE004
+     C                     EXSR *PSSR                                     CLE004
+     C                     ENDIF                                          CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                                       CLE028
+      ** Determine if Flat Rate Personal Loans (Rule of 78s) is                               CLE028
+      ** installed                                                                            CLE028
+      *                                                                                       CLE028
+     C                     CALL 'AOSARDR0'                                                    CLE028
+     C                     PARM *BLANKS   PRTCD   7                                           CLE028
+     C                     PARM '*VERIFY' POPTN   7                                           CLE028
+     C                     PARM 'CLE028'  PSARD   6                                           CLE028
+     C           SCSAR     PARM SCSAR     DSFDY                                               CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFNE *BLANKS                                                       CLE028
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE028
+     C           *LOCK     IN   LDA                                                           CLE028
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE028
+     C                     Z-ADD6         DBASE                                               CLE028
+     C                     MOVELPSARD     DBKEY                                               CLE028
+     C                     OUT  LDA                                                           CLE028
+     C                     EXSR *PSSR                                                         CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFEQ *BLANKS                                                       CLE028
+     C                     MOVE 'Y'       CLE028  1                                           CLE028
+     C                     ELSE                                                               CLE028
+     C                     MOVE 'N'       CLE028                                              CLE028
+     C                     ENDIF                                                              CLE028
+     C/COPY WNCPYSRC,LEH01290
+     C*
+      *                                                                                       264060
+      **  CLE134 feature                                                                      264060
+      *                                                                                       264060
+     C                     CALL 'AOSARDR0'                                                    264060
+     C                     PARM *BLANKS   @RTCD                                               264060
+     C                     PARM '*KEY   ' @OPTN                                               264060
+     C                     PARM 'CLE134'  @SARD   6                                           264060
+     C           SCSAR     PARM SCSAR     DSFDY                                               264060
+     C           @RTCD     IFEQ *BLANKS                                                       264060
+     C                     MOVE 'Y'       CLE134  1                                           264060
+     C                     ELSE                                                               264060
+     C                     MOVE 'N'       CLE134                                              264060
+     C           @RTCD     IFNE '*NRF    '                                                    264060
+     C           *LOCK     IN   LDA                                                           264060
+     C                     MOVEL'SCSARDPD'DBFILE                                              264060
+     C                     Z-ADD7         DBASE                                               264060
+     C                     MOVEL'CLE134'  DBKEY                                               264060
+     C                     OUT  LDA                                                           264060
+     C                     EXSR *PSSR                                                         264060
+     C                     ENDIF                                                              264060
+     C                     ENDIF                                                              264060
+      *                                                                                       264060
+      ** Retrieve system value setting.                                                     MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   @RTCD                                             MD035545
+     C                     PARM           P@OP01 20                                         MD035545
+     C                     PARM           P@VL01200                                         MD035545
+     C                     PARM           P@OP02 20                                         MD035545
+     C                     PARM           P@VL02200                                         MD035545
+     C                     PARM           P@OP03 20                                         MD035545
+     C                     PARM           P@VL03200                                         MD035545
+     C                     PARM           P@OP04 20                                         MD035545
+     C                     PARM           P@VL04200                                         MD035545
+     C                     PARM           P@OP05 20                                         MD035545
+     C                     PARM           P@VL05200                                         MD035545
+     C                     PARM           P@OP06 20                                         MD035545
+     C                     PARM           P@VL06200                                         MD035545
+     C                     PARM           P@OP07 20                                         MD035545
+     C                     PARM           P@VL07200                                         MD035545
+     C                     PARM           P@OP08 20                                         MD035545
+     C                     PARM           P@VL08200                                         MD035545
+     C                     PARM           P@OP09 20                                         MD035545
+     C                     PARM           P@VL09200                                         MD035545
+     C                     PARM           P@OP10 20                                         MD035545
+     C                     PARM           P@VL10200                                         MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'.                            MD035545
+      *                                                                                     MD035545
+     C           @RTCD     IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
+      *                                                                                     MD035545
+      ** Determine if CLE141 is switched ON                                                   CLE141
+      *                                                                                       CLE141
+     C                     MOVE 'N'       CLE141  1                                           CLE141
+     C                     CALL 'AOSARDR0'                                                    CLE141
+     C                     PARM *BLANKS   @RTCD                                               CLE141
+     C                     PARM '*VERIFY' @OPTN                                               CLE141
+     C                     PARM 'CLE141'  @SARD                                               CLE141
+     C           SCSAR     PARM SCSAR     DSFDY                                               CLE141
+      *                                                                                       CLE141
+     C           @RTCD     IFEQ *BLANKS                                                       CLE141
+     C                     MOVE 'Y'       CLE141                                              CLE141
+     C                     ENDIF                                                              CLE141
+      *                                                                                       CLE141
+     C* ACCESS EM DATA AREA AND LDA
+     C*
+     C           *NAMVAR   DEFN           EMSDS
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C           *LOCK     IN   EMSDS
+     C                     MOVE RQDTD     MODID   2
+     C                     OUT  EMSDS
+     C*
+     C* INITIALIZE RETURN CODE AND FIRST RECORD READ FLAG
+     C*
+     C                     MOVE *BLANK    RTNDWF
+     C                     MOVE *BLANK    FIRSTR  1
+     C*
+     C* IF PROGRAM HAS BEEN CALLED AS A LINKED ENQUIRY, SET UP CUSTOMER
+     C* NUMBER, BRANCH, FACILITY TYPE AND FACILITY SEQUENCE SCREEN
+     C* FIELDS
+     C*
+     C           MODID     IFEQ 'LE'
+     C                     MOVELCUSTNO    SCUST
+     C                     MOVELBRANCH    SBRCD
+     C                     MOVELFACTYP    SFACT
+     C                     MOVELFACSEQ    SFCNO
+     C                     MOVE PARTIC    SPART   1                       123853
+     C                     SETON                     06
+     C                     END
+     C*
+     C/COPY WNCPYSRC,LE0181C002
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    DKLIST - SET UP KEY LISTS                                     *
+     C*                                                                  *
+     C*    CALLED BY: INIT - INITIAL PROCESSING                          *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           DKLIST    BEGSR
+     C*
+     C* PARAMETER LIST FOR PROGRAM 'AOCUSTR0'
+     C*
+     C           PLIST1    PLIST
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           CKEY   10
+     C                     PARM           KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C* KEY LIST FOR FCLTY
+     C*
+     C           FCLTYK    KLIST
+     C**********           KFLD           #CNUM   60                                          CSD027
+     C                     KFLD           #CNUM   6                                           CSD027
+     C                     KFLD           #FACT   30
+     C                     KFLD           #FCNO   20
+     C                     KFLD           RECTF   1
+     C                     MOVE 'A'       RECTF
+     C*
+     C* KEY LISTS FOR LEREF
+     C*
+     C           LEREFK    KLIST
+     C                     KFLD           #CNUM
+     C                     KFLD           #FACT
+     C                     KFLD           #FCNO
+     C                     KFLD           #LNNO
+     C*
+     C           LEREFP    KLIST
+     C                     KFLD           #CNUM
+     C                     KFLD           #FACT
+     C                     KFLD           #FCNO
+     C/COPY WNCPYSRC,LE0181C034
+     C*
+     C* KEY LIST FOR CLOAN
+     C*
+     C           CLOANK    KLIST
+     C                     KFLD           LNNO
+     C                     KFLD           RECTL   1
+     C                     MOVE 'A'       RECTL
+      *                                                                                       264060
+     C           KDUEP     KLIST                                                              264060
+     C                     KFLD           WPORG   6                                           264060
+      *                                                                                       264060
+     C           KLOAN     KLIST                                                              264060
+     C                     KFLD           YPLON                                               264060
+      *                                                                   125469
+      * KEY LIST FOR LELOAN7                                              125469
+      *                                                                   125469
+     C           LOAN7     KLIST                                          125469
+     C**********           KFLD           W#PTFC  60                                   125469 CSD027
+     C                     KFLD           W#PTFC  6                                           CSD027
+     C                     KFLD           W#PTFT  30                      125469
+     C                     KFLD           W#PTFN  20                      125469
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    VALID - VALIDATE SCREEN INPUT                                 *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - MAIN PROCESSING                           *
+     C*    CALLS:     CMDSR  - PROCESS COMMAND KEYS                      *
+     C*               ZDATE2 - CONVERT DAY NUMBER TO DDMMMYY FORMAT      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           VALID     BEGSR
+     C*
+     C* SETOF OFF ERROR INDICATORS
+     C*
+     C                     SETOF                     30
+     C                     SETOF                     313233
+     C*
+     C* BLANK MESSAGE FIELD
+     C*
+     C                     MOVE *BLANKS   MSG
+     C*
+     C* CHECK COMMAND KEYS
+     C*
+     C                     EXSR CMDSR
+     C*
+     C* VALIDATE CUSTOMER
+     C*
+     C* CUSTOMER NOT ENTERED
+     C*
+     C           SCUST     IFEQ *BLANKS
+     C                     MOVE MES,1     MSG
+     C                     SETON                       3031
+     C                     ELSE
+     C*
+     C* CUSTOMER OR SHORTNAME ENTERED
+     C*
+     C                     MOVELSCUST     CKEY
+     C                     CALL 'AOCUSTR0'PLIST1
+     C*
+     C* INVALID CUSTOMER
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE MES,2     MSG
+     C                     SETON                       3031
+     C*
+     C* OTHERWISE, VALID CUSTOMER ENTERED
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   SCUST
+     C                     MOVELBBCUST    SCUST
+     C                     MOVELBBCUST    #CNUM
+     C                     END
+     C                     END
+     C*
+     C* IF CUSTOMER IS VALID, VALIDATE FACILITY
+     C*
+     C           MSG       IFEQ *BLANKS
+     C*
+     C                     MOVE SFACT     #FACT
+     C                     MOVE SFCNO     #FCNO
+     C*
+     C* FACILITY NOT ENTERED
+     C*
+     C           SFACT     IFEQ *BLANKS
+     C           #FACT     OREQ *ZERO
+     C           SFCNO     OREQ *BLANKS
+     C           #FCNO     OREQ *ZERO
+     C                     MOVE MES,3     MSG
+     C                     SETON                       3033
+     C*
+     C* OTHERWISE, FACILITY ENTERED
+     C*
+     C                     ELSE
+     C           FCLTYK    CHAINFCLTY                62
+     C*
+     C* INVALID FACILITY
+     C*
+     C           *IN62     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           RECI      ANDNE'E'
+     C                     MOVE MES,4     MSG
+     C                     SETON                       3033
+     C*
+     C* OTHERWISE, FORMAT FACILITY DETAILS FOR OUTPUT
+     C*
+     C                     ELSE
+     C                     MOVELSFACT     SFAC    3
+     C                     MOVELSFAC      FACAB
+     C                     MOVEL'/'       SFAC
+     C                     MOVE SFCNO     SFAC
+     C                     MOVE SFAC      FACAB
+     C/COPY WNCPYSRC,LEH00415
+     C*
+     C* FORMAT LAST CHANGE DATE OF REVOLVING CREDIT INDICATOR
+     C*
+     C                     MOVE *BLANKS   RDATE
+     C           RVCD      IFNE *ZERO
+     C                     MOVE RVCD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RDATE
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* IF CUSTOMER AND FACILITY VALID, VALIDATE BRANCH
+     C*
+     C           MSG       IFEQ *BLANKS
+     C*
+     C* IF MULTIBRANCHING = Y, CHECK USER'S ACCESS TO BOOKING BRANCH
+     C* OF THE FACILITY RECORD
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     CALL 'ZVBBU'
+     C                     PARM BRCA      @ZBR    3
+     C                     PARM           @ERR    10
+     C           @ERR      IFNE *ZERO
+     C           @ERR      IFEQ 1
+     C                     MOVE MES,5     MSG
+     C                     END
+     C           @ERR      IFEQ 2
+     C                     MOVE MES,6     MSG
+     C                     END
+     C                     SETON                     303133
+     C                     END
+     C*
+     C* IF EVERYTHING STILL VALID, VALIDATE BRANCH
+     C*
+     C           MSG       IFEQ *BLANKS
+     C*
+     C* IF BRANCH IS LEFT BLANK, USE DEFAULT BRANCH
+     C*
+     C           SBRCD     IFEQ *BLANKS
+     C                     MOVE DFTBR     SBRCD
+     C                     END
+     C*
+     C* VALIDATE USER'S BANK LEVEL AUTHORITY
+     C*
+     C           SBRCD     IFEQ 'ALL'
+     C           BNKAUT    ANDNE'Y'
+     C                     MOVE MES,7     MSG
+     C                     SETON                     3032
+     C                     END
+     C                     END
+     C*
+     C* IF EVERYTHING STILL VALID
+     C*
+     C           MSG       IFEQ *BLANKS
+     C           SBRCD     IFNE *BLANKS
+     C           SBRCD     ANDNE'ALL'
+     C*
+     C* DETERMINE IF BRANCH CODE EXISTS ON SD
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM SBRCD     @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE MES,8     MSG
+     C                     SETON                     3032
+     C                     ELSE
+     C                     MOVELA8BRCD    SBRCD
+     C*
+     C* CHECK USER'S ACCESS TO SELECTED BRANCH
+     C*
+     C                     CALL 'ZVBBU'
+     C                     PARM SBRCD     @ZBR
+     C                     PARM           @ERR
+     C           @ERR      IFNE *ZERO
+     C           @ERR      IFEQ 1
+     C                     MOVE MES,5     MSG
+     C                     END
+     C           @ERR      IFEQ 2
+     C                     MOVE MES,6     MSG
+     C                     END
+     C                     SETON                     3032
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,LEH00912
+     C*
+     C* IF EVERYTHING STILL VALID
+     C*
+     C           MSG       IFEQ *BLANKS
+     C*
+     C* CONDITION BRANCH FIELD IN SCREEN HEADER
+     C*
+     C           MBIN      IFEQ 'Y'
+     C           SBRCD     IFEQ 'ALL'
+     C                     SETON                     24
+     C                     MOVEABRTTLA    BRTTL  40
+     C                     ELSE
+     C                     SETOF                     24
+     C                     MOVE *BLANKS   BRTTL
+     C                     MOVE *BLANKS   WRK9    9
+     C                     MOVEL' Br -   'WRK9
+     C                     MOVE SBRCD     WRK9
+     C                     MOVELWRK9      BRTTL
+     C                     MOVE A8BRNM    BRTTL
+     C                     END
+     C                     ELSE
+     C                     SETOF                     24
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    PROINP - PROCESS SCREEN INPUT                                 *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - MAIN PROCESSING                           *
+     C*    CALLS:     CMDSR  - PROCESS COMMAND KEYS                      *
+     C*               ROLDWN - PROCESS ROLLDOWN                          *
+     C*               FILLSF - FILL SUBFILE                              *
+     C*               PROSEL - PROCESS SELECTION                         *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           PROINP    BEGSR
+     C*
+     C* CHECK COMMAND KEYS
+     C*
+     C                     EXSR CMDSR
+     C*
+     C* CHECK FOR INPUT OF SCREEN FIELDS (CUSTOMER ETC)
+     C*
+     C           SCUST     IFNE SSCUST
+     C           SBRCD     ORNE SSBRCD
+     C           SFACT     ORNE SSFACT
+     C           SFCNO     ORNE SSFCNO
+     C                     MOVE 'R'       RTNDWF
+     C                     MOVE *BLANK    FIRSTR
+     C                     END
+     C*
+     C* CHECK FOR ROLLDOWN
+     C*
+     C           *IN19     IFEQ '1'
+     C                     EXSR ROLDWN
+     C*
+     C* OTHERWISE, CHECK FOR ROLLUP
+     C*
+     C                     ELSE
+     C           *IN18     IFEQ '1'
+     C                     EXSR FILLSF
+     C*
+     C* OTHERWISE, IF RECORDS ARE DISPLAYED ON SUBFILE, CHECK IF ANY
+     C* OPTIONS HAVE BEEN INPUT
+     C*
+     C                     ELSE
+     C           *IN43     IFEQ '0'
+     C                     MOVE *BLANK    RETND
+     C           *IN63     DOUEQ'1'
+     C           RETND     OREQ 'U'
+     C           RETND     OREQ 'S'
+     C                     READCLE0181S1                 63
+     C           *IN63     IFEQ '0'
+     C*
+     C* IF OPTION ENTERED IS NOT '1' OR '2', DISPLAY ERROR MESSAGE
+     C*
+     C           OPTN      IFNE '1'
+     C           OPTN      ANDNE'2'
+     C                     MOVE *BLANK    OPTN
+     C                     UPDATLE0181S1
+     C                     MOVE MES,11    MSG
+     C                     SETON                     30
+     C*
+     C* OTHERWISE, PROCESS OPTION ENTERED
+     C*
+     C                     ELSE
+     C                     EXSR PROSEL
+     C                     MOVE *BLANK    OPTN
+     C                     UPDATLE0181S1
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    PROSEL - PROCESS SELECTION                                    *
+     C*                                                                  *
+     C*    CALLED BY: PROINP - PROCESS SCREEN INPUT                      *
+     C*    CALLS:     LE0190 - LOAN DETAILS ENQUIRY                      *
+     C*               LE0210 - LOAN ACTIVITY ENQUIRY                     *
+     C*               RETSR  - END OF PROGRAM PROCESSING                 *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           PROSEL    BEGSR
+     C/COPY WNCPYSRC,LE0181C010
+     C*
+     C* ACCESS DATA AREA EMSDS AND SET UP LOAN NUMBER AS PARAMETER
+     C* TO PASS TO LOWER LEVEL PROGRAMS
+     C*
+     C           *LOCK     IN   EMSDS
+     C                     MOVE *BLANKS   RQDTD
+     C                     MOVELLNNO      RQDTD
+     C                     MOVE 'LE'      RQDTD
+     C                     MOVE *BLANK    RETND
+     C                     OUT  EMSDS
+     C*
+     C* IF OPTION ENTERED IS '1', CALL LE0190 - LOAN DETAILS ENQUIRY
+     C*
+     C                     OUT  LDA
+     C           OPTN      IFEQ '1'
+     C                     CALL 'LE0190'
+     C*
+     C* OTHERWISE, OPTION ENTERED IS '2', CALL LE0210 - LOAN ACTIVITY
+     C* ENQUIRY
+     C** But if CLE004 is installed, call LE0212 instead                  128954
+     C*
+     C                     ELSE
+     C           CLE004    IFEQ 'Y'                                       128954
+     C                     CALL 'LE0212'                                  128954
+     C                     ELSE                                           128954
+     C                     CALL 'LE0210'
+     C                     ENDIF                                          128954
+     C                     END
+     C           *LOCK     IN   LDA
+     C*
+     C* CHECK DATA AREA EMSDS FOR COMMAND KEY TAKEN IN LOWER LEVEL
+     C* PROGRAMS
+     C*
+     C           *LOCK     IN   EMSDS
+     C*
+     C* IF F1 TAKEN IN LOWER LEVEL PROGRAM (RETURN CODE = 'S') AND THIS
+     C* PROGRAM CALLED AS A LINKED ENQUIRY (MODID = 'LE')
+     C* OR F3 TAKEN IN LOWER LEVEL PROGRAM (RETURN CODE = 'Q')
+     C* OR DATABASE ERROR HAS OCCURRED IN LOWER LEVEL PROGRAM (RETURN
+     C* CODE = 'E')
+     C*
+     C           RETND     IFEQ 'S'
+     C           MODID     ANDEQ'LE'
+     C           RETND     OREQ 'Q'
+     C           RETND     OREQ 'E'
+     C*
+     C* STORE RETURN CODE TO PASS TO HIGHER LEVEL PROGRAM AND EXIT THIS
+     C* PROGRAM
+     C*
+     C                     MOVE RETND     RTNDWF
+     C                     EXSR RETSR
+     C                     END
+     C                     OUT  EMSDS
+     C/COPY WNCPYSRC,LE0181C011
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FILLSF - FILL SUBFILE                                         *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - MAIN PROCESSING                           *
+     C*               PROINP - PROCESS SCREEN INPUT                      *
+     C*               FILLSF - FILL SUBFILE                              *
+     C*    CALLS:     READLV - READ LIVE RECORD FROM LEREF               *
+     C*               SFREC  - SET UP SUBFILE RECORD                     *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FILLSF    BEGSR
+     C*
+     C* SETOF INDICATOR TO DISPLAY HEADINGS
+     C*
+     C                     SETOF                     21
+     C*
+     C* SETON ROLLUP/ROLLDOWN INDICATORS
+     C*
+     C                     SETON                     4546
+     C                     MOVE *OFF      *IN64                           159495
+     C*
+     C* SET SUBFILE INDICATORS
+     C*
+     C                     MOVEA'001'     *IN,41
+     C                     Z-ADD*ZERO     RRN
+     C/COPY WNCPYSRC,LE0181C012
+     C**********           Z-ADD*ZERO     $LNNO   60                                          CLE148
+     C                     MOVEL*BLANKS   $LNNO   6                                           CLE148
+      *                                                                   159495
+     C           *IN19     IFEQ *ON                                       159495
+     C           *IN18     OREQ *ON                                       159495
+     C**********           Z-ADDLNNO      #LNNO   60                                   159495 CLE148
+     C                     MOVELLNNO      #LNNO                                               CLE148
+     C                     ELSE                                           159495
+     C**********           Z-ADD*ZERO     #LNNO   60                                   159495 CLE148
+     C                     MOVE *BLANKS   #LNNO                                               CLE148
+     C                     ENDIF                                          159495
+     C*
+     C* IF TOP OF THIS PAGE LOAN NUMBER IS EQUAL TO ZERO OR EQUAL TO
+     C* THAT ON FIRST RECORD READ FROM LEREF, DISABLE ROLLDOWN
+     C*
+     C********** #LNNO     IFEQ *ZERO                                                         CLE148
+     C           #LNNO     IFEQ *BLANKS                                                       CLE148
+     C           #LNNO     OREQ FLNNO
+     C                     SETOF                     46
+     C                     END
+     C/COPY WNCPYSRC,LE0181C013
+     C*
+     C                     WRITELE0181C1
+      *                                                                   123853
+      **If*enquiry*is*for*funding*participants*blank*out*the*facilit123853125469
+      **details*for*the*chain*to*LEREF******************************123853125469
+      *                                                                   123853
+     C***********SPART     IFEQ 'P'                                 123853125469
+     C***********          MOVE *BLANKS   #FCNO                     123853125469
+     C***********          MOVE *BLANKS   #FACT                     123853125469
+     C***********          ENDIF                                    123853125469
+      *                                                                   123853
+      ** This condition instead was commented out to fix the problem,     157736
+      ** due to the reason that it is also possible to insert an          157736
+      ** ordinary loan against a Funding Participant Facility.  Thus,     157736
+      ** by commenting this condition, it can be insured that all loans   157736
+      ** attached to the facility will be displayed, whether direct loans 157736
+      ** or as syndicated participations                                  157736
+      *                                                                   157736
+     C***********SPART     IFNE 'P'                                125469 157736
+      *                                                                   125469
+     C/COPY WNCPYSRC,LE0181C014
+     C           LEREFK    SETLLLEREF
+     C/COPY WNCPYSRC,LE0181C015
+     C*
+     C* READ FIRST LIVE RECORD FROM LEREF
+     C*
+     C                     EXSR READLV
+     C/COPY WNCPYSRC,LE0181C016
+     C**N60*****           Z-ADDLNNO      $LNNO            *TOP OF THIS PAGE                  CLE148
+     C***60*****           Z-ADD*ZERO     #LNNO                                               CLE148
+     C  N60                MOVELLNNO      $LNNO                                               CLE148
+     C   60                MOVE *BLANKS   #LNNO                                               CLE148
+     C/COPY WNCPYSRC,LE0181C017
+     C*
+     C           *IN60     DOWEQ'0'
+     C           RRN       ANDNE#COUNT
+     C*
+     C* FORMAT SUBFILE RECORD
+     C*
+     C                     EXSR SFREC
+     C*
+     C* OUTPUT RECORD TO SUBFILE
+     C*
+     C                     ADD  1         RRN     40     43*
+     C                     WRITELE0181S1
+     C*
+     C* IF THIS IS FIRST RECORD READ FROM LEREF, STORE LOAN NUMBER OF
+     C* THIS RECORD
+     C*
+     C           FIRSTR    IFNE 'Y'
+     C           *IN60     ANDEQ'0'
+     C/COPY WNCPYSRC,LE0181C018
+     C**********           Z-ADDLNNO      FLNNO   60                                          CLE148
+     C                     MOVELLNNO      FLNNO   6                                           CLE148
+     C/COPY WNCPYSRC,LE0181C019
+     C                     MOVE 'Y'       FIRSTR
+     C                     END
+     C*
+     C* AT END OF PAGE READ NEXT LIVE RECORD FROM LEREF
+     C*
+     C           RRN       IFEQ #COUNT
+     C                     EXSR READLV
+     C/COPY WNCPYSRC,LE0181C020
+     C**N60*****           Z-ADDLNNO      #LNNO            *TOP OF NEXT PAGE                  CLE148
+     C***60*****           Z-ADD*ZERO     #LNNO                                               CLE148
+     C  N60                MOVELLNNO      #LNNO                                               CLE148
+     C   60                MOVE *BLANKS   #LNNO                                               CLE148
+     C/COPY WNCPYSRC,LE0181C021
+     C*
+     C* OTHERWISE, NOT END OF PAGE READ NEXT LIVE RECORD FROM LEREF
+     C*
+     C                     ELSE
+     C                     EXSR READLV
+     C/COPY WNCPYSRC,LE0181C022
+     C***60*****           Z-ADD*ZERO     #LNNO                                               CLE148
+     C   60                MOVE *BLANKS   #LNNO                                               CLE148
+     C/COPY WNCPYSRC,LE0181C023
+     C                     END
+     C                     END
+      *                                                                   125469
+      *  Enquiry for Funding Participants                                 125469
+      *                                                                   125469
+     C***********          ELSE                                    125469 157736
+      *                                                                   125469
+     C                     MOVE #CNUM     W#PTFC                          125469
+     C                     MOVE #FACT     W#PTFT                          125469
+     C                     MOVE #FCNO     W#PTFN                          125469
+      *                                                                   125469
+     C           LOAN7     SETLLLOANL7                                    125469
+     C                     EXSR READPT                                    125469
+      *                                                                   125469
+     C/COPY WNCPYSRC,LE0181C024
+     C           *IN60     IFEQ *OFF                                      125469
+     C**********           Z-ADDLNRF      $LNNO            *TOP OF THIS PA             125469 CLE148
+     C**********           Z-ADDLNRF      LNNO                                         125469 CLE148
+     C                     MOVELLNRF      $LNNO                                               CLE148
+     C                     MOVELLNRF      LNNO                                                CLE148
+     C                     ELSE                                           125469
+     C**********           Z-ADD*ZERO     #LNNO                                        125469 CLE148
+     C                     MOVE *BLANKS   #LNNO                                               CLE148
+     C                     ENDIF                                          125469
+     C/COPY WNCPYSRC,LE0181C025
+      *                                                                   125469
+     C           *IN60     DOWEQ*OFF                                      125469
+     C           RRN       ANDNE#COUNT                                    125469
+      *                                                                   125469
+      * Format Subfile Record                                             125469
+      *                                                                   125469
+     C                     EXSR SFREC                                     125469
+      *                                                                   125469
+      * OUTPUT RECORD TO SUBFILE                                          125469
+      *                                                                   125469
+     C                     ADD  1         RRN            43*              125469
+     C                     WRITELE0181S1                                  125469
+      *                                                                   125469
+      * If This is first record read from LELOANL7 store loan No. of      125469
+      * this record                                                       125469
+      *                                                                   125469
+     C           FIRSTR    IFNE 'Y'                                       125469
+     C           *IN60     ANDEQ'0'                                       125469
+     C/COPY WNCPYSRC,LE0181C026
+     C**********           Z-ADDLNRF      FLNNO   60                                   125469 CLE148
+     C                     MOVELLNRF      FLNNO                                               CLE148
+     C/COPY WNCPYSRC,LE0181C027
+     C                     MOVE 'Y'       FIRSTR                          125469
+     C                     ENDIF                                          125469
+     C*                                                                   125469
+     C* At end of page read next live record from LELOANL7                125469
+     C*                                                                   125469
+     C           RRN       IFEQ #COUNT                                    125469
+     C                     EXSR READPT                                    125469
+     C/COPY WNCPYSRC,LE0181C028
+     C           *IN60     IFEQ *OFF                                      125469
+     C**********           Z-ADDLNRF      #LNNO            *TOP OF NEXT PA             125469 CLE148
+     C**********           Z-ADDLNRF      LNNO                                         125469 CLE148
+     C                     MOVELLNRF      #LNNO                                               CLE148
+     C                     MOVELLNRF      LNNO                                                CLE148
+     C                     ELSE                                           125469
+     C**********           Z-ADD*ZERO     #LNNO                                        125469 CLE148
+     C                     MOVEL*BLANKS   #LNNO                                               CLE148
+     C                     ENDIF                                          125469
+     C/COPY WNCPYSRC,LE0181C029
+      *                                                                   125469
+      * Otherwise, not end of page read next live record from LELOANL7    125469
+      *                                                                   125469
+     C                     ELSE                                           125469
+     C                     EXSR READPT                                    125469
+     C**********           Z-ADDLNRF      LNNO                                         125469 CLE148
+     C                     MOVELLNRF      LNNO                                                CLE148
+     C           *IN60     IFEQ *ON                                       125469
+     C**********           Z-ADD*ZERO     #LNNO                                        125469 CLE148
+     C                     MOVEL*BLANKS   #LNNO                                               CLE148
+     C                     ENDIF                                          125469
+     C                     ENDIF                                          125469
+     C                     ENDDO                                          125469
+      *                                                                   125469
+     C***********          ENDIF                                   125469 157736
+     C*
+     C* IF TOP OF NEXT PAGE LOAN NUMBER IS ZERO, DISABLE ROLLUP
+     C*
+     C***********#LNNO     IFEQ *ZERO                                     159495
+     C/COPY WNCPYSRC,LE0181C030
+     C********** LNNO      IFEQ *ZERO                                                  159495 CLE148
+     C           LNNO      IFEQ *BLANKS                                                       CLE148
+     C                     SETOF                     45
+     C                     MOVE *ON       *IN64                           159495
+     C                     END
+     C/COPY WNCPYSRC,LE0181C031
+     C*
+     C* 43 ON - NO RECORDS ON SUBFILE
+     C*
+     C           *IN43     IFEQ '1'
+     C                     MOVEA'01'      *IN,41
+     C*
+     C* IF MULTI-BRANCHING ON AND ALL BRANCHES REQUESTED
+     C* OR MULTI-BRANCHING OFF
+     C*
+     C           MBIN      IFEQ 'Y'
+     C           SBRCD     ANDEQ'ALL'
+     C           MBIN      OREQ 'N'
+     C*
+     C* DISPLAY 'NO LOANS ARE HELD FOR THIS CUSTOMER' MESSAGE
+     C*
+     C                     MOVE MES,9     MSG
+     C                     END
+     C*
+     C* IF MULTI-BRANCHING ON AND INDIVIDUAL BRANCH REQUESTED
+     C*
+     C           MBIN      IFEQ 'Y'
+     C           SBRCD     ANDNE'ALL'
+     C*
+     C* DISPLAY 'NO LOANS FOR CUSTOMER IN THE BRANCH' MESSAGE
+     C*
+     C                     MOVE MES,10    MSG
+     C                     END
+     C*
+     C                     SETON                     30
+     C                     ELSE
+     C                     MOVEA'11'      *IN,41
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    READLV - READ LIVE RECORD FROM LEREF                          *
+     C*                                                                  *
+     C*    CALLED BY: FILLSF - FILL SUBFILE                              *
+     C*    CALLS:     SELECT - DETERMINE IF RECORD TO BE SELECTED        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           READLV    BEGSR
+     C*
+     C* READ A LIVE RECORD FROM LEREF
+     C*
+     C                     MOVE '0'       *IN60
+     C                     MOVE 'N'       SELCT   1
+     C*
+     C           *IN60     DOWEQ'0'
+     C           SELCT     ANDEQ'N'
+     C*
+     C/COPY WNCPYSRC,LE0181C032
+     C           LEREFP    READELEREF                    60*
+     C/COPY WNCPYSRC,LE0181C033
+     C           *IN60     IFEQ '0'
+     C                     EXSR SELECT
+     C                     ELSE                                           159495
+     C**********           Z-ADD*ZERO     LNNO                                         159495 CLE148
+     C                     MOVEL*BLANKS   LNNO                                                CLE148
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT                                                              125469
+      ********************************************************************125469
+      *                                                                  *125469
+      *    READPT - READ LIVE RECORD FROM LELOANL7                       *125469
+      *                                                                  *125469
+      *    CALLED BY: FILLSF - FILL SUBFILE                              *125469
+      *    CALLS:     SELECT - DETERMINE IF RECORD TO BE SELECTED        *125469
+      *                                                                  *125469
+      ********************************************************************125469
+      *                                                                   125469
+     C           READPT    BEGSR                                          125469
+      *                                                                   125469
+     C           LOAN7     READELOANL7                   60               125469
+      *                                                                   125469
+     C           *IN60     IFEQ *OFF                                      125469
+     C           RECI      DOWNE'D'                                       125469
+     C           LOAN7     READELOANL7                   60               125469
+     C                     ENDDO                                          125469
+     C                     ENDIF                                          125469
+      *                                                                   125469
+     C                     ENDSR                                          125469
+      /EJECT                                                              125469
+     C********************************************************************
+     C*                                                                  *
+     C*    SFREC - SET UP SUBFILE RECORD                                 *
+     C*                                                                  *
+     C*    CALLED BY: FILLSF - FILL SUBFILE                              *
+     C*    CALLS:     CCYDEP - ACCESS CURRENCY DECIMAL PLACES            *
+     C*               ZSEDIT - EDIT NUMERIC FIELD FOR OUTPUT             *
+     C*               GLINTC - CALCULATE INTEREST                        *
+     C*               ZDATE2 - CONVERT DAY NUMBER TO DDMMMYY FORMAT      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           SFREC     BEGSR
+     C/COPY WNCPYSRC,LE0181C035
+     C*
+     C* ACCESS CURRENCY ARRAYS TO PICK UP DECIMAL PLACES.
+     C*
+     C                     MOVE CCY       XCCY    3
+     C                     EXSR CCYDEP
+      *                                                                   147830
+      * Get Syndicated loan narrative for sfl display                     147830
+      *                                                                   147830
+     C                     CLEARSLNAR                                     147830
+      *                                                                   147830
+     C                     SELEC                                          147830
+     C           LPFI      WHEQ 'I'                                       147830
+     C                     MOVE 'Intnl'   SLNAR                           147830
+     C           LPFI      WHEQ 'P'                                       147830
+     C                     MOVE 'Part.'   SLNAR                           147830
+     C           LPFI      WHEQ 'R'                                       147830
+     C                     MOVE 'Risk '   SLNAR                           147830
+     C           LPFI      WHEQ 'S'                                                           CLE106
+     C                     MOVE 'SubPt'   SLNAR                                               CLE106
+     C           SYIN      WHEQ 'Y'                                       147830
+     C***********          MOVE 'Prime'   SLNAR                    147830 155147
+     C                     MOVE 'Prmry'   SLNAR                           155147
+     C                     ENDSL                                          147830
+      *                                                                   147830
+     C*
+     C* INITIALIZE SCREEN AMOUNT FIELDS
+     C*
+     C                     MOVE *BLANKS   SCPAM
+     C                     MOVE *BLANKS   SDINT
+     C                     MOVE *BLANKS   SAINT
+     C*
+     C* EDIT CURRENT PRINCIPAL FOR OUTPUT TO SCREEN
+     C*
+     C                     MOVE 'J'       ZECODE                          147830
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE CPAM      ZFLD15
+     C                     Z-ADDXDECP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SCPAM
+     C*
+     C* CALCULATE ACCRUED INTEREST:
+     C* IF STOP ACCRUALS INDICATOR IS OFF
+     C* AND VALUE DATE IS BEFORE OR EQUAL TO TODAY IE. LOAN HAS STARTED
+     C*
+     C                     TESTB'3'       LONI           28
+     C           *IN28     IFEQ '0'
+     C           VDAT      ANDLERUND
+     C*
+     C* SET STARTING DATE EQUAL TO INTEREST ACCRUAL CONTROL DATE
+     C*
+     C                     MOVE IACD      ZIBEG
+     C*
+     C* DETERMINE END DATE:
+     C* IF MATURITY DATE EQUAL TO ZERO OR MATURITY DATE IS AFTER TODAY,
+     C* SET END DATE EQUAL TO RUN DATE
+     C*
+     C           MDAT      IFEQ *ZERO
+     C           RUND      ORLT MDAT
+     C                     MOVE RUND      ZIEND
+     C*
+     C* OTHERWISE, SET END DATE EQUAL TO MATURITY DATE
+     C*
+     C                     ELSE
+     C                     MOVE MDAT      ZIEND
+     C                     END
+      *                                                                                       CLE028
+      ** Adjustment of end date is not applicable to Flat rate loans                          CLE028
+      *                                                                                       CLE028
+     C           PTYP      IFNE 80                                                            CLE028
+     C*
+     C* CHECK IF FIRST DAY ACCRUALS:
+     C**IF*ACCRUALS*LAST*DAY*INDICATOR*IS*NOT*'Y'                         S01392
+     C***********                                                         S01392
+     C***********BKALDI    IFNE 'Y'                                       S01392
+      *                                                                   S01392
+      * adjust end date according to 'additional day indicator'           S01392
+     C                     Z-ADDMDAT      ZMDAT                           S01392
+     C***********          EXSR ZFLDC                              S01392 143510
+     C**********           Z-ADDVDAT      ZVDAT                                        S01392 245082
+     C                     Z-ADDMDAT      ZMDAT                                               245082
+     C                     EXSR ZFLAC                                     S01392
+      *                                                                   S01392
+     C******                                                              S01392
+     C**IF*MATURITY*DATE*EQUAL*TO*ZERO*IE.*CALL*LOAN*OR*MATURITY*DATE*    S01392
+     C**IS*AFTER*TODAY,*ADD*1*TO*END*DATE*IE.*ADD*EXTRA*DAY'S*INTEREST    S01392
+     C***********                                                         S01392
+     C***********MDAT      IFEQ *ZERO                                     S01392
+     C***********RUND      ORLT MDAT                                      S01392
+     C***********          ADD  1         ZIEND                           S01392
+     C***********          END                                            S01392
+     C***********          END                                            S01392
+      *                                                                                       CLE028
+     C                     ENDIF                                                              CLE028
+     C*
+     C* IF CURRENT PRINCIPAL IS POSITIVE, EXECUTE GLINTC TO CALCULATE
+     C* INTEREST
+     C*
+     C           CPAM      IFGT *ZERO
+     C*
+     C* CALCULATION BASIS:
+     C*
+     C                     MOVE ICBS      ZICALC
+     C*
+     C* INTEREST RATE:
+     C*
+     C                     Z-ADDINTR      ZIRATE
+     C*
+     C* PRINCIPAL:
+     C*
+     C                     Z-ADDCPAM      ZIAMT
+     C*
+     C/COPY WNCPYSRC,LE0181C003
+      *                                                                                       CLE028
+      ** When CLE028 is installed, process RULE78 to compute for                              CLE028
+      ** outstanding interest                                                                 CLE028
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+     C                     Z-ADDVDAT      W78VDT                                              CLE028
+     C                     Z-ADDMDAT      W78MDT                                              CLE028
+     C                     Z-ADDFLTI      W78FLT                                              CLE028
+     C                     MOVE RFRQ      W78RPF                                              CLE028
+     C                     Z-ADDFRPD      W78FRD                                              CLE028
+     C                     Z-ADDRDYN      W78RPM                                              CLE028
+     C                     MOVE CCY       W78CCY                                              CLE028
+     C                     MOVE *BLANKS   W78LCN                                              CLE028
+     C                     Z-ADDVDAT      W78BEG                                              CLE028
+     C                     Z-ADDZIEND     W78END                                              CLE028
+     C                     MOVE 'A'       W78ROA                                              CLE028
+     C                     EXSR RULE78                                                        CLE028
+     C                     Z-ADDW78INT    ZINTR                                               CLE028
+     C                     Z-ADDW78INT    AINT      H                                         CLE028
+     C                     ELSE                                                               CLE028
+     C/COPY WNCPYSRC,LEH01291
+     C                     EXSR GLINTC
+     C                     ENDIF                                                              CLE028
+     C/COPY WNCPYSRC,LE0181C004
+     C*                                                                   S01392
+     C** ROUND DOWN INTEREST IF REQUIRED.                                 S01392
+     C*                                                                   S01392
+     C           RDFC      IFEQ 'Y'                                       S01392
+     C                     Z-ADDZINTR     ACCI                            S01392
+     C                     ELSE                                           S01392
+     C                     Z-ADDZINTR     ACCI   120H                     S01392
+     C                     END                                            S01392
+     C*
+     C* OTHERWISE, INTEREST IS ZERO
+     C*
+     C                     ELSE
+     C                     Z-ADD*ZERO     ACCI
+     C                     END
+      *                                                                                     AR583389
+      ** For BV loan with capitalized interest and frequency, calculate                     AR583389
+      ** the correct accrued interest to date                                               AR583389
+      *                                                                                     AR583389
+     C********** VDAT      IFLT RUND                                               AR583389 AR732752
+     C           VDAT      IFLT ORED                                                        AR732752
+     C           ORED      ANDEQRUND                                                        AR732752
+     C           IPFR      ANDNE' '                                                         AR583389
+     C                     Z-ADDVDAT      FRMDAT  50                                        AR583389
+     C                     Z-ADDCPAM      FRMPR  130                                        AR583389
+     C                     Z-ADDNIDT      TODAT   50                                        AR583389
+     C                     Z-ADD0         INTRO  130                                        AR583389
+     C                     MOVE *BLANK    OFLG    1                                         AR583389
+      *                                                                                     AR583389
+     C           TODAT     DOWLEMDAT                                                        AR583389
+     C                     Z-ADDFRMDAT    ZIBEG                                             AR583389
+     C                     Z-ADDTODAT     ZIEND                                             AR583389
+     C                     Z-ADDFRMPR     ZIAMT                                             AR583389
+     C/COPY WNCPYSRC,LEH01292
+     C                     EXSR GLINTC                                                      AR583389
+     C                     ADD  ZINTR     INTRO     H                                       AR583389
+     C           INTC      IFEQ 'Y'                                                         AR583389
+     C                     ADD  ZINTR     FRMPR     H                                       AR583389
+     C                     ENDIF                                                            AR583389
+      *                                                                                     AR583389
+     C           OFLG      IFNE '1'                                                         AR583389
+     C                     EXSR SRNXT                                                       AR583389
+     C                     Z-ADDTODAT     FRMDAT                                            AR583389
+     C           WENDI     IFGT MDAT                                                        AR583389
+     C                     Z-ADDMDAT      TODAT                                             AR583389
+     C                     MOVE '1'       OFLG                                              AR583389
+     C                     ELSE                                                             AR583389
+     C                     Z-ADDWENDI     TODAT                                             AR583389
+     C                     ENDIF                                                            AR583389
+      *                                                                                     AR583389
+     C                     ELSE                                                             AR583389
+     C                     LEAVE                                                            AR583389
+     C                     ENDIF                                                            AR583389
+      *                                                                                     AR583389
+     C                     ENDDO                                                            AR583389
+     C           RDFC      IFEQ 'Y'                                                         AR583389
+     C                     Z-ADDINTRO     ACCI      H                                       AR583389
+     C                     ELSE                                                             AR583389
+     C                     Z-ADDINTRO     ACCI                                              AR583389
+     C                     ENDIF                                                            AR583389
+      *                                                                                     AR583389
+     C                     ENDIF                                                            AR583389
+     C*
+     C* CALCULATE DAILY INTEREST:
+     C* IF CURRENT PRINCIPAL IS POSITIVE, EXECUTE GLINTC TO CALCULATE
+     C* INTEREST
+     C*
+     C           CPAM      IFGT *ZERO
+     C********** IACD      ADD  1         ZIEND                          188368
+     C                     MOVE RUND      ZIBEG                          188368
+     C           RUND      ADD  1         ZIEND                          188368
+     C*
+     C/COPY WNCPYSRC,LE0181C005
+      *                                                                                       CLE028
+      ** For flat rate personal loans, daily interest is blank                                CLE028
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+     C                     Z-ADD*ZERO     ZINTR                                               CLE028
+     C                     ELSE                                                               CLE028
+     C/COPY WNCPYSRC,LEH01293
+     C                     EXSR GLINTC
+     C                     ENDIF                                                              CLE028
+     C/COPY WNCPYSRC,LE0181C006
+     C*                                                                   S01392
+     C* ROUND DOWN INTEREST IF REQUIRED.                                  S01392
+     C*                                                                   S01392
+     C           RDFC      IFEQ 'Y'                                       S01392
+     C                     Z-ADDZINTR     DINT                            S01392
+     C                     ELSE                                           S01392
+     C                     Z-ADDZINTR     DINT   120H
+     C                     END                                            S01392
+     C*
+     C* OTHERWISE, INTEREST IS ZERO
+     C*
+     C                     ELSE
+     C                     Z-ADD*ZERO     DINT
+     C                     END
+     C*
+     C* OTHERWISE, NOT ACCRUING INTEREST, SET ACCRUED INTEREST AND
+     C* DAILY INTEREST TO ZERO
+     C*
+     C                     ELSE
+     C                     Z-ADD*ZERO     ACCI
+     C                     Z-ADD*ZERO     DINT
+     C                     END
+     C*
+     C* CALCULATE ACCRUED INTEREST TO DATE:
+     C* ADD ACCRUED INTEREST ADJUSTMENT POSTED
+     C*
+     C           CLE028    IFEQ 'N'                                                           CLE028
+     C           CLE028    OREQ 'Y'                                                           CLE028
+     C           PTYP      ANDNE80                                                            CLE028
+     C           ACCI      ADD  AIAP      AINT   120
+     C*
+     C* ADD ACCRUED INTEREST MANUAL ADJUSTMENT POSTED
+     C*
+     C                     ADD  AIMN      AINT
+     C*
+     C* ADD ACCRUED INTEREST TO CONTROL DATE
+     C*
+     C                     ADD  AITC      AINT
+     C                     ENDIF                                                              CLE028
+     C*
+     C********** CLE028    IFEQ 'N'                                                  CLE028 BUG22930
+     C********** CLE028    OREQ 'Y'                                                  CLE028 BUG22930
+     C********** PTYP      ANDNE80                                                   CLE028 BUG22930
+     C********** CLE028    OREQ 'Y'                                                  CLE028 BUG22930
+     C********** PTYP      ANDEQ80                                                   CLE028 BUG22930
+     C********** ADIF      ANDNE'Y'                                                  CLE028 BUG22930
+      **********                                                                     CLE028 BUG22930
+     C**SUBTRACT*INTEREST*PAID/RECEIVED*TO*DATE***************************                  BUG22930
+     C**********                                                                            BUG22930
+     C**********           SUB  IPRD      AINT                                              BUG22930
+     C**********           ENDIF                                                     CLE028 BUG22930
+      *                                                                                     MD021635
+     C           CLE028    IFEQ 'N'                                                         MD021635
+     C           CLE028    OREQ 'Y'                                                         MD021635
+     C           PTYP      ANDNE80                                                          MD021635
+     C           CLE028    OREQ 'Y'                                                         MD021635
+     C           PTYP      ANDEQ80                                                          MD021635
+     C           ADIF      ANDNE'Y'                                                         MD021635
+      *                                                                                     MD021635
+      ** SUBTRACT INTEREST PAID/RECEIVED TO DATE                                            MD021635
+      *                                                                                     MD021635
+     C                     SUB  IPRD      AINT                                              MD021635
+     C                     ENDIF                                                            MD021635
+     C*
+     C* SUBTRACT INTEREST CAPITALIZED TO DATE
+     C*
+     C                     SUB  ICTD      AINT
+     C*
+     C* SUBTRACT INTEREST WRITTEN OFF TO DATE
+     C*
+     C                     SUB  IWOD      AINT
+     C/COPY WNCPYSRC,LE0181C001
+     C*
+     C* EDIT ACCRUED INTEREST FOR OUTPUT
+     C*
+     C**********           MOVE 'L'       ZECODE                                     147830 BUG22930
+     C                     MOVE 'J'       ZECODE                                            BUG22930
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE AINT      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SAINT
+     C*
+     C* EDIT DAILY INTEREST FOR OUTPUT
+     C*
+     C                     MOVE 'L'       ZECODE                          147830
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE DINT      ZFLD15
+     C                     EXSR ZSEDIT
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+     C                     MOVE *BLANKS   SDINT                                               CLE028
+     C                     ELSE                                                               CLE028
+     C                     MOVE ZOUT21    SDINT
+     C                     ENDIF                                                              CLE028
+     C*
+     C* CHECK IF PART. SOLD:
+     C* IF NUMBER OF PARTICPANTS GREATER THAN ZERO, SET PART. SOLD
+     C* TO 'Y'
+     C*
+     C                     MOVE *BLANK    PART
+     C           NOPS      IFGT *ZERO
+     C                     MOVE 'Y'       PART
+     C                     END
+     C*
+     C* CONVERT MATURITY DATE
+     C*
+     C                     MOVE *BLANKS   MDATE
+     C           MDAT      IFNE *ZERO
+     C                     MOVE MDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    MDATE
+     C                     END
+     C/COPY WNCPYSRC,LE0181C036
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    ROLDWN - PROCESS ROLLDOWN                                     *
+     C*                                                                  *
+     C*    CALLED BY: PROINP - PROCESS SCREEN INPUT                      *
+     C*    CALLS:     SELECT - DETERMINE IF RECORD TO BE SELECTED        *
+     C*               FILLSF - FILL SUBFILE                              *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ROLDWN    BEGSR
+     C*
+     C                     Z-ADD*ZERO     RRN
+     C/COPY WNCPYSRC,LE0181C037
+     C**********           Z-ADD$LNNO     #LNNO                                               CLE148
+     C                     MOVEL$LNNO     #LNNO                                               CLE148
+     C*
+     C* SET FILE POINTER AFTER TOP OF THIS PAGE LOAN NUMBER AND READ
+     C* PREVIOUS RECORD
+     C*
+     C           LEREFK    SETGTLEREF
+     C                     READPLEREF                    60*
+     C/COPY WNCPYSRC,LE0181C038
+     C*
+     C* DO WHILE NOT START OF FILE AND SUBFILE PAGE NOT FULL
+     C*
+     C           *IN60     DOWEQ'0'
+     C           RRN       ANDLT#COUNT
+     C*
+     C* IF CUSTOMER NUMBER OR FACILITY TYPE OR FACILITY NUMBER HAVE
+     C* CHANGED, TREAT AS START OF FILE
+     C*
+     C           CNUMR     IFNE #CNUM
+     C           FACT      ORNE #FACT
+     C           FCNO      ORNE #FCNO
+     C                     SETON                         60*
+     C*
+     C* OTHERWISE, CONTINUE READING BACKWARDS THROUGH FILE
+     C*
+     C                     ELSE
+     C/COPY WNCPYSRC,LE0181C039
+     C                     READPLEREF                    60*
+     C/COPY WNCPYSRC,LE0181C040
+     C*
+     C* DETERMINE IF RECORD TO BE SELECTED
+     C*
+     C                     EXSR SELECT
+     C*
+     C* IF RECORD SELECTED FOR OUTPUT
+     C*
+     C           SELCT     IFEQ 'Y'
+     C*
+     C* ADD 1 TO COUNT OF RECORDS READ
+     C*
+     C                     ADD  1         RRN
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C* RESET TOP OF THIS PAGE LOAN NUMBER
+     C*
+     C/COPY WNCPYSRC,LE0181C041
+     C**N60*****           Z-ADDLNNO      #LNNO            *TOP OF PAGE                       CLE148
+     C***60*****           Z-ADD*ZERO     #LNNO                                               CLE148
+     C  N60                MOVELLNNO      #LNNO                                               CLE148
+     C   60                MOVEL*BLANKS   #LNNO                                               CLE148
+     C/COPY WNCPYSRC,LE0181C042
+     C*
+     C* FILL NEXT PAGE OF SUBFILE
+     C*
+     C                     EXSR FILLSF
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    SELECT - DETERMINE IF RECORD TO BE SELECTED                   *
+     C*                                                                  *
+     C*    CALLED BY: READLV - READ LIVE RECORD FROM LEREF               *
+     C*               ROLDWN - PROCESS ROLLDOWN                          *
+     C*    CALLS:     *PSSR  - ERROR PROCESSING                          *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           SELECT    BEGSR
+     C/COPY WNCPYSRC,LE0181C043
+     C*
+     C* ONLY SELECT RECORDS FROM LEREF WITH RECORD ID EQUAL TO 'D'
+     C*
+     C           RECIR     IFEQ 'D'
+     C           CLE134    OREQ 'Y'                                                           264060
+     C           RECIR     ANDEQ'M'                                                           264060
+     C                     MOVE 'Y'       SELCT
+     C                     ELSE
+     C                     MOVE 'N'       SELCT
+     C                     END
+     C*
+     C* ACCESS LOANS FILE USING LOAN NUMBER FROM LEREF
+     C*
+     C           SELCT     IFEQ 'Y'
+     C           CLOANK    CHAINCLOAN                61
+     C*
+     C* DATABASE ERROR PROCESSING
+     C*
+     C           *IN61     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           RECI      ANDNE'M'
+      *                                                                   CLE004
+      **  Skip database processing if Syndications feature                CLE004
+      **  is switched on.  Just don't select this loan.                   CLE004
+      *                                                                   CLE004
+     C           CLE004    IFEQ 'Y'                                       CLE004
+     C                     MOVE 'N'       SELCT                           CLE004
+      *                                                                   CLE004
+     C                     ELSE                                           CLE004
+     C                     MOVEL'CLOAN'   DBFILE
+     C                     MOVELLNNO      LKEY    7
+     C                     MOVE RECTL     LKEY
+     C                     MOVELLKEY      DBKEY
+     C                     Z-ADD1         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF                                          CLE004
+      *                                                                   CLE004
+     C                     END
+     C*
+     C/COPY WNCPYSRC,LE0181C007
+     C* SELECT FACILITY RECORDS BY BRANCH CODE FOR BRANCH REPORT
+     C*
+     C           MBIN      IFEQ 'Y'
+     C           SBRCD     ANDNE*BLANKS
+     C           SBRCD     ANDNE'ALL'
+     C           SBRCD     ANDNEBRCAL
+     C                     MOVE 'N'       SELCT
+     C                     END
+     C                     END
+     C*
+      ** SELECT MATURED LOANS IF THERE ARE OUTSTANDING PDCLS WITH                             264060
+      ** CPAM<>0                                                                              264060
+      *                                                                                       264060
+     C           CLE134    IFEQ 'Y'                                                           264060
+     C           RECIR     ANDEQ'M'                                                           264060
+     C           SELCT     ANDEQ'Y'                                                           264060
+     C                     MOVE 'N'       SELCT                                               264060
+     C                     MOVELLTYP      WLTYP   1                                           264060
+     C           WLTYP     IFNE 'X'                                                           264060
+     C           WLTYP     ANDNE'Y'                                                           264060
+     C           WLTYP     ANDNE'Z'                                                           264060
+     C                     MOVE LNNO      WPORG                                               264060
+     C           KDUEP     SETLLLEPDUEL2                                                      264060
+     C           KDUEP     READELEPDUEL2                 61                                   264060
+     C           *IN61     DOWEQ*OFF                                                          264060
+     C           SELCT     ANDEQ'N'                                                           264060
+     C           KLOAN     CHAINLELOANLZ             62                                       264060
+     C           *IN62     IFEQ *OFF                                                          264060
+     C********** CPAMX     ANDNE0                                                    264060 MD021960
+     C                     MOVE 'Y'       SELCT                                               264060
+     C                     ENDIF                                                              264060
+     C           KDUEP     READELEPDUEL2                 61                                   264060
+     C                     ENDDO                                                              264060
+     C                     ENDIF                                                              264060
+     C                     ENDIF                                                              264060
+      *                                                                                       264060
+     C/COPY WNCPYSRC,LE0181C044
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    CCYARR - SET UP CURRENCY ARRAYS                               *
+     C*                                                                  *
+     C*    CALLED BY: INIT - INITIAL PROCESSING                          *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           CCYARR    BEGSR
+     C*
+     C* READ ALL RECORDS FROM CURRENCY DETAILS FILE AND SET UP CURRENCY
+     C* CODE AND CURRENCY DECIMAL PLACES ARRAYS
+     C*
+     C                     OPEN SDCURRPD
+     C*
+     C                     Z-ADD1         X       30
+     C                     READ SDCURRPD                 61
+     C*
+     C           *IN61     DOWEQ'0'
+     C                     MOVE A6CYCD    XCYA,X
+     C                     MOVE A6NBDP    XDPA,X
+     C                     ADD  1         X
+     C                     READ SDCURRPD                 61
+     C                     END
+     C*
+     C                     CLOSESDCURRPD
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    CCYDEP - ACCESS CURRENCY DECIMAL PLACES                       *
+     C*                                                                  *
+     C*    CALLED BY: SFREC - SET UP SUBFILE RECORD                      *
+     C*    CALLS:     *PSSR - ERROR PROCESSING                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           CCYDEP    BEGSR
+     C*
+     C                     Z-ADD1         X
+     C           XCCY      LOKUPXCYA,X                   61
+     C*
+     C* ARRAY XCYA HAS BEEN FILLED WITH RECORDS FROM SDCURRPD IN
+     C* SR. CCYARR; THEREFORE, IF A CURRENCY IS NOT FOUND IN THE ARRAY,
+     C* IT IS A DATABASE ERROR ON SDCURRPD
+     C*
+     C           *IN61     IFEQ '0'
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVELXCCY      DBKEY
+     C                     Z-ADD2         DBASE
+     C                     EXSR *PSSR
+     C*
+     C* OTHERWISE, STORE CURRENCY DECIMAL PLACES
+     C                     ELSE
+     C                     Z-ADDXDPA,X    XDECP   10
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    CMDSR - PROCESS COMMAND KEYS                                  *
+     C*                                                                  *
+     C*    CALLED BY: VALID  - VALIDATE SCREEN INPUT                     *
+     C*               PROINP - PROCESS SCREEN INPUT                      *
+     C*    CALLS:     RETSR  - END OF PROGRAM PROCESSING                 *
+     C*                                                                  *
+     C*    THIS IS A STANDARD LINK ENQUIRY SUBROUTINE FOR PROCESSING     *
+     C*    THE COMMAND KEYS                                              *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           CMDSR     BEGSR
+     C*
+     C* SET DATA AREA WORK FIELD RTNDWF TO BLANKS
+     C*
+     C                     MOVE *BLANK    RTNDWF  1
+     C*
+     C* IF F3 PRESSED, RETURN TO MENU
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'Q'       RTNDWF
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C* IF F1 PRESSED, RETURN TO INITIAL ENQUIRY
+     C*
+     C           *INKA     IFEQ '1'
+     C                     MOVE 'S'       RTNDWF
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C* IF F12 PRESSED, RETURN TO PREVIOUS ENQUIRY
+     C*
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'U'       RTNDWF
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    RETSR - END OF PROGRAM PROCESSING                             *
+     C*                                                                  *
+     C*    CALLED BY: PROSEL - PROCESS SELECTION                         *
+     C*               CMDSR  - PROCESS COMMAND KEYS                      *
+     C*               *PSSR  - ERROR PROCESSING                          *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C*    THIS IS A STANDARD LINK ENQUIRY SUBROUTINE FOR ENDING THE     *
+     C*    PROGRAM                                                       *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           RETSR     BEGSR
+     C*
+     C* SET ON LR
+     C*
+     C                     SETON                     LR
+     C*
+     C* ACCESS EM DATA AREA
+     C*
+     C           *LOCK     IN   EMSDS
+     C                     MOVE RTNDWF    RETND
+     C                     OUT  EMSDS
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+      *                                                                                     AR583389
+      *****************************************************************                     AR583389
+      *                                                               *                     AR583389
+      *    SRNXT - CALCULATE NEXT INTEREST DATE                       *                     AR583389
+      *                                                               *                     AR583389
+      *    CALLED BY: S/R SFREC                                       *                     AR583389
+      *                                                               *                     AR583389
+      *    CALLS:                                                     *                     AR583389
+      *                                                               *                     AR583389
+      *****************************************************************                     AR583389
+     C           SRNXT     BEGSR                                                            AR583389
+     C                     Z-ADDTODAT     ZDAYNO                                            AR583389
+     C                     MOVE IPFR      ZFREQ                                             AR583389
+     C                     Z-ADDIFDY      ZMDAY                                             AR583389
+     C                     MOVE CCY       ZCCY                                              AR583389
+     C                     MOVE '***'     ZLOC                                              AR583389
+      *                                                                                     AR583389
+      ** If interest payment frequency is 'R', means 'at rollover' -                        AR583389
+      ** actual interest frequency and interest payment date will be                        AR583389
+      ** the same as rollover setup.                                                        AR583389
+      *                                                                                     AR583389
+     C           IPFR      IFEQ 'R'                                                         AR583389
+     C                     MOVE RLFQ      ZFREQ                                             AR583389
+     C                     Z-ADDRLDY      ZMDAY                                             AR583389
+     C                     ENDIF                                                            AR583389
+      *                                                                                     AR583389
+     C                     Z-ADDZDAYNO    WBSDT   50                                          CLE141
+     C                     EXSR ZFRQB3                                                      AR583389
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C           PDDI      IFEQ 'A'                                                           CLE141
+     C                     Z-ADDZDAYNO    ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM CCYPI     PCURR  30                                           CLE141
+     C                     PARM LOCPI     PLOCN  30                                           CLE141
+     C                     PARM PDDI      PPAYC   1                                           CLE141
+     C                     PARM BJDFIN    PDFIN   1                                           CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT   50                                          CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+      *                                                                                       CLE141
+      ** Do not return adjusted date if it is equal to or earlier than                        CLE141
+      ** previous date (only happens for 'previous' date calculations);                       CLE141
+      ** instead use the base date                                                            CLE141
+      *                                                                                       CLE141
+     C           WBSDT     IFGE ZDYNBR                                                        CLE141
+     C                     Z-ADDZDAYNO    ZDYNBR                                              CLE141
+     C                     ENDIF                                                              CLE141
+     C                     ENDIF                                                              CLE141
+      *                                                                                       CLE141
+     C                     ELSE                                                               CLE141
+     C                     Z-ADD*ZEROS    ZNRDYS                                            AR583389
+     C                     SELEC                                                            AR583389
+     C           PDDI      WHEQ 'P'                                                         AR583389
+     C                     EXSR ZBKDT                                                       AR583389
+     C           PDDI      WHEQ 'N'                                                         AR583389
+     C                     EXSR ZFWDT                                                       AR583389
+     C           PDDI      WHEQ 'A'                                                         AR583389
+     C                     Z-ADDZDAYNO    ZDYNBR                                            AR583389
+     C           PDDI      WHEQ 'M'                                                         AR583389
+     C           PDDI      OREQ *BLANK                                                      AR583389
+     C                     EXSR ZDATE2                                                      AR583389
+     C           *IN98     IFEQ *OFF                                                        AR583389
+     C                     MOVE ZDATE     MMYY    40P                                       AR583389
+     C                     MOVELMMYY      MMNLCD  20P                                       AR583389
+     C                     ELSE                                                             AR583389
+     C                     MOVELZDATE     MMNLCD    P                                       AR583389
+     C                     ENDIF                                                            AR583389
+     C                     Z-ADDZDAYNO    @DAYNO  50                                        AR583389
+     C                     EXSR ZFWDT                                                       AR583389
+     C                     Z-ADDZDYNBR    ZDAYNO                                            AR583389
+     C                     EXSR ZDATE2                                                      AR583389
+     C           *IN98     IFEQ *OFF                                                        AR583389
+     C                     MOVE ZDATE     MMYY      P                                       AR583389
+     C                     MOVELMMYY      MMNWKD  20P                                       AR583389
+     C                     ELSE                                                             AR583389
+     C                     MOVELZDATE     MMNWKD    P                                       AR583389
+     C                     ENDIF                                                            AR583389
+     C           MMNLCD    IFNE MMNWKD                                                      AR583389
+     C                     Z-ADD@DAYNO    ZDAYNO                                            AR583389
+     C                     EXSR ZBKDT                                                       AR583389
+      *                                                                                     AR583389
+      ** If the next interest payment date falls on last interest                           AR583389
+      ** date computed by the system, change the next interest payment                      AR583389
+      ** date to next working day even if it is not on the same month.                      AR583389
+      *                                                                                     AR583389
+     C           ZDYNBR    IFEQ IACD                                                        AR583389
+     C                     EXSR ZFWDT                                                       AR583389
+     C                     ENDIF                                                            AR583389
+      *                                                                                     AR583389
+     C                     ENDIF                                                            AR583389
+     C                     ENDSL                                                            AR583389
+      *                                                                                       CLE141
+     C                     ENDIF                                                              CLE141
+      *                                                                                       CLE141
+     C                     Z-ADDZDYNBR    WENDI   50                                        AR583389
+      *                                                                                     AR583389
+      ** Also, when interest is not capitalised, compute for the date                       AR583389
+      ** when payment is to be taken if due date, falls on a holiday                        AR583389
+      *                                                                                     AR583389
+     C           INTC      IFNE 'Y'                                                         AR583389
+     C                     Z-ADDZDYNBR    ZDAYNO                                            AR583389
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C           PTDI      IFEQ *BLANK                                                        CLE141
+     C                     MOVEL'M'       PPAYC                                               CLE141
+     C                     ELSE                                                               CLE141
+     C                     MOVELPTDI      PPAYC                                               CLE141
+     C                     ENDIF                                                              CLE141
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM CCYPI     PCURR                                               CLE141
+     C                     PARM LOCPI     PLOCN                                               CLE141
+     C                     PARM           PPAYC                                               CLE141
+     C                     PARM BJDFIN    PDFIN                                               CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT                                               CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+      *                                                                                       CLE141
+      ** Do not return adjusted date if it is equal to or earlier than                        CLE141
+      ** previous date (only happens for 'previous' date calculations);                       CLE141
+      ** instead use the base date                                                            CLE141
+      *                                                                                       CLE141
+     C           WBSDT     IFGE ZDYNBR                                                        CLE141
+     C                     Z-ADDZDAYNO    ZDYNBR                                              CLE141
+     C                     ENDIF                                                              CLE141
+      *                                                                                       CLE141
+     C                     ELSE                                                               CLE141
+     C                     SELEC                                                            AR583389
+     C           PTDI      WHEQ 'P'                                                         AR583389
+     C                     EXSR ZBKDT                                                       AR583389
+     C           PTDI      WHEQ 'N'                                                         AR583389
+     C                     EXSR ZFWDT                                                       AR583389
+     C           PTDI      WHEQ 'M'                                                         AR583389
+     C           PTDI      OREQ *BLANK                                                      AR583389
+     C                     EXSR ZDATE2                                                      AR583389
+     C           *IN98     IFEQ *OFF                                                        AR583389
+     C                     MOVE ZDATE     MMYY    40P                                       AR583389
+     C                     MOVELMMYY      MMNLCD  20P                                       AR583389
+     C                     ELSE                                                             AR583389
+     C                     MOVELZDATE     MMNLCD    P                                       AR583389
+     C                     ENDIF                                                            AR583389
+     C                     Z-ADDZDAYNO    @DAYNO  50                                        AR583389
+     C                     EXSR ZFWDT                                                       AR583389
+     C                     Z-ADDZDYNBR    ZDAYNO                                            AR583389
+     C                     EXSR ZDATE2                                                      AR583389
+     C           *IN98     IFEQ *OFF                                                        AR583389
+     C                     MOVE ZDATE     MMYY      P                                       AR583389
+     C                     MOVELMMYY      MMNWKD  20P                                       AR583389
+     C                     ELSE                                                             AR583389
+     C                     MOVELZDATE     MMNWKD    P                                       AR583389
+     C                     ENDIF                                                            AR583389
+     C           MMNLCD    IFNE MMNWKD                                                      AR583389
+     C                     Z-ADD@DAYNO    ZDAYNO                                            AR583389
+     C                     EXSR ZBKDT                                                       AR583389
+      *                                                                                     AR583389
+      ** If the next interest payment date falls on last interest                           AR583389
+      ** date computed by the system, change the next interest payment                      AR583389
+      ** date to next working day even if it is not on the same month.                      AR583389
+      *                                                                                     AR583389
+     C           ZDYNBR    IFEQ IACD                                                        AR583389
+     C                     EXSR ZFWDT                                                       AR583389
+     C                     ENDIF                                                            AR583389
+      *                                                                                     AR583389
+     C                     ENDIF                                                            AR583389
+     C                     ENDSL                                                            AR583389
+     C                     ENDIF                                                            AR583389
+      *                                                                                       CLE141
+     C                     ENDIF                                                              CLE141
+      *                                                                                     AR583389
+     C                     Z-ADDZDYNBR    WENDI                                             AR583389
+      *                                                                                     AR583389
+     C                     ENDSR                                                            AR583389
+      *                                                                                     AR583389
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    *PSSR - ERROR PROCESSING                                      *
+     C*                                                                  *
+     C*    CALLED BY: SELECT - DETERMINE IF RECORD TO BE SELECTED        *
+     C*               CCYDEP - ACCESS CURRENCY DECIMAL PLACES            *
+     C*    CALLS:     RETSR  - END OF PROGRAM PROCESSING                 *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'LE0181'  DBPGM
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C*
+     C           MODID     IFEQ 'LE'
+     C                     MOVE 'E'       RTNDWF
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*                                                                  *
+     C********************************************************************
+     C/EJECT                                                              S01392
+     C/COPY ZSRSRC,ZFLACZ2                                                S01392
+ ******COPY ZSRSRC,ZDATE2Z2                                               S01392
+     C/COPY ZSRSRC,ZDATE2Z4                                               S01392
+     C/EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/EJECT
+     C/COPY ZSRSRC,GLINTCZ1
+     C/EJECT
+     C/COPY ZSRSRC,ZSAVEZ1
+     C/EJECT
+     C/COPY ZSRSRC,ZRSTORZ1
+     C/EJECT
+     C/COPY ZSRSRC,ZINTDYZ2                                               066550
+      /EJECT                                                              066550
+     C/COPY ZSRSRC,ZDATE9Z3                                               066550
+     C/COPY ZSRSRC,ZDAT10Z2                                               126017
+      /EJECT                                                              066550
+     C/COPY ZSRSRC,ZFREQBZ2                                                                   CLE028
+     C/COPY ZSRSRC,ZFWDT                                                                    AR583389
+     C/COPY ZSRSRC,ZBKDT                                                                    AR583389
+     C/COPY ZSRSRC,ZFRQB3                                                                   AR583389
+     C/COPY ZSRSRC,ZDATE1Z2                                                                   CLE028
+     C/COPY ZSRSRC,ZACCH                                                                      CLE028
+     C/COPY ZSRSRC,ZCHKH                                                                      CLE028
+     C/COPY ZSRSRC,RULE78Z1                                                                   CLE028
+      /EJECT                                                                                  CLE028
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                      S01392
+0366073110961461                                                          S01392
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                        S01392
+000031059090120151181212243273304334365                                   S01392
+**   ZMNM - MONTHS SHORT NAMES                                            S01392
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC                                      S01392
+**   MES - SCREEN MESSAGES
+ENTER CUSTOMER NUMBER OR SHORTNAME
+CUSTOMER NOT ON FILE
+INVALID FACILITY
+FACILITY NOT ON FILE OR FACILITY IS NOT SYNDICATED FACILITY
+USER IS NOT AUTHORISED TO ANY BOOKING BRANCHES
+USER IS NOT AUTHORISED TO THE BOOKING BRANCH
+NO BANK AUTHORIZATION FOR USER
+INVALID BRANCH CODE
+NO LOANS ARE HELD FOR THIS CUSTOMER
+NO LOANS FOR CUSTOMER IN THE BRANCH
+ENTER '1' FOR LOAN DETAILS, '2' FOR LOAN ACTIVITY
+**   BRTTLA - BRANCH TITLE (FOR CASE ALL)
+             All Branches
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH                                                     CLE028
+312831303130313130313031                                                                      CLE028

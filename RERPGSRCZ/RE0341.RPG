@@ -1,0 +1,1123 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Audit Letters Extract')                          *
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE0341 - AUDIT LETTERS EXTRACT                               *
+0007 F*                                                               *
+      *  (c)Finastra International Limited 2001                       *
+     F*      1990, 1993                                               *
+0009 F*                                                               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 099764             DATE 19JAN98               *
+     F*                 103240             DATE 23JUL96               *
+     F*                 S01413             DATE 13APR93               *
+     F*                 E23879                  04NOV91               *
+0010 F*                 S01117                  13NOV89               *
+0010 F*                 E14601                  22AUG88               *
+0010 F*                 S01168                  18AUG88               *
+     F*                 E10047                  04DEC86               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD007 - Customer Closing (SDCUSTL0)                         *
+      *  CDL008 - Continuous Linked Settlement (recompile SDCUSTPD)   *
+     F*  099764 - Exclude deleted customers from the update           *
+     F*  103240 - REPORT TOO LONG AS PROGRAM IS LOOPING ON ACCNT      *
+     F*           TO SEARCH A RETAIL ACCOUNT WITHOUT CONSIDERING THE  *
+     F*           CHANGE OF CUSTOMER                                  *
+     F*  S01413 - Header Box Standardised                             *
+     F*  E23879 - FILES BLOAN & LOAN ARE NO LONGER USED IN R10        *
+     F*           SO ALL REFERENCES ARE BEING REMOVED.                *
+     F*           DLAUDLL REFERENCE ALSO REMOVED.                     *
+0011 F*  S01117 - MULTIBRANCHING                                      *
+     F*  E14601 - THE UPDATED 'LAST DEALS HISTORY DATE' IS OUTPUT     *
+     F*           TO THE WRONG POSITION IN FILE CLINTCB.              *
+     F*  S01168 - Update SD SYNON client detail file with  run date   *
+     F*           for 'LAST AUDIT LETTER DATE'.                       *
+     F*  E10047 - SELECT AUDIT LETTERS BY BRANCH INCORRECT.           *
+0011 F*                                                               *
+0012 F*****************************************************************
+0011 F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 F*QSTS***IP**F***   12  6AI     2 DISK
+0013 FRQSTS   IP  F      15  6AI     2 DISK                               E10047
+0014 FCUSDE   IF  F     128 08AI     2 DISK                           U1  RE0341
+0015 F*EALS   IF  F     400  6AI     2 DISK                           U1  S01117
+0015 FDEALS   IF  F     500  6AI     2 DISK                           U1  S01117
+0016 F***ACCNT** IF  F     400 15AI     2 DISK                                         RE0341 CGL029
+     FACCNT   IF  F     573 21AI     2 DISK                                                   CGL029
+0017 F**OAN***IF  F     128 09AI     2 DISK                           U2  E23879
+0018 F*OANS***IF  F     400 13AI     2 DISK                           U2  E23879
+0019 FCLINT   UF  F     256  7AI     2 DISK                               RE0341
+     FSDCUSTL0UF  E           K        DISK                               S01168
+0020 FTABLE   IF  F      96 12AI     2 DISK                               RE0341
+0021 FDLAUDHH O   F      64            DISK                               RE0341
+0021 F*LAUDDD O   F      64            DISK                               S01117
+0021 F*LAUDDL O   F      64            DISK                               S01117
+0021 F*LAUDDR O   F      64            DISK                               S01117
+0021 FDLAUDDD O   F      70            DISK                               S01117
+0021 F*LAUDDL*O***F      70            DISK                         S01117E23879
+0021 F***DLAUDDR O   F      70            DISK                                         S01117 CGL029
+0021 FDLAUDDR O   F      80            DISK                                                   CGL029
+0021 FDLAUDZZ O   F      64            DISK                               RE0341
+0022 F*E0341P1O** F     132            PRINTER                      S01124S01117
+0016 FRE0341AUO   F     132     OA     PRINTER                            S01117
+0023 F********************************************************************RE0341
+0024 F*                                                                   RE0341
+0025 F* ID F  C  H  L    FUNCTION OF INDICATORS.                          RE0341
+0026 F* 01            REQST FILE DETAIL RECORD.                           RE0341
+0027 F* 02            REQST FILE CATCHALL.                                RE0341
+0028 F* 03            CUSTOMER DEALS FILE DETAIL RECORD.                  RE0341
+0029 F* 04            CUSTOMER DEALS FILE CATCHALL.                       RE0341
+0030 F* 05            DEALS FILE DETAIL RECORD - FOREIGN EXCHANGE.        RE0341
+0031 F* 06            DEALS FILE DETAIL RECORD - DEPOSITS.                RE0341
+0032 F* 07            DEALS FILE CATCHALL.                                RE0341
+0033 F* 08            ACCOUNTS MASTER FILE - DETAIL RECORD - RETAIL       RE0341
+0034 F* 09            ACCOUNTS MASTER FILE - CATCHALL                     RE0341
+0035 F**10************BORROWER/LOAN FILE - DETAIL RECORD                  E23879
+0036 F**11************BORROWER/LOAN FILE - CATCHALL                       E23879
+0037 F**12************LOANS FILE - DRAWDOWN DETAIL                        E23879
+0038 F**13************LOANS FILE - CATCHALL                               E23879
+0039 F* 14            CLIENT FILE - CUSTOMER STANDING DATA RECORD         RE0341
+0040 F*       20      FIRST CYCLE.                                        RE0341
+0041 F*       21      EXCEPTION OUTPUT S/DLAUD HEADER RECORD.             RE0341
+0042 F*       25      LEDGER BALANCE IS NEGATIVE                          RE0341
+0043 F*       27      DEALS PROCESSING IS TO BE DONE                      RE0341
+0044 F********28******LOANS PROCESSING IS TO BE DONE                      E23879
+0045 F*       29      RETAIL PROCESSING IS TO BE DONE                     RE0341
+0046 F*       31      WORK INDICATOR                                      RE0341
+0047 F*       32      S/DEALS CHAIN FAIL.                                 RE0341
+0048 F*       33      DEAL OR LOAN NUMBER IS IN THE ARRAY.                RE0341
+0049 F********34******WORK INDICATOR IN LOANS PROCESSING                  E23879
+0050 F*       35      IGNORE DEALS WITH DEAL TYPE 'OT'                    RE0341
+0051 F*       36      SETON IN EACH SECTION BY PRESENCE OF LIVE O/P DATA  RE0341
+0052 F*       37      SETON BY DEPOSIT RECORD IDENTIFYING INDICATOR.      RE0341
+0053 F*       38      CALL/NOTICE DEAL                                    RE0341
+0054 F*       39      FILE CONTROLS OUT OF BALANCE                        RE0341
+0055 F*       40      ON IF THERE IS A DEAL/LOAN FOR THE CUSTOMER         RE0341
+0055 F*       41      EXCEPTION OUTPUT TO UPDATE S/CLINT                  RE0341
+     F*       43      CHAIN TO SYNON CLIENT FILE FAILS - RECORD NOT FOUND S01168
+     F*       44      UPDAT OF SYNON CLIENT FILE FAILS                    S01168
+0056 F*       45      ON IF DL/CL/RT HAS BEEN REQUESTED                   RE0341
+0057 F*       51      EXCEPTION OUTPUT OF DEAL RECORD                     RE0341
+0058 F********52******EXCEPTION OUTPUT OF LOANS RECORD                    E23879
+0059 F*       53      EXCEPTION OUTPUT OF RETAIL RECORD                   RE0341
+0060 F*     60-63     THESE CONTROL OUTPUT OF 'NO DEAL' RECORDS.          RE0341
+0061 F*     90-99     STANDARD SUBROUTINES.                               RE0341
+0062 F*             U7FILE CONTROLS OUT OF BALANCE                        RE0341
+0063 F*             U8NO DEP OR FX FOUND ON S/DEALS CHAIN-DATABASE ERROR. RE0341
+0064 F********************************************************************RE0341
+0065 E*                                                                   RE0341
+0066 E                    DNO        16  6 0             CUSTOMER DEAL NOSRE0341
+0067 E                    LNO        16  6 0             LOAN REFS        RE0341
+     E                    CPY@    1   1 80
+0069 E*                                                                   RE0341
+0070 IRQSTS   NS  01   1 CD                                               RE0341
+0071 I                                        1   1 RECI                  RE0341
+0072 I**********                              2   70CNUMRQL1                           RE0341 CSD027
+0072 I                                        2   7 CNUMRQL1                                  CSD027
+0073 I                                        8   8 PARI                  RE0341
+0074 I                                        9   9 DLIN                  RE0341
+0075 I                                       10  10 CLIN                  RE0341
+0076 I                                       11  11 RTIN                  RE0341
+     I***********                            12  140BRCDRQ          E10047S01117
+     I                                       12  14 BRCDRQ                S01117
+0077 I**                                                                  RE0341
+0078 I**   REQST TRAILER.                                                 RE0341
+     I**
+0079 I        NS       1 CT                                               RE0341
+0080 I                                        1   1 RECI                  RE0341
+0081 I                                        2   60NORE                  RE0341
+0082 I**                                                                  RE0341
+0083 I**   REQST FILE CATCHALL.                                           RE0341
+     I**
+0084 I        NS  02                                                      RE0341
+0085 I*                                                                   RE0341
+0086 I*    CUSTOMER/DEALS INDEX FILE - DETAIL RECORD.                     RE0341
+0087 I*                                                                   RE0341
+0088 ICUSDE   NS  03   1 CD                                               RE0341
+0089 I                                        1   1 RECI                  RE0341
+0090 I**********                              2   70CNUMCD                             RE0341 CSD027
+0090 I                                        2   7 CNUMCD                                    CSD027
+0092 I                                       10 105 DNO                   RE0341
+0095 I*                                                                   RE0341
+0096 I**   CUSTOMER DEALS FILE CATCHALL.                                  RE0341
+     I**
+0097 I        NS  04                                                      RE0341
+0098 I*                                                                   RE0341
+0099 I*    DEALS FILE - DETAIL RECORD - FX SWAPS/OUTRIGHTS.               RE0341
+0100 I*                                                                   RE0341
+0101 IDEALS   NS  05   1 CD   8 CB                                        RE0341
+0102 I       OR        1 CS   8 CB                                        RE0341
+0103 I                                        1   1 RECI                  RE0341
+0104 I                                        2   70DLNO                  RE0341
+0109 I                                       20  21 DTYP                  RE0341
+0110 I                                       22  23 DLST                  RE0341
+0111 I                                    P  24  260DDAT                  RE0341
+0112 I                                    P  27  290VDAT                  RE0341
+0116 I                                       46  48 PUCY                  RE0341
+0117 I                                    P  49  550PUAM                  RE0341
+0118 I                                    P  56  628EXRT                  RE0341
+0119 I                                       86  88 SLCY                  RE0341
+0120 I                                    P  89  950SLAM                  RE0341
+0146 I                                      397 397 CHTP                  RE0341
+0147 I                                    P 398 4000TNLU                  RE0341
+0148 I*                                                                   RE0341
+0149 I*                                                                   RE0341
+0150 I*    DEALS FILE - DETAIL - TAKINGS/PLACINGS/TIME DEPOSITS/LOANS.    RE0341
+0151 I*                                                                   RE0341
+0152 IDEALS   NS  06   1 CD   8 CC                                        RE0341
+0153 I       OR        1 CS   8 CC                                        RE0341
+0154 I                                        1   1 RECI                  RE0341
+0155 I                                        2   70DLNO                  RE0341
+0156 I                                        8   8 RCDT                  RE0341
+0157 I                                        9  100RCDC                  RE0341
+0158 I**********                             11  160CNUM                               RE0341 CSD027
+0158 I                                       11  16 CNUM                                      CSD027
+0159 I****                                   17  190BRCD                  S01117
+0159 I                                       17  19 BRCA                  S01117
+0160 I                                       20  21 DTYP                  RE0341
+0161 I                                       22  23 DLST                  RE0341
+0162 I                                    P  24  260DDAT                  RE0341
+0163 I                                    P  27  290VDAT                  RE0341
+0164 I                                    P  30  320MDAT                  RE0341
+0166 I                                       35  38 BRKC                  RE0341
+0167 I                                    P  39  450BAGE                  RE0341
+0168 I                                       46  48 CCY                   RE0341
+0169 I                                    P  49  550PCPL                  RE0341
+0174 I                                    P  77  827INTR                  RE0341
+0175 I                                       83  850NOTD                  RE0341
+0182 I                                    P 131 1378LCXR                  RE0341
+0210 I                                      300 309 FACO                  RE0341
+0211 I                                      310 344 SPI                   RE0341
+0213 I                                      370 370 DNSI                  RE0341
+0214 I                                      371 371 DSTI                  RE0341
+0215 I                                      372 372 CNFI                  RE0341
+0216 I                                      373 373 ACEI                  RE0341
+0217 I                                      374 374 TLXI                  RE0341
+0218 I                                    P 391 3930ORED                  RE0341
+0219 I                                    P 394 3960LCD                   RE0341
+0220 I                                      397 397 CHTP                  RE0341
+0221 I                                    P 398 4000TNLU                  RE0341
+0222 I*                                                                   RE0341
+0223 I**   DEALS FILE CATCHALL.                                           RE0341
+0222 I*                                                                   RE0341
+0224 I        NS  07                                                      RE0341
+0225 I*                                                                   RE0341
+0226 I*                                                                   RE0341
+0227 I*    ACCOUNTS MASTER FILE - DETAIL RECORD - RETAIL ACCOUNT          RE0341
+0228 I*                                                                   RE0341
+0229 IACCNT   NS  08   1 CD  26 CR                                        RE0341
+0230 I                                        1   1 RECI                  RE0341
+0231 I**********                              2   70CNUMAC                             RE0341 CSD027
+0231 I                                        2   7 CNUMAC                                    CSD027
+0232 I                                        8  10 CCY                   RE0341
+0233 I**********                             11  140ACOD                               RE0341 CGL029
+     I                                       11  140ACODQQ                                    CGL029
+0234 I                                       15  160ACSQ                  RE0341
+0235 I****                                   23  250BRCD                  S01117
+0235 I                                       23  25 BRCA                  S01117
+0236 I                                       26  26 ATYP                  RE0341
+0241 I                                       36  55 ANAM                  RE0341
+0242 I                                    P  56  630LDBL                  RE0341
+0243 I                                    P  64  710CLBL                  RE0341
+0266 I                                      190 1990ACNO                  RE0341
+0272 I                                      213 2150FACT                  RE0341
+0273 I                                      216 2170FCNO                  RE0341
+0320 I                                    P 394 3960LCD                   RE0341
+0321 I                                      397 397 CHTP                  RE0341
+0322 I                                    P 398 4000TNLU                  RE0341
+     I                                      554 5630ACOD                                      CGL029
+0222 I*                                                                   RE0341
+0323 I*      ACCOUNTS MASTER FILE - CATCHALL                              RE0341
+0222 I*                                                                   RE0341
+0324 I        NS  09                                                      RE0341
+0231 I**********                              2   70CNUMAC                             103240 CSD027
+0231 I                                        2   7 CNUMAC                                    CSD027
+0325 I*                                                                   RE0341
+0326 I*****BORROWER/LOAN REFERENCE FILE - DETAIL RECORD                   E23879
+0327 I********                                                            E23879
+0328 I**OAN***NS  10   1 CD   8 CD                                        E23879
+0329 I********                                1   1 RECI                  E23879
+0330 I********                                2   70CNUMBL                E23879
+0331 I********                                8   8 RCDT                  E23879
+0332 I********                                9  100RECN                  E23879
+0333 I********                               11 106 LNO                   E23879
+0334 I********                            P 126 1280TNLU                  E23879
+0335 I********NS  11                                                      E23879
+0336 I*                                                                   RE0341
+0337 I*    DRAWDOWN FILE - DETAIL RECORD.                                 RE0341
+0338 I*                                                                   RE0341
+0339 I*OANS***NS**12***1*CD*  8 CG            1   1 RECI                  E23879
+0340 I**********************                  1   1 RECI                  E23879
+0341 I**********************                  2   70LNRF                  E23879
+0342 I**********************                  8   8 RCDT                  E23879
+0343 I**********************                  9  140DDRF                  E23879
+0347 I**********************                 30  320BRCD                  S01117
+0347 I**********************                 30  32 BRCA           S01117 E23879
+0349 I**********************                 36  38 DDCY                  E23879
+0352 I**********************              P  42  440DELD                  E23879
+0353 I**********************              P  45  470STTD                  E23879
+0354 I**********************              P  48  500MATD                  E23879
+0368 I**********************              P 106 1120ODDA                  E23879
+0374 I**********************              P 144 1460ROLD                  E23879
+0383 I**********************              P 188 1937EINR                  E23879
+0385 I**********************              P 195 1970IIND                  E23879
+0388 I**********************              P 202 2040ACTD                  E23879
+0389 I**********************              P 205 2110AITC                  E23879
+0390 I**********************              P 212 2180AIAN                  E23879
+0391 I**********************              P 219 2250AIAP                  E23879
+0392 I**********************              P 226 2320AIPD                  E23879
+0393 I**********************              P 233 2390IPRD                  E23879
+0398 I**********************                284 2850SDST                  E23879
+0400 I**********************                288 2890ACSQ                  E23879
+0418 I**********************              P 391 3930ORED                  E23879
+0419 I**********************              P 394 3960LCD                   E23879
+0420 I**********************                397 397 CHTP                  E23879
+0421 I**********************              P 398 4000TNLU                  E23879
+0422 I********NS**13********                                              E23879
+0423 I*                                                                   RE0341
+0424 I*    CLIENT FILE - CUSTOMER STANDING DATA RECORD.                   RE0341
+0425 I*                                                                   RE0341
+0426 ICLINT   NS  14   1 CD   8 CA                                        RE0341
+0427 I                                        1 256 LOTCLI                RE0341
+0428 I*                                                                   RE0341
+0429 I        NS                                                          RE0341
+0430 I*                                                                   RE0341
+0431 I*    TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.               RE0341
+0432 I*                                                                   RE0341
+0433 ITABLE   NS       2 C0   3 C1  12 C1                                 RE0341
+0434 I       AND      13 C0                                               RE0341
+0435 I                                        1   1 RECI                  RE0341
+0438 I                                       14  66 TITL                  RE0341
+0439 I                                       67  67 DATF                  RE0341
+0444 I                                    P  77  790RUND                  RE0341
+0445 I                                       80  86 RUNA                  RE0341
+0447 I                                    P  90  920LCD                   RE0341
+0448 I                                       93  93 CHTP                  RE0341
+0449 I                                    P  94  960TNLU                  RE0341
+     C                     MOVEACPY@      BIS@   80
+0450 C*                                                                   RE0341
+0451 C**   FIRST CYCLE PROCESSING                                         RE0341
+0452 C*                                                                   RE0341
+0453 C   20                GOTO ENDFC                                     RE0341
+0454 C                     SETON                     20                   RE0341
+0455 C*                                                                   RE0341
+0456 C**   GET BANK TITLE AND DATE.                                       RE0341
+0455 C*                                                                   RE0341
+0457 C                     EXSR ZSYSTM                                    RE0341
+0458 C   99                SETON                     U7LR                 RE0341
+0459 C   99                GOTO ENDDP                                     RE0341
+0455 C*                                                                   RE0341
+0460 C                     Z-ADD2         RECCNT  50                      RE0341
+0461 C                     Z-ADD2         DPNO    50                      RE0341
+0455 C*                                                                   RE0341
+0462 C                     MOVEL'G'       DDWRK   7                       RE0341
+0463 C                     MOVE '000000'  DDWRK                           RE0341
+0464 C                     MOVE DDWRK     DDKEY  13                       RE0341
+0455 C*                                                                   RE0341
+0465 C                     MOVE 'A'       CLIKEY  7                       RE0341
+0455 C*                                                                   RE0341
+0466 C                     MOVE ' 00'     BLNKEY  9                       RE0341
+0455 C*                                                                   RE0341
+0467 C                     MOVEL'   '     ACWRK   9                       RE0341
+0468 C                     MOVE '000000'  ACWRK                           RE0341
+0469 C**********           MOVE ACWRK     KEYACC 15                                    RE0341 CGL029
+     C                     MOVE ACWRK     KEYACC 21                                           CGL029
+0470 C*                                                                   RE0341
+0471 C                     MOVE ' '       BLNK20 20                       RE0341
+0472 C*                                                                   RE0341
+0473 C**   OUTPUT HEADER RECORD TO S/DLAUD.                               RE0341
+0455 C*                                                                   RE0341
+0474 C                     SETON                     21                   RE0341
+0475 C                     EXCPT                                          RE0341
+0476 C                     SETOF                     21                   RE0341
+0455 C*                                                                   RE0341
+0477 C           ENDFC     TAG                             ** ENDFC TAG **RE0341
+0478 C*                                                                   RE0341
+0479 C**   DETAIL PROCESSING                                              RE0341
+0480 C*                                                                   RE0341
+0481 C  N01                GOTO ENDDP                                     RE0341
+0478 C*                                                                   RE0341
+0479 C**   IF AT LEAST ONE DETAIL RECORD READ, SET ON *IN88               RE0341
+0480 C*                                                                   RE0341
+0486 C                     SETON                     88                   RE0341
+0482 C*                                                                   RE0341
+0483 C**   SKIP DETAIL PROCESSING FOR NON-DETAIL S/RQSTS RECORDS.         RE0341
+0455 C*                                                                   RE0341
+0484 C           RECCNT    ADD  1         RECCNT                          RE0341
+0485 C*                                                                   RE0341
+0486 C***L1****************SETOF                     272829               E23879
+0486 C   L1                SETOF                     2729                 E23879
+0487 C*                                                                   RE0341
+0488 C*  CHECK FOR REQUEST OF EACH LETTER TYPE IN TURN                    RE0341
+0489 C*                                                                   RE0341
+0490 C           DLIN      COMP 'Y'                      45               RE0341
+0491 C   45                SETON                     27                   RE0341
+0455 C*********************                                               E23879
+0492 C***********CLIN******COMP 'Y'                      45               E23879
+0493 C***45****************SETON                     28                   E23879
+0455 C*                                                                   RE0341
+0494 C           RTIN      COMP 'Y'                      45               RE0341
+0495 C   45                SETON                     29                   RE0341
+0496 C*                                                                   RE0341
+0497 C           ENDDP     TAG                             ** ENDDP TAG **RE0341
+0498 C*                                                                   RE0341
+0499 C*ALL FURTHER PROCESSING DONE AT TOTAL TIME, ON CHANGE OF CUST. NO.  RE0341
+0500 C*                                                                   RE0341
+0497 CL1         *IN88     IFEQ '1'                                       RE0341
+0498 C*                                                                   RE0341
+0501 CL1N27                                                               RE0341
+0502 CORNU1                GOTO ENDDL                                     RE0341
+0503 C*                                                                   RE0341
+0504 C**   PROCESSING DESCRIPTION FOR DEALING LETTERS                     RE0341
+0455 C*                                                                   RE0341
+0505 C**   READ THROUGH S/CUSDE TO OBTAIN DEAL NOS RELATING TO GIVEN      RE0341
+0455 C**   CUSTOMER NUMBER. IF NO DEALS FOUND, OUTPUT A RECORD BY         RE0341
+0508 C**   EXCEPTION INDICATING NO DEALS ON FILE FOR THAT CUSTOMER.       RE0341
+0509 C**   WITH EACH DEAL NUMBER, CHAIN TO THE S/DEALS FILE TO OBTAIN ALL RE0341
+0510 C**   THE RELEVANT DATA. IF A DEPOSIT OR FOREIGN EXCHANGE RECORD IS  RE0341
+0511 C**   NOT FOUND, SET ON INDICATOR U7 TO SHOW A DATABASE ERROR.       RE0341
+0512 C**   IF ONLY FOREIGN EXCHANGE DEALS EXIST OR ONLY DEPOSIT DEALS     RE0341
+0513 C**   EXIST FOR A CUSTOMER OUTPUT A DEFAULT RECORD INDICATING THERE  RE0341
+0514 C**   ARE NO DEALS OF THE OTHER TYPE FOR THAT CUSTOMER.              RE0341
+0515 C*                                                                   RE0341
+0516 C*                                                                   RE0341
+0517 CL1         PARI      COMP ' '                  4545                 RE0341
+0518 C*1*45****************GOTO ENDCL                                     E23879
+0518 CL1 45                GOTO ENDDL                                     E23879
+0519 C*                                                                   RE0341
+0520 CL1                   SETOF                     363740               RE0341
+0521 CL1                   SETOF                     606162               RE0341
+0522 CL1                   SETOF                     63                   RE0341
+0516 C*                                                                   RE0341
+0523 CL1                   MOVELCNUMRQ    CUSKEY  8                       RE0341
+0524 CL1                   MOVE '  '      CUSKEY                          RE0341
+0516 C*                                                                   RE0341
+0525 CL1         CUSKEY    SETLLCUSDE                                     RE0341
+0526 CL1         LOOP01    TAG                             ** LOOP01 TAG *RE0341
+0516 C*                                                                   RE0341
+0527 CL1                   SETOF                     3132                 RE0341
+0516 C*                                                                   RE0341
+0528 CL1                   READ CUSDE                    31 (END OF FILE) RE0341
+0516 C*                                                                   RE0341
+0529 CL1N31      CNUMRQ    COMP CNUMCD               3131                 RE0341
+0530 CL1N31                SETON                     40                   RE0341
+0516 C*                                                                   RE0341
+0531 CL1 31                EXSR OUTDL                                     RE0341
+0532 CL1 31                GOTO ENDDL                                     RE0341
+0516 C*                                                                   RE0341
+0533 CL1                   Z-ADD0         X       20                      RE0341
+0516 C*                                                                   RE0341
+0534 CL1         LOOP02    TAG                             ** LOOP02 TAG *RE0341
+0516 C*                                                                   RE0341
+0535 CL1                   SETOF                     0506                 RE0341
+0536 CL1         X         ADD  1         X                               RE0341
+0537 CL1         X         COMP 16                   33                   RE0341
+0516 C*                                                                   RE0341
+0538 CL1N31N33   DNO,X     COMP 0                        33               RE0341
+0539 CL1N31N33   DNO,X     CHAINDEALS                32    CHAIN FAIL     RE0341
+0516 C*                                                                   RE0341
+0540 CL1 05      DTYP      COMP 'OT'                     35               RE0341
+0516 C*                                                                   RE0341
+0541 CL1 05N35             SETON                     36                   RE0341
+0542 CL1 06                SETON                     37                   RE0341
+0543 CL1 32                SETON                     LRU7                 RE0341
+0544 CL1 32                GOTO ENDDL                                     RE0341
+0516 C*                                                                   RE0341
+0545 CL1 05                                                               RE0341
+0546 COR 06                EXSR OUTDL                                     RE0341
+0516 C*                                                                   RE0341
+0547 CL1N33                GOTO LOOP02                                    RE0341
+0548 CL1N31                GOTO LOOP01                                    RE0341
+0549 C*                                                                   RE0341
+0550 CL1         ENDDL     TAG                             ** ENDDL TAG **RE0341
+0551 C*                                                                   RE0341
+0552 C***PROCESSING*DESCRIPTION*FOR*LOANS*LETTERS.                        E23879
+0516 C*******************************************************             E23879
+0553 C****USING*THE*REQUESTED*CUSTOMER*NUMBER,*SET LOWER LIMITS ON THE    E23879
+0554 C***BLOAN*FILE*AND*READ*SEQUENTIALLY*UNTIL*A*CHANGE*OF*CUSTOMER.     E23879
+0555 C***FOR*EACH*LOAN*REFERENCE,*SET*LOWER*LIMITS*ON*THE*LOANS FILE AND  E23879
+0556 C***READ*THE*FILE*SEQUENTIALLY*UNTIL*A*CHANGE*OF*LOAN*REFERENCE      E23879
+0557 C**OCCURS.*OUTPUT*A*RECORD*TO*S/DLAUD*FOR*EACH*LIVE*DRAWDOWN. SHOULD E23879
+0558 C**THERE*BE*NO*DRAWDOWNS*ON*FILE*FOR*THIS*CUSTOMER*-*THIS DOES NOT   E23879
+0559 C***NECESSARILY*MEAN*THAT*THERE*IS*NO*REFERENCE*ON*S/BLOAN - OUTPUT  E23879
+0560 C***A*ZERO-TYPE*RECORD*TO*S/DLAUD*********************               E23879
+0552 C***PROCESSING*DESCRIPTION*FOR*LOANS*LETTERS.*********               E23879
+0516 C******************************************************              E23879
+0564 C***********                                                         E23879
+0565 C*1*******************SETOF                     3640                 E23879
+0566 C*1*******************MOVELCNUMRQ    BLNKEY  9                       E23879
+0567 C***********                                                         E23879
+0568 C*1*********BLNKEY    SETLLBLOAN                                     E23879
+0569 C***********                                                         E23879
+0570 C*1*********LOOP03    TAG                             ** LOOP03 TAG *E23879
+0571 C***********                                                         E23879
+0572 C*1*********          SETOF                     313234               E23879
+0573 C*1*********          READ BLOAN                    31END OF FILE    E23879
+0578 C***********                                                         E23879
+0574 C*1N31******CNUMRQ    COMP CNUMBL               3131                 E23879
+0575 C*1N31******          SETON                     40                   E23879
+0578 C***********                                                         E23879
+0576 C*1*31N40**           EXSR OUTCL                                     E23879
+0578 C**********                                                          E23879
+0577 C*1*31*****           GOTO ENDCL                                     E23879
+0578 C**********                                                          E23879
+0579 C*1********           Z-ADD0         X                               E23879
+0580 C**********                                                          E23879
+0581 C*1******** LOOP04    TAG                             ** LOOP04 TAG *E23879
+0582 C**********                                                          E23879
+0583 C*1******** X         ADD  1         X                               E23879
+0584 C*1******** X         COMP 16                   33                   E23879
+0585 C*1N33***** LNO,X     COMP 0                        33               E23879
+0586 C*1*33*****           GOTO LOOP03                                    E23879
+0587 C**********                                                          E23879
+0588 C*1*********          MOVELLNO,X     DDKEY                           E23879
+0589 C*1*********DDKEY     SETLLLOANS                                     E23879
+0590 C***********                                                         E23879
+0591 C*1*********LOOP05    TAG                             ** LOOP05 TAG *E23879
+0592 C***********                                                         E23879
+0593 C*1*********          SETOF                     1234                 E23879
+0594 C*1*********          READ LOANS                    34               E23879
+0595 C***********                                                         E23879
+0596 C*1*********          GOTO LOOP04                                    E23879
+0597 C***********                                                         E23879
+0598 C*1*********          GOTO LOOP05                                    E23879
+0599 C***********                                                         E23879
+0600 C*1*********LNO,X     COMP LNRF                 3434                 E23879
+0601 C*1*********          GOTO LOOP04                                    E23879
+0602 C***********                                                         E23879
+0603 C***********                                                         E23879
+0604 C*1*********          SETON                     36                   E23879
+0605 C*1*********          EXSR OUTCL                                     E23879
+0606 C*1*********          GOTO LOOP05                                    E23879
+0607 C***********                                                         E23879
+0608 C*1*********ENDCL     TAG                             ** ENDCL TAG **E23879
+0607 C* *********                                                         E23879
+0609 C*                                                                   RE0341
+0610 C*   PROCESSING DESCRIPTION FOR RETAIL LETTERS                       RE0341
+0578 C*                                                                   RE0341
+0611 C*  SET LOWER LIMITS WITH THE CUSTOMER ON THE ACCOUNTS MASTER FILE,  RE0341
+0612 C*  AND, FOR ONLY LIVE RETAIL ACCOUNTS, OUTPUT A RECORD TO           RE0341
+0613 C*  S/DLAUD FOR EACH ACCOUNT FOUND FOR THIS CUSTOMER. IF NO ACCOUNTS RE0341
+0614 C*  ARE FOUND (36 NOT ON) OUTPUT A 'ZERO TYPE' RECORD TO S/DLAUD.    RE0341
+0578 C*                                                                   RE0341
+0615 CL1N29                GOTO ENDRT                                     RE0341
+0616 C*                                                                   RE0341
+0617 CL1                   SETOF                     3136                 RE0341
+0618 CL1                   MOVELCNUMRQ    KEYACC                          RE0341
+0619 CL1         KEYACC    SETLLACCNT                                     RE0341
+0620 C*                                                                   RE0341
+0621 CL1         LOOP06    TAG                             ** LOOP06 TAG *RE0341
+0622 C*                                                                   RE0341
+0623 CL1                   SETOF                     0809                 RE0341
+0624 CL1                   READ ACCNT                    31               RE0341
+0625 C*                                                                   RE0341
+     CL1         *IN08     IFEQ '1'                                       103240
+     CL1                   MOVE '1'       *IN36                           103240
+     CL1                   END                                            103240
+     CL1         CNUMRQ    IFNE CNUMAC                                    103240
+     C***L1***** CNUMAC    ANDNE0                                                      103240 CSD027
+     CL1         CNUMAC    ANDNE*BLANKS                                                       CSD027
+     CL1                   ELSE                                           103240
+0626 CL1 09                GOTO LOOP06                                    RE0341
+     CL1                   END                                            103240
+0627 C*                                                                   RE0341
+0628 CL1N31      CNUMRQ    COMP CNUMAC               3131                 RE0341
+0578 C*                                                                   RE0341
+     C*1N31****  BRCDRQ    IFNE *ZERO                               E10047S01117
+     CL1N31      BRCDRQ    IFNE 'ALL'                                     S01117
+     C*                                                                   E10047
+     C*   CHECK THAT ACCOUNT IS FOR REQUESTED BRANCH                      E10047
+     C*                                                                   E10047
+     C*1*********BRCD      IFNE BRCDRQ                              E10047S01117
+     CL1         BRCA      IFNE BRCDRQ                                    S01117
+     CL1                   GOTO LOOP06                                    E10047
+     CL1                   END                                            E10047
+     CL1                   END                                            E10047
+0629 CL1 31N36             EXSR OUTRT                                     RE0341
+0630 CL1 31                GOTO ENDRT                                     RE0341
+0631 C*                                                                   RE0341
+0632 CL1                   SETON                     36                   RE0341
+0633 CL1                   EXSR OUTRT                                     RE0341
+0634 C*                                                                   RE0341
+0635 CL1                   GOTO LOOP06                                    RE0341
+0636 C*                                                                   RE0341
+0637 CL1         ENDRT     TAG                             ** ENDRT TAG **
+0638 C*                                                                   RE0341
+0639 C*  AT END OF PROCESSING, UPDATE THE S/CLINT RECORD FOR THIS         RE0341
+0640 C*  CUSTOMER WITH RUN DATE FOR 'LAST AUDIT LETTER DATE'.             RE0341
+0578 C*                                                                   RE0341
+0641 CL1                   MOVELCNUMRQ    CLIKEY                          RE0341
+0642 CL1         CLIKEY    CHAINCLINT                40                   RE0341
+0643 C*                                                                   RE0341
+0644 CL1 40                SETON                     LRU7U8               RE0341
+     C**
+     C*1N40****************SETON                     41                   099764
+     C*1N40****************EXCPT                                          099764
+     C*1N40****************SETOF                     41                   099764
+     CL1N40 14             SETON                     41                   099764
+     CL1N40 14             EXCPT                                          099764
+     CL1N40 14             SETOF                     41                   099764
+      *-------------------------------------------------------------------S01168
+      *                                                                   S01168
+      ** Also update the SYNON client file for this customer with run     S01168
+      ** date for 'LAST AUDIT LETTER DATE'.                               S01168
+      *                                                                   S01168
+     CL1                   MOVE CNUMRQ    KCNUM   6                       S01168
+      *                                                                   S01168
+      ** Access SYNON client file record.                                 S01168
+      ** Database error if record not found.                              S01168
+      *                                                                   S01168
+     CL1         KCNUM     CHAIN@BBREBG              43                   S01168
+     CL1         *IN43     IFEQ '1'                                       S01168
+     CL1                   MOVE '1'       *INU7                           S01168
+     CL1                   MOVE '1'       *INU8                           S01168
+     CL1                   MOVE '1'       *INLR                           S01168
+     CL1                   END                                            S01168
+      *                                                                   S01168
+      ** If record found determine which audit letter dates to update.    S01168
+      *                                                                   S01168
+     CL1         *IN43     IFEQ '0'                                       S01168
+      ** Last audit letter date.                                          S01168
+     CL1         *IN27     IFEQ '1'                                       S01168
+     CL1                   MOVE RUND      BBLALD                          S01168
+     CL1                   END                                            S01168
+      ***Last*dels*history date.                                   S01168 E23879
+     C*1**********IN28     IFEQ '1'                                S01168 E23879
+     C*1**********         MOVE RUND      BBLDHD                   S01168 E23879
+     C*1**********         END                                     S01168 E23879
+      ** Last retail letter date.                                         S01168
+     CL1         *IN29     IFEQ '1'                                       S01168
+     CL1                   MOVE RUND      BBLRLD                          S01168
+     CL1                   END                                            S01168
+      *                                                                   S01168
+     CL1                   UPDAT@BBREBG                44                 S01168
+      *                                                                   S01168
+     CL1         *IN44     IFEQ '1'                                       S01168
+     CL1                   MOVE '1'       *INU7                           S01168
+     CL1                   MOVE '1'       *INU8                           S01168
+     CL1                   MOVE '1'       *INLR                           S01168
+     CL1                   END                                            S01168
+      *                                                                   S01168
+     CL1                   END                                            S01168
+      *                                                                   S01168
+      *-------------------------------------------------------------------S01168
+0645 C*                                                                   RE0341
+0646 CL1         ENDL1     TAG                             ** ENDL1 TAG **RE0341
+0647 C*                                                                   RE0341
+0648 C**   END OF PROCESSING CONDITIONED ON *IN88                         RE0341
+0649 C*                                                                   RE0341
+0646 CL1                   END                                            RE0341
+0647 C*                                                                   RE0341
+0648 C**   LAST RECORD PROCESSING                                         RE0341
+0649 C*                                                                   RE0341
+0650 CLR         NORE      COMP RECCNT                   39               RE0341
+0651 CLRN39                SETON                     U8                   RE0341
+0653 C*                                                                   RE0341
+0654 C********************************************************************RE0341
+0655 C*                                                                   RE0341
+0656 C**   OUTDL SUBROUTINE.                                              RE0341
+0657 C**   - TO DECIDE IF THE S/DEALS RECORD SHOULD BE OUTPUT OR NOT,     RE0341
+0658 C**   AND TO SORT OUT THE DIFFERING INPUT FIELD NAMES (FROM THE      RE0341
+0659 C**   DIFFERENT RECORD TYPES) INTO COMMON OUTPUT FIELD NAMES.        RE0341
+0660 C*                                                                   RE0341
+0661 C*                                                                   RE0341
+0662 C           OUTDL     BEGSR                                          RE0341
+0663 C*                                                                   RE0341
+0664 C           START     TAG                             ** START TAG **RE0341
+0665 C*                                                                   RE0341
+0666 C   05                GOTO FX                                        RE0341
+0667 C   06                GOTO DEPOS                                     RE0341
+0668 C*                                                                   RE0341
+0669 C**   NO DEALS ON S/CUSDE FOR THIS CUSTOMER.                         RE0341
+0670 C                     Z-ADD0         DLNO                            RE0341
+0671 C                     Z-ADD0         DDAT                            RE0341
+0672 C                     Z-ADD0         VDAT                            RE0341
+0673 C                     Z-ADD0         MDAT                            RE0341
+0674 C                     MOVE '   '     CCY                             RE0341
+0675 C                     Z-ADD0         PCPL                            RE0341
+0676 C                     MOVE '   '     SLCY                            RE0341
+0677 C                     Z-ADD0         SLAM                            RE0341
+0678 C                     Z-ADD0         EXRT                            RE0341
+0679 C                     Z-ADD0         INTR                            RE0341
+0680 C                     Z-ADD4         FDIN    10                      RE0341
+0681 C   60                Z-ADD2         FDIN                            RE0341
+0682 C                     MOVE '  '      DTYP                            RE0341
+0683 C                     MOVE '  '      DLST                            RE0341
+0684 C                     GOTO EXCEPT                                    RE0341
+0685 C*                                                                   RE0341
+0686 C**   FOREIGN EXCHANGE RECORD FROM S/DEALS.                          RE0341
+0687 C           FX        TAG                             ***** FX TAG **RE0341
+0688 C*                                                                   RE0341
+0689 C                     MOVE PUCY      CCY                             RE0341
+0690 C                     Z-ADDPUAM      PCPL                            RE0341
+0691 C                     Z-ADD0         MDAT                            RE0341
+0692 C                     Z-ADD0         INTR                            RE0341
+0693 C*                                                                   RE0341
+0694 C                     Z-ADD1         FDIN                            RE0341
+0695 C*                                                                   RE0341
+0696 C**   KEEP A RUNNING TOTAL OF THE NUMBER AND HASH VALUE              RE0341
+0697 C**   OF THE S/DEALS FOREIGN EXCHANGE RECORDS.                       RE0341
+0698 C                     Z-ADDDPIN      ZZTOTI                          RE0341
+0699 C                     Z-ADDDPDC      ZZTOTD                          RE0341
+0700 C                     Z-ADD0         ZZAMT                           RE0341
+0701 C                     MOVE PCPL      ZZAMT                           RE0341
+0702 C   05                EXSR GLZADD                                    RE0341
+0703 C                     Z-ADDZZTOTI    DPIN   150                      RE0341
+0704 C                     Z-ADDZZTOTD    DPDC    30                      RE0341
+0705 C*                                                                   RE0341
+0706 C                     GOTO EXCEPT                                    RE0341
+0707 C*                                                                   RE0341
+0708 C*                                                                   RE0341
+0709 C**   DEPOSITS RECORD FROM S/DEALS.                                  RE0341
+0710 C           DEPOS     TAG                             ** DEPOS TAG **RE0341
+0711 C*                                                                   RE0341
+0712 C           NOTD      COMP -999                     38               RE0341
+0713 C  N38                Z-ADDNOTD      MDAT                            RE0341
+0714 C*                                                                   RE0341
+0715 C                     MOVE '   '     SLCY                            RE0341
+0716 C                     Z-ADD0         SLAM                            RE0341
+0717 C                     Z-ADD0         EXRT                            RE0341
+0718 C*                                                                   RE0341
+0719 C                     Z-ADD3         FDIN                            RE0341
+0720 C*                                                                   RE0341
+0721 C**   KEEP A RUNNING TOTAL OF THE NUMBER AND HASH VALUE              RE0341
+0722 C**   OF THE S/DEALS DEPOSIT RECORDS.                                RE0341
+0723 C                     Z-ADDDPIN      ZZTOTI                          RE0341
+0724 C                     Z-ADDDPDC      ZZTOTD                          RE0341
+0725 C                     Z-ADD0         ZZAMT                           RE0341
+0726 C                     MOVE PCPL      ZZAMT                           RE0341
+0727 C   06                EXSR GLZADD                                    RE0341
+0728 C                     Z-ADDZZTOTI    DPIN                            RE0341
+0729 C                     Z-ADDZZTOTD    DPDC                            RE0341
+0730 C*                                                                   RE0341
+0731 C           EXCEPT    TAG                             ** EXCEPT TAG *RE0341
+0732 C   05                                                               RE0341
+0733 COR 06                                                               RE0341
+0734 COR 60                                                               RE0341
+0735 COR 61                SETON                     51                   RE0341
+0736 C   51      DPNO      ADD  1         DPNO    50                      RE0341
+0737 C                     EXCPT                                          RE0341
+0738 C                     SETOF                     51                   RE0341
+0739 C*                                                                   RE0341
+0740 C**   SET INDICATORS SO THAT 'NO FX' OR 'NO DEPOSITS' MESSAGES ARE   RE0341
+0741 C**   OUTPUT.                                                        RE0341
+0742 C   60N61             SETON                     62                   RE0341
+0743 C   61N60                                                            RE0341
+0744 COR 61 62             SETON                     63                   RE0341
+0745 C   60 61             SETON                     62                   RE0341
+0746 C   33N36                                                            RE0341
+0747 CORN40                SETON                     60                   RE0341
+0748 C   60 61             SETOF                     60                   RE0341
+0749 C   33N37                                                            RE0341
+0750 CORN40                SETON                     61                   RE0341
+0751 C                     SETOF                     0506                 RE0341
+0752 C   60N62                                                            RE0341
+0753 COR 61N63             GOTO START                                     RE0341
+0754 C*                                                                   RE0341
+0755 C                     ENDSR                                          RE0341
+0756 C*                                                                   RE0341
+0757 C********************************************************************E23879
+0758 C********************                                                E23879
+0759 C*****OUTCL*SUBROUTINE.                                              E23879
+0760 C*****-*TO*DECIDE*IF*THE S/LOANS RECORD SHOULD BE OUTPUT OR NOT      E23879
+0761 C********************                                                E23879
+0762 C***********OUTCL**** BEGSR                                          E23879
+0763 C********************                                                E23879
+0764 C***36*************** GOTO LDATA                                     E23879
+0765 C********************                                                E23879
+0766 C*****NO*LOANS*ON*S/BLOAN FOR THIS CUSTOMER.                         E23879
+0767 C******************** Z-ADD0         LNRF                            E23879
+0768 C******************** Z-ADD0         DDRF                            E23879
+0769 C******************** Z-ADD0         DELD                            E23879
+0770 C******************** Z-ADD0         STTD                            E23879
+0771 C******************** Z-ADD0         IIND                            E23879
+0772 C******************** Z-ADD0         ROLD                            E23879
+0773 C******************** Z-ADD0         MATD                            E23879
+0774 C******************** MOVE '   '     DDCY                            E23879
+0775 C******************** Z-ADD0         ODDA                            E23879
+0776 C******************** Z-ADD0         EINR                            E23879
+0777 C*********************GOTO EXCP02                                    E23879
+0778 C********************                                                E23879
+0779 C*****FOREIGN*EXCHANGE RECORD FROM S/DEALS.                          E23879
+0780 C***********LDATA     TAG                             ** LDATA TAG **E23879
+0781 C********************                                                E23879
+0782 C*****KEEP*A*RUNNING*TOTAL OF THE NUMBER AND HASH VALUE              E23879
+0783 C*****OF*THE*S/LOANS*DRAWDOWN RECORDS                                E23879
+0784 C******************** Z-ADDDPIN      ZZTOTI                          E23879
+0785 C******************** Z-ADDDPDC      ZZTOTD                          E23879
+0786 C******************** Z-ADD0         ZZAMTD                          E23879
+0787 C******************** MOVE ODDA      ZZAMTD                          E23879
+0788 C******************** EXSR GLZADD                                    E23879
+0789 C******************** Z-ADDZZTOTI    DPIN   150                      E23879
+0790 C******************** Z-ADDZZTOTD    DPDC    30                      E23879
+0791 C********************                                                E23879
+0792 C***********EXCP02*** TAG                             ** EXCP02 TAG *E23879
+0793 C********************                                                E23879
+0794 C***********DPNO***** ADD  1         DPNO                            E23879
+0795 C********************                                                E23879
+0796 C******************** SETON                     52                   E23879
+0797 C******************** EXCPT                                          E23879
+0798 C******************** SETOF                     52                   E23879
+0799 C********************                                                E23879
+0800 C******************** ENDSR                                          E23879
+0801 C********************                                                E23879
+0802 C********************************************************************RE0341
+0803 C*                                                                   RE0341
+0804 C**   OUTRT SUBROUTINE.                                              RE0341
+0805 C**   - TO DECIDE IF THE S/ACCNT RECORD SHOULD BE OUTPUT OR NOT      RE0341
+0806 C*                                                                   RE0341
+0807 C           OUTRT     BEGSR                                          RE0341
+0808 C*                                                                   RE0341
+0809 C   36                GOTO RDATA                                     RE0341
+0810 C*                                                                   RE0341
+0811 C**   NO RETAIL ACCOUNTS ON S/ACCNT FOR THIS CUSTOMER                RE0341
+0812 C                     MOVE '   '     CCY                             RE0341
+0813 C                     Z-ADD0         ACOD                            RE0341
+0814 C                     Z-ADD0         ACSQ                            RE0341
+0815 C                     Z-ADD0         ACNO                            RE0341
+0816 C                     Z-ADD0         CLBL                            RE0341
+0817 C                     Z-ADD0         LDBL                            RE0341
+0818 C                     MOVE BLNK20    ANAM                            RE0341
+     C                     MOVE *BLANKS   BRCA                            S01117
+0819 C*                                                                   RE0341
+0820 C                     GOTO EXCP03                                    RE0341
+0821 C*                                                                   RE0341
+0822 C**   RETAIL ACCOUNT RECORD FROM S/ACCNT                             RE0341
+0823 C           RDATA     TAG                             ** RDATA TAG **RE0341
+0824 C*                                                                   RE0341
+0825 C**   KEEP A RUNNING TOTAL OF THE NUMBER AND HASH VALUE              RE0341
+0826 C**   OF THE S/ACCNT RETAIL ACCOUNT RECORDS                          RE0341
+0827 C                     Z-ADDDPIN      ZZTOTI                          RE0341
+0828 C                     Z-ADDDPDC      ZZTOTD                          RE0341
+0829 C           LDBL      COMP 0                      25                 RE0341
+0830 C   25                Z-SUBLDBL      ZZAMT                           RE0341
+0831 C  N25                Z-ADDLDBL      ZZAMT                           RE0341
+0832 C                     EXSR GLZADD                                    RE0341
+0833 C                     Z-ADDZZTOTI    DPIN   150                      RE0341
+0834 C                     Z-ADDZZTOTD    DPDC    30                      RE0341
+0835 C*                                                                   RE0341
+0836 C           EXCP03    TAG                             ** EXCP03 TAG *RE0341
+0837 C*                                                                   RE0341
+0838 C           DPNO      ADD  1         DPNO                            RE0341
+0839 C*                                                                   RE0341
+0840 C                     SETON                     53                   RE0341
+0841 C                     EXCPT                                          RE0341
+0842 C                     SETOF                     53                   RE0341
+0843 C*                                                                   RE0341
+0844 C                     ENDSR                                          RE0341
+0845 C*                                                                   RE0341
+0846 C********************************************************************RE0341
+0847 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)  RE0341
+0848 C*   IND '99' IS SET BY AN OVERFLOW ERROR                            RE0341
+0849 C*                                                                   RE0341
+0850 CSR         GLZADD    BEGSR                           *** GLZADD ****RE0341
+0851 C*                                                                   RE0341
+0852 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT  RE0341
+0853 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS RE0341
+0854 C*                                                                   RE0341
+0855 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS                       RE0341
+0856 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD  RE0341
+0857 CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD  RE0341
+0858 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW                  RE0341
+0859 C*                                                                   RE0341
+0860 CSR                   EXSR GLZSUM                                    RE0341
+0861 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *RE0341
+0862 C*                                                                   RE0341
+0863 C********************************************************************RE0341
+0864 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -            RE0341
+0865 C*                        GLZADD, GLZSUB, GLZCMP.                    RE0341
+0866 C*          PARAMETERS PASSED -                                      RE0341
+0867 C*                     I/P ZZAMTI ZZAMTD                             RE0341
+0868 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.       RE0341
+0869 C*                                                                   RE0341
+0870 CSR         GLZSUM    BEGSR                           *** GLZSUM ****RE0341
+0871 C*                                                                   RE0341
+0872 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI  RE0341
+0873 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD  RE0341
+0874 CSR                   SETOF                     919293               RE0341
+0875 CSR                   SETOF                     949599               RE0341
+0876 C*                                                                   RE0341
+0877 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG                      RE0341
+0878 CSR         ZZAMTI    COMP 0                      9293               RE0341
+0879 CSR 93      ZZAMTD    COMP 0                      9293               RE0341
+0880 CSR 93                GOTO ZZSEND                     ZERO BYPASS    RE0341
+0881 C*                                                                   RE0341
+0882 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.                       RE0341
+0883 CSR         ZZTOTI    COMP 0                      9193               RE0341
+0884 CSR 93      ZZTOTD    COMP 0                      9193               RE0341
+0885 C*                                                                   RE0341
+0886 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.                           RE0341
+0887 CSR 93                Z-ADDZZAMTI    ZZTOTI                          RE0341
+0888 CSR 93                Z-ADDZZAMTD    ZZTOTD                          RE0341
+0889 CSR 93                GOTO ZZSEND                     ZERO BYPASS    RE0341
+0890 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.                        RE0341
+0891 CSR 91N92                                                            RE0341
+0892 CORN91 92             GOTO ZZOFPS                                    RE0341
+0893 C*                                                                   RE0341
+0894 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40                      RE0341
+0895 CSR         ZZWK2     COMP 999                  93    '93' = CARRY   RE0341
+0896 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.RE0341
+0897 C*                                                                   RE0341
+0898 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VERE0341
+0899 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VERE0341
+0900 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3                           RE0341
+0901 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3                           RE0341
+0902 C*                                                                   RE0341
+0903 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED    RE0341
+0904 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS. RE0341
+0905 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE      RE0341
+0906 CSRN99                Z-ADDZZWK2     ZZTOTD                          RE0341
+0907 CSRN99                Z-ADDZZWK3     ZZTOTI                          RE0341
+0908 C*                                                                   RE0341
+0909 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT. RE0341
+0910 CSR 99                Z-ADD0         ZZAMT  153                      RE0341
+0911 CSR                   GOTO ZZSEND                                    RE0341
+0912 C*                                                                   RE0341
+0913 C* THE 'SIGNS' ARE DIFFERENT                                         RE0341
+0914 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**RE0341
+0915 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT            RE0341
+0916 C*                                                                   RE0341
+0917 CSR 92                Z-SUBZZAMTI    ZZAMTI 150                      RE0341
+0918 CSR 92                Z-SUBZZAMTD    ZZAMTD  30                      RE0341
+0919 C*                                                                   RE0341
+0920 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.           RE0341
+0921 C*                                                                   RE0341
+0922 CSR 91                Z-SUBZZTOTI    ZZTOTI                          RE0341
+0923 CSR 91                Z-SUBZZTOTD    ZZTOTD                          RE0341
+0924 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.                            RE0341
+0925 C*                                                                   RE0341
+0926 CSR         ZZTOTI    COMP ZZAMTI               93  95               RE0341
+0927 CSR 95      ZZTOTD    COMP ZZAMTD               93  95               RE0341
+0928 C*                                                                   RE0341
+0929 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.                                   RE0341
+0930 CSR 95                Z-ADD0         ZZTOTI                          RE0341
+0931 CSR 95                Z-ADD0         ZZTOTD                          RE0341
+0932 CSR 95                GOTO ZZSEND                                    RE0341
+0933 C*                                                                   RE0341
+0934 C* IF ZZTOT GT. ZZAMT.                                               RE0341
+0935 CSR 93      ZZAMTD    COMP ZZTOTD               94                   RE0341
+0936 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI                          RE0341
+0937 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2                           RE0341
+0938 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI                          RE0341
+0939 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD                          RE0341
+0940 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD                          RE0341
+0941 C*                                                                   RE0341
+0942 C*                                                                   RE0341
+0943 C* IF ZZAMT GT. ZZTOT.                                               RE0341
+0944 CSRN93      ZZTOTD    COMP ZZAMTD               94                   RE0341
+0945 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150                      RE0341
+0946 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2                           RE0341
+0947 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI                          RE0341
+0948 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI                          RE0341
+0949 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD                          RE0341
+0950 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD                          RE0341
+0951 C*                                                                   RE0341
+0952 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE          RE0341
+0953 CSR                   SETOF                     94                   RE0341
+0954 CSR 93 91                                                            RE0341
+0955 CORN93 92             SETON                     94                   RE0341
+0956 CSR 94                Z-SUBZZTOTI    ZZTOTI                          RE0341
+0957 CSR 94                Z-SUBZZTOTD    ZZTOTD                          RE0341
+0958 C**                                                                  RE0341
+0959 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.            RE0341
+0960 CSR 92                Z-SUBZZAMTI    ZZAMTI                          RE0341
+0961 CSR 92                Z-SUBZZAMTD    ZZAMTD                          RE0341
+0962 CSR         ZZSEND    TAG                             ** ZZSEND TAG *RE0341
+0963 C**                                                                  RE0341
+0964 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.           RE0341
+0965 CSR                   SETOF                     96                   RE0341
+0966 CSR         ZZTOTD    COMP 0                        91               RE0341
+0967 CSR 91      ZZTOTI    COMP 0                      96                 RE0341
+0968 CSR 96                MOVE '.000-'   ZZNEGD  5                       RE0341
+0969 CSR                   ENDSR                             ** ENDSR **  RE0341
+0970 C**                                                                  RE0341
+0971 C**                                                                  RE0341
+0972 C********************************************************************RE0341
+0973 C**                                                                  RE0341
+0974 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   RE0341
+0975 C**                                                                  RE0341
+0976 C           ZSYSTM    BEGSR                           *** ZSYSTM *** RE0341
+0977 C**                                                                  RE0341
+0978 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.                    RE0341
+0979 C                     MOVEL'01      'ZTABKY 12                       RE0341
+0980 C                     MOVE '  10'    ZTABKY                          RE0341
+0981 C**                                                                  RE0341
+0982 C           ZTABKY    CHAINTABLE                99    ON NOT THERE   RE0341
+0983 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED RE0341
+0984 C**                                                                  RE0341
+0985 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    RE0341
+0986 C           DATF      COMP 'M'                      98MMDDYY, 98 ON  RE0341
+0987 C**                                                                  RE0341
+0988 C                     ENDSR                                          RE0341
+0989 C**                                                                  RE0341
+0990 C**                                                                  RE0341
+0992 O*                                                                   RE0341
+0993 O* UPDATED CLIENT FILE                                               RE0341
+0994 O*                                                                   RE0341
+0995 OCLINT   E        L1 41                                              RE0341
+0996 O                         LOTCLI   256                               RE0341
+0997 O                    27   RUND     139P                              RE0341
+0998 O                    29   RUND     150P                              RE0341
+0999 O***********         28   RUND     153P                              E14601
+0999 O***********         28   RUND     142P                       E14601 E23879
+1000 O*                                                                   RE0341
+1001 O**   AUDIT EXTRACT FILE.                                            RE0341
+1002 ODLAUDHH E        21                                                 RE0341
+1003 O                                    1 'H'                           RE0341
+1004 O                                    7 '000000'                      RE0341
+1005 O                                   56 '0'                           RE0341
+1006 O*                                                                   RE0341
+1007 ODLAUDDD E        51                                                 RE0341
+1008 O                                    1 'D'                           RE0341
+1009 O                         CNUMRQ     7                               RE0341
+1010 O                         DLNO      13                               RE0341
+1011 O                         DDAT      16P                              RE0341
+1012 O                         VDAT      19P                              RE0341
+1013 O                         MDAT      22P                              RE0341
+1014 O                         CCY       25                               RE0341
+1015 O                         PCPL      32P                              RE0341
+1016 O                         SLCY      35                               RE0341
+1017 O                         SLAM      42P                              RE0341
+1018 O                         EXRT      49P                              RE0341
+1019 O                         INTR      55P                              RE0341
+1020 O                         FDIN      56                               RE0341
+1021 O                         DTYP      58                               RE0341
+1022 O                         DLST      60                               RE0341
+1022 O                         BRCA      70                               S01117
+1023 O**********************                                              E23879
+1024 O*LAUDDL*E********52                                                 E23879
+1025 O**********************              1 'L'                           E23879
+1026 O**********************   CNUMRQ     7                               E23879
+1027 O**********************   LNRF      13                               E23879
+1028 O**********************   DDRF      19                               E23879
+1029 O**********************   DELD      22P                              E23879
+1030 O**********************   STTD      25P                              E23879
+1031 O**********************   IIND      28P                              E23879
+1032 O**********************   ROLD      31P                              E23879
+1033 O**********************   MATD      34P                              E23879
+1034 O**********************   DDCY      37                               E23879
+1035 O**********************   ODDA      44P                              E23879
+1036 O**********************   EINR      50P                              E23879
+1022 O**********************   BRCA      70                        S01117 E23879
+1037 O*                                                                   RE0341
+1038 ODLAUDDR E        53                                                 RE0341
+1039 O                                    1 'R'                           RE0341
+1040 O                         CNUMRQ     7                               RE0341
+1041 O                         CCY       10                               RE0341
+1042 O**********               ACOD      14                                            RE0341 CGL029
+1043 O                         ACSQ      16                               RE0341
+1044 O                         ACNO      26                               RE0341
+1045 O                         CLBL      34P                              RE0341
+1046 O                         LDBL      42P                              RE0341
+1047 O                         ANAM      62                               RE0341
+1022 O                         BRCA      70                               S01117
+     O                         ACOD      80                                                   CGL029
+1048 ODLAUDZZ T        LR                                                 RE0341
+1049 O                                    1 'T'                           RE0341
+1050 O                                    7 '999999'                      RE0341
+1051 O                         DPIN      15P                              RE0341
+1052 O                         DPDC      17P                              RE0341
+1053 O                         DPNO      20P                              RE0341
+1054 O                                   56 '0'                           RE0341
+1055 O*                                                                   RE0341
+1056 O**   CONTROL TOTALS REPORT.                                         RE0341
+1057 O*E0341P1T   03   LR                                           S01124S01117
+1057 ORE0341AUT   03   LR                                                 S01117
+1058 O*****                              22 'REFERENCE RE0341'            S01117
+1058 O                                   22 'REFERENCE RE0341AU'          S01117
+1059 O                         TITL      89                               RE0341
+1060 O                                  104 'DATE'                        RE0341
+1061 O                         RUNA     112                               RE0341
+1062 O                                  122 'PAGE'                        RE0341
+1063 O                         PAGE     127                               RE0341
+1064 O        T   05      LR                                              RE0341
+1065 O                                   67 'AUDIT LETTERS EXTRACT - '    RE0341
+1066 O                                   82 'CONTROLS REPORT'             RE0341
+1067 O        T   06   LR                                                 RE0341
+1068 O                                   67 '------------------------'    RE0341
+1069 O                                   82 '---------------'             RE0341
+1070 O********T**236   LR 88                                              S01117
+1070 O        T  224   LR                                                 S01117
+1071 O                                   18 'RUN CONTROLS'                RE0341
+1072 O********T**2     LR 88                                              S01117
+1072 O        T  2     LR                                                 S01117
+1073 O***********                        17 'REQUEST FILE '               S01117
+1073 O                                   19 'REQUEST FILE '               S01117
+1074 O***********                        30 'RECORDS INPUT'               S01117
+1074 O                                   32 'RECORDS INPUT'               S01117
+1075 O                         NORE  4   41                               RE0341
+1076 O                      N39          48 '***'                         RE0341
+1077 O********T**2     LR 88                                              S01117
+1077 O        T  2     LR                                                 S01117
+1073 O***********                        17 'REQUEST FILE '               S01117
+1073 O                                   19 'REQUEST FILE '               S01117
+1079 O***********                        35 'RECORDS PROCESSED'           S01117
+1079 O                                   36 'RECORDS PROCESSED'           S01117
+1080 O                         RECCNT4   41                               RE0341
+1081 O                      N39          48 '***'                         RE0341
+1076 O                      N39          63 ' DIFFERENCE ***'             S01117
+1082 O********T**2     LR 88                                              S01117
+1082 O        T  2     LR                                                 S01117
+1083 O                                   34 'RECORDS OUTPUT'              RE0341
+1084 O                         DPNO  4   41                               RE0341
+1085 O                                   60 'HASH TOTAL'                  RE0341
+1086 O***********              DPIN      80                               S01117
+1086 O                         DPIN  Z   80                               S01117
+1087 O                         DPDC      83                               RE0341
+1070 O        T  236   LRN88                                              RE0341
+1071 O                                   72 'NO AUDIT LETTERS REQUEST'    RE0341
+1089 O                                   74 'ED'                          RE0341
+1088 O********T**      LR                                                 S01117
+1089 O***********                        72 '*** END OF REPORT ***'       S01117
+** CPY@   **      OBJECT COPYRIGHT
+(c)Finastra International Limited 2001

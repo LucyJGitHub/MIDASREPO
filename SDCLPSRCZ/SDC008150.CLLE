@@ -1,0 +1,180 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Stamp Tax Apply Rate Changes')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data                                       */
+/*                                                                   */
+/*       SDC008150 - Stamp Tax Effective Date Update                 */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR945638           Date 01Apr12              */
+/*                      CER049  *CREATE    Date 06Dec10              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR945638 - Stamp tax rate did not update                    */
+/*       CER049 - Stamp Tax                                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&WID) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Copyright Finastra International Limited +
+                           2010')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/** Declare parameters for access object AOSARDR0 */
+ 
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(60)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                           CMDLBL(ABNOR))
+ 
+/**   Main Processing */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Retrieve the system prefix xx */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')
+ 
+/** Check if CCB009 is active */
+ 
+             CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY'   +
+                           'CCB009' &DSFDY)
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                           VAR(&CCB009) VALUE('Y'))
+ 
+/** Check for restart */
+ 
+             CALL       CB0160 PARM(&CNAM &CSEQ &BUSY)
+ 
+/** If restart - restore object */
+ 
+             IF         COND(&BUSY *EQ 'Y') THEN(DO)
+               RSTOBJ     OBJ(SDSTPTPD SDSTPDPD SDSTMDPD) +
+                             SAVLIB(&DMLIB) +
+                             DEV(*SAVF) SAVF(&DILIB/SAVFTAXR)
+             ENDDO
+ 
+/** Create Sfile and save objects  */
+ 
+             CHKOBJ     OBJ(&DILIB/SAVFTAXR) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+               CRTSAVF    FILE(&DILIB/SAVFTAXR) TEXT('Save of +
+                             SDSTPTPD SDSTPDPD and SDSTMDPD.')
+             ENDDO
+             CLRSAVF    FILE(&DILIB/SAVFTAXR)
+ 
+/** Save data */
+ 
+             SAVOBJ     OBJ(SDSTPTPD SDSTPDPD SDSTMDPD) LIB(&DMLIB) +
+                           DEV(*SAVF) SAVF(&DILIB/SAVFTAXR)
+ 
+/** Set active flag */
+ 
+             CHGVAR     VAR(&BUSY) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+ 
+/** Start journalling PF/SDSTMDPD, PF/SDSTPTPD & PF/SDSTPDPD to  */
+/** journal ICJRN.                                               */
+/** If file is already journalled continue processing.           */
+ 
+             STRJRNPF   FILE(*LIBL/SDSTPTPD) JRN(*LIBL/ICJRN) +
+                           IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+ 
+             STRJRNPF   FILE(*LIBL/SDSTPDPD) JRN(*LIBL/ICJRN) +
+                           IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+ 
+             STRJRNPF   FILE(*LIBL/SDSTMDPD) JRN(*LIBL/ICJRN) +
+                           IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+ 
+/** Start commitment control */
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                           CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+             CALL       PGM(SD008150)
+ 
+             RTVJOBA    JOB(&WID) SWS(&SWS)
+ 
+/** DB error */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(MOPERQ MRUNQ)
+               CHGVAR     VAR(&MEM) VALUE('SDC008150 - Job +
+                             Terminated, Database in Error')
+               SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** SD008130 - Apply rate change to Flat/Charge tax */
+ 
+             IF         COND(&CSEQ *EQ 1) THEN(DO)                                      /*AR945638*/
+             CALL       PGM(SD008130)
+             ENDDO                                                                      /*AR945638*/
+ 
+             IF COND(%SWITCH(XXXXXX00)) +
+             THEN(DO)
+ 
+/** Set OK flag */
+ 
+               CHGVAR     VAR(&BUSY) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+               COMMIT
+               GOTO CMDLBL(END)
+             ENDDO
+ 
+ ABNOR:      SNDPGMMSG  MSG('Call to Program SDC008150 ended +
+                           abnormally') +
+                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ END:        ENDCMTCTL
+             MONMSG     MSGID(CPF8350)
+ 
+/** If CCB009 (COB Journalling) off, end journalling */
+ 
+             IF         COND(&CCB009 *NE 'Y') THEN(DO)
+ 
+               ENDJRNPF   FILE(SDSTMDPD)
+               MONMSG     MSGID(CPF7032)
+ 
+               ENDJRNPF   FILE(SDSTPTPD)
+               MONMSG     MSGID(CPF7032)
+ 
+               ENDJRNPF   FILE(SDSTPDPD)
+               MONMSG     MSGID(CPF7032)
+ 
+             ENDDO
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('Copyright Finastra +
+                           International Limited 2010')
+ 
+             ENDPGM

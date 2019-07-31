@@ -1,0 +1,727 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ Currencies conversion for Midas/Q')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas/Q                                              *
+      *                                                               *
+      *  MQEUCVT- Currencies Conversion                               *
+      *                                                               *
+      *  Function:  This program will be called Midasq programs       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CMQ002   *CREATE   Date 29Oct98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CMQ002 - Update Midas/Q Subsets with DBA R2 Database changes *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      * 01-05         Error Indicators                                *
+      *****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZPOWERZ1
+      *
+      ** Array containing powers for Ccy conversion
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CCY         2  3
+      *
+      ** Array containing Currencies
+      *
+     E                    AMNT        2 13 0
+      *
+      ** Array containing Amounts
+      *
+     E                    TYPE        2  2
+      *
+      ** Array containing Currency status
+      *
+     E                    SPRT        2 13 8
+      *
+      ** Array containing Currency rates
+      *
+     E                    MDIN        2  1
+      *
+      ** Array containing Currency M/D indicators
+      *
+     E                    EUER        2 13 8
+      *
+      ** Array containing Currency rates
+      *
+     E                    EUMD        2  1
+      *
+      ** Array containing Currency M/D indicators
+      *
+     E                    NBDP        2  1 0
+      *
+      ** Array containing Currency number of d.p.'s
+      *
+      /SPACE 3
+     ILDA       E DS
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDGELR    E DSSDGELRPD
+      ***  External data structures for General Ledger Details
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for Currency Details
+      *
+     IDSFDY     E DS
+      **  First data structure for Access Programs, short DS
+      *
+     IDSSDY     E DS
+      **  Second data structure for Access Programs, long DS
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C           FCCY      IFEQ TCCY
+     C                     Z-ADDFAMT      TAMT
+     C                     ELSE
+     C                     EXSR SRINIT
+      *
+      ** Perform Main Processing.
+      *
+     C                     EXSR SRCCYD
+     C                     EXSR SRCRAT
+     C                     EXSR SRAMNT
+     C                     Z-ADDAMNT,2    TAMT
+     C                     ENDIF
+      *
+      ** End Program and Return.
+      *
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AOGELRR0 Access Program (General Ledger)                     *
+      *  *PSSR  - Error Control Program                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           FCCY    3
+     C                     PARM           TCCY    3
+     C                     PARM           VDAT    50
+     C                     PARM           FAMT   130
+     C                     PARM           TAMT   130
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA   256
+      *
+      ** Initialise LDA field.
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MQEUCVT' DBPGM
+     C                     OUT  LDA
+      *
+      ** Setup array CCY
+      *
+     C                     MOVELFCCY      CCY,1
+     C                     MOVELTCCY      CCY,2
+      *
+      ** Setup array AMNT
+      *
+     C                     Z-ADDFAMT      AMNT,1
+     C                     Z-ADD*ZERO     AMNT,2
+      *
+      ** Set Error indicators to zero.
+      *
+     C                     MOVEA'00000'   *IN,01
+      *
+      ** Access Standing Data General Ledger File.
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Data base error in file SDGELRPD.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ************
+     C                     MOVEL'SDGELRPD'DBFILE           * DBERR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access Standing Data Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST  'POPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Data base error in file SDBANKPD.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 02 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Access Base currency details
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM BJCYCD    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERR 03 *
+     C                     MOVELBJCYCD    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Determine whether base currency is In, Out, or euro.
+      *
+     C                     MOVE 'OT'      BASTYP  2
+      *
+     C                     SELEC
+     C           BJCYCD    WHEQ BKEURO
+     C                     MOVE 'EU'      BASTYP
+      *
+     C           A6INCY    WHEQ 'Y'
+     C           A6TPSD    ANDLEVDAT
+     C                     MOVE 'IN'      BASTYP
+      *
+     C                     OTHER
+     C                     MOVE 'OT'      BASTYP
+     C                     ENDSL
+      *
+     C           BASTYP    IFEQ 'IN'
+     C                     Z-ADDA6EUER    BSEUER
+     C                     MOVE A6EUMD    BSEUMD
+     C                     ENDIF
+      *
+      ** If base is 'out', the euro spot may be required
+      ** later to convert in-->out or out-->in.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM BKEURO    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD007       DBASE
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVELBKEURO    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6SPRT    EUBYRT
+     C                     Z-ADDA6SPRT    EUSLRT
+     C                     MOVE A6MDIN    EUMDIN
+      *
+      ** Definitions.
+      *
+     C           *LIKE     DEFN FAMT      W#EAMT
+     C           *LIKE     DEFN FAMT      INTER1
+     C           *LIKE     DEFN FAMT      INTER2
+     C           *LIKE     DEFN FCCY      W#TRCY
+     C           *LIKE     DEFN TCCY      W#STCY
+     C           *LIKE     DEFN A6SPRT    EURATE
+     C           *LIKE     DEFN A6SPRT    EUBYRT
+     C           *LIKE     DEFN A6SPRT    EUSLRT
+     C           *LIKE     DEFN A6MDIN    EUMDIN
+     C           *LIKE     DEFN A6EUER    BSEUER
+     C           *LIKE     DEFN A6EUMD    BSEUMD
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CCYDET - Get Currency Details, (Whether 'IN' or 'OUT' etc)   *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AOCURRR0 Access Program (Currency Details)                   *
+      *  *PSSR  - Error Control Program                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCCYD    BEGSR
+      *
+      ** Determine Currency status and details for each Ccy.
+      *
+     C                     DO   2         X       10
+      *
+      ** Access Currencies File.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM CCY,X     PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Data base error in file SDCURRPD.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERR 04 *
+     C                     MOVELCCY,X     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    NBDP,X
+      *
+      ** Check whether Currency is 'IN' or Euro or 'OUT'
+      *
+     C                     SELEC
+      *
+      ** Set Currency status
+      *
+     C           CCY,X     WHEQ BKEURO
+     C                     MOVE 'EU'      TYPE,X
+      *
+     C           A6INCY    WHEQ 'Y'
+     C           A6TPSD    ANDLEVDAT
+     C                     MOVE 'IN'      TYPE,X
+     C                     OTHER
+     C                     MOVE 'OT'      TYPE,X
+     C                     ENDSL
+      *
+      ** Setup rates for currencies from CCY (X=1) and to CCY (X=2)
+      *
+     C                     Z-ADDA6SPRT    SPRT,X
+     C                     MOVE A6MDIN    MDIN,X
+      *
+     C           TYPE,X    IFEQ 'IN'
+     C                     Z-ADDA6EUER    EUER,X
+     C                     MOVE A6EUMD    EUMD,X
+      *
+      ** The 'spot' for an In currency where base is 'out' is derived
+      ** by combining the euro rate of the 'in' currency
+      *
+     C           BASTYP    IFEQ 'OT'
+     C           X         IFEQ 1
+     C                     Z-ADDEUBYRT    EURATE
+     C                     ELSE
+     C                     Z-ADDEUSLRT    EURATE
+     C                     ENDIF
+      *
+     C                     SELEC
+     C           EUMDIN    WHEQ EUMD,X
+     C           EURATE    MULT EUER,X    SPRT,X    H
+     C                     MOVE EUMDIN    MDIN,X
+      *
+     C           EURATE    WHGT EUER,X
+     C           EURATE    DIV  EUER,X    SPRT,X    H
+     C                     MOVE EUMDIN    MDIN,X
+      *
+     C                     OTHER
+     C           EUER,X    DIV  EURATE    SPRT,X    H
+     C                     MOVE EUMD,X    MDIN,X
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+      ** The 'spot' for an In currency where base is euros
+      ** is the euro rate.
+      *
+     C           BASTYP    IFEQ 'EU'
+     C                     Z-ADDA6EUER    SPRT,X
+     C                     MOVE A6EUMD    MDIN,X
+     C                     ENDIF
+      *
+      ** The 'spot' for an In currency where base is In is the
+      ** cross-rate of the two euro rates.
+      *
+     C           BASTYP    IFEQ 'IN'
+     C                     SELEC
+     C           A6EUMD    WHNE BSEUMD
+     C           A6EUER    MULT BSEUER    SPRT,X    H
+     C                     MOVE A6EUMD    MDIN,X
+      *
+     C           A6EUER    WHGT BSEUER
+     C           A6EUER    DIV  BSEUER    SPRT,X    H
+     C                     MOVE A6EUMD    MDIN,X
+      *
+     C                     OTHER
+     C           BSEUER    DIV  A6EUER    SPRT,X    H
+     C           A6EUMD    IFEQ 'D'
+     C                     MOVE 'M'       MDIN,X
+     C                     ELSE
+     C                     MOVE 'D'       MDIN,X
+     C                     ENDIF
+     C                     ENDSL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** The 'spot' for euros where base is an In currency is
+      ** the euro rate with the multiply/divide indicator inverted.
+      *
+     C           BASTYP    IFEQ 'IN'
+     C           TYPE,X    ANDEQ'EU'
+     C                     Z-ADDBSEUER    SPRT,X
+     C           BSEUMD    IFEQ 'D'
+     C                     MOVE 'M'       MDIN,X
+     C                     ELSE
+     C                     MOVE 'D'       MDIN,X
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CHKRAT - Check entry of rate is allowed, and calculate rate  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AOCURRR0 Access Program (Currency Details)                   *
+      *  RETURN - Return control.                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCRAT    BEGSR
+      *
+      ** Check entry of rate is allowed and whether one of the
+      ** currencies is the Base currency.
+      *
+     C                     SELEC
+      *
+      ** Set Rate to 1 if the currencies are the same.
+      ** Or the Euro rate if have an 'IN'/Euro combination.
+      *
+     C           CCY,1     WHEQ CCY,2
+     C                     Z-ADD1         ZRATEX
+     C                     MOVE 'D'       ZMDIX
+      *
+     C           TYPE,1    WHEQ 'IN'
+     C           TYPE,2    ANDEQ'EU'
+     C                     Z-ADDEUER,1    ZRATEX
+     C                     MOVE EUMD,1    ZMDIX
+      *
+     C           TYPE,1    WHEQ 'EU'
+     C           TYPE,2    ANDEQ'IN'
+     C                     Z-ADDEUER,2    ZRATEX
+     C           EUMD,2    IFEQ 'M'
+     C                     MOVE 'D'       ZMDIX
+     C                     ELSE
+     C                     MOVE 'M'       ZMDIX
+     C                     ENDIF
+      *
+     C           TYPE,1    WHEQ 'IN'
+     C           TYPE,2    ANDEQ'IN'
+     C           EUER,2    IFLE EUER,1
+     C                     Z-ADDEUER,1    ZRATE1 138
+     C                     MOVE EUMD,1    ZMDI1   1
+     C                     Z-ADDEUER,2    ZRATE2 138
+     C                     MOVE EUMD,2    ZMDI2   1
+     C                     ELSE
+     C                     Z-ADDEUER,2    ZRATE1
+     C                     MOVE EUMD,2    ZMDI1
+     C                     Z-ADDEUER,1    ZRATE2
+     C                     MOVE EUMD,1    ZMDI2
+     C                     ENDIF
+     C                     EXSR SRXRAT
+     C           EUER,2    IFGT EUER,1
+     C           ZMDIX     IFEQ 'M'
+     C                     MOVE 'D'       ZMDIX
+     C                     ELSE
+     C                     MOVE 'M'       ZMDIX
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** The remainder of cases will be EU/OT, OT/OT, OT/EU,
+      ** IN/OT, OT/IN which are treated the same.
+      *
+     C                     OTHER
+     C                     SELEC
+      *
+     C           CCY,2     WHEQ BJCYCD
+     C                     Z-ADDSPRT,1    ZRATEX
+     C                     MOVE MDIN,1    ZMDIX
+      *
+     C           CCY,1     WHEQ BJCYCD
+     C                     Z-ADDSPRT,2    ZRATEX
+     C           MDIN,2    IFEQ 'M'
+     C                     MOVE 'D'       ZMDIX
+     C                     ELSE
+     C                     MOVE 'M'       ZMDIX
+     C                     ENDIF
+      *
+     C                     OTHER
+     C           SPRT,2    IFLE SPRT,1
+     C                     Z-ADDSPRT,1    ZRATE1 138
+     C                     MOVE MDIN,1    ZMDI1   1
+     C                     Z-ADDSPRT,2    ZRATE2 138
+     C                     MOVE MDIN,2    ZMDI2   1
+     C                     ELSE
+     C                     Z-ADDSPRT,2    ZRATE1
+     C                     MOVE MDIN,2    ZMDI1
+     C                     Z-ADDSPRT,1    ZRATE2
+     C                     MOVE MDIN,1    ZMDI2
+     C                     ENDIF
+     C                     EXSR SRXRAT
+     C           SPRT,2    IFGT SPRT,1
+     C           ZMDIX     IFEQ 'M'
+     C                     MOVE 'D'       ZMDIX
+     C                     ELSE
+     C                     MOVE 'M'       ZMDIX
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDSL
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  TRNAMT - Transaction Amount                                  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  CONVRT - Convert amount from 'From Ccy' to 'To Ccy'          *
+      *  RETURN - Return control.                                     *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Debit amount is verified against or calculated from Credit
+      ** amount or vice versa.
+      *
+     C           SRAMNT    BEGSR
+      *
+     C                     SELEC
+      *
+     C           TYPE,1    WHEQ 'EU'
+     C           TYPE,2    ANDEQ'IN'
+     C           TYPE,1    OREQ 'IN'
+     C           TYPE,2    ANDEQ'EU'
+      *
+      ** Convert 'From amount' to 'To Currency' amount.
+      ** From Euro to 'IN' or from 'IN' to Euro.
+      *
+     C                     MOVE *BLANKS   W#TRCY           FROM Currency
+     C                     MOVE *BLANKS   W#STCY           TO Currency
+     C                     Z-ADDAMNT,1    W#EAMT           FROM Ccy Amount
+     C                     MOVE CCY,1     W#TRCY           FROM Currency
+     C                     MOVE CCY,2     W#STCY           TO Currency
+     C                     EXSR SRCONV
+      *
+     C                     Z-ADDP@OUTA    AMNT,2
+      *
+     C           TYPE,1    WHEQ 'IN'
+     C           TYPE,2    ANDEQ'IN'
+      *
+      ** Convert 'From amount' to 'To Currency' amount.
+      ** For 'IN' to 'IN' by calling EU0200 twice.
+      *
+     C                     MOVE *BLANKS   W#TRCY           FROM Currency
+     C                     MOVE *BLANKS   W#STCY           TO Currency
+     C                     Z-ADDAMNT,1    W#EAMT           FROM Ccy Amount
+     C                     MOVE CCY,1     W#TRCY           FROM Currency
+     C                     MOVE BKEURO    W#STCY           TO Euros
+     C                     EXSR SRCONV
+     C                     MOVE *BLANKS   W#TRCY           FROM Currency
+     C                     MOVE *BLANKS   W#STCY           TO Currency
+     C                     Z-ADDP@INTA    W#EAMT           FROM Ccy Amount
+     C                     MOVE BKEURO    W#TRCY           FROM Euros
+     C                     MOVE CCY,2     W#STCY           TO Currency
+     C                     EXSR SRCONV
+     C                     Z-ADDP@OUTA    AMNT,2
+      *
+      ** Verify/calculate the remaining cases using rate passed
+      ** if non-zero, or the calculated rate.
+      *
+     C                     OTHER
+      *
+     C                     Z-ADDZRATEX    ZCRSRT
+     C                     MOVE ZMDIX     ZCRSMD
+      *
+     C                     Z-ADDAMNT,1    ZAMTF            FROM Ccy Amount
+     C                     MOVE NBDP,1    ZCDPF            FROM Ccy d.p.
+     C                     MOVE NBDP,2    ZCDPT            TO Ccy d.p.
+     C                     EXSR ZCCYXR
+      *
+     C                     Z-ADDZAMTT     AMNT,2
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CONVRT - Subroutine to Call EU0200                           *
+      *                                                               *
+      *  Called By: DLVAM1, DLVAM2                                    *
+      *  Calls:                                                       *
+      *  EU0200 - Convert amount from 'From Ccy' to 'To Ccy'          *
+      *  *PSSR  - Error Control Program                               *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Convert 'From amount' to 'To Currency' amount.
+      *
+     C           SRCONV    BEGSR
+     C                     CALL 'EU0200'
+     C                     PARM *BLANKS   P@RTCD  7        Return Code
+     C                     PARM W#EAMT    P@FRAM 183       FROM Ccy Amount
+     C                     PARM W#TRCY    P@FRCY  3        FROM Currency
+     C                     PARM W#STCY    P@TOCY  3        TO Currency
+     C                     PARM           P@OUTA 150       Outright Amount
+     C                     PARM           P@INTA 183       Interim Amount
+     C                     PARM           P@EXRT 159       Exchange Rate
+     C                     PARM           P@MDIN  1        Mult/Div Ind
+     C           P@RTCD    IFEQ '*ERROR*'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD005       DBASE
+     C                     MOVEL*BLANKS   DBFILE           ************
+     C                     MOVEL'EU0200  'DBFILE           * DBERR 05 *
+     C                     MOVE *BLANKS   DBKEY            ************
+     C                     MOVEL*BLANKS   W@OPTN  7
+     C                     MOVELP@FRCY    W@OPTN
+     C                     MOVE P@TOCY    W@OPTN
+     C                     MOVELW@OPTN    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #XRATE - Subroutine to calculate cross rate                  *
+      *                                                               *
+      *  Called By: CHKRAT                                            *
+      *  Calls:                                                       *
+      *        None                                                   *
+      *                                                               *
+      *        Based on core sr/zxrate.                               *
+     C*****************************************************************
+      *
+     C           SRXRAT    BEGSR
+      *
+     C                     Z-ADD*ZEROS    ZRATEX 138
+      *
+      ** Calculate Cross Rate
+      **   ..  If M/D Indicator 1 = M/D Indicator 2
+      *
+     C           ZMDI1     IFEQ ZMDI2
+     C           ZRATE1    DIV  ZRATE2    ZRATEX    H
+      *
+     C                     ELSE
+      *
+      **   ..  Else
+      *
+     C           ZRATE1    MULT ZRATE2    ZRATEX    H
+     C                     END
+      *
+      ** Set Cross M/D Indicator
+      *
+     C                     MOVE ZMDI1     ZMDIX   1
+      *
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZCCYXR
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(c) Finastra International Limited 2001

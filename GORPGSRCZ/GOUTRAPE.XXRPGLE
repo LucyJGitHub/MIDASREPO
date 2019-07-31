@@ -1,0 +1,177 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+      *****************************************************************
+/*S*D ***RPGBASEMOD****************************************************                       CGP016
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GOUTRAPE - Update Global Consumer Banking TRAP               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CGP016  *REDUNDANT Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGP016 - Global database - Re-use deleted records            *
+      *  CRE026 - Consumer Banking                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *    xx    -  Function of Indicator                             *
+      *    99    -  Read operation on files                           *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *PSSR      - Program exception error routine                 *
+      *  *INZSR     - Initialisation Subroutine                       *
+      *  WRITE_TRAP - Subroutine to Write Transaction Index Record    *
+      *                                                               *
+      *  The *INZSR subroutine will only get called automatically     *
+      *  on entry to the module the first time it is run              *
+      *  (unless you end the program with LR on).  Similarly          *
+      *  D-spec initialisation only happens the first time.  Use      *
+      *  RESET for subsequent passes.                                 *
+      *                                                               *
+      *****************************************************************
+ 
+      *Work Consumer banking Transactions, Accounts and Position File
+     FGOEWTRAPL0IF   E           K DISK    RENAME(GETRAPD0:GEWTRAPD0)
+      **
+      *Update - Global Consumer Banking Transactions, Accounts and Position File
+     FGPETRAPL0 UF   E           K DISK    PREFIX(@)
+      **
+      *Update - Universal Transaction Extension Data File
+     FGPUTXEL0  UF   E           K DISK
+      **
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+      ** T R A N S A C T I O N    D E T A I L S
+     D T_TRAP        E DS                  EXTNAME(GPETRAPPD)
+ 
+     D W#RTCD          S              7A
+     D W#ERMS          S             50A
+     D I#LOC           S              4A
+     D I#CUSTDEFLT     S              1A
+     D I#RTCD          S              7A
+     D I#ERMS          S             50A
+      *
+      ** Read Global Consumer Banking Wrap TRAP
+      *
+     C                   READ      GOEWTRAPL0
+ 
+     C                   DOW       Not %EOF(GOEWTRAPL0)
+      *
+      ** Process when Action is Delete
+      *
+     C                   IF        T_ACTN = 'D'
+      *
+      ** Delete record, if exist in Global file (GPETRAPPD) file
+      *
+     C     T_ID          CHAIN     GPETRAPL0
+     C                   IF        %FOUND(GPETRAPL0)
+     C                   DELETE    GETRAPD0
+     C                   ENDIF
+      *
+      ** Delete record, if exist in Global Extension file (GPUTXEPD) file
+      *
+     C     GPUTXEK       CHAIN     GPUTXEL0
+     C                   IF        %FOUND(GPUTXEL0)
+     C                   DELETE    GPUTXED0
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      ** Process when Action is Insert OR Amend
+      *
+     C                   IF        T_ACTN = 'I' OR T_ACTN = 'A'
+      *
+      ** Write Transaction Index Record
+      *
+     C                   EXSR      WRITE_TRAP
+ 
+     C                   ENDIF
+      *
+      ** Process next record
+      *
+     C                   READ      GOEWTRAPL0
+     C                   ENDDO
+ 
+     C                   COMMIT
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      /SPACE 5
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WRITE_TRAP: Subroutine To Write Transaction Index Record      *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: GOWRTTRAPE                                            *
+      *****************************************************************
+     C     WRITE_TRAP    BEGSR
+ 
+     C                   MOVEL     'GLOB'        I#LOC
+     C                   MOVEL     'Y'           I#CUSTDEFLT
+      *
+      ** Write Transaction index Record,
+      *
+     C                   CALL      'GOWRTTRAPE'
+     C                   PARM      *BLANK        W#RTCD
+     C                   PARM      *BLANK        W#ERMS
+      *
+      ** Inputs
+      *
+     C                   PARM                    I#LOC
+     C                   PARM                    I#CUSTDEFLT
+     C                   PARM                    T_TRAP
+ 
+     C     W#RTCD        IFEQ      '*ERROR'
+     C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOWRTTRAPE'
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   ENDSR
+     C/SPACE 5
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Implicitly on program activation                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     *INZSR        BEGSR
+     C                   MOVE      *BLANK        I#RTCD
+     C                   MOVE      *BLANK        I#ERMS
+      *
+      ** Key list
+      *
+     C     GPUTXEK       KLIST
+     C                   KFLD                    T_ZONE
+     C                   KFLD                    T_MOD
+     C                   KFLD                    T_SMOD
+     C                   KFLD                    T_TREF
+ 
+ 
+     C                   ENDSR
+      ********************************************************************
+      /SPACE 5
+      ********************************************************************
+      * * P S S R  --- A B N O R M A L   E R R O R   C O N D I T I O N S
+      /COPY GOCPYSRC,GOPSSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2006

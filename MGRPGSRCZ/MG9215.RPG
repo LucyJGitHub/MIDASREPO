@@ -1,0 +1,1331 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MG MT362 deletion/cancellation control')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  MG9215 - IRS Rate Fix and Settlement Message Deletion        *
+      *                                                               *
+      *  Function:  This program will be used when producing MT362    *
+      *             IRS rate fix and settlement SWIFT messages for    *
+      *             re-fixing only. It will determine which message   *
+      *             types have previously been generated for rate fix *
+      *             or settlement for the same period and then        *
+      *             determine which of these messages to delete and   *
+      *             which will be used as the related message on the  *
+      *             amended message.                                  *
+      *                                                               *
+      *  Called By: DL6330 - FRAIRS Rate Fix and Settlement Confo     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW213             Date 03Jun13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 196068             Date 22Jul01               *
+      *                 CSW201             Date 02May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCF003             Date 01Aug96               *
+      *                 CSW005  *CREATE    Date 01Aug96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  196068 - Event type passed is wrong. MGST is used            *
+      *           instead of message status group.                    *
+      *  CSW201 - S.W.I.F.T. 2001 Standards Update                    *
+      *  CCF003 - Include MT360 and MT362 Confirmation Matching       *
+      *  CSW005 - MG34n and MG36n Message Generation                  *
+      *                                                               *
+      *****************************************************************
+     FMGOREFL0IF  E           K        DISK
+      *                                                                                       CSW201
+     FMGHISTL3IF  E           K        DISK                                                   CSW201
+      *                                                                                       CSW201
+      *****************************************************************
+      * Function of indicators                                        *
+      *   75    BOF or EOF or DB Error (MGOREFL0)                     *
+      *   76    First sent message for 'our' side event type has      *
+      *         already been retrieved.                               *
+      *   77    First sent message for 'their' side event type has    *
+      *         already been retrieved.                               *
+      *   78    First sent message for 'both' side event type has     *
+      *         already been retrieved.                               *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      * Subroutine Index                                              *
+      *   SRPRC1 - Set up output parameter 1                          *
+      *   SRPRC2 - Set up output parameter 2                          *
+      *   SRINIT - Initial Process                                    *
+      *   *PSSR  - Error Routine                                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    WR1       999 31                                                    CSW201
+     E                    WR2       999 31                                                    CSW201
+     E                    WR3       999 31                                                    CSW201
+     E                    WR4       999 31                                                    CSW201
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+     I            DS
+     I                                        1  16 TRNO
+     I                                        3   80F#DLNO
+      *
+      **  Data structure to extract transaction number (6,0)
+      *
+     I            DS
+     I                                        1  16 K#TRNO
+     I                                        1   2 K#MODI
+     I                                        3   80K#DLNO
+     I                                        9  110K#SEQN
+      *
+      **  Data structure used to position file pointer
+      *
+     IWDATA       DS                                                                          CSW201
+     I                                        1   2 WDEVTP                                    CSW201
+     I                                        3  18 WDTRNO                                    CSW201
+     I                                       19  22 WDMGST                                    CSW201
+     I                                       23  23 WDMGSG                                    CSW201
+     I                                       24  31 WDLSCC                                    CSW201
+      *                                                                                       CSW201
+      ** CSW201 Data details                                                                  CSW201
+      *                                                                                       CSW201
+     IWHREF       DS                         16                                               CSW201
+     I                                        1   2 WSMODI                                    CSW201
+     I                                        3   8 WSTRAN                                    CSW201
+     I                                        9  11 WSSEQ                                     CSW201
+      *                                                                                       CSW201
+      ** Transaction reference data structure                                                 CSW201
+      *                                                                                       CSW201
+     ISDBANK    E DSSDBANKPD
+      *
+      ** SD Bank Details
+      *
+     ISCSARD    E DSSCSARDPD                                              CCF003
+      *                                                                   CCF003
+      **  Data structure for Switchable Features file                     CCF003
+      *                                                                   CCF003
+     IDSFDY     E DSDSFDY
+      *
+      ** Short Data Structure
+      *
+     C/EJECT
+      *
+      ** Accept values from calling program
+      *
+     C           *ENTRY    PLIST
+      * Input Parameter
+     C                     PARM           P#MODI  2
+     C                     PARM           P#DLNO  60
+     C                     PARM           P#DTYP  2
+     C                     PARM           P#EVTP  2
+     C                     PARM           P#EDAT  50
+     C                     PARM           PKSNET  1
+      * Output Parameter
+     C                     PARM           PEVTP1  2
+     C                     PARM           PCANC1  1
+     C                     PARM           PTRNO1 16
+     C                     PARM           PEVTP2  2
+     C                     PARM           PCANC2  1
+     C                     PARM           PTRNO2 16
+     C                     PARM           PERROR  1
+      *
+      ** Perfrom initial processing
+      *
+     C                     EXSR SRINIT
+      *
+      **  Access last generated message for transaction number
+      *
+     C           K#TRNO    SETGTMGOREFD0               75
+     C                     READPMGOREFD0                 75
+      *
+     C                     MOVEA'000'     *IN,76
+      *
+      ** Process records while the ff. conditions are true:
+      **
+      ** 1. Module Id (FILE) = Module Id (PARAMETER) and
+      ** 2. Transaction No. (FILE, pos 3-8) = Deal Number (PARAMETER)
+      ** 3. Event Type (FILE) = '*U' or '*T' or '*B'
+      ** 4. Available Date (FILE) = Event Date (PARAMETER)
+      ** 5. Message Status (FILE) <> 'DLTD'
+      ** 6. *IN75 = OFF
+      ** 7. *IN76 = OFF - record with the same event type is not yet released
+      *
+     C           *IN75     DOWEQ'0'
+     C           MODI      ANDEQP#MODI
+     C           F#DLNO    ANDEQP#DLNO
+      *
+     C           AVDT      IFEQ P#EDAT
+     C           MGST      ANDNE'DLTD'
+     C           CSW201    ANDEQ'N'                                                           CSW201
+      *                                                                                       CSW201
+     C           AVDT      OREQ P#EDAT                                                        CSW201
+     C           MGST      ANDNE'DLTD'                                                        CSW201
+     C           CSW201    ANDEQ'Y'                                                           CSW201
+     C           MGDE      ANDGE10914                                                         CSW201
+      *
+     C           EVTP      IFEQ WFSU
+     C           *IN76     ANDNE*ON
+     C           EVTP      OREQ WFST
+     C           *IN77     ANDNE*ON
+     C           EVTP      OREQ WFSB
+     C           *IN78     ANDNE*ON
+      *
+     C                     SELEC
+     C           EVTP      WHEQ WFSU
+     C********** MGST      ANDEQ'2'                                                           196068
+     C           MGSG      ANDEQ'2'                                                           196068
+     C           EVTP      OREQ WFSU
+     C********** MGST      ANDEQ'3'                                                           196068
+     C           MGSG      ANDEQ'3'                                                           196068
+     C                     MOVE *ON       *IN76
+     C           EVTP      WHEQ WFST
+     C********** MGST      ANDEQ'2'                                                           196068
+     C           MGSG      ANDEQ'2'                                                           196068
+     C           EVTP      OREQ WFST
+     C********** MGST      ANDEQ'3'                                                           196068
+     C           MGSG      ANDEQ'3'                                                           196068
+     C                     MOVE *ON       *IN77
+     C           EVTP      WHEQ WFSB
+     C********** MGST      ANDEQ'2'                                                           196068
+     C           MGSG      ANDEQ'2'                                                           196068
+     C           EVTP      OREQ WFSB
+     C********** MGST      ANDEQ'3'                                                           196068
+     C           MGSG      ANDEQ'3'                                                           196068
+     C                     MOVE *ON       *IN78
+     C                     ENDSL
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+     C                     MOVELTRNO      WHREF                                               CSW201
+     C                     MOVE MTPY      WSMTPY                                              CSW201
+     C           KHIST     CHAINMGHISTL3             10                                       CSW201
+      *                                                                                       CSW201
+     C                     SELEC                                                              CSW201
+     C           WFTRN1    WHEQ *BLANKS                                                       CSW201
+     C                     MOVE HSFTRN    WFTRN1                                              CSW201
+     C                     MOVE EVTP      WEVTP1                                              CSW201
+      *                                                                                       CSW201
+     C           WFTRN2    WHEQ *BLANKS                                                       CSW201
+     C           HSFTRN    IFNE WFTRN1                                                        CSW201
+     C                     MOVE HSFTRN    WFTRN2                                              CSW201
+     C                     MOVE EVTP      WEVTP2                                              CSW201
+     C                     ENDIF                                                              CSW201
+      *                                                                                       CSW201
+     C           WFTRN3    WHEQ *BLANKS                                                       CSW201
+     C           HSFTRN    IFNE WFTRN2                                                        CSW201
+     C           HSFTRN    ANDNEWFTRN1                                                        CSW201
+     C                     MOVE HSFTRN    WFTRN3                                              CSW201
+     C                     MOVE EVTP      WEVTP3                                              CSW201
+     C                     ENDIF                                                              CSW201
+      *                                                                                       CSW201
+     C           WFTRN4    WHEQ *BLANKS                                                       CSW201
+     C           HSFTRN    IFNE WFTRN3                                                        CSW201
+     C           HSFTRN    ANDNEWFTRN2                                                        CSW201
+     C           HSFTRN    ANDNEWFTRN1                                                        CSW201
+     C                     MOVE HSFTRN    WFTRN4                                              CSW201
+     C                     MOVE EVTP      WEVTP4                                              CSW201
+     C                     ENDIF                                                              CSW201
+      *                                                                                       CSW201
+     C                     ENDSL                                                              CSW201
+      *                                                                                       CSW201
+     C                     CLEARWDATA                                                         CSW201
+     C                     MOVE EVTP      WDEVTP                                              CSW201
+     C                     MOVE TRNO      WDTRNO                                              CSW201
+     C                     MOVE MGST      WDMGST                                              CSW201
+     C                     MOVE MGSG      WDMGSG                                              CSW201
+     C                     MOVE LSCC      WDLSCC                                              CSW201
+      *                                                                                       CSW201
+     C                     SELEC                                                              CSW201
+      *                                                                                       CSW201
+     C           HSFTRN    WHEQ WFTRN1                                                        CSW201
+     C                     ADD  1         WK                                                  CSW201
+     C                     MOVE WDATA     WR1,WK                                              CSW201
+      *                                                                                       CSW201
+     C           HSFTRN    WHEQ WFTRN2                                                        CSW201
+     C                     ADD  1         WL                                                  CSW201
+     C                     MOVE WDATA     WR2,WL                                              CSW201
+      *                                                                                       CSW201
+     C           HSFTRN    WHEQ WFTRN3                                                        CSW201
+     C                     ADD  1         WM                                                  CSW201
+     C                     MOVE WDATA     WR3,WM                                              CSW201
+      *                                                                                       CSW201
+     C           HSFTRN    WHEQ WFTRN4                                                        CSW201
+     C                     ADD  1         WN                                                  CSW201
+     C                     MOVE WDATA     WR4,WN                                              CSW201
+      *                                                                                       CSW201
+     C                     OTHER                                                              CSW201
+     C                     LEAVE                                                              CSW201
+      *                                                                                       CSW201
+     C                     ENDSL                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+      *
+     C                     SELEC
+     C           WEVTP1    WHEQ *BLANKS
+     C                     MOVE EVTP      WEVTP1
+     C                     MOVE TRNO      WTRNO1
+     C                     MOVE MGST      WMGST1
+     C                     MOVE MGSG      WMGSG1
+     C                     MOVE LSCC      WLSCC1
+     C           WEVTP2    WHEQ *BLANKS
+     C                     MOVE EVTP      WEVTP2
+     C                     MOVE TRNO      WTRNO2
+     C                     MOVE MGST      WMGST2
+     C                     MOVE MGSG      WMGSG2
+     C                     MOVE LSCC      WLSCC2
+     C           WEVTP3    WHEQ *BLANKS
+     C                     MOVE EVTP      WEVTP3
+     C                     MOVE TRNO      WTRNO3
+     C                     MOVE MGST      WMGST3
+     C                     MOVE MGSG      WMGSG3
+     C                     MOVE LSCC      WLSCC3
+     C           WEVTP4    WHEQ *BLANKS
+     C                     MOVE EVTP      WEVTP4
+     C                     MOVE TRNO      WTRNO4
+     C                     MOVE MGST      WMGST4
+     C                     MOVE MGSG      WMGSG4
+     C                     MOVE LSCC      WLSCC4
+     C                     OTHER
+     C                     LEAVE
+     C                     ENDSL
+      *
+     C                     ENDIF                                                              CSW201
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READPMGOREFD0                 75
+      *
+     C                     ENDDO
+      *
+      ** Case Event Type Parameter = '*U' or '*T'
+      *
+     C           P#EVTP    IFEQ WFSU
+     C           P#EVTP    OREQ WFST
+      *
+     C           WEVTP1    IFNE 'SB'
+     C           WEVTP2    ANDNE'SB'
+     C           WEVTP3    ANDNE'SB'
+     C           WEVTP4    ANDNE'SB'
+      *
+      ** If netting (RS), find either ST or SU and if message is sent,
+      ** amend it else, delete it.
+      *
+     C           PKSNET    IFEQ 'Y'
+      *
+     C           WEVTP1    IFEQ WFSU
+     C           WEVTP1    OREQ WFST
+     C                     MOVELWEVTP1    WEVTP   2
+     C                     MOVELWMGST1    WMGST   4
+     C                     MOVELWTRNO1    P#TRNO 16
+     C                     EXSR SRPRC
+     C                     ENDIF
+      *
+     C           WEVTP2    IFEQ WFSU
+     C           WEVTP2    OREQ WFST
+     C                     MOVELWEVTP2    WEVTP
+     C                     MOVELWMGST2    WMGST
+     C                     MOVELWTRNO2    P#TRNO
+     C                     EXSR SRPRC
+     C                     ENDIF
+      *
+     C           WEVTP3    IFEQ WFSU
+     C           WEVTP3    OREQ WFST
+     C                     MOVELWEVTP3    WEVTP
+     C                     MOVELWMGST3    WMGST
+     C                     MOVELWTRNO3    P#TRNO
+     C                     EXSR SRPRC
+     C                     ENDIF
+      *
+     C           WEVTP4    IFEQ WFSU
+     C           WEVTP4    OREQ WFST
+     C                     MOVELWEVTP4    WEVTP
+     C                     MOVELWMGST4    WMGST
+     C                     MOVELWTRNO4    P#TRNO
+     C                     EXSR SRPRC
+     C                     ENDIF
+      *
+      **  Case not netting
+      *
+     C                     ELSE
+      *
+     C           WEVTP1    IFEQ P#EVTP
+     C                     MOVELP#EVTP    WEVTP
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+     C                     Z-ADDWK        WI                                                  CSW201
+      *                                                                                       CSW201
+     C           1         DO   WK        WJ                                                  CSW201
+     C                     MOVEAWR1,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC                                                         CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST1    WMGST   4
+     C                     MOVELWTRNO1    P#TRNO 16
+     C                     EXSR SRPRC
+     C                     ENDIF                                                              CSW201
+     C                     ENDIF
+      *
+     C           WEVTP2    IFEQ P#EVTP
+     C                     MOVELP#EVTP    WEVTP
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+     C                     Z-ADDWL        WI                                                  CSW201
+      *                                                                                       CSW201
+     C           1         DO   WL        WJ                                                  CSW201
+     C                     MOVEAWR2,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC                                                         CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST2    WMGST
+     C                     MOVELWTRNO2    P#TRNO
+     C                     EXSR SRPRC
+     C                     ENDIF                                                              CSW201
+     C                     ENDIF
+      *
+     C           WEVTP3    IFEQ P#EVTP
+     C                     MOVELP#EVTP    WEVTP
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+     C                     Z-ADDWM        WI                                                  CSW201
+      *                                                                                       CSW201
+     C           1         DO   WM        WJ                                                  CSW201
+     C                     MOVEAWR3,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC                                                         CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST3    WMGST
+     C                     MOVELWTRNO3    P#TRNO
+     C                     EXSR SRPRC
+     C                     ENDIF                                                              CSW201
+     C                     ENDIF
+      *
+     C           WEVTP4    IFEQ P#EVTP
+     C                     MOVELP#EVTP    WEVTP
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+     C                     Z-ADDWN        WI                                                  CSW201
+      *                                                                                       CSW201
+     C           1         DO   WN        WJ                                                  CSW201
+     C                     MOVEAWR4,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC                                                         CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST4    WMGST
+     C                     MOVELWTRNO4    P#TRNO
+     C                     EXSR SRPRC
+     C                     ENDIF                                                              CSW201
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           PEVTP1    IFEQ *BLANK
+     C           WEVTP1    ANDEQWFSB
+      *
+     C           P#EVTP    IFEQ WFSU
+     C           WEVTP2    ANDEQWFST
+     C           P#EVTP    OREQ WFST
+     C           WEVTP2    ANDEQWFSU
+     C                     MOVELP#EVTP    PEVTP1
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+      *                                                                                       CSW201
+     C           1         DO   WK        WJ                                                  CSW201
+     C                     MOVEAWR1,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST1    WMGST
+     C                     MOVELWTRNO1    P#TRNO
+     C                     EXSR SRPRC1
+     C                     ENDIF                                                              CSW201
+     C                     ENDIF
+      *
+     C           WEVTP2    IFEQ *BLANKS
+     C                     MOVELWFSB      PEVTP1
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+      *                                                                                       CSW201
+     C           1         DO   WK        WJ                                                  CSW201
+     C                     MOVEAWR1,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST1    WMGST
+     C                     MOVELWTRNO1    P#TRNO
+     C                     EXSR SRPRC1
+     C                     ENDIF                                                              CSW201
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           PEVTP1    IFEQ *BLANK
+     C           WEVTP2    ANDEQWFSB
+      *
+     C           P#EVTP    IFEQ WFSU
+     C           WEVTP1    ANDEQWFST
+     C           P#EVTP    OREQ WFST
+     C           WEVTP1    ANDEQWFSU
+      *
+     C                     MOVELP#EVTP    PEVTP1
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+      *                                                                                       CSW201
+     C           1         DO   WL        WJ                                                  CSW201
+     C                     MOVEAWR2,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST2    WMGST
+     C                     MOVELWTRNO2    P#TRNO
+     C                     EXSR SRPRC1
+     C                     ENDIF                                                              CSW201
+     C                     ENDIF
+      *
+     C           WEVTP1    IFEQ *BLANKS
+      *
+     C                     MOVELWFSB      PEVTP1
+     C                     MOVELWMGST1    WMGST
+     C                     MOVELWTRNO2    P#TRNO
+     C                     EXSR SRPRC1
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Case Event Type Parameter = '*B'
+      *
+     C           P#EVTP    IFEQ WFSB
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+     C                     MOVEAWR1,1     WDATA                                               CSW201
+     C                     MOVELWDMGSG    WMGSG1                                              CSW201
+     C                     MOVELWDMGST    WMGST1                                              CSW201
+     C                     MOVEAWR2,1     WDATA                                               CSW201
+     C                     MOVELWDMGSG    WMGSG2                                              CSW201
+     C                     MOVELWDMGST    WMGST2                                              CSW201
+     C                     MOVEAWR3,1     WDATA                                               CSW201
+     C                     MOVELWDMGSG    WMGSG3                                              CSW201
+     C                     MOVELWDMGST    WMGST3                                              CSW201
+     C                     MOVEAWR4,1     WDATA                                               CSW201
+     C                     MOVELWDMGSG    WMGSG4                                              CSW201
+     C                     MOVELWDMGST    WMGST4                                              CSW201
+     C                     ENDIF                                                              CSW201
+      *
+     C           WEVTP1    IFEQ P#EVTP
+     C           WEVTP2    ANDEQ*BLANKS
+     C                     MOVELP#EVTP    PEVTP1
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+      *                                                                                       CSW201
+     C           1         DO   WK        WJ                                                  CSW201
+     C                     MOVEAWR1,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST1    WMGST
+     C                     MOVELWTRNO1    P#TRNO
+     C                     EXSR SRPRC1
+     C                     ENDIF                                                              CSW201
+     C                     ENDIF
+      *
+      ** 'FB' and 'FB' combination
+      *
+     C           WEVTP1    IFEQ P#EVTP
+     C           WEVTP2    ANDEQP#EVTP
+      *
+     C                     SELEC
+      *
+     C           WMGSG1    WHEQ '2'
+     C           WMGSG1    OREQ '3'
+     C                     MOVELWEVTP1    PEVTP1
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+      *                                                                                       CSW201
+     C           1         DO   WK        WJ                                                  CSW201
+     C                     MOVEAWR1,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST1    WMGST
+     C                     MOVELWTRNO1    P#TRNO
+     C                     EXSR SRPRC1
+     C                     ENDIF                                                              CSW201
+      *
+     C           WMGSG2    WHEQ '2'
+     C           WMGSG2    OREQ '3'
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+      *                                                                                       CSW201
+     C           1         DO   WK        WJ                                                  CSW201
+     C                     MOVEAWR1,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST1    WMGST
+     C                     MOVELWTRNO1    P#TRNO
+     C                     EXSR SRPRC1
+     C                     ENDIF                                                              CSW201
+      *                                                                                       CSW201
+     C                     MOVELWEVTP2    PEVTP1
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+     C           1         DO   WL        WJ                                                  CSW201
+     C                     MOVEAWR2,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST2    WMGST
+     C                     MOVELWTRNO2    P#TRNO
+     C                     EXSR SRPRC1
+     C                     ENDIF                                                              CSW201
+      *
+     C                     OTHER
+     C                     MOVELWEVTP1    PEVTP1
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+     C           1         DO   WK        WJ                                                  CSW201
+     C                     MOVEAWR1,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST1    WMGST
+     C                     MOVELWTRNO1    P#TRNO
+     C                     EXSR SRPRC1
+     C                     ENDIF                                                              CSW201
+     C                     MOVELWEVTP2    PEVTP2
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+     C           1         DO   WL        WJ                                                  CSW201
+     C                     MOVEAWR2,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC2                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST2    WMGST
+     C                     MOVELWTRNO2    P#TRNO
+     C                     EXSR SRPRC2
+     C                     ENDIF                                                              CSW201
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C           WEVTP1    IFEQ WFSU
+     C           WEVTP2    ANDEQWFSU
+     C           WEVTP1    OREQ WFSU
+     C           WEVTP2    ANDEQWFST
+      *
+     C           WEVTP1    OREQ WFST
+     C           WEVTP2    ANDEQWFSU
+     C           WEVTP1    OREQ WFST
+     C           WEVTP2    ANDEQWFST
+      *
+     C           WMGST1    IFEQ 'CRTD'
+     C           WMGST2    ANDEQ'CRTD'
+     C           WMGST1    OREQ 'CRTD'
+     C           WMGST2    ANDEQ'AMND'
+      *
+     C           WMGST1    OREQ 'AMND'
+     C           WMGST2    ANDEQ'CRTD'
+     C           WMGST1    OREQ 'AMND'
+     C           WMGST2    ANDEQ'AMND'
+      *
+     C                     MOVE WFSB      PEVTP1
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+      *                                                                                       CSW201
+     C           1         DO   WK        WJ                                                  CSW201
+     C                     MOVEAWR1,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C           1         DO   WL        WJ                                                  CSW201
+     C                     MOVEAWR2,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+      *
+     C                     CALL 'MG9205'
+     C                     PARM           WTRNO1
+     C                     PARM           P#MODI
+     C                     PARM *BLANK    P#RTCD  1
+      *
+      ** If database error in MG9205 return control to calling program
+      *
+     C           P#RTCD    IFNE *BLANK
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CCF003
+      ** Amended so that PGM/MG9210 is executed if CCF003 is ON           CCF003
+      *                                                                   CCF003
+     C           CCF003    IFEQ 'Y'                                       CCF003
+      *                                                                   CCF003
+     C                     CALL 'MG9210'                                  CCF003
+     C                     PARM           WTRNO1                          CCF003
+     C                     PARM           P#MODI                          CCF003
+     C                     PARM *BLANK    P#RTCD  1                       CCF003
+      *                                                                   CCF003
+      ** If database error in MG9210 return control to calling program    CCF003
+      *                                                                   CCF003
+     C           P#RTCD    IFNE *BLANK                                    CCF003
+     C                     EXSR *PSSR                                     CCF003
+     C                     ENDIF                                          CCF002
+      *                                                                   CCF003
+     C                     ENDIF                                          CCF003
+      *
+     C                     CALL 'MG9205'
+     C                     PARM           WTRNO2
+     C                     PARM           P#MODI
+     C                     PARM *BLANK    P#RTCD  1
+      *
+      ** If database error in MG9205 return control to calling program
+      *
+     C           P#RTCD    IFNE *BLANK
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CCF003
+      ** Amended so that PGM/MG9210 is executed if CCF003 is ON           CCF003
+      *                                                                   CCF003
+     C           CCF003    IFEQ 'Y'                                       CCF003
+      *                                                                   CCF003
+     C                     CALL 'MG9210'                                  CCF003
+     C                     PARM           WTRNO2                          CCF003
+     C                     PARM           P#MODI                          CCF003
+     C                     PARM *BLANK    P#RTCD  1                       CCF003
+      *                                                                   CCF003
+      ** If database error in MG9210 return control to calling program    CCF003
+      *                                                                   CCF003
+     C           P#RTCD    IFNE *BLANK                                    CCF003
+     C                     EXSR *PSSR                                     CCF003
+     C                     ENDIF                                          CCF002
+      *                                                                   CCF003
+     C                     ENDIF                                          CCF003
+     C                     ENDIF                                                              CSW201
+      *
+     C                     ELSE
+      *
+     C                     MOVELWEVTP1    PEVTP1
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+      *                                                                                       CSW201
+     C           1         DO   WK        WJ                                                  CSW201
+     C                     MOVEAWR1,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST1    WMGST
+     C                     MOVELWTRNO1    P#TRNO
+     C                     EXSR SRPRC1
+     C                     ENDIF                                                              CSW201
+      *
+     C                     MOVELWEVTP2    PEVTP2
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+      *                                                                                       CSW201
+     C           1         DO   WL        WJ                                                  CSW201
+     C                     MOVEAWR2,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC2                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVELWMGST2    WMGST
+     C                     MOVELWTRNO2    P#TRNO
+     C                     EXSR SRPRC2
+     C                     ENDIF                                                              CSW201
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           WEVTP1    IFEQ WFSB
+     C           WEVTP2    ANDEQWFSU
+     C           WEVTP1    OREQ WFSB
+     C           WEVTP2    ANDEQWFST
+      *
+     C           WEVTP2    OREQ WFSB
+     C           WEVTP1    ANDEQWFSU
+     C           WEVTP2    OREQ WFSB
+     C           WEVTP1    ANDEQWFST
+      *
+     C           WMGST1    IFEQ 'CRTD'
+     C           WMGST2    ANDEQ'CRTD'
+     C           WMGST1    OREQ 'CRTD'
+     C           WMGST2    ANDEQ'AMND'
+      *
+     C           WMGST1    OREQ 'AMND'
+     C           WMGST2    ANDEQ'CRTD'
+     C           WMGST1    OREQ 'AMND'
+     C           WMGST2    ANDEQ'AMND'
+      *
+     C                     MOVE WFSB      PEVTP1
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+      *                                                                                       CSW201
+     C           1         DO   WK        WJ                                                  CSW201
+     C                     MOVEAWR1,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C           1         DO   WL        WJ                                                  CSW201
+     C                     MOVEAWR2,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+      *
+     C                     CALL 'MG9205'
+     C                     PARM           WTRNO1
+     C                     PARM           P#MODI
+     C                     PARM *BLANK    P#RTCD  1
+      *
+      ** If database error in MG9205 return control to calling program
+      *
+     C           P#RTCD    IFNE *BLANK
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CCF003
+      ** Amended so that PGM/MG9210 is executed if CCF003 is ON           CCF003
+      *                                                                   CCF003
+     C           CCF003    IFEQ 'Y'                                       CCF003
+      *                                                                   CCF003
+     C                     CALL 'MG9210'                                  CCF003
+     C                     PARM           WTRNO1                          CCF003
+     C                     PARM           P#MODI                          CCF003
+     C                     PARM *BLANK    P#RTCD  1                       CCF003
+      *                                                                   CCF003
+      ** If database error in MG9210 return control to calling program    CCF003
+      *                                                                   CCF003
+     C           P#RTCD    IFNE *BLANK                                    CCF003
+     C                     EXSR *PSSR                                     CCF003
+     C                     ENDIF                                          CCF002
+      *                                                                   CCF003
+     C                     ENDIF                                          CCF003
+      *
+     C                     CALL 'MG9205'
+     C                     PARM           WTRNO2
+     C                     PARM           P#MODI
+     C                     PARM *BLANK    P#RTCD  1
+      *
+      ** If database error in MG9205 return control to calling program
+      *
+     C           P#RTCD    IFNE *BLANK
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CCF003
+      ** Amended so that PGM/MG9210 is executed if CCF003 is ON           CCF003
+      *                                                                   CCF003
+     C           CCF003    IFEQ 'Y'                                       CCF003
+      *                                                                   CCF003
+     C                     CALL 'MG9210'                                  CCF003
+     C                     PARM           WTRNO2                          CCF003
+     C                     PARM           P#MODI                          CCF003
+     C                     PARM *BLANK    P#RTCD  1                       CCF003
+      *                                                                   CCF003
+      ** If database error in MG9210 return control to calling program    CCF003
+      *                                                                   CCF003
+     C           P#RTCD    IFNE *BLANK                                    CCF003
+     C                     EXSR *PSSR                                     CCF003
+     C                     ENDIF                                          CCF002
+      *                                                                   CCF003
+     C                     ENDIF                                          CCF003
+     C                     ENDIF                                                              CSW201
+      *
+     C                     ELSE
+      *
+     C           WEVTP1    IFEQ WFSU
+     C           WEVTP2    OREQ WFST
+     C                     MOVE WFSU      PEVTP1
+     C                     MOVE WFST      PEVTP2
+     C                     ENDIF
+      *
+     C           WEVTP1    IFEQ WFST
+     C           WEVTP2    OREQ WFSU
+     C                     MOVE WFST      PEVTP1
+     C                     MOVE WFSU      PEVTP2
+     C                     ENDIF
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+      *                                                                                       CSW201
+     C           1         DO   WK        WJ                                                  CSW201
+     C                     MOVEAWR1,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC1                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+      *
+     C                     MOVELWMGST1    WMGST
+     C                     MOVELWTRNO1    P#TRNO
+     C                     EXSR SRPRC1
+     C                     ENDIF                                                              CSW201
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'Y'                                                           CSW201
+      *                                                                                       CSW201
+     C           1         DO   WL        WJ                                                  CSW201
+     C                     MOVEAWR2,WJ    WDATA                                               CSW201
+     C                     MOVELWDMGST    WMGST                                               CSW201
+     C                     MOVELWDTRNO    P#TRNO                                              CSW201
+     C                     EXSR SRPRC2                                                        CSW201
+     C                     ENDDO                                                              CSW201
+      *                                                                                       CSW201
+     C                     ELSE                                                               CSW201
+      *
+     C                     MOVELWMGST2    WMGST
+     C                     MOVELWTRNO2    P#TRNO
+     C                     EXSR SRPRC2
+     C                     ENDIF                                                              CSW201
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Check if message deleted is an amendment of a previously
+      ** sent message and if it is, find released message and send
+      ** it back as reference message to calling program.
+      *
+     C           PCANC1    IFNE 'C'
+     C********** WLSCC1    ANDEQ'AMEND   '                                                    CSW201
+     C           WMGSG1    ANDEQ'AMND'                                                        CSW201
+     C                     SELEC
+     C           WEVTP1    WHEQ WEVTP3
+     C           WMGSG3    ANDEQ'2'
+     C           WEVTP1    OREQ WEVTP3
+     C           WMGSG3    ANDEQ'3'
+     C                     MOVELWTRNO3    PTRNO1
+     C                     MOVEL'C'       PCANC1
+     C           WEVTP1    WHEQ WEVTP4
+     C           WMGSG4    ANDEQ'2'
+     C           WEVTP1    OREQ WEVTP4
+     C           WMGSG4    ANDEQ'3'
+     C                     MOVELWTRNO4    PTRNO1
+     C                     MOVEL'C'       PCANC1
+     C                     ENDSL
+     C                     ENDIF
+      *
+     C           PCANC2    IFNE 'C'
+     C********** WLSCC2    ANDEQ'AMEND   '                                                    CSW201
+     C           WMGSG2    ANDEQ'AMND'                                                        CSW201
+     C                     SELEC
+     C           WEVTP2    WHEQ WEVTP3
+     C           WMGSG3    ANDEQ'2'
+     C           WEVTP2    OREQ WEVTP3
+     C           WMGSG3    ANDEQ'3'
+     C                     MOVELWTRNO3    PTRNO2
+     C                     MOVEL'C'       PCANC2
+     C           WEVTP2    WHEQ WEVTP4
+     C           WMGSG4    ANDEQ'2'
+     C           WEVTP2    OREQ WEVTP4
+     C           WMGSG4    ANDEQ'3'
+     C                     MOVELWTRNO4    PTRNO2
+     C                     MOVEL'C'       PCANC2
+     C                     ENDSL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** End Program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *   SRPRC  - Delete or set up message for amend                 *
+      *   Called by: Main Process                                     *
+      *   Calls    : MG9205                                           *
+      *****************************************************************
+     C           SRPRC     BEGSR
+      *
+     C           WMGST     IFEQ 'CRTD'
+     C           WMGST     OREQ 'AMND'
+      *
+     C                     CALL 'MG9205'
+     C                     PARM           P#TRNO
+     C                     PARM           P#MODI
+     C                     PARM *BLANKS   P#RTCD  1
+      *
+      ** If database error in MG9205 return control to calling program
+      *
+     C           P#RTCD    IFNE *BLANK
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CCF003
+      ** Amended so that PGM/MG9210 is executed if CCF003 is ON           CCF003
+      *                                                                   CCF003
+     C           CCF003    IFEQ 'Y'                                       CCF003
+      *                                                                   CCF003
+     C                     CALL 'MG9210'                                  CCF003
+     C                     PARM           P#TRNO                          CCF003
+     C                     PARM           P#MODI                          CCF003
+     C                     PARM *BLANK    P#RTCD  1                       CCF003
+      *                                                                   CCF003
+      ** If database error in MG9210 return control to calling program    CCF003
+      *                                                                   CCF003
+     C           P#RTCD    IFNE *BLANK                                    CCF003
+     C                     EXSR *PSSR                                     CCF003
+     C                     ENDIF                                          CCF002
+      *                                                                   CCF003
+     C                     ENDIF                                          CCF003
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'N'                                                           CSW201
+     C           WJ        OREQ WI                                                            CSW201
+      *
+     C           PCANC1    IFEQ *BLANKS
+     C                     MOVELWEVTP     PEVTP1
+     C                     ELSE
+     C                     MOVELWEVTP     PEVTP2
+     C                     ENDIF
+      *                                                                                       CSW201
+     C                     ENDIF                                                              CSW201
+      *
+     C                     ELSE
+      *                                                                                       CSW201
+     C           CSW201    IFEQ 'N'                                                           CSW201
+     C           WJ        OREQ WI                                                            CSW201
+      *
+     C           PCANC1    IFEQ *BLANKS
+     C                     MOVELWEVTP     PEVTP1
+     C                     MOVE P#TRNO    PTRNO1
+     C                     MOVE 'C'       PCANC1
+     C                     ELSE
+     C                     MOVELWEVTP     PEVTP2
+     C                     MOVE P#TRNO    PTRNO2
+     C                     MOVE 'C'       PCANC2
+     C                     ENDIF
+      *                                                                                       CSW201
+     C                     ENDIF                                                              CSW201
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *   SRPRC1 - Set up output parameter 1                          *
+      *   Called by: Main Process                                     *
+      *   Calls    : MG9205                                           *
+      *****************************************************************
+     C           SRPRC1    BEGSR
+      *
+     C           WMGST     IFEQ 'CRTD'
+     C           WMGST     OREQ 'AMND'
+      *
+     C                     CALL 'MG9205'
+     C                     PARM           P#TRNO
+     C                     PARM           P#MODI
+     C                     PARM *BLANKS   P#RTCD  1
+      *
+      ** If database error in MG9205 return control to calling program
+      *
+     C           P#RTCD    IFNE *BLANK
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CCF003
+      ** Amended so that PGM/MG9210 is executed if CCF003 is ON           CCF003
+      *                                                                   CCF003
+     C           CCF003    IFEQ 'Y'                                       CCF003
+      *                                                                   CCF003
+     C                     CALL 'MG9210'                                  CCF003
+     C                     PARM           P#TRNO                          CCF003
+     C                     PARM           P#MODI                          CCF003
+     C                     PARM *BLANK    P#RTCD  1                       CCF003
+      *                                                                   CCF003
+      ** If database error in MG9210 return control to calling program    CCF003
+      *                                                                   CCF003
+     C           P#RTCD    IFNE *BLANK                                    CCF003
+     C                     EXSR *PSSR                                     CCF003
+     C                     ENDIF                                          CCF002
+      *                                                                   CCF003
+     C                     ENDIF                                          CCF003
+      *
+     C                     ELSE
+      *
+     C                     MOVE P#TRNO    PTRNO1
+     C                     MOVE 'C'       PCANC1
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *   SRPRC2 - Set up output parameter 2                          *
+      *   Called by: Main Process                                     *
+      *   Calls    : MG9205                                           *
+      *****************************************************************
+     C           SRPRC2    BEGSR
+      *
+     C           WMGST     IFEQ 'CRTD'
+     C           WMGST     OREQ 'AMND'
+      *
+     C                     CALL 'MG9205'
+     C                     PARM           P#TRNO
+     C                     PARM           P#MODI
+     C                     PARM *BLANKS   P#RTCD  1
+      *
+      ** If database error in MG9205 return control to calling program
+      *
+     C           P#RTCD    IFNE *BLANK
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CCF003
+      ** Amended so that PGM/MG9210 is executed if CCF003 is ON           CCF003
+      *                                                                   CCF003
+     C           CCF003    IFEQ 'Y'                                       CCF003
+      *                                                                   CCF003
+     C                     CALL 'MG9210'                                  CCF003
+     C                     PARM           P#TRNO                          CCF003
+     C                     PARM           P#MODI                          CCF003
+     C                     PARM *BLANK    P#RTCD  1                       CCF003
+      *                                                                   CCF003
+      ** If database error in MG9210 return control to calling program    CCF003
+      *                                                                   CCF003
+     C           P#RTCD    IFNE *BLANK                                    CCF003
+     C                     EXSR *PSSR                                     CCF003
+     C                     ENDIF                                          CCF002
+      *                                                                   CCF003
+     C                     ENDIF                                          CCF003
+      *
+     C                     ELSE
+      *
+     C                     MOVE P#TRNO    PTRNO2
+     C                     MOVE 'C'       PCANC2
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *   SRINIT - Initial Process                                    *
+      *   Called by: Main Process                                     *
+      *   Calls    : NONE                                             *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      **  Set up Local Data Area (LDA)
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'MG9215'  DBPGM     P
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      ** Initialise workfields
+      *
+     C                     MOVE *BLANKS   WEVTP1  2
+     C                     MOVE *BLANKS   WEVTP2  2
+     C                     MOVE *BLANKS   WEVTP3  2
+     C                     MOVE *BLANKS   WEVTP4  2
+     C                     MOVE *BLANKS   WTRNO1 16
+     C                     MOVE *BLANKS   WTRNO2 16
+     C                     MOVE *BLANKS   WTRNO3 16
+     C                     MOVE *BLANKS   WTRNO4 16
+     C                     MOVE *BLANKS   WMGST1  4
+     C                     MOVE *BLANKS   WMGST2  4
+     C                     MOVE *BLANKS   WMGST3  4
+     C                     MOVE *BLANKS   WMGST4  4
+     C                     MOVE *BLANKS   WMGSG1  1
+     C                     MOVE *BLANKS   WMGSG2  1
+     C                     MOVE *BLANKS   WMGSG3  1
+     C                     MOVE *BLANKS   WMGSG4  1
+     C                     MOVE *BLANKS   WLSCC1  8
+     C                     MOVE *BLANKS   WLSCC2  8
+     C                     MOVE *BLANKS   WLSCC3  8
+     C                     MOVE *BLANKS   WLSCC4  8
+     C                     MOVE *BLANKS   WFTRN1 16                                           CSW201
+     C                     MOVE *BLANKS   WFTRN2 16                                           CSW201
+     C                     MOVE *BLANKS   WFTRN3 16                                           CSW201
+     C                     MOVE *BLANKS   WFTRN4 16                                           CSW201
+      *
+      ** Initialise output parameters
+      *
+     C                     MOVE *BLANKS   PEVTP1
+     C                     MOVE *BLANKS   PEVTP2
+     C                     MOVE *BLANKS   PCANC1
+     C                     MOVE *BLANKS   PCANC2
+     C                     MOVE *BLANKS   PTRNO1
+     C                     MOVE *BLANKS   PTRNO2
+      *
+      ** Access Bank Details (Used to get Run Date)
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Data base error in file (file)
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST  'DBKEY            ***************
+     C                     MOVEL'MG9215  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     SETON                       U7U8LR
+     C                     ENDIF
+      *
+      ** Move input parameters to key fields
+      *
+     C                     MOVE P#MODI    K#MODI
+     C                     MOVE P#DLNO    K#DLNO
+     C                     MOVE *HIVAL    K#SEQN
+      *
+      ** Determine wether 'Event type' parameter is Fix or Settlement
+      *
+     C                     MOVELP#EVTP    P#FS    1
+     C           P#FS      IFEQ 'F'
+     C                     MOVE 'FU'      WFSU    2
+     C                     MOVE 'FT'      WFST    2
+     C                     MOVE 'FB'      WFSB    2
+     C                     ELSE
+     C           P#FS      IFEQ 'S'
+     C                     MOVE 'SU'      WFSU
+     C                     MOVE 'ST'      WFST
+     C                     MOVE 'SB'      WFSB
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                   CCF003
+      ** Access Switchable features file to see if CCF003 is switched     CCF003
+      ** ON.                                                              CCF003
+      *                                                                   CCF003
+     C                     CALL 'AOSARDR0'                                CCF003
+     C                     PARM '       ' RTCDA   7                       CCF003
+     C                     PARM '*VERIFY' RTCDB   7                       CCF003
+     C                     PARM 'CCF003'  RTCDC   6                       CCF003
+      *                                                                   CCF003
+     C           RTCDA     IFEQ *BLANK                                    CCF003
+     C                     MOVE 'Y'       CCF003  1                       CCF003
+     C                     ELSE                                           CCF003
+     C                     MOVE 'N'       CCF003                          CCF003
+     C                     ENDIF                                          CCF003
+      *                                                                                       CSW201
+      ** Check if Swift 2001 Standards Update is installed                                    CSW201
+      *                                                                                       CSW201
+     C                     CALL 'SWIF2001'                                                    CSW201
+     C                     PARM *BLANKS   RTCDA                                               CSW201
+      *                                                                                       CSW201
+     C           RTCDA     IFEQ 'CSW2001'                                                     CSW201
+     C                     MOVE 'Y'       CSW201  1                                           CSW201
+     C                     ELSE                                                               CSW201
+     C                     MOVE 'N'       CSW201                                              CSW201
+     C                     ENDIF                                                              CSW201
+      *                                                                                       CSW201
+     C                     Z-ADD0         WI      30                                          CSW201
+     C                     Z-ADD0         WJ      30                                          CSW201
+     C                     Z-ADD0         WK      30                                          CSW201
+     C                     Z-ADD0         WL      30                                          CSW201
+     C                     Z-ADD0         WM      30                                          CSW201
+     C                     Z-ADD0         WN      30                                          CSW201
+      *                                                                                       CSW201
+     C           KHIST     KLIST                                                              CSW201
+     C                     KFLD           WSMODI                                              CSW201
+     C                     KFLD           WSTRAN                                              CSW201
+     C                     KFLD           WSMTPY  3                                           CSW201
+     C                     KFLD           WSSEQ                                               CSW201
+      *
+     C                     ENDSR
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by:                                                    *
+      * Calls    : None                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       PERROR
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

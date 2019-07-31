@@ -1,0 +1,240 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME SWIFT 98 Active ?')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  SWIFT98 - SWIFT 98 Active ?                                  *
+      *                                                               *
+      *  Function:  This program checks if SWIFT 98 is active.        *
+      *             It is active if switchable feature CSW098 is      *
+      *             installed (record on SCSARDPD) or the run date    *
+      *             is greater than 16th October 1998.                *
+      *                                                               *
+      *  Called By: Message Generation and SWIFT processing           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSW098             Date DDMmmYY               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CSW098 - SWIFT 1998 Changes                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+      *                                                                                       CSC022
+      *  Array containing Copyright statement
+      ***************** FIRST COMPILE TIME ARRAY *********************
+      *
+     E/COPY MECPYSRC,SRERRE
+      /EJECT
+      * Data structures:
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+      *
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+      *  Copysource for error processing
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      * Get Rundate - Rundate  *
+      *
+     IMMODDS    E DSSDMMODPD
+      *
+      * Modules Data Structure *
+      *
+     ISCSARD    E DSSCSARDPD
+      *
+      * Sar Text details *
+      *
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      * Data Structures used by Access Programs
+      *
+      *
+      /EJECT
+      *
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      * Entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+      *
+      *  Set up primary reference
+      *
+     C                     MOVEL'SWIFT98?'W0PREF    P
+      *
+      * Initialise program
+      *
+     C           $FIRST    IFEQ *BLANKS
+     C                     EXSR SRINIT
+     C                     END
+      *
+      * Move in result of initialisation
+      *
+     C                     MOVELP#RTCD    P0RTN
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMAIN    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     RETRN
+      *
+      ********************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Indicate that set up is complete
+      *
+     C                     MOVEL'Y'       $FIRST  1
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Get modules information
+      *
+     C                     CALL 'AOMMODR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           MMODDS    PARM *BLANKS   DSFDY            O:Module Flg
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Access SAR details file to see if CSW098 is installed.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*VERIFY' P@OPTN
+     C                     PARM 'CSW098'  @SARD   6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      *  If record found or run date > 16th October 1998 then active
+      *
+     C                     MOVEL*BLANKS   P#RTCD  7
+     C           P@RTCD    IFEQ *BLANKS
+     C           WURDNB    ORGT 9786
+     C                     MOVEL'CSW098'  P#RTCD
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL*BLANKS   WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+     CSR                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+      *
+      *
+**  CPY@
+(c) Finastra International Limited 2001

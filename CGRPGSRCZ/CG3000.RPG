@@ -1,0 +1,511 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG UDC print generator driver')
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG3000 - Print Generator Driver                              *
+      *                                                               *
+      *  Function:  This program calls the Print Generator, updates   *
+      *             the UDC Reference record and outputs a Log file   *
+      *             record.                                           *
+      *                                                               *
+      *  Called By: mmCnnnn - (program name)                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *  Prev Amend No. CCG015             Date 13Jun01               *
+      *                 190022             Date 28Jan99               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCG009             DATE 01JUN95               *
+      *                 086149             DATE 31MAR95               *
+      *                 086150             DATE 01MAR95               *
+      *                 086151             DATE 15FEB95               *
+      *                 S01522             DATE 07DEC94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CCG015 - Correspondence Manager Phase 1 (Recompile)          *
+      *  190022 - Increased the size of OVRPRTF string to accomodate  *
+      *           more options for the OVRPRTF command.               *
+      *  CCG009 - Private Banking UDC                                 *
+      *  086149 - Remove INDEX parameter                              *
+      *  086150 - Correct spool file number for AFP submit            *
+      *  086151 - Monitor for CG3001 ending in error                  *
+      *  S01552 - User Defined Correspondence                         *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  50   -    No Record found on PF/CGUDCRPD                     *
+      *  90   -    ROLBK indicator                                    *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FCGUDCRL0UF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     FCGXDCRL0UF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+      /EJECT
+      *
+      **  Command Strings for QCMDEXC
+     E                    #CMD    1   1 80
+      *
+      **  Copyright array.
+     E                    ##CPY   1   1 80
+      /COPY CGCPYSRC,SRERRE
+      /EJECT
+      *
+     IP#PGEN    E DSCGPGENPD
+      **  External DS for parameters based on PF/CGPGENPD
+      *
+      *
+     IP#UDCL    E DSCGUDCLPD
+      **  External DS for parameters based on PF/CGUDCLPD
+      *
+     I##UDCR      DS
+      **  Data Structure for concatenation of Item Number and Corresp
+     I                                        1   50##ITEM
+     I                                        6  15 ##DCOR
+      *
+     I*********** DS                                                      190022
+      **  Data Structure to set up Command String for QCMDEXC
+     I##CMD       DS                           1024                       190022
+     I****************************************1 256 ##CMD                 190022
+     I                                        1 256 ##CMD1                190022
+     I                                      257 512 ##CMD2                190022
+     I                                      513 768 ##CMD3                190022
+     I                                      7691024 ##CMD4                190022
+     I                                       14  23 ##FILE
+     I                                       33  42 ##PRTN
+     I                                       54  63 ##SPLF
+      *
+     IL#MSDT      DS
+      **  Data Structure to set up Message Data for the Log File
+     I                                    P   1   50L#ITEM
+     I                                        6  15 L#DCOR
+      *
+     ICGLDA     E DSCGLDA
+      **  Print Process Communication Data Area
+      *
+     ICPYR        DS
+      **  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+      ******/COPY CGCPYSRC,SRPGI                                          086149
+      /COPY CGCPYSRC,SRERRI
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   SRMAIN - Main processing                                    *
+      *   *INZSR - Initial processing - On First Call                 *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRMAIN - Main Processing                       *
+      *****************************************************************
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           P#PGEN
+      *
+      **  If the Action Code is '*PRINT', perform print specific
+      **  processing.
+     C           W0ACT     IFEQ '*PRINT  '
+      *
+      **  Retrieve the CGLDA.
+     C                     IN   CGLDA
+      *
+      **  Set up the CGLDA communication fields.
+     C                     MOVE B2ITEM    #@ITEM
+     C                     MOVE B2LAYO    #@LAYO
+     C                     MOVE B2DCOR    #@DCOR
+     C                     MOVE B2LGID    #@UNT
+     C                     MOVE B2GPTR    #@GPTR                          CCG009
+     C                     MOVE B2GPSQ    #@GPSQ                          CCG009
+      *
+      **  Output the CGLDA.
+     C                     OUT  CGLDA
+      *
+      **  Open the appropriate files if not already open
+     C           #@ARCH    IFEQ 'A'
+     C           ##FIL1    IFNE 'Y'
+     C                     OPEN CGXDCRL0
+     C                     MOVE 'Y'       ##FIL1  1
+     C                     ENDIF
+     C                     ELSE
+     C           ##FIL2    IFNE 'Y'
+     C                     OPEN CGUDCRL0
+     C                     MOVE 'Y'       ##FIL2  1
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Access the UDC Reference file for the Correspondence Item
+     C           #@ARCH    IFEQ 'A'
+     C           UDCRL0    CHAINCGXDCRL0             50
+     C                     ELSE
+     C           UDCRL0    CHAINCGUDCRL0             50
+     C                     ENDIF
+      *
+      **  If no record found, process database error.
+     C           *IN50     IFEQ *ON
+     C           #@ARCH    IFEQ 'A'
+     C                     MOVEL'CGXDCRL0'W0FILE
+     C                     ELSE
+     C                     MOVEL'CGUDCRL0'W0FILE
+     C                     ENDIF
+     C                     Z-ADDB2ITEM    ##ITEM
+     C                     MOVE B2DCOR    ##DCOR
+     C                     MOVEL##UDCR    W0KEY            ***************
+     C                     Z-ADD01        W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  If the spooled file has changed, perform overrides.
+      **  If a Print File Override string has not been input, perform a
+      **  standard override.
+     C           #@SPLC    IFEQ 'O'
+     C           #@SPLC    OREQ 'B'
+     C           B2OVRP    IFEQ *BLANKS
+     C                     MOVE *BLANKS   ##CMD
+     C                     MOVEL#CMD,1    ##CMD
+     C                     MOVE 'CG3000P1'##FILE
+     C                     MOVE B2PRTN    ##PRTN
+     C                     MOVE B2SPLF    ##SPLF
+     C***********          Z-ADD256       ##LGTH                          190022
+     C                     Z-ADD1024      ##LGTH                          190022
+     C                     CALL 'QCMDEXC'
+     C                     PARM           ##CMD
+     C                     PARM           ##LGTH
+      *
+      **  If a Print File Override string has been input, perform the
+      **  override provided.
+     C                     ELSE
+     C                     MOVE *BLANKS   ##CMD
+     C***********          MOVELB2OVRP    ##CMD                           190022
+     C                     MOVELB2OVRP    ##CMD1                          190022
+     C                     MOVELB2OVR2    ##CMD2                          190022
+     C                     MOVELB2OVR3    ##CMD3                          190022
+     C                     MOVELB2OVR4    ##CMD4                          190022
+     C***********          Z-ADD256       ##LGTH                          190022
+     C                     Z-ADD1024      ##LGTH                          190022
+     C                     CALL 'QCMDEXC'
+     C                     PARM           ##CMD
+     C                     PARM           ##LGTH
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Set up the Log file fields for this level.
+     C                     Z-ADDB2ITEM    DLITEM
+     C                     MOVE B2DCOR    DLDCOR
+     C                     Z-ADDB2ITEM    L#ITEM
+     C                     MOVE B2DCOR    L#DCOR
+     C                     MOVELL#MSDT    DLMSDT
+     C                     MOVEL'CG3000  'DLCPGM
+     C                     MOVEL'CG3001  'DLRPGM
+     C                     MOVELB2SPLF    DLSPLF
+     C                     MOVEL##JOB     DLSJOB
+     C                     MOVEL##USR     DLSUSR
+     C                     MOVEL##JNO     DLSJNO
+      *
+     C                     ENDIF
+      *
+      **  Call the Print Generator.
+     C***********          CALL 'CG3001'                                  086151
+     C                     CALL 'CG3001'               9090               086151
+     C                     PARM *BLANKS   P#RTCD  7
+     C                     PARM           W0ACT
+     C***********          PARM           INDEX                           086149
+      *                                                                   086151
+      **  Terminal error in called program.                               086151
+     C           *IN90     IFEQ '1'                                       086151
+      *                                                                   086151
+     C                     MOVEL'CG3001'  W0FILE                          086151
+     C                     MOVEL'*CALL'   W0KEY            ***************086151
+     C                     Z-ADD5         W0ERNB           * DB ERROR 05 *086151
+     C                     MOVEL'MEM5003' W0MSGD           ***************086151
+     C                     MOVEL'MIDAS  ' W0MSGF                          086151
+     C                     EXSR SRERR                                     086151
+     C                     ENDIF                                          086151
+      *
+      **  If the Action Code is '*PRINT', perform print specific
+      **  processing.
+     C           W0ACT     IFEQ '*PRINT  '
+      *
+      **  Update the status.
+      **  Set up Log file Text.
+     C           P#RTCD    IFNE *BLANKS
+     C                     MOVEL'UPRT'    DRISTS
+     C           P#RTCD    IFEQ '*ERROR*'
+     C                     MOVEL'CGD1593' DLMSID
+     C                     ELSE
+     C                     MOVEL'CGD1594' DLMSID
+     C                     ENDIF
+     C                     ELSE
+      *
+      *  Only set printed if final forms
+      *
+     C           B2ISTS    IFEQ 'PPFN'
+     C                     MOVE 'PRTD'    DRISTS
+     C                     MOVEL'CGD1792' DLMSID
+     C                     ELSE
+     C                     MOVEL'CGD1595' DLMSID
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           #@ARCH    IFEQ 'A'
+     C                     UPDAT@XDCRL0
+     C                     ELSE
+     C                     UPDAT@UDCRL0
+     C                     ENDIF
+      *
+      **  Retrieve the CGLDA.
+     C                     IN   CGLDA
+      *
+      **  Retrieve Log file data fields.
+     C                     MOVE #@SPNO    DLSPLN
+     C                     MOVE #@SPPS    DLSPGE
+     C                     MOVE #@SPPE    DLEPGE
+      *
+      **  Output the CGLDA.
+     C                     OUT  CGLDA
+      *
+      **  Output a Log file record.
+     C           #@ARCH    IFEQ 'A'
+     C                     CALL 'CG9050'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*WRITE  '##ACT
+     C                     PARM           P#UDCL
+     C                     PARM *BLANKS   ##TITL
+     C                     PARM *BLANKS   ##ULIN
+     C                     PARM 'YES'     ##CMT
+     C                     ELSE
+     C                     CALL 'CG9030'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*WRITE  '##ACT   8
+     C                     PARM           P#UDCL
+     C                     PARM *BLANKS   ##TITL  7
+     C                     PARM *BLANKS   ##ULIN  7
+     C                     PARM 'YES'     ##CMT   3
+     C                     ENDIF
+      *
+      **  Terminal error in called program.
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL##RTCD    W0KEY
+      *
+     C           #@ARCH    IFEQ 'A'
+     C                     MOVEL'CG9050  'W0FILE
+     C                     ELSE
+     C                     MOVEL'CG9030  'W0FILE           ***************
+     C                     ENDIF                           * DB ERROR 02 *
+     C                     Z-ADD02        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      *  If final forms then set charge log record
+      *
+     C           DLMSID    IFEQ 'CGD1792'
+      *
+      **  Reset spool data
+     C                     MOVEL*BLANKS   DLSPLF
+     C                     Z-ADD0         DLSPLN
+     C                     Z-ADD0         DLSPGE
+     C                     Z-ADD0         DLEPGE
+     C                     MOVEL'CGD1793' DLMSID
+      *
+      **  Output a Log file record.
+     C                     CALL 'CG9030'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*WRITE  '##ACT   8
+     C                     PARM           P#UDCL
+     C                     PARM *BLANKS   ##TITL  7
+     C                     PARM *BLANKS   ##ULIN  7
+     C                     PARM 'YES'     ##CMT   3
+      *
+      **  Terminal error in called program.
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL##RTCD    W0KEY
+      *                                                    ***************
+     C                     MOVEL'CG9030  'W0FILE           * DB ERROR 04 *
+     C                     Z-ADD04        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Non-Terminal error in called program - allow 10 times.
+     C           P#RTCD    IFNE '*ERROR*'
+     C           P#RTCD    ANDNE*BLANKS
+     C           ##ERRC    IFEQ 10
+     C                     MOVEL'*ERROR*' P#RTCD
+     C                     ENDIF
+     C                     ADD  1         ##ERRC  30
+     C                     ENDIF
+      *
+      **  Terminal error in called program.
+     C           P#RTCD    IFEQ '*ERROR*'
+     C                     MOVELP#RTCD    W0KEY
+      *                                                    ***************
+     C                     MOVEL'CG3000  'W0FILE           * DB ERROR 03 *
+     C                     Z-ADD03        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  If the Action Code is '*PRINT', perform print specific
+      **  processing.
+     C           W0ACT     IFEQ '*PRINT  '
+      *
+      **  If the spooled file has changed, perform APF processing if
+      **  required, using APF information.
+     C           #@SPLC    IFEQ 'B'
+     C           #@SPLC    OREQ 'C'
+     C           B2APF     IFEQ 'Y'
+     C           B2APFS    ANDNE*BLANKS
+      *
+      * Search string for SPLNBR(
+      *
+     C                     Z-ADD1         #S      50       Start Position
+     C                     Z-ADD1         #T      50       End Position
+     C                     Z-ADD1         #U      50       Length
+     C           'SPLNBR(' SCAN B2APFS:#S #S             90APF String
+      *
+      * If found substitute in Spool Number
+      *
+     C           #S        IFGT 1
+     C           '('       SCAN B2APFS:#S #S             90APF String
+     C           ')'       SCAN B2APFS:#S #T             90APF String
+      *
+      * Get first part of command string
+      *
+     C           #S        SUBSTB2APFS:1  ##CMD     P                     080854
+      *
+      * Fill in Spool file number
+      *
+     C***********          MOVE DLSPLN    ##006   6                       086150
+     C                     MOVE #@SPNO    ##006   6                       086150
+     C           ##006     IFNE '000000'
+     C           ##CMD     CAT  ##006:0   ##CMD
+     C                     ELSE
+     C                     MOVEL'*LAST '  ##006
+     C           ##CMD     CAT  ##006:0   ##CMD
+     C                     ENDIF
+      *
+      * Add all information from ")"
+      *
+     C           257       SUB  #T        #U               Length
+     C           #U        SUBSTB2APFS:#T ##CMD1256 P
+     C           ##CMD     CAT  ##CMD1:0  B2APFS    P
+      *
+     C                     ENDIF
+      *
+      *
+     C                     MOVE *BLANKS   ##CMD
+     C                     MOVELB2APFS    ##CMD
+     C                     Z-ADD256       ##LGTH
+     C                     CALL 'QCMDEXC'
+     C                     PARM           ##CMD
+     C                     PARM           ##LGTH 155
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *................................................................
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  *INZSR                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'*INZSR'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Key list for LF/CGUDCRL0, UDC Reference file
+     C           UDCRL0    KLIST
+     C                     KFLD           B2ITEM
+     C                     KFLD           B2DCOR
+      *
+      **  Define fields.
+      *
+     C           *NAMVAR   DEFN *LDA      CGLDA
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY CGCPYSRC,SRERRPSSR
+      /EJECT
+      /COPY CGCPYSRC,SRERRC
+      /EJECT
+      *****************************************************************
+** #CMD - Command Strings for QCMDEXC
+OVRPRTF FILE(          ) TOFILE(          ) SPLFNAME(          )
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

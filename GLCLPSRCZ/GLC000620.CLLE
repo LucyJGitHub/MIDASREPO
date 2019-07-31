@@ -1,0 +1,214 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL FATCA End of Year Check')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000620 - Midas GL FATCA End of Year Check                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL154  *CREATE    Date 13Oct14              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL154 - FATCA Reporting                                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CMPNAM &CMPSEQ &PGMNAM)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+             DCL        VAR(&CMPNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&PGMNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PINIT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&LDA)   TYPE(*CHAR) LEN(256)
+             DCL        VAR(&PSTAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&FEOYFLAG) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&FYEAR) TYPE(*CHAR) LEN(4) VALUE(' ')
+             DCL        VAR(&WYRNO) TYPE(*CHAR) LEN(2) VALUE('  ')
+             DCL        VAR(&WYRNO1) TYPE(*CHAR) LEN(2) VALUE('  ')
+ 
+             DCLF       FILE(CBUSERPD)
+ 
+/* Monitor for any errors and send appropriate message to MOPERQ */
+ 
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send Pgm Message */
+ 
+             CHGVAR     VAR(&MEM) VALUE('Midas GL FATCA End of Year +
+                          Checks')
+             SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ)
+ 
+/* Clear switches */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CRTDTAARA  DTAARA(QTEMP/ZMUSER) TYPE(*CHAR) LEN(17)
+             MONMSG     MSGID(CPF1023)
+ 
+             RCVF
+             CHGDTAARA  DTAARA(ZMUSER (1 10)) VALUE(&USUSER)
+ 
+/* Retrieve system prefix and setup library to be use for */
+/* backup and recovery */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             RTVDTAARA  DTAARA(GLFEOYDA (1 4)) RTNVAR(&FYEAR)
+             CHGVAR     VAR(&DPLIB) VALUE(&SYSID *CAT 'DPLIB   ')
+ 
+/* Midas GL FATCA End of Year Check */
+ 
+             CALL       PGM(GL000620) PARM(&FEOYFLAG &FYEAR &WYRNO &WYRNO1)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                CHGVAR     VAR(&MEM) VALUE(%SUBSTRING(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If FATCA year end component is not to run */
+/* Call CB0150 to update restart indicator then bypass processing*/
+ 
+             IF         COND(&FEOYFLAG *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&PSTAT) VALUE('N')
+                CALL       PGM(CB0150) PARM(&CMPNAM &CMPSEQ &PSTAT)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Call program CB0160 to get value of restart indicator. */
+             CALL       PGM(CB0160) PARM(&CMPNAM &CMPSEQ &PSTAT)
+ 
+/* Midas GL Customer Balance Collection */
+ 
+             IF         COND(&PGMNAM *EQ 'GL000621') THEN(DO)
+ 
+/* If it is NOT a restart. */
+             IF         COND(&PSTAT *NE 'Y') THEN(DO)
+ 
+/* If FATCA EOY component will be running, delete backup */
+/* and create a new backup file XGLCSBAPD to xxDPLIB */
+ 
+               DLTF       FILE(XGLCSBAPD)
+               MONMSG     MSGID(CPF0000)
+               CPYF       FROMFILE(GLCSBAPD) TOFILE(&DPLIB/XGLCSBAPD) +
+                          CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             OVRDBF     FILE(TRANSD)  TOFILE(TRANSD) MBR(*ALL)
+             CALL       PGM(GL000621) PARM(&PINIT)
+ 
+ /* If program returns in error recover file GLCSBAPD */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+                CPYF       FROMFILE(XGLCSBAPD) TOFILE(GLCSBAPD) +
+                           MBROPT(*REPLACE)
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                           EXEC(CLRPFM FILE(GLCSBAPD))
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                CHGVAR     VAR(&MEM) VALUE(%SUBSTRING(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             ENDDO
+ 
+/* Midas GL High value review */
+ 
+             IF         COND(&PGMNAM *EQ 'GL000622') THEN(DO)
+ 
+/* If it is NOT a restart. */
+             IF         COND(&PSTAT *NE 'Y') THEN(DO)
+ 
+/* If FATCA EOY component will be running, delete backup and */
+/* create a new backup file XSDFTCSPD and XSDFTNHPD to xxDPLIB */
+ 
+               DLTF       FILE(XSDFTCSPD)
+               MONMSG     MSGID(CPF0000)
+               DLTF       FILE(XSDFTNHPD)
+               MONMSG     MSGID(CPF0000)
+               CPYF       FROMFILE(SDFTCSPD) TOFILE(&DPLIB/XSDFTCSPD) +
+                          CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(SDFTNHPD) TOFILE(&DPLIB/XSDFTNHPD) +
+                          CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+ /* If program returns in error recover file SDFTCSPD and SDFTNHPD*/
+ 
+             CALL       PGM(GL000622)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+                CPYF       FROMFILE(XSDFTCSPD) TOFILE(SDFTCSPD) +
+                           MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                           EXEC(CLRPFM FILE(SDFTCSPD))
+                CPYF       FROMFILE(XSDFTNHPD) TOFILE(SDFTNHPD) +
+                           MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                           EXEC(CLRPFM FILE(SDFTNHPD))
+ 
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                CHGVAR     VAR(&MEM) VALUE(%SUBSTRING(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+ /* Update data area for FATCA Year */
+ 
+             CHGDTAARA  DTAARA(GLFEOYDA (1 4)) VALUE(&FYEAR)
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+                CALL       PGM(GLC000621A) PARM(&WYRNO &WYRNO1)
+             ENDDO
+             ENDDO
+ 
+/* Call CB0150 to update restart indicator. */
+ 
+             CHGVAR     VAR(&PSTAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CMPNAM &CMPSEQ &PSTAT)
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:
+ 
+/* Call CB0150 to update restart indicator */
+             CHGVAR     VAR(&PSTAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CMPNAM &CMPSEQ &PSTAT)
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC000620 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+             DLTDTAARA  DTAARA(QTEMP/ZMUSER)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM
+ 

@@ -1,0 +1,1695 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Drop off securities')                         *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2570  - DROP OFF EXPIRED SECURITIES                        *
+     F*                                                               *
+     F*  Function: To drop off securities which are either            *
+     F*   (COB)    - deleted, or                                      *
+     F*            - matured or past their retention period.          *
+     F*              Unless they Matured this year.                   *   S11029
+     F*                                                               *
+     F*  Called by: SEC1001 - Drop off Securities                     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 095907             Date 29Jan07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 234300             Date 25Sep06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CER001             Date 25Apr05               *
+      *                 222727             Date 05Nov03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 208241             Date 21Aug02               *
+      *                 CGL018             Date 08Oct02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS002             Date 14Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 157029             Date 21Jun01               *
+      *                 127566             Date 09May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 16May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPL002             Date 08Mar99               *
+      *                 098899             Date 07Apr97               *
+     F*                 106595             DATE 01AUG96               *  *
+     F*                 066394             DATE 02MAY96               *  *
+     F*                 S01408             DATE 05MAR96               *
+     F*                 S01408             DATE 11SEP95               *
+     F*                 S01447             DATE 16NOV93               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01455             DATE 05NOV93               *
+     F*                 S11029             DATE 19APR93               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E29170             DATE 08NOV91               *
+     F*                 S01117             DATE 07JUN91               *
+     F*                 S01269             DATE 02AUG90               *
+     F*                 E14008             DATE 21/09/88              *
+     F*                 S01158             DATE 13/05/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+     F*  095907 - TRAILERS SECTYA MUST BE UPDATED                     *
+     F*         - MODIFICATIONS CALCULATIONS FOR OUTPUT TRAILER       *
+     F*         - UPDATES OF RECI WITH '*' REPLACED BY DELETES        *
+     F*         - ADD ONE IN NUMBER OF RECORDS TO BE DROPPED IF RECI  *
+     F*           OF SECTYD IS NEITHER 'D' NORE 'M' (DELETED SECURIT. *
+     F*         - also applies 127891, 198678, 237236                 *
+     F*  237236 - Drop for file SESDX2PD.                             *
+     F*  198678 - Update of RECI with '*' replaced by 'delete'        *
+     F*           Integration of fix 095907 not completed.            *
+     F*           Drop on SECTYD                                      *
+     F*  127891 - WHEN A SECURITY IS DELETED, DELETE CORRESPONDING IN *
+     F*           PMMFHLPP                                            *
+      *  234300 - Recompiled over changed in PF/HSTTRD.               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *           (Recompile)                                         *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  CGL018 - Risk Weighted Assets                                *
+      *  CAS002 - Hedge Strategy/Linkage                              *
+      *  157029 - Drop deletes securities used in corp. actions files *
+      *  127566 - Recompiled over changed ZSDESCZ3                    *
+      *  CSD006 - Market Data Feed (Recompiled)                       *
+      *  CSE023 - Treaty Withholding Tax (Recompiled)                 *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*  CPL002 - Midas-Plato Interface (Recomipled)                  *
+     F*  098899 - Shouldn't drop matured security records if trades   *
+     F*           records exists.                                     *
+     F*  106595 - Core hook SE2570CCP4 entered incorrectly            *
+     F*           under hook name SE2200CCP4                          *  *
+     F*  066394 - If Retention Date for the Securities is not the     *  *
+     F*           same that for the trades, do not drop the           *  *
+     F*           securities otherwise the trades always stay in      *  *
+     F*           TRADSD with RECI 'S'                                *  *
+     F*  S01408 - Addition core hook SE2570CCP4.                      *
+     F*  S01408 - Addition core hook SE2570CCP1.                      *
+     F*           Addition core hook SE2570CCP2.                      *
+     F*           Addition core hook SE2570CCP3.                      *
+     F*           Addition core hook SE2570FFP1.                      *
+     F*           Addition core hook SE2570IIP1.                      *
+     F*  S01447 - Program amended to delete any record which is for a *
+     F*           security which is having its PF/SECTYD record RECI  *
+     F*           field set to '*'.                                   *
+     F*  S01455 - 'FF' ACCOUNT KEY ENHANCEMENTS.                      *
+     F*           Recompiled due to changes in PF/TABTB80.            *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S11029 - Program changed to not drop Securities that Matured *
+     F*           since last End of Year as they may be required for  *
+     F*           the Cost of Funds Report.                           *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching.                                     *
+     F*  S01269 - TRADE AUTHORISATION: RECOMPILED OVER CHANGED        *
+     F*           FILE TABICD.                                        *
+     F*  E14008 - CANCELLED RECORDS NOT SUBTRACTED FROM COUNT ON AUDIT*   E14008
+     F*           FILE AND NOT COUNTED AS LIVE RECORDS ON INPUT, ALSO *   E14008
+     F*           LINE COUNT ON PRINT FILE AMENDED                    *   E14008
+     F*  S01158 - POST INCORPORATION DEVELOPMENT FIXES                *   S01158
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSECTY   UF  E           K        DISK         KINFDS SECDS
+     F                                              KINFSR SECSR
+     FSECTYA  UF  E           K        DISK         KINFDS SCADS
+     F                                              KINFSR SCASR
+     FSESWHTL0UF  E           K        DISK         KINFDS SECDY          S01447
+     F                                              KINFSR SDYSR          S01447
+     FTRADSDL3IF  E           K        DISK                               066394
+     F            HSTTRDF                           KIGNORE               066394
+     F            DPTMVDF                           KIGNORE               066394
+     FTRADSH  IF  E           K        DISK                               098899
+     F            TRADSDF                           KRENAMETRADSDF2       098899
+     FASHTRNL7IF  E           K        DISK                                                   CAS002
+      ** RTV: Hedge Linkage Transaction Detail File                                           CAS002
+      ** by Hedge Indicator,Module,Security,Branch,Book & Put Call                            CAS002
+      *                                                                                       CAS002
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SE2570FFP1                                           S01408
+     FSESDX3PDUF  E           K        DISK                           UC                      CER001
+      *                                                                                       CER001
+      **  CAD Security ext. details                                                           CER001
+      *                                                                                       CER001
+     FSESDX1L0UF  E           K        DISK                           UC                      CER001
+      *                                                                                       CER001
+      ** Issuer Type Index file          Retrieval index        Prefix VV                     CER001
+      *                                                                                       CER001
+     FILICDRPDIF  E                    DISK                           UC                      CER001
+      *                                                                                       CER001
+      ** IBLC 2002 ICD File              Retrieval index        Prefix IC                     CER001
+      *                                                                                       CER001
+     FSESDX2PDUF  E           K        DISK                           UC                      237236
+     F***      SECURITY EXT. DETAILS                                                          237236
+      *                                                                                       237236
+     FSESRWAL0UF  E           K        DISK                                         CGL018
+      * Securities Risk Weighted Assets Codes                                       CGL018
+      *                                                                             CGL018
+     F*                                                                   S01408
+     F***SE2570P1O***E                    PRINTER                         E29170
+     FSE2570P1O   E                    PRINTER                        UC  E29170
+     F                                              KINFDS SPOOL          E29170
+     FSE2570AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         E29170
+     FTABICD  IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE               S11029
+     F* ICD SE    TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     FPMMFHLL3UF  E           K        DISK                                                   127891
+     FSECORFL3UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Action Reference File                               157029
+      *                                                                   157029
+     FSECODRL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Action Depot Reference File                         157029
+      *                                                                   157029
+     FSECODPL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Action - Depot                                      157029
+      *                                                                   157029
+     FSECOALL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Action Allocations                                  157029
+      *                                                                   157029
+     FSECOREL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Actions Reply Handling                              157029
+      *                                                                   157029
+     FSECORHL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Actions Reply Handling History                      157029
+      *                                                                   157029
+     FSECOBKL1UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Action Blocked Positions                            157029
+      *                                                                   157029
+     FSECOEXL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Action Exercises and Conventions                    157029
+      *                                                                   157029
+     FSECOFRL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Actions Free Allocations                            157029
+      *                                                                   157029
+     FSECOCEL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Actions Capital Changes                             157029
+      *                                                                   157029
+     FSECONFL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Actions Non Financial Events                        157029
+      *                                                                   157029
+     FSECONCL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Actions Name Changes                                157029
+      *                                                                   157029
+     FSECODVL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Actions Dividend Events                             157029
+      *                                                                   157029
+     FSECORGL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Actions Rights Issues                               157029
+      *                                                                   157029
+     FSECOOFL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Actions Offers                                      157029
+      *                                                                   157029
+     FSECOCRL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Actions Corporate Reorganisation                    157029
+      *                                                                   157029
+     FSECOCCL0UF  E           K        DISK                               157029
+     F                                              KINFSR *PSSR          157029
+      ** SE Corporate Actions Currency Changes                            157029
+      *                                                                   157029
+     FSECORBL0UF  E           K        DISK         KINFSR *PSSR      UC  157029
+      ** SE Securities Redenomination Bulk Definitions                    157029
+      *                                                                   157029
+     FSECORSL0UF  E           K        DISK         KINFSR *PSSR      UC  157029
+      ** SE Securities Redenomination Securities                          157029
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   50 - DIFFERENCE BETWEEN CALC AND FILE TOTALS OF RECORDS     *
+     F*   74  -END OF FILE ON SESRWAL0                               *             CGL018
+     F*   84  -ERROR ON DELETION OF SESRWAL0 RECORD                  *             CGL018
+     F*   88 - CHAIN FAIL DEPSSN/TRADSR                               *                       095907
+     F*   89 - EOF SECTY                                              *
+     F*90-99 - USED IN Z-SUBROUTINES                                  *
+     F*U7-U8 - DATABASE ERROR                                         *
+     F*   U8 - DIFFERENCE BETWEEN CALC AND FILE TOTALS OF RECORDS     *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   FIRST   -  OBTAINS ICD INFO AND CALCULATES RETENTION DATE   *
+     F*   PR01    -  CONTROLS PRINTING OF REPORT                      *
+     F*   AUDIT   -  OUTPUTS CONTROL REPORT AND UPDATES AUDIT RECORD  *
+     F*   *PSSR   -  Error handling                                   *   S01117
+     F*   RCFP1   - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF    *   E29170
+     F*   RCFAU   - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF    *   E29170
+     F*   RWA     -  SECURITIES RISK WEIGHT ASSETS - DELETE RECORDS  *             CGL018
+     F*   ZSYSTM  -  CHAINS TO ICD TABTB10                            *
+     F*   ZICD2   -  CHAINS TO ICD TABTB11                            *   S11029
+     F*   ZICDSE  -  CHAINS TO ICDSE TABTB36                          *
+     F*   ZSDESC  -  FORMATS SECURITY DESCRIPTIONS                    *
+     F*   ZDATE2  -  CONVERTS DAYS TO DATES                           *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZSDESCZ1
+      /COPY ZSRSRC,ZSDESCZ2
+      /EJECT
+     I*
+     I*
+     I            DS
+     I*
+     I* DATA STRUCTURE FOR TABLE FILE KEY
+     I*
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I*
+     ISECDS       DS
+     I*
+     I* DATA STRUCTURES FOR ERROR HANDLING
+     I*
+     I                                     *STATUS  STSSEC
+     I*
+     ISCADS       DS
+     I                                     *STATUS  STSSCA
+     I*
+     ISECDY       DS                                                      S01447
+     I                                     *STATUS  STSSDY                S01447
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     IDSFDY     E DSDSFDY                                                                     CAS002
+      ** Data structure for access objects, short data structure                              CAS002
+      *                                                                                       CAS002
+     ISCSARD    E DSSCSARDPD                                                                  CAS002
+      ** SAR file details accessed via access program AOSARDR0                                CAS002
+      *                                                                                       CAS002
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,SE2570IIP1                                           S01408
+     I*                                                                   S01408
+     I*
+     I*
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C* KEYLISTS FOR CHAINING TO FILES
+     C*
+     C           TABKEY    KLIST
+     C                     KFLD           TKEY
+     C*
+     C* CLEAR LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE2570  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C/COPY WNCPYSRC,SE2570C001
+     C*
+     C* OBTAIN ICD INFO
+     C*
+     C                     EXSR FIRST
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C* CLEAR WORK FIELDS
+     C*
+     C                     Z-ADD0         IREC    50
+     C                     Z-ADD0         LCNT    20
+     C                     Z-ADD0         LVREC   50
+     C                     Z-ADD0         MTRREC  50
+     C                     Z-ADD0         MATREC  50
+     C                     Z-ADD0         DPREC   50
+     C                     Z-ADD0         SECREC  50
+     C                     Z-ADD0         DECREC  50                      S01158
+      *                                                                   157029
+     C*                    MOVE 'N'       CSE007                          157029
+     C*                    MOVE 'N'       CEU017                          157029
+      *                                                                   157029
+      **  Access Switchable features file for Corporate actions           157029
+      *                                                                   157029
+     C                     CALL 'AOSARDR0'                                157029
+     C                     PARM '       ' @RTCD   7                       157029
+     C                     PARM '*VERIFY' @OPTN   7                       157029
+     C                     PARM 'CSE007'  @SARD   6                       157029
+      *                                                                   157029
+     C           @RTCD     IFEQ *BLANK                                    157029
+     C                     MOVE 'Y'       CSE007  1                       157029
+     C                     END                                            157029
+      *                                                                   157029
+      **  Access Switchable features for SE Redenomination                157029
+      *                                                                   157029
+     C                     CALL 'AOSARDR0'                                157029
+     C                     PARM '       ' @RTCD                           157029
+     C                     PARM '*VERIFY' @OPTN                           157029
+     C                     PARM 'CEU017'  @SARD                           157029
+      *                                                                   157029
+     C           @RTCD     IFEQ *BLANK                                    157029
+     C                     MOVE 'Y'       CEU017  1                       157029
+     C                     OPEN SECORBL0                                  157029
+     C                     OPEN SECORSL0                                  157029
+     C                     END                                            157029
+     C*
+     C* LOOP ROUND PROCESSING FOR EACH RECORD READ FROM SECTYD
+     C*
+     C           *IN89     DOUEQ'1'
+     C           *INU7     OREQ '1'
+     C*
+     C                     READ SECTY                    89
+     C*
+     C* AT END OF FILE - EXIT
+     C*
+     C           *IN89     IFEQ '1'
+     C           LCNT      IFNE 0
+     C                     WRITETRAIL
+     C                     END
+     C*
+     C                     GOTO ENDLP
+     C                     END
+     C*
+     C* ADD TO COUNT OF INPUT RECORDS
+     C*
+     C           RECI      IFNE '*'
+     C           RECI      ANDNE'C'                                       E14008
+     C                     ADD  1         IREC
+     C                     END
+     C*
+     C* IF LIVE RECORD (RECI=D) ADD TO COUNT AND NO FURTHER ACTION
+     C*
+     C           RECI      IFEQ 'D'
+     C                     ADD  1         LVREC
+     C                     ELSE
+     C*
+     C* IF MATURED RECORD (RECI=M) ADD TO COUNT
+     C*     - IF MATURITY DATE LESS THAN RETENTION DATE, DROP RECORD
+     C*       AND ADD TO COUNT                                                                095907
+     C/COPY WNCPYSRC,SE2570C004
+     C*
+     C*                                                                   066394
+     C* EXECUTE SUBROUTINE 'TRADE'. IF TRADES ALREADY EXIST IN TRADSD     066394
+     C* DO NOT DROP THE SECURITY. THIS TEST IS NEEDED WHEN THE            066394
+     C* RETENTION DATE FOR THE SECURITIES ARE NOT THE SAME FOR THE        066394
+     C* TRADES                                                            066394
+     C           RECI      IFEQ 'M'
+     C                     ADD  1         MATREC
+     C* DON'T DROP RECORD IF TRADS RECORD FOUND                           098899
+     C                     SETOF                     30                   098899
+     C           SESN      CHAINTRADSH               30                   098899
+     C*
+     C           MATY      IFLT RTDATE
+     C           *IN30     ANDEQ'1'                                       098899
+     C/COPY WNCPYSRC,SE2570C005
+     C                     EXSR TRADES                                    066394
+      *                                                                                       CAS002
+      ** If switchable feature CAS002 is present                                              CAS002
+      *                                                                                       CAS002
+     C           CAS002    IFEQ 'Y'                                                           CAS002
+     C                     MOVE *IN75     WIN75   1                                           CAS002
+     C                     MOVE *OFF      *IN75                                               CAS002
+      *                                                                                       CAS002
+      ** Keylist for CAS002 Hedge Transactions Details file                                   CAS002
+      ** Securities can only be set up as Hedged Items 'H'                                    CAS002
+      *                                                                                       CAS002
+     C                     MOVE 'H'       KDHIND  1                                           CAS002
+     C                     MOVE 'SE'      KMODSE  2                                           CAS002
+      *                                                                                       CAS002
+     C           KLIST7    KLIST                                                              CAS002
+     C                     KFLD           KDHIND                                              CAS002
+     C                     KFLD           KMODSE                                              CAS002
+     C                     KFLD           SESN                                                CAS002
+      *                                                                                       CAS002
+      ** Verify if record exists (*IN75 ON)                                                   CAS002
+      ** but there is no need to READ the record.                                             CAS002
+      *                                                                                       CAS002
+     C           KLIST7    SETLLASHTRNL7                 75                                   CAS002
+      *                                                                                       CAS002
+      ** Check if the security is specified on the CAS002                                     CAS002
+      ** Hedge Transaction Details file.                                                      CAS002
+      ** If found (*IN75 *ON), the security record cannot be dropped.                         CAS002
+      *                                                                                       CAS002
+     C           *IN75     IFEQ *ON                                                           CAS002
+     C                     MOVE *OFF      *IN88                                               CAS002
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C                     MOVE WIN75     *IN75                                               CAS002
+      *                                                                                       CAS002
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C/COPY WNCPYSRC,SE2570C007
+     C           *IN88     IFEQ '1'                                       066394
+     C                     MOVE '*'       RECI
+     C                     ADD  1         DPREC
+     C                     ADD  1         DPREC2  50                                          095907
+     C                     ADD  1         DECREC                          S01158
+     C                     ELSE
+     C                     ADD  1         MTRREC
+     C                     END                                            066394
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C* IF RECORD NOT LIVE OR MATURED, DROP RECORD
+     C*
+     C                     MOVE '*'       RECI
+     C* ADD ONE IN NUMBER OF DROPPED RECORDS ON THE PRINTER FILE BUT DO                       095907
+     C* NOT CONSIDER FOR TRADES AS '*'  AND 'C' ARE NOT COUNTED IN FIELD                      095907
+     C* NORE                                                                                  095907
+     C***********          ADD  1         DPREC                           E14008
+     C                     ADD  1         DPREC                                               095907
+      *                                                                             CGL018
+      ** If feature CGL018 is present,                                              CGL018
+      ** delete any records from file SESRWAPD                                      CGL018
+      *                                                                             CGL018
+     C           CGL018    IFEQ 'Y'                                                 CGL018
+     C                     EXSR RWA                                                 CGL018
+     C                     END                                                      CGL018
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF RECORD IS TO BE DROPPED (RECI=*)
+     C*      PRINT DETAIL REPORT
+     C*
+     C           RECI      IFEQ '*'
+     C/COPY WNCPYSRC,SE2570C002
+     C                     EXSR PR01
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE2570CCP1                                           S01408
+     C*                                                                   S01408
+      *                                                                                       CER001
+      **  When IBLC 2002 Setup is right, Drop Ext. Details                                    CER001
+      *                                                                                       CER001
+     C           ULX043    IFEQ 'Y'                                                           CER001
+     C           SESN      CHAINSESDX1L0             99                                       CER001
+     C           *IN99     IFEQ *OFF                                                          CER001
+     C                     DELETSECTYDDL                                                      CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      **  Drop CAD Details                                                                    CER001
+      *                                                                                       CER001
+     C           *IN46     IFEQ *ON                                                           CER001
+     C           SESN      CHAINSESDX3PD             86                                       CER001
+     C           *IN86     IFEQ *OFF                                                          CER001
+     C                     DELETSECTYDF6                                                      CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ***  DROP FOR FILE SESDX2PD                                                             237236
+      *                                                                                       237236
+     C           ULX610    IFEQ 'Y'                                                           237236
+     C           SESN      CHAINSESDX2PD             45                                       237236
+     C           *IN45     IFEQ *OFF                                                          237236
+     C                     DELETSECTYDF4                                                      237236
+     C                     ENDIF                                                              237236
+     C                     ENDIF                                                              237236
+      *                                                                   S01447
+      ** Access security WHT details file                                 S01447
+      *                                                                   S01447
+     C           SESN      CHAINSESWHTL0             19                   S01447
+      *                                                                   S01447
+      ** If record is found, delete it                                    S01447
+      *                                                                   S01447
+     C           *IN19     IFEQ '0'                                       S01447
+     C                     DELETSESWHTL0               20                 S01447
+      *                                                                   S01447
+      ** If error on deletion                                             S01447
+      *                                                                   S01447
+     C           *IN20     IFEQ '1'                                       S01447
+     C           *LOCK     IN   LDA                                       S01447
+     C                     MOVE 'SESWHTL0'DBFILE           ***************S01447
+     C                     MOVEL'DELET'   DBKEY            * DB ERROR 05 *S01447
+     C                     Z-ADD5         DBASE            ***************S01447
+     C                     OUT  LDA                                       S01447
+     C                     EXSR *PSSR                                     S01447
+     C                     SETON                     99U7U8               S01447
+     C                     END                                            S01447
+     C                     END                                            S01447
+     C*                                                                   S01447
+     C****                 UPDATSECTYDF                                                       198678
+     C                     DELETSECTYDF                                                       198678
+     C*                                                                                       127891
+     C** DELETE ALL MATURE FLAT POSITIONS FOR SECURITY                                        127891
+     C           SESN      SETLLPMMFHLL3                                                      127891
+     C                     READ PMMFHLL3                 60                                   127891
+     C*                                                                                       127891
+     C           *IN60     DOWEQ'0'                                                           127891
+     C           SESN      ANDEQQFTDSS                                                        127891
+     C                     DELETPMHOLDP0                                                      127891
+     C                     READ PMMFHLL3                 60                                   127891
+     C                     END                                                                127891
+     C*
+     C**** DELETE ALL RELATED RECORDS IN CORPORATE ACTIONS FILES          157029
+     C           CSE007    IFEQ 'Y'                                       157029
+     C           CEU017    OREQ 'Y'                                       157029
+     C           SESN      SETLLSECORFL3                                  157029
+     C           SESN      READESECORFL3                 85               157029
+      *                                                                   157029
+     C           *IN85     DOWEQ'0'                                       157029
+      *                                                                   157029
+      ** Delete all Depot Reference records                               157029
+      *                                                                   157029
+     C                     EXSR SRDPRR                                    157029
+      *                                                                   157029
+      ** Delete all Allocation records                                    157029
+      *                                                                   157029
+     C                     EXSR SRALRD                                    157029
+      *                                                                   157029
+      ** Delete all Depot Reference records                               157029
+      *                                                                   157029
+     C                     EXSR SRDPRD                                    157029
+      *                                                                   157029
+      *                                                                   157029
+      ** Delete all Reply Handling records                                157029
+      *                                                                   157029
+     C                     EXSR SRRHRD                                    157029
+      *                                                                   157029
+      ** Delete all Blcoking records                                      157029
+      *                                                                   157029
+     C                     EXSR SRBLKP                                    157029
+      *                                                                   157029
+      ** Delete all Corporate Action records                              157029
+      *                                                                   157029
+     C                     EXSR SRCARD                                    157029
+      ** Delete the Corporate Action Reference record                     157029
+      *                                                                   157029
+     C                     DELETSECORFD0                                  157029
+      ** Read next record                                                 157029
+      *                                                                   157029
+     C           SESN      READESECORFL3                 85               157029
+      *                                                                   157029
+     C                     ENDDO                                          157029
+     C                     ENDIF                                          157029
+     C*
+     C/COPY WNCPYSRC,SE2570C006
+     C                     END
+     C*
+     C           ENDLP     TAG
+     C*
+     C                     END
+     C*
+     C           EAUDIT    TAG
+     C*
+     C                     EXSR AUDIT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE2570CCP2                                           S01408
+     C*                                                                   S01408
+     C*
+     C           ULX043    IFEQ 'Y'                                                           CER001
+     C                     CLOSEILICDRPD                                                      CER001
+     C                     CLOSESESDX1L0                                                      CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ***  Close CAD extension file                                                           CER001
+      *                                                                                       CER001
+     C           *IN46     IFEQ *ON                                                           CER001
+     C           ULX008    OREQ 'Y'                                                           CER001
+     C                     CLOSESESDX3PD                                                      CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ***  CLOSE FILE SESDX2PD                                                                237236
+      *                                                                                       237236
+     C           ULX610    IFEQ 'Y'                                                           237236
+     C                     CLOSESESDX2PD                                                      237236
+     C                     ENDIF                                                              237236
+     C                     SETON                     LR
+     C*
+     C*                                                                   066394
+      /EJECT                                                              066394
+     C********************************************************************066394
+     C*                                                                   066394
+     C* TRADES- SUBROUTINE TO ACCESS TRADSD AND TO VERIFY IF A TRADE      066394
+     C*         ALREADY EXISTS FOR THE SECURITY                           066394
+     C*                                                                   066394
+     C           TRADES    BEGSR                           ** TRADES**    066394
+     C*                                                                   066394
+     C                     MOVE SESN      TDSS                            066394
+     C                     Z-ADD*ZEROS    TDVD                            066394
+     C                     MOVE *BLANKS   TDRF                            066394
+     C                     MOVE '0'       *IN88                           066394
+     C*                                                                   066394
+     C           TDSS      SETLLTRADSDF                                   066394
+     C                     READ TRADSDF                  88               066394
+     C  N88      SESN      IFNE TDSS                       - B1           066394
+     C                     MOVE '1'       *IN88                           066394
+     C                     END                             - E1           066394
+     C*                                                                   066394
+     C                     ENDSR                                          066394
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* FIRST - SUBROUTINE TO ACCESS ICD INFORMATION AND TO           *
+     C*         CALCULATE RETENTION DATE                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C* ACCESS ICD
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD1         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+      *                                                                   S11029
+      ***  Access ICD 2.                                                  S11029
+      *                                                                   S11029
+     C                     EXSR ZICD2                                     S11029
+     C           *IN99     IFEQ '1'                                       S11029
+     C                     SETON                     U7U8                 S11029
+     C           *LOCK     IN   LDA                                       S11029
+     C                     MOVE 'TABLE'   DBFILE           ***************S11029
+     C                     MOVEL'ICDR2'   DBKEY            * DB ERROR 04 *S11029
+     C                     Z-ADD4         DBASE            ***************S11029
+     C                     OUT  LDA                                       S11029
+     C                     EXSR *PSSR                                     S11029
+     C                     ELSE                                           S11029
+     C*
+     C* ACCESS ICDSE
+     C*
+     C                     EXSR ZICDSE
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELTKEY      DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD2         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C* CALCULATE RETENTION DATE
+     C*
+     C           RTMS      MULT 31        RTDATE  50
+     C           RUND      SUB  RTDATE    RTDATE
+     C*                                                                   S01408
+     C**/COPY*WNCPYSRC,SE2200CCP4                                  S01408 106595
+     C/COPY WNCPYSRC,SE2570CCP4                                           106595
+     C*                                                                   S01408
+      *                                                                   S11029
+      ***  If Retention Date is after End of Last Year, then change       S11029
+      ***  it to Beginning of Year, (done for Cost of Funds Report).      S11029
+      *                                                                   S11029
+     C           RTDATE    IFGT LEOY                                      S11029
+     C           LEOY      ADD  1         RTDATE                          S11029
+     C                     ENDIF                                          S11029
+     C*
+     C                     END
+     C                     ENDIF                                          S11029
+     C                     END
+      *                                                                                       CAS002
+      ** Check if Hedge Strategy / Linkage (CAS002) is installed                              CAS002
+      *                                                                                       CAS002
+     C                     CALL 'AOSARDR0'                                                    CAS002
+     C                     PARM *BLANKS   PRTCD   7                                           CAS002
+     C                     PARM '*VERIFY' POPTN   7                                           CAS002
+     C                     PARM 'CAS002'  PSARD   6                                           CAS002
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS002
+      *                                                                                       CAS002
+     C           PRTCD     IFNE *BLANKS                                                       CAS002
+     C           PRTCD     ANDNE'*NRF   '                                                     CAS002
+     C                     MOVE *ON       *INU7                                               CAS002
+     C                     MOVE *ON       *INU8                                               CAS002
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS002
+     C                     MOVELPSARD     DBKEY                                               CAS002
+     C                     Z-ADD8         DBASE                                               CAS002
+     C                     EXSR *PSSR                                                         CAS002
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C           PRTCD     IFEQ *BLANK                                                        CAS002
+     C                     MOVE 'Y'       CAS002  1                                           CAS002
+     C                     ELSE                                                               CAS002
+     C                     MOVE 'Y'       CAS002                                              CAS002
+     C                     ENDIF                                                              CAS002
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE2570CCP3                                           S01408
+     C*                                                                   S01408
+      *                                                                                       CER001
+      ** When Lux Returns have to be produced                                                 CER001
+      *                                                                                       CER001
+     C                     MOVE 'N'       ULX043  1                                           CER001
+      *                                                                                       CER001
+      ** Check Whether IBLC 2002 is installed (ULX043)                                        CER001
+      *                                                                                       CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM *BLANKS   PRTCD                                               CER001
+     C                     PARM '*VERIFY' POPTN                                               CER001
+     C                     PARM 'ULX043'  PSARD                                               CER001
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER001
+      *                                                                                       CER001
+      ** Database Error                                                                       CER001
+      *                                                                                       CER001
+     C           PRTCD     IFNE *BLANKS                                                       CER001
+     C           PRTCD     ANDNE'*NRF   '                                                     CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER001
+     C                     Z-ADD11        DBASE                                               CER001
+     C                     MOVEL'ULX043'  DBKEY                                               CER001
+     C                     OUT  LDA                                                           CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     SETON                     U7U8LR                                   CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C           PRTCD     IFEQ *BLANKS                                                       CER001
+      *                                                                                       CER001
+      ** Read IBLC 202 ICD file                                                               CER001
+      *                                                                                       CER001
+     C                     OPEN ILICDRPD                                                      CER001
+     C           1         SETLLILICDRPD                                                      CER001
+     C                     READ ILICDRPD                 99                                   CER001
+      *                                                                                       CER001
+      ** Handle database error                                                                CER001
+      *                                                                                       CER001
+     C           *IN99     IFEQ *ON                                                           CER001
+     C                     SETON                     U7U8                                     CER001
+     C                     MOVE 'ILICDRPD'DBFILE    P                                         CER001
+     C                     MOVEL'*FIRST'  DBKEY     P                                         CER001
+     C                     Z-ADD50        DBASE                                               CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ** Check IBLC 2002 'Use Dummy Issuer' Flag                                              CER001
+      *                                                                                       CER001
+     C           ICDMIS    IFEQ 'Y'                                                           CER001
+     C                     OPEN SESDX1L0                                                      CER001
+     C                     MOVE 'Y'       ULX043                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ** Check SAR details file to see if ULX004 is installed.                                CER001
+      *                                                                                       CER001
+     C                     MOVE 'N'       ULX004  1                                           CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM '       ' PRTCD                                               CER001
+     C                     PARM '*VERIFY' POPTN                                               CER001
+     C                     PARM 'ULX004'  PSARD                                               CER001
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER001
+      *                                                                                       CER001
+      ** Database Error                                                                       CER001
+      *                                                                                       CER001
+     C           PRTCD     IFNE *BLANKS                                                       CER001
+     C           PRTCD     ANDNE'*NRF   '                                                     CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER001
+     C                     Z-ADD12        DBASE                                               CER001
+     C                     MOVEL'ULX004'  DBKEY                                               CER001
+     C                     OUT  LDA                                                           CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     SETON                     U7U8LR                                   CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C           PRTCD     IFEQ *BLANK                                                        CER001
+     C                     MOVE 'Y'       ULX004                                              CER001
+     C                     MOVE *ON       *IN46                                               CER001
+     C                     OPEN SESDX3PD                                                      CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ** Check if feature ULX008 is installed                                                 CER001
+      *                                                                                       CER001
+     C                     MOVE 'N'       ULX008  1                                           CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM '       ' PRTCD                                               CER001
+     C                     PARM '*VERIFY' POPTN                                               CER001
+     C                     PARM 'ULX008'  PSARD                                               CER001
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER001
+      *                                                                                       CER001
+      ** Database Error                                                                       CER001
+      *                                                                                       CER001
+     C           PRTCD     IFNE *BLANKS                                                       CER001
+     C           PRTCD     ANDNE'*NRF   '                                                     CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER001
+     C                     Z-ADD13        DBASE                                               CER001
+     C                     MOVEL'ULX008'  DBKEY                                               CER001
+     C                     OUT  LDA                                                           CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     SETON                     U7U8LR                                   CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C           PRTCD     IFEQ *BLANK                                                        CER001
+     C                     MOVE 'Y'       ULX008                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ***  CHECK IF FEATURE ULX610 IS INSTALLED                                               237236
+     C                     MOVE 'N'       ULX610  1                                           237236
+     C                     CALL 'AOSARDR0'                                                    237236
+     C                     PARM '       ' PRTCD                                               237236
+     C                     PARM '*VERIFY' POPTN                                               237236
+     C                     PARM 'ULX610'  PSARD                                               237236
+      *                                                                                       237236
+      ** Database Error                                                                       237236
+      *                                                                                       237236
+     C           PRTCD     IFNE *BLANKS                                                       237236
+     C           PRTCD     ANDNE'*NRF   '                                                     237236
+     C           *LOCK     IN   LDA                                                           237236
+     C                     MOVEL'SCSARDPD'DBFILE           ***************                    237236
+     C                     Z-ADD14        DBASE            * DB ERROR 14 *                    237236
+     C                     MOVEL'ULX610'  DBKEY            ***************                    237236
+     C                     OUT  LDA                                                           237236
+     C                     EXSR *PSSR                                                         237236
+     C                     SETON                     U7U8LR                                   237236
+     C                     ENDIF                                                              237236
+      *                                                                                       237236
+     C           PRTCD     IFEQ *BLANK                                                        237236
+     C                     MOVE 'Y'       ULX610                                              237236
+     C                     OPEN SESDX2PD                                                      237236
+     C                     END                                                                237236
+      *                                                                             CGL018
+      ** Access details file to determine if CGL018 is on.                          CGL018
+      *                                                                             CGL018
+     C                     CALL 'AOSARDR0'                                          CGL018
+     C                     PARM *BLANKS   @RTCD   7                                 CGL018
+     C                     PARM '*VERIFY' @OPTN   7                                 CGL018
+     C                     PARM 'CGL018'  @SARD   6                                 CGL018
+     C           SCSARD    PARM SCSARD    DSFDY                                     CGL018
+      *                                                                             CGL018
+      ** Database Error                                                             CGL018
+      *                                                                             CGL018
+     C           @RTCD     IFNE *BLANKS                                             CGL018
+     C           @RTCD     ANDNE'*NRF   '                                           CGL018
+     C           *LOCK     IN   LDA                                                 CGL018
+     C                     MOVEL'SCSARDPD'DBFILE           ***************          CGL018
+     C                     Z-ADD6         DBASE            * DB ERROR 06 *          CGL018
+     C                     MOVEL'CGL018'  DBKEY            ***************          CGL018
+     C                     OUT  LDA                                                 CGL018
+     C                     EXSR *PSSR                                               CGL018
+     C                     SETON                     U7U8LR                         CGL018
+     C                     END                                                      CGL018
+      *                                                                             CGL018
+     C           @RTCD     IFEQ *BLANK                                              CGL018
+     C                     MOVE 'Y'       CGL018  1                                 CGL018
+     C                     ELSE                                                     CGL018
+     C                     MOVE 'N'       CGL018                                    CGL018
+     C                     END                                                      CGL018
+     C*
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  PR01    - SUBROUTINE TO PRINT DETAIL LINE/S                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           PR01      BEGSR
+     C*                                                                   E29170
+     C** Open output file if required                                     E29170
+     C*                                                                   E29170
+     C           LCNT      IFEQ 0                                         E29170
+     C                     OPEN SE2570P1                                  E29170
+     C*                                                                   E29170
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     END                                            E29170
+     C*
+     C* SET UP DETAIL LINES, USING ZSDESC TO EDIT SECURITY FULL NAME AND
+     C*     OTHER FIELDS FROM SECTY
+     C*
+     C*   - WRITE HEADINGS IF START OF PRINT OR OVERFLOW
+     C*
+     C           LCNT      IFGT 35
+     C           LCNT      OREQ 0
+     C                     WRITEHEAD1
+     C                     WRITEHEAD2
+     C***********          Z-ADD0         LCNT                            E14008
+     C                     Z-ADD11        LCNT                            E14008
+     C                     END
+     C*
+     C* SET UP PARAMETERS FOR ZSDESC
+     C*
+     C                     MOVE *BLANKS   ZSRPN
+     C                     MOVE SFN1      ZSFN1
+     C                     MOVE SFN2      ZSFN2
+     C                     MOVE RSFD      ZRSFD                           S01117
+     C                     EXSR ZSDESC
+     C*
+     C*  - WRITE DETAIL LINES
+     C*
+     C                     WRITEDETAIL1
+     C                     WRITEDETAIL2
+     C                     WRITEDETAIL3
+     C*
+     C************         ADD  3         LCNT                            E14008
+     C                     ADD  4         LCNT                            E14008
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  AUDIT  - SUBROUTINE TO OUTPUT AUDIT REPORT USING INFORMATION *
+     C*            FROM SECTYA AND PROCESSING                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AUDIT     BEGSR
+     C*
+     C* IF NO DATABASE ERRORS FOUND
+     C*      READ SECTYA AUDIT RECORD
+     C*
+     C           *INU7     IFEQ '0'
+     C                     READ SECTYAF                  99
+     C*
+     C* IF NOT FOUND - ERROR
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 03 *
+     C                     Z-ADD3         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     99U7U8
+     C                     ELSE
+     C*
+     C* CHECK FOR DIFFERENCE IN FILE AND CALCULATED TOTALS
+     C*
+     C                     Z-ADDNORE      SECREC
+     C           NORE      IFNE IREC
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *INU8
+     C                     END
+     C*
+     C* IF NO DIFFERENCE IN TOTALS - UPDATE AUDIT RECORD
+     C*
+     C           *INU8     IFEQ '0'
+     C********** NORE      SUB  DPREC     NORE                            S01158
+     C***        NORE      SUB  DECREC    NORE                            S01158              095907
+     C           IREC      SUB  DPREC2    NORE                                                095907
+     C                     Z-ADDNORE      SLRB
+     C                     UPDATSECTYAF
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     WRITEHEADAU
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C                     ELSE
+     C*
+     C* CHECK FOR ANY RECORDS READ
+     C*
+     C           IREC      IFEQ 0
+     C                     WRITENONE
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     END
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   SECSR  - SUBROUTINE FOR ERROR HANDLING OF SECURITIES FILE   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SECSR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE
+     C                     MOVELSESN      DBKEY
+     C                     Z-ADD90        DBASE
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSSEC    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************   S01447
+      /EJECT                                                              S01447
+     C*****************************************************************   S01447
+     C*                                                               *   S01447
+     C*   SDYSR  - SUBROUTINE FOR ERROR HANDLING OF SECURITIES        *   S01447
+     C*            EXTENSION FILE                                     *   S01447
+     C*                                                               *   S01447
+     C*****************************************************************   S01447
+     C*                                                                   S01447
+     C           SDYSR     BEGSR                                          S01447
+     C*                                                                   S01447
+     C           *LOCK     IN   LDA                                       S01447
+     C                     MOVE 'SESWHTL0'DBFILE                          S01447
+     C                     MOVEL'EXTN'    DBKEY                           S01447
+     C                     Z-ADD92        DBASE                           S01447
+     C                     OUT  LDA                                       S01447
+     C                     EXSR *PSSR                                     S01447
+     C                     MOVE STSSDY    DBSTAT                          S01447
+     C                     MOVE '1'       *IN97                           S01447
+     C                     SETON                     99U7U8               S01447
+     C                     GOTO EAUDIT                                    S01447
+     C*                                                                   S01447
+     C                     ENDSR                                          S01447
+     C*                                                                   S01447
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C* SCASR - SUBROUTINE FOR ERROR HANDLING OF SECURITIES AUDIT REC *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SCASR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     Z-ADD91        DBASE
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSSCA    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM *BLANKS   SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+     ******************************************************************   157029
+      /EJECT                                                              157029
+      *****************************************************************   157029
+      *                                                               *   157029
+      *            SRDPRR - Delete All Depot Reference Records.       *   157029
+      *                                                               *   157029
+      *  CALLS            -                                           *   157029
+      *                                                               *   157029
+      *  CALLED BY SRMAIN - Main Processing                           *   157029
+      *                                                               *   157029
+      *  FLDS USED        -                                           *   157029
+      *                                                               *   157029
+      *****************************************************************   157029
+     C           SRDPRR    BEGSR                                          157029
+      *                                                                   157029
+      ** Read first Depot Reference record for current CA Reference       157029
+      ** in LF/SECODRL0                                                   157029
+      *                                                                   157029
+     C           MACORF    SETLLSECODRL0                                  157029
+     C           MACORF    READESECODRL0                 87               157029
+      *                                                                   157029
+      ** Do while end of file and end of CA Reference is not reached      157029
+      *                                                                   157029
+     C           *IN87     DOWEQ'0'                        B*1            157029
+      *                                                                   157029
+      ** Delete the Depot Reference record in LF/SECODRL0                 157029
+      *                                                                   157029
+     C                     DELETSECODRD0                                  157029
+      *                                                                   157029
+      ** Read next Depot Reference record for current CA Reference        157029
+      ** in LF/SECODRL0                                                   157029
+      *                                                                   157029
+     C           MACORF    READESECODRL0                 87               157029
+      *                                                                   157029
+     C                     ENDDO                           E*1            157029
+      *                                                                   157029
+     C                     ENDSR                                          157029
+     ******************************************************************   157029
+      /EJECT                                                              157029
+      *****************************************************************   157029
+      *                                                               *   157029
+      *            SRDPRD - Delete All Depot Records.                 *   157029
+      *                                                               *   157029
+      *  CALLS            -                                           *   157029
+      *                                                               *   157029
+      *  CALLED BY SRMAIN - Main Processing                           *   157029
+      *                                                               *   157029
+      *  FLDS USED        -                                           *   157029
+      *                                                               *   157029
+      *****************************************************************   157029
+     C           SRDPRD    BEGSR                                          157029
+      *                                                                   157029
+      ** Read first Depot record for current CA Reference                 157029
+      ** in LF/SECODPL0                                                   157029
+      *                                                                   157029
+     C           MACORF    SETLLSECODPL0                                  157029
+     C           MACORF    READESECODPL0                 87               157029
+      *                                                                   157029
+      ** Do while end of file and end of CA Reference is not reached      157029
+      *                                                                   157029
+     C           *IN87     DOWEQ'0'                        B*1            157029
+      *                                                                   157029
+      ** Delete the Corporate Action Depot record in LF/SECODPL0          157029
+      *                                                                   157029
+     C                     DELETSECODPD0                                  157029
+      *                                                                   157029
+      ** Read next Depot record for current CA Reference                  157029
+      ** in LF/SECODPL0                                                   157029
+      *                                                                   157029
+     C           MACORF    READESECODPL0                 87               157029
+      *                                                                   157029
+     C                     ENDDO                           E*1            157029
+      *                                                                   157029
+     C                     ENDSR                                          157029
+      *                                                                   157029
+      *****************************************************************   157029
+      /EJECT                                                              157029
+      *****************************************************************   157029
+      *                                                               *   157029
+      *            SRALRD - Delete All Allocation Records.            *   157029
+      *                                                               *   157029
+      *  CALLS            -                                           *   157029
+      *                                                               *   157029
+      *  CALLED BY SRMAIN - Main Processing                           *   157029
+      *                                                               *   157029
+      *  FLDS USED        _                                           *   157029
+      *                                                               *   157029
+      *****************************************************************   157029
+     C           SRALRD    BEGSR                                          157029
+      *                                                                   157029
+      ** Read first Allocation record for current CA Reference            157029
+      ** in LF/SECOALL0                                                   157029
+      *                                                                   157029
+     C           MACORF    SETLLSECOALL0                                  157029
+     C           MACORF    READESECOALL0                 87               157029
+      *                                                                   157029
+      ** Do while end of file and end of CA Reference is not reached      157029
+      *                                                                   157029
+     C           *IN87     DOWEQ'0'                        B*1            157029
+      *                                                                   157029
+      ** Delete the Corporate Action Allocation record in LF/SEERALL0     157029
+      *                                                                   157029
+     C                     DELETSECOALD0                                  157029
+      *                                                                   157029
+      ** Read next Allocation record for current CA Reference             157029
+      ** in LF/SECOALL0                                                   157029
+      *                                                                   157029
+     C           MACORF    READESECOALL0                 87               157029
+      *                                                                   157029
+     C                     ENDDO                           E*1            157029
+      *                                                                   157029
+     C                     ENDSR                                          157029
+      *****************************************************************   157029
+      /EJECT                                                              157029
+      *****************************************************************   157029
+      *                                                               *   157029
+      *            SRRHRD - Delete All Reply Handling Records.        *   157029
+      *                                                               *   157029
+      *  CALLS            -                                           *   157029
+      *                                                               *   157029
+      *  CALLED BY SRMAIN - Main Processing                           *   157029
+      *                                                               *   157029
+      *  FLDS USED        -                                           *   157029
+      *                                                               *   157029
+      *****************************************************************   157029
+     C           SRRHRD    BEGSR                                          157029
+      *                                                                   157029
+      ** Read first Reply Handling record for current CA Reference        157029
+      ** in LF/SECOREL0                                                   157029
+      *                                                                   157029
+     C           MACORF    SETLLSECOREL0                                  157029
+     C           MACORF    READESECOREL0                 87               157029
+      *                                                                   157029
+      ** Do while end of file and end of CA Reference is not reached      157029
+      *                                                                   157029
+     C           *IN87     DOWEQ'0'                        B*1            157029
+      *                                                                   157029
+      ** Delete the Reply Handling record in LF/SECOREL0                  157029
+      *                                                                   157029
+     C                     DELETSECORED0                                  157029
+      *                                                                   157029
+      ** Read next Reply Handling record for current CA Reference         157029
+      ** in LF/SECOREL0                                                   157029
+      *                                                                   157029
+     C           MACORF    READESECOREL0                 87               157029
+      *                                                                   157029
+     C                     ENDDO                           E*1            157029
+      *                                                                   157029
+      ** Read first Reply Handling History record for current CA Reference157029
+      ** in LF/SECORHL0                                                   157029
+      *                                                                   157029
+     C           MACORF    SETLLSECORHL0                                  157029
+     C           MACORF    READESECORHL0                 87               157029
+      *                                                                   157029
+      ** Do while end of file and end of CA Reference is not reached      157029
+      *                                                                   157029
+     C           *IN87     DOWEQ'0'                        B*1            157029
+      *                                                                   157029
+      ** Delete the Reply Handling History record in LF/SECORHL0          157029
+      *                                                                   157029
+     C                     DELETSECORHD0                                  157029
+      *                                                                   157029
+      ** Read next Reply Handling History record for current CA Reference 157029
+      ** in LF/SECORHL0                                                   157029
+      *                                                                   157029
+     C           MACORF    READESECORHL0                 87               157029
+      *                                                                   157029
+     C                     ENDDO                           E*1            157029
+      *                                                                   157029
+     C                     ENDSR                                          157029
+      *****************************************************************   157029
+      /EJECT                                                              157029
+      *****************************************************************   157029
+      *                                                               *   157029
+      *            SRBLKP - Delete All Blocking Records.              *   157029
+      *                                                               *   157029
+      *  CALLS            -                                           *   157029
+      *                                                               *   157029
+      *  CALLED BY SRMAIN - Main Processing                           *   157029
+      *                                                               *   157029
+      *  FLDS USED        -                                           *   157029
+      *                                                               *   157029
+      *****************************************************************   157029
+     C           SRBLKP    BEGSR                                          157029
+      *                                                                   157029
+      ** Read first Blocking record for current CA Reference              157029
+      ** in LF/SECOBKL1                                                   157029
+      *                                                                   157029
+     C           MACORF    SETLLSECOBKL1                                  157029
+     C           MACORF    READESECOBKL1                 87               157029
+      *                                                                   157029
+      ** Do while end of file and end of CA Reference is not reached      157029
+      *                                                                   157029
+     C           *IN87     DOWEQ'0'                        B*1            157029
+      *                                                                   157029
+      ** Delete the Blocking record in LF/SECOBKL1                        157029
+      *                                                                   157029
+     C                     DELETSECOBKD0                                  157029
+      *                                                                   157029
+      ** Read next Blocking record for current CA Reference               157029
+      ** in LF/SECOBKL1                                                   157029
+      *                                                                   157029
+     C           MACORF    READESECOBKL1                 87               157029
+      *                                                                   157029
+     C                     ENDDO                           E*1            157029
+      *                                                                   157029
+     C                     ENDSR                                          157029
+      *****************************************************************   157029
+      /EJECT                                                              157029
+      *****************************************************************   157029
+      *                                                               *   157029
+      *            SRCARD - Delete All Corporate Action Records.      *   157029
+      *                                                               *   157029
+      *  CALLS            -                                           *   157029
+      *                                                               *   157029
+      *  CALLED BY SRMAIN - Main Processing                           *   157029
+      *                                                               *   157029
+      *  FLDS USED        -                                           *   157029
+      *                                                               *   157029
+      *****************************************************************   157029
+     C           SRCARD    BEGSR                                          157029
+      *                                                                   157029
+     C           MAPTYP    IFNE 'NC'                       B*0            157029
+     C           MAPTYP    ANDNE'NF'                                      157029
+     C           MAPTYP    ANDNE'CC'                                      157029
+      *                                                                   157029
+      ** Read first Corporate Action for current CA Reference having      157029
+      ** the same type                                                    157029
+      *                                                                   157029
+     C                     SELEC                                          157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'EX'                       B*1            157029
+     C           MACORF    SETLLSECOEXL0                                  157029
+     C           MACORF    READESECOEXL0                 87               157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'FR'                       B*1            157029
+     C           MACORF    SETLLSECOFRL0                                  157029
+     C           MACORF    READESECOFRL0                 87               157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'CE'                       B*1            157029
+     C           MACORF    SETLLSECOCEL0                                  157029
+     C           MACORF    READESECOCEL0                 87               157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'DV'                       B*1            157029
+     C           MACORF    SETLLSECODVL0                                  157029
+     C           MACORF    READESECODVL0                 87               157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'RG'                       B*1            157029
+     C           MACORF    SETLLSECORGL0                                  157029
+     C           MACORF    READESECORGL0                 87               157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'OF'                       B*1            157029
+     C           MACORF    SETLLSECOOFL0                                  157029
+     C           MACORF    READESECOOFL0                 87               157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'CR'                       B*1            157029
+     C           MACORF    SETLLSECOCRL0                                  157029
+     C           MACORF    READESECOCRL0                 87               157029
+      *                                                                   157029
+     C                     ENDSL                           E*1            157029
+      *                                                                   157029
+      ** Do while end of file and end of CA Reference is not reached      157029
+      *                                                                   157029
+     C           *IN87     DOWEQ'0'                        B*1            157029
+      *                                                                   157029
+      ** Delete the Corporate Action record of the current CA Reference   157029
+      *                                                                   157029
+     C                     SELEC                                          157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'EX'                       B*2            157029
+     C                     DELETSECOEXD0                                  157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'FR'                       B*2            157029
+     C                     DELETSECOFRD0                                  157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'CE'                       B*2            157029
+     C                     DELETSECOCED0                                  157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'DV'                       B*2            157029
+     C                     DELETSECODVD0                                  157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'RG'                       B*2            157029
+     C                     DELETSECORGD0                                  157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'OF'                       B*2            157029
+     C                     DELETSECOOFD0                                  157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'CR'                       B*2            157029
+     C                     DELETSECOCRD0                                  157029
+      *                                                                   157029
+     C                     ENDSL                           E*2            157029
+      *                                                                   157029
+      ** Read next Corporate Action record for current CA Reference       157029
+      *                                                                   157029
+     C                     SELEC                                          157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'EX'                       B*2            157029
+     C           MACORF    READESECOEXL0                 87               157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'FR'                       B*2            157029
+     C           MACORF    READESECOFRL0                 87               157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'CE'                       B*2            157029
+     C           MACORF    READESECOCEL0                 87               157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'DV'                       B*2            157029
+     C           MACORF    READESECODVL0                 87               157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'RG'                       B*2            157029
+     C           MACORF    READESECORGL0                 87               157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'OF'                       B*2            157029
+     C           MACORF    READESECOOFL0                 87               157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'CR'                       B*2            157029
+     C           MACORF    READESECOCRL0                 87               157029
+      *                                                                   157029
+     C                     ENDSL                           E*1            157029
+      *                                                                   157029
+     C                     ENDDO                           E*1            157029
+      *                                                                   157029
+     C                     ELSE                            X*0            157029
+      *                                                                   157029
+     C                     SELEC                                          157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'NF'                       B*1            157029
+     C           MACORF    CHAINSECONFL0             87                   157029
+     C           *IN87     IFEQ '0'                        B*2            157029
+     C                     DELETSECONFD0                                  157029
+     C                     ENDIF                           E*2            157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'NC'                       B*1            157029
+     C           MACORF    CHAINSECONCL0             87                   157029
+     C           *IN87     IFEQ '0'                        B*2            157029
+     C                     DELETSECONCD0                                  157029
+     C                     ENDIF                           E*2            157029
+      *                                                                   157029
+     C           MAPTYP    WHEQ 'CC'                       B*1            157029
+     C           MACORF    CHAINSECOCCL0             87                   157029
+     C           *IN87     IFEQ '0'                        B*2            157029
+     C           CEU017    IFEQ 'Y'                                       157029
+     C           NABLKR    CHAINSECORBL0             84                   157029
+     C           *IN84     IFEQ '0'                                       157029
+     C                     EXSR SRBLKD                                    157029
+     C                     DELETSECORBD0                                  157029
+     C                     END                                            157029
+     C                     END                                            157029
+     C                     DELETSECOCCD0                                  157029
+     C                     ENDIF                           E*2            157029
+      *                                                                   157029
+     C                     ENDSL                           E*1            157029
+     C                     ENDIF                           E*0            157029
+      *                                                                   157029
+     C                     ENDSR                                          157029
+      *****************************************************************   157029
+      /EJECT                                                              157029
+      *****************************************************************   157029
+      *                                                               *   157029
+      *            SRBLKD - Delete All Securities (PF/SECORSPD)       *   157029
+      *                                                               *   157029
+      *  CALLS            -                                           *   157029
+      *                                                               *   157029
+      *  CALLED BY SRMAIN - Main Processing                           *   157029
+      *                                                               *   157029
+      *  FLDS USED        -                                           *   157029
+      *                                                               *   157029
+      *****************************************************************   157029
+     C           SRBLKD    BEGSR                                          157029
+      *                                                                   157029
+      ***  Delete all record qith same Bulk Reference                     157029
+      *                                                                   157029
+     C           NBBLKR    SETLLSECORSL0                                  157029
+     C           NBBLKR    READESECORSL0                 87               157029
+      *                                                                   157029
+      ** Do while end of file and end of Bulk Reference is not reached    157029
+      *                                                                   157029
+     C           *IN87     DOWEQ*OFF                       B*1            157029
+      *                                                                   157029
+      ** Delete the Securities record of the current Bulk Reference       157029
+      *                                                                   157029
+     C                     DELETSECORSD0                                  157029
+      *                                                                   157029
+      ** Read next Securities record for current Bulk Reference           157029
+      *                                                                   157029
+     C           NBBLKR    READESECORSL0                 87               157029
+     C                     ENDDO                           E*1            157029
+      *                                                                   157029
+     C                     ENDSR                                          157029
+      *****************************************************************   157029
+      /EJECT                                                              157029
+     C*****************************************************************   E29170
+      /TITLE SR/RWA                                                                 CGL018
+      *******************************************************************           CGL018
+      * RWA       : Delete any records from SESRWAPD                    *           CGL018
+      * ---                                                             *           CGL018
+      * Called By : Main                                                *           CGL018
+      * Calls     : None                                                *           CGL018
+      *******************************************************************           CGL018
+     C           RWA       BEGSR                                                    CGL018
+      *                                                                             CGL018
+     C           SESN      SETLLSESRWAP0                                            CGL018
+     C           SESN      READESESRWAP0                 74                         CGL018
+     C           *IN74     DOWEQ'0'                                                 CGL018
+     C                     DELETSESRWAP0               84                           CGL018
+     C           *IN84     IFEQ '1'                                                 CGL018
+      *                                                                             CGL018
+      ** If delete not OK, database error.                                          CGL018
+      *                                                                             CGL018
+     C           *LOCK     IN   LDA                                                 CGL018
+     C                     MOVEL'SESRWAPD'DBFILE                                    CGL018
+     C                     Z-ADD007       DBASE                                     CGL018
+     C                     MOVELSESN      DBKEY            ***************          CGL018
+     C                     OUT  LDA                        * DB ERROR 07 *          CGL018
+     C                     EXSR *PSSR                      ***************          CGL018
+     C                     SETON                     U7U8LR                         CGL018
+     C                     ELSE                                                     CGL018
+     C           SESN      READESESRWAP0                 74                         CGL018
+     C                     ENDIF                                                    CGL018
+     C                     ENDDO                                                    CGL018
+     C                     ENDSR                                                    CGL018
+     C/COPY WNCPYSRC,SE2570C003
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT                                                              S11029
+     C/COPY ZSRSRC,ZICD2Z1                                                S11029
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSDESCZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

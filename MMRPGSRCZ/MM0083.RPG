@@ -1,0 +1,1040 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM - Midas upd ctl & sundry upds')               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - MM Dealer Module                                     *
+     F*                                                               *
+     F*     This program will be made redundant at DBA R4.00          *
+     F*     In the interim please check the new ILE RPG versions      *
+     F*     and apply any new fixes if they are appropriate.          *
+     F*                                                               *
+     F*  MM0083 - MIDAS UPDATE CONTROL AND SUNDRY UPDATES             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 MD022302           Date 09Sep13               *
+      *                 AR1044820          Date 17Jul13               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CAS009             Date 16May05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL033             Date 10Feb05               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             DATE 29AUG96               *
+     F*                 CAC001             Date 01FEB96               *
+     F*                 082738             DATE 01FEB95               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  MD022302 - A database error occurred when authorizing a      *
+      *             penalty termination of time deposit               *
+      *  AR1044820 - Incorrect projected movements for Adjustment to  *
+      *              Accrued Interest. Added parameters BEDEDC,       *
+      *              AFDEDC, and CALLER for calling AOOUMMU0.         *
+      *              Parameter mismatch occurred when AOOUMMU0 is     *
+      *              called and user is unable to insert a NA's       *
+      *              Purchased. Added parameters PFPAYF and PFRECF    *
+      *              for AOOUMMU0 (Child: AR1044821)                  *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL033 - Floating Rate CDs Issued                            *
+      *  CGL014 - Collaterals Processing (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CDL008 - Continuous Linked Settlement (recompile DEALSDB)    *
+     F*  S01408 - Add hook MM0083CCP1                                 *
+     F*         - Add hook MM0083CCP2                                 *
+     F*  CAC001 - Profit Centre Accounting Development:               *
+     F*           Recompiled only.                                    *
+     F*  082738 - Account Movements (NEW PROGRAM)                     *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+     F*       U6         PROGRAM ERROR                                *
+     F*       U7         DATA BASE OR EXCEPTION ERROR                 *
+     F*       U8         DATA BASE OR EXCEPTION ERROR                 *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     FMMDEMULLUF  E           K        DISK         KINFSR INFSR A    UC
+     F                                              KCOMIT
+     FMMDELULLUF  E           K        DISK         KINFSR INFSR A    UC
+     F                                              KCOMIT
+     F            DEALSDBF                          KIGNORE
+     FSDTIX   UF  E           K        DISK         KINFSR INFSR A    UC
+     F                                              KCOMIT
+     E                    CPY@    1   1 80
+     E*
+     E**  Array for aligning integer/decimal portions of amount
+     E                    @ID        18  1
+     IZ#BSTS    E DSZ#BST
+     IZ#ASTS    E DSZ#AST
+     IZ#WSTS    E DSZ#WST
+      *                                                                                    AR1044820
+      ** File - Payment Further Settlement Instructions                                    AR1044820
+      *                                                                                    AR1044820
+     IPFPAYF    E DSSDFSFPPD                                                               AR1044820
+      *                                                                                    AR1044820
+      ** File - Receive Further Settlement Instructions                                    AR1044820
+      *                                                                                    AR1044820
+     IPFRECF    E DSSDFSFRPD                                                               AR1044820
+      *                                                                                     MD022302
+     IDLDLQD    E DSDLSTMPPD                                                                MD022302
+      *
+      ** Data structure of standard loan/deposit deal.
+     I@STDL     E DSMMSTDLPP
+      *
+      ** Data structure of standard N/A bought deal.
+     I@STDB     E DSMMSTDBPP
+     I              QQDORI                          QQDOR1                                    CGL029
+     I              QQMORI                          QQMOR1                                    CGL029
+     I              QQDOPI                          QQDOP1                                    CGL029
+     I              QQMOPI                          QQMOP1                                    CGL029
+     I              QQBORI                          QQBOR1                                    CGL029
+     I              QQBOPI                          QQBOP1                                    CGL029
+     I              QQRONS                          QQRON1                                    CGL029
+     I              QQPONS                          QQPON1                                    CGL029
+      *
+      ** Data structure of standard N/A sold deal.
+     I@STDS     E DSMMSTDSPP
+     I              QQDORI                          QQDOR2                                    CGL029
+     I              QQMORI                          QQMOR2                                    CGL029
+     I              QQBORI                          QQBOR2                                    CGL029
+     I              QQBOPI                          QQBOP2                                    CGL029
+     I              QQRORI                          QQROR2                                    CGL029
+     I              QQROPI                          QQROP2                                    CGL029
+     I              QQRONS                          QQRON2                                    CGL029
+     I              QQPONS                          QQPON2                                    CGL029
+      *
+      ** Data structure of standard DEAM.
+     I@STDA     E DSMMSTDAPP
+     I              QQDORI                          QQDOR3                                    CGL029
+     I              QQMORI                          QQMOR3                                    CGL029
+     I              QQDOPI                          QQDOP3                                    CGL029
+     I              QQMOPI                          QQMOP3                                    CGL029
+     I              QQBORI                          QQBOR3                                    CGL029
+     I              QQBOPI                          QQBOP3                                    CGL029
+     I              QQRORI                          QQROR3                                    CGL029
+     I              QQROPI                          QQROP3                                    CGL029
+     I              QQRONS                          QQRON3                                    CGL029
+     I              QQPONS                          QQPON3                                    CGL029
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+      **  Program status data structure.
+     IPSDS       SDS
+     I                                      201 208 @FILE
+      *
+      **  Local data area for data base error.
+     I           UDS
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      *                                                               *
+      **  Data Structure for aligning integer/decimal purchase amount
+     I            DS                             18
+     I                                        1  150@INT
+     I                                       16  180@DEC
+     I                                        1  18 @ID
+     I/COPY WNCPYSRC,MM0083I001
+      *                                                                                    AR1044820
+      ** DS for DEALSDC - Before being updated by a program.                               AR1044820
+      *                                                                                    AR1044820
+     IBEDEDC      DS                           2139                                        AR1044820
+      *                                                                                    AR1044820
+      ** DS for DEALSDC - After being updated by a program.                                AR1044820
+      *                                                                                    AR1044820
+     IAFDEDC      DS                           2139                                        AR1044820
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MAIN     - Control processing                                 *
+      *                                                               *
+      * CALLS    #A       - Initial processing                        *
+      *          #B       - Control main processing                   *
+      *          #C       - Final processing                          *
+      *                                                               *
+      *****************************************************************
+      *
+      **  Initial processing.
+     C           @FCYC     IFNE 'Y'
+     C                     EXSR #A
+     C                     MOVE 'Y'       @FCYC   1
+     C                     END
+      *
+      **  Main processing.
+     C                     EXSR #B
+      *
+      **  Final processing.
+     C                     EXSR #C
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #A       - Initial processing                                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Control processing                        *
+      *                                                               *
+      *****************************************************************
+     C           #A        BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Receive input parameter.
+     C           *ENTRY    PLIST
+     C                     PARM           @TERM   1
+     C                     PARM           @DCAT
+     C                     PARM           @STDL
+     C                     PARM           @STDB
+     C                     PARM           @STDS
+     C                     PARM           @STDA
+     C                     PARM           @RACD
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+     C                     PARM           @@AURO  1
+     C/COPY WNCPYSRC,MM0083CCP1                                           S01408
+      *                                                                                       CDL033
+      ** FRCD Issued Extension details before update                                          CDL033
+      *                                                                                       CDL033
+     C                     PARM           PBFRCD100                                           CDL033
+      *                                                                                       CDL033
+      ** FRCD Issued Extension details after update                                           CDL033
+      *                                                                                       CDL033
+     C                     PARM           PAFRCD100                                           CDL033
+      *                                                                                       CDL033
+      *
+      ** Define temporary storage fields
+     C           *LIKE     DEFN IKMACT    ICMACT
+     C           *LIKE     DEFN IKLACT    @LACT
+     C           *LIKE     DEFN IKDSTS    @DSTS
+      *
+      **  If termination parameter is 'T', no further processing.
+     C           @TERM     CABEQ'T'       #A9
+      *
+      **  Set up program name in *LDA in case of database error.
+     C                     MOVEL'MM0083'  DBPGM
+      *
+      **  Open files.
+     C                     OPEN MMDEMULL
+     C                     OPEN MMDELULL
+     C                     OPEN SDTIX
+      *
+      **  Dummy write for files
+      *
+     C                     SETON                     99
+     C           *IN99     IFEQ '1'
+     C           *IN99     ANDNE'1'
+     C                     WRITEDTRIXHF
+     C                     WRITEDEALSDFF
+     C                     WRITEDEAMSDJF
+     C                     END
+      *
+      **  Define parameter list.
+      *
+     C           PARMS     PLIST
+     C                     PARM           @TERM
+     C                     PARM           @DCAT   1
+     C                     PARM           @STDL
+     C                     PARM           @STDB
+     C                     PARM           @STDS
+     C                     PARM           @STDA
+     C                     PARM           @RACD   1
+     C/COPY WNCPYSRC,MM0083CCP2                                           S01408
+      *                                                                                       CDL033
+      ** FRCD Issued Extension details before update                                          CDL033
+      *                                                                                       CDL033
+     C                     PARM           PBFRCD                                              CDL033
+      *                                                                                       CDL033
+      ** FRCD Issued Extension details after update                                           CDL033
+      *                                                                                       CDL033
+     C                     PARM           PAFRCD                                              CDL033
+      *                                                                                       CDL033
+      *
+      ** OBTAIN BANK DETAILS VIA ACCESS PROGRAM
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL@OPTN     DBKEY            * DBERR 06 *
+     C                     MOVE '006'     DBASE            ************
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C           #A9       ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #B       - Control main processing                            *
+      *                                                               *
+      * CALLS    MM0081/AOOUMMU0                                      *
+      *                                                               *
+      * CALLED BY  MAIN   - Control processing                        *
+      *                                                               *
+      *****************************************************************
+     C           #B        BEGSR
+      *
+      **  If termination parameter set to 'T', no further processing.
+     C           @TERM     CABEQ'T'       #B9
+     C/COPY WNCPYSRC,MM0083C005
+      *
+      ** load loan/deposit fields to common fields
+     C           @DCAT     IFEQ 'L'                        B1
+     C                     MOVE IKLACT    @LACT
+     C                     MOVE IKDSTS    @DSTS
+     C                     Z-ADDIKAMNP    WSAMNP 150
+     C/COPY WNCPYSRC,MM0083C004
+     C                     END                             E1
+      *
+      ** load N/As bought fields to common fields
+     C           @DCAT     IFEQ 'B'                        B1
+     C                     MOVE IHLACT    @LACT
+     C                     MOVE IHDSTS    @DSTS
+     C           IHMTYP    IFNE 'C1'                       B*2
+     C                     Z-ADDIHAMNP    WSAMNP
+     C                     ELSE                            X*2
+     C                     Z-ADDIHFVAL    WSAMNP
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** load N/As sold fields to common fields
+     C           @DCAT     IFEQ 'S'                        B1
+     C                     MOVE ILLACT    @LACT
+     C                     MOVE ILDSTS    @DSTS
+     C                     Z-ADDILAMNP    WSAMNP
+     C                     END                             E1
+      *
+      ** load DEAM's fields to common fields
+     C           @DCAT     IFEQ 'A'                        B1
+     C                     MOVE IGLACT    @LACT
+     C                     MOVE IGDSTS    @DSTS
+     C                     Z-ADDIGAMNP    WSAMNP
+     C                     END                             E1
+      *
+      **  If deal last action is 'S', ignore rest of processing
+     C           @LACT     IFEQ 'S'                         B1
+     C                     GOTO #B9
+     C                     END                              E1
+      *
+      **  If deal has been authorised, update MIDAS deal files.
+      *
+     C           @DSTS     IFNE 'I'                        B1
+     C           @DSTS     ANDNE'C'
+     C           @DSTS     IFNE 'R'                        B2
+     C           @DSTS     OREQ 'R'
+     C           @LACT     ANDNE'A'
+     C/COPY WNCPYSRC,MM0083C006
+      *
+     C                     CALL 'MM0081'  PARMS
+      *
+     C                     END                             E2
+     C                     END                             E1
+      *
+      ** Error
+     C           @TERM     CABEQ'E'       #B9
+     C/COPY WNCPYSRC,MM0083C003
+      *
+      ** Do On-line updates
+      *
+     C                     CALL 'AOOUMMU0'
+     C                     PARM           ##RTCD  7
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+     C                     PARM           @@AURO
+     C                     PARM           PFPAYF                                           AR1044820
+     C                     PARM           PFRECF                                           AR1044820
+      *                                                                                       CDL033
+      ** FRCD Issued Extension details before update                                          CDL033
+      *                                                                                       CDL033
+     C                     PARM           PBFRCD                                              CDL033
+      *                                                                                       CDL033
+      ** FRCD Issued Extension details after update                                           CDL033
+      *                                                                                       CDL033
+     C                     PARM           PAFRCD                                              CDL033
+      *                                                                                       CDL033
+     C                     PARM           DLDLQD                                            MD022302
+     C                     PARM *BLANKS   BEDEDC                                           AR1044820
+     C                     PARM *BLANKS   AFDEDC                                           AR1044820
+      *                                                                                    AR1044820
+      ** Calling Program                                                                   AR1044820
+      *                                                                                    AR1044820
+     C                     PARM *BLANKS   CALLER 10                                        AR1044820
+      *                                                                                    AR1044820
+     C           ##RTCD    IFEQ '*ERROR*'
+     C                     MOVEL'E'       @TERM
+     C                     GOTO #B9
+     C                     END
+     C/COPY WNCPYSRC,MM0083C007
+      *
+      **  Set up correct midas action code for updates
+      *
+     C           @DCAT     IFEQ 'L'                        B1
+     C                     MOVE IKMACT    ICMACT
+     C                     END                             E1
+      *
+     C           @DCAT     IFEQ 'B'                        B1
+     C                     MOVE IHMACT    ICMACT
+     C                     END                             E1
+      *
+     C           @DCAT     IFEQ 'S'                        B1
+     C                     MOVE ILMACT    ICMACT
+     C                     END                             E1
+      *
+     C           @DCAT     IFEQ 'A'                        B1
+     C                     MOVE IGMACT    ICMACT
+     C                     END                             E1
+      *
+      **  If deal has been authorised, update headers and trailers.
+     C           @DSTS     IFNE 'I'                        B1
+     C           @DSTS     ANDNE'C'
+      *
+      ** update loan/deposit, bought n/a or sold n/a trailer
+      *
+     C           ICMACT    IFNE 'A'                        B*2
+     C           @DCAT     IFNE 'A'                        B**3
+     C                     EXSR #ZD
+      *
+      ** if database error, no further processing
+      *
+     C           *INU7     CABEQ'1'       #B9
+     C                     ELSE                            X**3
+      *
+      ** update deal amendment trailer
+      *
+     C                     EXSR #ZF
+      *
+      ** if database error, no further processing
+      *
+     C           *INU7     CABEQ'1'       #B9
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+      ** Update header record.
+      *
+     C*
+     C           @DSTS     IFNE 'R'                        B*2
+     C           @DSTS     OREQ 'R'
+     C           @LACT     ANDNE'A'
+     C                     Z-ADD*ZERO     DLNO
+     C           DLNO      CHAINDTRIXHF              60      1
+     C           *IN60     IFEQ '1'                        B**3
+     C                     MOVE '010'     DBASE
+     C                     MOVEL'DTRIXHF' DBFILE           ***************
+     C                     MOVELDLNO      DBKEY            * DBERROR 010 *
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8
+     C                     GOTO #B9
+     C                     END                             E**3
+      *
+     C           @DCAT     IFEQ 'A'                        B**2
+     C                     ADD  1         NDAR
+     C                     ELSE                            X**3
+     C                     ADD  1         NDLR
+     C                     END                             E**3
+      *
+     C                     UPDATDTRIXHF                60
+     C           *IN60     IFEQ '1'                        B**3
+     C                     MOVE '011'     DBASE
+     C                     MOVEL'DTRIXHF' DBFILE           ***************
+     C                     MOVELDLNO      DBKEY            * DBERROR 011 *
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8
+     C                     GOTO #B9
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      **
+     C                     END                             E1
+     C/COPY WNCPYSRC,MM0083C008
+      *
+     C           #B9       ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #C       - Final processing                                   *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Control processing                        *
+      *                                                               *
+      *****************************************************************
+     C           #C        BEGSR
+      *
+      **  If termination parameter set to 'T', terminate program.
+     C           @TERM     IFEQ 'T'                        B1
+     C/COPY WNCPYSRC,MM0083C001
+     C                     MOVE '1'       *INLR
+     C                     GOTO #C9
+     C                     END                             E1
+      *
+      **  If database error, terminate program.
+     C           *INU7     IFEQ '1'                        B1
+     C/COPY WNCPYSRC,MM0083C002
+     C                     MOVE 'E'       @TERM
+     C                     MOVE '1'       *INLR
+     C                     GOTO #C9
+     C                     END                             E1
+      *
+      **  Return to calling program.
+     C                     RETRN
+      *
+     C           #C9       ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE: #ZD    - Update trailer record for loan/deposit, *
+      *                       bought N/A or sold N/A (update DEALSDF).*
+      *                                                               *
+      *  CALLED BY :  #B                                              *
+      *  CALLS     :                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ZD       BEGSR
+      *
+     C           999999    CHAINDEALSDFF             60
+     C           *IN60     IFEQ '1'                        B*1
+     C                     MOVE '005'     DBASE
+     C                     MOVEL'DEALSDFF'DBFILE           ***************
+     C                     MOVEL'9999999' DBKEY            * DBERROR 005 *
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8
+     C                     GOTO #ZD9
+     C                     END                             E*1
+      *
+      ** Loans/deposits - INSERTS
+     C           @DCAT     IFEQ 'L'                        B*1
+     C           ICMACT    ANDEQ'I'
+     C                     EXSR #ZE
+      *
+     C                     ADD  1         NORE
+     C                     ADD  1         NINS
+     C                     ADD  1         NLRA
+      *
+     C                     Z-ADDVRIF      @HINT  150
+     C                     Z-ADDVRIL      @HDEC   30
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VRIF
+     C                     Z-ADD@NEWDC    VRIL
+      *
+     C                     Z-ADDVLAF      @HINT
+     C                     Z-ADDVLAL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VLAF
+     C                     Z-ADD@NEWDC    VLAL
+     C                     GOTO #ZD1
+     C                     END                             E*1
+      *
+      ** Loans/deposits - DELETIONS
+     C           @DCAT     IFEQ 'L'                        B*1
+     C           ICMACT    ANDEQ'R'                        B*1
+     C                     EXSR #ZE
+      *
+     C                     ADD  1         NDEL
+     C                     SUB  1         NLRA
+      *
+     C                     Z-ADDVRDF      @HINT
+     C                     Z-ADDVRDL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VRDF
+     C                     Z-ADD@NEWDC    VRDL
+      *
+      **   Subtract new amounts (reverse signs and add)
+     C                     Z-SUB@INT      @INT
+     C                     Z-SUB@DEC      @DEC
+      *
+     C                     Z-ADDVLAF      @HINT
+     C                     Z-ADDVLAL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VLAF
+     C                     Z-ADD@NEWDC    VLAL
+     C                     GOTO #ZD1
+     C                     END                             E*1
+      *
+      ** N/A Bought - INSERTS
+     C           @DCAT     IFEQ 'B'                        B*1
+     C           ICMACT    ANDEQ'I'                        B*1
+     C                     EXSR #ZE
+      *
+     C                     ADD  1         NORE
+     C                     ADD  1         NINS
+     C                     ADD  1         NLRA
+      *
+     C                     Z-ADDVRIF      @HINT
+     C                     Z-ADDVRIL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VRIF
+     C                     Z-ADD@NEWDC    VRIL
+      *
+     C                     Z-ADDVLAF      @HINT
+     C                     Z-ADDVLAL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VLAF
+     C                     Z-ADD@NEWDC    VLAL
+     C                     GOTO #ZD1
+     C                     END                             E*1
+      *
+      ** N/A Bought - DELETIONS
+     C           @DCAT     IFEQ 'B'                        B*1
+     C           ICMACT    ANDEQ'R'                        B*1
+     C                     EXSR #ZE
+      *
+     C                     ADD  1         NDEL
+     C                     SUB  1         NLRA
+      *
+     C                     Z-ADDVRDF      @HINT
+     C                     Z-ADDVRDL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VRDF
+     C                     Z-ADD@NEWDC    VRDL
+      *
+      **   Subtract new amounts (reverse signs and add)
+     C                     Z-SUB@INT      @INT
+     C                     Z-SUB@DEC      @DEC
+     C                     Z-ADDVLAF      @HINT
+     C                     Z-ADDVLAL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VLAF
+     C                     Z-ADD@NEWDC    VLAL
+     C                     GOTO #ZD1
+     C                     END                             E*1
+      *
+      ** N/A Sold - INSERTS
+     C           @DCAT     IFEQ 'S'                        B*1
+     C           ICMACT    ANDEQ'I'                        B*1
+     C                     EXSR #ZE
+      *
+     C                     ADD  1         NORE
+     C                     ADD  1         NINS
+     C                     ADD  1         NLRA
+      *
+     C                     Z-ADDVRIF      @HINT
+     C                     Z-ADDVRIL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VRIF
+     C                     Z-ADD@NEWDC    VRIL
+     C                     Z-ADDVLAF      @HINT
+     C                     Z-ADDVLAL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VLAF
+     C                     Z-ADD@NEWDC    VLAL
+     C                     GOTO #ZD1
+     C                     END                             E*1
+      *
+      ** N/A Sold - DELETIONS
+     C           @DCAT     IFEQ 'S'                        B*1
+     C           ICMACT    ANDEQ'R'                        B*1
+     C                     EXSR #ZE
+      *
+     C                     ADD  1         NDEL
+     C                     SUB  1         NLRA
+      *
+     C                     Z-ADDVRDF      @HINT
+     C                     Z-ADDVRDL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VRDF
+     C                     Z-ADD@NEWDC    VRDL
+      *
+      **   Subtract new amounts (reverse signs and add)
+     C                     Z-SUB@INT      @INT
+     C                     Z-SUB@DEC      @DEC
+     C                     Z-ADDVLAF      @HINT
+     C                     Z-ADDVLAL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VLAF
+     C                     Z-ADD@NEWDC    VLAL
+     C                     END                             E*1
+      *
+     C           #ZD1      TAG                             **#ZD1**
+      *
+     C                     MOVE 'T'       RECI
+      *
+      ** Fields common to all deal and action types.
+      *
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE ICMACT    CHTP
+      *
+     C                     UPDATDEALSDFF               60
+      *
+     C           *IN60     IFEQ '1'                        B*1
+     C                     MOVE '007'     DBASE
+     C                     MOVEL'DEALSDFF'DBFILE           ***************
+     C                     MOVEL'99999999'DBKEY            * DBERROR 007 *
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8
+     C                     END                             E*1
+      *
+     C           #ZD9      ENDSR                           **#ZD9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE: #ZF    - Update trailer record for deal          *
+      *                       amendment (update DEAMSDJ).             *
+      *                                                               *
+      *                                                               *
+      *  CALLED BY :  #B                                              *
+      *  CALLS     :                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ZF       BEGSR
+      *
+     C           999999    CHAINDEAMSDJF             60
+     C           *IN60     IFEQ '1'                        B*1
+     C                     MOVE '008'     DBASE
+     C                     MOVEL'DEAMSDJF'DBFILE           ***************
+     C                     MOVEL'99999999'DBKEY            * DBERROR 008 *
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8
+     C                     GOTO #ZF9
+     C                     END                             E*1
+      *
+     C                     EXSR #ZE
+      *
+      ** Inserts  -  GENERAL
+     C           ICMACT    IFEQ 'I'                        B*1
+     C                     ADD  1         NORE
+     C                     ADD  1         NINS
+     C                     ADD  1         NLRA
+     C                     ELSE                            X*1
+      *
+      ** Deletions  -  GENERAL
+     C           ICMACT    IFEQ 'R'                        B*2
+     C                     ADD  1         NDEL              *2
+     C                     SUB  1         NLRA              *2
+     C                     END                             E*2
+     C                     END                             E*1
+      *
+      ** Inserts  -  AMENDMENT TYPE PI
+     C           ICMACT    IFEQ 'I'                        B*1
+     C           IGMTYP    ANDEQ'PI'                       B*1
+     C                     ADD  1         NIPR
+     C                     Z-ADDVRIF      @HINT
+     C                     Z-ADDVRIL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VRIF
+     C                     Z-ADD@NEWDC    VRIL
+     C                     Z-ADDVIPF      @HINT
+     C                     Z-ADDVIPL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VIPF
+     C                     Z-ADD@NEWDC    VIPL
+     C                     Z-ADDVLAF      @HINT
+     C                     Z-ADDVLAL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VLAF
+     C                     Z-ADD@NEWDC    VLAL
+     C                     GOTO #ZF1
+     C                     END                             E*1
+      *
+      ** Inserts  -  AMENDMENT TYPE PD
+     C           ICMACT    IFEQ 'I'                        B*1
+     C           IGMTYP    ANDEQ'PD'                       B*1
+     C                     ADD  1         NDPR
+     C                     Z-ADDVRIF      @HINT
+     C                     Z-ADDVRIL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VRIF
+     C                     Z-ADD@NEWDC    VRIL
+     C                     Z-ADDVDPF      @HINT
+     C                     Z-ADDVDPL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VDPF
+     C                     Z-ADD@NEWDC    VDPL
+     C                     Z-ADDVLAF      @HINT
+     C                     Z-ADDVLAL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VLAF
+     C                     Z-ADD@NEWDC    VLAL
+     C                     GOTO #ZF1
+     C                     END                             E*1
+      *
+      ** Deletions  -  AMENDMENT TYPE PI
+     C           ICMACT    IFEQ 'R'                        B*1
+     C           IGMTYP    ANDEQ'PI'                       B*1
+     C                     SUB  1         NIPR
+     C                     Z-ADDVRDF      @HINT
+     C                     Z-ADDVRDL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VRDF
+     C                     Z-ADD@NEWDC    VRDL
+      *
+      **   Subtract new amounts (reverse signs and add)
+     C                     Z-SUB@INT      @INT
+     C                     Z-SUB@DEC      @DEC
+     C                     Z-ADDVIPF      @HINT
+     C                     Z-ADDVIPL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VIPF
+     C                     Z-ADD@NEWDC    VIPL
+     C                     Z-ADDVLAF      @HINT
+     C                     Z-ADDVLAL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VLAF
+     C                     Z-ADD@NEWDC    VLAL
+     C                     GOTO #ZF1
+     C                     END                             E*1
+      *
+      ** Deletions  -  AMENDMENT TYPE PD
+     C           ICMACT    IFEQ 'R'                        B*1
+     C           IGMTYP    ANDEQ'PD'                       B*1
+     C                     SUB  1         NDPR
+     C                     Z-ADDVRDF      @HINT
+     C                     Z-ADDVRDL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VRDF
+     C                     Z-ADD@NEWDC    VRDL
+     C*
+      **   Subtract new amounts (reverse signs and add)
+     C                     Z-SUB@INT      @INT
+     C                     Z-SUB@DEC      @DEC
+     C                     Z-ADDVDPF      @HINT
+     C                     Z-ADDVDPL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VDPF
+     C                     Z-ADD@NEWDC    VDPL
+     C                     Z-ADDVLAF      @HINT
+     C                     Z-ADDVLAL      @HDEC
+     C                     EXSR #ZEA
+     C                     Z-ADD@NEWIT    VLAF
+     C                     Z-ADD@NEWDC    VLAL
+     C                     END                             E*1
+      *
+     C           #ZF1      TAG                             **#ZF1**
+      *
+      ** Fields common to all deal and action types.
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE 'A'       CHTP
+     C                     MOVE 'T'       RECI
+      *
+     C                     UPDATDEAMSDJF               60
+      *
+     C           *IN60     IFEQ '1'                        B*1
+     C                     MOVE '009'     DBASE
+     C                     MOVEL'DEAMSDJF'DBFILE           ***************
+     C                     MOVEL'99999999'DBKEY            * DBERROR 009 *
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8
+     C                     END                             E*1
+      *
+     C           #ZF9      ENDSR                           **#ZF9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE: #ZE    - Break amount down into 2 fields,        *
+      *                        15 & 3 long respectively.              *
+      *                                                               *
+      *  CALLED BY :  #ZC & #ZD                                       *
+      *  CALLS     :                                                  *
+      *                                                               *
+      *****************************************************************
+     C           #ZE       BEGSR
+      *
+      **    Set up purchase amount in @INT/@DEC (Integer/decimal)
+      *
+     C                     Z-ADD*ZERO     @DEC
+      *
+      ** MAKE WSAMNP POSITIVE IF IT IS NEGATIVE
+     C           WSAMNP    IFLT 0                          B1
+     C                     Z-SUBWSAMNP    WSAMNP
+     C                     END                             E1
+      *
+     C                     MOVE WSAMNP    @X15   15
+      *
+     C                     Z-ADD4         @N      20
+     C                     MOVEA@X15      @ID,@N
+      *
+     C           @DEC      IFLT *ZERO                      B1
+     C                     Z-SUB@INT      @INT
+     C                     END                             E1
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*   Subroutine #ZEA :  To add decimal and integer amounts
+     C*                      to file trailer totals
+     C*
+     C*   Uses  :   @TOTDC    Working decimal total     (4,0)
+     C*             @TOTIT    Working integer total     (15,0)
+     C*   Input :   @HDEC     Old decimal total         (3,0)
+     C*             @HINT     Old integer total         (15,0)
+     C*             @DEC      Decimal value to be added (3,0)
+     C*             @INT      Integer value to be added (15,0)
+     C*   Output:   @NEWDC    New decimal total         (3,0)
+     C*             @NEWIT    New integer total         (15,0)
+     C*
+     C*****************************************************************
+     C           #ZEA      BEGSR                           **ZEA***
+      *
+      **  Initialise fields
+     C                     Z-ADD*ZERO     @TOTDC  40
+     C                     Z-ADD@HINT     @NEWIT 150
+      *
+      ** Ensure that the decimal has the same sign as the integer
+      ** (On file the decimal already has a sign ie. @HDEC )
+     C           @INT      IFLT *ZERO                      B1
+     C           @DEC      ANDGT*ZERO                      B1
+     C                     Z-SUB@DEC      @DEC
+     C                     END                             E1
+      *
+      **  Decimals
+      **  Add the new decimals to the old total
+     C           @DEC      ADD  @HDEC     @TOTDC
+      *
+      **  Monitor for overflow (eg. -15 + -990 = -1005)
+     C           @TOTDC    IFLT -999                       B1
+     C                     SUB  1         @NEWIT
+     C                     END                             E1
+      *
+      **  Monitor for overflow (eg. 15 + 990 = 1005)
+     C           @TOTDC    IFGT 999                        B1
+     C                     ADD  1         @NEWIT
+     C                     END                             E1
+      *
+      **  Integers
+      **  Add the integers to the overflow corrected old total
+     C                     ADD  @INT      @NEWIT
+      *
+      **  COMPENSATE FOR THE DECIMALS GOING UNDER 0
+     C           @HDEC     IFGE 0
+     C           @NEWIT    ANDGT0
+     C           @TOTDC    ANDLT0
+     C                     SUB  1         @NEWIT
+     C                     ADD  1000      @TOTDC
+     C                     END
+     C           @HDEC     IFLT 0
+     C           @NEWIT    ANDLT0
+     C           @TOTDC    ANDGE0
+     C                     ADD  1         @NEWIT
+     C                     SUB  1000      @TOTDC
+     C                     END
+     C                     MOVE @TOTDC    @NEWDC  30
+     C*
+     C           #ZEA9     ENDSR                           ***ZEA9***
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR - PROGRAM ERROR SUBROUTINE                              *
+      *                                                               *
+      * CALLED BY:   EXECUTES WHENEVER PROGRAM ERROR OCCURS           *
+      *                                                               *
+      * CALLS:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** SET @ERR1 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR1   1
+     C                     MOVE '1'       *INU6
+      *
+      ** SET UP FIELDS IN LOCAL DATA AREA
+     C                     MOVEL'MM0083'  DBPGM
+     C                     MOVE '991'     DBASE
+      *
+      ** DUMP THE PROGRAM
+     C                     DUMP
+     C                     MOVE 'E'       @TERM
+     C                     END                             E1
+      *
+      ** TERMINATE THE PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INFSR - FILE EXCEPTION/ERROR SUBROUTINE                       *
+      *                                                               *
+      * CALLED BY:   EXECUTES WHENEVER FILE EXCEPTION/ERROR OCCURS    *
+      *                                                               *
+      * CALLS:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           INFSR     BEGSR
+      *
+      ** SET @ERR2 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR2     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR2   1
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+      *
+      ** SET UP FIELDS IN LOCAL DATA AREA
+     C                     MOVEL@FILE     DBFILE
+     C                     MOVE '992'     DBASE
+      *
+      ** DUMP THE PROGRAM
+     C                     DUMP
+     C                     MOVE 'E'       @TERM
+     C                     END                             E1
+      *
+      ** TERMINATE THE PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

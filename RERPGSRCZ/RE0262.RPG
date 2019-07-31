@@ -1,0 +1,1256 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Deflt Retl A/c Maint-Insert Valid'n')
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE0262 - DEFAULT RETAIL ACCOUNTS MAINTENANCE - S/REDEF       *
+0007 F*           INSERT SCREEN VALIDATION                            *
+0008 F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*      1990, 1993                                               *
+0010 F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. BUG27324           Date 31Mar10               *
+      *                 CAP205             Date 04Jan10               *
+      *                 CRE030             Date 07Jul06               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 03Jun06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3900            Date 04Aug04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 TDA087             Date 26Mar04               *
+      *                 TDA036             Date 22Mar04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01413             Date 13Apr93               *
+      *                 S01314                  31Jan91               *
+     F*                 LN0228                  21MAY90               *
+     F*                 S01194                  21FEB90               *
+     F*                 S01199                  15FEB90               *
+0011 F*                 S01117                  23NOV89               *
+0011 F*                 E11563                  25JAN89               *
+0012 F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG27324 - Incorrect validation of ABC Required field        *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  CRE030 - Default RE Accounts by Currency                     *
+      *  CSD027 - Only customer number is allowed, not short name.    *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3900 - Recompiled due to changed RE0260FM.                *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  TDA087 - Validation error when full account code is entered. *
+      *  TDA036 - Missing retail number in the Default Retail         *
+      *           Accounts enquiry.                                   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01413  -  Retail 3 Incorporation                            *
+     F*  S01314  -  REL10 PTF INCORP STANDARDISATION OF SAR S01199    *
+     F*             CHANGES TO 'HELP'.+ THE INSERT OF A LINE THAT AS  *
+     F*             BEEN DELETED WHEN IT SHOULD HAVE BEEN ** OUT.     *
+     F*  LN0228  -  ? HANDLING FOR BRANCH                             *
+     F*  S01194  -  NEW STANDING DATA                                 *
+     F*  S01199  -  HELP CHANGES                                      *
+     F*  S01117  -  MULTIBRANCHING                                    *
+     F*  E11563  -  VALIDATE BRANCH ENTERED AGAINST MASTER RECORD     *
+     F*             ON ACCNT.                                         *
+     F*                                                               *
+0013 F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,RE0262F001
+0016 F***RE0260FMCF  F     213            WORKSTN                                             CGL029
+     F***RE0260FMCF  F     236            WORKSTN                                      CGL029 CRE030
+     F***RE0260FMCF  F     239            WORKSTN                                      CRE030 CAP205
+     FRE0260FMCF  F     240            WORKSTN                                                CAP205
+     F/COPY WNCPYSRC,RE0262F002
+0020 F*TABLE***IF  F      96 12AI     2 DISK                              S01194
+0021 F*CCNT   IF  F     400 15AI     2 DISK                               S01117
+0021 F***ACCNT** IF  F     400 18AI     2 DISK                                         S01117 CGL029
+     FACCNT   IF  F     573 24AI     2 DISK                                                   CGL029
+     F                                              KCOMIT
+0022 F***ACNUM** IF  F      40 10AI     2 DISK                                                CGL029
+     FACNUM   IF  F      46 10AI     2 DISK                                                   CGL029
+0023 F*CLINT***IF  F     256  7AI     2 DISK                              S01194
+0024 F*
+0025 F*       FUNCTION OF INDICATORS
+0026 F*       KC      END OF JOB REQUEST
+0026 F*       U7      DATABASE ERROR
+0027 F*       89      BLINK ACTION CODE LABEL
+0028 F*       88      NON-DISPLAY ERROR MESSAGE/CODES
+0029 F*       87      NON-DISPLAY CHANGE DETAILS
+0030 F*       86      NON-DISPLAY USEFUL DATA
+0031 F*       85      OUTPUT ENQUIRE - SE - SCREEN
+0032 F*       84      OUTPUT DELETE - SD - SCREEN
+0033 F*       83      OUTPUT AMEND - SA - SCREEN
+0034 F*       82      OUTPUT INSERT - SI - SCREEN
+0035 F*       81      OUTPUT INITIAL - SF - SCREEN
+0036 F*       79      SYSTEM SET-UP FLAG ON
+0037 F* 78            SI SCREEN READ IN
+0038 F*       77      FIRST CYCLE IND
+     F*       40      ERROR ON ACCOUNT BALANCE CHECK REQUIRED FIELD                           CAP205
+     F*       39      ACCOUNT BALANCE CHECK REQUIRED DISABLED                                 CAP205
+0040 F*       38      RETAIL A/C NOS INDICATOR = N
+0041 F*       37      ACCOUNT CLOSED TODAY
+     F*       36      NOT MULTIBRANCHING                                  S01117
+     F*       35      BRANCH CODE BLANK                                   S01117
+0040 F*       34      CUSTOMER NUMBER BLANK
+0041 F*       33      CCY BLANK
+0042 F*       32      SEQ BLANK
+0043 F*       31     RETAIL NO. BLANK
+0044 F*       30      ALL CUSTOMER FIELDS BLANK
+0045 F*       21      INVALID ACCOUNT CODE
+0046 F*       22      INVALID CUSTOMER LABEL
+0047 F*       23      INVALID CURRENCY
+0048 F*       24      INVALID SEQUENCE
+0049 F*       25      INVALID RETAIL NO.
+0049 F*       25      INVALID BRANCH CODE
+     F*       27      ERROR ON CURRENCY CODE KEY FIELD                                        CRE030
+     F*       28      CRE030 (DEFAULT RE ACCOUNTS BY CURRENCY) ENABLED                        CRE030
+     F********27*     BRNCH AND SBRCDA MATCH                        E11563S01117
+0049 F**10*******     BRANCH CODES RECORD                                 S01117
+0050 F**11*******     CURRENCY RECORD 1                                   S01194
+0051 F* 12            ACNUM - ACCOUNT NUMBERS DETAIL RECORD
+0052 F**13******      CLINT - CLIENT FILE DETAIL RECORD                   S01194
+0053 F* 14            ACCNT - ACCOUNT MASTER FILE DETAIL RECORD
+     F**15*****       TABLE - ICDR 3                                      S01194
+0015 F*       02      SET ON IF ERROR DURING READ FROM THE WORK STATION *
+     F***********     /HELP INDICATOR                                     S01199
+0054 F*
+0055 E*    STANDARD TABLES/ARRAYS
+0056 E                    ERCD       19  4               ERROR CODES
+0057 E**********          ERCM    1  10 79               ERROR MESSAGES   E11563
+0057 E***********         ERCM    1  11 79               ERROR MESSAE11563S01117
+0057 E**********          ERCM    1  13 79               ERROR MESSAGES   S01117              CAP205
+0057 E                    ERCM    1  14 79               ERROR MESSAGES                       CAP205
+     E                    CPY@    1   1 80
+0058 I*    STANDARD FILES
+0059 I*
+0060 I*    WORKSTATION FILE
+0061 I*
+0062 I*    FORMAT - INSERT SCREEN
+0063 I*
+0064 IRE0260FMNS  78   8 CS   9 CI
+0065 I                                        1   7 SRUNA
+0066 I                                        8   9 SID
+0067 I                                       10  15 SPID
+0068 I                                       16  23 STIME
+0069 I                                       24  26 SWSID
+     I                                       27  29 SACCY                                     CRE030
+0070 I**********                             27  300SACOD                                     CGL029
+     I**********                             27  360SACOD                              CGL029 CRE030
+     I                                       30  390SACOD                                     CRE030
+     I/COPY WNCPYSRC,RE0262I001
+0071 I**********                             31  31 SACTN                                     CGL029
+     I**********                             37  37 SACTN                              CGL029 CRE030
+     I                                       40  40 SACTN                                     CRE030
+0072 I**********                             32  370SCNUM                 S01194
+0073 I**********                             32  37 SCNUMA                                    CGL029
+0074 I**********                             38  40 SCCY                                      CGL029
+0075 I**********                             41  420SSEQ                                      CGL029
+0076 I**********                             41  42 SSEQA                                     CGL029
+0077 I**********                             43  520SRETN                                     CGL029
+0078 I**********                             43  52 SRETNA                                    CGL029
+     I**********                             38  43 SCNUMA                             CGL029 CRE030
+     I                                       41  46 SCNUMA                                    CRE030
+     I**********                             44  46 SCCY                               CGL029 CRE030
+     I                                       47  49 SCCY                                      CRE030
+     I**********                             47  480SSEQ                               CGL029 CRE030
+     I                                       50  510SSEQ                                      CRE030
+     I**********                             47  48 SSEQA                              CGL029 CRE030
+     I                                       50  51 SSEQA                                     CRE030
+     I**********                             49  580SRETN                              CGL029 CRE030
+     I                                       52  610SRETN                                     CRE030
+     I**********                             49  58 SRETNA                             CGL029 CRE030
+     I                                       52  61 SRETNA                                    CRE030
+     I***********                            53  550SBRCD                 S01117
+     I**********                             53  55 SBRCDA                                    CGL029
+     I**********                             59  61 SBRCDA                             CGL029 CRE030
+     I                                       62  64 SBRCDA                                    CRE030
+     I                                       65  65 SABCR                                     CAP205
+0079 I*                                STANDARD STRING FIELDS
+0080 I**********                              1  31 SCN31                                     CGL029
+     I**********                              1  37 SCN31                              CGL029 CRE030
+     I                                        1  40 SCN31                                     CRE030
+     I/COPY WNCPYSRC,RE0262I003
+0081 I**********                              1  55 SCN55                                     CGL029
+     I**********                              1  61 SCN55                              CGL029 CRE030
+     I**********                              1  64 SCN55                              CRE030 CAP205
+     I                                        1  65 SCN55                                     CAP205
+0082 I*
+0083 I*    CATCHALL
+0084 I        NS
+0085 I                                        8   9 SID
+0090 I*
+0091 I*    NON-STANDARD FILES
+0092 I*
+0093 I*****TABLE*FILE***CURRENCIES*RECORD*1.                              S01194
+0094 I**********                                                          S01194
+0095 I*TABLE***NS  11   1 CD   2 C2   3 C0                                S01194
+0096 I*******AND      13 C1                                               S01194
+0097 I**********                              1   1 RECI                  S01194
+0098 I**********                              2   30RECT                  S01194
+0099 I**********                             10  12 CCY                   S01194
+0100 I**********                             13  130SREC                  S01194
+0101 I**********                             14  27 CCNM                  S01194
+0102 I**********                          P  28  348SPOT                  S01194
+0103 I**********                             35  37 CCYS                  S01194
+0104 I**********                             38  380CDP                   S01194
+0105 I**********                             39  390TNOT                  S01194
+0106 I**********                             40  40 DCCY                  S01194
+0107 I**********                             41  44 SRC1                  S01194
+0108 I**********                             45  48 SRC2                  S01194
+0109 I**********                             49  520TACC                  S01194
+0110 I**********                             53  560TEQV                  S01194
+0111 I**********                             57  600SWQV                  S01194
+0112 I**********                             61  640TAC4                  S01194
+0113 I**********                             65  680TAC5                  S01194
+0114 I**********                             69  69 HIND                  S01194
+0115 I**********                          P  70  768PART                  S01194
+0116 I**********                             77  780SSNO                  S01194
+0117 I**********                          P  79  858ERLC                  S01194
+0118 I**********                             86  860MDIN                  S01194
+0119 I**********                             87  870MDIA                  S01194
+0120 I**********                             88  880MDIB                  S01194
+0121 I**********                          P  90  920LCD                   S01194
+0122 I**********                             93  93 CHTP                  S01194
+0123 I**********                          P  94  960TNLU                  S01194
+0124 I***********                                                         S01117
+0093 I*****TABLE*FILE - BRANCH CODES RECORD                               S01117
+0094 I***********                                                         S01117
+0095 I*ABLE***NS* 10   1 CD   2 C1   3 C0                                 S01117
+0969 I***********                             1   1 RECI                  S01117
+0970 I***********                             2   30RECT                  S01117
+0971 I***********                            11  130BRCD                  S01117
+0972 I***********                            14  43 BRNM                  S01117
+0973 I***********                            44  490BICN                  S01117
+0974 I***********                            50  51 LOCC                  S01117
+0975 I***********                            52  53 CMPY                  S01117
+     I***********                            78  790SACS                  S01117
+     I***********                            78  79 SACSA                 S01117
+     I***********                            80  810EACS                  S01117
+     I***********                            80  81 EACSA                 S01117
+0976 I***********                         P  90  920LCD                   S01117
+0977 I***********                            93  93 CHTP                  S01117
+0978 I***********                         P  94  960TNLU                  S01117
+0127 I**********                                                          S01194
+0093 I*****TABLE*FILE***I.C.D.*3                                          S01194
+0094 I**********                                                          S01194
+0095 I*TABLE***NS  15   1 CD   2 C0   3 C1                                S01194
+0096 I*******AND      12 C2  13 C0                                        S01194
+0097 I**********                              1   1 RECI                  S01194
+0098 I**********                              2   30RECT                  S01194
+0099 I**********                             12  130RCDE                  S01194
+0100 I**********                             14  170COMS                  S01194
+0101 I**********                             18  210CADC                  S01194
+0102 I**********                          P  22  250MDIC                  S01194
+0103 I**********                          P  26  290MDIAX                 S01194
+0104 I**********                          P  30  330MCIC                  S01194
+0105 I**********                             34  370SRPL                  S01194
+0106 I**********                             38  410SPAC                  S01194
+0107 I**********                             42  450SWAC                  S01194
+0108 I**********                             46  490FTAC                  S01194
+0109 I**********                             50  530TAC4                  S01194
+0110 I**********                             54  570TAC5                  S01194
+0111 I**********                          P  58  610MCIA                  S01194
+0112 I**********                          P  63  650NOBA                  S01194
+0113 I**********                          P  66  680TSIZ                  S01194
+0114 I**********                             69  69 RACN                  S01194
+0115 I**********                             70  700GLSI                  S01194
+0116 I**********                             71  710RTSI                  S01194
+0117 I**********                             72  720DLSI                  S01194
+0118 I**********                             73  730NOSI                  S01194
+0119 I**********                             74  740CTSI                  S01194
+0120 I**********                          P  75  770ELAC                  S01194
+0121 I**********                          P  78  800ECAC                  S01194
+0122 I**********                          P  90  920LCD                   S01194
+0123 I**********                             93  93 CHTP                  S01194
+0123 I**********                          P  94  960TNLU                  S01194
+0124 I**********                                                          S01194
+0125 I*****CATCHALL                                                       S01194
+0126 I********NS                                                          S01194
+0127 I*
+0128 I**   ACCOUNT MASTER FILE - DETAIL RECORD.
+0129 I**
+0130 IACCNT   NS  14   1 CD
+0131 I                                        8  10 ACCY
+0132 I                                       23  25 BRNCH
+0133 I                                       26  26 ATYP
+0133 I                                       29  29 ACSTA
+0134 I                                    P  30  320DACO
+     I                                      190 1990ACNON                                     TDA036
+0135 I                                      200 200 RETB
+0136 I                                    P 260 2620LDID
+0137 I                                    P 336 3380LCID
+0138 I                                    P 239 2410RRNM
+0139 I                                      254 254 DRIF
+0140 I                                      330 330 CRIF
+0141 I**   ACCOUNT MASTER FILE - CATCH-ALL.
+0142 I        NS
+0143 I**
+0144 I**   RETAIL ACCOUNT NUMBERS FILE.
+0145 I**
+0146 IACNUM   NS  12   1 CD
+0147 I                                        2  11 ACNO
+0148 I                                       12  17 CNUMB
+0149 I                                       18  20 NCCY
+0150 I**********                             21  240ACODA                                     CGL029
+0151 I**********                             25  26 ACSQA                                     CGL029
+0152 I**********                             27  27 ACST                                      CGL029
+     I**********                             29  31 BRCDAN                             S01117 CGL029
+     I                                       21  300ACODA                                     CGL029
+     I                                       31  32 ACSQA                                     CGL029
+0152 I                                       33  33 ACST                                      CGL029
+     I                                       35  37 BRCDAN                                    CGL029
+0153 I*    ACNUM FILE CATCH-ALL.
+0154 I        NS
+0155 I*****CUSTOMER*MASTER*FILE***DETAIL*RECORD.                          S01194
+0156 I*CLINT***NS  13   1 CD                                              S01194
+0157 I**********                              1   1 RECI                  S01194
+0158 I*****CLINT*CATCH-ALL.                                               S01194
+0159 I********NS                                                          S01194
+0160 I*
+0161 I*    NON-STANDARD DATA STRUCTURES
+0162 I*
+0163 I*****DATA*STRUCTURE*FOR*TABLE*FILE*KEY                              S01194
+0164 I**********                                                          S01194
+0165 I**********  DS                                                      S01194
+0166 I**********                              1  12 TABKEY                S01194
+0167 I**********                              1   2 TAB2                  S01194
+0168 I**********                              9  11 TAB3A                 S01194
+0169 I**********                             10  12 TAB3B                 S01194
+0170 I**********                              9  12 TAB4                  S01194
+0171 I**********                             12  12 TAB1                  S01194
+0172 I**********                              6  11 TAB6                  S01194
+     I**                                                                  S01117
+     IZMUSER      DS                             17                       S01117
+     I** DATA AREA OF MENU USER                                           S01117
+     I                                       11  13 DFBR                  S01117
+0086 I*
+0087 I*    WORKSTATION TRANSACTION D.S.                                D
+0088 I*
+0089 IWTRN       UDS                            860
+     I                                        1 200 WST01
+     I                                      201 400 WST02
+     I                                      401 600 WST03
+     I                                      601 800 WST04
+     I                                      801 860 WST05
+     I                                        1   1 WR001
+     I**********                              2   5 WACOD                                     CGL029
+     I                                        2   5 ACODQQ                                    CGL029
+     I                                        6   6 WR006
+     I/COPY WNCPYSRC,RE0262I002
+     I                                    P  31  330WTNLU
+     I                                    P  34  360WORED
+     I                                    P  37  390WLCD
+     I                                       40  40 WR040
+     I                                    P  41  470WHASH
+     I                                       48  53 WCNUM
+     I                                       54  56 WCCY
+     I                                       57  58 WSEQ
+     I                                       59  68 WRETN
+     I                                       69  71 WBRCD                 S01117
+     I                                      129 138 WACOD                                     CGL029
+     I                                      139 139 WABCR                                     CAP205
+     I                                      401 401 WR401
+     I                                      402 4040WZ5
+     I                                      405 4070WZO5
+     I                                      408 410 WWSID
+     I                                      415 419 WLFILE
+     I                                      425 430 WWLOGP
+     I                                      431 431 WR431
+     I                                      432 432 WR432
+     I                                      450 455 WTIME
+     I                                      462 717 WLOGH
+0173 I*
+0174 I*    STANDARD LOCAL DATA AREA FIELDS
+0175 I*
+0176 ILDA        UDS                            256
+0177 I                                        1   8 LPROC
+0178 I***********                           134 138 LFILE                 S01117
+0179 I***********                           139 167 LKEY                  S01117
+0180 I***********                           168 175 LPROG                 S01117
+0181 I***********                           176 1770LDBNO                 S01117
+0182 I***********                           181 1850LRUND                 S01117
+0183 I***********                           186 192 LRUNA                 S01117
+0184 I***********                           193 193 LDATF                 S01117
+0185 I***********                           194 1940LSFLG                 S01117
+0186 I***********                           195 1960LKEYL                 S01117
+0187 I***********                           197 202 LISP                  S01117
+0188 I***********                           203 203 LTWOL                 S01117
+0189 I***********                           204 2040LLDLP                 S01117
+0190 I***********                           205 2090LTNLU                 S01117
+0191 I***********                           210 210 LDELM                 S01117
+0192 I***********                           211 211 LDUD                  S01117
+     I***********                           212 212 LMBIN                 S01117
+     I                                      134 141 LFILE                 S01117
+     I                                      142 170 LKEY                  S01117
+     I                                      171 180 LPROG                 S01117
+     I                                      181 1830LDBNO                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I                                      187 1910LRUND                 S01117
+     I                                      192 198 LRUNA                 S01117
+     I                                      199 199 LDATF                 S01117
+     I**********                            200 2000LSFLG           S01117S01194
+     I                                      200 200 LSFLG                 S01194
+     I                                      201 2020LKEYL                 S01117
+     I                                      203 208 LISP                  S01117
+     I                                      209 209 LTWOL                 S01117
+     I                                      210 2100LLDLP                 S01117
+     I                                      211 2150LTNLU                 S01117
+     I                                      216 216 LDELM                 S01117
+     I                                      217 217 LDUD                  S01117
+     I                                      218 218 LMBIN                 S01117
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I**
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+     I**  EXTERNAL DS FOR BRANCH CODE DETAILS                             S01117
+     ISDCURR    E DSSDCURRPD                                              S01194
+      **   CURRENCY DETAILS                                               S01194
+     ISDCUST    E DSSDCUSTPD                                              S01194
+      **   CUSTOMER DETAILS                                               S01194
+     I              QQDFAC                          QQDFC1                                    CGL029
+     ISDRETL    E DSSDRETLPD                                              S01194
+      **   RETAIL DETAILS                                                 S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+      *                                                                                       CRE030
+      **  Set up Constants                                                                    CRE030
+     I              'DftAcBranch'         C         C#DABR                                    CRE030
+     C                     MOVEACPY@      BIS@   80
+     C/COPY WNCPYSRC,RE0262C008
+0193 C*  FIRST CYCLE PROCESSING
+0194 C*
+     C**  PARAMETER LIST FOR PROGRAM 'AORETLR0'                           S01194
+     C           PLISTA    PLIST                                          S01194
+     C                     PARM '*DBERR ' RTCD    7                       S01194
+     C                     PARM '*FIRST ' OPTN    7                       S01194
+     C           SDRETL    PARM SDRETL    DSFDY                           S01194
+     C**  PARAMETER LIST FOR AOCURRR0                                     S01194
+     C           PLIST1    PLIST                                          S01194
+     C                     PARM '*BLANKS' RTCD                            S01194
+     C                     PARM '*KEY   ' OPTN                            S01194
+     C                     PARM           CKEY    3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C**  PARAMETER LIST FOR AOCUSTR0                                     S01194
+     C           PLIST2    PLIST                                          S01194
+     C                     PARM '*BLANKS' RTCD                            S01194
+     C                     PARM '*KEY   ' OPTN                            S01194
+     C                     PARM           CUSKEY 10                       S01194
+     C                     PARM '*CNUM  ' KEYSTS  7                       S01194
+     C           SDCUST    PARM SDCUST    DSSDY                           S01194
+     C*                                                                   S01194
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           WTRN
+     C           *LOCK     IN   *NAMVAR
+     C*                    MOVE '0'       *IN
+      *                                                                                       CRE030
+      ** Check feature CRE030                                                                 CRE030
+      *                                                                                       CRE030
+     C                     CALL 'AOSARDR0'                                                    CRE030
+     C                     PARM '       ' @RTCD   7                                           CRE030
+     C                     PARM '*VERIFY' @OPTN   7                                           CRE030
+     C                     PARM 'CRE030'  @SARD   6                                           CRE030
+     C*                                                                                       CRE030
+     C           @RTCD     IFEQ *BLANKS                                                       CRE030
+     C                     MOVE 'Y'       CRE030  1                                           CRE030
+     C                     MOVE *ON       *IN28                                               CRE030
+     C                     ELSE                                                               CRE030
+     C                     MOVE 'N'       CRE030                                              CRE030
+     C                     MOVE *OFF      *IN28                                               CRE030
+     C                     ENDIF                                                              CRE030
+      *                                                                                       CAP205
+      ** Check feature CAP205                                                                 CAP205
+      *                                                                                       CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM '       ' @RTCD                                               CAP205
+     C                     PARM '*VERIFY' @OPTN                                               CAP205
+     C                     PARM 'CAP205'  @SARD                                               CAP205
+     C*                                                                                       CAP205
+     C           @RTCD     IFEQ *BLANKS                                                       CAP205
+     C                     MOVE 'Y'       CAP205  1                                           CAP205
+     C                     MOVE *OFF      *IN39                                               CAP205
+     C                     ELSE                                                               CAP205
+     C                     MOVE 'N'       CAP205                                              CAP205
+     C                     MOVE *ON       *IN39                                               CAP205
+     C                     ENDIF                                                              CAP205
+     C**
+     C*    READ WORKSTATION FILE /*HELP*FACILITY*                         S01199
+     C**
+     C************IN02     DOUEQ'0'                                       S01314
+     C                     READ RE0260FM                 02
+     C************IN02     IFEQ '1'                                       S01199
+     C***********          MOVEAERCD      HERCD 160                       S01199
+     C***********          MOVEL'RE0260'  HBPGM   8                       S01199
+     C***********          CALL 'MHELP'                                   S01199
+     C***********          PARM           HBPGM                           S01199
+     C***********          PARM           HERCD                           S01199
+     C***********          END                                            S01199
+     C***********          END                                            S01314
+     C*
+0198 C   77                GOTO ENDFC
+0199 C                     SETON                     77
+0200 C*
+0201 C*  SET-UP STANDARD INPUT PROGRAM FIELDS  -  WPROG IS THIS PROGRAM
+0202 C*
+0203 C                     MOVELLISP      WPROG   8
+0204 C                     MOVE '2  '     WPROG
+0205 C                     MOVELWPROG     SPID    6
+0206 C*  SET-UP STANDARD LDA FIELDS
+0207 C                     MOVE WPROG     LPROG
+0208 C                     Z-ADD2         LLDLP
+0209 C*  SET-UP STANDARD BLANK FIELDS
+0210 C                     MOVE ' '       BLK200200
+0211 C*
+0212 C           LDATF     COMP 'M'                      98* DATE FORMAT
+0213 C********** LSFLG     COMP 1                        79* SSF          S01194
+0213 C           LSFLG     COMP 'Y'                      79* SSF          S01194
+0214 C*
+0215 C                     Z-ADD0         ZERO05  50
+0216 C                     Z-ADD0         ZERO13 130
+0217 C*
+0218 C*  LOG PROGRAM NAME
+0219 C*
+0220 C                     MOVE LISP      WLOGP   6
+0221 C                     MOVE '9'       WLOGP
+0222 C*
+0223 C*  INITIALISE FIELD TO BLANK OUT KEY/ACTION CODE
+0224 C*
+     C/COPY WNCPYSRC,RE0262C003
+0225 C**********           MOVE ' '       BLK05   5                                           CGL029
+     C**********           MOVE ' '       BLK05  11                                    CGL029 CRE030
+     C                     MOVE ' '       BLK05  14                                           CRE030
+     C/COPY WNCPYSRC,RE0262C001
+0226 C*
+0227 C*  INITIALISE BLANKS TO TEST FOR BLANK INPUT FIELDS
+0228 C*
+0229 C                     MOVE ' '       BLK3    3
+0230 C                     MOVE ' '       BLK2    2
+0231 C                     MOVE ' '       BLK6    6
+0232 C                     MOVE ' '       BLK10  10
+     C**                                                                  S01117
+     C**    IN THE DATAAREA ZMUSER                                        S01117
+     C**                                                                  S01117
+     C           *NAMVAR   DEFN           ZMUSER                          S01117
+     C                     IN   ZMUSER                                    S01117
+     C**                                                                  S01117
+     C**    CHECK MULTIBRANCHING INDICATOR                                S01117
+     C**                                                                  S01117
+     C           LMBIN     COMP 'Y'                  3636                 S01117
+0233 C*
+     C***CHAIN*TO*ICD3*FOR*RETAIL*ACCOUNT*NOS*IND                         S01194
+     C**********                                                          S01194
+     C**********           MOVE BLK200    TABKEY                          S01194
+     C**********           MOVE '01'      TAB2                            S01194
+     C**********           MOVE '20'      TABKEY                          S01194
+     C********** TABKEY    CHAINTABLE                99                   S01194
+     C*                                                                   S01194
+     C**  CALL ACCESS OBJECT AORETLR0 FOR RETAIL ACCOUNT NOS IND          S01194
+     C*                                                                   S01194
+     C                     CALL 'AORETLR0'PLISTA                          S01194
+     C*                                                                   S01194
+     C**N15*****           MOVE '90'      LDBNO                           S01194
+     C**N15*****           MOVELBLK200    LKEY                            S01194
+     C**N15*****           MOVELTABKEY    LKEY                            S01194
+     C**N15*****           MOVE 'TABLE'   LFILE                           S01194
+     C**N15*****           SETON                     U7LR                 S01194
+     C**N15*****           GOTO END                                       S01194
+     C********** RACN      COMP 'N'                      38               S01194
+     C           BMRANR    COMP 'N'                      38               S01194
+0234 C           ENDFC     TAG                             ** ENDFC TAG
+0235 C*
+0236 C*  INITIALISE STANDARD INDICATORS
+0237 C                     SETON                     888786* NON-DISPLAY
+0238 C                     SETOF                     8980  * BLINK LABELS
+0239 C                     SETOF                     858483* OUTPUT
+0240 C                     SETOF                     8281  * SCREENS
+0242 C*
+0243 C*  INITIALISE NON-STANDARD INDS
+0244 C*
+0245 C                     SETOF                     212223* BLINK
+0246 C                     SETOF                     242526* LABELS
+     C*                                                                                       CRE030
+     C           CRE030    IFEQ 'Y'                                                           CRE030
+     C                     SETOF                     27                                       CRE030
+     C                     ENDIF                                                              CRE030
+0247 C*
+0248 C*  CHECK FOR CORRECT SCREEN READ IN
+0249 C*
+0250 C   78                GOTO PROCES
+0251 C                     SETON                     U7LR
+0252 C                     MOVE 'SCREN'   LFILE
+0253 C                     MOVE BLK200    LKEY
+0254 C                     MOVEL'SI'      LKEY
+0255 C                     MOVE 'FOUND   'LKEY
+0256 C                     MOVE SID       LKEY
+0257 C                     MOVE '92'      LDBNO            ** DB ERROR 92
+0258 C                     GOTO END
+0259 C*
+0260 C           PROCES    TAG                             ** PROCES TAG
+0261 C*
+0262 C*  CLEAR ERROR CODE ARRAY, RESET INDEX
+0263 C*
+0264 C                     MOVE BLK200    ERMSG  79
+0265 C                     MOVE '    '    ERCD
+0266 C                     Z-ADD0         S       20
+0267 C*
+0268 C*  IF F3, END THE PROGRAM
+0269 C*
+0270 C   KC                MOVEL'**      'LPROC
+0271 C   KC                SETON                     LR
+0272 C   KC                GOTO END
+0273 C*
+0274 C*  IF F12, OUTPUT BLANK INITIAL SCREEN
+0275 C*
+0276 C   KL                EXSR SUBSF
+0277 C   KL                GOTO END
+0278 C*
+0279 C*  IF F10, OUTPUT ERROR MSG TO INSERT SCREEN
+0280 C*
+0281 C   KJ                EXSR SUBSI
+0282 C   KJ                SETOF                     88
+0283 C   KJ      S         ADD  1         S
+0284 C   KJ                MOVE '915'     ERCD,S
+0285 C   KJ                MOVE ERCM,1    ERMSG
+0286 C   KJ                GOTO END
+0287 C*
+0288 C*  IF NO CMD KEY ENTERED, NOW VALIDATE DATA INPUT
+0289 C*
+0290 C                     EXSR VALSI
+0291 C*
+0292 C*  S IS NON-ZERO IF THERE ARE ANY ERRORS
+0293 C*
+0294 C           S         COMP 0                    8282
+0295 C*
+0296 C*  IF THERE ARE ANY ERRORS, REOUTPUT THE
+0297 C*  INSERT SCREEN WITH ERROR CODES
+0298 C*
+0299 C   82                EXSR SUBSI
+0300 C   82                SETOF                     88
+0301 C   82                GOTO END
+0302 C*
+0303 C*  OTHERWISE, UPDATE THE WORKSTATION TRANSACTION FILE
+0304 C*  WITH THE MASTER FILE RECORD
+0305 C*
+8307 C*
+0308 C*  UPDATE WTRN  AND EXECUTE LOGGING/UPDATE PROGRAM
+0309 C*
+0311 C                     MOVE '9  '     LPROC
+0312 C*
+0313 C           END       TAG                             ** END TAG
+0319 C                     TIME           MTIME   60
+     C                     EXSR WTRNUP
+0314 C*
+0315 C*  SETOF OUTPUT INDS IF DATABASE ERROR
+0316 C*
+0317 C   U7                SETOF                     8182
+0318 C*
+     C   81
+     COR 82                EXCPT
+     C                     OUT  *NAMVAR
+     C                     RETRN
+0320 C*
+0321 C********************************************************************
+0322 C**
+0323 C**   SUBR. - TO SET UP INITIAL SCREEN OUTPUT
+0324 C**
+0325 C           SUBSF     BEGSR                           ***  SUBSF  ***
+0326 C                     SETON                     81
+0327 C                     MOVE '1  '     LPROC
+0328 C                     MOVE 'SF'      SID
+0329 C                     ENDSR
+0330 C********************************************************************
+0331 C**
+0332 C**   SUBR. - TO SET UP INSERT SCREEN OUTPUT
+0333 C**
+0334 C           SUBSI     BEGSR                           ***  SUBSI  ***
+0335 C                     SETON                     82
+0336 C                     MOVE '2  '     LPROC
+0337 C                     MOVE 'SI'      SID
+0338 C                     ENDSR
+0339 C********************************************************************
+0340 C**
+0341 C**  SUBR. - TO VALIDATE DATA ENTERED ON THE INSERT SCREEN
+0342 C**
+0343 C           VALSI     BEGSR                           ***  VALSI  ***
+0344 C*
+0345 C**   CHECK FOR BLANK FIELDS ENTERED
+0346 C*
+0347 C                     SETOF                     30
+0348 C           SCNUMA    COMP BLK6                     34
+     C/COPY WNCPYSRC,RE0262C004
+     C           CRE030    IFEQ 'Y'                                                           CRE030
+     C           SRETNA    IFEQ *BLANKS                                                       CRE030
+     C                     MOVELSACCY     SCCY                                                CRE030
+     C                     ELSE                                                               CRE030
+     C                     MOVEL*BLANKS   SCCY                                                CRE030
+     C                     ENDIF                                                              CRE030
+     C                     ENDIF                                                              CRE030
+      *                                                                                       CRE030
+0349 C           SCCY      COMP BLK3                     33
+     C/COPY WNCPYSRC,RE0262C005
+0350 C           SSEQA     COMP BLK2                     32
+     C********** SBRCDA    COMP *BLANKS                  35                            S01117 TDA036
+     C           SBRCDA    COMP *BLANKS                  35                                   TDA087
+0351 C           SRETNA    COMP BLK10                    31
+0352 C***34*33*32          SETON                     30                   S01117
+0352 C   34 33 32                                                         S01117
+0352 CAN 35                SETON                     30                   S01117
+0353 C   30 31
+0354 CORN30N31             GOTO ERR15
+0355 C   30                GOTO RETVAL
+0356 C*
+0357 C**   VALIDATE CUSTOMER  - *MUST*BE*NUMERIC*                         S01194
+0358 C*
+0359 C           SCNUMA    COMP BLK6                     22
+0360 C**N22*****           MOVE '      '  CHK6    6                       S01194
+0361 C**N22*****           MOVE SCNUM     CHK6                            S01194
+0362 C**N22***** CHK6      COMP SCNUMA               2222                 S01194
+0363 C           CLTERR    TAG                             ** CLTERR TAG**
+0364 C   22      S         ADD  1         S
+0365 C   22                MOVE '010'     ERCD,S
+0366 C   22                MOVE ERCM,2    ERMSG
+0367 C   22                GOTO VALSIE
+0368 C*
+0369 C**   MUST BE ON CLIENT FILE
+0370 C*
+0371 C**********           MOVELSCNUM     CLTKEY  7                       S01194
+0372 C**********           MOVE 'A'       CLTKEY                          S01194
+0373 C********** CLTKEY    CHAINCLINT                99                   S01194
+0199 C**N13*****           SETON                     22                   S01314
+     C                     MOVELSCNUMA    CUSKEY                          S01194
+     C                     CALL 'AOCUSTR0'PLIST2                          S01194
+     C           RTCD      IFEQ *BLANKS                                   S01194
+     C           KEYSTS    ANDEQ'*CNUM  '                                                     CSD027
+     C                     MOVELBBCUST    SCNUMA                          S01194
+     C                     ELSE                                           S01194
+     C                     SETON                         22               S01194
+     C           S         ADD  1         S                               S01194
+     C                     MOVE '010'     ERCD,S                          S01194
+     C                     MOVE ERCM,2    ERMSG                           S01194
+     C                     GOTO VALSIE                                    S01194
+     C                     END                                            S01194
+0374 C*                                                                   S01194
+0375 C   22                GOTO CLTERR
+0376 C*
+     C/COPY WNCPYSRC,RE0262C006
+0377 C*  VALIDATE CURRENCY
+0378 C*
+0379 C*  MANDATORY IF CUSTOMER NUMBER HAS BEEN ENTERED
+0380 C*
+0381 C           SCCY      COMP BLK3                     23
+0382 C   23      S         ADD  1         S
+0383 C   23                MOVE '011'     ERCD,S
+0384 C   23                MOVE ERCM,3    ERMSG
+0385 C   23                GOTO VALSIE
+0386 C*
+0387 C*  MUST BE LIVE RECORD ON*TABLE*FILE                                S01194
+0388 C*
+0389 C**********           MOVE BLK200    TABKEY                          S01194
+0390 C**********           MOVE '20'      TAB2                            S01194
+0391 C**********           MOVE '1'       TAB1                            S01194
+0392 C**********           MOVE SCCY      TAB3A                           S01194
+0393 C**********           EXSR TABCHN                                    S01194
+     C                     MOVE SCCY      CKEY                            S01194
+     C                     CALL 'AOCURRR0'PLIST1                          S01194
+     C           RTCD      COMP *BLANKS                  11               S01194
+     C   11                MOVE A6CYCD    SCCY                            S01194
+0394 C  N11                SETON                     23
+0395 C   23      S         ADD  1         S
+0396 C   23                MOVE '012'     ERCD,S
+0397 C   23                MOVE ERCM,4    ERMSG
+0398 C   23                GOTO VALSIE
+     C/COPY WNCPYSRC,RE0262C007
+     C*
+     C**VALIDATE*BRANCH CODE, MANDATORY ONLY IF MULTIBRANCHING IN SYSTEM  S01117
+     C*****MUST*BE NUMERIC, & LIVE ON TABLE FILE.                         S01117
+     C***********                                                         S01117
+     C***********LMBIN     IFEQ 'Y'                                       S01117
+     C***********SBRCDA    COMP BLK3                     26               S01117
+     C**N26******          MOVE *BLANK    CHK3    3                       S01117
+     C**N26******          MOVE SBRCD     CHK3                            S01117
+     C**N26******CHK3      COMP SBRCDA               2626                 S01117
+     C************IN26     IFEQ '0'                                       S01117
+     C***********          MOVE *BLANK    TABKEY                          S01117
+     C***********          MOVE '10'      TAB2                            S01117
+     C***********          MOVE SBRCD     TABKEY                          S01117
+     C***********          EXSR TABCHN                                    S01117
+     C**N10******          SETON                     26                   S01117
+     C***********          END                                            S01117
+     C************IN26     IFEQ '1'                                       S01117
+     C***********S         ADD  1         S                               S01117
+     C***********          MOVE '017'     ERCD,S                          S01117
+     C***********          MOVE ERCM,10   ERMSG                           S01117
+     C***********          GOTO VALSIE                                    S01117
+     C***********          END                                            S01117
+     C***********          END                                            S01117
+     C**                                                                                      CRE030
+     C** OBTAIN BRANCH CODE FROM SYSTEM VALUE                                                 CRE030
+     C           CRE030    IFEQ 'Y'                                                           CRE030
+     C                     MOVELC#DABR    P@OP01    P                                         CRE030
+      *                                                                                       CRE030
+     C                     CALL 'AOSVALR0'                                                    CRE030
+     C                     PARM *BLANKS   P@RTCD  7                                           CRE030
+     C                     PARM           P@OP01 20                                           CRE030
+     C                     PARM *BLANKS   P@VL01200                                           CRE030
+     C                     PARM *BLANKS   P@OP02 20                                           CRE030
+     C                     PARM *BLANKS   P@VL02200                                           CRE030
+     C                     PARM *BLANKS   P@OP03 20                                           CRE030
+     C                     PARM *BLANKS   P@VL03200                                           CRE030
+     C                     PARM *BLANKS   P@OP04 20                                           CRE030
+     C                     PARM *BLANKS   P@VL04200                                           CRE030
+     C                     PARM *BLANKS   P@OP05 20                                           CRE030
+     C                     PARM *BLANKS   P@VL05200                                           CRE030
+     C                     PARM *BLANKS   P@OP06 20                                           CRE030
+     C                     PARM *BLANKS   P@VL06200                                           CRE030
+     C                     PARM *BLANKS   P@OP07 20                                           CRE030
+     C                     PARM *BLANKS   P@VL07200                                           CRE030
+     C                     PARM *BLANKS   P@OP08 20                                           CRE030
+     C                     PARM *BLANKS   P@VL08200                                           CRE030
+     C                     PARM *BLANKS   P@OP09 20                                           CRE030
+     C                     PARM *BLANKS   P@VL09200                                           CRE030
+     C                     PARM *BLANKS   P@OP10 20                                           CRE030
+     C                     PARM *BLANKS   P@VL10200                                           CRE030
+      *                                                                                       CRE030
+      **  If the Return Code is blank, set Branch Code                                        CRE030
+     C           P@RTCD    IFEQ *BLANK                                                        CRE030
+     C                     MOVELP@VL01    SBRCDA                                              CRE030
+     C                     ENDIF                                                              CRE030
+     C                     ENDIF                                                              CRE030
+     C**                                                                  S01117
+     C** BASIC VALIDATION OF INPUT BRANCH CODE                            S01117
+     C           LMBIN     IFEQ 'Y'                        IF MULTIBRANCH S01117
+     C           SBRCDA    ANDNE*BLANKS                    &SBRCDA<>BLANK S01117
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7                       S01117
+     C                     PARM '*KEY    '@OPTN   7                       S01117
+     C                     PARM SBRCDA    @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01117              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     ADD  1         S                               S01117
+     C                     MOVE '017'     ERCD,S                          S01117
+     C                     MOVE ERCM,10   ERMSG                           S01117
+     C                     SETON                     26                   S01117
+     C                     GOTO VALSIE                                    S01117
+     C                     ELSE                                           LN0228
+     C                     MOVE A8BRCD    SBRCDA                          LN0228
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**  TAKE DEFAULT BRANCH CODE AS INPUT BRANCH IF NO INPUT BRANCH     S01117
+     C           SBRCDA    IFEQ *BLANKS                                   S01117
+     C                     MOVE DFBR      SBRCDA                          S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**  CHECK IF THE USER IS AUTHORIZED TO INSERT UNDER THE BRANCH      S01117
+     C           LMBIN     IFEQ 'Y'                        IF MULTIBRANCH S01117
+     C                     Z-ADD*ZERO     @ERR                            S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM 'I'       @ZACTN  1                       S01117
+     C                     PARM SBRCDA    @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**  IF NOT VALID FOR USER                                           S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         S                               S01117
+      *                                                                   S01117
+     C           @ERR      IFEQ 1                                         S01117
+     C                     MOVE '303'     ERCD,S                          S01117
+     C                     MOVE ERCM,12   ERMSG                           S01117
+     C                     ELSE                                           S01117
+     C                     MOVE '304'     ERCD,S                          S01117
+     C                     MOVE ERCM,13   ERMSG                           S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     SETON                     26                   S01117
+     C                     GOTO VALSIE                                    S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+0399 C*
+0400 C***VALIDATE SEQUENCE - NUMERIC,01-99, OR BLANK  IF NO MULTIBRANCHINGS01117
+     C*****WITH*MULTIBRANCHING  MUST BE WITHIN RANGE FOR BRANCH           S01117
+0401 C***********                                                         S01117
+0402 C***********SSEQA     COMP BLK2                 2424                 S01117
+     C***********LMBIN     IFEQ 'Y'                                       S01117
+     C**N24******          MOVE SACSA     SSEQA                           S01117
+     C**N24******          Z-ADDSACS      SSEQ                            S01117
+     C***********          ELSE                                           S01117
+0403 C**N24******          MOVE '01'      SSEQA                           S01117
+0404 C**N24******          Z-ADD1         SSEQ                            S01117
+     C***********          END                                            S01117
+0405 C**N24******          GOTO ACCVAL                                    S01117
+0406 C***********          MOVE '  '      CHK2    2                       S01117
+0407 C***********          MOVE SSEQ      CHK2                            S01117
+0408 C***********CHK2      COMP SSEQA                2424                 S01117
+     C***********LMBIN     IFEQ 'Y'                                       S01117
+     C**N24******SSEQ      COMP SACS                   24                 S01117
+     C**N24******SSEQ      COMP EACS                 24                   S01117
+     C***********          ELSE                                           S01117
+0409 C**N24******SSEQ      COMP 1                      24                 S01117
+     C***********          END                                            S01117
+     C** VALIDATE ACCOUNT SEQUENCE                                        S01117
+     C**          1.  MUST BE NUMERIC (01-99) IF ENTERED.                 S01117
+     C**          2.  DEFAULT TO 01, IF NOT INPUT.                        S01117
+     C*                                                                   S01117
+     C           SSEQA     IFEQ '00'                                      S01117
+     C           SSEQA     OREQ '  '                                      S01117
+     C                     MOVE '01'      SSEQA                           S01117
+     C                     Z-ADD1         SSEQ                            S01117
+     C                     ELSE                                           S01117
+     C                     MOVE SSEQA     SEQNUM  20                      S01117
+     C           SEQNUM    IFGT 99                                        S01117
+     C           SEQNUM    ORLE 0                                         S01117
+     C                     SETON                     24                   S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C  N24                GOTO ACCVAL                                    S01117
+0411 C   24      S         ADD  1         S
+0412 C   24                MOVE '013'     ERCD,S
+0413 C   24                MOVE ERCM,5    ERMSG
+0414 C   24                GOTO VALSIE
+0415 C*
+0416 C*****CUSTOMER,CCY,SEQ. MUST BE VALID ON ACCOUNT MASTER FILE         S01117
+0416 C**  CUSTOMER,CCY,SEQ.,BRANCH MUST BE VALID ON ACCOUNT MASTER FILE   S01117
+0417 C*
+0418 C           ACCVAL    TAG                             ** ACCVAL TAG**
+0419 C**********           MOVELSCNUM     TEMP1   9                       S01194
+0419 C                     MOVELSCNUMA    TEMP1   9                       S01194
+0420 C                     MOVE SCCY      TEMP1
+0421 C**********           MOVELSACOD     TEMP2   6                                           CGL029
+     C                     MOVELSACOD     TEMP2  12                                           CGL029
+0422 C                     MOVE SSEQ      TEMP2
+0423 C***********          MOVELTEMP1     ACCKEY 15                       S01117
+0424 C***********          MOVE TEMP2     ACCKEY                          S01117
+0423 C**********           MOVELTEMP1     TEMP3  15                                    S01117 CGL029
+     C                     MOVELTEMP1     TEMP3  21                                           CGL029
+0424 C                     MOVE TEMP2     TEMP3                           S01117
+0423 C**********           MOVELTEMP3     ACCKEY 18                                    S01117 CGL029
+     C                     MOVELTEMP3     ACCKEY 24                                           CGL029
+0424 C                     MOVE SBRCDA    ACCKEY                          S01117
+0425 C           ACCKEY    CHAINACCNT                99
+     C           *IN99     IFEQ '0'                                                           TDA036
+     C                     MOVE ACNO      SRETNA                                              TDA036
+     C                     ENDIF                                                              TDA036
+0426 C  N14                SETON                     222324
+0426 C  N14                SETON                     26                   S01117
+     C*
+     C* ACCOUNT MUST NOT BE CLOSED TODAY
+     C*
+     C                     SETOF                     37
+     C   14      ACSTA     COMP 'C'                      37
+     C   14 37             SETON                     222324
+     C   14 37             SETON                     26                   S01117
+0427 C   22      S         ADD  1         S
+0428 C   22                MOVE '014'     ERCD,S
+0429 C   22N37             MOVE ERCM,6    ERMSG
+0429 C   22 37             MOVE ERCM,9    ERMSG
+     C           *IN22     IFEQ '0'                                                           TDA036
+     C                     MOVE ACNON     SRETNA                                              TDA036
+     C                     ENDIF                                                              TDA036
+      *                                                                                       CAP205
+      ** Validate Account Balance Check Required                                              CAP205
+      *                                                                                       CAP205
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     SETOF                     40                                       CAP205
+     C           SABCR     IFEQ *BLANKS                                                       CAP205
+     C                     MOVE 'Y'       SABCR                                               CAP205
+     C                     ELSE                                                               CAP205
+     C           SABCR     IFNE 'Y'                                                           CAP205
+     C           SABCR     ANDNE'N'                                                           CAP205
+     C                     SETON                     40                                       CAP205
+     C           S         ADD  1         S                                                   CAP205
+     C                     MOVE '018'     ERCD,S                                              CAP205
+     C                     MOVE ERCM,14   ERMSG                                               CAP205
+     C                     ENDIF                                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+0430 C                     GOTO VALSIE
+0431 C*
+0432 C**   VALIDATE RETAIL NUMBER IF ENTERED
+0433 C*
+0434 C           RETVAL    TAG                             ** RETVAL TAG**
+     C*
+     C*****RETAIL*NO**MUST*NOT*BE*ENTERED*IF*RACN*=***N*                  S01194
+     C*    RETAIL NO. MUST NOT BE ENTERED IF BMRANR = N                   S01194
+     C*
+     C   38N31             SETON                     25
+     C   38N31             GOTO ERR016
+0435 C                     MOVE '        'CHK10  10
+0436 C                     MOVEL'  '      CHK10
+0437 C                     MOVE SRETN     CHK10
+0438 C           CHK10     COMP SRETNA               2525
+0439 C  N25      SRETN     CHAINACNUM                99
+0440 C  N12                SETON                     25
+     C*
+     C           ERR016    TAG
+0441 C   25      S         ADD  1         S
+0442 C   25                MOVE '016'     ERCD,S
+0443 C   25                MOVE ERCM,7    ERMSG
+0444 C   25                GOTO VALSIE
+     C*                                                                   E11563
+     C*  COPY ACCOUNT DETAILS FOR OUTPUT TO WORKSTATION FILE.             E11563
+     C*                                                                   E11563
+     C                     MOVE CNUMB     SCNUMA                          E11563
+     C                     MOVE NCCY      SCCY                            E11563
+     C                     MOVE ACSQA     SSEQA                           E11563
+     C                     MOVE BRCDAN    SBRCDA                          S01117
+     C***********                                                   E11563S01117
+     C***BRANCH*CODE ENTERED MUST EQUAL BRANCH CODE ON ACCNT.       E11563S01117
+     C***********                                                   E11563S01117
+     C***********          MOVELCNUMB     TEMP1   9                 E11563S01117
+     C***********          MOVE NCCY      TEMP1                     E11563S01117
+     C***********          MOVELACODA     TEMP2   6                 E11563S01117
+     C***********          MOVE ACSQA     TEMP2                     E11563S01117
+     C***********          MOVELTEMP1     ACCKEY 15                 E11563S01117
+     C***********          MOVE TEMP2     ACCKEY                    E11563S01117
+     C***********ACCKEY    CHAINACCNT                99             E11563S01117
+     C***********                                                   E11563S01117
+     C***AT*THIS*STAGE ACCOUNT WILL EXIST                           E11563S01117
+     C***********                                                   E11563S01117
+     C***********BRNCH     COMP SBRCDA                   27         E11563S01117
+     C************IN27     IFEQ '0'                                 E11563S01117
+     C***********S         ADD  1         S                         E11563S01117
+     C***********          MOVE '020'     ERCD,S                    E11563S01117
+     C***********          MOVE ERCM,11   ERMSG                     E11563S01117
+     C***********          GOTO VALSIE                              E11563S01117
+     C***********          END                                      E11563S01117
+     C**                                                                  S01117
+     C**  CHECK IF THE USER IS AUTHORIZED TO INSERT UNDER THE BRANCH      S01117
+     C           LMBIN     IFEQ 'Y'                        IF MULTIBRANCH S01117
+     C                     Z-ADD*ZERO     @ERR                            S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM 'I'       @ZACTN  1                       S01117
+     C                     PARM BRCDAN    @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**  IF NOT VALID FOR USER                                           S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         S                               S01117
+      *                                                                   S01117
+     C           @ERR      IFEQ 1                                         S01117
+     C                     MOVE '303'     ERCD,S                          S01117
+     C                     MOVE ERCM,12   ERMSG                           S01117
+     C                     ELSE                                           S01117
+     C                     MOVE '304'     ERCD,S                          S01117
+     C                     MOVE ERCM,13   ERMSG                           S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     SETON                     2526                 S01117
+     C                     GOTO VALSIE                                    S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*
+     C*  ACCOUNT MUST NOT BE CLOSED TODAY
+     C*
+     C           ACST      COMP 'C'                      25
+     C   25      S         ADD  1         S
+0442 C   25                MOVE '016'     ERCD,S
+0443 C   25                MOVE ERCM,9    ERMSG
+0444 C   25                GOTO VALSIE
+     C*
+     C*  A/C ON ACNUM MUST = THAT ON INITIAL SCRN
+     C*
+     C           ACODA     COMP SACOD                2525
+     C   25      S         ADD  1         S
+0442 C   25                MOVE '016'     ERCD,S
+0443 C   25                MOVE ERCM,7    ERMSG
+     C   25                GOTO VALSIE                                                      BUG27324
+      *
+     C           CRE030    IFEQ 'Y'                                                           CRE030
+     C           NCCY      COMP SACCY                2525                                     CRE030
+     C   25      S         ADD  1         S                                                   CRE030
+     C   25                MOVE '016'     ERCD,S                                              CRE030
+     C   25                MOVE ERCM,7    ERMSG                                               CRE030
+     C**********           GOTO VALSIE                                               CRE030 BUG27324
+     C   25                GOTO VALSIE                                                      BUG27324
+     C                     ENDIF                                                              CRE030
+      *                                                                                       CRE030
+      ** Validate Account Balance Check Required                                              CAP205
+      *                                                                                       CAP205
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     SETOF                     40                                       CAP205
+     C           SABCR     IFEQ *BLANKS                                                       CAP205
+     C                     MOVE 'Y'       SABCR                                               CAP205
+     C                     ELSE                                                               CAP205
+     C           SABCR     IFNE 'Y'                                                           CAP205
+     C           SABCR     ANDNE'N'                                                           CAP205
+     C                     SETON                     40                                       CAP205
+     C           S         ADD  1         S                                                   CAP205
+     C                     MOVE '018'     ERCD,S                                              CAP205
+     C                     MOVE ERCM,14   ERMSG                                               CAP205
+     C                     ENDIF                                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+0444 C                     GOTO VALSIE
+0445 C*
+0446 C**  ERROR 015 - INCORRECT COMBINATION OF FIELDS ENTERED,OR ALL BLANK
+0447 C*
+0448 C           ERR15     TAG                             ** ERR15 TAG **
+0449 C                     SETON                     222324
+0450 C                     SETON                     25
+     C                     SETON                     26                   S01117
+0451 C           S         ADD  1         S
+0452 C                     MOVE '015'     ERCD,S
+0453 C                     MOVE ERCM,8    ERMSG
+0454 C*
+0455 C           VALSIE    ENDSR                           **  VALSIE TAG
+0469 C********************************************************************
+0470 C**********                                                          S01194
+0471 C*****SUBR.***TO*CHAIN*TO*TABLE*FILE                                 S01194
+0472 C**********                                                          S01194
+0473 C********** TABCHN    BEGSR                           ***  TABCHN ***S01194
+0474 C**********                                                          S01194
+0475 C**********           SETOF                     101199               S01194
+0476 C**********                                                          S01194
+0477 C********** TABKEY    CHAINTABLE                99                   S01194
+0478 C**********                                                          S01194
+0479 C**********           ENDSR                                          S01194
+     C*****************************************************************
+     C**
+     C** SUBR. - TO UPDATE THE WORKSTATION TRANSACTION LOCAL DATA AR   EA
+     C**
+     C           WTRNUP    BEGSR                           *** WTRNUP ***
+     C                     MOVE BLK200    WST01
+     C                     MOVE BLK200    WST02
+     C                     MOVE BLK200    WST03
+     C                     MOVE BLK200    WST04
+     C                     MOVE BLK200    WST05
+     C**   MASTER FILE RECORD
+     C                     MOVE 'D'       WR001
+     C                     MOVE SACOD     WACOD
+     C/COPY WNCPYSRC,RE0262C002
+     C                     MOVE 'D'       WR006
+     C                     MOVE ZERO05    WTNLU
+     C                     MOVE LRUND     WORED
+     C                     MOVE LRUND     WLCD
+     C                     MOVE 'I'       WR040
+     C                     MOVE ZERO13    WHASH
+     C                     MOVE SCNUMA    WCNUM
+     C                     MOVE SCCY      WCCY
+     C                     MOVE SSEQA     WSEQ
+     C                     MOVE SRETNA    WRETN
+     C                     MOVE SBRCDA    WBRCD                           S01117
+     C                     MOVE SABCR     WABCR                                               CAP205
+     C**   FIRST 60 CHARACTERS OF EVENTUAL LOG RECORD
+     C                     MOVE 'D'       WR401
+     C                     MOVE ZERO05    WZ5
+     C                     MOVE ZERO05    WZO5
+     C                     MOVE WSID      WWSID
+     C                     MOVE LFILE     WLFILE
+     C                     MOVE WLOGP     WWLOGP
+     C                     MOVE '1'       WR431
+     C                     MOVE 'I'       WR432
+     C                     MOVE MTIME     WTIME
+     C**   256 CHARACTERS OF SCREEN FOR LOG FILE HEADER
+     C                     MOVELSCN55     WLOGH
+     C/COPY WNCPYSRC,RE0262C010
+     C                     ENDSR
+     C/COPY WNCPYSRC,RE0262C009
+     C*****************************************************************
+0481 O*  WORKSTATION - INITIAL SCREEN OUTPUT
+0482 O*
+0483 ORE0260FME        81
+0484 O                                   K8 'RE0260F1'
+     O/COPY WNCPYSRC,RE0262O001
+0485 O**********               SCN31     31                                                   CGL029
+     O**********               SCN31     37                                            CGL029 CRE030
+     O                         SCN31     40                                                   CRE030
+     O/COPY WNCPYSRC,RE0262O002
+0486 O                         SID        9
+0487 O                         SPID      15
+0488 O                         MTIME     23 '  .  .  '
+0489 O*  BLANK OUT KEY/ACTION CODE FOR F12 - REMOVED IN STANDARD PROG
+     O/COPY WNCPYSRC,RE0262O003
+0490 O**********       KL      BLK05     31                                                   CGL029
+     O**********       KL      BLK05     37                                            CGL029 CRE030
+     O                 KL      BLK05     40                                                   CRE030
+0491 O*  ERROR FIELDS
+0492 O**********               ERMSG    110                                                   CGL029
+0493 O**********               ERCD     186                                                   CGL029
+     O**********               ERMSG    116                                            CGL029 CRE030
+     O                         ERMSG    119                                                   CRE030
+     O**********               ERCD     195                                            CGL029 CRE030
+     O                         ERCD     198                                                   CRE030
+     O/COPY WNCPYSRC,RE0262O004
+0494 O*
+0495 O*  WORKSTATION - INSERT SCREEN OUTPUT
+0496 O*
+0497 ORE0260FME        82
+0498 O                                   K8 'RE0260F2'
+0499 O**********               SCN55     55                                                   CGL029
+     O**********               SCN55     61                                            CGL029 CRE030
+     O**********               SCN55     64                                            CRE030 CAP205
+     O                         SCN55     65                                                   CAP205
+0500 O                         SID        9
+0501 O                         SPID      15
+0502 O                         MTIME     23 '  .  .  '
+     O/COPY WNCPYSRC,RE0262O006
+     O**********               SCNUMA    37                                            S01194 CGL029
+     O**********               SCCY      40                                            S01194 CGL029
+     O**********               SSEQA     42                                            S01194 CGL029
+     O**********               SBRCDA    55                                            S01194 CGL029
+     O**********               SCNUMA    43                                            CGL029 CRE030
+     O                         SCNUMA    46                                                   CRE030
+     O**********               SCCY      46                                            CGL029 CRE030
+     O                         SCCY      49                                                   CRE030
+     O**********               SSEQA     48                                            CGL029 CRE030
+     O                         SSEQA     51                                                   CRE030
+     O**********               SBRCDA    61                                            CGL029 CRE030
+     O                         SBRCDA    64                                                   CRE030
+     O                         SABCR     65                                                   CAP205
+     O/COPY WNCPYSRC,RE0262O007
+0503 O*  ERROR FIELDS
+0504 O**********               ERMSG    134                                                   CGL029
+0505 O**********               ERCD     210                                                   CGL029
+     O**********               ERMSG    140                                            CGL029 CRE030
+     O**********               ERMSG    143                                            CRE030 CAP205
+     O                         ERMSG    144                                                   CAP205
+     O**********               ERCD     219                                            CGL029 CRE030
+     O**********               ERCD     222                                            CRE030 CAP205
+     O                         ERCD     223                                                   CAP205
+     O/COPY WNCPYSRC,RE0262O005
+     O** MESSAGES NO. 8 CHANGED & NO. 12 ADDED                            S01117
+**   ERROR MESSAGES
+F10 KEY NOT ALLOWED NOW
+INVALID CUSTOMER NUMBER
+CURRENCY MUST BE ENTERED WITH CUSTOMER NUMBER
+INVALID CURRENCY, NOT ON FILE
+INVALID ACCOUNT SEQUENCE ENTERED
+DEFAULT ACCOUNT DOES NOT EXIST
+INVALID RETAIL NUMBER ENTERED
+ENTER EITHER:  CUSTOMER,CCY,SEQ,BRANCH OR RETAIL NO.
+ERROR , ACCOUNT CLOSED TODAY
+INVALID BRANCH CODE
+INVALID BRANCH CODE, NOT THE SAME AS BRANCH CODE FOR ACCOUNT ENTERED.
+USER NOT AUTHORISED TO ANY ACTION CODE FOR THIS MENU ITEM & BRANCH
+USER NOT AUTHORISED TO THE ACTION CODE FOR THIS MENU ITEM & BRANCH
+VALUE MUST EITHER BE 'Y' OR 'N'
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

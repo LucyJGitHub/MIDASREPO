@@ -1,0 +1,407 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Routing keys Audit list')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  IL0695 - IBLC 2002 Routing Keys Audit Lists                  *
+      *                                                               *
+      *  Function: This program read ILRKAUPD and make 2 audit lists :*
+      *            IL0695P1 : Routing keys not found during extracts  *
+      *            IL0695P2 : Routing keys found during extracts      *
+      *                                                               *
+      *  Called By: CLP/ILC0695 - IBLC 2002 RK Audit lists            *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ULX043             Date 28Aug01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDCURRL0IF  E           K        DISK         KINFSR *PSSR
+      *** Currency file       Retrieval index              Prefix A6
+      *
+     FILRKAUPDIF  E           K        DISK         KINFSR *PSSR
+      ***  Routing keys for audit list                     Prefix AU
+      *
+     FILICDRPDIF  E                    DISK         KINFSR *PSSR
+      ***  IBLC 2002 ICD                                   Prefix IC
+      *
+     FIL0695AUO   E                    PRINTER      KINFDS SPOOLU
+     FIL0695P1O   E             60     PRINTER      KINFDS SPOOL1
+     FIL0695P2O   E             61     PRINTER      KINFDS SPOOL2     UC
+      *
+     E/EJECT
+      *****************************************************************
+      ***  Compile Time Arrays
+      *****************************************************************
+      *
+      ***  Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      *****************************************************************
+      ***  Runtime Arrays
+      *****************************************************************
+      ***  Array for currencies
+      *
+     E                    CCY       250  3   DEC     1 0
+      *
+      ***  Standard subroutine Arrays
+      *
+      /COPY ZSRSRC,ZFRPEDZ1                              Std ZFRPED
+      *
+      /EJECT
+      *****************************************************************
+      *
+      ***  Standard subroutine Data Structure
+      *
+      /COPY ZSRSRC,ZFRPEDZ2                                Std ZFRPED
+      *
+      ***  Working Data Structure
+      *
+     IPSDS       SDS
+      ***  Program status data structure foR WS/user ID's
+     I                                        1  10 PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     ILDA       E DSLDA                         256
+      ***  Local data area
+      *
+     IAUFLD       DS
+      ***  Data structure to move fields in report layout
+     I                                        1   2 AUMODI
+     I                                        3  19 AUTRNB
+     I                                       20  39 AURKEY
+     I                                       40  59 AUAKEY
+     I                                       60  62 AUECCY
+     I                                       63  65 AUDRR1
+     I                                       66  68 AUDRR2
+     I                                       69  71 AUDRR3
+     I                                       72  74 AUCRR1
+     I                                       75  77 AUCRR2
+     I                                       78  80 AUCRR3
+     I                                       81  81 AURVRS
+      *
+     IRPFLD       DS
+      ***  Data structure : Report fields
+     I                                        1   2 RMODI
+     I                                        3  19 RTRNB
+     I                                       20  39 RRKEY
+     I                                       40  59 RAKEY
+     I                                       60  62 RECCY
+     I                                       63  65 RDRR1
+     I                                       66  68 RDRR2
+     I                                       69  71 RDRR3
+     I                                       72  74 RCRR1
+     I                                       75  77 RCRR2
+     I                                       78  80 RCRR3
+     I                                       81  81 RRVRS
+      *
+      ***  Data Structure for RCF
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure - AU report
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISPOOL1      DS
+      ***  File Information Data Structure - P1 report
+     I                                       83  92 SFIL1
+     I                                    B 123 1240SFNUM1
+     ISPOOL2      DS
+      ***  File Information Data Structure - P2 report
+     I                                       83  92 SFIL2
+     I                                    B 123 1240SFNUM2
+      *
+     IDSFDY     E DSDSFDY
+      ***  Standing Data - Bank Details
+     ISDBANK    E DSSDBANKPD
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+     C                     READ ILRKAUPD                 50
+      *
+     C           *IN50     DOWEQ*OFF
+      *
+      ***  Break on Modules
+      *
+     C           WWMODI    IFNE AUMODI
+     C                     MOVE *ON       *IN60
+     C                     MOVE *ON       *IN61
+     C                     MOVE AUMODI    WWMODI
+     C                     ENDIF
+      *
+      ***  Fill report fields with details read
+      *
+     C                     MOVE AUFLD     RPFLD
+      *
+      ***  Search currency decimal places in Array
+      *
+     C                     Z-ADD1         #I
+     C           AUECCY    LOKUPCCY,#I                   80
+     C           *IN80     IFEQ *ON
+     C                     Z-ADDDEC,#I    ZDECS
+     C                     ELSE                            Not Found ==> 0
+     C                     Z-ADD0         ZDECS
+     C                     ENDIF
+      *
+      ***  Format Amount
+      *
+     C                     Z-ADDAUAMNT    ZFLD15
+     C                     EXSR ZFRPED
+     C           AUAMNT    IFNE 0
+     C                     MOVE ZOUT22    RAMNT
+     C                     ELSE
+     C                     MOVE *BLANKS   RAMNT
+     C                     ENDIF
+      *
+      ***  Print in files when FLAG AUFOUND = 'N' write in P1 else Write in P2
+      *
+     C           AUFOUN    IFEQ 'N'
+      *
+      ***  Manage Overflow of P1
+      *
+     C           *IN60     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN60
+     C                     ENDIF
+      *
+     C                     WRITEDETAP1
+     C                     MOVE *ON       *IN70            At Least Record in P1
+     C                     ELSE
+      *
+      ***  check Whether ICD flag ask to report it
+      *
+     C           ICPRID    IFEQ 'Y'
+      *
+      ***  Manage Overflow of P2
+      *
+     C           *IN61     IFEQ *ON
+     C                     WRITEHEADP2
+     C                     MOVE *OFF      *IN61
+     C                     ENDIF
+      *
+     C                     WRITEDETAP2
+     C                     MOVE *ON       *IN71            At LEast 1 in P2
+     C                     ENDIF                           ICPRID
+     C                     ENDIF                           AUFOUN
+      *
+     C                     READ ILRKAUPD                 50
+     C                     ENDDO
+      *
+      ***  Close the lists P1
+      *
+     C           *IN70     IFEQ *OFF
+     C                     WRITEHEADP1
+     C                     WRITENOLIP1
+     C                     ELSE
+     C                     WRITEENDP1
+     C                     ENDIF
+      *
+     C           ICPRID    IFEQ 'Y'
+     C           *IN71     IFEQ *OFF
+     C                     WRITEHEADP2
+     C                     WRITENOLIP2
+     C                     ELSE
+     C                     WRITEENDP2
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *               E N D    O F    M A I N L I N E S               *
+      *****************************************************************
+      *
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Initial processing : Reset static fields            *
+      *  ------                        access standing data           *
+      *  Called by : First RPG Cycle   automatically                  *
+      *  Calls     : *PSSR                                            *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Copyrights
+      *
+     C                     MOVEACPY@      CPY@2  80
+      *
+      ***  Receive parameter zone
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRSEQ   5
+     C                     PARM           PRLEV   1
+     C                     PARM           PRENT   3
+      *
+      ***  Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVELPGM       DBPGM
+      *
+      ***  Reset indicators
+      *
+     C                     MOVE *OFF      *IN
+      *
+      ***  Retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Read ILICDRPD record.
+      *
+     C           1         SETLLILICDRPD
+     C                     READ ILICDRPD                 99
+      *
+      ***  No Record
+      *
+     C           *IN99     IFEQ '1'                        ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 002 *
+     C                     MOVEL'ILICDRPD'DBFILE           ****************
+     C                     MOVE *BLANKS   DBKEY
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Read currency to know number of decimals
+      ***  and Keep in Array CCy
+      *
+     C                     Z-ADD0         #I      30
+     C           *LOVAL    SETLLSDCURRL0
+     C                     READ SDCURRL0                 99
+     C           *IN99     DOWEQ*OFF
+     C                     ADD  1         #I
+     C           #I        IFLE 250
+     C                     MOVEAA6CYCD    CCY,#I
+     C                     Z-ADDA6NBDP    DEC,#I
+     C                     READ SDCURRL0                 99
+     C                     ELSE
+     C                     MOVE *ON       *IN99            Stop
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     MOVE 'J'       ZECODE
+      *
+     C                     MOVE *BLANKS   WWMODI  2        BREAK
+     C                     MOVE *OFF      *IN70            at least 1 write P1
+     C                     MOVE *OFF      *IN71                ''           P2
+      *
+      ***  Start RCF for Printer files
+      *
+     C                     Z-ADDSFNUMU    ZSNUM
+     C                     MOVELSFILEU    SFILE
+     C                     EXSR SRZSFL
+      *
+     C                     Z-ADDSFNUM1    ZSNUM
+     C                     MOVELSFIL1     SFILE
+     C                     EXSR SRZSFL
+      *
+     C           ICPRID    IFEQ 'Y'
+     C                     OPEN IL0695P2                   OPEN and Record file
+     C                     Z-ADDSFNUM2    ZSNUM
+     C                     MOVELSFIL2     SFILE
+     C                     EXSR SRZSFL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRZSFL - Subroutine to call ZSFILE (Record in RCF)            *
+      * ------                                                        *
+      * Called by : *INZSR                                            *
+      *****************************************************************
+      *
+     C           SRZSFL    BEGSR
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ   5
+     C                     PARM           PRENT   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      ***  If an error occurred during ZSFILE processing,
+      ***  return to the calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR   - Program exception error routine                     *
+      *           Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      * Called by :                                                   *
+      * Calls     :                                                   *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           DBASE     IFEQ 0
+     C                     Z-ADD999       DBASE
+     C                     ENDIF
+      *
+      ***  Print error message in Audit report IL0695AU
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZFRPEDZ3
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2005

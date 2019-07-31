@@ -1,0 +1,111 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Generate I/E Entries - End Task Split')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC3666T4 - RE Generate I/E Entries - End Task Split        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE093  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CRE093 - Tactical COB changes REC3666                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &CNAM &CSEQ)
+ 
+/* Declare variables */
+ 
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
+                          VALUE('REC3666   ')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(3)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('REC3666T4 - RE Generate I/E Entries +
+                           - End Task Split') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Determine full DMLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DMLIB) VALUE(&SYSID *CAT 'DMLIB')
+ 
+/* Determine DTAQLIB library name */
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/* Retrieve first member description */
+ 
+             RTVMBRD    FILE(REACRDPD) RTNMBR(&MEMBER)
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+ 
+/* Delete sub-task data queue */
+ 
+LOOP:
+             DLTDTAQ    DTAQ(&DTAQLIB/&MEMBER)
+             MONMSG     MSGID(CPF2105 CPF9801)
+ 
+/* Retrieve next member description */
+ 
+             RTVMBRD    FILE(REACRDPD) MBR(&MEMBER *NEXT) +
+                          RTNMBR(&MEMBER)
+             MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(REMOVE))
+ 
+/* Loop for all members in driving file */
+ 
+             GOTO       CMDLBL(LOOP)
+ 
+/* Remove all members from driving file */
+ 
+REMOVE:
+             RMVM       FILE(REACRDPD) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+             OVRDBF     FILE(RTZZ) MBR(ACRL)
+             IF         COND(&MODE *EQ 'TWO') THEN(DO)
+             OVRDBF     FILE(GEIERZZ) TOFILE(GEIER2ZZ)
+             ENDDO
+ 
+             CALL       RE3666T4
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             DLTOVR     FILE(RTZZ)
+             IF         COND(&MODE *EQ 'TWO') THEN(DO)
+             DLTOVR     FILE(GEIERZZ)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Program REC3666T4 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+ 
+END:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

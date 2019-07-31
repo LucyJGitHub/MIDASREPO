@@ -1,0 +1,369 @@
+/*********************************************************************/
+/*S*D****CLPBASEMOD***************************************************/                   /*CCB020*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC004312  - 'Rebuild Phase' Processing                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CCB020 *REDUNDANT  Date 06Aug12              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG25489           Date 14Aug03              */
+/*                      BUG27134           Date 01Oct08              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSC018             Date 31May03              */
+/* Midas Release 4.01.02 --------------------------------------------*/
+/*                      207764             Date 23Jul02              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CSC011  *CREATE    Date 18Sep01              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG25489 - DBERRCTL error encountered in ACUD               */
+/*       BUG27134- Rewrite of SCBEGINJRN.                            */
+/*       CSC018 - Journaling options for high availability           */
+/*       207764 - Change all SAV* and RST* commands to print a       */
+/*                report of objects saved or restored.               */
+/*       CSC011 - 24x7 Midas Availability                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MSYSPRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SSYSPRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SUPPSBS) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SUPPXLIB) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SUPPJLIB) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SUPPDMLIB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SUPPDTALIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&MAINDILIB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MAINDMLIB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MAINDTALIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&CUTOVRPHS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SAVOPTN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&SAVFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SAV_FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SAVE_DTA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SPECMSG) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&MONSCHED) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(10)                                 /*BUG25489*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)                                 /*BUG25489*/
+             DCL        VAR(&ID) TYPE(*CHAR) LEN(2)                                     /*BUG25489*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Create local data area */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          TEXT('Midas SD Local data area')
+             MONMSG     MSGID(CPF1023)
+ 
+/** Allocate the data area SCC004312. If this is locked, SUPPTOMAIN is */
+/** already active and therefore this job should terminate             */
+ 
+             ALCOBJ     OBJ((SCC004312 *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))
+ 
+/* Do not proceed until the close of business has completed */
+ 
+ COBLOOP:
+ 
+ /* Check the Midas phase of day */
+ 
+             RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&MPHAS)
+ 
+/* Receive message queue MSPECIAL */
+ 
+             RCVMSG     MSGQ(MSPECIAL) RMV(*NO) MSG(&SPECMSG)
+ 
+             CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)
+ 
+/* Check if the COB Monitor is still active */
+ 
+             CHGVAR     VAR(&MONSCHED) VALUE('N')
+ 
+             ALCOBJ     OBJ((MONCHK *DTAARA *EXCL)) WAIT(5)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+                CHGVAR     VAR(&MONSCHED) VALUE('Y')
+             ENDDO
+ 
+ 
+/* Check if the COB Scheduler is still active */
+ 
+             ALCOBJ     OBJ((CBCHK *DTAARA *EXCL)) WAIT(5)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+                CHGVAR     VAR(&MONSCHED) VALUE('Y')
+             ENDDO
+ 
+/* If the phase of day is not 'A' OR MSPECIAL is 'EOD' */
+/* OR if the COBMONOTOR OR COBSCHED jobs are running   */
+/* then the close of business has not finished so wait */
+/* 10 seconds and check again.                         */
+ 
+             IF         COND((&MPHAS *NE 'A') *OR (&SPECMSG *EQ +
+                          'EOD') *OR (&MONSCHED *EQ 'Y')) THEN(DO)
+ 
+                DLYJOB     DLY(10)
+ 
+                CHGVAR     VAR(&MONSCHED) VALUE('Y')
+ 
+                GOTO       CMDLBL(COBLOOP)
+ 
+             ENDDO
+ 
+/* Transition the support system users into the main system */
+ 
+             CALL       PGM(SC004310)
+ 
+/* Check for failed SC004310 call */
+ 
+             RTVJOBA    SWS(&SWS)
+             IF         COND(%SST(&SWS 7 2) *EQ '11') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Access dataarea SC24X7 to get the 'main system prefix' and the */
+/** 'support system prefix'. */
+ 
+             RTVDTAARA  DTAARA(SC24X7 (1 2)) RTNVAR(&MSYSPRFX)
+             RTVDTAARA  DTAARA(SC24X7 (3 2)) RTNVAR(&SSYSPRFX)
+ 
+             CHGVAR     VAR(&SUPPSBS) VALUE('M' *CAT &SSYSPRFX *CAT +
+                          'SBS')
+             CHGVAR     VAR(&SUPPXLIB) VALUE(&SSYSPRFX *CAT 'XLIB')
+             CHGVAR     VAR(&SUPPJLIB) VALUE(&SSYSPRFX *CAT 'JLIB')
+             CHGVAR     VAR(&SUPPDMLIB) VALUE(&SSYSPRFX *CAT 'DMLIB')
+             CHGVAR     VAR(&SUPPDTALIB) VALUE(&SSYSPRFX *CAT 'DTALIB')
+             CHGVAR     VAR(&MAINDILIB) VALUE(&MSYSPRFX *CAT 'DILIB')
+             CHGVAR     VAR(&MAINDMLIB) VALUE(&MSYSPRFX *CAT 'DMLIB')
+             CHGVAR     VAR(&MAINDTALIB) VALUE(&MSYSPRFX *CAT 'DTALIB')
+ 
+/** Determine 'Cutover Phase' in dataarea SCSUPP. */
+ 
+             RTVDTAARA  DTAARA(SCSUPP (2 1)) RTNVAR(&CUTOVRPHS)
+ 
+             SNDPGMMSG  MSG('SCC004312 - Support System Journalling +
+                          rebuild started.') TOMSGQ(MOPERQ SC24X7Q)
+ 
+             IF         COND(&CUTOVRPHS *NE 'J') THEN(DO)
+ 
+/** End subsystem &SUPPSBS */
+ 
+ENDSBSY:        ENDSBS     SBS(&SUPPSBS) OPTION(*IMMED)
+                MONMSG     MSGID(CPF1054) EXEC(GOTO CMDLBL(ENDJRN))
+                MONMSG     MSGID(CPF1034 CPF1035 CPF1055 CPF1056)
+                DLYJOB     DLY(30)
+                GOTO       CMDLBL(ENDSBSY)
+ 
+/** End journal all files from journal ICJRN in library &SUPPJLIB. */
+ 
+ ENDJRN:        SNDPGMMSG  MSG('SCC004312 - Support subsystem +
+                           successfully ended.') TOMSGQ(MOPERQ SC24X7Q)
+                ENDJRNAP   FILE(*ALL) JRN(&SUPPJLIB/ICJRN)
+                MONMSG     MSGID(CPF0000)
+                ENDJRNPF   FILE(*ALL) JRN(&SUPPJLIB/ICJRN)
+                MONMSG     MSGID(CPF0000)
+                ENDJRNOBJ  OBJ(*ALL) OBJTYPE(*ALL) JRN(&SUPPJLIB/ICJRN)                   /*CSC018*/
+                MONMSG     MSGID(CPF0000)                                                 /*CSC018*/
+                SNDPGMMSG  MSG('SCC004312 - Journalling of file in +
+                           support system ended successfully.') +
+                           TOMSGQ(MOPERQ SC24X7Q)
+ 
+/** Delete ICJRN and journal receivers */
+ 
+                DLTJRN     JRN(&SUPPJLIB/ICJRN)
+                MONMSG     MSGID(CPF2105)
+                CHGJOB     INQMSGRPY(*DFT)
+ 
+                DLTJRNRCV  JRNRCV(&SUPPJLIB/ICRCV*)
+                MONMSG     MSGID(CPF2105)
+                CHGJOB     INQMSGRPY(*RQD)
+ 
+                SNDPGMMSG  MSG('SCC004312 - Journals and journal +
+                           receivers in support system deleted.') +
+                           TOMSGQ(MOPERQ SC24X7Q)
+ 
+/** Create ICJRN and journal receivers */
+ 
+                CRTJRNRCV  JRNRCV(&SUPPJLIB/ICRCV001) TEXT('IC Journal +
+                                 Receiver')
+                MONMSG     MSGID(CPF0000)
+                CRTJRNRCV  JRNRCV(&SUPPJLIB/ICRCV002) TEXT('IC Journal +
+                                 Receiver')
+                MONMSG        MSGID(CPF0000)
+                CRTJRN     JRN(&SUPPJLIB/ICJRN) +
+                             JRNRCV(&SUPPJLIB/ICRCV001) TEXT('IC Journal')
+                MONMSG        MSGID(CPF0000)
+ 
+                SNDPGMMSG  MSG('SCC004312 - Journals and journal +
+                           receivers in support system created +
+                           successfully.') TOMSGQ(MOPERQ SC24X7Q)
+ 
+/** Change the journal receiver, changing the journal to */
+/** receiver management by '*USER' for input cycle.      */
+ 
+/**********     CHGJRN     JRN(SCCMJRN) JRNRCV(*GEN) MNGRCV(*USER)                        /*207764*/
+/**********     CHGJRN     JRN(SCJRN) JRNRCV(*GEN) MNGRCV(*USER)                          /*207764*/
+ 
+/** Access dataarea SCSUPP to get the 'save option' and 'save file'. */
+ 
+                RTVDTAARA  DTAARA(SCSUPP (3 4)) RTNVAR(&SAVOPTN)
+                RTVDTAARA  DTAARA(SCSUPP (7 10)) RTNVAR(&SAVFILE)
+ 
+                IF         COND(&SAVOPTN *EQ 'DISK') THEN(CHGVAR +
+                             VAR(&SAV_FILE) VALUE(&SAVFILE))
+                ELSE       CMD(CHGVAR VAR(&SAV_FILE) VALUE('MAINDB'))
+ 
+                CHGVAR     VAR(&SAVE_DTA) VALUE(&SAV_FILE *TCAT 'DTA')
+ 
+/** Check if save file &SAV_FILE in  library &MAINDILIB exists. */
+/** and if save file &SAVE_DTA in  library &MAINDILIB exists.   */
+ 
+                CHKOBJ     OBJ(&MAINDILIB/&SAV_FILE) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+ 
+                CHKOBJ     OBJ(&MAINDILIB/&SAVE_DTA) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/** Restore library MAINDMLIB from save file &SAV_FILE in library */
+/** MAINDILIB into SUPPDMLIB member option *ALL. */
+ 
+                SNDPGMMSG  MSG('SCC004312 - Restore of ''main'' system +
+                           database to ''support'' system started.') +
+                           TOMSGQ(MOPERQ SC24X7Q)
+                                                                                        /*BUG25489*/
+                RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&ID)                             /*BUG25489*/
+                CHGVAR     VAR(&DVLIB) VALUE(&ID *CAT 'DVLIB')                          /*BUG25489*/
+                CHGVAR     VAR(&DMLIB) VALUE(&ID *CAT 'DMLIB')                          /*BUG25489*/
+                                                                                        /*BUG25489*/
+                RMVM       FILE(&DVLIB/SDINPHL0) MBR(*ALL)                              /*BUG25489*/
+                MONMSG     MSGID(CPF0000)                                               /*BUG25489*/
+                                                                                        /*BUG25489*/
+                RMVM       FILE(&DVLIB/SDINPHL1) MBR(*ALL)                              /*BUG25489*/
+                MONMSG     MSGID(CPF0000)                                               /*BUG25489*/
+                                                                                        /*BUG25489*/
+                RMVM       FILE(&DVLIB/SDINPHL2) MBR(*ALL)                              /*BUG25489*/
+                MONMSG     MSGID(CPF0000)                                               /*BUG25489*/
+                                                                                        /*BUG25489*/
+                RMVM       FILE(&DVLIB/SDINPHL3) MBR(*ALL)                              /*BUG25489*/
+                MONMSG     MSGID(CPF0000)                                               /*BUG25489*/
+                                                                                        /*BUG25489*/
+                RMVM       FILE(&DMLIB/SDINPHPD) MBR(*ALL)                              /*BUG25489*/
+                MONMSG     MSGID(CPF0000)                                               /*BUG25489*/
+ 
+/**********     RSTLIB     SAVLIB(&MAINDMLIB) DEV(*SAVF) +            */                  /*207764*/
+/**********                 SAVF(&MAINDILIB/&SAV_FILE) MBROPT(*ALL) + */                  /*207764*/
+/**********                 ALWOBJDIF(*FILELVL) RSTLIB(&SUPPDMLIB)    */                  /*207764*/
+                RSTLIB     SAVLIB(&MAINDMLIB) DEV(*SAVF) +
+                             SAVF(&MAINDILIB/&SAV_FILE) MBROPT(*ALL) +
+                             ALWOBJDIF(*FILELVL) RSTLIB(&SUPPDMLIB) +
+                             OUTPUT(*PRINT)                                               /*207764*/
+ 
+/**********     RSTLIB     SAVLIB(&MAINDTALIB) DEV(*SAVF) +           */                  /*207764*/
+/**********                 SAVF(&MAINDILIB/&SAVE_DTA) MBROPT(*ALL) + */                  /*207764*/
+/**********                 ALWOBJDIF(*FILELVL) RSTLIB(&SUPPDTALIB)   */                  /*207764*/
+                RSTLIB     SAVLIB(&MAINDTALIB) DEV(*SAVF) +
+                             SAVF(&MAINDILIB/&SAVE_DTA) MBROPT(*ALL) +
+                             ALWOBJDIF(*FILELVL) RSTLIB(&SUPPDTALIB) +
+                             OUTPUT(*PRINT)                                               /*207764*/
+ 
+                SNDPGMMSG  MSG('SCC004312 - Restore of ''main'' system +
+                           database to ''support'' system completed +
+                           successfully.') TOMSGQ(MOPERQ SC24X7Q)
+ 
+                CHGDTAARA  DTAARA(&SUPPDMLIB/SDSTAT (6 2)) VALUE(&SSYSPRFX)
+                CHGDTAARA  DTAARA(&SUPPDMLIB/TIDTA (11 2)) VALUE(&SSYSPRFX)
+                CHGDTAARA  DTAARA(&SUPPDMLIB/CGDTA  (7 2)) VALUE(&SSYSPRFX)
+                CHGDTAARA  DTAARA(&SUPPDMLIB/RPTRG  (1 2)) VALUE(&SSYSPRFX)
+                CHGDTAARA  DTAARA(&SUPPDMLIB/RPTRG (21 2)) VALUE(&SSYSPRFX)
+                CHGDTAARA  DTAARA(&SUPPDMLIB/RPTRG (39 2)) VALUE(&SSYSPRFX)
+                CHGDTAARA  DTAARA(&SUPPDMLIB/RPTRG (49 2)) VALUE(&SSYSPRFX)
+                CHGDTAARA  DTAARA(&SUPPDMLIB/MPHAS (1 1)) VALUE('A')
+ 
+                CLRMSGQ    MSGQ(&SUPPXLIB/MOPERQ)
+                CLRMSGQ    MSGQ(&SUPPXLIB/MRUNQ)
+                CLRMSGQ    MSGQ(&SUPPXLIB/MSTATUS)
+                CLRMSGQ    MSGQ(&SUPPXLIB/MSPECIAL)
+ 
+/** Move 'J' to 'Cutover Phase' in dataarea SCSUPP. */
+ 
+                CHGDTAARA  DTAARA(SCSUPP (2 1)) VALUE('J')
+             ENDDO
+ 
+/** Setup library list from 'MIDASIC' to Support System. */
+ 
+             CALL       PGM(UPC0014) PARM(&SSYSPRFX)
+ 
+/** Call SDC1774 to open and close all logical files. */
+ 
+             CALL       PGM(SDC1774)
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Start subsystem Support_SBS. */
+ 
+             STRSBS     SBSD(&SUPPSBS)
+             MONMSG     MSGID(CPF1010)
+ 
+             SNDPGMMSG  MSG('SCC004312 - Support subsystem +
+                          started.') TOMSGQ(MOPERQ SC24X7Q)
+ 
+/** Call SCBEGINJRN to start journaling all files. */
+/**********  CALL       PGM(SCBEGINJRN) PARM(&SSYSPRFX)                              */ /*BUG27134*/
+             JRNZONE    PFX(&SSYSPRFX) ACTION(*START)                                   /*BUG27134*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Call SCC000600 to start Data Replication. */
+ 
+             CALL       PGM(SCC000600)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** Move 'Z' to 'Cutover Phase' and blank to 'Transition started' in */
+/** dataarea SCSUPP. */
+ 
+             CHGDTAARA  DTAARA(SCSUPP (2 1)) VALUE('Z')
+             SNDPGMMSG  MSG('SCC004312 - ''Support'' to ''Main'' +
+                          Transition completed successfully.') +
+                          TOMSGQ(MOPERQ SC24X7Q)
+ 
+             CHGDTAARA  DTAARA(SCSUPP (1 1)) VALUE(' ')
+             SNDPGMMSG  MSG('SCC004312 - Support System rebuild +
+                          completed successfully.') TOMSGQ(MOPERQ +
+                          SC24X7Q)
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC004312 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ SC24X7Q)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** End program */
+ 
+ END:        DLCOBJ     OBJ((SCC004312 *DTAARA *EXCL))
+             ENDPGM

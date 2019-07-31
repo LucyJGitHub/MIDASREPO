@@ -1,0 +1,1195 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Generate N/A Purchased Reval. Postings')         *
+     H****************************************************************
+     H*                                                              *
+     H*          MIDAS ABS - EUROPEAN REPORTING                      *
+     H*                                                              *
+     H*        ER0510 - N/A PURCHASED REVALUATION POSTINGS           *
+     H*                                                              *
+      *  (c) Finastra International Limited 2005                      *
+     H*                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 12May06               *
+      *                 CER001             Date 25Aug05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ER_R10             Date 25OCT94               *
+     H*                 ER0200 ADs         Date 11JAN93               *
+     H*                    ER0134             DATE   22DEC92         *
+     H*                                                              *
+     H*****************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+     H*     ER_R10 - EUROPEAN REPORTING - LUXEMBOURG UPGRADE IN R10   *
+     H*            - ADD BRANCH CODE (R10 MULTIBRANCHING)             *
+     H*            - FDINSTPP DOESN'T EXIST ANYMORE                   *
+     H*     ER0200 - Revaluate every N/A Purch when Trading/Investment*
+     H*              indicator is equal to 'T' or 'F' (F is for Fixed *
+     H*              Assets)                                          *
+     H*     ER0134 - 1. WRONG GENERATION OF POSTINGS                  *
+     H*              2. SETUP OVERFLOW INDICATOR                      *
+     F*****************************************************************
+     F*DINSTLLIF* E                    DISK         KINFSR *PSSR          ER_R10
+     F**DRS*Installation Data                                             ER_R10
+     F*
+     FSDCURRL1IF  E           K        DISK         KINFSR *PSSR
+     F* Currency Codes - Rtv idx
+     F*
+     FSDBANKL1IF  E           K        DISK         KINFSR *PSSR
+     F* Bank Details - Rtv idx
+     F*
+     F***MMDENBY4UF  E           K        DISK         KINFSR *PSSR                           CER001
+     FMMDBX1L0UF  E           K        DISK         KINFSR *PSSR                              CER001
+     F* MM N/A Bought - Extended file - Rtv idx
+     F*
+     F***DEALDDL1IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FDLDDLXL0IF  E           K        DISK         KINFSR *PSSR                              CER001
+     F* MM N/A Bought deals
+     F*
+     F***SDDEALY4IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDDLX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+     F* Dealing I.C.D. - Extended file - Rtv idx
+     F*
+     FSDBRCHL1IF  E           K        DISK         KINFSR *PSSR
+     F* Branch Details - Rtv idx
+     F*
+     FSDACODL1IF  E           K        DISK         KINFSR *PSSR
+     F* Account Code details - Rtv idx
+     F*
+     F***GEBRPD* O   E                    DISK                                                CER001
+     FGLBRX1PDO   E                    DISK                                                   CER001
+     F* N/A Purchased Revaluation generated entries
+     F*
+     F***GEBRZZ* UF  E                    DISK                      A                         CER001
+     FGLBRX1PAUF  E                    DISK                      A                            CER001
+     F* N/A Purchased Revaluation trailer record
+     F*
+     FER0510P1O   E             70     PRINTER
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*
+     F*       70         OVERFLOW INDICATOR FOR ER0510P1
+     F*       80         EOF MMDENBX4
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   .. *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     E*
+     E                    ZS1        15  1 0             ZSEDIT ARRAY
+     E                    ZS2        21  1               ZSEDIT ARRAY
+     E** ARRAY USED IN CURRENCY AMOUNT CONVERSION
+     E                    POWER   1   7  7 3
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E** ARRAY FOR NARRATIVE
+     E                    AR      1   1 30
+     I** EXTERNAL DS FOR DEALING DETAILS                                  ER_R10
+     ISDDEAL    E DSSDDEALPD                                              ER_R10
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                ER_R10
+     IDSFDY     E DSDSFDY                                                 ER_R10
+     I*
+     I** DATA STRUCTURE FOR RPG 01021 ERROR HANDLING
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I*  DATA STRUCTURE FOR ZSEDIT
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     I*
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C** End Of Month parameter 'Y' or 'N'
+     C           *ENTRY    PLIST
+     C                     PARM           EOM     1
+     C*
+     C*----------------- FIRST CYCLE -----------------------------
+     C*
+     C                     EXSR #INIT
+     C*
+     C**********           READ DEALDDL1                 80                                   CER001
+     C                     READ DLDDLXL0                 80                                   CER001
+     C*
+     C** NO DETAILS TO RECORD
+     C           *IN80     IFEQ '1'                        - B1
+     C                     WRITER001
+     C                     WRITER003
+     C                     END                             - E1
+     C*
+     C*------------ DETAIL PROCESSING ----------------------------
+     C*
+     C           *IN80     DOWEQ'0'                        - B1
+     C*
+     C** RECORD MUST BE PROCESSED ?
+     C           VDAT      IFGE BJRDNB                     - B2
+     C           MDAT      ORLT BJRDNB
+     C***********SADT      ORLT BJRDNB
+     C                     GOTO NEXT
+     C                     END                             - E2
+     C*
+     C** ACCESS TO EXTENSION FILE
+     C********** DLNO      CHAINMMDENBY4             88                                       CER001
+     C           DLNO      CHAINMMDBX1L0             88                                       CER001
+     C*
+     C** DATA BASE ERROR
+     C           *IN88     IFEQ '1'                        - B2
+     C**********           MOVEL'MMDENBY4'DBFILE                                              CER001
+     C                     MOVEL'MMDBX1L0'DBFILE                                              CER001
+     C                     MOVELDLNO      DBKEY
+     C                     MOVEL'001'     DBASE
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C           VATRIN    IFNE 'T'                        - B2
+     C           VATRIN    ANDNE'F'                        - B2           ER0200
+     C                     GOTO NEXT
+     C                     END                             - E2
+     C*
+     C           *IN50     IFEQ '0'
+     C                     EXSR P006
+     C                     EXSR P007
+     C                     WRITER001
+     C                     WRITER005
+     C                     END
+     C*
+     C           *IN70     IFEQ '1'                        - B2
+     C                     WRITER001
+     C                     WRITER005
+     C                     MOVE '0'       *IN70                           ER0134
+     C                     END                             - E2
+     C*
+     C** LEVEL BREAK ON BRANCH OR CURRENCY
+     C           *IN50     IFEQ '1'                        - B2
+     C***********BRCD      IFNE WWBRCD                     - B3           ER_R10
+     C           BRCA      IFNE WWBRCD                     - B3           ER_R10
+     C           CCY       ORNE WWCCY
+     C                     EXSR S006
+     C                     WRITER006
+     C*
+     C***********BRCD      IFNE WWBRCD                     - B4           ER_R10
+     C           BRCA      IFNE WWBRCD                     - B4           ER_R10
+     C                     EXSR S007
+     C                     WRITER007
+     C                     EXSR P008
+     C                     EXSR P006
+     C                     END                             - E4
+     C           CCY       IFNE WWCCY                      - B4
+     C                     EXSR P007
+     C                     END                             - E4
+     C                     WRITER001
+     C                     WRITER005
+     C*
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C                     MOVE '1'       *IN50
+     C*
+     C** CALCULATE THE REVALUATION AMOUNT
+     C*********************EXSR P005
+     C*
+     C                     EXSR S002
+     C                     WRITER002
+     C                     MOVE 'N'       EMPTY   1
+     C*
+     C** UPDATE*MMDENBY4*ONLY*IF*END*OF*MONTH*PROCESSING***************                       CER001
+     C** UPDATE MMDBX1L0 ONLY IF END OF MONTH PROCESSING                                      CER001
+     C           EOM       IFEQ 'Y'                        - B3
+     C                     EXSR U500
+     C                     END                             - E3
+     C*
+     C** UPDATE APPROPRIATE SUB-TOTAL/TOTAL FIELDS
+     C           XRPORE    IFEQ 'Y'                        - B3
+     C           XXREAM    IFLT 0                          - B4
+     C                     ADD  XXREAM    WWSTY2
+     C                     ADD  XXREAM    WWTOY2
+     C                     ELSE                            - X4
+     C                     ADD  XXREAM    WWSTY1
+     C                     ADD  XXREAM    WWTOY1
+     C                     END                             - E4
+     C                     END                             - E3
+     C*
+     C           XRPORE    IFEQ 'N'                        - B3
+     C           XXREAM    IFLT 0                          - B4
+     C                     ADD  XXREAM    WWSTN2
+     C                     ADD  XXREAM    WWTON2
+     C                     ELSE                            - X4
+     C                     ADD  XXREAM    WWSTN1
+     C                     ADD  XXREAM    WWTON1
+     C                     END                             - E4
+     C                     END                             - E3
+     C*
+     C           NEXT      TAG
+     C*
+     C**********           READ DEALDDL1                 80                                   CER001
+     C                     READ DLDDLXL0                 80                                   CER001
+     C*
+     C************IN80     IFEQ '1'
+     C***********BRCD      ORNE WWBRCD                     - B2
+     C***********CCY       ORNE WWCCY
+     C*********************MOVE BRCD      XRBRCD
+     C*********************MOVE CCY       XRCCY
+     C*********************MOVE '1'       *IN50
+     C*********************EXSR TOTPRT
+     C*********************Z-ADDBRCD      WWBRCD  30
+     C*********************MOVE CCY       WWCCY   3
+     C*********************END                             - E2
+     C**
+     C                     END                             - E1
+     C*
+     C** TERMINATION PROCESSING
+     C           EMPTY     IFEQ 'Y'                        - B1
+     C                     WRITER001
+     C                     WRITER003
+     C                     ELSE                            - X1
+     C                     EXSR S006
+     C                     WRITER006
+     C                     EXSR S007
+     C                     WRITER007
+     C                     EXSR P008
+     C*
+     C** UPDATE TRAILER
+     C           TOTTRL    IFNE 0                          - B2
+     C                     EXSR U300
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C                     WRITER004
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*************************************************************************
+     C* P005 - CALCULATE THE REALISATION AMOUNT                               *
+     C*************************************************************************
+     C***********P005      BEGSR
+     C*
+     C***********CCY       IFNE IDCYDL                     - B1
+     C*
+     C** CONVERT FACE VALUE TO BASE CURRENCY FOR DEALING
+     C*********************Z-ADDFVAL      WWAMTI
+     C*********************EXSR SCONV
+     C*********************Z-ADDWWAMTO    XXREAM
+     C*********************ELSE                            - X1
+     C*********************Z-ADDFVAL      XXREAM
+     C*********************END                             - E1
+     C*
+     C***********VACLPR    SUB  PUPR      PRICE  137
+     C*
+     C***********PRICE     MULT XXREAM    XXREAM
+     C*
+     C*********************ENDSR
+     C*************************************************************************
+     C* P006 - RETRIEVE BRANCH DETAILS                                        *
+     C*************************************************************************
+     C           P006      BEGSR
+     C*
+     C***********          MOVELBRCD      AABRCD  3                       ER_R10
+     C                     MOVELBRCA      AABRCD  3                       ER_R10
+     C           AABRCD    CHAINSDBRCHL1             88
+     C** DATA BASE ERROR
+     C           *IN88     IFEQ '1'                        - B1
+     C                     MOVEL'SDBRCHL1'DBFILE
+     C***********          MOVELBRCD      DBKEY                           ER_R10
+     C                     MOVELBRCA      DBKEY                           ER_R10
+     C                     MOVEL'002'     DBASE
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C                     MOVELA8BRNM    XRBRNM 30
+     C                     MOVELA8BICN    WWBICN  6
+     C***********          Z-ADDA8SACS    WWSACS  20                      ER_R10
+     C***********          Z-ADDBRCD      WWBRCD                          ER_R10
+     C***********          MOVELBRCD      XRBRCD                          ER_R10
+     C                     MOVELBRCA      WWBRCD                          ER_R10
+     C                     MOVELBRCA      XRBRCD                          ER_R10
+     C*
+     C                     ENDSR
+     C*************************************************************************
+     C* P007 - RETRIEVE CURRENCY DETAILS                                      *
+     C*************************************************************************
+     C           P007      BEGSR
+     C*
+     C           CCY       CHAINSDCURRL1             88
+     C** DATA BASE ERROR
+     C           *IN88     IFEQ '1'                        - B1
+     C                     MOVEL'SDCURRL1'DBFILE
+     C                     MOVELCCY       DBKEY
+     C                     MOVEL'003'     DBASE
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C                     MOVELA6CYNM    XRCYNM 14
+     C                     Z-ADDA6NBDP    WWDPI
+     C                     MOVELA6MDIN    WWMDI
+     C                     Z-ADDA6SPRT    WWSRI
+     C                     MOVELCCY       WWCCY
+     C                     MOVELCCY       XRCCY
+     C*
+     C                     ENDSR
+     C*************************************************************************
+     C* P008 - GENERATE PROFIT AND LOSS POSTINGS                              *
+     C*        IF BRANCH IS CHANGED OR END OF REPORT                          *
+     C*************************************************************************
+     C           P008      BEGSR
+     C*
+     C** PROFIT AND LOSS POSTED POSITIVE
+     C           WWTOT     IFGT 0                          - B1
+     C*
+     C** ACCOUNT CODE 'Securities Revaluation Profit A/c Code'
+     C                     MOVE WASRAP    ACOD
+     C*
+     C           WASRAP    CHAINSDACODL1             88
+     C** DATA BASE ERROR
+     C           *IN88     IFEQ '1'                        - B2
+     C                     MOVEL'SDACODL1'DBFILE
+     C                     MOVELWASRAP    DBKEY
+     C                     MOVEL'004'     DBASE
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C** ACCOUNT TYPE
+     C                     MOVE A5ACTY    ATYP
+     C*
+     C           A5ACTY    IFEQ 'R'                        - B2
+     C                     Z-ADD1         RIND
+     C                     ELSE                            - X2
+     C                     Z-ADD0         RIND
+     C                     END                             - E2
+     C*
+     C** POSTING AMOUNT
+     C                     Z-ADDWWTOT     PSTA
+     C*
+     C** DEBIT/CREDIT INDICATOR
+     C                     Z-ADD0         DRCR
+     C*
+     C                     EXSR U001
+     C*
+     C** ACCOUNT CODE 'Securities Revaluation Profit Contra A/c Code'
+     C                     MOVELWASRCP    ACOD
+     C*
+     C           WASRCP    CHAINSDACODL1             88
+     C** DATA BASE ERROR
+     C           *IN88     IFEQ '1'                        - B2
+     C                     MOVEL'SDACODL1'DBFILE
+     C                     MOVELWASRCP    DBKEY
+     C                     MOVEL'005'     DBASE
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C** ACCOUNT TYPE
+     C                     MOVE A5ACTY    ATYP
+     C*
+     C           A5ACTY    IFEQ 'R'                        - B2
+     C                     Z-ADD1         RIND
+     C                     ELSE                            - X2
+     C                     Z-ADD0         RIND
+     C                     END                             - E2
+     C*
+     C** POSTING AMOUNT
+     C                     Z-ADDWWTOT     PSTA
+     C*
+     C** DEBIT/CREDIT INDICATOR
+     C                     Z-ADD1         DRCR
+     C*
+     C                     EXSR U001
+     C*
+     C                     END                             - E1
+     C*
+     C** PROFIT AND LOSS POSTED NEGATIVE
+     C           WWTOT     IFLT 0                          - B1
+     C*
+     C** ACCOUNT CODE 'Securities Revaluation Loss A/c Code'
+     C                     MOVE WASRAL    ACOD
+     C*
+     C           WASRAL    CHAINSDACODL1             88
+     C** DATA BASE ERROR
+     C           *IN88     IFEQ '1'                        - B2
+     C                     MOVEL'SDACODL1'DBFILE
+     C                     MOVELWASRAL    DBKEY
+     C                     MOVEL'006'     DBASE
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C** ACCOUNT TYPE
+     C                     MOVE A5ACTY    ATYP
+     C*
+     C           A5ACTY    IFEQ 'R'                        - B2
+     C                     Z-ADD1         RIND
+     C                     ELSE                            - X2
+     C                     Z-ADD0         RIND
+     C                     END                             - E2
+     C*
+     C** POSTING AMOUNT
+     C           WWTOT     IFLT 0                          - B2
+     C                     Z-SUBWWTOT     WWTOT
+     C                     END                             - E2
+     C                     Z-ADDWWTOT     PSTA
+     C*
+     C** DEBIT/CREDIT INDICATOR
+     C                     Z-ADD1         DRCR
+     C*
+     C                     EXSR U001
+     C*
+     C** ACCOUNT CODE 'Securities Revaluation Loss Contra A/c Code'
+     C                     MOVELWASRCL    ACOD
+     C*
+     C           WASRCL    CHAINSDACODL1             88
+     C** DATA BASE ERROR
+     C           *IN88     IFEQ '1'                        - B2
+     C                     MOVEL'SDACODL1'DBFILE
+     C                     MOVELWASRCL    DBKEY
+     C                     MOVEL'007'     DBASE
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C** ACCOUNT TYPE
+     C                     MOVE A5ACTY    ATYP
+     C*
+     C           A5ACTY    IFEQ 'R'                        - B2
+     C                     Z-ADD1         RIND
+     C                     ELSE                            - X2
+     C                     Z-ADD0         RIND
+     C                     END                             - E2
+     C*
+     C** POSTING AMOUNT
+     C           WWTOT     IFLT 0                          - B2
+     C                     Z-SUBWWTOT     WWTOT
+     C                     END                             - E2
+     C                     Z-ADDWWTOT     PSTA
+     C*
+     C** DEBIT/CREDIT INDICATOR
+     C                     Z-ADD0         DRCR
+     C*
+     C                     EXSR U001
+     C*
+     C                     END                             - E1
+     C*
+     C** HEADER SETUP
+     C           WWTOT     IFNE 0                          - B1
+     C                     ADD  2         WWCPT
+     C                     ADD  PSTA      TOTTRL 130                      ER0134
+     C                     ADD  PSTA      TOTTRL                          ER0134
+     C                     END                             - E1
+     C*
+     C** TOTAL POST REVALUATION 'N' / PROFIT
+     C***********WWTOY1    IFNE 0                          - B1           ER0134
+     C           WWTON1    IFNE 0                          - B1           ER0134
+     C*
+     C** ACCOUNT CODE 'Securities Revaluation Memorandum A/c Code'
+     C                     MOVE WASRAY    ACOD
+     C*
+     C           WASRAY    CHAINSDACODL1             88
+     C** DATA BASE ERROR
+     C           *IN88     IFEQ '1'                        - B2
+     C                     MOVEL'SDACODL1'DBFILE
+     C                     MOVELWASRAY    DBKEY
+     C                     MOVEL'008'     DBASE
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C** ACCOUNT TYPE
+     C                     MOVE A5ACTY    ATYP
+     C*
+     C           A5ACTY    IFEQ 'R'                        - B2
+     C                     Z-ADD1         RIND
+     C                     ELSE                            - X2
+     C                     Z-ADD0         RIND
+     C                     END                             - E2
+     C*
+     C** POSTING AMOUNT
+     C*********************Z-ADDWWTOT     PSTA                            ER0134
+     C                     Z-ADDWWTON1    PSTA                            ER0134
+     C*
+     C** DEBIT/CREDIT INDICATOR
+     C                     Z-ADD0         DRCR
+     C*
+     C                     EXSR U001
+     C*
+     C                     MOVELWASRCY    ACOD
+     C*
+     C           WASRCY    CHAINSDACODL1             88
+     C** DATA BASE ERROR
+     C           *IN88     IFEQ '1'                        - B2
+     C                     MOVEL'SDACODL1'DBFILE
+     C                     MOVELWASRCY    DBKEY
+     C                     MOVEL'009'     DBASE
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C** ACCOUNT TYPE
+     C                     MOVE A5ACTY    ATYP
+     C*
+     C           A5ACTY    IFEQ 'R'                        - B2
+     C                     Z-ADD1         RIND
+     C                     ELSE                            - X2
+     C                     Z-ADD0         RIND
+     C                     END                             - E2
+     C*
+     C** POSTING AMOUNT
+     C*********************Z-ADDWWTOT     PSTA                            ER0134
+     C                     Z-ADDWWTON1    PSTA                            ER0134
+     C*
+     C** DEBIT/CREDIT INDICATOR
+     C                     Z-ADD1         DRCR
+     C*
+     C                     EXSR U001
+     C*                                                                   ER0134
+     C** HEADER SETUP                                                     ER0134
+     C           WWTON1    IFNE 0                          - B2           ER0134
+     C                     ADD  2         WWCPT                           ER0134
+     C                     ADD  PSTA      TOTTRL 130                      ER0134
+     C                     ADD  PSTA      TOTTRL                          ER0134
+     C                     END                             - E2           ER0134
+     C*
+     C                     END                             - E1
+     C*
+     C                     Z-ADD0         WWTOY1                          ER0134
+     C                     Z-ADD0         WWTOY2                          ER0134
+     C                     Z-ADD0         WWTOY3                          ER0134
+     C                     Z-ADD0         WWTON1                          ER0134
+     C                     Z-ADD0         WWTON2                          ER0134
+     C                     Z-ADD0         WWTON3                          ER0134
+     C*
+     C                     ENDSR
+     C*************************************************************************
+     C* S002 - SETUP DETAILS FIELDS FOR PRINTER FILE                          *
+     C*************************************************************************
+     C           S002      BEGSR
+     C*
+     C                     MOVE DLNO      XRDLNO
+     C                     MOVE RNNA      XRNARA
+     C                     MOVE CNUM      XRCNUM
+     C                     MOVE VAPORE    XRPORE
+     C*
+     C** SETUP PURCHASE PRICE IN %
+     C           PUPR      DIV  FVAL      XXPUPR 117
+     C           XXPUPR    MULT 100       XXPUPR
+     C           XXPUPR    IFLT 0
+     C                     Z-SUBXXPUPR    XXPUPR
+     C                     END
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE XXPUPR    ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRPUPR
+     C*
+     C** CONVERT IN BASE CURRENCY AND SETUP FACE VALUE
+     C                     Z-ADDFVAL      WWAMTI
+     C                     EXSR SCONV
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWAMTO    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRFAVA
+     C*
+     C** SETUP CLOSURE PRICE IN %
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE VACLPR    ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRCLPR
+     C*
+     C** SETUP REVALUATION AMOUNT IN BASE CURRENCY
+     C                     Z-ADDWWAMTO    YY     130
+     C           XXPUPR    IFLT 0                          - B5
+     C                     Z-SUBXXPUPR    XXPUPR 117
+     C                     END                             - E5
+     C*
+     C           VACLPR    SUB  XXPUPR    XX     117
+     C           YY        MULT XX        ZZ     130
+     C           ZZ        DIV  100       XXREAM
+     C*
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE XXREAM    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRREAM
+     C*
+     C                     ENDSR
+     C*************************************************************************
+     C* U001 - WRITE A POSTING                                                *
+     C*************************************************************************
+     C           U001      BEGSR
+     C*
+     C                     MOVE 'P'       RECI
+     C                     MOVELWWBICN    CNUM
+     C***********          MOVELIDCYDL    CCY                             ER_R10
+     C                     MOVELBNCYDL    CCY                             ER_R10
+     C*
+     C                     MOVE *BLANKS   ZZ002
+     C                     MOVE *BLANKS   BOKC
+     C*
+     C***********A8SACS    IFEQ 0                          - B1           ER_R10
+     C                     Z-ADD1         ACSQ
+     C***********          ELSE                            - X1           ER_R10
+     C***********          Z-ADDA8SACS    ACSQ             - X1           ER_R10
+     C***********          END                             - E1           ER_R10
+     C*
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVELAR,1      PNAR
+     C                     MOVEL'GE-BR  ' SPOS
+     C***********          Z-ADDWWBRCD    BRCD                            ER_R10
+     C                     MOVELWWBRCD    BRCA                            ER_R10
+     C                     BITOF'01234567'PRIN
+     C                     WRITEAPOSTPDF
+     C*
+     C                     ENDSR
+     C*************************************************************************
+     C**U300*-*UPDATE/WRITE*A*TRAILER*RECORD*IN*GEBRZZ*************************               CER001
+     C* U300 - UPDATE/WRITE A TRAILER RECORD IN GLBRX1PA                      *               CER001
+     C*************************************************************************
+     C           U300      BEGSR
+     C*
+     C                     MOVE 'T'       RECI
+     C*
+     C**   Calculate Hash-total of rcds whole numbers and decimals
+     C           TOTTRL    DIV  1000      WWHRWN
+     C                     MVR            WWHRDC
+     C*
+     C*****Read*PF/GEBRZZ**********************************************                       CER001
+     C**   Read PF/GLBRX1PA                                                                   CER001
+     C********** 1         SETLLGEBRZZ                                                        CER001
+     C           1         SETLLGLBRX1PA                                                      CER001
+     C**********           READ GEBRZZ                   80                                   CER001
+     C                     READ GLBRX1PA                 80                                   CER001
+     C*
+     C**   If trailer already exists then update
+     C           *IN80     IFEQ '0'                        - B1
+     C                     ADD  WWCPT     NORE1
+     C                     ADD  WWHRWN    HRWN
+     C           HRDC      ADD  WWHRDC    WWHRDC
+     C           WWHRDC    IFGE 1000                       - B2
+     C           WWHRDC    SUB  1000      HRDC
+     C                     ADD  1         HRWN
+     C                     ELSE                            - X2
+     C                     Z-ADDWWHRDC    HRDC
+     C                     END                             - E2
+     C                     UPDATAPOSTZZF
+     C*
+     C**   otherwise write
+     C                     ELSE                            - X1
+     C                     Z-ADDWWCPT     NORE1
+     C                     Z-ADDWWHRWN    HRWN
+     C                     Z-ADDWWHRDC    HRDC
+     C                     WRITEAPOSTZZF
+     C                     END                             - E1
+     C*
+     C                     ENDSR
+     C*************************************************************************
+     C**U500*-*UPDATE*N/A*PURCHASED*EXTENDED*FILE*LF/MMDENBY4**********                       CER001
+     C* U500 - UPDATE N/A PURCHASED EXTENDED FILE LF/MMDBX1L0         *                       CER001
+     C*************************************************************************
+     C           U500      BEGSR
+     C*
+     C                     Z-ADDXXREAM    VAREAM
+     C                     UPDATMMDENBF4
+     C*
+     C                     ENDSR
+     C*************************************************************************
+     C* S006 - SUBROUTINE TO PRINT SUB-TOTALS FOR RUPTURE                     *
+     C*************************************************************************
+     C           S006      BEGSR
+     C*
+     C           WWSTY1    ADD  WWSTY2    WWSTY3
+     C                     Z-ADDWWSTN2    WWSTN3
+     C*
+     C** SUB-TOTAL AMOUNT
+     C           WWSTY3    ADD  WWSTN3    WWSTOT 130
+     C*
+     C** EDIT SUB-TOTAL1
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWSTY1    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRSTY1
+     C*
+     C** EDIT SUB-TOTAL 2
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWSTY2    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRSTY2
+     C*
+     C** EDIT SUB-TOTAL 3
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWSTY3    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRSTY3
+     C*
+     C** EDIT SUB-TOTAL 4
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWSTN1    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRSTN1
+     C*
+     C** EDIT SUB-TOTAL 5
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWSTN2    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRSTN2
+     C*
+     C** EDIT SUB-TOTAL 6
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWSTN3    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRSTN3
+     C*
+     C** EDIT SUB-TOTAL AMOUNT
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWSTOT    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRSTOT
+     C*
+     C                     Z-ADD0         WWSTY1 130
+     C                     Z-ADD0         WWSTY2 130
+     C                     Z-ADD0         WWSTY3 130
+     C                     Z-ADD0         WWSTN1 130
+     C                     Z-ADD0         WWSTN2 130
+     C                     Z-ADD0         WWSTN3 130
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*************************************************************************
+     C* S007 - SUBROUTINE TO PRINT TOTALS AMOUNT POSTED                       *
+     C*************************************************************************
+     C           S007      BEGSR
+     C*
+     C           WWTOY1    ADD  WWTOY2    WWTOY3                          ER0134
+     C                     Z-ADDWWTON2    WWTON3                          ER0134
+     C*
+     C** TOTAL AMOUNT
+     C           WWTOY3    ADD  WWTON3    WWTOT  130                      ER0134
+     C*
+     C** EDIT TOTAL1
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWTOY1    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRTOY1
+     C*
+     C** EDIT TOTAL 2
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWTOY2    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRTOY2
+     C*
+     C** EDIT TOTAL 3
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWTOY3    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRTOY3
+     C*
+     C** EDIT TOTAL 4
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWTON1    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRTON1
+     C*
+     C** EDIT TOTAL 5
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWTON2    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRTON2
+     C*
+     C** EDIT TOTAL 6
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWTON3    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRTON3
+     C*
+     C** EDIT PROFIT AND LOSS POSTED
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWTOT     ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XRTOT
+     C*
+     C*********************Z-ADD0         WWTOY1                          ER0134
+     C*********************Z-ADD0         WWTOY2                          ER0134
+     C*********************Z-ADD0         WWTOY3                          ER0134
+     C*********************Z-ADD0         WWTON1                          ER0134
+     C*********************Z-ADD0         WWTON2                          ER0134
+     C*********************Z-ADD0         WWTON3                          ER0134
+     C*
+     C                     ENDSR
+     C/EJECT
+     C**=================================================================
+      **
+      **  #INIT       SUBROUTINE TO INITIALIZE STATIC FIELDS AND ACCESS STANDING
+      **              DATA CALLED ONCE AT START OF PROGRAM FROM MAIN LINE.
+     C**
+      **     CALLED BY PROGRAM
+      **     CALLS     *PSSR
+      **
+     C**=================================================================
+     C**                                                   *****************
+     C           #INIT     BEGSR                           ** #INIT BEGSR **
+     C**                                                   *****************
+     C**  PREPARE LDA:
+     C**
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'ER0510'  DBPGM
+     C**
+     C**  INITIALIZE INDICATORS:
+     C                     MOVE '0'       *IN
+     C**
+     C**  INITIALIZE WORK FIELDS:
+     C                     Z-ADD0         WWSTY1 130
+     C                     Z-ADD0         WWSTY2 130
+     C                     Z-ADD0         WWSTY3 130
+     C                     Z-ADD0         WWSTN1 130
+     C                     Z-ADD0         WWSTN2 130
+     C                     Z-ADD0         WWSTN3 130
+     C*
+     C                     Z-ADD0         WWTOY1 130
+     C                     Z-ADD0         WWTOY2 130
+     C                     Z-ADD0         WWTOY3 130
+     C                     Z-ADD0         WWTON1 130
+     C                     Z-ADD0         WWTON2 130
+     C                     Z-ADD0         WWTON3 130
+     C*
+     C                     Z-ADD0         TOTTRL
+     C                     Z-ADD0         WWCPT   50
+     C***********          Z-ADD0         WWBRCD  30                      ER_R10
+     C                     MOVE *BLANKS   WWBRCD  3                       ER_R10
+     C                     MOVE *BLANKS   WWCCY   3
+     C                     MOVE 'Y'       EMPTY
+     C                     MOVE 'J'       ZECODE
+     C*
+     C                     Z-ADD0         WWHRDC  40       Hash decimal
+     C           *LIKE     DEFN HRWN      WWHRWN           Hash integer
+     C           *LIKE     DEFN VAREAM    XXREAM
+     C**
+     C**  GET INSTALLATION CONTROL DATA RECORD 1:
+     C                     READ SDBANKL1                 80
+     C           *IN80     IFEQ '1'                        - B1
+     C                     MOVEL'011'     DBASE            *****************
+     C                     MOVEL'SDBANKL1'DBFILE           ** DB ERROR 11 **
+     C                     MOVEL' NONE '  DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C**                                                               *****
+     C***READ*FIRST RECORD ON FILE LF/FDINSTPP                            ER_R10
+     C***********          Z-ADD1         SS0170  10                      ER_R10
+     C***********SS0170    CHAINFDINSTLL             88                   ER_R10
+     C***********                                                         ER_R10
+     C***CHECK*LOGICAL DELETE FLAG BANK                                   ER_R10
+     C***********IDDLTF    IFNE ' '                                       ER_R10
+     C***********          MOVE '1'       *IN82                           ER_R10
+     C***********          END                                            ER_R10
+     C***********                                                         ER_R10
+     C***DEAL*WITH DATA BASE ERROR                                        ER_R10
+     C************IN82     IFEQ '1'                                       ER_R10
+     C***********          MOVEL'FDINSTLL'DBFILE                          ER_R10
+     C***********          MOVE *BLANKS   DBKEY                           ER_R10
+     C***********          MOVEL'012'     DBASE                           ER_R10
+     C***********          EXSR *PSSR                                     ER_R10
+     C***********          END                                            ER_R10
+     C                     CALL 'AODEALR0'                                ER_R10
+     C                     PARM '       ' @RTCD   7                       ER_R10
+     C                     PARM '*FIRST ' @OPTN   7                       ER_R10
+     C           SDDEAL    PARM SDDEAL    DSFDY                           ER_R10
+     C*  DEAL WITH DATA BASE ERROR                                        ER_R10
+     C           @RTCD     IFNE *BLANKS                                   ER_R10
+     C                     MOVEL'SDDEALPD'DBFILE                          ER_R10
+     C                     MOVE *BLANKS   DBKEY                           ER_R10
+     C                     MOVEL'012'     DBASE                           ER_R10
+     C                     EXSR *PSSR                                     ER_R10
+     C                     END                                            ER_R10
+     C*
+     C** CHAIN IN CURRENCY FILE TO SETUP OUTPUT FIELDS
+     C***********IDCYDL    CHAINSDCURRL1             88                   ER_R10
+     C           BNCYDL    CHAINSDCURRL1             88                   ER_R10
+     C                     Z-ADDA6SPRT    WWSRO
+     C                     Z-ADDA6NBDP    WWDPO
+     C                     MOVE A6MDIN    WWMDO
+     C*
+     C** RETRIEVE NEW A/C CODES
+     C********** *LOVAL    SETLLSDDEALY4                                                      CER001
+     C           *LOVAL    SETLLSDDLX1L0                                                      CER001
+     C**********           READ SDDEALY4                 80                                   CER001
+     C                     READ SDDLX1L0                 80                                   CER001
+     C           *IN80     IFEQ '1'                        - B1
+     C                     MOVEL'013'     DBASE            *****************
+     C**********           MOVEL'SDDEALY4'DBFILE           ** DB ERROR 13 **                  CER001
+     C                     MOVEL'SDDLX1L0'DBFILE           ** DB ERROR 13 **                  CER001
+     C                     MOVEL' NONE '  DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C** INITIALIZE 4 BRANCH/CURRENCY SUB-TOTAL
+     C                     Z-ADD0         SBTOY1 150
+     C                     Z-ADD0         SBTOY2 150
+     C                     Z-ADD0         SBTON1 150
+     C                     Z-ADD0         SBTON2 150
+     C*
+     C** INITIALIZE 4 BRANCH TOTAL FIELDS
+     C                     Z-ADD0         TOTY1  150
+     C                     Z-ADD0         TOTY2  150
+     C                     Z-ADD0         TOTN1  150
+     C                     Z-ADD0         TOTN2  150
+     C*
+     C                     ENDSR
+     C*================================================================
+      **
+      ** *PSSR  S/R
+      **
+     C*================================================================
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C********************************************************************
+     C**                                                                 *
+     C**  SCONV - Converts an amount from one currency to another.       *
+     C**                                                                 *
+     C**  Input Fields - WWAMTI 15/0 amount in input currency            *
+     C**                 WWSRI  13/8 spot rate for input currency        *
+     C**                 WWSRO  13/8 spot rate for output currency       *
+     C**                 WWDPI  1/0  no. of decimals for input currency  *
+     C**                 WWDPO  1/0  no. of decimals for output currency *
+     C**                 WWMDI  1    mult/div indicator for input curr.  *
+     C**                 WWMDO  1    mult/div indicator for output curr. *
+     C**                                                                 *
+     C**  Arrays       - POWER  powers of 10                             *
+     C**                                                                 *
+     C**  Output Fields- WWAMTO 15/0 output amount converted to new curr *
+     C**                                                                 *
+     C**  CALLS    - NONE                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           SCONV     BEGSR                           **  SCONV    **
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDWWAMTI    WWAMTI 150
+     C                     Z-ADD0         WWAMTO 150
+     C           *LIKE     DEFN A6SPRT    WWSRI
+     C           *LIKE     DEFN A6SPRT    WWSRO
+     C           *LIKE     DEFN A6NBDP    WWDPI
+     C           *LIKE     DEFN A6NBDP    WWDPO
+     C           *LIKE     DEFN A6MDIN    WWMDI
+     C           *LIKE     DEFN A6MDIN    WWMDO
+     C*
+     C           WWDPO     SUB  WWDPI     Z       10
+     C           Z         ADD  4         Z
+     C*
+     C           WWMDI     IFNE WWMDO
+     C*
+     C** MULT/DIV INDICATORS DIFFERENT
+     C           WWSRI     MULT WWSRO     WWRATE 159H
+     C                     ELSE
+     C*
+     C** MULT/DIV INDICATORS THE SAME
+     C           WWSRO     IFEQ 0
+     C                     GOTO SC0
+     C                     END
+     C           WWSRI     DIV  WWSRO     WWRATE    H
+     C                     END
+     C*
+     C           WWMDI     IFEQ 'D'
+     C           WWRATE    IFEQ 0
+     C                     GOTO SC0
+     C                     END
+     C           POWER,Z   DIV  WWRATE    WWRATE    H
+     C                     ELSE
+     C           POWER,Z   MULT WWRATE    WWRATE    H
+     C                     END
+     C*
+     C           WWAMTI    MULT WWRATE    WWAMTO    H
+     C*
+     C           SC0       ENDSR                           **  SC0      **
+     C********************************************************************
+     C**                                                                 *
+     C** ZSEDIT subroutine to insert a decimal point and sign into a     *
+     C** numeric field and to blank out leading zeros (optionaly         *
+     C** inserting commas).                                              *
+     C**     Input fields:   ZFLD15 15/0                                 *
+     C**                     ZDECS  1/0                                  *
+     C**                     ZECODE 1/  ('J', 'L' or blank)              *
+     C**                                                                 *
+     C**     Arrays:         ZS1    15/1/0                               *
+     C**                     ZS2    21/1/                                *
+     C**                                                                 *
+     C**     Output fields:  ZOUT21 21                                   *
+     C**                                                                 *
+     CSR         ZSEDIT    BEGSR                           **  ZSEDIT   *
+     C*
+     C* Define/Clear fields
+     C*
+     C                     Z-ADDZFLD15    ZFLD15 150
+     C                     Z-ADDZDECS     ZDECS   10
+     C                     MOVE ZECODE    ZECODE  1
+     C                     MOVE *BLANKS   ZOUT21 21
+     C*
+     C*       SET UP WORK FIELDS
+     C*
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+     C*
+     C                     Z-ADD15        Z1      20
+     C                     Z-ADD20        Z2      20
+     C*
+     C           15        SUB  ZDECS     ZINTS   20
+     C*
+     C* Check if numeric field is negative
+     C*
+     C           ZFLD15    IFLT *ZEROS
+     C                     MOVE '-'       ZS2,21
+     C                     Z-SUBZFLD15    ZFLD15
+     C                     END
+     C*
+     C                     Z-ADDZFLD15    WORK15
+     C*
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+     C*
+     C           ZDECS     CABEQ0         ZS10
+     C*
+     C*       SET UP DECIMALS
+     C*
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQZDECS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     ADD  1         ZCNT
+     C                     SUB  1         Z1
+     C                     END
+     C*
+     C*       PUT IN DECIMAL PLACE
+     C*
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+     C*
+     C           ZS10      TAG                             ** ZS10 TAG **
+     C*
+     C*       SET UP INTEGERS
+     C*
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z1
+     C                     SUB  1         Z2
+     C*
+     C* If edit code is 'J', insert a ',' before each group of three
+     C* digits - not if beginning of array reached.
+     C*
+     C           Z2        IFGT *ZEROS
+     C           ZECODE    ANDEQ'J'
+     C                     ADD  1         CNT3
+     C           CNT3      IFEQ 3
+     C                     MOVE ','       ZS2,Z2
+     C                     SUB  1         Z2
+     C                     Z-ADD*ZEROS    CNT3
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*       PUT IN LEADING BLANKS
+     C*
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'
+     C           ZS2,Z2    OREQ ' '
+     C           ZS2,Z2    OREQ ','
+     C                     MOVE ' '       ZS2,Z2
+     C                     ADD  1         Z2
+     C           Z2        CABEQ22        ZS20
+     C                     END
+     C*
+     C*       IF NO INTEGERS PUT IN LEADING ZERO
+     C*
+     C           ZS20      TAG                             ** ZS20 TAG **
+     C*
+     C           Z2        IFEQ 22
+     C                     SUB  2         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     ELSE
+     C*
+     C           ZS2,Z2    IFEQ '.'
+     C                     SUB  1         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     END
+     C                     END
+     C*
+     C*       SET UP OUTPUT FIELD
+     C*
+     C                     MOVEAZS2       ZOUT21
+     C*
+     CSR                   ENDSR
+      /EJECT
+     C********************************************************************
+**   POWER - POWERS OF 10 FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(c) Finastra International Limited 2005
+**  AR
+SECURITIES REVALUATION - NAP

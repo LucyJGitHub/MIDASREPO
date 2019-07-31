@@ -1,0 +1,293 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ RTMANAGE production run interface')
+     F********************************************************************
+     F*                                                                  *
+     F*    Midas Midas/Q MODULE                                      *
+     F*                                                                  *
+     F*    MQ561C - PRODUCTION RUN INTERFACE FOR SUBSET RTMANAGE         *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01419             Date 17May93               *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
+     F*      S01419 - CREATED FOR RTMANAGE SUBSET                        *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F* Paramter list :
+     F* ~~~~~~~~~~~~~                                                 User
+     F* Name    Type    Size  Description                            Chang
+     F* ~~~~    ~~~~    ~~~~  ~~~~~~~~~~~                            ~~~~~
+     F* O#SDBK  Struct   n/a  MIDAS/Q system definition block          NO
+     F* O#TCBK  Struct   n/a  MIDAS/Q task / process control block     NO
+     F* O#PIBK  Struct   n/a  MIDAS/Q process information block        NO
+     F* O#IEBK  Struct   n/a  MIDAS/Q information exchange block       NO
+     F* DSP05#  Struct   n/a  MIDAS/Q subset defintion record          NO
+     F* DSP08#  Struct   n/a  MIDAS/Q report defintion record          NO
+     F* O#DDBK  Struct   n/a  MIDAS/Q device defintion block           NO
+     F* O#OTBK  Struct   n/a  MIDAS/Q output tracking block            NO
+     F* @SO@DS  Struct   n/a  MIDAS/Q select / omit values             NO
+     F* @PRTI@  Struct   n/a  MIDAS/Q subtotal warning block           NO
+     F* TPR#RC  Char       1  Return code.                             YES
+     F* TPR#RN  Packed   7,0  Run number assigned to production run    NO
+     F* TPR#PG  Char      10  Name of report module to be called       NO
+     F* TPR#NM  Char      10  Name of report definition (user name)    NO
+     F* TPR#RD  Char      40  Description of report                    NO
+     F* TPR#IA  Char     200  Permanent report interface area          YES
+     F* TPR#UR  Struct   500  Temporary user run interface area        YES
+     F* TPR#IO  Packed  15,0  User count of I/O operations             YES
+     F* TPR#  Ary(5)*chr(75)  User description of production run       YES
+     F*
+     E                    CPY@    1   1 80
+     E                    TPR#        5 75
+     E                    OVR     1   2 35
+     E                    QRY     1   4 80
+     E                    OVR1    1   1 20
+     E                    OVR2    1   2 21
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I@PRTI@      DS                            604
+     I@SO@DS      DS                           6000
+     I*******************************************
+     I* SYSTEM DEFINITION BLOCK - PACKAGE VERSION
+     I*******************************************
+     IO#SDBK      DS                           1000
+     I*********************************************
+     I* SYSTEM TASK CONTROL BLOCK - PACKAGE VERSION
+     I*********************************************
+     IO#TCBK      DS                           1000
+     I****************************************************
+     I* SYSTEM PROGRAM INFORMATION BLOCK - PACKAGE VERSION
+     I****************************************************
+     IO#PIBK      DS                           1000
+     I*****************************************************
+     I* SYSTEM INFORMATION EXCHANGE BLOCK - PACKAGE VERSION
+     I*****************************************************
+     IO#IEBK      DS                           2000
+     I*
+     I* FULL SUBSET DEFINITION RECORD
+     I*
+     IDSP05#    E DSO#XP05
+     I*
+     IDSP08#    E DSO#XP08
+     I*
+     I**************************************************
+     I* SYSTEM DEVICE DEFINITION BLOCK - PACKAGE VERSION
+     I**************************************************
+     IO#DDBK      DS                        003 200
+     I*****************************************************
+     I* SYSTEM OUTPUT FILE TRACKING BLOCK - PACKAGE VERSION
+     I*****************************************************
+     IO#OTBK      DS                        030 100
+     ITPR#UR      DS                            500
+     ITPR#IA      DS                            200
+     IXXX#UR      DS
+     I                                        1   2 $$CGCD
+     I                                        3   6 $$DU01
+     I                                        7   9 $$DU02
+     I                                       10  12 $$DU03
+     I                                       13  18 $$NU04
+     I                                       19  20 $$DU05
+     I                                       21  24 $$DU06
+     I                                       25  26 $$DU07
+     I                                       27  36 $$DU08
+     I                                       37  46 $$DU09
+     I                                       47  52 $$NU10
+     I                                       53  62 $$DU04
+     I                                       63  72 $$DU10
+     I                                       73 102 $$DESC
+     I*                                                                   S01117
+     I**   QCAEXEC Command                                                S01117
+     I*                                                                   S01117
+     ICMD1        DS                                                      S01117
+     I                                        1  35 WOVR                  S01117
+     I                                       21  22 WCGCD                 S01117
+      **
+     IOPNQRY      DS                            295
+     I                                        1  80 LINE1
+     I                                       81 160 LINE2
+     I                                      161 240 LINE3
+     I                                      241 295 LINE4
+     I                                       60 293 STRING
+     I                                       26  27 WGRP
+     C********************************************************************
+     C* *ENTRY parameter list : Generated by $$PLIST command
+     C********************************************************************
+     C*
+     C* WARNING : Changing the contents of any of these parameters (with t
+     C*           the exception of TPR#RC,TPR#IA,TPR#UR,TPR#IO and TPR#) m
+     C*           cause unpredictable or undesirable results.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           O#SDBK           SYSTEM DEFINITI
+     C                     PARM           O#TCBK           TASK CONTROL
+     C                     PARM           O#PIBK           PROGRAM INFORMA
+     C                     PARM           O#IEBK           INFORMATION EXC
+     C                     PARM           DSP05#           SUBSET DEFINITI
+     C                     PARM           DSP08#           REPORT DEFINITI
+     C                     PARM           O#DDBK           DEVICE DEFINITI
+     C                     PARM           O#OTBK           OUTPUT TRACKING
+     C                     PARM           @SO@DS           SELECT/OMIT CRI
+     C                     PARM           @PRTI@           PRINT WARNINGS
+     C                     PARM           TPR#RC  1        RETURN CODE
+     C                     PARM           TPR#RN  70       RUN NUMBER
+     C                     PARM           TPR#PG 10        PGM TO BE CALLE
+     C                     PARM           TPR#NM 10        REPORT NAME
+     C                     PARM           TPR#RD 40        REPORT DESCRIPT
+     C                     PARM           TPR#IA           USER REPORT DEF
+     C                     PARM           TPR#UR           USER RUN TIME A
+     C                     PARM           TPR#IO 150       USER I/O COUNT
+     C                     PARM           TPR#             USER RUN DESCRI
+     C*
+     C                     MOVELTPR#UR    XXX#UR
+     C*
+     C**  OVRDBF to the specified Control Group                           S01117
+     C*
+     C                     MOVE OVR,1     WOVR                            S01117
+     C                     MOVEL$$CGCD    WCGCD                           S01117
+      **
+     C                     CALL 'QCMDEXC'                                 E20839
+     C                     PARM           WOVR
+     C                     PARM 35        LEN    155
+     C*
+     C                     MOVE OVR,2     WOVR                            S01117
+     C                     MOVEL$$CGCD    WCGCD                           S01117
+     C                     CALL 'QCMDEXC'                                 E20839
+     C                     PARM           WOVR
+     C                     PARM 35        LEN    155
+     C*
+      ** If selection is requested
+     C*
+     C           $$DU01    IFNE *BLANKS
+     C           $$DU01    ANDNE'NA'
+     C           $$DU02    ORNE *BLANKS
+     C           $$DU02    ANDNE'NA'
+     C           $$DU03    ORNE *BLANKS
+     C           $$DU03    ANDNE'NA'
+     C           $$NU04    ORNE *BLANKS
+     C           $$DU05    ORNE *BLANKS
+     C           $$DU05    ANDNE'NA'
+     C           $$DU06    ORNE *BLANKS
+     C           $$DU06    ANDNE'NA'
+     C           $$DU07    ORNE *BLANKS
+     C           $$DU07    ANDNE'NA'
+     C           $$DU08    ORNE *BLANKS
+     C           $$DU08    ANDNE'NA'
+     C           $$DU09    ORNE *BLANKS
+     C           $$DU09    ANDNE'NA'
+     C           $$NU10    ORNE *BLANKS
+      *
+      ** Set up open query file command
+     C                     MOVELQRY,1     LINE1
+     C                     MOVELQRY,2     LINE2
+     C                     MOVELQRY,3     LINE3
+     C                     MOVELQRY,4     LINE4
+     C                     MOVEL$$CGCD    WGRP
+      *
+     C                     CALL 'MQ561CC'
+     C                     PARM           TPR#UR           PGM TO BE CALLE
+     C                     PARM           SELECT234        PGM TO BE CALLE
+      *
+     C                     MOVELSELECT    STRING
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           OPNQRY
+     C                     PARM 295       LEN    155
+     C*
+     C                     END
+     C*
+     C                     CALL TPR#PG
+     C                     PARM           O#SDBK           SYSTEM DEFINITI
+     C                     PARM           O#TCBK           TASK CONTROL
+     C                     PARM           O#PIBK           PROGRAM INFORMA
+     C                     PARM           O#IEBK           INFORMATION EXC
+     C                     PARM           DSP05#           SUBSET DEFINITI
+     C                     PARM           DSP08#           REPORT DEFINITI
+     C                     PARM           O#DDBK           DEVICE DEFINITI
+     C                     PARM           O#OTBK           OUTPUT TRACKING
+     C                     PARM           @SO@DS           SELECT/OMIT CRI
+     C                     PARM           @PRTI@           PRINT WARNINGS
+     C                     PARM           TPR#RC           RETURN CODE
+     C                     PARM           TPR#RN           RUN NUMBER
+     C                     PARM           TPR#PG           PGM TO BE CALLE
+     C                     PARM           TPR#NM           REPORT NAME
+     C                     PARM           TPR#RD           REPORT DESCRIPT
+     C                     PARM           TPR#IA           USER REPORT DEF
+     C                     PARM           TPR#UR           USER RUN TIME A
+     C                     PARM           TPR#IO           USER I/O COUNT
+     C                     PARM           TPR#             USER RUN DESCRI
+      *
+      ** Delete the override
+      *
+     C                     MOVE OVR2,1    OVRX   21                       S01117
+     C                     CALL 'QCMDEXC'
+     C                     PARM           OVRX
+     C                     PARM 21        LEN    155
+      *
+     C                     MOVE OVR2,2    OVRX                            S01117
+     C                     CALL 'QCMDEXC'
+     C                     PARM           OVRX
+     C                     PARM 21        LEN    155
+      *
+      *
+      * If selection is requested
+      *
+     C           $$DU01    IFNE *BLANKS
+     C           $$DU01    ANDNE'NA'
+     C           $$DU02    ORNE *BLANKS
+     C           $$DU02    ANDNE'NA'
+     C           $$DU03    ORNE *BLANKS
+     C           $$DU03    ANDNE'NA'
+     C           $$NU04    ORNE *BLANKS
+     C           $$DU05    ORNE *BLANKS
+     C           $$DU05    ANDNE'NA'
+     C           $$DU06    ORNE *BLANKS
+     C           $$DU06    ANDNE'NA'
+     C           $$DU07    ORNE *BLANKS
+     C           $$DU07    ANDNE'NA'
+     C           $$DU08    ORNE *BLANKS
+     C           $$DU08    ANDNE'NA'
+     C           $$DU09    ORNE *BLANKS
+     C           $$DU09    ANDNE'NA'
+     C           $$NU10    ORNE *BLANKS
+      *
+      *
+      ** Close the open query file
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           OVR1
+     C                     PARM 20        LEN    155
+      *
+     C                     END
+     C*
+     C                     MOVE '1'       *INLR
+**  CPY@
+(c) Finastra International Limited 2001
+**  OVR - TO OVERRIDE MEMBER AND SHARE(*YES) FOR OPEN QUERY FILE
+OVRDBF GLHIBLPD MBR(XX) SHARE(*YES)
+OVRDBF GLAVBLL1 MBR(XX)
+**  QRY - TO SET UP OPEN QUERY FILE COMMAND FOR QCMDEXC
+OPNQRYF FILE((GLHIBLPD   XX   *ONLY)) OPTION(*INP) QRYSLT('
+ 
+ 
+                                                     ')
+**  OVR1 - TO CLOSE THE OPEN QUERY FILE
+CLOF OPNID(GLHIBLPD)
+**  OVR2 - TO DELETE THE OVERRIDE
+DLTOVR FILE(GLHIBLPD)
+DLTOVR FILE(GLAVBLL1)

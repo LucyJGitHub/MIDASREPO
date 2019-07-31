@@ -1,0 +1,85 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Call program to initialise files')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000066 - Call program to initialise files                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27786 *CREATE   Date 13May10              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG27786 - New utility to handle file initialisation.       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &ERRORFLAG)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CMDLEN) TYPE(*DEC) LEN(15 5) VALUE(200)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+             DCLF       FILE(SMINZZPD)
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SMC000066')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             IF         COND(&IZMODE *EQ &MODE) THEN(DO)
+                IF         COND(&IZCLRF *EQ 'Y') THEN(DO)
+                   CLRPFM     FILE(&IZFILE)
+                ENDDO
+                IF         COND(&IZCPGM *EQ 'Y') THEN(DO)
+                   CHGVAR     VAR(&CMD) VALUE('CALL' *BCAT &IZPROG)
+                   IF         COND(&IZPARM *NE ' ') THEN(DO)
+                      CHGVAR     VAR(&CMD) VALUE(&CMD *BCAT &IZPARM)
+                   ENDDO
+                   CALL       PGM(QCMDEXC) PARM(&CMD &CMDLEN)
+                   IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                      CHGVAR     VAR(&ERRORMSG) VALUE('Error in calling' +
+                                   *BCAT &IZPROG)
+                      CALL       PGM(UP008010) PARM('*WRITE' 'SMC000066' +
+                                   &ERRORMSG)
+                      CHGVAR     VAR(&ERRORFLAG) VALUE('Y')
+                      CHGJOB     SWS(XXXXXX00)
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             ENDPGM

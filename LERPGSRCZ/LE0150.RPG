@@ -1,0 +1,466 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Single Conf Reprint Request prompt')             *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Customer Lending Module
+     F*                                                                  *
+     F*       LE0150 - SINGLE CONFIRMATION REPRINT REQUEST               *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
+      *                 AR322732           Date 23Jul12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01392             Date 01Oct92               *
+      *                 E38770             Date 24Apr92               *
+     F*                      S01220      DATE 15MAR91                    *
+     F*                      LN0469      DATE 09JUL90                    *
+     F*                      LN0438      DATE 29JUN90                    *
+     F*                      S01194      DATE 12FEB90                    *
+     F*                      S01117      DATE 12FEB90                    *
+     F********************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  AR322732 - LEC0212A and APISERVER locks LTRIX file.          *
+      *           - Prevent LTRIX RRN 1 from being locked.            *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*       S01392 - JAPANESE SUB MODULE ENHANCEMENTS                  *S01392
+     F*       E38770 - PARAMETER RPARM SHOULD BE SET UP WITH A DUMMY.    *
+     F*                DO NOT COMIT UNTIL THE END AND ROLBK IF F3 / F12. *
+     F*       S01220 - AMENDED FOR STRATEGIC RISK MANAGEMENT             *S01220
+     F*                RELEASE 10 TO ALLOW THE INPUT OF A BOOK           *S01220
+     F*                CODE AGAINST A LOAN.                              *S01220
+     F*       LN0469 - ALLOW FOR THE PROCESSING OF ONE OR MORE REQUESTS  *
+     F*              - ALSO ADD VALIDATION FOR BRANCH                    *
+     F*       LN0438 - AMENDED TO RECEIVE PARAMETERS AS SENT BY RCF      *
+     F*       S01194 - NEW STANDING DATA CHANGES                         *
+     F*       S01117 - RELEASE 10 MULTIBRANCHING                         *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FLE0150FMCF  E                    WORKSTN
+     F***LTRIX***UF  F      40            DISK                                              AR322732
+     FLTRIX   O   F      45            DISK                      A                          AR322732
+     F                                              KCOMIT
+     F*CLOAN***IF**F*****400  7AI     2 DISK                              S01220
+     F*CLOAN***IF**F     436  7AI     2 DISK                       S01220 CLE011
+     FCLOAN   IF  F    1310  7AI     2 DISK                               CLE011
+     F*ABLE***IF  F      96 12AI     2 DISK                               S01194
+     F/SPACE 3
+     F* 01            LTRIX FILE - HEADER
+     F* 02                       - BLANK RECORD
+     F* 03            CLOAN FILE - LIVE 'A' DETAIL RECORD
+     F* 04                       - REVERSED 'A' DETAIL RECORD
+     F* 09            RACT = E (IN ENQUIRY MODE)                          LN0438
+     F* 10            ENABLE COMMAND 10                                   LN0438
+     F**11************INDICATOR SET BY CA10                         LN0438LN0469
+     F**12************INDICATOR SET BY CA12                         LN0438LN0469
+     F**13************INDICATOR SET BY CA03                         LN0438LN0469
+     F* 11            INDICATOR SET BY CA10 (DELETE)                      LN0469
+     F* 12            INDICATOR SET BY CA12 (PREVIOUS SCREEN)             LN0469
+     F* 13            INDICATOR SET BY CA03 (EXIT WITHOUT REQUEST)        LN0469
+     F* 14            INDICATOR SET BY CA06 (EXIT, LAST REQUEST)          LN0469
+     F*       20      INVALID LOAN NUMBER ENTERED
+     F*       21      ORDERED BRANCH NOT THE SAME AS LOAN BRANCH          LN0469
+     F*       45      RELEASE LTRIX FILE
+     F*       71      UPDATE LTRIX DETAIL
+     F*       72      UPDATE LTRIX HEADER
+     F*       76      CHAIN FAIL - LTRIX
+     F*          U7   SYSTEM ERROR
+     F*         U7+U8 DATABASE ERROR
+     E                    CPY@    1   1 80
+     E*********           ERRMSG  1   3 26               ERROR MESSAGES   LN0469
+     E                    ERRMSG  1   4 26               ERROR MESSAGES   LN0469
+     I*
+     I*    LOAN TRANSACTIONS INDEX FILE - HEADER RECORD.
+     I*
+     I*LTRIX***NS  01   1 CH                                                                AR322732
+     I**********                              1   1 RECI                                    AR322732
+     I**********                              2   2 RCDT                                    AR322732
+     I**********                              3   80LNRF                                    AR322732
+     I**********                          P   9  110NORE                                    AR322732
+     I**********                          P  12  140FLSZ                                    AR322732
+     I**********                          P  15  170RRLC                                    AR322732
+     I**********                          P  18  200RRNA                                    AR322732
+     I**********                          P  21  230RRLX                                    AR322732
+     I**********                          P  24  260RRXP                                    AR322732
+     I**********                          P  27  290NLNR                                    AR322732
+     I**********                          P  30  320NLAR                                    AR322732
+     I**********                             33  330STPI                                    AR322732
+     I**********                          P  38  400TNLU                                    AR322732
+     I**********                              1  40 LOT                                     AR322732
+     I*
+     I**   BLANK RECORD
+     I*
+     I********NS  02   1 C                                                                  AR322732
+     I**
+     I**   CATCHALL
+     I********NS                                                                            AR322732
+     I**
+     I**   CUSTOMER LENDING LOANS FILE - DETAIL RECORD
+     ICLOAN   NS  03   1 CD   8 CA
+     I       OR   04   1 CR   8 CA
+     I                                       18  20 BRCA                  LN0469
+     I                                    P 391 3930ORED
+     I                                    P 394 3960LCD
+     I**
+     I**   CATCHALL
+     I        NS
+     I**
+     I*****T*A*B L E   F I L E - INSTALLATION CONTROL DATA RECORD 1.      S01194
+     I**********                                                          S01194
+     I*ABLE***NS       2 C0   3 C1  12 C1                                 S01194
+     I*******AND      13 C0                                               S01194
+     I**********                              1   1 RECI                  S01194
+     I**********                              2   30RECT                  S01194
+     I**********                             12  130RCDE                  S01194
+     I**********                             14  66 TITL                  S01194
+     I**********                             67  67 DATF                  S01194
+     I**********                             68  700DFBR                  S01194
+     I**********                             74  74 MODI1                 S01194
+     I**********                             75  75 MODI2                 S01194
+     I**********                             76  76 MODI3                 S01194
+     I**********                          P  77  790RUND                  S01194
+     I**********                             80  86 RUNA                  S01194
+     I**********                             87  870SFLG                  S01194
+     I**********                          P  90  920LCD                   S01194
+     I**********                             93  93 CHTP                  S01194
+     I**********                          P  94  960TNLU                  S01194
+     I**********                                                          S01194
+     I*****CATCHALL                                                       S01194
+     I********NS                                                          S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I              BJRDNB                          RUND                  S01194
+     I** BANK DETAILS                                                     S01194
+     ISDMMOD    E DSSDMMODPD                                              LN0469
+     I** MODULE DETAILS                                                   LN0469
+     I*                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     I**
+     I** IN CASE OF DATABASE ERRORS
+     ILDA        UDS                            256
+     I***********                           134 138 DBFILE                S01117
+     I                                      134 141 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I                                      142 170 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I                                      181 183 DBASE                 S01117
+     I***********                           134 177 DBINF                 S01117
+     I                                      134 187 DBINF                 S01117
+     I**    PROGRAM STATUS DATA AREA
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      254 263 USRID
+     I/COPY ZSRSRC,ZTNLU1Z1                                               S01392
+     I**
+     C                     MOVEACPY@      BIS@   80
+     C*                                                                   LN0438
+     C** ENTRY PARAMETER LIST                                             LN0438
+     C*                                                                   LN0438
+     C           *ENTRY    PLIST                                          LN0438
+     C                     PARM           RSEQ    5                       LN0438
+     C                     PARM           RLEV    1                       LN0438
+     C                     PARM           RENT    3                       LN0438
+     C                     PARM           RPARM 100                       LN0438
+     C                     PARM           RACT    1                       LN0438
+     C                     PARM           RCMD    1                       LN0438
+     C*                                                                   LN0438
+     C*    ONE CYCLE ONLY - SET UP CONSTANTS
+     C*
+     C                     SETON                     LR
+     C                     MOVE ' '       BLANKS100
+     C                     MOVE BLANKS    DBINF
+     C                     MOVE 'LE0150'  DBPGM
+     C                     Z-ADD0         ZERO05  50
+     C                     MOVEL'ENTER'   MSG    13
+     C                     MOVE 'LOAN NO' MSG
+     C*
+     C**********           EXSR ZSYSTM                                    S01194
+     C***99*****           SETON                     U7U8  ***************S01194
+     C***99*****           MOVE '01'      DBASE            * DB ERROR 01 *S01194
+     C***99*****           MOVE 'TABLE'   DBFILE           ***************S01194
+     C***99*****           MOVE ZTABKY    DBKEY                           S01194
+     C***99*****           GOTO END                                       S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C**********           PARM '*MSG  '  @RTCD   7                 S01194LN0469
+     C                     PARM '*DBERR'  @RTCD   7                       LN0469
+     C                     PARM '*FIRST'  @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C***********@RTCD     IFNE *BLANKS                             S01194LN0469
+     C***********          MOVEL'SDBANKPD'DBFILE             *******S01194LN0469
+     C***********          MOVEL'01'      DBASE              * DBERRS01194LN0469
+     C***********          MOVEL'*FIRST'  DBOPTN  7          *******S01194LN0469
+     C***********          SETON                     U7U8           S01194LN0469
+     C***********          GOTO END                                 S01194LN0469
+     C***********          END                                      S01194LN0469
+     C                     CALL 'AOMMODR0'                                LN0469
+     C                     PARM '*DBERR'  @RTCD   7                       LN0469
+     C                     PARM '*FIRST'  @OPTN   7                       LN0469
+     C           SDMMOD    PARM SDMMOD    DSFDY                           LN0469
+     C*
+     C** IF ACTION CODE IS ENQUIRE/DELETE, DON'T VALIDATE                 LN0438
+     C*                                                                   LN0438
+     C           RACT      IFEQ 'E'                                       LN0438
+     C                     SETON                     09                   LN0438
+     C                     END                                            LN0438
+     C*                                                                   LN0438
+     C           RACT      IFEQ 'D'                                       LN0438
+     C                     SETON                     10                   LN0438
+     C                     END                                            LN0438
+     C*                                                                   LN0438
+     C*    LOOP TO VALIDATE LOAN NUMBERS ENTERED
+     C*
+     C           LOOP      TAG                             ***  LOOP   ***
+     C*
+     C   20                MOVE ERRMSG,X  ERMSG
+     C   21                MOVE ERRMSG,X  ERMSG                           LN0469
+     C**N20N21**           Z-ADD0         LNO                                          LN0469 CLE148
+     C  N20N21             MOVEL*BLANKS   LNO                                                 CLE148
+     C                     TIME           MTIME   60
+     C                     EXFMTLE0150F1
+     C***KC******          GOTO END                        END OF JOB     LN0438
+     C*                                                                   LN0438
+     C*  LEAVE PROGRAM IF F10, F12 OR F3 PRESSED                          LN0438
+     C*                                                                   LN0438
+     C   11                                                               LN0469
+     COR 12                                                               LN0469
+     C*OR*13*****          GOTO END                                 LN0438LN0469
+     COR 13                                                               LN0469
+     COR 14                GOTO END                        END OF JOB     LN0469
+     C*
+     C                     SETOF                     030420
+     C                     SETOF                     21                   LN0469
+     C                     MOVELLNO       CLKEY   7
+     C                     MOVE 'A'       CLKEY
+     C           CLKEY     CHAINCLOAN                20
+     C  N03N04             Z-ADD1         X       10 20
+     C   03      ORED      COMP RUND                 2020
+     C   03 20             Z-ADD2         X
+     C   04      LCD       COMP RUND                 2020
+     C   04 20             Z-ADD3         X
+     C**                                                                  LN0469
+     C**   CHECK LOAN BRANCH MATCHES BRANCH SELECTED VIA RCF              LN0469
+     C           BGMBIN    IFEQ 'Y'                                       LN0469
+     C           *IN03     IFEQ '1'                                       LN0469
+     C           *IN04     OREQ '1'                                       LN0469
+     C           RENT      IFNE 'ALL'                                     LN0469
+     C           RENT      ANDNEBRCA                                      LN0469
+     C                     SETON                     2121                 LN0469
+     C                     Z-ADD4         X                               LN0469
+     C                     GOTO LOOP                                      LN0469
+     C                     END                                            LN0469
+     C                     END                                            LN0469
+     C                     END                                            LN0469
+     C   20                GOTO LOOP                       ERROR
+     C**
+     C**
+     C**   CALCULATIONS TO UPDATE LTRIX INSERTION
+     C           UDLOG     TAG                             ***  UDLOG  ***
+     C**
+     C**
+     C*    GET LTRIX HEADER FOR NEXT RRN - IF FILE FULL SET ON U8
+     C                     Z-ADD1         LTRRN   50
+ 156 C*  LOCK HDR BY READ & DUMMY UPDATE
+     C*
+2156 C                     EXSR HDRCHN
+     C  N76                SETON                     45
+     C  N76                EXSR EXCPTN
+     C  N01                SETON                     U7U8
+     C  N01                MOVE '02'      DBASE            * DB ERROR 02 *
+     C  N01                MOVE LTRRN     DBKEY
+     C  N01                MOVE 'LTRIX'   DBFILE
+     C**NU8***** RRNA      COMP FLSZ                 U8                                     AR322732
+     C   U8                GOTO END
+     C*
+     C*    GET LTRIX DETAIL RECORD FOR INSERTION
+     C**********           Z-ADDRRNA      LTRRN                                             AR322732
+     C                     EXSR LTRCHN
+     C  N02                SETON                     U7U8
+     C  N02                MOVE '03'      DBASE            * DB ERROR 03 *
+     C  N02                MOVE 'LTRIX'   DBFILE
+     C  N02                MOVE LTRRN     DBKEY
+     C   U8                GOTO END
+     C**
+     C           LOGHED    TAG                             ***  LOGHED ***
+     C**  OBTAIN LAST TRANSACTION NUMBER
+     C                     EXSR ZTNLU1
+     C**
+     C**   INSERT LTRIX RECORD
+     C                     SETON                     71
+     C                     EXSR EXCPTN
+     C**
+     C**   GET LTRIX HEADER RECORD READY FOR UPDATE
+     C                     Z-ADD1         LTRRN
+     C                     EXSR LTRCHN
+     C                     SETON                     01                                     AR322732
+     C  N01                SETON                     U7U8
+     C  N01                MOVE '06'      DBASE            * DB ERROR 06 *
+     C  N01                MOVE 'LTRIX'   DBFILE
+     C  N01                MOVE LTRRN     DBKEY
+     C  N01                GOTO END
+     C**
+     C**
+     C*****INCREMENT*HEADER*FIELDS*************************************                     AR322732
+     C********** NORE      ADD  1         NORE                                              AR322732
+     C********** RRNA      ADD  1         RRNA                                              AR322732
+     C********** NLNR      ADD  1         NLNR                                              AR322732
+     C                     Z-ADD0         RRNA    50                                        AR322732
+     C                     Z-ADD0         PRI2    10                                        AR322732
+     C                     Z-ADD0         PRI3    10                                        AR322732
+     C                     Z-ADD0         PRI4    10                                        AR322732
+     C**
+     C**   UPDATE LTRIX HEADER RECORD
+     C**********           SETON                     72                                     AR322732
+     C**********           EXSR EXCPTN                                                      AR322732
+     C**
+     C*****END*COMMITMENT*CYCLE***                                        E38770
+     C***********          COMIT                                          E38770
+     C**
+     C*    PROMPT FOR ANOTHER LOAN NUMBER
+     C                     GOTO LOOP
+     C**
+     C**
+     C           END       TAG                             ***  END    ***
+     C*
+     C** SET RETURN COMMANDS TO INDICATE HOW PROGRAM WAS EXITED           LN0438
+     C*                                                                   LN0438
+     C           *IN13     IFEQ '1'                                       LN0438
+     C                     MOVE 'E'       RCMD                            LN0438
+     C                     ROLBK                                          E38770
+     C                     END                                            LN0438
+     C           *IN12     IFEQ '1'                                       LN0438
+     C                     MOVE 'F'       RCMD                            LN0438
+     C                     ROLBK                                          E38770
+     C                     END                                            LN0438
+     C           *IN11     IFEQ '1'                                       LN0438
+     C                     MOVE 'D'       RCMD                            LN0438
+     C                     END                                            LN0438
+     C                     MOVEL'XXX'     RPARM                           E38770
+     C                     COMIT                                          E38770
+     C*
+ 251 C********************************************************************
+ 252 C*
+ 253 C*    ROUTINE TO ACCESS LTRIX RELATIVE FILE HEADER RECORD AND
+ 242 C*    DUMMY UPDATE/LOCK TO PREVENT EXTERNAL UPDATE.
+ 254 C*
+3255 C           HDRCHN    BEGSR                           *** HDRCHN ***
+ 256 C*
+3257 C**********           SETOF                     0102                                   AR322732
+3259 C********** LTRRN     CHAINLTRIX                76                                     AR322732
+3248 C**N76*****           EXCPTRECLCK                                                      AR322732
+ 245 C*
+3257 C**N76*****           SETOF                     0102                                   AR322732
+3247 C**N76***** LTRRN     CHAINLTRIX                76                                     AR322732
+     C                     SETON                     01                                     AR322732
+     C                     SETOF                     76                                     AR322732
+ 260 C*
+3261 C                     ENDSR
+ 262 C*
+     C********************************************************************
+     C*
+     C           LTRCHN    BEGSR                           ***  LTRCHN ***
+     C                     SETOF                     0102
+     C********** LTRRN     CHAINLTRIX                76                                     AR322732
+     C                     SETON                     02                                     AR322732
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C           EXCPTN    BEGSR                           ***  EXCPTN ***
+     C                     EXCPT
+     C                     SETOF                     457172
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C**********                                                          S01194
+     C*****ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   S01194
+     C**********                                                          S01194
+     C*R******** ZSYSTM    BEGSR                           ***  ZSYSTM ***S01194
+     C**********                                                          S01194
+     C*****SET*UP KEY FOR INSTALLATION CONTROL RECORD.                    S01194
+     C*R********           MOVEL'01      'ZTABKY 12                       S01194
+     C*R********           MOVE '  10'    ZTABKY                          S01194
+     C**********                                                          S01194
+     C*R******** ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+     C*RN99***** RECI      COMP 'D'                  9999  ON, IS DELETED S01194
+     C**********                                                          S01194
+     C*****CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    S01194
+     C*R******** DATF      COMP 'M'                      98MMDDYY, 98 ON. S01194
+     C**********                                                          S01194
+     C*R********           ENDSR                                          S01194
+     C**********                                                          S01194
+     C**********                                                          S01194
+     C*****************************************************************
+     C*
+     C*   ZTNLU1 SR. - TO LOCK THE TRANSACTION NUMBER DATA AREA AND
+     C*                THEN UPDATE AND RELEASE THE DATA AREA.
+     C********************************************************************S01392
+     C/COPY ZSRSRC,ZTNLU1Z2                                               S01392
+     C********************************************************************S01392
+     O*
+     O*    LTRIX FILE OUTPUT
+     O*
+     O*    UPDATE FILE HEADER RECORD.
+     O*LTRIX***E        72                                                                  AR322732
+     O**********               NORE      11P                                                AR322732
+     O**********               RRNA      20P                                                AR322732
+     O**********               NLNR      29P                                                AR322732
+     O*
+     O*    INSERT DETAIL RECORD
+     O********E*       71                                                                   AR322732
+     OLTRIX   EADD     71                                                                   AR322732
+     O                                    2 'DL'
+     O                         LNO        8
+     O                                   17 '00000000I'
+     O                    04             17 'R'
+     O                                   27 'RNY00000N0'
+     O                         BRCA      34                               LN0469
+     O                         RRNA      37P
+     O                         NATN      40P
+     O                         PRI2      41                                                 AR322732
+     O                         PRI3      42                                                 AR322732
+     O                         PRI4      43                                                 AR322732
+     O*
+     O*    LTRIX FILE - RELEASE
+     O********E*       45                                                                   AR322732
+ 943 O*
+ 944 O*    DUMMY UPDATE FROM SUBRTN HDRCHN
+4945 O********E*               RECLCK                                                       AR322732
+4942 O**********               RECI                                                         AR322732
+ 943 O*
+     O*
+     O*
+     O*
+     O*
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ERRMSG - ERROR MESSAGES
+INVALID LOAN NUMBER
+LOAN NOT INSERTED TODAY
+LOAN NOT REVERSED TODAY
+INVALID LOAN BRANCH

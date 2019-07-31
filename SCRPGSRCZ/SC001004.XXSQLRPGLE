@@ -1,0 +1,585 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*S*D****RPGSQLBND*****************************************************                     MD024412
+/*X*IA*:*OVRDBF*FILE(FMTEMP)*TOFILE(QAFDMBR)************************:**                     MD024412
+/*X*IB*:*OVRDBF*FILE(PHTEMP)*TOFILE(UPFDATTPD)**********************:**                     MD024412
+      *****************************************************************
+      *                                                               *
+      *  Midas - System Control Module                                *
+      *                                                               *
+      *  SC001004 - Midas SC Permanent Remove/Add Processing          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. MD024412 *REDUNDANTDate 20Jan14               *
+      *  Prev Amend No. MD023340           Date 08Nov13               *
+      *                 MD022590A          Date 08Oct13               *
+      *                 MD022554           Date 02Oct13               *
+      *                 MD022411           Date 16Sep13               *
+      *                 MD019898           Date 05Apr12               *
+      *                 CCB022A *REWRITE   Date 06Aug12               *
+      *                 CCB022  *CREATE    Date 06Aug12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD024412 - Additional changes for COM processing             *
+      *  MD023340 - REIACD and REACRD are sharing LF ACCRACJ          *
+      *  MD022590A - Account movements enquiry missing members        *
+      *  MD022554 - CBC022001 issues on missing members               *
+      *  MD022411 - Missing members on adding file members            *
+      *  MD019898 - CBC022001 optimisation                            *
+      *           - Optimisation for *ADD when parameter is *FILE. It *
+      *             does not need to execute SRDTAMBR.                *
+      *  CCB022A - COB Restructure - COB File Manager                 *
+      *  CCB022 - COB Restructure - COB File Manager                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of Indicators.                                           *
+      *                                                               *
+      *       LR - End of Program                                     *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  RUNCL - Subroutine that calls QCMDEXC                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** CoB Optimisation Manager Log
+     F***SCCMLGPD  UF A E             DISK                                                 MD022590A
+     FSCCMLGPD  O    E             DISK    INFSR(*PSSR)                                    MD022590A
+ 
+      ** Temporary file to output DSPFD
+     FFMTEMP    UF A E             DISK    USROPN
+     FPHTEMP    UF A E             DISK    USROPN
+ 
+     D CMD             S            500
+     D Length          S             15P 5
+     D PMode           S              4
+     D PLFName         S             10
+     D PMbrName        S             10
+     D PType           S              1
+     D WMName          S             10
+     D WMMbr           S             10
+ 
+      ** Work Variables
+ 
+     D WPrevMbr        S             10
+     D WMbrTmp         S             10
+     D WTotNPFM        S              5  0
+     D WPrevNSCM       S              3  0
+     D WPrevBOF        S             10
+     D WPrevTxt        S             50
+     D WPrevShr        S              1
+     D WMbrShr         S              4
+     D WCmd2           S            500    varying
+     D WCmd2T          S            200    varying
+     D WCmd3           S            200    varying
+     D WCmdStat        S              5  0
+ 
+     D True            C                   CONST(*ON)                                       MD022554
+     D False           C                   CONST(*OFF)                                      MD022554
+     D PSSRDone        S              1N   INZ(False)                                       MD022554
+                                                                                            MD022554
+      ** Message Processing Variables                                                      MD022590A
+                                                                                           MD022590A
+     D MsgTotal        S              2P 0 INZ                                              MD022554
+     D MsgIdx          S              3U 0 INZ                                              MD022554
+     D****CmdError        S              1N   INZ                                 MD022554 MD022590A
+     D CmdInError      S              1N   INZ                                             MD022590A
+     D IgnoreError     S              1N   INZ                                             MD022590A
+     D WrtError        S              1N   INZ                                              MD022554
+                                                                                            MD022554
+     D MsgList         DS                  INZ QUALIFIED                                    MD022554
+     D                                     DIM(20)                                          MD022554
+     D  MsgID                         7A                                                    MD022554
+     D  MsgSev                        2S 0                                                 MD022590A
+                                                                                            MD022554
+     D***SCFMBRDS      E DS                  EXTNAME(SCFMBRTD)                              MD022554
+     D SCFMBRDS      E DS                  INZ EXTNAME(SCFMBRPD)                            MD022554
+      ** ADD/RMV LF Members List                                                           MD022590A
+ 
+      ** Main Processing
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    PMode
+     C                   PARM                    PLFName
+     C                   PARM                    PMbrName
+     C                   PARM                    PType
+ 
+     C                   EVAL      WMName = PLFName
+     C                   EVAL      WMMbr = PMbrName
+ 
+      ** Permanent REMOVE Processing
+ 
+     C                   IF        PMode = '*RMV'
+ 
+     C                   SELECT
+     C                   WHEN      PType = 'F'
+     C                   EVAL      MBPERM = 'Y'
+     C                   WHEN      PType = 'C'
+     C                   EVAL      MBPERM = 'N'
+     C                   ENDSL
+ 
+     C                   IF        WMMbr <> '*FILE'
+     C                   EVAL      CMD = 'DSPFD FILE(' + WMName +
+     C                             ') TYPE(*MBR) OUTPUT(*OUTFILE) +
+     C                             OUTFILE(QTEMP/FMTEMP) +
+     C                             OUTMBR(*FIRST *REPLACE)'
+     C                   EVAL      WrtError = False                                         MD022554
+     C                   EXSR      RUNCL
+     C                   OPEN      FMTEMP
+     C                   ENDIF
+ 
+     C                   IF        WMMbr = '*ALL'
+     C                   READ      FMTEMP
+     C                   DOW       NOT %EOF(FMTEMP)
+ 
+     C                   IF        MBNAME <> *BLANKS
+ 
+     C/EXEC SQL
+     C***+*select***into*:SCFMBRDS*from*SCFMBRTD***                                         MD022554
+     C+ select * into :SCFMBRDS from SCFMBRPD                                               MD022554
+     C+ where MBFILE = :MBFILE
+     C+   and MBNAME = :MBNAME
+     C+   and MBBOF  = :MBBOF
+     C+   and MBBOM  = :MBBOM
+     C+ fetch first row only
+     C/END-EXEC
+ 
+     C                   IF        SQLCODE <> 0
+     C                             AND SQLCODE <> 100
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   IF        SQLCODE = 100
+     C                   EVAL      CMD = 'DSPFD FILE(' + MBBOF +
+     C                             ') TYPE(*ATR) OUTPUT(*OUTFILE) +
+     C                             FILEATR(*PF) OUTFILE(QTEMP/PHTEMP)'
+     C                   EVAL      WrtError = False                                         MD022554
+     C                   EXSR      RUNCL
+     C                   IF        CMCODE <> 'CPF3092'                                      MD022554
+     C                   OPEN      PHTEMP
+     C                   READ      PHTEMP
+     C                   EVAL      MBNPFM = PHNOMB
+     C                   CLOSE     PHTEMP
+     C                   ENDIF                                                              MD022554
+ 
+     C/EXEC SQL
+     C***+*insert*into*SCFMBRTD***                                                          MD022554
+     C+ insert into SCFMBRPD                                                                MD022554
+     C+ values :SCFMBRDS
+     C/END-EXEC
+                                                                                           MD022590A
+     C                   IF        SQLCODE < 0                                             MD022590A
+     C                   EXSR      *PSSR                                                   MD022590A
+     C                   ENDIF                                                             MD022590A
+ 
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   READ      FMTEMP
+     C                   ENDDO
+     C                   EVAL      CMD = 'RMVM FILE(' + WMName +
+     C                             ') MBR(*ALL)'
+     C                   EVAL      WrtError = True                                          MD022554
+     C                   EXSR      RUNCL
+     C                   CLOSE     FMTEMP
+     C                   ENDIF
+ 
+     C                   IF        WMMbr = '*FILE'
+     C                   EVAL      CMD = 'RMVM FILE(' + WMName +
+     C                             ') MBR(' + WMName + ')'
+     C                   EVAL      WrtError = True                                          MD022554
+     C                   EXSR      RUNCL
+     C                   ENDIF
+ 
+      ** WMMbr is neither *ALL nor *FILE.
+      ** It must be an exact member name.
+ 
+     C                   IF        WMMbr <> '*ALL' AND WMMbr <> '*FILE'
+     C                   READ      FMTEMP
+ 
+     C                   DOW       NOT %EOF(FMTEMP)
+     C                   IF        WMMbr = MBNAME
+ 
+     C/EXEC SQL
+     C***+*select***into*:SCFMBRDS*from*SCFMBRTD***                                         MD022554
+     C+ select * into :SCFMBRDS from SCFMBRPD                                               MD022554
+     C+ where MBFILE = :MBFILE
+     C+   and MBNAME = :MBNAME
+     C+   and MBBOF  = :MBBOF
+     C+   and MBBOM  = :MBBOM
+     C+ fetch first row only
+     C/END-EXEC
+ 
+     C                   IF        SQLCODE <> 0
+     C                             AND SQLCODE <> 100
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   IF        SQLCODE = 100
+     C                   EVAL      CMD = 'DSPFD FILE(' + MBBOF +
+     C                             ') TYPE(*ATR) OUTPUT(*OUTFILE) +
+     C                             FILEATR(*PF) OUTFILE(QTEMP/PHTEMP)'
+     C                   EVAL      WrtError = False                                         MD022554
+     C                   EXSR      RUNCL
+     C                   OPEN      PHTEMP
+     C                   READ      PHTEMP
+     C                   EVAL      MBNPFM = PHNOMB
+     C                   CLOSE     PHTEMP
+     C                   IF        MBNAME <> *BLANKS
+ 
+     C/EXEC SQL
+     C***+*insert*into*SCFMBRTD***                                                          MD022554
+     C+ insert into SCFMBRPD                                                                MD022554
+     C+ values :SCFMBRDS
+     C/END-EXEC
+                                                                                           MD022590A
+     C                   IF        SQLCODE < 0                                             MD022590A
+     C                   EXSR      *PSSR                                                   MD022590A
+     C                   ENDIF                                                             MD022590A
+ 
+     C                   ENDIF
+     C                   EVAL      WMbrTmp = MBNAME
+ 
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   READ      FMTEMP
+     C                   ENDDO
+ 
+     C                   EVAL      CMD = 'RMVM FILE(' + WMName +
+     C                             ') MBR(' + WMbrTmp + ')'
+     C                   EVAL      WrtError = True                                          MD022554
+     C                   EXSR      RUNCL
+ 
+     C                   CLOSE     FMTEMP
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** Permanent ADD Processing
+ 
+     C                   IF        PMode = '*ADD'
+ 
+     C                   SELECT
+ 
+      ** Member = *FILE
+ 
+     C                   WHEN      WMMbr = '*FILE'
+ 
+     C                   EVAL      CMD = 'DSPFD FILE(' + WMName +
+     C                             ') TYPE(*MBR) OUTPUT(*OUTFILE) +
+     C                             OUTFILE(QTEMP/FMTEMP) +
+     C                             OUTMBR(*FIRST *REPLACE)'
+     C                   EVAL      WrtError = False                                         MD022554
+     C                   EXSR      RUNCL
+     C                   OPEN      FMTEMP
+     C                   READ      FMTEMP
+ 
+     C                   IF        MBRSHR = 'N' OR MBRSHR = *BLANKS
+     C                   EVAL      WMbrShr = '*NO'
+     C                   ELSE
+     C                   EVAL      WMbrShr = '*YES'
+     C                   ENDIF
+ 
+     C                   EVAL      MBMTXT = %TRIM(%XLATE('''':' ':MBMTXT))
+     C                   EVAL      CMD = 'ADDLFM FILE(' + WMName +
+     C                             ') MBR(' + WMName + ') TEXT(''' +
+     C                             MBMTXT + ''') SHARE(' + WMbrShr + ')'
+     C                   CLOSE     FMTEMP
+     C                   EVAL      WrtError = True                                          MD022554
+     C                   EXSR      RUNCL
+ 
+      ** Member = *ALL or Member
+ 
+     C                   OTHER
+ 
+     C                   EVAL      %LEN(WCmd2) = 0
+ 
+ 
+     C/EXEC SQL
+     C+ declare MCursor insensitive scroll cursor for
+     C***+*select***from*SCFMBRTD***                                                        MD022554
+     C+ select * from SCFMBRPD                                                              MD022554
+     C+ where MBFILE = :WMName
+     C+ order by MBFILE, MBNAME
+     C/END-EXEC
+ 
+     C/EXEC SQL
+     C+ open MCursor
+     C/END-EXEC
+ 
+     C/EXEC SQL
+     C+ fetch next from MCursor into :SCFMBRDS
+     C/END-EXEC
+ 
+     C                   EVAL      WPrevMbr = MBNAME
+     C                   EVAL      WPrevBOF = MBBOF
+ 
+     C                   DOW       MBFILE = WMName AND SQLCODE = 0
+ 
+     C                   IF        (PType = 'C' AND MBPERM = 'N') OR
+     C                             (PType = 'F' AND MBPERM = 'Y')
+ 
+     C                   IF        MBNOMB = 1
+ 
+      ** Build the string for members with multiple data members
+      ** before executing.
+ 
+     C                   IF        WPrevBOF <> MBBOF
+     C                             OR WPrevMbr <> MBNAME
+     C                   EVAL      WCmd2T = ' (' + WPrevBOF + '(' + WCmd3 + '))'
+     C                   EVAL      WCmd2 = WCmd2 + WCmd2T
+     C                   EVAL      WCmd3 = *BLANKS
+     C                   EVAL      %LEN(WCmd3) = 0
+     C                   ENDIF
+ 
+     C                   EVAL      WCmd3 = WCmd3 + ' ' + MBBOM
+     C
+      ** If member has changed, write the pending build string.
+ 
+     C                   IF        WPrevMbr <> MBNAME
+     C                   IF        WPrevNSCM = WTotNPFM AND
+     C                             WPrevNSCM <> 0
+     C                   EVAL      WCmd2 = '*ALL'
+     C                   ENDIF
+     C                   EXSR      SRDTAMBR
+     C                   EVAL      WTotNPFM = 0
+     C                   ENDIF
+ 
+ 
+     C                   EVAL      WPrevMbr = MBNAME
+     C                   EVAL      WPrevBOF = MBBOF
+     C                   EVAL      WPrevTxt = MBMTXT
+     C                   EVAL      WPrevShr = MBRSHR
+     C                   EVAL      WTotNPFM = WTotNPFM + MBNPFM
+     C                   EVAL      WPrevNSCM = MBNSCM
+ 
+     C                   ENDIF
+ 
+ 
+     C                   IF        MBNOMB > 1
+ 
+      ** Build the string for members with multiple data members
+      ** before executing.
+ 
+     C                   IF        WPrevBOF <> MBBOF
+     C                             OR WPrevMbr <> MBNAME
+     C                   EVAL      WCmd2T = ' (' + WPrevBOF + '(' + WCmd3 + '))'
+     C                   EVAL      WCmd2 = WCmd2 + WCmd2T
+     C                   EVAL      WCmd3 = *BLANKS
+     C                   EVAL      %LEN(WCmd3) = 0
+     C                   ENDIF
+ 
+     C                   EVAL      WCmd3 = WCmd3 + ' ' + MBBOM
+ 
+      ** If member has changed, write the pending build string.
+ 
+     C                   IF        WPrevMbr <> MBNAME
+     C                   IF        WPrevNSCM = WTotNPFM AND
+     C                             WPrevNSCM <> 0
+     C                   EVAL      WCmd2 = '*ALL'
+     C                   ENDIF
+     C                   EXSR      SRDTAMBR
+     C                   EVAL      WTotNPFM = 0
+     C                   ENDIF
+ 
+     C                   EVAL      WPrevMbr = MBNAME
+     C                   EVAL      WPrevBOF = MBBOF
+     C                   EVAL      WPrevTxt = MBMTXT
+     C                   EVAL      WPrevShr = MBRSHR
+ 
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C/EXEC SQL
+     C+ fetch next from MCursor into :SCFMBRDS
+     C/END-EXEC
+ 
+     C                   ENDDO
+ 
+     C***/EXEC*SQL***                                                                       MD022411
+     C***+*delete*from*SCFMBRTD***                                                          MD022411
+     C***+*where*MBFILE*=*:MBFILE***                                                        MD022411
+     C***+*with*nc***                                                                       MD022411
+     C***/END-EXEC***                                                                       MD022411
+ 
+     C**********         ENDSL                                                              MD019898
+ 
+     C                   IF        SQLCODE = 100 AND MBNOMB > 0                             MD022554
+     C                   EVAL      WCmd2T = ' (' + WPrevBOF + '(' + WCmd3 + '))'
+     C                   EVAL      WCmd2 = WCmd2 + WCmd2T
+     C                   IF        WPrevNSCM = WTotNPFM AND
+     C                             WPrevNSCM <> 0
+     C                   EVAL      WCmd2 = '*ALL'
+     C                   ENDIF
+     C                   EXSR      SRDTAMBR
+     C                   ENDIF                                                              MD022554
+ 
+     C***/EXEC*SQL***                                                              MD022411 MD022554
+     C***+*delete*from*SCFMBRTD***                                                 MD022411 MD022554
+     C***+*where*MBFILE*=*:MBFILE***                                               MD022411 MD022554
+     C***+*with*nc***                                                              MD022411 MD022554
+     C***/END-EXEC***                                                              MD022411 MD022554
+      *****************************************************************            MD022411 MD022554
+     C/EXEC SQL
+     C+ close MCursor
+     C/END-EXEC
+                                                                                            MD019898
+     C                   ENDSL                                                              MD019898
+ 
+     C                   ENDIF
+ 
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RUNCL - This subroutine calls QCMDEXC with CMD as its        *
+      *          parameter.                                           *
+      *  Called by : MAIN                                             *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+     C     RUNCL         BEGSR
+     C**********         CALL(E)   'QCMDEXC'                                                MD022554
+     C**********         PARM      CMD           CMD                                        MD022554
+     C**********         PARM      500           Length                                     MD022554
+      *****************************************************************                     MD022554
+     C**********         IF        %ERROR                                                   MD022554
+     C**********         EVAL      CMCODE = %STATUS                                         MD022554
+     C**********         EVAL      CMLOG = CMD                                              MD022554
+     C**********         WRITE     SCCMLGD0                                                 MD022554
+     C**********         ENDIF                                                              MD022554
+                                                                                            MD022554
+      ** Initialise variables                                                               MD022554
+                                                                                            MD022554
+     C                   EVAL      Length = %LEN(%TRIM(CMD))                                MD022554
+     C                   EVAL      MsgIdx = 1                                               MD022554
+     C**********         EVAL      CmdError = False                               MD022554 MD022590A
+     C                   EVAL      IgnoreError = False                                     MD022590A
+     C                   EVAL      CmdInError = False                                      MD022590A
+                                                                                            MD022554
+     C                   CLEAR                   SCCMLGD0                                   MD022554
+                                                                                            MD022554
+      ** Execute command and retrieve messages                                              MD022554
+                                                                                            MD022554
+     C                   CALL      'CBC022004'                                              MD022554
+     C                   PARM                    CMD                                        MD022554
+     C                   PARM                    Length                                     MD022554
+     C                   PARM                    MsgList                                    MD022554
+     C                   PARM                    MsgTotal                                   MD022554
+                                                                                            MD022554
+     C                   EVAL      CMLOG = CMD                                              MD022554
+                                                                                            MD022554
+     C**********         IF        MsgTotal > 0                                   MD022554 MD022590A
+     C**********         EVAL      CmdError = True                                MD022554 MD022590A
+     C**********         EVAL      WrtError = True                                MD022554 MD022590A
+     C**********         ENDIF                                                    MD022554 MD022590A
+                                                                                            MD022554
+      ** Set error flag for messages with severity above 10                                MD022590A
+      ** Ignore if the errors are expected/valid                                           MD022590A
+                                                                                           MD022590A
+     C                   DOW       MsgIdx <= MsgTotal                                       MD022554
+                                                                                            MD022554
+     C                   IF        MsgList(MsgIdx).MsgSev > 10                             MD022590A
+     C                   IF        MsgList(MsgIdx).MsgID = 'CPF5812'                        MD022554
+     C                             OR MsgList(MsgIdx).MsgID = 'CPF7301'                     MD022554
+     C                             OR MsgList(MsgIdx).MsgID = 'CPF7303'                     MD022554
+     C                             OR MsgList(MsgIdx).MsgID = 'CPF320A'                     MD022554
+     C                             OR MsgList(MsgIdx).MsgID = 'CPF3020'                     MD022554
+     C                             OR MsgList(MsgIdx).MsgID = 'CPF3092'                     MD022554
+     C                             OR MsgList(MsgIdx).MsgID = 'CPF3213'                     MD023340
+     C**********         EVAL      CmdError = False                               MD022554 MD022590A
+     C                   EVAL      IgnoreError = True                                      MD022590A
+     C                   ELSE                                                              MD022590A
+     C                   EVAL      CmdInError = True                                       MD022590A
+     C                   ENDIF                                                             MD022590A
+     C                   ENDIF                                                              MD022554
+                                                                                            MD022554
+     C                   EVAL      MsgIdx = MsgIdx + 1                                      MD022554
+     C                   ENDDO                                                              MD022554
+                                                                                            MD022554
+     C**********         EVAL      CMCODE = MsgList(1).MsgID                      MD022554 MD022590A
+     C**********         IF        MsgTotal > 1                                   MD022554 MD022590A
+     C**********         EVAL      CMCODE = MsgList(2).MsgID                      MD022554 MD022590A
+     C                   IF        IgnoreError                                             MD022590A
+     C                   EVAL      CmdInError = False                                      MD022590A
+     C                   ENDIF                                                              MD022554
+                                                                                            MD022554
+      ** Write to logs file for traceability                                                MD022554
+      ** Set error flag to fail if appropriate                                              MD022554
+                                                                                            MD022554
+     C                   EVAL      CMCODE = MsgList(1).MsgID                                MD022554
+                                                                                            MD022554
+     C                   IF        WrtError                                                 MD022554
+     C                             OR CmdInError                                           MD022590A
+     C                   WRITE     SCCMLGD0                                                 MD022554
+     C                   ENDIF                                                              MD022554
+                                                                                            MD022554
+     C**********         IF        CmdError                                       MD022554 MD022590A
+     C                   IF        CmdInError                                              MD022590A
+     C                   EXSR      *PSSR                                                    MD022554
+     C                   ENDIF                                                              MD022554
+                                                                                            MD022554
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRDTAMBR - This subroutine is specifically for ADDLFM with   *
+      *             data members. CMD2 is a string with a collection  *
+      *             of all data members with the format:              *
+      *     '(PFNAME1 (PFMBR1)) (PFNAMEx (PFMBRx))'                   *
+      *  Called by : MAIN                                             *
+      *  Calls     : RUNCL                                            *
+      *                                                               *
+      *****************************************************************
+     C     SRDTAMBR      BEGSR
+ 
+ 
+     C                   IF        WPrevShr = 'N' OR WPrevShr = *BLANKS
+     C                   EVAL      WMbrShr = '*NO'
+     C                   ELSE
+     C                   EVAL      WMbrShr = '*YES'
+     C                   ENDIF
+ 
+     C                   EVAL      WPrevTxt = %TRIM(%XLATE('''':' ':WPrevTxt))
+     C                   EVAL      CMD = 'ADDLFM FILE(' + WMName +
+     C                             ') MBR(' + WPrevMbr + ') DTAMBRS(' +
+     C                             WCmd2 + ') TEXT(''' + WPrevTxt +
+     C                             ''') SHARE(' + WMbrShr + ')'
+     C                   EVAL      WrtError = True                                          MD022554
+     C                   EXSR      RUNCL
+     C                   EVAL      WCmd2 = *BLANKS
+     C                   EVAL      %LEN(WCmd2) = 0
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C     *PSSR         BEGSR
+ 
+     C                   IF        Not PSSRDone                                             MD022554
+     C                   DUMP
+     C                   EVAL      PSSRDone = True                                          MD022554
+     C                   ENDIF                                                              MD022554
+ 
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+     C                   ENDSR
+      *****************************************************************

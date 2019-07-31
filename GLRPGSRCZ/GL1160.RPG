@@ -1,0 +1,596 @@
+0001 H        1                                                           S01194
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Amount accrual reporting extract')
+0001 H***********                                                         S01194
+0002 F********************************************************************
+0003 F**                                                                 *
+     F*  Midas - General Ledger Module
+0005 F**                                                                 *
+0006 F**   GL1160 - AMOUNT ACCRUAL REPORTING EXTRACT                     *
+0007 F**                                                                 *
+      *  (c) Finastra International Limited 2001                      *
+0009 F**                                                                 *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL064             Date 10Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL003             Date 18Dec96               *
+      *                 BHF206             Date 09/03/89              *
+0010 F**                  S01194      DATE 09/03/89                      *
+0010 F**                  S01117      DATE 09/03/89                      *
+     F**                                                                 *
+0012 F********************************************************************
+     F**                                                                 *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL064 - Associated Customer / Cost Centre Validation         *
+      *           Changes (Recompile)                                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F**   CGL003 - ADDITION OF FIELDS FOR ACCRUAL FREQUENCY ON
+     F**            AMOUNT ACCRUALS
+     F**   BHF206 - DON'T COMPARE TOTALS IF ALL BRANCH REPORT            *
+     F**   S01194 - NEW STANDING DATA                                    *
+     F**   S01117 - MULTIBRANCHING                                       *
+0011 F**                                                                 *
+0012 F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 F/SPACE                                                              GL1160
+0014 F*AMACC***IP**F*****128  1AI     1 DISK                     GL1160   CGL003
+0014 F***AMACC** IP  F     134  1AI     1 DISK                                         CGL003 CGL029
+     FAMACC   IP  F     154  1AI     1 DISK                                                   CGL029
+0015 F*ABLE***IF* F      96 12AI     2 DISK                               S01194
+0016 F*AMAEXA**O***F******80            DISK                     GL1160   GL1160
+0016 FAMAEXA  O   F      86            DISK                               CGL003
+0016 F*AMAEXD**O***F******80            DISK                     GL1160   CGL003
+0016 F***AMAEXD* O   F      86            DISK                                         CGL003 CGL029
+     FAMAEXD  O   F      96            DISK                                                   CGL029
+0016 F*AMAEXZ**O***F******80            DISK                     GL1160   CGL003
+0016 FAMAEXZ  O   F      86            DISK                               CGL003
+0017 F*L1160P1O*  F     132     OF     PRINTER                   S01124   S01117
+0017 FGL1160AUO   F     132     OF     PRINTER                            S01117
+0018 F/SPACE                                                              GL1160
+0019 F* 01            AMACC FILE HEADER RECORD                            GL1160
+0020 F* 02            AMACC FILE DETAIL RECORD - LIVE                     GL1160
+0021 F* 03            AMACC FILE DETAIL RECORD - MATURED                  GL1160
+0022 F* 04            AMACC FILE TRAILER RECORD                           GL1160
+0023 F* 05            AMACC FILE CATCHALL                                 GL1160
+0024 F**06*******     TABLE FILE DETAIL RECORD - ICDR1                    S01194
+0025 F**07*******     TABLE FILE CATCHALL                                 S01194
+0026 F*       10      ZERO AMOUNT TO BE AMORTISED                         GL1160
+0027 F*       15      WORK INDICATOR                                      GL1160
+0028 F*       16      WORK INDICATOR                                      GL1160
+0029 F*       19      NOT FIRST CYCLE CALCULATIONS                        GL1160
+0030 F********99*     DATABASE ERROR IN TABLE FILE CHAIN                  S01194
+0030 F*       99      ACCESS FAIL                                         S01194
+0031 F*        NU7 U8 FILE CONTROLS OUT OF BALANCE                        GL1160
+0032 F*         U7 U8 DATABASE ERROR                                      GL1160
+     F*       46      ACCRUAL FREQUENCY SWITCHABLE FEATURE PRESENT        CGL003
+0033 F/SPACE                                                              GL1160
+     E                    CPY@    1   1 80
+0034 I* AMOUNT ACCRUAL FILE HEADER                                        GL1160
+0035 IAMACC   NS  01   1 CA                                               GL1160
+0036 I* LIVE DETAIL OR MATURED RECORD                                     GL1160
+0037 I        NS  02   1 CD                                               GL1160
+0038 I       OR   03   1 CM                                               GL1160
+0039 I                                        1   1 RECI                  GL1160
+0040 I                                        2   70REFN                  GL1160
+0041 I                                        8   8 REFT                  GL1160
+0042 I                                    P  41  470AMNT                  GL1160
+0043 I                                       48  50 CCY                   GL1160
+0044 I                                    P  51  530SDAT                  GL1160
+0045 I                                    P  54  560MDAT                  GL1160
+0046 I**********                             57  600DRAC                               GL1160 CGL029
+     I                                       57  600DRACQQ                                    CGL029
+0047 I**********                             61  660DRCN                  GL1160              CSD027
+0047 I                                       61  66 DRCN                  GL1160              CSD027
+0048 I**********                             67  700CRAC                               GL1160 CGL029
+     I                                       67  700CRACQQ                                    CGL029
+0049 I**********                             71  760CRCN                  GL1160              CSD027
+0049 I                                       71  76 CRCN                  GL1160              CSD027
+0050 I                                       77 106 NARR                  GL1160
+0051 I                                    P 107 1130AMPD                  GL1160
+0052 I                                      114 1150DRSQ                  GL1160
+0053 I                                      116 1170CRSQ                  GL1160
+     I                                      122 125 PRFC                  S01117
+     I                                      126 128 BRCA                  S01117
+     I                                      129 129 AMAPFQ                CGL003
+     I                                      130 1310AMFDAY                CGL003
+     I                                    P 132 1340AMAPDA                CGL003
+     I                                      135 1440DRAC                                      CGL029
+     I                                      145 1540CRAC                                      CGL029
+0054 I* TRAILER RECORD                                                    GL1160
+0055 I        NS  04   1 CZ                                               GL1160
+0056 I                                        1   1 RECI                  GL1160
+0057 I                                    P  35  370NR                    GL1160
+0058 I                                    P  50  570WN                    GL1160
+0059 I                                    P  90  910DC                    GL1160
+0060 I* CATCHALL                                                          GL1160
+0061 I        NS  05                                                      GL1160
+0062 I*                                                                   GL1160
+0063 I**TABLE*FILE*-*ICDR1                                                S01194
+0064 I*ABLE***NS* 06   1 CD   2 C0   3 C1                                 S01194
+0065 I*******AND*     12 C1  13 C0                                        S01194
+0066 I***********                             1   1 RECI                  S01194
+0067 I***********                            14  66 TITL                  S01194
+0068 I***********                            67  67 DATF                  S01194
+0069 I***********                            80  86 RUNA                  S01194
+0070 I**CATCHALL*                                                         S01194
+0071 I********NS* 07                                                      S01194
+0072 I*                                                                   GL1160
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+0073 I*                                                                   GL1160
+0074 ILDA        UDS                            256                       GL1160
+0075 I***********                           134 138 DBFILE                S01194
+0076 I***********                           139 167 DBKEY                 S01194
+0077 I***********                           168 175 DBPGM                 S01194
+0078 I***********                           176 1770DBASE                 S01194
+0075 I                                      134 141 DBFILE                S01194
+0076 I                                      142 170 DBKEY                 S01194
+0077 I                                      171 180 DBPGM                 S01194
+0078 I                                      181 1830DBASE                 S01194
+     I*                                                                   S01194
+     IRUNDT       DS                                                      S01194
+     I** DATA AREA RUNDAT                                                 S01194
+     I                                        1   7 RUNA                  S01194
+     I                                    P   8  100RUND                  S01194
+     I                                       11  11 SSF                   S01194
+     I                                       12  12 DATF                  S01194
+     I                                       13  13 MBIN                  S01194
+     I*                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** BANK DETAILS                                                     S01194
+     ISDBRCH    E DSSDBRCHPD                                              S01194
+     I              A8BRNM                          BRNM                  S01194
+     I** BRANCH DETAILS                                                   S01194
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I/EJECT                                                              S01194
+     C*                                                                   S01117
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           RENT    3                       S01117
+     C*                                                                   CGL003
+     C           *LIKE     DEFN AMAPFQ    WAPFQ                           CGL003
+     C           *LIKE     DEFN AMFDAY    WFDAY                           CGL003
+     C           *LIKE     DEFN AMAPDA    WAPDA                           CGL003
+     C*                                                                   CGL003
+     C                     CLEARWAPFQ                                     CGL003
+     C                     CLEARWFDAY                                     CGL003
+     C                     CLEARWAPDA                                     CGL003
+     C*                                                                   S01117
+0079 C/SPACE                                                              GL1160
+0080 C   19                GOTO ENDFC                                     GL1160
+     C                     MOVEACPY@      BIS@   80
+0081 C*                                                                   GL1160
+0082 C* FIRST CYCLE CALCULATIONS                                          GL1160
+0083 C*                                                                   GL1160
+0084 C                     SETON                     19                   GL1160
+0085 C*                                                                   GL1160
+0086 C**ACCESS*ICDR1,*DATABASE*ERROR*IF*NOT*FOUND                         S01194
+0087 C*                                                                   GL1160
+0088 C***********          EXSR ZSYSTM                     ****   1   ****S01194
+0089 C**N99******          GOTO ENDFC                                     S01194
+0090 C***********          Z-ADD1         DBASE                           S01194
+0091 C***********          MOVE 'GL1160'  DBPGM                           S01194
+0092 C***********          MOVE ZTABKY    DBKEY                           S01194
+0093 C***********          MOVE 'TABLE'   DBFILE                          S01194
+0094 C***********          GOTO END                                       S01194
+     C*                                                                   S01194
+     C** OBTAIN RUN DATE FROM RUNDAT                                      S01194
+     C*                                                                   S01194
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01194
+     C                     IN   RUNDT                                     S01194
+0085 C*                                                                   S01194
+0086 C* ACCESS BANK DETAILS, DATABASE ERROR IF RETURN CODE NOT BLANK      S01194
+0087 C*                                                                   S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     MOVEL'SDBANKPD'DBFILE             *************S01194
+     C                     MOVEL'001'     DBASE              * DBERR 001 *S01194
+     C                     MOVEL@OPTN     DBOPTN  7          *************S01194
+     C                     MOVEL@OPTN     DBKEY                           S01194
+     C                     MOVEL'GL1160'  DBPGM                           S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     SETON                     99                   S01194
+     C                     GOTO END                                       S01194
+     C                     END                                            S01194
+     C*                                                                   S01117
+     C           RENT      IFNE 'ALL'                                     S01117
+     C**********           CALL 'AOBRCHR0'                                             S01117 CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANK    @RTCD   7                       S01117
+     C                     PARM '*KEY    '@OPTN   7                       S01117
+     C                     PARM           RENT                            S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                        S01117 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C                     ELSE                                           S01117
+     C                     MOVE *BLANKS   BRNM                            S01117
+     C                     END                                            S01117
+0096 C*                                                                   GL1160
+     C* CHECK TO SEE IF ACCRUAL FREQUENCY SWITCHABLE FEATURE IS ON        CGL003
+     C*                                                                   CGL003
+     C                     CALL 'AOSARDR0'                                CGL003
+     C                     PARM *BLANKS   #RTCD   7                       CGL003
+     C                     PARM '*VERIFY' #OPTN   7                       CGL003
+     C                     PARM 'CGL003'  WSARD   6                       CGL003
+     C*                                                                   CGL003
+     C           #RTCD     IFNE *BLANK                                    CGL003
+     C           #RTCD     ANDNE'*NRF'                                    CGL003
+     C                     MOVEL'AOSARDR0'DBFILE                          CGL003
+     C                     Z-ADD3         DBASE            ************** CGL003
+     C                     MOVELWSARD     DBKEY            * DB ERROR 03* CGL003
+     C                     MOVE #OPTN     DBOPTN  7        ************** CGL003
+     C                     SETON                     U7U8LR               CGL003
+     C                     EXSR *PSSR                                     CGL003
+     C                     ENDIF                                          CGL003
+     C*                                                                   CGL003
+     C           #RTCD     IFEQ *BLANK                                    CGL003
+     C                     MOVE 'Y'       CGL003  1                       CGL003
+     C                     MOVE *ON       *IN46                           CGL003
+     C                     ENDIF                                          CGL003
+     C*                                                                   CGL003
+0097 C           ENDFC     TAG                             ** ENDFC TAG **GL1160
+0098 C*                                                                   GL1160
+0099 C* ALL PROCESSING IS SKIPPED IF RECORD NOT ACTIVE,HEADER OR TRAILER  GL1160
+0100 C*                                                                   GL1160
+0101 C   01                                                               GL1160
+0102 COR 04                                                               GL1160
+0103 COR 05                GOTO END                                       GL1160
+     C*                                                                   S01117
+     C* IF RECORD ON FILE NOT THE SAME AS REQUESTED BRANCH, SKIP IT       S01117
+     C*                                                                   S01117
+     C           RENT      IFNE BRCA                                      S01117
+     C           RENT      ANDNE'ALL'                                     S01117
+     C                     GOTO END                                       S01117
+     C                     END                                            S01117
+0104 C*                                                                   GL1160
+0105 C* MAIN PROCESSING                                                   GL1160
+0106 C*                                                                   GL1160
+0107 C                     ADD  1         COUNT   50                      GL1160
+0108 C*                                                                   GL1160
+0109 C* PREPARE FOR AND EXECUTE #TOTALLING                                GL1160
+0110 C*                                                                   GL1160
+0111 C                     Z-ADD0         ZZAMT                           GL1160
+0112 C                     MOVE AMNT      ZZAMT                           GL1160
+0113 C                     EXSR GLZADD                                    GL1160
+0114 C*                                                                   GL1160
+0115 C* ONLY LIVE RECORDS TO CARRY ON THROUGH MAIN PROCESSING             GL1160
+0116 C*                                                                   GL1160
+0117 C   03                GOTO END                                       GL1160
+0118 C*                                                                   GL1160
+0119 C* FIND AMOUNT TO BE AMORTISED                                       GL1160
+0120 C*                                                                   GL1160
+0121 C           AMNT      SUB  AMPD      AMRT   130     10               GL1160
+0122 C*                                                                   GL1160
+0123 C* IF NO AMOUNT TO BE AMORTISED, DO NOT OUTPUT OR COUNT RECORDS O/P  GL1160
+0124 C*                                                                   GL1160
+0125 C  N10                ADD  2         EXCNT   50                      GL1160
+0126 C*                                                                   GL1160
+0127 C*                                                                   GL1160
+0128 C           END       TAG                             ** END TAG **  GL1160
+0129 C*                                                                   GL1160
+0130 C   99                SETON                     LRU7U8               GL1160
+      *                                                                   S01117
+0131 C*                                                                   GL1160
+0132 C* COMPARE TOTALS FOR FILE CONTROL REPORT                            GL1160
+0133 C*                                                                   GL1160
+     CLR         RENT      IFEQ 'ALL'                                     BHF206
+0134 CLR         ZZTOTI    COMP WN                   1515                 GL1160
+0135 CLRN15      ZZTOTD    COMP DC                   1515                 GL1160
+0136 C*                                                                   GL1160
+0137 CLRN15      COUNT     COMP NR                   1515                 GL1160
+0138 CLR 15                SETON                     U8                   GL1160
+     CLR                   END                                            BHF206
+0139 C*                                                                   GL1160
+0140 C* RETRIEVE TIME FOR FILE CONTROL REPORT                             GL1160
+0141 C*                                                                   GL1160
+0143 C********************************************************************GL1160
+0144 C/SPACE                                                              GL1160
+0169 C********************************************************************S01194
+     C**                                                                  S01194
+     C**   *PSSR  SR TO DUMP PROGRAM WHEN DATABASE ERROR OCCURS           S01194
+     C**                                                                  S01194
+     C           *PSSR     BEGSR                                          S01194
+     C           @RUN      IFEQ *BLANKS                                   S01194
+     C                     MOVE 'Y'       @RUN    1                       S01194
+     C                     DUMP                                           S01194
+     C                     END                                            S01194
+     C                     ENDSR                                          S01194
+     C**                                                                  S01194
+0145 C********************************************************************GL1160
+0146 C**                                                                  GL1160
+0147 C*****ZSYSTM*SR.*TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   S01194
+0148 C**                                                                  GL1160
+0149 C***********ZSYSTM    BEGSR                           *** ZSYSTM *** S01194
+0150 C**                                                                  GL1160
+0151 C*****SET*UP KEY FOR INSTALLATION CONTROL RECORD.                    S01194
+0152 C***********          MOVEL'01      'ZTABKY 12                       S01194
+0153 C***********          MOVE '  10'    ZTABKY                          S01194
+0154 C**                                                                  GL1160
+0155 C***********ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+0156 C**N99******RECI      COMP 'D'                  9999  ON, IS DELETED S01194
+0157 C**                                                                  GL1160
+0158 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    GL1160
+0159 C***********DATF      COMP 'M'                      98MMDDYY, 98 ON  S01194
+0160 C**                                                                  GL1160
+0161 C***********          ENDSR                                          S01194
+0162 C**                                                                  GL1160
+0163 C**                                                                  GL1160
+0164 C********************************************************************GL1160
+0165 C/SPACE                                                              GL1160
+0166 C********************************************************************GL1160
+0167 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)  GL1160
+0168 C*   IND '99' IS SET BY AN OVERFLOW ERROR                            GL1160
+0169 C*                                                                   GL1160
+0170 CSR         GLZADD    BEGSR                           *** GLZADD ****GL1160
+0171 C*                                                                   GL1160
+0172 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT  GL1160
+0173 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS GL1160
+0174 C*                                                                   GL1160
+0175 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS                       GL1160
+0176 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD  GL1160
+0177 CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD  GL1160
+0178 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW                  GL1160
+0179 C*                                                                   GL1160
+0180 CSR                   EXSR GLZSUM                                    GL1160
+0181 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *GL1160
+0182 C*                                                                   GL1160
+0183 C********************************************************************GL1160
+0184 C/SPACE                                                              GL1160
+0185 C********************************************************************GL1160
+0186 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -            GL1160
+0187 C*                        GLZADD, GLZSUB, GLZCMP.                    GL1160
+0188 C*          PARAMETERS PASSED -                                      GL1160
+0189 C*                     I/P ZZAMTI ZZAMTD                             GL1160
+0190 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.       GL1160
+0191 C*                                                                   GL1160
+0192 CSR         GLZSUM    BEGSR                           *** GLZSUM ****GL1160
+0193 C*                                                                   GL1160
+0194 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI  GL1160
+0195 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD  GL1160
+0196 CSR                   SETOF                     919293               GL1160
+0197 CSR                   SETOF                     949599               GL1160
+0198 C*                                                                   GL1160
+0199 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG                      GL1160
+0200 CSR         ZZAMTI    COMP 0                      9293               GL1160
+0201 CSR 93      ZZAMTD    COMP 0                      9293               GL1160
+0202 CSR 93                GOTO ZZSEND                     ZERO BYPASS    GL1160
+0203 C*                                                                   GL1160
+0204 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.                       GL1160
+0205 CSR         ZZTOTI    COMP 0                      9193               GL1160
+0206 CSR 93      ZZTOTD    COMP 0                      9193               GL1160
+0207 C*                                                                   GL1160
+0208 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.                           GL1160
+0209 CSR 93                Z-ADDZZAMTI    ZZTOTI                          GL1160
+0210 CSR 93                Z-ADDZZAMTD    ZZTOTD                          GL1160
+0211 CSR 93                GOTO ZZSEND                     ZERO BYPASS    GL1160
+0212 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.                        GL1160
+0213 CSR 91N92                                                            GL1160
+0214 CORN91 92             GOTO ZZOFPS                                    GL1160
+0215 C*                                                                   GL1160
+0216 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40                      GL1160
+0217 CSR         ZZWK2     COMP 999                  93    '93' = CARRY   GL1160
+0218 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.GL1160
+0219 C*                                                                   GL1160
+0220 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VEGL1160
+0221 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VEGL1160
+0222 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3                           GL1160
+0223 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3                           GL1160
+0224 C*                                                                   GL1160
+0225 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED    GL1160
+0226 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS. GL1160
+0227 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE      GL1160
+0228 CSRN99                Z-ADDZZWK2     ZZTOTD                          GL1160
+0229 CSRN99                Z-ADDZZWK3     ZZTOTI                          GL1160
+0230 C*                                                                   GL1160
+0231 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT. GL1160
+0232 CSR 99                Z-ADD0         ZZAMT  153                      GL1160
+0233 CSR                   GOTO ZZSEND                                    GL1160
+0234 C*                                                                   GL1160
+0235 C* THE 'SIGNS' ARE DIFFERENT                                         GL1160
+0236 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**GL1160
+0237 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT            GL1160
+0238 C*                                                                   GL1160
+0239 CSR 92                Z-SUBZZAMTI    ZZAMTI 150                      GL1160
+0240 CSR 92                Z-SUBZZAMTD    ZZAMTD  30                      GL1160
+0241 C*                                                                   GL1160
+0242 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.           GL1160
+0243 C*                                                                   GL1160
+0244 CSR 91                Z-SUBZZTOTI    ZZTOTI                          GL1160
+0245 CSR 91                Z-SUBZZTOTD    ZZTOTD                          GL1160
+0246 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.                            GL1160
+0247 C*                                                                   GL1160
+0248 CSR         ZZTOTI    COMP ZZAMTI               93  95               GL1160
+0249 CSR 95      ZZTOTD    COMP ZZAMTD               93  95               GL1160
+0250 C*                                                                   GL1160
+0251 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.                                   GL1160
+0252 CSR 95                Z-ADD0         ZZTOTI                          GL1160
+0253 CSR 95                Z-ADD0         ZZTOTD                          GL1160
+0254 CSR 95                GOTO ZZSEND                                    GL1160
+0255 C*                                                                   GL1160
+0256 C* IF ZZTOT GT. ZZAMT.                                               GL1160
+0257 CSR 93      ZZAMTD    COMP ZZTOTD               94                   GL1160
+0258 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI                          GL1160
+0259 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2                           GL1160
+0260 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI                          GL1160
+0261 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD                          GL1160
+0262 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD                          GL1160
+0263 C*                                                                   GL1160
+0264 C*                                                                   GL1160
+0265 C* IF ZZAMT GT. ZZTOT.                                               GL1160
+0266 CSRN93      ZZTOTD    COMP ZZAMTD               94                   GL1160
+0267 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150                      GL1160
+0268 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2                           GL1160
+0269 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI                          GL1160
+0270 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI                          GL1160
+0271 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD                          GL1160
+0272 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD                          GL1160
+0273 C*                                                                   GL1160
+0274 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE          GL1160
+0275 CSR                   SETOF                     94                   GL1160
+0276 CSR 93 91                                                            GL1160
+0277 CORN93 92             SETON                     94                   GL1160
+0278 CSR 94                Z-SUBZZTOTI    ZZTOTI                          GL1160
+0279 CSR 94                Z-SUBZZTOTD    ZZTOTD                          GL1160
+0280 C**                                                                  GL1160
+0281 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.            GL1160
+0282 CSR 92                Z-SUBZZAMTI    ZZAMTI                          GL1160
+0283 CSR 92                Z-SUBZZAMTD    ZZAMTD                          GL1160
+0284 CSR         ZZSEND    TAG                             ** ZZSEND TAG *GL1160
+0285 C**                                                                  GL1160
+0286 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.           GL1160
+0287 CSR                   SETOF                     96                   GL1160
+0288 CSR         ZZTOTD    COMP 0                        91               GL1160
+0289 CSR 91      ZZTOTI    COMP 0                      96                 GL1160
+0290 CSR 96                MOVE '.000-'   ZZNEGD  5                       GL1160
+0291 CSR                   ENDSR                             ** ENDSR **  GL1160
+0292 C********************************************************************GL1160
+0293 C/SPACE                                                              GL1160
+0294 OAMAEXA  H        1P                                                 GL1160
+0295 O                                    1 'A'                           GL1160
+0296 OAMAEXD  D        02N10                                              GL1160
+0297 O                                    1 'D'                           GL1160
+0298 O                         CCY        4                               GL1160
+0299 O**********               DRAC       8                                            GL1160 CGL029
+     O                         DRACQQ     8                                                   CGL029
+0300 O                         DRCN      14                               GL1160
+0301 O                         REFN      20                               GL1160
+0302 O                         REFT      21                               GL1160
+0303 O                         NARR      51                               GL1160
+0304 O                         SDAT      54P                              GL1160
+0305 O                         MDAT      57P                              GL1160
+0306 O                         AMRT      64P                              GL1160
+0307 O                                   65 '0'                           GL1160
+0308 O                         DRSQ      67                               GL1160
+     O                         BRCA      76                               S01117
+     O                         PRFC      80                               S01117
+     O                 46      AMAPFQ    81                               CGL003
+     O                 46      AMFDAY    83                               CGL003
+     O                 46      AMAPDA    86P                              CGL003
+     O                N46      WAPFQ     81                               CGL003
+     O                N46      WFDAY     83                               CGL003
+     O                N46      WAPDA     86P                              CGL003
+0299 O                         DRAC      96                                                   CGL029
+0309 OAMAEXD  D        02N10                                              GL1160
+0310 O                                    1 'D'                           GL1160
+0311 O                         CCY        4                               GL1160
+0312 O**********               CRAC       8                                            GL1160 CGL029
+     O                         CRACQQ     8                                                   CGL029
+0313 O                         CRCN      14                               GL1160
+0314 O                         REFN      20                               GL1160
+0315 O                         REFT      21                               GL1160
+0316 O                         NARR      51                               GL1160
+0317 O                         SDAT      54P                              GL1160
+0318 O                         MDAT      57P                              GL1160
+0319 O                         AMRT      64P                              GL1160
+0320 O                                   65 '1'                           GL1160
+0321 O                         CRSQ      67                               GL1160
+     O                         BRCA      76                               S01117
+     O                         PRFC      80                               S01117
+     O                 46      AMAPFQ    81                               CGL003
+     O                 46      AMFDAY    83                               CGL003
+     O                 46      AMAPDA    86P                              CGL003
+     O                N46      WAPFQ     81                               CGL003
+     O                N46      WFDAY     83                               CGL003
+     O                N46      WAPDA     86P                              CGL003
+     O                         CRAC      96                                                   CGL029
+0322 O*                                                                   GL1160
+0323 OAMAEXZ  T        LR                                                 GL1160
+0324 O                                    1 'Z'                           GL1160
+0325 O                         EXCNT      4P                              GL1160
+0326 O*                                                                   GL1160
+0327 O*L1160P1T* 203   LR                                       S01124    S01117
+0327 OGL1160AUT  203   LR                                                 S01117
+0328 O***********                        22 'REFERENCE GL1160'            S01117
+0328 O                                   24 'REFERENCE GL1160AU'          S01117
+0329 O***********              TITL      89                               S01194
+0454 O                         BJURPT    89                               S01194
+0330 O                                  104 'DATE'                        GL1160
+0331 O                         RUNA     112                               GL1160
+0332 O                                  122 'PAGE'                        GL1160
+0333 O                         PAGE     126                               GL1160
+0334 O        T  1     LR                                                 GL1160
+0335 O                                   57 'AMOUNT ACCRUAL'              GL1160
+0336 O                                   75 'REPORTING EXTRACT'           GL1160
+0342 O                                   91 'RUN CONTROLS'                S01117
+0338 O        T  1  20 LR                                                 GL1160
+0339 O                                   58 '----------------'            GL1160
+0340 O                                   75 '-----------------'           GL1160
+     O        T  2     LR                                                 S01117
+     O                                   09 'Branch:'                     S01117
+     O                         RENT      14                               S01117
+     O                         BRNM      46                               S01117
+0341 O        T  2     LR                                                 GL1160
+0342 O***********                        20 'RUN CONTROLS -'              S01117
+0343 O                                   64 '-----------'                 GL1160
+0344 O                                   72 'PROGRAM'                     GL1160
+0345 O                                   84 '-----------'                 GL1160
+0346 O                                  102 '---------'                   GL1160
+0347 O                                  115 'FILE TRAILER'                GL1160
+0348 O                                  124 '--------'                    GL1160
+0349 O        T  1     LR                                                 GL1160
+0350 O                                   59 'NUMBER'                      GL1160
+0351 O                                   84 'VALUE'                       GL1160
+0352 O                                   99 'NUMBER'                      GL1160
+0353 O                                  124 'VALUE'                       GL1160
+0354 O        T  2     LR                                                 GL1160
+0355 O                                   18 'S/AMACC'                     GL1160
+0356 O        T  2     LR                                                 GL1160
+0357 O                                   32 'NUMBER OF ACTIVE RECORDS'    GL1160
+0358 O                                   40 'ON FILE'                     GL1160
+0359 O                         COUNT 3   59                               GL1160
+0360 O                         ZZTOTIZ   80                               GL1160
+0361 O                         ZZTOTD    83                               GL1160
+0362 O                         NR    3   99                               GL1160
+0363 O                         WN    Z  120                               GL1160
+0364 O                         DC       123                               GL1160
+0365 O                    U8NU7         130 '***'                         GL1160
+0366 O        T  2     LR                                                 GL1160
+0367 O                                   18 'S/AMAEX'                     GL1160
+0368 O        T  2  45 LR                                                 GL1160
+0369 O                                   25 'NUMBER OF RECORDS'           GL1160
+0370 O                                   41 'WRITTEN TO FILE'             GL1160
+0371 O                         EXCNT 3   59                               GL1160
+0372 O*                                                                   GL1160
+0373 O        T  3     U8NU7 LR                                           GL1160
+0374 O                                  100 '*** DIFFERENCE ***'          GL1160
+0375 O        T  1     U8 U7 LR                                           GL1160
+0376 O                                   42 '*** REFERENCE'               GL1160
+0377 O***********              DBPGM     51                               S01194
+0377 O                         DBPGM     53                               S01194
+0378 O                                   71 '-DATABASE ERROR AT'          GL1160
+0379 O***********              DBASE     74                               S01194
+0379 O                         DBASE     75                               S01194
+0380 O        T  1     U8 U7 LR                                           GL1160
+0381 O                                   37 'FILE NAME'                   GL1160
+0382 O***********              DBFILE    43                               S01194
+0383 O***********                        48 'KEY'                         S01194
+0384 O***********              DBKEY     78                               S01194
+0382 O                         DBFILE    46                               S01194
+0383 O                                   51 'KEY'                         S01194
+0384 O                         DBKEY     81                               S01194
+0385 O********T** 50   LR                                                 S01117
+0386 O***********                        77 '*** END OF REPORT ***'       S01117
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

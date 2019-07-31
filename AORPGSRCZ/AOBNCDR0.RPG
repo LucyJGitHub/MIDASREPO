@@ -1,0 +1,276 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Bank Codes access object')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas ACCESS OBJECTS                                         *
+     F*                                                               *
+     F*  AOBNCDR0 - READ ACCESS TO BRANCH CODES FILE                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 091241             Date 17Jul95               *
+      *                 CRT001  *CREATE    Date 28Feb95               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  091241 - Bank Code field extended from 7A to 11A.            *
+     F*  CRT001 - Created for Retail Teller System                    *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*      F U N C T I O N  O F   I N D I C A T O R S
+     F*
+     F*       01      OFF 1ST TIME ROUND
+     F*       90      FILE ERROR
+     F*       91      FILE OPEN ERROR
+     F*       92      ERROR ON FILE CLOSE
+     F*       93      FILE EMPTY
+     F*       94      EOF
+     F*       95      NO RECORD FOUND
+     F*       96      PARAMETER ERROR
+     F*       97      IF NO SELECTION
+     F*       98      ERROR ON PROGRAM CALL
+     F*       LR      LAST RECORD
+     F*
+     F********************************************************************
+      /EJECT
+     F*FSTART
+      ************************************************************
+     FSDBNCDL1IF  E           K        DISK                           UC
+      * IN  - @BNCDL1
+      ************************************************************
+      /EJECT
+     E*ESTART
+      ************************************************************
+     E                    @MG     1   1 50
+      ************************************************************
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright     arr
+     E********************************************************************
+      /EJECT
+     I*ISTART
+      ************************************************************
+     IP@MGDA      DS
+     I                                        1  50 @MG
+      *
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     ID@FMT     E DSSDBNCDPD
+      * @BNCDPD -
+      *
+     I*                                      65  65 P@DMMY
+     IP@FMT     E DSDSFDY
+     I* External Data structure to hold the outgoing record format
+     I* of the file.
+      *
+      *
+     IP@RBCD      DS
+      * Key slicing data structure (for Record Selection)
+     I                                        1   1 W@SL01
+     I                                        2   2 W@SL02
+     I                                        3   3 W@SL03
+     I                                        4   4 W@SL04
+     I                                        5   5 W@SL05
+     I                                        6   6 W@SL06
+     I                                        7   7 W@SL07
+     I                                        8   8 W@SL08                091241
+     I                                        9   9 W@SL09                091241
+     I                                       10  10 W@SL10                091241
+     I                                       11  11 W@SL11                091241
+      ************************************************************
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+      ************************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C*********************PARM           P@RBCD  7        I:Key field    091241
+     C                     PARM           P@RBCD 11        I:Key field    091241
+     C                     PARM           P@FMT            O:Format
+      *****************************************************
+      *
+      * Access Option *SAME input
+      *
+     C           P@OPTN    IFEQ '*SAME  '
+     C           *IN01     COMP '0'                      91
+     C                     GOTO T@SKIP
+     C                     END
+      *
+      *MAIN
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     939495 ¦ error
+     C                     SETOF                     969798 ¦ indicators
+      *
+      * First call - open file :
+      *
+     C           *IN01     IFEQ '0'                        IF 1 FIRST TIME
+     C                     SETON                     01      Set ind.
+     C                     OPEN SDBNCDL1               91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     END                             FI 1
+      *
+      * Last call - close file and terminate program :
+      *
+     C           P@OPTN    IFEQ '*FREE  '                  IF 2 FREE PGM
+     C                     CLOSESDBNCDL1               92    Close file
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C                     SETON                     LR      Set ind.
+     C                     END                             FI 2
+      *
+      * Caller requests first record :
+      *
+     C           P@OPTN    IFEQ '*FIRST '                  IF 3 FIRST REC
+     C           *LOVAL    SETLL@BNCDL1              9390    Set file
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*NEXT  ' P@OPTN             Force *Next
+     C                     END                             FI 3
+      *
+      * Caller requests next record :
+      *
+     C           P@OPTN    IFEQ '*NEXT  '                  IF 4 NEXT REC
+     C                     READ @BNCDL1                9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 4
+      *
+      * Caller requests last record :
+      *
+     C           P@OPTN    IFEQ '*LAST  '                  IF 5 LAST REC
+     C           *HIVAL    SETGT@BNCDL1                90    Set file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*PREV  ' P@OPTN             Force *Prev
+     C                     END                             FI 5
+      *
+      * Caller requests previous record :
+      *
+     C           P@OPTN    IFEQ '*PREV  '                  IF 6 PREV.REC
+     C                     READP@BNCDL1                9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 6
+      *
+      * Caller requests record indicated by key :
+      *
+     C           P@OPTN    IFEQ '*KEY   '                  IF 7 KEYED ACC
+     C           P@OPTN    OREQ '*VERIFY'                    OR
+     C           W@SL01    IFEQ '?'
+     C           W@SL02    OREQ '?'
+     C           W@SL03    OREQ '?'
+     C           W@SL04    OREQ '?'
+     C           W@SL05    OREQ '?'
+     C           W@SL06    OREQ '?'
+     C           W@SL07    OREQ '?'
+     C           W@SL08    OREQ '?'                                       091241
+     C           W@SL09    OREQ '?'                                       091241
+     C           W@SL10    OREQ '?'                                       091241
+     C           W@SL11    OREQ '?'                                       091241
+     C                     CALL 'SD0590S'              98    <SELECT>
+     C                     PARM *BLANK    P@RTC2  7          B:Return code
+     C                     PARM *BLANK    P@RBCD             B:Key
+     C           P@RTC2    COMP *BLANK               97      No selection
+     C           *IN97     CABEQ'1'       T@SKIP             No selection
+     C           *IN98     CABEQ'1'       T@SKIP             Program error
+     C                     END                             FI 8
+     C           P@RBCD    CHAIN@BNCDL1              9590    Get record
+     C           *IN95     CABEQ'1'       T@SKIP             No record fnd
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 7
+      *
+     C           P@OPTN    IFNE '*KEY   '                  IF 8 NOT KEYED
+     C           P@OPTN    ANDNE'*NEXT  '                   AND NOT SEQ.
+     C           P@OPTN    ANDNE'*PREV  '                   AND
+     C           P@OPTN    ANDNE'*VERIFY'                   AND
+     C           P@OPTN    ANDNE'*FREE  '                   AND
+     C                     SETON                       96    Parameter err
+     C                     END                             FI 8
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   94                MOVE '*EOF   ' P@RTCD           End of file
+     C   95                MOVE '*NRF   ' P@RTCD           No record found
+     C   96                MOVE '*OPTION' P@RTCD           Option error
+     C   97                MOVE '*NOSEL ' P@RTCD           No selection
+     C   98                MOVE '*CALL  ' P@RTCD           Called Pgm.err.
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 9 SEND MSGM
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   94                MOVE 'ACO1005' P@MGID             End of file
+     C   95                MOVE 'ACO1006' P@MGID             No record fnd
+     C   96                MOVE 'ACO1007' P@MGID             Option error
+     C   97                MOVE 'ACO1009' P@MGID             No selection
+     C   98                MOVE 'ACO1010' P@MGID             Call error
+     C                     CALL 'ZASNMG'                     <SEND MSG>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Program nam
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Message ID
+     C                     PARM *BLANK    P@MSGF 10          I:Message fil
+     C                     PARM *BLANK    P@MGKY  4          O:Message key
+     C                     PARM           P@MGDA 50          I:Message dta
+     C                     PARM '*DIAG'   P@MGTP  7          I:Message tpe
+     C                     END                             FI 9
+      *
+      * Caller Requests DB Error Handling
+      *
+     C           W@RTCD    IFEQ '*DBERR '                  IF
+     C           P@RTCD    ANDNE*BLANK                       AND
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END                             FI
+      *
+     C           P@OPTN    IFNE '*VERIFY'                  IF 10
+     C           P@OPTN    ANDNE'*FREE  '                    AND
+     C           P@RTCD    ANDNE'*OPTION'                    AND
+     C                     MOVELD@FMT     P@FMT            FI 10
+     C                     END
+      *
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+      *ENDMAIN
+**
+SDBNCDPD  AOBNCDR0  Retail Bank Codes
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

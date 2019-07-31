@@ -1,0 +1,351 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE To build REPMFWPD based on Sys Value')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE0940 -                                                     *
+      *                                                               *
+      *  Phase  - COB                                                 *
+      *                                                               *
+      *  Called by: REC0940                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      *                 248699             Date 28Jun07               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CRE009   *CREATE   Date 23Aug02               *
+      *                 XXXXXX             Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  248699 - Projected account movements for retial accounts are *
+      *           not showing up to what is defined in System Values  *
+      *           file.                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CRE009 - Projected Account Movements for Retail Accounts     *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicators list:                                             *
+      *                                                               *
+      *  89 - READ PF/SDCURRL1                                        *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Retail Projected Movements end date per currency
+     FREPMFWPDUF  E                    DISK                      A
+      *
+      ** Currency Codes
+     FSDCURRL1IF  E           K        DISK
+      *
+      /SPACE 3
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZHOLE
+      *
+      /SPACE 3
+      *
+     IREPMFWP0
+     I              REPMED                          @REPMD
+      ** Rename field in pf/REPMFWPD
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IREPMED      DS                              5
+      ** Dataarea for End Date
+      *
+     IMPHAS       DS                              1
+      ** Dataarea for PHASE OF DAY
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM UPGM
+      *
+     IDSFDY     E DSDSFDY
+      ** Data structures used by access programs SHORT
+      *
+     IDSSDY     E DSDSSDY
+      ** Data structures used by access programs LONG
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDSVAL    E DSSDSVALPD
+      ** System Value Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     I            DS
+     I                                        1 200 SVAL1
+     I                                        1   1 SVAL11
+      *
+     I              'ProjectedDaysRetail' C         DVALK
+      *
+     I/COPY ZSRSRC,ZHOLI
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *              M  A  I  N     P  R  O  G  R  A  M               *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Initialization process
+      *
+     C                     EXSR IINIT
+      *
+      ** Process Output to Report
+      *
+     C                     EXSR IPROC
+      *
+      ** End Process
+      *
+     C                     EXSR IEND
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SR/IINIT - Initialization process                            *
+      *                                                               *
+      *  Called by: M A I N                                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           IINIT     BEGSR
+      *
+     C                     MOVEACPY@      CPY2@  80
+     C                     MOVELUPGM      DBPGM
+      *
+     C           *NAMVAR   DEFN           LDA              Dcl LDA
+     C           *NAMVAR   DEFN           REPMED
+     C           *NAMVAR   DEFN           MPHAS
+      *
+     C                     IN   MPHAS
+     C                     MOVE MPHAS     @MPHAS  1
+      *
+      ** Extract bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            *************
+     C                     MOVEL*BLANKS   DBFILE           *DB ERROR 01*
+     C                     MOVE 'SDBANKPD'DBFILE           *************
+     C                     MOVEL'*FIRST  'DBKEY     P
+     C                     MOVEL'RE0940'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     READ REPMFWPD                 60
+     C           *IN60     DOWEQ*OFF
+     C                     DELETREPMFWP0
+     C                     READ REPMFWPD                 60
+     C                     ENDDO
+      *
+      ** RETRIEVE SYSTEM VALUES.
+      *
+     C                     MOVE *BLANKS   SVALK1
+     C                     MOVE *BLANKS   SVALK2
+     C                     MOVE *BLANKS   SVALK3
+     C                     MOVE *BLANKS   SVALK4
+     C                     MOVE *BLANKS   SVALK5
+     C                     MOVE *BLANKS   SVALK6
+     C                     MOVE *BLANKS   SVALK7
+     C                     MOVE *BLANKS   SVALK8
+     C                     MOVE *BLANKS   SVALK9
+     C                     MOVE *BLANKS   SVALK0
+      *
+     C                     MOVELDVALK     SVALK1
+      *
+     C                     CALL 'AOSVALR0'
+     C                     PARM           RTNCDE  7
+     C                     PARM           SVALK1 20
+     C                     PARM           SVAL1 200
+     C                     PARM           SVALK2 20
+     C                     PARM           SVAL2 200
+     C                     PARM           SVALK3 20
+     C                     PARM           SVAL3 200
+     C                     PARM           SVALK4 20
+     C                     PARM           SVAL4 200
+     C                     PARM           SVALK5 20
+     C                     PARM           SVAL5 200
+     C                     PARM           SVALK6 20
+     C                     PARM           SVAL6 200
+     C                     PARM           SVALK7 20
+     C                     PARM           SVAL7 200
+     C                     PARM           SVALK8 20
+     C                     PARM           SVAL8 200
+     C                     PARM           SVALK9 20
+     C                     PARM           SVAL9 200
+     C                     PARM           SVALK0 20
+     C                     PARM           SVAL10200
+      *
+     C           RTNCDE    IFNE *BLANKS
+     C           SVAL10    IFEQ '*NRF'
+     C                     MOVE SVALK0    DBKEY
+     C                     ENDIF
+     C           SVAL9     IFEQ '*NRF'
+     C                     MOVE SVALK9    DBKEY
+     C                     ENDIF
+     C           SVAL8     IFEQ '*NRF'
+     C                     MOVE SVALK8    DBKEY
+     C                     ENDIF
+     C           SVAL7     IFEQ '*NRF'
+     C                     MOVE SVALK7    DBKEY
+     C                     ENDIF
+     C           SVAL6     IFEQ '*NRF'
+     C                     MOVE SVALK6    DBKEY
+     C                     ENDIF
+     C           SVAL5     IFEQ '*NRF'
+     C                     MOVE SVALK5    DBKEY
+     C                     ENDIF
+     C           SVAL4     IFEQ '*NRF'
+     C                     MOVE SVALK4    DBKEY
+     C                     ENDIF
+     C           SVAL3     IFEQ '*NRF'
+     C                     MOVE SVALK3    DBKEY
+     C                     ENDIF
+     C           SVAL2     IFEQ '*NRF'
+     C                     MOVE SVALK2    DBKEY
+     C                     ENDIF
+     C           SVAL1     IFEQ '*NRF'
+     C                     MOVE SVALK1    DBKEY
+     C                     ENDIF
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVE 'SDSVALPD'DBFILE
+     C                     MOVE 'RE0940'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WDATE
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SR/IPROC - Details Extract                                   *
+      *                                                               *
+      *  Called by: M A I N                                           *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           IPROC     BEGSR
+      *
+      ** READ SDCURRPD.
+     C           *LOVAL    SETLLSDCURRL1
+     C                     READ SDCURRL1                 89
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      ** SETUP PARAMETERS FOR SB/ZFWDT.
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     MOVE A6CYCD    ZCCY
+     C                     MOVE *BLANKS   ZLOC
+      *
+     C**********           MOVE SVAL1     WNBR    20                                          248699
+     C                     MOVELSVAL1     #WNBR   3                                           248699
+     C                     MOVE #WNBR     WNBR    30                                          248699
+     C           @MPHAS    IFEQ 'A'
+     C                     Z-ADDWNBR      ZNRDYS
+     C                     ELSE
+     C           WNBR      ADD  1         ZNRDYS
+     C                     ENDIF
+      *
+      ** EXECUTE ZFWDT TO GET THE END DATE.
+     C                     EXSR ZFWDT
+      *
+     C           ZDYNBR    IFGT WDATE
+     C                     Z-ADDZDYNBR    WDATE   50
+     C                     ENDIF
+      *
+      ** POPULATE REPMFWPD WITH CCY AND END DATE.
+     C                     MOVE A6CYCD    REPMCY
+     C                     Z-ADDZDYNBR    @REPMD
+     C                     WRITEREPMFWP0
+      *
+      ** READ NEXT RECORD IN SDCURRPD.
+     C                     READ SDCURRL1                 89
+      *
+     C                     ENDDO
+      *
+      ** SET DTAARA REPMED WITH LATEST DATE RECORDED IN FILE.
+     C           *LOCK     IN   REPMED
+     C                     MOVE WDATE     REPMED
+     C                     OUT  REPMED
+      *
+     C                     ENDSR
+      *
+     C/COPY ZSRSRC,ZACCH
+     C/COPY ZSRSRC,ZFWDT
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SR/IEND  - End Processing                                    *
+      *                                                               *
+      *  Called by: M A I N                                           *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           IEND      BEGSR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called by: (**calling routines**)                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2002

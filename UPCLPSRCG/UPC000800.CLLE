@@ -1,0 +1,221 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Identify dlv. data migration type')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000800 - Identify deliverable data migration / upgrade   */
+/*                   type                                            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. CUP040 *CREATE     Date 12Mar14              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP040 - New deliverable data methodology.                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &LIBRARY &DLVFILE &ORIFILE &FMLIB +
+                          &TYPE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&LIBRARY) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DLVFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ORIFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(5)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&EXTFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWOROLD) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ORIORNOT) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ORIEXIST) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&NEWEXIST) TYPE(*CHAR) LEN(1) VALUE('Y')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/****************************************************************************/
+/*                                                                          */
+/* This program identifies the upgrade / migration type that needs to be    */
+/*  followed when handling deliverable data that may or may not use the new */
+/*  methodology.  It needs to find out answers to the following questions:  */
+/*  1. Does the file use the old (O) or new (N) methodology?  (&NEWORLD)    */
+/*  2. If the new methodolggy is being used was there an old version? Yes   */
+/*     (Y) or No (N). (&ORIORNOT)                                           */
+/*  3. If there was an old version is it present in the 'from' system?  Yes */
+/*     (Y) or No (N). (&ORIEXIST)                                           */
+/*  4. If there was no old version does the current version exist in the    */
+/*     'from' system? (Y) or No (N). (&NEWEXIST)                            */
+/*                                                                          */
+/* Once the program has identified it uses a combination of them to         */
+/*  determine the type.  The options are:                                   */
+/*  *OTOO - Old methodology to old methodolgy                               */
+/*  *OTON - Old methodology to new methodolgy                               */
+/*  *NTON - New methodology to new methodolgy                               */
+/*  *NEWO - New file using the old methodolgy (no migration required)       */
+/*  *NEWN - New file using the new methodolgy (no migration required)       */
+/*                                                                          */
+/****************************************************************************/
+ 
+/* Set up extension table name for checking existence and identify if file */
+/*  currently uses new methodology.                                        */
+             CHGVAR     VAR(&EXTFILE) VALUE(%SST(&DLVFILE 1 5) +
+                          *TCAT 'XTD')
+             CHKOBJ     OBJ(&EXTFILE) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&NEWOROLD) VALUE('O')
+             ENDDO
+/* Set up library prefix. */
+             CHGVAR     VAR(&PFX) VALUE(%SST(&LIBRARY 1 3))
+/* Flag if there was an old version of the file. */
+             IF         COND(&NEWOROLD *EQ 'N') THEN(DO)
+                IF         COND(&ORIFILE *NE '*NONE' *AND &ORIFILE *NE +
+                             ' ') THEN(DO)
+                   CHGVAR     VAR(&ORIORNOT) VALUE('Y')
+                ENDDO
+             ENDDO
+ 
+/* For each type of action perform a separate subroutine. */
+             IF         COND(&MODE *EQ '*MIG' ) THEN(DO)
+                CALLSUBR   SUBR(MIG)
+             ENDDO
+             IF         COND(&MODE *EQ '*UPG') THEN(DO)
+                CALLSUBR   SUBR(UPG)
+             ENDDO
+ 
+/* Based on the variables supplied return the upgrade / migration type. */
+             IF         COND(&NEWOROLD *EQ 'N' *AND &ORIORNOT *EQ +
+                          'Y' *AND &ORIEXIST *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&TYPE) VALUE('*OTON')
+             ENDDO
+             IF         COND(&NEWOROLD *EQ 'N' *AND &ORIORNOT *EQ +
+                          'Y' *AND &ORIEXIST *EQ 'N' *AND &NEWEXIST +
+                          *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&TYPE) VALUE('*NTON')
+             ENDDO
+             IF         COND(&NEWOROLD *EQ 'N' *AND &ORIORNOT *EQ +
+                          'N' *AND &NEWEXIST *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&TYPE) VALUE('*NTON')
+             ENDDO
+             IF         COND(&NEWOROLD *EQ 'N' *AND &ORIORNOT *EQ +
+                          'N' *AND &ORIEXIST *EQ 'N' *AND &NEWEXIST +
+                          *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&TYPE) VALUE('*NEWN')
+             ENDDO
+             IF         COND(&NEWOROLD *EQ 'N' *AND &ORIORNOT *EQ +
+                          'Y' *AND &ORIEXIST *EQ 'N' *AND &NEWEXIST +
+                          *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&TYPE) VALUE('*NEWN')
+             ENDDO
+             IF         COND(&NEWOROLD *EQ 'O' *AND &NEWEXIST *EQ +
+                          'Y') THEN(DO)
+                CHGVAR     VAR(&TYPE) VALUE('*OTOO')
+             ENDDO
+             IF         COND(&NEWOROLD *EQ 'O' *AND &NEWEXIST *EQ +
+                          'N') THEN(DO)
+                CHGVAR     VAR(&TYPE) VALUE('*NEWO')
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to identify type for migration.                                 */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(MIG)
+ 
+/* If it uses the new methodology check if there was an old version of the */
+/*  file in the 'from' library.                                            */
+             IF         COND(&NEWOROLD *EQ 'N') THEN(DO)
+                IF         COND(&ORIORNOT *EQ 'Y') THEN(DO)
+                   CHGVAR     VAR(&FMLIB) VALUE(&PFX *TCAT 'TALIB')
+                   CHKOBJ     OBJ(&FMLIB/&ORIFILE) OBJTYPE(*FILE)
+                   MONMSG     MSGID(CPF9801) EXEC(DO)
+                      CHGVAR     VAR(&FMLIB) VALUE(&PFX *TCAT 'MLIB')
+                      CHKOBJ     OBJ(&FMLIB/&ORIFILE) OBJTYPE(*FILE)
+                      MONMSG     MSGID(CPF9801) EXEC(DO)
+                         CHGVAR     VAR(&ORIEXIST) VALUE('N')
+                      ENDDO
+                   ENDDO
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&ORIEXIST) VALUE('N')
+                ENDDO
+/* If there is no old version of the file check if the new one existed in */
+/*  the 'from' library. */
+                IF         COND(&ORIEXIST *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&FMLIB) VALUE(&PFX *TCAT 'TALIB')
+                   CHKOBJ     OBJ(&FMLIB/&DLVFILE) OBJTYPE(*FILE)
+                   MONMSG     MSGID(CPF9801) EXEC(DO)
+                      CHGVAR     VAR(&NEWEXIST) VALUE('N')
+                   ENDDO
+                   IF         COND(&NEWEXIST *NE 'N') THEN(DO)
+                      CHGVAR     VAR(&LIBRARY) VALUE(&FMLIB)
+                   ENDDO
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&LIBRARY) VALUE(&FMLIB)
+                ENDDO
+             ENDDO
+ 
+/* If it uses the old methodology check if there was an old version of the */
+/*  file in the 'from' library.                                            */
+             IF         COND(&NEWOROLD *EQ 'O') THEN(DO)
+                CHGVAR     VAR(&FMLIB) VALUE(&PFX *TCAT 'TALIB')
+                CHKOBJ     OBJ(&FMLIB/&DLVFILE) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CHGVAR     VAR(&FMLIB) VALUE(&PFX *TCAT 'MLIB')
+                   CHKOBJ     OBJ(&FMLIB/&DLVFILE) OBJTYPE(*FILE)
+                   MONMSG     MSGID(CPF9801) EXEC(DO)
+                      CHGVAR     VAR(&NEWEXIST) VALUE('N')
+                   ENDDO
+                ENDDO
+                IF         COND(&NEWEXIST *NE 'N') THEN(DO)
+                   CHGVAR     VAR(&LIBRARY) VALUE(&FMLIB)
+                ENDDO
+             ENDDO
+ MIGEND:
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to identify type for upgrade.                                   */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(UPG)
+ 
+/* Identify the holding library for the upgrade. */
+             CHGVAR     VAR(&FMLIB) VALUE('#.' *TCAT &PFX *TCAT 'MLIB')
+ 
+/* If it uses the new methodology check if there was an old version of the */
+/*  file in the #. library.                                                */
+             IF         COND(&NEWOROLD *EQ 'N') THEN(DO)
+                IF         COND(&ORIORNOT *EQ 'Y') THEN(DO)
+                   CHKOBJ     OBJ(&FMLIB/&ORIFILE) OBJTYPE(*FILE)
+                   MONMSG     MSGID(CPF9801) EXEC(DO)
+                      CHGVAR     VAR(&ORIEXIST) VALUE('N')
+                   ENDDO
+                ENDDO
+/* For an upgrade the current file will not be in the 'from' library so there */
+/*  is no difference between New or New to New so &NEWEXIST will be left as   */
+/*  'Y'.                                                                      */
+             ENDDO
+ 
+/* If the old methodology is used then &NEWEXIST will be left as 'Y'. */
+ UPGEND:
+             ENDSUBR
+ 
+ ENDPGM:
+             ENDPGM

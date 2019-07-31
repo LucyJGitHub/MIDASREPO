@@ -1,0 +1,108 @@
+/*********************************************************************/
+/*XBI    OVRDBF  FILE(UTC000051F) TOFILE(UPFDATTPD)                  */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT FNDUPDSRC Find string for multi sources')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000007 - Create an SQL Object from Creation Parameters   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT015  *CREATE    Date 03Jan12              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUT015 - New utility to replace UPDSRC.                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&WRKLIB &SRC &STR &CASE &STRLEN)
+ 
+             DCL        VAR(&WRKLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRC) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&STR) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&CASE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&STRLEN) TYPE(*DEC) LEN(3 0)
+ 
+             DCL        VAR(&SRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+ 
+             DCLF       FILE(UTC000051F)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Build list of source files. */
+             CHGVAR     VAR(&SRCF) VALUE(%SST(&SRC 1 10))
+             CHGVAR     VAR(&LIB) VALUE(%SST(&SRC 11 10))
+             DLTF       FILE(QTEMP/DSPFDATR)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UTC000051F)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPFDATTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UTC000051F)
+             DSPFD      FILE(&LIB/&SRCF) TYPE(*ATR) OUTPUT(*OUTFILE) +
+                          FILEATR(*PF) OUTFILE(QTEMP/DSPFDATR)
+             CPYF       FROMFILE(QTEMP/DSPFDATR) +
+                          TOFILE(QTEMP/UTC000051F) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+/* Copy work files to work library. */
+             CRTDUPOBJ  OBJ(UTSTMTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(&WRKLIB) NEWOBJ(*OBJ)
+             MONMSG     MSGID(CPF2130) EXEC(DO)
+                CLRPFM     FILE(&WRKLIB/UTSTMTPD)
+             ENDDO
+             CRTDUPOBJ  OBJ(UTMBRSPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(&WRKLIB) NEWOBJ(*OBJ)
+             MONMSG     MSGID(CPF2130) EXEC(DO)
+                CLRPFM     FILE(&WRKLIB/UTMBRSPD)
+             ENDDO
+ 
+             OVRDBF     FILE(UTSTMTPD) TOFILE(&WRKLIB/UTSTMTPD)
+             OVRDBF     FILE(UTMBRSPD) TOFILE(&WRKLIB/UTMBRSPD)
+ 
+/* Call program with blank work library to write first record to UTSTMTPD. */
+             CALL       PGM(UT000050) PARM(&STR ' ' &CASE &STRLEN)
+             IF         COND(%SWITCH(1XXXXXXX)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             IF         COND(&PHDTAT *EQ 'S') THEN(DO)
+                CPYF       FROMFILE(&PHLIB/&PHFILE) +
+                             TOFILE(&WRKLIB/&PHFILE) FROMMBR(*ALL) +
+                             TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                             CRTFILE(*YES)
+                OVRDBF     FILE(SEARCHSRC) TOFILE(&WRKLIB/&PHFILE) +
+                             MBR(*ALL) SEQONLY(*YES 347)
+                CALL       PGM(UT000050) PARM(&STR &WRKLIB &CASE &STRLEN)
+                IF         COND(%SWITCH(1XXXXXXX)) THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                DLTOVR     FILE(SEARCHSRC)
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGJOB     SWS(1XXXXXXX)
+ 
+ENDPGM:
+             DLTOVR     FILE(UTSTMTPD UTMBRSPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

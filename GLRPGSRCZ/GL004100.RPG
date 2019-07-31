@@ -1,0 +1,380 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account Transfer Update SDNOSTPD')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL004100 - Midas GL Account Transfer Update SDNOSTPD         *
+      *                                                               *
+      *  Function:  This program updates the Midas SD Nostro details  *
+      *             File, SDNOSTPD with the new account details from  *
+      *             the Account Transfer Selected Accounts File,      *
+      *             GLSLACPD. It also will write an audit trail record*
+      *             for each update of SDNOSTPD                       *
+      *                                                               *
+      *  Called By: GL003600                                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2010                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27903           Date 13Jul10               *
+      *                 BUG27769           Date 09Jun10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CGL114  *CREATE    Date 04Jan10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG27903 - Unable to transfer account with setl 01 and 08    *
+      *  BUG27769 - Incorrect error code                              *
+      *  CGL114 - Account Transfer Utility                            *
+      *                                                               *
+      *****************************************************************
+      *  Function of Indicators                                       *
+      *                                                               *
+      *  01 - 19      Input Control.                                  *
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)      *
+      *   20          Record Not Found                                *
+      *   21          File Error Occurred                             *
+      *   22          Start/End Of File Reached                       *
+      *   25          Lookup/Scan.                                    *
+      *  30 - 39      Program Work Indicators                         *
+      *  40 - 49      Output Control.                                 *
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)    *
+      *  90 - 99      Error Control.                                  *
+      *****************************************************************
+      *
+     FSDNOSTLAUF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     FGLAUTFPDO   E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *                                                                                     BUG27903
+     INOSTD     E DSNOSTD                         8                                         BUG27903
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+     IDSFDY     E DSDSFDY
+      *
+     IDSFRAC      DS
+     I                                        1   6 DSFCNU
+     I                                        7   9 DSFCCY
+     I                                       10  19 DSFACO
+     I                                       20  21 DSFACS
+     I                                       22  24 DSFBRC
+      *
+     IDSTOAC      DS
+     I                                        1   6 DSTCNU
+     I                                        7   9 DSTCCY
+     I                                       10  19 DSTACO
+     I                                       20  21 DSTACS
+     I                                       22  24 DSTBRC
+      *
+     IDSKITE      DS                             90
+     I                                        1   6 KA7CUS
+     I                                        7   9 KA7CYC
+     I                                       10  19 KA7ACC
+     I                                       20  210KA7ACS
+     I                                       22  24 KA7BRC
+      *                                                                                     BUG27903
+     IWNOST       DS                                                                        BUG27903
+      * External Data Area for Nostro Details                                               BUG27903
+     I                                        1   3 WWCCY                                   BUG27903
+     I                                        4   5 WWNOSN                                  BUG27903
+     I                                        6   8 WWBRCH                                  BUG27903
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@PRCD  4
+     C                     PARM           P@RFNO 10
+     C           DSFRAC    PARM           P@FRAC 24
+     C           DSTOAC    PARM           P@TOAC 24
+     C                     PARM           P@RTCD  1
+      *
+     C                     EXSR SRINIT
+      *
+     C           P@PRCD    IFEQ '*LR '
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     EXSR XSIV01
+     C                     EXSR XMNOST
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XMNOST - Validate Midas SD Nostro Details File               *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     XSAUDT                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XMNOST    BEGSR
+      *
+     C           KNOST     SETLLSDNOSTLA
+     C           KNOST     READESDNOSTLA               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'002'     DBASE
+     C                     MOVEL'SDNOSTLA'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete and Write Records until End of File for Selected Account
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETSDNOSTD0               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'003'     DBASE
+     C                     MOVEL'SDNOSTLA'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELDSTCNU    A7CUST
+     C                     MOVELDSTCCY    A7CYCD
+     C                     MOVELDSTACO    A7ACCD
+     C                     MOVELDSTACS    A7ACSN
+     C                     MOVE *BLANKS   WWBRCD  3                                         BUG27903
+     C                     MOVELA7BRCD    WWBRCD                                            BUG27903
+     C                     MOVELDSTBRC    A7BRCD
+     C                     WRITESDNOSTD0               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'004'     DBASE
+     C                     MOVEL'SDNOSTLA'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                                     BUG27903
+     C           WWBRCD    IFNE A7BRCD                                                      BUG27903
+     C                     MOVE *BLANKS   WNOST                                             BUG27903
+     C                     MOVE DSTCCY    WWCCY                                             BUG27903
+     C                     MOVE A7NONB    WWNOSN                                            BUG27903
+     C                     MOVE DSTBRC    WWBRCH                                            BUG27903
+     C           *LOCK     IN   NOSTD                                                       BUG27903
+     C                     MOVE WNOST     DANOST                                            BUG27903
+     C                     OUT  NOSTD                                                       BUG27903
+     C                     ENDIF                                                            BUG27903
+      *
+     C                     EXSR XSAUDT
+      *
+     C           KNOST     READESDNOSTLA               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'005'     DBASE
+     C                     MOVEL'SDNOSTLA'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XSAUDT - Set Audit records                                   *
+      *                                                               *
+      *  Called By: XMNOST                                            *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XSAUDT    BEGSR
+      *
+     C                     MOVELP@RFNO    AURFNO
+     C                     MOVEL'SDNOSTPD'AUFILE
+     C                     MOVEL'SDNOSTLA'AULFIL
+     C                     MOVELDSFBRC    AUFBRC
+     C                     MOVELDSFCNU    AUFCNU
+     C                     MOVELDSFACO    AUFACO
+     C                     MOVELDSFACS    AUFACS
+     C                     MOVELDSTBRC    AUTBRC
+     C                     MOVELDSTCNU    AUTCNU
+     C                     MOVELDSTACO    AUTACO
+     C                     MOVELDSTACS    AUTACS
+     C                     MOVELA7OANN    WKOANN 14
+     C                     MOVELA7ORAC    WKORAC 25
+     C                     MOVELA7PNOI    WKPNOI  1
+     C                     MOVELA7NOSN    WKNOSN 10
+     C           WKOANN    CAT  WKORAC:1  AUTEXT
+     C                     CAT  WKPNOI:1  AUTEXT
+     C                     CAT  WKNOSN:1  AUTEXT 50 P
+     C                     MOVELWKDFMT    AUCRTD
+     C                     WRITEGLAUTFD0               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'001'     DBASE
+     C                     MOVEL'GLAUTFPD'DBFILE
+     C                     MOVELAURFNO    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XSIV01 - Set up initial values                               *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XSIV01    BEGSR
+      *
+     C                     MOVELDSFBRC    KA7BRC
+     C                     MOVELDSFCNU    KA7CUS
+     C                     MOVELDSFCCY    KA7CYC
+     C                     MOVELDSFACO    KA7ACC
+     C                     MOVELDSFACS    KA7ACS
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialise and define fields                        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           NOSTD                                             BUG27903
+      *                                                                                     BUG27903
+     C           *LOCK     IN   NOSTD                                                       BUG27903
+     C                     MOVE *BLANKS   DANOST                                            BUG27903
+     C                     OUT  NOSTD                                                       BUG27903
+      *
+      ** Retrieve Run Date.
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If return with an error (LR seton in called program) then
+      ** process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C********** @RTCD     OREQ '*ERROR*'                                                   BUG27769
+     C           @RTCD     ORNE *BLANKS                                                     BUG27769
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AOBANKR0'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     Z-ADD006       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBJMRDT    WKDFMT  9
+     C                     MOVE BJMRDT    WKYEAR  20
+      *
+     C           WKYEAR    IFLT 72
+     C           WKYEAR    ADD  2000      WKCCYY  40
+     C                     ELSE
+     C           WKYEAR    ADD  1900      WKCCYY
+     C                     ENDIF
+      *
+     C                     MOVE WKCCYY    WKDFMT  9
+      *
+     C           KNOST     KLIST
+     C                     KFLD           KA7CUS
+     C                     KFLD           KA7CYC
+     C                     KFLD           KA7ACC
+     C                     KFLD           KA7ACS
+     C                     KFLD           KA7BRC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE 'F'       P@RTCD
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2010

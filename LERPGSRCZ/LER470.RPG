@@ -1,0 +1,1931 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                     CLE075AU
+/*S*D****RPGSQL********************************************************            CLE075AU MD021155
+/*STD *  RPGBASE                                                                            MD021155
+/*EXI *  TEXT('Midas LE Profitability report by business gp.')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas Customer Lending Module                                *
+      *                                                               *
+      *  LER470 - Profitability Report by Business Group.             *
+      *                                                               *
+      *  Function: Report Profitability details by Business Group     *
+      *            in Input Cycle, where report may be run at Bank,   *
+      *            Department, Account Officer or Customer level, or  *
+      *            in Close of Business, where report is run at Bank  *
+      *            level only.                                        *
+      *                                                               *
+      *  Called By: LERC47B - CL program to run report in Input Cycle *
+      *             LERC47  - CL component in Close of Business       *
+      *                                                               *
+      *  Calls: ZSFILE   - Log spool file details for RCF.            *
+      *         LERDATEF - Validate and convert date to day number    *
+      *                    for first day of month.                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD021155           Date 11Jul13               *
+      *                 CLE075AU           Date 21Feb13               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CCB016             Date 30Nov05               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 27Apr05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 11Oct00               *
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163668             Date 14Jul99               *
+      *                 161257             Date 29Jun99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 158560             Date 06Apr99               *
+      *                 156043             Date 05Feb99               *
+      *                 148869             Date 16Dec98               *
+      *                 148873             Date 16Dec98               *
+      *                 052572             DATE 09DEC93               *
+      *                 088018             DATE 17JAN96               *
+      *                 BH3384             DATE 12AUG92               *
+      *                 BH3445             DATE 29JUL92               *
+      *                 ALIEN1             DATE 12JUL92               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD021155 - COB Restructure Phase 1 remnants                  *
+      *           - Not reading Facility which is incorrect           *
+      *  CLE075AU - COB Restructure - LE COB Optimisation Phase 1     *
+      *           - Applied for AR1090615                             *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CCB016 - CoB Performance Enhancements                        *
+      *           Call AOINDSR0 with blank return code instead of     *
+      *           *MSG.                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndication Manager                                 *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enahancements to CAS001, CAS002 and CAS004          *
+      *           (Recompile)                                         *
+      *  CSD006 - Use correct parameters for Access Objects           *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  163668 - Profitability showing on facility customer not on   *
+      *           agent customer                                      *
+      *  161257 - Show average balance for participants of the prime  *
+      *           facility as negative.                               *
+      *  158560 - Yield/margin rate calculations do not include       *
+      *           negative amounts, ie from parts sold.               *
+      *  156043 - Payable fee showing on profitability as income      *
+      *  148869  -  Ensure Credit agreements are not double accounted *
+      *             on facilities totals.                             *
+      *  148873  -  Ensure Internal Parts Purchased are not included  *
+      *             in profit for prime facility and that totals for  *
+      *             balance, fees, yield and margin are calculated    *
+      *             correctly.                                        *
+      *  052572 - Change calculation of average aggregate balance     *
+      *           from active days to actual days in the month/year   *
+      *  088018  -  Ensure Department and Account Offices shown on    *
+      *             first page - move initial processing.             *
+      *  BH3384  -  Wrong text on report header                       *
+      *  BH3445  -  Bad overflow. Tut, tut.                           *
+      *             Show report town too.                             *
+      *  ALIEN1 - For GL A/Cs, (Other Charges/Fees) account info. is  *
+      *           output by account (multiple records) or             *
+      *           consolidated (single record) for each customer.     *
+      *                                                               *
+      *****************************************************************
+     FLENQLF0 IP  E           K        DISK
+     F            LENQF                             KRENAMELENQF0
+     FLENQLF1 IF  E           K        DISK
+     FLENQLF3 IF  E           K        DISK                               161257
+     F            LENQF                             KRENAMELENQF3         161257
+     F** Add file to access loan calculation basis
+     FCLOAN   IF  E           K        DISK                               148873
+     F            CLOANHHF                          KIGNORE               148873
+     F            CLOANCKF                          KIGNORE               148873
+     F            CLOANZ1F                          KIGNORE               148873
+     FMLOAN   IF  E           K        DISK                               161257
+     F            CLOANHHF                          KIGNORE               161257
+     F            CLOANZ1F                          KIGNORE               161257
+     F            CLOANCKF                          KIGNORE               161257
+     F            CLOANCLF                          KRENAMEMCLONCLF       161257
+     FLEFCLTL2IF  E           K        DISK         KINFSR *PSSR          161257
+     FFCLTY   IF  E           K        DISK                               148869
+     F            FCLTYFMF                          KRENAMEFCLTY1         161257
+     F            FCLTYHHF                          KIGNORE               148869
+     F            FCLTYZZF                          KIGNORE               148869
+     F            FCLTYFNF                          KIGNORE               148869
+     F*                                                                   148873
+     FLER470AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     FLER470P1O   E             80     PRINTER      KINFDS SPOOL      UC
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01  - Output Facility Name/Sequence header.                 *
+     F*   02  - Output 'Total Facilities' header.                     *
+     F*   03  - Output 'Total Loans' header.                          *
+     F*   04  - Output 'DR' as part of Retail Account header.         *
+     F*   05  - Output 'CR' as part of Retail Account header.         *
+     F*                                                               *
+     F*   10  - OFF = Perform initial processing.                     *
+     F*                                                               *
+     F*   20  - Error Looking up Month no. of processing date.        *
+     F*   21  - Error Looking up reporting level array.               *
+     F*                                                               *
+     F*   31  - Output 'MM - Loans' header.                           *
+     F*   32  - Output 'MM - Deposits' header.                        *
+     F*   33  - Output 'MM - NAs Int.Bearing' header.                 *
+     F*   34  - Output 'MM - NAs Non-Int.Brg' header.                 *
+     F*   35  - Output 'FX - FX' header.                              *
+     F*   36  - Output 'FX - FRA' header.                             *
+     F*   37  - Output 'FX - IRS' header.                             *
+     F*   38  - Output 'FX - Futures' header.                         *
+     F*   39  - Output 'FX - Options' header.                         *
+     F*                                                               *
+     F*   40  - Output 'Total for All Departments'.                   *
+     F*   41  - Output Total for Department header.                   *
+     F*   42  - Output Total for Account Officer headings.            *
+     F*   43  - Output Department reference headings.                 *
+     F*   44  - Output Account Officer / Customer headings.           *
+     F*                                                               *
+     F*   45  - Output two blank lines before Customer header.        *
+     F*                                                               *
+     F*   50  - Output GL A/C fees by account.                        *   ALIEN1
+     F*                                                               *   ALIEN1
+     F*   60  - Output User's Account Officer code & Workstation id.  *
+     F*   61  - Output 'Weekly' report header.                        *
+     F*   62  - Output 'End of Month' report header.                  *
+     F*                                                               *
+     F*   80  - Overflow indicator.                                   *
+     F*                                                               *
+     F*   90  - End of file on READE LENQLF1.                         *
+     F*   91  - No record found. LOOKUP SDINDSPD                      *                     CLE075AU
+     F*                                                               *
+     F*   98  - Date format is MMDDYY.                                *
+     F*                                                               *
+     F* U7-U8 - Database Error.                                       *
+     F*                                                               *
+     F*   L1  - Level break on Customer Number from LENQF.            *
+     F*   L2  - Level break on Account Officer code from LENQF.       *
+     F*   L3  - Level break on Department code from LENQF.            *
+     F*                                                               *
+     F*   LR  - Last record indicator.                                *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  DETAIL  - Process detail and customer extract records.       *
+     F*  OFLCHK  - Print headings if overflow.                        *
+     F*  FACNAM  - Access facility name.                              *
+     F*  MOVDTA  - Set up fields for printing.                        *
+     F*  LONDET  - Accumulate loan and facility totals.               *
+     F*  LONTOT  - Calculate and print loan totals.                   *
+     F*  NWCUST  - Find new customer and industry names.              *
+     F*  NWACOF  - Find new account officer name.                     *
+     F*  NWDEPT  - Find new department name.                          *
+     F*  TOTAL   - Print A/c Officer, Department or Overall totals.   *
+     F*  OFLW    - Determine whether enough lines remain on page.     *
+     F*  INIT    - Perform first cycle calculations.                  *
+     F*  AOBANK  - Access Bank details.                               *
+     F*  DBERR   - Subroutine to handle database errors.              *
+     F*                                                               *
+     F*  *PSSR   - Error processing routine - DUMPs and ends          *
+     F*             (This is called automatically if an unexpected    *
+     F*             error occurs).                                    *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80               COPYRIGHT
+     E                    MDAY       31  1 0             LOAN DAYS-MTH
+     E                    YDAY      366  1 0             LOAN DAYS-YR
+     E                    AMDAY      31  1               LOAN DAYS-MTH
+     E                    AYDAY     366  1               LOAN DAYS-YR
+     E                    TMDY       31  1 0             LOAN DAYS-MTH
+     E                    TYDY      366  1 0             LOAN DAYS-YR
+     E                    MAV         9 15 0             MTD AV.BAL.
+     E                    YAV         9 15 0             YTD AV.BAL.
+     E/COPY WNCPYSRC,LER470E001
+     E                    MSG     1   4 40               MESSAGES
+     E/COPY WNCPYSRC,LER470E002
+     E                    TABTYP  4   4  1   TABLVL  1 0 REPORT TYPE/LEVEL
+     E                    @FTY      250  3               FACILITY TYPE                      CLE075AU
+     E                    @IND      300  3               INDUSTRY CODE                      CLE075AU
+     E                    #LRU      200 13 0                                                CLE075AU
+     E                    #LRUC     200 13 0                                                CLE075AU
+     I/EJECT
+     I*
+     I** Define control groups.
+     I*
+     ILENQF0
+     I/COPY WNCPYSRC,LER470I002
+     I              BRCA                            NQBRCA                ALIEN1
+     I/COPY WNCPYSRC,LER470I003
+     I                                              NQDEPTL3
+     I                                              NQACOFL2
+     I                                              NQCNUML1
+     I*                                                                   161257
+     IMCLONCLF                                                            161257
+     I              CNUM                            LNCNUM                161257
+     I              BRCA                            LNBRCA                161257
+     I              MDAT                            LNMDAT                161257
+     I              LNRF                            LNLNRF                161257
+     I              FSEQ                            LNFSEQ                161257
+     ICLOANCLF                                                            161257
+     I              CNUM                            LNCNUM                161257
+     I              BRCA                            LNBRCA                161257
+     I              MDAT                            LNMDAT                161257
+     I              LNRF                            LNLNRF                161257
+     I              FSEQ                            LNFSEQ                161257
+     IFCLTYFMF                                                            161257
+     I              CNUM                            FCCNUM                161257
+     I              BRCA                            FCBRCA                161257
+     I*                                                                   161257
+     IFCLTY1                                                              161257
+     I              CNUM                            F1CNUM                161257
+     I*
+     ISPOOL       DS
+     I*
+     I** Spool information data structure for main print.
+     I/COPY WNCPYSRC,LER470I004
+     I                                       83  90 SFILE
+     I/COPY WNCPYSRC,LER470I005
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN
+     I                                    B 367 3680PRTLN
+     I*
+     ISPOOLU      DS
+     I*
+     I** Spool information data structure for audit print.
+     I/COPY WNCPYSRC,LER470I006
+     I                                       83  90 SFILEU
+     I/COPY WNCPYSRC,LER470I007
+     I                                    B 123 1240SFNUMU
+     I            DS
+     I*
+     I** Split processing date into month & year
+     I*
+     I                                        1   7 PDATA
+     I                                        3   5 MMM
+     I                                        6   7 YY
+     I            DS
+     I*
+     I** Split up date for conversion.
+     I*
+     I                                        1   6 DATE
+     I                                        1   2 DD
+     I                                        3   6 MY
+     I            DS
+     I*
+     I** Define Start of month date.
+     I*
+     I                                        1   7 SMTH
+     I                                        1   2 DAY
+     I                                        3   5 MTH
+     I                                        6   7 YR
+     I            DS
+     I*
+     I** Deal Month to date Averages data structure.
+     I*
+     I                                    P   1  720MAV
+     I                                    P   1   80NQMAVA
+     I                                    P   9  160NQMAVB
+     I                                    P  17  240NQMAVC
+     I                                    P  25  320NQMAVD
+     I                                    P  33  400NQMAVE
+     I                                    P  41  480NQMAVF
+     I                                    P  49  560NQMAVG
+     I                                    P  57  640NQMAVH
+     I                                    P  65  720NQMAVI
+     I            DS
+     I*
+     I** Deal Year to date Averages data structure.
+     I*
+     I                                    P   1  720YAV
+     I                                    P   1   80NQYAVA
+     I                                    P   9  160NQYAVB
+     I                                    P  17  240NQYAVC
+     I                                    P  25  320NQYAVD
+     I                                    P  33  400NQYAVE
+     I                                    P  41  480NQYAVF
+     I                                    P  49  560NQYAVG
+     I                                    P  57  640NQYAVH
+     I                                    P  65  720NQYAVI
+     INQMDAY      DS
+     I*
+     I** Month Day array data structure.
+     I*
+     I                                        1  31 AMDAY
+     INQYDAY      DS
+     I*
+     I** Year Day array data structure.
+     I*
+     I                                        1 366 AYDAY
+     I*
+     IPSDS       SDS
+     I*
+     I** Program status data structure.
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     ILDA       E DS
+     I*
+     I*                                                                   052572
+     ILERSTS    E DSLERSTS                                                052572
+      ** Fees/Profitability enhancement status data area                  052572
+     I              FACHISD                         WHISST                052572
+     I              LERC2030                        LERC20                052572
+     I              LERC135                         LERC13                052572
+     I              LERC315                         LERC35                052572
+     I              LERC425                         LERC42                052572
+     I              EOYFLAG                         EOYFLG                052572
+     I** Database error data structure.
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details, read by access program.
+     ISDCURR    E DSSDCURRPD
+     I*
+     I** Currency Details, read by access program.
+     ISDCUST    E DSSDCUSTPD
+     I*
+     I** Customer Details, read by access program.
+     I***SDINDS*   E DSSDINDSPD                                                             CLE075AU
+     ISDINDS    E DSSDINDSPD                300                                             CLE075AU
+     I*
+     I** Local Industry Details, read by access program.
+     ISDACOF    E DSSDACOFPD
+     I*
+     I** Account Officer Details, read by access program.
+     ISDDEPT    E DSSDDEPTPD
+     I*
+     I** Facility Type Details, read by access program.
+     I***SDFACT*   E DSSDFACTPD                                                             CLE075AU
+     ISDFACT    E DSSDFACTPD                250                                             CLE075AU
+     I*
+     I** Department Details, read by access program.
+     I/COPY WNCPYSRC,LER470I001
+     IDSFDY     E DSDSFDY
+     I*
+     I** Short data structure for access program.
+     IDSSDY     E DSDSSDY
+     I*
+     I** Long data structure for access program.
+     C/EJECT
+     C*
+     C***Perform*initial*processing.**************************************088018
+     C*
+     C************IN10     CASEQ'0'       INIT                            088018
+     C***********          END                                            088018
+     C/COPY WNCPYSRC,LER470C005
+     C*
+     C** Change of Department - access Department name.
+     C*
+     C           *INL3     CASEQ'1'       NWDEPT
+     C                     END
+     C*
+     C** Change of Account Officer - access Account Officer name.
+     C*
+     C           *INL2     CASEQ'1'       NWACOF
+     C                     END
+     C*
+     C** Perform initial processing.                                      088018
+     C*                                                                   088018
+     C           *IN10     CASEQ'0'       INIT                            088018
+     C                     END                                            088018
+     C*                                                                   088018
+     C** Change of Customer - access Customer name.
+     C*
+     C           *INL1     CASEQ'1'       NWCUST
+     C                     END
+     C*
+     C** Process detail records.
+     C*
+     C/COPY WNCPYSRC,LER470C006
+     C                     EXSR DETAIL
+     C/COPY WNCPYSRC,LER470C007
+     C*
+     C** Total time processing:
+     C*
+     C** If first cycle indicator still off then LENQLF2 empty so
+     C** output no details format on audit report ...
+     C*
+     CL1         *IN10     IFEQ '0'
+     C*
+     C** Access Bank details for Run date and User report title.
+     C*
+     CL1                   EXSR AOBANK
+     C*
+     CL1                   OPEN LER470AU
+     CL1                   Z-ADD0         PAGE
+     CL1                   WRITELER470A1
+     CL1                   WRITENODETL
+     CL1                   CLOSELER470AU
+     CL1                   Z-ADDSFNUMU    SFNUM2  60
+     C*
+     C** ...and call ZSFILE to log spool file details with RCF...
+     C*
+     CL1                   CALL 'ZSFILE'
+     CL1                   PARM           SEQ     5
+     CL1                   PARM *BLANK    LBRCA   3
+     CL1                   PARM           SFILEU
+     CL1                   PARM           SFNUM2
+     CL1                   PARM           ZSERR   1
+     C*
+     C** Error during ZSFILE processing, return to calling program.
+     C*
+     CL1         ZSERR     IFEQ '1'
+     CL1                   SETON                     U7U8LR
+     CL1                   RETRN
+     CL1                   ELSE
+     CL1                   GOTO EXIT
+     CL1                   END
+     CL1                   END
+     C*
+     C** Change of Customer: print Loan totals if necessary.
+     C*
+     CL1         LTOT      IFEQ ' '
+     CL1         SAVSEQ    ANDEQ3
+     C/COPY WNCPYSRC,LER470C008
+     CL1                   EXSR LONTOT
+     CL1                   END
+     C*
+     C** Process level break on Account Officer if report level valid:
+     C*
+     CL2         @RLVL     IFGT 0
+     CL2                   MOVE 'A'       @RTYP
+     CL2                   EXSR TOTAL
+     CL2                   END
+     C*
+     C** Process level break on Department if report level valid:
+     C*
+     CL3         @RLVL     IFGT 1
+     CL3                   MOVE 'D'       @RTYP
+     CL3                   EXSR TOTAL
+     CL3                   END
+     C/COPY WNCPYSRC,LER470C009
+     C*
+     C** Last record processing:
+     C*
+     C** Output totals for all Departments if valid level...
+     C*
+     CLR         @RLVL     IFGT 2
+     CLR                   MOVE 'T'       @RTYP
+     CLR                   EXSR TOTAL
+     CLR                   END
+     C*
+     C** ...and print end of report line.
+     C*
+     CLR                   WRITELER470TT
+     C/COPY WNCPYSRC,LER470C010
+     C*
+     C** Exit program.
+     C*
+     CLR         EXIT      TAG
+     CLR                   RETRN
+     C/COPY WNCPYSRC,LER470C011
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  DETAIL --- Process detail and customer extract records.      *
+     C*                                                               *
+     C*  CALLED FROM: Main processing.                                *
+     C*  CALLS: FACTOT, LONDET, MOVDTA, FACNAM                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DETAIL    BEGSR
+     C/COPY WNCPYSRC,LER470C012
+     C*
+     C** Output Loan group totals if last Loan group processed.
+     C*
+     C           SAVSEQ    IFEQ 3
+     C           NQRSEQ    ANDNE3
+     C                     EXSR LONTOT
+     C                     END
+     C*
+     C** Set up fields for report dependant on extract record read.
+     C*
+     C                     Z-ADDNQRSEQ    SAVSEQ
+     C                     MOVEA'00000'   *IN,01
+     C                     MOVE NQRSEQ    X
+     C*
+     C** Facility detail/Customer records.
+     C*
+     C           NQRSEQ    IFEQ 1
+     C           NQRSEQ    OREQ 2
+     C                     MOVE '1'       *IN,X
+      *                                                                   161257
+     C**********           Z-ADD*ZERO     MLNR                                         161257 CLE148
+     C                     MOVEL*BLANKS   MLNR                                                CLE148
+      *                                                                   161257
+     C                     EXSR MOVDTA
+     C           NQRSEQ    CASEQ1         FACNAM
+     C                     END
+     C           WPRTR     IFEQ 'N'                                       163668
+     C                     WRITELER470FC
+     C           NQRSEQ    IFEQ 2
+     C                     WRITELER470XX
+     C                     END
+     C                     MOVEL'0'       *IN22                           163668
+      *                                                                   163668
+      ** Get all participant facilities related to the primary facility   163668
+      *                                                                   163668
+     C           WPRIM     IFEQ 'Y'                                       163668
+     C                     MOVE NQFACL    WCUST   6                       163668
+     C                     CALL 'AOCUSTR0'                                163668
+     C                     PARM *BLANKS   PRTCD                           163668
+     C                     PARM '*KEY'    POPTN                           163668
+     C                     PARM WCUST     PCUST                           163668
+     C                     PARM           PKYST                           163668
+     C           SDCUST    PARM SDCUST    DSSDY                           163668
+     C                     MOVEL*BLANKS   RNAME                           163668
+     C                     MOVEL*BLANKS   RTOWN                           163668
+     C                     MOVELBBCRNM    RNAME                           163668
+     C                     MOVELBBCRTN    RTOWN                           163668
+     C                     WRITELER470FL                                  163668
+     C           K#LTL2    SETLLLEFCLTL2                                  163668
+     C           K#LTL2    READELEFCLTL2                 23               163668
+     C           *IN23     DOWEQ'0'                                       163668
+     C**********           Z-ADDFCCNUM    KCUST                                        163668 CSD027
+     C                     MOVE FCCNUM    KCUST                                               CSD027
+     C                     Z-ADDFACT      KFTYP                           163668
+     C                     Z-ADDFCNO      KFSEQ                           163668
+     C           LF3KEY    CHAINLENQLF3              24                   163668
+     C           *IN24     IFEQ '0'                                       163668
+     C**********           Z-ADDFCCNUM    RFCLT                                        163668 CSD027
+     C                     MOVE FCCNUM    RFCLT                                               CSD027
+     C                     Z-ADDFACT      RFTYP                           163668
+     C                     Z-ADDFCNO      RFSEQ                           163668
+     C                     Z-SUBNQMAV2    RMAVV                           163668
+     C           NQMFE2    DIV  100       RMFEE     H                     163668
+     C                     Z-SUBRMFEE     RMFEE                           163668
+     C                     Z-SUBNQMMG2    RMMGN                           163668
+     C                     Z-SUBNQMAY2    RMAYR                           163668
+     C                     Z-SUBNQYAV2    RYAVV                           163668
+     C           NQYFE2    DIV  100       RYFEE     H                     163668
+     C                     Z-SUBRYFEE     RYFEE                           163668
+     C                     Z-SUBNQYMG2    RYMGN                           163668
+     C                     Z-SUBNQYAY2    RYAYR                           163668
+     C                     MOVE '1'       *IN22                           163668
+     C                     WRITELER470FL                                  163668
+     C                     ENDIF                                          163668
+     C           K#LTL2    READELEFCLTL2                 23               163668
+     C                     ENDDO                                          163668
+     C                     ENDIF                                          163668
+     C                     ENDIF                                          163668
+     C                     END
+     C*
+     C** Loan Customer record.
+     C*
+     C           NQRSEQ    IFEQ 3
+     C                     EXSR LONDET
+     C                     EXSR MOVDTA
+     C                     WRITELER470LN
+     C                     MOVE ' '       LTOT
+     C                     END
+     C*
+     C** Retail Customer record.
+     C*
+     C           NQRSEQ    IFEQ 4
+     C           NQRSEQ    OREQ 5
+     C                     MOVE '1'       *IN,X
+     C                     EXSR MOVDTA
+     C                     WRITELER470RT
+     C                     END
+     C*
+     C** General Ledger Customer record.
+     C*
+     C           NQRSEQ    IFEQ 6
+      *                                                                   ALIEN1
+      ** Output A/C details if GL A/C info. being reported by account     ALIEN1
+      *                                                                   ALIEN1
+     C           NQACCY    IFNE *BLANKS                                   ALIEN1
+     C                     SETON                     50                   ALIEN1
+     C                     END                                            ALIEN1
+     C                     EXSR MOVDTA
+     C                     WRITELER470GL
+     C                     SETOF                     50                   ALIEN1
+     C                     END
+     C*
+     C** Dealing Customer record.
+     C*
+     C           NQRSEQ    IFEQ 7
+     C                     WRITELER470XX
+     C                     EXSR MOVDTA
+     C                     WRITELER470XX
+     C                     END
+     C/COPY WNCPYSRC,LER470C013
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  OFLCHK --- Print headings if overflow.                       *
+     C*                                                               *
+     C*  CALLED FROM: MOVDTA, FACTOT, LONTOT                          *
+     C*  CALLS: Nothing                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           OFLCHK    BEGSR
+     C*
+     C           *IN80     IFEQ '1'
+     C                     WRITELER470H1
+     C                     WRITELER470H2
+     C                     MOVE '0'       *IN80
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  FACNAM --- Access facility name.                             *
+     C*                                                               *
+     C*  CALLED FROM: DETAIL                                          *
+     C*  CALLS: Nothing                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FACNAM    BEGSR
+     C*
+     C                     MOVE NQFTYP    FTYPA   3
+      *                                                                                     CLE075AU
+      ** Check if the facility type is existing in the cache                                CLE075AU
+      *                                                                                     CLE075AU
+     C                     EXSR SRCHKP                                                      CLE075AU
+     C           ##PFIC    IFEQ 'Y'                                                         CLE075AU
+     C           A         OCUR SDFACT                                                      CLE075AU
+     C                     ELSE                                                             CLE075AU
+      *                                                                                     CLE075AU
+     C                     EXSR SRADDP                                                      CLE075AU
+     C           A         OCUR SDFACT                                                      CLE075AU
+     C*
+     C                     CALL 'AOFACTR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM FTYPA     PTYPA   3
+     C           SDFACT    PARM SDFACT    DSFDY
+     C*
+     C** Record not found.
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDFACTPD'DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELFTYPA     DBKEY
+     C                     Z-ADD001       DBASE
+     C                     EXSR DBERR
+     C                     END
+      *                                                                                     CLE075AU
+     C                     MOVE NQFTYP    @FTY,A                                            CLE075AU
+     C                     ENDIF                                                            CLE075AU
+      *                                                                                     CLE075AU
+     C*
+     C                     MOVELAMFCNM    FNAME
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  MOVDTA --- Set up fields for printing.                       *
+     C*                                                               *
+     C*  CALLED FROM: DETAIL                                          *
+     C*  CALLS: OFLCHK                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           MOVDTA    BEGSR
+     C*
+     C** Set up fields for Non-Dealing output.
+     C*
+     C           NQRSEQ    IFNE 7
+      *                                                                   148869
+     C                     MOVE 'N'       WPRIM   1                       163668
+     C                     MOVE 'N'       WPRTR   1                       163668
+     C           NQRTYP    IFEQ 'F'                                       148869
+      *******************************************************************            148869 CLE075AU
+      ***Access*facilities*file*to*see*if*facility*is*a*Credit*Agreement*            148869 CLE075AU
+      *******************************************************************            148869 CLE075AU
+      **********                                                                   CLE075AU MD021155
+      ***Access*facilities*only*if*Credit*Agreements*are*****************          CLE075AU MD021155
+      ***present*in*the*system*******************************************          CLE075AU MD021155
+      **********                                                                   CLE075AU MD021155
+     C********** FNDCA     IFEQ 'Y'                                                CLE075AU MD021155
+      **********                                                                   CLE075AU MD021155
+     C***********          MOVELNQCNUM    K#FCUS                   148869 163668
+     C                     MOVELNQFACL    K#FCUS                          163668
+     C                     MOVELNQFTYP    K#FTYP                          148869
+     C                     MOVELNQFSEQ    K#FSEQ                          148869
+     C                     MOVE 'A'       K#RTYP                          148869
+     C***********K#FCTY    CHAINFCLTY                54             148869161257
+     C           K#FCTY    CHAINFCLTY1               54                   161257
+      **********                                                                   CLE075AU MD021155
+     C**********           ENDIF                                                   CLE075AU MD021155
+      *                                                                   148869
+      ** If record is a credit agreement do not display facitility amount 148869
+      *                                                                   148869
+     C           TRCA      IFEQ 'CA'                                      148869
+     C                     Z-ADD0         NQMAVV                          148869
+     C                     Z-ADD0         NQYAVV                          148869
+     C                     ENDIF                                          148869
+     C           PRTR      IFEQ 'P'                                       156043
+     C           PRTR      OREQ 'S'                                                           CLE106
+     C           PRTR      OREQ 'R'                                                           CLE106
+     C***********PRTR      OREQ 'I'                                 156043161257
+     C                     Z-SUBNQMFEE    NQMFEE                          156043
+     C                     Z-SUBNQYFEE    NQYFEE                          156043
+     C                     Z-SUBNQMAVV    NQMAVV                          161257
+     C                     Z-SUBNQYAVV    NQYAVV                          161257
+     C                     Z-SUBNQMAYR    NQMAYR                          161257
+     C                     Z-SUBNQYAYR    NQYAYR                          161257
+     C                     Z-SUBNQMAMR    NQMAMR                          161257
+     C                     Z-SUBNQYAMR    NQYAMR                          161257
+     C                     MOVE 'Y'       WPRTR                           163668
+     C                     ENDIF                                          156043
+      *                                                                   156043
+     C                     MOVELNQBRCA    K#BRCA                          161257
+     C***********          MOVELNQCNUM    K#PMFC                   161257 163668
+     C                     MOVELNQFACL    K#PMFC                          163668
+     C                     MOVELNQFTYP    K#PMFT                          161257
+     C                     MOVELNQFSEQ    K#PMFN                          161257
+     C           K#LTL2    SETLLLEFCLTL2                                  161257
+     C           K#LTL2    READELEFCLTL2                 51               161257
+      *                                                                   161257
+     C           *IN51     IFEQ '0'                                       163668
+     C           *IN51     OREQ '1'                                       163668
+     C           PRTR      ANDEQ'A'                                       163668
+     C           *IN51     OREQ '1'                                       163668
+     C           PRTR      ANDEQ' '                                       163668
+     C********** ANUM      ANDNE0                                                      163668 CSD027
+     C           ANUM      ANDNE*BLANKS                                                       CSD027
+     C                     MOVEL'Y'       WPRIM                           163668
+     C                     ENDIF                                          163668
+      *                                                                   163668
+     C************IN51     DOWEQ*OFF                                161257163668
+      ***********                                                   161257163668
+     C***********PRTR      IFEQ 'P'                                 161257163668
+     C***********PRTR      OREQ 'I'                                 161257163668
+     C***********          Z-ADDFCCNUM    KCUST                     161257163668
+     C***********          Z-ADDFACT      KFTYP                     161257163668
+     C***********          Z-ADDFCNO      KFSEQ                     161257163668
+     C***********LF3KEY    CHAINLENQLF3              52             161257163668
+      ***********                                                   161257163668
+     C************IN52     IFEQ *OFF                                161257163668
+     C***********          SUB  NQMMG2    NQMMGN                    161257163668
+     C***********          SUB  NQYMG2    NQYMGN                    161257163668
+     C***********          SUB  NQMFE2    NQMFEE                    161257163668
+     C***********          SUB  NQYFE2    NQYFEE                    161257163668
+     C***********          ENDIF                                    161257163668
+      ***********                                                   161257163668
+     C***********          ENDIF                                    161257163668
+      ***********                                                   161257163668
+     C***********K#LTL2    READELEFCLTL2                 51         161257163668
+     C***********          ENDDO                                    161257163668
+      *                                                                   161257
+     C                     ENDIF                                          148869
+     C*
+     C                     Z-ADDNQMAVV    MAVV
+     C                     Z-ADDNQYAVV    YAVV
+     C           NQMFEE    DIV  100       MFEE      H
+     C           NQYFEE    DIV  100       YFEE      H
+     C           NQMMGN    DIV  100       MMGN      H
+     C           NQYMGN    DIV  100       YMGN      H
+     C                     Z-ADDNQMAYR    MAYR
+     C                     Z-ADDNQYAYR    YAYR
+     C                     Z-ADDNQMAMR    MAMR
+     C                     Z-ADDNQYAMR    YAMR
+     C/COPY WNCPYSRC,LER470C001
+     C                     EXSR OFLCHK
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADD1         W
+     C           W         DOWLT10
+     C           YAV,W     IFNE 0
+     C                     Z-ADDMAV,W     MAVV
+     C                     Z-ADDYAV,W     YAVV
+     C           W         ADD  30        Z
+     C                     MOVE '1'       *IN,Z
+     C                     EXSR OFLCHK
+     C                     WRITELER470DF
+     C                     MOVE '0'       *IN,Z
+     C                     END
+     C                     ADD  1         W
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  LONDET --- Accumulate loan group totals.                     *
+     C*                                                               *
+     C*  CALLED FROM: DETAIL                                          *
+     C*  CALLS: Nothing                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           LONDET    BEGSR
+     C*
+     C** Move days into arrays.
+     C*
+     C                     MOVE AMDAY     MDAY
+     C                     MOVE AYDAY     YDAY
+     C*
+     C** Set up Loan group totals for report.
+     C*
+     C** Month to date: Set up day arrays - skip if all zeros.
+     C*
+     C********             XFOOTMDAY      MTOT    20                      052572
+     C           MTOT      IFGT 0
+     C*
+     C                     Z-ADD1         X       20
+     C           X         DOWLE31
+     C           MDAY,X    IFEQ 1
+     C                     Z-ADD1         TMDY,X
+     C                     END
+     C                     ADD  1         X
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Year to date: Set up day arrays - skip if all zeros.
+     C*
+     C**********           XFOOTYDAY      YTOT    30                      052572
+     C           YTOT      IFGT 0
+     C*
+     C                     Z-ADD1         Y       30
+     C           Y         DOWLE366
+     C           YDAY,Y    IFEQ 1
+     C                     Z-ADD1         TYDY,Y
+     C                     END
+     C                     ADD  1         Y
+     C                     END
+     C*
+     C                     END
+      *                                                                   148873
+     C           NQLNRF    CHAINCLOANCLF             53                   148873
+     C           *IN53     IFEQ *ON                                       161257
+     C           NQLNRF    CHAINMCLONCLF             53                   161257
+     C                     ENDIF                                          161257
+      *                                                                   148873
+     C********** MLNR      IFEQ 0                                                      148873 CLE148
+     C           MLNR      IFEQ *BLANKS                                                       CLE148
+      *                                                                   156043
+     C           LPFI      IFEQ 'P'                                       156043
+     C           LPFI      OREQ 'S'                                                           CLE106
+     C           LPFI      OREQ 'R'                                                           CLE106
+     C                     Z-SUBNQMFEE    NQMFEE                          156043
+     C                     Z-SUBNQYFEE    NQYFEE                          156043
+     C                     ENDIF                                          156043
+     C*
+     C** Add Aggregate in to totals for report.
+     C*
+     C                     ADD  NQMAGG    TMAG
+     C                     ADD  NQYAGG    TYAG
+     C                     ADD  NQMAVV    TMAV                            148873
+     C                     ADD  NQYAVV    TYAV                            148873
+     C*
+     C** Add Margin Aggregate in to totals:
+     C*
+     C                     ADD  NQMMGN    TMMG
+     C                     ADD  NQYMGN    TYMG
+     C*
+     C** Add Fee Aggregate in to totals:
+     C*
+     C                     ADD  NQMFEE    TMFE
+     C                     ADD  NQYFEE    TYFE
+     C*                                                                   148873
+     C                     ELSE                                           148873
+     C*                                                                   148873
+     C** Substract aggregate, fees & margin in to overall totals.         148873
+     C*                                                                   148873
+     C                     SUB  NQMAGG    TMAG                            148873
+     C                     SUB  NQYAGG    TYAG                            148873
+     C                     SUB  NQMAVV    TMAV                            148873
+     C                     SUB  NQYAVV    TYAV                            148873
+     C*                                                                   148873
+     C** Sub Margin Aggregate from totals:                                148873
+     C*                                                                   148873
+     C                     SUB  NQMMGN    TMMG                            148873
+     C                     SUB  NQYMGN    TYMG                            148873
+     C*                                                                   148873
+     C** Sub Fee Aggregate from totals:                                   148873
+     C*                                                                   148873
+     C                     SUB  NQMFEE    TMFE                            148873
+     C                     SUB  NQYFEE    TYFE                            148873
+     C*                                                                   148873
+     C                     ENDIF                                          148873
+     C*                                                                   148873
+     C** Calculate Modulus Total for average balance                      148873
+     C*                                                                   148873
+     C                     ADD  NQMAVV    MODTOT                          158560
+     C                     ADD  NQMAVV    YODTOT                          158560
+     C           NQMAVV    IFLT 0                                         148873
+     C********** MLNR      ORNE 0                                                      148873 CLE148
+     C           MLNR      ORNE *BLANKS                                                       CLE148
+     C           NQMAVV    MULT -1        WRK15                           148873
+     C           NQMAMR    MULT WRK15     WRK154                          148873
+     C                     ADD  WRK154    MARCAL                          148873
+     C           NQMAVV    MULT -1        WRK15                           148873
+     C           NQMAYR    MULT WRK15     WRK154                          148873
+     C                     ADD  WRK154    YARCAL                          148873
+     C                     ELSE                                           148873
+     C***********          ADD  NQMAVV    MODTOT                    148873158560
+     C           NQMAMR    MULT NQMAVV    WRK154                          148873
+     C                     ADD  WRK154    MARCAL                          148873
+     C***********          ADD  NQMAVV    YODTOT                    148873158560
+     C           NQMAYR    MULT NQMAVV    WRK154                          148873
+     C                     ADD  WRK154    YARCAL                          148873
+     C                     ENDIF                                          148873
+     C*                                                                   148873
+     C*                                                                   148873
+     C** Calculate Modulus Total for average balance for year             148873
+     C*                                                                   148873
+     C                     ADD  NQYAVV    MODTOY                          158560
+     C                     ADD  NQYAVV    YODTOY                          158560
+     C           NQYAVV    IFLT 0                                         148873
+     C********** MLNR      ORNE 0                                                      148873 CLE148
+     C           MLNR      ORNE *BLANKS                                                       CLE148
+     C           NQYAVV    MULT -1        WRK15                           148873
+     C           NQYAMR    MULT WRK15     WRK154                          148873
+     C                     ADD  WRK154    MARCAY                          148873
+     C           NQYAVV    MULT -1        WRK15                           148873
+     C           NQYAYR    MULT WRK15     WRK154                          148873
+     C                     ADD  WRK154    YARCAY                          148873
+     C                     ELSE                                           148873
+     C***********          ADD  NQYAVV    MODTOY                    148873158560
+     C           NQYAMR    MULT NQYAVV    WRK154                          148873
+     C                     ADD  WRK154    MARCAY                          148873
+     C***********          ADD  NQYAVV    YODTOY                    148873158560
+     C           NQYAYR    MULT NQYAVV    WRK154                          148873
+     C                     ADD  WRK154    YARCAY                          148873
+     C                     ENDIF                                          148873
+     C*                                                                   148873
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  LONTOT --- Calculate and print loan totals.                  *
+     C*                                                               *
+     C*  CALLED FROM: FACTOT                                          *
+     C*  CALLS: OFLCHK                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           LONTOT    BEGSR
+     C*
+     C** Calculate Month to date Average Balances.
+     C*
+     C***********          XFOOTTMDY      MTOT                            148873
+     C***********MTOT      IFNE 0                                         148873
+     C***********TMAG      DIV  MTOT      MAVV      H                     148873
+     C***********          ELSE                                           148873
+     C***********          Z-ADD0         MAVV                            148873
+     C***********          END                                            148873
+     C                     Z-ADDTMAV      MAVV                            148873
+     C*
+     C** Calculate Year to date Average Balances.
+     C*
+     C***********          XFOOTTYDY      YTOT                            148873
+     C***********YTOT      IFNE 0                                         148873
+     C***********TYAG      DIV  YTOT      YAVV      H                     148873
+     C***********          ELSE                                           148873
+     C***********          Z-ADD0         YAVV                            148873
+     C***********          END                                            148873
+     C                     Z-ADDTYAV      YAVV                            148873
+     C*
+     C** Calculate Month to date Yield & Margin rates.
+     C*
+     C***********TMAG      IFNE 0                                         148873
+     C           MODTOT    IFNE 0                                         148873
+     C*
+     C***********TMMG      ADD  TMFE      WRK15                           148873
+     C***********WRK15     DIV  TMAG      WRK158    H                     148873
+     C***********WRK158    MULT CALCB     MAYR                            148873
+     C           YARCAL    DIV  YODTOT    MAYR                            148873
+     C                     Z-ADD0         YODTOT                          148873
+     C                     Z-ADD0         YARCAL                          148873
+     C*
+     C***********TMMG      DIV  TMAG      WRK158    H                     148873
+     C***********WRK158    MULT CALCB     MAMR                            148873
+     C           MARCAL    DIV  MODTOT    MAMR                            148873
+     C/COPY WNCPYSRC,LER470C002
+     C                     Z-ADD0         MODTOT                          148873
+     C                     Z-ADD0         MARCAL                          148873
+     C*
+     C                     ELSE
+     C                     Z-ADD0         MAYR
+     C                     Z-ADD0         MAMR
+     C                     END
+     C*
+     C** Calculate Year to date Yield & Margin rates.
+     C*
+     C***********TYAG      IFNE 0                                         148873
+     C           MODTOY    IFNE 0                                         148873
+     C***********TYMG      ADD  TYFE      WRK15                           148873
+     C***********WRK15     DIV  TYAG      WRK158    H                     148873
+     C***********WRK158    MULT CALCB     YAYR                            148873
+     C           YARCAY    DIV  YODTOY    YAYR                            148873
+     C                     Z-ADD0         YODTOY                          148873
+     C                     Z-ADD0         YARCAY                          148873
+     C*
+     C***********TYMG      DIV  TYAG      WRK158    H                     148873
+     C***********WRK158    MULT CALCB     YAMR                            148873
+     C           MARCAY    DIV  MODTOY    YAMR                            148873
+     C/COPY WNCPYSRC,LER470C003
+     C                     Z-ADD0         MODTOY                          148873
+     C                     Z-ADD0         MARCAY                          148873
+     C                     ELSE
+     C                     Z-ADD0         YAYR
+     C                     Z-ADD0         YAMR
+     C                     END
+     C*
+     C** Adjust Fees & Margins for decimals.
+     C*
+     C           TMFE      DIV  100       MFEE      H
+     C           TYFE      DIV  100       YFEE      H
+     C           TMMG      DIV  100       MMGN      H
+     C           TYMG      DIV  100       YMGN      H
+     C*
+     C** Zeroise accumulated totals.
+     C*
+     C                     Z-ADD0         TMAG
+     C                     Z-ADD0         TYAG
+     C                     Z-ADD0         TMAV                            148873
+     C                     Z-ADD0         TYAV                            148873
+     C                     Z-ADD0         TMMG
+     C                     Z-ADD0         TYMG
+     C                     Z-ADD0         TMFE
+     C                     Z-ADD0         TYFE
+     C                     Z-ADD0         TMDY
+     C                     Z-ADD0         TYDY
+     C*
+     C** Write Loan totals.
+     C*
+     C                     EXSR OFLCHK
+     C                     MOVE '1'       *IN03
+     C                     WRITELER470LN
+     C                     WRITELER470XX
+     C                     MOVE '0'       *IN03
+     C                     MOVE 'Y'       LTOT
+     C                     Z-ADD0         SAVSEQ
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  NWCUST --- Find new customer and industry names.             *
+     C*                                                               *
+     C*  CALLED FROM: Main Processing                                 *
+     C*  CALLS: OFLW                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           NWCUST    BEGSR
+     C*
+     C                     MOVE NQCNUM    CUSTA   6
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*KEY'    POPTN   7
+     C                     PARM CUSTA     PCUST  10
+     C                     PARM           PKYST   7
+     C***********SDCUST    PARM SDCUST    DSFDY                             0093
+     C           SDCUST    PARM SDCUST    DSSDY                             0093
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C*
+     C                     MOVELMSG,1     CNAME
+     C                     MOVELMSG,2     INAME
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE *BLANKS   CNAME
+     C                     MOVELBBCRNM    CNAME
+      *                                                                                     CLE075AU
+      ** Check first if the industry code is present in the cache                           CLE075AU
+      *                                                                                     CLE075AU
+     C                     Z-ADD1         A                                                 CLE075AU
+     C           BBLICD    LOKUP@IND,A                   91                                 CLE075AU
+      *                                                                                     CLE075AU
+     C           *IN91     IFEQ *ON                                                         CLE075AU
+     C           BBLICD    ANDNE*BLANK                                                      CLE075AU
+     C           A         OCUR SDINDS                                                      CLE075AU
+     C                     MOVE *BLANKS   PRTCD                                             CLE075AU
+      *                                                                                     CLE075AU
+     C                     ELSE                                                             CLE075AU
+     C           I         OCUR SDINDS                                                      CLE075AU
+     C*
+     C                     CALL 'AOINDSR0'
+     C**********           PARM '*MSG   ' PRTCD                                               CCB016
+     C                     PARM *BLANKS   PRTCD                                               CCB016
+     C                     PARM '*KEY'    POPTN
+     C                     PARM BBLICD    PLICD   3
+     C           SDINDS    PARM SDINDS    DSFDY
+      *                                                                                     CLE075AU
+     C           BBLICD    IFNE *BLANK                                                      CLE075AU
+     C                     MOVE AOLICD    @IND,I                                            CLE075AU
+     C                     ADD  1         I                                                 CLE075AU
+     C*
+     C                     ENDIF                                                            CLE075AU
+      *                                                                                     CLE075AU
+     C                     ENDIF                                                            CLE075AU
+      *                                                                                     CLE075AU
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELAOLINA    INAME
+     C                     ELSE
+     C                     MOVELMSG,2     INAME
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Zeroise Loan total control fields.
+     C*
+     C                     MOVE ' '       LTOT
+     C                     Z-ADD0         SAVSEQ
+     C/COPY WNCPYSRC,LER470C014
+     C*
+     C** If level break has Not occurred then check for overflow.
+     C*
+     C           *IN80     IFEQ '0'
+     C                     EXSR OFLW
+     C                     END
+     C*
+     C** Skip page if necessary and print headings for new Customer.
+     C*
+     C           *IN80     IFEQ '1'
+     C                     WRITELER470H1
+     C                     MOVE '0'       *IN80
+     C                     ELSE
+     C                     MOVE '1'       *IN45
+     C                     END
+     C                     WRITELER470H2
+     C                     MOVE '0'       *IN45
+     C/COPY WNCPYSRC,LER470C015
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  NWACOF --- Find new account officer name.                    *
+     C*                                                               *
+     C*  CALLED FROM: Main Processing                                 *
+     C*  CALLS: Nothing                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           NWACOF    BEGSR
+     C*
+     C                     CALL 'AOACOFR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM NQACOF    PACOF   2
+     C           SDACOF    PARM SDACOF    DSFDY
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELMSG,3     ANAME
+     C                     ELSE
+     C                     MOVELAZACON    ANAME
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  NWDEPT --- Find new department name.                         *
+     C*                                                               *
+     C*  CALLED FROM: Main Processing                                 *
+     C*  CALLS: Nothing                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           NWDEPT    BEGSR
+     C*
+     C                     CALL 'AODEPTR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM NQDEPT    PDEPT   3
+     C           SDDEPT    PARM SDDEPT    DSFDY
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELMSG,4     DNAME
+     C                     ELSE
+     C                     MOVELAEDPNM    DNAME
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C/COPY WNCPYSRC,LER470C016
+     C*****************************************************************
+     C*                                                               *
+     C*  TOTAL --- Print A/c Officer, Department or Overall totals.   *
+     C*                                                               *
+     C*  CALLED FROM: Total time processing.                          *
+     C*  CALLS: DETAIL, LONTOT                                        *
+     C*****************************************************************
+     C*
+     C           TOTAL     BEGSR
+     C/COPY WNCPYSRC,LER470C017
+     C*
+     C** Set up key for Read of LENQLF1 for total required.
+     C*
+     C                     MOVE '0'       *IN80
+     C                     MOVE NQACOF    @ACOF
+     C           @RTYP     IFEQ 'A'
+     C/COPY WNCPYSRC,LER470C018
+     C                     MOVE NQDEPT    @DEPT
+     C                     MOVEA'00110'   *IN,40
+     C                     MOVELANAME     ATOT
+     C                     END
+     C           @RTYP     IFEQ 'D'
+     C/COPY WNCPYSRC,LER470C019
+     C                     MOVE *BLANKS   @ACOF
+     C                     MOVEA'01000'   *IN,40
+     C                     MOVELDNAME     DTOT
+     C                     END
+     C           @RTYP     IFEQ 'T'
+     C/COPY WNCPYSRC,LER470C020
+     C                     MOVE *BLANKS   @ACOF
+     C                     MOVE *BLANKS   @DEPT
+     C                     MOVEA'10000'   *IN,40
+     C                     END
+     C*
+     C** Skip page and print heading.
+     C*
+     C                     WRITELER470H1
+     C                     WRITELER470H2
+     C*
+     C** Read LENQLF1 file.
+     C** Ignore Loan-related records with group id. zero.
+     C*
+     C                     MOVE '0'       *IN90
+     C           L1KEY     SETLLLENQLF1
+     C           *IN90     DOWEQ'0'
+     C           L1KEY     READELENQLF1                  90
+     C           *IN90     IFEQ '0'
+     C           NQRSEQ    IFEQ 3
+     C           NQGPID    ANDEQ0
+     C                     GOTO NOTOT
+     C                     END
+     C*
+     C** Process detail and customer extract records.
+     C*
+     C/COPY WNCPYSRC,LER470C021
+     C                     EXSR DETAIL
+     C/COPY WNCPYSRC,LER470C022
+     C*
+     C           NOTOT     TAG
+     C*
+     C                     END
+     C                     END
+     C*
+     C** Print Loan totals if not already done.
+     C*
+     C           LTOT      IFEQ ' '
+     C           SAVSEQ    ANDEQ3
+     C                     EXSR LONTOT
+     C                     END
+     C*
+     C** Set overflow indicator to force new page for next Customer.
+     C*
+     C                     MOVE '1'       *IN80
+     C*
+     C** Reset indicators for Customer level output.
+     C*
+     C                     MOVEA'00011'   *IN,40
+     C/COPY WNCPYSRC,LER470C023
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  OFLW --- Determine whether enough lines remain on page.      *
+     C*                                                               *
+     C*  CALLED FROM: NWCUST                                          *
+     C*  CALLS: Nothing                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           OFLW      BEGSR
+     C*
+     C** Number of remaining lines is
+     C** the overflow line number minus the current line number.
+     C*
+     C           OFLLN     SUB  PRTLN     REMLN   30
+     C*
+     C** If this is less than the number required, alert need for
+     C** new page.
+     C*
+     C           REMLN     IFLT RQDLN
+     C                     SETON                     80
+     C                     ELSE
+     C                     SETOF                     80
+     C                     END
+     C*
+     C                     ENDSR
+     C/COPY WNCPYSRC,LER470C024
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  INIT --- Perform first cycle calculations                    *
+     C*                                                               *
+     C*  CALLED FROM: Main Processing                                 *
+     C*  CALLS: AOBANK                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C** Receive entry parameters.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PDAT    7
+     C                     PARM           @RTYP   1
+     C                     PARM           @USAC   2
+     C                     PARM           @WSID  10
+     C*
+     C** Ensure Copyright text appears in compiled object.
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Define local data area.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C                     MOVE '1'       *IN10
+     C*                                                                   052572
+     C           *NAMVAR   DEFN           LERSTS                          052572
+     C                     IN   LERSTS                                    052572
+     C*
+     C** Set up required number of lines before overflow occurs.
+     C*
+     C**********           Z-ADD1         RQDLN   30                      BH3445
+     C                     Z-ADD9         RQDLN   30                      BH3445
+     C*
+     C** Set up text for requester.
+     C*
+     C                     MOVEA'000'     *IN,60
+     C           @USAC     IFNE *BLANKS
+     C                     MOVE '1'       *IN60            REQUESTED
+     C***********          ELSE                                          BH3384
+     C***********@WSID     IFNE *BLANKS                                  BH3384
+     C***********          MOVE '1'       *IN61            WEEKLY        BH3384
+     C***********          ELSE                                          BH3384
+     C***********          MOVE '1'       *IN62            END OF MONTH  BH3384
+     C***********          END                                           BH3384
+     C                     END
+     C*
+     C** Find reporting level.
+     C*
+     C           @RTYP     LOKUPTABTYP    TABLVL         21
+     C                     MOVE TABLVL    @RLVL   10
+     C*
+     C** Access Bank details for Run date, Base Currency code and
+     C** Previous End of year date...
+     C*
+     C                     EXSR AOBANK
+     C/COPY WNCPYSRC,LER470C004
+     C*                                                                    0108
+     C** Should not do this check as all dates input to the routines       0108
+     C** are in DDMMYY format and this does not matter for the report      0108
+     C** as that uses the alpha date. This was causing an error in the     0108
+     C** profitability calculations                                        0108
+     C**                                                                   0108
+     C***Check*date*format*for standard subroutine.                        0108
+     C*********************                                                0108
+     C***********BJDFIN****IFEQ 'M'                                        0108
+     C*********************MOVE '1'       *IN98                            0108
+     C*********************END                                             0108
+     C                     MOVE '0'       *IN98                            0108
+     C*
+     C** Access Base Currency details to retrieve the
+     C** Default Calculation Basis
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM BJCYCD    PCYCD   3
+     C***********SDCURR    PARM SDCURR    DSFDY                                               CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                                               CSD006
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C           A6DICB    OREQ *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELBJCYCD    DBKEY
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     EXSR DBERR
+     C*
+     C** Set up the correct number of days in the year from the
+     C** Default Calculation Basis.
+     C*
+     C                     ELSE
+     C***********A6DICB    IFEQ '1'                                       148873
+     C***********A6DICB    OREQ '4'                                       148873
+     C***********          Z-ADD365       CALCB   30                      148873
+     C***********          ELSE                                           148873
+     C***********A6DICB    IFEQ '6'                                       148873
+     C***********          Z-ADD366       CALCB                           148873
+     C***********          ELSE                                           148873
+     C***********          Z-ADD360       CALCB                           148873
+     C***********          END                                            148873
+     C***********          END                                            148873
+     C                     END
+     C*
+     C** Calculate Start of Year date as
+     C** Previous End of year date (from Bank details file) + 1.
+     C*
+     C           BJPEYD    ADD  1         ZDAYNO
+     C                     Z-ADDZDAYNO    SYDY    50
+     C*
+     C** Convert the Start of year day number to date (DDMMYY) format
+     C*
+     C                     EXSR ZDATE2
+     C*
+     C** Store the Start of year day (DD) for use later.
+     C*
+     C                     MOVELZADATE    DDSTOR  20
+     C                     Z-ADDZDATE     SYDT    60
+     C*
+     C** Get month number of processing date.
+     C*
+     C                     MOVE PDAT      PDATA
+     C                     Z-ADD1         MN      20
+     C           MMM       LOKUPZMNM,MN                  20
+     C                     MOVE YY        MY
+     C*
+     C** Save the processing date month and year for later use.
+     C*
+     C                     MOVELMN        MY
+     C                     MOVE YY        MY
+     C                     MOVE DATE      SAVDAT  6
+     C*
+     C** Use DD part of start of year date (DDMMYY) as
+     C** Start of month day.
+     C*
+     C                     MOVELPDAT      DD1     20
+     C*
+     C** If the DD field of the processing date is less than the
+     C** DD field of the Start of month date then allow for
+     C** the use of the previous month's calculations by
+     C** subtracting 1 from the month number.
+     C*
+     C           DD1       IFLT DDSTOR
+     C                     SUB  1         MN
+     C*
+     C** Subsequently, if the resulting month number is zero then
+     C** move 12 into the MN field and subtract 1 from the YY field
+     C** to return to the previous year.
+     C*
+     C           MN        IFEQ 0
+     C                     Z-ADD12        MN
+     C                     MOVE YY        YYN     20
+     C                     SUB  1         YYN
+     C                     MOVE YYN       YY
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Now move the appropriate values into the month and year fields
+     C** for the date data structure.
+     C*
+     C                     MOVELMN        MY
+     C*
+     C** Convert the appropriate Start of month date to Midas day
+     C** number format having retrieved the appropriate alphanumeric
+     C** month from the array.
+     C*
+     C                     MOVE DDSTOR    DD
+     C                     MOVEAZMNM,MN   MTH1    3
+     C*
+     C                     MOVE DD        DAY
+     C                     MOVE YY        YR
+     C                     MOVE MTH1      MTH
+     C                     MOVE DATE      GDATE
+     C                     CALL 'LERDATEF'DATDAY
+     C                     Z-ADDGDAYNO    SMDY    50
+     C*
+     C** Calculate number of days in period from processing date.
+     C** N.B. processing date will be same month and year as
+     C** Start of month date.
+     C*
+     C** This PDAT conversion is unconditional.
+     C*
+     C                     MOVE SAVDAT    DATE
+     C                     MOVELPDAT      DD
+     C                     MOVE DATE      ZDATE
+     C                     EXSR ZDATE1
+     C           ZDAYNO    SUB  SMDY      PDAY    20
+     C                     ADD  1         PDAY
+     C*
+     C                     Z-ADDZDAYNO    PDAYNO  50                      052572
+     C*                                                                   052572
+     C*  Calculate acutal number of days in the month (to date)           052572
+     C           PDAYNO    SUB  STARMO    MTOT    20                      052572
+     C                     ADD  1         MTOT                            052572
+     C*                                                                   052572
+     C*  Calculate acutal number of days in the year (to date)            052572
+     C           PDAYNO    SUB  BJPEYD    YTOT    30                      052572
+     C** Set indicators for Customer level output.
+     C** Set on indicators to control printing of department reference
+     C** and account officer narratives.
+     C*
+     C                     MOVEA'00011'   *IN,40
+     C/COPY WNCPYSRC,LER470C025
+     C*
+     C** Open printer file for detail report.
+     C*
+     C                     OPEN LER470P1
+     C*
+     C** Call ZSFILE to log spool file details with RCF.
+     C*
+     C                     Z-ADDSFNUM     SFNUM1  60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANK    LBRCA
+     C                     PARM           SFILE
+     C                     PARM           SFNUM1
+     C                     PARM           ZSERR
+     C*
+     C** Error during ZSFILE processing, return to calling program.
+     C*
+     C           ZSERR     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C** Write the first header record (this follows the activity
+     C** period calculation so that start date and number of days
+     C** are output).
+     C*
+     C                     WRITELER470H1
+     C/COPY WNCPYSRC,LER470C026
+     C*
+     C** Define parameter list for LERDATEF
+     C** (Date to day number for first day in month).
+     C*
+     C           DATDAY    PLIST
+     C                     PARM           GDATE   60
+     C                     PARM           GDAYNO  50
+     C                     PARM           GRTCD   1
+     C*
+     C** Define key list for LENQLF1 file.
+     C*
+     C           L1KEY     KLIST
+     C                     KFLD           @RTYP   1
+     C/COPY WNCPYSRC,LER470C027
+     C                     KFLD           @DEPT   3
+     C                     KFLD           @ACOF   2
+      *                                                                   161257
+      ** Define key list for LENQLF3                                      161257
+      *                                                                   161257
+     C           LF3KEY    KLIST                                          161257
+     C**********           KFLD           KCUST   60                                   161257 CSD027
+     C                     KFLD           KCUST   6                                           CSD027
+     C                     KFLD           KFTYP   30                      161257
+     C                     KFLD           KFSEQ   20                      161257
+      *                                                                   161257
+      ** Key list to access Funding Participant Details For a prime       161257
+      ** Facility                                                         148869
+      *                                                                   161257
+     C           K#LTL2    KLIST                                          161257
+     C                     KFLD           K#BRCA  3                       161257
+     C**********           KFLD           K#PMFC  60                                   161257 CSD027
+     C                     KFLD           K#PMFC  6                                           CSD027
+     C                     KFLD           K#PMFT  30                      161257
+     C                     KFLD           K#PMFN  20                      161257
+      ** Key list to access Credit Agreement Details for a prime          148869
+      ** Facility                                                         148869
+      *                                                                   148869
+     C           K#FCTY    KLIST                                          148869
+     C**********           KFLD           K#FCUS  60                                   148869 CSD027
+     C                     KFLD           K#FCUS  6                                           CSD027
+     C                     KFLD           K#FTYP  30                      148869
+     C                     KFLD           K#FSEQ  20                      148869
+     C                     KFLD           K#RTYP  1                       148869
+     C*
+     C** Define work fields.
+     C*
+     C                     Z-ADD0         X       20
+     C                     Z-ADD0         W       20
+     C                     Z-ADD0         Z       20
+     C                     Z-ADD0         SAVSEQ  20
+     C                     Z-ADD0         WRK15  150
+     C                     Z-ADD0         MODTOT 150                      148873
+     C                     Z-ADD0         YODTOT 150                      148873
+     C                     Z-ADD0         MODTOY 150                      148873
+     C                     Z-ADD0         YODTOY 150                      148873
+     C                     Z-ADD0         WRK154 154                      148873
+     C                     Z-ADD0         WRK158 158
+     C                     Z-ADD0         MARCAL 154                      148873
+     C                     Z-ADD0         YARCAL 154                      148873
+     C                     Z-ADD0         MARCAY 154                      148873
+     C                     Z-ADD0         YARCAY 154                      148873
+     C                     MOVE *BLANK    LTOT    1
+     C           *LIKE     DEFN NQMAGG    TMAG
+     C           *LIKE     DEFN NQYAGG    TYAG
+     C           *LIKE     DEFN NQMAVV    TMAV                            148873
+     C           *LIKE     DEFN NQYAVV    TYAV                            148873
+     C           *LIKE     DEFN NQMMGN    TMMG
+     C           *LIKE     DEFN NQYMGN    TYMG
+     C           *LIKE     DEFN NQMFEE    TMFE
+     C           *LIKE     DEFN NQYFEE    TYFE
+     C*
+      ** Define variables for LRU and initializations.                                      CLE075AU
+      *                                                                                     CLE075AU
+     C                     Z-ADD0         #LEAST 130                                        CLE075AU
+     C           *LIKE     DEFN #LEAST    ##LC                                              CLE075AU
+      *                                                                                     CLE075AU
+     C                     Z-ADD0         ##PNDX  40                                        CLE075AU
+     C           *LIKE     DEFN ##PNDX    A                                                 CLE075AU
+     C           *LIKE     DEFN ##PNDX    ##PSAV                                            CLE075AU
+     C                     Z-ADD250       ##PSAV                                            CLE075AU
+     C                     Z-ADD0         ##LC                                              CLE075AU
+      *                                                                                     CLE075AU
+     C                     Z-ADD1         I       30                                        CLE075AU
+      **********                                                                   CLE075AU MD021155
+      ***Perform*SQl*to*check*if*any*Credit*Agreement*is*present********           CLE075AU MD021155
+      ***in*the*system**************************************************           CLE075AU MD021155
+      **********                                                                   CLE075AU MD021155
+     C***/EXEC*SQL******************************************************           CLE075AU MD021155
+     C***+*Declare*RCursor*Insensitive*scroll*cursor*for****************           CLE075AU MD021155
+     C***+*SELECT***FROM*FCLTYFM*WHERE*TRCA*=*'CA'**********************           CLE075AU MD021155
+     C***/END-EXEC******************************************************           CLE075AU MD021155
+      **********                                                                   CLE075AU MD021155
+     C***/EXEC*SQL******************************************************           CLE075AU MD021155
+     C***+OPEN*RCursor**************************************************           CLE075AU MD021155
+     C***/END-EXEC******************************************************           CLE075AU MD021155
+      **********                                                                   CLE075AU MD021155
+     C********** SQLER2    IFGT 0                                                  CLE075AU MD021155
+     C**********           MOVE 'Y'       FNDCA   1                                CLE075AU MD021155
+     C**********           ELSE                                                    CLE075AU MD021155
+     C**********           MOVE 'N'       FNDCA                                    CLE075AU MD021155
+     C**********           ENDIF                                                   CLE075AU MD021155
+      **********                                                                   CLE075AU MD021155
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  AOBANK --- Access Bank details.                              *
+     C*                                                               *
+     C*  CALLED FROM: INIT, Last record processing.                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AOBANK    BEGSR
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** Record not found.
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD003       DBASE
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************                     CLE075AU
+     C*                                                               *                     CLE075AU
+     C*  SRCHKP ---Checks if the facility type is present in the cache*                     CLE075AU
+     C*                                                               *                     CLE075AU
+     C*  Called From: FACNAM                                          *                     CLE075AU
+     C*                                                               *                     CLE075AU
+     C*****************************************************************                     CLE075AU
+     C           SRCHKP    BEGSR                                                            CLE075AU
+     C                     MOVE *IN20     #IN20   1                                         CLE075AU
+     C                     ADD  1         ##LC                                              CLE075AU
+     C                     MOVEL*BLANK    ##PFIC  1                                         CLE075AU
+      *                                                                                     CLE075AU
+      ** Restore saved value of A index                                                     CLE075AU
+      *                                                                                     CLE075AU
+     C                     Z-ADD##PSAV    A                                                 CLE075AU
+      *                                                                                     CLE075AU
+      ** Defend againts A == 0                                                              CLE075AU
+      *                                                                                     CLE075AU
+     C           A         IFEQ 0                                                           CLE075AU
+     C                     Z-ADD1         A                                                 CLE075AU
+     C                     ENDIF                                                            CLE075AU
+      *                                                                                     CLE075AU
+      ** Is this the same as the last LOKUP? if so, we can bypass LOKUP                     CLE075AU
+      *                                                                                     CLE075AU
+     C           FTYPA     IFEQ @FTY,A                                                      CLE075AU
+     C                     SETON                         20                                 CLE075AU
+     C                     ELSE                                                             CLE075AU
+      *                                                                                     CLE075AU
+      ** Begin lookup from last saved or if full, start from 1                              CLE075AU
+      *                                                                                     CLE075AU
+     C           ##PNDX    IFEQ 0                                                           CLE075AU
+     C                     Z-ADD1         A                                                 CLE075AU
+     C                     ELSE                                                             CLE075AU
+     C                     Z-ADD##PNDX    A                                                 CLE075AU
+     C                     ENDIF                                                            CLE075AU
+      *                                                                                     CLE075AU
+     C           FTYPA     LOKUP@FTY,A                   20                                 CLE075AU
+     C                     ENDIF                                                            CLE075AU
+      *                                                                                     CLE075AU
+     C           *IN20     IFEQ *ON                                                         CLE075AU
+     C                     MOVE ##LC      #LRU,A                                            CLE075AU
+      *                                                                                     CLE075AU
+      ** Save the last update to A                                                          CLE075AU
+      *                                                                                     CLE075AU
+     C                     Z-ADDA         ##PSAV                                            CLE075AU
+      *                                                                                     CLE075AU
+      ** Turn on indicator so that program will know it is in the array                     CLE075AU
+      *                                                                                     CLE075AU
+     C                     MOVE 'Y'       ##PFIC                                            CLE075AU
+     C                     ENDIF                                                            CLE075AU
+      *                                                                                     CLE075AU
+     C                     MOVE #IN20     *IN20                                             CLE075AU
+     C                     ENDSR                                                            CLE075AU
+     C*****************************************************************                     CLE075AU
+     C*                                                               *                     CLE075AU
+     C*  SRADDP --This subroutine adds the new facility type to the   *                     CLE075AU
+     C*           cache. if full, it replaces the least recently used *                     CLE075AU
+     C*                                                               *                     CLE075AU
+     C*  Called From: FACNAM                                          *                     CLE075AU
+     C*                                                               *                     CLE075AU
+     C*****************************************************************                     CLE075AU
+     C           SRADDP    BEGSR                                                            CLE075AU
+     C                     MOVE *IN40     #IN40   1                                         CLE075AU
+      *                                                                                     CLE075AU
+      ** Check if there is still available slot in the array.                               CLE075AU
+      *                                                                                     CLE075AU
+     C           ##PNDX    IFNE 0                                                           CLE075AU
+     C                     Z-ADD##PNDX    A                                                 CLE075AU
+      *                                                                                     CLE075AU
+     C                     MOVE ##LC      #LRU,A                                            CLE075AU
+      *                                                                                     CLE075AU
+     C                     SUB  1         ##PNDX                                            CLE075AU
+      *                                                                                     CLE075AU
+      ** Else replace the LRU                                                               CLE075AU
+      *                                                                                     CLE075AU
+     C                     ELSE                                                             CLE075AU
+     C                     Z-ADD1         A                                                 CLE075AU
+     C                     MOVEA#LRU      #LRUC                                             CLE075AU
+     C                     SORTA#LRUC                                                       CLE075AU
+     C                     Z-ADD#LRUC,1   #LEAST                                            CLE075AU
+     C           #LEAST    LOKUP#LRU,A                   40                                 CLE075AU
+      *                                                                                     CLE075AU
+     C                     MOVE ##LC      #LRU,A                                            CLE075AU
+      *                                                                                     CLE075AU
+     C                     ENDIF                                                            CLE075AU
+      *                                                                                     CLE075AU
+      ** Update PSAVE so next call to SRCHKP checks                                         CLE075AU
+      ** this newly added element.                                                          CLE075AU
+      *                                                                                     CLE075AU
+     C                     Z-ADDA         ##PSAV                                            CLE075AU
+     C                     MOVE #IN40     *IN40                                             CLE075AU
+     C                     ENDSR                                                            CLE075AU
+     C*****************************************************************
+     C*                                                               *
+     C*  DBERR --- Subroutine to handle database errors               *
+     C*                                                               *
+     C*  CALLED FROM: After abnormal operation occurs                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DBERR     BEGSR                           ** *PSSR **
+     C*
+     C** Set up program name for database error print.
+     C*
+     C                     MOVEL'LER470'  DBPGM
+     C                     OUT  LDA
+     C*
+     C** Open printer file for audit report.
+     C*
+     C                     OPEN LER470AU
+     C*
+     C** Write audit report header.
+     C*
+     C                     Z-ADD0         PAGE
+     C                     WRITELER470A1
+     C*
+     C** Write database error format in audit report.
+     C*
+     C                     WRITEDBERROR
+     C*
+     C** Close open printer files
+     C*
+     C           DBASE     IFNE 002
+     C           DBASE     ANDNE003
+     C                     CLOSELER470P1
+     C                     END
+     C*
+     C                     CLOSELER470AU
+     C*
+     C** Call ZSFILE to log spool file details with RCF.
+     C*
+     C                     Z-ADDSFNUMU    SFNUM2  60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANK    LBRCA
+     C                     PARM           SFILEU
+     C                     PARM           SFNUM2
+     C                     PARM           ZSERR
+     C*
+     C** Error during ZSFILE processing, return to calling program.
+     C*
+     C           ZSERR     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C** Execute *PSSR to terminate program.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR --- Subroutine to handle abnormal error conditions     *
+     C*                                                               *
+     C*  CALLED FROM: After abnormal operation occurs                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C** Ensure dump is executed only once.
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C** Exit program.
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE2Z3
+** CPY@   OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   MESSAGES - FOR UNKNOWN CODES
+* CUSTOMER UNKNOWN *
+* INDUSTRY UNKNOWN *
+* ACCOUNT OFFICER UNKNOWN *
+* DEPARTMENT UNKNOWN *
+     X/COPY WNCPYSRC,LER470X001
+**   REPORTING TYPES/LEVELS
+C0A1D2T3

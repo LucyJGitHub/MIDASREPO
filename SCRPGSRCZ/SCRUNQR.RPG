@@ -1,0 +1,219 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SC COB audit control list report')
+     F********************************************************************
+     F*  Midas  STANDING DATA MODULE.
+     F*                                                                  *
+     F*    SCRUNQR - END OF DAY AUDIT CONTROL LIST                       *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 132486             Date 21Jun01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01343             Date 22Aug91               *
+     F*                 LN0090             Date 02May90                  *
+     F*                    E15153      DATE 30/09/88                     *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*    132486 - Enrol SCRUNQP1 in RCF.                                     *
+     F*    S01343 - RENAMED FROM MRUNQR                                  *
+     F*                                                                  *
+     F*    LN0090 - REMOVE TABLE FILE AND USE ACCESS PGM TO READ SDBANKPD*
+     F*                                                                  *
+     F*    E15153 - CORRECT LENGTH OF WORKSTATION ID.                    *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***TABLE   IF  F      96 12AI     2 DISK                            LN0090
+     F*MRUNQRP1O   F     132     OF     PRINTER                    S01124 S01343
+     F*CRUNQP1O***F     132     OF     PRINTER                     S01343 132486
+     FSCRUNQP1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  132486
+     E                    CPY@    1   1 80
+     I******                                                              LN0090
+     I*****TABLE FILE - INSTALLATION CONTROL DATA RECORD 1                LN0090
+     I******                                                              LN0090
+     I***TABLE   NS  01   1 CD   2 C0   3 C1                              LN0090
+     I******    AND      12 C1  13 C0                                     LN0090
+     I******                                  1   1 RECI                  LN0090
+     I******                                 14  66 TITL                  LN0090
+     I******                                 67  67 DATF                  LN0090
+     I******                                 80  86 RUNA                  LN0090
+     I******                                                              LN0090
+     IONLY        DS
+     I                                        1 100 MSG100
+     I                                      101 132 MSG32
+     I                                        1   5 TEST
+     IMTIME       DS
+     I                                        1   2 HH
+     I                                        3   4 MM
+     I                                        5   6 SS
+     IPSDS       SDS
+     I*********                             244 246 WSID                  E15153
+     I                                      244 253 WSID                  E15153
+     I                                      254 263 USER
+     ISPOOL       DS                                                      132486
+     I                                       83  92 SFILE                 132486
+     I                                    B 123 1240SFNUM                 132486
+     I                                    B 367 3680LINE                  132486
+     I*                                                                   132486
+     I*                                                                   LN0090
+     I** DUMMY RECORD FORMATS FOR ACCESS OBJECTS                          LN0090
+     I*                                                                   LN0090
+     ISDBANK    E DSSDBANKPD                                              LN0090
+     I*                                                                   LN0090
+     IDSFDY     E DSDSFDY                                                 LN0090
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                LN0090
+     I*                                                                   LN0090
+     C                     MOVEACPY@      BIS@   80
+     C           *ENTRY    PLIST
+     C                     PARM           ONLY  132
+     C                     PARM           MTIME   6
+     C*                                                                   132486
+     C  N01                EXSR INIT                                      132486
+     C*                                                                   132486
+     C           *IN20     IFEQ '0'
+     C******               EXSR ZSYSTM                                    LN0090
+     C** CALL ACCESS PROGRAM FOR BANK DETAILS                             LN0090
+     C                     CALL 'AOBANKR0'                                LN0090
+     C                     PARM '*MSG    '@RTCD   7                       LN0090
+     C                     PARM '*FIRST  '@OPTN   7                       LN0090
+     C           SDBANK    PARM SDBANK    DSFDY                           LN0090
+     C*                                                                   LN0090
+     C           @RTCD     IFNE *BLANK                                    LN0090
+     C                     MOVEL'SDBANKPD'DBFILE 10         ************* LN0090
+     C                     MOVEL'01'      DBASE   3         *DBERROR 001* LN0090
+     C                     MOVEL@OPTN     DBOPTN  7         ************* LN0090
+     C*****      *IN99     IFEQ '1'                                       LN0090
+     C                     EXCPTERROR
+     C                     SETON                     U8
+     C                     SETON                     LR
+     C                     ELSE
+     C                     TIME           NOWTIM  60
+     C                     EXCPTTITLE
+     C                     END
+0327 C*    CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    LN0090
+0328 C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON  LN0090
+     C                     SETON                     20
+     C                     END
+     C           TEST      IFNE '*END*'
+     C   OF                TIME           NOWTIM
+     C   OF                EXCPTTITLE
+     C                     EXCPTDETAIL
+     C           MSG32     IFNE *BLANK
+     C   OF                TIME           NOWTIM
+     C   OF                EXCPTTITLE
+     C                     EXCPTLONG
+     C                     END
+     C                     RETRN
+     C                     ELSE
+     C                     SETON                     LR
+     C                     END
+     C********************************************************************132486
+     C*****                                                               132486
+      ********************************************************************132486
+     C           INIT      BEGSR                                          132486
+     C*                                                                   132486
+     C                     SETON                     01                   132486
+     C                     OPEN SCRUNQP1                                  132486
+     C*                                                                   132486
+     C** Ensure Report spool file recorded by RCF.                        132486
+     C*                                                                   132486
+     C                     Z-ADDSFNUM     ZSNUM   60                      132486
+     C*                                                                   132486
+     C                     CALL 'ZSFILE'                                  132486
+     C                     PARM           SEQ     5                       132486
+     C                     PARM *BLANKS   @PARM   3                       132486
+     C                     PARM           SFILE                           132486
+     C                     PARM           ZSNUM                           132486
+     C                     PARM           ZSERR   1                       132486
+     C*                                                                   132486
+     C           ZSERR     IFEQ 'Y'                                       132486
+     C*                                                                   132486
+     C**  Error during ZSFILE processing, return to calling program.      132486
+     C*                                                                   132486
+     C                     MOVE '1'       *INU7                           132486
+     C                     MOVE '1'       *INU8                           132486
+     C                     MOVE '1'       *INLR                           132486
+     C                     RETRN                                          132486
+     C                     END                                            132486
+     C*                                                                   132486
+     C                     ENDSR                                          132486
+     C********************************************************************
+     C*****                                                               LN0090
+     C*****ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   LN0090
+     C*****                                                               LN0090
+     C*****      ZSYSTM    BEGSR                           *** ZSYSTEM ***LN0090
+     C*****                                                               LN0090
+     C*****SET UP KEY FOR INSTALLATION CONTROL RECORD.                    LN0090
+     C*****                MOVEL'01      'ZTABKY 12                       LN0090
+     C*****                MOVE '  10'    ZTABKY                          LN0090
+     C*****                                                               LN0090
+     C*****      ZTABKY    CHAINTABLE                99    ON NOT THERE   LN0090
+     C**N99      RECI      COMP 'D'                  9999  ON, IS DELETED LN0090
+     C*****                                                               LN0090
+     C*****CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    LN0090
+     C*****      DATF      COMP 'M'                      98MMDDYY, 98 ON  LN0090
+     C*****                                                               LN0090
+     C*****                ENDSR                                          LN0090
+     C*****                                                               LN0090
+     C*****                                                               LN0090
+     C********************************************************************
+     O*MRUNQRP1E   02           TITLE                              S01124 S01343
+     O*****                              21 'REFERENCE MRUNQR'            S01343
+     OSCRUNQP1E   02           TITLE                                      S01343
+     O                                   21 'REFERENCE SCRUNQR'           S01343
+     O*****                    TITL      87                               LN0090
+1505 O                         BJURPT    89                               LN0090
+     O                                  103 'DATE'
+     O*****                    RUNA     111                               LN0090
+1507 O                         BJMRDT   112                               LN0090
+     O                                  122 'PAGE'
+     O                         PAGE  Z  128
+     O        E 21             TITLE
+     O                                    7 'TIME'
+     O                                   21 'USER -'
+     O                         USER      32
+     O                                   70 'END OF DAY AUDIT CONTROL'
+     O                                   77 'LIST -'
+     O                         NOWTIM    86 '  .  .  '
+     O                                  112 'WORKSTATION -'
+     O*************************WSID     116                               E15153
+     O                         WSID     123                               E15153
+     O        E 02             TITLE
+     O                                    9 '--------'
+     O                                   86 '********'
+     O                                   70 '------------------------'
+     O                                   75 '-----'
+     O        E 01             DETAIL
+     O                         HH         3
+     O                                    4 '.'
+     O                         MM         6
+     O                                    7 '.'
+     O                         SS         9
+     O                         MSG100   115
+     O        E 01             LONG
+     O                         MSG32     47
+     O        E 33             ERROR
+     O*****                              22 'REFERENCE MRUNQR'            S01343
+     O                                   22 'REFERENCE SCRUNQR'           S01343
+     O                                   62 'PRINT TERMINATED, '
+     O                                   80 'DATABASE IN ERROR.'
+     O        T  3     LR
+     O                                   77 '*** END OF REPORT ***'
+**  CPY@
+(c) Finastra International Limited 2001

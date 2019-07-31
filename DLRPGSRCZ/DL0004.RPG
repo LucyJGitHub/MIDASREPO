@@ -1,0 +1,560 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Cityd LE, FT, RE & NT Transmission router')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0004 - APPC connection program to CityDealer to exchange   *
+      *           changes in cashflow and exposure, and nostro        *
+      *           balances arising from Midas transactions.           *
+      *                                                               *
+      *  Called By: DL0003 (Transmission handler)                     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 095306             Date 01Nov95               *
+      *                 095299             Date 01NOV95               *
+      *                 095250             Date 31OCT95               *
+      *                 CCM002 *CREATE     Date 04OCT95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  095306 - Recompiled due to printer file change.              *
+      *  095299 - If Citydealer PC device is acquired successfully    *
+      *           but communications are terminated abnormally by the *
+      *           Citydealer PC, then this program crashes with a     *
+      *           permanent I/O error.                                *
+      *  095250 - Messages for zero amounts are being sent to         *
+      *           Citydealer in error.                                *
+      *  CCM002 - Midas/CityDealer interface (phases V and VI)        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FDLCDCGL0UF  E           K        DISK
+     FDLROCFF CF  E                    WORKSTN
+     F                                              KINFDS ERRDS
+     F                                              KNUM        1
+     F                                              KID    PGMDEV
+     FDLCDAUPDO   E                    DISK
+     FDL0004AUO   E                    PRINTER                        UC
+      *
+      *                   ****************************
+      *                   *  FUNCTION OF INDICATORS  *
+      *                   ****************************
+      *
+      *    50         EoF DLCDCGL0
+      *    55         Disable ALWWRT (allow write) on write to ICFF
+      *    89         Detach received from CityDealer
+      *    90         Error on read/ICFF
+      *    92         Error on write/ICFF
+      *    U7+U8      Database error
+      *
+      /EJECT
+      *
+      ** Copyright Statement and other arrays.
+     E                    CPY@    1   1 80
+     E                    MAP     1   1 62
+      /EJECT
+     IDLCDCGD0
+     I              MOTYP                           MOTYPX
+     I              BRCA                            BRCAX
+     I              CCY                             CCYX
+     I              VDAT0                           VDAT0X
+     I              NOSN                            NOSNX
+     I              AMT                             AMTX
+      ** Rename fields on audit which also appear on changes file.
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      ** Data Structure for Compilation - Copyright Insertion.
+      *
+     IO@LOG       DS                             72
+     I I            'T '                      1   2 O@CODE
+     I                                        3  10 O@DATE
+     I                                       11  72 MAP
+      ** Data Structure for login character check.
+      *
+     IO@DATA      DS                             34
+     I                                        1   2 MOTYPX
+     I                                        3   5 BRCAX
+     I                                        6   8 CCYX
+     I                                        9  16 O@VDAT
+     I                                       17  18 O@NOSN
+     I                                        3  18 O@CHCK
+     I                                       19  33 O@AMNT
+     I                                       34  34 O@SIGN
+      ** Data structure for transmitted changes.
+      *
+     II@DATA      DS                            256
+     I                                        1 256 FIELDI
+     I                                        1   1 I@TYP1
+     I                                        1   2 I@TYP2
+     I                                        3   6 I@RSN
+     I                                        3  18 I@CHCK
+     I                                       19  20 I@STAT
+     I                                       21  30 I@FAIL
+     I                                        1  72 I@LOG
+      ** Data structure to analyse incoming data from CityDealer.
+      *
+     IERRDS       DS                            488
+     I                                      273 282 PGMDEV
+     I                                      401 404 MAJMIN
+     I                                      401 402 MAJ
+      ** I/O Feedback Data Structure.
+      *
+     I            DS
+     I                                        1   8 DBFILE
+     I                                        9  37 DBKEY
+     I                                       38  47 DBPGM
+     I                                       48  500DBASE
+     I                                        1  50 @DBDTA
+      ** pseudo-LDA for database error details.
+      *
+     IPSDS       SDS
+     I                                        1 175 @PSDSE
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I                                     *PROGRAM ##PGM
+      ** Program Status Data Structure for job and user details.
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Data structure for bank details table.
+      *
+     I            DS
+     I                                        1   80@MDYN
+     I                                        1   8 @MDYA
+      ** Convert numeric YYYYMMDD date to alpha.
+      *
+     I            DS
+     I                                        1  150@AMTN
+     I                                        1  15 @AMTA
+      ** Convert amount to alpha.
+      *
+     I            DS
+     I                                        1   20NOSNX
+     I                                        1   2 @NOSNA
+      ** Convert nostro number to alpha.
+      *
+      /EJECT
+      *****************************************************************
+      *   Main Process                                                *
+      *   ------------                                                *
+      *                                                              *
+      *   Calls     - INIT; initial process                           *
+      *               DETL; detail process                            *
+      *               LOGOF; logoff/termination process               *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Perform initial process.
+     C                     EXSR INIT
+      *
+      ** Perform detail process.
+     C                     EXSR DETL
+      *
+      ** Perform termination process.
+     C                     EXSR LOGOF
+      /EJECT
+      *****************************************************************
+      *   DETL      - Detail processing; transmit changes to          *
+      *               CityDealer                                      *
+      *   Calls     - WERRF; write error details to audit file        *
+      *               LOGOF; logoff CityDealer system                 *
+      *   Called by - Main Process                                    *
+      *****************************************************************
+     C           DETL      BEGSR
+      *
+      ** Read first record from changes file.
+     C           *LOVAL    SETLLDLCDCGL0
+     C                     READ DLCDCGL0                 50
+      *
+      ** DoWhile records exist on this file...
+     C           *IN50     DOWEQ'0'
+      *
+      ** Initialise error condition.
+     C                     CLEARW@ENUM
+      *                                                                   095250
+      ** Transmit to Citydealer only if amount is not zero.               095250
+     C           AMTX      IFNE 0                                         095250
+      *
+      ** Convert value date to YYYYMMDD format.
+     C                     Z-ADDVDAT0X    @DAYN
+     C                     CALL 'ZA0140'
+     C                     PARM           @DAYN   50
+     C                     PARM BJDFIN    @DFMT   1
+     C                     PARM           @DATE   60
+     C                     PARM           @DATA   7
+     C                     PARM           @RTN    1
+     C                     PARM           @DAT8   80
+      *
+      ** Format outgoing data buffer. NB. amount set up as absolute
+      ** value in character format, with trailing sign ('+' or '-').
+     C                     Z-ADD@DAT8     @MDYN
+     C                     MOVEL@MDYA     O@VDAT
+     C                     MOVEL@NOSNA    O@NOSN
+     C           AMTX      IFLT 0
+     C           AMTX      MULT -1        @AMTN
+     C                     MOVEL'-'       O@SIGN
+     C                     ELSE
+     C                     Z-ADDAMTX      @AMTN
+     C                     MOVEL'+'       O@SIGN
+     C                     ENDIF
+     C                     MOVEL@AMTA     O@AMNT
+      *
+     C                     MOVELO@DATA    FIELDO    P
+      *
+      ** Transmit changes to CityDealer.
+     C                     WRITEMSOUTF                 92
+      *
+      ** If error on write, end session.
+     C           *IN92     IFEQ '1'
+     C           MAJ       ORGE '80'
+     C                     EXSR LOGOF
+     C                     END
+      *
+      ** Read CityDealer's response.
+     C***********          READ MSINF                    90               095299
+     C                     READ MSINF                  9290               095299
+      *                                                                   095299
+      ** Unrecoverable error for "READ"  -> database error.               095299
+     C           *IN92     IFEQ '1'                                       095299
+     C                     MOVE '005'     DBASE            ***************095299
+     C                     MOVE 'DLROCFF 'DBFILE           * DB ERROR 05 *095299
+     C                     MOVEL'*READ'   DBKEY            ***************095299
+     C                     MOVE ##PGM     DBPGM                           095299
+     C                     MOVEL'DRSMM'   @MSGF                           095299
+     C                     MOVEL*BLANKS   @MSGID                          095299
+     C                     CLEAR@EDTA                                     095299
+     C                     EXSR *PSSR                                     095299
+     C                     END                                            095299
+      *
+      ** If error on read, end session.
+     C           *IN90     IFEQ '1'
+     C           MAJ       ORGE '80'
+     C                     EXSR LOGOF
+     C                     END
+      *
+      ** If CityDealer returns invalid type or logoff set up error code
+     C           I@TYP2    IFNE 'LE'
+     C           I@TYP2    ANDNE'LP'
+     C           I@TYP2    ANDNE'FT'
+     C           I@TYP2    ANDNE'RE'
+     C           I@TYP2    ANDNE'NT'
+      *
+     C           I@TYP2    IFEQ 'LO'
+     C                     Z-ADD005       W@ENUM
+     C                     ELSE
+     C                     Z-ADD006       W@ENUM
+     C                     ENDIF
+      *
+      ** If message type is valid, and an acceptance...
+     C                     ELSE
+     C           I@STAT    IFEQ 'OK'
+      *
+      ** If data returned is same as transmitted, delete change record,
+     C           I@CHCK    IFEQ O@CHCK
+     C                     DELETDLCDCGD0
+      *
+      ** else (if returned data is different), set up error code.
+     C                     ELSE
+     C                     Z-ADD007       W@ENUM
+     C                     ENDIF
+      *
+      ** else (if data is NOT an acceptance), if data returned is
+      ** as transmitted, set up error code 008.
+     C                     ELSE
+     C           I@CHCK    IFEQ O@CHCK
+     C                     Z-ADD008       W@ENUM
+      *
+      ** If data is different, set up error code 009.
+     C                     ELSE
+     C                     Z-ADD009       W@ENUM
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If error encountered, write to audit file.
+     C           W@ENUM    IFNE *ZERO
+     C                     EXSR WERRF
+     C                     ENDIF
+      *
+      ** If logoff requested by CityDealer, attempt logoff and
+      ** terminate program.
+     C           W@ENUM    IFEQ 005
+     C                     EXSR LOGOF
+     C                     ENDIF
+      *                                                                   095250
+      ** Else, if amount is zero, simply delete the record from file.     095250
+     C                     ELSE                                           095250
+     C                     DELETDLCDCGD0                                  095250
+     C                     ENDIF                                          095250
+      *
+      ** Read next record.
+     C                     READ DLCDCGL0                 50
+     C                     ENDDO
+      *
+     C                     ENDSR                           DETL
+      /EJECT
+      *****************************************************************
+      *   WERRF     - Write error details to audit file               *
+      *   Calls     -                                                 *
+      *   Called by - INIT; initial process                           *
+      *               DETL; detail process                            *
+      *****************************************************************
+     C           WERRF     BEGSR
+      *
+      ** Set up audit record.
+     C                     CLEARDLCDAUD0
+     C           MOTYPX    IFEQ 'LE'
+     C           MOTYPX    OREQ 'LP'
+     C           MOTYPX    OREQ 'FT'
+     C           MOTYPX    OREQ 'RE'
+     C           MOTYPX    OREQ 'NT'
+     C                     MOVELMOTYPX    MOTYP
+     C                     MOVELBRCAX     BRCA
+     C                     MOVELCCYX      CCY
+     C                     MOVELVDAT0X    VDAT0
+     C                     MOVELNOSNX     NOSN
+     C                     MOVELAMTX      AMT
+     C                     ENDIF
+      *
+     C                     MOVEL##PGM     ERRP
+     C                     Z-ADDW@ENUM    ERRN
+     C                     Z-ADDBJRDNB    ERRD
+     C                     TIME           ERRT
+      *
+      ** Write to audit file.
+     C                     WRITEDLCDAUD0
+      *
+     C                     ENDSR                           WERRF
+      /EJECT
+      *****************************************************************
+      *   LOGOF     - Attempt logoff and detach from CityDealer       *
+      *   Calls     -                                                 *
+      *   Called by - INIT; initial process                           *
+      *               DETL; detail process                            *
+      *****************************************************************
+     C           LOGOF     BEGSR
+      *
+      ** If link is up, and CityDealer has not already issued detach
+      ** (*IN89 in ICF file format MSINF), attempt to send logoff and
+      ** issue detach from this side.
+     C           *IN89     IFEQ '0'
+     C                     SETON                     55
+     C                     MOVEL'LOEND'   FIELDO    P
+     C                     WRITEMSOUTF                 92
+     C                     WRITEPGMSTOP                92
+     C                     ENDIF
+      *
+      ** Close all files (inluding ICFF) and return to calling program.
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR                           LOGOF
+      /EJECT
+      *****************************************************************
+      *   INIT      - Login to CityDealer PC and send character check *
+      *   Calls     - WERRF; write error details to audit file        *
+      *               LOGOF; logoff CityDealer system                 *
+      *   Called by - Main Process                                    *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Copyright statement.
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Initialise error-number and input record format.
+     C                     Z-ADD*ZERO     W@ENUM  30
+     C                     CLEARDLCDCGD0
+      *
+      ** Access SDBANKPD for ICD.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM           SDBANK
+      *
+      ** If call ended in error, perform database error processing.
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '001'     DBASE            ***************
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     MOVEL'MIDAS'   @MSGF     P
+     C                     MOVEL'MEM0011' @MSGID
+     C                     MOVEL@DBDTA    @EDTA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Convert run-date to YYYYMMDD format.
+     C                     Z-ADDBJRDNB    @DAYN
+     C                     CALL 'ZA0140'
+     C                     PARM           @DAYN   50
+     C                     PARM BJDFIN    @DFMT   1
+     C                     PARM           @DATE   60
+     C                     PARM           @DATA   7
+     C                     PARM           @RTN    1
+     C                     PARM           @DAT8
+      *
+      * Acquire program device (CDDEV --- CityDealer device).
+     C                     MOVEL'CDDEV'   PGMDEV
+     C           PGMDEV    ACQ  DLROCFF                92
+      *
+      ** Unrecoverable error for "ACQ"  -> database error.
+     C           *IN92     IFEQ '1'
+     C           MAJ       ORGE '80'
+     C                     MOVE '002'     DBASE            ***************
+     C                     MOVE 'DLROCFF 'DBFILE           * DB ERROR 02 *
+     C                     MOVEL'*ACQUIRE'DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     MOVEL'DRSMM'   @MSGF
+     C                     MOVEL'CDM0001' @MSGID
+     C                     CLEAR@EDTA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Sign on to remote machine and evoke transaction program. NB.
+      ** 'TPCASH' is the Communications Manager name for the CityDealer
+      ** cashflow transaction program.
+     C                     MOVEL'CDDEV'   PGMDEV
+     C                     MOVEL'TPCASH'  PGMID     P
+     C                     WRITEEVKTP                  92
+      *
+      ** If evoke fails, terminate program.
+     C           *IN92     IFEQ '1'
+     C           MAJMIN    ORNE '0000'
+     C                     MOVE '003'     DBASE            ***************
+     C                     MOVE 'DLROCFF' DBFILE           * DB ERROR 03 *
+     C                     MOVEL'*EVOKE'  DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     MOVEL'DRSMM'   @MSGF
+     C                     MOVEL'CDM0002' @MSGID
+     C                     CLEAR@EDTA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Send character check information for login (MSOUTF includes
+      ** keyword ALWWRT, which should indicate turnaround at remote
+      ** system).
+     C                     CLEARFIELDO
+     C                     RESETO@LOG
+     C                     Z-ADD@DAT8     @MDYN
+     C                     MOVEL@MDYA     O@DATE
+     C                     MOVELO@LOG     FIELDO
+     C                     WRITEMSOUTF                 92
+      *
+      ** If write fails, attempt logoff.
+     C           *IN92     IFEQ '1'
+     C           MAJ       ORGE '80'
+     C                     EXSR LOGOF
+     C                     END
+      *
+      ** Wait for response from CityDealer.
+     C***********          READ MSINF                    90               095299
+     C                     READ MSINF                  9290               095299
+      *                                                                   095299
+      ** Unrecoverable error for "READ"  -> database error.               095299
+     C           *IN92     IFEQ '1'                                       095299
+     C                     MOVE '004'     DBASE            ***************095299
+     C                     MOVE 'DLROCFF 'DBFILE           * DB ERROR 04 *095299
+     C                     MOVEL'*READ'   DBKEY            ***************095299
+     C                     MOVE ##PGM     DBPGM                           095299
+     C                     MOVEL'DRSMM'   @MSGF                           095299
+     C                     MOVEL*BLANKS   @MSGID                          095299
+     C                     CLEAR@EDTA                                     095299
+     C                     EXSR *PSSR                                     095299
+     C                     END                                            095299
+      *
+      ** If read fails, logoff.
+     C           *IN90     IFEQ '1'
+     C           MAJ       ORGE '80'
+     C                     EXSR LOGOF
+     C                     ENDIF
+      *
+      ** If data is not a start session response, set up approriate
+      ** error code.
+     C           I@TYP1    IFNE 'T'
+     C           I@TYP2    IFEQ 'LO'
+     C           I@RSN     IFEQ 'DATA'
+     C                     Z-ADD001       W@ENUM
+     C                     ELSE
+     C                     Z-ADD002       W@ENUM
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD003       W@ENUM
+     C                     ENDIF
+      *
+      ** else, validate character check --- should be identical to
+      ** to that sent. If not, set up approriate error code.
+     C                     ELSE
+     C           I@LOG     IFNE O@LOG
+     C                     Z-ADD004       W@ENUM
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If error, write to audit file, and logoff.
+     C           W@ENUM    IFNE *ZERO
+     C                     EXSR WERRF
+     C                     EXSR LOGOF
+     C                     ENDIF
+      *
+     C                     ENDSR                           INIT
+      /EJECT
+      *****************************************************************
+      * Subroutine  -  *PSSR                                          *
+      * Function    -  Called automatically if a program error occurs *
+      *                or directly in case of database errors.        *
+      *                This subroutine DUMPs the program just once.   *
+      * Called by   -  Automatically                                  *
+      *                INIT                                           *
+      * Calls       -  DLCO4                                          *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+      *
+      ** DUMP, send message to MOPERQ, and write database error report.
+     C                     DUMP
+      *
+     C           @MSGID    IFEQ *BLANKS
+     C                     MOVEL'CDM0003' @MSGID
+     C                     MOVEL'DRSMM'   @MSGF     P
+     C                     MOVEL@PSDSE    @EDTA     P
+     C                     END
+      *
+     C                     CALL 'DLC0004'
+     C                     PARM           @MSGF  10
+     C                     PARM           @MSGID  7
+     C                     PARM           @EDTA 256
+      *
+     C                     OPEN DL0004AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEDL0004AU
+      *
+     C                     ENDIF
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+     C                     ENDSR                           *PSSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**  MAP
+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789

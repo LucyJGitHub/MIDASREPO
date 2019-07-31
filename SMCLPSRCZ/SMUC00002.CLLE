@@ -1,0 +1,135 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Upgrade local industry codes')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00002 - Upgrade new local indrustry codes               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2009                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP023             Date 27Apr11              */
+/*                      AR655783           Date 14Oct10              */
+/*                      CER059             Date 19Jul10              */
+/*                      CER020  *CREATE    Date 05May09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP023 - Restore program so that it works.                  */
+/*       AR655783 - Delhi Drop 1 Database Issues                     */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*              - Amend to properly copy back the data of TABLETN    */
+/*                after upgrade program.                             */
+/*       CER020 - Upgrade local industry codes icluding special      */
+/*                processing for TABLETN.                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+ 
+/**********  DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)                                */   /*CER059*/
+/**********  DCL        VAR(&LIB1) TYPE(*CHAR) LEN(7)                       */ /*CER059*/ /*CUP023*/
+/**********  DCL        VAR(&LIB2) TYPE(*CHAR) LEN(7)                       */ /*CER059*/ /*CUP023*/
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)                                     /*CUP023*/
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)                                 /*CUP023*/
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                            2009')
+ 
+ /* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Retrieve library prefix. */
+             IF         COND(&MODE *EQ '*UPG') THEN(DO)
+                RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PFX)
+/**********     CHGVAR     VAR(&LIB) VALUE('#.' *TCAT &PFX *TCAT 'DMLIB')            */   /*CER059*/
+/**********     CHGVAR     VAR(&LIB1) VALUE(&PFX *TCAT 'DMLIB')             */ /*CER059*/ /*CUP023*/
+/**********     CHGVAR     VAR(&LIB2) VALUE(&PFX *TCAT 'DPLIB')             */ /*CER059*/ /*CUP023*/
+                CHGVAR     VAR(&LIB) VALUE('#.' *TCAT &PFX *TCAT 'DMLIB')                 /*CUP023*/
+             ENDDO
+             IF         COND(&MODE *EQ '*MIG') THEN(DO)
+                CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                             'BrgOldZonePrefix' &SVAL1 ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+/**********     CHGVAR     VAR(&LIB) VALUE(&PFX *TCAT 'DMLIB')                       */   /*CER059*/
+/**********     CHGVAR     VAR(&LIB1) VALUE(&PFX *TCAT 'DMLIB')             */ /*CER059*/ /*CUP023*/
+/**********     CHGVAR     VAR(&LIB2) VALUE(&PFX *TCAT 'DPLIB')             */ /*CER059*/ /*CUP023*/
+                CHGVAR     VAR(&LIB) VALUE(&PFX *TCAT 'DMLIB')                            /*CUP023*/
+             ENDDO
+ 
+/* Copy new version of TABLETN to QTEMP. */
+             DLTF       FILE(QTEMP/TABLETNQT)
+             MONMSG     MSGID(CPF0000)
+/**********  CPYF       FROMFILE(TABLETN) TOFILE(QTEMP/TABLETNQT) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                             */   /*CER059*/
+/**********  CPYF       FROMFILE(&LIB1/TABLETN) +                                      */ /*CUP023*/
+/**********               TOFILE(QTEMP/TABLETNQT) CRTFILE(*YES)             */ /*CER059*/ /*CUP023*/
+             CPYF       FROMFILE(TABLETN) TOFILE(QTEMP/TABLETNQT) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+ 
+/* Copy saved version of TABLETN to QTEMP version. */
+/**********  CPYF       FROMFILE(&LIB/TABLETN) +
+                          TOFILE(QTEMP/TABLETNQT) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                             */   /*CER059*/
+/**********  CPYF       FROMFILE(&LIB2/TABLETN) +                    */                 /*AR655783*/
+/**********               TOFILE(QTEMP/TABLETNQT) MBROPT(*REPLACE) + */                 /*AR655783*/
+/**********               FMTOPT(*MAP *DROP)                         */      /*CER059*/ /*AR655783*/
+/**********  CPYF       FROMFILE(&LIB2/XTABLETN) +                                     */ /*CUP023*/
+/**********               TOFILE(QTEMP/TABLETNQT) MBROPT(*REPLACE) +                   */ /*CUP023*/
+/**********               FMTOPT(*MAP *DROP)                              */ /*AR655783*/ /*CUP023*/
+             CPYF       FROMFILE(&LIB/TABLETN) +
+                          TOFILE(QTEMP/TABLETNQT) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                  /*CUP023*/
+             MONMSG     MSGID(CPF0000)
+ 
+/* Override file and call RPG to update QTEMP version. */
+             OVRDBF     FILE(TABLETN) TOFILE(QTEMP/TABLETNQT) +
+                          OVRSCOPE(*JOB)
+             CALL       PGM(SD000900)
+             DLTOVR     FILE(TABLETN) LVL(*JOB)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Copy QTEMP version of TABLETN back to new version. */
+/**********  CPYF       FROMFILE(QTEMP/TABLETNQT) TOFILE(TABLETN) +
+                          MBROPT(*REPLACE)                                                /*CER059*/
+/**********  CPYF       FROMFILE(QTEMP/TABLETNQT) +                                    */ /*CUP023*/
+/**********               TOFILE(&LIB1/TABLETN) MBROPT(*REPLACE)            */ /*CER059*/ /*CUP023*/
+             CPYF       FROMFILE(QTEMP/TABLETNQT) TOFILE(TABLETN) +
+                          MBROPT(*REPLACE)                                                /*CUP023*/
+             MONMSG     MSGID(CPF0000)
+/**********  DLTF       FILE(&LIB2/XTABLETN)                              */ /*AR655783*/ /*CUP023*/
+/**********  MONMSG     MSGID(CPF0000)                                    */ /*AR655783*/ /*CUP023*/
+ 
+/* Remove record from SMZNMGPD. */                                                        /*CUP023*/
+             CHGVAR     VAR(&STM_STR) VALUE('delete from SMZNMGPD +
+                          where ZNOBJ = ''TABLETN''')                                     /*CUP023*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                             /*CUP023*/
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)                                                   /*CUP023*/
+             MONMSG     MSGID(SQL9010)                                                    /*CUP023*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

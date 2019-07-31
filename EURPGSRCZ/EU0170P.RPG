@@ -1,0 +1,619 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU Mapping list report - prompt program')
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Retail Utilities                                 *
+      *                                                               *
+      *  EU0170P- Mapping Details List report - Prompt                *
+      *                                                               *
+      *  Function: Writes printer file for mapping detail list        *
+      *                                                               *
+      *  Called By: FCC0201                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU022  *CREATE    Date 27Jan98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CEU022 - EMU Retail Utilities                                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    30      Branch Code in error                               *
+      *    31      Account Code in error                              *
+      *    32      Customer in error                                  *
+      *    33      Map number in error                                *
+      *    34      Euro account Creation date in error                *
+      *    35      Sweep creation date in error                       *
+      *    36      'In' Ccy account closure date in error             *
+      *                                                               *
+      *    80 & 81 Used for CHAIN and READ                            *
+      *    98      Date format indicator                              *
+      *                                                               *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *                   ~~~~~~~~~~~~~~~~~~~~                        *
+      *  INIT    -  Initial processing                                *
+      *  MAINPR  -  Main Processing                                   *
+      *  CLRFLD  -  Refreshes screen fields                           *
+      *  VLDENT  -  Checks that fields has been entered               *
+      *  VLDINP  -  Validates input                                   *
+      *  END     -  Set up parameter and close down program           *
+      *  ZASNMS  -  Error message subfile subroutine                  *
+      *  CLEARM  -  Clear message subfile                             *
+      *  *PSSR   -  Exception error handling                          *
+      *****************************************************************
+      *
+      ** EMU Mapping Details Header
+     FEUMDHDL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** EMU Mapping Detail List - Display File
+     FEU0170DFCF  E                    WORKSTN
+      *
+      *-----------------------------------------------------------------
+      *E-Specifications
+      *-----------------------------------------------------------------
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    ZMDY   13  13  3 0
+     E                    ZYDY    4   4  4 0
+      /SPACE 3
+      *
+      *-----------------------------------------------------------------
+      *I-Specifications
+      *-----------------------------------------------------------------
+      *                                                                -
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+     **                                     134 141 DBFILE
+     **                                     142 170 DBKEY
+     **                                     171 180 DBPGM
+     **                                     181 1830DBASE
+      *
+      ** RUNDAT Data Area
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+      ** Data Area of Menu User
+     IZMUSER      DS                             17
+     I                                       11  13 USRBCH
+      *
+      ** Program Status Data Structure
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** External DS for bank details
+     ISDACOD    E DSSDACODPD
+      *
+      ** Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Customer
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** Branch codes
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          QQDFAX                                    CGL029
+     I                                      178 183 A8SYCA
+      *
+      *  First DS for access program, short Data Structure
+     IDSFDY     E DSDSFDY
+      *
+      * Second DS for access programs, long Data Structure
+     IDSSDY     E DSDSSDY
+      *
+      *
+      *Data structure to ensure that input to screen fields is valid
+     I            DS
+     I                                        1 100 YES
+     I                                        1   3 S1BRCA
+     I**********                              4   7 S1ACOD                                    CGL029
+     I**********                              8  17 S1CNUM                                    CGL029
+     I**********                             18  23 S1MAPN                                    CGL029
+     I**********                             24  29 S1CRAC                                    CGL029
+     I**********                             30  35 S1CRSW                                    CGL029
+     I**********                             36  41 S1CLAC                                    CGL029
+     I                                        4  13 S1ACOD                                    CGL029
+     I                                       14  23 S1CNUM                                    CGL029
+     I                                       24  29 S1MAPN                                    CGL029
+     I                                       30  35 S1CRAC                                    CGL029
+     I                                       36  41 S1CRSW                                    CGL029
+     I                                       42  47 S1CLAC                                    CGL029
+      *Data structure for parameter to return to calling program
+     I            DS
+     I                                        1 100 PRPAR2
+     I                                        1   3 S2BRCA
+     I**********                              4   7 S2ACOD                                    CGL029
+     I**********                              8  13 S2CNUM                                    CGL029
+     I**********                             14  19 S2MAPN                                    CGL029
+     I**********                             20  25 S2CRAC                                    CGL029
+     I**********                             26  31 S2CRSW                                    CGL029
+     I**********                             32  37 S2CLAC                                    CGL029
+     I                                        4  13 S2ACOD                                    CGL029
+     I                                       14  19 S2CNUM                                    CGL029
+     I                                       20  25 S2MAPN                                    CGL029
+     I                                       26  31 S2CRAC                                    CGL029
+     I                                       32  37 S2CRSW                                    CGL029
+     I                                       38  43 S2CLAC                                    CGL029
+      *
+      * ===============================================================
+      *  C - Specifications
+      * ===============================================================
+     C           *ENTRY    PLIST
+     C                     PARM           PRSEQ   5
+     C                     PARM           PRLEV   1
+     C                     PARM           PRENT   3
+     C                     PARM           PRPAR 100
+     C                     PARM           PRACT   1
+     C                     PARM           PRCMD   1
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      **  Get User's Default Branch
+     C                     IN   ZMUSER
+      *
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      * ===============================================================
+      *                     DEFINITIONS
+      * ===============================================================
+      *                                                                -
+      ** Define Key Lists
+      ** ~~~~~~~~~~~~~~~~
+      *                                                                -
+      ** Define Fields
+      ** ~~~~~~~~~~~~~
+     C           *LIKE     DEFN EUMAPN    W#MAPN
+      *                                                                -
+      *================================================================-
+      *                   P R O G R A M
+      *================================================================-
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C                     EXSR INIT
+      *
+     C                     EXSR MAINPR
+      *
+     C                     EXSR END
+      *
+      *****************************************************************
+      * INIT   : Initial Processing                                   *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      **  Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE
+     C                     MOVEL'AOBANKR0'DBFILE
+     C                     MOVEL'*FIRST  'DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Check system date format, DDMMYY(98 off) or MMDDYY(98 on)
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      **  Access Switchable SAR details for the existence of CRE004
+      **  (Authorisation)
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CRE004'  @SARD   6
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CRE004  1
+     C                     MOVE *ON       *IN71
+     C                     ELSE
+     C                     MOVE 'N'       CRE004
+     C                     MOVE *OFF      *IN71
+     C                     ENDIF
+      *
+      *Set up screen field to display first screen
+     C                     MOVE '1'       W#FMT   1
+      *
+      *Set up message file
+     C                     MOVEL'EUMSGF'  ZAMSGF
+      *Write header format
+     C                     WRITEEU0170F0
+      *
+     C                     MOVE *ON       *IN89
+      *If multibranch default branch to User Branch
+     C           MBIN      IFEQ 'N'
+     C                     MOVE USRBCH    S1BRCA
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * MAINPR : Main Processing                                      *
+      *****************************************************************
+     C           MAINPR    BEGSR
+      *
+     C           W#FMT     DOWNE*BLANK
+      *
+     C                     WRITE#MSGCTL                    Messages
+      *
+     C                     EXFMTEU0170F1
+      *
+     C                     EXSR CLEARM
+      * Initialise indicators and error flag
+     C                     MOVEA'0000000' *IN,30
+     C                     MOVE ' '       W#ERR1
+      *
+     C                     SELEC
+      *F3 pressed
+     C           *IN03     WHEQ *ON
+     C                     MOVE *BLANKS   W#FMT
+     C                     MOVE 'E'       PRCMD
+      *F12 pressed
+     C           *IN12     WHEQ *ON
+     C                     MOVE *BLANKS   W#FMT
+     C                     MOVE 'F'       PRCMD
+      *F5 pressed
+     C           *IN05     WHEQ *ON
+     C                     EXSR CLRFLD
+      *Enter pressed
+     C                     OTHER
+      *
+     C                     EXSR VLDENT
+      *
+     C           W#ERR1    IFEQ *BLANK
+     C                     MOVE *BLANKS   W#FMT
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CLRFLD : Refresh screen fields                                *
+      *****************************************************************
+     C           CLRFLD    BEGSR
+      *
+     C                     MOVE *BLANKS   S1BRCA
+     C                     MOVE *BLANKS   S1ACOD
+     C                     MOVE *BLANKS   S1CNUM
+     C                     MOVE *BLANKS   S1MAPN
+     C                     MOVE *BLANKS   S1CRAC
+     C                     MOVE *BLANKS   S1CRSW
+     C                     MOVE *BLANKS   S1CLAC
+      *
+     C                     ENDSR
+      *****************************************************************
+      * VLDENT : Validate screen entries                              *
+      *****************************************************************
+     C           VLDENT    BEGSR
+      *
+     C           YES       IFEQ *BLANKS
+      *If no fields contain input
+     C                     MOVEL'EMR0001' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVEA'1111111' *IN,30
+      *
+     C                     ELSE
+      *Validate input
+     C                     EXSR VLDINP
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * VLDINP : Validate input fields                                *
+      *****************************************************************
+     C           VLDINP    BEGSR
+      *
+     C           S1BRCA    IFNE *BLANKS
+      *Validate branch if entered
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM S1BRCA    @BRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *Invalid branch code
+     C           @RTCD     IFNE *BLANKS
+     C           S1BRCA    ANDNE'ALL'
+     C                     MOVEL'EMR0101' ZAMSID
+     C                     MOVEL'Y'       W#ERR1  1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN30
+      *
+     C                     ELSE
+      * '?' pressed
+     C           S1BRCA    IFNE 'ALL'
+     C                     MOVELA8BRCD    S1BRCA
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           S1ACOD    IFNE *BLANKS
+      ** Validates account code
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C**********           PARM S1ACOD    @ACOD   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM S1ACOD    @ACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *Invalid account code
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'EMR0102' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN31
+      *
+     C                     ELSE
+      * '?' pressed
+     C                     MOVE A5ACCD    S1ACOD
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Customer
+     C           S1CNUM    IFNE *BLANKS
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM S1CNUM    @CNUM  10
+     C                     PARM           @CNST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      * Invalid customer code/shortname
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'EMR0106' ZAMSID
+     C                     MOVE 'Y'       W#ERR1           Error
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN32            RI & PC
+      *
+     C                     ELSE
+      * Checks whether customer is a parent
+     C           BBPAIN    IFEQ 'P'
+     C                     MOVEL'EMR0107' ZAMSID
+     C                     MOVE 'Y'       W#ERR1           Error
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN33            RI & PC
+      *
+     C                     ELSE
+      * '?' or shortname entered
+     C                     MOVELBBCUST    S1CNUM    P
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Customer
+     C           S1MAPN    IFNE *BLANKS
+      *
+      *Check map number entered is numeric
+     C                     MOVELS1MAPN    W#NUM   70
+     C                     MOVELW#NUM     W#ALF   6
+     C           S1MAPN    IFNE W#ALF
+      *
+     C                     MOVEL'EMR0307' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN33
+      *
+     C                     ELSE
+      *
+     C                     MOVE S1MAPN    W#MAPN
+     C           W#MAPN    CHAINEUMDHDL0             80
+      * Map no. not found
+     C           *IN80     IFEQ *ON
+     C                     MOVEL'EMR0308' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN33            RI & PC    d
+     C                     MOVE 'Y'       W#ERR1           Error
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *Date to create Euro Accounts
+     C           S1CRAC    IFNE *BLANKS
+      *
+     C                     Z-ADD*ZERO     ZDATE
+     C                     MOVE S1CRAC    ZDATE
+     C                     MOVELS1CRAC    WNUM7   70
+     C                     MOVELWNUM7     ALPH6   6
+      *
+     C                     EXSR ZDATE1
+      * Date not valid
+     C           *IN99     IFEQ *ON
+     C           S1CRAC    ORNE ALPH6
+     C                     MOVEL'EMR0147' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN34
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Date to Create Sweeps
+     C           S1CRSW    IFNE *BLANKS
+      *
+     C                     Z-ADD*ZERO     ZDATE
+     C                     MOVE S1CRSW    ZDATE
+     C                     MOVELS1CRSW    WNUM7   70
+     C                     MOVELWNUM7     ALPH6   6
+      *
+     C                     EXSR ZDATE1
+      * Invalid date
+     C           *IN99     IFEQ *ON
+     C           S1CRSW    ORNE ALPH6
+     C                     MOVEL'EMR0150' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN35
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Date to Close 'In' currency account
+     C           S1CLAC    IFNE *BLANKS
+      *
+     C                     Z-ADD*ZERO     ZDATE
+     C                     MOVE S1CLAC    ZDATE
+     C                     MOVELS1CLAC    WNUM7   70
+     C                     MOVELWNUM7     ALPH6   6
+      *
+     C                     EXSR ZDATE1
+      *  Invalid date
+     C           *IN99     IFEQ *ON
+     C           S1CLAC    ORNE ALPH6
+     C                     MOVEL'EMR0153' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN36
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * END    : Closedown                                            *
+      *****************************************************************
+     C           END       BEGSR
+      *
+     C                     MOVE S1BRCA    S2BRCA
+     C                     MOVE S1ACOD    S2ACOD
+     C                     MOVELS1CNUM    S2CNUM
+     C                     MOVE S1MAPN    S2MAPN
+     C                     MOVE S1CRAC    S2CRAC
+     C                     MOVE S1CRSW    S2CRSW
+     C                     MOVE S1CLAC    S2CLAC
+     C                     MOVE PRPAR2    PRPAR
+     C                     SETON                     LR
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  ZASNMS  -   Sends messages to the program's message queue
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA  6        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CLEARM  -  Clears the message queue                           *
+      *****************************************************************
+     C           CLEARM    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *****************************************************************
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+      *
+     C                     MOVE 'Y'       @RUN    1
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     DUMP
+      *
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+** ZMDY
+000031059090120151181212243273304334365
+** ZYDY
+0366073110961461

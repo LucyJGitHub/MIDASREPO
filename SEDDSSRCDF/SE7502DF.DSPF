@@ -1,0 +1,733 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SE Corporate actions events maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7502DF - SE Corporate Actions Events Maintenance           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL031             Date 05Jul04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE016             Date 10Jan01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CSE020             Date 21Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 137879             Date 01Jul98               *
+      *                 136420             Date 11Jun98               *
+      *                 CSE007  *CREATE    Date 27Oct97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL031 - Taxation of Savings Income                          *
+      *  CSE016 - Extended Security Descriptions                      *
+      *  CSE020 - Corporate Actions Domino Effect Processing          *
+      *  137879 - When entering a new Corporate Action using F9 from  *
+      *           the maintenance screen, ENTER should take you to the*
+      *           general details screen, NOT back to the maintenance *
+      *           screen.                                             *
+      *  136420 - Add the link between the Bulk Reference and the     *
+      *           Corporate Action Reference(s) linked to the Bulk    *
+      *  CSE007 - Corporate Actions                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     A                                      REF(*LIBL/MFRFL)
+      *
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      CHGINPDFT
+     A                                      VLDCMDKEY(46 'ANY VALID KEY')
+     A                                      INDARA
+     A                                      PRINT(*LIBL/QSYSPRT)
+     A                                      CA03(03 'Exit.')
+     A N47                                  CA05(05 'Refresh')
+     A N61N47N64                            CA09(09 'Add Mode.')
+      *
+      ****************************
+      ***  Subfile record format *
+      ****************************
+      *
+     A          R SE7502S0                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      SFL
+      *
+     A  84                                  SFLNXTCHG
+      *
+     A            #1SEL          1A  B  8  3TEXT('Selection Field')
+     A  57                                  DSPATR(PR)
+     A  62                                  DSPATR(RI PC)
+     A  57N62                               DSPATR(ND)
+     A N57N62                               DSPATR(UL HI)
+     A                                      CHECK(ER)
+      *                                              Begin /CSE020/
+     A*********** #1REFN         6A  O  8 10TEXT('Reference Number')
+     A            #1REFN         6A  O  8  9TEXT('Reference Number')
+      *                                              End   /CSE020/
+     A N38                                  DSPATR(HI)
+     A  38                                  DSPATR(RI)
+      *                                              Begin /CSE020/
+     A            #1LEVL         1A  O  8 17TEXT('Level')
+     A N45                                  DSPATR(ND)
+     A*********** #1SECN        10A  B  8 19TEXT('Security Shortname')
+     A            #1SECN        10A  B  8 20TEXT('Security Shortname')
+      *                                              End   /CSE020/
+     A N58N61N39                            DSPATR(UL HI)
+     A  58
+     AO 61                                  DSPATR(PR)
+     A  39                                  DSPATR(RI)
+      *                                              Begin /CSE020/
+     A*********** #1COAT         2A  B  8 30TEXT('Action Type')
+     A            #1COAT         2A  B  8 31TEXT('Action Type')
+      *                                              End   /CSE020/
+     A N58N61N33                            DSPATR(UL HI)
+     A  58
+     AO 61                                  DSPATR(PR)
+     A  33                                  DSPATR(RI)
+     A            #1COAN         6A  B  8 36TEXT('Date of Announcement')
+     A N61N63N37
+     AAN75N19                               DSPATR(UL HI)
+     A  11
+     AO 61
+     AO 63
+     AO 75
+     AO 19                                  DSPATR(PR)
+     A  37                                  DSPATR(RI)
+     A            #1EXDT         6A  B  8 47TEXT('Ex-Date')
+     A N63N19
+     AAN59N61N32                            DSPATR(UL HI)
+     A  61
+     AO 63
+     AO 59
+     AO 19                                  DSPATR(PR)
+     A  32                                  DSPATR(RI)
+     A            #1ALEF         6A  B  8 57TEXT('Alloc. Effect.')
+     A  63
+     AO 61
+     AO 19
+     AON48                                  DSPATR(PR)
+     A  48N19
+     AAN63N61N28                            DSPATR(UL HI)
+     A  28                                  DSPATR(RI)
+     A            #1NBOP         2A  B  8 69TEXT('Number Option')
+     A N58N61N29                            DSPATR(UL HI)
+     A  58
+     AO 61                                  DSPATR(PR)
+     A  29                                  DSPATR(RI)
+     A            #1GSTS         1A  O  8 76TEXT('General Status')
+     A N58N61N34                            DSPATR(HI)
+     A  34                                  DSPATR(RI)
+      *
+     A**Start of change CSE016
+     A            #1SRNM        41A  O  9 19TEXT('Security Description')
+     A  57                                  DSPATR(ND)
+     A**End of change CSE016
+      *                                              Begin /CSE020/
+     A**********  #FIELD       175A  H
+     A**Start of change CGL031
+     A**********  #FIELD       181A  H                                                        CGL031
+     A            #FIELD       182A  H
+     A**End of change CGL031
+      *                                              End   /CSE020/
+     A            #1PTYP         2A  H      TEXT('Processing Type')
+     A            #1TDVD         1A  H      TEXT('Trade/Value Date Position')
+     A            #2SEL          1A  H      TEXT('Selection Field')
+     A            #2COAN         6A  H      TEXT('Date of Announcement')
+     A            #2EXDT         6A  H      TEXT('Ex-Date')
+     A            #2ALEF         6A  H      TEXT('Allocation Effective Date')
+     A            #1FINA         1A  H      TEXT('Final Allocation')
+     A            #1STAT         1A  H      TEXT('Status')
+      *                                              Begin /CSE020/
+     A            #1MPRF         6A  H      TEXT('Parent Reference')
+      *                                              End   /CSE020/
+      *
+      ************************************
+      ***  Subfile control record format *
+      ************************************
+      *
+     A          R SE7502C0                  TEXT('Subfile control.')
+     A                                      SFLCTL(SE7502S0)
+      *
+     A**Start of change CSE016
+     A**********                            SFLSIZ(0016)                  CSE016
+     A**********                            SFLPAG(0015)                  CSE016
+     A                                      SFLSIZ(0008)
+     A                                      SFLPAG(0007)
+     A**End of change CSE016
+     A                                      OVERLAY
+     A  80                                  SFLCLR
+     A N80                                  SFLDSPCTL
+     A N80 81                               SFLDSP
+     A N80 81 30                            SFLEND
+     A N30                                  ROLLUP(27 'Next page.')
+      *
+     A            #1RRN          4S 0H      SFLRCDNBR
+      *
+     A            ##USR     R        O  1  2REFFLD(USER)
+     A                                  1 13'SE7502C0'
+     A                                  1 26'CORPORATE ACTION EVENTS'
+     A                                      DSPATR(HI)
+     A N61N64                           1 50'MAINTENANCE'
+     A                                      DSPATR(HI)
+     A  61N64                           1 50'ENQUIRY'
+     A                                      DSPATR(HI)
+     A  64                              1 50'REPORT'
+     A                                      DSPATR(HI)
+     A                                  1 67'DATE '
+     A            ##MRDT    R        O  1 73REFFLD(RUNA)
+      *
+     A            ##JOB     R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A            ##TME          6  0   2 73EDTWRD('  :  :  ')
+      *
+     A                                  3  2'Review From: Ref.'
+     A            #REFN          6A  B  3 20TEXT('Review from CO Ref.')
+     A N56N50                               DSPATR(UL HI)
+     A  56                                  DSPATR(PR)
+     A  50                                  DSPATR(PC RI)
+     A                                  3 27'Security'
+     A            #SECN         10A  B  3 36TEXT('Review from Security')
+     A N56N51                               DSPATR(UL HI)
+     A  56                                  DSPATR(PR)
+     A  51                                  DSPATR(PC RI)
+     A                                  3 47'Ex-date'
+     A            #EXDT          6A  B  3 55TEXT('Review from Ex-Date')
+     A N56N52                               DSPATR(UL HI)
+     A  56                                  DSPATR(PR)
+     A  52                                  DSPATR(PC RI)
+     A                                  3 62'Type'
+     A            #COAT          2A  B  3 67TEXT('Review from CO Type')
+     A N56N69                               DSPATR(UL HI)
+     A  56                                  DSPATR(PR)
+     A  69                                  DSPATR(PC RI)
+     A                                  3 70'Status'
+     A            #STAT          1A  B  3 77TEXT('Review from Status')
+     A N56N86                               DSPATR(UL HI)
+     A  56                                  DSPATR(PR)
+     A  86                                  DSPATR(PC RI)
+      *
+     A                                  5  1'Action'
+      *                                              Begin /CSE020/
+     A***********                       5 10'Ref.'
+     A                                  5  9'Ref.'
+     A***********                       5 18'Security'
+     A                                  5 20'Security'
+      *                                              End   /CSE020/
+     A                                  5 29'Type'
+     A                                  5 34'Date of'
+     A                                  5 47'Ex-Date'
+     A                                  5 56'Allocation'
+     A                                  5 67'Number'
+     A                                  5 74'Status'
+      *
+     A N61N57N64                        6  1'(GFAEP)'
+     A N61N57N64                        7  1'(RYDCVN)'
+     A  61N57N64                        6  1'( F E )'
+     A  61N57N64                        7  1'(    V )'
+     A  57N64                           6  1'(     )'
+     A  57N64                           7  1'(      )'
+     A  64                              6  1'(    P)'
+     A  64                              7  1'(      )'
+      *                                              Begin /CSE020/
+     A***********                       6 10'Number'
+     A                                  6  9'Number'
+     A                                  6 16'Lvl'
+     A N45                                  DSPATR(ND)
+     A***********                       6 18'Shortname'
+     A                                  6 20'Shortname'
+      *                                              End   /CSE020/
+     A                                  6 34'Announcement'
+     A                                  6 56'Effective'
+     A                                  6 67'Options'
+      *
+     A            #3REFN         6A  H      TEXT('CO Reference')
+     A            #3SECN        10A  H      TEXT('Security')
+     A            #3EXDT         6A  H      TEXT('Ex-Date')
+     A            #3COAT         2A  H      TEXT('CO Type')
+     A            #3STAT         1A  H      TEXT('Status')
+      *
+      *******************************************
+      ***  Bottom lines of screen: command keys *
+      *******************************************
+      *
+     A          R SE7502F1                  TEXT('Command keys.')
+      *
+     A                                      OVERLAY PUTOVR
+     A            ##CTX1        78     23  2TEXT('Command Text 1')
+     A N25                                  OVRDTA
+      *
+      ***************************
+      ***  Confirmatiom screen  *
+      ***************************
+      *
+     A          R SE7502F2                  TEXT('Confirmation screen')
+      *
+     A                                      OVERLAY
+     A  61N64
+     AO 43                                  CA12(12 'Previous.')
+      *
+     A            ##USR     R        O  1  2REFFLD(USER)
+     A                                  1 13'SE7502F2'
+     A                                  1 26'CORPORATE ACTION EVENTS +
+     A                                      MAINTENANCE'
+     A                                      DSPATR(HI)
+     A                                  1 67'DATE '
+     A            ##MRDT    R        O  1 73REFFLD(RUNA)
+      *
+     A            ##JOB     R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A            ##TME          6  0   2 73EDTWRD('  :  :  ')
+      *
+     A                                  3  2'Review From: Reference Number'
+     A            #REFN          6A  O  3 32TEXT('Review from CO Ref.')
+     A                                      DSPATR(HI)
+     A                                  3 40'Security'
+     A            #SECN         10A  O  3 49TEXT('Review from Security')
+     A                                      DSPATR(HI)
+     A                                  3 61'Ex-date'
+     A            #EXDT          6A  O  3 69TEXT('Review from Ex-Date')
+     A                                      DSPATR(HI)
+      *
+     A                                  5  1'Action'
+     A                                  5 10'Ref.'
+     A                                  5 18'Security'
+     A                                  5 29'Type'
+     A                                  5 34'Date of'
+     A                                  5 47'Ex-Date'
+     A                                  5 56'Allocaction'
+     A                                  5 67'Number'
+     A                                  5 74'Status'
+      *
+     A                                  6  1'(    )'
+     A                                  7  1'(     )'
+      *
+     A                                  6 10'Number'
+     A                                  6 18'Shortname'
+     A                                  6 34'Announcement'
+     A                                  6 56'Effective'
+     A                                  6 67'Options'
+      *
+     A            #1SEL          1A  O  8  3TEXT('Selection Field')
+     A                                      DSPATR(HI)
+     A            #1REFN         6A  O  8 10TEXT('Reference Number')
+     A                                      DSPATR(HI)
+     A            #1SECN        10A  O  8 18TEXT('Security Shortname')
+     A                                      DSPATR(HI)
+     A            #1COAT         2A  O  8 30TEXT('Action Type')
+     A                                      DSPATR(HI)
+     A            #1COAN         6A  O  8 36TEXT('Date of Announcement')
+     A                                      DSPATR(HI)
+     A            #1EXDT         6A  O  8 47TEXT('Ex-Date')
+     A                                      DSPATR(HI)
+     A            #1ALEF         6A  O  8 57TEXT('Alloc. Effect.')
+     A                                      DSPATR(HI)
+     A            #1NBOP         2A  O  8 69TEXT('Number Option')
+     A                                      DSPATR(HI)
+     A            #1GSTS         1A  O  8 76TEXT('General Status')
+     A                                      DSPATR(HI)
+      *
+     A                                 12 20'CONFIRM'
+     A  40                             12 28'REVERSAL'
+     A N40N41                          12 28'DELETION'
+     A  41                             12 28'AUTHORISATION'
+     A            #1CONF         1A  B 12 42TEXT('Confirmation Field')
+     A N44                                  DSPATR(HI UL)
+     A  44                                  DSPATR(RI PC)
+     A                                      CHECK(ER)
+      *
+      ***************************
+      ***  Detail record format *
+      ***************************
+      *
+     A          R SE7502F3                  TEXT('Detail record format')
+      *
+     A                                      OVERLAY
+      *                                              Begin /CSE020/
+     A  68                                  CA08(08 'Subordinate Action')
+      *                                              End   /CSE020/
+     A*                                              Begin /137879/
+     A*****                                 CA11
+     A N36                                  CA11
+     A*                                              End   /137879/
+     A  61N64
+     AO 43                                  CA12(12 'Previous.')
+      *
+     A            ##USR     R        O  1  2REFFLD(USER)
+     A                                  1 13'SE7502F3'
+     A                                  1 26'CORPORATE ACTION EVENTS +
+     A                                      MAINTENANCE'
+     A                                      DSPATR(HI)
+     A                                  1 67'DATE '
+     A            ##MRDT    R        O  1 73REFFLD(RUNA)
+     A            ##JOB     R        O  2  2REFFLD(JOJOB)
+     A                                  2 31'GENERAL INFORMATION'
+     A                                      DSPATR(HI)
+     A                                  2 67'TIME '
+     A            ##TME          6  0   2 73EDTWRD('  :  :  ')
+      *
+     A                                  3  2'Reference Number'
+     A            #1REFN         6A  O  3 19TEXT('CO Reference Number')
+     A                                      DSPATR(HI)
+     A                                  3 26'Security'
+     A            #1SECN        10A  O  3 35TEXT('Security')
+     A                                      DSPATR(HI)
+     A                                  3 46'Type'
+     A            #1COAT         2A  O  3 51TEXT('CO Type')
+     A                                      DSPATR(HI)
+     A                                  3 54'Ex-date'
+     A            #1EXDT         6A  O  3 62TEXT('Ex-Date')
+     A                                      DSPATR(HI)
+     A**Start of change CSE016
+     A                                  4 26'Security Desc'
+     A            #1SRNM        41A  O  4 40TEXT('Security Description')
+     A                                      DSPATR(HI)
+      *
+     A  35                              5  2'Bulk Ref. Number'
+     A  35        #1BLKR         6A  O  5 19TEXT('Bulk Ref.Number')
+     A                                      DSPATR(HI)
+      *
+     A  53                              5 38'Parent Action Reference'
+     A  53        #1PREF         6A  O  5 62TEXT('Parent Action Reference')
+     A                                      DSPATR(HI)
+      *
+     A                                 06 03'Trade or Value Date Position'
+     A            #1TDVD         1A  B 06 32TEXT('Trade/Value Date Position')
+     A N66                                  DSPATR(HI)
+     A N15N16N17
+     AAN18N66N61                            DSPATR(UL)
+     A  15
+     AO 16
+     AO 17
+     AO 18
+     AO 61                                  DSPATR(PR)
+     A  66                                  DSPATR(PC RI)
+      *
+     A                                 07 03'Payment Date'
+     A            #1COPD         6A  B 07 16TEXT('Payment Date')
+     A N65                                  DSPATR(HI)
+     A N65N61N18                            DSPATR(UL)
+     A  18
+     AO 61                                  DSPATR(PR)
+     A  65                                  DSPATR(PC RI)
+      *
+     A                                 07 30'Trade Date'
+     A            #1TDDT         6A  B 07 41TEXT('Trade Date')
+     A N60                                  DSPATR(HI)
+     A N60N61N18                            DSPATR(UL)
+     A  18
+     AO 61                                  DSPATR(PR)
+     A  60                                  DSPATR(PC RI)
+     A                                 07 52'Event Date'
+     A            #1EVDT         6A  B 07 63TEXT('Event Date')
+     A N49                                  DSPATR(HI)
+     A N49N61N18                            DSPATR(UL)
+     A  18
+     AO 61                                  DSPATR(PR)
+     A  49                                  DSPATR(PC RI)
+     A*                                              Begin /136420/
+     A**35******                        4  2'Bulk Ref. Number'            CSE016
+     A**35******  #1BLKR         6A  O  4 19TEXT('Bulk Ref.Number')       CSE016
+     A**********                            DSPATR(HI)                    CSE016
+     A*                                              End   /136420/
+     A*                                              Begin /CSE020/
+     A**53******                        4 38'Parent Action Reference'     CSE016
+     A**53******  #1PREF         6A  O  4 62TEXT('Parent Action Reference CSE016
+     A**********                            DSPATR(HI)                    CSE016
+     A*                                              End   /CSE020/
+      *
+     A**********                       05 03'Trade or Value Date Position CSE016
+     A**********  #1TDVD         1A  B 05 32TEXT('Trade/Value Date Positi CSE016
+     A*N66******                            DSPATR(HI)                    CSE016
+     A*N15N16N17                                                          CSE016
+     A*N18N66N61                            DSPATR(UL)                    CSE016
+     A**15******                                                          CSE016
+     A**16******                                                          CSE016
+     A**17******                                                          CSE016
+     A**18******                                                          CSE016
+     A**61******                            DSPATR(PR)                    CSE016
+     A**66******                            DSPATR(PC RI)                 CSE016
+      *
+     A**********                       06 03'Payment Date'                CSE016
+     A**********  #1COPD         6A  B 06 16TEXT('Payment Date')          CSE016
+     A*N65******                            DSPATR(HI)                    CSE016
+     A*N65N61N18                            DSPATR(UL)                    CSE016
+     A**18******                                                          CSE016
+     A**61******                            DSPATR(PR)                    CSE016
+     A**65******                            DSPATR(PC RI)                 CSE016
+      *
+     A**********                       06 30'Trade Date'                  CSE016
+     A**********  #1TDDT         6A  B 06 41TEXT('Trade Date')            CSE016
+     A*N60******                            DSPATR(HI)                    CSE016
+     A*N60N61N18                            DSPATR(UL)                    CSE016
+     A**18******                                                          CSE016
+     A**61******                            DSPATR(PR)                    CSE016
+     A**60******                            DSPATR(PC RI)                 CSE016
+     A**********                       06 52'Event Date'                  CSE016
+     A**********  #1EVDT         6A  B 06 63TEXT('Event Date')            CSE016
+     A*N49******                            DSPATR(HI)                    CSE016
+     A*N49N61N18                            DSPATR(UL)                    CSE016
+     A**18******                                                          CSE016
+     A**61******                            DSPATR(PR)                    CSE016
+     A**49******                            DSPATR(PC RI)                 CSE016
+     A**End of change CSE016
+      *
+     A                                 08 03'Coupon Number'
+     A            #1CPNB         3A  B 08 17TEXT('Coupon Number')
+     A N67                                  DSPATR(HI)
+     A N67N61                               DSPATR(UL)
+     A  61                                  DSPATR(PR)
+     A  67                                  DSPATR(PC RI)
+     A                                 08 25'ShareHolders Meeting Date'
+     A            #1SHMD         6A  B 08 51TEXT('Meeting Date')
+     A N70                                  DSPATR(HI)
+     A N70N61                               DSPATR(UL)
+     A  61                                  DSPATR(PR)
+     A  70                                  DSPATR(PC RI)
+     A                                 08 59'Letter to be Sent'
+     A  35                                  DSPATR(ND)
+     A            #1LTBS         1A  B 08 77TEXT('Letter to be Sent')
+     A N71N35                               DSPATR(HI)
+     A N71N61N35                            DSPATR(UL)
+     A  35
+     AO 61                                  DSPATR(PR)
+     A  35                                  DSPATR(ND)
+     A  71N35                               DSPATR(PC RI)
+      *
+     A                                 10 03'Old Capital Value'
+     A            #1OCPV        17A  B 10 21TEXT('Old Capital Value')
+     A N20                                  DSPATR(HI)
+     A N20N61                               DSPATR(UL)
+     A  61                                  DSPATR(PR)
+     A  20                                  DSPATR(PC RI)
+     A                                 10 42'New Capital Value'
+     A            #1NCPV        17A  B 10 60TEXT('New Capital Value')
+     A N21                                  DSPATR(HI)
+     A N21N61                               DSPATR(UL)
+     A  61                                  DSPATR(PR)
+     A  21                                  DSPATR(PC RI)
+      *
+     A                                 11 03'Old Nominal Value'
+     A            #1ONML        17A  B 11 21TEXT('Old Nominal Value')
+     A N22                                  DSPATR(HI)
+     A N22N61                               DSPATR(UL)
+     A  61                                  DSPATR(PR)
+     A  22                                  DSPATR(PC RI)
+     A                                 11 42'New Nominal Value'
+     A            #1NNML        17A  B 11 60TEXT('New Nominal Value')
+     A N23                                  DSPATR(HI)
+     A N23N61                               DSPATR(UL)
+     A  61                                  DSPATR(PR)
+     A  23                                  DSPATR(PC RI)
+      *
+     A                                 13 03'Market Cum Price'
+     A            #1CUPC        16A  B 13 20TEXT('Market Cum Price')
+     A N24                                  DSPATR(HI)
+     A N24N61                               DSPATR(UL)
+     A  61                                  DSPATR(PR)
+     A  24                                  DSPATR(PC RI)
+     A                                 13 42'Market Ex Price'
+     A            #1EXPC        16A  B 13 60TEXT('Market Ex Price')
+     A N31                                  DSPATR(HI)
+     A N31N61                               DSPATR(UL)
+     A  61                                  DSPATR(PR)
+     A  31                                  DSPATR(PC RI)
+      *
+     A                                 15 03'Customer Last Reply Date'
+     A  35                                  DSPATR(ND)
+     A            #1CLRD         6A  B 15 28TEXT('Customer Last Reply Date')
+     A N83                                  DSPATR(HI)
+     A N83N61N35                            DSPATR(UL)
+     A  35
+     AO 61                                  DSPATR(PR)
+     A  35                                  DSPATR(ND)
+     A  83                                  DSPATR(PC RI)
+     A                                 15 42'Last Reply Time'
+     A  35                                  DSPATR(ND)
+     A            #1CLRT         6A  B 15 60TEXT('Last Reply Time')
+     A N13                                  DSPATR(HI)
+     A N13N61N35                            DSPATR(UL)
+     A  35
+     AO 61                                  DSPATR(PR)
+     A  35                                  DSPATR(ND)
+     A  13                                  DSPATR(PC RI)
+      *
+     A                                 16 03'Depot    Last Reply Date'
+     A  35                                  DSPATR(ND)
+     A            #1DLRD         6A  B 16 28TEXT('Depot Last Reply Date')
+     A N85                                  DSPATR(HI)
+     A N85N61N35                            DSPATR(UL)
+     A  35
+     AO 61                                  DSPATR(PR)
+     A  35                                  DSPATR(ND)
+     A  85                                  DSPATR(PC RI)
+     A                                 16 42'Last Reply Time'
+     A  35                                  DSPATR(ND)
+     A            #1DLRT         6A  B 16 60TEXT('Last Reply Time')
+     A N14                                  DSPATR(HI)
+     A N14N61N35                            DSPATR(UL)
+     A  35
+     AO 61                                  DSPATR(PR)
+     A  35                                  DSPATR(ND)
+     A  14                                  DSPATR(PC RI)
+      *
+     A                                 18 03'Block Security'
+     A            #1BLOS         1A  B 18 18TEXT('Block Security')
+     A N42                                  DSPATR(HI)
+     A N42N61                               DSPATR(UL)
+     A  61                                  DSPATR(PR)
+     A  42                                  DSPATR(PC RI)
+     A                                 18 21'Block Positions'
+     A            #1BLOP         1A  B 18 37TEXT('Block All Positions')
+     A N72                                  DSPATR(HI)
+     A N72N61                               DSPATR(UL)
+     A  61                                  DSPATR(PR)
+     A  72                                  DSPATR(PC RI)
+     A                                 18 40'Block From Date/End Date'
+     A            #1BFRD         6A  B 18 66TEXT('Block From Date')
+     A N73                                  DSPATR(HI)
+     A N73N61                               DSPATR(UL)
+     A  61                                  DSPATR(PR)
+     A  73                                  DSPATR(PC RI)
+     A            #1BEND         6A  B 18 74TEXT('Block End Date')
+     A N74                                  DSPATR(HI)
+     A N74N61                               DSPATR(UL)
+     A  61                                  DSPATR(PR)
+     A  74                                  DSPATR(PC RI)
+     A**Start of change CGL031
+     A  06                             19  3'Subject to European Tax'
+     A  06        #1SETX         1A  B 19 27TEXT('Subject to European Tax')
+     A N07                                  DSPATR(HI)
+     A N07N61                               DSPATR(UL)
+     A  61                                  DSPATR(PR)
+     A  07                                  DSPATR(PC RI)
+     A**End of change CGL031
+      *
+     A                                 20 03'Refuse Offer'
+     A  26
+     AO 35                                  DSPATR(ND)
+     A            #1REFO         1A  B 20 20TEXT('Refuse Offer')
+     A N76                                  DSPATR(HI)
+     A N15N16N17
+     AAN18N35
+     AAN76N61N26                            DSPATR(UL)
+     A  15
+     AO 16
+     AO 17
+     AO 18
+     AO 26
+     AO 35
+     AO 61                                  DSPATR(PR)
+     A  26
+     AO 35                                  DSPATR(ND)
+     A  76                                  DSPATR(PC RI)
+     A                                 20 23'Customer Option Narrative'
+     A  26
+     AO 35                                  DSPATR(ND)
+     A            #1CONR         2A  B 20 49TEXT('Option Narrative')
+     A N77                                  DSPATR(HI)
+     A N15N16N17
+     AAN18N35
+     AAN77N61N26                            DSPATR(UL)
+     A  15
+     AO 16
+     AO 17
+     AO 18
+     AO 26
+     AO 35
+     AO 61                                  DSPATR(PR)
+     A  26
+     AO 35                                  DSPATR(ND)
+     A  77                                  DSPATR(PC RI)
+      *
+     A                                 21 03'Default No Reply'
+     A  26
+     AO 35                                  DSPATR(ND)
+     A            #1DFNR         1A  B 21 20TEXT('Default No Reply')
+     A N78                                  DSPATR(HI)
+     A N15N16N17
+     AAN18N35
+     AAN78N61N26                            DSPATR(UL)
+     A  15
+     AO 16
+     AO 17
+     AO 18
+     AO 26
+     AO 35
+     AO 61                                  DSPATR(PR)
+     A  26
+     AO 35                                  DSPATR(ND)
+     A  78                                  DSPATR(PC RI)
+     A                                 21 23'Default Cash Preferred'
+     A  26
+     AO 35                                  DSPATR(ND)
+     A            #1DFCP         1A  B 21 46TEXT('Default Cash Preferred')
+     A N79                                  DSPATR(HI)
+     A N15N16N17
+     AAN18N35
+     AAN79N61N26                            DSPATR(UL)
+     A  15
+     AO 16
+     AO 17
+     AO 18
+     AO 26
+     AO 35
+     AO 61                                  DSPATR(PR)
+     A  26
+     AO 35                                  DSPATR(ND)
+     A  79                                  DSPATR(PC RI)
+     A                                 21 50'Default Stock Preferred'
+     A  26
+     AO 35                                  DSPATR(ND)
+     A            #1DFSP         1A  B 21 76TEXT('Default Stock Preferred')
+     A N82                                  DSPATR(HI)
+     A N15N16N17
+     AAN18N35
+     AAN82N61N26                            DSPATR(UL)
+     A  15
+     AO 16
+     AO 17
+     AO 18
+     AO 26
+     AO 35
+     AO 61                                  DSPATR(PR)
+     A  26
+     AO 35                                  DSPATR(ND)
+     A  82                                  DSPATR(PC RI)
+      *
+     A            #2BLOS         1A  H      TEXT('Block Security')
+     A            #2BLOP         1A  H      TEXT('Block Positions')
+     A            #2BFRD         6A  H      TEXT('Block From Date')
+     A            #2BEND         6A  H      TEXT('Block End Date')
+      *
+      *******************************
+      ***  Subfile program messages *
+      *******************************
+      *
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+      *
+      ***************************************
+      ***  Subfile control program messages *
+      ***************************************
+      *
+     A          R #MSGCTL                   SFLCTL(#MSGRCD)
+     A                                      SFLSIZ(0015)
+     A                                      SFLPAG(0001)
+     A                                      TEXT('Program messages')
+     A                                      SFLINZ
+     A                                      SFLDSP
+     A                                      SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+      *

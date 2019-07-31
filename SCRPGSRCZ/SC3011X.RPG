@@ -1,0 +1,361 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SC Add background switchable feature')
+      *****************************************************************
+      *                                                               *
+      *  Midas - System Control Module                                *
+      *                                                               *
+      *  SC3011X - Insert/Delete Background Switchable Feature.       *
+      *                                                               *
+      *  Function:  This program inserts or deletes a switchable      *
+      *             feature to reflect a data setting such as a       *
+      *             flag on an ICD file.                              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCB008             Date 12Oct98               *
+      *                 S01486             Date 19OCT94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CCB008 - Synon Closedown Project (CB):                       *
+      *           - File removed from CB model.                       *
+      *  S01486 - New program created to allow ICD options to         *
+      *           control access to menu items, cob components etc.   *
+      *                                                               *
+      *****************************************************************
+     FSCSARDL0UF  E           K        DISK                      A    UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * UPD : Switchable Features    res in system update
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I :  Action Code
+     I                                        1   1 P1ANCD
+     IP2PARM      DS
+      * I :  Switchable Feature Number
+     I                                        1   6 P2SARN
+     IP3PARM      DS
+      * I :  Description
+     I                                        1  50 P3SARD
+     IP4PARM      DS
+      * O :  Return code
+     I                                        1   6 P4BSCD
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C           P1ANCD    PARM           WP0001  1        Action Code
+     C           P2SARN    PARM           WP0002  6        Switchable Feat
+     C           P3SARD    PARM           WP0003 50        Description
+     C           P4BSCD    PARM P4BSCD    WP0004  6        Return code
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Add Background Feature
+      * SC3011X Precompiler - Switchable Features  *
+      * Copyright Statement 1994 - Standard functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##AANA  7
+     C                     MOVE MRDT      WUAANA
+     C                     MOVE RDNB      WUAKTX
+     C                     MOVE SUC       WUAUST
+     C                     MOVE DFF       WUE3ST
+     C                     MOVE MBIN      WUF1ST
+      * Initialise work fields.
+     C                     MOVELP2SARN    WUSARN           Switchable Feat
+     C                     MOVELP3SARD    WUSARD           Description
+     C                     Z-ADD*ZERO     WULCD            Last change dat
+     C                     MOVEL'I'       WUTYLC           Type of the Las
+     C                     MOVEL*BLANK    WUAANA           midas rundate
+      * Insert mode processing.
+      * CASE: PAR.Action Code is Insert
+     C           P1ANCD    IFEQ 'I'                        *IF
+      * Create Background Feature - Switchable Features  *
+     C                     EXSR SACRRC
+     C                     END                             *FI
+      * Delete mode processing.
+      * CASE: PAR.Action Code is Delete
+     C           P1ANCD    IFEQ 'D'                        *IF
+      * Delete Background Feature - Switchable Features  *
+     C                     EXSR SBDLRC
+     C                     END                             *FI
+      * Move program return code to return code parameter.
+     C                     MOVELW0RTN     P4BSCD           Return code
+      *----------------------------------------------------------------
+      * Exit program
+     C           AAEXIT    TAG
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+      /EJECT
+     CSR         SACRRC    BEGSR
+      *================================================================
+      * Create Background Feature - Switchable Features  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move all fields to @SARDL0
+     C                     MOVELWUSARN    ABSARN           Switchable Feat
+     C                     MOVELWUSARD    ABSARD           Description
+     C                     Z-ADDWUAKTX    ABLCD            Last change dat
+     C                     MOVEL'I'       ABTYLC           Type of the Las
+      *
+      * USER: Processing before Data update
+     C           KLCRSA    KLIST
+     C                     KFLD           ABSARN           Switchable Feat
+      * Check for duplicate primary key
+     C           KLCRSA    SETLL@SARDL0                  90*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CBM0005' W0RTN   7
+      * Send message 'Switchable Features  EX'
+     C                     MOVEL'CBM0005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C                     WRITE@SARDL0                91  *
+      *
+     C           *IN91     IFEQ '1'
+      * Write error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBDLRC    BEGSR
+      *================================================================
+      * Delete Background Feature - Switchable Features  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @SARDL0
+     C                     MOVELWUSARN    ABSARN           Switchable Feat
+      *
+     C           KLDLSB    KLIST
+     C                     KFLD           ABSARN           Switchable Feat
+     C           KLDLSB    CHAIN@SARDL0              9091  *
+     C           *IN90     IFEQ '1'
+      * Record already deleted
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+      * Send message '*Database operation error'
+     C                     MOVEL'Y2U0004' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SBEXIT
+     C                     END
+      *
+      *................................................................
+     C                     DELET@SARDL0                91  *
+     C           *IN91     IFEQ '1'
+      * Delete error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Exit program: Normal
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field midas rundate
+     C                     MOVEL*BLANK    WUAANA  7
+      * Define work field run day number
+     C                     Z-ADD*ZERO     WUAKTX  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUAUST  1
+      * Define work field date format flag
+     C                     MOVEL*BLANK    WUE3ST  1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUF1ST  1
+      * Define work field Switchable Feature Number
+     C                     MOVEL*BLANK    WUSARN  6
+      * Define work field Description
+     C                     MOVEL*BLANK    WUSARD 50
+      * Define work field Last change date  LCD
+     C                     Z-ADD*ZERO     WULCD   50
+      * Define work field Type of the Last Change
+     C                     MOVEL*BLANK    WUTYLC  1
+      * Obtain default message file
+     C           *NAMVAR   DEFN CBMGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SCSARDL0
+     C                     MOVEL'N'       W0PMT   1
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SC3011XPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SC3011XPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY CBCPYSRC,CBPSSRINS
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SC3011XPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

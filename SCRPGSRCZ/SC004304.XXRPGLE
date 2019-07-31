@@ -1,0 +1,861 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+      *****************************************************************
+/*S*D ***RPGBASEMOD****************************************************
+/*O*RF*:*OVRDBF*FILE(SCACJBPX)*TOFILE(SCACJBPD)*********************:**
+      *****************************************************************
+      *                                                               *
+      *  Midas - System Control Module                                *
+      *                                                               *
+      *  SC004304 - Send Break Messages to Interactive Users          *
+      *             Connected to the System                           *
+      *                                                               *
+      *  Function:  This program will send break messages to          *
+      *             interactive users that are connected to the Midas *
+      *             system                                            *
+      *                                                               *
+      *  Component of: SC004301 ('Main' to 'Support' System           *
+      *                           Transition Monitor)                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CPK030   *REDUNDANTDate 11Apr14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSC011  *CREATE    Date 18Sep01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CPK030 - Clean up of deliverable data library.               *
+      *  CRE026 - Consumer Banking                                    *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CSC011 - 24x7 Midas Availability                             *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    70         Read SCACJBPX                                   *
+      *    71         Chain/READE SCSYSTL1                            *
+      *    72         SCAN Message Text                               *
+      *    73         Error in calling program                        *
+      *    U7         Database error                                  *
+      *    U8         Database Error                                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  SRMESS - Get Next Message to be Sent                         *
+      *  SRTIME - Calculate Time in Seconds                           *
+      *  SREND  - Subroutine to end program                           *
+      *  SRQCMD - Subroutine to 'QCMDEXC'                             *
+      * *PSSR   - Error processing                                    *
+      * *INZSR  - Initialise                                          *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+ 
+      ** Processing Date Switch Message File
+     FSCSYSTL1  IF   E           K DISK    INFSR(*PSSR)
+ 
+      ** Subsystem Jobs in System File
+     FSCACJBPX  IF   E             DISK    INFSR(*PSSR) USROPN
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **                                                                    ----
+      ** The following /COPY line includes (among others) the LDA layout
+      ** and the copyright array definition:
+ 
+      ** Data Area giving Installation Control Details
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+ 
+      ** Program Status Data Structure
+     D/COPY ZACPYSRC,PSDS
+ 
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+      ** Dummy Data Structure used by Access programs
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+ 
+      ** Dummy Data Structure used by Access programs
+     D DSSDY         E DS                  EXTNAME(DSSDY)
+ 
+      ** SF Users File
+     D MUSER         E DS                  EXTNAME(MUSERDD)
+ 
+      ** Main to Support System Transition Status Dataarea
+     D SCMAIN        E DS           256    EXTNAME(SCMAIN) DTAARA(SCMAIN)
+ 
+      ** 24x7 Status Dataarea
+     D SC24X7        E DS           256    EXTNAME(SC24X7) DTAARA(SC24X7)
+ 
+      ** Bank Details ICD File
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+ 
+      ** Subsystem jobs connected to the system
+     D SCACJB          DS           132
+     D  WJobName               4     13
+     D  WUser                 17     26
+     D  WNumber               30     35
+     D  WTYPE                 39     43
+ 
+      ** Data structure for time HH:MM:SS
+     D DSTimeVar       DS
+     D   WHours                1      2S 0
+     D   WMinute               3      4S 0
+     D   WSecond               5      6S 0
+ 
+      ** Data structure for time MMM:SS
+     D DSTimeVar2      DS
+     D   WMinute2              1      3S 0
+     D   WSecond2              4      5S 0
+ 
+      ** QCMDEXC dataarea
+     D WCommand2       DS           200
+     D  WCmd2                 25     77
+ 
+     D WQcmd2          S            100    DIM(1) CTDATA PERRCD(1)
+     D WMsgTxt         S            100    DIM(2) CTDATA PERRCD(1)
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+      ** Date Format (ddmmmyy)
+     D PADate          S              7
+ 
+      ** QCMDEXC parameter
+     D PCMD            S            200
+     D PCMDLEN         S             15  5
+ 
+      ** Date Format
+     D PDatFmt         S              1
+ 
+      ** Date Format (ddmmyy)
+     D PDate           S              6  0
+ 
+      ** Day Number
+     D PDayNo          S              5  0
+ 
+      ** User JobName
+     D PJobName        S             10
+ 
+      ** Message Text parm
+     D PMessage        S            500
+ 
+     D PNumber         S              6
+      ** User Job Number
+ 
+     D POPTN           S              7
+ 
+      ** Processing Type
+     D PPType          S              1
+ 
+      ** Return Code
+     D PRTCD           S              7
+ 
+      ** Subsystem
+     D PSubsyst        S              2
+ 
+      ** User parameter
+     D PUser           S             10
+ 
+      ** User Profile parm
+     D PUSRP           S             10
+ 
+      ** Current User JobName
+     D P@JobName       S             10
+ 
+     D WChgTyp         S              1A
+ 
+      ** Default Message used
+     D WDfltMsg        S            500
+ 
+      ** Duration of messages
+     D WDuration       S              5  0
+ 
+      ** Interactive User
+     D WIntUsr         S              1
+ 
+      ** Date in ddmmmyy format
+     D WkDate          S              8
+ 
+     D WLangCode       S              2
+ 
+      ** Type of Message
+     D WMsgType        S              1
+ 
+      ** Type of Message
+     D WMsgTime        S              5  0
+ 
+     D W_MsgTime       S              5
+ 
+     D WFirstMsg       S              1
+     D WMsg            S              1
+     D WPos            S              3  0
+     D WSecTot         S              5S 0
+     D WSecRem         S              5S 0
+     D WSec1           S              5S 0
+     D WSec2           S              5S 0
+     D WSysSecs        S              5S 0
+     D WS2TIME         S              5S 0
+     D WS2TMNM         S              5S 0
+     D WT1MTIM         S              5S 0
+     D W_S2TIME        S              5S 0
+     D W_S2TMNM        S              6S 0
+     D W_S2TPNM        S              1
+ 
+      ** System time workfield
+     D WTime           S              6  0
+ 
+      ** Rundate workfield
+     D @RUN            S              1
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+ 
+      *********************************************************************
+      * MAIN PROCEDURE                                                    *
+      *********************************************************************
+ 
+      ** Perform Initialisation
+ 
+     C                   EVAL      *IN70 = *OFF
+     C                   EVAL      *IN71 = *OFF
+     C                   EVAL      *IN72 = *OFF
+     C                   EVAL      WMsg  = *Blanks
+ 
+      ** Do while status in SCMAIN is not 'C'
+ 
+     C                   DOW       S2STAT <> 'C'
+ 
+      ** Copy spooled file of interactive session in the main system to
+      ** SCACJBPX
+ 
+     C                   CALL      'SCC004303'                          73
+     C                   PARM      S1MAIN        PSubsyst
+ 
+     C                   IF        (*INU7 = *ON
+     C                             AND *INU8 = *ON)
+     C                             OR *IN73 = *ON
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 001
+     C                   EVAL      DBFILE = 'SCC4303'
+     C                   EVAL      DBKEY = '*CALL'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      ** Read all records in SCACJBPX
+ 
+     C                   OPEN      SCACJBPX
+     C     1             SETLL     SCACJBPX
+     C                   READ      SCACJBPX                               70
+ 
+     C                   EVAL      WIntUsr = 'N'
+     C                   DOW       *IN70 = *OFF
+     C                   IF        WTYPE = 'INTER'
+     C                   IF        WJobName <> P@JobName
+     C                   EVAL      WIntUsr = 'Y'
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   READ      SCACJBPX                               70
+     C                   ENDDO
+ 
+     C                   CLOSE     SCACJBPX
+ 
+     C                   IF        WIntUsr = 'N'
+ 
+      ** Check for latest value of dataarea SC24X7
+ 
+     C                   IN        SC24X7
+ 
+     C                   IF        S1SOVR = ' '
+     C                             OR S1MANT = 'E'
+ 
+      ** Update Switchover mode and Maintenance mode in SC24X7
+ 
+     C     *LOCK         IN        SC24X7
+     C                   EVAL      S1SOVR = 'S'
+     C                   EVAL      S1MANT = 'E'
+     C                   OUT       SC24X7
+ 
+     C                   ENDIF
+ 
+     C     *LOCK         IN        SCMAIN
+     C                   EVAL      S2PHAS = 'O'
+     C                   OUT       SCMAIN
+     C                   EXSR      SREND
+     C                   ENDIF
+ 
+      ** Retrieve Time/Type of Next Message in SCMAIN
+ 
+     C                   IN        SCMAIN
+ 
+      ** Determine System time
+ 
+     C                   TIME                    WTIME
+ 
+      ** Check values of Time/Type of Next message
+ 
+     C                   IF        (WTime >= S2TMNM
+     C                             OR S2TPNM = ' ')
+     C                             AND S2STAT <> 'H'
+ 
+      ** Get next message to be sent when Type of Next message is blank
+ 
+     C                   IF        S2TPNM = ' '
+     C                   EVAL      WFirstMsg = 'C'
+     C                   EXSR      SRMESS
+     C                   ENDIF
+ 
+      ** Type of Next message is 'O'
+ 
+     C                   IF        S2TPNM = 'O'
+ 
+     C                   IF        S1SOVR = ' '
+     C                             OR S1MANT = 'E'
+ 
+     C     *LOCK         IN        SC24X7
+     C                   EVAL      S1SOVR = 'S'
+     C                   EVAL      S1MANT = 'E'
+     C                   OUT       SC24X7
+     C                   ENDIF
+ 
+     C     *LOCK         IN        SCMAIN
+     C                   EVAL      S2PHAS = 'O'
+     C                   OUT       SCMAIN
+     C                   EXSR      SREND
+     C                   ENDIF
+ 
+     C                   EVAL      WMsgType = S2TPNM
+     C                   EVAL      WMsgTime = S2TIME
+     C     KTwoKey       CHAIN     SCSYSTL1                           71
+     C                   IF        *IN71 = *ON
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 002
+     C                   EVAL      DBFILE = 'SCSYSTL1'
+     C                   MOVEL     WMsgTime      W_MsgTime
+     C                   EVAL      DBKEY = WMsgType + W_MsgTime
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ELSE
+     C                   EVAL      WDfltMsg = T1MTXT
+     C                   ENDIF
+ 
+      ** Copy spooled file of interactive session in the main system to
+      ** SCACJBPX
+ 
+     C                   CALL      'SCC004303'                          73
+     C                   PARM      S1MAIN        PSubsyst
+ 
+     C                   IF        (*INU7 = *ON
+     C                             AND *INU8 = *ON)
+     C                             OR *IN73 = *ON
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 003
+     C                   EVAL      DBFILE = 'SCC4303'
+     C                   EVAL      DBKEY = '*CALL'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   OPEN      SCACJBPX
+ 
+      ** Read all records in SCACJBPX
+ 
+     C     1             SETLL     SCACJBPX
+     C                   READ      SCACJBPX                               70
+ 
+     C                   DOW       *IN70 = *OFF
+ 
+      ** If interactive session
+ 
+     C                   IF        WTYPE = 'INTER'
+ 
+      ** Get the user language using access object AOUSERR0
+ 
+     C                   CALL      'AOUSERR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*KEY'        POPTN
+     C                   PARM      WUser         PUSRP
+     C     MUSER         PARM      MUSER         DSSDY
+ 
+     C                   IF        PRTCD <> *BLANKS
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 004
+     C                   EVAL      DBFILE = 'MUSERDD'
+     C                   EVAL      DBKEY = WUser
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      ** Chain to LF/SCSYSTL1 using 'Type of Next Message'/'Message Time'
+      ** from SCMAIN and user languange to get 'Message Text'
+ 
+     C                   EVAL      WMsgType = S2TPNM
+     C                   EVAL      WMsgTime = S2TIME
+     C                   EVAL      WLangCode = MULT
+     C     KThreeK       CHAIN     SCSYSTL1                           71
+     C                   IF        *IN71 = *ON
+     C                   EVAL      PMessage = WDfltMsg
+     C                   ELSE
+     C                   EVAL      PMessage = T1MTXT
+     C                   ENDIF
+ 
+      ** Scan message text for {*DATE*} and replace it with Processing_Date
+ 
+     C                   EVAL      WkDate = '{*DATE*}'
+     C     WkDate        SCAN      PMessage      WPos                     72
+     C                   DOW       *IN72 = *ON
+     C                   EVAL      %SUBST(PMessage:WPos:8) = PADATE
+     C     WkDate        SCAN      PMessage      WPos                     72
+     C                   ENDDO
+ 
+     C                   IF        P@JobName <> WJobName
+ 
+      ** Send break message to an interactive session
+ 
+     C                   CALL      'SCC004305'                          73
+     C                   PARM      'S'           PPType
+     C                   PARM      WJobName      PJobName
+     C                   PARM      *BLANKS       PUser
+     C                   PARM      *BLANKS       PNumber
+     C                   PARM                    PMessage
+ 
+     C                   IF        (*INU7 = *ON
+     C                             AND *INU8 = *ON)
+     C                             OR *IN73 = *ON
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 005
+     C                   EVAL      DBFILE = 'SCC4305'
+     C                   EVAL      DBKEY = '*CALL'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      ** Send program message to SC24X7Q
+ 
+     C                   IF        WFirstMsg = 'C'
+     C                   EVAL      WCommand2 = WQcmd2(1)
+     C                   MOVEA     WMsgTxt(1)    WCmd2
+     C                   EXSR      SRQCMD
+     C                   ENDIF
+ 
+     C                   IF        WFirstMsg = 'S'
+     C                   EVAL      WCommand2 = WQcmd2(1)
+     C                   MOVEA     WMsgTxt(2)    WCmd2
+     C                   EXSR      SRQCMD
+     C                   ENDIF
+ 
+     C                   ENDIF
+ 
+     C                   ENDIF
+ 
+     C                   READ      SCACJBPX                               70
+     C                   ENDDO
+     C                   CLOSE     SCACJBPX
+ 
+      ** Get Next Message to be sent
+ 
+     C                   EXSR      SRMESS
+ 
+      ** Retrieve dataarea SCMAIN and SC24X7
+ 
+     C                   IN        SCMAIN
+     C                   IN        SC24X7
+ 
+     C                   IF        S2TPLM = 'S'
+ 
+     C                   IF        S1SOVR = ' '
+     C                             OR S1MANT = 'E'
+ 
+     C     *LOCK         IN        SC24X7
+     C                   EVAL      S1SOVR = 'S'
+     C                   EVAL      S1MANT = 'E'
+     C                   OUT       SC24X7
+ 
+     C                   ENDIF
+ 
+     C     *LOCK         IN        SCMAIN
+     C                   EVAL      S2PHAS = 'A'
+     C                   OUT       SCMAIN
+ 
+     C                   ENDIF
+ 
+      ** Retrieve dataarea SCMAIN
+ 
+     C                   IN        SCMAIN
+ 
+     C                   ENDIF
+ 
+     C                   ENDDO
+ 
+     C                   EXSR      SREND
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRMESS - Subroutine to get next message to sent               *
+      *                                                               *
+      * Called by: Main Subroutine                                    *
+      *                                                               *
+      * Calls: SRTIME                                                 *
+      *                                                               *
+      *****************************************************************
+     C     SRMESS        BEGSR
+ 
+     C     *LOCK         IN        SCMAIN
+     C                   EVAL      S2TMLM = S2TMNM
+     C                   EVAL      S2TPLM = S2TPNM
+ 
+     C                   IF        S2TPLM = ' '
+ 
+     C                   EVAL      WMsgType = 'C'
+     C     WMsgType      CHAIN     SCSYSTL1                           71
+ 
+     C                   ELSE
+     C                   EVAL      WMsgType = S2TPLM
+     C                   EVAL      WMsgTime = S2TIME
+     C     KTwoKey       SETGT     SCSYSTL1                           71
+     C                   IF        *IN71 = *ON
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 006
+     C                   EVAL      DBFILE = 'SCSYSTL1'
+     C                   MOVEL     WMsgTime      W_MsgTime
+     C                   EVAL      DBKEY = WMsgType + W_MsgTime
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   EVAL      WMsgType = S2TPLM
+     C     WMsgType      READE     SCSYSTL1                               71
+     C                   ENDIF
+ 
+     C                   IF        (*IN71 = *ON AND S2TPLM = ' ')
+     C                             OR (*IN71 = *ON AND S2TPLM = 'C')
+     C                   EVAL      WMsgType = 'S'
+     C                   EVAL      WFirstMsg = 'S'
+     C     WMsgType      CHAIN     SCSYSTL1                           71
+     C                   ENDIF
+ 
+     C                   IF        *IN71 = *ON
+     C                   EVAL      S2TPNM = 'O'
+     C                   EVAL      WFirstMsg = 'O'
+ 
+      ** Convert system time to seconds
+ 
+     C                   MOVE      WTime         DSTimeVar
+     C                   EVAL      WChgTyp = '1'
+     C                   EXSR      SRTime
+     C                   EVAL      WSysSecs = WSecTot
+ 
+      ** Convert S2TIME to seconds
+ 
+     C                   MOVE      S2TIME        DSTimeVar2
+     C                   EVAL      WChgTyp   = '2'
+     C                   EXSR      SRTime
+     C                   EVAL      WS2Time = WSecTot
+ 
+     C                   EVAL      WS2TMNM = WSysSecs + WS2TIME
+ 
+      ** Convert WS2TMNM (SSSSS) to S2TMNM (HH:MM:SS)
+ 
+     C                   EVAL      WSecTot = WS2TMNM
+     C                   EVAL      WChgTyp = '3'
+     C                   EXSR      SRTime
+     C                   MOVE      DSTimeVar     S2TMNM
+     C                   EVAL      S2TIME = 0
+ 
+     C                   ELSE
+     C                   EVAL      S2TPNM = T1MTYP
+ 
+     C                   IF        S2TPLM = ' '
+     C                   EVAL      S2TMNM = WTime
+ 
+     C                   ELSE
+     C                   IF        S2TPLM = S2TPNM
+ 
+      ** Convert S2TIME to seconds
+ 
+     C                   MOVE      S2TIME        DSTimeVar2
+     C                   EVAL      WChgTyp = '2'
+     C                   EXSR      SRTime
+     C                   EVAL      WS2Time = WSecTot
+ 
+      ** Convert T1MTIM to seconds
+ 
+     C                   MOVE      T1MTIM        DSTimeVar2
+     C                   EVAL      WChgTyp = '2'
+     C                   EXSR      SRTime
+     C                   EVAL      WT1MTIM = WSecTot
+     C
+     C                   EVAL      WDuration = WS2TIME - WT1MTIM
+     C                   ELSE
+ 
+      ** Convert S2TIME to seconds
+ 
+     C                   MOVE      S2TIME        DSTimeVar2
+     C                   EVAL      WChgTyp = '2'
+     C                   EXSR      SRTime
+     C                   EVAL      WS2Time = WSecTot
+ 
+     C                   EVAL      WDuration = WS2TIME
+     C                   ENDIF
+ 
+      ** Convert System time (WSysTime) to seconds
+ 
+     C                   MOVE      WTime         DSTimeVar
+     C                   EVAL      WChgTyp = '1'
+     C                   EXSR      SRTime
+     C                   EVAL      WSysSecs = WSecTot
+ 
+      ** Add WDuration to WSysSecs (Duration + System Time)
+      ** Convert WS2TMNM (SSSSS) to S2TMNM (HH:MM:SS)
+ 
+     C                   EVAL      WS2TMNM = WSysSecs + WDuration
+     C                   EVAL      WSecTot = WS2TMNM
+     C                   EVAL      WChgTyp = '3'
+     C                   EXSR      SRTime
+     C                   MOVE      DSTimeVar     S2TMNM
+     C                   ENDIF
+     C                   EVAL      S2TIME = T1MTIM
+     C                   ENDIF
+ 
+     C                   OUT       SCMAIN
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRTime - Subroutine to Calculate time                         *
+      *                                                               *
+      * Called by: SRMESS                                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     SRTime        BEGSR
+ 
+     C                   SELECT
+ 
+      ** Convert HH:MM:SS to SSSSS
+ 
+     C                   WHEN      WChgTyp = '1'
+     c                   EVAL      WSec1 = WHours * 3600
+     C                   EVAL      WSec2 = WMinute * 60
+     C                   EVAL      WSecTot = WSec1 + WSec2 + WSecond
+ 
+      ** Convert MMM:SS to SSSSS
+ 
+     C                   WHEN      WChgTyp = '2'
+     C                   EVAL      WSec1 = WMinute2 * 60
+     C                   EVAL      WSecTot = WSec1 + WSecond2
+ 
+      ** Convert SSSSS to HH:MM:SS
+ 
+     C                   WHEN      WChgTyp = '3'
+     C                   EVAL      WHours = WSecTot / 3600
+     c                   EVAL      WSec1 = WHours * 3600
+     C                   EVAL      WSecRem = WSecTot - WSec1
+     C                   EVAL      WMinute = WSecRem / 60
+     c                   EVAL      WSec2   =  WMinute * 60
+     C                   EVAL      WSecond = WSecRem - WSec2
+     C                   ENDSL
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SREND - Subroutine to End Program                             *
+      *                                                               *
+      * Called by: Main Subroutine                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     SREND         BEGSR
+ 
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRQCMD - Subroutine to 'QCMDEXC'                              *
+      *                                                               *
+      * Called by: Main Subroutine                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     SRQCMD        BEGSR
+ 
+     C***                EVAL      WCommand2 = WQcmd2(1)
+     C                   EVAL      PCMD = WCommand2
+     C                   Z-ADD     100           PCMDLEN
+     C                   CALL      'QCMDEXC'
+     C                   PARM                    PCMD
+     C                   PARM                    PCMDLEN
+ 
+     C                   EVAL      WFirstMsg = *Blanks
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Implicitly on program activation                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     *INZSR        BEGSR
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    P@JobName
+ 
+      ** Retrieve dataarea SCMAIN and SC24X7
+ 
+     C                   IN        SCMAIN
+     C                   IN        SC24X7
+ 
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBPGM = 'SC004304'
+     C                   OUT       LDA
+ 
+      ** Access bank details
+ 
+     C                   CALL      'AOBANKR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*FIRST '     POPTN
+     C     SDBANK        PARM      SDBANK        DSFDY
+ 
+     C                   IF        PRTCD <> *BLANKS
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 007
+     C                   EVAL      DBFILE = 'SDBANKPD'
+     C                   EVAL      DBKEY = '*FIRST'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      ** Convert Processing_Date
+ 
+     C                   CALL      'ZDATE2'
+     C                   PARM      S1Date        PDayno
+     C                   PARM      BJDFIN        PDatFmt
+     C                   PARM                    PDate
+     C                   PARM                    PADate
+ 
+     C     KTwoKey       KLIST
+     C                   KFLD                    WMsgType
+     C                   KFLD                    WMsgTime
+ 
+     C     KThreeK       KLIST
+     C                   KFLD                    WMsgType
+     C                   KFLD                    WMsgTime
+     C                   KFLD                    WLangCode
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     *PSSR         BEGSR
+ 
+     C                   IF        @RUN = *BLANK
+ 
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+ 
+     C                   CALLB     'DBERRCTL'
+ 
+     C                   ENDIF
+ 
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** WQcmd2
+SNDMSG  MSG('SC004304 -                                                      ') TOMSGQ(SC24X7Q)
+** WMsgTxt
+''Countdown'' message sent to users in Main System.
+''Changeover'' message sent to users in Main System.

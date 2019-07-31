@@ -1,0 +1,277 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                      CCB023A
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - Arbitage Module
+     F*                                                              *
+     F*     AB8040    - CHECK STATUS OF DEALS ON AS400               *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                              *
+      *     Last Amend No. CCB023A *REDUNDANT  Date 06Aug12           *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CDL038             Date 10May05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                    E38012           DATE 03APR92             *
+     F*                    S01319           DATE 20JAN92             *
+     F*                    E27501           DATE 03SEP91             *
+     F*                    DT0181           DATE 22MAY91             *
+     F*                    DT0180           DATE 22MAY91             *
+     F*                    E17063           DATE 05/05/89            *
+     F*                                                              *
+     F****************************************************************
+     F*                                                               *
+     F*  CCB023A - COB Restructure - Input Cycle Termination          *
+     F*            Restructuring (Redundant)                          *
+     F*  CDL038 - Extended Deal Sub Type (Recompile)                  *
+     F*  E38012 - This program was made redundant by the DL/DRS       *
+     F*           rationalisation in error and is being reinstated    *
+     F*  S01319 - DL/DRS Rationalisation - program made redundant     *
+     F*  E27501 - New DS/LDA added in DT0181 was not defined as 256   *
+     F*           long, causing crash when tried to lock in           *
+     F*  DT0181 - Release 10 changes to Header Box,Copyright & LDA    *
+     F*  DT0180 - Recompiled for Release 10.                          *
+     F*  E17063 - Recompiled using IGNDECERR(*YES).                   *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  CREATION PARAMETERS                                          *
+     F*                                                               *
+******** SNPDUMP(*NONE) CODELIST(*NONE) IGNDECERR(*NO)              : *   E17063
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F**  Indicator Function Summary
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     F*
+     F*       U6         Program exception/error condition has occurred
+     F*       U7         Set on with U8 to signify file handling error.
+     F*       U8         Set on with U7 to signify file handling error.
+     F*
+     F*
+     F*
+      /EJECT
+     FABICCDLLIF  E           K        DISK         KINFSR INFSR
+      /EJECT
+     E*****************************************************************
+     E*
+     E**  ARRAY TO HOLD COPYRIGHT STATEMENT
+     E                    CPY@    1   1 80
+     E*
+     E*****************************************************************
+     I            DS
+     I*
+     I**  DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**  Program status data structure.
+     IPSDS       SDS
+     I**  Field containing workstation ID.
+     I                                      244 253 @JOB
+     I**  Field containing user ID.
+     I                                      254 263 @USER
+     I*
+     I**  Local data area for data base errors.
+     I***********UDS                                                      DT0181
+     I***LDA*********DS                                             DT0181E27501
+     ILDA         DS                            256                       E27501
+     I**  Field containing name of database file in error.
+     I                                      134 141 DBFILE
+     I**  Field containing key value causing database error.
+     I                                      142 170 DBKEY
+     I**  Field containing name of program causing database error.
+     I                                      171 180 DBPGM
+     I**  Field containing number of database error.
+     I                                      181 183 DBASE
+     I*
+     I*
+      /EJECT
+     C**VERSION**
+     C**AB DEALER CHECK STATUS OF DEALS
+     C                     MOVE '00.00.01'@VERS   8
+     C*
+     C**  Initial processing.
+     C                     EXSR #A
+     C*
+     C**  Main processing
+     C                     EXSR #B
+     C*
+     C           ENDPGM    TAG                             **ENDPGM**
+      /EJECT
+     C*****************************************************************
+     C* SUBROUTINES USED                                              *
+     C*                                                               *
+     C*  01  #B       - Main processing.                              *
+     C*  02  #A       - Initial processing.                           *
+     C*  04  INFSR    - Error handling SR for file errors.            *
+     C*  05  *PSSR    - Error handling SR for pgm errors.             *
+     C*                                                               *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #B     - Main Processing.                        *
+     C*                                                               *
+     C* FLDS USED  @DLTF  - Logical delete flag.                      *
+     C*            @DDLT  - Deal deleted flag.                        *
+     C*            @OKAH  - 'OK for after hours' flag.                *
+     C*                                                               *
+     C*  CALLED BY :           MAIN PROGRAM                           *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C*
+     C**  Access each record in file.
+     C*
+     C           *INLR     DOUEQ'1'                        B1
+     C                     READ ABICCDLL                 LR*1
+     C*
+     C           *INLR     IFEQ '0'                        B*2
+     C*
+     C**  Determine value of logical delete flag and
+     C**  If valid record, and deal deleted indicator is blank.
+     C*
+     C           JPDLTF    IFNE '*'                        B**3
+     C           JPDDLT    ANDEQ*BLANKS                    X**3
+     C*
+     C**  Set OK for after hours flag to 'N'.
+     C                     MOVE 'N'       @OKAH            ***3
+     C*
+     C**  Terminate processing.
+     C                     MOVE '1'       *INLR            ***3
+     C*
+     C                     END                             E**3
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C           #B9       ENDSR                           **#B9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE:  #A     - Initial processing.                    *
+     C*                                                               *
+     C* FLDS USED  @OKAH  - 'OK for after hours' flag.                *
+     C*                                                               *
+     C*  CALLED BY :          MAIN PROGRAM                            *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C           #A        BEGSR
+     C*
+     C**  Parameter list for returning the 'OK for after hours' flag.
+     C           *ENTRY    PLIST
+     C                     PARM           @OKAH   1
+     C*
+     C**  Default 'OK after hours' flag.
+     C                     MOVE 'Y'       @OKAH
+     C*                                                                   DT0181
+     C** Define data area LDA to Program                                  DT0181
+     C*                                                                   DT0181
+     C           *NAMVAR   DEFN           LDA                             DT0181
+     C           *LOCK     IN   LDA                                       DT0181
+     C*
+     C*
+     C**  Move program name into *LDA field.
+     C                     MOVEL'AB8040'  DBPGM
+     C                     OUT  LDA                                       DT0181
+     C*
+     C           #A9       ENDSR                           **#A9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: INFSR  - Handle error on file handling.          *
+     C*                                                               *
+     C*  FIELDS USED:        @ERR2  - Field to prevent looping.       *
+     C*                      @OKAH  - 'OK for after hours' flag.      *
+     C*                                                               *
+     C*  CALLED BY :                                                  *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INFSR     BEGSR
+     C*
+     C**  Set @ERR2 to 'Y' to prevent looping if further errors occur.
+     C           @ERR2     IFNE 'Y'                        B1
+     C*
+     C                     MOVE 'Y'       @ERR2   1        *1
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C*
+     C**  Set 'OK for after hours' flag to 'N'.
+     C                     MOVE 'N'       @OKAH
+     C*
+     C**  Set up fields in local data area.
+     C           *LOCK     IN   LDA                                       DT0181
+     C                     MOVEL'ABICCDLL'DBFILE           *1
+     C                     MOVEL'AB8040'  DBPGM            *1
+     C                     MOVEL'992'     DBASE            *1
+     C                     OUT  LDA                                       DT0181
+     C                     DUMP                            *1
+     C*
+     C                     END                             E1
+     C*
+     C**  Terminate processing immediately.
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C           INFSR9    ENDSR                           **INFSR9**
+     C*                                                               *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: *PSSR - Error handling subroutine.               *
+     C*                                                               *
+     C*  FIELDS USED:        @ERR1  - Field to prevent looping.       *
+     C*                      @OKAH  - 'OK for after hours' flag.      *
+     C*                                                               *
+     C*  CALLED BY : This routine is called if there are any program  *
+     C*                      errors.                                  *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C**  Set @ERR1 to 'Y' to prevent looping if further errors occur.
+     C           @ERR1     IFNE 'Y'                        B1
+     C*
+     C                     MOVE 'Y'       @ERR1   1        *1
+     C                     MOVE '1'       *INU6            *1
+     C*
+     C**  Set up fields in local data area.
+     C           *LOCK     IN   LDA                                       DT0181
+     C                     MOVEL'AB8040'  DBPGM            *1
+     C                     MOVEL'991'     DBASE            *1
+     C                     OUT  LDA                                       DT0181
+     C                     DUMP                            *1
+     C*
+     C**  Set 'OK for after hours' flag to 'N'.
+     C                     MOVE 'N'       @OKAH
+     C*
+     C                     END                             E1
+     C*
+     C**  Terminate processing immediately.
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C           #PSSR9    ENDSR                            ***PSSR9**
+     C*
+      /EJECT
+**   CPY@ - COPYRIGHT STATEMENT
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,150 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SD File Drop/Maintenance of RWA files Contro')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas   - SD Module                                         */
+/*                                                                   */
+/*       SDC001245  - File Drop/Maintenance of RWA files             */
+/*                                                                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CGL018  *CREATE    Date 01Oct02              */
+/*                                                                   */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL018 - Risk Weighted Assets                               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2002')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6) VALUE('  JLIB')
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)
+ 
+ /* Declare job name, user and number for remove journal changes      */
+ 
+             DCL        VAR(&CCB009JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CCB009USR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CCB009NBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CB0180DA) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&START) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)
+ 
+/* Monitor for error messages not trapped in the rest of the */
+/* program. If they occur reclaim resources and exit.        */
+             MONMSG     MSGID(CPF0000 CPA0000 MCH0000 RPG0000) +
+                          EXEC(GOTO CMDLBL(ABNOR))
+ 
+ 
+/* Check for Switchable feature CCB009.                     */
+ 
+             CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
+                          'CCB009' &AOFMT)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+ 
+/* Reset job switches.  */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+/* If restart                              */
+ 
+             IF         COND(&STAT *NE 'N') THEN(DO)
+ 
+/* If Feature CCB009 is 'off' (close of business journaling)*/
+ 
+               IF         COND(&CCB009 *NE '       ') THEN(DO)
+                CHKOBJ     OBJ(JRSD1245) OBJTYPE(*JRNRCV)
+                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOJRNRCV))
+                CHKOBJ     OBJ(JSD1245) OBJTYPE(*JRN)
+                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOJRN))
+                RMVJRNCHG  JRN(JSD1245) FILE((SDRWACPD) (SDRWASPD))
+                MONMSG     (CPF7042 CPF7049)
+ 
+                ENDJRNPF   FILE(*ALL) JRN(JSD1245)
+                MONMSG     MSGID(CPF7032)
+                DLTJRN     JRN(JSD1245)
+NOJRN:          CHGJOB     INQMSGRPY(*DFT)
+                DLTJRNRCV  JRNRCV(JRSD1245)
+                CHGJOB     INQMSGRPY(*RQD)
+NOJRNRCV:       CHGVAR VAR(&STAT) VALUE('N')
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+               ENDDO
+             ENDDO   /* restart Yes */
+ 
+/* Create Journal & Receiver -  CCB009 is OFF  */
+ 
+             CHGVAR     VAR(%SUBSTRING(&JLIB 1 2)) VALUE(&SYSID)
+             IF         COND(&CCB009 *NE '       ') THEN(DO)
+                CRTJRNRCV  JRNRCV(&JLIB/JRSD1245)
+                CRTJRN     JRN(&JLIB/JDSD1245) JRNRCV(&JLIB/JRSD1245) +
+ 
+                STRJRNPF   FILE(SDRWASCD SDRWASPD)  +
+                          JRN(JSD1245) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+                MONMSG     MSGID(CPF7030)
+             ENDDO
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/* Call Program (SD001245)  */
+ 
+             CALLPRC    PRC(SD001245)
+ 
+/* TEMP force halt */
+             CHGJOB     SWS(XXXXXX11)                       /*TEMP*/
+ 
+/* If U7 and U8 are on send database error message to MOPERQ */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              RTVDTAARA  DTAARA(*LDA (134 50)) RTNVAR(&MEM)
+              SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                         TOMSGQ(MOPERQ MRUNQ)
+              GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Delete Journal & Receiver if CCB009 is OFF */
+ 
+             IF         COND(&CCB009 *NE '       ') THEN(DO)
+              ENDJRNPF   FILE(*ALL) JRN(JSD1245)
+              MONMSG     MSGID(CPF7032)
+              DLTJRN     JRN(JSD1245)
+              CHGJOB     INQMSGRPY(*DFT)
+              DLTJRNRCV  JRNRCV(JRSD1245)
+              CHGJOB     INQMSGRPY(*RQD)
+             ENDDO
+             GOTO       CMDLBL(END)
+ 
+/***  Abnormal termination job  ***/
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SD001245 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited 2002')
+             MONMSG     MSGID(CPF0000)
+            ENDPGM

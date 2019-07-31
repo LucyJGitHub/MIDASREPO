@@ -1,0 +1,2741 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM SE portfolio holdings update')                *
+/*XBI *  OVRDBF FILE(SECEOX) TOFILE(SECEO) SHARE(*NO)                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Portfolio Management Module                          *
+      *                                                               *
+      *  PM1141 - SE Portfolio Holdings Update                        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23967           Date 14May09               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CSE037             Date 29Apr02               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 182961             Date 21Apr01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 11Oct00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 09Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPL002             Date 08Mar99               *
+      *                 104479             DATE 04MAR97               *
+      *                 CPM005             DATE 22JUL96               *
+      *                 CFF004             DATE 02OCT96               *
+      *                 109566             DATE 01NOV96               *
+      *                 CPM004             DATE 08FEB96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23967 - Add Local Industry Code Field. (Recompile)        *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *           (Recompile)                                         *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input     *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  182961 - Database error occurred due to a blank key field    *
+      *           (Instrument Type).  The default Instrument type in  *
+      *           PF/SDPORTPD is taken if a blank instrument type is  *
+      *           encountered.                                        *
+      *  CSD006 - Recompiled over changed SECTYD.                     *
+      *  CSE023 - Treaty Withholding Tax.                             *
+      *  CPB001 -  'Private Banking' Module                           *
+      *  CPL002 - Midas-Plato Interface (Recompiled)                  *
+      *  104479 - Recover market price from SNDEVD (prior to or at    *
+      *           event control date) to override price on SECTYD     *
+      *           only if extract type is 'historic', ie. historic    *
+      *           valuation statement is being produced.              *
+      *  CPM005 - Private Banking Phase 2                             *
+      *           Focus Group Changes upgraded to DBA                 *
+      *           PBFG/2 - CALCULATE & REPORT PERF. FOR ALL CUST.PORT *
+      *           PBFG/5 - INSTRUMENT ASSET LIABILITY SPLIT           *
+      *  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+      *  109566 - Recompile over new PMHOLDPD and PMMFHLPD            *
+      *  CPM004 - Bank Portfolios (NEW PROGRAM)                       *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+     FBKPHD   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FBKPOS   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FINVTP   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FPMPORTLLIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FPMDSPGPDIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FPMVLGHPDIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FSECEOX  IF  E           K        DISK
+     F            SEDEVDF                           KIGNORE
+     F                                              KINFSR *PSSR
+     FSECET   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FPMHSEXPDIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FPMHOLDPAUF  E           K        DISK                      A
+     F                                              KINFSR *PSSR
+     FPMMFHLL3UF  E           K        DISK
+     F            PMHOLDP0                          KRENAMEPMMFHLXX
+     F                                              KINFSR *PSSR
+     FPMMFHLPDO   E           K        DISK
+     F            PMHOLDP0                          KRENAMEPMMFHLP0
+     F                                              KINFSR *PSSR
+     FPMHOLDPDO   E           K        DISK
+     F                                              KINFSR *PSSR
+     FPMHOLDQ0O   E           K        DISK
+     F                                              KINFSR *PSSR
+     FPMHOLDQ1O   E           K        DISK
+     F                                              KINFSR *PSSR
+     FSDPORTPDIF  E                    DISK         KINFSR *PSSR          182961
+     FPM1141AUO   E                    PRINTER
+     E*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       50         END OF FILE ON BOOK POSITIONS
+     F*       60         AT LEAST ONE POSITION FOR BRANCH/SECURITY
+     F*
+     E*****************************************************************
+     E*
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZPOWERZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E** TABLES/ARRAYS USED TO AVOID FILE ACCESS OPERATIONS
+     E                    CYCD      200  3
+     E                    NBDP      200  1 0
+     E                    SPRT      200 13 8
+     E                    RKSQ      200  3 0
+     E                    MDIN      200  1
+     E                    DSPG      200  3
+     E                    DSPS      200  2 0
+     E                    VALG      200  3
+     E                    VLGS      200  2 0
+     E                    PRTK      200 10
+     E                    PRTD      200  3
+     E*
+     E** FORMAT SE DETAILS FOR OUTPUT  (SR/ZFRELN)
+     E**********          ZLI        20  1                                                    CGL029
+     E                    ZLI        26  1                                                    CGL029
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     I*****************************************************************
+     I##SECT    E DSSECTYD
+     I              ZZ005                           ##005
+     I                                      183 230 CDDS
+     I                                      183 230 CD
+     I                                      231 242 CRDS
+     I                                      231 242 CR
+     I##INVT    E DSINVTPD
+     I              RECI                            IRECI
+     I              LCD                             ILCD
+     I              CHTP                            ICHTP
+     I              TNLU                            ITNLU
+     I              NDEC                            INDEC                                     CSE037
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I*
+     I** Input parameters on call to AOPLCSR1
+     II@PARM      DS                            256
+     I                                        1   1 I#PORS
+     I                                        2   5 I#R997
+     I                                        6  15 I#CUST
+     I                                       16  18 I#BRCA
+     I                                       19  20 I#BOOK
+     I                                       21  24 I#PTFR
+     I                                       25  34 I#CPGM
+     I*
+     I** Output parameters on call to AOPLCSR1
+     IO@PARM      DS                            256
+     I                                        1   2 O#BOOK
+     I                                        3   6 O#PTFR
+     I                                        7  12 O#BICN
+     I                                       13  22 O#CRNM
+     I                                       23  24 O#ACOF
+     I            DS
+     I                                        1  10 ##PRTK
+     I**********                              1   60##BICN                                    CSD027
+     I                                        1   6 ##BICN                                    CSD027
+     I                                        7  10 ##PTFR
+     I            DS
+     I                                        1  17 ##BKPS
+     I                                        1  10 BHSC
+     I                                       11  13 BHBA
+     I                                       14  15 BHBK
+     I                                       16  16 BHMK
+     I                                       17  17 ##TVP1
+     IPMSTAT    E DS
+     I                                        1   50##ECD
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     ILDA         DS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *                                                                   CPM005
+      **  DS to write position sequencing in PMHOLDPD                     CPM005
+     I            DS                                                      CPM005
+     I                                        1  11 WWPOSQ                CPM005
+     I                                        1   3 ##NMCY                CPM005
+     I I            'A'                       4   4 WWORK1                CPM005
+     I                                        5   90WWMATY                CPM005
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Bank details
+     I*
+     ISDPORT    E DSSDPORTPD
+     I**  SD Portfolio Management ICD details
+     I*
+     ISDPLCS    E DSSDPLCSPD
+     I**  SD Portfolio Management Customer details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I**  Currencies details
+     I*
+     ISDPLIN    E DSSDPLINPD
+     I**  Portfolio Lending Instrument Types details
+     I*
+     ISDMMOD    E DSSDMMODPD                                              CPB001
+     I**  Module Details Accesses Via Access Program                      CPB001
+     I*                                                                   CPB001
+     IDSFDY     E DSDSFDY
+     I**  Short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Long data structure
+     I*
+     I/COPY WNCPYSRC,PM1141I001
+     C**************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * INDEX OF SUBROUTINES                                                   *
+      * INIT     - INITIAL PROCESSING                                          *
+      * MAIN     - MAIN PROCESSING                                             *
+      * DELMAT   - DELETE MATURED/FLAT SECURITIES POSITIONS                    *
+      * READBP   - READ THE BOOK POSITIONS                                     *
+      * FMTDET   - FORMAT DETAILS FOR OUTPUT TO THE PORTFOLIO HOLDINGS         *
+      * DETINT   - DETERMINE INTEREST DETAILS                                  *
+      * WHOLD    - WRITE TO PORTFOLIO HOLDINGS                                 *
+      * WHOLDP   - WRITE TO PORTFOLIO HOLDINGS (PORTFOLIO CONSOLIDATED)        *
+      * WHOLDC   - WRITE TO PORTFOLIO HOLDINGS (CUSTOMER CONSOLIDATED)         *
+      * WHOLDT   - WRITE TO PORTFOLIO HOLDINGS TOTALS                          *
+      * WHOLDA   - WRITE TO PORTFOLIO HOLDINGS AUDIT                           *
+      * INST     - ACCESS INSTRUMENT DETAILS                                   *
+      * CSTDET   - ACCESS CUSTOMER DETAILS                                     *
+      * PORDET   - ACCESS PORTFOLIO DETAILS                                    *
+      * UPDTOT   - UPDATE PORTFOLIO AND CUSTOMER TOTALS                        *
+      * ZEROIZ   - ZEROIZE PORTFOLIO AND CUSTOMER TOTALS                       *
+      * AUDIT    - AUDIT PROCESSING                                            *
+      * AUDREP   - WRITE PORTFOLIO HOLDINGS UPDATE (SE) AUDIT REPORT           *
+      * DETMKP   - DETERMINE THE MARKET PRICE (FOR A LIVE SECURITY)            *
+      * DETMKY   - DETERMINE THE MARKET YIELD (FOR A LIVE SECURITY)            *
+      * DETREP   - DETERMINE THE REDEMPTION PRICE (FOR A MATURED SECURITY)     *
+      * INIT     - INITIAL PROCESSING                                          *
+      * DETHSR   - DETERMINE HISTORIC SPOT RATE                                *
+      * *PSSR    - ERROR SUBROUTINE                                            *
+      *                                                                        *
+      * EXTERNAL ROUTINES CALLED                                               *
+      * ZYIELD   - CALCUL YIELDS OR PRICES                                     *
+      *                                                                        *
+     C*****************************************************************
+      /SPACE 5
+     C*****************************************************************
+     C*
+     C* COPYRIGHT
+     C                     MOVEA##CPY     ##CPY2 80
+     C*
+     C* INPUT PARAMETERS
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ##TVPS  1
+     C                     PARM           ##EXTP  1
+     C*
+     C** INITIAL PROCESSING
+     C*
+     C                     EXSR INIT
+     C*
+     C** MAIN PROCESSING
+     C*
+     C                     EXSR MAIN
+     C*
+     C** AUDIT PROCESSING
+     C*
+     C                     EXSR AUDIT
+     C*
+     C                     SETON                     LR
+     C*****************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * MAIN     - MAIN PROCESSING                                             *
+      *                                                                        *
+      **************************************************************************
+     C           MAIN      BEGSR
+     C*
+     C** DELETE ALL EXISTING MATURED/FLAT SECURITIES POSITIONS
+     C*
+     C           ##EXTP    IFEQ 'L'
+     C                     EXSR DELMAT
+     C                     END
+     C*
+     C** READ THE BOOK POSITIONS
+     C*
+     C                     EXSR READBP
+     C*
+     C**  Check if main file is empty
+     C*
+     C           *IN50     IFEQ '1'
+     C                     MOVE 'Y'       WEMPTY  1
+     C                     ELSE
+     C                     MOVE *BLANK    WEMPTY
+     C                     ENDIF
+     C*
+     C**  Process each book position selected
+     C*
+     C           *IN50     DOWEQ'0'
+     C*
+     C** IF AT LEAST ONE POSITION HAS PREVIOUSLY BEEN PROCESSED AND
+     C** THE POSITION READ IN IS FOR A NEW SECURITY OR BRANCH (CUSTOMER)
+     C*
+     C           *IN60     IFEQ '1'
+     C           ##BHSC    IFNE BHSC
+     C           ##BHBA    ORNE BHBA
+     C*
+     C** WRITE A RECORD TO THE PORTFOLIO HOLDINGS FILE
+     C** (PORTFOLIO CONSOLIDATED RECORD)
+     C*
+     C                     EXSR WHOLDP
+     C*
+     C** WRITE A RECORD TO THE PORTFOLIO HOLDINGS FILE
+     C** IF PRIVATE BANKING MODULE IS NOT SWITCH *ON                      CPB001
+     C** (CUSTOMER CONSOLIDATED RECORD)
+     C*
+     C           BGN4ST    IFNE 'Y'                                       CPB001
+     C                     EXSR WHOLDC
+     C                     ENDIF                                          CPB001
+     C*
+     C** ZEROIZE PORTFOLIO AND CUSTOMER TOTALS
+     C*
+     C                     EXSR ZEROIZ
+     C                     MOVE '0'       *IN60
+     C                     END
+     C                     END
+     C*
+     C** ON CHANGE OF SECURITY
+     C** ACCESS INSTRUMENT DETAILS
+     C*
+     C           ##BHSC    IFNE BHSC
+     C                     EXSR INST
+     C                     END
+     C*
+     C** ON CHANGE OF BRANCH OR BOOK
+     C*
+     C           ##BHBA    IFNE BHBA
+     C           ##BHBK    ORNE BHBK
+     C*
+     C** ACCESS CUSTOMER DETAILS
+     C*
+     C                     EXSR CSTDET
+     C*
+     C** ACCESS PORTFOLIO DETAILS (IF PORTFOLIO CUSTOMER)
+     C*
+     C           ##PORC    IFEQ 'Y'
+     C                     EXSR PORDET
+     C                     END
+     C*
+     C                     END
+     C*
+     C** UPDATE CONTROL FIELDS
+     C*
+     C                     MOVELBHSC      ##BHSC 10
+     C                     MOVELBHBA      ##BHBA  3
+     C                     MOVELBHBK      ##BHBK  2
+     C*
+     C** IF THE SECURITY IS NOT DELETED
+     C** AND THE BRANCH IS A PORTFOLIO CUSTOMER
+     C*
+     C           ##RECI    IFNE '*'
+     C           ##PORC    ANDEQ'Y'
+     C*
+     C** FORMAT DETAILS FOR OUTPUT TO THE PORTFOLIO HOLDINGS FILE
+     C*
+     C                     EXSR FMTDET
+     C*
+     C** WRITE A RECORD TO THE PORTFOLIO HOLDINGS FILE
+     C*
+     C                     EXSR WHOLD
+     C*
+     C** RECORD THAT AT LEAST ONE RECORD HAS BEEN PROCESSED
+     C*
+     C                     MOVE '1'       *IN60
+     C*
+     C** UPDATE THE PORTFOLIO AND CUSTOMER TOTALS AS PER UPDTOT
+     C*
+     C                     EXSR UPDTOT
+     C                     END
+     C*
+     C** READ THE BOOK POSITIONS
+     C*
+     C                     EXSR READBP
+     C                     END
+     C*
+     C** IF AT LEAST ONE POSITION HAS BEEN PROCESSED
+     C*
+     C           *IN60     IFEQ '1'
+     C*
+     C** WRITE A RECORD TO THE PORTFOLIO HOLDINGS FILE
+     C** (PORTFOLIO CONSOLIDATED RECORD)
+     C*
+     C                     EXSR WHOLDP
+     C*
+     C** WRITE A RECORD TO THE PORTFOLIO HOLDINGS FILE
+     C** IF PRIVATE BANKING MODULE IS NOT SWITCH *ON                      CPB001
+     C** (CUSTOMER CONSOLIDATED RECORD)
+     C*
+     C           BGN4ST    IFNE 'Y'                                       CPB001
+     C                     EXSR WHOLDC
+     C                     ENDIF                                          CPB001
+     C                     END
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * READBP   - READ THE BOOK POSITIONS                                     *
+      *                                                                        *
+      **************************************************************************
+     C           READBP    BEGSR
+     C*
+     C* READ THE BOOK POSITION HEADERS UNTIL A RECORD IS SELECTED
+     C*
+     C                     READ BKPHD                    50*
+     C*
+     C* IF NOT END OF FILE AND NOT CORRECT TRADE/VALUE DATE INDICATOR
+     C*
+     C           *IN50     DOWEQ'0'
+     C           BHTV      ANDNE##TVPS
+     C                     READ BKPHD                    50*
+     C                     END
+     C*
+     C* IF END OF FILE, EXIT
+     C*
+     C           *IN50     CABEQ'1'       EREADB
+     C*
+     C* ACCESS BOOK POSITION DETAILS
+     C*
+     C           KBKPOS    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           ##TVP1  1
+     C                     KFLD           ##BPPD  50
+     C                     MOVELBHTV      ##TVP1
+     C                     Z-ADDLPSD      ##BPPD
+     C           KBKPOS    CHAINBKPOSDF              99    *
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD11        DBASE            ***************
+     C                     MOVE 'BKPOSD  'DBFILE           * DB ERROR 11 *
+     C                     MOVEL##BKPS    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** SAVE SOME FIELDS FROM FILE BKPHD AND BKPOSD
+     C*
+     C                     MOVELBHMK      ##BHMK  1
+     C                     Z-ADDNPSN      ##NPSN 110
+     C                     Z-ADDLAVP      ##LAVP 158
+     C                     Z-ADDLFXP      ##FXAP 150
+     C                     Z-ADDECNP      ##ECNP 150
+     C                     Z-ADDPILP      ##PILP 150
+     C*
+     C** RESET OTHER NOMINAL AMOUNT (FROM THE 'OTHER' POSITION)
+     C*
+     C                     Z-ADD*ZERO     ##OTNM 150
+     C*
+     C* ACCESS 'OTHER' BOOK POSITION DETAILS
+     C*
+     C           KBKPOP    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           ##TVP1
+     C           ##TVPS    IFEQ 'T'
+     C                     MOVEL'V'       ##TVP1
+     C                     ELSE
+     C                     MOVEL'T'       ##TVP1
+     C                     END
+     C                     Z-ADD99999     ##BPPD
+     C           KBKPOS    SETGTBKPOSDF
+     C           KBKPOP    REDPEBKPOSDF                  99*
+     C*
+     C** SET OTHER NOMINAL AMOUNT
+     C*
+     C           *IN99     IFEQ '0'
+     C                     Z-ADDNPSN      ##OTNM
+     C                     END
+     C*
+     C           EREADB    ENDSR
+     C**************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * FMTDET   - FORMAT DETAILS FOR OUTPUT TO THE HOLDINGS FILE              *
+      *                                                                        *
+      **************************************************************************
+     C           FMTDET    BEGSR
+     C*
+     C** CALCULATE CURRENT BOOK COST
+     C*
+     C                     Z-ADD##NPSN    ZNOML
+     C                     Z-ADD##LAVP    ZPRC
+     C                     Z-ADD#NNBDP    ZCDP
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     ##APNM 150
+     C*
+     C** MOVE THE SECURITY REPORT NAME INTO THE INSTRUMENT NAME
+     C*
+     C                     MOVELSRPN      ##TXT1 20
+     C*
+     C** DETERMINE THE INSTRUMENT ENQUIRY DETAILS NARRATIVE
+     C*
+     C                     MOVEL##NMCY    ZNMCY            NOMINAL CURRENCY
+     C                     Z-ADDCPNR      ZCPNR            COUPON RATE
+     C                     Z-ADDMATY      ZMATY            MATURITY DATE
+     C                     MOVE PROT      ZPROT            PROCESSING TYPE
+     C                     EXSR ZFSELN
+     C**********           MOVELZLIN      ##TXT2 20                                           CGL029
+     C                     MOVELZLIN      ##TXT2 26                                           CGL029
+     C*
+     C** DETERMINE THE BOOK PRICE
+     C** (POSITION AP NUMERATOR DIVIDED BY THE POSITION NOMINAL)
+     C*
+     C                     Z-ADD##NPSN    ZNOML            NOMINAL
+     C                     Z-ADD##APNM    ZVALU            AP NUMERATOR
+     C                     Z-ADD##NMDP    ZNMDP            NOM.DEC.PLCS
+     C                     Z-ADD#NNBDP    ZNMCD            NOM.CCY.DEC.PLCS
+     C                     MOVELSPBS      ZPRCB            PRICE BASIS
+     C                     EXSR ZAVPRC
+     C                     Z-ADDZAVPR     ##BPRC 158
+     C*
+     C** CALCULATE MARKET FX RATES FROM NOMINAL CCY TO PORTFOLIO CURRENCY
+     C*
+     C                     Z-ADD1         ZAMTF
+     C                     MOVE ##NMCY    ZCCYF            NOM.CCY.
+     C                     MOVE ##PTCY    ZCCYT            PRT.CCY.
+     C                     Z-ADD#NSPRT    ZRATEF           NOM.CCY.SPOT RATE
+     C                     Z-ADD#PSPRT    ZRATET           PRT.CCY.SPOT RATE
+     C                     MOVE #NMDIN    ZMDINF           NOM.CCY. M/D IND
+     C                     MOVE #PMDIN    ZMDINT           PRT.CCY. M/D IND.
+     C                     Z-ADD#NNBDP    ZCDPF            NOM.CCY.DEC.PLCS
+     C                     Z-ADD#PNBDP    ZCDPT            PRT.CCY.DEC.PLCS
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZCRSRN    ##MFXD 308
+     C                     EXSR CONVN
+     C*
+     C** CONVERT RATE INTO MULTIPLY RATE
+     C*
+     C           ZCRSMD    IFEQ 'D'
+     C           1         DIV  ZCRSRT    ##MFXR 138H
+     C                     ELSE
+     C                     Z-ADDZCRSRT    ##MFXR
+     C                     END
+     C*
+     C** CONVERT MARKET FX RATE TO FORMAT DEFINED BY RANKING SEQUENCE
+     C*
+     C           #PRKSQ    IFLT #NRKSQ
+     C           1         DIV  ##MFXR    ##MFXR    H
+     C                     MOVE 'D'       ##MFMD  1
+     C                     ELSE
+     C                     MOVE 'M'       ##MFMD
+     C                     END
+     C*
+     C** DETERMINE THE BOOK FX RATE (WHICH IS THE POSITION FX AP NUMERATOR
+     C** DIVIDED BY THE POSITION AP NUMERATOR)
+     C*
+     C                     Z-ADD##APNM    ZAPNM            AP NUMERATOR
+     C                     Z-ADD##FXAP    ZFXAP            FX AP NUMERATOR
+     C                     Z-ADD#NNBDP    ZNMCD            NOM.CCY.DEC.PLCS
+     C                     Z-ADD#PNBDP    ZPTCD            PRT.CCY.DEC.PLCS
+     C                     EXSR ZFXAVP
+     C                     Z-ADDZAVFX     ##BFXR 138
+     C*
+     C** IF PORTFOLIO CURRENCY HAS HIGHER RANK THAN NOMINAL CUURENCY
+     C** TAKE INVERSE OF BOOK FX RATE
+     C*
+     C           #PRKSQ    IFLT #NRKSQ
+     C           ##BFXR    ANDNE0
+     C           1         DIV  ##BFXR    ##BFXR
+     C                     END
+     C*
+     C** DETERMINE THE MARKET VALUE IN NOMINAL CURRENCY (WHICH IS THE
+     C** POSITION NOMINAL X MARKET PRICE)
+     C*
+     C                     Z-ADD##NPSN    ZNOML            NOMINAL
+     C                     Z-ADD##MPRC    ZAVPR            MARKET PRICE
+     C                     Z-ADD##NMDP    ZNMDP            NOM.DEC.PLCS
+     C                     Z-ADD#NNBDP    ZNMCD            NOM.CCY.DEC.PLCS
+     C                     MOVELSPBS      ZPRCB            PRICE BASIS
+     C                     EXSR ZAPNUM
+     C                     Z-ADDZVALU     ##MVAL 150
+     C*
+     C** IF THE PROCESSING TYPE FROM LF/INVTP IS NOT 2,4 AND 7 AND
+     C** IF THE COUPON RATE DAY 1 (CD01) ON LF/SECTY IS NON-ZERO
+     C*
+     C           PROT      IFNE '2'
+     C           PROT      ANDNE'4'
+     C           PROT      ANDNE'7'
+     C           CD01      ANDNE0
+     C*
+     C** DETERMINE THE INTEREST DETAILS FOR THIS HOLDING
+     C*
+     C                     EXSR DETINT
+     C                     ELSE
+     C*
+     C** IF THE SECURITY IS NON-INTEREST BEARING SET THE
+     C** ACCRUED INTEREST, NEXT INTEREST DATE, START/LAST INTEREST
+     C** AND NUMBER OF DAYS ACCRUED INTEREST ALL EQUAL TO ZERO
+     C*
+     C                     Z-ADD0         ##INTK 150
+     C                     Z-ADD0         ##NIDT  50
+     C                     Z-ADD0         ##SLID  50
+     C                     Z-ADD0         ##NODA  30
+     C                     END
+     C*
+     C** THE BOOK VALUE IN NOMINAL CURRENCY IS EQUIVALENT TO THE AP
+     C** NUMERATOR FROM THE CURRENT POSITION
+     C*
+     C                     Z-ADD##APNM    ##BVAL 150
+     C*
+     C** IF THE MARKET PRICE IS ZERO, SET THE PROFIT/LOSS - MARKET IN
+     C** PORTFOLIO CURRENCY EQUAL TO ZERO
+     C*
+     C           ##MPRC    IFEQ 0
+     C                     Z-ADD0         ##PLMK 150
+     C                     ELSE
+     C*
+     C** CALCULATE THE PROFIT/LOSS - MARKET IN NOMINAL CURRENCY AS
+     C** FOLLOWS:
+     C** SUBTRACT THE BOOK VALUE IN NOMINAL CURRENCY FROM THE MARKET
+     C** VALUE IN NOMINAL CURRENCY TO GET THE PROFIT/LOSS - MARKET IN
+     C** NOMINAL CURRENCY
+     C*
+     C           ##MVAL    SUB  ##BVAL    ##PLMK
+     C*
+     C** CONVERT THE PROFIT/LOSS - MARKET IN NOMINAL CURRENCY TO AN
+     C** AMOUNT IN PORTFOLIO CURRENCY
+     C*
+     C                     Z-ADD##PLMK    ZAMTF
+     C                     MOVEL##NMCY    ZCCYF            NOM.CCY
+     C                     MOVEL##PTCY    ZCCYT            PRT.CCY
+     C                     Z-ADD#NSPRT    ZRATEF           NOM.CCY.SPOT RATE
+     C                     Z-ADD#PSPRT    ZRATET           PRT.CCY.SPOT RATE
+     C                     MOVEL#NMDIN    ZMDINF           NOM.CCY.M/D IND.
+     C                     MOVEL#PMDIN    ZMDINT           PRT.CCY.M/D IND.
+     C                     Z-ADD#NNBDP    ZCDPF            NOM.CCY.DEC.PLCS
+     C                     Z-ADD#PNBDP    ZCDPT            PRT.CCY.DEC.PLCS
+     C                     EXSR CONVN
+     C                     Z-ADDZAMTT     ##PLMK
+     C                     END
+     C*
+     C** CONVERT THE BOOK VALUE IN NOMINAL CURRENCY TO A BOOK VALUE
+     C** IN PORTFOLIO CURRENCY
+     C*
+     C                     Z-ADD##BVAL    ZAMTF
+     C                     MOVEL##NMCY    ZCCYF            NOM.CCY
+     C                     MOVEL##PTCY    ZCCYT            PRT.CCY
+     C                     Z-ADD#NSPRT    ZRATEF           NOM.CCY.SPOT RATE
+     C                     Z-ADD#PSPRT    ZRATET           PRT.CCY.SPOT RATE
+     C                     MOVEL#NMDIN    ZMDINF           NOM.CCY.M/D IND.
+     C                     MOVEL#PMDIN    ZMDINT           PRT.CCY.M/D IND.
+     C                     Z-ADD#NNBDP    ZCDPF            NOM.CCY.DEC.PLCS
+     C                     Z-ADD#PNBDP    ZCDPT            PRT.CCY.DEC.PLCS
+     C                     EXSR CONVN
+     C                     Z-ADDZAMTT     ##BVAL
+     C*
+     C** CALCULATE THE PROFIT/LOSS - FX AS FOLLOWS:
+     C** SUBTRACT THE FX AP NUMERATOR FROM THE BOOK VALUE IN PORTFOLIO
+     C** CURRENCY TO GET THE PROFIT/LOSS - FX IN PORTFOLIO CURRENCY
+     C*
+     C           ##BVAL    SUB  ##FXAP    ##PLFX 150
+     C*
+     C** THE BOOK YIELD
+     C*
+     C                     Z-ADD0         ##BKYD 158
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * DETINT   - DETERMINE INTEREST DETAILS                                  *
+      *                                                                        *
+      **************************************************************************
+     C           DETINT    BEGSR
+     C*
+     C** CALCULATE THE INTEREST
+     C*
+     C           PROT      IFEQ '6'
+     C                     CALL 'PMZINS'
+     C                     PARM           ##SECT
+     C                     PARM           ##INVT
+     C                     PARM ##BHSC    ##SESN 10
+     C                     PARM ##BHBA    ##BRCH  3
+     C                     PARM ##BHBK    ##BOOK  2
+     C                     PARM ##BHMK    ##MRKT  1
+     C                     PARM ##TVPS    ##TVDA  1
+     C                     PARM ##ECD     ##IDAT  50
+     C                     PARM *ZERO     ##INT  150
+     C                     PARM *ZERO     ##DAYS  50
+     C                     PARM *ZERO     ##LCD   50
+     C                     PARM *ZERO     ##NCD   50
+     C                     PARM #NNBDP    ##CDP   10
+     C                     PARM 'N'       ##FULL  1
+     C                     PARM *BLANK    ##RETC  6
+     C                     ELSE
+     C                     CALL 'PMZINN'
+     C                     PARM           ##SECT
+     C                     PARM           ##INVT
+     C                     PARM ##ECD     ##IDAT  50
+     C                     PARM ##NPSN    ##NOML 150
+     C                     PARM *BLANK    ##ACIN  1
+     C                     PARM *ZERO     ##INT  150
+     C                     PARM *ZERO     ##DAYS  50
+     C                     PARM *ZERO     ##LCD   50
+     C                     PARM *ZERO     ##NCD   50
+     C                     PARM #NNBDP    ##CDP   10
+     C                     PARM 'N'       ##FULL  1
+     C                     PARM *BLANK    ##RETC  6
+     C                     END
+     C*
+     C** SET THE NEXT INTEREST DATE
+     C*
+     C                     Z-ADD##NCD     ##NIDT
+     C*
+     C** SET THE START/LAST INTEREST DATE EQUAL
+     C*
+     C                     Z-ADD##LCD     ##SLID
+     C*
+     C** SET THE ACCRUED INTEREST
+     C*
+     C                     Z-ADD##INT     ##INTK
+     C*
+     C** SET THE NUMBER OF DAYS ACCRUED INTEREST
+     C*
+     C                     Z-ADD##DAYS    ##NODA
+     C*
+     C                     ENDSR
+      **************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * WHOLD    - WRITE TO PORTFOLIO HOLDINGS                                 *
+      *                                                                        *
+      **************************************************************************
+     C           WHOLD     BEGSR
+     C*
+     C** IF NOMINAL IS ZERO => 'F' FOR FLAT
+     C** OTHERWISE, RECORD ID FROM LF/SECTY ('D' OR 'M')
+     C*
+     C           ##NPSN    IFEQ 0
+     C           ##OTNM    ANDEQ0
+     C           ##RECI    ANDEQ'D'
+     C                     MOVEL'F'       QFRECI
+     C                     ELSE
+     C           ##RECI    IFEQ 'N'
+     C                     MOVEL'M'       QFRECI
+     C                     ELSE
+     C                     MOVEL##RECI    QFRECI
+     C                     END
+     C                     END
+     C*
+     C** ACCOUNT OFFICER
+     C                     MOVEL##ACOC    QFACOC
+     C*
+     C** CUSTOMER NUMBER
+     C**********           Z-ADD##CNUM    QFCNUM                                              CSD027
+     C                     MOVE ##CNUM    QFCNUM                                              CSD027
+     C*
+     C** PORTFOLIO REFERENCE
+     C                     MOVEL##PTFR    QFPTFR
+     C*
+     C** TRADE/VALUE DATE INDICATOR
+     C                     MOVEL##TVPS    QFTVDA
+     C*
+     C** MODULE ID: 'SE'
+     C                     MOVEL'SE'      QFMODI
+     C*
+     C** INSTRUMENT TYPE
+     C                     MOVEL##INNR    QFINNR
+     C*
+     C** INSTRUMENT TYPE DISPLAY SEQUENCE
+     C                     Z-ADD##ITDS    QFITDS
+     C*
+     C** INSTRUMENT TYPE VALUATION SEQUENCE
+     C                     Z-ADD##VLIS    QFVLIS
+     C*
+     C** DISPLAY GROUP
+     C                     MOVEL##DSPG    QFDSPG
+     C*
+     C** DISPLAY GROUP SEQUENCE
+     C                     Z-ADD##DSPS    QFDSPS
+     C*
+     C** VALUATION GROUP
+     C                     MOVEL##VALG    QFVALG
+     C*
+     C** VALUATION GROUP SEQUENCE
+     C                     Z-ADD##VLGS    QFVLGS
+     C*
+     C** SECURITY SHORTNAME
+     C                     MOVEL##BHSC    QFTDSS
+     C*
+     C** DEAL TYPE
+     C                     MOVE *BLANK    QFDTYP
+     C*
+     C** MIDAS INSTRUMENT NAME
+     C                     MOVEL##TXT1    QFTXT1
+     C*
+     C** INSTRUMENT ENQUIRY DETAILS
+     C                     MOVEL##TXT2    QFTXT2
+     C*
+     C** LINE 1 AMOUNT
+     C                     Z-ADD##NPSN    QFAMT1
+     C*
+     C** LINE 2 AMOUNT
+     C                     Z-ADD0         QFAMT2
+     C*
+     C** CURRENCY 1: NOMINAL CURRENCY
+     C                     MOVEL##NMCY    QFCCY1
+     C*
+     C** CURRENCY 2: BLANK
+     C                     MOVEL*BLANKS   QFCCY2
+     C*
+     C** CURRENCY DEC. PLACES 1: NOMINAL DEC. PLACES
+     C                     Z-ADD##NMDP    QFCDP1
+     C*
+     C** CURRENCY DEC. PLACES 2: NOMINAL CCY. DEC. PLACES
+     C                     Z-ADD#NNBDP    QFCDP2
+     C*
+     C** MARKET PRICE
+     C                     Z-ADD##MPRC    QFMPRC
+     C*
+     C** BOOK PRICE
+     C                     Z-ADD##BPRC    QFBOPR
+     C*
+     C** MARKET FX RATE
+     C                     Z-ADD##MFXR    QFMFXR
+     C                     MOVEL##MFMD    QFMFMD
+     C*
+     C** BOOK FX RATE
+     C                     Z-ADD##BFXR    QFBFXR
+     C*
+     C** MARKET VALUE
+     C                     Z-ADD##MVAL    QFMVAL
+     C*
+     C** PURCHASED INTEREST
+     C                     Z-ADD##PILP    QFPUIT
+     C*
+     C** ACCRUED INTEREST
+     C                     Z-ADD##INTK    QFACIS
+     C*
+     C** NEXT INTEREST DATE
+     C                     Z-ADD##NIDT    QFNIDT
+     C*
+     C** START/LAST INTEREST DATE
+     C                     Z-ADD##SLID    QFSLID
+     C*
+     C** NUMBER OF DAYS ACCRUED INTEREST
+     C                     Z-ADD##NODA    QFNODA
+     C*
+     C** PROFIT/LOSS MARKET
+     C                     Z-ADD##PLMK    QFPLMK
+     C*
+     C** PROFIT/LOSS FX
+     C                     Z-ADD##PLFX    QFPLFX
+     C*
+     C** BOOK YIELD
+     C                     Z-ADD##BKYD    QFBKYD
+     C*
+     C** MARKET YIELD
+     C                     Z-ADD##MKYD    QFMKYD
+     C*
+     C** DIRECT YIELD
+     C                     Z-ADD##DRYD    QFDRYD
+     C*
+     C** COUNTRY OF RISK
+     C           ##SCOR    IFNE *BLANKS
+     C                     MOVEL##SCOR    QFCNTR
+     C                     ELSE
+     C                     MOVE FCCNCD    QFCNTR
+     C                     END
+     C*
+     C** INDUSTRY
+     C********** ##SIDY    IFNE 0                                                             CER020
+     C**********           Z-ADD##SIDY    QFLIND                                              CER020
+     C           WWSIDY    IFNE *BLANKS                                                       CER020
+     C                     MOVE WWSIDY    QFLOIC                                              CER020
+     C                     ELSE
+     C**********           MOVE FCLICD    QFLIND                                              CER020
+     C                     MOVE FCLICD    QFLOIC                                              CER020
+     C                     END
+     C*
+     C** OTHER NOMINAL AMOUNT
+     C                     Z-ADD##OTNM    QFOAMT
+     C*
+     C** DATE EXTRACTED
+     C                     Z-ADD##ECD     QFDXTR
+     C*
+     C** PERFORMANCE REQUIRED
+     C                     MOVE 'N'       QFPFMR
+     C*
+     C** EXCHANGE RATE
+     C                     Z-ADD##MFXD    QFMFXD
+     C*
+     C** NOMINAL DECIMAL PLACES
+     C                     Z-ADD##NMDP    QFNMDP
+     C*
+     C** PRICE BASIS
+     C                     MOVELSPBS      QFSPBS
+     C*
+     C** RESET PORTFOLIO CURRENCY TOTALS
+     C*
+     C                     Z-ADD0         QFMVPC
+     C                     Z-ADD0         QFAIPC
+     C                     MOVE *BLANKS   QFINTC
+     C*
+     C** IF NOT HISTORIC EXTRACT, WRITE MATURED/FLAT POSITIONS
+     C*
+     C           ##EXTP    IFNE 'H'
+     C*
+     C           ##RECI    IFEQ 'M'
+     C           ##RECI    OREQ 'D'
+     C           ##NPSN    ANDEQ*ZERO
+     C           ##OTNM    ANDEQ*ZERO
+     C*
+     C** WRITE A RECORD TO FILE PMMFHLPD
+     C*
+     C/COPY WNCPYSRC,PM1141C001
+     C                     WRITEPMMFHLP0
+     C                     ADD  1         PMHCRE
+     C/COPY WNCPYSRC,PM1141C002
+     C                     END
+     C*
+     C                     END
+     C*
+     C** WRITE LIVE POSITIONS
+     C*
+     C           ##RECI    IFEQ 'D'
+     C           ##RECI    OREQ 'N'
+     C*
+     C           ##NPSN    IFNE *ZERO
+     C           ##OTNM    ORNE *ZERO
+     C*
+     C** WRITE DETAILS TO PORTFOLIO HOLDINGS TOTALS
+     C*
+     C                     EXSR WHOLDT
+     C*
+     C** WRITE A RECORD TO FILE PMHOLDPD
+     C*
+     C/COPY WNCPYSRC,PM1141C003
+     C                     WRITEPMHOLDP0
+     C                     ADD  1         PPHCRE
+     C/COPY WNCPYSRC,PM1141C004
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * WHOLDP   - WRITE TO PORTFOLIO HOLDINGS (PORTFOLIO CONSOLIDATED)        *
+      *                                                                        *
+      **************************************************************************
+     C           WHOLDP    BEGSR
+     C*
+     C** IF NOMINAL IS ZERO => 'F' FOR FLAT
+     C** OTHERWISE, RECORD ID FROM LF/SECTY ('D' OR 'M')
+     C*
+     C           #PNPSN    IFEQ 0
+     C           #POTNM    ANDEQ0
+     C           ##RECI    ANDEQ'D'
+     C                     MOVEL'F'       QFRECI
+     C                     ELSE
+     C           ##RECI    IFEQ 'N'
+     C                     MOVEL'M'       QFRECI
+     C                     ELSE
+     C                     MOVEL##RECI    QFRECI
+     C                     END
+     C                     END
+     C*
+     C** ACCOUNT OFFICER
+     C                     MOVEL##ACOC    QFACOC
+     C*
+     C** CUSTOMER NUMBER
+     C**********           Z-ADD##CNUM    QFCNUM                                              CSD027
+     C                     MOVE ##CNUM    QFCNUM                                              CSD027
+     C*
+     C** PORTFOLIO REFERENCE
+     C                     MOVEL'9998'    QFPTFR
+     C*
+     C** TRADE/VALUE DATE INDICATOR
+     C                     MOVEL##TVPS    QFTVDA
+     C*
+     C** MODULE ID: 'SE'
+     C                     MOVEL'SE'      QFMODI
+     C*
+     C** INSTRUMENT TYPE
+     C                     MOVEL##INNR    QFINNR
+     C*
+     C** INSTRUMENT TYPE DISPLAY SEQUENCE
+     C                     Z-ADD##ITDS    QFITDS
+     C*
+     C** INSTRUMENT TYPE VALUATION SEQUENCE
+     C                     Z-ADD##VLIS    QFVLIS
+     C*
+     C** DISPLAY GROUP
+     C                     MOVEL##DSPG    QFDSPG
+     C*
+     C** DISPLAY GROUP SEQUENCE
+     C                     Z-ADD##DSPS    QFDSPS
+     C*
+     C** VALUATION GROUP
+     C                     MOVEL##VALG    QFVALG
+     C*
+     C** VALUATION GROUP SEQUENCE
+     C                     Z-ADD##VLGS    QFVLGS
+     C*
+     C** SECURITY SHORTNAME
+     C                     MOVEL##BHSC    QFTDSS
+     C*
+     C** DEAL TYPE
+     C                     MOVE *BLANK    QFDTYP
+     C*
+     C** MIDAS INSTRUMENT NAME
+     C                     MOVEL##TXT1    QFTXT1
+     C*
+     C** INSTRUMENT ENQUIRY DETAILS
+     C                     MOVEL##TXT2    QFTXT2
+     C*
+     C** LINE 1 AMOUNT
+     C                     Z-ADD#PNPSN    QFAMT1
+     C*
+     C** LINE 2 AMOUNT
+     C                     Z-ADD0         QFAMT2
+     C*
+     C** CURRENCY 1: NOMINAL CURRENCY
+     C                     MOVEL##NMCY    QFCCY1
+     C*
+     C** CURRENCY 2: BLANK
+     C                     MOVEL*BLANKS   QFCCY2
+     C*
+     C** CURRENCY DEC. PLACES 1: NOMINAL DEC. PLACES
+     C                     Z-ADD##NMDP    QFCDP1
+     C*
+     C** CURRENCY DEC. PLACES 2: NOMINAL CCY. DEC. PLACES
+     C                     Z-ADD#NNBDP    QFCDP2
+     C*
+     C** MARKET PRICE
+     C                     Z-ADD##MPRC    QFMPRC
+     C*
+     C** BOOK PRICE
+     C                     Z-ADD0         QFBOPR
+     C*
+     C** CALCULATE MARKET FX RATE FROM NOMINAL CCY TO CUST BASE CURRENCY
+     C                     Z-ADD1         ZAMTF
+     C                     MOVE ##NMCY    ZCCYF            NOM.CCY
+     C                     MOVE ##CSBY    ZCCYT            CST.BAS.CCY
+     C                     Z-ADD#NSPRT    ZRATEF           NOM.CCY.SPOT RATE
+     C                     Z-ADD#CSPRT    ZRATET           CST.CCY.SPOT RATE
+     C                     MOVE #NMDIN    ZMDINF           NOM.CCY. M/D IND.
+     C                     MOVE #CMDIN    ZMDINT           CST.CCY. M/D IND.
+     C                     Z-ADD#NNBDP    ZCDPF            NOM.CCY.DEC.PLCS
+     C                     Z-ADD#CNBDP    ZCDPT            CST.CCY.DEC.PLCS
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZCRSRN    ##MFXD
+     C                     EXSR CONVN
+     C*
+     C** CONVERT RATE INTO MULTIPLY RATE
+     C           ZCRSMD    IFEQ 'D'
+     C           1         DIV  ZCRSRT    ##MFXR    H
+     C                     ELSE
+     C                     Z-ADDZCRSRT    ##MFXR
+     C                     END
+     C*
+     C** CONVERT MARKET FX RATE TO FORMAT DEFINED BY RANKING SEQUENCE
+     C           #CRKSQ    IFLT #NRKSQ
+     C           1         DIV  ##MFXR    QFMFXR    H
+     C                     MOVE 'D'       QFMFMD
+     C                     ELSE
+     C                     Z-ADD##MFXR    QFMFXR
+     C                     MOVE 'M'       QFMFMD
+     C                     END
+     C*
+     C** BOOK FX RATE
+     C                     Z-ADD0         QFBFXR
+     C*
+     C** MARKET VALUE
+     C                     Z-ADD#PMVAL    QFMVAL
+     C*
+     C** PURCHASED INTEREST
+     C                     Z-ADD#PPILP    QFPUIT
+     C*
+     C** ACCRUED INTEREST
+     C                     Z-ADD#PINTK    QFACIS
+     C*
+     C** NEXT INTEREST DATE
+     C                     Z-ADD##NIDT    QFNIDT
+     C*
+     C** START/LAST INTEREST DATE
+     C                     Z-ADD##SLID    QFSLID
+     C*
+     C** NUMBER OF DAYS ACCRUED INTEREST
+     C                     Z-ADD#PNODA    QFNODA
+     C*
+     C** PROFIT/LOSS MARKET
+     C                     Z-ADD0         QFPLMK
+     C*
+     C** PROFIT/LOSS FX
+     C                     Z-ADD0         QFPLFX
+     C*
+     C** BOOK YIELD
+     C                     Z-ADD0         QFBKYD
+     C*
+     C** MARKET YIELD
+     C                     Z-ADD##MKYD    QFMKYD
+     C*
+     C** DIRECT YIELD
+     C                     Z-ADD##DRYD    QFDRYD
+     C*
+     C** COUNTRY OF RISK
+     C           ##SCOR    IFNE *BLANKS
+     C                     MOVEL##SCOR    QFCNTR
+     C                     ELSE
+     C                     MOVE FCCNCD    QFCNTR
+     C                     END
+     C*
+     C** INDUSTRY
+     C********** ##SIDY    IFNE 0                                                             CER020
+     C**********           Z-ADD##SIDY    QFLIND                                              CER020
+     C           WWSIDY    IFNE *BLANKS                                                       CER020
+     C                     MOVE WWSIDY    QFLOIC                                              CER020
+     C                     ELSE
+     C**********           MOVE FCLICD    QFLIND                                              CER020
+     C                     MOVE FCLICD    QFLOIC                                              CER020
+     C                     END
+     C*
+     C** OTHER NOMINAL AMOUNT
+     C                     Z-ADD#POTNM    QFOAMT
+     C*
+     C** DATE EXTRACTED
+     C                     Z-ADD##ECD     QFDXTR
+     C*
+     C** PERFORMANCE REQUIRED
+     C**********           MOVE 'N'       QFPFMR                          CPM005
+     C*                                                                   CPM005
+     C           QBPFM8    IFEQ *BLANKS                                   CPM005
+     C                     MOVE 'N'       QFPFMR                          CPM005
+     C                     ELSE                                           CPM005
+     C                     MOVE QBPFM8    QFPFMR                          CPM005
+     C                     END                                            CPM005
+     C*
+     C** EXCHANGE RATE
+     C                     Z-ADD##MFXD    QFMFXD
+     C*
+     C** NOMINAL DECIMAL PLACES
+     C                     Z-ADD##NMDP    QFNMDP
+     C*
+     C** PRICE BASIS
+     C                     MOVELSPBS      QFSPBS
+     C*
+     C** RESET PORTFOLIO CURRENCY TOTALS
+     C*
+     C                     Z-ADD0         QFMVPC
+     C                     Z-ADD0         QFAIPC
+     C                     MOVE *BLANKS   QFINTC
+     C*
+     C** IF NOT HISTORIC EXTRACT, WRITE MATURED/FLAT POSITIONS
+     C*
+     C           ##EXTP    IFNE 'H'
+     C*
+     C           ##RECI    IFEQ 'M'
+     C           ##RECI    OREQ 'D'
+     C           #PNPSN    ANDEQ*ZERO
+     C           #POTNM    ANDEQ*ZERO
+     C*
+     C** WRITE A RECORD TO FILE PMMFHLPD
+     C*
+     C/COPY WNCPYSRC,PM1141C005
+     C                     WRITEPMMFHLP0
+     C                     ADD  1         PMHCRE
+     C/COPY WNCPYSRC,PM1141C006
+     C                     END
+     C*
+     C                     END
+     C*
+     C** WRITE LIVE POSITIONS
+     C*
+     C           ##RECI    IFEQ 'D'
+     C           ##RECI    OREQ 'N'
+     C*
+     C           #PNPSN    IFNE *ZERO
+     C           #POTNM    ORNE *ZERO
+     C*
+     C** WRITE DETAILS TO PORTFOLIO HOLDINGS TOTALS
+     C*
+     C                     EXSR WHOLDT
+     C*
+     C** WRITE A RECORD TO FILE PMHOLDPD
+     C*
+     C/COPY WNCPYSRC,PM1141C007
+     C                     WRITEPMHOLDP0
+     C                     ADD  1         PPHCRE
+     C/COPY WNCPYSRC,PM1141C008
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * WHOLDC   - WRITE TO PORTFOLIO HOLDINGS (CUSTOMER CONSOLIDATED)         *
+      *                                                                        *
+      **************************************************************************
+     C           WHOLDC    BEGSR
+     C*
+     C** IF TOTAL CUSTOMER NOMINAL IS ZERO => 'F' FOR FLAT
+     C** OTHERWISE, RECORD ID FROM LF/SECTY ('D' OR 'M')
+     C*
+     C           #CNPSN    IFEQ 0
+     C           #COTNM    ANDEQ0
+     C           ##RECI    ANDEQ'D'
+     C                     MOVEL'F'       QFRECI
+     C                     ELSE
+     C           ##RECI    IFEQ 'N'
+     C                     MOVEL'M'       QFRECI
+     C                     ELSE
+     C                     MOVEL##RECI    QFRECI
+     C                     END
+     C                     END
+     C*
+     C** ACCOUNT OFFICER
+     C                     MOVEL##ACOC    QFACOC
+     C*
+     C** CUSTOMER NUMBER
+     C**********           Z-ADD##CNUM    QFCNUM                                              CSD027
+     C                     MOVE ##CNUM    QFCNUM                                              CSD027
+     C*
+     C** PORTFOLIO REFERENCE
+     C                     MOVEL'9999'    QFPTFR
+     C*
+     C** TRADE/VALUE DATE INDICATOR
+     C                     MOVEL##TVPS    QFTVDA
+     C*
+     C** MODULE ID: 'SE'
+     C                     MOVEL'SE'      QFMODI
+     C*
+     C** INSTRUMENT TYPE
+     C                     MOVEL##INNR    QFINNR
+     C*
+     C** INSTRUMENT TYPE DISPLAY SEQUENCE
+     C                     Z-ADD##ITDS    QFITDS
+     C*
+     C** INSTRUMENT TYPE VALUATION SEQUENCE
+     C                     Z-ADD##VLIS    QFVLIS
+     C*
+     C** DISPLAY GROUP
+     C                     MOVEL##DSPG    QFDSPG
+     C*
+     C** DISPLAY GROUP SEQUENCE
+     C                     Z-ADD##DSPS    QFDSPS
+     C*
+     C** VALUATION GROUP
+     C                     MOVEL##VALG    QFVALG
+     C*
+     C** VALUATION GROUP SEQUENCE
+     C                     Z-ADD##VLGS    QFVLGS
+     C*
+     C** SECURITY SHORTNAME
+     C                     MOVEL##BHSC    QFTDSS
+     C*
+     C** DEAL TYPE
+     C                     MOVE *BLANK    QFDTYP
+     C*
+     C** MIDAS INSTRUMENT NAME
+     C                     MOVEL##TXT1    QFTXT1
+     C*
+     C** INSTRUMENT ENQUIRY DETAILS
+     C                     MOVEL##TXT2    QFTXT2
+     C*
+     C** LINE 1 AMOUNT
+     C                     Z-ADD#CNPSN    QFAMT1
+     C*
+     C** LINE 2 AMOUNT
+     C                     Z-ADD0         QFAMT2
+     C*
+     C** CURRENCY 1: NOMINAL CURRENCY
+     C                     MOVEL##NMCY    QFCCY1
+     C*
+     C** CURRENCY 2: BLANK
+     C                     MOVEL*BLANKS   QFCCY2
+     C*
+     C** CURRENCY DEC. PLACES 1: NOMINAL DEC. PLACES
+     C                     Z-ADD##NMDP    QFCDP1
+     C*
+     C** CURRENCY DEC. PLACES 2: NOMINAL CUR. DEC. PLACES
+     C                     Z-ADD#NNBDP    QFCDP2
+     C*
+     C** MARKET PRICE
+     C                     Z-ADD##MPRC    QFMPRC
+     C*
+     C** BOOK PRICE
+     C                     Z-ADD0         QFBOPR
+     C*
+     C** CALCULATE MARKET FX RATE FROM NOMINAL CCY TO CUST.BASE CURRENCY
+     C                     Z-ADD1         ZAMTF
+     C                     MOVE ##NMCY    ZCCYF            NOM.CCY
+     C                     MOVE ##CSBY    ZCCYT            CST.BAS.CCY
+     C                     Z-ADD#NSPRT    ZRATEF           NOM.CCY.SPOT RATE
+     C                     Z-ADD#CSPRT    ZRATET           CST.CCY.SPOT RATE
+     C                     MOVE #NMDIN    ZMDINF           NOM.CCY. M/D IND.
+     C                     MOVE #CMDIN    ZMDINT           CST.CCY. M/D IND.
+     C                     Z-ADD#NNBDP    ZCDPF            NOM.CCY.DEC.PLCS
+     C                     Z-ADD#CNBDP    ZCDPT            CST.CCY.DEC.PLCS
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZCRSRN    ##MFXD
+     C                     EXSR CONVN
+     C*
+     C** CONVERT RATE INTO MULTIPLY RATE
+     C           ZCRSMD    IFEQ 'D'
+     C           1         DIV  ZCRSRT    ##MFXR    H
+     C                     ELSE
+     C                     Z-ADDZCRSRT    ##MFXR
+     C                     END
+     C*
+     C** CONVERT MARKET FX RATE TO FORMAT DEFINED BY RANKING SEQUENCE
+     C           #CRKSQ    IFLT #NRKSQ
+     C           1         DIV  ##MFXR    QFMFXR    H
+     C                     MOVE 'D'       QFMFMD
+     C                     ELSE
+     C                     Z-ADD##MFXR    QFMFXR    H
+     C                     MOVE 'M'       QFMFMD
+     C                     END
+     C*
+     C** BOOK FX RATE
+     C                     Z-ADD0         QFBFXR
+     C*
+     C** MARKET VALUE
+     C                     Z-ADD#CMVAL    QFMVAL
+     C*
+     C** PURCHASED INTEREST
+     C                     Z-ADD#CPILP    QFPUIT
+     C*
+     C** ACCRUED INTEREST
+     C                     Z-ADD#CINTK    QFACIS
+     C*
+     C** NEXT INTEREST DATE
+     C                     Z-ADD##NIDT    QFNIDT
+     C*
+     C** START/LAST INTEREST DATE
+     C                     Z-ADD##SLID    QFSLID
+     C*
+     C** NUMBER OF DAYS ACCRUED INTEREST
+     C                     Z-ADD#CNODA    QFNODA
+     C*
+     C** PROFIT/LOSS MARKET
+     C                     Z-ADD0         QFPLMK
+     C*
+     C** PROFIT/LOSS FX
+     C                     Z-ADD0         QFPLFX
+     C*
+     C** BOOK YIELD
+     C                     Z-ADD0         QFBKYD
+     C*
+     C** MARKET YIELD
+     C                     Z-ADD##MKYD    QFMKYD
+     C*
+     C** DIRECT YIELD
+     C                     Z-ADD##DRYD    QFDRYD
+     C*
+     C** COUNTRY OF RISK
+     C           ##SCOR    IFNE *BLANKS
+     C                     MOVEL##SCOR    QFCNTR
+     C                     ELSE
+     C                     MOVE FCCNCD    QFCNTR
+     C                     END
+     C*
+     C** INDUSTRY
+     C********** ##SIDY    IFNE 0                                                             CER020
+     C**********           Z-ADD##SIDY    QFLIND                                              CER020
+     C           WWSIDY    IFNE *BLANKS                                                       CER020
+     C                     MOVE WWSIDY    QFLOIC                                              CER020
+     C                     ELSE
+     C**********           MOVE FCLICD    QFLIND                                              CER020
+     C                     MOVE FCLICD    QFLOIC                                              CER020
+     C                     END
+     C*
+     C** OTHER NOMINAL AMOUNT
+     C                     Z-ADD#COTNM    QFOAMT
+     C*
+     C** DATE EXTRACTED
+     C                     Z-ADD##ECD     QFDXTR
+     C*
+     C** PERFORMANCE REQUIRED
+     C**********           MOVE 'N'       QFPFMR                          CPM005
+      *                                                                   CPM005
+     C           QBPFM9    IFEQ *BLANKS                                   CPM005
+     C                     MOVE 'N'       QFPFMR                          CPM005
+     C                     ELSE                                           CPM005
+     C                     MOVE QBPFM9    QFPFMR                          CPM005
+     C                     END                                            CPM005
+     C*
+     C** EXCHANGE RATE
+     C                     Z-ADD##MFXD    QFMFXD
+     C*
+     C** NOMINAL DECIMAL PLACES
+     C                     Z-ADD##NMDP    QFNMDP
+     C*
+     C** PRICE BASIS
+     C                     MOVELSPBS      QFSPBS
+     C*
+     C** RESET PORTFOLIO CURRENCY TOTALS
+     C*
+     C                     Z-ADD0         QFMVPC
+     C                     Z-ADD0         QFAIPC
+     C                     MOVE *BLANKS   QFINTC
+     C*
+     C** IF NOT HISTORIC EXTRACT, WRITE MATURED/FLAT POSITIONS
+     C*
+     C           ##EXTP    IFNE 'H'
+     C*
+     C           ##RECI    IFEQ 'M'
+     C           ##RECI    OREQ 'D'
+     C           #CNPSN    ANDEQ*ZERO
+     C           #COTNM    ANDEQ*ZERO
+     C*
+     C** WRITE A RECORD TO FILE PMMFHLPD
+     C*
+     C/COPY WNCPYSRC,PM1141C009
+     C                     WRITEPMMFHLP0
+     C                     ADD  1         PMHCRE
+     C/COPY WNCPYSRC,PM1141C010
+     C                     END
+     C*
+     C                     END
+     C*
+     C** WRITE LIVE POSITIONS
+     C*
+     C           ##RECI    IFEQ 'D'
+     C           ##RECI    OREQ 'N'
+     C*
+     C           #CNPSN    IFNE *ZERO
+     C           #COTNM    ORNE *ZERO
+     C*
+     C** WRITE DETAILS TO PORTFOLIO HOLDINGS TOTALS
+     C*
+     C                     EXSR WHOLDT
+     C*
+     C** WRITE A RECORD TO FILE PMHOLDPD
+     C*
+     C/COPY WNCPYSRC,PM1141C011
+     C                     WRITEPMHOLDP0
+     C                     ADD  1         PPHCRE
+     C/COPY WNCPYSRC,PM1141C012
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+      ********************************************************************
+      *                                                                  *
+      * WHOLDT   - WRITE TO THE PORTFOLIO HOLDINGS TOTALS                *
+      *                                                                  *
+      ********************************************************************
+     C           WHOLDT    BEGSR
+     C*
+     C** DETERMINE PORTFOLIO VALUATION CURRENCY
+     C*
+     C           QFPTFR    IFNE '9997'
+     C           QFPTFR    ANDNE'9998'
+     C           QFPTFR    ANDNE'9999'
+     C                     MOVE ##PTCY    ##VLCY  3
+     C                     ELSE
+     C                     MOVE ##CSBY    ##VLCY
+     C                     END
+     C*
+     C** IF VALUATION CURRENCY DIFFERENT TO CURRENCY 1 SET UP PARAMETER
+     C** TO BE USED IN SR/ZCCYCN
+     C*
+     C           ##VLCY    IFNE QFCCY1
+     C*
+     C                     Z-ADD1         B
+     C           QFCCY1    LOKUPCYCD,B                   99
+     C*
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD12        DBASE            ***************
+     C                     MOVE 'SDCURRL0'DBFILE           * DB ERROR 12 *
+     C                     MOVELQFCCY1    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE QFCCY1    ZCCYF
+     C                     Z-ADDSPRT,B    ZRATEF
+     C                     MOVE MDIN,B    ZMDINF
+     C                     Z-ADDNBDP,B    ZCDPF
+     C*
+     C                     Z-ADD1         B
+     C           ##VLCY    LOKUPCYCD,B                   99
+     C*
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD13        DBASE            ***************
+     C                     MOVE 'SDCURRL0'DBFILE           * DB ERROR 13 *
+     C                     MOVEL##VLCY    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE ##VLCY    ZCCYT
+     C                     Z-ADDSPRT,B    ZRATET
+     C                     MOVE MDIN,B    ZMDINT
+     C                     Z-ADDNBDP,B    ZCDPT
+     C*
+     C** CONVERT MARKET VALUE TO PORTFOLIO CURRENCY
+     C                     Z-ADDQFMVAL    ZAMTF
+     C                     EXSR CONVN
+     C                     Z-ADDZAMTT     ##MVL1 150
+     C*
+     C** CONVERT ACCRUED INTEREST TO PORTFOLIO CURRENCY
+     C                     Z-ADDQFACIS    ZAMTF
+     C                     EXSR CONVN
+     C                     Z-ADDZAMTT     ##ACI1 150
+     C*
+     C** ... OTHERWISE USE VALUES WRITTEN TO PMHOLDPD
+     C                     ELSE                            X1
+     C                     Z-ADDQFMVAL    ##MVL1
+     C                     Z-ADDQFACIS    ##ACI1
+     C                     END                             E1
+     C*
+     C** SET ALL TOTAL FIELDS TO ZERO
+     C                     Z-ADD0         QFPTPA
+     C                     Z-ADD0         QFPTNA
+     C                     Z-ADD0         QFPTMV
+     C                     Z-ADD0         QFPVPA
+     C                     Z-ADD0         QFPVNA
+     C                     Z-ADD0         QFPVMV
+     C                     Z-ADD0         QFPTAI
+     C                     Z-ADD0         QFPTNI
+     C                     Z-ADD0         QFMVPC
+     C                     Z-ADD0         QFAIPC
+     C*
+     C** ADD MARKET VALUE AND ACCRUED INTEREST TO TOTALLING FIELDS
+     C           ##TVPS    IFEQ 'T'                        B1
+     C           QFTVDA    IFEQ 'T'                        B2
+     C           ##MVL1    IFGT 0                          B3
+     C                     Z-ADD##MVL1    QFPTPA
+     C                     ELSE                            X3
+     C                     Z-SUB##MVL1    QFPTNA
+     C                     END                             E3
+     C                     Z-ADD##ACI1    QFPTAI
+     C                     END                             E2
+     C*
+     C                     ELSE                            X1
+     C*
+     C           QFTVDA    IFEQ 'V'                        B2
+     C           ##MVL1    IFGT 0                          B3
+     C                     Z-ADD##MVL1    QFPVPA
+     C                     ELSE                            X3
+     C                     Z-SUB##MVL1    QFPVNA
+     C                     END                             E3
+     C                     Z-ADD##ACI1    QFPTAI
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** CALCULATE EXTRA FIELDS TO BE OUTPUT TO PMHOLDPD FOR MIDASQ
+     C           QFPTPA    IFNE 0                          B1
+     C           QFPVPA    ORNE 0
+     C                     Z-ADDQFPTPA    QFMVPC
+     C                     ADD  QFPVPA    QFMVPC
+     C                     MOVE '+'       QFINTC
+     C                     END                             E1
+     C*
+     C           QFPTNA    IFNE 0                          B1
+     C           QFPVNA    ORNE 0
+     C                     Z-SUBQFPTNA    QFMVPC
+     C                     SUB  QFPVNA    QFMVPC
+     C                     MOVE '-'       QFINTC
+     C                     END                             E1
+     C*
+     C           QFPTMV    IFNE 0                          B1
+     C           QFPVMV    ORNE 0
+     C                     Z-SUBQFPTMV    QFMVPC
+     C                     SUB  QFPVMV    QFMVPC
+     C                     MOVE 'L'       QFINTC
+     C                     END                             E1
+     C*
+     C           QFMVPC    IFEQ 0                          B1
+     C                     MOVE 'N'       QFINTC
+     C                     END                             E1
+     C*
+     C                     Z-ADDQFPTAI    QFAIPC
+     C*
+     C** WRITE DETAILS TO PMHOLDX0
+     C                     MOVE QFCCY1    QFCCY
+     C*                                                                   CPM005
+     C**  CALL SR FOR NEW FIELDS IN PMHOLDPD PMHOLDQ0 PMHOLDQ1            CPM005
+     C                     EXSR NEWFLD                                    CPM005
+     C*
+     C           QFPTFR    IFNE '9998'
+     C           QFPTFR    ANDNE'9999'
+     C           QBAPBC    OREQ 'N'
+     C*
+     C/COPY WNCPYSRC,PM1141C013
+     C           QBAPBC    IFEQ 'N'
+     C                     WRITEPMHOLDD1
+     C                     ELSE
+     C                     WRITEPMHOLDD0
+     C                     END
+     C/COPY WNCPYSRC,PM1141C014
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+      ********************************************************************
+      *
+      * WHOLDA   - WRITE TO PORTFOLIO HOLDINGS AUDIT
+      *
+      ********************************************************************
+     C           WHOLDA    BEGSR
+     C                     MOVEL'D'       QFRECI
+     C                     ADD  PPHCRE    QFNORE
+     C*
+     C** IF RECORD NOT FOUND ON PF/PMHOLDZZ, WRITE A RECORD
+     C/COPY WNCPYSRC,PM1141C015
+     C           *IN99     IFEQ '1'
+     C                     WRITEPMHOLDZ0
+     C                     ELSE
+     C*
+     C** OTHERWISE, UPDATE RECORD
+     C                     UPDATPMHOLDZ0
+     C                     END
+     C/COPY WNCPYSRC,PM1141C016
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * INST     - ACCESS INSTRUMENT DETAILS                                   *
+      *                                                                        *
+      **************************************************************************
+     C           INST      BEGSR
+     C*
+     C** ACCESS THE SECURITIES DETAILS
+     C*
+     C           BHSC      CHAINSECTY                99
+     C           *IN99     IFEQ '1'
+     C           RECI      OREQ '*'
+     C                     MOVE '*'       ##RECI
+     C                     GOTO EINST
+     C                     END
+     C*
+     C** SET THE SECURITY RECORD ID
+     C*
+     C           MATY      IFGT ##ECD
+     C           MATY      OREQ *ZERO
+     C                     MOVE 'D'       ##RECI           * LIVE
+     C                     ELSE
+     C*
+     C           ##EXTP    IFEQ 'H'
+     C                     MOVE 'M'       ##RECI  1        * MATURED
+     C                     ELSE
+     C*
+     C           MATY      IFLE BJRDNB
+     C                     MOVE 'M'       ##RECI  1        * ALREADY MATURED
+     C                     ELSE
+     C                     MOVE 'N'       ##RECI           * MATURING ON
+     C                     END                               WEEKEND.
+     C*
+     C                     END
+     C                     END
+     C*
+     C** STORE OTHER SECURITY DETAILS
+     C*
+     C                     Z-ADDNMDP      ##NMDP  10
+     C                     MOVELNMCY      ##NMCY  3
+     C                     MOVELSCOR      ##SCOR  2
+     C**********           Z-ADDSIDY      ##SIDY  30                                          CER020
+     C                     MOVE LOIC      WWSIDY  3                                           CER020
+     C*
+     C** ACCESS THE NOMINAL CURRENCY DETAILS
+     C*
+     C                     Z-ADD1         B
+     C           NMCY      LOKUPCYCD,B                   99
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD14        DBASE            ***************
+     C                     MOVE 'SDCURRL0'DBFILE           * DB ERROR 14 *
+     C                     MOVELNMCY      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** STORE THE NOMINAL CURRENCY DETAILS
+     C*
+     C                     Z-ADDSPRT,B    #NSPRT 138
+     C                     MOVELMDIN,B    #NMDIN  1
+     C                     Z-ADDNBDP,B    #NNBDP  10
+     C                     Z-ADDRKSQ,B    #NRKSQ  30
+     C*
+     C** ACCESS THE INVESTMENT TYPE DETAILS
+     C*
+     C           KINVTP    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C           KINVTP    CHAININVTP                99
+     C           *IN99     IFEQ '1'
+     C           RECI      OREQ '*'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD15        DBASE            ***************
+     C                     MOVE 'INVTP   'DBFILE           * DB ERROR 15 *
+     C                     MOVELSITP      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   182961
+      ** Instrument type is defaulted from PF/SDPORTPD if a blank         182961
+      ** instrument type is found.                                        182961
+      ** Indicator 35 was used as the operation's resulting indicator.    182961
+      *                                                                   182961
+     C           INNR      IFEQ *BLANKS                                   182961
+     C           1         SETLLSDPORTPD                                  182961
+     C                     READ SDPORTPD                 35               182961
+     C                     MOVE FCDINR    INNR                            182961
+     C                     ENDIF                                          182961
+     C*
+     C** STORE PM INSTRUMENT TYPE
+     C*
+     C                     MOVELINNR      ##INNR  3
+     C*
+     C** ACCESS THE PM INSTRUMENT TYPES FILE PF/SDPLINPD USING THE
+     C** INSTRUMENT TYPE FROM LF/INVTP
+     C*
+     C                     CALL 'AOPLINR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY  '  P@OPTN
+     C                     PARM INNR      P@INNR  3
+     C           SDPLIN    PARM SDPLIN    DSFDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD16        DBASE            ***************
+     C                     MOVE 'SDPLINPD'DBFILE           * DB ERROR 16 *
+     C                     MOVELINNR      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** SAVE SOME PM INSTRUMENT FIELDS
+     C*
+     C                     Z-ADDPDITDS    ##ITDS  20
+     C                     Z-ADDPDVLIS    ##VLIS  20
+     C                     MOVELPDDSPG    ##DSPG  3
+     C                     MOVELPDVALG    ##VALG  3
+     C*
+     C** ACCESS THE DISPLAY GROUP DETAILS FILE PF/PMDSPGPP USING
+     C** THE DISPLAY GROUP FROM PF/SDPLINPD
+     C*
+     C                     Z-ADD1         B
+     C           PDDSPG    LOKUPDSPG,B                   99
+     C*
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD17        DBASE            ***************
+     C                     MOVE 'PMDSPGPD'DBFILE           * DB ERROR 17 *
+     C                     MOVELPDDSPG    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDDSPS,B    ##DSPS  20
+     C                     END
+     C*
+     C** ACCESS THE VALUATION GROUP HEADINGS FILE PF/PMVLGHPP
+     C** USING THE VALUATION GROUP FROM PF/SDPLINPD
+     C*
+     C                     Z-ADD1         B
+     C           PDVALG    LOKUPVALG,B                   99
+     C*
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD18        DBASE            ***************
+     C                     MOVE 'PMVLGHPD'DBFILE           * DB ERROR 18 *
+     C                     MOVELPDVALG    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDVLGS,B    ##VLGS  20
+     C                     END
+     C*
+     C** IF THE SECURITY IS LIVE
+     C*
+     C           ##RECI    IFEQ 'D'
+     C*
+     C** DETERMINE THE MARKET PRICE
+     C*
+     C                     EXSR DETMKP
+     C*
+     C** DETERMINE THE MARKET YIELDS
+     C*
+     C                     EXSR DETMKY
+     C*
+     C** ELSE (IF THE SECURITY IS MATURED)
+     C*
+     C                     ELSE
+     C*
+     C**  DETERMINE THE REDEMPTION PRICE
+     C*
+     C                     EXSR DETREP
+     C*
+     C**  THE MARKET YIELDS ARE ZERO
+     C*
+     C                     Z-ADD0         ##MKYD
+     C                     Z-ADD0         ##DRYD
+     C                     END
+     C*
+     C           EINST     ENDSR
+      ********************************************************************
+      /SPACE 5
+      ********************************************************************
+      *
+      * CSTDET - ACCESS CUSTOMER DETAILS
+      *
+      ********************************************************************
+     C           CSTDET    BEGSR
+     C*
+     C** ACCESS DETAILS
+     C*
+     C                     MOVEL'B'       I#PORS
+     C                     MOVELFCR997    I#R997
+     C                     MOVELBHBA      I#BRCA
+     C                     MOVELBHBK      I#BOOK
+     C*
+     C                     CALL 'AOPLCSR1'
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*KEY   ' P@OPTN  7        I:Option
+     C                     PARM           I@PARM           I:Parameters
+     C                     PARM *BLANKS   O@PARM           O:Parameters
+     C           SDPLCS    PARM SDPLCS    DSFDY            O:Format
+     C*
+     C** ERROR
+     C           P@RTCD    IFEQ 'PMA0007'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD19        DBASE            ***************
+     C                     MOVE 'SDBRCHPD'DBFILE           * DB ERROR 19 *
+     C                     MOVELI#BRCA    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** IS THE BRANCH A PORTFOLIO CUSTOMER?
+     C*
+     C                     MOVE 'Y'       ##PORC  1
+     C           P@RTCD    IFNE *BLANK
+     C                     MOVE 'N'       ##PORC
+     C                     GOTO ECSTDT
+     C                     END
+     C*
+     C** STORE THE PORTFOLIO CUSTOMER
+     C*
+     C**********           MOVELO#BICN    ##CNUM  60                                          CSD027
+     C                     MOVELO#BICN    ##CNUM  6                                           CSD027
+     C*
+     C** GET THE CUSTOMER BASE CURRENCY DETAILS
+     C*
+     C                     Z-ADD1         B
+     C           QBCSBY    LOKUPCYCD,B                   99
+     C*
+     C** ERROR
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD20        DBASE            ***************
+     C                     MOVE 'SDCURRL0'DBFILE           * DB ERROR 20 *
+     C                     MOVELQBCSBY    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** STORE SOME CUSTOMER DETAILS
+     C*
+     C                     MOVELO#ACOF    ##ACOC  2
+     C                     MOVELQBCSBY    ##CSBY  3
+     C*
+     C                     Z-ADDSPRT,B    #CSPRT 138
+     C                     MOVE MDIN,B    #CMDIN  1
+     C                     Z-ADDNBDP,B    #CNBDP  10
+     C                     Z-ADDRKSQ,B    #CRKSQ  30
+     C*
+     C           ECSTDT    ENDSR
+     C**************************************************************************
+      /SPACE 5
+      ********************************************************************
+      *
+      * PORDET - ACCESS PORTFOLIO DETAILS
+      *
+      ********************************************************************
+     C           PORDET    BEGSR
+     C*
+     C* IF '9997' PORTFOLIO, THE PORTFOLIO CURRENCY IS THE CUSTOMER CURRENCY
+     C*
+     C           O#PTFR    IFEQ FCR997
+     C                     MOVEL'9997'    ##PTFR
+     C                     MOVELQBCSBY    PNPTCY
+     C                     ELSE
+     C*
+     C** ELSE, GET THE PORTFOLIO DETAILS
+     C*
+     C                     MOVELO#BICN    ##BICN
+     C                     MOVELO#PTFR    ##PTFR  4
+     C                     Z-ADD1         B
+     C           ##PRTK    LOKUPPRTK,B                   99
+     C*
+     C** IF PREVIOUSLY ACCESSED, SET THE PORTFOLIO CURRENCY
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVELPRTD,B    PNPTCY
+     C                     ELSE
+     C*
+     C** NOT PREVIOUSLY ACCESSED
+     C*
+     C           KPMPOR    KLIST
+     C                     KFLD           ##BICN
+     C                     KFLD           ##PTFR
+     C           KPMPOR    CHAINPMPORTLL             99
+     C*
+     C** ERROR
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD21        DBASE            ***************
+     C                     MOVE 'PMPORTLL'DBFILE           * DB ERROR 21 *
+     C                     MOVEL##PRTK    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADD1         B
+     C           *BLANK    LOKUPPRTK,B                   99
+     C                     MOVEL##PRTK    PRTK,B
+     C                     MOVELPNPTCY    PRTD,B
+     C*
+     C                     END
+     C                     END
+     C*
+     C** GET THE PORTFOLIO CURRENCY DETAILS
+     C*
+     C                     Z-ADD1         B
+     C           PNPTCY    LOKUPCYCD,B                   99
+     C*
+     C** ERROR
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD22        DBASE            ***************
+     C                     MOVE 'SDCURRL0'DBFILE           * DB ERROR 22 *
+     C                     MOVELPNPTCY    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** STORE SOME PORTFOLIO DETAILS
+     C*
+     C                     MOVELPNPTCY    ##PTCY  3
+     C*
+     C                     Z-ADDSPRT,B    #PSPRT 138
+     C                     MOVELMDIN,B    #PMDIN  1
+     C                     Z-ADDNBDP,B    #PNBDP  10
+     C                     Z-ADDRKSQ,B    #PRKSQ  30
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * UPDTOT   - UPDATE PORTFOLIO AND CUSTOMER TOTALS                        *
+      *                                                                        *
+      **************************************************************************
+     C           UPDTOT    BEGSR
+     C*
+     C** IF THE PORTFOLIO REFERENCE IS NOT '9997'
+     C*
+     C           ##PTFR    IFNE '9997'
+     C*
+     C** ADD TO THE TOTAL PORTFOLIO NOMINAL
+     C                     ADD  ##NPSN    #PNPSN 150
+     C                     ADD  ##OTNM    #POTNM 150
+     C*
+     C** ADD TO THE TOTAL PORTFOLIO MARKET VALUE
+     C                     ADD  ##MVAL    #PMVAL 150
+     C*
+     C** ADD TO THE TOTAL PORTFOLIO PURCHASED INTEREST
+     C                     ADD  ##PILP    #PPILP 150
+     C*
+     C** ADD TO THE TOTAL PORTFOLIO ACCRUED INTEREST
+     C                     ADD  ##INTK    #PINTK 150
+     C*
+     C** ADD TO THE TOTAL PORTFOLIO NUMBER OF DAYS ACCRUED INTEREST
+     C                     Z-ADD##NODA    #PNODA  50
+     C*
+     C                     END
+     C*
+     C** ADD TO THE TOTAL CUSTOMER NOMINAL
+     C                     ADD  ##NPSN    #CNPSN 150
+     C                     ADD  ##OTNM    #COTNM 150
+     C*
+     C** ADD TO THE TOTAL CUSTOMER MARKET VALUE
+     C                     ADD  ##MVAL    #CMVAL 150
+     C*
+     C** ADD TO THE TOTAL CUSTOMER PURCHASED INTEREST
+     C                     ADD  ##PILP    #CPILP 150
+     C*
+     C** ADD TO THE TOTAL CUSTOMER ACCRUED INTEREST
+     C                     ADD  ##INTK    #CINTK 150
+     C*
+     C** ADD TO THE TOTAL CUSTOMER NUMVER OF DAYS ACCRUED INTEREST
+     C                     Z-ADD##NODA    #CNODA  50
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * ZEROIZ - ZEROIZE PORTFOLIO AND CUSTOMER TOTALS                         *
+      *                                                                        *
+      **************************************************************************
+     C           ZEROIZ    BEGSR
+     C*
+     C** ZEROIZE ALL TOTAL FIELDS
+     C                     Z-ADD0         #PNPSN
+     C                     Z-ADD0         #PMVAL
+     C                     Z-ADD0         #PPILP
+     C                     Z-ADD0         #PINTK
+     C                     Z-ADD0         #PNODA
+     C                     Z-ADD0         #POTNM
+     C                     Z-ADD0         #CNPSN
+     C                     Z-ADD0         #CMVAL
+     C                     Z-ADD0         #CPILP
+     C                     Z-ADD0         #CINTK
+     C                     Z-ADD0         #CNODA
+     C                     Z-ADD0         #COTNM
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * AUDIT    - AUDIT PROCESSING                                            *
+      *                                                                        *
+      **************************************************************************
+     C           AUDIT     BEGSR
+     C*
+     C** ACCESS THE PORTFOLIO HOLDINGS AUDIT PF/PMHOLDZZ
+     C*
+     C                     READ PMHOLDPA                 99
+     C*
+     C** WRITE/UPDATE A RECORD ON PF/PMHOLDZZ
+     C*
+     C                     EXSR WHOLDA
+     C*
+     C** PRODUCE PORTFOLIO HOLDINGS UPDATE (SE) AUDIT REPORT
+     C*
+     C                     EXSR AUDREP
+     C*
+     C                     ENDSR
+     C*
+      ********************************************************************
+      /SPACE 5
+      ********************************************************************
+      *
+      * AUDREP   - WRITE PORTFOLIO HOLDINGS UPDATE (SE) AUDIT REPORT
+      *
+      ********************************************************************
+     C           AUDREP    BEGSR
+     C*
+     C/COPY WNCPYSRC,PM1141C017
+     C                     WRITEPM1141PP
+     C/COPY WNCPYSRC,PM1141C018
+     C*
+     C           WEMPTY    IFEQ 'Y'
+     C                     WRITENODTLS
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * DETMKP  - DETERMINE THE MARKET PRICE (FOR A LIVE SECURITY)             *
+      *                                                                        *
+      **************************************************************************
+     C           DETMKP    BEGSR
+     C*
+     C** READ THE LATEST PRICE (SECEO IS IN DESCENDING DATE SEQUENCE)
+     C** IF THE EXTRACT TYPE IS 'HISTORIC'                                104479
+     C*
+     C           KSNDEV    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           ##SNET  2
+     C                     KFLD           ##ECD
+     C           KSNDEP    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           ##SNET
+     C*
+     C           ##EXTP    IFEQ 'H'                                       104479
+     C                     MOVE 'PR'      ##SNET
+     C*
+     C           KSNDEV    SETGTSNDEVDF
+     C           KSNDEP    READESNDEVDF                  99*
+     C           *IN99     IFEQ '0'
+     C                     Z-ADDSNPR      MKPR
+     C                     END
+     C                     END                                            104479
+     C*
+     C** CONVERT THE MARKET PRICE FROM A YIELD INTO A % PRICE
+     C*
+     C           MKPR      IFNE *ZERO
+     C                     CALL 'PMZYLD'
+     C                     PARM 'P'       ##YP    1
+     C                     PARM           ##SECT
+     C                     PARM           ##INVT
+     C                     PARM ##ECD     ##IDAT  50
+     C                     PARM 100000000 ##NOML 150
+     C                     PARM 'C'       ##ACIN  1
+     C                     PARM MKPR      ##PDY  158
+     C                     PARM *ZERO     ##PRIC 158
+     C                     PARM #NNBDP    ##CDP   10
+     C                     PARM           ##RETC  6
+     C*
+     C                     Z-ADD##PRIC    ##MPRC 158
+     C*
+     C                     ELSE
+     C                     Z-ADD*ZERO     ##MPRC
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * DETMKY  - DETERMINE THE MARKET YIELD (FOR A LIVE SECURITY)             *
+      *                                                                        *
+      **************************************************************************
+     C           DETMKY    BEGSR
+     C*
+     C** IF THE SECURITY IS DISCOUNT OR YIELD TRADED
+     C*
+     C           STBS      IFEQ 'D'
+     C           STBS      OREQ 'Y'
+     C*
+     C** THE MARKET YIELD IS THAT RECOVERED FROM THE DEFINED PRICE
+     C*
+     C                     Z-ADDMKPR      ##MKYD 117
+     C*
+     C** ELSE IF THE SECURITY IS PRICE TRADED
+     C*
+     C                     ELSE
+     C*
+     C** IF THE SECURITY IS INTEREST BEARING, IN YIELD
+     C** CALCULATIONS USE THE AIBD METHOD, ELSE THE DISCOUNT METHOD
+     C*
+     C                     MOVEL'Y'       STBS
+     C*
+     C           CD01      IFNE *ZERO
+     C           CPNR      ANDNE*ZERO
+     C                     MOVEL'A '      SYBS
+     C                     ELSE
+     C                     MOVEL'DA'      SYBS
+     C                     END
+     C*
+     C** CALCULATE THE MARKET YIELD FROM THE MARKET % PRICE
+     C*
+     C                     CALL 'PMZYLD'
+     C                     PARM 'Y'       ##YP    1
+     C                     PARM           ##SECT
+     C                     PARM           ##INVT
+     C                     PARM ##ECD     ##IDAT  50
+     C                     PARM 100000000 ##NOML 150
+     C                     PARM 'C'       ##ACIN  1
+     C                     PARM *ZERO     ##PDY  158
+     C                     PARM ##MPRC    ##PRIC 158
+     C                     PARM #NNBDP    ##CDP   10
+     C                     PARM           ##RETC  6
+     C*
+     C           ##PDY     IFGT 0
+     C                     Z-ADD##PDY     ##MKYD 117
+     C                     ELSE
+     C                     Z-SUB9999      ##MKYD
+     C                     END
+     C*
+     C                     END
+     C*
+     C** CALCULATE THE DIRECT YIELD BY DIVIDING THE COUPON RATE BY THE
+     C** MARKET PRICE
+     C*
+     C           ##MPRC    IFNE 0
+     C           CPNR      DIV  ##MPRC    ##DRYD    H
+     C                     MULT 100       ##DRYD
+     C                     ELSE
+     C                     Z-ADD0         ##DRYD 117
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * DETREP  - DETERMINE THE REDEMPTION PRICE (FOR A MATURED SECURITY)      *
+      *                                                                        *
+      **************************************************************************
+     C           DETREP    BEGSR
+      *
+      ** CHECK FOR 'RC' EVENT ON DIARY FILE
+      *
+     C           KSECET    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           ##SDET  2
+     C                     KFLD           MATY
+     C*
+     C                     MOVE 'RC'      ##SDET
+     C*
+     C           KSECET    CHAINSECET                99
+      *
+      ** IF 'RC' EVENT NOT FOUND CHECK FOR 'RP' EVENT
+      *
+     C           *IN99     IFEQ '1'
+     C           RECI      OREQ '*'
+     C                     MOVE 'RP'      ##SDET
+     C           KSECET    CHAINSECET                99
+     C                     END
+      *
+      ** IF NEITHER 'RC' NOR 'RP' EVENTS FOUND SET TO 100% OR 1.
+      *
+     C           *IN99     IFEQ '1'
+     C           RECI      OREQ '*'
+     C           SPBS      IFEQ 'P'
+     C                     Z-ADD100       ##MPRC
+     C                     END
+     C           SPBS      IFEQ 'U'
+     C                     Z-ADD1         ##MPRC
+     C                     END
+     C                     ELSE
+     C                     Z-ADDSDRP      ##MPRC
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * INIT     - INITIAL PROCESSING                                          *
+      *                                                                        *
+      **************************************************************************
+     C           INIT      BEGSR
+     C*
+     C**  Define local data area
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** PREPARE LDA
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM1141'  DBPGM
+     C                     OUT  LDA
+     C*
+     C**  Access bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** TEST DATE FORMAT FOR SR/ZDATE2
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+     C*                                                                   CPB001
+     C**  Access Module Details                                           CPB001
+     C*                                                                   CPB001
+     C                     CALL 'AOMMODR0'                                CPB001
+     C                     PARM *BLANKS   P@RTCD                          CPB001
+     C                     PARM '*FIRST'  P@OPTN                          CPB001
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CPB001
+     C*                                                                   CPB001
+     C           P@RTCD    IFNE *BLANKS                                   CPB001
+     C           *LOCK     IN   LDA                                       CPB001
+     C                     Z-ADD5         DBASE            ***************CPB001
+     C                     MOVE 'SDMMODPD'DBFILE           *DB ERROR 005 *CPB001
+     C                     MOVEL'*FIRST'  DBKEY            ***************CPB001
+     C                     OUT  LDA                                       CPB001
+     C                     EXSR *PSSR                                     CPB001
+     C                     ENDIF                                          CPB001
+     C*
+     C**  Access Portfolio Management ICD
+     C*
+     C                     CALL 'AOPORTR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*FIRST'  P@OPTN
+     C           SDPORT    PARM SDPORT    DSFDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVE 'SDPORTPD'DBFILE           * DB ERROR 02 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY WNCPYSRC,PM1141C019
+     C*
+     C**  Read the first Currency record
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*FIRST'  P@OPTN
+     C                     PARM           P@CYCD  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVE 'SDCURRPD'DBFILE           * DB ERROR 03 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Set up array of currencies
+     C*
+     C                     Z-ADD1         B       30
+     C           P@RTCD    DOWNE'*EOF'
+     C*
+     C                     MOVE A6CYCD    CYCD,B
+     C                     Z-ADDA6SPRT    SPRT,B
+     C                     MOVE A6MDIN    MDIN,B
+     C                     Z-ADDA6NBDP    NBDP,B
+     C                     Z-ADDA6RKSQ    RKSQ,B
+     C*
+     C**  Determine Historic Rate
+     C*
+     C           ##EXTP    IFEQ 'H'
+     C                     EXSR DETHSR
+     C                     END
+     C*
+     C                     ADD  1         B
+     C*
+     C**  Read the next record in currencies file
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*NEXT '  P@OPTN
+     C                     PARM           P@CYCD  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           P@RTCD    ANDNE'*EOF'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVE 'SDCURRPD'DBFILE           * DB ERROR 04 *
+     C                     MOVEL'*NEXT '  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     END
+     C*
+     C** READ THROUGH PMDSPGPP SETTING UP ARRAY OF DISPLAY GROUPS
+     C*
+     C                     READ PMDSPGPD                 99
+     C                     Z-ADD1         B
+     C           *IN99     DOWEQ'0'
+     C                     MOVE PADSPG    DSPG,B
+     C                     Z-ADDPADSPS    DSPS,B
+     C                     ADD  1         B
+     C                     READ PMDSPGPD                 99
+     C                     END
+     C*
+     C** READ THROUGH PMVLGHPP SETTING UP ARRAY OF VALUATION GROUPS
+     C*
+     C                     READ PMVLGHPD                 99
+     C                     Z-ADD1         B
+     C           *IN99     DOWEQ'0'
+     C                     MOVE PBVALG    VALG,B
+     C                     Z-ADDPBVLGS    VLGS,B
+     C                     ADD  1         B
+     C                     READ PMVLGHPD                 99
+     C                     END
+     C*
+     C** ZEROIZE PORTFOLIO AND CUSTOMER TOTALS
+     C*
+     C                     EXSR ZEROIZ
+     C*
+     C** DEFINE DATA AREA PMSTAT
+     C*
+     C           *NAMVAR   DEFN           PMSTAT
+     C                     IN   PMSTAT
+     C*
+     C           EINIT     ENDSR
+     C**************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * DELMAT - DELETE MATURED/FLAT SECURITIES POSITIONS                      *
+      *                                                                        *
+      **************************************************************************
+     C           DELMAT    BEGSR
+     C           *BLANK    SETGTPMMFHLXX
+     C                     READ PMMFHLXX                 99*
+     C           *IN99     DOWEQ'0'
+     C                     DELETPMMFHLXX
+     C                     READ PMMFHLXX                 99*
+     C                     END
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * DETHSR - DETERMINE HISTORIC SPOT RATE                                  *
+      *                                                                        *
+      **************************************************************************
+     C           DETHSR    BEGSR
+     C*
+     C           KPMHSE    KLIST
+     C                     KFLD           A6CYCD
+     C                     KFLD           ##ECD
+     C           KPMHSP    KLIST
+     C                     KFLD           A6CYCD
+     C*
+     C           KPMHSE    SETGTPMHSEXPD
+     C           KPMHSP    REDPEPMHSEXPD                 99*
+     C           *IN99     IFEQ '0'
+     C                     Z-ADDQ8SPOT    SPRT,B
+     C                     END
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+     C********************************************************************
+     C*
+     C*  ZFSELN SR. TO FORMAT THE 20A PORTFOLIO MANAGMENT LINE DESCRIPTION
+     C*                                 FOR SECURITIES TRADING REL.2
+     C*
+     C*  FORMAT: XXX 999.9999 DDMMMYY
+     C*          XXX =  NOMINAL CURRENCY
+     C*          999.9999 = CONPON RATE
+     C*          DDMMMYY = MATURITY DATE
+     C*
+     C*  INPUT  FIELDS
+     C*       ZNMCY   3A     NOMINAL CURRENCY
+     C*       ZCPNR  117     COUPON RATE
+     C*       ZMATY   50     MATURITY DATE
+     C*       ZPROT   1A     PROCESSING TYPE
+     C*
+     C*  OUTPUT  FIELDS
+     C*       ZLIN   20A     LINE DESCRIPTION
+     C*
+     C*  ARRAY USED
+     C*       ZLI    20 ELEMENTS, EACH 1 CHARACTER LONG
+     C*
+     C********************************************************************
+     C           ZFSELN    BEGSR                           *** ZFSELN ***
+     C*
+     C** CLEAR LINE DESCRIPTION .
+     C                     MOVEA*BLANKS   ZLI
+     C*
+     C** MOVE NOMINNAL CURRENCY TO LINE DESCRIPTION
+     C                     MOVEAZNMCY     ZLI,01
+     C*
+     C** IF PROCESSING TYPE     NOT COMMODITIES ZPROT = 2
+     C**                        NOT EQUITIES    ZPROT = 4
+     C**                        NOT UNIT TRUSTS ZPROT = 7
+     C           ZPROT     IFNE '2'
+     C           ZPROT     ANDNE'4'
+     C           ZPROT     ANDNE'7'
+     C*
+     C** MOVE COUPON  RATE  TO LINE DESCRIPTION
+     C                     Z-ADDZCPNR     ZWRKN   74
+     C                     MOVELZWRKN     ZWRKA3  3
+     C                     MOVE ZWRKN     ZWRKA4  4
+     C                     MOVELZWRKA3    ZWRKA2  2
+     C*
+     C** SUPRESS LEADING ZEROES
+     C           ZWRKA2    IFEQ '00'
+     C                     MOVEL'  '      ZWRKA3
+     C                     END
+     C                     MOVELZWRKA3    ZWRKA1  1
+     C           ZWRKA1    IFEQ '0'
+     C                     MOVEL' '       ZWRKA3
+     C                     END
+     C                     MOVEAZWRKA3    ZLI,05
+     C                     MOVEA'.'       ZLI,08
+     C                     MOVEAZWRKA4    ZLI,09
+     C*
+     C** MOVE MATURITY DATE TO LINE DESCRIPTION
+     C                     Z-ADDZMATY     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZWRKA1  1
+     C           ZADATE    IFNE *BLANK
+     C           ZWRKA1    IFEQ ' '
+     C                     MOVEL'0'       ZADATE
+     C                     END
+     C                     MOVEAZADATE    ZLI,14
+     C                     END
+     C                     END
+     C*
+     C** SET ALL   FIELDS TO BLANKS OR ZEROS
+     C                     MOVE *BLANKS   ZNMCY   3
+     C                     MOVE *BLANKS   ZPROT   1
+     C                     Z-ADD*ZEROS    ZCPNR  117
+     C                     Z-ADD*ZEROS    ZMATY   50
+     C*
+     C**********           MOVEAZLI       ZLIN   20                                           CGL029
+     C                     MOVEAZLI       ZLIN   26                                           CGL029
+     C*
+     C                     ENDSR
+     C*******************************************************************
+      /SPACE 5
+     C**************************************************************************
+     C* CONVN
+     C**************************************************************************
+     C*
+     C           CONVN     BEGSR
+     C*
+     C** DEFINE ALL FIELDS
+     C*
+     C                     Z-ADDZAMTF     ZAMTF  150
+     C                     MOVE ZCCYF     ZCCYF   3
+     C                     MOVE ZCCYT     ZCCYT   3
+     C                     Z-ADDZRATEF    ZRATEF 138
+     C                     Z-ADDZRATET    ZRATET 138
+     C                     MOVE ZMDINF    ZMDINF  1
+     C                     MOVE ZMDINT    ZMDINT  1
+     C                     Z-ADDZCDPF     ZCDPF   10
+     C                     Z-ADDZCDPT     ZCDPT   10
+     C                     Z-ADDZAMTT     ZAMTT  150
+     C                     Z-ADDZCRSRT    ZCRSRT 138
+     C                     MOVE ZCRSMD    ZCRSMD  1
+     C*
+     C** IF 'FROM' CURRENCY EQUAL TO 'TO' CURRENCY SET AMOUNT IN 'TO' CURRENCY
+     C** EQUAL TO AMOUNT IN 'FROM' CURRENCY
+     C           ZCCYF     IFEQ ZCCYT
+     C                     Z-ADDZAMTF     ZAMTT
+     C                     Z-ADD1         ZCRSRT
+     C                     MOVE 'M'       ZCRSMD
+     C                     ELSE
+     C*
+     C** INITIALIZE CROSS EXCHANGE RATE (ZCRSSRT) TO ZERO
+     C                     Z-ADD*ZEROS    ZCRSRT
+     C                     MOVE ZMDINF    ZCRSMD
+     C*
+     C** IF MULT/DIV INDIC. FOR 'FROM' IS = MULT/DIV INDIC FOR 'TO' INDIC
+     C**   AND SPOT RATE FOR 'TO' CURRENCY (ZRATET) IS NOT = ZERO
+     C           ZMDINF    IFEQ ZMDINT
+     C           ZRATET    ANDNE*ZEROS
+     C           ZRATEF    IFGT ZRATET
+     C           ZRATEF    DIV  ZRATET    ZCRSRT
+     C                     ELSE
+     C           ZRATET    DIV  ZRATEF    ZCRSRT
+     C           ZMDINF    IFEQ 'D'
+     C                     MOVE 'M'       ZCRSMD
+     C                     ELSE
+     C                     MOVE 'D'       ZCRSMD
+     C                     END
+     C                     END
+     C*
+     C** IF MULT/DIV INDIC FOR 'FROM' IS NOT= MULT/DIV INDIC FOR 'TO' INDIC
+     C** OR  SPOT RATE FOR 'TO' CURRENCY (ZRATET) IS  = ZERO
+     C                     ELSE
+     C           ZRATEF    MULT ZRATET    ZCRSRT
+     C                     END
+     C*
+     C** EXECUTE   SR ZCCYXR
+     C                     EXSR ZCCYXR
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * *PSSR    - ERROR SUBROUTINE                                            *
+      *                                                                        *
+      **************************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C           ##ERRO    IFEQ ' '
+     C                     MOVE 'Y'       ##ERRO  1
+     C*
+     C           DBASE     IFNE 0
+     C*
+     C**  PRINT ERROR MESSAGE:
+     C                     WRITEERRORAU
+     C                     ELSE
+     C                     Z-ADD999       DBASE
+     C                     END
+     C*
+     C                     DUMP
+     C                     END
+     C*
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     RETRN
+     C*
+     C                     ENDSR
+      *****************************************************************   CPM005
+      /SPACE 5                                                            CPM005
+      *****************************************************************   CPM005
+      *                                                               *   CPM005
+      *  NEWFLD   - New field in PMHOLDPD PMHOLDQ0 PMHOLDQ1           *   CPM005
+      *                                                               *   CPM005
+      *  Subroutine Calls:                                            *   CPM005
+      *                                                               *   CPM005
+      *  Subroutine Called From:                                      *   CPM005
+      *  W01      -                                                   *   CPM005
+      *  W02      -                                                   *   CPM005
+      *  W03      -                                                   *   CPM005
+      *                                                               *   CPM005
+      *  Routine Uses Variables:                                      *   CPM005
+      *                                                               *   CPM005
+      *****************************************************************   CPM005
+     C           NEWFLD    BEGSR                                          CPM005
+      *                                                                   CPM005
+     C           MATY      IFEQ *ZEROS                                    CPM005
+     C                     Z-ADD99000     WWMATY                          CPM005
+     C                     ELSE                                           CPM005
+     C                     Z-ADDMATY      WWMATY                          CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+     C                     MOVELWWPOSQ    QFPOSQ                          CPM005
+     C                     MOVEL'C '      QFPOTY                          CPM005
+     C                     MOVEL'C '      QFPOST                          CPM005
+      *                                                                   CPM005
+     C           ##MVL1    ADD  ##ACI1    WWORK2 150                      CPM005
+     C           WWORK2    IFGT *ZEROS                                    CPM005
+     C                     Z-ADD*ZEROS    QFASVL                          CPM005
+     C           ##MVL1    ADD  ##ACI1    QFASVL                          CPM005
+     C                     MOVEL'A'       QFASLI                          CPM005
+     C                     ELSE                                           CPM005
+     C                     Z-ADD*ZEROS    QFASVL                          CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+     C           WWORK2    IFLT *ZEROS                                    CPM005
+     C                     Z-SUB##MVL1    ##MVL1                          CPM005
+     C           ##MVL1    SUB  ##ACI1    QFLIVL                          CPM005
+     C                     MOVEL'L'       QFASLI                          CPM005
+     C                     ELSE                                           CPM005
+     C                     Z-ADD*ZEROS    QFLIVL                          CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+     C                     ENDSR                                          CPM005
+     C********************************************************************
+      /SPACE 5
+      /COPY ZSRSRC,ZCNSDZ1
+      /SPACE 5
+      /COPY ZSRSRC,ZCCYCN
+      /SPACE 5
+      /COPY ZSRSRC,ZCCYXR
+      /SPACE 5
+      /COPY ZSRSRC,ZDATE2Z2
+      /SPACE 5
+      /COPY ZSRSRC,ZAVPRC
+      /SPACE 5
+      /COPY ZSRSRC,ZFXAVP
+      /SPACE 5
+      /COPY ZSRSRC,ZAPNUM
+     C*
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

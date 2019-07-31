@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Balance Statements - End Sub Task')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger                                      */
+/*                                                                   */
+/*       GLC43T3 - Midas GL Balance Statements - End Sub-task        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL061A *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL061A - Statements Task Split Processing                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('STMTSERVE')
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50) +
+                          VALUE('FINISH')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GLC43T3 - Midas GL Balance Statements +
+                          - End Sub-task') TOMSGQ(MRUNQ)
+ 
+/* Send FINISH message to main data queue */
+ 
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program GLC43T3 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+ 
+             ENDPGM

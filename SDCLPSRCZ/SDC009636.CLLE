@@ -1,0 +1,93 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Initialization Program for CER047')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC009636 - Midas Initialization Program for CER047         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2009                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG22521A *CREATE  Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG22521A - Cannot navigate to Link Types Maintenance       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+/**/
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2009')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+             CHGVAR     VAR(&LIB) VALUE(&PREF *CAT 'DMLIB')
+ 
+             SNDPGMMSG  MSG('SD009636 - Midas Initialization +
+                          Program for CER047') TOMSGQ(MRUNQ)
+ 
+/** Start Commitment Control */
+ 
+             IF         COND((&PMODE *EQ '1') *OR (&PMODE *EQ '2')) +
+                        THEN(DO)
+ 
+               STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+               MONMSG     MSGID(CPF8351)
+ 
+/** Call the Take-On RPG */
+ 
+               IF         COND(&PMODE *NE '3') THEN(DO)
+                 CALL       PGM(SD009636)
+               ENDDO
+ 
+/** If error */
+ 
+               IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+                 ROLLBACK
+ 
+                 GOTO       CMDLBL(ABNOR)
+ 
+               ENDDO
+ 
+               ELSE       CMD(DO)
+ 
+                 COMMIT
+ 
+               ENDDO
+               ENDCMTCTL
+               MONMSG     MSGID(CPF8355)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGVAR     VAR(&RTCDE) VALUE(*ERROR)
+ 
+ /** Send error message */
+ 
+             SNDPGMMSG  MSG('Program SDC009636 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+END:
+             MONMSG     MSGID(CPF2105)
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
+ 
+             ENDPGM

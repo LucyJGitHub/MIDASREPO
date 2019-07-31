@@ -1,0 +1,63 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Trade Innovation Interface                                    */
+/*                                                                             */
+/*       MP_FX_CONT - TI FX Deal Details from FXDEALPP                         */
+/*                                                                             */
+/*       (c) Finastra International Limited 2004                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 05Feb18                        */
+/*       Prev Amend No. CDL099             Date 06Oct17                        */
+/*                      CDL094             Date 30May14                        */
+/*                      CSW212             Date 03May12                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CDL049             Date 12May06                        */
+/*                      CSD027             Date 10Dec05                        */
+/*                      CDL038             Date 10May05                        */
+/*                      BUG3671            Date 13Jul04                        */
+/*                      BUG3481            Date 28Jun04                        */
+/*                      CTI004  *CREATE    Date 08Jun04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */                                                                       
+/*       CDL099 - Split Value Date (Recompile)                                 */
+/*       CDL094 - Enhance  Receive Settlement Instructions (Recompile)         */
+/*       CSW212 - SWIFT 2012 Changes (Recompile)                               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       CDL049 - Addition of a Reference Rate field (recompile)               */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CDL038 - Extended Deal Sub Type (Recompile)                           */
+/*       BUG3671 - SQL view changes                                            */
+/*       BUG3481 - Set rate as reciprocal where necessary.                     */
+/*       CTI004 - Midas-TI database integration                                */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT CHAR(DIGITS(FHDN38),6) AS REFERENCE, FHDAM1                            :
+  AS PURCH_AMT,FHCCY1 AS PURCH_CCY, ABS(FHDAM2)                                 :
+/*AS*SALE_AMT,FHCCY2*AS*SALE_CCY,FHDXRT*AS*RATE,*****                           :        /*BUG3481*/
+  AS SALE_AMT,FHCCY2 AS SALE_CCY,                                               :        /*BUG3481*/
+  (CASE WHEN FHDMD1 = 'M' THEN 1/FHDXRT ELSE FHDXRT END) AS RATE,               :        /*BUG3481*/
+  DATE(FHVDDN+719892) AS START_DATE, DATE(FHOTDN+719892)                        :
+**AS*END_DATE,*CHAR(DIGITS(FHDCNO),20)*AS*CUSTOMER,*****************************:/*BUG3671*/
+  AS END_DATE,                                                                  :/*BUG3671*/
+**CASE*(SELECT*TICUSN*FROM*SDTIINPD)*WHEN*'Y'*THEN*CHAR(DIGITS(FHDCNO),20)******:/*BUG3671*/  CSD027
+  CASE (SELECT TICUSN FROM SDTIINPD) WHEN 'Y' THEN CHAR(       FHDCNO ,20)      :             CSD027
+  ELSE FHDCSN END AS CUSTOMER,                                                  :/*BUG3671*/
+  FHDBRC AS BRANCH, 29067 AS TYPEFLAG, 1 AS TSTAMP FROM FXDEALPP                :
+  WHERE  FHTYPE='OP' AND FHDSTS='A';                                            :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas TI FX Deal details                          ';                     :
+                                                                                :

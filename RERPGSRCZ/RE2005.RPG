@@ -1,0 +1,670 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Outward Clearing Trans.Types Maint.')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE2005 - Outward Clearing Transaction Types maintenance      *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD035554           Date 25May16               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CRE023  *CREATE    Date 29Jul05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CRE023 - 2 O'clock Flag Upgrade to MidasPlus                 *
+      *                                                               *
+      ********************************************************************
+      **
+      **   INDICATORS FUNCTION
+      **
+      **      21    INPUT #POS
+      **      22    Add mode for (PR, ND, UL)
+      **      25    Sfldsp
+      **      26    Sfldspctl
+      **      27    Sflnxtchg
+      **      30    Sflend
+      **      88    Error
+      **      99    General
+      **
+     FRE2005DFCF  E                    WORKSTN
+     F                                        RRN01 KSFILE SFL01
+     F                                              KINFDS INFDS#
+      *
+     FSDRETRL1IF  E           K        DISK
+      *
+     FRETTYPL0UF  E           K        DISK                      A
+     F                                              KCOMIT
+     E                    FTR     1   2 78               FOOTER
+      *
+      ** Data structures:
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** Program data structure
+     IJBDTTM      DS
+      *
+      ** Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      *
+      ** Display file information data structure
+     IINFDS1    E DSY2I1DSP
+      *
+      ** File information data structure
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      *****************************************************************
+      *  Entry parameters
+      *****************************************************************
+      *                                                               *
+      *  Start Process                                                *
+      *                                                               *
+      *****************************************************************
+     C                     EXSR INIT
+     C                     EXSR POSSR
+     C           *INKC     DOWEQ'0'
+     C           RCD01     IFGT 0
+     C                     MOVE '1'       *IN25
+     C                     ELSE
+     C                     MOVE '0'       *IN25
+     C                     CALL 'ZA0350'
+     C                     PARM           MSGFL  10
+     C                     PARM 'SGX0025 'MSGID  10
+     C                     PARM *BLANKS   MSDTA  45
+     C                     MOVE '1'       *IN88
+     C                     ENDIF
+     C                     WRITEFTR01
+     C                     EXSR WRTMSG
+     C                     EXFMTSFC01
+     C                     EXSR CLRMSG
+     C                     SELEC
+     C           *INKC     WHEQ '1'
+     C           *IN08     WHEQ '1'
+     C                     EXSR BLDSR
+     C           *INKE     WHEQ '1'
+     C                     EXSR REFSR
+     C           RCD01     WHEQ *ZEROS
+     C                     EXSR F9SR
+     C           *IN21     WHEQ '1'
+     C                     EXSR POSSR
+     C                     OTHER
+     C                     EXSR SCRPOS
+     C                     EXSR VALSR
+     C  N88                EXSR P100
+     C                     ENDSL
+     C                     ENDDO
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *  P100 -Process select action                                  *
+      *                                                               *
+      *****************************************************************
+     C           P100      BEGSR
+     C           PGMMOD    CASEQ'CHG'     P110
+     C           PGMMOD    CASEQ'ADD'     P120
+     C                     ENDCS
+     C  N88 KI             EXSR F9SR
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  P120 - Process select action                                 *
+      *                                                               *
+      *****************************************************************
+     C           P120      BEGSR
+     C                     MOVE '0'       *IN27
+     C                     READCSFL01                    99
+     C           *IN99     DOWEQ'0'
+     C                     EXSR P400
+     C           RRN01     CHAINSFL01                99
+     C                     MOVE *BLANKS   #GTTYP
+     C                     MOVE *BLANKS   #GOCLR
+     C                     MOVE *BLANKS   #GRCLT
+     C                     MOVE *BLANKS   #GRCLP
+     C                     UPDATSFL01
+     C                     MOVE '0'       *IN27
+     C                     MOVE '0'       *IN31
+     C                     READCSFL01                    99
+     C                     ENDDO
+     C  N88                EXSR REFSR
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  P110 - Process select action                                 *
+      *                                                               *
+      *****************************************************************
+     C           P110      BEGSR
+     C                     MOVE '0'       *IN27
+     C                     READCSFL01                    99
+     C           *IN99     DOWEQ'0'
+     C                     SELEC
+     C           #SEL      WHEQ 'D'
+     C                     MOVE '1'       *IN27
+     C           #SEL      WHEQ *BLANKS
+     C                     EXSR P300
+     C           RRN01     CHAINSFL01                99
+     C                     OTHER
+     C                     MOVE *BLANKS   #SEL
+     C                     ENDSL
+     C                     UPDATSFL01
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN27
+     C                     READCSFL01                    99
+     C                     ENDDO
+     C  N88                EXSR P200
+     C  N88                EXSR REFSR
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  P200 - Delete action                                         *
+      *                                                               *
+      *****************************************************************
+     C           P200      BEGSR
+     C                     READCSFL01                    99
+     C           *IN99     DOWEQ'0'
+     C           #GTTYP    CHAINRETTYPL0             9998
+     C           *IN99     IFEQ '1'
+     C                     CALL 'ZA0350'
+     C                     PARM           MSGFL
+     C                     PARM 'SGX0030 'MSGID
+     C                     PARM *BLANKS   MSDTA
+     C                     MOVE '1'       *IN88
+     C                     MOVE '1'       *IN31
+     C                     ENDIF
+     C           *IN98     IFEQ '1'
+     C                     CALL 'ZA0350'
+     C                     PARM           MSGFL
+     C                     PARM 'SGX0031 'MSGID
+     C                     PARM *BLANKS   MSDTA
+     C                     MOVE '1'       *IN88
+     C                     MOVE '1'       *IN31
+     C                     ENDIF
+     C           *IN99     IFEQ '0'
+     C           *IN98     ANDEQ'0'
+     C                     MOVEL'*'       GRECI
+     C                     MOVEL'D'       GLTYP
+     C                     UPDATRETTYPD0               98
+     C  N98                COMIT
+     C   98                ROLBK
+     C                     ENDIF
+     C           RRN01     CHAINSFL01                99
+     C                     UPDATSFL01
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN27
+     C                     READCSFL01                    99
+     C                     ENDDO
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  P300 - UPDATE ACTION                                         *
+      *                                                               *
+      *****************************************************************
+     C           P300      BEGSR
+     C                     MOVE '1'       *IN97
+     C           #GTTYP    CHAINRETTYPL0             9998
+     C           *IN99     IFEQ '1'
+     C                     CALL 'ZA0350'
+     C                     PARM           MSGFL
+     C                     PARM 'SGX0030 'MSGID
+     C                     PARM *BLANKS   MSDTA
+     C                     MOVE '1'       *IN88
+     C                     MOVE '1'       *IN31
+     C                     ENDIF
+     C           *IN98     IFEQ '1'
+     C                     CALL 'ZA0350'
+     C                     PARM           MSGFL
+     C                     PARM 'SGX0031 'MSGID
+     C                     PARM *BLANKS   MSDTA
+     C                     MOVE '1'       *IN88
+     C                     MOVE '1'       *IN31
+     C                     ENDIF
+     C           *IN99     IFEQ '0'
+     C           *IN98     ANDEQ'0'
+     C                     EXSR SUBFIL
+     C                     MOVEL'C'       GLTYP
+     C                     UPDATRETTYPD0               98
+     C  N98                COMIT
+     C   98                ROLBK
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  P400 - Write new record                                      *
+      *                                                               *
+      *****************************************************************
+     C           P400      BEGSR
+     C                     MOVE '1'       *IN97
+     C           #GTTYP    CHAINRETTYPL0             9998
+     C           *IN98     IFEQ '1'
+     C                     CALL 'ZA0350'
+     C                     PARM           MSGFL
+     C                     PARM 'SGX0031 'MSGID
+     C                     PARM *BLANKS   MSDTA
+     C                     MOVE '1'       *IN88
+     C                     MOVE '1'       *IN31
+     C                     ENDIF
+     C           *IN98     IFEQ '0'
+     C           *IN99     IFEQ '0'
+     C                     EXSR SUBFIL
+     C                     MOVEL'I'       GLTYP
+     C                     UPDATRETTYPD0               98
+     C                     ELSE
+     C                     EXSR SUBFIL
+     C                     MOVEL'I'       GLTYP
+     C                     WRITERETTYPD0               98
+     C                     ENDIF
+     C  N98                COMIT
+     C   98                ROLBK
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  VALSR - Validation                                           *
+      *                                                               *
+      *****************************************************************
+     C           VALSR     BEGSR
+     C           PGMMOD    CASEQ'CHG'     VAL10
+     C           PGMMOD    CASEQ'ADD'     VAL20
+     C                     ENDCS
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  VAL10 - Validation for change screen                         *
+      *                                                               *
+      *****************************************************************
+     C           VAL10     BEGSR
+     C                     MOVE '0'       *IN98
+     C                     MOVE '1'       *IN27
+     C                     READCSFL01                    99
+     C           *IN99     DOWEQ'0'
+     C                     SELEC
+     C           #SEL      WHEQ 'D'
+     C           #GOCLR    WHEQ 'Y'
+     C           #GRCLT    ANDEQ' '
+     C           #GRCLP    ANDEQ' '
+     C           #GOCLR    WHEQ ' '
+     C           #GRCLT    ANDEQ'Y'
+     C           #GRCLP    ANDEQ' '
+     C           #GOCLR    WHEQ ' '
+     C           #GRCLT    ANDEQ' '
+     C           #GRCLP    ANDEQ'Y'
+     C                     OTHER
+     C                     CALL 'ZA0350'
+     C                     PARM           MSGFL
+     C                     PARM 'SGX0028 'MSGID
+     C                     PARM *BLANKS   MSDTA
+     C                     MOVE '1'       *IN88
+     C                     MOVE '1'       *IN32
+     C                     ENDSL
+     C   88N98             Z-ADDRRN01     RCD01
+     C   88                MOVE '1'       *IN98
+     C                     UPDATSFL01
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+     C                     READCSFL01                    99
+     C                     ENDDO
+     C                     MOVE '0'       *IN27
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  VAL20 - Validation for add screen                            *
+      *                                                               *
+      *****************************************************************
+     C           VAL20     BEGSR
+     C                     MOVE '0'       *IN98
+     C                     READCSFL01                    99
+     C           *IN99     DOWEQ'0'
+     C                     MOVE '1'       *IN27
+     C           #GTTYP    IFEQ *BLANKS
+     C                     MOVE *BLANKS   #GOCLR
+     C                     MOVE *BLANKS   #GRCLT
+     C                     MOVE *BLANKS   #GRCLP
+     C                     MOVE '0'       *IN27
+     C                     GOTO UPDTAG
+     C                     ENDIF
+     C                     MOVEL#GTTYP    NGTTYP  50
+     C                     MOVELNGTTYP    CGTTYP  5
+     C           #GTTYP    IFNE CGTTYP
+     C                     CALL 'ZA0350'
+     C                     PARM           MSGFL
+     C                     PARM 'SGX0026 'MSGID
+     C                     PARM *BLANKS   MSDTA
+     C                     MOVE '1'       *IN88
+     C                     MOVE '1'       *IN31
+     C                     ENDIF
+     C           #GTTYP    CHAINSDRETRL1             99
+     C           *IN99     IFEQ '1'
+     C                     CALL 'ZA0350'
+     C                     PARM           MSGFL
+     C                     PARM 'SGX0027 'MSGID
+     C                     PARM *BLANKS   MSDTA
+     C                     MOVE '1'       *IN88
+     C                     MOVE '1'       *IN31
+     C                     ENDIF
+     C           #GTTYP    CHAINRETTYPL0            N99
+     C           *IN99     IFEQ '0'
+     C           GRECI     ANDEQ'D'
+     C                     CALL 'ZA0350'
+     C                     PARM           MSGFL
+     C                     PARM 'SGX0029 'MSGID
+     C                     PARM *BLANKS   MSDTA
+     C                     MOVE '1'       *IN88
+     C                     MOVE '1'       *IN31
+     C                     ENDIF
+     C                     SELEC
+     C           #GOCLR    WHEQ 'Y'
+     C           #GRCLT    ANDEQ' '
+     C           #GRCLP    ANDEQ' '
+     C           #GOCLR    WHEQ ' '
+     C           #GRCLT    ANDEQ'Y'
+     C           #GRCLP    ANDEQ' '
+     C           #GOCLR    WHEQ ' '
+     C           #GRCLT    ANDEQ' '
+     C           #GRCLP    ANDEQ'Y'
+     C                     OTHER
+     C                     CALL 'ZA0350'
+     C                     PARM           MSGFL
+     C                     PARM 'SGX0028 'MSGID
+     C                     PARM *BLANKS   MSDTA
+     C                     MOVE '1'       *IN88
+     C                     MOVE '1'       *IN32
+     C                     ENDSL
+     C   88N98             Z-ADDRRN01     RCD01
+     C   88                MOVE '1'       *IN98
+     C           UPDTAG    TAG
+     C                     UPDATSFL01
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+     C                     READCSFL01                    99
+     C                     ENDDO
+     C  N88                EXSR VAL30
+     C                     MOVE '0'       *IN27
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * VAL30                                                         *
+      *                                                               *
+      *****************************************************************
+     C           VAL30     BEGSR
+     C                     MOVE '1'       *IN27
+     C                     READCSFL01                    99
+     C           *IN99     DOWEQ'0'
+     C                     MOVEL#GTTYP    WTTYP   5
+     C                     Z-ADDRRN01     II      50
+     C                     UPDATSFL01
+     C                     READCSFL01                    99
+     C           *IN99     DOWEQ'0'
+     C           WTTYP     IFEQ #GTTYP
+     C                     CALL 'ZA0350'
+     C                     PARM           MSGFL
+     C                     PARM 'SGX0029 'MSGID
+     C                     PARM *BLANKS   MSDTA
+     C                     MOVE '1'       *IN88
+     C                     MOVE '1'       *IN31
+     C                     ENDIF
+     C                     UPDATSFL01
+     C                     READCSFL01                    99
+     C                     ENDDO
+     C           *IN99     IFEQ '0'
+     C           II        CHAINSFL01                99
+     C                     READCSFL01                    99
+     C                     ENDIF
+     C                     ENDDO
+     C                     MOVE '0'       *IN27
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  F9SR - Change mode                                           *
+      *                                                               *
+      *****************************************************************
+     C           F9SR      BEGSR
+     C                     SELEC
+     C           PGMMOD    WHEQ 'CHG'
+     C                     MOVEL'ADD'     PGMMOD
+     C                     MOVELFTR,2     #FTR01
+     C                     MOVE '1'       *IN22
+     C                     EXSR REFSR
+     C           PGMMOD    WHEQ 'ADD'
+     C                     MOVEL'CHG'     PGMMOD
+     C                     MOVELFTR,1     #FTR01
+     C                     MOVE '0'       *IN22
+     C                     EXSR REFSR
+     C                     OTHER
+     C                     ENDSL
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CLR10 - Clear subfile                                        *
+      *                                                               *
+      *****************************************************************
+     C           CLR10     BEGSR
+     C                     MOVE '1'       *IN29
+     C                     WRITESFC01
+     C                     MOVE '0'       *IN29
+     C                     Z-ADD*ZEROS    RCD01
+     C                     Z-ADD*ZEROS    RRN01   50
+     C                     Z-ADD*ZEROS    RRN51   50
+     C                     MOVE *BLANKS   BLDPOS  5
+     C                     MOVE '0'       *IN30
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  BLDSR - Build subfile                                        *
+      *                                                               *
+      *****************************************************************
+     C           BLDSR     BEGSR
+     C           PGMMOD    CASEQ'CHG'     BLD10
+     C           PGMMOD    CASEQ'ADD'     BLD20
+     C                     ENDCS
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  BLD10 - Build subfile for change mode                        *
+      *                                                               *
+      *================================================================
+     C           BLD10     BEGSR
+     C           BLDPOS    IFNE *BLANKS
+     C           BLDPOS    SETGTRETTYPL0
+     C                     ENDIF
+     C                     Z-ADDRRN51     RRN01
+     C                     MOVE *BLANKS   #SEL
+     C                     DO   14
+     C           *IN30     DOUEQ'1'
+     C           GRECI     OREQ 'D'
+     C                     READ RETTYPL0            N    30
+     C                     ENDDO
+     C           *IN30     IFEQ '0'
+     C                     ADD  1         RRN01
+     C                     MOVELGTTYP     BLDPOS
+     C                     EXSR FILSUB
+     C                     WRITESFL01
+     C                     ENDIF
+     C                     ENDDO
+     C                     Z-ADDRRN01     RRN51
+     C                     EXSR SETRCD
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  BLD20 - Build blank subfile for add mode                     *
+      *                                                               *
+      *****************************************************************
+     C           BLD20     BEGSR
+     C                     Z-ADDRRN51     RRN01
+     C                     MOVE *BLANKS   #SEL
+     C                     MOVEL*BLANKS   #GTTYP
+     C                     MOVEL*BLANKS   #GOCLR
+     C                     MOVEL*BLANKS   #GRCLT
+     C                     MOVEL*BLANKS   #GRCLP
+     C                     DO   14
+     C                     ADD  1         RRN01
+     C                     WRITESFL01
+     C                     ENDDO
+     C                     Z-ADDRRN01     RRN51
+     C                     EXSR SETRCD
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  FILSUB - Move file variables to subfile                      *
+      *                                                               *
+      *****************************************************************
+     C           FILSUB    BEGSR
+     C                     MOVELGTTYP     #GTTYP
+     C                     MOVELGOCLR     #GOCLR
+     C                     MOVELGRCLT     #GRCLT
+     C                     MOVELGRCLP     #GRCLP
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SUBFIL - Move subfile variables to file variables            *
+      *                                                               *
+      *****************************************************************
+     C           SUBFIL    BEGSR
+     C                     MOVEL#GTTYP    GTTYP
+     C                     MOVEL#GOCLR    GOCLR
+     C                     MOVEL#GRCLT    GRCLT
+     C                     MOVEL#GRCLP    GRCLP
+     C                     MOVEL'D'       GRECI
+     C                     Z-ADDWRDNB     GLCD
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  POSSR - Position to transaction                              *
+      *                                                               *
+      *****************************************************************
+     C           POSSR     BEGSR
+     C                     MOVEL#POS      SPOSN   5
+     C           SPOSN     CHAINRETTYPL0            N99
+     C           *IN99     IFEQ '0'
+     C           SPOSN     SETLLRETTYPL0
+     C                     ELSE
+     C           SPOSN     SETGTRETTYPL0
+     C                     READPRETTYPL0            N    99
+     C           *IN99     IFEQ '0'
+     C                     MOVELGTTYP     SPOSN
+     C           SPOSN     SETLLRETTYPL0
+     C                     ELSE
+     C           *LOVAL    SETLLRETTYPL0
+     C                     READ RETTYPL0            N    99
+     C           *IN99     IFEQ '0'
+     C                     MOVELGTTYP     SPOSN
+     C           *LOVAL    SETLLRETTYPL0
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     EXSR CLR10
+     C                     EXSR BLD10
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SETRCD - Set subfile record                                  *
+      *                                                               *
+      *****************************************************************
+     C           SETRCD    BEGSR
+     C           RRN01     IFGT 0
+     C           RRN01     DIV  14        RCD01
+     C                     MVR            REMDR   40
+     C           REMDR     IFNE 0
+     C                     ADD  1         RCD01
+     C                     ENDIF
+     C           RCD01     MULT 14        RCD01
+     C                     SUB  13        RCD01
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SCRPOS - Screen position                                     *
+      *                                                               *
+      *****************************************************************
+     C           SCRPOS    BEGSR
+     C           @#SFRC    IFGT 0
+     C                     Z-ADD@#SFRC    RCD01
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  REFSR - Refresh                                              *
+      *                                                               *
+      *****************************************************************
+     C           REFSR     BEGSR
+     C                     SELEC
+     C           PGMMOD    WHEQ 'CHG'
+     C                     EXSR POSSR
+     C           PGMMOD    WHEQ 'ADD'
+     C                     EXSR CLR10
+     C                     EXSR BLD20
+     C                     OTHER
+     C                     ENDSL
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  WRTMSG - Write message                                       *
+      *                                                               *
+      *****************************************************************
+     C           WRTMSG    BEGSR
+     C           *IN88     IFEQ '1'
+     C                     WRITE#MSGCTL
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CLRMSG - Clear message                                       *
+      *                                                               *
+      *****************************************************************
+     C           CLRMSG    BEGSR
+     C           *IN88     IFEQ '1'
+     C                     MOVE '0'       *IN88
+     C                     CALL 'ZA0250'
+     C                     WRITE#MSGCTL
+     C                     ENDIF
+     C                     MOVE *BLANKS   MSGID
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  INIT - INITIALISE                                            *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+     C                     MOVE '1'       *IN26
+     C                     MOVEL'CHG'     PGMMOD  3
+     C                     MOVE '0'       *IN22
+     C                     MOVELFTR,1     #FTR01
+     C                     MOVEL'REUSRMSG'MSGFL
+      *
+      ** Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      *
+      ** Get Rundate - Rundate
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVELMRDT      ##MRDT           RUN DATE
+     C                     Z-ADDRDNB      WRDNB   50
+     C                     ENDSR
+**
+D=Delete   F3=Main Menu   F5=Refresh   F9=Go to 'Add' Mode
+F3=Main Menu   F5=Refresh   F9=Go to 'Change' Mode

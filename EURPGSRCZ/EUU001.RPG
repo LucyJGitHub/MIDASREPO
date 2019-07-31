@@ -1,0 +1,982 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU Update Guarantee file')                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Retail Utilities                                 *
+      *                                                               *
+      *  EUU001 - Update Guarantee file                               *
+      *                                                               *
+      *  Function:  This program is used to update automatically      *
+      *             the Guarantee file.                               *
+      *                                                               *
+      *  Called By: EUC0120                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 10May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 ULX004  *CREATE    Date 03Nov98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX004 - Midas Guarantees for EMU                            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    30      Guarantee Percentage is 0 / Conditonne '**' print  *
+      *    31      Print 'becareful Guarantee must be reviewed...'    *
+      *    80      Indicator used for CHAIN                           *
+      *    89      Indicator used for READ                            *
+      *    98      Indicates system date format                       *
+      *    LR      Closedown processing                               *
+      *                                                               *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *                   ~~~~~~~~~~~~~~~~~~~~                        *
+      *  SR200   -  Subroutine to perform calls to EMU standard       *
+      *             amount conversion program EU0200                  *
+      *  #UPDT1  -  Subroutine to update the record in guarantee file *
+      *             and write the record, when the access is 'Used to *
+      *             secure                                            *
+      *  #UPDT2  -  Subroutine to update the record in guarantee file *
+      *             and write the record, when the access is 'Secured *
+      *             by'                                               *
+      *  INITPR  -  Initial processing                                *
+      *  MAINPR  -  Main Processing for program                       *
+      *  WP1REC  -  Subroutine to Write a Detail record to the Report.*
+      *  WP1END  -  Write End of Report                               *
+      *  AUDIT   -  Subroutine to Output Audit report and End Program.*
+      *  ZSEDIT  -  Edit an Amount                                    *
+      *  ZDATE   -  Edit an Date                                      *
+      *  RCFP1   -  RCF Processing for P1 Report                      *
+      *  RCFAU   -  RCF Processing for Audit Report                   *
+      *  *PSSR   -  Exception error handling                          *
+      *****************************************************************
+      *
+      ** EMU mapping list
+     FEUMDHDL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** EMU mapping Details Account Mapping List
+     FEUACMLL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Guarantee Collaterals
+     FERGUARL3UF  E           K        DISK         KINFSR *PSSR
+     F            ERGUARD0                          KRENAMEERGUARD3
+     F                                              KCOMIT
+      *
+     FERGUARL4UF  E           K        DISK         KINFSR *PSSR
+     F            ERGUARD0                          KRENAMEERGUARD4
+     F                                              KCOMIT
+      *
+     FEUU001P1O   E                    PRINTER      KINFDS SPOOL1     UC
+      *
+     FEUU001AUO   E                    PRINTER      KINFDS SPOOLU
+      *
+      *-----------------------------------------------------------------
+      *E-Specifications
+      *-----------------------------------------------------------------
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+      *-----------------------------------------------------------------
+      *I-Specifications
+      *-----------------------------------------------------------------
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **                                    142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      ** RUNDAT Data Area
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+      ** First DS for access program, short Data Structure
+     IDSFDY     E DSDSFDY
+      *
+      ** Second DS for access program, short Data Structure
+     IDSSDY     E DSDSSDY
+      *
+      ** Program Status Data Structure
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** External data structures for MIDAS GL account master
+     ISDACCT    E DSACCNTL0
+      *
+      ** External data structures for Currency Details
+     ISDCURR    E DSSDCURRPD
+      *
+      **  External data structures for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** General Ledger Details
+     ISDGELR    E DSSDGELRPD
+      *
+      ** File Information Data Structure for EUU001P1.
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for EUU001AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ** To receive the key to access the file ACCNTAB
+     I            DS
+     I**********                              1  18 DSW                                       CER001
+     I                                        1  24 DSW                                       CER001
+     I                                        1   6 WCNUM
+     I                                        7   9 WCUCD
+     I**********                             10  13 WACCD                                     CER001
+     I**********                             14  15 WACSQ                                     CER001
+     I**********                             16  18 WBRCA                                     CER001
+     I                                       10  19 WACCD                                     CER001
+     I                                       20  21 WACSQ                                     CER001
+     I                                       22  24 WBRCA                                     CER001
+      *
+      ** To access the guarantee file with account master without currency
+      ** (access by LF/ERGUARL4)
+     I            DS
+     I**********                              1  15 DS1                                       CER001
+     I                                        1  21 DS1                                       CER001
+     I**********                              1   60D1CNUM                                   CSD027A
+     I                                        1   6 D1CNUM                                   CSD027A
+     I**********                              7  100D1ACOD                                    CER001
+     I**********                             11  120D1ACSQ                                    CER001
+     I**********                             13  15 D1BRCA                                    CER001
+     I                                        7  160D1ACOD                                    CER001
+     I                                       17  180D1ACSQ                                    CER001
+     I                                       19  21 D1BRCA                                    CER001
+      *
+      ** To receive the field updated 'Secured by reference'
+     I            DS
+     I**********                              1  15 DS1N                                      CER001
+     I                                        1  21 DS1N                                      CER001
+     I**********                              1   60N1CNUM                                   CSD027A
+     I                                        1   6 N1CNUM                                   CSD027A
+     I**********                              7  100N1ACOD                                    CER001
+     I**********                             11  120N1ACSQ                                    CER001
+     I**********                             13  15 N1BRCA                                    CER001
+     I                                        7  160N1ACOD                                    CER001
+     I                                       17  180N1ACSQ                                    CER001
+     I                                       19  21 N1BRCA                                    CER001
+      *
+      ** To access the guarantee file with the full account master
+      ** (access by LF/ERGUARL3)
+     I            DS
+     I**********                              1  18 DS2                                       CER001
+     I                                        1  24 DS2                                       CER001
+     I**********                              1   60D2CNUM                                   CSD027A
+     I                                        1   6 D2CNUM                                   CSD027A
+     I                                        7   9 D2CCY
+     I**********                             10  130D2ACOD                                    CER001
+     I**********                             14  150D2ACSQ                                    CER001
+     I**********                             16  18 D2BRCA                                    CER001
+     I                                       10  190D2ACOD                                    CER001
+     I                                       20  210D2ACSQ                                    CER001
+     I                                       22  24 D2BRCA                                    CER001
+      *
+      ** To receive the field updated 'Used to secured reference'
+     I            DS
+     I**********                              1  18 DS2N                                      CER001
+     I                                        1  24 DS2N                                      CER001
+     I**********                              1   60N2CNUM                                   CSD027A
+     I                                        1   6 N2CNUM                                   CSD027A
+     I                                        7   9 N2CCY
+     I**********                             10  130N2ACOD                                    CER001
+     I**********                             14  150N2ACSQ                                    CER001
+     I**********                             16  18 N2BRCA                                    CER001
+     I                                       10  190N2ACOD                                    CER001
+     I                                       20  210N2ACSQ                                    CER001
+     I                                       22  24 N2BRCA                                    CER001
+      *
+      ** To access the guarantee file with a retail account
+      ** (access by LF/ERGUARL3)
+     I            DS
+     I**********                              1  18 DS3                                       CER001
+     I                                        1  24 DS3                                       CER001
+     I                                        1  100D3RACN
+     I                                       11  18 D3BK
+      *
+      ** To receive the field updated 'Retail account'
+     I            DS
+     I                                        1  18 DS3N
+     I                                        1  100N3RACN
+     I                                       11  18 N3BK
+      *
+      ** To access the guarantee file with a retail account
+      ** (access by LF/ERGUARL4)
+     I            DS
+     I**********                              1  15 DS4                                       CER001
+     I                                        1  21 DS4                                       CER001
+     I                                        1  100D4RACN
+     I                                       11  15 D4BK
+      *
+      ** To receive the field updated 'Retail account'
+     I            DS
+     I**********                              1  15 DS4N                                      CER001
+     I                                        1  21 DS4N                                      CER001
+     I                                        1  100N4RACN
+     I                                       11  15 N4BK
+     I            DS
+     I                                        1  21 ZOUT21
+     I                                        1  20 ZOUT20
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+      *================================================================
+      *                   P R O G R A M
+      *================================================================
+      *
+      ** Initial Processing
+     C                     EXSR INITPR
+      *
+      ** Main Processing
+     C                     EXSR MAINPR
+      *
+      ** Output Audit Report and Ends
+     C                     EXSR AUDIT
+      *
+      ** End Program and Return.
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SR200 - Subroutine to perform calls to EMU standard          *
+      *          amount conversion program EU0200                     *
+      *                                                               *
+      *****************************************************************
+     C           SR200     BEGSR
+      *
+      ** Field WFAMT is passed by the calling routine
+     C                     CALL 'EU0200'
+     C                     PARM *BLANKS   P@RTCD  7        Return Code
+     C                     PARM WFAMT     P@FRAM 183       From Amt.
+     C                     PARM EUICCY    P@FRCY  3        From Ccy
+     C                     PARM BKEURO    P@TOCY  3        To Ccy
+     C                     PARM           P@OUTA 150       Outright Amt
+     C                     PARM           P@INTA 183       Interim Amt.
+     C                     PARM           P@EXRT 159       Exchnge Rate
+     C                     PARM           P@MDIN  1        Mult/Div Ind
+      *
+      ** If error occurred in EU0200 report database error and
+      ** terminate this program
+     C           P@RTCD    IFEQ '*ERROR'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ***********
+     C                     MOVEL'EU0200  'DBFILE           *DBASE 001*
+     C                     MOVEL'*CALL   'DBKEY            ***********
+     C                     MOVEL##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  #UPDT1- Subroutine to update the record in guarantee file    *
+      *          and write the record, when the access is 'Used to    *
+      *          secure                                               *
+      *                                                               *
+      *****************************************************************
+     C           #UPDT1    BEGSR
+      *
+      ** The currency used is the same as the one defined
+      ** in the 'Used to secure'account
+     C           RRSBYI    IFEQ 'S'
+     C           RRSBYR    ANDEQ*BLANKS
+      *
+      ** If the Guarantee amount is not equal to 0, convert it in Euro
+     C           RRGAMT    IFNE *ZERO
+     C                     Z-ADDRRGAMT    WFAMT  183       From Amount
+     C                     EXSR SR200
+      *
+      ** Update file field with amount returned from EU0200, and the
+      ** Guarantee currency
+     C                     Z-ADDP@OUTA    WWGAMT
+     C                     Z-ADDWWGAMT    RRGAMT
+     C                     ENDIF
+      *
+      ** Update the guarantee file
+     C                     MOVE BKEURO    RRGCCY
+     C                     UPDATERGUARD3
+      *
+      ** Write the record
+     C                     EXSR WP1REC
+     C                     ENDIF
+      *
+      ** The 'Secured by' is a Amount and the guarantee currency is
+      ** equal to the old 'in' currency
+     C           RRSBYI    IFEQ 'A'
+     C           RRGCCY    ANDEQEUICCY
+      *
+      ** If the Guarantee amount is not equal to 0, convert it in Euro
+     C           RRGAMT    IFNE *ZERO
+     C                     Z-ADDRRGAMT    WFAMT  183       From Amount
+     C                     EXSR SR200
+      *
+      ** Update file field with amount returned from EU0200, and the
+      ** Guarantee currency
+     C                     Z-ADDP@OUTA    WWGAMT
+     C                     Z-ADDWWGAMT    RRGAMT
+     C                     ENDIF
+      *
+      ** Update the guarantee file
+     C                     MOVE BKEURO    RRGCCY
+     C                     UPDATERGUARD3
+      *
+      ** Write the record
+     C                     EXSR WP1REC
+     C                     ENDIF
+      *
+      ** The instrument used to secure is a GL account and the currency
+      ** used is the same as the one defined in the 'Used to secure'
+     C           RRSBYI    IFEQ 'S'
+     C           RRSBYR    ANDNE*BLANKS
+      *
+     C                     MOVE RRSBYR    DS1
+      *
+     C                     MOVE D1CNUM    WCNUM
+     C                     MOVE BKEURO    WCUCD
+     C                     MOVE D1ACOD    WACCD
+     C                     MOVE D1ACSQ    WACSQ
+     C                     MOVE D1BRCA    WBRCA
+      *
+      ** Check if the GL account in Euro exist
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY  '  WOPTN   7
+     C                     PARM *BLANKS   WRETL  10
+     C                     PARM           WCNUM
+     C                     PARM           WCUCD
+     C                     PARM           WACCD
+     C                     PARM           WACSQ
+     C                     PARM           WBRCA
+     C           SDACCT    PARM SDACCT    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVEL'ACCNTAB 'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DB ERROR 002
+     C                     MOVELDSW       DBKEY            ***************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Update the guarantee file
+     C                     MOVE BKEURO    RRGCCY
+     C                     UPDATERGUARD3
+      *
+      ** Write the record
+     C                     EXSR WP1REC
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  #UPDT2- Subroutine to update the record in guarantee file    *
+      *          and write the record when the acces is 'Secured by'  *
+      *                                                               *
+      *****************************************************************
+     C           #UPDT2    BEGSR
+      *
+      ** If the method chosen by the bank is the 'Many to one'
+     C           EUMULT    IFEQ 'N'
+      *
+      ** Retrieve for each 'In' Account the ledger balance
+     C                     MOVE EUICNM    WCNUM
+     C                     MOVE EUICCY    WCUCD
+     C                     MOVE EUIACD    WACCD
+     C                     MOVE EUISQN    WACSQ
+     C                     MOVE EUIBRC    WBRCA
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY  '  WOPTN   7
+     C                     PARM *BLANKS   WRETL  10
+     C                     PARM           WCNUM
+     C                     PARM           WCUCD
+     C                     PARM           WACCD
+     C                     PARM           WACSQ
+     C                     PARM           WBRCA
+     C           SDACCT    PARM SDACCT    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVEL'ACCNTAB 'DBFILE           ***************
+     C                     Z-ADD006       DBASE            * DB ERROR 006
+     C                     MOVELDSW       DBKEY            ***************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** If balance of the 'In' account is debitor, Set up the
+      ** the Guarantee percentage equal to 0
+     C           CLBL      IFGE 0
+     C                     Z-ADD0         RRGPER
+     C                     ELSE
+      *
+      ** If the TOTAL Balance for the Mapping Reference is Credit,
+      ** calculate the Guarantee Percentage
+     C           WTCLBL    IFLT 0
+      *
+      ** Convert Balance of 'IN' account in Euro ccy
+     C                     Z-ADDCLBL      WFAMT  183       From Amount
+     C                     EXSR SR200
+     C                     Z-ADDP@OUTA    WWCLBL
+      *
+      ** Calculate new percentage
+     C           WWCLBL    DIV  WTCLBL    WWGPER  43
+     C           WWGPER    MULT RRGPER    RRGPER    H
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Update the guarantee file
+     C                     MOVE BKEURO    RRGCCY
+     C                     UPDATERGUARD4
+      *
+      ** Write the record
+     C                     EXSR WP1REC
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  INITPR  - Subroutine to do Program Initialisation.           *
+      *                                                               *
+      *****************************************************************
+     C           INITPR    BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive Parameter List.
+     C           *ENTRY    PLIST
+     C                     PARM           PPMAPN  6
+     C                     MOVE PPMAPN    WWMAPN  60
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     IN   RUNDAT
+      *
+      ** Reset the overflow indicators
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+     C                     Z-ADD0         RCOUNT  50       total read
+      *
+      ** Define Fields
+     C           *LIKE     DEFN CLBL      WTCLBL
+     C           *LIKE     DEFN CLBL      WWCLBL
+     C           *LIKE     DEFN RRGAMT    WWGAMT
+     C           *LIKE     DEFN A6NBDP    WWEUDP
+      *
+      ** Initialize the total of balance
+     C                     Z-ADD0         WTCLBL
+      *
+      ** Key Lists
+      ** To access the guarantee file with a key equal
+      ** Secured by reference equal a/c and 'Guarantee currency'
+     C           KEY01     KLIST
+     C                     KFLD           DS1
+     C                     KFLD           K1CCY
+      *
+      ** To access the guarantee file with a key equal
+      ** Secured by reference equal a retail account and 'Guarantee currency'
+     C           KEY04     KLIST
+     C                     KFLD           DS4
+     C                     KFLD           K2CCY
+      *
+      ** Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Check system date format, DDMMYY(98 off) or MMDDYY(98 on)
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Access general ledger details
+     C                     CALL 'AOGELRR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDGELR    PARM SDGELR    DSFDY
+      *
+      ** Retrieve currency details for Euro Currency for
+      ** Dealing
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM BKEURO    PCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Database error if currency not found
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE             ***********
+     C                     MOVEL'SDCURRPD'DBFILE            * DBERR 03*
+     C                     MOVELBKEURO    DBKEY             ***********
+     C                     MOVEL##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Save currency d.p. for formatting of amounts
+     C                     Z-ADDA6NBDP    WWEUDP
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  MAINPR  - Main processing for program                        *
+      *                                                               *
+      *****************************************************************
+     C           MAINPR    BEGSR
+      *
+      ** Retrieve the mapping detail
+     C           WWMAPN    CHAINEUMDHDL0             80
+     C           *IN80     IFEQ *ON
+     C                     GOTO ENDPR
+     C                     ENDIF
+      *
+      ** If the method chosen by the bank is the 'Many to one'
+     C           EUMULT    IFEQ 'N'
+      *
+      ** Read first record from the EMU Mapping details account
+     C           WWMAPN    SETLLEUACMLL0
+     C           WWMAPN    READEEUACMLL0                 89
+      *
+      ** Do Until End of File.
+     C           *IN89     DOWEQ*OFF
+      *
+      ** Retrieve for each 'In' Account the Cleared balance
+     C                     MOVE EUICNM    WCNUM
+     C                     MOVE EUICCY    WCUCD
+     C                     MOVE EUIACD    WACCD
+     C                     MOVE EUISQN    WACSQ
+     C                     MOVE EUIBRC    WBRCA
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY  '  WOPTN   7
+     C                     PARM *BLANKS   WRETL  10
+     C                     PARM           WCNUM
+     C                     PARM           WCUCD
+     C                     PARM           WACCD
+     C                     PARM           WACSQ
+     C                     PARM           WBRCA
+     C           SDACCT    PARM SDACCT    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVEL'ACCNTAB 'DBFILE           ***************
+     C                     Z-ADD004       DBASE            * DB ERROR 004
+     C                     MOVELDSW       DBKEY            ***************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Convert amount to Euro Currency
+     C           CLBL      IFNE 0
+     C                     Z-ADDCLBL      WFAMT  183       From Amount
+     C                     EXSR SR200
+      *
+      ** Update file field with amount returned from EU0200
+     C                     ADD  P@OUTA    WTCLBL
+     C                     ENDIF
+      *
+      ** Read next record from the EMU Mapping details account
+     C           WWMAPN    READEEUACMLL0                 89
+      *
+      ** End of Do Until End of Valid Records.
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Read first record which is involved in the mapping
+      ** in the EMU Mapping details account
+     C           WWMAPN    SETLLEUACMLL0
+     C           WWMAPN    READEEUACMLL0                 89
+      *
+      ** Do Until End of File.
+     C           *IN89     DOWEQ*OFF
+      *
+      ** To prepare the access guarantee file
+     C                     MOVE EUICNM    D2CNUM
+     C                     MOVE EUICCY    D2CCY
+     C                     MOVE EUIACD    D2ACOD
+     C                     MOVE EUISQN    D2ACSQ
+     C                     MOVE EUIBRC    D2BRCA
+      *
+     C           EUIACN    IFEQ *ZERO
+     C                     MOVE EUEACN    D3RACN
+     C                     MOVE EUEACN    D4RACN
+     C                     ELSE
+     C                     MOVE EUIACN    D3RACN
+     C                     MOVE EUIACN    D4RACN
+     C                     ENDIF
+     C                     MOVE *BLANKS   D3BK
+     C                     MOVE *BLANKS   D4BK
+     C                     MOVE *BLANKS   N3BK
+     C                     MOVE *BLANKS   N4BK
+      *
+     C                     MOVE EUICNM    D1CNUM
+     C                     MOVE EUIACD    D1ACOD
+     C                     MOVE EUISQN    D1ACSQ
+     C                     MOVE EUIBRC    D1BRCA
+      *
+     C                     MOVE EUICCY    K1CCY   3
+     C                     MOVE EUICCY    K2CCY   3
+      *
+      ** Access the Guarantee file with the account number
+     C           DS2       SETLLERGUARD3
+     C           DS2       READEERGUARD3                 80
+      *
+      ** Do Until End of File.
+     C           *IN80     DOWEQ*OFF
+      *
+      ** Update te 'Used to secure' field with the new account number
+     C                     MOVE EUECNM    N2CNUM
+     C                     MOVE EUECCY    N2CCY
+     C                     MOVE EUEACD    N2ACOD
+     C                     MOVE EUESQN    N2ACSQ
+     C                     MOVE EUEBRC    N2BRCA
+      *
+     C                     MOVELDS2N      RRUTSR
+     C                     EXSR #UPDT1
+      *
+      ** Read next record from the EMU Guarantee file
+     C           DS2       READEERGUARD3                 80
+      *
+      ** End of Do Until End of Valid Records.
+     C                     ENDDO
+      *
+      ** Access the Guarantee file with the retail account
+     C           DS3       SETLLERGUARD3
+     C           DS3       READEERGUARD3                 80
+      *
+      ** Do Until End of File.
+     C           *IN80     DOWEQ*OFF
+      *
+      ** Update te 'Used to secure' field with the new retail account
+     C                     MOVELEUEACN    N3RACN
+     C                     MOVELDS3N      RRUTSR
+      *
+     C                     EXSR #UPDT1
+      *
+      ** Read next record from the EMU Guarantee file
+     C           DS3       READEERGUARD3                 80
+      *
+      ** End of Do Until End of Valid Records.
+     C                     ENDDO
+      *
+      ** Access the Guarantee file with the account number
+     C           KEY01     SETLLERGUARD4
+     C           KEY01     READEERGUARD4                 80
+      *
+      ** Do Until End of File.
+     C           *IN80     DOWEQ*OFF
+      *
+      ** Update te 'Secured by' field with the new account number
+     C                     MOVE EUECNM    N1CNUM
+     C                     MOVE EUEACD    N1ACOD
+     C                     MOVE EUESQN    N1ACSQ
+     C                     MOVE EUEBRC    N1BRCA
+      *
+     C                     MOVELDS1N      RRSBYR
+      *
+     C                     EXSR #UPDT2
+      *
+      ** Read next record from the EMU Guarantee file
+     C           KEY01     READEERGUARD4                 80
+      *
+      ** End of Do Until End of Valid Records.
+     C                     ENDDO
+      *
+      ** Access the Guarantee file with the retail account
+     C           KEY04     SETLLERGUARD4
+     C           KEY04     READEERGUARD4                 80
+      *
+      ** Do Until End of File.
+     C           *IN80     DOWEQ*OFF
+      *
+      ** Update te 'Used to secure' field with the new retail account
+     C                     MOVELEUEACN    N4RACN
+     C                     MOVELDS4N      RRSBYR
+      *
+     C                     EXSR #UPDT2
+      *
+      ** Read next record from the EMU Guarantee file
+     C           KEY04     READEERGUARD4                 80
+      *
+      ** End of Do Until End of Valid Records.
+     C                     ENDDO
+      *
+      ** Read next record from the EMU Mapping details account
+     C                     READEEUACMLL0                 89
+      *
+      ** End of Do Until End of Valid Records.
+     C                     ENDDO
+      *
+      ** Write final records and Totals to Report.
+      ** Commit file updates
+     C           RCOUNT    IFNE 0
+     C                     EXSR WP1END
+     C                     COMIT
+     C                     ENDIF
+      *
+     C           ENDPR     TAG
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  WP1REC - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *****************************************************************
+     C           WP1REC    BEGSR
+      *
+     C           RCOUNT    IFEQ 0                          Not yet open
+     C                     OPEN EUU001P1
+     C                     EXSR RCFP1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Count records read.
+     C                     ADD  1         RCOUNT
+      *
+      ** Clear detail of printer file before setup
+     C                     CLEARDETAIL
+      *
+      ** Process Report Lines.
+     C                     MOVELDS2       R1ODAC
+      *
+     C                     MOVE RRRCUS    R1RCUS
+     C                     MOVELRRUTSI    R1UTSI
+     C                     MOVELRRUTSR    R1UTSR
+     C                     MOVELRRSBYI    R1SBYI
+     C                     MOVELRRSBYR    R1SBYR
+     C                     MOVELRRGCCY    R1GCCY
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE RRGPER    ZFLD15
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT20    R1GPER
+      *
+      ** Format after update amount for output
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE RRGAMT    ZFLD15
+     C                     MOVE WWEUDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    R1GAMT
+      *
+     C                     MOVE RRGVBY    R1GVBY
+     C                     MOVE RRGCOD    R1GCOD
+     C                     MOVE RRGSEQ    R1GSEQ
+      *
+     C           RRGPER    IFEQ 0
+     C                     MOVE *ON       *IN30
+     C                     MOVE *ON       *IN31
+     C                     ELSE
+     C                     MOVE *OFF      *IN30
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  WP1END - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *****************************************************************
+     C           WP1END    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+     C           *IN31     IFEQ *ON
+     C                     Z-ADD6         RQDLN1
+     C                     ELSE
+     C                     Z-ADD4         RQDLN1
+     C                     ENDIF
+      *
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Write out Total Format.
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+     C           RCFP1     BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF.
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+     C           RCFAU     BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *****************************************************************
+     C           AUDIT     BEGSR
+      *
+      ** RCF Processing for Audit File.
+     C                     EXSR RCFAU
+      *
+      ** Output Report Header and File Controls.
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** Or, if no records read, Output "No Details" message.
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           DBASE     IFEQ *ZERO
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     Z-ADD999       DBASE
+     C                     MOVE ##ERFL    DBFILE
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     ENDIF
+      *
+     C                     EXSR AUDIT
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+     C                     ROLBK
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZSEDITZ3
+      ********************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2005

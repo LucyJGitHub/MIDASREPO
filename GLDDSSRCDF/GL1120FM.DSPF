@@ -1,0 +1,564 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas GL Amount accrual input screen')                 *
+     A********************************************************************
+     A*                                                                  *
+     A*  Midas  GENERAL LEDGER MODULE                       *
+     A*                                                                  *
+     A*       GL1120FM - ACCRUAL INPUT SCREEN                            *
+     A*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                                  *
+      *  Last Amend No. MD043887           Date 16Apr18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD029265           Date 15Aug14               *
+      *                 MD022922           Date 21Feb14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL064             Date 07Jun06               *
+      *                 CAAA03             Date 16Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 197200             Date 20Aug01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 112563             Date 21Apr97               *
+      *                 CGL003             DATE 12DEC96                  *
+     A*                 S01253             DATE 17APR90                  *
+     A*                 S01199             DATE 16JUN89                  *
+     A*                                                                  *
+     A********************************************************************
+     A*                                                                  *
+      *  MD043887 - Extra box with no field name on the accrual screen*
+      *             during amend.                                     *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD029265 - Cannot complete accrual input insert due to       *
+      *             missing narrative upon 'Enter'                    *
+      *  MD022922 - Extra box with no field name on the accrual screen   *
+      *  CGL064 - Associated Customer / Cost Centre Validation Changes   *
+      *  CAAA03 - Webfacing Changes                                   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  197200 - Add amend action to amount accruals maintenance        *
+     A*  112563 - Header and footer changes required for GUI             *
+     A*           Multilanguage support.                                 *
+     A*           ( Additional change to Record Formats GL1120F1 and     *
+     A*           GL1120F2 :- 'F10=' text removed from both footers      *
+     A*           as command key F10 is not enabled for these Record     *
+     A*           Formats. )                                             *
+     A*       CGL003 - Add fields for Accrual Frequency on Amount        *
+     A*                Accruals                                          *
+     A*       S01253 - RECOMPILED FOR MULTILANGUAGE SCREENS              *
+     A*       S01199 - HELP                                              *
+     A*                                                                  *
+     A********************************************************************
+     A*      /////////////////////////////////////////
+     A*      // WARNING: When creating this display //
+     A*      // file, take options RSTDSP(*YES)     //
+     A*      //                    SHARE (*YES)     //
+     A*      /////////////////////////////////////////
+     A*****************************************************************
+     A*                                              Begin /CGL003/
+     A                                      REF(MFRFL)
+     A*                                              End   /CGL003/
+     A                                      CHGINPDFT PRINT(MPRINT)
+     A                                      INDARA
+     A*                                                    /*S01199*/
+     A*****
+     A*****   INITIAL SCREEN
+     A*****
+     A          R GL1120F1                  KEEP
+     A                                      TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      CF12
+     A                                      CF03
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A            RUNA           7A  B 01 02DSPATR(PR)
+     A            SID            2A  B 01 10DSPATR(PR ND)
+     A            SPID           6A  B 01 13DSPATR(PR ND)
+     A**                                             Begin /112563/
+     A                                  1 23'GL1120A'
+     A**                                             End   /112563/
+     A                                 01 34'ACCRUAL INPUT'
+     A                                      DSPATR(UL HI)
+     A                                 01 61TIME
+     A                                 01 74'WID'
+     A            SWID           3A  B 01 78DSPATR(PR)
+     A*
+     A                                 04 11'Reference'
+     A            FAREF          6N  B 04 21DSPATR(HI)
+     A  02                                  DSPATR(RI)
+     A N02                                  DSPATR(UL)
+     A*
+     A                                 04 31'Action'
+     A            ACTN           1A  B 04 38DSPATR(HI)
+     A  89                                  DSPATR(RI)
+     A N89                                  DSPATR(UL)
+     A*
+     A            ERMSG         79A  O 21 02
+     A  88                                  DSPATR(ND)
+      ** Start of change CAAA03
+     A**********                            DSPATR(RI HI)                                     CAAA03
+     A                                      DSPATR(HI)
+     A N88                                  DSPATR(RI)
+      ** End of change CAAA03
+     A*
+     A            ERCOD         79A  O 22 02
+     A  88                                  DSPATR(ND)
+      ** Start of change CAAA03
+     A**********                            DSPATR(RI HI)                                     CAAA03
+     A                                      DSPATR(HI)
+     A N88                                  DSPATR(RI)
+      ** End of change CAAA03
+     A**                                             Begin /112563/
+     A***********                      24 06'F3 - End of job'
+     A***********                      24 25'F12 - Initial screen'
+     A***********                      24 49'F10 - Deletion'
+     A                                 24 02'F3=Exit  F12=Initial screen'
+     A**                                             End   /112563/
+     A*******
+     A*******  MAIN INPUT SCREEN
+     A*******
+     A          R GL1120F2                  KEEP
+     A                                      CF12
+     A                                      CF03
+     A*                                                    /*S01199*/
+     A*                                              Begin /CGL003/
+     A*                                              End   /CGL003/
+     A*                                                    /*S01199*/
+     A            RUNA           7A  B 01 02DSPATR(PR)
+     A            SID            2A  B 01 10DSPATR(PR ND)
+     A            SPID           6A  B 01 13DSPATR(PR ND)
+     A**                                             Begin /112563/
+     A                                  1 23'GL1120B'
+     A**                                             End   /112563/
+     A                                 01 34'ACCRUAL INPUT'
+     A                                      DSPATR(UL HI)
+     A                                 01 63TIME
+     A                                 01 74'WID'
+     A            SWID           3A  B 01 78DSPATR(PR)
+     A*
+     A                                 04 11'Reference'
+     A            FAREF          6N  B 04 21DSPATR(HI PR)
+     A  02                                  DSPATR(RI)
+     A*
+     A                                 04 31'Action'
+     A            ACTN           1A  B 04 38DSPATR(HI PR)
+     A  89                                  DSPATR(RI)
+     A*
+     A**      START OF CHANGE                                /*S01117*/
+     A N40                             04 45'Branch'
+     A            SBRCA          3A  B 04 52DSPATR(HI)
+     A N41
+     AAN42                                  DSPATR(UL)
+     A  40                                  DSPATR(ND)
+     A  40                                  DSPATR(PR)
+     A  41
+     AO 42                                  DSPATR(RI)
+     A  41
+     AO 42                                  DSPATR(PC)
+     A***********                      07 20'Currency'
+     A*********** SCCY           3A  B 07 29DSPATR(HI)
+     A                                 07 10'Currency'
+     A            SCCY           3A  B 07 19DSPATR(HI)
+     A  03                                  DSPATR(RI)
+     A  83                                  DSPATR(PR)
+     A N83N03                               DSPATR(UL)
+     A*
+     A***********                      07 47'Amount'
+     A*********** SAMNT         14A  B 07 54DSPATR(HI)
+     A                                 07 27'Amount'
+     A            SAMNT         14A  B 07 34DSPATR(HI)
+     A  04                                  DSPATR(RI)
+     A N04                                  DSPATR(UL)
+     A  83                                  DSPATR(PC)
+     A*
+     A  50                             07 50'Profit Centre'
+     A            SPRFC          4A  B 07 64DSPATR(HI)
+     A N52                                  DSPATR(UL)
+     A N50                                  DSPATR(ND)
+     A N50                                  DSPATR(PR)
+     A  52                                  DSPATR(RI)
+     A  52                                  DSPATR(PC)
+     A**      END OF CHANGE                                  /*S01117*/
+     A*
+     A*                                              Begin /CGL003/
+     A*
+     A************                     09 18'Start date'
+     A************SSTDT          6N  B 09 29DSPATR(HI)
+     A**05********                          DSPATR(RI)
+     A*N05********                          DSPATR(UL)
+     A                                 09 05'Start date'
+     A            SSTDT          6N  B 09 19DSPATR(HI)
+     A  05                                  DSPATR(RI)
+     A N05                                  DSPATR(UL)
+     A*
+     A************                     09 40'Maturity date'
+     A************SMDAT          6N  B 09 54DSPATR(HI)
+     A**06********                          DSPATR(RI)
+     A*N06********                          DSPATR(UL)
+     A                                 09 32'Maturity date'
+     A            SMDAT          6N  B 09 46DSPATR(HI)
+     A  06                                  DSPATR(RI)
+     A N06                                  DSPATR(UL)
+     A*
+     A                                 10 05'Accrual Freq.'
+     A N46                                  DSPATR(ND)
+     A            SAPFQ     R        B 10 19REFFLD(APFQ)
+     A                                      DSPATR(HI)
+     A N47                                  DSPATR(UL)
+     A N46                                  DSPATR(ND)
+     A N46                                  DSPATR(PR)
+     A  47                                  DSPATR(RI)
+     A  47                                  DSPATR(PC)
+     A*
+     A                                 10 30'Accrual Day No.'
+     A N46                                  DSPATR(ND)
+     A            SFDAY     R        B 10 46REFFLD(FDAY)
+     A                                      DSPATR(HI)
+     A                                      EDTCDE(Z)
+     A N48                                  DSPATR(UL)
+     A N46                                  DSPATR(ND)
+     A N46                                  DSPATR(PR)
+     A  48                                  DSPATR(RI)
+     A  48                                  DSPATR(PC)
+     A*
+     A                                 10 57'Accrual Date'
+     A N46                                  DSPATR(ND)
+     A            SAPDA     R    6A  B 10 70REFFLD(APDA)
+     A                                      DSPATR(HI)
+     A N49                                  DSPATR(UL)
+     A N46                                  DSPATR(ND)
+     A N46                                  DSPATR(PR)
+     A  49                                  DSPATR(RI)
+     A  49                                  DSPATR(PC)
+     A*
+     A************                     11  5'Debit a/c code'
+     A************SDRCO          4N  B 11 21DSPATR(HI)
+     A**07********                          DSPATR(RI)
+     A*N07********                          DSPATR(UL)
+     A************
+     A************                     11 31'A/c sequence no.'
+     A************SDRSQ          2N  B 11 48DSPATR(HI)
+     A**24********                          DSPATR(RI)
+     A*N24********                          DSPATR(UL)
+     A************
+     A************                     11 56'Customer number'
+     A************SDRCN          6N  B 11 72DSPATR(HI)
+     A**08********                          DSPATR(RI)
+     A*N08********                          DSPATR(UL)
+     A*
+     A                                 12  5'Debit a/c code'
+     A**Start of change CGL029
+     A**********  SDRCO          4N  B 12 21DSPATR(HI)                                        CGL029
+     A            SDRCO         10N  B 12 21DSPATR(HI)
+     A**End of change CGL029
+     A  07                                  DSPATR(RI)
+     A N07                                  DSPATR(UL)
+     A*
+     A**Start of change CGL029
+     A**********                       12 31'A/c sequence no.'                                CGL029
+     A**********  SDRSQ          2N  B 12 48DSPATR(HI)                                        CGL029
+     A                                 12 34'A/c sequence no.'
+     A            SDRSQ          2N  B 12 51DSPATR(HI)
+     A**End of change CGL029
+     A  24                                  DSPATR(RI)
+     A N24                                  DSPATR(UL)
+     A*
+     A                                 12 56'Customer number'
+     A            SDRCN          6N  B 12 72DSPATR(HI)
+     A  08                                  DSPATR(RI)
+     A N08                                  DSPATR(UL)
+     A*
+     A*                                              End   /CGL003/
+     A*
+     A                                 13  5'Credit a/c code'
+     A**Start of change CGL029
+     A**********  SCRCO          4N  B 13 21DSPATR(HI)                                        CGL029
+     A            SCRCO         10N  B 13 21DSPATR(HI)
+     A**End of change CGL029
+     A  09                                  DSPATR(RI)
+     A N09                                  DSPATR(UL)
+     A*
+     A**Start of change CGL029
+     A**********                       13 31'A/c sequence no.'                                CGL029
+     A**********  SCRSQ          2N  B 13 48DSPATR(HI)                                        CGL029
+     A                                 13 34'A/c sequence no.'
+     A            SCRSQ          2N  B 13 51DSPATR(HI)
+     A**End of change CGL029
+     A  25                                  DSPATR(RI)
+     A N25                                  DSPATR(UL)
+     A*
+     A                                 13 56'Customer number'
+     A            SCRCN          6N  B 13 72DSPATR(HI)
+     A  12                                  DSPATR(RI)
+     A N12                                  DSPATR(UL)
+     A*
+     A                                 15 19'Narrative'
+     A            SPNAR         30A  B 15 29DSPATR(HI)
+     A  13                                  DSPATR(RI)
+     A N13N14                               DSPATR(UL)
+     A  14                                  DSPATR(PR)
+      **Start of change MD029265
+     A**********                            CHECK(FE)                                       MD029265
+      **End of change MD029265
+     A*
+     A                                 17 11'Amount posted to date'
+     A  82                                  DSPATR(ND)
+     A            SAMPD         14A  O 17 45DSPATR(HI)
+     A  82                                  DSPATR(ND)
+     A*
+     A                                 18 11'Amount remaining'
+     A  82                                  DSPATR(ND)
+     A            SAREM         14A  O 18 45DSPATR(HI)
+     A  82                                  DSPATR(ND)
+     A  54                             20  5'Associated Customer'                             CGL064
+     A**********  SASOC          6A  B 20 25DSPATR(HI)                               CGL064 MD022922
+     A  54        SASOC          6A  B 20 25DSPATR(HI)                                      MD022922
+     A  43                                  DSPATR(RI)                                        CGL064
+     A N43 54                               DSPATR(UL)                                        CGL064
+     A N54                                  DSPATR(ND)                                        CGL064
+     A*
+     A            ERMSG         79A  O 21 02
+     A  88                                  DSPATR(ND)
+      ** Start of change CAAA03
+     A**********                            DSPATR(RI HI)                                     CAAA03
+     A                                      DSPATR(HI)
+     A N88                                  DSPATR(RI)
+      ** End of change CAAA03
+     A*
+     A            ERCOD         79A  O 22 02
+     A  88                                  DSPATR(ND)
+      ** Start of change CAAA03
+     A**********                            DSPATR(RI HI)                                     CAAA03
+     A                                      DSPATR(HI)
+     A N88                                  DSPATR(RI)
+      ** End of change CAAA03
+     A*
+      ** Start of change CAAA03
+     A**********  SCHDT         17A  O 23 64DSPATR(RI HI)                                     CAAA03
+     A            SCHDT         17A  O 23 64DSPATR(HI)
+     A N87                                  DSPATR(RI)
+      ** End of change CAAA03
+     A  87                                  DSPATR(ND)
+     A*
+     A**                                             Begin /112563/
+     A***********                      24 06'F3 - End of job'
+     A***********                      24 25'F12 - Initial screen'
+     A***********                      24 49'F10 - Deletion'
+     A                                 24  2'F3=Exit  F12=Initial screen'
+     A**                                             End   /112563/
+     A*******
+     A*******  DELETE SCREEN
+     A*******
+     A          R GL1120F3                  KEEP
+      **Start of Change 197200
+     A**********                            CF10
+     A  67                                  CF05
+     A N67                                  CF10
+      **End of Change 197200
+     A                                      CF12
+     A                                      CF03
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A            RUNA           7A  B 01 02DSPATR(PR)
+     A            SID            2A  B 01 10DSPATR(PR ND)
+     A            SPID           6A  B 01 13DSPATR(PR ND)
+     A**                                             Begin /112563/
+     A                                  1 23'GL1120C'
+     A**                                             End   /112563/
+     A                                 01 34'ACCRUAL INPUT'
+     A                                      DSPATR(UL HI)
+     A                                 01 63TIME
+     A                                 01 74'WID'
+     A            SWID           3A  B 01 78DSPATR(PR)
+     A*
+     A                                 04 11'Reference'
+     A*/COPY WNCPYSRC,GL1120FM01
+      ** Start of change 197200
+     A**********  FAREF          6N  B 04 21DSPATR(HI UL)                                     197200
+     A            FAREF          6N  B 04 21
+     A                                      DSPATR(HI)
+     A                                      DSPATR(PR)
+      ** End of change 197200
+     A*
+     A                                 04 31'Action'
+      ** Start of change 197200
+     A**********  ACTN           1A  B 04 38DSPATR(HI UL)                                     197200
+     A            ACTN           1A  B 04 38
+     A                                      DSPATR(HI)
+     A                                      DSPATR(PR)
+      ** End of change 197200
+     A*/COPY WNCPYSRC,GL1120FM02
+     A*
+     A**      START OF CHANGE                                /*S01117*/
+     A N40                             04 45'Branch'
+     A            SBRCA          3A  B 04 52DSPATR(HI)
+     A                                      DSPATR(PR)
+     A  40                                  DSPATR(ND)
+     A***********                      07 20'Currency'
+     A*********** SCCY           3A  B 07 29DSPATR(HI PR)
+     A                                 07 10'Currency'
+     A            SCCY           3A  B 07 19DSPATR(HI PR)
+     A*
+     A***********                      07 47'Amount'
+     A*********** SAMNT         14A  B 07 54DSPATR(HI PR)
+     A                                 07 27'Amount'
+      ** Start of change 197200
+     A**********  SAMNT         14A  B 07 34DSPATR(HI PR)                                     197200
+     A            SAMNT         14A  B 07 34
+     A N67
+     AO 67N04                               DSPATR(HI)
+     A N67                                  DSPATR(PR)
+     A  04 67                               DSPATR(RI)
+     A  67                                  DSPATR(UL)
+      ** End of change 197200
+     A  50                             07 50'Profit Centre'
+     A            SPRFC          4A  B 07 64DSPATR(HI)
+     A                                      DSPATR(PR)
+     A N50                                  DSPATR(ND)
+     A**      END   OF CHANGE                                /*S01117*/
+     A*
+     A*                                              Begin /CGL003/
+     A*
+     A************                     09 18'Start date'
+     A************SSTDT          6N  B 09 29DSPATR(HI PR)
+     A************
+     A************                     09 40'Maturity date'
+     A************SMDAT          6N  B 09 54DSPATR(HI PR)
+     A************
+     A************                     11  5'Debit a/c code'
+     A************SDRCO          4N  B 11 21DSPATR(HI PR)
+     A************
+     A************                     11 31'A/c sequence no.'
+     A************SDRSQ          2N  B 11 48DSPATR(HI PR)
+     A************
+     A************                     11 56'Customer number'
+     A************SDRCN          6N  B 11 72DSPATR(HI PR)
+     A************
+     A                                 09 05'Start date'
+     A            SSTDT          6N  B 09 19DSPATR(HI PR)
+     A*
+     A                                 09 32'Maturity date'
+      ** Start of change 197200
+     A**********  SMDAT          6N  B 09 46DSPATR(HI PR)                                     197200
+     A            SMDAT          6N  B 09 46
+     A N67
+     AO 67N06                               DSPATR(HI)
+     A N67                                  DSPATR(PR)
+     A  06 67                               DSPATR(RI)
+     A  67                                  DSPATR(UL)
+     A  06 67N04                            DSPATR(PC)
+      ** End of change 197200
+     A*
+     A                                 10 05'Accrual Freq.'
+     A N46                                  DSPATR(ND)
+     A            SAPFQ     R        B 10 19REFFLD(APFQ)
+     A                                      DSPATR(HI PR)
+     A N46                                  DSPATR(ND)
+     A*
+     A                                 10 30'Accrual Day No.'
+     A N46                                  DSPATR(ND)
+     A            SFDAY     R        B 10 46REFFLD(FDAY)
+     A                                      DSPATR(HI PR)
+     A                                      EDTCDE(Z)
+     A N46                                  DSPATR(ND)
+     A*
+     A                                 10 57'Accrual Date'
+     A N46                                  DSPATR(ND)
+     A            SAPDA     R    6A  B 10 70REFFLD(APDA)
+     A                                      DSPATR(HI PR)
+     A N46                                  DSPATR(ND)
+     A*
+     A                                 12  5'Debit a/c code'
+     A**Start of change CGL029
+     A**********  SDRCO          4N  B 12 21DSPATR(HI PR)                                     CGL029
+     A            SDRCO         10N  B 12 21DSPATR(HI PR)
+     A*
+     A**********                       12 31'A/c sequence no.'                                CGL029
+     A**********  SDRSQ          2N  B 12 48DSPATR(HI PR)                                     CGL029
+     A                                 12 34'A/c sequence no.'
+     A            SDRSQ          2N  B 12 51DSPATR(HI PR)
+     A**End of change CGL029
+     A*
+     A                                 12 56'Customer number'
+     A            SDRCN          6N  B 12 72DSPATR(HI PR)
+     A*
+     A*                                              End   /CGL003/
+     A*
+     A                                 13  5'Credit a/c code'
+     A**Start of change CGL029
+     A**********  SCRCO          4N  B 13 21DSPATR(HI PR)                                     CGL029
+     A            SCRCO         10N  B 13 21DSPATR(HI PR)
+     A*
+     A**********                       13 31'A/c sequence no.'                                CGL029
+     A**********  SCRSQ          2N  B 13 48DSPATR(HI PR)                                     CGL029
+     A                                 13 34'A/c sequence no.'
+     A            SCRSQ          2N  B 13 51DSPATR(HI PR)
+     A**End of change CGL029
+     A*
+     A                                 13 56'Customer number'
+     A            SCRCN          6N  B 13 72DSPATR(HI PR)
+     A*
+     A                                 15 19'Narrative'
+     A            SPNAR         30A  B 15 29DSPATR(HI PR)
+     A*
+     A                                 17 11'Amount posted to date'
+     A  82                                  DSPATR(ND)
+     A            SAMPD         14A  O 17 45DSPATR(HI)
+     A  82                                  DSPATR(ND)
+     A*
+     A                                 18 11'Amount remaining'
+     A  82                                  DSPATR(ND)
+     A            SAREM         14A  O 18 45DSPATR(HI)
+     A  82                                  DSPATR(ND)
+     A  54                             20  5'Associated Customer'                             CGL064
+      **Start of change MD043887
+     A**********  SASOC          6A  B 20 25DSPATR(HI)                               CGL064 MD043887
+     A  54        SASOC          6A  B 20 25DSPATR(HI)
+      **End of change MD043887
+     A  44                                  DSPATR(PR)                                        CGL064
+     A N44 54                               DSPATR(UL)                                        CGL064
+     A N54                                  DSPATR(ND)                                        CGL064
+     A*
+     A            ERMSG         79A  O 21 02
+     A  88                                  DSPATR(ND)
+      ** Start of change CAAA03
+     A**********                            DSPATR(RI HI)                                     CAAA03
+     A                                      DSPATR(HI)
+     A N88                                  DSPATR(RI)
+      ** End of change CAAA03
+     A*
+     A            ERCOD         79A  O 22 02
+     A  88                                  DSPATR(ND)
+      ** Start of change CAAA03
+     A**********                            DSPATR(RI HI)                                     CAAA03
+     A                                      DSPATR(HI)
+     A N88                                  DSPATR(RI)
+      ** End of change CAAA03
+     A*
+      ** Start of change CAAA03
+     A**********  SCHDT         17A  O 23 64DSPATR(RI HI)                                     CAAA03
+     A            SCHDT         17A  O 23 64DSPATR(HI)
+     A N87                                  DSPATR(RI)
+      ** End of change CAAA03
+     A  87                                  DSPATR(ND)
+     A*
+     A**                                             Begin /112563/
+     A***********                      24 06'F3 - End of job'
+     A***********                      24 25'F12 - Initial screen'
+     A***********                      24 49'F10 - Deletion'
+      ** Start of change 197200
+     A**********                       24  2'F3=Exit  F12=Initial screen  F10=-               197200
+     A**********                            Delete'                                           197200
+     A N67N69                          24  2'F3=Exit  F12=Initial screen  F10=-
+     A                                      Delete'
+     A  67                             24  2'F3=Exit  F5=Refresh  F12=Initial-
+     A                                       screen'
+     A  69                             24  2'F3=Exit  F12=Initial screen'
+     A
+      ** End of change 197200
+     A**                                             End   /112563/

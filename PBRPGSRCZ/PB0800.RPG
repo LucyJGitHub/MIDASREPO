@@ -1,0 +1,1163 @@
+     H        1
+      *****************************************************************
+/*OVRF*: OVRDBF FILE(LOAN2) TOFILE(CLOANCL) SHARE(*YES)             : *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PB Generate file for reconciliation')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Private Banking Module                               *
+      *                                                               *
+      *  PB0800   - Generate file for Reconciliation                  *
+      *                                                               *
+      *  Function:  This program sets up the Reconciliation file      *
+      *                                                               *
+      *  (phase(s)) Close Of Business                                 *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 207288             Date 11Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CPK024             Date 24Feb06               *
+      *                 CDL038             Date 10May05               *
+      *                 CAS011             Date 16May05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CAS010             Date 09Feb05               *
+      *                 CPK022             Date 10Sep04               *
+      *                 185650             Date 02May01               *
+      *                 CFF007             Date 29Jun00               *
+      *                 205940             Date 22Oct02               *
+      *                 185649             Date 09Oct02               *
+      *                 174874             Date 27Sep02               *
+      *                 152319             Date 27Sep02               *
+      *                 CPB004             Date 11Jul02               *
+      *                 202088             Date 09Jul02               *
+      *                 204146             Date 02May02               *
+      *                 CSW037A            Date 02May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAP074             Date 08Aug02               *
+      *                 CPK016             Date 03Sep03               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001             Date 24Apr02               *
+      *                 198535             Date 15Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      *                 CPB002             Date 13Dec00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001   *CREATE   Date 16Jul99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date                                    *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  207288 - Do not extract FX spot deals.                       *
+      *           Do not extract first lag of swap.                   *
+      *           Applied for AR999664 (Child: AR999668)              *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPK024 - Increase LOAN2 to 1761 to be consistent with CLE036 *
+      *           and CLE106 changes                                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CAS011 - EIR/AC Accounting Upgrade to MP1                    *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CAS010 - IAS + PB Enhancements Upgrade to Midasplus          *
+      *  CPK022 - Packaging for 4.02.  Extend LOAN2.                  *
+      *  185650 - Conditions added to sign the derivative position.   *
+      *  CFF007 - Incorporation of "Futures and Options with TOF"     *
+      *  205940 - Consider transaction with Value Date on non-working *
+      *           day.                                                *
+      *  185649 - Guarantees not written into TORECOPD.               *
+      *  174874 - Buy amounts of forward deals should be negative     *
+      *  152319 - Due to SE redenomination, NMDP can be different.    *
+      *  CPB004 - In addition to Retail accouts, reconcile GL account *
+      *           postings for account codes set for transfer to TOF. *
+      *  202088 - ToF Reconciliation is not correct for Midas         *
+      *           retail account                                      *
+      *  204146 - Do not consider FX spot deal for Midas/ToF          *
+      *           reconciliation. Check made on FSLI indicator.       *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAP074 - Lending API enhancements - Loans input.             *
+      *  CPK016 - Release 5 packaging.  Clash of field names.         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  CAS001 - Reflect changes to SDLOANPD.                        *
+      *  198535 - Review the loop in CPPROC to extract all the        *
+      *           SE positions.                                       *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           - Extend the length of the LOAN2 file.              *
+      *  CPB002 - Meridian DBA Middleware Replication Customization.  *
+      *  CPB001 -  'Private Banking' Module                           *
+      *                                                               *
+      *****************************************************************
+     FSDCUSTPDIF  E                    DISK         KINFSR *PSSR
+     F* Customer details file
+     F*
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     F* SE Securities Details
+     F*
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+     F* GL Account details
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     F*
+     FCUSDE   IF  E           K        DISK         KINFSR *PSSR
+     F* MM Deals details
+     F                                              KINFDS FDS1
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F***PMCPLVLLIF  E           K        DISK         KINFSR *PSSR       CPB002
+     F**** PM Customer positions                                          CPB002
+     FSECDEPL1IF  E           K        DISK         KINFSR *PSSR          CPB002
+     F* SE Client Depot positions                                         CPB002
+     F*
+     F*LOAN2**IF**F    1300  6AI    12 DISK         KINFSR *PSSR                              CLE011
+     F*LOAN2**IF**F    1310  6AI    12 DISK         KINFSR *PSSR                       CLE011 CAS001
+     F***LOAN2** IF  F    1348  6AI    12 DISK         KINFSR *PSSR                    CAS001 CLE028
+     F*LOAN2**IF  F    1389  6AI    12 DISK         KINFSR *PSSR                       CLE028 CPK016
+     F**LOAN2***IF  F    1466  6AI    12 DISK         KINFSR *PSSR                     CPK016 CAP074
+     F***LOAN2** IF  F    1560  6AI    12 DISK         KINFSR *PSSR                    CAP074 CGL029
+     F*LOAN2***IF  F    1632  6AI    12 DISK         KINFSR *PSSR                      CGL022 CPK022
+     F*LOAN2***IF  F    1723  6AI    12 DISK         KINFSR *PSSR                      CPK022 CAS010
+     F***LOAN2   IF  F    1632  6AI    12 DISK         KINFSR *PSSR                    CAS010 CAS011
+     F***LOAN2***IF  F    1745  6AI    12 DISK         KINFSR *PSSR                    CAS011 CPK024
+     F*LOAN2**IF  F    1761  6AI    12 DISK         KINFSR *PSSR                       CPK024 CSD027
+     F*LOAN2**IF  F    1773  6AI    12 DISK         KINFSR *PSSR                       CSD027 CER020
+     F*LOAN2**IF  F    1782  6AI    12 DISK         KINFSR *PSSR                       CER020 207288
+     F***LOAN2**  IF  F    1829  6AI    12 DISK         KINFSR *PSSR                   207288 CLE134
+     F***LOAN2** IF  F    1905  6AI    12 DISK         KINFSR *PSSR                    CLE134 CDL099
+     FLOAN2   IF  F    2025  6AI    12 DISK         KINFSR *PSSR                              CDL099
+     F* LE Customer LOANS.
+     F*
+     FTRANSC  IF  E           K        DISK         KINFSR *PSSR          CFF007
+     F* FF Transaction Details                                            CFF007
+     F*                                                                   CFF007
+     FINTYP   IF  E           K        DISK         KINFSR *PSSR          CFF007
+     F* FF Instrument Details                                             CFF007
+     F*                                                                   CFF007
+     FFDDTSTYTIF  E           K        DISK                                                   207288
+     FPBRECOPDO   E           K        DISK                      A
+     F* PB Reconciliation Output file
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /TITLE ARRAY SPECIFICATIONS
+      *
+     E                    CPY@    1   1 80
+      **  Array for Object Copyright Statement.
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZHOLE                                                                      205940
+     E/COPY ZSRSRC,ZF2CE                                                                      205940
+     ILOAN2   NS
+      *****************************************************************
+     ISECTYDF
+     I              RECI                            SERECI
+      *
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+      *-------------------------------------------------------------------------
+     IFDS1        DS
+      *
+      ** File status data structure - record format
+     I                                     *RECORD  FORM
+      *
+     IWLDA      E DSLDA                         256
+      *
+      **  Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      **  Program Status Data Structure - gives Prog/Job/Workstn name
+      **  and user ID
+      *
+     I                                        1  10 PRGNAM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *                                                                                       205940
+     I/COPY ZSRSRC,ZHOLI                                                                      205940
+     I/COPY ZSRSRC,ZF2CI                                                                      205940
+      *
+     IDSSDY     E DSDSSDY
+      **  DS for access programs, long data structure
+     ISDBANK    E DSSDBANKPD
+      **  External DS for Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for CCY Details
+      *
+     ISDLOAN    E DSCLOANCL
+      ***  External data structures for LENDING
+      *                                                                   CPB004
+     ISDACOD    E DSSDACODPD                                              CPB004
+      **  External data structure for Account Code Details.               CPB004
+      *                                                                   CPB004
+     ISCSARD    E DSSCSARDPD                                              CPB004
+      **  External DS for SAR  Details                                    CPB004
+     I              LCD                             LCDX                  CPB004
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #INIT  - Program Initialisation                              *
+      *  GLPROC - Processing for Retail Account                       *
+      *  MMPROC - Processing for Dealing                              *
+      *  LEPROC - Processing for Lending                              *
+      *  CPPROC - Processing for Customer Positions                   *
+      *  FFPROC - Processing for Futures and Options                  *   CFF007
+      *  WRIT01 - Output record on PF/PBRECOPD                        *
+      *                                                               *
+      *  *PSSR  - Error Processing Subroutine - DUMPs and ends Program*
+      *           (This is called automatically if an unexpected      *
+      *            Error occurs, or specifically for DB Error.)       *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+      **  Program initialisation
+     C                     EXSR #INIT
+      *
+      **  Main loop processing
+     C           1         SETLLSDCUSTPD
+     C                     READ SDCUSTPD                 89
+      *
+      **  Only if it is Private Banking Customer
+     C           *IN89     DOWEQ*OFF                       - B1
+      *
+     C           BBPRBA    IFEQ 'Y'
+      *
+     C**********           MOVELBBCUST    TNCNUM  60                                          CSD027
+     C                     MOVELBBCUST    TNCNUM  6                                           CSD027
+      *
+      ** Execute 'GL' processing
+     C                     EXSR GLPROC
+      *
+      ** Execute 'LE'      processing
+     C                     EXSR LEPROC
+      *
+      ** Execute 'FX & MM' processing
+     C                     EXSR MMPROC
+      *
+      ** Execute Customer Position processing
+     C                     EXSR CPPROC
+      *
+      ** Execute 'FF'      processing                                     CFF007
+     C                     EXSR FFPROC                                    CFF007
+      *                                                                   CFF007
+     C                     ENDIF
+      *
+      ** Read next PB customer
+     C                     READ SDCUSTPD                 89
+      *
+     C                     ENDDO                           - E1
+      *
+      ** Termination processing
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * GLPROC - Processing for Retail Account                        *
+      * Called by: - MAIN                                             *
+      *                                                               *
+      * Calla    : - WRIT01                                           *
+      *****************************************************************
+      *
+     C           GLPROC    BEGSR
+      *
+      ** Position on file with customer
+     C           TNCNUM    SETLLACCNT
+     C                     READ ACCNT                    85
+      *
+      ** Loop process
+     C           *IN85     DOWEQ*OFF                       - B1
+     C           CNUM      ANDEQTNCNUM
+      *                                                                   CPB004
+     C           ATYP      IFEQ 'G'                                       CPB004
+     C           WPB004    ANDEQ'Y'                                       CPB004
+      *                                                                   CPB004
+     C*                                                                   CPB004
+     C                     MOVE ACOD      @ACOD   4                       CPB004
+     C                     CALL 'AOACODR0'                                CPB004
+     C                     PARM *BLANKS   @RTCD                           CPB004
+     C                     PARM '*KEY   ' @OPTN                           CPB004
+     C                     PARM           @ACOD                           CPB004
+     C           SDACOD    PARM SDACOD    DSSDY                           CPB004
+      *                                                                   CPB004
+      **  Handle Database Error.                                          CPB004
+      *                                                                   CPB004
+     C           @RTCD     IFNE *BLANKS                                   CPB004
+     C                     MOVE 'SDACODPD'WWBFIL           ***************CPB004
+     C                     Z-ADD004       WWBASE           *DB ERROR 004 *CPB004
+     C                     MOVELACOD      WWBKEY           ***************CPB004
+     C                     EXSR *PSSR                                     CPB004
+     C                     ENDIF                                          CPB004
+     C                     ENDIF                                          CPB004
+      *
+      ** SELECT ONLY CLEAR/LEDGER BALANCE DIFFERENT THAN 0
+     C           LDBL      IFNE *ZEROS                     - B2
+     C           ATYP      ANDEQ'R'
+     C           CLBL      ORNE *ZEROS
+     C           ATYP      ANDEQ'R'
+      *                                                                   CPB004
+     C           WPB004    OREQ 'Y'                                       CPB004
+     C           ATYP      ANDEQ'G'                                       CPB004
+     C           LDBL      ANDNE*ZEROS                                    CPB004
+     C           A5TRAN    ANDEQ'Y'                                       CPB004
+      *                                                                   CPB004
+     C           WPB004    OREQ 'Y'                                       CPB004
+     C           ATYP      ANDEQ'G'                                       CPB004
+     C           CLBL      ANDNE*ZEROS                                    CPB004
+     C           A5TRAN    ANDEQ'Y'                                       CPB004
+      *
+      ** Setup data for output
+     C                     MOVEL'GL'      TRMODI
+     C                     Z-ADD30        TRTOCA
+      *
+      ** Multi-portfolio processing
+     C           PTFR      IFEQ *BLANKS
+     C                     Z-ADD01        TRPORN
+     C                     ELSE
+     C                     MOVE PTFR      TRPORN
+     C                     ENDIF
+      *
+     C                     MOVELBRCA      TRBRCA
+     C                     MOVELCNUM      TRCNUM
+     C                     MOVELCCY       TRCCY
+     C                     MOVELACOD      TRACOD
+     C                     MOVELACSQ      TRACSQ
+     C**********           Z-ADD*ZEROS    TRDLNO                                              CLE148
+     C                     MOVE *BLANKS   TRDLNO                                              CLE148
+     C                     MOVEL*BLANKS   TRDTYP
+     C                     Z-ADDLMVD      TRDDAT
+     C                     Z-ADDLMVD      TRVDAT
+     C                     Z-ADD*ZEROS    TRMDAT
+     C                     MOVEL*BLANKS   TRSESN
+      *
+      ** Format amount  (18,3)
+     C                     Z-ADD*ZEROS    PAMNT
+     C                     MOVELCCY       PCCY    3
+     C                     Z-SUBLDBL      LDBL
+     C**********           MOVE LDBL      PAMNT  180                      202088
+     C                     Z-ADDLDBL      PAMNT  180                      202088
+     C                     EXSR SRCURR
+     C                     MOVE FAMNT     TRAMTD
+      *
+     C                     Z-ADD*ZEROS    PAMNT
+     C                     Z-SUBCLBL      CLBL
+     C**********           MOVE CLBL      PAMNT                           202088
+     C                     Z-ADDCLBL      PAMNT                           202088
+     C                     EXSR SRCURR
+     C                     MOVE FAMNT     TRAMVD
+      *
+     C                     Z-ADDCDIR      TRRADR
+     C                     Z-ADDCCIR      TRRACR
+     C                     MOVEL*BLANKS   TROCCY
+     C                     Z-ADD*ZEROS    TREXCH
+     C                     Z-ADDBJRDNB    TRRUND
+      *
+      ** Write a record
+     C                     EXSR WRIT01
+      *
+     C                     END                             - E2
+      *
+      ** Read next Retail Account
+     C                     READ ACCNT                    85
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * LEPROC - Processing for Lending Maturity/Rollov.              *
+      * Called by: - MAIN                                             *
+      *                                                               *
+      * Calls    : - WRIT01                                           *
+      *****************************************************************
+      *
+     C           LEPROC    BEGSR
+      *
+     C           TNCNUM    SETLLLOAN2
+     C                     READ LOAN2     SDLOAN         85
+      *
+      ** Loop process
+     C           *IN85     DOWEQ*OFF                       - B1
+     C           CNUM      ANDEQTNCNUM
+      *
+     C           BJRDNB    IFGE VDAT
+     C********** PTYP      ANDNE70                                                            185649
+      *                                                                                       205940
+      ** Consider if Value Date is a non-working day                                          205940
+     C           VDAT      ORGT BJRDNB                                                        205940
+     C           VDAT      ANDLTBJDNWD                                                        205940
+      *                                                                                       205940
+      ** Setup data for 'LE' record
+      *  Use code 10 as per MM deals for TOF
+      *
+     C                     MOVEL'LE'      TRMODI
+     C                     Z-ADD10        TRTOCA
+      *
+      ** Multi-portfolio processing
+      *
+     C           PTFR      IFEQ *BLANKS
+     C                     Z-ADD01        TRPORN
+     C                     ELSE
+     C                     MOVE PTFR      TRPORN
+     C                     ENDIF
+      *
+     C                     MOVELBRCA      TRBRCA
+     C                     MOVELCNUM      TRCNUM
+     C                     MOVELCCY       TRCCY
+     C                     MOVEL*BLANKS   TRACOD
+     C                     MOVEL'01'      TRACSQ
+     C**********           Z-ADDLNRF      TRDLNO                                              CLE148
+     C                     MOVE LNRF      TRDLNO                                              CLE148
+     C                     MOVELLTYP      TRDTYP
+     C                     MOVE SUTP      TRDTYP
+     C                     Z-ADDDDAT      TRDDAT
+     C                     Z-ADDVDAT      TRVDAT
+     C                     Z-ADDMDAT      TRMDAT
+     C                     MOVEL*BLANKS   TRSESN
+      *
+      ** Format amount  (18,3)
+     C                     Z-ADD*ZEROS    PAMNT
+     C                     MOVELCCY       PCCY
+     C                     MOVE CPAM      PAMNT
+     C                     EXSR SRCURR
+     C                     MOVE FAMNT     TRAMTD
+     C                     MOVE FAMNT     TRAMVD
+      *
+      ** Debit & Credit Rate    (TO BE CHECKED)
+     C                     Z-ADDINTR      TRRADR
+     C                     Z-ADD*ZEROS    TRRACR
+      *
+      ** Reverse sign for loans  (TO BE CHECKED)
+     C                     Z-SUBTRAMTD    TRAMTD
+     C                     Z-SUBTRAMVD    TRAMVD
+      *
+      ** Write 'LE' record
+     C                     EXSR WRIT01
+     C                     END                             - E2
+     C                     READ LOAN2     SDLOAN         85
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************   CFF007
+      *                                                               *   CFF007
+      * FFPROC - Processing for Futures and Options Transactions      *   CFF007
+      * Called by: - MAIN                                             *   CFF007
+      *                                                               *   CFF007
+      * Calls    : - WRIT01                                            *  CFF007
+      *****************************************************************   CFF007
+      *                                                                   CFF007
+     C           FFPROC    BEGSR                                          CFF007
+      *                                                                   CFF007
+     C           TNCNUM    SETLLTRANSC                                    CFF007
+     C                     READ TRANSC                   85               CFF007
+      *                                                                   CFF007
+      ** Loop process                                                     CFF007
+     C           *IN85     DOWEQ*OFF                       - B1           CFF007
+     C           CUSC      ANDEQTNCNUM                                    CFF007
+      *                                                                   CFF007
+     C           BJRDNB    IFGE VALD                                      CFF007
+     C           NOCO      ANDNE*ZEROS                                    CFF007
+      ** Setup data for 'FF' record                                       CFF007
+      *                                                                   CFF007
+     C           ISTT      CHAININTYP                55                   CFF007
+      *                                                                   CFF007
+     C           *IN55     IFEQ *ON                                       CFF007
+     C                     Z-ADD004       WWBASE           ***************CFF007
+     C                     MOVEL'INTYP   'WWBFIL           *DB ERROR 004 *CFF007
+     C                     MOVELISTT      WWBKEY    P      ***************CFF007
+     C                     EXSR *PSSR                                     CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     MOVEL'FF'      TRMODI                          CFF007
+     C                     Z-ADD40        TRTOCA                          CFF007
+      *                                                                   CFF007
+      ** Multi-portfolio processing                                       CFF007
+      *                                                                   CFF007
+     C           PTFR      IFEQ *BLANKS                                   CFF007
+     C                     Z-ADD01        TRPORN                          CFF007
+     C                     ELSE                                           CFF007
+     C                     MOVE PTFR      TRPORN                          CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     MOVELBRCA      TRBRCA                          CFF007
+     C                     MOVELCUSC      TRCNUM                          CFF007
+     C                     MOVELISCY      TRCCY                           CFF007
+     C                     MOVEL*BLANKS   TRACOD                          CFF007
+     C                     MOVEL*BLANKS   TRACSQ                          CFF007
+     C**********           Z-ADDTNBR      TRDLNO                                       CFF007 CLE148
+     C                     MOVE TNBR      TRDLNO                                              CLE148
+     C                     MOVE *BLANKS   TRDTYP                          CFF007
+     C                     Z-ADDTRSD      TRDDAT                          CFF007
+     C                     Z-ADDVALD      TRVDAT                          CFF007
+     C                     Z-ADDFTDT      TRMDAT                          CFF007
+     C                     MOVEL*BLANKS   TRSESN                          CFF007
+     C                     Z-ADD*ZEROS    TRAMTD                          CFF007
+     C**********           Z-ADDNOCO      TRAMVD                   CFF007 185650
+     C********** BOCO      IFEQ *ZEROS                                                 185650 CSD027
+     C           BOCO      IFEQ *BLANKS                                                       CSD027
+     C           TRTY      IFEQ 'P'                                       185650
+     C                     Z-SUBNOCO      TRAMVD                          185650
+     C                     ELSE                                           185650
+     C                     Z-ADDNOCO      TRAMVD                          185650
+     C                     ENDIF                                          185650
+     C                     ELSE                                           185650
+     C           TRTY      IFEQ 'P'                                       185650
+     C                     Z-ADDNOCO      TRAMVD                          185650
+     C                     ELSE                                           185650
+     C                     Z-SUBNOCO      TRAMVD                          185650
+     C                     ENDIF                                          185650
+     C                     ENDIF                                          185650
+     C                     Z-ADD*ZEROS    TRRADR                          CFF007
+     C                     Z-ADD*ZEROS    TRRACR                          CFF007
+     C                     MOVEL*BLANKS   TROCCY                          CFF007
+     C                     Z-ADD*ZEROS    TREXCH                          CFF007
+     C                     Z-ADDBJRDNB    TRRUND                          CFF007
+      *                                                                   CFF007
+     C                     MOVELISTT      TRISTT                          CFF007
+     C                     Z-ADDYRNO      TRYRNO                          CFF007
+     C                     Z-ADDMTHN      TRMTHN                          CFF007
+     C                     MOVELPCAL      TRPCAL                          CFF007
+     C                     Z-ADDSTRP      TRSTRP                          CFF007
+      *                                                                   CFF007
+      ** Write 'FF' record                                                CFF007
+     C                     EXSR WRIT01                                    CFF007
+      *                                                                   CFF007
+      ** Reset record format                                              CFF007
+     C                     RESETPBRECOD0                                  CFF007
+      *                                                                   CFF007
+     C                     END                             - E2           CFF007
+     C                     READ TRANSC                   85               CFF007
+      *                                                                   CFF007
+     C                     ENDDO                           - E1           CFF007
+      *                                                                   CFF007
+     C                     ENDSR                                          CFF007
+      /EJECT                                                              CFF007
+      *****************************************************************
+      *                                                               *
+      * MMPROC - Processing for Money Market live deals               *
+      * Called by: - MAIN                                             *
+      *                                                               *
+      * Calls    : - WRIT01                                           *
+      *****************************************************************
+      *
+     C           MMPROC    BEGSR
+      *
+      ** Position on file with customer
+     C           TNCNUM    SETLLCUSDE
+     C                     READ CUSDE                    85
+      *
+      ** Loop process
+     C           *IN85     DOWEQ*OFF                       - B1
+     C           CNUM      ANDEQTNCNUM
+      *
+      ** FX Deals
+     C           FORM      IFEQ 'DEALSDBF'                 - B2
+     C********** BJRDNB    ANDGEVDAT                                                          204146
+     C           BJRDNB    ANDGEDDAT                                                          204146
+     C           RECI      ANDNE'E'                                                           204146
+     C**********           Z-ADDDDAT      ZDAYNO           Deal Date                   205940 207288
+     C**********           MOVE PUCY      ZCCY1            Buy Ccy                     205940 207288
+     C**********           MOVE *BLANKS   ZLOC1                                        205940 207288
+     C**********           MOVE SLCY      ZCCY2            Sell Ccy                    205940 207288
+     C**********           MOVE *BLANKS   ZLOC2                                        205940 207288
+     C**********           Z-ADD2         ZNRDYS           2 open Day                  205940 207288
+     C**********           EXSR ZF2C                                                   205940 207288
+      *****************************************************************                204146 207288
+      ***Skip*some*'FX'*transactions***********************************                204146 207288
+     C********** FSLI      IFLT 2                                                      204146 207288
+     C********** DTYP      ORNE 'SW'                                                   204146 207288
+     C********** VDAT      ANDLEZDYNBR                                                 204146 207288
+      *                                                                                       207288
+      ** Get spot indicator.                                                                  207288
+      *                                                                                       207288
+     C                     MOVELDTYP      TFDTPE                                              207288
+     C                     MOVELDLST      TFDLST                                              207288
+     C           KSECU     KLIST                                                              207288
+     C                     KFLD           TFDTPE                                              207288
+     C                     KFLD           TFDLST                                              207288
+     C           KSECU     CHAINFDDTSTD0             86                                       207288
+     C           *IN86     IFEQ '0'                                                           207288
+     C           TFSPOT    IFNE 'Y'                                                           207288
+      *                                                                                       207288
+     C** First leg of swap must not be sent                                                   207288
+     C           DTYP      IFEQ 'SW'                                                          207288
+     C           FSLI      ANDEQ1                                                             207288
+      ** Read next Deals record                                                               207288
+     C                     READ CUSDE                    85                                   207288
+     C                     ITER                                                               207288
+     C                     ENDIF                                                              207288
+      *                                                                                       204146
+     C**********           ELSE                                                        204146 207288
+      *
+      ** Setup data for first 'FX' record
+     C                     MOVEL'FX'      TRMODI
+     C                     Z-ADD20        TRTOCA
+      *
+      ** Multi-portfolio processing
+     C           PTFR      IFEQ *BLANKS
+     C                     Z-ADD01        TRPORN
+     C                     ELSE
+     C                     MOVE PTFR      TRPORN
+     C                     ENDIF
+      *
+     C                     MOVELBRCA      TRBRCA
+     C                     MOVELCNUM      TRCNUM
+     C                     MOVELPUCY      TRCCY
+     C                     MOVEL*BLANKS   TRACOD
+     C                     MOVEL'01'      TRACSQ
+     C**********           Z-ADDDLNO      TRDLNO                                              CLE148
+     C                     MOVE DLNO      TRDLNO                                              CLE148
+     C                     MOVELDTYP      TRDTYP
+     C                     MOVE DLST      TRDTYP
+     C                     Z-ADDDDAT      TRDDAT
+     C                     Z-ADDDDAT      TRVDAT
+     C                     Z-ADDVDAT      TRMDAT
+     C                     MOVEL*BLANKS   TRSESN
+      *
+      ** Format amount  (18,3)
+     C                     Z-ADD*ZEROS    PAMNT
+     C                     MOVELPUCY      PCCY
+     C**********           MOVE PUAM      PAMNT                                               174874
+     C                     Z-SUBPUAM      PAMNT                                               174874
+     C                     EXSR SRCURR
+     C                     MOVE FAMNT     TRAMTD
+     C                     MOVE FAMNT     TRAMVD
+      *
+     C                     Z-ADD*ZEROS    TRRADR
+     C                     Z-ADD*ZEROS    TRRACR
+     C                     MOVELSLCY      TROCCY
+     C                     Z-ADDEXRT      TREXCH
+     C                     Z-ADDBJRDNB    TRRUND
+      *
+      ** Write first 'FX' record
+     C                     EXSR WRIT01
+      *
+      ** Setup data for second 'FX' record
+     C                     MOVELSLCY      TRCCY
+      *
+      ** Format amount  (18,3)
+     C                     Z-ADD*ZEROS    PAMNT
+     C                     MOVELSLCY      PCCY
+     C                     MOVE SLAM      PAMNT
+     C                     EXSR SRCURR
+     C                     MOVE FAMNT     TRAMTD
+     C                     MOVE FAMNT     TRAMVD
+      *
+     C                     MOVELPUCY      TROCCY
+      *
+      ** Write second 'FX'record
+     C                     EXSR WRIT01
+      *
+      ** Reset record format
+     C                     RESETPBRECOD0
+      *                                                                                       204146
+     C                     ENDIF                                                              207288
+     C                     END                                                                204146
+      *
+     C                     END                             - E2
+      *
+      ** MM Deals
+     C           FORM      IFEQ 'DEALSDCF'                 - B2
+     C           BJRDNB    ANDGEVDAT
+      *                                                                                       205940
+      ** Consider if Value Date is a non-working day                                          205940
+      *                                                                                       205940
+     C           FORM      OREQ 'DEALSDCF'                                                    205940
+     C           VDAT      ANDGTBJRDNB                                                        205940
+     C           VDAT      ANDLTBJDNWD                                                        205940
+      *
+      ** Setup data for 'MM' record
+     C                     MOVEL'MM'      TRMODI
+     C                     Z-ADD10        TRTOCA
+      *
+      ** Multi-portfolio processing
+     C           PTFR      IFEQ *BLANKS
+     C                     Z-ADD01        TRPORN
+     C                     ELSE
+     C                     MOVE PTFR      TRPORN
+     C                     ENDIF
+      *
+     C                     MOVELBRCA      TRBRCA
+     C                     MOVELCNUM      TRCNUM
+     C                     MOVELCCY       TRCCY
+     C                     MOVEL*BLANKS   TRACOD
+     C                     MOVEL'01'      TRACSQ
+     C**********           Z-ADDDLNO      TRDLNO                                              CLE148
+     C                     MOVE DLNO      TRDLNO                                              CLE148
+     C                     MOVELDTYP      TRDTYP
+     C                     MOVE DLST      TRDTYP
+     C                     Z-ADDDDAT      TRDDAT
+     C                     Z-ADDVDAT      TRVDAT
+      *
+      ** Maturity Date
+     C           DTYP      IFEQ 'CD'                       - B3
+     C           DTYP      OREQ 'CL'
+     C           DTYP      OREQ 'LN'
+     C           DTYP      OREQ 'DL'
+     C           BJRDNB    ADD  NOTD      TRMDAT
+     C                     ELSE                            - X3
+     C                     Z-ADDMDAT      TRMDAT
+     C                     END                             - E3
+      *
+     C                     MOVEL*BLANKS   TRSESN
+      *
+      ** Format amount  (18,3)
+     C                     Z-ADD*ZEROS    PAMNT
+     C                     MOVELCCY       PCCY
+     C                     MOVE PCPL      PAMNT
+     C                     EXSR SRCURR
+     C                     MOVE FAMNT     TRAMTD
+     C                     MOVE FAMNT     TRAMVD
+      *
+      ** Debit & Credit Rate
+     C           DTYP      IFEQ 'IT'
+     C           DTYP      OREQ 'TD'
+     C           DTYP      OREQ 'CD'
+     C           DTYP      OREQ 'LN'
+     C           DTYP      OREQ 'CI'
+     C                     Z-ADDINTR      TRRACR
+     C                     Z-ADD*ZEROS    TRRADR
+     C                     END
+      *
+     C           DTYP      IFEQ 'IP'
+     C           DTYP      OREQ 'TI'
+     C           DTYP      OREQ 'CL'
+     C           DTYP      OREQ 'DL'
+     C                     Z-ADDINTR      TRRADR
+     C                     Z-ADD*ZEROS    TRRACR
+      *
+      ** Reverse sign for loans
+     C                     Z-SUBTRAMTD    TRAMTD
+     C                     Z-SUBTRAMVD    TRAMVD
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   TROCCY
+     C                     Z-ADD*ZEROS    TREXCH
+     C                     Z-ADDBJRDNB    TRRUND
+      *
+      ** Write 'MM' record
+     C                     EXSR WRIT01
+      *
+     C                     END                             - E2
+      *
+      ** Read next Deals record
+     C                     READ CUSDE                    85
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CPPROC - Processinf for Customer Positions                    *
+      * Called by: - MAIN                                             *
+      *                                                               *
+      * Calls    : - WRIT01                                           *
+      *****************************************************************
+      *
+     C           CPPROC    BEGSR
+      *
+      ** Position on file with customer
+     C*****      TNCNUM    SETLLPMCPLVLL                                  CPB002
+     C*****                READ PMCPLVLL                 85               CPB002
+     C           TNCNUM    SETLLSECDEPL1                                  CPB002
+     C**********           READ SECDEPL1                 85        CPB002 198535
+     C           TNCNUM    READESECDEPL1                 85               198535
+      *                                                                   CPB002
+     C**********           Z-ADDCDCN      WWCDCN  60                                   CPB002 CSD027
+     C                     MOVE CDCN      WWCDCN  6                                           CSD027
+     C                     MOVE PTFR      WWPTFR  4                       CPB002
+     C                     MOVE CDSN      WWCDSN 10                       CPB002
+     C                     MOVE CDPA      WWCDPA  3                       CPB002
+     C                     Z-ADDDDTE      WWDDTE  50                      CPB002
+     C                     Z-ADD*ZEROS    WWCDNV 150                      CPB002
+     C                     Z-ADD*ZEROS    WWCECN 150                      CPB002
+      *
+      ** Loop process
+     C           *IN85     DOWEQ*OFF                       - B1
+     C*****      QACNUM    ANDEQTNCNUM                                    CPB002
+     C********** CDCN      ANDEQTNCNUM                             CPB002 198535
+      *
+      ** Select only balance different than 0
+     C           CDNV      IFNE *ZEROS                     - B2           CPB002
+     C           RECI      ANDEQ'D'                                       CPB002
+      *                                                                   CPB002
+      ** Cumulate Amounts by Customer/Portfolio/Security                  CPB002
+     C           CDCN      IFNE WWCDCN                     - B2a          CPB002
+     C           PTFR      ORNE WWPTFR                                    CPB002
+     C           CDSN      ORNE WWCDSN                                    CPB002
+      *                                                                   CPB002
+     C                     EXSR SRCDEP                                    CPB002
+      *                                                                   CPB002
+     C**********           Z-ADDCDCN      WWCDCN                                       CPB002 CSD027
+     C                     MOVE CDCN      WWCDCN                                              CSD027
+     C                     MOVE PTFR      WWPTFR                          CPB002
+     C                     MOVE CDSN      WWCDSN                          CPB002
+     C                     MOVE CDPA      WWCDPA                          CPB002
+     C                     Z-ADDDDTE      WWDDTE                          CPB002
+      *                                                                   CPB002
+     C                     Z-ADD*ZEROS    WWCDNV                          CPB002
+     C                     Z-ADD*ZEROS    WWCECN                          CPB002
+      *                                                                   198535
+     C           CDCN      IFNE TNCNUM                                    198535
+     C                     MOVE '1'       *IN85                           198535
+     C                     GOTO ELOOP                                     198535
+     C                     END                                            198535
+      *                                                                   198535
+     C                     END                             - E2a          CPB002
+      *                                                                   CPB002
+     C                     ADD  CDNV      WWCDNV                          CPB002
+     C                     ADD  CECN      WWCECN                          CPB002
+     C                     END                             - E2           CPB002
+      *                                                                   CPB002
+     C*****      QANOML    IFNE *ZEROS                     - B2           CPB002
+      *****                                                               CPB002
+      ***Setup data for SE Customer Positions                             CPB002
+     C*****                MOVEL'SE'      TRMODI                          CPB002
+     C*****                Z-ADD00        TRTOCA                          CPB002
+      *****                                                               CPB002
+     C*****      QAPTFR    IFEQ *BLANKS                    - B3           CPB002
+     C*****                Z-ADD01        TRPORN                          CPB002
+     C*****                ELSE                            - X3           CPB002
+     C*****                MOVE QAPTFR    TRPORN                          CPB002
+     C*****                ENDIF                           - E3           CPB002
+      *****                                                               CPB002
+     C*****                MOVELQABRCD    TRBRCA                          CPB002
+     C*****                MOVELQACNUM    TRCNUM                          CPB002
+     C*****                MOVEL*BLANKS   TRACOD                          CPB002
+     C*****                MOVEL'01'      TRACSQ                          CPB002
+     C*****                Z-ADD*ZEROS    TRDLNO                          CPB002
+     C*****                MOVEL*BLANKS   TRDTYP                          CPB002
+     C*****                Z-ADDQAPDAT    TRDDAT                          CPB002
+     C*****                Z-ADDQAPDAT    TRVDAT                          CPB002
+     C*****                Z-ADDQAPDAT    TRMDAT                          CPB002
+     C*****                MOVELQATDSS    TRSESN                          CPB002
+      *****                                                               CPB002
+      ***Retrieve Security details                                        CPB002
+     C*****      QATDSS    CHAINSECTY                55                   CPB002
+     C*****      *IN55     IFEQ *ON                        - B1           CPB002
+     C*****                Z-ADD003       WWBASE           ***************CPB002
+     C*****                MOVEL'SECTY   'WWBFIL           *DB ERROR 003 *CPB002
+     C*****                MOVE QATDSS    WWBKEY           ***************CPB002
+     C*****                EXSR *PSSR                                     CPB002
+     C*****                ENDIF                           - E1           CPB002
+      *****                                                               CPB002
+     C*****                MOVELNMCY      TRCCY                           CPB002
+      *****                                                               CPB002
+      ***Due to SE Redenomination nominal decimal places may be differentsCPB002
+     C*****      5         SUB  QATNMD    DC      10                      CPB002
+     C*****      QANOML    MULT POWER8,DC TRAMVD           CPB002         CPB002
+      *****                                                               CPB002
+      ***Setup field "Ex-Coupon Nominal - Value Date Basis"               CPB002
+     C*****      5         SUB  QATNMD    DC      10                      CPB002
+     C*****      QACSEX    MULT POWER8,DC TRAMEX                          CPB002
+      *****                                                               CPB002
+     C*****                Z-ADD*ZEROS    TRRADR                          CPB002
+     C*****                Z-ADD*ZEROS    TRRACR                          CPB002
+     C*****                MOVEL*BLANKS   TROCCY                          CPB002
+     C*****                Z-ADD*ZEROS    TREXCH                          CPB002
+     C*****                Z-ADDBJRDNB    TRRUND                          CPB002
+      *****                                                               CPB002
+      ***Write a record                                                   CPB002
+      ***Not for 'M'atured Security                                       CPB002
+     C*****      SERECI    IFNE 'M'                        - B3           CPB002
+     C*****                EXSR WRIT01                                    CPB002
+     C*****                ENDIF                           - E3           CPB002
+      *****                                                               CPB002
+     C*****                END                             - E2           CPB002
+      *
+      ** Read next Customer Position
+     C*****                READ PMCPLVLL                 85               CPB002
+     C                     READ SECDEPL1                 85               CPB002
+      *
+     C           ELOOP     TAG                                            198535
+      *                                                                   198535
+     C                     ENDDO                           - E1
+      *                                                                   CPB002
+     C           WWCDNV    IFNE *ZEROS                     - B1           CPB002
+     C           RECI      ANDEQ'D'                                       CPB002
+     C                     EXSR SRCDEP                                    CPB002
+     C                     ENDIF                           - E1           CPB002
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WRIT01 - Write a record on PF/PBRECOPD                        *
+      * Called by: - SR/GLPROC - RE Account Processing                *
+      *            - SR/MMPROC - MM & FX Processing                   *
+      *            - SR/CPPROC - Customer Positions                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRIT01    BEGSR
+      *
+      ** Write record on file
+     C                     WRITEPBRECOD0
+      *
+      ** Reset record format for non FX generation
+     C           TRMODI    IFNE 'FX'                       - B1
+     C                     RESETPBRECOD0
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************   CPB002
+      *                                                               *   CPB002
+      * SRCDEP - Setup record for writing on PF/PBRECOPD              *   CPB002
+      * Called by: - SR/CPPROC - Processing for Customer Positions    *   CPB002
+      *                                                               *   CPB002
+      *****************************************************************   CPB002
+      *                                                                   CPB002
+     C           SRCDEP    BEGSR                                          CPB002
+      *                                                                   CPB002
+      ** Setup data for SE Customer Positions                             CPB002
+     C                     MOVEL'SE'      TRMODI                          CPB002
+     C                     Z-ADD00        TRTOCA                          CPB002
+      *                                                                   CPB002
+     C           WWPTFR    IFEQ *BLANKS                    - B1           CPB002
+     C                     Z-ADD01        TRPORN                          CPB002
+     C                     ELSE                            - X1           CPB002
+     C                     MOVE WWPTFR    TRPORN                          CPB002
+     C                     ENDIF                           - E1           CPB002
+      *                                                                   CPB002
+     C                     MOVELWWCDPA    TRBRCA                          CPB002
+     C                     MOVELWWCDCN    TRCNUM                          CPB002
+     C                     MOVEL*BLANKS   TRACOD                          CPB002
+     C                     MOVEL'01'      TRACSQ                          CPB002
+     C**********           Z-ADD*ZEROS    TRDLNO                                       CPB002 CLE148
+     C                     MOVE *BLANKS   TRDLNO                                              CLE148
+     C                     MOVEL*BLANKS   TRDTYP                          CPB002
+     C                     Z-ADDWWDDTE    TRDDAT                          CPB002
+     C                     Z-ADDWWDDTE    TRVDAT                          CPB002
+     C                     Z-ADDWWDDTE    TRMDAT                          CPB002
+     C                     MOVELWWCDSN    TRSESN                          CPB002
+      *                                                                   CPB002
+      ** Retrieve Security details                                        CPB002
+     C           WWCDSN    CHAINSECTY                55                   CPB002
+     C           *IN55     IFEQ *ON                        - B1           CPB002
+     C                     Z-ADD003       WWBASE           ***************CPB002
+     C                     MOVEL'SECTY   'WWBFIL           *DB ERROR 003 *CPB002
+     C                     MOVE WWCDSN    WWBKEY           ***************CPB002
+     C                     EXSR *PSSR                                     CPB002
+     C                     ENDIF                           - E1           CPB002
+      *                                                                   CPB002
+     C                     MOVELNMCY      TRCCY                           CPB002
+      *                                                                   CPB002
+      ** Due to SE Redenomination nominal decimal places may be differentsCPB002
+     C           5         SUB  NMDP      DC      10                      CPB002
+     C           WWCDNV    MULT POWER8,DC TRAMVD                          CPB002
+      *                                                                   CPB002
+      ** Setup field "Ex-Coupon Nominal - Value Date Basis"               CPB002
+     C           5         SUB  NMDP      DC      10                      CPB002
+     C           WWCECN    MULT POWER8,DC TRAMEX                          CPB002
+      *                                                                   CPB002
+     C                     Z-ADD*ZEROS    TRRADR                          CPB002
+     C                     Z-ADD*ZEROS    TRRACR                          CPB002
+     C                     MOVEL*BLANKS   TROCCY                          CPB002
+     C                     Z-ADD*ZEROS    TREXCH                          CPB002
+     C                     Z-ADDBJRDNB    TRRUND                          CPB002
+      *                                                                   CPB002
+      ** Write a record                                                   CPB002
+     C           SERECI    IFNE 'M'                        - B1           CPB002
+     C                     EXSR WRIT01                                    CPB002
+     C                     ENDIF                           - E1           CPB002
+      *                                                                   CPB002
+     C                     ENDSR                                          CPB002
+      *****************************************************************   CPB002
+      /EJECT                                                              CPB002
+      *****************************************************************
+      *                                                               *
+      * SRCURR - Retrieve ccy decimal places to format amount (18,3)  *
+      * Called by: - SR/GLPROC - RE Account Processing                *
+      *            - SR/MMPROC - MM & FX Processing                   *
+      *            - SR/CPPROC - Customer Positions                   *
+      *                                                               *
+      * Input parameter : - PCCY : currency code                      *
+      *                   - PAMNT: Amount to format                   *
+      * Output parameter: - FAMNT: Formated  amount                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCURR    BEGSR
+      *
+      ** Retrieve ccy decimal places
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' PRETUR  7
+     C                     PARM '*KEY   ' POPTI   7
+     C                     PARM PCCY      PKEY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRETUR    IFNE *BLANKS                    - B1
+     C                     Z-ADD002       WWBASE           ***************
+     C                     MOVEL'SDCURRPD'WWBFIL           *DB ERROR 002 *
+     C                     MOVE PCCY      WWBKEY           ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           - E1
+      *
+     C** Format decimal places
+     C           A6NBDP    IFEQ 0                          - B1
+     C********** PAMNT     MULT 1000      FAMNT  180                                          152319
+     C           PAMNT     MULT 10000     FAMNT  180                                          152319
+     C                     ELSE                            - X1
+     C           A6NBDP    IFEQ 1                          - B2
+     C********** PAMNT     MULT 100       FAMNT                                               152319
+     C           PAMNT     MULT 1000      FAMNT                                               152319
+     C                     ELSE                            - X2
+     C           A6NBDP    IFEQ 2                          - B3
+     C********** PAMNT     MULT 10        FAMNT                                               152319
+     C           PAMNT     MULT 100       FAMNT                                               152319
+     C                     ELSE                            - X3
+     C           A6NBDP    IFEQ 3                          - B4                               152319
+     C           PAMNT     MULT 10        FAMNT                                               152319
+     C                     ELSE                            - X4                               152319
+     C                     Z-ADDPAMNT     FAMNT
+     C                     ENDIF                                                              152319
+     C                     END                             - E3
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #INIT  - Initial process                                      *
+      * Called by: - main process                                     *
+      * Calls: none                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+     C           KINVT2    KLIST
+     C                     KFLD           KCCY    3
+     C                     KFLD           KINVT   3
+      *
+      **  Redefine data error fields
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      **  Access Bank details via access program
+      **  (database error handling done in access program)
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      **  Set Date indicator to DDMMYY
+     C                     MOVE *OFF      *IN98
+      *                                                                   CPB004
+      **  Access SAR details via access program                           CPB004
+     C                     CALL 'AOSARDR0'                                CPB004
+     C                     PARM '       ' @RTCD   7                       CPB004
+     C                     PARM '*KEY   ' @OPTN   7                       CPB004
+     C                     PARM 'CPB004'  @SARD   6                       CPB004
+     C           SCSARD    PARM SCSARD    DSSDY                           CPB004
+      *                                                                   CPB004
+     C           @RTCD     IFEQ *BLANKS                                   CPB004
+     C                     MOVE 'Y'       WPB004  1                       CPB004
+     C                     ELSE                                           CPB004
+     C                     MOVE 'N'       WPB004                          CPB004
+     C                     ENDIF                                          CPB004
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL'PB0800'  DBPGM     P
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     DUMP
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZF2C                                                                       205940
+     C/COPY ZSRSRC,ZACCH                                                                      205940
+**  CPY@ - OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**  POWER8 - ARRAY OF POWERS FOR NOMINAL DP TO CURRENCY DP CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

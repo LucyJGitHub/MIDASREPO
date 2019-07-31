@@ -1,0 +1,242 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF AP Submit Job')                              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Application Program Interface Module                */
+/*                                                                   */
+/*       APCSBJBVU - Midas OF AP Submit Job                          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD051848           Date 04Sep18              */
+/*       Prev Amend No. MD046675           Date 27Jul17              */
+/*                      MD046248           Date 27Oct17              */
+/*                      MD024079           Date 12Dec13              */
+/*                      CAP090A            Date 04Nov13              */
+/*                      CAP090   *CREATE   Date 10Jul13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD051848 - Build issue. Object APCSBJBVU not created        */
+/*       MD046675 - Use a different jobq for GLC000585.              */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD024079 - CAP090 Invalid parameter.                        */
+/*       CAP090A - Initiate Batch Process API                        */
+/*       CAP090 - Initiate Batch Process API                         */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM        PARM(&INPROGRAM &APPARM1 &APPARM2 &APPARM3 +
+                          &APPARM4 &APPARM5 &APPARM6 &APPARM7 +
+                          &APPARM8 &APPARM9 &APPARM10 &APSBMJOB +
+                          &EXTDATA &APUSERID &FIELDNAME &MSGID +
+                          &MSGDTA &IDX &WFIELDNAM &WMSGID &WMSGDTA +
+                          &UPDATEYN &BUFFER &APIRETC)
+
+             DCL        VAR(&INPROGRAM) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&APPARM1)   TYPE(*CHAR) LEN(100)
+             DCL        VAR(&APPARM2)   TYPE(*CHAR) LEN(100)
+             DCL        VAR(&APPARM3)   TYPE(*CHAR) LEN(100)
+             DCL        VAR(&APPARM4)   TYPE(*CHAR) LEN(100)
+             DCL        VAR(&APPARM5)   TYPE(*CHAR) LEN(100)
+             DCL        VAR(&APPARM6)   TYPE(*CHAR) LEN(100)
+             DCL        VAR(&APPARM7)   TYPE(*CHAR) LEN(100)
+             DCL        VAR(&APPARM8)   TYPE(*CHAR) LEN(100)
+             DCL        VAR(&APPARM9)   TYPE(*CHAR) LEN(100)
+             DCL        VAR(&APPARM10)  TYPE(*CHAR) LEN(100)
+             DCL        VAR(&APSBMJOB)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&EXTDATA)   TYPE(*CHAR) LEN(500)
+             DCL        VAR(&APUSERID)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FIELDNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGID)     TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGDTA)    TYPE(*CHAR) LEN(50)
+             DCL        VAR(&IDX)       TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&WFIELDNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WMSGID)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&WMSGDTA)   TYPE(*CHAR) LEN(50)
+             DCL        VAR(&UPDATEYN)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BUFFER)    TYPE(*CHAR) LEN(6000)
+             DCL        VAR(&IDX)       TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&APIRETC)   TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&PARN)      TYPE(*CHAR) LEN(2) VALUE('''')
+
+             DCL        VAR(&SBMJOB)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SBMUSR)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SBMNUM)    TYPE(*CHAR) LEN(6)
+             DCL        VAR(&PCMD)      TYPE(*CHAR) LEN(1500)
+             DCL        VAR(&WJOBQ)     TYPE(*CHAR) LEN(10)                             /*MD051848*/
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+
+/** Validate program to submit **/
+
+             IF         COND(&APUSERID *EQ '          ') THEN(DO)
+             CHKOBJ     OBJ(&INPROGRAM) OBJTYPE(*PGM) AUT(*USE)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR))
+             ENDDO
+
+             ELSE       DO
+             CHKOBJ     OBJ(&INPROGRAM) OBJTYPE(*PGM) AUT(*NONE)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR))
+             ENDDO
+
+
+/** Build the command to submit **/
+
+/**********  CHGVAR     VAR(&PCMD) VALUE('CALL' *BCAT &INPROGRAM *BCAT + */              /*CAP090A*/
+/**********               'PARM( ' +                                     */              /*CAP090A*/
+/**********               *TCAT &PARN *TCAT &APPARM1 *TCAT &PARN +       */              /*CAP090A*/
+/**********               *BCAT &PARN *TCAT &APPARM2 *TCAT &PARN +       */              /*CAP090A*/
+/**********               *BCAT &PARN *TCAT &APPARM3 *TCAT &PARN +       */              /*CAP090A*/
+/**********               *BCAT &PARN *TCAT &APPARM4 *TCAT &PARN +       */              /*CAP090A*/
+/**********               *BCAT &PARN *TCAT &APPARM5 *TCAT &PARN +       */              /*CAP090A*/
+/**********               *BCAT &PARN *TCAT &APPARM6 *TCAT &PARN +       */              /*CAP090A*/
+/**********               *BCAT &PARN *TCAT &APPARM7 *TCAT &PARN +       */              /*CAP090A*/
+/**********               *BCAT &PARN *TCAT &APPARM8 *TCAT &PARN +       */              /*CAP090A*/
+/**********               *BCAT &PARN *TCAT &APPARM9 *TCAT &PARN +       */              /*CAP090A*/
+/**********               *BCAT &PARN *TCAT &APPARM10**TCAT&&PARN++      */              /*CAP090A*/
+/**********               *TCAT ')')                                     */              /*CAP090A*/
+                                                                                         /*CAP090A*/
+             CHGVAR     VAR(&PCMD) VALUE('CALL' *BCAT &INPROGRAM *BCAT +
+                          'PARM(')                                                       /*CAP090A*/
+                                                                                         /*CAP090A*/
+             IF         COND(&APPARM1 *NE ' ')  THEN(DO)                                 /*CAP090A*/
+/**********  CHGVAR     VAR(&PCMD) VALUE(&PCMD *TCAT &PARN *TCAT +       */             /*MD024079*/
+/**********               &APPARM1 *TCAT &PARN)                          */ /*CAP090A*/ /*MD024079*/
+             CHGVAR     VAR(&PCMD) VALUE(&PCMD *TCAT &PARN *TCAT +
+                          &APPARM1 *CAT &PARN)                                          /*MD024079*/
+             ENDDO                                                                       /*CAP090A*/
+                                                                                         /*CAP090A*/
+             IF         COND(&APPARM2 *NE ' ')  THEN(DO)                                 /*CAP090A*/
+/**********  CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +       */             /*MD024079*/
+/**********               &APPARM2 *TCAT &PARN)                          */ /*CAP090A*/ /*MD024079*/
+             CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +
+                          &APPARM2 *CAT &PARN)                                          /*MD024079*/
+             ENDDO                                                                       /*CAP090A*/
+                                                                                         /*CAP090A*/
+             IF         COND(&APPARM3 *NE ' ')  THEN(DO)                                 /*CAP090A*/
+/**********  CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +       */             /*MD024079*/
+/**********               &APPARM3 *TCAT &PARN)                          */ /*CAP090A*/ /*MD024079*/
+             CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +
+                          &APPARM3 *CAT &PARN)                                          /*MD024079*/
+             ENDDO                                                                       /*CAP090A*/
+                                                                                         /*CAP090A*/
+             IF         COND(&APPARM4 *NE ' ')  THEN(DO)                                 /*CAP090A*/
+/**********  CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +       */             /*MD024079*/
+/**********               &APPARM4 *TCAT &PARN)                          */ /*CAP090A*/ /*MD024079*/
+             CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +
+                          &APPARM4 *CAT &PARN)                                          /*MD024079*/
+             ENDDO                                                                       /*CAP090A*/
+                                                                                         /*CAP090A*/
+             IF         COND(&APPARM5 *NE ' ')  THEN(DO)                                 /*CAP090A*/
+/**********  CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +       */             /*MD024079*/
+/**********               &APPARM5 *TCAT &PARN)                          */ /*CAP090A*/ /*MD024079*/
+             CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +
+                          &APPARM5 *CAT &PARN)                                          /*MD024079*/
+             ENDDO                                                                       /*CAP090A*/
+                                                                                         /*CAP090A*/
+             IF         COND(&APPARM6 *NE ' ')  THEN(DO)                                 /*CAP090A*/
+/**********  CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +       */             /*MD024079*/
+/**********               &APPARM6 *TCAT &PARN)                          */ /*CAP090A*/ /*MD024079*/
+             CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +
+                          &APPARM6 *CAT &PARN)                                          /*MD024079*/
+             ENDDO                                                                       /*CAP090A*/
+                                                                                         /*CAP090A*/
+             IF         COND(&APPARM7 *NE ' ')  THEN(DO)                                 /*CAP090A*/
+/**********  CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +       */             /*MD024079*/
+/**********               &APPARM7 *TCAT &PARN)                          */ /*CAP090A*/ /*MD024079*/
+             CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +
+                          &APPARM7 *CAT &PARN)                                          /*MD024079*/
+             ENDDO                                                                       /*CAP090A*/
+                                                                                         /*CAP090A*/
+             IF         COND(&APPARM8 *NE ' ')  THEN(DO)                                 /*CAP090A*/
+/**********  CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +       */             /*MD024079*/
+/**********               &APPARM8 *TCAT &PARN)                          */ /*CAP090A*/ /*MD024079*/
+             CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +
+                          &APPARM8 *CAT &PARN)                                          /*MD024079*/
+             ENDDO                                                                       /*CAP090A*/
+                                                                                         /*CAP090A*/
+             IF         COND(&APPARM9 *NE ' ')  THEN(DO)                                 /*CAP090A*/
+/**********  CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +       */             /*MD024079*/
+/**********               &APPARM9 *TCAT &PARN)                          */ /*CAP090A*/ /*MD024079*/
+             CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +
+                          &APPARM9 *CAT &PARN)                                          /*MD024079*/
+             ENDDO                                                                       /*CAP090A*/
+                                                                                         /*CAP090A*/
+             IF         COND(&APPARM10 *NE ' ')  THEN(DO)                                /*CAP090A*/
+/**********  CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +       */             /*MD024079*/
+/**********               &APPARM10 *TCAT &PARN)                         */ /*CAP090A*/ /*MD024079*/
+             CHGVAR     VAR(&PCMD) VALUE(&PCMD *BCAT &PARN *TCAT +
+                          &APPARM10 *CAT &PARN)                                         /*MD024079*/
+             ENDDO                                                                       /*CAP090A*/
+                                                                                         /*CAP090A*/
+             CHGVAR     VAR(&PCMD) VALUE(&PCMD *TCAT ')')                                /*CAP090A*/
+
+             RTVJOBD    JOBD(MBATCH) JOBQ(&WJOBQ)                                       /*MD046675*/
+             IF         COND(&INPROGRAM *EQ 'GLC000585') THEN(DO)                       /*MD046675*/
+             CHGVAR     VAR(&WJOBQ) VALUE('DIJOBQ')                                     /*MD046675*/
+             ENDDO                                                                      /*MD046675*/
+
+/** Submit program to batch **/
+
+             IF         COND(&APUSERID *EQ '          ') THEN(DO)
+/**********  SBMJOB     JOB(&INPROGRAM) JOBD(MBATCH) JOBQ(*JOBD) + */                   /*MD046675*/
+/**********               USER(*JOBD) RTGDTA(*JOBD) RQSDTA(&PCMD) +*/                   /*MD046675*/
+/**********               INLLIBL(*JOBD) MSGQ(MOPERQ)              */                   /*MD046675*/
+             SBMJOB     JOB(&INPROGRAM) JOBD(MBATCH) JOBQ(&WJOBQ) +
+                          USER(*JOBD) RTGDTA(*JOBD) RQSDTA(&PCMD) +
+                          INLLIBL(*JOBD) MSGQ(MOPERQ)                                   /*MD046675*/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+             ENDDO
+
+             ELSE       DO
+/**********  SBMJOB     JOB(&INPROGRAM) JOBD(MBATCH) JOBQ(*JOBD) + */                   /*MD046675*/
+/**********               USER(*JOBD) RTGDTA(*JOBD) RQSDTA(&PCMD) +*/                   /*MD046675*/
+/**********               INLLIBL(*JOBD) MSGQ(MOPERQ)              */       /*CAP090A*/ /*MD046675*/
+/**********               USER(&APUSERID) RTGDTA(*JOBD) +            */                  /*CAP090A*/
+/**********               RQSDTA(&PCMD) INLLIBL(*JOBD) MSGQ(MOPERQ)  */                  /*CAP090A*/
+             SBMJOB     JOB(&INPROGRAM) JOBD(MBATCH) JOBQ(&WJOBQ) +
+                          USER(*JOBD) RTGDTA(*JOBD) RQSDTA(&PCMD) +
+                          INLLIBL(*JOBD) MSGQ(MOPERQ)                                   /*MD046675*/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+             ENDDO
+
+
+/** Retrieve the job reference of the submitted job **/
+
+             RCVMSG     PGMQ(*SAME) RMV(*NO) MSGDTA(&MSGDTA) +
+                          MSGID(&MSGID)
+
+             IF         COND(&MSGID *EQ 'CPC1221') THEN(DO)
+             CHGVAR     VAR(&SBMJOB) VALUE(%SST(&MSGDTA 1 10))
+             CHGVAR     VAR(&SBMUSR) VALUE(%SST(&MSGDTA 11 10))
+             CHGVAR     VAR(&SBMNUM) VALUE(%SST(&MSGDTA 21 6))
+
+             CHGVAR     VAR(&APSBMJOB) VALUE('Submitted job' +
+                          *BCAT &SBMJOB *TCAT '/' *TCAT &SBMUSR +
+                          *TCAT '/' *TCAT &SBMNUM)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ERROR:
+             CHGVAR     VAR(&IDX) VALUE(&IDX + 1)
+             CHGVAR     VAR(&FIELDNAME) VALUE('SJPROGRAM')
+             CHGVAR     VAR(&MSGID) VALUE('45046149')
+             CHGVAR     VAR(&MSGDTA) VALUE(&INPROGRAM)
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDMSG     MSG('Midas OF AP Submit to Job has +
+                          terminated abnormally.') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ END:
+
+             ENDPGM

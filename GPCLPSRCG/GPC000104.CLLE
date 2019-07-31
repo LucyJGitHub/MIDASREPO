@@ -1,0 +1,260 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas GP Open Month End Restore DBICG and DBICGTA')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Global Processing                               */
+/*                                                                   */
+/*       GPC000104 - Open Month End Restore DBICG and DBICGTA        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2005                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG8387            Date 03Sep05              */
+/*                      BUG8328 *CREATE    Date 30Aug05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       BUG8387- Library DUMGI/DUMDI not found                      */
+/*       BUG8328- OME Global Data Replication from Live to OME       */
+/*                                                                   */
+/*********************************************************************/
+ 
+/**********  PGM        PARM(&GMLIBL &GTALIBL &GILIBL &DUMGM &DUMGT +  */                 /*CSC043*/
+/**********               &DUMGI &DEV &DBICGSQ &DBICGTSQ &JBNM)        */                 /*CSC043*/
+             PGM        PARM(&GMLIBL &GTALIBL &GILIBL &DUMGM &DUMGT +
+                          &DUMGI &DEV &DBICGSQ &DBICGTSQ &JBNM +
+                          &IASP_YN &IASP)                                                 /*CSC043*/
+ 
+             DCL        VAR(&GMLIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GTALIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GILIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DUMGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DUMGT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DUMGI) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DEV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DBICGSQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DBICGTSQ) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&JBNM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(80) VALUE(' ')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2005')
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                    /*CSC043*/
+ 
+/** If Restore from a device */
+ 
+             IF         COND(&DEV *NE '          ') THEN(DO)
+/**********  RSTOBJ     OBJ(DBICG) SAVLIB(&GILIBL) DEV(&DEV) +
+                          SEQNBR(&DBICGSQ) RSTLIB(DUMGI) OUTPUT(*PRINT)*/                /*BUG8387*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             RSTOBJ     OBJ(DBICG) SAVLIB(&GILIBL) DEV(&DEV) +
+                          SEQNBR(&DBICGSQ) RSTLIB(&DUMGI) +
+                          OUTPUT(*PRINT) RSTASPDEV(&IASP)                                 /*CSC043*/
+             MONMSG     MSGID(CPF3773)                                                    /*CSC043*/
+             MONMSG     MSGID(CPF3767) EXEC(DO)                                           /*CSC043*/
+             CHGVAR     VAR(&MSG) VALUE('Device' *BCAT &DEV *BCAT +
+                          'not found.')                                                   /*CSC043*/
+             SNDBRKMSG  MSG(&MSG) TOMSGQ(&JBNM)                                           /*CSC043*/
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)                                          /*CSC043*/
+             MONMSG     MSGID(CPF0000)                                                    /*CSC043*/
+             GOTO       CMDLBL(NOCOPY)                                                    /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+             RSTOBJ     OBJ(DBICG) SAVLIB(&GILIBL) DEV(&DEV) +
+                          SEQNBR(&DBICGSQ) RSTLIB(&DUMGI) +
+                          OUTPUT(*PRINT)                                                 /*BUG8387*/
+             MONMSG     MSGID(CPF3773)
+             MONMSG     MSGID(CPF3767) EXEC(DO)
+             CHGVAR     VAR(&MSG) VALUE('Device' *BCAT &DEV *BCAT +
+                          'not found.')
+             SNDBRKMSG  MSG(&MSG) TOMSGQ(&JBNM)
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(NOCOPY)
+             ENDDO
+             ENDDO                                                                        /*CSC043*/
+ 
+/**********  RSTOBJ     OBJ(DBICGTA) SAVLIB(&GILIBL) DEV(&DEV) +
+                          SEQNBR(&DBICGTSQ) RSTLIB(DUMGI) +
+                          OUTPUT(*PRINT)                             */                  /*BUG8387*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             RSTOBJ     OBJ(DBICGTA) SAVLIB(&GILIBL) DEV(&DEV) +
+                          SEQNBR(&DBICGTSQ) RSTLIB(&DUMGI) +
+                          OUTPUT(*PRINT) RSTASPDEV(&IASP)                                 /*CSC043*/
+             MONMSG     MSGID(CPF3773)                                                    /*CSC043*/
+             MONMSG     MSGID(CPF3767) EXEC(DO)                                           /*CSC043*/
+             CHGVAR     VAR(&MSG) VALUE('Device' *BCAT &DEV *BCAT +
+                          'not found.')                                                   /*CSC043*/
+             SNDBRKMSG  MSG(&MSG) TOMSGQ(&JBNM)                                           /*CSC043*/
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)                                          /*CSC043*/
+             MONMSG     MSGID(CPF0000)                                                    /*CSC043*/
+             GOTO       CMDLBL(NOCOPY)                                                    /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+             RSTOBJ     OBJ(DBICGTA) SAVLIB(&GILIBL) DEV(&DEV) +
+                          SEQNBR(&DBICGTSQ) RSTLIB(&DUMGI) +
+                          OUTPUT(*PRINT)                                                 /*BUG8387*/
+             MONMSG     MSGID(CPF3773)
+             MONMSG     MSGID(CPF3767) EXEC(DO)
+             CHGVAR     VAR(&MSG) VALUE('Device' *BCAT &DEV *BCAT +
+                          'not found.')
+             SNDBRKMSG  MSG(&MSG) TOMSGQ(&JBNM)
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(NOCOPY)
+             ENDDO
+             ENDDO
+             ENDDO                                                                        /*CSC043*/
+ 
+/** Restore all files residing in xxGMLIB to a temporary dummy library */
+ 
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             RSTOBJ     OBJ(GP* T_*) SAVLIB(&GMLIBL) DEV(*SAVF) +
+                          SAVF(&GILIBL/DBICG) MBROPT(*ALL) +
+                          RSTLIB(&DUMGM) OUTPUT(*PRINT) +
+                          RSTASPDEV(&IASP)                                                /*CSC043*/
+             MONMSG     MSGID(CPF3773)                                                    /*CSC043*/
+                                                                                          /*CSC043*/
+/** Check if Global DBIC is empty, then display this message */                           /*CSC043*/
+                                                                                          /*CSC043*/
+             MONMSG     MSGID(CPF3707) EXEC(DO)                                           /*CSC043*/
+             CHGVAR     VAR(&MSG) VALUE('Save file DBICG in library' +
+                          *BCAT &GILIBL *BCAT 'has no data.')                             /*CSC043*/
+             SNDBRKMSG  MSG(&MSG) TOMSGQ(&JBNM)                                           /*CSC043*/
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)                                          /*CSC043*/
+             MONMSG     MSGID(CPF0000)                                                    /*CSC043*/
+             GOTO       CMDLBL(NOCOPY)                                                    /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+                                                                                          /*CSC043*/
+/** Check if no object restored from xxGMLIB */                                           /*CSC043*/
+                                                                                          /*CSC043*/
+             MONMSG     MSGID(CPF3770) EXEC(DO)                                           /*CSC043*/
+             CHGVAR     VAR(&MSG) VALUE('No objects restored for +
+                          library' *BCAT &GMLIBL *TCAT '.')                               /*CSC043*/
+             SNDBRKMSG  MSG(&MSG) TOMSGQ(&JBNM)                                           /*CSC043*/
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)                                          /*CSC043*/
+             MONMSG     MSGID(CPF0000)                                                    /*CSC043*/
+             GOTO       CMDLBL(NOCOPY)                                                    /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+             RSTOBJ     OBJ(GP* T_*) SAVLIB(&GMLIBL) DEV(*SAVF) +
+                          SAVF(&GILIBL/DBICG) MBROPT(*ALL) +
+                          RSTLIB(&DUMGM) OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF3773)
+ 
+/** Check if Global DBIC is empty, then display this message */
+ 
+             MONMSG     MSGID(CPF3707) EXEC(DO)
+             CHGVAR     VAR(&MSG) VALUE('Save file DBICG in library' +
+                          *BCAT &GILIBL *BCAT 'has no data.')
+             SNDBRKMSG  MSG(&MSG) TOMSGQ(&JBNM)
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(NOCOPY)
+             ENDDO
+ 
+/** Check if no object restored from xxGMLIB */
+ 
+             MONMSG     MSGID(CPF3770) EXEC(DO)
+             CHGVAR     VAR(&MSG) VALUE('No objects restored for +
+                          library' *BCAT &GMLIBL *TCAT '.')
+             SNDBRKMSG  MSG(&MSG) TOMSGQ(&JBNM)
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(NOCOPY)
+             ENDDO
+             ENDDO                                                                        /*CSC043*/
+ 
+/** Restore all files residing in xxGTALIB to a temporary dummy library */
+ 
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             RSTOBJ     OBJ(GP* T_*) SAVLIB(&GTALIBL) DEV(*SAVF) +
+                          SAVF(&GILIBL/DBICGTA) MBROPT(*ALL) +
+                          RSTLIB(&DUMGT) OUTPUT(*PRINT) +
+                          RSTASPDEV(&IASP)                                                /*CSC043*/
+             MONMSG     MSGID(CPF3773)                                                    /*CSC043*/
+                                                                                          /*CSC043*/
+/** Check if DBICGTA is empty, then display this message */                               /*CSC043*/
+                                                                                          /*CSC043*/
+             MONMSG     MSGID(CPF3707) EXEC(DO)                                           /*CSC043*/
+             CHGVAR     VAR(&MSG) VALUE('Save file DBICGTA in library' +
+                          *BCAT &GILIBL *BCAT 'has no data.')                             /*CSC043*/
+             SNDBRKMSG  MSG(&MSG) TOMSGQ(&JBNM)                                           /*CSC043*/
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)                                          /*CSC043*/
+             MONMSG     MSGID(CPF0000)                                                    /*CSC043*/
+             GOTO       CMDLBL(NOCOPY)                                                    /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+                                                                                          /*CSC043*/
+/** Check if no object restored from xxGTALIB */                                          /*CSC043*/
+                                                                                          /*CSC043*/
+             MONMSG     MSGID(CPF3770) EXEC(DO)                                           /*CSC043*/
+             CHGVAR     VAR(&MSG) VALUE('No objects restored for +
+                          library' *BCAT &GTALIBL *TCAT '.')                              /*CSC043*/
+             SNDBRKMSG  MSG(&MSG) TOMSGQ(&JBNM)                                           /*CSC043*/
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)                                          /*CSC043*/
+             MONMSG     MSGID(CPF0000)                                                    /*CSC043*/
+             GOTO       CMDLBL(NOCOPY)                                                    /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+             RSTOBJ     OBJ(GP* T_*) SAVLIB(&GTALIBL) DEV(*SAVF) +
+                          SAVF(&GILIBL/DBICGTA) MBROPT(*ALL) +
+                          RSTLIB(&DUMGT) OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF3773)
+ 
+/** Check if DBICGTA is empty, then display this message */
+ 
+             MONMSG     MSGID(CPF3707) EXEC(DO)
+             CHGVAR     VAR(&MSG) VALUE('Save file DBICGTA in library' +
+                          *BCAT &GILIBL *BCAT 'has no data.')
+             SNDBRKMSG  MSG(&MSG) TOMSGQ(&JBNM)
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(NOCOPY)
+             ENDDO
+ 
+/** Check if no object restored from xxGTALIB */
+ 
+             MONMSG     MSGID(CPF3770) EXEC(DO)
+             CHGVAR     VAR(&MSG) VALUE('No objects restored for +
+                          library' *BCAT &GTALIBL *TCAT '.')
+             SNDBRKMSG  MSG(&MSG) TOMSGQ(&JBNM)
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(NOCOPY)
+             ENDDO
+             ENDDO                                                                        /*CSC043*/
+ 
+             CHGDTAARA  DTAARA(GOMESTAT) VALUE('S')
+             GOTO       CMDLBL(ENDP)
+ 
+ NOCOPY:     CHGDTAARA  DTAARA(GOMESTAT) VALUE('F')
+ 
+ENDP:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+             ENDPGM

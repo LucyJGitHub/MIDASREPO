@@ -1,0 +1,274 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Set Retail Overrides data area flags')
+     T* GL Set Retail Override flags
+      *
+     H* SYSTEM      : GL Journal Entries
+     H*  Company :
+     H* ANALYST     : J L Blenkinsop
+     H* DATE        : August 1988
+     H* DESCRIPTION : Set Retail Override flags in Data Area GLREOV
+      *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - General Ledger Module
+     F*                                                                  *S01251
+     F*     GLSETDR - RETAIL RETAIL OVERRIDE DATAAREA FLAGS              *S01251
+     F*                                                                  *S01251
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *S01251
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG8521            Date 15Sep05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 116358             Date  09JAN98              *  *S01251
+     F*                 CGL002             Date 28OCT96               *
+     F*                 E23794             Date 08OCT90               *
+     F*                 S01199             Date 02MAY90               *
+     F*                 S01251             DATE 22FEB90                  *S01251
+     F*                                                                  *S01251
+     F********************************************************************S01251
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *     BUG5821 - Use override indicator #10 for Group Accounts   *
+      *               Limit checking (apply GEMS 227185).             *
+     F*     116358 - Fields should default to 'N' as ' ' is invalid.     *S01251
+     F*  CGL002 - Block GL Accounts in Journal Entry Input            *
+     F*     E23794 - PGM RECOMPILED FOR CURSOR SENSITIVE HELP FIX        *S01251
+     F*     S01199 - CHANGED FOR CURSOR SENSITIVE HELP                   *S01251
+     F*     S01251 - REVIEWED BY CPS FOR NAME CHANGES                    *S01251
+     F********************************************************************S01251
+     M* MAINTENANCE : *NONE
+      *
+      ********************************************************************
+     F********************************************************************
+     F*  P R O G R A M     C R E A T I O N     P A R A M E T E R S    *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*FSTART
+      ************************************************************
+     FGLSETDR#CF  E                    WORKSTN
+     E                    CPY@    1   1 80
+      * I/O - Display file
+      ************************************************************
+      /EJECT
+     I*ISTART
+      ********************************************************************
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     I##REOV      DS
+      * Retail Override Display data structure
+     I                                        1   1 ##RFDR
+     I                                        2   2 ##RFCR
+     I                                        3   3 ##BLDR
+     I                                        4   4 ##BLCR
+     I                                        5   5 ##INAC
+     I                                        6   6 ##NOT1
+     I                                        7   7 ##BNKR
+     I                                        8   8 ##BADD
+     I                                        9   9 ##STOP
+     I                                       10  10 ##NOT2
+      *
+     IGLREOV      DS
+      * Retail Override Data Area data structure
+     I                                        1   1 GLRFDR
+     I                                        2   2 GLRFCR
+     I                                        3   3 GLBLDR
+     I                                        4   4 GLBLCR
+     I                                        5   5 GLINAC
+     I                                        6   6 GLNOT1
+     I                                        7   7 GLBANK
+     I                                        8   8 GLBADD
+     I                                        9   9 GLSTOP
+     I                                       10  10 GLNOT2
+      *
+     IRUNDAT      DS
+      * MIDAS Run date Data Area data structure
+     I*******                                 1   7 ##ACNA                S01251
+     I*******                             P   8  100##EJNB                S01251
+     I*******                                11  11 ##DDST                S01251
+     I*******                                12  12 ##DEST                S01251
+     I*******                                13  13 ##DFST                S01251
+     I                                        1   7 ##MRDT                S01251
+     I                                    P   8  100##RDNB                S01251
+     I                                       11  11 ##SUC                 S01251
+     I                                       12  12 ##DFF                 S01251
+     I                                       13  13 ##MBIN                S01251
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     ISDMMOD    E DSSDMMODPD                                              CGL002
+      **  Module Details                                                  CGL002
+      *                                                                   CGL002
+     ISCSARD    E DSSCSARDPD                                              CGL002
+      **  Switchable Features Details                                     CGL002
+      *                                                                   CGL002
+     IDSFDY     E DSDSFDY                                                 CGL002
+      **  First data structure for access pgms, short data structure      CGL002
+      *
+      ********************************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************
+      *MAIN
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           GLREOV 10        Data Area
+     C                     IN   GLREOV                     - Overrides
+     C                     MOVE GLREOV    ##REOV           To display
+     C           ##RFDR    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##RFDR                          116358
+     C                     ENDIF                                          116358
+     C           ##RFCR    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##RFCR                          116358
+     C                     ENDIF                                          116358
+     C           ##BLDR    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##BLDR                          116358
+     C                     ENDIF                                          116358
+     C           ##BLCR    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##BLCR                          116358
+     C                     ENDIF                                          116358
+     C           ##INAC    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##INAC                          116358
+     C                     ENDIF                                          116358
+     C           ##BNKR    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##BNKR                          116358
+     C                     ENDIF                                          116358
+     C           ##BADD    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##BADD                          116358
+     C                     ENDIF                                          116358
+     C           ##STOP    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##STOP                          116358
+     C                     ENDIF                                          116358
+     C           ##NOT2    IFEQ ' '                                                          BUG8521
+     C                     MOVE 'N'       ##NOT2                                             BUG8521
+     C                     ENDIF                                                             BUG8521
+      *
+     C           *NAMVAR   DEFN           RUNDAT 13        Data Area
+     C                     IN   RUNDAT                     - Run date
+      *                                                                   CGL002
+      **  Access module details                                           CGL002
+      *                                                                   CGL002
+     C                     CALL 'AOMMODR0'                                CGL002
+     C                     PARM '*DBERR'  WRTCD   7                       CGL002
+     C                     PARM '*FIRST'  WOPTN   7                       CGL002
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CGL002
+      *                                                                   CGL002
+      **  Check if Retail module is present in the system                 CGL002
+      *                                                                   CGL002
+     C           BGRTBN    IFEQ 'Y'                                       CGL002
+     C                     MOVE *ON       *IN20                           CGL002
+     C                     ENDIF                                          CGL002
+      *                                                                   CGL002
+      **  Check if Block GL A/c Enhancement feature is installed          CGL002
+      *                                                                   CGL002
+     C                     CALL 'AOSARDR0'                                CGL002
+     C                     PARM *BLANKS   WRTCD                           CGL002
+     C                     PARM '*VERIFY' WOPTN                           CGL002
+     C                     PARM 'CGL002'  WSARN   6                       CGL002
+     C           SCSARD    PARM SCSARD    DSFDY                           CGL002
+      *                                                                   CGL002
+     C           WRTCD     IFEQ *BLANKS                                   CGL002
+     C                     MOVE *ON       *IN21                           CGL002
+     C                     ENDIF                                          CGL002
+      *                                                                                      BUG8521
+      **  Check if Cash Management (CRE008) feature is installed.                            BUG8521
+      *                                                                                      BUG8521
+     C                     CALL 'AOSARDR0'                                                   BUG8521
+     C                     PARM *BLANKS   WRTCD                                              BUG8521
+     C                     PARM '*VERIFY' WOPTN                                              BUG8521
+     C                     PARM 'CRE008'  WSARN   6                                          BUG8521
+     C           SCSARD    PARM SCSARD    DSFDY                                              BUG8521
+      *                                                                                      BUG8521
+     C           WRTCD     IFEQ *BLANKS                                                      BUG8521
+     C                     MOVE *ON       *IN22                                              BUG8521
+     C                     ENDIF                                                             BUG8521
+      *
+      * Display main screen and accept data until CMD.1 :
+      *
+     C*          *IN01     DOUEQ'1'                        DO 1 TO EOJ
+     C           *IN03     DOUEQ'1'                        DO 1 TO EOJ
+     C                     EXFMT#DETL                        S'File
+     C           *IN05     CASEQ'1'       AALOAD           CAS 1 Reload
+     C*          *IN03     CASEQ'1'       ABUPDT               2 Update
+     C           *IN09     CASEQ'1'       ABUPDT               2 Update
+     C                     END                             SAC
+     C                     END                             OD 1
+      *
+     C                     SETON                     LR    End program
+      *
+      *****************************************************
+      *ENDMAIN
+      /EJECT
+     CSR         AALOAD    BEGSR
+      *==================================================== Called from:
+      * Reload display from original data                   *MAIN
+      *----------------------------------------------------
+      *
+     C                     MOVE GLREOV    ##REOV           To display
+     C           ##RFDR    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##RFDR                          116358
+     C                     ENDIF                                          116358
+     C           ##RFCR    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##RFCR                          116358
+     C                     ENDIF                                          116358
+     C           ##BLDR    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##BLDR                          116358
+     C                     ENDIF                                          116358
+     C           ##BLCR    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##BLCR                          116358
+     C                     ENDIF                                          116358
+     C           ##INAC    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##INAC                          116358
+     C                     ENDIF                                          116358
+     C           ##BNKR    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##BNKR                          116358
+     C                     ENDIF                                          116358
+     C           ##BADD    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##BADD                          116358
+     C                     ENDIF                                          116358
+     C           ##STOP    IFEQ ' '                                       116358
+     C                     MOVE 'N'       ##STOP                          116358
+     C                     ENDIF                                          116358
+     C           ##NOT2    IFEQ ' '                                                          BUG8521
+     C                     MOVE 'N'       ##NOT2                                             BUG8521
+     C                     ENDIF                                                             BUG8521
+      *
+      *----------------------------------------------------
+      *
+      *====================================================
+     CSR         AAEXIT    ENDSR
+      /EJECT
+     CSR         ABUPDT    BEGSR
+      *==================================================== Called from:
+      * Update Data Area                                    *MAIN
+      *----------------------------------------------------
+      *
+     C           *LOCK     IN   GLREOV                     Get DTAARA
+     C                     MOVE ##REOV    GLREOV           Move data
+     C                     OUT  GLREOV                     Set DTAARA
+      *
+     C*                    SETON                     01    End program
+     C                     SETON                     03    End program
+      *
+      *----------------------------------------------------
+      *
+      *====================================================
+     CSR         ABEXIT    ENDSR
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

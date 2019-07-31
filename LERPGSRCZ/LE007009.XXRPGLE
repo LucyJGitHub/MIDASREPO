@@ -1,0 +1,278 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CLE164
+      *****************************************************************
+      *                                                               *
+      *  Midas - LE Module                                            *
+      *                                                               *
+      *  LE007009  - Update PCNs for ICD changes                      *
+      *                                                               *
+      *  Function:  This program reads SDLOANPD, SDFACTPD and SDFEEPD.*
+      *             For any records on these files which were amended *
+      *             today, it checks and if necessary updates all     *
+      *             associated records on LEACCNPD.                   *
+      *                                                               *
+      *  Called By: LEC07009                                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CLE164 *REDUNDANT  Date 18Aug14               *
+      *  Prev Amend No. AR314325           Date 01Aug12               *
+      *                 CLE134  *CREATE    Date 01Aug12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *  AR314325 - LEACCNPD file update error                        *
+      *             (Child: AR314326)                                 *
+      *  CLE134 - Past Due Call Loans Processing                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    98         Date Format                                     *
+      *    U7+U8      Database Errors                                 *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      * *PSSR - Error processing                                      *
+      * *INZSR - Initialise Subroutine                                *
+      *                                                               *
+      *    The *INZSR subroutine will only get called automatically   *
+      *    on entry to the module the first time it is run            *
+      *    (unless you end the program with LR on).  Similarly        *
+      *    D-spec initialisation only happens the first time.  Use    *
+      *    RESET for subsequent passes.                               *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+ 
+     FSDLOANL1  IF   E             DISK    INFSR(*PSSR)
+     FSDFACTL1  IF   E             DISK    INFSR(*PSSR)
+     FSDFEEL1   IF   E             DISK    INFSR(*PSSR)
+     FLEACCNLC  UF   E           K DISK    INFSR(*PSSR) COMMIT
+     F                                     RENAME(LEACCND0:LEACCNDC)
+     FLEACCNLD  UF   E           K DISK    INFSR(*PSSR) COMMIT
+     F                                     RENAME(LEACCND0:LEACCNDD)
+     FLEACCNLE  UF   E           K DISK    INFSR(*PSSR) COMMIT
+     F                                     RENAME(LEACCND0:LEACCNDE)
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ D-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+     D LDA           E DS           256    EXTNAME(LDA)
+ 
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      ** 134 141 DBFILE
+      ** Defines:                     142 170 DBKEY
+      **                              171 180 DBPGM
+      **                              181 1830DBASE
+ 
+     D RUNDAT        E DS                  EXTNAME(RUNDAT)
+     D                                     DTAARA(RUNDAT)
+ 
+     D @RUN            S              1
+ 
+      ** Additional Field Definitions
+     D WKFCTY          S              3  0
+     D WKFECD          S              2  0
+ 
+      *****************************************************************
+ 
+      ** +--- Start of Main processing -------------------------------+
+      ** ¦                                                            ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR  ¦
+      ** ¦ is executed at program activation.                         ¦
+      ** ¦                                                            ¦
+      ** +------------------------------------------------------------+
+ 
+      *****************************************************************
+      * MAIN PROCEDURE                                                *
+      *****************************************************************
+ 
+     C     *DTAARA       DEFINE                  LDA
+ 
+     C                   IN        RUNDAT
+ 
+     C     KLTYP         KLIST
+     C                   KFLD                    AYLNTY
+     C                   KFLD                    AYLNST
+ 
+     C     KFTYP         KLIST
+     C                   KFLD                    WKFCTY
+ 
+     C     KFEE          KLIST
+     C                   KFLD                    WKFECD
+ 
+      ** SDLOANL1
+ 
+     C                   READ      SDLOANL1                               80
+     C     *IN80         DOWEQ     '0'
+     C     AYLCD         IFEQ      AGRDNB
+     C     AYTYLC        ANDEQ     'A'
+     C     KLTYP         SETLL     LEACCNLC
+     C     KLTYP         READE     LEACCNLC                               81
+     C     *IN81         DOWEQ     '0'
+ 
+      ** For a Loan PDCL, update RPPCK1
+ 
+     C     RPFCOD        IFEQ      0
+     C     AYPCKO        IFNE      0
+     C                   Z-ADD     AYPCKO        RPPCK1
+     C                   ELSE
+     C                   Z-ADD     99999         RPPCK1
+     C                   ENDIF
+     C     RPPCK1        IFLT      RPPCK2
+     C     RPPCK1        ANDLT     RPPCK3
+     C                   Z-ADD     RPPCK1        RPPCKO
+     C                   ENDIF
+ 
+      ** For a Loan Fee PDCL, update RPPCK2
+ 
+     C                   ELSE
+     C     AYPCKO        IFNE      0
+     C                   Z-ADD     AYPCKO        RPPCK2
+     C                   ELSE
+     C                   Z-ADD     99999         RPPCK2
+     C                   ENDIF
+     C     RPPCK2        IFLT      RPPCK1
+     C     RPPCK2        ANDLT     RPPCK3
+     C                   Z-ADD     RPPCK2        RPPCKO
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   UPDATE    LEACCNDC
+     C     KLTYP         READE     LEACCNLC                               81
+     C                   ENDDO
+     C                   ENDIF
+     C                   READ      SDLOANL1                               80
+     C                   ENDDO
+ 
+      ** SDFACTL1
+ 
+     C                   READ      SDFACTL1                               80
+     C     *IN80         DOWEQ     '0'
+     C     AMLCD         IFEQ      AGRDNB
+     C     AMTYLC        ANDEQ     'A'
+     C                   MOVEL     AMFCTY        WKFCTY
+     C     KFTYP         SETLL     LEACCNLD
+     C     KFTYP         READE     LEACCNLD                               81
+     C     *IN81         DOWEQ     '0'
+ 
+      ** For a Loan PDCL or a Facility Fee PDCL, update RPPCK2
+ 
+     C     AMPCKO        IFNE      0
+     C                   Z-ADD     AMPCKO        RPPCK2
+     C                   ELSE
+     C                   Z-ADD     99999         RPPCK2
+     C                   ENDIF
+     C     RPPCK2        IFLT      RPPCK1
+     C     RPPCK2        ANDLT     RPPCK3
+     C                   Z-ADD     RPPCK2        RPPCKO
+     C                   ENDIF
+ 
+     C                   UPDATE    LEACCNDD
+     C     KFTYP         READE     LEACCNLD                               81
+     C                   ENDDO
+     C                   ENDIF
+     C                   READ      SDFACTL1                               80
+     C                   ENDDO
+ 
+      ** SDFEEL1
+ 
+     C                   READ      SDFEEL1                                80
+     C     *IN80         DOWEQ     '0'
+     C     AULCD         IFEQ      AGRDNB
+     C     AUTYLC        ANDEQ     'A'
+     C                   MOVEL     AUFECD        WKFECD
+     C     KFEE          SETLL     LEACCNLE
+     C     KFEE          READE     LEACCNLE                               81
+     C     *IN81         DOWEQ     '0'
+ 
+      ** For a Loan Fee PDCL or a Facility Fee PDCL, update RPPCK1
+ 
+     C     AUPCKO        IFNE      0
+     C                   Z-ADD     AUPCKO        RPPCK1
+     C                   ELSE
+     C                   Z-ADD     99999         RPPCK1
+     C                   ENDIF
+     C     RPPCK1        IFLT      RPPCK2
+     C     RPPCK1        ANDLT     RPPCK3
+     C                   Z-ADD     RPPCK1        RPPCKO
+     C                   ENDIF
+ 
+     C                   UPDATE    LEACCNDE
+     C     KFEE          READE     LEACCNLE                               81
+     C                   ENDDO
+     C                   ENDIF
+     C                   READ      SDFEEL1                                80
+     C                   ENDDO
+ 
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      *****************************************************************
+ 
+     C     *INZSR        BEGSR
+ 
+      ** Initializing the LDA information
+ 
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = *ZEROS
+     C                   EVAL      DBFILE = *BLANKS
+     C                   EVAL      DBKEY = *BLANKS
+     C                   EVAL      DBPROC = *BLANKS
+     C                   EVAL      DBPGM  = 'LE007009'
+     C                   OUT       LDA
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+ 
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+ 
+     C     *PSSR         BEGSR
+ 
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+ 
+     C                   ENDIF
+ 
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT

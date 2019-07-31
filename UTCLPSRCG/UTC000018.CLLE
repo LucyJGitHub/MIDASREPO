@@ -1,0 +1,117 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT CPP for SNDSPLF')                            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities module                                    */
+/*                                                                   */
+/*       UPC000018 - CPP for SNDSPLF                                 */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP039  *CREATE    Date 02Dec10              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP039 - New utility.                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE &TOINTNET &JOB &SPLNBR)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOINTNET) TYPE(*CHAR) LEN(642)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&SPLNBR) TYPE(*CHAR) LEN(6)
+ 
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&STMF) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&FLR) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&DIR) TYPE(*CHAR) LEN(13)
+             DCL        VAR(&TOSTMF) TYPE(*CHAR) LEN(27)
+             DCL        VAR(&JOBNUMBER) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&EMAIL) TYPE(*CHAR) LEN(64)
+             DCL        VAR(&STARTPOS) TYPE(*DEC) LEN(3 0) VALUE(3)
+             DCL        VAR(&NOOFEMAIL) TYPE(*INT)
+             DCL        VAR(&NOOFEMAILB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&COUNT) TYPE(*INT)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Create a unique name for the stream file and folder. */
+             RTVJOBA    NBR(&JOBNUMBER)
+             CHGVAR     VAR(&FLR) VALUE('F' *TCAT &JOBNUMBER)
+             CHGVAR     VAR(&DIR) VALUE('/QDLS/' *TCAT &FLR)
+             CHGVAR     VAR(&STMF) VALUE('S' *TCAT &JOBNUMBER *TCAT +
+                          '.TXT')
+             CHGVAR     VAR(&TOSTMF) VALUE(&QUOTE *TCAT &DIR *TCAT +
+                          '/' *TCAT &STMF  *TCAT &QUOTE)
+ 
+/* Find out how many e-mails are to be sent. */
+             CHGVAR     VAR(&NOOFEMAILB) VALUE(%SST(&TOINTNET 1 2))
+             CHGVAR     VAR(&NOOFEMAIL) VALUE(%BIN(&NOOFEMAILB))
+ 
+/* Create folder for stream file. */
+             RMVLNK     OBJLNK(&TOSTMF)
+             MONMSG     MSGID(CPF0000)
+             RD         DIR(&DIR)
+             MONMSG     MSGID(CPF0000)
+             MD         DIR(&DIR)
+             MONMSG     MSGID(CPF0000)
+ 
+/* The validity checker will already have copied the spooled file to a */
+/*  physical file.  Now copy the physical to a stream file.            */
+             CPYTOSTMF  +
+                          FROMMBR('/QSYS.LIB/QTEMP.LIB/UTC000018D.FIL+
+                          E/UTC000018D.MBR') TOSTMF(&TOSTMF) +
+                          STMFOPT(*REPLACE) STMFCODPAG(*PCASCII)
+ 
+             DOFOR      VAR(&COUNT) FROM(1) TO(&NOOFEMAIL)
+                CHGVAR     VAR(&EMAIL) VALUE(%SST(&TOINTNET &STARTPOS 64))
+                SNDDST     TYPE(*DOC) TOINTNET((&EMAIL)) +
+                             DSTD('Requested spooled file.') +
+                             MSG('Requested spooled file' *BCAT &FILE +
+                             *TCAT ', Job' *BCAT &JOB *TCAT ', Spool +
+                             number' *BCAT &SPLNBR *TCAT '.') +
+                             DOC(&STMF) FLR(&FLR)
+                CHGVAR     VAR(&STARTPOS) VALUE(&STARTPOS + 64)
+             ENDDO
+ 
+/* Attempt to clear down files and folders. */
+             RMVLNK     OBJLNK(&TOSTMF)
+             MONMSG     MSGID(CPF0000)
+             RD         DIR(&DIR)
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ENDPGM:
+             ENDPGM

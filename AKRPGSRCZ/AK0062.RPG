@@ -1,0 +1,541 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AK SE A/C Key Gen. - Select Keys to Amd')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Account Key Generator                                *
+      *                                                               *
+      *  AK0062 - SE A/c Key Generation - Review/Amend Screen Control *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1071025          Date 16Jan13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 101299             Date 16Apr96               *
+      *                 081881             DATE 18JAN95               *
+      *                 081884             DATE 17JAN95               *
+      *                 S01315             DATE 12DEC90               *
+      *                 E22116             DATE 30MAY90               *
+      *                 AK0007             DATE 11/10/89              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1071025 - Erroneous field will only highlight after the    *
+      *              second enter (Recompile)                         *
+      *  101299 - On addition of A/C key to template, do not check if *
+      *           the key exists in the live file already.            *
+      *  081881 - This pgm is now used to maintain template keys      *
+      *           as well as generated keys - amend pgm to display    *
+      *           correct text on screen                              *
+      *  081884 - Narrative Code is now alpha - Recompile             *
+      *  S01315 - Change to SD standards                              *
+      *           Program name changed from SE4020 to AK0062.         *
+      *  E22116  -  HELP SYSTEM. RECOMPILED TO PICK UP CHANGED        *
+      *             DISPLAY FILE, SE4020DF.                           *
+      *  AK0007  -  End of subfile not processed correctly. Change to *
+      *             program logic.                                    *
+      *                                                               *
+     F*****************************************************************
+     F*SE4020DFCF**E******              WORKSTN                           S01315
+     FAK0062DFCF  E                    WORKSTN                            S01315
+     F                                        RRN   KSFILE AKSUB
+     FXSEACKD IF  E                    DISK                           UC  S01315
+      *
+      *   INDICATOR USAGE
+      *   ---------------
+      *
+      *   01      SFLDSP conditioning indicator
+      *   02      SFLDSPCTL conditioning indicator
+      *   03      SFLEND conditioning indicator
+      *   04      SFLNXTCHG enabling indicator
+      *   05      Reload subfile (required if Deletion/Insertion made)
+      *   10      CMD/3 pressed
+      *   12      F12 pressed
+      *   20      No records written to subfile.                          AK0007
+      *  N30      Process generated account keys                          081881
+      *   30      Process template account keys                           081881
+      *   55      No more changed records from this page of subfile
+      *   90      End of file on XSEACKD
+      *   99      General error
+      *
+      *   SUBROUTINE DEFINITIONS
+      *   ----------------------
+      *   FILL  -  Builds subfile from XSEACKD
+      *   SCREEN  -  Handles screen and processes keys
+      *
+      *   ARRAYS
+      *   ------
+     E*                                                                   S01315
+     E                    CPY@    1   1 80                                S01315
+     E** Copyright array                                                  S01315
+     E                    SOPTN       3  1               Option fields.
+     E                    SKEY        3 20               Keys in subfile.
+      *
+      *  Data structures for transferring fields from program to screen
+      *  and vice versa.
+      *
+     IOPT         DS
+     I                                        1   1 OPTN1
+     I                                        2   2 OPTN2
+     I                                        3   3 OPTN3
+     IKEY         DS
+     I                                        1  20 KEY1
+     I                                       21  40 KEY2
+     I                                       41  60 KEY3
+     I*                                                                   S01315
+     ICPYR@#      DS                                                      S01315
+     I                                        1  80 CPY@                  S01315
+     I                                        1  20 CPY@##                S01315
+     I** Data Structure for Compilation  - Copyright Insertion            S01315
+     I*                                                                   S01315
+     IPSDS       SDS                                                      S01315
+     I                                      244 253 WSID                  S01315
+     I                                      254 263 USRID                 S01315
+     I** Data Structure to retrieve User and Workstation ID.              S01315
+     I*                                                                   S01315
+     IRUNDAT      DS                             13                       S01315
+     I                                        1   7 RUNA                  S01315
+     I                                    P   8  100RUND                  S01315
+     I                                       11  11 SSF                   S01315
+     I                                       12  12 DATF                  S01315
+     I                                       13  13 @MBIN                 S01315
+      ** Rundate Data Area                                                S01315
+      *
+      *   C O N T R O L   P R O C E S S I N G
+      *   -----------------------------------
+     C*                                                                   S01315
+     C*****************************************************************   S01315
+     C           *ENTRY    PLIST                           Entry parameterS01315
+     C                     PARM           FKEY3   1        Return code    S01315
+     C                     PARM           FKEY4   1        Return code    S01315
+     C                     PARM           TYPE    8        RUN TYPE       081881
+      *****************************************************************   S01315
+     C** Define Rundat Data Area                                          S01315
+     C*                                                                   S01315
+     C           *NAMVAR   DEFN           RUNDAT                          S01315
+     C                     IN   RUNDAT                                    S01315
+     C*                                                                   S01315
+     C           TYPE      IFEQ 'TEMPLATE'                                081881
+     C                     SETON                     30                   081881
+     C                     ELSE                                           081881
+     C                     SETOF                     30                   081881
+     C                     END                                            081881
+     C*                                                                   081881
+     C** Clear all fields to send messages to message queue.              S01315
+     C*                                                                   S01315
+     C                     MOVEL*BLANK    ZAPGM            Program queue  S01315
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue      S01315
+     C                     MOVEL*BLANK    ZAMSID           Message Id.    S01315
+     C                     MOVEL*BLANK    ZAMSGF           Message file.  S01315
+     C                     MOVEL*BLANK    ZAMSDA           Message data.  S01315
+     C                     MOVEL*BLANK    ZAMSTP           Message type.  S01315
+     C*                                                                   S01315
+     C                     MOVE *BLANKS   SPGMQ            Program queue  S01315
+     C                     MOVEL'AK0062'  SPGMQ            Program queue  S01315
+     C*                                                                   S01315
+     C                     MOVE '0'       FKEY3                           S01315
+     C*                                                                   S01315
+     C** Check whether F3 pressed from AK0063 (FKEY4 = '1') or            S01315
+     C** F3/F12 pressed in this program (FKEY3).                          S01315
+     C*                                                                   S01315
+     C           FKEY4     DOUEQ'1'                                       S01315
+     C           FKEY3     OREQ '1'                                       S01315
+     C           FKEY3     OREQ '2'                                       S01315
+     C*                                                                   S01315
+      *  Fill subfile.
+      *
+     C                     SETOF                     90                   S01315
+     C                     EXSR FILL
+      *
+      *  Display subfile and process required keys.
+      *
+     C                     SETOF                     1012                 S01315
+     C                     EXSR SCREEN
+      *
+     C                     END                                            S01315
+      *                                                                   S01315
+     C***********FIN       TAG                                            S01315
+     C                     SETON                     LR                   S01315
+     C                     RETRN                                          S01315
+      *
+      *******************************************************************
+      *                                                                 *
+      *  FILL  -  Builds subfile from XSEACKD                           *
+      *        -  Sets indicators for first display of screen           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           FILL      BEGSR
+      *
+     C                     OPEN XSEACKD                                   S01315
+     C*
+     C                     Z-ADD1         RRN
+     C*                                                                   S01315
+     C** While not eof (XSEACKD)                                          S01315
+     C*                                                                   S01315
+     C           *IN90     DOWEQ'0'                                       S01315
+      *
+      *  3 a/c keys in each subfile record.
+      *
+     C                     Z-ADD0         X       10
+     C           X         DOUEQ3
+     C************         READ XSEACKDF                 90               081884
+     C                     READ TSEACKDF                 90               081884
+      *
+      *  If EOF not yet reached, move a/c key from generated file to next
+      *  available position in subfile record.
+      *
+     C           *IN90     IFEQ '0'
+     C           RECI      IFNE '*'                                       S01315
+     C                     ADD  1         X
+     C                     MOVE ACKE      SKEY,X
+      *                                                                   AK0007
+      *  If this subfile record filled, write it and increment RRN.       AK0007
+      *                                                                   AK0007
+     C           X         IFEQ 3                                         AK0007
+     C                     MOVE *BLANKS   OPT                             AK0007
+     C                     MOVEASKEY      KEY                             AK0007
+     C                     WRITEAKSUB                                     AK0007
+     C                     ADD  1         RRN     40                      AK0007
+     C                     END                                            AK0007
+      *                                                                   AK0007
+     C                     END                             RECI=*  AK0007 S01315
+      *                                                            AK0007 S01315
+     C                     ELSE
+      *
+      *  Else...EOF
+      *  Blank out remainder of array.
+      *  Set X to 3 to terminate 'DO' loop.
+      *  Write out last record to subfile only if X *NE zero.             AK0007
+      *  If no records written set indicator 20 and write empty record    AK0007
+      *  to prevent RPG1255.                                              AK0007
+      *
+     C*
+     C                     CLOSEXSEACKD                                   S01315
+     C*
+     C           X         IFEQ 1
+     C                     MOVE *BLANKS   SKEY,2
+     C                     MOVE *BLANKS   SKEY,3
+     C                     ELSE
+     C           X         IFEQ 2
+     C                     MOVE *BLANKS   SKEY,3
+     C                     END
+     C                     END
+      *
+     C           X         IFNE 0                                         AK0007
+     C                     MOVE *BLANKS   OPT                             AK0007
+     C                     MOVEASKEY      KEY                             AK0007
+     C                     WRITEAKSUB                                     AK0007
+     C                     ELSE
+      *                                                                   AK0007
+     C           RRN       IFEQ 1                                         AK0007
+     C                     SETON                     20                   AK0007
+     C                     MOVE *BLANKS   OPT                             AK0007
+     C                     MOVE *BLANKS   KEY                             AK0007
+     C                     WRITEAKSUB                                     AK0007
+     C                     END                                            AK0007
+      *                                                                   AK0007
+     C                     END                                            AK0007
+      *                                                                   AK0007
+     C                     Z-ADD3         X
+      *                                                                   AK0007
+     C                     END                                            AK0007
+      ***                                                                 AK0007
+      ***If this subfile record filled, write it and increment RRN.       AK0007
+      ***                                                                 AK0007
+     C***        X         IFEQ 3                                         AK0007
+     C***                  MOVE *BLANKS   OPT                             AK0007
+     C***                  MOVEASKEY      KEY                             AK0007
+     C***                  WRITEAKSUB                                     AK0007
+     C***                  ADD  1         RRN     40                      AK0007
+     C***                  END                                            AK0007
+      *
+     C                     END
+     C                     END
+      *
+      *  Subfile filled at this point. Set indicators for SFLDSP, SFLDSPCTL
+      *  and SFLEND keywords. Set RRN for initial display.
+      *  Disable SFLDSP if indicator 20 on - nothing to display.
+      *
+     C           *IN20     IFEQ '1'                                       AK0007
+     C                     MOVEA'011'     *IN,01                          AK0007
+     C                     ELSE                                           AK0007
+     C                     MOVEA'111'     *IN,01
+     C                     END                                            AK0007
+     C                     Z-ADD1         RRN
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      *  SCREEN - Displays subfile.                                     *
+      *         - Processes selected keys.                              *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SCREEN    BEGSR
+     C*                                                                   S01315
+     C*  Do until CMD/3 (Indr. 10) or F12 pressed to terminate            S01315
+     C*  program or FKEY4 passed back as 1 from AK0063 (F3 pressed)       S01315
+     C*  or Deletion/Insertion made (therefore subfile needs reloading)   S01315
+     C*                                                                   S01315
+     C           *IN10     DOUEQ'1'                                       S01315
+     C           *IN12     OREQ '1'                                       S01315
+     C           FKEY4     OREQ '1'                                       S01315
+     C           *IN05     OREQ '1'                                       S01315
+      *
+     C                     WRITEHEADER                                    S01315
+     C*                                                                   S01315
+     C** If no records to display in subfile                              S01315
+     C*                                                                   S01315
+     C           *IN20     IFEQ '1'                        If no reAK0007 S01315
+     C                     EXFMTNOFMT                                     S01315
+     C***********          EXFMTAKSUBCTL                           AK0007 S01315
+     C*                                                                   S01315
+     C** Clear messages from program message queue.                       S01315
+     C*                                                                   S01315
+     C                     CALL 'Y2CLMSC'                                 S01315
+     C                     PARM SPGMQ     ZAPGM  10                       S01315
+     C                     PARM '*SAME'   ZAPGRL  5                       S01315
+     C*                                                                   S01315
+     C** If F9 pressed to Insert new Account Key                          S01315
+     C*                                                                   S01315
+     C           *IN09     IFEQ '1'                        F9 pressed to iS01315
+     C                     MOVE 'I'       ACTN                            S01315
+     C*                                                                   101299
+     C           *IN30     IFEQ '1'                                       101299
+     C                     MOVE 'T'       FKEY4                           101299
+     C                     ELSE                                           101299
+     C                     MOVE ' '       FKEY4                           101299
+     C                     END                                            101299
+     C*                                                                   101299
+     C                     CALL 'AK0063'                                  S01315
+     C                     PARM           SKEY,X                          S01315
+     C                     PARM           ACTN                            S01315
+     C                     PARM           FKEY4                           S01315
+     C                     SETON                     05    Reload reqd    S01315
+     C                     END                             F9             S01315
+     C*                                                                   S01315
+     C** If records exist in subfile                                      S01315
+     C*                                                                   S01315
+     C                     ELSE                            Records exist  S01315
+     C                     WRITEFTR                                       S01315
+     C                     EXFMTAKSUBCTL
+     C*                                                                   S01315
+     C** Clear messages from program message queue.                       S01315
+     C*                                                                   S01315
+     C                     CALL 'Y2CLMSC'                                 S01315
+     C                     PARM SPGMQ     ZAPGM  10                       S01315
+     C                     PARM '*SAME'   ZAPGRL  5                       S01315
+     C*                                                                   S01315
+     C** If F9 pressed to Insert Account Key                              S01315
+     C*                                                                   S01315
+     C           *IN09     IFEQ '1'                        F9 pressed     S01315
+     C                     MOVE 'I'       ACTN                            S01315
+     C*                                                                   101299
+     C           *IN30     IFEQ '1'                                       101299
+     C                     MOVE 'T'       FKEY4                           101299
+     C                     ELSE                                           101299
+     C                     MOVE ' '       FKEY4                           101299
+     C                     END                                            101299
+     C*                                                                   101299
+     C                     CALL 'AK0063'                                  S01315
+     C                     PARM           SKEY,X                          S01315
+     C                     PARM           ACTN                            S01315
+     C                     PARM           FKEY4                           S01315
+     C                     SETON                     05    Reload reqd    S01315
+     C*                                                                   S01315
+     C                     ELSE                            Not F9         S01315
+      *
+      ** If F3/F12 not pressed                                            S01315
+      *                                                                   S01315
+     C           *IN10     IFEQ '0'                        If not F3/F12  S01315
+     C           *IN12     ANDEQ'0'                                       S01315
+      *
+      *  Read all changed records from currently displayed page.
+      *
+     C                     SETOF                     55
+      *                                                                   S01315
+     C           *IN55     DOWEQ'0'                        Not eof        S01315
+     C                     READCAKSUB                    55
+      *
+      *  If not EOF, call AK0063 once for each key in current subfile     S01315
+      *  record for which an action code has been entered                 S01315
+      *
+     C           *IN55     IFEQ '0'                        Not eof        S01315
+      *
+     C                     MOVEAOPT       SOPTN
+     C                     MOVEAKEY       SKEY
+     C                     Z-ADD0         X
+     C*                                                                   S01315
+     C** Process all 3 keys on line of subfile                            S01315
+     C*                                                                   S01315
+     C           X         DOUEQ3                          3 keys per lineS01315
+     C                     ADD  1         X
+     C*                                                                   S01315
+     C** If option entered                                                S01315
+     C*                                                                   S01315
+     C           SOPTN,X   IFNE ' '                        If blank optn  S01315
+     C*                                                                   S01315
+     C** If option entered for blank key, send message & blank out        S01315
+     C** option                                                           S01315
+     C*                                                                   S01315
+     C           SKEY,X    IFEQ *BLANKS                    If blank key   S01315
+     C                     MOVEL'USR4265' ZAMSID                          S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C*                                                                   S01315
+     C           X         IFEQ 1                                         S01315
+     C                     MOVE *BLANKS   OPTN1                           S01315
+     C                     ELSE                                           S01315
+     C           X         IFEQ 2                                         S01315
+     C                     MOVE *BLANKS   OPTN2                           S01315
+     C                     ELSE                                           S01315
+     C           X         IFEQ 3                                         S01315
+     C                     MOVE *BLANKS   OPTN3                           S01315
+     C                     END                                            S01315
+     C                     END                                            S01315
+     C                     END                                            S01315
+     C*                                                                   S01315
+     C** If valid option entered on non-blank key, call AK0063            S01315
+     C*                                                                   S01315
+     C                     ELSE                                           S01315
+     C           SOPTN,X   IFEQ 'A'                        If amend reqd  S01315
+     C           SOPTN,X   OREQ 'E'                        If enquire req S01315
+     C           SOPTN,X   OREQ 'D'                        If delete req  S01315
+     C                     MOVE SOPTN,X   ACTN    1                       S01315
+     C***********          CALL 'SE4030'                                  S01315
+     C*                                                                   101299
+     C           *IN30     IFEQ '1'                                       101299
+     C                     MOVE 'T'       FKEY4                           101299
+     C                     ELSE                                           101299
+     C                     MOVE ' '       FKEY4                           101299
+     C                     END                                            101299
+     C*                                                                   101299
+     C                     CALL 'AK0063'                                  S01315
+     C                     PARM           SKEY,X
+     C                     PARM           ACTN                            S01315
+     C                     PARM           FKEY4                           S01315
+     C*                                                                   S01315
+     C* If F3 not pressed from AK0063, blank out option                   S01315
+     C*                                                                   S01315
+     C           FKEY4     IFNE '1'                                       S01315
+     C           X         IFEQ 1                                         S01315
+     C                     MOVE *BLANKS   OPTN1                           S01315
+     C                     ELSE                                           S01315
+     C           X         IFEQ 2                                         S01315
+     C                     MOVE *BLANKS   OPTN2                           S01315
+     C                     ELSE                                           S01315
+     C           X         IFEQ 3                                         S01315
+     C                     MOVE *BLANKS   OPTN3                           S01315
+     C                     END                                            S01315
+     C                     END                                            S01315
+     C                     END                                            S01315
+     C*                                                                   S01315
+     C** Set on Indicator 05, if subfile needs reloading                  S01315
+     C*                                                                   S01315
+     C           ACTN      IFEQ 'D'                                       S01315
+     C                     SETON                     05                   S01315
+     C                     END                                            S01315
+     C*                                                                   S01315
+     C                     END                             FKEY4 <> 1     S01315
+     C*                                                                   S01315
+     C** If invalid option entered on non-blank key, send message         S01315
+     C** and blank out option                                             S01315
+     C*                                                                   S01315
+     C                     ELSE                                           S01315
+     C                     MOVEL'USR4252' ZAMSID                          S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C*                                                                   S01315
+     C           X         IFEQ 1                                         S01315
+     C                     MOVE *BLANKS   OPTN1                           S01315
+     C                     ELSE                                           S01315
+     C           X         IFEQ 2                                         S01315
+     C                     MOVE *BLANKS   OPTN2                           S01315
+     C                     ELSE                                           S01315
+     C           X         IFEQ 3                                         S01315
+     C                     MOVE *BLANKS   OPTN3                           S01315
+     C                     END                             X=3            S01315
+     C                     END                             X=2            S01315
+     C                     END                             X=1            S01315
+     C                     END                             Amd/Del/Enq    S01315
+     C                     END                             Blank key      S01315
+     C                     END                             Option blank   S01315
+     C                     END                             3 keys per lineS01315
+     C*                                                                   S01315
+     C**  Update subfile                                                  S01315
+     C*                                                                   S01315
+     C           FKEY4     IFNE '1'                                       S01315
+     C                     UPDATAKSUB                                     S01315
+     C                     END                                            S01315
+     C*                                                                   S01315
+     C                     END                             EOF            S01315
+     C                     END                             Eof            S01315
+     C*                                                                   S01315
+     C                     END                             F3/F12         S01315
+      *                                                                   S01315
+     C                     END                             NOT F9      t  S01315
+      *                                                                   S01315
+     C                     END                             RECS EXIST     S01315
+     C*                                                                   S01315
+     C                     END                             F3/F12         S01315
+     C*                                                                   S01315
+     C** If F3 not pressed from AK0063, set up return codes for F3/F12    S01315
+     C*                                                                   S01315
+     C           FKEY4     IFNE '1'                                       S01315
+      *                                                                   S01315
+     C           *IN10     IFEQ '1'                                       S01315
+     C                     MOVE '1'       FKEY3            F3             S01315
+     C                     END                                            S01315
+      *                                                                   S01315
+     C           *IN12     IFEQ '1'                                       S01315
+     C                     MOVE '2'       FKEY3            F12            S01315
+     C                     END                                            S01315
+     C*                                                                   S01315
+     C                     END                                            S01315
+     C*                                                                   S01315
+     C* Clear subfile                                                     S01315
+     C*                                                                   S01315
+     C                     SETOF                     0102                 S01315
+     C                     WRITEAKSUBCTL                                  S01315
+     C*                                                                   S01315
+     C                     ENDSR
+      *
+      *******************************************************************
+     C*                                                                   S01315
+     C*  ZASNMS - Send message to program message queue                   S01315
+     C*                                                                   S01315
+     C*  Called By : SCREEN                                               S01315
+     C*                                                                   S01315
+     C*  Calls: Y2SNMGC - Send message to program message queue           S01315
+     C*                   queue (external)                                S01315
+     C*                                                                   S01315
+      ********************************************************************S01315
+     C           ZASNMS    BEGSR                                          S01315
+     C*                                                                   S01315
+     C** Declare message file name                                        S01315
+     C*                                                                   S01315
+     C                     MOVEL'SDUSRMSG'ZAMSGF                          S01315
+     C*                                                                   S01315
+     C                     CALL 'Y2SNMGC'                                 S01315
+     C                     PARM SPGMQ     ZAPGM  10        Program queue  S01315
+     C                     PARM           ZAPGRL  5        Rel queue      S01315
+     C                     PARM           ZAMSID  7        Message Id.    S01315
+     C                     PARM           ZAMSGF 10        Message file.  S01315
+     C                     PARM           ZAMSDA132        Message data.  S01315
+     C                     PARM           ZAMSTP  7        Message type.  S01315
+     C*                                                                   S01315
+     C                     ENDSR                                          S01315
+     C*                                                                   S01315
+     C********************************************************************S01315
+**  CPY@                                                                  S01315
+(c) Finastra International Limited 2001

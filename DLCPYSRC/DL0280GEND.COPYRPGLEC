@@ -1,0 +1,78 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member of DL0280GEND                           *
+      *                                                               *
+      *  Last Amend No. MD024109           Date 17Dec13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG6293            Date 04Oct04               *
+      *                 BUG3012            Date 01Jun04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD024109 - Incomplete postings generated for value date      *
+      *             with amount allocation for CDL018                 *
+      *  BUG6293- Move subroutine to a /COPY to free up space in      *
+      *           DL0280 for other changes.                           *
+      *  BUG3012- Account keys are not being output for multiple      *
+      *           settlement accounts.                                *
+      *                                                               *
+      *****************************************************************   CDL018
+      *                                                               *   CDL018
+      *  GENDIF - Generate Account Key for Differences                *   CDL018
+      *                                                               *   CDL018
+      *****************************************************************   CDL018
+     C     GENDIF        BEGSR                                                                 CDL01
+      *                                                                   CDL018
+      **  Reset work fields                                               CDL018
+     C                   Z-ADD     0             ##AMTA           13 0                         CDL01
+     C                   Z-ADD     0             ##AMTB           19 3                         CDL01
+      *                                                                   CDL018
+      *                                                                   CDL018
+      ** Set settlement account and branch if settlement type 14          CDL018
+     C     ##SETM        IFEQ      14                                                          CDL01
+     C                   MOVEL     ##ACX         KYOSTL                                        CDL01
+      *                                                                   CDL018
+      ** Access the Account Details using the Retail account key.         CDL018
+     C                   MOVEL     ##ACX         @RETL                                         CDL01
+     C                   CALL      'AOACCTR0'                                                  CDL01
+     C                   PARM      *BLANKS       @RTCD                                         CDL01
+     C                   PARM      '*KEY   '     @OPTN                                         CDL01
+     C                   PARM                    @RETL                                         CDL01
+     C                   PARM      *BLANKS       @CNUM                                         CDL01
+     C                   PARM      *BLANKS       @CUCD                                         CDL01
+     C                   PARM      *BLANKS       @ACCD                                         CDL01
+     C                   PARM      *BLANKS       @ACSQ                                         CDL01
+     C                   PARM      *BLANKS       @BRCA                                         CDL01
+     C     SDACCT        PARM      SDACCT        DSSDY                                         CDL01
+      *                                                                   CDL018
+      **  Database error if account not found                             CDL018
+     C     @RTCD         IFNE      *BLANKS                                                     CDL01
+     C                   MOVE      'ACCNTAB '    DBFILE                         *************  CDL01
+     C                   MOVEL     '055'         DBASE                          *DBERROR 055*  CDL01
+     C                   MOVEL     ##ACX         DBKEY                          *************  CDL01
+     C                   EXSR      *PSSR                                                       CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      **  Set branch code for retail account number                       CDL018
+     C                   MOVE      @BRCA         KYSTBR                                        CDL01
+      *                                                                   CDL018
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      ** Set settlement account and branch if settlement type 05          CDL018
+     C     ##SETM        IFEQ      05                                                          CDL01
+     C                   MOVEL     ##ACX         KYSTBR                                        CDL01
+     C                   MOVE      ##ACX         #WRK18           18                           CDL01
+     C                   MOVEL     #WRK18        KYOSTL                                        CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      **  Calculate difference                                            CDL018
+     C     ##PSTA        SUB       ##TOTE        KYAMT                                         CDL01
+      *                                                                   CDL018
+      ** Generate account key                                                               MD024109
+      *                                                                                     MD024109
+     C                   EXSR      MEXCP                                                    MD024109
+      *                                                                                     MD024109
+     C                   ENDSR                                                                 CDL01

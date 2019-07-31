@@ -1,0 +1,2779 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Gen. fwd events for portfolios')
+/*OVRF*: OVRDBF FILE(SEEVNT) TOFILE(SECED) SHARE(*NO)                 *
+/*OVRF*: OVRDBF FILE(SECET) SHARE(*NO)                                *
+/*OVRF*: OVRDBF FILE(SECET1) TOFILE(SECET) SHARE(*NO)                 *   058887
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  PM1410 - PM Generate Forward Events for Portfolio            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 226449             Date 24Jun15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG8884            Date 05Oct05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 TDA035             Date 02Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 180707             Date 25Jul00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 171874             Date 26Jun01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 152860             Date 17May99               *
+      *                 147195             Date 16Nov98               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL008             Date 03Mar99               *
+      *                 130862             Date 18Oct98               *
+      *                 098849             Date 14Oct96               *
+     F*                 088399             Date 14Oct96               *
+     F*                 077391             DATE 10NOV94               *
+     F*                 086671             DATE 24JUN96               *
+     F*                 100240             DATE 26FEB96               *
+     F*                 100241             DATE 26FEB96               *
+     F*                 094696             DATE 24OCT95               *
+     F*                 092961             DATE 04OCT95               *
+     F*                 081439             DATE 10JAN95               *
+     F*                 083547             DATE 20FEB95               *
+     F*                 S01496             DATE 13DEC94               *
+     F*                 S01486             DATE 11AUG94               *
+     F*                 058887             DATE 21JUL93               *
+     F*                 S01313             DATE 06MAY93               *
+     F*                 47934              DATE 30NOV92               *
+     F*                 47719              DATE 24NOV92               *
+     F*                 46660              DATE 03NOV92               *
+     F*                 001391     ADIF    DATE 13NOV91               *
+     F*                 B08268             DATE 21OCT91               *
+     F*                 B08022             DATE 01JUL91               *
+     F*                 B07959             DATE 10JUN91               *
+     F*                 B07903             DATE 06JUN91               *
+     F*                 B07879             DATE 30MAY91               *
+     F*                 B07859             DATE 27MAY91               *
+     F*                 B05982             DATE 15MAY91               *
+     F*                 R05873             DATE 23APR91               *
+     F*                 R05772             DATE 02APR91               *
+     F*                 R10034             DATE 12SEP90               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG8884- CSE071 holidays currencies not defined (recompile)  *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  180707 - No Position Settlements generated. Recompile over   *
+     F*           changes in /COPY ZNCDZ3.                            *
+      *  171874 - ZAINSH changes - only recompile                     *
+     F*  152860 - As for EMU, number of decimal can be defined by     *
+     F*           Security, adhust dividend amount in relation with   *
+     F*           this one.                                           *
+     F*  147195 - If last position is before last coupon date, reset  *
+     F*           ex-coupon nominal to zero.                          *
+      *  CGL008 - Security on Journal Entry. Recompile.               *
+     F*  130862 - Recompiled over ZLCDZ1 & ZDAYSZ2 changes.           *
+     F*  098849 - IF NOMINAL MINUS EX-COUPON OF THE LIVE POSITION IS 0 *
+     F*           DO NOT PROCESS COUPON CALCULATION AND DO NOT WRITE A *
+     F*           RECORD IN PMEVN1PD                                   *
+     F*  088399 - FOR PERFORMANCE REASONS RE-DO FIX 77391             *
+     F*  077391 - COUPON AMOUNT WRONG FOR LAST PERIOD (WHEN COUPON    *
+     F*           DATE NOT FALLING ON MATURITY DATE)                  *
+     F*  086671 - Once a redemption is authorised, forward event is   *
+     F*           created by PM1400. If redemption date and coupon    *
+     F*           date are equal for a security, customer position    *
+     F*           created by redemption authorisation is considered   *
+     F*           and coupon event no more generated, when this is the*
+     F*           the case, coupon amount must contain early          *
+     F*           redemption                                          *
+     F*  100240 - When S01447 is on, non taxable securities give a    *
+     F*           database error because no record on SESWHTL0; not   *
+     F*           an error, just means that security is non-taxable.  *
+     F*         - Calculate tax correctly for forward dividends/      *
+     F*           coupons (as per proccessing in SE2380)              *
+     F*  100241 - Recompile over amended LF/PMPOINL0; required because*
+     F*           PMFPOSPD fields have been changed from prefix QD to *
+     F*           prefix QA, to prevent output of blank/zero forward  *
+     F*           position records instead of correct ones.           *
+     F*  094696 - Need to take into accounts dividends matured today  *
+     F*           due to S01510                                       *
+     F*  092961 - Recompile over ZDAYSZ2 which was amended by 086491  *
+     F*           (Wrong number of days calculated for day basis 1    *
+     F*           when start or end day is last day of February)      *
+     F*  081439 - Wrong update of field tax rate - Recompile          *
+     F*  083547 - RECOMPILED OVER MUSERDD                             *
+     F*  S01496 - Incorporation of Jyske Enhancements (S10982)        *
+     F*  S01486 - Portfolio Management Upgrade to Release 10.         *
+     F*  058887 - CHECK FOR COUPON / DIVIDEND EVENT AFTER POSITION    *
+     F*            DATE                                               *
+     F*  S01313 - RECOMPILE DUE TO PORTFOLIO PERFORMANCE              *
+     F*  47934  - CORRECT CALCULATION OF INTERESET IN SR/ZAINSH       *
+     F*  47719  - CORRECT CONVERSION OF AMOUNTS BETWEEN CURRENCIES    *
+     F*  46660  - DO NOT CALCULATE ACCRUALS FOR PART PAYMENT          *
+     F*  001391 - SPECIFIC PROCESSING FOR WITHOLDING TAX (R05772) NOT *
+     F*             CONDITIONNED WITH THE EXISTENCE OF THE MODULE     *
+     F*  B08268 - SUNDRY FIXES TO SPEED UP GENERATION OF CASHFLOWS    *
+     F*  B08022 - Permit dividend events for processing type 7.       *
+     F*  B07959 - IGNORE TRADES DONE ON EVENT DATE (AS IN ZACRFD)     *
+     F*  B07903 - Customer position events do not reflect required    *
+     F*           conversions into customer's currency.  Fix does not *
+     F*           change events, but SE1480 and PM1410 now produce    *
+     F*           extracts of expected currency conversions.          *
+     F*  B07879 - MATURITY EVENTS SHOULD BE IN NOMINAL CURRENCY       *
+     F*  B07859 - EVENT CURRENCY SHOULD ALWAYS BE VALUE CURRENCY      *
+     F*  B05982 - ALTERED DUE TO CHANGES TO SR/ZAINSH                 *
+     F*  R05873 - EVENTS ONLY OUTPUT FOR CERTAIN EVENT TYPES          *
+     F*  R05772 - EVENT AMOUNTS SHOULD BE NET OF WITHOLDING TAX AND   *
+     F*            CHARGES                                            *
+     F*  R10034 - OUTPUT DETAILS FROM SPECIFIC INSTRUMENT             *
+     F*                                                               *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSECEF   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FFDDIV   IF  E           K        DISK         KINFSR *PSSR          094696
+     F            SEDEVDF                           KRENAMESEDEVFF        094696
+     F****PREFIX*OF*SDBANKPD*IS*'BJ'*****************************         S01486
+     F***SDBANKPDIF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F****PREFIX*OF*SDCURRL0*IS*'A6'*****************************         S01486
+     F***SDCURRL0IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***SECTYDJ0IF**E           K        DISK                     B08268 S01486
+     FPMSECTL0IF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR          B08268
+     FINVTP   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F****PREFIX*OF*PMFPINDX*IS*'QA'*****************************         S01486
+     F***PMFPINDXIF**E           K        DISK                            S01486
+     F**  PREFIX OF PMPOINL0 IS 'QA'                                      S01486
+     FPMPOINL0IF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     FSECEO   IF  E           K        DISK
+     F            SNDEVDF                           KIGNORE
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F                                              KINFSR *PSSR
+     FSEEVNT  IF  E           K        DISK
+     F            SNDEVDF                           KRENAMESNDEVDE
+     F            SEDEVDF                           KRENAMESEDEVDE
+     F                                              KINFSR *PSSR
+     FSECET   IF  E           K        DISK                               B05982
+     F            SEDEVDF                           KRENAMESEDEVD2        B05982
+     F                                              KINFSR *PSSR          B05982
+     F**  PREFIX OF PMAPOSLL IS 'QA'
+     FPMAPOSLLIF  E           K        DISK
+     F            PMCPOSP0                          KRENAMEPMAPOSP0
+     F                                              KINFSR *PSSR
+     F*ECTYDX0IF**E           K        DISK                         B08268R05772
+     F***TACNTRL1IF**E           K        DISK                     R05772 S01486
+     F***PMEVN1PPO***E           K        DISK                     B08268 S01486
+     FPMEVN1PDO   E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F***SDMMODPDIF**E                    DISK                     001391 S01486
+     F**  Securities WHT Details                                          S01486
+     FSESWHTL0IF  E           K        DISK                               S01486
+     F***SNDET***IF**E           K        DISK                     058887 S01486
+     F**  Security Events by Type                                         S01486
+     FPMSNDVL0IF  E           K        DISK                               S01486
+     F            SNDEVDF                           KRENAMESNDEVD1        058887
+     F                                              KINFSR *PSSR          058887
+     FSECET1  IF  E           K        DISK                               058887
+     F            SEDEVDF                           KRENAMESEDEVD3        058887
+     F                                              KINFSR *PSSR          058887
+     FPM1410AUO   E                    PRINTER
+     E*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      71: INDICATOR FOR READ
+     F**      72: INDICATOR FOR READ
+     F**      73: INDICATOR FOR READ OF SNDET                             058887
+     F**      76: NO RECORD (CF. PROCESS #P05)
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * ..   ..   73   74   75   ..   77   78   79   80 *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     E*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** UPDATE EVENT NARRATIVE
+     E                    NAR     1   5 20
+     E*
+     E** FORMAT SE DETAILS FOR OUTPUT  (SR/ZFRELN)
+     E                    ZLI        20  1
+     E*                                                                   B08040
+     E** TABLES/ARRAYS USED TO AVOID FILE ACCESS OPERATIONS               B08040
+     E                    CYCD      200  3                                B08040
+     E                    SPRT      200 13 8                              B08040
+     E                    NBDP      200  1 0                              B08040
+     E                    MDIN      200  1                                B08040
+     E*
+      /COPY ZSRSRC,ZPOWERZ1
+      /COPY ZSRSRC,ZPOWER8Z1
+     E*
+      /COPY ZSRSRC,ZDATE2Z1
+     E*
+      /COPY ZSRSRC,ZNCDZ1
+     E*
+      /COPY ZSRSRC,ZDAYSZ1
+     I*****************************************************************
+     I*
+     I** RENAME FIELDS FROM SECEF - FORMAT SNDEVDF
+     ISNDEVDF
+     I              SNSN                            SDSN
+     I              SNDT                            SDED
+     I              SNET                            SDET
+     I*
+     I** RENAME FIELDS FROM SECEF - FORMAT SNDEVDE (FOR ZAINSH/ZAISCH)
+     ISNDEVDE
+     I              SNDT                            SDED
+     I              SNET                            SDET
+     I*                                                                   058887
+     I** RENAME FIELDS FROM SNDET - FORMAT SNDEVDF                        058887
+     ISNDEVD1                                                             058887
+     I              RECI                            RNRECI                058887
+     I              SNSN                            RNSNSN                058887
+     I              SNDT                            RNSNDT                058887
+     I              SNET                            RNSNET                058887
+     I              SNCR                            RNSNCR                058887
+     I              SNCF                            RNSNCF                058887
+     I              SNCP                            RNSNCP                058887
+     I              SNCA                            RNSNCA                058887
+     I              SNPR                            RNSNPR                058887
+     I              SNNA                            RNSNNA                058887
+     I              NMCY                            RNNMCY                058887
+     I              MDTI                            RNMDTI                058887
+     I*                                                                   058887
+     I** RENAME FIELDS FROM SNDET - FORMAT SEDEVDF                        058887
+     ISEDEVD3                                                             058887
+     I              RECI                            R1RECI                058887
+     I              SDSN                            R1SDSN                058887
+     I              SDED                            R1SDED                058887
+     I              SDET                            R1SDET                058887
+     I              SDNV                            R1SDNV                058887
+     I              SDVA                            R1SDVA                058887
+     I              SDCP                            R1SDCP                058887
+     I              SRPT                            R1SRPT                058887
+     I              SDTR                            R1SDTR                058887
+     I              SRMI                            R1SRMI                058887
+     I              SDPD                            R1SDPD                058887
+     I              SDNC                            R1SDNC                058887
+     I              SDPP                            R1SDPP                058887
+     I              SDPC                            R1SDPC                058887
+     I              SDTA                            R1SDTA                058887
+     I              SDTP                            R1SDTP                058887
+     I              SDRP                            R1SDRP                058887
+     I              SDCV                            R1SDCV                058887
+     I              SDCX                            R1SDCX                058887
+     I              SDCE                            R1SDCE                058887
+     I              SDMD                            R1SDMD                058887
+     I              NMCY                            R1NMCY                058887
+     I              SDAD                            R1SDAD                058887
+     I              SDDT                            R1SDDT                058887
+     I              RCIC                            R1RCIC                058887
+     I              LCD                             R1LCD                 058887
+     I              CHTP                            R1CHTP                058887
+     I              TNLU                            R1TNLU                058887
+     I***********   SDXD                            R1SDXD         058887 S01486
+     I*                                                                   B08268
+     IPMSTAT      DS                                                      B08268
+     I                                        1   50WWECD                 B08268
+     I                                        1   50ECD                   B08268
+     I                                        1 256 WWSTAT                B08268
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+      /COPY ZSRSRC,ZNCDZ2
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***LDA********UDS                            256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   S01486
+     IPGMDS     ESDSY2PGDSP                                               S01486
+     I**  Program status data structure                                   S01486
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Midas  Bank details                                          S01486
+     I*                                                                   S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I**  Midas  Currencies details                                    S01486
+     I*                                                                   S01486
+     ISDMMOD    E DSSDMMODPD                                              S01486
+     I**  Midas  Midas Modules details                                 S01486
+     I*                                                                   S01486
+     ISDUSER    E DSMUSERDD                                               S01486
+     I**  Data structure for User Details                                 S01486
+     I*                                                                   S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I**  Data structure for Customer Details                             S01486
+     I*                                                                   S01486
+     ISDBRCH    E DSSDBRCHPD                                              S01486
+     I              QQDFAC                          BRDFAC                                    CGL029
+     I**  Data structure for Branch Details                               S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure                                            S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I**  Long data structure                                             S01486
+     I*                                                                   S01486
+     ISECNTR    E DSSECNTRPD                                              S01486
+     I** SE Country tax rate details                                      S01486
+     I*                                                                   S01486
+     ISECBTX    E DSSECBTXPD                                              S01486
+     I** SE Country to Branch tax rate details                            S01486
+     I/COPY WNCPYSRC,PM1410I001
+     I*                                                                   S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * INIT     - INITIAL PROCESSING                                    *
+      * #P01     - PROCESS FORWARD SECURITY EVENTS                       *
+      * #P02     - ACCESS INSTRUMENT DETAILS                             *
+      * #P03     - ACCESS CUSTOMER CURRENCY INFORMATION                  *
+      * #P04     - ACCESS PORTFOLIO DETAILS                              *
+      * #P05     - SET UP REMAINING SECURITY DETAILS                     *
+      * #P06     - DETERMINE EVENT AMOUNT                                *
+      * COUPON   - DETERMINE COUPON AMOUNT                               *
+      * DIVEXP   - DETERMINE DIVIDEND DUE AMOUNT                         *
+      * DIVDUE   - DETERMINE DIVIDEND EXPECTED AMOUNT                    *
+      * MATUR    - DETERMINE MATURITY AMOUNT                             *
+      * MORTPA   - DETERMINE MORTGAGE PAYMENT AMOUNT                     *
+      * PARTPA   - DETERMINE PART-PAY AMOUNT                             *
+      * #P07     - UPDATE PORTFOLIO CASHFLOW EVENTS                      *
+      * #W01     - WRITE TO PORTFOLIO CASHFLOW EVENTS                    *
+      * #W03     - WRITE TO FORWARD PORT. EVENTS GENER. AUDIT REPORT     *
+      * #P08     - CALCULATE WITHHOLDING TAX AMOUNT                      *R05772
+      * #P09     - GET WITHOLDING TAX RATES                              *100240
+      * ZCCYCN   - CONVERT AN AMOUNT FROM ONE CURRENCY TO ANOTHER        *
+      * ZCCYXR   - CONVERT AN AMOUNT FROM ONE CURRENCY TO ANOTHER        *
+      * ZFSELN   - FORMAT THE 20A PORTF. MANAGEMENT DESCRIPT. TO SE 2    *
+      * ZDATE1   - VALIDATE DATE SUBMITTED                               *
+      * ZDATE2   - CONVERT A DAY NUMBER TO A DATE NUMBER                 *
+      * ZLCD     - CALCULATE THE LAST COUPON DATE PRIOR EVENT C. DATE    *
+      * ZAINSH   - CALCUL SE ACCRUED INTEREST - NON SCHULDSCHEIN         *
+      * ZAISCH   - CALCUL SE ACCRUED INTEREST - SCHULDSCHEIN             *
+      * ZRATE    - CALCUL EFFECTIVE RATE                                 *
+      * ZACCR    - CALCUL INTEREST ACCRUED BETWEEN 2 DATES               *
+      * ZDAYS    - CALCUL NUMBER OF DAYS BETWEEN TWO DATES               *
+      * ZDYYR    - CALCUL NUMBER OF DAYS IN INTEREST YEAR                *
+      * ZNCD     - CALCULATE THE NEXT COUPON DATE                        *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+     C*****************************************************************
+     C** KEY DEFINITION
+     C*****************************************************************
+     C           KFPIN     KLIST
+     C                     KFLD           WWSDSN
+     C                     KFLD           WWTVD
+     C*
+     C           KINV      KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C*
+     C           KSEDE     KLIST
+     C                     KFLD           WWTDSS
+     C                     KFLD           WWETYP
+     C                     KFLD           WWDAT
+     C*                                                                   R05772
+     C**WITHHOLDING*TAX*COUNTRY*RATE*FILE********LF/TACNTRL1*****  R05772 S01486
+     C***********                                                  R05772 S01486
+     C***********TACNTR    KLIST                                   R05772 S01486
+     C***********          KFLD           SECTTA                   R05772 S01486
+     C***********          KFLD           SETABD                   R05772 S01486
+     C*                                                                   R05772
+     C** DEFINE WORK FIELDS FOR POSITION SETTLEMENTS.                     R05772
+     C*                                                                   R05772
+     C************LIKE     DEFN CRRASO    WRASO                    R05772 S01486
+     C************LIKE     DEFN CRRAUS    WRAUS                    R05772 S01486
+     C************LIKE     DEFN CRDLOR    WDLOR                    R05772 S01486
+     C           *LIKE     DEFN TBRASR    WRASO                           S01486
+     C           *LIKE     DEFN TBRAUS    WRAUS                           S01486
+     C           *LIKE     DEFN TBDLOR    WDLOR                           S01486
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C** MAIN PROCESSING
+     C*****************************************************************
+     C*
+     C                     EXSR INIT
+     C*
+     C** EXECUTE #P01 - PROCESS FORWARD SECURITY EVENTS
+     C***********          EXSR #P01                                      094696
+     C                     EXSR #P011                                     094696
+     C*
+     C** PRODUCE THE FORWARD PORTFOLIO EVENTS GENERATION AUDIT REPORT
+     C** AS PER #W03
+     C                     EXSR #W03
+     C*
+     C** END THE PROGRAM
+     C                     MOVE '1'       *INLR
+     C*
+     C*****************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INIT     - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAJCD   - BASE CURRENCY                                         *
+      * WWC9NB   - SPOT RATE FOR BASE CURRENCY                           *
+      * WWDANB   - NUMBER OF DECIMAL PLACES FOR BASE CURRENCY            *
+      * WWA8SB   - MULT/DIV. INDICATOR FOR BASE CURRENCY                 *
+      * WWH0NB   - WORK FIELD FOR EVENT CONTROL DATE CALCULATION         *
+      *                                                                  *
+      ********************************************************************
+     C           INIT      BEGSR                           ** INIT  BSR **
+     C* READ SDMMODPD TO TEST IF PROCESSING W/TAX  IS NEEDED              001391
+     C***********          READ SDMMODPD                 99        001391 S01486
+     C*                                                                   001391
+     C**  Access Midas Module details                                     S01486
+     C*                                                                   S01486
+     C                     CALL 'AOMMODR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST'  P@OPTN  7                       S01486
+     C           SDMMOD    PARM SDMMOD    DSFDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD10        DBASE            ***************S01486
+     C                     MOVE 'SDMMODPD'DBFILE           *DB ERROR 010 *S01486
+     C                     MOVEL'*FIRST'  DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF                                          S01486
+     C*                                                                   S01486
+      *** Check Withholding tax is installed                              S01486
+      *                                                                   S01486
+     C                     CALL 'AOSARDR0'                                S01486
+     C                     PARM *BLANKS   @RTCD                           S01486
+     C                     PARM '*VERIFY' @OPTN                           S01486
+     C                     PARM 'S01447'  @SARD   6                       S01486
+      *                                                                   S01486
+     C           @RTCD     IFEQ *BLANK                                    S01486
+     C                     MOVE 'Y'       S01447  1                       S01486
+     C                     ELSE                                           S01486
+     C                     MOVE 'N'       S01447                          S01486
+     C                     END                                            S01486
+     C/COPY WNCPYSRC,PM1410C001
+     C*                                                                   S01486
+     C**  Define local data area                                          S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C*
+     C** PREPARE LDA
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM1410'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C*                                                                   B08268
+     C** DEFINE DATA AREA PMSTAT                                          B08268
+     C           *NAMVAR   DEFN           PMSTAT                          B08268
+     C                     IN   PMSTAT                                    B08268
+     C*
+     C***GET*INSTALLATION*CONTROL*DATA*RECORD*1******************         S01486
+     C***********          READ SDBANKPD                 71               S01486
+     C************IN71     IFEQ '1'                                       S01486
+     C***********                                                         S01486
+     C***ERROR***************************************************         S01486
+     C***********          Z-ADD1         DBASE            **DB ERROR 01**S01486
+     C***********          MOVEL'SDBANKPD'DBFILE           ***************S01486
+     C***********          MOVEL*BLANKS   DBKEY                           S01486
+     C*                                                                   S01486
+     C**  Access bank details                                             S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*FIRST'  P@OPTN                          S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            ***************S01486
+     C                     MOVE 'SDBANKPD'DBFILE           *DB ERROR 001 *S01486
+     C                     MOVEL'*FIRST'  DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*
+     C** TEST DATE FORMAT FOR SR/ZDATE2
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+     C                     END
+     C*                                                                   B08268
+     C** READ THROUGH SDCURRL0 SETTING UP ARRAY OF CURRENCIES             B08268
+     C***********          READ SDCURRL0                 72        B08268 S01486
+     C*                                                                   S01486
+     C**  Read the first Currency record                                  S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*FIRST'  P@OPTN                          S01486
+     C                     PARM           P@CYCD  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD13        DBASE            ***************S01486
+     C                     MOVE 'SDCURRPD'DBFILE           *DB ERROR 013 *S01486
+     C                     MOVEL'*FIRST'  DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF                                          S01486
+     C*                                                                   S01486
+     C**  Set up array of currencies                                      S01486
+     C*                                                                   S01486
+     C                     Z-ADD1         B       30                      B08268
+     C************IN72     DOWEQ'0'                                B08268 S01486
+     C           P@RTCD    DOWNE'*EOF'                                    S01486
+     C                     MOVE A6CYCD    CYCD,B                          B08268
+     C                     Z-ADDA6SPRT    SPRT,B                          B08268
+     C                     MOVE A6MDIN    MDIN,B                          B08268
+     C                     Z-ADDA6NBDP    NBDP,B                          B08268
+     C                     ADD  1         B                               B08268
+     C***********          READ SDCURRL0                 72        B08268 S01486
+     C*                                                                   S01486
+     C**  Read the next record in currencies file                         S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*NEXT '  P@OPTN                          S01486
+     C                     PARM           P@CYCD  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           P@RTCD    ANDNE'*EOF'                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD14        DBASE            ***************S01486
+     C                     MOVE 'SDCURRPD'DBFILE           *DB ERROR 014 *S01486
+     C                     MOVEL'*NEXT '  DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF                                          S01486
+     C*                                                                   S01486
+     C                     END                                            B08268
+     C*                                                                   B08268
+     C** ACCESS LF/SDCURRL0 USING THE BASE CURRENCY FROM LF/SDBANKPD      B08268
+     C** FOR THE SPOT RATE AND NUMBER OF DECIMAL PLACES                   B08268
+     C                     Z-ADD1         B                               B08268
+     C           BJCYCD    LOKUPCYCD,B                   72               B08268
+     C** ERROR                                                            B08268
+     C           *IN72     IFEQ '0'                        ***************B08268
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            **DB ERROR 02**B08268
+     C                     MOVEL'SDCURRL0'DBFILE           ***************B08268
+     C                     MOVELBJCYCD    DBKEY                           B08268
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B08268
+     C                     ELSE                                           B08040
+     C                     MOVE BJCYCD    WWCYCD  3                       B08040
+     C                     Z-ADDSPRT,B    A6SPRT                          B08040
+     C                     MOVE MDIN,B    A6MDIN                          B08040
+     C                     Z-ADDNBDP,B    A6NBDP                          B08040
+     C                     MOVE BJCYCD    WWCYCD  3                       B08040
+     C                     Z-ADDA6SPRT    WWSPRT 138
+     C                     Z-ADDA6NBDP    WWNBDP  10
+     C                     MOVELA6MDIN    WWA8SB  1
+     C                     END                                            B08040
+     C*                                                                   S01486
+     C           S01447    IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  Get user's default branch.                                      S01486
+     C*                                                                   S01486
+     C                     CALL 'AOUSERR0'                                S01486
+     C                     PARM *BLANKS   @RTCD   7                       S01486
+     C                     PARM '*KEY   ' @OPTN   7                       S01486
+     C                     PARM ##USR     @USER  10                       S01486
+     C           SDUSER    PARM SDUSER    DSSDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD17        DBASE            ***************S01486
+     C                     MOVE 'MUSERDD 'DBFILE           * DB ERROR 17 *S01486
+     C                     MOVEL##USR     DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**  Get country.                                                    S01486
+     C*                                                                   S01486
+     C**********           CALL 'AOBRCHR0'                                S01486              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD                           S01486
+     C                     PARM '*KEY   ' @OPTN                           S01486
+     C                     PARM DBRN      @BRCA   3                       S01486
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01486              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD18        DBASE            ***************S01486
+     C                     MOVE 'SDBRCHPD'DBFILE           * DB ERROR 18 *S01486
+     C                     MOVELDBRN      DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**  Get country of location.                                        S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   @RTCD                           S01486
+     C                     PARM '*KEY   ' @OPTN                           S01486
+     C                     PARM A8BICN    @KEY1  10                       S01486
+     C                     PARM *BLANKS   @KYST   7                       S01486
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD19        DBASE            ***************S01486
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 19 *S01486
+     C                     MOVELA8BICN    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*
+     C           EINIT     ENDSR                           ** END INIT  **
+      ********************************************************************
+     C/EJECT                                                              094696
+     C********************************************************************094696
+     C*                                                                  *094696
+     C* #P011    - PROCESS FORWARD SECURITY EVENTS                       *094696
+     C*                                                                  *094696
+     C* SUBROUTINE CALLS:                                                *094696
+     C* #P01     - PROCESS FORWARD SECURITY EVENTS                       *094696
+     C*                                                                  *094696
+     C* SUBROUTINE CALLED FROM:                                          *094696
+     C* MAIN     - MAIN PROCESSING                                       *094696
+     C*                                                                  *094696
+     C********************************************************************094696
+     C           #P011     BEGSR                           ** #P011 BSR **094696
+     C*                                                                   094696
+     C** READ FROM LF/SECEF - FORWARD SECURITY EVENTS                     094696
+     C                     READ SECEF                    71               094696
+     C           *IN71     DOWEQ'0'                        B1             094696
+     C*                                                                   094696
+     C** ONLY PRODUCE CASHFLOW EVENTS FOR FOLLOWING EVENT TYPES           094696
+     C           SDET      IFEQ 'MA'                       B2             094696
+     C           SDET      OREQ 'DE'                                      094696
+     C           SDET      OREQ 'DV'                                      094696
+     C           SDET      OREQ 'CP'                                      094696
+     C           SDET      OREQ 'MP'                                      094696
+     C           SDET      OREQ 'PP'                                      094696
+     C*                                                                   094696
+     C** ACCESS THE INSTRUMENT DETAILS AS PER #P01                        094696
+     C                     EXSR #P01                                      094696
+     C*                                                                   094696
+     C                     END                             E2             094696
+     C*                                                                   094696
+     C** READ FROM LF/SECEF - FORWARD SECURITY EVENTS                     094696
+     C                     READ SECEF                    71               094696
+     C                     END                             E1             094696
+     C*                                                                   094696
+     C** READ FROM LF/FDDIV - FORWARD SECURITY EVENTS                     094696
+     C                     READ FDDIV                    71               094696
+     C           *IN71     DOWEQ'0'                        B1             094696
+     C*                                                                   094696
+     C** ONLY PRODUCE CASHFLOW EVENTS FOR EVENTS MATURED TODAY            094696
+     C           SDAD      IFEQ BJRDNB                     B2             094696
+     C           RECI      ANDEQ'M'                                       094696
+     C*                                                                   094696
+     C** ACCESS THE INSTRUMENT DETAILS AS PER #P01                        094696
+     C                     EXSR #P01                                      094696
+     C*                                                                   094696
+     C                     END                             E2             094696
+     C*                                                                   094696
+     C** READ FROM LF/SECEF - FORWARD SECURITY EVENTS                     094696
+     C                     READ FDDIV                    71               094696
+     C                     END                             E1             094696
+     C*                                                                   094696
+     C                     ENDSR                                          094696
+     C********************************************************************094696
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P01     - PROCESS FORWARD SECURITY EVENTS                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #P02     - ACCESS INSTRUMENT DETAILS                             *
+      * #P03     - ACCESS CUSTOMER CURRENCY INFORMATION                  *
+      * #P04     - ACCESS PORTFOLIO DETAILS                              *
+      * #P05     - SET UP REMAINING SECURITY DETAILS                     *
+      * #P06     - DETERMINE EVENT AMOUNT                                *
+      * #P07     - UPDATE PORTFOLIO CASHFLOW EVENTS                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWSDSN   - SECURITY SHORTNAME FROM LF/SECEF                      *
+      * WWSDCP   - CURRENT FACTOR FROM LF/SECEF                          *
+      * WWSDPP   - PART PAY/CALL REDEMPTION AMOUNT FROM LF/SECEF         *
+      * WWSDPC   - PART PAY/CALL REDEMPTION % FROM LF/SECEF              *
+      * WWSDET   - EVENT TYPE FROM LF/SECEF                              *
+      * WWSDED   - EVENT DATE FROM LF/SECEF                              *
+      **WWCNUM***-*CUSTOMER*NUMBER*FROM*LF/PMFPINDX***********************S01486
+      **WWPTFR***-*PORTFOLIO*REFERENCE*FROM*LF/PMFPINDX*******************S01486
+      **WWTDSS***-*SECURITY*SHORTNAME*FROM*LF/PMFPINDX********************S01486
+      **WWTVDA***-*TRADE/VALUE*DATE*FROM*LF/PMFPINDX**********************S01486
+      * WWCNUM   - CUSTOMER NUMBER FROM LF/PMPOINL0                      *S01486
+      * WWPTFR   - PORTFOLIO REFERENCE FROM LF/PMPOINL0                  *S01486
+      * WWTDSS   - SECURITY SHORTNAME FROM LF/PMPOINL0                   *S01486
+      * WWTVDA   - TRADE/VALUE DATE FROM LF/PMPOINL0                     *S01486
+      * WWANOM   - AMOUNT IN NOMINAL CURRENCY                            *
+      *                                                                  *
+      ********************************************************************
+     C           #P01      BEGSR                           ** #P01  BSR **
+     C***********                                                         094696
+     C***READ*FROM*LF/SECEF*-*FORWARD*SECURITY*EVENTS******************   094696
+     C***********          READ SECEF                    71               094696
+     C************IN71     DOWEQ'0'                        B1             094696
+     C***********                                                         094696
+     C***ONLY*PRODUCE*CASHFLOW EVENTS FOR FOLLOWING EVENT TYPES           094696
+     C***********SDET      IFEQ 'MA'                       B2       R05873094696
+     C***********SDET      OREQ 'DE'                                R05873094696
+     C***********SDET      OREQ 'DV'                                R05873094696
+     C***********SDET      OREQ 'CP'                                R05873094696
+     C***********SDET      OREQ 'MP'                                R05873094696
+     C***********SDET      OREQ 'PP'                                R05873094696
+     C*
+     C** IF THE SECURITY IS DIFFERENT
+     C** FROM THAT OF THE PREVIOUS RECORD
+     C           WWSDSN    IFNE SDSN                       B3
+     C*
+     C** ACCESS THE INSTRUMENT DETAILS AS PER #P02
+     C                     EXSR #P02
+     C                     END                             E3
+     C*
+     C** SAVE SOME FIELDS
+     C                     Z-ADDSDCP      WWSDCP  98
+     C                     Z-ADDSDPP      WWSDPP 150
+     C                     Z-ADDSDPC      WWSDPC  73
+     C                     MOVELSDET      WWSDET  2
+     C                     Z-ADDSDED      WWSDED  50
+     C                     MOVELSDSN      WWSDSN 10
+     C*
+     C** DETERMINE WHETHER TRADE OR VALUE DATE POSITIONS TO BE USED
+     C           WWPROT    IFEQ '4'
+     C           WWSDET    ANDEQ'DV'
+     C           WWPROT    OREQ '4'                                       058887
+     C           WWSDET    ANDEQ'DE'                                      058887
+     C           WWPROT    OREQ '7'                                       058887
+     C           WWSDET    ANDEQ'DV'                                      058887
+     C           WWPROT    OREQ '7'                                       058887
+     C           WWSDET    ANDEQ'DE'                                      058887
+     C                     MOVEL'T'       WWTVD   1
+     C                     ELSE
+     C                     MOVEL'V'       WWTVD
+     C                     END
+     C*
+     C** SET LOWER LIMITS ON THE FORWARD POSITIONS INDEX
+     C*
+     C***********KFPIN     SETLLPMFPINDX                                  S01486
+     C           KFPIN     SETLLPMPOINL0                                  S01486
+     C*
+     C***READ*EQUAL*FROM*LF/PMFPINDX*-*FORWARD*POSITIONS*INDEX*WITH       S01486
+     C** READ EQUAL FROM LF/PMPOINL0 - FORWARD POSITIONS INDEX WITH       S01486
+     C** A KEY OF THE SECURITY FROM LF/SECEF AND A TRADE/VALUE INDICATOR
+     C** TO 'T' IF THE PROCESSING TYPE FROM LF/INVTP IS 4 (SHARES),
+     C** OTHERWISE A TRADE/VALUE INDICATOR OF 'V'
+     C***********KFPIN     READEPMFPINDX                 72               S01486
+     C           KFPIN     READEPMPOINL0                 72               S01486
+     C*
+     C***DO*WHILE*END*OF*FILE*IS*NOT*REACHED*ON*LF/PMFPINDX******         S01486
+     C** DO WHILE END OF FILE IS NOT REACHED ON LF/PMPOINL0               S01486
+     C           *IN72     DOWEQ'0'                        B3
+     C*
+     C           QANPDT    IFEQ 0                          B4
+     C                     Z-ADD*HIVAL    QANPDT
+     C                     END                             E4
+     C*
+     C** CHECK THAT EVENT TO BE PRODUCED ON POSITION
+     C** FOR COUPONS & DIVIDENDS USE POSITION FROM PREVIOUS DAY
+     C                     Z-ADDQANPDT    WWNPDT
+     C           WWSDET    IFEQ 'DV'                       B4
+     C           WWSDET    OREQ 'CP'
+     C           WWSDED    SUB  1         WWSDE1  50
+     C           QANPDT    SUB  1         WWNPDT  50
+     C                     ELSE
+     C                     Z-ADDWWSDED    WWSDE1
+     C                     Z-ADDQANPDT    WWNPDT
+     C                     END                             E4
+     C*
+     C** EVENT PRODUCED IF POSITION EXISTED ON EVENT DATE AND NEXT
+     C** POSITION DATE IN FUTURE
+     C           QANPDT    IFEQ WWSDED                                    086671
+     C           WWSDE1    ANDGEQAPDAT                                    086671
+     C           QANPDT    ORGT WWSDED                                    086671
+     C           WWSDE1    ANDGEQAPDAT                                    086671
+     C***********WWSDE1    IFGE QAPDAT                     B4             086671
+     C***********WWSDE1    ANDLTWWNPDT                                    086671
+     C*
+     C** IF THE CUSTOMER BASE CURRENCY HAS CHANGED
+     C           WWCSBY    IFNE QACSBY                     B5
+     C                     MOVE QACSBY    WWCSBY  3
+     C                     EXSR #P03
+     C                     END                             E5
+     C*
+     C** IF THE CUSTOMER OR PORTFOLIO REFERENCE HAS CHANGED
+     C           WWCNUM    IFNE QACNUM                     B5
+     C           WWPTFR    ORNE QAPTFR
+     C*
+     C** ACCESS THE PORTFOLIO DETAILS AS PER #P04
+     C                     EXSR #P04
+     C                     END                             E5
+     C*                                                                   B08268
+     C** IF THE SECURITY IS DIFFERENT                                     B08268
+     C** FROM THAT OF THE PREVIOUS RECORD                                 B08268
+     C           WASDSN    IFNE SDSN                       B5             B08268
+     C*                                                                   B08268
+     C** ACCESS THE INSTRUMENT DETAILS AS PER #P05                        B08268
+     C                     EXSR #P05                                      B08268
+     C                     MOVELSDSN      WASDSN 10
+     C                     END                             E5             B08268
+     C*
+     C** SAVE SOME FIELDS
+     C**********           MOVELQACNUM    WWCNUM  60                                          CSD027
+     C                     MOVELQACNUM    WWCNUM  6                                           CSD027
+     C                     MOVELQAPTFR    WWPTFR  4
+     C                     MOVELQATDSS    WWTDSS 10
+     C                     MOVELQATVDA    WWTVDA  1
+     C*                                                                   058887
+     C** CHECK FOR COUPON EVENT BETWEEN POSITION DATE AND EVENT DATE      058887
+     C                     EXSR #P061                                     058887
+     C*
+     C** DETERMINE THE EVENT AMOUNT AS PER #P06
+     C           QAPDAT    IFLE LCPN                                      147195
+     C                     Z-ADD0         QACSEX                          147195
+     C                     END                                            147195
+     C           QANOML    SUB  QACSEX    WWCUM  150
+     C           WWCUM     IFNE 0                                         098849
+     C                     EXSR #P06
+     C*
+     C** IF THE EVENT AMOUNT IS NON-ZERO
+     C           WWANOM    IFNE 0                          B5
+     C*
+     C** EXECUTE #P07 - UPDATE PORTFOLIO CASHFLOW EVENTS
+     C                     EXSR #P07
+     C                     END                             E5
+     C                     END                                            098849
+     C                     END                             E4             R05873
+     C*
+     C***READ*EQUAL*FROM*LF/PMFPINDX*-*FORWARD*POSITIONS*INDEX*WITH       S01486
+     C** READ EQUAL FROM LF/PMPOINL0 - FORWARD POSITIONS INDEX WITH       S01486
+     C** A KEY OF THE SECURITY FROM LF/SECEF AND A TRADE/VALUE INDICATOR
+     C** TO 'T' IF THE PROCESSING TYPE FROM LF/INVTP IS 4 (SHARES),
+     C** OTHERWISE A TRADE/VALUE INDICATOR OF 'V'
+     C***********KFPIN     READEPMFPINDX                 72               S01486
+     C           KFPIN     READEPMPOINL0                 72               S01486
+     C                     END                             E3
+     C*
+     C***********          END                             E2             094696
+     C***********                                                         094696
+     C***READ*FROM*LF/SECEF*-*FORWARD*SECURITY*EVENTS*********************094696
+     C***********          READ SECEF                    71               094696
+     C***********          END                             E1             094696
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P02     - ACCESS INSTRUMENT DETAILS                             *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      * ZNCD     - CALCULATE THE NEXT COUPON DATE                        *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS FORWARD SECURITY EVENTS                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWNMCY   - NOMINAL CURRENCY                                      *
+      * WWC9NN   - SPOT RATE FOR NOMINAL CURRENCY                        *
+      * WWA8SN   - MULT/DIV. INDICATOR FOR NOMINAL CURRENCY              *
+      * WWDANN   - NUMBER OF DECIMAL PLACES FOR NOMINAL CURRENCY         *
+      * WWINNR   - INSTRUMENT TYPE                                       *
+      * WWINAM   - MIDAS INSTRUMENT NAME                                 *
+      * WWTVD    - TRADE/VALUE DATE FOR KEY DEFINITION                   *
+      * WWECCY   - EVENT CURRENCY                                        *
+      * WWC9NE   - SPOT RATE FOR EVENT CURRENCY                          *
+      * WWA8SE   - MULT/DIV. INDICATOR FOR EVENT CURRENCY                *
+      * WWDANE   - NUMBER OF DECIMAL PLACES FOR EVENT CURRENCY           *
+      *                                                                  *
+      ********************************************************************
+     C           #P02      BEGSR                           ** #P02  BSR **
+     C*
+     C** ACCESS THE SECURITIES FILE LF/SECTY USING THE SECURITY
+     C** SHORTNAME FROM LF/SECEF
+     C***********SDSN      CHAINSECTYDJ0             72            B08268 S01486
+     C           SDSN      CHAINPMSECTL0             72                   S01486
+     C           *IN72     IFEQ '1'
+     C*
+     C** ERROR
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD4         DBASE            **DB ERROR 04**
+     C***********          MOVEL'SECTYDJ0'DBFILE           ********B08268 S01486
+     C                     MOVE 'PMSECTL0'DBFILE                          S01486
+     C                     MOVELSDSN      DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** ACCESS THE INVESTMENT TYPES FILE LF/INVTP USING THE NOMINAL
+     C** CURRENCY AND INVESTMENT TYPE FROM LF/SECTY
+     C           KINV      CHAININVTP                72
+     C           *IN72     IFEQ '1'
+     C*
+     C** ERROR
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD6         DBASE            **DB ERROR 06**
+     C                     MOVEL'INVTP'   DBFILE           ***************
+     C                     MOVELNMCY      DBKEY
+     C                     MOVE SITP      DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*
+     C** SAVE SOME FIELDS
+     C                     MOVELINNR      WWINNR  3
+     C                     MOVELINAM      WWINAM 20
+     C                     MOVELPROT      WWPROT  1
+     C                     END
+     C***********                                                  S01486 100240
+     C***********S01447    IFEQ 'Y'                                S01486 100240
+     C***********                                                  S01486 100240
+     C***********SDSN      CHAINSESWHTL0             72            S01486 100240
+     C************IN72     IFEQ '1'                                S01486 100240
+     C************LOCK     IN   LDA                                S01486 100240
+     C***********          Z-ADD15        DBASE     ***************S01486 100240
+     C***********          MOVE 'SESWHTL0'DBFILE    * DB ERROR 15 *S01486 100240
+     C***********          MOVELSDSN      DBKEY     ***************S01486 100240
+     C***********          OUT  LDA                                S01486 100240
+     C***********          EXSR *PSSR                              S01486 100240
+     C***********          END                                     S01486 100240
+     C***********                                                  S01486 100240
+     C***********          END                                     S01486 100240
+      *                                                                   100240
+      *** If Withholding Tax feature installed                            100240
+      *                                                                   100240
+     C           S01447    IFEQ 'Y'                        *B1            100240
+      *                                                                   100240
+      *** Initialise work tax rate and amount fields                      100240
+      *                                                                   100240
+     C                     Z-ADD*ZERO     WRASO                           100240
+      *                                                                   100240
+      *** Access securities WHT details file to get tax band              100240
+      *                                                                   100240
+     C           SDSN      CHAINSESWHTL0             72                   100240
+     C           *IN72     IFEQ '0'                        *B2            100240
+      *                                                                   100240
+      *** If tax band not zero, then access SE country tax rate file      100240
+      *** to get tax rate at source, and access country to branch tax     100240
+      *** rate file to get tax rate by user.                              100240
+      *** Otherwise get rates from security file.                         100240
+      *                                                                   100240
+     C           S1TABD    IFEQ *ZERO                      *B3            100240
+     C                     Z-ADDS1RASO    WRASO                           100240
+     C                     ELSE                            *X3            100240
+      *                                                                   100240
+     C           TXCTTA    IFNE S1CTTA                     *B4            100240
+     C           TXTABD    ORNE S1TABD                                    100240
+     C                     MOVELS1CTTA    UKEY    3                       100240
+     C                     MOVE S1TABD    UKEY                            100240
+      *                                                                   100240
+     C                     CALL 'AOSCTXR0'                                100240
+     C                     PARM *BLANKS   @RTCD                           100240
+     C                     PARM '*KEY   ' @OPTN                           100240
+     C                     PARM S1CTTA    @CTTA   2                       100240
+     C                     PARM S1TABD    @TABD   10                      100240
+     C           SECNTR    PARM SECNTR    DSSDY                           100240
+     C*                                                                   100240
+     C           @RTCD     IFNE *BLANKS                    *B5            100240
+     C           TXRECI    ORNE 'D'                                       100240
+     C           *LOCK     IN   LDA                                       100240
+     C                     MOVEL'SECNTRL0'DBFILE           ***************100240
+     C                     MOVELUKEY      DBKEY            ** DB ERROR 15 100240
+     C                     Z-ADD16        DBASE            ***************100240
+     C                     OUT  LDA                                       100240
+     C                     EXSR *PSSR                                     100240
+     C                     END                             *E5            100240
+     C                     END                             *E4            100240
+     C                     Z-ADDTXRASO    WRASO                           100240
+     C                     END                             *E3            100240
+     C                     END                             *E2            100240
+     C                     END                             *E1            100240
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P03     - ACCESS CUSTOMER CURRENCY INFORMATION                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS FORWARD SECURITY EVENTS                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAVCD   - ACCOUNT OFFICER                                       *
+      * WWCSBY   - CUSTOMER BASE CURRENCY                                *
+      * WWC9NC   - SPOT RATE FOR CUSTOMER CURRENCY                       *
+      * WWA8SC   - MULT/DIV. INDICATOR FOR CUSTOMER CURRENCY             *
+      * WWDANC   - NUMBER OF DECIMAL PLACES FOR CUSTOMER CURRENCY        *
+      *                                                                  *
+      ********************************************************************
+     C           #P03      BEGSR                           *** #P03   ***
+     C*
+     C** ACCESS THE SPOT RATE FOR THE CUSTOMER BASE CURRENCY FROM
+     C** LF/SDCURRL0 USING THE CUSTOMER BASE CURRENCY ON LF/SDPLCSL0
+     C                     Z-ADD1         B                               B08268
+     C           QACSBY    LOKUPCYCD,B                   72               B08268
+     C           *IN72     IFEQ '0'                        ***************B08268
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            **DB ERROR 02**B08268
+     C                     MOVEL'SDCURRL0'DBFILE           ***************B08268
+     C                     MOVELQACSBY    DBKEY                           B08268
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B08268
+     C                     ELSE                                           B08040
+     C                     Z-ADDSPRT,B    A6SPRT                          B08040
+     C                     MOVE MDIN,B    A6MDIN                          B08040
+     C                     Z-ADDNBDP,B    A6NBDP                          B08040
+     C                     Z-ADDA6SPRT    WWC9NC 138
+     C                     MOVELA6MDIN    WWA8SC  1
+     C                     Z-ADDA6NBDP    WWDANC  10
+     C                     END                                            B08040
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P04     - ACCESS PORTFOLIO DETAILS                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS FORWARD SECURITY EVENTS                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWVCUR   - VALUATION CURRENCY                                    *
+      * WWC9NV   - SPOT RATE FOR VALUATION CURRENCY                      *
+      * WWA8SV   - MULT/DIV. INDICATOR FOR VALUATION CURRENCY            *
+      * WWDANV   - NUMBER OF DECIMAL PLACES FOR VALUATION CURRENCY       *
+      *                                                                  *
+      ********************************************************************
+     C           #P04      BEGSR                           *** #P04   ***
+     C*
+     C** IF THE PORTFOLIO REFERENCE IS NOT '9997'
+     C           QAPTFR    IFNE '9997'
+     C                     MOVELQAPTCY    WWVCUR  3                       B08268
+     C*
+     C** ACCESS THE SPOT RATE FOR THE VALUATION CURRENCY FROM
+     C** LF/SDCURRL0 USING THE VALUATION CURRENCY
+     C                     Z-ADD1         B                               B08268
+     C           WWVCUR    LOKUPCYCD,B                   72               B08268
+     C           *IN72     IFEQ '0'                        ***************B08268
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD11        DBASE            **DB ERROR 02**B08268
+     C                     MOVEL'SDCURRL0'DBFILE           ***************B08268
+     C                     MOVELWWVCUR    DBKEY                           B08268
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B08268
+     C                     ELSE                                           B08040
+     C                     Z-ADDSPRT,B    A6SPRT                          B08040
+     C                     MOVE MDIN,B    A6MDIN                          B08040
+     C                     Z-ADDNBDP,B    A6NBDP                          B08040
+     C                     Z-ADDA6SPRT    WWC9NV 138
+     C                     MOVELA6MDIN    WWA8SV  1
+     C                     Z-ADDA6NBDP    WWDANV  10
+     C                     END                                            B08040
+     C                     END
+     C*
+     C** OTHERWISE (IF THE PORTFOLIO REFERENCE IS '9997')
+     C           QAPTFR    IFEQ '9997'
+     C*
+     C** SET THE VALUATION CURRENCY EQUAL TO THE CUSTOMER BASE CURRENCY
+     C** FROM LF/SDPLCSL0
+     C                     MOVELWWCSBY    WWVCUR
+     C*
+     C** SET THE VALUATION CURRENCY SPOT RATE AND NUMBER OF DECIMAL
+     C** PLACES EQUAL TO THAT FOR THE CUSTOMER BASE CURRENCY
+     C                     Z-ADDWWC9NC    WWC9NV
+     C                     MOVELWWA8SC    WWA8SV
+     C                     Z-ADDWWDANC    WWDANV
+     C                     END
+     C*
+     C                     ENDSR
+      ********************************************************************B08268
+      /EJECT                                                              B08268
+      ********************************************************************B08268
+      *                                                                  *B08268
+      * #P05     - SET UP REMAINING SECURITY DETAILS                     *
+      *                                                                  *B08268
+      * SUBROUTINE CALLS:                                                *B08268
+      *                                                                  *B08268
+      * SUBROUTINE CALLED FROM:                                          *B08268
+      * #P01     - PROCESS FORWARD SECURITY EVENTS                       *B08268
+      *                                                                  *B08268
+      * ROUTINE USES VARIABLES:                                          *B08268
+      *                                                                  *B08268
+      ********************************************************************B08268
+     C           #P05      BEGSR                           ** #P05  BSR **B08268
+     C*                                                                   B08268
+     C**CHECK*IF*COUNTRY*OF*TAX*EXISTS***************************  B08268 S01486
+     C***********SECTTA    IFNE *BLANKS                    B1      B08268 S01486
+     C***********SETABD    ANDNE*ZEROS                             B08268 S01486
+     C***********                                                  B08268 S01486
+     C***********TACNTR    CHAINTACNTRL1             80            B08268 S01486
+     C************IN80     IFEQ '1'                        B2      B08268 S01486
+     C***********CRRECI    ORNE 'D'                                B08268 S01486
+     C***********          MOVEL'TACNTRL1'DBFILE           ********B08268 S01486
+     C***********          MOVEL*BLANKS   DBKEY            ** DB ERB08268 S01486
+     C***********          Z-ADD018       DBASE            ********B08268 S01486
+     C***********          EXSR *PSSR                              B08268 S01486
+     C***********          END                             E2      B08268 S01486
+     C***********                                                  B08268 S01486
+     C**SAVE*THE*RATES*OF*TAX************************************  B08268 S01486
+     C***********                                                  B08268 S01486
+     C***********          Z-ADDCRRASO    WRASO                    B08268 S01486
+     C***********          Z-ADDCRRAUS    WRAUS                    B08268 S01486
+     C***********          MOVE CRDLOR    WDLOR                    B08268 S01486
+     C***********                                                  B08268 S01486
+     C***********          ELSE                            X1      B08268 S01486
+     C***********                                                  B08268 S01486
+     C**SAVE*THE*RATES*OF*TAX*FROM*SECURITY*DETAIL*EXTENDED*FILE*  B08268 S01486
+     C***********          Z-ADDSERASO    WRASO                    B08268 S01486
+     C***********          Z-ADDSERAUS    WRAUS                    B08268 S01486
+     C***********          MOVE SEDLOR    WDLOR                    B08268 S01486
+     C***********          END                             E1      B08268 S01486
+     C*
+     C** ACCESS THE SPOT RATE & N# OF DEC. FROM LF/SDCURRL0 USING THE NOMINAL
+     C** CURRENCY FROM LF/SECTY
+     C                     Z-ADD1         B                               B08268
+     C           NMCY      LOKUPCYCD,B                   72               B08268
+     C           *IN72     IFEQ '0'                        ***************B08268
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD5         DBASE            **DB ERROR 02**B08268
+     C                     MOVEL'SDCURRL0'DBFILE           ***************B08268
+     C                     MOVELNMCY      DBKEY                           B08268
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B08268
+     C                     ELSE                                           B08040
+     C                     Z-ADDSPRT,B    A6SPRT                          B08040
+     C                     MOVE MDIN,B    A6MDIN                          B08040
+     C                     Z-ADDNBDP,B    A6NBDP                          B08040
+     C                     MOVELNMCY      WWNMCY  3
+     C                     Z-ADDA6SPRT    WWC9NN 138
+     C                     MOVELA6MDIN    WWA8SN  1
+     C                     Z-ADDA6NBDP    WWDANN  10
+     C                     END                                            B08040
+     C*
+     C** ACCESS LF/SDCURRL0 USING THE EVENT CURRENCY ABOVE FOR THE SPOT
+     C** RATE AND NUMBER OF DEC. PLACES
+     C                     Z-ADD1         B                               B08268
+     C           VLCY      LOKUPCYCD,B                   72               B08268
+     C           *IN72     IFEQ '0'                        ***************B08268
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD7         DBASE            **DB ERROR 02**B08268
+     C                     MOVEL'SDCURRL0'DBFILE           ***************B08268
+     C                     MOVELVLCY      DBKEY                           B08268
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B08268
+     C                     ELSE                                           B08040
+     C                     Z-ADDSPRT,B    A6SPRT                          B08040
+     C                     MOVE MDIN,B    A6MDIN                          B08040
+     C                     Z-ADDNBDP,B    A6NBDP                          B08040
+     C                     Z-ADDA6SPRT    WWC9NE 138
+     C                     MOVELA6MDIN    WWA8SE  1
+     C                     Z-ADDA6NBDP    WWDANE  10
+     C                     END                                            B08040
+     C*
+     C** CALCULATE THE NEXT COUPON DATE AS PER STANDARD SUBROUTINE
+     C** ZNCD, PASSING THE FOLLOWING PARM.:
+     C** CD  : ARRAY OF COUPON DATES FROM LF/SECTY
+     C** CR  : ARRAY OF RATE/PAYMENT INDICATORS FROM LF/SECTY
+     C** ITLD: INITIAL DATE FROM LF/SECTY
+     C** FCPN: FIST COUPON DATE FROM LF/SECTY
+     C** MATY: MATURITY DATE FROM LF/SECTY
+     C** ECD : EVENT CONTROL DATE FROM P/INIT
+     C           SDET      IFEQ 'CP'                                      058887
+     C                     EXSR ZNCD
+     C*
+     C** DETERMINE THE COUPON DATE PRIOR TO THE EVENT DATE
+     C** AS FOLLOWS:
+     C** SUBTRACT 1 FROM THE EVENT DATE AND PUT THE RESULT INTO ZECD
+     C           SDED      SUB  1         ZECD
+     C*
+     C** CALCULATE THE LAST COUPON DATE AS PER STANDARD SUBROUTINE ZLCD
+     C** PASSING THE FOLLOWING INFORMATION:
+     C** CD  : ARRAY OF COUPON DATES FROM LF/SECTY
+     C** CR  : ARRAY OF RATE/PAYMENT INDICATORS FROM LF/SECTY
+     C** ISSD: ISSUE DATE FROM LF/SECTY
+     C** ITLD: INITIAL DATE FROM LF/SECTY
+     C** FCPN: FIRST COUPON DATE FROM LF/SECTY
+     C** ZECD: EVENT CONTROL DATE AS ABOVE
+     C                     EXSR ZLCD
+     C*                                                                   088399
+     C** SAVE LAST COUPON DATE (PRIOR TO NEXT COUPON)                     088399
+     C                     Z-ADDZZLCD     XXLCD   50                      088399
+     C*                                                                   088399
+     C** CALCULATE + SAVE LAST COUPON DATE (PRIOR TO MATURITY)            088399
+     C           MATY      SUB  1         ZECD                            088399
+     C                     EXSR ZLCD                                      088399
+     C                     Z-ADDZZLCD     MMLCD   50                      088399
+     C*                                                                   088399
+     C** MOVE BACK LAST COUPON DATE (FOR SCHULDSCHEIN)                    088399
+     C                     Z-ADDXXLCD     ZZLCD   50                      088399
+     C*                                                                   088399
+     C*
+     C** IF THE PROCESSING TYPE FROM LF/INVTP IS NOT EQUAL TO 6
+     C** IE THIS IS NOT A SCHULDSCHEIN SECURITY
+     C           PROT      IFNE '6'
+     C           PROT      ANDNE'2'                                       46660
+     C           PROT      ANDNE'4'                                       46660
+     C           PROT      ANDNE'7'                                       46660
+     C*
+     C** SET THE PRINCIPAL AMOUNT EQUAL TO 1. IE CALCULATE THE AMOUNT
+     C** OF INTEREST FOR EACH UNIT OF NOMINAL
+     C                     Z-ADD100000    ZAMTP
+     C*
+     C** SET THE FROM DATE ZFMDAT EQUAL TO THE LAST COUPON DATE ZZLCD
+     C** (PRIOR TO THIS EVENT) FROM SUBROUTINE ZLCD ABOVE
+     C******************** Z-ADDZZLCD     ZFMDAT                          088399
+     C                     Z-ADDXXLCD     ZFMDAT                          088399
+     C*
+     C** SET THE TO DATE ZTODAT EQUAL TO THE EVENT DATE SDED
+     C** FROM LF/SECEF
+     C                     Z-ADDSDED      ZTODAT
+     C*
+     C** SET THE SECURITY ZSSNM EQUAL TO THAT FROM LF/PMCFPSLL
+     C                     MOVELQATDSS    ZSSNM
+     C*
+     C** SET THE NOMINAL CURRENCY DECIMAL PLACES TO THAT FROM LF/SDCURRL0
+     C                     Z-ADDWWDANN    A6NBDP
+     C*
+     C** CALCULATE THE ACCRUED INTEREST FROM THE LAST COUPON DATE
+     C** TO THE EVENT DATE AS PER STANDARD SUBROUTINE ZAINSH
+     C                     EXSR ZAINSH
+     C           ZTOAI     DIV  100000    WWTOAI 209H
+     C*                                                                   088399
+     C** REPEAT PROCESSING FOR COUPON TO MATURITY                         088399
+     C                     Z-ADDMMLCD     ZFMDAT                          088399
+     C                     Z-ADDMATY      ZTODAT                          088399
+     C                     MOVELQATDSS    ZSSNM                           088399
+     C                     Z-ADDWWDANN    A6NBDP                          088399
+     C                     EXSR ZAINSH                                    088399
+     C           ZTOAI     DIV  100000    WWTOMI 209H                     088399
+     C                     END
+     C                     END                                            058887
+     C***********                                                  S01486 100240
+     C***********S01447    IFEQ 'Y'                                S01486 100240
+     C***********                                                  S01486 100240
+     C****Initialise work tax rate and amount fields.              S01486 100240
+     C***********                                                  S01486 100240
+     C***********          Z-ADD0         WRASO                    S01486 100240
+     C***********          Z-ADD0         WRAUS                    S01486 100240
+     C***********          MOVEL*BLANKS   WDLOR                    S01486 100240
+     C***********                                                  S01486 100240
+     C****If*tax*band at source is zero, then take rate from security1486 100240
+     C****WHT*details file; otherwise access SE country tax rate file1486 100240
+     C****to*get*tax rate at source.                               S01486 100240
+     C***********                                                  S01486 100240
+     C***********S1TABD    IFEQ *ZERO                              S01486 100240
+     C***********          Z-ADDS1RASO    WRASO                    S01486 100240
+     C***********          ELSE                                    S01486 100240
+     C***********          MOVELS1CTTA    UKEY    3                S01486 100240
+     C***********          MOVE S1TABD    UKEY                     S01486 100240
+     C***********                                                  S01486 100240
+     C***********          CALL 'AOSCTXR0'                         S01486 100240
+     C***********          PARM *BLANKS   @RTCD                    S01486 100240
+     C***********          PARM '*KEY   ' @OPTN                    S01486 100240
+     C***********          PARM S1CTTA    @CTTA   2                S01486 100240
+     C***********          PARM S1TABD    @TABD   10               S01486 100240
+     C***********SECNTR    PARM SECNTR    DSSDY                    S01486 100240
+     C***********                                                  S01486 100240
+     C***********@RTCD     IFNE *BLANKS                            S01486 100240
+     C***********TXRECI    ORNE 'D'                                S01486 100240
+     C************LOCK     IN   LDA                                S01486 100240
+     C***********          Z-ADD16        DBASE     ***************S01486 100240
+     C***********          MOVE 'SECNTRL0'DBFILE    * DB ERROR 16 *S01486 100240
+     C***********          MOVELUKEY      DBKEY     ***************S01486 100240
+     C***********          OUT  LDA                                S01486 100240
+     C***********          EXSR *PSSR                              S01486 100240
+     C***********          ELSE                                    S01486 100240
+     C***********          Z-ADDTXRASO    WRASO                    S01486 100240
+     C***********          END                                     S01486 100240
+     C***********                                                  S01486 100240
+     C***********          END                                     S01486 100240
+     C***********                                                  S01486 100240
+     C****If*tax*band by user is not zero, then access country to  S01486 100240
+     C****branch*tax rate file to get tax rate by user; otherwise set1486 100240
+     C****to*zero.                                                 S01486 100240
+     C***********                                                  S01486 100240
+     C***********S1TABU    IFNE *ZERO                              S01486 100240
+     C***********                                                  S01486 100240
+     C***********          CALL 'AOCBTXR0'                         S01486 100240
+     C***********          PARM *BLANKS   @RTCD                    S01486 100240
+     C***********          PARM '*KEY   ' @OPTN                    S01486 100240
+     C***********          PARM DBRN      @BRCA   3                S01486 100240
+     C***********          PARM S1CTTA    @CTTA                    S01486 100240
+     C***********          PARM S1TABU    @TABU   10               S01486 100240
+     C***********SECBTX    PARM SECBTX    DSFDY                    S01486 100240
+     C***********                                                  S01486 100240
+     C***********@RTCD     IFEQ *BLANKS                            S01486 100240
+     C***********TBRECI    ANDEQ'D'                                S01486 100240
+     C***********          Z-ADDTBRASR    WRASO                    S01486 100240
+     C***********          Z-ADDTBRAUS    WRAUS                    S01486 100240
+     C***********          MOVELTBDLOR    WDLOR                    S01486 100240
+     C***********          END                                     S01486 100240
+     C***********                                                  S01486 100240
+     C***********          END                                     S01486 100240
+     C***********                                                  S01486 100240
+     C***********          END                                     S01486 100240
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P06     - DETERMINE EVENT AMOUNT                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * COUPON   - DETERMINE COUPON AMOUNT                               *
+      * DIVEXP   - DETERMINE DIVIDEND DUE AMOUNT                         *
+      * DIVDUE   - DETERMINE DIVIDEND EXPECTED AMOUNT                    *
+      * MATUR    - DETERMINE MATURITY AMOUNT                             *
+      * MORTPA   - DETERMINE MORTGAGE PAYMENT AMOUNT                     *
+      * PARTPA   - DETERMINE PART-PAY AMOUNT                             *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS FORWARD SECURITY EVENTS                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P06      BEGSR                           *** #P06   ***
+     C*
+     C** IF THE EVENT TYPE IS 'CP'
+     C           WWSDET    IFEQ 'CP'
+     C*
+     C** DETERMINE THE COUPON AMOUNT AS PER SR/COUPON
+     C                     EXSR COUPON
+     C                     END
+     C*
+     C** IF THE EVENT TYPE IS 'DE'
+     C           WWSDET    IFEQ 'DE'
+     C*
+     C** DETERMINE THE DIVIDEND EXPECTED AMOUNT AS PER SR/DIVEXP
+     C                     EXSR DIVEXP
+     C                     END
+     C*
+     C** IF THE EVENT TYPE IS 'DV'
+     C           WWSDET    IFEQ 'DV'
+     C*
+     C** DETERMINE THE DIVIDEND DUE AMOUNT AS PER SR/DIVDUE
+     C                     EXSR DIVDUE
+     C                     END
+     C*
+     C** IF THE EVENT TYPE IS 'MA'
+     C           WWSDET    IFEQ 'MA'
+     C*
+     C** DETERMINE THE MATURITY AMOUNT AS PER SR/MATUR
+     C                     EXSR MATUR
+     C                     END
+     C*
+     C** IF THE EVENT TYPE IS 'MP'
+     C           WWSDET    IFEQ 'MP'
+     C*
+     C** DETERMINE THE MORTGAGE PAYMENT AMOUNT AS PER SR/MORTPA
+     C                     EXSR MORTPA
+     C                     END
+     C*
+     C** IF THE EVENT TYPE IS 'PP'
+     C           WWSDET    IFEQ 'PP'
+     C*
+     C** DETERMINE THE PART PAYMENT AMOUNT AS PER SR/PARTPA
+     C                     EXSR PARTPA
+     C                     END
+     C*
+     C                     ENDSR
+      ********************************************************************058887
+      /EJECT                                                              058887
+      ********************************************************************058887
+      *                                                                  *058887
+      * #P061    - CHECK FOR COUPON/DIVIDEND EVENT BETWEEN POSITION      *058887
+      *            DATE AND DATE OF FORWARD EVENT                        *058887
+      *                                                                  *058887
+      * SUBROUTINE CALLS:                                                *058887
+      *                                                                  *058887
+      * SUBROUTINE CALLED FROM:                                          *058887
+      * #P01     - PROCESS FORWARD SECURITY EVENTS                       *058887
+      *                                                                  *058887
+      * ROUTINE USES VARIABLES:                                          *058887
+      *                                                                  *058887
+      ********************************************************************058887
+     C           #P061     BEGSR                           *** #P06   *** 058887
+     C*                                                                   058887
+     C           SNDFKY    KLIST                                          058887
+     C                     KFLD           WWSDSN                          058887
+     C                     KFLD           WXSDET  2                       058887
+     C                     KFLD           QAPDAT                          058887
+     C*                                                                   058887
+     C** IF 'CP' EVENT, CHECK FOR COUPON EVENT BETWEEN POSITION DATE      058887
+     C** AND EVENT DATE                                                   058887
+     C           WWSDET    IFEQ 'CP'                       B1             058887
+     C*                                                                   058887
+     C** IF LAST COUPON DATE FROM THE SECURITY *GE POSITION DATE  AND     058887
+     C** BEFORE EVENT DATE THEN RESET EX-COUPON NOMINAL                   058887
+     C           LCPN      IFGE QAPDAT                     B2             058887
+     C           LCPN      ANDLTWWSDED                                    058887
+     C                     Z-ADD0         QACSEX                          058887
+     C                     END                             E2             058887
+     C*                                                                   058887
+     C** IF LAST COUPON DATE BEFORE POSITION DATE, OBTAIN NEXT COUPON     058887
+     C** EVENT AFTER POSITION DATE                                        058887
+     C           LCPN      IFLT QAPDAT                     B2             058887
+     C*                                                                   058887
+     C                     MOVE 'CP'      WXSDET                          058887
+     C***********SNDFKY    SETLLSNDET                              058887 S01486
+     C***********          READ SNDET                    73        058887 S01486
+     C           SNDFKY    SETLLPMSNDVL0                                  S01486
+     C                     READ PMSNDVL0                 73               S01486
+     C*                                                                   058887
+     C** IF RECORD READ FOR SAME SECURITY AND EVENT TYPE AND EVENT DATE   058887
+     C** GREATER THAN OR EQUAL TO POSITION DATE AND LESS THAN EVENT       058887
+     C** DATE FROM LF/SECEF RESET EX-COUPON NOMINAL TO 0                  058887
+     C           *IN73     IFEQ '0'                        B3             058887
+     C           RNSNSN    ANDEQWWSDSN                                    058887
+     C           RNSNET    ANDEQWXSDET                                    058887
+     C           RNSNDT    ANDGEQAPDAT                                    058887
+     C           RNSNDT    ANDLTWWSDED                                    058887
+     C                     Z-ADD0         QACSEX                          058887
+     C                     END                             E3             058887
+     C                     END                             E2             058887
+     C                     END                             E1             058887
+     C*                                                                   058887
+     C** IF THE EVENT TYPE IS 'DV' OR 'DE' DETERMINE THE DIVIDEND         058887
+     C** EVENT OR EXPECTED DIVIDEND EVENT AFTER THE POSITION DATE         058887
+     C           WWSDET    IFEQ 'DV'                       B1             058887
+     C           WWSDET    OREQ 'DE'                                      058887
+     C*                                                                   058887
+     C                     Z-ADD*HIVAL    WWSNDT                          058887
+     C*                                                                   058887
+     C** DETERMINE THE NEXT DIVIDEND EVENT AFTER THE POSITION DATE        058887
+     C                     MOVE 'DV'      WXSDET                          058887
+     C           SNDFKY    SETLLSECET1                                    058887
+     C                     READ SECET1                   73               058887
+     C*                                                                   058887
+     C** IF RECORD READ FOR SAME SECURITY AND EVENT TYPE SAVE THE         058887
+     C** EVENT DATE                                                       058887
+     C           *IN73     IFEQ '0'                        B2             058887
+     C           R1SDSN    ANDEQWWSDSN                                    058887
+     C           R1SDET    ANDEQWXSDET                                    058887
+     C                     Z-ADDR1SDED    WWSNDT  50                      058887
+     C                     END                             E2             058887
+     C*                                                                   058887
+     C** DETERMINE THE NEXT EXPECTED DIVIDEND EVENT AFTER THE POSITION    058887
+     C** DATE                                                             058887
+     C                     MOVE 'DE'      WXSDET                          058887
+     C***********SNDFKY    SETLLSNDET                              058887 S01486
+     C***********          READ SNDET                    73        058887 S01486
+     C           SNDFKY    SETLLPMSNDVL0                                  S01486
+     C                     READ PMSNDVL0                 73               S01486
+     C*                                                                   058887
+     C** IF RECORD READ FOR SAME SECURITY AND EVENT TYPE AND THE 'DE'     058887
+     C** EVENT IS BEFORE THE 'DV' EVENT SAVE THE DATE                     058887
+     C           *IN73     IFEQ '0'                        B2             058887
+     C           RNSNSN    ANDEQWWSDSN                                    058887
+     C           RNSNET    ANDEQWXSDET                                    058887
+     C           RNSNDT    ANDLTWWSNDT                                    058887
+     C                     Z-ADDRNSNDT    WWSNDT  50                      058887
+     C                     END                             E2             058887
+     C*                                                                   058887
+     C** IF DATE OF NEXT 'DV' 'DE' EVENT IS BEFORE EVENT DATE FROM        058887
+     C** LF/SECEF RESET EX-COUPON NOMINAL TO 0                            058887
+     C           WWSNDT    IFLT WWSDED                     B2             058887
+     C                     Z-ADD0         QACSEX                          058887
+     C                     END                             E2             058887
+     C                     END                             E1             058887
+     C*                                                                   058887
+     C                     ENDSR                                          058887
+     C**************************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * COUPON   - DETERMINE COUPON AMOUNT  (NON - DIARY)                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZLCD     - CALCULATE THE LAST COUPON DATE PRIOR EVENT C. DATE    *
+      * ZAINSH   - CALCUL SE ACCRUED INTEREST - NON SCHULDSCHEIN         *
+      * ZAISCH   - CALCUL SE ACCRUED INTEREST - SCHULDSCHEIN             *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P06     - DETERMINE EVENT AMOUNT                                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCUM    - CUM - COUPON NOMINAL                                  *
+      * WWANOM   - AMOUNT IN NOMINAL CURRENCY                            *
+      *                                                                  *
+      ********************************************************************
+     C           COUPON    BEGSR                           *** COUPON ***
+     C*
+     C** IF THE PROCESSING TYPE FROM LF/INVTP IS EQUAL TO 6
+     C** IE THIS IS A SCHULDSCHEIN SECURITY
+     C           PROT      IFEQ '6'
+     C*
+     C** SET THE FROM DATE ZFMDAT EQUAL TO THE LAST COUPON DATE ZZLCD
+     C** (PRIOR TO THIS EVENT) FROM SUBROUTINE ZLCD ABOVE
+     C                     Z-ADDZZLCD     ZFMDAT
+     C*
+     C** SET THE TO DATE ZTODAT EQUAL TO THE EVENT DATE SDED
+     C** FROM LF/SECEF
+     C                     Z-ADDWWSDED    ZTODAT
+     C*
+     C** SET THE CUSTOMER ZCUST EQUAL TO THAT FROM LF/PMCFPSLL
+     C                     MOVELQACNUM    ZCUST
+     C*
+     C** SET THE PORTFOLIO REFERENCE ZPTRF EQUAL TO THAT
+     C** FROM LF/PMCFPSLL
+     C                     MOVELQAPTFR    ZPTRF
+     C*
+     C** SET THE SECURITY ZSSNM EQUAL TO THAT FROM LF/PMCFPSLL
+     C                     MOVELQATDSS    ZSSNM
+     C*
+     C** SET THE TRADE/VALUE BASIS ZTVBS EQUAL TO THAT
+     C** FROM LF/PMCFPSLL
+     C                     MOVELQATVDA    ZTVBS
+     C*
+     C** SET THE NOMINAL CURRENCY DECIMAL PLACES TO THAT FROM LF/SDCURRL0
+     C                     Z-ADDWWDANN    A6NBDP
+     C*
+     C** CALCULATE THE ACCRUED INTEREST FROM THE LAST COUPON DATE
+     C** TO THE EVENT DATE AS PER STANDARD SUBROUTINE ZAISCH
+     C                     EXSR ZAISCH
+     C*
+     C** SET THE EVENT AMOUNT IN NOMINAL CURRENCY EQUAL TO THE TOTAL
+     C** ACCRUED INTEREST ZTOAI FROM ZAINSH/ZAISCH
+     C                     Z-ADDZTOAI     WWANOM 150
+     C*
+     C** ... OTHERWISE FOR NON-SCHULDSCHEIN MULTIPLY CUM COUPON NOMINAL
+     C** BY AMOUNT PER UNIT CALCULATED IN #P05
+     C** ONLY VALID FOR COUPON NOT FALLING ON MATURITY DATE               077391
+     C                     ELSE
+     C           WWSDED    IFNE MATY                                      077391
+     C*********  WWCUM     MULT WWTOAI    WWANOM                          088399
+     C           WWCUM     MULT WWTOAI    WWANOM    H                     088399
+     C                     ELSE                                           077391
+     C           WWCUM     MULT WWTOMI    WWANOM    H                     088399
+     C**                                                           077391 088399
+     C** FOR COUPON ON MATURITY DATE - RECALCULATE COUPON AMOUNT   077391 088399
+     C** (PERIOD MAY NOT BE FULL COUPON PERIOD)                    077391 088399
+     C*                                                            077391 088399
+     C** DETERMINE THE COUPON DATE PRIOR TO THE EVENT DATE         077391 088399
+     C** AS FOLLOWS:                                               077391 088399
+     C** SUBTRACT 1 FROM THE EVENT DATE AND PUT THE RESULT INTO ZEC077391 088399
+     C**         WWSDED    SUB  1         ZECD                     077391 088399
+     C*                                                            077391 088399
+     C** CALCULATE THE LAST COUPON DATE AS PER STANDARD SUBROUTINE 077391 088399
+     C** PASSING THE FOLLOWING INFORMATION:                        077391 088399
+     C**                   EXSR ZLCD                               077391 088399
+     C**                                                           077391 088399
+     C**                   Z-ADDWWCUM     ZAMTP                    077391 088399
+     C*                                                            077391 088399
+     C** SET THE FROM DATE ZFMDAT EQUAL TO THE LAST COUPON DATE ZZL077391 088399
+     C** (PRIOR TO THIS EVENT) FROM SUBROUTINE ZLCD ABOVE          077391 088399
+     C**                   Z-ADDZZLCD     ZFMDAT                   077391 088399
+     C*                                                            077391 088399
+     C** SET THE TO DATE ZTODAT EQUAL TO THE EVENT DATE SDED       077391 088399
+     C** FROM LF/SECEF                                             077391 088399
+     C**                   Z-ADDWWSDED    ZTODAT                   077391 088399
+     C*                                                            077391 088399
+     C** SET THE SECURITY ZSSNM EQUAL TO THAT FROM LF/PMCFPSLL     077391 088399
+     C**                   MOVELQATDSS    ZSSNM                    077391 088399
+     C*                                                            077391 088399
+     C** SET THE NOMINAL CURRENCY DECIMAL PLACES TO THAT FROM LF/SD077391 088399
+     C**                   Z-ADDWWDANN    A6NBDP                   077391 088399
+     C*                                                            077391 088399
+     C** CALCULATE THE ACCRUED INTEREST FROM THE LAST COUPON DATE  077391 088399
+     C** TO THE EVENT DATE AS PER STANDARD SUBROUTINE ZAINSH       077391 088399
+     C**                   EXSR ZAINSH                             077391 088399
+     C**                   Z-ADDZTOAI     WWANOM 150               077391 088399
+     C                     END                                            077391
+     C********************************************************************077391
+     C                     END
+     C*                                                                   001391
+     C***********BGNTST    IFEQ 'Y'                                001391 S01486
+     C           S01447    IFEQ 'Y'                                       S01486
+     C*                                                                   001391
+     C*                                                                   R05772
+     C** CALCULATE AMOUNT IN NOMINAL CURRENCY NET OF WITHHOLDING TAX      R05772
+     C*                    EXSR #P08                                      R05772
+     C*                                                                   R05772
+     C*                                                                   001391
+     C                     END                                            001391
+     C*                                                                   001391
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DIVEXP   - DETERMINE DIVIDEND DUE AMOUNT  (NON - DIARY)          *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZCCYCN   - CONVERT AN AMOUNT FROM ONE CURRENCY TO ANOTHER        *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P06     - DETERMINE EVENT AMOUNT                                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWETAM   - EVENT AMOUNT                                          *
+      * WWECCY   - EVENT CURRENCY                                        *
+      * WWNMCY   - NOMINAL CURRENCY                                      *
+      * WWC9NE   - SPOT RATE FOR EVENT CURRENCY                          *
+      * WWC9NN   - SPOT RATE FOR NOMINAL CURRENCY                        *
+      * WWA8SE   - MULT/DIV. INDICATOR FOR EVENT CURRENCY                *
+      * WWA8SN   - MULT/DIV. INDICATOR FOR NOMINAL CURRENCY              *
+      * WWDANE   - NUMBER OF DECIMAL PLACES FOR EVENT CURRENCY           *
+      * WWDANN   - NUMBER OF DECIMAL PLACES FOR NOMINAL CURRENCY         *
+      * WWANOM   - AMOUNT IN NOMINAL CURRENCY                            *
+      *                                                                  *
+      ********************************************************************
+     C           DIVEXP    BEGSR                           *** DIVEXP ***
+     C*
+     C** MULTIPLY THE POSITION CUM-COUPON NOMINAL BY THE TOTAL CALLED
+     C** AMOUNT/% (SNCP FROM LF/SECEF) AND PUT THE RESULT IN THE
+     C** EVENT AMOUNT IN EVENT CURRENCY
+     C           WWCUM     MULT SNCP      WWETAM 150
+     C* Adjust for nominal decimal places, if required.                   B08022
+     C           NMDP      IFEQ 4                                         B08022
+     C                     DIV  10000     WWETAM    H                     B08022
+     C                     END                                            B08022
+     C           NMDP      IFEQ 2                                         152860
+     C                     DIV  100       WWETAM    H                     152860
+     C                     END                                            152860
+     C*                                                                   B07859
+     C** CONVERT AMOUNT FROM EVENT CURRENCY TO NOMINAL CURRENCY           B07859
+     C                     Z-ADDWWETAM    ZAMTF                           B07859
+     C                     Z-ADDSEXR      ZCRSRT                          B07859
+     C           SMDI      IFEQ 'D'                                       B07859
+     C                     MOVE 'M'       ZCRSMD                          B07859
+     C                     ELSE                                           B07859
+     C                     MOVE 'D'       ZCRSMD                          B07859
+     C                     END                                            B07859
+     C*                                                                   B07859
+     C                     Z-ADDWWDANE    ZCDPF                           B07859
+     C                     Z-ADDWWDANN    ZCDPT                           B07859
+     C                     EXSR ZCCYXR                                    B07859
+     C*
+     C** SET THE EVENT AMOUNT IN NOMINAL CURRENCY EQUAL TO ZAMTT
+     C** FROM SR/ZCCYCN
+     C                     Z-ADDZAMTT     WWANOM
+     C*                                                                   001391
+     C***********BGNTST    IFEQ 'Y'                                001391 S01486
+     C           S01447    IFEQ 'Y'                                       S01486
+     C*                                                                   001391
+     C*                                                                   R05772
+     C** CALCULATE AMOUNT IN NOMINAL CURRENCY NET OF WITHHOLDING TAX      R05772
+     C                     EXSR #P08                                      R05772
+     C*                                                                   001391
+     C                     END                                            001391
+     C*                                                                   001391
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DIVDUE   - DETERMINE DIVIDEND EXPECTED AMOUNT  (DIARY)           *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P06     - DETERMINE EVENT AMOUNT                                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWDANE   - NUMBER OF DECIMAL PLACES FOR EVENT CURRENCY           *
+      * WWORK    - WORK FIELD                                            *
+      * WWANOM   - AMOUNT IN NOMINAL CURRENCY                            *
+      *                                                                  *
+      ********************************************************************
+     C           DIVDUE    BEGSR                           *** DIVDUE ***
+     C*
+     C** ADD 4 TO THE EVENT CURRENCY DECIMAL PLACES AND PUT THE RESULT
+     C** IN AN INDEX ZI
+     C           4         ADD  WWDANE    ZI
+     C*
+     C** MULTIPLY THE DIVIDEND PAYMENT AMOUNT SDVA FROM LF/SECEF
+     C** BY POWER,ZI AND PUT THE RESULT IN A WORK FIELD 15,8 IN SIZE
+     C           SDVA      MULT POWER,ZI  WWORK  158
+     C*
+     C** MULTIPLY THE CUM-COUPON NOMINAL BY THE WORK FIELD ABOVE
+     C** AND PUT THE RESULT IN THE EVENT AMOUNT IN NOMINAL CURRENCY
+     C** WITH HALF-ADJUST
+     C           WWORK     MULT WWCUM     WWETAM    H                     B07859
+     C* Adjust for nominal decimal places, if required.                   B08022
+     C           NMDP      IFEQ 4                                         B08022
+     C                     DIV  10000     WWETAM    H                     B08022
+     C                     END                                            B08022
+     C           NMDP      IFEQ 2                                         152860
+     C                     DIV  100       WWETAM    H                     152860
+     C                     END                                            152860
+     C*                                                                   B07859
+     C** CONVERT AMOUNT FROM EVENT CURRENCY TO NOMINAL CURRENCY           B07859
+     C                     Z-ADDWWETAM    ZAMTF                           B07859
+     C                     Z-ADDSEXR      ZCRSRT                          B07859
+     C           SMDI      IFEQ 'D'                                       B07859
+     C                     MOVE 'M'       ZCRSMD                          B07859
+     C                     ELSE                                           B07859
+     C                     MOVE 'D'       ZCRSMD                          B07859
+     C                     END                                            B07859
+     C*                                                                   B07859
+     C                     Z-ADDWWDANE    ZCDPF                           B07859
+     C                     Z-ADDWWDANN    ZCDPT                           B07859
+     C                     EXSR ZCCYXR                                    B07859
+     C*
+     C** SET THE EVENT AMOUNT IN NOMINAL CURRENCY EQUAL TO ZAMTT
+     C** FROM SR/ZCCYCN
+     C                     Z-ADDZAMTT     WWANOM
+     C*                                                                   001391
+     C***********BGNTST    IFEQ 'Y'                                001391 S01486
+     C           S01447    IFEQ 'Y'                                       S01486
+     C*                                                                   001391
+     C*                                                                   R05772
+     C** CALCULATE AMOUNT IN NOMINAL CURRENCY NET OF WITHHOLDING TA       R05772
+     C                     EXSR #P08                                      R05772
+     C*                                                                   001391
+     C                     END                                            001391
+     C*                                                                   001391
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * MATUR    - DETERMINE MATURITY AMOUNT (DIARY)                     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P06     - DETERMINE EVENT AMOUNT                                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWETYP   - EVENT TYPE (WORK FIELD FOR KEY DEFINITION)            *
+      * WWDAT    - EVENT DATE (WORK FIELD FOR KEY DEFINITION)            *
+      * WWPMAT   - PRICE AT MATURITY (WORK FIELD)                        *
+      * WWANOM   - AMOUNT IN NOMINAL CURRENCY                            *
+      * WWDANN   - NUMBER OF DECIMAL PLACES FOR NOMINAL CURRENCY         *
+      *                                                                  *
+      ********************************************************************
+     C           MATUR     BEGSR                           *** MATUR  ***
+     C*
+     C** OBTAIN THE PRICE AT MATURITY AS FOLLOWS:
+     C** ACCESS FORMAT SEDEVDO USING A KEY OF THE SECURITY
+     C***FROM*LF/PMFPINDX,*AN*EVENT*TYPE*EQUAL*TO*'RC',*AND*AN*EVENT      S01486
+     C** FROM LF/PMPOINL0, AN EVENT TYPE EQUAL TO 'RC', AND AN EVENT      S01486
+     C** DATE EQUAL TO THE MATURITY DATE (MATY FROM LF/SECTY)
+     C                     MOVEL'RC'      WWETYP  2
+     C                     Z-ADDMATY      WWDAT   50
+     C           KSEDE     CHAINSEDEVDO              72
+     C*
+     C** IF NO RECORD IS FOUND
+     C** ACCESS FORMAT SEDEVDO USING A KEY OF THE SECURITY
+     C***FROM*LF/PMFPINDX,*AN*EVENT*TYPE*EQUAL*TO*'RP',*AND*AN*EVENT      S01486
+     C** FROM LF/PMPOINL0, AN EVENT TYPE EQUAL TO 'RP', AND AN EVENT      S01486
+     C** DATE EQUAL TO THE MATURITY DATE (MATY FROM LF/SECTY)
+     C           *IN72     IFEQ '1'
+     C                     MOVEL'RP'      WWETYP
+     C           KSEDE     CHAINSEDEVDO              72
+     C                     END
+     C*
+     C** IF EITHER OF THE ACCESSES ABOVE WERE SUCCESSFUL
+     C           *IN72     IFEQ '0'
+     C** SET THE PRICE AT MATURITY, A WORK FIELD OF SIZE 15,7 EQUAL
+     C** TO THE REDEMPTION PRICE SDRP FROM FORMAT SEDEVDO
+     C                     Z-ADDSDRP      WWPMAT 157
+     C                     ELSE
+     C*
+     C** OTHERWISE
+     C** IF THE PRICE BASIS FROM LF/SECTY IS 'P' FOR PERCENTAGE
+     C           SPBS      IFEQ 'P'
+     C*
+     C** SET THE PRICE AT MATURITY EQUAL TO 100
+     C                     Z-ADD100       WWPMAT
+     C                     ELSE
+     C*
+     C** OTHERWISE (IF THE PRICE BASIS FROM LF/SECTY IS 'U')
+     C** SET THE PRICE AT MATURITY EQUAL TO 1
+     C                     Z-ADD1         WWPMAT
+     C                     END
+     C                     END
+     C*
+     C** MULTIPLY THE PRICE AT MATURITY BY THE POSITION CUM-COUPON
+     C** NOMINAL AND PUT THE RESULT IN THE EVENT AMOUNT IN NOMINAL
+     C** CURRENCY
+     C           WWPMAT    MULT WWCUM     WWANOM
+     C*
+     C** IF THE PRICE BASIS FROM LF/SECTY IS 'P' FOR PERCENTAGE
+     C           SPBS      IFEQ 'P'
+     C*
+     C** DIVIDE THE EVENT AMOUNT IN NOMINAL CURRENCY BY 100
+     C           WWANOM    DIV  100       WWANOM
+     C                     END
+     C*
+     C** IF THE NOMINAL CURRENCY DECIMAL PLACES (FROM LF/SDCURRL0
+     C** FOR THE NOMINAL CURRENCY) IS NOT EQUAL TO THE NOMINAL DEC.
+     C** PLACES FROM LF/SECTY
+     C           WWDANN    IFNE NMDP
+     C*
+     C** SUBTRACT THE NOMINAL DEC. PLACES FROM THE NOMINAL CURRENCY
+     C** DECIMAL PLACES AND PUT THE RESULT IN INDEX ZI
+     C           WWDANN    SUB  NMDP      ZI
+     C*
+     C** ADD 5 TO INDEX ZI
+     C                     ADD  5         ZI      10
+     C*
+     C** MULTIPLY THE EVENT AMOUNT IN NOMINAL CURRENCY BY POWER8,ZI
+     C** WITH HALF-ADJUST
+     C           WWANOM    MULT POWER8,ZI WWANOM    H
+     C                     END
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * MORTPA   - DETERMINE MORTGAGE PAYMENT AMOUNT  (DIARY)            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P06     - DETERMINE EVENT AMOUNT                                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWANOM   - AMOUNT IN NOMINAL CURRENCY                            *
+      * WWETYP   - EVENT TYPE (WORK FIELD FOR KEY DEFINITION)            *
+      * WWDAT    - EVENT DATE (WORK FIELD FOR KEY DEFINITION)            *
+      **WWTDSS***-*SECURITY*SHORTNAME*FROM*LF/PMFPINDX********************S01486
+      * WWTDSS   - SECURITY SHORTNAME FROM LF/PMPOINL0                   *S01486
+      * WWCFD    - CURRENT FACTOR DIFFERENCE (WORK FIELD)                *
+      *                                                                  *
+      ********************************************************************
+     C           MORTPA    BEGSR                           *** MORTPA ***
+     C*
+     C** IF THE REPAYMENT METHOD SRMI FROM LF/SECEF IS 'Y'
+     C           SRMI      IFEQ 'Y'
+     C*
+     C** SET THE EVENT AMOUNT IN NOMINAL CURRENCY EQUAL TO THE REPAYMENT
+     C** AMOUNT SRPT FROM LF/SECEF
+     C                     Z-ADDSRPT      WWANOM
+     C                     ELSE
+     C*
+     C** OTHERWISE
+     C***CHAIN*TO*SEDEVDO*USING*A*KEY*OF*THE*SECURITY*FROM*LF/PMFPINDX,   S01486
+     C** CHAIN TO SEDEVDO USING A KEY OF THE SECURITY FROM LF/PMPOINL0,   S01486
+     C** AN EVENT TYPE EQUAL TO 'MP' AND AN EVENT DATE EQUAL TO THE EVENT
+     C** DATE SDED FROM LF/SECEF. THEN READ THE NEXT RECORD TO SEE IF
+     C** THERE IS ANY PRIOR DIARY EVENT/CURRENT FACTOR. IF THIS IS THE ONLY
+     C** DIARY EVENT FOR THIS SECURITY/MP, SET THE CURRENT FACTOR TO 1.
+     C                     MOVEL'MP'      WWETYP
+     C                     Z-ADDWWSDED    WWDAT
+     C           KSEDE     CHAINSEDEVDO              72
+     C*
+     C** RECORD MUST BE ON SEDEVDO, OTHERWISE DATABASE ERROR
+     C           *IN72     IFEQ '1'                        ***************
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD12        DBASE            **DB ERROR 12**
+     C                     MOVEL'SEDEVD  'DBFILE           ***************
+     C                     MOVELWWETYP    #EKEY   9
+     C                     MOVE WWSDED    #EKEY
+     C                     MOVELWWTDSS    DBKEY
+     C                     MOVE #EKEY     DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** READ FROM FORMAT SEDEVDO
+     C                     READ SEDEVDO                  72
+     C*
+     C***IF*NO*RECORD*IS*READ*FOR*THE*SECURITY*FROM*LF/PMFPINDX**         S01486
+     C** IF NO RECORD IS READ FOR THE SECURITY FROM LF/PMPOINL0           S01486
+     C** OR DIARY TYPE NOT EQUAL TO 'MP' OR END OF FILE
+     C           WWTDSS    IFNE SDSN
+     C           SDET      ORNE 'MP'
+     C           *IN72     OREQ '1'
+     C*
+     C** SET THE CURRENT FACTOR SDCP (THAT WOULD HAVE BEEN READ FROM
+     C** FORMAT SEDEVDO) EQUAL TO 1
+     C                     Z-ADD1         SDCP
+     C                     END
+     C*
+     C** SUBTRACT THE CURRENT FACTOR SDCP FROM FORMAT SEDEVDO
+     C** FROM THE CURRENT FACTOR FROM LF/SECEF AND PUT THE RESULT
+     C** IN THE CURRENT FACTOR DIFFERENCE A 9,8 WORK FIELD
+     C           WWSDCP    SUB  SDCP      WWCFD   98
+     C*
+     C** MULTIPLY THE CURRENT FACTOR DIFFERENCE BY THE POSITION
+     C** CUM-COUPON NOMINAL AND PUT THE RESULT IN THE EVENT AMOUNT
+     C** IN NOMINAL CURRENCY
+     C           WWCFD     MULT WWCUM     WWANOM
+     C                     END
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * PARTPA   - DETERMINE PART-PAY AMOUNT    (DIARY)                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P06     - DETERMINE EVENT AMOUNT                                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWANOM   - AMOUNT IN NOMINAL CURRENCY                            *
+      * WWDANN   - NUMBER OF DECIMAL PLACES FOR NOMINAL CURRENCY         *
+      *                                                                  *
+      ********************************************************************
+     C           PARTPA    BEGSR                           *** PARTPA ***
+     C*
+     C** IF THE PROCESSING TYPE FROM LF/INVTP IS '4'
+     C           PROT      IFEQ '4'
+     C*
+     C** SET THE EVENT AMOUNT IN NOMINAL CURRENCY EQUAL TO THE
+     C** POSITION CUM-COUPON NOMINAL MULTIPLIED BY THE PART PAY/CALL
+     C** REDEMPTION AMOUNT SDPP FROM LF/SECEF
+     C           WWCUM     MULT WWSDPP    WWANOM
+     C                     ELSE
+     C*
+     C** OTHERWISE
+     C** SET THE EVENT AMOUNT IN NOMINAL CURRENCY EQUAL TO THE
+     C** POSITION CUM-COUPON NOMINAL MULTIPLIED BY THE PART PAY/CALL
+     C** REDEMPTION % WWSDPC FROM LF/SECEF WITH HALF-ADJUST
+     C           WWCUM     MULT WWSDPC    WWANOM    H
+     C*
+     C** DIVIDE THE EVENT AMOUNT IN NOMINAL CURRENCY BY 100 WITH
+     C** HALF ADJUST
+     C           WWANOM    DIV  100       WWANOM    H
+     C*
+     C** IF THE NOMINAL CURRENCY DECIMAL PLACES (FROM SDCURRL0 FOR
+     C** THE NOMINAL CURRENCY) IS NOT EQUAL TO THE NOMINAL DEC. PLACES
+     C** FROM LF/SECTY
+     C           WWDANN    IFNE NMDP
+     C*
+     C** SUBTRACT THE NOMINAL DEC. PLACES FROM THE NOMINAL CURRENCY
+     C** DECIMAL PLACES AND PUT THE RESULT IN INDEX ZI
+     C           WWDANN    SUB  NMDP      ZI
+     C*
+     C** ADD 5 TO INDEX ZI
+     C                     ADD  5         ZI
+     C*
+     C** MULTIPLY THE EVENT AMOUNT IN NOMINAL CURRENCY BY POWER8,ZI
+     C** WITH HALF-ADJUST
+     C           WWANOM    MULT POWER8,ZI WWANOM    H
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P07     - UPDATE PORTFOLIO CASHFLOW EVENTS                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZFSELN   - FORMAT THE 20A PORTF. MANAGEMENT DESCRIPT. TO SE 2    *
+      * ZCCYCN   - CONVERT AN AMOUNT FROM ONE CURRENCY TO ANOTHER        *
+      * #W01     - WRITE TO PORTFOLIO CASHFLOW EVENTS                    *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS FORWARD SECURITY EVENTS                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWT2XT   - INSTRUMENT ENQUIRY DETAILS                            *
+      * WWSDET   - EVENT TYPE FROM LF/SECEF                              *
+      * WWENAR   - EVENT NARRATIVE                                       *
+      * WWANOM   - AMOUNT IN NOMINAL CURRENCY                            *
+      * WWAMTR   - EVENT AMOUNT PAY/RECEIVE                              *
+      * WWNMCY   - NOMINAL CURRENCY                                      *
+      * WWECCY   - EVENT CURRENCY                                        *
+      * WWC9NN   - SPOT RATE FOR NOMINAL CURRENCY                        *
+      * WWC9NE   - SPOT RATE FOR EVENT CURRENCY                          *
+      * WWA8SN   - MULT/DIV. INDICATOR FOR NOMINAL CURRENCY              *
+      * WWA8SE   - MULT/DIV. INDICATOR FOR EVENT CURRENCY                *
+      * WWDANN   - NUMBER OF DECIMAL PLACES FOR NOMINAL CURRENCY         *
+      * WWDANE   - NUMBER OF DECIMAL PLACES FOR EVENT CURRENCY           *
+      * WWETAM   - EVENT AMOUNT                                          *
+      * WWVCUR   - VALUATION CURRENCY                                    *
+      * WWC9NV   - SPOT RATE FOR VALUATION CURRENCY                      *
+      * WWA8SV   - MULT/DIV. INDICATOR FOR VALUATION CURRENCY            *
+      * WWDANV   - NUMBER OF DECIMAL PLACES FOR VALUATION CURRENCY       *
+      * WWPTFA   - EVENT AMOUNT IN PORTFOLIO CURRENCY                    *
+      * WWCSBY   - CUSTOMER BASE CURRENCY                                *
+      * WWC9NC   - SPOT RATE FOR CUSTOMER CURRENCY                       *
+      * WWA8SC   - MULT/DIV. INDICATOR FOR CUSTOMER CURRENCY             *
+      * WWDANC   - NUMBER OF DECIMAL PLACES FOR CUSTOMER CURRENCY        *
+      * WWCUCA   - EVENT AMOUNT IN CUSTOMER CURRENCY                     *
+      * WWAJCD   - BASE CURRENCY                                         *
+      * WWC9NB   - SPOT RATE FOR BASE CURRENCY                           *
+      * WWA8SB   - MULT/DIV. INDICATOR FOR BASE CURRENCY                 *
+      * WWDANB   - NUMBER OF DECIMAL PLACES FOR BASE CURRENCY            *
+      * WWBCYA   - EVENT AMOUNT IN BASE CURRENCY                         *
+      *                                                                  *
+      ********************************************************************
+     C           #P07      BEGSR                           *** #P07   ***
+     C*
+     C** EXECUTE STANDARD SR/ZFSELN - FORMAT SE LINE DESCRIPTION
+     C** WITH THE FOLLOWING INPUT PARM.:
+     C** ZNMCY: NOMINAL CURRENCY FROM LF/SECTY
+     C** ZCPNR: COUPON (RATE) FROM LF/SECTY
+     C** ZMATY: MATURITY DATE FROM LF/SECTY
+     C                     MOVELSRPN      WWT1XT 20                       R10034
+     C                     MOVELWWNMCY    ZNMCY
+     C                     Z-ADDCPNR      ZCPNR
+     C                     Z-ADDMATY      ZMATY
+     C                     MOVE PROT      ZPROT
+     C                     EXSR ZFSELN
+     C*
+     C** MOVE FORMATTED LINE DESCRIPTION TO INSTRUMENT ENQUIRY DETAILS
+     C** NARRATIVE TO BE WRITTEN TO THE PORTFOLIO CASHFLOW EVENTS FILE
+     C                     MOVELZLIN      WWT2XT 20
+     C*
+     C** UPDATE EVENT NARRATIVE
+     C           WWSDET    IFEQ 'CP'
+     C                     MOVELNAR,1     WWENAR 20
+     C                     END
+     C*
+     C           WWSDET    IFEQ 'DV'
+     C           WWSDET    OREQ 'DE'
+     C                     MOVELNAR,2     WWENAR
+     C                     END
+     C*
+     C           WWSDET    IFEQ 'MA'
+     C                     MOVELNAR,3     WWENAR
+     C                     END
+     C*
+     C           WWSDET    IFEQ 'MP'
+     C                     MOVELNAR,4     WWENAR
+     C                     END
+     C*
+     C           WWSDET    IFEQ 'PP'
+     C                     MOVELNAR,5     WWENAR
+     C                     END
+     C*
+     C** IF THE EVENT TYPE IS NOT 'PP' (PART PAY)
+     C           WWSDET    IFNE 'PP'
+     C*
+     C** IF THE EVENT AMOUNT IN NOMINAL CURRENCY IS GREATER THAN ZERO
+     C           WWANOM    IFGT 0
+     C*
+     C** SET THE EVENT AMOUNT PAY/RECEIVE IND. TO 'R'
+     C                     MOVEL'R'       WWAMTR  1
+     C                     ELSE
+     C*
+     C** OTHERWISE
+     C** SET THE EVENT AMOUNT PAY/RECEIVE IND. TO 'P'
+     C                     MOVEL'P'       WWAMTR
+     C*
+     C** REVERSE THE SIGN OF THE EVENT AMOUNT IN NOMINAL CURRENCY
+     C           WWANOM    MULT -1        WWANOM
+     C                     END
+     C*
+     C** OTHERWISE (IF THE EVENT TYPE IS 'PP')
+     C                     ELSE
+     C*
+     C** IF THE EVENT AMOUNT IN NOMINAL CURRENCY IS GREATER THAN ZERO
+     C           WWANOM    IFGT 0
+     C*
+     C** SET THE EVENT AMOUNT PAY/RECEIVE IND. TO 'P'
+     C                     MOVEL'P'       WWAMTR
+     C                     ELSE
+     C** OTHERWISE
+     C** SET THE EVENT AMOUNT PAY/RECEIVE IND. TO 'R'
+     C                     MOVEL'R'       WWAMTR
+     C*
+     C** REVERSE THE SIGN OF THE EVENT AMOUNT IN NOMINAL CURRENCY
+     C           WWANOM    MULT -1        WWANOM
+     C                     END
+     C                     END
+     C*                                                                   B07859
+     C** DETERMINE EVENT CURRENCY - NOMINAL FOR PART PAYMENT AND          B07859
+     C** MORTGAGE PAYMENT OTHERWISE VALUE CURRENCY                        B07859
+     C           WWSDET    IFEQ 'PP'                                      B07859
+     C           WWSDET    OREQ 'MP'                                      B07859
+     C           WWSDET    OREQ 'MA'                                      B07879
+     C                     MOVE WWNMCY    WWECCY  3                       B07859
+     C                     ELSE                                           B07859
+     C                     MOVE VLCY      WWECCY                          B07859
+     C                     END                                            B07859
+     C*
+     C** CONVERT THE EVENT AMOUNT (WHICH IS IN NOMINAL CURRENCY)
+     C** INTO AN AMOUNT IN VALUE CURRENCY USING THE STANDARD SUBROUTINE
+     C** ZCCYXR WITH THE FOLLOWING INPUT PARM.:
+     C** ZAMTF: EVENT AMOUNT IN NOMINAL CURRENCY
+     C** ZCRSRT: EXCHANGE RATE NOMINAL CURRENCY TO EVENT CURRENCY
+     C** ZCRSMD: CROSS RATE MULTIPLY/DIVIDE INDICATOR
+     C** ZCDPF: NOMINAL CURRENCY DECIMAL PLACES FROM LF/SDCURRL0
+     C** ZCDPT: EVENT CURRENCY DECIMAL PLACES FROM LF/SDCURRL0
+     C           WWNMCY    IFNE WWECCY                                    B07859
+     C                     Z-ADDWWANOM    ZAMTF                           B07859
+     C                     Z-ADDSEXR      ZCRSRT                          B07859
+     C                     MOVE SMDI      ZCRSMD                          B07859
+     C                     Z-ADDWWDANN    ZCDPF
+     C                     Z-ADDWWDANE    ZCDPT
+     C                     EXSR ZCCYXR                                    B07859
+     C*
+     C** SET THE EVENT AMOUNT IN EVENT CURRENCY EQUAL TO ZAMTT
+     C** FROM SR/ZCCYCN
+     C                     Z-ADDZAMTT     WWETAM 150
+     C*                                                                   B07859
+     C                     ELSE                                           B07859
+     C                     Z-ADDWWANOM    WWETAM                          B07859
+     C                     END                                            B07859
+     C*
+     C** CONVERT THE EVENT AMOUNT FROM VALUE CURRENCY TO AN AMOUNT IN     B07859
+     C** VALUATION CURRENCY USING THE STANDARD SUBROUTINE SR/ZCCYCN       B07859
+     C                     Z-ADDWWETAM    ZAMTF                           B07859
+     C           WWNMCY    IFEQ WWECCY                                    B07859
+     C                     MOVELWWNMCY    ZCCYF                           B07859
+     C                     MOVELWWA8SN    ZMDINF                          B07859
+     C                     Z-ADDWWC9NN    ZRATEF                          B07859
+     C                     Z-ADDWWDANN    ZCDPF                           B07859
+     C                     ELSE                                           B07859
+     C                     MOVELVLCY      ZCCYF                           B07859
+     C                     MOVELWWA8SE    ZMDINF                          B07859
+     C                     Z-ADDWWC9NE    ZRATEF                          B07859
+     C                     Z-ADDWWDANE    ZCDPF                           B07859
+     C                     END                                            B07859
+     C                     MOVELWWVCUR    ZCCYT                           B07859
+     C                     Z-ADDWWC9NV    ZRATET                          B07859
+     C                     MOVELWWA8SV    ZMDINT                          B07859
+     C                     Z-ADDWWDANV    ZCDPT                           B07859
+     C                     EXSR ZCCYCN                                    B07859
+     C*
+     C** SET THE EVENT AMOUNT IN PORTFOLIO CURRENCY EQUAL TO ZAMTT
+     C** FROM SR/ZCCYCN
+     C                     Z-ADDZAMTT     WWPTFA 150
+     C*                                                                   B07859
+     C** CONVERT THE EVENT AMOUNT INTO AN AMOUNT IN CUSTOMER BASE         B07859
+     C** CURRENCY VIA SR/ZCCYCN                                        UBRB07859
+     C*                                                                   B07859
+     C                     Z-ADDWWETAM    ZAMTF                           B07859
+     C           WWNMCY    IFEQ WWECCY                                    B07859
+     C                     MOVELWWNMCY    ZCCYF                           B07859
+     C                     MOVELWWA8SN    ZMDINF                          B07859
+     C                     Z-ADDWWC9NN    ZRATEF                          B07859
+     C                     Z-ADDWWDANN    ZCDPF                           B07859
+     C                     ELSE                                           B07859
+     C                     MOVELVLCY      ZCCYF                           B07859
+     C                     MOVELWWA8SE    ZMDINF                          B07859
+     C                     Z-ADDWWC9NE    ZRATEF                          B07859
+     C                     Z-ADDWWDANE    ZCDPF                           B07859
+     C                     END                                            B07859
+     C*                                                                   B07859
+     C                     MOVELWWCSBY    ZCCYT                           B07859
+     C                     Z-ADDWWC9NC    ZRATET                          B07859
+     C                     MOVELWWA8SC    ZMDINT                          B07859
+     C                     Z-ADDWWDANC    ZCDPT                           B07859
+     C                     EXSR ZCCYCN                                    B07859
+     C*
+     C** SET THE EVENT AMOUNT IN CUSTOMER CURRENCY EQUAL TO ZAMTT
+     C** FROM SR/ZCCYCN
+     C                     Z-ADDZAMTT     WWCUCA 150
+     C*
+     C** CONVERT THE EVENT AMOUNT INTO AN AMOUNT IN BASE CURRENCY         B07859
+     C** USING STANDARD SUBROUTINE SR/ZCCYCN                              B07859
+     C*                                                                   B07859
+     C                     Z-ADDWWETAM    ZAMTF                           B07859
+     C           WWNMCY    IFEQ WWECCY                                    B07859
+     C                     MOVELWWNMCY    ZCCYF                           B07859
+     C                     MOVELWWA8SN    ZMDINF                          B07859
+     C                     Z-ADDWWC9NN    ZRATEF                          B07859
+     C                     Z-ADDWWDANN    ZCDPF                           B07859
+     C                     ELSE                                           B07859
+     C                     MOVELVLCY      ZCCYF                           B07859
+     C                     MOVELWWA8SE    ZMDINF                          B07859
+     C                     Z-ADDWWC9NE    ZRATEF                          B07859
+     C                     Z-ADDWWDANE    ZCDPF                           B07859
+     C                     END                                            B07859
+     C*                                                                   B07859
+     C                     MOVELWWCYCD    ZCCYT                           B07859
+     C                     Z-ADDWWSPRT    ZRATET                          B07859
+     C                     MOVELWWA8SB    ZMDINT                          B07859
+     C                     Z-ADDWWNBDP    ZCDPT                           B07859
+     C                     EXSR ZCCYCN                                    B07859
+     C*                                                                   B07859
+     C** SET THE EVENT AMOUNT IN BASE CURRENCY EQUAL TO ZAMTT
+     C** FROM SR/ZCCYCN
+     C                     Z-ADDZAMTT     WWBCYA 150
+     C/COPY WNCPYSRC,PM1410C002
+     C*
+     C** WRITE A RECORD TO THE PORTFOLIO CASHFLOW EVENTS FILE
+     C** PF/PMEVNTPP AS PER #W01
+     C                     EXSR #W01
+     C*
+     C** ADD 1 TO A COUNT OF CASHFLOW EVENTS GENERATED
+     C                     ADD  1         PPCFEV
+     C/COPY WNCPYSRC,PM1410C003
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT                                                              R05772
+      ********************************************************************R05772
+      *                                                                  *R05772
+      * #P08     - CALCULATE CASHFLOW NET OF WITHHOLDING TAX             *R05772
+      *                                                                  *R05772
+      * SUBROUTINE CALLS:                                                *R05772
+      *                                                                  *R05772
+      * SUBROUTINE CALLED FROM:                                          *R05772
+      * COUPON   - PROCESS COUPON EVENTS                                 *R05772
+      * DIVEXP   - PROCESS DIVIDEND EXPECTED                             *R05772
+      * DIVDUE   - PROCESS DIVIDEND DUE                                  *R05772
+      *                                                                  *R05772
+      * ROUTINE USES VARIABLES:                                          *R05772
+      * WWANOM   - CASHFLOW AMOUNT                                       *R05772
+      * WWCTAX   - WITHOLDING TAX TO BE DEDUCTED INDICATOR               *R05772
+      *                                                                  *R05772
+      ********************************************************************R05772
+     C           #P08      BEGSR                           *** #P08   *** R05772
+     C*                                                                   R05772
+     C                     Z-ADD0         WWTASO                          R05772
+     C                     Z-ADD0         WWTAUS                          R05772
+     C*                                                                   R05772
+     C* CALCULATE WITHHOLDING TAX ONLY WHEN CUSTOMER RECEIVING INTEREST   R05772
+     C* (IE WWANOM *GT 0)                                                 R05772
+     C           WWANOM    IFGT 0                          B1             R05772
+     C*                                                                   R05772
+     C* CALCULATE THE AMOUNT OF WITHHOLDING TAX DEDUCTED AT SOURCE        R05772
+     C*                                                                   R05772
+     C***********WWANOM    MULT WRASO     WPRASO 182               R05772 S01496
+     C***********WPRASO    DIV  100       WWTASO 150H              R05772 S01496
+     C           WWANOM    MULT WRASO     WPRASO 204                      S01496
+     C           WPRASO    DIV  10000     WWTASO 150H                     S01496
+     C*                                                                   R05772
+     C* CALC. TAX DEDUCTED BY USER IF DEDUCT FOR LOCAL RESIDENTS IS 'Y'   R05772
+     C*                       -OR- IF DEDUCT FOR LOCAL RESIDENTS IS 'N'   R05772
+     C*                            AND CUSTOMER IS A FOREIGN RESIDENT     R05772
+     C*                                                                   R05772
+     C* Access User Withholding Tax Rate                                  100240
+      *                                                                   100240
+     C                     EXSR #P09                                      100240
+      *                                                                   100240
+     C           WDLOR     IFEQ 'Y'                        B2             R05772
+     C           WDLOR     OREQ 'N'                                       R05772
+     C***********QACOLC    ANDNEBJCNCD                             B08268 S01486
+     C***********QACOLC    ANDNEBBCOLC                             S01486 100240
+     C           QACOLC    ANDNEUCOLC                                     100240
+     C*                                                                   R05772
+     C* CALCULATE THE AMOUNT OF WITHHOLDING TAX DEDUCTED BY USER          R05772
+     C*                                                                   R05772
+     C***********WWANOM    MULT WRAUS     WPRAUS 182               R05772 S01496
+     C***********WPRAUS    DIV  100       WWTAUS 150H              R05772 S01496
+     C           WWANOM    MULT WRAUS     WPRAUS 204                      S01496
+     C           WPRAUS    DIV  10000     WWTAUS 150H                     S01496
+     C                     END                             E2             R05772
+     C*                                                                   R05772
+     C                     END                             E1             R05772
+     C*                                                                   R05772
+     C** SUBTRACT TAX FROM CSHFLOW                                        R05772
+     C           WWANOM    SUB  WWTAUS    WWANOM                          R05772
+     C           WWANOM    SUB  WWTASO    WWANOM                          R05772
+     C*                                                                   R05772
+     C                     ENDSR                                          R05772
+      ********************************************************************R05772
+      /EJECT                                                              100240
+      *****************************************************************   100240
+      *                                                               *   100240
+      *  #P09   - Access User Withholding Tax Rate                    *   100240
+      *                                                               *   100240
+      *  CALLED BY:    #P08                                           *   100240
+      *  CALLS:        NONE                                           *   100240
+      *                                                               *   100240
+      *****************************************************************   100240
+      *                                                                   100240
+     C           #P09      BEGSR                                          100240
+      *                                                                   100240
+     C           UBRCH     IFNE QABRCD                                    100240
+      *                                                                   100240
+      **  Get country.                                                    100240
+      *                                                                   100240
+     C**********           CALL 'AOBRCHR0'                                100240              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD                           100240
+     C                     PARM '*KEY   ' @OPTN                           100240
+     C                     PARM QABRCD    @BRCA   3                       100240
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           100240              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   100240
+     C           @RTCD     IFNE *BLANKS                                   100240
+     C           *LOCK     IN   LDA                                       100240
+     C                     Z-ADD18        DBASE            ***************100240
+     C                     MOVE 'SDBRCHPD'DBFILE           * DB ERROR 18 *100240
+     C                     MOVELQABRCD    DBKEY            ***************100240
+     C                     OUT  LDA                                       100240
+     C                     EXSR *PSSR                                     100240
+     C                     END                                            100240
+     C*                                                                   100240
+     C**  Get country of BICN.                                            100240
+     C*                                                                   100240
+     C                     CALL 'AOCUSTR0'                                100240
+     C                     PARM *BLANKS   @RTCD                           100240
+     C                     PARM '*KEY   ' @OPTN                           100240
+     C                     PARM A8BICN    @KEY1  10                       100240
+     C                     PARM *BLANKS   @KYST   7                       100240
+     C           SDCUST    PARM SDCUST    DSSDY                           100240
+     C*                                                                   100240
+     C           @RTCD     IFNE *BLANKS                                   100240
+     C           *LOCK     IN   LDA                                       100240
+     C                     Z-ADD19        DBASE            ***************100240
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 19 *100240
+     C                     MOVELA8BICN    DBKEY            ***************100240
+     C                     OUT  LDA                                       100240
+     C                     EXSR *PSSR                                     100240
+     C                     END                                            100240
+      *                                                                   100240
+     C                     MOVE BBCOLC    UCOLC   2                       100240
+     C                     MOVE QABRCD    UBRCH   3                       100240
+     C                     END                                            100240
+     C*                                                                   100240
+     C**  If tax band by user is not zero, then access country to         100240
+     C**  branch tax rate file to get tax rate by user; otherwise set     100240
+     C**  to zero.                                                        100240
+     C*                                                                   100240
+     C           QABRCD    IFNE TBBRCA                                    100240
+     C           S1CTTA    ORNE TBCTTA                                    100240
+     C           S1TABU    ORNE TBTABU                                    100240
+     C*                                                                   100240
+     C           S1TABU    IFEQ *ZERO                                     100240
+     C                     Z-ADD*ZERO     WRAUS                           100240
+     C                     MOVE *BLANK    WDLOR                           100240
+     C                     ELSE                                           100240
+     C*                                                                   100240
+     C                     CALL 'AOCBTXR0'                                100240
+     C                     PARM *BLANKS   @RTCD                           100240
+     C                     PARM '*KEY   ' @OPTN                           100240
+     C                     PARM QABRCD    @BRCA   3                       100240
+     C                     PARM S1CTTA    @CTTA                           100240
+     C                     PARM S1TABU    @TABU   10                      100240
+     C           SECBTX    PARM SECBTX    DSFDY                           100240
+     C*                                                                   100240
+     C           @RTCD     IFEQ *BLANKS                                   100240
+     C           TBRECI    ANDEQ'D'                                       100240
+     C                     Z-ADDTBRAUS    WRAUS                           100240
+     C                     MOVELTBDLOR    WDLOR                           100240
+     C                     ELSE                            *X3            100240
+     C                     Z-ADD*ZERO     WRAUS                           100240
+     C                     MOVE *BLANK    WDLOR                           100240
+     C                     END                                            100240
+     C*                                                                   100240
+     C                     END                                            100240
+     C                     END                                            100240
+      *                                                                   100240
+     C                     ENDSR                                          100240
+      *                                                                   100240
+      ********************************************************************100240
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W01     - WRITE TO PORTFOLIO CASHFLOW EVENTS                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P07     - UPDATE PORTFOLIO CASHFLOW EVENTS                      *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAVCD   - ACCOUNT OFFICER                                       *
+      **WWCNUM***-*CUSTOMER*NUMBER*FROM*LF/PMFPINDX***********************S01486
+      **WWPTFR***-*PORTFOLIO*REFERENCE*FROM*LF/PMFPINDX*******************S01486
+      * WWCNUM   - CUSTOMER NUMBER FROM LF/PMPOINL0                      *S01486
+      * WWPTFR   - PORTFOLIO REFERENCE FROM LF/PMPOINL0                  *S01486
+      * WWSDSN   - SECURITY SHORTNAME FROM LF/SECEF                      *
+      * WWCSBY   - CUSTOMER BASE CURRENCY                                *
+      * WWDANC   - NUMBER OF DECIMAL PLACES FOR CUSTOMER CURRENCY        *
+      * WWVCUR   - VALUATION CURRENCY                                    *
+      * WWDANV   - NUMBER OF DECIMAL PLACES FOR VALUATION CURRENCY       *
+      * WWINNR   - INSTRUMENT TYPE                                       *
+      * WWINAM   - MIDAS INSTRUMENT NAME                                 *
+      * WWT2XT   - INSTRUMENT ENQUIRY DETAILS                            *
+      * WWSDED   - EVENT DATE FROM LF/SECEF                              *
+      * WWENAR   - EVENT NARRATIVE                                       *
+      * WWECCY   - EVENT CURRENCY                                        *
+      * WWETAM   - EVENT AMOUNT                                          *
+      * WWAMTR   - EVENT AMOUNT PAY/RECEIVE                              *
+      * WWPTFA   - EVENT AMOUNT IN PORTFOLIO CURRENCY                    *
+      * WWCUCA   - EVENT AMOUNT IN CUSTOMER CURRENCY                     *
+      * WWBCYA   - EVENT AMOUNT IN BASE CURRENCY                         *
+      *                                                                  *
+      ********************************************************************
+     C           #W01      BEGSR                           *** #W01   ***
+     C*
+     C***********          MOVEL'D'       Q9RECI                          S01486
+     C                     MOVEL'D'       GCRECI                          S01486
+     C*
+     C** ACCOUNT OFFICER: FROM LF/SDPLCSL0
+     C***********          MOVELQAACOC    Q9ACOC                          S01486
+     C                     MOVELQAACOC    GCACOC                          S01486
+     C*
+     C***CUSTOMER*NUMBER:*COUNTERPARTY*FROM*LF/PMFPINDX**********         S01486
+     C** CUSTOMER NUMBER: COUNTERPARTY FROM LF/PMPOINL0                   S01486
+     C***********          Z-ADDWWCNUM    Q9CNUM                          S01486
+     C**********           Z-ADDWWCNUM    GCCNUM                                       S01486 CSD027
+     C                     MOVE WWCNUM    GCCNUM                                              CSD027
+     C*
+     C***PORTFOLIO*REFERENCE:*FROM*LF/PMFPINDX*******************         S01486
+     C** PORTFOLIO REFERENCE: FROM LF/PMPOINL0                            S01486
+     C***********          MOVELWWPTFR    Q9PTFR                          S01486
+     C                     MOVELWWPTFR    GCPTFR                          S01486
+     C*
+     C** TRANSACTION REFERENCE: BLANK
+     C***********          MOVEL*BLANKS   Q9TTRF                          S01486
+     C                     MOVEL*BLANKS   GCTTRF                          S01486
+     C*
+     C** SECURITY SHORTNAME: FROM LF/SECEF
+     C***********          MOVELWWSDSN    Q9SEPR                          S01486
+     C                     MOVELWWSDSN    GCSEPR                          S01486
+     C*
+     C** MODULE ID: 'SE'
+     C***********          MOVEL'SE'      Q9MODI                          S01486
+     C                     MOVEL'SE'      GCMODI                          S01486
+     C*
+     C** PM BASE CURRENCY: CUSTOMER BASE CURRENCY FROM LF/SDPLCSL0
+     C***********          MOVELWWCSBY    Q9CSBY                          S01486
+     C                     MOVELWWCSBY    GCCSBY                          S01486
+     C*
+     C** BASE CURRENCY DEC. PLACES : CUSTOMER DEC. PLACES FROM
+     C** LF/SDCURRL0
+     C***********          Z-ADDWWDANC    Q9BYDP                          S01486
+     C                     Z-ADDWWDANC    GCBYDP                          S01486
+     C*
+     C** PORTFOLIO CURRENCY: VALUATION CURRENCY (SEE #P04)
+     C***********          MOVELWWVCUR    Q9PTCY                          S01486
+     C                     MOVELWWVCUR    GCPTCY                          S01486
+     C*
+     C** PORTF. CURRENCY DEC. PLACES : VALUATION DEC. PLACES FROM
+     C** LF/SDCURRL0
+     C***********          Z-ADDWWDANV    Q9PCDP                          S01486
+     C                     Z-ADDWWDANV    GCPCDP                          S01486
+     C*
+     C** INSTRUMENT TYPE : PM INSTRUMENT TYPE FROM LF/INVTP
+     C***********          MOVELWWINNR    Q9INNR                          S01486
+     C***********          MOVELWWPROT    Q9PROT                          S01486
+     C                     MOVELWWINNR    GCINNR                          S01486
+     C                     MOVELWWPROT    GCPROT                          S01486
+     C*
+     C** MIDAS INSTRUMENT NAME : INVESTMENT NAME FROM LF/INVTP
+     C*
+     C** INSTRUMENT ENQUIRY DETAILS: SEE #P07
+     C***********          MOVELWWT1XT    Q9T1XT                   R10034 S01486
+     C***********          MOVELWWT2XT    Q9T2XT                          S01486
+     C                     MOVELWWT1XT    GCT1XT                          S01486
+     C                     MOVELWWT2XT    GCT2XT                          S01486
+     C*
+     C** EVENT DATE: EVENT DATE FROM LF/SECEF
+     C           WWSDET    IFEQ 'DV'
+     C           WWSDET    OREQ 'MP'
+     C***********          Z-ADDSDPD      Q9EVTD                          S01486
+     C                     Z-ADDSDPD      GCEVTD                          S01486
+     C                     ELSE
+     C***********          Z-ADDWWSDED    Q9EVTD                          S01486
+     C                     Z-ADDWWSDED    GCEVTD                          S01486
+     C                     END
+     C*
+     C** EVENT NARRATIVE: SEE #P07
+     C***********          MOVELWWENAR    Q9ENAR                          S01486
+     C                     MOVELWWENAR    GCENAR                          S01486
+     C*
+     C** EVENT CURRENCY : SEE #P02
+     C***********          MOVELWWECCY    Q9ECCY                          S01486
+     C                     MOVELWWECCY    GCECCY                          S01486
+     C*
+     C** EVENT AMOUNT: SEE #P07
+     C***********          Z-ADDWWETAM    Q9ETAM                          S01486
+     C                     Z-ADDWWETAM    GCETAM                          S01486
+     C*
+     C** EVENT AMOUNT PAY/RECEIVE: SEE #P07
+     C***********          MOVELWWAMTR    Q9AMTR                          S01486
+     C                     MOVELWWAMTR    GCAMTR                          S01486
+     C*
+     C** EVENT AMOUNT PORTFOLIO CURRENCY: SEE #P07
+     C***********          Z-ADDWWPTFA    Q9PTFA                          S01486
+     C                     Z-ADDWWPTFA    GCPTFA                          S01486
+     C*
+     C** EVENT AMOUNT CUSTOMER CURRENCY: SEE #P07
+     C***********          Z-ADDWWCUCA    Q9CUCA                          S01486
+     C                     Z-ADDWWCUCA    GCCUCA                          S01486
+     C*
+     C** EVENT AMOUNT BASE CURRENCY: SEE #P07
+     C***********          Z-ADDWWBCYA    Q9BCYA                          S01486
+     C                     Z-ADDWWBCYA    GCBCYA                          S01486
+     C*
+     C***********          MOVE QACLAS    Q9CLAS                          S01486
+     C***********          MOVE INVT      Q9INVT                          S01486
+     C***********          MOVE QABRCD    Q9BRCD                          S01486
+     C***********          MOVE WWSDET    Q9SDET                          S01486
+     C***********          MOVE WWNMCY    Q9NMCY                          S01486
+     C                     MOVE QACLAS    GCCLAS                          S01486
+     C                     MOVE INVT      GCINVT                          S01486
+     C                     MOVE QABRCD    GCBRCD                          S01486
+     C                     MOVE WWSDET    GCSDET                          S01486
+     C                     MOVE WWNMCY    GCNMCY                          S01486
+     C*
+     C** WRITE A RECORD IN FILE PMEVNTPP
+     C                     WRITEPMEVNTP0
+     C*
+     C                     ENDSR                           *** EW01   ***
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W03     - WRITE TO FORWARD PORT. EVENTS GENER. AUDIT REPORT     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W03      BEGSR                           *** #W03   ***
+     C*                                                                   S01486
+     C                     WRITEPM1410AR
+     C*                                                                   S01486
+     C           PPCFEV    IFEQ *ZERO                                     S01486
+     C                     WRITENODTLS                                    S01486
+     C                     ENDIF                                          S01486
+     C*
+     C                     ENDSR                           *** E#W03  ***
+     C**************************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  ZFSELN SR. TO FORMAT THE 20A PORTFOLIO MANAGMENT LINE DESCRIPTION
+     C*                                 FOR SECURITIES TRADING REL.2
+     C*
+     C*  FORMAT: XXX 999.9999 DDMMMYY
+     C*          XXX =  NOMINAL CURRENCY
+     C*          999.9999 = CONPON RATE
+     C*          DDMMMYY = MATURITY DATE
+     C*
+     C*  INPUT  FIELDS
+     C*       ZNMCY   3A     NOMINAL CURRENCY
+     C*       ZCPNR  117     COUPON RATE
+     C*       ZMATY   50     MATURITY DATE
+     C*       ZPROT   1A     PROCESSING TYPE
+     C*
+     C*  OUTPUT  FIELDS
+     C*       ZLIN   20A     LINE DESCRIPTION
+     C*
+     C*  ARRAY USED
+     C*       ZLI    20 ELEMENTS, EACH 1 CHARACTER LONG
+     C*
+     C********************************************************************
+     C           ZFSELN    BEGSR                           *** ZFSELN ***
+     C*
+     C** CLEAR LINE DESCRIPTION .
+     C                     MOVEA*BLANKS   ZLI
+     C*
+     C** MOVE NOMINNAL CURRENCY TO LINE DESCRIPTION
+     C                     MOVEAZNMCY     ZLI,01
+     C*
+     C** IF PROCESSING TYPE     NOT COMMODITIES ZPROT = 2
+     C**                        NOT EQUITIES    ZPROT = 4
+     C**                        NOT UNIT TRUSTS ZPROT = 7
+     C           ZPROT     IFNE '2'
+     C           ZPROT     ANDNE'4'
+     C           ZPROT     ANDNE'7'
+     C*
+     C** MOVE COUPON  RATE  TO LINE DESCRIPTION
+     C                     Z-ADDZCPNR     ZWRKN   74
+     C                     MOVELZWRKN     ZWRKA3  3
+     C                     MOVE ZWRKN     ZWRKA4  4
+     C                     MOVELZWRKA3    ZWRKA2  2
+     C*
+     C** SUPRESS LEADING ZEROES
+     C           ZWRKA2    IFEQ '00'
+     C                     MOVEL'  '      ZWRKA3
+     C                     END
+     C                     MOVELZWRKA3    ZWRKA1  1
+     C           ZWRKA1    IFEQ '0'
+     C                     MOVEL' '       ZWRKA3
+     C                     END
+     C                     MOVEAZWRKA3    ZLI,05
+     C                     MOVEA'.'       ZLI,08
+     C                     MOVEAZWRKA4    ZLI,09
+     C*
+     C** MOVE MATURITY DATE TO LINE DESCRIPTION
+     C                     Z-ADDZMATY     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZWRKA1  1
+     C           ZADATE    IFNE *BLANK
+     C           ZWRKA1    IFEQ ' '
+     C                     MOVEL'0'       ZADATE
+     C                     END
+     C                     MOVEAZADATE    ZLI,14
+     C                     END
+     C                     END
+     C*
+     C** SET ALL   FIELDS TO BLANKS OR ZEROS
+     C                     MOVE *BLANKS   ZNMCY   3
+     C                     MOVE *BLANKS   ZPROT   1
+     C                     Z-ADD*ZEROS    ZCPNR  117
+     C                     Z-ADD*ZEROS    ZMATY   50
+     C*
+     C                     MOVEAZLI       ZLIN   20
+     C*
+     C                     ENDSR
+     C*******************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZLCDZ1
+      /EJECT
+      /COPY ZSRSRC,ZAISCH
+      /EJECT
+      /COPY ZSRSRC,ZAINSH
+      /EJECT
+      /EJECT
+      /COPY ZSRSRC,ZRATEZ1
+      /EJECT
+      /COPY ZSRSRC,ZACCRZ1
+      /EJECT
+      /COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+      /COPY ZSRSRC,ZDYYRZ3
+      /EJECT
+      /COPY ZSRSRC,ZNCDZ3
+      /EJECT
+      /COPY ZSRSRC,ZCCYCN
+      /EJECT
+      /COPY ZSRSRC,ZCCYXR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * INIT     - INITIAL PROCESSING                                    *
+      * #P02     - ACCESS INSTRUMENT DETAILS                             *
+      * #P03     - ACCESS CUSTOMER DETAIL                                *
+      * #P04     - ACCESS PORTFOLIO DETAILS                              *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     SETON                     U7U8LR
+     C*                                                                   S01486
+     C                     WRITEERRORAU                                   S01486
+     C*                                                                   S01486
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C*
+**  CPY@
+(c) Finastra International Limited 2001
+**  NAR
+COUPON DUE
+DIVIDEND DUE
+MATURITY
+MORTGAGE PAYMENT
+PART PAYMENT
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351

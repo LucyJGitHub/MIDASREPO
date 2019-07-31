@@ -1,0 +1,160 @@
+      *****************************************************************
+/*STD *: PGMBASE                                                    : *
+/*EXI *  TEXT('Midas TI Receive TI postings to Midas API')            *
+/*E*I****MODULE(TI0310M)*BNDSRVPGM(TISRVPGM)************************: *                       174745
+/*EXI *: MODULE(TI0310M) ACTGRP(*CALLER)                            : *                       CPK016
+/*E*I *:*MODULE(TI0310M)********************************************:**                174745 CPK016
+/*E*I *:*BNDSRVPGM(*NONE)*BNDDIR(MIDAS)*ACTGRP(*CALLER)*************:**                174745 CPK016
+      *****************************************************************
+      *                                                               *
+      *  Midas - Trade Inovation (TI) Module                          *
+      *                                                               *
+      *  TI0310  - Receive TI Postings to Midas API                   *
+      *                                                               *
+      *  Function: This Postings API will add new records to the TI   *
+      *            Postings file LF/TIPOSTL0 and update existing ones.*
+      *  Phase(s): Input cycle                                        *
+      *                                                               *
+      *  Called By: TIC0300                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD045010           Date 05Apr17               *
+      *                 CRE095             Date 25Apr14               *
+      *                 CRE090             Date 14Feb14               *
+      *                 AR1095876          Date 30Sep13               *
+      *                 AR899028           Date 25Jan12               *
+      *                 AR847269           Date 09Nov11               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP205             Date 04Jan10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 244557             Date 20Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 241385             Date 03Aug06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6008            Date 25Feb05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG4840            Date 28Oct04               *
+      *                 BUG4200            Date 09Sep04               *
+      *                 BUG3955            Date 18Aug04               *
+      *                 BUG3100            Date 02Aug04               *
+      *                 BUG3836            Date 02Aug04               *
+      *                 BUG3837            Date 02Aug04               *
+      *                 CTI005  *REWRITE   Date 06Jul04               *
+      *                 BUG2677            Date 25Jun04               *
+      *                 CTI005             Date 12Apr04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CDE005             Date 23Aug02               *
+      *                 CPK016             Date 29Jul03               *
+      *                 212558             Date 31Jan03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 207601             Date 29Oct02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 189111             Date 11Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CTI003             Date 01Apr01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 176322             Date 10Nov00               *
+      *                 175869             Date 10Nov00               *
+      *                 166006             Date 08Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CDE001             Date 13Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 174745             Date 07Feb00               *
+      *                 162155             Date 11Jan00               *
+      *                 161458             Date 02Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 145040             Date 24Dec98               *
+      *                 144702             Date 02Nov98               *
+      *                 144700             Date 20Oct98               *
+      *                 140071             Date  4Aug98               *
+      *                 CEU029             Date 01Sep98               *
+      *                 CAP002             Date 27May98               *
+      *                 CTI001   *CREATE   Date 16JUL97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD045010 - Component LEC06A 10008 looping during COB caused  *
+      *             by CGL184. Recompile due to changes in TI0310M.   *
+      *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
+      *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
+      *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *
+      *             RUND (Child: AR1095877) (Recompile)               *
+      *  AR899028 - NOSTRO AMAD System errors occured; applied        *
+      *             fix AR847269                                      *
+      *  AR847269 - Column F1DACN not in specified tables (Recompile) *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *           (Recompile)                                         *
+      *  244557 - Recompiled due to changes in module TI0310M.        *
+      *  241385 - Recompile over changed TI0310M.                     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6008- Leave date validation to TI0341M.                   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG4840 - Include A/c balance check not set on GLACNTQD.     *
+      *  BUG4200- Spot Trade Equivalents are not generated. Recompiled*
+      *           due to TI0310M amendments.  Applied fix 222857.     *
+      *          - SP101 entries generated with wrong a/c code        *
+      *          - Ignore SP101 account error.                        *
+      *  BUG3955 - Key for KTIP4 is now TRDATE not DRCV. Changed      *
+      *            second TIM0006 to TIM0011 to tell them apart.      *
+      *            Added dumps for troubleshooting.                   *
+      *  BUG3100 - Recompiled due to changes in TI0310M.              *
+      *  BUG3836 - Projections not maintained - caused by 212558      *
+      *  BUG3837 - Account code & sequence corrupted on TIPOSTPD      *
+      *  CTI005 - Midas Plus-TI Integration Enhancements              *
+      *           Automatic Account Opening                           *
+      *           COMPLETE RE-WRITE OF EARLIER CTI005 CODE IN TI0310M *
+      *           LOGGED UNDER BUG3100                                *
+      *  BUG2677 - Recompile over changed TI0310M module.             *
+      *  CTI005 - Midas Plus-TI Integration Enhancements              *
+      *           Automatic Account Opening                           *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CDE005 - Data Export - Reservation ID (Recompile)            *
+      *  CPK016 - Release 5 packaging.  Standardise parameters.       *
+      *  212558 - Re-compile due to changes in TI0310M.               *
+      *  207601 - Ensure PSTIN starts as 'N' at the entry to this     *
+      *           program so it can only be 'Y' if set as such.       *
+      *  189111 - Recompile over changes in TI0310M.                  *
+      *  CTI003 - Re-compile due to changes in TI0310M.               *
+      *  176322 - Re-compile due to changes in TI0310M.               *
+      *  175869 - Re-compile due to changes in TI0310M.               *
+      *  166006 - Re-compile due to changes in TI0310M.               *
+      *  CDE001 - Data Export - CCRM Limits (Recompiled)              *
+      *  174745 - Recompile as TISRVPGM made redundant.               *
+      *  162155 - Recompile only.                                     *
+      *  161458 - Recompile over changes in TI0310M.                  *
+      *  145040 - Recompile only.                                     *
+      *  144702 - Recompile only.                                     *
+      *  144700 - Recompile only.                                     *
+      *  140071 - Recompile only.                                     *
+      *  CEU029 - EMU Midas/Trade Innovation Interface Enhancements:  *
+      *           include Original Currency and Amount on TI Postings.*
+      *  CAP002 - Conversion of Midas inputs to modular API structure *
+      *           Recompiled to prevent signature violations as the   *
+      *           Service Program referenced has been recompiled.     *
+      *  CTI001 - Midas / Trade Innovation Interface Phase 1          *
+      *                                                               *
+      *****************************************************************

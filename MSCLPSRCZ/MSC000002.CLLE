@@ -1,0 +1,60 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas BIC Directory File Desc Initialise')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - S.W.I.F.T Direct Link                               */
+/*                                                                   */
+/*       MSC000002  MIDAS BIC Directory File Desc Initialise Control */
+/*                                                                   */
+/*        (c) Finastra International Limited 2013                    */
+/*                                                                   */
+/*        Last Amend No. MD046248            Date 27Oct17            */
+/*        Prev Amend No. CFT050 *CREATE      Date 03Jun13            */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*  MD046248 - Finastra Rebranding                                   */
+/*  CFT050 - SWIFTRef Directories upload                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRTCDE &PMODE)
+/**/
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PRTCDE) TYPE(*CHAR) LEN(7)
+/**/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR ))
+             CHGJOB     SWS(00000000)
+/**/
+/* Obtain a list of fields in file MEBIB3PD AND MEIBN3PD             */
+/**/
+             DSPFFD FILE(MEBIB3PD) OUTPUT(*OUTFILE) OUTFILE(QTEMP/MS000001PF)
+             DSPFFD FILE(MEIBN3PD) OUTPUT(*OUTFILE) OUTFILE(QTEMP/MS000002PF)
+/**/
+/* Populate file MEBICFPD with the list of fields from file MEBIB3PD AND MEIBN3PD */
+/**/
+             CPYF   FROMFILE(QTEMP/MS000001PF) TOFILE(MEBICFPD) MBROPT(*REPLACE) +
+                                                                FMTOPT(*MAP *DROP)
+             CPYF   FROMFILE(QTEMP/MS000002PF) TOFILE(MEBICFPD) MBROPT(*ADD) +
+                                                                FMTOPT(*MAP *DROP)
+/**/
+/* Invoke the program to set sequence number field on MEBICFPD and MEIBN3PD */
+/**/
+             CALL       PGM(MS000002)
+/**/
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO CMDLBL(ERROR))
+/**/
+/* Report on success                                                 */
+/**/
+             SNDPGMMSG  MSG('Initialisation Program ran successfully')
+             GOTO ENDPGM
+/**/
+ ERROR:      SNDPGMMSG  MSG('Initialisation Program failed')
+             CHGVAR     VAR(&PRTCDE) VALUE('*ERROR')
+/**/
+             DLTF       FILE(QTEMP/MS000001PF)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/MS000002PF)
+             MONMSG     MSGID(CPF0000)
+/**/
+ ENDPGM:     ENDPGM

@@ -1,0 +1,226 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP On-screen compare using system values')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC000111 - On-screen compare using system values           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2005                     */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. CUP034             Date 16Jan07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CSM005  *CREATE    Date 23Aug05              */
+/*                                                                   */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP034 - Reduce size of implementation library              */
+/*       CSM005 - New program to control Bridge compares.            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFXSVAL &BASSVAL &CMPSVAL &MRGSVAL +
+                          &WRKSVAL &JOBDSVAL &PROMPT)
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&BASSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&CMPSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&MRGSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&WRKSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&JOBDSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PROMPT) TYPE(*CHAR) LEN(6)
+ 
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BASLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WRKLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBD) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PROGRAM) TYPE(*CHAR) LEN(10) +
+                          VALUE('UPC000111 ')
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CMDLEN) TYPE(*DEC) LEN(15 5) VALUE(200)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(1 0)
+             DCL        VAR(&COUNTSTR) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&NOINPUT) TYPE(*CHAR) LEN(2) VALUE('?*')
+             DCL        VAR(&INPUT) TYPE(*CHAR) LEN(2) VALUE('??')
+             DCL        VAR(&KEYWORD) TYPE(*CHAR) LEN(72) +
+                          VALUE('GLOBPFX(    BASLIB(     +
+                          CMPLIB(     MRGLIB(     WRKLIB(     +
+                          JOBD(     ')
+             DCL        VAR(&PARAMETER) TYPE(*CHAR) LEN(72)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2005')
+ 
+             DCLF       FILE(UPGSVALJ0)
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create data area MIDASMSG in QTEMP. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/* Check that System Values have an entry. */
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&PREFIX) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &BASSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&BASLIB) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &CMPSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&CMPLIB) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &MRGSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&MRGLIB) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &WRKSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&WRKLIB) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &JOBDSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&JOBD) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(VALIDATE)
+ 
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('UPC000111' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Save library list and make sure work library is at top. */
+/**********  SAVLIBL    SAVDTL(UPC000111)                                              */ /*CUP034*/
+             CALL       PGM(GPC000016) PARM(&PREFIX)                                      /*CUP034*/
+             RMVLIBLE   LIB(&WRKLIB)
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&WRKLIB)
+ 
+/* Call program to perform actual compares. */
+             IF         COND(&PROMPT *EQ 'NNNNNN') THEN(DO)
+                BRIDGECOMP GLOBPFX(&PREFIX) BASLIB(&BASLIB) +
+                             CMPLIB(&CMPLIB) MRGLIB(&MRGLIB) +
+                             WRKLIB(&WRKLIB) JOBD(&JOBD)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&PROGRAM) VALUE('UPC000110 ')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+/* Build up string of values for parameters. */
+                CHGVAR     VAR(%SST(&PARAMETER 1 12)) VALUE(&PREFIX +
+                             *TCAT ')')
+                CHGVAR     VAR(%SST(&PARAMETER 13 12)) VALUE(&BASLIB +
+                             *TCAT ')')
+                CHGVAR     VAR(%SST(&PARAMETER 25 12)) VALUE(&CMPLIB +
+                             *TCAT ')')
+                CHGVAR     VAR(%SST(&PARAMETER 37 12)) VALUE(&MRGLIB +
+                             *TCAT ')')
+                CHGVAR     VAR(%SST(&PARAMETER 49 12)) VALUE(&WRKLIB +
+                             *TCAT ')')
+                CHGVAR     VAR(%SST(&PARAMETER 61 12)) VALUE(&JOBD +
+                             *TCAT ')')
+/* Set up start of BRIDGECOMP command. */
+                CHGVAR     VAR(&CMD) VALUE('BRIDGECOMP')
+/* Set up counts for LOOP. */
+                CHGVAR     VAR(&COUNT) VALUE(1)
+                CHGVAR     VAR(&COUNTSTR) VALUE(&COUNT)
+ LOOP:
+                IF         COND(&COUNT *LE 6) THEN(DO)
+                   IF         COND(%SST(&PROMPT &COUNT 1) *EQ 'Y') THEN(DO)
+                      CHGVAR     VAR(&CMD) VALUE(&CMD *BCAT &INPUT)
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGVAR     VAR(&CMD) VALUE(&CMD *BCAT &NOINPUT)
+                   ENDDO
+                   CHGVAR     VAR(&CMD) VALUE(&CMD *TCAT %SST(&KEYWORD +
+                                &COUNTSTR 12) *TCAT %SST(&PARAMETER +
+                                &COUNTSTR 12))
+                   CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)
+                   CHGVAR     VAR(&COUNTSTR) VALUE(&COUNTSTR + 12)
+                   GOTO       CMDLBL(LOOP)
+                ENDDO
+                CALL       PGM(QCMDEXC) PARM(&CMD &CMDLEN)
+                MONMSG     MSGID(CPF6801)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&PROGRAM) VALUE('UPC000110 ')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) MSGDTA(&PROGRAM) +
+                          MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details.')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC000111' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ ENDPGM:
+/**********  RSTLIBL    SAVEDLIBL(UPC000111)                                           */ /*CUP034*/
+/**********  MONMSG     MSGID(CPF0000)                                                 */ /*CUP034*/
+ 
+             ENDPGM

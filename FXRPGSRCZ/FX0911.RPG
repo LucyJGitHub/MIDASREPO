@@ -1,0 +1,1760 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FX Net Summary/Detail Reports')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  FX0911 - FX Net Totals Summary Report                        *
+      *                                                               *
+      *  Function:  This program prints the Net Totals Summary        *
+      *             and Details Reports.                              *
+      *                                                               *
+      *  Called By: FX0910 - Net Summary Screens                      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 MD039946           Date 12Dec16               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CSD095             Date 08Apr14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CDL031             Date 05Dec04               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 133143             Date 27Feb98               *
+      *                 CEU003             Date 19Mar98               *
+      *                 CDL002             Date 02FEB97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  MD039946 - Recompile due to changes in SDCUSTLD.             *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *           (Recompile)                                         *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CDL031 - Effective Date on Extended SSI (Recompile)          *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in FXDEALPP.*
+      *  133143 - Report does not handle US date format.              *
+      *           For 'Account with Bank', counterparty must be       *
+      *            checked if not found in customer file.             *
+      *  CEU003 - EMU Dealing Settlement Ccy conversion.              *
+      *  CDL002 - FX Netting                                          *
+      *                                                               *
+      *****************************************************************
+      *  NOTE : ANY CHANGES MADE TO SUBR CALCIN MAY NEED TO BE        *
+      *         APPLIED ALSO TO FX0910 FX0921 AND FX0930 AS THEY      *
+      *         PERFORM SIMILAR PROCESSING                            *
+      *
+      *****************************************************************
+      *                                                               *
+      *                                                               *
+      *       40         LOKUP Indicator for CCY'S Array              *
+      *       51         Print Summary Report Header                  *
+      *       52         Print Detail Report Header                   *
+      *       53         Paired CCY's used                            *
+      *       55         Print Receive Instructions print control     *
+      *       60         Print Overflow                               *
+      *       70         EOF on READE DEALSDBL                        *
+      *       71         CHAIN fail on customer files                 *
+      *       76         End of File on SDCGRPL2                      *
+      *       77         End of File on SDCUSTLD                      *
+      *       81         ON- GROUP Netting requested                  *
+      *       82         End of File on SDCUSTLC                      *
+      *       85         CHAIN fail on MGOREFLG                       *
+      *       86         CHAIN fail on CFFEEDL0                       *
+      *       87         CHAIN fail on SDEXSTL1                       *
+      *       88         CHAIN fail on FXNTIPPD                       *
+      *                -----------------
+      *                Unused indicators
+      *                -----------------
+      *       01  02  03  04  05  06  07  08  09  10
+      *       11  12  13  14  15  16  17  18  19  20
+      *       21  22  23  24  25  26  27  28  29  30
+      *       31  32  33  34  35  36  37  38  39  ..
+      *       41  42  43  44  45  46  47  48  49  50
+      *       ..  ..  ..  54  ..  56  57  58  59  ..
+      *       61  62  63  64  65  66  67  68  69  ..
+      *       ..  72  73  74  75  ..  ..  78  79  80
+      *       ..  ..  83  84  ..  ..  ..  ..  89  90
+      *       91  92  93  94  95  96  97  98  99
+      *
+      *
+      *****************************************************************
+     FSDEXSTL1IF  E           K        DISK
+      *  Extended settlement instructions
+     FSDCUSTLCIF  E           K        DISK
+      *  Customers by Grup Name
+     FSDCUSTLDIF  E           K        DISK
+      *  Customers Not in Group
+     FDEALSDBLIF  E           K        DISK
+      *  FX transactions by Customer/Value date
+     FFXNTIPPDIF  E                    DISK
+      *  DEALS IN PROCESS OF BEING NETTED
+     FSDCGRPL2IF  E           K        DISK
+      *  Netting Group Code Table
+     FMGOREFLGIF  E           K        DISK
+      *  Midas MG Out Messages by mod/trno
+     FCFFEEDL0IF  E           K        DISK
+      *  Midas CF Feedback file
+     FFX0911P1O   E             60     PRINTER                        UC
+     F                                              KINFDS SPOOL
+     F*  Printer File
+     FFX0911AUO   E                    PRINTER                        UC
+     F                                              KINFDS SPOOLU
+     F*  Printer Audit File
+     F/COPY WNCPYSRC,FX0911F001
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      *  Arrays and Tables
+      *
+     E                    ACCY      200  3
+     E                    PCCY      200  9
+     E                    NNTD      200  1               NON NET DEALS
+     E                    ABUY        7 15 0
+     E                    ASEL        7 15 0
+     E                    ANET        7 15 0
+     E                    ABYF        6 20
+     E                    ASLF        6 20
+     E                    ANTF        6 21
+     E                    CY        200  3
+     E                    CDP       200  1 0
+     E                    CYNM      200 14
+     E/COPY WNCPYSRC,FX0911E001
+      /COPY ZSRSRC,ZFRPEDZ1
+      *  /Copy is for ARRAYS/TABLES for amount formatting
+      /COPY ZSRSRC,ZDATE2Z1
+      *  /Copy is for ARRAYS/TABLES for date formatting
+     IDBERR     E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **         Defines :                  134 141 DBFILE
+      **                                    142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      *  Multi Occurrence DS defining hash totals arrays
+     IHASH       IDS                        200
+     I                                        1 105 ABUY
+     I                                      106 210 ASEL
+     I                                      211 315 ANET
+      *
+     I/COPY WNCPYSRC,FXH00079
+     ICYDDS     E DSSDCURRPD
+      **   Currency details from SDCURRPD
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer Details format for access object pgm
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** MIDAS Modules Details Accessed Via Access Program
+      *
+     ISDBANK    E DSSDBANKPD
+      ** MIDAS Bank Details Accessed Via Access Program
+     I*                                                                   133143
+     ISDCNST    E DSSDCNSTPD                                              133143
+     I** Midas Counterparty nostro details - accessed via AO              133143
+     I*
+     IDSFDY     E DSDSFDY
+     I* First DS For Access Programs, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* Second DS For Access Programs, LONG DATA STRUCTURE
+      *
+      /COPY ZSRSRC,ZFRPEDZ2
+      *  /Copy is for DS statements for amount formatting
+      *
+      **  Data structure to define Paired ccys
+      *
+     IPCCYS       DS
+     I                                        4   6 PCCYS1
+     I                                        7   9 PCCYS2
+     I/COPY WNCPYSRC,FXH00080
+      *
+      **  Data structure to define formatted totals
+      *
+     IFMTHSH      DS
+      *  BUY Totals
+     I                                        1 120 ABYF
+     I                                        1  20 DDBMAT
+     I                                       21  40 DDBMIS
+     I                                       41  60 DDBUNM
+     I                                       61  80 DDBTOT
+     I                                       81 100 DDBOUT
+     I                                      101 120 DDBSYS
+      *  SELL Totals
+     I                                      121 240 ASLF
+     I                                      121 140 DDSMAT
+     I                                      141 160 DDSMIS
+     I                                      161 180 DDSUNM
+     I                                      181 200 DDSTOT
+     I                                      201 220 DDSOUT
+     I                                      221 240 DDSSYS
+      *  NET Totals
+     I                                      241 366 ANTF
+     I                                      241 261 DDNMAT
+     I                                      262 282 DDNMIS
+     I                                      283 303 DDNUNM
+     I                                      304 324 DDNETT
+     I                                      325 345 DDNOUT
+     I                                      346 366 DDNSYS
+      *
+      **  Data Structure:  Deal Last Change date in YYMMDD format
+      *
+     I            DS
+     I                                        1   60WFDLDC
+     I                                        3   40WFDLMC
+      *
+      **  Data Structure:  6 to 8 digit year/mont day field
+      *
+     I            DS
+     I                                        1   80WFVAL8
+     I                                        1   40WFVAYY
+     I                                        3   40WFVALY
+     I                                        5   60WFVAMM
+     I                                        7   80WFVADD
+     I                                        3   80WFVALD
+      *
+      **  Data Structure to redefine Report Parameter.
+      *
+     I            DS
+     I                                        1 100 REPRT
+     I                                        1  10 PLCUST
+     I                                       11  16 PLVALD
+     I                                       17  17 SUMM
+     I                                       18  18 EXTEND
+     I                                       19  19 PAIRS
+     I                                       20  22 CURRCY
+      *
+      **  Data Structure to redefine Customer no.
+      *
+     I            DS
+     I                                        1  10 DDCUST
+     I                                        1   4 GRPKEY
+     I                                        5  10 CHKGRP
+      *
+      **  Data Structure to redefine Customer no. parm
+      *
+     I            DS
+     I**********                              1   60WFCUST                                    CSD027
+     I                                        1   6 WFCUST                                    CSD027
+     I                                        7  120DDVALD
+     I                                        7   8 WFDDDD
+     I                                        9  10 WFDDMM
+     I                                       11  12 WFDDYY
+      *
+      **  Data Structure:  Redefine parameter value date
+      *
+     I            DS
+     I                                        1   6 WFPLVD
+     I                                        1   2 WFPLDD
+     I                                        3   4 WFPLMM
+     I                                        5   6 WFPLYY
+      *
+     ISPOOL       DS
+     I***  File Information Data Structure for FX0911P1.
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I***  File Information Data Structure for FX0911AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I*
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      ***  End Program and Return.
+      *
+     C                     EXSR EXIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  RCFP1  - RCF Processing for Audit Report                     *
+      *  AOBANKR0 Access Program (Bank Details)                       *
+      *  AOMMODR0 Access Program (Switchable Features)                *
+      *  *PSSR  - Error Control Program                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Receive Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C                     PARM           RLEV    1
+     C                     PARM           RENT    3
+     C                     PARM           REPT  100
+     C                     MOVE REPT      REPRT
+      *
+      **  Check whether paired or non-paired currencies selected.
+      *
+     C           PAIRS     IFEQ 'Y'
+     C                     MOVE 'Y'       DDPCCY  1
+     C                     MOVE '1'       *IN53
+     C                     ELSE
+     C                     MOVE 'N'       DDPCCY
+     C                     MOVE '0'       *IN53
+     C                     ENDIF
+      *
+      ***  Initialise LDA field.
+      *
+     C                     MOVEL'FX0911'  DBPGM
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS                    ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *             *
+     C                     MOVEL'001'     DBASE            * DBERROR 001 *
+     C                     MOVEL@OPTN     DBKEY            *             *
+     C                     EXSR *PSSR                      ***************
+     C                     END
+      *
+      ** Access MIDAS Modules.
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS                    ***************
+     C                     MOVEL'SDMMODPD'DBFILE           *             *
+     C                     MOVEL'002'     DBASE            * DBERROR 002 *
+     C                     MOVEL@OPTN     DBKEY            *             *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+      *
+      ** Format default Date to Date of next working day
+      ** If no date entered.
+      *
+     C           PLVALD    IFNE *BLANKS
+     C                     MOVE PLVALD    WFPLVD
+     C                     MOVE PLVALD    DDVALD                          133143
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDBJDNWD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     WFPLVD
+     C                     MOVE ZDATE     DDVALD                          133143
+     C                     ENDIF
+      *
+      ** Reorder Date according to System Format.
+      *
+     C************IN98     IFEQ '0'                                       133143
+     C***********          MOVE WFPLDD    WFDDDD                          133143
+     C***********          MOVE WFPLMM    WFDDMM                          133143
+     C***********          ELSE                                           133143
+     C***********          MOVE WFPLMM    WFDDDD                          133143
+     C***********          MOVE WFPLDD    WFDDMM                          133143
+     C***********          ENDIF                                          133143
+     C*
+     C           *IN98     IFEQ '0'                                       133143
+     C                     MOVE WFPLDD    WFVADD                          133143
+     C                     MOVE WFPLMM    WFVAMM                          133143
+     C                     ELSE                                           133143
+     C                     MOVE WFPLMM    WFVADD                          133143
+     C                     MOVE WFPLDD    WFVAMM                          133143
+     C                     ENDIF                                          133143
+     C***********          MOVE WFPLYY    WFDDYY                          133143
+     C***********          MOVE WFDDDD    WFVADD                          133143
+     C***********          MOVE WFDDMM    WFVAMM                          133143
+     C                     MOVE WFDDYY    WFVALY
+      *
+      **  Initialise date for correct century.
+      *
+     C           WFVALY    IFGE 72
+     C                     MOVEL'19'      WFVAYY
+     C                     ELSE
+     C                     MOVEL'20'      WFVAYY
+     C                     ENDIF
+      *
+      **  Key List for access to message genaration file
+      *
+     C           KMSSG     KLIST
+     C                     KFLD           MODI
+     C                     KFLD           MTRN
+      *
+      **  Key List for access to All Customer Groups.
+      *
+     C           KGRPDL    KLIST
+     C                     KFLD           SET     1
+     C                     KFLD           GRPKEY
+     C                     MOVE '*'       SET
+      *
+      **  Key List for access to Interface deals search file
+      *
+     C           KCUSDL    KLIST
+     C**********           KFLD           WFCUST  60       Customer No.                       CSD027
+     C                     KFLD           WFCUST  6        Customer No.                       CSD027
+     C                     KFLD           WFVAYY           Value Date
+     C                     KFLD           WFVAMM           Value Date
+     C                     KFLD           WFVADD           Value Date
+      *
+      **  MIDAS ABS Extended Standard Settlements Key
+      *
+     C           EXSKEY    KLIST
+     C                     KFLD           BYCYCD
+     C                     KFLD           BYCUST
+     C                     KFLD           BYTRTY
+     C*
+     C** Load currency and decimal places arrays
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*FIRST ' P@OPTN
+     C                     PARM *BLANKS   @KEYCY  3
+     C           CYDDS     PARM CYDDS     DSSDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVE '*FIRST ' DBKEY            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERROR 010 *
+     C                     Z-ADD10        DBASE            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADD0         X
+     C*
+     C           P@RTCD    DOWEQ*BLANKS
+     C           X         OREQ 200
+     C*
+     C                     ADD  1         X
+     C                     MOVELA6CYCD    CY,X
+     C                     Z-ADDA6NBDP    CDP,X
+     C                     MOVELA6CYNM    CYNM,X
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*NEXT  ' P@OPTN
+     C                     PARM *BLANKS   @KEYCY
+     C           CYDDS     PARM CYDDS     DSSDY
+     C                     ENDDO
+     C/COPY WNCPYSRC,FX0911C001
+      *
+      **  Define Multi-branching fields
+      *
+     C                     MOVE BYOPBR    BYOPBR  3
+     C                     MOVE BYORBR    BYORBR  3
+     C                     MOVE BJSLCD    BJSLCD  3
+      *
+      **  Check if Customer/Value supplied
+      *
+     C           PLCUST    IFNE *BLANKS
+     C                     MOVELPLCUST    DDCUST           Setup of Cust
+     C                     ENDIF
+      *
+      **  Open and write header on printer file and ensure
+      **  Spool File recorded by RCF.
+      *
+     C                     OPEN FX0911P1
+     C                     EXSR RCFP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  PRALLN - Processing for *ALLNET Report
+      *  REPORT - Processing customer Deals
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           *** PROCES ***
+      *
+      *  Print details for all Netting Customers
+     C           DDCUST    IFEQ '*ALLNET '
+     C                     MOVE *ON       *IN51
+     C                     EXSR PRALLN
+      *  Or selected Customer Details
+     C                     ELSE
+     C                     MOVE *ON       *IN52
+     C                     EXSR REPORT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/EXIT
+      *****************************************************************
+      *                                                               *
+      *  EXIT   - Write End of Report and End Program.                *
+      *                                                               *
+      *  Called By: Main Processing, PROCES, *PSSR                    *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EXIT      BEGSR                           *** EXIT   ***
+      *
+      **  Print End of Report, So long as an Error has
+      **  not occured.(*PSSR).
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     WRITETRAILPY
+     C                     ENDIF
+      *
+      **  End Program and Return.
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/REPORT
+      *****************************************************************
+      *                                                               *
+      *  REPORT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: PROCES,ALLNET                                     *
+      *  Calls:                                                       *
+      *  CALCIN - Calculate Records to include (Matched)              *
+      *  CALHSH - Calculate and update appropriate totals             *
+      *  FMTAMT - Format and Write a Detail Record to the Report      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REPORT    BEGSR
+     C/COPY WNCPYSRC,FXH00081
+      *
+      **  Reset Totals
+      *
+     C                     Z-ADD1         X
+     C           X         DOWLE200
+     C           ACCY,X    ANDNE*BLANKS
+     C           X         OCUR HASH
+     C                     CLEARHASH
+     C                     MOVE *BLANKS   ACCY,X
+     C                     MOVE *BLANKS   PCCY,X
+      *
+      **  Blank Non Net Deal Array.
+      *
+     C                     MOVE *BLANKS   NNTD,X
+     C                     ADD  1         X
+     C                     ENDDO
+     C                     MOVE '0'       *IN71
+      *
+      **  Check For Entry of Group Code or Customer.
+      *
+     C           CHKGRP    IFEQ *BLANKS
+     C/COPY WNCPYSRC,FXH00082
+     C           KGRPDL    CHAINSDCGRPL2             76
+     C/COPY WNCPYSRC,FXH00083
+     C                     ELSE
+     C                     MOVE '1'       *IN76
+     C                     END
+      *
+      **  Group to be Processed.
+      *
+     C           *IN76     IFEQ '0'
+     C                     MOVE '1'       *IN81
+     C           D6GPCD    SETLLSDCUSTLC
+     C/COPY WNCPYSRC,FXH00084
+     C           D6GPCD    READESDCUSTLC                 82
+     C           *IN82     IFEQ *OFF
+     C                     MOVELBBCUST    WFCUST
+     C                     ENDIF
+     C/COPY WNCPYSRC,FXH00085
+      *
+      **  Or Customer to be Processed.
+      *
+     C                     ELSE
+     C                     MOVEA'00'      *IN,81
+      *
+      **  Validate Entered Customer Number
+      *
+     C**********           Z-ADD0         WFCUST                                              CSD027
+     C                     MOVE *BLANKS   WFCUST                                              CSD027
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '       ' P@RTCD  7        Produce MSG on
+     C                     PARM '*KEY'    P@OPTN  7        Via Key
+     C                     PARM DDCUST    P@KEY  10        Customer Number
+     C                     PARM '       ' P@KYST  7        Key Status
+     C           SDCUST    PARM SDCUST    DSSDY
+      *  Set Customer in error
+     C           P@RTCD    IFNE *BLANKS
+     C           P@KYST    OREQ '*ERROR '                  ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           *             *
+     C                     MOVEL'003'     DBASE            * DBERROR 003 *
+     C                     MOVELDDCUST    DBKEY            *             *
+     C                     EXSR *PSSR                      ***************
+     C                     ELSE
+     C                     MOVELBBCUST    WFCUST
+     C                     ENDIF
+     C/COPY WNCPYSRC,FXH00209
+     C                     ENDIF
+      *
+      **  Process While More Customers Exist For Group.
+      *
+     C           *IN82     DOWEQ'0'
+      *
+      **  Position File and Read First Record.
+      *
+     C           KCUSDL    SETLLDEALSDBL
+     C           KCUSDL    READEDEALSDBL                 70
+      *
+      **  Loop until end of file/customer
+      *
+     C           *IN70     DOWEQ'0'
+      *
+     C/COPY WNCPYSRC,FXH00086
+      ** If Detail Record Selected, Don't Include Deals if
+      ** The Selected Currency is not bought or sold
+      *
+     C           *IN52     IFEQ *ON
+     C           FHCCY1    ANDNECURRCY
+     C           FHCCY2    ANDNECURRCY
+     C                     ELSE
+      *
+      ** Bypass deleted records
+      *
+     C           FHDDLT    IFNE 'D'
+     C                     MOVE 'N'       PROBUY  1
+     C                     MOVE 'N'       PROSEL  1
+     C                     MOVE 'N'       NNTBUY  1
+     C                     MOVE 'N'       NNTSEL  1
+     C           FHNBUY    IFEQ 'Y'
+     C           FHRSCY    ANDEQ*BLANKS                                   CEU003
+     C*                                                                   CEU003
+     C           DDPCCY    IFEQ 'Y'                                       CEU003
+     C           FHPSCY    ANDEQ*BLANKS                                   CEU003
+     C           DDPCCY    ORNE 'Y'                                       CEU003
+     C*                                                                   CEU003
+     C           FHNBRF    IFEQ *BLANKS
+      *
+      **  Check Netting Not in Progress for Appropriate Side.
+      *
+     C           FHDN38    CHAINFXNTIPPD             88
+      *
+      **  If Record Found, Then Another User is Netting This Deal.
+      *
+     C           *IN88     IFEQ '1'
+     C                     MOVE 'Y'       PROBUY
+     C                     END
+     C                     END
+     C                     ELSE
+      * FLAG for Existence of Non Net Deals
+     C                     MOVE 'Y'       NNTBUY
+     C                     END
+     C                     ENDIF                                          CEU003
+     C                     END
+     C           FHNSEL    IFEQ 'Y'
+     C           FHPSCY    ANDEQ*BLANKS                                   CEU003
+     C*                                                                   CEU003
+     C           DDPCCY    IFEQ 'Y'                                       CEU003
+     C           FHRSCY    ANDEQ*BLANKS                                   CEU003
+     C           DDPCCY    ORNE 'Y'                                       CEU003
+     C*                                                                   CEU003
+     C           FHNSRF    IFEQ *BLANKS
+      *
+      **  Check Netting Not in Progress for Appropriate Side.
+      *
+     C           FHDN38    CHAINFXNTIPPD             88
+     C           *IN88     IFEQ '1'
+      *
+      **  If Record Found, Then Another User is Netting This Deal.
+      *
+     C                     MOVE 'Y'       PROSEL
+     C                     END
+     C                     ELSE
+      * FLAG for Existence of Non Net Deals
+     C                     MOVE 'Y'       NNTSEL
+     C                     END
+     C                     ENDIF                                          CEU003
+     C                     END
+     C/COPY WNCPYSRC,FX0911C002
+     C           PROBUY    IFEQ 'Y'
+     C           PROSEL    OREQ 'Y'
+      *
+      **  Calculate sub-total to include under
+      *
+     C                     EXSR CALCIN                     calculate index
+      *
+      **  Access and update the appropriate total except for 'Not
+      **  Matched' deals.
+      *
+     C                     EXSR CALHSH                     update totals
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Read next record
+      *
+     C/COPY WNCPYSRC,FXH00087
+     C           KCUSDL    READEDEALSDBL                 70
+     C                     ENDDO
+      *
+      **  Access Next Record For Group if Group Proccesing or
+      **  Force End of Processing if Single Customer.
+      *
+     C           *IN81     IFEQ '1'
+     C           D6GPCD    READESDCUSTLC                 82
+      *
+     C           *IN82     IFEQ *OFF
+     C                     MOVELBBCUST    WFCUST
+     C                     ENDIF
+     C/COPY WNCPYSRC,FXH00088
+      *
+     C                     ELSE
+     C                     MOVE '1'       *IN82
+     C                     ENDIF
+     C                     ENDDO
+     C/COPY WNCPYSRC,FX0911C003
+      *
+      **  Format amounts for output
+      *
+     C           DETAIL    IFNE 1
+     C                     WRITENODETL
+     C                     ELSE
+     C                     EXSR FMTAMT
+     C                     ENDIF
+     C                     Z-ADD0         DETAIL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CALCIN
+      *****************************************************************
+      *                                                               *
+      *  CALCIN - Calculate Records to Include                        *
+      *                                                               *
+      *  Called By: REPORT                                            *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CALCIN    BEGSR
+      *
+      **  Reset Index calc
+      **  Where The Values of D are 1,2,3,5
+      **  These are Matched, Mismatched, Unmatched and Outstanding.
+      *
+     C                     Z-ADD0         D       10
+      *
+      ** If DEAL is authorised and matched declare as matched.
+      *
+     C           FHDSTS    IFEQ 'A'
+     C           FHMTCH    ANDEQ'Y'
+      *  These are Matched Deals.
+     C                     Z-ADD1         D
+     C                     ENDIF
+      *
+      ** If DEAL is authorised and not matched check if
+      ** Confirmation Matching Module is on.
+      *
+     C           FHDSTS    IFEQ 'A'
+     C           FHMTCH    ANDEQ'N'
+     C           BGCFMT    ANDEQ'Y'
+      *
+      ** Setup partial KEY for Message Generation file (confirmation
+      ** messages)
+      *
+     C                     MOVEL'DL'      MODI
+     C                     MOVELFHDN38    MTRN
+     C           KMSSG     CHAINMGOREFLG             85
+      *
+     C           *IN85     IFEQ *ON
+      *  These are Unmatched Deals.
+     C                     Z-ADD3         D
+     C                     ELSE
+     C           TRNO      CHAINCFFEEDL0             86
+     C                     ENDIF
+     C           *IN86     IFEQ *ON
+      *  These are Unmatched Deals.
+     C                     Z-ADD3         D
+     C                     ELSE
+      *
+      ** If Confirmation Matching Module is on check to see
+      ** whether matched or not.
+      *
+     C                     SELEC
+     C           CPSX      WHEQ 50
+     C           CPSX      OREQ 97
+     C           CPSX      OREQ 99
+      *  These are Matched Deals.
+     C                     Z-ADD1         D
+     C           CPSX      WHEQ 51
+     C           CPSX      OREQ 52
+     C           CPSX      OREQ 53
+     C           CPSX      OREQ 54
+      *  These are Mismatched Deals.
+     C                     Z-ADD2         D
+     C           CPSX      WHEQ 00
+     C           CPSX      OREQ 01
+     C           CPSX      OREQ 02
+      *  These are Unmatched Deals.
+     C                     Z-ADD3         D
+     C                     OTHER
+      *  These are Unmatched Deals.
+     C                     Z-ADD3         D
+     C                     ENDSL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Confirmation Matching Module is off declare as
+      ** unmatched.
+      *
+     C           FHDSTS    IFEQ 'A'
+     C           FHMTCH    ANDEQ'N'
+     C           BGCFMT    ANDNE'Y'
+      *  These are Unmatched Deals.
+     C                     Z-ADD3         D
+     C                     ENDIF
+      *
+      ** If Deal is not Authorised declare as Outstanding.
+      *
+     C           FHDSTS    IFEQ 'C'
+      *  These are Outstanding Deals.
+     C                     Z-ADD5         D
+     C                     ENDIF
+      *
+      ** If no matched Deals set no details flag on.
+      *
+     C           D         IFEQ 1
+     C                     Z-ADD1         DETAIL  10
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CALHSH
+      *****************************************************************
+      *                                                               *
+      *  CALHSH - Calculate Records to Include                        *
+      *                                                               *
+      *  Called By: REPORT                                            *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CALHSH    BEGSR
+     C/COPY WNCPYSRC,FXH00211
+      *
+     C           PROBUY    IFEQ 'Y'
+      *
+      **  Access Buy Currency element
+      *
+     C                     Z-ADD1         X       30
+      *
+      **  If a Detail Report is to be printed check whether the
+      **  BUY Currency is the same as in the Deal.
+      *
+     C           *IN52     IFEQ *ON
+     C           FHCCY1    ANDEQCURRCY
+     C           *IN52     OREQ *OFF
+      *
+      **  Paired ccy's NOT selected
+      *
+     C           DDPCCY    IFNE 'Y'
+     C           FHCCY1    LOKUPACCY,X                   40
+      *
+      **  Add new currencies
+      *
+     C                     MOVE *BLANKS   WFCCY   3
+     C           *IN40     IFEQ '0'
+     C           WFCCY     LOKUPACCY,X                   40
+     C                     MOVE FHCCY1    ACCY,X
+     C                     END
+      *
+      **  Paired ccy's selected
+      *
+     C                     ELSE
+      *
+      **  'Alpha Sort' the ccy's
+      *
+     C           FHCCY1    IFLE FHCCY2
+     C                     MOVE FHCCY1    PCCYS1           Paired ccy search 1
+     C                     MOVE FHCCY2    PCCYS2           Paired ccy search 2
+     C                     ELSE
+     C                     MOVE FHCCY2    PCCYS1           Paired ccy search 1
+     C                     MOVE FHCCY1    PCCYS2           Paired ccy search 2
+     C                     END
+     C                     MOVELFHCCY1    PCCYS            Paired ccy search
+     C           PCCYS     LOKUPPCCY,X                   40
+      *
+      **  Add new currencies
+      *
+     C                     MOVE *BLANKS   WFCCY9  9
+     C           *IN40     IFEQ '0'
+     C           WFCCY9    LOKUPPCCY,X                   40
+     C                     MOVE PCCYS     PCCY,X
+     C                     MOVE FHCCY1    ACCY,X
+     C                     END
+     C                     END
+     C           NNTBUY    IFEQ 'Y'
+     C                     MOVE 'Y'       NNTD,X
+     C                     END
+      *
+      **  Position to Currency occurrence of DS
+      *
+     C           X         OCUR HASH
+      *
+      **  Add Buy amount
+      *
+     C                     ADD  FHDBUY    ABUY,D
+      *
+     C                     ENDIF
+     C                     END
+     C           PROSEL    IFEQ 'Y'
+      *
+      **  Access Sell Currency element
+      *
+     C                     Z-ADD1         X
+      *
+      **  If a Detail Report is to be printed check whether the
+      **  SELL Currency is the same as in the Deal.
+      *
+     C           *IN52     IFEQ *ON
+     C           FHCCY2    ANDEQCURRCY
+     C           *IN52     OREQ *OFF
+      *
+      **  Paired ccy's NOT selected
+      *
+     C           DDPCCY    IFNE 'Y'
+     C           FHCCY2    LOKUPACCY,X                   40
+      *
+      **  Add new currencies
+      *
+     C                     MOVE *BLANKS   WFCCY
+     C           *IN40     IFEQ '0'
+     C           WFCCY     LOKUPACCY,X                   40
+     C                     MOVE FHCCY2    ACCY,X
+     C                     END
+      *
+      **  Paired ccy's selected
+      *
+     C                     ELSE
+      *
+      **  'Alpha Sort' the ccy's
+      *
+     C           FHCCY1    IFLE FHCCY2
+     C                     MOVE FHCCY1    PCCYS1           Paired ccy search 1
+     C                     MOVE FHCCY2    PCCYS2           Paired ccy search 2
+     C                     ELSE
+     C                     MOVE FHCCY2    PCCYS1           Paired ccy search 1
+     C                     MOVE FHCCY1    PCCYS2           Paired ccy search 2
+     C                     END
+     C                     MOVELFHCCY2    PCCYS            Paired ccy search
+     C           PCCYS     LOKUPPCCY,X                   40
+      *
+      **  Add new currencies
+      *
+     C                     MOVE *BLANKS   WFCCY9  9
+     C           *IN40     IFEQ '0'
+     C           WFCCY9    LOKUPPCCY,X                   40
+     C                     MOVE PCCYS     PCCY,X
+     C                     MOVE FHCCY2    ACCY,X
+     C                     END
+     C                     END
+     C           NNTSEL    IFEQ 'Y'
+     C                     MOVE 'Y'       NNTD,X
+     C                     END
+      *
+      **  Position to Currency occurrence of DS
+      *
+     C           X         OCUR HASH
+      *
+      **  Add Sell amount
+      *
+     C                     ADD  FHDSEL    ASEL,D
+      *
+     C                     ENDIF
+     C                     END
+      *
+     C/COPY WNCPYSRC,FXH00089
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/FMTAMT
+      *****************************************************************
+      *                                                               *
+      *  FMTAMT - Format Currencies and Output.                       *
+      *                                                               *
+      *  Called By: REPORT                                            *
+      *  Calls:                                                       *
+      *  ZFRPED - Amount Format Subroutine.                           *
+      *  PRINT  - Print Net Summary Details.                          *
+      *  CURDET - Obtain the Currency Details.                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FMTAMT    BEGSR
+      *
+     C/COPY WNCPYSRC,FXH00090
+     C                     MOVE *BLANKS   DCCYS1  3
+     C                     MOVE *BLANKS   DCCYS2  3
+     C                     Z-ADD1         X
+      *
+      **  Loop until all currencies treated or all read
+      *
+     C           X         DOWLE200
+     C           ACCY,X    ANDNE*BLANKS
+      *
+      **  Clear formatted fields DS
+      *
+     C                     CLEARFMTHSH
+      *
+      **  Position to currency occurence of DS
+      *
+     C           X         OCUR HASH
+      *
+      **  Calculate buy net total
+      *
+     C           ABUY,1    ADD  ABUY,2    ABUY,4
+     C                     ADD  ABUY,3    ABUY,4
+      *
+      **  Calculate Buy System Total
+      *
+     C           ABUY,4    ADD  ABUY,5    ABUY,6
+      *
+      **  Calculate Sell net total
+      *
+     C           ASEL,1    ADD  ASEL,2    ASEL,4
+     C                     ADD  ASEL,3    ASEL,4
+      *
+      **  Calculate Sell System Total
+      *
+     C           ASEL,4    ADD  ASEL,5    ASEL,6
+      *
+      **  Calculate Net totals
+      *
+     C           ABUY      SUB  ASEL      ANET
+      *
+      **  Retrieve CCY Decimal Places for CCY
+      *
+     C                     Z-ADD1         K       30
+     C                     MOVE ACCY,X    WFCCY
+     C           WFCCY     LOKUPCY,K                     40
+      *
+      **  Get currency details
+      *
+     C           *IN40     IFEQ '1'
+     C                     MOVE CDP,K     A6NBDP
+     C                     ELSE
+     C                     Z-ADD0         A6NBDP
+     C                     END
+      *
+      **  Format all amounts as required
+      *
+     C                     Z-ADD1         K
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+      *
+     C           K         DOWLE6
+      *
+      **  Format Buy value
+      *
+     C                     MOVE ABUY,K    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    ABYF,K
+      *
+      **  Format Sell value
+      *
+     C                     MOVE ASEL,K    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    ASLF,K
+      *
+      **  Format Net value
+      *
+     C                     MOVE ANET,K    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    ANTF,K
+      *
+      **  Format next element
+      *
+     C                     ADD  1         K
+      *
+     C                     ENDDO                           Format elements
+     C                     MOVE ACCY,X    DDCCY
+     C                     MOVE PCCY,X    PCCYS            Paired Currencies
+      *
+      **  Check for same Currency Pair to suppress second pair
+      *
+     C           PCCYS1    IFNE DCCYS1
+     C           PCCYS2    ORNE DCCYS2
+     C                     MOVE PCCYS1    DCCYS1
+     C                     MOVE PCCYS2    DCCYS2
+     C                     ELSE
+     C                     MOVE *BLANKS   DCCYS1
+     C                     MOVE *BLANKS   DCCYS2
+     C                     END
+      *
+      **  Write the Detail Record if Selected
+      *
+     C           *IN52     IFEQ *ON
+     C                     EXSR CURDET
+     C                     WRITEHEADER
+     C                     ENDIF
+      *
+      **  Write the record
+      *
+     C                     EXSR PRINT
+      *
+      **  Get Next currency
+      *
+     C                     ADD  1         X
+     C                     ENDDO                           CCY
+      *
+     C/COPY WNCPYSRC,FXH00091
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/PRALLN
+      *****************************************************************
+      *                                                               *
+      *  PRALLN - Print *ALLNET Net Total Summary Report.             *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  REPORT - Process Report Lines.                               *
+      *                                                               *
+      *****************************************************************
+      *
+      *  Print Summary for all Netting Customers
+      *
+     C           PRALLN    BEGSR
+      *
+      **  Position file pointer and read first Group record
+      *
+     C/COPY WNCPYSRC,FXH00092
+     C           *LOVAL    SETLLSDCGRPL2
+     C                     READ SDCGRPL2                 76
+     C/COPY WNCPYSRC,FXH00093
+      *
+      **  Loop until all records read
+      *
+     C           *IN76     DOWEQ'0'
+     C                     MOVE *BLANKS   DDCUST
+     C                     MOVELD6GPCD    DDCUST
+      *
+      **  Calculate Net total
+      *
+     C                     WRITEHEADER
+     C                     EXSR REPORT
+      *
+      **  Read Next Netting Customer Group
+      *
+     C/COPY WNCPYSRC,FXH00207
+     C                     READ SDCGRPL2                 76
+     C/COPY WNCPYSRC,FXH00208
+     C                     ENDDO
+      *
+     C                     MOVE *OFF      *IN81
+      *
+      **  Read first Netting Customer Not in Group.
+      *
+     C/COPY WNCPYSRC,FXH00094
+     C           *LOVAL    SETLLSDCUSTLD
+     C                     READ SDCUSTLD                 77
+     C/COPY WNCPYSRC,FXH00095
+      *
+      **  Loop until all records read
+      *
+     C           *IN77     DOWEQ'0'
+      *
+      **  Set pgm parameters from retrieved values
+      *
+     C                     MOVE *BLANKS   DDCUST
+     C                     MOVE BBCUST    DDCUST
+      *
+      **  Calculate Net total
+      *
+     C                     WRITEHEADER
+     C                     EXSR REPORT
+      *
+      **  Read Next Netting Customer Not in Group.
+      *
+     C/COPY WNCPYSRC,FXH00096
+     C                     READ SDCUSTLD                 77
+     C/COPY WNCPYSRC,FXH00097
+     C                     ENDDO
+      *
+      **  Reset Customer Value
+      *
+     C                     MOVE *BLANKS   DDCUST
+     C                     MOVEL'*ALLNET' DDCUST
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CURDET
+      *****************************************************************
+      *                                                               *
+      *  CURDET - Access The Details for Each Currency                *
+      *                                                               *
+      *  Called By: FMTAMT                                            *
+      *  Calls:                                                       *
+      *         - None                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CURDET    BEGSR
+      *
+      **  Get Currency details
+      *
+     C                     Z-ADD1         K       30
+     C           DDCCY     LOKUPCY,K                     40
+     C           *IN40     IFEQ '1'
+     C                     MOVE CYNM,K    A6CYNM
+     C                     MOVE A6CYNM    TLCCNM
+     C                     ELSE
+     C                     MOVE *BLANKS   TLCCNM
+     C                     MOVE '*Unknown'TLCCNM
+     C                     END
+      *
+      **  Paired currencies selected
+      *
+     C           *IN53     IFEQ *ON
+      *
+      **  Get first currency details
+      *
+     C                     Z-ADD1         K       30
+     C           PCCYS1    LOKUPCY,K                     40
+     C           *IN40     IFEQ '1'
+     C                     MOVE CYNM,K    A6CYNM
+     C                     MOVE A6CYNM    P1CCNM
+     C                     ELSE
+     C                     MOVE *BLANKS   P1CCNM
+     C                     MOVE '*Unknown'P1CCNM
+     C                     END
+      *
+      **  Get second currency details
+      *
+     C                     Z-ADD1         K       30
+     C           PCCYS2    LOKUPCY,K                     40
+     C           *IN40     IFEQ '1'
+     C                     MOVE CYNM,K    A6CYNM
+     C                     MOVE A6CYNM    P2CCNM
+     C                     ELSE
+     C                     MOVE *BLANKS   P2CCNM
+     C                     MOVE '*Unknown'P2CCNM
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      **************************************************************************
+      *****************************************************************
+      /TITLE SR/PRINT
+      *****************************************************************
+      *                                                               *
+      *  PRINT  - Print Net Total Summary Report.                     *
+      *                                                               *
+      *  Called By: FMTAMT                                            *
+      *  Calls:                                                       *
+      *  ACCCUS - Calculate Extended Settlement Details               *
+      *                                                               *
+      *****************************************************************
+      *
+      **  Print the summary or detail netting details
+      *
+     C           PRINT     BEGSR
+      *
+      **  Print Header
+      *
+     C           *IN60     IFEQ *ON
+     C                     WRITEHEADER
+     C                     MOVE '0'       *IN60
+     C                     ENDIF
+      *
+      **  Processing for printing Settlement Instructions
+      **  With Net Totals.
+      *
+     C           SUMM      IFEQ 'Y'
+     C           EXTEND    ANDEQ'Y'
+      *
+      **  Access Settlement Instructions and Print details
+      *
+     C                     EXSR ACCCUS
+     C                     WRITESETTLMNT
+     C                     ENDIF
+      *
+      **  Write the Summary record only
+      *
+     C           SUMM      IFEQ 'Y'
+     C           EXTEND    ANDNE'Y'
+     C                     WRITENETTOTAL
+     C                     ENDIF
+      *
+      **  Print Detail if requested
+      *
+     C           SUMM      IFNE 'Y'
+     C                     WRITENETDETLS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ACCCUS
+      *****************************************************************
+      *                                                               *
+      *  ACCCUS - Access Extended Settlement Details                  *
+      *                                                               *
+      *  Called By: PRINT                                             *
+      *  Calls:                                                       *
+      *  ACCCUS - Calculate Extended Settlement Details               *
+      *  AOCUSTR0 Access Program (Customer Details)                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACCCUS    BEGSR
+     C                     MOVE *BLANKS   WFONS            Our Nostro
+     C                     MOVE *BLANKS   DDOBN            Ord Bank Shortname
+     C                     MOVE *BLANKS   DDOBNS           Ord Bank SWIFT Id
+     C                     MOVE *BLANKS   DDOCS            Ord Cust Shortname
+     C                     MOVE *BLANKS   DDOCSS           Ord Cust SWIFT Id
+     C                     MOVE *BLANKS   DDACBN           A/c with Shortname
+     C                     MOVE *BLANKS   DDACBS           A/c with SWIFT Id
+     C                     MOVE *BLANKS   DDBYNB           Ben Shortname
+     C                     MOVE *BLANKS   DDBYNS           Ben SWIFT Id
+      *
+      **  Setup Key Fields
+      *
+     C           *IN81     IFEQ *ON
+     C                     MOVELD6NTCU    BYCUST
+     C                     ELSE
+     C                     MOVELWFCUST    BYCUST
+     C                     ENDIF
+     C                     MOVE DDCCY     BYCYCD
+     C                     MOVE 'FX'      BYTRTY
+      *
+      **  Access Extended Settlement Instructions
+      *
+     C           EXSKEY    CHAINSDEXSTL1             87
+      *
+      **  If CHAIN fails Attempt CHAIN using 'ALL TYPES' (AT).
+      *
+     C           *IN87     IFEQ '1'
+     C                     MOVEL'AT'      BYTRTY
+     C           EXSKEY    CHAINSDEXSTL1             87
+     C                     END
+      *
+      **  Process retrieved transactions
+      *
+     C           *IN87     IFEQ '0'
+      *
+      **  Treat Receive Instructions
+      *
+     C           ANET,4    IFGE 0
+      *
+      **  Set print Indicator
+      *
+     C                     MOVE '1'       *IN55
+      *
+      **  Setup our Nostro field
+      *
+     C                     MOVE *BLANKS   WFONS
+     C           BYRSTY    IFEQ '05'
+     C                     MOVELBYORBR    WFONS
+     C                     MOVE BYRONO    WFONS
+     C                     ELSE
+     C                     MOVELBYRONO    WFONS
+     C                     END
+      *
+      **  Receive Ordering Bank
+      *
+     C           BYROBN    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD  7        Produce MSG on
+     C                     PARM '*KEY'    P@OPTN  7        Via Key
+     C                     PARM BYROBN    P@KEY  10        Customer NumberS01251
+     C                     PARM *BLANKS   P@KYST  7        Key Status
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      **  Print details if found
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           P@KYST    OREQ '*ERROR '                  ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           *             *
+     C                     MOVEL'004'     DBASE            * DBERROR 004 *
+     C                     MOVELBYROBN    DBKEY            *             *
+     C                     EXSR *PSSR                      ***************
+     C                     ELSE
+     C                     MOVE BBCSSN    DDOBN            Shortname
+     C                     MOVE BBCSID    DDOBNS           SWIFT Id
+     C                     END
+     C                     ENDIF
+      *
+      **  Receive Ordering Customer
+      *
+     C           BYROCS    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD  7        Produce MSG on
+     C                     PARM '*KEY'    P@OPTN  7        Via Key
+     C                     PARM BYROCS    P@KEY  10        Customer NumberS01251
+     C                     PARM *BLANKS   P@KYST  7        Key Status
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      **  Print details if found
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           P@KYST    OREQ '*ERROR '                  ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           *             *
+     C                     MOVEL'005'     DBASE            * DBERROR 005 *
+     C                     MOVELBYROCS    DBKEY            *             *
+     C                     EXSR *PSSR                      ***************
+     C                     ELSE
+     C                     MOVE BBCSSN    DDOCS            Shortname
+     C                     MOVE BBCSID    DDOCSS           SWIFT Id
+     C                     END
+     C                     ENDIF
+      *
+      **  Treat Pay instructions
+      *
+     C                     ELSE
+      *
+      **  Set print Indicator
+      *
+     C                     MOVE '0'       *IN55
+      *
+      **  Setup our Nostro field
+      *
+     C                     MOVE *BLANKS   WFONS
+     C           BYPSTY    IFEQ '05'
+     C           BYCVMR    ANDEQ'Y'
+     C                     MOVELBYOPBR    WFONS
+     C                     MOVE BYPONO    WFONS
+     C                     ELSE
+     C                     MOVELBYPONO    WFONS
+     C                     END
+      *
+      **  Pay Ordering Bank
+      *
+     C           BYPOBN    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD  7        Produce MSG on
+     C                     PARM '*KEY'    P@OPTN  7        Via Key
+     C                     PARM BYPOBN    P@KEY  10        Customer NumberS01251
+     C                     PARM *BLANKS   P@KYST  7        Key Status
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      **  Print details if found
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           P@KYST    OREQ '*ERROR '                  ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           *             *
+     C                     MOVEL'006'     DBASE            * DBERROR 006 *
+     C                     MOVELBYPOBN    DBKEY            *             *
+     C                     EXSR *PSSR                      ***************
+     C                     ELSE
+     C                     MOVE BBCSSN    DDOBN            Shortname
+     C                     MOVE BBCSID    DDOBNS           SWIFT Id
+     C                     END
+     C                     ENDIF
+      *
+      **  Pay Ordering Customer
+      *
+     C           BYPOCS    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD  7        Produce MSG on
+     C                     PARM '*KEY'    P@OPTN  7        Via Key
+     C                     PARM BYPOCS    P@KEY  10        Customer NumberS01251
+     C                     PARM *BLANKS   P@KYST  7        Key Status
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      **  Print details if found
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           P@KYST    OREQ '*ERROR '                  ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           *             *
+     C                     MOVEL'007'     DBASE            * DBERROR 007 *
+     C                     MOVELBYPOCS    DBKEY            *             *
+     C                     EXSR *PSSR                      ***************
+     C                     ELSE
+     C                     MOVE BBCSSN    DDOCS            Shortname
+     C                     MOVE BBCSID    DDOCSS           SWIFT Id
+     C                     END
+     C                     ENDIF
+      *
+      **  Account With Bank
+      *
+     C           BYACBN    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD  7        Produce MSG on
+     C                     PARM '*KEY'    P@OPTN  7        Via Key
+     C                     PARM BYACBN    P@KEY  10        Customer NumberS01251
+     C                     PARM *BLANKS   P@KYST  7        Key Status
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      **  Print details if found
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           P@KYST    OREQ '*ERROR '                  ***************
+     ************          MOVEL'SDCUSTPD'DBFILE           *             *133143
+     C***********          MOVEL'008'     DBASE            * DBERROR 008 *133143
+     C***********          MOVELBYACBN    DBKEY            *             *133143
+     C***********          EXSR *PSSR                      ***************133143
+      *                                                                   133143
+      * If customer details not found then look for counterparty nostro   133143
+     C                     CALL 'AOCNSTR0'                                133143
+     C                     PARM '*MSG    'P@RTCD                          133143
+     C                     PARM '*KEY    'P@OPTN                          133143
+     C                     PARM BYACBN    @ARCD   8                       133143
+     C           SDCNST    PARM SDCNST    DSFDY                           133143
+     C*                                                                   133143
+     C           P@RTCD    IFNE *BLANK                                    133143
+     C                     MOVEL'SDCNSTPD'DBFILE            ************* 133143
+     C                     MOVEL'008'     DBASE             *DBERROR 008* 133143
+     C                     MOVELBYACBN    DBKEY             ************* 133143
+     C                     EXSR *PSSR                                     133143
+     C                     ELSE                                           133143
+     C                     MOVE AWCPNC    DDACBN                          133143
+     C                     MOVE AWSWID    DDACBS                          133143
+     C                     END                                            133143
+      *                                                                   133143
+     C                     ELSE
+     C                     MOVE BBCSSN    DDACBN           Shortname
+     C                     MOVE BBCSID    DDACBS           SWIFT Id
+     C                     END
+     C                     ENDIF
+      *
+      **  Beneficiary
+      *
+     C           BYBYNB    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD  7        Produce MSG on
+     C                     PARM '*KEY'    P@OPTN  7        Via Key
+     C                     PARM BYBYNB    P@KEY  10        Customer NumberS01251
+     C                     PARM *BLANKS   P@KYST  7        Key Status
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      **  Print details if found
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           P@KYST    OREQ '*ERROR '                  ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           *             *
+     C                     MOVEL'009'     DBASE            * DBERROR 009 *
+     C                     MOVELBYBYNB    DBKEY            *             *
+     C                     EXSR *PSSR                      ***************
+     C                     ELSE
+     C                     MOVE BBCSSN    DDBYNB           Shortname
+     C                     MOVE BBCSID    DDBYNS           SWIFT Id
+     C                     END
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Check if figure is negative
+      *
+     C           ANET,4    IFGE 0
+      *
+      **  Set print Indicator for Receive
+      *
+     C                     MOVE '1'       *IN55
+      *
+      **  Set print Indicator for Pay
+      *
+     C                     ELSE
+     C                     MOVE '0'       *IN55
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN           LDA   256
+     C           *LOCK     IN   LDA
+     C                     MOVELDBERR     LDA
+     C                     OUT  LDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     OPEN FX0911AU
+     C                     EXSR RCFAU
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     EXSR EXIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: *PSSR                                             *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Output Report Header
+      *
+     C                     WRITEHEADAU
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C                     WRITEDBERROR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR   1
+     C*
+     C** Error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+      * Signal error
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR   1
+     C*
+     C** Error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+      * Signal error
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *  Amount Format Subroutine
+      /COPY ZSRSRC,ZFRPEDZ3
+      *
+      *****************************************************************
+      *  Date Format Subroutine
+      /COPY ZSRSRC,ZDATE2Z2
+      *
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

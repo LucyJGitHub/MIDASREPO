@@ -1,0 +1,554 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Customer Documentation Enquiry')              *
+     F********************************************************************
+     F*                                                                  *
+     F*    Midas PORTFOLIO MANAGEMENT                                    *
+     F*                                                                  *
+     F*    PM0165  - CUSTOMER DOCUMENTATION ENQUIRY                      *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *S01486
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 02Jul97               *
+      *                 085817             Date 13Mar95               *
+     F*                 S01486             DATE 05AUG94               *
+     F*                 049467             DATE 28JAN93               *
+     F*                                                                  *
+     F********************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*           PBFG/5 - INSTRUMENT ASSET/LIABILITY SPLIT           *
+     F*           PBFG/6 - ADDITIONAL CUSTOMER DETAILS                *
+     F*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     F*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     F*  085817 - Recompile due to changes in PMLDAPD                 *
+     F*  S01486 - Portfolio management upgrade to R10                    *S01486
+     F*  049467 - RECOMPILED FOR RELEASE 3 PTF 02                        *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F**SDBANKL1IF  E                    DISK                             S01486
+     F**********                                    KINFSR *PSSR          S01486
+     F**
+     F**PM0165DDCF  E                    WORKSTN                          S01486
+     FPM0165DFCF  E                    WORKSTN                            S01486
+     F                                        RRN   KSFILE PM0165S0
+     F**
+     F**PMDCOMPPIF  E           K        DISK                             S01486
+     F**********                                    KINFSR *PSSR          S01486
+     F**
+     F**PMCUSDPPIF  E           K        DISK                             S01486
+     FPMCUSDPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F* FILE ID 'P6'
+     F**
+     FPMDOCCLLIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*********************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       03         END OF JOB
+     F*       12         INITIAL PROGRAM
+     F*
+     F*
+     F*       45         VLDCMDKY INDICATOR FOR DISPLAY FILE
+     F*
+     F*       52         S/PM0160F2  SFLEND
+     F*       53         S/PM0160C0  SFLNXTCHG
+     F*       54         S/PM0160C0  SFLDSP
+     F*       55         S/PM0160C0  SFLEND
+     F*
+     F********71         FILE OPERATIONS INDICATOR - SDBANKL1             S01486
+     F********72         FILE OPERATIONS INDICATOR - PMCUSDPP             S01486
+     F*       72         FILE OPERATIONS INDICATOR - PMCUSDPD             S01486
+     F********73         FILE OPERATIONS INDICATOR - SDCUSTPD             S01486
+     F*       74         FILE OPERATIONS INDICATOR - PMDOCCLL
+     F*       75         FILE OPERATIONS INDICATOR - PMCUSDXX
+     F*       76         SUBFILE OPERATIONS INDICATOR - PM0160S0
+     F*       78         SUBFILE OPERATIONS INDICATOR - PM0160S0
+     F********77         FILE OPERATIONS INDICATOR - PMDCOMPP             S01486
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F*       ''WWAID' VALUES USED
+     F*
+     F*       03         CA3
+     F*       12         CA12
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   ..   04   05   06   07   08   09   10 *
+     F**      * 11   ..   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   ..   46   47   48   49   50 *
+     F**      * 51   ..   ..   ..   ..   ..   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * ..   ..   ..   ..   ..   ..   ..   ..   79   .. *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     F*********************************************************************
+     E*
+     E** ARRAY FOR INFORMATION MESSAGES
+     E*
+     E                    INF     1   1 76
+     E** ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E*
+     I********************************************************************
+     I**
+     I** EXTERNAL FORMAT FOR GROUP DATA AREA
+     I**
+     I**WWGDA     E DSPMGRDAPP                                            S01486
+     I**
+     I**WWLDA     E DSPMLDAPP                                             S01486
+     IWWLDA     E DSPMLDAPD                                               S01486
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I*
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     IPMDCOM    E DSPMDCOMPD                                              S01486
+     I** EXTERNAL DS FOR DOCUMENT COMMENT CODE                            S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     IRUNDT       DS                                                      S01486
+      **  DATA AREA RUNDAT                                                S01486
+     I                                        1   7 RUNA                  S01486
+     I                                    P   8  100RUND                  S01486
+     I                                       11  11 SSF                   S01486
+     I                                       12  12 DATF                  S01486
+     I                                       13  13 MBIN                  S01486
+     IZMUSER      DS                             17                       S01486
+     I** DATA AREA OF MENU USER                                           S01486
+     I                                       11  13 USRBCH                S01486
+     IMILDA       DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY                 S01486
+     I                                      171 180 DBPGM                 S01486
+     I                                      181 1830DBASE                 S01486
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      ********************************************************************
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #A       - INITIAL PROCESSING                                    *
+      * #AA      - UPDATE OF SUBFILE                                     *
+      * #B       - PROCESS SCREEN                                        *
+      * #BA      - PROCESS COMMAND KEYS                                  *
+      * #ZAA     - PROCESS FILES                                         *
+      * *PSSR    - PROCESS DATA BASE ERRORS                              *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * PMC1002  - UPDATE *GDA                                           *
+      * PMC1003  - RETRIEVE *LDA                                         *
+      *                                                                  *
+      ********************************************************************
+     C**
+     C** KEY LIST
+     C**
+     C           PMDOCK    KLIST
+     C                     KFLD           WWDCSK  20
+     C                     KFLD           WWDCOK  3
+     C**
+     C** KEY LIST
+     C**
+     C           PMCUSK    KLIST
+     C**********           KFLD           WWCNUM  60                                          CSD027
+     C                     KFLD           WWCNUM  6                                           CSD027
+     C                     KFLD           WWDCOK
+     C********************************************************************
+     C** PROGRAM START
+     C********************************************************************
+     C**
+     C                     EXSR #A
+     C*
+     C                     EXSR #B
+     C**
+     C           WWAID     IFEQ '03'
+     C**
+     C**
+     C** SET ENQUIRIES TERMINATING FIELD IN *GDA TO 'Y'
+     C**
+     C                     MOVEL'Y'       QMENQT
+     C***                                                                 S01486
+     C***UPDATE *GDA                                                      S01486
+     C***                                                                 S01486
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C**
+     C                     END
+     C**                                                                  CPM005
+     C           WWAID     IFEQ '12'                                      CPM005
+     C                     MOVEL'P'       QMENQT                          CPM005
+     C                     CALL 'PMC1001'                                 CPM005
+     C                     PARM           WWLDA                           CPM005
+     C                     END                                            CPM005
+     C*
+     C                     RETRN
+      ********************************************************************
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #A       - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PMC1010  - RETRIEVE *GDA                                         *
+      * *PSSR    - PROCESS DATA BASE ERRORS                              *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPARM   - PARAMETER TO READ *GDA                                *
+      *                                                                  *
+      ********************************************************************
+     C           #A        BEGSR                           ** #A    BSR **
+     C*
+     C                     MOVE '0'       *IN
+     C                     MOVE '0'       *INKL
+     C**
+     C                     MOVEL'*'       DDPGMQ
+      ***  Copyright Statement.                                           S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C**
+     C** RETRIEVE INFORMATIONS FROM *LDA
+     C**
+     C                     CALL 'PMC1003'
+     C                     PARM           WWLDA
+     C**********           MOVELQMRUNA    DDRUNA                          S01486
+     C           *NAMVAR   DEFN LDA       MILDA                           S01486
+     C           *LOCK     IN   MILDA                                     S01486
+     C                     MOVE *BLANK    DBFILE                          S01486
+     C                     MOVE *BLANK    DBKEY                           S01486
+     C                     MOVE *BLANK    DBPGM                           S01486
+     C                     Z-ADD*ZERO     DBASE                           S01486
+     C                     MOVEL'PM0010'  DBPGM                           S01486
+     C                     OUT  MILDA                                     S01486
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C***********1         SETLLSDBANKL1                                  S01486
+     C***********                                                         S01486
+     C***********          READ SDBANKL1                 71               S01486
+     C***********                                                         S01486
+     C************IN71     IFEQ '1'                                       S01486
+     C*                                                    ***************
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   WWRTCD  7                       S01486
+     C                     PARM '*FIRST ' WWOPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   MILDA                      ***************S01486
+     C                     Z-ADD1         QMERRN           **DB ERROR 01**
+     C***********          MOVEL'SDBANKL1'QMFILE           ***************S01486
+     C                     MOVE 'SDBANKPD'QMFILE           ***************S01486
+     C                     MOVE *BLANKS   QMKEY
+     C                     OUT  MILDA                                     S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     ENDSR                           **#A   ENDSR**
+      ********************************************************************
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #AA      - UPDATE OF SUBFILE                                     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #ZAA     - PROCESS FILES                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #B       - PROCESS SCREEN                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWDOCS   -                                                       *
+      * WWDCCO   - DOCUMENT CODE                                         *
+      * WWCNUM   - CUSTOMER NUMBER                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #AA       BEGSR                           ** #AA   BSR **
+     C*
+     C** INITIALIZE WORK FIELDS
+     C                     MOVE '1'       *IN55
+     C                     Z-ADD1         RRN     40
+     C                     Z-ADD0         WWDOCS  20
+     C                     MOVE *BLANKS   WWDCCO  3
+     C**
+     C**
+     C** FILL FIELDS OF SUBFILE HEADER
+     C                     MOVELQMCNUM    DDCNUM
+     C                     MOVELQMCNUM    WWCNUM
+     C                     MOVELQMCRNM    DDNAME
+     C** FILL SUBFILE DETAILS
+     C**
+     C                     MOVE '1'       *IN54
+     C                     WRITEPM0165C0
+     C                     MOVE '0'       *IN54
+     C                     EXSR #ZAA
+     C**
+     C                     ENDSR
+      ********************************************************************
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #B       - PROCESS SCREEN                                        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #AA      - UPDATE OF SUBFILE                                     *
+      * #BA      - PROCESS COMMAND KEYS                                  *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAID    - WORK FIELD USED FOR COMMAND KEYS                      *
+      * WWREAD   - WORK FLD USED TO CHECK IF DETAILS READ IN SUBFILE     *
+      *                                                                  *
+      ********************************************************************
+     C           #B        BEGSR                           **#B     BSR **
+     C*
+     C** PERFORM PROCESSING TO SET UP SCREEN FIELDS
+     C                     EXSR #AA
+     C*
+     C           WWAID     DOUEQ'03'
+     C           WWAID     OREQ '12'
+     C**
+     C** SEND INFORMATION MESSAGE
+     C**
+     C                     MOVELINF,1     DDINFO
+     C**
+     C                     WRITEPM0165F2
+     C**
+     C           WWREAD    IFEQ 'Y'
+     C**
+     C                     EXFMTPM0165C0
+     C**
+     C                     ELSE
+     C**
+     C                     EXFMTPM0165F1
+     C**
+     C                     END
+     C**
+     C                     EXSR #BA
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+      ********************************************************************
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #BA      - PROCESS COMMAND KEYS                                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #B       - PROCESS SCREEN                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAID    - WORK FIELD USED FOR COMMAND KEYS                      *
+      *                                                                  *
+      ********************************************************************
+     C           #BA       BEGSR                           **#BA    BSR **
+     C**
+     C           *INKC     IFEQ '1'
+     C                     MOVEL'03'      WWAID   2
+     C                     MOVE '0'       *INKC
+     C                     END
+     C**
+     C           *INKL     IFEQ '1'
+     C                     MOVEL'12'      WWAID
+     C                     MOVE '0'       *INKL
+     C                     END
+     C**
+     C           *IN45     IFEQ '0'
+     C                     MOVEL'RA'      WWAID
+     C                     END
+     C**
+     C                     ENDSR
+      ********************************************************************
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #ZAA     - PROCESS FILES                                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #AA      - UPDATE OF SUBFILE                                     *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWDCSK   -                                                       *
+      * WWDCOK   - DOCUMENT CODE (KEY)                                   *
+      * WWREAD   - WORK FLD USED TO CHECK IF DETAILS READ IN SUBFILE     *
+      *                                                                  *
+      ********************************************************************
+     C           #ZAA      BEGSR                           ** #ZAA  BSR **
+     C**
+     C** POSITION POINTER IN FILE FOR FIRST TIME
+     C**
+     C                     MOVE *LOVAL    WWDCSK
+     C                     MOVE *LOVAL    WWDCOK
+     C                     MOVE 'N'       WWREAD  1
+     C**
+     C           PMDOCK    SETLLPMDOCCLL
+     C**
+     C** READ IN SEQUENCE
+     C**
+     C                     READ PMDOCCLL                 74
+     C**
+     C           *IN74     DOWEQ'0'
+     C**
+     C                     MOVELP3DCCO    WWDCOK
+     C                     MOVELP3DCCO    DDDCCO
+     C                     MOVELP3DNAR    DDDNAR
+     C**
+     C***********PMCUSK    CHAINPMCUSDPP             77                   S01486
+     C           PMCUSK    CHAINPMCUSDPD             77                   S01486
+     C**
+     C** IF RECORD FOUND FOR DOCUMENT ON CUSTOMER DOCUMENTATION FILE
+     C***SET*UP*COMMENT*DETAILS FROM PF/PMCUSDPP OTHERWISE SET DETAILS    S01486
+     C** SET UP COMMENT DETAILS FROM PF/PMCUSDPD OTHERWISE SET DETAILS    S01486
+     C** TO BLANK
+     C           *IN77     IFEQ '0'
+     C           P6RECI    ANDEQ'D'
+     C                     MOVELP6DCCC    DDDCCC
+     C                     MOVELP6DCMS    DDDCMS
+     C*
+     C** IF THE DOCUMENT COMMENT TEXT (PMDOCCPP) IS BLANK OUTPUT TEXT
+     C***ASSOCIATED*WITH*DOCUMENT*COMMENT*CODE*IN*PMDCOMPP                S01486
+     C** ASSOCIATED WITH DOCUMENT COMMENT CODE IN PMDCOMPD                S01486
+     C           P6DCCM    IFEQ *BLANKS
+     C*
+     C***********P6DCCC    CHAINPMDCOMPP             76                   S01486
+     C*
+     C                     MOVELP6DCCC    WWDCCC                          S01486
+     C                     CALL 'AODCOMR0'                                S01486
+     C                     PARM '*DBERR ' WWRTCD                          S01486
+     C                     PARM '*KEY   ' WWOPTN                          S01486
+     C                     PARM           WWDCCC  3                       S01486
+     C           PMDCOM    PARM PMDCOM    DSFDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C********** *IN76     IFEQ '0'                                       S01486
+     C                     MOVE P4DCMN    DDDCCM
+     C                     ELSE
+     C                     MOVE *BLANKS   DDDCCM
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVELP6DCCM    DDDCCM
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   DDDCCC
+     C                     MOVE *BLANKS   DDDCCM
+     C                     MOVE 'N'       DDDCMS
+     C                     END
+     C**
+     C                     WRITEPM0165S0
+     C*
+     C** OBTAIN NEXT SET OF DOCUMENT DETAILS
+     C                     READ PMDOCCLL                 74
+     C                     ADD  1         RRN
+     C                     END
+     C**
+     C** IF DETAILS READ
+     C**
+     C           RRN       IFGT 1
+     C                     MOVEL'Y'       WWREAD
+     C                     END
+     C**
+     C                     ENDSR
+      ********************************************************************
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - PROCESS DATA BASE ERRORS                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PMC1000  - UPDATE *GDA                                           *
+      * PMC1020  - END GROUP JOB                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #A       - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPARM   - PARAMETER TO READ *GDA                                *
+      * WWEND    - PARAMETER FOR PMC1020                                 *
+      * WWGRPJ   - PARAMETER FOR PMC1020                                 *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'PM0165'  QMPGM
+     C                     MOVEL'Y'       QMENQT
+     C***                                                                 S01486
+     C***UPDATE *GDA                                                      S01486
+     C***                                                                 S01486
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C**                                                                  S01486
+     C                     DUMP
+     C**
+     C**
+     C                     ENDSR
+** INF
+ F3=Exit  F12=Start screen  Help  Rollup  Rolldown
+**  CPY@
+(c) Finastra International Limited 2001

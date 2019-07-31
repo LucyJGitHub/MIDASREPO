@@ -1,0 +1,253 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Account Posting - Task Split Server')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger                                      */
+/*                                                                   */
+/*       GLC0600T2 - Midas GL Account Posting - Task Split Server    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD037383           Date 25May16              */
+/*                      MD025682           Date 19Aug14              */
+/*                      AR1097218          Date 05Apr13              */
+/*                      CGL142             Date 06Aug12              */
+/*                      CGL120   *CREATE   Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD037383 - ACCNTAB blank after COB component GLC008140 00001*/
+/*                  Stamp Tax (CER049) processing.                   */
+/*                  Rework that component to make it 'Task Split'    */
+/*                  compliant.                                       */
+/*       MD025682 - Dump only if an error                            */
+/*       AR1097218 - GLC0720 seq 10001 failed Out of Balance         */
+/*       CGL142 - Tactical COB changes GL                            */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POSTNUM &CNAME &CSEQ &COPY_RECS)
+ 
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE(GLACPOPD)
+             DCL        VAR(&INDEXFL) TYPE(*CHAR) LEN(10) +
+                          VALUE(GLACPIPD)
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLACPSERVE')
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&COPY_RECS) TYPE(*DEC) LEN(7 0)
+             DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&SACPOFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WKCUR) TYPE(*DEC) LEN(10 0)                                  /*CGL142*/
+             DCL        VAR(&WKDLT) TYPE(*DEC) LEN(10 0)                                  /*CGL142*/
+             DCL        VAR(&WKTOT) TYPE(*DEC) LEN(10 0)                                  /*CGL142*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GLC0600T2 - Midas GL Account Posting +
+                          Task Split Server') TOMSGQ(MRUNQ)
+ 
+             IF         COND(&POSTNUM = '3') THEN(DO)
+             RTVMBRD    FILE(GEXBPD) NBRCURRCD(&CURRCD)
+             IF         COND(&CURRCD = 0) THEN(GOTO END)
+             ENDDO
+                                                                                          /*CGL142*/
+             RTVMBRD    FILE(ZACCNTAB) NBRCURRCD(&WKCUR) +
+                          NBRDLTRCD(&WKDLT)                                               /*CGL142*/
+             CHGVAR     VAR(&WKTOT) VALUE(&WKCUR + &WKDLT)                                /*CGL142*/
+ 
+/* Start commitment control */
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             ALCOBJ     OBJ((&INDEXFL *FILE *EXCL))
+ 
+/* Read COB components file to check the restart status */
+ 
+             CALL       PGM(CB0160) PARM(&CNAME &CSEQ &STAT)
+ 
+/* Check if any problems with COB components file */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Override posting file */
+ 
+             IF         COND(&POSTNUM = '1') THEN(DO)
+             OVRDBF     FILE(SACPO) TOFILE(GLACPML0)
+             ENDDO
+             ELSE       CMD(DO)
+             IF         COND(&POSTNUM = '7') THEN(DO)                                   /*MD037383*/
+             OVRDBF     FILE(SACPO) TOFILE(GLGESTL3)                                    /*MD037383*/
+             ENDDO                                                                      /*MD037383*/
+             ELSE       CMD(DO)                                                         /*MD037383*/
+             CHGVAR     VAR(&SACPOFILE) VALUE('ACPO' *CAT &POSTNUM)
+             OVRDBF     FILE(SACPO) TOFILE(&SACPOFILE)
+             ENDDO                                                                      /*MD037383*/
+             ENDDO
+ 
+/* If restart status = F, only resend END message to sub-Task */
+ 
+             IF         COND(&STAT = 'F') THEN(DO)
+             GOTO       CMDLBL(SNDEND)
+             ENDDO
+ 
+/* Set restart status to 'Y' */
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
+ 
+/* Wait for data queue entry */
+ 
+ RECEIVE:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+/* Extract member name */
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(%SUBSTRING(&MSGDATA 1 10))
+ 
+/* Clear the driving file */
+ 
+             CLRPFM     FILE(&DRIVER) MBR(&MEMBER)
+ 
+/* Override driving file */
+ 
+             OVRDBF     FILE(&DRIVER) TOFILE(&DRIVER) MBR(&MEMBER)
+ 
+/**********  IF         COND(&POSTNUM = '2' *OR &POSTNUM = '3' *OR +*/                    /*CGL142*/
+/**********                &POSTNUM = '4') THEN(DO)                 */                    /*CGL142*/
+             OVRDBF     FILE(ACCNT) TOFILE(ZACCNT)
+/**********  ENDDO                                                  */                    /*CGL142*/
+ 
+/* Call the program to copy records to specified member */
+ 
+/**********  CALL       PGM(GL0600T2) PARM(&COPY_RECS &RTN_CODE)    */                    /*CGL142*/
+             CALL       PGM(GL0600T2) PARM(&COPY_RECS &WKTOT &RTN_CODE)                   /*CGL142*/
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Set up data queue and message data */
+ 
+             CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
+             CHGVAR     VAR(&MSGDATA) VALUE('PROMPT')
+ 
+/* Send message data to data queue ONLY If data is written to driver file*/
+ 
+/**********  IF         COND(&RTN_CODE *NE 'NRF') THEN(DO)         */                  /*AR1097218*/
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+/**********  ENDDO                                                 */                  /*AR1097218*/
+ 
+/* If return code = EOF, set restart status to 'N' and terminate */
+ 
+/**********  IF         COND(&RTN_CODE = 'EOF' *OR &RTN_CODE +     */                  /*AR1097218*/
+/**********               = ' NRF') THEN(DO)                       */                  /*AR1097218*/
+             IF         COND(&RTN_CODE = 'EOF') THEN(DO)                               /*AR1097218*/
+ 
+             CHGVAR     VAR(&STAT) VALUE('F')
+             CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
+ 
+             GOTO       CMDLBL(SNDEND)
+ 
+             ENDDO
+ 
+/* If return code <> EOF, wait for another data queue entry */
+ 
+             GOTO       CMDLBL(RECEIVE)
+ 
+ SNDEND:
+ 
+/* Retrieve first member description */
+ 
+RTVMEMBR:
+             RTVMBRD    FILE(GLACPOPD) RTNMBR(&MEMBER)
+             MONMSG     MSGID(CPF3018) EXEC(DO)
+                        DLYJOB     DLY(1)
+                        GOTO       CMDLBL(RTVMEMBR)
+                        ENDDO
+ 
+/* Set up data queue and message data */
+ 
+             CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
+             CHGVAR     VAR(&MSGDATA) VALUE('END')
+ 
+/* Send message data to data queue */
+ 
+ LOOP:       CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+ 
+/* Retrieve next member description */
+ 
+RTVNXTMBR:
+             RTVMBRD    FILE(&DRIVER) MBR(&MEMBER *NEXT) +
+                          RTNMBR(&SNDDTAQ)
+             MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(RCVDTAQ))
+             MONMSG     MSGID(CPF3018) EXEC(DO)
+                        DLYJOB     DLY(1)
+                        GOTO       CMDLBL(RTVNXTMBR)
+                        ENDDO
+ 
+/* Loop for all members in driving file */
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&SNDDTAQ)
+             GOTO       CMDLBL(LOOP)
+ 
+/* Wait for data queue entry */
+ 
+ RCVDTAQ:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+/* If message = FINISH, terminate the program */
+ 
+             IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') THEN(DO)
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
+             GOTO       CMDLBL(END)
+             ENDDO
+             ELSE       CMD(DO)
+             CHGVAR     VAR(&MEMBER) VALUE(%SUBSTRING(&MSGDATA 1 10))
+             CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
+             CHGVAR     VAR(&MSGDATA) VALUE('END')
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+             MONMSG     MSGID(CPF9801)
+             GOTO       CMDLBL(RCVDTAQ)
+             ENDDO
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program GLC0600T2 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             DMPCLPGM                                                                   /*MD025682*/
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+/**********  DMPCLPGM                                              */                   /*MD025682*/
+             ENDPGM

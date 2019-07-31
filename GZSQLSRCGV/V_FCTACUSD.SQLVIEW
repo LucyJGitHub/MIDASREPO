@@ -1,0 +1,161 @@
+/*******************************************************************************
+/*                                                                             *
+/*       Midas - Global Processing Module                                      *
+/*                                                                             *
+/*       V_FCTACUSD - FATCA customer details and main customer details view    *
+/*                                                                             *
+/*       (c) Finastra International Limited 2013                               *
+/*                                                                             *
+/*       Last Amend No. MD051929           Date 20Sep18                        *
+/*       Prev Amend No. MD046248           Date 27Oct17                        *
+/*                      MD045378           Date 24Apr17                        *
+/*                      CGL154             Date 13Oct14                        *
+/*                      CSW216             Date 14Mar16                        *
+/*                      MD027491           Date 27Jun14                        *
+/*                      MD025828           Date 05May14                        *
+/*                      MD026853A          Date 29May14                        *
+/*                      MD026453 *CREATE   Date 01May13                        *
+/*                                                                             *
+/*-----------------------------------------------------------------------------*
+/*                                                                             *
+/*       MD051929 - Customer Deactivated but not displayed as Inactive,        *
+/*                   intraday or after CoB (Recompile)                         *
+/*       MD046248 - Finastra Rebranding                                        *
+/*       MD045378 - Two customers is shown in the listview. Included the Zone  *
+/*                  in the Filter.                                             *
+/*       CGL154 - FATCA Reporting (Recompile)                                  *
+/*       CSW216 - SWIFT Changes 2016 (Recompile)                               *
+/*       MD027491 - CUSD Indicium Results Filter do not recognize record with  *
+/*                  BLANK Sysval and Y or N Override Value                     *
+/*                  Apply fix MD027338 and MD027338A                           *
+/*       MD025828 - [ENGINEERING] Listview of Maintain Customer (Recompile)    *
+/*       MD026853A - US Indicia filter result field error                      *
+/*       MD026453 - Build Issues                                               *
+/*                                                                             *
+/*******************************************************************************
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT A.*,B.*,                                                               :
+  CASE WHEN FAHMSV='Y' AND FAHMOV= 'N' THEN 'N'                                 :
+  WHEN FAHMSV='' AND FAHMOV='Y' THEN 'Y'                                        :           MD027491
+  WHEN FAHMSV='' AND FAHMOV='N' THEN 'N'                                        :           MD027491
+  WHEN FAHMSV='Y' AND FAHMOV='' THEN 'Y'                                        :          MD026853A
+  WHEN FAHMSV='N' AND FAHMOV='N' THEN 'N'                                       :          MD026853A
+  WHEN FAHMSV='Y' AND FAHMOV='Y' THEN 'Y'                                       :
+  WHEN FAHMSV='N' AND FAHMOV='' THEN 'N'                                        :
+  WHEN FAHMSV='N' AND FAHMOV='Y' THEN 'Y' END AS FAHMRE,                        :
+  CASE WHEN FAMCSV='Y' AND FAMCOV='' THEN 'Y'                                   :
+  WHEN FAMCSV='' AND FAMCOV='N' THEN 'N'                                        :           MD027491
+  WHEN FAMCSV='' AND FAMCOV='Y' THEN 'Y'                                        :           MD027491
+  WHEN FAMCSV='Y' AND FAMCOV='N' THEN 'N'                                       :
+  WHEN FAMCSV='N' AND FAMCOV='N' THEN 'N'                                       :          MD026853A
+  WHEN FAMCSV='Y' AND FAMCOV='Y' THEN 'Y'                                       :
+  WHEN FAMCSV='N' AND FAMCOV='' THEN 'N'                                        :
+  WHEN FAMCSV='N' AND FAMCOV='Y' THEN 'Y' END AS FAMCRE,                        :
+  CASE WHEN FARPSV='Y' AND FARPOV='' THEN 'Y'                                   :
+  WHEN FARPSV=' ' AND FARPOV='N' THEN 'N'                                       :           MD027491
+  WHEN FARPSV=' ' AND FARPOV='Y' THEN 'Y'                                       :           MD027491
+  WHEN FARPSV='Y' AND FARPOV='N' THEN 'N'                                       :
+  WHEN FARPSV='N' AND FARPOV='N' THEN 'N'                                       :          MD026853A
+  WHEN FARPSV='Y' AND FARPOV='Y' THEN 'Y'                                       :
+  WHEN FARPSV='N' AND FARPOV='' THEN 'N'                                        :
+  WHEN FARPSV='N' AND FARPOV='Y' THEN 'Y' END AS FARPRE,                        :
+  CASE WHEN FAAUSV='Y' AND FAAUOV='' THEN 'Y'                                   :
+  WHEN FAAUSV=' ' AND FAAUOV='N' THEN 'N'                                       :           MD027491
+  WHEN FAAUSV=' ' AND FAAUOV='Y' THEN 'Y'                                       :           MD027491
+  WHEN FAAUSV='Y' AND FAAUOV='N' THEN 'N'                                       :
+  WHEN FAAUSV='N' AND FAAUOV='N' THEN 'N'                                       :          MD026853A
+  WHEN FAAUSV='Y' AND FAAUOV='Y' THEN 'Y'                                       :
+  WHEN FAAUSV='N' AND FAAUOV='' THEN 'N'                                        :
+  WHEN FAAUSV='N' AND FAAUOV='Y' THEN 'Y' END AS FAAURE,                        :
+  CASE WHEN FACISV='Y' AND FACIOV='' THEN 'Y'                                   :
+  WHEN FACISV=' ' AND FACIOV='N' THEN 'N'                                       :           MD027491
+  WHEN FACISV=' ' AND FACIOV='Y' THEN 'Y'                                       :           MD027491
+  WHEN FACISV='Y' AND FACIOV='N' THEN 'N'                                       :
+  WHEN FACISV='N' AND FACIOV='N' THEN 'N'                                       :          MD026853A
+  WHEN FACISV='Y' AND FACIOV='Y' THEN 'Y'                                       :
+  WHEN FACISV='N' AND FACIOV='' THEN 'N'                                        :
+  WHEN FACISV='N' AND FACIOV='Y' THEN 'Y' END AS FACIRE,                        :
+  CASE WHEN FACBSV='Y' AND FACBOV='' THEN 'Y'                                   :
+  WHEN FACBSV=' ' AND FACBOV='N' THEN 'N'                                       :           MD027491
+  WHEN FACBSV=' ' AND FACBOV='Y' THEN 'Y'                                       :           MD027491
+  WHEN FACBSV='Y' AND FACBOV='N' THEN 'N'                                       :
+  WHEN FACBSV='N' AND FACBOV='N' THEN 'N'                                       :          MD026853A
+  WHEN FACBSV='Y' AND FACBOV='Y' THEN 'Y'                                       :
+  WHEN FACBSV='N' AND FACBOV='' THEN 'N'                                        :
+  WHEN FACBSV='N' AND FACBOV='Y' THEN 'Y' END AS FACBRE,                        :
+  CASE WHEN FACDSV='Y' AND FACDOV='' THEN 'Y'                                   :
+  WHEN FACDSV=' ' AND FACDOV='N' THEN 'N'                                       :           MD027491
+  WHEN FACDSV=' ' AND FACDOV='Y' THEN 'Y'                                       :           MD027491
+  WHEN FACDSV='Y' AND FACDOV='N' THEN 'N'                                       :
+  WHEN FACDSV='N' AND FACDOV='N' THEN 'N'                                       :          MD026853A
+  WHEN FACDSV='Y' AND FACDOV='Y' THEN 'Y'                                       :
+  WHEN FACDSV='N' AND FACDOV='' THEN 'N'                                        :
+  WHEN FACDSV='N' AND FACDOV='Y' THEN 'Y' END AS FACDRE,                        :
+  CASE WHEN FAGCSV='Y' AND FAGCOV='' THEN 'Y'                                   :
+  WHEN FAGCSV=' ' AND FAGCOV='N' THEN 'N'                                       :           MD027491
+  WHEN FAGCSV=' ' AND FAGCOV='Y' THEN 'Y'                                       :           MD027491
+  WHEN FAGCSV='Y' AND FAGCOV='N' THEN 'N'                                       :
+  WHEN FAGCSV='N' AND FAGCOV='N' THEN 'N'                                       :          MD026853A
+  WHEN FAGCSV='Y' AND FAGCOV='Y' THEN 'Y'                                       :
+  WHEN FAGCSV='N' AND FAGCOV='' THEN 'N'                                        :
+  WHEN FAGCSV='N' AND FAGCOV='Y' THEN 'Y' END AS FAGCRE,                        :
+  CASE WHEN FAIDSV='Y' AND FAIDOV='' THEN 'Y'                                   :
+  WHEN FAIDSV=' ' AND FAIDOV='N' THEN 'N'                                       :           MD027491
+  WHEN FAIDSV=' ' AND FAIDOV='Y' THEN 'Y'                                       :           MD027491
+  WHEN FAIDSV='Y' AND FAIDOV='N' THEN 'N'                                       :
+  WHEN FAIDSV='N' AND FAIDOV='N' THEN 'N'                                       :          MD026853A
+  WHEN FAIDSV='Y' AND FAIDOV='Y' THEN 'Y'                                       :
+  WHEN FAIDSV='N' AND FAIDOV='' THEN 'N'                                        :
+  WHEN FAIDSV='N' AND FAIDOV='Y' THEN 'Y' END AS FAIDRE,                        :
+  CASE WHEN FAJASV='Y' AND FAJAOV='' THEN 'Y'                                   :
+  WHEN FAJASV=' ' AND FAJAOV='N' THEN 'N'                                       :           MD027491
+  WHEN FAJASV=' ' AND FAJAOV='Y' THEN 'Y'                                       :           MD027491
+  WHEN FAJASV='Y' AND FAJAOV='N' THEN 'N'                                       :
+  WHEN FAJASV='N' AND FAJAOV='N' THEN 'N'                                       :          MD026853A
+  WHEN FAJASV='Y' AND FAJAOV='Y' THEN 'Y'                                       :
+  WHEN FAJASV='N' AND FAJAOV='' THEN 'N'                                        :
+  WHEN FAJASV='N' AND FAJAOV='Y' THEN 'Y' END AS FAJARE,                        :
+  CASE WHEN FATESV='Y' AND FATEOV='' THEN 'Y'                                   :
+  WHEN FATESV=' ' AND FATEOV='N' THEN 'N'                                       :           MD027491
+  WHEN FATESV=' ' AND FATEOV='Y' THEN 'Y'                                       :           MD027491
+  WHEN FATESV='Y' AND FATEOV='N' THEN 'N'                                       :
+  WHEN FATESV='N' AND FATEOV='N' THEN 'N'                                       :          MD026853A
+  WHEN FATESV='Y' AND FATEOV='Y' THEN 'Y'                                       :
+  WHEN FATESV='N' AND FATEOV='' THEN 'N'                                        :
+  WHEN FATESV='N' AND FATEOV='Y' THEN 'Y' END AS FATERE,                        :
+  CASE WHEN FATXSV='Y' AND FATXOV='' THEN 'Y'                                   :
+  WHEN FATXSV=' ' AND FATXOV='N' THEN 'N'                                       :           MD027491
+  WHEN FATXSV=' ' AND FATXOV='Y' THEN 'Y'                                       :           MD027491
+  WHEN FATXSV='Y' AND FATXOV='N' THEN 'N'                                       :
+  WHEN FATXSV='N' AND FATXOV='N' THEN 'N'                                       :          MD026853A
+  WHEN FATXSV='Y' AND FATXOV='Y' THEN 'Y'                                       :
+  WHEN FATXSV='N' AND FATXOV='' THEN 'N'                                        :
+  WHEN FATXSV='N' AND FATXOV='Y' THEN 'Y' END AS FATXRE,                        :
+  CASE WHEN                                                                     :
+  FAHMSV<>'' OR FAHMOV<>'' OR                                                   :
+  FAMCSV<>'' OR FAMCOV<>'' OR                                                   :
+  FARPSV<>'' OR FARPOV<>'' OR                                                   :
+  FAAUSV<>'' OR FAAUOV<>'' OR                                                   :
+  FACISV<>'' OR FACIOV<>'' OR                                                   :
+  FACBSV<>'' OR FACBOV<>'' OR                                                   :
+  FACDSV<>'' OR FACDOV<>'' OR                                                   :
+  FAGCSV<>'' OR FAGCOV<>'' OR                                                   :
+  FAIDSV<>'' OR FAIDOV<>'' OR                                                   :
+  FAJASV<>'' OR FAJAOV<>'' OR                                                   :
+  FATESV<>'' OR FATEOV<>'' OR                                                   :
+  FATXSV<>'' OR FATXOV<>''                                                      :
+  THEN 'Y' ELSE 'N' END AS FAINDC,                                              :
+  C.FCDESC AS FADESC                                                            :
+  FROM V_GZCUSTPD A                                                             :
+  LEFT JOIN V_SDFTCSW0 B                                                        :
+  ON A.BBCUST = B.FACUST AND A.BBBRCD = B.FABRCH                                :
+  LEFT JOIN GZSDFATCPD C                                                        :
+  ON C.FCCODE=B.FACLAC                                                          :
+  AND C.FCZONE = A.ZONE                                                         :           MD045378
+/*******************************************************************************
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Events View                              ';                     :
+                                                                                :

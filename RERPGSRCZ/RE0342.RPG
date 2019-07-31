@@ -1,0 +1,1326 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Edit letters print')                          *
+0001 H***********
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module                                        *
+0005 F*                                                               *
+0006 F*  RE0342 - AUDIT LETTERS PRINT                                 *
+0007 F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CFT004             Date 27Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 096626             Date 11Jan96               *
+      *                 081267             Date 03Mar95               *
+     F*                 S01413             DATE 13APR93               *
+0008 F*                 S01117                  20JAN90               *
+0009 F*                                                               *
+0010 F*****************************************************************
+0009 F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CFT004 - Straight Through Processing Phase 2                 *
+      *           International Bank Account Numbers (IBAN)           *
+     F*  096626  -  This report is not being produced when ALL is     *
+     F*             specified because customers with no accounts      *
+     F*             are extracted into this program with a blank      *
+     F*             branch so routine CHKBR does not set up CLTKEY    *
+     F*             with a 'B' so DBASE error 4 happens.              *
+     F*  081267  -  Pgm should not output Head Office address,        *
+     F*             especially as head office customer number may     *
+     F*             be blank.  Also, program shouldn't output the     *
+     F*             same address twice in letter heading.  Program    *
+     F*             was amended to output address of Branch Internal  *
+     F*             Customer.                                         *
+     F*  S01413  -  Header Box Standardised                           *
+0011 F*  S01117  -  Multibranching                                    *
+0009 F*                                                               *
+0010 F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0011 F*LAUS   IP  F      64  1AI     1 DISK                               S01117
+0011 F***DLAUS** IP  F      70  1AI     1 DISK                                         S01117 CGL029
+     FDLAUS   IP  F      80  1AI     1 DISK                                                   CGL029
+0012 FTABLE   IF  F      96 12AI     2 DISK
+0014 FCLINT   IF  F     256  7AI     2 DISK
+     FACCNT   IF  E           K        DISK                               CFT004
+     F            ACCNTAAF                          KIGNORE               CFT004
+     F            ACCNTACF                          KIGNORE               CFT004
+0015 F*E0342P1O   F     132     OF     PRINTER                      S01124S01117
+     FRE0342AUO   F     132     OA     PRINTER      KINFDS SPOOLU         S01117
+     FRE0342P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  S01117
+0016 F*
+0017 F* ID F  C  H  L    FUNCTION OF INDICATORS.
+0018 F* 01            SORTED AUDIT LETTERS FILE - DEALS RECORD.
+0019 F* 02                                      - TRAILER.
+0020 F* 03            TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.
+0021 F* 04                       - INSTALLATION CONTROL DATA RECORD 2
+0022 F* 05                       - CURRENCIES RECORD 1.
+0023 F* 06            CLINT FILE - CUSTOMER NAME AND ADDRESS RECORD.
+0024 F* 07    SORTED AUDIT LETTERS FILE - RETAIL RECORD
+0025 F* 08                              - LOANS RECORD
+0026 F*    25         LEDGER BALANCE ON RT RECORD IS NEGATIVE
+     F*       30      SOME DETAILS                                        S01117
+0027 F*       44/45   FILE CONTROLS BALANCE
+0028 F*       46      CALL DEAL
+0029 F*       47      NOTICE DEAL
+0030 F*       50      FDIN = 1 OR 2, FX RECORD.
+0031 F*      51-54    SELL CURRENCY DECIMAL PLACES.
+0032 F*       60      FDIN = 2 OR 4, NO DEALS FOR THIS CUSTOMER.
+0033 F*    61         CURRENCY BLANK ON RETAIL RECORD
+0034 F*    62         DRAWDOWN CURRENCY BLANK ON LOANS RECORD
+     F*       65      MULTIBRANCH OUTPUT INDICATOR                        S01117
+     F*       66      OUTPUT BRANCH NAME AT CHANGE OF BRANCH              S01117
+0035 F*       69      CHAIN FAIL.
+0036 F*       70      FDIN = 3 OR 4, DEPOSIT RECORD.
+0037 F*      71-74    BUY CURRENCY DECIMAL PLACES.
+0038 F*       75      ON-MONEY IS INGOING. OFF-MONEY IS OUTGOING.
+0039 F*    76         RETAIL ACCOUNT NUMBER ZERO
+0040 F*       80      SUPPRESS PRINTING OF DL OR CL LETTER WITH NO DATA
+     F*       88      MBIN = 'Y'                                          S01117
+0041 F*          L1   CHANGE OF FX/LOAN/DEPOSIT INDICATOR
+0042 F*          L2   CHANGE OF RECORD I.D.
+0043 F*          L3   CHANGE OF CUSTOMER NUMBER
+0043 F*          L4   CHANGE OF BRANCH CODE                               S01117
+0044 F*             U7DATABASE ERROR.                                     E80529
+0045 F*             U8CONTROL TOTALS DIFFERENCE.                          E80529
+0046 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+0047 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+0048 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    CPY@    1   1 80
+0049 E                    ACCY      150  3
+0050 E                    DEC       150  1 0
+     E/COPY WNCPYSRC,RE0342E001
+0051 IDLAUS   NS  01   1 CD
+0052 I                                        1   1 RECI  L2
+0053 I**********                              2   70CNUM  L3                                  CSD027
+0053 I                                        2   7 CNUM  L3                                  CSD027
+0054 I                                        8  130DLNO
+0055 I                                    P  14  160DDAT
+0056 I                                    P  17  190VDAT
+0057 I                                    P  20  220MDAT
+0058 I                                       23  25 CCY
+0059 I                                    P  26  320PCPL
+0060 I                                       33  35 SLCY
+0061 I                                    P  36  420SLAM
+0062 I                                    P  43  498EXRT
+0063 I                                    P  50  557INTR
+0064 I                                       56  560FDIN  L1
+0065 I                                       57  58 DTYP
+0066 I                                       59  60 DLST
+0066 I                                       68  70 BRCA  L4              S01117
+0067 I        NS  07   1 CR
+0068 I                                        1   1 RECI  L2
+0069 I**********                              2   70CNUM  L3                                  CSD027
+0069 I                                        2   7 CNUM  L3                                  CSD027
+0070 I                                        8  10 CCY             61
+0071 I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ                                    CGL029
+0072 I                                       15  160ACSQ
+0073 I                                       17  260ACNO            76
+0074 I                                    P  35  420LDBL          25
+0075 I                                       43  62 ANAM
+0066 I                                       68  70 BRCA  L4              S01117
+     I                                       71  800ACOD                                      CGL029
+0076 I        NS  08   1 CL
+0077 I                                        1   1 RECI  L2
+0078 I**********                              2   70CNUM  L3                                  CSD027
+0078 I                                        2   7 CNUM  L3                                  CSD027
+0079 I**********                              8  130LNRF                                      CLE148
+0080 I**********                             14  190DDRF                                      CLE148
+     I                                        8  13 LNRF                                      CLE148
+     I                                       14  19 DDRF                                      CLE148
+0081 I                                    P  20  220DELD
+0082 I                                    P  23  250STDT
+0083 I                                    P  26  280IIND
+0084 I                                    P  29  310ROLD
+0085 I                                    P  32  340MATD
+0086 I                                       35  37 DDCY            62
+0087 I                                    P  38  440ODDA
+0088 I                                    P  45  507EINR
+0066 I                                       68  70 BRCA  L4              S01117
+0089 I        NS  02   1 CT
+0090 I                                        1   1 RECI
+0091 I**********                              2   70CNUM                                      CSD027
+0091 I                                        2   7 CNUM                                      CSD027
+0092 I                                    P   8  150FXIN
+0093 I                                    P  16  170FXDC
+0094 I                                    P  18  200FXNO
+0095 I        NS  09   1 CH
+0096 I*
+0097 I* CATCHALL
+0098 I        NS
+0099 I*
+0100 I*    TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.
+0101 I*
+0102 ITABLE   NS  03   2 C0   3 C1  12 C1
+0103 I       AND      13 C0
+0104 I                                        1   1 RECI
+0105 I                                        2   30RECT
+0106 I                                       12  130RCDE
+0107 I                                       14  66 TITL
+0108 I                                       67  67 DATF
+0109 I                                       80  86 RUNA
+0110 I*
+0111 I*    TABLE FILE - INSTALLATION CONTROL DATA RECORD 2.
+0112 I*
+0113 I        NS  04   1 CD   2 C0   3 C1
+0114 I       AND      12 C1  13 C1
+0115 I                                        1   1 RECI
+0116 I                                        2   30RECT
+0117 I                                       12  130RCDE
+0118 I**********                             23  280HEAD                                      CSD027
+0118 I                                       23  28 HEAD                                      CSD027
+0119 I*****TABLE*FILE*-*ACCOUNT*CODES*RECORD*1.************************                       CGL029
+0120 I**********                                                                              CGL029
+0121 I********NS  10   1 CD   2 C3   3 C0                                                     CGL029
+0122 I*******AND      13 C1                                                                   CGL029
+0123 I**********                              1   1 RECI                                      CGL029
+0124 I**********                              2   30RECT                                      CGL029
+0125 I**********                              9  120ACOD                                      CGL029
+0126 I**********                             14  38 ACKN                                      CGL029
+0129 I*
+0130 I*    TABLE FILE - CURRENCIES RECORD 1.
+0131 I*
+0132 I        NS  05   1 CD   2 C2   3 C0
+0133 I       AND      13 C1
+0134 I                                        1   1 RECIX
+0135 I                                        2   30RECTX
+0136 I                                       10  12 CCYX
+0137 I                                       13  130SRECX
+0138 I                                       38  380CDPX
+0139 I                                    P  90  920LCD
+0140 I                                       93  93 CHTP
+0141 I        NS
+     I                                        1   1 RECIX
+     I                                        2   30RECTX
+     I                                       13  130SRECX
+0142 I                                    P  94  960TNLU
+0143 I*
+0144 I*    CLIENT FILE - CUSTOMER NAME AND ADDRESS RECORD.
+0145 I*
+0146 ICLINT   NS  06   1 CD   8 CB
+0147 I                                        1   1 RECI
+0148 I                                        9  43 CNA1
+0149 I                                       44  78 CNA2
+0150 I                                       79 113 CNA3
+0151 I                                      114 148 CNA4
+0152 I                                    P 250 2520LCD
+0153 I                                      253 253 CHTP
+0154 I                                    P 254 2560TNLU
+     I*                                                                   S01117
+     I*    OUTPUT TO LOCAL DATA AREA                                      S01117
+     I*                                                                   S01117
+0117 ILDA        UDS                            256                       S01117
+0118 I***********                           134 138 DBFILE                S01117
+0119 I***********                           139 167 DBKEY                 S01117
+0120 I***********                           168 175 DBPGM                 S01117
+0121 I***********                           176 177 DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     I**   FILE INFORMATION DATA STRUCTURE - P1                           S01117
+     I**                                                                  S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I**                                                                  S01117
+     I**   FILE INFORMATION DATA STRUCTURE - AU                           S01117
+     I**                                                                  S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I**                                                                  S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I                                       13  13 MBIN                  S01117
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+     I**                                                                  S01117
+     I              A8BRNM                          BRNM                  S01117
+     ISCSARD    E DSSCSARDPD                                              CFT004
+      ** MIDAS Switchable Features Accessed Via Access Program            CFT004
+      *                                                                   CFT004
+     IDSFDY     E DSDSFDY                                                 S01117
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01117
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 CFT004
+      *                                                                   CFT004
+      ** Long data structure for access programs.                         CFT004
+      *                                                                                       CGL029
+     ISDACOD    E DSSDACODPD                                                                  CGL029
+      ** Midas SD Account codes data structure                                                CGL029
+      *                                                                                       CGL029
+0122 I*                                                                   S01117
+     I**                                                                  S01117
+     C                     MOVEACPY@      BIS@   80
+     C/EJECT                                                              S01117
+     C**                                                                  S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM           BRNCH   3         BRANCH OR ALL S01117
+     C**                                                                  S01117
+     C*    DEFINE LDA                                                     S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+0155 C*
+0156 C**   F I R S T   C Y C L E   P R O C E S S I N G.
+0157 C   20                GOTO ENDFC
+0158 C                     SETON                     20
+     C**                                                                  S01117
+0130 C**         FOR DATA BASE ERROR REFERENCE                            S01117
+0131 C*                                                                   S01117
+0132 C                     MOVEL'RE0342  'DBPGM                           S01117
+0133 C                     MOVE ' '       BLANKS 29                       S01117
+0134 C                     MOVE *BLANKS   DBKEY                           S01117
+0134 C                     MOVE *BLANKS   DBFILE                          S01117
+0135 C*                                                                   S01117
+0159 C**SET*UP*ACCOUNT*RECORD*KEY**************************************                       CGL029
+0160 C**********           MOVEL'30'      ACKEY  12                                           CGL029
+0161 C**********           MOVE '1'       ACK5    5                                           CGL029
+0162 C*
+0163 C**   GET BANK TITLE, RUN DATE AND THE BANKS NAME AND ADDRESS.
+0164 C                     MOVEL'01    '  TABKEY 12
+0165 C                     MOVE '    10'  TABKEY
+0166 C                     EXSR ZSYSTM
+0167 C   99                SETON                     LRU8U7
+0168 C***U7******          MOVE ZTABKY    ERRFLD 12                       S01117
+     C           *INU7     IFEQ '1'                                       S01117
+     C                     MOVELZTABKY    DBKEY                           S01117
+     C                     MOVEL'TABLE'   DBFILE                          S01117
+     C                     Z-ADD01        DBASE                           S01117
+     C                     END                                            S01117
+0169 C   99                GOTO ENDDP
+     C**                                                                  S01117
+     C**         IN THE DATAAREA RUNDAT                                   S01117
+     C**                                                                  S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**                                                                  S01117
+     C**         SETON MULTIBRANCH INDICATOR IF MBIN = Y                  S01117
+     C**                                                                  S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETON                     88                   S01117
+     C                     END                                            S01117
+     C/COPY WNCPYSRC,RE0342C001
+     C**                                                                  S01117
+0170 C*
+0171 C                     MOVE '11'      TABKEY
+0172 C           TABKEY    CHAINTABLE                69
+0173 C  N04                SETON                     LRU8U7
+0174 C***U7******          MOVE TABKEY    ERRFLD                          S01117
+     C           *INU7     IFEQ '1'                                       S01117
+     C                     MOVELTABKEY    DBKEY                           S01117
+     C                     MOVEL'TABLE'   DBFILE                          S01117
+     C                     Z-ADD02        DBASE                           S01117
+     C                     END                                            S01117
+0175 C  N04                GOTO ENDDP
+0176 C*
+     C*  HEAD OFFICE CUSTOMER NUMBER IS BLANK IF CUSTOMER IS HEAD OFFICE  081267
+     C*  AND IN ANY CASE, PGM SHOULD PRINT ADDRESS OF BRANCH RATHER THAN  081267
+     C*  ADDRESS OF HEAD OFFICE ON AUDIT LETTER                           081267
+0177 C************         MOVELHEAD      CLTKEY  7                       081267
+0178 C************         MOVE 'B'       CLTKEY                          081267
+0179 C***********CLTKEY    CHAINCLINT                69                   081267
+0180 C**N06*******         SETON                     LRU8U7               081267
+0181 C***U7******          MOVE CLTKEY    ERRFLD                          S01117
+     C************INU7     IFEQ '1'                                 S01117081267
+     C************         MOVELCLTKEY    DBKEY                     S01117081267
+     C************         MOVEL'CLINT'   DBFILE                    S01117081267
+     C************         Z-ADD03        DBASE                     S01117081267
+     C************         END                                      S01117081267
+0182 C**N06*******         GOTO ENDDP                                     081267
+0183 C************         MOVE CNA1      CNA1B  35                       081267
+0184 C************         MOVE CNA2      CNA2B  35                       081267
+0185 C************         MOVE CNA3      CNA3B  35                       081267
+0186 C************         MOVE CNA4      CNA4B  35                       081267
+0315 C*                                                                   081267
+0315 C**   SET UP AN ARRAY OF CURRENCIES AND AN ARRAY OF DECIMAL          081267
+0316 C**   PLACES FOR THOSE CURRENCIES.                                   081267
+0187 C                     EXSR CCYARR
+      *                                                                   CFT004
+      **  Access SAR details file to see if CFT004 is installed.          CFT004
+      *                                                                   CFT004
+     C                     CALL 'AOSARDR0'                                CFT004
+     C                     PARM *BLANKS   PRTCD   7                       CFT004
+     C                     PARM '*VERIFY' POPTN   7                       CFT004
+     C                     PARM 'CFT004'  PSARD   6                       CFT004
+     C           SCSARD    PARM SCSARD    DSSDY                           CFT004
+     C*                                                                   CFT004
+     C                     MOVE 'N'       CFT004                          CFT004
+     C           PRTCD     IFEQ *BLANKS                                   CFT004
+     C                     MOVE 'Y'       CFT004  1                       CFT004
+     C                     ENDIF                                          CFT004
+      *                                                                   CFT004
+     C           KACCT     KLIST                                          CFT004
+     C                     KFLD           CNUM                            CFT004
+     C                     KFLD           CCY                             CFT004
+     C                     KFLD           ACOD                            CFT004
+     C                     KFLD           ACSQ                            CFT004
+     C                     KFLD           BRCA                            CFT004
+0188 C*
+0189 C           ENDFC     TAG                             ** ENDFC TAG **
+0190 C*
+0191 C**   D E T A I L   P R O C E S S I N G.
+0192 C*
+0193 C**   SKIP DETAIL PROCESSING FOR DLAUS HEADER AND TRAILER.
+0194 C                     SETOF                     60
+0195 C                     SETOF                     507080
+0196 C   02
+0197 COR 09      RECRED    ADD  1         RECRED
+0198 C  N01N07N08          GOTO ENDDP
+     C/COPY WNCPYSRC,RE0342C007
+     C*                                                                   S01117
+     C           *INL4     IFEQ '1'                                       S01117
+     C                     EXSR CHKBR                                     S01117
+     C                     SETON                     66                   S01117
+     C*                                                                   S01117
+     C*    IF DATABASE ERROR ACCESSING BRANCH CODE RECORD                 S01117
+     C*                                                                   S01117
+     C   U7 U8             GOTO ENDDP                                     S01117
+0199 C*
+     C                     END                                            S01117
+0199 C*                                                                   S01117
+0200 C**   GET CLIENT NAME AND ADDRESS.
+0201 C                     MOVELCNUM      CLTKEY
+     C                     MOVE 'B'       CLTKEY                          096626
+0202 C   L3                SETOF                     06
+0203 C   L3      CLTKEY    CHAINCLINT                69
+0204 C   L3N06             SETON                     LRU8U7
+0205 C***L3*U7***          MOVE CLTKEY    ERRFLD                          S01117
+     C   L3 U7             MOVELCLTKEY    DBKEY                           S01117
+     C   L3 U7             MOVEL'CLINT'   DBFILE                          S01117
+     C   L3 U7             Z-ADD04        DBASE                           S01117
+0206 C   L3N06             GOTO ENDDP
+0207 C*
+0208 C   07 61
+0209 COR 08 62             SETON                     80
+0210 C   07 61
+0211 COR 08 62             GOTO TOTALS
+0212 C   07
+0213 COR 08                GOTO CDEP
+0214 C**   IS DEAL FX OR DEPOSIT & ARE THERE ANY DEALS FOR THIS CUSTOMER.
+0215 C           FDIN      COMP 2                    705050
+0216 C           FDIN      COMP 2                        60
+0217 C  N60      FDIN      COMP 4                        60
+0218 C   60                SETON                     80
+0219 C*
+0220 C**   GET THE CURRENCY DECIMAL POSITIONS.
+0221 C           CDEP      TAG
+0222 C   08                MOVE DDCY      CCY
+0223 C                     Z-ADD1         X
+0224 C                     SETOF                     05
+0225 C  N60      CCY       LOKUPACCY,X                   05
+0226 C  N05N60             SETON                     LRU8U7
+     C/COPY WNCPYSRC,RE0342C009
+0227 C***U7******          MOVE CCY       ERRFLD                          S01117
+     C           *INU7     IFEQ '1'                                       S01117
+     C                     MOVELCCY       DBKEY                           S01117
+     C                     MOVEL'TABLE'   DBFILE                          S01117
+     C                     Z-ADD05        DBASE                           S01117
+     C                     END                                            S01117
+0228 C  N05N60             GOTO ENDDP
+0229 C           DEC,X     COMP 1                      7172
+0230 C           DEC,X     COMP 2                    74  73
+     C/COPY WNCPYSRC,RE0342C010
+0231 C***07*****           MOVELACOD      ACK5                                                CGL029
+0232 C***07*****           MOVE ACK5      ACKEY                                               CGL029
+0233 C***07*****           SETOF                     10                                       CGL029
+0234 C***07***** ACKEY     CHAINTABLE                99                                       CGL029
+0235 C***07*99**                                                                              CGL029
+0236 C*OR*07N10*            SETON                     U7U8LR                                  CGL029
+0237 C***U7******          MOVE ACKEY     ERRFLD                          S01117
+     C********** *INU7     IFEQ '1'                                                    S01117 CGL029
+     C**********           MOVELACKEY     DBKEY                                        S01117 CGL029
+     C**********           MOVEL'TABLE'   DBFILE                                       S01117 CGL029
+     C**********           Z-ADD06        DBASE                                        S01117 CGL029
+     C**********           END                                                         S01117 CGL029
+      *                                                                                       CGL029
+     C           *IN07     IFEQ *ON                                                           CGL029
+     C                     MOVELACOD      PACOD  10                                           CGL029
+     C                     CALL 'AOACODR0'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD                                               CGL029
+     C                     PARM '*KEY    '@OPTN                                               CGL029
+     C                     PARM           PACOD                                               CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *                                                                                       CGL029
+      ** Error occured in AOACODR0 Access Program                                             CGL029
+      *                                                                                       CGL029
+     C           @RTCD     IFNE *BLANK                                                        CGL029
+     C                     MOVE *ON       *INU7                                               CGL029
+     C                     MOVE *ON       *INU8                                               CGL029
+     C                     MOVE *ON       *INLR                                               CGL029
+     C                     MOVELACOD      DBKEY                                               CGL029
+     C                     MOVEL'SDACODPD'DBFILE                                              CGL029
+     C                     Z-ADD06        DBASE                                               CGL029
+     C                     ENDIF                                                              CGL029
+     C                     ENDIF                                                              CGL029
+      *                                                                                       CGL029
+0238 C   U7                GOTO ENDDP
+     C*                                                                   S01117
+     C*   PRINT BRANCH HEADING IF FIRST LETTER FOR BRANCH                 S01117
+     C           *IN66     IFEQ '1'                                       S01117
+     C           *IN80     ANDEQ'0'                                       S01117
+     C                     EXCPT                                          S01117
+     C                     SETOF                     66                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+0239 C   07                GOTO TOTALS
+0240 C   08                GOTO DATES
+0241 C*
+0242 C                     Z-ADD1         X
+0243 C                     SETOF                     05
+0244 C   50N60   SLCY      LOKUPACCY,X                   05
+0245 C  N05 50N60          SETON                     LRU8U7
+     C/COPY WNCPYSRC,RE0342C011
+0246 C***U7******          MOVE SLCY      ERRFLD                          S01117
+     C           *INU7     IFEQ '1'                                       S01117
+     C                     MOVELSLCY      DBKEY                           S01117
+     C                     MOVEL'TABLE'   DBFILE                          S01117
+     C                     Z-ADD07        DBASE                           S01117
+     C                     END                                            S01117
+0247 C  N05 50N60          GOTO ENDDP
+0248 C           DEC,X     COMP 1                      5152
+0249 C           DEC,X     COMP 2                    54  53
+     C/COPY WNCPYSRC,RE0342C012
+0250 C*
+0251 C* CHECK FOR CALL/NOTICE DEALS
+0252 C                     SETOF                     4647
+0253 C  N60 70   MDAT      COMP 0                        46
+0254 C  N60 70   MDAT      COMP 1000                   47
+0255 C  N60 70 47          Z-ADDMDAT      NOTD    30
+0256 C**   CONVERT DATES TO DDMMMYY FORMAT.
+0257 C                     Z-ADDDDAT      ZDAYNO
+0258 C  N60                EXSR ZDATE2
+0259 C                     MOVE ZADATE    DDATA   7
+0260 C*
+0261 C                     Z-ADDVDAT      ZDAYNO
+0262 C  N60                EXSR ZDATE2
+0263 C                     MOVE ZADATE    VDATA   7
+0264 C*
+0265 C                     Z-ADDMDAT      ZDAYNO
+0266 C  N60 70N47          EXSR ZDATE2
+0267 C                     MOVE ZADATE    MDATA   7
+0268 C           DATES     TAG
+0269 C                     Z-ADDDELD      ZDAYNO
+0270 C                     EXSR ZDATE2
+0271 C                     MOVE ZADATE    DELDA   7
+0272 C                     Z-ADDSTDT      ZDAYNO
+0273 C                     EXSR ZDATE2
+0274 C                     MOVE ZADATE    STDTA   7
+0275 C                     Z-ADDIIND      ZDAYNO
+0276 C                     EXSR ZDATE2
+0277 C                     MOVE ZADATE    IINDA   7
+0278 C                     Z-ADDROLD      ZDAYNO
+0279 C                     EXSR ZDATE2
+0280 C                     MOVE ZADATE    ROLDA   7
+0281 C                     Z-ADDMATD      ZDAYNO
+0282 C                     EXSR ZDATE2
+0283 C                     MOVE ZADATE    MATDA   7
+0284 C   08                GOTO TOTALS
+0285 C*
+0286 C**   FOR DEPOSIT DEALS IS MONEY INGOING OR OUTGOING?
+0287 C   70      DTYP      COMP 'IT'                     75-INGOING
+0288 C   70N75   DTYP      COMP 'CD'                     75
+0289 C   70N75   DTYP      COMP 'TD'                     75
+0290 C   70N75   DTYP      COMP 'CI'                     75
+0291 C*
+0292 C           TOTALS    TAG
+0293 C**   HASH TOTALS.
+0294 C           RECRED    ADD  1         RECRED  50
+0295 C*          PCPL      DIV  1000      ZZAMT
+0296 C   01      PCPL      DIV  1000      ZZAMT
+0297 C   07N25             Z-ADDLDBL      ZZAMT
+0298 C   07 25             Z-SUBLDBL      ZZAMT
+0299 C   08      ODDA      DIV  1000      ZZAMT
+0300 C                     EXSR GLZADD
+0301 C*
+     C           *IN07     IFEQ '1'                                       CFT004
+     C           *IN61     ANDNE'1'                                       CFT004
+     C                     MOVE '0'       *IN11                           CFT004
+     C                     MOVEL*BLANKS   RIBAN  47                       CFT004
+     C           CFT004    IFEQ 'Y'                                       CFT004
+     C           KACCT     CHAINACCNT                12                   CFT004
+      *                                                                   CFT004
+      ** Format International Bank Account Numbers                        CFT004
+      *                                                                   CFT004
+     C           *IN12     IFEQ '0'                                       CFT004
+     C           IBAN      ANDNE*BLANKS                                   CFT004
+     C                     CALL 'AOIBANR3'                                CFT004
+     C                     PARM *BLANKS   PRTCD   7                       CFT004
+     C                     PARM IBAN      PIBAN  47                       CFT004
+     C                     PARM *BLANKS   PIWITH 47                       CFT004
+     C                     PARM *BLANKS   PINOBL 34                       CFT004
+      *                                                                   CFT004
+     C           PRTCD     IFEQ *BLANKS                                   CFT004
+     C                     MOVELPIWITH    RIBAN  47                       CFT004
+     C                     MOVE '1'       *IN11                           CFT004
+     C                     ENDIF                                          CFT004
+      *                                                                   CFT004
+     C                     ENDIF                                          CFT004
+     C                     ENDIF                                          CFT004
+     C                     ENDIF                                          CFT004
+      *                                                                   CFT004
+0302 C           ENDDP     TAG                             ** ENDDP TAG **
+0303 CL1                   SETOF                     OF
+0304 C*
+0305 C**   L A S T   R E C O R D   P R O C E S S I N G.
+0306 C*
+0307 C**   CHECK FOR HASH TOTALS DIFFERENCE.
+0308 CLR         RECRED    COMP FXNO                     44
+0309 CLRN44                SETON                     U8
+0310 CLR         ZZTOTI    COMP FXIN                     45
+0311 CLR 45      ZZTOTD    COMP FXDC                     45
+0312 CLRN45                SETON                     U8
+     C**                                                                  S01117
+     C**                                                                  S01117
+     C*       ENSURE TOTAL SPOOL FILE RECORDED BY RCF                     S01117
+     C**                                                                  S01117
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     CLR                   OUT  LDA                                       S01117
+     C*                                                                   S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     CLR                   PARM           SEQ                             S01117
+     CLR                   PARM *BLANK    SENTY   3                       S01117
+     CLR                   PARM           SFILEU                          S01117
+     CLR                   PARM           ZSNUMU                          S01117
+     CLR                   PARM           ZSERR   1                       S01117
+     CLR         *LOCK     IN   LDA                                       S01117
+      *                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+     C**                                                                  S01117
+     C**                                                                  S01117
+     CLR U7 U8             EXSR *PSSR                                     S01117
+0232 C*                                                                   S01117
+0234 C**                                                                  S01117
+     C********************************************************************S01117
+     C*SUBROUTINE- CHKBR                                                  S01117
+     C*PURPOSE   - ACCESS BRANCH DETAILS                                  S01117
+     C*                                                                   S01117
+     C*CALLED FROM- MAIN PROGRAM CYCLE                                    S01117
+     C**                                                                  S01117
+     C           CHKBR     BEGSR                           *** CHKBR * ** S01117
+     C**                                                                  S01117
+     C                     CLOSERE0342P1                                  S01117
+     C**                                                                  S01117
+     C                     SETOF                     65                   S01117
+     C*                                                                   S01117
+     C*    ACCESS BRANCH DETAILS ONLY IF RECORD READ IS NOT A ZERO-       S01117
+     C*    TYPE RECORD                                                    S01117
+     C           BRCA      IFNE *BLANKS                                   S01117
+     C**                                                                  S01117
+     C*    SET ON *IN65 TO ALLOW O/P TO RE0342P1                          S01117
+     C**                                                                  S01117
+     C                     SETON                     65                   S01117
+     C                     OPEN RE0342P1                                  S01117
+     C                     MOVE 'Y'       P1OP    1                       S01117
+     C                     SETON                     30    SOME DETAILS   S01117
+     C**                                                                  S01117
+     C*    ENSURE REPORT SPOOL FILE RECORDED BY RCF                       S01117
+     C**                                                                  S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C**                                                                  S01117
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM BRCA      SENTY                           S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+     C           *LOCK     IN   LDA                                       S01117
+      *                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**                                                                  S01117
+     C*    ACCESS BRANCH DETAILS                                          S01117
+     C*                                                                   S01117
+     C**                                                                  S01117
+      **                                                                  S01117
+      ***GET*BRANCH*NAME,*ONLY*WHEN*MBIN*=*'Y'***                   S01117081267
+      **                                                                  S01117
+     C***********MBIN      IFEQ 'Y'                                 S01117081267
+      *                                                                   S01117
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM BRCA      @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01117              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     MOVEL@DSNB     DBKEY                           S01117
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************S01117
+     C                     Z-ADD12        DBASE            * DBERROR 012 *S01117
+     C                     SETON                     U7U8LR***************S01117
+     C                     GOTO ENDDP                                     081267
+     C                     END                                            S01117
+      *                                                                   S01117
+      * OBTAIN ADDRESS OF BRANCH INTERNAL CUSTOMER TO PRINT ON LETTER     081267
+     C*                                                                   S01117
+     C                     MOVELA8BICN    CLTKEY  7                       081267
+     C                     MOVE 'B'       CLTKEY                          081267
+     C           CLTKEY    CHAINCLINT                69                   081267
+     C  N06                SETON                     LRU8U7               081267
+     C           *INU7     IFEQ '1'                                       081267
+     C                     MOVELCLTKEY    DBKEY            ***************081267
+     C                     MOVEL'CLINT'   DBFILE           * DBERROR 003 *081267
+     C                     Z-ADD03        DBASE            ***************081267
+     C                     GOTO ENDDP                                     081267
+     C                     END                                            081267
+      *                                                                   081267
+     C***********          END                                      S01117081267
+      *                                                                   S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+     C/COPY WNCPYSRC,RE0342C008
+     C********************************************************************S01117
+     C/SPACE 3                                                            S01117
+     C********************************************************************S01117
+0314 C**
+0315 C**   SR. TO SET UP AN ARRAY OF CURRENCIES AND AN ARRAY OF
+0316 C**   DECIMAL PLACES FOR THOSE CURRENCIES.
+0317 C**
+0318 C           CCYARR    BEGSR                           *** CCYARR  ***
+0319 C                     SETOF                     99
+0320 C                     Z-ADD0         X       30
+0321 C**   SET UP KEY FOR CURRENCY TABLE.
+0322 C                     MOVEL'20      'XCYKEY 12
+0323 C                     MOVE '   1'    XCYKEY
+0324 C**
+0325 C**   SET LOWER LIMIT AND READ CURRENCY TABLE HEADER.
+0326 C           XCYKEY    SETLLTABLE
+0327 C**
+0328 C**   LOOP TO READ CURRENCY DETAIL RECORDS.
+0329 C           XLOOP     TAG                             ** XLOOP TAG **
+0330 C                     READ TABLE                    99
+0331 C  N99      RECTX     COMP 20                   9999
+0332 C**
+0333 C**   END IF ALL CURRENCY RECORDS PROCESSED
+0334 C   99                GOTO XEND
+0335 C**
+0336 C**   IGNORE DELETED RECORDS AND NON-SUB-RECORD ONE.
+0337 C           RECIX     COMP 'D'                  9797
+0338 C   97                GOTO XLOOP
+0339 C           SRECX     COMP 1                    9797
+0340 C   97                GOTO XLOOP
+0341 C           X         ADD  1         X
+0342 C**
+0343 C**   MOVE DATA INTO ARRAYS.
+     C/COPY WNCPYSRC,RE0342C002
+0344 C                     MOVE CCYX      ACCY,X
+     C/COPY WNCPYSRC,RE0342C013
+0345 C                     MOVE CDPX      DEC,X
+     C/COPY WNCPYSRC,RE0342C014
+0346 C**
+0347 C**   CHECK FOR FULL ARRAY.96 ON IF FULL.
+0348 C           X         COMP 150                      96
+0349 C**
+0350 C**   GO TO READ NEXT RECORD.
+0351 C  N96                GOTO XLOOP
+0352 C**
+0353 C           XEND      TAG                             ** XEND TAG  **
+0354 C                     ENDSR
+0355 C********************************************************************
+0356 C**
+0357 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+0358 C**
+0359 C           ZDATE2    BEGSR                           *** ZDATE2 ***
+0360 C**
+0361 C**   CLEAR DATE FIELDS.
+0362 C                     Z-ADD0         ZDATE   60
+0363 C                     MOVEL'       ' ZADATE  7
+0364 C**
+0365 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+0366 C                     Z-ADDZDAYNO    ZDAYNO  50
+0367 C**
+0368 C**   DETERMINE YEAR NUMBER.
+0369 C**
+0370 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+0371 C           ZDAYNO    SUB  1         ZDAYN1  50   99
+0372 C   99                GOTO ZDEND2
+0373 C**
+0374 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+0375 C           ZDAYN1    DIV  1461      ZLYR    20
+0376 C                     MVR            ZDAYN1           SAVE REMAINING
+0377 C**                                                   DAYS
+0378 C**   CALCULATE NUMBER OF REMAINING YEARS.
+0379 C                     Z-ADD1         ZWRK2   20
+0380 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+0381 C           ZDAYN1    COMP ZYDY,ZWRK2             90
+0382 C  N90      ZWRK2     ADD  1         ZWRK2
+0383 C  N90                GOTO ZDTAG1
+0384 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+0385 C**
+0386 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+0387 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+0388 C**
+0389 C**   CALCULATE ACTUAL YEAR NUMBER.
+0390 C           ZLYR      MULT 4         ZWRK3   30
+0391 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+0392 C                     Z-ADDZWRK3     ZYEAR   20
+0393 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+0394 C**
+0395 C**   DETERMINE MONTH NUMBER.
+0396 C**
+0397 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+0398 C                     SETOF                     9293
+0399 C   91      ZDAYN1    COMP 59                     9293
+0400 C   91N92   ZDAYN1    SUB  1         ZDAYN1
+0401 C**
+0402 C**   CALCULATE MONTH NUMBER.
+0403 C                     Z-ADD2         ZWRK2
+0404 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+0405 C           ZDAYN1    COMP ZMDY,ZWRK2             94
+0406 C  N94      ZWRK2     ADD  1         ZWRK2
+0407 C  N94                GOTO ZDTAG2
+0408 C           ZWRK2     SUB  1         ZWRK2
+0409 C**
+0410 C                     Z-ADDZWRK2     ZMTH    20       MONTH
+0411 C**
+0412 C**   DETERMINE DAY OF MONTH.
+0413 C**
+0414 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+0415 C           ZDAYN1    ADD  1         ZDAYN1
+0416 C**
+0417 C**   CALCULATE DAY OF MONTH.
+0418 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+0419 C**
+0420 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+0421 C   93      ZDAY      ADD  1         ZDAY
+0422 C**
+0423 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+0424 C  N98                MOVELZDAY      ZWRK4   40
+0425 C   98                MOVE ZDAY      ZWRK4
+0426 C  N98                MOVE ZMTH      ZWRK4
+0427 C   98                MOVELZMTH      ZWRK4
+0428 C                     MOVELZWRK4     ZDATE
+0429 C                     MOVE ZYEAR     ZDATE
+0430 C**
+0431 C**   FORMAT ALPHA DATE, DDMMMYY.
+0432 C           ZDAY      COMP 10                     95
+0433 C                     MOVELZDAY      ZWRK5   5
+0434 C   95                MOVEL' '       ZWRK5
+0435 C                     MOVE ZMNM,ZMTH ZWRK5
+0436 C                     MOVELZWRK5     ZADATE
+0437 C                     MOVE ZYEAR     ZADATE
+0438 C**
+0439 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+0440 C********************************************************************
+0441 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+0442 C*   IND '99' IS SET BY AN OVERFLOW ERROR
+0443 C*
+0444 CSR         GLZADD    BEGSR                           *** GLZADD ****
+0445 C*
+0446 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+0447 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+0448 C*
+0449 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+0450 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+0451 CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+0452 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+0453 C*
+0454 CSR                   EXSR GLZSUM
+0455 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+0456 C*
+0457 C********************************************************************
+0458 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+0459 C*                        GLZADD, GLZSUB, GLZCMP.
+0460 C*          PARAMETERS PASSED -
+0461 C*                     I/P ZZAMTI ZZAMTD
+0462 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+0463 C*
+0464 CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+0465 C*
+0466 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+0467 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+0468 CSR                   SETOF                     919293
+0469 CSR                   SETOF                     949599
+0470 C*
+0471 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+0472 CSR         ZZAMTI    COMP 0                      9293
+0473 CSR 93      ZZAMTD    COMP 0                      9293
+0474 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0475 C*
+0476 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+0477 CSR         ZZTOTI    COMP 0                      9193
+0478 CSR 93      ZZTOTD    COMP 0                      9193
+0479 C*
+0480 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+0481 CSR 93                Z-ADDZZAMTI    ZZTOTI
+0482 CSR 93                Z-ADDZZAMTD    ZZTOTD
+0483 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0484 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+0485 CSR 91N92
+0486 CORN91 92             GOTO ZZOFPS
+0487 C*
+0488 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+0489 CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+0490 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+0491 C*
+0492 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+0493 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+0494 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+0495 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+0496 C*
+0497 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+0498 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+0499 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+0500 CSRN99                Z-ADDZZWK2     ZZTOTD
+0501 CSRN99                Z-ADDZZWK3     ZZTOTI
+0502 C*
+0503 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+0504 CSR 99                Z-ADD0         ZZAMT  153
+0505 CSR                   GOTO ZZSEND
+0506 C*
+0507 C* THE 'SIGNS' ARE DIFFERENT
+0508 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+0509 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+0510 C*
+0511 CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+0512 CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+0513 C*
+0514 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+0515 C*
+0516 CSR 91                Z-SUBZZTOTI    ZZTOTI
+0517 CSR 91                Z-SUBZZTOTD    ZZTOTD
+0518 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+0519 C*
+0520 CSR         ZZTOTI    COMP ZZAMTI               93  95
+0521 CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+0522 C*
+0523 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+0524 CSR 95                Z-ADD0         ZZTOTI
+0525 CSR 95                Z-ADD0         ZZTOTD
+0526 CSR 95                GOTO ZZSEND
+0527 C*
+0528 C* IF ZZTOT GT. ZZAMT.
+0529 CSR 93      ZZAMTD    COMP ZZTOTD               94
+0530 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+0531 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+0532 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+0533 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+0534 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+0535 C*
+0536 C*
+0537 C* IF ZZAMT GT. ZZTOT.
+0538 CSRN93      ZZTOTD    COMP ZZAMTD               94
+0539 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+0540 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+0541 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+0542 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+0543 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+0544 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+0545 C*
+0546 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+0547 CSR                   SETOF                     94
+0548 CSR 93 91
+0549 CORN93 92             SETON                     94
+0550 CSR 94                Z-SUBZZTOTI    ZZTOTI
+0551 CSR 94                Z-SUBZZTOTD    ZZTOTD
+0552 C**
+0553 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+0554 CSR 92                Z-SUBZZAMTI    ZZAMTI
+0555 CSR 92                Z-SUBZZAMTD    ZZAMTD
+0556 CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+0557 C**
+0558 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+0559 CSR                   SETOF                     96
+0560 CSR         ZZTOTD    COMP 0                        91
+0561 CSR 91      ZZTOTI    COMP 0                      96
+0562 CSR 96                MOVE '.000-'   ZZNEGD  5
+0563 CSR                   ENDSR                             ** ENDSR **
+0564 C********************************************************************
+0565 C**
+0566 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+0567 C**
+0568 C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+0569 C**
+0570 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+0571 C                     MOVEL'01      'ZTABKY 12
+0572 C                     MOVE '  10'    ZTABKY
+0573 C**
+0574 C           ZTABKY    CHAINTABLE                99    ON NOT THERE
+0575 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+0576 C**
+0577 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+0578 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0579 C**
+0580 C                     ENDSR
+0497 C********************************************************************S01117
+     C*                                                                   S01117
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+0532 C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C/COPY WNCPYSRC,RE0342C003
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C/COPY WNCPYSRC,RE0342C006
+     C********************************************************************S01117
+0582 ORE0342P1H  103   L1NU7N80                                           S01124
+     O       AND       65                                                 S01117
+0583 O                         CNA1      45
+0584 O************             CNA1B    109                               081267
+0585 O        H  1     L1NU7N80
+     O       AND       65                                                 S01117
+0586 O                         CNA2      45
+0587 O************             CNA2B    109                               081267
+0588 O        H  1     L1NU7N80
+     O       AND       65                                                 S01117
+0589 O                         CNA3      45
+0590 O************             CNA3B    109                               081267
+0591 O        H  1     L1NU7N80
+     O       AND       65                                                 S01117
+0592 O                         CNA4      45
+0593 O************             CNA4B    109                               081267
+0594 O        H 21     L1NU7N80
+     O       AND       65                                                 S01117
+     O/COPY WNCPYSRC,RE0342O001
+0595 O                                   19 'DEAR SIRS,'
+0596 O        H  1     L1NU7N80
+     O       AND       65                                                 S01117
+0597 O                                   43 'OUR RECORDS SHOW THAT AT'
+0598 O                                   64 'CLOSE OF BUSINESS ON'
+0599 O                         RUNA      72
+0600 O                N07                91 'THE UNDERMENTIONED'
+0601 O                 70               116 'DEPOSITS WERE OUTSTANDIN'
+0602 O                 70               118 'G.'
+0603 O                 50               116 'FOREIGN EXCHANGE CONTRAC'
+0604 O                 50               118 'TS'
+0605 O                 07                93 'THE BALANCES ON YOUR'
+0606 O                 07               117 'RETAIL ACCOUNTS WITH US'
+0607 O                 08               115 'DRAWINGS AGAINST COMMIT'
+0608 O                 08               120 'MENTS'
+0609 O        H  1     L1NU7N80
+     O       AND       65                                                 S01117
+0610 O                 07                25 'WERE AS FOLLOWS.'
+0611 O                N07N70             26 'WERE OUTSTANDING.'
+0612 O                 07                50 'AS PART OF OUR NORMAL AU'
+0613 O                 07                73 'DIT PROCEDURE WOULD YOU'
+0614 O                 07                98 'PLEASE COMPARE DETAILS W'
+0615 O                 07               118 'ITH YOUR RECORDS AND'
+0616 O                N07N70             51 'AS PART OF OUR NORMAL AU'
+0617 O                N07N70             74 'DIT PROCEDURE WOULD YOU'
+0618 O                N07N70             99 'PLEASE COMPARE DETAILS W'
+0619 O                N07N70            119 'ITH YOUR RECORDS AND'
+0620 O                 70                33 'AS PART OF OUR NORMAL AU'
+0621 O                 70                56 'DIT PROCEDURE WOULD YOU'
+0622 O                 70                81 'PLEASE COMPARE DETAILS W'
+0623 O                 70               105 'ITH YOUR RECORDS AND CON'
+0624 O                 70               119 'FIRM AGREEMENT'
+0625 O        H  1     L1NU7N80
+     O       AND       65                                                 S01117
+0626 O                 70                33 'BY SIGNING THE DUPLICATE'
+0627 O                 70                58 'OF THIS LETTER, WHERE IN'
+0628 O                 70                82 'DICATED, AND RETURNING I'
+0629 O                 70               106 'T IN THE ENVELOPE PROVID'
+0630 O                 70               109 'ED.'
+0631 O                N70                33 'CONFIRM AGREEMENT BY SIG'
+0632 O                N70                57 'NING THE DUPLICATE OF TH'
+0633 O                N70                81 'IS LETTER, WHERE INDICAT'
+0634 O                N70               104 'ED, AND RETURNING IT IN'
+0635 O                N70               117 'THE ENVELOPE'
+0636 O        H  1     L1NU7N80
+     O       AND       65                                                 S01117
+0637 O                N70                18 'PROVIDED.'
+     O/COPY WNCPYSRC,RE0342O002
+0638 O        H  3     L1NU7N80
+     O       AND       65                                                 S01117
+0639 O                                   77 'YOUR ASSISTANCE IS'
+0640 O                                   90 'APPRECIATED.'
+0641 O        H  2     L1NU7N80
+     O       AND       65                                                 S01117
+0642 O                                   89 '--------------------'
+0643 O                                   98 'AUDITOR'
+0644 O        H  3     L1NU7N80
+     O       AND       65                                                 S01117
+     O/COPY WNCPYSRC,RE0342O003
+0645 O                                   30 'WITH EXCEPTION OF THE'
+0646 O                                   51 'DISCREPANCIES LISTED'
+0647 O                                   60 'OVERLEAF'
+0648 O                                   82 'WE CONFIRM DETAILS AS'
+0649 O                                   90 'LISTED.'
+     O/COPY WNCPYSRC,RE0342O004
+0650 O        H  2     L1NU7N80
+     O       AND       65                                                 S01117
+0651 O                                   89 '--------------------'
+0652 O                                  111 'AUTHORISED SIGNATURE'
+0653 O        H  2     L1NOF 07
+0654 O       AND      NU7N80
+     O       AND       65                                                 S01117
+0655 O       OR  203   OF 07NU7
+0656 O       AND      N80
+     O       AND       65                                                 S01117
+0657 O                                   11 'ACCOUNT'
+0658 O                                   40 'ACCOUNT TYPE'
+0659 O                                   65 'ACCOUNT NAME'
+0660 O                                   84 'RETAIL NO.'
+0661 O                                  102 'CURRENCY'
+0662 O                                  130 'LEDGER BALANCE'
+0663 O        H  1     L1NOFN07
+0664 O       AND      N08NU7N80
+     O       AND       65                                                 S01117
+0665 O       OR  103   OFN07N08
+0666 O       AND      NU7N80
+     O       AND       65                                                 S01117
+0667 O                                   20 'CONTRACT   DEAL DEAL'
+0668 O                                   25 'TYPE'
+0669 O                 70                45 'START    MATURITY'
+0670 O                 70                73 'CURRENCY    DEPOSIT TAKE'
+0671 O                 70                95 'N FROM YOU    DEPOSIT '
+0672 O                 70               107 'GIVEN TO YOU'
+0673 O                 70               124 'INTEREST'
+0674 O                 50                50 'CURRENCY   AMOUNT BOUGH'
+0675 O                 50                71 'T FROM YOU   CURRENCY'
+0676 O                 50                94 'AMOUNT SOLD TO YOU'
+0677 O                 50               125 'EXCHANGE        MATURITY'
+0678 O        H  2     L1NOFN07
+0679 O       AND      N08NU7N80
+     O       AND       65                                                 S01117
+0680 O       OR  2     OFN07N08
+0681 O       AND      NU7N80
+     O       AND       65                                                 S01117
+0682 O                                   21 'DATE     NO.  SUB-'
+0683 O                                   25 'TYPE'
+0684 O                 70                43 'DATE       DATE'
+0685 O                 70               122 'RATE'
+0686 O                 50                34 'BOUGHT'
+0687 O                 50                69 'SOLD'
+0688 O                 50               123 'RATE            DATE'
+0689 O        H  1     L1NOF 08
+0690 O       AND      NU7N80
+     O       AND       65                                                 S01117
+0691 O       OR  103   OF 08
+0692 O       AND      NU7N80
+     O       AND       65                                                 S01117
+0693 O                                   24 'CONTRACT      LOAN'
+0694 O                                   45 'DRAWDOWN    START'
+0695 O                                   58 'CURRENCY'
+0696 O                                   71 'DRAWDOWN'
+0697 O                                   92 'INTEREST'
+0698 O                                  104 'INTEREST'
+0699 O                                  130 'ROLLOVER   MATURITY'
+0700 O        H  2     L1NOF 08
+0701 O       AND      NU7N80
+     O       AND       65                                                 S01117
+0702 O       OR        OF 08
+0703 O       AND      NU7N80
+     O       AND       65                                                 S01117
+0704 O                                   27 'DATE      REFERENCE'
+0705 O                                   44 'REFERENCE   DATE'
+0706 O                                   70 'AMOUNT'
+0707 O                                  102 'RATE        DATE'
+0708 O                                  128 'DATE       DATE'
+     O        E  1 3   65 88                                              S01117
+     O                                   12 'BRANCH'                      S01117
+     O                         BRCA      16                               S01117
+     O                                   17 '-'                           S01117
+     O                         BRNM      47                               S01117
+0709 O        DF 2     01N60NU7
+0710 O*******AND*     N80                                                 S01117
+0710 O       AND      N80 65                                              S01117
+0711 O                         DDATA      8
+0712 O                         DLNO      16
+0713 O                         DTYP      20
+0714 O                                   21 '-'
+0715 O                         DLST      23
+0716 O                 70      VDATA     34
+0717 O                 70N47   MDATA     45
+0718 O                 70 46             44 'CALL'
+0719 O                N46 70 47NOTD  Z   40
+0720 O                N46 70 47          45 'DAYS'
+0721 O                 70      CCY       55
+     O/COPY WNCPYSRC,RE0342O005
+0722 O                 70 71 75PCPL      79 ' ,   ,   ,   , 0 '
+0723 O                 70 72 75PCPL      81 '   ,   ,   , 0 . '
+0724 O                 70 73 75PCPL      82 '  ,   ,   , 0 .  '
+0725 O                 70 74 75PCPL      83 ' ,   ,   , 0 .   '
+0726 O                 70 71N75PCPL     103 ' ,   ,   ,   , 0 '
+0727 O                 70 72N75PCPL     105 '   ,   ,   , 0 . '
+0728 O                 70 73N75PCPL     106 '  ,   ,   , 0 .  '
+0729 O                 70 74N75PCPL     107 ' ,   ,   , 0 .   '
+     O/COPY WNCPYSRC,RE0342O006
+0730 O                 70      INTR  4  127
+0731 O                 50      CCY       33
+     O/COPY WNCPYSRC,RE0342O007
+0732 O                 50 71   PCPL      55 ' ,   ,   ,   , 0 '
+0733 O                 50 72   PCPL      57 '   ,   ,   , 0 . '
+0734 O                 50 73   PCPL      58 '  ,   ,   , 0 .  '
+0735 O                 50 74   PCPL      59 ' ,   ,   , 0 .   '
+     O/COPY WNCPYSRC,RE0342O008
+0736 O                 50      SLCY      69
+     O/COPY WNCPYSRC,RE0342O009
+0737 O                 50 51   SLAM      90 ' ,   ,   ,   , 0 '
+0738 O                 50 52   SLAM      92 '   ,   ,   , 0 . '
+0739 O                 50 53   SLAM      93 '  ,   ,   , 0 .  '
+0740 O                 50 54   SLAM      94 ' ,   ,   , 0 .   '
+0741 O                 50      EXRT  4  111
+     O/COPY WNCPYSRC,RE0342O010
+0742 O                 50      MDATA    124
+0743 O        DF 2     07N61NU7
+0744 O*******AND*     N80                                                 S01117
+0744 O       AND      N80 65                                              S01117
+0745 O                         CNUM       9
+0746 O                                   10 '-'
+0747 O                         ACSQ      12
+0748 O**********               ACKN      46                                                   CGL029
+     O                         A5ACCN    46                                                   CGL029
+0749 O                         ANAM      69
+0750 O                N76      ACNO      84
+0751 O                         CCY       99
+     O/COPY WNCPYSRC,RE0342O011
+0752 O                    71   LDBL     127 '   ,   ,   ,   , 0 &CR'
+0753 O                    72   LDBL     129 '  ,   ,   ,   , 0 . &CR'
+0754 O                    73   LDBL     130 ' ,   ,   ,   , 0 .  &CR'
+0755 O                    74   LDBL     131 '   ,   ,   , 0 .   &CR'
+     O/COPY WNCPYSRC,RE0342O012
+     O        DF 2     07N60NU7                                           CFT004
+     O       AND      N80 65 11                                           CFT004
+     O                         RIBAN     50                               CFT004
+0756 O********D**2     08N62NU7                                           S01117
+0756 O        DF 2     08N62NU7                                           S01117
+0757 O*******AND*     N80                                                 S01117
+0757 O       AND      N80 65                                              S01117
+0758 O                         DELDA     14
+0759 O                         LNRF      25
+0760 O                         DDRF      35
+0761 O                         STDTA     46
+0762 O                         DDCY      56
+     O/COPY WNCPYSRC,RE0342O013
+0763 O                 71      ODDA      73 ' ,   ,   ,   , 0 '
+0764 O                 72      ODDA      75 '   ,   ,   , 0 . '
+0765 O                 73      ODDA      76 '  ,   ,   , 0 .  '
+0766 O                 74      ODDA      77 ' ,   ,   , 0 .   '
+     O/COPY WNCPYSRC,RE0342O014
+0767 O                         EINR      94 ' ,   .       '
+0768 O                         IINDA    103
+0769 O                         ROLDA    118
+0770 O                         MATDA    129
+0806 O        T  125   L4N80NU7                                           S01117
+0806 O       AND       65 30                                              S01117
+     O                 88                65 '*** END OF REPORT FOR'       S01117
+     O                 88                73 ' BRANCH '                    S01117
+     O                 88      BRCA      76                               S01117
+     O                 88                80 ' ***'                        S01117
+     O                N88                72 '*** END OF REPORT ***'       S01117
+     O*                                                                   S01117
+     O*                                                                   S01117
+     O*  PRINT FILE CONTROLS PAGE                                         S01117
+     O*                                                                   S01117
+0771 O********T** 03   LR                                                 S01117
+     ORE0342AUT  203   LR                                                 S01117
+0772 O**********                         22 'REFERENCE RE0342'            S01117
+0772 O                                   24 'REFERENCE RE0342AU'          S01117
+0773 O                         TITL      89
+0774 O                                  104 'DATE'
+0775 O                         RUNA     112
+0776 O                                  122 'PAGE'
+0777 O                         PAGE     127
+0778 O        T   05   LR
+0779 O***********                        64 'DEALS AUDIT LETTER -'        S01117
+0779 O                                   64 'RETAIL AUDIT LETTER -'       S01117
+0780 O***********                        79 'CONTROL REPORT'              S01117
+0780 O                                   80 'CONTROL REPORT'              S01117
+0781 O        T   06   LR
+0782 O***********                        64 '--------------------'        S01117
+0782 O                                   64 '---------------------'       S01117
+0783 O                                   79 '---------------'
+0784 O        T   20   LR
+0785 O                                   21 'RUN CONTROLS'
+0786 O        T   21   LR
+0787 O                                   55 'NUMBER'
+0788 O                                   84 'VALUE'
+0789 O        T   23   LR
+0790 O                                   28 'RECORDS PROCESSED'
+0791 O                         RECREDZ   55
+0792 O                         ZZTOTIZ   86
+0793 O                         ZZTOTD    89
+0794 O***********      U8NU7             94 '***'                         S01117
+0795 O        T   25   LR
+0796 O                                   26 'RECORDS ON FILE'
+0797 O                         FXNO  Z   55
+0798 O                         FXIN  Z   86
+0799 O                         FXDC      89
+0800 O***********      U8NU7             94 '***'                         S01117
+     O        T   27   LR U8NU7                                           S01117
+     O                N44                67 '*** DIFFERENCE ***'          S01117
+     O                N45                97 '*** DIFFERENCE ***'          S01117
+0361 O        T   30   LRN30NU7                                           S01117
+0362 O                                   62 '***  NO DETAILS TO '         S01117
+0362 O                                   73 'REPORT  ***'                 S01117
+0639 O*                                                                   S01117
+0640 O*  DATABASE ERROR OUTPUT                                            S01117
+0641 O*                                                                   S01117
+0642 O        T 3      LR U7                                              S01117
+     O                                   66 'DATABASE ERROR '             S01117
+     O                         DBASE     69                               S01117
+     O                                   83 'IN PROGRAM '                 S01117
+     O                         DBPGM     93                               S01117
+     O        T 2      LR U7                                              S01117
+     O                                   56 'FILE '                       S01117
+     O                         DBFILE    64                               S01117
+     O                                   70 ', KEY '                      S01117
+     O                         DBKEY     99                               S01117
+     O*                                                                   S01117
+0801 O********T*33     LR U7                                        E80529S01117
+0802 O***********                        71 '*** DATABASE ERROR ***'      S01117
+0803 O********T**3     U7 LR                                              S01117
+0804 O***********                        62 'CHAIN FAIL BY'               S01117
+0805 O***********              ERRFLD    76                               S01117
+0806 O********T*3      LR                                                 S01117
+0807 O***********                        70 '*** END OF REPORT ***'       S01117
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

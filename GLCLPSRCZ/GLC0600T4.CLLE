@@ -1,0 +1,122 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Account Posting - End Task Split')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger                                      */
+/*                                                                   */
+/*       GLC0600T4 - Midas GL Account Posting - End Task Split       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD036707           Date 26Apr16              */
+/*                      AR1097218          Date 22Apr13              */
+/*                      CGL142             Date 06Aug12              */
+/*                      CGL120   *CREATE   Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD036707 - FOOB in GLC44. Clear work file GLSYSOZX.         */
+/*                  Apply for MD037302.                              */
+/*       AR1097218A - GLC0720 seq 10001 failed Out of Balance        */
+/*       CGL142 - Tactical COB changes GL                            */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POSTNUM &CNAM &CSEQ)
+ 
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLACPSERVE')
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE(GLACPOPD)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&LDA)  TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GLC0600T4 - Midas GL Account Posting +
+                          - End Task Split') TOMSGQ(MRUNQ)
+ 
+             IF         COND(&POSTNUM = '3') THEN(DO)
+             RTVMBRD    FILE(GEXBPD) NBRCURRCD(&CURRCD)
+             IF         COND(&CURRCD = 0) THEN(GOTO END)
+             ENDDO
+ 
+/* Determine full DMLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DMLIB) VALUE(&SYSID *CAT 'DMLIB')
+ 
+/* Determine full JLIB and DTAQLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                                       /*CGL142*/
+                                                                                          /*CGL142*/
+/* Retrieve first member description */
+ 
+             RTVMBRD    FILE(&DRIVER) RTNMBR(&MEMBER)
+             MONMSG     MSGID(CPF3019) EXEC(GOTO CMDLBL(REMOVE))                          /*CGL142*/
+ 
+/* Delete sub-task data queue */
+ 
+ LOOP:       DLTDTAQ    DTAQ(&DTAQLIB/&MEMBER)
+             MONMSG     MSGID(CPF2105 CPF9801)
+ 
+/* Retrieve next member description */
+ 
+             RTVMBRD    FILE(&DRIVER) MBR(&MEMBER *NEXT) +
+                          RTNMBR(&MEMBER)
+             MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(REMOVE))
+ 
+/* Loop for all members in driving file */
+ 
+             GOTO       CMDLBL(LOOP)
+ 
+ REMOVE:
+ 
+/* Remove all members from driving file and trailer file */
+ 
+             RMVM       FILE(&DRIVER) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+                                                                                          /*CGL142*/
+             CALL       PGM(GL0600T4) PARM(&POSTNUM)                                      /*CGL142*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                  /*CGL142*/
+             GOTO       CMDLBL(ABNOR)                                                     /*CGL142*/
+             ENDDO                                                                        /*CGL142*/
+                                                                                      /*AR1097218A*/
+             CLRPFM     FILE(GLACCTAC)                                                /*AR1097218A*/
+             CLRPFM     FILE(GLSYSOZX)                                                  /*MD036707*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program GLC0600T4 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+             ROLLBACK                                                                     /*CGL142*/
+             ENDCMTCTL                                                                    /*CGL142*/
+             MONMSG     MSGID(CPF0000)                                                    /*CGL142*/
+ 
+END:
+ 
+             ENDPGM

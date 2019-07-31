@@ -1,0 +1,1064 @@
+     H        1                           F
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Outgoing statements by SWIFT a/c')
+     F*****************************************************************
+     F*                                                               *
+     F*   Midas - MESSAGE MANAGEMENT                                  *
+     F*                                                               *
+     F*   ME0560 - OUTGOING STATEMENTS BY SWIFT A/C                   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD041784           Date 04Nov16               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 217970             Date 06Jun06               *
+      *                 237310             Date 15Dec05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 TDA035             Date 02Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 186033             Date 23Feb01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 Patch D ---------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 166753             Date 24Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                   141572           Date 21Sep98               *
+      *                   136457           DATE 03OCT98               *
+      *                   CMT001           DATE 02NOV98               *
+      *                   113352           DATE 13FEB97               *
+     F*                   S01408           DATE 14NOV96               *
+     F*                   CSW004           DATE 12DEC95               *
+     F*                   087368           DATE 01MAY95               *
+     F*                   081561           DATE 12JAN95               *
+     F*                   081505           DATE 11JAN95               *
+     F*                   066991           DATE 23FEB94               *
+     F*                   058239           DATE 16FEB94               *
+     F*                   S01389           DATE 22JUN92               *
+     F*                   E38492           DATE 14APR92               *
+     F*                   E32330           DATE 22OCT91               *
+     F*                   E29588           DATE 22OCT91               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD041784 - Invalid account number issued for account defined *
+      *             in Network Account Maintenance                    *
+      *  217970 - Use of VBRA is replaced by VBRX in MBRBSDD.         *
+      *           Applied fix annotated as 237310.                    *
+      *  237310 - Fix 197434 made field VBRA redundant and created    *
+      *           field VBRX with size 2700 to contain 900 branches.  *
+      *           Applied fix 217970.                                 *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  186033 - Check if the user is authorised for the branch. If  *
+      *           so, check also the allowed action codes for the     *
+      *           user based on the branch entered.                   *
+     F*  166753 - Add century field to key list and use for           *
+     F*           selection purposes.                                 *
+     F*  141572 - Recompile over changes in MGOREFPD                  *
+     F*  136457 - 'No messages to report' displayed although there are*
+     F*           messages for the account when account is a retail   *
+     F*           account but full account is entered during enquiry. *
+     F*  CMT001 - Orion Telex 3.3 Implementation.                     *
+     F*           Addition of new Telex status codes.                 *
+     F*  113352 - Recompile over changes in MGOREFPD                  *
+     F*  S01408 - Addition of core hook ME0560EEP1                    *
+     F*         - Addition of core hook ME0560X001                    *
+     F*         - Addition of core hook ME0560OOP1                    *
+     F*         - Addition of core hook ME0560CCP2                    *
+     F*         - Addition of core hook ME0560CCP1                    *
+     F*  CSW004 - Recompile due to change to PF/SWACSSB and LF/MGOREFLJ
+     F*  087368 - Authority problem ; any user with 'System routing   *
+     F*           officer' or 'Allow access to bank level functions'  *
+     F*           set to 'Y' was being given autorities to all        *
+     F*           action codes regardless of what had been set up     *
+     F*           via SPF.                                            *
+     F*  081561 - Additional message status for supervisors added.    *
+     F*  081505 - Message status text changed (at end of pgm).        *
+     F*  066991 - Orion not passing Telex status back to Midas        *
+     F*  058239 - "DATABASE ERROR IN FILE, KEY, IN ME0600, AT 000"    *
+     F*           when Outgoing Statements By Swift A/C option was    *
+     F*           taken & action code 'A' was inserted & scanned      *
+     F*           to the end of last file.                            *
+     F*  S01389 - Recompile only. New field on SWACSSB.               *
+     F*  E38492 - Retail account should not show when retail is not   *
+     F*           ON or retail account numbers are not used.          *
+     F*  E32330 - BHF Implementation specific changes.                *
+     F*            o Highlight NAK/ed messages                        *
+     F*  E29588 - Post-Collection SWIFT Rationalisation Amendments.   *
+     F*                                                               *
+     F*****************************************************************
+     FME0560DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE ME0560F4
+     F                                              KINFDS INFDS
+     F/COPY WNCPYSRC,ME0560F001
+     FMGOREFLJIF  E           K        DISK
+     FMUSER   IF  E           K        DISK
+     FSDMMODPDIF  E                    DISK
+     FSDBANKPDIF  E                    DISK
+     FSWACB   IF  E           K        DISK
+     F            SWACSSBF                          KRENAMESWACFUL
+     F            SWACSSAF                          KIGNORE
+     F            SWACSSCF                          KIGNORE
+     FSWACR   IF  E           K        DISK
+     F            SWACSSBF                          KRENAMESWACRET
+     FACCNTL0 IF  E           K        DISK                                                 MD041784
+     F            ACCNTABF                          KRENAMEACCTFUL                          MD041784
+     FACCNTL1 IF  E           K        DISK                                                 MD041784
+     F            ACCNTABF                          KRENAMEACCTRET                          MD041784
+     FGLNWACL5IF  E           K        DISK                                                 MD041784
+      *                                                                   186033
+      ** Valid branch for user                                            186033
+      *                                                                   186033
+     FMBRBS   IF  E           K        DISK                               186033
+      *
+      * ID C  F  H  L    Function of indicators
+      *    10            EOF MGOREF
+      *    11            EOF ME0560F4
+      *    20            SFLDSP
+      *    21            SFLDSPCTL
+      *    22            SFLEND
+      *    23            Rollup
+      *    24            SFLNXTCHG
+      *    25            CF ON
+      *    30            Error
+      *    31            SWIFT a/c error
+      *    32            Date error
+      *    41            Multibranching on
+      *    42            Retail on
+      *    45            Full a/c no. in use (OFF => Retail a/c no.)
+      *    51            TABCD/TABNAR LOKUP
+      *    80            SWIFT a/c not on file
+      *    87            EOF SDBANKPD
+      *    88            EOF SDMMODPD
+      *    89            EOF MUSER
+      *    KC            F3 pressed
+      *    KL            F12 pressed
+      *    U7,U8         DB Error
+      *
+      *                                                                   S01408
+     E/COPY WNCPYSRC,ME0560EEP1                                           S01408
+      *                                                                   S01408
+     E                    TXT     1   1 78               text
+     E/COPY WNCPYSRC,ME0560E001
+     E********************TABCD   1  23  4   TABNAR 12   status codes     066991
+     E********************TABCD   1  41  4   TABNAR 12   status code066991081561
+     E********************TABCD   1  42  4   TABNAR 12   status code081561CMT001
+     E                    TABCD   1  49  4   TABNAR 12   status codes     CMT001
+     E/COPY WNCPYSRC,ME0560E002
+     E                    CPY@    1   1 80
+     E********************TRN       200 16               TRNs             058239
+     E********************ATN       200  1               action codes     058239
+     E                    TRN       400 16               TRNs             058239
+     E                    ATN       400  1               action codes     058239
+     E**********          BR        100  3  A            Branches                      186033 237310
+     E                    BR        900  3  A            Branches                             237310
+     E                    ACTA        6  1  A            Action codes     186033
+     IACCTFUL                                                                               MD041784
+     I              CFSB                            GLCFSB                                  MD041784
+     IACCTRET                                                                               MD041784
+     I              CFSB                            GLCFSB                                  MD041784
+      *
+     IINFDS       DS
+     I                                    B 378 3790LSTRRN
+      **  Last subfile start RRN
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+      **  Workstation ID
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                       13  13 MBIN
+      **  RUNDAT data area
+      *
+     I/COPY WNCPYSRC,ME0560I001
+     ISATN        DS                              3
+     I                                        1   1 @A1
+     I                                        2   2 @A2
+     I                                        3   3 @A3
+     I/COPY WNCPYSRC,ME0560I002
+      **  Action codes data structure
+      *
+     I            DS
+     I**********                              1  18 SWAC                                      CGL029
+     I                                        1  24 SWAC                                      CGL029
+     I                                        1   3 SBCH
+     I**********                              4  18 KEYFUL                                    CGL029
+     I                                        4  24 KEYFUL                                    CGL029
+     I                                        4   9 SCNUM
+     I                                       10  12 SCCY
+     I**********                             13  16 SACOD                                     CGL029
+     I**********                             13  160KACOD                                     CGL029
+     I**********                             17  18 SACSQ                                     CGL029
+     I**********                             17  180KACSQ                                     CGL029
+     I                                       13  22 SACOD                                     CGL029
+     I                                       13  220KACOD                                     CGL029
+     I                                       23  24 SACSQ                                     CGL029
+     I                                       23  240KACSQ                                     CGL029
+     I            DS
+     I                                        1  10 SREAC
+     I                                        1  100KREAC
+      **  DSs to combine fields for full a/c and for keys
+      *
+     I            DS
+     I                                        1  44 NOTAUT
+     I                                        1  40 NOTNAR
+     I                                       42  44 BRANCH
+     I            DS
+     I                                        1   6 WRKDAT
+     I                                        1   2 WRKYY
+     I                                        3   4 WRKMM
+     I                                        5   6 WRKDD
+      **  Data structure for rearranging date
+      *
+     I            DS
+     I                                        1   6 CHGDAT
+     I                                        1   4 @CHG4
+     I                                        5   6 CHGYY
+      **  Data structure for rearranging date
+      *
+     I*                                                                   E38492
+     ISDRETL    E DSSDRETLPD                                              E38492
+      * Data Structure for Retail Data Access Program                     E38492
+     I*                                                                   E38492
+     IDSFDY     E DSDSFDY                                                 E38492
+      * Short Data Structure for Access Programs                          E38492
+      *                                                                   E38492
+     C/EJECT
+      *
+      **  Key for Outgoing Message Reference by SWIFT a/c and Date
+     C           KEYA      KLIST
+     C                     KFLD           BRANCH  3
+     C**********           KFLD           KEYAC  15                                           CGL029
+     C                     KFLD           KEYAC  21                                           CGL029
+     C                     KFLD           CIND                            166753
+     C                     KFLD           MGDE
+      *
+      **  Key for Outgoing Message Reference by SWIFT a/c
+     C           KEYB      KLIST
+     C                     KFLD           BRANCH
+     C                     KFLD           KEYAC
+      *
+      ** Key for SWIFT a/c by Retail a/c no.
+     C           KRET      KLIST
+     C                     KFLD           KREAC
+      *
+      ** Key for SWIFT a/c by full a/c identifier
+     C           KFUL      KLIST
+     C                     KFLD           BRANCH
+     C                     KFLD           SCNUM
+     C                     KFLD           SCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+      *
+     C           REKEY     KLIST                                                            MD041784
+     C                     KFLD           BRCA                                              MD041784
+     C                     KFLD           CNUM                                              MD041784
+     C                     KFLD           CCY                                               MD041784
+     C                     KFLD           ACOD                                              MD041784
+     C                     KFLD           ACSQ                                              MD041784
+      *                                                                                     MD041784
+     C           GLKEY     KLIST                                                            MD041784
+     C                     KFLD           SCNUM                                             MD041784
+     C                     KFLD           SCCY                                              MD041784
+     C                     KFLD           KACOD                                             MD041784
+     C                     KFLD           KACSQ                                             MD041784
+     C                     KFLD           BRANCH                                            MD041784
+      **  ZM1001 ERROR
+      *
+     C           PLIST3    PLIST
+     C                     PARM           @MSGID 10
+     C                     PARM           @MSDTA 78
+      *
+     C                     MOVEL'ME0560'  PGMQ   10                       S01227
+     C                     MOVEL*BLANKS   MSGKEY  4
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN  - main process                                        *
+      *   INIT  - initial process                                     *
+      *   VSEL  - validate selection                                  *
+      *   ENQY  - perform enquiry                                     *
+      *   VRCD  - obtain first record matching selection criteria     *
+      *   LINK  - perform lower link                                  *
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN - Main process                                         *
+      *   Calls -  INIT initial process                               *
+      *            VSEL validate selection                            *
+      *            ENQY perform enquiry                               *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Display selection screen until F3 pressed
+     C           *INKC     DOWEQ'0'                                   1
+      *
+      **  If no errors clear input fields
+     C           *IN30     IFEQ '0'                                   2
+     C                     MOVE *BLANKS   SBCH
+     C                     MOVE *BLANKS   SCNUM
+     C                     MOVE *BLANKS   SCCY
+     C                     MOVE *BLANKS   SACOD
+     C                     MOVE *BLANKS   SACSQ
+     C                     MOVE *BLANKS   SREAC
+     C                     MOVE *BLANKS   SDAT
+     C                     END                                       E2
+      *
+     C                     WRITEME0560F1
+     C                     WRITESFLMSGC
+     C                     EXFMTME0560F2
+     C                     CALL 'ZM1002'
+      *
+      * Save input fields
+      *
+     C                     MOVE SBCH      @SBCH   3
+     C                     MOVE SCNUM     @SCNUM  6
+     C                     MOVE SCCY      @SCCY   3
+     C**********           MOVE SACOD     @SACOD  4                                           CGL029
+     C                     MOVE SACOD     @SACOD 10                                           CGL029
+     C                     MOVE SACSQ     @SACSQ  2
+     C                     MOVE SREAC     @SREAC 10
+     C                     MOVE SDAT      @SDAT   6
+      * If F5 pressed then restore input fields
+     C           REST      TAG
+     C           *INKE     IFEQ '1'
+     C                     MOVE @SBCH     SBCH
+     C                     MOVE @SCNUM    SCNUM
+     C                     MOVE @SCCY     SCCY
+     C                     MOVE @SACOD    SACOD
+     C                     MOVE @SACSQ    SACSQ
+     C                     MOVE @SREAC    SREAC
+     C                     MOVE @SDAT     SDAT
+     C                     END
+      *
+     C                     SETOF                     303132
+      *
+      **  If F3 not pressed validate selection
+     C           *INKC     IFEQ '0'                                   2
+     C                     EXSR VSEL
+      *
+      **  If selection valid
+     C           *IN30     IFEQ '0'                                   3
+     C                     MOVE *BLANKS   SELECT
+      *
+      **  Perform enquiry
+     C                     EXSR ENQY
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - Inital process                                       *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'ME0560'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access RUNDAT to find run date & multibranching indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+      *
+      **  Access MUSER for user's authority
+     C           USRID     CHAINMUSER                89
+      *
+     C           *IN89     IFEQ '1'                                   1
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVELUSRID     DBKEY            * DB ERROR 01 *
+     C                     MOVEL'MUSER'   DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+      **  Access SDMMODPD for active networks
+     C           1         CHAINSDMMODPD             88
+      *
+     C           *IN88     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 02 *
+     C                     MOVEL'SDMMODPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+      **  Access SDBANKPD for date format
+     C           1         CHAINSDBANKPD             87
+      *
+     C           *IN87     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 03 *
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *                                                                   E29588
+      **  Obtain previous run-date                                        E29588
+     C                     CALL 'ZM0110'                                  E29588
+     C                     PARM           PREV    50                      E29588
+      *
+      **  Set multibranching indicator or single branch
+     C           MBIN      IFEQ 'Y'                                   1
+     C                     SETON                     41
+     C                     ELSE                                      X1
+     C                     MOVE BJSBRC    BRANCH
+     C                     END                                       E1
+      *
+      **  Set Retail indicator.
+     C           BGRTBN    IFEQ 'Y'                                   1
+     C*                                                                   E38492
+     C* IF RETAIL IS PRESENT, SEE IF RETIAL ACCOUNT NUMBERS ARE USED      E38492
+     C                     CALL 'AORETLR0'                                E38492
+     C                     PARM '*DBERR  '@RTCD   7                       E38492
+     C                     PARM '*FIRST  '@OPTN   7                       E38492
+     C           SDRETL    PARM SDRETL    DSFDY                           E38492
+     C           BMRANR    IFEQ 'Y'                                       E38492
+     C                     SETON                     42
+     C                     END                                            E38492
+     C                     END                                       E1
+      *
+      ** Set up narrative for 'Not authorised to branch XXX'
+     C                     MOVELTXT,1     NOTNAR
+      *
+      ** Get valid branch for user                                        186033
+      *                                                                   186033
+     C                     MOVEA*BLANKS   BR,1                            186033
+     C           USRID     CHAINMBRBS                60                   186033
+      *                                                                   186033
+     C           *IN60     IFEQ '0'                                       186033
+     C**********           MOVEAVBRA      BR,1                                         186033 237310
+     C                     MOVEAVBRX      BR,1                                                237310
+     C                     ENDIF                                          186033
+      *                                                                   186033
+      ** Check if CGL013 is installed                                                       MD041784
+      *                                                                                     MD041784
+     C                     MOVEL'N'       CGL013  1                                         MD041784
+     C                     CALL 'AOSARDR0'                                                  MD041784
+     C                     PARM '       ' @RTCD                                             MD041784
+     C                     PARM '*VERIFY' @OPTN                                             MD041784
+     C                     PARM 'CGL013'  @SARD   6                                         MD041784
+     C           @RTCD     IFEQ *BLANKS                                                     MD041784
+     C                     MOVEL'Y'       CGL013                                            MD041784
+     C                     ENDIF                                                            MD041784
+      *                                                                                     MD041784
+     C/COPY WNCPYSRC,ME0560C001
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VSEL  - Validate selection                                  *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           VSEL      BEGSR
+      *
+      **  If entered date must be in valid format & before run date
+     C                     MOVE SDAT      @@DATE
+     C           SDAT      IFNE *BLANKS                               1
+     C                     CALL 'ZA0270'
+     C                     PARM           @@DATE  60
+     C                     PARM BJDFIN    @@DFMT  1
+     C                     PARM           @@RTN   1
+     C                     PARM           @@DAYN  50
+      *
+     C           @@RTN     IFNE '0'                                   2
+     C                     MOVEL'MEM1015' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     3032
+      *
+     C                     ELSE                                      X2
+     C           @@DAYN    IFGT BJRDNB                                3
+     C                     MOVEL'MEM1016' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     3032
+     C                     END                                       E3
+     C                     END                                       E2
+      *
+      ***Else*default*to*run-date*in*correct*format********************   E29588
+      ** Else default to previous run-date in correct format              E29588
+     C                     ELSE                                      X1
+     C******************** Z-ADDBJRDNB    @@DAYN                          E29588
+     C                     Z-ADDPREV      @@DAYN                          E29588
+     C                     CALL 'ZA0140'
+     C                     PARM           @@DAYN
+     C                     PARM BJDFIN    @@DFMT
+     C                     PARM           @@DATE
+     C                     PARM           @@DATA  7
+     C                     PARM           @@RTN
+     C                     PARM           @@DAT8  80
+     C                     MOVE @@DATE    SDAT
+     C                     END
+      *                                                              E1
+      ** If no errors convert date to key-field format
+     C           *IN30     IFEQ '0'                                   1
+     C                     CALL 'ZM0060'
+     C                     PARM @@DAYN    ZMDAY   50
+     C                     PARM           ZMDATE  6
+     C                     END                                       E1
+      *
+      ** Initialise Message reference key field
+     C                     MOVE *BLANKS   KEYAC
+      *
+      ** Either SWIFT a/c or Retail a/c no. - but not both
+     C           SWAC      IFEQ *BLANKS
+     C           SREAC     ANDEQ*BLANKS
+     C           SWAC      ORNE *BLANKS
+     C           SREAC     ANDNE*BLANKS
+      *                                                               1
+     C                     MOVEL'MEM1017' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     3031
+      *
+     C                     ELSE                                      X1
+      *
+      ** Full account entered -
+     C           SWAC      IFNE *BLANKS                               2
+      *
+      ** *IN45 set to enable full a/c i/d on summary display
+     C                     SETON                     45
+      *
+      ** Use entered branch in key
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE SBCH      BRANCH
+     C                     END
+      *
+      ** Use full a/c i/d to access SWIFT account reference
+     C           KFUL      CHAINSWACFUL              80
+      *                                                                                     MD041784
+      ** If CGL013 is installed, access network accounts file                               MD041784
+      *                                                                                     MD041784
+     C           CGL013    IFEQ 'Y'                                                         MD041784
+     C           *IN80     ANDEQ'1'                                                         MD041784
+     C           KFUL      CHAINGLNWACL5             80                                     MD041784
+     C           *IN80     IFEQ '0'                                                         MD041784
+     C           GLKEY     CHAINACCTFUL              80                                     MD041784
+     C                     ENDIF                                                            MD041784
+     C                     ENDIF                                                            MD041784
+      *
+      ** Set key to Message reference to full a/c i/d
+     C                     MOVELKEYFUL    KEYAC
+      *                                                                   136457
+      ** If a retail account, use retail acct no. to key to MGOREFPD.     136457
+      *                                                                   136457
+     C           ACNO      IFGT 0                                         136457
+     C                     MOVE *BLANKS   KEYAC                           136457
+     C                     MOVELACNO      KEYAC                           136457
+     C                     END                                            136457
+      *
+      ** Retail a/c entered -
+     C                     ELSE                                      X2
+      *
+      ** *IN45 set off to enable retail a/c i/d on summary display
+     C                     SETOF                     45
+      *
+      ** Use Retail a/c i/d to access SWIFT account reference
+     C           KRET      CHAINSWACRET              80
+      *
+      ** If CGL013 is installed, access network accounts file                               MD041784
+      *                                                                                     MD041784
+     C           CGL013    IFEQ 'Y'                                                         MD041784
+     C           *IN80     ANDEQ'1'                                                         MD041784
+     C           KRET      CHAINACCTRET              80                                     MD041784
+     C           *IN80     IFEQ '0'                                                         MD041784
+     C           REKEY     CHAINGLNWACL5             80                                     MD041784
+     C                     ENDIF                                                            MD041784
+     C                     ENDIF                                                            MD041784
+      *                                                                                     MD041784
+      ** Set key to Message reference to retail a/c i/d
+     C                     MOVELSREAC     KEYAC
+      *
+      ** Set branch to a/c branch
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE BRCA      BRANCH
+     C                     END
+      *
+     C                     END                                       E2
+      *
+     C                     END                                       E1
+      *
+      ** If SWIFT a/c not found - error
+     C           *IN80     IFEQ '1'                                   1
+     C                     MOVEL'MEM1018' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     3031
+      *
+      ** otherwise validate branch
+     C                     ELSE                                      X1
+      *
+      ***Bank*level*authority*or*system*routing*officer*******************087368
+      ***authorised*to*all*actions****************************************087368
+      **********                                                          087368
+     C********** BANK      IFEQ 'Y'                                       087368
+     C********** ROUF      OREQ 'Y'                                   2   087368
+     C**********           MOVE 'EAP'     SATN                            087368
+      *
+      **  Else check  user authorised to any actions
+     C**********           ELSE                                      X2   087368
+     C                     CALL 'ZVRAT'
+     C                     PARM BRANCH    ZBR     3
+     C                     PARM           ACODES  6
+     C                     PARM 0         ERR     10
+      *
+     C           ERR       IFEQ 0
+     C           ACODES    ANDNE*BLANKS                               3
+     C                     MOVELACODES    SATN
+      *
+     C                     ELSE                                      X3
+     C                     MOVE *BLANKS   @MSGID
+     C                     MOVELNOTAUT    @MSDTA
+     C                     CALL 'ZM1001'  PLIST3
+     C                     MOVE *BLANKS   @MSDTA
+     C                     SETON                     3031
+     C                     END                                       E3
+     C**********           END                                       E2   087368
+     C                     END                                       E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ENQY - Perform enquiry                                      *
+      *   Called by main process                                      *
+      *   Calls - VRCD obtain first record matching selection criteria*
+      *           LINK perform lower link                             *
+      *****************************************************************
+      *
+     C           ENQY      BEGSR
+      *
+      **  Set up date key field
+     C                     MOVE ZMDATE    MGDE
+      *
+      **  Setup century field for MGDE                                    166753
+     C                     MOVELMGDE      YY      20                      166753
+     C           YY        IFLT 72                                        166753
+     C                     MOVE '2'       CIND                            166753
+     C                     ELSE                                           166753
+     C                     MOVE '1'       CIND                            166753
+     C                     ENDIF                                          166753
+      *                                                                   166753
+      **  Set lower limit on file
+     C           KEYA      SETLLMGOREFD0
+      *
+      **  Obtain first record matching selection criteria
+     C                     EXSR VRCD
+      *
+      **  Write 'No records match selection criteria'
+     C           *IN10     IFEQ '1'                                   1
+     C                     MOVEL'MEM1020' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     30
+     C                     ELSE                                      X1
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITEME0560F5
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+      *
+      **  Perform rollup
+     C           *IN23     DOUEQ'0'                                   2
+      *
+      **  RRN of first record on page
+     C                     Z-ADDRRN       DSPREC
+     C                     Z-ADD0         @CNT    20
+      *
+      **  Fill subfile page
+     C           *IN10     DOWEQ'0'                                   3
+     C           @CNT      ANDLT14
+      *                                                                   186033
+      ** If user is not authorised to the branch of the item read,        186033
+      ** skip.                                                            186033
+      *                                                                   186033
+     C           BRCA      LOKUPBR                       62               186033
+     C           *IN62     CABEQ'0'       NEXTR                           186033
+      *
+      **  Obtain status description
+     C           MGST      LOKUPTABCD     TABNAR         51
+     C           *IN51     IFEQ '1'                                   4
+     C                     MOVELTABNAR    STATUS
+     C                     ELSE                                      X4
+      *                                                                   S01408
+     C/COPY WNCPYSRC,ME0560CCP1                                           S01408
+      *                                                                   S01408
+     C                     MOVE *BLANKS   STATUS
+     C                     MOVELMGST      STATUS
+     C                     END                                       E4
+      *                                                                   S01408
+     C/COPY WNCPYSRC,ME0560CCP2                                           S01408
+      *                                                                   S01408
+      *
+      * If multi-branching ON, display branch
+     C           MBIN      IFEQ 'Y'                                   4
+     C                     MOVE BRCA      SBRCA
+     C                     END                                       E4
+      *
+     C                     MOVELMGDE      WRKDAT
+     C                     MOVE WRKYY     CHGYY
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVELWRKMM     @CHG4
+     C                     MOVE WRKDD     @CHG4
+     C                     ELSE
+     C                     MOVE WRKMM     @CHG4
+     C                     MOVELWRKDD     @CHG4
+     C                     END
+      *
+     C                     MOVELCHGDAT    @MGDE
+      *
+      **  Write subfile record
+     C                     WRITEME0560F4
+     C                     ADD  1         RRN
+     C                     ADD  1         @CNT
+      *                                                                   186033
+     C           NEXTR     TAG                                            186033
+      *
+      **  Obtain next record matching selection criteria
+     C                     EXSR VRCD
+     C                     END                                       E3
+      *                                                                   186033
+      **  Write 'No messages to report' if no record matches              186033
+      **  the selection criteria.                                         186033
+      *                                                                   186033
+     C           @CNT      IFEQ 0                                         186033
+     C                     MOVEL'MEM1020' @MSGID                          186033
+     C                     CALL 'ZM1001'  PLIST3                          186033
+     C                     MOVE '1'       *IN30                           186033
+     C                     GOTO ENQEND                                    186033
+     C                     ENDIF                                          186033
+      *
+      **  Display subfile until F3, F12 or rollup pressed
+     C           *INKC     DOUEQ'1'                                   3
+     C           *INKL     OREQ '1'
+     C           *IN23     OREQ '1'
+      *
+      **  If EOF set on SFLEND
+     C           *IN10     IFEQ '1'                                   4
+     C                     SETON                     22
+     C                     END                                       E4
+      *
+      **  Display subfile
+     C                     WRITEME0560F3
+     C                     WRITESFLMSGC
+     C                     EXFMTME0560F5
+     C                     CALL 'ZM1002'
+      *
+     C                     SETOF                     2230
+      *
+      ** If F5 pressed then goto main process to reselect the input
+     C           *INKE     IFEQ '1'
+     C                     GOTO REST
+     C                     END
+      *
+     C                     Z-ADDLSTRRN    DSPREC
+     C                     MOVE *BLANKS   SELECT
+      *
+      **  If F3, F12 or rollup not pressed perform lower link
+     C           *INKC     IFEQ '0'                                   4
+     C           *INKL     ANDEQ'0'
+     C           *IN23     ANDEQ'0'
+     C                     EXSR LINK
+     C                     END                                       E4
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+     C**********           ENDSR                                          186033
+     C           ENQEND    ENDSR                                          186033
+     C/EJECT
+      *****************************************************************
+      *   VRCD - Obtain first record matching selection criteria      *
+      *   Called by - ENQY Process enquiry                            *
+      *****************************************************************
+      *
+     C           VRCD      BEGSR
+      *
+      **  Read file
+     C           KEYB      READEMGOREFD0                 10
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   LINK - Perform lower link                                   *
+      *   Called by - ENQY Process enquiry                            *
+      *****************************************************************
+      *
+     C           LINK      BEGSR
+      *
+      **  Save next MGOREF record
+     C                     MOVE SBRCA     @BRCA   3
+     C**********           MOVE SACN      @SACN  15                                           CGL029
+     C                     MOVE SACN      @SACN  21                                           CGL029
+     C                     MOVE MGDE      @MGDE   60
+     C                     MOVE TRNO      @TRNO  16
+     C                     MOVE NWRK      @NWRK   6
+     C                     MOVE STATUS    @STAT  12
+     C                     Z-ADDRRN       @RRN    50
+      *
+     C                     MOVE *BLANKS   RTCD
+     C                     MOVE *BLANKS   TRN
+     C                     MOVE *BLANKS   ATN
+     C                     Z-ADD0         X       30
+      *
+     C           *IN11     DOUEQ'1'                                   1
+     C                     READCME0560F4                 11
+      *
+      **  Advance pointer to first non-blank record
+     C           *IN11     DOWEQ'0'                                   2
+     C           SELECT    ANDEQ' '
+     C                     UPDATME0560F4
+     C                     READCME0560F4                 11
+     C                     END                                       E2
+      *
+     C           *IN11     IFEQ '0'                                   2
+      *                                                                   186033
+      ** Check if user is authorised for the action code he slected       186033
+      *                                                                   186033
+     C                     MOVE *BLANKS   ACT                             186033
+      *                                                                   186033
+     C                     CALL 'ZVRAT'                                   186033
+     C                     PARM BRCA      ZBR     3                       186033
+     C                     PARM           ACT     6                       186033
+     C                     PARM 0         EACT    10                      186033
+      *                                                                   186033
+      ** If authorised, save action codes, else issue error message.      186033
+      *                                                                   186033
+     C           EACT      IFEQ 1                                         186033
+     C           ACT       OREQ *BLANKS                                   186033
+     C                     MOVEL'MEM1019' @MSGID                          186033
+     C                     CALL 'ZM1001'  PLIST3                          186033
+     C                     MOVE '1'       *IN24                           186033
+     C                     MOVE '1'       *IN30                           186033
+     C                     MOVE '1'       *IN38                           186033
+     C                     UPDATME0560F4                                  186033
+     C                     MOVE '0'       *IN24                           186033
+     C                     MOVE '0'       *IN38                           186033
+      *                                                                   186033
+     C                     ELSE                                           186033
+      *                                                                   186033
+      ** Check if user is authorised for the selected action code         186033
+      *                                                                   186033
+     C                     MOVEAACT       ACTA,1                          186033
+     C           SELECT    LOKUPACTA                     63               186033
+     C           *IN63     IFEQ '0'                                       186033
+     C                     MOVEL'MEM1102' @MSGID                          186033
+     C                     CALL 'ZM1001'  PLIST3                          186033
+     C                     MOVE '1'       *IN24                           186033
+     C                     MOVE '1'       *IN30                           186033
+     C                     MOVE '1'       *IN38                           186033
+     C                     UPDATME0560F4                                  186033
+     C                     MOVE '0'       *IN24                           186033
+     C                     MOVE '0'       *IN38                           186033
+     C                     ELSE                                           186033
+      *                                                                   186033
+     C           SELECT    IFEQ @A1                                   3
+     C           SELECT    OREQ @A2
+     C           SELECT    OREQ @A3
+     C/COPY WNCPYSRC,ME0560C002
+      *
+      **  Process print selections
+     C           SELECT    IFEQ 'P'                                   4
+     C                     CALL 'MEC0845R'
+     C                     PARM TRNO      PTRN   16
+     C                     PARM BRCA      PBCH    3
+     C                     PARM MBIN      PMLT    1
+     C                     PARM BGCFMT    PCNF    1
+     C/COPY WNCPYSRC,ME0560C003
+      *
+      **  Store enquire & amend selections
+     C                     ELSE                                      X4
+     C                     ADD  1         X
+     C                     MOVE TRNO      TRN,X
+     C                     MOVE SELECT    ATN,X
+     C                     END                                       E4
+     C                     MOVE ' '       SELECT
+     C                     UPDATME0560F4
+      *
+      **  Highlight invalid selections
+     C                     ELSE                                      X3
+     C                     MOVEL'MEM1021' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     243038
+     C                     UPDATME0560F4
+     C                     SETOF                     2438
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+     C                     ENDIF                                          186033
+     C                     ENDDO                                          186033
+      *
+      **  Process enquire & amend selections
+     C           X         IFGT 0                                     1
+     C                     Z-ADDX         @X      30
+     C                     Z-ADD1         X
+      *
+     C           X         DOWLE@X                                    2
+     C           RTCD      ANDNE'12'
+     C                     MOVE *BLANKS   FILA
+      *
+      **  If F8 pressed process next selection
+     C           RTCD      IFEQ '08'                                  3
+     C                     ADD  1         X
+     C                     END                                       E2
+      *
+      **  If F9 pressed process previous selection
+     C           RTCD      IFEQ '09'                                  3
+     C                     SUB  1         X
+     C                     END                                       E3
+      *
+      **  If single selection suppress F8 & F9
+     C           @X        IFEQ 1                                     2
+     C                     MOVE 'S'       FILA
+     C                     END                                       E2
+      *
+      **  If first selection suppress F9
+     C           X         IFEQ 1                                     3
+     C           FILA      ANDNE'S'
+     C                     MOVE 'F'       FILA
+     C                     END                                       E3
+      *
+      **  If last selection suppress F8
+     C           X         IFEQ @X                                    3
+     C           FILA      ANDNE'S'
+     C                     MOVE 'L'       FILA
+     C                     END                                       E3
+      *
+      **  Perform lower link
+     C                     MOVE TRN,X     TRNO
+     C                     MOVE ATN,X     ACTN
+     C                     CALL 'MEC0600'
+     C                     PARM           TRNO   16
+     C                     PARM           BGCFMT  1
+     C                     PARM           ACTN    1
+     C                     PARM           FILA    1
+     C                     PARM           RTCD    2
+     C                     PARM *BLANKS   @ERR    1
+      *
+      * @ERR set to '1' if error
+     C           @ERR      IFEQ '1'                                   3
+     C                     EXSR *PSSR
+     C                     END                                       E3
+      *
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+      **  restore next MGOREF record
+     C                     MOVE @BRCA     SBRCA
+     C                     MOVE @SACN     SACN
+     C                     MOVE @MGDE     MGDE
+     C                     MOVE @TRNO     TRNO
+     C                     MOVE @NWRK     NWRK
+     C                     MOVE @STAT     STATUS
+     C                     Z-ADD@RRN      RRN
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,ME0560C004
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     ******************************************************************
+      *                                                                   S01408
+     O/COPY WNCPYSRC,ME0560OOP1                                           S01408
+      *                                                                   S01408
+** E32330 - File translation table for high intensity bytes
+ME0560DF227B204A
+     X/COPY WNCPYSRC,ME0560X001                                           S01408
+**  message
+Not authorised to any actions for branch
+** TABCD/TABNAR - Table of Status/Narrative.
+CRTDCreated
+AMNDAmended
+DLTDDeleted
+RSNDRdy to send
+PENDPending Trans
+TRANTransmitted
+EFMT#Format err¢
+ELAU#Lgl Aut err¢
+ESEQ#Inp seq err¢
+ETID#Term ID err¢
+ELEN#Length err¢
+EAUT#SW auth err¢
+QRDQ#RDYQ error¢
+QVRQ#VRYQ error¢
+LACKLogical ack
+NACK#Neg ack¢
+EBL1#Err bas hd¢
+EBL2#Err app hd¢
+EBL4#Err text¢
+EBL5#Err trlr¢
+PRTDPrinted
+RRTDRe-routed
+TSNTSent                                                                  081505
+TOUTPending Tx                                                            066991
+TCANCancelled                                                             066991
+TRTYIn retry                                                              066991
+TACTActive                                                                081505
+TSENSent                                                                  081505
+THLEHeld - error                                                          066991
+THLOHeld/Oper.                                                            066991
+TBOXAt Telex box                                                          066991
+TCNRCancel req.                                                           066991
+TRELHeld on TlxQ                                                          081505
+TWTGWaiting                                                               081505
+TRTSRdy to send                                                           066991
+TDESIn despatch                                                           066991
+TONQOn Tlx queue                                                          066991
+TCMPComplete                                                              081505
+TUNKUnknown                                                               066991
+TRRTRe-route Q                                                            066991
+TDLTDeleted                                                               081505
+TSPVSupervisor                                                            081561
+THORHeld Origntr                                                          CMT001
+THTCHeld Time C.                                                          CMT001
+THLOHeld by Oper                                                          CMT001
+TCARAt Carrier                                                            CMT001
+THOPHeld by Oper                                                          CMT001
+TIRSItem Reset                                                            CMT001
+TCNANot accountd                                                          CMT001
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

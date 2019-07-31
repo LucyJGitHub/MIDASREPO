@@ -1,0 +1,390 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME MT970 Accounts List')
+      *****************************************************************
+      *                                                               *
+      *  Midas - ME Module                                            *
+      *                                                               *
+      *  ME0901 - ME MT970 Accounts List                              *
+      *                                                               *
+      *  Function: To print a list of MT970 Accounts.                 *
+      *                                                               *
+      *  Called By: MEC0601 - Midas ME MT970 Accounts List            *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW099  *CREATE    Date 28Feb05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW099 - Creation of MT970 Netting Statements                *
+      *                                                               *
+      *****************************************************************
+     FMGF970L1IF  E           K        DISK         KINFSR *PSSR
+     FME0901P1O   E             05     PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL
+     FME0901AUO   E                    PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOLU
+     F/EJECT
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #B     - MAIN PROCESSING                                     *
+      *  ZA0150 - STANDARD SUBROUTINE TO ACCESS I.C.D.                *
+      *  #A     - INITIAL PROCESSING                                  *
+      *  #C     - TERMINATION PROCESSING                              *
+      *  #CA    - FILE CONTROL PROCESSING                             *
+      *  ZEDIT  - EDIT A NUMERIC FIELD FOR DISPLAY                    *
+      *  *PSSR  - ERROR HANDLING SUBROUTINE                           *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+      *
+     E                    CPY@    1   1 80
+      **  COPYRIGHT ARRAY.
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+      *
+     E/EJECT
+      *
+     IDSSDY     E DSDSSDY
+      * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     ISDBANK    E DSSDBANKPD
+      ** BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     IPSDS       SDS
+      **  PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+      *
+     IDBERR       DS                            256
+      ** DATA AREA FOR DATABASE ERROR INFORMATION
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     ISPOOL       DS
+     I** SPOOL INFORMATION DATA STRUCTURE FOR ZSFILE
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+     ISPOOLU      DS
+     I** SPOOL INFORMATION DATA STRUCTURE FOR ZSFILE - AU REPORT
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I/EJECT
+      *
+      **  INITIAL PROCESSING
+     C                     EXSR #A
+      *
+      **  MAIN PROCESSING
+     C                     EXSR #B
+      *
+      **  TERMINATION PROCESSING
+     C                     EXSR #C
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #B - MAIN PROCESSING.                                        *
+      *       CONTROLS SET UP OF ME0901P1 DETAILS.                    *
+      *       OUTPUTS ME0901P1 DETAILS.                               *
+      *                                                               *
+      *  CALLED BY:  CONTROL PROCESSING                               *
+      *                                                               *
+      *  USES:       SEQ    - RCF - SEQUENCE NUMBER OF REPORT         *
+      *              SENTY  - RCF - ENTITY OF REPORT (BLANK)          *
+      *              SFILE  - RCF - REPORT FILE NAME                  *
+      *              ZSNUM  - RCF - REPORT FILE NUMBER (DECIMAL)      *
+      *              SFNUM  - RCF - REPORT FILE NUMBER (BINARY)       *
+      *              ZSERR  - RCF - ERROR IN ZSFILE                   *
+      *                                                               *
+      *****************************************************************
+     C           #B        BEGSR
+      *
+      ** DO UNTIL END OF MT970 Accounts File
+     C           *IN14     DOWNE'1'
+      *
+      ** READ THE SWAP RATES FILE
+     C                     READ MGF970L1                 14
+      *
+      ** IF END OF FILE THEN GOTO END
+     C           *IN14     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C                     GOTO #B9
+     C                     END
+      *
+      **  IF DATA BASE ERROR HAS OCCURRED NO MORE PROCESSING IN THIS
+      **  ROUTINE
+     C           *IN80     IFEQ '1'
+     C                     GOTO #B9
+     C                     END
+      *
+      ** OPEN PRINTER FILE AND INDICATE THAT THERE IS AT LEAST ONE
+      ** DETAIL TO REPORT; ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C           *IN54     IFEQ '0'
+     C                     OPEN ME0901P1
+     C                     MOVE '1'       *IN54
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      **
+     C           ZSERR     IFEQ 'Y'
+      *
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     WRITEME0901R0
+      *
+     C                     END
+      *
+      ** IF OVERFLOW INDICATOR IS ON THROW PAGE AND WRITE HEADER
+     C           *IN05     IFEQ '1'
+     C                     WRITEME0901R0
+     C                     END
+      *
+     C                     MOVE LBRCA     RBRCA
+     C                     MOVE LCNUM     RCNUM
+     C                     MOVE LCCY      RCCY
+     C                     MOVE LACOD     RACOD
+     C                     MOVE LACSQ     RACSQ
+      *
+     C                     MOVE *BLANKS   RSTS
+     C                     SELEC
+     C           LTYLC     WHEQ 'I'
+     C                     MOVEL'INSERT'  RSTS
+     C           LTYLC     WHEQ 'A'
+     C                     MOVEL'AMENDED' RSTS
+     C           LTYLC     WHEQ 'X'
+     C           'AUTHORI' CAT  'SED'     RSTS
+     C                     ENDSL
+      *
+      ** IF OVERFLOW INDICATOR ON THEN SET IT OFF
+     C           *IN05     IFEQ '1'
+     C                     MOVE '0'       *IN05
+     C                     END
+      *
+      ** WRITE DETAIL RECORD TO ME0901P1
+     C                     WRITEME0901R1
+      *
+      ** INCREMENT COUNT OF RECORDS OUTPUT
+     C                     ADD  1         @CALC
+      *
+     C                     END
+      *
+     C                     MOVE '1'       *INLR
+      *
+     C           #B9       ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZA0150    - THIS SUBROUTINE CALLS THE ACCESS PROGRAM AOBANKR0*
+      *              TO GET ICD.  *IN80 IS SET ON IN *PSSR IF THE     *
+      *              CALL TO AOBANKR0 FAILS.  DETAILS OF THE ATTEMPTED*
+      *              ACCESS ARE PLACED IN THE LDA IF ACCESS FAILS.    *
+      *                                                               *
+      *  CALLED BY:  #A - INITIAL PROCESSING                          *
+      *                                                               *
+      *****************************************************************
+     C           ZA0150    BEGSR
+      **
+      **   ACCESS BANK DETAILS
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** IF ACCESS PROGRAM FAILS CALL SR. *PSSR
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     Z-ADD2         DBASE            * DBERR 002 *
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           ZA0159    ENDSR
+     C*****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE:  #A  - INITIAL PROCESSING                        *
+      *                                                               *
+      *  CALLED BY :  CONTROL PROCESSING                              *
+      *                                                               *
+      *  CALLS     :  ZA0150 - STANDARD SUBROUTINE TO ACCESS ICD      *
+      *                                                               *
+      *  USES:        SEQ    - RCF - SEQUENCE NUMBER OF REPORT        *
+      *               @CALC  - TOTAL NUMBER OF DETAILS OUTPUT         *
+      *                                                               *
+      *****************************************************************
+     C           #A        BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  ACCESS INSTALLATION CONTROL DATA
+     C                     EXSR ZA0150
+      *
+      ** IF SR. ZA0150 FAILS GOTO END
+     C           *IN80     IFEQ '1'
+     C                     GOTO #A9
+     C                     END
+      *
+      **  LOAD PRINTER FILE FIELDS WITH DATE AND TITLE
+     C                     MOVE BJURPT    RRTITL
+     C                     MOVE BJMRDT    RRRUNA
+      *
+      **  SET NUMBER OF RECORDS READ TO ZERO
+     C                     Z-ADD0         @CALC   50
+      *
+     C           #A9       ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #C        - TERMINATION PROCESSING                           *
+      *                                                               *
+      *  CALLED BY : CONTROL PROCESSING                               *
+      *                                                               *
+      *  CALLS     : ZA0150 - STANDARD SUBROUTINE TO ACCESS I.C.D.    *
+      *              #CA    - FILE CONTROL PROCESSING                 *
+      *                                                               *
+      *  USES:       SEQ    - RCF - SEQUENCE NUMBER OF REPORT         *
+      *              SENTY  - RCF - ENTITY OF REPORT (BLANK)          *
+      *              SFILE  - RCF - REPORT FILE NAME                  *
+      *              ZSNUM  - RCF - REPORT FILE NUMBER (DECIMAL)      *
+      *              SFNUM  - RCF - REPORT FILE NUMBER (BINARY)       *
+      *              ZSERR  - RCF - ERROR IN ZSFILE                   *
+      *                                                               *
+      *****************************************************************
+     C           #C        BEGSR
+      *
+      ** CALL ZSFILE  FOR AUDIT REPORT
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANK    SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+      ** IF ERROR CODE = 'Y' THEN TERMINATE THE PROGRAM
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      **  IF DATA BASE ERROR HAS OCCURRED OUTPUT TOTAL REPORT HEADINGS;
+      **  PRINT ERROR MESSAGE AND EXIT PROGRAM.
+     C           *IN80     IFEQ '1'
+     C                     WRITEDLTOTSR0
+     C                     WRITEDLTOTSR1
+     C                     GOTO #C9
+     C                     END
+      *
+      **  PRODUCE STANDARD TOTALS REPORT
+     C                     EXSR #CA
+      *
+      **  IF A DATA BASE ERROR HAS OCCURRED, BYPASS FURTHER PRODESSING
+     C           *INU7     CABEQ'1'       #C9
+      *
+      **  PRINTS 'END OF REPORT' IF *IN54 ON.
+     C           *IN54     IFEQ '1'
+     C                     WRITEME0901R2
+     C                     END
+      *
+     C                     RETRN
+     C           #C9       ENDSR
+      *
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      *  #CA - PRODUCES STANDARD TOTALS REPORT                       *
+      *                                                              *
+      *  CALLED BY:  #C                                              *
+      *                                                              *
+      *  CALLS:                                                      *
+      *                                                              *
+      *  USES:       @CALC  - TOTAL NUMBER OF DETAILS OUTPUT         *
+      *                                                              *
+      ****************************************************************
+     C           #CA       BEGSR
+      *
+      **  SET UP CALCULATED NUMBER OF RECORDS FIELD
+     C                     Z-ADD@CALC     RRCALC
+      *
+      **  PRINT STANDARD TOTALS REPORT
+     C                     WRITEDLTOTSR0
+      *
+     C           #CA9      ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      /COPY ZSRSRC,ZEDITZ2
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - ERROR HANDLING SUBROUTINE.                           *
+      *                                                               *
+      *  CALLED BY:  EXECUTES WHENEVER FILE OR PROGRAM EXCEPTION      *
+      *              ERROR OCCURS.                                    *
+      *  CALLS :                                                      *
+      *                                                               *
+      *  USES:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVE 'ME0901  'DBPGM
+      *
+      ** LOAD LDA WITH DATABASE ERROR INFORMATION FROM DBERR
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVE DBERR     @LDA
+     C                     OUT  @LDA
+      *
+     C                     SETON                     U7U8LR
+      *
+      ** SET ON DATABASE ERROR INDICATOR AND DUMP
+     C                     MOVE '1'       *IN80
+     C                     DUMP
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2005

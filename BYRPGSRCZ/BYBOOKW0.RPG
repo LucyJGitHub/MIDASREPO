@@ -1,0 +1,380 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE Book codes maintenance window')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Windows                                              *
+      *                                                               *
+      *  BYBOOKW0  Book Codes Maintenance Window Program              *
+      *                                                               *
+      *  Function:  This program processes Bank of England Yellow     *
+      *             Book details if this module is switched on.       *
+      *                                                               *
+      *  (c) Finastra International Limited 2000                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. LLN008             Date 12May00               *
+      *  Last Amend No. LLN016             Date 12May00               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Amendment Details                                            *
+      *  -----------------                                            *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  LLN008 - Add new field 'Trade/Value Indicator'               *
+      *  LLN016 - Upgrade BoE to DBAR3.                               *
+      *                                                               *
+      *****************************************************************
+      *                                                                  *
+      * ID F  C  H  L    FUNCTION OF INDICATORS                          *
+      *                                                                  *
+      *       03      F3 PRESSED EXIT PROGRAM
+      *       12      F12 PRESSED GOTO PREVIOUS SCREEN
+      *       20      PROTECT FIELDS IN ENQUIRE MODE
+      *       30      REDISPLAY THE SCREEN
+      *       35      ENABLE F5
+      *       40      ENABLE F10
+      *       50      BANKING/TRADING IND. INVALID
+      *       51      TRADE/VALUE DATE IND. INVALID                  LLN008
+      *       54      AT LEAST ONE FIELD IN ERROR
+      *       84      CHAIN TO BYBOOKY0 FAILED
+      *       85      CHAIN TO BYBOOKY0 FAILED
+      *
+     FBYBOOKY0UF  E           K        DISK                      A
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT
+      * Book codes extension file - retrieval
+      *
+     FBYBOOK#0CF  E                    WORKSTN
+     F                                              KINFSR *PSSR
+      * Book codes window screen
+      *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     IP@FMT     E DSDSSDY
+      *
+      **
+     I/COPY QWINDSRC,SD0310GDTA
+      * DATA MEMBER FOR MAIN PROGRAM
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      **   Parameter list for window manager
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           W0RTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           SPARE 256
+      *
+      *****************************************************************
+      *
+      *                M A I N  P R O C E S S I N G
+      *
+      *****************************************************************
+      *
+      ** Continue to redisplay the screen if *IN30 remains off
+     C           *IN30     DOUEQ'1'
+      *
+      ** Main Format of the Display File
+     C           *IN54     IFEQ '1'
+     C                     WRITE#MSGCTL
+     C                     ENDIF
+     C                     EXFMTWINDOWF
+     C                     EXSR CLEAR
+      *
+     C           *IN03     CASEQ'1'       EXIT
+     C           *IN12     CASEQ'1'       PREV
+     C                     CAS            VALID
+     C                     ENDCS
+     C                     ENDDO
+      *
+      **   Exit from program
+     C                     EXSR TERM
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * CLEAR MESSAGE FILE
+      *****************************************************************
+     C           CLEAR     BEGSR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM
+      *****************************************************************
+     C           TERM      BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM IF F3 HAS BEEN PRESSED
+      *****************************************************************
+     C           EXIT      BEGSR
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     EXSR TERM
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INITIALISE FIELDS
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Check to see if Yellow book changes (LLN007) is switched on.
+     C                     MOVEL'LLN007'  ULSARN  6        SAR number fiel
+     C                     MOVEL*BLANK    ULRTCD  7        Access Pgm Retu
+     C                     MOVEL*BLANK    LLN007  1
+      *
+      ** SAR switched on check - Standard Functions  *
+     C                     CALL 'AOSARDR0'             90  SAR switched on
+     C                     PARM           ULRTCD  7        Access Pgm Retu
+     C                     PARM '*VERIFY' WQ0288  7        Option for ACCO
+     C                     PARM           ULSARN  6        SAR number fiel
+     C                     PARM *BLANK    WQ0290 76        Access obj dumm
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOSARDR0'W0CLPG
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** If Yellow book feature is 'off' end program
+     C           ULRTCD    IFEQ '*NRF'                     *IF
+     C                     EXSR TERM
+     C                     ENDIF
+      *
+      ** Define the LDA for error handling
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define window position
+     C                     Z-ADDSROW      SWROW
+     C                     Z-ADDSCOL      SWCOL
+      *
+      ** Retrieve title for window
+     C                     MOVEL'GBBYUSR' ZAMSGF
+     C                     MOVE 'MSG'     ZAMSGF
+     C                     CALL 'SDRTVTXT'
+     C                     PARM           TITLE
+     C                     PARM           ZAMSGF
+     C                     PARM           TEXT  132
+     C                     MOVELTEXT      STITL
+      *
+      ** Protect input fields if enquiry and enable command keys
+     C                     SELEC
+     C           ACTN      WHEQ 'E'
+     C                     SETON                     20
+     C           ACTN      WHEQ 'D'
+     C                     EXSR TERM
+     C                     OTHER
+     C                     SETON                     35
+     C                     ENDSL
+      *
+      ** Set up KLIST and move in key from DATA
+     C           BOOKKY    KLIST
+     C                     KFLD           K@BOOK  2
+      *
+     C                     MOVEL#1BKCD    K@BOOK
+      *
+      * Get extension file details
+     C           BOOKKY    CHAINBYBOOKY0            N90
+     C           *IN90     IFEQ *ON
+     C           ACTN      OREQ 'I'
+     C                     MOVE 'B'       L#BTIN
+     C                     MOVE *BLANK    L#TVIN                          LLN008
+     C                     ELSE
+     C                     MOVELLTRDI     L#BTIN
+     C                     MOVELLTRVL     L#TVIN                          LLN008
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *    EXIT FROM PROGRAM IF F12 HAS BEEN PRESSED
+      *
+      *****************************************************************
+      *
+     C           PREV      BEGSR
+      *
+      ** Set F12 return code and end program
+     C                     MOVE 'USR0790' W0RTN
+     C                     EXSR TERM
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * UPDATE THE EXTENSION FILE
+      *****************************************************************
+      *
+     C           UPDAT     BEGSR
+      *
+      ** Check fo record exists or not
+     C           BOOKKY    CHAINBYBOOKY0             90
+      *
+      ** Move display field values into extension file fields
+     C                     MOVELL#BTIN    LTRDI
+     C                     MOVELL#TVIN    LTRVL                           LLN008
+     C                     MOVEL#1BKCD    LBKCD
+      *
+      * Write/Update extension file
+     C           *IN90     IFEQ *ON
+     C                     WRITEBYBOOKD0
+     C                     ELSE
+     C                     UPDATBYBOOKD0
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      * VALIDATE THE SCREEN
+      *****************************************************************
+     C           VALID     BEGSR
+      *
+      *  Reset indicators
+     C                     MOVE *ON       *IN30
+     C                     MOVE *OFF      *IN50
+     C                     MOVE *OFF      *IN51            LLN008
+     C                     MOVE *OFF      *IN54
+      *
+      ** Validate only for insert or amend
+     C           ACTN      IFEQ 'I'
+     C           ACTN      OREQ 'A'
+      *
+      ** Validate Banking/Trading Indicator
+      ** Valid values are T and B
+     C           L#BTIN    IFNE 'T'
+     C           L#BTIN    ANDNE'B'
+     C                     MOVEL'GBBYUSR' ZAMSGF
+     C                     MOVE 'MSG'     ZAMSGF
+     C                     MOVEL'BYM0031' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'BYM0031' W0RTN
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN50
+     C                     MOVE *ON       *IN54
+     C                     ENDIF
+      *
+     C           *IN30     IFEQ *ON                                       LLN008
+     C*                                                                   LLN008
+      ** Validate Trade/Value Date Indicator                              LLN008
+      ** Valid values are T and V                                         LLN008
+     C           L#TVIN    IFNE 'T'                                       LLN008
+     C           L#TVIN    ANDNE'V'                                       LLN008
+     C                     MOVEL'GBBYUSR' ZAMSGF                          LLN008
+     C                     MOVE 'MSG'     ZAMSGF                          LLN008
+     C                     MOVEL'BYM0103' ZAMSID                          LLN008
+     C                     EXSR ZASNMS                                    LLN008
+     C                     MOVEL'BYM0103' W0RTN                           LLN008
+     C                     MOVE *OFF      *IN30                           LLN008
+     C                     MOVE *ON       *IN51                           LLN008
+     C                     MOVE *ON       *IN54                           LLN008
+     C                     ENDIF                                          LLN008
+      *                                                                   LLN008
+     C                     ENDIF                                          LLN008
+      *
+      * If no errors, perform update
+     C           *IN30     IFEQ '1'
+     C                     EXSR UPDAT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           VAEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * Send message to program's message queue.
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C           ZAEXIT    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2000

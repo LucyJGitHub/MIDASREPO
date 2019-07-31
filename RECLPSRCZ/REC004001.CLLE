@@ -1,0 +1,138 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE On-Line Synch. of RSACMT, APOST & GLACPH')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC004001 - On-Line Synch. of RSACMTPD, APOST, GLACPH       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE072  *CREATE    Date 30Jun11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CRE072 - BankFusion Midas Teller Related Changes            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&TEMPENTYP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JSEQN) TYPE(*DEC) LEN(10)
+             DCL        VAR(&JSEQA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRCVR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2011')
+ 
+             DCLF       FILE(REPPJSPD)
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             ALCOBJ     OBJ((REPPJSPD *FILE *EXCLRD)) WAIT(30)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
+             SNDPGMMSG  MSG('Attempt to start Universal Transactions +
+                          Manager has failed. Probable cause: +
+                          process is active already.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CHGJOB SWS(00000000)
+ 
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
+ 
+             RCVF
+ 
+             CHGVAR     VAR(&JSEQN) VALUE(&JSLSEQ)
+             CHGVAR     VAR(&JRCVR) VALUE(&JSLRCV)
+ 
+/** Check if journal sequence exists. */
+/** If journal sequence does not exist, set to restart at first entry */
+ 
+   RERUN:    IF         COND(&JSEQN = 0) THEN(DO)
+             RTVJRNE    JRN(ICJRN) RCVRNG(&JRCVR) FROMENT(*FIRST) +
+                          TOENT(*FIRST) RTNSEQNBR(&JSEQN)
+               MONMSG     MSGID(CPF0000) EXEC(DO)
+                          CHGVAR     VAR(&JSEQN) VALUE(0)
+                          CHGVAR     VAR(&JRCVR) VALUE('*CURRENT')
+                          GOTO       CMDLBL(RERUN)
+               ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+             RTVJRNE    JRN(ICJRN) RCVRNG(&JRCVR) +
+                          FROMENT(&JSEQN) TOENT(*LAST) +
+                          RTNENTTYP(&TEMPENTYP)
+               MONMSG     MSGID(CPF0000) EXEC(DO)
+                          CHGVAR     VAR(&JSEQN) VALUE(0)
+                          CHGVAR     VAR(&JRCVR) VALUE('*CURRENT')
+                          GOTO       CMDLBL(RERUN)
+               ENDDO
+             ENDDO
+ 
+             CHGVAR     VAR(&JSEQN) VALUE(&JSEQN + 1)
+ 
+/** Overrides */
+ 
+             OVRDBF     FILE(GPULOGPD) SHARE(*NO) SEQONLY(*YES 1)
+             OVRDBF     FILE(REPPJSPD) SHARE(*NO)
+             OVRDBF     FILE(REPPJSPDN) TOFILE(REPPJSPD) SHARE(*NO)
+ 
+/** Receive journal entries*/
+ 
+ 
+             CHGVAR     VAR(&JSEQA) VALUE(&JSEQN)
+             RCVJRNE    JRN(ICJRN) EXITPGM(RE004001) +
+                          FILE((REPPSTPD)) RCVRNG(*CURCHAIN) +
+                          JRNCDE((R) (C *IGNFILSLT) (U *IGNFILSLT) +
+                          (J *IGNFILSLT)) ENTTYP(PT PX UP) +
+                          ENTFMT(*TYPE1) DELAY(*NEXTENT) +
+                          FROMENT(&JSEQA)
+ 
+             DLTOVR *ALL
+ 
+             IF COND(%SWITCH(XXXXX100)) THEN(DO)
+                CHGVAR     VAR(&JSEQN) VALUE(0)
+                CHGJOB     SWS(00000000)
+                GOTO       CMDLBL(RERUN)
+             ENDDO
+ 
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                ROLLBACK
+                SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                           REC004001 ended abnormally - see job log') +
+                             TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+/** Abnormal termination */
+ 
+             CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                        REC004001 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:         DLCOBJ     OBJ((REPPJSPD *FILE *EXCLRD))
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             RCLRSC
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             ENDPGM
+ 

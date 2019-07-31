@@ -1,0 +1,172 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Validity checker for JRNZONE')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control                                      */
+/*                                                                   */
+/*       SCBEGINJ_V - Validity checker for JRNZONE                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2008                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR886414           Date 05Jan12              */
+/*                      CBF012             Date 04Jul11              */
+/*                      BUG27911           Date 20Jul10              */
+/*                      BUG27134 *CREATE   Date 08Oct08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR886414 - Creation of CBS, CBA and BF libraries in SMSETUPD*/
+/*                  not catered                                      */
+/*       CBF012 - BF Infrastructure: Upgradability                   */
+/*       BUG27911 - Remove hard-coded library references.              */
+/*       BUG27134 - Put command around SCBEGINJRN.                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SYSTEMID &ACTION)
+ 
+             DCL        VAR(&SYSTEMID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GSYSTEMID) TYPE(*CHAR) LEN(2)                                /*CBF012*/
+             DCL        VAR(&RSVALRTNC) TYPE(*CHAR) LEN(7)                                /*CBF012*/
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)                                  /*CBF012*/
+             DCL        VAR(&LIBFIX) TYPE(*CHAR) LEN(4)                                   /*CBF012*/
+             DCL        VAR(&ACTION) TYPE(*CHAR) LEN(6)
+ 
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BFLIB) TYPE(*CHAR) LEN(10)                                   /*CBF012*/
+/**********  DCL        VAR(&CBSLIB) TYPE(*CHAR) LEN(10) */                  /*CBF012*/ /*AR886414*/
+/**********  DCL        VAR(&CBALIB) TYPE(*CHAR) LEN(10) */                  /*CBF012*/ /*AR886414*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2008')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)                                                     /*CBF012*/
+                                                                                          /*CBF012*/
+/** Get the global prefix system values  */                                               /*CBF012*/
+                                                                                          /*CBF012*/
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
+                          'BrgMidasGlobalPrefix' &SVAL1 +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ')                                /*CBF012*/
+                                                                                          /*CBF012*/
+/** If there is an error finding any system value then end abnormally  */                 /*CBF012*/
+                                                                                          /*CBF012*/
+                IF         COND(&RSVALRTNC *NE '       ') THEN(DO)                        /*CBF012*/
+                   GOTO       CMDLBL(ERROR)                                               /*CBF012*/
+                ENDDO                                                                     /*CBF012*/
+                                                                                          /*CBF012*/
+             CHGVAR     VAR(&GSYSTEMID) VALUE(%SST(&SVAL1 1 2))                           /*CBF012*/
+             CHGVAR     VAR(&LIBFIX) VALUE(&SYSTEMID *CAT &GSYSTEMID)                     /*CBF012*/
+                                                                                          /*CBF012*/
+/*  Set up library names. */
+             CHGVAR     VAR(&DMLIB) VALUE(&SYSTEMID *CAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&SYSTEMID *CAT 'DPLIB')
+             CHGVAR     VAR(&DTLIB) VALUE(&SYSTEMID *CAT 'DTALIB')
+             CHGVAR     VAR(&DZLIB) VALUE(&SYSTEMID *CAT 'DZLIB')
+             CHGVAR     VAR(&JLIB) VALUE(&SYSTEMID *CAT 'JLIB')
+             CHGVAR     VAR(&BFLIB) VALUE(&LIBFIX *CAT 'BFLIB')                           /*CBF012*/
+/**********  CHGVAR     VAR(&CBSLIB) VALUE(&LIBFIX *CAT 'CBSLIB') */         /*CBF012*/ /*AR886414*/
+/**********  CHGVAR     VAR(&CBALIB) VALUE(&LIBFIX *CAT 'CBALIB') */         /*CBF012*/ /*AR886414*/
+ 
+/* Check whether the libraries exist. */
+             CHKOBJ     OBJ(&DMLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                             Library' *BCAT &DMLIB *BCAT 'does not +
+                             exist.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             CHKOBJ     OBJ(&DPLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                             Library' *BCAT &DPLIB *BCAT 'does not +
+                             exist.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             CHKOBJ     OBJ(&DTLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                             Library' *BCAT &DTLIB *BCAT 'does not +
+                             exist.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             CHKOBJ     OBJ(&DZLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                             Library' *BCAT &DZLIB *BCAT 'does not +
+                             exist.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             CHKOBJ     OBJ(&JLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                             Library' *BCAT &JLIB *BCAT 'does not +
+                             exist.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             CHKOBJ     OBJ(&BFLIB) OBJTYPE(*LIB)                                         /*CBF012*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CBF012*/
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                             Library' *BCAT &BFLIB *BCAT 'does not +
+                             exist.') MSGTYPE(*DIAG)                                      /*CBF012*/
+                CHGVAR     VAR(&ERROR) VALUE('Y')                                         /*CBF012*/
+                GOTO       CMDLBL(ERROR)                                                  /*CBF012*/
+             ENDDO                                                                        /*CBF012*/
+ 
+/**********  CHKOBJ     OBJ(&CBSLIB) OBJTYPE(*LIB)                       */  /*CBF012*/ /*AR886414*/
+/**********  MONMSG     MSGID(CPF9801) EXEC(DO)                          */  /*CBF012*/ /*AR886414*/
+/**********     SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                             Library' *BCAT &CBSLIB *BCAT 'does not +
+                             exist.') MSGTYPE(*DIAG)                     */  /*CBF012*/ /*AR886414*/
+/**********     CHGVAR     VAR(&ERROR) VALUE('Y')                        */  /*CBF012*/ /*AR886414*/
+/**********     GOTO       CMDLBL(ERROR)                                 */  /*CBF012*/ /*AR886414*/
+/**********  ENDDO                                                       */  /*CBF012*/ /*AR886414*/
+ 
+/**********  CHKOBJ     OBJ(&CBALIB) OBJTYPE(*LIB)                       */  /*CBF012*/ /*AR886414*/
+/**********  MONMSG     MSGID(CPF9801) EXEC(DO)                          */  /*CBF012*/ /*AR886414*/
+/**********     SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                             Library' *BCAT &CBALIB *BCAT 'does not +
+                             exist.') MSGTYPE(*DIAG)                     */  /*CBF012*/ /*AR886414*/
+/**********     CHGVAR     VAR(&ERROR) VALUE('Y')                        */  /*CBF012*/ /*AR886414*/
+/**********     GOTO       CMDLBL(ERROR)                                 */  /*CBF012*/ /*AR886414*/
+/**********  ENDDO                                                       */  /*CBF012*/ /*AR886414*/
+/**********                                                              */  /*CBF012*/ /*AR886414*/
+/* Check that the journal exists. */
+             CHGVAR     VAR(&JLIB) VALUE('*LIBL     ')                                  /*BUG27911*/
+             CHKOBJ     OBJ(&JLIB/ICJRN) OBJTYPE(*JRN)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                             Journal ICJRN does not exist in' *BCAT +
+                             &JLIB *TCAT '.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

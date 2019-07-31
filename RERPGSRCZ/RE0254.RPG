@@ -1,0 +1,3072 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Sweeps maintenance')                          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE0254 - Sweeps Maintenance                                  *
+      *                                                               *
+      *  Function:  This maintenance program will be available to     *
+      *   (I/C)     allow retail accounts to be defined as sweep      *
+      *             accounts if Sweep Accounting switchable feature   *
+      *             is installed.                                     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD051141           Date 09Sep18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL154             Date 13Oct14               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CRE401             Date 26Nov09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3281            Date 17Jun04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 197465             Date 02Sep02               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176510             Date 13Apr00               *
+      *                 165496                   3Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 137642                  14Jul98               *
+      *                 CEU022             Date 21Jan98               *
+      *                 CRE004  *CREATE    Date 20Jan97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD051141 - Profit Centre is not Mandatory even if CLE051 is  *
+      *             switched on.                                      *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *           (Recompile)                                         *
+      *  CRE401 - 4-Eyes Checking Gaps - Sweeps (Applied BUG23989)    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3281 - Discrepancies on sources                           *
+      *  CGL014 - Collaterals Processing                              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  197465 - A blank narrative is invalid.                       *
+      *  176510 - Modified call to AOPRFMR0 to include the Account    *
+      *           Officer (Retrieved fom AOCUSTR0) and to default the *
+      *           profit centre only after the transaction branch     *
+      *           is entered.                                         *
+      *  165496 - Sweep is checked if it exists for credit account of *
+      *           origin whether entered as a retail number or full   *
+      *           midas account number. Modified to ensure all        *
+      *           instances of a/c are checked for.                   *
+      *  137642 - Incorrect Error message being issued                *
+      *  CEU022 - EMU Retail Utilities                                *
+      *           Program updated to allow sweep type '4' to be
+      *           entered and to allow accounts of different          *
+      *           currencies to be swept to one another.              *
+      *  CRE004 - Sweep Accounting                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FRESWEPL0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     FRESWEPL2IF  E           K        DISK         KINFSR *PSSR
+     F            RESWEPD0                          KRENAMERESWEPD2
+     FRESWEPL3IF  E           K        DISK         KINFSR *PSSR
+     F            RESWEPD0                          KRENAMERESWEPD3
+     F/COPY WNCPYSRC,RE0254F001
+     FRE0254DFCF  E                    WORKSTN
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    03 - Command 3                                             *
+      *    05 - Command 5                                             *
+      *    10 - Command 10                                            *
+      *    11 - Command 11 (Authorise)                                *                       CRE401
+      *    12 - Command 12                                            *
+      * 30-31 - Screen Footer Indicators                              *
+      * 32-33 - Initial screen error indicators                       *
+      * 34-57 - Detail screen error indicators                        *
+      * 50-52 - Used to condition Report Title                        *
+      *   58  - Additional fields for CRE401                          *                       CRE401
+      *   59  - Authorise key (F11) footer indicator                  *                       CRE401
+      *   60  - End of File (RESWEPL1)                                *
+      *   65  - End of File (RESWEPL2/3)                              *   165496
+      * 70-71 - Proctect detail screen                                *
+      *    72 - Test Bit (RETB)                                       *
+      *                                                               *
+      *   80  - Retail Account Number Used?                           *
+      *   81  - Profit Center Used?                                   *
+      *   82  - Multibranching ON                                     *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRBLNK - Initialise initial screen fields & error indicator  *
+      *  SRVAL1 - Validate initial screen inputs                      *
+      *  SRPROC - Detail screen processing                            *
+      *  SRFRMT - Format detail screen fields                         *
+      *  SRVAL2 - Validate detail screen inputs                       *
+      *  UPDAT  - File update processing                              *
+      *  CHECK  - Check if record has been changed                    *
+      *  SRAMND - Amend a record                                      *
+      *  SRDELE - Delete a record                                     *
+      *  SRINS  - Insert a record                                     *
+      *  ZTNLU1 - To generate new transaction number                  *
+      *                                                               *
+      *  CLEAR  - Clear program message queue                         *
+      *  ZASNMS - Write message to program message queue              *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *  ZDATE1 - Convert Date to Midas Day Number                    *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *  ZALIGN - To right align numeric fields                       *
+      *  ZEDIT  - To insert decimal point and zeros                   *
+      *                                                               *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    ZPAYF  13  13  1               Frequency array
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZEDITZ1
+      *
+      /SPACE 3
+     IRESWEPD2
+      *
+      ** Rename RESWEPD2 format fields - RESWEPL2  file
+      *
+     I              RECI                            RRECI
+     I              SWEP                            RSWEP
+     I              DRBR                            RDRBR
+     I              DCUS                            RDCUS
+     I              DACD                            RDACD
+     I              DACS                            RDACS
+     I              DRAN                            RDRAN
+     I              CBRC                            RCBRC
+     I              CCUS                            RCCUS
+     I              CSCA                            RCSCA
+     I              CACD                            RCACD
+     I              CRAN                            RCRAN
+     I              BRCA                            RBRCA
+     I              MBSI                            RMBSI
+     I              CCY                             RCCY
+     I              NXTP                            RNXTP
+     I              DLPY                            RDLPY
+     I              PAYF                            RPAYF
+     I              DYTP                            RDYTP
+     I              PNCD                            RPNCD
+     I              PNAR                            RPNAR
+     I              PRFC                            RPRFC
+     I              TRAT                            RTRAT
+     I              STHR                            RSTHR
+     I              SWTP                            RSWTP
+     I              LCD                             RLCD
+     I              CHTP                            RCHTP
+     I              TNLU                            RTNLU
+     I              CCYC                            RCCYC                 CEU022
+     IRESWEPD3
+      *
+      ** Rename RESWEPD3 format fields - RESWEPL3  file
+      *
+     I              RECI                            ARECI
+     I              SWEP                            RSWEP
+     I              DRBR                            ADRBR
+     I              DCUS                            ADCUS
+     I              DACD                            ADACD
+     I              DACS                            ADACS
+     I              DRAN                            ADRAN
+     I              CBRC                            ACBRC
+     I              CCUS                            ACCUS
+     I              CSCA                            ACSCA
+     I              CACD                            ACACD
+     I              CRAN                            ACRAN
+     I              BRCA                            ABRCA
+     I              MBSI                            AMBSI
+     I              CCY                             ACCY
+     I              NXTP                            ANXTP
+     I              DLPY                            ADLPY
+     I              PAYF                            APAYF
+     I              DYTP                            ADYTP
+     I              PNCD                            APNCD
+     I              PNAR                            APNAR
+     I              PRFC                            APRFC
+     I              TRAT                            ATRAT
+     I              STHR                            ASTHR
+     I              SWTP                            ASWTP
+     I              LCD                             ALCD
+     I              CHTP                            ACHTP
+     I              TNLU                            ATNLU
+     I              CCYC                            ACCYC                 CEU022
+     I/COPY WNCPYSRC,RE0254I002
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IZMUSER    E DSZMUSER
+      ** Data Area of Menu User
+      *
+     I/COPY WNCPYSRC,RE0254I003
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISDBANK    E DSSDBANKPD
+      ** SD Bank Details
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** SD Module Details
+      *
+     ISDRETL    E DSSDRETLPD
+      ** SD Retail Details
+      *
+     ISDGELR    E DSSDGELRPD
+     I              QQACCD                          QQACC1                                    CGL029
+      ** SD General Ledger Details
+      *
+     ISDACCT    E DSACCNTAB
+     I              PRFC                            APRFC
+     I/COPY WNCPYSRC,RE0254I004
+      *
+      ** SD Account Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** SD Customer Details
+      *
+     ISDACOD    E DSSDACODPD
+     I              QQACCD                          QQACC2                                    CGL029
+      ** SD Account Code Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** SD Currency Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          QQDFC1                                    CGL029
+      ** SD Branch Details
+      *
+     ISDPRFM    E DSSDPRFMPD
+      ** SD Profit Centre Default Matrix Details
+      *
+     ISDPRFC    E DSSDPRFCPD
+      ** SD Profit Centre Details
+      *
+     ISDRETR    E DSSDRETRPD
+      ** SD Retail Transaction Types Details
+      *
+     ISDNARR    E DSSDNARRPD
+      ** SD Narrative Code Types Details
+      *                                                                                       CGL014
+     ISCSARD    E DSSCSARDPD                                                                  CGL014
+     I              LCD                             XLCD                                      CGL014
+      ** Switchable features details                                                          CGL014
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure - used as parameter to access programs
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Date Structure- used as parameter to access programs
+     I/COPY WNCPYSRC,RE0254I001
+      *
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+      *
+     I**  Date Structure to provide text on comit entry in journal
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 SACTNX
+     I                                       26  35 USRIDX
+     I                                       51  56 SSWEPX
+      *
+      ** Data Structure for Credit A/c of Origin screen field
+      *
+     I***SCRAC**     DS                             18                                        CGL029
+     ISCRAC       DS                             24                                           CGL029
+     I                                        1   3 SDRBR
+     I                                        4   9 SDCUS
+     I                                       10  12 SDCCY
+     I**********                             13  16 SDACD                                     CGL029
+     I**********                             17  18 SDACS                                     CGL029
+     I                                       13  22 SDACD                                     CGL029
+     I                                       23  24 SDACS                                     CGL029
+      *
+      ** Data Structure Credit Sweep Account screen field
+      *
+     I***SSWAC**     DS                             18                                        CGL029
+     ISSWAC       DS                             24                                           CGL029
+     I                                        1   3 SCBRC
+     I                                        4   9 SCCUS
+     I                                       10  12 SCCCY
+     I**********                             13  16 SCSCA                                     CGL029
+     I**********                             17  18 SCACD                                     CGL029
+     I                                       13  22 SCSCA                                     CGL029
+     I                                       23  24 SCACD                                     CGL029
+      *
+     I***FCRAC**     DS                             18                                        CGL029
+     IFCRAC       DS                             24                                           CGL029
+     I                                        1   3 BRCA1
+     I                                        4   9 CNUM1
+     I                                       10  12 CCY1
+     I**********                             13  16 ACOD1                                     CGL029
+     I**********                             16  18 ACSQ1                                     CGL029
+     I                                       13  22 ACOD1                                     CGL029
+     I                                       23  24 ACSQ1                                     CGL029
+      *
+     I***FSWAC**     DS                             18                                        CGL029
+     IFSWAC       DS                             24                                           CGL029
+     I                                        1   3 BRCA2
+     I                                        4   9 CNUM2
+     I                                       10  12 CCY2
+     I**********                             13  16 ACOD2                                     CGL029
+     I**********                             16  18 ACSQ2                                     CGL029
+     I                                       13  22 ACOD2                                     CGL029
+     I                                       23  24 ACSQ2                                     CGL029
+      *
+     ISPNAR       DS                             30
+     I                                        1   2 WPNCD
+     I                                        3  30 WNARR
+      *
+      ** Message File
+      *
+     I              'GBREUSRMSG'          C         MSGF
+     I/COPY WNCPYSRC,RE0254I005
+      *
+      ** Constants for SAUTH field                                                            CRE401
+      *                                                                                       CRE401
+     I              ' AUTHORISED '        C         WAUTH                                     CRE401
+     I              'TO AUTHORISE '       C         WTAUTH                                    CRE401
+     I              '- INSERT'            C         WTAINS                                  BUG23989
+     I              '- AMEND '            C         WTAAMD                                  BUG23989
+     I              '- DELETE'            C         WTADEL                                  BUG23989
+     C/TITLE Main Processing
+      *===============================================================*
+      * Main Program                                                  *
+      *===============================================================*
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Display initial screen until F3 is pressed
+      *
+     C           *IN03     DOWEQ'0'
+      *
+      ** Display Header
+      *
+     C                     WRITERE0254F0
+      *
+      ** Display the necessary footer
+      *
+     C                     MOVEA'10'      *IN,30
+     C                     WRITERE0254F3
+      *
+      ** Display error messages
+      *
+     C                     WRITE#MSGCTL
+      *
+      ** Write and read Sweep Ref. No. and Action Code
+      *
+     C                     EXFMTRE0254F1
+      *
+      ** Clear program messages queue
+      *
+     C                     EXSR CLEAR
+      *
+      ** If F12 is pressed then blank out input fields and
+      ** reset error indicators
+      *
+     C           *IN12     IFEQ '1'
+     C                     EXSR SRBLNK
+     C                     ENDIF
+      *
+      ** If ENTER is pressed then validate screen inputs,
+      **    if no error occured then process next screen
+     C           *IN12     IFEQ '0'
+     C           *IN03     ANDEQ'0'
+     C                     EXSR SRVAL1
+     C           NOERR     IFEQ 'Y'
+     C                     EXSR SRPROC
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Exit program
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINIT - Initial processing                                   *
+      *                                                               *
+      * Called by: Main                                               *
+      *                                                               *
+      * Calls    : *PSSR - Error Processing Subroutine                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Define Data Areas
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           ZMUSER
+      *
+      ** Access Bank Details (SDBANKPD)
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Data base error in file (SDBANKPD)
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 01 *
+     C                     MOVEL'*FIRST  'DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access Retail ICD Details (SDRETLPD)
+      *
+     C                     CALL 'AORETLR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDRETL    PARM SDRETL    DSFDY
+      *
+      ** Data base error in file (SDRETLPD)
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     Z-ADD2         DBASE            ************
+     C                     MOVEL'SDRETLPD'DBFILE           * DBERR 02 *
+     C                     MOVEL'*FIRST  'DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check if Retail Account Number is to be displayed
+      *
+     C           BMRANR    IFEQ 'Y'
+     C                     MOVE '1'       *IN80
+     C                     ELSE
+     C                     MOVE '0'       *IN80
+     C                     ENDIF
+      *
+      ** Access General Ledger Details (SDGELRPD)
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Data base error in file (SDGELRPD)
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     Z-ADD3         DBASE            ************
+     C                     MOVEL'SDGELRPD'DBFILE           * DBERR 03 *
+     C                     MOVEL'*FIRST  'DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check if Profit Centre is to be displayed
+      *
+     C           BKPRCU    IFEQ 'Y'
+     C                     MOVE '1'       *IN81
+     C                     ELSE
+     C                     MOVE '0'       *IN81
+     C                     ENDIF
+      *
+      **  Access Switchable SAR details for the existence of CEU022       CEU022
+      **  (Authorisation)                                                 CEU022
+     C                     CALL 'AOSARDR0'                                CEU022
+     C                     PARM *BLANK    @RTCD                           CEU022
+     C                     PARM '*VERIFY' @OPTN                           CEU022
+     C                     PARM 'CEU022'  @SARD   6                       CEU022
+      *                                                                   CEU022
+     C           @RTCD     IFEQ *BLANK                                    CEU022
+     C                     MOVE 'Y'       CEU022  1                       CEU022
+     C                     ELSE                                           CEU022
+     C                     MOVE 'N'       CEU022                          CEU022
+     C                     ENDIF                                          CEU022
+      *                                                                                       CRE401
+      ** Check if enhancement CRE401 is on                                                    CRE401
+      *                                                                                       CRE401
+     C                     CALL 'AOSARDR0'                                                    CRE401
+     C                     PARM *BLANKS   @RTCD                                               CRE401
+     C                     PARM '*VERIFY' @OPTN                                               CRE401
+     C                     PARM 'CRE401'  @SARD                                               CRE401
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRE401
+      *                                                                                       CRE401
+     C           @RTCD     IFNE *BLANKS                                                       CRE401
+     C           @RTCD     ANDNE'*NRF   '                                                     CRE401
+     C           *LOCK     IN   LDA                                                           CRE401
+     C                     MOVEL'SCSARDPD'DBFILE                                              CRE401
+     C                     MOVEL'CRE401  'DBKEY                                               CRE401
+     C                     Z-ADD6         DBASE                                               CRE401
+     C                     OUT  LDA                                                           CRE401
+     C                     SETON                     U7U8LR                                   CRE401
+     C                     EXSR *PSSR                                                         CRE401
+     C                     ENDIF                                                              CRE401
+      *                                                                                       CRE401
+     C           @RTCD     IFEQ *BLANKS                                                       CRE401
+     C                     MOVE 'Y'       CRE401  1                                           CRE401
+     C                     ELSE                                                               CRE401
+     C                     MOVE 'N'       CRE401                                              CRE401
+     C                     ENDIF                                                              CRE401
+      *                                                                                       CGL014
+      ** Check if enhancement CGL014 (Collaterals Processing) is on                           CGL014
+      *                                                                                       CGL014
+     C                     CALL 'AOSARDR0'                                                    CGL014
+     C                     PARM *BLANKS   PRTCD   7                                           CGL014
+     C                     PARM '*VERIFY' POPTN   7                                           CGL014
+     C                     PARM 'CGL014'  PSARD   6                                           CGL014
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL014
+      *                                                                                       CGL014
+     C           PRTCD     IFNE *BLANKS                                                       CGL014
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL014
+     C           *LOCK     IN   LDA                                                           CGL014
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL014
+     C                     MOVEL'CGL014  'DBKEY                                               CGL014
+     C                     Z-ADD5         DBASE                                               CGL014
+     C                     OUT  LDA                                                           CGL014
+     C                     SETON                     U7U8LR                                   CGL014
+     C                     EXSR *PSSR                                                         CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+     C           PRTCD     IFEQ *BLANKS                                                       CGL014
+     C                     MOVE 'Y'       CGL014  1                                           CGL014
+     C                     ELSE                                                               CGL014
+     C                     MOVE 'N'       CGL014                                              CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+      ** Check if enhancement CLE051 (Mandatory Profit Centre User Input) is on             MD051141
+      *                                                                                     MD051141
+     C                     CALL 'AOSARDR0'                                                  MD051141
+     C                     PARM *BLANKS   @RTCD                                             MD051141
+     C                     PARM '*VERIFY' @OPTN   7                                         MD051141
+     C                     PARM 'CLE051'  @SARD   6                                         MD051141
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD051141
+      *                                                                                     MD051141
+     C           PRTCD     IFNE *BLANKS                                                     MD051141
+     C           PRTCD     ANDNE'*NRF   '                                                   MD051141
+     C           *LOCK     IN   LDA                                                         MD051141
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD051141
+     C                     MOVEL'CLE051  'DBKEY                                             MD051141
+     C                     Z-ADD5         DBASE                                             MD051141
+     C                     OUT  LDA                                                         MD051141
+     C                     SETON                     U7U8LR                                 MD051141
+     C                     EXSR *PSSR                                                       MD051141
+     C                     ENDIF                                                            MD051141
+      *                                                                                     MD051141
+     C           PRTCD     IFEQ *BLANKS                                                     MD051141
+     C                     MOVE 'Y'       CLE051  1                                         MD051141
+     C                     ELSE                                                             MD051141
+     C                     MOVE 'N'       CLE051                                            MD051141
+     C                     ENDIF                                                            MD051141
+      *                                                                                     MD051141
+      ** Read in Installation Control Data and Menu User Data
+      *
+     C                     IN   RUNDAT
+     C                     IN   ZMUSER
+      *
+      ** Check if Branch is to be displayed (Multi-branching?)
+      ** (If not CR A/c of Origin & CR Sweep Acct. Branch to
+      **   Single Branch Code from SDBANKPD)
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN82
+     C                     ELSE
+     C                     MOVE '0'       *IN82
+     C                     MOVE BJSBRC    SDRBR
+     C                     MOVE BJSBRC    SCBRC
+     C                     ENDIF
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      ** Setup Screen Title Fields
+      *
+     C                     MOVE USER      SUSER
+     C                     MOVE WSID      SWSID
+     C                     MOVE AGMRDT    SRUNA
+     C/COPY WNCPYSRC,RE0254C001
+      *
+      ** Define KLIST used to access LF/ RESWEPL2
+      *
+     C           KEY2      KLIST
+     C***********          KFLD           KDRAN  100                      165496
+     C                     KFLD           ACNO#  100                      165496
+      *
+      ** Define KLIST used to access LF/ RESWEPL3
+      *
+     C           KEY3      KLIST
+     C***********          KFLD           KDRBR   3                       165496
+     C***********          KFLD           KDCUS   60                      165496
+     C***********          KFLD           KDCCY   3                       165496
+     C***********          KFLD           KDACD   40                      165496
+     C***********          KFLD           KDACS   20                      165496
+     C                     KFLD           BRCA#   3                       165496
+     C**********           KFLD           CNUM#   60                                   165496 CSD027
+     C                     KFLD           CNUM#   6                                           CSD027
+     C                     KFLD           CCY#    3                       165496
+     C**********           KFLD           ACOD#   40                                   165496 CGL029
+     C                     KFLD           ACOD#  100                                          CGL029
+     C                     KFLD           ACSQ#   20                      165496
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRVAL1 - Validates initial screen input fields                *
+      *                                                               *
+      * Called by: Main                                               *
+      *                                                               *
+      * Calls    : ZASNMS - Send message to program message queue     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVAL1    BEGSR
+      *
+      ** Set off error indicators
+      *
+     C                     MOVEA'00'      *IN,32
+      *
+     C                     MOVE 'Y'       NOERR   1
+     C                     MOVE 'Y'       WVTAMT  1                                           CGL014
+     C                     MOVE 'Y'       WVTSGN  1                                           CGL014
+     C                     MOVE 'Y'       WVSTYP  1                                           CGL014
+      *
+      ** Validate Sweep Reference Number
+      *
+     C           SSWEP     IFEQ *BLANK
+      *
+      ** Sweep Reference must be entered
+      *
+     C                     MOVE 'N'       NOERR
+     C                     MOVE '1'       *IN32
+     C                     MOVEL'RE71883 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE SSWEP     WNUM7   70
+     C                     MOVE WNUM7     WALP6   6
+     C           SSWEP     IFNE WALP6
+      *
+      ** Sweep Reference Number must be numeric
+      *
+     C                     MOVE 'N'       NOERR
+     C                     MOVE '1'       *IN32
+     C                     MOVEL'RE71884 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           WNUM7     IFEQ *ZERO
+     C           WNUM7     OREQ 999999
+      *
+      ** Sweep Reference Number must not be zero and not equal to 999999
+      *
+     C                     MOVE 'N'       NOERR
+     C                     MOVE '1'       *IN32
+     C                     MOVEL'RE71885 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** 2. Validate Action Code
+      **    Valid entries are 'I', 'A', 'D' and 'E', if it is
+      **    blank the program will default it to 'E'
+      *
+     C           SACTN     IFEQ *BLANK
+     C                     MOVE 'E'       SACTN
+     C                     ENDIF
+      *
+      ** Invalid Action Code
+      *
+     C           SACTN     IFNE 'I'
+     C           SACTN     ANDNE'A'
+     C           SACTN     ANDNE'D'
+     C           SACTN     ANDNE'E'
+      *                                                                                       CRE401
+      ** Action Code 'X' (Authorise) is valid if CRE401 is on                                 CRE401
+      *                                                                                       CRE401
+     C           CRE401    IFEQ 'Y'                                                           CRE401
+     C           SACTN     ANDNE'X'                                                           CRE401
+     C                     MOVE 'N'       NOERR
+     C                     MOVE '1'       *IN33
+     C                     MOVEL'RE71886 'ZAMSID
+     C                     EXSR ZASNMS
+      *                                                                                       CRE401
+     C                     ELSE                                                               CRE401
+     C           CRE401    IFEQ 'N'                                                           CRE401
+     C                     MOVE 'N'       NOERR                                               CRE401
+     C                     MOVE '1'       *IN33                                               CRE401
+     C                     MOVEL'RE71886 'ZAMSID                                              CRE401
+     C                     EXSR ZASNMS                                                        CRE401
+     C                     ENDIF                                                              CRE401
+     C                     ENDIF                                                              CRE401
+     C                     ENDIF
+      *
+      ** If Sweep Reference Number and Action Code are
+      ** valid then locate Sweep Reference in RESWEPL0
+      *
+     C           NOERR     IFEQ 'Y'
+      *
+     C                     MOVE SSWEP     NSWEP   60
+     C           NSWEP     CHAINRESWEPL0             60
+      *
+     C           *IN60     IFEQ '0'
+     C                     UNLCKRESWEPL0
+     C                     ENDIF
+      *
+      ** If found and action code is 'I'
+      *
+     C           *IN60     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C           SACTN     ANDEQ'I'
+     C                     MOVE 'N'       NOERR
+     C                     MOVE '1'       *IN32
+     C                     MOVEL'RE71887 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** If not found or found but is not live record
+      ** and Action Code is 'A', 'D' or 'E'
+      *
+     C           *IN60     IFEQ '1'
+     C           *IN60     OREQ '0'
+     C           RECI      ANDNE'D'
+      *
+     C           SACTN     IFEQ 'A'
+     C           SACTN     OREQ 'D'
+     C           SACTN     OREQ 'E'
+     C           SACTN     OREQ 'X'                                                           CRE401
+     C                     MOVE 'N'       NOERR
+     C                     MOVE '1'       *IN32
+     C                     MOVEL'RE71888 'ZAMSID
+     C                     EXSR ZASNMS
+     C/COPY WNCPYSRC,RE0254C002
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *                                                                                       CRE401
+      ** Validate Action Code 'X'                                                             CRE401
+      *                                                                                       CRE401
+     C           CRE401    IFEQ 'Y'                                                           CRE401
+     C           SACTN     IFEQ 'X'                                                           CRE401
+     C           AUTH      ANDEQ'Y'                                                           CRE401
+     C                     MOVE 'N'       NOERR                                               CRE401
+     C                     MOVE '1'       *IN33                                               CRE401
+     C                     MOVEL'RE72036 'ZAMSID                                              CRE401
+     C                     EXSR ZASNMS                                                        CRE401
+     C                     ENDIF                                                              CRE401
+      *                                                                                       CRE401
+     C           SACTN     IFEQ 'X'                                                           CRE401
+     C           LUSR      ANDEQUSER                                                          CRE401
+     C                     MOVE 'N'       NOERR                                               CRE401
+     C                     MOVE '1'       *IN33                                               CRE401
+     C                     MOVEL'RE72037 'ZAMSID                                              CRE401
+     C                     EXSR ZASNMS                                                        CRE401
+     C                     ENDIF                                                              CRE401
+     C                     ENDIF                                                              CRE401
+      *
+      ** If still valid check if user is authorised
+      *
+     C           NOERR     IFEQ 'Y'
+      *
+      ** If Multi-branching indicator is off
+      ** Check if user is authorised to Action Code
+      *
+     C           *IN82     IFEQ '0'
+      *
+     C                     CALL 'ZVACTU'
+     C                     PARM SACTN     ZACTN   1
+     C                     PARM           ERR     10
+      *
+     C           ERR       IFNE 0
+     C                     MOVE 'N'       NOERR
+     C                     MOVE '1'       *IN33
+     C                     MOVEL'RE71889 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Multi-branching indicator is on and Action Code
+      ** is not 'I' check if user is authorised to Action Code
+      ** and Transaction Branch combination
+      *
+     C           *IN82     IFEQ '1'
+     C           SACTN     ANDNE'I'
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM SACTN     ZACTN   1
+     C                     PARM BRCA      ZBRCD   3
+     C                     PARM           ERR     10
+      *
+     C           ERR       IFNE 0
+     C                     MOVE 'N'       NOERR
+     C                     MOVEA'11'      *IN,32
+     C                     MOVEL'RE71890 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRPROC - Process Detail Screen                                *
+      *                                                               *
+      * Called by: Main                                               *
+      *                                                               *
+      * Calls    : SRFRMT - Format Detail Screen Fields               *
+      *            CLEAR  - Clear program message queue               *
+      *            UPDAT  - File update processing                    *
+      *            SRBLNK - Initialise initial screen                 *
+      *            SRVAL2 - Validate detail screen inputs             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      ** Format Detail Screen
+      *
+     C                     EXSR SRFRMT
+     C/COPY WNCPYSRC,RE0254C010
+      *
+      ** Do until F3 or F12 is pressed
+      *
+     C           *IN03     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+     C/COPY WNCPYSRC,RE0254C007
+      *
+      ** Display footer (Indicator is set in SRFRMT)
+      *
+     C                     WRITERE0254F3
+      *
+      ** Display error message
+      *
+     C                     WRITE#MSGCTL
+      *
+      ** Write and Read detail screen
+      *
+     C                     EXFMTRE0254F2
+      *
+      ** Clear program message queue
+      *
+     C                     EXSR CLEAR
+      *
+      ** F5 is pressed (Re-display the original data)
+      *
+     C           *IN05     IFEQ '1'
+     C                     EXSR SRFRMT
+     C                     ENDIF
+      *
+      ** F10 is pressed (Delete a record)
+      *
+     C           *IN10     IFEQ '1'
+     C/COPY WNCPYSRC,RE0254C003
+     C                     EXSR UPDAT
+     C                     ENDIF
+      *                                                                                       CRE401
+      ** F11 is pressed (Authorise a record)                                                  CRE401
+      *                                                                                       CRE401
+     C           *IN11     IFEQ '1'                                                           CRE401
+     C                     EXSR SRVAL2                                                        CRE401
+     C           NOERR     IFEQ 'Y'                                                           CRE401
+     C                     EXSR UPDAT                                                         CRE401
+     C                     ENDIF                                                              CRE401
+     C                     ENDIF                                                              CRE401
+      *
+      ** F12 is pressed (Blank out initial screen fields)
+      *
+     C           *IN12     IFEQ '1'
+     C                     EXSR SRBLNK
+     C                     ENDIF
+      *
+      ** ENTER  is pressed
+      *
+     C           *IN03     IFEQ '0'
+     C           *IN05     ANDEQ'0'
+     C           *IN10     ANDEQ'0'
+     C           *IN11     ANDEQ'0'                                                           CRE401
+     C           *IN12     ANDEQ'0'
+      *
+     C           SACTN     IFEQ 'I'
+     C           SACTN     OREQ 'A'
+      *
+      ** Perform detail screen validation
+      *
+     C                     EXSR SRVAL2
+      *
+      ** If detail screen is valid, perform file update
+      *
+     C           NOERR     IFEQ 'Y'
+     C/COPY WNCPYSRC,RE0254C004
+     C                     EXSR UPDAT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If in Enquiry screen go back to initial screen
+      *
+     C           SACTN     IFEQ 'E'
+     C/COPY WNCPYSRC,RE0254C005
+     C                     EXSR SRBLNK
+     C                     MOVE '1'       *IN12
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRFRMT - Format Detail Screen                                 *
+      *                                                               *
+      * Called by: SRPROC - Process Detail Screen                     *
+      *            CHECK  - Check if record has been changed          *
+      *                                                               *
+      * Calls    : ZDATE2 - Convert Midas Day Number to date format   *
+      *            ZEDIT  - Edit an amount                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFRMT    BEGSR
+      *
+      ** Initialise screen fields
+      *
+     C                     MOVE *BLANK    SAUTH                                               CRE401
+     C                     MOVE *BLANK    SBRCA
+     C                     MOVE *BLANK    SDRBR
+     C                     MOVE *BLANK    SDCUS
+     C                     MOVE *BLANK    SDCCY
+     C                     MOVE *BLANK    SDACD
+     C                     MOVE *BLANK    SDACS
+     C                     MOVE *BLANK    SDRAN
+      *
+     C                     MOVE *BLANK    SCBRC
+     C                     MOVE *BLANK    SCCUS
+     C                     MOVE *BLANK    SCCCY
+     C                     MOVE *BLANK    SCSCA
+     C                     MOVE *BLANK    SCACD
+     C                     MOVE *BLANK    SCRAN
+      *
+     C                     MOVE *BLANK    SPRFC
+     C                     MOVE *BLANK    STRAT
+     C                     MOVE *BLANK    SPNAR
+     C                     MOVE *BLANK    SCCY
+     C                     MOVE *BLANK    SNXTP
+     C                     MOVE *BLANK    SPAYF
+     C                     MOVE *BLANK    SDYTP
+     C                     MOVE *BLANK    SDLPY
+     C                     MOVE *BLANK    SSTHR
+     C                     MOVE *BLANK    SSTHRS
+     C                     MOVE *BLANK    SSWTP
+     C                     MOVE *BLANK    SLUSR                                               CRE401
+      *
+     C                     MOVE *BLANK    WMULTS  1
+     C                     MOVE *BLANK    ACNO1  10
+     C                     MOVE *BLANK    ACNO2  10
+      *
+     C                     MOVE *BLANK    W@PNCD  2
+     C                     MOVE *BLANK    W@PNAR 30
+      *
+      ** Set off error indicators  (*IN34 to *IN57)
+      *
+     C                     MOVEA'00000000'*IN,34
+     C                     MOVEA'00000000'*IN,42
+     C                     MOVEA'00000000'*IN,50
+      *
+      ** Footer for initial and detail screen are the same
+      ** if Action Code is 'E' thus indicator 30 is turned
+      ** off only if SACTN = 'E'
+      *
+     C           SACTN     IFEQ 'D'
+     C                     MOVEA'01'      *IN,30
+     C                     ENDIF
+      *
+     C           SACTN     IFEQ 'I'
+     C           SACTN     OREQ 'A'
+     C                     MOVEA'00'      *IN,30
+     C                     ENDIF
+      *
+      ** Set protect indicator off (PR)
+      *
+     C                     MOVEA'00'      *IN,70
+      *                                                                                       CRE401
+      ** Display new fields if CRE401 is on                                                   CRE401
+      *                                                                                       CRE401
+     C                     MOVE '0'       *IN58                                               CRE401
+     C                     MOVE '0'       *IN59                                               CRE401
+     C           CRE401    IFEQ 'Y'                                                           CRE401
+     C                     MOVE '1'       *IN58                                               CRE401
+     C                     MOVELLUSR      SLUSR                                               CRE401
+     C           AUTH      IFEQ 'Y'                                                           CRE401
+     C                     MOVELWAUTH     SAUTH                                               CRE401
+     C                     ELSE                                                               CRE401
+     C                     SELEC                                                            BUG23989
+     C           CHTP      WHEQ 'A'                                                         BUG23989
+     C                     MOVELWTAUTH    SAUTH                                               CRE401
+     C                     MOVE WTAAMD    SAUTH                                             BUG23989
+     C           CHTP      WHEQ 'I'                                                         BUG23989
+     C                     MOVELWTAUTH    SAUTH                                             BUG23989
+     C                     MOVE WTAINS    SAUTH                                             BUG23989
+     C           CHTP      WHEQ 'D'                                                         BUG23989
+     C                     MOVELWTAUTH    SAUTH                                             BUG23989
+     C                     MOVE WTADEL    SAUTH                                             BUG23989
+     C                     ENDSL                                                            BUG23989
+     C                     ENDIF                                                              CRE401
+     C           SACTN     IFEQ 'I'                                                           CRE401
+     C                     MOVE *BLANKS   SAUTH                                               CRE401
+     C                     MOVE *BLANKS   SLUSR                                               CRE401
+     C                     MOVE '0'       *IN58                                               CRE401
+     C                     ENDIF                                                              CRE401
+     C           SACTN     IFEQ 'X'                                                           CRE401
+     C                     MOVE '0'       *IN30                                               CRE401
+     C                     MOVE '0'       *IN31                                               CRE401
+     C                     MOVE '1'       *IN59                                               CRE401
+     C                     MOVE '1'       *IN70                                               CRE401
+     C                     MOVE '1'       *IN71                                               CRE401
+     C                     ENDIF                                                              CRE401
+     C                     ENDIF                                                              CRE401
+      *
+      ** If Action Code is not 'I'
+      *
+     C           SACTN     IFNE 'I'
+      *
+      ** If Action Code is 'E' or 'D' protect screen fields
+      ** If Action Code is 'D' enable F10 key and 'F10=Delete' footer
+      *
+     C           SACTN     IFEQ 'E'
+     C           SACTN     OREQ 'D'
+     C                     MOVEA'11'      *IN,70
+     C                     ENDIF
+      *
+      ** Save Last Change Date, Last Change Type and
+      ** Transaction Number of Last update (to be used by CHECK subroutine)
+      *
+     C                     MOVE LCD       SVLCD   50
+     C                     MOVE CHTP      SVCHTP  1
+     C                     MOVE TNLU      SVTNLU  50
+      *
+      ** Convert Sweep Date to ddmmyy or mmddyy depending on *IN98
+      *
+     C                     MOVE NXTP      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SNXTP
+      *
+      ** Convert Final Date to ddmmyy or mmddyy depending on *IN98
+      *
+     C           DLPY      IFNE *ZERO
+     C                     MOVE DLPY      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SDLPY
+     C                     ENDIF
+      *
+      **  Format Sweep Threshold Sign
+      *
+     C           STHR      IFLT *ZERO
+     C                     MOVE '-'       SSTHRS
+     C                     ELSE
+     C           STHR      IFGT *ZERO
+     C                     MOVE '+'       SSTHRS
+     C                     ELSE
+     C                     MOVE *BLANK    SSTHRS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Format Sweep Threshold Amount, access program AOCURRR0
+      **  is used to get the right number decimal place
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           CCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     Z-ADD4         DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERR 04 *
+     C                     MOVELCCY       DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           STHR      IFLT *ZERO
+     C           STHR      MULT -1        WSTHRP 130
+     C                     ELSE
+     C                     MOVE STHR      WSTHRP
+     C                     ENDIF
+     C/COPY WNCPYSRC,RE0254C011
+     C                     MOVE WSTHRP    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SSTHR
+      *
+      ** If Profit Centre is used and not Amendable then
+      ** Protect Profit Centre
+      *
+     C           *IN81     IFEQ '1'
+     C           BKPRCA    ANDEQ'N'
+     C                     MOVE '1'       *IN71
+     C                     ENDIF
+      *
+      ** Format remaining file fields to screen fields
+      *
+     C                     MOVE BRCA      SBRCA
+      *
+     C                     MOVE DRBR      SDRBR
+     C********** DCUS      IFNE *ZERO                                                         CSD027
+     C           DCUS      IFNE *BLANKS                                                       CSD027
+     C                     MOVE DCUS      SDCUS
+     C                     ENDIF
+     C           DRAN      IFEQ *ZERO
+     C                     MOVE CCY       SDCCY
+     C                     ENDIF
+     C           DACD      IFNE *ZERO
+     C                     MOVE DACD      SDACD
+     C                     ENDIF
+     C           DACS      IFNE *ZERO
+     C                     MOVE DACS      SDACS
+     C                     ENDIF
+     C           DRAN      IFNE *ZERO
+     C                     MOVE DRAN      SDRAN
+     C                     ENDIF
+      *
+     C                     MOVE CBRC      SCBRC
+     C********** CCUS      IFNE *ZERO                                                         CSD027
+     C           CCUS      IFNE *BLANKS                                                       CSD027
+     C                     MOVE CCUS      SCCUS
+     C                     ENDIF
+     C           CRAN      IFEQ *ZERO
+     C***********          MOVE CCY       SCCCY                           CEU022
+     C                     MOVE CCYC      SCCCY                           CEU022
+     C                     ENDIF
+     C           CSCA      IFNE *ZERO
+     C                     MOVE CSCA      SCSCA
+     C                     ENDIF
+     C           CACD      IFNE *ZERO
+     C                     MOVE CACD      SCACD
+     C                     ENDIF
+     C           CRAN      IFNE *ZERO
+     C                     MOVE CRAN      SCRAN
+     C                     ENDIF
+      *
+     C                     MOVE PRFC      SPRFC
+     C                     MOVE TRAT      STRAT
+      *
+     C           PNCD      IFEQ *BLANKS
+     C                     MOVELPNAR      SPNAR
+     C                     ELSE
+     C                     MOVELPNCD      SPNAR
+     C                     ENDIF
+      *
+     C                     MOVE CCY       SCCY
+     C                     MOVE PAYF      SPAYF
+     C           DYTP      IFNE *ZERO
+     C                     MOVE DYTP      SDYTP
+     C                     ENDIF
+     C                     MOVE SWTP      SSWTP
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRVAL2 - Detail screen validation                             *
+      *                                                               *
+      * Called by: SRPROC - Detail Processing                         *
+      *                                                               *
+      * Calls    : ZASNMS - Send message to program message queue     *
+      *            ZDATE1 - Convert Date to Midas Day Number          *
+      *            ZDATE2 - Convert Midas Day Number to Date Format   *
+      *            ZALIGN - To right align numeric fields             *
+      *            ZEDIT  - Edit an amount                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVAL2    BEGSR
+      *
+      ** Set off error indicators (*IN34 to *IN57)
+      **   (For DSPATR(RI) & DSPATR(PC))
+      *
+     C                     MOVEA'00000000'*IN,34
+     C                     MOVEA'00000000'*IN,42
+     C                     MOVEA'00000000'*IN,50
+      *
+      ** NOERR equals 'N' if at least one field
+      ** in detail screen field is in error
+      *
+     C                     MOVE 'Y'       NOERR   1
+      *
+      ** Transaction Branch:
+      **   1. Must be entered when Multi-branching Ind. is ON
+      **   2. Must a valid record in PF/SDBRCHPD when entered
+      *
+     C           *IN82     IFEQ '1'
+      *
+     C                     SELEC
+     C           SBRCA     WHEQ *BLANK
+     C                     MOVE 'N'       NOERR
+     C                     MOVE '1'       *IN34
+     C                     MOVEL'RE71891 'ZAMSID
+     C                     EXSR ZASNMS
+     C           SBRCA     WHNE *BLANK
+      *
+      ** Check if '?' is present in Transaction Branch entered
+      **    (WHELP will be greater than *ZERO if it does)
+      *
+     C           '?'       SCAN SBRCA:1   WHELP   10
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SBRCA
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      ** Send error message if return code not blank
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'N'       NOERR
+     C                     MOVE '1'       *IN34
+     C                     MOVEL'RE71892 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      ** If Transaction Branch is valid and '?' is present
+      ** in Transaction Branch entered assign Branch Code
+      ** from access program to Transaction Branch.
+      *
+     C           NOERR     IFEQ 'Y'
+     C           WHELP     ANDGT*ZERO
+     C                     MOVE A8BRCD    SBRCA
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *
+      **  Validate  C R E D I T   A / C   O F   O R I G I N
+      *---------------------------------------------------------
+      *
+      ** WERR1 equals 'N' if CR A/c of Origin is in error
+      *
+     C                     MOVE 'Y'       WERR1   1
+      *
+      ** Both CR A/c of Origin Full Midas Account and
+      ** Retail Account Number should not be blank.
+      *
+     C           SCRAC     IFEQ *BLANK
+     C           SDRAN     ANDEQ*BLANK
+      *
+     C                     MOVEL'RE71897 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111111'  *IN,35
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+      *
+     C                     ENDIF
+      *
+      ** Both CR A/c of Origin Midas Acct. and Retail Acct. No.
+      ** should not be entered at the same time.
+      *
+     C           SCRAC     IFNE *BLANK
+     C           SDRAN     ANDNE*BLANK
+      *
+     C                     MOVEL'RE71895 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111111'  *IN,35
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+      *
+     C                     ENDIF
+      *
+      ** CR A/c of Origin Full Midas Acct. No. must be entered
+      ** If CR A/c of Origin Retail Acct. No. (SDRAN) is blank.
+      *
+     C           SDRAN     IFEQ *BLANK
+      *
+      ** If Multi-branching is ON, CR A/c of Origin
+      ** Branch Code must be entered
+      *
+     C           *IN82     IFEQ '1'
+      *
+      ** Get Branch Code from ZMUSER if it is blank
+      *
+     C           SDRBR     IFEQ *BLANK
+     C                     MOVE DBRN      SDRBR
+     C                     ENDIF
+      *
+      ** Branch Code must be found in PF/SDBRCHPD
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*BLANK  '@RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SDRBR
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      ** Send error message if return code not blank
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN35
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+     C                     MOVEL'RE71899 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** If no error occured AOBRCHR0 access program
+      ** and '?' is present in Branch Code entered,
+      ** get Branch Code from Access Object Program
+      *
+     C           '?'       SCAN SDRBR:1   WHELP   10
+     C           @RTCD     IFEQ *BLANK
+     C           WHELP     ANDGT*ZERO
+     C                     MOVE A8BRCD    SDRBR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Customer Number must not be entered
+      *
+     C           SDCUS     IFEQ *BLANK
+     C                     MOVE '1'       *IN36
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+     C                     MOVEL'RE71900 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM SDCUS     @KEY    6
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Send error message if return code not blank
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN36
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+     C                     MOVEL'RE71903 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** No error occured in AOCUSTR0 and
+      ** '?' is present in Cust. No. entered,
+      ** get Cust. No. from Access Program
+      *
+     C           '?'       SCAN SDCUS:1   WHELP
+     C           @RTCD     IFEQ *BLANK
+     C           WHELP     ANDGT*ZERO
+     C                     MOVE BBCUST    SDCUS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Currency & Account Code must be entered
+      ** if Customer Number is entered
+      *
+     C           *IN36     IFEQ '0'
+      *
+     C           SDCCY     IFEQ *BLANK
+     C                     MOVE '1'       *IN37
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+     C                     MOVEL'RE71893 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SDCCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Send error message if return code not blank
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN37
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+     C                     MOVEL'RE71904 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** No error occured in AOCURRR0 and  '?' is present
+      ** in Currency Code entered get Currency Code
+      ** from access program
+      *
+     C           '?'       SCAN SDCCY:1   WHELP
+     C           @RTCD     IFEQ *BLANK
+     C           WHELP     ANDGT*ZERO
+     C                     MOVE A6CYCD    SDCCY
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Account Code must be entered.
+      *
+     C           SDACD     IFEQ *BLANK
+     C                     MOVE '1'       *IN38
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+     C                     MOVEL'RE71902 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SDACD
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+      ** Error occured in AOACODR0 Access Program
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN38
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+     C                     MOVEL'RE71905 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** No error occured in AOACODR0 and '?' is present in
+      ** Account Code entered get selected Account Code from
+      ** from access program
+      *
+     C           '?'       SCAN SDACD:1   WHELP
+     C           @RTCD     IFEQ *BLANK
+     C           WHELP     ANDGT*ZERO
+     C                     MOVE A5ACCD    SDACD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Default Acct. Seq. No. to '01' when blank
+      *
+     C           SDACS     IFEQ *BLANK
+     C                     MOVE '01'      SDACS
+     C                     ENDIF
+      *
+      ** End for SDRAN = *BLANK
+     C                     ENDIF
+      *
+      ** If Credit A/c of Origin is valid,
+      ** check if it does exist in PF/ACCNTAB
+      *
+     C           WERR1     IFEQ 'Y'
+     C                     CALL 'AOACCTR0'
+     C                     PARM           @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SDRAN
+     C                     PARM           SDCUS
+     C                     PARM           SDCCY
+     C                     PARM           SDACD
+     C                     PARM           SDACS
+     C                     PARM           SDRBR
+     C           SDACCT    PARM SDACCT    DSSDY
+      *
+      ** Error occured in AOACCTR0 Access Program
+      ** (Retail Account is invalid if '?' is present)
+      *
+     C           '?'       SCAN SDRAN:1   WHELP
+     C           @RTCD     IFNE *BLANK
+     C           WHELP     ORGT *ZERO
+     C                     MOVEA'111111'  *IN,35
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+     C                     MOVEL'RE71906 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C/COPY WNCPYSRC,RE0254C012
+     C                     ENDIF
+     C/COPY WNCPYSRC,RE0254C008
+      *
+      ** If CR A/c of Origin is valid, check if it is
+      ** a Retail or Close Account
+      *
+     C           WERR1     IFEQ 'Y'
+      *
+      ** Retail Account?
+      *
+     C           ATYP      IFNE 'R'
+     C                     MOVEA'111111'  *IN,35
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+     C                     MOVEL'RE71907 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Close Account?
+      *
+     C           ACST      IFEQ 'C'
+     C                     MOVEA'111111'  *IN,35
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+     C                     MOVEL'RE71908 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                   176510
+     C           WERR1     IFEQ 'Y'                                       176510
+     C                     MOVE CNUM      WCNUM   6                       176510
+     C                     CALL 'AOCUSTR0'                                176510
+     C                     PARM *BLANKS   @RTCD   7                       176510
+     C                     PARM '*KEY    '@OPTN   7                       176510
+     C                     PARM WCNUM     @KEY    6                       176510
+     C                     PARM *BLANKS   @KYST   7                       176510
+     C           SDCUST    PARM SDCUST    DSSDY                           176510
+     C                     ENDIF                                          176510
+      *                                                                   176510
+      ** Move Account officer (from SDCUST) into field for AOPRFMR0 call  176510
+     C                     MOVE BBACOC    ACOF1   2                       176510
+      *
+      ** Save Retail Indicator
+      *
+     C                     MOVE RETB      WRETB1  1
+      *
+     C                     MOVE BRCA      BRCA1
+     C                     MOVE CNUM      CNUM1
+     C                     MOVE CCY       CCY1
+     C                     MOVE ACOD      ACOD1
+     C                     MOVE ACSQ      ACSQ1
+     C                     Z-ADDACNO      ACNO#                           165496
+     C                     MOVE BRCA      BRCA#                           165496
+     C**********           Z-ADDCNUM      CNUM#                                        165496 CSD027
+     C                     MOVE CNUM      CNUM#                                               CSD027
+     C                     MOVE CCY       CCY#                            165496
+     C                     Z-ADDACOD      ACOD#                           165496
+     C                     Z-ADDACSQ      ACSQ#                           165496
+     C**********           Z-ADDMINB      WMINB1 110                                  CGL014 BUG3281
+     C                     Z-ADDCOLA      WCOLA1 150                                         BUG3281
+     C                     Z-ADDBCOA      WBCOA1 150                                          CGL014
+     C                     MOVE COLF      WCOLF1  1                                           CGL014
+      *
+      *
+      **  Validate  C R E D I T   S W E E P   A C C O U N T
+      *-------------------------------------------------------
+      *
+      ** WERR2 equals 'N' if CR Sweep Account is in error
+      *
+     C                     MOVE 'Y'       WERR2   1
+      *
+      ** If both Credit Sweep Account and Retail Account Number are blank
+      *
+     C           SSWAC     IFEQ *BLANK
+     C           SCRAN     ANDEQ*BLANK
+      *
+     C                     MOVEA'111111'  *IN,41
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71898 'ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ENDIF
+      *
+      ** If both full Midas A/c Number and Retail Account Number are entered
+      *
+     C           SSWAC     IFNE *BLANK
+     C           SCRAN     ANDNE*BLANK
+      *
+     C                     MOVEA'111111'  *IN,41
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71896 'ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ENDIF
+      *
+      ** If CR Sweep Account Retail No. is blank,
+      ** CR Sweep Account Midas Acct. No. must be entered.
+      *
+     C           SCRAN     IFEQ *BLANK
+      *
+      ** If Multi-branching is ON, CR Sweep Account
+      ** Branch Code must be entered
+      *
+     C           *IN82     IFEQ '1'
+      *
+      ** Get Branch Code from ZMUSER if it is blank
+      *
+     C           SCBRC     IFEQ *BLANK
+     C                     MOVE DBRN      SCBRC
+     C                     ENDIF
+      *
+      ** Branch Code must be a valid record in PF/SDBRCHPD
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SCBRC
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      ** Error occured in AOBRCHR0 Access Program
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN41
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71899 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** No error occured AOBRCHR0 access program
+      ** and '?' is present in Branch Code entered,
+      ** get Branch Code from Access Object Program
+      *
+     C           '?'       SCAN SCBRC:1   WHELP
+     C           @RTCD     IFEQ *BLANK
+     C           WHELP     ANDGT*ZERO
+     C                     MOVE A8BRCD    SCBRC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Customer Number must not be entered.
+      *
+     C           SCCUS     IFEQ *BLANK
+     C                     MOVE '1'       *IN42
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71900 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM SCCUS     @KEY    6
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Error occured in AOCUSTR0 Access Program
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN42
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71903 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** No error occured in AOCUSTR0 and
+      ** '?' is present in Cust. No. entered,
+      ** get Cust. No. from Access Program
+      *
+     C           '?'       SCAN SCCUS:1   WHELP
+     C           @RTCD     IFEQ *BLANK
+     C           WHELP     ANDGT*ZERO
+     C                     MOVE BBCUST    SCCUS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Currency and Account Code must be entered
+      ** if Customer Number is entered
+      *
+     C           *IN42     IFEQ '0'
+      *
+      ** Currency Code must be entered.
+      *
+     C           SCCCY     IFEQ *BLANK
+     C                     MOVE '1'       *IN43
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71901 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SCCCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Error occured in AOCURRR0 Access Program
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN43
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71904 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** No error occured in AOCURRR0 and  '?' is present
+      ** in Currency Code entered get Currency Code
+      ** from access program
+      *
+     C           '?'       SCAN SCCCY:1   WHELP
+     C           @RTCD     IFEQ *BLANK
+     C           WHELP     ANDGT*ZERO
+     C                     MOVE A6CYCD    SCCCY
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Account Code must be entered
+      *
+     C           SCSCA     IFEQ *BLANK
+     C                     MOVE '1'       *IN44
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71902 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SCSCA
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+      ** Error occured in AOACODR0 Access Program
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN44
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71905 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** No error occured in AOACODR0 and '?' is present in
+      ** Account Code entered get selected Account Code from
+      ** from access program
+      *
+     C           '?'       SCAN SCSCA:1   WHELP
+     C           @RTCD     IFEQ *BLANK
+     C           WHELP     ANDGT*ZERO
+     C                     MOVE A5ACCD    SCSCA
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If Account Sequence Number is blank default it to '01'
+      *
+     C           SCACD     IFEQ *BLANK
+     C                     MOVE '01'      SCACD
+     C                     ENDIF
+      *
+      ** End of SCRAN = Blank
+     C                     ENDIF
+      *
+      ** If Credit Sweep Account is a valid,
+      ** check if it does exist in PF/ACCNTAB
+      *
+     C           WERR2     IFEQ 'Y'
+     C                     CALL 'AOACCTR0'
+     C                     PARM           @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SCRAN
+     C                     PARM           SCCUS
+     C                     PARM           SCCCY
+     C                     PARM           SCSCA
+     C                     PARM           SCACD
+     C                     PARM           SCBRC
+     C           SDACCT    PARM SDACCT    DSSDY
+      *
+      ** Error occured in AOACCTR0 Access Program
+      ** (Retail Account is invalid if '?' is present)
+      *
+     C           '?'       SCAN SCRAN:1   WHELP
+     C           @RTCD     IFNE *BLANK
+     C           WHELP     ORGT *ZERO
+     C                     MOVEA'111111'  *IN,41
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71906 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C/COPY WNCPYSRC,RE0254C013
+     C                     ENDIF
+     C/COPY WNCPYSRC,RE0254C009
+      *
+     C           WERR2     IFEQ 'Y'
+      *
+      ** Account Type is not 'R' (Retail Account)
+      *
+     C           ATYP      IFNE 'R'
+     C                     MOVEA'111111'  *IN,41
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71907 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Account is Closed (Account Status='C')
+      *
+     C           ACST      IFEQ 'C'
+     C                     MOVEA'111111'  *IN,41
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71908 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Save CR Sweep Account Retail Indicator
+      *
+     C                     MOVE RETB      WRETB2  1
+      *
+     C                     ENDIF
+      *
+      ** Save CR Sweep Account Midas Full Account
+      *
+     C                     MOVE BRCA      BRCA2
+     C                     MOVE CNUM      CNUM2
+     C                     MOVE CCY       CCY2
+     C                     MOVE ACOD      ACOD2
+     C                     MOVE ACSQ      ACSQ2
+     C                     Z-ADDACNO      WACNO2 100                                          CGL014
+     C**********           Z-ADDMINB      WMINB2 110                                  CGL014 BUG3281
+     C                     Z-ADDCOLA      WCOLA2 150                                         BUG3281
+     C                     Z-ADDBCOA      WBCOA2 150                                          CGL014
+     C                     MOVE COLF      WCOLF2  1                                           CGL014
+      *
+      ** Accounts Currency Code must be equal
+      *
+     C           *IN37     IFEQ '0'
+     C           *IN43     ANDEQ'0'
+      *                                                                   CEU022
+     C           CEU022    IFEQ 'N'                                       CEU022
+     C           CCY1      ANDNECCY2
+      *                                                                   CEU022
+     C                     MOVE '1'       *IN37
+     C                     MOVE '1'       *IN43
+     C                     MOVE 'N'       WERR1
+     C                     MOVE 'N'       WERR2
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71927 'ZAMSID
+     C                     EXSR ZASNMS
+      *                                                                   CEU022
+     C                     ENDIF                                          CEU022
+      *                                                                   CEU022
+     C                     ENDIF                                          CEU022
+      *
+      ** If multi-branching indicator is on, Transaction Branch
+      ** must be equal to either Credit A/c of Origin Branch or
+      ** Credit Sweep Account Branch
+      *
+     C           *IN82     IFEQ '1'
+      *
+     C           WERR1     IFEQ 'Y'
+     C           WERR2     ANDEQ'Y'
+      *
+     C           SBRCA     IFNE BRCA1
+     C           SBRCA     ANDNEBRCA2
+     C                     MOVE '1'       *IN34
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71911 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Validate if user is authorised to Action Code and Branch Combination
+      *
+     C           *IN34     IFEQ '0'
+     C                     CALL 'ZVACTBU'
+     C                     PARM SACTN     ZACTN   1
+     C                     PARM SBRCA     ZBRCD   3
+     C                     PARM           ERR     10
+      *
+     C           ERR       IFNE 0
+     C                     MOVE '1'       *IN34
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71912 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***If*Profit*Centre*is*used:*************************************   176510
+      ** If Profit Centre is used and a valid Transaction branch is       176510
+      ** entered.                                                         176510
+      **    1. Profit Centre must be a valid record in PF/SDPRFCPD
+      **       if entered
+      **    2. Get value from default matrix when blank
+      *
+     C           *IN81     IFEQ '1'
+     C           *IN34     ANDEQ'0'                                       176510
+      *
+     C           SPRFC     IFNE *BLANK
+     C                     CALL 'AOPRFCR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM SPRFC     @KEY1   4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+      *
+      ** Error occurred
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN47
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71914 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** No error occured AOPRFCR0 access program
+      ** and '?' is present in Profit Centre entered,
+      ** get Profit Centre from Access Object Program
+      *
+     C           '?'       SCAN SPRFC:1   WHELP
+     C           @RTCD     IFEQ *BLANK
+     C           WHELP     ANDGT*ZERO
+     C                     MOVE DSPCCD    SPRFC
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           WERR1     IFEQ 'Y'
+     C           BKPCDU    ANDEQ'Y'
+     C                     CALL 'AOPRFMR0'
+     C                     PARM *BLANKS   RTCDPR  1
+     C                     PARM *BLANKS   BOOKPR  2
+     C                     PARM *BLANKS   TRTPPR  5
+     C                     PARM *BLANKS   SUTPPR  2
+     C                     PARM SBRCA     BRANPR  3
+     C                     PARM *BLANKS   DEPTPR  3
+     C                     PARM USER      USERPR 10
+     C******************** PARM *BLANKS   ACOFPR  2                       176510
+     C                     PARM ACOF1     ACOFPR  2                       176510
+     C                     PARM CNUM1     CNUMPR  6
+     C                     PARM *BLANKS   PRFCPR  4
+     C           RTCDPR    IFEQ '0'
+     C           RTCDPR    OREQ '1'
+     C                     MOVE PRFCPR    SPRFC
+     C                     ENDIF
+     C           RTCDPR    IFEQ '1'                                                         MD051141
+     C           RTCDPR    OREQ '2'                                                         MD051141
+     C           CLE051    IFEQ 'Y'                                                         MD051141
+     C                     MOVE '1'       *IN47                                             MD051141
+     C                     MOVE 'N'       NOERR                                             MD051141
+     C                     MOVEL'REL0030' ZAMSID                                            MD051141
+     C                     EXSR ZASNMS                                                      MD051141
+     C                     ENDIF                                                            MD051141
+     C                     ENDIF                                                            MD051141
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Transaction Type:
+      **   1. Must be a valid record in PF/SDRETRPD
+      **   2. Default to '91005' when blank
+      *
+     C           STRAT     IFEQ *BLANK
+     C                     MOVE '91005'   STRAT
+     C                     ELSE
+     C                     CALL 'AORETRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM STRAT     @TRATT  5
+     C           SDRETR    PARM SDRETR    DSFDY
+      *
+      ** Error occurred
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN48
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71915 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      *
+      ** No error occured AORETRR0 access program
+      ** and '?' is present in Trans. Type entered,
+      ** get Trans. Type from Access Object Program
+      *
+     C           '?'       SCAN STRAT:1   WHELP   10
+     C           @RTCD     IFEQ *BLANK
+     C           WHELP     ANDGT*ZERO
+     C                     MOVE A1RTTY    STRAT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *                                                                                       197465
+      ** Narrative                                                                            197465
+      *                                                                                       197465
+     C           SPNAR     IFEQ *BLANK                                                        197465
+     C                     MOVE '1'       *IN49                                               197465
+     C                     MOVE 'N'       NOERR                                               197465
+     C                     MOVEL'RE71935' ZAMSID                                              197465
+     C                     EXSR ZASNMS                                                        197465
+     C                     ENDIF                                                              197465
+      *
+      ** Narrative Code:
+      *
+     C           WPNCD     IFNE *BLANK
+     C           WNARR     ANDEQ*BLANK
+      *
+     C                     CALL 'AONARRR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY    'WOPTN   7
+     C                     PARM           WPNCD
+     C           SDNARR    PARM SDNARR    DSFDY
+      *
+      **  Error occurred
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN49
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71928 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE ALNVCD    W@PNCD
+     C                     MOVE ALDON     W@PNAR
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE *BLANK    W@PNCD
+     C                     MOVE SPNAR     W@PNAR
+     C                     ENDIF
+      *
+      ** Currency Code:
+      **   1. Must be entered
+      **   2. Must be a valid record in PF/SDCURRPD
+      **   3. Must be equal to Currency Code of Accounts entered
+      *
+     C           SCCY      IFEQ *BLANK
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71893 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SCCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Error occurred
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71904 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** No error occured in AOCURRR0 and  '?' is present
+      ** in Currency Code entered get Currency Code
+      ** from access program
+      *
+     C           '?'       SCAN SCCY:1    WHELP
+     C           @RTCD     IFEQ *BLANK
+     C           WHELP     ANDGT*ZERO
+     C                     MOVE A6CYCD    SCCY
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Must be equal to Currency Code of accounts entered
+      *
+     C           CEU022    IFEQ 'N'                                       CEU022
+      *                                                                   CEU022
+     C           WERR1     IFEQ 'Y'
+     C           WERR2     ANDEQ'Y'
+     C           SCCY      ANDNECCY1
+     C           WERR1     OREQ 'Y'
+     C           WERR2     ANDEQ'Y'
+     C           SCCY      ANDNECCY2
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71910 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ELSE                                           CEU022
+      *                                                                   CEU022
+     C           WERR1     IFEQ 'Y'                                       CEU022
+     C           WERR2     ANDEQ'Y'                                       CEU022
+     C           SCCY      ANDNECCY1                                      CEU022
+     C                     MOVE '1'       *IN50                           CEU022
+     C                     MOVE 'N'       NOERR                           CEU022
+     C                     MOVEL'RE71910 'ZAMSID                          CEU022
+     C                     EXSR ZASNMS                                    CEU022
+     C                     ENDIF                                          CEU022
+      *                                                                   CEU022
+     C                     ENDIF                                          CEU022
+      *                                                                   CEU022
+      ** Sweep Date:
+      **   1. Must be a valid date
+      **   2. Must be greater than or equal to run date
+      **   3. Default to Run Date when blank
+      *
+     C                     Z-ADD*ZERO     NNXTP   50
+     C           SNXTP     IFEQ *BLANK
+     C                     MOVE AGRDNB    NNXTP
+     C                     MOVE AGRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SNXTP
+     C                     ELSE
+     C                     MOVE SNXTP     ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN51
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71916 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE ZDAYNO    NNXTP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Sweep Date is less than Run Date
+      *
+     C           NNXTP     IFGT *ZERO
+     C           NNXTP     ANDLTAGRDNB
+     C                     MOVE '1'       *IN51
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71917 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C/COPY WNCPYSRC,RE0254C016
+      *
+      ** Frequency Code:
+      **  1. Valid entries are 'D', 'W' 'F', 'S', 'M', 'R', 'T', 'Q'
+      **     'X', 'Y', 'L', 'B', 'A'
+      **  2. Default to 'D' when blank
+      *
+     C           SPAYF     IFEQ *BLANK
+     C                     MOVE 'D'       SPAYF
+     C                     ELSE
+     C           SPAYF     LOKUPZPAYF                    72
+     C           *IN72     IFEQ '0'
+     C                     MOVE '1'       *IN52
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71918 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Sweep Day Number:
+      **   1. Must range from 01-31 when entered.
+      **   2. Must be blank if Frequency Code is not
+      **      'M', 'T', 'Q', 'X' or 'Y'
+      **   3. Default to Sweep Day Number when blank and
+      **      Frequency Code is 'M', 'T', 'Q', 'X' or 'Y'
+      *
+     C           *IN51     IFEQ '0'
+      *
+     C           SPAYF     IFEQ 'M'
+     C           SPAYF     OREQ 'T'
+     C           SPAYF     OREQ 'Q'
+     C           SPAYF     OREQ 'X'
+     C           SPAYF     OREQ 'Y'
+      *
+     C           SDYTP     IFEQ *BLANK
+     C           *IN98     IFEQ '0'
+     C           2         SUBSTSNXTP:1   SDYTP
+     C                     ELSE
+     C           2         SUBSTSNXTP:3   SDYTP
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE SDYTP     NDYTP   20
+     C           NDYTP     IFLT 1
+     C           NDYTP     ORGT 31
+     C                     MOVE '1'       *IN53
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71919 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ELSE
+     C           SDYTP     IFNE *BLANK
+     C                     MOVE '1'       *IN53
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71926 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Final Date when entered:
+      **  1. Must be a valid date
+      **  2. Must be greater than or equal to Sweep Date
+      *
+     C                     Z-ADD*ZERO     NDLPY   50
+      *
+     C           SDLPY     IFNE *BLANK
+     C                     MOVE SDLPY     ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN54
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71920 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE ZDAYNO    NDLPY
+     C           NDLPY     IFLT NNXTP
+     C                     MOVE '1'       *IN54
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71921 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Threshold Amount:
+      **   1. Must be a valid amount in Sweep currency
+      *
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE SSTHR     ZFIELD
+     C                     MOVE A6NBDP    ZADEC
+     C           13        SUB  A6NBDP    ZADIG
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN55
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WVTAMT                                              CGL014
+     C                     MOVEL'RE71922 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE ZFIELD    NSTHR  130
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SSTHR
+     C                     ENDIF
+      *
+      ** Threshold Sign:
+      **   1. Valid entries are '+' & '-'
+      **   2. Default to '+' when blank
+      *
+     C           SSTHRS    IFEQ *BLANK
+     C                     MOVE '+'       SSTHRS
+     C                     ENDIF
+      *
+     C           SSTHRS    IFNE '+'
+     C           SSTHRS    ANDNE'-'
+     C                     MOVE '1'       *IN56
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WVTSGN                                              CGL014
+     C                     MOVEL'RE71923 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Sweep Type:
+      **   1. Valid  entries are '1', '2' or '3'
+      **   1. If switchable feature CEU022 is installed '4' is also valid CEU022
+      **   2. Default to '3' when blank
+      *
+     C           SSWTP     IFEQ *BLANK
+     C                     MOVE '3'       SSWTP
+     C/COPY WNCPYSRC,RE0254C015
+     C                     ENDIF
+      *                                                                   CEU022
+     C           CEU022    IFEQ 'N'                                       CEU022
+      *                                                                   CEU022
+     C           SSWTP     IFNE '1'
+     C           SSWTP     ANDNE'2'
+     C           SSWTP     ANDNE'3'
+     C                     MOVE '1'       *IN57
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WVSTYP                                              CGL014
+     C                     MOVEL'RE71924 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ELSE                                           CEU022
+      *                                                                   CEU022
+     C           SSWTP     IFNE '1'                                       CEU022
+     C           SSWTP     ANDNE'2'                                       CEU022
+     C           SSWTP     ANDNE'3'                                       CEU022
+     C           SSWTP     ANDNE'4'                                       CEU022
+     C                     MOVE '1'       *IN57                           CEU022
+     C                     MOVE 'N'       NOERR                           CEU022
+     C                     MOVE 'N'       WVSTYP                                              CGL014
+     C                     MOVEL'RE71930 'ZAMSID                          CEU022
+     C                     EXSR ZASNMS                                    CEU022
+     C                     ENDIF                                          CEU022
+      *                                                                   CEU022
+     C                     ENDIF                                          CEU022
+      *                                                                                       CGL014
+     C           CGL014    IFEQ 'Y'                                                           CGL014
+     C           WVTAMT    ANDEQ'Y'                                                           CGL014
+     C           WVTSGN    ANDEQ'Y'                                                           CGL014
+     C           WVSTYP    ANDEQ'Y'                                                           CGL014
+     C                     MOVE 'N'       WFLAG   1                                           CGL014
+      *                                                                                       CGL014
+     C           SSTHRS    IFEQ '-'                                                           CGL014
+     C                     Z-SUBNSTHR     WTHAMT 130                                          CGL014
+     C                     ELSE                                                               CGL014
+     C                     Z-ADDNSTHR     WTHAMT                                              CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+     C                     SELEC                                                              CGL014
+     C           SSWTP     WHEQ '1'                                                           CGL014
+     C           WCOLF1    IFEQ 'Y'                                                           CGL014
+     C**********           Z-ADDWMINB1    WMINB  110                                  CGL014 BUG3281
+     C                     Z-ADDWCOLA1    WCOLA  150                                         BUG3281
+     C                     Z-ADDWBCOA1    WBCOA  130                                          CGL014
+     C                     MOVE 'Y'       WFLAG   1                                           CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+     C           SSWTP     WHEQ '2'                                                           CGL014
+     C           WCOLF2    IFEQ 'Y'                                                           CGL014
+     C**********           Z-ADDWMINB2    WMINB                                       CGL014 BUG3281
+     C                     Z-ADDWCOLA2    WCOLA                                              BUG3281
+     C                     Z-ADDWBCOA2    WBCOA                                               CGL014
+     C                     MOVE 'Y'       WFLAG   1                                           CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+     C           SSWTP     WHEQ '3'                                                           CGL014
+     C           WCOLF1    IFEQ 'Y'                                                           CGL014
+     C**********           Z-ADDWMINB1    WMINB                                       CGL014 BUG3281
+     C                     Z-ADDWCOLA1    WCOLA                                              BUG3281
+     C                     Z-ADDWBCOA1    WBCOA                                               CGL014
+     C                     MOVE 'Y'       WFLAG   1                                           CGL014
+     C                     ENDIF                                                              CGL014
+     C           WCOLF2    IFEQ 'Y'                                                           CGL014
+     C**********           Z-ADDWMINB2    WMINB                                       CGL014 BUG3281
+     C                     Z-ADDWCOLA2    WCOLA                                              BUG3281
+     C                     Z-ADDWBCOA2    WBCOA                                               CGL014
+     C                     MOVE 'Y'       WFLAG   1                                           CGL014
+     C                     ENDIF                                                              CGL014
+     C                     ENDSL                                                              CGL014
+      *                                                                                       CGL014
+     C           WFLAG     IFEQ 'Y'                                                           CGL014
+      *                                                                                       CGL014
+      ** Threshold amount must be greater than blocked amount                                 CGL014
+      ** of the corresponding account (a/c of origin/sweep)                                   CGL014
+      *                                                                                       CGL014
+     C           WTHAMT    IFLT WBCOA                                                         CGL014
+     C                     MOVE '1'       *IN55                                               CGL014
+     C                     MOVE '1'       *IN56                                               CGL014
+     C                     MOVE 'N'       NOERR                                               CGL014
+     C                     MOVEL'RE71937 'ZAMSID                                              CGL014
+     C                     EXSR ZASNMS                                                        CGL014
+     C                     ELSE                                                               CGL014
+      *                                                                                       CGL014
+      ** Warning - Threshold amount is less than minimum balance                              CGL014
+      ** for the corresponding account (a/c of origin/sweep)                                  CGL014
+      *                                                                                       CGL014
+     C********** WTHAMT    IFLT WMINB                                                 CGL014 BUG3281
+     C           WTHAMT    IFLT WCOLA                                                        BUG3281
+     C           WTHAMT    IFNE WCOPY                                                         CGL014
+     C           NOERR     OREQ 'N'                                                           CGL014
+     C                     MOVE '0'       WWARN                                               CGL014
+     C                     ENDIF                                                              CGL014
+     C           WWARN     IFEQ '0'                                                           CGL014
+     C           NOERR     ANDNE'N'                                                           CGL014
+     C           NOERR     IFNE 'N'                                                           CGL014
+     C                     MOVE '1'       WWARN                                               CGL014
+     C                     ENDIF                                                              CGL014
+     C                     MOVE '1'       *IN55                                               CGL014
+     C                     MOVE '1'       *IN56                                               CGL014
+     C                     MOVE 'N'       NOERR                                               CGL014
+     C                     MOVEL'RE71936 'ZAMSID                                              CGL014
+     C                     Z-ADDWTHAMT    WCOPY                                               CGL014
+     C                     EXSR ZASNMS                                                        CGL014
+     C                     ENDIF                                                              CGL014
+     C                     ENDIF                                                              CGL014
+     C                     ENDIF                                                              CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+      ** Check if Account is Blocked, Bankrupt or Bad Debt
+      *
+     C           *IN57     IFEQ '0'
+      *
+     C           WERR1     IFEQ 'Y'
+      *
+     C                     SELEC
+     C           SSWTP     WHEQ '1'
+     C                     TESTB'2'       WRETB1         72Block Debits
+     C           SSWTP     WHEQ '2'
+     C                     TESTB'3'       WRETB1         72Block Credits
+     C           SSWTP     WHEQ '3'
+     C                     TESTB'2'       WRETB1         72Block Credits
+     C  N72                TESTB'3'       WRETB1         72Block Credits
+     C           SSWTP     WHEQ '4'                                       CEU022
+     C                     TESTB'2'       WRETB1         72Block Credits  CEU022
+     C  N72                TESTB'3'       WRETB1         72Block Credits  CEU022
+     C                     ENDSL
+      *
+     C  N72                TESTB'6'       WRETB1         72Bankrupt/Liq.
+     C  N72                TESTB'7'       WRETB1         72Bad Debt
+     C           *IN72     IFEQ '1'
+     C                     MOVEA'111111'  *IN,35
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+     C                     MOVEL'RE71909 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           WERR2     IFEQ 'Y'
+      *
+     C                     SELEC
+     C           SSWTP     WHEQ '1'
+     C                     TESTB'3'       WRETB2         72Block Credits
+     C           SSWTP     WHEQ '2'
+     C                     TESTB'2'       WRETB2         72Block Debits
+     C           SSWTP     WHEQ '3'
+     C                     TESTB'2'       WRETB2         72Block Debits
+     C  N72                TESTB'3'       WRETB2         72Block Credits
+     C           SSWTP     WHEQ '4'                                       CEU022
+     C                     TESTB'2'       WRETB2         72Block Debits   CEU022
+     C  N72                TESTB'3'       WRETB2         72Block Credits  CEU022
+     C                     ENDSL
+      *
+     C  N72                TESTB'6'       WRETB2         72Bankrupt/Liq.
+     C  N72                TESTB'7'       WRETB2         72Bad Debt
+     C           *IN72     IFEQ '1'
+     C                     MOVEA'111111'  *IN,41
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71909 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** CR A/C of Origin in use?
+      *
+     C           WERR1     IFEQ 'Y'
+      *
+      ***Move*Screen*fields*to*Key*fields                                 165496
+      **                                                                  165496
+     C***********          MOVE SDRBR     KDRBR                           165496
+     C***********          MOVE SDCUS     KDCUS                           165496
+     C***********          MOVE SDCCY     KDCCY                           165496
+     C***********          MOVE SDACD     KDACD                           165496
+     C***********          MOVE SDACS     KDACS                           165496
+     C***********          MOVE SDRAN     KDRAN                           165496
+      **                                                                  165496
+     C***********SDRAN     IFNE *BLANKS                                   165496
+     C***********KEY2      CHAINRESWEPL2             61                   165496
+     C***********          ELSE                                           165496
+     C***********KEY3      CHAINRESWEPL3             61                   165496
+     C***********          ENDIF                                          165496
+      *                                                                   165496
+      ** Chain to see if sweep for credit acc of origin exists or not,    165496
+      ** then read through to check for sweeps other than the first       165496
+      ** one found.                                                       165496
+      *                                                                   165496
+     C********** CNUM#     IFEQ *ZERO                      RETL NO USED                165496 CSD027
+     C           CNUM#     IFEQ *BLANKS                    RETL NO USED                       CSD027
+     C           KEY2      CHAINRESWEPL2             65                   165496
+     C           *IN65     IFEQ *OFF                       REC FOUND      165496
+      *                                                                   165496
+      ** If a record found, check to see if others exist.                 165496
+      *                                                                   165496
+     C           *IN65     DOWEQ*OFF                       REC FOUND      165496
+      *                                                                   165496
+     C           ARECI     IFNE 'D'                        REC NOT LIVE   165496
+     C           KEY2      READERESWEPL2                 65               165496
+     C                     SETON                     61    ACCEPT SWEEP   165496
+     C                     ELSE                            REC LIVE       165496
+     C                     SETON                     65                   165496
+     C                     SETOF                     61    REJECT SWEEP   165496
+     C                     ENDIF                                          165496
+      *                                                                   165496
+     C                     ENDDO                                          165496
+      *                                                                   165496
+     C                     ELSE                            REC NOT FOUND  165496
+     C                     SETON                     61    ACCEPT SWEEP   165496
+     C                     ENDIF                                          165496
+      *                                                                   165496
+     C                     ELSE                            GL A/C KEY     165496
+      *                                                                   165496
+     C           KEY3      CHAINRESWEPL3             65                   165496
+     C           *IN65     IFEQ *OFF                       REC FOUND      165496
+      *                                                                   165496
+      ** If a record found, check to see if others exist.                 165496
+      *                                                                   165496
+     C           *IN65     DOWEQ*OFF                       REC FOUND      165496
+      *                                                                   165496
+     C           ARECI     IFNE 'D'                        REC NOT LIVE   165496
+     C           KEY3      READERESWEPL3                 65               165496
+     C                     SETON                     61    ACCEPT SWEEP   165496
+     C                     ELSE                            REC LIVE       165496
+     C                     SETON                     65                   165496
+     C                     SETOF                     61    REJECT SWEEP   165496
+     C                     ENDIF                                          165496
+      *                                                                   165496
+     C                     ENDDO                                          165496
+      *                                                                   165496
+     C                     ELSE                            REC NOT FOUND  165496
+     C                     SETON                     61    ACCEPT SWEEP   165496
+     C                     ENDIF                                          165496
+      *                                                                   165496
+     C                     ENDIF                                          165496
+      *
+     C           SACTN     IFEQ 'I'
+     C           *IN61     ANDEQ'0'
+     C           SACTN     OREQ 'A'
+     C           *IN61     ANDEQ'0'
+     C           SWEP      ANDNERSWEP
+     C                     MOVE 'N'       WERR1
+     C                     MOVE 'N'       NOERR
+     C                     MOVEA'111111'  *IN,35
+     C***********          MOVEL'RE71929 'ZAMSID                          137642
+     C                     MOVEL'RE72014 'ZAMSID                          137642
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C/COPY WNCPYSRC,RE0254C014
+      *
+     C                     ENDIF
+      *
+      ** CR A/c of Origin must not be equal to CR Sweep Account
+      *
+     C           WERR1     IFEQ 'Y'
+     C           WERR2     ANDEQ'Y'
+     C           FCRAC     ANDEQFSWAC
+     C                     MOVEA'111111'  *IN,35
+     C                     MOVEA'111111'  *IN,41
+     C                     MOVE 'N'       NOERR
+     C                     MOVE 'N'       WERR1
+     C                     MOVE 'N'       WERR2
+     C                     MOVEL'RE71913 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C/COPY WNCPYSRC,RE0254C018
+      *
+      ** If CR A/c of Origin Branch is not equal to CR Sweep Account
+      ** Branch, set Multi-branch Sweep Indicator to 'Y'
+      *
+     C           NOERR     IFEQ 'Y'
+     C           BRCA1     ANDNEBRCA2
+     C                     MOVE 'Y'       WMULTS
+     C                     ELSE
+     C                     MOVE 'N'       WMULTS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * UPDAT - Update Processing                                     *
+      *                                                               *
+      * Called by: SRPROC - Process Detail Screen                     *
+      *                                                               *
+      * Calls: CHECK  - Check if record has been changed              *
+      *        SRAMND - Amend a record                                *
+      *        SRDELE - Delete a record                               *
+      *        SRINS  - Insert a record                               *
+      *        SRBLNK - Initialise initial screen                     *
+      *        SRAUTH - Update a record if Action Code = 'X'          *                       CRE401
+      *                                                               *
+      *****************************************************************
+      *
+     C           UPDAT     BEGSR
+      *
+     C           SACTN     IFEQ 'A'
+     C           SACTN     OREQ 'D'
+     C           SACTN     OREQ 'X'                                                           CRE401
+     C                     EXSR CHECK
+     C           NOERR     IFEQ 'Y'
+     C           SACTN     CASEQ'A'       SRAMND
+     C           SACTN     CASEQ'D'       SRDELE
+     C           SACTN     CASEQ'X'       SRAUTH                                              CRE401
+     C                     ENDCS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SACTN     IFEQ 'I'
+     C                     EXSR SRINS
+     C                     ENDIF
+      *
+      ** Set up standard output information
+      *
+     C           NOERR     IFEQ 'Y'
+     C                     MOVE 'RE'      MDID    2
+     C                     MOVEL'RE0254'  PGMN    8
+     C                     MOVE WSID      WSIDX   3
+     C                     TIME           MTIME   60
+     C                     MOVE SACTN     SACTNX  1
+     C                     MOVE USER      USRIDX 10
+     C                     MOVE SSWEP     SSWEPX  6
+      *
+     C           CMTTXT    COMIT
+      *
+     C                     MOVE '1'       *IN12
+     C                     EXSR SRBLNK
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C/COPY WNCPYSRC,RE0254C006
+      *****************************************************************
+      *                                                               *
+      * SRAMND - Update record in RESWEPL0                            *
+      *                                                               *
+      * Called by: UPDAT - Update Processing                          *
+      *                                                               *
+      * Calls    : ZTNLU1 - Generate new transaction number           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAMND    BEGSR
+      *
+     C                     MOVE SDRBR     DRBR
+     C                     MOVE SDCUS     DCUS
+     C                     MOVE SDACD     DACD
+     C                     MOVE SDACS     DACS
+     C                     MOVE SDRAN     DRAN
+      *
+     C                     MOVE SCBRC     CBRC
+     C                     MOVE SCCUS     CCUS
+     C                     MOVE SCSCA     CSCA
+     C                     MOVE SCACD     CACD
+     C                     MOVE SCRAN     CRAN
+      *
+     C                     MOVE SBRCA     BRCA
+     C                     MOVE WMULTS    MBSI
+      *
+     C                     MOVE SCCY      CCY
+     C                     MOVE NNXTP     NXTP
+     C                     MOVE NDLPY     DLPY
+     C                     MOVE SPAYF     PAYF
+     C                     MOVE SDYTP     DYTP
+     C                     MOVE W@PNCD    PNCD
+     C                     MOVE W@PNAR    PNAR
+     C                     MOVE SPRFC     PRFC
+     C                     MOVE STRAT     TRAT
+      *
+     C                     MOVE CCY2      CCYC                            CEU022
+      *                                                                   CEU022
+     C           SSTHRS    IFEQ '-'
+     C           NSTHR     MULT -1        NSTHR
+     C                     ENDIF
+     C                     MOVE NSTHR     STHR
+      *
+     C                     MOVE SSWTP     SWTP
+      *
+     C                     MOVE BJRDNB    LCD
+     C                     MOVE 'A'       CHTP
+      *
+     C                     EXSR ZTNLU1
+     C                     MOVE NATN      TNLU
+      *                                                                                       CRE401
+     C           CRE401    IFEQ 'Y'                                                           CRE401
+     C                     MOVE 'N'       AUTH                                                CRE401
+     C                     MOVE USER      LUSR                                                CRE401
+     C                     MOVE *BLANK    AUSR                                                CRE401
+     C                     ELSE                                                               CRE401
+     C                     MOVE *BLANK    AUTH                                                CRE401
+     C                     MOVE *BLANK    LUSR                                                CRE401
+     C                     MOVE *BLANK    AUSR                                                CRE401
+     C                     ENDIF                                                              CRE401
+      *
+     C                     UPDATRESWEPD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRDELE - Update record in RESWEPL0                            *
+      *                                                               *
+      * Called by: UPDAT - Update Processing                          *
+      *                                                               *
+      * Calls    : ZTNLU1 - Generate new transaction number           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDELE    BEGSR
+      *
+     C                     MOVE '*'       RECI
+     C                     MOVE BJRDNB    LCD
+     C                     MOVE 'D'       CHTP
+     C                     EXSR ZTNLU1
+     C                     MOVE NATN      TNLU
+      *                                                                                       CRE401
+     C           CRE401    IFEQ 'Y'                                                           CRE401
+     C                     MOVE 'D'       RECI                                                CRE401
+     C                     MOVE 'N'       AUTH                                                CRE401
+     C                     MOVE USER      LUSR                                                CRE401
+     C                     MOVE *BLANK    AUSR                                                CRE401
+     C                     ELSE                                                               CRE401
+     C                     MOVE *BLANK    AUTH                                                CRE401
+     C                     MOVE *BLANK    LUSR                                                CRE401
+     C                     MOVE *BLANK    AUSR                                                CRE401
+     C                     ENDIF                                                              CRE401
+      *
+     C                     UPDATRESWEPD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINS - Write a record in RESWEPL0                            *
+      *                                                               *
+      * Called by: UPDAT - Update Processing                          *
+      *                                                               *
+      * Calls    : ZTNLU1 - Generate new transaction number           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINS     BEGSR
+      *
+     C                     MOVE *BLANK    OVRWRT  1
+     C                     MOVE SSWEP     NSWEP   60
+     C           NSWEP     CHAINRESWEPL0             60
+     C           *IN60     IFEQ '0'
+     C           RECI      ANDNE'D'
+     C                     MOVE 'Y'       OVRWRT
+     C                     ENDIF
+      *
+     C                     MOVE 'D'       RECI
+     C                     MOVE SSWEP     SWEP
+      *
+     C                     MOVE SDRBR     DRBR
+     C                     MOVE SDCUS     DCUS
+     C                     MOVE SDACD     DACD
+     C                     MOVE SDACS     DACS
+     C                     MOVE SDRAN     DRAN
+      *
+     C                     MOVE SCBRC     CBRC
+     C                     MOVE SCCUS     CCUS
+     C                     MOVE SCSCA     CSCA
+     C                     MOVE SCACD     CACD
+     C                     MOVE SCRAN     CRAN
+      *
+     C                     MOVE SBRCA     BRCA
+     C                     MOVE WMULTS    MBSI
+      *
+     C                     MOVE SCCY      CCY
+     C                     MOVE NNXTP     NXTP
+     C                     MOVE NDLPY     DLPY
+     C                     MOVE SPAYF     PAYF
+     C                     MOVE SDYTP     DYTP
+     C                     MOVE W@PNCD    PNCD
+     C                     MOVE W@PNAR    PNAR
+     C                     MOVE SPRFC     PRFC
+     C                     MOVE STRAT     TRAT
+      *                                                                   CEU022
+     C                     MOVE CCY2      CCYC                            CEU022
+      *
+     C           SSTHRS    IFEQ '-'
+     C           NSTHR     MULT -1        NSTHR
+     C                     ENDIF
+     C                     MOVE NSTHR     STHR
+      *
+     C                     MOVE SSWTP     SWTP
+     C                     MOVE BJRDNB    LCD
+     C                     MOVE 'I'       CHTP
+      *
+      ** Obtain last transaction number
+      *
+     C                     EXSR ZTNLU1
+     C                     MOVE NATN      TNLU
+      *                                                                                       CRE401
+     C           CRE401    IFEQ 'Y'                                                           CRE401
+     C                     MOVE 'N'       AUTH                                                CRE401
+     C                     MOVE USER      LUSR                                                CRE401
+     C                     MOVE *BLANK    AUSR                                                CRE401
+     C                     ELSE                                                               CRE401
+     C                     MOVE *BLANK    AUTH                                                CRE401
+     C                     MOVE *BLANK    LUSR                                                CRE401
+     C                     MOVE *BLANK    AUSR                                                CRE401
+     C                     ENDIF                                                              CRE401
+      *
+      ** If Sweep Ref. is already on file but is not
+      ** a live record then overwrite the said record
+      ** otherwise insert new record
+      *
+     C           OVRWRT    IFEQ 'Y'
+     C                     UPDATRESWEPD0
+     C                     ELSE
+     C                     WRITERESWEPD0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT                                                                                  CRE401
+      *****************************************************************                       CRE401
+      *                                                               *                       CRE401
+      * SRAUTH - Update a record if Action Code is 'X' (Authorise)    *                       CRE401
+      *                                                               *                       CRE401
+      * Called by: UPDAT - Update Processing                          *                       CRE401
+      *                                                               *                       CRE401
+      * Calls    : ZTNLU1 - Generate new transaction number           *                       CRE401
+      *                                                               *                       CRE401
+      *****************************************************************                       CRE401
+      *                                                                                       CRE401
+     C           SRAUTH    BEGSR                                                              CRE401
+      *                                                                                       CRE401
+     C           CHTP      IFEQ 'D'                                                           CRE401
+     C                     MOVE '*'       RECI                                                CRE401
+     C                     ENDIF                                                              CRE401
+      *                                                                                       CRE401
+     C                     MOVE BJRDNB    LCD                                                 CRE401
+     C                     EXSR ZTNLU1                                                        CRE401
+     C                     MOVE NATN      TNLU                                                CRE401
+     C                     MOVE 'Y'       AUTH                                                CRE401
+     C                     MOVE USER      AUSR                                                CRE401
+     C                     UPDATRESWEPD0                                                      CRE401
+      *                                                                                       CRE401
+     C                     ENDSR                                                              CRE401
+      *****************************************************************                       CRE401
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CHECK - Check if record has been changed                      *
+      *                                                               *
+      * Called by: UPDAT - Update Processing                          *
+      *                                                               *
+      * Calls: ZASNMS - Send message to program message queue         *
+      *        SRFRMT - Format screen fields                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CHECK     BEGSR
+      *
+     C                     MOVE 'Y'       NOERR
+      *
+      ** Check if record has been changed or
+      ** deleted by another user
+      *
+     C                     MOVE SSWEP     NSWEP   60
+     C           NSWEP     CHAINRESWEPL0             60
+     C           *IN60     IFEQ '1'
+     C           LCD       ORNE SVLCD
+     C           CHTP      ORNE SVCHTP
+     C           TNLU      ORNE SVTNLU
+     C           RECI      ORNE 'D'
+      *
+     C                     MOVE 'N'       NOERR
+     C                     MOVEL'RE71925 'ZAMSID
+     C                     EXSR ZASNMS
+      *
+      ** If record has been deleted by another user
+      ** re-display initial screen otherwise re-load changes
+      *
+     C           RECI      IFNE 'D'
+     C                     MOVE '1'       *IN12
+     C                     MOVEA'11'      *IN,32
+     C                     ELSE
+     C                     EXSR SRFRMT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRBLNK - Initialise initial screen input fields and reset     *
+      *          error indicators                                     *
+      *                                                               *
+      * Called by: Main                                               *
+      *            SRPROC - Process detail screen                     *
+      *            UPDAT  - Update processing                         *
+      *                                                               *
+      * Calls    : None                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBLNK    BEGSR
+      *
+      ** Initialise screen input fields
+      *
+     C                     MOVE *BLANK    SSWEP
+     C                     MOVE *BLANK    SACTN
+     C                     Z-ADD0         WCOPY  130                                          CGL014
+     C                     MOVE '0'       WWARN   1                                           CGL014
+     C/COPY WNCPYSRC,RE0254C017
+      *
+      ** Set off error indicators
+      *
+     C                     MOVEA'00'      *IN,32
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ZTNLU1 - To lock the transaction number date area and then    *
+      *          update and release the data area.                    *
+      *                                                               *
+      * Called by: SRAMND - Amend a record                            *
+      *            SRDELE - Delete a record                           *
+      *            SRINS  - Insert a record                           *
+      *                                                               *
+      * Calls    : None                                               *
+      *                                                               *
+      *****************************************************************
+     C           ZTNLU1    BEGSR
+      *
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ZASNMS - Send Message to program message queue                *
+      *                                                               *
+      * Called by: SRVAL1 - Validate initial screen                   *
+      *            SRVAL2 - Validate detail screen                    *
+      *            CHECK  - Check if record has been changed          *
+      *                                                               *
+      * Calls    : None                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM MSGF      ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CLEAR - Clear message on program message queue               *
+      *                                                               *
+      *  Called by: Main                                              *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLEAR     BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: SRINIT - Initial processing                        *
+      *                                                               *
+      * Calls    : None                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZEDITZ2
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZALIGNZ2
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**  ZPAYF
+DWFSMRTQXYBLA
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

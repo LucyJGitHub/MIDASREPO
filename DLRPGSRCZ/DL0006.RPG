@@ -1,0 +1,602 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Citydealer LE cashflow extract')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0006 - Citydealer LE Cashflow Extract                      *
+      *                                                               *
+      *  Function:  This program will be called by DLC0006 during     *
+      *  (C.O.B.)   Close of Business.  It will use the Customer      *
+      *             Lending events file to extract all those event    *
+      *             types for all loans and facilities in the system  *
+      *             which relate to funds being received or paid out. *
+      *                                                               *
+      *  Called By: DLC0006                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE154             Date 06Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 191525             Date 27Mar01               *
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163486             Date 19Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPK009             Date 13Aug99               *
+      *                 095562             DATE 07NOV95               *
+      *                 095306             DATE 01NOV95               *
+      *                 CCM002 *CREATE     DATE 04SEP95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  191525 - DB error when settlement account not found.         *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  163486 - Recompile due to changes in LVENTEL.                *
+      *  CPK009 - Recompile problem found at DBA R3.00 packaging.     *
+      *  095562 - Wrong value date for call loan maturity events and  *
+      *           message type 'LP' also written out to wrong record. *
+      *  095306 - Recompiled due to printer file change.              *
+      *  CCM002 - Midas/Citydealer Interface (Phases V and VI)        *
+      *                                                               *
+      *****************************************************************
+     FLVENTL5 IF  E           K        DISK
+     FCLOAN   IF  E           K        DISK
+     FDLCDNCL0UF  E           K        DISK         KINFSR *PSSR A
+     FDL0006AUO   E                    PRINTER                        UC
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N    O F    I N D I C A T O R S                *
+     F*                                                               *
+     F*  10         EOF read for LF/LVENTL5                           *
+     F*  20         Chain Fails for LF/DLCDNCL0                       *
+     F*  30         Chain Fails for LF/CLOAN                          *
+     F*  U7-U8      Database Error                                    *
+     F*  LR         Exit program                                      *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  #LINIT  -  Initial Processing                                *
+     F*  #LEVNT  -  Process all events                                *
+     F*  #LSETL  -  Determine if Settlement is Through a Nostro Event *
+     F*  *PSSR   -  Program exception error routine                   *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+      /COPY ZSRSRC,ZHOLE
+      /SPACE 3
+      ** Rename NLRA field in CLOANCK to distinguish it from same                             CPK009
+      ** named field defined in LOAMSZ1                                                       CPK009
+      *                                                                                       CPK009
+     ICLOANCKF                                                                                CPK009
+     I              NLRA                            NLRACK                                    CPK009
+      *                                                                                       CPK009
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I*
+     I** Temporary Data Structure for file DLCDNCL0.
+     I*
+     I            DS
+     I                                        1   2 ULMTYP
+     I                                        3   5 ULBRCA
+     I                                        6   8 ULCCY
+     I                                        9  130ULVDAT
+     I                                       14  150ULNOSN
+     I                                       16  300ULAMT
+     I                                        1  30 ULCDNC
+     I*
+     I** Data structure for file DLCDNCL0.
+     I*
+     I            DS
+     I                                        1   2 MOTYP
+     I                                        3   5 BRCA
+     I                                        6   8 CCY
+     I                                        9  130VDAT0
+     I                                       14  150NOSN
+     I                                       16  300AMT
+     I                                        1  30 WCDNC
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+     I*
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDACCT    E DSACCNTAB
+     I              CCY                             ACCCY
+     I              BRCA                            ACBRCA
+      ** Account Details
+      *
+     ISDNOST    E DSSDNOSTPD
+      ** Nostro Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+      /EJECT
+     C*
+     C** Initialisation.
+     C*
+     C                     EXSR #LINIT
+     C*
+     C** Process all events in the file.
+     C*
+     C                     EXSR #LEVNT
+     C*
+     C                     MOVE '1'       *INLR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LINIT  - Initial Processing.                                 *
+     C*                                                               *
+     C* Called by :  Main - Main Processing.                          *
+     C*                                                               *
+     C* Calls :  *PSSR  - Database Error Processing                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LINIT    BEGSR
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Set Key for file DLCDNCL0.
+     C*
+     C           KCDNC     KLIST
+     C                     KFLD           ULMTYP
+     C                     KFLD           ULBRCA
+     C                     KFLD           ULCCY
+     C                     KFLD           ULVDAT
+     C                     KFLD           ULNOSN
+     C*
+     C** Set Key for file CLOAN.
+     C*
+     C           KCLOAN    KLIST
+     C                     KFLD           LNRF
+     C                     KFLD           WRCDT   1
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** Access the Bank Details.
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0006'  DBPGM
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LEVNT  - Process all events.                                 *
+     C*                                                               *
+     C* Called by :  Main - Main Processing.                          *
+     C*                                                               *
+     C* Calls :  #LSETL - Determine if Settlement is Through a        *
+     C*                   Nostro Event                                *
+     C*          #LEDAT - Determine the Output Event Date             *
+     C*          *PSSR  - Program exception error routine             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LEVNT    BEGSR
+     C*
+     C** Read a record from the Customer Lending Cashflow Events file.
+     C*
+     C                     READ LVENTL5                  10
+     C                     MOVE '1'       WFIRST  1
+     C                     MOVE '0'       WRECRD  1
+     C*
+     C** Process every record in the file.
+     C*
+     C           *IN10     DOWEQ*OFF
+     C*
+     C** Initialise Settlement Nostro.
+     C*
+     C                     Z-ADD0         WNOSN   20
+     C*
+     C** Determine if Settlement through a Nostro Account
+     C** if Settlement type is not zero.
+     C*
+     C           SETP      IFNE 0
+     C                     EXSR #LSETL
+     C                     ENDIF
+     C*
+     C** Determine the Output Event Date and set module/type
+     C** to 'LP' or 'LE'.
+     C*
+     C           EDAT      IFEQ 0
+     C                     EXSR #LEDAT
+     C***********          MOVE 'LP'      ULMTYP                          095562
+     C                     MOVE 'LP'      WMTYP   2                       095562
+     C                     ELSE
+     C                     Z-ADDEDAT      WEDAT
+     C***********          MOVE 'LE'      ULMTYP                          095562
+     C                     MOVE 'LE'      WMTYP                           095562
+     C                     ENDIF
+     C*
+     C           WFIRST    IFEQ '1'
+     C           WMTYP     ORNE ULMTYP                                    095562
+     C           EBRC      ORNE ULBRCA
+     C           ECCY      ORNE ULCCY
+     C           WEDAT     ORNE ULVDAT
+     C           WNOSN     ORNE ULNOSN
+     C*
+     C** If this is NOT the first record processed.
+     C*
+     C           WFIRST    IFNE '1'
+     C*
+     C** Access the Citydealer New Transmission Values file.
+     C*
+     C           KCDNC     CHAINDLCDNCL0             20
+     C*
+     C** If record is found, update the file.
+     C*
+     C           *IN20     IFEQ *OFF
+     C                     ADD  ULAMT     AMT
+     C                     UPDATDLCDNCD0
+     C                     ELSE
+     C*
+     C** Write the new record to the file.
+     C*
+     C                     MOVELULCDNC    WCDNC
+     C                     WRITEDLCDNCD0
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** Setup the fields from the event record.
+     C*
+     C                     MOVE WMTYP     ULMTYP                          095562
+     C                     MOVE EBRC      ULBRCA
+     C                     MOVE ECCY      ULCCY
+     C                     Z-ADDWEDAT     ULVDAT
+     C                     Z-ADDWNOSN     ULNOSN
+     C                     Z-ADD0         ULAMT
+     C*
+     C                     ENDIF
+     C*
+     C** Process the amount according to Incoming/Outgoing indicator.
+     C*
+     C           INOI      IFEQ 'I'
+     C                     ADD  EAMT      ULAMT
+     C                     ENDIF
+     C           INOI      IFEQ 'O'
+     C                     SUB  EAMT      ULAMT
+     C                     ENDIF
+     C*
+     C** Read the next record from the Customer Lending Cashflow
+     C** Events file.
+     C*
+     C                     READ LVENTL5                  10
+     C*
+     C                     MOVE '0'       WFIRST
+     C                     MOVE '1'       WRECRD
+     C*
+     C                     ENDDO
+     C*
+     C** If at least one record is processed.
+     C*
+     C           WRECRD    IFEQ '1'
+     C*
+     C** Access the Citydealer New Transmission Values file.
+     C*
+     C           KCDNC     CHAINDLCDNCL0             20
+     C*
+     C** If record is found, update the file.
+     C*
+     C           *IN20     IFEQ *OFF
+     C                     ADD  ULAMT     AMT
+     C                     UPDATDLCDNCD0
+     C                     ELSE
+     C*
+     C** Write the new record to the file.
+     C*
+     C                     MOVELULCDNC    WCDNC
+     C                     WRITEDLCDNCD0
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LSETL - Determine if Settlement is Through a Nostro Event    *
+     C*                                                               *
+     C* Called by :  #LEVNT - Process all events.                     *
+     C*                                                               *
+     C* Calls :  *PSSR  - Program exception error routine             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LSETL    BEGSR
+     C*
+     C** For Settlement types 01, 02, 07, 08, and 12.
+     C*
+     C           SETP      IFEQ 1
+     C           SETP      OREQ 2
+     C           SETP      OREQ 7
+     C           SETP      OREQ 8
+     C           SETP      OREQ 12
+     C*
+     C** Set the Settlement Nostro from the first 2 characters of
+     C** Our Settlement Account number.
+     C*
+     C                     MOVELOSAC      WNOSN
+     C                     ENDIF
+     C*
+     C** For Settlement types 04 and 05.
+     C*
+     C           SETP      IFEQ 4
+     C           SETP      OREQ 5
+     C*
+     C** Set the Customer Number.
+     C*
+     C                     MOVELOSAC      WCUNR   6
+     C*
+     C** Set the Account Code.
+     C*
+     C**********           MOVE OSAC      WTMP1   6                                           CGL029
+     C**********           MOVELWTMP1     WACOD   4                                           CGL029
+     C                     MOVE OSAC      WTMP1  12                                           CGL029
+     C                     MOVELWTMP1     WACOD  10                                           CGL029
+     C*
+     C** Set the Account Sequence.
+     C*
+     C           SETP      IFEQ 4
+     C                     MOVEL'01'      WSEQ    2
+     C                     ELSE
+     C                     MOVE WTMP1     WTMP2   2
+     C           WTMP2     IFEQ *BLANKS
+     C                     MOVEL'01'      WSEQ
+     C                     ELSE
+     C                     MOVELWTMP2     WSEQ
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** Access the Nostro Details using the values above.
+     C*
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM WCUNR     @CUST   6
+     C                     PARM ECCY      @CCY    3
+     C**********           PARM WACOD     @ACCD   4                                           CGL029
+     C                     PARM WACOD     @ACCD  10                                           CGL029
+     C                     PARM WSEQ      @ACSN   2
+     C                     PARM *BLANKS   @NOST   2
+     C                     PARM EBRC      @BRCA   3
+     C                     PARM *BLANKS   @CSSN  10
+     C                     PARM *BLANKS   @PNOI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+     C*
+     C** If record is found, set the Settlement Nostro from the file.
+     C*
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVELA7NONB    WNOSN
+     C                     ELSE
+     C*
+     C** Set the Settlement Nostro to zero.
+     C*
+     C                     Z-ADD0         WNOSN
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C** For Settlement type 14.
+     C*
+     C           SETP      IFEQ 14
+     C*
+     C** Set the Retail account number.
+     C*
+     C                     MOVELOSAC      WRETAC 10
+     C*
+     C** Access the Account Details using the Retail account key.
+     C*
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM WRETAC    @RETL  10
+     C                     PARM *BLANKS   @CNUM   6
+     C                     PARM *BLANKS   @CUCD   3
+     C**********           PARM *BLANKS   @ACCD   4                                           CGL029
+     C                     PARM *BLANKS   @ACCD  10                                           CGL029
+     C                     PARM *BLANKS   @ACSQ   2
+     C                     PARM *BLANKS   @BRCA
+     C           SDACCT    PARM SDACCT    DSSDY
+     C*
+     C********** @RTCD     IFNE *BLANKS                                   191525
+     C********** *LOCK     IN   LDA                                       191525
+     C**********           MOVEL'DL0006'  DBPGM                           191525
+     C**********           Z-ADD2         DBASE            ***************191525
+     C**********           MOVEL'ACCNTAB 'DBFILE           *DB ERROR 002 *191525
+     C**********           MOVELWRETAC    DBKEY            ***************191525
+     C**********           OUT  LDA                                       191525
+     C**********           EXSR *PSSR                                     191525
+     C**********           ENDIF                                          191525
+      *                                                                   191525
+      ** Only access nostro details if account is existing.               191525
+      ** Otherwise, leave nostro number to be equal to zero.              191525
+      *                                                                   191525
+     C           @RTCD     IFEQ *BLANKS                                   191525
+     C*
+     C** Access the Nostro Details using the Account Details above.
+     C*
+     C                     MOVE CNUM      @CUST
+     C                     MOVE ACOD      @ACCD
+     C                     MOVE ACSQ      @ACSN
+     C*
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @CUST
+     C                     PARM ACCCY     @CCY
+     C                     PARM           @ACCD
+     C                     PARM           @ACSN
+     C                     PARM *BLANKS   @NOST
+     C                     PARM ACBRCA    @BRCA
+     C                     PARM *BLANKS   @CSSN
+     C                     PARM *BLANKS   @PNOI
+     C           SDNOST    PARM SDNOST    DSFDY
+     C*
+     C** If record is found, set the Settlement Nostro from the file.
+     C*
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVELA7NONB    WNOSN
+     C                     ELSE
+     C*
+     C** Set the Settlement Nostro to zero.
+     C*
+     C                     Z-ADD0         WNOSN
+     C                     ENDIF
+     C                     ENDIF                                          191525
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LEDAT - Determine the Output Event Date                      *
+     C*                                                               *
+     C* Called by :  #LEVNT - Process all events.                     *
+     C*                                                               *
+     C* Calls :  *PSSR  - Program exception error routine             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LEDAT    BEGSR
+     C*
+     C** Access the Loan 'A' record from CLOAN for the loan reference
+     C** on the current event record.
+     C*
+     C                     MOVE 'A'       WRCDT
+     C           KCLOAN    CHAINCLOAN                30
+     C*
+     C           *IN30     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0006'  DBPGM
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'CLOAN   'DBFILE           *DB ERROR 003 *
+     C                     MOVELLNRF      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C** If Billing days is zero, add one day to billing days
+     C*
+     C           BLDY      IFEQ 0
+     C                     Z-ADD1         BLDY
+     C                     ENDIF
+      *
+     C***********          Z-ADDBJRDNB    ZDAYNO                          095562
+     C                     Z-ADDBJDNWD    ZDAYNO                          095562
+     C                     MOVELCCY       ZCCY
+     C                     Z-ADDBLDY      ZNRDYS
+     C                     EXSR ZFWDT
+     C                     Z-ADDZDYNBR    WEDAT   50
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* Called by: #LINIT - Initial Processing                        *
+     C*            #LSETL - Determine if Settlement is Through a      *
+     C*                     Nostro Event                              *
+     C*            #LEDAT - Determine the Output Event Date           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C                     OPEN DL0006AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEDL0006AU
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C/COPY ZSRSRC,ZFWDT
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

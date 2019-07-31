@@ -1,0 +1,1564 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Man. Adj. of the Commissions')                   *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+     F*                                                               *
+     F*  RE3110  - RETAIL MANUAL ADJUSTEMENT OF THE COMMISSIONS       *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER049             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG26713           Date 09Nov09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6811            Date 06May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02Mar99               *
+      *                 CTI002             Date 09Sep98               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER049 - Stamp Tax (Recompile)                               *
+      *  BUG26713 - Some data are misfigured                          *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6811 - No proper validation occurs when entering invalid  *
+      *            retail account number                              *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FRE3110DFCF  E                    WORKSTN
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FREACR   IF  E           K        DISK
+     F            REACRAF                           KIGNORE
+     F            REACRZF                           KIGNORE
+     FACNUM   IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACNUMABF
+     FRECOM   UF  E           K        DISK
+     FRE3110AUO   E                    PRINTER
+     F*
+      /EJECT
+     F*****************************************************************
+     F*
+     F*           FUNCTION OF INDICATORS
+     F*
+     F*       01         NON DISPLAY OF THE UNLINKED DATE
+     F*       13      CURRENCY BLANK
+     F*       37         MULT-BRANCH IND ON - MBIN=Y
+     F*       61         INVALID SIGN FOR COMM. ON HIGHEST OVERDRAFT
+     F*       62         INVALID SIGN FOR COMM. ON DEBIT TURNOVER
+     F*       63         INVALID SIGN FOR COMM. ON DEBIT INTEREST
+     F*       64         INVALID SIGN FOR INACTIVE ACCOUNT COMMISSION
+     F*       65         INVALID SIGN FOR COMM. ON MIN CR BALANCE
+     F*       66         INVALID SIGN FOR COMM. ON DAILY STATEMENT
+     F*       99         LOKUP SUCCESSFUL
+     F*
+     F*       LR         END OF PROGRAM
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         DATABASE ERROR
+     F*
+     F*****************************************************************
+      /SPACE 3
+     F*
+     F**          SUBROUTINES INDEX
+     F*
+     F*   ACCNUM - A/C details have been entered
+     F*
+     F/EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZALIGNZ1
+     E/EJECT
+     I*
+     I** SACNO DATA STRUCTURE
+     I*
+     I            DS
+     I                                        1  10 SACNO
+     I                                        1  100RETNO
+     I*
+     I** DATA STRUCTURE FOR CURRENCY DECIMAL PLACE
+     I*
+     I            DS
+     I                                        1  150INTDR0
+     I                                        1  151INTDR1
+     I                                        1  152INTDR2
+     I                                        1  153INTDR3
+     I*
+     I            DS
+     I                                        1  150INTCR0
+     I                                        1  151INTCR1
+     I                                        1  152INTCR2
+     I                                        1  153INTCR3
+     I*
+     I            DS
+     I                                        1  130CHDBE0
+     I                                        1  131CHDBE1
+     I                                        1  132CHDBE2
+     I                                        1  133CHDBE3
+     I*
+     I            DS
+     I                                        1  130ACCEA0
+     I                                        1  131ACCEA1
+     I                                        1  132ACCEA2
+     I                                        1  133ACCEA3
+     I*
+     I            DS
+     I                                        1  130CDIE0
+     I                                        1  131CDIE1
+     I                                        1  132CDIE2
+     I                                        1  133CDIE3
+     I*
+     I            DS
+     I                                        1  130IACE0
+     I                                        1  131IACE1
+     I                                        1  132IACE2
+     I                                        1  133IACE3
+     I*
+     I            DS
+     I                                        1  130CMBE0
+     I                                        1  131CMBE1
+     I                                        1  132CMBE2
+     I                                        1  133CMBE3
+     I*
+     I            DS
+     I                                        1  130FXDC0
+     I                                        1  131FXDC1
+     I                                        1  132FXDC2
+     I                                        1  133FXDC3
+     I*
+     I            DS
+     I                                        1  130TOTC0
+     I                                        1  131TOTC1
+     I                                        1  132TOTC2
+     I                                        1  133TOTC3
+     I            DS
+     I                                        1  130NOIP0
+     I                                        1  131NOIP1
+     I                                        1  132NOIP2
+     I                                        1  133NOIP3
+     I*
+     I** KEY DATA STRUCTURE : RKEY TO FILL LKEY IF ERROR
+     I*
+     I            DS
+     I**********                              1  23 DKEY                                      CGL029
+     I**********                              1  18 HKEY                                      CGL029
+     I                                        1  29 DKEY                                      CGL029
+     I                                        1  24 HKEY                                      CGL029
+     I                                        1   3 SBRCA
+     I                                        1   30BRCDK
+     I**********                              4  18 RKEY                                      CGL029
+     I                                        4  24 RKEY                                      CGL029
+     I                                        4   9 SCNUM
+     I**********                              4   90CNUMK                                     CSD027
+     I                                        4   9 CNUMK                                     CSD027
+     I                                       10  12 SCCY
+     I                                       10  12 CCYK
+     I**********                             13  16 SACOD                                     CGL029
+     I**********                             13  160ACODK                                     CGL029
+     I**********                             17  18 SACSQ                                     CGL029
+     I**********                             17  180ACSQK                                     CGL029
+     I**********                             19  230WDATE                                     CGL029
+     I                                       13  22 SACOD                                     CGL029
+     I                                       13  220ACODK                                     CGL029
+     I                                       23  24 SACSQ                                     CGL029
+     I                                       23  240ACSQK                                     CGL029
+     I                                       25  290WDATE                                     CGL029
+     I*
+     I** KEY DATA STRUCTURE : RKEY TO FILL LKEY IF ERROR
+     I*
+     I            DS
+     I**********                              1  23 PKEY                                      CGL029
+     I**********                              1  18 LDKEY                                     CGL029
+     I                                        1  29 PKEY                                      CGL029
+     I                                        1  24 LDKEY                                     CGL029
+     I                                        1   3 PBRCD
+     I                                        1   30KBRCD
+     I**********                              4  18 AKEY                                      CGL029
+     I                                        4  24 AKEY                                      CGL029
+     I                                        4   9 PCNUM
+     I                                        4   90KCNUM
+     I                                       10  12 PCCY
+     I                                       10  12 KCCY
+     I**********                             13  16 PACOD                                     CGL029
+     I**********                             13  160KACOD                                     CGL029
+     I**********                             17  18 PACSQ                                     CGL029
+     I**********                             17  180KACSQ                                     CGL029
+     I**********                             19  230DATEW                                     CGL029
+     I                                       13  22 PACOD                                     CGL029
+     I                                       13  220KACOD                                     CGL029
+     I                                       23  24 PACSQ                                     CGL029
+     I                                       23  240KACSQ                                     CGL029
+     I                                       25  290DATEW                                     CGL029
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ICHDBEO      DS                                                                        BUG26713
+     I                                        1  13 CHDBE4                                  BUG26713
+     I                                       14  14 CHDBE5                                  BUG26713
+     IACCEAO      DS                                                                        BUG26713
+     I                                        1  13 ACCEA4                                  BUG26713
+     I                                       14  14 ACCEA5                                  BUG26713
+     ICDIEO       DS                                                                        BUG26713
+     I                                        1  13 CDIEO4                                  BUG26713
+     I                                       14  14 CDIEO5                                  BUG26713
+     IIACEO       DS                                                                        BUG26713
+     I                                        1  13 IACEO4                                  BUG26713
+     I                                       14  14 IACEO5                                  BUG26713
+     ICMBEO       DS                                                                        BUG26713
+     I                                        1  13 CMBEO4                                  BUG26713
+     I                                       14  14 CMBEO5                                  BUG26713
+     INOIPO       DS                                                                        BUG26713
+     I                                        1  13 NOIPO4                                  BUG26713
+     I                                       14  14 NOIPO5                                  BUG26713
+     IFXDCO       DS                                                                        BUG26713
+     I                                        1  13 FXDCO4                                  BUG26713
+     I                                       14  14 FXDCO5                                  BUG26713
+     ITOTCO       DS                                                                        BUG26713
+     I                                        1  13 TOTCO4                                  BUG26713
+     I                                       14  14 TOTCO5                                  BUG26713
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** RETRIEVE WSID FROM PROGRAM STATUS DATA STRUCTURE
+     I*
+     IPSDS       SDS
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+     I*
+     I** DATA AREA RUNDAT
+     I*
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 AGMBIN
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     I** Currency Type
+     I*
+     I              A6NBDP                          CDP
+     I*
+     ISDACOD    E DSSDACODPD
+     I*
+     I** Account Code
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I*
+     I** Customer Details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+     I*
+     I**  Branch Details
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     I**
+     IZMUSER      DS                             17
+     I** DATA AREA OF MENU USER
+     I                                       11  13 DFBM
+     I/EJECT
+     C*===================================================================
+     C*
+     C** KEY LISTS
+     C*
+     C*
+     C** KEY FIELD TO ACCESS TO ACCNT FILE
+     C*
+     C           RETKEY    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+     C           RETKE1    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C*
+     C** WORK FIELDS DEFINITION
+     C*
+     C                     MOVE *BLANKS   KEY    12
+     C           *LIKE     DEFN ACNO      WACNO
+     C********** *LIKE     DEFN CNUM      I     - 3                                           CSD027
+     C                     Z-ADD*ZEROS    I       30                                          CSD027
+     C           *LIKE     DEFN CCY       MSGID + 7
+     C           *LIKE     DEFN KEY       HBPGM - 4
+     C           *LIKE     DEFN KEY       FLD10 - 2
+     C           *LIKE     DEFN KEY       FLD6  - 6
+     C           *LIKE     DEFN KEY       FLD4  - 8
+     C           *LIKE     DEFN KEY       FLD2  -10
+     C           *LIKE     DEFN SACNO     FLD11 + 1
+     C********** *LIKE     DEFN CNUM      FLD70 + 1                                           CSD027
+     C                     Z-ADD*ZEROS    FLD70   70                                          CSD027
+     C           *LIKE     DEFN ACOD      FLD50 + 1
+     C           *LIKE     DEFN SACSQ     FLD30 + 1
+     C           *LIKE     DEFN CHDBE3    WAMT                                              BUG26713
+     C*
+     C**  Parameter list for AOCURRR0
+     C*
+     C           PLISTC    PLIST
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C**  Parameter list for AOACODR0
+     C*
+     C           PLISTA    PLIST
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C**********           PARM           @ACCD   4                                           CGL029
+     C                     PARM           @ACCD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY
+     C*
+     C**  Parameter list for AOCUSTR0
+     C*
+     C           PLISTS    PLIST
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           @KEY1  10
+     C                     PARM           @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C/EJECT
+     C*===================================================================
+     C** P R O G R A M     S T A R T
+     C*===================================================================
+     C*
+     C** FIRST CYCLE PROCESSING
+     C*
+     C                     EXSR FIRST
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C**
+     C**    IN THE DATAAREA RUNDAT
+     C**
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C**
+     C**    IN THE DATAAREA ZMUSER
+     C**
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C*
+     C**   IF MBIN = Y SETON MULTIBRANCH IND.
+     C           AGMBIN    COMP 'Y'                      37
+     C*
+     C** MAIN PROCESSING UNTIL CK3 OR ERROR
+     C*
+     C           *INKC     DOWEQ'0'                        - B1
+     C*
+     C                     EXSR MAIN
+     C*
+     C                     END                             - E1
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*===================================================================
+     C** P R O G R A M     E N D
+     C*===================================================================
+     C/EJECT
+     C********************************************************************
+     C**
+     C** MAIN subroutine to execute main processing.
+     C**
+     C**     Called by       START
+     C**     Calls
+     C**
+     C           MAIN      BEGSR                           **MAIN BEGSR**
+     C*
+     C** DISPLAY FILE PROCESSING
+     C*
+     C                     EXFMTRE3110F1
+     C*
+     C** SET UP FORMAT INDICATORS
+     C*
+     C                     MOVE '0'       *IN01
+     C                     MOVE '0'       *IN11
+     C                     MOVE '0'       *IN12
+     C                     MOVE '0'       *IN13
+     C                     MOVE '0'       *IN14
+     C                     MOVE '0'       *IN15
+     C                     MOVE '0'       *IN16
+     C*
+     C** RESET ALL ERROR MESSAGES
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ
+     C                     PARM           TOPRQ
+     C                     WRITERE3110F0
+     C*
+     C** CHECK COMMAND KEY
+     C*
+     C           *INKC     CASEQ'1'       CMD3
+     C           *INKL     CASEQ'1'       CMD12
+     C                     CAS            CHKINP
+     C                     END
+     C*
+     C                     ENDSR                           **MAIN ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** CHKINP subroutine to STOP THE PROGRAM
+     C**
+     C**     Called by       MAIN
+     C**     Calls
+     C**
+     C           CHKINP    BEGSR                           **CHKINP BEGSR**
+     C*
+     C           SCNUM     IFEQ *BLANKS                    - B1
+     C           SCCY      ANDEQ*BLANKS
+     C           SACOD     ANDEQ*BLANKS
+     C           SACSQ     ANDEQ*BLANKS
+     C*
+     C           SACNO     IFEQ *BLANKS                    - B2
+     C                     MOVEL'REL0004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN11
+     C                     MOVE '1'       *IN12
+     C                     MOVE '1'       *IN13
+     C                     MOVE '1'       *IN14
+     C                     MOVE '1'       *IN15
+     C                     MOVE '1'       *IN16
+     C                     ELSE                            - X2
+     C*
+     C                     EXSR RETNUM
+     C                     END                             - E2
+     C*
+     C                     ELSE                            - X1
+     C*
+     C           SACNO     IFNE *BLANKS
+     C                     MOVEL'REL0004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN11
+     C                     MOVE '1'       *IN12
+     C                     MOVE '1'       *IN13
+     C                     MOVE '1'       *IN14
+     C                     MOVE '1'       *IN15
+     C                     MOVE '1'       *IN16
+     C*
+     C                     ELSE                            - X2
+     C*
+     C           SACSQ     IFEQ *BLANKS                    - B3
+     C                     MOVE '01'      SACSQ
+     C                     END                             - E3
+     C*
+     C           SCNUM     IFEQ *BLANKS                    - B3
+     C                     MOVEL'REL0006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN11
+     C*
+     C           SCCY      IFEQ *BLANKS                    - B4
+     C                     MOVEL'REL0005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN12
+     C                     END                             - E4
+     C*
+     C           SACOD     IFEQ *BLANKS                    - B4
+     C                     MOVEL'REL0007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN13
+     C                     END                             - E4
+     C*
+     C                     ELSE                            - X3
+     C*
+     C           SCCY      IFEQ *BLANKS                    - B4
+     C                     MOVEL'REL0005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN12
+     C*
+     C           SACOD     IFEQ *BLANKS                    - B5
+     C                     MOVEL'REL0007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN13
+     C                     END                             - E5
+     C*
+     C                     ELSE                            - X4
+     C*
+     C           SACOD     IFEQ *BLANKS                    - B5
+     C                     MOVEL'REL0007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN13
+     C*
+     C                     ELSE                            - X5
+     C*
+     C** BRANCH CODE NOT ENTERED, MOVE DEFAULT VALUE.
+     C*
+     C           SBRCA     IFEQ *BLANKS
+     C           SACNO     ANDEQ*BLANKS
+     C                     MOVE DFBM      SBRCA
+     C                     END
+     C*
+     C                     EXSR VBRCA
+     C**
+     C*
+     C** VALIDATE A/C DETAILS ENTERED
+     C*
+     C                     EXSR ACCNUM
+     C*
+     C                     END                             - E5
+     C*
+     C                     END                             - E4
+     C*
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **CHKINP ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RETNUM retail number only has been entered
+     C**
+     C**     Called by       CHKINP
+     C**     Calls           PROCIN
+     C**
+     C           RETNUM    BEGSR                           **RETNUM BEGSR**
+     C*
+     C** CHECK FOR NUMERIC RETAIL NUMBER
+     C*
+     C                     MOVE '0'       FLD11
+     C                     MOVELSACNO     FLD11
+     C                     TESTN          FLD11      51
+     C*
+     C           *IN51     IFEQ '1'                        - B1
+     C           RETNO     CHAINACNUM                52
+     C                     END                             - E1
+     C*
+     C           *IN52     IFEQ '1'
+     C           *IN51     OREQ *OFF                                                         BUG6811
+     C                     MOVEL'REL0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN15
+     C                     ELSE                            - X1
+     C*
+     C** RECORD FOUND - USE FIELDS TO CHAIN ACCNT
+     C*
+     C                     MOVE CNUM      SCNUM
+     C                     MOVE CCY       SCCY
+     C                     MOVE ACOD      SACOD
+     C                     MOVE ACSQ      SACSQ
+     C                     MOVE BRCA      SBRCA
+     C*
+     C** ACCESS CURRENCY FILE FOR NO. OF DECIMAL PLACES
+     C*
+     C                     CALL 'AOCURRR0'PLISTC
+     C*
+     C           *IN11     IFNE '1'                                                           CSD027
+     C           *IN12     ANDNE'1'                                                           CSD027
+     C           *IN13     ANDNE'1'                                                           CSD027
+     C           *IN14     ANDNE'1'                                                           CSD027
+     C           *IN15     ANDNE'1'                                                           CSD027
+     C           *IN16     ANDNE'1'                                                           CSD027
+     C                     EXSR PROCIN
+     C                     END                                                                CSD027
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **RETNUM ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** ACCNUM a/c details have been entered
+     C**
+     C**     Called by       CHKINP
+     C**     Calls           PROCIN
+     C**
+     C           ACCNUM    BEGSR                           **ACCNUM BEGSR**
+     C*
+     C** CHECK FOR NUMERIC CUSTOMER NUMBER
+     C*
+     C                     MOVELSCNUM     @KEY1
+     C                     CALL 'AOCUSTR0'PLISTS
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'REL0018' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN11
+     C                     ELSE
+     C                     MOVEL@KEY1     SCNUM
+     C                     END                             - E1
+     C*
+     C** CHECK IF CURRENCY IS VALID
+     C*
+     C                     CALL 'AOCURRR0'PLISTC
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                         13
+     C           *LOCK     IN   LDA
+     C                     MOVEL'REL0021' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN12
+     C                     ELSE
+     C                     MOVE A6CYCD    SCCY
+     C                     END                             - E2
+     C*
+     C** CHECK FOR NUMERIC ACCOUNT CODE
+     C*
+     C                     MOVELSACOD     @ACCD
+     C                     CALL 'AOACODR0'PLISTA
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'REL0019' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN13
+     C                     ELSE
+     C           A5ACTY    IFNE 'R'                                                           CSD027
+     C                     MOVEL'RE27111' ZAMSID                                              CSD027
+     C                     EXSR ZASNMS                                                        CSD027
+     C                     WRITERE3110F0                                                      CSD027
+     C                     MOVE '1'       *IN11                                               CSD027
+     C                     MOVE '1'       *IN12                                               CSD027
+     C                     MOVE '1'       *IN13                                               CSD027
+     C                     MOVE '1'       *IN14                                               CSD027
+     C                     MOVE '1'       *IN16                                               CSD027
+     C                     END                                                                CSD027
+     C                     MOVELA5ACCD    SACOD
+     C                     END                             - E1
+     C*
+     C** CHECK FOR NUMERIC SEQUENCE NUMBER
+     C*
+     C                     MOVE '0'       FLD30
+     C                     MOVELSACSQ     FLD30
+     C                     TESTN          FLD30      50
+     C*
+     C           *IN50     IFEQ *OFF                       - B1
+     C                     MOVEL'REL0020' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN14
+     C                     ELSE                            - X1
+     C*
+     C** RECORD FOUND - PROCESS RECORD INPUT
+     C*
+     C                     EXSR PROCIN
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **ACCNUM ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** PROCIN subroutine to STOP THE PROGRAM
+     C**
+     C**     Called by       MAIN
+     C**     Calls
+     C**
+     C           PROCIN    BEGSR                           **PROCIN BEGSR**
+     C*
+     C                     MOVE SCNUM     CNUM
+     C                     MOVE SCCY      CCY
+     C                     MOVE SACOD     ACOD
+     C                     MOVE SACSQ     ACSQ
+     C                     MOVE SBRCA     BRCA
+     C*
+     C           RETKEY    CHAINACCNT                51
+     C*
+     C           *IN16     IFEQ '1'                        - B1
+     C           *IN51     OREQ '1'
+     C*
+     C           *IN51     IFEQ '1'                        - B1
+     C                     MOVEL'REL0017' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN11
+     C                     MOVE '1'       *IN12
+     C                     MOVE '1'       *IN13
+     C                     MOVE '1'       *IN14
+     C                     END
+     C*
+     C                     ELSE                            - X1
+     C*
+     C                     MOVE ACNO      SACNO
+     C                     MOVE BRCA      SBRCA
+     C*
+     C                     MOVE ACNO      WACNO
+     C*
+     C** CHECK NUMBER OF DECIMAL OF CURRENCY
+     C*
+     C                     MOVEA'0000'    *IN,80
+     C*
+     C           CDP       IFEQ 0                          - B2
+     C                     MOVE '1'       *IN80
+     C                     ELSE                            - X2
+     C           CDP       IFEQ 1                          - B3
+     C                     MOVE '1'       *IN81
+     C                     ELSE                            - X3
+     C           CDP       IFEQ 2                          - B4
+     C                     MOVE '1'       *IN82
+     C                     ELSE                            - X4
+     C                     MOVE '1'       *IN83
+     C                     END                             - E4
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C           RETKEY    CHAINREACR                52
+     C*
+     C           *IN52     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD23        DBASE
+     C                     MOVEL'REACR'   DBFILE           ***************
+     C                     MOVELRKEY      DBKEY            **DB ERROR 23**
+     C                     OUT  LDA
+     C                     MOVE '1'       *IN89            ***************
+     C                     EXSR DBSR
+     C                     END                             - E2
+     C*
+     C                     Z-ADDDAIC1     INTDR0
+     C                     ADD  MADI      INTDR0
+     C                     ADD  GADI      INTDR0
+     C                     Z-ADDCAIC1     INTCR0
+     C                     ADD  MACI      INTCR0
+     C                     ADD  GACI      INTCR0
+     C*
+     C           RETKE1    CHAINRECOM                53
+     C*
+     C           *IN53     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD23        DBASE
+     C                     MOVEL'RECOM'   DBFILE           ***************
+     C                     MOVELRKEY      DBKEY            **DB ERROR 23**
+     C                     OUT  LDA
+     C                     MOVE '1'       *IN89            ***************
+     C                     EXSR DBSR
+     C                     END                             - E2
+     C*
+     C                     Z-ADDCHDBE     CHDBE0
+     C                     Z-ADDACCEA     ACCEA0
+     C                     Z-ADDCDIE      CDIE0
+     C                     Z-ADDIACE      IACE0
+     C                     Z-ADDCMBE      CMBE0
+     C                     Z-ADDNOIP      NOIP0
+     C                     Z-ADDFXDC      FXDC0
+     C*
+     C                     Z-ADDCHDBE     TOTC0
+     C                     ADD  ACCEA     TOTC0
+     C                     ADD  CDIE      TOTC0
+     C                     ADD  IACE      TOTC0
+     C                     ADD  CMBE      TOTC0
+     C                     ADD  NOIP      TOTC0
+     C                     ADD  FXDC      TOTC0
+     C*
+     C                     MOVEL*BLANKS   CCHDB3
+     C                     MOVEL*BLANKS   CACCC3
+     C                     MOVEL*BLANKS   CCDIC3
+     C                     MOVEL*BLANKS   CIACC3
+     C                     MOVEL*BLANKS   CCMBC3
+     C                     MOVEL*BLANKS   CCINS3
+     C                     MOVEL*BLANKS   CCHDBS
+     C                     MOVEL*BLANKS   CACCCS
+     C                     MOVEL*BLANKS   CCDICS
+     C                     MOVEL*BLANKS   CIACCS
+     C                     MOVEL*BLANKS   CCMBCS
+     C                     MOVEL*BLANKS   CCINSS
+     C                     MOVE ZERO13    CCHDB3
+     C                     MOVE ZERO13    CACCC3
+     C                     MOVE ZERO13    CCDIC3
+     C                     MOVE ZERO13    CIACC3
+     C                     MOVE ZERO13    CCMBC3
+     C                     MOVE ZERO13    CCINS3
+     C           *IN80     IFEQ '1'                        - B2
+     C                     Z-ADD0         ZADEC
+     C                     EXSR DSPFLD
+     C*
+     C                     ELSE                            - X2
+     C           *IN81     IFEQ '1'                        - B2
+     C                     Z-ADD1         ZADEC
+     C                     EXSR DSPFLD
+     C*
+     C                     ELSE                            - X2
+     C           *IN82     IFEQ '1'                        - B3
+     C                     Z-ADD2         ZADEC
+     C                     EXSR DSPFLD
+     C                     ELSE                            - X3
+     C           *IN83     IFEQ '1'                        - B4
+     C                     Z-ADD3         ZADEC
+     C                     EXSR DSPFLD
+     C                     END                             - E4
+     C                     END                             - E3
+     C                     END                             - E2
+     C                     END                             - E2
+     C*
+     C           *INKC     DOWEQ'0'                        - B2
+     C           *INKL     ANDEQ'0'
+     C           *IN20     ANDEQ'0'
+     C*
+     C** DISPLAY FILE PROCESSING
+     C*
+     C                     EXFMTRE3110F2
+     C*
+     C** RESET ALL ERROR MESSAGES
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ
+     C                     PARM           TOPRQ
+     C                     WRITERE3110F0
+     C*
+     C           *INKL     IFEQ '1'                        - B3
+     C                     MOVE *BLANKS   SCNUM
+     C                     MOVE *BLANKS   SCCY
+     C                     MOVE *BLANKS   SACOD
+     C                     MOVE *BLANKS   SACSQ
+     C                     MOVE *BLANKS   SBRCA
+     C                     MOVE *BLANKS   SACNO
+     C                     ELSE                            - X3
+     C           *INKC     IFEQ '0'                        - B4
+     C*
+     C           *IN80     IFEQ '1'                        - B
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD13        ZADIG
+     C                     EXSR UPDFLD
+     C                     ELSE                            - X
+     C*
+     C           *IN81     IFEQ '1'                        - B5
+     C                     Z-ADD1         ZADEC
+     C                     Z-ADD12        ZADIG
+     C                     EXSR UPDFLD
+     C                     ELSE                            - X5
+     C           *IN82     IFEQ '1'                        - B6
+     C                     Z-ADD2         ZADEC
+     C                     Z-ADD11        ZADIG
+     C                     EXSR UPDFLD
+     C                     ELSE                            - X6
+     C           *IN83     IFEQ '1'                        - B7
+     C                     Z-ADD3         ZADEC
+     C                     Z-ADD10        ZADIG
+     C                     EXSR UPDFLD
+     C                     END                             - E7
+     C                     END                             - E6
+     C                     END                             - E5
+     C                     END                             - E
+     C*
+     C           *IN61     IFEQ '1'
+     C           *IN62     OREQ '1'
+     C           *IN63     OREQ '1'
+     C           *IN64     OREQ '1'
+     C           *IN65     OREQ '1'
+     C           *IN66     OREQ '1'
+     C                     MOVE 'Y'       SERR    1
+     C                     ELSE
+     C                     MOVE 'N'       SERR
+     C                     END
+     C*
+     C           *IN41     IFEQ '0'
+     C           *IN42     ANDEQ'0'
+     C           *IN43     ANDEQ'0'
+     C           *IN44     ANDEQ'0'
+     C           *IN45     ANDEQ'0'
+     C           *IN46     ANDEQ'0'
+     C           SERR      ANDEQ'N'
+     C*
+     C           CCHDBS    IFEQ '-'
+     C                     SUB  RESUL1    CCHDBC
+     C                     SUB  RESUL1    CHDBE
+     C                     ELSE
+     C                     ADD  RESUL1    CCHDBC
+     C                     ADD  RESUL1    CHDBE
+     C                     END
+     C*
+     C           CACCCS    IFEQ '-'
+     C                     SUB  RESUL2    CACCC
+     C                     SUB  RESUL2    ACCEA
+     C                     ELSE
+     C                     ADD  RESUL2    CACCC
+     C                     ADD  RESUL2    ACCEA
+     C                     END
+     C*
+     C           CCDICS    IFEQ '-'
+     C                     SUB  RESUL3    CCDIC
+     C                     SUB  RESUL3    CDIE
+     C                     ELSE
+     C                     ADD  RESUL3    CCDIC
+     C                     ADD  RESUL3    CDIE
+     C                     END
+     C*
+     C           CIACCS    IFEQ '-'
+     C                     SUB  RESUL4    CIACC
+     C                     SUB  RESUL4    IACE
+     C                     ELSE
+     C                     ADD  RESUL4    CIACC
+     C                     ADD  RESUL4    IACE
+     C                     END
+     C*
+     C           CCMBCS    IFEQ '-'
+     C                     SUB  RESUL5    CCMBC
+     C                     SUB  RESUL5    CMBE
+     C                     ELSE
+     C                     ADD  RESUL5    CCMBC
+     C                     ADD  RESUL5    CMBE
+     C                     END
+     C*
+     C           CCINSS    IFEQ '-'
+     C                     SUB  RESUL6    CCINST
+     C                     SUB  RESUL6    NOIP
+     C                     ELSE
+     C                     ADD  RESUL6    CCINST
+     C                     ADD  RESUL6    NOIP
+     C                     END
+     C*
+     C                     UPDATRECOMDF
+     C                     MOVE '1'       *IN20
+     C                     MOVE *BLANKS   SCNUM
+     C                     MOVE *BLANKS   SCCY
+     C                     MOVE *BLANKS   SACOD
+     C                     MOVE *BLANKS   SACSQ
+     C                     MOVE *BLANKS   SBRCA
+     C                     MOVE *BLANKS   SACNO
+     C                     END
+     C*
+     C                     END                             - E4
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     MOVE '0'       *IN20
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **PROCIN ENDSR**
+     C********************************************************************
+     C/EJECT
+     C******************************************************************
+     C**
+     C** DSPFLD  subroutine to set up fields for display
+     C**
+     C**     Called by       PROCIN
+     C**     Calls
+     C**
+     C           DSPFLD    BEGSR                           **DSPFLD BEGSR*
+     C*
+     C                     MOVE '0'       *IN99
+     C                     MOVEA'000000'  *IN,41
+     C                     MOVEA'000000'  *IN,61
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CCHDB3    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    CCHDB3
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CACCC3    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    CACCC3
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CCDIC3    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    CCDIC3
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CIACC3    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    CIACC3
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CCMBC3    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    CCMBC3
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CCINS3    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    CCINS3
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE INTDR3    INTDRO
+     C                     MOVE INTDR0    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    INTDRO
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE INTCR3    INTCRO
+     C                     MOVE INTCRO    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    INTCRO
+     C*
+     C           CHDBE3    IFLT 0                                                           BUG26713
+     C                     Z-SUBCHDBE3    WAMT                                              BUG26713
+     C                     MOVE '-'       CHDBE5                                            BUG26713
+     C                     ELSE                                                             BUG26713
+     C                     Z-ADDCHDBE3    WAMT                                              BUG26713
+     C                     MOVE ' '       CHDBE5                                            BUG26713
+     C                     ENDIF                                                            BUG26713
+     C                     MOVE *BLANKS   ZFIELD
+     C**********           MOVE CHDBE3    CHDBEO                                            BUG26713
+     C**********           MOVE CHDBEO    ZFIELD                                            BUG26713
+     C                     MOVE WAMT      ZFIELD                                            BUG26713
+     C                     EXSR ZEDIT
+     C**********           MOVE ZFIELD    CHDBEO                                            BUG26713
+     C                     MOVE ZFIELD    CHDBE4                                            BUG26713
+     C*
+     C           ACCEA3    IFLT 0                                                           BUG26713
+     C                     Z-SUBACCEA3    WAMT                                              BUG26713
+     C                     MOVE '-'       ACCEA5                                            BUG26713
+     C                     ELSE                                                             BUG26713
+     C                     Z-ADDACCEA3    WAMT                                              BUG26713
+     C                     MOVE ' '       ACCEA5                                            BUG26713
+     C                     ENDIF                                                            BUG26713
+     C                     MOVE *BLANKS   ZFIELD
+     C**********           MOVE ACCEA3    ACCEAO                                            BUG26713
+     C**********           MOVE ACCEAO    ZFIELD                                            BUG26713
+     C                     MOVE WAMT      ZFIELD                                            BUG26713
+     C                     EXSR ZEDIT
+     C**********           MOVE ZFIELD    ACCEAO                                            BUG26713
+     C                     MOVE ZFIELD    ACCEA4                                            BUG26713
+     C*
+     C           CDIE3     IFLT 0                                                           BUG26713
+     C                     Z-SUBCDIE3     WAMT                                              BUG26713
+     C                     MOVE '-'       CDIEO5                                            BUG26713
+     C                     ELSE                                                             BUG26713
+     C                     Z-ADDCDIE3     WAMT                                              BUG26713
+     C                     MOVE ' '       CDIEO5                                            BUG26713
+     C                     ENDIF                                                            BUG26713
+     C                     MOVE *BLANKS   ZFIELD
+     C**********           MOVE CDIE3     CDIEO                                             BUG26713
+     C**********           MOVE CDIEO     ZFIELD                                            BUG26713
+     C                     MOVE WAMT      ZFIELD                                            BUG26713
+     C                     EXSR ZEDIT
+     C**********           MOVE ZFIELD    CDIEO                                             BUG26713
+     C                     MOVE ZFIELD    CDIEO4                                            BUG26713
+     C*
+     C           IACE3     IFLT 0                                                           BUG26713
+     C                     Z-SUBIACE3     WAMT                                              BUG26713
+     C                     MOVE '-'       IACEO5                                            BUG26713
+     C                     ELSE                                                             BUG26713
+     C                     Z-ADDIACE3     WAMT                                              BUG26713
+     C                     MOVE ' '       IACEO5                                            BUG26713
+     C                     ENDIF                                                            BUG26713
+     C                     MOVE *BLANKS   ZFIELD
+     C**********           MOVE IACE3     IACEO                                             BUG26713
+     C**********           MOVE IACEO     ZFIELD                                            BUG26713
+     C                     MOVE WAMT      ZFIELD                                            BUG26713
+     C                     EXSR ZEDIT
+     C**********           MOVE ZFIELD    IACEO                                             BUG26713
+     C                     MOVE ZFIELD    IACEO4                                            BUG26713
+     C*
+     C           CMBE3     IFLT 0                                                           BUG26713
+     C                     Z-SUBCMBE3     WAMT                                              BUG26713
+     C                     MOVE '-'       CMBEO5                                            BUG26713
+     C                     ELSE                                                             BUG26713
+     C                     Z-ADDCMBE3     WAMT                                              BUG26713
+     C                     MOVE ' '       CMBEO5                                            BUG26713
+     C                     ENDIF                                                            BUG26713
+     C                     MOVE *BLANKS   ZFIELD
+     C**********           MOVE CMBE3     CMBEO                                             BUG26713
+     C**********           MOVE CMBEO     ZFIELD                                            BUG26713
+     C                     MOVE WAMT      ZFIELD                                            B3G26713
+     C                     EXSR ZEDIT
+     C**********           MOVE ZFIELD    CMBEO                                             BUG26713
+     C                     MOVE ZFIELD    CMBEO4                                            BUG26713
+     C*
+     C           NOIP3     IFLT 0                                                           BUG26713
+     C                     Z-SUBNOIP3     WAMT                                              BUG26713
+     C                     MOVE '-'       NOIPO5                                            BUG26713
+     C                     ELSE                                                             BUG26713
+     C                     Z-ADDNOIP3     WAMT                                              BUG26713
+     C                     MOVE ' '       NOIPO5                                            BUG26713
+     C                     ENDIF                                                            BUG26713
+     C                     MOVE *BLANKS   ZFIELD
+     C**********           MOVE NOIP3     NOIPO                                             BUG26713
+     C                     MOVE WAMT      ZFIELD                                            BUG26713
+     C                     EXSR ZEDIT
+     C**********           MOVE ZFIELD    NOIPO                                             BUG26713
+     C                     MOVE ZFIELD    NOIPO4                                            BUG26713
+     C*
+     C           FXDC3     IFLT 0                                                           BUG26713
+     C                     Z-SUBFXDC3     WAMT                                              BUG26713
+     C                     MOVE '-'       FXDCO5                                            BUG26713
+     C                     ELSE                                                             BUG26713
+     C                     Z-ADDFXDC3     WAMT                                              BUG26713
+     C                     MOVE ' '       FXDCO5                                            BUG26713
+     C                     ENDIF                                                            BUG26713
+     C                     MOVE *BLANKS   ZFIELD
+     C**********           MOVE FXDC3     FXDCO                                             BUG26713
+     C**********           MOVE FXDCO     ZFIELD                                            BUG26713
+     C                     MOVE WAMT      ZFIELD                                            BUG26713
+     C                     EXSR ZEDIT
+     C**********           MOVE ZFIELD    FXDCO                                             BUG26713
+     C                     MOVE ZFIELD    FXDCO4                                            BUG26713
+     C*
+     C           TOTC3     IFLT 0                                                           BUG26713
+     C                     Z-SUBTOTC3     WAMT                                              BUG26713
+     C                     MOVE '-'       TOTCO5                                            BUG26713
+     C                     ELSE                                                             BUG26713
+     C                     Z-ADDTOTC3     WAMT                                              BUG26713
+     C                     MOVE ' '       TOTCO5                                            BUG26713
+     C                     ENDIF                                                            BUG26713
+     C                     MOVE *BLANKS   ZFIELD
+     C**********           MOVE TOTC3     TOTCO                                             BUG26713
+     C**********           MOVE TOTCO     ZFIELD                                            BUG26713
+     C                     MOVE WAMT      ZFIELD                                            BUG26713
+     C                     EXSR ZEDIT
+     C**********           MOVE ZFIELD    TOTCO                                             BUG26713
+     C                     MOVE ZFIELD    TOTCO4                                            BUG26713
+     C*
+     C                     ENDSR                           **DSPFLD ENDSR*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** UPDFLD  subroutine to set up fields for file update
+     C**
+     C**     Called by       PROCIN
+     C**     Calls
+     C**
+     C           UPDFLD    BEGSR                           **UPDFLD BEGSR*
+     C*
+     C                     MOVE '0'       *IN99
+     C                     MOVEA'000000'  *IN,41
+     C                     MOVEA'000000'  *IN,61
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CCHDB3    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN41
+     C                     MOVEL'RE71203' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     END
+     C           CCHDBS    IFNE *BLANK
+     C           CCHDBS    ANDNE'+'
+     C           CCHDBS    ANDNE'-'
+     C*
+     C** Sign of commission must be either blank, '+' or '-'
+     C*
+     C                     MOVEL'RE71204' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN61
+     C                     MOVE '1'       *IN99
+     C                     WRITERE3110F0
+     C                     END
+     C*
+     C           *IN99     IFEQ '0'
+     C                     MOVE ZFIELD    RESUL1 130
+     C                     END
+     C*
+     C                     MOVE '0'       *IN99
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CACCC3    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN42
+     C                     MOVEL'RE71203' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C*                    GOTO UPDFL9
+     C                     END
+     C           CACCCS    IFNE *BLANK
+     C           CACCCS    ANDNE'+'
+     C           CACCCS    ANDNE'-'
+     C*
+     C** Sign of commission must be either blank, '+' or '-'
+     C*
+     C                     MOVEL'RE71204' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN62
+     C                     MOVE '1'       *IN99
+     C                     WRITERE3110F0
+     C                     END
+     C*
+     C           *IN99     IFEQ '0'
+     C                     MOVE ZFIELD    RESUL2 130
+     C                     END
+     C*
+     C                     MOVE '0'       *IN99
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CCDIC3    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN43
+     C                     MOVEL'RE71203' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C*                    GOTO UPDFL9
+     C                     END
+     C           CCDICS    IFNE *BLANK
+     C           CCDICS    ANDNE'+'
+     C           CCDICS    ANDNE'-'
+     C*
+     C** Sign of commission must be either blank, '+' or '-'
+     C*
+     C                     MOVEL'RE71204' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN63
+     C                     MOVE '1'       *IN99
+     C                     WRITERE3110F0
+     C                     END
+     C*
+     C           *IN99     IFEQ '0'
+     C                     MOVE ZFIELD    RESUL3 130
+     C                     END
+     C*
+     C                     MOVE '0'       *IN99
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CIACC3    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN44
+     C                     MOVEL'RE71203' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C*                    GOTO UPDFL9
+     C                     END
+     C           CIACCS    IFNE *BLANK
+     C           CIACCS    ANDNE'+'
+     C           CIACCS    ANDNE'-'
+     C*
+     C** Sign of commission must be either blank, '+' or '-'
+     C*
+     C                     MOVEL'RE71204' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN64
+     C                     MOVE '1'       *IN99
+     C                     WRITERE3110F0
+     C                     END
+     C*
+     C           *IN99     IFEQ '0'
+     C                     MOVE ZFIELD    RESUL4 130
+     C                     END
+     C*
+     C                     MOVE '0'       *IN99
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CCMBC3    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN45
+     C                     MOVEL'RE71203' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C*                    GOTO UPDFL9
+     C                     END
+     C           CCMBCS    IFNE *BLANK
+     C           CCMBCS    ANDNE'+'
+     C           CCMBCS    ANDNE'-'
+     C*
+     C** Sign of commission must be either blank, '+' or '-'
+     C*
+     C                     MOVEL'RE71204' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN65
+     C                     MOVE '1'       *IN99
+     C                     WRITERE3110F0
+     C                     END
+     C*
+     C           *IN99     IFEQ '0'
+     C                     MOVE ZFIELD    RESUL5 130
+     C                     END
+     C*
+     C                     MOVE '0'       *IN99
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CCINS3    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN46
+     C                     MOVEL'RE71203' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C*                    GOTO UPDFL9
+     C                     END
+     C           CCINSS    IFNE *BLANK
+     C           CCINSS    ANDNE'+'
+     C           CCINSS    ANDNE'-'
+     C*
+     C** Sign of commission must be either blank, '+' or '-'
+     C*
+     C                     MOVEL'RE71204' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN66
+     C                     MOVE '1'       *IN99
+     C                     WRITERE3110F0
+     C                     END
+     C*
+     C           *IN99     IFEQ '0'
+     C                     MOVE ZFIELD    RESUL6 130
+     C                     END
+     C*
+     C           UPDFL9    ENDSR                           **UPDFLD ENDSR*
+     C********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+     C/EJECT
+     C********************************************************************
+     C**
+     C** CMD3 subroutine to STOP THE PROGRAM
+     C**
+     C**     Called by       MAIN
+     C**     Calls
+     C**
+     C           CMD3      BEGSR                           **CMD3 BEGSR**
+     C*
+     C                     ENDSR                           **CMD3 ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** CMD3 subroutine to STOP THE PROGRAM
+     C**
+     C**     Called by       MAIN
+     C**     Calls
+     C**
+     C           FIRST     BEGSR                           **FIRST BEGSR**
+     C*
+     C** PREPARE WORK VARIABLES
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE3110'  DBPGM
+     C                     OUT  LDA
+     C                     Z-ADD1         PAGE
+     C                     MOVEL'*'       DDPGMQ
+     C*
+     C**   Select the program MSGQ for error msg.
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C*
+     C**   Fill in fields for subroutine ZASNMS
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue
+     C                     MOVEL'REUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      ** ACCESS BANK DETAILS
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C*
+     C** SET UP FORMAT INDICATORS
+     C*
+     C                     MOVE '0'       *IN01
+     C                     MOVE '0'       *IN11
+     C                     MOVE '0'       *IN12
+     C                     MOVE '0'       *IN13
+     C                     MOVE '0'       *IN14
+     C                     MOVE '0'       *IN15
+     C                     MOVE '0'       *IN16
+     C*
+     C                     ENDSR                           **FIRST ENDSR**
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZASNMS    - Send message to program message queue             *
+     C*                                                               *
+     C* CALLS     - Y2SNMGC                                           *
+     C*                                                               *
+     C* CALLED BY - CHKINP                                            *
+     C*           - RETNUM                                            *
+     C*           - ACCNUM                                            *
+     C*           - PROCIN                                            *
+     C*                                                               *
+     C*****************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file.
+     C                     PARM           ZAMSDA           Message data.
+     C                     PARM           ZAMSTP           Message type.
+     C*
+     C** Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Message queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C           ZASNM9    ENDSR                           ZASNM9 TAG
+     C*
+      /EJECT
+     C********************************************************************
+     C**
+     C** CMD12 subroutine to SET TO THE FIRST SCREEN
+     C**
+     C**     Called by       MAIN
+     C**     Calls
+     C**
+     C           CMD12     BEGSR                           **CMD12 BEGSR**
+     C*
+     C                     MOVE *BLANKS   SCNUM
+     C                     MOVE *BLANKS   SCCY
+     C                     MOVE *BLANKS   SACOD
+     C                     MOVE *BLANKS   SACSQ
+     C                     MOVE *BLANKS   SBRCA
+     C                     MOVE *BLANKS   SACNO
+     C                     Z-ADD*ZEROS    ZERO13 130
+     C                     Z-ADD*ZEROS    INTDR0
+     C                     Z-ADD*ZEROS    INTCR0
+     C                     Z-ADD*ZEROS    CHDBE0
+     C                     MOVEL*BLANKS   CCHDB3
+     C                     Z-ADD*ZEROS    ACCEA0
+     C                     MOVEL*BLANKS   CACCC3
+     C                     Z-ADD*ZEROS    CDIE0
+     C                     MOVEL*BLANKS   CCDIC3
+     C                     Z-ADD*ZEROS    IACE0
+     C                     MOVEL*BLANKS   CIACC3
+     C                     Z-ADD*ZEROS    CMBE0
+     C                     MOVEL*BLANKS   CCMBC3
+     C                     Z-ADD*ZEROS    NOIP0
+     C                     MOVEL*BLANKS   CCINS3
+     C                     Z-ADD*ZEROS    FXDC0
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ
+     C                     PARM           TOPRQ
+     C                     WRITERE3110F0
+     C*
+     C                     ENDSR                           **CMD12 ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** DBSR subroutine for database error handling
+     C**
+     C**     Called by       FIRST, LINKSR, CMD4, UNLINK, ACCRET,
+     C**                     VALLIN, PROCIN, RELSR, CRTLNK
+     C**     Calls           -
+     C**
+     C           DBSR      BEGSR                           **DBSR BEGSR**
+     C*
+     C           *IN89     IFEQ '1'                        - B1
+     C                     WRITEHEADAU
+     C                     END                             - E1
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     WRITEERRAU
+     C*
+     C           *IN89     IFEQ '1'                        - B1
+     C                     WRITEENDAU
+     C                     END                             - E1
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           **DBSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** VBRCA subroutine to validate  user authority to BRANCH.
+     C**
+     C**       Called by PROCIN
+     C**       Calls     *none
+     C**
+     C           VBRCA     BEGSR                           **VBRCA BEGSR**
+     C*
+     C** BASIC VALIDATION OF INPUT BRANCH CODE
+     C*
+     C           AGMBIN    IFEQ 'Y'                        IF MULTIBRANCH
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SBRCA     @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'REL0013' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN16
+     C                     ELSE
+     C                     MOVE A8BRCD    SBRCA
+     C                     END
+     C*
+     C**  VALIDATE BRANCH AGAINST USER
+     C*
+     C           *IN16     IFNE '1'
+     C                     CALL 'ZVBBU'
+     C                     PARM SBRCA     @ZBR    3
+     C                     PARM           @ERR    10
+     C*
+     C**  IF NOT VALID FOR USER
+     C*
+     C           @ERR      IFEQ 1
+     C                     MOVEL'REL0015' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN16
+     C                     END
+     C           @ERR      IFEQ 2
+     C                     MOVEL'REL0016' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3110F0
+     C                     MOVE '1'       *IN16
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR                           **VBRCA ENDSR**
+     C********************************************************************
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001

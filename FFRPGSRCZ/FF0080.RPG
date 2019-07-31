@@ -1,0 +1,1261 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Close Out Set Enq/Canc       Main')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  -  Futures and Options Module
+     F*                                                                  *
+     F*   FF0080  -  CLOSE OUT SET ENQUIRY/CANCELLATION                  *
+     F*                                                                  *
+     F*  (c) Finastra International Limited 2001                         *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 243826A            Date 25Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFF006             Date 28Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 21Jun99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF004             Date 13Sep96               *
+      *                 CPM003             Date 01May96               *
+     F*                 S71062             DATE 19DEC95                  *
+     F*                 S01456             DATE 08NOV93                  *
+     F*                 S01455             DATE 05NOV93                  *
+     F*                 S01411             DATE 05JUL93                  *
+     F*                 S03643             DATE 19FEB93                  *
+     F*                 S01393             DATE 30OCT92                  *
+     F*                 FUJI-FF0011        DATE 10AUG92                  *
+     F*                 E44655             DATE 16SEP92                  *
+     F*                  AUS022             DATE 06AUG92                 *
+     F*                  S01199             DATE 27FEB90                 *
+     F*                  S01117             DATE 26FEB90                 *
+     F*                  E18343             DATE 11NOV89                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  243826A- Recompiled due to changes in FFPRCSZ2, FFPRCSZ3,    *
+      *           FFPRVLZ2 and FFPRVLZ3.                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CFF006 - Fractional Ticks Enhancement.  (Recompiled)         *
+     F*  CPB001 - 'Private Banking' Module                               *
+      *  CGL007 - Account Postings Enquiry                            *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)     *
+     F*  CPM003 - FF PM Interface Upgrade to R10.                     *
+     F*  S71062 - FF/PM Add portfolio narrative only when PM is on    *
+     F*           & customer is present.                              *
+     F*  S01456 - 'FF' MONTHLY P&L ENHANCEMENTS.                         *
+     F*            Recompiled due to change to PF/MKCTLD.                *
+     F*  S01455 - 'FF' ACCOUNT KEY ENHANCEMENTS.                         *
+     F*           Recompiled due to changes in file TABFF.               *
+     F*  S01411 - Recompiled as field 'ORIGINAL ENTRY DATE' added to     *
+     F*           PF/TRANSD.                                             *
+     F*  E03643 - Recompile because of change to pf/clostt               *
+     F*  S01393 - RECOMPILED FOR STRATEGIC RISK MANAGEMENT               *
+     F*  FUJI-FF0011 - The system does not differentiate between         *
+     F*               american and european option on exercise           *
+     F*               validation and OTC confirmation wording.           *
+     F*               *** RECOMPILE ONLY ***                             *
+     F*   E44655  -  Format an option strike price based on the          *
+     F*              quotation detail for the underlying future.         *
+     F*   AUS022  -  AUSTRALIAN CHANGE : Introduction of Processing      *
+     F*              Types 7 and 8.                                      *
+     F*   S01199  -  HELP SYSTEM                                     *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*   E18343  -  PROGRAM RE-COMPILED DUE TO CHANGE IN ZSRSRC         *
+     F*              MEMBER ZFRPEDZ3                                     *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*YES)                                              *
+     F*                                                                  *
+     F********************************************************************
+     FTABFF   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB10F                          KIGNORE               S01117
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTB80F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F* CCY 1     TABTG10F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F* BRANCH    TABLETRF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     FMARKT   IF  E           K        DISK
+     FMKCTL   IF  E           K        DISK
+     FINTYP   IF  E           K        DISK
+     FINTYP2  IF  E           K        DISK
+     F            INTYPDF                           KRENAMEINTYPD2F
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FBOOKD   IF  E           K        DISK
+     FTRANS   IF  E           K        DISK
+     FFF0080DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE FF0080S0
+     FCLOST8  IF  E           K        DISK
+     FCLOST   UF  E           K        DISK
+     F                                              KCOMIT
+     FPMPORTLLIF  E           K        DISK                           UC  S71062
+      /SPACE 2
+     F********************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*        20        SFLEND INDICATOR
+     F*
+     F*        30        CANCELLATION MODE
+     F*
+     F*        50        FF0070F0 END OF FILE
+     F*        51        NO RECORDS FOR KEY ON CLOST8
+     F*        52        CLOST8 END-OF-FILE
+     F*        53        MBIN = 'Y'                                       S01117
+     F*
+     F*        70        DISPLAY 'CLOSE OUT SET CANCELLED'
+     F*       N70        DISPLAY 'CLOSE OUT SET NOT CANCELLED'
+     F*
+     F*     80-89        Reserved for Standard FF Subroutines
+     F*
+     F*     90-99        Reserved for Standard MIDAS Subroutines
+     F*
+     F*        99        GENERAL CHAIN/READ FAIL INDICATOR FOR DB ERRORS
+     F*
+     F*        U1        Cmd 3 Taken.
+     F*
+     F*     U7+U8        Database Errors
+     F*
+     F********************************************************************
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,FFPRCSZ2
+     E/COPY ZSRSRC,FFFMTZ1
+     E*                   MSG     1   1 76
+     E* ERROR MESSAGES
+     E*
+     E                    AERR       24  4
+     E* ERROR CODES
+     E*
+     E                    CPY@    1   1 80
+     IINTYPD2F
+     I*
+      ** Rename of fields from INTYP
+     I*
+     I              ISTT                            ISTT2
+     I              ISTI                            ISTI2
+     I              ISPT                            ISPT2
+     I              ISCY                            ISCY2
+     I              QOTC                            QOTC2
+     I              TKDM                            TKDM2
+     I              MNPF                            MNPF2
+     I              TKVL                            TKVL2
+     I              OTHC                            OTHC2
+     ITRANSDF
+     I*
+      ** Rename of fields from TRANS
+     I*
+     I              RECI                            RECIT
+     I              TNBR                            TNBRT
+     I***********   BRCD                            BRCDT                 S01117
+     I              BRCA                            BRCDT                 S01117
+     I              BOCO                            BOCOT
+     I              CUSC                            CUSCT
+     I              BOKC                            BOKCT
+     I              ISTT                            ISTTT
+     I              YRNO                            YRNOT
+     I              MTHN                            MTHNT
+     I              PCAL                            PCALT
+     I              STRP                            STRPT
+     I              TRTY                            TRTYT
+     I              ULTT                            ULTTT
+     I              TRSD                            TRSDT
+     I              ISCY                            ISCYT
+     I              LCD                             LCDT
+     I              CHTP                            CHTPT
+     I              TNLU                            TNLUT
+     I              PTFR                            PTFRT                 S71062
+     I/COPY ZSRSRC,ZFRPEDZ2
+     I/COPY ZSRSRC,FFSRDSZ1
+     I/COPY ZSRSRC,FFPRCSZ3
+     I/COPY ZSRSRC,ZTNLU1Z1
+     I/COPY ZSRSRC,FFFMTZ2
+     I*
+     I           SDS
+     I*
+     I**      DATA STRUCTURE FOR WOKSTATION ID FOR SCREEN OUTPUT
+     I*
+     I                                      244 246 WSID
+     I                                      254 263 USRID
+     I*
+     ICCKEY       DS
+     I*
+     I*  DATASTRUCTURE FOR ACCESSING CURRENCY CODES FROM TABLE TILE
+     I*
+     I                                        1   20TWENTY
+     I                                        9  11 ISCY
+     I                                       12  120ONE
+     I*
+     IBRKEY       DS
+     I*
+     I*  DATASTRUCTURE FOR ACCESSING BRANCH DETAILS FROM TABLE TILE
+     I*
+     I                                        1   20TEN
+     I***********                            10  120BRCDX                 S01117
+     I                                       10  12 BRCDX                 S01117
+     I*
+     I*                                                                   S71062
+     IPMKEY       DS                                                      S71062
+     I*                                                                   S71062
+     I*  DATASTRUCTURE FOR ACCESSING PMPORTPP                             S71062
+     I*                                                                   S71062
+     I**********                              1   60CUSPOR                             S71062 CSD027
+     I                                        1   6 CUSPOR                                    CSD027
+     I                                        7  10 PTFRT                 S71062
+     ILDA         DS                            256
+     I*
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I**  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     ISDPORT    E DSSDPORTPD                                              S71062
+     I** External data structure For PM ICD                               S71062
+     ISDMMOD    E DSSDMMODPD                                              S71062
+     I** External data structure For Modules id's                         S71062
+     I@DSFDY    E DSDSFDY                                                 S71062
+     I** First DS for Access programs                                     S71062
+     I/COPY WNCPYSRC,FF0080I001
+      * Dtaara used by Postings enquiry - GL0090                          CGL007
+     IFFCODS    E DSFFCODTA                                               CGL007
+     I********************************************************************
+      /EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C********************************************************************
+     C*
+     C*   MAIN BODY
+     C*
+     C********************************************************************
+     C                     EXSR START
+     C                     EXSR MIDDLE
+     C                     EXSR END
+     C********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C**                 INDEX OF SUB-ROUTINES
+     C*
+     C*****************************************************************
+     C*
+     C**         1. START   - INITIAL PROCESSING
+     C**         2. MIDDLE  - PROCESS CANCELLATION/ENQUIRY SCREENS
+     C**         3. END     - END PROCESSING
+     C**         4. SCRNHD  - DETERMINE SCREEN HEADINGS
+     C**         5. CUSTNM  - ACCESS CUSTOMER/BROKER DETAILS
+     C**         6. BOOKNM  - ACCESS BOOK DETAILS
+     C**         7. LOADSF  - LOAD SUBFILE
+     C**         8. CLOSET  - CLOSE OUT SET CANCELLATION
+     C***********9.*HELP****-*HELP*PROCESSING************                 S01199
+     C**        10. DBERR   - DATABASE ERROR PROCESSING
+     C**        11. ZFRPED  - AMOUNT CONVERSION
+     C**        12. ZDATE2  - DATE CONVERSION
+     C**        13. FFPRCS  - CONVERT PRICES TO SCREEN FORMAT
+     C**        14. ZTNLU1  - NEXT TRANSACTION NUMBER
+     C*
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+      ** S/R START - INITIAL PROCESSING AND FIRST WRITE/READ OF SCREENS
+     C*
+      ** CALLED FROM - MAINLINE
+     C*
+      ** CALLS - DBERR; SCRNHD; LOADSF; HELP
+     C*
+     C********************************************************************
+     C*
+     C           START     BEGSR
+     C*
+      ** Receive Parameters From FF0070 Program Via CL With
+      **  Close Out Details Selected.
+     C*
+     C           *ENTRY    PLIST
+     C***********          PARM           BRCD                            S01117
+     C                     PARM           BRCA                            S01117
+     C                     PARM           ISTT
+     C                     PARM           YRNO
+     C                     PARM           MTHN
+     C                     PARM           PCAL
+     C                     PARM           STRP
+     C                     PARM           BOCO
+     C                     PARM           CUSC
+     C                     PARM           BOKC
+     C                     PARM           COPL
+     C                     PARM           MRKT
+     C                     PARM           SACTN   1
+     C                     PARM           CLON
+     C*
+      ** Set Up Program Constants.
+     C*
+     C                     Z-ADD1         ONE
+     C                     Z-ADD10        TEN
+     C                     Z-ADD20        TWENTY
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANKS   DBPGM                           S01117
+     C                     MOVE 'FF0080'  DBPGM
+     C                     MOVEL*BLANKS   DBKEY                           S01117
+     C                     MOVEL*BLANKS   DBFILE                          S01117
+     C                     Z-ADD*ZEROS    DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C*
+      ** SFLEND Indicator.
+     C*
+     C                     SETON                     20
+     C*
+      ** Condition Screen Description Of Action Selected.
+     C*
+     C/COPY WNCPYSRC,FF0080C001
+      *                                                                   CGL007
+      * If Action code passed in parameter is equal 'Z' ,that means that  CGL007
+      * the prgram is called by Postings enquiry - GL0090                 CGL007
+      *                                                                   CGL007
+     C           SACTN     IFEQ 'Z'                                       CGL007
+     C                     SETON                     65                   CGL007
+     C                     MOVEL'E'       SACTN                           CGL007
+     C                     END                                            CGL007
+      *                                                                   CGL007
+     C           SACTN     IFEQ 'C'
+     C                     SETON                     30
+     C                     END
+     C*
+      ***Access*TABTB10***************************************************S01117
+      ***IF*no*record*found,**********************************************S01117
+      ***OR*record*not*live***********************************************S01117
+      *******Perform*Database-error***************************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10F                 99               S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C************NAMVAR   DEFN           LDA                             S01117
+     C************LOCK     IN   LDA                                       S01117
+     C***********          MOVE 'TABLE'   DBFILE                          S01117
+     C***********          MOVEL'TABTB10' DBKEY            ***************S01117
+     C***********          Z-ADD1         DBASE            * DB ERROR 01 *S01117
+     C***********          EXSR DBERR                      ***************S01117
+     C***********          END                                            S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+     C** SET MBIN INDICATOR. IF 'Y', SUPPRESS BRANCH CODE ON SCREEN.      S01117
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     MOVE '1'       *IN53                           S01117
+     C                     END                                            S01117
+     C*                                                                   S71062
+     C                     CALL 'AOMMODR0'                                S71062
+     C                     PARM *BLANKS   @RTCD   7                       S71062
+     C                     PARM '*FIRST  '@OPTN   7                       S71062
+     C           SDMMOD    PARM SDMMOD    @DSFDY                          S71062
+     C*                                                                   S71062
+     C           @RTCD     IFNE *BLANKS                                   S71062
+     C           *LOCK     IN   LDA                                       S71062
+     C                     MOVE 'SDMMODPD'DBFILE                          S71062
+     C                     MOVEL*BLANKS   DBKEY            ***************S71062
+     C                     Z-ADD15        DBASE            * DB ERROR 15 *S71062
+     C                     EXSR DBERR                      ***************S71062
+     C                     END                                            S71062
+     C*                                                                   S71062
+     C**   If Portfolio Management is present, access Portfolio ICD to    S71062
+     C**   retrieve "the reference attached to 9997 portfolio"            S71062
+     C*                                                                   S71062
+     C           BGPFMG    IFEQ 'Y'                                       S71062
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S71062
+     C                     OPEN PMPORTLL                                  S71062
+     C           BGPFMG    IFEQ 'Y'                                       CPB001
+     C                     CALL 'AOPORTR0'                                S71062
+     C                     PARM *BLANKS   @RTCD   7                       S71062
+     C                     PARM '*FIRST  '@OPTN   7                       S71062
+     C           SDPORT    PARM SDPORT    @DSFDY                          S71062
+     C*                                                                   S71062
+     C           @RTCD     IFNE *BLANKS                                   S71062
+     C           *LOCK     IN   LDA                                       S71062
+     C                     MOVE 'SDPORTPD'DBFILE                          S71062
+     C                     MOVEL*BLANKS   DBKEY            ***************S71062
+     C                     Z-ADD16        DBASE            * DB ERROR 16 *S71062
+     C                     EXSR DBERR                      ***************S71062
+     C                     END                                            S71062
+     C                     ENDIF                                          CPB001
+     C                     END                                            S71062
+     C*                                                                   S71062
+     C           WWKEY     KLIST                                          S71062
+     C                     KFLD           CUSPOR                          S71062
+     C                     KFLD           PTFRT                           S71062
+     C*
+      ** Set indicator for date format, from DATF field.
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+      ** Execute Subroutine to Set Up Screen Headings.
+     C*
+     C                     EXSR SCRNHD
+     C*
+      ** Execute Subroutine to Load Subfile Of Close Out Details.
+     C*
+     C                     EXSR LOADSF
+     C*
+      ** Terminate Program If No Close Out Details on Subfile.
+     C*
+     C           RRN       IFEQ 0
+     C                     SETON                     LRU8
+     C                     RETRN
+     C                     ELSE
+     C*
+      ** Write Formats Common To ENQUIRY and CANCELLATION Screens.
+     C*
+     C                     WRITEFF0080F0
+     C                     WRITEFF0080C0
+     C*
+      ** Overlay Command Key Mask Unique to ENQUIRY Screen and
+      **  Process asscociated HELP requests.
+     C*
+     C           SACTN     IFEQ 'E'
+     C                     EXFMTFF0080F3
+     C/COPY WNCPYSRC,FF0080C002
+     C           *IN65     IFEQ *ON                                       CGL007
+     C                     EXSR END                                       CGL007
+     C                     END                                            CGL007
+     C*
+     C********** *IN09     DOWEQ'1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           READ FF0080F3                 50               S01199
+     C**********           END                                            S01199
+     C*
+     C                     ELSE
+     C*
+      ** Overlay Command Key Mask Unique to CANCELLATION Screen and
+      **  Process asscociated HELP requests.
+     C*
+     C                     EXFMTFF0080F2
+     C*
+     C********** *IN09     DOWEQ'1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           READ FF0080F2                 50               S01199
+     C**********           END                                            S01199
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+      ** S/R MIDDLE - PROCESS CANCELLATION AND ENQUIRY SCREENS
+     C*
+      ** CALLED FROM - MAINLINE
+     C*
+      ** CALLS  CLOSET; HELP
+     C*
+     C********************************************************************
+     C*
+     C           MIDDLE    BEGSR
+     C*
+      ** DO WHILE Not CMD 3 (Exit) And Not CMD 12 (Restart)
+     C*
+     C           *IN01     DOWNE'1'
+     C           *IN05     ANDNE'1'
+     C*
+      ** CMD 10 taken - Close Out Cancellation Requested.
+     C*
+     C           *IN04     IFEQ '1'
+     C                     EXSR CLOSET
+     C                     ELSE
+     C*
+      ** ENTER Pressed - If Cancellation Requested, Re-Display
+      **  With Message to inform CMD 10 Required for Cancellation.
+      **  Process associated HELP Request.
+     C*
+     C           SACTN     IFEQ 'C'
+     C                     WRITEFF0080F1
+     C                     EXFMTFF0080F2
+     C*
+     C********** *IN09     DOWEQ'1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           READ FF0080F3                 50               S01199
+     C**********           END                                            S01199
+     C*
+     C                     ELSE
+     C*
+      ** Overlay Command Key Mask Unique to ENQUIRY Screen and
+      **  Process asscociated HELP requests.
+     C*
+     C                     EXFMTFF0080F3
+     C*
+     C********** *IN09     DOWEQ'1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           READ FF0080F4                 50               S01199
+     C**********           END                                            S01199
+     C*
+      ** END IF/ELSE Cancellation/Enquiry
+     C*
+     C                     END
+     C*
+      ** END IF/ELSE CMD 10 taken - Close Out Cancellation Requested.
+     C*
+     C                     END
+     C*
+      ** END DO WHILE Not CMD 3 (Exit) And Not CMD 12 (Restart)
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R END    - END OF PROGRAM PROCESSING
+     C*
+      ** CALLED FROM - MAINLINE
+     C*
+      ** CALLS  NO SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           END       BEGSR
+     C*
+      ** IF CMD 3 Selected, Exit Program and Set On Switch U1
+      **  to Exit CL, Otherwise CL will Restart With Initial Screen.
+     C*
+     C/COPY WNCPYSRC,FF0080C003
+     C           *IN65     IFEQ *ON                                       CGL007
+     C           *NAMVAR   DEFN           FFCODS                          CGL007
+     C           *LOCK     IN   FFCODS                                    CGL007
+     C                     MOVE ' '       FFRTN                           CGL007
+     C           *IN01     IFEQ *ON                                       CGL007
+     C                     MOVE '1'       FFRTN                           CGL007
+     C                     END                                            CGL007
+     C           *IN05     IFEQ *ON                                       CGL007
+     C                     MOVE '5'       FFRTN                           CGL007
+     C                     END                                            CGL007
+     C                     OUT  FFCODS                                    CGL007
+     C                     ELSE                                           CGL007
+     C           *IN01     IFEQ '1'
+     C                     SETON                     U1
+     C                     END
+     C/COPY WNCPYSRC,FF0080C004
+     C                     END                                            CGL007
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R SCRNHD - DETERMINE SCREEN HEADINGS
+     C*
+      ** CALLED FROM - MIDDLE
+     C*
+      ** CALLS  ZFRPED; DBERR; CUSTNM; BOOKNM; FFPRCS
+     C*
+     C********************************************************************
+     C*
+     C           SCRNHD    BEGSR
+     C*
+     C*  Branch Parameter
+     C*
+      **     Access TABLETR for branch
+      **     IF no record found,
+      **     OR record not live
+      **          Perform Database error processing
+     C*
+     C***********          MOVELBRCD      BRCDX                           S01117
+     C                     MOVELBRCA      BRCDX                           S01117
+     C           BRKEY     CHAINTABLETRF             99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TABLE'   DBFILE
+     C***********          MOVELBRCD      DBKEY            ***************S01117
+     C                     MOVELBRCA      DBKEY            ***************S01117
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C*  Market Centre Parameter
+     C*
+     C           MRKT      IFNE *BLANKS
+     C*
+      ** Access MARKT
+      ** IF no record found,
+      ** OR record not live
+      **     Perform Database-error
+     C*
+     C           MRKT      CHAINMARKT                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'MARKT'   DBFILE
+     C                     MOVELMRKT      DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** Access MKCTL
+      ** IF no record found,
+      ** OR record not live
+      **     Perform Database-error
+     C*
+     C           MRKT      CHAINMKCTL                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'MKCTL'   DBFILE
+     C                     MOVELMRKT      DBKEY            ***************
+     C                     Z-ADD04        DBASE            * DB ERROR 04 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  Instrument Type Parameter
+     C*
+      **     Access INTYP for instrument details
+      **     IF no record found,
+      **     OR record not live
+      **          Perform Database-error
+     C*
+     C           ISTT      CHAININTYP                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'INTYP'   DBFILE
+     C                     MOVELISTT      DBKEY            ***************
+     C                     Z-ADD05        DBASE            * DB ERROR 05 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      **     Access TABTG10 for currency
+      **     IF no record found,
+      **     OR record not live
+      **          Perform Database error processing
+     C*
+     C*
+     C           CCKEY     CHAINTABTG10F             99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVELISCY      DBKEY            ***************
+     C                     Z-ADD06        DBASE            * DB ERROR 06 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      **         IF Instrument is a Market Option
+      **             Access INTYP2 using Future reference for underlying ins
+      **             IF no record found,
+      **             OR record not live
+      **                  Perform Database-error
+     C*
+     C           ISTI      IFEQ 'N'
+     C           ISPT      ANDGT3
+     C********** ISTI      OREQ 'N'                                AUS022 E44655
+     C           ISPT      ANDNE7                                         AUS022
+     C                     MOVELISTT      ISTT2K  5                       AUS022
+     C                     MOVE FTRF      ISTT2K                          E44655
+     C***********          MOVE FTRF      ISTT2K                          AUS022
+     C           ISTT2K    CHAININTYP2               99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'INTYP2'  DBFILE
+     C                     MOVELISTT2K    DBKEY            ***************
+     C                     Z-ADD07        DBASE            * DB ERROR 07 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  Instrument is a Market Instrument
+     C*
+     C           ISTI      IFEQ 'N'
+     C           ISPT      ANDNE7                                         AUS022
+     C*
+     C*  Year Number Parameter
+     C*
+     C                     MOVELYRNO      SYRNO
+     C*
+     C*  Month Number Parameter
+     C*
+     C                     MOVELZMNM,MTHN SMTHDS
+     C*
+     C                     END
+     C*
+     C*  Strike Price Parameter
+     C*
+     C*
+      ** IF Instrument is an Option.
+      ** Format strike price:
+     C*
+     C           ISPT      IFGT 3
+     C           ISPT      ANDNE7                                         AUS022
+     C*
+     C                     Z-ADDSTRP      FFPRIC
+     C*
+      ** IF Instrument is an Market Instrument use Ticks Denominator
+      ** and Minimun Price Fluctuate fron LF/INTYP2
+     C*
+     C           ISTI      IFEQ 'N'
+     C*
+     C                     Z-ADDTKDM2     FFTKDM
+     C                     Z-ADDMNPF2     FFMNPF
+     C*
+      ** ELSE if Instrument is an OTC Instrument use Ticks Denominator
+      ** and Minimun Price Fluctuate fron LF/INTYP
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADDTKDM      FFTKDM
+     C                     Z-ADDMNPF      FFMNPF
+     C*
+     C                     END
+     C*
+      ** Execute Subroutine to Format Strike Price
+     c*
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    SSTRP
+     C*
+     C                     END
+     C*
+      **  Broker Customer & Book Parameters
+     C*
+     C********** BOCO      IFNE *ZERO                                                         CSD027
+     C           BOCO      IFNE *BLANKS                                                       CSD027
+     C                     MOVEL'Broker  'NAR1
+     C**********           Z-ADDBOCO      CUSBRK                                              CSD027
+     C                     MOVE BOCO      CUSBRK                                              CSD027
+     C                     EXSR CUSTNM
+     C                     MOVELCRNM      DET1
+     C*
+     C********** CUSC      IFNE *ZERO                                                         CSD027
+     C           CUSC      IFNE *BLANKS                                                       CSD027
+     C                     MOVEL'Customer'NAR2
+     C**********           Z-ADDCUSC      CUSBRK                                              CSD027
+     C**********           Z-ADDCUSC      CUSPOR  60                                   S71062 CSD027
+     C                     MOVE CUSC      CUSBRK                                              CSD027
+     C                     MOVE CUSC      CUSPOR  6                                           CSD027
+     C                     EXSR CUSTNM
+     C                     MOVELCRNM      DET2
+     C                     ELSE
+     C*
+     C           BOKC      IFNE *BLANK
+     C                     MOVEL'Book'    NAR2
+     C                     EXSR BOOKNM
+     C                     MOVELBOKD      DET2
+     C                     END
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C********** CUSC      IFNE *ZERO                                                         CSD027
+     C           CUSC      IFNE *BLANKS                                                       CSD027
+     C                     MOVEL'Customer'NAR1
+     C**********           Z-ADDCUSC      CUSBRK                                              CSD027
+     C**********           Z-ADDCUSC      CUSPOR                                       S71062 CSD027
+     C                     MOVE CUSC      CUSBRK                                              CSD027
+     C                     MOVE CUSC      CUSPOR                                              CSD027
+     C                     EXSR CUSTNM
+     C                     MOVELCRNM      DET1
+     C                     END
+     C*
+     C           BOKC      IFNE *BLANK
+     C                     MOVEL'Book'    NAR2
+     C                     EXSR BOOKNM
+     C                     MOVELBOKD      DET2
+     C                     END
+     C*
+     C                     END
+     C*
+      ** Execute Subroutine to Format Realized Profit/Loss
+     c*
+     C                     Z-ADDCOPL      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    SCOPL
+     C*
+      ** Instrument Currency Parameter
+     c*
+     C                     MOVELISCY      SISCY
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R CUSTNM TO ACCESS CUSTOMER/BROKER NAME FROM CLINT
+     C*
+      ** CALLED FROM SCRNHD;
+     C*
+      ** CALLS  DBERR;
+     C*
+     C********************************************************************
+     C*
+     C           CUSTNM    BEGSR
+     C*
+      **     Access CLINT for Customer/broker
+      **     IF no record found,
+      **     OR record not live
+      **          Perform Database error processing
+     C*
+     C*
+     C           *LIKE     DEFN CUSC      CUSBRK
+     C*
+     C           CLINTK    KLIST
+     C                     KFLD           CUSBRK
+     C                     KFLD           TYPE
+     C*
+      ** Name/Address details
+     C*
+     C           *LIKE     DEFN RCDT      TYPE
+     C                     MOVE 'A'       TYPE
+     C           CLINTK    CHAINCLINT                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'CLINT'   DBFILE
+     C                     MOVELCUSBRK    DBKEY            ***************
+     C                     Z-ADD08        DBASE            * DB ERROR 08 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R BOOKNM TO ACCESS BOOK NAME FROM BOOKD
+     C*
+      ** CALLED FROM SCRNHD;
+     C*
+      ** CALLS  DBERR;
+     C*
+     C********************************************************************
+     C*
+     C           BOOKNM    BEGSR
+     C*
+     C           BOKC      CHAINBOOKD                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'BOOKD'   DBFILE
+     C                     MOVELBOKC      DBKEY            ***************
+     C                     Z-ADD9         DBASE            * DB ERROR 09 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R LOADSF TO LOAD SUBFILE
+     C*
+      ** CALLED FROM - MIDDLE
+     C*
+      ** CALLS DBERR; ZDATE2; FFPRCS;
+     C*
+     C********************************************************************
+     C*
+     C           LOADSF    BEGSR
+     C*
+      ** At least one record on CLOST8 must exist
+      ** for the Close Out Number involved
+     C*
+     C           CLON      SETLLCLOST8                   51
+     C*
+     C           *IN51     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'CLOST'   DBFILE
+     C                     MOVELCLON      DBKEY            ***************
+     C                     Z-ADD10        DBASE            * DB ERROR 10 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** Read all records on CLOST8 for the Close Out Number involved
+     C*
+     C           CLON      READECLOST8                   52
+     C*
+     C           RECI      IFNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'CLOST'   DBFILE
+     C                     MOVELCLON      DBKEY            ***************
+     C                     Z-ADD11        DBASE            * DB ERROR 11 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     MOVE *OFF      *IN02                           S71062
+     C           *IN52     DOWEQ'0'
+     C*
+      ** Get Transaction Details
+     C*
+     C           TNBR      CHAINTRANS                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECIT     ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TRANS'   DBFILE
+     C                     MOVELTNBR      DBKEY            ***************
+     C                     Z-ADD12        DBASE            * DB ERROR 12 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*                                                                   S71062
+     C********** CUSC      IFNE *ZEROS                     *B1                         S71062 CSD027
+     C           CUSC      IFNE *BLANKS                    *B1                                CSD027
+     C           BGPFMG    ANDEQ'Y'                                       S71062
+     C           FCPORS    ANDNE'B'                                       CPM003
+     C********** CUSC      ORNE *ZEROS                                                 CPB001 CSD027
+     C           CUSC      ORNE *BLANKS                                                       CSD027
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+      ** If portfolio of the trade is 9997 display portfolio narrative    S71062
+      ** on SDPORTPD                                                      S71062
+     C** If Bank Portfolios are supported, treat as if PM off             CPM003
+     C*                                                                   S71062
+     C* PTFR is blanks for non private banking customers                  CPB001
+     C           PTFRT     IFNE *BLANKS                                   CPB001
+     C*                                                                   CPB001
+     C           PTFRT     IFEQ '9997'                     **B2           S71062
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVELFCR997    DDPTFN    P                     S71062
+     C                     ELSE                            **X2           S71062
+     C*                                                                   S71062
+      ** else access to PMPORTPD to retrieve narrative                    S71062
+     C*                                                                   S71062
+     C           WWKEY     CHAINPMPORTLL             99                   S71062
+     C*                                                                   S71062
+      ** Record not found, process database error                         S71062
+     C*                                                                   S71062
+     C           *IN99     IFEQ '1'                        ***B3          S71062
+     C           *LOCK     IN   LDA                                       S71062
+     C                     MOVE 'PMPORTPD'DBFILE                          S71062
+     C                     MOVELPMKEY     DBKEY            ***************S71062
+     C                     Z-ADD17        DBASE            * DB ERROR 17 *S71062
+     C                     EXSR DBERR                      ***************S71062
+     C                     ELSE                            ***X3          S71062
+     C*                                                                   S71062
+      ** Record found, display porfolio narrative on PMPORTPD             S71062
+     C*                                                                   S71062
+     C                     MOVELPNPTFN    DDPTFN    P                     S71062
+     C                     END                             ***E3          S71062
+     C*                                                                   S71062
+     C                     END                             **E2           S71062
+     C*                                                                   CPB001
+     C                     ENDIF                                          CPB001
+     C*                                                                   S71062
+      ** Customer not present                                             S71062
+     C*                                                                   S71062
+     C                     ELSE                            *X1            S71062
+     C                     MOVE *ON       *IN02                           S71062
+     C                     END                             *E1            S71062
+     C*
+      ** Format Transaction Date
+     C*
+     C                     Z-ADDTRSD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    STRDT
+     C*
+      ** Transaction Number
+     C*
+     C                     Z-ADDTNBR      STNBR
+     C*
+      ** Transaction Type
+     C*
+     C                     MOVE TRTY      STRTY
+     C*
+      ** Format Contract Price using Subroutine FFPRCS
+      **  Use ticks denoninator and minimun price fluctuation from INTYP
+     C*
+     C                     Z-ADDCOPR      FFPRIC
+     C                     Z-ADDMNPF      FFMNPF
+     C                     Z-ADDTKDM      FFTKDM
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    SCOPR
+     C*
+      ** Transaction Narrative
+     C*
+     C                     MOVE TNAR      STNAR
+     C*
+      ** Final Closure Ind
+     C*
+     C                     MOVE FCLI      SFCIN
+     C*
+      ** Number of Contracts Closed
+     C*
+     C                     Z-ADDNCCL      SNCCL
+     C*
+      ** Write Subfile Record.
+      **
+     C*
+     C                     ADD  1         RRN     50
+     C                     WRITEFF0080S0
+     C*
+      ** Read next Close Out transaction
+     C*
+     C           CLON      READECLOST8                   52
+     C*
+     C           *IN52     IFEQ '0'
+     C           RECI      ANDNE'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'CLOST'   DBFILE
+     C                     MOVELCLON      DBKEY            ***************
+     C                     Z-ADD13        DBASE            * DB ERROR 13 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R CLOSET - UPDATE CLOSE OUT SET FOR CANCELLATION
+     C*
+      ** CALLED FROM - MIDDLE
+     C*
+      ** CALLS  ZTNLU1; HELP; FF0320(PROGRAM)
+     C*
+     C********************************************************************
+     C*
+     C           CLOSET    BEGSR
+     C*
+      ** Lock/Update Data Area For Last Transaction Number.
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C           CLON      CHAINCLOST                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'CLOST'   DBFILE
+     C                     MOVELCLON      DBKEY            ***************
+     C                     Z-ADD14        DBASE            * DB ERROR 14 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** If Close Out Set Already Cancelled By Another Job
+      **  Display Screen 'Close Out Set Not Cancelled' (Not 70)
+      **  With Associated Command Key Mask.
+     C*
+     C           CORI      IFEQ 'Y'
+     C                     SETOF                     70
+     C                     WRITEFF0080F5
+     C                     EXFMTFF0080F4
+     C*
+      **  Process asscociated HELP requests.
+     C*
+     C********** *IN09     DOWEQ'1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           READ FF0080F4                 50               S01119
+     C**********           END                                            S01199
+     C*
+      ** If Cmd 3 Pressed Exit Program With U1
+      **  Else Just Plain Exit.
+     C*
+     C           *IN01     IFEQ '1'
+     C*
+     C                     SETON                     U1
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+      ** Else if Close Out Set not already cancelled by another job
+     C*
+     C                     ELSE
+     C*
+      ** SET-UP UPDATE FIELDS FOR LF/CLOST
+     C*
+     C                     MOVE 'Y'       CORI
+     C                     MOVE 'N'       SHPI
+     C*
+     C           MRKT      IFEQ *BLANKS
+     C                     Z-ADDRUND      LCD
+     C                     ELSE
+     C                     Z-ADDBUSD      LCD
+     C                     END
+     C*
+     C                     MOVE 'D'       CHTP
+     C                     Z-ADDFNATN     TNLU
+     C*
+     C                     EXCPTECLOST
+     C*
+      ** Call Close Out Set Reversal Shadow Processing Program
+      ** Passing The Market as a Parameter.
+     C*
+     C                     CALL 'FF0320'
+     C                     PARM           MRKT
+     C                     PARM           IND     10
+     C*
+      ** If FF0320 Returns With return code set to 1 , Exit The Program
+      **  Else Display Screen 'Close Out Set Cancelled'
+      **  With Associated Command Key Mask.
+     C*
+     C           IND       IFEQ 1
+     C*
+     C                     SETON                     U1U7U8
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ELSE
+     C*
+     C                     SETON                     70
+     C*
+     C                     WRITEFF0080F5
+     C                     EXFMTFF0080F4
+     C**********                                                          S01199
+      ****Process*asscociated HELP requests.                              S01199
+     C**********                                                          S01199
+     C********** *IN09     DOWEQ'1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           READ FF0080F4                 50               S01119
+     C**********           END                                            S01199
+     C*
+      ** If Cmd 3 Pressed Exit Program With U1
+      **  Else Plain Exit.
+     C*
+     C           *IN01     IFEQ '1'
+     C*
+     C                     SETON                     U1
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+      ** S/R HELP TO PERFORM HELP KEY PROCESSING
+     C*
+      ** CALLED FROM MAINLINE; CLOSET
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           HELP      BEGSR
+     C*
+     C                     MOVEL'FF0070'  HBPGM   6
+     C                     MOVEAAERR      HERCD 160
+     C                     CALL 'MHELP'
+     C                     PARM           HBPGM
+     C                     PARM           HERCD
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R DBERR TO PERFORM DATABASE ERROR EXIT FROM PROGRAM
+     C*
+      ** CALLED FROM
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+      ** Seton U7 U8 LR
+      ** Return
+     C*
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZFRPEDZ3
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C/COPY ZSRSRC,FFPRCSZ4
+     C/EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+     C********************************************************************
+     O*
+     O** Update CLOSTD
+     O*
+     OCLOSTDF E                ECLOST
+     O                         CORI
+     O                         SHPI
+     O                         LCD
+     O                         CHTP
+     O                         TNLU
+      /COPY ZSRSRC,ZDATE2Z3
+**  CPY@
+(c) Finastra International Limited 2001

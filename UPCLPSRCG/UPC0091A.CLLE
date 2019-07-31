@@ -1,0 +1,96 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP UPDDLVLST validity checker')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UTC0091 - CRTDLVLST Validity Checker                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. CUP042 *REWRITE    Date 28Apr15              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CUP001 *CREATE     Date 29Dec98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP042 - Reworking of command to simplify it.               */
+/*       CUP001 - Introduction of BRIDGE                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&DLVLIB)
+ 
+             DCL        VAR(&DLVLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&MSGSUB) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&MSGTXT) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) +
+                          VALUE('N')
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(128)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2001')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check for  library containing deliverables list. */
+DLVLIB:
+             CHKOBJ     OBJ(&DLVLIB) OBJTYPE(*LIB) AUT(*CHANGE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&MSGSUB) VALUE(&DLVLIB *CAT 'QSYS')
+                RTVMSG     MSGID(CPF9801) MSGF(QCPFMSG) +
+                             MSGDTA(&MSGSUB) MSG(&MSGTXT)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                CHGVAR     VAR(&MSGSUB) VALUE(&DLVLIB *CAT 'QSYS')
+                RTVMSG     MSGID(CPF9802) MSGF(QCPFMSG) +
+                             MSGDTA(&MSGSUB) MSG(&MSGTXT)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+/* If validity error then send message back to command . . . */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&MSGTXT) VALUE('0000' *TCAT &MSGTXT)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA(&MSGTXT) +
+                             MSGTYPE(*DIAG)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+/* . . .  else send generic message. */
+             ELSE       CMD(DO)
+                IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                   RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   IF         COND(&MSGID *NE ' ') THEN(DO)
+                      SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                   MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                      GOTO       CMDLBL(RCVMSG)
+                   ENDDO
+                   RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

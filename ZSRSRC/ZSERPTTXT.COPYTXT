@@ -1,0 +1,151 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+  *********************************************************************
+  **                                                                 **
+  ** This subroutine is created under SAR no. S01502, BLI Telekurs   **
+  ** Processing dated 08JUL94.                                       **
+  **                                                                 **
+  *********************************************************************
+ 
+  STANDARD SUBROUTINE - ZSERPT
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Purpose:
+  ~~~~~~~~
+   The ZSERPT subroutine puts together the security name, coupon rate
+   & maturity date to come up w/ the report title.  It removes the
+   trailing blanks in a security name.  It also removes the leading
+   and trailing zeroes in the coupon rate and placing a decimal point
+   and the '%' sign in the proper position.  The maturity date is
+   formatted to DDMMMYY.  This subroutine is created for the Security
+   Module.
+ 
+  Notes for when including in RPG pgm for compiling:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC ZSERPT1 should be included in the 'E' specifications
+   /COPY ZSRSRC ZSERPT2 should be included in the subroutine section
+ 
+   ZSERPT3 needs to be copied into the pgm source at the appropriate
+   point in the compile time array data section.
+ 
+   Notes: (1)- Sequence of array details & data needs to be consistent.
+          (2)- This subroutine cannot be use together with ZDATE2 bec.
+               of their common compile time array ZMNM.  If ZDATE2
+               needs to be called together w/ ZSERPT, call ZDATE2
+               as a program instead of a subroutine.
+ 
+   Requirements:
+   ~~~~~~~~~~~~
+   The subroutine references eight execution time arrays which must
+   be described on extension specifications.
+ 
+   ZRNO   -     An alphanumeic array of 41 one byte element which will
+                contain the formated output array.
+ 
+   ZRNN   -     An alphameric array of 20 one-byte elements which will
+                serve as a work field in formatting the security name.
+ 
+   ZRN1   -     An alphameric array of 1 one-byte elements which will
+                serve as a work field in formatting the coupon rate.
+ 
+   ZRN2   -     An alphameric array of 2 one-byte elements which will
+                serve as a work field in formatting the coupon rate
+                and the maturity date.
+ 
+   ZRN3   -     An alphameric array of 3 one-byte elements which will
+                serve as a work field in formatting the coupon rate.
+ 
+   ZRN4   -     An alphameric array of 4 one-byte elements which will
+                serve as a work field in formatting the coupon rate.
+ 
+   ZRNL   -     An alphameric array of 4 one-byte elements which will
+                serve as a work field in formatting the coupon rate.
+ 
+   ZRNR   -     An alphameric array of 7 one-byte elements which will
+                serve as a work field in formatting the coupon rate.
+ 
+   The subroutine references one compile time array which must
+   be described on extension specifications.
+ 
+   ZMNM   -     An array containing the month shortname.
+ 
+   Input:
+   ~~~~~
+ 
+   ZTITLE  -    An alphameric field of length 20 containing the
+                security name.
+ 
+   ZCPRAT  -    A numeric field of length (11,7) containing the
+                coupon rate.
+ 
+   ZMADAT  -    A numeric field of length 6 containing the maturity
+                date.
+ 
+   98     - indicator is on if the date format of the system is MMDDYY,
+            off if date format DDMMYY.  This indicator is set in
+            subroutine ZSYSTM.  If the ZSYSTM subroutine is not used
+            indicator 98 must be set by comparing the field BJDFIN (on
+            SDBANKPD) to a constant of M, if equal 98 will be set on.
+ 
+ 
+   Procedure:
+   ~~~~~~~~~
+ 
+   1.   All trailing blanks of the Security Name will be removed.
+        This is done by moving the field ZTITLE to ZRNN array.
+        Each of the element of the array will be checked for blanks
+        starting from the last position.  The array ZRNN will then
+        be moved to ZRNO w/ the pointer X positioned 1 space after the
+        non-blank character in the security name.
+ 
+   2.   All leading zeroes of the coupon rate will be removed.  This
+        is done by moving the first 4 digit of the rate to array
+        ZRNWRL.  Each element of the array is scanned for a 0 digit
+        starting from the first position.  The array ZRNWRL starting
+        from the first non-zero digit will be move to ZRNO.  The
+        pointer X is positioned accordingly.
+ 
+   3.   A decimal point is moved to ZRNO if the rate has a fractional
+        part otherwise it will skip step 4 and proceed to step 5.
+ 
+   4.   All trailing zeroes of the coupon rate wll be removed.  This
+        is done by moving the last 7 digit of the rate to array ZRNWRR.
+        ZRNWRR is scanned for a 0 digit starting from the last
+        position.  The array ZRNWRR will be moved to ZRNO w/ the
+        pointer X positioned after the last non-zero digit of the
+        rate.
+ 
+   5.   The '%' sign will be moved to ZRNO and pointer X positioned
+        accordingly.
+ 
+   6.   The maturity date will be formatted first to DDMMYY afterwhich
+        it will be finally formated to DDMMMYY and place in ZRNO.
+        This is done by manipulating the field ZMADAT, ZWRK4, ZWRKM,
+        ZWRKD, ZRNWK2 and array ZRN2 and ZMNM.
+ 
+   7.   The edited report name ZRNO will then be moved to ZRPNAM.
+ 
+ 
+   Output:
+   ~~~~~~
+ 
+   ZRPNAM - the 41 character alphameric field containing the formated
+            report name w/ the security name, coupon rate and maturity
+            date in it.

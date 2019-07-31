@@ -1,0 +1,191 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/
+/*E*I****TEXT('Midas*SM*Set*up*authorities*across*zone/global')*******/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000036 - Set up authorities across zone/global           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. CUP042 *REDUNDANT  Date 06Nov14              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CUP033             Date 08Jun06              */
+/*                      CSM005             Date 21Sep05              */
+/*                      CSM003             Date 30May05              */
+/*                      CPK020             Date 27Jul04              */
+/*                      CPK019             Date 06Jul04              */
+/*                      CPK018  *CREATE    Date 20May04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP042 - Changes for Bridge deliverable data split          */
+/*       CUP033 - Removal of System Value /COPYs.                    */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CSM003 - Use system value rather than UPSTAT.               */
+/*       CPK020 - Additions to authority standards.                  */
+/*       CPK019 - Put in use of UPSTAT.  This is intended to be      */
+/*                removed at a later date.                           */
+/*       CPK018 - MidasPlus packaging.  Authority set up.            */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                                       */ /*CUP033*/
+             PGM        PARM(&GPFXSVAL &PFXSVAL)                                          /*CUP033*/
+ 
+             DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)                                /*CUP033*/
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
+/**COPY*UPCPYSRCG,UPGSVALDCL*                                        */ /*             */ /*CUP033*/
+             DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)                                  /*CUP033*/
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)                                    /*CUP033*/
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')                     /*CUP033*/
+             DCL        VAR(&ZADOPT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZDATABASE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZOWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZWEBUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZUSERS) TYPE(*CHAR) LEN(10)                                  /*CPK020*/
+             DCL        VAR(&ZUSER) TYPE(*CHAR) LEN(10)                                   /*CPK019*/
+             DCL        VAR(&GADOPT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GDATABASE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GOWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GUSERS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(UPSVALJ0)                                                    /*CUP033*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create Midas Info Screen data area in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG MSGID(CPF2105)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          TEXT('Midas Info Screen Data Area')
+ 
+             CHGJOB     SWS(00000000)
+ 
+VALIDATE:                                                                                 /*CUP033*/
+             RCVF                                                                         /*CUP033*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
+                GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)                              /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&GPSBSID) VALUE(&GIVAL)                                 /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)                               /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&SBSID) VALUE(&GIVAL)                                   /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
+ 
+/**COPY*UPCPYSRCG,UPGSVALCL1*                                        */ /*             */ /*CUP033*/
+/**COPY*UPCPYSRC,UPSVALCAL21*                                        */ /*             */ /*CUP033*/
+/**********  IF         COND(&GPSBSID *EQ '  ' *OR &SBSID *EQ ' ') +                   */ /*CUP033*/
+/**********               THEN(DO)                                                     */ /*CUP033*/
+ CHECK:                                                                                   /*CUP033*/
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('SMC000036' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/**Use*system*prefix*from*UPSTAT*for*Midas zone.**/ /*                      */ /*CPK019*/ /*CSM003*/
+/**********  RTVDTAARA  DTAARA(UPSTAT (62 2)) RTNVAR(&SBSID)                */ /*CPK019*/ /*CSM003*/
+ 
+/* Set up the names of authorisation lists and profiles. */
+             CHGVAR     VAR(&GADOPT) VALUE(&GPSBSID *TCAT 'ADOPT')
+             CHGVAR     VAR(&ZADOPT) VALUE(&SBSID *TCAT 'ADOPT')
+ 
+             CHGVAR     VAR(&GDATABASE) VALUE(&GPSBSID *TCAT +
+                          'DATABASE')
+             CHGVAR     VAR(&ZDATABASE) VALUE(&SBSID *TCAT 'DATABASE')
+ 
+             CHGVAR     VAR(&GOWNER) VALUE(&GPSBSID *TCAT 'OWNER')
+             CHGVAR     VAR(&ZOWNER) VALUE(&SBSID *TCAT 'OWNER')
+ 
+             CHGVAR     VAR(&GUSERS) VALUE(&GPSBSID *TCAT 'USERS')
+             CHGVAR     VAR(&ZUSERS) VALUE(&SBSID *TCAT 'USERS')                          /*CPK020*/
+ 
+             CHGVAR     VAR(&ZUSER) VALUE(&SBSID *TCAT 'USER')                            /*CPK019*/
+ 
+             CHGVAR     VAR(&ZWEBUSER) VALUE(&SBSID *TCAT 'WEBUSER')
+ 
+/* Add entries for the global adoption authorisation list. */
+             RMVAUTLE   AUTL(&GADOPT) USER(&ZOWNER)
+             MONMSG     MSGID(CPF2285)
+             ADDAUTLE   AUTL(&GADOPT) USER(&ZOWNER) AUT(*USE)
+ 
+             RMVAUTLE   AUTL(&GADOPT) USER(&ZWEBUSER)
+             MONMSG     MSGID(CPF2285)
+             ADDAUTLE   AUTL(&GADOPT) USER(&ZWEBUSER) AUT(*ALL)
+ 
+/* Add entries for the global database authorisation list. */
+             RMVAUTLE   AUTL(&GDATABASE) USER(&ZOWNER)
+             MONMSG     MSGID(CPF2285)
+             ADDAUTLE   AUTL(&GDATABASE) USER(&ZOWNER) AUT(*ALL)
+ 
+             RMVAUTLE   AUTL(&GDATABASE) USER(&ZWEBUSER)
+             MONMSG     MSGID(CPF2285)
+             ADDAUTLE   AUTL(&GDATABASE) USER(&ZWEBUSER) AUT(*ALL)
+ 
+/* Add entries for the zone adoption authorisation list. */
+             RMVAUTLE   AUTL(&ZADOPT) USER(&GOWNER)
+             MONMSG     MSGID(CPF2285)
+             ADDAUTLE   AUTL(&ZADOPT) USER(&GOWNER) AUT(*USE)
+ 
+             RMVAUTLE   AUTL(&ZADOPT) USER(&GUSERS)
+             MONMSG     MSGID(CPF2285)
+             ADDAUTLE   AUTL(&ZADOPT) USER(&GUSERS) AUT(*USE)
+ 
+/* Add entries for the zone database authorisation list. */
+             RMVAUTLE   AUTL(&ZDATABASE) USER(&GOWNER)
+             MONMSG     MSGID(CPF2285)
+             ADDAUTLE   AUTL(&ZDATABASE) USER(&GOWNER) AUT(*USE)
+ 
+/* Attach ggUSERS profile to zzUSER as group profile. */                                  /*CPK019*/
+             CHGUSRPRF  USRPRF(&ZUSER) GRPPRF(&GUSERS)                                    /*CPK019*/
+             CHGUSRPRF  USRPRF(&ZUSER) SUPGRPPRF(&ZUSERS)                                 /*CPK020*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal program end. */
+ABNOR:
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000)
+/* Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMC000036') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('SMC000036' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+             ENDPGM

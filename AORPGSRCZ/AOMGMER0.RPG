@@ -1,0 +1,183 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Bank details access object')
+      *****************************************************************
+      *                                                               *
+      *  Midas  ACCESS OBJECTS                                        *
+      *                                                               *
+      *     AOMGMER0 - READ ACCESS TO MESSAGE MNGT                    *
+      *                I.C.D ACCESS OBJECT                            *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 219242             Date 01Jul03               *
+      *                 219241             Date 01Jul03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 210496             Date 10Oct02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPK008             Date 23Jun97               *
+      *                    CSW009             DATE 20FEB97            *
+      *                    S01431             DATE 27OCT93            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  219242 - Not possible to create MT103+ payment msg from      *
+      *           non-FT transaction (Recompile)                      *
+      *  219241 - Defaulting of "Details of Charges" assign a         *
+      *           system value (Recompile)                            *
+      *     210496 - Recompile over CSW027 changes                    *
+      *     CPK008 - DBA R2 packaging:                                *
+      *              - Reverse out change CSW009 as this has been     *
+      *                delivered to core too early.                   *
+      *     CSW009 - Midas-SWIFT Alliance semi-interactive interface  *
+      *               - Change to DSFDY and recompile.                *
+      *     S01431 - MERVA/2 DEVELOPMENT:                             *
+      *              - RECOMPILE OVER EXTENDED SDMGMEPD.              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * ID F  C  H  L  FUNCTION OF INDICATORS                         *
+      *                                                               *
+      *       01       OFF ON THE FIRST RUN                           *
+      *       90       FILE ERROR                                     *
+      *       91       OPEN ERROR                                     *
+      *       92       CLOSE ERROR                                    *
+      *       93       EMPTY FILE                                     *
+      *       96       OPTION ERROR                                   *
+      *                                                               *
+      /EJECT
+      *FSTART                                                         *
+      *****************************************************************
+     FSDMGMEL1IF  E           K        DISK                           UC
+      * IN  - @ENREK0 ME DETAILS (BYCD)
+      ************************************************************
+      /EJECT
+     E*ESTART
+     E************************************************************
+     E                    @MG     1   1 50
+     E************************************************************
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT
+     I*ISTART
+      ************************************************************
+     IP@MGDA      DS
+     I                                        1  50 @MG
+      *
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     ID@FMT     E DSSDMGMEPD                                              S01230
+      *
+     I*P@FMT*****E DSDSFDY                                                CSW009
+     I*P@FMT*****E*DSDSSDY                                          CSW009CPK008
+     IP@FMT     E DSDSFDY                                                 CPK008
+      *                                                                   CPK008
+      ************************************************************
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+      ************************************************************        S01230
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM D@FMT     P@FMT            O:Format
+      *****************************************************
+      *MAIN
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     9396   ¦ error
+     C           P@OPTN    IFEQ '*KEY   '
+     C           P@OPTN    OREQ '*FIRST '
+     C           P@OPTN    OREQ '*LAST  '
+     C           P@OPTN    OREQ '*NEXT  '
+     C           P@OPTN    OREQ '*PREV  '
+     C           P@OPTN    OREQ '*FREE  '
+     C           P@OPTN    OREQ '*SAME  '
+     C           P@OPTN    OREQ '*VERIFY'
+     C           *IN01     IFEQ '0'                          IF2 1'st time
+     C                     SETON                     01
+     C                     OPEN SDMGMEL1               91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C           *LOVAL    SETLL@ENREK0              9390    Set file
+     C  N93                READ @ENREK0                  93
+     C                     CLOSESDMGMEL1               92    Close file
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C                     END                               FI2
+     C                     ELSE
+     C                     SETON                     96      Parm error
+     C                     END
+      *
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   96                MOVE '*OPTION' P@RTCD           No selection
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 9 SND MSG
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   96                MOVE 'ACO1007' P@MGID
+     C                     CALL 'ZASNMG'                     <SND MSG>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Prog name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Msg ID
+     C                     PARM *BLANK    P@MSGF 10          I:Msg file
+     C                     PARM *BLANK    P@MGKY  4          O:Msg key
+     C                     PARM           P@MGDA 50          I:Msg data
+     C                     PARM '*DIAG'   P@MGTP  7          I:Msg type
+     C                     END                             FI 9
+      *
+      *      CALLER REQUESTS DB HANDLING
+      *
+     C           W@RTCD    IFEQ '*DBERR'                   IF DB ERROR
+     C           P@RTCD    ANDNE*BLANK                     AND
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END                             FI
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+      *ENDMAIN
+**
+SDMGMEPD  AOMGMER0  ME Details
+** CPY@     : Copyright notice for inclusion in all programs           graS01230
+(c) Finastra International Limited 2001

@@ -1,0 +1,528 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Database migration')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000042 - Perform object migration                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1085447          Date 06Feb13              */
+/*                      AR792029           Date 22Jun11              */
+/*                      CUP003             Date 02Aug10              */
+/*                      BUG27793  *REWRITE Date 07Jun10              */
+/*                                *MOVE                              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      BG26993            Date 26Jan10              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CUP038             Date 05Sep07              */
+/*                      CUP034             Date 23Jan07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK025  *CREATE    Date 18Jul06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1085447 - Handle migration of loan references to alpha.   */
+/*       AR792029 - Change ssytem prefix references within migration */
+/*                  job.                                             */
+/*       CUP003 - Handle unique key problems better.                 */
+/*       BUG27793 - Make migration multi-streamed.  Move to global.  */
+/*       BG26993- Delivery of upgrade programs to core.              */
+/*              - Migration of MEMOS is now handled differently.     */
+/*       CUP038 - Re-organisation of migration tools.                */
+/*       CUP034 - Reduce size of implementation library.             */
+/*       CPK025 - MidasPlus 1.3 packaging.  New migration to handle  */
+/*                customer number changes.                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OBJECT &OBJTYPE &FMLIB &TOLIB &CRT +
+                          &RERUN &MODE)
+ 
+             DCL        VAR(&OBJECT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CRT) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RERUN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&THRESHOLD) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&THRESHOLDA) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JUMP) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&JUMPA) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SYSPCTAFT) TYPE(*DEC) LEN(7 4)
+             DCL        VAR(&SYSTOT) TYPE(*DEC) LEN(7 0)
+             DCL        VAR(&SINGLE) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&SM40RTN) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&SM62RTN) TYPE(*CHAR) LEN(10) VALUE(' ')                   /*AR1085447*/
+             DCL        VAR(&UP249RTN) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)                                  /*CUP003*/
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check system usage and end if it has breached threshold. */
+             RTVDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (23 2)) +
+                          RTNVAR(&THRESHOLDA)
+             RTVDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (25 2)) RTNVAR(&JUMPA)
+             CHGVAR     VAR(&THRESHOLD) VALUE(&THRESHOLDA)
+             CHGVAR     VAR(&JUMP) VALUE(&JUMPA)
+             CALL       PGM(UP0249) PARM(&UP249RTN &SYSPCTAFT &SYSTOT)
+             IF         COND(&SYSPCTAFT *GE &THRESHOLD *OR +
+                          (&SYSPCTAFT - &THRESHOLD) *GT &JUMP) THEN(DO)
+                CHGDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (27 1)) VALUE('Y')
+                CALL       PGM(SM000008) PARM(&OBJECT &OBJTYPE +
+                             '*UPDATE' '999999')
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Machine +
+                             threshold has been breached.') MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Set status to ACTIVE. */
+             CALL       PGM(SM000008) PARM(&OBJECT &OBJTYPE +
+                          '*UPDATE' 'ACTIVE')
+ 
+/* Handle physical files. */
+             IF         COND(&OBJTYPE *EQ '*FILE') THEN(DO)
+/* Before attempting copy check if file exists in both libraries */
+/*  and that members match.                                      */
+                CALL       PGM(UPC0262) PARM(&OBJECT &FMLIB &TOLIB)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                                in calling UPC0262 (member check).') +
+                                MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+ 
+/* If the migration is across alpha customer number changes then check if */
+/*  the specific file needs to be handled specially.                      */
+                IF         COND(&MODE *EQ '*PREAC') THEN(DO)
+/* Create and rename temporary source file for RUNSQLSTM. */
+                   DLTF       FILE(QTEMP/RUNSQLSTM)
+                   MONMSG     MSGID(CPF0000)
+                   DLTF       FILE(QTEMP/RUNSQL)
+                   MONMSG     MSGID(CPF0000)
+                   CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                                MBR(RUNSQLSTM) TEXT('Temporary source +
+                                file for SMC000038')
+                   RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                                NEWOBJ(RUNSQL)
+/* Call program to attempt to migrate customer numbers. */
+                   CALL       PGM(SM000040) PARM(&OBJECT &OBJTYPE &FMLIB +
+                                &TOLIB &RERUN &SINGLE &SM40RTN)
+                   IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                                   MSGDTA('Unexpected error in calling +
+                                   SM000040 (update of customer number).  +
+                                   Check dump.') MSGTYPE(*DIAG)
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                   IF         COND(&SM40RTN *EQ '*ERROR') THEN(DO)
+                      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                                   in calling SM000040 (update of customer +
+                                   number).') MSGTYPE(*DIAG)
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                   IF         COND(&SM40RTN *EQ '*NOTFOUND') THEN(DO)
+                      GOTO       CMDLBL(NOT_FOUND)
+                   ENDDO
+                   IF         COND(&SM40RTN *EQ '*UNIQUE') THEN(DO)                       /*CUP003*/
+                      GOTO       CMDLBL(UNIQUE)                                           /*CUP003*/
+                   ENDDO                                                                  /*CUP003*/
+/* If successful then end program. */
+                   IF         COND(&SM40RTN *EQ ' ') THEN(DO)
+                      DLTSPLF    FILE(RUNSQLSTM) SPLNBR(*LAST)
+                      MONMSG     MSGID(CPF0000)
+                      GOTO       CMDLBL(SUCCESS)
+                   ENDDO
+/* SM000040 also can return '*NOTONCNUM' which means that a normal copy is */
+/*  attempted.                                                             */
+                ENDDO
+ 
+/* If the migration is across alpha loan reference changes then check if  */           /*AR1085447*/
+/*  the specific file needs to be handled specially.                      */           /*AR1085447*/
+                IF         COND(&MODE *EQ '*PREAL') THEN(DO)                           /*AR1085447*/
+/* Create and rename temporary source file for RUNSQLSTM. */                           /*AR1085447*/
+                   DLTF       FILE(QTEMP/RUNSQLSTM)                                    /*AR1085447*/
+                   MONMSG     MSGID(CPF0000)                                           /*AR1085447*/
+                   DLTF       FILE(QTEMP/RUNSQL)                                       /*AR1085447*/
+                   MONMSG     MSGID(CPF0000)                                           /*AR1085447*/
+                   CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                                MBR(RUNSQLSTM) TEXT('Temporary source +
+                                file for SMC000038')                                   /*AR1085447*/
+                   RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                                NEWOBJ(RUNSQL)                                         /*AR1085447*/
+/* Call program to attempt to migrate loan references. */                              /*AR1085447*/
+                   CALL       PGM(SM000062) PARM(&OBJECT &OBJTYPE &FMLIB +
+                                &TOLIB &RERUN &SINGLE &SM62RTN)                        /*AR1085447*/
+                   IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                         /*AR1085447*/
+                      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                                   MSGDTA('Unexpected error in calling +
+                                   SM000062 (update of loan reference). +
+                                   Check dump.') MSGTYPE(*DIAG)                        /*AR1085447*/
+                      GOTO       CMDLBL(ERROR)                                         /*AR1085447*/
+                   ENDDO                                                               /*AR1085447*/
+                   IF         COND(&SM62RTN *EQ '*ERROR') THEN(DO)                     /*AR1085447*/
+                      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                                   in calling SM000062 (update of loan +
+                                   reference).') MSGTYPE(*DIAG)                        /*AR1085447*/
+                      GOTO       CMDLBL(ERROR)                                         /*AR1085447*/
+                   ENDDO                                                               /*AR1085447*/
+                   IF         COND(&SM62RTN *EQ '*NOTFOUND') THEN(DO)                  /*AR1085447*/
+                      GOTO       CMDLBL(NOT_FOUND)                                     /*AR1085447*/
+                   ENDDO                                                               /*AR1085447*/
+                   IF         COND(&SM62RTN *EQ '*UNIQUE') THEN(DO)                    /*AR1085447*/
+                      GOTO       CMDLBL(UNIQUE)                                        /*AR1085447*/
+                   ENDDO                                                               /*AR1085447*/
+/* If successful then end program. */                                                  /*AR1085447*/
+                   IF         COND(&SM62RTN *EQ ' ') THEN(DO)                          /*AR1085447*/
+                      DLTSPLF    FILE(RUNSQLSTM) SPLNBR(*LAST)                         /*AR1085447*/
+                      MONMSG     MSGID(CPF0000)                                        /*AR1085447*/
+                      GOTO       CMDLBL(SUCCESS)                                       /*AR1085447*/
+                   ENDDO                                                               /*AR1085447*/
+/* SM000062 also can return '*NOTONLNRF' which means that a normal copy is */          /*AR1085447*/
+/*  attempted.                                                             */          /*AR1085447*/
+                ENDDO                                                                  /*AR1085447*/
+ 
+                CPYF       FROMFILE(&FMLIB/&OBJECT) +
+                             TOFILE(&TOLIB/&OBJECT) FROMMBR(*ALL) +
+                             TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                             CRTFILE(&CRT) FMTOPT(*NONE)
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*NONE) - Category 1        */
+/*                                                                   */
+/* First category of monitored messages are critical errors and will */
+/* be flagged as failed without attempting other types of CPYF as    */
+/* they would also fail.                                             */
+/*********************************************************************/
+/* If to-file does not exist then flag. */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2861) EXEC(DO)
+                   GOTO       CMDLBL(NOT_FOUND)
+                ENDDO
+/* If from-file does not exist. */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* If insufficient authority to either from-file or to-file. */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2864) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2862) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* If from-file has more fields than to-file, treat as error. */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2965) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* If, because of overrides, utility thinks it is copying to itself. */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2874) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* If from-file or to-file is locked, or to-file is in use. */
+                MONMSG     MSGID(CPF2952 CPF2909) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* If to-file has insufficient allowed number of members */
+                MONMSG     MSGID(CPF2888) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* If from-file not found; this error may be caused by an existing */
+/*  override.                                                      */
+                MONMSG     MSGID(CPF2875) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* If error in writing to 'to' member then it is unable to work    */
+/*  out why; therefore flag as failure.                            */
+                MONMSG     MSGID(CPF2972) EXEC(DO)
+/* Check for last diagnostic and see if it is related to unique keys. */                  /*CUP003*/
+                   RCVMSG     MSGTYPE(*DIAG) MSGID(&MSGID)                                /*CUP003*/
+                   IF         COND(&MSGID *EQ 'CPF5104') THEN(DO)                         /*CUP003*/
+/* Call program to remove member for logical causing problem and try copy */              /*CUP003*/
+/*  again.                                                                */              /*CUP003*/
+                      CALL       PGM(SMC000078) PARM(&OBJECT &FMLIB &TOLIB +
+                                   '*NONE' &RTNCODE)                                      /*CUP003*/
+                      IF         COND(&RTNCODE *NE ' ') THEN(DO)                          /*CUP003*/
+                         GOTO       CMDLBL(UNIQUE)                                        /*CUP003*/
+                      ENDDO                                                               /*CUP003*/
+                   ENDDO                                                                  /*CUP003*/
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*NONE) - Category 2        */
+/*                                                                   */
+/* Second category of monitored messages are non-critical errors and */
+/* will be flagged as completed without attempting other types of    */
+/* copy as they would also fail.                                     */
+/*********************************************************************/
+/* If from-file has no members or its only member is empty. */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(DO)
+                   RMVM       FILE(&TOLIB/&OBJECT) MBR(*ALL)
+                   MONMSG     MSGID(CPF7301)
+                   GOTO       CMDLBL(SUCCESS)
+                ENDDO
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                   GOTO       CMDLBL(SUCCESS)
+                ENDDO
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                   GOTO       CMDLBL(SUCCESS)
+                ENDDO
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*NONE) - Category 3        */
+/*                                                                   */
+/* Third category of monitored messages are for possibly critical    */
+/* errors but further CPYFs should be attempted.                     */
+/*********************************************************************/
+/* If different FMTOPT required. */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2969) EXEC(DO)
+                   GOTO       CMDLBL(TAG02)
+                ENDDO
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(DO)
+                   GOTO       CMDLBL(TAG02)
+                ENDDO
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2962) EXEC(DO)
+                   GOTO       CMDLBL(TAG02)
+                ENDDO
+ 
+/* If CPYF worked then end program. */
+                GOTO       CMDLBL(SUCCESS)
+ TAG02:
+                CPYF       FROMFILE(&FMLIB/&OBJECT) +
+                           TOFILE(&TOLIB/&OBJECT) FROMMBR(*ALL) +
+                           TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                           CRTFILE(&CRT) FMTOPT(*MAP *DROP)
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*MAP *DROP) - Category 1   */
+/*                                                                   */
+/* It is possible that a message from the 3rd category for the first */
+/* CPYF was received first; therefore, some category 1 errors must   */
+/* be monitored for again.                                           */
+/*********************************************************************/
+/* If from-file or to-file is locked, or to-file is in use. */
+                MONMSG     MSGID(CPF2952 CPF2909) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* If to-file has insufficient allowed number of members. */
+                MONMSG     MSGID(CPF2888) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* If to-file has incorrect data in any fields. */
+                MONMSG     MSGID(CPF2972) EXEC(DO)
+/* Check for last diagnostic and see if it is related to unique keys. */                  /*CUP003*/
+                   RCVMSG     MSGTYPE(*DIAG) MSGID(&MSGID)                                /*CUP003*/
+                   IF         COND(&MSGID *EQ 'CPF5104') THEN(DO)                         /*CUP003*/
+/* Call program to remove member for logical causing problem and try copy */              /*CUP003*/
+/*  again.                                                                */              /*CUP003*/
+                      CALL       PGM(SMC000078) PARM(&OBJECT &FMLIB &TOLIB +
+                                   '*MAP ' &RTNCODE)                                      /*CUP003*/
+                      IF         COND(&RTNCODE *NE ' ') THEN(DO)                          /*CUP003*/
+                         GOTO       CMDLBL(UNIQUE)                                        /*CUP003*/
+                      ENDDO                                                               /*CUP003*/
+                   ENDDO                                                                  /*CUP003*/
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*MAP *DROP) - Category 2   */
+/*                                                                   */
+/* It is possible that a message from the 3rd category for the first */
+/* CPYF was received first; therefore, some category 2 errors must   */
+/* be monitored for again.                                           */
+/*********************************************************************/
+/* If from-file has no members or its only member is empty. */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(DO)
+                   GOTO       CMDLBL(SUCCESS)
+                ENDDO
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                   GOTO       CMDLBL(SUCCESS)
+                ENDDO
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                   GOTO       CMDLBL(SUCCESS)
+                ENDDO
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*MAP *DROP) - Category 3   */
+/*                                                                   */
+/* Third category of monitored messages are for possibly critical    */
+/* errors but further CPYFs should be attempted.                     */
+/*********************************************************************/
+/* If different FMTOPT required. */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+ 
+/* If CPYF worked then end program. */
+                GOTO       CMDLBL(SUCCESS)
+             ENDDO
+ 
+/* Handle data areas. */
+             IF         COND(&OBJTYPE *EQ '*DTAARA') THEN(DO)
+/* Check if it exists in 'to' library; if it doesn't then flag. */
+                CHKOBJ     OBJ(&TOLIB/&OBJECT) OBJTYPE(*DTAARA)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   GOTO       CMDLBL(NOT_FOUND)
+                ENDDO
+/* If the migration is across alpha customer number changes then check if */
+/*  the specific data area needs to be handled specially.                 */
+                IF         COND(&MODE *EQ '*PREAC') THEN(DO)
+                   CALL       PGM(SM000040) PARM(&OBJECT &OBJTYPE &FMLIB +
+                                &TOLIB &RERUN &SINGLE &SM40RTN)
+                   IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                                   MSGDTA('Unexpected error in calling +
+                                   SM000040 (update of customer number).  +
+                                   Check dump.') MSGTYPE(*DIAG)
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                   IF         COND(&SM40RTN *EQ '*ERROR') THEN(DO)
+                      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                                   in calling SM000040 (update of customer +
+                                   number).') MSGTYPE(*DIAG)
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                   IF         COND(&SM40RTN *EQ '*NOTFOUND') THEN(DO)
+                      GOTO       CMDLBL(NOT_FOUND)
+                   ENDDO
+                   IF         COND(&SM40RTN *EQ ' ') THEN(DO)
+                      GOTO       CMDLBL(SUCCESS)
+                   ENDDO
+/* SM000040 also can return '*NOTONCNUM' which means that a normal copy is */
+/*  attempted.                                                             */
+                ENDDO
+ 
+/* If the migration is across alpha loan reference changes then check if  */           /*AR1085447*/
+/*  the specific data area needs to be handled specially.                 */           /*AR1085447*/
+                IF         COND(&MODE *EQ '*PREAL') THEN(DO)                           /*AR1085447*/
+                   CALL       PGM(SM000062) PARM(&OBJECT &OBJTYPE &FMLIB +
+                                &TOLIB &RERUN &SINGLE &SM62RTN)                        /*AR1085447*/
+                   IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                         /*AR1085447*/
+                      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                                   MSGDTA('Unexpected error in calling +
+                                   SM000062 (update of loan reference). +
+                                   Check dump.') MSGTYPE(*DIAG)                        /*AR1085447*/
+                      GOTO       CMDLBL(ERROR)                                         /*AR1085447*/
+                   ENDDO                                                               /*AR1085447*/
+                   IF         COND(&SM62RTN *EQ '*ERROR') THEN(DO)                     /*AR1085447*/
+                      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                                   in calling SM000062 (update of loan +
+                                   reference).') MSGTYPE(*DIAG)                        /*AR1085447*/
+                      GOTO       CMDLBL(ERROR)                                         /*AR1085447*/
+                   ENDDO                                                               /*AR1085447*/
+                   IF         COND(&SM62RTN *EQ '*NOTFOUND') THEN(DO)                  /*AR1085447*/
+                      GOTO       CMDLBL(NOT_FOUND)                                     /*AR1085447*/
+                   ENDDO                                                               /*AR1085447*/
+                   IF         COND(&SM62RTN *EQ ' ') THEN(DO)                          /*AR1085447*/
+                      GOTO       CMDLBL(SUCCESS)                                       /*AR1085447*/
+                   ENDDO                                                               /*AR1085447*/
+/* SM000062 also can return '*NOTONLNRF' which means that a normal copy is */          /*AR1085447*/
+/*  attempted.                                                             */          /*AR1085447*/
+                ENDDO                                                                  /*AR1085447*/
+ 
+                CPYDTAARA  FMDTAARA(&FMLIB/&OBJECT) +
+                             TODTAARA(&TOLIB/&OBJECT)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                                in copying data area' *BCAT &OBJECT *TCAT +
+                                '.') MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                GOTO       CMDLBL(SUCCESS)
+             ENDDO
+ 
+/* Copy data queues. */
+             IF         COND(&OBJTYPE *EQ '*DTAQ') THEN(DO)
+/* Check if it exists in 'to' library; if it doesn't then flag. */
+                CHKOBJ     OBJ(&TOLIB/&OBJECT) OBJTYPE(*DTAQ)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   GOTO       CMDLBL(NOT_FOUND)
+                ENDDO
+                CPYDTAQ    FMDTAQ(&FMLIB/&OBJECT) TODTAQ(&TOLIB/&OBJECT)
+                MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                                in copying data queue' *BCAT &OBJECT +
+                                *TCAT '.') MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                GOTO       CMDLBL(SUCCESS)
+             ENDDO
+ 
+/* Handle validation lists. */                                                            /*CUP003*/
+             IF         COND(&OBJTYPE *EQ '*VLDL') THEN(DO)                               /*CUP003*/
+/* Check if it exists in 'to' library; if it doesn't then flag. */                        /*CUP003*/
+                CHKOBJ     OBJ(&TOLIB/&OBJECT) OBJTYPE(*VLDL)                             /*CUP003*/
+                MONMSG     MSGID(CPF9801) EXEC(DO)                                        /*CUP003*/
+                   GOTO       CMDLBL(NOT_FOUND)                                           /*CUP003*/
+                ENDDO                                                                     /*CUP003*/
+/* If it does exist then delete 'to' version and create duplicate of 'from'. */           /*CUP003*/
+                DLTVLDL    VLDL(&TOLIB/&OBJECT)                                           /*CUP003*/
+                MONMSG     MSGID(CPF0000) EXEC(DO)                                        /*CUP003*/
+                   SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                                in migrating validation list' *BCAT +
+                                &OBJECT *TCAT '.') MSGTYPE(*DIAG)                         /*CUP003*/
+                   GOTO       CMDLBL(ERROR)                                               /*CUP003*/
+                ENDDO                                                                     /*CUP003*/
+                CRTDUPOBJ  OBJ(&OBJECT) FROMLIB(&FMLIB) OBJTYPE(*VLDL) +
+                             TOLIB(&TOLIB)                                                /*CUP003*/
+                MONMSG     MSGID(CPF0000) EXEC(DO)                                        /*CUP003*/
+                   SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                                in migrating validation list' *BCAT +
+                                &OBJECT *TCAT '.') MSGTYPE(*DIAG)                         /*CUP003*/
+                   GOTO       CMDLBL(ERROR)                                               /*CUP003*/
+                ENDDO                                                                     /*CUP003*/
+                GOTO       CMDLBL(SUCCESS)                                                /*CUP003*/
+             ENDDO                                                                        /*CUP003*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+NOT_FOUND:
+             CALL       PGM(SM000008) PARM(&OBJECT &OBJTYPE +
+                          '*UPDATE' 'NFOUND')
+             GOTO       CMDLBL(ENDPGM)
+ 
+SUCCESS:
+/* Call program to check if the object needs the system prefix changed. */              /*AR792029*/
+             CALL       PGM(SMC000114) PARM(&OBJECT &OBJTYPE +
+                          &FMLIB &TOLIB)                                                /*AR792029*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*AR792029*/
+                GOTO       CMDLBL(ERROR)                                                /*AR792029*/
+             ENDDO                                                                      /*AR792029*/
+             CALL       PGM(SM000008) PARM(&OBJECT &OBJTYPE +
+                          '*UPDATE' 'PASSED')
+             GOTO       CMDLBL(ENDPGM)
+ 
+UNIQUE:                                                                                   /*CUP003*/
+             CALL       PGM(SM000008) PARM(&OBJECT &OBJTYPE +
+                          '*UPDATE' 'UNIQUE')                                             /*CUP003*/
+             GOTO       CMDLBL(ENDPGM)                                                    /*CUP003*/
+ 
+ERROR:
+/* Set status to FAILED. */
+             CALL       PGM(SM000008) PARM(&OBJECT &OBJTYPE +
+                          '*UPDATE' 'FAILED')
+             IF         COND(&RECURSIVE *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                             MSGDTA('Recursive error for job' *BCAT +
+                             &OBJECT *TCAT '.') MSGTYPE(*ESCAPE)
+             ENDDO
+             CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+ 
+ERROR2:
+ /* Receive escape error message. */
+             RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                          MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+ /* Pass it back to calling program. */
+             SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                          MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+ENDPGM:
+             ENDPGM

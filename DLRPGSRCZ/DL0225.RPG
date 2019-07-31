@@ -1,0 +1,901 @@
+0001 H             1                                                      S01194
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL List of forward rates')                       *
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Dealing Module                                       *
+0005 F*                                                               *
+0006 F*  DL0225  -  FORWARD RATES REPORT                              *
+0007 F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+0009 F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 258435             Date 19Aug14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 17Jan01               *
+      *                 CAP059             Date 17Jan01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 129805             DATE 13FEB98               *
+     F*                 089129             DATE 27JUL95               *
+     F*                 088301             DATE 16JUN95               *
+     F*                 087890             DATE 16JUN95               *
+     F*                 063791             DATE 08JUL94               *
+     F*                 S01432             DATE 27JUL93               *
+0011 F*                 E24383             DATE 21FEB91               *
+0011 F*                 S01328             DATE 04FEB91               *
+     F*                 LN0740             DATE 27SEP90               *
+     F*                 BHF243             DATE 27JUL90               *
+     F*                 LN0363             DATE 13JUN90               *
+     F*                 LN0135             DATE 09MAY90               *
+     F*                 E19921             DATE 12APR90               *
+     F*                 E138               DATE 04DEC89               *
+     F*                 E00018             DATE  3/11/89              *
+0010 F*                 S01194             DATE 22/05/89              *
+0010 F*                 S01117             DATE 22/05/89              *
+0010 F*                 E11531             DATE 25/09/87              *
+0010 F*                 E81265             DATE 24/02/87              *
+     F*                 E47227             DATE 12/06/86              *
+0011 F*                                                               *
+0012 F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  258435 - Allow user to define parameter for calculation of   *
+     F*           forward days. Use new system value ForwardDays,     *
+     F*           whose permitted values are as follows:              *
+     F*           WR = Working Days from Run Date                     *
+     F*           WS = Working Days from Spot Date                    *
+     F*           CR = Calendar Days from Run Date                    *
+     F*           CS = Calendar Days from Spot Date                   *
+     F*           Apply fix 255972.                                   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+     F*  CSD006 - Market Data Feeds                                   *
+     F*  CAP059 - Conversion of Forward Rates into Modular APIs       *
+     F*  129805 - Fix 063791 changed program to use working days      *
+     F*           instead of calendar days when calculating forward   *
+     F*           days. This is incorrect. Program should increment   *
+     F*           Run Date by No of Spot Days (working days only),    *
+     F*           and then calculate the Forward Date from this date; *
+     F*           i.e. 90 days forward is 90 calendar days from the   *
+     F*           Spot Date for the currency. Amended program to do   *
+     F*           this.                                               *
+     F*  089129 - FWDRTFE file changed; field size increased to allow *
+     F*           5 digits and 8 decimals for forward points. Field   *
+     F*           PFW has been replaced by PNF.                       *
+     F*  088301 - Allow input of Forward with same number of decimals *
+     F*           as spot.                                            *
+     F*  087890 - Print sign as on Maintenance Screen (S01432)        *
+     F*  063791 - Amend the program to calculate the days forward     *
+     F*           based on working days and not on calendar days.     *
+     F*           Two new copy sources, subroutine ZFWDTA and I-specs *
+     F*           ZHOLIA were added.                                  *
+     F*  S01432 - changed version of FWDRT                            *
+     F*  E24383 - OVERFLOW PROBLEM                                    *
+     F*  S01328 - FRA/IRS REVALUATION                                 *
+     F*  LN0740 - SEQ SHOULD NOT BE SET TO *BLANKS AS THIS CAUSES     *
+     F*           A NEW SEQUENCE NO. TO BE ALLOCATED                  *
+     F*  BHF243 - ADDITION TO FIX LN0363, P1 REPORTS SHOULD           *
+     F*           PRODUCE HEADINGS AT THE TOP OF A PRINTOUT.          *
+     F*  LN0363 - P1 REPORT SHOULD NOT PRINT HEADINGS IF DETAILS      *
+     F*           NOT PRESENT. NOT PRINTING 'END OF REPORT'           *
+     F*  LN0135 - 'AU'REPORT SHOULD NOT SHOW 'END OF REPORT'          *
+     F*  E19921 - CODE ADDED TO ENSURE REPORT HEADINGS ARE            *
+     F*           DISPLAYED IF PRIMARY FILE (FWDRT) EMPTY.            *
+     F*           (SUPERCEDED BY E138 AND S01194)                     *
+     F*  E138   - SHOULD NOT PRODUCE P1 IF NO DETAILS                 *
+     F*           ACCESS SDBANKPD FOR TITLE AND DATE (CALL #ZZ) IF    *
+     F*           NO RECORDS FOUND                                    *
+     F*  E00018 - MANDATORY PROGRAM SO NO PARAMETERS PASSED -AVOIDS   *
+     F*           DUMMY PARAMETERS BEING PASSED TO RPG PROGRAMS       *
+     F*  S01194 - NEW STANDING DATA                                   *
+     F*  S01117 - AMENDMENTS FOR MULTIBRANCHING                       *
+     F*  E11531 - IF LCD IS BLANK DO NOT OUTPUT IT                    *
+     F*  E81265 - '* NO DETAILS TO REPORT *' ADDED TO OUTPUT          *
+     F*                                                               *
+     F*****************************************************************
+0014 F*FWDRT***UP**F*****256**3AI*****2*DISK                              S01328
+0014 F*FWDRT***UP  F     261  3AI     2 DISK                       S01328 S01432
+0014 F*FWDRT***UP  F     436  3AI     2 DISK                       S01432 089129
+0014 F*FWDRT***UP  F     611  3AI     2 DISK                       089129 CSD006
+0014 FFWDRT   UP  F     646  3AI     2 DISK                               CSD006
+0015 F*TABLE   IF  F      96 12AI     2 DISK                              S01194
+0016 F*DL0225P1O   F     132     OF     PRINTER                           S01124
+0016 FDL0225P1O   F     132     OF     PRINTER      KINFDS SPOOL          S01117
+     FDL0225AUO   F     132     OV     PRINTER      KINFDS SPOOLU         S01117
+     F*****************************************************************
+     F*                                                               *
+0017 F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+0018 F* 01            FORWARD RATES HEADER                            *
+0019 F* 02            FORWARD RATES DETAIL                            *
+0020 F**03*****       TABLE FILE I.C.D.1                              *   S01194
+0021 F**04*****       TABLE FILE I.C.D.2                              *   S01194
+     F* 05            FIRST DETAIL RECORD                             *   LN0363
+     F* 06            OUTPUT HEADING                                  *   LN0363
+     F* 07            DETAILS REPORTED                                *   LN0363
+0022 F*       20      FIRST CYCLE CALCULATIONS DONE                   *
+0023 F*       21      ALL ELEMENTS OF DAYS/RATE ARRAYS PROCESSED      *
+0024 F*       22      CHANGE TYPE IS INSERT                           *
+0024 F*       23      LAST RECORD TO BE PRINTED                       *   E24383
+0025 F********25      CHAIN FAIL                                      *   S01194
+0026 F*       30      PRINT CURRENCY CODE FOR FIRST FORWARD RATE      *
+0027 F*       31      PRINT DETAIL LINE                               *
+     F*       32      NO RECORDS TO REPORT                            *   E81265
+     F*       36      LAST CHANGE DATE IS BLANK                       *   E11531
+     F*       50      S01432 SAR INSTALLED                            *   087890
+     F*       51      CSD006 SAR INSTALLED                            *   CSD006
+0028 F*          U8   TOTALS OUT OF BALANCE.                          *
+0029 F*        U7&U8  DATABASE ERROR                                  *
+     F*                                                               *
+     F*****************************************************************
+     E/COPY ZSRSRC,ZHOLE                                                  063791
+     E                    CPY@    1   1 80
+0030 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+0031 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+0032 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+0033 E********************DFW        25  3 0                              S01328
+0033 E                    DFW        25  5 0                              S01328
+0034 E                    RFW        25 13 8
+     E***********         PFW        25 10 6                        087890088301
+     E***********         PFW        25 10 8                        088301089129
+     E                    SFW        25  1                                087890
+0034 E                    PNF        25 13 8                              089129
+0035 I*    FORWARD RATES FILE - HEADER RECORD.
+0036 I*
+0037 IFWDRT   NS  01   1 CH
+0038 I                                        1   1 RECI
+0039 I                                        2   4 CCY
+0040 I                                    P   5   70NORE
+0041 I                                    P   8  100FLSZ
+0042 I                                    P  11  130NLRB
+0043 I                                    P  14  160NINS
+0044 I                                    P  17  190NAMD
+0045 I                                    P  20  220NDEL
+0046 I                                    P  23  250NLRA
+0047 I                                    P 250 2520LCD
+0048 I                                      253 253 CHTP
+0049 I                                    P 254 2560TNLU
+0050 I*
+0051 I*
+0052 I*    FORWARD RATES FILE - DETAIL RECORD.
+0053 I*
+0054 IFWDRT   NS  02   1 CD
+0055 I                                        1   1 RECI
+0056 I                                        2   4 CCY
+0057 I************************************P   5  54 DFW                   S01328
+0058 I************************************P  55 229 RFW                   S01328
+0059 I************************************P 250 2520LCD                   S01328
+0059 I************************************  250 252 LCDTP       36 E11531 S01328
+0060 I************************************  253 253 CHTP                  S01328
+0061 I************************************P 254 2560TNLU                  S01328
+0057 I                                    P   5  79 DFW                   S01328
+0058 I                                    P  80 254 RFW                   S01328
+0059 I                                    P 255 2570LCD                   S01328
+0059 I                                      255 257 LCDTP           36    S01328
+0060 I                                      258 258 CHTP                  S01328
+0061 I                                    P 259 2610TNLU                  S01328
+     I************                        P 262 411 PFW             087890089129
+     I                                      412 436 SFW                   087890
+0060 I                                    P 437 611 PNF                   089129
+0060 I                                    P 639 6460FRDFTS                CSD006
+0062 I*
+0063 I        NS
+0064 I*
+0065 I*****TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.               S01194
+0066 I*****                                                               S01194
+0067 I*ABLE   NS  03   2 C0   3 C1  12 C1                                 S01194
+0068 I*****  AND      13 C0                                               S01194
+0069 I*****                                   1   1 RECI                  S01194
+0070 I*****                                   2   30RECT                  S01194
+0071 I*****                                  12  130RCDE                  S01194
+0072 I*****                                  14  66 TITL                  S01194
+0073 I*****                                  67  67 DATF                  S01194
+0074 I***********                            68  700DFBR           S01117 S01194
+0074 I*****                                  68  70 DFBM           S01117 S01194
+0075 I*****                                  74  74 MODI1                 S01194
+0076 I*****                                  75  75 MODI2                 S01194
+0077 I*****                                  76  76 MODI3                 S01194
+0078 I*****                               P  77  790RUND                  S01194
+0079 I*****                                  80  86 RUNA                  S01194
+0080 I*****                                  87  870SFLG                  S01194
+0081 I*****                               P  90  920LCD                   S01194
+0082 I*****                                  93  93 CHTP                  S01194
+0083 I*****                               P  94  960TNLU                  S01194
+0084 I*****                                                               S01194
+0085 I*****                                                               S01194
+0086 I*****TABLE FILE - INSTALLATION CONTROL DATA RECORD 2.               S01194
+0087 I*****                                                               S01194
+0088 I*ABLE   NS  04   1 CD   2 C0   3 C1                                 S01194
+0089 I*****  AND      12 C1  13 C1                                        S01194
+0090 I*****                                   1   1 RECI                  S01194
+0091 I*****                                   2   30RECT                  S01194
+0092 I*****                                  12  130RCDE                  S01194
+0093 I*****                                  14  16 BCCY                  S01194
+0094 I*****                                  17  19 BCYL                  S01194
+0095 I*****                                  20  22 HOCY                  S01194
+0096 I*****                                  23  280HEAD                  S01194
+0097 I*****                               P  29  310APDA                  S01194
+0098 I*****                                  35  35 APFQ                  S01194
+0099 I*****                               P  36  380LOGS                  S01194
+0100 I*****                                  39  40 CUZR                  S01194
+0101 I*****                               P  41  430DNWD                  S01194
+0102 I*****                                  44  460BVLP                  S01194
+0103 I*****                                  47  49 LOCY                  S01194
+0104 I*****                                  50  510FDAY                  S01194
+0105 I*****                                  86  86 ISAV                  S01194
+0106 I*****                               P  87  890LLOG                  S01194
+0107 I*****                               P  90  920LCD                   S01194
+0108 I*****                                  93  93 CHTP                  S01194
+0109 I*****                               P  94  960TNLU                  S01194
+0110 I*****                                                               S01194
+0111 I*****   NS                                                          S01194
+0110 I*                                                                   S01117
+0110 ISPOOL       DS                                                      S01117
+0110 I**  File information data structure                                 S01117
+0110 I                                       83  92 SFILE                 S01117
+0110 I                                    B 123 1240SFNUM                 S01117
+     I                                    B 243 2460SWRIT                 S01117
+0110 I*                                                                   S01117
+0110 ISPOOLU      DS                                                      S01117
+0110 I**  File information data structure                                 S01117
+0110 I                                       83  92 SFILEU                S01117
+0110 I                                    B 123 1240SFNUMU                S01117
+     I*                                                                   S01194
+     I@BINRY      DS                                                      S01117
+     I** DEFINE A BLANK BINARY FIELD FOR USE WITH SWRIT                   S01117
+     I                                    B   1   40@BKBIN                S01117
+0110 I*                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01194
+     I*                                                                   S01194
+     I/COPY WNCPYSRC,DL0225I001
+     ISDCURR    E DSSDCURRPD                                              129805
+     I** External DS for Currency details                                 129805
+     I*                                                                   129805
+     I/COPY WNCPYSRC,DL0225I002
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     I/COPY ZSRSRC,ZHOLIA                                                 063791
+     I/COPY ZSRSRC,ZHOLDS                                                 063791
+      *                                                                   CSD006
+     I                                        1  10 WKDATE                CSD006
+     I                                        1   4 WKCCYY                CSD006
+     I                                        6   7 WKDFMO                CSD006
+     I                                        9  10 WKDFDD                CSD006
+     I                                       11  18 WKTIME                CSD006
+     I                                       11  12 WKDFHH                CSD006
+     I                                       14  15 WKDFMI                CSD006
+     I                                       17  18 WKDFSS                CSD006
+      *                                                                                       258435
+      * Data structure to hold input parameter for AOSVALR0.                                  258435
+     I            DS                                                                          258435
+     I                                        1  20 WPARM                                     258435
+     I                                        1   5 WPARM1                                    258435
+     I                                        6  10 WPARM2                                    258435
+     I                                       11  15 WPARM3                                    258435
+     I                                       16  20 WPARM4                                    258435
+      *                                                                   S01117
+      * ENTRY PARAMETER REQUIRED BY RCF                                   S01117
+     C********** *ENTRY    PLIST                                    S01117E00018
+     C**********           PARM           SEQ                       S01117E00018
+      *                                                                   S01117
+0112 C*
+0113 C*    FIRST CYCLE CALCULATIONS
+0114 C   20                GOTO NOTFC
+0115 C                     SETON                     20
+0116 C                     Z-ADD0         ZERO5   50
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVEL'DL0225'  DBPGM  10                       S01117
+0117 C*
+0118 C*****READ INSTALLATION CONTROL DATA 1.                              S01194
+0119 C*****                MOVEL'01'      TABKEY 12                       S01194
+0120 C*****                MOVE '10'      TABKEY                          S01194
+0121 C*****                EXSR TABCHN                                    S01194
+0122 C**N03                GOTO ERROR                                     S01194
+0123 C*****      DATF      COMP 'M'                      98               S01194
+0124 C*****                                                               S01194
+0125 C*****READ INSTALLATION CONTROL DATA 2.                              S01194
+0126 C*****                MOVE '1'       TABKEY                          S01194
+0127 C*****                EXSR TABCHN                                    S01194
+0128 C**N04                GOTO ERROR                                     S01194
+0124 C*                                                                   S01194
+     C** READ BANK DETAILS VIA ACCESS PROGRAM                             S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON  S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     MOVEL'SDBANKPD'DBFILE 10        ************   S01194
+     C                     MOVEL'01'      DBASE   2        * DBERR 01 *   S01194
+     C                     MOVEL@OPTN     DBOPTN  7        ************   S01194
+     C                     MOVEL@OPTN     DBKEY  29                       S01194
+     C                     GOTO ERROR                                     S01194
+     C                     END                                            S01194
+      *                                                                   087890
+      **  Access SAR details file to see if S01432  is installed.         087890
+      *                                                                   087890
+     C                     CALL 'AOSARDR0'                                087890
+     C                     PARM '       ' @RTCD                           087890
+     C                     PARM '*VERIFY' @OPTN                           087890
+     C                     PARM 'S01432'  @SARD   6                       087890
+      *                                                                   087890
+     C           @RTCD     IFEQ *BLANK                                    087890
+     C                     MOVE '1'       *IN50                           087890
+     C                     ELSE                                           087890
+     C                     MOVE '0'       *IN50                           087890
+     C                     END                                            087890
+      *                                                                   CSD006
+      **  Access SAR details file to see if CSD006  is installed.         CSD006
+      *                                                                   CSD006
+     C                     CALL 'AOSARDR0'                                CSD006
+     C                     PARM '       ' @RTCD                           CSD006
+     C                     PARM '*VERIFY' @OPTN                           CSD006
+     C                     PARM 'CSD006'  @SARD                           CSD006
+      *                                                                   CSD006
+     C           @RTCD     IFEQ *BLANK                                    CSD006
+     C                     MOVE '1'       *IN51                           CSD006
+     C                     ELSE                                           CSD006
+     C                     MOVE '0'       *IN51                           CSD006
+     C                     END                                            CSD006
+0124 C*                                                                   S01194
+      *                                                                                       258435
+      ** Check system value for meaning of Forward Days.                                      258435
+      ** Set up parameter so access object checks System Value ForwardDays                    258435
+     C                     MOVE *BLANKS   WPARM                                               258435
+     C                     MOVEL'Forwa'   WPARM1                                              258435
+     C                     MOVEL'rdDay'   WPARM2                                              258435
+     C                     MOVEL's'       WPARM3                                              258435
+     C                     MOVELWPARM     SVALK1                                              258435
+      * Call Access object:                                                                   258435
+     C                     CALL 'AOSVALR0'                                                    258435
+     C                     PARM           RTNCDE  7                                           258435
+     C                     PARM           SVALK1 20                                           258435
+     C                     PARM           SVAL1 200                                           258435
+     C                     PARM           SVALK2 20                                           258435
+     C                     PARM           SVAL2 200                                           258435
+     C                     PARM           SVALK3 20                                           258435
+     C                     PARM           SVAL3 200                                           258435
+     C                     PARM           SVALK4 20                                           258435
+     C                     PARM           SVAL4 200                                           258435
+     C                     PARM           SVALK5 20                                           258435
+     C                     PARM           SVAL5 200                                           258435
+     C                     PARM           SVALK6 20                                           258435
+     C                     PARM           SVAL6 200                                           258435
+     C                     PARM           SVALK7 20                                           258435
+     C                     PARM           SVAL7 200                                           258435
+     C                     PARM           SVALK8 20                                           258435
+     C                     PARM           SVAL8 200                                           258435
+     C                     PARM           SVALK9 20                                           258435
+     C                     PARM           SVAL9 200                                           258435
+     C                     PARM           SVALK0 20                                           258435
+     C                     PARM           SVAL10200                                           258435
+      * If the system value is not found then issue a database error                          258435
+     C           RTNCDE    IFNE '        '                                                    258435
+     C                     MOVEL'SDSVALPD'DBFILE                                              258435
+     C                     MOVEL'66'      DBASE                                               258435
+     C                     MOVEL@OPTN     DBOPTN                                              258435
+     C                     MOVEL'SVALK1'  DBKEY                                               258435
+     C                     ELSE                                                               258435
+      * Isolate the first 2 characters of SVAL1 which should contain the value                258435
+     C                     MOVELSVAL1     WRK02   2        2 character fld                    258435
+     C                     MOVELWRK02     WC      1        working or calendar                258435
+     C                     MOVE WRK02     RS      1        from run date or spot              258435
+     C                     ENDIF                                                              258435
+0129 C*
+0130 C*    DETAIL CALCULATIONS.
+0131 C           NOTFC     TAG                             ** NOTFC TAG **
+0132 C*
+0133 C*    PROCESS ONLY DETAIL RECORDS, KEEP RUNNING TOTAL.
+0134 C  N02                GOTO END
+     C*                                                                   LN0363
+     C/COPY WNCPYSRC,DL0225C001
+     C*    Obtain currency details                                        129805
+     C                     CALL 'AOCURRR0'                                129805
+     C                     PARM 'DBERR  ' @RTCD   7                       129805
+     C                     PARM '*KEY   ' @OPTN   7                       129805
+     C                     PARM CCY       @AJCD   3                       129805
+     C           SDCURR    PARM SDCURR    DSSDY                           129805
+     C           @RTCD     IFNE *BLANK                                    129805
+     C                     MOVEL'SDCURRPD'DBFILE 10        ************   129805
+     C                     MOVEL'02'      DBASE   2        * DBERR 02 *   129805
+     C                     MOVEL@OPTN     DBOPTN  7        ************   129805
+     C                     MOVELCCY       DBKEY  29                       129805
+     C                     GOTO ERROR                                     129805
+     C                     END                                            129805
+     C/COPY WNCPYSRC,DL0225C002
+     C*                                                                   129805
+     C*    PRINT HEADER IF FIRST DETAIL READ                              LN0363
+     C*                                                                   LN0363
+     C           *IN05     IFEQ '0'                                       LN0363
+     C                     SETON                     050607               LN0363
+     C                     EXSR HEDEX                                     BHF243
+     C                     ELSE                                           LN0363
+     C                     SETOF                     06                   LN0363
+     C                     END                                            LN0363
+     C*                                                                   BHF243
+     C           *INOF     IFEQ '1'                                       BHF243
+     C                     EXSR HEDEX                                     BHF243
+     C                     END                                            BHF243
+     C*                                                                   BHF243
+0135 C           NREC      ADD  1         NREC    50
+0136 C*
+0137 C*    SET INDICATOR TO PRINT CURRENCY.
+0138 C                     SETON                     30
+0139 C*
+0140 C*    CHECK LAST CHANGE TYPE.
+0141 C           CHTP      COMP 'I'                      22
+0142 C*
+0143 C*    CONVERT LAST CHANGE DATE
+0144 C                     Z-ADDLCD       ZDAYNO
+0145 C                     EXSR ZDATE2
+0146 C                     MOVE ZADATE    LCDA    7
+     C/COPY WNCPYSRC,DL0225C003
+0147 C*
+     C**  Increment Run Date by No of Spot Days for Currency, taking any  129805
+     C**  non-working days for the currency into account - Forward Days   129805
+     C**  are calculated from spot date.                                  129805
+     C*                                                                   129805
+     C**   Check System Value to determine Base Date                                          258435
+     C           RS        IFEQ 'S'                                                           258435
+     C                     Z-ADDBJRDNB    ZDAYNO                          129805
+     C                     MOVE CCY       ZCCY                            129805
+     C                     MOVE *BLANKS   ZLOC                            129805
+     C                     Z-ADDA6SPDY    ZNRDYS                          129805
+     C                     EXSR ZFWDTA                                    129805
+     C                     Z-ADDZDYNBR    @BASE   50                      129805
+     C                     ELSE                                                               258435
+     C                     Z-ADDBJRDNB    @BASE                                               258435
+     C                     ENDIF                                                              258435
+     C/COPY WNCPYSRC,DL0225C004
+     C*                                                                   129805
+0148 C*    LOOP TO ACCESS DAYS/RATE ARRAYS.
+0149 C                     Z-ADD0         N       20
+0150 C           NEXT      TAG
+0151 C           N         ADD  1         N
+0152 C*
+0153 C*    CHECK WHETHER ALL ELEMENTS PROCESSED
+0154 C           N         COMP 25                   21
+0155 C  N21      DFW,N     COMP 0                        21
+0156 C   21                GOTO END
+0157 C*
+0158 C*    CONVERT   DATE FOR FORWARD RATE.
+0159 C*****      RUND      ADD  DFW,N     ZDAYNO                          S01194
+0159 C***********BJRDNB    ADD  DFW,N     ZDAYNO                   S01194 063791
+     C/COPY WNCPYSRC,DL0225C005
+     C*                                                                   063791
+     C***Calculate*date*based*on*working*days*and*not*on*calendar da063791129805
+     C*                                                             063791129805
+     C**********           Z-ADDBJRDNB    ZDAYNO                    063791129805
+     C**********           MOVE CCY       ZCCY                      063791129805
+     C**********           MOVE *BLANKS   ZLOC                      063791129805
+     C**********           Z-ADDDFW,N     ZNRDYS                    063791129805
+     C**********           EXSR ZFWDTA                              063791129805
+     C**********           Z-ADDZDYNBR    ZDAYNO                    063791129805
+     C*                                                                   129805
+     C****Increment*Spot*Date*by*No*of*Forward*Days*(Ignore*holidays)**                129805 258435
+     C**  Increment Base Date by No of Forward Days, either calendar                          258435
+     C**   or working, depending on System Value                                              258435
+     C*                                                                   129805
+     C           WC        IFEQ 'C'                                                           258435
+     C           @BASE     ADD  DFW,N     ZDAYNO                          129805
+     C                     ELSE                                                               258435
+     C                     Z-ADD@BASE     ZDAYNO                                              258435
+     C                     MOVE CCY       ZCCY                                                258435
+     C                     MOVE *BLANKS   ZLOC                                                258435
+     C                     Z-ADDDFW,N     ZNRDYS                                              258435
+     C                     EXSR ZFWDTA                                                        258435
+     C                     Z-ADDZDYNBR    ZDAYNO                                              258435
+     C                     ENDIF                                                              258435
+     C*                                                                   063791
+     C**  Convert date to DDMMMYY format for report.                      129805
+     C*                                                                   129805
+     C/COPY WNCPYSRC,DL0225C006
+0160 C                     EXSR ZDATE2
+0161 C                     MOVE ZADATE    DATE    7
+     C*                                                                   E24383
+     C* SET ON INDICATOR TO SIGNIFY LAST ELEMENT BEING PROCESSED          E24383
+     C*                                                                   E24383
+0149 C           N         ADD  1         P       20                      E24383
+0154 C           P         COMP 25                   23                   E24383
+0155 C  N23      DFW,P     COMP 0                        23               E24383
+0162 C*
+     C           *IN51     IFEQ *ON                                       CSD006
+     C                     MOVE FRDFTS    WKTMST 14                       CSD006
+     C                     MOVE ' /  /  ' WKDATE                          CSD006
+     C                     MOVE ' :  :  ' WKTIME                          CSD006
+     C           4         SUBSTWKTMST:1  WKCCYY                          CSD006
+     C           2         SUBSTWKTMST:5  WKDFMO                          CSD006
+     C           2         SUBSTWKTMST:7  WKDFDD                          CSD006
+     C           2         SUBSTWKTMST:9  WKDFHH                          CSD006
+     C           2         SUBSTWKTMST:11 WKDFMI                          CSD006
+     C           2         SUBSTWKTMST:13 WKDFSS                          CSD006
+     C                     ENDIF                                          CSD006
+0163 C*    PRINT DETAIL LINE.
+0164 C                     SETON                         31
+0165 C                     EXSR EXCEPT
+0166 C*
+0167 C*    PROCESS NEXT ELEMENT
+0168 C                     GOTO NEXT
+0169 C*
+0170 C*    SET ERROR INDICATORS.
+0171 C           ERROR     TAG                             ** ERROR TAG **
+0172 C*****                SETON                     U7U8LR               S01194
+     C                     EXSR *PSSR                                     S01194
+0173 C*
+0174 C           END       TAG                             ** END TAG **
+0175 C*
+0176 C*    SET OVERFLOW INDICATOR.
+0177 C*R                   SETON                     OF                   S01117
+0178 C*
+0179 C*    TOTAL CALCULATIONS
+0509 C*                                                                   S01117
+     C** ENSURE SPOOL FILE RECORDED BY RCF ONCE - ONLY IF P1 IS WRITTEN   S01117
+     C** TO. SWRIT IS INCREMENTED FOR EVERY SUCCESSFUL WRITE TO THE       S01117
+     C** FILE - IF IT IS BLANK (OR 0) THEN NOTHING HAS BEEN WRITTEN TO    S01117
+     C** THE FILE. UNABLE TO COMPARE SWRIT TO *BLANKS SO USE @BKBIN -     S01117
+     C** AN UNITIALISED BINARY FIELD.                                     S01117
+     CLR         SWRIT     IFNE 0                                         S01117
+     CLR         SWRIT     ANDNE@BKBIN                                    S01117
+     C*                                                                   S01117
+     C** TRANSFER BINARY DATA INTO NUMERIC FIELD                          S01117
+     CLR                   Z-ADDSFNUM     ZSNUM   60                      S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     C*********************PARM           SEQ     5                 S01117E00018
+     C*R*********          PARM *BLANKS   SEQ     5                 E00018LN0740
+     CLR                   PARM           SEQ     5                       LN0740
+     CLR                   PARM *BLANK    @PARM   3                       S01117
+     CLR                   PARM           SFILE                           S01117
+     CLR                   PARM           ZSNUM                           S01117
+     CLR                   PARM *BLANK    ZSERR   1                       S01117
+     C*                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+     CLR                   END                                            S01117
+0509 C*                                                                   S01117
+     C** ENSURE AUDIT FILE RECORDED BY RCF                                S01117
+     C*                                                                   S01117
+     C** TRANSFER BINARY DATA INTO NUMERIC FIELD                          S01117
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     C*********************PARM           SEQ                       S01117E00018
+     C*R*********          PARM *BLANKS   SEQ                       E00018LN0740
+     CLR                   PARM           SEQ                             LN0740
+     CLR                   PARM *BLANK    @PARM                           S01117
+     CLR                   PARM           SFILEU                          S01117
+     CLR                   PARM           ZSNUMU                          S01117
+     CLR                   PARM *BLANK    ZSERR   1                       S01117
+     C*                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+0509 C*                                                                   S01117
+0180 CLRNU7      NLRA      COMP NREC                 U8U8
+     CLR         NREC      COMP 0                        32               E81265
+0181 C*
+     C** IF NO DETAILS THEN CALL #ZZ FOR HEADING/DATE ETC. FOR REPORT     E138
+     CLR         *IN32     IFEQ '1'                                       E138
+     CLR                   EXSR #ZZ                                       E138
+     CLR                   END                                            E138
+     C*                                                                   E138
+0182 C********************************************************************S01194
+0183 C*****SR. TO CHAIN TO TABLE FILE.                                    S01194
+0184 C*****      TABCHN    BEGSR                           *** TABCHN *** S01194
+0185 C*****                SETOF                     0304                 S01194
+0186 C*****      TABKEY    CHAINTABLE                25                   S01194
+0187 C*****                ENDSR                                          S01194
+0188 C*****                                                               S01194
+0189 C********************************************************************
+0190 C*    SR. TO PERFORM EXCEPTION OUTPUT.
+0191 C           EXCEPT    BEGSR                           *** EXCEPT ***
+0192 C                     EXCPT
+0193 C                     SETOF                     3031
+0194 C                     ENDSR
+0195 C*
+     C*****************************************************************   S01117
+0190 C*    SR. TO OUTPUT HEADER ON EXCEPTION0                             BHF243
+0191 C           HEDEX     BEGSR                           *** HEDEX  *** BHF243
+0192 C                     EXCPT                                          BHF243
+0193 C                     SETOF                     06                   BHF243
+0194 C                     ENDSR                                          BHF243
+0195 C*                                                                   BHF243
+     C*****************************************************************   BHF243
+0197 C**
+0198 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+0199 C**
+0200 C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+0201 C**
+0202 C           ZDATE2    BEGSR                           *** ZDATE2 ***
+0203 C**
+0204 C**   CLEAR DATE FIELDS.
+0205 C                     Z-ADD0         ZDATE   60
+0206 C                     MOVEL'       ' ZADATE  7
+0207 C**
+0208 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+0209 C                     Z-ADDZDAYNO    ZDAYNO  50
+0210 C**
+0211 C**   DETERMINE YEAR NUMBER.
+0212 C**
+0213 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+0214 C           ZDAYNO    SUB  1         ZDAYN1  50   99
+0215 C   99                GOTO ZDEND2
+0216 C**
+0217 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+0218 C           ZDAYN1    DIV  1461      ZLYR    20
+0219 C                     MVR            ZDAYN1           SAVE REMAINING
+0220 C**                                                   DAYS
+0221 C**   CALCULATE NUMBER OF REMAINING YEARS.
+0222 C                     Z-ADD1         ZWRK2   20
+0223 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+0224 C           ZDAYN1    COMP ZYDY,ZWRK2             90
+0225 C  N90      ZWRK2     ADD  1         ZWRK2
+0226 C  N90                GOTO ZDTAG1
+0227 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+0228 C**
+0229 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+0230 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+0231 C**
+0232 C**   CALCULATE ACTUAL YEAR NUMBER.
+0233 C           ZLYR      MULT 4         ZWRK3   30
+0234 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+0235 C                     Z-ADDZWRK3     ZYEAR   20
+0236 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+0237 C**
+0238 C**   DETERMINE MONTH NUMBER.
+0239 C**
+0240 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+0241 C                     SETOF                     9293
+0242 C   91      ZDAYN1    COMP 59                     9293
+0243 C   91N92   ZDAYN1    SUB  1         ZDAYN1
+0244 C**
+0245 C**   CALCULATE MONTH NUMBER.
+0246 C                     Z-ADD2         ZWRK2
+0247 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+0248 C           ZDAYN1    COMP ZMDY,ZWRK2             94
+0249 C  N94      ZWRK2     ADD  1         ZWRK2
+0250 C  N94                GOTO ZDTAG2
+0251 C           ZWRK2     SUB  1         ZWRK2
+0252 C**
+0253 C                     Z-ADDZWRK2     ZMTH    20       MONTH
+0254 C**
+0255 C**   DETERMINE DAY OF MONTH.
+0256 C**
+0257 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+0258 C           ZDAYN1    ADD  1         ZDAYN1
+0259 C**
+0260 C**   CALCULATE DAY OF MONTH.
+0261 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+0262 C**
+0263 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+0264 C   93      ZDAY      ADD  1         ZDAY
+0265 C**
+0266 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+0267 C  N98                MOVELZDAY      ZWRK4   40
+0268 C   98                MOVE ZDAY      ZWRK4
+0269 C  N98                MOVE ZMTH      ZWRK4
+0270 C   98                MOVELZMTH      ZWRK4
+0271 C                     MOVELZWRK4     ZDATE
+0272 C                     MOVE ZYEAR     ZDATE
+0273 C**
+0274 C**   FORMAT ALPHA DATE, DDMMMYY.
+0275 C           ZDAY      COMP 10                     95
+0276 C                     MOVELZDAY      ZWRK5   5
+0277 C   95                MOVEL' '       ZWRK5
+0278 C                     MOVE ZMNM,ZMTH ZWRK5
+0279 C                     MOVELZWRK5     ZADATE
+0280 C                     MOVE ZYEAR     ZADATE
+0281 C**
+0282 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+0283 C**
+0284 C**
+0612 C********************************************************************S01194
+     C*                                                                   S01194
+     C           *PSSR     BEGSR                                          S01194
+     C*                                                                   S01194
+     C           @RUN      IFEQ *BLANK                                    S01194
+     C                     MOVE 'Y'       @RUN    1                       S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     DUMP                                           S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C                     ENDSR                                          S01194
+0597 C*****************************************************************   S01194
+     C*                                                                   E138
+     C* SUBROUTINE : #ZZ                                                  E138
+     C*                                                                   E138
+     C* CALLED BY MAIN PROCESSING DURING TOTAL TIME CALCULATIONS IF       E138
+     C* NO RECORDS READ AND THEREFORE SDBANKPD NOT READ                   E138
+     C*                                                                   E138
+     C           #ZZ       BEGSR                                          E138
+     C*                                                                   E138
+     C** IF FIRST CYCLE NOT PERFORMED GET BANK DETAILS FOR HEADINGS       E138
+     C*                                                                   E138
+     C                     CALL 'AOBANKR0'                                E138
+     C                     PARM '*MSG   ' @RTCD   7                       E138
+     C                     PARM '*FIRST ' @OPTN   7                       E138
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C           @RTCD     IFNE *BLANK                                    E138
+     C                     MOVEL'SDBANKPD'DBFILE           ************   E138
+     C                     MOVEL'04'      DBASE            * DBERR 04 *   E138
+     C                     MOVEL@OPTN     DBOPTN           ************   E138
+     C                     SETON                     U7U8LR               E138
+     C                     EXSR *PSSR                                     E138
+     C                     GOTO #ZZ9                                      E138
+     C                     END                                            E138
+     C*                                                                   E138
+     C           #ZZ9      ENDSR                                          E138
+0597 C*****************************************************************   E138
+     C/COPY ZSRSRC,ZACCH                                                  063791
+     C/COPY ZSRSRC,ZFWDTA                                                 063791
+      /EJECT                                                              S01194
+0286 OFWDRT   D        01
+0287 O                         NLRA      13P
+0288 O                         ZERO5     16P
+0289 O                         ZERO5     19P
+0290 O                         ZERO5     22P
+0291 O****25P1H   03   01                                          S01124 LN0363
+0291 O*DL0225P1D***03   02 06                                       LN0363BHF243
+0292 O*******OR   03   OF                                                 BHF243
+0291 ODL0225P1E   03   OF                                                 BHF243
+     O       OR   03   02 06                                              BHF243
+     O                                   24 'REFERENCE DL0225P1'          S01117
+0293 O***********                        22 'REFERENCE DL0225'            S01117
+0294 O*****                    TITL      89                               S01194
+0294 O                         BJURPT    89                               S01194
+0295 O                                  104 'DATE'
+0296 O*****                    RUNA     112                               S01194
+0296 O                         BJMRDT   112                               S01194
+0297 O                                  122 'PAGE'
+0298 O                         PAGE     127
+0299 O*****   H   05   01                                                 LN0363
+0299 O********D   05   02 06                                              BHF243
+0300 O*******OR   05   OF                                                 BHF243
+0300 O        E   05   OF                                                 BHF243
+0299 O       OR   05   02 06                                              BHF243
+0301 O                                   72 'FORWARD RATES AGAINST -'
+0302 O*****                    BCCY      76                               S01194
+0302 O                         BJCYCD    76                               S01194
+0303 O******  H  206   01                                                 LN0363
+0303 O********D  206   02 06                                        LN0363BHF243
+0304 O*******OR  206   OF                                                 BHF243
+0304 O        E  206   OF                                                 BHF243
+0303 O       OR  206   02 06                                              BHF243
+0305 O                                   73 '------------------------'
+0306 O                                   76 '---'
+0307 O******  H  1     01                                                 LN0363
+0307 O********D  1     02 06                                        LN0363BHF243
+0308 O*******OR  1     OFNLR                                              BHF243
+0308 O        E  1     OFNLR                                              BHF243
+0307 O       OR  1     02 06                                              BHF243
+0309 O**********                         50 'CCY              DATE'       089129
+0310 O***********                        75 'DAYS        RATE'            087890
+0310 O**********      N50                75 'DAYS        RATE'      087890089129
+     O**********       50                58 'DAYS'                  087890089129
+     O**********       50                69 'FWD. PT'               087890089129
+0309 O                                   47 'CCY           DATE'          089129
+0310 O                N50                74 'DAYS          RATE'          089129
+     O                 50                55 'DAYS'                        089129
+     O                 50                68 'FWD. PT'                     089129
+     O                 50                82 'RATE'                        087890
+0311 O                                   99 'LAST CHANGE'
+0312 O******  H  1     01                                                 LN0363
+0312 O********D  1     02 06                                        LN0363BHF243
+0313 O*******OR  1     OFNLR                                              BHF243
+0313 O        E  1     OFNLR                                              BHF243
+0312 O********E  1     02 06                                       BHF243 E24383
+0312 O       OR  1     02 06                                              E24383
+0314 O********                           99 'DATE    TYPE'                089129
+0314 O                                  101 'DATE    TYPE'                089129
+0315 O********H 00     OFNLR                                              E47227
+0315 O********H 00     OFNLRN30                                    E47227 E24383
+0313 O        E 00     OFN23N30                                           E24383
+0316 O                         CCY       32
+0317 O* IF NO LAST CHANGE DATE DO NOT PRINT LCD                           E11531
+0317 O**                       LCDA      93                               E11531
+0317 O********        N36      LCDA      93                        E11531 089129
+0317 O                N36      LCDA      95                               089129
+0318 O                                  101 'AMEND'
+0319 O                 22               102 'INSERT'
+0320 O        E 10     30
+0321 O************             CCY       32                               E47227
+0322 O************             LCDA      93                               E47227
+0323 O************                      101 'AMEND'                       E47227
+0324 O************     22               102 'INSERT'                      E47227
+0325 O        EF01     31
+0321 O                 30      CCY       32                               E47227
+0317 O* IF NO LAST CHANGE DATE DO NOT PRINT LCD                           E11531
+0322 O*                30      LCDA      93                               E11531
+0322 O**               30N36   LCDA      93                        E11531 089129
+0322 O                 30N36   LCDA      95                               089129
+0323 O                 30               101 'AMEND'                       E47227
+0324 O                 30 22            102 'INSERT'                      E47227
+0326 O***********              DATE      52                               089129
+0326 O                         DATE      49                               089129
+0327 O***********              DFW,N Z   62                               087890
+0328 O***********              RFW,N 3   79                               087890
+     O                N50      DFW,N Z   62                               087890
+     O                N50      RFW,N 3   79                               087890
+     O                 50      DFW,N Z   54                               089129
+     O                 50N30   PNF,N 3   70                               089129
+     O                 50      SFW,N     72                               089129
+     O                 50      RFW,N 3   87                               089129
+     O        EF 1     23                                                 CSD006
+     O                 51                79 'TIMESTAMP:'                  CSD006
+     O                 51      WKDATE    91                               CSD006
+     O                 51      WKTIME   100                               CSD006
+     O*****************50      DFW,N Z   57                        087890 089129
+     O*****************50N30   PFW,N 3   68                        087890 089129
+     O*****************50      SFW,N     70                        087890 089129
+     O*****************50      RFW,N 3   84                        087890 089129
+     O********T   2030 LR 32                                       E81265 E138
+     O********T   2030NLR 32                                         E138 LN0363
+     O********                           74 '* NO DETAILS TO REPORTE81265 LN0363
+     O        T 3      LR 07                                              LN0363
+     O                                   74 '*** END OF REPORT ***'       LN0363
+0329 O********TF**36   LR                                                 S01117
+     ODL0225AUT   03   LR                                                 S01117
+     O                                   24 'REFERENCE DL0225AU'          S01117
+0294 O*****                    TITL      89                               S01194
+0294 O                         BJURPT    89                               S01194
+0295 O                                  104 'DATE'                        S01117
+0296 O*****                    RUNA     112                               S01194
+0296 O                         BJMRDT   112                               S01194
+0297 O                                  122 'PAGE'                        S01117
+0298 O                         PAGE1    127                               S01117
+0299 O        T   05   LR                                                 S01117
+0301 O                                   72 'FORWARD RATES REPORT'        S01117
+0302 O                                   89 '- CONTROL REPORT'            S01117
+0303 O        T  206   LR                                                 S01117
+0305 O                                   73 '---------------------'       S01117
+0306 O                                   89 '----------------'            S01117
+0330 O        T  2     LRNU7
+0331 O                                   18 'RUN CONTROLS'
+0332 O        T  2     LRNU7
+0333 O                                   59 'NUMBER'
+0334 O        T  2     LRNU7
+0335 O                                   31 'RECORDS LISTED IN THIS '
+0336 O                                   37 'REPORT'
+0337 O                         NREC  3   59
+0338 O        T  2     LRNU7
+0339 O                                   27 'FORWARD RATES FILE '
+0340 O                                   34 'CONTROL'
+0341 O                         NLRA  3   59
+0342 O        T  2     LRNU7 U8
+0343 O                                   76 '*** DIFFERENCE ***'
+     O        T   2030 LR 32                                              S01117
+     O                                   74 '* NO DETAILS TO REPORT *'    S01117
+0344 O*****   T  1     LRNU7                                              LN0135
+0345 O*****                              77 '*** END OF REPORT ***'       LN0135
+0346 O*****   T 3      LR U7 U8                                           S01117
+0347 O*****                              22 'REFERENCE DL0225'            S01117
+0348 O*****                              62 'PRINT TERMINATED, '          S01117
+0349 O*****                              80 'DATABASE IN ERROR.'          S01117
+     O        T 3      LR U7 U8                                           S01117
+     O                                   71 '*** PRINT TERMINATED ***'    S01117
+     O        T 1      LR U7 U8                                           S01117
+     O                                   57 'DATABASE ERROR'              S01117
+     O                         DBASE     61                               S01117
+     O                                   67 'FILE'                        S01117
+     O                         DBFILE    78                               S01117
+     O        T 13     LR U7 U8                                           S01117
+     O                                   46 'KEY'                         S01117
+     O                         DBKEY     76                               S01117
+     O**
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

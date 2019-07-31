@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SC Consumer banking wrapper program')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Consumer Banking                                    */
+/*                                                                   */
+/*       SCC005200 - Consumer Banking Wrapper Program                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BUG14826A          Date 13Sep07              */
+/*                      BUG14633           Date 22Aug07              */
+/*                      CRE026 *CREATE     Date 24May06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG14826A - Transactions made using Equation functions were */
+/*           not reflected in the Projected Nostro Balances Enquiry  */
+/*       BUG14633 - Consumer Banking menus are not working           */
+/*       CRE026 - Consumer Banking                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &OPTION &CONTEXT &ERRMSG &ERRTXT)
+ 
+             DCL        VAR(&MZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CBUNIT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&OPTION) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&CONTEXT) TYPE(*CHAR) LEN(55)
+             DCL        VAR(&ERRMSG) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERRTXT) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&CONTEXT1) TYPE(*CHAR) LEN(512)                             /*BUG14633*/
+             DCL        VAR(&CONTEXT2) TYPE(*CHAR) LEN(512)                             /*BUG14633*/
+             DCL        VAR(&DASYS) TYPE(*CHAR) LEN(2000)                              /*BUG14826A*/
+             DCL        VAR(&NOSPROJ) TYPE(*CHAR) LEN(1)                               /*BUG14826A*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+/* Retrieve Equation Data area Set up for Nostro */                                    /*BUG14826A*/
+             RTVDTAARA  DTAARA(DASYSCT2) RTNVAR(&DASYS)                                /*BUG14826A*/
+             CHGVAR     VAR(&NOSPROJ) VALUE(%SUBSTRING(&DASYS 1254 1))                 /*BUG14826A*/
+                                                                                       /*BUG14826A*/
+             IF         COND((&NOSPROJ *EQ 'Y') *AND (&OPTION *EQ +
+                          'E44')) THEN(DO)                                             /*BUG14826A*/
+             CHGDTAARA  DTAARA(GLNOSTCTL) VALUE('STOP')                                /*BUG14826A*/
+/* Delay Job                                                      */                   /*BUG14826A*/
+             DLYJOB     DLY(40)                                                        /*BUG14826A*/
+             CLRPFM     FILE(GLNOSTPD)                                                 /*BUG14826A*/
+             CHGDTAARA  DTAARA(GLNOSTCTL) VALUE(' ')                                   /*BUG14826A*/
+             ENDDO                                                                     /*BUG14826A*/
+                                                                                       /*BUG14826A*/
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/* Get Midas zone */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&MZONE)
+             CHGVAR     VAR(&CBUNIT) VALUE('X' *CAT &MZONE)
+ 
+/**********  CALL       PGM(W96HMC) PARM(&MODE &CBUNIT &OPTION +
+                          &CONTEXT &ERRMSG &ERRTXT)                                     /*BUG14633*/
+             CALL       PGM(W96HMC) PARM(&MODE &CBUNIT &OPTION +
+                          &CONTEXT &ERRMSG &ERRTXT &CONTEXT1 &CONTEXT2)                 /*BUG14633*/
+ 
+             IF         COND(&ERRTXT *NE ' ') THEN(DO)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&ERRMSG)
+             CHGDTAARA  DTAARA(MIDASMSG (301 450)) VALUE(&ERRTXT)
+             CALL       PGM(SCC0010) PARM('SCC005200' 'ENTER' ' ')
+             ENDDO
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+ 
+END:
+             ENDPGM

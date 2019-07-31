@@ -1,0 +1,430 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SC process to be run in COB')                    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE6400 - Determine Safe Custody Process (COB)                *
+      *                                                               *
+      *  FUNCTION:  This program checks whether any Safe Custody      *
+      *  (COB)      Fee process is due for this COB and calculates    *
+      *                  the next due dates.                          *
+      *                                                               *
+      *  CALLED BY: SEC6400 - Check Safe Custody Control Dates        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 082994             Date 09Feb95               *
+      *                 S01464             Date 04Apr94               *
+      *                 R0128              DATE 11FEB91               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  082994 - Recompile due to changes in SESTAT by Telekurs      *
+      *  S01464 - Safe Custody Fees                                   *
+      *  R0128  - No accrual calculated, remove old fix ???.          *
+      *                                                               *
+      ********************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F**
+     F**   SAFE CUSTODY ICD
+     F***SCICDPPDUF**E                 DISK         KINFSR *PSSR          S01464
+     FSDSCFEPDUF  E                    DISK         KINFSR *PSSR          S01464
+     F*
+     F**   BANK DETAILS FILE
+     FSDBANKPDIF  E                    DISK         KINFSR *PSSR
+     F*
+     F**   GENERAL LEDGER DETAILS
+     FSDGELRPDIF  E                    DISK         KINFSR *PSSR
+     F*
+     F**   OUTSTANDING SAFE CUSTODY SETTLEMENTS
+     F***SCOCFSL1IF**E        K        DISK         KINFSR *PSSR          S01464
+     FSEOCFSL1IF  E           K        DISK         KINFSR *PSSR          S01464
+     F*
+     F**   HOLIDAYS
+     F***TABLETJ*IF**E        K        DISK         KINFSR *PSSR          S01464
+     F*
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F**                                                                 *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F**                 ------------------------                        *
+     F**                                                                 *
+     F**       23 - ICD RECORD NOT FOUND.                                *
+     F**                                                                 *
+     F**       65 - EOF REACHED FOR SCOCFSP0. ( VALUE DATE ).            *
+     F**                                                                 *
+     F**    98 - DATE FORMAT INDICATOR FOR ZDATE2                        *
+     F**                                                                 *
+     F**                                                                 *
+     F**                                                                 *
+     F**                                                                 *
+     F********************************************************************
+     F/EJECT
+     E********************************************************************
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+     E/COPY ZSRSRC,ZFRQAZ1
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E/COPY ZSRSRC,ZHOLE                                                  S01464
+     E*                                                                   S01464
+     E********************************************************************
+     E/EJECT
+     I********************************************************************
+     I*
+     I** DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I** LOCAL DATA AREA FOR DATA BASE ERRORS
+     I*
+     I***LDA     UDS                            256                       S01464
+     ILDA         DS                            256                       S01464
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**************************************131 183 DBLOT                 S01464
+     I*                                                                   S01464
+     ISDGELR    E DSSDGELRPD                                              S01464
+     I**  MIDAS General Ledger                                            S01464
+     I*
+     I** SECURITIES TRADING DATA AREA
+     I*
+     ISESTAT    EUDS
+     I*
+     I** STANDING DATA, DATA AREA
+     I*
+     ISDSTAT    EUDS
+     I*
+     IDSFDY     E DSDSFDY                                                 S01464
+     I**  Short data structure for access programs                        S01464
+     I*                                                                   S01464
+     IDSSDY     E DSDSSDY                                                 S01464
+     I**  Long data structure for access programs                         S01464
+     I*                                                                   S01464
+     I/COPY ZSRSRC,ZHOLI                                                  S01464
+     I*                                                                   S01464
+     C/EJECT
+     C********************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INITIALISATION
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C                     EXSR #B
+     C*
+     C**   TERMINATE PROGRAM
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C********************************************************************
+     C********************************************************************
+     C           #A        BEGSR
+     C*
+     C** SET *IN98 ACCORDING TO DATE FORMAT
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVE '0'       *IN98
+     C                     END
+     C                     END
+     C*
+     C**   INITIALISE DATA AREA SESTAT, SDSTAT AS A NAMED VARIABLE.
+     C*
+     C           *NAMVAR   DEFN           SESTAT
+     C*
+     C           *NAMVAR   DEFN           SDSTAT
+     C*
+     C** Define Local Data Area                                           S01464
+     C*                                                                   S01464
+     C           *NAMVAR   DEFN           LDA                             S01464
+     C*                                                                   S01464
+     C**   INITIALISE DB ERROR FIELDS
+     C*
+     C***********          MOVEL*BLANKS   DBLOT                           S01464
+     C***********          MOVEL'SE6400'  DBPGM                           S01464
+     C*
+     C**   ACCESS ICD RECORD 1 FOR BANK DETAILS
+     C*
+     C           1         SETLLSDBANKPD
+     C                     READ SDBANKPD                 23
+     C*
+     C**   IF ICD 1 NOT FOUND THEN DB ERROR
+     C*
+     C           *IN23     IFEQ '1'
+     C           BJTYLC    OREQ 'D'
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD1         DBASE
+     C                     MOVE *BLANKS   DBFILE           ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERROR 001 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVEL'SE6400'  DBPGM                           S01464
+     C                     OUT  LDA                                       S01464
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C**   ACCESS ICD RECORD 1 FOR ACCRUAL PROFIT DATE
+     C*
+     C           1         SETLLSDGELRPD
+     C                     READ SDGELRPD                 23
+     C*
+     C**   IF ICD 1 NOT FOUND THEN DB ERROR
+     C*
+     C           *IN23     IFEQ '1'
+     C           BKTYLC    OREQ 'D'
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD2         DBASE
+     C                     MOVE *BLANKS   DBFILE           ***************
+     C                     MOVEL'SDGELRPD'DBFILE           * DBERROR 002 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVEL'SE6400'  DBPGM                           S01464
+     C                     OUT  LDA                                       S01464
+     C                     EXSR #ZA
+     C                     END
+     C                     Z-ADDBKAPDT    APDA    50
+     C*
+     C**   ACCESS ICD RECORD 1 FOR ACCRUAL DATES
+     C*
+     C***********1         SETLLSCICDPPD                                  S01464
+     C***********          READ SCICDPPD                 23               S01464
+     C           1         SETLLSDSCFEPD                                  S01464
+     C                     READ SDSCFEPD                 23               S01464
+     C*
+     C**   IF ICD 1 NOT FOUND THEN DB ERROR
+     C*
+     C           *IN23     IFEQ '1'
+     C***********SACHTP    OREQ 'D'                                       S01464
+     C           FBTYLC    OREQ 'D'                                       S01464
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD3         DBASE
+     C                     MOVE *BLANKS   DBFILE           ***************
+     C***********          MOVEL'SCICDPPD'DBFILE           * DBERROR 003 *S01464
+     C                     MOVEL'SDSCFEPD'DBFILE           * DBERROR 003 *S01464
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVEL'SE6400'  DBPGM                           S01464
+     C                     OUT  LDA                                       S01464
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C*
+     C** NOW COPY IN THE ROUTINE TO CALCULATE NEXT ACCRUAL DATE ,
+     C** PLUS THE TWO SUBORDINATE ROUTINES IT USES - ZDATE1Z2,2Z2.
+     C*
+     C/COPY ZSRSRC,ZFRQAZ2
+     C*
+     C/COPY ZSRSRC,ZDATE1Z2
+     C*
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*                                                                   S01464
+     C/COPY ZSRSRC,ZCHKH                                                  S01464
+     C*                                                                   S01464
+     C/COPY ZSRSRC,ZACCH                                                  S01464
+     C*
+     C********************************************************************
+     C           #B        BEGSR
+     C*
+     C** SET EVENT CONTROL DATE EQUAL TO THE LESSER OF ACCRUAL PROFIT
+     C** DATE  AND (DATE OF NEXT WORKING DAY - 1).
+     C*
+     C           *LIKE     DEFN BJDNWD    WWECD
+     C                     Z-ADDBJDNWD    WWECD
+     C                     SUB  01        WWECD
+     C           BKAPDT    IFLT WWECD
+     C                     Z-ADDBKAPDT    WWECD
+     C                     END
+     C*
+     C** CHECK TO SEE IF ACCRUAL DATE NEEDS UPDATED, AND IF SO DO IT.
+     C*
+     C***********SAANDA    IFLE WWECD                                     S01464
+     C           FBANDA    IFLE WWECD                                     S01464
+     C           *LOCK     IN   SESTAT
+     C                     MOVE 'Y'       APRR
+     C                     OUT  SESTAT
+     C**************       Z-ADDSACCRD    SALCRD
+     C***********          Z-ADDSACCRD    SALCRD                    R0128 S01464
+     C***********          Z-ADDSAANDA    SACCRD                          S01464
+     C                     Z-ADDFBCCRD    FBLCRD                          S01464
+     C                     Z-ADDFBANDA    FBCCRD                          S01464
+     C*
+     C**     SET UP PARAMETERS FOR CALL TO ZFRQA.
+     C**       FIRST MAKE SURE A ZERO FIELD ISN'T SENT TO ZFRQA.
+     C*
+     C***********SAADYM    IFEQ 00                                        S01464
+     C***********          ADD  01        SAADYM                          S01464
+     C           FBADYM    IFEQ 00                                        S01464
+     C                     ADD  01        FBADYM                          S01464
+     C                     END
+     C*
+     C***********          MOVE SAAFRQ    ZFREQ                           S01464
+     C***********          Z-ADDSAANDA    ZDAYNO                          S01464
+     C***********          Z-ADDSAADYM    ZMDAY                           S01464
+     C                     MOVE FBAFRQ    ZFREQ                           S01464
+     C                     Z-ADDFBANDA    ZDAYNO                          S01464
+     C                     Z-ADDFBADYM    ZMDAY                           S01464
+     C                     MOVE BJLCCY    ZCCY
+     C*
+     C**     NOW CALL THE SUB-ROUTINE WITH SET UP PARAMETERS.
+     C*
+     C/COPY WNCPYSRC,SE6400C001
+     C                     EXSR ZFRQA
+     C/COPY WNCPYSRC,SE6400C002
+     C***********          Z-ADDZDAYNO    SAANDA                          S01464
+     C                     Z-ADDZDAYNO    FBANDA                          S01464
+     C                     ELSE
+     C           *LOCK     IN   SESTAT
+     C                     MOVE 'N'       APRR
+     C                     OUT  SESTAT
+     C                     END
+     C*
+     C** CHECK TO SEE IF 'FEE GENERATION' IS REQUIRED OR NOT.
+     C*
+     C***********SANSGD    IFLE WWECD                                     S01464
+     C           FBNSGD    IFLE WWECD                                     S01464
+     C           *LOCK     IN   SESTAT
+     C                     MOVE 'Y'       FGNR
+     C                     OUT  SESTAT
+     C                     ELSE
+     C           *LOCK     IN   SESTAT
+     C                     MOVE 'N'       FGNR
+     C                     OUT  SESTAT
+     C                     END
+     C*
+     C** GET VALUE DATE FROM APPROPRIATE FILE AND CHECK TO SEE IF
+     C** ANY 'SETTLEMENT FEE POSTING' IS REQUIRED OR NOT.
+     C*
+     C************LOVAL    SETLLSCOCFSL1                                  S01464
+     C***********          READ SCOCFSL1               6565               S01464
+     C           *LOVAL    SETLLSEOCFSL1                                  S01464
+     C                     READ SEOCFSL1               6565               S01464
+     C           *IN65     IFEQ '0'
+     C           SESEVD    IFLE WWECD
+     C           *LOCK     IN   SESTAT
+     C                     MOVE 'Y'       SFPR
+     C                     OUT  SESTAT
+     C                     ELSE
+     C           *LOCK     IN   SESTAT
+     C                     MOVE 'N'       SFPR
+     C                     OUT  SESTAT
+     C                     END
+     C                     ELSE
+     C           *LOCK     IN   SESTAT
+     C                     MOVE 'N'       SFPR
+     C                     OUT  SESTAT
+     C                     END
+     C*
+     C** CHECK TO SEE IF NEXT SETTLEMENT DATE NEEDS UPDATED OR NOT.
+     C*
+     C***********SASNDA    IFLE WWECD                                     S01464
+     C           FBSNDA    IFLE WWECD                                     S01464
+     C*
+     C**     SET UP PARAMETERS FOR CALL TO ZFRQA.
+     C**       FIRST MAKE SURE A ZERO FIELD ISN'T SENT TO ZFRQA.
+     C*
+     C***********SASDYM    IFEQ 00                                        S01464
+     C***********          ADD  01        SASDYM                          S01464
+     C           FBSDYM    IFEQ 00                                        S01464
+     C                     ADD  01        FBSDYM                          S01464
+     C                     END
+     C*
+     C***********          MOVE SASFRE    ZFREQ                           S01464
+     C***********          Z-ADDSASNDA    ZDAYNO                          S01464
+     C***********          Z-ADDSASDYM    ZMDAY                           S01464
+     C                     MOVE FBSFRE    ZFREQ                           S01464
+     C                     Z-ADDFBSNDA    ZDAYNO                          S01464
+     C                     Z-ADDFBSDYM    ZMDAY                           S01464
+     C                     MOVE BJLCCY    ZCCY
+     C*
+     C**     NOW CALL THE SUB-ROUTINE WITH SET UP PARAMETERS.
+     C*
+     C/COPY WNCPYSRC,SE6400C003
+     C                     EXSR ZFRQA
+     C/COPY WNCPYSRC,SE6400C004
+     C***********          Z-ADDZDAYNO    SASNDA                          S01464
+     C                     Z-ADDZDAYNO    FBSNDA                          S01464
+     C                     END
+     C*
+     C* UPDATE THE RELEVANT FILES AND DATA-AREAS.
+     C*
+     C                     EXSR #BA
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C***********          UPDATSCICDPP0                                  S01464
+     C                     UPDATSDSCFED0                                  S01464
+     C           *LOCK     IN   SDSTAT
+     C                     MOVE WWECD     MECD
+     C                     MOVE BJRDNB    MRNA
+     C                     OUT  SDSTAT
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*                                                                   S01464
+     C                     MOVE '1'       *INLR                           S01464
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C/EJECT
+**   CPY@
+(c) Finastra International Limited 2001
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

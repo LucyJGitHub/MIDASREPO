@@ -1,0 +1,682 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Combine Posn Settlements Audit')              *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2580 - COMBINE POSITION SETTLEMENT AUDIT                   *
+     F*                                                               *
+     F*  Function: To combine Position Settlement Audit records into  *
+     F*   (COB)    a single member                                    *
+     F*                                                               *
+     F*  Called by: SEC0606G - Combine Position Settlements           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG3122            Date 17Jul04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 147208             Date 10Nov98               *
+      *                 CEU017             Date 03Avr98               *
+      *                 CSE007             DATE 03feb98               *
+     F*                 085991             DATE 21JUN95               *
+     F*                 S01496             DATE 21JUL94               *
+     F*                 S01502             DATE 08JUL94               *
+     F*                 S01447             DATE 04NOV93               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 E37527             DATE 31MAR92               *
+     F*                 S01117             DATE 10JUN91               *
+     F*                E21146              DATE 13MAR90               *
+     F*                S01219              DATE 10/08/89              *
+     F*                E15825              DATE 18/10/88              *
+     F*                E14546              DATE 16/08/88              *
+     F*                E13991              DATE 28/06/88              *
+     F*                E14006              DATE 28/06/88              *
+     F*                S01158              DATE 06/05/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+     F*  147208 - EMU - Avoid Database error at 06 when feature       *
+     F*           CEU017 or CSE007 is ON and member CORPAC empty      *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*  CSE007 - Corporate Actions                                   *
+     F*  085991 - Generate POSETDX2 if needed for MT500               *
+     F*  S01496 - Incorporation of Jyske Enhancements (S10978, S10985)*
+     F*  S01502 - BLI TELEKURS PROCESSING. RECOMPILED DUE TO          *
+     F*           CHANGE IN LENGTH OF SESTAT, 133 LONG.               *
+     F*  S01447 - WITHHOLDING TAX (SE) ENHANCEMENT.                   *
+     F*           Recompiled due to changes in PF/POSETD.             *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx Feature - if present, ensure that Position    *
+     F*           Settlements generated in COB for Coupons/Dividends  *
+     F*           for Portfolio Customers have corresponding Position *
+     F*           Settlement Extension records.                       *
+     F*  E37527 - Recompiled for corrections to Audit Print File.     *
+     F*  S01117   Multi-branching                                     *
+     F*  E21146   Replace QCAEXEC with QCMDEXC                        *   E21146
+     F*  S01219   Ignore CPOSN1 & CPOSN2 if Portfolio Processing      *   S01219
+     F*           has not been Licensed.                              *   S01219
+     F*  E15825   Ignore POSETD records with RECI of 'M'.             *   E14546
+     F*  E14546   Update No of records before input cycle field       *   E14546
+     F*  E13991   PROGRAM SHOULD UPDATE RECORD IN MEMBER POSETA       *   E13991
+     F*           NOT WRITE A NEW RECORD.                             *   E13991
+     F*  E14006   PROGRAM SHOULD COMPARE NO OF RECORDS IN MEMBER      *   E14006
+     F*           POSETD WITH NO OF RECORDS ON TOTAL OF ALL NORE      *   E14006
+     F*           IN ALL MEMBER IN FILE POSETA.                       *   E14006
+     F*  S01158   POST INCORPORATION DEVELOPMENT FIXES                *   S01158
+     F*                                                               *   S01158
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     F********POSETD  IF  E           K        DISK                       S01158
+     F*****POSEB   IF  E           K        DISK                    S01158E14006
+     FPOSETD  IF  E           K        DISK                               E14006
+     F*****POSETA  UF  E           K        DISK                 A    UC  E13991
+     FPOSETA  UF  E           K        DISK                           UC  E13991
+     FPOSETDY1IF  E           K        DISK                      A        S01401
+     FPOSETDY2IF  E           K        DISK                      A        085991
+     FSE2580AUO   E                    PRINTER
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F****35****EOF*for*Position*Settlements************(POSETD)      *   S01158
+     F*   35 - EOF for Position Settlements            (POSEB)        *   S01158
+     F*   36 - EOF for Position Settlements Audit file (POSETA)       *
+     F*   50 - Print '*** DIFFERENCE ***' on report                   *
+     F*   60 - Amend S01496 switch *ON                                *   S01496
+     F*   88 - Write Fail on POSETDY1                                 *   S01401
+     F*   89 - Chain Fail on POSETDY1                                 *   S01401
+     F*                                                               *   S01401
+     F*   99 - DB Error on Table file.                 (TABSE )       *
+     F*U7&U8 - DB Error occurred                                      *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   CNTNEW - Count number of live records                       *
+     F*   CNTOLD - Total number of records as per the audit file      *
+     F*   RUNCTL - Run Control Processing                             *
+     F*   *PSSR  - Error handling                                     *   S01117
+     F*   ZNOREC - DB Error Processing                                *
+     F*   ZDEFN  - Define all program variables                       *
+     F*   ZSYSTM - Obtain ICD1                                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E*********           OVR     1   5 31                                CSE007
+     E                    OVR     1   6 31                                CSE007
+     E*********           OVS     1   6 31                         S01496 CSE007
+     E                    OVS     1   7 31                                CSE007
+      *
+      /EJECT
+     I           SDS
+      *
+      * System Status Data-Structure.
+      *
+     I                                     *PROGRAM @PGMNM
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *                                                                   S01401
+     ISDSECS    E DSSDSECSPD                                              S01401
+      ***  External Data Structure for Securities Trading Clients.        S01401
+      *                                                                   S01401
+     IDSSDY     E DSDSSDY                                                 S01401
+      ***  Long Data Structure for Access Objects.                        S01401
+      *
+     I*LDA******* UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+      *
+      * Local Data Area data-structure.
+      *
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01219
+     I* DATA STRUCTURE FOR SESTAT                                         S01219
+     I*                                                                   S01219
+     ISESTAT    E DS                                                      S01219
+      *
+      /EJECT
+      *================================================================
+      *              I N I T I A L I S A T I O N
+      *================================================================
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVEL@PGMNM    DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C                     EXSR ZSYSTM
+     C*
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 05 **
+     C                     Z-ADD5         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C*                                                                   S01219
+     C* DEFINE DATA AREA SESTAT                                           S01219
+     C*                                                                   S01219
+     C           *NAMVAR   DEFN           SESTAT                          S01219
+     C                     IN   SESTAT                                    S01219
+      *                                                                   S01401
+      **  Access Switchable features file for MT5xx processing - S01401   S01401
+      *                                                                   S01401
+     C                     CALL 'AOSARDR0'                                S01401
+     C                     PARM *BLANKS   WRTCD   7                       S01401
+     C                     PARM '*VERIFY' WOPTN   7                       S01401
+     C                     PARM 'S01401'  WSARD   6                       S01401
+      *                                                                   S01401
+     C           WRTCD     IFEQ *BLANKS                                   S01401
+     C                     MOVE 'Y'       S01401  1                       S01401
+     C                     END                                            S01401
+      *                                                                   S01401
+      **  Define key list for Position Settlements Extension file         S01401
+     C           KPOSET    KLIST                                          S01401
+     C                     KFLD           PBCA                            S01401
+     C                     KFLD           PSSH                            S01401
+     C                     KFLD           PCPY                            S01401
+     C                     KFLD           PDUD                            S01401
+     C                     KFLD           PEVT                            S01401
+      *                                                                   S01496
+      **  Access SAR details file to see if JYSKE Enhcmts is installed.   S01496
+      *                                                                   S01496
+     C                     CALL 'AOSARDR0'                                S01496
+     C                     PARM '       ' @RTCD   7                       S01496
+     C                     PARM '*VERIFY' @OPTN   7                       S01496
+     C                     PARM 'S01496'  WSARD   6                       S01496
+      *                                                                   S01496
+     C           @RTCD     IFEQ *BLANK                                    S01496
+     C                     MOVE 'Y'       S01496  1                       S01496
+     C                     MOVE *ON       *IN60                           S01496
+     C                     ENDIF                                          S01496
+      *                                                                   CSE007
+      **  Access SAR details file to see if Corporate Action installed.   CSE007
+      *                                                                   CSE007
+     C                     CALL 'AOSARDR0'                                CSE007
+     C                     PARM '       ' @RTCD   7                       CSE007
+     C                     PARM '*VERIFY' @OPTN   7                       CSE007
+     C                     PARM 'CSE007'  WSARD   6                       CSE007
+      *                                                                   CSE007
+     C           @RTCD     IFEQ *BLANK                                    CSE007
+     C                     MOVE 'Y'       CSE007  1                       CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CEU017
+      ***  Access SAR details file to see if Securities Redenomination    CEU017
+      ***  is installed                                                   CEU017
+      *                                                                   CEU017
+     C                     MOVE 'N'       CEU017  1                       CEU017
+     C                     CALL 'AOSARDR0'                                CEU017
+     C                     PARM '       ' @RTCD   7                       CEU017
+     C                     PARM '*VERIFY' @OPTN   7                       CEU017
+     C                     PARM 'CEU017'  WSARD   6                       CEU017
+      *                                                                   CEU017
+     C           @RTCD     IFEQ *BLANK                                    CEU017
+     C                     MOVE 'Y'       CEU017  1                       CEU017
+     C                     ENDIF                                          CEU017
+      *
+      /EJECT
+      *================================================================
+      *            M A I N   L I N E   C O D E
+      *================================================================
+      *
+     C                     EXSR CNTNEW
+      *
+      ** (only process if not database error yet)                         S01401
+     C           *INU7     IFEQ '0'                                       S01401
+     C                     EXSR CNTOLD
+     C                     END                                            S01401
+     C*
+     C           ENDPGM    TAG
+     C                     EXSR RUNCTL
+      *
+     C                     SETON                     LR
+     C                     RETRN
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CNTNEW SR  : Counts the number of records in the combined     *
+     C***************member*of*POSETD.*********************           *   S01158
+     C*              member of POSEB.                                 *   S01158
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CNTNEW    BEGSR
+      *
+     C**********           READ POSETD                   35               S01158
+     C*********************READ POSEB                    35         S01158E14006
+     C                     READ POSETD                   35               E14006
+     C*
+     C           *IN35     DOWEQ'0'
+     C           *INU7     ANDEQ'0'                                       S01401
+     C*                                                                   S01496
+     C**  Process records with RECI = 'R' only if Jyske Enhancements      S01496
+     C**  feature is installed                                            S01496
+     C**  OR Process records with RECI = 'R' if Corporate Action          CSE007
+     C**  feature is installed                                            CSE007
+     C*                                                                   S01496
+     C           S01496    IFEQ 'Y'                                       S01496
+     C           CSE007    OREQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+     C           RECI      ORNE 'R'                                       S01496
+      *
+      * Don't count any records marked as deleted.
+      *
+     C           RECI      IFNE '*'
+     C           RECI      ANDNE'M'                                       E15825
+     C*                                                                   S01496
+     C           S01496    IFEQ 'Y'                                       S01496
+     C           CSE007    OREQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+     C           RECI      IFNE 'R'                                       S01496
+     C                     ADD  1         @COUNT
+     C                     END                                            S01496
+     C                     ELSE                                           S01496
+     C                     ADD  1         @COUNT                          S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     END
+      *                                                                   S01401
+      ***  If Portfolio Management is licensed in the System and the      S01401
+      ***  MT5xx Feature is present, then for Portfolio Customers, for    S01401
+      ***  Coupon and Dividend Position Settlements, ensure that a        S01401
+      ***  corresponding Extension record is present.                     S01401
+      *                                                                   S01401
+     C           PFPL      IFEQ 'Y'                                       S01401
+     C           S01401    ANDEQ'Y'                                       S01401
+      *                                                                   S01401
+      ***  Select only Coupons and Dividends.                             S01401
+      *                                                                   S01401
+     C           PEVT      IFEQ 'CP'                                      S01401
+     C           PEVT      OREQ 'DV'                                      S01401
+      *                                                                   S01401
+      ***  Ascertain if Customer is Safe Custody or Discretionary.        S01401
+      *                                                                   S01401
+     C                     MOVE PCPY      WPCPY   6                       S01401
+     C                     CALL 'AOSECSR0'                                S01401
+     C                     PARM *BLANKS   WRTCD   7                       S01401
+     C                     PARM '*KEY   ' WOPTN   7                       S01401
+     C                     PARM           WPCPY                           S01401
+     C           SDSECS    PARM SDSECS    DSSDY                           S01401
+      *                                                                   S01401
+     C           WRTCD     IFEQ *BLANKS                                   S01401
+     C           BFCLAS    IFEQ 'S'                                       S01401
+     C           BFCLAS    OREQ 'D'                                       S01401
+      *                                                                   S01401
+      ***  Check if record exists on Extension File.                      S01401
+      *                                                                   S01401
+     C           KPOSET    CHAINPOSETDY1             89                   S01401
+      *                                                                   S01401
+      ***  If it doesn't, set one up and Write it.                        S01401
+      *                                                                   S01401
+     C           *IN89     IFEQ '1'                                       S01401
+     C                     CLEARPOSETDD1                                  S01401
+     C                     MOVE PBCA      POPBCA                          S01401
+     C                     MOVE PSSH      POPSSH                          S01401
+     C                     MOVE PCPY      POPCPY                          S01401
+     C                     MOVE PDUD      POPDUD                          S01401
+     C                     MOVE PEVT      POPEVT                          S01401
+     C                     MOVE LCD       POLCD                           S01401
+     C                     MOVE 'N'       PORCDG                          S01401
+     C                     MOVE *ZEROS    POSEQN                          S01401
+     C                     MOVE 'N'       POGMES                          S01401
+      *                                                                   S01401
+     C                     WRITEPOSETDD1               88                 S01401
+      *                                                                   S01401
+      **  If the Write fails, then process a database error               S01401
+     C           *IN88     IFEQ '1'                                       S01401
+     C           *LOCK     IN   LDA                                       S01401
+     C                     Z-ADD1         DBASE            ***************S01401
+     C                     MOVEL'POSETDY1'DBFILE           * DB ERROR 01 *S01401
+     C                     MOVELPCPY      DBKEY            ***************S01401
+     C                     OUT  LDA                                       S01401
+     C                     EXSR *PSSR                                     S01401
+     C                     SETON                     U7U8                 S01401
+     C                     END                                            S01401
+      *                                                                   S01401
+      ***  End of Position Settlement Extension record not on file.       S01401
+     C                     ENDIF                                          S01401
+     C*                                                                   085991
+     C** Check if record exists on Extension File.                        085991
+     C*                                                                   085991
+     C           KPOSET    CHAINPOSETDY2             89                   085991
+     C*                                                                   085991
+     C** If it doesn't, set one up and Write it.                          085991
+     C*                                                                   085991
+     C           *IN89     IFEQ '1'                                       085991
+     C                     CLEARPOSETDD2                                  085991
+     C                     MOVE PBCA      P2PBCA                          085991
+     C                     MOVE PSSH      P2PSSH                          085991
+     C                     MOVE PCPY      P2PCPY                          085991
+     C                     MOVE PDUD      P2PDUD                          085991
+     C                     MOVE PEVT      P2PEVT                          085991
+     C*                                                                   085991
+     C                     WRITEPOSETDD2               88                 085991
+     C*                                                                   085991
+     C** If the Write fails, then process a database error                085991
+     C*                                                                   085991
+     C           *IN88     IFEQ '1'                                       085991
+     C           *LOCK     IN   LDA                                       085991
+     C                     Z-ADD1         DBASE            ***************085991
+     C                     MOVEL'POSETDY2'DBFILE           * DB ERROR 01 *085991
+     C                     MOVELPCPY      DBKEY            ***************085991
+     C                     OUT  LDA                                       085991
+     C                     EXSR *PSSR                                     085991
+     C                     SETON                     U7U8                 085991
+     C                     END                                            085991
+     C                     END                                            085991
+      ***  End of Counterparty on File.                                   S01401
+     C                     ENDIF                                          S01401
+      ***  End of Portfolio Customers.                                    S01401
+     C                     ENDIF                                          S01401
+      ***  End of only Coupons and Dividends.                             S01401
+     C                     ENDIF                                          S01401
+      ***  End of Portfolio Management licensed and MT5xx present.        S01401
+     C                     ENDIF                                          S01401
+     C***  End of Jyske Enhancements installed                            S01496
+     C                     ENDIF                                          S01496
+      *                                                                   S01401
+     C**********           READ POSETD                   35               S01158
+     C*********************READ POSEB                    35         S01158E14006
+     C                     READ POSETD                   35               E14006
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CNTOLD SR  : Counts the total number of records in the 4 old  *
+     C***********************members*of*POSETD.******                 *   S01158
+     C*              members of POSEB.                                *   S01158
+     C*                                                               *
+     C*****************************************************************
+     C           CNTOLD    BEGSR
+      *
+      * Override to the appropriate member.
+      *
+     C***********1         DO   4         @X                              E14006
+     C***********1         DO   5         @X                       E14006 S01219
+     C*                                                                   S01219
+     C* If Portfolio Management has not been Licensed CPOSN1 & CPOSN2     S01219
+     C* will be empty                                                     S01219
+     C*                                                                   S01219
+     C           PFPL      IFEQ 'Y'                                       S01219
+     C                     Z-ADD1         @X                              S01219
+     C                     ELSE                                           S01219
+     C                     Z-ADD3         @X                              S01219
+     C                     END                                            S01219
+     C*                                                                   S01219
+     C********** @X        DOWLE5                                   S01219S01496
+     C           S01496    IFEQ 'Y'                                 S01219S01496
+     C**********           Z-ADD6         W01496  10          S01219S01496CSE007
+     C                     Z-ADD7         W01496  10                      CSE007
+     C                     ELSE                                     S01219S01496
+     C**********           Z-ADD5         W01496              S01219S01496CSE007
+     C                     Z-ADD6         W01496                          CSE007
+     C                     ENDIF                                    S01219S01496
+     C           @X        DOWLEW01496                              S01219S01496
+     C*                                                                   CSE007
+     C* If feature Corporate Action is not installed                      CSE007
+     C* or feature Securities Redenomination is installed                 CEU017
+     C           CSE007    IFNE 'Y'                                       CSE007
+     C           CEU017    ANDNE'Y'                                       CEU017
+     C*                                                                   CSE007
+     C* By-pass override of member CORPAC                                 CSE007
+     C           S01496    IFEQ 'Y'                                       CSE007
+     C           @X        ANDEQ6                                         CSE007
+     C           S01496    ORNE 'Y'                                       CSE007
+     C           @X        ANDEQ5                                         CSE007
+     C                     Z-ADD*ZEROS    NORE                            CSE007
+     C                     GOTO RDNXT                                     CSE007
+     C                     ENDIF                                          CSE007
+     C*                                                                   CSE007
+     C                     ENDIF                                          CSE007
+     C*
+     C******************** MOVEAOVR,@X    @OVRDB                          S01496
+     C  N60                MOVEAOVR,@X    @OVRDB                          S01496
+     C   60                MOVEAOVS,@X    @OVRDB                          S01496
+     C*
+     C*********************CALL 'QCAEXEC'                                 E21146
+     C                     CALL 'QCMDEXC'                                 E21146
+     C                     PARM @OVRDB    #CMD
+     C                     PARM 31        #CMDLN
+      *
+      * Get the audit record and total it up.
+      *
+     C                     OPEN POSETA
+     C                     READ POSETA                   36
+      *                                                                   E13991
+      * If processing member POSETA don't close file                      E13991
+      *                                                                   E13991
+     C***********@X        IFNE 5                                   E13991S01496
+     C           @X        IFNE W01496                              E13991S01496
+     C                     CLOSEPOSETA
+     C                     END                                            E13991
+      *
+      * If no record exists, execute the standard database error rtn.
+      *  and exit this routine.
+      *
+     C********** *IN36     CASEQ'1'       ZNOREC                          147208
+     C**********           END                                            147208
+     C           *IN36     IFEQ '1'                                       147208
+     C*                                                                   147208
+     C           S01496    IFEQ 'Y'                                       147208
+     C           @X        ANDEQ6                                         147208
+     C           S01496    ORNE 'Y'                                       147208
+     C           @X        ANDEQ5                                         147208
+     C                     Z-ADD*ZEROS    NORE                            147208
+     C                     ELSE                                           147208
+     C                     EXSR ZNOREC                                    147208
+     C                     ENDIF                                          147208
+     C*                                                                   147208
+     C                     ENDIF                                          147208
+     C*
+     C           RDNXT     TAG                                            CSE007
+     C*                                                                   CSE007
+     C                     ADD  1         @X                              S01219
+     C        N99          ADD  NORE      @COUN2
+     C        N99          END
+     C*
+     C           ENDOLD    ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+      *                                                               *
+      * RUNCTL SR  : Performs the final run control processing.       *
+      *                                                               *
+     C*****************************************************************
+      *
+     C           RUNCTL    BEGSR
+      *
+      * Output Header Record.
+      *
+     C                     WRITEHEADER
+      *
+      * If U8 & U7 are on output the DB Error format.
+      *
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     WRITEERROR
+     C                     ELSE
+      *
+      * If the count of live records NE count of old records, print out
+      *  a 'difference' note on the report.
+      *
+     C           @COUNT    IFNE @COUN2
+     C                     SETON                       50U8
+     C                     ELSE
+      ***********************************                                 E14006
+      **Override*POSETA*to*Member*POSETA*and output the new 'total no.    E14006
+      ***of*records'*record.************                                  E14006
+      *********************                                               E14006
+     C*********************MOVEAOVR,5     @OVRDB                          E14006
+     C*********************                                               E14006
+     C*********************CALL 'QCAEXEC'                                 E14006
+     C*********************PARM @OVRDB    #CMD                            E14006
+     C*********************PARM 31        #CMDLN                          E14006
+     C*
+     C*********************Z-ADD0         NLRB                            E14546
+     C                     Z-ADD@COUNT    NLRB                            E14546
+     C                     Z-ADD0         NOIN
+     C                     Z-ADD0         NOAM
+     C                     Z-ADD0         NODE
+     C                     Z-ADD@COUNT    NORE
+     C                     Z-ADD0         TNLU
+     C*********************OPEN POSETA                                    E14006
+     C*********************WRITEPOSETAF                                   E13991
+     C                     UPDATPOSETAF                                   E13991
+     C                     CLOSEPOSETA
+     C                     END
+     C*
+     C                     Z-ADD@COUNT    OCNT01
+     C                     Z-ADD@COUN2    OCNT02
+     C                     WRITECONTROL
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+      *                                                               *
+      * ZNOREC SR  : Handles the 'no records on file' database error, *
+      *              using the array pointer @X as the DB Error No.   *
+      *                                                               *
+     C*****************************************************************
+      *
+     C           ZNOREC    BEGSR
+      *
+     C                     SETON                     U7U899
+     C                     MOVE 'POSET'   DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     Z-ADD@X        DBASE
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+      *                                                               *
+      * ZDEFN SR   : Defines all program variables.                   *
+      *                                                               *
+     C*****************************************************************
+      *
+     C           ZDEFN     BEGSR
+      *
+      * Define Data Areas
+      * -----------------
+      *
+      * Define Like Work Fields
+      * -----------------------
+      *
+      * Define Non-Like Work Fields
+      * ---------------------------
+      *
+     C                     Z-ADD0         @COUNT 150       New Rec. Count
+     C                     Z-ADD0         @COUN2 150       Old Rec. Count
+     C                     MOVE *BLANKS   #CMD   35        Command String
+     C                     Z-ADD0         #CMDLN 155       Command Length
+     C                     MOVE *BLANKS   @OVRDB 31        Command String
+     C                     Z-ADD0         @X      10       Array Index
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+** Override Commands.
+OVRDBF FILE(POSETA) MBR(CPOSN1)
+OVRDBF FILE(POSETA) MBR(CPOSN2)
+OVRDBF FILE(POSETA) MBR(DPOSN1)
+OVRDBF FILE(POSETA) MBR(DPOSN2)
+OVRDBF FILE(POSETA) MBR(CORPAC)                                           CSE007
+OVRDBF FILE(POSETA) MBR(POSETA)
+** Override Commands for Amend S01496 switch *ON                          S01496
+OVRDBF FILE(POSETA) MBR(CPOSN1)                                           S01496
+OVRDBF FILE(POSETA) MBR(CPOSN2)                                           S01496
+OVRDBF FILE(POSETA) MBR(DPOSN1)                                           S01496
+OVRDBF FILE(POSETA) MBR(DPOSN2)                                           S01496
+OVRDBF FILE(POSETA) MBR(REDEMP)                                           S01496
+OVRDBF FILE(POSETA) MBR(CORPAC)                                           CSE007
+OVRDBF FILE(POSETA) MBR(POSETA)                                           S01496

@@ -1,0 +1,222 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SE Forward Diary Enquiry')
+     A********************************************************************
+     A*                                                                  *
+     A*  Midas - Securities Trading Module
+     A*                                                                  *
+     A*   SE0260DF - FORWARD DIARY ENQUIRY                               *
+     A*                                                                  *
+     A*     (c) Finastra International Limited 2001                      *
+     A*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Prev Amend No. 149985             Date 29Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 112563             Date 20Jan97               *
+      *                 S01510             Date 10Aug94               *
+     A*                 S01509             DATE 10AUG94                  *
+     A*                 S01117             DATE 02MAY91                  *
+     A*                 E23129             DATE 06AUG90                  *
+     A*                 S01253             DATE 17APR90                  *
+     A*                 S01199             DATE 03/08/89                 *
+     A*                 S01179             DATE 21/10/88                 *
+     A*                 E13794             DATE 04/07/88                 *
+     A*                                                                  *
+     A*------------------------------------------------------------------*
+     A*                                                                  *
+      *   MD046248 - Finastra Rebranding                                 *
+      *   149985  -  Do not allow Security Report Name Enquiry if this*
+      *              is the original enquiry (recursive call).        *
+     A*   112563  -  Header and footer changes required for GUI          *
+     A*              Multilanguage support.                              *
+     A*   S01510  -  Dividend payments based on ex-date                  *
+     A*   S01509  -  Value currency to be currency of Issuer Payments    *
+     A*   E23129  -  'F5:clear screen' not 'F5:refresh screen'.          *
+     A*   S01253  -  RECOMPILED FOR MULTILANGUAGE SCREENS                *
+     A*   S01199 - HELP SYSTEM.                                          *
+     A*   S01179  -  AS400 CONVERSION                                    *
+     A*              (REPLACE RTGAID KEYWORD WITH FUNCTION KEYS AND      *
+     A*              INDICATORS AS IT IS NOT SUPPORTED ON THE AS/400)    *
+     A*   E13794  -  DISPLAY CANCELLED/MATURED STATUS                    *
+     A*                                                                  *
+     A********************************************************************
+     A*         /////////////////////////////////////////
+     A*        // WARNING: When creating this display //
+     A*       //   file, take options RSTDSP(*YES)   //
+     A*      //                       SHARE (*YES)  //
+     A*     /////////////////////////////////////////
+     A*****************************************************************
+     A                                      INDARA
+     A                                      CHGINPDFT
+     A***********                                                     /S01179/
+     A                                      VLDCMDKEY(55 'ANY VALID KEY')
+     A*                                              Begin /S01199/
+     A*                                              End   /S01199/
+     A                                      PRINT(MPRINT)
+     A*N03******                            ROLLUP                     /S01179/
+     A N03                                  ROLLUP(50)
+     A                                      CF03
+     A                                      CF12
+     A                                      CF05
+      *                                              Begin /149985/
+     A***********                           CF06
+     A  69                                  CF06
+      *                                              End   /149985/
+     A                                      CF09
+     A*                                              Begin /S01199/
+     A*                                              Begin /S01117/
+     A*                                              End   /S01117/
+     A*                                              End   /S01199/
+     A          R SE0260S0                  SFL
+     A                                      TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A            SELECT         1A  B  7  2DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                      DSPATR(ND PR)
+     A            SSDED          7A  O  7  4DSPATR(HI)
+     A            SNMCY          3A  O  7 12DSPATR(HI)
+     A            SSDET          2A  O  7 16DSPATR(HI)
+     A            SSDSN         10A  O  7 19DSPATR(HI)
+     A            SAMNT         21A  O  7 30DSPATR(HI)
+     A            SSDPD          7A  O  7 52DSPATR(HI)
+     A            SSCCY          3A  O  7 60DSPATR(HI)
+     A            SSFPR         14A  O  7 64DSPATR(HI)
+     A*/COPY WNCPYSRC,SE0260DF01
+     A*                                              Begin /S01510/
+     A*********** SSDNV         35A  O  8 26DSPATR(HI)
+     A            SSDNV         35A  O  8 16DSPATR(HI)
+     A            SSDEX          7A  O  8 52DSPATR(HI)
+     A N57                                  DSPATR(ND)
+     A*                                              End   /S01510/
+     A            SCVRD         16A  O  8 62DSPATR(HI)
+     A*/COPY WNCPYSRC,SE0260DF02
+     A          R SE0260C0                  SFLCTL(SE0260S0)
+     A                                      TEXT('SUBFILE CONTROL')
+     A*/COPY WNCPYSRC,SE0260DF03
+     A                                      SFLSIZ(0008)
+     A                                      SFLPAG(0007)
+     A*/COPY WNCPYSRC,SE0260DF04
+     A                                      OVERLAY
+     A**********                            RTGAID(1)                /S01179/
+     A N02                                  SFLDSPCTL
+     A N02N03                               SFLDSP
+     A  02                                  SFLCLR
+     A  05                                  SFLEND
+     A  06                                  SFLMSG('Roll up or down is beyond +
+     A                                      first or last record in file.' 06)
+     A            SFLREC         4S 0H      SFLRCDNBR
+     A  04                             21 25'*** No Details to display ***'
+     A                                      DSPATR(HI)
+     A  42        ERMSG         79   O 21  2DSPATR(HI RI)
+     A*                                              Begin /E23129/
+     A************                     22  2'Enter F3:end, F12:previous e-
+     A************                          nquiry, F5:refresh screen, F-
+     A************                          6:Shortname'
+     A**                                             Begin /112563/
+     A***********                      22  2'Enter F3:end, F12:previous e-
+     A***********                           nquiry, F5:clear screen, F-
+     A***********                           6:Shortname'
+     A*                                              End   /E23129/
+     A***********                      23  2'Enquiry, F9:initial enquiry, R-
+     A***********                           ollup/down:next/previous screen, o-
+     A***********                           r enter'
+     A***********                      24  2'Event Date'
+     A*********** EVTDAT         6A  B 24 13DSPATR(HI)
+      *                                              Begin /149985/
+     A***********                      22  2'F3=Exit  F12=Previous  F5=Clear  -
+     A***********                           F6=Shortname Enquiry  F9=Initial -
+     A***********                           Enquiry'
+     A  69                             22  2'F3=Exit  F12=Previous  F5=Clear  -
+     A                                      F6=Shortname Enquiry  F9=Initial -
+     A                                      Enquiry'
+     A N69                             22  2'F3=Exit  F12=Previous  F5=Clear  -
+     A                                       F9=Initial Enquiry'
+      *                                              End   /149985/
+     A                                 23  2'Event Date'
+     A            EVTDAT         6A  B 23 13DSPATR(HI)
+     A**                                             End   /112563/
+     A N41                                  DSPATR(UL)
+     A  41                                  DSPATR(RI)
+     A  41                                  DSPATR(PC)
+     A**                                             Begin /112563/
+     A***********                      24 21', Currency'
+     A*********** CURNCY         3A  B 24 32DSPATR(HI)
+     A                                 23 22'Currency'
+     A            CURNCY         3A  B 23 31DSPATR(HI)
+     A**                                             End   /112563/
+     A N44                                  DSPATR(UL)
+     A  44                                  DSPATR(RI)
+     A  44                                  DSPATR(PC)
+     A**                                             Begin /112563/
+     A***********                      24 36', Event Type'
+     A*********** EVTTYP         2A  B 24 49DSPATR(HI)
+     A                                 23 37'Event Type'
+     A            EVTTYP         2A  B 23 48DSPATR(HI)
+     A**                                             End   /112563/
+     A N43                                  DSPATR(UL)
+     A  43                                  DSPATR(RI)
+     A  43                                  DSPATR(PC)
+     A**                                             Begin /112563/
+     A***********                      24 52', Security'
+     A*********** SECSNM        10A  B 24 63DSPATR(HI)
+     A                                 23 53'Security'
+     A            SECSNM        10A  B 23 62DSPATR(HI)
+     A**                                             End   /112563/
+     A N45                                  DSPATR(UL)
+     A  45                                  DSPATR(RI)
+     A  45                                  DSPATR(PC)
+     A*
+     A          R SE0260F0                  TEXT('TOP OF SCREEN')
+     A                                  1  2'FORWARD DIARY ENQUIRY'
+     A                                      DSPATR(HI UL)
+     A**                                             Begin /112563/
+     A                                  1 36'SE0260'
+     A**                                             End   /112563/
+     A            RUNA           7A  O  1 55
+     A                                  1 64TIME
+     A                                  1 74'WID'
+     A            WSID           3A  O  1 78
+     A                                  2  3'Event Date'
+     A            SSSDED         7A  O  2 14DSPATR(HI)
+     A                                  2 26'Currency'
+     A            SSNMCY         3A  O  2 35DSPATR(HI)
+     A                                  2 43'Event Type'
+     A            SSSDET         3A  O  2 54DSPATR(HI)
+     A                                  2 62'Security'
+     A            SSSDSN        10A  O  2 71DSPATR(HI)
+     A*                                                    /E13794/
+     A  31                              3 65'''CANCELLED'''
+     A  32                              3 65'''MATURED'''
+     A*                                                    /E13794/
+     A                                  4  5'Event'
+     A*                                              Begin /S01509/
+     A***********                       4 12'Nom'
+     A N56                              4 12'Nom'
+     A  56                              4 12'Ccy'
+     A*                                              End   /S01509/
+     A                                  4 16'Type'
+     A                                  4 21'Security'
+     A                                  4 33'Amount/Security'
+     A*                                              Begin /S01510/
+     A***********                       4 52'Payment'
+     A N57                              4 52'Payment'
+     A  57                              4 52'Pay/Ex'
+     A*                                              End   /S01510/
+     A                                  4 64'Factor/%/Rate'
+     A                                  5  5'Date'
+     A*                                              Begin /S01509/
+     A***********                       5 12'Ccy'
+     A N56                              5 12'Ccy'
+     A***********                       5 26'Narrative'
+     A                                  5 16'Narrative'
+     A*                                              End   /S01509/
+     A                                  5 53'Date'
+     A                                  5 60'Ccy'
+     A                                  5 64'Conv/Red.Price'

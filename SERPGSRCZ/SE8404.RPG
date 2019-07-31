@@ -1,0 +1,918 @@
+     H        1
+      *****************************************************************
+/*XBIA*  OVRDBF FILE(SEDEXRPX) TOFILE(SEDEXRPD) SHARE(*NO)            *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Daily Exchange Rates Maintenance')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE8404 -Daily Exchange Rates Maintenance                     *
+      *                                                               *
+      *  Called by: SEC8404                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2017                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSE108 *CREATE     Date 06Oct17               *
+      *                 nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSE108 - Yearly Profitability Report and Enquiry             *
+      *                                                               *
+      *****************************************************************
+     FSE8404DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE SUBFLREC
+     FSEDEXRPDIF  E           K        DISK
+     FSEDEXRPXUF  E           K        DISK                      A
+     F            SEDEXRD0                          KRENAMESEDEXRXX
+     E                    CYMD      366  6 0
+     E                    ZEROS      20  1
+     E                    NUM    10  10  1
+     E                    ZA1        16  1
+     E                    ZA2        16  1
+     E                    ZS1        15  1 0
+     E                    ZS2        21  1
+     E/COPY ZSRSRC,ZDATE2Z1
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     I            DS
+     I                                        1  21 ZOUT21
+     I                                        6  21 ZOUT16
+     I            DS
+     I                                        1   60WMDY
+     I                                        1   20WMTH
+     I                                        3   40WDAY
+     I                                        5   60WYEAR
+     I            DS
+     I                                        1   60ZYMD
+     I                                        1   20ZYEAR
+     I                                        1   2 ZYEARA
+     I                                        3   40ZMTH
+     I                                        3   4 ZMTHA
+     I                                        5   60ZDAY
+     I                                        5   6 ZDAYA
+     IDATA      E DSSEDEXRPD
+     I              DLCCCY                          ##CCCY
+     I              DLYEAR                          ##YEAR
+     I              DLMNTH                          ##MNTH
+     I              DLDAYN                          ##DAYN
+     IDBERR       DS                            256
+      ** Local Data Area DS for Database Error Information.
+     I                                      134 177 DBLOT
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+     I           SDS
+     I                                      244 253 WSID
+     I                                      254 263 USIDX
+      *
+     IDSFDY     E DSDSFDY
+      ** FIRST DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for ICD Details
+     ISDCURR    E DSSDCURRPD
+      ** External data structures for GL Details
+      *
+      ** ACCESS ICD
+      *
+      ** Access LF/SDBANKL1
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 01 *
+     C                     MOVEL'SDBANKL1'DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** Determine Years, Months, Days in Current year
+      *
+     C                     EXSR DETCUY
+      *
+     C                     MOVE '0'       ZEROS
+     C                     Z-ADD18        #C      20
+     C                     SETON                     70    *  PROTECT SCREEN
+      *
+     C           SEDEXK    KLIST
+     C                     KFLD           DLCCCY
+     C                     KFLD           DLYEAR
+     C                     KFLD           DLMNTH
+     C                     KFLD           DLDAYN
+      *
+     C                     MOVEL*BLANK    DLCCCY
+     C                     MOVEL*BLANK    DLYEAR
+     C                     MOVEL*BLANK    DLMNTH
+     C                     MOVEL*BLANK    DLDAYN
+      *
+     C                     MOVEL'SEUSRMSG'WUMSGF 10
+      *
+     C           *INKC     DOWEQ'0'
+     C                     EXSR INPUT
+     C  NKC                EXSR DSPLAY
+     C                     END
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      *                                                               *
+      *  INPUT - INPUT SUBROUTINE                                     *
+      *                                                               *
+      *****************************************************************
+     C           INPUT     BEGSR
+      *
+      ** ACCESS RECORD AND DISPLAY SCREEN
+      *
+     C                     MOVELDLCCCY    ##CCCY
+     C                     MOVELDLYEAR    ##YEAR
+     C                     MOVELDLMNTH    ##MNTH
+     C                     MOVELDLDAYN    ##DAYN
+     C                     Z-ADD*ZERO     DLEXRT
+     C           SEDEXK    CHAINSEDEXRD0             99    *
+     C           SEDEXK    CHAINSEDEXRXX             60    *
+     C                     EXSR CNVFLD
+     C                     WRITESCREEN
+     C                     WRITESCRMESS
+     C                     READ SCREEN                   99*
+     C                     MOVEL*BLANK    DDERR
+      *
+      ** DO WHILE CK/3 NOT TAKEN
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKG     ANDEQ'0'
+      *
+      ** ROLLDOWN
+      *
+     C           *IN05     IFEQ '1'
+     C                     EXSR RDPFIL
+     C           *IN99     IFEQ '1'
+     C           *HIVAL    SETGTSEDEXRD0
+     C                     EXSR RDPFIL
+     C         99          EXSR BLKFLD
+      ** Send error message 'End of file'
+     C                     MOVE *BLANKS   WUMTXT 80
+     C                     MOVEL'SSE8100' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03 80        Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** ROLLUP
+      *
+     C           *IN06     IFEQ '1'
+     C                     EXSR RDFFIL
+     C           *IN99     IFEQ '1'
+     C           *LOVAL    SETLLSEDEXRD0
+     C                     EXSR RDFFIL
+     C         99          EXSR BLKFLD
+      ** Send error message 'End of file'
+     C           *IN99     IFEQ *ON
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8100' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ELSE
+      ** Send error message 'Start of file'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8101' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** IF ROLLDOWN OR ROLLUP
+      *
+     C           *IN05     IFEQ '1'
+     C           *IN06     OREQ '1'
+     C                     MOVELDLCCCY    ##CCCY
+     C                     MOVELDLYEAR    ##YEAR
+     C                     MOVELDLMNTH    ##MNTH
+     C                     MOVELDLDAYN    ##DAYN
+     C                     Z-ADD*ZERO     DLEXRT
+     C           SEDEXK    CHAINSEDEXRXX             60    *
+     C   60                SETON                     70    *  PROTECT SCREEN
+     C   60                SETON                     21    *  POSN CURSOR
+     C  N60                SETOF                     70    *  ENABLE SCREEN
+     C  N60                SETON                     25    *  POSN CURSOR
+     C                     EXSR CNVFLD
+     C                     ENDIF
+      *
+      ** IF NO ROLLDOWN OR ROLLUP
+      *
+     C           *IN05     IFEQ '0'
+     C           *IN06     ANDEQ'0'
+      *
+      ** VALIDATION OF SCREEN FIELDS
+      *
+     C                     EXSR VALIDD
+      *
+      ** IF NO ERRORS
+      *
+     C           *IN10     IFEQ '0'
+      *
+      ** IF THE KEY FIELDS HAVE CHANGED
+      *
+     C           DLCCCY    IFNE ##CCCY
+     C           DLYEAR    ORNE ##YEAR
+     C           DLMNTH    ORNE ##MNTH
+     C           DLDAYN    ORNE ##DAYN
+      *
+     C                     MOVELDLCCCY    ##CCCY
+     C                     MOVELDLYEAR    ##YEAR
+     C                     MOVELDLMNTH    ##MNTH
+     C                     MOVELDLDAYN    ##DAYN
+     C                     Z-ADD*ZERO     DLEXRT
+     C           SEDEXK    CHAINSEDEXRXX             60    *
+     C           *IN60     IFEQ *ON
+      ** Send message 'Press enter to add record'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8108' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ELSE
+      ** Send message 'Press enter to update record'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8109' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+      *
+     C                     EXSR CNVFLD
+     C                     SETOF                     70    *  ENABLE SCREEN
+     C                     SETON                     25    *  POSN CURSOR
+      *
+      ** ELSE, UPDATE FILE IF KEY FIELDS ARE UNCHANGED
+      *
+     C                     ELSE
+     C                     EXSR UPDFIL
+     C                     EXSR BLKFLD
+     C                     SETON                     70    *  PROTECT SCREEN
+     C                     SETON                     21    *  POSN CURSOR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** DISPLAY SCREEN
+      *
+     C                     WRITESCREEN
+     C                     WRITESCRMESS
+     C                     READ SCREEN                   99*
+     C                     MOVEL*BLANK    DDERR
+     C                     MOVEAZEROS     *IN,10
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  UPDFIL - UPDATE FILE SUBROUTINE                              *
+      *                                                               *
+      *****************************************************************
+     C           UPDFIL    BEGSR
+     C                     MOVELDLYEAR    ZYEARA
+     C                     MOVELDLMNTH    ZMTHA
+     C                     MOVELDLDAYN    ZDAYA
+     C                     Z-ADD1         X
+     C           ZYMD      LOKUPCYMD,X                   99*
+     C           *IN99     IFEQ '1'
+     C           *INKJ     ANDEQ'1'
+      *
+      ** Send error message 'This record can't be deleted as it is in
+      ** the current period'
+      *
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8110' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ELSE
+     C   KJN60             DELETSEDEXRXX
+     C           *INKJ     IFEQ *ON
+     C           *IN60     ANDEQ*OFF
+      ** Send error message 'Record deleted'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'CO00259' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+      *
+     C  NKJN60             UPDATSEDEXRXX
+     C           *INKJ     IFEQ *OFF
+     C           *IN60     ANDEQ*OFF
+      ** Send message 'Record updated'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8106' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+      *
+     C  NKJ 60             WRITESEDEXRXX
+     C           *INKJ     IFEQ *OFF
+     C           *IN60     ANDEQ*ON
+      ** Send message 'Record added'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8107' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DSPLAY - DISPLAY SUBROUTINE                                  *
+      *                                                               *
+      *****************************************************************
+     C           DSPLAY    BEGSR
+     C                     MOVEL'N'       EXIT    1
+     C           EXIT      DOWEQ'N'
+      *
+     C                     EXSR FILLSB
+      *
+     C                     EXSR CNVFLD
+     C                     WRITESUBFLCTL
+     C                     WRITESUBMESS
+     C                     READ SUBFLCTL                 99*
+     C                     MOVEL*BLANK    DDERR
+      ** CK3 OR CK12,  END
+     C           *INKC     IFEQ '1'
+     C           *INKL     OREQ '1'
+     C                     EXSR BLKFLD
+     C                     MOVEL'Y'       EXIT
+     C                     END
+      ** ROLLDOWN
+     C           *IN05     IFEQ '1'
+     C                     EXSR ROLDWN
+     C                     END
+      ** SELECT
+     C           *IN,04    IFEQ '0'
+     C                     READCSUBFLREC                 99*RECORD CHANGED
+     C           *IN99     IFEQ '0'
+     C                     MOVEL'Y'       EXIT
+     C                     SETOF                     70    *  ENABLE SCREEN
+     C                     SETON                     25    *  POSN CURSOR
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  FILLSB - FILL SUBFILE SUBROUTINE                             *
+      *                                                               *
+      *****************************************************************
+     C           FILLSB    BEGSR
+     C                     MOVEA'000'     *IN,1
+     C                     MOVEA'1'       *IN,4
+     C                     Z-ADD*ZERO     RRN
+     C                     WRITESUBFLCTL
+     C           SEDEXK    SETLLSEDEXRPD
+     C                     EXSR RDFFIL
+     C           *IN99     IFEQ '0'
+     C                     MOVELDLCCCY    ##CCCY
+     C                     MOVELDLYEAR    ##YEAR
+     C                     MOVELDLMNTH    ##MNTH
+     C                     MOVELDLDAYN    ##DAYN
+     C                     ELSE
+     C                     MOVEL*BLANK    ##CCCY
+     C                     MOVEL*BLANK    ##YEAR
+     C                     MOVEL*BLANK    ##MNTH
+     C                     MOVEL*BLANK    ##DAYN
+     C                     MOVEL*BLANK    DLCCCY
+     C                     MOVEL*BLANK    DLYEAR
+     C                     MOVEL*BLANK    DLMNTH
+     C                     MOVEL*BLANK    DLDAYN
+     C           DDERR     IFEQ *BLANK
+      ** Send error message 'End of file'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8100' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN99     DOWEQ'0'
+     C                     ADD  1         RRN     40     04*
+     C                     EXSR CNVFLD
+     C                     WRITESUBFLREC
+     C           RRN       IFEQ #C
+     C                     EXSR RDFFIL
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    DLCCCY
+     C                     MOVEL*BLANK    DLYEAR
+     C                     MOVEL*BLANK    DLMNTH
+     C                     MOVEL*BLANK    DLDAYN
+     C           DDERR     IFEQ *BLANK
+      ** Send error message  'End of file'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8100' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     ELSE
+     C                     SETON                         99*
+     C                     ENDIF
+     C                     ELSE
+     C                     EXSR RDFFIL
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    DLCCCY
+     C                     MOVEL*BLANK    DLYEAR
+     C                     MOVEL*BLANK    DLMNTH
+     C                     MOVEL*BLANK    DLDAYN
+     C           DDERR     IFEQ *BLANK
+      ** Send error message  'End of file'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8100' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     END
+      *
+     C           *IN,4     IFEQ '1'
+     C                     MOVEA'010'     *IN,1
+     C                     ELSE
+     C                     MOVEA'111'     *IN,1
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  ROLDWN - ROLL DOWN SUBROUTINE                                *
+      *                                                               *
+      *****************************************************************
+     C           ROLDWN    BEGSR
+     C                     Z-ADD*ZERO     RRN
+     C                     MOVEL##CCCY    DLCCCY
+     C                     MOVEL##YEAR    DLYEAR
+     C                     MOVEL##MNTH    DLMNTH
+     C                     MOVEL##DAYN    DLDAYN
+     C           SEDEXK    SETGTSEDEXRPD
+     C                     EXSR RDPFIL
+      *
+     C           *IN99     DOWEQ'0'
+     C           RRN       ANDLT#C
+     C                     EXSR RDPFIL
+     C                     ADD  1         RRN
+     C                     END
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    DLCCCY
+     C                     MOVEL*BLANK    DLYEAR
+     C                     MOVEL*BLANK    DLMNTH
+     C                     MOVEL*BLANK    DLDAYN
+     C                     MOVE *BLANKS   WUMTXT
+      ** Send error message 'Start of file'
+     C                     MOVEL'SSE8101' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  VALIDD - VALIDATION SUBROUTINE                               *
+      *                                                               *
+      *****************************************************************
+     C           VALIDD    BEGSR
+      *
+      ** CK4 - BYPASS VALIDATION
+      *
+     C           *INKJ     CABEQ'1'       EVALID
+      *
+      ** CURRENCY
+      *
+      ** Access Currency file for details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM DLCCCY    WCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Database Error if not found.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           *IN10     IFEQ '0'
+      ** Send error message 'Invalid currency'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'CS04108' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     SETON                     101121
+     C                     ENDIF
+      *
+      ** YEAR
+      *
+     C                     MOVELDLYEAR    TEST    1
+     C                     EXSR TSTNUM
+     C           *IN99     IFEQ *OFF
+     C           *IN10     ANDEQ*OFF
+      ** Send error message 'Invalid year'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8102' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+      *
+     C  N99                SETON                     1012
+     C                     MOVE DLYEAR    TEST
+     C                     EXSR TSTNUM
+     C           *IN99     IFEQ *OFF
+     C           *IN10     ANDEQ*OFF
+      ** Send error message 'Invalid year'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8102' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+      *
+     C  N99                SETON                     1012
+     C           DLYEAR    IFLT '92'
+      **
+     C           DLYEAR    ANDGT'50'
+     C           *IN10     IFEQ *OFF
+      ** Send error message 'Invalid year'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8102' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     SETON                     1012
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** MONTH
+      *
+     C                     MOVELDLMNTH    TEST
+     C                     EXSR TSTNUM
+     C           *IN99     IFEQ *OFF
+     C           *IN10     ANDEQ*OFF
+      ** Send error message 'Invalid month'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8103' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+      *
+     C  N99                SETON                     1013
+     C                     MOVE DLMNTH    TEST
+     C                     EXSR TSTNUM
+     C           *IN99     IFEQ *OFF
+     C           *IN10     ANDEQ*OFF
+      ** Send error message 'Invalid month'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8103' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+      *
+     C  N99                SETON                     1013
+     C           DLMNTH    IFLT '01'
+     C           DLMNTH    ORGT '12'
+     C           *IN10     IFEQ *OFF
+      ** Send error message 'Invalid month'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8103' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     SETON                     1013
+     C                     ENDIF
+      *
+      ** DAY
+      *
+     C                     MOVELDLDAYN    TEST    1
+     C                     EXSR TSTNUM
+     C           *IN99     IFEQ *OFF
+     C           *IN10     ANDEQ*OFF
+      ** Send error message 'Invalid day'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8104' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+      *
+     C  N99                SETON                     1014
+     C                     MOVE DLDAYN    TEST
+     C                     EXSR TSTNUM
+     C           *IN99     IFEQ *OFF
+     C           *IN10     ANDEQ*OFF
+      ** Send error message 'Invalid day'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8104' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+      *
+     C  N99                SETON                     1014
+     C           DLDAYN    IFLT '01'
+     C           *IN10     IFEQ *OFF
+      ** Send error message 'Invalid day'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8104' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+      *
+     C                     SETON                     1014
+     C                     ELSE
+     C                     MOVELDLDAYN    WDAY
+     C                     MOVELDLMNTH    WMTH
+     C                     MOVELDLYEAR    WYEAR
+     C                     Z-ADDWMDY      ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     IFEQ '1'
+     C           *IN10     IFEQ *OFF
+      ** Send error message 'Invalid day'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8104' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+      *
+     C                     SETON                     1014
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** RATE (IF INPUT ENABLED)
+      *
+     C           *IN70     IFEQ '0'
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVELDDEXRT    ZFIELD
+     C                     Z-ADD7         ZADIG
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    DLEXRT
+     C           *IN99     IFEQ '1'
+     C           DLEXRT    OREQ 0
+     C           A6SPRT    OREQ 1
+     C           DLEXRT    ANDNE1
+     C           *IN10     IFEQ *OFF
+      ** Send error message 'Invalid exchange rate'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8105' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+      *
+     C                     SETON                     101525
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           EVALID    TAG
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  TSTNUM - TEST NUMERIC SUBROUTINE                             *
+      *                                                               *
+      *****************************************************************
+     C           TSTNUM    BEGSR
+     C                     Z-ADD1         X       30
+     C           TEST      LOKUPNUM,X                    99*
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CNVFLD - CONVERT FIELD SUBROUTINE                            *
+      *                                                               *
+      *****************************************************************
+     C           CNVFLD    BEGSR
+      *
+      ** CURRENCY
+      *
+      ** Access Currency file for details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM DLCCCY    WCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Database Error if not found.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           DLCCCY    OREQ *BLANK
+     C                     MOVEL*BLANK    DDSPOT
+     C                     MOVEL*BLANK    DDMDIN
+     C                     ELSE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE A6SPRT    ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVEL*BLANK    DDSPOT
+     C                     MOVELZOUT16    DDSPOT
+     C           A6MDIN    IFEQ 'M'
+     C                     MOVEL'M'       DDMDIN
+     C                     ELSE
+     C                     MOVEL'D'       DDMDIN
+     C                     END
+     C                     END
+      *
+      ** EXCHANGE RATE
+      *
+     C           DLEXRT    IFNE 0
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE DLEXRT    ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVEL*BLANK    DDEXRT
+     C                     MOVELZOUT16    DDEXRT
+     C                     ELSE
+     C                     MOVEL*BLANK    DDEXRT
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  RDFFIL - READ FILE SUBROUTINE                                *
+      *                                                               *
+      *****************************************************************
+     C           RDFFIL    BEGSR
+     C                     READ SEDEXRD0                 99*
+     C                     EXSR SELCTN
+     C           SELT      DOWEQ'N'
+     C                     READ SEDEXRD0                 99*
+     C                     EXSR SELCTN
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  RDPFIL - READ PRIOR FILE SUBROUTINE                          *
+      *                                                               *
+      *****************************************************************
+     C           RDPFIL    BEGSR
+     C                     READPSEDEXRD0                 99*
+     C                     EXSR SELCTN
+     C           SELT      DOWEQ'N'
+     C                     READPSEDEXRD0                 99*
+     C                     EXSR SELCTN
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SELCTN - SELECT SUBROUTINE                                   *
+      *                                                               *
+      *****************************************************************
+     C           SELCTN    BEGSR
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'*'       SELT    1
+     C                     END
+     C           ESELCT    ENDSR
+      *****************************************************************
+      *                                                               *
+      *  BLKFLD - BLANK FIELDS SUBROUTINE                             *
+      *                                                               *
+      *****************************************************************
+     C           BLKFLD    BEGSR
+     C                     MOVEL*BLANK    DLCCCY
+     C                     MOVEL*BLANK    DLYEAR
+     C                     MOVEL*BLANK    DLMNTH
+     C                     MOVEL*BLANK    DLDAYN
+     C                     MOVEL*BLANK    DDEXRT
+     C                     MOVEL*BLANK    DDSPOT
+     C                     MOVEL*BLANK    DDMDIN
+     C                     MOVEL*BLANK    DATA
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DETCUY - Determine Years, Months, Days in Current Year       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETCUY    BEGSR                           ** DETCUY *
+      *
+     C                     Z-ADD0         X       30
+     C                     Z-ADDBJPEYD    ZDAYNO
+     C           X         DOWLT366
+     C                     ADD  1         X
+     C                     ADD  1         ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZYMD      CYMD,X
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+** NUM
+0123456789
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

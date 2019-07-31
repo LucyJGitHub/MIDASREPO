@@ -1,0 +1,577 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Closed period maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounts Module                           *
+      *                                                               *
+      *  MC0120 - Closed Period Maintenance                           *
+      *                                                               *
+      *  Function : This program closes and reopens Management Account*
+      *   (I/C)     periods. The last closed period and the first open*
+      *             period are displayed to be reopened or closed.    *
+      *                                                               *
+      *  Called By: MC0100 - Period Set Maintenance                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *  Prev Amend No. 135910             Date 22Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CMC001 *C *CREATE  Date 18Mar96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  135910 - CPF4293 while closing management account period.    *
+      *  CMC001 - Management Accounts Enhancement for PCA.            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *          F U N C T I O N   O F   I N D I C A T O R S          *
+      *                                                               *
+      *   03  - F3  was pressed - Exit from the program               *
+      *   12  - F12 was pressed - Goto previous screen                *
+      *   21  - Error in Status field                                 *
+      *   22  - Enable SFLDSP                                         *
+      *   23  - Enable SFLDSPCTL                                      *
+      *   24  - Enable SFLEND - MC0120C0                              *
+      *   25  - Enable SFLEND - MC0120C1                              *
+      *   26  - Subfile is empty                                      *
+      *   27  - CHAIN fails in Subfile/MC0120S0                       *
+      *   28  - READE/READP/CHAIN fails in LF/GLPERDL0                *
+      *   29  - CHAIN fails in LF/GLPERSL0                            *
+      *   U7  - Switch 7                                              *
+      *   U8  - Switch 8                                              *
+      *   LR  - Exit program                                          *
+      *                                                               *
+      *****************************************************************
+     F*
+     FGLPERDL0UF  E           K        DISK         KINFSR *PSSR
+     F*GLPERSL0UF*E********** K        DISK         KINFSR *PSSR          135910
+     FGLPERSL0UF  E           K        DISK         KCOMIT                135910
+     F                                              KINFSR *PSSR          135910
+     FMC0120DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        WRRN  KSFILE MC0120S0
+     E/EJECT
+     E                    CPY@    1   1 80
+     E**  Copyright Statement
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     I/EJECT
+     I*
+     ICPYR@#      DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     ILDA       E DSLDA
+     I*
+     I**  Local data area for database error details
+     I**  *LOCK IN LDA immediately before and OUT LDA immediately
+     I**  after each database error handling.
+     I**
+     I**                                    134 141 DBFILE
+     I**       Defines:                     142 170 DBKEY
+     I**                                    171 180 DBPGM
+     I**                                    181 1830DBASE
+     I*
+     IPSDS       SDS
+     I*
+     I**  Program Status Data Structure - gives Workstation name and
+     I**  User ID.
+     I*
+     I                                     *PROGRAM SPGM
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I*
+     I**  System Rundate
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Data Structure for Bank Details Access Program
+     I*
+     IDSFDY     E DSDSFDY
+     I**  Short Data Structure for Access Programs
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Long Data Structure for Access Programs
+     I*
+     I            DS
+     I                                        1   4 SYEAR
+     I                                        1   2 SPDCT
+     I                                        3   4 SPDYR
+     C/EJECT
+     C*
+     C**  Copyright statement.
+     C*
+     C                     MOVEACPY@      MKI@   80
+     C*
+     C**  *ENTRY parameter list.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PPSTC   1
+     C                     PARM           PACTN   1
+     C*
+     C**  Parameter list for program 'AOBANKR0'.
+     C*
+     C           PBANK     PLIST
+     C                     PARM '*DBERR  'WRTCD   7
+     C                     PARM '*FIRST  'WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C**  Key List for LF/GLPERDL0.
+     C*
+     C           KPERD     KLIST
+     C                     KFLD           PPSTC
+     C                     KFLD           SPDCT
+     C                     KFLD           SPDYR
+     C                     KFLD           SPDNY
+     C*
+     C**  Define the LDA for error handling.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C**  Access Rundate.
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C**  Access Bank Details File.
+     C*
+     C                     CALL 'AOBANKR0'PBANK
+     C*
+     C**  Check System Date Format, DDMMYY OR MMDDYY.
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     ENDIF
+     C*
+     C**  Get the Period set name.
+     C*
+     C           PPSTC     CHAINGLPERSL0             29
+     C*
+     C**  Move data to screen fields.
+     C*
+     C                     MOVE RUNA      SMRDT
+     C                     MOVE WSID      SWSID
+     C                     MOVE USRID     SUSER
+     C                     MOVE PPSTC     SPSTC
+     C                     MOVE STPSNM    SPSNM
+     C                     MOVE *BLANK    WUPDT   1
+     C*
+     C**  Process subfile until user presses F3.
+     C*
+     C                     EXSR SRPROC
+     C*
+     C**  If user presses F3, return action to 'T'.
+     C*
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'T'       PACTN
+     C                     ENDIF
+     C*
+     C**  If any update has been done, update last change date of
+     C**  the period set record
+     C*
+     C           WUPDT     IFEQ 'Y'
+     C           SPSTC     CHAINGLPERSL0             29
+     C                     MOVE 'A'       STTYLC
+     C                     Z-ADDRUND      STLCD
+     C                     UPDAT@BJREDS
+     C                     COMIT                                          135910
+     C                     ENDIF
+     C*
+     C**  Exit from program.
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRPROC                                        *
+     C*  Function    :  Subfile Processing                            *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*  Calls       :  SRLOAD - Load Subfile                         *
+     C*                 SRVALD - Validate and Process Options         *
+     C*                 SRMCLR - Clear Message Subfile                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRPROC    BEGSR                           ** SRPROC **
+     C*
+     C**  Build Subfile.
+     C*
+     C                     EXSR SRLOAD
+     C*
+     C                     WRITEMC0120F0
+     C                     WRITEMC0120F1
+     C*
+     C**  Execute routine until the user presses F3 or F12.
+     C*
+     C           *IN03     DOUEQ'1'
+     C           *IN12     OREQ '1'
+     C*
+     C                     WRITEMC0120C1
+     C                     EXFMTMC0120C0
+     C*
+     C           *IN26     IFEQ '0'
+     C                     EXSR SRMCLR
+     C                     ENDIF
+     C*
+     C**  Validate and process options.
+     C*
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+     C                     EXSR SRVALD
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C           SRPRO9    ENDSR                           ** SRPRO9 ****
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRLOAD                                        *
+     C*  Function    :  Load Subfile                                  *
+     C*                                                               *
+     C*  Called by   :  SRPROC - Subfile Processing                   *
+     C*                 SRVALD - Validate and Process Options         *
+     C*  Calls       :  SRMCLR - Clear Message Subfile                *
+     C*                 ZASNMS - Send Message to Program message Queue*
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRLOAD    BEGSR                           ** SRLOAD **
+     C*
+     C**  Initialised all indicators.
+     C*
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C*
+     C**  Initialised variables.
+     C*
+     C                     Z-ADD1         WRRN    40
+     C*
+     C**  Clear Program and Message Subfile.
+     C*
+     C                     WRITEMC0120C0
+     C                     EXSR SRMCLR
+     C*
+     C**  Load records into subfile.
+     C*
+     C                     MOVE '1'       *IN23
+     C*
+     C**  Set the file pointer into the top of file LF/GLPERDL0.
+     C**  Get the first opened period.
+     C*
+     C           PPSTC     CHAINGLPERDL0             28
+     C*
+     C**  If there is no record in LF/GLPERDL0, display 'No Record to
+     C**  Display'.
+     C*
+     C           *IN28     IFEQ '1'
+     C                     MOVE '1'       *IN26
+     C                     MOVEL'GLX0394' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C*
+     C                     MOVE '1'       *IN22
+     C*
+     C**  If first record is closed, search for the last closed period.
+     C*
+     C           DTCLSD    IFGT 0
+     C*
+     C           *IN28     DOWEQ'0'
+     C           DTCLSD    ANDGT0
+     C           PPSTC     READEGLPERDL0                 28
+     C                     ENDDO
+     C*
+     C           *IN28     IFEQ '1'
+     C           PPSTC     SETGTGLPERDL0
+     C                     ENDIF                                          072314
+     C*
+     C           PPSTC     REDPEGLPERDL0                 28
+     C*
+     C                     ENDIF                                          072314
+     C*
+     C**  Load the last closed period.
+     C*
+     C           DTCLSD    IFGT 0
+     C*
+     C                     MOVE *BLANKS   SSTAT
+     C                     MOVE DTPDCT    SPDCT
+     C                     MOVE DTPDYR    SPDYR
+     C                     MOVE DTPDNY    SPDNY
+     C                     MOVE DTPDNM    SPDNM
+     C*
+     C                     Z-ADDDTEPDD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SEPDD
+     C                     Z-ADDDTEPDD    SEPDDN
+     C*
+     C                     Z-ADDDTCLSD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SCLSD
+     C                     Z-ADDDTCLSD    SCLSDN
+     C*
+     C                     WRITEMC0120S0
+     C                     ADD  1         WRRN
+     C*
+     C           PPSTC     READEGLPERDL0                 28
+     C*
+     C                     ENDIF                                          072314
+     C*
+     C**  Load the first open period.
+     C*
+     C           DTCLSD    IFLE 0
+     C           *IN28     ANDEQ'0'
+     C*
+     C                     MOVE *BLANKS   SSTAT
+     C                     MOVE DTPDCT    SPDCT
+     C                     MOVE DTPDYR    SPDYR
+     C                     MOVE DTPDNY    SPDNY
+     C                     MOVE DTPDNM    SPDNM
+     C*
+     C                     Z-ADDDTEPDD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SEPDD
+     C                     Z-ADDDTEPDD    SEPDDN
+     C*
+     C                     MOVE *BLANKS   SCLSD
+     C                     Z-ADDDTCLSD    SCLSDN
+     C*
+     C                     WRITEMC0120S0
+     C                     ADD  1         WRRN
+     C*
+     C                     ENDIF                                          072314
+     C*
+     C                     ENDIF
+     C*
+     C           SRLOA9    ENDSR                           ** SRLOA9 ****
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRVALD                                        *
+     C*  Function    :  Validate and Process Options                  *
+     C*                                                               *
+     C*  Called by   :  SRPROC - Subfile Processing                   *
+     C*  Calls       :  SRLOAD - Load Subfile                         *
+     C*                 SRMCLR - Clear Message Subfile                *
+     C*                 ZASNMS - Send Message to Program message Queue*
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRVALD    BEGSR                           ** SRVALD **
+     C*
+     C**  Remove Reversed-image attribute.
+     C*
+     C                     MOVE '0'       *IN21
+     C*
+     C           1         CHAINMC0120S0             27
+     C           *IN27     IFEQ '0'
+     C                     UPDATMC0120S0
+     C                     ELSE
+     C                     EXSR SRMCLR
+     C                     ENDIF
+     C*
+     C           2         CHAINMC0120S0             27
+     C           *IN27     IFEQ '0'
+     C                     UPDATMC0120S0
+     C                     ENDIF
+     C*
+     C**  Get entry.
+     C*
+     C           1         CHAINMC0120S0             27
+     C*
+     C           *IN27     IFEQ '0'
+     C           SSTAT     ANDEQ*BLANKS
+     C           2         CHAINMC0120S0             27
+     C                     ENDIF
+     C*
+     C**  Validate entry.
+     C*
+     C           *IN27     IFEQ '0'
+     C           SSTAT     ANDNE*BLANKS
+     C*
+     C**  If entry is not 'O' or 'C', display error message "Entry must
+     C**  be 'O' for Open or 'C' for close".
+     C*
+     C           SSTAT     IFNE 'C'
+     C           SSTAT     ANDNE'O'
+     C                     MOVEL'GLX0387' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN21
+     C                     UPDATMC0120S0
+     C                     ENDIF
+     C*
+     C**  If entry is 'C' for closed period or 'O' for open period,
+     C**  display error message "This period is already Closed or
+     C**  Opened".
+     C*
+     C           SSTAT     IFEQ 'C'
+     C           SCLSDN    ANDGT0
+     C           SSTAT     OREQ 'O'
+     C           SCLSDN    ANDLE0
+     C                     MOVEL'GLX0388' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN21
+     C                     UPDATMC0120S0
+     C                     ENDIF
+     C*
+     C**  If entry is 'C' for the current or a future period, display
+     C**  error message "This period cannot be closed".
+     C*
+     C           SSTAT     IFEQ 'C'
+     C           SEPDDN    ANDGERUND
+     C                     MOVEL'GLX0389' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN21
+     C                     UPDATMC0120S0
+     C                     ENDIF
+     C*
+     C**  If entry is valid, update the file.
+     C*
+     C           *IN21     IFEQ '0'
+     C*
+     C           KPERD     CHAINGLPERDL0             28
+     C           *IN28     IFEQ '0'
+     C*
+     C           SSTAT     IFEQ 'C'
+     C                     Z-ADDRUND      DTCLSD
+     C                     ENDIF
+     C*
+     C           SSTAT     IFEQ 'O'
+     C                     Z-SUBDTCLSD    DTCLSD
+     C                     ENDIF
+     C*
+     C                     UPDAT@BLREDR
+     C*
+     C**  Setup action flag if any update has been done
+     C*
+     C                     MOVE 'Y'       WUPDT
+     C*
+     C**  Rebuild Subfile.
+     C*
+     C                     EXSR SRLOAD
+     C*
+     C                     WRITEMC0120F0
+     C                     WRITEMC0120F1
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF                                          072314
+     C*                                                                   072314
+     C                     ENDIF                                          072314
+     C*
+     C           SRVAL9    ENDSR                           ** SRVAL9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRMCLR                                        *
+     C*  Function    :  Clear Message Subfile                         *
+     C*                                                               *
+     C*  Called by   :  SRPROC - Subfile Processing                   *
+     C*                 SRLOAD - Load Subfile                         *
+     C*  Calls       :  Y2CLMSC - Clear program message queue         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRMCLR    BEGSR                           ** SRMCLR **
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGM      ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C           SRMCL9    ENDSR                           ** SRMCL9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  ZASNMS                                        *
+     C*  Function    :  Send Message to program message queue         *
+     C*                                                               *
+     C*  Called by   :  SRLOAD - Load Subfile                         *
+     C*                 SRVALD - Validate and Process Options         *
+     C*  Calls       :  Y2SNMGC - Send a message                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZASNMS    BEGSR                           ** ZASNMS **
+     C*
+     C**  Declare message file name
+     C*
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM SPGM      ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+     C*
+     C           ZASNM9    ENDSR                           ** ZASNM9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C                     ROLBK                                          135910
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     ENDIF
+     C*
+     C                     CALL 'DBERRCTL'
+     C*
+     C           #PSSR9    ENDSR                           ** *PSSR9 **
+     C*
+     C********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+** CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

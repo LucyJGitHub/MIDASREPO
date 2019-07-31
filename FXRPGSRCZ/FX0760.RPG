@@ -1,0 +1,489 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Monthly deals file reorganization')              *
+      ****************************************************************
+      *                                                              *
+      *  Midas - FX Dealer Module                             *
+      *                                                              *
+      *     FX0760    - MONTHLY DEALS FILE REORGANIZATION.           *
+      *                                                              *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 AR407323           Date 04Dec12               *
+      *                 AR970738           Date 04Dec12               *
+      *                 CSW212             Date 03May12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 241302             Date 01Sep06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 BUG11241           Date 12Apr06               *
+      *                 BUG9020            Date 13Jan06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CLE040             Date 05Jul04               *
+      *                 BUG3937            Date 10Sep04               *
+      *                 228542             Date 05Aug04               *
+      *                 BUG3822            Date 27Jul04               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 205625             Date 28Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date   07Oct99             *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                    S01408             DATE   24MAY96         *
+      *                    S01408             DATE   18APR95         *
+      *                    S01453             DATE   14DEC93         *
+      *                    E20774             DATE   16MAR90         *
+      *                    E13292             DATE   17/05/88        *
+      *                    S01136             DATE   08/12/87        *
+      *                                                              *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  AR407323 - There is still a record in DEALSDB or DLBHISPD.   *
+      *             Fix is to use option to date field in comparing   *
+      *             instead of value date for DEALSDB. Remove purging *
+      *             since it is already redundant to FX0690.          *
+      *           - Applied for AR991584 (Child: AR991586)            *
+      *  AR970738 - Drop credit lines extension records only for      *
+      *             non-authorized deleted deals. Pattern fix 263291A *
+      *             (Child: AR970741)                                 *
+      *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  241302 - FX deal is prematurely dropped.                     *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  BUG11241- Don't condition opening of DEALS on BGN4ST         *
+      *  BUG9020 - LEC000100 failed due to missing recs in DLDLDBQD/  *
+      *            DEALSDB and DLDLDGQD but missing from DEALSDG      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CLE040 - Collateralised Lending Phase 2 (Recompile)          *
+      *  BUG3937 - Remove BUG3822 deletion of Extension files should  *
+      *            be done when the records are purge from DEALSDB.   *
+      *  228542 - RGZPFM command has changed at V5R3                  *
+      *           - Note: array physically deleted:                   *
+      *             RGZPFM FILE(FXDEALPP)                             *
+      *  BUG3822 - Drop credit lines extension records                *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in FXDEALPP.*
+      *  205625 - Avoid drop of FX deal in EOM.                      *
+      *  CAS001 - Net Present Value (NPV) Accounting (Recompile)      *
+      *  CDL008 - Continuous Linked Settlement (Recompiled)           *
+     F*     CPB001- Meridian DBA Middleware Replication Customization*
+     F*             Midas/TOF Interface.                             *
+     F*             Do not delete deals matured and dropped during   *
+     F*             same COB. They need to go to Meridian.           *
+     F*     S01408 - Addition of Core Hook FX0760IIP1                *
+     F*            - Addition of Core Hook FX0760CCP2                *
+     F*            - Addition of Core Hook FX0760CCP3                *
+     F*            - Addition of Core Hook FX0760CCP4                *
+     F*     S01408 - Addition of Core Hook FX0760CEIP                *
+     F*            - Addition of Core Hook FX0760CEPP                *
+     F*            - Addition of Core Hook FX0760CCPG                *
+     F*            - Addition of Core Hook FX0760CCP1                *
+     F*            - Addition of Core Hook FX0760EEPG                *
+     F*            - Addition of Core Hook FX0760FFPG                *
+      *     S01453 - MARGIN AND FX POSITIONS/POINTS AND BASE CURRENCY*
+      *              POSITIONS/POINTS ADDED TO FX INPUT (RECOMPILED) *
+      *     E20774 - REPLACE QCAEXEC WITH QCMDEXC                    *
+      *                                                              *
+      *     AMEND NO. S01136                                         *
+      *               PROGRAM TRIES TO REORGANIZE FILE EVEN IF IT IS *
+      *               EMPTY                                          *
+      *                                                              *
+      *     AMEND NO. E13292                                         *
+      *               PROGRAM TRIES TO REORGANIZE FILE ONLY IF IT IS *
+      *               EMPTY                                          *
+      *                                                              *
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *      60          chain fail on FXTDOPLL
+      *      61          end of file on FXDEALLL
+      *
+      ****************************************************************
+      /EJECT
+     F*****************************************************************
+     FFXDEALLLUF  E           K        DISK         KINFSR *PSSR      UC
+     FFXTDOPLLUF  E           K        DISK         KINFSR *PSSR      UC
+     F            FXDEALP0                          KRENAMEFXTDOPL0
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR      UC  CPB001
+     F            DEALSDAF                          KIGNORE               CPB001
+     F            DEALSDCF                          KIGNORE               CPB001
+     F            DEALSDDF                          KIGNORE               CPB001
+     F            DEALSDEF                          KIGNORE               CPB001
+     F            DEALSDFF                          KIGNORE               CPB001
+     F            DEALSDGF                          KIGNORE               CPB001
+     F*DLDEALL5UF E           K        DISK         KINFSR *PSSR      UC             BUG3822 BUG3937
+     F***DLDEALL5UF  E           K        DISK         KINFSR *PSSR      UC         BUG9020 AR407323
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,FX0760FFPG                                           S01408
+     F*                                                                   S01408
+     E********************@P      1   1 21               QCAEXEC COMMAND  E20774
+     E**********          @P      1   1 21               QCMDEXC COMMAND               E20774 228542
+     E/COPY WNCPYSRC,FX0760E001
+     E                    CPY@    1   1 80                                S01194
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,FX0760EEPG                                           S01408
+     E*                                                                   S01408
+      /EJECT
+      *****************************************************************
+     ISDMMOD    E DSSDMMODPD                                              CPB001
+     I* Access Module Details dile.                                       CPB001
+     ISDBANK    E DSSDBANKPD                                                                  241302
+     I*                                                                   CPB001
+     IDSFDY     E DSDSFDY                                                 CPB001
+     I* First DS for access programs, short data structure                CPB001
+     ILDA        UDS                            256                                           241302
+     I                                      134 141 DBFILE                                    241302
+     I                                      142 170 DBKEY                                     241302
+     I                                      171 180 DBPGM                                     241302
+     I                                      181 1830DBERR                                     241302
+     I                                      182 1830DBASE                                     241302
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,FX0760IIP1                                           S01408
+     I*                                                                   S01408
+      *                                                               *
+      * MAIN     - control process                                    *
+      *                                                               *
+      * CALLS    #A       - initialize                                *
+      *          #B       - main processing                           *
+      *          #C       - terminate                                 *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C                     EXSR #A
+      *
+     C                     EXSR #B
+      *
+     C                     EXSR #C
+      *
+     C           ENDPGM    TAG
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SUBROUTINES USED                                              *
+      *                                                               *
+      *  01  #B       - main processing                               *
+      *  02  #A       - initialize                                    *
+      *  03  #C       - terminate                                     *
+      *  04  *PSSR    - error processing                              *
+      *                                                               *
+      * EXTERNAL ROUTINE                                              *
+      ***05**QCAEXEC**-*execute*CL*command                            *   E20774
+      *  05  QCMDEXC  - execute CL command                            *   E20774
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #B       - main processing                                    *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      * FLDS USED  @DLNO  - alpha deal number for accessing FXTDOPLL  *
+      *                                                               *
+      *****************************************************************
+     C           #B        BEGSR
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX0760CCPG                                           S01408
+     C*                                                                   S01408
+      *
+      ** loop here until all records on FXDEALLL have been read
+     C           *IN61     DOWEQ'0'                        B1
+      *
+      ** if the deal deleted indicator is 'D' then delete the record
+     C           FHDDLT    IFEQ 'D'                        B*2
+     C                     DELETFXDEALP0                   **2
+     C**********           EXSR DELEXT                                               BUG3822 BUG3937
+     C**********           EXSR DELEXT                                              BUG9020 AR407323
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX0760CCP2                                           S01408
+     C*                                                                   S01408
+     C                     GOTO #B1                        **2
+     C                     END                             E*2
+      *
+      ** if the logical delete flag is '*'
+     C           FHDLTF    IFEQ '*'                        B*2
+     C                     DELETFXDEALP0                   **2
+     C**********           EXSR DELEXT                                               BUG3822 BUG3937
+     C**********           EXSR DELEXT                                              BUG9020 AR407323
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX0760CCP3                                           S01408
+     C*                                                                   S01408
+     C                     GOTO #B1                        **2
+     C                     END                             E*2
+      *                                                                                     AR970738
+      ** Consider Option To Date in checking Value Date                                     AR970738
+      *                                                                                     AR970738
+     C           FHOTDN    IFGT FHVDDN                                                      AR970738
+     C                     Z-ADDFHOTDN    WVDAT   50                                        AR970738
+     C                     ELSE                                                             AR970738
+     C                     Z-ADDFHVDDN    WVDAT                                             AR970738
+     C                     ENDIF                                                            AR970738
+      *
+      ** if the deal has matured and is not an option or a takedown
+      ** then delete it
+     C           FHDSTS    IFEQ 'M'                        B*2
+     C           FHDTYP    ANDNE'O'                        **2
+     C           FHDTYP    ANDNE'T'                        **2
+     C           FHVDDN    ANDLTBJRDNB                                                        241302
+      *                                                                   CPB001
+     C**  If a deals record is not found, delete FXDEALPP record.         CPB001
+     C**  Fixe linked with DL1070 (TOF PB)                                CPB001
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C                     Z-ADDFHDN38    @DEALN  60                      CPB001
+     C           @DEALN    CHAINDEALS                65                   CPB001
+     C           *IN65     IFEQ '0'                                       CPB001
+     C********** REPI      ANDNE'Y'                                                    CPB001 205625
+     C           REPI      ANDEQ' '                                                           205625
+     C                     MOVE '1'       *IN65                           CPB001
+     C                     ENDIF                                          CPB001
+      *                                                                   CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVE '1'       *IN65                           CPB001
+     C                     ENDIF                                          CPB001
+      *                                                                   CPB001
+     C           *IN65     IFEQ '1'                                       CPB001
+     C                     DELETFXDEALP0                   **2
+     C**********           EXSR DELEXT                                               BUG3822 BUG3937
+     C**********           EXSR DELEXT                                              BUG9020 AR407323
+     C                     ENDIF                                          CPB001
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX0760CCP4                                           S01408
+     C*                                                                   S01408
+     C                     END                             E*2
+      *
+      ** if the deal is a matured option, delete the option, then
+      ** delete all the takedowns, if they exist.
+     C           FHDSTS    IFEQ 'M'                        B*2
+     C           FHDTYP    ANDEQ'O'                        **2
+     C********** FHVDDN    ANDLTBJRDNB                                               241302 AR970738
+     C           WVDAT     ANDLTBJRDNB                                                      AR970738
+     C                     DELETFXDEALP0                   **2
+     C**********           EXSR DELEXT                                               BUG3822 BUG3937
+     C**********           EXSR DELEXT                                              BUG9020 AR407323
+     C/COPY WNCPYSRC,FX0760C001
+      *
+      ** loop until all the takedowns have been deleted
+     C                     MOVE FHDN38    @DLNO   6        **2
+     C           *IN60     DOUEQ'1'                        B**3
+     C           @DLNO     CHAINFXTDOPLL             60    ***3
+     C           *IN60     IFEQ '0'                        B***4
+     C                     DELETFXTDOPL0                   ****4
+     C**********           EXSR DELEXT                                               BUG3822 BUG3937
+     C**********           EXSR DELEXT                                              BUG9020 AR407323
+     C/COPY WNCPYSRC,FX0760C002
+     C                     END                             E***4
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+     C           #B1       TAG                             #B1 TAG
+      *
+      ** read the next record on file
+     C                     READ FXDEALLL                 61*1
+      *
+     C                     END                             E1
+      *
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX0760CCP1                                           S01408
+     C*                                                                   S01408
+     C           #B9       ENDSR                           #B9 TAG
+      */EJECT***                                                                     BUG3822 BUG3937
+      *****************************************************************              BUG3822 BUG3937
+      **DELEXT*-*Delete*extension*record*******************************              BUG3822 BUG3937
+      *****************************************************************              BUG3822 BUG3937
+     C********** DELEXT    BEGSR                                                     BUG3822 BUG3937
+     C**********           MOVELFHDN38    F1DLNO                                     BUG3822 BUG3937
+     C********** F1DLNO    CHAINDLDLDBD0             99    *                         BUG3822 BUG3937
+     C**N99*****           DELETDLDLDBD0                   *                         BUG3822 BUG3937
+     C**********           ENDSR                                                     BUG3822 BUG3937
+      *****************************************************************              BUG3822 BUG3937
+      */EJECT***                                                                    BUG9020 AR407323
+      *****************************************************************             BUG9020 AR407323
+      ***DELEXT*-*Delete*extension*record*if*deal*is*not*in*DEALSDB****             BUG9020 AR407323
+      *****************************************************************             BUG9020 AR407323
+     C********** DELEXT    BEGSR                                                    BUG9020 AR407323
+      *****************************************************************             BUG9020 AR407323
+     C**********           MOVELFHDN38    FNDLNO  60                                BUG9020 AR407323
+     C********** FNDLNO    CHAINDEALSDBF             99                             BUG9020 AR407323
+     C********** *IN99     IFEQ *OFF                                                BUG9020 AR407323
+     C**********           MOVELFHDN38    F1DLNO                                    BUG9020 AR407323
+     C********** FHDSTS    IFEQ 'C'                                                AR970738 AR407323
+     C********** FHDDLT    ANDEQ'D'                                                AR970738 AR407323
+     C********** F1DLNO    CHAINDLDLDBD0             99                             BUG9020 AR407323
+     C********** *IN99     IFEQ *OFF                                                BUG9020 AR407323
+     C**********           DELETDLDLDBD0                                            BUG9020 AR407323
+     C**********           ENDIF                                                    BUG9020 AR407323
+     C**********           ENDIF                                                    BUG9020 AR407323
+     C**********           ENDIF                                                    BUG9020 AR407323
+     C**********           ENDSR                                                    BUG9020 AR407323
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #A       - initialize                                         *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #A        BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80                       S01194
+      ** open the files
+     C                     OPEN FXDEALLL
+     C                     OPEN FXTDOPLL
+     C**********           OPEN DLDEALL5                                             BUG3822 BUG3937
+     C**********           OPEN DLDEALL5                                            BUG9020 AR407323
+     C/COPY WNCPYSRC,FX0760C003
+      *
+      ** get the first record from FXDEALLL
+     C                     READ FXDEALLL                 61
+      *
+     C           *IN61     IFEQ '1'                        B1             S01136
+     C                     MOVE 'Y'       @NOREC  1        *1             S01136
+     C                     END                             E1             S01136
+      *                                                                   CPB001
+     C** Call Access program for Midas Modules Details                    CPB001
+     C                     CALL 'AOMMODR0'                                CPB001
+     C                     PARM '*MSG    '@RTCD   7                       CPB001
+     C                     PARM '*FIRST  '@OPTN   7                       CPB001
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CPB001
+     C*                                                                   CPB001
+     C           @RTCD     IFEQ *BLANKS                                   CPB001
+     C********** BGN4ST    ANDEQ'Y'                                                  CPB001 BUG11241
+     C                     OPEN DEALS                                     CPB001
+     C                     ENDIF                                          CPB001
+      *                                                                                       241302
+      ** Access SDBANKPD.                                                                     241302
+      *                                                                                       241302
+     C                     CALL 'AOBANKR0'                                                    241302
+     C                     PARM *BLANKS   @RTCD                                               241302
+     C                     PARM '*FIRST ' @OPTN                                               241302
+     C           SDBANK    PARM SDBANK    DSFDY                                               241302
+     C           @RTCD     IFNE *BLANKS                                                       241302
+     C                     MOVE '1'       *IN99                                               241302
+     C                     MOVEL'SDBANKPD'DBFILE           ************                       241302
+     C                     MOVEL'01'      DBASE            * DBERR 01 *                       241302
+     C                     MOVEL@OPTN     DBOPTN  7        ************                       241302
+     C                     SETON                     U7LR                                     241302
+     C                     EXSR *PSSR                                                         241302
+     C                     END                                                                241302
+      *
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX0760CEIP                                           S01408
+     C*                                                                   S01408
+     C           #A9       ENDSR                           #A9 TAG
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #C       - terminate                                          *
+      *                                                               *
+      **CALLS****QCAEXEC**-*execute*CL*command                        *   E20774
+      * CALLS    QCMDEXC  - execute CL command                        *   E20774
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      **FLDS*USED**@P*****-*array*containing*the*command*for*QCAEXEC  *   E20774
+      * FLDS USED  @P     - array containing the command for QCMDEXC  *   E20774
+      *************@P1****-*parameter*for*QCAEXEC*containing*command  *   E20774
+      *            @P1    - parameter for QCMDEXC containing command  *   E20774
+      *************@P2****-*parameter*for*QCAEXEC*with*len*of*command *   E20774
+      *            @P2    - parameter for QCMDEXC with len of command *   E20774
+      *                                                               *
+      *****************************************************************
+     C           #C        BEGSR
+      *
+      ** close the files
+     C                     CLOSEFXDEALLL
+     C                     CLOSEFXTDOPLL
+      *                                                                   CPB001
+     C********** BGN4ST    IFEQ 'Y'                                                  CPB001 BUG11241
+     C                     CLOSEDEALS                                     CPB001
+     C**********           ENDIF                                                     CPB001 BUG11241
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX0760CEPP                                           S01408
+     C*                                                                   S01408
+      *
+      ** reorganize the physical file member of FXDEALPP
+     C***********@NOREC    IFEQ 'Y'                        B1       E13292S01136
+     C           @NOREC    IFNE 'Y'                        B1             E13292
+     C*********************CALL 'QCAEXEC'                  *1             E20774
+     C**********           CALL 'QCMDEXC'                  *1                          E20774 228542
+     C**********           PARM @P,1      @P1    21        *1                                 228542
+     C**********           PARM 21        @P2    155       *1                                 228542
+     C                     MOVEL'SCC00'   PGM    10                                           228542
+     C                     MOVE '0060 '   PGM                                                 228542
+     C                     MOVEL'FXDEALPP'RGZFIL 10                                           228542
+     C                     MOVEL'*FIRST'  RGZMBR 10                                           228542
+     C                     CALL PGM                                                           228542
+     C                     PARM           RGZFIL                                              228542
+     C                     PARM           RGZMBR                                              228542
+     C                     END                             E1             S01136
+     C/COPY WNCPYSRC,FX0760C004
+      *
+      ** set on last record indicator to terminate program
+     C                     MOVE '1'       *INLR
+      *
+     C           #C9       ENDSR                           #C9 TAG
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR    - error processing                                   *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+      *
+     C           #PSSR9    ENDSR                           #PSSR9 TAG
+      *****************************************************************
+      /EJECT
+     X/COPY WNCPYSRC,FX0760X001
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

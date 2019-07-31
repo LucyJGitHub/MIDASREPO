@@ -1,0 +1,1306 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Close of business monitor menu')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                         *
+      *                                                               *
+      *  CB0015A - CoB menu for S01420                                *
+      *                                                               *
+      *  Function:  This program is in charge to display and          *
+      *             allow selection of the CoB menu items             *
+      *                                                               *
+      *  Called By: CBC0015A                                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CCB020B            Date 06Aug12               *
+      *                 AR1015594          Date 20Nov12               *
+      *                 CCB020             Date 06Aug12               *
+      *                 CSC054             Date 23Feb12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BG12664            Date 11Oct06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSF002             Date 11Sep03               *
+      *                 CAAA02             Date 16Jul03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 08May02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 08Nov01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 110180             Date 24SEP97               *
+      *                 102795             Date 16JAN97               *
+      *                 101392             DATE 23MAY96               *
+      *                 094273             DATE 31Oct95               *
+      *                 S01420             Date 12APR95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CCB020B - COB Restructure - Secondary COB Infrastructure     *
+      *  AR1015594 - Disable option 2 in COB menu when PEA option 5   *
+      *              is already available                             *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CSC054 - Period End Adjustments                              *
+      *  BG12664 - Call AOMENUR0 to remove lock on the SFMENU*        *
+      *            files as the database restore was failing on       *
+      *            reopen.                                            *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSF002 - Global Processing                                   *
+      *  CAAA02 - Remove use of INVITE keyword to enable WebFacing    *
+      *           to process screens. Recompile only.                 *
+      *  CPK015 - Release 4.01 packaging:                             *
+      *           - The HOME key processing bypasses the R4 security  *
+      *             and must be removed. This change should NOT be    *
+      *             reintroduced.                                     *
+      *  CPK014 - Release 4 packaging:                                *
+      *           - Remove journalling option from screen.            *
+      *  110180 - The program displayed error message when            *
+      *           option 8 for "Close of Business enquiry screen"     *
+      *           was taken by a user other than the main user        *
+      *           who is running the CoB.                             *
+      *           Also amended the program for option 6"Enter Rundate"*
+      *           which is not on the screen but program allowed the  *
+      *           user to take this option.                           *
+      *  102795 - Re-write SELECTION FORMAT (CB0015F1) when ENTER key *
+      *           was pressed instead of F6 or F12.                   *
+      *  101392 - MPHAS is locked when restart causing SAVLIB fails   *
+      *  094273 - Add option to rejournal failed journalled files     *
+      *  S01420 - CoB Enhancements                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FCB015ADFCF  E                    WORKSTN
+     F                                              KNUM        1
+     FCBCOMSL0IF  E           K        DISK         KINFSR *PSSR      UC
+      *
+     FCBUSERL0IF  E           K        DISK         KINFSR *PSSR      UC
+      *
+      /SPACE 2
+      *****************************************************************
+      *                                                               *
+      *     C  L   FUNCTION OF INDICATORS                             *
+      *                                                               *
+      *    01      DISPLAY MENU CONTROLLING INDICATOR                 *
+      *    06      COMMAND KEY 6 FOR REOPEN INPUT CYCLE OPTION        *
+      *    12      COMMAND KEY 12 FOR REOPEN INPUT CYCLE OPTION       *
+      *    31      DISPLAY MENU OPTION 1                              *
+      *    32      DISPLAY MENU OPTION 3                              *
+      *    33      DISPLAY MENU OPTION 2                              *
+      *    34      DISPLAY MENU OPTION 8                              *
+      *    35      DISPLAY MENU OPTION 10                             *
+      *    36      DISPLAY MENU OPTION 4                              *
+      *    37      DISPLAY MENU OPTION 9                              *
+      *****38****  DISPLAY MENU OPTION 13                             *   094273
+      *    38      DISPLAY MENU OPTION 98                             *   094273
+      *    39      DISPLAY MENU OPTION 13                             *   094273
+      *****46******DISPLAY*MENU*OPTION*5*******************************                       CSF002
+      *    46      DISPLAY MENU OPTION 5 PEA Menu                     *                       CSC054
+      *    47      DISPLAY MENU OPTION 6                              *
+      *    48      DISPLAY MENU OPTION 7                              *
+      *    51      ALLOW OPTIONAL FEATURES                            *
+      *    52      DISPLAY MENU OPTION 11                             *
+      *    52      DISPLAY MENU OPTION 12                             *
+      *    50      FAIL ON READ OF CB015ADF                           *
+      *    60      INVALID OPTION ENTERED                             *
+      *    65      ALLOW USE OF F6/F12 TO REOPEN INPUT CYCLE          *
+      *    70      PROTECT SCREEN IF CONFIRM/CANCEL DISPLAYED         *
+      *    77      FAILED CHAIN ON LF/CBCOMSL0                        *
+      *    78      ERROR ON LOCK OF DATAAREA MPHAS                    *
+      *    79      ERROR ON LOCK OF DATAAREA CBSTAT                   *
+      *                                                               *
+      *        LR  LAST RECORD INDICATOR                              *
+      *                                                               *
+      *    U1      SCREEN TIMED OUT                                   *
+      *    U7&U8   DATABASE ERROR                                     *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+      *
+     E                    CPY@    1   1 80
+      ** COPYRIGHT ARRAY
+      *
+     E                    SCRMSG  1   5 78
+      ** SCREEN MESSAGE ARRAY
+      *
+     E                    OPTERR  1   1 78
+      ** OPTION ENDED IN ERROR MESSAGE ARRAY
+      *
+     E                    QCMD1   1   1 80
+     E                    QCMD2   1   1 13
+      ** QCMDEXC COMMAND
+      *
+      *****************************************************************
+     E/EJECT
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      ** LOCAL DATA AREA
+      *
+     ICBSTAT      DS                             50
+     I                                       14  160CBFAIL
+     I                                       18  190NOAS
+     I                                       20  20 HALTST
+     I                                       21  250SCHEDT
+     I                                       26  310SCHETI
+     I                                       32  32 REOPFL
+     I                                       45  45 COBSTS
+      ** CBSTAT DATA AREA
+      *
+     IMPHAS       DS                              1
+     I                                        1   1 PHASE
+      ** MPHAS  DATA AREA
+      *
+     IERARR       DS
+     I                                        1  78 OPTERR
+     I                                        8   8 OPTION
+      ** SET UP ERROR OPTION NUMBER FOR ARRAY OPTERR
+      *
+     I#SCJRN      DS                              9                       094273
+     I                                        1   5 #SCJR1                094273
+     I                                        6   9 #SCJR2                094273
+     I** Dataarea for calling SCJRNFAIL                                   094273
+     I*                                                                   094293
+     IQCMD        DS
+     I                                        1  80 QCMD1
+     I                                       81  93 QCMD2
+      ** DATA STRUCTURE TO SET UP QCMDEXC COMMAND
+      *
+     ISCTIM       DS
+     I                                        1   60SCTIME
+     I                                        1   20SCHRS
+     I                                        3   40SCMIN
+     I                                        5   60SCSEC
+      ** DATA STRUCTURE TO SPLIT SYSTEM TIME INTO HRS, MINS & SECS
+      *
+     IDPTIME      DS
+     I                                        1   2 DPHRS
+     I                                        1   1 DPHRSA
+     I                                        3   3 COLON1
+     I                                        4   5 DPMIN
+     I                                        6   6 COLON2
+     I                                        7   8 DPSEC
+      ** DATA STRUCTURE TO CONVERT SYSTEM TIME FOR DISPLAY (HH:MM:SS)
+      *
+     IRUNDAT      DS                             13
+     I                                        1   7 AGMRDT
+      ** DATA STRUCTURE TO GET DATE FROM RUNDAT DATA AREA
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      ** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+      *
+     IPSDS       SDS
+     I                                     *STATUS  PGMSTS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I                                      264 2690JNBR
+      ** DATA STRUCTURE FOR WORKSTATION ID FOR SCREEN OUTPUT
+      *
+     I              'PEAIndicator'        C         PEAIND                                    CSC054
+      *                                                                                       CSC054
+      ** Constant value for PEA Indicator                                                     CSC054
+      *                                                                                       CSC054
+     I              'BankPhaseStrReopen'  C         BPSRO                                    CCB020B
+     I              'SCC001060'           C         BPPROG                                   CCB020B
+      *                                                                                      CCB020B
+     ISDCOBP    E DSSDCOBPPD
+      ** EXTERNAL DATA STRUCTURE FOR ACCESS OBJECT SDCOBPPD FORMAT
+      *
+      **SDBANK    E DSSDBANKPD
+      *
+     IDSSDY     E DSDSSDY                                                                    BG12664
+     IDSFDY     E DSDSFDY
+      ** FIRST DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CSC054
+      ** External data structure for SAR file details                                         CSC054
+      *                                                                                       CSC054
+     I/COPY WNCPYSRC,CB0015AI01
+      *****************************************************************
+     I/EJECT
+      *
+      ** PARAMETER LIST TO DETERMINE WHETHER CALLED
+      ** FROM MAIN MONITOR OR SECONDARY SCREEN
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           FROM    1
+     C                     PARM           WWJOB  10
+     C                     PARM           WWUSER 10
+     C                     PARM           WWNBR   6
+     C                     PARM           WWIN51  1
+     C                     PARM           WWIN52  1
+      *
+     C           WWKEY     KLIST
+     C                     KFLD           WWCOMP 10
+     C                     KFLD           WWCSEQ  5
+      *
+      ** KLIST TO ACCESS USER FILE
+      *
+     C           WWKEY2    KLIST
+     C                     KFLD           WWJOB
+     C                     KFLD           WWUSER
+     C                     KFLD           WWNBR
+      *
+     C                     MOVEA'00'      *IN,51
+     C                     MOVE '0'       *IN55
+     C                     MOVEL'VERIFY'  WWVRFY  6
+     C                     CALL 'CBC0515'
+     C                     PARM           WWUSER
+     C                     PARM           WWJOB
+     C                     PARM           WWNBR
+     C                     PARM           WWDTAQ
+     C                     PARM           WWVRFY
+     C                     PARM           WWERRO  1
+      *
+     C           WWERRO    IFEQ 'Y'
+     C                     MOVE '1'       *IN55
+     C                     END
+      *
+     C           WWIN51    IFEQ 'Y'
+     C                     MOVE '1'       *IN51
+     C           WWIN52    IFEQ 'Y'
+     C                     MOVE '1'       *IN52
+     C                     END
+     C                     END
+      *
+      ** RETRIEVE DATA QUEUE OF JOB
+      *
+     C                     MOVEL'DTQ'     WWDTA9  9
+     C                     MOVE JNBR      WWDTA9
+     C                     MOVELWWDTA9    WWDTAQ 10
+      *
+      ** DEFINE DATA AREA LDA AND LOCK TO SET
+      ** UP PROGRAM NAME FOR DATABASE ERRORS
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CB0015  'DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     OUT  LDA
+      *
+      **  GET RUN DATE FROM DATA AREA RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    RUNA
+     C                     UNLCKRUNDAT
+      *
+      ** CALL ACCESS OBJECT AOCOBPR0 TO ACCESS COB ICD FILE
+      *
+     C                     CALL 'AOCOBPR0'
+     C                     PARM '*MSG   ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDCOBP    PARM SDCOBP    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AOCOB'   DBFILE
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+      *                                                                                       CSC054
+      ** Check if CSC054 Period End Adjustments is Switched On                                CSC054
+      *                                                                                       CSC054
+     C                     CALL 'AOSARDR0'                                                    CSC054
+     C                     PARM *BLANKS   P@RTCD                                              CSC054
+     C                     PARM '*VERIFY' P@OPTN                                              CSC054
+     C                     PARM 'CSC054'  PSARD   6                                           CSC054
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC054
+      *                                                                                       CSC054
+     C                     MOVE 'N'       CSC054  1                                           CSC054
+     C           P@RTCD    IFNE *BLANKS                                                       CSC054
+     C           P@RTCD    ANDNE'*NRF  '                                                      CSC054
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSC054
+     C                     MOVE *BLANKS   DBKEY            ***************                    CSC054
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *                    CSC054
+     C                     EXSR DBERR                      ***************                    CSC054
+     C                     ELSE                                                               CSC054
+     C           P@RTCD    IFEQ *BLANKS                                                       CSC054
+     C                     MOVE 'Y'       CSC054                                              CSC054
+      *                                                                                       CSC054
+      ** Check PEA Indicator                                                                  CSC054
+      *                                                                                       CSC054
+     C                     MOVE ' '       WPEA    1                                           CSC054
+     C                     CALL 'AOSVALR0'                                                    CSC054
+     C                     PARM           P@RTCD                                              CSC054
+     C                     PARM PEAIND    SVALK1 20                                           CSC054
+     C                     PARM           SVAL1 200                                           CSC054
+     C                     PARM           SVALK2 20                                           CSC054
+     C                     PARM           SVAL2 200                                           CSC054
+     C                     PARM           SVALK3 20                                           CSC054
+     C                     PARM           SVAL3 200                                           CSC054
+     C                     PARM           SVALK4 20                                           CSC054
+     C                     PARM           SVAL4 200                                           CSC054
+     C                     PARM           SVALK5 20                                           CSC054
+     C                     PARM           SVAL5 200                                           CSC054
+     C                     PARM           SVALK6 20                                           CSC054
+     C                     PARM           SVAL6 200                                           CSC054
+     C                     PARM           SVALK7 20                                           CSC054
+     C                     PARM           SVAL7 200                                           CSC054
+     C                     PARM           SVALK8 20                                           CSC054
+     C                     PARM           SVAL8 200                                           CSC054
+     C                     PARM           SVALK9 20                                           CSC054
+     C                     PARM           SVAL9 200                                           CSC054
+     C                     PARM           SVALK0 20                                           CSC054
+     C                     PARM           SVAL10200                                           CSC054
+      *                                                                                       CSC054
+     C                     MOVE '0'       *IN46                                               CSC054
+     C           P@RTCD    IFEQ *BLANKS                                                       CSC054
+     C                     MOVELSVAL1     WPEA                                                CSC054
+     C           WPEA      IFEQ 'Y'                                                           CSC054
+     C                     MOVE '1'       *IN46                                               CSC054
+     C                     ENDIF                                                              CSC054
+     C                     ENDIF                                                              CSC054
+     C                     ENDIF                                                              CSC054
+     C                     ENDIF                                                              CSC054
+      *
+      ** DO WHILE INDICATOR 01 IS OFF
+      ** AND SCREEN NOT TIMED OUT
+      *
+     C           *IN01     DOWEQ'0'
+     C           *INU1     ANDNE'1'
+      *
+      ** SET ON INDICATORS TO DISPLAY OPTIONS 1,7,8 AND 9
+      *
+     C                     SETON                     313437
+     C                     SETON                     48
+      *
+      ** DEFINE AND LOCK DATA AREA CBSTAT
+      *
+     C           *NAMVAR   DEFN           CBSTAT
+     C           *LOCK     IN   CBSTAT                 79
+      *
+      ** DEFINE AND LOCK DATA AREA MPHAS
+      *
+     C           *NAMVAR   DEFN           MPHAS
+     C                     IN   MPHAS                  78
+      *
+      ** IF ERROR OCCURS ON LOCK OF DATA AREA CBSTAT OR MPHAS
+      ** (IE IT IS BEING LOCKED BY ANOTHER PROGRAM)
+      ** EXIT PROGRAM USING PROGRAM STATUS SUBROUTINE
+      *
+      ** IF COMPONENT SCC0411 HAS NOT RUN, SET ON INDICATOR 47
+      ** TO ALLOW OPTION 6 (ENTRY OF RUNDATE)
+      *
+     C                     MOVE *BLANKS   WWCOMP                          094273
+     C                     MOVEL'SCC0411' WWCOMP
+     C                     MOVEL'00001'   WWCSEQ
+      *
+      ** Open file LF/CBCOMSL0
+      *
+     C                     OPEN CBCOMSL0
+      *
+     C           WWKEY     CHAINCBCOMSL0             77
+      *
+     C           *IN77     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CBCOMSL0'DBFILE
+     C                     MOVELWWCOMP    DBKEY            ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+      *
+     C           DHCSTS    IFEQ *BLANKS
+     C                     SETON                     47
+     C                     END
+      ** Check if SCC000121 00001 was already called                                          CSC054
+     C           CSC054    IFEQ 'Y'                                                           CSC054
+     C                     MOVE *BLANKS   WWCOMP                                              CSC054
+     C                     MOVEL'SCC0001' WWCOMP                                              CSC054
+     C                     MOVE '21 '     WWCOMP                                              CSC054
+     C                     MOVEL'00001'   WWCSEQ                                              CSC054
+     C           WWKEY     CHAINCBCOMSL0             77                                       CSC054
+     C           *IN77     IFEQ '1'                                                           CSC054
+     C                     MOVE '0'       *IN46                                               CSC054
+     C                     ELSE                                                               CSC054
+     C           DHCODP    IFNE *ZERO                                                         CSC054
+     C                     MOVE '0'       *IN46                                               CSC054
+     C                     ENDIF                                                              CSC054
+     C                     ENDIF                                                              CSC054
+     C                     ENDIF                                                              CSC054
+      ****************************************************************                        CSF002
+      ***IF*MPHAS*EQUALS*'F'*AND*COMPONENT*SCC0411*HAS*NOT*RUN,*SET***                        CSF002
+      ***ON*INDICATOR*46*TO*ALLOW*OPTION*5*(COB*ON*REQUESTS*REPORT****                        CSF002
+      ****************************************************************                        CSF002
+     C********** PHASE     IFEQ 'F'                                                           CSF002
+      ****************************************************************                        CSF002
+     C**********           MOVE *BLANKS   WWCOMP                                       094273 CSF002
+     C**********           MOVEL'SCC0411' WWCOMP                                              CSF002
+     C**********           MOVEL'00001'   WWCSEQ                                              CSF002
+      ****************************************************************                        CSF002
+     C********** WWKEY     CHAINCBCOMSL0             77                                       CSF002
+      ****************************************************************                        CSF002
+     C********** *IN77     IFEQ '1'                                                           CSF002
+     C********** *LOCK     IN   LDA                                                           CSF002
+     C**********           MOVEL'CBCOMSL0'DBFILE                                              CSF002
+     C**********           MOVELWWCOMP    DBKEY            ***************                    CSF002
+     C**********           Z-ADD3         DBASE            * DB ERROR 03 *                    CSF002
+     C**********           EXSR DBERR                      ***************                    CSF002
+     C**********           END                                                                CSF002
+      ****************************************************************                        CSF002
+     C********** DHCSTS    IFEQ *BLANKS                                                       CSF002
+     C**********           SETON                     46                                       CSF002
+     C**********           END                                                                CSF002
+     C**********           END                                                                CSF002
+     C*                                                                   094273
+     C***Read*CBCOMSL0*to*see*if*SCJRNFIN*has*failed**********************             094273 CPK014
+     C**********                                                                       094273 CPK014
+     C**********           MOVE *BLANKS   WWCOMP                                       094273 CPK014
+     C**********           MOVEL'SCJRNFIN'WWCOMP                                       094273 CPK014
+     C**********           MOVEL'00001'   WWCSEQ                                       094273 CPK014
+     C**********                                                                       094273 CPK014
+     C********** WWKEY     CHAINCBCOMSL0             77                                094273 CPK014
+     C**********                                                                       094273 CPK014
+     C********** *IN77     IFEQ '1'                                                    094273 CPK014
+     C********** *LOCK     IN   LDA                                                    094273 CPK014
+     C**********           MOVEL'CBCOMSL0'DBFILE                                       094273 CPK014
+     C**********           MOVELWWCOMP    DBKEY            ***************             094273 CPK014
+     C**********           Z-ADD4         DBASE            **DB*ERROR*04**             094273 CPK014
+     C**********           EXSR DBERR                      ***************             094273 CPK014
+     C**********           END                                                         094273 CPK014
+     C**********                                                                       094273 CPK014
+     C********** DHCSTS    IFEQ 'A'                                                    094273 CPK014
+     C**********           SETON                     39                                094273 CPK014
+     C**********           END                                                         094273 CPK014
+      *
+      ** Close file LF/CBCOMSL0
+      *
+     C                     CLOSECBCOMSL0
+      *
+      ** IF REOPEN FAIL INDICATOR (POS 32) IS ON SET
+      ** OFF INDICATORS DISPLAYING OPTIONS 1,8 AND 9
+      *
+     C           REOPFL    IFEQ 'Y'
+     C                     SETOF                     313437
+      *
+     C                     ELSE
+      *
+      ** IF CLOSE OF BUSINESS RUN HAS HALTED (CBSTAT POS
+      ** 20 = Y) SET INDICATOR TO DISPLAY OPTION 2
+      *
+     C           HALTST    IFEQ 'Y'
+     C                     SETON                     33
+     C                     END
+      *
+      ** Disable Option 2 when PEA Option 5 is available                                   AR1015594
+      *                                                                                    AR1015594
+     C           CSC054    IFEQ 'Y'                                                        AR1015594
+     C           WPEA      ANDEQ'Y'                                                        AR1015594
+     C           *IN46     ANDEQ'1'                                                        AR1015594
+     C                     SETOF                     33                                    AR1015594
+     C                     END                                                             AR1015594
+      *                                                                                    AR1015594
+     C                     END
+      *
+      ** IF COMPONENTS HAVE FAILED (CBSTAT POS 14-16 NOT ZERO)
+      ** AND ATTEMPT TO REOPEN INPUT CYCLE HAS NOT FAILED
+      ** SET INDICATOR TO DISPLAY OPTION 3
+      *
+     C           CBFAIL    IFGT 0
+     C           REOPFL    ANDNE'Y'
+     C                     SETON                     32
+     C                     END
+      *
+      ** IF COMMAND ENTRY FLAG (FROM SDCOBPL0) = Y AND
+      ** ERROR COUNT (CBSTAT POS 14-16) IS GREATER THAN 0
+      *
+     C           DOAQCM    IFEQ 'Y'
+     C           CBFAIL    ANDGT0
+     C                     SETON                     35
+     C                     END
+      *
+     C                     CALL 'CBTIME'
+     C                     PARM           DAYNOA  5
+     C                     PARM           STIME   6
+     C                     PARM           DFMT    1
+      *
+      ** MOVE DAY NO FROM CBTIME TO DATE WORK FIELD (DWF)
+      ** AND TIME (HHMM) TO TIME WORK FIELD (TWF)
+      ** HAVING SUBTRACTED 1 MINUTE
+      *
+     C                     MOVE DAYNOA    DWF     50
+     C                     MOVE STIME     SCTIME  60
+     C           SCTIME    SUB  100       TWF     60
+      *
+      ** IF    CLOSE OF BUSINESS RUN HAS HALTED (POS 20 = Y)
+      ** OR    LAST SCHEDULED DATE CBSTAT POS 21-25 IS NOT ZERO AND
+      **       IS LESS THAN THE SYSTEM DATE AND THE NUMBER OF
+      **       ACTIVE STREAMS = 0
+      ** OR    LAST SCHEDULED DATE CBSTAT POS 21-25 IS NOT ZERO AND
+      **       IS EQUAL TO THE SYSTEM DATE AND THE LAST SCHEDULED
+      **       TIME CBSTAT POS 26-31 IS LESS THAN THE SYSTEM TIME
+      **       MINUS 1 MINUTE AND NO OF ACTIVE STREAMS = 0
+      *
+     C           HALTST    IFEQ 'Y'
+     C           SCHEDT    ORLT DWF
+     C           SCHEDT    ANDNE0
+     C           NOAS      ANDEQ0
+     C           SCHEDT    OREQ DWF
+     C           SCHETI    ANDLTTWF
+     C           SCHEDT    ANDNE0
+     C           NOAS      ANDEQ0
+      *
+      ** SET ON INDICATOR TO DISPLAY OPTIONS 4 & 11
+      *
+     C                     SETON                     38
+      *
+      ** IF MPHAS EQUALS 'C'  OR 'D', SET ON IDICATOR 36 TO ALLOW
+      ** OPTION 4 (REOPEN INPUT CYCLE)
+      *
+     C           PHASE     IFEQ 'C'
+     C********** PHASE     OREQ 'D'                                                           CCB020
+     C********** PHASE     OREQ 'B'                                                           CCB020
+     C                     SETON                     36
+     C                     END
+      *
+      ** SET UP SWITCH WORK FIELD DEPENDING ON WHETHER CLOSE
+      ** OF BUSINESS RUN HAS HALTED (CBSTAT POS 20 = Y)
+      *
+     C           HALTST    IFEQ 'Y'
+      *
+     C                     MOVE 'H'       SWWF    1
+     C                     ELSE
+      *
+     C                     MOVE 'R'       SWWF
+     C                     END
+      *
+     C                     END
+      *
+      ** UNLOCK DATA AREA CBSTAT
+      *
+     C                     OUT  CBSTAT
+      *
+      ** IF PROGRAM CALLED FROM SECONDARY SCREEN
+      ** SET INDICATORS TO DISPLAY OPTION 11
+      ** AND NON DISPLAY OPTIONS 4 & 9
+      *
+     C           FROM      IFEQ 'B'
+     C                     SETON                     38
+     C                     SETOF                     3637
+      *
+     C                     END
+      *
+      ** IF PROGRAM CALLED AS RESTART DISPLAY SCREEN
+      ** SET INDICATORS TO DISPLAY OPTIONS 4 & 11
+      ** AND NON DISPLAY OPTION 9 WHILST THERE ARE
+      ** FAILED COMPONENTS WHICH REQUIRE RESTARTING
+      *
+     C           FROM      IFEQ 'R'
+     C           *IN32     ANDEQ'1'
+     C                     SETON                     3638
+     C                     SETOF                     37
+      *
+      ** ELSE
+      ** IF PROGRAM CALLED AS RESTART DISPLAY SCREEN
+      ** AND THERE ARE NO FAILED COMPONENTS TO RESTART
+      ** SET INDICATORS TO NON DISPLAY OPTIONS 4 & 11
+      ** AND DISPLAY OPTION 9
+      ** OPTIONS 4 & 11 NOT DISPLAYED IF REOPEN I/C  FAILED
+      *
+     C                     ELSE
+     C           FROM      IFEQ 'R'
+     C           *IN32     ANDEQ'0'
+     C           REOPFL    ANDNE'Y'
+      *
+     C                     SETOF                     3638
+      *
+      ** IF RESTART AFTER HALT OPTION DISPLAYED
+      ** ENSURE RETURN TO MONITOR OPTION (9) IS NOT DISPLAYED
+      *
+     C           *IN33     IFEQ '0'
+     C                     SETON                     37
+     C                     ELSE
+     C                     SETOF                     37
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      ** SET UP CURRENT TIME FOR DISPLAY ON SCREEN
+      *
+     C                     MOVE ':'       COLON1
+     C                     MOVE ':'       COLON2
+     C                     MOVE SCHRS     DPHRS
+     C                     MOVE SCMIN     DPMIN
+     C                     MOVE SCSEC     DPSEC
+     C           DPHRSA    IFEQ '0'
+     C                     MOVE *BLANKS   DPHRSA
+     C                     END
+     C                     MOVE DPTIME    SCCURT
+      *
+      ** WRITE HEADER AND SELECTION FORMATS
+      *
+     C                     WRITECB0015F0
+     C                     WRITECB0015F1
+     C**********           READ CB015ADF               U150                                   CAAA02
+     C                     READ CB0015F1               U150                                   CAAA02
+      *
+     C********** *IN89     IFEQ '1'                                                           CPK015
+     C**********           MOVE '0'       *IN89                                               CPK015
+     C**********           MOVEL'CONTRL'  WWVRFY  6                                           CPK015
+     C**********           CALL 'CBC0515'                                                     CPK015
+     C**********           PARM           WWUSER                                              CPK015
+     C**********           PARM           WWJOB                                               CPK015
+     C**********           PARM           WWNBR                                               CPK015
+     C**********           PARM           WWDTAQ                                              CPK015
+     C**********           PARM           WWVRFY                                              CPK015
+     C**********           PARM           WWERRO  1                                           CPK015
+     C**********           END                                                                CPK015
+      *
+     C                     OPEN CBUSERL0
+     C           WWKEY2    CHAINCBUSERD0             80
+     C           *IN80     IFEQ '1'
+     C           USLOCK    OREQ 'L'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C                     CLOSECBUSERL0
+      *
+      ** IF SCREEN HAS NOT BEEN TIMED OUT
+      *
+     C           *INU1     IFNE '1'
+      *
+      ** SET OFF SCREEN ERROR INDICATOR
+      *
+     C                     SETOF                     60
+      *
+      ** LEFT JUSTIFY THE OPTION TAKEN (SELECT FIELD)
+      *
+     C                     MOVELSELECT    WSLCT   1
+     C                     MOVE SELECT    WSLCT2  1
+     C           WSLCT     IFEQ ' '
+     C                     MOVE *BLANKS   SELECT
+     C                     MOVELWSLCT2    SELECT
+     C                     MOVE *BLANKS   WSLCT2
+     C                     END
+      *
+      ** IF OPTION TAKEN IS INVALID THEN SET ON
+      ** ERROR INDICATOR AND WRITE ERROR MESSAGE
+      *
+     C           SELECT    IFEQ '1'
+     C           *IN31     ANDEQ'0'
+     C           SELECT    OREQ '1'
+     C           *IN55     ANDEQ'0'
+     C           SELECT    OREQ '2'
+     C           *IN33     ANDEQ'0'
+     C           SELECT    OREQ '2'
+     C           *IN55     ANDEQ'0'
+     C           SELECT    OREQ '3'
+     C           *IN32     ANDEQ'0'
+     C           SELECT    OREQ '3'
+     C           *IN55     ANDEQ'0'
+     C           SELECT    OREQ '4'
+     C           *IN36     ANDEQ'0'
+     C           SELECT    OREQ '4'
+     C           *IN55     ANDEQ'0'
+     C           SELECT    OREQ '5'
+     C           *IN55     ANDEQ'0'                                                           CSC054
+     C           SELECT    OREQ '5'                                                           CSC054
+     C           CSC054    ANDEQ'Y'                                                           CSC054
+     C           WPEA      ANDEQ'Y'                                                           CSC054
+     C           *IN46     ANDEQ'0'                                                           CSC054
+     C           SELECT    OREQ '5'                                                           CSC054
+     C           CSC054    ANDEQ'N'                                                           CSC054
+     C           SELECT    OREQ '5'                                                           CSC054
+     C           WPEA      ANDEQ'N'                                                           CSC054
+     C********** *IN46     ANDEQ'0'                                                           CSF002
+     C           SELECT    OREQ '6'
+     C           *IN47     ANDEQ'0'
+     C           SELECT    OREQ '6'                                       110180
+     C           *IN55     ANDEQ'0'                                       110180
+     C           SELECT    OREQ '7'
+     C           *IN48     ANDEQ'0'
+     C           SELECT    OREQ '7'
+     C           *IN55     ANDEQ'0'
+     C           SELECT    OREQ '8'
+     C           *IN34     ANDEQ'0'
+     C***********SELECT    OREQ '8'                                       110180
+     C************IN55     ANDEQ'0'                                       110180
+     C           SELECT    OREQ '9'
+     C           *IN37     ANDEQ'0'
+     C           SELECT    OREQ '10'
+     C           *IN35     ANDEQ'0'
+     C           SELECT    OREQ '10'
+     C           *IN55     ANDEQ'0'
+     C           SELECT    OREQ '11'
+     C           *IN51     ANDEQ'0'
+     C           SELECT    OREQ '11'
+     C           *IN55     ANDEQ'0'
+     C           SELECT    OREQ '11'
+     C           *IN52     ANDEQ'0'
+     C           SELECT    OREQ '12'
+     C           *IN51     ANDEQ'0'
+     C           SELECT    OREQ '12'
+     C           *IN55     ANDEQ'0'
+     C           SELECT    OREQ '12'
+     C           *IN52     ANDEQ'0'
+     C           SELECT    OREQ '13'                                      094273
+     C           *IN39     ANDEQ'0'                                       094273
+     C********** SELECT    OREQ '13'                                      094273
+     C********** *IN51     ANDEQ'0'                                       094273
+     C           SELECT    OREQ '98'                                      094273
+     C           *IN51     ANDEQ'0'                                       094273
+     C           SELECT    OREQ '99'
+     C           *IN38     ANDEQ'0'
+     C           SELECT    OREQ '99'
+     C           *IN55     ANDEQ'0'
+     C           SELECT    ORLT '1'
+     C           SELECT    ORGT '13'
+     C********** SELECT    ANDLT'99'                                      094273
+     C           SELECT    ANDLT'98'                                      094273
+     C           WSLCT2    ANDNE*BLANKS
+     C           SELECT    ORGT '99'
+     C           WSLCT2    ANDNE*BLANKS
+     C           WSLCT2    ORLT '0'
+     C           WSLCT2    ANDNE*BLANKS
+      *
+     C                     SETON                     60
+     C                     MOVE SELECT    OPTION
+     C                     MOVE SCRMSG,1  ERRMSG
+      *
+      ** ELSE CALL PROGRAM REQUESTED FROM MENU
+      *
+     C                     ELSE
+      *
+     C* RELEASE MPHAS                                                     101392
+     C                     OUT  MPHAS                  99                 101392
+     C*                                                                   101392
+      ** IF VALUE = 1 CALL HALT MENU PROGRAM CB0020
+      *
+     C           SELECT    IFEQ '1'
+     C                     CALL 'CBC0026'
+     C                     PARM 'CB0020'  PROG   10
+     C                     PARM           ERROR   1
+     C                     END
+      *
+      ** IF VALUE = 3 CALL RESTART FAILED COMPONENTS PROGRAM CB0065
+      *
+     C           SELECT    IFEQ '3'
+     C                     CALL 'CBC0026'
+     C                     PARM 'CB0065'  PROG   10
+     C                     PARM           ERROR   1
+     C                     END
+      *
+      ** IF VALUE = 2 CALL RESTART AFTER HALT PROGRAM CBC0070
+      *
+     C           SELECT    IFEQ '2'
+     C                     CALL 'CBC0026'
+     C                     PARM 'CBC0070' PROG   10
+     C                     PARM           ERROR
+     C                     END
+      *
+      ** IF VALUE = 8 CALL CLOSE OF BUSINESS ENQUIRY PROGRAM CBC0060
+      *
+     C           SELECT    IFEQ '8'
+     C                     CALL 'CBC0026'
+     C                     PARM 'CB0060'  PROG   10
+     C                     PARM           ERROR
+     C                     END
+      *
+      ** IF VALUE = 10 DISPLAY COMMAND ENTRY SCREEN
+      *
+     C           SELECT    IFEQ '10'
+     C                     CALL 'QCMD'
+     C                     END
+      *
+      ** IF VALUE = 4 REOPEN INPUT CYCLE
+      *
+     C           SELECT    IFEQ '4'
+      *
+      ** SET MESSAGE FIELD AND ALLOW
+      ** USE OF KEYS F6 AND F12
+      *
+     C                     MOVE SCRMSG,2  ERRMSG
+     C                     SETON                     606570
+      *
+      ** WRITE SELECTION FORMAT (CB0015F1) TO SCREEN
+      *
+     C                     WRITECB0015F1
+      *
+      ** DO WHILE COMMAND KEYS F6 AND F12
+      ** NOT PRESSED, SCREEN NOT TIMED OUT
+      *
+     C           *IN06     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+     C           *INU1     ANDEQ'0'
+      *
+      ** Re-write SELECTION FORMAT (CB0015F1) to screen if neither F6     102795
+      ** nor F12 was chosen                                               102795
+      *                                                                   102795
+     C                     WRITECB0015F1                                  102795
+      *                                                                   102795
+     C***********          READ CB015ADF               U150                                   CAAA02
+     C                     READ CB0015F1               U150                                   CAAA02
+      *
+     C                     END
+     C                     SETOF                     70
+      *
+      ** IF KEY F6 PRESSED AND SCREEN NOT TIMED OUT
+      *
+     C           *IN06     IFEQ '1'
+     C           *INU1     ANDEQ'0'
+      *
+      ** CALL CBC0028 TO SETUP MSGQ/MSPECIAL AND TO REOPEN INPUT CYCLE.
+      *
+      * Release the lock on the SFMENU* files so that the database can be restored.          BG12664
+      *                                                                                      BG12664
+     C                     MOVEL'*FREE'   AOOPTN  7                                          BG12664
+      *                                                                                      BG12664
+     C                     CALL 'AOMENUR0'                                                   BG12664
+     C                     PARM           RTNCDE  7                             Return code  BG12664
+     C                     PARM           AOOPTN                                AOOption     BG12664
+     C                     PARM           ID     10                             UniqueID     BG12664
+     C                     PARM           DSSDY                                 Format       BG12664
+      *                                                                                      BG12664
+      ** Check for BankPhaseStrReopen system value.                                          CCB020B
+      *                                                                                      CCB020B
+     C                     CALL 'AOSVALR0'                                                   CCB020B
+     C                     PARM *BLANKS   P@RTCD                                             CCB020B
+     C                     PARM BPSRO     SVALK1                                             CCB020B
+     C                     PARM           SVAL1                                              CCB020B
+     C                     PARM           SVALK2                                             CCB020B
+     C                     PARM           SVAL2                                              CCB020B
+     C                     PARM           SVALK3                                             CCB020B
+     C                     PARM           SVAL3                                              CCB020B
+     C                     PARM           SVALK4                                             CCB020B
+     C                     PARM           SVAL4                                              CCB020B
+     C                     PARM           SVALK5                                             CCB020B
+     C                     PARM           SVAL5                                              CCB020B
+     C                     PARM           SVALK6                                             CCB020B
+     C                     PARM           SVAL6                                              CCB020B
+     C                     PARM           SVALK7                                             CCB020B
+     C                     PARM           SVAL7                                              CCB020B
+     C                     PARM           SVALK8                                             CCB020B
+     C                     PARM           SVAL8                                              CCB020B
+     C                     PARM           SVALK9                                             CCB020B
+     C                     PARM           SVAL9                                              CCB020B
+     C                     PARM           SVALK0                                             CCB020B
+     C                     PARM           SVAL10                                             CCB020B
+      *                                                                                      CCB020B
+     C           P@RTCD    IFNE *BLANKS                                                      CCB020B
+     C           P@RTCD    ANDNE'*NRF'                                                       CCB020B
+     C           *LOCK     IN   LDA                                                          CCB020B
+     C                     MOVEL'SDSVALPD'DBFILE                                             CCB020B
+     C                     MOVE BPSRO     DBKEY                                              CCB020B
+     C                     Z-ADD3         DBASE                                              CCB020B
+     C                     EXSR DBERR                                                        CCB020B
+     C                     ENDIF                                                             CCB020B
+      *                                                                                      CCB020B
+      ** If system value is not blank,                                                       CCB020B
+      ** call SCC001060 to update BANKPHASE dtaara.                                          CCB020B
+      *                                                                                      CCB020B
+     C           SVAL1     IFNE *BLANKS                                                      CCB020B
+     C                     MOVELSVAL1     BPPARM 98                                          CCB020B
+     C                     CALL BPPROG                                                       CCB020B
+     C                     PARM           BPPARM                                             CCB020B
+      *                                                                                      CCB020B
+      ** Check for errors in SCC001060.                                                      CCB020B
+      *                                                                                      CCB020B
+     C           *INU7     IFEQ *ON                                                          CCB020B
+     C           *INU8     ANDEQ*ON                                                          CCB020B
+     C                     SETOF                     65                                      CCB020B
+     C                     MOVE SELECT    OPTION                                             CCB020B
+     C                     MOVE OPTERR,1  ERRMSG                                             CCB020B
+     C                     ENDIF                                                             CCB020B
+     C                     ENDIF                                                             CCB020B
+      *                                                                                      CCB020B
+     C                     CALL 'CBC0028'
+      *
+      ** IF SCMINIT FAILS TO REOPEN INPUT CYCLE
+      ** (IE CBSTAT POS 32 IS STILL = 'Y')
+      ** DEACTIVATE COMMAND KEYS F6 AND F12,
+      ** AND WRITE ERROR MESSAGE
+      *
+     C           *IN79     DOUEQ'0'
+     C           *LOCK     IN   CBSTAT                 79
+     C                     END
+     C           REOPFL    IFEQ 'Y'
+      *
+     C                     SETOF                     65
+     C                     MOVE SELECT    OPTION
+     C                     MOVE OPTERR,1  ERRMSG
+      *
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** ELSE IF COMMAND KEY 12 PRESSED TO CANCEL REQUEST
+      ** TO REOPEN INPUT CYCLE THEN CLEAR MESSAGE
+      *
+     C           *IN12     IFEQ '1'
+     C                     SETOF                     60
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** IF VALUE = 9 RETURN TO MAIN CLOSE OF BUSINESS MONITOR
+      *
+     C           SELECT    IFEQ '9'
+     C                     SETON                     01
+     C                     END
+      *                                                                                       CSF002
+      ** CBC0301 (CoB on-request reports) is redundant at Midas Plus.                         CSF002
+      *                                                                                       CSF002
+      ****************************************************************                        CSF002
+      ***IF*VALUE*=*5*CALL*PROGRAM*CBC0301*TO*DISPLAY*COB*REPORTS*MENU                        CSF002
+      ****************************************************************                        CSF002
+     C********** SELECT    IFEQ '5'                                                           CSF002
+      ****************************************************************                        CSF002
+      ***CHECK*TO*SEE*IF*USER*IS*AUTHORISED*TO*THE*SYSTEM*************                        CSF002
+      ****************************************************************                        CSF002
+     C**********           CALL 'SF0410'                                                      CSF002
+     C**********           PARM           @GROUP 50                                           CSF002
+     C**********           PARM           @USER  25                                           CSF002
+     C**********           PARM           @SLEVL  40                                          CSF002
+     C**********           PARM           @TIMEO  50                                          CSF002
+     C**********           PARM           @ERROR  10                                          CSF002
+     C**********           PARM           @MULT   2                                           CSF002
+      ****************************************************************                        CSF002
+      ***IF*USER*IS*DEFINED*TO*THE*SYSTEM*****************************                        CSF002
+      ****************************************************************                        CSF002
+     C********** @ERROR    IFNE 1                                                             CSF002
+     C**********           CALL 'CBC0301'                                                     CSF002
+     C**********           PARM           @USER                                               CSF002
+     C**********           PARM           @SLEVL                                              CSF002
+     C**********           PARM           @TIMEO                                              CSF002
+     C**********           END                                                                CSF002
+     C**********           END                                                                CSF002
+      *                                                                                       CSC054
+      ** IF VALUE = 5 CALL PEA MENU PROGRAM CB0700                                            CSC054
+      *                                                                                       CSC054
+     C           SELECT    IFEQ '5'                                                           CSC054
+     C           CSC054    ANDEQ'Y'                                                           CSC054
+     C           WPEA      ANDEQ'Y'                                                           CSC054
+     C           *IN46     ANDEQ'1'                                                           CSC054
+     C                     CALL 'CBC0026'                                                     CSC054
+     C                     PARM 'CB0700'  PROG                                                CSC054
+     C                     PARM           ERROR                                               CSC054
+     C                     ENDIF                                                              CSC054
+      *
+      ** IF VALUE = 6 CALL PROGRAM SD1020 TO ENTER RUNDATE
+      *
+     C           SELECT    IFEQ '6'
+     C/COPY WNCPYSRC,CB0015AC01
+     C                     CALL 'SD1020'
+     C/COPY WNCPYSRC,CB0015AC02
+     C                     END
+      *
+      ** IF VALUE = 7 CALL PROGRAM SDC1740 (SAVE PARAMETERS MAIN-
+      *  TENANCE OPTION)
+      *
+     C           SELECT    IFEQ '7'
+     C                     CALL 'SDC1740'
+     C                     END
+      *                                                                   094273
+      ** If Option 13 taken Display journal failure screen                094273
+      *                                                                   094273
+     C           SELECT    IFEQ '13'                                      094273
+     C                     MOVEL'SCJRN'   #SCJR1                          094273
+     C                     MOVEL'FAIL'    #SCJR2                          094273
+     C                     CALL #SCJRN                                    094273
+     C                     END                                            094273
+      *
+      ** IF VALUE =12 CALL PROGRAM CBC0530
+      *  WORK ACTIVE JOBS
+      *
+     C           SELECT    IFEQ '12'
+     C           *IN51     ANDEQ'1'
+     C           *IN52     ANDEQ'1'
+     C                     CALL 'CBC0530'
+     C                     END
+      *
+      ** IF VALUE = 99 CALL PROGRAM CBC0027 TO SIGN OFF
+      *
+     C           SELECT    IFEQ '99'
+      *
+      ** SET MESSAGE FIELD AND ALLOW
+      ** USE OF KEYS F6 AND F12
+      *
+     C                     MOVE SCRMSG,5  ERRMSG
+     C                     SETON                     606570
+      *
+      ** DO WHILE COMMAND KEYS F6 AND F12
+      ** NOT PRESSED, SCREEN NOT TIMED OUT
+      *
+     C           *IN06     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+     C           *INU1     ANDEQ'0'
+      *
+      ** WRITE SELECTION FORMAT (CB0015F1) TO SCREEN
+      *
+     C                     WRITECB0015F1
+      *
+     C***********          READ CB015ADF               U150                                   CAAA02
+     C                     READ CB0015F1               U150                                   CAAA02
+      *
+     C                     END
+     C                     SETOF                     70
+      *
+      ** IF KEY F6 PRESSED AND SCREEN NOT TIMED OUT
+      *
+     C           *IN06     IFEQ '1'
+     C           *INU1     ANDEQ'0'
+      *
+      ** IF PROGRAM CALLED FROM SECONDARY SCREEN
+      ** SIGN OFF WITH PARAMETER 'B'
+      *
+     C           FROM      IFEQ 'B'
+     C                     CALL 'CBC0027'
+     C                     PARM 'B'       PARM    1
+      *
+      ** IF CALLED FROM MAIN MONITOR SET PARAMETER
+      ** DEPENDING ON HALT STATUS TO
+      ** CANCEL SCHEDULER AND SIGN OFF
+      *
+     C                     ELSE
+      *
+     C           SWWF      IFEQ 'H'
+      *
+     C                     CALL 'CBC0027'
+     C                     PARM 'H'       PARM
+     C                     ELSE
+      *
+     C                     CALL 'CBC0027'
+     C                     PARM 'R'       PARM
+     C                     END
+      *
+     C                     END
+      *
+      ** SET ON ERROR INDICATOR AND WRITE ERROR MESSAGE SINCE
+      ** IF PROGRAM REACHES THIS POINT CBC0027 HAS FAILED
+      *
+     C                     SETON                     60
+     C                     MOVE SELECT    OPTION
+     C                     MOVE OPTERR,1  ERRMSG
+      *
+     C                     ELSE
+      *
+      ** ELSE IF COMMAND KEY 12 PRESSED TO CANCEL REQUEST
+      ** TO EXIT FROM MONITOR  THEN CLEAR MESSAGE
+      *
+     C           *IN12     IFEQ '1'
+     C                     SETOF                     60
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+      ** DISPLAY ACTIVE USERS
+      *
+     C           SELECT    IFEQ '11'
+     C           *IN51     ANDEQ'1'
+     C           *IN52     ANDEQ'1'
+     C                     MOVEL*BLANKS   WWCODE
+     C                     CALL 'CBC0532'              99
+     C                     PARM           WWCODE 10
+     C           WWCODE    IFEQ 'RETURN'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C                     END
+      *
+      ***IF*VALUE*=*13*EXIT*FROM*MONITOR******************************    094273
+     C********** SELECT    IFEQ '13'                                      094273
+      *
+      ** IF VALUE = 98 EXIT FROM MONITOR                                  094273
+      *
+     C           SELECT    IFEQ '98'                                      094273
+     C           *IN51     ANDEQ'1'
+      *
+      ** SET MESSAGE FIELD AND ALLOW
+      ** USE OF KEYS F6 AND F12
+      *
+     C                     MOVE SCRMSG,4  ERRMSG
+     C                     SETON                     606570
+      *
+      ** DO WHILE COMMAND KEYS F6 AND F12
+      ** NOT PRESSED, SCREEN NOT TIMED OUT
+      *
+     C           *IN06     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+     C           *INU1     ANDEQ'0'
+      *
+      ** WRITE SELECTION FORMAT (CB0015F1) TO SCREEN
+      *
+     C                     WRITECB0015F1
+      *
+     C***********          READ CB015ADF               U150                                   CAAA02
+     C                     READ CB0015F1               U150                                   CAAA02
+      *
+     C                     END
+     C                     SETOF                     70
+      *
+      ** IF KEY F6 PRESSED AND SCREEN NOT TIMED OUT
+      *
+     C           *IN06     IFEQ '1'
+     C           *INU1     ANDEQ'0'
+      *
+      ** CALL CBC0028 TO SETUP MSGQ/MSPECIAL AND TO REOPEN INPUT CYCLE.
+      *
+     C                     EXSR ENDDSP
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ELSE
+      *
+      ** ELSE IF COMMAND KEY 12 PRESSED TO CANCEL REQUEST
+      ** TO EXIT FROM MONITOR  THEN CLEAR MESSAGE
+      *
+     C           *IN12     IFEQ '1'
+     C                     SETOF                     60
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** IF ERROR PARAMETER PASSED BACK FROM CBC0026
+      ** IS 'Y' SET ON ERROR INDICATOR AND SET UP ERROR
+      ** MESSAGE AS 'OPTION X ENDED IN ERROR'
+      *
+     C           ERROR     IFEQ 'Y'
+     C                     SETON                     60
+     C                     MOVE SELECT    OPTION
+     C                     MOVE OPTERR,1  ERRMSG
+     C                     END
+      ****************************************************************                        CSF002
+      ***IF*ERROR*PARAMETER*PASSED*BACK*FROM*SF0410*******************                        CSF002
+      ***IS*'1',*SET*ON*ERROR*INDICATOR*AND*SET*UP*ERROR**************                        CSF002
+      ***MESSAGE*AS*'USER*NOT*DEFINED*TO*THE*SYSTEM'******************                        CSF002
+      ****************************************************************                        CSF002
+     C********** @ERROR    IFEQ 1                                                             CSF002
+     C**********           SETON                     60                                       CSF002
+     C**********           MOVE SCRMSG,3  ERRMSG                                              CSF002
+     C**********           END                                                                CSF002
+      *
+      ** IF ERROR PARAMETER PASSED BACK FROM CBC0026
+      ** IS 'T' SET ON SCREEN TIMED OUT INDICATOR
+      *
+     C           ERROR     IFEQ 'T'
+     C                     SETON                     U1
+     C                     END
+      *
+      ** IF VALID OPTION TAKEN CLEAR SCREEN INPUT FIELD
+      *
+     C           ERROR     IFNE 'Y'
+     C           ERROR     ANDNE'T'
+     C********** @ERROR    ANDNE1                                                             CSF002
+     C                     MOVE *BLANKS   SELECT
+     C                     WRITECB0015F2
+     C                     SETOF                     323335
+     C                     SETOF                     3638
+     C                     SETOF                     39                   094273
+     C**********           SETOF                     4647                                     CSF002
+     C                     SETOF                     47                                       CSF002
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     SETON                     LR
+      *
+      ********************************************************************
+      *
+      ** SUBROUTINE TO SEND TERMINATION MESSAGE TO DATA QUEUE
+      *
+     C           ENDDSP    BEGSR
+      *
+     C                     CALL 'CB0533'
+     C                     PARM           WWUSER
+     C                     PARM           WWJOB
+     C                     PARM           WWNBR
+      *
+     C                     MOVEL*BLANKS   WWUSER
+     C                     CALL 'CBC0522'
+     C                     PARM           WWUSER
+     C                     PARM           WWJOB
+     C                     PARM           WWNBR
+     C                     PARM           WWDTAQ
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *
+      ** INDEX OF SUBROUTINES
+      *
+      *
+      ** *PSSR  - PROGRAM STATUS SUBROUTINE
+      ** DBERR  - DATABASE ERROR PROCESSING SUBROUTINE
+      *
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      ** *PSSR SUBROUTINE
+      *
+      ** SUBROUTINE TO SEND MESSAGE ON LOCK OF
+      ** DATA AREA CBSTAT AND RETURN TO MONITOR
+      *
+     C           *PSSR     BEGSR
+      *
+     C           PGMSTS    IFEQ 00432
+      *
+     C                     Z-ADD93        LEN    155
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QCMD
+     C                     PARM           LEN
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *************************************************************
+      *
+      ** S/R DBERR TO PERFORM DATABASE ERROR EXIT FROM PROGRAM
+      *
+      ** CALLED FROM MAIN CYCLE
+      *
+      ** CALLS NO OTHER SUBROUTINES
+      *
+      *************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+      ** SETON INDICATORS U7 U8 LR
+      ** AND RETURN TO CALLING PROGRAM
+      *
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**  SCRMSG  -  MESSAGE ARRAY
+ENTRY MUST BE A VALID OPTION NUMBER
+PRESS F6 TO CONFIRM OR F12 TO CANCEL REQUEST TO REOPEN INPUT CYCLE
+USER NOT DEFINED/AUTHORISED TO THE SYSTEM
+PRESS F6 TO CONFIRM OR F12 TO CANCEL EXIT FROM MONITOR
+PRESS F6 TO CONFIRM OR F12 TO CANCEL STOP OF COB PROCESSING
+**  OPTERR  -  OPTION ENDED IN ERROR ERROR MESSAGE
+OPTION   ENDED IN ERROR
+**  QCMD1 - FIRST PART OF QCMDEXC COMMAND
+SNDMSG MSG('TEMPORARILY UNABLE TO ACCESS C.O.B. CONTROL MENU - PLEASE RE-TRY') T
+**  QCMD2 - SECOND PART OF QCMDEXC COMMAND
+OMSGQ(MOPERQ)

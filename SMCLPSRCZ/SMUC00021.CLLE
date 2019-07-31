@@ -1,0 +1,54 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Migrate STRAN to LEADINPD')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00021 - Migrate STRAN to LEADINPD                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2007                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BG26993            Date 26Jan10              */
+/*                      CPK025  *CREATE    Date 23Apr07              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BG26993 - Delivery of upgrade programs to core.             */
+/*               - Renamed CPK025C01.                                */
+/*       CPK025  - Migration utility.                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RELEASE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&ERROR) TYPE(*DEC) LEN(1 0)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2007')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Copy STRAN to temporary copy; only type 'J' records. */
+             DLTF       FILE(QTEMP/STRANTEMP)
+             MONMSG     MSGID(CPF0000)
+             CPYF       FROMFILE(STRAN) TOFILE(QTEMP/STRANTEMP) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCCHAR(*RCD 1 *EQ 'J')
+ 
+             CALL       PGM(SMU00050)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ ENDPGM:
+             ENDPGM

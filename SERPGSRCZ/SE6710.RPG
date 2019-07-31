@@ -1,0 +1,329 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE ER Retrieve Blocked Position')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE6710 - SE Retrieve Block Position                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CGL011             Date 20Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU017             Date 03Apr98               *
+      *                 CSE007             Date 17Dec97               *
+     F*                 128862             Date 30Jan98               *
+     F*                 S01496             Date 03Oct94               *
+     F*                 S10978             Date 16Apr93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL011 - Collateral Processing for Midas                     *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*  CSE007 - Corporate Actions                                   *
+     F*  128862 - SE0050 AND SE6710 WAS NOT COMPATIBLE FOR FILE       *
+     F*           CPOSN (IN SE0050 KCOMIT)                            *
+     F*           CREATE A NEW LOGICAL FILE CPOSNL1                   *
+     F*  S01496 - Incorporation of JYSKE Enhancements (S10978)        *
+     F*  S10978 - JYSZRH: EARLY REDEMPTIONS                           *
+     F*           * GENERAL BLOCKS. . . . . . . . . . . : N           *
+     F*           * SPECIFIC BLOCKS ON ALL THE POSITION : Y           *
+     F*           * SPECIFIC BLOCKS . . . . . . . . . . : Y           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****CPOSN   IF  E           K        DISK                          128862
+     FCPOSNL1 IF  E           K        DISK                               128862
+     FPMCPOSL0IF  E           K        DISK
+     FSEBKALL0IF  E           K        DISK
+     F*****************************************************************
+      /EJECT
+     E*****************************************************************
+     E*
+     E**   For Compilation - Copyright Insertion
+     E                    CPY@    1   1 80
+     E*****************************************************************
+      /EJECT
+     I*****************************************************************
+     ISEERALD0    01
+     I              VCRECI                          XXRECI
+     I              VCBRCD                          XXBRCD
+     I              VCCNUM                          XXCNUM
+     I              VCPTFR                          XXPTFR
+     I              VCERTP                          XXBLTY
+     I              VCSESN                          XXSESN
+     I              VCBEDT                          XXBEDT
+     I              VCNOMA                          XXNOMB
+     I*
+     ISEBLKPD0    02
+     I              VDRECI                          XXRECI
+     I              VDBRCD                          XXBRCD
+     I              VDCNUM                          XXCNUM
+     I              VDPTFR                          XXPTFR
+     I              VDBLTY                          XXBLTY
+     I              VDSESN                          XXSESN
+     I              VDBEDT                          XXBEDT
+     I              VDNOMB                          XXNOMB
+     I              VDBSTT                          XXBSTT                CSE007
+      *                                                                   CSE007
+     ISECOBKD0    03                                                      CSE007
+     I              MURECI                          XXRECI                CSE007
+     I              MUBRCD                          XXBRCD                CSE007
+     I              MUCNUM                          XXCNUM                CSE007
+     I              MUPTFR                          XXPTFR                CSE007
+     I              MUBLTY                          XXBLTY                CSE007
+     I              MUSESN                          XXSESN                CSE007
+     I              MUBEDT                          XXBEDT                CSE007
+     I              MUNOMB                          XXNOMB                CSE007
+     I              MUBSTT                          XXBSTT                CSE007
+      *                                                                   CSE007
+     ISECOALD0    04                                                      CSE007
+     I              MCRECI                          XXRECI                CSE007
+     I              MCBRCD                          XXBRCD                CSE007
+     I              MCCNUM                          XXCNUM                CSE007
+     I              MCPTFR                          XXPTFR                CSE007
+     I              MCBLTY                          XXBLTY                CSE007
+     I              MCBSEC                          XXSESN                CSE007
+     I              MCBEDT                          XXBEDT                CSE007
+     I              MCBSTT                          XXBSTT                CSE007
+     I*
+     I**   Data Structure for Compilation - Copyright Insertion
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*****************************************************************
+      /EJECT
+      *****************************************************************
+      *   INDICATOR USAGE                                             *
+      *   ---------------                                             *
+      *                                                               *
+      *   01   -    FORMAT SEERALD0 READ                              *
+      *   02   -    FORMAT SEBLKPD0 READ                              *
+      *   03   -    FORMAT SECOBKD0 READ                              *   CSE007
+      *   04   -    FORMAT SECOALD0 READ                              *   CSE007
+      *                                                               *
+      *****************************************************************
+      *   SUBROUTINE INDEX                                            *
+      *   ----------------                                            *
+      *                                                               *
+      *   P001 - Initial processing                                   *
+      *   P002 - Main processing                                      *
+      *   P003 - Termination processing                               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** MAIN PROCESSING
+      *****************************************************************
+      ** ENTRY PLIST
+      **
+      **   PPRUND : RUNDATE                 (5A)
+      **   PPOBPO : OBTAIN POSITION         (1A)
+      **   PPBRCD : BRANCH CODE             (3A)
+      **   PPSESN : SECURITY SHORTNAME      (10A)
+      **   PPCNUM : CUSTOMER                (6A)
+      **   PPPTFR : PORTFOLIO               (4A)
+      **   PPBLTY : BLOCK TYPE              (1A)
+      **   PPNOBL : NOMINAL ALREADY BLOCKED (13A) - OUTPUT
+      **   PPNOPO : NOMINAL POSITION        (13A) - OUTPUT
+      *****************************************************************
+     C*
+     C** KLIST'S
+     C           KEY1      KLIST
+     C                     KFLD           KKBRCD
+     C                     KFLD           PPSESN
+     C                     KFLD           KKCNUM
+     C*
+     C           KEY2      KLIST
+     C                     KFLD           PPSESN
+     C                     KFLD           KKCNUM
+     C                     KFLD           KKT
+     C                     KFLD           PPPTFR
+     C*
+     C           KEY3      KLIST
+     C                     KFLD           KKBRCD
+     C                     KFLD           KKCNUM
+     C                     KFLD           PPPTFR
+     C                     KFLD           KKBLTY
+     C                     KFLD           PPSESN
+     C                     KFLD           KKRUND
+     C*
+     C                     EXSR P001
+     C                     EXSR P002
+     C                     EXSR P003
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*   P001   Initial processing
+     C*****************************************************************
+     C           P001      BEGSR
+     C*                                                                   S01496
+     C**  Copyright statement                                             S01496
+     C*                                                                   S01496
+     C                     MOVEACPY@      ACT@   80                       S01496
+     C*
+     C** Receive input parameters
+     C           *ENTRY    PLIST
+     C                     PARM           PPRUND  5
+     C                     PARM           PPOBPO  1
+     C                     PARM           PPBRCD  3
+     C                     PARM           PPSESN 10
+     C                     PARM           PPCNUM  6
+     C                     PARM           PPPTFR  4
+     C                     PARM           PPBLTY  1
+     C                     PARM           PPNOBL 13
+     C                     PARM           PPNOPO 13
+     C                     PARM           PPCOLF  1                       CGL011
+     C                     PARM           PPCOLA 15                       CGL011
+     C*
+     C** Initialize key fields
+     C                     MOVE PPRUND    KKRUND  50
+     C***********          MOVE PPBRCD    KKBRCD  30                      S01496
+     C                     MOVE PPBRCD    KKBRCD  3                       S01496
+     C**********           MOVE PPCNUM    KKCNUM  60                                          CSD027
+     C                     MOVE PPCNUM    KKCNUM  6                                           CSD027
+     C                     MOVE PPBLTY    KKBLTY  1
+     C                     MOVE 'T'       KKT     1
+     C*
+     C** Reset to zero output parameters
+     C                     MOVE *BLANKS   PPNOBL
+     C                     MOVE *BLANKS   PPNOPO
+     C                     MOVE *ZEROS    WWNOBL 130
+     C                     MOVE *ZEROS    WWNOPO 130
+     C                     MOVE *BLANKS   PPCOLA                          CGL011
+     C                     MOVE *ZEROS    WWCOAM 150                      CGL011
+     C*
+     C           EP001     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*   P002   Main processing
+     C*****************************************************************
+     C           P002      BEGSR
+     C*
+     C** If Branch, Security or Customer blank, terminate processing
+     C           PPBRCD    IFEQ *BLANKS                    B*1
+     C           PPSESN    OREQ *BLANKS
+     C           PPCNUM    OREQ *BLANKS
+     C*
+     C                     EXSR P003
+     C*
+     C                     ENDIF                           E*1
+     C*
+     C** Obtain position, if 'Obtain position' parameter 'Y'
+     C           PPOBPO    IFEQ 'Y'                        B*1
+     C*
+     C           PPPTFR    IFEQ *BLANKS                    B*2
+     C*
+     C****       KEY1      CHAINCPOSN                71                   128862
+     C           KEY1      CHAINCPOSNL1              71                   128862
+     C           *IN71     IFEQ '0'                        B*3
+     C                     Z-ADDCSNT      WWNOPO
+     C                     ENDIF                           E*3
+     C*
+     C                     ELSE                            X*2
+     C*
+     C           KEY2      CHAINPMCPOSL0             71
+     C           *IN71     IFEQ '0'                        B*3
+     C                     Z-ADDQANOML    WWNOPO
+     C                     ENDIF                           E*3
+     C*
+     C                     ENDIF                           E*2
+     C*
+     C                     ENDIF                           E*1
+     C*
+     C** If 'Block Type' parameter not 'P' or 'S' or 'Run date'
+     C** parameter is equal zero, terminate processing
+     C           PPBLTY    IFNE 'P'                        B*1
+     C           PPBLTY    ANDNE'S'
+     C           KKRUND    OREQ *ZEROS
+     C*
+     C                     EXSR P003
+     C*
+     C                     ENDIF                           E*1
+     C*
+     C** Obtain Blocked Nominal
+     C           KEY3      SETLLSEBKALL0
+     C******               MOVEA'00'      *IN,01                          CSE007
+     C                     MOVEA'0000'    *IN,01                          CSE007
+     C                     READ SEBKALL0                 71
+     C*
+     C           *IN71     DOWEQ'0'                        B*1
+     C           KKBRCD    ANDEQXXBRCD
+     C           KKCNUM    ANDEQXXCNUM
+     C           PPPTFR    ANDEQXXPTFR
+     C           PPBLTY    ANDEQXXBLTY
+     C           WWNOBL    ANDNE*HIVAL
+      *                                                                   CSE007
+      ***  If 01 ON = format SEERALD0 read, reset field XXBSTT: Block     CSE007
+      ***  from Date/Blocked Start Date.                                  CSE007
+      *                                                                   CSE007
+     C           *IN01     IFEQ '1'                                       CSE007
+     C                     Z-ADD0         XXBSTT                          CSE007
+     C                     ENDIF                                          CSE007
+     C*
+     C           XXRECI    IFEQ 'D'                        B*2
+     C           XXSESN    ANDEQPPSESN
+     C           XXBEDT    ANDGEKKRUND
+     C           XXBSTT    ANDLEKKRUND                                    CSE007
+     C*
+     C           XXNOMB    IFEQ *HIVAL                     B*3
+     C           XXNOMB    OREQ *ZEROS
+     C                     MOVE *HIVAL    WWNOBL
+     C                     ELSE                            X*3
+     C                     ADD  XXNOMB    WWNOBL
+     C                     ENDIF                           E*3
+     C*
+     C           PPCOLF    IFEQ 'Y'                                       CGL011
+     C           PPBLTY    ANDEQ'P'                                       CGL011
+     C                     ADD  VDCOLA    WWCOAM                          CGL011
+     C                     ELSE                                           CGL011
+     C                     Z-ADD*ZEROS    WWCOAM                          CGL011
+     C                     ENDIF                                          CGL011
+      *                                                                   CGL011
+     C                     ENDIF                           E*2
+     C*
+     C******               MOVEA'00'      *IN,01                          CSE007
+     C                     MOVEA'0000'    *IN,01                          CSE007
+     C                     READ SEBKALL0                 71
+     C*
+     C                     ENDDO                           E*1
+     C*
+     C                     MOVE WWNOBL    PPNOBL
+     C                     MOVE WWNOPO    PPNOPO
+     C                     MOVE WWCOAM    PPCOLA                          CGL011
+     C*
+     C           EP002     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*   P003 - Termination processing
+     C*****************************************************************
+     C           P003      BEGSR
+     C*
+     C                     MOVE '0'       *INLR
+     C                     RETRN
+     C*
+     C           EP003     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

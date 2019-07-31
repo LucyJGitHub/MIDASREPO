@@ -1,0 +1,281 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BU Trading Data BackGnd Upd')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  STANDING DATA MODULE
+     F*                                                                  *
+     F*     TABTB20 - BACKGROUND UPDATE OF TABTB20/TABTB40/TABTB11       *S01117
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01117             Date 23/02/90              *
+      *                 S01230             Date 07/11/89              *
+     F*                    S01229             DATE 20/10/89              *S01229
+     F*                    E17596             DATE 20/03/89              *S01229
+     F*                    E01168             DATE 07/12/88              *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01117  - RELEASE 10 CHANGES                                    *S01230
+     F*  S01230  - STANDARDISE PROGRAMS                                  *S01230
+     F*  S01229  - SYNON FIELD NAME CHANGES                              *
+     F*  E17596  - RECOMPILED FOR NEW VERSION OF TABLETXL                *
+     F*  E01168 - COMPENASATING SUSPENCE ACCOUNT BEING MOVED TO COMPUTER *
+     F*           SUSPENCE ACCOUNT                                       *
+     F*                                                                  *
+     F********************************************************************S01230
+     F*                                                                  *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*                                                                  *
+     F*       30      CHAIN TABTB20 FAILED/ERROR                         *
+     F*       31      ERROR ON TABTB20 FILE                              *
+     F*       32      CHAIN TABLETX FAILED/ERROR                         *
+     F*                                                                  *
+     F********************************************************************
+     FTABTB20 UF  E           K        DISK
+     F                                              KCOMIT
+     FTABTB40 UF  E           K        DISK
+     F                                              KCOMIT
+     FTABTB11 UF  E           K        DISK
+     F                                              KCOMIT
+     FTABLETA UF  E           K        DISK
+     F                                              KCOMIT
+     FTABLETXLUF  E           K        DISK
+     F                                              KCOMIT
+      /EJECT
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT                                                              S01230
+     I*
+     I* RENAME RECORD ID ON HEADER FILE TO AVOID OVERWRITING
+     I*
+     ITABLETAF
+     I              RECT                            RECTA
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     I*                                                                   S01230
+      /EJECT
+     C*
+     C           *ENTRY    PLIST
+      *
+     C*                    PARM           WCOMS   4        Account Code   E01168
+     C**********           PARM           WCSAC   4        Account Code                E01168 CGL029
+     C*********************PARM           WSRPL   4        Spot RevaluatioS01229
+     C**********           PARM           WSRAC   4        Spot Revaluatio             S01229 CGL029
+     C*********************PARM           WSPAC   4        Spot Trade AccoS01229
+     C**********           PARM           WSPTA   4        Spot Trade Acco             S01229 CGL029
+     C                     PARM           WCSAC  10                                           CGL029
+     C                     PARM           WSRAC  10                                           CGL029
+     C                     PARM           WSPTA  10                                           CGL029
+     C                     PARM           WSTCY   3        Currency Code
+     C                     PARM           WUSCY   3        US Dollars Curr
+     C                     PARM           WLCD    50       Last Change Dat
+     C*********************PARM           WCHTP   1        Type of Last ChS01229
+     C                     PARM           WTYLC   1        Type of Last ChS01229
+     C                     PARM           WBRCF   1        Base Rate Chang
+     C                     PARM           WOURC   1        Ourselves/Nostr
+     C                     PARM           WBRNC   1        Branch Name on
+     C                     PARM           WLOCY   1        Local Currency
+     C                     PARM           WGLSI   1        GL Stationary I
+     C*********************PARM           WRTSI   1        Retail StatemenS01229
+     C                     PARM           WLRSS   1        Retail StatemenS01229
+     C*********************PARM           WDLSI   1        DL Statement StS01229
+     C                     PARM           WDLSS   1        DL Statement StS01229
+     C*********************PARM           WNOSI   1        Nostro StatemenS01229
+     C                     PARM           WLNSS   1        Nostro StatemenS01229
+     C*********************PARM           WCTSI   1        Contingency StmS01229
+     C                     PARM           WLCSS   1        Contingency StmS01229
+     C                     PARM           WFFNY   1        Federal Funds I
+     C                     PARM           WCPRB   1        C/party Rec. Ba
+     C                     PARM           WTLII   1        2-level Input I
+     C                     PARM           WSWPY   10       Swift Priority
+     C                     PARM           WCHPY   10       Chips Priority
+     C                     PARM           WCPPY   10       Chaps Priority
+     C                     PARM           WTXPY   10       Telex Priority
+     C                     PARM           WFDPY   10       Fedwire Priority
+     C                     PARM           WBAPY   10       Bankwire Priority
+     C                     PARM           P0RTN   7        *Return code
+     C*
+      /EJECT
+     C****************************************************************
+     C*
+     C*   M A I N L I N E   P R O G R A M
+     C*
+     C****************************************************************
+     C*
+     C* IF RECORD HAS BEEN CHANGED, RETRIEVE RECORD FROM FILE
+     C*
+     C***********WCHTP     IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C                     READ TABTB20F                 30NO RECORDS
+     C  N30                READ TABTB40F                 30NO RECORDS
+     C  N30                READ TABTB11F                 30NO RECORDS
+     C*
+     C* IF RECORD FOUND, MOVE RECEIVED PARAMETERS INTO FILE FIELDS
+     C* AND UPDATE
+     C*
+     C           *IN30     IFEQ '0'
+     C*                    MOVE WCOMS     COMS                            E01168
+     C                     MOVE WCSAC     CSAC                            E01168
+     C*********************MOVE WSRPL     SRPL                            S01229
+     C                     MOVE WSRAC     SRPL                            S01229
+     C*********************MOVE WSPAC     SPAC                            S01229
+     C                     MOVE WSPTA     SPAC                            S01229
+     C                     MOVE WSTCY     STCY
+     C                     MOVE WUSCY     USCY
+     C                     MOVE WBRCF     BRCF
+     C                     MOVE WOURC     OURC
+     C                     MOVE WBRNC     BRNC
+     C                     MOVE WLOCY     LCYN
+     C                     MOVE WGLSI     GLSI
+     C*********************MOVE WRTSI     RTSI                            S01229
+     C                     MOVE WLRSS     RTSI                            S01229
+     C*********************MOVE WDLSI     DLSI                            S01229
+     C                     MOVE WDLSS     DLSI                            S01229
+     C*********************MOVE WNOSI     NOSI                            S01229
+     C                     MOVE WLNSS     NOSI                            S01229
+     C*********************MOVE WCTSI     CTSI                            S01229
+     C                     MOVE WLCSS     CTSI                            S01229
+     C                     MOVE WFFNY     FFNY
+     C                     MOVE WTLII     TLII
+     C                     Z-ADDWSWPY     PRSW
+     C                     Z-ADDWCHPY     PRCI
+     C                     Z-ADDWCPPY     PRCA
+     C                     Z-ADDWTXPY     PRTX
+     C                     Z-ADDWFDPY     PRFW
+     C                     Z-ADDWBAPY     PRBW
+     C                     Z-ADD1         RECT
+     C                     Z-ADD20        RCDE
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATTABTB20F               30  ERROR
+     C  N30                Z-ADD40        RCDE
+     C  N30                UPDATTABTB40F               30  ERROR
+     C  N30                Z-ADD11        RCDE
+     C  N30                UPDATTABTB11F               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT A CHANGED RECORD
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN DELETED FROM THE NEW FILE, RETRIEVE IT
+     C* FROM TABTB20
+     C*
+     C***********WCHTP     IFEQ 'D'                                       S01229
+     C           WTYLC     IFEQ 'D'                                       S01229
+     C                     READ TABTB20F                 30NO RECORDS
+     C*
+     C* IF RECORD FOUND, UPDATE RELEVANT FIELDS (WE DON'T ACTUALLY
+     C* DELETE ANY RECORDS FROM THE OLD FILES)
+     C*
+     C           *IN30     IFEQ '0'
+     C                     Z-ADD20        RCDE
+     C                     MOVE '*'       RECI
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATTABTB20F               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS HAVE OCCURRED ON TABTB20 UPDATE
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C*
+     C* RETRIEVE OLD TRAILER FILE RECORD
+     C*
+     C           '01'      CHAINTABLETXF             32    CHAIN FAILED
+     C*
+     C* IF CHAIN TO FILE SUCCESSFUL
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* IF FIRST ACCESS TO THE FILE THEN GET HEADER RECORD
+     C*
+     C           NINS      ANDEQ0
+     C           NAMD      ANDEQ0
+     C           NDEL      ANDEQ0
+     C*
+     C                     READ TABLETAF                 32  EOF
+     C*
+     C* IF HEADER RECORD FOUND THEN SET PRINT INDICATOR AND UPDATE
+     C*
+     C           *IN32     IFEQ '0'
+     C                     ADD  3         INSC
+     C                     UPDATTABLETAF               32    ERROR
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* UPDATE AS APPROPRIATE THE NUMBER OF INSERTS,AMENDS OR DELETES
+     C* ON THE TRAILER FILE
+     C*
+     C***********WCHTP     IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C                     ADD  1         NAMD
+     C                     END
+     C*
+     C***********WCHTP     IFEQ 'D'                                       S01229
+     C           WTYLC     IFEQ 'D'                                       S01229
+     C                     ADD  1         NDEL
+     C                     END
+     C*
+     C                     UPDATTABLETXF               32    ERROR
+     C*
+     C                     END
+     C*
+     C* CHECK FOR ANY ERRORS AND SET ERROR PARAMETER FOR RETURN TO
+     C* NEW FILE MAINTENANCE PROGRAM
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+** CPY@     : Copyright notice for inclusion in all programs           grams
+(c) Finastra International Limited 2001

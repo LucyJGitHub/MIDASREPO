@@ -1,0 +1,102 @@
+      *****************************************************************
+/*STD *  PGMBASE                                                      *
+/*EXI *  MODULE(ABFUNDVU) ACTGRP(*CALLER)                             *
+/*EXI *  TEXT('Midas AB Internal Funding Deals interface control')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Internal Funding Module                              *
+      *                                                               *
+      *  ABFUNDVU - Internal Funding Deals validate and update        *
+      *                                                               *
+      *  Function: This program validates internal funding deals for  *
+      *            input into the Midas database.                     *
+      *            The action code determines which processes are     *
+      *            executed as follows:                               *
+      *            - For I (=Insert) or A (=Amend)                    *
+      *              - Validate the transaction details fields        *
+      *            - For A (=AMEND),                                  *
+      *              - if transaction is a partial amendment, call a  *
+      *                separate function to complete the transaction  *
+      *                details.                                       *
+      *              - if transaction is valid, call a separate       *
+      *                function to check whether it is a valid        *
+      *                amendment.                                     *
+      *            - For D (=DELETE), call a separate function to     *
+      *              process the transaction and bypass the rest of   *
+      *              the validation.                                  *
+      *                                                               *
+      *            For all action codes, the decision to as to        *
+      *            whether to write to the valid or invalid file and  *
+      *            the call to the message handler will take place    *
+      *            in this module                                     *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CRE073             Date 06Dec10               *
+      *                 261910             Date 18Sep09               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG26950A          Date 26Jan10               *
+      *                 BUG26950           Date 22Jan10               *
+      *                 261140             Date 16Sep09               *
+      *                 CAP191             Date 12May09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG8550            Date 16Jun06               *
+      *                 CDL049             Date 04Jul06               *
+      *                 CDL038             Date 10May05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG8259            Date 26Aug05               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CAP084  *CREATE    Date 05Aug03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  261910 - Recompiled due to changes done in module ABFUNDVU.  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  BUG26950A - Reapply 262001 fix due to incomplete delivery    *
+      *              (Recompile)                                      *
+      *  BUG26950 - No FOTID and AFOTID for the Internal Deposit      *
+      *             Applied fix 262001 (Recompile)                    *
+      *  262001 - Front Office ID and Assoc Front Office ID of Assoc  *
+      *           Deal is not populated. Populate the Front Office ID *
+      *           and Assoc Front Office ID of Associated Deal.       *
+      *  261140 - Missing Front Office ID / Assoc Front Office ID     *
+      *           (Recompile)                                         *
+      *  CAP191 - MQ Enabling of FUND and EXTR APIs (recompile)       *
+      *  BUG8550 - Reposition capture of ZMUSER data area (RECOMPILE) *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG8259- Serious Midas Error occurred (Recompile)            *
+      *  CGL014 - Collaterals Processing (Recompile)                  *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *           (Recompile)                                         *
+      *  CDL020 - Apply Base Rate at Value Date                       *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *  CAP084 - API Wrapper project                                 *
+      *                                                               *
+      *****************************************************************

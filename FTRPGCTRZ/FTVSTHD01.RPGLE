@@ -1,0 +1,245 @@
+     H DEBUG
+     H COPYRIGHT('(c) Finastra International Limited 2002')
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+/*EXI *  TEXT('Midas FT Validate Sub-Type-Header')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standard subprograms                                 *
+      *                                                               *
+      *  FTVSTHD01  - Validate Sub-Type Header                        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *    This source is centrally supported and must ONLY be        *
+      *    amended by Core Development Personnel                      *
+      *                                                               *
+      *    /COPY, Client or Country amendments must not be            *
+      *    applied to this source.                                    *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 256564             Date 17Sep08               *
+      *                 CSW207             Date 07Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CDL038             Date 10May05               *
+      *                 CSW201             Date 02May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 185107             Date 17Oct00               *
+      *                 184167             Date 27Sep00               *
+      *                 184060             Date 22Sep00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CFT008  *CREATE    Date 17Nov99               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
+      *  256564 - Recompile due to PF changes done by fix 256330      *
+      *  CSW207 - Swift 2007 Changes (Recompiled)                     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW201 - SWIFT 2001 Standards Update (Recompiled)            *
+      *  185107 - Mapping of details from swift message - Recompile   *
+      *  184167 - Transaction type/sub type combination validation    *
+      *  184060 - No transaction type code in detail screen -Recompile*
+      *  CFT008 - Funds Transfer/Swift Messages MT102                 *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *****************************************************************
+     FSDDLSTL1  IF   E           K DISK
+     FFDDTSTL1  IF   E           K DISK                                         184167
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      ** Standard D-specs
+      ** ================
+      **
+      ** The following /COPY line includes the LDA layout,
+      ** the copyright array definition,
+      ** and the following named constants:
+      **    True       logical = *on (for indcator processing)
+      **    False      logical = *off (for indcator processing)
+      **    DBErrCtl   10A     = 'DBERRCTL' (the name of the database error
+      **                                    handler)
+      ** and the following variables:
+      **    RunBefore  1A (for the PSSR)
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+      ** Program Status Data Structure
+      ** =============================
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+ 
+     D/COPY ZACPYSRC,PSDS
+     D/COPY ZACPYSRC,ERR_XARRYS
+ 
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+ 
+      **********************************************************************
+      /EJECT                                                               *
+      **********************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+     D P@FMT         E DS                  EXTNAME(SDDLSTPD)
+      * @ASRECO - Deal Sub-types record format data structure
+      * Header record datastructure
+     D HdrRcdIn      E DS                  EXTNAME(FT102HSPD)
+     D DtlRcdIn      E DS                  EXTNAME(FT102DSPD) PREFIX(D)
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+      ** Klist fields                                                           184167
+     D K_DTPE11        S                   LIKE(DTPE11)                         184167
+     D K_DLST11        S                   LIKE(DLST11)                         184167
+                                                                                184167
+      * OK Flags for first screen - Header
+     D OKFlagHs1     E DS                  EXTNAME(FTE102H1PD)
+ 
+     D GenOkFlag2      S              1    Import
+      ** Index for arrays of error message ids etc
+     D Idx             S              3P 0
+ 
+      ** Index for arrays of warning message ids etc
+     D WIdx            S              3P 0
+ 
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+ 
+     C                   Eval      RetCodeIn  = *Blanks
+     C                   Eval      Idx        = 0
+     C                   Eval      WIdx       = 0
+ 
+     C                   Eval      GenOkFlag2 = 'Y'
+ 
+     C                   CallB     'AODLSTR0'
+     C                   Parm                    P@RTCD            7
+     C                   Parm      '*VERIFY'     P@OPTN            7
+     C                   Parm                    PCCTTST
+     C                   Parm                    P@FMT
+ 
+     C                   If        P@RTCD <> *Blanks
+     C                   Eval      GenOkFlag2 = 'N'
+     C                   Eval      Idx = Idx + 1
+     C                   Eval      FldNamXAr(Idx) = DDSName
+     C                   Eval      MsgIdXAr(Idx) = 'RFV0194'
+     C                   Eval      RetCodeIn = 'Error'
+     C                   Endif
+ 
+     C                   Eval      K_DTPE11 = PCCTTYP                           184167
+     C                   Eval      K_DLST11 = PCCTTST                           184167
+                                                                                184167
+     C     Kfddtstl1     Setll     FDDTSTPD                               94    184167
+     C                                                                          184167
+                                                                                184167
+     C                   If        *IN94 = *Off                                 184167
+     C                   Eval      GenOkFlag2 = 'N'                             184167
+     C                   Eval      Idx = Idx + 1                                184167
+     C                   Eval      FldNamXAr(Idx) = DDSName                     184167
+     C                   Eval      MsgIdXAr(Idx) = 'RFV0386'                    184167
+     C                   Eval      RetCodeIn = 'Error'                          184167
+     C                   Endif                                                  184167
+                                                                                184167
+     C                   Return
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     *INZSR        Begsr
+ 
+     C     *Entry        PLIST
+ 
+      ** INPUTS
+ 
+     C                   Parm                    RetCodeIn
+     C                   Parm                    RespMode          1
+     C                   Parm                    ActionCode        1
+ 
+      *  Screen fields
+     C                   Parm                    HdrRcdIn
+     C                   Parm                    DtlRcdIn
+     C                   PARM                    OKFlagHS1
+ 
+      * OUTPUTS
+      * Error fields/message IDs/message data (arrays) from/to caller
+     C                   Parm                    FldNamXAr
+     C                   Parm                    MsgIDXAr
+     C                   Parm                    MsgDtaXAr
+ 
+     C                   Parm                    WFldNmXAr
+     C                   Parm                    WMsgIDXAr
+     C                   Parm                    WMsgDtXAr
+ 
+     C                   Parm                    DDSName          10
+ 
+      *                                                                         184167
+      * Key list for Deal type/subtype                                          184167
+     C     Kfddtstl1     KLIST                                                  184167
+     C                   KFLD                    K_DTPE11                       184167
+     C                   KFLD                    K_DLST11                       184167
+ 
+      ** Program, module and procedure names for database error processing.
+      ** =================================================================
+      ** The following /COPY sets these values, and also defines LDA as
+      ** an external data area
+ 
+     C/COPY ZACPYSRC,DBFIELDS
+ 
+     C                   Endsr                                                  *** InzEnd ***
+ 
+      *****************************************************************
+      /EJECT
+      ********************************************************************
+     C/COPY ZACPYSRC,PSSR_ILE
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

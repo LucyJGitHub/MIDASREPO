@@ -1,0 +1,1587 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Generate Forward Events for Portfolio')
+/*OVRF*: OVRDBF FILE(SEEVNT) TOFILE(SECED) SHARE(*NO)                 *
+/*OVRF*: OVRDBF FILE(SECET) SHARE(*NO)                                *
+     H***********                                                         S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  PM1415 - Generate Forward Events For Portfolios              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 080742             Date 22Dec94               *
+     F*                 S01486             Date 11AUG94               *
+     F*                 049421             DATE 22JAN93               *
+     F*                 B08294             DATE 22JAN93               *
+     F*                 R08268             DATE 24OCT91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  080742 - Output blanks records due to rename of fields       *
+     F*  S01486 - Portfolio Management Upgrade to Release 10          *
+     F*  049421 - HEADER BOX STANDARDISATION                          *
+     F*  B08294 - PORTFOLIO CHANGES                                   *
+     F*  B08268 - SUNDRY FIXES TO SPEED UP GENERATION OF CASHFLOWS    *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FPMEVN1LLIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F****PREFIX*OF*SDBANKPD*IS*'BJ'***********************************   S01486
+     F***SDBANKPDIF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F*
+     F* Charge/commissions Rates Table.
+     F*
+     FSECGT   IF  F     346  5AI     2 DISK
+     F*
+     F* Default charges table.
+     F*
+     F***TADFTCL2IF**E           K        DISK                            S01486
+     FSEDFTCL2IF  E           K        DISK                               S01486
+     F***PMEVNTPPO***E                    DISK                            S01486
+     FPMEVNTPDO   E                    DISK                               S01486
+     F            PMEVNTP0                          KRENAMEPMEVNTP1
+     F                                              KINFSR *PSSR
+     F****PREFIX*OF*PMEVNTZZ*IS*'Q9'***********************************   S01486
+     F**  PREFIX OF PMEVNTPA IS 'Q9'                                      S01486
+     F***PMEVNTZZO***E                    DISK                            S01486
+     FPMEVNTPAO   E                    DISK                               S01486
+     F                                              KINFSR *PSSR
+     F***CCVEXD**O***E                    DISK                            S01486
+     FPM1415AUO   E                    PRINTER
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      71: INDICATOR FOR READ
+     F**      72: INDICATOR FOR READ
+     F**      76: NO RECORD (CF. PROCESS #P05)
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * ..   ..   73   74   75   ..   77   78   79   80 *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     E*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E*
+      /COPY ZSRSRC,ZPOWER8Z1
+     E*
+     E                    ZRA        15 15 0             RANGE LIMITS
+     E                    ZPC        15  7 4             PERCENTAGES
+     E                    ZCG        15 15 0             FLAT CHARGES
+     IPMEVNTP0                                                            080742
+     I              GCRECI                          Q9RECI                080742
+     I              GCACOC                          Q9ACOC                080742
+     I              GCCNUM                          Q9CNUM                080742
+     I              GCPTFR                          Q9PTFR                080742
+     I              GCTTRF                          Q9TTRF                080742
+     I              GCSEPR                          Q9SEPR                080742
+     I              GCMODI                          Q9MODI                080742
+     I              GCCSBY                          Q9CSBY                080742
+     I              GCBYDP                          Q9BYDP                080742
+     I              GCPTCY                          Q9PTCY                080742
+     I              GCPCDP                          Q9PCDP                080742
+     I              GCINNR                          Q9INNR                080742
+     I              GCT1XT                          Q9T1XT                080742
+     I              GCT2XT                          Q9T2XT                080742
+     I              GCEVTD                          Q9EVTD                080742
+     I              GCENAR                          Q9ENAR                080742
+     I              GCECCY                          Q9ECCY                080742
+     I              GCETAM                          Q9ETAM                080742
+     I              GCAMTR                          Q9AMTR                080742
+     I              GCPTFA                          Q9PTFA                080742
+     I              GCCUCA                          Q9CUCA                080742
+     I              GCBCYA                          Q9BCYA                080742
+     I              GCINVT                          Q9INVT                080742
+     I              GCCLAS                          Q9CLAS                080742
+     I              GCPROT                          Q9PROT                080742
+     I              GCBRCD                          Q9BRCD                080742
+     I              GCSDET                          Q9SDET                080742
+     I              GCNMCY                          Q9NMCY                080742
+     I*
+     I** SECURITY CHARGES AND COMMISSIONS
+     ISECGT   NS
+     I                                        1 346 WWSCG1
+     I                                        1   1 RECI
+     I                                        2   4 CCY
+     I                                        5   6 CCOM
+     I                                        7   7 CHGB
+     I                                        8   8 THRI
+     I                                        9  28 CHNR
+     I                                       29  29 TXAP
+     I                                       30  30 REBA
+     I                                    P  31  380STU1
+     I                                    P  39  460STU2
+     I                                    P  47  540STU3
+     I                                    P  55  620STU4
+     I                                    P  63  700STU5
+     I                                    P  71  780STU6
+     I                                    P  79  860STU7
+     I                                    P  87  940STU8
+     I                                    P  95 1020STU9
+     I                                    P 103 1100ST10
+     I                                    P 111 1180ST11
+     I                                    P 119 1260ST12
+     I                                    P 127 1340ST13
+     I                                    P 135 1424ST14
+     I                                    P 143 1464PL01
+     I                                    P 147 1504PL02
+     I                                    P 151 1544PL03
+     I                                    P 155 1584PL04
+     I                                    P 159 1624PL05
+     I                                    P 163 1664PL06
+     I                                    P 167 1704PL07
+     I                                    P 171 1744PL08
+     I                                    P 175 1784PL09
+     I                                    P 179 1824PL10
+     I                                    P 183 1864PL11
+     I                                    P 187 1904PL12
+     I                                    P 191 1944PL13
+     I                                    P 195 1984PL14
+     I                                    P 199 2024PL15
+     I                                    P 203 2100FC01
+     I                                    P 211 2180FC02
+     I                                    P 219 2260FC03
+     I                                    P 227 2340FC04
+     I                                    P 235 2420FC05
+     I                                    P 243 2500FC06
+     I                                    P 251 2580FC07
+     I                                    P 259 2660FC08
+     I                                    P 267 2740FC09
+     I                                    P 275 2820FC10
+     I                                    P 283 2900FC11
+     I                                    P 291 2980FC12
+     I                                    P 299 3060FC13
+     I                                    P 307 3140FC14
+     I                                    P 315 3220FC15
+     I                                      323 323 LPSI
+     I                                    P 324 3310MNCH
+     I                                    P 332 3390MXCH
+     I                                    P 340 3420LCD
+     I                                      343 343 CHTP
+     I                                    P 344 3460TNLU
+     I*
+     IWWSCG1      DS
+     I                                        1   1 RECI
+     I                                        2   4 CCY
+     I                                        5   6 CCOM
+     I                                        7   7 CHGB
+     I                                        8   8 THRI
+     I                                        9  28 CHNR
+     I                                       29  29 TXAP
+     I                                       30  30 REBA
+     I                                    P  31  380STU1
+     I                                    P  39  460STU2
+     I                                    P  47  540STU3
+     I                                    P  55  620STU4
+     I                                    P  63  700STU5
+     I                                    P  71  780STU6
+     I                                    P  79  860STU7
+     I                                    P  87  940STU8
+     I                                    P  95 1020STU9
+     I                                    P 103 1100ST10
+     I                                    P 111 1180ST11
+     I                                    P 119 1260ST12
+     I                                    P 127 1340ST13
+     I                                    P 135 1424ST14
+     I                                    P 143 1464PL01
+     I                                    P 147 1504PL02
+     I                                    P 151 1544PL03
+     I                                    P 155 1584PL04
+     I                                    P 159 1624PL05
+     I                                    P 163 1664PL06
+     I                                    P 167 1704PL07
+     I                                    P 171 1744PL08
+     I                                    P 175 1784PL09
+     I                                    P 179 1824PL10
+     I                                    P 183 1864PL11
+     I                                    P 187 1904PL12
+     I                                    P 191 1944PL13
+     I                                    P 195 1984PL14
+     I                                    P 199 2024PL15
+     I                                    P 203 2100FC01
+     I                                    P 211 2180FC02
+     I                                    P 219 2260FC03
+     I                                    P 227 2340FC04
+     I                                    P 235 2420FC05
+     I                                    P 243 2500FC06
+     I                                    P 251 2580FC07
+     I                                    P 259 2660FC08
+     I                                    P 267 2740FC09
+     I                                    P 275 2820FC10
+     I                                    P 283 2900FC11
+     I                                    P 291 2980FC12
+     I                                    P 299 3060FC13
+     I                                    P 307 3140FC14
+     I                                    P 315 3220FC15
+     I                                      323 323 LPSI
+     I                                    P 324 3310MNCH
+     I                                    P 332 3390MXCH
+     I                                    P 340 3420LCD
+     I                                      343 343 CHTP
+     I                                    P 344 3460TNLU
+     I*                                                                   B08268
+     IWWSCGT      DS                            346                       B08268
+     I*                                                                   B08268
+     IWWCPCM      DS                            346                       B08268
+     I*                                                                   B08268
+     IWWCPCC      DS                                                      B08268
+     I*                                                                   B08268
+     IWWDVCM      DS                                                      B08268
+     I*                                                                   B08268
+     IWWDVCC      DS                                                      B08268
+     I*                                                                   B08268
+     IWWMTCM      DS                                                      B08268
+     I*                                                                   B08268
+     IWWMTCC      DS                                                      B08268
+     I            DS
+     I                                        1  150ZPIN0
+     I                                        1  151ZPIN1
+     I                                        1  152ZPIN2
+     I                                        1  153ZPIN3
+     I**
+     I            DS
+     I                                        1  150ZTCON0
+     I                                        1  151ZTCON1
+     I                                        1  152ZTCON2
+     I                                        1  153ZTCON3
+     I*
+     IWWCGCD      DS
+     I                                        1   3 WWCCY1
+     I                                        4   5 WWCODE
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***LDA********UDS                            256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Data structure for bank details                                 S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure for access objects                         S01486
+     I*                                                                   S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * INIT     - INITIAL PROCESSING                                    *
+      * #P01     - PROCESS FORWARD SECURITY EVENTS                       *
+      * #P02     - DETEMINE DEFAULT CHARGES TO BE APPLIED                *
+      * CALAMT   - CALCULATE DEFAULT CHARGES                             *
+      **#W01*****-*OUTPUT*RECORD*TO*CCVEXD*****************************   S01486
+      * #W02     - OUTPUT FILE CONTROL DETAILS                           *
+      * #W03     - OUTPUT FORWARD SECURITY EVENTS AUDIT REPORT           *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      ********************************************************************
+     C*
+     C**DEFAULT*CHARGES*TABLE.**LF/TADFTCPD****************************   S01486
+     C* DEFAULT CHARGES TABLE.  LF/SEDFTCL2                               S01486
+     C*
+     C           DFTKY1    KLIST
+     C                     KFLD           WKCLAS  1
+     C                     KFLD           WKINVT  3
+     C***********          KFLD           WKCUST  6                       S01486
+     C**********           KFLD           WKCUST  60                                   S01486 CSD027
+     C                     KFLD           WKCUST  6                                           CSD027
+     C*
+     C* KLIST FOR SECURITY CHARGE DETAILS
+     C*****************************************************************
+     C** MAIN PROCESSING
+     C*****************************************************************
+     C*
+     C                     EXSR INIT
+     C*
+     C** EXECUTE #P01 - PROCESS FORWARD SECURITY EVENTS
+     C                     EXSR #P01
+     C*
+     C** WRITE A RECORD TO THE PORTFOLIO CASHFLOW EVENTS AUDIT FILE
+     C** AS PER #W02
+     C                     EXSR #W02
+     C*
+     C** PRODUCE THE FORWARD PORTFOLIO EVENTS GENERATION AUDIT REPORT
+     C** AS PER #W03
+     C                     EXSR #W03
+     C*
+     C** END THE PROGRAM
+     C                     MOVE '1'       *INLR
+     C*
+     C*****************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INIT     - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           INIT      BEGSR                           ** INIT  BSR **
+     C*                                                                   S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C*
+     C** PREPARE LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM1415'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C***********          READ SDBANKPD                 71               S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST'  P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C************IN71     IFEQ '1'                                       S01486
+     C           P@RTCD    IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C*
+     C** ERROR
+     C                     Z-ADD1         DBASE            **DB ERROR 01**
+     C***********          MOVEL'SDBANKPD'DBFILE           ***************S01486
+     C                     MOVE 'SDBANKPD'DBFILE           ***************S01486
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*
+     C** TEST DATE FORMAT FOR SR/ZDATE2
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+     C*                                                                   B08294
+      ** Set up forward date limit for write to CCVEXD                    B08294
+     C           BJRDNB    ADD  7         CCLMT   50                      B08294
+     C                     END
+     C*
+     C           EINIT     ENDSR                           ** END INIT  **
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P01     - PROCESS FORWARD SECURITY EVENTS                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #P02     - ACCESS DEFAULT CHARGE DETAIL                          *
+      * CALAMT   - CALCULATE CHARGE AMOUNT                               *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P01      BEGSR                           ** #P01  BSR **
+     C*
+     C** READ THROUGH ALL EVENTS GENERATED
+     C                     READ PMEVN1LL                 71
+     C           *IN71     DOWEQ'0'                        B1
+     C*
+     C** ON CHANGE OF CUSTOMER OR INVESTMENT TYPE OBTAIN DEFAULT CHARGE
+     C** DETAILS
+     C***********WWCLAS    IFNE Q9CLAS                     B2             S01486
+     C***********WWINVT    ORNE Q9INVT                                    S01486
+     C***********WWCNUM    ORNE Q9CNUM                                    S01486
+     C********** WWCLAS    IFNE GCCLAS                     B2       S01486080742
+     C********** WWINVT    ORNE GCINVT                              S01486080742
+     C********** WWCNUM    ORNE GCCNUM                              S01486080742
+     C           WWCLAS    IFNE Q9CLAS                     B2             080742
+     C           WWINVT    ORNE Q9INVT                                    080742
+     C           WWCNUM    ORNE Q9CNUM                                    080742
+     C                     EXSR #P02
+     C***********          MOVE Q9CLAS    WWCLAS  1                       S01486
+     C***********          MOVE Q9INVT    WWINVT  3                       S01486
+     C***********          MOVE Q9CNUM    WWCNUM  60                      S01486
+     C***********          MOVE GCCLAS    WWCLAS  1                 S01486080742
+     C***********          MOVE GCINVT    WWINVT  3                 S01486080742
+     C***********          MOVE GCCNUM    WWCNUM  60                S01486080742
+     C                     MOVE Q9CLAS    WWCLAS  1                       080742
+     C                     MOVE Q9INVT    WWINVT  3                       080742
+     C**********           MOVE Q9CNUM    WWCNUM  60                                   080742 CSD027
+     C                     MOVE Q9CNUM    WWCNUM  6                                           CSD027
+     C                     END                             E2
+     C*
+     C** CALCULATE CHARGE AMOUNTS AS PER #P03
+     C                     EXSR #P03
+     C*
+     C** OUTPUT FINAL EVENT DETAILS
+     C                     ADD  1         PPCFEV
+     C                     WRITEPMEVNTP1
+     C*
+     C***WRITE*A*RECORD*TO*EXPECTED*CONVERSION*EXTRACT*IF*REQUIRED*****   S01486
+     C***********Q9PTCY    IFNE Q9ECCY                     B2             S01486
+     C***********          EXSR #W01                                      S01486
+     C***********          END                             E2             S01486
+     C*
+     C                     READ PMEVN1LL                 71
+     C                     END                             E1
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P02     - OBTAIN DEFAULT CHARGE INFORMATION                     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS FORWARD SECURITY EVENTS                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P02      BEGSR                           ** #P02  BSR **
+     C*
+     C** RESET DEFAULT CHARGE AND COMMISSION FIELDS TO BLANK
+     C                     MOVE *BLANKS   DCCPCM
+     C                     MOVE *BLANKS   DCCPCC
+     C                     MOVE *BLANKS   DCDVCM
+     C                     MOVE *BLANKS   DCDVCC
+     C                     MOVE *BLANKS   DCMTCM
+     C                     MOVE *BLANKS   DCMTCC
+     C*
+     C** OBTAIN DEFAAULT CHARGE CODES
+     C***********          MOVE Q9CLAS    WKCLAS  1                       S01486
+     C***********          MOVE Q9INVT    WKINVT  3                       S01486
+     C***********          MOVE Q9CNUM    WKCUST  6                       S01486
+     C***********          MOVE GCCLAS    WKCLAS  1                 S01486080742
+     C***********          MOVE GCINVT    WKINVT  3                 S01486080742
+     C***********          MOVE GCCNUM    WKCUST  60                S01486080742
+     C                     MOVE Q9CLAS    WKCLAS  1                       080742
+     C                     MOVE Q9INVT    WKINVT  3                       080742
+     C**********           MOVE Q9CNUM    WKCUST  60                                   080742 CSD027
+     C                     MOVE Q9CNUM    WKCUST  6                                           CSD027
+     C*
+     C** OBTAIN DEFAULT SETTLEMENT INSTRUCTIONS FOR CUSTOMER
+     C***********DFTKY1    CHAINTADFTCL2             80                   S01486
+     C           DFTKY1    CHAINSEDFTCL2             80                   S01486
+     C*
+     C** IF DEFAULT SETTLEMENT INSTRUCTIONS NOT FOUND FOR CUSTOMER
+     C** CHECK WHETHER INSTRUCTIONS EXIST FOR INVESTMENT TYPE
+     C           *IN80     IFEQ '1'                        B1
+     C           DCRECI    ORNE 'D'
+     C***********          MOVE *BLANKS   WKCUST                          S01486
+     C**********           Z-ADD0         WKCUST                                       S01486 CSD027
+     C                     MOVE *BLANKS   WKCUST                                              CSD027
+     C***********DFTKY1    CHAINTADFTCL2             80                   S01486
+     C           DFTKY1    CHAINSEDFTCL2             80                   S01486
+     C*
+     C** IF DEFAULT SETTLEMENT INSTRUCTIONS NOT FOUND FOR INVSETMENT
+     C** TYPE CHECK WHETHER INSTRUCTIONS EXIST FOR CUSTOMER CLASIFICATION
+     C*
+     C           *IN80     IFEQ '1'                        B2
+     C           DCRECI    ORNE 'D'
+     C                     MOVE *BLANKS   WKINVT
+     C***********DFTKY1    CHAINTADFTCL2             80                   S01486
+     C           DFTKY1    CHAINSEDFTCL2             80                   S01486
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** CHARGES TO BE DISPLAYED IN NOMINAL CURRENCY WHETHER THE
+     C** SECURITY IS SINGLE, DUAL OR MULTI CURRENCY (REF AMEND TO FS
+     C***********          MOVE Q9NMCY    WWCCY1  3                       S01486
+     C***********          MOVE GCNMCY    WWCCY1  3                 S01486080742
+     C                     MOVE Q9NMCY    WWCCY1  3                       080742
+     C           DCCPCM    IFNE *BLANKS                    B1
+     C                     MOVE DCCPCM    WWCODE
+     C           WWCGCD    CHAINSECGT     WWSCGT     80
+     C                     MOVE WWSCGT    WWSCG1
+     C*
+     C           *IN80     IFEQ '0'                        B2
+     C           RECI      ANDEQ'D'
+     C                     MOVE WWSCGT    WWCPCM
+     C                     ELSE                            X2
+     C                     MOVE *BLANKS   DCCPCM
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C           DCCPCC    IFNE *BLANKS                    B1
+     C                     MOVE DCCPCC    WWCODE
+     C           WWCGCD    CHAINSECGT     WWSCGT     80
+     C                     MOVE WWSCGT    WWSCG1
+     C*
+     C           *IN80     IFEQ '0'                        B2
+     C           RECI      ANDEQ'D'
+     C                     MOVE WWSCGT    WWCPCC
+     C                     ELSE                            X2
+     C                     MOVE *BLANKS   DCCPCC
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C           DCDVCM    IFNE *BLANKS                    B1
+     C                     MOVE DCDVCM    WWCODE                          B08268
+     C           WWCGCD    CHAINSECGT     WWSCGT     80
+     C                     MOVE WWSCGT    WWSCG1
+     C*
+     C           *IN80     IFEQ '0'                        B2
+     C           RECI      ANDEQ'D'
+     C                     MOVE WWSCGT    WWDVCM
+     C                     ELSE                            X2
+     C                     MOVE *BLANKS   DCDVCM
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C           DCDVCC    IFNE *BLANKS                    B1
+     C                     MOVE DCDVCC    WWCODE
+     C           WWCGCD    CHAINSECGT     WWSCGT     80
+     C                     MOVE WWSCGT    WWSCG1
+     C*
+     C           *IN80     IFEQ '0'                        B2
+     C           RECI      ANDEQ'D'
+     C                     MOVE WWSCGT    WWDVCC
+     C                     ELSE                            X2
+     C                     MOVE *BLANKS   DCDVCC
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C           DCMTCM    IFNE *BLANKS                    B1
+     C                     MOVE DCMTCM    WWCODE
+     C           WWCGCD    CHAINSECGT     WWSCGT     80
+     C                     MOVE WWSCGT    WWSCG1
+     C*
+     C           *IN80     IFEQ '0'                        B2
+     C           RECI      ANDEQ'D'
+     C                     MOVE WWSCGT    WWMTCM
+     C                     ELSE                            X2
+     C                     MOVE *BLANKS   DCMTCM
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C           DCMTCC    IFNE *BLANKS                    B1
+     C                     MOVE DCMTCC    WWCODE
+     C           WWCGCD    CHAINSECGT     WWSCGT     80
+     C                     MOVE WWSCGT    WWSCG1
+     C*
+     C           *IN80     IFEQ '0'                        B2
+     C           RECI      ANDEQ'D'
+     C                     MOVE WWSCGT    WWMTCC
+     C                     ELSE                            X2
+     C                     MOVE *BLANKS   DCMTCC
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P03     - CALCULATE CASHFLOW NET OF CHARGES AND COMMISSIONS     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P03      BEGSR                           *** #P09   ***
+     C*
+     C                     Z-ADD0         WWCHRG 150
+     C*
+     C** CALCULATE DEFAUL COUPON COMMISSIONS
+     C***********Q9SDET    IFEQ 'CP'                       B1             S01486
+     C***********GCSDET    IFEQ 'CP'                       B1       S01486080742
+     C           Q9SDET    IFEQ 'CP'                       B1             080742
+     C*
+     C           DCCPCM    IFNE *BLANKS                    B2
+     C                     MOVE DCCPCM    WWCODE  2
+     C                     MOVE WWCPCM    WWSCG1                          B08268
+     C                     EXSR CALAMT
+     C                     ADD  ZCHGA     WWCHRG
+     C                     END                             E2
+     C*
+     C** CALCULATE DEFAULT COUPON CHARGES
+     C           DCCPCC    IFNE *BLANKS                    B2
+     C                     MOVE DCCPCC    WWCODE
+     C                     MOVE WWCPCC    WWSCG1                          B08268
+     C                     EXSR CALAMT
+     C                     ADD  ZCHGA     WWCHRG
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C** CALCULATE DEFAULT DIVIDEND COMMISSIONS
+     C***********Q9SDET    IFEQ 'DV'                       B1             S01486
+     C***********GCSDET    IFEQ 'DV'                       B1       S01486080742
+     C           Q9SDET    IFEQ 'DV'                       B1             080742
+     C*
+     C           DCDVCM    IFNE *BLANKS                    B2
+     C                     MOVE DCDVCM    WWCODE
+     C                     MOVE WWDVCM    WWSCG1                          B08268
+     C                     EXSR CALAMT
+     C                     ADD  ZCHGA     WWCHRG
+     C                     END                             E2
+     C*
+     C** CALCULATE DEFAULT DIVIDEND CHARGE
+     C           DCDVCC    IFNE *BLANKS                    B2
+     C                     MOVE DCDVCC    WWCODE
+     C                     MOVE WWDVCC    WWSCG1                          B08268
+     C                     EXSR CALAMT
+     C                     ADD  ZCHGA     WWCHRG
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C** CALCULATE DEFAULT MATURITY COMMISSIONS
+     C***********Q9SDET    IFEQ 'MT'                       B1             S01486
+     C***********GCSDET    IFEQ 'MT'                       B1       S01486080742
+     C           Q9SDET    IFEQ 'MT'                       B1             080742
+     C*
+     C           DCMTCM    IFNE *BLANKS                    B2
+     C                     MOVE DCMTCM    WWCODE
+     C                     MOVE WWMTCM    WWSCG1                          B08268
+     C                     EXSR CALAMT
+     C                     ADD  ZCHGA     WWCHRG
+     C                     END                             E2
+     C*
+     C** CALCULATE DEFAULT MATURITY CHARGES
+     C           DCMTCC    IFNE *BLANKS                    B2
+     C                     MOVE DCMTCC    WWCODE
+     C                     MOVE WWMTCC    WWSCG1                          B08268
+     C                     EXSR CALAMT
+     C                     ADD  ZCHGA     WWCHRG
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C** CALCULATE EVENT AMOUNTS NET OF CHARGES
+     C***********Q9ETAM    SUB  WWCHRG    WWCHR1 150                      S01486
+     C***********GCETAM    SUB  WWCHRG    WWCHR1 150                S01486080742
+     C           Q9ETAM    SUB  WWCHRG    WWCHR1 150                      080742
+     C***********WWCHR1    DIV  Q9ETAM    WWFACT 108                      S01486
+     C***********WWCHR1    DIV  GCETAM    WWFACT 108                S01486080742
+     C           WWCHR1    DIV  Q9ETAM    WWFACT 108                      080742
+     C*
+     C***********Q9ETAM    MULT WWFACT    Q9ETAM    H                     S01486
+     C***********GCETAM    MULT WWFACT    GCETAM    H               S01486080742
+     C           Q9ETAM    MULT WWFACT    Q9ETAM    H                     080742
+     C*
+     C***********Q9PTFA    MULT WWFACT    Q9PTFA    H                     S01486
+     C***********GCPTFA    MULT WWFACT    GCPTFA    H               S01486080742
+     C           Q9PTFA    MULT WWFACT    Q9PTFA    H                     080742
+     C*
+     C***********Q9CUCA    MULT WWFACT    Q9CUCA    H                     S01486
+     C***********GCCUCA    MULT WWFACT    GCCUCA    H               S01486080742
+     C           Q9CUCA    MULT WWFACT    Q9CUCA    H                     080742
+     C*
+     C***********Q9BCYA    MULT WWFACT    Q9BCYA    H                     S01486
+     C***********GCBCYA    MULT WWFACT    GCBCYA    H               S01486080742
+     C           Q9BCYA    MULT WWFACT    Q9BCYA    H                     080742
+     C*
+     C           #P099     ENDSR                           ** P05    **
+     C*
+     C********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CALAMT  SUB ROUTINE TO DETERMINE IF AMOUNTS NEED TO BE       *
+      *          DEFAULTED FOR CHARGES                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CALAMT    BEGSR
+     C*
+     C                     Z-ADD0         ZCHGA
+     C                     MOVE '0'       *IN80                           B08268
+     C*
+     C** IF CHARGE DETAILS APLLYING TO POSITION SETTLEMENTS CALCULATE
+     C** CHARGE AMOUNT
+     C           LPSI      IFNE 'S'
+     C           LPSI      ANDNE'P'
+     C                     EXSR CALAM2
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CALAM2  SUB ROUTINE TO CALCULATE CHARGE AMOUNTS              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CALAM2    BEGSR
+     C*
+     C*  CHARGE DETAILS
+     C*
+     C                     MOVE CHGB      ZCHGB
+     C                     MOVE THRI      ZTHRI
+     C                     Z-ADDMNCH      ZMNCH
+     C                     Z-ADDMXCH      ZMXCH
+     C*
+     C*  SET UP ARRAY FOR UPPER RANGE LIMITS
+     C*
+     C                     Z-ADDSTU1      ZRA,1
+     C                     Z-ADDSTU2      ZRA,2
+     C                     Z-ADDSTU3      ZRA,3
+     C                     Z-ADDSTU4      ZRA,4
+     C                     Z-ADDSTU5      ZRA,5
+     C                     Z-ADDSTU6      ZRA,6
+     C                     Z-ADDSTU7      ZRA,7
+     C                     Z-ADDSTU8      ZRA,8
+     C                     Z-ADDSTU9      ZRA,9
+     C                     Z-ADDST10      ZRA,10
+     C                     Z-ADDST11      ZRA,11
+     C                     Z-ADDST12      ZRA,12
+     C                     Z-ADDST13      ZRA,13
+     C                     Z-ADDST14      ZRA,14
+     C*
+     C*  SET UP ARRAY FOR PERCENTAGE LEVELS
+     C*
+     C                     Z-ADDPL01      ZPC,1
+     C                     Z-ADDPL02      ZPC,2
+     C                     Z-ADDPL03      ZPC,3
+     C                     Z-ADDPL04      ZPC,4
+     C                     Z-ADDPL05      ZPC,5
+     C                     Z-ADDPL06      ZPC,6
+     C                     Z-ADDPL07      ZPC,7
+     C                     Z-ADDPL08      ZPC,8
+     C                     Z-ADDPL09      ZPC,9
+     C                     Z-ADDPL10      ZPC,10
+     C                     Z-ADDPL11      ZPC,11
+     C                     Z-ADDPL12      ZPC,12
+     C                     Z-ADDPL13      ZPC,13
+     C                     Z-ADDPL14      ZPC,14
+     C                     Z-ADDPL15      ZPC,15
+     C*
+     C*  SET UP ARRAY FOR FLAT CHARGES
+     C*
+     C                     Z-ADDFC01      ZCG,1
+     C                     Z-ADDFC02      ZCG,2
+     C                     Z-ADDFC03      ZCG,3
+     C                     Z-ADDFC04      ZCG,4
+     C                     Z-ADDFC05      ZCG,5
+     C                     Z-ADDFC06      ZCG,6
+     C                     Z-ADDFC07      ZCG,7
+     C                     Z-ADDFC08      ZCG,8
+     C                     Z-ADDFC09      ZCG,9
+     C                     Z-ADDFC10      ZCG,10
+     C                     Z-ADDFC11      ZCG,11
+     C                     Z-ADDFC12      ZCG,12
+     C                     Z-ADDFC13      ZCG,13
+     C                     Z-ADDFC14      ZCG,14
+     C                     Z-ADDFC15      ZCG,15
+     C*
+     C*  SECURITY DETAILS
+     C                     Z-ADD0         ZDECS
+     C                     Z-ADD0         ZNMDP
+     C                     Z-ADD1         ZPRICE
+     C***********          Z-ADDQ9ETAM    ZNOML                           S01486
+     C***********          Z-ADDGCETAM    ZNOML                     S01486080742
+     C                     Z-ADDQ9ETAM    ZNOML                           080742
+     C                     Z-ADD0         ZTCFC
+     C***********          MOVE Q9PROT    ZPROT                           S01486
+     C***********          MOVE GCPROT    ZPROT                     S01486080742
+     C                     MOVE Q9PROT    ZPROT                           080742
+     C                     MOVE 'U'       ZSPBS
+     C                     Z-ADD0         ZPINT
+     C                     Z-ADD0         ZTCON
+     C                     MOVE *BLANKS   ZCCYI
+     C                     MOVE *BLANKS   ZCCYO
+     C                     Z-ADD0         ZEXCH
+     C                     MOVE *BLANKS   ZMD
+     C                     Z-ADD0         ZTNOM
+     C*
+     C                     EXSR CALAM3
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+      *****************************************************************   S01486
+      *****************************************************************   S01486
+      **#W01*****-*Write*to*expected*currency*conversions*file*********   S01486
+      *****************************************************************   S01486
+      **SUBROUTINE*CALLS:**********************************************   S01486
+      *****************************************************************   S01486
+      **SUBROUTINE*CALLED*FROM:****************************************   S01486
+      **#W01*****-*Write*to*portfolio*cash*flow*events*****************   S01486
+      **ROUTINE*USES*VARIABLES:****************************************   S01486
+      *****************************************************************   S01486
+      *****************************************************************   S01486
+     C***********#W01      BEGSR                           *** #W04   *   S01486
+     C**Set*up*fields*for*output*to*extract*file.**********************   S01486
+     C***********          MOVE Q9RECI    RECI                            S01486
+     C***********          MOVE Q9BRCD    CCBR                     B08268 S01486
+     C***********          Z-ADDQ9CNUM    CCCN                            S01486
+     C***********          MOVE Q9PTFR    CCPR                            S01486
+     C***********          MOVELQ9SEPR    CCSS                            S01486
+     C***********          MOVE Q9PTCY    CCCC                            S01486
+     C***********          Z-ADDQ9EVTD    CCDT                            S01486
+     C***********          MOVE Q9SDET    CCET                            S01486
+     C***********          MOVE Q9ECCY    CCEC                            S01486
+     C***********          Z-ADDQ9ETAM    CCEA                            S01486
+     C***********          MOVE Q9AMTR    CCFC                            S01486
+     C***********          Z-ADDQ9PTFA    CCCA                            S01486
+     C***For*declared*dividends*&*mortgage*repays,*use*pay*date*from*diaryS01486
+     C**         Q9SDET    IFEQ 'DV'                                B07903B08294
+     C**         Q9SDET    OREQ 'MP'                                B07903B08294
+     C***********          Z-ADDQ9EVTD    CPYD                            S01486
+     C***********          Z-ADDGCEVTD    CPYD                            S01486
+     C**                   END                                      B07903B08294
+     C*****************************************************************   S01486
+     C***********CPYD      IFLE CCLMT                              B08294 S01486
+     C***********          WRITECCVEXDF                                   S01486
+     C***********          END                                     B08294 S01486
+     C*****************************************************************   S01486
+     C***********          ENDSR                           *** E#W04  *** S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W02     - WRITE TO PORTFOLIO CASHFLOW EVENTS AUDIT              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W02      BEGSR                           *** #W02   ***
+     C                     MOVEL'D'       Q9RECI
+     C                     Z-ADDPPCFEV    Q9NORE
+     C                     WRITEPMEVNTZ0
+     C*
+     C                     ENDSR                           *** EW02   ***
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W03     - WRITE TO FORWARD PORT. EVENTS GENER. AUDIT REPORT     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W03      BEGSR                           *** #W03   ***
+     C                     WRITEPM1415AR
+     C                     WRITECONTROL                                   S01486
+     C           PPCFEV    IFEQ 0                                         S01486
+     C                     WRITENODTLS                                    S01486
+     C                     END                                            S01486
+     C*
+     C                     ENDSR                           *** E#W03  ***
+     C********************************************************************
+     C**
+     C**   CALAM3 SR. TO CALCULATE CHARGES/COMMISSIONS
+     C**
+     C********************************************************************
+     C*
+     C           CALAM3    BEGSR
+     C*
+     C*  WORK FIELDS
+     C*
+     C                     Z-ADD*ZERO     ZZ      20
+     C                     Z-ADD*ZERO     ZAM0   150
+     C                     Z-ADD*ZERO     ZAM1   151
+     C                     Z-ADD*ZERO     ZAM2   152
+     C                     Z-ADD*ZERO     ZAM3   153
+     C                     Z-ADD*ZERO     ZCON0  150
+     C                     Z-ADD*ZERO     ZCON1  151
+     C                     Z-ADD*ZERO     ZCON2  152
+     C                     Z-ADD*ZERO     ZCON3  153
+     C                     Z-ADD*ZERO     ZCONS  150
+     C                     Z-ADD*ZERO     ZCG0   150
+     C                     Z-ADD*ZERO     ZCG1   151
+     C                     Z-ADD*ZERO     ZCG2   152
+     C                     Z-ADD*ZERO     ZCG3   153
+     C                     Z-ADD*ZERO     ZPRICX 150
+     C                     Z-ADD*ZEROS    ZNOMLX 150
+     C*
+     C*  COURTAGE WORK FIELDS
+     C                     Z-ADD*ZEROS    ZPIN0
+     C                     Z-ADD*ZEROS    ZTCON0
+     C*
+     C                     MOVEL*BLANK    ZFLAG   1
+     C*
+     C*  INPUT PARAMETERS
+     C*
+     C* FROM THE CHARGE TYPES FILE
+     C*
+     C                     MOVE ZCHGB     ZCHGB   1
+     C                     MOVE ZTHRI     ZTHRI   1
+     C                     Z-ADDZRA       ZRA
+     C                     Z-ADDZPC       ZPC
+     C                     Z-ADDZCG       ZCG
+     C                     Z-ADDZMNCH     ZMNCH  150
+     C                     Z-ADDZMXCH     ZMXCH  150
+     C*
+     C* FROM THE TRADE/SECURITY
+     C*
+     C*********************Z-ADDZNOML*****ZNOML  110
+     C                     Z-ADDZNOML     ZNOML  150
+     C                     Z-ADDZPRICE    ZPRICE 158
+     C                     Z-ADDZDECS     ZDECS   10
+     C                     Z-ADDZNMDP     ZNMDP   10
+     C                     MOVE ZPROT     ZPROT   1
+     C                     Z-ADDZTCFC     ZTCFC   98
+     C                     MOVE ZSPBS     ZSPBS   1
+     C*
+     C* COURTAGE INPUT PARAMETERS
+     C                     MOVE ZCCYI     ZCCYI   3
+     C                     MOVE ZCCYO     ZCCYO   3
+     C                     Z-ADDZEXCH     ZEXCH  138
+     C                     MOVE ZMD       ZMD     1
+     C                     Z-ADDZPINT     ZPINT  150
+     C                     Z-ADDZTCON     ZTCON  150
+     C                     Z-ADDZTNOM     ZTNOM  150
+     C*
+     C                     ADD  ZPINT     ZPIN0
+     C                     ADD  ZTCON     ZTCON0
+     C*
+     C*  OUTPUT PARAMETERS - CHARGE/COMMISSION AMOUNT CALCULATED
+     C*
+     C                     Z-ADD*ZERO     ZCHGA  150
+     C*------------------------------------------------------------------*
+     C*
+     C*  SET PRICE TO 1 OR 100 IF CHARGE BASIS IS NOMINAL, ELSE AMOUNT
+     C*  IS CALCULATED INCORRECTLY IN ZCCAL2
+     C           ZCHGB     IFEQ 'N'
+     C           ZSPBS     IFEQ 'P'                        - B2
+     C                     Z-ADD100       ZPRICE
+     C                     ELSE
+     C                     Z-ADD1         ZPRICE
+     C                     END
+     C                     END
+     C*
+     C*------------------------------------------------------------------*
+      *
+      *  Calculate CONSIDERATION
+      *
+      *------------------------------------------------------------------*
+     C           ZDECS     IFEQ 0                          - B1
+     C           ZNOML     MULT ZPRICE    ZCON0     H
+      *
+     C** If mortgage backed security then multiply by current factor
+      *
+     C           ZPROT     IFEQ '8'                        - B2
+     C                     MULT ZTCFC     ZCON0
+     C                     END                             - E2
+      *
+     C** If price is % basis divide by 100
+      *
+     C           ZSPBS     IFEQ 'P'                        - B2
+     C                     DIV  100       ZCON0     H
+     C                     END                             - E2
+      *
+     C*  allow for nominal decimal places of security
+      *
+     C           5         SUB  ZNMDP     ZZ
+     C                     MULT POWER8,ZZ ZCON0
+     C*
+     C* COURTAGE : SAVE FIELD CHANGED IN SUBROUTINE
+     C***********          Z-ADDZCON0     ZCONSS 150
+     C                     MOVE ZCON0     ZCONSS 150
+      *
+     C*  Courtage : add total consideration
+     C           ZTCON     IFNE 0                          - B2
+     C           ZTCON0    MULT POWER8,ZZ WWCON0 150
+     C                     ADD  WWCON0    ZCON0
+     C                     END                             - E2
+      *
+     C*  Courtage : purchase interest to consideration
+     C           ZCHGB     IFEQ 'I'                        - B2
+     C           ZPIN0     MULT POWER8,ZZ WWPIN0 150
+     C                     ADD  WWPIN0    ZCON0
+     C                     MOVE 'C'       ZCHGB
+     C                     END                             - E2
+      *
+     C                     MOVE ZCON0     ZCONS
+     C                     END                             - E1
+      *
+     C           ZDECS     IFEQ 1                          - B1
+     C           ZNOML     MULT ZPRICE    ZCON1     H
+     C           ZPROT     IFEQ 'P'                        - B2
+     C           ZCON1     DIV  10        ZCON1
+     C           ZNOML     DIV  10        ZNOML
+     C                     END                             - E2
+     C           ZPROT     IFEQ '8'                        - B2
+     C                     MULT ZTCFC     ZCON1
+     C                     END                             - E2
+     C           ZSPBS     IFEQ 'P'                        - B2
+     C                     DIV  100       ZCON1     H
+     C                     END                             - E2
+     C           5         SUB  ZNMDP     ZZ
+     C                     MULT POWER8,ZZ ZCON1
+     C*****                Z-ADDZCON1     ZCONSS
+     C                     MOVE ZCON1     ZCONSS
+     C           ZTCON     IFNE 0                          - B2
+     C           ZTCON1    MULT POWER8,ZZ WWCON1 151
+     C                     ADD  WWCON1    ZCON1
+     C                     END                             - E2
+     C           ZCHGB     IFEQ 'I'                        - B2
+     C           ZPIN1     MULT POWER8,ZZ WWPIN1 151
+     C                     ADD  WWPIN1    ZCON1
+     C                     MOVE 'C'       ZCHGB
+     C                     END                             - E2
+     C                     MOVE ZCON1     ZCONS
+     C                     END                             - E1
+      *
+     C           ZDECS     IFEQ 2                          - B1
+     C           ZNOML     MULT ZPRICE    ZCON2     H
+     C           ZPROT     IFEQ 'P'                        - B2
+     C           ZCON2     DIV  100       ZCON2
+     C           ZNOML     DIV  100       ZNOML
+     C                     END                             - E2
+     C           ZPROT     IFEQ '8'                        - B2
+     C                     MULT ZTCFC     ZCON2
+     C                     END                             - E2
+     C           ZSPBS     IFEQ 'P'                        - B2
+     C                     DIV  100       ZCON2     H
+     C                     END                             - E2
+     C           5         SUB  ZNMDP     ZZ
+     C                     MULT POWER8,ZZ ZCON2
+     C***                  Z-ADDZCON2     ZCONSS
+     C                     MOVE ZCON2     ZCONSS
+     C           ZTCON     IFNE 0                          - B2
+     C           ZTCON2    MULT POWER8,ZZ WWCON2 152
+     C                     ADD  WWCON2    ZCON2
+     C                     END                             - E2
+     C           ZCHGB     IFEQ 'I'                        - B2
+     C           ZPIN2     MULT POWER8,ZZ WWPIN2 152
+     C                     ADD  WWPIN2    ZCON2
+     C                     MOVE 'C'       ZCHGB
+     C                     END                             - E2
+     C                     MOVE ZCON2     ZCONS
+     C                     END                             - E1
+      *
+     C           ZDECS     IFEQ 3                          - B1
+     C           ZNOML     MULT ZPRICE    ZCON3     H
+     C           ZPROT     IFEQ 'P'                        - B2
+     C           ZCON3     DIV  1000      ZCON3
+     C           ZNOML     DIV  1000      ZNOML
+     C                     END                             - E2
+     C           ZPROT     IFEQ '8'                        - B2
+     C                     MULT ZTCFC     ZCON3
+     C                     END                             - E2
+     C           ZSPBS     IFEQ 'P'                        - B2
+     C                     DIV  100       ZCON3     H
+     C                     END                             - E2
+     C           5         SUB  ZNMDP     ZZ
+     C                     MULT POWER8,ZZ ZCON3
+     C***                  Z-ADDZCON3     ZCONSS
+     C                     MOVE ZCON3     ZCONSS
+     C           ZTCON     IFNE 0                          - B2
+     C           ZTCON3    MULT POWER8,ZZ WWCON3 153
+     C                     ADD  WWCON3    ZCON3
+     C                     END                             - E2
+     C           ZCHGB     IFEQ 'I'                        - B2
+     C           ZPIN3     MULT POWER8,ZZ WWPIN3 153
+     C                     ADD  WWPIN3    ZCON3
+     C                     MOVE 'C'       ZCHGB
+     C                     END                             - E2
+     C                     MOVE ZCON3     ZCONS
+     C                     END                             - E1
+     C*
+     C           ZTNOM     IFNE 0                          - B1
+     C                     ADD  ZTNOM     ZNOML
+     C                     END                             - E1
+     C*------------------------------------------------------------------*
+     C*
+     C*  CALCULATE FLAT CHARGES
+     C*
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFEQ 'F'
+     C                     Z-ADD*ZEROS    ZZ
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  CONSIDERATION LESS THAN RANGE LIMIT
+     C*
+     C           ZCONS     IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZERO
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  ADD FLAT RATE TO WORK FIELD
+     C*
+     C                     Z-ADDZCG,ZZ    ZCHGA
+     C                     END
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C*
+     C*  CALCULATE PRICE CHARGE RATE
+     C*
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFEQ 'P'
+     C                     Z-ADD*ZEROS    ZZ
+     C                     MOVE ZPRICE    ZPRICX
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  PRICE LESS THAN RANGE LIMIT
+     C*
+     C           ZPRICX    IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  CALCULATE AMOUNT
+     C*
+     C           ZDECS     IFEQ 0
+     C           ZCON0     MULT ZPC,ZZ    ZAM0
+     C                     DIV  100       ZAM0      H
+     C                     MOVE ZCG,ZZ    ZCG0
+     C                     ADD  ZCG0      ZAM0
+     C                     MOVE ZAM0      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C           ZCON1     MULT ZPC,ZZ    ZAM1
+     C                     DIV  100       ZAM1      H
+     C                     MOVE ZCG,ZZ    ZCG1
+     C                     ADD  ZCG1      ZAM1
+     C                     MOVE ZAM1      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C           ZCON2     MULT ZPC,ZZ    ZAM2
+     C                     DIV  100       ZAM2      H
+     C                     MOVE ZCG,ZZ    ZCG2
+     C                     ADD  ZCG2      ZAM2
+     C                     MOVE ZAM2      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C           ZCON3     MULT ZPC,ZZ    ZAM3
+     C                     DIV  100       ZAM3      H
+     C                     MOVE ZCG,ZZ    ZCG3
+     C                     ADD  ZCG3      ZAM3
+     C                     MOVE ZAM3      ZCHGA
+     C                     END
+     C*
+     C                     END
+     C*------------------------------------------------------------------*
+     C*  CALCULATE CONSIDERATION/Threshold BASED CHARGES
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFEQ 'C'
+     C           ZTHRI     ANDEQ'Y'
+     C                     Z-ADD*ZEROS    ZZ
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  CONSIDERATION LESS THAN RANGE LIMIT
+     C*
+     C           ZCONS     IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  CALCULATE AMOUNT
+     C*
+     C           ZDECS     IFEQ 0
+     C           ZCON0     MULT ZPC,ZZ    ZAM0
+     C                     DIV  100       ZAM0      H
+     C                     MOVE ZCG,ZZ    ZCG0
+     C                     ADD  ZCG0      ZAM0
+     C                     MOVE ZAM0      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C           ZCON1     MULT ZPC,ZZ    ZAM1
+     C                     DIV  100       ZAM1      H
+     C                     MOVE ZCG,ZZ    ZCG1
+     C                     ADD  ZCG1      ZAM1
+     C                     MOVE ZAM1      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C           ZCON2     MULT ZPC,ZZ    ZAM2
+     C                     DIV  100       ZAM2      H
+     C                     MOVE ZCG,ZZ    ZCG2
+     C                     ADD  ZCG2      ZAM2
+     C                     MOVE ZAM2      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C           ZCON3     MULT ZPC,ZZ    ZAM3
+     C                     DIV  100       ZAM3      H
+     C                     MOVE ZCG,ZZ    ZCG3
+     C                     ADD  ZCG3      ZAM3
+     C                     MOVE ZAM3      ZCHGA
+     C                     END
+     C                     END
+     C*------------------------------------------------------------------*
+     C*  CALCULATE CONSIDERATION/Tiered BASED CHARGES
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFEQ 'C'
+     C           ZTHRI     ANDEQ'N'
+     C                     Z-ADD*ZEROS    ZZ
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  CONSIDERATION LESS THAN RANGE LIMIT
+     C*
+     C           ZCONS     IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  CALCULATE AMOUNT
+     C*
+     C                     EXSR ZCCAL2
+     C*
+     C           ZDECS     IFEQ 0
+     C                     MOVE ZCG,ZZ    ZCG0
+     C                     ADD  ZCG0      ZAM0
+     C                     MOVE ZAM0      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C                     MOVE ZCG,ZZ    ZCG1
+     C                     ADD  ZCG1      ZAM1
+     C                     MOVE ZAM1      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C                     MOVE ZCG,ZZ    ZCG2
+     C                     ADD  ZCG2      ZAM2
+     C                     MOVE ZAM2      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C                     MOVE ZCG,ZZ    ZCG3
+     C                     ADD  ZCG3      ZAM3
+     C                     MOVE ZAM3      ZCHGA
+     C                     END
+     C*
+     C                     END
+     C*------------------------------------------------------------------*
+     C*
+     C*  CALCULATE NOMINAL/Threshold BASED CHARGES
+     C*
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFEQ 'N'
+     C           ZTHRI     ANDEQ'Y'
+     C*
+     C** ADJUST FOR NOMINAL DEC.PLACES (IMPLICIT 4 D.P.s ON LF/SECGT)
+     C*
+     C           8         SUB  ZNMDP     ZZ
+     C           ZNOML     MULT POWER8,ZZ ZNOMLX
+     C                     MULT 10        ZNOMLX
+     C                     Z-ADD*ZEROS    ZZ
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  NOMINAL LESS THAN RANGE LIMIT
+     C*
+     C           ZNOMLX    IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  CALCULATE AMOUNT
+     C*
+     C           ZDECS     IFEQ 0
+     C           ZCON0     MULT ZPC,ZZ    ZAM0
+     C                     DIV  100       ZAM0      H
+     C                     MOVE ZCG,ZZ    ZCG0
+     C                     ADD  ZCG0      ZAM0
+     C                     MOVE ZAM0      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C           ZCON1     MULT ZPC,ZZ    ZAM1
+     C                     DIV  100       ZAM1      H
+     C                     MOVE ZCG,ZZ    ZCG1
+     C                     ADD  ZCG1      ZAM1
+     C                     MOVE ZAM1      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C           ZCON2     MULT ZPC,ZZ    ZAM2
+     C                     DIV  100       ZAM2      H
+     C                     MOVE ZCG,ZZ    ZCG2
+     C                     ADD  ZCG2      ZAM2
+     C                     MOVE ZAM2      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C           ZCON3     MULT ZPC,ZZ    ZAM3
+     C                     DIV  100       ZAM3      H
+     C                     MOVE ZCG,ZZ    ZCG3
+     C                     ADD  ZCG3      ZAM3
+     C                     MOVE ZAM3      ZCHGA
+     C                     END
+     C*
+     C                     END
+     C*------------------------------------------------------------------*
+     C*  CALCULATE NOMINAL/Tiered BASED CHARGES
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFEQ 'N'
+     C           ZTHRI     ANDEQ'N'
+     C*
+     C** ADJUST FOR NOMINAL DEC.PLACES (IMPLICIT 4 D.P.s ON LF/SECGT)
+     C*
+     C           8         SUB  ZNMDP     ZZ
+     C           ZNOML     MULT POWER8,ZZ ZNOMLX
+     C                     MULT 10        ZNOMLX
+     C                     Z-ADD*ZEROS    ZZ
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  NOMINAL LESS THAN RANGE LIMIT
+     C*
+     C           ZNOMLX    IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  CALCULATE AMOUNT
+     C*
+     C                     EXSR ZCCAL2
+     C*
+     C           ZDECS     IFEQ 0
+     C                     MOVE ZCG,ZZ    ZCG0
+     C                     ADD  ZCG0      ZAM0
+     C                     MOVE ZAM0      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C                     MOVE ZCG,ZZ    ZCG1
+     C                     ADD  ZCG1      ZAM1
+     C                     MOVE ZAM1      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C                     MOVE ZCG,ZZ    ZCG2
+     C                     ADD  ZCG2      ZAM2
+     C                     MOVE ZAM2      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C                     MOVE ZCG,ZZ    ZCG3
+     C                     ADD  ZCG3      ZAM3
+     C                     MOVE ZAM3      ZCHGA
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  SET MINIMUM AMOUNT
+     C*
+     C           ZCHGA     IFLT ZMNCH
+     C                     Z-ADDZMNCH     ZCHGA
+     C                     END
+     C*
+     C*  SET MAXIMUM AMOUNT
+     C*
+     C           ZMXCH     IFNE *ZERO
+     C           ZCHGA     ANDGTZMXCH
+     C                     Z-ADDZMXCH     ZCHGA
+     C                     END
+     C*
+     C*  RESTORE SAVED FIELD AFTER CALCULATION OF CONSIDERATION
+     C*
+     C***                  Z-ADDZCONSS    ZCONS
+     C                     MOVE ZCONSS    ZCONS
+     C*
+     C                     ENDSR
+     C*
+      /COPY ZSRSRC,ZCCAL2Z1
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * INIT     - INITIAL PROCESSING                                    *
+      * #P02     - ACCESS INSTRUMENT DETAILS                             *
+      * #P03     - ACCESS CUSTOMER DETAIL                                *
+      * #P04     - ACCESS PORTFOLIO DETAILS                              *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*                                                                   S01486
+     C** Output header and database error record format                   S01486
+     C*                                                                   S01486
+     C                     WRITEPM1415AR                                  S01486
+     C                     WRITEDBERROR                                   S01486
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+**  CPY@
+(c) Finastra International Limited 2001
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

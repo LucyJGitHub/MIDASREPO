@@ -1,0 +1,1220 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Produce dependency table report')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing
+     F*                                                               *
+     F*  CB0210 - PRODUCE DEPENDENCY TABLE REPORT                     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CPK030             Date 26Mar14               *
+      *                 CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 180007             Date 08Jun00               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CPB001             Date 02Jun99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CPL002             DATE 08MAR99               *
+     F*                 CTI001             DATE 30JUL97               *
+     F*                 CCB003             Date 21OCT96               *
+     F*                 CAC001             DATE 17JUN96               *
+     F*                 S01486             DATE 06JUN94               *
+     F*                 S01498             DATE 06JUN94               *
+     F*                 S01522             DATE 25NOV94               *
+     F*                 S01493             DATE 19JUL94               *
+     F*                 S01488             DATE 25APR94               *
+     F*                 S01393             DATE 29OCT92               *
+     F*                 S10736             DATE 29OCT92               *
+     F*                 S01379             DATE 22SEP92               *
+     F*                 S01382             DATE 11AUG92               *
+     F*                 S01339             DATE 31JUL92               *
+     F*                 S01310             DATE 31JUL91               *
+     F*                 LN0635             DATE 16AUG90               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CPK030 - Program wrote out incorrect format on first line.   *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+     F*  180007 - Increase size of variables to prevent array idx err *
+     F*  CPB001 - 'Private Banking' Module                            *
+     F*  CPL002 - Midas - Plato Interface Enhancement.                *
+     F*  CTI001 - Midas / Trade Innovation Interface Phase 1          *
+      *  CCB003 - COB Performance Enhancements - Task Split           *
+      *           Amended to show new fields for Task Split process.  *
+     F*  CAC001 - Profit Centre Accounting Development:               *
+     F*           Introduction of new Analytical Accounting module    *
+     F*  S01486 - PORTFOLIO MANAGEMENT                                *
+     F*  S01498 - PORTFOLIO LENDING                                   *
+      *  S01522 - User Defined Correspondence                         *
+      *  S01493 - MIDAS EXPORT DATA INTERFACE                         *   S01493
+      *  S01488 - COB RUN CONDITIONS ENHANCEMENTS                     *
+      *           RUNDAY COMPILE TIME ARRAY REMOVED                   *
+      *  S01393 - RISK MANAGEMENT                                     *
+      *  S10736 - MANAGEMENT ACCOUNTING                               *
+      *  S01379 - HISTORY AND AUDIT FACILITY                          *
+      *         - USE 'HF' FOR HISTORY AND AUDIT FACILITY             *
+      *  S01382 - OPTICAL DISK REPORTING                              *
+      *         - USE 'MF' FOR MICROFICHE, 'OD' FOR OPTICAL DISK      *
+      *  S01339 - SYNDICATED LOANS MADE REDUNDANT AT R10.             *
+      *  S01310 - SWIFT RATIONALISATION                               *
+      *           CHANGE 'NETWORK MIDAS' (NM) TO 'MESSAGE             *
+      *           MANAGEMENT' (ME) - ARRAYS MODPOS, MODNM & MODIDS    *
+      *           CHANGED                                             *
+      *           --- AND ADD CF (POSN 70)
+     F*  LN0635 - CHANGE FRA/IRS MODULE ID FORM '#L' TO 'IR'          *
+     F*                                                               *
+     F*****************************************************************
+     FCBMDCNL1IF  E           K        DISK                           UC
+     FCBDPRLL1IF  E           K        DISK                           UC
+     FCBDPRLL4IF  E           K        DISK                           UC
+     FCBMEXCL1IF  E           K        DISK                           UC
+     FCBCMPNL1IF  E           K        DISK
+     FCBCMPNL4IF  E           K        DISK
+     FCBRUNCL1IF  E           K        DISK                           UC  S01488
+     FCB0210P1O   E                    PRINTER
+     F                                              KINFDS PRINT
+     F*
+      /SPACE 2
+     F********************************************************************
+     F*
+     F*     C  L   FUNCTION OF INDICATORS
+     F*
+     F*    25      ERROR ON LOKUP OF ARRAY MMODFL
+     F*    30      OUTPUT 'NO. OF TASK SPLIT JOBS' FIELD ON REPORT        CCB003
+     F*    35      NO RECORDS FOUND ON OR END OF FILE CBCMPNL4
+     F*    36      NO RECORDS FOUND ON OR END OF FILE CBCMPNL4 ALSO
+     F*            SETON AFTER SINGLE COMPONENT REPORT PRODUCED
+     F*    41      FAIL ON CHAIN TO CBCMPNL1 OR NO FURTHER RECORDS
+     F*            FOUND ON SAME KEY
+     F*    43      FAIL ON CHAIN TO CBDPRLL1 OR NO FURTHER RECORDS
+     F*            FOUND ON SAME KEY
+     F*    44      FAIL ON CHAIN TO CBCMPNL1 FOR TEXT FIELD
+     F*    45      FAIL ON CHAIN TO CBDPRLL1 OR NO FURTHER RECORDS
+     F*            FOUND ON SAME KEY
+     F*    47      FAIL ON CHAIN TO CBMEXCL1 OR NO FURTHER RECORDS
+     F*            FOUND ON SAME KEY
+     F*    49      FAIL ON CHAIN TO CBCMPNL4
+     F*    50      ERROR ON LOKUP OF ARRAY MODPOS
+     F*    70      PRINT SUB HEADING FOR FIRST RECORD ON OTHER MODULES
+     F*            DETAILS FORMAT
+     F*    71      PRINT SUB HEADING FOR FIRST RECORD ON DEPENDENT
+     F*            COMPONENT DETAILS FORMAT
+     F*    72      PRINT SUB HEADING FOR FIRST RECORD ON DEPENDS ON
+     F*            COMPONENT DETAILS FORMAT
+     F*    73      PRINT SUB HEADING FOR FIRST RECORD ON MUTUALLY
+     F*            EXCLUSIVE COMPONENT DETAILS FORMAT
+     F*    81      PRINT OTHER MODULES DETAILS SUB HEADING WITH (cont.)
+     F*            FIELD
+     F*    83      PRINT DEPENDENT COMPONENT DETAILS SUB-HEADING WITH
+     F*            (cont.) FIELD
+     F*    84      PRINT DEPENDS ON COMPONENT DETAILS SUB-HEADING WITH
+     F*            (cont.) FIELD
+     F*    85      PRINT MUTUALLY EXCLUSIVE COMPONENT DETAILS SUB
+     F*            HEADINGS WITH (cont.) FIELD
+     F*    89      PRINT 'OR' IF MORE THAN ONE RECORD FOR OTHER MODULES
+     F*            DETAILS
+     F*    90      END OF FILE CBRUNCL1
+     F*
+     F*        LR  LAST RECORD INDICATOR
+     F*
+     F*    U7&U8   DATABASE ERROR
+     F*
+     F*                 ****************************
+     F*                  EXPLANATION OF MODULE CODES
+     F*                 ****************************
+     F*
+     F*    CODE   POSITION DESCRIPTION
+     F*
+     F*     SD      14     STANDING DATA
+     F*     MT      15     MIDAS/TELEX   MODULE
+     F*     #A      16     SWIFT FUNDS TRANSFER
+     F*     #B      17     SWIFT SECURITIES TRADING
+     F*     #C      18     SWIFT CUSTOMER LENDING
+     F******#D******19*****SWIFT SYNDICATED LOANS                         S01339
+     F*     #E      20     SWIFT STATEMENTS
+     F*     #F      21     SWIFT DEALING
+     F*     GL      22     STANDING DATA/GENERAL LEDGER
+     F*     DL      23     DEALING: FX
+     F******CL******24*****SYNDICATED LOANS                               S01339
+     F*     EM      25     EXPOSURE MANAGEMENT
+     F*     FM      26     FINANCIAL MODELLER
+     F*     ST      27     STATUTORY RETURNS
+     F*     LE      28     CUSTOMER LENDING
+     F*     RE      29     RETAIL BANKING
+     F*     MS      30     MIDAS/S.W.I.F.T. DIRECT LINK
+     F*     SE      31     SECURITIES TRADING
+     F*     RC      32     AUTO-RECONCILIATIONS
+     F*     #G      33     BOND DEALERS INTERFACE
+     F*     FD      34     DRS STANDING DATA
+     F*     CM      35     DRS CONTROL MODULE
+     F*     FX      36     DRS FOREIGN EXCHANGE
+     F*     MM      37     DRS MONEY MARKET
+     F*     AB      38     DRS ARBITRAGE MODULE
+     F*     FT      39     FUNDS TRANSFER
+     F*     CA      40     DRS COMMON APPLICATIONS
+     F*     FF      41     FUTURES & OPTIONS
+     F******#H******42*****MIDAS/TELEX SYNDICATED LOANS                   S01339
+     F*     #I      43     MIDAS/TELEX DEALING
+     F*     #J      44     MIDAS/TELEX GENERAL LEDGER
+     F*     #K      45     MIDAS/TELEX CUSTOMER LENDING
+      *     ME      46     MESSAGE MANAGEMENT                             S01310
+     F******NM******46*****NETWORK MIDAS                                  S01310
+     F******#L******47     FRA/IRS INDICATOR                              LN0635
+     F*     IR      47     FRA/IRS INDICATOR                              LN0635
+     F*     DL      48     DEALING: MM
+     F*     DL      49     INTERNAL CONTRACTS
+     F*     TM      50     TREASURY MANAGEMENT
+     F******#M      51     RISK MANAGEMENT                                S01393
+     F*     RM      51     RISK MANAGEMENT                                S01393
+     F*     TK      52     TESTKEY
+     F*     MQ      53     MIDAS/Q
+     F******MA******54     MICROFICHE                                     S01382
+     F*     MF      54     MICROFICHE                                     S01382
+     F*     IA      55     INTEREST ON ACCOUNTS MODULE
+     F*             56     WINDOW PROCESSING
+     F*             57     SAR PROCESSING
+     F*             58     FRENCH RETURNS
+     F*             59     LUX RETURNS
+     F*             60     DUTCH RETURNS
+     F*             61     GERMAN RETURNS
+     F*             62     BELGIAN RETURNS
+     F*             63     ITALIAN RETURNS
+     F*             64     SWIFT EXTERNAL INTERFACE
+     F*             65     PORTFLOIO MANAGEMENT
+     F*             66     CREDIT MANAGEMENT
+     F*             67     HEAD OFFICE REPORTING
+     F*             68     AVERAGE BALANCES
+     F*             69     MARGINS
+     F************* 70     CONFIRMATION MATCHING                          S01310
+     F*     CF      70     CONFIRMATION MATCHING                          S01310
+     F*             71     MIMIX
+     F*             72     REPORT CONTROL FACILITY
+     F*             73     AMPS INT
+     F*             74     SWISS RETURNS
+     F*             75     FIDUCIARY LOANS AND DEPOSITS
+     F*             76     LOMBARD CREDITS
+     F*             77     CANTONAL TAX
+     F*             78     STAMP DUTY
+     F*             79     USE DRS SHORTNAMES
+     F*             80     CHIPS DEALING
+     F*             81     CHIPS LENDING
+     F*             82     CHIPS OPENING BALANCE
+     F*             83     CHIPS
+     F*             84     CHIPS DIRECT LINK
+     F**************85     OPTICAL DISK                                   S01382
+     F*     OD      85     OPTICAL DISK                                   S01382
+     F*     MB      86     MULTIBRANCHING INDICATOR
+     F*     HF      94     HISTORY AND AUDIT FACILITY                     S01379
+     F*     MC      95     MANAGEMENT ACCOUNTING                          S10736
+     F*     ED      99     MIDAS EXPORT DATA INTERFACE                    S01493
+     F*     CG     101     User Defined Correspondence                    S01522
+     F*     PL     102     Midas Plato Interface Enhancement              CPL002
+     F*     TI     103     Midas/TI Interface                             CTI001
+     F*     PB     104     Private Banking                                CPB001
+     F**********87-128     RESERVED FOR LATER USE                         S01379
+     F* REMAINING POSITIONS RESERVED FOR LATER USE                        S01379
+     F*
+     F*****************************************************************
+     F/EJECT
+     E*
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E                    MODPOS 11 128  2
+     E** ARRAY SHOWING POSITIONS OF MODULES FROM FILE SDMMODPD
+     E*
+     E                    MODIDS 13 128  4
+     E** ARRAY SHOWING FOUR NAME MODULE TITLE FOR REPORT
+     E*
+     E                    MODNM   1 128 30
+     E** ARRAY TO CONVERT 2A MODULE NAME TO MEANINGFUL ENGLISH NAME
+     E*
+     E********************RUNDAY  1  21 76                                S01488
+     E                    RDAY       99 70                                S01488
+     E** ARRAY SHOWING DAY ON WHICH REPORT IS RUN
+     E*
+     E                    VALM       10  3
+     E** ARRAY TO HOLD MODULE ID'S AND
+     E** SWITCH SETTINGS FROM CBMDCNL1
+     E*
+     E                    OUT        10  8
+     E** ARRAY TO HOLD MODULE ID AND SWITCH
+     E** SETTING TO BE OUTPUT TO REPORT
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*
+     I@DHREGH
+     I              DHCSEQ                          XXDMCD
+     I              DHCMEF                          XXKGST
+     I              DHCOTT                          XXDLCD
+     I** RENAME FIELDS AS USED IN CHAIN TO CBMEXCL1
+     I*
+     IOMOD        DS
+     I                                        1  30 OTHMOD
+     I                                        1   2 DJMD01
+     I                                        3   3 DJMP01
+     I                                        4   5 DJMD02
+     I                                        6   6 DJMP02
+     I                                        7   8 DJMD03
+     I                                        9   9 DJMP03
+     I                                       10  11 DJMD04
+     I                                       12  12 DJMP04
+     I                                       13  14 DJMD05
+     I                                       15  15 DJMP05
+     I                                       16  17 DJMD06
+     I                                       18  18 DJMP06
+     I                                       19  20 DJMD07
+     I                                       21  21 DJMP07
+     I                                       22  23 DJMD08
+     I                                       24  24 DJMP08
+     I                                       25  26 DJMD09
+     I                                       27  27 DJMP09
+     I                                       28  29 DJMD10
+     I                                       30  30 DJMP10
+     I** DATA STRUCTURE TO TAKE MODULE ID
+     I** AND SWITCH SETTING FIELDS FROM CBMDCNL1
+     I*
+     IMODSDT      DS
+     I                                        1   3 VAL
+     I                                        1   2 FLDNM
+     I                                        3   3 ONOFF
+     I** DATA STRUCTURE TO SPLIT OTHER MODULE DETAILS FIELD
+     I*
+     IMODKDS      DS
+     I                                        1  10 MODNMX
+     I                                       11  15 MODSQX
+     I** DATA STRUCTURE FOR KEY FIELD MODKEY TO BE MOVED INTO DBKEY FIELD
+     I*
+     ICOMKDS      DS
+     I                                        1   2 CMPMDX
+     I                                        3  12 CMPNMX
+     I                                       13  17 CMPSQX
+     I** DATA STRUCTURE FOR KEY FIELD COMKEY TO BE MOVED INTO DBKEY FIELD
+     I*
+     IDEPKDS      DS
+     I                                        1  10 DCOPX
+     I                                       11  15 DSEQX
+     I** DATA STRUCTURE FOR KEY FIELD DEPKEY TO BE MOVED INTO DBKEY FIELD
+     I*
+     IDPCKDS      DS
+     I                                        1  10 DPCOPX
+     I                                       11  15 DPSEQX
+     I** DATA STRUCTURE FOR KEY FIELD DPCKEY TO BE MOVED INTO DBKEY FIELD
+     I*
+     IMEXKDS      DS
+     I                                        1  10 MECOX
+     I                                       11  15 MESQX
+     I** DATA STRUCTURE FOR KEY FIELD MEXKEY TO BE MOVED INTO DBKEY FIELD
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I** LOCAL DATA AREA
+     I*
+     IPRINT       DS
+     I                                    B 367 3680LINE
+     I** DATA STRUCTURE FOR LINE VARIABLE
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DATA STRUCTURE FOR ACESS OBJECT AOBANKR0
+     I*
+     IDSFDY     E DSDSFDY
+     I** FIRST DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     I*
+     I*****************************************************************
+     I/EJECT
+     /*
+     C           *ENTRY    PLIST
+     C                     PARM           NUM     1
+     C                     PARM           CMPNM  10
+     C                     PARM           CMPSQ   5
+     C                     PARM           MODID   2
+     C*
+     C** KEY TO CHAIN TO CBMDCNL1
+     C*
+     C           MODKEY    KLIST
+     C                     KFLD           COMPNM
+     C                     KFLD           COMPSQ
+     C*
+     C** KEY TO CHAIN TO CBCMPNL4
+     C*
+     C           COMKEY    KLIST
+     C                     KFLD           COMPMD
+     C                     KFLD           COMPNM
+     C                     KFLD           COMPSQ
+     C*
+     C** KEY TO CHAIN TO CBDPRLL1
+     C*
+     C           DEPKEY    KLIST
+     C                     KFLD           DIDDON
+     C                     KFLD           DIDDOS
+     C*
+     C** KEY TO CHAIN TO CBDPRLL4
+     C*
+     C           DPCKEY    KLIST
+     C                     KFLD           DIDSON
+     C                     KFLD           DIDSOS
+     C*
+     C** KEY TO CHAIN TO CBMEXCL1
+     C*
+     C           MEXKEY    KLIST
+     C                     KFLD           DKMECN
+     C                     KFLD           DKMECS
+     C*
+     C** DEFINE LOCAL DATA AREA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** SET UP PROGRAM NAME FOR DATABASE ERRORS
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CB0210  'DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+     C*
+     C** CALL AOBANKR0
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** DATABASE ERROR IF AOBANKR0 DOES
+     C** NOT EXIST OR INVALID RECORD FOUND
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     WRITERPTHDG
+     C                     MOVEL'BNKR0'   DBFILE           ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+      *                                                                   S01488
+      *    Load array of run days from CB run conditions file             S01488
+      *                                                                   S01488
+     C                     OPEN CBRUNCL1                                  S01488
+     C                     READ CBRUNCL1                 90               S01488
+     C           *IN90     DOWEQ'0'                                       S01488
+     C                     ADD  1         C       20                      S01488
+     C                     MOVE ANRUNT    RDAY,C                          S01488
+     C                     READ CBRUNCL1                 90               S01488
+     C                     ENDDO                                          S01488
+     C                     CLOSECBRUNCL1                                  S01488
+     C*
+     C** IF PARAMETER NUM = 1 MOVE COMPONENT
+     C** NAME INTO REPORT TYPE FIELD
+     C*
+     C           NUM       IFEQ '1'
+     C                     MOVELCMPNM     REPTYP
+     C                     END
+     C*
+     C** IF PARAMETER NUM = 2 MOVE MODULE TITLE INTO
+     C** REPORT TYPE FIELD USING ARRAYS MODPOS AND MODNM
+     C*
+     C           NUM       IFEQ '2'
+     C******************** Z-ADD1         X       20                      S01522
+     C                     Z-ADD1         X       30                      S01522
+     C           MODID     LOKUPMODPOS,X                 50
+     C*
+     C** IF MODULE ID NOT FOUND ON ARRAY MODPOS DATABASE ERROR
+     C*
+     C           *IN50     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     WRITERPTHDG
+     C                     MOVEL'MODPS'   DBFILE
+     C                     MOVELMODID     DBKEY            ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     MOVELMODNM,X   REPTYP
+     C*
+     C                     END
+     C*
+     C** IF PARAMETER NUM = 3 MOVE 'ALL COMPONENTS'
+     C** INTO REPORT TYPE FIELD USING WORK FIELD FLDZZ
+     C*
+     C           NUM       IFEQ '3'
+     C                     MOVEL'ALL COMP'FLDZZ  14
+     C                     MOVE 'ONENTS'  FLDZZ
+     C                     MOVELFLDZZ     REPTYP
+     C                     END
+     C*
+     C** WRITE REPORT HEADER
+     C*
+     C                     WRITERPTHDG
+     C*
+     C** IF NUM = 1 CHAIN TO CBCMPNL4 TO FIND RECORD
+     C*
+     C           NUM       IFEQ '1'
+     C                     MOVE MODID     COMPMD  2
+     C                     MOVE CMPNM     COMPNM 10
+     C                     MOVE CMPSQ     COMPSQ  5
+     C           COMKEY    CHAIN@CMPNHK              49
+     C*
+     C** IF RECORD NOT ON CBCMPNL4 DATABASE ERROR
+     C*
+     C           *IN49     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CMPL4'   DBFILE
+     C                     MOVE COMPMD    CMPMDX
+     C                     MOVE COMPNM    CMPNMX
+     C                     MOVE COMPSQ    CMPSQX
+     C                     MOVELCOMKDS    DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     EXSR RPTDET
+     C*
+     C                     END
+     C*
+     C** IF NUM = 2 READ FILE CBCMPNL4 TO FIND RECORDS
+     C*
+     C           NUM       IFEQ '2'
+     C           MODID     SETLL@CMPNHK                  35
+     C*
+     C** IF NO RECORDS FOR THIS MODULE WRITE
+     C** NO DETAILS TO REPORT FORMAT
+     C*
+     C           *IN35     IFEQ '0'
+     C                     WRITENODTRP
+     C*
+     C                     ELSE
+     C           MODID     READE@CMPNHK                  35
+     C*
+     C           *IN35     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CMPL4'   DBFILE
+     C                     MOVELMODID     DBKEY            ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     EXSR RPTDET
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** IF NUM = 3 READ COMPONENTS FILE TO FIND RECORDS
+     C*
+     C           NUM       IFEQ '3'
+     C                     READ @CMPNHK                  36
+     C*
+     C** IF NO RECORDS ON CBCMPNL4 DATABASE ERROR
+     C*
+     C           *IN36     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CMPL4'   DBFILE
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     Z-ADD5         DBASE            * DB ERROR 05 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     EXSR RPTDET
+     C*
+     C                     END
+     C*
+     C** WRITE 'END OF REPORT' LINE
+     C*
+     C                     WRITERPTEND
+     C*
+     C                     SETON                     LR
+     C*
+     C***************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** INDEX OF SUBROUTINES
+     C**
+     C**
+     C** RPTDET - TO PRODUCE REPORT DETAILS
+     C**
+     C** DBERR  - DATABASE ERROR HANDLING
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** RPTDET - SUBROUTINE TO PRODUCE REPORT DETAILS
+     C*
+     C           RPTDET    BEGSR
+     C*
+     C** DO WHILE RECORDS FOUND ON CBCMPNL4
+     C*
+     C           *IN36     DOWNE'1'
+     C*
+     C** SETON INDICATORS FOR PRINTING REPORT SECTION HEADINGS
+     C*
+     C                     SETON                     707172
+     C                     SETON                     73
+     C*
+     C** SET UP RUN TYPE FIELD VIA ARRAY
+     C** ADD ONE AS FIRST TYPE IS '00'
+     C*
+     C                     MOVE DHCFRQ    T       20
+     C                     ADD  1         T
+     C*********************MOVE RUNDAY,T  RUNTP                           S01488
+     C                     MOVELRDAY,T    RUNTP                           S01488
+     C*
+      ** Only display 'No. of Task Split Jobs' field if                   CCB003
+      ** 'Task Split Job' field is 'Y'.                                   CCB003
+      *                                                                   CCB003
+     C                     MOVE '0'       *IN30                           CCB003
+      *                                                                   CCB003
+     C           DHTASK    IFEQ 'Y'                                       CCB003
+     C                     MOVE '1'       *IN30                           CCB003
+     C                     ELSE                                           CCB003
+     C                     MOVE 'N'       DHTASK                          CCB003
+     C                     ENDIF                                          CCB003
+     C** WRITE COMPONENT DETAILS FORMAT
+     C*
+     C                     WRITECOMPDT
+     C*
+     C** IF THERE ARE EXTRA MODULES RELATING TO THIS COMPONENT
+     C*
+     C           DHCEMI    IFEQ 'Y'
+     C*
+     C** OPEN FILE CBMDCNL1 AND CHAIN FOR OTHER MODULES DETAILS
+     C*
+     C                     OPEN CBMDCNL1
+     C                     MOVE DHCOTT    COMPNM
+     C                     MOVE DHCSEQ    COMPSQ
+     C           MODKEY    CHAIN@DJREGN              41
+     C*
+     C** IF NO RECORDS ON CBMDCNL1 CLOSE FILE
+     C** AND PERFORM DATABASE ERROR SUBROUTINE
+     C*
+     C           *IN41     IFEQ '1'
+     C                     CLOSECBMDCNL1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MDCL1'   DBFILE
+     C                     MOVE COMPNM    MODNMX
+     C                     MOVE COMPSQ    MODSQX
+     C                     MOVELMODKDS    DBKEY            ***************
+     C                     Z-ADD6         DBASE            * DB ERROR 06 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** DO WHILE SAME KEY
+     C*
+     C           *IN41     DOWEQ'0'
+     C*
+     C** SET UP ARRAYS TO DETERMINE OTHER MODULE DETAILS TO REPORT
+     C*
+     C                     MOVE *BLANKS   OUT
+     C                     MOVEAOTHMOD    VALM
+     C**********           Z-ADD1         Z       20                      180007
+     C**********           Z-ADD1         CNT     20                      180007
+     C                     Z-ADD1         Z       30                      180007
+     C                     Z-ADD1         CNT     30                      180007
+     C                     MOVE VALM,CNT  VAL
+     C*
+     C** DO FOR EACH OF THE TEN RECORDS UNLESS ONE IS BLANK,
+     C** IF ONE BLANK RECORD FOUND ALL REMAINDER ARE ASSUMED BLANK
+     C*
+     C           Z         DOWLE10
+     C           FLDNM     ANDNE*BLANKS
+     C*
+     C** ZEROISE LOKUP FIELD IN ORDER TO SEARCH WHOLE
+     C** ARRAY FOR EACH MODULE ID ON OTHER MODULES FILE
+     C*
+     C**********           Z-ADD1         Y       20                      180007
+     C                     Z-ADD1         Y       30                      180007
+     C*
+     C           FLDNM     LOKUPMODPOS,Y                 25
+     C*
+     C           *IN25     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MODPS'   DBFILE
+     C                     MOVELFLDNM     DBKEY            ***************
+     C                     Z-ADD7         DBASE            * DB ERROR 07 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     MOVELMODIDS,Y  OUT,Z
+     C                     MOVE *BLANKS   WORK    3
+     C                     MOVELONOFF     WORK
+     C                     MOVE WORK      OUT,Z
+     C                     ADD  1         Z
+     C                     ADD  1         CNT
+     C                     MOVE VALM,CNT  VAL
+     C                     END
+     C*
+     C                     MOVEAOUT       OTMDFL
+     C*
+     C*
+     C** IF PAGE IS WRITING ON LINE 56 OR BELOW
+     C** WRITE CONTINUATION LINE AND NEXT PAGE
+     C** HEADING AND SET ON INDICATOR TO WRITE SUB-HEADING
+     C*
+     C           LINE      IFGE 56
+     C                     WRITECONLIN
+     C                     SETON                     81
+     C*
+     C                     WRITERPTHDG
+     C                     WRITEOTMDDT
+     C*
+     C** SET OFF SUB HEADING LINE INDICATOR
+     C*
+     C                     SETOF                     81
+     C*
+     C                     ELSE
+     C*
+     C                     WRITEOTMDDT
+     C*
+     C** SET OFF INDICATOR AFTER FIRST PRINT OF SUB-HEADING
+     C*
+     C           *IN70     IFEQ '1'
+     C                     SETOF                     70
+     C                     END
+     C*
+     C                     END
+     C*
+     C** READ NEXT RECORD WITH SAME KEY
+     C*
+     C           MODKEY    READE@DJREGN                  41
+     C*
+     C** OUTPUT 'OR' TO REPORT LINE IF FURTHER RECORDS FOUND
+     C*
+     C           *IN41     IFEQ '0'
+     C                     SETON                     89
+     C                     END
+     C*
+     C                     END
+     C*
+     C** CLOSE FILE CBMDCNL1
+     C*
+     C                     CLOSECBMDCNL1
+     C*
+     C                     END
+     C*
+     C** DETERMINE COMPONENTS WHICH MUST RUN
+     C** BEFORE COMPONENT BEING REPORTED ON
+     C*
+     C** OPEN CBDPRLL1 AND CHAIN TO FILE
+     C*
+     C                     OPEN CBDPRLL1
+     C                     MOVE DHCOTT    COMPNM
+     C                     MOVE DHCSEQ    COMPSQ
+     C           MODKEY    CHAIN@DIREGK              43
+     C*
+     C** IF NO RECORDS ON CBDPRLL1 CLOSE FILE
+     C** AND PERFORM DATABASE ERROR HANDLING,
+     C** UNLESS REPORT ON COBBEGIN COMPONENT IS
+     C** REQUIRED WHEN PROCESSING FOR COMPONENTS
+     C** TO RUN BEFORE IS BYPASSED
+     C*
+     C           *IN43     IFEQ '1'
+     C           DHCOTT    ANDNE'COBBEGIN'
+     C                     CLOSECBDPRLL1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DPRL1'   DBFILE
+     C                     MOVE COMPNM    MODNMX
+     C                     MOVE COMPSQ    MODSQX
+     C                     MOVELMODKDS    DBKEY            ***************
+     C                     Z-ADD8         DBASE            * DB ERROR 08 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** DO WHILE SAME KEY
+     C*
+     C           *IN43     DOWEQ'0'
+     C*
+     C** CHAIN CBCMPNL1 FOR TEXT FIELD
+     C*
+     C           DEPKEY    CHAIN@DHREGH              44
+     C*
+     C** IF NO RECORDS ON CBCMPNL1 DATABASE ERROR
+     C*
+     C           *IN44     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CMPL1'   DBFILE
+     C                     MOVE DIDDON    DCOPX
+     C                     MOVE DIDDOS    DSEQX
+     C                     MOVELDEPKDS    DBKEY            ***************
+     C                     Z-ADD9         DBASE            * DB ERROR 09 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** IF PAGE IS WRITING ON LINE 56 OR BELOW WRITE
+     C** CONTINUATION LINE, NEW PAGE HEADING AND
+     C** DEPENDENT COMPONENT FORMAT ON NEXT PAGE
+     C*
+     C           LINE      IFGE 56
+     C*
+     C** WRITE CONTINUATION LINE ONLY
+     C** IF NOT FIRST PRINT OF HEADINGS
+     C*
+     C           *IN71     IFEQ '0'
+     C                     WRITECONLIN
+     C                     SETON                     83
+     C                     END
+     C*
+     C                     WRITERPTHDG
+     C                     WRITEDEPCDT
+     C*
+     C** SET OFF SUB HEADING LINE INDICATOR
+     C*
+     C                     SETOF                     83
+     C*
+     C                     ELSE
+     C*
+     C                     WRITEDEPCDT
+     C*
+     C                     END
+     C*
+     C** SET OFF INDICATOR AFTER FIRST PRINT OF SUB-HEADING
+     C*
+     C           *IN71     IFEQ '1'
+     C                     SETOF                     71
+     C                     END
+     C*
+     C** READ NEXT RECORD WITH SAME KEY
+     C*
+     C           MODKEY    READE@DIREGK                  43
+     C*
+     C                     END
+     C*
+     C** CLOSE FILE CBDPRLL1 AFTER ALL RECORDS FOUND
+     C*
+     C                     CLOSECBDPRLL1
+     C*
+     C** DETERMINE COMPONENTS WHICH MUST RUN
+     C** BEFORE COMPONENT BEING REPORTED ON
+     C*
+     C** OPEN CBDPRLL4 AND CHAIN TO FILE
+     C*
+     C                     OPEN CBDPRLL4
+     C                     MOVE DHCOTT    COMPNM
+     C                     MOVE DHCSEQ    COMPSQ
+     C           MODKEY    CHAIN@DPRLHW              45
+     C*
+     C***IF*NO*RECORDS*ON*CBDPRLL4*CLOSE*FILE**************************                       CCB020
+     C***AND*PERFORM*DATABASE*ERROR*HANDLING,**************************                       CCB020
+     C***UNLESS*REPORT*ON*COBEND*COMPONENT*IS**************************                       CCB020
+     C***REQUIRED*WHEN*PROCESSING*FOR*COMPONENTS***********************                       CCB020
+     C***TO*RUN*AFTER*IS*BYPASSED**************************************                       CCB020
+      ** If no records on CBDPRLL4 close file and perform database                            CCB020
+      ** error handling, unless report on SCOBFINISH component is                             CCB020
+      ** required when processing for components to run after is                              CCB020
+      ** bypassed                                                                             CCB020
+     C*
+     C                     MOVEL'SCOBFINI'SCOBFI 10                                           CCB020
+     C                     MOVE 'SH'      SCOBFI                                              CCB020
+     C           *IN45     IFEQ '1'
+     C********** DHCOTT    ANDNE'COBEND'                                                      CCB020
+     C           DHCOTT    ANDNESCOBFI                                                        CCB020
+     C                     CLOSECBDPRLL4
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DPRL4'   DBFILE
+     C                     MOVE COMPNM    MODNMX
+     C                     MOVE COMPSQ    MODSQX
+     C                     MOVELMODKDS    DBKEY            ***************
+     C                     Z-ADD10        DBASE            * DB ERROR 10 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** DO WHILE SAME KEY
+     C*
+     C           *IN45     DOWEQ'0'
+     C*
+     C** CHAIN CBCMPNL1 FOR TEXT FIELD
+     C*
+     C           DPCKEY    CHAIN@DHREGH              44
+     C*
+     C** IF NO RECORDS ON CBCMPNL1 DATABASE ERROR
+     C*
+     C           *IN44     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CMPL1'   DBFILE
+     C                     MOVE DIDSON    DCOPX
+     C                     MOVE DIDSOS    DSEQX
+     C                     MOVELDPCKDS    DBKEY            ***************
+     C                     Z-ADD11        DBASE            * DB ERROR 11 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** IF PAGE IS WRITING ON LINE 55 OR BELOW WRITE
+     C** CONTINUATION LINE, NEW PAGE HEADING AND
+     C** DEPENDS ON COMPONENT FORMAT ON NEXT PAGE
+     C*
+     C           LINE      IFGE 55
+     C*
+     C** WRITE CONTINUATION LINE ONLY
+     C** IF NOT FIRST PRINT OF HEADINGS
+     C*
+     C           *IN72     IFEQ '0'
+     C                     WRITECONLIN
+     C                     SETON                     84
+     C                     END
+     C*
+     C                     WRITERPTHDG
+     C**********           WRITEDEPCDT                                                        CPK030
+     C                     WRITEDEPONC                                                        CPK030
+     C*
+     C** SET OFF SUB HEADING LINE INDICATOR
+     C*
+     C                     SETOF                     84
+     C*
+     C                     ELSE
+     C*
+     C                     WRITEDEPONC
+     C*
+     C                     END
+     C*
+     C** SET OFF INDICATOR AFTER FIRST PRINT OF SUB-HEADING
+     C*
+     C           *IN72     IFEQ '1'
+     C                     SETOF                     72
+     C                     END
+     C*
+     C** READ NEXT RECORD WITH SAME KEY
+     C*
+     C           MODKEY    READE@DPRLHW                  45
+     C*
+     C                     END
+     C*
+     C** CLOSE FILE CBDPRLL4 AFTER ALL RECORDS FOUND
+     C*
+     C                     CLOSECBDPRLL4
+     C*
+     C** IF MUTUALLY EXCLUSIVE FLAG IS ON
+     C*
+     C           DHCMEF    IFEQ 'Y'
+     C*
+     C** OPEN OTHER MODULES DETAIL FILE CBMEXCL1 AND CHAIN FOR RECORDS
+     C*
+     C                     OPEN CBMEXCL1
+     C                     MOVE DHCOTT    COMPNM
+     C                     MOVE DHCSEQ    COMPSQ
+     C           MODKEY    CHAIN@DKREGQ              47
+     C*
+     C** IF NO RECORDS ON CBMEXCL1 CLOSE FILE
+     C** AND PERFORM DATABASE ERROR HANDLING
+     C*
+     C           *IN47     IFEQ '1'
+     C                     CLOSECBMEXCL1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CBMEX'   DBFILE
+     C                     MOVE COMPNM    MODNMX
+     C                     MOVE COMPSQ    MODSQX
+     C                     MOVELMODKDS    DBKEY            ***************
+     C                     Z-ADD12        DBASE            * DB ERROR 12 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** DO WHILE SAME KEY
+     C*
+     C           *IN47     DOWEQ'0'
+     C*
+     C** CHAIN CBCMPNL1 FOR TEXT FIELD FORMAT OVERRIDDEN TO @DHREGH
+     C*
+     C           MEXKEY    CHAIN@DHREGH              44
+     C*
+     C** IF NO RECORDS ON CBCMPNL1 DATABASE ERROR
+     C*
+     C           *IN44     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CMPL1'   DBFILE
+     C                     MOVE DKMECN    MECOX
+     C                     MOVE DKMECS    MESQX
+     C                     MOVELMEXKDS    DBKEY            ***************
+     C                     Z-ADD13        DBASE            * DB ERROR 13 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** IF WRITING ON OR BELOW LINE 55 WRITE
+     C** CONTINUATION LINE, SET ON INDICATOR FOR
+     C** NEXT PAGE SUB HEADING AND WRITE NEXT
+     C** PAGE HEADING AND DETAIL.
+     C*
+     C           LINE      IFGE 55
+     C*
+     C** WRITE CONTINUATION LINE ONLY
+     C** IF NOT FIRST PRINT OF HEADINGS
+     C*
+     C           *IN73     IFEQ '0'
+     C                     WRITECONLIN
+     C                     SETON                     85
+     C                     END
+     C*
+     C                     WRITERPTHDG
+     C                     WRITEMUEXDT
+     C*
+     C** SETOFF SUB HEADING LINE INDICATOR
+     C*
+     C                     SETOF                     85
+     C*
+     C                     ELSE
+     C*
+     C                     WRITEMUEXDT
+     C*
+     C                     END
+     C*
+     C** SET OFF INDICATOR AFTER FIRST PRINT OF SUB-HEADING
+     C*
+     C           *IN73     IFEQ '1'
+     C                     SETOF                     73
+     C                     END
+     C*
+     C** READ NEXT RECORD WITH SAME KEY
+     C*
+     C           MODKEY    READE@DKREGQ                  47
+     C*
+     C                     END
+     C*
+     C** CLOSE FILE WHEN ALL RECORDS WITH SAME KEY FOUND
+     C*
+     C                     CLOSECBMEXCL1
+     C*
+     C                     END
+     C*
+     C* IF SINGLE COMPONENT REPORT REQUESTED
+     C* SET ON END OF FILE INDICATOR
+     C*
+     C           NUM       IFEQ '1'
+     C                     SETON                     36
+     C*
+     C                     END
+     C*
+     C** IF REPORT BY MODULE READ ALL RECORDS WITH SAME
+     C** MODULE ID ON COMPONENTS FILE (CBCMPNL4)
+     C*
+     C           NUM       IFEQ '2'
+     C           MODID     READE@CMPNHK                  36
+     C*
+     C                     END
+     C*
+     C** IF ALL COMPONENT REPORT READ ALL RECORDS
+     C** ON COMPONENTS FILE (CBCMPNL4)
+     C*
+     C           NUM       IFEQ '3'
+     C                     READ @CMPNHK                  36
+     C*
+     C                     END
+     C*
+     C** IF RECORD FOUND WRITE HEADER
+     C*
+     C           *IN36     IFEQ '0'
+     C                     WRITERPTHDG
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** DATABASE ERROR SUBROUTINE TO PERFORM DATABASE ERROR
+     C** EXIT FROM PROGRAM
+     C*
+     C** CALLED FROM MAIN CYCLE AND RPTDET SUBROUTINE
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** WRITE DATABASE ERROR ON NEW PAGE
+     C*
+     C                     WRITERPTHDG
+     C*
+     C** OUTPUT DATA BASE ERROR MESSAGE TO PRINTER FILE.
+     C*
+     C                     WRITEDBERDT
+     C*
+     C** OUTPUT 'END OF REPORT' MESSAGE TO PRINTER FILE.
+     C*
+     C                     WRITERPTEND
+     C*
+     C** SETON INDICATORS U7 U8 LR AND RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**  MODPOS  -  MODULE IDS ACCORDING TO SDMMODPD SEE COMMENT IN F-SPECS
+ 
+    SDMT#A#B#C  #E#FGL                                                    S01339
+DL  EMFMSTLEREMSSERC#G                                                    S01339
+FDCMFXMMABFTCAFF  #I#J                                                    S01339
+#KMEIRDLDLTMRMTKMQMFIA                                  LN0635S01310S01382S01393
+                  PM                                                      S01486
+      CF          LB                                                      S01498
+              OD                                                          S01382
+          HFMC                                                      S01379S10736
+AACGPLTIPB                                        CTI001S01522CAC001CPL002CPB001
+ 
+ 
+**  MODIDS  -  MODULE IDS FOR OTHER MODULE FIELDS ON REPORT
+ 
+  SD  MTSWMTSWSESWLESWCLSWSMSWDL  GL  DL  CL  EM  FM
+  ST  LE  RE  MS  SE  RC      FD  CM  FX  MM  AB  FT
+  CA  FFMTCLMTDLMTGLMTLE  ME  IR  DL  DL  TM  RM  TK                LN0635S01310
+  MQ  MF  IA                                                              S01382
+ 
+                  CF                                                      S01310
+                          OD                                              S01382
+          HF  MC                  AA  CG  PL            S01379S10736S01522CPL002
+ 
+**  MODNM  -  MODULE NAMES TO BE PRINTED ON REPORT HEADING
+NOT USED
+NOT USED
+NOT USED
+NOT USED
+NOT USED
+NOT USED
+NOT USED
+NOT USED
+NOT USED
+NOT USED
+NOT USED
+NOT USED
+NOT USED
+STANDING DATA
+MIDAS/TELEX MODULE
+SWIFT FUNDS TRANSFER
+SWIFT SECURITIES TRADING
+SWIFT CUSTOMER LENDING
+SWIFT SYNDICATED LOANS (REDUN)                                            S01339
+SWIFT STATEMENTS
+SWIFT DEALING
+GENERAL LEDGER
+DEALING:FX
+SYNDICATED LOANS       (REDUN)                                            S01339
+EXPOSURE MANAGEMENT
+DRS FINANCIAL MODELLER
+STATUTORY RETURNS
+CUSTOMER LENDING
+RETAIL
+MIDAS/SWIFT DIRECT LINK
+SECURITIES TRADING
+AUTOMATIC RECONCILIATIONS
+BOND DEALERS INTERFACE
+DRS STANDING DATA
+DRS CONTROL MODULE
+DRS FOREIGN EXCHANGE
+DRS MONEY MARKET
+DRS ARBITRAGE
+FUNDS TRANSFER
+DRS COMMON APPLICATIONS
+FUTURES & OPTIONS
+MIDAS/TELEX SYNDICATED LOANS (REDUN)                                      S01339
+MIDAS/TELEX DEALING
+MIDAS/TELEX GENERAL LEDGER
+MIDAS/TELEX CUSTOMER LENDING
+MESSAGE MANAGEMENT                                                        S01310
+FRA/IRS
+DEALING:MM
+INTERNAL CONTRACTS
+TREASURY MANAGEMENT
+RISK MANAGEMENT
+TESTKEY
+MIDAS/Q
+MICROFICHE
+INTEREST ON ACCOUNTS
+WINDOW PROCESSING
+SAR PROCESSING
+FRENCH RETURNS
+LUX RETURNS
+DUTCH RETURNS
+GERMAN RETURNS
+BELGIAN RETURNS
+ITALIAN RETURNS
+SWIFT EXTERNAL INTERFACE
+PORTFOLIO MANAGEMENT
+CREDIT MANAGEMENT
+HEAD OFFICE REPORTING
+AVERAGE BALANCES
+MARGINS
+CONFIRMATION MATCHING
+MIMIX
+REPORT CONTROL FACILITY
+AMPS INT
+SWISS RETURNS
+FIDUCIARY LOANS AND DEPOSITS
+LOMBARD CREDITS
+CANTONAL TAX
+STAMP DUTY
+USE DRS SHORTNAMES
+CHIPS DEALING
+CHIPS LENDING
+CHIPS OPENING BALENCE
+CHIPS
+CHIPS DIRECT LINK
+OPTICAL DISK
+MULTIBRANCHING INDICATOR
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+HISTORY AND AUDIT FACILITY                                                S01379
+MANAGEMENT ACCOUNTING                                                     S10736
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+MIDAS EXPORT DATA INTERFACE                                               S01493
+ANALYTICAL ACCOUNTING                                                     CAC001
+User Defined Correspondence                                               S01522
+Midas Plato Interface                                                     CPL002
+MIDAS/TI INTERFACE                                                        CTI001
+PRIVATE BANKING                                                           CPB001
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE
+RESERVED FOR FUTURE USE

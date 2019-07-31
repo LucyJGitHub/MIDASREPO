@@ -1,0 +1,472 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ML Multi-language support initiation java')     */
+/*E*I****ACTGRP(*CALLER)*DFTACTGRP(*NO)*******************************/                   /*CSC022*/
+/*********************************************************************/
+/*                                                                   */
+/*      Midas - Multiple Language Support Module                     */
+/*                                                                   */
+/*      MLC0030 - Multiple Language Support Initiation for java      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. CSD102             Date 08Jan19              */
+/*       Prev Amend No. MD024398           Date 16Jul18              */
+/*                      CLE168             Date 26Feb18              */
+/*                      MD046248           Date 27Oct17              */
+/*                      AR316373           Date 03Jun15              */
+/*                      CPK030             Date 11Apr14              */
+/*                      MD021423E          Date 17Sep13              */
+/*                      AR1096245          Date 15Mar13              */
+/*                      AR1021983          Date 01Aug12              */
+/*                      AR971184           Date 28May12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      260359             Date 19May09              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      256330             Date 01Sep08              */
+/*                      BUG16705A          Date 01Apr08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      239202             Date 26Sep06              */
+/*                      240759             Date 30Jun06              */
+/*                      239963             Date 31May06              */
+/*                      239551             Date 31May06              */
+/*                      BUG9689            Date 21Dec05              */
+/*                      BUG4646            Date 04Nov04              */
+/*                      BUG4284            Date 21Sep04              */
+/*                     BG1105                Date 15Dec03            */
+/*                     BUG1699               Date 31Mar04            */
+/*                     CSC022                Date 24Feb04            */
+/*                     CPK018                Date 15Dec03            */
+/*                     CSC021                Date 15Dec03            */
+/*                     CAP084  *CREATE       Date 03Jul03            */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSD102 - Password Length Extension                          */
+/*       MD024398  - API Performance Optimisation                    */
+/*                 - Enable caching of switchable features           */
+/*                   Remove redundant code.                          */
+/*                 - Applied fix for MD051247                        */
+/*       CLE168 - Allow Debit in Blocked Account                     */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR316373 - Recompile due to change in /COPY MLCOVRDCL and   */
+/*                  MLCOVROVR.                                       */
+/*       CPK030 - Clean up of deliverable data library.              */
+/*       MD021423E - MRUNQ is overflowed by message                  */
+/*       AR1096245 - Error message encountered upon Insert/Enquire   */
+/*                   Update while system is in Secondary COB         */
+/*       AR1021983 - [PDP] Option C - Technical Enhancements Stated  */
+/*                   in POC                                          */
+/*       AR971184 - For some JMS APIs (CUSD, AMAD, DPMV, OPAY), Front*/
+/*             Office Id is no more updated in master database       */
+/*             files which provokes some big problems in third       */
+/*             party product such as TOF.(Child:AR971185)            */
+/*       260359 - Information messages should not be sent to MOPERQ  */
+/*                to help keep it clear for tracking real error msgs */
+/*       256330 - API - LEFAMD message transaction causes the        */
+/*                APISERVER to dump. Reverse fix BUG16705A.          */
+/*       BUG16705A - The system should automatically generate        */
+/*                   customer number if field is blank               */
+/*       239202 - ZMUSER dataarea not updated with user-id.          */
+/*       240759 - Applied fix 239963.                                */
+/*                Call on ZMUSER is failling into MSGW with MCH3602- */
+/*                pointer error to Teraspace not valid.              */
+/*                Fix applied as 239551.                             */
+/*       239963 - Applied fix 239551.                                */
+/*       239551 - Call on ZMUSER is failling into MSGW with MCH3602- */
+/*                pointer error to Teraspace not valid.              */
+/*       BUG9689- New SIRS deal causes database error                */
+/*       BUG4646- Completion of SIRS api                             */
+/*       BUG4284- Remove overrides on SDDEALS3,4,5 and SDBANKL3,4,5  */
+/*       BG1105 - Increase the message array length                  */
+/*       BUG1699 - Need to re-create ZMUSER when switching zone      */
+/*       CSC022 - Commitment Control Changes for MidasPlus           */
+/*       CPK018 - MidasPlus packaging.  Change MSAFT* to GPAFT*.     */
+/*       CSC021 - If called from Help ignore the processing in this  */
+/*                program                                            */
+/*       CAP084 - Synchronous calling of APIs                        */
+/*                                                                   */
+/*********************************************************************/
+/************PGM        PARM(&PROGRAM &MULT &SYS &TRANSTYPE &PARM +
+                          &INUSER &BUFFER &BUFFER2 &BUFFER3 +
+                          &BUFFER4 &BUFFER5 &BUFFER6 &BUFFER7 +
+                          &BUFFER8 &BUFFER9 &MSGARR &APIRETC)              */     /*BUG4646 239551*/
+/**********  PGM        PARM(&PROGRAM &MULT &SYS &TRANSTYPE &PARM +
+                          &INUSER1 &BUFFER &BUFFER2 &BUFFER3 +
+                          &BUFFER4 &BUFFER5 &BUFFER6 &BUFFER7 +
+                          &BUFFER8 &BUFFER9 &MSGARR &APIRETC)              */    /*239557 AR971184*/
+/******                   &INUSER &BUFFER &MSGARR &APIRETC)          */                  /*BUG4646*/
+             PGM        PARM(&PROGRAM &MULT &SYS &TRANSTYPE &PARM +
+                          &INUSER1 &BUFFER &BUFFER2 &BUFFER3 +
+                          &BUFFER4 &BUFFER5 &BUFFER6 &BUFFER7 +
+                          &BUFFER8 &BUFFER9 &MSGARR &APIRETC &APHEAD)                   /*AR971184*/
+
+/*/COPY MLCPYSRC,MLCOVRDCL                                         */
+
+/*/COPY WNCPYSRC,MLCOVRRC1                                         */
+
+/*/COPY WNCPYSRC,MLCOVRRC2                                         */
+
+/* Program call variables */
+             DCL        VAR(&PROGRAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYS)       TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PREVSYS)   TYPE(*CHAR) LEN(2)                              /*MD024398*/
+             DCL        VAR(&TRANSTYPE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(1000)
+             DCL        VAR(&INUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&INUSER1) TYPE(*CHAR) LEN(10)                                 /*239551*/
+             DCL        VAR(&BUFFER)    TYPE(*CHAR) LEN(9999)
+             DCL        VAR(&BUFFER2)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER3)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER4)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER5)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER6)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER7)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER8)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER9)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+/******      DCL        VAR(&MSGARR)    TYPE(*CHAR) LEN(2000)                      /*BG1105*/
+             DCL        VAR(&MSGARR)    TYPE(*CHAR) LEN(9999)                      /*BG1105*/
+             DCL        VAR(&APIRETC)   TYPE(*CHAR) LEN(1)
+
+/**********  DCL        VAR(&OLDNAME) TYPE(*CHAR) LEN(10)                              */ /*CPK030*/
+/**********  DCL        VAR(&IBMLVL) TYPE(*CHAR) LEN(6)                                */ /*CPK030*/
+/**********  DCL        VAR(&NEWNAME) TYPE(*CHAR) LEN(10)                              */ /*CPK030*/
+/**********  DCL        VAR(&VALUE) TYPE(*CHAR) LEN(50)                                */ /*CPK030*/
+/**********  DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                */ /*CPK030*/
+/**********  DCL        VAR(&RCVVAR) TYPE(*CHAR) LEN(25)                               */ /*CPK030*/
+/**********  DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(8) +                              */ /*CPK030*/
+/**********               VALUE('PRDR0100')                                            */ /*CPK030*/
+/**********  DCL        VAR(&PRDINF) TYPE(*CHAR) LEN(27) +                             */ /*CPK030*/
+/**********               VALUE('*OPSYS *CUR  0000*CODE    ')                          */ /*CPK030*/
+/*******     DCL        VAR(&TRANSID)   TYPE(*CHAR) LEN(100)                 *******/ /*CSC021*/
+             DCL        VAR(&TRANSID)   TYPE(*CHAR) LEN(300)                          /*CSC021*/
+             DCL        VAR(&APIRETC)   TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
+/**********  DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(17)                               */ /*CPK030*/
+             DCL        VAR(&JOBNO) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&MBIN) TYPE(*CHAR) LEN(1)
+/**********  DCL        VAR(&TYPE ) TYPE(*CHAR) LEN(1)                                  /*MD024398*/
+             DCL        VAR(&ERRCOD) TYPE(*DEC) LEN(1)
+/**********  DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(200)          */            /*AR971184 CSD102*/
+             DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(318)                                 /*CSD102*/
+
+/* Parameters for call to AOMENUR1                                   */
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTION) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')                         /*BUG9689*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                    /*BUG9689*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                     /*BUG9689*/
+             DCL        VAR(&COBFL)  TYPE(*CHAR) LEN(08)                               /*AR1021983*/
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2003')
+
+/* Global monitor */
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+
+             CHGVAR     VAR(&INUSER) VALUE(&INUSER1)                                      /*239551*/
+             IF         COND(&TRANSTYPE = 'HELP') THEN(GOTO +
+                          CMDLBL(HELP))                                                   /*CSC021*/
+                                                                                        /*MD024398*/
+/* Data area QTEMP/APFLAGQT is used to tell AOSARDRO to cache */                        /*MD024398*/
+/* switchable features.  It contains the zone prefix.         */                        /*MD024398*/
+/* Check if it exists and whether the zone has changed.       */                        /*MD024398*/
+             RTVDTAARA  DTAARA(QTEMP/APFLAGQT *ALL) RTNVAR(&PREVSYS)                    /*MD024398*/
+             MONMSG     MSGID(CPF1015) EXEC(DO)                                         /*MD024398*/
+                                                                                        /*MD024398*/
+/* If data area doesn't exist, create it.                    */                         /*MD024398*/
+                CRTDTAARA  DTAARA(QTEMP/APFLAGQT) TYPE(*CHAR) LEN(2) +
+                             VALUE(&SYS) TEXT('Flag to indicate that +
+                             call comes from an API')                                   /*MD024398*/
+                GOTO       CMDLBL(FLAGBYPASS)                                           /*MD024398*/
+             ENDDO                                                                      /*MD024398*/
+                                                                                        /*MD024398*/
+/* If it does exist, check if zone has changed     */                                   /*MD024398*/
+             IF         COND(&PREVSYS *NE &SYS) THEN(DO)                                /*MD024398*/
+                                                                                        /*MD024398*/
+/* If zone has changed, clear the cache and reset data area      */                     /*MD024398*/
+                CHGVAR     VAR(&RTCD) VALUE('       ')                                  /*MD024398*/
+                CHGVAR     VAR(&SAR) VALUE('      ')                                    /*MD024398*/
+                CHGVAR     VAR(&OPTN) VALUE('*FREE  ')                                  /*MD024398*/
+                CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR)                         /*MD024398*/
+                CHGDTAARA  DTAARA(QTEMP/APFLAGQT *ALL) VALUE(&SYS)                      /*MD024398*/
+             ENDDO                                                                      /*MD024398*/
+FlagBypass:                                                                             /*MD024398*/
+
+/* Set flag to bypass MUSER (ie language is determined by input parm) */
+             CHGVAR     VAR(&IGNMUSER) VALUE('Y')
+
+/*                                                                                      /*MD024398*/
+/* This pgm runs in base. There are no eligible activation groups.                      /*MD024398*/
+/**********  RCLACTGRP  ACTGRP(*ELIGIBLE)                                               /*MD024398*/
+/**********  MONMSG     MSGID(CPF0000)                                                  /*MD024398*/
+             CHGJOB     LOG(4 00 *SECLVL) LOGCLPGM(*YES) SWS(XXXXXX00)
+/*                                                                                      /*MD024398*/
+/* Type is always '0'.  This program is only ever called from APTRANR/VU                /*MD024398*/
+/**********  RTVJOBA    NBR(&JOBNO) TYPE(&TYPE)                                         /*MD024398*/
+
+             CHGVAR     VAR(&COBFL) VALUE(%SST(&APHEAD 73 08))                         /*AR1021983*/
+             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
+/**********  IF         COND(&MPHAS *NE 'A') THEN(DO)                                  /*AR1021983*/
+/**********  IF         COND((&MPHAS *NE 'A') *AND (&COBFL *NE +   */                  /*AR1096245*/
+/**********               'MIDASCOB')) THEN(DO)                    */        /*AR1021983 AR1096245*/
+             IF         COND((&MPHAS *NE 'A') *AND (&MPHAS *NE 'G') +
+                          *AND (&COBFL *NE 'MIDASCOB')) THEN(DO)                       /*AR1096245*/
+                CHGVAR     VAR(&MSGARR) VALUE(' : : :Midas not in input +
+                             cycle. Entry prohibited:')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+/**********  DLTOVR     FILE(*ALL)                                                       /*BUG1699*/
+
+/***Put*in*overrides*to*ensure*that*dates*and*numbers*are*formatted**/                   /*BUG4284*/
+/***for*the*java*browser*-*i.e.*dates*are*DMY,*numbers*are*n,nnn.nn**/                   /*BUG4284*/
+/**********  OVRDBF     FILE(SDBANKL0) TOFILE(SDBANKL3) SECURE(*YES)*/                   /*BUG4284*/
+/**********  OVRDBF     FILE(SDBANKL1) TOFILE(SDBANKL4) SECURE(*YES)*/                   /*BUG4284*/
+/**********  OVRDBF     FILE(SDBANKL2) TOFILE(SDBANKL5) SECURE(*YES)*/                   /*BUG4284*/
+/**********  OVRDBF     FILE(SDDEALL0) TOFILE(SDDEALL3) SECURE(*YES)*/                   /*BUG4284*/
+/**********  OVRDBF     FILE(SDDEALL1) TOFILE(SDDEALL4) SECURE(*YES)*/                   /*BUG4284*/
+/**********  OVRDBF     FILE(SDDEALL2) TOFILE(SDDEALL5) SECURE(*YES)*/                   /*BUG4284*/
+
+/*  Get the unique menu code for the API for access checking */
+             CHGVAR     VAR(&OPTION) VALUE('*KEY')
+             CALL       PGM(AOMENUR1) PARM(&RETURNCODE &OPTION +
+                          &TRANSTYPE &DSFDY)
+             IF         COND(&RETURNCODE *NE '          ') THEN(DO)
+                CHGVAR     VAR(&MSGARR) VALUE('API option ' *CAT +
+                             &TRANSTYPE *BCAT 'not found in SFMENUL1')
+                SNDMSG     MSG('API option ' *CAT &TRANSTYPE *BCAT 'not +
+                             found in SFMENUL1') TOMSGQ(MOPERQ)
+                MONMSG     MSGID(CPF0000)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/*  Create and populate the ZMITEM dataarea in QTEMP   */
+             CRTDTAARA  DTAARA(QTEMP/ZMITEM) TYPE(*CHAR) LEN(10) +
+                          TEXT('Midas SF Menu Item Unique Code')
+             MONMSG     MSGID(CPF1023)
+             CHGDTAARA  DTAARA(QTEMP/ZMITEM) VALUE(%SST(&DSFDY 1 10))
+
+/*  Create ZMUSER datararea                                       */                     /*BUG1699*/
+             DLTDTAARA  DTAARA(QTEMP/ZMUSER)                                             /*BUG1699*/
+             MONMSG     MSGID(CPF2105)                                                   /*BUG1699*/
+             CALL       PGM(ZMUSER) PARM(&ERRCOD &INUSER)                                /*BUG1699*/
+             IF         COND(&ERRCOD *NE 0) THEN(DO)                                      /*239202*/
+                 SNDMSG     MSG('MLC0030 - Default Branch or Department +
+                        not valid for user: ' *BCAT &INUSER) TOMSGQ(MOPERQ)               /*239202*/
+                 SNDMSG     MSG('MLC0030 - Dataarea ZMUSER not updated +
+                          correctly.  Please check MUSERDD.') +
+                          TOMSGQ(MOPERQ)                                                  /*239202*/
+             ENDDO                                                                        /*239202*/
+                                                                                          /*239202*/
+/***Verify*if*ZMUSER*was*updated*correctly */                                    /*239202 MD024398*/
+/**********  CALL       PGM(SFC000026) PARM('          ')                        /*239202 MD024398*/
+                                                                                          /*239202*/
+/***Check*that ZMUSER dataarea has been set up in QTEMP, if not   */                     /*BUG1699*/
+/***create*it here.                                               */                     /*BUG1699*/
+/**********  CHKOBJ     OBJ(QTEMP/ZMUSER) OBJTYPE(*DTAARA)                               /*BUG1699*/
+/**********  MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)                                  /*BUG1699*/
+/**********     CALL       PGM(ZMUSER) PARM(&ERRCOD &INUSER)                             /*BUG1699*/
+/**********     GOTO       CMDLBL(CONTINUE)                                              /*BUG1699*/
+/**********  ENDDO                                                                       /*BUG1699*/
+/**********                                                                              /*BUG1699*/
+/***If*ZMUSER exists, check that this is the same user             */                    /*BUG1699*/
+/**********  RTVDTAARA  DTAARA(QTEMP/ZMUSER) RTNVAR(&ZMUSER)                             /*BUG1699*/
+/**********  IF         COND(%SST(&ZMUSER 1 10) *NE &INUSER) THEN(DO)                    /*BUG1699*/
+/**********     SNDMSG     MSG(&PROGRAM *tcat ' called: ZMUSER changed from ' +          /*BUG1699*/
+/**********               *CAT &ZMUSER *CAT ' to  ' *BCAT &INUSER) +                     /*BUG1699*/
+/**********               TOMSGQ(MOPERQ)                                                 /*BUG1699*/
+/**********     DLTDTAARA  DTAARA(QTEMP/ZMUSER)                                          /*BUG1699*/
+/**********     CALL       PGM(ZMUSER) PARM(&ERRCOD &INUSER)                             /*BUG1699*/
+/**********  ENDDO                                                                       /*BUG1699*/
+/**********Continue:                                                                     /*BUG1699*/
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000)
+
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                      /*BUG9689*/
+             CHGVAR     VAR(&SAR) VALUE('CGL014')                                        /*BUG9689*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                      /*BUG9689*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR)                             /*BUG9689*/
+                                                                                         /*BUG9689*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                               /*BUG9689*/
+                     CRTDTAARA  DTAARA(QTEMP/DLUFBO) TYPE(*CHAR) LEN(50)                 /*BUG9689*/
+                     MONMSG     MSGID(CPF0000)                                           /*BUG9689*/
+             ENDDO                                                                       /*BUG9689*/
+                                                                                         /*BUG9689*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CLE168*/
+             CHGVAR     VAR(&SAR) VALUE('CLE168')                                         /*CLE168*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CLE168*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR)                              /*CLE168*/
+                                                                                          /*CLE168*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CLE168*/
+                     CRTDTAARA  DTAARA(QTEMP/LEFCLY) TYPE(*CHAR) LEN(12)                  /*CLE168*/
+                     MONMSG     MSGID(CPF0000)                                            /*CLE168*/
+             ENDDO                                                                        /*CLE168*/
+                                                                                          /*CLE168*/
+/**********  CRTDTAARA  DTAARA(QTEMP/APDUMP) TYPE(*CHAR) LEN(256) +                    /*BUG16705A*/
+/**********               TEXT('Midas API DUMP Information Data Area')                 /*BUG16705A*/
+/**********  CRTDTAARA  DTAARA(QTEMP/APDUMP) TYPE(*CHAR) LEN(274) +
+/**********               TEXT('Midas API DUMP Information Data Area')      /*BUG16705A*/ /*256330*/
+             CRTDTAARA  DTAARA(QTEMP/APDUMP) TYPE(*CHAR) LEN(256) +
+                          TEXT('Midas API DUMP Information Data Area')                    /*256330*/
+             MONMSG     MSGID(CPF0000)
+
+/*                                                                                      /*MD024398*/
+/* Type is always '0'.  This program is only ever called from APTRAN*                   /*MD024398*/
+/**********  IF         COND(&TYPE = '0') THEN(DO)                                      /*MD024398*/
+                CHGVAR     VAR(&TRANSID) VALUE(%SST(&PARM 3 100))
+/**********  SNDMSG     MSG(&PROGRAM *TCAT ' called:' *CAT &SYS *BCAT +                   /*260359*/
+/**********                        &INUSER *BCAT &TRANSTYPE *BCAT +                       /*260359*/
+/**********               &TRANSID *TCAT '.  Job number is ' *CAT +                       /*260359*/
+/**********               &JOBNO) TOMSGQ(MOPERQ)                                          /*260359*/
+             IF         COND((&MPHAS *EQ 'A') *OR (&MPHAS *EQ 'G')) +
+                          THEN(DO)                                                     /*MD021423E*/
+             SNDMSG     MSG(&PROGRAM *TCAT ' called:' *CAT &SYS *BCAT +
+                                   &INUSER *BCAT &TRANSTYPE *BCAT +
+                          &TRANSID *TCAT '.  Job number is ' *CAT +
+                          &JOBNO) TOMSGQ(MRUNQ)                                           /*260359*/
+             MONMSG     MSGID(CPF0000)                                                    /*239551*/
+             ENDDO                                                                     /*MD021423E*/
+/**********  ENDDO                                                                      /*MD024398*/
+
+/* If multi-branching, set up data areas   */
+             RTVDTAARA  DTAARA(RUNDAT (13 1)) RTNVAR(&MBIN)
+             IF         COND(&MBIN *EQ 'Y') THEN(CALL PGM(SFC0400))
+
+/*/COPY MLCPYSRC,MLCOVROVR                                         */
+
+/*/COPY WNCPYSRC,MLCOVRRC3                                         */
+
+/*/COPY WNCPYSRC,MLCOVRRC4                                         */
+
+/*****Determine*operating*system*level*                            */ /*               */ /*CPK030*/
+/**********  CALL       PGM(QSZRTVPR) PARM(&RCVVAR X'00000019' +                       */ /*CPK030*/
+/**********               &FORMAT &PRDINF X'00000000')                                 */ /*CPK030*/
+
+/**********  CHGVAR     VAR(&OSLVL) VALUE(%SST(&RCVVAR 20 6))                          */ /*CPK030*/
+
+/*****Check*for*PF/QAOKDP01*                                       */ /*               */ /*CPK030*/
+/**********  CHGVAR     VAR(&OLDNAME) VALUE(QAOKDP01)                                  */ /*CPK030*/
+
+/**********  CALL       PGM(AOIBMDR0) PARM(&RTNCDE '*KEY' &IBMLVL +                    */ /*CPK030*/
+/**********               &OLDNAME &VALUE)                                             */ /*CPK030*/
+
+/**********  IF         COND(&RTNCDE *NE '*NRF') THEN(DO)                              */ /*CPK030*/
+/**********     CHGVAR     VAR(&NEWNAME) VALUE(%SST(&VALUE 17 10))                     */ /*CPK030*/
+/**********     OVRDBF     FILE(&OLDNAME) TOFILE(&NEWNAME)                             */ /*CPK030*/
+/**********  ENDDO                                                                     */ /*CPK030*/
+
+/*****Check*for*PF/QAOKLP02*                                       */ /*               */ /*CPK030*/
+/**********  CHGVAR     VAR(&OLDNAME) VALUE(QAOKLP02)                                  */ /*CPK030*/
+
+/**********  CALL       PGM(AOIBMDR0) PARM(&RTNCDE '*KEY' &IBMLVL +                    */ /*CPK030*/
+/**********               &OLDNAME &VALUE)                                             */ /*CPK030*/
+
+/**********  IF         COND(&RTNCDE *NE '*NRF') THEN(DO)                              */ /*CPK030*/
+/**********     CHGVAR     VAR(&NEWNAME) VALUE(%SST(&VALUE 17 10))                     */ /*CPK030*/
+/**********     OVRDBF     FILE(&OLDNAME) TOFILE(&NEWNAME)                             */ /*CPK030*/
+/**********  ENDDO                                                                     */ /*CPK030*/
+
+/*****Check*for*LF/QAOKDL01*                                       */ /*               */ /*CPK030*/
+/**********  CHGVAR     VAR(&OLDNAME) VALUE(QAOKDL01)                                  */ /*CPK030*/
+
+/**********  CALL       PGM(AOIBMDR0) PARM(&RTNCDE '*KEY' &IBMLVL +                    */ /*CPK030*/
+/**********               &OLDNAME &VALUE)                                             */ /*CPK030*/
+
+/**********  IF         COND(&RTNCDE *NE '*NRF') THEN(DO)                              */ /*CPK030*/
+/**********     CHGVAR     VAR(&NEWNAME) VALUE(%SST(&VALUE 17 10))                     */ /*CPK030*/
+/**********     OVRDBF     FILE(&OLDNAME) TOFILE(&NEWNAME)                             */ /*CPK030*/
+/**********  ENDDO                                                                     */ /*CPK030*/
+
+/**Apply*AFT*overrides**/ /*                                                           */ /*CPK030*/
+/**********  CHGVAR     VAR(&OSLVL2) VALUE(%SST(&OSLVL 1 2) *CAT +                     */ /*CPK030*/
+/**********               'DFT')                                                       */ /*CPK030*/
+
+/**GPAFT1PD**/ /*                                                                      */ /*CPK030*/
+/**********  CHGVAR     VAR(&AFTMBR) VALUE('          ')                               */ /*CPK030*/
+/**********  CHGVAR     VAR(&AFTMBR) VALUE(&OSLVL)                                     */ /*CPK030*/
+/**********  CHKOBJ     OBJ(MSAFT1PD) OBJTYPE(*FILE) MBR(&OSLVL)                       */ /*CPK018*/
+/**********  CHKOBJ     OBJ(GPAFT1PD) OBJTYPE(*FILE) MBR(&OSLVL)                */ /*CPK018 CPK030*/
+/**********  MONMSG     MSGID(CPF9815) EXEC(DO)                                        */ /*CPK030*/
+/**********     CHGVAR     VAR(&AFTMBR) VALUE('          ')                            */ /*CPK030*/
+/**********     CHGVAR     VAR(&AFTMBR) VALUE(&OSLVL2)                                 */ /*CPK030*/
+/**********     CHKOBJ     OBJ(MSAFT1PD) OBJTYPE(*FILE) MBR(&OSLVL2)                   */ /*CPK018*/
+/**********     CHKOBJ     OBJ(GPAFT1PD) OBJTYPE(*FILE) MBR(&OSLVL2)            */ /*CPK018 CPK030*/
+/**********     MONMSG     MSGID(CPF9815) EXEC(DO)                                     */ /*CPK030*/
+/**********        CHGVAR     VAR(&AFTMBR) VALUE('          ')                         */ /*CPK030*/
+/**********        CHGVAR     VAR(&AFTMBR) VALUE(*FIRST)                               */ /*CPK030*/
+/**********     ENDDO                                                                  */ /*CPK030*/
+/**********  ENDDO                                                                     */ /*CPK030*/
+
+/**********  OVRDBF     FILE(MSAFT1PD) MBR(&AFTMBR)                                    */ /*CPK018*/
+/**********  OVRDBF     FILE(GPAFT1PD) MBR(&AFTMBR)                             */ /*CPK018 CPK030*/
+
+/**GPAFT2PD**/ /*                                                                      */ /*CPK030*/
+/**********  CHGVAR     VAR(&AFTMBR) VALUE('          ')                               */ /*CPK030*/
+/**********  CHGVAR     VAR(&AFTMBR) VALUE(&OSLVL)                                     */ /*CPK030*/
+/**********  CHKOBJ     OBJ(MSAFT2PD) OBJTYPE(*FILE) MBR(&OSLVL)                       */ /*CPK018*/
+/**********  CHKOBJ     OBJ(GPAFT2PD) OBJTYPE(*FILE) MBR(&OSLVL)                */ /*CPK018 CPK030*/
+/**********  MONMSG     MSGID(CPF9815) EXEC(DO)                                        */ /*CPK030*/
+/**********     CHGVAR     VAR(&AFTMBR) VALUE('          ')                            */ /*CPK030*/
+/**********     CHGVAR     VAR(&AFTMBR) VALUE(&OSLVL2)                                 */ /*CPK030*/
+/**********     CHKOBJ     OBJ(MSAFT2PD) OBJTYPE(*FILE) MBR(&OSLVL2)                   */ /*CPK018*/
+/**********     CHKOBJ     OBJ(GPAFT2PD) OBJTYPE(*FILE) MBR(&OSLVL2)            */ /*CPK018 CPK030*/
+/**********     MONMSG     MSGID(CPF9815) EXEC(DO)                                     */ /*CPK030*/
+/**********        CHGVAR     VAR(&AFTMBR) VALUE('          ')                         */ /*CPK030*/
+/**********        CHGVAR     VAR(&AFTMBR) VALUE(*FIRST)                               */ /*CPK030*/
+/**********     ENDDO                                                                  */ /*CPK030*/
+/**********  ENDDO                                                                     */ /*CPK030*/
+
+/**********  OVRDBF     FILE(MSAFT2PD) MBR(&AFTMBR)                                    */ /*CPK018*/
+/**********  OVRDBF     FILE(GPAFT2PD) MBR(&AFTMBR)                             */ /*CPK018 CPK030*/
+
+/**GPAFT3PD**/ /*                                                                      */ /*CPK030*/
+/**********  CHGVAR     VAR(&AFTMBR) VALUE('          ')                               */ /*CPK030*/
+/**********  CHGVAR     VAR(&AFTMBR) VALUE(&OSLVL)                                     */ /*CPK030*/
+/**********  CHKOBJ     OBJ(MSAFT3PD) OBJTYPE(*FILE) MBR(&OSLVL)                       */ /*CPK018*/
+/**********  CHKOBJ     OBJ(GPAFT3PD) OBJTYPE(*FILE) MBR(&OSLVL)                */ /*CPK018 CPK030*/
+/**********  MONMSG     MSGID(CPF9815) EXEC(DO)                                        */ /*CPK030*/
+/**********     CHGVAR     VAR(&AFTMBR) VALUE('          ')                            */ /*CPK030*/
+/**********     CHGVAR     VAR(&AFTMBR) VALUE(&OSLVL2)                                 */ /*CPK030*/
+/**********     CHKOBJ     OBJ(MSAFT3PD) OBJTYPE(*FILE) MBR(&OSLVL2)                   */ /*CPK018*/
+/**********     CHKOBJ     OBJ(GPAFT3PD) OBJTYPE(*FILE) MBR(&OSLVL2)            */ /*CPK018 CPK030*/
+/**********     MONMSG     MSGID(CPF9815) EXEC(DO)                                     */ /*CPK030*/
+/**********        CHGVAR     VAR(&AFTMBR) VALUE('          ')                         */ /*CPK030*/
+/**********        CHGVAR     VAR(&AFTMBR) VALUE(*FIRST)                               */ /*CPK030*/
+/**********     ENDDO                                                                  */ /*CPK030*/
+/**********  ENDDO                                                                     */ /*CPK030*/
+
+/**********  OVRDBF     FILE(MSAFT3PD) MBR(&AFTMBR)                                    */ /*CPK018*/
+/**********  OVRDBF     FILE(GPAFT3PD) MBR(&AFTMBR)                             */ /*CPK018 CPK030*/
+ HELP:                                                                                    /*CSC021*/
+/* Call the program name as passed to this program */
+/**********  CALL       PGM(&PROGRAM) PARM(&TRANSTYPE &PARM &BUFFER +
+                          &BUFFER2 &BUFFER3 &BUFFER4 +
+                          &BUFFER5 &BUFFER6 &BUFFER7 &BUFFER8 +
+                          &BUFFER9  +
+                          &MSGARR &APIRETC)                              */              /*BUG4646*/
+             CALL       PGM(&PROGRAM) PARM(&TRANSTYPE &PARM &BUFFER +
+                          &BUFFER2 &BUFFER3 &BUFFER4 +
+                          &BUFFER5 &BUFFER6 &BUFFER7 &BUFFER8 +
+                          &BUFFER9  +
+                          &MSGARR &APIRETC &APHEAD)                             /*BUG4646 AR971184*/
+
+/* Go to the end of the program */
+             GOTO       CMDLBL(ENDPGM)
+
+ ABNOR:
+             SNDMSG     MSG('Multiple language support initiation +
+                          terminated abnormally') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+
+             CHGVAR     VAR(&APIRETC) VALUE('0')
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+
+/* End of program processing */
+ ENDPGM:
+             ENDPGM

@@ -1,0 +1,313 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  DL0280 - DL0280UREL                                          *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. 248539             Date 15Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 226073A            Date 12Jan07               *
+      *                 226073             Date 27Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 230934             Date 21Sep06               *
+      *                 205045  *CREATE    Date 06Jun06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  248539 - Reversal postings for matured FX deals are not      *
+      *           generated.  Applied part of fix 238297.             *
+      *           Also, delete records in DLNPVPPD if DL0280 is       *
+      *           running in COB.                                     *
+      *  226073A - Missing line of code.                              *
+      *  226073 - Book code output on non-UP/UL keys in error         *
+      *  230934 - UP/UL passed in the CCys of  FX deaals for reversals*
+      *           and maturities. It should be the base ccy used like *
+      *           in DL4400. Extension of fix 226170.                 *
+      *  205045 - Rollover deal not found in DEALSDC, while           *
+      *           processing deal for Portfolio Management. Change    *
+      *           the LF to look to include historic deals DLCHISPD.  *
+      *           Externalised SR/UREL from DL0280.                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRUREL - Generation of unrealised profit/loss account keys                            CAS004
+      ***********for revervsed deals                                                   CAS004 221703
+      *          for reversed and matured deals                       *                       221703
+      *                                                               *
+      *****************************************************************
+     C     SRUREL        BEGSR
+      *                                                                                       CAS004
+     C                   MOVE      'DL'          KMOD
+     C                   MOVE      *BLANKS       AKY
+     C                   MOVEA     DTYP          AKY(1)
+     C                   MOVEA     'A'           AKY(3)
+     C                   MOVEA     DLST          AKY(4)
+      *                                                                                       CAS004
+     C     WBCPL         IFEQ      'Y'
+     C                   MOVEA     BOKC          AKY(6)
+     C                   ENDIF
+      *                                                                                       CAS004
+     C                   MOVE      ' '           AKY(8)
+     C                   Z-ADD     KYSETL        WYSETL
+     C                   MOVE      KYOSTL        WYOSTL
+     C                   MOVE      KYSTBR        WYSTBR
+     C                   Z-ADD     KYDAT         KYFED
+     C                   Z-ADD     *ZERO         KYSETL
+     C                   MOVE      *BLANK        KYOSTL
+     C                   MOVE      BRCA          KYSTBR
+     C                   MOVEL     PRFC          OPPRFC
+      *                                                                                       221703
+     C     *IN03         IFEQ      *ON
+     C     *IN04         OREQ      *ON
+     C                   Z-ADD     FSPUPL        KYAMT
+     C     FSPUPL        IFLT      *ZERO
+     C                   MOVEA     'UL'          AKY(9)
+     C                   ELSE
+     C                   MOVEA     'UP'          AKY(9)
+     C                   ENDIF
+     C                   EXSR      SRUGEN
+     C                   Z-ADD     *ZERO         FSPUPL
+     C                   ENDIF
+      *                                                                                       221703
+     C     *IN10         IFEQ      *ON
+     C     DTYP          IFEQ      'RX'
+     C                   MOVE      BJCYCD        KYCCY
+     C                   MOVE      *BLANKS       KYSCY
+     C                   ELSE
+     C                   MOVE      UCUCY         KYCCY
+     C                   MOVE      PSCY          KYSCY
+     C                   ENDIF
+     C                   Z-ADD     *ZERO         WUNRL            15 0
+     C                   ENDIF
+      *                                                                                       221703
+     C     CAS004        IFEQ      'Y'
+     C                   MOVE      *IN87         WIN87
+      *                                                                                       CAS004
+     C     KHDGKY        CHAIN     ASHTRNLA                           87
+     C     *IN87         IFEQ      '0'
+     C     FSDHIN        IFEQ      'D'
+      *                                                                                       CAS004
+     C                   IF        DTYP = 'CX'                                                228701
+     C                   MOVE      *IN87         WRK87             1                          228701
+     C                   IF        LNKDN <> *ZERO                                             228701
+     C     LNKDN         CHAIN     DLDLHBL0                           87                      228701
+     C                   IF        *IN87 = *OFF                                               228701
+     C     BLNKDN        CHAIN     DLDLHCL0                           87                      228701
+     C                   IF        *IN87 = *OFF                                               228701
+     C                   MOVEL     CCCY          KYCCY                                        228701
+     C                   ENDIF                                                                228701
+     C                   ENDIF                                                                228701
+     C                   ELSE                                                                 228701
+     C                   MOVEL     'H'           KDHIN                                        228701
+     C     KHDGK1        CHAIN     ASHTRNLB                           87                      228701
+     C                   DOW       *IN87 = *OFF                                               228701
+     C                   IF        FSMOD = 'FH'                                               228701
+     C*****FSDLNO        CHAIN     ASFHTRL3                           87               228701 CLE148
+     C                   MOVE      FSDLNX        FSDLNXS           6 0                        CLE148
+     C     FSDLNXS       CHAIN     ASFHTRL3                           87                      CLE148
+     C                   MOVEL     FSCCY         KYCCY                                        228701
+     C                   EVAL      *IN87 = *ON                                                228701
+     C                   ENDIF                                                                228701
+     C     KHDGK1        READE     ASHTRNLB                               87                  228701
+     C                   ENDDO                                                                228701
+     C                   ENDIF                                                                228701
+      ** Ensure that poiter to file ASHTRNLA and *IN87 is restored.                           228701
+     C     KHDGKY        CHAIN     ASHTRNLA                           87                      228701
+     C                   MOVE      WRK87         *IN87                                        228701
+     C                   ENDIF                                                                228701
+      *                                                                                       228701
+     C                   Z-ADD     FSEFUP        KYAMT
+     C                   ADD       FSEFUP        WUNRL
+     C     FSEFUP        IFLT      *ZERO
+     C                   MOVEA     'FDL'         AKY(8)
+      *                                                                                       CAS004
+     C                   ELSE
+     C                   MOVEA     'FDP'         AKY(8)
+     C                   ENDIF
+      *                                                                                       CAS004
+     C                   EXSR      SRUGEN
+     C                   Z-ADD     *ZERO         FSEFUP
+      *                                                                                       CAS004
+     C                   Z-ADD     FSECUP        KYAMT
+     C                   ADD       FSECUP        WUNRL
+     C     FSECUP        IFLT      *ZERO
+     C                   MOVEA     'CDL'         AKY(8)
+      *                                                                                       CAS004
+     C                   ELSE
+     C                   MOVEA     'CDP'         AKY(8)
+     C                   ENDIF
+      *                                                                                       CAS004
+     C                   EXSR      SRUGEN
+     C                   Z-ADD     *ZERO         FSECUP
+      *                                                                                       CAS004
+     C                   Z-ADD     FSXFUP        KYAMT
+     C                   ADD       FSXFUP        WUNRL
+     C     FSXFUP        IFLT      *ZERO
+     C                   MOVEA     'FXL'         AKY(8)
+      *                                                                                       CAS004
+     C                   ELSE
+     C                   MOVEA     'FXP'         AKY(8)
+     C                   ENDIF
+      *                                                                                       CAS004
+     C                   EXSR      SRUGEN
+     C                   Z-ADD     *ZERO         FSXFUP
+      *                                                                                       CAS004
+     C                   Z-ADD     FSXCUP        KYAMT
+     C                   ADD       FSXCUP        WUNRL
+     C     FSXCUP        IFLT      *ZERO
+     C                   MOVEA     'CXL'         AKY(8)
+      *                                                                                       CAS004
+     C                   ELSE
+     C                   MOVEA     'CXP'         AKY(8)
+     C                   ENDIF
+      *                                                                                       CAS004
+     C                   EXSR      SRUGEN
+     C                   Z-ADD     *ZERO         FSXCUP
+      *                                                                                       CAS004
+     C                   Z-ADD     FSTRUP        KYAMT
+     C                   ADD       FSTRUP        WUNRL
+     C     DTYP          IFEQ      'RS'
+     C     CAS006        OREQ      'Y'
+     C     DTYP          ANDEQ     'FR'
+     C     FSTRUP        IFLT      *ZERO
+     C                   MOVEA     ' UL'         AKY(8)
+      *                                                                                       CAS004
+     C                   ELSE
+     C                   MOVEA     ' UP'         AKY(8)
+     C                   ENDIF
+      *                                                                                       CAS004
+     C                   EXSR      SRUGEN
+     C                   Z-ADD     *ZERO         FSTRUP
+     C                   ENDIF
+      *                                                                                       CAS005
+     C     CAS005        IFEQ      'Y'
+      *                                                                                       CAS005
+     C                   Z-ADD     FSUURP        KYAMT
+     C                   ADD       FSUURP        WUNRL
+     C     FSUURP        IFLT      *ZERO
+     C                   MOVEA     ' UL'         AKY(8)
+     C                   ELSE
+     C                   MOVEA     ' UP'         AKY(8)
+     C                   ENDIF
+     C                   EXSR      SRUGEN
+     C                   Z-ADD     *ZERO         FSUURP
+      *                                                                                       CAS005
+     C                   Z-ADD     FSTURP        KYAMT
+     C                   ADD       FSTURP        WUNRL
+     C     FSTURP        IFLT      *ZERO
+     C                   MOVEA     ' UL'         AKY(8)
+     C                   ELSE
+     C                   MOVEA     ' UP'         AKY(8)
+     C                   ENDIF
+     C                   EXSR      SRUGEN
+     C                   Z-ADD     *ZERO         FSTURP
+      *                                                                                       CAS005
+     C                   Z-ADD     FSTFUP        KYAMT
+     C                   ADD       FSTFUP        WUNRL
+     C     FSTFUP        IFLT      *ZERO
+     C                   MOVEA     'FTL'         AKY(8)
+     C                   ELSE
+     C                   MOVEA     'FTP'         AKY(8)
+     C                   ENDIF
+     C                   EXSR      SRUGEN
+     C                   Z-ADD     *ZERO         FSTFUP
+      *                                                                                       CAS005
+     C                   Z-ADD     FSTCUP        KYAMT
+     C                   ADD       FSTCUP        WUNRL
+     C     FSTCUP        IFLT      *ZERO
+     C                   MOVEA     'CTL'         AKY(8)
+     C                   ELSE
+     C                   MOVEA     'CTP'         AKY(8)
+     C                   ENDIF
+     C                   EXSR      SRUGEN
+     C                   Z-ADD     *ZERO         FSTCUP
+      *                                                                                       CAS005
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CAS004
+     C     FSDHIN        IFEQ      'H'
+      *                                                                                       CAS004
+     C                   Z-ADD     FSEFUP        KYAMT
+     C     FSEFUP        IFLT      *ZERO
+     C                   MOVEA     'FIL'         AKY(8)
+      *                                                                                       CAS004
+     C                   ELSE
+     C                   MOVEA     'FIP'         AKY(8)
+     C                   ENDIF
+      *                                                                                       CAS004
+     C                   EXSR      SRUGEN
+     C                   Z-ADD     *ZERO         FSEFUP
+      *                                                                                       CAS004
+     C                   Z-ADD     FSECUP        KYAMT
+     C     FSECUP        IFLT      *ZERO
+     C                   MOVEA     'CIL'         AKY(8)
+      *                                                                                       CAS004
+     C                   ELSE
+     C                   MOVEA     'CIP'         AKY(8)
+     C                   ENDIF
+      *                                                                                       CAS004
+     C                   EXSR      SRUGEN
+     C                   Z-ADD     *ZERO         FSECUP
+     C                   ENDIF
+      *                                                                                       CAS004
+     C                   ENDIF
+      *                                                                                       CAS004
+     C     *IN10         IFEQ      *ON
+     C     UNRLP         IFGT      *ZERO
+     C     UNRLP         ANDGT     WUNRL
+     C     UNRLP         ORLT      *ZERO
+     C     UNRLP         ANDLT     WUNRL
+     C                   MOVE      ' '           AKY(8)
+     C     UNRLP         SUB       WUNRL         KYAMT
+     C     UNRLP         IFLT      *ZERO
+     C                   MOVEA     'UL'          AKY(9)
+     C                   ELSE
+     C                   MOVEA     'UP'          AKY(9)
+     C                   ENDIF
+     C                   EXSR      SRUGEN
+     C                   Z-ADD     *ZERO         UNRLP
+     C                   Z-ADD     *ZERO         UNRL
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CAS005
+     C     CAS005        IFEQ      'Y'
+     C     *INU1         ANDEQ     '1'                                                        248539
+     C                   MOVE      ' '           AKY(8)
+     C     DLNO          SETLL     DLNPVPL2
+     C     DLNO          READE     DLNPVPL2                               87
+     C     *IN87         DOWEQ     *OFF
+      *                                                                                       CAS005
+     C***********        MOVEL     FSCYCD        KYCCY                                 CAS005 230934
+     C                   MOVEL     BJCYCD        KYCCY                                        230934
+     C                   Z-ADD     FSPRLA        KYAMT
+     C     FSPRLA        IFLT      *ZERO
+     C                   MOVEA     'UL'          AKY(9)
+     C                   ELSE
+     C                   MOVEA     'UP'          AKY(9)
+     C                   ENDIF
+     C                   EXSR      SRUGEN
+      *                                                                                       CAS005
+     C                   DELETE    DLNPVPD0
+     C     DLNO          READE     DLNPVPL2                               87
+     C                   ENDDO
+     C                   ENDIF
+      *                                                                                       CAS005
+     C                   MOVE      WIN87         *IN87
+     C                   ENDIF
+      *                                                                                       223573
+     C                   MOVEA     ' '           AKY(9)
+     C                   Z-ADD     WYSETL        KYSETL
+     C                   MOVE      WYOSTL        KYOSTL
+     C                   MOVE      WYSTBR        KYSTBR
+     C                   MOVEA     '  '          AKY(6)                                      226073A
+      *                                                                                       CAS004
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * End of /COPY DL0280UREL                                       *
+      *****************************************************************

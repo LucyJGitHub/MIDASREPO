@@ -1,0 +1,198 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SF Validate originating branch/user')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas  SECURITY PROFILE FACILITY
+     F*                                                               *
+     F*   ZVOBU  - TO VALIDATE THAT THE USER IS AUTHORISED TO         *
+     F*            AN ORIGINATING BRANCH                              *
+     F*                                                               *
+     F*  Function: This program checks that the user is authorised    *
+     F*            to an Originating Branch.                          *
+     F*            A parameter is passed back to the calling program  *
+     F*            to indicate validity :                             *
+     F*            0 - all valid                                      *
+     F*            1 - no valid originating branches found for user   *
+     F*            2 - user is not authorised to this originating     *
+     F*                branch                                         *
+     F*                                                               *
+     F*  Where Used: Input Cycle, multibranch environment             *
+     F*                                                               *
+     F*  Called By: Any program requiring this validation             *
+     F*                                                               *
+     F*  Calls: None                                                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*  Any changes made to this program may also need to be         *
+     F*  incorporated in ZBOBU.                                       *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 236017             Date 08Nov05               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 197434             Date 09Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 E26748             Date 01Aug91               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  236017 - This program is called within the same QZDASOINIT   *
+      *           job for different Users so the Valid Booking        *
+      *           Branch array needs to be setup each time the        *
+      *           program is called. Apply TD1211 changes.            *
+      *  197434 - Array index error on SF0021. Increase maximum       *
+      *           number of branches from 100 to 900.                 *
+     F*   E26748 - SOURCE MEMBER INCORRECTLY PLACED IN ZARPGSRC       *
+     F*            SO MOVE TO SFRPGSRC.                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F* ID F  C  H  L     FUNCTION OF INDICATORS
+     F*
+     F*       01       OPEN FILE
+     F*       99       NO VALID ORIGINATING BRANCHES FOUND
+     F*
+     F*****************************************************************
+     F*       INPUTS TO THIS PROGRAMME
+     F*
+     F*       BRANCH CODE 3A  FROM THE CALLING PROGRAMME
+     F*       DTAARA/ZOBU     LIST OF VALID ORIGINATING BRANCHES FOR USER
+     F*
+     F*****************************************************************
+     F*       OUTPUT FROM THIS PROGRAMME
+     F*
+     F*       ERROR CODE : 0 = NO ERROR
+     F*                    1 = NO VALID ORIGINATING BRANCHES FOUND FOR USER
+     F*                    2 = THIS BRANCH CODE NOT VALID FOR USER
+     F*
+     F*****************************************************************
+     E**********          ZOB       100  3               STORAGE ARRAY                        197434
+     E                    ZOB       900  3               STORAGE ARRAY                        197434
+     I*
+     I* DATA STRUCTURE TO SET UP VALID ORIGINATING BRANCHES
+     I*
+     IZOBU        DS
+     I                                        1   1 ZCHO
+     I                                        2   4 ZINO
+     I                                        5 154 ZOB1
+     I                                      155 304 ZOB2
+     IZOBU1       DS                                                                          197434
+      *                                                                                       197434
+      ** Originating Branches 1                                                               197434
+      *                                                                                       197434
+     I                                        1 255 ZOB11                                     197434
+     I                                      256 510 ZOB12                                     197434
+     I                                      511 765 ZOB13                                     197434
+     I                                      7661020 ZOB14                                     197434
+     I                                     10211275 ZOB15                                     197434
+     I                                     12761530 ZOB16                                     197434
+     I                                     15311785 ZOB17                                     197434
+     I                                     17861998 ZOB18                                     197434
+     IZOBU2       DS                                                                          197434
+      *                                                                                       197434
+      ** Originating Branches 2                                                               197434
+      *                                                                                       197434
+     I                                        1 255 ZOB21                                     197434
+     I                                      256 402 ZOB22                                     197434
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           ZOBRX   3        BRANCH CODE 3A
+     C                     PARM           ERR     10       ERROR CODE 1S
+     C*
+     C                     Z-ADD0         ERR
+     C                     SETOF                       99
+     C*
+     C*****************************************************************
+     C**  IF FIRST ROUND MOVE ZOBU INFO INTO ARRAY
+     C*
+     C*********  *IN01     IFEQ '0'                        B01                                236017
+     C**
+     C*********            SETON                     01    1SR ROUND IND                      236017
+     C*
+     C                     EXSR ZSPFO
+     C*
+     C*********            END                                                                236017
+     C*****************************************************************
+     C*
+     C* IF NO ENTRIES ON ZOBU SET ERROR CONDITION TO 1
+     C*
+     C           W         IFEQ 0
+     C                     Z-ADD1         ERR
+     C*
+     C* AT LEAST ONE ENTRY IS ON ZOBU
+     C*
+     C                     ELSE
+     C*
+     C* SAVE 'W' SO THAT SEARCHING ALWAYS STARTS AT LOWEST ENTRY
+     C*
+     C                     Z-ADDW         V       30
+     C*
+     C* INPUTED BRANCH NOT ON ZOBU
+     C*
+     C           ZOBRX     LOKUPZOB,V                    99
+     C*
+     C           *IN99     IFEQ '0'
+     C                     Z-ADD2         ERR
+     C                     END
+     C*
+     C                     END
+     C*C
+     C                     RETRN
+     C*****************************************************************
+     C**  P/ZSPFO STD SR TO MAKE SPF USER/ORIG.BRS AVAILABLE TO PGM
+     C**    INPUT FROM EXT.DTAARA- ZOB1 & 2,UP TO 100 BRANCHES,TOP DOWN
+     C**                           ZINO,INDEX OF LOWEST ENTRY FOR ARRAY
+     C**    OUTPUT - ZOB  ARRAY, TOP DOWN
+     C**             W, EQ ZIN
+     C**
+     C           ZSPFO     BEGSR                           **  ZSPFO **
+     C           *NAMVAR   DEFN           ZOBU
+     C                     IN   ZOBU
+     C                     MOVEAZOB1      ZOB,1
+     C                     MOVEAZOB2      ZOB,51
+     C                     MOVE ZINO      W       30
+     C                     UNLCKZOBU
+      *                                                                                       197434
+      ** Set up the array ZOB by branches in data areas ZOBU1 and ZOBU2                       197434
+      *                                                                                       197434
+     C           *NAMVAR   DEFN           ZOBU1                                               197434
+     C                     IN   ZOBU1                                                         197434
+     C                     Z-ADD101       Z       30                                          197434
+     C                     MOVEAZOB11     ZOB,Z                                               197434
+     C                     Z-ADD186       Z                                                   197434
+     C                     MOVEAZOB12     ZOB,Z                                               197434
+     C                     Z-ADD271       Z                                                   197434
+     C                     MOVEAZOB13     ZOB,Z                                               197434
+     C                     Z-ADD356       Z                                                   197434
+     C                     MOVEAZOB14     ZOB,Z                                               197434
+     C                     Z-ADD441       Z                                                   197434
+     C                     MOVEAZOB15     ZOB,Z                                               197434
+     C                     Z-ADD526       Z                                                   197434
+     C                     MOVEAZOB16     ZOB,Z                                               197434
+     C                     Z-ADD611       Z                                                   197434
+     C                     MOVEAZOB17     ZOB,Z                                               197434
+     C                     Z-ADD696       Z                                                   197434
+     C                     MOVEAZOB18     ZOB,Z                                               197434
+     C                     UNLCKZOBU1                                                         197434
+      *                                                                                       197434
+     C           *NAMVAR   DEFN           ZOBU2                                               197434
+     C                     IN   ZOBU2                                                         197434
+     C                     Z-ADD767       Z                                                   197434
+     C                     MOVEAZOB21     ZOB,Z                                               197434
+     C                     Z-ADD852       Z                                                   197434
+     C                     MOVEAZOB22     ZOB,Z                                               197434
+     C                     UNLCKZOBU2                                                         197434
+      *                                                                                       197434
+     C                     ENDSR
+0969 C********************************************************************

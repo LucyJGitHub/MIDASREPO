@@ -1,0 +1,418 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Power of Attorney')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Access Object                                        *
+      *                                                               *
+      *  AOPATTR0 - Power of Attorney                                 *
+      *                                                               *
+      *  Function: Access record from SDPATTL1 and SDPATTL2           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CPM005             Date 13Aug96               *
+      *                 CPM005 *C *CREATE  Date 23Jul96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CPM005 - Private Banking Phase 2                             *
+      *           Focus Group Changes upgraded to DBA                 *
+      *           Changed to accommodate a second logical             *
+      *  CPM005 - Private Banking Phase 2                             *
+      *           Focus Group Changes upgraded to DBA                 *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *        D F C H L   FUNCTION INDICATOR                         *
+      *                                                               *
+      *        01     INITIALISATION                                  *
+      *        02     INITIALISATION                                  *
+      *        90     FILE ERROR                                      *
+      *        91     FILE OPEN ERROR                                 *
+      *        92     FILE CLOSE ERROR                                *
+      *        93     FILE EMPTY                                      *
+      *        94     END OF FILE                                     *
+      *        95     NO RECORD FOUND                                 *
+      *        96     OPTION ERROR                                    *
+      *        97     NO SELECTION                                    *
+      *        98     ERROR ON CALL OF SELECTION PROGRAM(PM0091)      *
+      *                                                               *
+      *****************************************************************
+      *
+      /EJECT
+     F***SDPATTL0IF**E        K        DISK                           UC  CPM005
+      **IN**-*SDPATTL0*Credit*Cards************************************   CPM005
+      *                                                                   CPM005
+     FSDPATTL1IF  E           K        DISK                           UC  CPM005
+      * IN  - SDPATTL1 Credit Cards                                       CPM005
+      *                                                                   CPM005
+     FSDPATTL2IF  E           K        DISK                           UC  CPM005
+      * IN  - SDPATTL2 Credit Cards                                       CPM005
+      /EJECT
+      *
+     E                    @MG     1   1 50
+      *
+      **  Work character arrays
+     E                    ARCUST      6  1
+     E                    ARUSID     20  1
+      *
+      * Description     : Copyright notice for inclusion in all programs
+      *
+     E                    CPY@    1   1 80               Copyright
+      *
+      /EJECT
+      *
+      * Description     : Copyright notice for inclusion in all programs
+      *
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+      *
+     IP@MGDA      DS
+     I                                        1  50 @MG
+      *
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     ID@FMT     E DSSDPATTPD
+      * SDPATTPD - Power of Attorney format data structure
+      *
+     IP@FMT     E DSDSFDY
+      * External Data structure to hold the outgoing record format
+      * of the file.
+      *
+      *****************************************************************
+      /EJECT
+      *
+      **  Object Copyright code
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM           P@CUST  6        I:Customer
+     C                     PARM           P@USID 20        I:User ID
+     C                     PARM           P@FMT            O:Format
+      *
+      **  Key list
+      *
+     C           W@KEY     KLIST
+     C                     KFLD           P@CUST
+     C                     KFLD           P@USID
+      *
+      **  Execute Subroutine 'MAIN'.
+      *
+     C                     EXSR MAIN
+      *
+      **  Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INDEX OF SUBROUTINES                                         *
+      *                                                               *
+      *  MAIN - Main Process                                          *
+      *                                                               *
+      *  *PSSR  - File Error Handling                                 *
+      *                                                               *
+      *****************************************************************
+      *
+      *****************************************************************
+      *                                                               *
+      *  MAIN - Main Process                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MAIN      BEGSR
+      *
+     C           P@OPTN    IFEQ '*SAME  '
+     C           *IN01     COMP '0'                      91
+     C                     GOTO T@SKIP
+     C                     END
+      *
+     C                     SETOF                     5354   ¦ Test ind.   CPM005
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     939495 ¦ error
+     C                     SETOF                     969798 ¦ indicators
+      *
+      **  First call - open file :
+      *
+     C           *IN01     IFEQ '0'                        IF 1 FIRST TIME
+     C                     SETON                     01      Set ind.
+     C***********          OPEN SDPATTL0               91    Open file    CPM005
+     C                     OPEN SDPATTL1               91    Open file    CPM005
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     END                             FI 1
+     C           *IN02     IFEQ '0'                        IF 2 FIRST TIMECPM005
+     C                     SETON                     02      Set ind.     CPM005
+     C                     OPEN SDPATTL2               91    Open file    CPM005
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error   CPM005
+     C                     ENDIF                           FI 2           CPM005
+      *                                                                   CPM005
+      * Determine which logical needs accessing                           CPM005
+      *                                                                   CPM005
+      * 1) 53 & 54 On then both P@CUST & P@USID are blank goto T@SKIP     CPM005
+      * 2) 53 & 54 Off then Chain SDPATTL1 with P@CUST & P@USID           CPM005
+      * 3) 53 Off 54 On Access SDPATTL1 with P@CUST                       CPM005
+      * 4) 53 On 54 Off Access SDPATTL2 with P@USID                       CPM005
+      *                                                                   CPM005
+      *                                                                   CPM005
+     C           P@CUST    IFEQ *BLANKS                    IF 3           CPM005
+     C                     SETON                     53                   CPM005
+     C                     ENDIF                           FI 3           CPM005
+     C           P@USID    IFEQ *BLANKS                    IF 4           CPM005
+     C                     SETON                     54                   CPM005
+     C                     ENDIF                           FI 4           CPM005
+     C*                                                                   CPM005
+     C           *IN53     IFEQ '1'                        IF 5           CPM005
+     C           *IN54     ANDEQ'1'                        AND            CPM005
+     C                     SETON                     96                   CPM005
+     C                     GOTO T@SKIP                     KEY ERROR      CPM005
+     C                     ENDIF                           FI 5           CPM005
+      *                                                                   CPM005
+      **  Caller requests record indicated by key :                       CPM005
+      *                                                                   CPM005
+     C                     MOVEAP@CUST    ARCUST                          CPM005
+     C                     MOVEAP@USID    ARUSID                          CPM005
+     C           '?'       LOKUPARCUST                   51               CPM005
+     C           '?'       LOKUPARUSID                   52               CPM005
+     C           P@OPTN    IFEQ '*KEY   '                  IF 6 KEY AC CESCPM005
+     C           P@OPTN    OREQ '*VERIFY'                   OR            CPM005
+     C           *IN51     IFEQ *ON                        IF 7 SELECT    CPM005
+     C           *IN52     OREQ *ON                         OR            CPM005
+     C                     CALL 'SD4360S'              98    <SELECT>     CPM005
+     C                     PARM *BLANK    P@RTC2  7          B:Return codeCPM005
+     C                     PARM *BLANK    P@CUST             B:Key        CPM005
+     C                     PARM *BLANK    P@USID             B:Key        CPM005
+     C           P@RTC2    COMP *BLANK               97      No selection CPM005
+     C           *IN97     CABEQ'1'       T@SKIP             No selection CPM005
+     C           *IN98     CABEQ'1'       T@SKIP             Program errorCPM005
+     C                     END                             FI 7           CPM005
+      *                                                                   CPM005
+      * Caller requests record indicated by key :                         CPM005
+      *                                                                   CPM005
+     C***********W@KEY     CHAIN@PATTL0              9590    Get record   CPM005
+     C  N53N54   W@KEY     CHAIN@PATTL1              9590    Get record   CPM005
+     C  N53 54   P@CUST    SETLL@PATTL1              9390    Get record   CPM005
+     C  N53 54             READ @PATTL1                9094  Read record  CPM005
+     C           F2CUST    IFNE P@CUST                       Check cust   CPM005
+     C                     SETON                     95      No. entered  CPM005
+     C                     ENDIF                             = inputed    CPM005
+     C   53N54   P@USID    CHAIN@PATTL2              9590    Get Record   CPM005
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file   CPM005
+     C           *IN94     CABEQ'1'       T@SKIP             End of file  CPM005
+     C           *IN95     CABEQ'1'       T@SKIP             No rec found CPM005
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error   CPM005
+     C                     END                             FI 6           CPM005
+      *
+      **  Last call - close file and terminate program :
+      *
+     C           P@OPTN    IFEQ '*FREE  '                  IF 1 FREE PGM
+     C***********          CLOSESDPATTL0               92    Close file   CPM005
+     C   01                CLOSESDPATTL1               92    Close file   CPM005
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C   02                CLOSESDPATTL2               92    Close file   CPM005
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error  CPM005
+     C                     SETON                     LR      Set ind.
+     C                     RETRN                                          CPM005
+     C                     END                             FI 1
+      *
+      **  Caller requests first record (through USID key):
+      *
+     C           P@OPTN    IFEQ '*FIRST '                  IF 2 FIRST REC
+     C           P@CUST    ANDEQ*BLANKS                      Usid.        CPM005
+     C************LOVAL    SETLL@PATTL0              9390    Set file     CPM005
+     C           *LOVAL    SETLL@PATTL2              9390    Set file     CPM005
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*NEXT  ' P@OPTN             Force *Next
+     C                     END                             FI 2
+      *                                                                   CPM005
+      **  Caller requests first record (through CUST & USID/CUST keys):   CPM005
+      *                                                                   CPM005
+     C           P@OPTN    IFEQ '*FIRST '                  IF 3 FIRST REC CPM005
+     C           P@USID    IFEQ *BLANKS                    IF 4 Cust No.  CPM005
+     C           P@CUST    ORNE *BLANKS                      Cust No. &   CPM005
+     C           P@USID    ANDNE*BLANKS                      Usid.        CPM005
+     C           *LOVAL    SETLL@PATTL1              9390    Set file     CPM005
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file   CPM005
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error   CPM005
+     C                     MOVE '*NEXT  ' P@OPTN             Force *Next  CPM005
+     C                     ENDIF                           FI 4           CPM005
+     C                     ENDIF                           FI 3           CPM005
+      *
+      **  Caller requests next record (through USID key):                 CPM005
+      *
+     C           P@OPTN    IFEQ '*NEXT  '                  IF 5 NEXT REC
+     C           P@CUST    ANDEQ*BLANKS                      Usid.        CPM005
+     C***********          READ @PATTL0                9094  Read record  CPM005
+     C                     READ @PATTL2                9094  Read record  CPM005
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 5
+      *                                                                   CPM005
+      **  Caller requests next record (through CUST & USID/CUST keys):    CPM005
+      *                                                                   CPM005
+     C           P@OPTN    IFEQ '*NEXT  '                  IF 6 NEXT REC  CPM005
+     C           P@USID    IFEQ *BLANKS                    IF 7 Cust No.  CPM005
+     C           P@CUST    ORNE *BLANKS                      Cust No. &   CPM005
+     C           P@USID    ANDNE*BLANKS                      Usid.        CPM005
+     C                     READ @PATTL1                9094  Read record  CPM005
+     C           *IN94     CABEQ'1'       T@SKIP             End of file  CPM005
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error   CPM005
+     C                     ENDIF                           FI 7           CPM005
+     C                     ENDIF                           FI 6           CPM005
+      *
+      **  Caller requests last record (through USID key):                 CPM005
+      *
+     C           P@OPTN    IFEQ '*LAST  '                  IF 8 LAST REC
+     C           P@CUST    ANDEQ*BLANKS                      Usid.        CPM005
+     C************HIVAL    SETGT@PATTL0                90    Set file     CPM005
+     C           *HIVAL    SETGT@PATTL2                90    Set file     CPM005
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*PREV  ' P@OPTN             Force *Prev
+     C                     END                             FI 8
+      *                                                                   CPM005
+      **  Caller requests last record (through CUST & USID/CUST keys):    CPM005
+      *                                                                   CPM005
+     C           P@OPTN    IFEQ '*LAST  '                  IF 9 LAST R EC CPM005
+     C           P@USID    IFEQ *BLANKS                    IF 10 Cust No. CPM005
+     C           P@CUST    ORNE *BLANKS                      Cust No. &   CPM005
+     C           P@USID    ANDNE*BLANKS                      Usid.        CPM005
+     C           *HIVAL    SETGT@PATTL1                90    Set file     CPM005
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error   CPM005
+     C                     MOVE '*PREV  ' P@OPTN             Force *Prev  CPM005
+     C                     ENDIF                           FI 10          CPM005
+     C                     ENDIF                           FI 9           CPM005
+      *
+      **  Caller requests previous record (through USID key):             CPM005
+      *
+     C           P@OPTN    IFEQ '*PREV  '                  IF 11 PREV.REC
+     C           P@CUST    ANDEQ*BLANKS                      Usid.        CPM005
+     C***********          READP@PATTL0                9094  Read record  CPM005
+     C                     READP@PATTL2                9094  Read record  CPM005
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 11
+      *                                                                   CPM005
+      **  Caller requests previous record (through CUST & USID/CUST keys):CPM005
+      *                                                                   CPM005
+     C           P@OPTN    IFEQ '*PREV  '                  IF 12 PREV.REC CPM005
+     C           P@USID    IFEQ *BLANKS                    IF 13 Cust No. CPM005
+     C           P@CUST    ORNE *BLANKS                      Cust No. &   CPM005
+     C           P@USID    ANDNE*BLANKS                      Usid         CPM005
+     C                     READP@PATTL1                9094  Read record  CPM005
+     C           *IN94     CABEQ'1'       T@SKIP             End of file  CPM005
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error   CPM005
+     C                     ENDIF                           FI 13          CPM005
+     C                     ENDIF                           FI 12          CPM005
+      *
+      ****Caller*requests*record*indicated*by*key*:********************   CPM005
+      *
+     C***********          MOVEAP@CUST    ARCUST                          CPM005
+     C***********          MOVEAP@USID    ARUSID                          CPM005
+     C***********'?'       LOKUPARCUST                   51               CPM005
+     C***********'?'       LOKUPARUSID                   52               CPM005
+     C***********P@OPTN    IFEQ '*KEY   '                  IF 7 KEY ACCESSCPM005
+     C***********P@OPTN    OREQ '*VERIFY'                   OR            CPM005
+     C************IN51     IFEQ *ON                        IF 8 SELECT    CPM005
+     C************IN52     OREQ *ON                         OR            CPM005
+     C***********          CALL 'SD4360S'              98    <SELECT>     CPM005
+     C***********          PARM *BLANK    P@RTC2  7          B:Return codeCPM005
+     C***********          PARM *BLANK    P@CUST             B:Key        CPM005
+     C***********          PARM *BLANK    P@USID             B:Key        CPM005
+     C***********P@RTC2    COMP *BLANK               97      No selection CPM005
+     C************IN97     CABEQ'1'       T@SKIP             No selection CPM005
+     C************IN98     CABEQ'1'       T@SKIP             Program errorCPM005
+     C***********          END                             FI 8           CPM005
+     C***********W@KEY     CHAIN@PATTL0              9590    Get record   CPM005
+     C************IN95     CABEQ'1'       T@SKIP             No rec found CPM005
+     C************IN90     CABEQ'1'       T@SKIP         LR  File error   CPM005
+     C***********          END                             FI 7           CPM005
+      *
+     C           P@OPTN    IFNE '*KEY   '                  IF 14 NOT KEYED
+     C           P@OPTN    ANDNE'*NEXT  '                   AND NOT SEQ.
+     C           P@OPTN    ANDNE'*PREV  '                   AND
+     C           P@OPTN    ANDNE'*VERIFY'                   AND
+     C           P@OPTN    ANDNE'*FREE  '                   AND
+     C                     SETON                       96    Parm error
+     C                     END                             FI 14
+      *
+      **  No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   94                MOVE '*EOF   ' P@RTCD           End of file
+     C   95                MOVE '*NRF   ' P@RTCD           No rec found
+     C   96                MOVE '*OPTION' P@RTCD           Option error
+     C   97                MOVE '*NOSEL ' P@RTCD           No selection
+     C   98                MOVE '*CALL  ' P@RTCD           Called Pgm.err.
+      *
+      **  Caller requests~message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 15 SEND MSG
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   94                MOVE 'ACO1005' P@MGID             End of file
+     C   95                MOVE 'ACO1006' P@MGID             No rec found
+     C   96                MOVE 'ACO1007' P@MGID             Option error
+     C   97                MOVE 'ACO1009' P@MGID             No selection
+     C   98                MOVE 'ACO1010' P@MGID             Call error
+     C                     CALL 'ZASNMG'                     <SEND MSG>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Pgm name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Message ID
+     C                     PARM *BLANK    P@MSGF 10          I:Msg file
+     C                     PARM *BLANK    P@MGKY  4          O:Message key
+     C                     PARM           P@MGDA             I:Msg data
+     C                     PARM '*DIAG'   P@MGTP  7          I:Msg type
+     C                     END                             FI 15
+      *
+      **  Caller requests DB error handling
+      *
+     C           W@RTCD    IFEQ '*DBERR '                  IF 16
+     C           P@RTCD    ANDNE*BLANK                      AND
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END                             FI 16
+      *
+     C           P@OPTN    IFNE '*VERIFY'                  IF 17
+     C           P@OPTN    ANDNE'*FREE  '                   AND
+     C           P@OPTN    ANDNE'*OPTION'                   AND
+     C                     MOVELD@FMT     P@FMT
+     C                     END                             FI 17
+      *
+     C                     ENDSR
+      *
+**
+SDPATTL0  AOPATTR0  Power of Attorney
+** CPY@ - OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

@@ -1,0 +1,698 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER - Format CCSF extraction for ABACUS/FIRE')
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting (Luxembourg)                      *
+      *                                                               *
+      *  ERLUFT14 - Format CSSF extarction for ABACCUS/FIRE           *
+      *                                                               *
+      *  Function:  This program will produce a File to be downloaded *
+      *  (phase(s)) onto PC format. ERFT14PP is kept in xxDPLIB.      *
+      *                                                               *
+      *  Called  in : COB automatically  (Rundat)                     *
+      *             : I/C by menu (Choosen date)                      *
+      *                                                               *
+      *  Called By: ERC0650 - CCSF Reporting                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. UPG402             Date 05Oct04               *
+      *                 UPGCSW             Date 27Sep02               *
+      *                 210004             Date 26Sep02               *
+      *                 183648             Date 13sep00               *
+      *                 ULX008             Date 25Jul00               *
+      *                 ULX008             Date 28Apr00               *
+      *                 ULX008             Date 17Apr00               *
+      *                 ULX008             Date 23Feb00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  UPG402 - Recompile due to change in ZALIGNZ2                 *
+      *  UPGCSW - Due to an upgrade of swift changes 2002 rename      *
+      *           variable V to W (confict with hook ZSRSRC/ZCOTRZ1   *
+      *           Amend ZSRSRC,ZALIGNZ2
+      *  210004 - Mismatch between ',' and '.' in Amend mode.         *
+      *           Link with fix 206456 in ZEDIT. So, apply same fix   *
+      *           in SR/ZALIGN and SR/ZFRPED.                         *
+      *  183648 - Trailer wrongly formatted                           *
+      *  ULX008 - CSSF Statutory Reporting : Change Control C         *
+      *  ULX008 - CSSF Statutory Reporting : Capture by FIRE :        *
+      *           "CAB+time" in Header equal to CAB+time in Trailer   *
+      *           + Time of Transaction must be onto 9 position       *
+      *  ULX008 - CSSF Statutory Reporting : Change Control B         *
+      *  ULX008 - CSSF Statutory Reporting : Commissariat aux Bourses *
+      *                                                               *
+      *****************************************************************
+     FERLUICL1IF  E           K        DISK         KINFSR *PSSR
+      ***  ER I.C.D.
+      *
+     FERLUCBPPIF  E           K        DISK         KINFSR *PSSR
+      ***  Extraction for CSSF
+      *
+     FERFT14PPO   E                    DISK         KINFSR *PSSR
+      ***  Output to PC Download
+      *
+      /EJECT
+      /COPY ZSRSRC,ZEDITZ1
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZDATE9Z1
+      *
+     E                    CPY@    1   1 80
+      *** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      ***  Data Area giving Installation Control Details
+      *
+     ISDBANK    E DSSDBANKPD                                                                  CER001
+      ** Bank Details                                                                         CER001
+      *                                                                                       CER001
+     IDSFDY     E DSDSFDY                                                                     CER001
+      ***  Short DS for Access Objects Programs                                               CER001
+      *                                                                                       CER001
+     IPSDS       SDS
+      ***  Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      /COPY ZSRSRC,ZDATE9Z2
+      *
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+     C                     EXSR #HEAD
+      *
+     C                     EXSR #DETA
+      *
+     C                     EXSR #TRAI
+      *
+      *****************************************************************
+      *              E N D     O F     M A I N L I N E S              *
+      *****************************************************************
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *  #HEAD  - Produce Header Record of ERFT14PP                   *
+      *  ------                                                       *
+      *  Called by : Mainlines                                        *
+      *  Calls     : #LEFT, #NUML                                     *
+      *****************************************************************
+      *
+     C           #HEAD     BEGSR
+      *
+      ***  Reset Format
+      *
+     C                     MOVE *BLANKS   FMT14R
+      *
+     C                     MOVEL'H['      FMT14R    P      header record
+      *
+      ***  C001 : Investment Company code
+      *
+     C                     MOVELVPINCC    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      *****C002*:*Physical*Batch*Name*:**CAB+time                         ULX008
+      ***  C002 : Physical Batch Name :  CAB+ date+ time                  ULX008
+      *
+     C           FMT14R    CAT  'CAB':0   FMT14R
+     C                     Z-ADDWKDATE    @@DAYN  50                      ULX008
+     C                     EXSR ZDATE9                                    ULX008
+     C                     Z-ADD@@VDT     WK08N0  80                      ULX008
+     C                     Z-ADD0         ZADEC            No Decimals    ULX008
+     C                     MOVE *BLANKS   ZFIELD                          ULX008
+     C                     MOVE WK08N0    ZFIELD    P                     ULX008
+     C                     EXSR #NUML                                     ULX008
+     C           FMT14R    CAT  TEMP:1    FMT14R                          ULX008
+     C                     MOVELTEMP      DATTIM 15        Keep for traileULX008
+     C                     TIME           WKTIME  60
+     C                     Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WKTIME    ZFIELD    P
+     C                     EXSR #NUML
+     C******     FMT14R    CAT  TEMP:0    FMT14R                          ULX008
+     C******               MOVELTEMP      CABTIM  6        Keep for traileULX008
+     C           FMT14R    CAT  TEMP:1    FMT14R                          ULX008
+     C******               MOVE TEMP      DATTIM           Keep fo ULX008 183648
+     C                     MOVELTEMP      DATXX   6                       183648
+     C                     MOVE DATXX     DATTIM                          183648
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C003 : Origin of The Physical Batch : DETR
+      *
+     C           FMT14R    CAT  'DETR':0  FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C004 : Reporting Date : Midas rundate or selected Date (YYYYMMDD)
+      *
+     C                     Z-ADDWKDATE    @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     WK08N0  80
+     C                     Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WK08N0    ZFIELD    P
+     C                     EXSR #NUML
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C005 : Production Date : Current Midas Rundat
+      *
+     C                     Z-ADDAGRDNB    @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     WK08N0  80
+     C                     Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WK08N0    ZFIELD    P
+     C                     EXSR #NUML
+     C           FMT14R    CAT  TEMP:0    FMT14R
+      *
+     C           FMT14R    CAT  ']':0     FMT14R           End of Record
+      *
+     C                     WRITEERFT14D0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #DETA  - Produce Details Records of ERFT14PP                 *
+      *  ------                                                       *
+      *  Called by : Mainlines                                        *
+      *  Calls     : #LEFT, #NUML                                     *
+      *****************************************************************
+      *
+     C           #DETA     BEGSR
+      *
+      ***  Read Extracted file
+      *
+     C                     Z-ADD0         CHKSUM  90       Totla of Treated record
+     C                     READ ERLUCBPP                 35
+     C           *IN35     DOWEQ*OFF
+      *
+      ***  Increment the Check sum field, Fill in Record
+      *
+     C                     ADD  1         CHKSUM
+      *
+      ***  Fill in Record details
+      *
+     C                     EXSR #FILL
+      *
+     C                     WRITEERFT14D0                   Write Out
+      *
+      ***  Read Next record
+      *
+     C                     READ ERLUCBPP                 35
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #FILL  - Fill in Details Record of ERFT14PP                  *
+      *  ------                                                       *
+      *  Called by : #DETA                                            *
+      *  Calls     : #LEFT, #NUML                                     *
+      *****************************************************************
+      *
+     C           #FILL     BEGSR
+      *
+      ***  Reset Format
+      *
+     C                     MOVE *BLANKS   FMT14R
+      *
+     C                     MOVEL'D['      FMT14R    P      Detail Record
+      *
+      ***  C072 : Original Transaction Reference
+      *
+     C                     MOVELLUC072    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C009 : Indicator of Transaction Cancelled
+      *
+     C                     MOVELLUC009    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C011 : Date of Transaction (YYYYMMDD)
+      *
+     C                     Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE LUC011    ZFIELD    P
+     C                     EXSR #NUML
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C012 : Time of Transaction (HHMMSSmmm)
+      *
+     C           LUC012    IFEQ *ZEROS
+     C                     MOVE *ALL'0'   WZERO   9
+     C           FMT14R    CAT  WZERO     FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+     C                     ELSE
+     C                     Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C****                 MOVE LUC012    ZFIELD    P                     ULX008
+     C****                 EXSR #NUML                                     ULX008
+     C***        FMT14R    CAT  TEMP:0    FMT14R                          ULX008
+     C                     MOVE LUC012    ALPH9   9                       ULX008
+     C           FMT14R    CAT  ALPH9:0   FMT14R                          ULX008
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+     C                     ENDIF
+      *
+      ***  C013 : ID of Cancelled Transaction
+      *
+     C                     MOVELLUC013    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C014 : ID of Transaction
+      *
+     C                     MOVELLUC014    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C015 : ID Investment Company
+      *
+     C                     MOVELLUC015    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C016 : ID Customer Account
+      *
+     C                     MOVELLUC016    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C017 : Type Code of Counterparty
+      *
+     C                     MOVELLUC017    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C018 : Counterparty (Lux)
+      *
+     C                     MOVELLUC018    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C019 : Counterparty (Not Lux)
+      *
+     C                     MOVELLUC019    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C020 : ISIN Code
+      *
+     C                     MOVELLUC020    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C021 : Security Code
+      *
+     C                     MOVELLUC021    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C022 : Security Type Code
+      *
+     C                     MOVELLUC022    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C023 : Description of Security
+      *
+     C                     MOVELLUC023    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C024 : Quantity
+      *
+     C                     Z-ADD4         ZADEC            4 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE LUC024    ZFIELD    P
+     C                     EXSR #NUML
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C025 : Amount
+      *
+     C                     Z-ADD4         ZADEC            4 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE LUC025    ZFIELD    P
+     C                     EXSR #NUML
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C026 : Price
+      *
+     C                     Z-ADD8         ZADEC            8 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE LUC026    ZFIELD    P
+     C                     EXSR #NUML
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C027 : Indic. OTC/EXchange Traded
+      *
+     C                     MOVELLUC027    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C028 : Indicator of Aggregation
+      *
+     C                     MOVELLUC028    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C029 : Product Code Security
+      *
+     C                     MOVELLUC029    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C007 : ISO Country Code
+      *
+     C                     MOVELLUC007    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C030 : Purchase / Sale Code
+      *
+     C                     MOVELLUC030    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+      *
+     C           FMT14R    CAT  ']':0     FMT14R           End of Record
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #TRAI  - Produce Trailer Record of ERFT14PP                  *
+      *  ------                                                       *
+      *  Called by : Mainlines                                        *
+      *  Calls     : #LEFT                                            *
+      *****************************************************************
+      *
+     C           #TRAI     BEGSR
+      *
+      ***  Reset Format
+      *
+     C                     MOVE *BLANKS   FMT14R
+      *
+     C                     MOVEL'T['      FMT14R    P      Trailer Record
+      *
+      ***  C001 : Investment Company code
+      *
+     C                     MOVELVPINCC    TEMP  256 P
+     C                     EXSR #LEFT
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      *****C002*:*Physical*Batch*Name*:**CAB+time                         ULX008
+      ***  C002 : Physical Batch Name :  CAB+ date+ time                  ULX008
+      ***                                from header due to FIRE Check    ULX008
+      *
+     C           FMT14R    CAT  'CAB':0   FMT14R
+     C****                 TIME           WKTIME  60                      ULX008
+     C****                 Z-ADD0         ZADEC            No Decimals    ULX008
+     C****                 MOVE *BLANKS   ZFIELD                          ULX008
+     C****                 MOVE WKTIME    ZFIELD    P                     ULX008
+     C****                 EXSR #NUML                                     ULX008
+     C******               MOVELCABTIM    TEMP             take from headeULX008
+     C                     MOVELDATTIM    TEMP             take from headeULX008
+     C******     FMT14R    CAT  TEMP:0    FMT14R                          183648
+     C           FMT14R    CAT  TEMP:1    FMT14R                          183648
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C003 : Origin of The Physical Batch : DETR
+      *
+     C           FMT14R    CAT  'DETR':0  FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C004 : Reporting Date : Midas rundate or selected Date (YYYYMMDD)
+      *
+     C                     Z-ADDWKDATE    @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     WK08N0  80
+     C                     Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WK08N0    ZFIELD    P
+     C                     EXSR #NUML
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C005 : Production Date : Current Midas Rundat
+      *
+     C                     Z-ADDAGRDNB    @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     WK08N0  80
+     C                     Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WK08N0    ZFIELD    P
+     C                     EXSR #NUML
+     C           FMT14R    CAT  TEMP:0    FMT14R
+     C           FMT14R    CAT  ',':0     FMT14R           Fields Separator
+      *
+      ***  C070 : Check Sum
+      *
+     C                     Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CHKSUM    ZFIELD    P
+     C                     EXSR #NUML
+     C           FMT14R    CAT  TEMP:0    FMT14R
+      *
+      *
+     C           FMT14R    CAT  ']':0     FMT14R           End of Record
+      *
+     C                     WRITEERFT14D0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #LEFT  - This routine will align string TEMP of 256 Char     *
+      *  -----                                                        *
+      *  Called by : #HEAD, #FILL, #TRAI, #NUML                       *
+      *  Calls     : *NONE                                            *
+      *****************************************************************
+      *
+     C           #LEFT     BEGSR
+      *
+      ***  Declare temp size
+      *
+     C                     MOVELTEMP      TEMP  256
+      *
+      ***  Search first non blanks
+      *
+     C           ' '       CHECKTEMP      #I      30
+     C           #I        IFNE 0
+      *
+      ***  When found, left align by substring and Blanks padding
+      *
+     C                     SUBSTTEMP:#I   TEMP      P
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #NUML  - Remove Trailing Zero of Numeric value and left      *
+      *  -----    in TEMP field                                       *
+      *  input : ZFIELD (16A)                                         *
+      *          ZADEC  (1N0)                                         *
+      *  Output : TEMP  (100A)                                        *
+      *  Called by : #HEAD, #FILL, #TRAI                              *
+      *  Calls     : ZEDIT, #LEFT                                     *
+      *****************************************************************
+      *
+     C           #NUML     BEGSR
+      *
+     C                     EXSR ZEDIT
+      *
+      ***  ZADEC is used to detect number of Maximum trailing 0
+      *
+     C           ZADEC     IFGT 1                          Keep 1
+     C           ZADEC     SUB  1         #L      20       Mas of Loops
+     C                     Z-ADD16        #J      20       Right scanning
+     C           #L        DOWGT0
+      *
+      ***  Remove trailing Zero if found, if different then stop
+      *
+     C           ZA2,#J    IFEQ '0'                        use ZEDIT array
+     C                     MOVEA' '       ZA2,#J
+     C                     SUB  1         #J
+     C                     ELSE
+     C                     Z-ADD0         #L               Stop when 0
+     C                     ENDIF
+      *
+      ***  Discrease loop
+      *
+     C                     SUB  1         #L               stop when 0
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ***  PUT and left ALign
+      *
+     C                     MOVE *BLANKS   TEMP  256        Reset
+     C                     MOVEAZA2       TEMP              put new value
+     C                     EXSR #LEFT                       Left align
+      *
+     C                     ENDSR
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZDATE9Z3
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Initial subroutine called automatically             *
+      *  ------                                                       *
+      *  Called by : At Pgm start                                     *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ***  Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PDATE   5        5 ALPHA
+     C                     PARM           OUTDAT  6        DDMMYY
+      *
+      ***  If eqal to Zero, take midas rundate
+      *
+     C           PDATE     IFEQ '00000'
+     C                     Z-ADDAGRDNB    WKDATE  50       Midas Run date
+     C                     ELSE
+     C                     MOVE PDATE     WKDATE  50
+     C                     ENDIF
+      *
+      ***  Validate date as correct using ZDATE2
+      *
+     C                     Z-ADDWKDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD1         DBASE            * DBERROR 001 *
+     C                     MOVEL'*NONE'   DBFILE           ***************
+     C           'WRONG '  CAT  'DATE'    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Output Date
+      *
+     C                     MOVELZDATE     OUTDAT    P
+      *                                                                                       CER001
+      ***  Access Bank Details                                                                CER001
+      *                                                                                       CER001
+     C                     CALL 'AOBANKR0'                                                    CER001
+     C                     PARM *BLANKS   PRTCD   7                                           CER001
+     C                     PARM '*FIRST ' POPTN   7                                           CER001
+     C           SDBANK    PARM SDBANK    DSFDY                                               CER001
+      *                                                                                       CER001
+     C           PRTCD     IFNE *BLANKS                                                       CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     MOVELPGM       DBPGM                                               CER001
+     C                     Z-ADD3         DBASE                                               CER001
+     C                     MOVEL'SDBANKPD'DBFILE                                              CER001
+     C                     MOVEL'*FIRST'  DBKEY                                               CER001
+     C                     OUT  LDA                                                           CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDIF                                                              CER001
+      *
+      ***  Read LU ICD
+      *
+     C           'LU'      CHAINERLUICL1             99
+     C           *IN99     IFEQ *ON                        not Found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD2         DBASE            * DBERROR 002 *
+     C                     MOVEL'ERLUICL1'DBFILE           ***************
+     C                     MOVEL'LU'      DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Program exception error routine                     *
+      *  ------   Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      * Called by : database error                                    *
+      * Calls     : *none                                             *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C/COPY ZSRSRC,ZEDITZ2
+     C/COPY ZSRSRC,ZALIGNZ2
+      ********************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**  CPY@
+(c) Finastra International Limited 2005

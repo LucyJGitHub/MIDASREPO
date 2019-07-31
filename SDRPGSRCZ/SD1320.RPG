@@ -1,0 +1,1048 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD BSPL structures enquiry')
+      *****************************************************************
+      *                                                               *
+      *  Midas STANDING DATA MODULE                                   *
+      *                                                               *
+      *  SD1320 - Reporting Structures Enquiry                        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 243655             Date 21Nov06               *
+      *                 244934             Date 10Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSC023             Date 28Jan04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 14Nov01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 174871             Date 15Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01Mar99               *
+      *                 CTI002             Date 23Sep98               *
+      *                 062782             DATE 09FEB94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  243655 - Level 'A' do not appear in BSPL Structure Enquiry.  *
+      *           Also the Narrative is printed on the second line    *
+      *           instead of in the right hand column as labelled.    *
+      *           Issue with missing level A is data-oriented. Only   *
+      *           the problem with the narrative is fixed here.       *
+      *  BUG13279- Apply 244394                                       *
+      *  244934 - Recompile due to change of length of field POSN     *
+      *           in SD1320DF                                         *
+      *  CSC023 - SBMJOB output queue must be *JOBD.                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK014 - Submit jobs with user *JOBD                         *
+      *  174871 - If the last BS/PL Set on SDREPCL1 as 13 codes,      *
+      *           program loops.                                      *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *  062782 - BS/PL enquiry does not completely clear narrative   *
+      *           line before displaying next line. To fix, always    *
+      *           move *BLANKS to NARRAT field before moving A5ACCN   *
+      *           in sr/FILLAC.                                       *
+      *                                                               *
+      *****************************************************************
+     F*
+     FSDREPCL1IF  E           K        DISK
+     FSDRPSTL1IF  E           K        DISK
+     FSDRPSTL2IF  E           K        DISK
+     FSDACODL1IF  E           K        DISK
+     FSDACRCL1IF  E           K        DISK
+     FSD1320DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE SFLRCD
+     F*
+     F*****************************************************************
+     F*
+     F*  ID  F  C  H  L     Function of Indicators
+     F*
+     F*  03      Exit program indicator
+     F*  12      Exit program (Previous) indicator
+     F*  20      End of file SDREPCL1
+     F*  21      End of file SDACRCL1
+     F*  22      Chain fail on file SDACRCL1
+     F*  25      ROLLUP indicator for subfile
+     F*  27      Message subfile end indicator
+     F*  30      Chain fail on SDRPSTL1
+     F*  30      Chain fail on SDRPSTL2
+     F*  31      LOKUP on array SETNUM successful
+     F*  40      Chain fail on SDACODL1
+     F*  50      Subfile display indicator
+     F*  51      Subfile display control indicator
+     F*  52      End of subfile indicator
+     F*  60      QCMDEXC failure on sending 'MIDAS' to MSTATUS
+     F*  61      QCMDEXC failure on report submission
+     F*  62      QCMDEXC failure on MIDASRMV submission
+     F*  U7      Database Error indicator
+     F*  U8      Database Error indicator
+     F*
+     F*****************************************************************
+     F/EJECT
+     E*
+     E                    SETNUM  9   9  3
+     E** Set number array
+     E*
+     E                    MIDAS   1   1 35
+     E** Send 'MIDAS' message to MSTATUS message queue
+     E*
+     E**********          SBM     1   2 49                                                    CPK014
+     E                    SBM     1   3 49                                                    CPK014
+     E** Command to submit Report SD1325 to print
+     E*
+     E                    MIDRMV  1   1 71
+     E** Command to submit MIDASRMV program
+     E*
+     E                    CPY@    1   1 80
+     E** Copyright array
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I** Data Structure for Compilation  - Copyright Insertion
+     I*
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I** Data Structure to retrieve User and Workstation ID.
+     I*
+     ILVLNOS      DS
+     I**********                              1   9 LVLNO1                                    CGL029
+     I**********                              5  13 LVLNO2                                    CGL029
+     I**********                              9  17 LVLNO3                                    CGL029
+     I**********                             13  21 LVLNO4                                    CGL029
+     I**********                             17  25 LVLNO5                                    CGL029
+     I**********                             21  29 LVLNO6                                    CGL029
+     I**********                             25  33 LVLNO7                                    CGL029
+     I**********                             29  37 LVLNO8                                    CGL029
+     I**********                             33  41 LVLNO9                                    CGL029
+     I**********                             37  45 LVLNOX                                    CGL029
+     I**************************************  1  21 LVLNO1                             CGL029 243655
+     I************************************** 11  31 LVLNO2                             CGL029 243655
+     I************************************** 21  41 LVLNO3                             CGL029 243655
+     I************************************** 31  51 LVLNO4                             CGL029 243655
+     I************************************** 41  61 LVLNO5                             CGL029 243655
+     I************************************** 51  71 LVLNO6                             CGL029 243655
+     I************************************** 61  81 LVLNO7                             CGL029 243655
+     I************************************** 71  91 LVLNO8                             CGL029 243655
+     I************************************** 81 101 LVLNO9                             CGL029 243655
+     I************************************** 91 111 LVLNOX                             CGL029 243655
+     I                                        1  15 LVLNO1                                    243655
+     I                                        5  19 LVLNO2                                    243655
+     I                                        9  23 LVLNO3                                    243655
+     I                                       13  27 LVLNO4                                    243655
+     I                                       17  31 LVLNO5                                    243655
+     I                                       21  35 LVLNO6                                    243655
+     I                                       25  39 LVLNO7                                    243655
+     I                                       29  43 LVLNO8                                    243655
+     I                                       33  47 LVLNO9                                    243655
+     I                                       37  51 LVLNOX                                    243655
+     I** Level numbers Data Structure to indent levels on screen
+      *
+     ILVLWRK      DS
+     I**********                              1   6 LVLNOA                                    CGL029
+     I**********                              5  10 LVLNOB                                    CGL029
+     I**********                              9  14 LVLNOC                                    CGL029
+     I**********                             13  18 LVLNOD                                    CGL029
+     I**********                             17  22 LVLNOE                                    CGL029
+     I**********                             21  26 LVLNOF                                    CGL029
+     I**********                             25  30 LVLNOG                                    CGL029
+     I**********                             29  34 LVLNOH                                    CGL029
+     I**********                             33  38 LVLNOJ                                    CGL029
+     I**********                             37  42 LVLNOK                                    CGL029
+     I**************************************  1  12 LVLNOA                             CGL029 243655
+     I************************************** 11  22 LVLNOB                             CGL029 243655
+     I************************************** 21  32 LVLNOC                             CGL029 243655
+     I************************************** 31  42 LVLNOD                             CGL029 243655
+     I************************************** 41  52 LVLNOE                             CGL029 243655
+     I************************************** 51  62 LVLNOF                             CGL029 243655
+     I************************************** 61  72 LVLNOG                             CGL029 243655
+     I************************************** 71  82 LVLNOH                             CGL029 243655
+     I************************************** 81  92 LVLNOJ                             CGL029 243655
+     I************************************** 91 102 LVLNOK                             CGL029 243655
+     I                                        1  12 LVLNOA                                    243655
+     I                                        5  16 LVLNOB                                    243655
+     I                                        9  20 LVLNOC                                    243655
+     I                                       13  24 LVLNOD                                    243655
+     I                                       17  28 LVLNOE                                    243655
+     I                                       21  32 LVLNOF                                    243655
+     I                                       25  72 LVLNOG                                    243655
+     I                                       29  41 LVLNOH                                    243655
+     I                                       33  44 LVLNOJ                                    243655
+     I                                       37  48 LVLNOK                                    243655
+     I** Level numbers Data Structure (work) to indent levels
+      *
+     IRUNDAT      DS                             13
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 @MBIN
+      ** Rundate Data Area
+      *
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I** Local Data Area
+     I*
+     I*SBREP******DS                             98                                           CPK014
+     ISBREP       DS                            110                                           CPK014
+     I                                        1  49 SUB1
+     I                                       50  98 SUB2
+     I                                      100 110 SUB3                                      CPK014
+     I                                       54  54 SETNM
+     I** Data structure for setting up SBMJOB command for report
+      *                                                                                       CPK014
+     ISBRMV       DS                             83                                           CPK014
+     I                                        1  71 SBRMV1                                    CPK014
+     I                                       73  83 SBRMV2                                    CPK014
+      *                                                                                       CPK014
+      ** Data structure to set up SBMJOB command for MIDASRMV                                 CPK014
+     I*
+     I******************************************************************
+     I/EJECT
+     I******************************************************************
+     C*
+     C* INDEX OF SUBROUTINES
+     C*
+     C* MAIN   - Main Screen displayed.
+     C* FILLRP - Fill Screen fields with Reporting Codes.
+     C* FILLAC - Fill Screen fields with Account Codes.
+     C* DSPSFL - Display subfile on screen.
+     C* NODETL - Output 'No details to display' to screen.
+     C* ROLUP  - Rollup processing.
+     C* CF11   - Submit report to job queue.
+     C* ZASNMS - Send message to program message queue.
+     C* *PSSR  - Database Error subroutine.
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*  Initial Processing                                              *
+     C*                                                                  *
+     C* CALLS:   MAIN subroutine                                         *
+     C*          ZASNMS subroutine to send error message                 *
+     C*          Y2CLMSC - clears program message queue                  *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C** KLIST for SDREPCL1
+     C*
+     C           REPKEY    KLIST
+     C                     KFLD           REPSET  1
+     C**********           KFLD           REPCOD  4                                           CGL029
+     C                     KFLD           REPCOD 10                                           CGL029
+     C*
+     C** KLIST for SDACRCL1
+     C*
+     C           ACRKEY    KLIST
+     C                     KFLD           ACRSET  1        Set No.
+     C**********           KFLD           ACRCOD  4        Rep. Code                          CGL029
+     C**********           KFLD           ACRACD  4        Account Code                       CGL029
+     C                     KFLD           ACRCOD 10                                           CGL029
+     C                     KFLD           ACRACD 10                                           CGL029
+     C                     KFLD           ACRDCR  1        DR/CR Ind.
+     C*
+     C** Define Local Data Area
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** Define Rundat Data Area
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C** Clear all fields to send messages to message queue.
+     C*
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C                     MOVE *BLANKS   SPGMQ            Program queue
+     C                     MOVEL'SD1320'  SPGMQ            Program queue
+     C*
+     C** Write Key Screen
+     C*
+     C*
+     C           *IN03     DOWEQ'0'
+     C                     MOVE '0'       *IN12
+     C                     MOVE '1'       *IN25
+     C                     WRITEHDRFMT1
+     C                     WRITE#MSGCTL
+     C                     EXFMTKEYFMT
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C** Check whether Set No. entered is integer or shortname.
+     C*
+     C           *IN03     IFEQ '0'
+     C                     MOVELSET       @SET1   1
+     C           SET       LOKUPSETNUM                   31
+     C*
+     C** If value entered is between 1 and 9:
+     C*
+     C           *IN31     IFEQ '1'
+     C           @SET1     CHAINSDRPSTL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE @SET1     REPSET
+     C                     MOVE @SET1     SETNO
+     C                     EXSR MAIN
+     C                     ELSE
+     C*
+     C** Error message sent if Set Number not in System.
+     C*
+     C                     MOVEL'USR4200' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C*
+     C** Value entered is shortname:
+     C*
+     C                     ELSE
+     C*
+     C           SET       CHAINSDRPSTL2             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE G5RSNO    REPSET
+     C                     MOVE G5RSNO    SETNO
+     C                     EXSR MAIN
+     C                     ELSE
+     C*
+     C** Error message sent if Shortname not in System.
+     C*
+     C                     MOVEL'USR4200' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     SETON                     LR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* MAIN        Display Main Screen and build subfile                *
+     C*                                                                  *
+     C* CALLED BY:  Initial processing                                   *
+     C*                                                                  *
+     C* CALLS:      NODETL subroutine.                                   *
+     C*             ROLUP subroutine.                                    *
+     C*             CF11  subroutine.                                    *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           MAIN      BEGSR
+     C*
+     C                     WRITEHDRFMT2
+     C                     WRITEFOOTER
+     C                     MOVE *BLANKS   POSN
+     C*
+     C           *IN03     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+     C*
+     C                     MOVELPOSN      REPCOD
+     C                     MOVE '1'       *IN25
+     C*
+     C           REPKEY    SETLLSDREPCL1
+     C*
+     C                     READ SDREPCL1                 20
+     C*
+     C           *IN20     IFEQ '0'
+     C*
+     C** Check that record has correct Reporting Set
+     C*
+     C           REPSET    IFEQ G4RSNO
+     C*
+     C** If the only record found on SDREPCPD for Set Number 9 has a
+     C** Reporting Code of 9999 (ie. is dummy/last record on file),
+     C** output 'No details to display' format.
+     C*
+     C           G4RSNO    IFEQ '9'
+     C           G4RSCD    ANDEQ'9999'
+     C                     EXSR NODETL
+     C*
+     C** If relevant record found, initialise subfile RRN, set on
+     C** indicators for SFLDSP and SFLDSPCTL
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADD1         RRN     40
+     C                     MOVEA'110'     *IN,50
+     C*
+     C** Perform loop when Rollup key pressed
+     C*
+     C                     EXSR ROLUP
+     C*
+     C                     END
+     C*
+     C** If no record on file SDREPCL1 has the Reporting Set selected
+     C** by user, output 'No details to display'.
+     C*
+     C                     ELSE
+     C                     EXSR NODETL
+     C                     END
+     C*
+     C*
+     C** If no record found on file SDREPCL1, output 'No details to
+     C*  display'.
+     C*
+     C                     ELSE
+     C                     EXSR NODETL
+     C                     END
+     C*
+     C** Clear the subfile of all records
+     C*
+     C                     SETOF                     5051
+     C                     WRITESFLCTLR
+     C*
+     C**  If F11 is pressed, submit report to job queue.
+     C*
+     C           *IN11     IFEQ '1'
+     C                     EXSR CF11
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* FILLRP:     Subroutine to move Reporting Code and Name into      *
+     C*             screen fields.                                       *
+     C*                                                                  *
+     C* CALLED BY:  ROLUP subroutine                                     *
+     C*                                                                  *
+     C* CALLS:                                                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FILLRP    BEGSR
+     C*
+     C** Clear Reporting Level fields in data structures.
+     C*
+     C                     MOVE *BLANKS   LVLNOS
+     C                     MOVE *BLANKS   LVLWRK
+     C*
+     C** If Report level is 1, output Code in position 1 of DS.
+     C*
+     C           G4LVNB    IFEQ '1'
+     C                     MOVEL'B-'      LVLNOA
+     C                     MOVE G4RSCD    LVLNOA
+     C                     MOVELLVLNOA    LVLNO1
+     C                     END
+     C*
+     C** If Report level is 2, output Code in position 2 of DS.
+     C*
+     C           G4LVNB    IFEQ '2'
+     C                     MOVEL'B-'      LVLNOB
+     C                     MOVE G4RSCD    LVLNOB
+     C                     MOVELLVLNOB    LVLNO2
+     C                     END
+     C*
+     C** If Report level is 3, output Code in position 3 of DS.
+     C*
+     C           G4LVNB    IFEQ '3'
+     C                     MOVEL'B-'      LVLNOC
+     C                     MOVE G4RSCD    LVLNOC
+     C                     MOVELLVLNOC    LVLNO3
+     C                     END
+     C*
+     C** If Report level is 4, output Code in position 4 of DS.
+     C*
+     C           G4LVNB    IFEQ '4'
+     C                     MOVEL'B-'      LVLNOD
+     C                     MOVE G4RSCD    LVLNOD
+     C                     MOVELLVLNOD    LVLNO4
+     C                     END
+     C*
+     C** If Report level is 5, output Code in position 5 of DS.
+     C*
+     C           G4LVNB    IFEQ '5'
+     C                     MOVEL'B-'      LVLNOE
+     C                     MOVE G4RSCD    LVLNOE
+     C                     MOVELLVLNOE    LVLNO5
+     C                     END
+     C*
+     C** If Report level is 6, output Code in position 6 of DS.
+     C*
+     C           G4LVNB    IFEQ '6'
+     C                     MOVEL'B-'      LVLNOF
+     C                     MOVE G4RSCD    LVLNOF
+     C                     MOVELLVLNOF    LVLNO6
+     C                     END
+     C*
+     C** If Report level is 7, output Code in position 7 of DS.
+     C*
+     C           G4LVNB    IFEQ '7'
+     C                     MOVEL'B-'      LVLNOG
+     C                     MOVE G4RSCD    LVLNOG
+     C                     MOVELLVLNOG    LVLNO7
+     C                     END
+     C*
+     C** If Report level is 8, output Code in position 8 of DS.
+     C*
+     C           G4LVNB    IFEQ '8'
+     C                     MOVEL'B-'      LVLNOH
+     C                     MOVE G4RSCD    LVLNOH
+     C                     MOVELLVLNOH    LVLNO8
+     C                     END
+     C*
+     C** If Report level is 9, output Code in position 9 of DS.
+     C*
+     C           G4LVNB    IFEQ '9'
+     C                     MOVEL'B-'      LVLNOJ
+     C                     MOVE G4RSCD    LVLNOJ
+     C                     MOVELLVLNOJ    LVLNO9
+     C                     END
+     C*
+     C** Move Levels data structure into screen field.
+     C*
+     C                     MOVE LVLNOS    CODLVL
+     C                     MOVELG4RPNA    NARRAT
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* FILLAC:     Subroutine to move Account Code and Name into        *
+     C*             screen fields.                                       *
+     C*                                                                  *
+     C* CALLED BY:  ROLUP subroutine                                     *
+     C*                                                                  *
+     C* CALLS:                                                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FILLAC    BEGSR
+     C*
+     C** Determine whether DR, CR or both DR and CR records exist
+     C** on SDACRCPD for this Account Code. Output '-DR', '-CR' or
+     C** blanks (for both) to screen.
+     C*
+     C** If Debit/Credit indicator of record read is '0' (ie Debit),   )
+     C** check if Credit record also exists (chain using '1').
+     C*
+     C           G6DRCR    IFEQ '0'                        Debit Record
+     C                     MOVE G6ACCD    ACRACD
+     C                     MOVE '1'       ACRDCR           Credit
+     C           ACRKEY    CHAINSDACRCL1             22
+     C*
+     C           *IN22     IFEQ '0'                        Chain successful
+     C                     MOVE *BLANKS   WUDBCT  3
+     C                     ELSE
+     C                     MOVE '2'       ACRDCR
+     C           ACRKEY    SETLLSDACRCL1                   Reset file positioner
+     C                     MOVE '-DR'     WUDBCT
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVE '-CR'     WUDBCT
+     C                     END
+     C*
+     C** Clear Account Code fields in data structures.
+     C*
+     C                     MOVE *BLANKS   LVLNOS
+     C                     MOVE *BLANKS   LVLWRK
+     C*
+     C** If Report level is 1, output Account Code in position 2 of DS.
+     C*
+     C           G4LVNB    IFEQ '1'
+     C                     MOVEL'A-'      LVLNOB
+     C                     MOVE A5ACCD    LVLNOB
+     C                     MOVELLVLNOB    LVLNO2
+     C                     MOVE WUDBCT    LVLNO2
+     C                     END
+     C*
+     C** If Report level is 2, output Account Code in position 3 of DS.
+     C*
+     C           G4LVNB    IFEQ '2'
+     C                     MOVEL'A-'      LVLNOC
+     C                     MOVE A5ACCD    LVLNOC
+     C                     MOVELLVLNOC    LVLNO3
+     C                     MOVE WUDBCT    LVLNO3
+     C                     END
+     C*
+     C** If Report level is 3, output Account Code in position 4 of DS.
+     C*
+     C           G4LVNB    IFEQ '3'
+     C                     MOVEL'A-'      LVLNOD
+     C                     MOVE A5ACCD    LVLNOD
+     C                     MOVELLVLNOD    LVLNO4
+     C                     MOVE WUDBCT    LVLNO4
+     C                     END
+     C*
+     C** If Report level is 4, output Account Code in position 5 of DS.
+     C*
+     C           G4LVNB    IFEQ '4'
+     C                     MOVEL'A-'      LVLNOE
+     C                     MOVE A5ACCD    LVLNOE
+     C                     MOVELLVLNOE    LVLNO5
+     C                     MOVE WUDBCT    LVLNO5
+     C                     END
+     C*
+     C** If Report level is 5, output Account Code in position 6 of DS.
+     C*
+     C           G4LVNB    IFEQ '5'
+     C                     MOVEL'A-'      LVLNOF
+     C                     MOVE A5ACCD    LVLNOF
+     C                     MOVELLVLNOF    LVLNO6
+     C                     MOVE WUDBCT    LVLNO6
+     C                     END
+     C*
+     C** If Report level is 6, output Account Code in position 7 of DS.
+     C*
+     C           G4LVNB    IFEQ '6'
+     C                     MOVEL'A-'      LVLNOG
+     C                     MOVE A5ACCD    LVLNOG
+     C                     MOVELLVLNOG    LVLNO7
+     C                     MOVE WUDBCT    LVLNO7
+     C                     END
+     C*
+     C** If Report level is 7, output Account Code in position 8 of DS.
+     C*
+     C           G4LVNB    IFEQ '7'
+     C                     MOVEL'A-'      LVLNOH
+     C                     MOVE A5ACCD    LVLNOH
+     C                     MOVELLVLNOH    LVLNO8
+     C                     MOVE WUDBCT    LVLNO8
+     C                     END
+     C*
+     C** If Report level is 8, output Account Code in position 9 of DS.
+     C*
+     C           G4LVNB    IFEQ '8'
+     C                     MOVEL'A-'      LVLNOJ
+     C                     MOVE A5ACCD    LVLNOJ
+     C                     MOVELLVLNOJ    LVLNO9
+     C                     MOVE WUDBCT    LVLNO9
+     C                     END
+     C*
+     C** If Report level is 9, output Account Code in position 10 of DS
+     C*
+     C           G4LVNB    IFEQ '9'
+     C                     MOVEL'A-'      LVLNOK
+     C                     MOVE A5ACCD    LVLNOK
+     C                     MOVELLVLNOK    LVLNOX
+     C                     MOVE WUDBCT    LVLNOX
+     C                     END
+     C*
+     C** Move Levels data structure into screen field.
+     C*
+     C                     MOVE LVLNOS    CODLVL
+     C                     MOVEL*BLANKS   NARRAT                          062782
+     C                     MOVELA5ACCN    NARRAT
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* NODETL:     Output 'No details to display' to screen             *
+     C*                                                                  *
+     C* CALLED BY:  MAIN subroutine                                      *
+     C*                                                                  *
+     C* CALLS:      Y2CLMSC - clears program message queue               *
+     C*             ZASNMS - sends message to message queue              *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           NODETL    BEGSR
+     C*
+     C                     MOVEA'010'     *IN,50
+     C                     WRITENODTFM
+     C                     WRITE#MSGCTL
+     C                     EXFMTSFLCTLR
+     C*
+     C** Error message sent if Rollup attempted.
+     C*
+     C           *IN25     DOWEQ'1'
+     C                     MOVEL'USR4203' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     WRITENODTFM
+     C                     WRITE#MSGCTL
+     C                     EXFMTSFLCTLR
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C                     END
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* ROLUP :     Rollup processing.                                   *
+     C*                                                                  *
+     C* CALLED BY:  MAIN subroutine                                      *
+     C*                                                                  *
+     C* CALLS:      FILLRP subroutine.                                   *
+     C*             FILLAC subroutine.                                   *
+     C*             DSPSFL subroutine.                                   *
+     C*             *PSSR  subroutine.                                   *
+     C*             Y2CLMSC clears program message queue.                *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ROLUP     BEGSR
+     C*
+     C*  Perform loop when Rollup key pressed
+     C*
+     C           *IN25     DOUEQ'0'
+     C                     Z-ADDRRN       DSPREC
+     C*
+     C*  Set count for number of records written to subfile
+     C*
+     C                     Z-ADD0         WUSAVE  20
+     C*
+     C** Add next page of records to the subfile - providing that
+     C** Reporting Set remains the same, the subfile is not full
+     C** and there are records on file.
+     C*
+     C           *IN20     DOWEQ'0'
+     C           REPSET    ANDEQG4RSNO
+     C           *IN52     ANDNE'1'
+     C           *IN25     ANDEQ'1'
+     C*
+     C** If record read had Set Number 9 and Reporting Code 9999,
+     C** set on end of file indicator and do not display record.
+     C*
+     C           G4RSNO    IFEQ '9'
+     C           G4RSCD    ANDEQ'9999'
+     C                     MOVE '1'       *IN20
+     C*
+     C                     ELSE
+     C                     EXSR FILLRP
+     C*
+     C                     WRITESFLRCD
+     C                     ADD  1         RRN
+     C                     ADD  1         WUSAVE
+     C*
+     C                     EXSR DSPSFL
+     C*
+     C** Retrieve first record on SDACRCL1
+     C*
+     C                     MOVE G4RSNO    ACRSET
+     C                     MOVE G4RSCD    ACRCOD
+     C                     MOVE *BLANKS   ACRACD
+     C                     MOVE *BLANKS   ACRDCR
+     C           ACRKEY    SETLLSDACRCL1
+     C                     READ SDACRCL1                 21
+     C*
+     C** Do while records exist on SDACRCL1 with same Reporting Set
+     C** and Reporting Code, and subfile is not full
+     C*
+     C           *IN21     DOWEQ'0'
+     C           G4RSNO    ANDEQG6RSNO
+     C           G4RSCD    ANDEQG6RSCD
+     C           *IN25     ANDEQ'1'
+     C*
+     C** Retrieve Account Code from SDACODL1 unless Account Code on
+     C** SDACRCPD is blank.
+     C*
+     C           G6ACCD    IFNE *BLANKS
+     C           G6ACCD    CHAINSDACODL1             40
+     C*
+     C** If record not found, exit with DB error
+     C*
+     C           *IN40     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'SDACODL1'DBFILE
+     C                     MOVELG6ACCD    DBKEY            ***************
+     C                     Z-ADD001       DBASE            ** DBERR 001 **
+     C                     MOVEL'SD1320'  DBPGM            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Fill Levels Data Structure with Account Codes
+     C*
+     C                     EXSR FILLAC
+     C                     WRITESFLRCD
+     C                     ADD  1         RRN
+     C                     ADD  1         WUSAVE
+     C                     EXSR DSPSFL
+     C*
+     C                     END                             End ACCD=*BLANKS
+     C*
+     C** Retrieve next record on SDACRCL1
+     C*
+     C                     READ SDACRCL1                 21
+     C                     END
+     C*
+     C                     READ SDREPCL1                 20
+     C                     END
+     C*
+     C                     END
+     C*
+     C** If there are no more records on file with the same Set Number,
+     C** set on end of file indicator and SFLEND indicator.
+     C*                                                                   174871
+     C** OR: If there are no more records to be read on SDREPCL1,         174871
+     C** set on end of file indicator and SFLEND indicator.               174871
+     C*
+     C           G4RSNO    IFNE REPSET
+     C           *IN20     OREQ *ON                                       174871
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN52
+     C*
+     C** When the FINAL subfile page to be displayed has exactly 13
+     C** records, the '+' sign will still appear on screen (owing to
+     C** the fact that this subfile is being loaded from two files).
+     C** Therefore if user tries to Rollup, send message saying Rollup
+     C** not allowed. Reset RRN.
+     C*
+     C           *IN25     IFEQ '1'
+     C           WUSAVE    ANDEQ0
+     C           RRN       SUB  13        RRN
+     C                     Z-ADDRRN       DSPREC
+     C                     MOVE '0'       *IN25
+     C                     MOVEL'USR4203' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     WRITE#MSGCTL
+     C                     EXFMTSFLCTLR
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Display the subfile on screen if last record on SDREPCL1
+     C** has been read and there are records still in subfile.
+     C** Set on SFLEND indicator.
+     C*
+     C           *IN20     IFEQ '1'
+     C           WUSAVE    ANDNE0
+     C                     MOVE '1'       *IN52
+     C                     WRITE#MSGCTL
+     C                     EXFMTSFLCTLR
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* DSPSFL:     Display subfile on screen.                           *
+     C*                                                                  *
+     C* CALLED BY:  ROLUP subroutine                                     *
+     C*                                                                  *
+     C* CALLS:      Y2CLMSC clears program message queue                 *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           DSPSFL    BEGSR
+     C*
+     C** Only display subfile on screen if the subfile page
+     C** is full.
+     C*
+     C           WUSAVE    IFEQ 13
+     C                     WRITE#MSGCTL
+     C                     EXFMTSFLCTLR
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C                     Z-ADD0         WUSAVE
+     C                     Z-ADDRRN       DSPREC
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* CF11 :      Submit report to job queue.                          *
+     C*                                                                  *
+     C* CALLED BY:  MAIN subroutine                                      *
+     C*                                                                  *
+     C* CALLS:      QCMDEXC to send 'MIDAS' to MSTATUS.                  *
+     C*             QCMDEXC to submit report.                            *
+     C*             QCMDEXC to remove 'MIDAS' from MSTATUS.              *
+     C*             ZASNMS to send error message to message queue        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           CF11      BEGSR
+     C*
+     C** Send 'MIDAS' message to message queue MSTATUS.
+     C*
+     C                     CALL 'QCMDEXC'              60
+     C                     PARM           MIDAS
+     C                     PARM 35        MIDLEN 155
+     C*
+     C** If QCMDEXC fails, send error message
+     C*
+     C           *IN60     IFEQ '1'
+     C                     MOVEL'USR4201' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     WRITE#MSGCTL
+     C*
+     C** Else move Set Number into Command Data Structure in order to
+     C** submit report.
+     C*
+     C                     ELSE
+     C*
+     C                     MOVEASBM,1     SUB1
+     C                     MOVEASBM,2     SUB2
+     C                     MOVEASBM,3     SUB3                                                CPK014
+     C                     MOVE SETNO     SETNM
+     C                     CALL 'QCMDEXC'              61
+     C                     PARM           SBREP
+     C***********          PARM 98        SBLEN  155                                          CPK014
+     C**********           PARM 110       SBLEN  155                                   CPK014 CSC023
+     C                     PARM 147       SBLEN  155                                          CSC023
+     C*
+     C** If QCMDEXC fails, send user a message saying report submission
+     C*  failed.
+     C*
+     C           *IN61     IFEQ '1'
+     C                     MOVEL'USR4201' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     WRITE#MSGCTL
+     C                     END
+     C*
+     C** Submit job to call MIDASRMV program.
+     C*
+     C                     MOVEAMIDRMV    SBRMV1                                              CPK014
+     C                     MOVEASBM,3     SBRMV2                                              CPK014
+     C                     CALL 'QCMDEXC'              62
+     C**********           PARM           MIDRMV                                              CPK014
+     C**********           PARM 71        RMVLEN 155                                          CPK014
+     C                     PARM           SBRMV                                               CPK014
+     C**********           PARM 83        RMVLEN 155                                   CPK014 CSC023
+     C                     PARM 110       RMVLEN 155                                          CSC023
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* ZASNMS:     Send message to program message queue                *
+     C*                                                                  *
+     C* CALLED BY:  Initial processing (Key Screen)                      *
+     C*             MAIN subroutine                                      *
+     C*             NODETL subroutine                                    *
+     C*             CF11 subroutine                                      *
+     C*                                                                  *
+     C* CALLS:      Y2SNMGC                                              *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ZASNMS    BEGSR
+     C*
+     C** Declare message file name
+     C*
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM SPGMQ     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* *PSSR:      Database error processing subroutine                 *
+     C*                                                                  *
+     C* CALLED BY:  ROLUP subroutine                                     *
+     C*                                                                  *
+     C* CALLS:                                                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C** Seton Database error inds, dump program and return control
+     C*
+     C                     SETON                     U7U8
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+**  SETNUM
+1  2  3  4  5  6  7  8  9
+**  MIDAS
+SNDMSG MSG('MIDAS') TOMSGQ(MSTATUS)
+**  SBM
+SBMJOB CMD(CALL PGM(SDC1325) PARM('     ' ' ' '
+ ' ' ')) JOB(SD1325P1) JOBD(MBATCH) RTGDTA(*JOBD)
+USER(*JOBD) INLLIBL(*JOBD) OUTQ(*JOBD)                                                        CSC023
+**  MIDRMV
+SBMJOB CMD(CALL PGM(MIDASRMV)) JOB(MIDASRMV) JOBD(MBATCH) RTGDTA(*JOBD)
+**  CPY@
+(c) Finastra International Limited 2001

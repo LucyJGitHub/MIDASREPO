@@ -1,0 +1,775 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE List of Unpresented Cheques')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                    *
+     F*                                                               *
+     F*  RE4213 - List of Unpresented Cheques                         *
+     F*                                                               *
+     F*  Function:  This program produces a list of all unpresented   *
+     F*  (COB)      cheques for retail accounts.  The report is       *
+     F*             printed in branch and retail account number       *
+     F*             sequence.  The report can be produced on request  *
+     F*             during Close of Business or in Input Cycle.  The  *
+     F*             report will be available at branch and system     *
+     F*             level.                                            *
+     F*                                                               *
+     F*  Called By: REC4213                                           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT001  *CREATE    Date 28Feb95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CRT001 - Retail Teller System.                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *
+     FCHQBKL2 IF  E           K        DISK         KINFSR *PSSR
+      ** Cheque book file          Logical file
+      *
+     FRE4213AUO   E                    PRINTER      KINFDS SPOOLU
+      ** List of unpresented cheques Audit report
+      *
+     FRE4213P1O   E             11     PRINTER      KINFDS SPOOL      UC
+      ** List of unpresented cheques print file
+      *
+      *****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*                                                               *
+     F*  11   - Overflow indicator                                    *
+     F*  15   - First line indicator                                  *
+     F*                                                               *
+     F*  37   - Branch Level                                          *
+     F*  38   - System Level                                          *
+     F*  39   - Multibranch                                           *
+     F*                                                               *
+     F*  72   - General Indicator Used For CHAIN                      *
+     F*                                                               *
+     F*  81   - Used for checking with @CA array elements             *
+     F*                                                               *
+     F* U7+U8 - Set on if database error occurs                       *
+     F*                                                               *
+     F*                                                               *
+     F****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  MAIN   - Control Processing                                  *
+     F*  FIRST  - Initial Processing                                  *
+     F*                                                               *
+     F*  PRODET - Process details                                     *
+     F*  MUPCHQ - Move unpresented cheques to print                   *
+     F*  MTARPR - Move to array and print                             *
+     F*                                                               *
+     F*  PRHED  - Print header                                        *
+     F*  PRDET  - Print details                                       *
+     F*  PRCON  - Print controls                                      *
+     F*  WRDET  - Write Details                                       *
+     F*                                                               *
+     F*  UPDHED - Update header                                       *
+     F*                                                               *
+     F*  FINAL  - Final Processing                                    *
+     F*                                                               *
+     F*  *PSSR  - Program error                                       *
+     F*  ZFRPED - Edit numeric field                                  *
+     F*  ZDATE2 - Convert date to dayno. to date formats              *
+     F*  DBERR  - Database Error Handling :                           *
+     F*           Terminates program                                  *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *
+      ** SR.ZDATE2 subroutine
+      /COPY ZSRSRC,ZDATE2Z1
+     E                    @CA        20  1
+      **  Cheque presented array
+      *
+     E                    @CN        16  5
+      **  Cheque presented array (last four digits of cheque no)
+     E                    CPY@    1   1 80
+      *
+     I@CQPS       DS                             80
+      * Data structure to redefine cheque presented array
+     I                                        1  80 @CN
+     I                                        1  80 @CQPA
+      *
+     I            DS                             19
+      * Data structure to for holding key list of cheque book file
+     I                                        1  19 @CHQBK
+     I                                        1  100KACNO
+     I                                       11  110KGCIN
+     I                                       12  190KSCQN
+     I*
+     I** FILE INFORMATION DATA STRUCTURE
+     I*
+     ISPOOL       DS
+     I                                        9   9 OPEN
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE
+     ISPOOLU      DS
+     I                                        9   9 OPENU
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 367 3680LINE1
+     I*
+     I** DATA AREA RUNDAT
+     I*
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     ILDA         DS                            256
+     I**  Local data area for data base errors.
+     I                                        1   3 ERTLID
+     I                                       11  20 ERTWID
+     I                                       21  30 ERWSID
+     I**  Field combining the following fields
+     I                                      134 183 DBLOT
+     I**  Name of database file in error
+     I                                      134 141 DBFILE
+     I**  Key value causing database error
+     I                                      142 170 DBKEY
+     I**  Name of program causing database error
+     I                                      172 180 DBPGM
+     I**  Number of database error
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Bank Details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I**  Branch Codes
+     I*
+     IDSFDY     E DSDSFDY
+      *First DS for Access Programs, short data structure
+     I*
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+      ** Field containing program ID
+     I                                        1  10 @PGM
+      *
+      ** Field containing workstation ID
+     I                                      244 253 @JOB
+      *
+      ** Field containing user ID
+     I                                      254 263 @USER
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Processing                        *
+      *                                                               *
+      * CALLS      FINAL  - Final Processing                          *
+      *            FIRST  - Initial Processing                        *
+      *            PRODET - Process details                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+     C                     PARM           @RENT   3
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Initial Processing
+     C                     EXSR FIRST
+     C*
+     C**  Check entity for 'ALL', blank or a specific branch
+     C*
+     C           @RENT     IFEQ 'ALL'
+     C           @RENT     OREQ *BLANKS
+     C           *LOVAL    SETLLCHQBKPDF
+     C                     ELSE
+     C           @RENT     SETLLCHQBKPDF
+     C                     END
+      *
+      ** processing cheque book file  until EOF
+      *
+     C                     READ CHQBKPDF                 72
+      *
+     C           *IN72     DOWEQ'0'
+      *
+     C           RECID     IFEQ 'D'
+      *
+     C           BRCA      IFNE @BRCA
+     C*
+     C           OPEN      IFEQ 'Y'
+     C           @RENT     ANDNE*BLANKS
+     C                     WRITELAST
+     C                     CLOSERE4213P1
+     C                     END
+     C*
+     C** Open printer file RE4216P1 if entity is not blank or the
+     C** printer file is not yet open
+     C*
+     C           @RENT     IFNE *BLANKS
+     C           OPEN      ORNE 'Y'
+     C                     OPEN RE4213P1
+     C                     MOVE '1'       *IN11
+     C                     MOVE 'Y'       OPEN
+     C*
+     C** Ensure Report Spool File Recorded by RCF for P1 report
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C**  Get branch name using access object
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @BRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C**  Check if error occurred
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           *************
+     C                     Z-ADD5         DBASE            * DB ERR 05 *
+     C                     MOVELBRCA      DBKEY            *************
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     MOVE A8BRNM    PBRNM
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     EXSR PRODET
+     C*
+     C                     END
+     C*
+     C                     READ CHQBKPDF                 72
+      *
+     C**  For Branch level, it must be the same as the branch selected
+     C*
+     C           @RENT     IFNE 'ALL'
+     C           @RENT     ANDNE*BLANKS
+     C           @RENT     ANDNEBRCA
+     C                     MOVE '1'       *IN72
+     C                     END
+      *
+     C                     END
+      *
+      ** If EOF reached do final processing
+     C                     EXSR FINAL
+      *
+     C                     CLOSE*ALL
+      *
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRODET - Process details                           *
+      *                                                               *
+      * CALLS      PRHED  - Print Header                              *
+      *            PRDET  - Print Details                             *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRODET    BEGSR                           ** PRODET **
+      *
+      ** Initialize the cheque presented array for every new retail
+      ** acct. no.
+      *
+     C                     MOVEL*BLANKS   @CQPA
+      *
+      ** Add 1 to no of live records read
+     C                     ADD  1         NORE
+      *
+      ** Check for change of branch code
+     C           @BRCA     IFNE *BLANKS
+     C           BRCA      ANDNE@BRCA
+      *
+      ** Seton overflow indicator to print the heading
+     C                     MOVELBRCA      @BRCA
+      *
+     C                     END
+      *
+      ** Check for overflow and print the heading
+     C           *IN11     IFEQ '1'
+     C                     EXSR PRHED
+     C                     END
+      *
+      ** Print passbook details
+     C                     EXSR PRDET
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FINAL  - Final Processing                          *
+      *                                                               *
+      * CALLS      PRCON  - Print controls                            *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FINAL     BEGSR                           ** FINAL  **
+      *
+      ** Print the last line of the report
+     C           NORE      IFGT *ZEROS
+     C                     WRITELAST
+     C                     END
+      *
+      ** Print control totals report.
+     C                     EXSR PRCON
+      *
+     C                     SETON                     LR
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRDET  - Print details                             *
+      *                                                               *
+      * CALLS      PRHED  - Print header                              *
+      *                                                               *
+      * CALLED BY  PRODET - Process details                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRDET     BEGSR                           ** PRDET  **
+      *
+      ** Seton first line indicator
+     C                     SETON                     15
+     C                     MOVELACNO      PACNO
+     C                     MOVELGCQI      PGCIN
+     C                     MOVELSCQN      PSCQN
+     C                     MOVELNOCQ      PNOCQ
+      *
+      ** Format dates
+     C                     Z-ADDDISS      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PDISS
+      *
+     C                     Z-ADDDCOL      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PDCOL
+      *
+      ** check for heading print
+     C           *IN11     IFEQ '1'
+     C                     EXSR PRHED
+     C                     END
+      *
+      ** Write detail line
+     C                     EXSR MUPCHQ
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MUPCHQ - Move unpresented cheques to print         *
+      *                                                               *
+      * CALLS      MTARPR - Move to array and print                   *
+      *            WRDET  - Write Details                             *
+      *                                                               *
+      * CALLED BY  PRHED  - Print Header                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MUPCHQ    BEGSR                           ** MUPCHQ **
+      *
+     C                     Z-ADDSCQN      @CQNF   80
+     C                     Z-ADD0         @L      20
+     C                     MOVEACQPS      @CA
+     C           @CQNF     DOWLEECQN
+      *
+      ** Calculate cheque presented status array index
+     C           @CQNF     SUB  SCQN      @OFSET  80
+     C           @OFSET    DIV  8         @I      20
+     C                     MVR            @BITN   10
+     C                     ADD  1         @I
+      *
+      ** Test corresponding bit-position of element for cheque presented
+     C           @BITN     IFEQ 0
+     C                     TESTB'0'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 1
+     C                     TESTB'1'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 2
+     C                     TESTB'2'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 3
+     C                     TESTB'3'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 4
+     C                     TESTB'4'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 5
+     C                     TESTB'5'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 6
+     C                     TESTB'6'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 7
+     C                     TESTB'7'       @CA,@I         81
+     C                     END
+      *
+      ** If test is successful
+     C           *IN81     IFEQ '0'
+      *
+      ** Move to array and print
+     C                     EXSR MTARPR
+     C                     END
+      *
+      ** Increment for next cheque no
+     C                     ADD  1         @CQNF
+      *
+     C                     END
+      *
+     C                     MOVEL@CQPA     PUPCQ
+     C                     EXSR WRDET
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MTARPR - Move to array and print                   *
+      *                                                               *
+      * CALLS      PRHED  - Print header                              *
+      *            WRDET  - Write Details                             *
+      *                                                               *
+      * CALLED BY  MUPCHQ - Move unpresented cheques to print         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MTARPR    BEGSR                           ** MTARPR **
+      *
+      **   CLEAR THE ARRAY BEFORE WRITING THE FIRST ELEMENT TO @CN
+      *
+     C           @L        IFEQ 0
+     C                     MOVEA*BLANKS   @CN
+     C                     END
+      *
+     C                     ADD  1         @L
+      *
+      ** to get the last four digits of the cheque no
+     C                     MOVE @CQNF     CQNA    4
+     C                     MOVELCQNA      @CN,@L
+      *
+     C           @L        IFEQ 16
+      *
+     C                     Z-ADD0         @L
+     C                     MOVEL@CQPA     PUPCQ
+     C                     MOVEL*BLANKS   @CQPA
+      *
+      ** check for heading print
+     C           *IN11     IFEQ '1'
+     C                     EXSR PRHED
+     C                     END
+      *
+      ** print the line
+     C                     EXSR WRDET
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            WRDET  - Write Details                             *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  MUPCHQ - Move unpresented cheques to print         *
+      *            MTARPR - Move to array and print                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           WRDET     BEGSR                           ** WRDET  **
+      *
+      ** Check if first line is printed
+     C           *IN15     IFEQ '1'
+     C                     WRITEDETAIL
+     C                     SETOF                     15
+     C                     ELSE
+     C                     WRITEREST
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRHED  - Print Header                              *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  PRODET - Process details                           *
+      *            PRDET  - Print details                             *
+      *            MTARPR - Move to array and print                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRHED     BEGSR                           ** PRHED  **
+      *
+     C                     MOVELBRCA      PBRCA
+     C                     TIME           STIME   60
+     C                     MOVELSTIME     TIME
+     C                     WRITEHEADER
+     C                     SETOF                     11
+      *
+      ** Seton first line indicator on a page skip
+     C                     SETON                     15
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRCON  - Print controls                            *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  FINAL  - Final processing                          *
+      *                                                               *
+      * FLDS USED        -                                            *
+      *                                                               *
+      *****************************************************************
+     C           PRCON     BEGSR                           ** PRCON  **
+      *
+      ** Print control totals report.
+     C                     WRITEAUHDNG
+     C           NORE      IFGT *ZEROS
+     C                     WRITEAUDETL
+     C                     ELSE
+     C                     WRITENODTLS
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FIRST  - Initial Processing                        *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling               (01)*
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *
+      ** Account Numbers Cross Reference
+     C           KLACNO    KLIST
+     C                     KFLD           KACNO  100
+      *
+      ** Currency Details
+     C           KLBANK    KLIST
+     C                     KFLD           BJBANK
+      *
+     C                     MOVE '0'       *IN37
+     C                     MOVE '0'       *IN38
+     C           @RLEV     IFEQ 'B'
+     C                     MOVE '1'       *IN37
+     C                     ELSE
+     C                     MOVE '1'       *IN38
+     C                     END
+     C*
+     C** Read in DTAARA/RUNDAT to get multibranching indicator
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN39
+     C                     ELSE
+     C*
+     C** Set up appropriate level and entity if not Branch level
+     C*
+     C                     MOVE 'S'       @RLEV
+     C                     MOVE *BLANKS   @RENT
+     C                     MOVE '0'       *IN39
+     C                     END
+      *
+      **   Reset LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE4216'  DBPGM
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      ** Get Midas run-date and title
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+      ** If record not found?
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD1         DBASE            ** DB ERR 01 **
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     MOVE @OPTN     DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Set up date format indicator
+     C           BJDFIN    IFEQ 'D'
+     C                     SETOF                     98
+     C                     ELSE
+     C                     SETON                     98
+     C                     END
+     C*
+     C** Ensure Audit Spool File recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUM2  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANK    SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM2
+     C                     PARM           ZSERR
+     C*
+     C** If an error occurred during ZSFILE processing,
+     C** return to the calling program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      **  Initialise work variables
+     C                     MOVE *BLANK    @BRCA   3
+     C                     Z-ADD0         NORE    50
+      *
+      *  Seton overflow indicator
+     C                     SETON                     11
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DBERR  - Database Error Handling :                 *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                   (01) *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL@PGM      DBPGM
+     C                     WRITEAUHDNG
+     C                     WRITEDBERROR
+     C                     CLOSERE4213AU
+     C*
+     C           OPEN      IFEQ '1'
+     C                     WRITEERRLINE
+     C                     CLOSERE4213P1
+     C                     END
+     C*
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR             - Program error                             *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY                                                     *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      ** Transaction failed.  Re-input necessary.
+     C                     DUMP
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      ** SR.ZDATE2 subroutine
+      /COPY ZSRSRC,ZDATE2Z2
+      *
+      *****************************************************************
+      *
+      /EJECT
+      ** SR.ZDATE2 contents of ZDATE2 compile time array
+      /COPY ZSRSRC,ZDATE2Z3
+** COPYRIGHT OBJECT **
+(c) Finastra International Limited 2001

@@ -1,0 +1,316 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Obtain currency totals')
+      *****************************************************************
+      *                                                               *
+      *  Midas  GENERAL LEDGER MODULE                                 *
+      *                                                               *
+      *     GL0136U - Fill Currency file for Batch of Journal items   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 11Oct00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 178093             Date 03May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL008             Date 03Mar99               *
+      *                 E30554             Date 30Oct91               *
+      *                 S01199             Date 02May90               *
+      *                 S01117            DATE 23MAR90                *
+      *                 S01251            DATE 12MAR90                *
+      *                 S01234            DATE 09FEB90                *
+      *                 S01212            DATE : 20/09/89             *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD006 - Use correct parameters for Access Objects           *
+      *  178093 - This program should have been recompiled over the   *
+      *           SDCURRPD changes introduced at DBA3.02.             *
+      *  CGL008 - Security on Journal Entry. Recompile.               *
+      *   E30554 - IF A WORKSTATION TERMINATES ABNORMALLY DURING BATCH*
+      *            INPUT RECORDS ON GLJENSPD ARE NOT ROLLED BACK.     *
+      *   S01199 - RECOMPILED FOR CURSOR SENSITIVE HELP               *  *
+      *   S01212 - WINDOW PROCESSING BEING ALLOWED.                   *
+      *            Thus an extra parameter was required to be passed  *
+      *            into this program to determine whether this pgm    *
+      *            was called from the Abbreviated or Full journal    *
+      *            entries program. This parameter is passed into the *
+      *            Delete Batch Program and the Currency Enquiry pgm  *
+      *            so that they will be able to tell whether to call  *
+      *            the window pgm or to call the Display File pgm.    *
+      *                                                               *
+      *                                                               *
+      *   S01234 - BATCH NUMBER NOW USED AS A CHARACTER FIELD         *
+      *                                                               *
+      *   S01251 - PROGRAM AND FIELD NAME CHANGES                     *
+      *                                                               *
+      *   S01117 - Release 10 Changes - Addition of Branch Code as    *
+      *            Key field to Journal Entry Summary File. GLJENSPD  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     F*FSTART
+      ************************************************************
+     F*********GLBTREL2IF  E           K        DISK                      S01251
+     FGLJENPL2IF  E           K        DISK                               S01251
+     F                                              KCOMIT                E30554
+      * IN  - @BTREBG Journal items    (JDNB¦AHCD)
+      *...........................................................
+     F*****GLBSREL0UF  E           K        DISK                 A        S01251
+     FGLJENSL0UF  E           K        DISK                      A        S01251
+     F                                              KCOMIT                E30554
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+      * I/O - @BSREAI Journal currency (JDNB¦AHCD)
+      ************************************************************
+      /EJECT
+     I*ISTART
+      ************************************************************
+     I******P@FMAT    E DSGLBRREP                                         S01251
+     IP@FMAT    E DSGLJENHPD                                              S01251
+      * Batch header file format data structure
+      *
+     IP@CURF    E DSSDCURRPD
+      * Currency file format data structure
+      *
+     IDSSDY     E DSDSSDY                                                                     CSD006
+      ** External DS for long dummy data structure                                            CSD006
+      *                                                                                       CSD006
+     I            DS
+      * #1 Hash normalisation data structure
+     I                                        1  150W@FB15
+     I                                        1  140W@FB14
+     I                                        1  130W@FB13
+     I                                        1  120W@FB12
+     I                                       15  151W@FB01
+     I                                       14  152W@FB02
+     I                                       13  153W@FB03
+      *
+     I            DS
+      * #2 Hash normalisation data structure
+     I                                        1   93W@##09
+     I                                        1   60W@##06
+     I                                        7   90W@##03
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ************************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C                     MOVEACPY@      BIS@   80
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  1        O:Option
+     C                     PARM           P@CLPG  1        I:Calling Pgm  S01212
+     C                     PARM           P@FMAT           B:Format
+      *****************************************************
+      *MAIN
+     C********** *LIKE     DEFN BTAJCD    W@AJCD           Currency code  S01251
+     C           *LIKE     DEFN BTCYCD    W@CYCD           Currency code  S01251
+     C           *LIKE     DEFN BTIBCA    W@IBCA           Branch Code    S01117
+     C           *LIKE     DEFN P@RTCD    W@RTCD           Return code
+      *
+      * Delete existing Currency records for Batch :
+      *
+     C********** BRJDNB    SETLL@BSREAI              010103 Set currency  S01251
+     C           BRBTNB    SETLL@BSREAI              010103 Set currency  S01251
+      *
+     C           *IN03     IFEQ '1'                        IF DATA
+     C           *IN01     DOUEQ'1'                        DO READ GROUP
+     C********** BRJDNB    READE@BSREAI                0101  Read Ccy.    S01251
+     C           BRBTNB    READE@BSREAI                0101  Read Ccy.    S01251
+     C           *IN01     IFEQ '0'                        IF DATA
+     C                     DELET@BSREAI                01    Remove
+     C                     END                             FI
+     C                     END                             OD
+     C                     END                             FI
+      *
+      * Reset calculated Hash fields :
+      *
+     C*******************  Z-ADD*ZERO     BRJGNB           Reset items    S01251
+     C*******************  Z-ADD*ZERO     BRJENB           Reset integer  S01251
+     C*******************  Z-ADD*ZERO     BRJFNB           Reset decimal  S01251
+     C                     Z-ADD*ZERO     BRHINC           Reset items    S01251
+     C                     Z-ADD*ZERO     BRHICC           Reset integer  S01251
+     C                     Z-ADD*ZERO     BRHDCC           Reset decimal  S01251
+     C                     Z-ADD*ZERO     W@FB15           Set work field
+     C                     Z-ADD*ZERO     W@##09           Set work field
+      *
+      * Set to start of group of item records for Batch :
+      *
+     C********** BRJDNB    SETLL@BTREBG              010203 Set file      S01251
+     C           BRBTNB    SETLL@BTREBG              010203 Set file      S01251
+      *
+      * Read group; at end of each currency, add currency record :
+      *
+     C           *IN01     IFEQ '0'                        IF   NOT EMPTY
+     C           *IN02     ANDEQ'0'                         AND NO ERRORS
+     C           *IN03     ANDEQ'1'                         AND DATA
+      *                    ¦
+     C           *IN04     DOUEQ'1'                        DO READ GROUP
+     C*********  BRJDNB    READE@BTREBG                0204  Read items   S01251
+     C           BRBTNB    READE@BTREBG                0204  Read items
+      *                    ¦|
+     C           *IN04     IFEQ '0'                        IF DATA
+     C           *IN02     ANDEQ'0'                         AND NO ERRORS
+      *                    ¦|¦
+     C********** BTDKST    IFEQ 'Y'                        IF RETAIL ERRORS01251
+     C********** BTDJST    ANDNE'Y'                         AND ¬OVRIDDEN S01251
+     C           BTRINE    IFEQ 'Y'                        IF RETAIL ERRORS01251
+     C           BTRINO    ANDNE'Y'                         AND ¬OVRIDDEN S01251
+     C                     MOVE 'E'       P@OPTN             Inform
+     C                     END                             FI
+      *                    ¦|¦
+     C******************** ADD  1         BRJGNB             Count items  S01251
+     C                     ADD  1         BRHINC             COUNT items  S01251
+      *                    ¦|¦
+     C*********  BTAJCD    IFNE W@AJCD                     IF NEW CURRENCYS01251
+     C           BTCYCD    IFNE W@CYCD                     IF NEW CURRENCYS01251
+     C           BTIBCA    ORNE W@IBCA                      OR NEW BRANCH S01117
+      *                    ¦|¦¦
+     C*********  W@AJCD    IFNE *BLANK                     IF NOT FIRST   S01251
+     C           W@CYCD    IFNE *BLANK                     IF NOT FIRST   S01251
+     C*******************  Z-ADDBTJDNB    BSJDNB             Batch number S01234
+     C*******************  MOVE BTJDNB    BSJDNB             Batch number S01234
+     C*******************  MOVE W@AJCD    BSAHCD             Currency codeS01251
+     C                     MOVE BTBTNB    BSBTNB             Batch number S01251
+     C                     MOVE W@CYCD    BSCYCD             Currency codeS01251
+     C                     MOVE W@IBCA    BSBRCD             Branch Code  S01117
+     C                     WRITE@BSREAI                      Write  file
+     C                     END                             FI
+      *                    ¦|¦¦
+     C******************   Z-ADD*ZERO     BSJKNB             Debit total  S01251
+     C******************   Z-ADD*ZERO     BSJLNB             Credit total S01251
+     C******************   MOVE BTAJCD    W@AJCD             New currency S01251
+     C                     Z-ADD*ZERO     BSDBTT             Debit total  S01251
+     C                     Z-ADD*ZERO     BSCRTT             Credit total S01251
+     C                     MOVE BTCYCD    W@CYCD             New currency S01251
+     C                     MOVE BTIBCA    W@IBCA             New Branch   S01117
+      *                    ¦|¦¦
+     C******************** CALL 'AOCURRR0'             90    <CURRENCY>   S01251
+     C******************** PARM *BLANK    P@RTCD  7          B:Return codeS01251
+     C******************** PARM '*KEY   ' P@CUOP  7          I:Option     S01251
+     C******************** PARM BTAJCD    P@AJCD  3          I:Key field  S01251
+     C******************** PARM           P@CURF             O:Format     S01251
+      *                    ¦|¦¦                                           S01251
+     C                     CALL 'AOCURRR0'             90    <CURRENCY>   S01251
+     C                     PARM *BLANK    P@RTCD  7          B:Return codeS01251
+     C                     PARM '*KEY   ' P@CUOP  7          I:Option     S01251
+     C                     PARM BTCYCD    P@CYCD  3          I:Key field  S01251
+     C***********          PARM           P@CURF             O:Format     S01251              CSD006
+     C           P@CURF    PARM P@CURF    DSSDY              O:Format     S01251              CSD006
+     C                     END                             FI             S01251
+      *                    ¦|¦
+      * Add amount to Dr or Cr of Currency record :
+      *                    ¦|¦
+     C********** BTAVST    IFEQ 'D'                        IF DEBIT AMT.  S01251
+     C***********          ADD  BTFBNB    BSJKNB             Debit total  S01251
+      *                                                                   S01251
+     C           BTDCIN    IFEQ 'D'                        IF DEBIT AMT.  S01251
+     C                     ADD  BTPTAM    BSDBTT             Debit total  S01251
+     C                     ELSE                            EL CREDIT AMT.
+     C******************** ADD  BTFBNB    BSJLNB             Credit total S01251
+     C                     ADD  BTPTAM    BSCRTT             Credit total S01251
+     C                     END                             FI
+      *                    ¦|¦
+      * Normalise amount and add to calculated hash total :
+      *                    ¦|¦
+     C******************** Z-ADDBTFBNB    W@FB15             To work fieldS01251
+     C                     Z-ADDBTPTAM    W@FB15             To work fieldS01251
+     C                     MLLZO'0'       W@FB15             Make positive
+      *                    ¦|¦
+     C***********A6DANB****IFEQ *ZERO                      IF DECIMAL=0   S01251
+     C           A6NBDP    IFEQ *ZERO                      IF DECIMAL=0   S01251
+     C***********          ADD  W@FB15    BRJENB             Hash integer S01251
+     C                     ADD  W@FB15    BRHICC             Hash integer S01251
+     C                     END                             FI
+      *                    ¦|¦
+     C***********A6DANB****IFEQ 1                          IF DECIMAL=1   S01251
+     C           A6NBDP    IFEQ 1                          IF DECIMAL=1   S01251
+     C***********          ADD  W@FB14    BRJENB             Hash integer S01251
+     C                     ADD  W@FB14    BRHICC             Hash integer S01251
+     C                     ADD  W@FB01    W@##09             Check decimal
+     C                     END                             FI
+      *                    ¦|¦
+     C***********A6DANB****IFEQ 2                          IF DECIMAL=2   S01251
+     C           A6NBDP    IFEQ 2                          IF DECIMAL=2   S01251
+     C*********            ADD  W@FB13    BRJENB             Hash integer S01251
+     C                     ADD  W@FB13    BRHICC             Hash integer S01251
+     C                     ADD  W@FB02    W@##09             Check decimal
+     C                     END                             FI
+      *                    ¦|¦
+     C***********A6DANB****IFEQ 3                          IF DECIMAL=3   S01251
+     C           A6NBDP    IFEQ 3                          IF DECIMAL=3   S01251
+     C**********           ADD  W@FB12    BRJENB             Hash integer S01251
+     C                     ADD  W@FB12    BRHICC             Hash integer S01251
+     C                     ADD  W@FB03    W@##09             Check decimal
+     C                     END                             FI
+      *                    ¦|¦
+     C                     END                             FI
+      *                    ¦|
+     C                     END                             OD
+      *                    ¦
+      * End of Batch - add last currency record :
+      *                    ¦
+     C******************** Z-ADDBTJDNB    BSJDNB           Batch number   S01234
+     C******************** MOVE BTJDNB    BSJDNB           Batch number   S01251
+     C******************** MOVE W@AJCD    BSAHCD           Currency code  S01251
+     C                     MOVE BTBTNB    BSBTNB           Batch number   S01251
+     C                     MOVE W@CYCD    BSCYCD           Currency code  S01251
+     C                     MOVE W@IBCA    BSBRCD           Branch Code    S01117
+     C                     WRITE@BSREAI                    Write  file
+      *                    ¦
+      * Add decimal amount to Hash and add carry to hash integer :
+      *                    ¦
+     C*******************  Z-ADDW@##03    BRJFNB           Hash decimal   S01251
+     C*******************  ADD  W@##06    BRJENB           Carry integer  S01251
+     C                     Z-ADDW@##03    BRHDCC           Hash decimal   S01251
+     C                     ADD  W@##06    BRHICC           Carry integer  S01251
+      *                    ¦
+     C                     END                             FI
+      *
+      * Call the Currency file display programs :
+      *
+     C***********W@RTCD    IFEQ '*AMEND '                  IF ADD/AMEND
+     C***********          CALL 'GL0112D'              90    <BATCH CURR>
+     C***********          PARM           P@RTCD             B:Return code
+     C***********          PARM           P@OPTN             O:Option
+     C***********          PARM           P@FMAT             B:Format
+     C***********          END                             FI
+      *
+     C***********W@RTCD    IFEQ '*DELETE'                  IF DELETE
+     C***********          CALL 'GL0111D'              90    <BATCH CURR>
+     C***********          PARM           P@RTCD             B:Return code
+     C***********          PARM           P@OPTN             O:Option
+     C***********          PARM P@CLPG    P@CLPG             I:Calling PgmS01212
+     C***********          PARM           P@FMAT             B:Format
+     C***********          END                             FI
+      *
+     C***********W@RTCD    IFEQ '*ENQ   '                  IF ENQUIRY
+     C***********          CALL 'GL0110D'              90    <BATCH CURR>
+     C***********          PARM           P@RTCD             B:Return code
+     C***********          PARM           P@OPTN             O:Option
+     C***********          PARM P@CLPG    P@CLPG             I:Calling PgmS01212
+     C***********          PARM           P@FMAT             B:Format
+     C***********          END                             FI
+      *
+      * Return to caller :
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************
+      *ENDMAIN
+**  CPY@
+(c) Finastra International Limited 2001

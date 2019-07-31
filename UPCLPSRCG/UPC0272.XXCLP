@@ -1,0 +1,205 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC0272 - Create and copy data queues                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/*       Last Amend No. CUP041  *REDUNDANT Date 01Aug14              */
+/*       Prev Amend No. A1076141           Date 11Jan13              */
+/*                      AR967490           Date 10May12              */
+/*                      CBF012             Date 04Jul11              */
+/*                      CUT008             Date 09Feb11              */
+/*                      AR656906           Date 13Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CUP030             Date 31Dec04              */
+/*                      CPK018             Date 03Mar04              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CPK015 *CREATE     Date 27Feb02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*       A1076141 - Change back to only having one type of DBU.      */
+/*       AR967490 - DTAQ and TBL not being able to be created by     */
+/*                  UPC0272                                          */
+/*       CBF012 - BF Infrastructure: Upgradability                   */
+/*       CUT008  - CRTOBJ rewrite                                    */
+/*                 Change of CRTOBJ parameters                       */
+/*       AR656906 - Handle tables (non-SQL).                         */
+/*       CUP030 - End journaling on moved objects.                   */
+/*       CPK018 - MidasPlus packaging.  Upgrade of global layer.     */
+/*       CPK015 - 4.01 packaging.  Handle data queues.               */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&PTFSRC &LIBMOV &SBS &OWNER &AUTL &RETURN)  */               /*CBF012*/
+/**********  PGM        PARM(&PTFSRC &LIBMOV &SBS &OWNER &AUTL &RETURN &MODE) */ /*CBF012 A1076141*/
+             PGM        PARM(&PTFSRC &LIBMOV &SBS &OWNER &AUTL &RETURN)                 /*A1076141*/
+ 
+             DCL        VAR(&PTFSRC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LIBMOV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+/**********  DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)                         */ /*CBF012 A1076141*/
+ 
+             DCL        VAR(&FRLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(10)                                   /*CPK018*/
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)                                   /*CPK018*/
+             DCL        VAR(&GTALIB) TYPE(*CHAR) LEN(10)                                  /*CPK018*/
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(8)                                /*AR656906*/
+             DCL        VAR(&LIBTYPE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&USTS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&NEWNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2001')
+ 
+             DCLF       FILE(UPDLVCLL)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&DMLIB) VALUE(&SBS *CAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&SBS *CAT 'DPLIB')
+             CHGVAR     VAR(&DTALIB) VALUE(&SBS *CAT 'DTALIB')
+             CHGVAR     VAR(&DZLIB) VALUE(&SBS *CAT 'DZLIB')
+             CHGVAR     VAR(&GMLIB) VALUE(&SBS *CAT 'GMLIB')                              /*CPK018*/
+             CHGVAR     VAR(&GPLIB) VALUE(&SBS *CAT 'GPLIB')                              /*CPK018*/
+             CHGVAR     VAR(&GTALIB) VALUE(&SBS *CAT 'GTALIB')                            /*CPK018*/
+ 
+             CHGVAR     VAR(&RETURN) VALUE(' ')
+             CHGVAR     VAR(&USTS) VALUE('C')
+ 
+READNEXT:
+             IF         COND(&AUMBNM *NE ' ') THEN(DO)
+/*/COPY UPCPYSRCG,C_UP0020A                                          */
+             ENDDO
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/**********  IF         COND(((&MODE *EQ '*NML') *AND +                              */ /*A1076141*/
+/**********               (%SUBSTRING(&AUSRCF 1 2) *EQ 'HI')) *OR +                  */ /*A1076141*/
+/**********               ((&MODE *EQ '*HIL') *AND +                                 */ /*A1076141*/
+/**********               (%SUBSTRING(&AUSRCF 1 2) *NE 'HI'))) THEN(DO)       */ /*CBF012 A1076141*/
+/**********     GOTO       CMDLBL(READNEXT)                                   */ /*CBF012 A1076141*/
+/**********  ENDDO                                                            */ /*CBF012 A1076141*/
+ 
+             CHGVAR     VAR(&LIBTYPE) VALUE('   ')
+             CHGVAR     VAR(&LIBTYPE) VALUE(%SST(&AUSRCF 9 2))
+             IF         COND(&LIBTYPE *EQ 'QT') THEN(GOTO +
+                          CMDLBL(READNEXT))
+             IF         COND(&LIBTYPE *EQ 'DT') THEN(DO)
+                CHGVAR     VAR(&FRLIB) VALUE(&DTALIB)
+             ENDDO
+             IF         COND(&LIBTYPE *EQ 'DM') THEN(DO)
+                CHGVAR     VAR(&FRLIB) VALUE(&DMLIB)
+             ENDDO
+             IF         COND(&LIBTYPE *EQ 'DP') THEN(DO)
+                CHGVAR     VAR(&FRLIB) VALUE(&DPLIB)
+             ENDDO
+             IF         COND(&LIBTYPE *EQ 'DZ') THEN(DO)
+                CHGVAR     VAR(&FRLIB) VALUE(&DZLIB)
+             ENDDO
+             IF         COND(&LIBTYPE *EQ 'GM') THEN(DO)                                  /*CPK018*/
+                CHGVAR     VAR(&FRLIB) VALUE(&GMLIB)                                      /*CPK018*/
+             ENDDO                                                                        /*CPK018*/
+             IF         COND(&LIBTYPE *EQ 'GP') THEN(DO)                                  /*CPK018*/
+                CHGVAR     VAR(&FRLIB) VALUE(&GPLIB)                                      /*CPK018*/
+             ENDDO                                                                        /*CPK018*/
+             IF         COND(&LIBTYPE *EQ 'GT') THEN(DO)                                  /*CPK018*/
+                CHGVAR     VAR(&FRLIB) VALUE(&GTALIB)                                     /*CPK018*/
+             ENDDO                                                                        /*CPK018*/
+ 
+/**********  IF         COND(&AUMBNM *EQ 'DTAQ') THEN(DO)   **/           /*AR656906*/  /*AR967490*/
+             IF         COND(&AUMBTP *EQ 'DTAQ') THEN(DO)                               /*AR967490*/
+                CHGVAR     VAR(&OBJTYPE) VALUE('*DTAQ')                                 /*AR656906*/
+             ENDDO                                                                      /*AR656906*/
+/**********  IF         COND(&AUMBNM *EQ 'TBL') THEN(DO)                  /*AR656906*/  /*AR967490*/
+             IF         COND(&AUMBTP *EQ 'TBL') THEN(DO)                                /*AR967490*/
+                CHGVAR     VAR(&OBJTYPE) VALUE('*TBL')                                  /*AR656906*/
+             ENDDO                                                                      /*AR656906*/
+ 
+/* If object not found then just create */
+/**********  RTVOBJD    OBJ(&AUMBNM) OBJTYPE(*DTAQ) RTNLIB(&RTNLIB)                  */ /*AR656906*/
+             RTVOBJD    OBJ(&AUMBNM) OBJTYPE(&OBJTYPE) RTNLIB(&RTNLIB)                  /*AR656906*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(CRTOBJ)
+             ENDDO
+/**********  MOVOBJ     OBJ(&RTNLIB/&AUMBNM) OBJTYPE(*DTAQ) +                        */ /*AR656906*/
+/**********               TOLIB(&LIBMOV)                                             */ /*AR656906*/
+             MOVOBJ     OBJ(&RTNLIB/&AUMBNM) OBJTYPE(&OBJTYPE) +
+                          TOLIB(&LIBMOV)                                                /*AR656906*/
+             MONMSG     MSGID(CPF2112) EXEC(DO)
+/* If object already exists then try to rename it and move again */
+                CHGVAR     VAR(&NEWNAM) VALUE('#.' *TCAT &AUMBNM)
+/**********     RNMOBJ     OBJ(&LIBMOV/&AUMBNM) OBJTYPE(*DTAQ) +                     */ /*AR656906*/
+/**********               NEWOBJ(&NEWNAM)                                            */ /*AR656906*/
+                RNMOBJ     OBJ(&LIBMOV/&AUMBNM) OBJTYPE(&OBJTYPE) +
+                             NEWOBJ(&NEWNAM)                                            /*AR656906*/
+/* If renamed object already exists then flag as failure */
+                MONMSG     MSGID(CPF2112) EXEC(DO)
+                   CHGVAR     VAR(&USTS) VALUE('F')
+                   GOTO       CMDLBL(READNEXT)
+                ENDDO
+/**********     MOVOBJ     OBJ(&RTNLIB/&AUMBNM) OBJTYPE(*DTAQ) +                     */ /*AR656906*/
+/**********               TOLIB(&LIBMOV)                                             */ /*AR656906*/
+                MOVOBJ     OBJ(&RTNLIB/&AUMBNM) OBJTYPE(&OBJTYPE) +
+                             TOLIB(&LIBMOV)                                             /*AR656906*/
+             ENDDO
+ 
+             IF         COND(&OBJTYPE *EQ '*DTAQ') THEN(DO)                             /*AR656906*/
+                ENDJRNOBJ  OBJ(&LIBMOV/&AUMBNM) OBJTYPE(*DTAQ)                            /*CUP030*/
+                MONMSG     MSGID(CPF0000)                                                 /*CUP030*/
+             ENDDO                                                                      /*AR656906*/
+ 
+CRTOBJ:
+/**********  CRTOBJ     SRCMBR(&AUMBNM) SRCFILE(&PTFSRC/&AUSRCF) +
+                          PLIB(&FRLIB) OWNER(&OWNER) AUTL(&AUTL)   */                     /*CUT008*/
+             CRTOBJ     OBJ(&FRLIB/&AUMBNM) SRCFILE(&PTFSRC/&AUSRCF) +
+                          SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                          /*CUT008*/
+             MONMSG     MSGID(SYS9898 SYS0011 SYS0017) EXEC(DO)
+                CHGVAR     VAR(&USTS) VALUE('F')
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+/* If moved version not found then data queue is new. */
+/**********  CHKOBJ     OBJ(&LIBMOV/&AUMBNM) OBJTYPE(*DTAQ)                          */ /*AR656906*/
+             CHKOBJ     OBJ(&LIBMOV/&AUMBNM) OBJTYPE(&OBJTYPE)                          /*AR656906*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(READNEXT))
+ 
+             IF         COND(&OBJTYPE *EQ '*DTAQ') THEN(DO)                             /*AR656906*/
+                CPYDTAQ    FMDTAQ(&LIBMOV/&AUMBNM) TODTAQ(&FRLIB/&AUMBNM)
+                MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                   CHGVAR     VAR(&USTS) VALUE('F')
+                   GOTO       CMDLBL(READNEXT)
+                ENDDO
+             ENDDO                                                                      /*AR656906*/
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGVAR     VAR(&RETURN) VALUE('F')
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+ 
+             ENDPGM

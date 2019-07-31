@@ -1,0 +1,879 @@
+0001 H**********                                                                              CSC011
+     H        1                                                                               CSC011
+0002 F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SC Input/valid'n of today's run date')           *
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - System Control Module                                *
+0005 F*                                                               *
+0006 F*  SD1020 - Processing for input of Next Working Day            *
+0007 F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+0009 F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1064796          Date 05Dec12               *
+      *                 CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CCB014             Date 25Apr05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *  Prev Amend No. CSC011             Date 18Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 190849             Date 16Feb01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CUP006             Date 16Dec99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01408             DATE 26APR96               *
+     F*                 S01408             DATE 10APR96               *
+     F*                 S01495             DATE 01OCT94               *
+     F*                 S01408             DATE 24JUN93               *
+     F*                 S01375             DATE 03APR92               *
+     F*                 E29436             DATE 11OCT91               *
+0010 F*                 S01194             DATE 21MAR90               *
+0011 F*                                                               *
+0012 F*---------------------------------------------------------------*
+0011 F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1064796 -  Error message 'Date entered must be greater     *
+      *               than run date'                                  *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CCB014 - Pre-Scheduled Batch Close Of Business               *
+      *  CSC011 - 24x7 Midas Availability                             *
+     F*  190849 - Reformat dates to include leading zeroes.           *
+     F*  CUP006 - General improvements to next working day screen.    *
+     F*  S01408 - Core hook SD1020EEP1 added                          *
+     F*           Core hook SD1020EEP2 added                          *
+     F*  S01408 - Core hook SD1020CCP2 added                          *
+     F*           Core hook SD1020CCP1 added                          *
+     F*  S01495 - COB Enhancements.                                   *
+     F*  S01408 - Core hook SD1020CEIP added                          *
+     F*           Core hook SD1020FPG added                           *
+     F*           Core hook SD1020CIKS added                          *
+     F*  S01375 - Auto COB amendments                                 *
+     F*  E29436 - MOVED TO SOURCE FILE SCRPGSRC FROM SDRPGSRC.        *
+0011 F*  S01194 - NEW SD FIELD NAMES                                  *
+0011 F*                                                               *
+0012 F*****************************************************************
+     F/COPY WNCPYSRC,SD1020F001
+0013 F*SETKEYDFCF**E********************WORKSTN************************                       CUP006
+0013 F***SD1020DFCF  E                    WORKSTN                                      CUP006 CCB014
+     FSD1020DFCF  E                    WORKSTN                        UC                      CCB014
+     C*
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SD1020FPG                                            S01408
+     C*                                                                   S01408
+0014 F*TABLE**IF* F      96 12AI     2 DISK                               S01194
+0015 F**01*******     TABLE FILE - INSTALLATION CONTROL RECORD 1          S01194
+0016 F**02*******                - INSTALLATION CONTROL RECORD 2          S01194
+0017 F**03*******                - CATCH ALL                              S01194
+     F**04*******                - HOLIDAY RECORD                         S01194
+0018 F*****10****     CHAIN FAILURE                                       S01194
+0019 F*    12         INVALID DATE -RE-ENTER
+0020 F*       20      DATE ENTERED HOLIDAY IN LOCAL CCY
+0021 F*       21      WORKING DAYS BETWEEN RUN DATE AND DATE ENTERED
+     F*       22      INVALID DATE
+      *       23      Non-display date input option                                           CUP006
+0022 F********31******RE-ENTER DATE AFTER WARNING - SETON IF CMD12 ENTERED                    190849
+ 021 F*       32      DATE ENTERED IS NOT EQUAL TO PREVIOUS DATE ENTERED
+0023 F*    90-99      - SUBROUTINE ERROR INDICATOR
+0024 F********30*U7   SETON WHEN CMD3 IS PRESSED                          S01495
+0025 F*          U8   DATABASE ERROR
+0026 F*          LR   SETON TO TERMINATE PROGRAM IN FIRST CYCLE
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,SD1020EEP1                                           S01408
+     E*                                                                   S01408
+0027 E***********         MSG     1   6 50                                                    190849
+     E                    MSG     1   8 50                                                    190849
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,SD1020EEP2                                           S01408
+     E*                                                                   S01408
+0028 E                    ZYDY    4   4  4 0             ZDATE SR. ARRAY
+0029 E                    ZMDY   13  13  3 0             ZDATE SR. ARRAY
+0030 E***********         ZHC        50  3               ZDATE5 SR. ARRAY S01194
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZHOLE                                                  S01194
+     E* /COPY FOR ZCHKH SUBROUTINE                                        S01194
+      *                                                                                       190849
+      ** Datastructure to format dates with leading zeroes                                    190849
+     IFMTDAT      DS                              7                                           190849
+     I                                        1   1 DATZRO                                    190849
+0031 I*
+0032 I***TABLE*FILE*INSTALLATION*CONTROL*DATA*RECORDS*1*2*AND*3           S01194
+0033 I***********                                                         S01194
+0034 I*TABLE**NS* 01   1 CD   2 C0   3 C1                                 S01194
+0035 I*******AND*     12 C1  13 C0                                        S01194
+0036 I***********                             1   1 RECI                  S01194
+0037 I***********                            67  67 DATF                  S01194
+0038 I***********                         P  77  790RUND                  S01194
+0039 I********NS* 02   1 CD   2 C0   3 C1                                 S01194
+0040 I*******AND*     12 C1  13 C1                                        S01194
+0042 I***********                            47  49 LOCY                  S01194
+0043 I********NS* 03   1 CD   2 C0   3 C1                                 S01194
+0044 I*******AND*     12 C2  13 C0                                        S01194
+0045 I***********                         P  63  650NOBA                  S01194
+0046 I***********                         P  66  680TSIZ                  S01194
+0047 I*****TABLE*FILE*-*HOLIDAY*RECORD.                                   S01194
+0048 I********E-EXCLUDE,*I-INCLUDE.                                       S01194
+0049 I***********                                                         S01194
+0050 I*TABLE**NS* 04   1 CD   2 C2   3 C2                                 S01194
+0051 I*******AND*     14 CE                                               S01194
+0052 I*******OR** 04   1 CD   2 C2   3 C2                                 S01194
+0053 I*******AND*     14 CI                                               S01194
+0054 I***********                             1   1 RECI                  S01194
+0055 I***********                             2   30RECT                  S01194
+0056 I***********                             8  120HOL                   S01194
+0057 I***********                            13  130SREC                  S01194
+0058 I***********                            14  14 INEX                  S01194
+0059 I***********                            15  89 HCCY                  S01194
+0060 I***********                         P  90  920LCD                   S01194
+0061 I***********                            93  93 CHTP                  S01194
+0062 I***********                         P  94  960TNLU                  S01194
+0063 I********NS* 10                                                      S01194
+0064 I***********                             1   1 RECI                  S01194
+0065 I** DATASTRUCTURE FOR LOCAL DATA AREA
+0066 I*
+0067 ILDA        UDS                            256
+0068 I                                        1   50VDATE
+0070 I***********                           210 2120NOBAL                 S01194
+0071 I***********                           205 2090TSIZL                 S01194
+     I                                      134 141 DBFILE                                    CSC011
+     I                                      142 170 DBKEY                                     CSC011
+     I                                      171 180 DBPGM                                     CSC011
+     I                                      181 1830DBASE                                     CSC011
+     I*                                                                   S01375
+     I** DATASTRUCTURE FOR AUTO COB DATA                                  S01375
+     ICOBDTA    E DSCBCOBIPD                                              S01375
+     I*                                                                   S01375
+     I** DATASTRUCTURE FOR MIDAS PHASE DATA AREA                          S01375
+     I**MPHAS*******DS                                                                 S01375 CCB020
+     I**********                              1   1 MPHASE                             S01375 CCB020
+     I*                                                                   S01375
+     I/COPY WNCPYSRC,SD1020I001
+      *                                                                                       CCB014
+      ** DATASTRUCTURE FOR DLYCOB DATA AREA                                                   CCB014
+      *                                                                                       CCB014
+     IDLYCOB      DS                            256                                           CCB014
+     I                                        2   2 SCHREQ                                    CCB014
+     I* PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I****************                      244 246 WSID                                     CUP006
+     I                                      244 253 SWSID                                    CUP006
+     I                                      254 263 SUSER                                    CUP006
+      *                                                                                       CSC011
+     ISC24X7    E DS                                                                          CSC011
+      ** Data area for 24x7 Status                                                            CSC011
+      *                                                                                       CSC011
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** BANK DETAILS                                                     S01194
+     I*                                                                   S01194
+     ISCSARD    E DSSCSARDPD                                                                  CSC011
+      ** Switchable features description                                                      CSC011
+      *                                                                                       CSC011
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     I/COPY ZSRSRC,ZHOLI                                                  S01194
+     I* /COPY FOR ZCHKH SUBROUTINE                                        S01194
+0072 C*
+     C                     MOVEACPY@      BIS@   80
+0072 C***********                                                         S01194
+0073 C****FIRST*CYCLE-CHAIN*TO*INSTALLATION*CONTROL*DATA                  S01194
+0074 C****RECORD*1*TO*OBTAIN*RUN*DATE*AND*DATE*FORMAT                     S01194
+0075 C***********                                                         S01194
+0076 C***********          EXSR ZSYSTM                                    S01194
+     C***99******          DO                                             S01194
+0077 C***********          SETON                     LRU8                 S01194
+0078 C***********          GOTO END                                       S01194
+     C***********          END                                            S01194
+0079 C***********                                                         S01194
+0080 C****CHAIN*TO*INSTALLATION*CONTROL*DATA*RECORD*2                     S01194
+0081 C****TO*OBTAIN*LOCAL*CURRENCY                                        S01194
+0082 C****BUILD*KEY*TO*CHAIN                                              S01194
+0083 C***********                                                         S01194
+0084 C***********          MOVEL'01    '  KEY    12                       S01194
+0085 C***********          MOVE '11'      KEY                             S01194
+0086 C***********KEY       CHAINTABLE                10                   S01194
+     C***10******          DO                                             S01194
+     C***********          SETON                     LRU8                 S01194
+     C***********          GOTO END                                       S01194
+     C***********          END                                            S01194
+0089 C***********                                                         S01194
+0090 C****CHAIN*TO*INSTALLATION*CONTROL*DATA*RECORD*3                     S01194
+0091 C****TO*OBTAIN*XACT*FILE*SIZE*AND*NO.*OF*BATCHES                     S01194
+0092 C****BUILD*KEY*TO*CHAIN                                              S01194
+0093 C***********                                                         S01194
+0094 C***********          MOVE '20'      KEY                             S01194
+0095 C***********KEY       CHAINTABLE                10                   S01194
+     C***10******          DO                                             S01194
+     C***********          SETON                     LRU8                 S01194
+     C***********          GOTO END                                       S01194
+     C***********          END                                            S01194
+     C*                                                                   S01194
+     C*  CHECK INSTALLATION CONTROL DATA                                  S01194
+     C*  USING ACCESS OBJECTS TO OBTAIN RECORDS FROM SDBANKPD             S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' P@RTCD  7                       S01194
+     C                     PARM '*FIRST ' P@OPTN  7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C*                                                                   S01194
+     C*  IF ERROR FOUND BY ACCESS OBJECT EXIT                             S01194
+     C*  PROGRAM AFTER SETTING ON U8 FOR CALLIG PROGRAM                   S01194
+     C*                                                                   S01194
+     C           P@RTCD    IFNE *BLANKS                                   S01194
+     C                     SETON                     LRU8                 S01194
+     C                     GOTO END                                       S01194
+     C                     END                                            S01194
+     C/COPY WNCPYSRC,SD1020C006
+     C*                                                                   S01194
+     C*  SET UP LOCATION FOR HOLIDAYS SUBROUTINE                          S01194
+     C*                                                                   S01194
+     C                     MOVE BJSLCD    ZLOC                            S01194
+     C*                                                                   S01194
+     C*  IF DATE FORMAT = 'M' SET ON 98 FOR ZDATE1 SUBROUTINE             S01194
+     C*                                                                   S01194
+     C           BJDFIN    IFEQ 'M'                                       S01194
+     C                     SETON                     98                   S01194
+     C                     END                                            S01194
+     C**                                                                  S01194
+0099 C                     SETOF                     9912
+      *                                                                                       CSC011
+     C           *NAMVAR   DEFN           LDA                                                 CSC011
+      *                                                                                       CSC011
+      ** Check if CSC011 is installed                                                         CSC011
+      *                                                                                       CSC011
+     C                     CALL 'AOSARDR0'                                                    CSC011
+     C                     PARM *BLANKS   P@RTCD                                              CSC011
+     C                     PARM '*VERIFY' P@OPTN                                              CSC011
+     C                     PARM 'CSC011'  PSAR    6                                           CSC011
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC011
+      *                                                                                       CSC011
+     C           P@RTCD    IFEQ *BLANKS                                                       CSC011
+     C           *NAMVAR   DEFN           SC24X7                                              CSC011
+     C                     IN   SC24X7                                                        CSC011
+     C                     Z-ADDS1DATE    ZDAYNO                                              CSC011
+     C                     GOTO NEXT                                                          CSC011
+     C                     ENDIF                                                              CSC011
+      *                                                                                       CSC011
+     C           P@RTCD    IFNE *BLANKS                                                       CSC011
+     C           P@RTCD    ANDNE'*NRF   '                                                     CSC011
+     C           *LOCK     IN   LDA                                                           CSC011
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSC011
+     C                     Z-ADD01        DBASE                                               CSC011
+     C                     MOVEL'CSC011'  DBKEY                                               CSC011
+     C                     MOVEL'SD1020'  DBPGM                                               CSC011
+     C                     OUT  LDA                                                           CSC011
+     C                     EXSR *PSSR                                                         CSC011
+     C                     ENDIF                                                              CSC011
+     C**                                                                  S01375
+     C***GET*MIDAS*PHASE*FROM*MPHAS*DATA*AREA                                          S01375 CCB020
+     C********** *NAMVAR   DEFN           MPHAS                                        S01375 CCB020
+     C**********           IN   MPHAS                                                  S01375 CCB020
+     C                     MOVEL'CBC00100'@CLPRM  9                                        AR1064796
+     C                     MOVE '1'       @CLPRM                                           AR1064796
+     C                     CALL @CLPRM                                                     AR1064796
+     C                     PARM *BLANKS   COBST   4                                        AR1064796
+     C*                                                                   055293
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SD1020CEIP                                           S01408
+      *                                                                                       CCB014
+      ** Check if SAR CCB014 is installed                                                     CCB014
+      *                                                                                       CCB014
+     C                     CALL 'AOSARDR0'                                                    CCB014
+     C                     PARM *BLANKS   @RTCD   7                                           CCB014
+     C                     PARM '*VERIFY' @OPTN   7                                           CCB014
+     C                     PARM 'CCB014'  @SARD   6                                           CCB014
+     C                     PARM           DSFDY                                               CCB014
+      *                                                                                       CCB014
+      ** SAR CCB014 is installed                                                              CCB014
+      *                                                                                       CCB014
+     C           @RTCD     IFEQ *BLANK                                                        CCB014
+     C                     MOVEL'Y'       CCB014  1                                           CCB014
+      *                                                                                       CCB014
+      ** Get Schedule infor from data area                                                    CCB014
+      *                                                                                       CCB014
+     C           *NAMVAR   DEFN           DLYCOB                                              CCB014
+     C                     IN   DLYCOB                                                        CCB014
+     C                     ELSE                                                               CCB014
+      *                                                                                       CCB014
+      ** SAR CCB014 is not installed                                                          CCB014
+      *                                                                                       CCB014
+     C           @RTCD     IFEQ '*NRF'                                                        CCB014
+     C                     MOVEL'N'       CCB014                                              CCB014
+     C                     ELSE                                                               CCB014
+      *                                                                                       CCB014
+      ** Database error processing                                                            CCB014
+      *                                                                                       CCB014
+     C                     MOVE '1'       *INLR                                               CCB014
+     C                     MOVE '1'       *INU8                                               CCB014
+     C                     GOTO END                                                           CCB014
+     C                     ENDIF                                                              CCB014
+      *                                                                                       CCB014
+     C                     ENDIF                                                              CCB014
+     C           CCB014    IFNE 'Y'                                                           CCB014
+     C           SCHREQ    ORNE 'Y'                                                           CCB014
+     C                     OPEN SD1020DF                                                      CCB014
+     C                     ENDIF                                                              CCB014
+      *                                                                                       CUP006
+      *  Get current Run Date & Next Working Day in two formats (nnMMMnn & nn/nn/nn)          CUP006
+     C                     CALL 'ZA0140'                                                      CUP006
+     C                     PARM           BJRDNB                                              CUP006
+     C                     PARM           BJDFIN                                              CUP006
+     C                     PARM           RDDATE  60                                          CUP006
+     C                     PARM           RDATE   7                                           CUP006
+     C                     PARM           RDRTN   1                                           CUP006
+     C                     PARM           RDDAT8  80                                          CUP006
+      *                                                                                       CUP006
+     C                     CALL 'ZA0140'                                                      CUP006
+     C                     PARM           BJDNWD                                              CUP006
+     C                     PARM           BJDFIN                                              CUP006
+     C                     PARM           NDDATE  60                                          CUP006
+     C                     PARM           NDATE   7                                           CUP006
+     C                     PARM           NDRTN   1                                           CUP006
+     C                     PARM           NDDAT8  80                                          CUP006
+      *                                                                                       CUP006
+      *  Set up screen info and defaults                                                      CUP006
+     C                     Z-ADDBJDNWD    ZDAYNO                                              Q19084
+     C                     MOVE *ON       *IN23                                               CUP006
+     C                     MOVELBJMRDT    SRUNA                                               CUP006
+     C                     MOVE BJMRDT    FMTDAT                                              190849
+     C           DATZRO    IFEQ ' '                                                           190849
+     C                     MOVE '0'       DATZRO                                              190849
+     C                     ENDIF                                                              190849
+     C***********'('       CAT  BJMRDT    RUNDAY  9                                    CUP006 190849
+     C           '('       CAT  FMTDAT    RUNDAY  9                                           190849
+     C           RUNDAY    CAT  ')':0     RUNDAY                                              CUP006
+     C                     CLEARFMTDAT                                                        190849
+     C                     MOVE NDATE     FMTDAT                                              190849
+     C           DATZRO    IFEQ ' '                                                           190849
+     C                     MOVE '0'       DATZRO                                              190849
+     C                     ENDIF                                                              190849
+     C***********'('       CAT  NDATE     NXTDAY  9                                    CUP006 190849
+     C           '('       CAT  FMTDAT    NXTDAY  9                                           190849
+     C           NXTDAY    CAT  ')':0     NXTDAY                                              CUP006
+0098 C**                                                                  S01375
+0100 C** PROMPT OPERATOR  FOR RUN DATE AND ALLOW OPTION
+0101 C** TO USE COMMAND KEY 1
+0102 C           RETRY     TAG                             ** RETRY TAG **
+3420 C*****************    TIME           MTIME   60                                          CUP006
+     C/COPY WNCPYSRC,SD1020C007
+0203 C***********          SETOF                     31                                       190849
+0104 C***********          MOVE MSG,2     FIELD1                          S01495
+     C*****                EXFMTSETKEY6A                                  S01375
+     C                     EXSR DSPLY                                     S01375
+      *                                                                                       190849
+      *   If an incorrect date was entered previously, use SR ZDATE1 to                       190849
+      *   format date to day number form for later validation.                                190849
+     C           *IN22     IFEQ '1'                                                           190849
+     C                     MOVE DATE      ZDATE   60                                          190849
+     C                     EXSR ZDATE1                                                        190849
+     C                     ENDIF                                                              190849
+     C                     SETOF                     202122                                   190849
+     C***********          SETOF                     22                                       190849
+     C*
+     C***30******          DO                                             S01495
+     C***********          SETON                     LRU7                 S01495
+     C***********          GOTO END                                       S01495
+     C***********          END                                            S01495
+     C*
+     C           RERUN     TAG                             *** RERUN ***
+     C                     MOVE *BLANKS   FIELD2
+     C                     MOVE *BLANKS   FIELD3
+     C***********          SETOF                     32                                       190849
+     C/COPY WNCPYSRC,SD1020C004
+     C           CCB014    IFEQ 'Y'                                                           CCB014
+     C           SCHREQ    ANDEQ'Y'                                                           CCB014
+     C                     GOTO UCSTAG                                                        CCB014
+     C                     ENDIF                                                              CCB014
+      ***********                                                                      CUP006 190849
+      *****If*confirmation is 'Y', use next working day from SDBANKPD, otherwise       CUP006 190849
+      *****prompt for input                                                            CUP006 190849
+     C***********CONFM     IFEQ 'Y'                                                    CUP006 190849
+     C***********          Z-ADDBJDNWD    ZDAYNO                                       CUP006 190849
+     C***********          ELSE                                                        CUP006 190849
+      *                                                                                       190849
+      *    If confirmation is 'N', prompt for input                                           190849
+     C           CONFM     IFEQ 'N'                                                           190849
+      *                                                                                       CUP006
+     C                     MOVE ' '       FLAG                                                190849
+     C                     MOVE ' '       CONFM                                               190849
+     C                     MOVE *OFF      *IN23                                               CUP006
+     C                     EXFMTSD1020F1                                                      CUP006
+     C*
+0109 C**   USE ZDATE1 SUBROUTINE TO CONVERT DATE TO
+0110 C**   DAY NUMBER FORM - IF DATE IS INVALID INDICATOR 99
+0111 C**   IS SETON AND OPERATOR IS RE-PROMPTED AND'INVALID DATE'DISPLAYED
+0112 C*
+0113 C                     MOVE DATE      ZDATE   60
+0114 C                     EXSR ZDATE1
+     C                     ENDIF                                                              CUP006
+     C/COPY WNCPYSRC,SD1020C005
+     C           UCSTAG    TAG                                                                CCB014
+0108 C*
+     C   99                DO
+0115 C                     MOVE MSG,3     FIELD2
+     C                     SETON                     22
+0116 C                     GOTO RETRY
+     C                     END
+0117 C*
+0118 C** IF DATE VALID ENSURE THAT IT IS GREATER THAN
+0119 C** LAST PROCESSING DATE -IF NOT DISPLAY MESSAGE
+0120 C** TO OPERATOR AND RE-PROMPT FOR RUN DATE
+0121 C*
+0122 C***********ZDAYNO    IFLE RUND                                      S01194
+0122 C           ZDAYNO    IFLE BJRDNB                                    S01194
+0123 C                     MOVE MSG,1     FIELD2
+     C                     SETON                     22
+0125 C                     GOTO RETRY
+     C                     END
+0121 C*
+0126 C**   CHECK IF DATE ENTERED IS HOLIDAY IN LOCAL CCY AND IF
+0127 C**   WORKING DAYS EXIST BETWEEN DATE ENTERED AND PREVIOUS RUN DATE
+0128 C**
+0129 C***********          MOVE LOCY      ZCCY                            S01194
+     C/COPY WNCPYSRC,SD1020C008
+0129 C                     MOVE BJLCCY    ZCCY                            S01194
+0130 C***********          MOVE 'Y'       ZOPT                            S01194
+0131 C***********          EXSR ZDATE5                                    S01194
+     C                     EXSR ZCHKH                                     S01194
+0132 C***********ZDAYNO    COMP ZDYNBR                 20  HOL IN LOCY    S01194
+     C           ZIND      IFEQ 'H'                                       S01194
+     C                     SETON                     20                   S01194
+     C                     END                                            S01194
+0133 C**
+0134 C                     MOVE ZDAYNO    SAVDY   50
+0135 C***********RUND      ADD  1         ZDAYNO                          S01194
+0135 C           BJRDNB    ADD  1         ZDAYNO                          S01194
+0136 C***********          EXSR ZDATE5                                    S01194
+0137 C***********SAVDY     COMP ZDYNBR               21    WK DAYS BETWEENS01194
+0138 C**
+     C*                                                                   S01194
+     C*  CHECK DAYS IN BETWEEN RUN DAY + 1 AND DAY ENTERED                S01194
+     C*  TO CHECK IF ANY WORKING DAYS EXIST IN THIS PERIOD                S01194
+     C*                                                                   S01194
+     C           *IN21     DOWEQ'0'                                       S01194
+     C           SAVDY     ANDNEZDAYNO                                    S01194
+     C*                                                                   S01194
+     C           SAVDY     IFGT ZDAYNO                                    S01194
+     C                     EXSR ZCHKH                                     S01194
+     C           ZIND      IFEQ 'W'                                       S01194
+     C                     SETON                     21                   S01194
+     C                     END                                            S01194
+     C                     END                                            S01194
+     C                     ADD  1         ZDAYNO                          S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+0139 C                     MOVE SAVDY     ZDAYNO
+     C/COPY WNCPYSRC,SD1020C009
+0140 C   20                MOVE MSG,4     FIELD2
+     C/COPY WNCPYSRC,SD1020CCP1                                           S01408
+0142 C   21                MOVE MSG,5     FIELD3
+     C/COPY WNCPYSRC,SD1020CCP2                                           S01408
+0144 C***20**********                                                                         190849
+0145 C*OR*21*********       MOVE MSG,6     FIELD1                                             190849
+0144 C***20**********                                                                         190849
+0144 C*R*21**********      MOVE DATE      DATEP   60                                          190849
+      *                                                                                       190849
+      * If holiday in local ccy, or working days exist, or a new                              190849
+      * date has been entered, request confirmation.                                          190849
+     C           *IN20     IFEQ *ON                                                           190849
+     C           *IN21     OREQ *ON                                                           190849
+     C           CONFM     OREQ ' '                                                           190849
+     C                     MOVE *ON       *IN23                                               190849
+      *                                                                                       190849
+      * Reset confirmation flag                                                               190849
+     C           CONFM     IFNE 'Y'                                                           190849
+     C                     MOVE ' '       CONFM                                               190849
+     C                     ENDIF                                                              190849
+      *                                                                                       190849
+      *  If a date has been entered, get Run Day Number for requested date                    190849
+     C           DATE      IFGT 0                                                             190849
+     C                     CALL 'ZA0270'                                                      190849
+     C                     PARM           DATE                                                190849
+     C                     PARM           BJDFIN                                              190849
+     C                     PARM           RDRTN                                               190849
+     C                     PARM           RQRDNB  50                                          190849
+      *                                                                                       190849
+      *  Format requested date                                                                190849
+     C                     CALL 'ZA0140'                                                      190849
+     C                     PARM           RQRDNB                                              190849
+     C                     PARM           BJDFIN                                              190849
+     C                     PARM           DATE                                                190849
+     C                     PARM           RQDATE  7                                           190849
+     C                     PARM           RDRTN                                               190849
+     C                     PARM           RDDAT8                                              190849
+      *                                                                                       190849
+     C                     CLEARFMTDAT                                                        190849
+     C                     Z-ADDDATE      NDDATE                                              190849
+     C                     MOVE RQDATE    FMTDAT                                              190849
+     C           DATZRO    IFEQ ' '                                                           190849
+     C                     MOVE '0'       DATZRO                                              190849
+     C                     ENDIF                                                              190849
+     C           '('       CAT  FMTDAT    NXTDAY                                              190849
+     C           NXTDAY    CAT  ')':0     NXTDAY                                              190849
+     C                     ENDIF                                                              190849
+     C                     ENDIF                                                              190849
+      ***************                                                                         190849
+     C/COPY WNCPYSRC,SD1020C001
+     C           CCB014    IFEQ 'Y'                                                           CCB014
+     C           SCHREQ    ANDEQ'Y'                                                           CCB014
+      *                                                                                       CCB014
+     C           *IN20     IFEQ '1'                                                           CCB014
+      *                                                                                       CCB014
+     C           *IN21     IFEQ '1'                                                           CCB014
+     C                     MOVE '1'       *INLR                                               CCB014
+     C                     MOVE '1'       *INU8                                               CCB014
+     C                     GOTO END                                                           CCB014
+     C                     ENDIF                                                              CCB014
+     C                     ENDIF                                                              CCB014
+     C                     ENDIF                                                              CCB014
+     C***20**********                                                                         190849
+     C*R*21**************  EXFMTSETKEY6A                                               CUP006 190849
+     C*R*21**********      EXFMTSD1020F1                                               CUP006 190849
+     C***20**********                                                                         190849
+     C*OR*21******DATE      COMP DATEP                3232                                    190849
+     C***************                                                                         190849
+     C************IN32     IFEQ '1'                                                           190849
+     C***************      SETOF                     202122                                   190849
+     C***************      MOVE *BLANKS   FIELD3                                              190849
+     C***************      GOTO RERUN                                                         190849
+     C***************      END                                                                190849
+     C*
+     C*
+     C************IN31     IFEQ '1'                                                           190849
+     C           CONFM     IFEQ 'N'                                                           190849
+     C                     MOVE ' '       CONFM                                               190849
+     C                     MOVE *ZEROS    DATE
+     C                     SETOF                     202122
+     C                     MOVE *BLANKS   FIELD1                          S01495
+     C                     MOVE *BLANKS   FIELD2
+     C                     MOVE *BLANKS   FIELD3
+0148 C                     GOTO RETRY
+     C                     END
+      *                                                                                       190849
+      *   If holiday  or working days exist prior to next day,                                190849
+      *   get confirmation.  Set flag to prevent loop.                                        190849
+     C           *IN20     IFEQ '1'                                                           190849
+     C           FLAG      ANDNE'Y'                                                           190849
+     C           *IN21     OREQ '1'                                                           190849
+     C           FLAG      ANDNE'Y'                                                           190849
+     C                     MOVE ' '       CONFM                                               190849
+     C                     MOVE 'Y'       FLAG    1                                           190849
+     C                     GOTO RETRY                                                         190849
+     C                     ENDIF                                                              190849
+     C*
+     C***30******          SETON                     LRU7                 S01495
+     C***30******          GOTO END                                       S01495
+0149 C**  IF DATE VALID  OUTPUT TO LOCAL DATA AREA
+0151 C*
+     C           NEXT      TAG                                                                CSC011
+0152 C                     MOVE ZDAYNO    VDATE
+0154 C***********          MOVE NOBA      NOBAL                           S01194
+0155 C***********          MOVE TSIZ      TSIZL                           S01194
+      *                                                                                       190849
+      ****Before*Update,*check*that*phase*has*not*moved*to*F.                          190849 CCB020
+     C**********           IN   MPHAS                                                  190849 CCB020
+     C**********           MOVE MSG,7     FIELD2                                       190849 CCB020
+     C**********           MOVE MSG,8     FIELD3                                       190849 CCB020
+     C**********           SETON                     2021                              190849 CCB020
+     C**********           EXFMTSD1020F1                                               190849 CCB020
+     C                     MOVEL'CBC00100'@CLPRM                                           AR1064796
+     C                     MOVE '1'       @CLPRM                                           AR1064796
+     C                     CALL @CLPRM                                                     AR1064796
+     C                     PARM *BLANKS   COBST                                            AR1064796
+     C           COBST     IFEQ '*YES'                                                     AR1064796
+     C                     MOVE MSG,7     FIELD2                                           AR1064796
+     C                     MOVE MSG,8     FIELD3                                           AR1064796
+     C                     SETON                     2021                                  AR1064796
+     C                     EXFMTSD1020F1                                                      190849
+     C                     ENDIF                                                           AR1064796
+     C**********           ENDIF                                                       190849 CCB020
+     C*                                                                   S01375
+     C**  UPDATE CBAICDPD FILE                                            S01375
+     C***********ADCOBT    IFEQ '*YES'               +AUTO C.O.B   S01375 S01495
+     C***********MPHASE    ANDNE'F'                  +PHASE F ?    S01375 S01495
+     C********** MPHASE    IFNE 'F'                         +PHASE F ?    S01495              CCB020
+     C           COBST     IFEQ '*NO '                                                     AR1064796
+     C                     CALL 'ZDATE2'                                  S01375
+     C                     PARM           ZDAYNO  50       Value date     S01375
+     C                     PARM BJDFIN    ZDATFM  1        Date format indS01375
+     C                     PARM           ZDATE   60       Value date     S01375
+     C                     PARM           ZADATE  7        Run-date in DDMS01375
+     C                     MOVEL'*SETDATE'ADAUTO                          S01375
+     C                     MOVELZADATE    ADCBMD                          S01375
+     C                     Z-ADDZDAYNO    ADDBRN                          S01375
+     C                     CALL 'CB0602U'                                 S01375
+     C                     PARM           U#RTN   7                       S01375
+     C                     PARM           COBDTA                          S01375
+     C                     END                                            S01375           AR1064796
+     C**********           END                                            S01375              CCB020
+     C*                                                                   S01375
+      *                                                                   S01195
+      ** Close holiday file                                               S01195
+      *                                                                   S01195
+     C                     MOVE '*FREE  ' ZOPTN                           S01195
+     C                     EXSR ZACCH                                     S01195
+     C*                                                                   S01195
+0156 C**    SETON LR TO TERMINATE PROGRAM
+0157 C**
+0158 C*
+0159 C                     SETON                     LR
+0160 C           END       TAG
+0161 C********************************************************************
+     C/EJECT                                                              S01375
+     C********************************************************************S01375
+     C* DSPLY SUBR - SCREEN DISPLAY PROCESSING                            S01375
+     C********************************************************************S01375
+     C           DSPLY     BEGSR                                          S01375
+     C*                                                                   S01375
+     C/COPY WNCPYSRC,SD1020C003
+     C           $FIRST    IFEQ *BLANK                      FIRST TIME    S01375
+     C                     MOVE 'Y'       $FIRST  1                       S01375
+     C                     MOVEL'*TODAY  'ADAUTO                          S01375
+     C                     CALL 'CB0602X'                                 S01375
+     C                     PARM           U#RTN   7                       S01375
+     C                     PARM           COBDTA                          S01375
+     C/COPY WNCPYSRC,SD1020C002
+     C           CCB014    IFEQ 'Y'                                                           CCB014
+     C           SCHREQ    ANDEQ'Y'                                                           CCB014
+     C                     Z-ADDBJDNWD    ZDAYNO                                              CCB014
+     C                     CALL 'ZDATE2'                                                      CCB014
+     C                     PARM           ZDAYNO                                              CCB014
+     C                     PARM BJDFIN    ZDATFM                                              CCB014
+     C                     PARM           ZDATE                                               CCB014
+     C                     PARM           ZADATE                                              CCB014
+     C                     MOVE ZDATE     DATE                                                CCB014
+     C                     GOTO DSPLYX                                                        CCB014
+     C                     ENDIF                                                              CCB014
+     C***********ADCOBT    IFEQ '*YES'               +AUTO C.O.B   S01375 S01495
+     C***********MPHASE    ANDEQ'F'                  +PHASE F ?    S01375 S01495
+     C********** MPHASE    IFEQ 'F'                         +PHASE F ?                 S01495 CCB020
+     C           COBST     IFEQ '*YES'                                              CCB020 AR1064796
+     C                     Z-ADDADDBRN    ZDAYNO                          S01375
+     C                     CALL 'ZDATE2'                                  S01375
+     C                     PARM           ZDAYNO           Value date     S01375
+     C                     PARM BJDFIN    ZDATFM           Date format indS01375
+     C                     PARM           ZDATE            Value date     S01375
+     C                     PARM           ZADATE           Run-date in DDMS01375
+     C                     MOVE ZDATE     DATE                            S01375
+     C***********          GOTO DSPLYX                                    S01375              190849
+     C**********           END                                                         S01375 CCB020
+     C                     ENDIF                                                           AR1064796
+     C                     END                                            S01375
+     C*                                                                   S01375
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SD1020CIKS                                           S01408
+     C*                                                                   S01408
+     C******************   EXFMTSETKEY6A                                               CUP006 S01375
+     C                     EXFMTSD1020F1                                                      CUP006
+      *                                                                   S01375
+      *  If confirmation was requested, make sure a value has                                 190849
+      *  been entered.                                                                        190849
+     C           *IN23     IFEQ '1'                                                           190849
+     C           CONFM     ANDEQ' '                                                           190849
+     C                     GOTO RETRY                                                         190849
+     C                     ENDIF                                                              190849
+     C*                                                                   S01375
+     C           DSPLYX    ENDSR                                          S01375
+     C********************************************************************S01375
+      /EJECT                                                                                  CSC011
+      *****************************************************************                       CSC011
+      *                                                               *                       CSC011
+      * *PSSR  - Program Exception Error Routine                      *                       CSC011
+      *                                                               *                       CSC011
+      *****************************************************************                       CSC011
+      *                                                                                       CSC011
+     C           *PSSR     BEGSR                                                              CSC011
+      *                                                                                       CSC011
+     C           @RUN      IFEQ *BLANK                                                        CSC011
+     C                     DUMP                                                               CSC011
+     C                     MOVE 'Y'       @RUN    1                                           CSC011
+      *                                                                                       CSC011
+     C                     CALL 'DBERRCTL'                                                    CSC011
+      *                                                                                       CSC011
+     C                     ENDIF                                                              CSC011
+      *                                                                                       CSC011
+     C                     MOVE *ON       *INU7                                               CSC011
+     C                     MOVE *ON       *INU8                                               CSC011
+     C                     MOVE *ON       *INLR                                               CSC011
+      *                                                                                       CSC011
+     C                     RETRN                                                              CSC011
+      *                                                                                       CSC011
+     C                     ENDSR                                                              CSC011
+      *****************************************************************                       CSC011
+     C/EJECT                                                              S01375
+0162 C***********                                                         S01194
+0163 C*****SR.*TO*CHAIN*TO*THE*INSTALLATION*CONTROL*DATA*RECORD.          S01194
+0164 C***********                                                         S01194
+0165 C*SR********ZSYSTM    BEGSR                           ZSYSTM BEGSR   S01194
+0166 C***********                                                         S01194
+0167 C*****SET*UP*KEY*FOR*INSTALLATION*CONTROL*RECORD.                    S01194
+0168 C*SR********          MOVEL'01      'ZTABKY 12                       S01194
+0169 C*SR********          MOVE '  10'    ZTABKY                          S01194
+0170 C***********                                                         S01194
+0171 C*SR********ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+0172 C*SRN99*****RECI      COMP '*'                      99ON, IS DELETED S01194
+0173 C***********                                                         S01194
+0174 C*****CHECK*SYSTEM*DATE*FORMAT,*DDMMYY*OR*MMDDYY.                    S01194
+0175 C*SR********DATF      COMP 'M'                      98MMDDYY, 98 ON. S01194
+0176 C***********                                                         S01194
+0177 C*SR********          ENDSR                                          S01194
+0178 C***********                                                         S01194
+0179 C***********                                                         S01194
+0180 C********************************************************************
+0181 C**
+0182 C**   SR. TO VALIDATE DATES SUBMITTED AND CONVERT TO NUMBER OF DAYS.
+0183 C**
+0184 CSR         ZDATE1    BEGSR                           ZDATE1 BEGSR
+0185 C**
+0186 C**   CLEAR DAY NUMBER.
+0187 CSR                   Z-ADD0         ZDAYNO  50
+0188 C**
+0189 C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+0190 CSR                   MOVE ZDATE     ZYEAR   20
+0191 CSRN98                MOVELZDATE     ZDAY    20
+0192 CSR 98                MOVELZDATE     ZMTH    20
+0193 CSR                   MOVE ZDATE     ZWRK4   40
+0194 CSRN98                MOVELZWRK4     ZMTH
+0195 CSR 98                MOVELZWRK4     ZDAY
+0196 C**
+0197 C**   ENSURE MONTH IS VALID.
+0198 CSR         ZMTH      COMP 0                      9999
+0199 CSRN99      ZMTH      COMP 12                   99
+0200 CSR 99                GOTO ZDEND1                     BYPASS IF ERROR
+0201 C**
+0202 C**   CHECK FOR 30 DAY MONTHS.
+0203 CSR         ZMTH      COMP 4                        91IF 91 ON, 30
+0204 CSRN91      ZMTH      COMP 6                        91DAY MONTH.
+0205 CSRN91      ZMTH      COMP 9                        91
+0206 CSRN91      ZMTH      COMP 11                       91
+0207 C**
+0208 C**   ENSURE DAY IS VALID.
+0209 CSR         ZDAY      COMP 0                      9999
+0210 CSR 91N99   ZDAY      COMP 30                   99
+0211 CSRN91N99   ZDAY      COMP 31                   99
+0212 CSR 99                GOTO ZDEND1                     BYPASS IF ERROR
+0213 C**
+0214 C**   CHECK FOR LEAP YEAR AND FEBRUARY.
+0215 CSR         ZYEAR     ADD  28        ZYEAR
+0216 CSR         ZYEAR     DIV  4         ZLYR    20
+0217 CSR                   MVR            ZLY     20     92LEAP YR, 92 ON.
+0218 CSR         ZMTH      COMP 2                    94  93FEB., 93 ON.
+0219 C**                                                   PAST FEB, 94 ON
+0220 C**   IF FEBUARY FURTHER VALIDATE DAY.
+0221 CSRN92 93   ZDAY      COMP 28                   99
+0222 CSR 92 93   ZDAY      COMP 29                   99
+0223 CSR 99                GOTO ZDEND1                     BYPASS IF ERROR
+0224 C**
+0225 C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANS
+0226 CSR         ZLYR      MULT 1461      ZDAYNO           X DYS IN SPAN.
+0227 CSRN92      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YR
+0228 CSR 92 94   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.
+0229 CSR         ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR
+0230 CSR         ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTH
+0231 C**
+0232 CSR         ZDEND1    ENDSR                           ZDEND1 ENDSR
+0233 C**
+0234 C**
+0236 C********************************************************************
+0237 C***********                                                         S01194
+0238 C*****ZDATE5*SR.*TO*DETERMINE*IF*A*DAY*NUMBER*DATE*IS*A*HOLIDAY      S01194
+0239 C****************IN*GIVEN*CURRENCY,*AND,*IF*DAY*IS*A*HOLIDAY         S01194
+0240 C****************AND*IF*REQUIRED,*DETERMINE*NEXT*WORKING*DAY.        S01194
+0241 C***********                                                         S01194
+0242 C***********ZDATE5    BEGSR                           *** ZDATE5 *** S01194
+0243 C***********                                                         S01194
+0244 C*****CALCULATIONS*TO*DEFINE*INPUT*FIELDS.                           S01194
+0245 C***********          Z-ADDZDAYNO    ZDAYNO  50                      S01194
+0246 C***********          MOVE ZCCY      ZCCY    3                       S01194
+0247 C***********          MOVE ZOPT      ZOPT    1                       S01194
+0248 C***********                                                         S01194
+0249 C*****CALCULATIONS*TO*DEFINE/CLEAR*WORKFIELDS.                       S01194
+0250 C***********          MOVE '   '     ZHC                             S01194
+0251 C***********                                                         S01194
+0252 C*****RESET*INDICATOR.                                               S01194
+0253 C***********          SETOF                     99                   S01194
+0254 C***********                                                         S01194
+0255 C*****CALCULATION*TO*DEFINE/SET*OUTPUT*FIELD.                        S01194
+0256 C***********          Z-ADDZDAYNO    ZDYNBR  50                      S01194
+0257 C***********                                                         S01194
+0258 C*****DETERMINE*IF*HOLIDAY                                           S01194
+0259 C***********ZDHOL     TAG                             ** ZDHOL TAG **S01194
+0260 C***********          SETOF                     91                   S01194
+0261 C***********                                                         S01194
+0262 C*****SET*KEY*FOR*FIRST*HOLIDAY*RECORD.                              S01194
+0263 C***********          MOVEL'22      'ZTABKY 12                       S01194
+0264 C***********          MOVELZDYNBR    ZWRK6   6                       S01194
+0265 C***********          MOVE '1'       ZWRK6                           S01194
+0266 C***********          MOVE ZWRK6     ZTABKY                          S01194
+0267 C***********                                                         S01194
+0268 C*****CHAIN*FOR*HOLIDAY*RECORD,*RECORD*1*OR*2.                       S01194
+0269 C***********ZDHCH5    TAG                             ** ZDHCH5 TAG *S01194
+0270 C***********ZTABKY    CHAINTABLE                90    ON NOT THERE   S01194
+0271 C**N90******RECI      COMP 'D'                  9090  DELETED        S01194
+0272 C***********                                                         S01194
+0273 C*****STORE*CURRENCIES*IF*RECORD*FOUND.                              S01194
+0274 C**N90N91***          MOVEAHCCY      ZHC,1                           S01194
+0275 C***91N90***          MOVEAHCCY      ZHC,26                          S01194
+0276 C***********                                                         S01194
+0277 C*****GET*SECOND*RECORD,*IF*NOT*ALREADY*DONE.                        S01194
+0278 C***********          MOVE ZTABKY    ZWRK1N  10                      S01194
+0279 C***********ZWRK1N    COMP 1                        91               S01194
+0280 C***********          MOVE '2'       ZTABKY                          S01194
+0281 C***91N90***          GOTO ZDHCH5                                    S01194
+0282 C***********                                                         S01194
+0283 C*****BYPASS*TO*END*IF*NO*FIRST*RECORD*FOUND.                        S01194
+0284 C***90*91***          GOTO ZDEND5                                    S01194
+0285 C***********                                                         S01194
+0286 C*****DETERMINE*HOLIDAY*RECORD*TYPE.                                 S01194
+0287 C***********INEX      COMP 'E'                      92               S01194
+0288 C***********INEX      COMP 'I'                      93               S01194
+0289 C***********                                                         S01194
+0290 C*****CHECK*IF*CURRENCY*ON*HOLIDAY.                                  S01194
+0291 C***********ZCCY      LOKUPZHC                      94               S01194
+0292 C***********                                                         S01194
+0293 C*****BYPASS*TO*END*IF*NOT*HOLIDAY*FOR*CURRENCY.                     S01194
+0294 C***92*94***                                                         S01194
+0295 C*OR93N94***          GOTO ZDEND5                                    S01194
+0296 C***********                                                         S01194
+0297 C*****SET*INDICATOR*FOR*HOLIDAY*FOR*DAY*NUMBER.                      S01194
+0298 C***********          SETON                     99                   S01194
+0299 C***********                                                         S01194
+0300 C***********                                                         S01194
+0301 C*****CHECK*IF*NEXT*WORKING*DAY*REQUIRED.                            S01194
+0302 C***********ZOPT      COMP 'Y'                      95               S01194
+0303 C***95******ZDYNBR    ADD  1         ZDYNBR                          S01194
+0304 C***95******          GOTO ZDHOL                                     S01194
+0305 C***********                                                         S01194
+0306 C***********                                                         S01194
+0307 C***********ZDEND5    ENDSR                           * ZDEND5 ENDSR*S01194
+0308 C***********                                                         S01194
+0309 C***********                                                         S01194
+0310 C********************************************************************
+     C/COPY ZSRSRC,ZACCH                                                  S01194
+     C* /COPY FOR ZACCH SUBROUTINE                                        S01194
+     C/COPY ZSRSRC,ZCHKH                                                  S01194
+     C* /COPY FOR ZCHKH SUBROUTINE                                        S01194
+     C/COPY WNCPYSRC,SD1020C010
+**  MSG
+Date entered must be greater than last run date
+F/3 to exit
+Date entered is invalid
+WARNING - date entered is holiday in local ccy
+WARNING - working days exist before entered date
+Press enter to continue or F/12 to re-enter date
+WARNING - Next day processing already initiated
+WARNING - Change not processed
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

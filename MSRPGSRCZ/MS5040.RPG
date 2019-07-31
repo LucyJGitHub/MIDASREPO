@@ -1,0 +1,494 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Incoming Messages Lost During Rec')
+      *****************************************************************
+      *                                                               *
+      *  Midas - SWIFT DIRECT LINK                               *
+      *                                                               *
+      *   MS5040 - INCOMING MESSAGES LOST DURING RECOVERY REPORT      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21Sep98               *
+      *                 113352             Date 13FEB97               *
+      *                  CSW095            DATE 10APR95               *
+      *                  S01310            DATE 06DEC90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *   141572 - Recompile over changes in MGOREFPD                 *
+      *   113352 - Recompile over changes in MGOREFPD                 *
+      *   CSW095 - S.W.I.F.T 1995 Message Changes.                    *
+      *            Increase arrays to handle a 10,000 character       *
+      *            message.                                           *
+      *   S01310 - SWIFT RATIONALISATION                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     F*ABTB10*IF**E********   K        DISK                               S01310
+     FSDBANKPDIF  E                    DISK                               S01310
+     FMSJRI2L0IF  E           K        DISK
+     F*SIXA***IF**E********   K        DISK                               S01310
+     FMGOREFL0IF  E           K        DISK                               S01310
+     FMS5040P1O   E             50     PRINTER
+      *
+      * ID C  F  H  L    Function of indicators
+      * 10               Read fail indicator
+      * 11               Chain fail indicator
+      * 50               MS5040P1 overflow
+      * 89               EOF SDBANKPD                                     S01310
+      **89***************READ fail indicator                              S01310
+      * U7U8LR           DB error
+      *
+     E***********         IMSG     3072  1                                CSW095
+     E                    IMSG     9999  1                                CSW095
+     E                    LINE      130  1
+     E                    CPY@    1   1 80                                S01310
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     I            DS
+     I                                        1 114 @HDR
+     I                                        7  18 ORAD
+     I                                       19  22 OSNN
+     I                                       23  28 OSQN
+     I                                       34  36 OMTP
+     I                                       37  40 OITM
+     I                                       41  68 OMIR
+     I                                       69  74 @ODT
+     I                                       75  78 OOTM
+     I                                       79  79 @MPY
+     I                                       81  83 @WK3
+      **  Message header data structure
+      *
+     I            DS
+     I                                        1 256 MDTA
+     I                                        7  18 SEND
+     I                                       19  22 SESS
+     I                                       23  28 SEQ
+     I                                       38  43 DAT
+     I                                       44  47 TIM
+     I                                       54  54 @WK1
+     I                                       56  60 @WM5
+     I                                       61  63 @CDE
+     I                                       64  66 @TAG
+     I                                       68  72 @WL5
+      **  Message data data structure
+      *
+     C***********KEY1******KLIST                                          S01310
+     C*********************KFLD           MSMI                            S01310
+     C*********************KFLD           TNRF                            S01310
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN  - Main process                                        *
+      *   INIT  - Initial process                                     *
+      *   MSG   - Process incoming message                            *
+      *   ACK   - Process output acknowledgements                     *
+      *   REPT  - Format incoming messages report                     *
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN - Main process                                         *
+      *   Calls -  INIT   Initial process                             *
+      *            MSG    Process incoming message                    *
+      *            ACK    Process output acknowledgements             *
+     C*****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Read first record from LF/MSJRI2L0
+     C                     READ MSJRI2L0                 10
+      *
+      **  Write 'NO MESSAGES TO REPORT'
+     C           *IN10     IFEQ '1'
+     C                     WRITENORECS
+     C                     END
+      *
+      **  Report all incoming messages
+     C           *IN10     IFNE '1'
+     C           ACNK      ANDEQ' '
+     C                     EXSR MSG
+     C                     END
+      *
+      **  Report all acknowledgements
+     C           *IN10     IFNE '1'
+     C           ACNK      ANDNE' '
+     C                     EXSR ACK
+     C                     END
+      *
+      **  Write report,header,trailer & end of report
+     C                     WRITEHEADER
+     C                     WRITEEOREPT
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - Inital process                                       *
+      *   Called by main process                                      *
+     C*****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80                       S01310
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE 'MS5040  'DBPGM
+     C                     OUT  LDA
+      *
+      **  Initialise 'CR' and 'LF' fields
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+      *
+      ****Access*TABTB10*to find run date                                 S01310
+     C*********************READ TABTB10                  89               S01310
+      **  Access SDBANKPD for report title                                S01310
+     C                     READ SDBANKPD                 89               S01310
+      *
+     C           *IN89     IFEQ '1'
+     C***********RECI******ORNE 'D'                                       S01310
+     C           *LOCK     IN   LDA
+     C                     MOVE '01'      DBASE
+     C                     MOVE 'FIRST'   DBKEY            * DB ERROR 01 *
+     C*********************MOVE 'TABTB10' DBFILE                          S01310
+     C                     MOVE 'SDBANKPD'DBFILE                          S01310
+     C                     OUT  LDA
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   MSG - Process incoming message                              *
+      *   Calls - REPT  Format message for report                     *
+      *   Called by main process                                      *
+     C*****************************************************************
+      *
+     C           MSG       BEGSR
+      *
+      **  Do until EOF or Acnknowment records encountered
+     C           *IN10     DOWEQ'0'
+     C           ACNK      ANDEQ' '
+     C***********          Z-ADD1         X       40                      CSW095
+     C                     Z-ADD1         X       50                      CSW095
+     C                     MOVE MOR       @MOR   28
+      *
+      **  Move all records for Message Into Array.
+     C           *IN10     DOWEQ'0'
+     C           MOR       ANDEQ@MOR
+     C                     MOVEAMDTA      IMSG,X
+     C                     READ MSJRI2L0                 10
+     C                     ADD  256       X
+     C                     END
+      *
+      **  Write report header & MESSAGE
+     C                     WRITEHEADER
+     C                     EXSR REPT
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ACK - Process output acknowledgements                       *
+      *   Called by main process                                      *
+     C*****************************************************************
+      *
+     C           ACK       BEGSR
+      *
+      **  Set overflow indicator ON
+     C                     SETON                     50
+      *
+      **  Do until EOF
+     C           *IN10     DOWEQ'0'
+      *
+      **  Set up network field
+     C           @WM5      IFEQ '{311:'
+     C           @WL5      OREQ '{311:'
+     C                     MOVE 'STTX '   NTWK
+     C                     ELSE
+     C                     MOVE 'SWIFT'   NTWK
+     C                     END
+      *
+      **  Set up status field
+     C                     MOVE *BLANKS   CODE
+     C                     MOVE *BLANKS   TAG
+     C           @WK1      IFEQ '0'
+     C                     MOVE 'ACCEPTED'STAT
+     C                     ELSE
+     C                     MOVE 'REJECTED'STAT
+     C                     MOVE @CDE      CODE
+     C                     MOVE @TAG      TAG
+     C                     END
+      *
+      **  Obtain Message Type, Destination and
+      **  Message Priority from MSIXA
+     C                     MOVE *BLANKS   MSTYP
+     C                     MOVE *BLANKS   DEST
+     C                     MOVE *BLANKS   PRTY
+     C*********************MOVELTRNO      MSMI                            S01310
+     C*********************MOVE TRNO      TNRF                            S01310
+     C***********KEY1******CHAINMSIXA                11                   S01310
+     C           TRNO      CHAINMGOREFL0             11                   S01310
+     C           *IN11     IFEQ '0'
+     C                     MOVE MTPY      MSTYP
+     C                     MOVELNWDS      DEST                            S01310
+     C*********************MOVE DTID      DEST                            S01310
+      *
+     C***********MSGP******IFEQ '01'                                      S01310
+     C           MPRY      IFEQ 'U'                                       S01310
+     C                     MOVE 'URGENT'  PRTY
+     C                     ELSE
+     C                     MOVE 'NORMAL'  PRTY
+     C                     END
+     C                     END
+      *
+      **  Write logical acknowledgement details
+     C           *IN50     IFEQ '1'
+     C                     WRITEHEADER
+     C                     WRITEPAGHEAD
+     C                     SETOF                     50
+     C                     END
+      *
+     C                     WRITELGLACK
+      *
+      **  If STTX acknowledgement Write answerback line
+      **  Set up fields for Telex Answerback, if present
+     C           @WM5      IFEQ '{311:'
+     C                     Z-ADD61        X
+     C                     END
+      *
+     C           @WL5      IFEQ '{311:'
+     C                     Z-ADD73        X
+     C                     END
+      *
+     C           @WM5      IFEQ '{311:'
+     C           @WL5      OREQ '{311:'
+     C                     MOVEAMDTA      IMSG
+     C                     Z-ADD1         Z
+      *
+     C           @WK2      DOUEQ'}}'
+      *
+     C           @WK2      DOUEQCRLF
+     C           @WK2      OREQ '}}'
+     C                     MOVE IMSG,X    LINE,Z
+     C***********          ADD  1         X       40                      CSW095
+     C                     ADD  1         X                               CSW095
+     C                     ADD  1         Z       30
+     C                     MOVEAIMSG,X    @WK2    2
+     C                     END
+      *
+     C           *IN50     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     50
+     C                     END
+      *
+     C                     MOVEALINE      RCD
+     C                     WRITEFIELD
+     C                     ADD  2         X
+     C                     MOVE *BLANKS   LINE
+     C                     Z-ADD1         Z
+     C                     END
+     C                     END
+      *
+      **  Read next record
+      *
+     C                     READ MSJRI2L0                 10
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *   REPT  - Format message for report                           *
+      *   Called by - MSG  Process incoming message                   *
+     C*****************************************************************
+      *
+     C           REPT      BEGSR
+      *
+      **  Analyse message headers using data structure
+     C                     MOVEAIMSG,1    @HDR  114
+     C                     Z-ADD86        X
+      *
+      **  Format message output date for editing & message priority
+     C                     MOVE @ODT      OODT    60
+     C           @MPY      IFEQ 'N'
+     C                     MOVE 'NORMAL'  OPTY
+     C                     ELSE
+     C                     MOVE 'URGENT'  OPTY
+     C                     END
+      *
+      **  Write basic header & application header (blocks 1 & 2)
+     C                     WRITEBLOCK1
+      *
+      **  If user header present
+     C           @WK3      IFEQ '{3:'
+     C                     MOVE *BLANKS   OBPY
+     C                     MOVE *BLANKS   OMUR
+     C                     Z-ADD84        X
+      *
+      **  If banking priority present
+     C                     MOVEAIMSG,X    @WK5    5
+     C           @WK5      IFEQ '{113:'
+     C                     ADD  5         X
+     C                     Z-ADD1         Z       30
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         X
+     C                     ADD  1         Z
+     C                     END
+     C                     MOVEALINE      OBPY
+     C                     MOVEA*BLANKS   LINE
+     C                     ADD  1         X
+     C                     END
+      *
+      **  If message user reference (MUR) present
+     C                     MOVEAIMSG,X    @WK5
+     C           @WK5      IFEQ '{108:'
+     C                     ADD  5         X
+     C                     Z-ADD1         Z
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         X
+     C                     ADD  1         Z
+     C                     END
+     C                     MOVEALINE      OMUR
+     C                     MOVEA*BLANKS   LINE
+     C                     ADD  1         X
+     C                     END
+      *
+      **  Write user header (block 3)
+     C                     WRITEBLOCK3
+     C                     ADD  6         X
+     C                     END
+      *
+      **  Write message text (block 4) headings
+     C                     WRITEBLOCK4
+      *
+      **  Do while not end of message
+     C           @WK2      DOUEQ'-}'
+     C                     Z-ADD5         Z
+      *
+      **  If tag is present indent by 5 characters
+     C           IMSG,X    IFEQ ':'
+     C                     Z-ADD1         Z
+     C                     END
+      *
+      **  Do while CRLF or ETX
+     C           @WK2      DOUEQCRLF
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         X
+     C                     ADD  1         Z
+     C                     MOVEAIMSG,X    @WK2    2
+     C                     END
+      *
+      **  Write out detail line
+     C                     MOVEALINE      RCD
+     C                     WRITEFIELD
+     C                     MOVEA*BLANKS   LINE
+      *
+     C                     ADD  2         X
+     C                     MOVEAIMSG,X    @WK2
+     C                     END
+      *
+     C                     ADD  2         X
+     C                     MOVEAIMSG,X    @WL3    3
+      *
+      **  If message trailer present
+     C           @WL3      IFEQ '{5:'
+     C                     ADD  4         X
+      **  Write trailer header (block 5)
+     C                     WRITEBLOCK5
+      *
+     C           @WK2      DOUEQ'}}'
+     C                     Z-ADD1         Z
+      *
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         Z
+     C                     ADD  1         X
+     C                     END
+      *
+      **  Write out detail line
+     C                     MOVEALINE      RCD
+     C                     WRITEFIELD
+     C                     MOVEA*BLANKS   LINE
+      *
+     C                     MOVEAIMSG,X    @WK2
+     C                     ADD  2         X
+     C                     END
+     C                     END
+      *
+     C                     MOVEAIMSG,X    @WL3
+      *
+      **  If STS trailer present
+     C           @WL3      IFEQ '{S:'
+     C                     ADD  4         X
+      **  Write STS trailer header (S block)
+     C                     WRITESBLOCK
+      *
+     C           @WK2      DOUEQ'}}'
+     C                     Z-ADD1         Z
+      *
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         Z
+     C                     ADD  1         X
+     C                     END
+      *
+      **  Write out detail line
+     C                     MOVEALINE      RCD
+     C                     WRITEFIELD
+     C                     MOVEA*BLANKS   LINE
+      *
+     C                     MOVEAIMSG,X    @WK2
+     C                     ADD  2         X
+     C                     END
+     C                     END
+      *
+      **  Add 1 to message total
+     C                     ADD  1         TOTI    40
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - Error handling                                      *
+      *   Called by - INIT Initial process                            *
+     C*****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

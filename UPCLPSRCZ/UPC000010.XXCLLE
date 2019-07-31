@@ -1,0 +1,186 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/
+/*E*I****TEXT('Midas*SM*Set*authorities*for*IBM*objects*-*zone')******/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade module                                      */
+/*                                                                   */
+/*       UPC000010 - Set authorities for IBM objects zone            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/*       Last Amend No. CUP042 *REDUNDANT  Date 02Jan15              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BUG27240           Date 12Mar10              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CUP034  *MOVED     Date 18Jan07              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP042 - Restructure of deliverable data files.             */
+/*       BUG27240- Applied CPK029 file locking fix                   */
+/*       CPK029 - Stop lock on file.                                 */
+/*       CUP034 - Reduce size of implementation library.             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFXSVAL)
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
+ 
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&LEN) TYPE(*DEC) LEN(4 0) VALUE(50)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&USERNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REPLY1) TYPE(*CHAR) LEN(1)
+ 
+             DCLF       FILE(UPIBMOPD) OPNID(A)
+             DCLF       FILE(UPSVALJ0) OPNID(B)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2007')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Check that System Values have an entry. */
+VALIDATE:
+             RCVF       OPNID(B)
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&B_GISVAL *EQ &PFXSVAL) THEN(DO)
+                IF         COND(&B_GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&SBSID) VALUE(&B_GIVAL)
+                ENDDO
+/**********     GOTO       CMDLBL(CHECK)                                               */ /*CPK029*/
+             ENDDO
+ 
+             GOTO       CMDLBL(VALIDATE)
+ 
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('UPC000010' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Create data area /MIDASMSG in QTEMP. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+             CALL       PGM(UPC0014) PARM(&SBSID)
+ 
+/* Enter name of user to be granted authority. */
+             USERNAME   ??USERNAME(*PUBLIC)
+             MONMSG     MSGID(CPF6801) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             RTVDTAARA  DTAARA(QTEMP/USERNAME (1 10)) RTNVAR(&USERNAME)
+/* Check that the user profile exists. */
+             IF         COND(&USERNAME *NE '*PUBLIC') THEN(DO)
+                CHKOBJ     OBJ(&USERNAME) OBJTYPE(*USRPRF)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE('Profile' +
+                                *BCAT &USERNAME *BCAT 'does not exist')
+                   CALL       PGM(SCC0010) PARM('UPC000010' 'ENTER' 'Y')
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+             ENDDO
+ 
+READNEXT:
+             RCVF       OPNID(A)
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Check that object exists and that the user has authority. */
+             CHKOBJ     OBJ(&A_IOLIB/&A_IOIBMO) OBJTYPE(&A_IOTYPE) AUT(*ALL)
+/* Object/library combination does not exist. */
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+CHOOSE:
+                CHGVAR     VAR(&REPLY1) VALUE(' ')
+                CHGVAR     VAR(&MESSAGE) VALUE(' ')
+                CHGVAR     VAR(&MESSAGE) VALUE(&A_IOIBMO *TCAT ', type' +
+                             *BCAT &A_IOTYPE *BCAT 'in library' *BCAT +
+                             &A_IOLIB)
+                CALL       PGM(UTC0069) PARM(&MESSAGE &LEN)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CHGVAR     VAR(&MESSAGE) VALUE('     is not found.')
+                CALL       PGM(UTC0069) PARM(&MESSAGE &LEN)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)
+                CHGVAR     VAR(&MESSAGE) VALUE(' ')
+                CHGVAR     VAR(&MESSAGE) VALUE('C = Cancel whole program')
+                CALL       PGM(UTC0069) PARM(&MESSAGE &LEN)
+                CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)
+                CHGVAR     VAR(&MESSAGE) VALUE(' ')
+                CHGVAR     VAR(&MESSAGE) VALUE('I = Ignore object, try +
+                             next')
+                CALL       PGM(UTC0069) PARM(&MESSAGE &LEN)
+                CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE(&MESSAGE)
+ 
+                CALL  PGM(SCC0010) PARM('UPC000010' 'OPTION2' &REPLY1)
+                IF         COND(&REPLY1 *EQ 'C') THEN(DO)
+                   CHGDTAARA  DTAARA(MIDASMSG *ALL) VALUE(' ')
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+                IF         COND(&REPLY1 *EQ 'I') THEN(DO)
+                   CHGDTAARA  DTAARA(MIDASMSG *ALL) VALUE(' ')
+                   GOTO       CMDLBL(READNEXT)
+                ENDDO
+/* If not one of the options then redisplay screen with message. */
+                IF         COND(&REPLY1 *NE 'I' *AND &REPLY1 *NE 'C') +
+                             THEN(DO)
+                   RTVMSG  MSGID(UPM0012) MSGF(UTMSGF) MSG(&MESSAGE)
+                   CHGDTAARA DTAARA(MIDASMSG (551 50)) VALUE(&MESSAGE)
+                   GOTO       CMDLBL(CHOOSE)
+                ENDDO
+             ENDDO
+ 
+/* Authority is not enough. */
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE('User has +
+                             insufficient authority to')
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE('one or more +
+                             objects.')
+                CALL       PGM(SCC0010) PARM('UPC000010' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             CHGVAR     VAR(&A_IOPROF) VALUE(&USERNAME)
+ 
+/* First, revoke all authority for requested object ... */
+             RVKOBJAUT  OBJ(&A_IOLIB/&A_IOIBMO) OBJTYPE(&A_IOTYPE) +
+                          USER(&A_IOPROF) AUT(*ALL)
+             MONMSG     MSGID(CPF2256)
+/* ... and then grant the required authority. */
+             GRTOBJAUT  OBJ(&A_IOLIB/&A_IOIBMO) OBJTYPE(&A_IOTYPE) +
+                          USER(&A_IOPROF) AUT(&A_IOAUT)
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC000010') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC000010' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ENDPGM:
+             ENDPGM

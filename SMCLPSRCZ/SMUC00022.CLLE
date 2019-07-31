@@ -1,0 +1,86 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Update files for FF/PM')                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00022 - Call upgrade programs for FF/PM                 */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BG26993            Date 26Jan10              */
+/*                      CPM003             Date 13May96              */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BG26993 - Delivery of upgrade programs to core.             */
+/*               - Renamed CPM003C01.                                */
+/*       CPM003  - Portfolio Management Interface to FF              */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          1996')
+ 
+             DCLF       FILE(MKCTLD)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 SYS0000 MCH0000)
+ 
+/* Update TRANSD file. */
+             OVRDBF     FILE(TRANSD) MBR(OTC)
+             OVRDBF     FILE(CLOSTT) MBR(OTC)
+ 
+             CALL       PGM(SMU00053)
+ 
+             DLTOVR     FILE(*ALL)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSG('Database error in FFCTRANSD ' *CAT +
+                             &MEM) TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(PGMEND)
+             ENDDO
+ 
+ READ:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(NEXT))
+ 
+             OVRDBF     FILE(TRANSD) MBR(&MRKT)
+             OVRDBF     FILE(CLOSTT) MBR(&MRKT)
+             CALL       PGM(SMU00053)
+             DLTOVR     FILE(*ALL)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSG('Database error in FFCTRANSD ' *CAT +
+                             &MEM) TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(PGMEND)
+             ENDDO
+ 
+             GOTO       CMDLBL(READ)
+ 
+NEXT:
+/* Update INTYPD file. */
+             CALL       PGM(SMU00052)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSG('Database error in FFCTRANSD ' *CAT +
+                             &MEM) TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(PGMEND)
+             ENDDO
+ 
+/* Update PMPORTPD file. */
+             CALL       PGM(SMU00054)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSG('Database error in FFCTRANSD ' *CAT +
+                             &MEM) TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+PGMEND:
+             DLTDTAARA  DTAARA(QTEMP/LDA)
+             MONMSG     MSGID(CPF0000)
+             RETURN
+             ENDPGM

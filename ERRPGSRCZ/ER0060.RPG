@@ -1,0 +1,1391 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Lump-Sum Provision Rates Maintenance')
+     H*****************************************************************
+     H*                                                               *
+     H*   MIDAS/ABS  EUROPEAN REPORTING - LUXEMBOURG                  *
+     H*                                                               *
+     H*   ER0060 - LUMP-SUM PROVISION RATES                           *
+     H*                                                               *
+      *  (c) Finastra International Limited 2005                      *
+     H*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 ERL371 TL          Date 30Nov93               *
+     H*                                                               *
+     F*****************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+     F*   ERL371 - IML 1.4 DEVELOPMENT                                *
+     F*****************************************************************
+     F*
+     FER0060DFCF  E                    WORKSTN
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+      *
+     FERLUMPL1IF  E           K        DISK
+     F                                              KINFDS INFDS1
+      *
+     FERLUMPL0UF  E           K        DISK                      A    UC
+     F                                              KCOMIT
+      *
+     E                    ZA1        16  1               ZALIGN/ZEDIT ARR
+     E                    ZA2        16  1               ZALIGN/ZEDIT ARR
+     E                    @F         16  1               ZA0840 array
+      * input array for SR/ZA0840
+     E                    @G         16  1               ZA0840 array
+      * output array for SR/ZA0840
+     E                    @H      1  15 15 0             ZA0840 array
+      *
+     E                    TXT     1   2 78
+     E                    @CN     1  16 25               Long constants.
+     E                    CPY@    1   1 80               BIS Copyright array
+      /EJECT
+      * Data structures:-
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure.
+     IJBDTTM      DS
+      * Job date/time.
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file data structure.
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure.
+      *
+     I@1DBRC    E DSERLUMPL0
+      * Current/previous master file format fields for change control.
+      *
+     ITYPE        DS
+     I                                        1   1 CHECK
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     ICPYR@#      DS
+     I* BIS Copyright array
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Deal Type no Blanks'
+      * Deal Type
+     I                                        1   2 ZA0002
+      * Message data for 'Question Mark Error(Deal)'
+      * Deal Type
+     I                                        1   2 ZA0003
+      * Message data for 'Deal Sub-Type no blanks'
+      * Deal Sub-type
+     I                                        1   2 ZA0004
+      * Message data for 'Deal Sub-Type no blanks'
+      * Deal Sub-type
+     I                                        1   2 ZA0005
+      * Message data for 'Description required'
+      * Deal Type Description
+     I                                        1  30 ZA0006
+     I*
+     I**  Local data area for data base error:
+     ILDA        UDS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      /EJECT
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise and load subfile page.
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested:
+     C           W0RSF     DOWEQ'N'
+      * Display screen.
+     C                     EXSR CAEXFM
+      * Process response:
+      * Exit request: Cancel & exit program.
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload.
+     C   05                CAS            FBRQRL
+      *   Display next SFL page.
+     C   27                CAS            BBLDSF
+      * Process screen input.
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise & Load subfile page.
+      *================================================================
+      * Clear subfile.
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile.
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * USER: Initialise subfile header
+     C                     MOVEL@CN,01    WUDELA           Deletion Allowe
+      *CASE:     WRK.Set Up Complete is No
+     C           WUSUC     IFEQ @CN,01                     *IF
+      *CASE:     PGM.*Program mode is *CHANGE
+     C           W0PMD     IFEQ @CN,02                     *IF
+     C                     MOVEL@CN,03    WUDELA           Deletion Allowe
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     MOVEL@CN,03    WUAMAL           Amend allowed
+      *CASE:     WRK.Set Up Complete is Yes
+     C           WUSUC     IFEQ @CN,03                     *IF
+      *CASE:     PGM.*Program mode is *CHANGE
+     C           W0PMD     IFEQ @CN,02                     *IF
+     C                     MOVEL@CN,01    WUAMAL           Amend allowed
+     C                     END                             *FI
+     C                     END                             *FI
+      * Set Up Function Key Text - Standard Functions  *
+     C*
+     C           W0PMD     IFEQ 'CHG'
+     C                     MOVEATXT,1     ##CTX1
+     C                     END
+     C           W0PMD     IFEQ 'ADD'
+     C                     MOVEATXT,2     ##CTX1
+     C                     END
+      * If CHANGE mode, then position file:
+     C           W0PMD     IFNE 'ADD'
+     C           *LIKE     DEFN #2CODE    WZCODE
+     C                     MOVEL#2CODE    WZCODE           LUM-SUM CODE
+      * Setup key.
+     C                     MOVEL#2CODE    LSCODE           LUM-SUM CODE
+     C           LSCODE    SETLLERLUMPD1             82    *82=EOF
+     C  N82                READ ERLUMPD1               9182*82=EOF
+     C                     ELSE
+     C                     SETOF                     82    *
+     C                     END
+      * Load subfile page.
+     C                     EXSR BBLDSF
+      *................................................................
+      * If no records found, display error message.
+     C   82      ##RR      IFEQ *ZERO                      IF
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             FI ##RR = *ZERO
+      *
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page (write empty page if add mode).
+      *================================================================
+     C                     SETOF                     84    No SFLNXTCHG
+      * Re-establish fields in read-ahead record.
+     C   27      W0PMD     IFNE 'ADD'
+     C  N82                READPERLUMPD1                 90*
+     C  N82                READ ERLUMPD1                 90*
+     C                     END
+      *
+      * Setof record error indicators.
+     C                     MOVE *ALL'0'   WKIND0  6
+     C                     MOVE *ALL'1'   WKIND1  6
+      * Start at previous highest SFL record reached.
+     C                     Z-ADD##RRMX    ##RR    50
+     C                     Z-ADD*ZERO     ##RROK  50
+      *................................................................
+      * Load next page of SFL:
+     C  N82      ##RROK    DOWLT##SFPG                     DO
+     C                     MOVEAWKIND0    *IN,33
+     C                     SETOF                     87    *
+      * Clear SFL fields.
+     C                     EXSR MAIZ#1
+      * If change mode, load SFL fields.
+     C           W0PMD     IFNE 'ADD'
+     C                     EXSR MBFL#1
+      * Validate subfile record and calculate derived fields.
+     C                     EXSR DFV2RC
+     C                     END
+      * Output to subfile.
+     C                     ADD  1         ##RR       81    *
+     C                     ADD  1         ##RROK
+      * Set screen conditioning indicators.
+     C                     EXSR GADSA1
+     C                     WRITE#SFLRCD
+     C           W0PMD     IFNE 'ADD'
+     C                     READ ERLUMPD1                 82*82=EOF
+     C                     END
+     C  N82                END                             OD 1 - #SFPG
+      *................................................................
+      * Save highest SFL rec, so load can continue at end point.
+     C           ##RR      IFGT ##RRMX
+     C           ##RRMX    ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests.
+      *================================================================
+      * Set screen conditioning indicators.
+     C                     EXSR GBDSA2
+      * Update screen time.
+     C                     TIME           ##TME            Screen time.
+     C           W0HLP     DOUEQ'N'
+      * PUTOVR unless conditioned fields change.
+     C                     SETON                     86
+     C           *IN89     IFNE CAIN89
+     C           *IN81     ORNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN89     CAIN89  1
+     C                     MOVE *IN81     CAIN81  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+     C                     MOVEL'N'       W0HLP   1        Reset help requ
+      * If help requested, display help text.
+     C   25                EXSR ZHHPKY                     Display help te
+     C                     END
+      * Update job time.
+     C                     TIME           ##JTM            Job time.
+      * Clear messages from program message queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag.
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input.
+      *================================================================
+      * Maintain subfile position where possible.
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      *
+     C           W0PMD     IFNE 'ADD'
+      * Change of position specified?
+     C           WZCODE    CASNE#2CODE    FBRQRL           LUM-SUM CODE
+     C                     END
+     C                     END
+      * Quit if reload requested.
+     C           W0RSF     CABEQ'Y'       DAEXIT
+      *
+     C   81                DO
+      * No data entered as yet.
+     C                     MOVEL'N'       WKIPIN  1
+      * Confirm/update is not defered.
+     C                     MOVEL'N'       W0DCF   1
+      * Process subfile records.
+     C                     EXSR DBPRSF
+      * If error, exit:
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested:
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * If data entered.
+     C           WKIPIN    IFEQ 'Y'
+      * Update DBF from subfile.
+     C                     EXSR EAPRSF
+      * If error during update, exit:
+     C           *IN99     CABEQ'1'       DAEXIT
+     C                     END                             WKIPIN
+     C                     END                             OD 81
+      *=====Process function keys=====
+      * Switch between *ADD/*CHANGE modes.
+     C   09                EXSR FACHMD
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile records.
+      *================================================================
+     C                     READC#SFLRCD                  92*
+     C           *IN92     DOWEQ'0'
+     C                     EXSR DCPRSR
+     C                     SETOF                     87    *
+      * Set screen conditioning indicators.
+     C                     EXSR GADSA1
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  92*
+     C                     END
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         DCPRSR    BEGSR
+      *================================================================
+      * Process subfile record.
+      *================================================================
+      * Setoff error indicators.
+     C                     MOVEAWKIND0    *IN,33
+     C                     SETOF                     98    No errors
+     C                     SETOF                     84    NO SFLNXTCHG
+     C           W0PMD     IFEQ 'ADD'
+      * Check for null record.
+     C                     EXSR DDNLRC
+     C           W0NLR     IFEQ 'Y'
+     C                     GOTO DCEXIT
+     C                     END
+      * If not null record, continue.
+     C                     END
+     C                     MOVEL'Y'       WKIPIN           Data entered
+     C                     SETON                     84    *SFLNXTCHG
+      * If delete request, bypass validation.
+     C           #1SEL     IFEQ 'D'
+     C                     GOTO DCEXIT
+     C                     END
+      * Validate subfile record.
+     C                     EXSR DEV1RC
+      * If SFLRCD invalid, note the fact.
+     C   98N99             Z-ADD##RR      ##SFRC     99    Invalid SFLRCD
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         DDNLRC    BEGSR
+      *================================================================
+      * Check for null record.
+      *================================================================
+     C                     MOVEL'N'       W0NLR   1
+     C           #1CODE    CABNE*BLANK    DDEXIT           LUM-SUM CODE
+     C           #1NARA    CABNE*BLANK    DDEXIT           NARRATIVE
+     C           #1RATE    CABNE*BLANK    DDEXIT           LUM-SUM RATE
+     C                     MOVEL'Y'       W0NLR
+      *================================================================
+     CSR         DDEXIT    ENDSR
+      /EJECT
+     CSR         DEV1RC    BEGSR
+      *================================================================
+      * Validate subfile record.
+      *================================================================
+      * Validate subfile record relations.
+     C                     EXSR DFV2RC
+      * LUM-SUM CODE REQUIRED
+     C           #1CODE    IFEQ *BLANK                     IF
+     C                     SETON                     9834  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             FI
+      * LUM-SUM NARRATIVE REQUIRED
+     C           #1NARA    IFEQ *BLANK                     IF
+     C                     SETON                     9835  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             FI
+      * LUM-SUM RATE REQUIRED
+     C           #1RATE    IFEQ *BLANK                     IF
+     C                     SETON                     9837  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             FI
+      *================================================================
+     CSR         DEEXIT    ENDSR
+      /EJECT
+     CSR         DFV2RC    BEGSR
+      *================================================================
+      * Validate subfile record relations.
+      *================================================================
+      *
+      **   Using SR/ZA0840 subroutine to validate and align amount
+     C           #1CODE    IFNE *BLANKS
+     C           #1CODE    IFLT '00'
+     C           #1CODE    ORGT '99'
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'ER60001' ZAMSID
+     C**********           MOVEL'ERUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      *
+      **   Using SR/ZA0840 subroutine to validate and align amount
+     C           #1RATE    IFNE *BLANKS
+     C                     MOVE #1RATE    @@ALPH
+     C                     Z-ADD2         @@IDP
+     C                     Z-ADD2         @@IINT
+     C                     MOVE *BLANK    @@ERCD
+     C                     EXSR ZA0840
+     C           @@ERCD    IFEQ 1                          - B1
+     C           @@ERCD    OREQ 2
+     C                     MOVE '1'       *IN37
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'ER60002' ZAMSID
+     C**********           MOVEL'ERUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     EXSR ZASNMS
+     C                     END                             - E1
+      *
+      **   If the amount returned by the subroutine is negative
+      **   sending a mesage
+     C           @@AMT     IFLT *ZEROS                     - B1
+     C                     MOVE '1'       *IN37
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'ER60002' ZAMSID
+     C**********           MOVEL'ERUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     EXSR ZASNMS
+     C                     END                             - E1
+      *
+      **   If the amount returned by the subroutine is valid
+      **   moving the amount in a work field
+     C           #1RATE    IFNE *BLANKS                    - B1
+     C           *IN37     ANDEQ'0'
+     C                     MOVE @@ALPH    #1RATE
+     C                     END                             - E1
+      *
+     C                     END
+      *
+      *
+      *================================================================
+     CSR         DFEXIT    ENDSR
+      /EJECT
+     CSR         EAPRSF    BEGSR
+      *================================================================
+      * Update DBF from subfile records.
+      *================================================================
+      * Initialise subfile reload flag.
+     C           W0PMD     IFEQ 'ADD'
+     C                     MOVEL'Y'       W0RSF
+     C                     ELSE
+     C                     MOVEL'N'       W0RSF
+     C                     END
+      * Process all modified subfile records.
+     C                     READC#SFLRCD                  92*
+     C           *IN92     DOWEQ'0'
+      * Process modified subfile record.
+     C                     EXSR EBPRSR
+     C           W0RTN     IFNE *BLANK
+      * Error: ROLLBACK any DBF changes.
+     C                     ROLBK
+     C                     ELSE
+      * Otherwise COMMIT any DBF changes.
+     C                     COMIT
+     C                     END
+     C                     MOVEL*BLANK    #1SEL
+      * Set screen conditioning indicators.
+     C                     EXSR GADSA1
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  92*
+     C                     END
+      * If any errors, cancel reload.
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'N'       W0RSF   1
+     C                     END
+      *================================================================
+     CSR         EAEXIT    ENDSR
+      /EJECT
+     CSR         EBPRSR    BEGSR
+      *================================================================
+      * Process modified subfile record.
+      *================================================================
+      * Set off error indicators
+     C                     MOVEAWKIND0    *IN,33           Clear errors
+     C                     SETOF                     98    No errors
+      *
+     C           W0PMD     IFEQ 'ADD'
+      * Process add request.
+     C           #1SEL     IFNE 'D'
+     C                     EXSR DDNLRC
+     C           W0NLR     IFNE 'Y'
+     C                     EXSR ECADRQ
+     C                     END
+     C                     END
+     C                     ELSE
+     C           #1SEL     IFEQ 'D'
+      * Process delete request.
+     C                     EXSR EDDLRQ
+     C                     ELSE
+      * Process change request.
+     C                     EXSR EECHRQ
+     C                     END
+     C                     END
+      * If error occurred on update, note the fact.
+     C           *IN98     IFEQ '1'
+     C           *IN99     IFEQ '0'
+     C                     Z-ADD##RR      ##SFRC     99    Error on update
+     C                     END
+     C                     END
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         ECADRQ    BEGSR
+      *================================================================
+      * Process add request.
+      *================================================================
+      * USER: Create DBF record
+     C                     EXSR SACRRC
+     C           W0RTN     IFNE *BLANK
+      * Write error detected.
+     C                     MOVEAWKIND1    *IN,34           Screen errors
+     C                     SETON                     98    Format Error
+     C                     SETOF                     87    Enable entry
+     C                     SETON                     84    SFLNXTCHG
+     C                     ELSE
+      * DBF Write successful.
+     C                     SETON                     87    Disable entry
+     C                     SETOF                     84    No SFLNXTCHG
+     C                     END
+      *================================================================
+     CSR         ECEXIT    ENDSR
+      /EJECT
+     CSR         EDDLRQ    BEGSR
+      *================================================================
+      * Process delete request.
+      *================================================================
+      * USER: Delete DBF record
+     C                     EXSR SCDLRC
+     C           W0RTN     IFNE *BLANK
+      * Delete unsuccessful.
+     C                     MOVEAWKIND1    *IN,33           Screen errors
+     C                     SETON                     98    Format Error
+     C                     SETOF                     87    Enable entry
+     C                     SETON                     84    SFLNXTCHG
+      * If record altered, reset subfile record.
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1           IF
+     C                     END
+     C                     ELSE
+      * DBF Delete successful.
+      * Blank out record and protect from entry.
+     C                     EXSR MAIZ#1
+     C                     SETON                     87    Disable entry
+     C                     SETOF                     84    No SFLNXTCHG
+     C                     MOVEL'Y'       W0RSF   1        Reload subfile
+     C                     END                             FI W0RTCD
+      *================================================================
+     CSR         EDEXIT    ENDSR
+      /EJECT
+     CSR         EECHRQ    BEGSR
+      *================================================================
+      * Process update request.
+      *================================================================
+      * USER: Change DBF record
+     C                     EXSR SECHRC
+     C           W0RTN     IFNE *BLANK
+      * DBF Update error detected.
+     C                     MOVEAWKIND1    *IN,33           Screen errors
+     C                     SETON                     98    Format Error
+     C                     SETOF                     87    Enable entry
+     C                     SETON                     84    SFLNXTCHG
+      * Reset subfile record if changed record.
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1           IF
+     C                     END
+     C                     ELSE
+      * DBF Update successful.
+     C                     SETOF                     87    Enable entry
+     C                     SETOF                     84    No SFLNXTCHG
+     C                     END                             FI W0RTCD
+      *================================================================
+     CSR         EEEXIT    ENDSR
+      /EJECT
+     CSR         FACHMD    BEGSR
+      *================================================================
+      * Flip between *ADD and *CHANGE modes.
+      *================================================================
+     C           W0PMD     IFNE 'ADD'
+     C                     MOVEL'ADD'     W0PMD
+     C                     ELSE
+     C                     MOVEL'CHG'     W0PMD
+     C                     END
+     C                     EXSR FBRQRL
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload.
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         GADSA1    BEGSR
+      *================================================================
+      * Set display attributes for Subfile record.
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      * Protect keys if change mode or updated record.
+     C                     SETON                     88    *
+     C   89N87             SETOF                     88    *
+     C******               MOVEL*IN87     *IN79
+     C******     WUDELA    IFEQ @CN,01                     *IF
+     C******               MOVEL'1'       *IN79
+     C******               END                             *FI
+     C******               MOVEL*IN87     *IN78
+     C******     WUAMAL    IFEQ @CN,01                     *IF
+     C******               MOVEL'1'       *IN78
+     C******               END                             *FI
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSA2    BEGSR
+      *================================================================
+      * Set display attributes for Subfile control.
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise subfile record.
+      *================================================================
+     C                     MOVEL*BLANK    #1DBRC           Previous values
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+     C                     MOVEL*BLANK    #1CODE           LUM-SUM CODE
+     C                     MOVEL*BLANK    #1NARA           NARRATIVE
+     C                     MOVEL*BLANK    #1RATE           LUM-SUM RATE
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @AYRECL fields to subfile.
+      *================================================================
+     C                     Z-ADDLSLCD     #1LCD            Last Change Dat
+     C                     MOVELLSTYLC    #1TYLC           Type of Last Ch
+     C                     MOVELLSCODE    #1CODE           LUM-SUM CODE
+     C                     MOVELLSNARA    #1NARA           NARRATIVE
+     C                     MOVELLSRATE    #1RATE           RATE
+      *
+      **   Use the SR/ZEDIT to format the Provisions Forfaitaires
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE LSRATE    ZFIELD
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1RATE
+     C                     MOVE *BLANKS   ZFIELD
+      * Hold current record image for change detection.
+     C                     MOVEL@1DBRC    #1DBRC
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control.
+      *================================================================
+     C                     MOVEL*BLANKS   #2CODE           LUM-SUM CODE
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         SACRRC    BEGSR
+      *================================================================
+      * Create Record
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move all fields to @AYRECK
+     C                     MOVEL#1CODE    LSCODE           LUM-SUM CODE
+     C                     MOVEL#1NARA    LSNARA           NARRATIVE
+     C                     Z-ADDWURDNB    LSLCD            Last Change Dat
+     C                     MOVEL@CN,11    LSTYLC           Type of Last Ch
+     C                     MOVE #1RATE    @@ALPH
+     C                     Z-ADD2         @@IDP
+     C                     Z-ADD2         @@IINT
+     C                     MOVE *BLANK    @@ERCD
+     C                     EXSR ZA0840
+     C                     Z-ADD@@AMT     LSRATE
+      *
+      * Check for duplicate primary key.
+     C           LSCODE    SETLLERLUMPD0                 90*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'ER00506' W0RTN   7
+      * Send message 'COMBINATION ALREADY EXISTS'
+     C                     MOVEL'ER00506' ZAMSID           Message id.
+     C**********           MOVEL'ERUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     9834  *
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C                     WRITEERLUMPD0               91  *
+      *
+     C           *IN91     IFEQ '1'
+      * Write error detected.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SCDLRC    BEGSR
+      *================================================================
+      * Delete record
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * USER: Processing before DBF update
+      *CASE:     PAR.Action Code is Delete
+     C           @CN,14    IFEQ @CN,14                     *IF
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Send message 'Function key not allowed'
+     C                     MOVEL'USR0533' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     98    *
+      *
+     C                     MOVELW0RTN     W0DCF            *Defer confirm
+     C                     MOVEL@CN,15    W0RTN            *Return code
+     C                     GOTO SCEXIT                     *QUIT
+     C                     END                             *FI
+      * Move key fields to @AYRECK
+     C                     MOVEL#1CODE    LSCODE           LUM-SUM CODE
+      *
+     C           LSCODE    CHAINERLUMPD0             9091  *
+     C           *IN90     IFEQ '1'
+      * Record already deleted.
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SCEXIT
+     C                     END
+      *
+      * Check for changed record.
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+      * Use SETLL to release record lock.
+     C           LSCODE    SETLLERLUMPD0             9091  *
+     C                     GOTO SCEXIT
+     C                     END                             FI #1DBRC
+      *................................................................
+     C                     DELETERLUMPD0               91  *
+     C           *IN91     IFEQ '1'
+      * Delete error detected.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * Change Standing Data Cont - Standing Data Controls  *
+     C                     EXSR SDCHRC
+     C                     MOVEL@CN,14    WUTYLC           Type of Last Ch
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         SDCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      *================================================================
+     CSR         SDEXIT    ENDSR
+      /EJECT
+     CSR         SECHRC    BEGSR
+      *================================================================
+      * Change record
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @AYRECK
+     C                     MOVEL#1CODE    LSCODE           LUM-SUM CODE
+      *
+     C           LSCODE    CHAINERLUMPD0             9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found.
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     GOTO SEEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SEEXIT
+     C                     END
+      *
+      * Check for changed record.
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+      * Use SETLL to release record lock.
+     C           LSCODE    SETLLERLUMPD0             9091  *
+     C                     GOTO SEEXIT
+     C                     END                             FI #1DBRC
+      * Move Non-key fields to @AYRECK
+     C                     Z-ADDWURDNB    LSLCD            Last Change Dat
+     C                     MOVEL@CN,16    LSTYLC           Type of Last Ch
+     C                     MOVEL#1NARA    LSNARA           NARRATIVE
+     C                     MOVE #1RATE    @@ALPH
+     C                     Z-ADD2         @@IDP
+     C                     Z-ADD2         @@IINT
+     C                     MOVE *BLANK    @@ERCD
+     C                     EXSR ZA0840
+     C                     Z-ADD@@AMT     LSRATE
+      *
+     C                     UPDATERLUMPD0               91  *
+     C           *IN91     IFEQ '1'
+      * Change error detected.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF Change successful.
+      * Update saved record image.
+     C                     MOVEL@1DBRC    #1DBRC
+     C                     END
+      *================================================================
+     CSR         SEEXIT    ENDSR
+      /EJECT
+     CSR         SFCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      *================================================================
+     CSR         SFEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue.
+      *================================================================
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+      * If no message file specified use default.
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      * Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text.
+      *================================================================
+     C                     MOVEL'Y'       W0HLP   1        Signal help req
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Member name.
+     C                     PARM *BLANK    YYHPFL 10        *DFT text file.
+     C                     PARM *BLANK    YYHPLB 10        Help text lib.
+     C                     PARM           W0RTN   7        Return Code.
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Exit program: Normal.
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct.
+      *================================================================
+      * ROLLBACK any uncommitted DBF changes.
+     C                     ROLBK                       90
+      *
+      * Terminate program.
+     C                     SETON                     LR
+      *
+      * Exit program.
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation.
+      *================================================================
+     C                     MOVE *BLANK    W0RTN   7
+      * Setup job date/time.
+     C                     Z-ADDUDATE     ##JDT            Job date.
+     C                     TIME           ##JTM            Job time.
+     C                     TIME           ##TME   60       Screen time.
+      * Define work field Deletion Allowed
+     C                     MOVEL*BLANK    WUDELA  1
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Amend allowed
+     C                     MOVEL*BLANK    WUAMAL  1
+      * Define work field Check Deal Digit
+     C                     MOVEL*BLANK    WUCLDG  1
+      * Obtain default message file.
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Flag1
+     C                     MOVEL*BLANK    WUFLG1  1
+      * Define work field Flag2
+     C                     MOVEL*BLANK    WUFLG2  1
+      * Define work field Flag3
+     C                     MOVEL*BLANK    WUFLG3  1
+      * Define work field run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Type of Last Change
+     C                     MOVEL*BLANK    WUTYLC  1
+      * Define work field midas rundate
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Open files.
+     C                     OPEN ERLUMPL0
+      *
+     C                     Z-ADD14        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+     C                     Z-ADD*ZERO     ##RRMX           MAX RECNO
+      *................................................................
+      * If member empty, set to *ADD mode, else to *CHANGE mode.
+     C           @1NROP    IFEQ *ZERO
+     C                     MOVEL'ADD'     W0PMD   3        Add mode
+     C                     ELSE
+     C                     MOVEL'CHG'     W0PMD            Change mode
+     C                     END
+      * USER: Initialise program
+      * Standard RPG Creation PAR - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB
+     C                     MOVE SUC       WUSUC
+     C                     MOVE DFF       WUDFF
+     C                     MOVE MBIN      WUMBIN
+      * Initialise subfile control.
+     C                     EXSR MEIZ#2
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      ********************************************************************
+      *
+     C           ZA0840    BEGSR
+      *
+      **   initialize the fields and the arrays
+     C                     MOVE '0'       *IN51
+     C                     MOVE '0'       *IN52
+     C                     Z-ADD0         @@ERCD  10
+     C                     Z-ADD0         @@AMT  150
+     C                     MOVEA*BLANKS   @G
+     C                     MOVEA@@ALPH    @F
+     C                     MOVE *BLANKS   @@ALPH 16
+     C                     Z-ADD0         @@WK7   10
+     C                     Z-ADD0         @@CADP  30
+     C                     Z-ADD0         @@CINT  30
+     C                     Z-ADD0         @@PIDP  30
+     C                     Z-ADD0         @@PODP  30
+     C                     Z-ADD0         @@C     20
+     C                     Z-ADD0         @@D     20
+     C                     Z-ADD0         @@E     20
+      *
+      **   define the input fields
+     C           *LIKE     DEFN @@CADP    @@IDP
+     C           *LIKE     DEFN @@CINT    @@IINT
+      *
+      ** first check that the number input will not produce a number
+      ** output with more than 15 figures.
+     C           @@IDP     ADD  @@IINT    @@WK2   20
+     C           @@WK2     IFGT 15                         B1
+     C                     Z-ADD2         @@ERCD           *1
+     C                     GOTO ZA0849                     *1
+     C                     END                             E1
+      *
+      ** work through input array, ignoring leading zeros and blanks,
+      ** also blanking the leading zeros in the input array.
+     C                     MOVE '0'       *IN53
+     C                     ADD  1         @@C
+     C           @@C       DOWLE16                         B1
+     C           *IN53     ANDEQ'0'                        *1
+     C           @F,@@C    IFNE ' '                        B*2
+     C           @F,@@C    ANDNE'0'                        **2
+     C                     MOVE '1'       *IN53            **2
+     C                     SUB  1         @@C              **2
+     C                     END                             E*2
+     C                     ADD  1         @@C              **2
+     C                     END                             E1
+      *
+      ** check the integer part of the number for valid characters.
+     C           @@C       DOWLE16                         B1
+     C           @F,@@C    ANDNE'.'                        *1
+     C           @F,@@C    ANDNE' '                        *1
+      *
+      ** check for non numeric characters
+     C           @F,@@C    IFGT '9'                        B*2
+     C           @F,@@C    ORLT '0'                        **2
+     C                     Z-ADD0         @@AMT            **2
+     C                     Z-ADD1         @@ERCD           **2
+     C                     GOTO ZA0849                     **2
+      *
+     C                     ELSE                            X*2
+      *
+     C                     ADD  1         @@CINT           **2
+      *
+      ** check number of integers is not greater than that required
+     C           @@CINT    IFGT @@IINT                     B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** multiply the output amount by 10 then add the number in
+      ** the input array element being processed.
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C           @@AMT     ADD  @@WK7     @@AMT            **2
+     C                     END                             E*2
+      *
+      ** increase array index
+     C                     ADD  1         @@C              *1
+     C                     END                             E1
+      *
+      ** set up position of decimal point in input array
+     C                     Z-ADD@@C       @@PIDP
+      *
+      ** if the character pointed to is a decimal point add 1 to the
+      ** index
+     C           @@C       IFLE 16                         B1
+     C           @F,@@C    ANDEQ'.'                        *1
+     C                     ADD  1         @@C              *1
+     C                     MOVE '1'       *IN52            *1
+     C                     END                             E1
+      *
+      ** now validate the decimal part of the number
+     C           @@C       DOWLE16                         B1
+      *
+      ** if a blank is found set on the blank input indicator
+     C           @F,@@C    IFEQ ' '                        B*2
+     C                     MOVE '1'       *IN51            **2
+     C                     END                             E*2
+      *
+      ** if the figure is numeric, check that the number of decimal
+      ** places does not exceed that specified, and that no blanks
+      ** have been entered.
+     C           @F,@@C    IFGE '0'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     ADD  1         @@CADP           **2
+      *
+     C           @@CADP    IFGT @@IDP                      B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C           *IN51     IFEQ '1'                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** update output amount
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C                     ADD  @@WK7     @@AMT            **2
+      *
+     C                     ELSE                            X*2
+      *
+      ** if the character is not numeric and not a blank then it is
+      ** invalid
+     C           @F,@@C    IFNE ' '                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      *
+      ** increase index
+     C                     ADD  1         @@C              *1
+      *
+     C                     END                             E1
+      *
+      ** correct the output number for any decimal places not input
+      ** in the alpha field.
+     C           @@IDP     SUB  @@CADP    @@E
+      *
+      ** increase the index by one to get correct array entry
+     C                     ADD  1         @@E
+     C           @@AMT     MULT @H,@@E    @@AMT
+      *
+      ** now format the output alpha field, first calculate where
+      ** the decimal point goes
+     C           16        SUB  @@IDP     @@PODP
+     C           @@PODP    SUB  1         @@PIDP
+      *
+      ** if there are no decimal points set the position to 17
+     C           @@IDP     IFEQ 0                          B1
+     C                     Z-ADD17        @@PODP           *1
+     C                     END                             E1
+      *
+      ** move the output number into the input array
+     C                     MOVEA*BLANKS   @F
+     C                     MOVE @@AMT     @@AMTA 15
+     C                     MOVEA@@AMTA    @F
+      *
+      ** set up indexes
+     C                     Z-ADD1         @@C
+     C                     Z-ADD1         @@D
+     C                     MOVE '0'       *IN50
+      *
+      ** now fill up the output array
+     C           @@D       DOWLE16                         B1
+      *
+      ** insert decimal point if the position is found
+     C           @@D       IFEQ @@PODP                     B*2
+     C                     MOVE '.'       @G,@@D           **2
+     C                     ADD  1         @@D              **2
+     C                     END                             E*2
+      *
+      ** insert the zero before the decimal point
+     C           *IN50     IFEQ '0'                        B*2
+     C           @@D       ANDEQ@@PIDP                     **2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE '1'       *IN50            **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** blank leading zeros
+     C           *IN50     IFEQ '0'                        B*2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE ' '       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** move a normal character
+     C           @F,@@C    IFGE '1'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     MOVE @F,@@C    @G,@@D           **2
+     C                     MOVE '1'       *IN50            **2
+     C                     END                             E*2
+      *
+      ** non blanked zero
+     C           @F,@@C    IFEQ '0'                        B*2
+     C           *IN50     ANDEQ'1'                        **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+     C                     ADD  1         @@C              *1
+     C                     ADD  1         @@D              *1
+     C                     END                             E1
+      *
+      *
+      ** put output array into output amount
+     C                     MOVEA@G        @@ALPH
+      *
+      ** align figure with zero decimal places.
+     C           @@IDP     IFEQ 0                          B1
+     C                     MOVE *BLANKS   @@ALP1 17        *1
+     C                     MOVE @@ALPH    @@ALP1           *1
+     C                     MOVEL@@ALP1    @@ALPH           *1
+     C                     END                             E1
+      *
+     C           ZA0849    ENDSR                           ZA0849 TAG
+      *
+     C*******************************************************************
+     C*******************************************************************
+     C**
+     C**  ZEDIT SUBROUTINE TO INSERT A DECIMAL POINT INTO A NUMERIC FIELD
+     C**  AND TO BLANK OUT LEADING ZEROES.
+     C**      INPUT FIELDS:   ZFIELD 16/
+     C*                       ZADEC
+     C*                       ZADIG - NOT ACTUALLY USED
+     C*
+     C*       ARRAYS    ZA1 ,ZA2   BOTH 16 ELEMENTS, EACH ONE BYTE LONG.
+     C*
+     C*       OUTPUT FIELD   ZFIELD
+     C*
+     C*******************************************************************
+     C           ZEDIT     BEGSR                           ***  ZEDIT  **
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**
+     C*       SET UP WORK FIELDS
+     C*
+     C                     MOVEA' '       ZA1
+     C                     MOVEA' '       ZA2
+     C*
+     C                     Z-ADD16        Z1      20
+     C                     Z-ADD16        Z2      20
+     C*
+     C           16        SUB  ZADEC     ZADEC2  20
+     C*
+     C*
+     C                     MOVEAZFIELD    ZA1
+     C*
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+     C*
+     C           ZADEC     COMP 0                        91
+     C   91                GOTO ZT20
+     C**
+     C           ZT10      TAG                             ** ZT10 TAG **
+     C**
+     C*
+     C*       SET UP DECIMALS
+     C*
+     C                     MOVE ZA1,Z1    ZA2,Z2
+     C           Z1        SUB  1         Z1
+     C           Z2        SUB  1         Z2
+     C*
+     C           Z2        COMP 0                        90
+     C   90                GOTO ZT30
+     C*
+     C*       CHECK IF END OF DECIMALS
+     C**
+     C           Z2        COMP ZADEC2               90
+     C   90                GOTO ZT10
+     C*
+     C**
+     C*       PUT IN DECIMAL PLACE
+     C*
+     C                     MOVE '.'       ZA2,Z2
+     C           Z2        SUB  1         Z2
+     C*
+     C           ZT20      TAG                             ** ZT20 TAG **
+     C*
+     C*       SET UP INTEGERS
+     C*
+     C                     MOVE ZA1,Z1    ZA2,Z2
+     C           Z1        SUB  1         Z1
+     C           Z2        SUB  1         Z2
+     C**
+     C           Z2        COMP 0                    90
+     C   90                GOTO ZT20
+     C*
+     C*       PUT IN LEADING BLANKS
+     C*
+     C           ZT30      TAG                             ** ZT30 TAG **
+     C**
+     C                     Z-ADD1         Z2
+     C**
+     C           ZT40      TAG                             ** ZT40 TAG **
+     C*
+     C           ZA2,Z2    COMP '0'                  9090
+     C   90      ZA2,Z2    COMP ' '                  9090
+     C*
+     C   90                GOTO ZT50
+     C*
+     C                     MOVE ' '       ZA2,Z2
+     C           Z2        ADD  1         Z2
+     C*
+     C           Z2        COMP 16                     90
+     C   90                GOTO ZT40
+     C*
+     C*       IF NO INTEGERS PUT IN LEADING ZERO
+     C*
+     C           ZT50      TAG                             ** ZT50 TAG **
+     C*
+     C                     Z-ADDZADEC2    Z2
+     C  N91      Z2        SUB  1         Z2
+     C           ZA2,Z2    COMP ' '                      90
+     C   90                MOVE '0'       ZA2,Z2
+     C*
+     C*       SET UP OUTPUT FIELD
+     C*
+     C           ZT60      TAG                             ** ZT60 TAG **
+     C*
+     C                     MOVEAZA2       ZFIELD 16
+     C**
+     CSR         ZEND      ENDSR                           ** ZEND **
+     C*****************************************************************
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *================================================================
+      * Database error
+      *================================================================
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C*
+     C**  Print dump and cancel program:
+     C                     DUMP
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *================================================================
+     CSR         PSEXIT    ENDSR
+** array of powers of 10 from 0 to 8
+000000000000001
+000000000000010
+000000000000100
+000000000001000
+000000000010000
+000000000100000
+000000001000000
+000000010000000
+000000100000000
+000001000000000
+000010000000000
+000100000000000
+001000000000000
+010000000000000
+100000000000000
+**
+D=Delete   F3=Exit   F5=Refresh   F9=Go to 'Add' Mode
+F3=Exit   F5=Reset Screen   F9=Go to 'Change' Mode
+** @CN Long constants used in program.
+N
+CHG
+Y
+H
+J
+K
+**ERR**
+ADD
+?
+?INVAL
+I
+ERLUMPPD
+*ERROR*
+D
+Y2U0004
+A
+** CPY@     : Copyright notice for inclusion in all BIS programs
+(c) Finastra International Limited 2005

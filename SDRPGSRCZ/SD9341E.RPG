@@ -1,0 +1,576 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ICD For New Retail')                             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas   Standing Data Module
+     F*                                                               *
+     F*  SD9341E - ICD FOR NEW RETAIL FEATURE MAINTENANCE             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR844310           Date 05Oct11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT002             Date 01Dec95               *
+      *                 CRT001             Date 28Feb95               *
+     F*                 S01413 *CREATE     Date 13Apr93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR844310 - Stamp tax column is missing                       *
+     F*  CRT002 - Retail Branch Access.                               *
+     F*  CRT001 - Retail Teller System.                               *
+     F*  S01413 - Retail 3 Incorporation.                             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSD9341E#CF  E                    WORKSTN      KINFSR *PSSR
+     FTABTBRE IF  E                    DISK         KINFSR *PSSR
+     FSD9341PMO   E                    PRINTER      KINFSR *PSSR      UC
+     F/EJECT
+     F*****************************************************************
+     F*
+     F*  F U N C T I O N   O F   I N D I C A T O R S
+     F*
+     F*  N31        PROTECT SCHOV, STCHOV, SCHOD1 & SCHOD2
+     F*  N32        PROTECT SCDTR, SCDTR1
+     F*  N33        PROTECT SFXAC, SFXAC1
+     F*  N34        PROTECT SCNDS, SCNDS1
+     F*  N35        PROTECT SCDRI, SCDRI1
+     F*  N36        PROTECT SCMBL, SCMBL1
+     F*  N37        PROTECT SCIAC, SCIAC1
+     F*  N38        PROTECT SVATP
+     F*  N39        PROTECT STEGP
+     F*  N40        PROTECT STAIA
+     F*  N41        PROTECT SINTS
+     F*  N42        PROTECT SINTC
+     F*  N43        PROTECT STCAL
+     F*  N44        PROTECT SCMTR
+     F*  N45        PROTECT SCADC
+     F*  N55        PROTECT STURN
+     F*  N56        PROTECT SSTMC
+     F*  N57        PROTECT SFACH
+     F*  N58        Protect SPBKU                                         CRT001
+     F*  90         VAT PROCESSING NOT PRESENT IN SYSTEM
+     F*  91         CER049 switch on                                                        AR844310
+     F*  99         FILE READ ERROR
+     F*
+     F*  LR         END OF PROGRAM
+     F*  U7         DATABASE ERROR
+     F*  U8         DATABASE ERROR
+     F*
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*
+     F*  I N D E X   T O   S U B R O U T I N E S
+     F*
+     F*  FIRST  -  INITIAL PROCESSING
+     F*  CHKINP -  VALIDATE INPUT FIELDS
+     F*  RFRSH  -  RESET SCREEN FIELDS TO ORIGINAL FILE VALUES
+     F*  WARN   -  SEND FILE UPDATE WARNING ERROR
+     F*  UTBRE  -  UPDATE TABTBRE
+     F*  RESET  -  RESET ERROR INDICATORS & CLEAR MESSAGES
+     F*  *PSSR  -  DATABASE ERROR HANDLING
+     F*  DBSR   -  PRODUCE AUDIT REPORT IF DBASE ERROR
+     F*
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Copyright array
+     I*
+     I/EJECT
+     I* Define the data structure to pass data to WN0010 and return pgm
+     I*
+     I/COPY QWINDSRC,SD9341DTA
+     I*
+     I** Data structure to get program name, used to send error
+     I** messages to the program message queue.
+     I*
+     IPSDS       SDS
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+     I*
+     I** Local Data Area for Database Error Details
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I*
+     I** Module Details
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     C/EJECT
+     C*===================================================================
+     C** P R O G R A M     S T A R T
+     C*===================================================================
+     C*
+     C** COPYRIGHT STATEMENT
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           WP0001  5        Work Return cod
+     C                     EXSR FIRST
+     C*
+     C** MAIN PROCESSING UNTIL CK3 OR ENTER PRESSED
+     C*
+     C                     EXFMTSD9341F1
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'EXXIT'   WP0001
+     C                     GOTO ENDP
+     C                     END
+     C*
+     C           *IN12     IFEQ '1'
+     C                     MOVE 'PREVS'   WP0001
+     C                     GOTO ENDP
+     C                     END
+     C*                                                               *
+     C**      WINDOW PROCESSING                                       *
+     C*
+     C                     MOVEL'SD9341E' #PGM
+     C                     MOVE RECI      P1RECI
+     C                     MOVE BJDFIN    P1DFIN
+     C                     MOVE SSTMC     P1STMC
+     C                     MOVE SFACH     P1FACH
+     C*
+     C           BGWDPR    IFEQ 'Y'
+     C           SSTMC     ANDEQ'Y'
+     C           BGWDPR    OREQ 'Y'
+     C           SFACH     ANDEQ'Y'
+     C*
+     C/COPY WNCPYSRC,SD9341EC01
+     C                     UNLCKLDA
+     C                     CALL 'WN0010'
+     C                     PARM           #PGM   10
+     C                     PARM *BLANK    KEY     2
+     C                     PARM 'E'       ACTION  1
+     C                     PARM           DATA
+     C                     PARM *BLANK    #RTRN   7
+     C                     PARM           SPARE 256
+     C           *LOCK     IN   LDA
+     C*
+     C** Cmd12 pressed
+     C*
+     C           #RTRN     IFEQ 'USR0790'
+     C                     CALL 'SNDERMSG'
+     C                     PARM ##PGM     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM 'WND0001' ZAMSID  7        Message Id.
+     C                     PARM 'MIDAS  ' ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C** Clear all fields
+     C*
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C                     END
+     C*
+     C           #RTRN     IFNE 'USR0790'
+     C                     MOVE '1'       *INKC
+     C                     END
+     C*
+     C                     END                             - E1
+     C*
+     C           ENDP      TAG
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C********************************************************************
+     C**
+     C** FIRST subroutine to START THE PROGRAM
+     C**
+     C**     Called by       MAIN
+     C**     Calls
+     C**
+     C           FIRST     BEGSR                           **FIRST BEGSR**
+     C*
+     C** DATA AREA LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** PREPARE WORK VARIABLES
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SD9341E' DBPGM
+     C                     OUT  LDA
+     C                     Z-ADD1         PAGE
+     C*
+     C** Get Bank details from SDBANKPD
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** ERROR IN SDBANKPD
+     C*
+     C           @RTCD     IFNE *BLANKS                    - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA                        ***************
+     C                     MOVE '0'       *IN89            * DB ERROR 01 *
+     C                     EXSR DBSR                       ***************
+     C                     END                             - E1
+     C*
+     C** Set up audit report titles
+     C*
+     C                     MOVE BJMRDT    RUNA
+     C                     MOVE BJURPT    TITL
+     C*
+     C** Set up screen run date
+     C*
+     C                     MOVE RUNA      SRUNA
+     C*                                                                   CRT001
+     C**  Check if Retail Teller System SAR is insatlled                  CRT001
+     C*                                                                   CRT001
+     C                     CALL 'AOSARDR0'                                CRT001
+     C                     PARM *BLANKS   @RTCD   7                       CRT001
+     C                     PARM '*VERIFY' @OPTN   7                       CRT001
+     C                     PARM 'CRT001'  @SAR    6                       CRT001
+     C*                                                                   CRT001
+     C           @RTCD     IFNE *BLANKS                                   CRT001
+     C                     MOVE '0'       *IN58                           CRT001
+     C                     ELSE                                           CRT001
+     C                     MOVE '1'       *IN58                           CRT001
+     C                     MOVE 'Y'       CRT001  1                       CRT002
+     C                     END                                            CRT001
+     C*                                                                   CRT002
+     C**  Check if Retail Branch Access (CRT002) SAR is installed         CRT002
+     C*                                                                   CRT002
+     C                     CALL 'AOSARDR0'                                CRT002
+     C                     PARM *BLANKS   @RTCD   7                       CRT002
+     C                     PARM '*VERIFY' @OPTN   7                       CRT002
+     C                     PARM 'CRT002'  @SAR    6                       CRT002
+     C*                                                                   CRT002
+     C           @RTCD     IFNE *BLANKS                                   CRT002
+     C           CRT001    IFNE 'Y'                                       CRT002
+     C                     MOVE '0'       *IN58                           CRT002
+     C                     END                                            CRT002
+     C                     ELSE                                           CRT002
+     C                     MOVE '1'       *IN58                           CRT002
+     C                     MOVE 'Y'       CRT002  1                       CRT002
+     C                     END                                            CRT002
+      *                                                                                     AR844310
+      **  Check if Stamp Tax (CER049) SAR is installed                                      AR844310
+      *                                                                                     AR844310
+     C                     CALL 'AOSARDR0'                                                  AR844310
+     C                     PARM *BLANKS   @RTCD                                             AR844310
+     C                     PARM '*VERIFY' @OPTN                                             AR844310
+     C                     PARM 'CER049'  @SAR                                              AR844310
+      *                                                                                     AR844310
+     C           @RTCD     IFNE *BLANKS                                                     AR844310
+     C                     MOVE '1'       *IN91                                             AR844310
+     C                     ELSE                                                             AR844310
+     C                     MOVE '0'       *IN91                                             AR844310
+     C                     ENDIF                                                            AR844310
+     C*
+     C/COPY WNCPYSRC,SD9341EC02
+     C** SET UP FORMAT INDICATORS
+     C*
+     C                     MOVE '1'       *IN02
+     C                     MOVE '0'       *IN11
+     C                     MOVE '0'       *IN53
+     C                     MOVE '0'       *IN13
+     C                     MOVE '0'       *IN14
+     C                     MOVE '0'       *IN15
+     C                     MOVE '0'       *IN16
+     C                     MOVE '0'       *IN17
+     C                     MOVE '0'       *IN18
+     C                     MOVE '0'       *IN19
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+     C                     MOVE '0'       *IN28
+     C                     MOVE '0'       *IN29
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN46
+     C                     MOVE '0'       *IN47
+     C                     MOVE '0'       *IN48
+     C                     MOVE '0'       *IN49
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C                     MOVE '0'       *IN52
+     C                     MOVE '0'       *IN55
+     C                     MOVE '0'       *IN56
+     C                     MOVE '0'       *IN57
+     C                     MOVE '0'       *IN60
+     C                     MOVE '0'       *IN90
+     C*
+     C** ACCESS ICD RETAIL (TABTBRE)
+     C*
+     C                     READ TABTBRE                  99
+     C*
+     C** ERROR IN TABTBRE
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVE 'TABTBRE' DBFILE
+     C                     OUT  LDA                        ***************
+     C                     MOVE '0'       *IN89            * DB ERROR 02 *
+     C                     EXSR DBSR                       ***************
+     C                     END                             - E1
+     C*
+     C** SETUP ICD FIELDS
+     C*
+     C** (If a module is not installed, screen fields are non-display
+     C** and protected)
+     C*
+     C                     MOVE CDTO      SCDTR1
+     C                     MOVE TCDTO     SCDTR
+     C***********CDTO      IFNE *BLANKS
+     C           ICDTO     IFEQ 'Y'
+     C                     MOVE '1'       *IN32
+     C                     END
+     C*
+     C                     MOVE CHOV      SCHOV
+     C                     MOVE CMDR      SCHOD1
+     C                     MOVE MDPF      SCHOD2
+     C                     MOVE TCHOV     STCHOV
+     C***********CHOV      IFNE *BLANKS
+     C           ICHOV     IFEQ 'Y'
+     C                     MOVE '1'       *IN31
+     C                     END
+     C*
+     C                     MOVE FXAC      SFXAC1
+     C                     MOVE TFXAC     SFXAC
+     C***********FXAC      IFNE *BLANKS
+     C           IFXAC     IFEQ 'Y'
+     C                     MOVE '1'       *IN33
+     C                     END
+     C*
+     C                     MOVE CNDS      SCNDS1
+     C                     MOVE TCNDS     SCNDS
+     C***********CNDS      IFNE *BLANKS
+     C           ICNDS     IFEQ 'Y'
+     C                     MOVE '1'       *IN34
+     C                     END
+     C*
+     C                     MOVE CDRI      SCDRI1
+     C                     MOVE TCDRI     SCDRI
+     C***********CDRI      IFNE *BLANKS
+     C           ICDRI     IFEQ 'Y'
+     C                     MOVE '1'       *IN35
+     C                     END
+     C*
+     C                     MOVE CMBL      SCMBL1
+     C                     MOVE TCMBL     SCMBL
+     C***********CMBL      IFNE *BLANKS
+     C           ICMBL     IFEQ 'Y'
+     C                     MOVE '1'       *IN36
+     C                     END
+     C*
+     C                     MOVE CINA      SCIAC1
+     C                     MOVE TCINA     SCIAC
+     C***********CINA      IFNE *BLANKS
+     C           ICINA     IFEQ 'Y'
+     C                     MOVE '1'       *IN37
+     C                     END
+     C*
+     C** If VAT Processing not installed, set on screen field
+     C** protect indicator
+     C*
+     C                     MOVE VATP      SVATP
+     C***********VATP      IFNE *BLANKS
+     C           IVATP     IFEQ 'Y'
+     C                     MOVE '1'       *IN38
+     C                     ELSE
+     C                     MOVE '1'       *IN90
+     C                     END
+     C*
+     C***********LNKA      IFNE *BLANKS
+     C           ILNKA     IFEQ 'Y'
+     C                     MOVE LNKA      SINTC
+     C                     MOVE '1'       *IN42
+     C                     END
+     C*
+     C***********TCAL      IFNE *BLANKS
+     C           ITCAL     IFEQ 'Y'
+     C                     MOVE TCAL      STCAL
+     C                     MOVE '1'       *IN43
+     C                     END
+     C*
+     C***********CMTR      IFNE *BLANKS
+     C           ICMTR     IFEQ 'Y'
+     C                     MOVE CMTR      SCMTR
+     C                     MOVE '1'       *IN44
+     C                     END
+     C*
+     C***********CDFC      IFNE *BLANKS
+     C           ICDFC     IFEQ 'Y'
+     C                     MOVE CDFC      SCADC
+     C                     MOVE '1'       *IN45
+     C                     END
+     C*
+     C***********TEGP      IFNE *BLANKS
+     C           ITEGP     IFEQ 'Y'
+     C                     MOVE TEGP      STEGP
+     C                     MOVE '1'       *IN39
+     C                     END
+     C*
+     C***********TAIA      IFNE *BLANKS
+     C           ITAIA     IFEQ 'Y'
+     C                     MOVE TAIA      STAIA
+     C                     MOVE '1'       *IN40
+     C                     END
+     C*
+     C           TURN      IFEQ 'Y'
+     C                     MOVE TTURN     STURN
+     C                     MOVE '1'       *IN55
+     C                     END
+     C*
+     C           STMC      IFEQ 'Y'
+     C                     MOVE TSTMC     SSTMC
+     C                     MOVE '1'       *IN56
+     C                     END
+     C*
+     C           IFACH     IFEQ 'Y'
+     C                     MOVE FACH      SFACH
+     C                     MOVE '1'       *IN57
+     C                     END
+     C*
+     C** If VAT Processing not active, the following tax fields must
+     C** default to N and are not displayed
+     C*
+     C           VATP      IFNE 'Y'
+     C                     MOVE 'N'       SCDTR
+     C                     MOVE 'N'       STCHOV
+     C                     MOVE 'N'       SFXAC
+     C                     MOVE 'N'       SCNDS
+     C                     MOVE 'N'       SCDRI
+     C                     MOVE 'N'       SCMBL
+     C                     MOVE 'N'       SCIAC
+     C                     END
+     C*
+     C** Interest Statements default
+     C*
+     C                     MOVE '1'       *IN41
+     C           ISTS      IFEQ *BLANKS
+     C                     MOVE '1'       SINTS
+     C                     ELSE
+     C                     MOVE ISTS      SINTS
+     C                     END
+     C           *IN91     IFEQ '0'                                                         AR844310
+     C                     MOVE CHODS     SCHODS                                            AR844310
+     C                     MOVE CDTOS     SCDTOS                                            AR844310
+     C                     MOVE FACOS     SFACOS                                            AR844310
+     C                     MOVE FACCS     SFACCS                                            AR844310
+     C                     MOVE NDSTS     SNDSTS                                            AR844310
+     C                     MOVE DRINS     SDRINS                                            AR844310
+     C                     MOVE CACBS     SCACBS                                            AR844310
+     C                     MOVE CHIAS     SCHIAS                                            AR844310
+     C                     ENDIF                                                            AR844310
+     C*                                                                   CRT001
+     C**  If Retail Teller System SAR (CRT001) is installed               CRT001
+     C**  or Retail Branch Access (CRT002) SAR is installed,              CRT002
+     C*                                                                   CRT001
+     C           *IN58     IFEQ '1'                                       CRT001
+     C                     MOVE PBKU      SPBKU                           CRT001
+     C                     END                                            CRT001
+     C*
+     C**  DETERMINE IF WINDOW REQUIRED (BGWDPR IN SDMMODPD)
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVE 'SDMMODPD'DBFILE           ***************
+     C                     MOVEL*BLANKS   DBKEY            **DB ERROR 03**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '0'       *IN89
+     C                     EXSR DBSR
+     C                     END
+     C*
+     C                     ENDSR                           **FIRST ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** DBSR subroutine for database error handling
+     C**
+     C**     Called by       FIRST, *PSSR
+     C**     Calls           -
+     C**
+     C           DBSR      BEGSR                           **DBSR BEGSR**
+     C*
+     C                     OPEN SD9341PM
+     C*
+     C                     WRITEHEADAU
+     C*
+     C                     WRITEERRAU
+     C*
+     C                     CLOSESD9341PM
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           **DBSR ENDSR**
+     C********************************************************************
+     C*
+     C*   *PSSR  --  DATABASE ERROR HANDLING ROUTINE
+     C*
+     C*  CALLED AUTOMATICALLY IF ANY ERROR ON FILE I/O OPERATION
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     SETON                     U7U8LR
+     C*
+     C** Produce error audit report
+     C*
+     C                     EXSR DBSR
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001

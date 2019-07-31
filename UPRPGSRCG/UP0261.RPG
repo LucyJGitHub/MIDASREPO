@@ -1,0 +1,595 @@
+      *****************************************************************
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UP Copy data from one library to another')
+      *****************************************************************
+      *                                                               *
+      *  Midas - UP Module                                            *
+      *                                                               *
+      *  UP0261   - Display objects not moved                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CPK025             Date 03Jul06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CUP015             Date 02Jul01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CUP008             Date 14Jun00               *
+      *                 CUP007             Date 21Mar00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CUP006             Date 18Nov99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CPK009  *CREATE    Date 13Sep99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CPK025 - MidasPlus 1.3 packaging.  Moved to global layer.    *
+      *  CUP015 - Move all command processing to CL pgm               *
+      *  CUP008 - For physical files use CRTDUPOBJ instead of CPYF so *
+      *           that source information is retained.                *
+      *  CUP007 - Enhancements to utility                             *
+      *           Coping with MSGF's; sundry error fixes              *
+      *  CUP006 - Enhancements to utility                             *
+      *           Coping with DATAQ's; message when no records left   *
+      *           in file                                             *
+      *  CPK009 - DBA R3 packaging: introduction of new utility       *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FUP0261DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE FMT1
+     FUPNOTFPDUF  E           K        DISK
+      *
+      ** Array to create QCMDEXC commands
+     E*****************   CMD     1  11 80                                                    CUP006
+     E*****************   CMD     1  12 80                                             CUP006 CUP007
+     E*****************   CMD     1  13 80                                             CUP007 CUP015
+      *
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *****************                                                                       CUP015
+      **Data*structures to build up QCMDEXC commands                                          CUP015
+     I************DS***                                                                       CUP015
+     I*****************                       1 128 CPYF                                      CUP015
+     I*****************                       1  71 CPYF1                                     CUP015
+     I*****************                      15  35 QUAL1                                     CUP015
+     I*****************                      45  65 QUAL2                                     CUP015
+     I*****************                      68 128 CPYF2                                     CUP015
+     I************DS***                                                                       CUP015
+     I*****************                       1 183 CRTOBJ                                    CUP015
+     I*****************                       1  58 CRTOB1                                    CUP015
+     I*****************                      59 120 CRTOB2                                    CUP015
+     I*****************                     121 183 CRTOB3                                    CUP015
+     I*****************                      16  25 SRCMBR                                    CUP015
+     I***************************************36  55 QUAL3                              CUP007 CUP015
+     I*****************                      36  56 QUAL3                              CUP007 CUP015
+     I*****************                      64  73 PLIB                                      CUP015
+     I************DS***                                                                       CUP015
+     I*****************                       1 103 DUPOBJ                                    CUP015
+     I*****************                       1  71 DUPOB1                                    CUP015
+     I*****************                      72 103 DUPOB2                                    CUP015
+     I*****************                      15  24 DOBJ                                      CUP015
+     I*****************                      35  44 FLIB                                      CUP015
+     I*****************                      55  61 OBJTYP                                    CUP015
+     I*****************                      78  87 TLIB                                      CUP015
+     I************DS***                                                                       CUP015
+     I*****************                       1  34 DSPPFM                                    CUP015
+     I*****************                      13  33 QUAL4                                     CUP015
+     I************DS***                                                                       CUP015
+     I*****************                       1  33 DSPFD                                     CUP015
+     I*****************                      12  32 QUAL5                                     CUP015
+     I************DS***                                                                       CUP015
+     I*****************                       1  54 DSPDTA                                    CUP015
+     I*****************                      18  53 QUAL6                                     CUP015
+     I************DS***                                                                       CUP015
+     I*****************                       1  80 DSPOBJ                                    CUP015
+     I*****************                      13  33 QUAL7                                     CUP015
+     I*****************                      44  50 DOBJTP                                    CUP015
+     I************DS***                                                                CUP006 CUP015
+     I*****************                       1  66 MOVOBJ                             CUP006 CUP015
+     I*****************                      12  32 QUAL8                              CUP006 CUP015
+     I*****************                      56  65 MOVLIB                             CUP006 CUP015
+     I************DS***                                                                CUP007 CUP015
+     I*****************                       1  45 DSPMSG                             CUP007 CUP015
+     I*****************                      14  34 QUAL9                              CUP007 CUP015
+      *
+      * DS to convert fields to display sizes
+     I            DS
+     I                                        1  50 ODOBTX
+     I                                        1  47 XXTEXT
+     I                                       51  60 ODOBAT
+     I                                       51  56 XXTYPE
+      *
+      * DS to check for duplicated entries
+     I            DS
+     I                                        1  10 ODOBNM
+     I                                       11  18 ODOBTP
+     I                                        1  18 DUPNAM
+     C           *ENTRY    PLIST
+     C                     PARM           TOLIB  10
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      * Clear spurious and duplicate entries from UPNOTFPD                                    CUP007
+     C                     EXSR INIT                                                          CUP007
+     C           *IN03     DOWEQ*OFF
+      *
+      * Build subfile
+     C                     CLEARCOMPNM
+     C                     MOVE 'N'       NOREC   1                                           CUP006
+     C                     EXSR BUILD
+     C                     MOVE *DATE     CURDAT 60
+      *
+      * If no records, send blank format, otherwise send subfile                              CUP006
+     C           NOREC     IFEQ 'N'                                                           CUP006
+     C                     EXFMTNORCD                                                         CUP006
+     C                     ELSE                                                               CUP006
+      *
+     C                     WRITEFMT0
+     C                     EXFMTFMT2
+     C                     ENDIF                                                              CUP006
+      *
+      * If F3 pressed, exit program
+     C           *IN03     IFEQ *ON
+     C                     ELSE
+      *
+      * If F5 pressed, rebuild subfile
+     C           *IN05     IFEQ *ON
+     C           *LOVAL    SETLLUPNOTFPD
+      *
+     C                     ELSE
+      *
+      * If subset and/or reposition selected, rebuild from requested
+      * position/with requested subset.  Indicator 01 is set on if
+      * any field in the format has changed, so it caters for the user
+      * changing the selection details and pressing enter again.
+      *   if... (
+     C           XXPOS     IFNE *BLANK
+     C           *IN01     ANDEQ*ON
+      *         )
+      *   or... (
+     C           XXSUB     ORNE *BLANK
+     C           *IN01     ANDEQ*ON
+      *         )
+      *
+     C           XXPOS     SETLLUPNOTFPD
+      *
+     C                     ELSE
+     C           NOREC     IFEQ 'Y'                                                           CUP006
+     C                     READCFMT1                     21
+      *
+      * If *IN21 is on, no selection has been made - rebuild
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOVAL    SETLLUPNOTFPD
+     C                     ELSE
+      *
+      * Retrieve selected line from array and process selection
+      *       D = Delete object from file
+      *       O = Display object description
+      *       V = View contents
+      *       X = Perform action
+      *
+     C           *IN21     DOWEQ*OFF
+      *
+      * Selection D - Remove object from DSPOBJD outfile
+     C           XXOPT     IFEQ 'D'
+     C           FKEY      KLIST
+     C                     KFLD           ODOBNM
+     C                     KFLD           ODOBTP
+     C           FKEY      SETLLUPNOTFPD
+     C           FKEY      DELETUPNOTFPD             70
+      *
+     C                     ENDIF
+      *
+      *  All other commands are handled by CL                                                 CUP015
+     C           XXOPT     IFEQ 'O'                                                           CUP015
+     C           XXOPT     OREQ 'V'                                                           CUP015
+     C           XXOPT     OREQ 'X'                                                           CUP015
+     C                     CALL 'UPC0261'                                                     CUP015
+     C                     PARM           XXOPT                                               CUP015
+     C                     PARM           ODOBNM                                              CUP015
+     C                     PARM           ODLBNM                                              CUP015
+     C                     PARM           TOLIB                                               CUP015
+     C                     PARM           ODOBAT                                              CUP015
+     C                     PARM           ODOBTP                                              CUP015
+     C                     PARM           ODSRCL                                              CUP015
+     C                     PARM           ODSRCF                                              CUP015
+     C                     PARM           RTNCOD                                              CUP015
+      *                                                                                       CUP015
+      ***********                                                                             CUP015
+      ********V*= View contents                                                               CUP015
+     C***********XXOPT     IFEQ 'V'                                                           CUP015
+     C***********          EXSR VIEW                                                          CUP015
+     C***********          ENDIF                                                              CUP015
+      ***********                                                                             CUP015
+      ********O*= Display object description                                                  CUP015
+     C***********XXOPT     IFEQ 'O'                                                           CUP015
+     C***********          EXSR OBJDES                                                        CUP015
+     C***********          ENDIF                                                              CUP015
+      *
+      * Selection X - Process request
+     C           XXOPT     IFEQ 'X'
+     C***********          EXSR PROCES                                                        CUP015
+      *
+      * If object has been created, remove entry from UPNOTFPD
+     C           RTNCOD    IFEQ 'Exist'
+     C           FKEY      SETLLUPNOTFPD
+     C           FKEY      DELETUPNOTFPD             70
+     C                     CLEARRTNCOD                                                        CUP007
+     C                     ENDIF
+      *
+     C                     ENDIF                                                              CUP015
+     C                     ENDIF
+      *
+     C                     READCFMT1                     21
+      *                                                                                       CUP015
+      * If previous option ended in error, force rebuild of subfile                           CUP015
+     C           RTNCOD    IFEQ 'Error'                                                       CUP015
+     C                     MOVE *ON       *IN21                                               CUP015
+     C                     CLEARRTNCOD                                                        CUP015
+     C                     ENDIF                                                              CUP015
+     C                     ENDDO
+      *
+      *  Reset file
+     C           XXPOS     SETLLUPNOTFPD
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF                                                              CUP006
+      *
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *                                                                                       CUP007
+      ********************************************************************                    CUP007
+      *   INIT Subroutine - remove duplicate & spurious entries from     *                    CUP007
+      *                     UPNOTFPD                                     *                    CUP007
+      ********************************************************************                    CUP007
+      *                                                                                       CUP007
+      * The INCREL parameter in CPYF can only be used on one field; this                      CUP007
+      * means that the file UPNOTFPD may contain duplicate records where                      CUP007
+      * objects of the same name but different types have been copied in.                     CUP007
+     C           INIT      BEGSR                                                              CUP007
+      *                                                                                       CUP007
+     C                     READ UPNOTFPD                 50                                   CUP007
+      *                                                                                       CUP007
+     C           *IN50     DOWEQ*OFF                                                          CUP007
+      *                                                                                       CUP007
+      * Check whether object does actually exist in 'to lib'                                  CUP007
+     C                     CALL 'UTCHKOBJ'                                                    CUP007
+     C                     PARM           RTNCOD 10                                           CUP007
+     C                     PARM           ODOBNM                                              CUP007
+     C                     PARM           TOLIB                                               CUP007
+     C                     PARM           ODOBTP                                              CUP007
+     C                     PARM           CHKMBR 10                                           CUP007
+      *                                                                                       CUP007
+      * If object is in 'to lib', remove entry from UPNOTFPD & get                            CUP007
+      * next record                                                                           CUP007
+     C           RTNCOD    IFEQ 'Exist'                                                       CUP007
+     C                     DELETUPNOTFPD                                                      CUP007
+     C                     ELSE                                                               CUP007
+      *                                                                                       CUP007
+      * Check whether object name has been duplicated                                         CUP007
+     C           DUPNAM    IFEQ COMPNM                                                        CUP007
+     C                     DELETUPNOTFPD                                                      CUP007
+     C                     ENDIF                                                              CUP007
+     C                     ENDIF                                                              CUP007
+      *                                                                                       CUP007
+      * Save name and type for duplicate checking                                             CUP007
+     C                     MOVELDUPNAM    COMPNM 20                                           CUP007
+     C                     READ UPNOTFPD                 50                                   CUP007
+     C                     ENDDO                                                              CUP007
+      *                                                                                       CUP007
+      * Reset file                                                                            CUP007
+     C           *LOVAL    SETLLUPNOTFPD                                                      CUP007
+     C                     MOVE *OFF      *IN50                                               CUP007
+      *                                                                                       CUP007
+     C                     ENDSR                                                              CUP007
+      ********************************************************************
+      *   BUILD Subroutine - Build subfile                               *
+      ********************************************************************
+      *
+      * IBM CPYF when used with INCREL parameter treats the comparand as a
+      * wild card; thus if trying to copy records including a string of
+      * 'CB', all records with a string beginning with CB are copied.
+      * This leads to spurious entries and duplicated entries.
+     C           BUILD     BEGSR
+      *
+      * Initialise
+     C           *IN50     DOUEQ*ON
+     C                     MOVE *BLANKS   XXOPT
+     C                     Z-ADD0         J       30
+     C                     Z-ADD1         RRN     30
+      *
+     C                     MOVE *ON       *IN30
+     C                     WRITEFMT2
+     C                     MOVE *OFF      *IN30
+      *
+     C                     READ UPNOTFPD                 50
+      *
+      * Build subfile
+     C           *IN50     DOWEQ*OFF
+     C                     MOVE 'Y'       NOREC                                               CUP006
+      *                                                                                       CUP007
+      **Check*whether*object*does*actually exist in 'to lib' (to cope                         CUP007
+      **with*error*in*IBM*CPYF*command)*                                                      CUP007
+     C***********          CALL 'UTCHKOBJ'                                                    CUP007
+     C***********          PARM           RTNCOD 10                                           CUP007
+     C***********          PARM           ODOBNM                                              CUP007
+     C***********          PARM           TOLIB                                               CUP007
+     C***********          PARM           ODOBTP                                              CUP007
+     C***********          PARM           CHKMBR 10                                           CUP007
+      **********************************                                                      CUP007
+      **If*object*is*in*'to*lib',*remove entry from UPNOTFQT & get                            CUP007
+      **next*record*********************                                                      CUP007
+     C********** RTNCOD    IFEQ 'Exist'                                                       CUP007
+     C********** FKEY      SETLLUPNOTFPD                                               CUP006 CUP007
+     C********** FKEY      DELETUPNOTFPD             70                                CUP006 CUP007
+     C***********          READ UPNOTFPD                 50                                   CUP006
+     C***********          ENDIF                                                              CUP006
+     C***********          DELETUPNOTFPD                                               CUP006 CUP007
+     C***********          ELSE                                                        CUP006 CUP007
+      **********************************                                                      CUP007
+      **Check*whether*object*name*has*been*duplicated*(to*cope***********************         CUP007
+      **with*error*in*IBM*CPYF*command)**********************************************         CUP007
+     C********** DUPNAM    DOWEQCOMPNM                                                 CUP006 CUP007
+     C********** *IN50     ANDEQ*OFF                                                   CUP006 CUP007
+     C********** FKEY      SETLLUPNOTFPD                                               CUP006 CUP007
+     C********** FKEY      DELETUPNOTFPD             70                                CUP006 CUP007
+     C**********           READ UPNOTFPD                 50                                   CUP006
+     C**********           READ UPNOTFPD                 50                                   CUP006
+     C**********           ENDDO                                                              CUP006
+     C********** DUPNAM    IFEQ COMPNM                                                 CUP006 CUP007
+     C**********           DELETUPNOTFPD                                               CUP006 CUP007
+     C**********           ELSE                                                        CUP006 CUP007
+      *
+      * Create meaningful 'type' descriptions for those instances where
+      * ODOBAT is blank
+     C           ODOBTP    IFEQ '*CMD'
+     C           ODOBTP    OREQ '*PNLGRP'
+     C           ODOBTP    OREQ '*DTAARA'
+     C           ODOBTP    OREQ '*SRVPGM'
+     C           ODOBTP    OREQ '*BNDDIR'
+     C           ODOBTP    OREQ '*TBL'
+     C           ODOBTP    OREQ '*USRSPC'
+     C           ODOBTP    OREQ '*DTAQ'                                                       CUP006
+     C           ODOBTP    OREQ '*MSGF'                                                       CUP007
+     C           7         SUBSTODOBTP:2  ODOBAT
+     C                     ENDIF
+      *                                                                                       CUP015
+      * A program and a module with the same name both have an attribute                      CUP015
+      * of RPGLE or CLLE; change the program's attribute to PGM for clarity.                  CUP015
+     C           ODOBTP    IFEQ '*PGM'                                                        CUP015
+     C           ODOBAT    ANDEQ'RPGLE'                                                       CUP015
+     C           ODOBTP    OREQ '*PGM'                                                        CUP015
+     C           ODOBAT    ANDEQ'CLLE'                                                        CUP015
+     C                     MOVEL'PGM  '   XXTYPE                                              CUP015
+     C                     ENDIF                                                              CUP015
+      *
+      * If subset requested only select matching records, otherwise
+      * select all.
+     C           XXSUB     IFEQ *BLANK
+     C           XXSUB     OREQ ODOBAT
+     C                     ADD  1         J
+      *
+     C                     WRITEFMT1
+     C                     MOVE *OFF      *IN91
+     C                     ADD  1         RRN
+     C                     ENDIF
+     C******************   ENDIF                                                       CUP006 CUP007
+     C******************   ENDIF                                                       CUP006 CUP007
+      ******************                                                                      CUP007
+      **Save*name*and*type*for*duplicate*checking*************************************        CUP007
+     C******************   MOVELDUPNAM    COMPNM 20                                           CUP007
+     C                     READ UPNOTFPD                 50
+     C                     ENDDO
+      *
+      * If subset requested and no matches found, rebuild
+     C           XXSUB     IFNE *BLANK
+     C           J         ANDEQ0
+     C           *LOVAL    SETLLUPNOTFPD
+     C                     MOVE *BLANK    XXSUB
+     C                     MOVE *OFF      *IN50
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      * If all records in subset found, reset subset parameter
+     C           *IN50     IFEQ *ON
+     C                     MOVE *BLANK    XXSUB
+     C                     MOVE *BLANK    XXPOS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      *   PROCES Subroutine - Process request                            *
+      ********************************************************************
+      *
+     C***********PROCES    BEGSR                                                              CUP015
+      ***********                                                                             CUP015
+     C***********ODOBAT    IFEQ 'PF'                                                          CUP015
+     C***********          MOVELCMD,1     CPYF1                                               CUP008
+     C***********          MOVELCMD,2     CPYF2                                               CUP008
+     C***********          MOVEL'/'       SLASH   1                                           CUP008
+     C***********ODLBNM    CAT  SLASH:0   QUAL1                                               CUP008
+     C***********QUAL1     CAT  ODOBNM:0  QUAL1                                               CUP008
+     C***********TOLIB     CAT  SLASH:0   QUAL2                                               CUP008
+     C***********QUAL2     CAT  ODOBNM:0  QUAL2                                               CUP008
+     C***********          Z-ADD128       MSGLEN 155                                          CUP008
+     C***********          CALL 'QCMDEXC'              9393                                   CUP008
+     C***********          PARM           CPYF                                                CUP008
+     C***********          PARM           MSGLEN                                              CUP008
+     C***********          MOVELCMD,6     DUPOB1                                       CUP008 CUP015
+     C***********          MOVELCMD,7     DUPOB2                                       CUP008 CUP015
+     C***********          MOVELODOBNM    DOBJ                                         CUP008 CUP015
+     C***********          MOVELODLBNM    FLIB                                         CUP008 CUP015
+     C***********          MOVELODOBTP    OBJTYP                                       CUP008 CUP015
+     C***********          MOVELTOLIB     TLIB                                         CUP008 CUP015
+     C***********          Z-ADD103       MSGLEN 155                                   CUP008 CUP015
+     C***********          CALL 'QCMDEXC'              9393                            CUP008 CUP015
+     C***********          PARM           DUPOBJ                                       CUP008 CUP015
+     C***********          PARM           MSGLEN                                       CUP008 CUP015
+     C***********          ELSE                                                               CUP015
+      ***********                                                                             CUP015
+     C***********ODOBAT    IFEQ 'LF'                                                          CUP015
+     C***********          MOVELCMD,3     CRTOB1                                              CUP015
+     C***********          MOVELCMD,4     CRTOB2                                              CUP015
+     C***********          MOVELCMD,5     CRTOB3                                              CUP015
+     C***********          MOVELODSRCM    SRCMBR                                              CUP015
+     C***********          MOVEL'/'       SLASH                                               CUP015
+     C***********ODSRCL    CAT  SLASH:0   QUAL3                                               CUP015
+     C***********QUAL3     CAT  ODSRCF:0  QUAL3                                               CUP015
+     C***********          MOVELTOLIB     PLIB                                                CUP015
+     C***********          Z-ADD182       MSGLEN 155                                          CUP015
+     C***********          CALL 'QCMDEXC'              9393                                   CUP015
+     C***********          PARM           CRTOBJ                                              CUP015
+     C***********          PARM           MSGLEN                                              CUP015
+     C***********          ELSE                                                               CUP015
+      ***********                                                                             CUP015
+     C***********ODOBAT    IFEQ 'DTAQ'                                                 CUP006 CUP015
+     C***********          MOVELCMD,12    MOVOBJ                                       CUP006 CUP015
+     C***********          MOVEL'/'       SLASH   1                                    CUP006 CUP015
+     C***********ODLBNM    CAT  SLASH:0   QUAL8                                        CUP006 CUP015
+     C***********QUAL8     CAT  ODOBNM:0  QUAL8                                        CUP006 CUP015
+     C***********          MOVELTOLIB     MOVLIB                                       CUP006 CUP015
+     C***********          Z-ADD66        MSGLEN 155                                   CUP006 CUP015
+     C***********          CALL 'QCMDEXC'              9393                            CUP006 CUP015
+     C***********          PARM           MOVOBJ                                       CUP006 CUP015
+     C***********          PARM           MSGLEN                                       CUP006 CUP015
+     C***********          ELSE                                                        CUP006 CUP015
+      ***********                                                                             CUP015
+     C***********          MOVELCMD,6     DUPOB1                                              CUP015
+     C***********          MOVELCMD,7     DUPOB2                                              CUP015
+     C***********          MOVELODOBNM    DOBJ                                                CUP015
+     C***********          MOVELODLBNM    FLIB                                                CUP015
+     C***********          MOVELODOBTP    OBJTYP                                              CUP015
+     C***********          MOVELTOLIB     TLIB                                                CUP015
+     C***********          Z-ADD103       MSGLEN 155                                          CUP015
+     C***********          CALL 'QCMDEXC'              9393                                   CUP015
+     C***********          PARM           DUPOBJ                                              CUP015
+     C***********          PARM           MSGLEN                                              CUP015
+     C***********          ENDIF                                                              CUP015
+     C***********          ENDIF                                                              CUP015
+     C***********          ENDIF                                                       CUP006 CUP015
+      ***********                                                                             CUP015
+      **Check*object has been created                                                         CUP015
+     C***********          CALL 'UTCHKOBJ'                                                    CUP015
+     C***********          PARM           RTNCOD 10                                           CUP015
+     C***********          PARM           ODOBNM                                              CUP015
+     C***********          PARM           TOLIB                                               CUP015
+     C***********          PARM           ODOBTP                                              CUP015
+     C***********          PARM           CHKMBR 10                                           CUP015
+      ***********                                                                             CUP015
+     C***********          ENDSR                                                              CUP015
+      *
+      ********************************************************************
+      *   VIEW Subroutine - View contents of PF or DTAARA, DSPFD for LF  *
+      *                   - DSPMSGF for MSGF                             *                    CUP007
+      ********************************************************************
+      *
+     C***********VIEW      BEGSR                                                              CUP015
+      ***********                                                                             CUP015
+     C***********ODOBAT    IFEQ 'PF'                                                          CUP015
+     C***********          MOVELCMD,8     DSPPFM                                              CUP015
+     C***********          MOVEL'/'       SLASH   1                                           CUP015
+     C***********ODLBNM    CAT  SLASH:0   QUAL4                                               CUP015
+     C***********QUAL4     CAT  ODOBNM:0  QUAL4                                               CUP015
+     C***********          Z-ADD34        MSGLEN 155                                          CUP015
+     C***********          CALL 'QCMDEXC'              9393                                   CUP015
+     C***********          PARM           DSPPFM                                              CUP015
+     C***********          PARM           MSGLEN                                              CUP015
+     C***********          ENDIF                                                              CUP015
+      ***********                                                                             CUP015
+     C***********ODOBAT    IFEQ 'LF'                                                          CUP015
+     C***********          MOVELCMD,9     DSPFD                                               CUP015
+     C***********          MOVEL'/'       SLASH   1                                           CUP015
+     C***********ODLBNM    CAT  SLASH:0   QUAL5                                               CUP015
+     C***********QUAL5     CAT  ODOBNM:0  QUAL5                                               CUP015
+     C***********          Z-ADD33        MSGLEN 155                                          CUP015
+     C***********          CALL 'QCMDEXC'              9393                                   CUP015
+     C***********          PARM           DSPFD                                               CUP015
+     C***********          PARM           MSGLEN                                              CUP015
+     C***********          ENDIF                                                              CUP015
+      ***********                                                                             CUP015
+     C***********ODOBAT    IFEQ 'DTAARA'                                                      CUP015
+     C***********          MOVELCMD,10    DSPDTA                                              CUP015
+     C***********          MOVEL'/'       SLASH                                               CUP015
+     C***********ODLBNM    CAT  SLASH:0   QUAL6                                               CUP015
+     C***********QUAL6     CAT  ODOBNM:0  QUAL6                                               CUP015
+     C***********          Z-ADD54        MSGLEN 155                                          CUP015
+     C***********          CALL 'QCMDEXC'              9393                                   CUP015
+     C***********          PARM           DSPDTA                                              CUP015
+     C***********          PARM           MSGLEN                                              CUP015
+     C***********          ENDIF                                                              CUP015
+      ***********                                                                             CUP015
+     C***********ODOBAT    IFEQ 'MSGF'                                                 CUP007 CUP015
+     C***********          MOVELCMD,13    DSPMSG                                       CUP007 CUP015
+     C***********          MOVEL'/'       SLASH                                        CUP007 CUP015
+     C***********ODLBNM    CAT  SLASH:0   QUAL9                                        CUP007 CUP015
+     C***********QUAL9     CAT  ODOBNM:0  QUAL9                                        CUP007 CUP015
+     C***********          Z-ADD45        MSGLEN 155                                   CUP007 CUP015
+     C***********          CALL 'QCMDEXC'              9393                            CUP007 CUP015
+     C***********          PARM           DSPMSG                                       CUP007 CUP015
+     C***********          PARM           MSGLEN                                       CUP007 CUP015
+     C***********          ENDIF                                                       CUP007 CUP015
+      ***********                                                                      CUP007 CUP015
+     C***********          ENDSR                                                              CUP015
+      *
+      ********************************************************************
+      *   OBJDES Subroutine - Display object description                 *
+      ********************************************************************
+      *
+     C***********OBJDES    BEGSR                                                              CUP015
+      ***********                                                                             CUP015
+     C***********          MOVELCMD,11    DSPOBJ                                              CUP015
+     C***********          MOVEL'/'       SLASH   1                                           CUP015
+     C***********ODLBNM    CAT  SLASH:0   QUAL7                                               CUP015
+     C***********QUAL7     CAT  ODOBNM:0  QUAL7                                               CUP015
+     C***********          MOVELODOBTP    DOBJTP                                              CUP015
+     C***********          Z-ADD75        MSGLEN 155                                          CUP015
+     C***********          CALL 'QCMDEXC'              9393                                   CUP015
+     C***********          PARM           DSPOBJ                                              CUP015
+     C***********          PARM           MSGLEN                                              CUP015
+      ***********                                                                             CUP015
+     C***********          ENDSR                                                              CUP015
+      *
+      ********************************************************************
+      *
+     C*MD*-*build*up QCMDEXC parameters                                                       CUP015
+CPYF F*ROMFILE(***                  ) TOFILE(                     )                           CUP015
+FROMMB*R(*ALL)*TOMBR(*FROMMBR) MBROPT(*REPLACE) CRTFILE(*YES)                                 CUP015
+?CRTOB*J*SRCMBR(**        ) SRCFILE(                     )                                    CUP015
+PLIB( **********)*OWNER(*USER) AUTL(*NONE) NOCRT(N) KEEPSRC(N)                                CUP015
+MLSYS(*N)*SUBM(N)*                                                                            CUP015
+CRTDUP*OBJ*OBJ(***       ) FROMLIB(          ) OBJTYPE(       )                               CUP015
+TOLIB(***********) NEWOBJ(*OBJ)                                                               CUP015
+DSPPFM**FILE(*****                )                                                           CUP015
+DSPFD *FILE(******               )                                                            CUP015
+DSPDTA*ARA*DTAARA(                                    )                                       CUP015
+DSPOBJ*D*OBJ(*****                ) OBJTYPE(       ) DETAIL(*BASIC)                           CUP015
+MOVOBJ**OBJ(******               ) OBJTYPE(*DTAQ) TOLIB(          )                    CUP006 CUP015
+DSPMSG*F*MSGF(****                 ) OUTPUT(*)                                         CUP007 CUP015
+**  CPY@
+(c) Finastra International Limited 2001

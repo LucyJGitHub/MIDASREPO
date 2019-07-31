@@ -1,0 +1,894 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Display a plane or layout.')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                  *
+     F*                                                               *
+     F*  CG8900  - - - - Display Layout Window                        *
+     F*                                                               *
+     F*  Function:   - - This program displays layout file CGWPDISP.  *
+     F*                                                               *
+     F*  Called By:  - - Various programs (as required).              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01522             Date 01Jan95               *
+      *                                    Date ddmmmyy               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  S01522 - User Defined Correspondent                          *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*  03 -- F3 (Exit).                                             *
+     F*  05 -- F5 (Home).                                             *
+     F*  06 -- F6 (Request action prompt).                            *
+     F*  12 -- F12 (Previous).                                        *
+     F*  15 -- F15 (Home).                                            *
+     F*  16 -- F16 (Reposition).                                      *
+     F*  19 -- F19 (Window to the left).                              *
+     F*  20 -- F20 (Window to the right).                             *
+     F*  25 -- Display SFLEND in message subfile.                     *
+     F*  29 -- Valid command key pressed.                             *
+     F*  80 -- Clear subfile.                                         *
+     F*  81 -- Display subfile control record.                        *
+     F*  82 -- Display subfile record.                                *
+     F*  83 -- EOF reached.                                           *
+     F*  90 -- Error detected.                                        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Subroutine usage                                             *
+     F*  ~~~~~~~~~~~~~~~~                                             *
+     F*  SRIZSF -- Initialise subfile.                                *
+     F*  SRLDSF -- Load subfile.                                      *
+     F*  SREXFM -- Display screen.                                    *
+     F*  SRCPOS -- Calculate the cursor position.                     *
+     F*  SRHOME -- Reposition display to row 1, column 1.             *
+     F*  SRCRSR -- Reposition display to cursor location.             *
+     F*  SRLEFT -- Move the display to the left.                      *
+     F*  SRRGHT -- Move the display to the right.                     *
+     F*  SRTEXT -- Retrieve text for the command keys.                *
+     F*  SRSNMS -- Send a message to the program's queue.             *
+     F*  SREXPG -- Program exit processing.                           *
+     F*  SRINIT -- Provide initialisation and definitions.            *
+     F*                                                               *
+     F*  Copied in routines:                                          *
+     F*                                                               *
+     F*  *PSSR  -- Program error routine.                             *
+     F*  SRFILE -- File error routine.                                *
+     F*  SRERR  -- Error reporting routine.                           *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE
+     F*-------------------------------------------------------------------
+     F* Copied-in file definitions:
+     F*
+     F/COPY WNCPYSRC,CG8900FPG
+     F*===================================================================
+     FCG8900DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE #SFLRCD
+     F                                              KINFDS INFODS
+     F                                              KINFSR SRFILE
+     F* Window display file
+     F*-------------------------------------------------------------------
+     FCGWPDISPIF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR SRFILE
+     F* Layout data file
+     F*-------------------------------------------------------------------
+     E/EJECT
+     E*-------------------------------------------------------------------
+     E* Error processing array:
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E                    CPY@    1   1 80               Copyright
+     E                    DTA       256  1               Data characters.
+     E                    INP      2000256               Incoming data.
+     E*
+     E* Copied-in array definitions:
+     E*
+     E/COPY WNCPYSRC,CG8900EPG
+     E*
+     E*-------------------------------------------------------------------
+     I/EJECT
+     I*-------------------------------------------------------------------
+     I/COPY WNCPYSRC,CG8900IPG
+     I*
+     I* Copied-in data structures
+     I*
+     I*...................................................................
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I* Error processing data structures
+     I*
+     I*...................................................................
+     IBIGLDA    E DSCGLDA
+     I*
+     I* Local data area
+     I*
+     I              #@CROW                          ROW
+     I              #@CCOL                          COL
+     I*
+     I*...................................................................
+     IRUNDAT    E DSRUNDAT
+     I*
+     I* RUNDAT data area
+     I*
+     I*...................................................................
+     IINFODS    E DSY2I#DSP
+     I*
+     I* Display file information data structure
+     I*
+     I*...................................................................
+     IINFDS1    E DSY2I1DSP
+     I*
+     I* Data file information data structure
+     I*
+     I*...................................................................
+     I* Displayed line characters:
+     I*
+     IDATADS      DS
+     I                                        1 256 DTA
+     I*...................................................................
+     I* Job date and time:
+     I*
+     IJBDTTM      DS
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     I*...................................................................
+     I* Message translation fields:
+     I*
+     IDSMTR       DS
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P0RFR   1
+     C*
+     C* Initialise:
+     C                     EXSR SRINIT
+     C*
+     C* Do until not a positioning request:
+     C*
+     C           *IN15     DOUEQ*OFF
+     C           *IN16     ANDEQ*OFF
+     C           *IN19     ANDEQ*OFF
+     C           *IN20     ANDEQ*OFF
+     C*
+     C* Display screen:
+     C                     EXSR SREXFM
+     C*
+     C           *IN15     CASEQ*ON       SRHOME           Home
+     C           *IN16     CASEQ*ON       SRCRSR           Cursor position
+     C           *IN19     CASEQ*ON       SRLEFT           Left
+     C           *IN20     CASEQ*ON       SRRGHT           Right
+     C                     ENDCS
+     C*
+     C                     ENDDO
+     C*
+     C* Determine the cursor position:
+     C                     EXSR SRCPOS
+     C*
+     C* Close the file:
+     C                     CLOSECGWPDISP
+     C                     MOVE 'N'       W#OPEN
+     C*
+     C* Exit the program:
+     C                     EXSR SREXPG
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREXFM displays the screen.                        **
+     C********************************************************************
+     C           SREXFM    BEGSR                           * S R E X F M *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREXFM'  @STK,Q
+     C*
+     C* Update the screen time and the job time:
+     C*
+     C                     TIME           ##TME
+     C                     Z-ADD##TME     ##JTM
+     C*
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT
+     C                     EXFMT#SFLCTL
+     C*
+     C* Return indicators 01..24 (the command-key indicators):
+     C*
+     C                     MOVEA*IN,1     #@CMDK
+     C*
+     C           EXEXFM    TAG                             <<<=== EXEXFM
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCPOS determines the cursor's position.           **
+     C********************************************************************
+     C           SRCPOS    BEGSR                           * S R G P O S *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCPOS'  @STK,Q
+     C* Clear values:
+     C                     Z-ADD*ZERO     #@TROW
+     C                     Z-ADD*ZERO     #@TCOL
+     C*
+     C* Retrieve the position in absolute terms
+     C*  (that is, the physical display values):
+     C*
+     C           @#RWCL    DIV  256       ##ROW   30
+     C                     MVR            ##COL   30
+     C*
+     C* If over the subfile area, get the position in subfile terms:
+     C*
+     C           ##ROW     IFGE 2
+     C           ##ROW     ANDLE21
+     C           ##ROW     ADD  @#SFRC    #@TROW
+     C                     ADD  ROW       #@TROW
+     C                     SUB  3         #@TROW
+     C           ##COL     ADD  COL       #@TCOL
+     C                     SUB  2         #@TCOL
+     C                     ENDIF
+     C*
+     C           EXCPOS    TAG                             <<<=== EXCPOS
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRHOME handles F15                                 **
+     C**   (reposition the display to the Home position).               **
+     C********************************************************************
+     C           SRHOME    BEGSR                           * S R H O M E *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRHOME'  @STK,Q
+     C*
+     C* Set positions:
+     C                     Z-ADD1         ROW
+     C                     Z-ADD1         COL
+     C                     Z-ADD*ZERO     #C
+     C*
+     C* Initialise subfile:
+     C                     EXSR SRIZSF
+     C*
+     C* Load the subfile:
+     C                     EXSR SRLDSF
+     C*
+     C           EXHOME    TAG                             <<<=== EXHOME
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCRSR handles F16                                 **
+     C**   (reposition the subfile to the current cursor position).     **
+     C********************************************************************
+     C           SRCRSR    BEGSR                           * S R C R S R *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCRSR'  @STK,Q
+     C*
+     C* Get cursor position:
+     C                     EXSR SRCPOS
+     C*
+     C* If valid, set the positions:
+     C*
+     C           #@TROW    IFNE *ZERO
+     C           #@TCOL    ANDNE*ZERO
+     C                     Z-ADD#@TROW    ROW
+     C                     Z-ADD#@TCOL    COL
+     C*
+     C* Clear the subfile:
+     C                     EXSR SRIZSF
+     C*
+     C* Initialise the array start position:
+     C*
+     C           ROW       SUB  1         #C
+     C*
+     C* Load the subfile:
+     C                     EXSR SRLDSF
+     C                     ENDIF
+     C*
+     C           EXCRSR    TAG                             <<<=== EXCRSR
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRLEFT handles F19                                 **
+     C**   (reposition the display to the left).                        **
+     C********************************************************************
+     C           SRLEFT    BEGSR                           * S R L E F T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRLEFT'  @STK,Q
+     C*
+     C                     SUB  #WIDTH    COL
+     C           COL       IFLT 1
+     C                     Z-ADD1         COL
+     C                     ENDIF
+     C           #FIRST    SUB  1         #C
+     C*
+     C* Initialise subfile:
+     C                     EXSR SRIZSF
+     C*
+     C* Load the subfile:
+     C                     EXSR SRLDSF
+     C*
+     C           EXLEFT    TAG                             <<<=== EXLEFT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRRGHT handles F20                                 **
+     C**   (reposition the display to the right).                       **
+     C********************************************************************
+     C           SRRGHT    BEGSR                           * S R R G H T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRRGHT'  @STK,Q
+     C*
+     C                     ADD  #WIDTH    COL
+     C           COL       IFGT #MAXR
+     C                     Z-ADD#MAXR     COL
+     C                     ENDIF
+     C           #FIRST    SUB  1         #C
+     C*
+     C* Initialise subfile:
+     C                     EXSR SRIZSF
+     C*
+     C* Load the subfile:
+     C                     EXSR SRLDSF
+     C*
+     C           EXRGHT    TAG                             <<<=== EXRGHT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRIZSF initialises the subfile.                    **
+     C********************************************************************
+     C           SRIZSF    BEGSR                           * S R I Z S F *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRIZSF'  @STK,Q
+     C*
+     C* Clear the subfile:
+     C                     SETOF                     81
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+     C                     SETON                     81
+     C*
+     C* Reset top RRN:
+     C                     Z-ADD*ZERO     ##RRMX  50
+     C*
+     C* /Copy point for subfile control initialisation:
+     C*
+     C/COPY WNCPYSRC,CG8900DISC
+     C*
+     C           EXIZSF    TAG                             <<<=== EXIZSF
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRLDSF loads the subfile.                          **
+     C********************************************************************
+     C           SRLDSF    BEGSR                           * S R L D S F *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRLDSF'  @STK,Q
+     C*
+     C* Start at previous highest record in subfile:
+     C*
+     C                     Z-ADD##RRMX    RRN     50
+     C*
+     C* Reset the subfile record number:
+     C*
+     C                     Z-ADD*ZERO     ##SFRC
+     C*
+     C* Reset the "first element" number:
+     C*
+     C                     Z-ADD*ZERO     #FIRST  50
+     C*
+     C* Load subfile lines until end of array:
+     C*
+     C           #R        IFGT *ZERO
+     C           #C        DOUGE#R
+     C*
+     C* Increment counter:
+     C                     ADD  1         #C
+     C*
+     C* If first line, save the element number:
+     C*
+     C           #FIRST    IFEQ *ZERO
+     C                     Z-ADD#C        #FIRST
+     C                     ENDIF
+     C*
+     C* Move the data:
+     C                     MOVE *BLANKS   #1LINE
+     C                     MOVELINP,#C    DATADS
+     C                     MOVEADTA,COL   #1LINE
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* /Copy point for subfile record initialisation:
+     C*
+     C/COPY WNCPYSRC,CG8900DISR
+     C*
+     C* Write the record:
+     C                     ADD  1         RRN
+     C*
+     C* If not done, set subfile position to show the current record:
+     C*
+     C           ##SFRC    IFEQ *ZERO
+     C                     Z-ADDRRN       ##SFRC
+     C                     ENDIF
+     C                     WRITE#SFLRCD
+     C*
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Set indicators 82 (display subfile) and 83 (end of array):
+     C*
+     C                     SETOF                     82
+     C           RRN       IFNE *ZERO
+     C                     SETON                     82
+     C                     ENDIF
+     C*
+     C                     SETON                     83
+     C*
+     C* Save highest RRN:
+     C                     Z-ADDRRN       ##RRMX
+     C*
+     C           EXLDSF    TAG                             <<<=== EXLDSF
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRTEXT retrieves function key text.                **
+     C********************************************************************
+     C           SRTEXT    BEGSR                           * S R T E X T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRTEXT'  @STK,Q
+     C*
+     C* Function keys:
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1298' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##CMD1
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1331' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##CMD2
+     C*
+     C           EXITXT    TAG                             <<<=== EXITXT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSNMS sends a message to the program's queue.     **
+     C********************************************************************
+     C           SRSNMS    BEGSR                           * S R S N M S *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSNMS'  @STK,Q
+     C*
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVE ##PGM     ZAPGMQ
+     C                     ENDIF
+     C*
+     C* If no message file specified, use default:
+     C*
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVE ZADFMF    ZAMSGF
+     C                     ENDIF
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+     C*
+     C* Clear all fields after use:
+     C*
+     C                     MOVE *BLANKS   ZAPGMQ
+     C                     MOVE *BLANKS   ZAPGRL
+     C                     MOVE *BLANKS   ZAMSID
+     C                     MOVE *BLANKS   ZAMSGF
+     C                     MOVE *BLANKS   ZAMSDA
+     C                     MOVE *BLANKS   ZAMSTP
+     C*
+     C           EXSNMS    TAG                             <<<=== EXSNMS
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREXPG handles program termination.                **
+     C********************************************************************
+     C           SREXPG    BEGSR                           * S R E X P G *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREXPG'  @STK,Q
+     C* F3:
+     C           *IN03     IFEQ *ON
+     C                     MOVE 'Y2U9999' P0RTN
+     C                     ENDIF
+     C* F12:
+     C           *IN12     IFEQ *ON
+     C                     MOVE 'USR0790' P0RTN
+     C                     ENDIF
+     C*
+     C* /Copy point for exit processing:
+     C*
+     C/COPY WNCPYSRC,CG8900DEPP
+     C*
+     C* Copy any undisplayed messages to the caller:
+     C*
+     C                     CALL 'Y2CPMSC'
+     C                     PARM           ##PGM
+     C*
+     C* Clear the message ID and message data:
+     C*
+     C                     MOVE *BLANKS   #@MSID
+     C                     MOVE *BLANKS   #@MDTA
+     C*
+     C                     OUT  BIGLDA
+     C*
+     C           EXEXPG    TAG                             <<<=== EXEXPG
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRDATA reads data to fill the array.               **
+     C********************************************************************
+     C           SRDATA    BEGSR                           * S R D A T A *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRDATA'  @STK,Q
+     C*
+     C* Read from the database file to load an array.
+     C* This array is then used to load the subfile:
+     C*
+     C                     Z-ADD*ZERO     #R      50
+     C                     MOVE *BLANKS   INP
+     C           *LOVAL    SETLLCGWPDISP
+     C*
+     C           *IN90     DOUEQ*ON
+     C                     READ CGWPDISP                 90
+     C           *IN90     IFEQ *OFF
+     C           DSPSEQ    ANDLE2000
+     C           DSPSEQ    ANDNE*ZERO
+     C* Move index:
+     C                     Z-ADDDSPSEQ    #R
+     C* Move data:
+     C                     MOVELDSPLIN    INP,#R
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C* If no DBF records found,
+     C*  display an error message -- "No data to display":
+     C*
+     C           #R        IFEQ *ZERO
+     C                     MOVE 'Y2U0008' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Initialise the subfile:
+     C*
+     C                     EXSR SRIZSF
+     C*
+     C* Reset the pointer:
+     C*
+     C           ROW       SUB  1         #C      50
+     C*
+     C* Load the subfile:
+     C*
+     C                     EXSR SRLDSF
+     C*
+     C           EXDATA    TAG                             <<<=== EXDATA
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRINIT provides initialisation.                    **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C* Define and clear error return code:
+     C*
+     C                     MOVE *BLANKS   P0RTN   7
+     C                     MOVE *BLANK    W0RSL   1
+     C                     MOVE *BLANK    W0RSF   1
+     C*
+     C* Get the local data area (*LDA):
+     C*
+     C           *NAMVAR   DEFN *LDA      BIGLDA
+     C                     IN   BIGLDA
+     C*
+     C* Initialise indicators for re-entry:
+     C*
+     C                     MOVE '0'       *IN
+     C*
+     C* Define current row and column values for
+     C*  the top left corner of the window:
+     C*
+     C           ##CSET    IFNE 'Y'
+     C                     Z-ADD1         ROW
+     C                     Z-ADD1         COL
+     C                     MOVE 'Y'       ##CSET  1
+     C                     ENDIF
+     C*
+     C* Set job date and time and the screen time:
+     C*
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+     C                     Z-ADD##JTM     ##TME   60
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Define the default message file:
+     C*
+     C                     MOVEL'CGUSRMSG'ZADFMF 10
+     C*
+     C* If used, display the message identified in #@MSID:
+     C*
+     C           #@MSID    IFNE *BLANKS
+     C                     MOVE #@MSID    ZAMSID
+     C                     MOVE #@MDTA    ZAMSDA
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C*
+     C* Move the copyright parameter:
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C* Get the run-date:
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C                     MOVELAGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVELAGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C*
+     C* If return with an error (LR seton in called program),
+     C*  process for database error.
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVE 'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If first call, open file CGWPDISP and load data:
+     C*
+     C           W#OPEN    IFNE 'Y'
+     C                     OPEN CGWPDISP
+     C*
+     C* Initialise the array start position:
+     C*
+     C                     MOVE 'Y'       W#OPEN  1
+     C                     EXSR SRDATA
+     C                     ELSE
+     C*
+     C* If requested, refresh data:
+     C*
+     C           P0RFR     IFNE *BLANK
+     C                     EXSR SRDATA
+     C                     MOVE *BLANK    P0RFR
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C* /Copy point for calculations:
+     C*
+     C/COPY WNCPYSRC,CG8900DCPG
+     C*
+     C* Get the command-key text:
+     C*
+     C           @@TEXT    IFNE 'Y'
+     C                     MOVE 'Y'       @@TEXT  1
+     C                     EXSR SRTEXT
+     C                     ENDIF
+     C*
+     C* Data display width and maximum right values (256 - 75 + 1 = 182):
+     C*
+     C                     Z-ADD75        #WIDTH  30
+     C                     Z-ADD182       #MAXR   30
+     C*
+     C           EXINIT    TAG                             <<<=== EXINIT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** Subroutine *PSSR handles program errors.                       **
+     C********************************************************************
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* File and Program Error Processing
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for calculation specifications:
+     C*
+     C/COPY WNCPYSRC,CG8900CPG
+     C*
+     C********************************************************************
+     O/EJECT
+     O********************************************************************
+     C* /Copy point for output:
+     C*
+     O/COPY WNCPYSRC,CG8900DOPG
+     C*
+     O********************************************************************
+** CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,1844 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Bureau De Change Rates Defaults Maint')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4252 - Bureau De Change Rates Defaults Maintenance         *
+     F*                                                               *
+     F*  Function:  This program handles the amendment, validation,   *
+     F*  (I/C)      deletion, and display of the fields in the        *
+     F*             currency details extension file PF/REBDCRPD.      *
+     F*             Depending on the action code, a record will       *
+     F*             either be written to or updated on PF/REBDCRPD    *
+     F*             unless the action code is delete in which case    *
+     F*             the record will be deleted from PF/REBDCRPD.      *
+     F*                                                               *
+     F*  Called By: Retail Teller System Maintenance Menu             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 BUG8671            Date 30Nov05               *
+      *                 BUG3984            Date 12Aug04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 196778             Date 28Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 190201             Date 05Jun01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 150864             Date 07Jan99               *
+      *                 146200             Date 30Oct98               *
+      *                 CEU025             Date 31Aug98               *
+      *                 CEU024             Date 14Jul98               *
+      *                 CRT001 *CREATE     Date 28Feb95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG8671 - Selection of currency was not passing back code    *
+      *  BUG3984 - Recompiled due to changed RE4252DF.                *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  196778 - Do not condition on the End of Transition date.     *
+      *  190201 - Allow two users to enquire on the same record but   *
+      *           send an error message when to users are trying to   *
+      *           amend/delete the same record at the same time.      *
+      *  150864 - Update of 'in' ccy rates, caused by change to Euro  *
+      *           rates, is wrong when amount differs for the 2 ccys. *
+      *           NB. The amount is a scaling factor which enables a  *
+      *           rate to be expressed in the format 8,3. The scaling *
+      *           factor has not been taken into account by the EMU   *
+      *           changes. Also multiply/divide indicator is wrong or *
+      *           hard-coded in some places, and the BdC rate must be *
+      *           expressed in the same format (M/D) as the spot rate.*
+      *  146200 - Euro ccy rates become zero                          *
+      *  CEU025 - EMU: Midas-Cashier Interface                        *
+      *  CEU024 - EMU: RTS Enhancement                                *
+     F*  CRT001 - Retail Teller System                                *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FRE4252DFCF  E                    WORKSTN      KINFSR *PSSR
+     F** Bureau de Change Rates Defaults - Display
+     F*
+     FREBDCRPDUF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     F** Bureau de Change Rates Defaults Currency Details
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - Chain to REBDCRPD fails                               *
+     F*                                                               *
+     F*   20  - SFLEND indicator                                      *
+     F*                                                               *
+     F*   21  - Action code invalid                                   *
+     F*   22  - Currency code invalid                                 *
+     F*   23  - Amount invalid                                        *
+     F*   24  - Exchange buy rate invalid                             *
+     F*   25  - Exchange sell rate invalid                            *
+     F*   26  - Exchange average rate invalid                         *
+     F*   27  - Exchange cash buy rate invalid                        *
+     F*   28  - Exchange cash sell rate invalid                       *
+     F*   29  - Exchange cash average rate invalid                    *
+     F*                                                               *
+     F*   30  - General error indicator                               *
+      *   31  - Base ccy is 'in' ccy and transaction ccy is 'out' ccy *   CEU024
+      *   32  - Currency in REBDCRPD is found in the array            *   CEU024
+      *   33  - Transaction ccy is an 'in' ccy                        *   CEU024
+      *   34  - End of file for REBDCRPD                              *   CEU024
+      *   35  - Protect rate fields                                   *   CEU024
+      *   36  - Display Out/In ccy exchange rates                     *   CEU024
+      *   37  - Display accept rates                                  *   CEU024
+     F*                                                               *
+     F*   40  - Protect input fields                                  *
+     F*   41  - Allow delete on display file                          *
+     F*                                                               *
+     F* 90-99 - Standard MIDAS subroutines                            *
+     F*                                                               *
+     F*   KC  - Exit requested                                        *
+     F*   KE  - Refresh requested                                     *
+     F*   KJ  - Delete requested                                      *
+     F*   KL  - Previous screen requested                             *
+     F*                                                               *
+     F*   LR  - Last record indicator                                 *
+     F*                                                               *
+     F* U7+U8 - Database error                                        *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  Control Subroutines                                          *
+     F*                                                               *
+     F*  #INIT  - Initial processing                                  *
+     F*  #RFRSH - Refresh screen details                              *
+     F*  #DSPIN - Display initial screen                              *
+     F*  #VALIN - Validate initial screen details                     *
+     F*  #DETA  - Detail processing                                   *
+     F*  #LOAD  - Load amount and rates defaults                      *
+     F*  #UPDT  - Update processing                                   *
+     F*  #DELT  - Deletion processing                                 *
+     F*  #ENQY  - Enquiry processing                                  *
+     F*  #VALD  - Validate amount and rates defaults                  *
+      *  #ADJRT - Adjust calculated rate for 3 decimal places         *   150864
+      *  SREMPD - EMU Related Update Processing                       *   CEU024
+      *  ZXRATN - Calculate multiply or divide cross-exchange rate    *   150864
+     F*  #LAST  - Final processing                                    *
+     F*                                                               *
+     F*  *PSSR  - Database Error Handling                             *
+     F*                                                               *
+     F*  SNDMSG - Send program message parameters                     *
+     F*                                                               *
+     F*  Standard MIDAS Subroutines                                   *
+     F*                                                               *
+     F*  ZEDIT  - Format numeric fields                               *
+     F*  ZALIGN - Validate and right-align numeric fields             *
+     F*                                                               *
+     F*  External Routines                                            *
+     F*                                                               *
+     F*  SCC0250 - Clear Message Queue                                *
+     F*  SCC0240 - Send Message                                       *
+     F*                                                               *
+     F*  DBERRCTL Program error                                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    @AR        13  1               Work array       150864
+      *                                                                   150864
+     E                    CPY@    1   1 80
+     E** Copyright array
+     E                    CYCD      200  3  A                             CEU024
+      ** 'In' ccy array                                                   CEU024
+      *                                                                   CEU024
+     E*
+     E/COPY ZSRSRC,ZEDITZ1
+     E** Array for standard subroutine ZEDIT
+     E*
+      /EJECT
+     I*
+     I            DS
+     I** Data structure for amount and rates details
+     I*
+     I                                        1  63 WDETL
+     I                                        1   9 D#AMNT
+     I                                       10  18 D#DNRT
+     I                                       19  27 D#DPRT
+     I                                       28  36 D#DSRT
+     I                                       37  45 D#VNRT
+     I                                       46  54 D#VPRT
+     I                                       55  63 D#VSRT
+     I*
+     IPSDS       SDS
+     I**  Program Status Data Structure
+     I*
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+     I*
+     ILDA         DS                            256
+     I** Local data area for database error details
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** External data structure for Bank Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** External data structure for Currency Details
+     I*
+     ISCSARD    E DSSCSARDPD                                              CEU024
+      ** External data structure for Switchable Features Details          CEU024
+      *                                                                   CEU024
+     ISDGELR    E DSSDGELRPD                                              CEU024
+      ** External data structure for General Ledger Details               CEU024
+      *                                                                   CEU024
+     IDSFDY     E DSDSFDY
+     I**  Short data structure for access objects
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Long data structure for access programs
+     I*
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+     C** Perform initial processing
+     C*
+     C                     EXSR #INIT
+     C*
+     C** Refresh initial screen
+     C*
+     C                     EXSR #RFRSH
+     C*
+     C** Display initial screen
+     C*
+     C                     EXSR #DSPIN
+     C*
+     C** Do while Cmd/3 is not pressed
+     C*
+     C           *INKC     DOWEQ'0'
+     C*
+     C** If Cmd/5 is pressed, refresh initial screen
+     C*
+     C           *INKE     CASEQ'1'       #RFRSH
+     C*
+     C** If Enter key is pressed, validate details
+     C*
+     C                     CAS            #VALIN
+     C*
+     C                     END
+     C*
+     C** Redisplay initial screen
+     C*
+     C                     EXSR #DSPIN
+     C*
+     C                     END
+     C*
+     C** End program
+     C*
+     C                     EXSR #LAST
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #INIT  -  Initial processing                                  *
+     C*                                                               *
+     C* Calls:  *PSSR                                                 *
+     C*                                                               *
+     C* Called from: Main processing                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #INIT     BEGSR                           *** #INIT ***
+     C*
+     C** Copyright statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Initialise LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'RE4252'  DBPGM
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+     C*
+     C** Initialise screen message queue
+     C*
+     C                     MOVEL'*'       SPGMQ
+     C*
+     C** Seton message subfile end indicator
+     C*
+     C                     MOVE '1'       *IN20
+     C*
+     C** Initialise message file
+     C*
+     C                     MOVE *BLANKS   @MSGID  7
+     C                     MOVEL'RTSMSGF' @MSGF  10
+     C*
+     C** Get bank details using access object
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** Check if an error occurred
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           **************
+     C                     Z-ADD01        DBASE            * DBERROR 01 *
+     C                     OUT  LDA                        **************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Rundate in DDMMMYY format
+     C*
+     C                     MOVE BJMRDT    SRUNA
+     C*
+     C                     MOVEL'N'       CEU024  1                       CEU024
+      *                                                                   CEU024
+      ** Access Switchable Feature Details                                CEU024
+      *                                                                   CEU024
+     C                     CALL 'AOSARDR0'                                CEU024
+     C                     PARM *BLANKS   PRTCD   7                       CEU024
+     C                     PARM '*VERIFY' POPTN   7                       CEU024
+     C                     PARM 'CEU024'  PSARD   6                       CEU024
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU024
+      *                                                                   CEU024
+     C           PRTCD     IFEQ *BLANKS                                   CEU024
+     C                     MOVEL'Y'       CEU024                          CEU024
+     C                     ELSE                                           CEU024
+      *                                                                   CEU024
+      ** Handle Database Error                                            CEU024
+      *                                                                   CEU024
+     C           PRTCD     IFNE '*NRF    '                                CEU024
+     C           *LOCK     IN   LDA                                       CEU024
+     C                     MOVEL'SCSARDPD'DBFILE           ************** CEU024
+     C                     MOVEL'CEU024'  DBKEY            * DBERROR 02 * CEU024
+     C                     Z-ADD2         DBASE            ************** CEU024
+     C                     OUT  LDA                                       CEU024
+     C                     EXSR *PSSR                                     CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+     C                     MOVEL'N'       CEU025  1                       CEU025
+      *                                                                   CEU025
+      ** Access Switchable Feature Details                                CEU025
+      *                                                                   CEU025
+     C                     CALL 'AOSARDR0'                                CEU025
+     C                     PARM *BLANKS   PRTCD                           CEU025
+     C                     PARM '*VERIFY' POPTN                           CEU025
+     C                     PARM 'CEU025'  PSARD                           CEU025
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU025
+      *                                                                   CEU025
+     C           PRTCD     IFEQ *BLANKS                                   CEU025
+     C                     MOVEL'Y'       CEU025                          CEU025
+     C                     ELSE                                           CEU025
+      *                                                                   CEU025
+      ** Handle Database Error                                            CEU025
+      *                                                                   CEU025
+     C           PRTCD     IFNE '*NRF    '                                CEU025
+     C           *LOCK     IN   LDA                                       CEU025
+     C                     MOVEL'SCSARDPD'DBFILE           ************** CEU025
+     C                     MOVEL'CEU025'  DBKEY            * DBERROR 06 * CEU025
+     C                     Z-ADD6         DBASE            ************** CEU025
+     C                     OUT  LDA                                       CEU025
+     C                     EXSR *PSSR                                     CEU025
+     C                     ENDIF                                          CEU025
+      *                                                                   CEU025
+     C                     ENDIF                                          CEU025
+      *                                                                   CEU025
+     C           CEU024    IFEQ 'Y'                                       CEU024
+     C           CEU025    OREQ 'Y'                                       CEU025
+      *                                                                   CEU024
+      ** Access General Ledger File                                       CEU024
+      *                                                                   CEU024
+     C**********           CALL 'AOGELRR0'                                             CEU024 CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD                           CEU024
+     C                     PARM '*FIRST  'POPTN                           CEU024
+     C********** SDGELR    PARM SDGELR    DSFDY                                        CEU024 CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *                                                                   CEU024
+      ** Handle Database Error.                                           CEU024
+      *                                                                   CEU024
+     C           PRTCD     IFNE *BLANKS                                   CEU024
+     C           *LOCK     IN   LDA                                       CEU024
+     C                     MOVEL'SDGELRPD'DBFILE           ************** CEU024
+     C                     MOVEL'*FIRST  'DBKEY            * DBERROR 03 * CEU024
+     C                     Z-ADD3         DBASE            ************** CEU024
+     C                     EXSR *PSSR                                     CEU024
+     C                     OUT  LDA                                       CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+      ** Base ccy is Euro                                                 CEU024
+      *                                                                   CEU024
+     C           BJCYCD    IFEQ BKEURO                                    CEU024
+     C                     MOVE 'E'       WBCIN   1                       CEU024
+     C                     ELSE                                           CEU024
+      *                                                                   CEU024
+      ** Call Access Program for Currency Details                         CEU024
+      *                                                                   CEU024
+     C                     CALL 'AOCURRR0'                                CEU024
+     C                     PARM *BLANKS   PRTCD                           CEU024
+     C                     PARM '*KEY    'POPTN                           CEU024
+     C                     PARM BJCYCD    PCURR   3                       CEU024
+     C           SDCURR    PARM SDCURR    DSSDY                           CEU024
+      *                                                                   CEU024
+      ** Handle Database Error.                                           CEU024
+      *                                                                   CEU024
+     C           PRTCD     IFNE *BLANKS                                   CEU024
+     C           *LOCK     IN   LDA                                       CEU024
+     C                     MOVEL'SDCURRPD'DBFILE           ************** CEU024
+     C                     MOVELBJCYCD    DBKEY            * DBERROR 04 * CEU024
+     C                     Z-ADD4         DBASE            ************** CEU024
+     C                     EXSR *PSSR                                     CEU024
+     C                     OUT  LDA                                       CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+      ** Base ccy is an 'In' ccy                                          CEU024
+      *                                                                   CEU024
+     C           A6INCY    IFEQ 'Y'                                       CEU024
+     C           BJRDNB    ANDGEA6TPSD                                    CEU024
+     C********** BJRDNB    ANDLEA6TPED                              CEU024196778
+     C                     MOVE 'I'       WBCIN                           CEU024
+     C                     Z-ADDA6EUER    WEUER  138                      CEU024
+     C                     MOVELA6EUMD    WEUMD   1                       CEU024
+     C                     ELSE                                           CEU024
+      *                                                                   CEU024
+      ** Base ccy is an 'out' ccy                                         CEU024
+      *                                                                   CEU024
+     C                     MOVE 'O'       WBCIN                           CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+     C           WBCIN     IFEQ 'O'                                       CEU024
+      *                                                                   CEU024
+     C                     MOVEL'*FIRST  'POPTN                           CEU024
+     C                     MOVEL*BLANKS   PRTCD                           CEU024
+     C                     Z-ADD1         X       30                      CEU024
+      *                                                                   CEU024
+     C           PRTCD     DOWEQ*BLANKS                                   CEU024
+      *                                                                   CEU024
+      ** Call Access Program for Currency Details                         CEU024
+      *                                                                   CEU024
+     C                     CALL 'AOCURRR0'                                CEU024
+     C                     PARM *BLANKS   PRTCD                           CEU024
+     C                     PARM           POPTN                           CEU024
+     C                     PARM           PCURR                           CEU024
+     C           SDCURR    PARM SDCURR    DSSDY                           CEU024
+      *                                                                   CEU024
+      ** Handle Database Error.                                           CEU024
+      *                                                                   CEU024
+     C           PRTCD     IFNE *BLANKS                                   CEU024
+     C           POPTN     ANDEQ'*FIRST  '                                CEU024
+     C           *LOCK     IN   LDA                                       CEU024
+     C                     MOVEL'SDCURRPD'DBFILE           ************** CEU024
+     C                     MOVELPOPTN     DBKEY            * DBERROR 05 * CEU024
+     C                     Z-ADD5         DBASE            ************** CEU024
+     C                     EXSR *PSSR                                     CEU024
+     C                     OUT  LDA                                       CEU024
+     C                     ELSE                                           CEU024
+      *                                                                   CEU024
+      ** Load 'in' ccy and euro in an array                               CEU024
+      *                                                                   CEU024
+     C           A6INCY    IFEQ 'Y'                                       CEU024
+     C           BJRDNB    ANDGEA6TPSD                                    CEU024
+     C********** BJRDNB    ANDLEA6TPED                              CEU024196778
+     C           A6CYCD    OREQ BKEURO                                    CEU024
+     C                     MOVELA6CYCD    CYCD,X                          CEU024
+     C                     ADD  1         X                               CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+     C                     ENDIF                                          CEU024
+     C                     MOVEL'*NEXT   'POPTN                           CEU024
+     C                     ENDDO                                          CEU024
+      *                                                                   CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #RFRSH -  Refresh screen                                      *
+     C*                                                               *
+     C* Calls:  None                                                  *
+     C*                                                               *
+     C* Called from: Main processing, #VALIN                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #RFRSH    BEGSR                           *** #RFRSH ***
+     C*
+     C** Initialise indicators and screen fields
+     C*
+     C                     MOVE *BLANKS   SACTN
+     C                     MOVE *BLANKS   SCCY
+     C                     MOVE *BLANKS   WDETL
+     C                     SETOF                     212223
+     C                     SETOF                     242526
+     C                     SETOF                     272829
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #DSPIN -  Display initial screen                              *
+     C*                                                               *
+     C* Calls:  None                                                  *
+     C*                                                               *
+     C* Called from: Main processing                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #DSPIN    BEGSR                           *** #DSPIN ***
+     C*
+     C** Display program message subfile for any messages
+     C*
+     C                     WRITERE4252C0
+     C*
+     C** Display and accept initial screen
+     C*
+     C                     EXFMTRE4252F0
+     C*
+     C** Clear program message queue
+     C*
+     C                     CALL 'SCC0250'
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #VALIN -  Validate initial screen                             *
+     C*                                                               *
+     C* Calls:  SNDMSG, #DETA, #RFRSH                                 *
+     C*                                                               *
+     C* Called from: Main processing                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #VALIN    BEGSR                           *** #VALIN ***
+     C*
+     C** Setof validation error indicator
+     C*
+     C                     SETOF                     302122
+     C                     MOVE '0'       *IN31                           CEU024
+     C                     MOVE '0'       *IN33                           CEU024
+     C                     MOVE '0'       *IN35                           CEU024
+     C                     MOVE '0'       *IN36                           CEU024
+     C                     MOVE '0'       *IN37                           CEU024
+     C*
+     C** Validate ACTION CODE
+     C*
+     C           SACTN     IFNE 'I'
+     C           SACTN     ANDNE'A'
+     C           SACTN     ANDNE'E'
+     C           SACTN     ANDNE'D'
+     C                     SETON                     21
+     C                     MOVE 'USR0001' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C*
+     C** Validate CURRENCY CODE
+     C**     Currency code must be entered
+     C*
+     C           SCCY      IFEQ *BLANKS
+     C                     SETON                     22
+     C                     MOVE 'USR0076' @MSGID
+     C                     EXSR SNDMSG
+     C*
+     C**     Currency code must be defined on the currencies file
+     C*
+     C                     ELSE
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM SCCY      P@CURR  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C                     SETON                     22
+     C                     MOVE 'USR0049' @MSGID
+     C                     EXSR SNDMSG
+     C*                                                                                      BUG8671
+     C                     ELSE                                                              BUG8671
+     C                     MOVELP@CURR    SCCY                                               BUG8671
+     C*
+     C                     END
+     C*
+     C                     MOVELA6CYNM    SCNAM
+     C                     MOVELA6MDIN    @TMDIN  1                       150864
+      *                                                                   CEU024
+      ** Transaction ccy is an 'in' ccy                                   CEU024
+      *                                                                   CEU024
+     C           CEU024    IFEQ 'Y'                                       CEU024
+     C           A6INCY    ANDEQ'Y'                                       CEU024
+     C           BJRDNB    ANDGEA6TPSD                                    CEU024
+     C********** BJRDNB    ANDLEA6TPED                              CEU024196778
+     C           CEU025    OREQ 'Y'                                       CEU025
+     C           A6INCY    ANDEQ'Y'                                       CEU025
+     C           BJRDNB    ANDGEA6TPSD                                    CEU025
+     C********** BJRDNB    ANDLEA6TPED                              CEU025196778
+     C                     MOVE '1'       *IN33                           CEU024
+     C                     Z-ADDA6EUER    WEUTC  138                      CEU024
+     C                     MOVELA6EUMD    WEUTI   1                       CEU024
+     C                     ENDIF                                          CEU024
+     C*
+     C                     END
+     C*
+     C** Further validate action code against currency code entered
+     C*
+     C           *IN30     IFEQ '0'
+      *                                                                                       190201
+      ** Allow two or more users to enquire same record at the                                190201
+      ** same time                                                                            190201
+      *                                                                                       190201
+     C           SACTN     IFEQ 'E'                                                           190201
+     C           SCCY      CHAINREBDCRPD            N10                                       190201
+     C                     ELSE                                                               190201
+     C           SCCY      CHAINREBDCRPD             1038                                     190201
+     C                     END                                                                190201
+      *                                                                                       190201
+      ** Display 'Record in use by another Workstation' if action                             190201
+      ** code is not enquire                                                                  190201
+      *                                                                                       190201
+     C           SACTN     IFNE 'E'                                                           190201
+     C           *IN38     ANDEQ'1'                                                           190201
+     C                     MOVE '1'       *IN22                                               190201
+     C                     MOVE '1'       *IN30                                               190201
+     C                     END                                                                190201
+     C*
+     C********** SCCY      CHAINREBDCRPD             10                                       190201
+     C*
+     C**     If action code is insert, currency code must not be
+     C**     existing on PF/REBDCRPD
+     C*
+     C           *IN10     IFEQ '0'
+     C*
+     C           SACTN     IFEQ 'I'
+     C                     SETON                     22
+     C                     MOVE 'USR1210' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C*
+     C**     If action code is enquire, delete, or amend currency code
+     C**     must exist on PF/REBDCRPD
+     C*
+     C                     ELSE
+     C           SACTN     IFEQ 'E'
+     C           SACTN     OREQ 'D'
+     C           SACTN     OREQ 'A'
+     C                     SETON                     22
+     C                     MOVE 'USR1211' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** If no validation error, display screen to accept or display
+     C** amount and rates details
+     C*
+     C           *IN30     IFEQ '0'
+      *                                                                   CEU024
+      ** Base ccy is an 'in' ccy and transaction ccy is an 'out' ccy      CEU024
+      *                                                                   CEU024
+     C           CEU024    IFEQ 'Y'                                       CEU024
+     C           WBCIN     ANDEQ'I'                                       CEU024
+     C           *IN33     ANDEQ'0'                                       CEU024
+     C           SCCY      ANDNEBKEURO                                    CEU024
+     C           SACTN     ANDNE'D'                                       CEU024
+     C           SACTN     ANDNE'E'                                       CEU024
+     C           CEU025    OREQ 'Y'                                       CEU025
+     C           WBCIN     ANDEQ'I'                                       CEU025
+     C           *IN33     ANDEQ'0'                                       CEU025
+     C           SCCY      ANDNEBKEURO                                    CEU025
+     C           SACTN     ANDNE'D'                                       CEU025
+     C           SACTN     ANDNE'E'                                       CEU025
+     C                     MOVE '1'       *IN31                           CEU024
+     C                     MOVELSCCY      SOTIN                           CEU024
+     C                     MOVEL'/'       WOTIN   4                       CEU024
+     C                     MOVE BJCYCD    WOTIN                           CEU024
+     C                     MOVE WOTIN     SOTIN                           CEU024
+     C           SACTN     IFEQ 'A'                                       CEU024
+     C                     MOVE '1'       *IN36                           CEU024
+     C                     ENDIF                                          CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+     C                     EXSR #DETA
+     C                     EXSR #RFRSH
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #DETA  -  Detail Processing                                   *
+     C*                                                               *
+     C* Calls:  #LOAD, #DELT, #ENQY, #UPDT                            *
+     C*                                                               *
+     C* Called from: #VALIN                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #DETA     BEGSR                           *** #DETA ***
+     C*
+     C                     EXSR #LOAD
+     C*
+     C                     SETOF                     4041
+     C*
+     C*** Process input depending on the action code
+     C*
+     C           SACTN     CASEQ'D'       #DELT
+     C*
+     C           SACTN     CASEQ'E'       #ENQY
+     C*
+     C                     CAS            #UPDT
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LOAD  -  Load Details                                        *
+     C*                                                               *
+     C* Calls:  ZEDIT                                                 *
+     C*                                                               *
+     C* Called from: #DETA, #UPDT                                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LOAD     BEGSR                           *** #LOAD ***
+     C*
+     C** Set up screen fields for display
+     C*
+     C           *IN10     IFEQ *OFF
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FEAMNT    ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    D#AMNT
+      *                                                                   CEU024
+      ** Base ccy is an 'in' ccy and transaction ccy is an 'out' ccy      CEU024
+      *                                                                   CEU024
+     C           CEU024    IFEQ 'Y'                                       CEU024
+     C           *IN31     ANDEQ'1'                                       CEU024
+     C           CEU025    OREQ 'Y'                                       CEU025
+     C           *IN31     ANDEQ'1'                                       CEU025
+     C                     MOVEL*BLANKS   SEUBR                           CEU024
+     C                     MOVEL*BLANKS   SEUSR                           CEU024
+     C                     MOVEL*BLANKS   SEUAR                           CEU024
+     C                     MOVEL*BLANKS   SEUCB                           CEU024
+     C                     MOVEL*BLANKS   SEUCS                           CEU024
+     C                     MOVEL*BLANKS   SEUCA                           CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE FEDNRT    ZFIELD                          CEU024
+     C                     Z-ADD3         ZADEC                           CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    SEUBR                           CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE FEDPRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    SEUSR                           CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE FEDSRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    SEUAR                           CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE FEVNRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    SEUCB                           CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE FEVPRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    SEUCS                           CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE FEVSRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    SEUCA                           CEU024
+      *                                                                   CEU024
+      * Calculate transaction ccy to Euro rate                            150864
+     C**********           Z-ADDFEDNRT    ZRATE1 138               CEU024 150864
+     C**********           MOVEL'M'       ZMDI1   1                CEU024 150864
+      *                                                                   150864
+      * Adjust rate by scaling factor to get true rate, and use correct   150864
+      * mult./div. ind. for ccy.                                          150864
+     C           FEDNRT    DIV  FEAMNT    ZRATE1 138                      150864
+     C                     MOVEL@TMDIN    ZMDI1   1                       150864
+     C                     Z-ADDWEUER     ZRATE2 138                      CEU024
+     C           WEUMD     IFEQ 'D'                                       CEU024
+     C                     MOVEL'M'       ZMDI2   1                       CEU024
+     C                     ELSE                                           CEU024
+     C                     MOVEL'D'       ZMDI2                           CEU024
+     C                     ENDIF                                          CEU024
+     C                     MOVEL@TMDIN    ZCROSS  1                       150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C**********           Z-ADDZRATEX    FEDNRT                   CEU024 150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT FEAMNT    FEDNRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDFEDPRT    ZRATE1                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C**********           Z-ADDZRATEX    FEDPRT                   CEU024 150864
+     C           FEDPRT    DIV  FEAMNT    ZRATE1                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT FEAMNT    FEDPRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDFEDSRT    ZRATE1                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C**********           Z-ADDZRATEX    FEDSRT                   CEU024 150864
+     C           FEDSRT    DIV  FEAMNT    ZRATE1                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT FEAMNT    FEDSRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDFEVNRT    ZRATE1                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C**********           Z-ADDZRATEX    FEVNRT                   CEU024 150864
+     C           FEVNRT    DIV  FEAMNT    ZRATE1                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT FEAMNT    FEVNRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDFEVPRT    ZRATE1                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C**********           Z-ADDZRATEX    FEVPRT                   CEU024 150864
+     C           FEVPRT    DIV  FEAMNT    ZRATE1                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT FEAMNT    FEVPRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDFEVSRT    ZRATE1                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C**********           Z-ADDZRATEX    FEVSRT                   CEU024 150864
+     C           FEVSRT    DIV  FEAMNT    ZRATE1                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT FEAMNT    FEVSRT    H                     150864
+     C                     ENDIF                                          CEU024
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FEDNRT    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    D#DNRT
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FEDPRT    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    D#DPRT
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FEDSRT    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    D#DSRT
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FEVNRT    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    D#VNRT
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FEVPRT    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    D#VPRT
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FEVSRT    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    D#VSRT
+     C*
+     C                     ELSE
+     C                     CLEARD#AMNT
+     C                     CLEARD#DNRT
+     C                     CLEARD#DPRT
+     C                     CLEARD#DSRT
+     C                     CLEARD#VNRT
+     C                     CLEARD#VPRT
+     C                     CLEARD#VSRT
+      *                                                                   CEU024
+     C           CEU024    IFEQ 'Y'                                       CEU024
+     C           CEU025    OREQ 'Y'                                       CEU025
+      *                                                                   CEU024
+      ** Base ccy is Euro and transaction ccy is an 'in' ccy              CEU024
+      *                                                                   CEU024
+     C           WBCIN     IFEQ 'E'                                       CEU024
+     C           *IN33     ANDEQ'1'                                       CEU024
+      *                                                                   150864
+      * Don't invert Euro rate                                            150864
+     C********** WEUTI     IFEQ 'M'                                CEU024 150864
+     C**********           Z-ADDWEUTC     WTREX  133               CEU024 150864
+     C                     Z-ADDWEUTC     WTREX  138                      150864
+     C**********           ELSE                                    CEU024 150864
+     C********** 1         DIV  WEUTC     WTREX     H              CEU024 150864
+     C**********           ENDIF                                   CEU024 150864
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+      ** Base ccy is 'in' ccy and transaction ccy is Euro                 CEU024
+      *                                                                   CEU024
+     C           WBCIN     IFEQ 'I'                                       CEU024
+     C           SCCY      ANDEQBKEURO                                    CEU024
+     C********** WEUMD     IFEQ 'D'                                CEU024 150864
+     C                     Z-ADDWEUER     WTREX                           CEU024
+     C**********           ELSE                                    CEU024 150864
+     C********** 1         DIV  WEUER     WTREX     H              CEU024 150864
+     C**********           ENDIF                                   CEU024 150864
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+      ** Base ccy is 'in' ccy and transaction ccy is an 'in' ccy          CEU024
+      *                                                                   CEU024
+     C           WBCIN     IFEQ 'I'                                       CEU024
+     C           *IN33     ANDEQ'1'                                       CEU024
+     C                     Z-ADDWEUTC     ZRATE1                          CEU024
+     C                     MOVELWEUTI     ZMDI1                           CEU024
+     C                     Z-ADDWEUER     ZRATE2                          CEU024
+     C                     MOVELWEUMD     ZMDI2                           CEU024
+     C                     MOVEL@TMDIN    ZCROSS                          150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C                     EXSR ZXRATN                                    150864
+     C********** ZMDIX     IFEQ 'D'                                CEU024 150864
+     C********** 1         DIV  ZRATEX    ZRATEX                   CEU024 150864
+     C**********           ENDIF                                   CEU024 150864
+     C                     Z-ADDZRATEX    WTREX     H                     CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+      ** Base ccy is the same as the transaction ccy                      CEU024
+      *                                                                   CEU024
+     C           BJCYCD    IFEQ SCCY                                      CEU024
+     C                     Z-ADD1         WTREX                           CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+     C           WBCIN     IFEQ 'E'                                       CEU024
+     C           *IN33     ANDEQ'1'                                       CEU024
+     C           WBCIN     OREQ 'I'                                       CEU024
+     C           SCCY      ANDEQBKEURO                                    CEU024
+     C           WBCIN     OREQ 'I'                                       CEU024
+     C           *IN33     ANDEQ'1'                                       CEU024
+     C           BJCYCD    OREQ SCCY                                      CEU024
+      *                                                                   150864
+      * Bureau de Change rate only has 3 decimal places. Adjust rate      150864
+      * and use scaling factor if required.                               150864
+     C                     EXSR #ADJRT                                    150864
+      *                                                                   150864
+     C                     MOVE *BLANKS   ZFIELD                          150864
+     C                     MOVE W#FACT    ZFIELD                          150864
+     C                     Z-ADD0         ZADEC                           150864
+     C                     EXSR ZEDIT                                     150864
+     C                     MOVE ZFIELD    D#AMNT                          150864
+      *                                                                   150864
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C**********           MOVE WTREX     ZFIELD                   CEU024 150864
+     C                     MOVE WTREXB    ZFIELD                          150864
+     C                     Z-ADD3         ZADEC                           CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    D#DNRT                          CEU024
+     C                     MOVE ZFIELD    D#DPRT                          CEU024
+     C                     MOVE ZFIELD    D#DSRT                          CEU024
+     C                     MOVE ZFIELD    D#VNRT                          CEU024
+     C                     MOVE ZFIELD    D#VPRT                          CEU024
+     C                     MOVE ZFIELD    D#VSRT                          CEU024
+     C                     ENDIF                                          CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+     C                     END
+      *                                                                   CEU024
+      ** Format screen to be non-amendable                                CEU024
+      *                                                                   CEU024
+     C           CEU024    IFEQ 'Y'                                       CEU024
+     C           CEU025    OREQ 'Y'                                       CEU025
+     C           WBCIN     IFEQ 'I'                                       CEU024
+     C           *IN33     ANDEQ'1'                                       CEU024
+     C           WBCIN     OREQ 'I'                                       CEU024
+     C           SCCY      ANDEQBKEURO                                    CEU024
+     C           WBCIN     OREQ 'E'                                       CEU024
+     C           *IN33     ANDEQ'1'                                       CEU024
+     C           BJCYCD    OREQ SCCY                                      CEU024
+     C                     MOVE '1'       *IN35                           CEU024
+     C                     ENDIF                                          CEU024
+     C                     ENDIF                                          CEU024
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #UPDT  -  Update processing                                   *
+     C*                                                               *
+     C* Calls:  #LAST, #LOAD, #VALD                                   *
+     C*                                                               *
+     C* Called from: #DETA                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #UPDT     BEGSR                           *** #UPDT ***
+     C*
+     C                     MOVE 'N'       VALID
+     C                     MOVE 'N'       WPASS   1                       CEU024
+     C*
+     C** Do until field is valid, F3 or F12 pressed
+     C*
+     C           VALID     DOUEQ'Y'
+     C           *INKC     OREQ *ON
+     C           *INKL     OREQ *ON
+     C*
+     C** Display program message subfile for any messages
+     C*
+     C                     WRITERE4252C0
+     C*
+     C** Output screen
+     C*
+     C                     EXFMTRE4252F1
+     C*
+     C** Clear program message queue
+     C*
+     C                     CALL 'SCC0250'
+     C*
+     C                     SETOF                     232425
+     C                     SETOF                     262728
+     C                     SETOF                     29
+     C*
+     C** Exit if F3 pressed
+     C*
+     C           *INKC     IFEQ *ON
+     C                     EXSR #LAST
+     C                     ENDIF
+     C*
+     C** Refresh details if F5 pressed
+     C*
+     C           *INKE     IFEQ *ON
+     C                     SETOF                     232425
+     C                     SETOF                     262728
+     C                     SETOF                     29
+     C                     EXSR #LOAD
+     C                     ENDIF
+     C*
+     C** Return to previous screen if F12 pressed
+     C*
+     C           *INKL     IFEQ *ON
+     C                     SETOF                     232425
+     C                     SETOF                     262728
+     C                     SETOF                     29
+     C                     MOVE *BLANKS   WDETL
+     C                     ENDIF
+     C*
+     C** If F3 and F12 not requested validate input
+     C*
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+     C           *INKE     ANDEQ*OFF
+     C                     EXSR #VALD
+     C*
+     C** If input valid update fields
+     C*
+     C           VALID     IFEQ 'Y'
+     C                     Z-ADDW#AMNT    FEAMNT
+     C                     Z-ADDW#DNRT    FEDNRT
+     C                     Z-ADDW#DPRT    FEDPRT
+     C                     Z-ADDW#DSRT    FEDSRT
+     C                     Z-ADDW#VNRT    FEVNRT
+     C                     Z-ADDW#VPRT    FEVPRT
+     C                     Z-ADDW#VSRT    FEVSRT
+      *                                                                   CEU024
+     C           CEU024    IFEQ 'Y'                                       CEU024
+     C           *IN31     ANDEQ'1'                                       CEU024
+     C           WPASS     ANDEQ'N'                                       CEU024
+     C           CEU025    OREQ 'Y'                                       CEU025
+     C           *IN31     ANDEQ'1'                                       CEU025
+     C           WPASS     ANDEQ'N'                                       CEU025
+     C                     MOVEL'N'       VALID                           CEU024
+     C                     MOVEL'Y'       WPASS                           CEU024
+     C                     MOVEL'1'       *IN36                           CEU024
+     C                     MOVEL'1'       *IN37                           CEU024
+     C                     ELSE                                           CEU024
+     C*
+     C** If record does not exist on customer extension file write
+     C** details
+     C*
+     C           *IN10     IFEQ *ON
+     C                     MOVE SCCY      FECYCD
+     C                     WRITEREBDCRD0
+     C*
+     C** If record exists update record
+     C*
+     C                     ELSE
+     C                     UPDATREBDCRD0
+     C                     ENDIF
+      *                                                                   CEU024
+     C                     ENDIF                                          CEU024
+     C*
+      ** Base ccy is an out ccy and transaction ccy is Euro               CEU024
+      *                                                                   CEU024
+     C           CEU024    IFEQ 'Y'                                       CEU024
+     C           WBCIN     ANDEQ'O'                                       CEU024
+     C           SCCY      ANDEQBKEURO                                    CEU024
+     C           CEU025    OREQ 'Y'                                       CEU025
+     C           WBCIN     ANDEQ'O'                                       CEU025
+     C           SCCY      ANDEQBKEURO                                    CEU025
+     C                     EXSR SREMPD                                    CEU024
+     C                     ENDIF                                          CEU024
+      *                                                                   CEU024
+     C                     COMIT
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #DELT  -  Deletion processing                                 *
+     C*                                                               *
+     C* Calls:  #LAST                                                 *
+     C*                                                               *
+     C* Called from: #DETA                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #DELT     BEGSR                           *** #DELT ***
+     C*
+     C                     SETON                     4041
+     C*
+     C** Do until F3, F12 or F10 pressed
+     C*
+     C           *INKC     DOUEQ*ON
+     C           *INKJ     OREQ *ON
+     C           *INKL     OREQ *ON
+     C*
+     C** Display program message subfile for any messages
+     C*
+     C                     WRITERE4252C0
+     C*
+     C** Output screen
+     C*
+     C                     EXFMTRE4252F1
+     C*
+     C** Exit if F3 pressed
+     C*
+     C           *INKC     IFEQ *ON
+     C                     EXSR #LAST
+     C                     ENDIF
+     C*
+     C** If F10 pressed delete record if it exists
+     C*
+     C           *INKJ     IFEQ *ON
+     C                     DELETREBDCRD0
+     C                     COMIT
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #ENQY  -  Enquiry  processing                                 *
+     C*                                                               *
+     C* Calls:  #LAST                                                 *
+     C*                                                               *
+     C* Called from: #DETA                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ENQY     BEGSR                           *** #ENQY ***
+     C*
+     C                     SETON                     40
+     C*
+     C** Display program message subfile for any messages
+     C*
+     C                     WRITERE4252C0
+     C*
+     C** Output screen
+     C*
+     C                     EXFMTRE4252F1
+     C*
+     C** Exit if F3 pressed
+     C*
+     C           *INKC     IFEQ *ON
+     C                     EXSR #LAST
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #VALD  -  Validate detail fields                              *
+     C*                                                               *
+     C* Calls:  ZALIGN, SNDMSG                                        *
+     C*                                                               *
+     C* Called from: #UPDT                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #VALD     BEGSR                           *** #VALD ***
+     C*
+     C                     MOVE 'Y'       VALID   1
+     C*
+     C** Convert amount into numeric
+     C*
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE D#AMNT    ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD9         ZADIG
+     C                     EXSR ZALIGN
+     C*
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       VALID
+     C                     SETON                     23
+     C                     MOVE 'USR0008' @MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C                     MOVE ZFIELD    W#AMNT  90
+     C                     ENDIF
+     C*
+     C** Exchange amount must be greater or equal 1
+     C*
+     C           *IN23     IFEQ *OFF
+     C           W#AMNT    IFLT 1
+     C                     SETON                     23
+     C                     MOVE 'USR1209' @MSGID
+     C                     EXSR SNDMSG
+     C                     MOVE 'N'       VALID
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** Convert rates into numeric
+     C*
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE D#DNRT    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     Z-ADD5         ZADIG
+     C                     EXSR ZALIGN
+     C*
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       VALID
+     C                     SETON                     24
+     C                     MOVE 'USR1213' @MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C                     MOVE ZFIELD    W#DNRT  83
+     C                     ENDIF
+     C*
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE D#DPRT    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     Z-ADD5         ZADIG
+     C                     EXSR ZALIGN
+     C*
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       VALID
+     C                     SETON                     25
+     C                     MOVE 'USR1214' @MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C                     MOVE ZFIELD    W#DPRT  83
+     C                     ENDIF
+     C*
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE D#DSRT    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     Z-ADD5         ZADIG
+     C                     EXSR ZALIGN
+     C*
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       VALID
+     C                     SETON                     26
+     C                     MOVE 'USR1215' @MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C                     MOVE ZFIELD    W#DSRT  83
+     C                     ENDIF
+     C*
+     C** Exchange rates must be in increasing order
+     C** DNRT <= DSRT <= DPRT
+     C*
+     C           *IN24     IFEQ *OFF
+     C           *IN25     ANDEQ*OFF
+     C           *IN26     ANDEQ*OFF
+     C           W#DNRT    IFLT 0
+     C           W#DNRT    ORGT W#DSRT
+     C           @TMDIN    ANDEQ'M'                                       150864
+     C           W#DSRT    ORGT W#DPRT
+     C           @TMDIN    ANDEQ'M'                                       150864
+     C           W#DPRT    ORGT W#DSRT                                    150864
+     C           @TMDIN    ANDEQ'D'                                       150864
+     C           W#DSRT    ORGT W#DNRT                                    150864
+     C           @TMDIN    ANDEQ'D'                                       150864
+     C                     SETON                     242526
+     C                     MOVE 'USR1207' @MSGID
+     C                     EXSR SNDMSG
+     C                     MOVE 'N'       VALID
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** Convert cash rates into numeric
+     C*
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE D#VNRT    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     Z-ADD5         ZADIG
+     C                     EXSR ZALIGN
+     C*
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       VALID
+     C                     SETON                     27
+     C                     MOVE 'USR1216' @MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C                     MOVE ZFIELD    W#VNRT  93
+     C                     ENDIF
+     C*
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE D#VPRT    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     Z-ADD5         ZADIG
+     C                     EXSR ZALIGN
+     C*
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       VALID
+     C                     SETON                     28
+     C                     MOVE 'USR1217' @MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C                     MOVE ZFIELD    W#VPRT  93
+     C                     ENDIF
+     C*
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE D#VSRT    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     Z-ADD5         ZADIG
+     C                     EXSR ZALIGN
+     C*
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       VALID
+     C                     SETON                     29
+     C                     MOVE 'USR1212' @MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C                     MOVE ZFIELD    W#VSRT  93
+     C                     ENDIF
+     C*
+     C** Exchange cash rates must be in increasing order
+     C** VNRT <= VSRT <= VPRT
+     C*
+     C           *IN27     IFEQ *OFF
+     C           *IN28     ANDEQ*OFF
+     C           *IN29     ANDEQ*OFF
+     C           W#VNRT    IFLT 0
+     C           W#VNRT    ORGT W#VSRT
+     C           @TMDIN    ANDEQ'M'                                       150864
+     C           W#VSRT    ORGT W#VPRT
+     C           @TMDIN    ANDEQ'M'                                       150864
+     C           W#VPRT    ORGT W#VSRT                                    150864
+     C           @TMDIN    ANDEQ'D'                                       150864
+     C           W#VSRT    ORGT W#VNRT                                    150864
+     C           @TMDIN    ANDEQ'D'                                       150864
+     C                     SETON                     272829
+     C                     MOVE 'USR1208' @MSGID
+     C                     EXSR SNDMSG
+     C                     MOVE 'N'       VALID
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                   CEU024
+      ** Base ccy is an 'in' ccy and transaction ccy is an 'out' ccy      CEU024
+      *                                                                   CEU024
+     C           CEU024    IFEQ 'Y'                                       CEU024
+     C           *IN31     ANDEQ'1'                                       CEU024
+     C           VALID     ANDEQ'Y'                                       CEU024
+     C           CEU025    OREQ 'Y'                                       CEU025
+     C           *IN31     ANDEQ'1'                                       CEU025
+     C           VALID     ANDEQ'Y'                                       CEU025
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE W#AMNT    ZFIELD                          CEU024
+     C                     Z-ADD0         ZADEC                           CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    D#AMNT                          CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE W#DNRT    ZFIELD                          CEU024
+     C                     Z-ADD3         ZADEC                           CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    D#DNRT                          CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE W#DPRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    D#DPRT                          CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE W#DSRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    D#DSRT                          CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE W#VNRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    D#VNRT                          CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE W#VPRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    D#VPRT                          CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE W#VSRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    D#VSRT                          CEU024
+     C                     MOVE '1'       *IN40                           CEU024
+      *                                                                   150864
+      * Calculate transaction ('out') ccy to base rate                    150864
+     C**********           Z-ADDW#DNRT    ZRATE1                   CEU024 150864
+     C**********           MOVEL'M'       ZMDI1                    CEU024 150864
+      *                                                                   150864
+      * Adjust rate by scaling factor to get true rate, and use correct   150864
+      * mult./div. ind. for transaction ccy.                              150864
+     C           W#DNRT    DIV  W#AMNT    ZRATE1                          150864
+     C                     MOVEL@TMDIN    ZMDI1                           150864
+     C                     Z-ADDWEUER     ZRATE2                          CEU024
+     C                     MOVELWEUMD     ZMDI2                           CEU024
+     C                     MOVEL@TMDIN    ZCROSS                          150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C                     EXSR ZXRATN                                    150864
+     C**********           Z-ADDZRATEX    W#DNRT                   CEU024 150864
+     C           ZRATEX    MULT W#AMNT    W#DNRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDW#DPRT    ZRATE1                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C**********           Z-ADDZRATEX    W#DPRT                   CEU024 150864
+     C           W#DPRT    DIV  W#AMNT    ZRATE1                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT W#AMNT    W#DPRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDW#DSRT    ZRATE1                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C**********           Z-ADDZRATEX    W#DSRT                   CEU024 150864
+     C           W#DSRT    DIV  W#AMNT    ZRATE1                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT W#AMNT    W#DSRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDW#VNRT    ZRATE1                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C**********           Z-ADDZRATEX    W#VNRT                   CEU024 150864
+     C           W#VNRT    DIV  W#AMNT    ZRATE1                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT W#AMNT    W#VNRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDW#VPRT    ZRATE1                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C**********           Z-ADDZRATEX    W#VPRT                   CEU024 150864
+     C           W#VPRT    DIV  W#AMNT    ZRATE1                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT W#AMNT    W#VPRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDW#VSRT    ZRATE1                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C**********           Z-ADDZRATEX    W#VSRT                   CEU024 150864
+     C           W#VSRT    DIV  W#AMNT    ZRATE1                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT W#AMNT    W#VSRT    H                     150864
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE W#DNRT    ZFIELD                          CEU024
+     C                     Z-ADD3         ZADEC                           CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    SEUBR                           CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE W#DPRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    SEUSR                           CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE W#DSRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    SEUAR                           CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE W#VNRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    SEUCB                           CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE W#VPRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    SEUCS                           CEU024
+      *                                                                   CEU024
+     C                     MOVE *BLANKS   ZFIELD                          CEU024
+     C                     MOVE W#VSRT    ZFIELD                          CEU024
+     C                     EXSR ZEDIT                                     CEU024
+     C                     MOVE ZFIELD    SEUCA                           CEU024
+     C           SCCY      CHAINREBDCRPD             10                   CEU024
+      *                                                                   CEU024
+     C                     ENDIF                                          CEU024
+     C*
+     C                     ENDSR
+      /EJECT                                                              150864
+      *****************************************************************   150864
+      *                                                               *   150864
+      * #ADJRT -  Adjust calculated rate for 3 decimal places         *   150864
+      *                                                               *   150864
+      * Calls:  None                                                  *   150864
+      *                                                               *   150864
+      * Called from: #LOAD                                            *   150864
+      *                                                               *   150864
+      *****************************************************************   150864
+      *                                                                   150864
+     C           #ADJRT    BEGSR                                          150864
+      *                                                                   150864
+     C                     MOVE WTREX     @WK13  130                      150864
+     C                     MOVE @WK13     @WK13A 13                       150864
+     C                     MOVEA@WK13A    @AR                             150864
+      *                                                                   150864
+      * If 5 figures before dec. point can only have 3 dec. places        150864
+     C           @AR,1     IFNE '0'                                       150864
+     C                     Z-ADDWTREX     WTREXB  83H                     150864
+     C                     Z-ADD1         W#FACT  90                      150864
+     C                     ELSE                                           150864
+      *                                                                   150864
+      * Find last significant digit                                       150864
+     C                     Z-ADD13        @B      20                      150864
+     C           @AR,@B    DOWEQ'0'                                       150864
+     C           @B        ANDGT8                                         150864
+     C                     SUB  1         @B                              150864
+     C                     ENDDO                                          150864
+      *                                                                   150864
+      * If 3 or less dec. places no scaling factor required               150864
+     C           @B        IFLT 9                                         150864
+     C                     Z-ADDWTREX     WTREXB                          150864
+     C                     Z-ADD1         W#FACT                          150864
+     C                     ELSE                                           150864
+      *                                                                   150864
+      * Find 1st significant digit                                        150864
+     C                     Z-ADD2         @A      20                      150864
+     C           @AR,@A    DOWEQ'0'                                       150864
+     C           @A        ANDLT6                                         150864
+     C                     ADD  1         @A                              150864
+     C                     ENDDO                                          150864
+      *                                                                   150864
+      * Adjust rate and set scaling factor as required                    150864
+     C                     SELEC                                          150864
+      *                                                                   150864
+     C           @A        WHEQ 2                                         150864
+     C           @B        OREQ 9                                         150864
+     C                     Z-ADDWTREX     @WK84   84H                     150864
+     C                     MOVE @WK84     WTREXB                          150864
+     C                     Z-ADD10        W#FACT                          150864
+      *                                                                   150864
+     C           @A        WHEQ 3                                         150864
+     C           @B        OREQ 10                                        150864
+     C                     Z-ADDWTREX     @WK85   85H                     150864
+     C                     MOVE @WK85     WTREXB                          150864
+     C                     Z-ADD100       W#FACT                          150864
+      *                                                                   150864
+     C           @A        WHEQ 4                                         150864
+     C           @B        OREQ 11                                        150864
+     C                     Z-ADDWTREX     @WK86   86H                     150864
+     C                     MOVE @WK86     WTREXB                          150864
+     C                     Z-ADD1000      W#FACT                          150864
+      *                                                                   150864
+     C           @A        WHEQ 5                                         150864
+     C           @B        OREQ 12                                        150864
+     C                     Z-ADDWTREX     @WK87   87H                     150864
+     C                     MOVE @WK87     WTREXB                          150864
+     C                     Z-ADD10000     W#FACT                          150864
+      *                                                                   150864
+     C                     OTHER                                          150864
+     C                     Z-ADDWTREX     @WK88   88H                     150864
+     C                     MOVE @WK88     WTREXB                          150864
+     C                     Z-ADD100000    W#FACT                          150864
+      *                                                                   150864
+     C                     ENDSL                                          150864
+      *                                                                   150864
+     C                     ENDIF                                          150864
+     C                     ENDIF                                          150864
+      *                                                                   150864
+     C                     ENDSR                                          150864
+      /EJECT                                                              CEU024
+      *****************************************************************   CEU024
+      *                                                               *   CEU024
+      * SREMPD -  EMU Related Update Processing                       *   CEU024
+      *                                                               *   CEU024
+      * Calls:  None                                                  *   CEU024
+      *                                                               *   CEU024
+      * Called from: #UPDT - Update Processing                        *   CEU024
+      *                                                               *   CEU024
+      *****************************************************************   CEU024
+      *                                                                   CEU024
+     C           SREMPD    BEGSR                                          CEU024
+      *                                                                   CEU024
+     C           *LOVAL    SETLLREBDCRPD                                  CEU024
+     C                     READ REBDCRPD                 34               CEU024
+      *                                                                   CEU024
+     C           *IN34     DOWEQ'0'                                       CEU024
+     C           FECYCD    LOKUPCYCD                     32               CEU024
+     C           *IN32     IFEQ '1'                                       CEU024
+     C           FECYCD    ANDNEBKEURO                                    146200
+     C                     CALL 'AOCURRR0'                                CEU024
+     C                     PARM *BLANKS   PRTCD                           CEU024
+     C                     PARM '*KEY    'POPTN                           CEU024
+     C                     PARM FECYCD    PCURR                           CEU024
+     C           SDCURR    PARM SDCURR    DSSDY                           CEU024
+      *                                                                   CEU024
+      ** Convert rates when base ccy is an 'out' ccy and transaction cc   CEU024
+      ** ccy is Euro, only 'in' ccy and euro ccy in the file              CEU024
+      *                                                                   CEU024
+     C**********           Z-ADDW#DNRT    ZRATE2                   CEU024 150864
+      *                                                                   150864
+      * Adjust Euro BdC rate by scaling factor to get true rate           150864
+     C           W#DNRT    DIV  W#AMNT    ZRATE2                          150864
+     C           @TMDIN    IFEQ 'D'                                       150864
+     C                     MOVEL'M'       ZMDI2                           150864
+     C                     ELSE                                           150864
+     C                     MOVEL'D'       ZMDI2                           CEU024
+     C                     ENDIF                                          150864
+     C                     Z-ADDA6EUER    ZRATE1                          CEU024
+     C                     MOVELA6EUMD    ZMDI1                           CEU024
+     C                     MOVELA6MDIN    ZCROSS                          150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C                     EXSR ZXRATN                                    150864
+     C********** ZMDIX     IFEQ 'D'                                CEU024 150864
+     C********** 1         DIV  ZRATEX    FEDNRT                   CEU024 150864
+     C**********           ELSE                                    CEU024 150864
+     C**********           Z-ADDZRATEX    FEDNRT                   CEU024 150864
+     C**********           ENDIF                                   CEU024 150864
+     C           ZRATEX    MULT FEAMNT    FEDNRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDW#DPRT    ZRATE2                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C********** ZMDIX     IFEQ 'D'                                CEU024 150864
+     C********** 1         DIV  ZRATEX    FEDPRT                   CEU024 150864
+     C**********           ELSE                                    CEU024 150864
+     C**********           Z-ADDZRATEX    FEDPRT                   CEU024 150864
+     C**********           ENDIF                                   CEU024 150864
+     C           W#DPRT    DIV  W#AMNT    ZRATE2                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT FEAMNT    FEDPRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDW#DSRT    ZRATE2                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C********** ZMDIX     IFEQ 'D'                                CEU024 150864
+     C********** 1         DIV  ZRATEX    FEDSRT                   CEU024 150864
+     C**********           ELSE                                    CEU024 150864
+     C**********           Z-ADDZRATEX    FEDSRT                   CEU024 150864
+     C**********           ENDIF                                   CEU024 150864
+     C           W#DSRT    DIV  W#AMNT    ZRATE2                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT FEAMNT    FEDSRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDW#VNRT    ZRATE2                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C********** ZMDIX     IFEQ 'D'                                CEU024 150864
+     C********** 1         DIV  ZRATEX    FEVNRT                   CEU024 150864
+     C**********           ELSE                                    CEU024 150864
+     C**********           Z-ADDZRATEX    FEVNRT                   CEU024 150864
+     C**********           ENDIF                                   CEU024 150864
+     C           W#VNRT    DIV  W#AMNT    ZRATE2                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT FEAMNT    FEVNRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDW#VPRT    ZRATE2                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C********** ZMDIX     IFEQ 'D'                                CEU024 150864
+     C********** 1         DIV  ZRATEX    FEVPRT                   CEU024 150864
+     C**********           ELSE                                    CEU024 150864
+     C**********           Z-ADDZRATEX    FEVPRT                   CEU024 150864
+     C**********           ENDIF                                   CEU024 150864
+     C           W#VPRT    DIV  W#AMNT    ZRATE2                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT FEAMNT    FEVPRT    H                     150864
+      *                                                                   CEU024
+     C**********           Z-ADDW#VSRT    ZRATE2                   CEU024 150864
+     C**********           EXSR ZXRATE                             CEU024 150864
+     C********** ZMDIX     IFEQ 'D'                                CEU024 150864
+     C********** 1         DIV  ZRATEX    FEVSRT                   CEU024 150864
+     C**********           ELSE                                    CEU024 150864
+     C**********           Z-ADDZRATEX    FEVSRT                   CEU024 150864
+     C**********           ENDIF                                   CEU024 150864
+     C           W#VSRT    DIV  W#AMNT    ZRATE2                          150864
+     C                     EXSR ZXRATN                                    150864
+     C           ZRATEX    MULT FEAMNT    FEVSRT    H                     150864
+      *                                                                   150864
+     C                     UPDATREBDCRD0                                  CEU024
+     C                     ENDIF                                          CEU024
+     C                     READ REBDCRD0                 34               CEU024
+     C                     ENDDO                                          CEU024
+      *                                                                   CEU024
+     C                     ENDSR                                          CEU024
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SNDMSG -  Send program message                                *
+     C*                                                               *
+     C* Calls:  None                                                  *
+     C*                                                               *
+     C* Called from: #VALIN, #VALD                                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SNDMSG    BEGSR                           *** SNDMSG ***
+     C*
+     C                     SETON                     30
+     C*
+     C                     CALL 'SCC0240'
+     C                     PARM           @MSGID
+     C                     PARM           @MSGF
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LAST  -  Final processing                                    *
+     C*                                                               *
+     C* Calls:  None                                                  *
+     C*                                                               *
+     C* Called from: Main processing, #UPDT, #DELT, #ENQY             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LAST     BEGSR                           *** #LAST  ***
+     C*
+     C                     CLOSE*ALL
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  -  Error control subroutine                           *
+     C*                                                               *
+     C*  Calls:  None                                                 *
+     C*                                                               *
+     C*  Called from:  #INIT                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           *** *PSSR ***
+     C*
+     C** Check to see that *PSSR has not been called yet
+     C*
+     C                     ROLBK
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+     C*
+     C** If *PSSR already run, then just end the program here
+     C*
+     C                     SETON                     U7U8LR
+     C*
+     C** Call standard database error program
+     C*
+     C                     CALL 'DBERRCTL'
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C/EJECT                                                              150864
+      *****************************************************************   150864
+      *                                                               *   150864
+      * ZXRATN - Calculate a multiply or divide cross-exchange rate   *   150864
+      *                                                               *   150864
+      *   Input - ZRATE1 (13,8) Exchange rate 1 (to base/Euro)        *   150864
+      *           ZMDI1  (1A)   Multiply/divide ind. for ZRATE1       *   150864
+      *           ZRATE2 (13,8) Exchange rate 2 (to base/Euro)        *   150864
+      *           ZMDI2  (1A)   Multiply/divide ind. for ZRATE2       *   150864
+      *           ZCROSS (1A)   Multiply or divide cross rate req'd?  *   150864
+      *                                                               *   150864
+      * Calls:  None                                                  *   150864
+      *                                                               *   150864
+      * Called from: #LOAD, #VALD, SREMPD                             *   150864
+      *                                                               *   150864
+      *****************************************************************   150864
+      *                                                                   150864
+     C           ZXRATN    BEGSR                           ** ZXRATN ** **150864
+      *                                                                   150864
+     C                     Z-ADD*ZEROS    ZRATEX 138                      150864
+      *                                                                   150864
+      * Do not calculate with a zero rate                                 150864
+     C           ZRATE1    IFNE *ZEROS                                    150864
+     C           ZRATE2    ANDNE*ZEROS                                    150864
+      *                                                                   150864
+      * Mult./divide ind. same.                                           150864
+      * If both mult. and mult. cross-rate req'd or both divide and       150864
+      * divide cross-rate req'd, calc. is rate1/rate2.                    150864
+      * If both mult. and divide cross-rate req'd or both divide and      150864
+      * mult. cross-rate req'd, calc. is rate2/rate1.                     150864
+     C           ZMDI1     IFEQ ZMDI2                                     150864
+      *                                                                   150864
+     C           ZMDI1     IFEQ 'M'                                       150864
+     C           ZCROSS    ANDEQ'M'                                       150864
+     C           ZMDI1     OREQ 'D'                                       150864
+     C           ZCROSS    ANDEQ'D'                                       150864
+     C           ZRATE1    DIV  ZRATE2    ZRATEX    H                     150864
+     C                     ELSE                                           150864
+     C           ZRATE2    DIV  ZRATE1    ZRATEX    H                     150864
+     C                     ENDIF                                          150864
+      *                                                                   150864
+     C                     ELSE                                           150864
+      *                                                                   150864
+      * Mult./divide ind. not the same                                    150864
+      * If 1st rate is divide and divide cross-rate req'd or 2nd rate     150864
+      * is divide and multiply rate is req'd, calc. is rate1 * rate2.     150864
+      * If 1st rate is divide and mult. cross-rate req'd or 2nd rate      150864
+      * is divide and divide rate is req'd, calc. is 1/(rate1 * rate2).   150864
+     C           ZRATE1    MULT ZRATE2    ZRATEX    H                     150864
+      *                                                                   150864
+     C           ZMDI1     IFEQ 'D'                                       150864
+     C           ZCROSS    ANDEQ'M'                                       150864
+     C           ZMDI2     OREQ 'D'                                       150864
+     C           ZCROSS    ANDEQ'D'                                       150864
+     C           1         DIV  ZRATEX    ZRATEX    H                     150864
+     C                     ENDIF                                          150864
+      *                                                                   150864
+     C                     ENDIF                                          150864
+     C                     ENDIF                                          150864
+      *                                                                   150864
+     C                     ENDSR                                          150864
+      *                                                                   150864
+     C********************************************************************150864
+     C/EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+     C/COPY ZSRSRC,ZALIGNZ2
+      /EJECT                                                              CEU024
+     C*/C*PY ZSRSRC,ZXRATEZ1                                       CEU024 150864
+     C*****************************************************************
+**  CPY@ - OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

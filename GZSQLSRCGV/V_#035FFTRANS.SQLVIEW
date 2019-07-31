@@ -1,0 +1,296 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_#FFTRANS - FF OTC Transaction Details                               */
+/*                                                                             */
+/*       (c) Finastra International Limited 2003                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CSF011             Date 12Sep11                        */
+/*                      CAP208             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER043             Date 02Jun08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/*                      CAP191             Date 26Nov09                        */
+/*                      261609             Date 10Sep09                        */
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/*                      245354             Date 30Jan07                        */
+/*                      244971             Date 11Jan07                        */
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      BUG6288            Date 14Mar05                        */
+/*                      BUG5332            Date 25Jan05                        */
+/*                      BUG5553            Date 20Jan05                        */
+/*                      BUG5404            Date 17Jan05                        */
+/*                      CLE025             Date 20Oct04                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      BUG666             Date 07APR04                        */
+/*                      BUG664             Date 18MAR04                        */
+/*                      BUG1355            Date 16MAR04                        */
+/*                      CGP001  *CREATE    Date 20Aug03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CAP208 - F&O Market Instrument API (Recompile)                        */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       CAP191 - MQ Enabling of FUND and EXTR APIs (Recompile)                */
+/*       261609 - Change table GZFFOTCCPD to GZTRANSD and set filter in        */
+/*                retrieving records whether for OTC or EXTR via MTHN          */
+/*       245354 - If expiry date of instrument is after system rundate then    */
+/*                show status as expired.                                      */
+/*       244971 - Need to include field FTDT from GZINTYPD                     */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       BUG6288- Performance Enhancements "Order By"                          */
+/*       BUG5332- Listview changes (Currency OTC/Non-Currency OTC)             */
+/*       BUG5553- Performance Enhancements                                     */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG1912- SQL performance analysis required                            */
+/*       BUG666 - LISTVIEW CCY COLUMN FORMATTING                               */
+/*       BUG664 - BROKER CODE MUST BE PADDED                                   */
+/*       BUG1355- CLOSURE REF MUST BE PADDED                                   */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+**********F1.RECI,  F1.BRCA, F1.BOCO, F1.BOKC, F1.ISTT,                         :  BUG664
+**F1.RECI,**F1.BRCA,*F1.BOKC,*F1.ISTT,******************************************:  BUG664 245354
+  F1.BRCA, F1.BOKC, F1.ISTT,                                                    :  245354
+  F1.YRNO, F1.MTHN, F1.PCAL, F1.STRP, F1.TRTY, F1.ULTT,                         :
+  F1.NUCO, F1.NOCO, F1.NOBO, F1.COPR, F1.TNAR, F1.TBLO,                         :
+**********F1.CLSR, F1.ECPI, F1.CBPI, F1.ISCY, F1.FCIN, F1.FBIN,                 :  BUG1355
+  F1.ECPI, F1.CBPI, F1.ISCY, F1.FCIN, F1.FBIN,                                  :  BUG1355
+  F1.CHTP, F1.TNLU, F1.ORBR, F1.PRFC, F1.PTFR,                                  :
+**F1.ACNI,*F1.MABK,*F1.MACU,*F1.CUUN,*F1.UNPL,*F1.UPLS,*F1.MHEX,****************:  BUG666
+  F1.ACNI, F1.MHEX,                                                             :  BUG666
+  F1.BPRC, F1.TPRC, F1.PYRC, F1.FRNT, F1.AFRT, F1.REPA, F1.TMST,                :
+  F1.PLSPTP, F1.CENT, F1.COVE, F1.HETR, F1.BLUP, F1.REPI,                       :  BUG666
+**F1.PLSPTP,*F1.CENT,*F1.COVE,*F1.HETR,*F1.BLUP,*F1.REPI,*F1.FSURPL,************:  BUG666
+**F1.FSTUPL,*F1.FSPUPL,*F1.FSYUPL,**********************************************:  BUG666
+  F1.TNBR,F1.CUSC,LNKR,CLSR,BOCO,F2.CCMC,F2.CCMS,F2.CCHC,F2.BCMC,               :BUG6288
+  F2.BCMS,F2.BCHC,F2.CSLT,F2.BSLT,F1.TRSD,F1.FCDA,F1.LCD,F1.ORED,F1.VALD,       :BUG6288
+  DIGITS(F1.TNBR) as PADTNBR,                                                   :
+**DIGITS(F1.CUSC)*as*PADCUSC,***************************************************:             CSD027
+         F1.CUSC  as PADCUSC,                                                   :             CSD027
+  case when LNKR = 0 then ' ' else DIGITS(LNKR) end as PADLNKR,                 :
+  case when CLSR = 0 then ' ' else DIGITS(CLSR) end as PADCLSR,                 :  BUG1355
+**case*when*BOCO*=*0*then*'*'*else*DIGITS(BOCO)*end*as*PADBOCO,*****************:  BUG664     CSD027
+  case when BOCO = '' then ' ' else        BOCO  end as PADBOCO,                :             CSD027
+  F2.OCSB, F2.OCDB, F2.CCSB, F2.CCDB, F2.CPSB, F2.CPDB, F2.OCSC,                :
+  F2.OCDC, F2.CCSC, F2.CCDC, F2.CPSC, F2.CPDC, F2.NCCP,                         :
+  F2.BCPT,                                                                      :
+**F2.BSLA,*F2.BSBR,*F2.BBID,*F2.BFAO,*F2.BCPN,*F2.BCHP,*************************:  BUG666
+**F2.BCMP,*F2.CCPT,*************************************************************:  BUG666
+  F2.BSLA, F2.BSBR, F2.BBID, F2.BFAO, F2.BCPN,                                  :  BUG666
+  F2.CCPT,                                                                      :  BUG666
+  case when F2.CCMC= 0 then ' ' else DIGITS(F2.CCMC) end as PADCCMC,            :
+  case when F2.CCMS=0 then ' ' else DIGITS(F2.CCMS)  end as PADCCMS,            :
+  case when F2.CCHC= 0 then ' ' else DIGITS(F2.CCHC) end as PADCCHC,            :
+  case when F2.BCMC= 0 then ' ' else DIGITS(F2.BCMC) end as PADBCMC,            :
+  case when F2.BCMS=0 then ' ' else DIGITS(F2.BCMS)  end as PADBCMS,            :
+  case when F2.BCHC= 0 then ' ' else DIGITS(F2.BCHC) end as PADBCHC,            :
+  DIGITS(F2.CSLT) as PADCSLT,                                                   :
+  DIGITS(F2.BSLT) as PADBSLT,                                                   :
+**F2.CSLA,*F2.BRSC,*F2.CBID,*F2.CFAO,*F2.CCPN,*F2.CCHP,*F2.CCMP,****************:  BUG666
+  F2.CSLA, F2.BRSC, F2.CBID, F2.CFAO, F2.CCPN,                                  :  BUG666
+  F2.FRNT AS FRT,                                                               :
+  F2.AFRT AS AFR,                                                               :
+  F2.REPA AS REP,                                                               :
+  F2.TMST AS TMS,                                                               :
+**F2.CMCB,F2.CHCB,F2.CMCC,F2.CHCC,F3.ISPT,*A8ZONE*AS*CUSTZONE,*V_GPGLCUSL.*,****:            BUG5553
+  F2.CMCB,F2.CHCB,F2.CMCC,F2.CHCC,F3.ISPT, A8ZONE AS CUSTZONE,                  :            BUG5553
+  GPGLCUSL.CGGLOB,GPGLCUSL.CGCSSN,GPGLCUSL.CGRNM,GPGLCUSL.CGRTN,                :            BUG5553
+  GPGLCUSL.CGICD,GPGLCUSL.CGACO,GPGLCUSL.CGCNCZ,GPGLCUSL.CGCOLC,                :            BUG5553
+  GPGLCUSL.CGBRCD,GPGLCUSL.CGCUST,GPGLCUSL.CGZONE,                              :            BUG5553
+    CASE WHEN F1.TRSD=0 THEN NULL ELSE DATE(F1.TRSD+719892) END AS FTRSD,       :
+    CASE WHEN F1.FCDA=0 THEN NULL ELSE DATE(F1.FCDA+719892) END AS FFCDA,       :
+    CASE WHEN F1.LCD=0 THEN NULL ELSE DATE(F1.LCD+719892) END AS FLCD,          :
+    CASE WHEN F1.ORED=0 THEN NULL ELSE DATE(F1.ORED+719892) END AS FORED,       :
+    CASE WHEN F1.VALD=0 THEN NULL ELSE DATE(F1.VALD+719892) END AS FVALD,       :
+****DEC(F2.PRMP*C1.SCALING,31,4)*AS*"SPRMP",************************************:
+****DEC(F2.PRMP*C1.SCALING*C1.RATE,31,4)*AS*"BSPRMP",***************************:            BUG5553
+****DEC(F2.CCMA*C1.SCALING,31,4)*AS*"SCCMA",************************************:            BUG5553
+****DEC(F2.CCMA*C1.SCALING*C1.RATE,31,4)*AS*"BSCCMA",***************************:            BUG5553
+****DEC(F2.CCHA*C1.SCALING,31,4)*AS*"SCCHA",************************************:            BUG5553
+****DEC(F2.CCHA*C1.SCALING*C1.RATE,31,4)*AS*"BSCCHA",***************************:            BUG5553
+****DEC(F2.BCMA*C1.SCALING,31,4)*AS*"SBCMA",************************************:            BUG5553
+****DEC(F2.BCMA*C1.SCALING*C1.RATE,31,4)*AS*"BSBCMA",***************************:            BUG5553
+****DEC(F2.BCHA*C1.SCALING,31,4)*AS*"SBCHA",************************************:            BUG5553
+****DEC(F2.BCHA*C1.SCALING*C1.RATE,31,4)*AS*"BSBCHA",***************************:            BUG5553
+****DEC(F2.BMAR*C1.SCALING,31,4)*AS*"SBMAR",************************************:            BUG5553
+****DEC(F2.BMAR*C1.SCALING*C1.RATE,31,4)*AS*"BSBMAR",***************************:            BUG5553
+****DEC(F2.CMAR*C1.SCALING,31,4)*AS*"SCMAR",************************************:            BUG5553
+****DEC(F2.CMAR*C1.SCALING*C1.RATE,31,4)*AS*"BSCMAR"****************************:BUG666
+****DEC(F2.CMAR*C1.SCALING*C1.RATE,31,4)*AS*"BSCMAR",***************************:    BUG666  BUG5553
+****DEC(F1.MABK*C1.SCALING,31,4)*AS*"SMABK",************************************:    BUG666  BUG5553
+****DEC(F1.MABK*C1.SCALING*C1.RATE,31,4) AS "BSMABK",***************************:    BUG666  BUG5553
+****DEC(F1.MACU*C1.SCALING,31,4)*AS*"SMACU",************************************:    BUG666  BUG5553
+****DEC(F1.MACU*C1.SCALING*C1.RATE,31,4) AS "BSMACU",***************************:    BUG666  BUG5553
+****DEC(F1.CUUN*C1.SCALING,31,4)*AS*"SCUUN",************************************:    BUG666  BUG5553
+****DEC(F1.CUUN*C1.SCALING*C1.RATE,31,4)*AS*"BSCUUN",***************************:    BUG666  BUG5553
+****DEC(F1.UNPL*C1.SCALING,31,4)*AS*"SUNPL",************************************:    BUG666  BUG5553
+****DEC(F1.UNPL*C1.SCALING*C1.RATE,31,4)*AS*"BSUNPL",***************************:    BUG666  BUG5553
+****DEC(F1.UPLS*C1.SCALING,31,4)*AS*"SUPLS",************************************:    BUG666  BUG5553
+****DEC(F1.UPLS*C1.SCALING*C1.RATE,31,4)*AS*"BSUPLS",***************************:    BUG666  BUG5553
+****DEC(F1.FSURPL*C1.SCALING,31,4)*AS*"SFSURPL",********************************:    BUG666  BUG5553
+****DEC(F1.FSURPL*C1.SCALING*C1.RATE,31,4)*AS*"BSFSURPL",***********************:    BUG666  BUG5553
+****DEC(F1.FSTUPL*C1.SCALING,31,4)*AS*"SFSTUPL",********************************:    BUG666  BUG5553
+****DEC(F1.FSTUPL*C1.SCALING*C1.RATE,31,4)*AS*"BSFSTUPL",***********************:    BUG666  BUG5553
+****DEC(F1.FSPUPL*C1.SCALING,31,4)*AS*"SFSPUPL",********************************:    BUG666  BUG5553
+****DEC(F1.FSPUPL*C1.SCALING*C1.RATE,31,4)*AS*"BSFSPUPL",***********************:    BUG666  BUG5553
+****DEC(F1.FSYUPL*C1.SCALING,31,4)*AS*"SFSYUPL",********************************:    BUG666  BUG5553
+****DEC(F1.FSYUPL*C1.SCALING*C1.RATE,31,4)*AS*"BSFSYUPL",***********************:    BUG666  BUG5553
+****DEC(F2.BCHP*C1.SCALING,31,4)*AS*"SBCHP",************************************:    BUG666  BUG5553
+****DEC(F2.BCHP*C1.SCALING*C1.RATE,31,4)*AS*"BSBCHP",***************************:    BUG666  BUG5553
+****DEC(F2.BCMP*C1.SCALING,31,4)*AS*"SBCMP",************************************:    BUG666  BUG5553
+****DEC(F2.BCMP*C1.SCALING*C1.RATE,31,4)*AS*"BSBCMP",***************************:    BUG666  BUG5553
+****DEC(F2.CCHP*C1.SCALING,31,4)*AS*"SCCHP",************************************:    BUG666  BUG5553
+****DEC(F2.CCHP*C1.SCALING*C1.RATE,31,4)*AS*"BSCCHP",***************************:    BUG666  BUG5553
+****DEC(F2.CCMP*C1.SCALING,31,4)*AS*"SCCMP",************************************:    BUG666  BUG5553
+****DEC(F2.CCMP*C1.SCALING*C1.RATE,31,4)*AS*"BSCCMP"****************************:    BUG666  BUG5553
+    F2.PRMP AS SPRMP,                                                           :            BUG5553
+    F2.CCMA AS SCCMA,                                                           :            BUG5553
+    F2.CCHA AS SCCHA,                                                           :            BUG5553
+    F2.BCMA AS SBCMA,                                                           :            BUG5553
+    F2.BCHA AS SBCHA,                                                           :            BUG5553
+    F2.BMAR AS SBMAR,                                                           :            BUG5553
+    F2.CMAR AS SCMAR,                                                           :            BUG5553
+    F1.MABK AS SMABK,                                                           :            BUG5553
+    F1.MACU AS SMACU,                                                           :            BUG5553
+    F1.CUUN AS SCUUN,                                                           :            BUG5553
+    F1.UNPL AS SUNPL,                                                           :            BUG5553
+    F1.UPLS AS SUPLS,                                                           :            BUG5553
+    F1.FSURPL AS SFSURPL,                                                       :            BUG5553
+    F1.FSTUPL AS SFSTUPL,                                                       :            BUG5553
+    F1.FSPUPL AS SFSPUPL,                                                       :            BUG5553
+    F1.FSYUPL AS SFSYUPL,                                                       :            BUG5553
+    F2.BCHP AS SBCHP,                                                           :            BUG5553
+    F2.BCMP AS SBCMP,                                                           :            BUG5553
+    F2.CCHP AS SCCHP,                                                           :            BUG5553
+    F2.CCMP AS SCCMP,                                                           :            BUG5553
+    F3.FTDT AS FTDT,                                                            :             244971
+    CASE WHEN F3.FTDT=0 THEN NULL ELSE DATE(F3.FTDT+719892) END AS FFTDT,       :             244971
+****F3.OTHC,*F3.CTAM,*F3.CTCY,*F3.CCAM******************************************:     BUG5332 245354
+    F3.OTHC, F3.CTAM, F3.CTCY, F3.CCAM,                                         :             245354
+    CASE WHEN F3.FTDT < F4.BJRDNB                                               :             245354
+         THEN 'E' ELSE F1.RECI END AS RECI                                      :             245354
+**FROM*GZFFOTCCPD*AS*F1*********************************************************:             261609
+  FROM GZTRANSD AS F1                                                           :             261609
+  LEFT JOIN GZSDBRCHPD ON F1.BRCA = A8BRCD                                      :
+**LEFT*JOIN*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCUST*=*DIGITS(F1.CUSC)**********:BUG1912
+**LEFT*JOIN*GPGLCUSL*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCNUM*=*F1.CUSC*********:BUG1912     BUG5553
+  LEFT JOIN GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = F1.CUSC                    :            BUG5553
+  LEFT JOIN GZTRSETD as F2 on F2.TNBR = F1.TNBR AND F2.ZONE = A8ZONE            :
+**LEFT*JOIN*GZINTYPD*as*F3*on*F3.ISTT*=*F1.ISTT**AND*F3.FFZONE*=*A8ZONE;********:     BUG5553 245354
+**LEFT*JOIN*GZINTYPD*as*F3*on*F3.ISTT*=*F1.ISTT**AND*F3.FFZONE*=*A8ZONE*********:            BUG5553
+***LEFT*JOIN*V_GLOBRATE*C1*ON*C1.CCY=F1.ISCY;***********************************:            BUG5553
+  LEFT JOIN GZINTYPD as F3 on F3.ISTT = F1.ISTT  AND F3.FFZONE = A8ZONE         :             245354
+**LEFT*JOIN*GZSDBANKPD*as*F4*on*F4.BJZONE*=*A8ZONE*;****************************:      245354 261609
+  LEFT JOIN GZSDBANKPD as F4 on F4.BJZONE = A8ZONE                              :             261609
+  WHERE F1.MTHN = 0;                                                            :             261609
+                                                                                :
+                                                                                :
+ * DESCRIBESTART                                                                :
+***DESCRIBEFIELD*PADTNBR****AS*TNBR*******USING*GZFFOTCCPD**********************:             261609
+ * DESCRIBEFIELD PADTNBR    AS TNBR       USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*PADCUSC****AS*CUSC*******USING*GZFFOTCCPD**********************:             261609
+ * DESCRIBEFIELD PADCUSC    AS CUSC       USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*PADLNKR****AS*LNKR*******USING*GZFFOTCCPD**********************:             261609
+ * DESCRIBEFIELD PADLNKR    AS LNKR       USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*PADCLSR****AS*CLSR*******USING*GZFFOTCCPD**********************:     BUG1355 261609
+ * DESCRIBEFIELD PADCLSR    AS CLSR       USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*PADBOCO****AS*BOCO*******USING*GZFFOTCCPD**********************:      BUG664 261609
+ * DESCRIBEFIELD PADBOCO    AS BOCO       USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*FTRSD******AS*TRSD*******USING*GZFFOTCCPD**********************:             261609
+ * DESCRIBEFIELD FTRSD      AS TRSD       USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*FFCDA******AS*FCDA*******USING*GZFFOTCCPD**********************:             261609
+ * DESCRIBEFIELD FFCDA      AS FCDA       USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*FLCD*******AS*LCD********USING*GZFFOTCCPD**********************:             261609
+ * DESCRIBEFIELD FLCD       AS LCD        USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*FORED******AS*ORED*******USING*GZFFOTCCPD**********************:             261609
+ * DESCRIBEFIELD FORED      AS ORED       USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*FVALD******AS*VALD*******USING*GZFFOTCCPD**********************:             261609
+ * DESCRIBEFIELD FVALD      AS VALD       USING GZTRANSD                        :             261609
+ * DESCRIBEFIELD PADCCMC    AS CCMC       USING GZTRSETD                        :
+ * DESCRIBEFIELD PADCCMS    AS CCMS       USING GZTRSETD                        :
+ * DESCRIBEFIELD PADCCHC    AS CCHC       USING GZTRSETD                        :
+ * DESCRIBEFIELD PADCSLT    AS CSLT       USING GZTRSETD                        :
+ * DESCRIBEFIELD FRT        AS FRNT       USING GZTRSETD                        :
+ * DESCRIBEFIELD AFR        AS AFRT       USING GZTRSETD                        :
+ * DESCRIBEFIELD REP        AS REPA       USING GZTRSETD                        :
+ * DESCRIBEFIELD TMS        AS TMST       USING GZTRSETD                        :
+ * DESCRIBEFIELD SPRMP      AS PRMP       USING GZTRSETD                        :
+***DESCRIBEFIELD*BSPRMP*****AS*PRMP*******USING*GZTRSETD***(BASECCY)************:            BUG5553
+ * DESCRIBEFIELD SCCMA      AS CCMA       USING GZTRSETD                        :
+***DESCRIBEFIELD*BSCCMA*****AS*CCMA*******USING*GZTRSETD***(BASECCY)************:            BUG5553
+ * DESCRIBEFIELD SCCHA      AS CCHA       USING GZTRSETD                        :
+***DESCRIBEFIELD*BSCCHA*****AS*CCHA*******USING GZTRSETD***(BASECCY)************:            BUG5553
+ * DESCRIBEFIELD SBCMA      AS BCMA       USING GZTRSETD                        :
+***DESCRIBEFIELD*BSBCMA*****AS*BCMA*******USING*GZTRSETD***(BASECCY)************:            BUG5553
+ * DESCRIBEFIELD SBCHA      AS BCHA       USING GZTRSETD                        :
+***DESCRIBEFIELD*BSBCHA*****AS*BCHA*******USING*GZTRSETD***(BASECCY)************:            BUG5553
+ * DESCRIBEFIELD SBMAR      AS BMAR       USING GZTRSETD                        :
+***DESCRIBEFIELD*BSBMAR*****AS*BMAR*******USING*GZTRSETD***(BASECCY)************:            BUG5553
+ * DESCRIBEFIELD SCMAR      AS CMAR       USING GZTRSETD                        :
+***DESCRIBEFIELD*BSCMAR*****AS*CMAR*******USING*GZTRSETD***(BASECCY)************:            BUG5553
+***DESCRIBEFIELD*SMABK******AS*MABK*******USING*GZFFOTCCPD**********************:      BUG666 261609
+ * DESCRIBEFIELD SMABK      AS MABK       USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*BSMABK*****AS*MABK*******USING*GZFFOTCCPD*(BASECCY)************:     BUG666 BUG5553
+***DESCRIBEFIELD*SMACU******AS*MACU*******USING*GZFFOTCCPD**********************:      BUG666 261609
+ * DESCRIBEFIELD SMACU      AS MACU       USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*BSMACU*****AS*MACU*******USING*GZFFOTCCPD*(BASECCY)************:     BUG666 BUG5553
+***DESCRIBEFIELD*SCUUN******AS*CUUN*******USING*GZFFOTCCPD**********************:      BUG666 261609
+ * DESCRIBEFIELD SCUUN      AS CUUN       USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*BSCUUN*****AS*CUUN*******USING*GZFFOTCCPD*(BASECCY)************:     BUG666 BUG5553
+***DESCRIBEFIELD*SUNPL******AS*UNPL*******USING*GZFFOTCCPD**********************:      BUG666 261609
+ * DESCRIBEFIELD SUNPL      AS UNPL       USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*BSUNPL*****AS*UNPL*******USING*GZFFOTCCPD*(BASECCY)************:     BUG666 BUG5553
+***DESCRIBEFIELD*SUPLS******AS*UPLS*******USING*GZFFOTCCPD**********************:      BUG666 261609
+ * DESCRIBEFIELD SUPLS      AS UPLS       USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*BSUPLS*****AS*UPLS*******USING*GZFFOTCCPD*(BASECCY)************:     BUG666 BUG5553
+***DESCRIBEFIELD*SFSURPL****AS*FSURPL*****USING*GZFFOTCCPD**********************:      BUG666 261609
+ * DESCRIBEFIELD SFSURPL    AS FSURPL     USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*BSFSURPL***AS*FSURPL*****USING*GZFFOTCCPD*(BASECCY)************:     BUG666 BUG5553
+***DESCRIBEFIELD*SFSTUPL****AS*FSTUPL*****USING*GZFFOTCCPD**********************:      BUG666 261609
+ * DESCRIBEFIELD SFSTUPL    AS FSTUPL     USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*BSFSTUPL***AS*FSTUPL*****USING*GZFFOTCCPD*(BASECCY)************:     BUG666 BUG5553
+***DESCRIBEFIELD*SFSPUPL****AS*FSPUPL*****USING*GZFFOTCCPD**********************:      BUG666 261609
+ * DESCRIBEFIELD SFSPUPL    AS FSPUPL     USING GZTRANSD                        :             261609
+***DESCRIBEFIELD*BSFSPUPL***AS*FSPUPL*****USING*GZFFOTCCPD*(BASECCY)************:     BUG666 BUG5553
+***DESCRIBEFIELD*SFSYUPL****AS*FSYUPL*****USING*GZFFOTCCPD**********************:      BUG666 261609
+ * DESCRIBEFIELD SFSYUPL    AS FSYUPL     USING GZTRANSD                        :BUG666       261609
+***DESCRIBEFIELD*BSFSYUPL***AS*FSYUPL*****USING*GZFFOTCCPD*(BASECCY)************:     BUG666 BUG5553
+ * DESCRIBEFIELD SBCHP      AS BCHP       USING GZTRSETD                        :BUG666
+***DESCRIBEFIELD*BSBCHP*****AS*BCHP*******USING*GZTRSETD***(BASECCY)************:     BUG666 BUG5553
+ * DESCRIBEFIELD SBCMP      AS BCMP       USING GZTRSETD                        :BUG666
+***DESCRIBEFIELD*BSBCMP*****AS*BCMP*******USING*GZTRSETD***(BASECCY)************:     BUG666 BUG5553
+ * DESCRIBEFIELD SCCHP      AS CCHP       USING GZTRSETD                        :BUG666
+***DESCRIBEFIELD*BSCCHP*****AS*CCHP*******USING*GZTRSETD***(BASECCY)************:     BUG666 BUG5553
+ * DESCRIBEFIELD SCCMP      AS CCMP       USING GZTRSETD                        :BUG666
+***DESCRIBEFIELD*BSCCMP*****AS*CCMP*******USING*GZTRSETD***(BASECCY)************:     BUG666 BUG5553
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :
+ * DESCRIBEFIELD FFTDT      AS FTDT       USING GZINTYPD                        :             244971
+ * DESCRIBEEND                                                                  :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ FF OTC transaction details - GZFFOTCCPD  ';                     :
+                                                                                :

@@ -1,0 +1,252 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Period End Adjustment System Restore')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000107 - Period End Adjustment System Restore            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. CSD101             Date 07Dec18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1009800          Date 20Nov12              */
+/*                      AR999622           Date 09Jul12              */
+/*                      CSC054  *CREATE    Date 23Feb12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSD101 - Password Encryption                                */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1009800 - Report field in SDBANKPD of PEA system should   */
+/*                   be restored to its original value               */
+/*       AR999622 - COB background still running after PEA opens     */
+/*       CSC054 - Period End Adjustments                             */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&PRFL) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PRFP) TYPE(*CHAR) LEN(2)
+
+             DCL        VAR(&DMLIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIBP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DILIBP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JLIBP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DUMDM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DOWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MQMGR) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&MQUEUE) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(2000)
+             DCL        VAR(&NBRRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DPLIBP) TYPE(*CHAR) LEN(10)                               /*AR1009800*/
+
+/*/COPY SDCPYSRC,SDSVALDCL  */
+
+             DCLF       FILE(SCPEADL0)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          Ltd. 2012')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/**********  SNDPGMMSG  MSG('SCC000107 - SC Restore DBIC Data to +
+                          PEA System') TOMSGQ(MRUNQ)                                      /*CSD101*/
+             SNDPGMMSG  MSG('SCC000107 - SC Restore DBICDM Data to +
+                          PEA System') TOMSGQ(MRUNQ)                                      /*CSD101*/
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Set to COB mode to avoid starting I/C jobs */
+
+             CHGDTAARA  DTAARA(MPHAS (1 1)) VALUE('C')
+
+/** Get Live and PEA zone system prefix */
+/** also get MQ Queue Manager and Incoming Queue Name */
+
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
+                          'PEALiveSystemPrefix' &SVAL1 +
+                          'PEASystemPrefix' &SVAL2 +
+                          'SaveFileToLibrary' &SVAL3 +
+                          'RestoreToLibrary' &SVAL4 +
+                          'PEAHandShakingQM' &SVAL5 +
+                          'PEAHandShakingIQ' &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK10 &SVAL10)
+
+             CHGVAR     VAR(&PRFL) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&PRFP) VALUE(%SST(&SVAL2 1 2))
+             CHGVAR     VAR(&MQMGR) VALUE(%SST(&SVAL5 1 48))
+             CHGVAR     VAR(&MQUEUE) VALUE(%SST(&SVAL6 1 48))
+
+/** Retrieve JOB details */
+
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO +
+                        CMDLBL(ABNOR))
+             CHGVAR     VAR(&DMLIBL) VALUE(&PRFL *CAT 'DMLIB')
+             CHGVAR     VAR(&DMLIBP) VALUE(&PRFP *CAT 'DMLIB')
+             CHGVAR     VAR(&JLIBP) VALUE(&PRFP *CAT 'JLIB')
+             CHGVAR     VAR(&DILIBP) VALUE(%SST(&SVAL3 1 10))
+             CHGVAR     VAR(&DUMDM) VALUE(%SST(&SVAL4 1 10))
+             CHGVAR     VAR(&DOWNER) VALUE(&PRFP *CAT 'OWNER')
+             CHGVAR     VAR(&DPLIBP) VALUE(&PRFP *CAT 'DPLIB')                         /*AR1009800*/
+
+/** Create temporary message queue for error handling. */
+
+             CRTMSGQ    MSGQ(&DUMDM/RSTERR) TEXT('Temporary +
+                          message queue for restore errors')
+             MONMSG     MSGID(CPF0000)
+
+/** Check if re-run of copy database */
+
+             RTVDTAARA  DTAARA(SCPEASTS) RTNVAR(&STAT)
+             IF         COND(&STAT = 'C') THEN(DO)
+                GOTO       CMDLBL(CPYDB)
+             ENDDO
+
+/** Kill Object Locks */
+
+             SCKOBJLCK  LIB(&DMLIBP) JNAM(*ALL) JUSR(*ALL) LOCKST(*ALL)
+
+/** End COB background jobs */                                                          /*AR999622*/
+                                                                                        /*AR999622*/
+             CALL       PGM(SCC000120)                                                  /*AR999622*/
+                                                                                        /*AR999622*/
+/** Copy User Report Title of PEA system's bank details */                             /*AR1009800*/
+                                                                                       /*AR1009800*/
+             CPYF       FROMFILE(&DMLIBP/SDBANKPD) +
+                          TOFILE(&DPLIBP/SCPURTPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                           /*AR1009800*/
+             MONMSG     MSGID(CPF0000)                                                 /*AR1009800*/
+                                                                                       /*AR1009800*/
+/** Restore all files residing in xxDMLIB to RestoreToLibrary */
+
+/**********  RSTLIB     SAVLIB(&DMLIBL) DEV(*SAVF) +
+                          SAVF(&DILIBP/DBIC) MBROPT(*ALL) +
+                          RSTLIB(&DUMDM) OUTPUT(*PRINT)                                */ /*CSD101*/
+             RSTLIB     SAVLIB(&DMLIBL) DEV(*SAVF) +
+                          SAVF(&DILIBP/DBICDM) MBROPT(*ALL) +
+                          RSTLIB(&DUMDM) OUTPUT(*PRINT)                                   /*CSD101*/
+             MONMSG     MSGID(CPF3773)
+
+/** Check if DBIC is empty */
+
+             MONMSG     MSGID(CPF3707) EXEC(DO)
+/**********     SNDMSG     MSG('Save file DBIC in library' *BCAT +
+                           &DILIBP *TCAT 'has no data.') +
+                           TOMSGQ(&DUMDM/RSTERR)                                       */ /*CSD101*/
+                SNDMSG     MSG('Save file DBICDM in library' *BCAT +
+                           &DILIBP *TCAT 'has no data.') +
+                           TOMSGQ(&DUMDM/RSTERR)                                          /*CSD101*/
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/** Check if no object restored from xxDMLIB */
+
+             MONMSG     MSGID(CPF3770) EXEC(DO)
+                SNDMSG     MSG('No objects restored for library' *BCAT +
+                           &DMLIBP *TCAT '.') TOMSGQ(&DUMDM/RSTERR)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+
+/** Remove all triggers */
+
+             RMVALLTRG  LIBRARY(&DMLIBP)
+             RMVALLTRG  LIBRARY(&DUMDM)
+
+/** Generate driving file of objects to be restored in PEA system */
+
+             DLTF       FILE(QTEMP/SCC000107)
+             MONMSG     MSGID(CPF0000)
+
+             DSPOBJD    OBJ(&DUMDM/*ALL) OBJTYPE(*FILE *DTAARA) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/SCC000107)
+             CPYF       FROMFILE(QTEMP/SCC000107) TOFILE(SCPEADPD) +
+                           MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+
+/** Call program to remove records from SCPEADPD that are not be copied */
+
+             CALL       PGM(SC000108)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+CPYDB:       RCVF    RCDFMT(QLIDOBJD)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDOF))
+
+/** End physical file journaling */
+
+             ENDJRNPF   FILE(&ODOBNM) JRN(&JLIBP/ICJRN)
+             MONMSG     MSGID(CPF0000)
+
+/** Submit program to copy object to PEA system */
+
+             SBMJOB     CMD(CALL PGM(SCC000108) PARM(&ODOBNM &ODOBTP +
+                          &DUMDM &DMLIBP)) JOB(&ODOBNM) +
+                          JOBD(MBATCH) JOBQ(INTERFACE) +
+                          PRTDEV(*CURRENT) OUTQ(*JOBD) USER(*JOBD) +
+                          RTGDTA(*JOBD) INLLIBL(*JOBD)
+
+             GOTO       CMDLBL(CPYDB)
+
+ENDOF:
+
+/** Wait for Active CPYF to complete */
+
+             RTVMBRD    FILE(SCPEADL1) NBRCURRCD(&NBRRCD)
+
+             IF         COND(&NBRRCD > 0) THEN(DO)
+                DLYJOB     DLY(30)
+                GOTO       CMDLBL(ENDOF)
+             ENDDO
+
+/** Check for Errors encountered */
+
+CHKERR:      RTVMBRD    FILE(SCPEADL0) NBRCURRCD(&NBRRCD)
+
+             IF         COND(&NBRRCD > 0) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/** Call PEA Initiation Program */
+
+             CALL       SCC000109 PARM(&PRFL &PRFP)
+
+/** Clear RestoreToLibrary */
+
+             SBMJOB     CMD(CLRLIB LIB(&DUMDM)) JOB(CLRTMPLIB) +
+                          JOBD(MBATCH) JOBQ(INTERFACE) +
+                          PRTDEV(*CURRENT) OUTQ(*JOBD) USER(*JOBD) +
+                          RTGDTA(*JOBD) INLLIBL(*JOBD)
+
+             CHGVAR     VAR(&MSG) VALUE('Restore Successful')
+
+             GOTO       CMDLBL(ENDP)
+
+ABNOR:       CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000107 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+             DSPMSG     MSGQ(&DUMDM/RSTERR) OUTPUT(*PRINT)
+             CHGVAR     VAR(&MSG) VALUE('Restore Failed')
+
+ENDP:        DLTMSGQ    MSGQ(&DUMDM/RSTERR)
+             MONMSG     MSGID(CPF0000)
+
+/** Call ZAMSGTOMQ to send message to PEA status monitor */
+
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CALL       PGM(ZAMSGTOMQ) PARM(&RETURNCODE &PRFP +
+                          &MQMGR &MQUEUE &MSG)
+
+             ENDPGM

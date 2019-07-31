@@ -1,0 +1,139 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CB Reroute at i/c termination')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       CBC000005 - Midas CB Reroute at I/C Termination             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB021  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CCB021 - COB Restructure - Non Working Day COB              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PARM1 &PARM2 &PARM3 &PARM4 &PARM5)
+ 
+             DCL        VAR(&PARM1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PARM2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PARM3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PARM4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PARM5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CLBP) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STATMSG) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RPY) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          Systems Ltd. 2012')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Call SCC0010 for confirmation of Non-working day Cob request */
+             RTVMSG     MSGID(SCM0012) MSGF(MIDASMSG) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)
+             RTVMSG     MSGID(SCM0204) MSGF(MIDASMSG) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (2 1)) VALUE('1')
+ 
+             CALL       PGM(SCC0010) PARM('SCC0105' 'OPTION' &CLBP)
+ 
+/* Re-route the job back to input cycle if response is not 'Y' */
+             IF         COND(&CLBP *NE 'Y') THEN(DO)
+                RCVMSG     MSGQ(MSTATUS) RMV(*YES)
+                RRTJOB     RTGDTA('MIDASIC')
+             ENDDO
+ 
+             RTVJOBA    JOB(&JOB)
+             CHGMSGQ    MSGQ(&JOB) DLVRY(*BREAK) PGM(*SAME)
+ 
+/* First allocate the message queues */
+             ALCOBJ     OBJ((MSPECIAL *MSGQ *EXCL)) WAIT(9999)
+             SNDPGMMSG  MSG('Non-working day CoB commencing') +
+                          TOMSGQ(MRUNQ)
+ 
+ LOOP1:
+             CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)
+             RCVMSG     MSGQ(MSTATUS) RMV(*NO) MSG(&STATMSG)
+ 
+             IF         COND(&STATMSG *NE '     ') THEN(DO)
+ 
+/* Call SCC0010 to inform user that job cannot be run now */
+ 
+ LOOP2:
+                CHGVAR     VAR(&RPY) VALUE('Y')
+ 
+                RTVMSG     MSGID(SCM0026) MSGF(MIDASMSG) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (2 1)) VALUE('1')
+                CALL       PGM(SCC0010) PARM('SCC0400' 'RETRY' &RPY)
+ 
+                IF         COND((&RPY *EQ 'Y') *OR (&RPY *EQ 'y')) +
+                             THEN(DO)
+                   GOTO CMDLBL(LOOP1)
+                ENDDO
+ 
+                IF         COND((&RPY *EQ 'N') *OR (&RPY *EQ 'n')) +
+                             THEN(DO)
+                   GOTO CMDLBL(EXIT)
+                ENDDO
+ 
+             ENDDO
+ 
+             DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))
+             CHGDTAARA  DTAARA(MPHAS (1 1)) VALUE('N')
+ 
+             SCWRTJREG EVENT(MPHAS) FLAG(N) TEXT('MPHAS changed +
+                         from A to N')
+ 
+/* Call NWDC controller program */
+             CALL       PGM(CBC000003)
+ 
+ EXIT:
+             DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+             SNDPGMMSG  MSG('Program CBC000005 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* Remove message from MSPECIAL */
+             ALCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             RCVMSG     MSGQ(MSPECIAL)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SIGNOFF    LOG(*LIST)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+ 
+             ALCOBJ     OBJ((MSPECIAL *MSGQ *EXCL)) WAIT(9999)
+ 
+             CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)
+ 
+             RCVMSG     MSGQ(MSPECIAL)
+ 
+             DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))
+ 
+             ENDPGM

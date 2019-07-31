@@ -1,0 +1,115 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/*O*R****OVRDBF*FILE(MSGFS)*TOFILE(QADSPOBJ)**************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC0100 - Merge all message files                           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. CUP041   *REDUNDANT Date 01Aug14             */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CPK020             Date 05Aug04              */
+/*                      CPK018             Date 21Apr04              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CUP002             Date 12Apr99              */
+/*                      CUP001 *CREATE     Date 11Sep98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*       CPK020 - Ensure ownership of ZZGBMSGF is correct.           */
+/*       CPK018 - MidasPlus packaging.  Use driving file.            */
+/*       CUP002 - Create message file if it is new.                  */
+/*       CUP001 - Introduction of BRIDGE                             */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&PTFDTA &SBSID &RETURN)                                   */ /*CPK018*/
+             PGM        PARM(&PTFDTA &DTALIB &RETURN)                                     /*CPK018*/
+ 
+             DCL        VAR(&PTFDTA) TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)                                 */ /*CPK018*/
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)                                   /*CPK020*/
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)                                    /*CPK020*/
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&TEXT) TYPE(*CHAR) LEN(50)                /*CUP002*/
+             DCL        VAR(&ODOBNM) TYPE(*CHAR) LEN(10)                                  /*CPK018*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2001')
+ 
+/**********  DCLF       FILE(MSGFS)                                                    */ /*CPK018*/
+             DCLF       FILE(UPDLVCLN)                                                    /*CPK018*/
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/**********  CHGVAR     VAR(&DTALIB) VALUE(&SBSID *TCAT 'DTALIB')                      */ /*CPK018*/
+ 
+/**DSPOBJD*to*obtain*list*of*message*files**/ /*                                       */ /*CPK018*/
+/**********  DSPOBJD    OBJ(&PTFDTA/*ALL) OBJTYPE(*MSGF) +                             */ /*CPK018*/
+/**********               OUTPUT(*OUTFILE) OUTFILE(QTEMP/MSGFS)                        */ /*CPK018*/
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(DSPMSGF)
+             ENDDO
+ 
+             CHGVAR     VAR(&ODOBNM) VALUE(&AUMBNM)                                       /*CPK018*/
+ 
+/* Special processing for ZZGBMSGF */
+             IF         COND(&ODOBNM *EQ 'ZZGBMSGF') THEN(DO)
+                DLTMSGF    MSGF(&DTALIB/#.ZZGBMSGF)
+                MONMSG     MSGID(CPF0000)
+                RNMOBJ     OBJ(&DTALIB/ZZGBMSGF) OBJTYPE(*MSGF) +
+                          NEWOBJ(#.ZZGBMSGF)
+                CRTDUPOBJ  OBJ(ZZGBMSGF) FROMLIB(&PTFDTA) +
+                          OBJTYPE(*MSGF) TOLIB(&DTALIB)
+                CHGVAR     VAR(&OWNER) VALUE(%SST(&DTALIB 1 2) *TCAT +
+                             'OWNER')                                                     /*CPK020*/
+                CHGVAR     VAR(&AUTL) VALUE(%SST(&DTALIB 1 2) *TCAT +
+                             'DATABASE')                                                  /*CPK020*/
+                CHGOWNAUT  OBJ(&DTALIB/ZZGBMSGF) OBJTYPE(*MSGF) +
+                             NEWOWN(&OWNER) AUTL(&AUTL) CHGLIB(N)                         /*CPK020*/
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+             DLTMSGF    MSGF(QTEMP/&ODOBNM)
+             MONMSG     MSGID(CPF0000)
+ 
+             CRTMSGF    MSGF(QTEMP/&ODOBNM) TEXT('Replaced message +
+                          identifiers')
+/* Check if message file already exists and if it doesn't create  */  /*CUP002*/
+             CHKOBJ     OBJ(&DTALIB/&ODOBNM) OBJTYPE(*MSGF)           /*CUP002*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                       /*CUP002*/
+                RTVOBJD OBJ(&PTFDTA/&ODOBNM) OBJTYPE(*MSGF) TEXT(&TEXT) /*CUP002*/
+                CRTMSGF    MSGF(&DTALIB/&ODOBNM) TEXT(&TEXT)          /*CUP002*/
+             ENDDO                                                    /*CUP002*/
+                                                                      /*CUP002*/
+             MRGMSGF    FROMMSGF(&PTFDTA/&ODOBNM) +
+                          TOMSGF(&DTALIB/&ODOBNM) +
+                          RPLMSGF(QTEMP/&ODOBNM) SELECT(*ALL)
+             MONMSG     MSGID(CPF6801) EXEC(GOTO CMDLBL(END))
+ 
+             GOTO       CMDLBL(READNEXT)
+DSPMSGF:
+             WRKMSGF    MSGF(QTEMP/*ALL)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGVAR     VAR(&RETURN) VALUE('F')
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+ 
+             ENDPGM

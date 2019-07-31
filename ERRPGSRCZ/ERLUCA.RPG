@@ -1,0 +1,1992 @@
+     H        1   Y                       F
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('MIDAS ER Reporting - CAD Allocation Main Component')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas  - European reporting                                  *
+      *                                                               *
+      *  ERLUCA - LU  Reporting - LMI CAD allocation                  *
+      *                                                               *
+      *  Function:  This program generates details for CAD            *
+      *                                                               *
+      *  Called By: ERC0702 - Interface to FRS component allocation   *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 225555             Date 01Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 11May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 169091             Date 19Oct99               *
+      *                 ULX047             Date 04Dec02               *
+      *                 UPG042             Date 04Oct04               *
+      *                 ULX046             Date 31Oct02               *
+      *                 194921             Date 28Jun01               *
+      *                 192549             Date 30Apr01               *
+      *                 181643             Date 30Mar01               *
+      *                 187689             Date 19Dec00               *
+      *                 ULX008             Date 19Jul00               *
+      *                 ULX008             Date 23Mar00               *
+      *                 ULX008             Date 23Mar00               *
+      *                 CAD028             Date 05Jan99               *
+      *                 ULX012             Date 15Dec98               *
+      *                 ARTE01             Date 25Nov98               *
+      *                 143793             Date 06Oct98               *
+      *                 CAD007             Date 23Jul98               *
+      *                 CAD002             Date 30May98               *
+      *                 127046             Date 03Dec97               *
+      *                 ULX004             Date 28Oct97               *
+      *                                                               *
+      * --------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *          (recompiled)                                         *
+      * 225555 - Add discount/premium amount, amount to amortize      *
+      *          and 'Prix d'Acquisition'. Recompile only over        *
+      *          changed EREXTRPD.                                    *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      * 169091 - Incorrect DB error displayed when record not found   *
+      * ULX047 - CSSF Market Values calculation                       *
+      *          in SDCTRYZ6                                          *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      * ULX046 - Circulars 2002/170-174-175 Integration               *
+      *          Recompiled due to changes in file layout             *
+      * 194921 - To populate several empty fields                    *
+      * 192549 - Derivative market value not set up for forex.       *
+     H* 181643 - Repo not extracted from money market deposits       *
+      * 187689 - "GRD" currency in EMU                                *
+      * ULX008 - "Commissariat aux Bourses" - Change control C        *
+      *          Recompiled due to changes in PF/ERLUICPD             *
+      * ULX008 - "Commissariat aux Bourses" - Change control A        *
+      *          Recompiled due to changes in PF/ERLUICPD             *
+      * ULX008 - CSSF Statutory Reporting - Commissariat aux Bourses  *
+      *          Recompiled due to changes in PF/ERLUICPD             *
+      * CAD028 - SDCTRYZ6 accessed with the ISO country code          *
+      * ULX012 - Guarantees and Collateral Management enhancements    *
+      *          Recompile over changed file ERLUICPD                 *
+      * ARTE01 - Final maturity date must be set to the end date      *
+      * 143793 - Several problems with the IRS                        *
+      * CAD007 - CAD adaptation to data dictionary version 1.6        *
+      * CAD002 - To ignore SE Value date positions                    *
+      * 127046 - FX deals market value calculation                    *
+      * ULX004 - Capital Adequacy                                     *
+      *        - IML Circular 97/138                                  *
+      *                                                               *
+      *****************************************************************
+     F***EREXTRL0IP**E           K        DISK                                                CER001
+     FEREXTXL0IP  E           K        DISK                                                   CER001
+      * EX - ER Extract File
+      *      Rcd fmt : EREXTRF0
+      *
+     F***ERICDRL1IF**E           K        DISK                                                CER001
+     FERICDXL1IF  E           K        DISK                                                   CER001
+      * VD - ER I.C.D.
+      *
+     F***ERCURRL1IF  E           K        DISK                            187689
+     F*** VR - Currency Codes table                                       187689
+     FSDCURRL1IF  E           K        DISK                               187689
+     F* A6 - Currency Codes table                                         187689
+      *
+     F**ERBRCHL0IF  E           K        DISK                             ULX047
+     F**A8*-*Branch*Codes*table                                           ULX047
+      *
+     F***SDCTRYX6IF  E           K        DISK                            CAD028
+     F***SDCTRYZ6IF**E           K        DISK                                         CAD028 CER001
+     FSDCTX4L1IF  E           K        DISK                                                   CER001
+     F* WF - Country Codes extension file
+      *
+     F***ERLUICL0IF**E           K        DISK                                                CER001
+     FERLICXL0IF  E           K        DISK                                                   CER001
+     F* VP - LU I.C.D.
+      *
+     F***SDBOOKY4IT**F       3           EDISK                                                CER001
+     FSDBKX3L0IT  F       3           EDISK                                                   CER001
+     F* WC - Book code
+      *
+     F***FWDRT   IF  E           K        DISK                     127046 ULX047
+     F**Forward*rates*table                                        127046 ULX047
+      ***********                                                  127046 ULX047
+      **             ** ------------------- **
+     F***ERLUCAPDO***E                    DISK         KINFDS OUTFIL                          CER001
+     FERLCAXPDO   E                    DISK         KINFDS OUTFIL                             CER001
+      * EX - ER LU CAD Extract File
+      *      Rcd fmt : ERLUCAF0
+      *
+      **             ** ------------------- **
+     FERLUCAAUO   E                    PRINTER
+      * Audit List -
+      *
+      *===============================================================*
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       80         FILE ACCESS OPERATION FAIL
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * ..   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+      *
+      * Book codes extension details
+     E****SDBOOKY4********WWBK    1 200  2   WWTI    1                                        CER001
+     E    SDBKX3L0        WWBK    1 200  2   WWTI    1                                        CER001
+      *
+      /COPY ZSRSRC,ZDATE9Z1
+      /COPY ZSRSRC,ZHOLE
+     E****                                                         127046 ULX047
+     E****FORWARD DATES/RATES                                      127046 ULX047
+     E****                DAT        26  5 0A                      127046 ULX047
+     E****                RAT        26 13 8                       127046 ULX047
+      ****                                                         127046 ULX047
+      ****FORWARD DAYS ARRAY                                       127046 ULX047
+     E****                DF         25  5 0                       127046 ULX047
+      ****                                                         127046 ULX047
+      ****FORWARD RATES ARRAY                                      127046 ULX047
+     E****                RF         25 13 8                       127046 ULX047
+      ****                                                         127046 ULX047
+      ****FORWARD DATES ARRAY INCLUDING RUN DATE IN FIRST ELEMENT  127046 ULX047
+     E****                DYF        26  5 0                       127046 ULX047
+      ****                                                         127046 ULX047
+      ****FORWARD RATES ARRAY INCLUDING CURRENCY SPOT RATE IN FIRST127046 ULX047
+     E****                RAF        26 13 8                       127046 ULX047
+     E****                                                         127046 ULX047
+     E****                POWER   1   7  7 3             POWER ARRA127046 ULX047
+      *
+      ** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      *===============================================================*
+      *
+     IEREXTRF0
+     I                                              EXBRCDL4
+     I                                              EXLOTDL3
+     I                                              EXDECKL3
+     I                                              EXCCYCL2
+     I                                              EXCUSTL1
+      *
+     I              EXISSN                          RNISSN
+      *
+      /COPY ZSRSRC,ZDAT10Z1
+      /COPY ZSRSRC,ZHOLI
+      /COPY ZSRSRC,ZHOLDS
+      *
+      ** Data area for database errors
+     IWLDA      E DSLDA                         256
+      *
+      *
+      ** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      * Data structure for EXDLNO
+     I            DS
+     I**********                              1  20 EXDLNO                                    CER001
+     I                                        1  26 EXDLNO                                    CER001
+     I                                        1   2 EXDL12
+     I                                        3   5 EXDL35
+      * Data structure for EXDECK                                         ULX047
+     I            DS                                                      ULX047
+     I**********                              1   8 EXDECK                             ULX047 CER001
+     I                                        1  14 EXDECK                                    CER001
+     I                                        1   2 EXDEC2                ULX047
+      * Data structure for EXSESN                                         ULX047
+     I            DS                                                      ULX047
+     I                                        1  10 EXSESN                ULX047
+     I                                        1   3 EXSES1                ULX047
+     I                                        6  10 EXSES2                ULX047
+      * Program status data structure
+     I           SDS
+     I                                     *PROGRAM PGM
+      * Output File data structure
+     IOUTFIL      DS
+     I                                     *FILE    FILNAM
+     I*                                                            127046 ULX047
+      ***DATA*STRUCTURE*TO*GET*THE FORWARD DAYS FROM FILE LF/FWDRT 127046 ULX047
+      *******                                                      127046 ULX047
+     I**DFWDS       DS                                             127046 ULX047
+     I*******                             P   1  750DF             127046 ULX047
+      *******                                                      127046 ULX047
+     I***DATA*STRUCTURE*TO*GET*THE FORWARD RATES FROM FILE LF/FWDRT127046 ULX047
+     I**RFWDS       DS                                             127046 ULX047
+     I*******                             P   1 1758RF             127046 ULX047
+     I*                                                                   194921
+     I**  DATA STRUCTURE FOR SR. ZINTDY - DATE FIELD YYYYMMDD.            194921
+     I            DS                                                      194921
+     I                                        1   80ZZDATA                194921
+     I                                        1   40ZZYY1                 194921
+     I                                        5   60ZZMM1                 194921
+     I                                        7   80ZZDD1                 194921
+     I*                                                                   194921
+     I**  DATA STRUCTURE FOR SR. ZINTDY - DATE FIELD YYYYMMDD.            194921
+     I            DS                                                      194921
+     I                                        1   80ZZDATB                194921
+     I                                        1   40ZZYY2                 194921
+     I                                        5   60ZZMM2                 194921
+     I                                        7   80ZZDD2                 194921
+     I*                                                                   194921
+     I**  DATA STRUCTURE FOR SR. ZDATE9 - FIELD IS @@Z71Y                 194921
+     I            DS                                                      194921
+     I                                        1   40@@Z71Y                194921
+     I                                        1   10@@SSY1                194921
+     I                                        2   20@@SSY2                194921
+     I                                        3   30@@SSY3                194921
+     I                                        4   40@@SSY4                194921
+     I*                                                                   194921
+     I**  DATA STRUCTURE FOR SR. ZDATE9 - FIELD IS @@VDT                  194921
+     I            DS                                                      194921
+     I                                        1   80@@VDT                 194921
+     I                                        1   40@@YR                  194921
+     I                                        5   60@@Z71M                194921
+     I                                        7   80@@Z71D                194921
+      /EJECT
+     C*================================================================
+      *
+     C                     EXSR SRSQBK
+      *                                                                   CAD002
+     C           EXLOTD    IFEQ 'SEC'                                     CAD002
+     C           EXRCSI    ANDEQ'V'                                       CAD002
+     C                     GOTO NXTRCD                                    CAD002
+     C                     END                                            CAD002
+      *
+     C           EXINCL    IFEQ 'Y'                        B1
+     C           EXPRDC    ANDNE*ZEROS
+     C           EXLOTD    ANDNE'SEF'
+     C           EXAMNT    ANDNE*ZEROS                                    ULX047
+      *
+      * Only the purchase forward trades must be extracted
+     C           EXINCL    OREQ 'Y'
+     C           EXPRDC    ANDNE*ZEROS
+     C           EXLOTD    ANDEQ'SEF'
+     C           EXDRCR    ANDEQ0
+      *
+      * Reporting date
+     C           EXREPD    IFNE WWREPD
+     C                     Z-ADDEXREPD    ZZDTIN
+     C                     EXSR ZDAT10
+     C                     Z-ADDZZMDNO    W#REPD  50
+     C                     Z-ADDEXREPD    WWREPD
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   EXORIG
+     C                     MOVE EXTREF    EXORIG
+     C                     MOVELEXRIND    EXORIG
+      *
+      * Issuer Name
+     C                     MOVELRNISSN    EXISSN
+      *
+      ** Setup issuer details
+      *
+     C***********EXLOTD    IFEQ 'SEC'                      B2             143793
+     C***********EXLOTD    OREQ 'SEF'                                     143793
+      *
+     C                     Z-ADD*ZEROS    EXISEC                          ULX047
+     C                     Z-ADD*ZEROS    EXNSEC                          ULX047
+     C                     MOVE *BLANKS   EXLISS                          ULX047
+      * Institute sector of issuer
+     C           EXLOTD    IFEQ 'SEC'                      B2             ULX047
+     C           EXLOTD    OREQ 'SEF'                                     ULX047
+     C                     Z-ADDEXECOS    EXISEC
+     C                     Z-ADDEXNCOS    EXNSEC                          ULX004
+      *
+      * ISO Country Code of Issuer
+     C                     MOVE EXCNCZ    EXLISS
+     C                     ENDIF                                          ULX047
+      *
+     C*********************ELSE                            X2             143793
+      *********************                                               143793
+      **Institute*sector*of issuer                                        143793
+     C*********************Z-ADD*ZEROS    EXISEC                          143793
+     C*********************Z-ADD*ZEROS    EXNSEC                   ULX004 143793
+      *********************                                               143793
+      **ISO*Country*Code*of Issuer                                        143793
+     C*********************MOVE *BLANKS   EXLISS                          143793
+      *********************                                               143793
+     C*********************ENDIF                           E2             143793
+      *
+     C                     EXSR SRDETL
+      *
+      * Amount in Local currency
+     C                     Z-ADDEXAMNT    INAMNT 160
+     C                     EXSR SRCALC
+     C                     Z-ADDOUTAMT    EXLAMT
+      *
+      * Local Nominal Amount
+     C                     Z-ADDEXNOMA    INAMNT
+     C                     EXSR SRCALC
+     C                     Z-ADDOUTAMT    EXLNOM
+      *
+      * Option Exercise Price in rep
+     C                     Z-ADDEXEXPR    INAMNT
+     C                     EXSR SRCALC
+     C                     Z-ADDOUTAMT    EXLEXP
+      *
+      * Market Value 1 in FX Ccy
+     C           EXLOTD    IFEQ 'OPT'                      B2
+     C           VPOPCM    ANDEQ1
+     C           EXLOTD    OREQ 'OPT'
+     C***********VPOPCM    ANDEQ4                                         ULX004
+     C           VPOPCM    ANDEQ3                                         ULX004
+      *
+     C           EXRSKF    IFNE *ZEROS                     B3
+     C                     MULT EXRSKF    EXMKT1
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+      * Market Value 1 in rep. Ccy
+     C           EXDEC2    IFEQ 'RX'                                      ULX047
+     C           EXLOTD    OREQ 'FXP'                                     ULX047
+     C           EXLOTD    OREQ 'FXS'                                     ULX047
+     C                     Z-ADDEXMKT1    EXLMK1                          ULX047
+     C                     ELSE                                           ULX047
+     C                     Z-ADDEXMKT1    INAMNT
+     C                     EXSR SRCALC
+     C                     Z-ADDOUTAMT    EXLMK1
+     C                     ENDIF                                          ULX047
+      *                                                                   ERC002
+      ***********                                                         ULX047
+     C***********EXLOTD    IFEQ 'FXP'                              ERC002 ULX047
+     C***********EXLOTD    OREQ 'FXS'                              ERC002 ULX047
+     C***********                                                  127046 ULX047
+     C***SET*UP*INPUT FIELDS FOR SR/ZFWDRT :                       127046 ULX047
+     C***'FROM'*FIELDS FROM DEAL CCY AND 'TO' FIELDS FROM REPORT. C127046 ULX047
+     C***********          Z-ADDEXAMNT    ZAMTF                    127046 ULX047
+     C***********          MOVE EXCCYC    ZCCYF                    127046 ULX047
+     C***********          MOVE VDCCYC    ZCCYT                    127046 ULX047
+     C***********          MOVE @@MDI1    ZMDINF                   127046 ULX047
+     C***********          MOVE @@MDI2    ZMDINT                   127046 ULX047
+     C***********          Z-ADD@@NBD1    ZCDPF                    127046 ULX047
+     C***********          Z-ADD@@NBD2    ZCDPT                    127046 ULX047
+     C***********          Z-ADD@@RAT1    ZSPOTF                   127046 ULX047
+     C***********          Z-ADD@@RAT2    ZSPOTT                   127046 ULX047
+     C***********                                                  127046 ULX047
+     C***********          Z-ADDEXENDD    ZZDTIN                   127046 ULX047
+     C***********          EXSR ZDAT10                             127046 ULX047
+     C***********          Z-ADDZZMDNO    ZDATN                    127046 ULX047
+     C***********                                                  127046 ULX047
+     C***********          Z-ADDW#REPD    ZRDATE                   127046 ULX047
+     C***********                                                  127046 ULX047
+     C***********          EXSR ZFWDRT                             127046 ULX047
+     C***********                                                  127046 ULX047
+     C***********          Z-ADDEXAMNT    EXMKT1                   127046 ULX047
+     C***********EXMKT1    MULT ZCRSRT    EXLMK1                   127046 ULX047
+     C***********                                                  192549 ULX047
+     C***********          Z-ADDEXAMNT    EXDEMK                   192549 ULX047
+     C***********          Z-ADDEXDEMK    INAMNT                   192549 ULX047
+     C***********          Z-ADD@@RAT1    WWRAT1 138               192549 ULX047
+     C***********          Z-ADDEXCLPR    @@RAT1                   192549 ULX047
+     C***********          EXSR SRCALC                             192549 ULX047
+     C***********          Z-ADDOUTAMT    EXLDMK                   192549 ULX047
+     C***********          Z-ADDWWRAT1    @@RAT1                   192549 ULX047
+     C***********                                                  192549 ULX047
+     C***********          END                                     127046 ULX047
+      *
+      * Deal Number
+     C           EXLOTD    IFEQ 'GLA'                      B2
+     C                     MOVE 'GL'      EXDL12
+     C                     MOVE EXBRCD    EXDL35
+     C                     MOVE EXTREF    EXDLNO
+     C                     ELSE                            X2
+     C                     MOVE EXORIG    EXDLNO
+     C                     ENDIF                           E2
+      *
+      * Intra group transaction flag
+     C                     Z-ADD0         EXIGRF
+     C***********          MOVE EXCGRP    WWCGRP                          ULX047
+     C***********WWCGRP    SETLLERBRCHL0                 80               ULX047
+     C************IN80     IFEQ *ON                        B2             ULX047
+     C           EXCONS    IFNE 0                                         ULX047
+     C                     Z-ADD1         EXIGRF
+     C                     ENDIF                           E2
+      *
+      * Book Type
+     C                     Z-ADD2         EXBKTP
+     C                     Z-ADD1         I       30
+     C           EXBKCD    LOKUPWWBK,I                   80
+     C           *IN80     IFEQ *ON                        B2
+     C           WWTI,I    ANDEQ'T'
+     C                     Z-ADD1         EXBKTP
+     C                     ENDIF                           E2
+      *
+      * Derivative Market Value rep.
+      *                                                                   192549
+     C           EXLOTD    IFNE 'FXP'                                     192549
+     C           EXLOTD    ANDNE'FXS'                                     192549
+     C           EXDEC2    ANDNE'RX'                                      ULX047
+     C                     Z-ADDEXDEMK    INAMNT
+     C                     EXSR SRCALC
+     C                     Z-ADDOUTAMT    EXLDMK
+     C                     ELSE                                           ULX047
+     C                     Z-ADDEXDEMK    EXLDMK                          ULX047
+     C                     Z-ADD0         EXDEMK                          ULX047
+     C                     ENDIF                                          192549
+      *
+      * Original Contract Value Rep
+     C                     Z-ADDEXORCV    INAMNT
+     C                     EXSR SRCALC
+     C                     Z-ADDOUTAMT    EXLOCV
+      *
+      * Nr days after working day 0
+      *
+     C                     Z-ADD0         EXDYSU
+      *
+     C           EXSTRD    IFNE *ZEROS                     B2
+      *
+     C                     Z-ADDEXSTRD    ZZDTIN
+     C                     EXSR ZDAT10
+     C           ZZMDNO    IFLT W#REPD                     B3
+     C                     Z-ADDZZMDNO    ZDAYNO
+     C                     Z-ADD0         WWNFWD  20
+     C                     MOVE VDCCYC    ZCCY
+     C                     MOVE *BLANKS   ZLOC
+      *
+     C           ZDYNBR    DOUEQW#REPD                     B4
+     C           WWNFWD    OREQ 6
+     C                     ADD  1         WWNFWD
+     C                     Z-ADDWWNFWD    ZNRDYS
+     C                     EXSR ZFWDT
+     C                     ENDDO                           E4
+      *
+     C           ZDYNBR    IFEQ W#REPD                     B4
+     C                     Z-ADDWWNFWD    EXDYSU
+     C                     ENDIF                           E4
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+      * Underwriting Flag
+     C                     Z-ADD0         EXUNWF
+     C           EXDYSU    IFGT 0                          B2
+     C*********************Z-ADD2         EXUNWF                          ULX004
+     C                     Z-ADD1         EXUNWF                          ULX004
+     C                     ENDIF                           E2
+      *
+      ** Access Country extended details of the issuer (if exist)
+      *
+     C           EXLISS    IFEQ *BLANKS                    B2
+      *
+     C                     MOVE *BLANKS   WFICTR
+      *
+     C                     ELSE                            X2
+      *
+     C***********EXLISS    CHAINSDCTRYX6             80                   CAD028
+     C********** EXLISS    CHAINSDCTRYZ6             80                                CAD028 CER001
+     C           EXLISS    CHAINSDCTX4L1             80                                CAD028 CER001
+     C           *IN80     IFEQ *ON                        B3
+     C           *LOCK     IN   WLDA
+     C                     MOVEL'001'     DBASE
+     C*******              MOVEL'SDCUSTX6'DBFILE                          169091
+     C**********           MOVEL'SDCTRYZ6'DBFILE                                       169091 CER001
+     C                     MOVEL'SDCTX4L1'DBFILE                                       169091 CER001
+     C                     MOVELEXLISS    DBKEY
+     C                     EXSR SRDBER
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+      *
+      * Specific risk qualification
+      * The first condition met sucessfully, defined the value of EXSRKQ
+      * in spite of the other conditions
+      *
+     C                     Z-ADD6         EXSRKQ
+      *
+     C           EXISEC    IFEQ 1410                       B2
+     C           EXISEC    OREQ 2001
+     C           EXISEC    OREQ 2100
+      *
+     C           WFICTR    IFEQ 'Y'                        B3
+     C           WFICTR    OREQ 'N'
+     C***********EXCLAT    ANDEQ3                                         ULX004
+     C           EXCLAT    ANDEQ4                                         ULX004
+     C                     Z-ADD1         EXSRKQ
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+     C***********EXISEC    IFEQ 2002                       B2             ULX004
+     C           EXISEC    IFEQ 2200                       B2             ULX004
+     C           EXISEC    OREQ 2005
+     C***********EXISEC    OREQ 2008                                      ULX004
+     C                     Z-ADD1         EXSRKQ
+     C                     ENDIF                           E2
+      *
+     C***********EXISEC    IFEQ 2200                       B2             ULX004
+     C           EXISEC    IFEQ 2002                       B2             ULX004
+      *
+     C           EXLISS    IFEQ 'BE'                       B3
+     C           EXLISS    OREQ 'DK'
+     C           EXLISS    OREQ 'DE'
+     C           EXLISS    OREQ 'ES'
+     C           EXLISS    OREQ 'NL'
+     C                     Z-ADD1         EXSRKQ
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+     C           EXLOTD    IFEQ 'FRA'                      B2
+     C           EXLOTD    OREQ 'IRS'
+     C                     Z-ADD1         EXSRKQ
+     C                     ENDIF                           E2
+      *
+     C***********EXCLAT    IFEQ 4                          B2             ULX004
+     C           EXCLAT    IFEQ 5                          B2             ULX004
+     C           EXSRKQ    ANDEQ6
+     C                     Z-ADD2         EXSRKQ
+     C                     ENDIF                           E2
+      *
+     C           EXSRKQ    IFEQ 6                          B2
+      *
+     C           EXISEC    IFEQ 1422                       B3
+     C           EXISEC    OREQ 2008                       B3             ULX004
+     C                     Z-ADD3         EXSRKQ
+     C                     ENDIF                           E3
+      *
+     C***********EXISEC    IFEQ 2200                       B3             ULX004
+     C           EXISEC    IFEQ 2002                       B3             ULX004
+     C           WFICTR    ANDEQ'Y'
+     C           EXLISS    ANDNE'BE'
+     C           EXLISS    ANDNE'DK'
+     C           EXLISS    ANDNE'DE'
+     C           EXLISS    ANDNE'ES'
+     C           EXLISS    ANDNE'NL'
+     C                     Z-ADD3         EXSRKQ
+     C                     ENDIF                           E3
+      *
+     C           EXISEC    IFEQ 1421                       B3
+     C           EXISEC    OREQ 1451
+     C           EXISEC    OREQ 1481
+      *
+     C           WFICTR    IFEQ 'Y'                        B4
+     C                     Z-ADD3         EXSRKQ
+     C                     ENDIF                           E4
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+      * Interest rate risk calc.
+     C                     Z-ADDVPIRCG    EXIRRM
+      *
+      * Market Value 2 in rep. Ccy
+     C                     Z-ADDEXMKT2    INAMNT
+     C                     EXSR SRCALC
+     C                     Z-ADDOUTAMT    EXLMK2
+      *
+      * Equity Position Risk Method
+     C                     Z-ADDVPEPRM    EXEPRM
+      *
+      * Unique Contract Reference
+     C           EXLOTD    IFEQ 'OPT'                      B2
+     C           6         SUBSTEXTREF:8  EXUCOR    P
+     C                     ENDIF                           E2
+      *
+      * Unique Ref. Counterparty
+     C                     MOVELEXCSSN    EXRFCP
+      *
+      * Accrued interest in rep ccy
+     C           EXACCR    IFLT 0                                         143793
+     C                     Z-SUBEXACCR    EXACCR                          143793
+     C                     END                                            143793
+     C                     Z-ADDEXACCR    INAMNT
+     C                     EXSR SRCALC
+     C                     Z-ADDOUTAMT    EXLACC
+      *
+      * Record Type
+     C                     Z-ADD30        EXRECT
+      *
+      * Record Sequence
+     C                     ADD  1         EXSEQN
+      *                                                                   ULX004
+      * Net Present value in reporting currency                           ULX004
+     C                     Z-ADDEXLMK1    EXLNPV                          ULX004
+      *                                                                   ULX004
+      * Statistical risk value in reporting currency                      ULX004
+     C                     Z-ADD0         EXLSTA                          ULX004
+      *                                                                   ULX004
+      * Position                                                          ULX004
+     C                     MOVE '0'       EXPOSI                          ULX004
+      * If long/short position indicator 1 or 2 is long, set Position     ULX004
+      * to long                                                           ULX004
+     C           EXLSP1    IFEQ 1                                         ULX004
+     C           EXLSP2    OREQ 1                                         ULX004
+     C                     MOVE 'L'       EXPOSI                          ULX004
+     C                     ENDIF                                          ULX004
+      * If long/short position indicator 1 or 2 is short set Position     ULX004
+      * to court                                                          ULX004
+     C           EXLSP1    IFEQ 2                                         ULX004
+     C           EXLSP2    OREQ 2                                         ULX004
+     C                     MOVE 'C'       EXPOSI                          ULX004
+     C                     ENDIF                                          ULX004
+      * If lot description is 'future' or 'option'                        ULX004
+     C           EXLOTD    IFEQ 'FTR'                                     ULX004
+     C           EXLOTD    OREQ 'OPT'                                     ULX004
+      * If call/put option is call, set Position to long                  ULX004
+     C           EXCPIN    IFEQ 1                                         ULX004
+     C                     MOVE 'L'       EXPOSI                          ULX004
+     C                     ENDIF                                          ULX004
+      * If call/put option is put, set Position to court                  ULX004
+     C           EXCPIN    IFEQ 2                                         ULX004
+     C                     MOVE 'C'       EXPOSI                          ULX004
+     C                     ENDIF                                          ULX004
+     C                     ENDIF                                          ULX004
+      *                                                                   ULX004
+      * Unique option reference                                           ULX004
+     C                     MOVE *BLANKS   EXOPTI                          ULX004
+      * If lot description is 'future' or 'option'                        ULX004
+     C           EXLOTD    IFEQ 'FTR'                                     ULX004
+     C           EXLOTD    OREQ 'OPT'                                     ULX004
+     C                     MOVELEXUCOR    EXOPTI                          ULX004
+     C                     ENDIF                                          ULX004
+      *                                                                   ULX004
+      * Own funds to cover options                                        ULX004
+     C                     Z-ADD0         EXOFOP                          ULX004
+      *                                                                   ULX004
+      * Own funds to cover options - Risk gamma                           ULX004
+     C                     Z-ADD0         EXOFGA                          ULX004
+      *                                                                   ULX004
+      * Own funds to cover options - Risk vega                            ULX004
+     C                     Z-ADD0         EXOFVE                          ULX004
+      *                                                                   ULX004
+      * Internal rate of return                                           ULX004
+     C                     Z-ADD0         EXIRRT                          ULX004
+      *                                                                   CAD007
+      * Maturity to next interest fixing date                             CAD007
+     C                     Z-ADD*ZEROS    EXMNIF                          CAD007
+      *                                                                   ARTE01
+      * Final maturity date                                               ARTE01
+     C                     Z-ADDEXENDD    EXFMDT                          ARTE01
+      *                                                                   CAD007
+      * Credit id.                                                        CAD007
+     C                     MOVELEXORIG    EXCRID                          CAD007
+      *                                                                   CAD007
+      * Transaction intermediary                                          CAD007
+     C                     Z-ADD5         EXTINT                          CAD007
+     C           EXOTCE    IFEQ 2                                         CAD007
+     C                     Z-ADD1         EXTINT                          CAD007
+     C                     END                                            CAD007
+     C           EXOTCE    IFEQ 1                                         CAD007
+     C                     Z-ADD2         EXTINT                          CAD007
+     C                     END                                            CAD007
+     C*                                                                   194921
+     C** Processing for Interest Rate Swaps                               194921
+     C***********EXPRDC    IFEQ 2301                               194921 ULX047
+     C                     Z-ADD0         EXMNIF                          ULX047
+     C           EXLOTD    IFEQ 'IRS'                                     ULX047
+      *                                                                   194921
+      ** Maturity to next fixing date                                     194921
+     C           EXIRTT    IFEQ 2                                         194921
+     C                     Z-ADDW#REPD    ZZBEG                           194921
+     C***********EXNIDT    IFEQ 0                                  194921 ULX047
+     C***********          Z-ADDEXENDD    ZZDTIN                   194921 ULX047
+     C***********          ELSE                                    194921 ULX047
+     C*********************Z-ADDEXNIDT    ZZDTIN                   194921 ULX047
+     C                     Z-ADDEXNIFD    ZZDTIN                          ULX047
+     C***********          ENDIF                                   194921 ULX047
+     C                     EXSR ZDAT10                                    194921
+     C                     Z-ADDZZMDNO    ZZEND                           194921
+     C                     MOVE '3'       ZZCALC                          194921
+     C                     EXSR ZINTDY                                    194921
+     C                     Z-ADDZZINDY    EXMNIF                          194921
+     C                     ENDIF                                          194921
+     C                     ENDIF                                          ULX047
+      *                                                                   194921
+      ** Maturity A                                                       194921
+     C                     Z-ADD0         EXMATA                          ULX047
+     C           EXDATA    IFNE 0                                         ULX047
+      *                                                                   ULX047
+     C                     Z-ADDW#REPD    ZZBEG                           194921
+     C*********************Z-ADDEXENDD    ZZDTIN                   194921 ULX047
+     C                     Z-ADDEXDATA    ZZDTIN                          ULX047
+     C                     EXSR ZDAT10                                    194921
+     C                     Z-ADDZZMDNO    ZZEND                           194921
+     C                     MOVE '3'       ZZCALC                          194921
+     C                     EXSR ZINTDY                                    194921
+     C                     Z-ADDZZINDY    EXMATA                          194921
+      *                                                                   194921
+      ** Remaining maturity until the end of the swap contract            194921
+     C                     Z-ADD0         EXRMSW                          ULX047
+     C           EXLOTD    IFEQ 'IRS'                                     ULX047
+     C                     Z-ADDEXMATA    EXRMSW                          194921
+     C                     ENDIF                                          ULX047
+      *                                                                   194921
+     C                     ENDIF                                          194921
+      *                                                                   ULX047
+      ** Maturity B                                                       ULX047
+     C                     Z-ADD0         EXMATB                          ULX047
+     C           EXDATB    IFNE 0                                         ULX047
+      *                                                                   ULX047
+     C                     Z-ADDW#REPD    ZZBEG                           ULX047
+     C                     Z-ADDEXDATB    ZZDTIN                          ULX047
+     C                     EXSR ZDAT10                                    ULX047
+     C                     Z-ADDZZMDNO    ZZEND                           ULX047
+     C                     MOVE '3'       ZZCALC                          ULX047
+     C                     EXSR ZINTDY                                    ULX047
+     C                     Z-ADDZZINDY    EXMATB                          ULX047
+      *                                                                   ULX047
+     C                     ENDIF                                          ULX047
+      *                                                                   ULX047
+      ** Remaianing maturity until the exercise date for options          ULX047
+     C                     Z-ADD0         EXRMEX                          ULX047
+     C           EXEXDA    IFNE 0                                         ULX047
+      *                                                                   ULX047
+     C                     Z-ADDW#REPD    ZZBEG                           ULX047
+     C                     Z-ADDEXEXDA    ZZDTIN                          ULX047
+     C                     EXSR ZDAT10                                    ULX047
+     C                     Z-ADDZZMDNO    ZZEND                           ULX047
+     C                     MOVE '3'       ZZCALC                          ULX047
+     C                     EXSR ZINTDY                                    ULX047
+     C                     Z-ADDZZINDY    EXRMEX                          ULX047
+      *                                                                   ULX047
+     C                     ENDIF                                          ULX047
+     C*                                                                   194921
+     C***Processing*for*Forward*Foreign*Exchange*Deals             194921 ULX047
+     C***********EXPRDC    IFEQ 3201                               194921 ULX047
+     C                     Z-ADD0         EXORMA                          ULX047
+     C           EXLOTD    IFEQ 'FXP'                                     ULX047
+     C           EXLOTD    OREQ 'FXS'                                     ULX047
+     C           EXSES1    OREQ 'OTC'                                     ULX047
+     C           EXSES2    ANDEQ'FOREX'                                   ULX047
+      *                                                                   194921
+      ** Original maturity                                                194921
+     C                     Z-ADDEXSTRD    ZZDTIN                          194921
+     C                     EXSR ZDAT10                                    194921
+     C                     Z-ADDZZMDNO    ZZBEG                           194921
+     C                     Z-ADDEXENDD    ZZDTIN                          194921
+     C                     EXSR ZDAT10                                    194921
+     C                     Z-ADDZZMDNO    ZZEND                           194921
+     C                     MOVE '3'       ZZCALC                          194921
+     C                     EXSR ZINTDY                                    194921
+     C                     Z-ADDZZINDY    EXORMA                          194921
+      *                                                                   194921
+     C                     ENDIF                                          194921
+      *
+      * Save EXECOS (Old Economic sector) and output the new one          ULX004
+     C                     Z-ADDEXECOS    SVECOS  40                      ULX004
+     C                     Z-ADDEXNCOS    EXECOS                          ULX004
+      * Save EXISEC (Old Economic sector) and output the new one          ULX004
+     C                     Z-ADDEXISEC    SVISEC  40                      ULX004
+     C                     Z-ADDEXNSEC    EXISEC                          ULX004
+      *                                                                   ULX004
+     C                     WRITEERLUCAF0
+      *                                                                   ULX004
+      * Restore EXECOS (Old Economic sector) for calculation              ULX004
+     C                     Z-ADDSVECOS    EXECOS                          ULX004
+      *                                                                   ULX004
+      * Restore EXISEC (Old Economic sector) for calculation              ULX004
+     C                     Z-ADDSVISEC    EXISEC                          ULX004
+      *
+      ** Following fields of ERLUTRPD are loaded by the corresponding
+      ** fields of EREXTRPD, otherwise by blanks or zeros.
+      *
+      * Interest Rate Type           EXIRTT   1N ( 1,0)
+      * Amount in Currency           EXAMNT  16N (16,0)
+      * Nominal Amount               EXNOMA  16N (16,0)
+      * Exercise Price Of an Option  EXEXPR  16N (16,0)
+      * Derivative Market Value FX   EXDEMK  16N (16,0)
+      * Counterparty risk weight     EXCRKW   1N ( 1,0)
+      * Unsettled Transaction Flag   EXUNSF   1N ( 1,0)
+      * Nr working days past sett.   EXWDPS   3N ( 3,0)
+      * Original Contract Value      EXORCV  16N (16,0)
+      * Indicator Hedged Position    EXHEDG   1N ( 1,0)
+      * Modified Duration A          EXMODA  16N (16,0)
+      * Modified Duration B          EXMODB  16N (16,0)
+      * Long/Short Position Ind. 1   EXLSP1   1N ( 1,0)
+      * Long/Short Position Ind. 2   EXLSP2   1N ( 1,0)
+      * Maturity A                   EXMATA   5N ( 5,0)
+      * Maturity B                   EXMATB   5N ( 5,0)
+      * Transaction Type             EXTRTY   1N ( 1,0)
+      * Unique Repo Reference        EXREPO  20A
+      * Market Value 2 in FX Ccy     EXMKT2  16N (16,0)
+      * Nature Of Underlying Posn    EXNUND   1N ( 1,0)
+      * Rem. mat. til exercise date  EXRMEX   5N ( 5,0)
+      * Rem. mat. til end of swap    EXRMSW   5N ( 5,0)
+      * OTC/Exchange Traded          EXOTCE   1N ( 1,0)
+      * Original Maturity            EXORMA   5N ( 5,0)
+      * Accrued Interest             EXACCR  16N (16,0)
+      * Provisions & Depreciation FX EXPRVS  16N (16,0)
+      * Provision & Depreciation Rep EXLPRV  16N (16,0)
+      * Option Style                 EXOPST   1N ( 1,0)
+      * Call/Put Indicator           EXCPIN   1N ( 1,0)
+      * Audit Trail 1                EXAUD1  20A
+      * Audit Trail 2                EXAUD2  20A
+      * Audit Trail 3                EXAUD3  20A
+      * Date B                       EXDATB   8N ( 8,0)
+      * Exercise Date Of An Option   EXEXDA   8N ( 8,0)
+      * Final Maturity Date Of Swap  EXFMSW   8N ( 8,0)
+      * Start Date                   EXSTDA   8N ( 8,0)
+      * Final Maturity Date          EXFMDT   8N ( 8,0)
+      * Customer Number              EXCUST   6A
+      * Customer Report Name         EXCRNM  20A
+      **Decision*Table*Key***********EXDECK***8A***********************                       CER001
+      * Decision Table Key           EXDECK  14A                                              CER001
+      * Reference Rate               EXREFR  32A                          CAD007
+      * Next Interest Fixing Date    EXNIFD   8N                          CAD007
+      * Origine of record
+      *
+     C                     ENDIF                           E1
+      *
+     C           NXTRCD    TAG                                            CAD002
+      *                                                                   CAD002
+      *-----------------------------------------------------------
+      *
+     CLR                   EXSR SRAUDT
+      *
+      /EJECT
+     C*================================================================
+      **
+      **  SRDETL      Detail processing
+      **
+      *-----------------------------------------------------------
+     C           SRDETL    BEGSR
+      *-----------------------------------------------------------
+      *
+      **  Following fields should be reset to zero or blanks
+      *
+      * Broad based index flag
+     C                     Z-ADD*ZEROS    EXBBIX
+      * Claims Type
+     C                     Z-ADD*ZEROS    EXCLAT
+      * Convertible treatment flag
+     C                     Z-ADD*ZEROS    EXCTFG
+      * Excess collat treatment flag
+     C                     Z-ADD*ZEROS    EXEXCF
+      * Ranking
+     C                     MOVE *BLANKS   EXRNKG
+      * Options Calculation Method
+     C                     Z-ADD*ZEROS    EXOPCM
+      *
+      **  Specific processing depending on record type:
+      *
+     C           EXLOTD    IFEQ 'MMD'                      B1
+     C                     CALL 'ERLU64'
+     C                     PARM           EXLOTD
+     C                     PARM           EXTREF
+     C                     PARM           VHFRNI  1
+     C                     PARM           EXENDD
+     C                     PARM           EXLAMT
+     C                     PARM           EXGUAC  10
+     C                     PARM           EXBKCD                          181643
+     C                     PARM *ZEROS    EXREVD
+     C                     PARM *ZEROS    EXPPSC  60
+     C                     PARM *ZEROS    EXCCSZ  10
+     C                     PARM *ZEROS    EXCORA 160
+     C                     PARM *ZEROS    EXCORT  10
+     C                     PARM *ZEROS    EXVOTR  52
+     C                     PARM *BLANKS   EXTRIN
+     C                     PARM *ZEROS    EXEVMT  10
+     C                     PARM *ZEROS    EXSWLK  10
+     C                     PARM *ZEROS    EXTOVM  30
+     C                     PARM *ZEROS    EXIM93  10
+      * Claims Type
+     C                     PARM *ZEROS    EXCLAT
+     C                     PARM *BLANKS   EXSUBR  1
+     C                     PARM *ZEROS    EXLSAM 160
+     C                     PARM *BLANK    ERROR   1
+      *
+     C           ERROR     IFEQ 'Y'                        B2
+     C                     EXSR SRDBER
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+     C           EXLOTD    IFEQ 'SEC'                      B1
+     C                     CALL 'ERLU67'
+     C                     PARM           EXBRCD
+     C                     PARM           EXTREF
+     C                     PARM           EXDECK
+     C                     PARM           EXLAMT
+     C                     PARM *ZEROS    EXCORA
+     C                     PARM *ZEROS    EXCORT
+     C                     PARM *ZEROS    EXVOTR
+     C                     PARM *BLANKS   EXTRIN
+     C                     PARM *ZEROS    EXEVMT
+     C                     PARM *ZEROS    EXSWLK
+     C                     PARM *ZEROS    EXTOVM
+     C                     PARM *ZEROS    EXIM93
+      * Claims Type
+     C                     PARM *ZEROS    EXCLAT
+     C                     PARM *BLANKS   EXSUBR
+     C                     PARM *ZEROS    EXLSAM
+      * Ranking
+     C                     PARM *BLANKS   EXRNKG
+     C                     PARM *BLANK    ERROR   1
+      *
+     C           ERROR     IFEQ 'Y'                        B2
+     C                     EXSR SRDBER
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+     C           EXLOTD    IFEQ 'DEP'                      B1
+     C                     CALL 'ERLU69'
+      *  Input Parameters
+     C                     PARM           EXLOTD
+     C                     PARM           EXTREF
+     C                     PARM           EXDECK
+     C                     PARM           EXSESN
+      *  Output Parameters
+     C                     PARM *ZEROS    EXTOVM
+      * Excess collat treatment flag
+     C                     PARM *ZEROS    EXEXCF
+     C                     PARM *BLANK    ERROR   1
+      *
+     C           ERROR     IFEQ 'Y'                        B2
+     C                     EXSR SRDBER
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+     C           EXLOTD    IFEQ 'SEF'                      B1
+     C                     CALL 'ERLU78'
+      *  Input Parameters
+     C                     PARM           EXSESN
+      *  Output Parameters
+      * Claims Type
+     C                     PARM *ZEROS    EXCLAT
+      * Ranking
+     C                     PARM *BLANKS   EXRNKG
+     C                     PARM *BLANK    ERROR   1
+      *
+     C           ERROR     IFEQ 'Y'                        B2
+     C                     EXSR SRDBER
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+     C           EXLOTD    IFEQ 'OPT'                      B1
+     C           EXLOTD    OREQ 'FTR'
+     C                     CALL 'ERLU71'
+      *  Input Parameters
+     C                     PARM           EXLOTD
+     C                     PARM           EXTREF
+      *  Output Parameters
+      * Options Calculation Method
+     C                     PARM *ZEROS    EXOPCM
+     C                     PARM *BLANKS   EXSESN
+      * Broad based index flag
+     C                     PARM *ZEROS    EXBBIX
+     C                     PARM *BLANK    ERROR   1
+      *
+     C           ERROR     IFEQ 'Y'                        B2
+     C                     EXSR SRDBER
+     C                     ENDIF                           E2
+      *
+     C           EXSESN    IFNE *BLANKS                    B2
+     C                     CALL 'ERLU79'
+      *  Input Parameters
+     C                     PARM           EXSESN
+     C                     PARM           W#REPD
+      *  Output Parameters
+      * Issuer Number
+     C                     PARM *ZEROS    EXISSR
+      * Issuer Name
+     C                     PARM *BLANKS   EXISSN
+      * Institute sector of issuer
+     C                     PARM *ZEROS    EXISEC
+     C                     PARM *ZEROS    EXNSEC  40                      ULX004
+      * ISO Country Code of Issuer
+     C                     PARM *BLANK    EXLISS
+      * Coupon Rate
+     C                     PARM *ZEROS    EXCPNR
+      * Date A
+     C                     PARM *ZEROS    EXDATA
+      * Next interest fixing data
+     C                     PARM *ZEROS    EXNIFD                          CAD007
+     C                     PARM *BLANK    ERROR   1
+      *
+     C           ERROR     IFEQ 'Y'                        B3
+     C                     EXSR SRDBER
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+      * Unique Issuance Reference
+     C                     MOVELEXSESN    EXUISS
+      *
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      **
+      /EJECT
+     C*================================================================
+      **
+      **  SRSQBK      Sequence Breaks
+      **
+      *-----------------------------------------------------------
+     C           SRSQBK    BEGSR
+      *-----------------------------------------------------------
+      *
+      ** Branch Code sequence break:
+     C           *INL4     IFEQ *ON                        B1
+     C                     CALL 'ERLU61'
+     C                     PARM           EXBRCD
+     C                     PARM           EXORCC
+     C                     PARM *BLANK    EXINCL  1
+     C                     PARM *ZERO     EXOROC  10
+     C                     PARM *BLANK    EXORCL  3
+     C                     PARM *BLANK    ERROR   1
+      *
+     C           ERROR     IFEQ 'Y'                        B2
+     C                     EXSR SRDBER
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+      ** Lot id/Decision Key sequence break:
+     C           *INL3     IFEQ *ON                        B1
+     C                     CALL 'ERLU77'
+     C                     PARM           EXLOTD
+     C                     PARM           EXDECK
+      * Product Code
+     C                     PARM *ZEROS    EXPRDC
+      * Portfolio Type                                                    ULX004
+     C                     PARM *ZEROS    EXPORT  10                      ULX004
+     C                     PARM *BLANK    ERROR   1
+      *
+     C           ERROR     IFEQ 'Y'                        B2
+     C                     EXSR SRDBER
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+      ** Currency sequence break:
+      *
+     C           *INL2     IFEQ *ON                        B1
+     C***********EXCCYC    CHAINERCURRL1             80                   187689
+     C           EXCCYC    CHAINSDCURRL1             80                   187689
+     C           *IN80     IFEQ *ON                        B2
+     C           *LOCK     IN   WLDA
+     C                     MOVEL'002'     DBASE
+     C***********          MOVEL'ERCURRL1'DBFILE                          187689
+     C                     MOVEL'SDCURRL1'DBFILE                          187689
+     C                     MOVELEXCCYC    DBKEY
+     C                     EXSR SRDBER
+     C                     ELSE                            X2
+      * Currency Local Code
+     C***********          MOVELVRSWCY    EXCCYL                          187689
+     C***********          Z-ADDVRSPRT    @@RAT1 138                      187689
+     C***********          MOVE VRMDIN    @@MDI1  1                       187689
+     C***********          MOVE VRNBDP    @@NBD1  10                127046187689
+     C                     MOVELA6SWCY    EXCCYL                          187689
+     C                     Z-ADDA6SPRT    @@RAT1 138                      187689
+     C                     MOVE A6MDIN    @@MDI1  1                       187689
+     C                     MOVE A6NBDP    @@NBD1  10                      187689
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+      ** Customer sequence break:
+     C           *INL1     IFEQ *ON                        B1
+     C           EXLOTD    OREQ 'SEC'
+     C                     CALL 'ERLU63'
+     C                     PARM           EXLOTD
+     C                     PARM           EXCUST
+     C                     PARM           EXCUCC
+     C                     PARM           EXBNBI
+      * ISO Country Code
+     C**********           PARM *BLANK    EXCUCL                                              CER001
+     C           EXCUCL    PARM *BLANK    PXCUCL  3                                           CER001
+     C                     PARM *ZERO     EXCONS  10
+      * Economic Sector Code
+     C                     PARM *ZEROS    EXECOS
+     C                     PARM *ZEROS    EXNCOS  40                      ULX004
+     C                     PARM           EXCNCZ
+     C**********           PARM *ZEROS    EXCGRP  60                                         CSD027A
+     C                     PARM *BLANKS   EXCGRP  6                                          CSD027A
+     C                     PARM *ZEROS    EXPAPS  50
+      * Netting Agreement
+     C                     PARM *ZEROS    EXNTAG
+     C                     PARM *BLANKS   EXCGRN 20
+     C                     PARM *BLANKS   EXCGLC  2
+     C                     PARM *ZEROS    EXPERF  1
+     C                     PARM *BLANKS   EXSMRS  1                       187689
+     C                     PARM *BLANKS   EXMCID  1                                           CER001
+     C                     PARM *BLANK    ERROR   1
+      *
+     C           ERROR     IFEQ 'Y'                        B2
+     C                     EXSR SRDBER
+     C                     ENDIF                           E2
+      *
+      * The country code must be the country of citizenship for the banks
+     C                     MOVE EXCNCZ    EXCUCL
+      *
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      /EJECT
+      **=================================================================
+      ********                                                     127046 ULX047
+      ***ZFWDRT - SR. TO CALCULATE THE FORWARD FX RATE BETWEEN TWO 127046 ULX047
+      ********                                                     127046 ULX047
+      ***INPUT  FIELDS                                             127046 ULX047
+      ********ZAMTF  150     'FROM' AMOUNT                         127046 ULX047
+      ********ZCCYF   3A     'FROM' CURRENCY                       127046 ULX047
+      ********ZCCYT   3A     'TO' CURRENCY                         127046 ULX047
+      ********ZMDINF  1A     'FROM' CURRENCY MULTIPLY/DIVIDE INDICA127046 ULX047
+      ********ZMDINT  1A     'TO' CURRENCY MULTIPLY/DIVIDE INDICATO127046 ULX047
+      ********ZCDPF   10     'FROM' CURRENCY NUMBER OF DECIMAL PLAC127046 ULX047
+      ********ZCDPT   10     'TO' CURRENCY NUMBER OF DECIMAL PLACES127046 ULX047
+      ********ZSPOTF 138     'FROM' CURRENCY SPOT RATE             127046 ULX047
+      ********ZSPOTT 138     'TO' CURRENCY SPOT RATE               127046 ULX047
+      ********ZDATN   50     FORWARD DATE (MIDAS DAY NUMBER FORMAT)127046 ULX047
+      ********ZRDATE  50     RUN DATE, SDBANKPD (MIDAS DAY NUMBER F127046 ULX047
+      ********                                                     127046 ULX047
+      ***OUTPUT  FIELDS                                            127046 ULX047
+      ********ZAMTT  150     ZAMTF CONVERTED INTO 'TO' CURRENCY    127046 ULX047
+      ********               USING FORWARD RATES                   127046 ULX047
+      ********ZCRSRT 138     FORWARD FX RATE BETWEEN 'FROM' & 'TO' 127046 ULX047
+      ********               (ALWAYS A MULTIPLY RATE)              127046 ULX047
+      ********                                                     127046 ULX047
+      ****WORK FIELDS                                              127046 ULX047
+      ********DFWDS          DATA STRUCTURE (75 = 25 X 3P)         127046 ULX047
+      ********RFWDS          DATA STRUCTURE (175 = 25 X 7P)        127046 ULX047
+      ********DF             FORWARD DAYS ARRAY (25 X 3 0)         127046 ULX047
+      ********RF             FORWARD RATES ARRAY (25 X 13 8)       127046 ULX047
+      ********DYF            FORWARD DATES ARRAY (26 X 3 0)        127046 ULX047
+      ********RAF            FORWARD RATES ARRAY (26 X 13 8)       127046 ULX047
+      ********ZWCCY   3A     CURRENCY                              127046 ULX047
+      ********ZWSPOT 138     SPOT RATE                             127046 ULX047
+      ********I       10     INDEX TO PROCESS 'FROM' AND 'TO' CURRE127046 ULX047
+      ********J       20     INDEX TO ACCESS ELEMENTS OF ARRAYS    127046 ULX047
+      ********K       20     INDEX TO ACCESS ELEMENTS OF ARRAYS    127046 ULX047
+      ********ZWRATE 138     FORWARD RATE                          127046 ULX047
+      ********ZRATEF 138     'FROM' CURRENCY FORWARD RATE (INPUT FO127046 ULX047
+      ********ZRATET 138     'TO' CURRENCY FORWARD RATE (INPUT FOR 127046 ULX047
+      ********ZWDAT1  50     DATE (MIDAS DAY NUMBER FORMAT)        127046 ULX047
+      ********ZWDAT2  50     DATE (MIDAS DAY NUMBER FORMAT)        127046 ULX047
+      ********ZWDDT1  50     DATE (MIDAS DAY NUMBER FORMAT)        127046 ULX047
+      ********ZWDDT2  50     DATE (MIDAS DAY NUMBER FORMAT)        127046 ULX047
+      ********ZWRAT1 138     RATE                                  127046 ULX047
+      ********ZWRAT2 138     RATE                                  127046 ULX047
+      ********ZWRDIF 158     RATE                                  127046 ULX047
+      ********                                                     127046 ULX047
+      ****INDICATORS USED                                          127046 ULX047
+      *********IN91,92,93,*  USED ON SEARCH FOR ZDATN ON FORWARD DA127046 ULX047
+      *********IN99          USED ON CHAIN TO LF/FWDRT             127046 ULX047
+      ********                                                     127046 ULX047
+      ****ALSO REQUIRED                                            127046 ULX047
+      ********DATA STRUCTURE FOR FORWARD DAYS FROM FILE FWDRT (CHAR127046 ULX047
+      ********DATA STRUCTURE FOR FORWARD RATES FROM FILE FWDRT (CHA127046 ULX047
+      ********ARRAY FOR FORWARD DAYS FROM FILE FWDRT (NUM)         127046 ULX047
+      ********ARRAY FOR FORWARD RATES FROM FILE FWDRT (NUM)        127046 ULX047
+      ********ARRAY FOR ALL FORWARD DATES (RUN DATE AND R.D.+DAYS F127046 ULX047
+      ********ARRAY FOR ALL FORWARD RATES (SPOT RATE AND RATES FROM127046 ULX047
+      ********                                                     127046 ULX047
+      ***CALLS:                                                    127046 ULX047
+      ********ZCCYCN                                               127046 ULX047
+      ********                                                     127046 ULX047
+      ***CALLED BY:                                                127046 ULX047
+      ********                                                     127046 ULX047
+      *************************************************************127046 ULX047
+      ********                                                     127046 ULX047
+     C********   ZFWDRT    BEGSR                           ** ZFWDR127046 ULX047
+      ********                                                     127046 ULX047
+      ***DEFINE INPUT AND OUTPUT FIELDS                            127046 ULX047
+     C********             Z-ADDZAMTF     ZAMTF  150               127046 ULX047
+     C********             MOVE ZCCYF     ZCCYF   3                127046 ULX047
+     C********             MOVE ZCCYT     ZCCYT   3                127046 ULX047
+     C********             MOVE ZMDINF    ZMDINF  1                127046 ULX047
+     C********             MOVE ZMDINT    ZMDINT  1                127046 ULX047
+     C********             Z-ADDZCDPF     ZCDPF   10               127046 ULX047
+     C********             Z-ADDZCDPT     ZCDPT   10               127046 ULX047
+     C********             Z-ADDZSPOTF    ZSPOTF 138               127046 ULX047
+     C********             Z-ADDZSPOTT    ZSPOTT 138               127046 ULX047
+     C********             Z-ADDZDATN     ZDATN   50               127046 ULX047
+     C********             Z-ADDZRDATE    ZRDATE  50               127046 ULX047
+     C********             Z-ADD0         ZAMTT  150               127046 ULX047
+     C********             Z-ADD0         ZCRSRT 138               127046 ULX047
+      ********                                                     127046 ULX047
+      ***CALCULATE THE FORWARD RATE FIRST FOR THE 'FROM' CURRENCY  127046 ULX047
+      ***AND*THEN FOR THE 'TO' CURRENCY BY USING THE SAME PROCESSIN127046 ULX047
+     C********             Z-ADD1         I       30               127046 ULX047
+     C********   I         DOUEQ3                          B1      127046 ULX047
+      ********                                                     127046 ULX047
+      ***I*=*1 : 'FROM' CURRENCY, I = 2 : 'TO' CURRENCY            127046 ULX047
+     C********   I         IFEQ 1                          B2      127046 ULX047
+     C********             MOVE ZCCYF     ZWCCY   3                127046 ULX047
+     C********             Z-ADDZSPOTF    ZWSPOT 138               127046 ULX047
+     C********             ELSE                            X2      127046 ULX047
+     C********             MOVE ZCCYT     ZWCCY                    127046 ULX047
+     C********             Z-ADDZSPOTT    ZWSPOT                   127046 ULX047
+     C********             END                             E2      127046 ULX047
+      ********                                                     127046 ULX047
+      ***INITIALISE FORWARD DATES AND FORWARD RATES ARRAYS         127046 ULX047
+     C********             MOVEA*ZERO     DYF                      127046 ULX047
+     C********             MOVEA*ZERO     RAF                      127046 ULX047
+     C********             Z-ADDZRDATE    DYF,1                    127046 ULX047
+     C********             Z-ADDZWSPOT    RAF,1                    127046 ULX047
+      ********                                                     127046 ULX047
+      ***ACCESS LF/FWDRT AND SET UP FURTHER ELEMENTS OF THE TWO ARR127046 ULX047
+     C********   ZWCCY     CHAINFWDRT                99            127046 ULX047
+      ********                                                     127046 ULX047
+     C********   *IN99     IFEQ '0'                        B2      127046 ULX047
+     C********   RECI      ANDEQ'D'                                127046 ULX047
+     C********             MOVE DFW       DFWDS                    127046 ULX047
+     C********             MOVE RFW       RFWDS                    127046 ULX047
+     C********             Z-ADD1         J       30               127046 ULX047
+     C********             Z-ADD2         K       30               127046 ULX047
+      ********                                                     127046 ULX047
+      ***SET*UP EACH ELEMENT OF FORWAD DATES ARRAY                 127046 ULX047
+     C********   J         DOWLT26                         B3      127046 ULX047
+     C********   DF,J      IFNE 0                          B4      127046 ULX047
+     C********   ZRDATE    ADD  DF,J      DYF,K                    127046 ULX047
+     C********             ADD  1         J                        127046 ULX047
+     C********             ADD  1         K                        127046 ULX047
+     C********             ELSE                            X4      127046 ULX047
+     C********             Z-ADD90        J                        127046 ULX047
+     C********             END                             E4      127046 ULX047
+     C********             END                             E3      127046 ULX047
+      ********                                                     127046 ULX047
+      ***SET*UP ELEMENTS OF FORWAD RATES ARRAY                     127046 ULX047
+     C********             MOVEARF        RAF,2                    127046 ULX047
+      ********                                                     127046 ULX047
+     C********             END                             E2      127046 ULX047
+      ********                                                     127046 ULX047
+      ***DETERMINE IF ZDATN IS EQUAL TO AN ELEMENT OF FORWARD DATES127046 ULX047
+     C********             Z-ADD1         J                        127046 ULX047
+     C********   ZDATN     LOKUPDYF,J                    91        127046 ULX047
+     C********   *IN91     IFEQ '1'                        B2      127046 ULX047
+      ********                                                     127046 ULX047
+      ***ZDATN IS EQUAL TO A FORWARD DATE IN THE ARRAY             127046 ULX047
+     C********             Z-ADDRAF,J     ZWRATE 138               127046 ULX047
+      ********                                                     127046 ULX047
+      ***DETERMINE IF ZDATN IS GREATER THAN LAST DATE OF ARRAY     127046 ULX047
+      ***OR*IF ZDATN FALLS BETWEEN TWO DATES IN ARRAY              127046 ULX047
+     C********             ELSE                            X2      127046 ULX047
+     C********             MOVE '0'       *IN92                    127046 ULX047
+     C********             MOVE '0'       *IN93                    127046 ULX047
+      ********                                                     127046 ULX047
+     C********   J         DOUGT26                         B3      127046 ULX047
+     C********   *IN92     OREQ '1'                                127046 ULX047
+     C********   *IN93     OREQ '1'                                127046 ULX047
+     C********   ZDATN     IFLT DYF,J                      B4      127046 ULX047
+     C********             MOVE '1'       *IN92                    127046 ULX047
+     C********             ELSE                            X4      127046 ULX047
+     C********   DYF,J     IFEQ 0                          B5      127046 ULX047
+     C********             MOVE '1'       *IN93                    127046 ULX047
+     C********             ELSE                            X5      127046 ULX047
+     C********             ADD  1         J                        127046 ULX047
+     C********             END                             E5      127046 ULX047
+     C********             END                             E4      127046 ULX047
+     C********             END                             E3      127046 ULX047
+      ********                                                     127046 ULX047
+      ***ZDATN IS GREATER THAN THE LAST FORWARD DATE IN THE ARRAY  127046 ULX047
+     C********   *IN92     IFEQ '0'                        B3      127046 ULX047
+     C********             SUB  1         J                        127046 ULX047
+     C********             Z-ADDRAF,J     ZWRATE                   127046 ULX047
+      ********                                                     127046 ULX047
+      ***ZDATN IS BETWEEN TWO FORWARD DATES IN THE ARRAY           127046 ULX047
+     C********             ELSE                            X3      127046 ULX047
+     C********             Z-ADDDYF,J     ZWDAT2  50               127046 ULX047
+     C********             Z-ADDRAF,J     ZWRAT2 138               127046 ULX047
+     C********             SUB  1         J                        127046 ULX047
+     C********             Z-ADDDYF,J     ZWDAT1  50               127046 ULX047
+     C********             Z-ADDRAF,J     ZWRAT1 138               127046 ULX047
+     C********   ZDATN     SUB  ZWDAT1    ZWDDT1  50               127046 ULX047
+     C********   ZWDAT2    SUB  ZWDAT1    ZWDDT2  50               127046 ULX047
+     C********   ZWRAT2    SUB  ZWRAT1    ZWRDIF 158               127046 ULX047
+     C********             MULT ZWDDT1    ZWRDIF                   127046 ULX047
+     C********             DIV  ZWDDT2    ZWRDIF    H              127046 ULX047
+     C********   ZWRAT1    ADD  ZWRDIF    ZWRATE                   127046 ULX047
+     C********             END                             E3      127046 ULX047
+      ********                                                     127046 ULX047
+     C********             END                             E2      127046 ULX047
+      ********                                                     127046 ULX047
+     C********   I         IFEQ 1                          B2      127046 ULX047
+     C********             Z-ADDZWRATE    ZRATEF 138               127046 ULX047
+     C********             ELSE                            X2      127046 ULX047
+     C********             Z-ADDZWRATE    ZRATET 138               127046 ULX047
+     C********             END                             E2      127046 ULX047
+      ********                                                     127046 ULX047
+     C********             ADD  1         I                        127046 ULX047
+     C********             END                             E1      127046 ULX047
+      ********                                                     127046 ULX047
+      ***CALL*SR/ZCCYCN TO CALCULATE THE FORWARD FX RATE           127046 ULX047
+      ***USING THE CALCULATED FORWARD RATES                        127046 ULX047
+     C********             EXSR ZCCYCN                             127046 ULX047
+      ********                                                     127046 ULX047
+      ***IF*THE CROSS RATE MULT/DIV IND IS 'D', INVERSE FORWARD FX 127046 ULX047
+     C********   ZCRSMD    IFEQ 'D'                        B1      127046 ULX047
+     C********   1         DIV  ZCRSRT    ZCRSRT    H              127046 ULX047
+     C********             END                             E1      127046 ULX047
+      ********                                                     127046 ULX047
+     C********             ENDSR                           ** ZFWDR127046 ULX047
+      ********                                                     127046 ULX047
+     C*************************************************************127046 ULX047
+     C********                                                     127046 ULX047
+     C***ZCCYCN SR. TO CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER127046 ULX047
+     C***CURRENCY USING THE SPOT RATES FOR THE TWO CURRENCIES      127046 ULX047
+     C********                                                     127046 ULX047
+     C***INPUT  FIELDS                                             127046 ULX047
+     C********ZAMTF  150     AMOUNT IN 'FROM' CURRENCY             127046 ULX047
+     C********ZCCYF   3A     FROM CURRENCY                         127046 ULX047
+     C********ZCCYT   3A     TO CURRENCY                           127046 ULX047
+     C********ZRATEF 138     SPOT RATE FOR 'FROM' CURRENCY         127046 ULX047
+     C********ZRATET 138     SPOT RATE FOR 'TO' CURRENCY           127046 ULX047
+     C********ZMDINF  1A     MULTIPLY/DIVIDE INDICATOR FOR 'FROM' C127046 ULX047
+     C********ZMDINT  1A     MULTIPLY/DIVIDE INDICATOR FOR 'TO' CUR127046 ULX047
+     C********ZCDPF   10     CURRENCY DECIMAL PLACES FOR 'FROM' CUR127046 ULX047
+     C********ZCDPT   10     CURRENCY DECIMAL PLACES FOR 'TO' CURRE127046 ULX047
+     C********                                                     127046 ULX047
+     C***OUTPUT  FIELDS                                            127046 ULX047
+     C********ZAMTT  150     AMOUNT IN 'TO' CURRENCY (IE. CONVERTED127046 ULX047
+     C********ZCRSRT 138     CROSS EXCHANGE RATE                   127046 ULX047
+     C********ZCRSMD  1A     CROSS RATE MULTIPLY/DIVIDE INDICATOR  127046 ULX047
+     C********                                                     127046 ULX047
+     C********                                                     127046 ULX047
+     C***CALLS:                                                    127046 ULX047
+     C********                                                     127046 ULX047
+     C*************************************************************127046 ULX047
+     C********                                                     127046 ULX047
+     C********   ZCCYCN    BEGSR                           *** ZCCY127046 ULX047
+     C********                                                     127046 ULX047
+     C***DEFINE ALL FIELDS                                         127046 ULX047
+     C********             Z-ADDZAMTF     ZAMTF  150               127046 ULX047
+     C********             MOVE ZCCYF     ZCCYF   3                127046 ULX047
+     C********             MOVE ZCCYT     ZCCYT   3                127046 ULX047
+     C********             Z-ADDZRATEF    ZRATEF 138               127046 ULX047
+     C********             Z-ADDZRATET    ZRATET 138               127046 ULX047
+     C********             MOVE ZMDINF    ZMDINF  1                127046 ULX047
+     C********             MOVE ZMDINT    ZMDINT  1                127046 ULX047
+     C********             Z-ADDZCDPF     ZCDPF   10               127046 ULX047
+     C********             Z-ADDZCDPT     ZCDPT   10               127046 ULX047
+     C********             Z-ADDZAMTT     ZAMTT  150               127046 ULX047
+     C********             Z-ADDZCRSRT    ZCRSRT 138               127046 ULX047
+     C********             MOVE ZCRSMD    ZCRSMD  1                127046 ULX047
+     C********                                                     127046 ULX047
+     C***IF*'FROM' CURRENCY EQUAL TO 'TO' CURRENCY SET AMOUNT IN 'T127046 ULX047
+     C***EQUAL TO AMOUNT IN 'FROM' CURRENCY                        127046 ULX047
+     C********   ZCCYF     IFEQ ZCCYT                              127046 ULX047
+     C********             Z-ADDZAMTF     ZAMTT                    127046 ULX047
+     C********             Z-ADD1         ZCRSRT                   127046 ULX047
+     C********             MOVE 'M'       ZCRSMD                   127046 ULX047
+     C********   1000000000MULT 1000000   ZCRSRN                   127046 ULX047
+     C********             GOTO CCYEND                             127046 ULX047
+     C********             END                                     127046 ULX047
+     C********                                                     127046 ULX047
+     C***INITIALIZE CROSS EXCHANGE RATE (ZCRSSRT) TO ZERO          127046 ULX047
+     C********             Z-ADD*ZEROS    ZCRSRT                   127046 ULX047
+     C********                                                     127046 ULX047
+     C***CONVERT 'FROM' RATE TO MULTIPLY RATE                      127046 ULX047
+     C********   ZMDINF    IFEQ 'M'                                127046 ULX047
+     C********             Z-ADDZRATEF    ZRATF1 138               127046 ULX047
+     C********   1000000000MULT ZRATEF    ZRATF2 308               127046 ULX047
+     C********   10        MULT ZRATF2    ZRATF2                   127046 ULX047
+     C********             ELSE                                    127046 ULX047
+     C********   1         DIV  ZRATEF    ZRATF1                   127046 ULX047
+     C********   1000000000MULT 10        ZRWORK 200               127046 ULX047
+     C********   ZRWORK    DIV  ZRATEF    ZRATF2    H              127046 ULX047
+     C********             END                                     127046 ULX047
+     C********                                                     127046 ULX047
+     C***CONVERT 'TO' RATE TO MULTIPLY RATE                        127046 ULX047
+     C********   ZMDINT    IFEQ 'M'                                127046 ULX047
+     C********             Z-ADDZRATET    ZRATT1 138               127046 ULX047
+     C********   1000000000MULT ZRATET    ZRATT2 308               127046 ULX047
+     C********   10        MULT ZRATT2    ZRATT2                   127046 ULX047
+     C********             ELSE                                    127046 ULX047
+     C********   1         DIV  ZRATET    ZRATT1                   127046 ULX047
+     C********   1000000000MULT 10        ZRWORK                   127046 ULX047
+     C********   ZRWORK    DIV  ZRATET    ZRATT2    H              127046 ULX047
+     C********             END                                     127046 ULX047
+     C********                                                     127046 ULX047
+     C***NOW*CALCULATE CROSS RATE                                  127046 ULX047
+     C********   ZRATT1    IFNE *ZEROS                             127046 ULX047
+     C********   ZRATF1    DIV  ZRATT1    ZCRSRT                   127046 ULX047
+     C********                                                     127046 ULX047
+     C***CALCULATE DOUBLE PRECISION FX RATE                        127046 ULX047
+     C***FIRST SPLIT FIGURE INTO TWO PARTS                         127046 ULX047
+     C********   1000000000MULT 1000000   ZRWORK                   127046 ULX047
+     C********   ZRATF2    MULT ZRWORK    ZRATBF 300               127046 ULX047
+     C********             Z-ADDZRATF2    ZRATSF 158               127046 ULX047
+     C********                                                     127046 ULX047
+     C***DIVIDE BOTH BIG AND SMALL PARTS BY TO FX RATE AND ADD TO C127046 ULX047
+     C***TO*BE USED IN CALCULATIONS                                127046 ULX047
+     C********   ZRATBF    DIV  ZRATT2    ZCRSRN 309H              127046 ULX047
+     C********   ZRATSF    DIV  ZRATT2    ZCRSR1 309H              127046 ULX047
+     C********             ADD  ZCRSR1    ZCRSRN                   127046 ULX047
+     C********             END                                     127046 ULX047
+     C********                                                     127046 ULX047
+     C***MOVE*MULT/DIV INDIC FOR 'FROM' CURRENCY TO CROSS RATE MULT127046 ULX047
+     C***INDICATOR (ZCRSMD)                                        127046 ULX047
+     C********             MOVE 'M'       ZCRSMD                   127046 ULX047
+     C********                                                     127046 ULX047
+     C***IF*CROSS EXCHANGE RATE IS EQUAL TO ZERO                   127046 ULX047
+     C***SET*ZAMTT  TO *ZERO  & EXIT                               127046 ULX047
+     C********   ZCRSRN    IFEQ 0                                  127046 ULX047
+     C********             Z-ADD*ZEROS    ZAMTT                    127046 ULX047
+     C********             GOTO CCYEND                             127046 ULX047
+     C********             END                                     127046 ULX047
+     C********                                                     127046 ULX047
+     C***IF*DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF) EQUALS DECI127046 ULX047
+     C***DECIMAL PLACES  FOR 'TO' CURRENCY CONVERT AMOUNT BY SIMPLE127046 ULX047
+     C***MULTIPLICATION                                            127046 ULX047
+     C********   ZCDPF     IFEQ ZCDPT                      B1      127046 ULX047
+     C********   ZAMTF     MULT ZCRSRN    ZAMTO  300H              127046 ULX047
+     C********             END                             E1      127046 ULX047
+     C********                                                     127046 ULX047
+     C***IF*DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF)  NOT EQUALS127046 ULX047
+     C***DECIMAL PLACES  FOR 'TO' CURRENCY ADJUST AMOUNT FOR DIFFER127046 ULX047
+     C********   ZCDPF     IFNE ZCDPT                      B1      127046 ULX047
+     C********                                                     127046 ULX047
+     C***SUBTRACT DECIMAL PLACES 'FROM' FROM DECIMAL PLACES 'TO' IN127046 ULX047
+     C********   ZCDPT     SUB  ZCDPF     ZWKPX   10               127046 ULX047
+     C********   ZWKPX     ADD  4         B       30               127046 ULX047
+     C********                                                     127046 ULX047
+     C***IF*POWER ELEMENT (8,4) LESS THAN 1                        127046 ULX047
+     C********   POWER,B   IFLT 1                          B2      127046 ULX047
+     C********                                                     127046 ULX047
+     C***MULTIPLY AMOUNT IN FROM CURRENCY BY ELEMENT IN POWER ARRAY127046 ULX047
+     C********   POWER,B   MULT ZAMTF     ZWK153 153               127046 ULX047
+     C********                                                     127046 ULX047
+     C********   ZWK153    MULT ZCRSRN    ZAMTO     H              127046 ULX047
+     C********             END                             E2      127046 ULX047
+     C********                                                     127046 ULX047
+     C***IF*POWER ELEMENT (8,4) GREATER OR EQUAL TO 1              127046 ULX047
+     C********   POWER,B   IFGE 1                          B2      127046 ULX047
+     C********   ZAMTF     MULT POWER,B   ZAMTO                    127046 ULX047
+     C********   ZAMTO     MULT ZCRSRN    ZAMTO     H              127046 ULX047
+     C********             END                             E2      127046 ULX047
+     C********             END                             E1      127046 ULX047
+     C********                                                     127046 ULX047
+     C********   ZAMTO     DIV  ZRWORK    ZAMTT     H              127046 ULX047
+     C********                                                     127046 ULX047
+     C********   CCYEND    ENDSR                                   127046 ULX047
+      **
+      **=================================================================
+      **
+      **  *INZSR      Program initialisation sub-routine
+      **
+      *-----------------------------------------------------------
+     C           *INZSR    BEGSR
+      *-----------------------------------------------------------
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C************LIKE     DEFN A8BICN    WWCGRP                          ULX047
+     C           *LIKE     DEFN EXREPD    WWREPD
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           BJMRDT  7        Run date
+     C                     PARM           BJURPT 53        Rpt Title
+     C                     PARM           LASTSQ  60       Output Parm
+      *                                                    (last seq num)
+      *
+     C           *LOCK     IN   WLDA
+     C                     MOVEL*BLANK    WLDA
+     C                     MOVELPGM       DBPGM
+     C                     OUT  WLDA
+     C                     MOVE '0'       *INU7
+      *
+      **  Access ER ICD to retrieve local Ccy & Xrate v/s Base ccy :
+      *
+     C********** 'LU'      CHAINERICDRL1             80                                       CER001
+     C           'LU'      CHAINERICDXL1             80                                       CER001
+     C           *IN80     IFEQ *ON                        B1
+     C           *LOCK     IN   WLDA
+     C                     MOVEL'003'     DBASE            *****************
+     C**********           MOVEL'ERICDRL1'DBFILE                                              CER001
+     C                     MOVEL'ERICDXL1'DBFILE                                              CER001
+     C                     MOVEL'LU'      DBKEY
+     C                     EXSR SRDBER
+     C                     ELSE                            X1
+     C***********VDCCYC    CHAINERCURRL1             80                   187689
+     C           VDCCYC    CHAINSDCURRL1             80                   187689
+     C           *IN80     IFEQ *ON                        B2
+     C           *LOCK     IN   WLDA
+     C                     MOVEL'004'     DBASE            ***************
+     C***********          MOVEL'ERCURRL1'DBFILE                          187689
+     C                     MOVEL'SDCURRL1'DBFILE                          187689
+     C                     MOVELVDCCYC    DBKEY
+     C                     EXSR SRDBER
+     C                     ELSE                            X2
+     C***********          Z-ADDVRSPRT    @@RAT2 138                      187689
+     C***********          MOVE VRMDIN    @@MDI2  1                       187689
+     C***********          MOVE VRNBDP    @@NBD2  10                127046187689
+     C                     Z-ADDA6SPRT    @@RAT2 138                      187689
+     C                     MOVE A6MDIN    @@MDI2  1                       187689
+     C                     MOVE A6NBDP    @@NBD2  10                      187689
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+      ** IML 2.4 DEVELOPMENT
+      *
+     C********** 'LU'      CHAINERLUICL0             80                                       CER001
+     C           'LU'      CHAINERLICXL0             80                                       CER001
+     C           *IN80     IFEQ *ON                        B1
+     C           *LOCK     IN   WLDA
+     C                     MOVEL'005'     DBASE
+     C**********           MOVEL'ERLUICL0'DBFILE                                              CER001
+     C                     MOVEL'ERLICXL0'DBFILE                                              CER001
+     C                     MOVEL'LU'      DBKEY
+     C                     EXSR SRDBER
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      **
+      **   SRCALC     Convert Amount to Report CCY
+      **
+      **   INPUT  : INAMNT 160
+      **   OUTPUT : OUTAMT 248
+      **
+      *-----------------------------------------------------------
+     C           SRCALC    BEGSR
+      *-----------------------------------------------------------
+     C                     Z-ADD0         OUTAMT 248
+      *
+     C           @@MDI1    IFEQ 'M'
+     C           @@MDI2    ANDEQ'D'
+     C           @@RAT1    MULT @@RAT2    WWRAT  138
+     C           INAMNT    MULT WWRAT     OUTAMT    H
+     C                     ENDIF
+      *
+     C           @@MDI1    IFEQ 'M'
+     C           @@MDI2    ANDEQ'M'
+     C           INAMNT    MULT @@RAT1    OUTAMT
+     C           OUTAMT    DIV  @@RAT2    OUTAMT    H
+     C                     ENDIF
+      *
+     C           @@MDI1    IFEQ 'D'
+     C           @@MDI2    ANDEQ'D'
+     C           INAMNT    MULT @@RAT2    OUTAMT
+     C           OUTAMT    DIV  @@RAT1    OUTAMT    H
+     C                     ENDIF
+      *
+     C           @@MDI1    IFEQ 'D'
+     C           @@MDI2    ANDEQ'M'
+     C           @@RAT1    MULT @@RAT2    WWRAT
+     C           INAMNT    DIV  WWRAT     OUTAMT    H
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C*****************************************************************   194921
+     C           ZINTDY    BEGSR                                          194921
+     C*                                                                   194921
+     C           *IN80     IFEQ '1'                                095238 194921
+     C                     MOVE '1'       IN80SV  1                095238 194921
+     C                     ELSE                                    095238 194921
+     C                     MOVE '0'       IN80SV                   095238 194921
+     C                     END                                     095238 194921
+     C                     MOVE ZZBEG     ZZBEG   50                      194921
+     C                     MOVE ZZEND     ZZEND   50                      194921
+     C                     MOVE ZZCALC    ZZCALC  1                       194921
+     C                     Z-ADD*ZEROS    ZZINDY  50                      194921
+     C                     Z-ADD*ZEROS    ZZLPNM  50                      194921
+     C*                                                                   194921
+     C**  FIND NUMBER OF DAYS DIFFERENCE BETWEEN DATES                    194921
+     C           ZZEND     SUB  ZZBEG     ZZWDAT  50                      194921
+     C*                                                                   194921
+     C****FOR*CALCULATION*METHODS*3,4*OR*5**                       126017 194921
+     C**  FOR CALCULATION METHODS 3,4,5 OR 6                       126017 194921
+     C           ZZCALC    IFEQ '3'                                       194921
+     C           ZZCALC    OREQ '4'                                       194921
+     C           ZZCALC    OREQ '5'                                       194921
+     C           ZZCALC    OREQ '6'                                126017 194921
+     C*                                                                   194921
+     C                     Z-ADDZZBEG     @@DAYN  50                      194921
+     C                     EXSR ZDATE9                                    194921
+     C                     Z-ADD@@VDT     ZZDATA                          194921
+     C*                                                                   194921
+     C                     Z-ADDZZEND     @@DAYN                          194921
+     C                     EXSR ZDATE9                                    194921
+     C                     Z-ADD@@VDT     ZZDATB                          194921
+     C                     END                                     126017 194921
+      *                                                            126017 194921
+     C           ZZCALC    IFEQ '3'                                126017 194921
+     C           ZZCALC    OREQ '4'                                126017 194921
+     C           ZZCALC    OREQ '5'                                126017 194921
+     C*                                                                   194921
+     C**  IF IN SAME MONTH                                                194921
+     C           ZZYY1     IFEQ ZZYY2                                     194921
+     C           ZZMM1     IFEQ ZZMM2                                     194921
+     C           ZZDD2     SUB  ZZDD1     ZZINDY           - LOAD OUTPT   194921
+     C           ZZDD2     IFEQ 31                                 095244 194921
+     C           ZZDD1     ANDNEZZDD2                              097885 194921
+     C                     SUB  1         ZZINDY                   095244 194921
+     C                     END                                     095244 194921
+     C                     GOTO ZINTD9                     ----------->   194921
+     C                     END                                            194921
+     C                     END                                            194921
+     C*                                                                   194921
+     C                     ELSE                                           194921
+      *                                                            126017 194921
+     C           ZZCALC    IFEQ '6'                        B1      126017 194921
+      *                                                            126017 194921
+      * Perform no. of days calculation for method 6               126017 194921
+      * Find the number of leap year and non-leap year days in the 126017 194921
+      * interest period. The non-leap year days are then adjusted b126017 194921
+      * factor of 366/365 to allow for the divisor of 366 in GLINTC126017 194921
+      * This figure is then added to the actual leap year days to g126017 194921
+      * a factored number of days in the interest period.          126017 194921
+      *                                                            126017 194921
+     C                     Z-ADD0         LEAP50  50               126017 194921
+     C                     Z-ADD0         NLEAP   50               126017 194921
+      *                                                            126017 194921
+      * If start and end date are in the same year, check if the   126017 194921
+      * year is a leap year and add no. of interest days to the    126017 194921
+      * relevant total                                             126017 194921
+     C           ZZYY1     IFEQ ZZYY2                      B2      126017 194921
+     C           ZZYY1     DIV  4         ZZWN5                    126017 194921
+     C                     MVR            ZZWN5                    126017 194921
+     C           ZZWN5     IFNE 0                          B3      126017 194921
+     C                     ADD  ZZWDAT    NLEAP                    126017 194921
+     C                     ELSE                            X3      126017 194921
+     C                     ADD  ZZWDAT    LEAP50                   126017 194921
+     C                     END                             E3      126017 194921
+      *                                                            126017 194921
+      * else must break down the interest period into leap years   126017 194921
+      * and non-leap years                                         126017 194921
+     C                     ELSE                            X2      126017 194921
+      *                                                            126017 194921
+      * Save end date year value                                   126017 194921
+     C                     Z-ADDZZDATB    DATBSV  80               126017 194921
+     C                     Z-ADDZZYY2     YY2SAV  40               126017 194921
+      *                                                            126017 194921
+      * Add 1 to starting year number                              126017 194921
+     C           ZZYY1     ADD  1         ZZYY2                    126017 194921
+      *                                                            126017 194921
+      * Get Midas day number for 1st Jan of year after start date  126017 194921
+     C                     MOVE '01'      ZZMM2                    126017 194921
+     C                     MOVE '01'      ZZDD2                    126017 194921
+     C                     MOVE ZZDATB    ZZDTIN                   126017 194921
+     C                     EXSR ZDAT10                             126017 194921
+     C                     Z-ADDZZMDNO    ZZENDW  50               126017 194921
+     C           ZZENDW    SUB  ZZBEG     ZZWDAT                   126017 194921
+      *                                                            126017 194921
+      * Check if current year is a leap year                       126017 194921
+     C           ZZYY1     DIV  4         ZZWN5                    126017 194921
+     C                     MVR            ZZWN5                    126017 194921
+     C           ZZWN5     IFNE 0                          B3      126017 194921
+     C                     ADD  ZZWDAT    NLEAP                    126017 194921
+     C                     ELSE                            X3      126017 194921
+     C                     ADD  ZZWDAT    LEAP50                   126017 194921
+     C                     END                             E3      126017 194921
+      *                                                            126017 194921
+      * Accumulate leap year and non-leap year days for complete   126017 194921
+      * years in the interest period                               126017 194921
+     C           ZZYY2     DOWLTYY2SAV                     B3      126017 194921
+      *                                                            126017 194921
+      * Check if current year is a leap year                       126017 194921
+     C           ZZYY2     DIV  4         ZZWN5                    126017 194921
+     C                     MVR            ZZWN5                    126017 194921
+     C           ZZWN5     IFNE 0                          B4      126017 194921
+     C                     ADD  365       NLEAP                    126017 194921
+     C                     ELSE                            X4      126017 194921
+     C                     ADD  366       LEAP50                   126017 194921
+     C                     END                             E4      126017 194921
+      *                                                            126017 194921
+      * Add 1 to year number                                       126017 194921
+     C                     ADD  1         ZZYY2                    126017 194921
+     C                     ENDDO                           E3      126017 194921
+      *                                                            126017 194921
+      * Finally calculate the days for the last part-year up       126017 194921
+      * to the end date                                            126017 194921
+      *                                                            126017 194921
+      * Get Midas day number for 1st Jan of current year           126017 194921
+     C                     MOVE '01'      ZZMM2                    126017 194921
+     C                     MOVE '01'      ZZDD2                    126017 194921
+     C                     MOVE ZZDATB    ZZDTIN                   126017 194921
+     C                     EXSR ZDAT10                             126017 194921
+     C                     Z-ADDZZMDNO    ZZBEG                    126017 194921
+     C           ZZEND     SUB  ZZBEG     ZZWDAT                   126017 194921
+      *                                                            126017 194921
+      * Check if year is a leap year                               126017 194921
+     C           ZZYY2     DIV  4         ZZWN5                    126017 194921
+     C                     MVR            ZZWN5                    126017 194921
+     C           ZZWN5     IFNE 0                          B3      126017 194921
+     C                     ADD  ZZWDAT    NLEAP                    126017 194921
+     C                     ELSE                            X3      126017 194921
+     C                     ADD  ZZWDAT    LEAP50                   126017 194921
+     C                     END                             E3      126017 194921
+      *                                                            126017 194921
+     C                     END                             E2      126017 194921
+      *                                                            126017 194921
+      * Multiply non-leap year days by 366/365                     126017 194921
+     C           NLEAP     MULT 366       WNLP1  150               126017 194921
+     C           WNLP1     DIV  365       WNLP2  157H              126017 194921
+      *                                                            126017 194921
+      * Add the result to the number of leap year days to give     126017 194921
+      * the total days in interest period                          126017 194921
+     C           LEAP50    ADD  WNLP2     INT6DY 157H              126017 194921
+     C*                                                            126017 194921
+     C                     ELSE                                    126017 194921
+      *                                                            126017 194921
+     C****IF*NOT*3,4*OR*5*EXIT*PROCESSING*******                   126017 194921
+     C**  IF NOT 3,4,5 OR 6 EXIT PROCESSING                        126017 194921
+     C                     Z-ADDZZWDAT    ZZINDY           - LOAD OUTPT   194921
+     C                     GOTO ZINTD9                     ----------->   194921
+     C*                                                                   194921
+     C                     END                                            194921
+     C                     END                                     126017 194921
+     C*                                                                   194921
+     C           ZZCALC    IFEQ '3'                                       194921
+     C*                                                                   194921
+     C**  CALC NO. DAYS IN FIRST MONTH                                    194921
+     C*                                                            040697 194921
+     C**  FOR FEB TEST IF DAY EQUAL TO END OF MONTH                040697 194921
+     C           ZZMM1     IFEQ 2                                  040697 194921
+     C*                                                            040697 194921
+     C**  TEST IF LEAP YEAR                                        040697 194921
+     C           ZZYY1     DIV  4         ZZWN5                    040697 194921
+     C                     MVR            ZZWN5          80        040697 194921
+     C*                                                            040697 194921
+     C**  STORE DAY NUMBER                                         040697 194921
+     C                     Z-ADDZZDD1     ZZSTO1  50               040697 194921
+     C*                                                            040697 194921
+     C**  FOR LAST DAY OF MONTH ---> INITIALISE WITH 30            040697 194921
+     C           *IN80     IFEQ '1'                                040697 194921
+     C*                                                            040697 194921
+     C           ZZDD1     IFEQ 29                                 040697 194921
+     C                     Z-ADD30        ZZDD1                    040697 194921
+     C                     END                                     040697 194921
+     C*                                                            040697 194921
+     C                     ELSE                                    040697 194921
+     C*                                                            040697 194921
+     C           ZZDD1     IFEQ 28                                 040697 194921
+     C                     Z-ADD30        ZZDD1                    040697 194921
+     C                     END                                     040697 194921
+     C*                                                            040697 194921
+     C                     END                                     040697 194921
+     C*                                                            040697 194921
+     C                     END                                     040697 194921
+     C*                                                            040697 194921
+     C           30        SUB  ZZDD1     ZZP1    50   80                 194921
+     C*                                                                   194921
+     C**  IF < 0, INITIALISE TO 0                                         194921
+     C           *IN80     IFEQ '1'                                       194921
+     C                     Z-ADD*ZEROS    ZZP1                            194921
+     C                     END                                            194921
+     C*                                                            040697 194921
+     C**  RESTORE START DATE DAY NUMBER                            040697 194921
+     C           ZZMM1     IFEQ 2                                  040697 194921
+     C                     Z-ADDZZSTO1    ZZDD1                    040697 194921
+     C                     END                                     040697 194921
+     C*                                                                   194921
+     C**  CALC NO. DAYS IN LAST MONTH                                     194921
+     C           ZZDD2     IFLE 30                                        194921
+     C                     Z-ADDZZDD2     ZZP2    50                      194921
+     C                     ELSE                                           194921
+     C                     Z-ADD30        ZZP2                            194921
+     C                     END                                            194921
+     C*                                                            040697 194921
+     C**  FOR FEB TEST IF DAY EQUAL TO END OF MONTH                040697 194921
+     C           ZZMM2     IFEQ 2                                  040697 194921
+     C*                                                            040697 194921
+     C**  TEST IF LEAP YEAR                                        040697 194921
+     C           ZZYY2     DIV  4         ZZWN5                    040697 194921
+     C                     MVR            ZZWN5          80        040697 194921
+     C*                                                            040697 194921
+     C**  INTIALISE WITH NUMBER OF DAYS IN LAST MONTH              040697 194921
+     C                     Z-ADDZZDD2     ZZP2                     040697 194921
+     C*                                                            040697 194921
+     C**  IF END OF MONTH CONSIDER 30 DAYS                         040697 194921
+     C           *IN80     IFEQ '1'                                040697 194921
+     C*                                                            040697 194921
+     C           ZZDD2     IFEQ 29                                 040697 194921
+     C                     Z-ADD30        ZZP2                     040697 194921
+     C                     END                                     040697 194921
+     C*                                                            040697 194921
+     C                     ELSE                                    040697 194921
+     C*                                                            040697 194921
+     C           ZZDD2     IFEQ 28                                 040697 194921
+     C                     Z-ADD30        ZZP2                     040697 194921
+     C                     END                                     040697 194921
+     C*                                                            040697 194921
+     C                     END                                     040697 194921
+     C*                                                            040697 194921
+     C                     END                                     040697 194921
+     C*                                                                   194921
+     C**  CALC NO. DAYS IN INTERVENING MONTHS                             194921
+     C           ZZYY2     IFEQ ZZYY1                                     194921
+     C*                                                                   194921
+     C           ZZMM2     SUB  ZZMM1     ZZP3    50                      194921
+     C                     SUB  1         ZZP3                            194921
+     C                     MULT 30        ZZP3                            194921
+     C*                                                                   194921
+     C                     ELSE                                           194921
+     C*                                                                   194921
+     C**  FIND NO. OF DAYS FOR THE COMPLETE YEARS                         194921
+     C           ZZYY2     SUB  ZZYY1     ZZP3                            194921
+     C                     SUB  1         ZZP3                            194921
+     C                     MULT 360       ZZP3                            194921
+     C*                                                                   194921
+     C**  FIND NO. OF MONTHS FOR THE TWO PARTIAL YEARS                    194921
+     C           12        SUB  ZZMM1     ZZWN5A  50                      194921
+     C                     MULT 30        ZZWN5A                          194921
+     C*                                                                   194921
+     C           ZZMM2     SUB  1         ZZWN5                           194921
+     C           ZZWN5     MULT 30        ZZWN5                           194921
+     C*                                                                   194921
+     C**  ACCUMULATE                                                      194921
+     C           ZZWN5A    ADD  ZZWN5     ZZWN5A                          194921
+     C           ZZP3      ADD  ZZWN5A    ZZP3                            194921
+     C*                                                                   194921
+     C                     END                                            194921
+     C*                                                                   194921
+     C**  FINAL SUM                                                       194921
+     C           ZZP1      ADD  ZZP2      ZZINDY                          194921
+     C                     ADD  ZZP3      ZZINDY                          194921
+     C*                                                                   194921
+     C                     END                                            194921
+     C*                                                                   194921
+     C**  FOR METHODS 4 AND 5                                             194921
+     C           ZZCALC    IFEQ '4'                                       194921
+     C           ZZCALC    OREQ '5'                                       194921
+     C*                                                                   194921
+     C**  CALC NO. OF LEAP YEARS BETWEEN START AND END DATES              194921
+     C           ZZYY1     DIV  4         ZZWN5   50                   YR 194921
+     C                     MVR            ZZWN5          80               194921
+     C*                                                                   194921
+     C**  CHECK WHETHER START YEAR IS AFFECTED BY LEAP YEAR               194921
+     C           ZZYY1     IFEQ ZZYY2                                     194921
+     C*                                                                   194921
+     C           ZZMM1     IFLE 2                                         194921
+     C           ZZMM2     ANDGT2                                         194921
+     C           *IN80     ANDEQ'1'                                       194921
+     C                     ADD  1         ZZLPNM                          194921
+     C                     END                                            194921
+     C*                                                                   194921
+     C                     ELSE                                           194921
+     C*                                                                   194921
+     C           ZZMM1     IFLE 2                                         194921
+     C           *IN80     ANDEQ'1'                                       194921
+     C                     ADD  1         ZZLPNM                          194921
+     C                     END                                            194921
+     C*                                                                   194921
+     C                     END                                            194921
+     C*                                                                   194921
+     C**  LOOP TO CALCULATE NO. LEAP YEARS                                194921
+     C           ZZYY1     DOWLTZZYY2                                     194921
+     C*                                                                   194921
+     C**  INCREMENT START YEAR                                            194921
+     C                     ADD  1         ZZYY1                           194921
+     C*                                                                   194921
+     C           ZZYY1     IFEQ ZZYY2                                     194921
+     C*                                                                   194921
+     C           ZZMM2     IFGT 2                                         194921
+     C           ZZYY2     DIV  4         ZZWN5                        YR 194921
+     C                     MVR            ZZWN5          80               194921
+     C*                                                                   194921
+     C**  ADD 1 IF LEAP YEAR                                              194921
+     C           *IN80     IFEQ '1'                                       194921
+     C                     ADD  1         ZZLPNM                          194921
+     C                     END                                            194921
+     C*                                                                   194921
+     C                     END                                            194921
+     C*                                                                   194921
+     C                     ELSE                                           194921
+     C*                                                                   194921
+     C           ZZYY1     DIV  4         ZZWN5                        YR 194921
+     C                     MVR            ZZWN5          80               194921
+     C*                                                                   194921
+     C**  ADD 1 IF LEAP YEAR                                              194921
+     C           *IN80     IFEQ '1'                                       194921
+     C                     ADD  1         ZZLPNM                          194921
+     C                     END                                            194921
+     C*                                                                   194921
+     C                     END                                            194921
+     C*                                                                   194921
+     C                     END                                            194921
+     C*                                                                   194921
+     C**  DEDUCT NO. OF LEAP YEARS CALCULATED BETWEEN START               194921
+     C**  AND END DATES                                                   194921
+     C           ZZWDAT    SUB  ZZLPNM    ZZINDY           - LOAD OUTPT   194921
+     C*                                                                   194921
+     C                     END                                            194921
+     C           ZINTD9    TAG                                     095238 194921
+     C           IN80SV    IFEQ '1'                                095238 194921
+     C                     MOVE '1'       *IN80                    095238 194921
+     C                     ELSE                                    095238 194921
+     C                     MOVE '0'       *IN80                    095238 194921
+     C                     END                                     095238 194921
+     C*                                                                   194921
+     C***********ZINTD9    ENDSR                                   095238 194921
+     C                     ENDSR                                   095238 194921
+      *================================================================
+      **
+      **  SRDBER      Monitored error
+      **
+      *-----------------------------------------------------------
+     C           SRDBER    BEGSR
+      *-----------------------------------------------------------
+      *
+     C           ERROR     IFEQ 'Y'
+     C           *LOCK     IN   WLDA
+     C                     ENDIF
+     C                     OUT  WLDA
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C                     EXSR SRAUDT
+     C***********ERROR     IFEQ *BLANK                                    187689
+     C                     DUMP
+     C***********          ENDIF                                          187689
+     C                     RETRN
+      *
+     C                     ENDSR
+      *================================================================
+      **
+      **  SRAUDT      Audit List
+      **
+      *-----------------------------------------------------------
+     C           SRAUDT    BEGSR
+      *-----------------------------------------------------------
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C                     Z-ADDEXSEQN    RCOUNT
+     C                     Z-ADDEXSEQN    LASTSQ
+     C                     WRITECONTROL
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *================================================================
+      /COPY ZSRSRC,ZDAT10Z2
+      /COPY ZSRSRC,ZACCH
+      /COPY ZSRSRC,ZFWDT
+      /COPY ZSRSRC,ZDATE9Z3                                               194921
+      **  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION          127046 ULX047
+      *0000001                                                     127046 ULX047
+      *0000010                                                     127046 ULX047
+      *0000100                                                     127046 ULX047
+      *0001000                                                     127046 ULX047
+      *0010000                                                     127046 ULX047
+      *0100000                                                     127046 ULX047
+      *1000000                                                     127046 ULX047
+      *
+      ** Array File Trans. change to ERLCAXPD instead of ERLUCAPD                             CER001
+      *
+** FILE TRANS. ERLUCAPD FILE TO REMOVE ALL NON STANDARD CHARACTERS
+*EQUATE ERLCAXPD
+*EQUATE C144504EC551C552C554C956C164C368406A406FC571C572C5744079407A407D407E407F
+*EQUATE C181C282C383C484C585C686C787C888C989D191D292D393D494D595D696D797D898D999
+*EQUATE E2A2E3A3E4A4E5A5E6A6E7A7E8A8E9A940E0E4FE
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**  CPY@
+(c) Finastra International Limited 2005

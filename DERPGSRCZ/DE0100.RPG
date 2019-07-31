@@ -1,0 +1,1934 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DE Account codes to be extracted maint')
+/*OVR *  OVRDBF FILE(DEACEXL1) TOFILE(DEACEXL0) SHARE(*NO)            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Data Export Module                                   *
+      *                                                               *
+      *  DE0100 - Midas Account Codes to be Extracted Maintenance     *
+      *                                                               *
+      *  Function:  This program maintaines the Account Codes to      *
+      *             be Extracted file.                                *
+      *                                                               *
+      *  Called By: DEC0100 - A/c Codes to be Extracted Control       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 208221             Date 11Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CDE002             Date 05Dec00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CDE001  *Create    Date 18May99               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  208221 - Changes identified during alpha site                *
+      *  CDE002 - Revenue Analysis                                    *
+      *  CDE001 - Data Export - CCRM Limits.                          *
+      *                                                               *
+      *****************************************************************
+     FDEACEXL1IF  E           K        DISK         KINFSR *PSSR      UC
+     F            DEACEXP0                          KRENAMEDEACEXP1
+     FDEACEXL0UF  E           K        DISK         KINFSR *PSSR A    UC
+     F                                              KCOMIT
+     FDE0100DFCF  E                    WORKSTN                        UC
+     F                                        S1RRN KSFILE DE0100S1
+     F                                              KINFDS INFDS#
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    03           Exit Function Key F3                          *
+      *    05           Refresh Function Key F5                       *
+      *    09           Insert Function Key F9                        *
+      *    25           Help Requested                                *
+      *    27           Rollup/Rolldown Key                           *
+      *    31           Invalid A/c Code position field               *
+      *    32           Invalid Action Code                           *
+      *    33           Invalid A/c Code                              *
+      *    34           Invalid Include in Limits                     *
+      *    35           Invalid Include in Revenue                    *
+      *    36           Invalid Include in Limits selection           *
+      *    37           Invalid Include in Revenue selection          *
+      *    50           ON if CDE002 is ON                            *
+      *    70           A/c Code numeric work indicator               *
+      *    78           Protect A/c Code Field                        *
+      *    79           Protect Selection Field                       *
+      *    80           Subfile Clear                                 *
+      *    81           Subfile Display                               *
+      *    82           Subfile End                                   *
+      *    84           Subfile Next Change                           *
+      *    86           Overlay                                       *
+      *    87           Enable Key Screen                             *
+      *    88           Protect Key Fields                            *
+      *    89           Add Mode                                      *
+      *    90           Read Indicator                                *
+      *    91           Read Indicator                                *
+      *    92           Readc Indicator                               *
+      *    94           Cursor DDS Indicator                          *
+      *    98           Force Input Format                            *
+      *    99           Global Error Indicator                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /EJECT
+      *
+     IPGMDS     ESDSY2PGDSP
+      ** Program data structure
+      *
+     IJBDTTM      DS
+      ** Job date/time
+      *
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      *
+      ** Message data for Account Code
+      *
+     I            DS
+     I                                        1 132 ZAMSDA
+     I**********                              1   4 ZA0004                                    CGL029
+     I                                        1  10 ZA0004                                    CGL029
+      *
+     ISDACOD    E DSSDACODPD
+      ** Rename fields
+     I              A5ACCD                          ACACCD
+     I              A5ACCN                          ACACCN
+     I** Account Code Details
+     I*
+     ISCSARD    E DSSCSARDPD
+      ** External DS for SAR Details
+      *
+     IINFDS#    E DSY2I#DSP
+      ** Display file information data structure
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     I@1DBRC    E DSDEACEXPD
+     I              QQACCD                          QQACC1                                    CGL029
+      ** Current/previous master file format fields for change control
+      *
+     IYCRDCS      DS                             35
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      *
+     ILDA         DS                            256
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I                                      184 256 DBTXT
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                   Index to subroutines                        *
+      *  Main routine                                                 *
+      *  SRINIT  -  Initial processing                                *
+      *  SRBDSF  -  Initialise and load subfile page                  *
+      *  SRLOAD  -  Load subfile page                                 *
+      *  SRDISP  -  Display subfile                                   *
+      *  SR8TST  -  Test cursor                                       *
+      *  SRHELP  -  Display HELP text                                 *
+      *  SRPROC  -  Process screen input                              *
+      *  SRSUBF  -  Process modified subfile record                   *
+      *  SRPOPS  -  Process subfile record                            *
+      *  SRNLRC  -  Check for null record                             *
+      *  SRVDRC  -  Validate subfile record                           *
+      *  SRVALS  -  Validate subfile record relations                 *
+      *  SRUPSF  -  Update records from subfile                       *
+      *  SRPRSR  -  Process action requested                          *
+      *  SRADDR  -  Process add request                               *
+      *  SRDELR  -  Process delete request                            *
+      *  SRUDAT  -  Process update request                            *
+      *  SRMODE  -  Switch between *ADD and *CHANGE modes             *
+      *  SRPOST  -  Request subfile reload                            *
+      *  SRPROT  -  Set display attributes for subfile record         *
+      *  SRCLRS  -  Initialise subfile record                         *
+      *  SRMOVE  -  Transfer records from DEACEXL1 to subfile         *
+      *  SRWRIT  -  Create A/c Code Extract record                    *
+      *  SRDLET  -  Delete A/c Code Extract record                    *
+      *  SRUPDT  -  Update A/c Code Extract record                    *
+      *  SRVAL1  -  Validate A/c Code                                 *
+      *  SRVAL2  -  Validate Include in Extract Flags                 *
+      *  SREND   -  End program                                       *
+      *  ZASNMS  -  Message handling subroutine                       *
+      *  *PSSR   -  Error handling subroutine                         *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Main Program
+      *
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR SRINIT
+      *
+     C                     DO   *HIVAL
+      *
+      ** Initialise and load subfile page
+      *
+     C                     EXSR SRBDSF
+      *
+     C                     MOVEL'N'       W0RSF   1
+      *
+      ** Display screen until reload requested
+      *
+     C           W0RSF     DOWEQ'N'
+      *
+      ** Display screen
+      *
+     C                     EXSR SRDISP
+      *
+      ** Process response
+      *
+     C   03                CAS            SREND
+      *
+     C   05                CAS            SRPOST
+      *
+     C   27                CAS            SRLOAD
+      *
+     C                     CAS            SRPROC
+     C                     ENDCS
+      *
+     C                     ENDDO
+     C                     ENDDO
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT  -  Initial Processing                                *
+      *  Called by: Main routine                                      *
+      *  Calls    : Y2BGCMC - Begin Commit Control                    *
+      *             Y2QLVNR - Qualify a Name                          *
+      *             AOSARDR0 - Access Switchable Features Details     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialisation
+      *
+     C           W0ICL     IFEQ *BLANKS
+     C                     MOVEL'Y'       W0ICL   1
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     ENDIF
+      *
+     C                     MOVE *BLANK    WCSRLC  3
+     C                     MOVEL*BLANKS   W0RSL   1
+     C                     MOVEL*BLANKS   W0RSF   1
+     C                     MOVEL0         W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      *
+      ** Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     MOVEL*BLANKS   WUSFLS  1
+     C                     MOVEL*BLANKS   WUTQKF  1
+     C                     MOVEL*BLANKS   WUIVKF  1
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DE0100'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBTXT
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      *
+     C                     Z-ADD0         WURDNB  50
+      *
+      ** Signal first error message outstanding
+      *
+     C                     MOVEL'Y'       ZAFSMS  1
+      *                                                                                       CDE002
+      ** Initialise first load of subfile variable                                            CDE002
+      *                                                                                       CDE002
+     C                     MOVE 'Y'       WWFIRS  1                                           CDE002
+     C                     MOVE ' '       WKDELR  1                                           CDE002
+      *
+      ** Begin commit control
+      *
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           PRTCD   7
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           PRTCD     ANDNE'CPF8351'
+     C                     EXSR SREND
+     C                     ENDIF
+      *
+      ** Define *Synon program work fields
+      *
+     C                     MOVEL*BLANKS   W0CFL  10
+     C                     Z-ADD*ZEROS    W0CRW   50
+     C                     Z-ADD*ZEROS    W0CCL   50
+      *
+      ** Move main file information to JOB context
+      *
+     C                     MOVE @1FFL     ZZFFL  10
+     C                     MOVE @1FLB     ZZFLB  10
+     C                     MOVE @1FMB     ZZFMB  10
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+      *
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21
+      *
+      ** Open files for update
+      *
+     C                     OPEN DE0100DF
+     C                     OPEN DEACEXL0
+     C                     OPEN DEACEXL1
+      *
+     C                     MOVEL'N'       W0PMT   1
+      *
+     C                     Z-ADD14        ##SFPG  30
+     C                     Z-ADD1         SRRND
+      *
+      ** Maximum record number
+      *
+     C                     Z-ADD0         ##RRMX
+      *
+      ** Scan limit
+      *
+     C                     Z-ADD500       W0SLM   50
+      *
+      ** Subfile pages
+      *
+     C                     Z-ADD1         W0SPG   30
+      *
+      ** Processed Subfile record
+      *
+     C                     Z-ADD0         W0RR0   40
+      *
+      ** Set to *CHANGE mode
+      *
+     C                     MOVEL'CHG'     W0PMD   3
+     C                     MOVEL*BLANKS   W0GRP   1
+      *
+      ** Define rundate
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      SRUNA   7
+     C                     MOVE RDNB      WURDNB
+      *
+      ** Check if CDE002 is installed
+      *
+     C                     MOVE *BLANKS   CDE002  1
+      *
+     C                     CALL 'AOSARDR0'               90
+     C                     PARM '*BLANKS' PRTCD   7
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CDE002'  PSARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           PRTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CDE002
+     C                     MOVE '1'       *IN50
+     C                     ENDIF
+      *                                                                                       208221
+      ** Check if CDE001 is installed                                                         208221
+      *                                                                                       208221
+     C                     MOVE *BLANKS   CDE001  1                                           208221
+      *                                                                                       208221
+     C                     CALL 'AOSARDR0'               90                                   208221
+     C                     PARM '*BLANKS' PRTCD   7                                           208221
+     C                     PARM '*VERIFY' POPTN   7                                           208221
+     C                     PARM 'CDE002'  PSARD   6                                           208221
+     C           SCSARD    PARM SCSARD    DSFDY                                               208221
+      *                                                                                       208221
+     C           PRTCD     IFEQ *BLANK                                                        208221
+     C                     MOVE 'Y'       CDE001                                              208221
+     C                     ENDIF                                                              208221
+      *
+      ** Initialise subfile control
+      *
+     C                     MOVEL*BLANKS   DPACOD
+     C                     MOVEL*BLANKS   DPDESC
+     C                     MOVEL*BLANKS   DPILME
+     C                     MOVEL*BLANKS   DPIRVE
+     C                     MOVEL*BLANKS   DPASOC                                              CDE002
+     C                     MOVEL*BLANKS   DPSELP                                              CDE002
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBDSF  -  Initialise and Load Subfile Page                  *
+      *  Called by: Main routine                                      *
+      *  Calls    : SRLOAD, ZASNMS                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBDSF    BEGSR
+      *
+      ** Initialise & load subfile page
+      *
+     C                     MOVE '1'       *IN80
+     C                     WRITEDE0100C1
+     C                     MOVE '0'       *IN80
+      *
+      ** Reset no of records in subfile
+      *
+     C                     Z-ADD0         ##RRMX  50 81
+      *
+      ** If CHANGE mode, then position file
+      *
+     C           W0PMD     IFNE 'ADD'
+     C**********           MOVELDPACOD    WZACOD  4                                           CGL029
+     C                     MOVELDPACOD    WZACOD 10                                           CGL029
+     C                     MOVELDPDESC    WZDESC 25
+     C                     MOVELDPILME    WZILME  1
+     C                     MOVELDPIRVE    WZIRVE  1
+     C                     MOVELDPASOC    WZASOC  1                                           CDE002
+     C                     MOVELDPSELP    WZSELP  1                                           CDE002
+     C                     MOVELDPACOD    A5ACCD
+      *
+      ** Setup key
+      *
+     C           DPACOD    SETLLDEACEXP1             82
+      *
+     C  N82                READ DEACEXP1               9182
+     C                     ELSE
+     C                     MOVE '0'       *IN82
+     C                     ENDIF
+      *
+      ** Load subfile page
+      *
+     C                     EXSR SRLOAD
+      *
+      ** If no records found, display error message
+      *
+     C   82      S1RRN     IFEQ 0
+     C                     MOVEL'DEP0003' ZAMSID
+     C                     MOVEL'MIDAS   'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOAD  -  Load Subfile Page                                 *
+      *  Called by: Main routine, SRBDSF                              *
+      *  Calls    : SRCLRS, SRMOVE, SRVALS, SRPROT                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLOAD    BEGSR
+      *
+      ** Load subfile page but write empty page if add mode
+      *
+     C                     MOVE '0'       *IN84
+      *
+      ** Re-establish fields in read-ahead record
+      *
+     C   27      W0PMD     IFNE 'ADD'
+     C  N82                READPDEACEXP1                 90
+     C  N82                READ DEACEXP1                 90
+     C                     ENDIF
+      *
+      ** Start at previous highest record in SFL
+      *
+     C                     Z-ADD##RRMX    S1RRN   50
+     C                     Z-ADD0         ##RROK  50
+      *
+      ** Set required pages based on *Set Cursor or *Subfile Pages
+      *
+     C           W0RR0     IFGT 0
+     C           W0RR0     DIV  ##SFPG    ##SPG   30
+     C                     MVR            ##SLIN  30
+      *
+     C           ##SLIN    IFGT 0
+     C                     ADD  1         ##SPG
+     C                     ENDIF
+      *
+     C           W0SPG     IFGT ##SPG
+     C                     Z-ADDW0SPG     ##SPG
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADDW0SPG     ##SPG
+     C                     ENDIF
+      *
+      ** Compute lines required based on pages
+      *
+     C           ##SPG     MULT ##SFPG    ##SFLN  90
+     C           ##SFLN    IFGT 999
+     C                     Z-ADD999       ##SFLN
+     C                     ENDIF
+      *
+      ** Load next subfile page
+      *
+     C  N82      ##RROK    DOWLT##SFLN
+     C                     ADD  1         S1RRN
+     C                     MOVEA'0000'    *IN,32
+     C                     MOVEA'00'      *IN,38                                              CDE002
+     C                     MOVE '0'       *IN87
+      *
+      ** Clear subfile fields
+      *
+     C                     EXSR SRCLRS
+      *
+      ** If CHANGE mode, load subfile fields
+      *
+     C           W0PMD     IFNE 'ADD'
+     C                     EXSR SRMOVE
+      *
+      ** Record will be selected unless overridden
+      *
+     C                     MOVEL'Y'       W0RSL   1
+      *
+     C           DPDESC    IFNE *BLANK                     Description
+      * Scan for search string
+     C                     CALL 'QCLSCAN'
+     C                     PARM           A5ACCN           Description
+      * Length
+     C                     PARM 25        WQA3N   30
+      * Start
+     C                     PARM 1         WQB3N   30
+      * Mask
+     C                     PARM           DPDESC
+      * Length
+     C                     PARM 25        WQC3N   30
+      * Translate
+     C                     PARM '1'       WQD1    1
+      * Trim
+     C                     PARM '1'       WQE1    1
+      * Wild
+     C                     PARM '?'       WQF1    1
+      * Result
+     C                     PARM           WQG3N   30
+     C           WQG3N     IFLT 1
+     C                     MOVEL'N'       W0RSL
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           DPILME    IFNE ' '
+     C           DPILME    ANDNEA5ILME
+     C                     MOVEL'N'       W0RSL
+     C                     ENDIF
+      *
+     C           DPIRVE    IFNE ' '
+     C           DPIRVE    ANDNEA5IRVE
+     C                     MOVEL'N'       W0RSL
+     C                     ENDIF
+      *                                                                                       CDE002
+     C           DPASOC    IFNE ' '                                                           CDE002
+     C           DPASOC    ANDNEA5ASOC                                                        CDE002
+     C                     MOVEL'N'       W0RSL                                               CDE002
+     C                     ENDIF                                                              CDE002
+      *                                                                                       CDE002
+     C           DPSELP    IFNE ' '                                                           CDE002
+     C           DPSELP    ANDNEA5SELP                                                        CDE002
+     C                     MOVEL'N'       W0RSL                                               CDE002
+     C                     ENDIF                                                              CDE002
+      *
+     C                     MOVELA5ACCD    DDACOD
+     C                     MOVELA5ACCN    DDDESC
+     C                     MOVELA5ILME    DDILME
+     C                     MOVELA5IRVE    DDIRVE
+     C                     MOVELA5ASOC    DDASOC                                              CDE002
+     C                     MOVELA5SELP    DDSELP                                              CDE002
+     C                     MOVE *BLANKS   #1WARN                                              CDE002
+     C                     MOVEL'Y'       WUSFLS
+      *
+      ** If record dropped...
+      *
+     C                     SUB  1         S1RRN
+     C           W0RSL     CABNE'Y'       BB020
+     C                     ADD  1         S1RRN
+      *
+      ** Validate subfile record and calculate derived fields
+      *
+     C                     EXSR SRVALS
+     C                     ELSE
+      *
+      ** Initialize subfile record
+      *
+     C                     MOVEL'N'       WUSFLS
+     C                     ENDIF
+      *
+      ** Output to subfile
+      *
+     C                     ADD  1         ##RROK     81
+      *
+      ** If SFLRCD invalid, note that errors present
+      *
+     C   98N99             MOVE '1'       *IN99
+      *
+      ** Set screen conditioning indicators
+      *
+     C                     EXSR SRPROT
+     C                     WRITEDE0100S1
+      *
+      ** End of File
+      *
+     C           BB020     TAG
+     C           W0PMD     IFNE 'ADD'
+     C                     READ DEACEXP1                 82
+     C                     ENDIF
+      *
+     C  N82                ENDDO
+      *
+      ** Save highest SFL record load can continue at end point
+      *
+     C           S1RRN     IFGT ##RRMX
+      *
+      ** Calculate top line
+      *
+     C           ##RROK    DIV  ##SFPG    ##SPG
+     C                     MVR            ##SLIN
+      *
+     C           ##SLIN    IFGT 0
+     C           S1RRN     SUB  ##SLIN    SRRND
+     C                     ELSE
+     C           S1RRN     SUB  ##SFPG    SRRND
+     C                     ENDIF
+      *
+     C                     ADD  1         SRRND
+     C                     Z-ADDS1RRN     ##RRMX
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDISP  -  Display Subfile                                   *
+      *  Called by: Main routine                                      *
+      *  Calls    : SR8TST, SRHELP,                                   *
+      *             Y2CLMSC - Clear specified program message queue   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDISP    BEGSR
+      *
+      ** Set screen conditioning indicators
+      *
+     C           W0PMD     COMP 'ADD'                    89
+      *
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      *
+      ** PUTOVR unless conditioned fields change
+      *
+     C                     MOVE '1'       *IN86
+     C           *IN89     IFNE CAIN89
+     C           *IN81     ORNE CAIN81
+     C                     MOVE '0'       *IN86
+     C                     ENDIF
+      *
+     C                     MOVE *IN89     CAIN89  1
+     C                     MOVE *IN81     CAIN81  1
+      *
+      ** Set cursor by *SET CURSOR data
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITEDE0100C2
+     C                     EXFMTDE0100C1
+      *                                                                                       CDE002
+     C           WWFIRS    IFEQ 'Y'                                                           CDE002
+     C           WKDELR    OREQ 'D'                                                           CDE002
+     C                     MOVE 'N'       WWFIRS                                              CDE002
+     C                     MOVE ' '       WKDELR                                              CDE002
+     C                     ENDIF                                                              CDE002
+      *
+      ** Maintain subfile position where possible
+      *
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    SRRND
+     C                     ENDIF
+      *
+      ** Test cursor
+      *
+     C                     EXSR SR8TST
+      *
+      ** Clear set cursor DDS indicator
+      *
+     C           WCSRLC    IFEQ 'OFF'
+     C                     MOVE '0'       *IN94
+     C                     ENDIF
+     C                     MOVE *BLANK    WCSRLC
+      *
+      ** If help requested, display help text
+      *
+     C   25                EXSR SRHELP
+     C                     ENDDO
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** Reset first message only flag
+      *
+     C                     MOVEL'Y'       ZAFSMS  1      99
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SR8TST  -  Test cursor                                       *
+      *  Called by: SRDISP                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+      *
+     C           SR8TST    BEGSR
+      *
+      ** Test cursor
+      *
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHELP  -  Display HELP Text                                 *
+      *  Called by: SRDISP                                            *
+      *  Calls    : YDDSHPR - Help Text Control                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRHELP    BEGSR
+      *
+      ** Signal help request
+      *
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+      *
+     C           @#RWCL    DIV  256       ZHCSRW  50
+     C                     MVR            ZHCSCL  50
+      *
+      ** Save cursor position for redisplay
+      *
+     C                     Z-ADDZHCSRW    ZZCSRW  30
+     C                     Z-ADDZHCSCL    ZZCSCL  30
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10
+     C                     PARM *BLANK    YYHPFL 10
+     C                     PARM *BLANK    YYHPLB 10
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10
+     C                     PARM '*NORMAL' YYUSOP 10
+     C                     PARM ZHCSRW    YYRW    50
+     C                     PARM ZHCSCL    YYCL    50
+     C                     PARM *ZERO     YYLGCT  50
+     C                     PARM *BLANK    YYLGVN 10
+      *
+      ** Clear set cursor DDS indicator
+      *
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                MOVE '1'       *IN94
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC  -  Process Screen Input                              *
+      *  Called by: Main routine                                      *
+      *  Calls    : SRPOST, SRSUBF, SRUPSF, SRMODE                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      ** Change of position specified
+      *
+     C           W0PMD     IFNE 'ADD'
+     C           WZACOD    CASNEDPACOD    SRPOST
+     C           WZDESC    CASNEDPDESC    SRPOST
+     C           WZILME    CASNEDPILME    SRPOST
+     C           WZIRVE    CASNEDPIRVE    SRPOST
+     C           WZASOC    CASNEDPASOC    SRPOST                                              CDE002
+     C           WZSELP    CASNEDPSELP    SRPOST                                              CDE002
+     C                     ENDCS
+     C                     ENDIF
+      *
+      ** Quit if reload requested
+      *
+     C           W0RSF     CABEQ'Y'       DAEXIT
+      *
+     C   81                DO
+     C                     MOVEL'N'       WKIPIN  1
+      *
+      ** Process subfile records
+      *
+     C                     EXSR SRSUBF
+      *
+     C           *IN99     CABEQ'1'       DAEXIT
+      *
+     C           WKIPIN    IFEQ 'Y'
+      *
+      ** Update DBF from subfile
+      *
+     C                     EXSR SRUPSF
+      *
+      ** Exit if error during update
+      *
+     C           *IN99     CABEQ'1'       DAEXIT
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Switch between *ADD/*CHANGE modes
+      *
+     C   09                EXSR SRMODE
+      *
+     C           DAEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSUBF  -  Process Modified Subfile Record                   *
+      *  Called by: SRPROC                                            *
+      *  Calls    : SRPOPS, SRPROT                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSUBF    BEGSR
+      *
+      ** Process modified subfile record
+      *
+     C                     READCDE0100S1                 92
+      *
+     C           *IN92     DOWEQ'0'
+     C                     EXSR SRPOPS
+     C                     MOVE '0'       *IN87
+     C                     EXSR SRPROT
+     C                     UPDATDE0100S1
+     C                     READCDE0100S1                 92
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPOPS  -  Process Subfile Record                            *
+      *  Called by: SRSUBF                                            *
+      *  Calls    : SRNLRC, SRVDRC                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPOPS    BEGSR
+      *
+      ** Set off error indicators
+      *
+     C                     MOVEA'0000'    *IN,32
+     C                     MOVEA'00'      *IN,38                                              CDE002
+     C                     MOVE '0'       *IN84
+     C                     MOVE '0'       *IN98
+      *
+     C           W0PMD     IFEQ 'ADD'
+      *
+      ** Check for null record
+      *
+     C                     EXSR SRNLRC
+      *
+     C           W0NLR     IFEQ 'Y'
+     C                     GOTO DCEXIT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If not null record, continue
+      *
+     C                     MOVEL'Y'       WKIPIN
+      *
+     C                     MOVE '1'       *IN84
+      *
+      ** If delete request, bypass validation
+      *
+     C           DDACTN    IFEQ 'D'
+     C                     GOTO DCEXIT
+     C                     ENDIF
+      *
+      ** Validate subfile record
+      *
+     C                     EXSR SRVDRC
+      *
+      ** If SFLRCD invalid, note the fact
+      *
+     C   98N99             Z-ADDS1RRN     SRRND      99
+      *
+     C           DCEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNLRC  -  Check for Null Record                             *
+      *  Called by: SRPOPS, SRPRSR                                    *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRNLRC    BEGSR
+      *
+     C                     MOVEL'N'       W0NLR   1
+     C           DDACOD    CABNE*BLANKS   DDEXIT
+     C           DDDESC    CABNE*BLANKS   DDEXIT
+     C           DDILME    CABNE*BLANKS   DDEXIT
+     C           DDIRVE    CABNE*BLANKS   DDEXIT
+     C           DDASOC    CABNE*BLANKS   DDEXIT                                              CDE002
+     C           DDSELP    CABNE*BLANKS   DDEXIT                                              CDE002
+     C                     MOVEL'Y'       W0NLR
+      *
+     C           DDEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVDRC  -  Validate Subfile Record                           *
+      *  Called by: SRPOPS                                            *
+      *  Calls    : ZASNMS, SRVALS                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVDRC    BEGSR
+      *
+      ** In Add mode, need to move screen value to hidden file field
+      *
+     C           W0PMD     IFEQ 'ADD'
+     C                     MOVELDDACOD    #1ACCD
+     C                     MOVEL'N'       WUSFLS
+      *
+      ** A/c Code is blank
+      *
+     C           DDACOD    IFEQ *BLANKS
+     C                     MOVEL'DEP0004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *                                                                                       CDE002
+      ** Check if entered account code already exists                                         CDE002
+      *                                                                                       CDE002
+     C           DDACOD    CHAINDEACEXP0             90                                       CDE002
+     C           *IN90     IFEQ *OFF                                                          CDE002
+     C                     MOVEL'DEP0006' ZAMSID                                              CDE002
+     C                     EXSR ZASNMS                                                        CDE002
+     C                     MOVE *ON       *IN33                                               CDE002
+     C                     MOVE *ON       *IN98                                               CDE002
+     C                     ENDIF                                                              CDE002
+      *
+     C                     ELSE
+      *
+     C                     MOVEL'Y'       WUSFLS
+     C                     ENDIF
+      *
+      ** Validate subfile record relations
+      *
+     C                     EXSR SRVALS
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVALS  -  Validate Subfile Record Relations                 *
+      *  Called by: SRLOAD, SRVDRC                                    *
+      *  Calls    : SRVAL1, SRVAL2                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVALS    BEGSR
+      *
+      ** Validate subfile record relations
+      *
+     C                     EXSR SRVAL1
+      *
+      ** Validate Include in Extract flags
+      *
+      ** Validate only if not the first load of the subfile                                   CDE002
+      *                                                                                       CDE002
+     C           WWFIRS    IFNE 'Y'                                                           CDE002
+     C           WKDELR    ANDNE'D'                                                           CDE002
+     C                     EXSR SRVAL2
+     C                     ENDIF                                                              CDE002
+      *
+      ** Store previous value of Include in Revenue flag for comparison                       CDE002
+      *                                                                                       CDE002
+     C                     MOVE DDIRVE    #1IRVP                                              CDE002
+     C                     MOVE DDACOD    #1ACCP                                              CDE002
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPSF  -  Update Records from Subfile                       *
+      *  Called by: SRPROC                                            *
+      *  Calls    : SRPRSR, SRPROT                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPSF    BEGSR
+      *
+      ** Initialise subfile reload flag
+      *
+     C           W0PMD     IFEQ 'ADD'
+     C                     MOVEL'Y'       W0RSF
+     C                     ELSE
+     C                     MOVEL'N'       W0RSF
+     C                     ENDIF
+      *
+      ** Process all modified subfile records
+      *
+     C                     READCDE0100S1                 92
+      *
+     C           *IN92     DOWEQ'0'
+     C                     EXSR SRPRSR
+      *
+      ** Rollback any DBF changes if error occur
+      *
+     C           W#EROR    IFNE *BLANKS
+     C                     ROLBK
+     C                     ELSE
+     C                     COMIT
+     C                     ENDIF
+      *
+      ** Set screen conditioning indicators
+      *
+     C                     MOVEL*BLANKS   DDACTN
+     C                     EXSR SRPROT
+     C                     UPDATDE0100S1
+     C                     READCDE0100S1                 92
+     C                     ENDDO
+      *
+      ** Cancel reload if errors occur
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'N'       W0RSF   1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPRSR  -  Process action requested                          *
+      *  Called by: SRUPSF                                            *
+      *  Calls    : SRNLRC, SRADDR, SRDELR, SRUDAT                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPRSR    BEGSR
+      *
+      ** Set off error indicators
+      *
+     C                     MOVEA'0000'    *IN,32
+     C                     MOVEA'00'      *IN,38                                              CDE002
+     C                     MOVE '0'       *IN98
+      *
+      ** Process add request
+      *
+     C           W0PMD     IFEQ 'ADD'
+      *
+     C           DDACTN    IFNE 'D'
+     C                     EXSR SRNLRC
+     C           W0NLR     IFNE 'Y'
+     C                     EXSR SRADDR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Process delete request
+      *
+     C           DDACTN    IFEQ 'D'
+     C                     EXSR SRDELR
+     C                     ELSE
+      *
+      ** Process change request
+      *
+     C                     EXSR SRUDAT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If error occurred on update, note the fact
+      *
+     C           *IN98     IFEQ '1'
+     C           *IN99     ANDEQ'0'
+     C                     Z-ADDS1RRN     SRRND      99
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRADDR  -  Process Add Request                               *
+      *  Called by: SRPRSR                                            *
+      *  Calls    : SRWRIT                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRADDR    BEGSR
+      *
+      ** Create A/c Codes Extract details
+      *
+     C                     EXSR SRWRIT
+      *
+      ** Error detected
+      *
+     C           W#EROR    IFNE *BLANKS
+     C                     MOVEA'111'     *IN,33
+     C                     MOVE '1'       *IN84
+     C                     MOVE '0'       *IN87
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN84
+     C                     MOVE '1'       *IN87
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDELR  -  Process Delete Request                            *
+      *  Called by: SRPRSR                                            *
+      *  Calls    : SRDLET, SRMOVE, SRCLRS                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDELR    BEGSR
+      *
+      ** Delete A/c Codes Extract details
+      *
+     C                     EXSR SRDLET
+      *
+     C           W#EROR    IFNE *BLANKS
+      *
+      ** Delete unsuccessful
+      *
+     C                     MOVEA'1111'    *IN,32
+     C                     MOVEA'11'      *IN,38                                              CDE002
+     C                     MOVE '1'       *IN84
+     C                     MOVE '0'       *IN87
+     C                     MOVE '1'       *IN98
+     C           W#EROR    CASEQ'Y'       SRMOVE
+     C                     ENDCS
+     C                     ELSE
+      *
+      ** Blank out record and protect from entry
+      *
+     C                     MOVE 'D'       WKDELR  1                                           CDE002
+     C                     EXSR SRCLRS
+     C                     MOVE '0'       *IN84
+     C                     MOVE '1'       *IN87
+      *
+      ** Reload subfile
+      *
+     C                     MOVEL'Y'       W0RSF   1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUDAT  -  Process Update Request                            *
+      *  Called by: SRPRSR                                            *
+      *  Calls    : SRUPDT, SRMOVE                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUDAT    BEGSR
+      *
+      ** Change A/c Codes Extract Details
+      *
+     C                     EXSR SRUPDT
+     C           W#EROR    IFNE *BLANKS
+      *
+      ** Screen errors
+      *
+     C                     MOVEA'1111'    *IN,32
+     C                     MOVEA'11'      *IN,38                                              CDE002
+     C                     MOVE '1'       *IN84
+     C                     MOVE '0'       *IN87
+     C                     MOVE '1'       *IN98
+      *
+      ** Reset subfile record if changed record
+      *
+     C           W#EROR    CASEQ'Y'       SRMOVE
+     C                     ENDCS
+     C                     ELSE
+      *
+      ** Enable entry
+      *
+     C                     MOVE '0'       *IN84
+     C                     MOVE '0'       *IN87
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMODE  -  Switch Between *ADD and *CHANGE Modes             *
+      *  Called by: SRPROC                                            *
+      *  Calls    : SRPOST                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMODE    BEGSR
+      *                                                                                       CDE002
+      ** Initialise first load of subfile                                                     CDE002
+      *                                                                                       CDE002
+     C                     MOVE 'Y'       WWFIRS                                              CDE002
+      *
+      ** Switch between *ADD/*CHANGE modes
+      *
+     C           W0PMD     IFNE 'ADD'
+     C                     MOVEL'ADD'     W0PMD
+     C                     ELSE
+     C                     MOVEL'CHG'     W0PMD
+     C                     ENDIF
+      *
+     C                     EXSR SRPOST
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPOST  -  Request Subfile Reload                            *
+      *  Called by: Main routine, SRPROC, SRMODE                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPOST    BEGSR
+      *
+      ** Request subfile reload
+      *
+     C                     MOVEL'Y'       W0RSF
+      *
+     C   05                MOVE *BLANKS   DPACOD
+     C   05                MOVE *BLANKS   DDACTN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROT  -  Set Display Attributes for Subfile Record         *
+      *  Called by: SRLOAD, SRSUBF, SRUPSF                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROT    BEGSR
+      *
+     C           W0PMD     COMP 'ADD'                    89
+      *
+      ** Protect keys if change mode or updated record
+      *
+     C                     MOVE '1'       *IN88
+     C   89N87             MOVE '0'       *IN88
+     C                     MOVEL*IN87     *IN79
+      *
+     C           WUSFLS    IFEQ 'N'
+     C                     MOVEL'1'       *IN79
+     C                     ENDIF
+      *
+     C                     MOVEL*IN87     *IN78
+     C           W0PMD     IFEQ 'CHG'
+     C                     MOVEL'1'       *IN78
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLRS  -  Initialise Subfile Record                         *
+      *  Called by: SRLOAD, SRDELR                                    *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCLRS    BEGSR
+      *
+      ** Initialise subfile record
+      *
+     C                     MOVEL*BLANKS   #1DBRC
+     C                     MOVEL*BLANKS   #1ACCD
+     C                     MOVEL*BLANKS   #1ACCN
+     C                     MOVEL*BLANKS   #1ILME
+     C                     MOVEL*BLANKS   #1IRVE
+     C                     MOVEL*BLANKS   #1WARN                                              CDE002
+     C                     MOVEL*BLANKS   DDACTN
+     C                     MOVEL*BLANKS   DDACOD
+     C                     MOVELDDACOD    #1ACCP                                              CDE002
+     C                     MOVEL*BLANKS   DDDESC
+     C                     MOVEL*BLANKS   DDILME
+     C                     MOVEL*BLANKS   DDIRVE
+     C                     MOVELDDIRVE    #1IRVP                                              CDE002
+     C                     MOVEL*BLANKS   DDASOC                                              CDE002
+     C                     MOVEL*BLANKS   DDSELP                                              CDE002
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMOVE  -  Transfer Records from MEFNODL1 to Subfile         *
+      *  Called by: SRLOAD, SRDELR, SRUDAT                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMOVE    BEGSR
+      *
+      ** Move DEACEXL1 fields to subfile
+      *
+     C                     MOVELA5ACCD    #1ACCD
+     C                     MOVELA5ACCN    #1ACCN
+     C                     MOVELA5ILME    #1ILME
+     C                     MOVELA5IRVE    #1IRVE
+     C                     MOVELA5ASOC    #1ASOC                                              CDE002
+     C                     MOVELA5SELP    #1SELP                                              CDE002
+      *
+      ** Hold current record image for change detection
+      *
+     C                     MOVEL@1DBRC    #1DBRC
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRWRIT  -  Create A/c Code extract record                    *
+      *  Called by: SRADDR                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRIT    BEGSR
+      *
+     C                     MOVEL*BLANKS   W#EROR
+      *
+      ** Set up output details
+      *
+     C                     MOVELDDACOD    A5ACCD
+     C                     MOVELDDDESC    A5ACCN
+     C                     MOVELDDILME    A5ILME
+     C                     MOVELDDIRVE    A5IRVE
+     C                     MOVELDDASOC    A5ASOC                                              CDE002
+     C                     MOVELDDSELP    A5SELP                                              CDE002
+      *
+      ** Check for duplicate primary key
+      *
+     C           A5ACCD    SETLLDEACEXP0                 90
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR  1
+     C                     MOVEL'DEP0006' ZAMSID
+     C                     MOVELA5ACCD    ZA0004
+     C                     EXSR ZASNMS
+     C                     GOTO SAEXIT
+     C                     ENDIF
+      *
+     C                     WRITEDEACEXP0               91
+      *
+      ** Write error detected
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     ENDIF
+      *
+     C           SAEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDLET  -  Delete A/c Code Extract record                    *
+      *  Called by: SRDELR                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDLET    BEGSR
+      *
+      ** Delete TPP Nostro Defaults
+      *
+     C                     MOVEL*BLANKS   W#EROR
+      *
+      ** Move key fields to MEFNODL0
+      *
+     C                     MOVELDDACOD    A5ACCD
+      *
+     C           A5ACCD    CHAINDEACEXP0             9091
+      *
+      ** Record already deleted
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     MOVEL'DEP0007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO SCEXIT
+     C                     ENDIF
+      *
+      ** Record locked
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     MOVEL'DEP0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO SCEXIT
+     C                     ENDIF
+      *
+      ** Check for changed record
+      *
+     C           #1DBRC    IFNE @1DBRC
+     C                     MOVEL'Y'       W#EROR
+     C                     MOVEL'DEP0009' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      ** Release record lock
+      *
+     C           A5ACCD    SETLLDEACEXP0             9091
+     C                     GOTO SCEXIT
+     C                     ENDIF
+      *
+     C                     DELETDEACEXP0               91
+      *
+      ** Delete error detected
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     ENDIF
+      *
+      ** Error detected
+      *
+     C           W#EROR    IFNE *BLANKS
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+     C           SCEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPDT  -  Update A/c Code Extract record                    *
+      *  Called by: SRUDAT                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPDT    BEGSR
+      *
+      ** Reset error status fields
+      *
+     C                     MOVEL*BLANKS   W#EROR
+      *
+      ** Set record data changed flag
+      *
+     C                     MOVE 'N'       YCRDC   1
+      *
+      ** Move key fields to DEACEXL0
+      *
+     C                     MOVELDDACOD    A5ACCD
+      *
+     C           A5ACCD    CHAINDEACEXP0             9091
+      *
+      ** Record not found
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     MOVEL'DEP0010' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO SEEXIT
+     C                     ENDIF
+      *
+      ** Record locked
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     GOTO SEEXIT
+     C                     ENDIF
+      *
+      ** Check for changed record
+      *
+     C           #1DBRC    IFNE @1DBRC
+     C                     MOVEL'Y'       W#EROR
+     C                     MOVEL'DEP0009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     UNLCKDEACEXL0               91
+     C                     GOTO SEEXIT
+     C                     ENDIF
+      *
+      ** Store record data for null update check
+      *
+     C                     MOVE @1DBRC    YCRDCS
+      *
+      ** Move non-key fields to MEFNODL0
+      *
+     C                     MOVELDDDESC    A5ACCN
+     C                     MOVELDDILME    A5ILME
+     C                     MOVELDDIRVE    A5IRVE
+     C                     MOVELDDASOC    A5ASOC                                              CDE002
+     C                     MOVELDDSELP    A5SELP                                              CDE002
+      *
+     C           @1DBRC    IFNE YCRDCS
+     C                     MOVE 'Y'       YCRDC
+     C                     ENDIF
+      *
+      ** If changed update record otherwise release record
+      *
+     C           YCRDC     IFEQ 'Y'
+     C                     UPDATDEACEXP0               91
+     C                     ELSE
+     C                     UNLCKDEACEXL0               91
+     C                     ENDIF
+      *
+      ** Change error detected
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     ELSE
+      *
+      ** Update saved record image
+      *
+     C                     MOVEL@1DBRC    #1DBRC
+     C                     ENDIF
+      *
+     C           SEEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVAL1  -  Validate A/c Code                                 *
+      *  Called by: SRVALS                                            *
+      *  Calls    : AOACODR0 - Access A/c Codes Details               *
+      *             ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVAL1    BEGSR
+      *
+      ** Validate A/c Code
+      *
+     C                     MOVEL*BLANK    QSEL    1
+     C           '?'       SCAN DDACOD:1                 70
+      *
+     C           *IN70     IFEQ '0'
+     C                     TESTN          DDACOD     70
+     C                     ELSE
+     C                     MOVEL'?'       QSEL
+     C                     ENDIF
+      *
+     C           *IN70     IFEQ '0'
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'DEP0011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      ** Check that A/c Code Exists
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM '*BLANKS' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C**********           PARM DDACOD    PACOD   4                                           CGL029
+     C                     PARM DDACOD    PACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'DEP0012' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           DDDESC    IFEQ *BLANK
+     C                     MOVELACACCN    DDDESC
+     C                     ENDIF
+     C           QSEL      IFEQ '?'
+     C                     MOVELACACCD    DDACOD
+     C                     MOVE *ON       *IN98                                               208221
+     C                     ENDIF
+     C           A5TOIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'DEP0014' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVAL2  -  Validate Include Flags                            *
+      *  Called by: SRVALS                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVAL2    BEGSR
+      *
+     C***********CDE002    IFEQ 'Y'                                                           208221
+     C           CDE001    IFEQ 'Y'                                                           208221
+      *
+     C********** DDILME    IFNE ' '                                                           208221
+     C********** DDILME    ANDNE'Y'                                                           208221
+     C           DDILME    IFNE 'Y'                                                           208221
+     C           DDILME    ANDNE'N'
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'DEP0005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF                                                              208221
+      *
+     C********** DDILME    IFEQ ' '                                                           208221
+     C**********           MOVE 'Y'       DDILME                                              208221
+     C**********           ENDIF                                                              208221
+      *
+     C********** DDIRVE    IFNE ' '                                                           208221
+     C********** DDIRVE    ANDNE'Y'                                                           208221
+     C           CDE002    IFEQ 'Y'                                                           208221
+     C           DDIRVE    IFNE 'Y'                                                           208221
+     C           DDIRVE    ANDNE'N'
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'DEP0013' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *                                                                                       208221
+      ** If account code is a retail, associated customer and                                 208221
+      ** select postings flag should be blanks                                                208221
+      *                                                                                       208221
+     C           A5ACTY    IFEQ 'R'                                                           208221
+     C           DDASOC    IFNE *BLANKS                                                       208221
+     C                     MOVE '1'       *IN38                                               208221
+     C                     MOVE '1'       *IN98                                               208221
+     C                     MOVEL'DEP0018' ZAMSID                                              208221
+     C                     EXSR ZASNMS                                                        208221
+     C                     ENDIF                                                              208221
+     C           DDSELP    IFNE *BLANK                                                        208221
+     C                     MOVEL'DEP0018' ZAMSID                                              208221
+     C                     EXSR ZASNMS                                                        208221
+     C                     ENDIF                                                              208221
+     C                     ENDIF                                                              208221
+      *
+     C           DDIRVE    IFEQ ' '
+      **********                                                                       CDE002 208221
+      ***If*account*section*of*the*account*code is*'IN',default*include***             CDE002 208221
+      ***to*revenue*flag*to*'Y',*otherwise,*default*this*flag*to*'N'******             CDE002 208221
+      **********                                                                       CDE002 208221
+     C********** A5ACSC    IFEQ 'IN'                                                   CDE002 208221
+     C                     MOVE 'Y'       DDIRVE
+     C**********           ELSE                                                        CDE002 208221
+     C**********           MOVE 'N'       DDIRVE                                       CDE002 208221
+     C**********           ENDIF                                                       CDE002 208221
+      *                                                                                       CDE002
+     C                     ELSE                                                               CDE002
+     C           DDIRVE    IFEQ 'N'                                                           CDE002
+     C                     MOVE *BLANKS   #1WARN                                              CDE002
+     C                     ENDIF                                                              CDE002
+     C                     ENDIF                                                              208221
+      *                                                                                       CDE002
+     C           DDIRVE    IFEQ 'Y'                                                           CDE002
+      *                                                                                       CDE002
+      ***If*account*section*is*not*Income,*display*warning*message********             CDE002 208221
+      ** If account section is not Income and the account code is                             208221
+      ** not a retail, give a warning                                                         208221
+      *                                                                                       CDE002
+     C           A5ACSC    IFNE 'IN'                                                          CDE002
+     C           A5ACTY    ANDNE'R'                                                           208221
+      *                                                                                       CDE002
+     C           #1WARN    IFEQ *BLANKS                                                       CDE002
+     C           W0PMD     ANDEQ'CHG'                                                         CDE002
+     C           DDIRVE    ORNE #1IRVP                                                        CDE002
+     C           W0PMD     ANDEQ'ADD'                                                         CDE002
+     C           #1WARN    ANDEQ*BLANKS                                                       CDE002
+     C           DDACOD    ORNE #1ACCP                                                        CDE002
+     C           W0PMD     ANDEQ'ADD'                                                         CDE002
+     C           #1WARN    ANDEQ*BLANKS                                                       CDE002
+     C                     MOVE '1'       *IN35                                               CDE002
+     C                     MOVE '1'       *IN98                                               CDE002
+     C                     MOVE 'Y'       #1WARN                                              CDE002
+     C                     MOVEL'DEP0017' ZAMSID                                              CDE002
+     C                     EXSR ZASNMS                                                        CDE002
+      *                                                                                       CDE002
+     C                     ELSE                                                               CDE002
+      *                                                                                       CDE002
+      ** If warning has been displayed, set warning flag to blanks, so                        CDE002
+      ** that, the warning message will not be redisplayed the next time                      CDE002
+      *                                                                                       CDE002
+     C           #1WARN    IFEQ 'Y'                                                           CDE002
+     C                     MOVE *BLANKS   #1WARN                                              CDE002
+     C                     MOVE '0'       *IN35                                               208221
+     C                     ENDIF                                                              CDE002
+      *                                                                                       CDE002
+     C                     ENDIF                                                              CDE002
+      *                                                                                       CDE002
+     C                     ENDIF                                                              CDE002
+      *                                                                                       208221
+     C           A5ACTY    IFNE 'R'                                                           208221
+     C           DDSELP    ANDEQ*BLANKS                                                       208221
+     C                     MOVE '1'       *IN39                                               208221
+     C                     MOVE '1'       *IN98                                               208221
+     C                     MOVEL'DEP0019' ZAMSID                                              208221
+     C                     EXSR ZASNMS                                                        208221
+     C                     ENDIF                                                              208221
+      *                                                                                       CDE002
+     C                     ENDIF
+      ***********                                                                      CDE002 208221
+     C***********          ENDIF                                                       CDE002 208221
+      *                                                                                       CDE002
+     C           DDIRVE    IFEQ 'Y'                                                           CDE002
+     C           A5ACTY    ANDNE'R'                                                           CDE002
+      *                                                                                       CDE002
+     C           DDASOC    IFNE 'Y'                                                           CDE002
+     C           DDASOC    ANDNE'N'                                                           CDE002
+     C           DDASOC    ANDNE*BLANKS                                                       CDE002
+      *                                                                                       CDE002
+     C                     MOVE '1'       *IN38                                               CDE002
+     C                     MOVE '1'       *IN98                                               CDE002
+     C                     MOVEL'DEP0015' ZAMSID                                              CDE002
+     C                     EXSR ZASNMS                                                        CDE002
+      *                                                                                       CDE002
+     C                     ENDIF                                                              CDE002
+      *                                                                                       CDE002
+     C           DDSELP    IFNE 'A'                                                           CDE002
+     C           DDSELP    ANDNE'S'                                                           CDE002
+     C           DDSELP    ANDNE'M'                                                           CDE002
+     C           DDSELP    ANDNE*BLANKS                                                       CDE002
+      *                                                                                       CDE002
+     C                     MOVE '1'       *IN39                                               CDE002
+     C                     MOVE '1'       *IN98                                               CDE002
+     C                     MOVEL'DEP0016' ZAMSID                                              CDE002
+     C                     EXSR ZASNMS                                                        CDE002
+      *                                                                                       CDE002
+     C                     ENDIF                                                              CDE002
+      *                                                                                       CDE002
+     C                     ELSE                                                               CDE002
+      *                                                                                       CDE002
+      ***Default*Associated*Customer*and*Select*Postings*flags*to*blank***             CDE002 208221
+      ***if*Include*in*Revenue*is*set*to*No.******************************             CDE002 208221
+      ** If include in revenue flag is set to 'N' then, associated customer                   208221
+      ** and select postings fields should be blanks, else error                              208221
+      *                                                                                       CDE002
+     C           DDIRVE    IFEQ 'N'                                                           CDE002
+     C           DDASOC    IFNE *BLANK                                                        208221
+     C                     MOVE '1'       *IN38                                               208221
+     C                     MOVE '1'       *IN98                                               208221
+     C                     MOVEL'DEP0033' ZAMSID                                              208221
+     C                     EXSR ZASNMS                                                        208221
+     C                     ENDIF                                                              208221
+     C           DDSELP    IFNE *BLANK                                                        208221
+     C                     MOVE '1'       *IN39                                               208221
+     C                     MOVE '1'       *IN98                                               208221
+     C                     MOVEL'DEP0033' ZAMSID                                              208221
+     C                     EXSR ZASNMS                                                        208221
+     C                     ENDIF                                                              208221
+     C**********           MOVE *BLANK    DDASOC                                       CDE002 208221
+     C**********           MOVE *BLANK    DDSELP                                       CDE002 208221
+     C                     ENDIF                                                              CDE002
+      *                                                                                       CDE002
+     C           DDASOC    IFNE 'N'                                                           CDE002
+     C           DDASOC    ANDNE*BLANK                                                        CDE002
+      *                                                                                       CDE002
+     C                     MOVE '1'       *IN38                                               CDE002
+     C                     MOVE '1'       *IN98                                               CDE002
+     C************         MOVEL'DEP0015' ZAMSID                                        CDE002208221
+     C                     MOVEL'DEP0034' ZAMSID                                              208221
+     C                     EXSR ZASNMS                                                        CDE002
+      *                                                                                       CDE002
+     C                     ENDIF                                                              CDE002
+      *                                                                                       CDE002
+     C           DDSELP    IFNE 'A'                                                           CDE002
+     C           DDSELP    ANDNE*BLANK                                                        CDE002
+      *                                                                                       CDE002
+     C                     MOVE '1'       *IN39                                               CDE002
+     C                     MOVE '1'       *IN98                                               CDE002
+     C***********          MOVEL'DEP0016' ZAMSID                                        CDE002208221
+     C                     MOVEL'DEP0035' ZAMSID                                              208221
+     C                     EXSR ZASNMS                                                        CDE002
+      *                                                                                       CDE002
+     C                     ENDIF                                                              CDE002
+      *                                                                                       CDE002
+     C                     ENDIF                                                              CDE002
+      *                                                                                       CDE002
+     C                     ELSE                                                               CDE002
+      *                                                                                       CDE002
+     C                     MOVEL'N'       DDASOC                                              CDE002
+     C                     MOVEL'A'       DDSELP                                              CDE002
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS  -  Message Handling Subroutine                       *
+      *  Called by: Various                                           *
+      *  Calls    : Y2SNMGC - Send a message                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      **********                                                                              CDE002
+      ***Send*if*first*error*message*or*not*an*error*message***********                       CDE002
+      **********                                                                              CDE002
+     C********** ZAMSTP    IFNE *BLANKS                                                       CDE002
+     C********** ZAFSMS    ORNE 'N'                                                           CDE002
+     C********** ZAMSTP    IFEQ *BLANKS                                                       CDE002
+      **********                                                                              CDE002
+      ***Signal*first*error*message*sent*******************************                       CDE002
+      **********                                                                              CDE002
+     C**********           MOVEL'N'       ZAFSMS                                              CDE002
+     C**********           ENDIF                                                              CDE002
+     C           ZAPGMQ    IFEQ *BLANKS
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     MOVEL'MIDAS   'ZAMSGF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+     C**********           ENDIF                                                              CDE002
+      *
+      ** Clear all fields for default mechanism next time
+      *
+     C                     MOVEL*BLANKS   ZAPGMQ
+     C                     MOVEL*BLANKS   ZAPGRL
+     C                     MOVEL*BLANKS   ZAMSID
+     C                     MOVEL*BLANKS   ZAMSGF
+     C                     MOVEL*BLANKS   ZAMSDA
+     C                     MOVEL*BLANKS   ZAMSTP
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREND   -  End Program                                       *
+      *  Called by: Various                                           *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREND     BEGSR
+      *
+      ** Rollback any uncommitted DBF changes
+      *
+     C                     ROLBK                       90
+      *
+      ** Terminate program
+      *
+     C                     MOVE '1'       *INLR
+      *
+      ** Exit program
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   -  Error Handling Subroutine                         *
+      *  Called by: Various                                           *
+      *  Calls    : DBERRCTL - Database Error Control                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+** CPY@
+(c) Finastra International Limited 2001

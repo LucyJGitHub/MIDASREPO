@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Private banking upgrade - SECFTPPP')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00017 - Private Banking upgrade for SECFTPPP            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2009                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BG26993            Date 26Jan10              */
+/*                      CSM001 *C *CREATE  Date 14Oct02              */
+/*                      xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BG26993 - Delivery of upgrade programs to core.             */
+/*               - Renamed CPBMIGC25.                                */
+/*       CSM001  - Upgrade of Private Banking layer                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FLIB)
+ 
+             DCL        VAR(&FLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                            2009')
+ 
+ /* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+/* Check if `from` file exists; if not then end. */
+             CHKOBJ     OBJ(&FLIB/SECFTPPP) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Check if 'new' file already has records. */
+             RTVMBRD    FILE(SDCFTPPD) NBRCURRCD(&NBRCURRCD)
+             IF         COND(&NBRCURRCD *NE 0) THEN(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             ELSE       CMD(DO)
+/* Attempt to copy file across. */
+                CPYF       FROMFILE(&FLIB/SECFTPPP) TOFILE(SDCFTPPD) +
+                             MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+/* If the 'from' file is empty. */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+             ENDDO
+ 
+             CALL       PGM(SMU00039)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

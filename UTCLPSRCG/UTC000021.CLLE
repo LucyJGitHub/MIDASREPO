@@ -1,0 +1,150 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Display service program info. to file')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000021 - Display service program info. to file           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT013  *CREATE    Date 18May11              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUT013 - New utility to display service program information */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SRVPGM &DETAIL &OUTFILE &OUTMBR &OUTPUT)
+ 
+             DCL        VAR(&SRVPGM) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&DETAIL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OUTFILE) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&OUTMBR) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&OUTPUT) TYPE(*CHAR) LEN(8)
+ 
+             DCL        VAR(&SRVPGMN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRVPGML) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OUTFILEN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OUTFILEL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OPTION) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&BASEFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TEXT) TYPE(*CHAR) LEN(50)
+ 
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2011')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Create temporary user space for utility. */
+             CRTUSRSPC  USRSPC(QTEMP/SRVPGMUS) DELETE(*YES) +
+                          TEXT('Temporary user space for MDSPSRVPGM')
+ 
+/* Break down variables. */
+             CHGVAR     VAR(&SRVPGMN) VALUE(%SST(&SRVPGM 1 10))
+             CHGVAR     VAR(&SRVPGML) VALUE(%SST(&SRVPGM 11 10))
+             CHGVAR     VAR(&OUTFILEN) VALUE(%SST(&OUTFILE 1 10))
+             CHGVAR     VAR(&OUTFILEL) VALUE(%SST(&OUTFILE 11 10))
+             CHGVAR     VAR(&MEMBER) VALUE(%SST(&OUTMBR 3 10))
+             CHGVAR     VAR(&OPTION) VALUE(%SST(&OUTMBR 13 8))
+ 
+/* Determine which base file is to be used from DETAIL parameter. */
+             IF         COND(&DETAIL *EQ '*MODULE') THEN(DO)
+                CHGVAR     VAR(&BASEFILE) VALUE('UTSPMDPD')
+             ENDDO
+             IF         COND(&DETAIL *EQ '*SRVPGM') THEN(DO)
+                CHGVAR     VAR(&BASEFILE) VALUE('UTSPSPPD')
+             ENDDO
+             IF         COND(&DETAIL *EQ '*ACTGRPEXP') THEN(DO)
+                CHGVAR     VAR(&BASEFILE) VALUE('UTSPEAPD')
+             ENDDO
+             IF         COND(&DETAIL *EQ '*ACTGRPIMP') THEN(DO)
+                CHGVAR     VAR(&BASEFILE) VALUE('UTSPDIPD')
+             ENDDO
+             IF         COND(&DETAIL *EQ '*COPYRIGHT') THEN(DO)
+                CHGVAR     VAR(&BASEFILE) VALUE('UTSPCIPD')
+             ENDDO
+             IF         COND(&DETAIL *EQ '*PROCEXP') THEN(DO)
+                CHGVAR     VAR(&BASEFILE) VALUE('UTSPPEPD')
+             ENDDO
+             IF         COND(&DETAIL *EQ '*DTAEXP') THEN(DO)
+                CHGVAR     VAR(&BASEFILE) VALUE('UTSPDEPD')
+             ENDDO
+             IF         COND(&DETAIL *EQ '*SIGNATURE') THEN(DO)
+                CHGVAR     VAR(&BASEFILE) VALUE('UTSPSGPD')
+             ENDDO
+/* Retrieve text of file. */
+             RTVOBJD    OBJ(&BASEFILE) OBJTYPE(*FILE) TEXT(&TEXT)
+ 
+/* If member name is not specified then change it to file name. */
+             IF         COND(&MEMBER *EQ '*FIRST') THEN(DO)
+                CHGVAR     VAR(&MEMBER) VALUE(&OUTFILEN)
+             ENDDO
+ 
+/* If the outfile does not exist then create it. */
+             CHKOBJ     OBJ(&OUTFILEL/&OUTFILEN) OBJTYPE(*FILE) +
+                          MBR(&MEMBER)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+/* If *LIBL is specified then change it to *CURLIB. */
+                IF         COND(&OUTFILEL *EQ '*LIBL') THEN(DO)
+                   CHGVAR     VAR(&OUTFILEL) VALUE('*CURLIB')
+                ENDDO
+                CRTDUPOBJ  OBJ(&BASEFILE) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                             TOLIB(&OUTFILEL) NEWOBJ(&OUTFILEN)
+                CHGPF      FILE(&OUTFILEL/&OUTFILEN) MAXMBRS(*NOMAX)
+                ADDPFM     FILE(&OUTFILEL/&OUTFILEN) MBR(&MEMBER) +
+                             TEXT(&TEXT)
+             ENDDO
+             MONMSG     MSGID(CPF9815) EXEC(DO)
+                ADDPFM     FILE(&OUTFILEL/&OUTFILEN) MBR(&MEMBER) +
+                             TEXT(&TEXT)
+             ENDDO
+/* If *REPLACE specified then clear member first. */
+             IF         COND(&OPTION *EQ '*REPLACE') THEN(DO)
+                CLRPFM     FILE(&OUTFILEL/&OUTFILEN) MBR(&MEMBER)
+             ENDDO
+ 
+/* Override to base file before calling program to populate file. */
+             OVRDBF     FILE(&BASEFILE) TOFILE(&OUTFILEL/&OUTFILEN) +
+                          MBR(&MEMBER)
+             CALL       PGM(UT000036) PARM(&SRVPGMN &SRVPGML &DETAIL +
+                          &RTNCODE)
+             DLTOVR     FILE(&BASEFILE)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,953 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+     C*****************************************************************
+     C*                                                               *
+     C*  FFDATE SR.   TO DETERMINE THE CORRECT WORKING DAY AS A MIDAS *
+     C*               DAY NUMBER FOR A FORMULA SPECIFIED FOR EACH     *
+     C*               MARKET/INSTRUMENT TYPE/YEAR/MONTH               *
+     C*                                                               *
+     C*   INPUT   : FFDATC   DATE FORMULA           FORMAT (7A)       *
+     C*             FFMTH    MONTH OF REQD. DATE    FORMAT (2N)       *
+     C*             FFYR     YEAR OF REQD. DATE     FORMAT (2N)       *
+     C*             FFCCY1   MARKET CURRENCY        FORMAT (3A)       *
+     C*             FFLOC    MARKET LOCATION        FORMAT (3A)       *   S01195
+     C*             FFCCY2   INSTRUMENT CURRENCY    FORMAT (3A)       *
+     C*             FFCCY3   OTHER CURRENCY         FORMAT (3A)       *
+     C*                                                               *
+     C*   OUTPUT  : FFDAY    WORKING DAY DEFINED                      *
+     C*                      BY INPUT FIELDS        FORMAT (5N)       *
+     C*                                                               *
+     C*   SUBROUTINES USED:                                           *
+     C*                                                               *
+     C*             FFDE31   CALC LAST WORKING DAY IN MONTH           *
+     C*             FFDN31   CALC SPECIFIED WORKING DAY IN MONTH      *
+     C*             FFDAAD   ADJUST DAY WITH AN ACTUAL NO. OF DAYS    *
+     C*             FFDABD   ADJUST DAY WITH NO. OF BUSINESS DAYS IN  *
+     C*                      MARKET CENTRE CCY                        *
+     C*             FFDACD   ADJUST DAY WITH NO. OF BUSINESS DAYS IN  *
+     C*                      MARKET CENTRE CCY & INST CCY & OTHER CCY *
+     C*             FFDAWD   ADJUST DAY WITH BY 1 BUSINESS DAY IN     *
+     C*                      MARKET CENTRE CCY IF NOT A WORKING DAY   *
+     C**************FFDCYH***DETERMINE*WHETHER*CCY*PASSED*IS*A*WORKING*   S01195
+     C***********************DAY*FOR*THE*LAST*DAY*OUPUT*BY*ZDATE/5*****   S01195
+     C*             ZCHKH    DETERMINE WHETHER CCY PASSED IS A WORKING*   S01195
+     C*                      DAY FOR THE LAST DAY OUPUT BY ZFWDT/ZBKDT*   S01195
+     C*                      IN THE SPECIFIED LOCATION.               *   S01195
+     C**************FFDAT3***CALCULATE*A*NO.*OF*WORKING*DAYS*BACK******   S01195
+     C***********************IN*A*GIVEN*CCY****************************   S01195
+     C**************FFDAT5***DETERMINE*WHETHER*A*DAY*IS*A*WORKING*DAY**   S01195
+     C***********************&*FIND*THE*PREV*WORKING*DAY*IF*IT*IS*NOT**   S01195
+     C*                                                               *
+     C*             ZDATE1   CONVERT A DATE TO A NO. OF DAYS          *
+     C**************ZDATE3***CALCULATE*A*NO.*OF*WORKING*DAYS*FORWARDS**   S01195
+     C***********************IN*A*GIVEN*CCY****************************   S01195
+     C**************ZDATE5***DETERMINE*WHETHER*A*DAY*IS*A*WORKING*DAY**   S01195
+     C***********************&*FIND*THE*NEXT*WORKING*DAY*IF*IT*IS*NOT**   S01195
+     C*             ZFWDT    DETERMINE WHETHER A DAY IS A WORKING DAY *   S01195
+     C*                      IN THE SPECIFIED LOCATION;               *   S01195
+     C*                      & FIND THE NEXT WORKING DAY IF IT IS NOT *   S01195
+     C*             ZBKDT    DETERMINE WHETHER A DAY IS A WORKING DAY *   S01195
+     C*                      IN THE SPECIFIED LOCATION;               *   S01195
+     C*                      & FIND THE PREV WORKING DAY IF IT IS NOT *   S01195
+     C*                                                               *
+     C*                                                               *
+     C***************IN85****USED/RESET*AS*WORK*INDICATOR**************   S01195
+     C*                                                               *
+     C* NB. THE DATE FORMULA COMPRISES:       ABCDEFG       WHERE     *
+     C*                                       -------                 *
+     C*  AB  =  BASE DATE.   =  a) DAY NO. IN MONTH                   *
+     C*                   OR =  b) WEEK NO. AND DAY CODE              *
+     C*                   OR =  c) LAST WORKING DAY IN MONTH  ("31")  *
+     C*                                                               *
+     C*  CDEFG = ADJUSTMENT                                           *
+     C*                                                               *
+     C*          IF NO ADJUSTMENT (DEFG = *BLANKS) AND BASE DATE IS   *
+     C*          a) OR b) ABOVE,                                      *
+     C*                                                               *
+     C*  C  =    "+"/"-" FOR NEXT/PREVIOUS WORKING DAY IF HOLIDAY     *
+     C*                                                               *
+     C*          OTHERWISE, IF ADJUSTMENT SPECIFIED:                  *
+     C*                                                               *
+     C*  C  =    "+"/"-" NUMBER OF DAYS FORWARDS/BACKWARDS            *
+     C*                                                               *
+     C*  DE =    NUMBER OF DAYS                                       *
+     C*                                                               *
+     C*  F  =    TYPE OF DAYS TO BE COUNTED                           *
+     C*                     "A" = ACTUAL DAYS                         *
+     C*                     "B" = BUSINESS DAYS IN CCY1               *
+     C*                     "C" = BUSINESS DAYS IN CCY1,CCY2 & CCY3   *
+     C*                                                               *
+     C*  G  =    "+"/"-" FOR NEXT/PREVIOUS WORKING DAY IF DAY FROM    *
+     C*          F IS A HOLIDAY  ( TYPE "A" ONLY )                    *
+     C*                                                               *
+     C*****************************************************************
+     C**
+     C           FFDATE    BEGSR                           ***FFDATE****
+     C**
+     C*
+     C**   DEFINE/INITIALISE FIELDS
+     C*
+     C                     MOVE FFDATC    FFDATC  7
+     C                     Z-ADDFFMTH     FFMTH   20
+     C                     Z-ADDFFYR      FFYR    20
+     C                     MOVE FFCCY1    FFCCY1  3
+     C                     MOVE FFLOC     FFLOC   3                       S01195
+     C                     MOVE FFCCY2    FFCCY2  3
+     C                     MOVE FFCCY3    FFCCY3  3
+     C*
+     C                     Z-ADD0         FFDAY   50
+     C*
+     C           *LIKE     DEFN FFMTH     FFTM
+     C           *LIKE     DEFN FFYR      FFYRW
+     C           *LIKE     DEFN FFDAY     DUMP
+     C           *LIKE     DEFN FFDAY     FFMDY
+     C           *LIKE     DEFN FFDAY     FFMDY1
+     C           *LIKE     DEFN FFDAY     FFMDY2
+     C           *LIKE     DEFN FFDAY     FFMDY3
+     C************LIKE     DEFN FFCCY1    FFCCYX                          S01195
+     C*
+     C**  FIND DAY IN MONTH
+     C**  IF '31' SPECIFIED, FIND LAST WORKING DAY IN MONTH
+     C**  OTHERWISE FIND THE DAY SPECIFIED BY THE DAY NO. OR DAY CODE
+     C*
+     C           FFAB      CASEQ'31'      FFDE31
+     C           FFAB      CASNE'31'      FFDN31
+     C                     END
+     C*
+     C*    CALCULATE ADJUSTMENTS SPECIFIED TO DATE
+     C*
+     C**   ADJUSTMENTS TO DATE NEED TO BE MADE IF
+     C**   1.  A DAY NO. OR CODE WAS SPECIFIED ( AS THIS DAY MAY BE A
+     C**       HOLIDAY OR AN ADJUSTMENT MAY HAVE BEEN SPECIFIED )
+     C**   OR
+     C**   2.  ' MONTH END ' WAS SPECIFIED ( WHICH WILL BE A WORKING
+     C**       DAY ) AND AN ADJUSTMENT HAS BEEN SPECIFIED
+     C*
+     C           FFAB      IFNE '31'
+     C           FFAB      OREQ '31'
+     C           FFDEF     ANDNE*BLANKS
+     C*
+     C**   DETERMINE NO. OF DAYS FORWARDS/BACKWARDS DEPENDING ON CODE
+     C**            I.E. 'A' = ACTUAL DAYS
+     C**            I.E. 'B' = BUSINESS DAYS - MARKET CENTRE CCY
+     C**            I.E. 'C' = BUSINESS DAYS - MKT. CENTRE & INST. CCY
+     C**            I.E. ' ' = NO ADJUSTMENT
+     C**   NB  RESULT WILL BE A WORKING DAY
+     C**       ( BEFORE/AFTER DAY GIVEN IF HOLIDAY - DEP. IF +/- CODE )
+     C*
+     C           FFDEF     IFNE *BLANK
+     C                     MOVE FFDEA     FFDE    20
+     C                     ELSE
+     C                     Z-ADD*ZERO     FFDE
+     C                     END
+     C*
+     C           FFF       CASEQ'A'       FFDAAD
+     C           FFF       CASEQ'B'       FFDABD
+     C           FFF       CASEQ'C'       FFDACD
+     C           FFF       CASEQ' '       FFDAWD
+     C                     END
+     C*
+     C                     END
+     C**
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  FFDE31 SR.   CALLED FROM STANDARD SUBROUTINE FFDATE          *
+     C*               CALCULATE LAST WORKING DAY IN MONTH             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FFDE31    BEGSR                           ****FFDE31***
+     C**
+     C*
+     C**   DETERMINE MONTH NUMBER FOR NEXT MONTH
+     C*
+     C*
+     C**   IF NOT DECEMBER
+     C*
+     C           FFMTH     IFNE 12
+     C           FFMTH     ADD  1         FFTM
+     C                     Z-ADDFFYR      FFYRW
+     C*
+     C**   IF DECEMBER
+     C*
+     C                     ELSE
+     C                     Z-ADD1         FFTM
+     C           FFYR      ADD  1         FFYRW
+     C                     END
+     C*
+     C**   DETERMINE MIDAS DAY NUMBER FOR 1ST OF NEXT MONTH
+     C*
+     C           *IN98     IFEQ '1'
+     C                     MOVE '01'      FFWRK4  40
+     C                     MOVELFFTM      FFWRK4
+     C                     ELSE
+     C                     MOVE FFTM      FFWRK4
+     C                     MOVEL'01'      FFWRK4
+     C                     END
+     C*
+     C                     MOVE FFYRW     ZDATE
+     C                     MOVELFFWRK4    ZDATE
+     C*
+     C                     EXSR ZDATE1
+     C*
+     C                     Z-ADDZDAYNO    FFDAY
+     C*
+     C**   SUBTRACT 1 TO GET LAST DAY OF MONTH REQUIRED
+     C*
+     C                     SUB  1         FFDAY
+     C*
+     C**   IF THIS IS NOT A WORKING DAY, FIND LAST WORKING DAY IN MONTH
+     C**   IN THE MARKET CURRENCY
+     C*
+     C                     MOVE FFDAY     ZDAYNO
+     C                     Z-ADD0         ZNRDYS                          S01195
+     C                     MOVE FFCCY1    ZCCY
+     C                     MOVE FFLOC     ZLOC                            S01195
+     C***********          MOVE 'Y'       ZOPT                            S01195
+     C***********          EXSR FFDAT5                                    S01195
+     C                     EXSR ZBKDT                                     S01195
+     C*
+     C                     Z-ADDZDYNBR    FFDAY
+     C**
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  FFDN31 SR.   CALLED FROM STANDARD SUBROUTINE FFDATE          *
+     C*               CALCULATE THE SPECIFIED DAY IN MONTH            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FFDN31    BEGSR                           ****FFDN31***
+     C**
+     C*
+     C**  CONVERT THE FIRST TWO CHARACTERS
+     C*
+     C**
+     C**  DETERMINE MIDAS DATE FOR 1ST OF MONTH
+     C**
+     C*
+     C           *IN98     IFEQ '1'
+     C                     MOVELFFMTH     FFWRK4
+     C                     MOVE '01'      FFWRK4
+     C                     ELSE
+     C                     MOVE FFMTH     FFWRK4
+     C                     MOVEL'01'      FFWRK4
+     C                     END
+     C*
+     C                     MOVELFFWRK4    ZDATE
+     C                     MOVE FFYR      ZDATE
+     C*
+     C                     EXSR ZDATE1
+     C*
+     C                     Z-ADDZDAYNO    FFDAY
+     C**
+     C*
+     C**
+     C**    DETERMINE WHETHER FIRST TWO CHARACTERS ARE DAY NO.OR
+     C**    DAY CODE
+     C**
+     C*
+     C           FFB       LOKUPTABDY     TABNO          81
+     C*
+     C**    IF FIRST TWO CHARACTERS ARE DAY CODE
+     C*
+     C           *IN81     IFEQ '1'
+     C**
+     C*
+     C**  DETERMINE DAY IN THE WEEK FOR THE 1ST OF THE MONTH FOR A
+     C**  GIVEN MIDAS DATE.
+     C**  ( THIS METHOD IS BASED ON THE FACT THAT THE DAY OF MIDAS DAY
+     C**  1 - 01/01/72 - IS KNOWN.  SEE SD1050 )
+     C*
+     C           FFDAY     DIV  7         DUMP
+     C                     MVR            FFDAYY  10
+     C*
+     C**  DETERMINE THE NO. OF DAYS AFTER 1ST OF MONTH AND IT'S
+     C**     MIDAS DATE
+     C*
+     C                     Z-ADDTABNO     FFDAYW  10
+     C           FFDAYW    SUB  FFDAYY    FFDAYZ  10   82
+     C   82                ADD  7         FFDAYZ
+     C                     ADD  FFDAYZ    FFDAY
+     C                     MOVE FFAA      FFA     10
+     C           2         DO   FFA
+     C           FFDAY     ADD  7         FFDAY
+     C                     END
+     C**
+     C                     ELSE
+     C**
+     C*
+     C**    IF FIRST TWO CHARACTERS ARE  NO. OF DAYS
+     C*
+     C*
+     C**    ADD NO. OF DAYS TO MIDAS DAY NO. OF FIRST DAY OF MONTH
+     C*
+     C                     MOVE FFAB      FFABN   20
+     C                     SUB  1         FFABN
+     C                     ADD  FFABN     FFDAY
+     C**
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  FFDAAD SR.   CALLED FROM STANDARD SUBROUTINE FFDATE          *
+     C*               TO ADJUST DAY WITH SPECIFIED NO. OF ACTUAL      *
+     C*               DAYS                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FFDAAD    BEGSR                           ****FFDAAD***
+     C**
+     C*
+     C**   ADD/SUBTRACT SPECIFIED NO. OF DAYS AS REQUIRED
+     C*
+     C           FFC       IFEQ '+'
+     C                     ADD  FFDE      FFDAY
+     C                     ELSE
+     C                     SUB  FFDE      FFDAY
+     C                     END
+     C*                                                                   S01195
+     C**   SET UP NO. OF DAYS AND LOCATION FOR ZFWDT/ZBKDT                S01195
+     C*                                                                   S01195
+     C                     Z-ADD0         ZNRDYS                          S01195
+     C                     MOVE FFLOC     ZLOC                            S01195
+     C*
+     C**   IF FFDAY IS HOLIDAY DETERMINE NEXT/PREVIOUS  WORKING DAY
+     C*
+     C           FFG       IFEQ '+'
+     C*
+     C**   IF HOLIDAY, DETERMINE NEXT WORKING DAY
+     C*
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     MOVE FFCCY1    ZCCY
+     C***********          MOVE 'Y'       ZOPT                            S01195
+     C***********          EXSR ZDATE5                                    S01195
+     C                     EXSR ZFWDT                                     S01195
+     C*
+     C                     Z-ADDZDYNBR    FFDAY
+     C*
+     C                     ELSE
+     C*
+     C**   IF HOLIDAY, DETERMINE PREVIOUS WORKING DAY
+     C*
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     MOVE FFCCY1    ZCCY
+     C***********          MOVE 'Y'       ZOPT                            S01195
+     C***********          EXSR FFDAT5                                    S01195
+     C                     EXSR ZBKDT                                     S01195
+     C*
+     C                     Z-ADDZDYNBR    FFDAY
+     C*
+     C                     END
+     C**
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  FFDABD SR.   CALLED FROM STANDARD SUBROUTINE FFDATE          *
+     C*               TO ADJUST DAY WITH SPECIFIED NO. OF BUSINESS    *
+     C*               DAYS FOR THE MARKET CENTRE                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FFDABD    BEGSR                           ****FFDABD***
+     C*                                                                   S01195
+     C**   SET UP LOCATION FOR ZFWDT/ZBKDT                                S01195
+     C*                                                                   S01195
+     C                     MOVE FFLOC     ZLOC                            S01195
+     C**
+     C*
+     C**   ADD/SUBTRACT SPECIFIED NO. OF DAYS AS REQUIRED
+     C*
+     C           FFC       IFEQ '+'
+     C*
+     C**   CALCULATE LIMIT FFDE WORKING DAYS AFTER DATE
+     C*
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     MOVE FFCCY1    ZCCY
+     C                     Z-ADDFFDE      ZNRDYS
+     C***********          EXSR ZDATE3                                    S01195
+     C                     EXSR ZFWDT                                     S01195
+     C*
+     C                     Z-ADDZDYNBR    FFDAY
+     C*
+     C                     ELSE
+     C*
+     C**   CALCULATE LIMIT FFDE WORKING DAYS BEFORE DATE
+     C*
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     MOVE FFCCY1    ZCCY
+     C                     Z-ADDFFDE      ZNRDYS
+     C***********          EXSR FFDAT3                                    S01195
+     C                     EXSR ZBKDT                                     S01195
+     C*
+     C                     Z-ADDZDYNBR    FFDAY
+     C*
+     C                     END
+     C**
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  FFDACD SR.   CALLED FROM STANDARD SUBROUTINE FFDATE          *
+     C*               TO ADJUST DAY WITH SPECIFIED NO. OF BUSINESS    *
+     C*               DAYS IN CCY OF MARKET CENTRE & INSTRUMENT &     *
+     C*               ANY OTHER CCY                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FFDACD    BEGSR                           ****FFDACD***
+     C**
+     C*
+     C**   DETERMINE SPECIFIED NEXT/PREVIOUS WORKING DAYS IN ALL CCYS
+     C*
+     C           FFC       IFEQ '+'
+     C**
+     C*
+     C**   DETERMINE NEXT FFDE WORKING DAYS
+     C*
+     C**   CALCULATE LIMIT FFDE WORKING DAYS AFTER DATE,IN CCY1
+     C*
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     MOVE FFCCY1    ZCCY
+     C                     MOVE FFLOC     ZLOC                            S01195
+     C                     Z-ADDFFDE      ZNRDYS
+     C***********          EXSR ZDATE3                                    S01195
+     C                     EXSR ZFWDT                                     S01195
+     C                     Z-ADDZDYNBR    FFMDY1
+     C*
+     C**   CALCULATE LIMIT FFDE WORKING DAYS AFTER DATE,IN CCY2
+     C*
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     MOVE FFCCY2    ZCCY
+     C                     MOVE *BLANK    ZLOC                            S01195
+     C                     Z-ADDFFDE      ZNRDYS
+     C***********          EXSR ZDATE3                                    S01195
+     C                     EXSR ZFWDT                                     S01195
+     C                     Z-ADDZDYNBR    FFMDY2
+     C*
+     C**   CALCULATE LIMIT FFDE WORKING DAYS AFTER DATE,IN CCY3
+     C**   IF PRESENT
+     C*
+     C           FFCCY3    IFNE ' '
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     MOVE FFCCY3    ZCCY
+     C                     MOVE *BLANK    ZLOC                            S01195
+     C                     Z-ADDFFDE      ZNRDYS
+     C***********          EXSR ZDATE3                                    S01195
+     C                     EXSR ZFWDT                                     S01195
+     C                     Z-ADDZDYNBR    FFMDY3
+     C                     END
+     C*
+     C**   TO FIND THE EARLIEST DAY ( TODAY OR LATER ) WHICH IS A
+     C**   WORKING DAY IN ALL CURRENCIES, FIRST FIND THE LATEST OF
+     C**   ALL THE DATES
+     C*
+     C           FFMDY1    IFGT FFMDY2
+     C                     Z-ADDFFMDY1    FFMDY
+     C                     ELSE
+     C                     Z-ADDFFMDY2    FFMDY
+     C                     END
+     C           FFCCY3    IFNE *BLANKS
+     C           FFMDY3    ANDGTFFMDY
+     C                     Z-ADDFFMDY3    FFMDY
+     C                     END
+     C*
+     C**   CHECK IF FFMDY IS WORKING DAY IN ALL CURRENCIES
+     C*
+     C                     Z-ADDFFMDY     ZDYNBR
+     C*
+     C                     MOVE 'N'       HOLF    1
+     C*
+     C**   CONTINUE WHILE THE DATE IS A HOLIDAY IN ANY CCY
+     C*
+     C           HOLF      DOWEQ'N'
+     C*
+     C                     Z-ADDZDYNBR    ZDAYNO
+     C                     Z-ADD0         ZNRDYS                          S01195
+     C*
+     C**   FIND NEXT WORKING DAY IN CCY1
+     C*
+     C                     MOVE FFCCY1    ZCCY
+     C                     MOVE FFLOC     ZLOC                            S01195
+     C***********          MOVE 'Y'       ZOPT                            S01195
+     C***********          EXSR ZDATE5                                    S01195
+     C                     EXSR ZFWDT                                     S01195
+     C*
+     C**   CHECK IF THIS DATE IS A HOLIDAY IN CCY2
+     C*
+     C***********          MOVE FFCCY2    FFCCYX                          S01195
+     C                     MOVE FFCCY2    ZCCY                            S01195
+     C                     MOVE *BLANK    ZLOC                            S01195
+     C*
+     C***********          EXSR FFDCYH                                    S01195
+     C                     EXSR ZCHKH                                     S01195
+     C*
+     C**   IF CCY2 A HOLIDAY,INCREMENT DAY AND REPEAT FROM CCY1 CHECK
+     C*
+     C************IN85     IFEQ '1'                                       S01195
+     C           ZIND      IFEQ 'H'                                       S01195
+     C*
+     C                     ADD  1         ZDYNBR
+     C                     ELSE
+     C*
+     C**   IF CCY2 NOT A HOLIDAY, CHECK CCY3 IF PRESENT
+     C**   IF CCY3 NOT PRESENT, DAY IS NOT A HOLIDAY IN ANY CCY
+     C*
+     C           FFCCY3    IFEQ *BLANK
+     C                     MOVE 'Y'       HOLF
+     C                     ELSE
+     C*
+     C**   CHECK IF THIS DATE IS A HOLIDAY IN CCY3
+     C*
+     C***********          MOVE FFCCY3    FFCCYX                          S01195
+     C                     MOVE FFCCY3    ZCCY                            S01195
+     C                     MOVE *BLANK    ZLOC                            S01195
+     C*
+     C***********          EXSR FFDCYH                                    S01195
+     C                     EXSR ZCHKH                                     S01195
+     C*
+     C**   IF CCY3 A HOLIDAY,INCREMENT DAY AND REPEAT FROM CCY1 CHECK
+     C*
+     C************IN85     IFEQ '1'                                       S01195
+     C           ZIND      IFEQ 'H'                                       S01195
+     C                     ADD  1         ZDYNBR
+     C*
+     C                     ELSE
+     C*
+     C**   IF CCY3 NOT A HOLIDAY, DAY IS NOT A HOLIDAY IN ANY CCY
+     C*
+     C                     MOVE 'Y'       HOLF
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C**
+     C                     END
+     C*
+     C**   ZDYNBR IS THE NEXT WORKING DAY NOT A HOLIDAY IN ANY CCY
+     C*
+     C                     Z-ADDZDYNBR    FFDAY
+     C**
+     C                     ELSE
+     C**
+     C*
+     C**   DETERMINE PREVIOUS FFDE WORKING DAYS
+     C*
+     C**   CALCULATE LIMIT FFDE WORKING DAYS BEFORE DATE,IN CCY1
+     C*
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     MOVE FFCCY1    ZCCY
+     C                     MOVE FFLOC     ZLOC                            S01195
+     C                     Z-ADDFFDE      ZNRDYS
+     C***********          EXSR FFDAT3                                    S01195
+     C                     EXSR ZBKDT                                     S01195
+     C                     Z-ADDZDYNBR    FFMDY1
+     C*
+     C**   CALCULATE LIMIT FFDE WORKING DAYS BEFORE DATE,IN CCY2
+     C*
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     MOVE FFCCY2    ZCCY
+     C                     MOVE *BLANK    ZLOC                            S01195
+     C                     Z-ADDFFDE      ZNRDYS
+     C***********          EXSR FFDAT3                                    S01195
+     C                     EXSR ZBKDT                                     S01195
+     C                     Z-ADDZDYNBR    FFMDY2
+     C*
+     C**   CALCULATE LIMIT FFDE WORKING DAYS BEFORE DATE,IN CCY3
+     C**   IF PRESENT
+     C*
+     C           FFCCY3    IFNE ' '
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     MOVE FFCCY3    ZCCY
+     C                     MOVE *BLANK    ZLOC                            S01195
+     C                     Z-ADDFFDE      ZNRDYS
+     C***********          EXSR FFDAT3                                    S01195
+     C                     EXSR ZBKDT                                     S01195
+     C                     Z-ADDZDYNBR    FFMDY3
+     C                     END
+     C*
+     C**   TO FIND THE LATEST DAY ( TODAY OR EARLIER ) WHICH IS A
+     C**   WORKING DAY IN ALL CURRENCIES, FIRST FIND THE EARLIEST OF
+     C**   ALL THE DATES
+     C*
+     C           FFMDY1    IFLT FFMDY2
+     C                     Z-ADDFFMDY1    FFMDY
+     C                     ELSE
+     C                     Z-ADDFFMDY2    FFMDY
+     C                     END
+     C           FFCCY3    IFNE *BLANKS
+     C           FFMDY3    ANDLTFFMDY
+     C                     Z-ADDFFMDY3    FFMDY
+     C                     END
+     C*
+     C**   CHECK IF FFMDY IS WORKING DAY IN ALL CURRENCIES
+     C*
+     C                     Z-ADDFFMDY     ZDYNBR
+     C*
+     C                     MOVE 'N'       HOLF
+     C*
+     C**   CONTINUE WHILE THE DATE IS A HOLIDAY IN ANY CCY
+     C*
+     C           HOLF      DOWEQ'N'
+     C*
+     C                     Z-ADDZDYNBR    ZDAYNO
+     C                     Z-ADD0         ZNRDYS                          S01195
+     C*
+     C**   FIND PREVIOUS WORKING DAY IN CCY1
+     C*
+     C                     MOVE FFCCY1    ZCCY
+     C                     MOVE FFLOC     ZLOC                            S01195
+     C***********          MOVE 'Y'       ZOPT                            S01195
+     C***********          EXSR FFDAT5                                    S01195
+     C                     EXSR ZBKDT                                     S01195
+     C*
+     C**   CHECK IF THIS DATE IS A HOLIDAY IN CCY2
+     C*
+     C***********          MOVE FFCCY2    FFCCYX                          S01195
+     C                     MOVE FFCCY2    ZCCY                            S01195
+     C                     MOVE *BLANK    ZLOC                            S01195
+     C*
+     C***********          EXSR FFDCYH                                    S01195
+     C                     EXSR ZCHKH                                     S01195
+     C*
+     C**   IF CCY2 A HOLIDAY,INCREMENT DAY AND REPEAT FROM CCY1 CHECK
+     C*
+     C************IN85     IFEQ '1'                                       S01195
+     C           ZIND      IFEQ 'H'                                       S01195
+     C*
+     C                     SUB  1         ZDYNBR
+     C                     ELSE
+     C*
+     C**   IF CCY2 NOT A HOLIDAY, CHECK CCY3 IF PRESENT
+     C**   IF CCY3 NOT PRESENT, DAY IS NOT A HOLIDAY IN ANY CCY
+     C*
+     C           FFCCY3    IFEQ *BLANK
+     C                     MOVE 'Y'       HOLF
+     C                     ELSE
+     C*
+     C**   CHECK IF THIS DATE IS A HOLIDAY IN CCY3
+     C*
+     C***********          MOVE FFCCY3    FFCCYX                          S01195
+     C                     MOVE FFCCY3    ZCCY                            S01195
+     C                     MOVE *BLANK    ZLOC                            S01195
+     C*
+     C***********          EXSR FFDCYH                                    S01195
+     C                     EXSR ZCHKH                                     S01195
+     C*
+     C**   IF CCY3 A HOLIDAY,INCREMENT DAY AND REPEAT FROM CCY1 CHECK
+     C*
+     C************IN85     IFEQ '1'                                       S01195
+     C           ZIND      IFEQ 'H'                                       S01195
+     C                     SUB  1         ZDYNBR
+     C*
+     C                     ELSE
+     C*
+     C**   IF CCY3 NOT A HOLIDAY, DAY IS NOT A HOLIDAY IN ANY CCY
+     C*
+     C                     MOVE 'Y'       HOLF
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C**
+     C                     END
+     C*
+     C**   ZDYNBR IS THE PREVIOUS WORKING DAY NOT A HOLIDAY IN ANY CCY
+     C*
+     C                     Z-ADDZDYNBR    FFDAY
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  FFDAWD SR.   CALLED FROM STANDARD SUBROUTINE FFDATE          *
+     C*               RETURN DAY PASSED IF IT IS A WORKING DAY, ELSE  *
+     C*               RETURN NEXT/PREVIOUS WORKING DAY IN MARKET      *
+     C*               CENTRE CURRENCY AND LOCATION AS REQUIRED        *   S01195
+     C****************CENTRE*CURRENCY*AS*REQUIRED**********************   S01195
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C           FFDAWD    BEGSR                           ****FFDAWD***
+     C*                                                                   S01195
+     C**   SET UP NO. OF DAYS AND LOCATION FOR ZFWDT/ZBKDT                S01195
+     C*                                                                   S01195
+     C                     Z-ADD0         ZNRDYS                          S01195
+     C                     MOVE FFLOC     ZLOC                            S01195
+     C**
+     C           FFC       IFEQ '+'
+     C*
+     C**   IF FFDAY IS HOLIDAY DETERMINE NEXT WORKING DAY
+     C*
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     MOVE FFCCY1    ZCCY
+     C***********          MOVE 'Y'       ZOPT                            S01195
+     C***********          EXSR ZDATE5                                    S01195
+     C                     EXSR ZFWDT                                     S01195
+     C*
+     C                     ELSE
+     C*
+     C**  IF FFDAY IS HOLIDAY DETERMINE PREVIOUS WORKING DAY
+     C*
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     MOVE FFCCY1    ZCCY
+     C***********          MOVE 'Y'       ZOPT                            S01195
+     C***********          EXSR FFDAT5                                    S01195
+     C                     EXSR ZBKDT                                     S01195
+     C                     END
+     C*
+     C                     Z-ADDZDYNBR    FFDAY
+     C**
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************   S01195
+     C***********                                                     *   S01195
+     C***FFDCYH*SR.**CALLED*FROM*SUBROUTINE*FFDACD*(*CALLED*FROM*******   S01195
+     C***************STANDARD*SUBROUTINE*FFDATE*)**********************   S01195
+     C***************DETERMINE*WHETHER*CURRENCY*RECEIVED*IS*A*HOLIDAY**   S01195
+     C***********                                                     *   S01195
+     C**NB.*THIS*ROUTINE*CHECKS*FOR*THE*LAST*DAY*OUTPUT*BY*ZDATE5******   S01195
+     C***********                                                     *   S01195
+     C**RECEIVES*:**FFCCYX**CURRENCY*TO*BE*TESTED****(3A)**************   S01195
+     C**OUTPUTS**:***IN85***(*ON*IF*HOLIDAY*)**************************   S01195
+     C***********                                                     *   S01195
+     C*****************************************************************   S01195
+     C***********                                                         S01195
+     C***********FFDCYH    BEGSR                           ****FFDCYH***  S01195
+     C***********                                                         S01195
+     C***********                                                         S01195
+     C*****RESET*WORK INDICATOR                                           S01195
+     C*****(**IN85 IS SET ON IF THE DAY LAST OUTPUT BY ZDATE5             S01195
+     C*****IS*A*HOLIDAY IN THE CURRENCY PASSED TO THIS ROUTINE )          S01195
+     C***********                                                         S01195
+     C***********          MOVE '0'       *IN85                           S01195
+     C***********                                                         S01195
+     C*****FOLLOWING THE LAST EXECUTION OF ZDATE5, *IN91 IS ON IF AT      S01195
+     C*****LEAST*ONE HOLIDAY RECORD FOR THE DAY IS FOUND                  S01195
+     C***********                                                         S01195
+     C*****IF**IN91 IS ON, THEN THE DAY IS NOT A HOLIDAY IN ANY           S01195
+     C*****CURRENCY AND SO NO FURTHER PROCESSING IS REQUIRED.             S01195
+     C*****IF**IN91 IS OFF,THEN THE ARRAY SET UP IN ZDATE5 CAN BE         S01195
+     C*****CHECKED TO SEE IF THE CURRENCY PASSED TO THIS ROUTINE          S01195
+     C*****IS*A*HOLIDAY.                                                  S01195
+     C***********                                                         S01195
+     C************IN90     IFEQ '0'                                       S01195
+     C************IN91     OREQ '0'                                       S01195
+     C***********                                                         S01195
+     C***********                                                         S01195
+     C*****CHECK*IF CURRENCY ON HOLIDAY ARRAY                             S01195
+     C***********                                                         S01195
+     C***********FFCCYX    LOKUPZHC                      85               S01195
+     C***********                                                         S01195
+     C*****CHECK*IF SEE IF CURRENCY IS TO BE INCLUDED OR EXCLUDED         S01195
+     C*****(*INCLUDE : DATE IS A HOLIDAY IN CURRENCY IN ARRAY     )       S01195
+     C*****(*EXCLUDE : DATE IS NOT A HOLIDAY IN CURRENCY IN ARRAY )       S01195
+     C***********                                                         S01195
+     C************IN85     IFEQ '1'                                       S01195
+     C***********                                                         S01195
+     C***********INEX      IFEQ 'I'                                       S01195
+     C***********          SETON                     85                   S01195
+     C***********          ELSE                                           S01195
+     C***********          SETOF                     85                   S01195
+     C***********          END                                            S01195
+     C***********                                                         S01195
+     C***********          ELSE                                           S01195
+     C***********                                                         S01195
+     C***********INEX      IFEQ 'I'                                       S01195
+     C***********          SETOF                     85                   S01195
+     C***********          ELSE                                           S01195
+     C***********          SETON                     85                   S01195
+     C***********          END                                            S01195
+     C***********                                                         S01195
+     C***********          END                                            S01195
+     C***********                                                         S01195
+     C***********          END                                            S01195
+     C***********                                                         S01195
+     C***********          ENDSR                                          S01195
+     C***********                                                         S01195
+     C*****************************************************************   S01195
+     C*EJECT*****                                                         S01195
+     C********************************************************************S01195
+     C*****FFDAT3*SR.*TO*CALCULATE*ANY*NUMBER*OF*WORKING******************S01195
+     C****************DAYS*BACK*IN*ANY*CURRENCY.**************************S01195
+     C***********                                                        *S01195
+     C*********THIS*SR.*CAN*BE*USED*WHEN*THE*INPUT*CYCLE*IS*RUNNING*AS****S01195
+     C*********HOLIDAY*RECORDS*ARE*ACCESSED*BY*CHAIN.*THEREFORE*NEWLY*****S01195
+     C*********ADDED*RECORDS*IN*THE*OVERFLOW*AREA*CAN*ALSO*BE*ACCESSED.***S01195
+     C***********                                                        *S01195
+     C********************************************************************S01195
+     C***********FFDAT3    BEGSR                           *** FFDAT3 *** S01195
+     C***********                                                         S01195
+     C*****CALCULATIONS TO DEFINE INPUT FIELDS.                           S01195
+     C***********          Z-ADDZDAYNO    ZDAYNO  50       STARTING DATE  S01195
+     C***********          MOVE ZCCY      ZCCY    3        DATE CURRENCY  S01195
+     C***********          Z-ADDZNRDYS    ZNRDYS  20       NBR OF WORKING S01195
+     C***********                                          DAYS BACK      S01195
+     C*****CLEAR*COUNT OF NBR OF DAYS SUBTRACTED, & DEFINE ZDYNBR.        S01195
+     C***********          Z-ADD0         ZDCNT   20                      S01195
+     C***********          Z-ADDZDAYNO    ZDYNBR  50                      S01195
+     C***********                                                         S01195
+     C*****LOOP*TO DECREMENT DAY NUMBER AND CHECK FOR HOLIDAY.            S01195
+     C***********XDLOP1    TAG                             ** XDLOP1 TAG *S01195
+     C***********                                                         S01195
+     C***********          SETOF                     9596                 S01195
+     C***********ZDYNBR    SUB  1         ZDYNBR                          S01195
+     C***********                                                         S01195
+     C*****CHAIN*FOR HOLIDAY RECORD 1                                     S01195
+     C***********XDHCHN    TAG                             ** XDHCHN TAG *S01195
+     C***********                                                         S01195
+     C***********ZDYNBR    CHAINTABLETJF             90    ON NOT THERE   S01195
+     C**N90******RECI      COMP 'D'                  9090  DELETED        S01195
+     C***********                                                         S01195
+     C*****NO*RECORD 1 FOUND, IS NOT A HOLIDAY                            S01195
+     C***90******          GOTO XDOAGN                                    S01195
+     C***********                                                         S01195
+     C*****DETERMINE TYPE FOUND, INCLUDE OR EXCLUDE                       S01195
+     C***********INEX      COMP 'E'                  92  91               S01195
+     C***********                                                         S01195
+     C*****CHECK*IF DAY IS HOLIDAY FOR CURRENCY.                          S01195
+     C***********ZCCY      LOKUPHCCY                     93               S01195
+     C***91*93***          GOTO XDOAGN                     EXCLUDE FOUND  S01195
+     C***92*93***          GOTO XDLOP1                     INCLUDE FOUND  S01195
+     C***********                                                         S01195
+     C*****IF*EXCLUDE OR INCLUDE NOT FOUND CHECK                          S01195
+     C*****FOR*SECOND HOLIDAY RECORD, IF REQUIRED.                        S01195
+     C***********'   '     LOKUPHCCY                     94ON IF NO RCD.2 S01195
+     C************IN94     IFEQ '0'                                       S01195
+     C***********          READ TABLETJF                 90               S01195
+     C***********                                                         S01195
+     C*****CHECK*IF DAY IS HOLIDAY FOR CURRENCY.                          S01195
+     C************IN90     IFEQ '0'                                       S01195
+     C***********RECI      ANDEQ'D'                                       S01195
+     C***********HOL       ANDEQZDYNBR                                    S01195
+     C***********ZCCY      LOKUPHCCY                     93               S01195
+     C***********          END                                            S01195
+     C***********                                                         S01195
+     C***********          END                                            S01195
+     C***91*93***          GOTO XDOAGN                     EXCLUDE FOUND  S01195
+     C***92*93***          GOTO XDLOP1                     INCLUDE FOUND  S01195
+     C***********                                                         S01195
+     C***91******          GOTO XDLOP1                     EXC. NOT FOUND S01195
+     C***92******          GOTO XDOAGN                     INC. NOT FOUND S01195
+     C***********                                                         S01195
+     C*****INCREMENT COUNT AND CHECK IF REQUIRED NUMBER OF DAYS           S01195
+     C*****HAS*BEEN SUBTRACTED. IF NOT, GO THROUGH LOOP1 AGAIN.           S01195
+     C***********XDOAGN    TAG                             ** XDOAGN TAG *S01195
+     C***********                                                         S01195
+     C***********ZDCNT     ADD  1         ZDCNT                           S01195
+     C***********ZDCNT     COMP ZNRDYS                 97                 S01195
+     C***97******          GOTO XDLOP1                                    S01195
+     C***********                                                         S01195
+     C***********          ENDSR                                          S01195
+     C***********                                                         S01195
+     C*****************************************************************   S01195
+     C*EJECT*****                                                         S01195
+     C********************************************************************S01195
+     C***********                                                         S01195
+     C***FFDAT5*SR. TO DETERMINE IF A DAY NUMBER DATE IS A HOLIDAY        S01195
+     C***********  IN GIVEN CURRENCY, AND IF DAY IS A HOLIDAY AND         S01195
+     C***********  IF REQUIRED, DETERMINE PREVIOUS WORKING DAY.           S01195
+     C***********                                                         S01195
+     C********************************************************************S01195
+     C***********FFDAT5    BEGSR                           *** FFDAT5 *** S01195
+     C***********          SETOF                     89                   S01195
+     C***********                                                         S01195
+     C*****CALCULATIONS TO DEFINE INPUT FIELDS.                           S01195
+     C***********          Z-ADDZDAYNO    ZDAYNO  50                      S01195
+     C***********          MOVE ZCCY      ZCCY    3                       S01195
+     C***********          MOVE ZOPT      ZOPT    1                       S01195
+     C***********                                                         S01195
+     C*****CALCULATION TO DEFINE/SET OUTPUT FIELD.                        S01195
+     C***********          Z-ADDZDAYNO    ZDYNBR  50                      S01195
+     C***********                                                         S01195
+     C*****DETERMINE IF HOLIDAY                                           S01195
+     C***********ZDHOL6    TAG                             ** ZDHOL6 TAG**S01195
+     C***********                                                         S01195
+     C*****CALCULATIONS TO DEFINE/CLEAR WORKFIELDS.                       S01195
+     C***********          MOVE '   '     ZHC                             S01195
+     C***********                                                         S01195
+     C*****CHAIN*FOR HOLIDAY RECORD 1                                     S01195
+     C***********ZDYNBR    CHAINTABLETJF             90    ON NOT THERE   S01195
+     C************IN90     IFEQ '0'                                       S01195
+     C***********RECI      ANDEQ'D'                                       S01195
+     C***********                                                         S01195
+     C*****STORE*CURRENCIES IF RECORD FOUND.                              S01195
+     C***********          MOVEAHCCY      ZHC,1                           S01195
+     C***********          ELSE                                           S01195
+     C***********                                                         S01195
+     C*****BYPASS TO END IF NO FIRST RECORD FOUND.                        S01195
+     C***********          GOTO ZDEND6                                    S01195
+     C***********          END                                            S01195
+     C***********                                                         S01195
+     C*****GET*SECOND RECORD                                              S01195
+     C***********          READ TABLETJF                 90               S01195
+     C************IN90     IFEQ '0'                                       S01195
+     C***********RECI      ANDEQ'D'                                       S01195
+     C***********HOL       ANDEQZDYNBR                                    S01195
+     C***********          MOVEAHCCY      ZHC,26                          S01195
+     C***********          END                                            S01195
+     C***********                                                         S01195
+     C*****DETERMINE HOLIDAY RECORD TYPE.                                 S01195
+     C***********INEX      COMP 'E'                      92               S01195
+     C***********INEX      COMP 'I'                      93               S01195
+     C***********                                                         S01195
+     C*****CHECK*IF CURRENCY ON HOLIDAY.                                  S01195
+     C***********ZCCY      LOKUPZHC                      94               S01195
+     C***********                                                         S01195
+     C*****BYPASS TO END IF NOT HOLIDAY FOR CURRENCY.                     S01195
+     C***92*94***                                                         S01195
+     C*R*93N94***          GOTO ZDEND6                                    S01195
+     C***********                                                         S01195
+     C*****SET*INDICATOR FOR HOLIDAY FOR DAY NUMBER.                      S01195
+     C***********          SETON                     89                   S01195
+     C***********                                                         S01195
+     C*****CHECK*IF NEXT WORKING DAY REQUIRED.                            S01195
+     C***********ZOPT      COMP 'Y'                      95               S01195
+     C***95******ZDYNBR    SUB  1         ZDYNBR                          S01195
+     C***95******          GOTO ZDHOL6                                    S01195
+     C***********                                                         S01195
+     C***********ZDEND6    ENDSR                           * ZDEND5 ENDSR*S01195
+     C***********                                                         S01195
+     C********************************************************************S01195
+     C*EJECT*****                                                         S01195
+      *****************************************************************
+      * End of /COPY XXXXXXX                                          *
+      *****************************************************************

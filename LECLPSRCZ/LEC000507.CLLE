@@ -1,0 +1,63 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE PDP Batch Bulk of Repayment Priority')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LE000507 - Midas LE PDP Batch Bulk of Repayment Priority    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD031720           Date 07Jan15              */
+/*                      CLE164 *CREATE     Date 18Aug14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD-31720 - Job not ended properly when LEC000507 ran        */
+/*       CLE164 - CLE134 Enhancement F (Repayment Methodology)       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PARM1 &PARM2)
+ 
+             DCL        VAR(&PARM1) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&PARM2) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             CHGJOB     SWS(00000000)
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+ 
+             CALL       PGM(LE000507) PARM(&PARM1 &PARM2)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ERROR))
+ 
+             COMMIT
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Job terminated.') TOMSGQ(MOPERQ MRUNQ)
+ 
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ENDPGM:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)                                                 /*MD031720*/
+ 
+             ENDPGM

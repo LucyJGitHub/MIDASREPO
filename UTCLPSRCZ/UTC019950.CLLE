@@ -1,0 +1,67 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Recreate T_DLAAQD Records Based on STRANF')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       UTC019950 - Utility to Recreate T_DLAAQD Records Based on   */
+/*                   STRANF file                                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD019950 *CREATE   Date 10Apr13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD019950 - Transaction Number already exists encountered    */
+/*                  in SOAP                                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          Systems Ltd. 2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('UTC019950 - Utility to Recreate Re+
+                          cords of T_DLAAQD') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/* Midas UT utility to recreate T_DLAAQD records */
+ 
+             CLRPFM     T_DLAAQD
+             CALL       PGM(UT019950)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                            TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             SNDPGMMSG  MSG('Program UTC019950 ended sucessfully.') +
+                            TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program UTC019950 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+             ENDPGM

@@ -1,0 +1,820 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Audit Letters Rquest - Input')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas  Retail Module
+0005 F*                                                               *
+0006 F*  RE0340A - RETAIL AUDIT LETTERS REQUEST                       *
+0007 F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. BUG17446           Date 06May08               *
+      *                 249079             Date 23Jul07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 082338             Date 01Feb95               *
+      *                 S01413             Date 13Apr93               *
+     F*                 BHF699                  02OCT90               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG17446 - Error with customer field                         *
+      *  249079 - Customer number can now be alpha-numeric            *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+     F*  082338 - RCF requires a FCPARPPD if a prompt program is      *
+     F*           specified on the report parameter. Otherwise        *
+     F*           the periodic request report cannot be enquired on   *
+     F*           or amended.                                         *
+     F*           Write a dummy parameter which will be used in       *
+     F*           FC0215 to write the required FCPARPPD.              *
+     F*  S01413 - Header Box Standardised                             *
+     F*  BHF699 - Wrong variable used to terminate RCF processing     *
+     F*           when CMD3 or CMD12 taken.                           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FRE0340DFCF  E                    WORKSTN
+     F                                        RRN1  KSFILE RE0340F2
+     F*
+     FSDCUSTL5IF  E           K        DISK
+     FSDCUSTL6IF  E           K        DISK
+     FRE0340EXUF  E           K        DISK                      A
+     F                                              KCOMIT
+     F/COPY WNCPYSRC,RE0340AF01
+     F*
+     F****************************************************************
+     F*    FUNCTION OF INDICATORS.
+     F*
+     F* 03            CMD 3 TAKEN FROM DSPF-END PROGRAM
+     F* 06            CMD 6 TAKEN FROM DSPF-END PROMPTING AND CONTINUE
+     F* 12            CMD 12 TAKEN FROM DSPF-RETRN TO RCF INITIAL PROMP
+0037 F*       22      CUSTOMER INPUT FIELD ENTERED
+0038 F*       23      PARENT INPUT FIELD ENTERED
+     F*       24      'ALL'  ENTERED  IN FIELD. (BLANK DEFAULTS TO ALL)
+     F*      50       SFLEND
+     F*      51       SFLCLR
+     F*      52       SFLDSPCTL
+     F*      53       SFLDSP
+0048 F*       61      CUSTOMER INVALID - BLINK SCREEN
+0049 F*       63      PARENT INVALID - BLINK SCREEN
+0053 F*       69      ON IF AN ERROR OCCURS
+0024 F*
+0055 F*       75      CHAIN FAIL TO SDCUSTL6
+     F*      81       USED FOR DELET SUBR AS INDICATOR ON READE
+     F*      82       BLANKS ENTERED
+     F*      88       MULTI BRANCH SYSTEM
+     F*       89      CHAIN FAIL
+     F*       90-99   STANDARD SUBROUTINES / WORK INDS.
+     F*       98      DATE FORMAT  -- ON  =  MMDDYY
+     F*          U7   DATA BASE ERROR :: INSTL. CTL REC. NOT FOUND
+     F*          U8   DATA BASE ERROR.
+     F*          LR   END  PROGRAM.
+     F*
+     F****************************************************************
+     E                    ZA1        16  1               ZALIGN INPUT
+     E                    ZA2        16  1               ZALIGN OUTPUT
+     E                    MSG     1   5 55               ERROR MESSAGES
+     E                    CPY@    1   1 80
+     E****************************************************************
+     I*
+     I@CUSTFT
+     I              BBCUST                          CUST
+     I              BBPAIN                          CMIN
+     I*
+     I@CUSTF3
+     I              BBCUST                          CUST
+     I              BBCSSN                          CNUMSN
+     I              BBPAIN                          CMIN
+     I              BBDTDL                          DATED
+0139 I*
+     I*    DATA  AREA FOR  DBASE ERROR MESSAGE.
+     I*    LOCAL DATA AREA
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**   RETRIEVE WSID FROM PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      244 253 SWSID
+     I                                      254 263 USRID
+     I**
+     I** DATA AREA RUNDAT
+     I**
+     IRUNDT       DS
+     I                                       13  13 MBIN
+0276 I*
+     I* DATA STRUCTURES FOR USE WITH ACCESS OBJECTS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I              BJRDNB                          RUND
+     I              BJDFIN                          DATF
+     I              BJMRDT                          RUNA
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+0122 I*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQNO   5
+     C                     PARM           LEVEL   1
+     C                     PARM           BRCIN   3
+     C                     PARM           SPARM 100
+     C                     PARM           ACTION  1
+     C                     PARM           ACTCMD  1
+     C*
+     C*****************************************************
+     C**           INDEX  TO  SUBROUTINES
+     C**
+     C**    1.  CHECK  :::  VALIDATION OF INPUT DATA.
+     C**    2.  CUSTSR :::  VALIDATION OF CUSTOMER.
+     C**    3.  PARNSR :::  VALIDATION OF PARENT.
+     C**    4.  ZALIGN :::  STANDARD SUBROUTINE TO VALIDATE AND ALIGN FIELDS.
+     C**    5.  INIT   :::  CLEAR FIELDS.
+     C**    6.  FILSF  :::  FILLS SUBFILE WITH CUSTOMERS REQUESTED.
+     C**    7.  CLRSF  :::  CLEARS SUBFILE AND WRITES HEADER RECORD.
+     C**    8.  DELET  :::  DELETES RECORDS FOR THIS REQUEST ON CMD3/12
+     C**    9.  *PSSR  :::  HANDLES ABNORMAL ERROR CONDITIONS.
+     C**
+     C*****************************************************
+     C**
+     C**    * PROGRAM (MAIN RTN.)  BEGINS :::
+     C**
+     C**      I.   GET INSTALLATION CTL REC. IF NOT FOUND,
+     C**           DATA BASE ERR. SETON  U7 & U8. SETON LR.
+     C**           ACCESS SDBANKPD/ICD TO OBTAIN RUNDATE.
+     C**
+     C**           SETUP DATABASE ERROR REFERENCE
+     C*
+     C                     MOVEL'RE0340A 'DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C                     MOVE RUNA      SRUNA
+     C**
+     C**    IN THE DATAAREA RUNDAT
+     C**
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C**
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN88
+     C                     END
+     C**
+     C**   SYSTEM DATE FORMAT : *IN98 = 1 IF MMDDYY.
+     C           DATF      COMP 'M'                      98
+     C**
+     C**
+     C**     II.   INITIALIZE SUBFILE & WORK/KEY FLDS
+     C                     EXSR CLRSF
+     C                     EXSR INIT
+     C**
+     C**    III.   DO LOOP TILL CMD 03,12 OR 06 ARE PRESSED:::
+     C**
+     C                     WRITERE0340F1
+     C           BRCIN     COMP 'ALL'                    24
+     C           *IN06     DOUEQ'1'
+     C           *IN03     OREQ '1'
+     C           *IN12     OREQ '1'
+     C**
+     C**      1.  DISPLAY/ACCEPT INPUT FIELDS.
+     C                     EXFMTRE0340F3
+     C                     SETOF                     616369
+     C**
+     C**      2.  VALIDATE  INPUT.
+     C           *IN03     IFNE '1'
+     C           *IN06     ANDNE'1'
+     C           *IN12     ANDNE'1'
+     C                     EXSR CHECK
+     C**
+     C**      3.  WRITE OUT A/C RECORDS REQUESTED
+     C**          IF NO ERROR AND DISPLAY SUBFILE
+     C**          DETAILS.
+     C**
+     C**          DO NOT ALLOW ENTRY OF BLANKS MORE THAN ONCE
+     C**
+     C           *IN82     IFNE '1'
+     C**
+     C           ERROR     IFEQ 0
+     C**
+     C**      IF ALL ACCOUNTS FOR ONE/ALL BRANCHES HAVE BEEN
+     C**      REQUESTED, SETON INDICATOR 82 TO PREVENT FURTHER INPUT.
+     C**      OTHERWISE, OUTPUT THE CUSTOMER NUMBER, BRANCH CODE AND
+     C**      PARENT INDICATOR TO PF/RE0340EX.
+     C**
+     C           OPTION    IFEQ '3'
+     C                     MOVE '1'       *IN82
+     C**
+     C           MBIN      IFEQ 'Y'
+     C                     MOVELBRCIN     BRCA
+     C                     END
+     C**
+     C                     ELSE
+     C                     MOVE CUST      CNUMB
+     C                     MOVE BRCIN     BRCA
+     C                     MOVE CMIN      PARIN
+     C                     END
+     C**
+     C**      IF MBIN = 'N' MOVE 'ALL' TO BRANCH CODE
+     C**
+     C           MBIN      IFEQ 'N'
+     C                     MOVE 'ALL'     BRCA
+     C                     END
+     C*
+     C                     EXSR FILLSF
+     C                     WRITERE0340C1
+     C                     END
+     C*
+     C                     EXSR INIT
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C**
+     C**    IV.   END PROGRAM.
+     C**
+     C           JOBEND    TAG                             *** JOBEND ***
+     C           *IN03     IFEQ '1'
+     C**********           MOVE 'E'       ACTION                          BHF699
+     C                     MOVE 'E'       ACTCMD                          BHF699
+     C                     EXSR DELET
+     C                     END
+     C           *IN12     IFEQ '1'
+     C**********           MOVE 'F'       ACTION                          BHF699
+     C                     MOVE 'F'       ACTCMD                          BHF699
+     C                     EXSR DELET
+     C                     END
+      *                                                                   082338
+      * Set Dummy parameter for RCF                                       082338
+     C                     MOVEL'X'       SPARM                           082338
+      *                                                                   082338
+     C                     SETON                     LR
+     C                     RETRN
+     C**
+     C**
+     C**    *****   PROGRAM (MAIN RTN.)  ENDS.
+     C**
+     C*****************************************************
+     C**    SUBROUTINE (1) :::  CHECK
+     C**                    SCREEN  INPUT  VALIDATION
+     C**
+     C**---------------------------------------------------
+     C           CHECK     BEGSR
+     C**    INITIALIZE  WORK  FIELDS.
+     C**
+     C                     Z-ADD0         ERROR   10
+     C                     Z-ADD0         X       10
+     C                     MOVE ' '       OPTION  1
+     C                     MOVE *BLANKS   ERR
+     C                     MOVE *BLANKS   CNOUT
+     C                     SETOF                     2223
+     C**
+     C**    IF 'ALL' ALREADY SELECTED, SKIP VALIDATION
+     C           *IN82     IFEQ '1'
+     C                     GOTO VALEND
+     C                     END
+     C**
+     C**    1.  SET INDICATORS 22 TO 24 ACCORDING TO INPUT.
+     C**        IND.   ON WHEN:            OFF WHEN:
+     C**
+     C**        22     CUSN NOT *BLANKS    CUSN = *BLANKS
+     C**        23     PARN NOT *BLANKS    PARN = BLANKS
+     C**        24     'ALL' ENTERED IN    BRCIN NOT ALL
+     C**               BRCIN FIELD          OR A BRANCH CODE
+     C**
+     C           CUSN      COMP *BLANKS              2222
+     C           PARN      COMP *BLANKS              2323
+     C**
+     C**
+     C**    2.  SET OPTION ACCORDING TO VALUES INPUT :::
+     C**    OPT.   DESCRIPTION                     22 23 24
+     C**
+     C**      1.   ONE CUSTOMER FOR ALL BRANCHES    1  0  1
+     C**        OR ONE CUSTOMER FOR ONE BRANCH      1  0  0
+     C**      2.   ONE PARENT FOR ALL BRANCHES      0  1  1
+     C**        OR ONE PARENT FOR ONE BRANCH        0  1  0
+     C**      3.   ALL CUSTOMERS FOR ONE BRANCH     0  0  0
+     C**        OR ALL CUSTOMERS FOR ALL BRANCH     0  0  1
+     C**
+     C   22N23 24
+     COR 22N23N24          DO
+     C                     MOVE '1'       OPTION
+     C                     EXSR CUSTSR
+     C                     END
+     C**
+     C  N22 23 24
+     CORN22 23N24          DO
+     C                     MOVE '2'       OPTION
+     C                     EXSR PARNSR
+     C                     END
+     C**
+     C  N22N23             DO
+     C                     MOVE '3'       OPTION
+     C                     MOVEL'ALL'     CNOUT
+     C                     END
+     C**
+     C**    3.  IF OPTION CANNOT BE DETERMINED, ERROR.
+     C**        SET CONDITIONS TO REFLECT ERROR & EXIT.
+     C**
+     C           OPTION    IFEQ ' '
+     C                     Z-ADD5         X
+     C                     END
+     C**
+     C**
+     C           VALERR    TAG                             *** VALERR ***
+     C           X         IFNE 0
+     C                     SETON                     69
+     C                     MOVEAMSG,X     ERR
+     C                     ADD  1         ERROR
+     C                     END
+     C           VALEND    ENDSR
+     C**
+     C********************************************************************
+     C**
+     C**    SUBROUTINE (2) :::  CUSTSR
+     C**        TO VALIDATE CUSTOMER NUMBER OR SHORTNAME
+     C**
+     C**---------------------------------------------------
+     C**
+     C           CUSTSR    BEGSR                                       ***
+     C**
+     C**
+     C**   EDIT INPUT USING ZALIGN
+     C**
+     C                     MOVE *BLANKS   ZFIELD
+     C**
+     C                     MOVELCUSN      ZFIELD
+     C                     Z-ADD6         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+     C**
+     C**   NON NUMERIC FIELD DETECTED
+     C**
+     C***99******          GOTO CHKAC                                                         249079
+     C**
+     C**   NUMERIC FIELD MUST BE A VALID CUSTOMER NO.
+     C**
+     C           *IN99     IFEQ '0'                                                           249079
+     C                     MOVE ZFIELD    CLKEY   6
+     C                     ELSE                                                               249079
+     C                     MOVELCUSN      CLKEY                                               249079
+     C                     ENDIF                                                              249079
+     C/COPY WNCPYSRC,RE0340AC01
+     C                     SETOF                     89
+     C           CLKEY     CHAINSDCUSTL5             89
+     C**
+     C**   CHAIN TO CUSTOMER MASTER FAILED
+     C**
+     C           *IN89     IFEQ '1'
+     C           *IN99     ANDEQ'0'                                                           249079
+     C/COPY WNCPYSRC,RE0340AC02
+     C                     Z-ADD1         X
+     C                     MOVE '1'       *IN61
+     C                     GOTO CUSEND
+     C                     END
+      *                                                                                       249079
+     C           *IN89     IFEQ '1'                                                           249079
+     C           *IN99     ANDEQ'1'                                                           249079
+     C                     GOTO CHKAC                                                         249079
+     C                     ENDIF                                                              249079
+     C**
+     C**   CUSTOMER ENTERED MUST NOT BE PARENT
+     C**
+     C           CMIN      IFEQ 'P'
+     C                     Z-ADD2         X
+     C                     MOVE '1'       *IN61
+     C                     GOTO CUSEND
+     C                     END
+     C**
+     C**
+     C**   VALID CUST.NO. FIELD
+     C**
+     C                     MOVELCLKEY     CNOUT
+     C                     GOTO CUSEND
+     C**
+     C**   ALPHABETIC FIELD MUST BE VALID SHORTNAME
+     C**
+     C           CHKAC     TAG                                         ***
+     C**
+     C                     MOVE CUSN      SNMKEY 10
+     C                     SETOF                     89
+     C           SNMKEY    CHAINSDCUSTL6             89
+     C           *IN89     IFEQ '1'
+     C/COPY WNCPYSRC,RE0340AC03
+     C                     Z-ADD1         X
+     C                     MOVE '1'       *IN61
+     C                     GOTO CUSEND
+     C                     END
+     C**
+     C**   SHORTNAME ENTERED MUST NOT BE DELETED CUSTOMERS
+     C**
+     C           DATED     IFNE 0
+     C                     Z-ADD1         X
+     C                     MOVE '1'       *IN61
+     C                     GOTO CUSEND
+     C                     END
+     C**
+     C**
+     C**   CUSTOMER SHORTNAME MUST NOT BE PARENT
+     C**
+     C           CMIN      IFEQ 'P'
+     C                     Z-ADD2         X
+     C                     MOVE '1'       *IN61
+     C                     GOTO CUSEND
+     C                     END
+     C**
+     C**
+     C**   VALID SHORTNAME FIELD
+     C**
+     C                     MOVELSNMKEY    CNOUT
+     C**
+     C**
+     C/COPY WNCPYSRC,RE0340AC04
+     C           CUSEND    ENDSR                                       ***
+     C/COPY WNCPYSRC,RE0340AC05
+     C**
+     C*****************************************************
+     C**
+     C**    SUBROUTINE (3) :::  PARNSR
+     C**        TO VALIDATE PARENT NUMBER OR SHORTNAME
+     C**
+     C**---------------------------------------------------
+     C**
+     C           PARNSR    BEGSR                                       ***
+     C**
+     C**
+     C**   EDIT INPUT USING ZALIGN
+     C**
+     C                     MOVE *BLANKS   ZFIELD
+     C**
+     C                     MOVELPARN      ZFIELD
+     C                     Z-ADD6         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+     C**
+     C**   NON NUMERIC FIELD DETECTED
+     C**
+     C***99******          GOTO CHKAP                                                       BUG17446
+     C**
+     C**   NUMERIC FIELD MUST BE A VALID CUSTOMER NO.
+     C**
+     C           *IN99     IFEQ '0'                                                         BUG17446
+     C                     MOVE ZFIELD    CLKEY   6
+     C                     ELSE                                                             BUG17446
+     C                     MOVELPARN      CLKEY                                             BUG17446
+     C                     ENDIF                                                            BUG17446
+     C/COPY WNCPYSRC,RE0340AC06
+     C                     SETOF                     89
+     C           CLKEY     CHAINSDCUSTL5             89
+     C**
+     C**   CHAIN TO CUSTOMER MASTER FAILED
+     C**
+     C           *IN89     IFEQ '1'
+     C           *IN99     ANDEQ'0'                                                         BUG17446
+     C/COPY WNCPYSRC,RE0340AC07
+     C                     Z-ADD3         X
+     C                     MOVE '1'       *IN63
+     C                     GOTO PAREND
+     C                     END
+      *                                                                                     BUG17446
+     C           *IN89     IFEQ '1'                                                         BUG17446
+     C           *IN99     ANDEQ'1'                                                         BUG17446
+     C                     GOTO CHKAP                                                       BUG17446
+     C                     ENDIF                                                            BUG17446
+     C**
+     C**   MUST BE PARENT IF PARENT FIELD IS ENTERED
+     C**
+     C           CMIN      IFNE 'P'
+     C                     Z-ADD4         X
+     C                     MOVE '1'       *IN63
+     C                     GOTO PAREND
+     C                     END
+     C**
+     C**
+     C**   VALID CUST.NO. FIELD
+     C**
+     C                     MOVELCLKEY     CNOUT
+     C                     GOTO PAREND
+     C**
+     C**   ALPHABETIC FIELD MUST BE VALID SHORTNAME
+     C**
+     C           CHKAP     TAG                                         ***
+     C**
+     C                     MOVE PARN      SNMKEY 10
+     C                     SETOF                     89
+     C           SNMKEY    CHAINSDCUSTL6             89
+     C           *IN89     IFEQ '1'
+     C/COPY WNCPYSRC,RE0340AC08
+     C                     Z-ADD3         X
+     C                     MOVE '1'       *IN63
+     C                     GOTO PAREND
+     C                     END
+     C**
+     C**   SHORTNAME ENTERED MUST NOT BE DELETED CUSTOMERS
+     C**
+     C           DATED     IFNE 0
+     C                     Z-ADD3         X
+     C                     MOVE '1'       *IN63
+     C                     GOTO PAREND
+     C                     END
+     C**
+     C**
+     C**   SHORTNAME ENTERED MUST BE PARENT
+     C**
+     C           CMIN      IFNE 'P'
+     C                     Z-ADD4         X
+     C                     MOVE '1'       *IN63
+     C                     GOTO PAREND
+     C                     END
+     C**
+     C**   VALID SHORTNAME FIELD
+     C**
+     C                     MOVELSNMKEY    CNOUT
+     C**
+     C**
+     C/COPY WNCPYSRC,RE0340AC09
+     C           PAREND    ENDSR                                       ***
+     C/COPY WNCPYSRC,RE0340AC10
+     C**
+     C*****************************************************
+     C**    SUBROUTINE (4) :::  ZALIGN
+     C**        TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.
+     C**
+     C**---------------------------------------------------
+     C**
+     C           ZALIGN    BEGSR                           *** ZALIGN ***
+     C**
+     C                     SETOF                     929399
+     C**
+     C**   SAVE INPUT FIELD IN ARRAY, ZA1.
+     C                     MOVEAZFIELD    ZA1
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ' '       ZA2
+     C                     MOVEAZA2       ZFIELD 16
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+     C**
+     C**   ENSURE REQUIRED STRUCTURE OF FIELD IS VALID.
+     C           ZADIG     ADD  ZADEC     ZZ      20
+     C           ZZ        COMP 15                   99
+     C   99                GOTO ZAEND
+     C**
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.
+     C           ZATAG1    TAG                             ** ZATAG1 TAG *
+     C           ZX        ADD  1         ZX
+     C**
+     C**   CHECK FOR DECIMAL POINT. ERROR IF SECOND DECIMAL POINT.
+     C           ZA1,ZX    COMP '.'                      90
+     C   90 93             SETON                     99
+     C   99                GOTO ZAEND
+     C**
+     C**
+     C**   CHECK FOR 'M' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'M'                      96
+     C   96                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 9                    99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CHECK FOR 'T' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'T'                      97
+     C   97                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 12                   99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZA1
+     C   96
+     COR 97                MOVE ' '       ZA1,ZX
+     C**
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER A DIGIT.
+     C           ZA1,ZX    COMP ' '                      91
+     C   91 92             GOTO ZATAG2
+     C**
+     C**   CHECK FOR NUMERIC, IF NOT '.' OR ' '.
+     C  N90N91   ZA1,ZX    COMP '0'                    99
+     C  N90N91N99ZA1,ZX    COMP '9'                  99
+     C   99                GOTO ZAEND                      NOT NUMERIC
+     C**
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.
+     C**   ZZ, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.
+     C  N90N91   ZY        ADD  1         ZY         92
+     C  N90N91             MOVE ZA1,ZX    ZA2,ZY
+     C   90                Z-ADDZY        ZZ         93  93
+     C**
+     C           ZX        COMP 16                     94  CHECK IF ALL
+     C   94                GOTO ZATAG1
+     C**
+     C           ZATAG2    TAG                             ** ZATAG2 TAG *
+     C**
+     C**   IF 'M' SPECIFIED, MULTIPLY ZA1 BY 1 MILLION
+     C   96      ZZ        ADD  6         ZZ
+     C**
+     C**   IF 'T' SPECIFIED, MULTIPLY ZA1 BY 1 THOUSAND
+     C   97      ZZ        ADD  3         ZZ
+     C**
+     C**   FILL IN ZEROS IN ANY BLANKS LEFT OF DECIMAL POINT
+     C   96 93
+     COR 97 93   ZZ        DOWGTZY
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF CONSTANT SPECIFIED WITH NO DECIMAL POINT ZEROISE BLANKS
+     C   96N93             DO   6
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C   97N93             DO   3
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZZ.
+     C  N93                Z-ADDZY        ZZ
+     C**
+     C**   CHECK FOR EMBEDDED BLANKS.
+     C   91 92             MOVEAZA1,ZX    ZFIELD
+     C   91 92   ZFIELD    COMP ' '                  9999
+     C   99                GOTO ZAEND                      EMBEDDED BLANK
+     C**
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE
+     C**   OF DECIMAL POINT ARE NOT MORE THAN ALLOWED.
+     C           ZZ        COMP ZADIG                99
+     C           ZY        SUB  ZZ        ZX
+     C  N99      ZADEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZAEND
+     C   95                GOTO ZATAG4                     NO TRAILING
+     C**                                                   BLANKS.
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.
+     C           ZY        ADD  ZX        ZZ
+     C           ZATAG3    TAG                             ** ZATAG3 TAG *
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C           ZY        COMP ZZ                     94
+     C   94                GOTO ZATAG3
+     C**
+     C**   RIGHT-ALIGN THE VALUE BY MOVING BACK TO ARRAY, ZA1.
+     C           ZATAG4    TAG                             ** ZATAG4 TAG *
+     C                     MOVE '0'       ZA1
+     C                     Z-ADD16        ZX
+     C           ZATAG5    TAG                             ** ZATAG5 TAG *
+     C           ZY        COMP 0                        94
+     C   94                GOTO ZATAG6
+     C                     MOVE ZA2,ZY    ZA1,ZX
+     C           ZY        SUB  1         ZY
+     C           ZX        SUB  1         ZX
+     C                     GOTO ZATAG5
+     C           ZATAG6    TAG                             ** ZATAG6 TAG *
+     C**
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFIELD.
+     C                     MOVEAZA1       ZFIELD
+     C**
+     C                     SETOF                     9697
+     C**
+     C           ZAEND     ENDSR                           * ZAEND ENDSR *
+     C**
+     C**
+     C********************************************************************
+     C**    SUBROUTINE (5) :::  INIT
+     C**        TO  INIT WORK  FIELDS AND RESET INDICATORS.
+     C**
+     C**---------------------------------------------------
+     C           INIT      BEGSR
+0185 C*
+0178 C  N69                MOVE *BLANKS   CUSN
+0178 C  N69                MOVE *BLANKS   PARN
+0178 C                     MOVE *BLANKS   CNUMB
+0178 C                     MOVE ' '       PARIN
+0185 C*
+     C                     ENDSR
+     C**
+     C*****************************************************
+     C**    SUBROUTINE (6) :::  FILLSF
+     C**        TO  ADD  ACCOUNT  NUMBERS  TO SUBFILE
+     C**
+     C**---------------------------------------------------
+     C           FILLSF    BEGSR
+     C**
+     C                     Z-ADDRRN1      PGREC1
+     C                     WRITERE0340F2
+     C                     WRITERE0340E1
+     C                     COMIT
+     C                     ADD  1         RRN1
+     C                     ENDSR
+     C**
+     C*****************************************************
+     C**    SUBROUTINE (7) :::  CLRSF
+     C**        CLEAR SUBFILE AND WRITE HEADER RECORD.
+     C**
+     C**---------------------------------------------------
+     C           CLRSF     BEGSR
+     C**
+     C                     SETOF                     525355
+     C                     SETON                     51
+     C                     WRITERE0340C1
+     C                     SETOF                     51
+     C                     SETON                     525350
+     C                     Z-ADD1         PGREC1
+     C                     Z-ADD1         RRN1    50
+     C                     ENDSR
+     C**
+     C*****************************************************
+     C**    SUBROUTINE (8) :::  DELET
+     C**        DELET RECORDS FOR THIS REQUEST IF CMD 3
+     C**        OR CMD 12 ARE TAKEN
+     C**
+     C**---------------------------------------------------
+     C           DELET     BEGSR
+     C**
+     C           SEQNO     SETLLRE0340E1
+     C           *IN81     DOWEQ'0'
+     C           SEQNO     READERE0340E1                 81
+     C           *IN81     IFEQ '0'
+     C                     DELETRE0340E1
+     C                     COMIT
+     C                     END
+     C                     END
+     C                     ENDSR
+     C**
+     C*****************************************************
+     C*
+     C**    SUBROUTINE (9) :::  *PSSR
+     C**        TO HANDLE ABNORMAL ERROR CONDITIONS
+     C**
+     C**    CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C**
+     C**    CALLS: NOTHING
+     C**
+     C**---------------------------------------------------
+     C*
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+** MSG
+INVALID CUSTOMER NUMBER/SHORTNAME
+CUSTOMER NUMBER/SHORTNAME REFERS TO A PARENT
+INVALID PARENT NUMBER/SHORTNAME
+ENTRY DOES NOT REFER TO A PARENT
+ENTER ONLY ONE OF CUSTOMER OR PARENT NUMBER/SHORTNAME
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

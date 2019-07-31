@@ -1,0 +1,1379 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Generate Interbranch Entries at Batch lvl')   *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - GENERAL LEDGER MODULE                                *
+     F*                                                               *
+     F*  GL0261 - GENERATE INTERBRANCH ENTRIES AT BATCH LEVEL         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 250874             Date 14Nov12               *
+      *                 MD019891           Date 10Apr13               *
+      *                 AR1075051          Date 10Feb13               *
+      *                 CGL127AM           Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 151104             Date 15Jun01               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01Mar99               *
+      *                 CTI002             Date 23Sep98               *
+     F*                 122087             DATE 05FEB98               *
+      *                 CCB003             DATE 15Oct96               *
+     F*                 CMC001             DATE 18MAR96               *
+     F*                 CAC001             DATE 01FEB96               *
+     F*                 082389             DATE 27Mar96               *
+     F*                 087773             DATE  5OCT95               *
+     F*                 076564             DATE 05OCT94               *
+     F*                 S01413             DATE 13APR93               *
+     F*                 056374             DATE 03FEB94               *
+     F*                 S10736             DATE 03SEP92               *
+     F*                 S01340             DATE 11NOV91               *
+     F*                 BHF796             DATE 25APR91               *
+     F*                 LN0258             DATE 24MAY90               *
+     F*                 LN0176             DATE 14MAY90               *
+     F*                 LN0092             DATE 02MAY90               *
+     F*                 S01229             DATE 02MAY90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  250874 - FOOB due to PSTA>13 digits. Make sure that PSTA     *
+      *           will be able to accommodate the total by dividing   *
+      *           it into several postings. Applied for AR1054926     *
+      *           (Child: AR1054927)                                  *
+      *  MD019891 - Record count and account values incorrect in      *
+      *             GLC4114 resulting in FOOB                         *
+      *  AR1075051 - Missing MANPOPD records caused by jumbled keys.  *
+      *              This resulted to difference in APOSTPD.          *
+      *  CGL127AM - COB Restructure - GL COB Optimisation Phase 1     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+     F*           Information                                         *
+     F*           ACKEY Key List renamed to KACKY to avoid conflict   *
+     F*           with APOSTPDF.                                      *
+      *  151104 - Allow up to 900 branches.                           *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  122087 - Initialise PRIN to avoid duplicated Inter-Branch    *
+     F*           Real time postings. (111818)                        *
+     F*  CCB003 - COB Performance Enhancements - Task Split           *
+     F*           Replace GLJENHL2 with GLBATHPD.                     *
+     F*           Replace MANPOZZ with GLBATHPA.                      *
+     F*           Remove processing for GL0260P1 report.              *
+     F*           Add commitment control to MANPOPD and GLBATHPA.     *
+     F*  CMC001 - Management Accounts Enhancement for PCA:            *
+     F*           Do not output to PF/MANPOPD if CMC001 feature is    *
+     F*           installed.                                          *
+     F*  CAC001 - Profit Centre Accounting Development:               *
+     F*           Output the 'Primary Funding Profit Centre' from     *
+     F*           PCA ICD file for all postings.                      *
+     F*  082389 - Some field values are not editted and generated     *
+     F*           entries are printed incorrectly, always as two      *
+     F*           Debits or two Credits.                              *
+     F*  087773 - Incorrect batch number justification for entries    *
+     F*           via main branch                                     *
+     A*  076564 - BOTH ENTRIES PRODUCED ARE REPORTED AS DEBIT.        *
+     F*  S01413 - Recompiled for Retail 3 Incorporation               *
+     F*  056374 - Print 'END OF REPORT FOR BRANCH' after last detail  *
+     F*           line on GL0261P1 report.                            *
+     F*  S10736 - MANAGEMENT ACCOUNTING                               *
+     F*  S01340 - MIS GL Real Time Posting                            *
+     F*  BHF796 - AMOUNTS DISPLAYING INCORRECTLY ON AUDIT LIST        *
+     F*  LN0258 - 'DUEFRM' & 'DUETO' INCORRECT IN SUBR GENR.          *
+     F*  LN0176 - INCORRECT LDA PROCESSING                            *
+     F*  LN0092 - COND. STAT ON FIELD 'BKIEBI' INCORRECT              *
+     F*  S01229 - SYNON FILE NAME CHANGES                             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*GLBRREL3IF  E           K        DISK                              S01229
+     F*GLJENHL2IF**E           K        DISK                       S01229 CCB003
+     FGLJENHL2IF  E           K        DISK                                                 CGL127AM
+     F***GLBATHPDIF**E           K        DISK                                       CCB003 CGL127AM
+     FGLBATHPDUF  E           K        DISK         KCOMIT            UC                    CGL127AM
+     F            GLBATHD0                          KRENAMEDRIVEF                           CGL127AM
+      *                                                                   CCB003
+     F*GLBSREL1IF  E           K        DISK                              S01229
+     FGLJENSL1IF  E           K        DISK                               S01229
+     FSDBRCHPDIF  E           K        DISK
+     FACCNT   IF  E           K        DISK
+     FMANPOPD O   E           K        DISK
+     F                                              KCOMIT                CCB003
+     F*MANPOZZ*UF**E           K        DISK                              CCB003
+     FGLBATHPAUF  E           K        DISK                               CCB003
+     F                                              KCOMIT                CCB003
+     F*GL0261P1O***E             10     PRINTER      KINFDS SPOOL      UC CCB003
+     F*GL0261AUO***E                    PRINTER      KINFDS SPOOLU        CCB003
+     FGL0261AUO   E                    PRINTER      KINFDS SPOOLU     UC  CCB003
+     F*
+      *****************************************************************   CCB003
+      *                                                                   CCB003
+     F********10******OVRFLOW*INDICATOR                                   CCB003
+     F*
+     F********40******POSTING CURRENCY HAS ZERO DECIMAL POINTS            CCB003
+     F********41******POSTING CURRENCY HAS ONE DECIMAL POINTS             CCB003
+     F********42******POSTING CURRENCY HAS TWO DECIMAL POINTS             CCB003
+     F********43******POSTING CURRENCY HAS THREE DECIMAL POINTS           CCB003
+     F*
+     F********47******NEGATIVE HASH TOTAL.                                CCB003
+     F*       48      NO DETAILS TO REPORT
+     F*       50      END OF GLJENHL0 FILE                                S01229
+     F*       51      END OF SDBRCHPD REACHED WHILE LOADING TO STORAGE
+     F*       64      END OF GLJENSL0 FILE                                S01229
+     F*       71      ERROR ON ACCESSING GENERAL LEDGER DETAILS
+     F*       72      GENERATE JOURNAL INTER-BRANCH ENTERIES AT ITEM LEVEL
+     F*       73      BATCH PROCESSED IS MULTIBRANCHED
+     F*       74      GENERATE INTERBRANCH ENTERIES VIA MAIN BRANCH
+     F*       75      RECORD FOUND ON MULTIPLE OCCURANCE DATA STRUCTURE
+     F*       76      ACCOUNT NOT FOUND
+     F*       77      DEBT GT CRED
+     F*       98      Error while reading GLBATHPA                    *   CCB003
+     F*       99      EOF indicator for GLBATHPA                      *   CCB003
+     F*          U7U8 DATABASE ERROR
+     F*          U8   ONE OR MORE BATCHES HAVE DISCREPANCY.
+      *                                                                   CCB003
+      *****************************************************************   CCB003
+      *                                                                   CCB003
+     E                    NARR    1   4 30
+     E                    CPY@    1   1 80
+      *                                                                   CCB003
+      *****************************************************************   CCB003
+      *                                                                   CCB003
+     I*@BRREB9                                                            S01229
+      *                                                                   CCB003
+     I*@BRTHCJ                                                     S01229 CCB003
+     I***@BRREMA                                                                     CCB003 CGL127AM
+     I@BRTHCJ                                                                               CGL127AM
+     I              BRBTNB                          BNUMH
+     I              BRHINC                          NII
+     I              BRDPCD                          DPMT
+     I              BRBCDA                          BRCB
+     I              BRBTSF                          STAT
+      *                                                                   CCB003
+     I@BSREAJ
+     I              BSBTNB                          BNUM
+     I              BSCYCD                          CCY
+     I              BSDBTT                          DEBT
+     I              BSCRTT                          CRED
+     I              BSBRCD                          BRCC
+      *                                                                   CAC001
+     IACCNTABF                                                            CAC001
+      **  Rename profit centre of account master details                  CAC001
+      *                                                                   CAC001
+     I              PRFC                            PRFCX                 CAC001
+      *                                                                   CAC001
+      *                                                                   CCB003
+     I***********SPOOL       DS                                           CCB003
+     I***********                            83  90 SFILE                 CCB003
+     I***********                         B 123 1240SFNUM                 CCB003
+     I*
+     ISPOOLU      DS
+     I                                       83  90 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I* DATA STRUCTURE USED TO STORE BRANCH/DUE FROM/DUE TO ACOUNT CODE
+     I*
+     I*BRNCH*****  DS                        100                          151104
+     IBRNCH       DS                        900                           151104
+     I                                        1   3 BRANCH
+     I                                        4  13 INTCUS
+     I**********                             14  17 DUEFRM                                    CGL029
+     I**********                             18  21 DUETO                                     CGL029
+     I                                       14  23 DUEFRM                                    CGL029
+     I                                       24  33 DUETO                                     CGL029
+     I*
+     I****DATA*STRUCTURE*USED*TO*STORE*CURRENCY*DETAILS                   CCB003
+     I***********                                                         CCB003
+     I*CURLOD****  DS                        100                          CCB003
+     I***********                             1   3 CURC                  CCB003
+     I***********                             4   4 NODEC                 CCB003
+0276 I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*     LOCAL DATA AREA
+     I*DA********UDS                            256                       LN0176
+     I*LDA*******  DS                            256             LN0176   CCB003
+     I***********                           134 141 DBFILE                CCB003
+     I***********                           142 170 DBKEY                 CCB003
+     I***********                           171 180 DBPGM                 CCB003
+     I***********                           181 1830DBASE                 CCB003
+      *                                                                   CCB003
+      ** Data Structure for the end record key                                              CGL127AM
+      *                                                                                     CGL127AM
+     I            DS                                                                        CGL127AM
+     I                                        1   6 ENDKEY                                  CGL127AM
+     I**********                              1   3 EBTNB                         CGL127AM AR1075051
+     I**********                              4   6 EBCDA                         CGL127AM AR1075051
+     I                                        1   3 EBCDA                                  AR1075051
+     I                                        4   6 EBTNB                                  AR1075051
+      *                                                                                     CGL127AM
+      ** Data Structure for the next record key                                             CGL127AM
+      *                                                                                     CGL127AM
+     I            DS                                                                        CGL127AM
+     I                                        1   6 NXTKEY                                  CGL127AM
+     I**********                              1   3 NBTNB                         CGL127AM AR1075051
+     I**********                              4   6 NBCDA                         CGL127AM AR1075051
+     I                                        1   3 NBCDA                                  AR1075051
+     I                                        4   6 NBTNB                                  AR1075051
+      *                                                                                     CGL127AM
+      ** Data Structure for the last record key                                             CGL127AM
+      *                                                                                     CGL127AM
+     I            DS                                                                        CGL127AM
+     I                                        1   6 LSTKEY                                  CGL127AM
+     I**********                              1   3 LBTNB                         CGL127AM AR1075051
+     I**********                              4   6 LBCDA                         CGL127AM AR1075051
+     I                                        1   3 LBCDA                                  AR1075051
+     I                                        4   6 LBTNB                                  AR1075051
+      *                                                                                     CGL127AM
+     ILDA       EUDSLDA                         256                       CCB003
+      *                                                                   CCB003
+     I**  PROGRAMME STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      244 253 SWSID
+     I                                      254 263 USRID
+     I*
+     I**   BANK DETAILS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I              BJRDNB                          RUND
+     I              BJMRDT                          RUNA
+     I              BJURPT                          TITLE
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     I**   GENERAL LEDGER DETAILS
+     I*
+     ISDGELR    E DSSDGELRPD
+     I*
+     I**   ACCOUNT CODES DETAILS
+     I*
+     ISDACOD    E DSSDACODPD
+     I              A5ACTY                          ATYP
+     I              A5ACSC                          ACSC                  S10736
+     I              QQACCD                          QQACCX                                    CGL029
+     I*
+     ISDPCAC    E DSSDPCACPD                                              CAC001
+     I**   Profit Centre Details                                          CAC001
+     I              QQFNAA                          QQFNAX                                    CGL029
+     I              QQFNIC                          QQFNIX                                    CGL029
+     I*                                                                   CAC001
+     ISDMMOD    E DSSDMMODPD                                              CAC001
+     I**   Module Details                                                 CAC001
+     I*                                                                   CMC001
+     ISCSARD    E DSSCSARDPD                                              CMC001
+     I**   Switchable Features Details                                    CMC001
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     I            DS                                                                          250874
+     I                                        1  150WPSTA                                     250874
+     I                                        1   20LDGTS                                     250874
+      *                                                                                       250874
+      ** Data structure to define leading digits                                              250874
+      *                                                                                       250874
+     I              '5000000000000'       C         ##CAMT                                    250874
+      ** Constant amount for postings greater than 13,0                                       250874
+      *                                                                   CCB003
+      ** Commitment control size                                                            CGL127AM
+      *                                                                                     CGL127AM
+     ICBTASK    E DSCBTASKSP                                                                CGL127AM
+      *****************************************************************   CCB003
+     C*
+     C*    INITIAL CALCULATIONS
+     C*
+     C*    DEFINE LDA
+     C           *NAMVAR   DEFN           LDA
+     C           @FIRST    IFEQ ' '                                                         CGL127AM
+     C                     EXSR INIT
+     C                     MOVE 'Y'       @FIRST  1                                         CGL127AM
+     C                     ENDIF                                                            CGL127AM
+      *                                                                                     CGL127AM
+      ** Access data area CBTASKSP for commit block size                                    CGL127AM
+      *                                                                                     CGL127AM
+     C           *NAMVAR   DEFN CBTASKSP  CBTASK                                            CGL127AM
+     C                     IN   CBTASK                                                      CGL127AM
+     C                     MOVE CMTBLK    #OPTIM 100                                        CGL127AM
+      *                                                                   CCB003
+      ** Define work field previously defined in D007 format in           CCB003
+      ** GL0261AU which is not used any more.                             CCB003
+     C                     Z-ADD0         ACTOT   50                      CCB003
+     C                     Z-ADD0         ZZTOTI                                            MD019891
+     C                     Z-ADD0         ZZTOTD                                            MD019891
+      *                                                                                     CGL127AM
+      ** Key field chain to GLJENHL2 files                                                  CGL127AM
+      *                                                                                     CGL127AM
+     C           GLJKEY    KLIST                                                            CGL127AM
+     C                     KFLD           BRBCDA                                            CGL127AM
+     C                     KFLD           BRBTNB                                            CGL127AM
+      *                                                                   CCB003
+     C                     Z-ADD1         #COMIT  60                                        CGL127AM
+     C                     Z-ADD*ZEROS    BTCH                                              CGL127AM
+     C                     OPEN GLBATHPD                                                    CGL127AM
+      *                                                                                     CGL127AM
+      ** Read end key from GLBATHPD                                                         CGL127AM
+      *                                                                                     CGL127AM
+     C                     MOVE 'L'       IXCKEY  1                                         CGL127AM
+     C           IXCKEY    CHAINDRIVEF               38                                     CGL127AM
+     C           *IN38     IFEQ '0'                                                         CGL127AM
+     C                     MOVE BRBTNB    EBTNB                                             CGL127AM
+     C                     MOVE BRBCDA    EBCDA                                             CGL127AM
+     C                     ENDIF                                                            CGL127AM
+      *                                                                                     CGL127AM
+      ** Read start key from GLBATHPD                                                       CGL127AM
+      *                                                                                     CGL127AM
+     C           *IN38     IFEQ '0'                                                         CGL127AM
+     C                     MOVE 'F'       IXCKEY                                            CGL127AM
+     C           IXCKEY    CHAINDRIVEF               38                                     CGL127AM
+     C                     ENDIF                                                            CGL127AM
+     C           *IN38     IFEQ '0'                                                         CGL127AM
+     C                     MOVE BRBTNB    NBTNB                                             CGL127AM
+     C                     MOVE BRBCDA    NBCDA                                             CGL127AM
+     C                     ENDIF                                                            CGL127AM
+      *                                                                                     CGL127AM
+      ** Set pointer for first record for process                                           CGL127AM
+      *                                                                                     CGL127AM
+     C                     MOVE '0'       *IN50                                             CGL127AM
+     C           NXTKEY    IFGT ENDKEY                                                      CGL127AM
+     C           NXTKEY    OREQ ENDKEY                                                      CGL127AM
+     C           PROT      ANDEQ'C'                                                         CGL127AM
+     C                     MOVE '1'       *IN50                                             CGL127AM
+     C                     ENDIF                                                            CGL127AM
+      *                                                                                     CGL127AM
+     C           *IN50     IFEQ '0'                                                         CGL127AM
+      *                                                                                     CGL127AM
+     C           PROT      IFEQ ' '                                                         CGL127AM
+     C           GLJKEY    SETLLGLJENHL2                                                    CGL127AM
+     C                     ELSE                                                             CGL127AM
+     C           GLJKEY    SETGTGLJENHL2                                                    CGL127AM
+     C                     ENDIF                                                            CGL127AM
+      *                                                                                     CGL127AM
+     C*
+     C*    READ BATCH HEADER RECORD
+     C*
+     C*********************READ @BRREB9                  50               S01229
+     C***********          READ @BRTHCJ                  50        S01229 CCB003
+     C**********           READ @BRREMA                  50                          CCB003 CGL127AM
+     C                     READ @BRTHCJ                  50                                 CGL127AM
+     C           *IN50     IFEQ '0'                                                         CGL127AM
+     C                     MOVE BNUMH     NBTNB                                             CGL127AM
+     C**********           MOVE BRBCDA    NBCDA                                   CGL127AM AR1075051
+     C                     MOVE BRCB      NBCDA                                            AR1075051
+     C                     ENDIF                                                            CGL127AM
+     C                     ENDIF                                                            CGL127AM
+     C*                                                                   CCB003
+     C           *IN50     DOWEQ'0'
+     C*
+     C*    IF ACCEPTED BATCH
+     C*
+     C           STAT      ANDEQ'A'
+     C*                                                                   S01340
+     C**  OR BATCH ALREADY POSTED                                         S01340
+     C*                                                                   S01340
+     C           *IN50     OREQ '0'                                       S01340
+     C           STAT      ANDEQ'S'                                       S01340
+      *                                                                                     CGL127AM
+     C                     MOVE NXTKEY    LSTKEY                                            CGL127AM
+     C                     ADD  1         #COMIT                                            CGL127AM
+     C*
+     C****If*Management*Accounts*Enhancement*feature*is*not*installeCMC001CCB003
+     C***********                                                   CMC001CCB003
+     C***********CMC001    IFNE 'Y'                                 CMC001CCB003
+     C***********CMC001    OREQ 'Y'                                 CMC001CCB003
+     C***********STAT      ANDNE'S'                                 CMC001CCB003
+     C***********                                                   CMC001CCB003
+     C*****FOR*EACH*NEW*BRANCH*PRODUCE*A*SEPARATE*REPORT                  CCB003
+     C***********                                                         CCB003
+     C***********BRCB      IFNE BRCBX                                     CCB003
+     C***********                                                  056374 CCB003
+     C***Write*'END*OF*REPORT'.                                    056374 CCB003
+     C***********                                                  056374 CCB003
+     C************IN15     IFEQ '1'                                056374 CCB003
+     C***********          WRITEE201                               056374 CCB003
+     C***********          MOVE '0'       *IN15                    056374 CCB003
+     C***********          END                                     056374 CCB003
+     C***********                                                  056374 CCB003
+     C***********          CLOSEGL0261P1                                  CCB003
+     C***********          SETON                     10                   CCB003
+     C***********          MOVE BRCB      BRCBX   3                       CCB003
+     C***********                                                         CCB003
+     C***********          OPEN GL0261P1                                  CCB003
+     C***********                                                         CCB003
+     C****ENSURE*REPORT*SPOOL*FILE*RECORDED*BY*RCF                        CCB003
+     C***********                                                         CCB003
+     C***********          Z-ADDSFNUM     SFNUM1  60                      CCB003
+     C***********          OUT  LDA                                LN0176 CCB003
+     C***********          CALL 'ZSFILE'                                  CCB003
+     C***********          PARM           SEQ                             CCB003
+     C***********          PARM BRCB      SENTY   3                       CCB003
+     C***********          PARM           SFILE                           CCB003
+     C***********          PARM           SFNUM1                          CCB003
+     C***********          PARM           ZSERR   1                       CCB003
+     C***********                                                         CCB003
+     C************LOCK     IN   LDA                                LN0176 CCB003
+     C***********ZSERR     IFEQ 'Y'                                       CCB003
+     C***********                                                         CCB003
+     C**ERROR*DURING*ZSFILE*PROCESSING,*RETURN*TO*CALLING*PROGRAMME       CCB003
+     C***********                                                         CCB003
+     C***********          SETON                     U7U8LR               CCB003
+     C***********          RETRN                                          CCB003
+     C***********          END                                            CCB003
+     C***********          Z-ADD0         PAGE                            CCB003
+     C***********          END                                            CCB003
+     C*
+     C*    KEEP A COUNT
+     C*
+     C                     ADD  1         BTCH    50
+     C*
+     C*    IF MULTIBRANCHED BATCH
+     C*
+     C***********BRMBIN    COMP 'Y'                      73               S01229
+     C           BRMBRB    COMP 'Y'                      73               S01229
+     C*
+     C*    READ BRANCH/CURRENCY TOTALS
+     C*
+     C           *IN73     IFEQ '1'
+     C***********          ADD  1         MBTCH   50                      CCB003
+     C***********BNUMH     SETLLGLBSREL1                                  S01229
+     C           BNUMH     SETLLGLJENSL1                                  S01229
+     C           BNUMH     READE@BSREAJ                  64
+     C*
+     C*    IF HEADER BRANCH NE BRANCH/CURRENCY TOTAL BRANCH AND DEBIT
+     C*    AMOUNT NE CREDIT AMOUNT GENERATE INTERBRANCH ENTERIES
+     C*
+     C           *IN64     DOWEQ'0'
+     C           BRCB      IFNE BRCC
+     C           DEBT      ANDNECRED
+     C*
+     C********** DEBT      SUB  CRED      PSTA                                                250874
+     C********** PSTA      COMP 0                      77                                     250874
+     C********** *IN77     IFEQ '1'                                                           250874
+     C**********           Z-SUBPSTA      PSTA                                                250874
+     C**********           END                                                                250874
+     C           DEBT      SUB  CRED      WPSTA                                               250874
+     C           WPSTA     COMP 0                      77                                     250874
+     C           *IN77     IFEQ '1'                                                           250874
+     C                     Z-SUBWPSTA     WPSTA                                               250874
+     C                     ENDIF                                                              250874
+     C*
+     C***CHECK*CORRECT*NO.*OF*DECIMALS*FOR*POSTING*AMOUNT*BY*CHECKING     CCB003
+     C***TO*SEE*IF*CURRENCY*INPUTED*HAS*BEEN*ENTERED*PREVIOUSLY           CCB003
+     C***********                                                         CCB003
+     C***********          Z-ADD1         V       30                      CCB003
+     C***********V         DOWLEW                                         CCB003
+     C************IN96     ANDNE'1'                                       CCB003
+     C***********V         OCUR CURLOD                                    CCB003
+     C***********CCY       IFEQ CURC                                      CCB003
+     C***********          MOVE NODEC     A6NBDP                          CCB003
+     C***********          SETON                     96                   CCB003
+     C***********          END                                            CCB003
+     C***********          ADD  1         V                               CCB003
+     C***********          END                                            CCB003
+     C***********                                                         CCB003
+     C**IF*A*NEW*CCY CODE, THEN OBTAIN AND LOAD IN DATA STRUCTURE         CCB003
+     C***********                                                         CCB003
+     C************IN96     IFEQ '0'                                       CCB003
+     C***********          CALL 'AOCURRR0'                                CCB003
+     C***********          PARM *BLANK    @RTCD                           CCB003
+     C***********          PARM '*KEY    '@OPTN                           CCB003
+     C***********          PARM           CCY                             CCB003
+     C***********SDCURR    PARM SDCURR    DSSDY                           CCB003
+     C***********@RTCD     IFNE *BLANKS                                   CCB003
+     C************LOCK     IN   LDA                                       LN0176
+     C***********          MOVEL'SDCURRPD'DBFILE                          CCB003
+     C***********          MOVEL'GL0261'  DBPGM                           CCB003
+     C***********          Z-ADD06        DBASE                           CCB003
+     C***********          OUT  LDA                                       LN0176
+     C***********          SETON                     LRU7U8               CCB003
+     C***********          WRITEE101                                      CCB003
+     C***********          GOTO ERROR                                     CCB003
+     C***********          ELSE                                           CCB003
+     C***********          ADD  1         W       30                      CCB003
+     C***********W         OCUR CURLOD                                    CCB003
+     C***********          MOVE CCY       CURC                            CCB003
+     C***********          MOVE A6NBDP    NODEC                           CCB003
+     C***********          END                                            CCB003
+     C***********          END                                            CCB003
+     C***********                                                         CCB003
+     C***********A6NBDP    COMP 1                      4041               CCB003
+     C***********A6NBDP    COMP 2                    43  42               CCB003
+     C***********                                                         CCB003
+     C************IN40     IFEQ '1'                                       CCB003
+     C******************** Z-ADDPSTA      PSTAA                           BHF796
+     C***********          MOVE PSTA      PSTAA                    BHF796 CCB003
+     C***********          MOVE DEBT      DEBTA                    082389 CCB003
+     C***********          MOVE CRED      CREDA                    082389 CCB003
+     C***********          END                                            CCB003
+     C***********                                                         CCB003
+     C************IN41     IFEQ '1'                                       CCB003
+     C******************** Z-ADDPSTA      PSTAB                           BHF796
+     C***********          MOVE PSTA      PSTAB                    BHF796 CCB003
+     C***********          MOVE DEBT      DEBTB                    082389 CCB003
+     C***********          MOVE CRED      CREDB                    082389 CCB003
+     C***********          END                                            CCB003
+     C***********                                                         CCB003
+     C************IN42     IFEQ '1'                                       CCB003
+     C******************** Z-ADDPSTA      PSTAC                           BHF796
+     C***********          MOVE PSTA      PSTAC                    BHF796 CCB003
+     C***********          MOVE DEBT      DEBTC                    082389 CCB003
+     C***********          MOVE CRED      CREDC                    082389 CCB003
+     C***********          END                                            CCB003
+     C***********                                                         CCB003
+     C************IN43     IFEQ '1'                                       CCB003
+     C******************** Z-ADDPSTA      PSTAD                           BHF796
+     C***********          MOVE PSTA      PSTAD                    BHF796 CCB003
+     C***********          MOVE DEBT      DEBTD                    082389 CCB003
+     C***********          MOVE CRED      CREDD                    082389 CCB003
+     C***********          END                                            CCB003
+     C***********                                                         CCB003
+     C*****PRINT*AN*AUDIT*OF*THE*OPERATION                                CCB003
+     C***********                                                         CCB003
+     C***********          EXSR AUDIT                                     CCB003
+     C*
+     C*    GENERATE POSTINGS
+     C*
+     C                     Z-ADDWPSTA     PSTA                                                250874
+     C           PSTA      IFNE 0                                                             250874
+     C                     EXSR GENR
+     C                     ENDIF                                                              250874
+      *                                                                                       250874
+      ** Need to check if posting amount is greater than 13,0 and if so                       250874
+      ** ensure extra postings are output to MANPOPD                                          250874
+      *                                                                                       250874
+     C           LDGTS     IFNE *ZEROS                                                        250874
+     C           LDGTS     MULT 2         W#LOOP  30                                          250874
+     C                     DO   W#LOOP                                                        250874
+     C                     MOVEL##CAMT    PSTA                                                250874
+     C                     EXSR GENR                                                          250874
+     C                     ENDDO                                                              250874
+     C                     ENDIF                                                              250874
+     C*
+     C                     END
+     C           BNUMH     READE@BSREAJ                  64
+     C                     END
+     C                     END
+     C*
+     C*    READ NEXT BATCH HEADER RECORD
+     C*
+     C                     SETOF                         64
+     C*********************READ @BRREB9                  50               S01229
+     C***********          READ @BRTHCJ                  50        S01229 CCB003
+     C**********           READ @BRREMA                  50                          CCB003 CGL127AM
+      *                                                                                     CGL127AM
+      ** Check if end record is read                                                        CGL127AM
+      *                                                                                     CGL127AM
+     C                     READ @BRTHCJ                  50                                 CGL127AM
+      *                                                                                     CGL127AM
+     C           *IN50     IFEQ '0'                                                         CGL127AM
+     C                     MOVE BNUMH     NBTNB                                             CGL127AM
+     C**********           MOVE BRBCDA    NBCDA                                   CGL127AM AR1075051
+     C                     MOVE BRCB      NBCDA                                            AR1075051
+      *                                                                                     CGL127AM
+     C           NXTKEY    IFGT ENDKEY                                                      CGL127AM
+     C                     MOVE '1'       *IN50                                             CGL127AM
+     C                     ENDIF                                                            CGL127AM
+     C                     ENDIF                                                            CGL127AM
+     C                     END
+     C*
+     C*    DO 'TOTAL TIME' CALCULATIONS
+     C*
+     C                     EXSR LRSR
+     C*
+     C           ERROR     TAG                             ** ERROR TAG **
+     C*
+     C**********           SETON                     LR                                     CGL127AM
+     C                     RETRN                                                            CGL127AM
+     C*
+     C*****************************************************************
+     C***********                                                         CCB003
+     C****AUDIT*SR*-*TO*PRINT*A*REPORT*OF*THE*RECORDS*PROCESSED           CCB003
+     C***********                                                         CCB003
+     C****CALLED*BY*MAIN*PROCESSING                                       CCB003
+     C***********                                                         CCB003
+     C*****************************************************************   CCB003
+     C***********AUDIT     BEGSR                                          CCB003
+     C***********                                                         CCB003
+     C***********          MOVE BRCC      BRCA                            CCB003
+     C***********          EXSR OVRF                                      CCB003
+     C***********          WRITED001                                      CCB003
+     C***********          EXSR OVRF                                      CCB003
+     C***********          WRITED002                                      CCB003
+     C***********          EXSR OVRF                                      CCB003
+     C***********          WRITED003                                      CCB003
+     C***********                                                         CCB003
+     C***********          ENDSR                                          CCB003
+     C*****************************************************************   CCB003
+     C***********                                                         CCB003
+     C****OVRF*SR*-*TO*HANDLE*OVERFLOW                                    CCB003
+     C***********                                                         CCB003
+     C****CALLED*AT*VARIOUS*PLACES                                        CCB003
+     C***********                                                         CCB003
+     C*****************************************************************   CCB003
+     C***********OVRF      BEGSR                                          CCB003
+     C***********                                                         CCB003
+     C************IN10     IFEQ '1'                                       CCB003
+     C***********          WRITEH001                                      CCB003
+     C***********          SETOF                     10                   CCB003
+     C***********                                                  056374 CCB003
+     C************IN15     IFEQ '0'                                056374 CCB003
+     C***********          MOVE '1'       *IN15                    056374 CCB003
+     C***********          END                                     056374 CCB003
+     C***********                                                  056374 CCB003
+     C***********          END                                            CCB003
+     C***********                                                         CCB003
+     C***********          ENDSR                                          CCB003
+     C*****************************************************************
+     C*
+     C*
+     C*   LRSR SR - TO HANDLE 'TOTAL TIME' CALCULATIONS
+     C*
+     C*   CALLED BY MAIN PROCESSING
+     C*
+     C*****************************************************************
+     C           LRSR      BEGSR
+     C*
+     C***********MBTCH     IFEQ 0                                         CCB003
+     C***********          WRITEH101                                      CCB003
+     C***********          WRITEE001                                      CCB003
+     C***********          ELSE                                           CCB003
+     C***********                                                         CCB003
+     C***********ZZTOTD    MULT 10        TOTD    40   47                 CCB003
+     C************IN47     IFEQ '0'                                       CCB003
+     C***********ZZTOTI    COMP 0                      47                 CCB003
+     C***********          END                                            CCB003
+     C*
+     C                     READ APOSTZZF                 99
+     C                     ADD  ACTOT     NORE1
+     C*
+     C*   ADD TOTAL POSTING AMOUNT TO HASH TOTAL
+     C*
+     C* MOVE MANPOZZ FIELDS INTO GLZSUM FIELDS
+     C                     Z-ADDHRWN      ZZAMTI 150       INTEGER FIELD
+     C                     Z-ADDHRDC      ZZAMTD  30       DECIMAL FIELD
+     C*
+     C                     EXSR GLZSUM
+     C                     MOVELZZTOTI    HRWN
+     C                     MOVELZZTOTD    HRDC
+     C                     UPDATAPOSTZZF
+      *                                                                   CCB003
+     C***********          WRITEH101                                      CCB003
+     C***********          WRITED005                                      CCB003
+     C***********          WRITED006                                      CCB003
+     C***********          WRITED007                                      CCB003
+     C***********          WRITED008                                      CCB003
+     C***********                                                  056374 CCB003
+     C***Write*'END*OF*REPORT'.                                    056374 CCB003
+     C***********                                                  056374 CCB003
+     C************IN15     IFEQ '1'                                056374 CCB003
+     C***********          WRITEE201                               056374 CCB003
+     C***********          MOVE '0'       *IN15                    056374 CCB003
+     C***********          END                                     056374 CCB003
+     C***********                                                  056374 CCB003
+     C***********          END                                            CCB003
+      *                                                                                     CGL127AM
+      ** Commit if no records left in driving file and number of                            CGL127AM
+      ** records processed is not 0                                                         CGL127AM
+      *                                                                                     CGL127AM
+     C           *IN50     IFEQ '1'                                                         CGL127AM
+     C           #COMIT    ANDGT0                                                           CGL127AM
+     C                     EXSR UPDPTR                                                      CGL127AM
+     C                     COMIT                                                            CGL127AM
+     C                     ENDIF                                                            CGL127AM
+      *                                                                                     CGL127AM
+     C                     UNLCKGLBATHPA                                                    CGL127AM
+     C                     CLOSEGLBATHPD                                                    CGL127AM
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C*   INIT SR - TO ACCESS ICD'S AND SET UP MULTIPLE OCCURANCE DATA
+     C*             STRUCTURE OF BRANCHES, INTERNAL CUSTOMER NUMBER AND
+     C*             DUR TO AND DUE FROM ACCOUNTS
+     C*
+     C*   CALLED BY MAIN PROCESSING
+     C*
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C**
+     C                     MOVEACPY@      BIS@   80
+     C                     Z-ADD235959    PTIM                            S10736
+     C*
+     C***ENSURE*TOTALS*SPOOL*FILE*RECORDED*BY*RCF                         CCB003
+     C***********                                                         CCB003
+     C***********          Z-ADDSFNUMU    SFNUM2  60                      CCB003
+     C***********          CALL 'ZSFILE'                                  CCB003
+     C***********          PARM *BLANKS   SEQ     5                       CCB003
+     C***********          PARM *BLANKS   SENTY   3                       CCB003
+     C***********          PARM           SFILEU                          CCB003
+     C***********          PARM           SFNUM2                          CCB003
+     C***********          PARM           ZSERR   1                       CCB003
+     C***********                                                         CCB003
+     C************LOCK     IN   LDA                                       LN0176
+     C***********ZSERR     IFEQ 'Y'                                       CCB003
+     C***********                                                         CCB003
+     C**ERROR*DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME       CCB003
+     C***********                                                         CCB003
+     C***********          SETON                     U7U8LR               CCB003
+     C***********          RETRN                                          CCB003
+     C***********          END                                            CCB003
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       LN0176
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DB ERROR 1
+     C                     MOVEL'001'     DBASE            ***************
+     C                     EXSR *PSSR                                     CCB003
+     C***********          MOVEL'GL0261'  DBPGM                           CCB003
+     C***********          OUT  LDA                                LN0176 CCB003
+     C***********          SETON                     LRU7U8               CCB003
+     C***********          WRITEE101                                      CCB003
+     C***********          GOTO ERROR                                     CCB003
+     C                     END
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       LN0176
+     C                     MOVE 'SDGELRPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DB ERROR 3
+     C                     MOVEL'003'     DBASE            ***************
+     C                     EXSR *PSSR                                     CCB003
+     C***********          MOVEL'GL0261'  DBPGM                           CCB003
+     C***********          OUT  LDA                                LN0176 CCB003
+     C***********          SETON                     LRU7U8               CCB003
+     C***********          WRITEE101                                      CCB003
+     C***********          GOTO ERROR                                     CCB003
+     C                     END
+     C*
+     C* GENERATE INTERBRANCH ENTERIES?
+     C*
+     C***********BKIEBI    COMP 'Y'                      72               LN0092
+     C           BKIEBI    COMP 'I'                      72               LN0092
+     C           BKIEMB    COMP 'Y'                      74
+     C                     MOVE BKMABR    MAINB   3
+     C*
+     C*STORE BRANCH CODE, INTERNAL CUSTOMER NUMBER AND DUE FROM/TO ACOD
+     C*
+     C                     Z-ADD0         X       30
+     C                     READ SDBRCHPD                 51
+     C           *IN51     DOWEQ'0'
+     C                     ADD  1         X
+     C           X         OCUR BRNCH
+     C                     MOVE A8BRCD    BRANCH
+     C                     MOVE A8BICN    INTCUS
+     C                     MOVE A8DFAC    DUEFRM
+     C                     MOVE A8DTAC    DUETO
+     C                     READ SDBRCHPD                 51
+     C                     END
+     C*
+     C                     SETON                     48
+      *                                                                   CAC001
+      **  Get module details using access object                          CAC001
+      *                                                                   CAC001
+     C                     CALL 'AOMMODR0'                                CAC001
+     C                     PARM '*MSG   ' @RTCD                           CAC001
+     C                     PARM '*FIRST ' @OPTN                           CAC001
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CAC001
+     C           @RTCD     IFNE *BLANKS                                   CAC001
+     C           *LOCK     IN   LDA                                       CAC001
+     C                     MOVE 'SDMMODPD'DBFILE           ***************CAC001
+     C                     MOVEL@OPTN     DBKEY            * DB ERROR 005 CAC001
+     C                     Z-ADD5         DBASE            ***************CAC001
+     C                     MOVEL'GL0261'  DBPGM                           CAC001
+     C                     OUT  LDA                                       CAC001
+     C                     SETON                     U7U8LR               CAC001
+     C                     WRITEE101                                      CAC001
+     C                     GOTO ERROR                                     CAC001
+     C                     ENDIF                                          CAC001
+      *                                                                   CAC001
+      **  If Analytical Accounting module is switched on, get the         CAC001
+      **  'Primary Funding Profit Centre' from PCA ICD                    CAC001
+      *                                                                   CAC001
+     C           BGN0ST    IFEQ 'Y'                                       CAC001
+     C                     CALL 'AOPCACR0'                                CAC001
+     C                     PARM '*MSG   ' @RTCD                           CAC001
+     C                     PARM '*FIRST ' @OPTN                           CAC001
+     C           SDPCAC    PARM SDPCAC    DSFDY                           CAC001
+     C           @RTCD     IFNE *BLANKS                                   CAC001
+     C           *LOCK     IN   LDA                                       CAC001
+     C                     MOVE 'SDPCACPD'DBFILE           ***************CAC001
+     C                     MOVEL@OPTN     DBKEY            * DB ERROR 006 CAC001
+     C                     Z-ADD6         DBASE            ***************CAC001
+     C                     MOVEL'GL0261'  DBPGM                           CAC001
+     C                     OUT  LDA                                       CAC001
+     C                     SETON                     U7U8LR               CAC001
+     C                     WRITEE101                                      CAC001
+     C                     GOTO ERROR                                     CAC001
+     C                     ENDIF                                          CAC001
+     C                     ENDIF                                          CAC001
+      *                                                                   CMC001
+      **  Check if Management Accounts Enhancement is installed           CMC001
+      *                                                                   CMC001
+     C                     MOVE 'N'       CMC001  1                       CMC001
+     C                     CALL 'AOSARDR0'                                CMC001
+     C                     PARM '*MSG   ' @RTCD                           CMC001
+     C                     PARM '*VERIFY' @OPTN                           CMC001
+     C                     PARM 'CMC001'  @SARN   6                       CMC001
+     C           SCSARD    PARM SCSARD    DSFDY                           CMC001
+      *                                                                   CMC001
+     C           @RTCD     IFNE *BLANKS                                   CMC001
+     C           @RTCD     IFNE '*NRF'                                    CMC001
+     C           *LOCK     IN   LDA                                       CMC001
+     C                     MOVE 'SCSARDPD'DBFILE           ***************CMC001
+     C                     MOVEL@SARN     DBKEY            * DB ERROR 007 CMC001
+     C                     Z-ADD7         DBASE            ***************CMC001
+     C                     OUT  LDA                                       CMC001
+     C                     SETON                     U7U8LR               CMC001
+     C                     WRITEE101                                      CMC001
+     C                     GOTO ERROR                                     CMC001
+     C                     ENDIF                                          CMC001
+     C                     ELSE                                           CMC001
+     C                     MOVE 'Y'       CMC001  1                       CMC001
+     C                     ENDIF                                          CMC001
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C* GENR SR - TO GENERATE INTER-BRANCH ENTERIES
+     C*
+     C*   CALLED BY MAIN PROCESSING
+     C*   CALLS  GENRX, CUSNUM AND BRACOD
+     C*
+     C*****************************************************************
+     C*
+     C           GENR      BEGSR
+     C*
+     C* SET UP COMMON FIELDS FOR ALL POSTINGS
+     C*
+     C                     MOVE RUND      PSTD
+     C                     MOVE RUND      VALD
+     C***********          MOVE BNUM      SPOS                            087773
+     C                     MOVELBNUM      SPOS                            087773
+     C                     MOVE BNUM      DLREF
+     C                     MOVE BNUM      OTRF
+     C                     BITOF'01234567'PRIN                            122087
+      *                                                                   CAC001
+      **  If Analytical Accounting module is switched on, profit          CAC001
+      **  centre should be the 'Primary Funding Profit Centre'            CAC001
+      *                                                                   CAC001
+     C           BGN0ST    IFEQ 'Y'                                       CAC001
+     C                     MOVE FTPRFP    PRFC                            CAC001
+     C                     ELSE                                           CAC001
+     C                     MOVE *BLANKS   PRFC                            CAC001
+     C                     ENDIF                                          CAC001
+     C*                                                                   S01117
+     C**  IF BATCH STATUS IS 'S', SET BIT ON PRIN FIELD                   S01340
+     C*                                                                   S01340
+     C           STAT      IFEQ 'S'                                       S01340
+     C                     BITON'6'       PRIN    1                       S01340
+     C                     END                                            S01340
+     C*
+     C**  WRITE RECORD TO POSTINGS FILE FOR INTERBRANCH ENTRY VIA THE
+     C**  BATCH BRANCH
+     C*
+     C**  IF NOT VIA MAIN BRANCH, SET UP CORRECT BRANCH FOR POSTING       LN0258
+     C**
+     C           *IN74     IFEQ '0'
+     C           BRCB      OREQ MAINB
+     C           BRCC      OREQ MAINB
+     C                     MOVE BRCC      CUSBR   3
+     C                     ELSE
+     C                     MOVE MAINB     CUSBR   3
+     C                     END
+     C                     EXSR CUSNUM
+     C                     MOVE INTCUS    CNUM
+     C                     MOVE BRCB      ACBR    3
+     C                     EXSR BRACOD
+     C**                                                                  LN0258
+     C**  IF DEBT *GT CRED , *IN77 IS SWITCHED ON ('1').                  LN0258
+     C**                                                                  LN0258
+     C           *IN77     IFEQ '0'
+     C                     MOVE '0'       DRCR
+     C****************     MOVE DUETO     ACOD                            LN0258
+     C                     MOVE DUEFRM    ACOD                            LN0258
+     C                     ELSE
+     C                     MOVE '1'       DRCR
+     C****************     MOVE DUEFRM    ACOD                            LN0258
+     C                     MOVE DUETO     ACOD                            LN0258
+     C                     END
+     C**********           MOVE ACOD      ACALFA  4                                           CGL029
+     C                     MOVE ACOD      ACALFA 10                                           CGL029
+     C                     EXSR ACTYPE
+     C                     MOVE BRCB      BRCA
+     C                     MOVE '01'      ACSQ
+     C                     MOVE NARR,1    PNAR
+     C                     EXSR GETAC
+     C                     MOVE 'P'       RECI
+     C           CMC001    IFNE 'Y'                                       CMC001
+     C           CMC001    OREQ 'Y'                                       CMC001
+     C           STAT      ANDNE'S'                                       CMC001
+     C                     WRITEAPOSTPDF
+     C***********          EXSR OVRF                                      CCB003
+     C***********          WRITED004                                      076564
+     C***********          WRITEF004                               076564 CCB003
+     C                     ENDIF                                          CMC001
+     C*
+     C**  WRITE RECORD TO POSTINGS FILE FOR INTERBRANCH ENTRY VIA THE
+     C**  TOTALS BRANCH (BRANCH ON BRANCH/CCY TOTALS FILE GLBSREP)
+     C*
+     C**  IF NOT VIA MAIN BRANCH, SET UP CORRECT BRANCH FOR POSTING       LN0258
+     C**                                                                  LN0258
+     C           *IN74     IFEQ '0'
+     C           BRCB      OREQ MAINB
+     C           BRCC      OREQ MAINB
+     C                     MOVE BRCB      CUSBR   3
+     C                     ELSE
+     C                     MOVE MAINB     CUSBR   3
+     C                     END
+     C                     EXSR CUSNUM
+     C                     MOVE INTCUS    CNUM
+     C                     MOVE BRCC      ACBR
+     C                     EXSR BRACOD
+     C**                                                                  LN0258
+     C**  IF DEBT *GT CRED , *IN77 IS SWITCHED ON ('1').                  LN0258
+     C**                                                                  LN0258
+     C           *IN77     IFEQ '0'
+     C                     MOVE '1'       DRCR
+     C****************     MOVE DUEFRM    ACOD                            LN0258
+     C                     MOVE DUETO     ACOD                            LN0258
+     C                     ELSE
+     C                     MOVE '0'       DRCR
+     C****************     MOVE DUETO     ACOD                            LN0258
+     C                     MOVE DUEFRM    ACOD                            LN0258
+     C                     END
+     C**********           MOVE ACOD      ACALFA  4                                           CGL029
+     C                     MOVE ACOD      ACALFA                                              CGL029
+     C                     EXSR ACTYPE
+     C                     MOVE BRCC      BRCA
+     C                     MOVE NARR,2    PNAR
+     C                     EXSR GETAC
+     C                     MOVE 'P'       RECI
+     C           CMC001    IFNE 'Y'                                       CMC001
+     C           CMC001    OREQ 'Y'                                       CMC001
+     C           STAT      ANDNE'S'                                       CMC001
+     C                     WRITEAPOSTPDF
+     C***********          EXSR OVRF                                      CCB003
+     C***********          WRITED004                                      CCB003
+     C                     ENDIF                                          CMC001
+     C*
+     C           *IN74     IFEQ '1'
+     C           BRCB      ANDNEMAINB
+     C           BRCC      ANDNEMAINB
+     C                     EXSR GENRX
+     C*
+     C* ADD POSTING AMOUNT TO HASH TOTAL,ALLOWING FOR DIVISION BY 1000
+     C*
+     C           PSTA      MULT .004      ZZAMT
+     C                     EXSR GLZADD
+     C*
+     C                     ADD  4         ACTOT
+     C*
+     C*
+     C                     ELSE
+     C*
+     C* ADD POSTING AMOUNT TO HASH TOTAL,ALLOWING FOR DIVISION BY 1000
+     C*
+     C           PSTA      MULT .002      ZZAMT
+     C                     EXSR GLZADD
+     C*
+     C                     ADD  2         ACTOT
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C* GENRX SR - TO GENERATE INTER-BRANCH ENTERIES VIA MAIN BRANCH
+     C*
+     C*   CALLED BY GENR
+     C*   CALLS  CUSNUM AND BRACOD
+     C*
+     C*****************************************************************
+     C*
+     C           GENRX     BEGSR
+     C*
+     C**  WRITE RECORD TO POSTINGS FILE FOR INTERBRANCH ENTRY VIA THE
+     C**  MAIN BRANCH
+     C*
+     C                     MOVE BRCC      CUSBR
+     C                     EXSR CUSNUM
+     C                     MOVE INTCUS    CNUM
+     C                     MOVE MAINB     ACBR
+     C                     EXSR BRACOD
+     C           *IN77     IFEQ '0'
+     C                     MOVE '0'       DRCR
+     C                     MOVE DUETO     ACOD
+     C                     ELSE
+     C                     MOVE '1'       DRCR
+     C                     MOVE DUEFRM    ACOD
+     C                     END
+     C**********           MOVE ACOD      ACALFA  4                                           CGL029
+     C                     MOVE ACOD      ACALFA                                              CGL029
+     C                     EXSR ACTYPE
+     C                     MOVE MAINB     BRCA
+     C                     MOVE NARR,3    PNAR
+     C                     EXSR GETAC
+     C                     MOVE 'P'       RECI
+     C           CMC001    IFNE 'Y'                                       CMC001
+     C           CMC001    OREQ 'Y'                                       CMC001
+     C           STAT      ANDNE'S'                                       CMC001
+     C                     WRITEAPOSTPDF
+     C***********          EXSR OVRF                                      CCB003
+     C***********          WRITED004                                      076564
+     C***********          WRITEF004                               076564 CCB003
+     C                     ENDIF                                          CMC001
+     C*
+     C**  WRITE RECORD TO POSTINGS FILE FOR INTERBRANCH ENTRY VIA THE
+     C**  TOTALS BRANCH (BRANCH ON BRANCH/CCY TOTALS FILE GLBSREP)
+     C*
+     C                     MOVE BRCB      CUSBR
+     C                     EXSR CUSNUM
+     C                     MOVE INTCUS    CNUM
+     C                     MOVE MAINB     ACBR
+     C                     EXSR BRACOD
+     C           *IN77     IFEQ '0'
+     C                     MOVE '1'       DRCR
+     C                     MOVE DUEFRM    ACOD
+     C                     ELSE
+     C                     MOVE '0'       DRCR
+     C                     MOVE DUETO     ACOD
+     C                     END
+     C**********           MOVE ACOD      ACALFA  4                                           CGL029
+     C                     MOVE ACOD      ACALFA                                              CGL029
+     C                     EXSR ACTYPE
+     C                     MOVE MAINB     BRCA
+     C                     MOVE NARR,4    PNAR
+     C                     EXSR GETAC
+     C           CMC001    IFNE 'Y'                                       CMC001
+     C           CMC001    OREQ 'Y'                                       CMC001
+     C           STAT      ANDNE'S'                                       CMC001
+     C                     MOVE 'P'       RECI
+     C                     WRITEAPOSTPDF
+     C***********          EXSR OVRF                                      CCB003
+     C***********          WRITED004                                      CCB003
+     C                     ENDIF                                          CMC001
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C*  BRACOD SR - TO OBTAIN BRANCH CODE/ACCOUNT CODE FROM DS
+     C*
+     C*   CALLED BY GENR AND GENRX
+     C*
+     C*****************************************************************
+     C           BRACOD    BEGSR
+     C*
+     C                     Z-ADD1         Y       30
+     C           1         DO   X         Y
+     C           Y         OCUR BRNCH
+     C           BRANCH    IFEQ ACBR
+     C                     GOTO BREND
+     C                     END
+     C                     END
+     C*
+     C           BREND     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C*  CUSNUM SR - TO OBTAIN CUSTOMER NUMBER FROM DATA STRUCTURE
+     C*
+     C*   CALLED BY GENR AND GENRX
+     C*
+     C*****************************************************************
+     C*
+     C           CUSNUM    BEGSR
+     C*
+     C                     Z-ADD1         Y       30
+     C           1         DO   X         Y
+     C           Y         OCUR BRNCH
+     C           BRANCH    IFEQ CUSBR
+     C                     GOTO CNEND
+     C                     END
+     C                     END
+     C*
+     C           CNEND     ENDSR
+     C*
+     C********************************************************************
+     C*  ACTYPE SR - TO OBTAIN RETAIL INDICATOR FROM ACCOUNT CODE
+     C*
+     C*   CALLED BY GENR AND GENRX
+     C*
+     C*****************************************************************
+     C*
+     C           ACTYPE    BEGSR
+     C*
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           ACALFA
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFEQ *BLANKS
+     C           ATYP      IFEQ 'R'
+     C                     MOVE '1'       RIND
+     C                     ELSE
+     C                     MOVE '0'       RIND
+     C                     END
+     C                     ELSE
+     C           *LOCK     IN   LDA                                       LN0176
+     C                     MOVE 'SDACODPD'DBFILE           ***************
+     C***********          MOVEL@OPTN     DBKEY            * DB ERROR 3   CCB003
+     C***********          MOVEL'003'     DBASE            ***************CCB003
+     C                     MOVELACALFA    DBKEY                           CCB003
+     C                     MOVEL'002'     DBASE                           CCB003
+     C                     EXSR *PSSR                                     CCB003
+     C***********          MOVEL'GL0261'  DBPGM                           CCB003
+     C***********          OUT  LDA                                LN0176 CCB003
+     C***********          SETON                     LRU7U8               CCB003
+     C***********          WRITEE101                                      CCB003
+     C***********          GOTO ERROR                                     CCB003
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*  GETAC SR - TO OBTAIN LEDGER & CLEARED BALANCE
+     C*
+     C*   CALLED BY GENR AND GENRX
+     C*
+     C*****************************************************************
+     C*
+     C           GETAC     BEGSR
+     C*
+     C                     Z-ADD0         LDBL
+     C                     Z-ADD0         CLBL
+     C*
+     C********** ACKEY     KLIST                                                              CGL020
+     C           KACKY     KLIST                                                              CGL020
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+     C*
+     C********** ACKEY     CHAINACCNT                76                                       CGL020
+     C           KACKY     CHAINACCNT                76                                       CGL020
+     C*
+     C                     Z-ADDLDBL      SDLB
+     C                     Z-ADDCLBL      SDCB
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     C           GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     C                     Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     C   91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     C                     Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     C                     Z-ADDZZAMT     ZZWK1   33
+     C                     MOVE ZZWK1     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     C                     EXSR GLZSUM
+     C           ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C********************************************************************
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+     C*                        GLZADD, GLZSUB, GLZCMP.
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     C           GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     C                     Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     C                     Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     C                     SETOF                     919293
+     C                     SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     C           ZZAMTI    COMP 0                      9293
+     C   93      ZZAMTD    COMP 0                      9293
+     C   93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     C           ZZTOTI    COMP 0                      9193
+     C   93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     C   93                Z-ADDZZAMTI    ZZTOTI
+     C   93                Z-ADDZZAMTD    ZZTOTD
+     C   93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     C   91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     C           ZZWK2     COMP 999                  93    '93' = CARRY
+     C  N93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     C   93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     C      93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     C   93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     C  N93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     C  N92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     C   92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     C  N99                Z-ADDZZWK2     ZZTOTD
+     C  N99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     C   99                Z-ADD0         ZZAMT  153
+     C                     GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     C           ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     C   92                Z-SUBZZAMTI    ZZAMTI 150
+     C   92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     C   91                Z-SUBZZTOTI    ZZTOTI
+     C   91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     C           ZZTOTI    COMP ZZAMTI               93  95
+     C   95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     C   95                Z-ADD0         ZZTOTI
+     C   95                Z-ADD0         ZZTOTD
+     C   95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     C   93      ZZAMTD    COMP ZZTOTD               94
+     C   93 94   ZZTOTI    SUB  1         ZZTOTI
+     C   93 94   ZZTOTD    ADD  1000      ZZWK2
+     C   93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     C   93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     C   93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     C  N93      ZZTOTD    COMP ZZAMTD               94
+     C  N93 94   ZZAMTI    SUB  1         ZZWK3  150
+     C  N93 94   ZZAMTD    ADD  1000      ZZWK2
+     C  N93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     C  N93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     C  N93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     C  N93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     C                     SETOF                     94
+     C   93 91
+     CORN93 92             SETON                     94
+     C   94                Z-SUBZZTOTI    ZZTOTI
+     C   94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     C   92                Z-SUBZZAMTI    ZZAMTI
+     C   92                Z-SUBZZAMTD    ZZAMTD
+     C           ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     C                     SETOF                     96
+     C           ZZTOTD    COMP 0                        91
+     C   91      ZZTOTI    COMP 0                      96
+     C   96                MOVE '.000-'   ZZNEGD  5
+     C                     ENDSR                             ** ENDSR **
+      *****************************************************************   CCB003
+      *  *PSSR  - Program error                                       *   CCB003
+      *****************************************************************   CCB003
+     C           *PSSR     BEGSR                                          CCB003
+      *                                                                   CCB003
+     C                     MOVEL'GL0261'  DBPGM                           CCB003
+     C                     OUT  LDA                                       CCB003
+      *                                                                   CCB003
+     C                     OPEN GL0261AU                                  CCB003
+     C                     WRITEH101                                      CCB003
+     C                     WRITEE101                                      CCB003
+     C                     CLOSEGL0261AU                                  CCB003
+      *                                                                   CCB003
+     C                     DUMP                                           CCB003
+     C                     RETRN                                          CCB003
+      *                                                                   CCB003
+     C                     ENDSR                                          CCB003
+     C********************************************************************
+      *                                                               *                     CGL127AM
+      *  UPDPTR - Update REHISUPD with Start Key for restart          *                     CGL127AM
+      *                                                               *                     CGL127AM
+      *  Called by:                                                   *                     CGL127AM
+      *                                                               *                     CGL127AM
+      *****************************************************************                     CGL127AM
+      *                                                                                     CGL127AM
+     C           UPDPTR    BEGSR                                                            CGL127AM
+      *                                                                                     CGL127AM
+     C                     MOVE 'F'       IXCKEY                                            CGL127AM
+     C*                    MOVE NXTKEY    LSTKEY                                            CGL127AM
+     C           IXCKEY    CHAINDRIVEF               38                                     CGL127AM
+     C           *IN38     IFEQ '0'                                                         CGL127AM
+     C                     MOVE LBTNB     BRBTNB                                            CGL127AM
+     C                     MOVE LBCDA     BRBCDA                                            CGL127AM
+     C                     MOVE 'C'       PROT                                              CGL127AM
+     C                     UPDATDRIVEF                                                      CGL127AM
+     C                     ENDIF                                                            CGL127AM
+      *                                                                                     CGL127AM
+     C                     ENDSR                                                            CGL127AM
+      *****************************************************************                     CGL127AM
+     C/EJECT                                                                                CGL127AM
+      *****************************************************************                     CGL127AM
+** NARR
+INTERBRANCH-BATCH BRANCH
+INTERBRANCH-ENTRIES BRANCH
+INTERBRANCH-MAIN/ENTRIES BRANCH
+INTERBRANCH-MAIN/BATCH BRANCH
+**  CPY@
+(c) Finastra International Limited 2001

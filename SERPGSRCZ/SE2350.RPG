@@ -1,0 +1,2050 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Update User Depot Positions')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2350  - UPDATE USER DEPOT POSITIONS                        *
+     F*                                                               *
+     F*  Function: To update user depot positions, past and current,  *
+     F*   (COB)    with the effect of trades, depot movements and     *
+     F*            trade settlements which:                           *
+     F*            - have been input today, or                        *
+     F*            - have been input before today but have a value    *
+     F*              date (trade) or 2nd date (depot movement) falling*
+     F*              due, which affects depot positions value date    *
+     F*              basis balances.                                  *
+     F*                                                               *
+     F*  Called by: SEC0606A - Update User Depot Positions            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSE037             Date 29Apr02               *
+      *                 170783             Date 09Jul02               *
+      *                 206316             Date 19Jul02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 09Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 130862             Date 16Oct98               *
+     F*                 147127             Date 20Nov98               *
+     F*                 CEU017             Date 07Apr98               *
+     F*                 CSE007             Date 17Mar98               *
+     F*                 115654             DATE 05NOV97               *
+     F*                 CSE005             DATE 04FEB97               *
+     F*                 099930             DATE 01APR96               *
+     F*               . 091254             DATE 20OCT95               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E32882             DATE 10DEC91               *
+     F*                 E29170             DATE 06NOV91               *
+     F*                 E29307             DATE 09OCT91               *
+     F*                 S01117             DATE 06JUN91               *
+     F*                 E21605             DATE 02APR90               *
+     F*                 E21303             DATE 06MAR90               *
+     F*                 S01176             DATE 09/11/88              *
+     F*                 E15426             DATE 03/11/88              *
+     F*                 E15035             DATE 19/09/88              *
+     F*                 E14547             DATE 12/08/88              *
+     F*                 E13561             DATE 20/06/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input.    *
+      *  170783 - RECOMPILED OVER CHANGED ZLCDZ1.                     *
+     F*  206316 - Recompiled over changed ZLCDZ1.                     *
+     F*  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  130862 - Recompiled over changed ZLCDZ1.                     *
+     F*  147127 - Redenomination caused Depot holdings to be updated  *
+     F*           incorrectly. Fix is to ensure that correct position *
+     F*           record is fetched, otherwise reset position values. *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*           Just recompile                                      *
+     F*  CSE007 - Corporate Actions - Just recompile                  *
+     F*  115654 - Forward dated depot transfer should update I/C      *
+     F*           nominal settle field.                               *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  099930 - WLUDDT is not setup correctly in all cases - leads  *
+     F*           to the ex-coupon nominal sometimes being reset to   *
+     F*           zero when a coupon date has not been crossed.       *
+     F*           Amendment to fix E29307.                            *
+     F*  091254 - RECOMPILE OVER CHANGED ZLCDZ1 & ZNCDZ3              *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E32882 - Recompiled over changed file UDPAC.                 *
+     F*  E29170 - Report Control Facility changes.                    *
+     F*  E29307 - Ex-coupon nominal on positions not always reset when*
+     F*             a position is created that crosses a coupon date  *
+     F*  S01117 -   Multibranching                                    *
+     F*  E21605 -   UPDATE SETTLED AMOUNT FOR DNWD CORRECTLY          *   E21605
+     F*  E21303  -  FOR SHARES USE TRADE DATE EX-DIVIDEND NOMINAL TO  *   E21303
+     F*             UPDATE THE POSITIONS                              *   E21303
+     F*  S01176  -  SECURITIES TRADING 3.1  AUSTRALIA                 *   S01176
+     F*  E15426  -  CORRECT REWORK OF POSITIONS FOR BACK-VALUATION    *   E15426
+     F*             REMOVES E14547 (ATTEMPTED FIX FOR SAME PROBLEM)   *   E15426
+     F*  E15035  -  AUDIT FILES SETACA,TRDACA,UDEPPA,UDPMVA DO NOT    *   E15035
+     F*             HAVE RECI FIELD. CHECK FOR * LEADS TO DB ERROR 04 *   E15035
+     F*  E14547  -  Previous record not being flagged as historic     *   E14547
+     F*             if only value date and settlement actions (both   *   E14547
+     F*             for same date) being read in subsequently         *   E14547
+     F*  E13561  -  CHECK CORRECT DATE TO UPDATE RECI WITH 'H'.       *   E13561
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FTRDACA  IF  E                    DISK
+     FSETACA  IF  E                    DISK
+     FUDPMVA  IF  E                    DISK
+     FUDEPPA  UF  E                    DISK         KINFDS UDEDDS
+     F                                              KINFSR UDEDSR
+     FINVTP   IF  E           K        DISK                               E21303
+     FSECTY   IF  E           K        DISK                               E21303
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     FSE2350AUO   E                    PRINTER
+     FUDPAC   IF  E           K        DISK
+     FUDEPH   UF  E           K        DISK         KINFDS UDEPDSA
+     F                                              KINFSR UDEPSR
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01 - DEPOT MOVEMENT ACTION RECORD READ IN                   *
+     F*   02 - SETTLEMENT ACTION RECORD READ IN                       *
+     F*   03 - TRADE ACTION RECORD READ IN                            *
+     F*   29 - PRINT DIFFERENCE MESSAGE DEPOT MVMNTS AUDIT & COUNT    *
+     F*   55 - CHAIN FAIL TO SECURITIES FILE                          *   E21303
+     F*   77 - END OF FILE ON READE OR RECORD EXISTS ON SETLL         *
+     F*   79 - CHAIN FAIL ON INVESTMENT TYPES FILE                    *   E21303
+     F*   87 - EXCEPTION ERROR ON UPDATED FILE - PRINTS STATUS/AUDIT  *
+     F*   89 - END OF FILE ON DEPOT ACTIONS FILE                      *
+     F*90-99 - USED IN Z SUBROUTINES                                  *
+     F*   U7 - DATABASE ERROR                                         *
+     F*   U8 - DATABASE ERROR                                         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   FIRST  - ACCESSES ICD INFORMATION                           *
+     F*   P01    - OBTAIN LATEST CORRECT POSITION DATE AND BALANCES   *
+     F*   P02    - UPDATE INTERVENING POSITION RECORDS FOR NEW ACTION *
+     F*            DATE                                               *
+     F*   U01    - UPDATE INTERVENING POSITIONS FOR EACH EXISTING     *
+     F*             POSITION DATE WITH NO ACTIONS.                    *
+     F*   U02    - UPDATE POSITIONS WITH ACTIONS ON THIS DATE FOR EACH*
+     F*            EXISTING POSITION DATE WITH ACTIONS.               *
+     F*   W01    - WRITE A NEW POSITION RECORD                        *
+     F*                                                               *
+     F*   ACCUM  - ACCUMULATES VALUES OF ACTIONS FOR A DATE           *
+     F*   CLRUPD - ZEROISE DEPOT POSN RECORD FIELDS                   *
+     F*   LASTDT - RETRIEVE LAST POSITION RECORD FOR A POSITION       *
+     F*   NOPOSN - NO EXISTING DEPOT POSITION,INITIALISE FIELDS       *
+     F*   CHGPOS - UPDATE DEPOT POSN RECORDS FROM LAST DATE UPDATED   *
+     F*            TO MOST RECENT.                                    *
+     F*   CHNSEC - TO CHAIN TO SECURITIES AND INVESTMENT TYPES FILE   *   E21303
+     F*   NEWDAT - ACCESS DEPOT POSN RCD FOR LATEST POSN DATE LESS    *
+     F*            THAN OR EQUAL TO ACTION DATE                       *
+     F*                                                               *
+     F*   AUDIT  - OUTPUTS AUDIT RECORD UDEPPA AND CONTROL REPORT     *
+     F*   ZSYSTM - OBTAINS ICD1                                       *
+     F*   ZICD2  - OBTAINS ICD2                                       *
+     F*   UDEDSR - ERROR HANDLING FOR UDEPPA                          *
+     F*   UDEPSR - ERROR HANDLING FOR UDEPH                           *
+     F*   *PSSR  - Error handling                                     *   S01117
+     F*****************************************************************
+      /EJECT
+     E**    TABLES AND ARRAYS    **
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1                                               E29307
+     E/COPY ZSRSRC,ZNCDZ1                                                 E29307
+      /EJECT
+     I*
+     I* USER DEPOT ACTIONS RECORD FORMATS       -    LF/UDPAC
+     IUDPMVDF     01
+     I* USER DEPOT MOVEMENTS RECORD - ID 01
+     ISETACDF     02
+     I* SETTLEMENTS ACTION   RECORD - ID 02
+     ITRDACDF     03
+     I* TRADE ACTION         RECORD - ID 03
+      *                                                                                       CSE037
+      ** RENAME FIELDS USED IN ANOTHER FILE TO ALLOW COMPILE                                  CSE037
+     IINVTPDF                                                                                 CSE037
+     I              SFLG                            ISFLG                                     CSE037
+      *                                                                                       CSE037
+     I*
+     ITABLKY      DS
+     I*  TABTB11 TABLE KEY FIELD DATA STRUCTURE FOR DB ERROR
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I*
+     ICOMARA      DS
+     I* COMMON AREA FOR KEY FIELDS ON ACTION RECORDS READ FROM LF/UDPAC
+     I***********                             1   30WBC                   S01117
+     I                                        1   3 WBC                   S01117
+     I                                        4  13 WSS
+     I**********                             14  190WDP                                       CSD027
+     I                                       14  19 WDP                                       CSD027
+     I                                       20  21 WBK
+     I                                       22  22 WMK
+     I*
+     ISTGARA      DS
+     I* STORAGE  AREA FOR KEY FIELDS ON PREVIOUS ACTION RECORD
+     I***********                             1   30WSBC                  S01117
+     I                                        1   3 WSBC                  S01117
+     I                                        4  13 WSSS
+     I**********                             14  190WSDP                                      CSD027
+     I                                       14  19 WSDP                                      CSD027
+     I                                       20  21 WSBK
+     I                                       22  22 WSMK
+     I*
+     IUDEDDS      DS                            366
+     I*  USER DEPOT POSITIONS AUDIT FILE ERROR EXCEPTIOND DATA STRUCT.
+     I                                     *STATUS  STSUDD
+     IUDEPDS      DS                            366
+     I*  USER DEPOT POSITIONS FILE ERROR EXCEPTIOND DATA STRUCT.
+     I                                     *STATUS  STSUDA
+     I*
+     IDNATN       DS
+     I*  DATA AREA DATA STRUCTURE FOR TRANS NO OF UPDATE
+     I                                        1   50FNATN
+     IINVKEY      DS                                                      E21303
+     I                                        1   3 NMCY                  E21303
+     I                                        4   6 SITP                  E21303
+     I*
+     I/COPY ZSRSRC,ZNCDZ2                                                 E29307
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*
+     ICPYR@#      DS
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C* KEYLISTS FOR CHAINING TO FILES
+     C*
+     C* USER DEPOT POSITIONS - HIST. & CURR (UPDATED) LF/UDEPH
+     C*
+     C           UDPKEY    KLIST
+     C***********          KFLD           UDBR                            S01117
+     C                     KFLD           UDBA                            S01117
+     C                     KFLD           UDSN
+     C                     KFLD           UDPT
+     C                     KFLD           UDBK
+     C                     KFLD           UDMK
+     C                     KFLD           WDT
+     C*
+     C* USER DEPOT POSITIONS - NO DATE ON KEY (UPDATED) LF/UDEPH
+     C*
+     C           UDPKND    KLIST
+     C***********          KFLD           UDBR                            S01117
+     C                     KFLD           UDBA                            S01117
+     C                     KFLD           UDSN
+     C                     KFLD           UDPT
+     C                     KFLD           UDBK
+     C                     KFLD           UDMK
+     C*
+     C* USER DEPOT POSITIONS - HIST. & CURR (UPDATED) LF/UDEPH
+     C*
+     C           STGKEY    KLIST
+     C                     KFLD           WSBC
+     C                     KFLD           WSSS
+     C                     KFLD           WSDP
+     C                     KFLD           WSBK
+     C                     KFLD           WSMK
+     C                     KFLD           STGDAT
+     C*
+     C* USER DEPOT POSITIONS - HIST. & CURR (UPDATED) LF/UDEPH
+     C* NO DATE ON KEY OF STORED BRAN/SEC/DEPOT/BOOK/MARKET-SEE CHGPOS
+     C*
+     C           STGKY2    KLIST
+     C                     KFLD           WSBC
+     C                     KFLD           WSSS
+     C                     KFLD           WSDP
+     C                     KFLD           WSBK
+     C                     KFLD           WSMK
+     C*
+     C*  TABLES TABTB11 AND TABTB10
+     C*
+     C           TABKEY    KLIST
+     C                     KFLD           TKEY
+     C*                                                                   E21303
+     C* INVESTMENT TYPES                         LF/INVTP                 E21303
+     C*                                                                   E21303
+     C           INVTKY    KLIST                                          E21303
+     C                     KFLD           NMCY                            E21303
+     C                     KFLD           SITP                            E21303
+     C*
+     C* ACCESS ICD INFORMATION
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     Z-ADD0         DBASE
+     C                     MOVE 'SE2350  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C                     EXSR FIRST
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *IN99     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C* DEFINE AND CLEAR WORK FIELDS
+     C*
+     C           *LIKE     DEFN UDDT      WACTDT
+     C           *LIKE     DEFN UDDT      WDT
+     C           *LIKE     DEFN UDDT      WLASTD
+     C           *LIKE     DEFN UDDT      WLUDDT
+     C           *LIKE     DEFN UDDT      STGDAT
+     C           *LIKE     DEFN UDDT      WCOMPD
+     C           *LIKE     DEFN DDBA      WDBASE
+     C           *LIKE     DEFN DPMV      WTYPE
+     C           *LIKE     DEFN DRIN      WREVER
+     C*
+     C** DEFINE ACCUMUALTOR FIELDS FOR ACTIONS ON ONE DATE
+     C*
+     C           *LIKE     DEFN UDNT      WUDNT
+     C           *LIKE     DEFN UDNV      WUDNV
+     C           *LIKE     DEFN UDNS      WUDNS
+     C           *LIKE     DEFN UNRT      WUNRT
+     C           *LIKE     DEFN UNRV      WUNRV
+     C           *LIKE     DEFN UDTP      WUDTP
+     C           *LIKE     DEFN UDTS      WUDTS
+     C           *LIKE     DEFN UDPV      WUDPV
+     C           *LIKE     DEFN UDSV      WUDSV
+     C           *LIKE     DEFN UECN      WUECN
+     C           *LIKE     DEFN USNT      WUSNT
+     C           *LIKE     DEFN USNR      WUSNR
+     C           *LIKE     DEFN USNV      WUSNV
+     C           *LIKE     DEFN USRV      WUSRV
+     C           *LIKE     DEFN UNSI      WUNSI                           E21605
+     C*
+     C** DEFINE ACCUMULATOR FIELDS FOR ACTIONS ON ONE POSITION
+     C*
+     C           *LIKE     DEFN UDNT      WUDNTP
+     C           *LIKE     DEFN UDNV      WUDNVP
+     C           *LIKE     DEFN UDNS      WUDNSP
+     C           *LIKE     DEFN UNRT      WUNRTP
+     C           *LIKE     DEFN UNRV      WUNRVP
+     C           *LIKE     DEFN UDTP      WUDTPP
+     C           *LIKE     DEFN UDTS      WUDTSP
+     C           *LIKE     DEFN UDPV      WUDPVP
+     C           *LIKE     DEFN UDSV      WUDSVP
+     C           *LIKE     DEFN UECN      WUECNP
+     C           *LIKE     DEFN USNT      WUSNTP
+     C           *LIKE     DEFN USNR      WUSNRP
+     C           *LIKE     DEFN USNV      WUSNVP
+     C           *LIKE     DEFN USRV      WUSRVP
+     C***********          Z-ADD0         WBC                             S01117
+     C                     MOVE *BLANKS   WBC                             S01117
+     C**********           Z-ADD0         WDP                                                 CSD027
+     C                     MOVE *BLANKS   WDP                                                 CSD027
+     C*
+     C* LOOP ROUND PROCESSING FOR EACH ACTION RECORD READ LF/UDPAC
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C** SETOF RECORD IDENTIFYING INDICATORS FOR ACTION FILE 01,02,03
+     C*
+     C                     MOVEA'000'     *IN,01
+     C*
+     C* READ ACTION FILE OF DEPOT MOVEMENTS
+     C*
+     C                     READ UDPAC                    89
+     C*
+     C* IF NOT END OF FILE IF DELETED RECORD ADD TO COUNT AND IGNORE
+     C*
+     C           *IN89     IFEQ '0'
+     C           RECI      ANDEQ'*'
+     C   01                ADD  1         WCMOVT
+     C   02                ADD  1         WCSETT
+     C   03                ADD  1         WCTRAD
+     C                     GOTO ENDLP
+     C                     END
+     C*
+     C* AT END OF FILE - DO UPDATES FOR LAST DATE AND LAST POSITION
+     C*
+     C           *IN89     IFEQ '1'
+     C*
+     C* EXECUTE CHANGE OF DATE SUBROUTINE  (UNLESS NO ACTION DATA READ)
+     C*
+     C           WSS       IFNE *BLANK
+     C*
+     C           WEQUAL    IFEQ '1'
+     C           WLASTD    ANDNE0
+     C           WACTDT    OREQ DNWD
+     C           WLASTD    ANDNE0
+     C                     EXSR U02
+     C**********           EXSR LASTDT                              E14547E15426
+     C                     ELSE
+     C                     EXSR W01
+     C                     END
+     C*
+     C* EXECUTE CHANGE OF POSITION SUBROUTINE
+     C*
+     C**  ON CHANGE OF POSN ADD LAST DATE ACCUMULATORS TO POSITION CHGS
+     C*
+     C                     EXSR ADDDAT
+     C                     EXSR CHGPOS
+     C                     END
+     C*
+     C                     GOTO ENDLP
+     C                     END
+     C*
+     C** DETERMINE RECORD TYPE AND ADD TO COUNTER FOR EACH TYPE
+     C*   DEPOT MOVEMENTS COUNT
+     C*
+     C           *IN01     IFEQ '1'
+     C                     ADD  1         WCMOVT  50
+     C*
+     C* MOVE KEYS AND DATE TO DATA STRUCTURE FOR COMPARISON
+     C*
+     C***********          MOVE DPBC      WBC                             S01117
+     C                     MOVE DPBA      WBC                             S01117
+     C                     MOVE DPSS      WSS
+     C**********           Z-ADDDDEP      WDP                                                 CSD027
+     C                     MOVE DDEP      WDP                                                 CSD027
+     C                     MOVE DMRT      WMK
+     C                     MOVE DPBK      WBK
+     C                     Z-ADDDADA      WACTDT
+     C                     MOVE DDBA      WDBASE
+     C                     MOVE DPMV      WTYPE
+     C                     MOVE DRIN      WREVER
+     C                     END
+     C*
+     C*  SETTLEMENTS COUNT
+     C*
+     C           *IN02     IFEQ '1'
+     C                     ADD  1         WCSETT  50
+     C*
+     C* MOVE KEYS AND DATE TO DATA STRUCTURE FOR COMPARISON
+     C*
+     C***********          MOVE SBCD      WBC                             S01117
+     C                     MOVE SBCA      WBC                             S01117
+     C                     MOVE SSSN      WSS
+     C**********           Z-ADDSODP      WDP                                                 CSD027
+     C                     MOVE SODP      WDP                                                 CSD027
+     C                     MOVE SMAR      WMK
+     C                     MOVE SBOC      WBK
+     C                     Z-ADDSEDE      WACTDT
+     C                     MOVE 'S'       WDBASE
+     C                     MOVE STET      WTYPE
+     C                     MOVE SRIN      WREVER
+     C                     END
+     C*
+     C*  TRADE ACTIONS COUNT
+     C*
+     C           *IN03     IFEQ '1'
+     C                     ADD  1         WCTRAD  50
+     C*
+     C* MOVE KEYS AND DATE TO DATA STRUCTURE FOR COMPARISON
+     C*
+     C***********          MOVE TDBR      WBC                             S01117
+     C                     MOVE TDBA      WBC                             S01117
+     C                     MOVE TDSS      WSS
+     C**********           Z-ADDOUDP      WDP                                                 CSD027
+     C                     MOVE OUDP      WDP                                                 CSD027
+     C                     MOVE TDMI      WMK
+     C                     MOVE TDBK      WBK
+     C                     Z-ADDEVTD      WACTDT
+     C                     MOVE TVDA      WDBASE
+     C                     MOVE '  '      WTYPE
+     C                     MOVE PRSL      WTYPE
+     C                     MOVE RVLI      WREVER
+     C                     END
+     C*
+     C** COMPARE KEY AND DATE TO STORED KEY AND DATE
+     C*
+     C* CHANGE OF POSITION - PROCESS CHG OF DATE, LAST POSN & NEXT POSN
+     C*
+     C           COMARA    IFNE STGARA
+     C*
+     C* IF ACTION DATE EQUALS POSITION RECORD DATE OR NXT WRKING DAY
+     C* THEN UPDATE IN SUBR U02, ELSE ADD POSITION RECORD IN SUBR W01
+     C* NB. ON FIRST POSITION , DO NOT EXSR U02/W01/CHGPOS
+     C*
+     C           WSSS      IFNE *BLANK
+     C*
+     C**  ON CHANGE OF POSN ADD LAST DATE ACCUMULATORS TO POSITION CHGS
+     C*
+     C                     EXSR ADDDAT
+     C           STGDAT    IFEQ UDDT
+     C           WLASTD    ANDNE0
+     C           STGDAT    OREQ DNWD
+     C           WLASTD    ANDNE0
+     C                     EXSR U02
+     C**********           EXSR LASTDT                              E14547E15426
+     C                     ELSE
+     C                     EXSR W01
+     C                     END
+     C                     EXSR CHGPOS
+     C                     END
+     C*                                                                   E21303
+     C** ACCESS SECURITIES FILE AND INVESTMENT TYPES FILE ON CHANGE OF    E21303
+     C*   POSITION IF NECESSARY                                           E21303
+     C*                                                                   E21303
+     C           WSS       IFNE KWSS                                      E21303
+     C                     EXSR CHNSEC                                    E21303
+     C                     END                                            E21303
+     C*
+     C** GET LATEST DATE FOR THE POSITION IN SUBR LASTDT
+     C*
+     C                     EXSR LASTDT
+     C*
+     C** INCREMENT COUNT OF POSITIONS  FOR NEW POSITION
+     C*
+     C                     ADD  1         WCPOSN  50
+     C                     EXSR P01
+     C*
+     C                     ELSE
+     C*
+     C** PROCESS CHANGE OF DATE WITHIN SAME POSITION
+     C*
+     C           WACTDT    IFNE STGDAT
+     C*
+     C**  ON CHANGE OF DATE ADD LAST DATE ACCUMULATORS TO POSITION CHGS
+     C*
+     C                     EXSR ADDDAT
+     C*
+     C* IF THE LATEST POSITION DATE IS LESS THAN THE CURRENT ACTION DATE  E15426
+     C* THEN BRING THE LATEST POSITION DATE UP TO THAT DATE.              E15426
+     C*                                                                   E15426
+     C           WACTDT    IFGT WLASTD                                    E15426
+     C           WACTDT    ANDNEDNWD                                      E15426
+     C                     Z-ADDWACTDT    WLASTD                          E15426
+     C                     END                                            E15426
+     C*                                                                   E15426
+     C* IF ACTION DATE EQUALS POSITION RECORD DATE OR NXT WRKING DAY
+     C* THEN UPDATE IN SUBR U02, ELSE ADD POSITION RECORD IN SUBR W01
+     C*
+     C           WEQUAL    IFEQ '1'
+     C           STGDAT    OREQ DNWD
+     C                     EXSR U02
+     C**********           EXSR LASTDT                              E14547E15426
+     C                     ELSE
+     C                     EXSR W01
+     C                     END
+     C                     EXSR P02
+     C                     EXSR NEWDAT
+     C                     END
+     C                     END
+     C*
+     C** NOW PROCESS ACTION RECORD READ BY ACCUMULATING CHANGES
+     C*
+     C*      ACCUMULATE HERE
+     C*
+     C                     EXSR ACCUM
+     C                     MOVE COMARA    STGARA
+     C                     Z-ADDWACTDT    STGDAT
+     C           ENDLP     TAG                             ** ENDLP **
+     C*
+     C                     END
+     C*
+     C* ACCESS UDPMVA AUDIT RECORD FOR DEPOT MOVEMENT ACTIONS
+     C*
+     C                     READ UDPMVA                   79
+     C********** *IN79     IFNE '1'                                       E15035
+     C********** RECI      ANDEQ'*'                                       E15035
+     C**********           MOVE '1'       *IN79                           E15035
+     C**********           END                                            E15035
+     C*
+     C* DATA BASE ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C                     MOVEL'UDPMVA'  DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 03 **
+     C                     Z-ADD3         DBASE            *****************
+     C                     SETON                       U7U8
+     C                     GOTO EAUDIT
+     C                     END
+     C                     Z-ADDNORE      DMNORE  50
+     C*
+     C* ACCESS SETACA AUDIT RECORD FOR SETTLEMENT ACTIONS
+     C*
+     C                     READ SETACA                   79
+     C********** *IN79     IFNE '1'                                       E15035
+     C********** RECI      ANDEQ'*'                                       E15035
+     C**********           MOVE '1'       *IN79                           E15035
+     C**********           END                                            E15035
+     C*
+     C* DATA BASE ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C                     MOVEL'SETACA'  DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 04 **
+     C                     Z-ADD4         DBASE            *****************
+     C                     SETON                       U7U8
+     C                     GOTO EAUDIT
+     C                     END
+     C                     Z-ADDNORE      STNORE  50
+     C*
+     C* ACCESS TRDACA AUDIT RECORD FOR TRADE ACTIONS
+     C*
+     C                     READ TRDACA                   79
+     C*********  *IN79     IFNE '1'                                       E15035
+     C*********  RECI      ANDEQ'*'                                       E15035
+     C*********            MOVE '1'       *IN79                           E15035
+     C*********            END                                            E15035
+     C*
+     C* DATA BASE ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C                     MOVEL'TRDACA'  DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 05 **
+     C                     Z-ADD5         DBASE            *****************
+     C                     SETON                       U7U8
+     C                     GOTO EAUDIT
+     C                     END
+     C           NORT      ADD  NRDT      TRNORE  50
+     C           EAUDIT    TAG                             ** EAUDIT **
+     C*
+     C* OUTPUT RUN CONTROL REPORT
+     C*
+     C                     EXSR AUDIT
+     C*
+     C                     SETON                     LR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ACCUM  SR - ACCUMULATE CHANGES FOR THIS DATE                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ACCUM     BEGSR                           ** ACCUM **
+     C*
+     C** DATE OF ACTION IS NOT EQUAL TO DATE OF NEXT WORKING DAY
+     C*
+     C           WACTDT    IFNE DNWD
+     C*
+     C*  DEPOT MOVEMENT
+     C*
+     C           *IN01     IFEQ '1'
+     C*
+     C* IF A REVERSAL REVERSE THE SIGN OF THE NOMINAL
+     C*
+     C           WREVER    IFEQ 'Y'
+     C                     Z-SUBDMNA      DMNA
+     C                     END
+     C*
+     C**  TYPE IS USER TRANSFER IN, DATE BASIS IS T = TRADE
+     C*
+     C           WTYPE     IFEQ 'UI'
+     C           WDBASE    ANDEQ'T'
+     C*
+     C* ADD TO TRADE NOMINAL
+     C*
+     C                     ADD  DMNA      WUDNT
+     C                     END
+     C*
+     C**  TYPE IS USER TRANSFER IN, DATE BASIS IS C = VALUE AND SETTL.
+     C*
+     C           WTYPE     IFEQ 'UI'
+     C           WDBASE    ANDEQ'C'
+     C*
+     C* ADD TO VALUE NOMINAL AND SETTLEMENT NOMINAL
+     C*
+     C                     ADD  DMNA      WUDNV
+     C                     ADD  DMNA      WUDNS
+     C                     END
+     C*
+     C**  TYPE IS USER TRANSFER IN, DATE BASIS IS A = ALL DATES
+     C*
+     C           WTYPE     IFEQ 'UI'
+     C           WDBASE    ANDEQ'A'
+     C*
+     C* ADD TO NOMINAL TRADE, SETTLEMENT AND VALUE
+     C*
+     C                     ADD  DMNA      WUDNT
+     C                     ADD  DMNA      WUDNV
+     C                     ADD  DMNA      WUDNS
+     C                     END
+     C*
+     C**  TYPE IS USER TRANSFER OUT, DATE BASIS IS T = TRADE
+     C*
+     C           WTYPE     IFEQ 'UO'
+     C           WDBASE    ANDEQ'T'
+     C*
+     C* SUB FROM TRADE NOMINAL
+     C*
+     C                     SUB  DMNA      WUDNT
+     C                     END
+     C*
+     C**  TYPE IS USER TRANSFER OUT, DATE BASIS IS C = VALUE AND SETTL.
+     C*
+     C           WTYPE     IFEQ 'UO'
+     C           WDBASE    ANDEQ'C'
+     C*
+     C* SUB FROM VALUE NOMINAL AND SETTLEMENT NOMINAL
+     C*
+     C                     SUB  DMNA      WUDNV
+     C                     SUB  DMNA      WUDNS
+     C                     END
+     C*
+     C**  TYPE IS USER TRANSFER OUT, DATE BASIS IS A = ALL DATES
+     C*
+     C           WTYPE     IFEQ 'UO'
+     C           WDBASE    ANDEQ'A'
+     C*
+     C* SUB FROM NOMINAL TRADE, SETTLEMENT AND VALUE
+     C*
+     C                     SUB  DMNA      WUDNT
+     C                     SUB  DMNA      WUDNV
+     C                     SUB  DMNA      WUDNS
+     C                     END
+     C*
+     C*   REPO OUT TYPE
+     C*
+     C**  TYPE IS REPO OUT,  DATE BASIS IS T = TRADE
+     C*
+     C           WTYPE     IFEQ 'RO'
+     C           WDBASE    ANDEQ'T'
+     C*
+     C* SUB FROM TRADE NOMINAL REPOS
+     C*
+     C                     SUB  DMNA      WUNRT
+     C                     END
+     C*
+     C**  TYPE IS REPO OUT, DATE BASIS IS V = VALUE
+     C*
+     C           WTYPE     IFEQ 'RO'
+     C           WDBASE    ANDEQ'V'
+     C*
+     C* SUB FROM  VALUE NOMINAL REPOS
+     C*
+     C                     SUB  DMNA      WUNRV
+     C                     END
+     C*
+     C**  TYPE IS REPO OUT, DATE BASIS IS B = BOTH
+     C*
+     C           WTYPE     IFEQ 'RO'
+     C           WDBASE    ANDEQ'B'
+     C*
+     C* SUB FROM NOMINAL TRADE AND VALUE REPOS
+     C*
+     C                     SUB  DMNA      WUNRT
+     C                     SUB  DMNA      WUNRV
+     C                     END
+     C*
+     C*   REPO IN TYPE
+     C*
+     C**  TYPE IS REPO IN, DATE BASIS IS T = TRADE
+     C*
+     C           WTYPE     IFEQ 'RI'
+     C           WDBASE    ANDEQ'T'
+     C*
+     C* ADD TO TRADE NOMINAL REPOS
+     C*
+     C                     ADD  DMNA      WUNRT
+     C                     END
+     C*
+     C**  TYPE IS REPO IN, DATE BASIS IS V = VALUE
+     C*
+     C           WTYPE     IFEQ 'RI'
+     C           WDBASE    ANDEQ'V'
+     C*
+     C* ADD TO VALUE NOMINAL REPO
+     C*
+     C                     ADD  DMNA      WUNRV
+     C                     END
+     C*
+     C**  TYPE IS REPO IN, DATE BASIS IS B = BOTH
+     C*
+     C           WTYPE     IFEQ 'RI'
+     C           WDBASE    ANDEQ'B'
+     C*
+     C* ADD TO NOMINAL TRADE AND VALUE REPO
+     C*
+     C                     ADD  DMNA      WUNRT
+     C                     ADD  DMNA      WUNRV
+     C                     END
+     C*
+     C* NEXT END IS END OF *IN01 IFEQ '1',= DEPOT MOVEMENT ACTION TYPES
+     C*
+     C                     END
+     C*
+     C*  SETTLEMENTS ACTION RECORD
+     C*
+     C           *IN02     IFEQ '1'
+     C*
+     C* IF A REVERSAL REVERSE THE SIGN OF THE NOMINAL
+     C*
+     C           WREVER    IFEQ 'Y'
+     C                     Z-SUBSNMS      SNMS
+     C                     END
+     C*
+     C**  TYPE IS SETTLEMENT PURCHASE, DATE BASIS IS S = SETTLEMENT
+     C*
+     C           WTYPE     IFEQ 'TP'
+     C           WDBASE    ANDEQ'S'
+     C*
+     C* ADD TO NOMINAL SETTLEMENT
+     C*
+     C                     ADD  SNMS      WUDNS
+     C                     END
+     C*
+     C**  TYPE IS SETTLEMENT SALE, DATE BASIS IS S = SETTLEMENT
+     C*
+     C           WTYPE     IFEQ 'TS'
+     C           WDBASE    ANDEQ'S'
+     C*
+     C* SUB FROM NOMINAL SETTLEMENT
+     C*
+     C                     SUB  SNMS      WUDNS
+     C                     END
+     C*
+     C* NEXT END IS END OF *IN02 IFEQ '1',= SETTLEMENT ACTION TYPES
+     C*
+     C                     END
+     C*
+     C*  TRADE ACTION RECORD
+     C*
+     C           *IN03     IFEQ '1'
+     C*
+     C* IF A REVERSAL REVERSE THE SIGN OF THE NOMINAL
+     C*
+     C           WREVER    IFEQ 'Y'
+     C                     Z-SUBNOML      NOML
+     C                     END
+     C*
+     C**  TYPE IS TRADE PURCHASE, DATE BASIS IS T = TRADE
+     C*
+     C           WTYPE     IFEQ ' P'
+     C           WDBASE    ANDEQ'T'
+     C*
+     C* ADD TO NOMINAL TRADE
+     C*
+     C                     ADD  NOML      WUDNT
+     C*                                                                   E21303
+     C** IF A SHARE & ACCRUAL IND. IS X IT IS EX-DIVIDEND. UPDATE THIS    E21303
+     C*                                                                   E21303
+     C           PROT      IFEQ '4'                                       E21303
+     C           ACRI      ANDEQ'X'                                       E21303
+     C                     ADD  NOML      WUECN                           E21303
+     C                     END                                            E21303
+     C                     END
+     C*
+     C**  TYPE IS TRADE PURCHASE, DATE BASIS IS V = VALUE
+     C*
+     C           WTYPE     IFEQ ' P'
+     C           WDBASE    ANDEQ'V'
+     C*
+     C* ADD TO NOMINAL  VALUE
+     C*
+     C                     ADD  NOML      WUDNV
+     C*
+     C** IF A ACCRUAL INDICATOR IS X IT IS EX-COUPON - UPDATE THIS TOO
+     C*
+     C           ACRI      IFEQ 'X'
+     C           PROT      ANDNE'4'                                       E21303
+     C                     ADD  NOML      WUECN
+     C                     END
+     C                     END
+     C*
+     C**  TYPE IS TRADE SALE, DATE BASIS IS T = TRADE
+     C*
+     C           WTYPE     IFEQ ' S'
+     C           WDBASE    ANDEQ'T'
+     C*
+     C* SUB FROM NOMINAL TRADE
+     C*
+     C                     SUB  NOML      WUDNT
+     C*                                                                   E21303
+     C** IF A SHARE & ACCRUAL IND. IS X IT IS EX-DIVIDEND. UPDATE THIS    E21303
+     C*                                                                   E21303
+     C           PROT      IFEQ '4'                                       E21303
+     C           ACRI      ANDEQ'X'                                       E21303
+     C                     SUB  NOML      WUECN                           E21303
+     C                     END                                            E21303
+     C                     END
+     C*
+     C**  TYPE IS TRADE SALE, DATE BASIS IS V = VALUE
+     C*
+     C           WTYPE     IFEQ ' S'
+     C           WDBASE    ANDEQ'V'
+     C*
+     C* SUB FROM NOMINAL  VALUE
+     C*
+     C                     SUB  NOML      WUDNV
+     C*
+     C** IF A ACCRUAL INDICATOR IS X IT IS EX-COUPON - UPDATE THIS
+     C*
+     C           ACRI      IFEQ 'X'
+     C           PROT      ANDNE'4'                                       E21303
+     C                     SUB  NOML      WUECN
+     C                     END
+     C                     END
+     C*
+     C* NEXT END IS END OF *IN03 IFEQ '1', = TRADE ACTION TYPES
+     C*
+     C                     END
+     C*
+     C*  ELSE ACTION DATE IS EQUAL TO NEXT WORKING DAY
+     C*
+     C                     ELSE
+     C*
+     C* UPDATE SUM NOMINAL FIELDS INSTEAD
+     C*  DEPOT MOVEMENT
+     C*
+     C           *IN01     IFEQ '1'
+     C*
+     C* IF A REVERSAL REVERSE THE SIGN OF THE NOMINAL
+     C*
+     C           WREVER    IFEQ 'Y'
+     C                     Z-SUBDMNA      DMNA
+     C                     END
+     C*
+     C**  TYPE IS USER TRANSFER IN , DATE BASIS IS T = TRADE
+     C*
+     C           WTYPE     IFEQ 'UI'
+     C           WDBASE    ANDEQ'T'
+     C*
+     C* ADD TO TRADE NOMINAL
+     C*
+     C                     ADD  DMNA      WUDTP
+     C                     END
+     C*
+     C**  TYPE IS USER TRANSFER IN, DATE BASIS IS C = VALUE AND SETTL.
+     C*
+     C           WTYPE     IFEQ 'UI'
+     C           WDBASE    ANDEQ'C'
+     C*
+     C* ADD TO VALUE NOMINAL
+     C*
+     C                     ADD  DMNA      WUDPV
+     C                     ADD  DMNA      WUNSI                           115654
+     C                     END
+     C*
+     C**  TYPE IS USER TRANSFER IN, DATE BASIS IS A = ALL DATES
+     C*
+     C           WTYPE     IFEQ 'UI'
+     C           WDBASE    ANDEQ'A'
+     C*
+     C* ADD TO NOMINAL TRADE, SETTLEMENT AND VALUE
+     C*
+     C                     ADD  DMNA      WUDTP
+     C                     ADD  DMNA      WUDPV
+     C                     ADD  DMNA      WUNSI                           115654
+     C                     END
+     C*
+     C**  TYPE IS USER TRANSFER OUT, DATE BASIS IS T = TRADE
+     C*
+     C           WTYPE     IFEQ 'UO'
+     C           WDBASE    ANDEQ'T'
+     C*
+     C* ADD FROM TRADE NOMINAL
+     C*
+     C                     ADD  DMNA      WUDTS
+     C                     END
+     C*
+     C**  TYPE IS USER TRANSFER OUT, DATE BASIS IS C = VALUE AND SETTL.
+     C*
+     C           WTYPE     IFEQ 'UO'
+     C           WDBASE    ANDEQ'C'
+     C*
+     C* ADD FROM VALUE NOMINAL
+     C*
+     C                     ADD  DMNA      WUDSV
+     C                     ADD  DMNA      WUNSI                           115654
+     C                     END
+     C*
+     C**  TYPE IS USER TRANSFER OUT, DATE BASIS IS A = ALL DATES
+     C*
+     C           WTYPE     IFEQ 'UO'
+     C           WDBASE    ANDEQ'A'
+     C*
+     C* ADD FROM NOMINAL TRADE AND VALUE
+     C*
+     C                     ADD  DMNA      WUDTS
+     C                     ADD  DMNA      WUDSV
+     C                     ADD  DMNA      WUNSI                           115654
+     C                     END
+     C*
+     C*   REPO OUT TYPE
+     C*
+     C**  TYPE IS REPO OUT, DATE BASIS IS T = TRADE
+     C*
+     C           WTYPE     IFEQ 'RO'
+     C           WDBASE    ANDEQ'T'
+     C*
+     C* SUB FROM SUM NOMINAL REPOS TRADE
+     C*
+     C                     SUB  DMNA      WUSNT
+     C                     END
+     C*
+     C**  TYPE IS REPO OUT, DATE BASIS IS V = VALUE
+     C*
+     C           WTYPE     IFEQ 'RO'
+     C           WDBASE    ANDEQ'V'
+     C*
+     C* SUB FROM SUM NOMINAL REPOS VALUE
+     C*
+     C                     SUB  DMNA      WUSNV
+     C                     END
+     C*
+     C**  TYPE IS REPO OUT, DATE BASIS IS B = BOTH
+     C*
+     C           WTYPE     IFEQ 'RO'
+     C           WDBASE    ANDEQ'B'
+     C*
+     C* SUB FROM SUM NOMINAL  REPOS TRADE AND VALUE
+     C*
+     C                     SUB  DMNA      WUSNT
+     C                     SUB  DMNA      WUSNV
+     C                     END
+     C*
+     C**  TYPE IS REPO IN, DATE BASIS IS T = TRADE
+     C*
+     C           WTYPE     IFEQ 'RI'
+     C           WDBASE    ANDEQ'T'
+     C*
+     C* ADD TO SUM NOMINAL REVERSE REPO TRADE
+     C*
+     C                     ADD  DMNA      WUSNT
+     C                     END
+     C*
+     C**  TYPE IS REPO IN, DATE BASIS IS V = VALUE
+     C*
+     C           WTYPE     IFEQ 'RI'
+     C           WDBASE    ANDEQ'V'
+     C*
+     C* ADD TO SUM NOMINAL REVERSE REPO VALUE
+     C*
+     C                     ADD  DMNA      WUSNV
+     C                     END
+     C*
+     C**  TYPE IS REPO IN, DATE BASIS IS B = BOTH
+     C*
+     C           WTYPE     IFEQ 'RI'
+     C           WDBASE    ANDEQ'B'
+     C*
+     C* ADD TO SUM NOMINAL REVERSE REPOS TRADE AND VALUE
+     C*
+     C                     ADD  DMNA      WUSNT
+     C                     ADD  DMNA      WUSNV
+     C                     END
+     C*
+     C* NEXT END IS END OF *IN01 IFEQ '1', = DEPOT MOVEMENT ACTION TYPES
+     C*
+     C                     END
+     C*
+     C*  TRADE ACTION RECORD
+     C*
+     C           *IN03     IFEQ '1'
+     C*
+     C* IF A REVERSAL REVERSE THE SIGN OF THE NOMINAL
+     C*
+     C           WREVER    IFEQ 'Y'
+     C                     Z-SUBNOML      NOML
+     C                     END
+     C*
+     C**  TYPE IS TRADE PURCHASE, DATE BASIS IS T = TRADE
+     C*
+     C           WTYPE     IFEQ ' P'
+     C           WDBASE    ANDEQ'T'
+     C*
+     C* ADD TO SUM NOMINAL TRADE PURCHASES
+     C*
+     C                     ADD  NOML      WUDTP
+     C                     END
+     C*
+     C**  TYPE IS TRADE PURCHASE, DATE BASIS IS V = VALUE
+     C*
+     C           WTYPE     IFEQ ' P'
+     C           WDBASE    ANDEQ'V'
+     C*
+     C* ADD TO SUM NOMINAL VALUE PURCHASES
+     C*
+     C                     ADD  NOML      WUDPV
+     C           AUTS      IFEQ 'Y'                                       E21605
+     C                     ADD  NOML      WUNSI                           E21605
+     C                     END                                            E21605
+     C                     END
+     C*
+     C**  TYPE IS TRADE SALE, DATE BASIS IS T = TRADE
+     C*
+     C           WTYPE     IFEQ ' S'
+     C           WDBASE    ANDEQ'T'
+     C*
+     C* SUB FROM SUM NOMINAL TRADE SALES
+     C*
+     C                     SUB  NOML      WUDTS
+     C                     END
+     C*
+     C**  TYPE IS TRADE SALE, DATE BASIS IS V = VALUE
+     C*
+     C           WTYPE     IFEQ ' S'
+     C           WDBASE    ANDEQ'V'
+     C*
+     C* SUB FROM SUM NOMINAL VALUE SALES
+     C*
+     C                     SUB  NOML      WUDSV
+     C           AUTS      IFEQ 'Y'                                       E21605
+     C                     SUB  NOML      WUNSI                           E21605
+     C                     END                                            E21605
+     C                     END
+     C*
+     C* NEXT END IS END OF *IN03 IFEQ '1', = TRADE ACTION TYPES
+     C*
+     C                     END
+     C                     END
+     C*
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* P01 SR - OBTAIN LATEST CORRECT POSITION DATE AND BALANCES     *
+     C*            FOR EACH POSITION WITH ACTIONS TODAY               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           P01       BEGSR                           ** P01 **
+     C*
+     C** CONSTRUCT KEY TO DEPOT POSITIONS HIST/CURR LF/UDEPH
+     C*
+     C                     Z-ADD*ZERO     WLUDDT                          E29307
+     C***********          MOVE WBC       UDBR                            S01117
+     C                     MOVE WBC       UDBA                            S01117
+     C                     MOVE WSS       UDSN
+     C                     MOVE WDP       UDPT
+     C                     MOVE WBK       UDBK
+     C                     MOVE WMK       UDMK
+     C                     Z-ADDWACTDT    WDT
+     C           UDPKEY    SETLLUDEPPDF                  77
+     C*
+      ***  If a record with equal key found, then read it.                099930
+      *                                                                   099930
+     C           *IN77     IFEQ '1'
+     C           UDPKEY    READEUDEPPDF                  77
+     C*
+     C**  DATES ARE EQUAL - SET FLAG TO INDICATE THIS - SEE W01 SUBR
+     C*
+     C                     Z-ADDUDDT      WLUDDT                          E29307
+     C                     MOVE '1'       WEQUAL  1
+     C*********************GOTO ENDP01                                    099930
+      *                                                                   099930
+      ***  ELSE a record with equal key was not found                     099930
+      *                                                                   099930
+     C                     ELSE
+     C                     MOVE '0'       WEQUAL
+     C*********************END                                            099930
+     C*
+     C** SEARCH FOR NEXT EARLIEST DATE EQUAL OR BEFORE ACTION DATE
+     C*
+     C                     READPUDEPPDF                  77
+     C*
+     C** IF BEGINNING OF FILE ITS FOR FIRST DATE OF FIRST POSITION
+     C*
+     C           *IN77     IFEQ '1'
+     C                     EXSR CLRUPD
+     C*********************GOTO ENDP01                                    099930
+     C*********************END                                            099930
+      *                                                                   099930
+      ***  ELSE a record has been read                                    099930
+      *                                                                   099930
+     C                     ELSE                                           099930
+      *                                                                   099930
+     C*
+     C* CHECK IF RECORD RETRIEVED IS SAME AS ACTION RECORD KEY
+     C* ELSE ZEROISE FIELDS IN FILE LAYOUT UDEPPDF
+     C*
+     C***********WBC       IFNE UDBR                                      S01117
+     C           WBC       IFNE UDBA                                      S01117
+     C           WSS       ORNE UDSN
+     C           WDP       ORNE UDPT
+     C           WBK       ORNE UDBK
+     C           WMK       ORNE UDMK
+     C                     READ UDEPPDF                  77               E15426
+      *                                                                   099930
+      ***  The above READ is based on the assumption that there will      099930
+      ***  always be at least one record on UDEPPD for every Position     099930
+      ***  If there isn't, then problems will arise. If there is, then    099930
+      ***  WACTDT cannot actually equal UDDT at this point. So the next   099930
+      ***  IF statment will always be true.                               099930
+      *                                                                   099930
+     C           WACTDT    IFNE UDDT                                      E15426
+     C           WBC       ORNE UDBA                                      147127
+     C           WSS       ORNE UDSN                                      147127
+     C           WDP       ORNE UDPT                                      147127
+     C           WBK       ORNE UDBK                                      147127
+     C           WMK       ORNE UDMK                                      147127
+     C                     EXSR CLRUPD
+     C                     END                                            099930
+      *                                                                   099930
+      ***  ELSE the REASP has found a prior Position, so set the last     099930
+      ***  Position Date accordingly                                      099930
+      *                                                                   099930
+     C                     ELSE                                           E29307
+     C                     Z-ADDUDDT      WLUDDT                          E29307
+     C*********************END                                      E15426099930
+     C                     END
+      *** END of IF/ELSE beginning of file found                          099930
+     C                     END                                            099930
+      *** END of IF/ELSE record with Equal Key read                       099930
+     C                     END                                            099930
+     C*
+     C           ENDP01    ENDSR                           ** ENDP01**
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CLRUPD SR - CLEAR OUT FIELDS IN FILE LAYOUT UDEPPDF           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CLRUPD    BEGSR                           ** CLRUPD **
+     C*
+     C** CLEAR EACH FIELD -
+     C** NO DEPOT POSITION EQUAL OR BEFORE THIS ACTION
+     C*
+     C                     Z-ADD0         UDNT
+     C                     Z-ADD0         UDNV
+     C                     Z-ADD0         UDNS
+     C                     Z-ADD0         UNRT
+     C                     Z-ADD0         UNRV
+     C                     Z-ADD0         UDTP
+     C                     Z-ADD0         UDTS
+     C                     Z-ADD0         UDSV
+     C                     Z-ADD0         UDPV
+     C                     Z-ADD0         UECN
+     C                     Z-ADD0         USNT
+     C                     Z-ADD0         USNR
+     C                     Z-ADD0         USNV
+     C                     Z-ADD0         USRV
+     C                     Z-ADD0         UNSI                            E21605
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ADDDAT SR - ADD DATE ACCUMULATED CHANGES TO POSITION CHANGES  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ADDDAT    BEGSR                           ** ADDDAT **
+     C*
+     C** ADD EACH DATE ACCUMULATED FIELD TO POSTION FIELDS
+     C*
+     C                     ADD  WUDNT     WUDNTP
+     C                     ADD  WUDNV     WUDNVP
+     C                     ADD  WUDNS     WUDNSP
+     C                     ADD  WUNRT     WUNRTP
+     C                     ADD  WUNRV     WUNRVP
+     C                     ADD  WUDTP     WUDTPP
+     C                     ADD  WUDTS     WUDTSP
+     C                     ADD  WUDPV     WUDPVP
+     C                     ADD  WUDSV     WUDSVP
+     C                     ADD  WUECN     WUECNP
+     C                     ADD  WUSNT     WUSNTP
+     C                     ADD  WUSNR     WUSNRP
+     C                     ADD  WUSNV     WUSNVP
+     C                     ADD  WUSRV     WUSRVP
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* P02 SR - UPDATE INTERVENING POSITION RECORDS                  *
+     C*          FOR EACH NEW ACTION DATE                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           P02       BEGSR                           ** P02 **
+     C*
+     C           UDPKEY    SETGTUDEPPDF              77
+     C*
+     C** WLUDDT IS DATE OF LAST DEPOT POSN. RECORD UPDATED
+     C*
+     C           WLUDDT    DOWLTWACTDT
+     C           UDPKND    READEUDEPPDF                  77
+     C           *IN77     IFEQ '0'
+     C           UDDT      ANDLEWACTDT
+     C*
+     C** SUBR U03 HAS TO RESET RECORD TO H IF LATER DATE ADDED.
+     C** A TEST IS MADE AGAINST WCOMPD - SET TO ACTION DATE WHEN U03
+     C** CALLED HERE WHILST SET TO STORAGE DATE (WACTDT) IF FROM CHGPOS
+     C*
+     C                     Z-ADDWACTDT    WCOMPD
+     C                     EXSR U03
+     C           UDDT      IFEQ WACTDT
+     C           WCUPDE    SUB  1         WCUPDE
+     C                     END
+     C                     Z-ADDUDDT      WLUDDT
+     C                     ELSE
+     C*
+     C*  IF 77 ON END OF FILE - FORCE END OF DO LOOP
+     C*
+     C                     Z-ADDWACTDT    WLUDDT
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  AT END OF UPDATES ZEROISE DATE ACCUMULATORS
+     C*
+     C                     Z-ADD0         WUDNT
+     C                     Z-ADD0         WUDNV
+     C                     Z-ADD0         WUDNS
+     C                     Z-ADD0         WUNRT
+     C                     Z-ADD0         WUNRV
+     C                     Z-ADD0         WUDTP
+     C                     Z-ADD0         WUDTS
+     C                     Z-ADD0         WUDPV
+     C                     Z-ADD0         WUDSV
+     C                     Z-ADD0         WUECN
+     C                     Z-ADD0         WUSNT
+     C                     Z-ADD0         WUSNR
+     C                     Z-ADD0         WUSNV
+     C                     Z-ADD0         WUSRV
+     C                     Z-ADD0         WUNSI                           E21605
+     C           ENDP02    ENDSR                           ** ENDP02 **
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* U01 SR - UPDATE USER DEPOT POSITION RECORD FOR EACH           *
+     C*            EXISTING POSITION DATE WITH ACTIONS.               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           U01       BEGSR                           ** U01 **
+     C*
+     C** ADD ACCUMULATED CHANGES TO CURRENT RECORD VALUES AND UPDATE
+     C*
+     C                     ADD  WUDNT     UDNT
+     C                     ADD  WUDNV     UDNV
+     C                     ADD  WUDNS     UDNS
+     C                     ADD  WUECN     UECN
+     C                     ADD  WUNRT     UNRT
+     C                     ADD  WUNRV     UNRV
+     C                     UPDATUDEPPDF
+     C                     ADD  1         WCUPDE  50
+     C                     Z-ADDUDDT      WLUDDT
+     C*
+     C           ENDU01    ENDSR                           ** ENDU01 **
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* U03 SR - UPDATE INTERVENING POSITIONS FOR EACH                *
+     C*            EXISTING POSITION DATE WITH NO ACTIONS.            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           U03       BEGSR                           ** U03 **
+     C*
+     C** DETERMINE IF LAST DATE FOR POSITION
+     C*
+     C           UDDT      IFLT WLASTD
+     C                     MOVE 'H'       RECI
+     C                     ELSE
+     C           UDDT      IFEQ WLASTD
+     C           WCOMPD    ANDGTUDDT
+     C           WCOMPD    ANDNEDNWD
+     C                     MOVE 'H'       RECI
+     C                     END
+     C                     END
+     C*
+     C** ADD ACCUMULATED CHANGES TO CURRENT RECORD VALUES AND UPDATE
+     C*
+     C                     ADD  WUDNTP    UDNT
+     C                     ADD  WUDNVP    UDNV
+     C                     ADD  WUDNSP    UDNS
+     C                     ADD  WUECNP    UECN
+     C                     ADD  WUNRTP    UNRT
+     C                     ADD  WUNRVP    UNRV
+     C                     UPDATUDEPPDF
+     C                     ADD  1         WCUPDE  50
+     C                     Z-ADDUDDT      WLUDDT
+     C*
+     C           ENDU03    ENDSR                            **ENDU03**
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   LASTDT -                                                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           LASTDT    BEGSR                            **LASTDT***
+     C*
+     C* GET LATEST DATE FOR THIS NEW POSITION
+     C*
+     C** CONSTRUCT KEY TO DEPOT POSITIONS HIST/CURR LF/UDEPH
+     C*
+     C***********          MOVE WBC       UDBR                            S01117
+     C                     MOVE WBC       UDBA                            S01117
+     C                     MOVE WSS       UDSN
+     C                     MOVE WDP       UDPT
+     C                     MOVE WBK       UDBK
+     C                     MOVE WMK       UDMK
+     C                     MOVE *HIVAL    WDT
+     C           UDPKEY    SETGTUDEPPDF
+     C*
+     C           RDLOOP    TAG                             ** RDLOOP **
+     C*
+     C                     READPUDEPPDF                  77
+     C*
+     C*  IF DELETED RECORD GO TO RDLOOP AND READ NEXT PREVIOUS RCD
+     C*
+     C           *IN77     IFEQ '0'
+     C           RECI      CABEQ'*'       RDLOOP
+     C                     END
+     C*
+     C*  IF BEGINNING OF FILE - NO POSITION YET FOR SECURITY
+     C*
+     C           *IN77     IFEQ '1'
+     C                     EXSR NOPOSN
+     C                     GOTO ENDLSD
+     C                     END
+     C*
+     C* CHECK IF RECORD RETRIEVED IS SAME AS ACTION RECORD KEY
+     C* ELSE NO POSITION FOR SECURITY - EXSR NOPOSN
+     C*
+     C***********WBC       IFNE UDBR                                      S01117
+     C           WBC       IFNE UDBA                                      S01117
+     C           WSS       ORNE UDSN
+     C           WDP       ORNE UDPT
+     C           WBK       ORNE UDBK
+     C           WMK       ORNE UDMK
+     C                     EXSR NOPOSN
+     C                     GOTO ENDLSD
+     C                     END
+     C*
+     C** STORE LAST POSITION DATE HELD ON FILE IN WLASTD FIELD
+     C*
+     C                     Z-ADDUDDT      WLASTD
+     C*
+     C** IF NEW DATE IN FOR THIS POSITION IS GREATER THAN LAST DATE
+     C** FOR THIS POSITION AND ACTION DATE IS NOT EQUAL TO DATE NEXT
+     C** WORKING DAY, UPDATE THIS LAST RECORD TO REC.ID = H HISTORY
+     C*
+     C           WACTDT    IFNE DNWD
+     C           WACTDT    ANDGTUDDT
+     C                     MOVE 'H'       RECI
+     C                     UPDATUDEPPDF
+     C                     END
+     C*
+     C           ENDLSD    ENDSR                           ** ENDLSD **
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* NOPOSN SR - NO EXISTING POSITION FOR THIS SECURITY            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           NOPOSN    BEGSR                           ** NOPOSN **
+     C*
+     C*  ZEROISE WLASTD (DATE OF LAST POSITION)
+     C*  AND ZEROISE VALUE FIELDS
+     C*
+     C                     Z-ADD0         WLASTD
+     C                     Z-ADD0         UDDT
+     C                     Z-ADD0         UECN
+     C                     Z-ADD0         UDNT
+     C                     Z-ADD0         UDNV
+     C                     Z-ADD0         UDNS
+     C                     Z-ADD0         UNRT
+     C                     Z-ADD0         UNRV
+     C                     Z-ADD0         UDTP
+     C                     Z-ADD0         UDTS
+     C                     Z-ADD0         UDPV
+     C                     Z-ADD0         UDSV
+     C                     Z-ADD0         USNT
+     C                     Z-ADD0         USNR
+     C                     Z-ADD0         USNV
+     C                     Z-ADD0         USRV
+     C                     Z-ADD0         TNLU
+     C                     Z-ADD0         UNSI                            E21605
+     C*
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CHGPOS SR - CHANGE OF POSITION                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CHGPOS    BEGSR                           ** CHGPOS **
+     C*
+     C*  UPDATE DEPOT POSITION RECORDS FROM LAST DATE UPDATED TO MOST
+     C*  RECENT.
+     C*
+     C* IGNORE IF DATE OF ACTION IS DNWD - NONE TO UPDATE (CLEAR FLDS)
+     C*
+     C           STGDAT    IFNE DNWD
+     C*
+     C           STGKEY    SETLLUDEPPDF                  77
+     C           WLUDDT    DOWLEWLASTD
+     C           STGKY2    READEUDEPPDF                  77
+     C           *IN77     IFNE '1'
+     C           UDDT      IFGT WLUDDT
+     C*
+     C** SUBR U03 HAS TO RESET RECORD TO H IF LATER DATE ADDED.
+     C** A TEST IS MADE AGAINST WCOMPD - SET TO STORAGE DATE WHEN
+     C** CALLED FROM U03 WHILST SET TO ACTION DATE (WACTDT) IF FROM P02
+     C*
+     C                     Z-ADDSTGDAT    WCOMPD
+     C                     EXSR U03
+     C                     Z-ADDUDDT      WLUDDT
+     C                     END
+     C*
+     C* ELSE 77 ON IS END OF FILE - FORCE END OF LOOP
+     C*
+     C                     ELSE
+     C                     Z-SUB1         WLASTD
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* ZEROISE ALL ACCUMULATORS AFTER UPDATING HAS OCCURRED
+     C*
+     C*   DATE ACCUMULATORS
+     C*
+     C                     Z-ADD0         WUDNT
+     C                     Z-ADD0         WUDNV
+     C                     Z-ADD0         WUDNS
+     C                     Z-ADD0         WUNRT
+     C                     Z-ADD0         WUNRV
+     C                     Z-ADD0         WUDTP
+     C                     Z-ADD0         WUDTS
+     C                     Z-ADD0         WUDPV
+     C                     Z-ADD0         WUDSV
+     C                     Z-ADD0         WUECN
+     C                     Z-ADD0         WUSNT
+     C                     Z-ADD0         WUSNR
+     C                     Z-ADD0         WUSNV
+     C                     Z-ADD0         WUSRV
+     C                     Z-ADD0         WUNSI                           E21605
+     C*
+     C*   POSITION ACCUMULATORS
+     C*
+     C                     Z-ADD0         WUDNTP
+     C                     Z-ADD0         WUDNVP
+     C                     Z-ADD0         WUDNSP
+     C                     Z-ADD0         WUNRTP
+     C                     Z-ADD0         WUNRVP
+     C                     Z-ADD0         WUDTPP
+     C                     Z-ADD0         WUDTSP
+     C                     Z-ADD0         WUDPVP
+     C                     Z-ADD0         WUDSVP
+     C                     Z-ADD0         WUECNP
+     C                     Z-ADD0         WUSNTP
+     C                     Z-ADD0         WUSNRP
+     C                     Z-ADD0         WUSNVP
+     C                     Z-ADD0         WUSRVP
+     C           ENDCHP    ENDSR                           **ENDCHP**
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* U02 SR - UPDATE POSITIONS WITH ACTIONS ON THIS DATE           *
+     C*            FOR EACH EXISTING POSITION DATE WITH ACTIONS.      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           U02       BEGSR                           ** U02 **
+     C*
+     C** DETERMINE IF LAST DATE FOR POSITION
+     C*
+     C           UDDT      IFLT WLASTD
+     C                     MOVE 'H'       RECI
+     C                     ELSE
+     C           UDDT      IFEQ WLASTD
+     C***********WACTDT    ANDGTUDDT                                      E13561
+     C           STGDAT    ANDGTUDDT                                      E13561
+     C***********WACTDT    ANDNEDNWD                                      E13561
+     C           STGDAT    ANDNEDNWD                                      E13561
+     C                     MOVE 'H'       RECI
+     C                     END
+     C                     END
+     C*
+     C** IF ACTION DATE NOT EQUAL TO DNWD, UPDATE IN SUBR U01
+     C*
+     C           STGDAT    IFNE DNWD
+     C                     EXSR U01
+     C                     ELSE
+     C*
+     C**  FILL IN NOMINAL UPDATES DNWD TYPE
+     C*
+     C                     ADD  WUDTP     UDTP
+     C                     ADD  WUDPV     UDPV
+     C                     ADD  WUDTS     UDTS
+     C                     ADD  WUDSV     UDSV
+     C                     ADD  WUSNT     USNT
+     C                     ADD  WUSNV     USNV
+     C                     ADD  WUNSI     UNSI                            E21605
+     C*
+     C***Update*Nominal*Settled*I/C*+/-*Nominal,*if*Trade*Action*&*S01176 E21605
+     C******Auto*Settle*Ind*=*'Y'**********************************S01176 E21605
+     C************IN03     IFEQ '1'                                S01176 E21605
+     C***********AUTS      ANDEQ'Y'                                S01176 E21605
+     C***********PRSL      IFEQ 'P'                                S01176 E21605
+     C***********          ADD  NOML      UNSI                     S01176 E21605
+     C***********          ELSE                                    S01176 E21605
+     C***********PRSL      IFEQ 'S'                                S01176 E21605
+     C***********          SUB  NOML      UNSI                     S01176 E21605
+     C***********          END                                     S01176 E21605
+     C***********          END                                     S01176 E21605
+     C***********          END                                     S01176 E21605
+     C*
+     C* UPDATE CDEPPD - NB SINCE DATE IS DNWD HERE, RECI MUST EQUAL 'D'
+     C*
+     C                     MOVE 'D'       RECI
+     C                     UPDATUDEPPDF
+     C                     ADD  1         WCUPDE  50
+     C                     Z-ADDUDDT      WLUDDT
+     C                     END
+     C           ENDU02    ENDSR                            **ENDU02**
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* W01 SR - WRITE NEW POSITION RECORD                            *
+     C*            FOR EACH POSITION FOR A NEW DATE .                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           W01       BEGSR                           ** W01 **
+     C*
+     C* IF LAST DATE FOR POSITION AND ACTION DATE GT LAST POSN DATE
+     C* RECI IS MADE EQUAL TO D - ELSE RECI IS EQUAL TO H
+     C*
+     C           COMARA    IFNE STGARA
+     C********** STGDAT    ANDGTWLASTD                                    E15426
+     C           STGDAT    ANDGEWLASTD                                    E15426
+     C           *IN89     OREQ '1'
+     C********** STGDAT    ANDGTWLASTD                                    E15426
+     C           STGDAT    ANDGEWLASTD                                    E15426
+     C                     MOVE 'D'       RECI
+     C                     ELSE
+     C                     MOVE 'H'       RECI
+     C                     END
+     C*
+     C* SET UP KEY FIELDS FROM ACTION RECORD
+     C*
+     C***********          MOVE WSBC      UDBR                            S01117
+     C                     MOVE WSBC      UDBA                            S01117
+     C                     MOVE WSSS      UDSN
+     C**********           Z-ADDWSDP      UDPT                                                CSD027
+     C                     MOVE WSDP      UDPT                                                CSD027
+     C                     MOVE WSBK      UDBK
+     C                     MOVE WSMK      UDMK
+     C                     Z-ADDSTGDAT    UDDT
+     C*                                                                   E29307
+     C* If coupon date crossed, reset ex-coupon nominal                   E29307
+     C*                                                                   E29307
+     C           UDDT      ADD  1         ZECD                            E29307
+     C                     EXSR ZLCD                                      E29307
+     C           ZZLCD     IFGT WLUDDT                                    E29307
+     C                     Z-ADD*ZERO     UECN                            E29307
+     C                     END                                            E29307
+     C*
+     C           STGDAT    IFNE DNWD
+     C*
+     C** ADD ACCUMULATED CHANGES TO CURRENT RECORD VALUES AND UPDATE
+     C*
+     C                     ADD  WUDNT     UDNT
+     C                     ADD  WUDNV     UDNV
+     C                     ADD  WUDNS     UDNS
+     C                     ADD  WUECN     UECN
+     C                     ADD  WUNRT     UNRT
+     C                     ADD  WUNRV     UNRV
+     C*
+     C*  ACTION DATE IS EQUAL DATE NEXT WORKING DAY
+     C*
+     C                     ELSE
+     C*
+     C**  FILL IN NOMINAL UPDATES DNWD TYPE
+     C*
+     C                     ADD  WUDTP     UDTP
+     C                     ADD  WUDPV     UDPV
+     C                     ADD  WUDTS     UDTS
+     C                     ADD  WUDSV     UDSV
+     C                     ADD  WUSNT     USNT
+     C                     ADD  WUSNV     USNV
+     C                     ADD  WUNSI     UNSI                            E21605
+     C*
+     C***Update*Nominal*Settled*I/C*+/-*Nominal,*if*Trade*Action*&*S01176 E21605
+     C******Auto*Settle*Ind*=*'Y'**********************************S01176 E21605
+     C************IN03     IFEQ '1'                                S01176 E21605
+     C***********AUTS      ANDEQ'Y'                                S01176 E21605
+     C***********PRSL      IFEQ 'P'                                S01176 E21605
+     C***********          ADD  NOML      UNSI                     S01176 E21605
+     C***********          ELSE                                    S01176 E21605
+     C***********PRSL      IFEQ 'S'                                S01176 E21605
+     C***********          SUB  NOML      UNSI                     S01176 E21605
+     C***********          END                                     S01176 E21605
+     C***********          END                                     S01176 E21605
+     C***********          END                                     S01176 E21605
+     C*
+     C                     END
+     C                     Z-ADD0         TNLU
+     C*
+     C                     WRITEUDEPPDF
+     C*
+     C* COUNT NO OF RECORDS ADDED AND STORE LAST DATE HELD FOR POSN.
+     C*
+     C                     ADD  1         WCADDP  50
+     C                     Z-ADDUDDT      WLUDDT
+     C*
+     C           ENDW02    ENDSR                           **ENDW02**
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CHGDAT SR - NEW DATE FOR SAME POSITION ACTION RECORD          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           NEWDAT    BEGSR                           ** NEWDAT **
+     C*
+     C** ACCESS DEPOT POSITION RECORD UDEPPDF FOR LATEST POSITION
+     C** DATE WHICH IS LESS THAN ACTION DATE
+     C*
+     C** CONSTRUCT KEY TO DEPOT POSITIONS HIST/CURR LF/UDEPH
+     C*
+     C***********          MOVE WBC       UDBR                            S01117
+     C                     MOVE WBC       UDBA                            S01117
+     C                     MOVE WSS       UDSN
+     C**********           Z-ADDWDP       UDPT                                                CSD027
+     C                     MOVE WDP       UDPT                                                CSD027
+     C                     MOVE WBK       UDBK
+     C                     MOVE WMK       UDMK
+     C                     Z-ADDWACTDT    WDT
+     C           UDPKEY    SETLLUDEPPDF                  77
+     C*
+     C*  77 ON MEANS RECORD MATCHES A DATE ON UDEPPD FILE
+     C*
+     C           *IN77     IFEQ '1'
+     C                     MOVE '1'       WEQUAL
+     C           UDPKEY    READEUDEPPDF                  77
+     C                     GOTO ENDNWD
+     C                     END
+     C*
+     C* IF NOT A DATE MATCH READ PREVIOUS ONE FOR LATEST EARLIER DATE
+     C*
+     C                     MOVE '0'       WEQUAL
+     C                     READPUDEPPDF                  77
+     C*
+     C*
+     C           ENDNWD    ENDSR                           ** ENDNWD **
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* AUDIT - SR TO UPDATE BOOK POSITION HEADER AND OUTPUT          *
+     C*               CONTROL REPORT                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C** COMPARE COUNT OF MOVEMENTS TO AUDIT MOVEMENTS
+     C*
+     C           *INU8     IFNE '1'
+     C           WCMOVT    IFNE DMNORE
+     C                     MOVE '1'       *INU8
+     C                     END
+     C                     END
+     C*
+     C** READ DEPOT POSITIONS AUDIT FILE UNLESS ALREADY DB ERROR U7
+     C*
+     C           *INU7     IFNE '1'
+     C                     READ UDEPPA                   79
+     C********** *IN79     IFNE '1'                                       E15035
+     C********** RECI      ANDEQ'*'                                       E15035
+     C**********           MOVE '1'       *IN79                           E15035
+     C**********           END                                            E15035
+     C*
+     C* DATA BASE ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'UDEPPA'  DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 06 **
+     C                     Z-ADD6         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                       U7U8
+     C                     END
+     C                     END
+     C*
+     C** UPDATE UDEPPA IF U8 NOT ON
+     C*
+     C           *INU8     IFNE '1'
+     C                     Z-ADDNORE      DPNORE  50
+     C                     ADD  WCADDP    NORE
+     C                     UPDATUDEPPAF
+     C                     END
+     C           *INU8     IFEQ '1'
+     C                     Z-ADD0         NORE
+     C                     END
+     C*
+     C* OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADAU
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C                     ELSE
+     C*
+     C**IF*RECORD*COUNT*IS*ZERO*OUTPUT*NONE****************************   E29170
+     C***********                                                         E29170
+     C***********WCMOVT    ADD  WORK1     WORK1   50                      E29170
+     C***********WCSETT    ADD  WORK1     WORK1   50                      E29170
+     C***********WCTRAD    ADD  WORK1     WORK1   50                      E29170
+     C***********WORK1     IFEQ 0                                         E29170
+     C***********          WRITENONE                                      E29170
+     C***********          ELSE                                           E29170
+     C           DMNORE    COMP WCMOVT               2929
+     C                     WRITECONTROL
+     C*
+     C***********          END                                            E29170
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2                                               E29307
+     C/COPY ZSRSRC,ZDATE2Z2                                               E29307
+     C/COPY ZSRSRC,ZLCDZ1                                                 E29307
+     C*****************************************************************
+     C*                                                               *
+     C*  UDEDSR  - SUBROUTINE FOR ERROR HANDLING OF PF/UDEPPA         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           UDEDSR    BEGSR                            **UDEDSR**
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'UDEPPA'  DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 07 **
+     C                     Z-ADD07        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSUDD    DBSTAT
+     C                     MOVE '1'       *IN87
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  UDEPSR  - SUBROUTINE FOR ERROR HANDLING OF LF/UDEPH          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           UDEPSR    BEGSR                           ** UDEPSR **
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'UDEPH'   DBFILE           *****************
+     C                     MOVELCOMARA    DBKEY            ** DB ERROR 08 **
+     C                     Z-ADD08        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSUDA    DBSTAT
+     C                     MOVE '1'       *IN87
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* FIRST - SUBROUTINE TO ACCESS ICD INFORMATION                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C* ACCESS ICD    TABTB10
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD1         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C* ACCESS ICD2   TABTB11
+     C*
+     C                     EXSR ZICD2
+     C           *INU7     IFEQ '1'
+     C                     MOVE '1'       *IN99
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELTKEY      DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD2         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C                     END
+     C*
+     C*
+     C*
+     C                     ENDSR
+     C*****************************************************************   E21303
+      /EJECT                                                              E21303
+     C*****************************************************************   E21303
+     C*                                                               *   E21303
+     C* CHNSEC - SUBROUTINE TO CHAIN TO SECTY AND INVTY FOR INFO.     *   E21303
+     C*                                                               *   E21303
+     C*****************************************************************   E21303
+     C*                                                                   E21303
+     C           CHNSEC    BEGSR                           ** CHNSEC *    E21303
+     C*                                                                   E21303
+     C* ACCESS SECURITIES FILE                                            E21303
+     C*                                                                   E21303
+     C                     MOVE WSS       KWSS   10                       E21303
+     C           KWSS      CHAINSECTY                55                   E21303
+     C           *IN55     IFEQ '1'                                       E21303
+     C           RECI      ORNE 'D'                                       E21303
+     C           RECI      ANDNE'M'                                       E21303
+     C                     MOVE '1'       *INU7                           E21303
+     C                     MOVE '1'       *INU8                           E21303
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SECTY'   DBFILE           ***************E21303
+     C                     MOVELKWSS      DBKEY            ** DB ERROR 09 E21303
+     C                     Z-ADD9         DBASE            ***************E21303
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE                                           E21303
+     C*                                                                   E21303
+     C** CHAIN FOR INVESTMENT TYPE RECORD AND DATA BASE ERROR             E21303
+     C*                                                                   E21303
+     C           INVTKY    CHAININVTP                79                   E21303
+     C           *IN79     IFEQ '1'                                       E21303
+     C           RECI      OREQ '*'                                       E21303
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'INVTP'   DBFILE           ***************E21303
+     C                     MOVELINVKEY    DBKEY            ** DB ERROR 10 E21303
+     C                     SETON                     U7U8  ***************E21303
+     C                     Z-ADD10        DBASE                           E21303
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END                                            E21303
+     C                     END                                            E21303
+     C*                                                                   E21303
+     C                     ENDSR                                          E21303
+     C*                                                                   E21303
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************   E21303
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

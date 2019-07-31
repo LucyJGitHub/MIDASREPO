@@ -1,0 +1,55 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Activation of Feature')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000350 - Midas SC Activation of Feature                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. CSW219  *CREATE    Date 04Mar19              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSW219 - SWIFT 2019 Changes                                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                        2019')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Create data area LDA */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGJOB     SWS(XXXXXX00)
+
+/** Update SCSAR* Files               */
+             CALL       PGM(SC000350)
+
+/** Database error processing */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))
+             GOTO       CMDLBL(END)
+
+ABNOR:
+/* Error processing */
+             CHGJOB     SWS(XXXXXX11)
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000350 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+
+END:
+             ENDPGM

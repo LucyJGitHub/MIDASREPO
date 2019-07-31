@@ -1,0 +1,871 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas GL Collateral details display')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  DSPF/GLCOLLDDF - Collateral Details Dispaly                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      *                 CGL018             Date 30Sep02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CGL011 *CREATE     Date 20Sep99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL018 - Risk Weighted Assets                                *
+      *  CGL011 - Collateral Processing for Midas (Phase 1)           *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Function of Indicators                                       *
+      *  ----------------------                                       *
+      *  10-45  Field Error - highlight screen fields                 *
+      *  64 - Enquiry, Delete or Authorise Mode.                      *
+      *  65 - Insert Mode.                                            *
+      *  69 - Position to Action Code.                                *
+      *  70 - CGL012 is installed.                                    *
+      *  71 - Pledge collateral type.                                 *
+      *  72 - Mortgage collateral type.                               *
+      *  73 - General/specific Ind is 'S'.                            *
+      *  74 - Account, Deposit or Pledge collateral type.             *
+      *  75 - Charges, Guarantees, Letters or Official Guarantees     *
+      *       collateral type.                                        *
+      *  76 - F17(Risk Weighted Assets) is enabled.                   *                       CGL018
+      *  77 - F15(Allocation) is enabled.                             *
+      *  78 - F16(Narrative) is enabled.                              *
+      *  79 - F10(Delete) is enabled.                                 *
+      *  96 - Subfile control                                         *
+      *  97 - Subfile end                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+     A                                      MSGLOC(22)
+     A                                      REF(MFRFL)
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      INDARA
+     A                                      CF03
+     A                                      CF12
+      *****************************************************************
+      *
+      ** Initial Screen
+     A          R GLCOLLD0                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+     A                                      BLINK
+     A                                      PUTOVR
+      *
+     A            DDUSER    R        O  1  2REFFLD(USER)
+     A                                      OVRDTA
+     A                                  1 13'GLCOLLD'
+     A            BJMRDT         7A  O  1 73OVRDTA
+     A            DDWSID    R        O  2  2REFFLD(JOJOB)
+     A                                      OVRDTA
+     A                                  2 28'Collateral Details Maintenance'
+     A                                      DSPATR(HI)
+     A            DDTIME         6Y 0O  2 72EDTWRD('  :  :  ')
+     A                                      OVRDTA
+      *
+     A                                  4  3'Action...:'
+     A            DDACTN         1A  B  4 14TEXT('Action code')
+     A N10                                  DSPATR(HI UL)
+     A  10                                  DSPATR(RI)
+     A  69
+     AO 10                                  DSPATR(PC)
+     A                                      OVRDTA
+     A                                  4 38'Collateral Reference...:'
+     A            DDCREF        10A  B  4 63TEXT('Collateral Ref.')
+     A N11                                  DSPATR(HI UL)
+     A  11                                  DSPATR(RI PC)
+     A                                      OVRDTA
+      *
+     A                                  6 29'OR'
+     A                                 10 29'AND/OR'
+      *
+     A                                  8  3'Review From..............:'
+     A            DDREVF        10A  B  8 30TEXT('Review From')
+     A N12                                  DSPATR(HI UL)
+     A  12                                  DSPATR(RI PC)
+     A                                      OVRDTA
+      *
+     A                                 11  3'Select:'
+     A  70                             12  3'Requiring Authorisation..:'
+     A            DDREQR         1A  B 12 30TEXT('Req. Authorisation')
+     A N13 70                               DSPATR(HI UL)
+     A  13 70                               DSPATR(RI PC)
+     A N70                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 13  3'Entity Level.............:'
+     A            DDSENT         1A  B 13 30TEXT('Entity Level')
+     A N14                                  DSPATR(HI UL)
+     A  14                                  DSPATR(RI PC)
+     A                                      OVRDTA
+     A                                 14  3'Company..................:'
+     A            DDSCMP         3A  B 14 30TEXT('Company')
+     A N15                                  DSPATR(HI UL)
+     A  15                                  DSPATR(RI PC)
+     A                                      OVRDTA
+     A                                 15  3'Branch...................:'
+     A            DDSBRC         3A  B 15 30TEXT('Branch')
+     A N16                                  DSPATR(HI UL)
+     A  16                                  DSPATR(RI PC)
+     A                                      OVRDTA
+      *
+     A                                 17  3'Collateral Type..........:'
+     A            DDSCOL         5A  B 17 30TEXT('Collateral Branch')
+     A N17                                  DSPATR(HI UL)
+     A  17                                  DSPATR(RI PC)
+     A                                      OVRDTA
+     A                                 18  3'Collateral Customer......:'
+     A            DDSCNU        10A  B 18 30TEXT('Collateral Customer')
+     A N18                                  DSPATR(HI UL)
+     A  18                                  DSPATR(RI PC)
+     A                                      OVRDTA
+     A                                 19  3'Collateral Currency......:'
+     A            DDSCCY         3A  B 19 30TEXT('Collateral Currency')
+     A N19                                  DSPATR(HI UL)
+     A  19                                  DSPATR(RI PC)
+     A                                      OVRDTA
+     A                                 20  3'Collateral Value.........:'
+     A            DDSVAL        16A  B 20 30TEXT('Collateral Value')
+     A N20                                  DSPATR(HI UL)
+     A  20                                  DSPATR(RI PC)
+     A                                      OVRDTA
+     A                                 21  3'General/Specific.........:'
+     A            DDSGNS         1A  B 21 30TEXT('General/Specific')
+     A N21N65                               DSPATR(HI UL)
+     A  21N65                               DSPATR(RI PC)
+     A  65                                  DSPATR(PR)
+     A                                      OVRDTA
+      *****************************************************************
+      *
+      ** First Detail Screen
+     A          R GLCOLLD1                  OVERLAY
+     A                                      BLINK
+     A                                      PUTOVR
+     A  79                                  CF10
+     A                                      CF15
+     A                                      CF16
+      * Start of change CGL018
+     A  76                                  CF17
+      * End of change CGL018
+      *
+     A            DDUSER    R        O  1  2REFFLD(USER)
+     A                                      OVRDTA
+     A                                  1 13'GLCOLLD'
+     A            BJMRDT         7A  O  1 73OVRDTA
+     A            DDWSID    R        O  2  2REFFLD(JOJOB)
+     A                                      OVRDTA
+     A                                  2 28'Collateral Details Maintenance'
+     A                                      DSPATR(HI)
+     A            DDTIME         6Y 0O  2 72EDTWRD('  :  :  ')
+     A                                      OVRDTA
+      *
+     A                                  4  3'Action...:'
+     A            DDACTN         1A  O  4 14TEXT('Action code')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A                                  4 38'Collateral Reference...:'
+     A            DDCREF        10A  O  4 63TEXT('Collateral Ref.')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                  6  3'Entity Level...:'
+     A            DDENTY         1A  B  6 20TEXT('Entity Level')
+     A                                      DSPATR(HI)
+     A N10N64                               DSPATR(UL)
+     A  10                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                  6 28'Company.............:'
+     A            DDCMPY         3A  B  6 50TEXT('Company')
+     A                                      DSPATR(HI)
+     A N11N64                               DSPATR(UL)
+     A  11                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                  6 62'Branch:'
+     A            DDBRCA         3A  B  6 70TEXT('Branch')
+     A                                      DSPATR(HI)
+     A N12N64                               DSPATR(UL)
+     A  12                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                  7  3'Collateral Type:'
+     A            DDCOLT         5A  B  7 20TEXT('Collateral Type')
+     A                                      DSPATR(HI)
+     A N13N64                               DSPATR(UL)
+     A  13                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                  7 28'Collateral Customer.:'
+     A            DDCNUM        10A  B  7 50TEXT('Collateral Customer')
+     A                                      DSPATR(HI)
+     A N14N64                               DSPATR(UL)
+     A  14                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                  7 62'Status:'
+     A            DDSTAT         1A  B  7 70TEXT('Status')
+     A                                      DSPATR(HI)
+     A N15N64                               DSPATR(UL)
+     A  15N64                               DSPATR(RI PC)
+     A  64                                  DSPATR(PR ND)
+     A                                      OVRDTA
+     A            DDSDES         8A  O  7 72TEXT('Status Description')
+     A                                      DSPATR(HI)
+     A N64                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                  9  3'Description....:'
+     A            DDDESC        30A  B  9 20TEXT('Description')
+     A                                      DSPATR(HI)
+     A N16N64                               DSPATR(UL)
+     A  16                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                  9 55'General/Specific:'
+     A            DDGNSP         1A  B  9 73TEXT('General/Specific')
+     A                                      DSPATR(HI)
+     A N17N64                               DSPATR(UL)
+     A  17                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                 10  3'Cross Ref......:'
+     A            DDXREF        20A  B 10 20TEXT('Cross Ref')
+     A                                      DSPATR(HI)
+     A N18N64                               DSPATR(UL)
+     A  18                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                 11  3'Signing Date...:'
+     A            DDSDAT         6A  B 11 20TEXT('Signing Date')
+     A                                      DSPATR(HI)
+     A N19N64                               DSPATR(UL)
+     A  19                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 11 28'Value Date..........:'
+     A            DDVDAT         6A  B 11 50TEXT('Value Date')
+     A                                      DSPATR(HI)
+     A N20N64                               DSPATR(UL)
+     A  20                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 11 63'End Date:'
+     A            DDEDAT         6A  B 11 73TEXT('End Date')
+     A                                      DSPATR(HI)
+     A N21N64                               DSPATR(UL)
+     A  21                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                 12  3'Renewal........:'
+     A            DDRNEW         1A  B 12 20TEXT('Renewal')
+     A                                      DSPATR(HI)
+     A N22N64                               DSPATR(UL)
+     A  22                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 12 28'Review Date.........:'
+     A            DDRVDT         6A  B 12 50TEXT('Review Date')
+     A                                      DSPATR(HI)
+     A N23N64                               DSPATR(UL)
+     A  23                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 12 60'Freq/Day No:'
+     A            DDRFRQ         1A  B 12 73TEXT('Frequency')
+     A                                      DSPATR(HI)
+     A N24N64                               DSPATR(UL)
+     A  24                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 12 75'/'
+     A            DDRDNO         2A  B 12 77TEXT('Day No.')
+     A                                      DSPATR(HI)
+     A N25N64                               DSPATR(UL)
+     A  25                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                 14  3'Currency.......:'
+     A            DDCCY          3A  B 14 20TEXT('Currency')
+     A                                      DSPATR(HI)
+     A N26N64                               DSPATR(UL)
+     A  26                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 14 28'Amount/Percentage Ind...:'
+     A            DDAPCT         1A  B 14 54TEXT('Amnt/Percentage Ind')
+     A                                      DSPATR(HI)
+     A N27N64                               DSPATR(UL)
+     A  27                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 14 59'Units:'
+     A            DDUNIT        14A  B 14 66TEXT('Units')
+     A                                      DSPATR(HI)
+     A N28N64                               DSPATR(UL)
+     A  28                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                 15  3'Percentage.....:'
+     A            DDPCNT         6A  B 15 20TEXT('Percentage')
+     A                                      DSPATR(HI)
+     A N29N64                               DSPATR(UL)
+     A  29                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 15 28'Unit Amount.........:'
+     A            DDUAMT        16A  B 15 50TEXT('Unit Amount')
+     A                                      DSPATR(HI)
+     A N30N64                               DSPATR(UL)
+     A  30                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                 16 28'Maximum Amount......:'
+     A            DDMAMT        16A  B 16 50TEXT('Max. Amount')
+     A                                      DSPATR(HI)
+     A N31N64                               DSPATR(UL)
+     A  31                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                 17  3'Valuation......:'
+     A            DDVAMT        16A  B 17 20TEXT('Valuation')
+     A                                      DSPATR(HI)
+     A N32N64                               DSPATR(UL)
+     A  32                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 17 42'Valuer:'
+     A            DDVCNM        10A  B 17 50TEXT('Valuer')
+     A                                      DSPATR(HI)
+     A N33N64                               DSPATR(UL)
+     A  33                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                 18  3'Valuation Date.:'
+     A            DDVLDT         6A  B 18 20TEXT('Valuation Date')
+     A                                      DSPATR(HI)
+     A N34N64                               DSPATR(UL)
+     A  34                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 18 28'Next Valuation Date.:'
+     A            DDNVDT         6A  B 18 50TEXT('Next Valuation Date')
+     A                                      DSPATR(HI)
+     A N35N64                               DSPATR(UL)
+     A  35                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 18 60'Freq/Day No:'
+     A            DDVFRQ         1A  B 18 73TEXT('Frequency')
+     A                                      DSPATR(HI)
+     A N36N64                               DSPATR(UL)
+     A  36                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 18 75'/'
+     A            DDVDNO         2A  B 18 77TEXT('Day No.')
+     A                                      DSPATR(HI)
+     A N37N64                               DSPATR(UL)
+     A  37                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                 20  3'Margin.........:'
+     A            DDMARG         6A  B 20 20TEXT('Margin')
+     A                                      DSPATR(HI)
+     A N38N64                               DSPATR(UL)
+     A  38                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 20 28'Holding Customer....:'
+     A            DDHCNM        10A  B 20 50TEXT('Holding Customer')
+     A                                      DSPATR(HI)
+     A N39N64                               DSPATR(UL)
+     A  39                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                 21  3'Location.......:'
+     A            DDCOLO         3A  B 21 20TEXT('Location')
+     A                                      DSPATR(HI)
+     A N40N64                               DSPATR(UL)
+     A  40                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 21 28'Lending Value.......:'
+     A            DDLAMT        16A  O 21 50TEXT('Lending Value')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *****************************************************************
+      *
+      ** Second Detail Screen
+     A          R GLCOLLD2                  OVERLAY
+     A                                      BLINK
+     A                                      PUTOVR
+     A  79                                  CF10
+     A                                      CF15
+     A                                      CF16
+      * Start of change CGL018
+     A  76                                  CF17
+      * End of change CGL018
+      *
+     A            DDUSER    R        O  1  2REFFLD(USER)
+     A                                      OVRDTA
+     A                                  1 13'GLCOLLD'
+     A            BJMRDT         7A  O  1 73OVRDTA
+     A            DDWSID    R        O  2  2REFFLD(JOJOB)
+     A                                      OVRDTA
+     A                                  2 28'Collateral Details Maintenance'
+     A                                      DSPATR(HI)
+     A            DDTIME         6Y 0O  2 72EDTWRD('  :  :  ')
+     A                                      OVRDTA
+      *
+     A                                  4  3'Action...:'
+     A            DDACTN         1A  O  4 14TEXT('Action code')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A                                  4 38'Collateral Reference...:'
+     A            DDCREF        10A  O  4 63TEXT('Collateral Ref.')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                  6  3'Provider Details:'
+     A            DDPR01        10A  B  6 21TEXT('Provider Customer 1')
+     A                                      DSPATR(HI)
+     A N10N64                               DSPATR(UL)
+     A  10                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDPR02        10A  B  6 32TEXT('Provider Customer 2')
+     A                                      DSPATR(HI)
+     A N11N64                               DSPATR(UL)
+     A  11                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDPR03        10A  B  6 43TEXT('Provider Customer 3')
+     A                                      DSPATR(HI)
+     A N12N64                               DSPATR(UL)
+     A  12                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDPR04        10A  B  7 21TEXT('Provider Customer 4')
+     A                                      DSPATR(HI)
+     A N13N64                               DSPATR(UL)
+     A  13                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDPR05        10A  B  7 32TEXT('Provider Customer 5')
+     A                                      DSPATR(HI)
+     A N14N64                               DSPATR(UL)
+     A  14                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDPR06        10A  B  7 43TEXT('Provider Customer 6')
+     A                                      DSPATR(HI)
+     A N15N64                               DSPATR(UL)
+     A  15                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDPR07        10A  B  8 21TEXT('Provider Customer 7')
+     A                                      DSPATR(HI)
+     A N16N64                               DSPATR(UL)
+     A  16                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDPR08        10A  B  8 32TEXT('Provider Customer 8')
+     A                                      DSPATR(HI)
+     A N17N64                               DSPATR(UL)
+     A  17                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDPR09        10A  B  8 43TEXT('Provider Customer 9')
+     A                                      DSPATR(HI)
+     A N18N64                               DSPATR(UL)
+     A  18                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDPR10        10A  B  9 21TEXT('Provider Customer 10')
+     A                                      DSPATR(HI)
+     A N19N64                               DSPATR(UL)
+     A  19                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDPR11        10A  B  9 32TEXT('Provider Customer 11')
+     A                                      DSPATR(HI)
+     A N20N64                               DSPATR(UL)
+     A  20                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDPR12        10A  B  9 43TEXT('Provider Customer 12')
+     A                                      DSPATR(HI)
+     A N21N64                               DSPATR(UL)
+     A  21                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A  71                              6 56'Price Feed Link:'
+     A            DDPFLK         1A  B  6 73TEXT('Price Feed Link')
+     A                                      DSPATR(HI)
+     A N22 71N64                            DSPATR(UL)
+     A  22 71                               DSPATR(RI PC)
+     A N71                                  DSPATR(ND)
+     A N71
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                 11  3'Accrued Interest:'
+     A            DDACCR        14A  B 11 21TEXT('Accrued Interest')
+     A                                      DSPATR(HI)
+     A N23N64                               DSPATR(UL)
+     A  23                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A  72                             11 40'Income Rate/Amount:'
+     A            DDIAMT        16A  B 11 60TEXT('Income Rate/Amount')
+     A                                      DSPATR(HI)
+     A N24 72N64                            DSPATR(UL)
+     A  24 72                               DSPATR(RI PC)
+     A N72                                  DSPATR(ND)
+     A N72
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A  73                             13  3'Module Secured..:'
+     A            DDMODS         2A  B 13 21TEXT('Module Secured')
+     A                                      DSPATR(HI)
+     A N25 73N64                            DSPATR(UL)
+     A  25 73                               DSPATR(RI PC)
+     A N73                                  DSPATR(ND)
+     A N73
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A  73                             13 26'Facility..:'
+     A            DDFCUS         6A  B 13 38TEXT('Secured Fclty Cust')
+     A                                      DSPATR(HI)
+     A N26 73N64                            DSPATR(UL)
+     A  26 73                               DSPATR(RI PC)
+     A N73                                  DSPATR(ND)
+     A N73
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDFTYP         3A  B 13 45TEXT('Secured Fclty Type')
+     A                                      DSPATR(HI)
+     A N27 73N64                            DSPATR(UL)
+     A  27 73                               DSPATR(RI PC)
+     A N73                                  DSPATR(ND)
+     A N73
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDFSEQ         2A  B 13 49TEXT('Secured Fclty Seq')
+     A                                      DSPATR(HI)
+     A N28 73N64                            DSPATR(UL)
+     A  28 73                               DSPATR(RI PC)
+     A N73                                  DSPATR(ND)
+     A N73
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A  73                             13 54'Loan/Limit:'
+     A            DDLNLM         6A  B 13 66TEXT('Loan/Limit')
+     A                                      DSPATR(HI)
+     A N29 73N64                            DSPATR(UL)
+     A  29 73                               DSPATR(RI PC)
+     A N73                                  DSPATR(ND)
+     A N73
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A  73                             14 26'Retail a/c:'
+     A**Start of change CGL029
+     A**********  DDACNT        18A  B 14 38TEXT('Retail a/c')                                CGL029
+     A            DDACNT        24A  B 14 38TEXT('Retail a/c')
+     A**End of change CGL029
+     A                                      DSPATR(HI)
+     A N30 73N64                            DSPATR(UL)
+     A  30 73                               DSPATR(RI PC)
+     A N73                                  DSPATR(ND)
+     A N73
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A  74                             16  3'Collateral Transaction/Account...:'
+     A**Start of change CGL029
+     A**********  DDCTRN        19A  B 16 38TEXT('Collateral Trans./Accnt')                   CGL029
+     A            DDCTRN        25A  B 16 38TEXT('Collateral Trans./Accnt')
+     A**End of change CGL029
+     A                                      DSPATR(HI)
+     A N31 74N64                            DSPATR(UL)
+     A  31 74                               DSPATR(RI PC)
+     A N74                                  DSPATR(ND)
+     A N74
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A  74                             17  3'Inclusive/Exclusive of +
+     A                                      interest/charges:'
+     A            DDINEX         1A  B 17 44TEXT('Inc/Exc of Int/chrgs ind')
+     A                                      DSPATR(HI)
+     A N32 74N64                            DSPATR(UL)
+     A  32 74                               DSPATR(RI PC)
+     A N74                                  DSPATR(ND)
+     A N74
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A  75                             18  3'Image Refs......:'
+     A            DDIRF1        20A  B 18 21TEXT('Image Reference 1')
+     A                                      DSPATR(HI)
+     A N33 75N64                            DSPATR(UL)
+     A  33 75                               DSPATR(RI PC)
+     A N75                                  DSPATR(ND)
+     A N75
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDIRF2        20A  B 18 43TEXT('Image Reference 2')
+     A                                      DSPATR(HI)
+     A N34 75N64                            DSPATR(UL)
+     A  34 75                               DSPATR(RI PC)
+     A N75                                  DSPATR(ND)
+     A N75
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDIRF3        20A  B 19 21TEXT('Image Reference 3')
+     A                                      DSPATR(HI)
+     A N35 75N64                            DSPATR(UL)
+     A  35 75                               DSPATR(RI PC)
+     A N75                                  DSPATR(ND)
+     A N75
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDIRF4        20A  B 19 43TEXT('Image Reference 4')
+     A                                      DSPATR(HI)
+     A N36 75N64                            DSPATR(UL)
+     A  36 75                               DSPATR(RI PC)
+     A N75                                  DSPATR(ND)
+     A N75
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDIRF5        20A  B 20 21TEXT('Image Reference 5')
+     A                                      DSPATR(HI)
+     A N37 75N64                            DSPATR(UL)
+     A  37 75                               DSPATR(RI PC)
+     A N75                                  DSPATR(ND)
+     A N75
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDIRF6        20A  B 20 43TEXT('Image Reference 6')
+     A                                      DSPATR(HI)
+     A N38 75N64                            DSPATR(UL)
+     A  38 75                               DSPATR(RI PC)
+     A N75                                  DSPATR(ND)
+     A N75
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A  75                             21  3'Document Ref....:'
+     A            DDDORF        20A  B 21 21TEXT('Document Reference')
+     A                                      DSPATR(HI)
+     A N39 75N64                            DSPATR(UL)
+     A  39 75                               DSPATR(RI PC)
+     A N75                                  DSPATR(ND)
+     A N75
+     AO 64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *****************************************************************
+      *
+      ** Thrid Detail Screen
+     A          R GLCOLLD3                  OVERLAY
+     A                                      BLINK
+     A                                      PUTOVR
+     A  79                                  CF10
+     A                                      CF15
+     A                                      CF16
+      * Start of change CGL018
+     A  76                                  CF17
+      * End of change CGL018
+      *
+     A            DDUSER    R        O  1  2REFFLD(USER)
+     A                                      OVRDTA
+     A                                  1 13'GLCOLLD'
+     A            BJMRDT         7A  O  1 73OVRDTA
+     A            DDWSID    R        O  2  2REFFLD(JOJOB)
+     A                                      OVRDTA
+     A                                  2 28'Collateral Details Maintenance'
+     A                                      DSPATR(HI)
+     A            DDTIME         6Y 0O  2 72EDTWRD('  :  :  ')
+     A                                      OVRDTA
+      *
+     A                                  4  3'Action...:'
+     A            DDACTN         1A  O  4 14TEXT('Action code')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A                                  4 38'Collateral Reference...:'
+     A            DDCREF        10A  O  4 63TEXT('Collateral Ref.')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                  6  3'Issuer.........:'
+     A            DDINSR        10A  B  6 20TEXT('Issuer')
+     A                                      DSPATR(HI)
+     A N10N64                               DSPATR(UL)
+     A  10                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                  6 33'Insurance Policy Ref..:'
+     A            DDIPLY        20A  B  6 57TEXT('Issurance Policy Ref')
+     A                                      DSPATR(HI)
+     A N11N64                               DSPATR(UL)
+     A  11                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                  7  3'Policy Location:'
+     A            DDIPLO         3A  B  7 20TEXT('Policy Location')
+     A                                      DSPATR(HI)
+     A N12N64                               DSPATR(UL)
+     A  12                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                  7 33'Insurance Valuation...:'
+     A            DDIVAL        16A  B  7 57TEXT('Issurance Valuation')
+     A                                      DSPATR(HI)
+     A N13N64                               DSPATR(UL)
+     A  13                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                  8  3'Restrictions...:'
+     A            DDIRST         1A  B  8 20TEXT('Restriction')
+     A                                      DSPATR(HI)
+     A N14N64                               DSPATR(UL)
+     A  14                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                  8 33'Insurance Date........:'
+     A            DDINDT         6A  B  8 57TEXT('Issurance Date')
+     A                                      DSPATR(HI)
+     A N15N64                               DSPATR(UL)
+     A  15                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                  9 33'Freq/Day No...........:'
+     A                                  9 59'/'
+     A            DDINFQ         1A  B  9 57TEXT('Frequency')
+     A                                      DSPATR(HI)
+     A N16N64                               DSPATR(UL)
+     A  16                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            DDINDN         2A  B  9 61TEXT('Day No.')
+     A                                      DSPATR(HI)
+     A N17N64                               DSPATR(UL)
+     A  17                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                 11  3'Registered.....:'
+     A            DDRGTR         1A  B 11 20TEXT('Registered')
+     A                                      DSPATR(HI)
+     A N18N64                               DSPATR(UL)
+     A  18                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 11 33'Value of Prior Charges:'
+     A            DDVPCH        16A  B 11 57TEXT('Value of Prior Charges')
+     A                                      DSPATR(HI)
+     A N19N64                               DSPATR(UL)
+     A  19                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *
+     A                                 12 33'Subsequent Charges....:'
+     A            DDSCHC        10A  B 12 57TEXT('Subsequent Charges')
+     A                                      DSPATR(HI)
+     A N20N64                               DSPATR(UL)
+     A  20                                  DSPATR(RI PC)
+     A  64                                  DSPATR(PR)
+     A                                      OVRDTA
+      *****************************************************************
+      *
+      ** Footer for Detail Screens
+     A          R GLCOLLF1                  TEXT('Screen Footer 1')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A  79                                  CF10
+     A  77                                  CF15
+     A  78                                  CF16
+      * Start of change CGL018
+     A  76                                  CF17
+      * End of change CGL018
+     A            DDTEXT        75A  O 23 02DSPATR(HI)
+     A                                      OVRDTA
+      * Start of change CGL018
+     A**********                       24 02'F3 = Exit'                                       CGL018
+     A                                 24 02'F3=Exit'
+      * End of change CGL018
+     A                                      OVRATR
+      * Start of change CGL018
+     A**********                       24 13'F12 = Previous'                                  CGL018
+     A                                 24 12'F12=Prev'
+      * End of change CGL018
+     A                                      OVRATR
+      * Start of change CGL018
+     A**********                       24 29'F15 = Allocation'                                CGL018
+     A                                 24 23'F15=Allocation'
+      * End of change CGL018
+     A N77                                  DSPATR(ND)
+     A                                      OVRATR
+      * Start of change CGL018
+     A**********                       24 47'F16 = Narrative Details'                         CGL018
+     A                                 24 40'F16=Narr. Details'
+      * End of change CGL018
+     A N78                                  DSPATR(ND)
+     A                                      OVRATR
+      * Start of change CGL018
+     A                                 24 60'F17=Risk Wtd. Assets'
+     A N76                                  DSPATR(ND)
+     A                                      OVRATR
+      * End of change CGL018
+      *****************************************************************
+      *
+     A          R GLCOLLS1                  SFL
+     A                                      SFLMSGRCD(22)
+     A            DDSFKY                    SFLMSGKEY
+     A            DDPGMQ                    SFLPGMQ
+      *****************************************************************
+      *
+     A          R GLCOLLC1                  SFLCTL(GLCOLLS1)
+     A                                      SFLSIZ(24)
+     A                                      SFLPAG(1)
+     A N96                                  SFLDSPCTL
+     A                                      SFLDSP
+     A                                      SFLINZ
+     A                                      OVERLAY
+     A  97                                  SFLEND
+     A            DDPGMQ                    SFLPGMQ
+      *

@@ -1,0 +1,3825 @@
+     H        1
+      *****************************************************************
+/*OVRF*: OVRDBF FILE(SECTYZ1) TOFILE(SECTY) SHARE(*NO)              : *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Corporate action reply handling maint')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE7515 - Corporate Actions Reply Handling Maintenance        *
+     F*                                                               *
+     F*  Function:  This program maintains the Corporate Action       *
+     F*  (I/C)      Reply Handling Details Maintenance.               *
+     F*                                                               *
+     F*  Called By: SE7513 - Corporate Actions Customer/Book Maint.   *
+     F*             SE7514 - Corporate Actions Reply Handling Select. *
+     F*             SE7540 - Corporate Actions Customer/Book Enquiry  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 223182             Date 30Jan04               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 190204             Date 31May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 182471             Date 09Sep00               *
+      *                 161732             Date 21Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 04Dec98               *
+      *                 155622             Date 22Feb99               *
+     F*                 137877             Date 22Jul98               *
+     F*                 149983             Date 10Dec98               *
+     F*                 135689             Date 03Jun98               *
+     F*                 CSE007  *CREATE    Date 01DEC97               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  223182 - Error on Corporate Action.                          *
+      *         - Ignore DBERR for closed customers. Applied 223539.  *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  190204 - Recompiled due to changes in PF/SECODVPD.           *
+      *  182471 - Amendment to ensure Cash % is shown when required   *
+      *           on the reply screen.                                *
+      *  161732 - Corporate Actions Exercise and Conversion - Part    *
+      *           Stock/Keep Rest Calculation.                        *
+      *  CAC005 - PCA-SE Enhancement.                                 *
+     F*  155622 - Corporate Actions: Do not show field 'New Reply' on *
+     F*           Reply Handling (level 2) screen if no customer      *
+     F*           options.                                            *
+     F*  137877 - Corporate Actions: Reply Handling amendments.       *
+     F*  149983 - EMU: Block OLD Security for Sale as well            *
+     F*  135689 - Corporate Actions                                   *
+     F*           - Error in validation of Block End Date             *
+     F*  CSE007 - Corporate Actions                                   *
+     F*                                                               *
+     F*****************************************************************
+      *
+      ** SE Security Details
+     FSECTYZ1 IF  E           K        DISK         KINFSR *PSSR
+      *
+      **  MQ - SE CORPORATE ACTIONS Customer/Book Reply
+     FSECOREL0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      *
+      **  MQ - SE CORPORATE ACTIONS Reply History file-Detail
+     FSECORHL0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      *
+      **   MU - SE CORPORATE ACTIONS Blocked Positions
+     FSECOBKL2UF  E           K        DISK                      A
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT
+      *
+      **  MA - SE CORPORATE ACTIONS References
+     FSECORFL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      **  MD - SE Corporate Actions - Dividends Events
+     FSECODVL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      **  ME - SE Corporate Actions - Free Allocation
+     FSECOFRL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      **  MG - SE Corporate Actions - Capital Change
+     FSECOCEL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      **  MH - SE Corporate Actions - Corporate Reorganization
+     FSECOCRL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      **  MF - SE Corporate Actions - Right Issues
+     FSECORGL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      **  MI - SE Corporate Actions - Exchange Offers
+     FSECOOFL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      **  MJ - SE Corporate Actions - Exercise & Conversion
+     FSECOEXL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      **   MN - SE Option Narrative Code
+     FSECONAL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      **  MO - SE Corporate Actions - Instructions
+     FSECOSIL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      **  MO - SE Corporate Actions - Instructions
+     FSECOSIL2IF  E           K        DISK         KINFSR *PSSR
+     F            SECOSID0                          KRENAMESECOSID1
+      *
+      **  Display file
+     FSE7515DFCF  E                    WORKSTN      KINFSR *PSSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                  FUNCTION OF INDICATORS                       *
+      *                  ----------------------                       *
+      *                                                               *
+      *       13         Call Reply Handling History Enqy. program    *
+      *       14         Call Instruction Maintenance program         *
+      *       16         Call Customer/Book Enquiry program           *
+      *       20-25      Fields error in Display file (Level 1)       *
+      *       26-31      Fields error in Display file (Level 2)       *
+      *       46         Any valid key                                *
+      *       60         LS = Final Allocation Stock                  *
+      *                  LY = Final Allocation Cash and Stock         *
+      *                  S = Stock Authorised                         *
+      *                  X = Fully Authorised (Cash and Stock)        *
+      *       70         0 - Amend or Insert mode                     *
+      *                  1 - Enquire mode                             *
+      *       75         Record not found.                            *
+      *       76         No record not found in SECOREL0.             *
+      *       78         General function indicator                   *
+      *       80-89      Standard RTS subroutines                     *
+      *       90-99      Standard MIDAS subroutines                   *
+      *       KC         Exit program                                 *
+      *       KE         Refresh screen                               *
+      *       KL         Previous                                     *
+      *       LR         End program.                                 *
+      *       U7+U8      Database error occurs                        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINT  - Initial Processing                                  *
+      *  SRMAIN - Main Processing                                     *
+      *  SRENDP - End Processing                                      *
+      *  SRINS1 - Initialise screen fields (level 1)                  *
+      *  SRINS2 - Initialise screen fields (level 2)                  *
+      *  SRGCON - Get Customer Option Narrative                       *
+      *  SRVLD1 - Validate Details ( Level 1)                         *
+      *  SRVLD2 - Validate Details ( Level 2)                         *
+      *  SRSAV1 - Save screen fields (level 1)                        *
+      *  SRSAV2 - Save screen fields (level 2)                        *
+      *  SRPFKY - Process function keys                               *
+      *  *PSSR - Program error handling routine                       *
+      *  ZASNMS - Send message to program's message queue             *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      **  Array for Copyright
+     E                    CPY@    1   1 80
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     E/COPY ZSRSRC,ZALIGNZ1
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+      *
+     E                    NARR    1   3 27               NARRATIVE
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      **  Program Data Structure
+     IPGMDS     ESDSY2PGDSP
+      *
+      **   LOCAL DATA AREA
+     ILDA       E DSLDA                         256
+      *
+      **  Local data area for database error details
+      **  *LOCK IN LDA immediately before and OUT LDA immediately
+      **  after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      **  Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Customer Details
+     ISDCUST    E DSSDCUSTPD
+      *
+      **  Second DS for Access Programs, Long Data Structure
+     IDSSDY     E DSDSSDY
+      *
+      *                                                                                       223182
+      ** DS for access objects - long data structure                                          223182
+      *                                                                                       223182
+     IDSLDY     E DSDSLDY                                                                     223182
+      *                                                                                       223182
+     ISESTAT    E DSSESTAT
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Start Mainline                            *
+      *                                                               *
+      * CALLS      SRINIT - Initial Processing                        *
+      *            SRMAIN - Main Processing                           *
+      *            SRENDP   End Processing                            *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+      **  Input Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @CORF   6        Reference
+     C                     PARM           @SESN  10        Security Short.
+     C                     PARM           @COAT   2        Corporate Type
+     C                     PARM           @PTYP   2        Processing Type
+     C                     PARM           @COEX   5        Ex-Date
+     C                     PARM           @STAT   1        Corporate Action Stat
+     C                     PARM           @BRCD   3        Branch
+     C                     PARM           @DDPT   6        Depot
+     C                     PARM           @BOOK   2        Book
+     C                     PARM           @CNUM   6        Customer
+     C                     PARM           @PTFR   4        Portfolio
+     C                     PARM           @EXPS  16        Ex-date Pos'n  161732
+     C                     PARM           @MODE   1        Mode
+     C                     PARM           @CPGM   6        Calling Pgm
+     C                     PARM           @RTCD   1        Return Code
+      *
+     C                     MOVE ' '       @FINA   1        Final Allocation Indi
+      *
+      **  Initial Processing
+     C                     EXSR SRINIT
+      *
+      **  Main Processing
+     C                     EXSR SRMAIN
+      *
+      **  End Processing
+     C                     EXSR SRENDP
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRINIT - Initial Processing                        *
+      *                                                               *
+      * CALLS      *PSSR  - Program error handling routine            *
+      *                                                               *
+      * CALLED BY  MAIN   - Start Mainline                            *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Copyright Statement
+     C                     MOVEACPY@      MKI@   80
+      *
+      **   Reset LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           SESTAT
+      *
+      ***  Access data area SESTAT: Midas SE Status to check if Portfolio Manage
+      ***  licensed.
+     C                     IN   SESTAT
+      *
+     C           PFPL      IFEQ 'Y'
+     C                     MOVE '1'       *IN55
+     C                     ENDIF
+      *
+     C                     MOVEL'SE7515'  DBPGM
+      *
+      **  Initialise Key and Working Fields
+      *
+     C           KEY1      KLIST
+     C                     KFLD           @CORF   6        Reference
+     C                     KFLD           WOPNB   20       Option Number
+      *
+     C           KEY2      KLIST
+     C                     KFLD           @CORF
+     C                     KFLD           @BRCD
+     C                     KFLD           PCOTP
+     C                     KFLD           @BOOK
+     C                     KFLD           WCNUM
+      *
+     C           KEY3      KLIST
+     C                     KFLD           WBRCD   3
+     C                     KFLD           WBOOK   2
+     C                     KFLD           WCOAT   2
+     C                     KFLD           WSESN  10
+      *
+     C           KEY4      KLIST
+     C                     KFLD           WBRCD   3
+     C**********           KFLD           WCNUM   60                                          CSD027
+     C                     KFLD           WCNUM   6                                           CSD027
+     C                     KFLD           WPTFR   4
+     C                     KFLD           WCOAT   2
+     C                     KFLD           WSESN  10
+      *
+     C**********           MOVE @CNUM     WKNUM   60                                          CSD027
+     C                     MOVE @CNUM     WKNUM   6                                           CSD027
+      *
+      **  Setup Screen Time
+     C                     TIME           ##TME   60       Screen time.
+      *
+      **  Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WLRTCD  7
+     C                     PARM '*FIRST'  WLOPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      **  If record not found
+     C           WLRTCD    IFNE *BLANKS                    B*1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ****************
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 001 *
+     C                     MOVEL*BLANKS   DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E*1
+      *                                                                   CAC005
+      ***  Check if CAC005 - PCA-SE Enhancement is on.                    CAC005
+      *                                                                   CAC005
+     C                     MOVE 'N'       CAC005  1                       CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   WLRTCD                          CAC005
+     C                     PARM '*VERIFY' @OPTN   7                       CAC005
+     C                     PARM 'CAC005'  @SARD   6                       CAC005
+      *                                                                   CAC005
+     C           WLRTCD    IFEQ *BLANK                                    CAC005
+     C                     MOVE 'Y'       CAC005                          CAC005
+     C                     ENDIF                                          CAC005
+      *
+     C                     MOVE BJMRDT    ##MRDT           Midas Run Date
+      *
+      **  Determine Date Format
+     C           BJDFIN    IFEQ 'M'                        B*1
+     C                     MOVE '1'       *IN98
+     C                     ENDIF                           E*1
+      *
+      **  Retrieve the Maturity Date of the Event Security
+     C           @SESN     CHAINSECTYZ1              89
+      *
+      **  If record not found
+     C           *IN89     IFEQ '1'                        B*1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ****************
+     C                     MOVE 'SECTYD'  DBFILE           * DB ERROR 002 *
+     C                     MOVEL@SESN     DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E*1
+      *
+      ** Just for definition of the file in 'F' card with a 'U' (=UPDATE)
+      ** Needed because file already open in calling program in Update
+      ** Mode with ADD option specified
+     C           *IN99     IFEQ '0'                        B*1
+     C           *IN99     ANDEQ'1'
+     C           @CORF     CHAINSECORHL0             89
+     C                     UPDATSECORHD0
+     C                     ENDIF                           E*1
+      *
+     C                     MOVE @CORF     SCORF            Reference
+     C                     MOVE @SESN     SSESN            Security Short.
+     C                     MOVE @COAT     SCOAT            Corporate Type
+     C                     MOVE @EXPS     SEXPS                           161732
+      *
+     C           @COEX     IFNE *BLANKS
+     C           @COEX     ANDNE'00000'
+     C                     MOVE @COEX     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SEXDT            Ex-Date
+     C                     ELSE
+     C                     MOVE *BLANKS   SEXDT            Ex-Date
+     C                     ENDIF
+      *
+     C                     MOVE @BRCD     SBRCD            Branch Code
+     C                     MOVEL@BOOK     SCUBK     P
+      *                                                                   CAC005
+      ** If CAC005 is on & @BOOK is nonblank, get user book & profit      CAC005
+      ** centre using AOBKPCR0.                                           CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C           @BOOK     ANDNE*BLANKS                                   CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM           PRTCD   7                       CAC005
+     C                     PARM '*USER  ' PMOPTN  7                       CAC005
+     C           PMBKCD    PARM *BLANKS   PMBKCD  2                       CAC005
+     C           PMPRFC    PARM *BLANKS   PMPRFC  4                       CAC005
+     C                     PARM @BOOK     PMPSBK  2                       CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVELPMBKCD    SCUBK                           CAC005
+     C                     MOVE PMPRFC    SCUBK                           CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+      *
+     C********** WKNUM     IFNE 0                                                             CSD027
+     C           WKNUM     IFNE *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   WLKEYC
+     C                     MOVELWKNUM     WLKEYC
+     C**********           CALL 'AOCUSTR0'                                                    223182
+     C                     CALL 'AOCUSTR1'                                                    223182
+     C                     PARM '*DBERR'  WLRTCD
+     C                     PARM '*KEY   ' WLOPTN
+     C                     PARM           WLKEYC 10
+     C                     PARM *BLANKS   WLKYST  7
+     C********** SDCUST    PARM SDCUST    DSSDY                                               223182
+     C           SDCUST    PARM SDCUST    DSLDY                                               223182
+      *
+      **  If record not found
+     C           WLRTCD    IFNE *BLANKS
+     C           BBCLST    ANDNE'Y'                                                           223182
+     C           *LOCK     IN   LDA
+     C                     Z-ADD010       DBASE            ****************
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 010 *
+     C                     MOVELWKNUM     DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVELBBCSSN    SCUBK            Customer/Book
+     C                     ENDIF
+      *
+     C                     MOVEL'SEUSRMSG'PMSGF  10
+      *
+      **  Fill in Fields for Subroutine ZASNMS
+     C                     MOVEL'SE7515'  ZAPGM  10        Message queue
+     C                     MOVEL'SEUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+      **  Clear Messages from Program Message Queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     WRITESE7515C1
+      *
+      **  Determine fields to protect depending of the Status and the Final Allo
+     C                     MOVE '0'       *IN60
+      *
+      **  LS=Final Allocation Stock          (*IN60)
+      **  LY=Final Allocation Cash and Stock (*IN60)
+      **  S =Stock Authorised                (*IN60)
+      **  X =Fully Authorised (Cash & Stock) (*IN60)
+     C           @STAT     IFEQ 'L'                        B*1
+      *
+     C           @FINA     IFEQ 'S'                        B*2
+     C           @FINA     OREQ 'Y'
+     C                     MOVE '1'       *IN60
+     C                     ENDIF                           E*2
+      *
+     C                     ELSE                            X*1
+      *
+     C           @STAT     IFEQ 'S'                        B*2
+     C           @STAT     OREQ 'X'
+     C                     MOVE '1'       *IN60
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Change the narratives 'Cash %' and 'Nominal to be taken as cash'
+      ** to '% To Accept' and 'Nominal to accept' if processing type is
+      ** a Non Financial Events (OF and NF) in Level 2.
+     C                     MOVE '0'       *IN40                                               182471
+     C           @PTYP     IFEQ 'OF'                       B*1
+     C           @PTYP     OREQ 'NF'
+     C                     MOVE '1'       *IN40
+     C                     ELSE                                                               182471
+     C                     MOVE '0'       *IN40                                               182471
+     C                     ENDIF                           E*1
+      *
+      **  Retrieve the Default No Reply (Level 1)
+     C           @CORF     CHAINSECORFL1             89
+      *
+      **  If record not found
+     C           *IN89     IFEQ '1'                        B*1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE            ****************
+     C                     MOVE 'SECORFL1'DBFILE           * DB ERROR 003 *
+     C                     MOVEL@CORF     DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE                            X*1
+     C                     MOVE MADFNR    SD1NR
+     C                     ENDIF                           E*1
+      *
+      **  Retrieve the Default No Reply (Level 2)
+     C                     MOVE '  '      SD2NR
+      *
+     C           @PTYP     IFEQ 'DV'                       B*1
+     C           @PTYP     OREQ 'RG'
+     C           @PTYP     OREQ 'OF'
+     C           @PTYP     OREQ 'EX'
+     C                     MOVE SD1NR     WOPNB
+      *
+     C           SD1NR     IFEQ '  '                       B*2
+     C                     Z-ADD01        WOPNB
+     C                     ENDIF                           E*2
+      *
+     C           @PTYP     IFEQ 'DV'                       B*2
+     C           KEY1      CHAINSECODVL1             89
+      *
+      **  If record not found
+     C           *IN89     IFEQ '1'                        B*3
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE            ****************
+     C                     MOVE 'SECODVL1'DBFILE           * DB ERROR 004 *
+     C                     MOVE *BLANKS   DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE MDDFNR    SD2NR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*@
+      *
+     C           @PTYP     IFEQ 'RG'                       B*2
+     C           KEY1      CHAINSECORGL1             89
+      *
+      **  If record not found
+     C           *IN89     IFEQ '1'                        B*3
+     C           *LOCK     IN   LDA
+     C                     Z-ADD005       DBASE            ****************
+     C                     MOVE 'SECORGL1'DBFILE           * DB ERROR 005 *
+     C                     MOVE *BLANKS   DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE MFDFNR    SD2NR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C           @PTYP     IFEQ 'OF'                       B*2
+     C           KEY1      CHAINSECOOFL1             89
+      *
+      **  If record not found
+     C           *IN89     IFEQ '1'                        B*3
+     C           *LOCK     IN   LDA
+     C                     Z-ADD006       DBASE            ****************
+     C                     MOVE 'SECOOFL1'DBFILE           * DB ERROR 006 *
+     C                     MOVE *BLANKS   DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE MIDFNR    SD2NR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C           @PTYP     IFEQ 'EX'                       B*2
+     C           KEY1      CHAINSECOEXL1             89
+      *
+      **  If record not found
+     C           *IN89     IFEQ '1'                        B*3
+     C           *LOCK     IN   LDA
+     C                     Z-ADD007       DBASE            ****************
+     C                     MOVE 'SECOEXL1'DBFILE           * DB ERROR 007 *
+     C                     MOVE *BLANKS   DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE MJDFNR    SD2NR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      **  Retrieve the current reply for Books (Level 1 & 2)
+     C           @BOOK     IFNE *BLANKS                    B*1
+     C                     MOVE 'B'       PCOTP   1
+     C           KEY2      CHAINSECOREL0             76
+      *
+     C           *IN76     IFEQ '1'                        B*2
+     C                     MOVE 'N'       EXBCRE           Current Reply exist
+     C                     MOVE *BLANKS   SR1CR
+     C                     MOVE *BLANKS   SR2CR
+     C                     ELSE                            X*2
+     C                     MOVE 'Y'       EXBCRE           Current Reply exist
+     C                     MOVE MQR1RE    SR1CR
+      *
+     C           @PTYP     IFEQ 'DV'                       B*3
+     C           @PTYP     OREQ 'RG'
+     C           @PTYP     OREQ 'OF'
+     C           @PTYP     OREQ 'EX'
+     C                     MOVE MQR2RE    SR2CR
+     C                     ELSE                            X*3
+     C                     MOVE *BLANKS   SR2CR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     MOVE @BRCD     WBRCD
+     C                     MOVE @BOOK     WBOOK
+     C                     MOVE @COAT     WCOAT
+     C                     MOVE @SESN     WSESN
+      *
+      **  Retrieve the standard instructions reply for level 1 for Books
+     C           KEY3      CHAINSECOSIL2             75
+      *
+     C           *IN75     IFEQ '1'                        B*2
+     C                     MOVE *BLANKS   WSESN
+     C           KEY3      CHAINSECOSIL2             75
+      *
+     C           *IN75     IFEQ '1'                        B*3
+     C                     MOVE *BLANKS   WCOAT
+     C           KEY3      CHAINSECOSIL2             75
+      *
+     C           *IN75     IFEQ '1'                        B*4
+     C                     MOVE *BLANKS   WBOOK
+     C           KEY3      CHAINSECOSIL2             75
+     C                     ENDIF                           E*4
+      *
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     MOVE 'N'       SN1EX
+     C                     MOVE 'N'       SN2EX
+     C                     MOVE *BLANKS   SS1ID
+     C                     MOVE *BLANKS   SS2ID
+      *
+     C           *IN75     IFEQ '0'                        B*2
+     C                     MOVE 'Y'       EXBCSI  1        Standard Instruction exist
+      *
+     C           MOCAPP    IFGE 50                         B*3
+     C                     MOVE MADFCP    SS1ID
+     C                     ELSE                            X*3
+     C                     MOVE MADFSP    SS1ID
+     C                     ENDIF                           E*3
+      *
+     C           MONAR1    IFNE *BLANKS                    B*3
+     C           MONAR2    ORNE *BLANKS
+     C           MONAR3    ORNE *BLANKS
+     C           MONAR4    ORNE *BLANKS
+     C           MONAR5    ORNE *BLANKS
+     C           MONAR6    ORNE *BLANKS
+     C           MONAR7    ORNE *BLANKS
+     C           MONAR8    ORNE *BLANKS
+     C           MONAR9    ORNE *BLANKS
+     C                     MOVE 'Y'       SN1EX
+     C                     MOVE 'Y'       SN2EX
+     C                     ENDIF                           E*3
+      *
+     C                     ELSE                            X*2
+     C                     MOVE 'N'       EXBCSI           Standard Instruction exist
+     C                     ENDIF                           E*2
+      *
+      **  Retrieve the standard instructions reply for level 2 for Books
+     C                     EXSR SRREP2
+      *
+     C                     ENDIF                           E*1
+      *
+      **  Retrieve the current reply for Customer (Level 1 & 2)
+     C           @BOOK     IFEQ *BLANKS                    B*1
+     C                     MOVE 'C'       PCOTP   1
+     C                     MOVE @CNUM     WCNUM
+     C           KEY2      CHAINSECOREL0             76
+      *
+     C           *IN76     IFEQ '1'                        B*2
+     C                     MOVE 'N'       EXBCRE  1        Current Reply exist
+     C                     MOVE *BLANKS   SR1CR
+     C                     MOVE *BLANKS   SR2CR
+     C                     ELSE                            X*2
+     C                     MOVE 'Y'       EXBCRE           Current Reply exist
+     C                     MOVE MQR1RE    SR1CR
+      *
+     C           @PTYP     IFEQ 'DV'                       B*3
+     C           @PTYP     OREQ 'RG'
+     C           @PTYP     OREQ 'OF'
+     C           @PTYP     OREQ 'EX'
+     C                     MOVE MQR2RE    SR2CR
+     C                     ELSE                            X*3
+     C                     MOVE *BLANKS   SR2CR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     MOVE @BRCD     WBRCD
+     C                     MOVE @CNUM     WCNUM
+     C                     MOVE @PTFR     WPTFR
+     C                     MOVE @COAT     WCOAT
+     C                     MOVE @SESN     WSESN
+      *
+      **  Retrieve the standard instructions reply for level 1 for Customer
+     C           KEY4      CHAINSECOSIL1             75
+      *
+     C           *IN75     IFEQ '1'                        B*2
+     C                     MOVE *BLANKS   WSESN
+     C           KEY4      CHAINSECOSIL1             75
+      *
+     C           *IN75     IFEQ '1'                        B*3
+     C                     MOVE *BLANKS   WCOAT
+     C           KEY4      CHAINSECOSIL1             75
+      *
+     C           *IN75     IFEQ '1'                        B*4
+     C                     MOVE *BLANKS   WPTFR
+     C           KEY4      CHAINSECOSIL1             75
+      *
+     C           *IN75     IFEQ '1'                        B*5
+     C**********           Z-ADD*ZEROS    WCNUM                                               CSD027
+     C                     MOVE *BLANKS   WCNUM                                               CSD027
+     C           KEY4      CHAINSECOSIL1             75
+     C                     ENDIF                           E*5
+      *
+     C                     ENDIF                           E*4
+      *
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     MOVE @CNUM     WCNUM
+      *
+     C                     MOVE 'N'       SN1EX
+     C                     MOVE 'N'       SN2EX
+     C                     MOVE *BLANKS   SS1ID
+     C                     MOVE *BLANKS   SS2ID
+      *
+     C           *IN75     IFEQ '0'                        B*2
+     C                     MOVE 'Y'       EXBCSI  1        Standard Instruction exist
+      *
+     C           MOCAPP    IFGE 50                         B*3
+     C                     MOVE MADFCP    SS1ID
+     C                     ELSE                            X*3
+     C                     MOVE MADFSP    SS1ID
+     C                     ENDIF                           E*3
+      *
+     C           MONAR1    IFNE *BLANKS                    B*3
+     C           MONAR2    ORNE *BLANKS
+     C           MONAR3    ORNE *BLANKS
+     C           MONAR4    ORNE *BLANKS
+     C           MONAR5    ORNE *BLANKS
+     C           MONAR6    ORNE *BLANKS
+     C           MONAR7    ORNE *BLANKS
+     C           MONAR8    ORNE *BLANKS
+     C           MONAR9    ORNE *BLANKS
+     C                     MOVE 'Y'       SN1EX
+     C                     MOVE 'Y'       SN2EX
+     C                     ENDIF                           E*3
+      *
+     C                     ELSE                            X*2
+     C                     MOVE 'N'       EXBCSI           Standard Instruction exist
+     C                     ENDIF                           E*2
+      *
+      **  Retrieve the standard instructions reply for level 2 for Customers
+     C                     EXSR SRREP2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Setup Date Letter sent
+     C           MALPRO    IFEQ 0
+     C                     MOVE *BLANKS   SD1LS
+     C                     MOVE *BLANKS   SD2LS
+     C                     ELSE
+     C                     MOVE MALPRO    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SD1LS
+     C                     MOVE ZDATE     SD2LS
+     C                     ENDIF
+      *
+     C                     MOVE NMCY      SNMCY
+      *
+      ** Protect and non-display 'Cash %' and 'Nominal to be taken as stock'
+     C           @PTYP     IFNE 'DV'
+     C           @PTYP     ANDNE'OF'
+     C           @PTYP     ANDNE'EX'
+     C           @PTYP     ANDNE'NF'
+     C           @PTYP     ANDNE'RG'                                                          182471
+     C                     MOVE '1'       *IN50
+     C                     ELSE
+     C                     MOVE '0'       *IN50
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRMAIN - Main Processing                           *
+      *                                                               *
+      * CALLS      SRINS1 - Initialise screen fields (level 1)        *
+      *            SRINS2 - Initialise screen fields (level 2)        *
+      *            SRVLD1 - Validate Details ( Level 1)               *
+      *            SRVLD2 - Validate Details ( Level 2)               *
+      *            SRSAV1 - Save screen fields (level 1)              *
+      *            SRSAV2 - Save screen fields (level 2)              *
+      *            SRPFKY - Process function keys                     *
+      *                                                               *
+      * CALLED BY  MAIN   - Start Mainline                            *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+     C                     MOVE 'N'       WWEND   1
+      *
+      **  Protect fields if the mode is not Insert/Amend
+     C           @MODE     IFEQ 'A'                        B*1
+     C           @MODE     OREQ 'I'
+     C                     MOVE '0'       *IN70
+     C                     ELSE                            X*1
+     C                     MOVE '1'       *IN70
+     C                     ENDIF                           E*1
+      *
+      **  Setof error indicator *IN20 TO *IN31
+     C                     MOVEA'000000'  *IN,20
+     C                     MOVEA'000000'  *IN,26
+      *
+      **  Clear Messages from Program Message Queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     EXSR SRINS1
+     C                     EXSR SRINS2
+      *
+      **  Do while F3, F12 not pressed
+     C           *INKC     DOWEQ'0'                        B*1
+     C           *INKL     ANDEQ'0'
+     C           WWEND     ANDEQ'N'
+      *
+     C                     TIME           ##TME            Screen time.
+      *
+     C           MANBOP    IFEQ 1                          B*2
+      *
+     C           @PTYP     IFEQ 'DV'                       B*3
+     C           @PTYP     OREQ 'RG'
+     C           @PTYP     OREQ 'OF'
+     C           @PTYP     OREQ 'EX'
+     C                     MOVE *BLANKS   SR1CR
+     C                     MOVE *BLANKS   SS1ID
+     C                     MOVE *BLANKS   SD1NR
+     C                     EXSR SRMPL2
+      *
+     C           *IN70     IFEQ '0'                        B*4
+     C           ERROR     ANDEQ'N'
+     C                     EXSR SRSAV2
+      *
+      **   BLOCKING PROCESSING
+      *
+     C           SR2BA     IFNE SR2HA                      B*5
+     C           SR2HF     ORNE SR2HF
+     C           SR2HE     ORNE SR2HE
+     C                     EXSR SRBLK2
+     C                     ENDIF                           E*5
+      *
+     C           *IN76     IFEQ '0'                        B*5
+     C                     UPDATSECORED0
+     C                     ELSE                            X*5
+     C                     WRITESECORED0
+     C                     ENDIF                           E*5
+      *
+     C                     ENDIF                           E*4
+      *
+     C                     ELSE                            X*3
+     C                     WRITESE7515C1
+     C                     WRITESE7515F3
+     C                     EXFMTSE7515F1
+      *
+      **  Clear Messages from Program Message Queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C           *IN46     IFEQ '0'                        B*4
+     C           *IN70     ANDEQ'0'
+     C                     EXSR SRVLD1
+      *
+     C           ERROR     IFEQ 'N'                        B*5
+     C                     EXSR SRSAV1
+      *
+      **   BLOCKING PROCESSING
+      *
+     C           SR1BA     IFNE SR1HA                      B*6
+     C           SR1HF     ORNE SR1HF
+     C           SR1HE     ORNE SR1HE
+     C                     EXSR SRBLK1
+     C                     ENDIF                           E*6
+      *
+     C           *IN76     IFEQ '0'
+     C                     UPDATSECORED0
+     C                     ELSE
+     C                     WRITESECORED0
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WWEND
+     C                     ENDIF                           E*5
+      *
+     C                     ENDIF                           E*4
+      *
+     C                     ENDIF                           E*3
+      *
+     C                     ELSE                            X*2
+      *
+     C                     WRITESE7515C1
+     C                     WRITESE7515F3
+     C                     EXFMTSE7515F1
+      *
+      **  Clear Messages from Program Message Queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C           *IN46     IFEQ '0'                        B*3
+     C           *IN70     ANDEQ'1'
+     C                     EXSR SRMPL2
+     C                     ENDIF                           E*3
+      *
+     C           *IN46     IFEQ '0'                        B*3
+     C           *IN70     ANDEQ'0'
+     C                     EXSR SRVLD1
+      *
+     C           ERROR     IFEQ 'N'                        B*4
+      *                                                                   155622
+     C                     MOVE *BLANKS   S2OP1                           155622
+     C                     MOVE *BLANKS   S2OP2                           155622
+     C                     MOVE *BLANKS   S2OP3                           155622
+     C                     MOVE *BLANKS   S2OP4                           155622
+     C                     MOVE *BLANKS   S2OP5                           155622
+     C                     MOVE *BLANKS   S2OP6                           155622
+     C                     MOVE *BLANKS   S2OP7                           155622
+      *                                                                   155622
+     C                     MOVE *BLANKS   ZFIELD                          155622
+     C                     MOVE SR1RE     ZFIELD                          155622
+     C                     Z-ADD2         ZADIG                           155622
+     C                     Z-ADD0         ZADEC                           155622
+     C                     EXSR ZALIGN                                    155622
+     C                     MOVE ZFIELD    MQR1RE                          155622
+      *                                                                   155622
+     C                     EXSR SRINS2                                    155622
+     C                     EXSR SRMPL2
+      *
+      **  If F12 was pressed, display the previous screen
+     C           *INKL     IFEQ '1'                        B*5
+     C                     MOVE '0'       *INKL
+     C                     EXSR SRINS2
+     C                     ENDIF                           E*5
+      *
+     C           ERROR     IFEQ 'N'                        B*5
+     C                     EXSR SRSAV1
+     C                     EXSR SRSAV2
+      *
+     C           *IN76     IFEQ '0'
+     C                     UPDATSECORED0
+     C                     ELSE
+     C                     WRITESECORED0
+     C                     ENDIF
+      *
+     C                     ENDIF                           E*5
+      *
+     C                     ENDIF                           E*4
+      *
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+      **  If F5 is pressed, refresh the screens
+     C           *INKE     IFEQ '1'                        B*2
+     C                     MOVEA'00000'   *IN,20
+     C                     EXSR SRINS1
+     C                     ENDIF                           E*2
+      *
+      ** If a function key is press
+     C           *IN46     IFEQ '1'                        B*2
+     C                     EXSR SRPFKY
+     C                     ENDIF                           E*2
+      *
+     C                     ENDDO                           E*1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRMPL2 - Main Processing for Level 2               *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRMPL2    BEGSR
+      *
+     C                     MOVE 'N'       WWEND2  1
+      *
+      **  Do while F3, F12 not pressed
+     C           *INKC     DOWEQ'0'                        B*1
+     C           *INKL     ANDEQ'0'
+     C           WWEND2    ANDEQ'N'
+      *
+     C                     TIME           ##TME            Screen time.
+      *
+     C                     WRITESE7515C1
+     C                     WRITESE7515F3
+     C                     EXFMTSE7515F2
+      *
+      **  Setof error indicators from *IN25 to *IN31
+     C                     MOVEA'0000000' *IN,25
+      *
+      **  Clear Messages from Program Message Queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      **  If <enter> pressed, validate screen fields
+     C           *IN46     IFEQ '0'                        B*2
+     C           *IN70     ANDEQ'0'
+     C                     EXSR SRVLD2
+      *
+      **  If no error, update file and return to previous screen
+     C           ERROR     IFEQ 'N'                        B*3
+     C                     MOVE 'Y'       WWEND2
+     C                     MOVE 'Y'       WWEND
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+      **  If F5 is pressed, refresh the screens
+     C           *INKE     IFEQ '1'                        B*2
+     C                     MOVEA'0000000' *IN,25
+     C                     EXSR SRINS2
+     C                     ENDIF                           E*2
+      *
+      ** If a function key is press
+     C           *IN46     IFEQ '1'                        B*2
+     C                     EXSR SRPFKY
+     C                     ENDIF                           E*2
+      *
+     C                     ENDDO                           E*1
+      *
+      **  If F3 or F12 were pressed, dont save the screen fields
+     C           *INKC     IFEQ '1'
+     C           *INKL     OREQ '1'
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRENDP - End Processing                            *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Start Mainline                            *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRENDP    BEGSR
+      *
+      *
+      **  Execute Commitment Control to fix all inserted records
+     C                     COMIT
+      *
+     C           *INKC     IFEQ '1'                        B*1
+     C                     MOVE '3'       @RTCD
+     C                     ENDIF                           E*1
+      *
+     C           *INKL     IFEQ '1'                        B*1
+     C                     MOVE '2'       @RTCD
+     C                     ENDIF                           E*1
+      *
+      **  End Program
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRINS1 - Initialise screen fields (level 1)        *
+      *                                                               *
+      * CALLS      *PSSR  - Program error handling routine            *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRINS1    BEGSR
+      *
+      **  Setof error indicator *IN20 TO *IN24
+     C                     MOVEA'00000'   *IN,20
+      *
+      ** Setup the output fields in lines 10 to 14.
+     C                     MOVE 0         *IN78
+     C                     Z-ADD0         WCTR    20
+      *
+     C           @PTYP     IFEQ 'DV'                       B*0
+     C           @PTYP     OREQ 'FR'
+     C           @PTYP     OREQ 'RG'
+     C           @PTYP     OREQ 'CE'
+     C           @PTYP     OREQ 'CR'
+     C           @PTYP     OREQ 'OF'
+     C           @PTYP     OREQ 'EX'
+      *
+     C           @CORF     SETLLSECODVL1
+     C           @CORF     SETLLSECOFRL1
+     C           @CORF     SETLLSECORGL1
+     C           @CORF     SETLLSECOCEL1
+     C           @CORF     SETLLSECOCRL1
+     C           @CORF     SETLLSECOOFL1
+     C           @CORF     SETLLSECOEXL1
+      *
+     C           *IN78     DOWEQ'0'                        B*1
+     C           WCTR      ANDLE9
+      *
+     C           @PTYP     IFEQ 'DV'                       B*2
+     C           @CORF     READESECODVL1                 78
+      *
+     C           *IN78     IFEQ '0'                        B*3
+      *
+     C                     SELEC
+      *
+     C           MDOPTN    WHEQ 1                          B*4
+     C                     MOVEL'1. '     S1OP1
+     C                     MOVE MDOPSH    S1OP1
+      *
+     C           MDOPTN    WHEQ 2                          B*4
+     C                     MOVEL'2. '     S1OP2
+     C                     MOVE MDOPSH    S1OP2
+      *
+     C           MDOPTN    WHEQ 3                          B*4
+     C                     MOVEL'3. '     S1OP3
+     C                     MOVE MDOPSH    S1OP3
+      *
+     C           MDOPTN    WHEQ 4                          B*4
+     C                     MOVEL'4. '     S1OP4
+     C                     MOVE MDOPSH    S1OP4
+      *
+     C           MDOPTN    WHEQ 5                          B*4
+     C                     MOVEL'5. '     S1OP5
+     C                     MOVE MDOPSH    S1OP5
+      *
+     C           MDOPTN    WHEQ 6                          B*4
+     C                     MOVEL'6. '     S1OP6
+     C                     MOVE MDOPSH    S1OP6
+      *
+     C           MDOPTN    WHEQ 7                          B*4
+     C                     MOVEL'7. '     S1OP7
+     C                     MOVE MDOPSH    S1OP7
+      *
+     C           MDOPTN    WHEQ 8                          B*4
+     C                     MOVEL'8. '     S1OP8
+     C                     MOVE MDOPSH    S1OP8
+      *
+     C           MDOPTN    WHEQ 9                          B*4
+     C                     MOVEL'9. '     S1OP9
+     C                     MOVE MDOPSH    S1OP9
+      *
+     C                     ENDSL
+      *
+     C                     ADD  1         WCTR
+      *
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C           @PTYP     IFEQ 'FR'                       B*2
+     C           @CORF     READESECOFRL1                 78
+      *
+     C           *IN78     IFEQ '0'                        B*3
+     C           MEOPTN    IFEQ 1                          B*4
+     C                     MOVEL'1. '     S1OP1
+     C                     MOVE MEOPSH    S1OP1
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MEOPTN    IFEQ 2                          B*4
+     C                     MOVEL'2. '     S1OP2
+     C                     MOVE MEOPSH    S1OP2
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MEOPTN    IFEQ 3                          B*4
+     C                     MOVEL'3. '     S1OP3
+     C                     MOVE MEOPSH    S1OP3
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MEOPTN    IFEQ 4                          B*4
+     C                     MOVEL'4. '     S1OP4
+     C                     MOVE MEOPSH    S1OP4
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MEOPTN    IFEQ 5                          B*4
+     C                     MOVEL'5. '     S1OP5
+     C                     MOVE MEOPSH    S1OP5
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MEOPTN    IFEQ 6                          B*4
+     C                     MOVEL'6. '     S1OP6
+     C                     MOVE MEOPSH    S1OP6
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MEOPTN    IFEQ 7                          B*4
+     C                     MOVEL'7. '     S1OP7
+     C                     MOVE MEOPSH    S1OP7
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MEOPTN    IFEQ 8                          B*4
+     C                     MOVEL'8. '     S1OP8
+     C                     MOVE MEOPSH    S1OP8
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MEOPTN    IFEQ 9                          B*4
+     C                     MOVEL'9. '     S1OP9
+     C                     MOVE MEOPSH    S1OP9
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+     C                     ENDIF                           E*2
+      *
+     C           @PTYP     IFEQ 'RG'                       B*2
+     C           @CORF     READESECORGL1                 78
+      *
+     C           *IN78     IFEQ '0'                        B*3
+      *
+     C                     SELEC
+      *
+     C           MFOPTN    WHEQ 1                          B*4
+     C                     MOVEL'1. '     S1OP1
+     C                     MOVE MFOPSH    S1OP1
+      *
+     C           MFOPTN    WHEQ 2                          B*4
+     C                     MOVEL'2. '     S1OP2
+     C                     MOVE MFOPSH    S1OP2
+      *
+     C           MFOPTN    WHEQ 3                          B*4
+     C                     MOVEL'3. '     S1OP3
+     C                     MOVE MFOPSH    S1OP3
+      *
+     C           MFOPTN    WHEQ 4                          B*4
+     C                     MOVEL'4. '     S1OP4
+     C                     MOVE MFOPSH    S1OP4
+      *
+     C           MFOPTN    WHEQ 5                          B*4
+     C                     MOVEL'5. '     S1OP5
+     C                     MOVE MFOPSH    S1OP5
+      *
+     C           MFOPTN    WHEQ 6                          B*4
+     C                     MOVEL'6. '     S1OP6
+     C                     MOVE MFOPSH    S1OP6
+      *
+     C           MFOPTN    WHEQ 7                          B*4
+     C                     MOVEL'7. '     S1OP7
+     C                     MOVE MFOPSH    S1OP7
+      *
+     C           MFOPTN    WHEQ 8                          B*4
+     C                     MOVEL'8. '     S1OP8
+     C                     MOVE MFOPSH    S1OP8
+      *
+     C           MFOPTN    WHEQ 9                          B*4
+     C                     MOVEL'9. '     S1OP9
+     C                     MOVE MFOPSH    S1OP9
+      *
+     C                     ENDSL
+      *
+     C                     ADD  1         WCTR
+      *
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C           @PTYP     IFEQ 'CE'                       B*2
+     C           @CORF     READESECOCEL1                 78
+      *
+     C           *IN78     IFEQ '0'                        B*3
+     C           MGOPTN    IFEQ 1                          B*4
+     C                     MOVEL'1. '     S1OP1
+     C                     MOVE MGOPSH    S1OP1
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MGOPTN    IFEQ 2                          B*4
+     C                     MOVEL'2. '     S1OP2
+     C                     MOVE MGOPSH    S1OP2
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MGOPTN    IFEQ 3                          B*4
+     C                     MOVEL'3. '     S1OP3
+     C                     MOVE MGOPSH    S1OP3
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MGOPTN    IFEQ 4                          B*4
+     C                     MOVEL'4. '     S1OP4
+     C                     MOVE MGOPSH    S1OP4
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MGOPTN    IFEQ 5                          B*4
+     C                     MOVEL'5. '     S1OP5
+     C                     MOVE MGOPSH    S1OP5
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MGOPTN    IFEQ 6                          B*4
+     C                     MOVEL'6. '     S1OP6
+     C                     MOVE MGOPSH    S1OP6
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MGOPTN    IFEQ 7                          B*4
+     C                     MOVEL'7. '     S1OP7
+     C                     MOVE MGOPSH    S1OP7
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MGOPTN    IFEQ 8                          B*4
+     C                     MOVEL'8. '     S1OP8
+     C                     MOVE MGOPSH    S1OP8
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MGOPTN    IFEQ 9                          B*4
+     C                     MOVEL'9. '     S1OP9
+     C                     MOVE MGOPSH    S1OP9
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+     C                     ENDIF                           E*2
+      *
+     C           @PTYP     IFEQ 'CR'                       B*2
+     C           @CORF     READESECOCRL1                 78
+      *
+     C           *IN78     IFEQ '0'                        B*3
+     C           MHOPTN    IFEQ 1                          B*4
+     C                     MOVEL'1. '     S1OP1
+     C                     MOVE MHOPSH    S1OP1
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MHOPTN    IFEQ 2                          B*4
+     C                     MOVEL'2. '     S1OP2
+     C                     MOVE MHOPSH    S1OP2
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MHOPTN    IFEQ 3                          B*4
+     C                     MOVEL'3. '     S1OP3
+     C                     MOVE MHOPSH    S1OP3
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MHOPTN    IFEQ 4                          B*4
+     C                     MOVEL'4. '     S1OP4
+     C                     MOVE MHOPSH    S1OP4
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MHOPTN    IFEQ 5                          B*4
+     C                     MOVEL'5. '     S1OP5
+     C                     MOVE MHOPSH    S1OP5
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MHOPTN    IFEQ 6                          B*4
+     C                     MOVEL'6. '     S1OP6
+     C                     MOVE MHOPSH    S1OP6
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MHOPTN    IFEQ 7                          B*4
+     C                     MOVEL'7. '     S1OP7
+     C                     MOVE MHOPSH    S1OP7
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MHOPTN    IFEQ 8                          B*4
+     C                     MOVEL'8. '     S1OP8
+     C                     MOVE MHOPSH    S1OP8
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+      *
+     C           MHOPTN    IFEQ 9                          B*4
+     C                     MOVEL'9. '     S1OP9
+     C                     MOVE MHOPSH    S1OP9
+     C                     ADD  1         WCTR
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+     C                     ENDIF                           E*2
+      *
+     C           @PTYP     IFEQ 'OF'                       B*2
+     C           @CORF     READESECOOFL1                 78
+      *
+     C           *IN78     IFEQ '0'                        B*3
+      *
+     C                     SELEC
+      *
+     C           MIOPTN    WHEQ 1                          B*4
+     C                     MOVEL'1. '     S1OP1
+     C                     MOVE MIOPSH    S1OP1
+      *
+     C           MIOPTN    WHEQ 2                          B*4
+     C                     MOVEL'2. '     S1OP2
+     C                     MOVE MIOPSH    S1OP2
+      *
+     C           MIOPTN    WHEQ 3                          B*4
+     C                     MOVEL'3. '     S1OP3
+     C                     MOVE MIOPSH    S1OP3
+      *
+     C           MIOPTN    WHEQ 4                          B*4
+     C                     MOVEL'4. '     S1OP4
+     C                     MOVE MIOPSH    S1OP4
+      *
+     C           MIOPTN    WHEQ 5                          B*4
+     C                     MOVEL'5. '     S1OP5
+     C                     MOVE MIOPSH    S1OP5
+      *
+     C           MIOPTN    WHEQ 6                          B*4
+     C                     MOVEL'6. '     S1OP6
+     C                     MOVE MIOPSH    S1OP6
+      *
+     C           MIOPTN    WHEQ 7                          B*4
+     C                     MOVEL'7. '     S1OP7
+     C                     MOVE MIOPSH    S1OP7
+      *
+     C           MIOPTN    WHEQ 8                          B*4
+     C                     MOVEL'8. '     S1OP8
+     C                     MOVE MIOPSH    S1OP8
+      *
+     C           MIOPTN    WHEQ 9                          B*4
+     C                     MOVEL'9. '     S1OP9
+     C                     MOVE MIOPSH    S1OP9
+      *
+     C                     ENDSL
+      *
+     C                     ADD  1         WCTR
+      *
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C           @PTYP     IFEQ 'EX'                       B*2
+     C           @CORF     READESECOEXL1                 78
+      *
+     C           *IN78     IFEQ '0'                        B*3
+      *
+     C                     SELEC
+      *
+     C           MJOPTN    WHEQ 1                          B*4
+     C                     MOVEL'1. '     S1OP1
+     C                     MOVE MJOPSH    S1OP1
+      *
+     C           MJOPTN    WHEQ 2                          B*4
+     C                     MOVEL'2. '     S1OP2
+     C                     MOVE MJOPSH    S1OP2
+      *
+     C           MJOPTN    WHEQ 3                          B*4
+     C                     MOVEL'3. '     S1OP3
+     C                     MOVE MJOPSH    S1OP3
+      *
+     C           MJOPTN    WHEQ 4                          B*4
+     C                     MOVEL'4. '     S1OP4
+     C                     MOVE MJOPSH    S1OP4
+      *
+     C           MJOPTN    WHEQ 5                          B*4
+     C                     MOVEL'5. '     S1OP5
+     C                     MOVE MJOPSH    S1OP5
+      *
+     C           MJOPTN    WHEQ 6                          B*4
+     C                     MOVEL'6. '     S1OP6
+     C                     MOVE MJOPSH    S1OP6
+      *
+     C           MJOPTN    WHEQ 7                          B*4
+     C                     MOVEL'7. '     S1OP7
+     C                     MOVE MJOPSH    S1OP7
+      *
+     C           MJOPTN    WHEQ 8                          B*4
+     C                     MOVEL'8. '     S1OP8
+     C                     MOVE MJOPSH    S1OP8
+      *
+     C           MJOPTN    WHEQ 9                          B*4
+     C                     MOVEL'9. '     S1OP9
+     C                     MOVE MJOPSH    S1OP9
+      *
+     C                     ENDSL
+      *
+     C                     ADD  1         WCTR
+      *
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDDO                           E*1
+     C                     ENDIF                           E*0
+      *
+     C           @PTYP     IFEQ 'CR'                       B*1
+     C           MAREFO    ANDEQ'Y'
+     C           MACONR    CHAINSECONAL0             89
+      *
+     C           *IN89     IFEQ '0'                        B*2
+     C                     MOVEL'10.'     S1OP0
+     C                     MOVE MNNARR    S1OP0
+     C                     ELSE                            X*2
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD008       DBASE            ****************
+     C                     MOVE 'SECONAL0'DBFILE           * DB ERROR 008 *
+     C                     MOVELMACONR    DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Setup the Input/Output fields in lines 16 to 21.
+     C           *IN76     IFEQ '0'                        B*1
+     C                     MOVE MQR1RE    SR1RE
+     C                     MOVE MQR1NA    SR1NA
+      *
+     C                     MOVE MQR1N1    SR1N1
+     C                     MOVE MQR1N2    SR1N2
+     C                     MOVE MQR1N3    SR1N3
+     C                     MOVE MQR1BA    SR1BA
+      *
+     C           MQR1BF    IFNE 0                          B*2
+     C                     MOVE MQR1BF    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SR1BF
+     C                     ELSE                            X*2
+     C                     MOVE *BLANKS   SR1BF
+     C                     ENDIF                           E*2
+      *
+     C           MQR1BE    IFNE 0                          B*2
+     C                     MOVE MQR1BE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SR1BE
+     C                     ELSE                            X*2
+     C                     MOVE *BLANKS   SR1BE
+     C                     ENDIF                           E*2
+      *
+     C                     ELSE                            X*1
+      *
+     C                     MOVE *BLANKS   SR1RE
+     C                     MOVE *BLANKS   SR1NA
+      *
+     C                     MOVE *BLANKS   SR1N1
+     C                     MOVE *BLANKS   SR1N2
+     C                     MOVE *BLANKS   SR1N3
+     C                     MOVE MABLOP    SR1BA
+      *
+     C           MABFRD    IFNE 0                          B*2
+     C                     MOVE MABFRD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SR1BF
+     C                     ELSE                            X*2
+     C                     MOVE *BLANKS   SR1BF
+     C                     ENDIF                           E*2
+      *
+     C           MABEND    IFNE 0                          B*2
+     C                     MOVE MABEND    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SR1BE
+     C                     ELSE                            X*2
+     C                     MOVE *BLANKS   SR1BE
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+     C                     MOVE SR1BA     SR1HA
+     C                     MOVE SR1BF     SR1HF
+     C                     MOVE SR1BE     SR1HE
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRINS2 - Initialise screen fields (level 2)        *
+      *                                                               *
+      * CALLS      *PSSR  - Program error handling routine            *
+      *            SRGCON - Get Customer Option Narrative             *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRINS2    BEGSR
+      *
+      **  Setof error indicator *IN26 TO *IN31
+     C                     MOVEA'000000'  *IN,20
+      *
+      ** Setup the output fields in lines 10 to 14.
+     C                     Z-ADDWOPNB     NUMB    20
+      *
+     C           MQR1RE    IFNE *BLANKS                    B*1
+     C                     MOVE MQR1RE    WOPNB
+      *
+     C                     SELEC
+      *
+     C           @PTYP     WHEQ 'OF'                       B*2
+     C           KEY1      CHAINSECOOFL1             75
+      *
+     C           @PTYP     WHEQ 'RG'                       B*2
+     C           KEY1      CHAINSECORGL1             75
+      *
+     C           @PTYP     WHEQ 'DV'                       B*2
+     C           KEY1      CHAINSECODVL1             75
+      *
+     C           @PTYP     WHEQ 'EX'                       B*2
+     C           KEY1      CHAINSECOEXL1             75
+      *
+     C                     ENDSL
+      *
+     C                     Z-ADDNUMB      WOPNB
+      *
+     C                     ELSE                            X*1
+      *
+     C                     MOVE *LOVAL    WOPNB
+      *
+     C                     SELEC
+      *
+     C           @PTYP     WHEQ 'OF'                       B*2
+     C           KEY1      SETLLSECOOFL1
+     C                     READ SECOOFL1                 75
+      *
+     C           @PTYP     WHEQ 'RG'                       B*2
+     C           KEY1      SETLLSECORGL1
+     C                     READ SECORGL1                 75
+      *
+     C           @PTYP     WHEQ 'DV'                       B*2
+     C           KEY1      SETLLSECODVL1
+     C                     READ SECODVL1                 75
+      *
+     C           @PTYP     WHEQ 'EX'                       B*2
+     C           KEY1      SETLLSECOEXL1
+     C                     READ SECOEXL1                 75
+      *
+     C                     ENDSL                           E*1
+      *
+     C                     Z-ADDNUMB      WOPNB
+     C                     ENDIF                           E*1
+      *
+     C           @PTYP     IFEQ 'OF'                       B*1
+      *
+     C           MIOPT1    IFEQ 'Y'                        B*2
+     C                     MOVE MINAR1    KOPTN   2
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP1
+     C                     MOVEL'1. '     S2OP1
+     C                     ENDIF                           E*2
+      *
+     C           MIOPT2    IFEQ 'Y'                        B*2
+     C                     MOVE MINAR2    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP2
+     C                     MOVEL'2. '     S2OP2
+     C                     ENDIF                           E*2
+      *
+     C           MIOPT3    IFEQ 'Y'                        B*2
+     C                     MOVE MINAR3    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP3
+     C                     MOVEL'3. '     S2OP3
+     C                     ENDIF                           E*2
+      *                                                                   155622
+     C           MIOPT1    IFNE 'Y'                        B*2            155622
+     C           MIOPT2    ANDNE'Y'                                       155622
+     C           MIOPT3    ANDNE'Y'                                       155622
+     C                     MOVE '1'       *IN35                           155622
+     C                     ELSE                            X*2            155622
+     C                     MOVE '0'       *IN35                           155622
+     C                     ENDIF                           E*2            155622
+      *
+     C                     ENDIF                           E*1
+      *
+     C           @PTYP     IFEQ 'DV'                       B*1
+      *
+     C           MDOPT1    IFEQ 'Y'                        B*2
+     C                     MOVE MDNAR1    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP1
+     C                     MOVEL'1. '     S2OP1
+     C                     ENDIF                           E*2
+      *
+     C           MDOPT2    IFEQ 'Y'                        B*2
+     C                     MOVE MDNAR2    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP2
+     C                     MOVEL'2. '     S2OP2
+     C                     ENDIF                           E*2
+      *
+     C           MDOPT3    IFEQ 'Y'                        B*2
+     C                     MOVE MDNAR3    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP3
+     C                     MOVEL'3. '     S2OP3
+     C                     ENDIF                           E*2
+      *
+     C           MDOPT4    IFEQ 'Y'                        B*2
+     C                     MOVE MDNAR4    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP4
+     C                     MOVEL'4. '     S2OP4
+     C                     ENDIF                           E*2
+      *
+     C           MDOPT5    IFEQ 'Y'                        B*2
+     C                     MOVE MDNAR5    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP5
+     C                     MOVEL'5. '     S2OP5
+     C                     ENDIF                           E*2
+      *                                                                   155622
+     C           MDOPT1    IFNE 'Y'                        B*2            155622
+     C           MDOPT2    ANDNE'Y'                                       155622
+     C           MDOPT3    ANDNE'Y'                                       155622
+     C           MDOPT4    ANDNE'Y'                                       155622
+     C           MDOPT5    ANDNE'Y'                                       155622
+     C                     MOVE '1'       *IN35                           155622
+     C                     ELSE                            X*2            155622
+     C                     MOVE '0'       *IN35                           155622
+     C                     ENDIF                           E*2            155622
+      *
+     C                     ENDIF                           E*1
+      *
+     C           @PTYP     IFEQ 'RG'                       B*1
+      *
+     C           MFOPT1    IFEQ 'Y'                        B*2
+     C                     MOVE MFNAR1    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP1
+     C                     MOVEL'1. '     S2OP1
+     C                     ENDIF                           E*2
+      *
+     C           MFOPT2    IFEQ 'Y'                        B*2
+     C                     MOVE MFNAR2    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP2
+     C                     MOVEL'2. '     S2OP2
+     C                     ENDIF                           E*2
+      *
+     C           MFOPT3    IFEQ 'Y'                        B*2
+     C                     MOVE MFNAR3    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP3
+     C                     MOVEL'3. '     S2OP3
+     C                     ENDIF                           E*2
+      *
+     C           MFOPT4    IFEQ 'Y'                        B*2
+     C                     MOVE MFNAR4    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP4
+     C                     MOVEL'4. '     S2OP4
+     C                     ENDIF                           E*2
+      *
+     C           MFOPT5    IFEQ 'Y'                        B*2
+     C                     MOVE MFNAR5    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP5
+     C                     MOVEL'5. '     S2OP5
+     C                     ENDIF                           E*2
+      *
+     C           MFOPT6    IFEQ 'Y'                        B*2
+     C                     MOVE MFNAR6    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP6
+     C                     MOVEL'6. '     S2OP6
+     C                     ENDIF                           E*2
+      *
+     C           MFOPT7    IFEQ 'Y'                        B*2
+     C                     MOVE MFNAR7    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP7
+     C                     MOVEL'7. '     S2OP7
+     C                     ENDIF                           E*2
+      *                                                                   155622
+     C           MFOPT1    IFNE 'Y'                        B*2            155622
+     C           MFOPT2    ANDNE'Y'                                       155622
+     C           MFOPT3    ANDNE'Y'                                       155622
+     C           MFOPT4    ANDNE'Y'                                       155622
+     C           MFOPT5    ANDNE'Y'                                       155622
+     C           MFOPT6    ANDNE'Y'                                       155622
+     C           MFOPT7    ANDNE'Y'                                       155622
+     C                     MOVE '1'       *IN35                           155622
+     C                     ELSE                            X*2            155622
+     C                     MOVE '0'       *IN35                           155622
+     C                     ENDIF                           E*2            155622
+      *
+     C                     ENDIF                           E*1
+      *
+     C           @PTYP     IFEQ 'EX'                       B*1
+      *
+     C           MJOPT1    IFEQ 'Y'                        B*2
+     C                     MOVE MJNAR1    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP1
+     C                     MOVEL'1. '     S2OP1
+     C                     ENDIF                           E*2
+      *
+     C           MJOPT2    IFEQ 'Y'                        B*2
+     C                     MOVE MJNAR2    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP2
+     C                     MOVEL'2. '     S2OP2
+     C                     ENDIF                           E*2
+      *
+     C           MJOPT3    IFEQ 'Y'                        B*2
+     C                     MOVE MJNAR3    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP3
+     C                     MOVEL'3. '     S2OP3
+     C                     ENDIF                           E*2
+      *
+     C           MJOPT4    IFEQ 'Y'                        B*2
+     C                     MOVE MJNAR4    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP4
+     C                     MOVEL'4. '     S2OP4
+     C                     ENDIF                           E*2
+      *
+     C           MJOPT5    IFEQ 'Y'                        B*2
+     C                     MOVE MJNAR5    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP5
+     C                     MOVEL'5. '     S2OP5
+     C                     ENDIF                           E*2
+      *
+     C           MJOPT6    IFEQ 'Y'                        B*2
+     C                     MOVE MJNAR6    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP6
+     C                     MOVEL'6. '     S2OP6
+     C                     ENDIF                           E*2
+      *
+     C           MJOPT7    IFEQ 'Y'                        B*2
+     C                     MOVE MJNAR7    KOPTN
+     C                     EXSR SRGCON
+     C                     MOVE MNNARR    S2OP7
+     C                     MOVEL'7. '     S2OP7
+     C                     ENDIF                           E*2
+      *                                                                   155622
+     C           MJOPT1    IFNE 'Y'                        B*2            155622
+     C           MJOPT2    ANDNE'Y'                                       155622
+     C           MJOPT3    ANDNE'Y'                                       155622
+     C           MJOPT4    ANDNE'Y'                                       155622
+     C           MJOPT5    ANDNE'Y'                                       155622
+     C           MJOPT6    ANDNE'Y'                                       155622
+     C           MJOPT7    ANDNE'Y'                                       155622
+     C                     MOVE '1'       *IN35                           155622
+     C                     ELSE                            X*2            155622
+     C                     MOVE '0'       *IN35                           155622
+     C                     ENDIF                           E*2            155622
+      *
+     C                     ENDIF                           E*1
+      *
+     C           @PTYP     IFEQ 'NF'                       B*1
+     C           @PTYP     OREQ 'CE'
+     C           @PTYP     OREQ 'CR'
+     C                     MOVE *BLANKS   S2OP1
+     C                     MOVE *BLANKS   S2OP2
+     C                     MOVE *BLANKS   S2OP3
+     C                     MOVE *BLANKS   S2OP4
+     C                     MOVE *BLANKS   S2OP5
+     C                     MOVE *BLANKS   S2OP6
+     C                     MOVE *BLANKS   S2OP7
+     C                     ENDIF
+      *
+      ** Setup the Input/Output fields in lines 16 to 21.
+     C           *IN76     IFEQ '0'                        B*1
+     C           *IN35     IFEQ '1'                        B*2            155622
+     C                     MOVE *BLANKS   SR2RE                           155622
+     C                     ELSE                            X*2            155622
+     C                     MOVE MQR2RE    SR2RE
+     C                     ENDIF                           E*2            155622
+     C                     MOVE MQR2NA    SR2NA
+      *
+     C           MQR2CA    IFNE 0
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE MQR2CA    ZFLD15
+     C                     Z-ADD2         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVEL*BLANKS   SR2CA
+     C                     MOVE ZOUT21    WFLD7   7
+     C                     MOVELWFLD7     SR2CA
+     C                     ELSE                            X*2
+     C                     MOVE *BLANKS   SR2CA
+     C                     ENDIF                           E*2
+      *
+     C           MQR2CN    IFNE 0                          B*2
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE MQR2CN    ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVEL*BLANKS   SR2CN
+     C                     MOVE ZOUT21    WFLD17 17
+     C                     MOVELWFLD17    SR2CN
+     C                     ELSE                            X*2
+     C                     MOVE *BLANKS   SR2CN
+     C                     ENDIF                           E*2
+      *
+     C                     MOVE MQR2N1    SR2N1
+     C                     MOVE MQR2N2    SR2N2
+     C                     MOVE MQR2N3    SR2N3
+     C                     MOVE MQR2BA    SR2BA
+      *
+     C           MQR2BF    IFNE 0                          B*2
+     C                     MOVE MQR2BF    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SR2BF
+     C                     ELSE                            X*2
+     C                     MOVE *BLANKS   SR2BF
+     C                     ENDIF                           E*2
+      *
+     C           MQR2BE    IFNE 0                          B*2
+     C                     MOVE MQR2BE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SR2BE
+     C                     ELSE                            X*2
+     C                     MOVE *BLANKS   SR2BE
+     C                     ENDIF                           E*2
+      *
+     C                     ELSE                            X*1
+     C                     MOVE *BLANKS   SR2RE
+     C                     MOVE *BLANKS   SR2NA
+      *
+     C           @PTYP     IFEQ 'DV'                       B*1.1          137877
+     C           @PTYP     OREQ 'OF'                                      137877
+     C           @PTYP     OREQ 'EX'                                      137877
+     C           @PTYP     OREQ 'NF'                                      137877
+      *                                                                   137877
+     C           MOCAPP    IFNE 0                          B*2
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE MOCAPP    ZFLD15
+     C                     Z-ADD2         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVEL*BLANKS   SR2CA
+     C                     MOVE ZOUT21    WFLD7   7
+     C                     MOVELWFLD7     SR2CA
+     C                     ELSE                            X*2
+     C                     MOVE *BLANKS   SR2CA
+     C                     ENDIF                           E*2
+     C                     ELSE                            X*1.1          137877
+     C                     MOVE *BLANKS   SR2CA                           137877
+     C                     ENDIF                           E*1.1          137877
+      *
+     C                     MOVE *BLANKS   SR2CN
+      *
+     C                     MOVE *BLANKS   SR2N1
+     C                     MOVE *BLANKS   SR2N2
+     C                     MOVE *BLANKS   SR2N3
+      *
+     C           MQR1BA    IFNE *BLANKS                    B*2
+     C                     MOVE MQR1BA    SR2BA
+     C                     ELSE                            X*2
+     C                     MOVE MABLOP    SR2BA
+     C                     ENDIF                           E*2
+      *
+     C           MQR1BF    IFNE 0                          B*2
+     C                     MOVE MQR1BF    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SR2BF
+     C                     ELSE                            X*2
+      *
+     C           MABFRD    IFNE 0
+     C                     MOVE MABFRD    ZDAYNO           B*3
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SR2BF
+     C                     ELSE                            X*3
+     C                     MOVE *BLANKS   SR2BF
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C           MQR1BE    IFNE 0                          B*2
+     C                     MOVE MQR1BE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SR2BE
+     C                     ELSE                            X*2
+      *
+     C           MABFRD    IFNE 0                          B*3
+     C                     MOVE MABEND    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SR2BE
+     C                     ELSE                            X*3
+     C                     MOVE *BLANKS   SR2BE
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+     C                     MOVE SR2BA     SR2HA
+     C                     MOVE SR2BF     SR2HF
+     C                     MOVE SR2BE     SR2HE
+      *
+      ** If Processing Type is 'Exercise' and Option 6 was taken,         161732
+      ** set indicator 41 to display alternative text.                    161732
+      *                                                                   161732
+     C           @PTYP     IFEQ 'EX'                                      161732
+     C           MJOPT6    ANDEQ'Y'                                       161732
+     C                     MOVE *ON       *IN41                           161732
+     C                     ENDIF                                          161732
+      *                                                                   161732
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRGCON - Get Customer Option Narrative             *
+      *                                                               *
+      * CALLS      *PSSR  - Program error handling routine            *
+      *                                                               *
+      * CALLED BY  SRINS2 - Initialise screen fields (level 2)        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRGCON    BEGSR
+      *
+     C           KOPTN     CHAINSECONAL0             89
+      *
+     C           *IN89     IFEQ '1'                        B*1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD009       DBASE            ****************
+     C                     MOVE 'SECONAL0'DBFILE           * DB ERROR 009 *
+     C                     MOVELMINAR1    DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E*1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRVLD1 - Validate Details ( Level 1)               *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRVLD1    BEGSR
+      *
+      **  Setof error indicator *IN20 TO *IN24
+     C                     MOVEA'00000'   *IN,20
+      *
+     C                     MOVE 'N'       ERROR
+      *
+      ** Validate New Reply
+     C           SR1RE     IFNE *BLANKS                    B*1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SR1RE     ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    WNRPL   20
+      *
+     C           *IN99     IFEQ '1'                        B*2
+     C           WNRPL     ORLT 1
+     C           WNRPL     ORGT 10
+     C                     MOVEL'CO00245' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN20
+     C                     MOVE 'Y'       ERROR   1
+     C                     ENDIF                           E*2
+      *
+     C           WNRPL     IFEQ 1                          B*2
+     C           S1OP1     ANDEQ*BLANKS
+     C           WNRPL     OREQ 2
+     C           S1OP2     ANDEQ*BLANKS
+     C           WNRPL     OREQ 3
+     C           S1OP3     ANDEQ*BLANKS
+     C           WNRPL     OREQ 4
+     C           S1OP4     ANDEQ*BLANKS
+     C           WNRPL     OREQ 5
+     C           S1OP5     ANDEQ*BLANKS
+     C           WNRPL     OREQ 6
+     C           S1OP6     ANDEQ*BLANKS
+     C           WNRPL     OREQ 7
+     C           S1OP7     ANDEQ*BLANKS
+     C           WNRPL     OREQ 8
+     C           S1OP8     ANDEQ*BLANKS
+     C           WNRPL     OREQ 9
+     C           S1OP9     ANDEQ*BLANKS
+     C                     MOVEL'CO00245' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN20
+     C                     MOVE 'Y'       ERROR   1
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Validate Reply Method Narrative
+     C           SR1NA     IFEQ *BLANKS
+     C                     MOVEL'CO00246' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN21
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF
+      *
+      ** Validate Narrative (optional) - no validation
+      *
+      ** Validate Block Positions - optional
+     C           SR1BA     IFNE *BLANK                     B*1
+     C           SR1BA     ANDNE'E'
+     C           SR1BA     ANDNE'W'
+     C           SR1BA     ANDNE'N'
+     C                     MOVEL'CO00045' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN22
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*1
+      *
+     C           SR1BA     IFEQ *BLANKS
+     C                     MOVE 'N'       SR1BA
+     C                     ENDIF
+      *
+      ** Validate Block From Date
+     C           SR1BF     IFEQ *BLANKS                    B*1
+     C           SR1BA     ANDEQ'E'
+     C           SR1BF     OREQ *BLANKS
+     C           SR1BA     ANDEQ'W'
+     C                     MOVEL'CO00243' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN23
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*1
+      *
+     C           SR1BF     IFNE *BLANKS
+     C           SR1BA     ANDNE'E'
+     C           SR1BA     ANDNE'W'
+     C                     MOVEL'CO00046' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN23
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*1
+      *
+     C           SR1BF     IFNE *BLANKS                    B*1
+     C           SR1BA     ANDEQ'E'
+     C           SR1BF     ORNE *BLANKS
+     C           SR1BA     ANDEQ'W'
+     C                     MOVE SR1BF     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ '1'                        B*2
+     C                     MOVEL'CO00048' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN23
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*2
+      *
+     C                     Z-ADDZDAYNO    WRK1    50
+      *
+     C           *IN22     IFEQ '0'                        B*2
+     C           *IN99     ANDEQ'0'
+      *
+     C           WRK1      IFLE BJRDNB                     B*3
+     C                     MOVEL'CO00050' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN23
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Validate Block End Date
+     C           SR1BE     IFEQ *BLANKS                    B*1
+     C           SR1BA     ANDEQ'E'
+     C           SR1BE     OREQ *BLANKS
+     C           SR1BA     ANDEQ'W'
+     C                     MOVEL'CO00244' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN24
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*1
+      *
+     C           SR1BE     IFNE *BLANKS
+     C           SR1BA     ANDNE'E'
+     C           SR1BA     ANDNE'W'
+     C                     MOVEL'CO00047' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN24
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*1
+      *
+     C           SR1BE     IFNE *BLANKS                    B*1
+     C           SR1BA     ANDEQ'E'
+     C           SR1BE     ORNE *BLANKS
+     C           SR1BA     ANDEQ'W'
+     C                     MOVE SR1BE     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ '1'                        B*2
+     C                     MOVEL'CO00049' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN24
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*2
+      *
+     C           *IN24     IFEQ '0'                        B*2
+     C           *IN99     ANDEQ'0'
+      *
+     C           ZDAYNO    IFLE BJRDNB                     B*3
+     C           ZDAYNO    ORLE WRK1
+     C           ZDAYNO    ORGE MATY
+     C           MATY      ANDNE*ZEROS                                    135689
+     C                     MOVEL'CO00051' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN24
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRVLD2 - Validate Details ( Level 2)               *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRVLD2    BEGSR
+      *
+      **  Setof error indicator *IN26 TO *IN31
+     C                     MOVEA'000000'  *IN,26
+      *
+     C                     MOVE 'N'       ERROR
+      *
+      ** Validate New Reply
+     C           SR2RE     IFNE *BLANKS                    B*1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SR2RE     ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    WNRPL   20
+      *
+     C           *IN99     IFEQ '1'                        B*2
+     C           WNRPL     ORLT 1
+     C           WNRPL     ORGT 7
+     C                     MOVEL'CO00245' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN25
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*2
+      *
+     C           WNRPL     IFEQ 1                          B*2
+     C           S2OP1     ANDEQ*BLANKS
+     C           WNRPL     OREQ 2
+     C           S2OP2     ANDEQ*BLANKS
+     C           WNRPL     OREQ 3
+     C           S2OP3     ANDEQ*BLANKS
+     C           WNRPL     OREQ 4
+     C           S2OP4     ANDEQ*BLANKS
+     C           WNRPL     OREQ 5
+     C           S2OP5     ANDEQ*BLANKS
+     C           WNRPL     OREQ 6
+     C           S2OP6     ANDEQ*BLANKS
+     C           WNRPL     OREQ 7
+     C           S2OP7     ANDEQ*BLANKS
+     C                     MOVEL'CO00245' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN25
+     C                     MOVE 'Y'       ERROR   1
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+     C           *IN26     IFEQ '0'                        B*1
+      *
+     C           @PTYP     IFEQ 'NF'                       B*2
+     C           @PTYP     OREQ 'FR'
+     C           @PTYP     OREQ 'CE'
+     C           @PTYP     OREQ 'CR'
+      *
+     C           SR2RE     IFNE *BLANKS                    B*3
+     C                     MOVEL'CO00247' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN25
+     C                     MOVE 'Y'       ERROR   1
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Validate Reply Method Narrative
+     C           SR2NA     IFEQ *BLANKS
+     C                     MOVEL'CO00246' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN26
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF
+      *
+      ** Validate Cash %
+     C           SR2CA     IFNE *BLANKS                    B*1
+      *
+     C           @PTYP     IFEQ 'DV'                       B*2
+     C           SR2RE     ANDNE'5'
+     C           @PTYP     OREQ 'RG'
+     C           SR2RE     ANDNE'5'
+     C           SR2RE     ANDNE'6'
+     C           @PTYP     OREQ 'OF'
+     C           SR2RE     ANDNE'3'
+     C           @PTYP     OREQ 'EX'
+     C           SR2RE     ANDNE'5'
+     C           SR2RE     ANDNE'6'
+     C           @PTYP     OREQ 'NF'
+     C           SR2RE     ANDNE' '
+      *
+     C           @PTYP     ORNE 'DV'
+     C           @PTYP     ANDNE'RG'
+     C           @PTYP     ANDNE'OF'
+     C           @PTYP     ANDNE'EX'
+     C           @PTYP     ANDNE'NF'
+     C                     MOVEL'CO00250' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN27
+     C                     MOVE 'Y'       ERROR
+     C                     ELSE                            X*2
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SR2CA     ZFIELD
+     C                     Z-ADD5         ZADIG
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    WCASH   52
+      *
+     C           *IN99     IFEQ '1'                        B*3
+     C           WCASH     ORLT 0
+     C           WCASH     ORGT 100
+     C                     MOVEL'CO00248' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN27
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Validate Nominal to be taken as cash
+     C           SR2CN     IFNE *BLANKS                    B*1
+      *
+     C           @PTYP     IFEQ 'DV'                       B*2
+     C           SR2RE     ANDNE'5'
+     C           @PTYP     OREQ 'RG'
+     C           SR2RE     ANDNE'5'
+     C           SR2RE     ANDNE'6'
+     C           @PTYP     OREQ 'OF'
+     C           SR2RE     ANDNE'3'
+     C           @PTYP     OREQ 'EX'
+     C           SR2RE     ANDNE'5'
+     C           SR2RE     ANDNE'6'
+     C           @PTYP     OREQ 'NF'
+     C           SR2RE     ANDNE' '
+      *
+     C           @PTYP     ORNE 'DV'
+     C           @PTYP     ANDNE'RG'
+     C           @PTYP     ANDNE'OF'
+     C           @PTYP     ANDNE'EX'
+     C           @PTYP     ANDNE'NF'
+     C                     MOVEL'CO00250' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN28
+     C                     MOVE 'Y'       ERROR
+     C                     ELSE                            X*2
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SR2CN     ZFIELD
+     C           15        SUB  NMDP      ZADIG
+     C                     Z-ADDNMDP      ZADEC
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '1'                        B*3
+     C                     MOVEL'CO00249' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN28
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Validate Narrative (optional) - no validation
+      *
+      ** Validate Block Positions - optional
+     C           SR2BA     IFNE *BLANK                     B*1
+     C           SR2BA     ANDNE'E'
+     C           SR2BA     ANDNE'W'
+     C           SR2BA     ANDNE'N'
+     C                     MOVEL'CO00045' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN29
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*1
+      *
+     C           SR2BA     IFEQ *BLANKS
+     C                     MOVE 'N'       SR2BA
+     C                     ENDIF
+      *
+      ** Validate Block From Date
+     C           SR2BF     IFEQ *BLANKS                    B*1
+     C           SR2BA     ANDEQ'E'
+     C           SR2BF     OREQ *BLANKS
+     C           SR2BA     ANDEQ'W'
+     C                     MOVEL'CO00243' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN23
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*1
+      *
+     C           SR2BF     IFNE *BLANKS                    B*1
+     C           SR2BA     ANDNE'E'
+     C           SR2BA     ANDNE'W'
+     C                     MOVEL'CO00046' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN30
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*1
+      *
+     C           SR2BF     IFNE *BLANKS                    B*1
+     C           SR2BA     ANDEQ'E'
+     C           SR2BF     ORNE *BLANKS
+     C           SR2BA     ANDEQ'W'
+     C                     MOVE SR2BF     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ '1'                        B*2
+     C                     MOVEL'CO00048' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN30
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*2
+      *
+     C                     Z-ADDZDAYNO    WRK2    50
+      *
+     C           *IN30     IFEQ '0'                        B*2
+     C           *IN99     ANDEQ'0'
+      *
+     C           WRK2      IFLE BJRDNB                     B*3
+     C                     MOVEL'CO00050' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN30
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Validate Block End Date
+     C           SR2BE     IFEQ *BLANKS                    B*1
+     C           SR2BA     ANDEQ'E'
+     C           SR2BE     OREQ *BLANKS
+     C           SR2BA     ANDEQ'W'
+     C                     MOVEL'CO00243' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN23
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*1
+      *
+     C           SR2BE     IFNE *BLANKS                    B*1
+     C           SR2BA     ANDNE'E'
+     C           SR2BA     ANDNE'W'
+     C                     MOVEL'CO00047' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN31
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*1
+      *
+     C           SR2BE     IFNE *BLANKS                    B*1
+     C           SR2BA     ANDEQ'E'
+     C           SR2BE     ORNE *BLANKS
+     C           SR2BA     ANDEQ'W'
+     C                     MOVE SR2BE     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ '1'                        B*2
+     C                     MOVEL'CO00049' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN31
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*2
+      *
+     C           *IN31     IFEQ '0'                        B*2
+     C           *IN99     ANDEQ'0'
+      *
+     C           ZDAYNO    IFLE BJRDNB                     B*3
+     C           ZDAYNO    ORLE WRK2
+     C           ZDAYNO    ORGE MATY
+     C           MATY      ANDNE*ZEROS                                    135689
+     C                     MOVEL'CO00051' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN31
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRSAV1 - Save screen fields (level 1)              *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRSAV1    BEGSR
+      *
+     C           *IN76     IFEQ '0'
+     C                     MOVE 'A'       MQCHTP
+     C                     ELSE
+     C                     MOVE 'I'       MQCHTP
+     C                     ENDIF
+      *
+     C                     MOVE 'D'       MQRECI
+     C                     Z-ADDBJRDNB    MQLCD
+     C                     MOVE ##USR     MQLUID
+     C                     MOVE @CORF     MQCORF
+     C                     MOVE SSESN     MQSESN
+     C                     MOVE SBRCD     MQBRCD
+      *
+     C           @BOOK     IFNE *BLANKS
+     C                     MOVE 'B'       MQCOTP
+     C                     ELSE
+     C                     MOVE 'C'       MQCOTP
+     C                     ENDIF
+      *
+     C                     MOVE @BOOK     MQBOOK
+      *
+     C********** WKNUM     IFEQ 0                                                             CSD027
+     C**********           Z-ADD0         MQCNUM                                              CSD027
+     C           WKNUM     IFEQ *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   MQCNUM                                              CSD027
+     C                     ELSE
+     C**********           Z-ADDWKNUM     MQCNUM                                              CSD027
+     C                     MOVE WKNUM     MQCNUM                                              CSD027
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SR1RE     ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    MQR1RE
+      *
+     C           MANBOP    IFEQ 1
+     C           MQR1RE    ANDEQ*BLANKS
+     C                     MOVE '01'      MQR1RE
+     C                     ENDIF
+      *
+     C                     MOVE SR1NA     MQR1NA
+     C                     MOVE SR1N1     MQR1N1
+     C                     MOVE SR1N2     MQR1N2
+     C                     MOVE SR1N3     MQR1N3
+      *
+     C           SR1BA     IFEQ ' '
+     C                     MOVE 'N'       MQR1BA
+     C                     ELSE
+     C                     MOVE SR1BA     MQR1BA
+     C                     ENDIF
+      *
+     C           SR1BF     IFEQ *BLANKS
+     C                     Z-ADD0         MQR1BF
+     C                     ELSE
+     C                     MOVE SR1BF     ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    MQR1BF
+     C                     ENDIF
+      *
+     C           SR1BE     IFEQ *BLANKS
+     C                     Z-ADD0         MQR1BE
+     C                     ELSE
+     C                     MOVE SR1BE     ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    MQR1BE
+     C                     ENDIF
+      *
+     C           *IN76     IFEQ '0'
+     C                     MOVE 'U'       @RTCD
+     C                     ELSE
+     C                     MOVE 'W'       @RTCD
+     C                     ENDIF
+      *
+     C                     MOVE MQRECI    MPRECI
+     C                     Z-ADDMQLCD     MPLCD
+     C                     MOVE MQCHTP    MPCHTP
+     C                     MOVE MQLUID    MPLUID
+     C                     MOVE MQCORF    MPCORF
+     C                     MOVE MQCOTP    MPCOTP
+     C                     MOVE MQBOOK    MPBOOK
+     C**********           Z-ADDMQCNUM    MPCNUM                                              CSD027
+     C                     MOVE MQCNUM    MPCNUM                                              CSD027
+     C                     MOVE MQR1RE    MPRHRE
+     C                     Z-ADDBJRDNB    MPRHDT
+     C                     TIME           MPRHTI
+     C                     MOVE MQR1NA    MPRHNA
+     C                     Z-ADD*ZEROS    MPRHCA
+     C                     Z-ADD*ZEROS    MPRHCN
+     C                     MOVE MQR1N1    MPRHN1
+     C                     MOVE MQR1N2    MPRHN2
+     C                     MOVE MQR1N3    MPRHN3
+     C                     MOVE MQR1BA    MPRHBA
+     C                     Z-ADDMQR1BF    MPRHBF
+     C                     Z-ADDMQR1BE    MPRHBE
+     C                     MOVE '1'       MPRHLV
+      *
+     C                     WRITESECORHD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRSAV2 - Save screen fields (level 2)              *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRSAV2    BEGSR
+      *
+     C           *IN76     IFEQ '0'
+     C                     MOVE 'A'       MQCHTP
+     C                     ELSE
+     C                     MOVE 'I'       MQCHTP
+     C                     ENDIF
+      *
+     C                     MOVE 'D'       MQRECI
+     C                     Z-ADDBJRDNB    MQLCD
+     C                     MOVE ##USR     MQLUID
+     C                     MOVE @CORF     MQCORF
+     C                     MOVE SSESN     MQSESN
+     C                     MOVE SBRCD     MQBRCD
+      *
+     C           @BOOK     IFNE *BLANKS
+     C                     MOVE 'B'       MQCOTP
+     C                     ELSE
+     C                     MOVE 'C'       MQCOTP
+     C                     ENDIF
+      *
+     C                     MOVE @BOOK     MQBOOK
+      *
+     C********** WKNUM     IFEQ 0                                                             CSD027
+     C**********           Z-ADD0         MQCNUM                                              CSD027
+     C           WKNUM     IFEQ *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   MQCNUM                                              CSD027
+     C                     ELSE
+     C**********           Z-ADDWKNUM     MQCNUM                                              CSD027
+     C                     MOVE WKNUM     MQCNUM                                              CSD027
+     C                     ENDIF
+      *
+     C           MANBOP    IFEQ 1
+     C           MQR1RE    ANDEQ*BLANKS
+     C                     MOVE '01'      MQR1RE
+     C                     ENDIF
+      *
+     C                     MOVE SR2RE     MQR2RE
+     C                     MOVE SR2NA     MQR2NA
+      *
+     C           SR2CA     IFEQ *BLANKS
+     C                     Z-ADD0         MQR2CA
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVELSR2CA     ZFIELD
+     C                     Z-ADD3         ZADIG
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    MQR2CA
+     C                     ENDIF
+      *
+     C           SR2CN     IFEQ *BLANKS
+     C                     Z-ADD0         MQR2CN
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVELSR2CN     ZFIELD
+     C           15        SUB  NMDP      ZADIG
+     C                     Z-ADDNMDP      ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    MQR2CN
+     C                     ENDIF
+      *
+     C                     MOVE SR2N1     MQR2N1
+     C                     MOVE SR2N2     MQR2N2
+     C                     MOVE SR2N3     MQR2N3
+      *
+     C           SR2BA     IFEQ ' '
+     C                     MOVE 'N'       MQR2BA
+     C                     ELSE
+     C                     MOVE SR2BA     MQR2BA
+     C                     ENDIF
+      *
+     C           SR2BF     IFEQ *BLANKS
+     C                     Z-ADD0         MQR2BF
+     C                     ELSE
+     C                     MOVE SR2BF     ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    MQR2BF
+     C                     ENDIF
+      *
+     C           SR2BE     IFEQ *BLANKS
+     C                     Z-ADD0         MQR2BE
+     C                     ELSE
+     C                     MOVE SR2BE     ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    MQR2BE
+     C                     ENDIF
+      *
+     C           *IN76     IFEQ '0'                        B*1
+     C                     MOVE 'U'       @RTCD
+     C                     ELSE                            X*1
+     C                     MOVE 'W'       @RTCD
+     C                     ENDIF                           E*1
+      *
+     C                     MOVE MQRECI    MPRECI
+     C                     Z-ADDMQLCD     MPLCD
+     C                     MOVE MQCHTP    MPCHTP
+     C                     MOVE MQLUID    MPLUID
+     C                     MOVE MQCORF    MPCORF
+     C                     MOVE MQCOTP    MPCOTP
+     C                     MOVE MQBOOK    MPBOOK
+     C**********           Z-ADDMQCNUM    MPCNUM                                              CSD027
+     C                     MOVE MQCNUM    MPCNUM                                              CSD027
+     C                     MOVE MQR2RE    MPRHRE
+     C                     Z-ADDBJRDNB    MPRHDT
+     C                     TIME           MPRHTI
+     C                     MOVE MQR2NA    MPRHNA
+     C                     Z-ADDMQR2CA    MPRHCA
+     C                     Z-ADDMQR2CN    MPRHCN
+     C                     MOVE MQR2N1    MPRHN1
+     C                     MOVE MQR2N2    MPRHN2
+     C                     MOVE MQR2N3    MPRHN3
+     C                     MOVE MQR2BA    MPRHBA
+     C                     Z-ADDMQR2BF    MPRHBF
+     C                     Z-ADDMQR2BE    MPRHBE
+     C                     MOVE '2'       MPRHLV
+      *
+     C                     WRITESECORHD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRPFKY - Process function keys                     *
+      *                                                               *
+      * CALLS      SE7541 - Reply Handling History Enquiry            *
+      *            SE7518 - Instruction Maintenance                   *
+      *            SE7540 - Customer/Book Enquiry                     *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRPFKY    BEGSR
+      *
+      ** If F13 is pressed, call SE7541
+     C           *IN13     IFEQ '1'
+     C                     CALL 'SE7541'               99
+     C                     PARM           @CORF            CA Reference
+     C                     PARM           @BOOK            Book
+     C                     PARM           @CNUM            Customer Numberame
+     C                     PARM           @BRCD            Branch
+     C                     PARM           @PTFR            Portfolio Reference
+     C                     PARM           @DDPT            Depot
+     C                     PARM           @RTCD            Return Code
+     C*
+     C**   IR ERROR INDICATOR OF THE PROGRAM CALL IS ON
+     C**   OR IF RETURN CODE IS EQUAL TO 'E' (ERROR)
+     C**         DATABASE ERROR
+     C*
+     C           *IN99     IFEQ '1'
+     C           @RTCD     OREQ 'E'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'011'     DBASE            *****************
+     C                     MOVEL*BLANKS   DBFILE           ** DB ERROR 11 **
+     C                     MOVELNARR,1    DBKEY            *****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If F14 is pressed, call SE7518
+     C           *IN14     IFEQ '1'
+     C                     CALL 'SE7518'               99
+     C*
+     C**   IR ERROR INDICATOR OF THE PROGRAM CALL IS ON
+     C**   OR IF RETURN CODE IS EQUAL TO 'E' (ERROR)
+     C**         DATABASE ERROR
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'012'     DBASE            *****************
+     C                     MOVEL*BLANKS   DBFILE           ** DB ERROR 12 **
+     C                     MOVELNARR,2    DBKEY            *****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If F16 is pressed, call SE7540
+     C           *IN16     IFEQ '1'
+     C           @CPGM     ANDEQ'SE7540'
+     C                     MOVEL'CO00307' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+     C                     MOVE WOPNB     POPTN   2
+     C           @CPGM     IFEQ *BLANKS
+     C                     MOVE 'SE7515'  @CPGM   6
+     C                     ENDIF
+      *
+     C           *IN16     IFEQ '1'
+     C                     CALL 'SE7540'               99
+     C                     PARM           @CORF            ER Reference
+     C                     PARM           POPTN            Option number
+     C                     PARM           @BRCD            Branch
+     C                     PARM           @BOOK            Book
+     C                     PARM           @CNUM            Customer number
+     C                     PARM           @PTFR            Portfolio
+     C                     PARM           @CPGM            Calling Pgm
+     C                     PARM           @RTCD            Return Code
+     C*
+     C**   IR ERROR INDICATOR OF THE PROGRAM CALL IS ON
+     C**   OR IF RETURN CODE IS EQUAL TO 'E' (ERROR)
+     C**         DATABASE ERROR
+     C*
+     C           *IN99     IFEQ '1'
+     C           @RTCD     OREQ 'E'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'013'     DBASE            *****************
+     C                     MOVEL*BLANKS   DBFILE           ** DB ERROR 13 **
+     C                     MOVELNARR,3    DBKEY            *****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           @RTCD     IFEQ '3'                        Return Code
+     C                     MOVE '1'       *INKC
+     C                     ENDIF
+      *
+     C                     MOVE '0'       *IN13
+     C                     MOVE '0'       *IN14
+     C                     MOVE '0'       *IN16
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRBLK1 - Blocking Processing 1                     *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRBLK1    BEGSR
+      *
+      **   ACCESS BLOCKING FILE WITH THE CORPORATE ACTION REFERENCE
+      *
+     C           MQCORF    CHAINSECOBKL2             89
+      *
+      **   IF BLOCK EXISTS, REVERSE THE CURRENT BLOCKING RECORD
+      *
+     C           *IN89     IFEQ '0'                        B*1
+     C                     MOVE '*'       MURECI
+     C                     UPDATSECOBKD0
+     C                     ENDIF                           E*1
+      *                                                                   149983
+      **   ACCESS BLOCKING FILE WITH THE CORPORATE ACTION REFERENCE       149983
+      *                                                                   149983
+     C           MQCORF    CHAINSECOBKL2             89                   149983
+      *                                                                   149983
+      **   IF BLOCK EXISTS, REVERSE THE CURRENT BLOCKING RECORD           149983
+      *                                                                   149983
+     C           *IN89     IFEQ '0'                        B*1            149983
+     C                     MOVE '*'       MURECI                          149983
+     C                     UPDATSECOBKD0                                  149983
+     C                     ENDIF                           E*1            149983
+      *
+      **   CREATE THE NEW BLOCKING RECORD IF BLOCK POSITIONS 'E' OR'W'
+      *
+     C           MQR1BA    IFEQ 'E'                        B*1
+     C           MQR1BA    OREQ 'W'
+     C                     MOVE 'D'       MURECI
+     C                     Z-ADDMQLCD     MULCD
+     C                     MOVE 'I'       MUCHTP
+     C                     MOVE MQLUID    MULUID
+     C                     MOVE MQBRCD    MUBRCD
+     C**********           Z-ADD*ZEROS    MUCNUM                                              CSD027
+     C                     MOVE *BLANKS   MUCNUM                                              CSD027
+     C                     MOVE *BLANKS   MUPTFR
+     C                     MOVE 'P'       MUBLTY
+     C                     MOVE MQSESN    MUSESN
+     C                     Z-ADDMQR1BE    MUBEDT
+     C                     Z-ADD*ZEROS    MUNOMB
+      *
+     C                     MOVEL@COAT     WWBNAR  9
+     C                     MOVE MQCORF    WWBNAR
+     C                     MOVELWWBNAR    MUBNAR
+      *
+     C                     Z-ADD1         MUSEQN
+     C                     Z-ADDMQR1BF    MUBSTT
+     C                     MOVE MQR1BA    MUBEWI
+     C                     MOVE MQCORF    MUCORF
+     C                     WRITESECOBKD0
+     C                     MOVE 'S'       MUBLTY                          149983
+     C                     WRITESECOBKD0                                  149983
+     C                     ENDIF                           E*1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRBLK2 - Blocking Processing 2                     *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRBLK2    BEGSR
+      *
+      **   ACCESS BLOCKING FILE WITH THE CORPORATE ACTION REFERENCE
+      *
+     C           MQCORF    CHAINSECOBKL2             89
+      *
+      **   IF BLOCK EXISTS, REVERSE THE CURRENT BLOCKING RECORD
+      *
+     C           *IN89     IFEQ '0'                        B*1
+     C                     MOVE '*'       MURECI
+     C                     UPDATSECOBKD0
+     C                     ENDIF                           E*1
+      *
+      **   CREATE THE NEW BLOCKING RECORD IF BLOCK POSITIONS 'E' OR'W'
+      *
+     C           MQR2BA    IFEQ 'E'                        B*1
+     C           MQR2BA    OREQ 'W'
+     C                     MOVE 'D'       MURECI
+     C                     Z-ADDMQLCD     MULCD
+     C                     MOVE 'I'       MUCHTP
+     C                     MOVE MQLUID    MULUID
+     C                     MOVE MQBRCD    MUBRCD
+     C**********           Z-ADD*ZEROS    MUCNUM                                              CSD027
+     C                     MOVE *BLANKS   MUCNUM                                              CSD027
+     C                     MOVE *BLANKS   MUPTFR
+     C                     MOVE 'P'       MUBLTY
+     C                     MOVE MQSESN    MUSESN
+     C                     Z-ADDMQR2BE    MUBEDT
+     C                     Z-ADD*ZEROS    MUNOMB
+      *
+     C                     MOVEL@COAT     WWBNAR  9
+     C                     MOVE MQCORF    WWBNAR
+     C                     MOVELWWBNAR    MUBNAR
+      *
+     C                     Z-ADD1         MUSEQN
+     C                     Z-ADDMQR2BF    MUBSTT
+     C                     MOVE MQR2BA    MUBEWI
+     C                     MOVE MQCORF    MUCORF
+     C                     WRITESECOBKD0
+     C                     ENDIF                           E*1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRREP2 - Retrieve the standard instructions        *
+      *                     reply for level 2 for Books & Customers   *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY                                                     *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRREP2    BEGSR
+      *
+     C                     Z-ADD0         WCAPR   52       Cash %
+      *
+      ***  If Processing Type = Dividends Events, Rights Issues, Offers or Exercices and
+      ***  Conversions.
+     C           MAPTYP    IFEQ 'DV'                       B*1 Dividend Events
+     C           MAPTYP    OREQ 'RG'                       Rights Issues
+     C           MAPTYP    OREQ 'OF'                       Offers
+     C           MAPTYP    OREQ 'EX'                       Exercice and Conversion
+      *
+      ***  CASE 1: If Customer/Booh Current Reply exists.
+     C           EXBCRE    IFEQ 'Y'                        B*2
+      *
+      ***  Set Option for Actual Allocation 2 to Reply Option Level 2.
+     C                     MOVE MQR2RE    SS2ID
+      *
+      ***  If Processing Type = Dividend Events.
+     C           MAPTYP    IFEQ 'DV'                       B*3
+      *
+      ***  If Option 1 selected: Cash Payment/Sell Rights, set Cash % to 100.
+     C           MDOPT1    IFEQ 'Y'                        B*4
+     C                     Z-ADD100       WCAPR
+     C                     ELSE                            X*4
+      *
+      ***  If Option 5 selected: Take Part Cash/Rest Stock, set Cash % to Reply Cash % Level 2.
+     C           MDOPT5    IFEQ 'Y'                        B*5
+     C                     Z-ADDMQR2CA    WCAPR
+     C                     ELSE                            X*5
+      *
+      ***  If Option selected is 2: Take Stock+Buy Additional Rights or 3: Take Stock+Sell Excess
+      ***  Rights or 4: Take Stock, set Cash % to 0.
+     C           MDOPT2    IFEQ 'Y'                        B*6
+     C           MDOPT3    OREQ 'Y'
+     C           MDOPT4    OREQ 'Y'
+     C                     Z-ADD0         WCAPR
+     C                     ENDIF                           E*6
+     C                     ENDIF                           E*5
+     C                     ENDIF                           E*4
+     C                     ELSE                            X*3
+      *
+      ***  If Processing Type = Rights Issues.
+     C           MAPTYP    IFEQ 'RG'                       B*4
+      *
+      ***  If Option 1 selected: Sell all Rights, set Cash % to 100.
+     C           MFOPT1    IFEQ 'Y'                        B*5
+     C                     Z-ADD100       WCAPR
+     C                     ELSE                            X*5
+      *
+      ***  If Option selected is 5: Take Part Cash/Rest Stock or 6: Take Part Cash/Keep Stock,
+      ***  set Cash % to Reply Cash % Level 2.
+     C           MFOPT5    IFEQ 'Y'                        B*6
+     C           MFOPT6    OREQ 'Y'
+     C                     Z-ADDMQR2CA    WCAPR
+     C                     ELSE                            X*6
+      *
+      ***  If Option selected is 2: Take Stock+Buy Fraction or 3: Take Stock+Sell Fraction or 4:
+      ***  Take Stock or 7: Do nothing, set Cash % to 0.
+     C           MFOPT2    IFEQ 'Y'                        B*7
+     C           MFOPT3    OREQ 'Y'
+     C           MFOPT4    OREQ 'Y'
+     C           MFOPT7    OREQ 'Y'
+     C                     Z-ADD0         WCAPR
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+     C                     ENDIF                           E*5
+     C                     ELSE                            X*4
+      *
+      ***  If Processing Type = Offers.
+     C           MAPTYP    IFEQ 'OF'                       B*5
+      *
+      ***  If Option 1 selected: Accept Offer, set Cash % to 100.
+     C           MIOPT1    IFEQ 'Y'                        B*6
+     C                     Z-ADD100       WCAPR
+     C                     ELSE                            X*6
+      *
+      ***  If Option 3 selected: Partial Accept Offer, set Cash % to Reply Cash % Level 2.
+     C           MIOPT3    IFEQ 'Y'                        B*7
+     C                     Z-ADDMQR2CA    WCAPR
+     C                     ELSE                            X*7
+      *
+      ***  If Option 2 selected: Refuse Offer, set Cash % to 0.
+     C           MIOPT2    IFEQ 'Y'                        B*8
+     C                     Z-ADD0         WCAPR
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+     C                     ELSE                            X*5
+      *
+      ***  If Processing Type = Exercices and Conversions.
+     C           MAPTYP    IFEQ 'EX'                       B*6
+      *
+      ***  If Option 1 selected: Sell all Rights, set Cash % to 100.
+     C           MJOPT1    IFEQ 'Y'                        B*7
+     C                     Z-ADD100       WCAPR
+     C                     ELSE                            X*7
+      *
+      ***  If Option selected is 5: Take Part Cash/Rest Stock or 6: Take Part Cash/Keep Stock,
+      ***  set Cash % to Reply Cash % Level 2.
+     C           MJOPT5    IFEQ 'Y'                        B*8
+     C           MJOPT6    OREQ 'Y'
+     C                     Z-ADDMQR2CA    WCAPR
+     C                     ELSE                            X*8
+      *
+      ***  If Option selected is 2: Take Stock+Buy Fraction or 3: Take Stock+Sell Fraction or 4:
+      ***  Take Stock or 7: Do nothing, set Cash % to 0.
+     C           MJOPT2    IFEQ 'Y'                        B*9
+     C           MJOPT3    OREQ 'Y'
+     C           MJOPT4    OREQ 'Y'
+     C           MJOPT7    OREQ 'Y'
+     C                     Z-ADD0         WCAPR
+     C                     ENDIF                           E*9
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+     C                     ENDIF                           E*5
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+      *
+      ***  CASE 2: Else, if Customer/Book Current Reply does not exist.
+     C                     ELSE                            X*2
+      *
+      ***  Set Option for Actual Allocation 2 to Default for No Reply from SECOxxL1
+      ***  (where xx = 'DV', 'RG', 'EX' or 'OF').
+     C                     SELEC                           B*3
+     C           @PTYP     WHEQ 'DV'
+     C                     MOVE MDDFNR    SS2ID
+      *
+     C           @PTYP     WHEQ 'RG'
+     C                     MOVE MFDFNR    SS2ID
+      *
+     C           @PTYP     WHEQ 'OF'
+     C                     MOVE MIDFNR    SS2ID
+      *
+     C           @PTYP     WHEQ 'EX'
+     C                     MOVE MJDFNR    SS2ID
+     C                     ENDSL                           E*3
+      *
+      ***  CASE 2.1: If Customer/Book Standard Corporate Actions Instruction exists (and Customer/
+      ***            Book Current Reply does not exist).
+     C           EXBCSI    IFEQ 'Y'                        B*3
+      *
+      ***  Set Cash % to Cash Preferred % from SECOSIL1.
+     C                     Z-ADDMOCAPP    WCAPR
+      *
+      ***  If Processing Type = Dividend Events.
+     C           MAPTYP    IFEQ 'DV'                       B*4
+      *
+      ***  If Stock Dividend Type = Stock for Stock or Combined for Cash and Stock, set Cash % to 0.
+     C           MDSDIT    IFEQ 'S'                        B*5 Stock for Stock
+     C           MDSDIT    OREQ 'C'                        Combined for Cash and Stock
+     C                     Z-ADD0         WCAPR
+     C                     ENDIF                           E*5
+      *
+      ***  If Cash % is < 50.
+     C           WCAPR     IFLT 50                         B*5
+      *
+      ***  If Option 5 not allowed, set Cash % to 0.
+     C           MDOPT5    IFNE 'Y'                        B*6
+     C                     Z-ADD0         WCAPR
+     C                     ELSE                            X*6
+      *
+      ***  If Option 5 allowed and Cash % not 0, default Option for Actual allocation 2 is '5'
+      ***  (Cash % already = Cash Preferred % from Standard Instruction (SECOSIL1)).
+     C           WCAPR     IFNE 0                          B*7
+     C                     MOVE '5'       SS2ID
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+     C                     ELSE                            X*5
+      *
+      ***  If Cash % > 50.
+     C           WCAPR     IFGT 50                         B*6
+      *
+      ***  If Option 5 not allowed, set Cash % to 100.
+     C           MDOPT5    IFNE 'Y'                        B*7
+     C                     Z-ADD100       WCAPR
+     C                     ELSE                            X*7
+      *
+      ***  If Option 5 allowed and Cash % not 100, default Option for Actual allocation 2 is '5'
+      ***  (Cash % already = Cash Preferred % from Standard Instruction (SECOSIL1)).
+     C           WCAPR     IFNE 100                        B*8
+     C                     MOVE '5'       SS2ID
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+     C                     ENDIF                           E*5
+      *
+      ***  If Cash % is 0 (means it is Stock Preferred).
+     C           WCAPR     IFEQ 0                          B*5
+      *
+      ***  If Rounding Option from SECOSIL1 = 'U' and Option 2 is allowed, default Option for
+      ***  Actual Allocation 2 is '2' (Cash % is already 0).
+     C           MOROOP    IFEQ 'U'                        B*6
+     C           MDOPT2    IFEQ 'Y'                        B*7
+     C                     MOVE '2'       SS2ID
+     C                     ELSE                            X*7
+      *
+      ***  If Rounding Option is 'U' and Option 2 is not allowed and Option 4 is allowed, default
+      ***  Option for Actual Allocation 2 is '4' (Cash % is already 0).
+     C           MDOPT4    IFEQ 'Y'                        B*8
+     C                     MOVE '4'       SS2ID
+     C                     ELSE                            X*8
+      *
+      ***  If Rounding Option is 'U' and Options 2 and 4 are not allowed and Option 3 is allowed,
+      ***  default Option for Actual Allocation 2 is '3' (Cash % is already 0).
+     C           MDOPT3    IFEQ 'Y'                        B*9
+     C                     MOVE '3'       SS2ID
+     C                     ELSE                            X*9
+      *
+      ***  If Rounding Option is 'U' and Options 2, 4 and 3 are not allowed and Option 5 is allowed,
+      ***  default Option for Actual Allocation 2 is '5' and Set Cash % to Cash Preferred % from
+      ***  Standard Instruction (SECOSIL1).
+     C           MDOPT5    IFEQ 'Y'                        B*10
+     C                     MOVE '5'       SS2ID
+     C                     Z-ADDMOCAPP    WCAPR
+     C                     ELSE                            X*10
+      *
+      ***  If Rounding Option is 'U' and Options 2, 4, 3 and 5 are not allowed and Option 1 is
+      ***  allowed, default Option for Actual Allocation 2 is '1' and Set Cash % to 100.
+     C           MDOPT1    IFEQ 'Y'                        B*11
+     C                     MOVE '1'       SS2ID
+     C                     Z-ADD100       WCAPR
+     C                     ELSE                            X*11
+      *
+      ***  If Rounding Option is 'U' and Options 2, 4, 3, 5 and 1 are not allowed, default
+      ***  Option for Actual Allocation 2 is blank.
+     C                     MOVE ' '       SS2ID
+     C                     ENDIF                           E*11
+     C                     ENDIF                           E*10
+     C                     ENDIF                           E*9
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+      *
+      ***  If Rounding Option from SECOSIL1 = 'D' and Option 3 is allowed, default Option for
+      ***  Actual Allocation 2 is '3' (Cash % is already 0).
+     C           MOROOP    IFEQ 'D'                        B*6
+     C           MDOPT3    IFEQ 'Y'                        B*7
+     C                     MOVE '3'       SS2ID
+     C                     ELSE                            X*7
+      *
+      ***  If Rounding Option is 'D' and Option 3 is not allowed and Option 4 is allowed, default
+      ***  Option for Actual Allocation 2 is '4' (Cash % is already 0).
+     C           MDOPT4    IFEQ 'Y'                        B*8
+     C                     MOVE '4'       SS2ID
+     C                     ELSE                            X*8
+      *
+      ***  If Rounding Option is 'D' and Options 3 and 4 are not allowed and Option 2 is allowed,
+      ***  default Option for Actual Allocation 2 is '2' (Cash % is already 0).
+     C           MDOPT2    IFEQ 'Y'                        B*9
+     C                     MOVE '2'       SS2ID
+     C                     ELSE                            X*9
+      *
+      ***  If Rounding Option is 'D' and Options 3, 4 and 2 are not allowed and Option 5 is allowed,
+      ***  default Option for Actual Allocation 2 is '5' and Set Cash % to Cash Preferred % from
+      ***  Standard Instruction (SECOSIL1).
+     C           MDOPT5    IFEQ 'Y'                        B*10
+     C                     MOVE '5'       SS2ID
+     C                     Z-ADDMOCAPP    WCAPR
+     C                     ELSE                            X*10
+      *
+      ***  If Rounding Option is 'D' and Options 3, 4, 2 and 5 are not allowed and Option 1 is
+      ***  allowed, default Option for Actual Allocation 2 is '1' and Set Cash % to 100.
+     C           MDOPT1    IFEQ 'Y'                        B*11
+     C                     MOVE '1'       SS2ID
+     C                     Z-ADD100       WCAPR
+     C                     ELSE                            X*11
+      *
+      ***  If Rounding Option is 'D' and Options 3, 4, 2, 5 and 1 are not allowed, default
+      ***  Option for Actual Allocation 2 is blank.
+     C                     MOVE ' '       SS2ID
+     C                     ENDIF                           E*11
+     C                     ENDIF                           E*10
+     C                     ENDIF                           E*9
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+     C                     ELSE                            X*5
+      *
+      ***  If Cash % is 100 (means it is Cash Preferred).
+     C           WCAPR     IFEQ 100                        B*6
+      *
+      ***  If Option 1 allowed, default Option for Actual Allocation 2 is '1' (Cash % is already
+      ***  100).
+     C           MDOPT1    IFEQ 'Y'                        B*7
+     C                     MOVE '1'       SS2ID
+     C                     ELSE                            X*7
+      *
+      ***  If Option 1 not allowed and Option 5 allowed, default Option for Actual Allocation 2 is
+      ***  '5' and set Cash % to Cash Preferred % from Standard Instruction (SECOSIL1).
+     C           MDOPT5    IFEQ 'Y'                        B*8
+     C                     MOVE '5'       SS2ID
+     C                     Z-ADDMOCAPP    WCAPR
+     C                     ELSE                            X*8
+      *
+      ***  If Option 1 and 5 not allowed, set Cash % to 0.
+     C                     Z-ADD0         WCAPR
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+     C                     ENDIF                           E*5
+     C                     ELSE                            X*4
+      *
+      ***  If Processing Type = Offers.
+     C           MAPTYP    IFEQ 'OF'                       B*5
+      *
+      ***  If % Accepted is < 50.
+     C           WCAPR     IFLT 50                         B*6
+      *
+      ***  If Option 3 is not allowed, default as per % Accepted is 0.
+     C           MIOPT3    IFNE 'Y'                        B*7
+     C                     Z-ADD0         WCAPR
+     C                     ELSE                            X*7
+      *
+      ***  If Option 3 is allowed and % Accepted is not 0, default Option for Actual Allocation 2 is
+      ***  '3' (% Accepted already = Cash Preferred % from Standard Instruction (SECOSIL1)).
+     C           WCAPR     IFNE 0                          B*8
+     C                     MOVE '2'       SS2ID
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+     C                     ELSE                            X*6
+      *
+      ***  If % Accepted is > 50.
+     C           WCAPR     IFGT 50                         B*7
+      *
+      ***  If Option 3 is not allowed (and % Accepted is > 50), default as per % Accepted is 100.
+     C           MIOPT3    IFNE 'Y'                        B*8
+     C                     Z-ADD100       WCAPR
+     C                     ELSE                            X*8
+      *
+      ***  If Option 3 is allowed and % Accepted is not 100, default Option for Actual Allocation 2
+      ***  is '3' (% Accepted already = Cash Preferred % from Standard Instruction (SECOSIL1)).
+     C           WCAPR     IFNE 100                        B*9
+     C                     MOVE '3'       SS2ID
+     C                     ENDIF                           E*9
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+      *
+      ***  If % Accepted is 0 (means it is refused).
+     C           WCAPR     IFEQ 0                          B*6
+      *
+      ***  If Option 2 allowed, default Option for Actual Allocation 2 is '2' (% Accepted is
+      ***  already 0).
+     C           MIOPT2    IFEQ 'Y'                        B*7
+     C                     MOVE '2'       SS2ID
+     C                     ELSE                            X*7
+      *
+      ***  If Option 2 is not allowed and Option 3 is allowed, default Option for Actual Allocation
+      ***  2 is '3' and set % Accepted to Cash Preferred % from Standard Instruction (SECOSIL1).
+     C           MIOPT3    IFEQ 'Y'                        B*8
+     C                     MOVE '3'       SS2ID
+     C                     Z-ADDMOCAPP    WCAPR
+     C                     ELSE                            X*8
+      *
+      ***  If Option 2 and 3 are not allowed and Option 1 is allowed, default Option for Actual
+      ***   Allocation 2 is '1' and set % Accepted to 100.
+     C           MIOPT1    IFEQ 'Y'                        B*9
+     C                     MOVE '1'       SS2ID
+     C                     Z-ADD100       WCAPR
+     C                     ELSE                            X*9
+      *
+      ***  If Option 2, 3 and 1 are not allowed, default Option for Actual Allocation 2 is blank.
+     C                     MOVE '  '      SS2ID
+     C                     ENDIF                           E*9
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+     C                     ELSE                            X*6
+      *
+      ***  If % Accepted is 100 (means it is Cash Preferred).
+     C           WCAPR     IFEQ 100                        B*7
+      *
+      ***  If Option 1 is allowed, default Option for Actual Allocation 2 is '1' (% Accepted is
+      ***  already 100).
+     C           MIOPT1    IFEQ 'Y'                        B*8
+     C                     MOVE '1'       SS2ID
+     C                     ELSE                            X*8
+      *
+      ***  If Option 1 is not allowed and Option 3 is allowed, default Option for Actual Allocation
+      ***  2 is '3' and set % Accepted to Cash Preferred % from Standard Instruction (SECOSIL1).
+     C           MIOPT3    IFEQ 'Y'                        B*9
+     C                     MOVE '3'       SS2ID
+     C                     Z-ADDMOCAPP    WCAPR
+     C                     ELSE                            X*9
+      *
+      ***  If Option 1 and 3 are not allowed and Option 2 is allowed, default Option for Actual
+      ***  Allocation 2 is '2' and set % Accepted to 0.
+     C           MIOPT2    IFEQ 'Y'                        B*10
+     C                     MOVE '2'       SS2ID
+     C                     Z-ADD0         WCAPR
+     C                     ELSE                            X*10
+      *
+      ***  If Option 1, 3 and 2 are not allowed, default Option for Actual Allocation is blank.
+     C                     MOVE ' '       SS2ID
+     C                     ENDIF                           E*10
+     C                     ENDIF                           E*9
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+     C                     ELSE                            X*5
+      *
+      ***  If Processing Type = Rights Issues or Exercices and Conversions.
+     C           MAPTYP    IFEQ 'RG'                       B*6
+     C           MAPTYP    OREQ 'EX'
+      *
+      ***  If Cash % is < 50.
+     C           WCAPR     IFLT 50                         B*7
+      *
+      ***  If Option 5 and 6 are not allowed, default as per Cash % is 0.
+     C           MFOPT5    IFNE 'Y'                        B*8
+     C           MFOPT6    ANDNE'Y'
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT5    ORNE 'Y'
+     C           MJOPT6    ANDNE'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     Z-ADD0         WCAPR
+     C                     ENDIF                           E*8
+      *
+      ***  If Option 5 and 6 are allowed and Cash % is not 0.
+     C           MFOPT5    IFEQ 'Y'                        B*8
+     C           MFOPT6    ANDEQ'Y'
+     C           WCAPR     ANDNE0
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT5    OREQ 'Y'
+     C           MJOPT6    ANDEQ'Y'
+     C           WCAPR     ANDNE0
+     C           MAPTYP    ANDEQ'EX'
+      *
+      ***  If Convertible/Keep Indicator from Standard Instruction (SECOSIL1) is 'C', default
+      ***  Option for Actual Allocation 2 is '5' (Cash % already = Cash Preferred % from Standard
+      ***  Instruction (SECOSIL1)).
+     C           MOCKIN    IFEQ 'C'                        B*9
+     C                     MOVE '5'       SS2ID
+     C                     ENDIF                           E*9
+      *
+      ***  If Convertible/Keep Indicator from Standard Instruction (SECOSIL1) is 'K', default
+      ***  Option for Actual Allocation 2 is '6' (Cash % already = Cash Preferred % from Standard
+      ***  Instruction (SECOSIL1)).
+     C           MOCKIN    IFEQ 'K'                        B*9
+     C                     MOVE '6'       SS2ID
+     C                     ENDIF                           E*9
+     C                     ENDIF                           E*8
+     C                     ELSE                            X*7
+      *
+      ***  If Cash % is > 50.
+     C           WCAPR     IFGT 50                         B*8
+      *
+      ***  If Option 5 and 6 are not allowed, default as per Cash % is 100.
+     C           MFOPT5    IFNE 'Y'                        B*9
+     C           MFOPT6    ANDNE'Y'
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT5    ORNE 'Y'
+     C           MJOPT6    ANDNE'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     Z-ADD100       WCAPR
+     C                     ENDIF                           E*9
+      *
+      ***  If Option 5 and 6 are allowed and Cash % is not 0.
+     C           MFOPT5    IFEQ 'Y'                        B*9
+     C           MFOPT6    ANDEQ'Y'
+     C           WCAPR     ANDNE100
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT5    OREQ 'Y'
+     C           MJOPT6    ANDEQ'Y'
+     C           WCAPR     ANDNE100
+     C           MAPTYP    ANDEQ'EX'
+      *
+      ***  If Convertible/Keep Indicator from Standard Instruction (SECOSIL1) is 'C', default
+      ***  Option for Actual Allocation 2 is '5' (Cash % already = Cash Preferred % from Standard
+      ***  Instruction (SECOSIL1)).
+     C           MOCKIN    IFEQ 'C'                        B*10
+     C                     MOVE '5'       SS2ID
+     C                     ENDIF                           E*10
+      *
+      ***  If Convertible/Keep Indicator from Standard Instruction (SECOSIL1) is 'K', default
+      ***  Option for Actual Allocation 2 is '6' (Cash % already = Cash Preferred % from Standard
+      ***  Instruction (SECOSIL1)).
+     C           MOCKIN    IFEQ 'K'                        B*10
+     C                     MOVE '6'       SS2ID
+     C                     ENDIF                           E*10
+     C                     ENDIF                           E*9
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+      *
+      ***  If Cash % is 0 (means it is Stock Preferred).
+     C           WCAPR     IFEQ 0                          B*7
+      *
+      ***  If Convertible/Keep Indicator from Standard Instruction (SECOSIL1) is 'K'
+     C           MOCKIN    IFEQ 'K'                        B*8
+      *
+      ***  If Option 7 is allowed, default Option for Actual Allocation is '7' (Cash % already
+      ***  = 0).
+     C           MFOPT7    IFEQ 'Y'                        B*9
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT7    OREQ 'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     MOVE '7'       SS2ID
+     C                     ENDIF                           E*9
+     C                     ENDIF                           E*8
+      *
+      ***  If Convertible/Keep Indicator from Standard Instruction (SECOSIL1) is 'C'
+     C           MOCKIN    IFEQ 'C'                        B*8
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'U'.
+     C           MOROOP    IFEQ 'U'                        B*9
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'U' and Option 2 is allowed,
+      ***  default Option for Actual Allocation 2 is '2' (Cash % already = 0).
+     C           MFOPT2    IFEQ 'Y'                        B*10
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT2    OREQ 'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     MOVE '2'       SS2ID
+     C                     ELSE                            X*10
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'U' and Option 2 is not
+      ***  allowed and Option 4 is allowed, default Option for Actual Allocation 2 is '4'
+      ***  (Cash % already = 0).
+     C           MFOPT4    IFEQ 'Y'                        B*11
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT4    OREQ 'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     MOVE '4'       SS2ID
+     C                     ELSE                            X*11
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'U' and Options 2 and 4 are
+      ***  not allowed and Option 3 is allowed, default Option for Actual Allocation 2 is '3'
+      ***  (Cash % already = 0).
+     C           MFOPT3    IFEQ 'Y'                        B*12
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT3    OREQ 'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     MOVE '3'       SS2ID
+     C                     ELSE                            X*12
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'U' and Options 2, 4 and 3 are
+      ***  not allowed and Option 5 is allowed, default Option for Actual Allocation 2 is '5' and
+      ***  set Cash % to Cash Preferred % from Standard Instruction (SECOSIL1).
+     C           MFOPT5    IFEQ 'Y'                        B*13
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT5    OREQ 'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     MOVE '5'       SS2ID
+     C                     Z-ADDMOCAPP    WCAPR
+     C                     ELSE                            X*13
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'U' and Options 2, 4, 3 and 5
+      ***  are not allowed and Option 1 is allowed, default Option for Actual Allocation 2 is '1'
+      ***  and set Cash % to 100.
+     C           MFOPT1    IFEQ 'Y'                        B*14
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT1    OREQ 'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     MOVE '1'       SS2ID
+     C                     Z-ADD100       WCAPR
+     C                     ELSE                            X*14
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'U' and Options 2, 4, 3, 5
+      ***  and 1 are not allowed, default Option for Actual Allocation 2 is blank.
+     C                     MOVE '  '      SS2ID
+     C                     ENDIF                           E*14
+     C                     ENDIF                           E*13
+     C                     ENDIF                           E*12
+     C                     ENDIF                           E*11
+     C                     ENDIF                           E*10
+     C                     ENDIF                           E*9
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'D'.
+     C           MOROOP    IFEQ 'D'                        B*9
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'D' and Option 3 is allowed,
+      ***  default Option for Actual Allocation 2 is '3' (Cash % already = 0).
+     C           MFOPT3    IFEQ 'Y'                        B*10
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT3    OREQ 'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     MOVE '3'       SS2ID
+     C                     ELSE                            X*10
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'D' and Option 3 is not
+      ***  allowed and Option 4 is allowed, default Option for Actual Allocation is '4' (Cash %
+      ***  already = 0).
+     C           MFOPT4    IFEQ 'Y'                        B*11
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT4    OREQ 'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     MOVE '4'       SS2ID
+     C                     ELSE                            X*11
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'D' and Options 3 and 4 are
+      ***  not allowed and Option 2 is allowed, default Option for Actual Allocation is '2' (Cash %
+      ***  already = 0).
+     C           MFOPT2    IFEQ 'Y'                        B*12
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT2    OREQ 'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     MOVE '2'       SS2ID
+     C                     ELSE                            X*12
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'D' and Options 3, 4 and 2 are
+      ***  not allowed and Option 5 is allowed, default Option for Actual Allocation is '5' and set
+      ***  Cash % to Cash Preferred % from Standard Instruction (SECOSIL1).
+     C           MFOPT5    IFEQ 'Y'                        B*13
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT5    OREQ 'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     MOVE '5'       SS2ID
+     C                     Z-ADDMOCAPP    WCAPR
+     C                     ELSE                            X*13
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'D' and Options 3, 4, 2 and 5
+      ***  are not allowed and Option 1 is allowed, default Option for Actual Allocation is '1' and
+      ***  set Cash % to 100.
+     C           MFOPT1    IFEQ 'Y'                        B*14
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT1    OREQ 'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     MOVE '1'       SS2ID
+     C                     Z-ADD100       WCAPR
+     C                     ELSE                            X*14
+      *
+      ***  If Rounding Option from Standard Instruction (SECOSIL1) is 'D' and Options 3, 4, 2, 5 and
+      ***  1 are not allowed, default Option for Actual Allocation is blank.
+     C                     MOVE '  '      SS2ID
+     C                     ENDIF                           E*14
+     C                     ENDIF                           E*13
+     C                     ENDIF                           E*12
+     C                     ENDIF                           E*11
+     C                     ENDIF                           E*10
+     C                     ENDIF                           E*9
+     C                     ENDIF                           E*8
+     C                     ELSE                            X*7
+      *
+      ***  If Cash % is 100 (means it is Cash Preferred).
+     C           WCAPR     IFEQ 100                        B*8
+      *
+      ***  If Option 1 is allowed, default Option for Actual Allocation 2 is '1' (Cash % already
+      ***  = 100).
+     C           MFOPT1    IFEQ 'Y'                        B*9
+     C           MAPTYP    ANDEQ'RG'
+     C           MJOPT1    OREQ 'Y'
+     C           MAPTYP    ANDEQ'EX'
+     C                     MOVE '1'       SS2ID
+     C                     ELSE                            X*9
+      *
+      ***  If Option 1 is not allowed, default as per Cash % is 0.
+     C                     Z-ADD0         WCAPR
+     C                     ENDIF                           E*9
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+     C                     ENDIF                           E*5
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+      *
+      ***  CASE 2.2: IF Customer/Book Standard Corporate Action Instruction does not exist
+      ***               (and Customer/Book Current Reply does not exist),
+      ***            OR if Customer/Book Standard Corporate Action Instruction exist BUT default
+      ***               Option (Option for Actual Allocation 2 calculated in CASE 2.1 or retrieve
+      ***               from Standard Instruction (SECOSIL1) in CASE 2) is blank (and Customer/Book
+      ***               Current Reply does not exist).
+     C           EXBCSI    IFEQ 'N'                        B*3
+     C           EXBCSI    OREQ 'Y'
+     C           SS2ID     ANDEQ'  '
+      *
+     C                     SELEC                           B*4
+     C           @PTYP     WHEQ 'DV'
+     C                     MOVE MDDFNR    SS2ID
+      *
+     C           @PTYP     WHEQ 'RG'
+     C                     MOVE MFDFNR    SS2ID
+      *
+     C           @PTYP     WHEQ 'OF'
+     C                     MOVE MIDFNR    SS2ID
+      *
+     C           @PTYP     WHEQ 'EX'
+     C                     MOVE MJDFNR    SS2ID
+     C                     ENDSL                           E*4
+      *
+     C                     ENDIF                           E*3
+     C                     ENDIF                           E*2
+     C                     ENDIF                           E*1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program error handling routine            *
+      *                                                               *
+      * CALLS     DBERRCTL- DB error                                  *
+      *                                                               *
+      * CALLED BY  SRINIT - Initial Processing                        *
+      *            SRINS1 - Initialise screen fields (level 1)        *
+      *            SRINS2 - Initialise screen fields (level 2)        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      **  Rollback Changes, Print Dump and Cancel Program
+     C                     ROLBK
+     C                     MOVE 'E'       @RTCD
+     C                     DUMP
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     CALL 'DBERRCTL'
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ZASNMS - Send message tp program's message queue   *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRVLD1 - Validate Details ( Level 1)               *
+      *            SRVLD2 - Validate Details ( Level 2)               *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+      **  Message file specified use PMSGF
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      **  Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  NARR
+ERROR CALL PGM 'SE7541'
+ERROR CALL PGM 'SE7518'
+ERROR CALL PGM 'SE7540'

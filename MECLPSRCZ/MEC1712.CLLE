@@ -1,0 +1,93 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ME Meridian Library Save')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Messages Management Module                          */
+/*                                                                   */
+/*       MEC1712 - Midas ME Meridian Library Save                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD034371           Date 25Nov15              */
+/*                      CCB023A *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD034371 - Program variable &DILIB not set                  */
+/*       CCB023A - COB Restructure - Input Cycle Termination         */
+/*                 Restructuring                                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MNGSYS) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&MESAVF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MELIB) TYPE(*CHAR) LEN(10)
+ 
+/*/COPY SDCPYSRC,SDSVALDCL                                         */
+ 
+             DCL        VAR(&DTACPRV) TYPE(*CHAR) LEN(10)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO ABNOR)
+ 
+             SNDPGMMSG  MSG('Meridian Library Save') TOMSGQ(MOPERQ)
+ 
+             RTVDTAARA  DTAARA(MESTAT (50 1)) RTNVAR(&MNGSYS)
+             CHGVAR     VAR(&RTN) VALUE('       ')
+             CALL       PGM(AOSARDR0) PARM(&RTN '*VERIFY' 'CSW025')
+ 
+             IF         COND((&RTN *EQ '   ') *AND (&MNGSYS *EQ 'Y')) +
+                          THEN(DO)
+ 
+/* Get System Value for Data Compression parameter */
+/* in save commands */
+ 
+               CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
+                          'SavDataCompression' &SVAL1 +
+                          ' ' &SVAL2 +
+                          ' ' &SVAL3 +
+                          ' ' &SVAL4 +
+                          ' ' &SVAL5 +
+                          ' ' &SVAL6 +
+                          ' ' &SVAL7 +
+                          ' ' &SVAL8 +
+                          ' ' &SVAL9 +
+                          ' ' &SVAL10)
+ 
+               IF         COND(&RSVALRTNC *NE '       ') THEN(GOTO +
+                            CMDLBL(ABNOR))
+               CHGVAR     VAR(&DTACPRV) VALUE(&SVAL1)
+ 
+               RTVDTAARA  DTAARA(MESTAT (19 10)) RTNVAR(&MESAVF)
+ 
+/* Set &DILIB from dtaara/MESTAT                                                        /*MD034371*/
+               RTVDTAARA  DTAARA(MESTAT (29 8)) RTNVAR(&DILIB )                         /*MD034371*/
+                                                                                        /*MD034371*/
+               DLTF       FILE(&DILIB/&MESAVF)
+               MONMSG     MSGID(CPF0000)
+               CRTSAVF    FILE(&DILIB/&MESAVF)
+ 
+               RTVDTAARA  DTAARA(MESTAT (9 10)) RTNVAR(&MELIB)
+               SAVLIB     LIB(&MELIB) DEV(*SAVF) +
+                            SAVF(&DILIB/&MESAVF) OMITOBJ((Q*)) +
+                            OUTPUT(*PRINT) DTACPR(&DTACPRV)
+             ENDDO
+ 
+             GOTO       ENDPGM
+ 
+ABNOR:
+ 
+             SNDPGMMSG  MSG('Meridian Library Save ENDED ABNORMALLY') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             CHGJOB     SWS(XXXXXX1X)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ ENDPGM:
+             ENDPGM
+ 

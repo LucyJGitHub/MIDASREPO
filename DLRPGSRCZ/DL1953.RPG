@@ -1,0 +1,541 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL FRA/IRS revaluations report prompt')          *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FRA/IRS Module
+     F*                                                               *
+     F*  DL1953 - FRA/IRS REVALUATION REPORT CURRENCY AND BOOK PROMPT *
+     F*                                                               *
+     F*  Function: This Program prompts for the Currency/Book to run  *
+     F*    (I/C)   a Revaluation Report. Which report depends on the  *
+     F*            Input Parameter: F - FRA                           *
+     F*                             S - IRS RS                        *
+     F*                             X - IRS RX                        *
+     F*                                                               *
+     F*  This program is very similar to DL1934.                      *
+     F*                                                               *
+     F*  Called By: DLC1953F - FRA Revaluation Report                 *
+     F*             DLC1953S - IRS RS Revaluation Report              *
+     F*             DLC1953X - IRS RX Revaluation Report              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 217684             Date 12May03               *
+      *                 CIR012             Date 02Apr03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP056             Date 13Mar02               *
+      *                 CIR008             Date 13Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                  E38654            Date 27Apr92               *
+      *                  S01328            Date 12Mar91               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  217684 - Authorisation User Malfunction (Recompile)          *
+      *  CIR012 - Allow report selection by deal number.              *
+      *  CAP056 - Automatic Authorisation of Interface deals          *
+      *           (Recompile)                                         *
+      *  CIR008 - FRA/IRS Deals Authorisation (Recompile)             *
+      *  E38654 - F12 DOES NOT WORK                                   *
+      *  S01328 - FRA/IRS Revaluations - New Program                  *
+      *                                                               *
+      *****************************************************************
+      *
+     FDEALALL IF  E           K        DISK         KINFSR *PSSR                              CIR012
+     F            DEALSDAF                          KIGNORE                                   CIR012
+     F            DEALSDBF                          KIGNORE                                   CIR012
+     F            DEALSDCF                          KIGNORE                                   CIR012
+     F            DEALSDDF                          KIGNORE                                   CIR012
+     F            DEALSDEF                          KIGNORE                                   CIR012
+     F            DEALSDFF                          KIGNORE                                   CIR012
+      *                                                                                       CIR012
+     FDL1953DFCF  E                    WORKSTN
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    03  - EXIT PROGRAM                                         *
+     F*    12  - PREVIOUS SCREEN                                      *
+     F*                                                               *
+     F*    10  - Revaluation report selected for FRA                  *
+     F*    20  - Revaluation report selected for Single Currency IRS  *
+     F*    30  - Revaluation report selected for Cross Currency IRS   *
+     F*                                                               *
+     F*    40  - ERROR ON INPUT CURRENCY                              *
+     F*    50  - ERROR ON INPUT BOOK                                  *
+     F*                                                               *
+     F*    70  - INPUT PASSED VALIDATION                              *
+     F*                                                               *
+     F*  U7+U8 - DATABASE ERROR                                       *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Initial Processing                                  *
+     F*  VAL    - Validate input from user                            *
+     F*  ERROR  - Send message to program message queue               *
+     F*  *PSSR  - Database Error Processing                           *
+     F*                                                               *
+     F*  Index to external programs used                              *
+     F*                                                               *
+     F*  ZA0250 - Clear message subfile                               *
+     F*  ZA0240 - Add a message to message subfile                    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E** COMPILE TIME ARRAY FOR COPYRIGHT STATEMENT
+      /SPACE 3
+     I*
+     IPSDS       SDS
+     I*   Program Status Data Structure
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     ISDBANK    E DSSDBANKPD
+     I* External Data-Structure for Bank Installation Control Data.
+     I*
+     ISDFAIS    E DSSDFAISPD
+     I* External Data-Structure for FRA/IRS Standing Data.
+     I*
+     ISDCURR    E DSSDCURRPD
+     I* External Data-Structure for Currency Codes.
+     I*
+     ISDBOOK    E DSSDBOOKPD
+     I* External Data-Structure for Book Codes.
+     I*
+     IDSFDY     E DSDSFDY
+     I* First Byte Data-Structure for Access Programs.
+     I*
+     IDSSDY     E DSDSSDY
+     I* Second Byte Data-Structure for Access Programs.
+     I*
+     IRPARM       DS
+     I** Selected Currency - output parameter
+     I                                        1   3 PCCY
+     I** Selected Book - output parameter
+     I                                        4   5 PBOOK
+     I** Selected Deal Number - output parameter                                              CIR012
+     I                                        6  11 PDEAL                                     CIR012
+     I*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C                     EXSR INIT
+     C*
+     C** If CA03 has been pressed or if validation successful end pgm.
+     C           *IN03     DOWEQ'0'
+     C           *IN12     ANDEQ'0'                                       E38654
+     C           *IN70     ANDEQ'0'
+     C*
+     C** Write subfile record, if error exists message will be displayed
+     C                     WRITEDL1953C0
+     C*
+     C** Display initial input screen or, if in error, re-display.
+     C                     EXFMTDL1953P1
+     C*
+     C** Validate user input, if in error send msg(s) to error subfile.
+     C                     EXSR VAL
+     C*
+     C                     END
+     C*
+     C** end program
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  INIT       - Initial Processing                              *
+     C*                                                               *
+     C*  CALLED BY: - Main Processing                                 *
+     C*                                                               *
+     C*  CALLS:     - ZA0250 - Clear message subfile                  *
+     C*                                                               *
+     C*  USES:        RPARM  - Input/Output parameter: 100A DS        *
+     C*                         01-03 PCCY   - Output : Selected Ccy  *
+     C*                         04-05 PBOOK  - Output : Selected Book *
+     C*               RCMD   - Command Key taken                      *
+     C*               DATE   - Run date from the ICD                  *
+     C*               WBOOK  - Screen field - Currency                *
+     C*               WCCY   - Screen field - Book                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+      *
+      ***  Copyright Statement.
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Receive parameters
+     C           *ENTRY    PLIST
+     C                     PARM           FI      1
+     C                     PARM           RPARM
+     C                     PARM           RCMD    1
+     C*
+     C**  Access FRA/IRS Standing Data for Book Code defaults.
+     C**  (database error processing handled by the access program)
+     C                     CALL 'AOFAISR0'
+     C                     PARM '*DBERR'  @RTCD
+     C                     PARM '*FIRST'  @OPTN
+     C           SDFAIS    PARM SDFAIS    DSFDY
+     C*
+     C**  If running in FRA mode then set *IN10 on and set up screen
+     C**  field for Book to default book for FRA.
+     C           FI        IFEQ 'F'
+     C                     MOVE '1'       *IN10
+     C                     MOVE BQFTBC    WBOOK
+     C                     ELSE
+     C*
+     C**  ...else running in IRS mode so set up screen field for Book
+     C**  to default book for IRS.
+     C                     MOVE BQITBC    WBOOK
+     C*
+     C**  if running in Single Currency IRS mode then set on *IN20
+     C           FI        IFEQ 'S'
+     C                     MOVE '1'       *IN20
+     C                     ELSE
+     C*
+     C**  else running in Cross Currency IRS mode so set on *IN30
+     C                     MOVE '1'       *IN30
+     C                     END
+     C*
+     C                     END
+      *                                                                                       CIR012
+      ** Deal number field must be defaulted to blank                                         CIR012
+     C                     MOVE *BLANKS   WDEAL                                               CIR012
+     C*
+     C** Access Installation Control Data for Local CCY Code and Date.
+     C**  (database error processing handled by the access program)
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR'  @RTCD
+     C                     PARM '*FIRST'  @OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C                     MOVE BJLCCY    WCCY
+     C                     MOVE BJMRDT    DATE
+     C*
+     C** Set up subfile message queue as program message queue and
+     C** clear messages.
+     C                     MOVEL'*'       DDPGMQ
+     C                     CALL 'ZA0250'
+     C*
+     C                     ENDSR                           ** INIT9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  VAL        - Validate input from user                        *
+     C*                                                               *
+     C*  CALLED BY: - Main Processing                                 *
+     C*                                                               *
+     C*  CALLS:     - ERROR  - Send a message to program message queue*
+     C*               ZA0250 - Clear message subfile                  *
+     C*                                                               *
+     C*  USES:      - PBOOK  - Output parameter: Selected Book        *
+     C*               PCCY   - Output parameter: Selected Currency    *
+     C*               PDEAL  - Output parameter: Selected Deal Number *                       CIR012
+     C*               WBOOK  - Screen field - Book                    *
+     C*               WCCY   - Screen field - Currency                *
+     C*               WDEAL  - Screen field - Deal Number             *                       CIR012
+     C*               RCMD   - Command Key taken                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VAL       BEGSR
+     C*
+     C** Reset error indicators.
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN60                                               CIR012
+     C*
+     C** if CA03 then set up RCF field; end subroutine and exit program
+     C           *IN03     IFEQ '1'
+     C                     MOVEL'E'       RCMD
+     C                     GOTO VAL9
+     C                     END
+     C*
+     C** if CA12 has not been pressed then perform validation
+     C           *IN12     IFEQ '0'
+     C*
+     C**  Cross Currency IRS Revaluation report not able to be
+     C**  selected by currency therefore, if Currency is blank or if
+     C**  IRS Cross Currency Revaluation report requested, then do not
+     C**  validate the currency.  (Blank Currency means 'ALL'.)
+     C           WCCY      IFNE *BLANKS
+     C           *IN30     ANDEQ'0'
+     C*
+     C** Validate Currency entered by user.
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WCCY      WWCCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C** If Currency is invalid set up error indicator.
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN40
+     C*
+     C** ...else allow for '?' on input and set up Currency
+     C                     ELSE
+     C                     MOVELA6CYCD    WCCY
+     C                     END
+     C*
+     C                     END
+     C*
+     C** if Book is blank do not validate. (Blank Book means 'ALL'.)
+     C           WBOOK     IFNE *BLANKS
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM WBOOK     WWBOOK  2
+     C           SDBOOK    PARM SDBOOK    DSFDY
+     C*
+     C** if Book is invalid set up error indicator.
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN50
+     C*
+     C** ...else allow for '?' on input and set up Book
+     C                     ELSE
+     C                     MOVELBDBKCD    WBOOK
+     C                     END
+     C*
+     C                     END
+      *                                                                                       CIR012
+      ** if Deal is blank do not validate. (Blank Deal means 'ALL'.)                          CIR012
+     C           WDEAL     IFNE *BLANKS                                                       CIR012
+     C                     EXSR DLVAL                                                         CIR012
+     C                     ENDIF                                                              CIR012
+     C*
+     C***If*no*error*on*either*Book*or*Currency*then*move*input*fields*                       CIR012
+     C** If no error on either Book, Currency or deal number, then move input fields          CIR012
+     C** to the output parameters; indicate validation successful.
+     C           *IN40     IFEQ '0'
+     C           *IN50     ANDEQ'0'
+     C           *IN60     ANDEQ'0'                                                           CIR012
+     C*
+     C**  if Currency blank (blank means 'ALL'), or program called in
+     C**  Cross Currency mode, then set to asterisks to avoid RPARM
+     C**  being returned as all blanks
+     C           WCCY      IFEQ *BLANKS
+     C           FI        OREQ 'X'
+     C                     MOVE '***'     PCCY
+     C                     ELSE
+     C                     MOVE WCCY      PCCY
+     C                     END
+     C*
+     C**  if Book blank (blank means 'ALL') then set to asterisks to
+     C**  avoid RPARM being returned as all blanks
+     C           WBOOK     IFEQ *BLANKS
+     C                     MOVE '**'      PBOOK
+     C                     ELSE
+     C                     MOVE WBOOK     PBOOK
+     C                     END
+     C*
+     C**  if Deal blank (blank means 'ALL') then set to asterisks to                          CIR012
+     C**  avoid RPARM being returned as all blanks                                            CIR012
+     C           WDEAL     IFEQ *BLANKS                                                       CIR012
+     C                     MOVE '******'  PDEAL                                               CIR012
+     C                     ELSE                                                               CIR012
+     C                     MOVE WDEAL     PDEAL                                               CIR012
+     C                     END                                                                CIR012
+      *                                                                                       CIR012
+     C                     MOVE '1'       *IN70
+     C*
+     C** ...error in input field(s) move error messages into message
+     C** subfile for display
+     C                     ELSE
+     C                     EXSR ERROR
+     C                     END
+     C*
+     C** ...else CA12 pressed so set fields to defaults as before
+     C                     ELSE
+     C                     MOVE BJLCCY    WCCY
+     C*
+     C           FI        IFEQ 'F'
+     C                     MOVE BQFTBC    WBOOK
+     C                     ELSE
+     C                     MOVE BQITBC    WBOOK
+     C                     END
+     C*
+     C** and clear any error messages in the message subfile.
+     C                     CALL 'ZA0250'
+     C*
+     C                     MOVEL'F'       RCMD                            E38654
+     C                     END
+     C*
+     C           VAL9      ENDSR                           ** VAL9 **
+     C*
+     C*****************************************************************
+     C/EJECT                                                                                  CIR012
+      *****************************************************************                       CIR012
+      *                                                               *                       CIR012
+      *  DLVAL      - Validate deal number                            *                       CIR012
+      *                                                               *                       CIR012
+      *  CALLED BY: - VAL - Validate input from user                  *                       CIR012
+      *                                                               *                       CIR012
+      *  CALLS:     - SR/ERROR - send error message                   *                       CIR012
+      *                                                               *                       CIR012
+      *****************************************************************                       CIR012
+      *                                                                                       CIR012
+     C           DLVAL     BEGSR                                                              CIR012
+      *                                                                                       CIR012
+      ** Initialise deal number error indicators                                              CIR012
+     C                     MOVEA'000'     *IN,60                                              CIR012
+      *                                                                                       CIR012
+      ** If deal number already inputted as a selection, currency                             CIR012
+      ** and book fields must be blank                                                        CIR012
+     C           WBOOK     IFNE *BLANKS                                                       CIR012
+     C           WCCY      ORNE *BLANKS                                                       CIR012
+     C           *IN30     ANDNE'1'                                                           CIR012
+     C                     MOVE '1'       *IN60                                               CIR012
+     C                     MOVEL'MMM9040' WMSGID 10                                           CIR012
+     C                     ENDIF                                                              CIR012
+      *                                                                                       CIR012
+      ** Deal Number should be numeric                                                        CIR012
+     C           *IN60     IFEQ '0'                                                           CIR012
+     C                     TESTN          WDEAL      61                                       CIR012
+     C           *IN61     IFEQ '1'                                                           CIR012
+     C                     MOVE WDEAL     KDEAL   60                                          CIR012
+      *                                                                                       CIR012
+      ** ...else send msg "Deal Number must be numeric"                                       CIR012
+     C                     ELSE                                                               CIR012
+     C                     MOVE '1'       *IN60                                               CIR012
+     C                     MOVEL'MMM0162' WMSGID                                              CIR012
+     C                     ENDIF                                                              CIR012
+     C                     ENDIF                                                              CIR012
+      *                                                                                       CIR012
+      ** If deal number is valid, check if it exist                                           CIR012
+      ** It should be a live FRA/IRS deal                                                     CIR012
+     C           *IN60     IFEQ '0'                                                           CIR012
+     C           KDEAL     CHAINDEALALL              62                                       CIR012
+     C           *IN62     IFEQ '0'                                                           CIR012
+     C           RECI      ANDEQ'D'                                                           CIR012
+     C           DTYP      ANDEQ'RS'                                                          CIR012
+     C           *IN62     OREQ '0'                                                           CIR012
+     C           RECI      ANDEQ'D'                                                           CIR012
+     C           DTYP      ANDEQ'RX'                                                          CIR012
+     C           *IN62     OREQ '0'                                                           CIR012
+     C           RECI      ANDEQ'D'                                                           CIR012
+     C           DTYP      ANDEQ'FR'                                                          CIR012
+     C                     MOVE '0'       *IN60                                               CIR012
+      *                                                                                       CIR012
+      ** ...else send msg "Deal does not exist"                                               CIR012
+     C                     ELSE                                                               CIR012
+     C                     MOVE '1'       *IN60                                               CIR012
+     C                     MOVEL'ABM0125' WMSGID                                              CIR012
+     C                     ENDIF                                                              CIR012
+     C                     ENDIF                                                              CIR012
+      *                                                                                       CIR012
+     C                     ENDSR                                                              CIR012
+      *                                                                                       CIR012
+     C*****************************************************************                       CIR012
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  ERROR      - Send message to program message queue           *
+     C*                                                               *
+     C*  CALLED BY: - VAL - Validate input from user                  *
+     C*                                                               *
+     C*  CALLS:     - ZA0250 - Clear message subfile                  *
+     C*             - ZA0240 - Add a message to message subfile       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ERROR     BEGSR
+     C*
+     C** clear message subfile
+     C                     CALL 'ZA0250'
+     C*
+     C** If error on Currency send error message to message subfile
+     C           *IN40     IFEQ '1'
+     C                     CALL 'ZA0240'
+     C                     PARM 'FIS0001' @MSGID 10
+     C                     END
+     C*
+     C** If error on Book send error message to message subfile
+     C           *IN50     IFEQ '1'
+     C                     CALL 'ZA0240'
+     C                     PARM 'FIS0009' @MSGID 10
+     C                     END
+      *                                                                                       CIR012
+      ** If error on Deal number, send error message to message subfile                       CIR012
+     C           *IN60     IFEQ '1'                                                           CIR012
+      *                                                                                       CIR012
+     C           WMSGID    IFEQ 'MMM9040'                                                     CIR012
+     C                     MOVE '1'       *IN40                                               CIR012
+     C                     MOVE '1'       *IN50                                               CIR012
+     C                     MOVE '0'       *IN60                                               CIR012
+     C                     ENDIF                                                              CIR012
+      *                                                                                       CIR012
+     C                     CALL 'ZA0240'                                                      CIR012
+     C                     PARM WMSGID    @MSGID 10                                           CIR012
+     C                     ENDIF                                                              CIR012
+     C*
+     C                     ENDSR                           ** ERROR9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR      - Database Error Processing                       *
+     C*                                                               *
+     C*  CALLED BY:   Executes whenever file of program exception     *
+     C*               error occurs                                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C*
+     C** (no need to set up LDA since all database errors handled by
+     C**  access programs)
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*
+     C                     CALL 'DBERRCTL'
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

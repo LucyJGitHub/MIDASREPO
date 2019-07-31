@@ -1,0 +1,563 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Orders to be executed - extract')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7542 - Orders to be Executed - Extract                     *
+      *                                                               *
+      * Function:  To extract data for the Affected Customer          *
+      * (COB - I/C)                                                   *
+      *                                                               *
+      *  Called By: Standart RCF processing                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 161732             Date 21Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSE007  *CREATE    Date 02Apr98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  161732 - Corporate Actions Exercise and Conversion -         *
+      *           Part Stock/Keep Rest Calculation                    *
+      *           (Recompiled due to changes in PF/SECOEXPD)          *
+      *  CSE007 - Corporate Actions                                   *
+      *                                                               *
+      *****************************************************************
+     FSECORFL2IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Reference                                      Prefix - 'MA'
+      *
+     FSECOALL9IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Allocation                                     Prefix - 'MC'
+      *
+     FSECODRL0IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Depots                                         Prefix - 'MS'
+      *
+     FSECOEXL0IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Exercice & Conversion                          Prefix - 'MJ'
+      *
+     FSECOOEPDO   E           K        DISK         KINFSR *PSSR
+      ***  CO Orders to be Executed                          Prefix - 'MY'
+      *
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      ***  Securities Details
+      *
+     FSE7542AUO   E                    PRINTER      KINFSR *PSSR      UC
+      ***  Orders to be Executed - Audit
+     F                                              KINFDS SPOOLU
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    #NAR    1   5 35
+      ***  Option narrative
+      *
+     E                    CPY@    1   1 80
+      ***  Array containing Copyright statement
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     IWWCODR      DS
+      ***  Working DS for database error
+     I                                        1   6 WKCORF
+     I                                        7   9 WKBRCD
+     I**********                             10  150WKDDPT                                    CSD027
+     I                                       10  15 WKDDPT                                    CSD027
+      *
+     IWWCOEX      DS
+      ***  Working DS for database error
+     I                                        1   6 WKCOR2
+     I                                        7   80WKOPTN
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for SE7542AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IPSDS       SDS
+      ***  Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  Customer extension file
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Bank Details
+      *
+     IDSSDY     E DSDSSDY
+      ***  Second DS For Access Programs, Long Data Structure
+      *
+     IDSFDY     E DSDSFDY
+      ***  First DS for access programs, short data structure
+      *
+     ICPYR@$      DS
+      ***  Data structure for compilation - Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                M A I N   P R O C E S S I N G                  *
+      *****************************************************************
+      *
+      ***  Read file for record
+      ***  LF select only records with status not 'C'
+      *
+     C                     READ SECORFL2                 88
+      *
+      ***  Do While End of File not reached.
+      *
+     C           *IN88     DOWEQ*OFF
+      *
+      ***  Process only processing type 'EX'
+      *
+     C           MAPTYP    IFEQ 'EX'
+      *
+      ***  Retrieve nominal currency and nominal decimal places from PF/SECTYD
+      *
+     C           MASESN    IFNE WWSESN
+     C                     MOVE MASESN    WWSESN
+     C                     EXSR #SECTO
+     C                     ENDIF
+      *
+      ***  Access CO Allocation with corporate action reference
+      ***  LF select customers only with reply level 2 = 1,2,3,5 or 6
+      *
+     C                     MOVE MACORF    WKCORF
+     C           WKCORF    SETLLSECOALL9
+     C           WKCORF    READESECOALL9                 87
+      *
+      ***  Do While End of File not reached.
+      *
+     C           *IN87     DOWEQ*OFF
+      *
+     C                     EXSR #REPD1
+      *
+      ***  Read next CO Allocation
+      *
+     C           WKCORF    READESECOALL9                 87
+     C                     ENDDO                           EOF not reached
+     C                     ENDIF                           Proc. Type 'EX'
+      *
+      ***  Read next CO Reference
+      *
+     C                     READ SECORFL2                 88
+     C                     ENDDO                           EOF not reached
+      *
+      ***  Normal End of Program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #REPD1 - Process Report Lines.                               *
+      *  ------                                                       *
+      *  Called By : Main processing                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #REPD1    BEGSR
+      *
+      ***  If Customer Number is not equal to old Customer
+      ***  than retrieve account officer
+      *
+     C           MCCNUM    IFNE WWCNUM
+     C                     MOVE MCCNUM    WWCNUM
+     C                     MOVELMCCNUM    WLCUST
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY  '  WLOPTN
+     C                     PARM           WLCUST 10
+     C                     PARM *BLANKS   WLKYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 02 *
+     C                     MOVELWWCNUM    DBKEY     P      ***************
+     C                     MOVEL'SE7542'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  If an account officer is selected from the promt
+      ***  process only this account officer
+      *
+     C           PENT      IFNE 'ALL'
+     C           PENT      ANDNE*BLANKS
+     C           BBACOC    IFNE PENT
+     C                     GOTO ENDRPT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  If depot number is not equal to old depot
+      ***  than retrieve the final allocation date and the status
+      *
+     C           MCDDPT    IFNE WWDDPT
+     C**********           Z-ADDMCDDPT    WWDDPT                                              CSD027
+     C                     MOVE MCDDPT    WWDDPT                                              CSD027
+     C                     MOVE MCCORF    WKCORF
+     C                     MOVE MCBRCD    WKBRCD
+     C**********           Z-ADDMCDDPT    WKDDPT                                              CSD027
+     C                     MOVE MCDDPT    WKDDPT                                              CSD027
+      *
+     C           KWCODR    CHAINSECODRL0             89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 03 *
+     C                     MOVEL'SECODRL0'DBFILE    P      ***************
+     C                     MOVELWWCODR    DBKEY     P
+     C                     MOVEL'SE7542'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Access to Exercise & Conversion to retrive the Trading from/to date
+      *
+     C                     MOVE MCCORF    WKCOR2
+     C                     Z-ADDMCOPTN    WKOPTN
+      *
+     C           KWCOEX    CHAINSECOEXL0             89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 04 *
+     C                     MOVEL'SECOEXL0'DBFILE    P      ***************
+     C                     MOVELWWCOEX    DBKEY     P
+     C                     MOVEL'SE7542'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARSECOOED0
+      *
+      ** .. Reference
+     C                     MOVELMACORF    MYCORF    P
+      ** .. Corporate Action otpion
+     C                     Z-ADDMCOPTN    MYOPTN
+      ** .. Branch code
+     C                     MOVE MCBRCD    MYBRCD
+      ** .. Depot
+     C**********           Z-ADDMCDDPT    MYDDPT                                              CSD027
+     C                     MOVE MCDDPT    MYDDPT                                              CSD027
+      ** .. Customer/Book indicator
+     C                     MOVE MCCOTP    MYCOTP
+      ** .. Customer
+     C**********           Z-ADDMCCNUM    MYCNUM                                              CSD027
+     C                     MOVE MCCNUM    MYCNUM                                              CSD027
+      ** .. Portfolio
+     C                     MOVE MCPTFR    MYPTFR
+      ** .. Nominal
+      *
+      ***  The content of thes fields depends on the option selected
+      ***  (MCOPT2, reply level 2 held on PF/SECOALPD)
+      *
+     C                     SELEC
+      *
+      ***  MCOPT2 = 1; Nominal = Ex date position
+      ***  Narrative = "Sell all rights"
+      *
+     C           MCOPT2    WHEQ '1'
+     C                     Z-ADDMCEXPO    MYNOML
+     C                     MOVEL#NAR,1    MYOPNA
+      *
+      ***  MCOPT2 = 2; Nominal = Actual stock rounding
+      ***  Narrative = "Take Stock + Buy Fraction"
+      *
+     C           MCOPT2    WHEQ '2'
+     C                     Z-ADDMCASTR    MYNOML
+     C                     MOVEL#NAR,2    MYOPNA
+      *
+      ***  MCOPT2 = 3; Nominal = Actual stock rounding
+      ***  Narrative = "Take Stock + Sell Fraction"
+      *
+     C           MCOPT2    WHEQ '3'
+     C                     Z-ADDMCASTR    MYNOML
+     C                     MOVEL#NAR,3    MYOPNA
+      *
+      ***  MCOPT2 = 5; Nominal = Holding taken at cash
+      ***  Narrative = "Take Part Cash/Rest Stock"
+      *
+     C           MCOPT2    WHEQ '5'
+     C                     Z-ADDMCHOCA    MYNOML
+     C                     MOVEL#NAR,4    MYOPNA
+      *
+      ***  MCOPT2 = 6; Nominal = Holding taken at cash
+      ***  Narrative = "Take Part Cash/Keep Rest"
+      *
+     C           MCOPT2    WHEQ '6'
+     C                     Z-ADDMCHOCA    MYNOML
+     C                     MOVEL#NAR,5    MYOPNA
+     C                     OTHER
+     C                     Z-ADD*ZEROS    MYNOML
+     C                     MOVE *BLANKS   MYOPNA
+     C                     ENDSL
+      *
+      ** .. Security
+     C                     MOVELMCSESN    MYSESN    P
+      ** .. Option Number
+     C                     MOVE MCOPT2    MYOPNO
+      ** .. Corporate Action Type
+     C                     MOVE MCCOAT    MYCOAT
+      ** .. Account Officer
+     C                     MOVE BBACOC    MYACOF
+      ** .. Nominal currency of event security
+     C                     MOVE NMCY      MYNCCY
+      ** .. Nominal decimal places
+     C                     MOVE NMDP      MYNMDP
+      ** .. Trading from date
+     C                     Z-ADDMJTRAF    MYTRAF
+      ** .. Trading to date
+     C                     Z-ADDMJTRAT    MYTRAT
+      ** .. Status
+     C                     MOVE MSCOST    MYCOST
+      ** .. User Id
+     C                     MOVELUSER      MYLUID    P
+      ** .. Last change Type
+     C                     MOVE 'I'       MYCHTP
+      ** .. Last change Date
+     C                     Z-ADDBJRDNB    MYLCD
+      ** .. Record Id
+     C                     MOVE 'D'       MYRECI
+      *
+      ***  Write Detail Record.
+      *
+     C                     WRITESECOOED0
+     C                     ADD  1         RCOUNT
+      *
+     C           ENDRPT    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #SECTO - Access to LF/SECTY to Retrieve fields details       *
+      *  ------   for the event security                              *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #SECTO    BEGSR
+      *
+      ***  Chain for security record
+      *
+     C           WWSESN    CHAINSECTY                89
+      *
+     C           *IN89     IFEQ *ON
+     C           RECI      OREQ '*'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           * DB ERROR 05 *
+     C                     MOVEL'SECTY   'DBFILE    P      ***************
+     C                     MOVELWWSESN    DBKEY     P
+     C                     MOVEL'SE7542'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *  ------                                                       *
+      *  Called By : Main Processing, *PSSR                           *
+      *  Calls     : None.                                            *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+     C           WWOPEN    IFNE 'Y'                        WHEN NO RECORD READ
+     C                     EXSR RCFAU
+     C                     ENDIF
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ***  Output the DB Error Information.
+      *
+     C                     WRITEDBERROR
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ***  Open printer File
+      *
+     C                     CLOSESE7542AU
+     C                     MOVE 'N'       WWRCF            Audit under RCF
+     C                     OPEN SE7542AU
+     C                     MOVE 'Y'       WWOPEN  1
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM PENT      SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVE 'SE7542AU'DBFILE           * DB ERROR 01 *
+     C           'ZSFILE R'CAT  'OUTINE'  DBKEY     P      ***************
+     C                     MOVEL'SE7542'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WWRCF   1        Audit under RCF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *   *INZSR - Initial Processing                                 *
+      *   ------                                                      *
+      *   Called by : Main processing                                 *
+      *   Calls     : None.                                           *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PENT    3
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     Z-ADD0         DBASE
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SE7542'  DBPGM     P
+     C                     OUT  LDA
+      *
+     C                     MOVE 'Y'       WWRCF   1        Audit under RCF
+      *
+      ***  Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' WLRTCD  7
+     C                     PARM '*FIRST ' WLOPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE    P      * DB ERROR 06 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ***************
+     C                     MOVEL'SE7542'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Report Work fields.
+      *
+     C                     Z-ADD0         RCOUNT  50
+     C**********           Z-ADD0         WWCNUM  60                                          CSD027
+     C**********           Z-ADD0         WWDDPT  60                                          CSD027
+     C                     MOVE *BLANKS   WWCNUM  6                                           CSD027
+     C                     MOVE *BLANKS   WWDDPT  6                                           CSD027
+     C                     MOVE *BLANKS   WWSESN 10
+     C                     MOVE 'N'       WWOPEN
+      *
+     C           KWCODR    KLIST
+     C                     KFLD           WKCORF           Reference
+     C                     KFLD           WKBRCD           Branch
+     C                     KFLD           WKDDPT           Depot
+      *
+     C           KWCOEX    KLIST
+     C                     KFLD           WKCORF           Reference
+     C                     KFLD           WKOPTN           Option
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Error control subroutine                            *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C                     SETON                     U7U8
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C           WWRCF     IFEQ 'Y'
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  #NAR
+Sell all rights
+Take Stock + Buy Fraction
+Take Stock + Sell Fraction
+Take Part Cash/Rest Stock
+Take Part Cash/Keep Rest
+**  CPY@
+(c) Finastra International Limited 2001

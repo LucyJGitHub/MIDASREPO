@@ -1,0 +1,1289 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AGDL Reporting setup')
+/*OVRF*: OVRDBF SDECOSPD SDECOSLXPD                                 : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  RPG/ERGA01    - AGDL REPORT SETUP                            *
+      *                                                               *
+      *  Function: This program accept single item input from a       *
+      *            workstation to maintain the account codes and the  *
+      *            economic sectors for wich the account balances will*
+      *            be extracted.                                      *
+      *                                                               *
+      *                                                               *
+      *  Called By: CLP/ERCAG01 -                                     *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 UPG402             Date 05Oct04               *
+      *                 UPGCSW             Date 27Sep02               *
+      *                 210004             Date 26Sep02               *
+      *                 174185             Date 25JAN00               *
+      *                 183923             Date 20Sep00
+      *                 155076             Date 25Feb99               *
+      *                 ULX010  *Create    DATE 24Mar98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to change in ZALIGNZ2                 *
+      *  UPGCSW - Due to an upgrade of swift changes 2002 rename      *
+      *           variable V to W (confict with hook ZSRSRC/ZCOTRZ1   *
+      *           Amend ZSRSRC,ZALIGNZ2
+      *  210004 - Mismatch between ',' and '.' in Amend mode.         *
+      *           Link with fix 206456 in ZEDIT. So, apply same fix   *
+      *           in SR/ZALIGN and SR/ZFRPED.                         *
+      *  174185 - New Code Sectors economic must be used              *
+      *           (linked with 166701)                                *
+      *  183923 - File SDECOSPD is renamed SDECOSLXPD.                *
+      *           Recompile                                           *
+      *  155076 - New fonctionalities of ULX010                       *
+      *  ULX010 - AGDL Reporting statistiques sur les d{pôts garantis *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  #INIT             Initial processing                         *
+      *  #TRNS             Translate fields for screen                *
+      *  #UFRC             Update File Records                        *
+      *  #VALD             Validate detail fields                     *
+      *  #CURR             Validate limit currency                    *
+      *  #AMOU             Validate limit amout                       *
+      *  #ACCO             Validate Account codes                     *
+      *  #ECSE             Validate Economic Sectors                  *
+      *  #EMPL             Validate Employee                          *
+      *  #TELE             Validate Telephone                         *
+      *  *PSSR             File error handling                        *
+      *  ZASNMS            Send PROGRAM to program's message queue    *
+      *                                                               *
+      *================================================================
+      *  #INIT             Initial processing                         *
+     FAGDLSEPPUF  E                    DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      *AGDL report setup
+     F******SDECOSPDIF  E           K        DISK         KINFSR *PSSR    174185
+     FSDNCOSPDIF  E           K        DISK         KINFSR *PSSR          174185
+      *ECONOMIC SECTORS
+      *
+     FERAG01DFCF  E                    WORKSTN
+      *AGDL setup maintenance (display file)
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E**********          ACC        50  4  D                                                 CER001
+     E                    ACC        50 10  D                                                 CER001
+      ** Array containing ACCOUNT CODES
+      *
+     E                    ECS        30  4  D
+      ** Array containing ECONOMIC SECTORS
+      *
+     E/COPY ZSRSRC,ZALIGNZ1
+      * for subroutine zalign used for check numeric field
+      * for subroutine zedit used for insert blanks.
+      /SPACE 3
+     ICPYR@#      DS
+      ***  Data structure for compilation  - Copyright insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                        1  10 PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     I            DS
+      ***  Data structures to set up the screens fields to blanks
+     I                                        1   3 ERCURR
+     I                                        4  18 ERLIMI
+     I                                       19  48 ERRESP
+     I                                       49  63 ERTELE
+     I                                        1  63 DSER
+     I            DS
+     I**********                              1   4 ERGA01                                    CER001
+     I**********                              5   8 ERGA02                                    CER001
+     I**********                              9  12 ERGA03                                    CER001
+     I**********                             13  16 ERGA04                                    CER001
+     I**********                             17  20 ERGA05                                    CER001
+     I**********                             21  24 ERGA06                                    CER001
+     I**********                             25  28 ERGA07                                    CER001
+     I**********                             29  32 ERGA08                                    CER001
+     I**********                             33  36 ERGA09                                    CER001
+     I**********                             37  40 ERGA10                                    CER001
+     I**********                             41  44 ERGA11                                    CER001
+     I**********                             45  48 ERGA12                                    CER001
+     I**********                             49  52 ERGA13                                    CER001
+     I**********                             53  56 ERGA14                                    CER001
+     I**********                             57  60 ERGA15                                    CER001
+     I**********                             61  64 ERGA16                                    CER001
+     I**********                             65  68 ERGA17                                    CER001
+     I**********                             69  72 ERGA18                                    CER001
+     I**********                             73  76 ERGA19                                    CER001
+     I**********                             77  80 ERGA20                                    CER001
+     I**********                             81  84 ERGA21                                    CER001
+     I**********                             85  88 ERGA22                                    CER001
+     I**********                             89  92 ERGA23                                    CER001
+     I**********                             93  96 ERGA24                                    CER001
+     I**********                             97 100 ERGA25                                    CER001
+     I**********                            101 104 ERGA26                                    CER001
+     I**********                            105 108 ERGA27                                    CER001
+     I**********                            109 112 ERGA28                                    CER001
+     I**********                            113 116 ERGA29                                    CER001
+     I**********                            117 120 ERGA30                                    CER001
+     I**********                            121 124 ERGA31                                    CER001
+     I**********                            125 128 ERGA32                                    CER001
+     I**********                            129 132 ERGA33                                    CER001
+     I**********                            133 136 ERGA34                                    CER001
+     I**********                            137 140 ERGA35                                    CER001
+     I**********                            141 144 ERGA36                                    CER001
+     I**********                            145 148 ERGA37                                    CER001
+     I**********                            149 152 ERGA38                                    CER001
+     I**********                            153 156 ERGA39                                    CER001
+     I**********                            157 160 ERGA40                                    CER001
+     I**********                            161 164 ERGA41                                    CER001
+     I**********                            165 168 ERGA42                                    CER001
+     I**********                            169 172 ERGA43                                    CER001
+     I**********                            173 176 ERGA44                                    CER001
+     I**********                            177 180 ERGA45                                    CER001
+     I**********                            181 184 ERGA46                                    CER001
+     I**********                            185 188 ERGA47                                    CER001
+     I**********                            189 192 ERGA48                                    CER001
+     I**********                            193 196 ERGA49                                    CER001
+     I**********                            197 200 ERGA50                                    CER001
+     I**********                              1 200 ERACON                                    CER001
+     I                                        1 250 ERACN1                                    CER001
+     I                                        1  10 ERGA01                                    CER001
+     I                                       11  20 ERGA02                                    CER001
+     I                                       21  30 ERGA03                                    CER001
+     I                                       31  40 ERGA04                                    CER001
+     I                                       41  50 ERGA05                                    CER001
+     I                                       51  60 ERGA06                                    CER001
+     I                                       61  70 ERGA07                                    CER001
+     I                                       71  80 ERGA08                                    CER001
+     I                                       81  90 ERGA09                                    CER001
+     I                                       91 100 ERGA10                                    CER001
+     I                                      101 110 ERGA11                                    CER001
+     I                                      111 120 ERGA12                                    CER001
+     I                                      121 130 ERGA13                                    CER001
+     I                                      131 140 ERGA14                                    CER001
+     I                                      141 150 ERGA15                                    CER001
+     I                                      151 160 ERGA16                                    CER001
+     I                                      161 170 ERGA17                                    CER001
+     I                                      171 180 ERGA18                                    CER001
+     I                                      181 190 ERGA19                                    CER001
+     I                                      191 200 ERGA20                                    CER001
+     I                                      201 210 ERGA21                                    CER001
+     I                                      211 220 ERGA22                                    CER001
+     I                                      221 230 ERGA23                                    CER001
+     I                                      231 240 ERGA24                                    CER001
+     I                                      241 250 ERGA25                                    CER001
+      *                                                                                       CER001
+     I                                      251 500 ERACN2                                    CER001
+     I                                      251 260 ERGA26                                    CER001
+     I                                      261 270 ERGA27                                    CER001
+     I                                      271 280 ERGA28                                    CER001
+     I                                      281 290 ERGA29                                    CER001
+     I                                      291 300 ERGA30                                    CER001
+     I                                      301 310 ERGA31                                    CER001
+     I                                      311 320 ERGA32                                    CER001
+     I                                      321 330 ERGA33                                    CER001
+     I                                      331 340 ERGA34                                    CER001
+     I                                      341 350 ERGA35                                    CER001
+     I                                      351 360 ERGA36                                    CER001
+     I                                      361 370 ERGA37                                    CER001
+     I                                      371 380 ERGA38                                    CER001
+     I                                      381 390 ERGA39                                    CER001
+     I                                      391 400 ERGA40                                    CER001
+     I                                      401 410 ERGA41                                    CER001
+     I                                      411 420 ERGA42                                    CER001
+     I                                      421 430 ERGA43                                    CER001
+     I                                      431 440 ERGA44                                    CER001
+     I                                      441 450 ERGA45                                    CER001
+     I                                      451 460 ERGA46                                    CER001
+     I                                      461 470 ERGA47                                    CER001
+     I                                      471 480 ERGA48                                    CER001
+     I                                      481 490 ERGA49                                    CER001
+     I                                      491 500 ERGA50                                    CER001
+     I            DS
+     I                                        1   4 ERGE51
+     I                                        5   8 ERGE52
+     I                                        9  12 ERGE53
+     I                                       13  16 ERGE54
+     I                                       17  20 ERGE55
+     I                                       21  24 ERGE56
+     I                                       25  28 ERGE57
+     I                                       29  32 ERGE58
+     I                                       33  36 ERGE59
+     I                                       37  40 ERGE60
+     I                                       41  44 ERGE61
+     I                                       45  48 ERGE62
+     I                                       49  52 ERGE63
+     I                                       53  56 ERGE64
+     I                                       57  60 ERGE65
+     I                                       61  64 ERGE66
+     I                                       65  68 ERGE67
+     I                                       69  72 ERGE68
+     I                                       73  76 ERGE69
+     I                                       77  80 ERGE70
+     I                                       81  84 ERGE71
+     I                                       85  88 ERGE72
+     I                                       89  92 ERGE73
+     I                                       93  96 ERGE74
+     I                                       97 100 ERGE75
+     I                                      101 104 ERGE76
+     I                                      105 108 ERGE77
+     I                                      109 112 ERGE78
+     I                                      113 116 ERGE79
+     I                                      117 120 ERGE80
+     I                                        1 120 ERECON
+     I            DS
+      ***  Data structures for file fields
+     I                                        1   3 AGCURR
+     I                                        4  180AGLIMI
+     I                                       19  48 AGRESP
+     I                                       49  63 AGTELE
+     I                                        1  63 DSAG
+     I            DS
+      ***  Data structures for economic sectors fields for test if at least one
+      *** is blank.
+1    I                                        1   4 ECSB
+     I                                        1   1 ECS1
+     I                                        2   2 ECS2
+     I                                        3   3 ECS3
+     I                                        4   4 ECS4
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure for acces programs
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure for acces programs
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for Currency Details
+     ISDACOD    E DSSDACODPD
+      ***  External data structures for Account code Details
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+     C/TITLE Main processing
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T
+      *================================================================
+      *
+      ***  Perform setup of standard fields
+      *
+     C                     EXSR #INIT
+      *
+      ***  Do until F3 or error
+      *
+     C           *INKC     DOUEQ*ON
+     C           *INKE     CASEQ*ON       #TRNS
+     C                     ENDCS
+     C                     WRITEERAG01C0
+     C                     EXFMTERAG01D1
+      ***  IF  ENTER key pressed
+     C           *INKE     IFNE *ON
+     C           *INKC     IFNE *ON
+     C                     EXSR #VALD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ***  Terminate program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *================================================================
+      *  P R O G R A M     E N D
+      *================================================================
+      /EJECT
+      *================================================================
+      **
+      ** ZASNMS - SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE
+      ** CALLS  - Y2SNMSGC - SEND MESSAGE.
+      ** CALLED BY SCREENS VALIDATIONS
+      **
+      *================================================================
+     C           ZASNMS    BEGSR
+      *
+      ***   message file specified use PMSGF
+      *
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ***   Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C           ZAEXIT    ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      **
+      ** #VALD     : validate detail screen processing
+      ** Called by : MAIN
+      ** CALLS     : ZASNMS
+      **           : #CURR   validate limit currency
+      **           : #AMOU   validate limit amout
+      **           : #ACCO   validate Account codes
+      **           : #ECSE   validate Economic Sectors
+      **           : #EMPL   validate Employee
+      **           : #TELE   validate Telephone
+      *================================================================
+      *
+     C           #VALD     BEGSR                           ** #VALD  BSR**
+      *
+      ***  Initialize program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+      *
+      ***  Reset screen error indicators
+      *
+     C                     MOVEA*OFF      *IN              Error entry
+      *
+      ***  Limit Currency
+     C                     EXSR #CURR
+      *
+      *** Limit amount
+     C                     EXSR #AMOU
+      *
+      ***  Account codeS
+     C                     EXSR #ACCO
+      *
+      ***  Economic Sectors
+     C                     EXSR #ECSE
+      *
+      ***  Employee name
+     C                     EXSR #EMPL
+      *
+      ***  Telephone number
+     C                     EXSR #TELE
+      *
+     C           *IN80     IFNE *ON
+     C                     EXSR #UFRC
+     C                     ENDIF
+      *
+     C                     ENDSR                           ** #VALD END **
+      *================================================================
+      /EJECT
+      *================================================================
+      **
+      ** #CURR S/R : Validate limit currency
+      ** Called by : #VALD
+      ** CALLS     : ZASNMS
+      *================================================================
+     C           #CURR     BEGSR
+      ***
+      ***  Limit Currency  must be a  valid currency
+      ***
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM ERCURR    WCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C                     MOVELWCYCD     ERCURR
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'ULX0001' ZAMSID
+     C                     MOVE *ON       *IN80
+     C                     MOVE *ON       *IN82
+     C                     EXSR ZASNMS
+      *                                                                   155076
+     C                     ELSE                                           155076
+     C                     Z-ADDA6NBDP    WWDCP   10                      155076
+     C                     ENDIF
+     C                     ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      **
+      ** #AMOU S/R : Validate limit amount
+      ** Called by : #VALD
+      **
+      *================================================================
+     C           #AMOU     BEGSR
+      *** Limit amount must not be blank
+      ***
+     C           ERLIMI    IFEQ *BLANKS                    B1
+     C                     MOVEL'ULX0009' ZAMSID           mandatory
+     C                     MOVE *ON       *IN80
+     C                     MOVE *ON       *IN83
+     C                     EXSR ZASNMS
+      ***
+      *** Test if numeric field
+      ***
+     C                     ELSE                            X1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE ERLIMI    ZFIELD
+     C*****                Z-ADD0         ZADEC                           155076
+     C                     Z-ADDWWDCP     ZADEC                           155076
+     C           15        SUB  WWDCP     ZADIG
+     C                     EXSR ZALIGN
+     C                     ENDIF                            E1
+     C           *IN99     IFEQ '1'                        -B1
+     C                     MOVEL'ULX0002' ZAMSID           mandatory
+     C                     MOVE *ON       *IN80
+     C                     MOVE *ON       *IN83
+     C                     EXSR ZASNMS
+      *                                                                   155076
+     C                     ELSE                                           155076
+     C*************        MOVE *BLANKS   ERLIMI                          155076
+     C*************        MOVE ZFIELD    ERLIMI                          155076
+     C                     MOVE ZFIELD    WWLIMI 15                       155076
+     C                     ENDIF                            E1
+     C                     ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      **
+      ** #ACCO S/R : Validate Account codes
+      ** Called by : #VALD
+      **
+      *================================================================
+     C           #ACCO     BEGSR
+      ***
+      ***  Account code at least one is mandatory and must be a valid account co
+      ***
+     C                     MOVE ERGA01    ACC,1
+     C                     MOVE ERGA02    ACC,2
+     C                     MOVE ERGA03    ACC,3
+     C                     MOVE ERGA04    ACC,4
+     C                     MOVE ERGA05    ACC,5
+     C                     MOVE ERGA06    ACC,6
+     C                     MOVE ERGA07    ACC,7
+     C                     MOVE ERGA08    ACC,8
+     C                     MOVE ERGA09    ACC,9
+     C                     MOVE ERGA10    ACC,10
+     C                     MOVE ERGA11    ACC,11
+     C                     MOVE ERGA12    ACC,12
+     C                     MOVE ERGA13    ACC,13
+     C                     MOVE ERGA14    ACC,14
+     C                     MOVE ERGA15    ACC,15
+     C                     MOVE ERGA16    ACC,16
+     C                     MOVE ERGA17    ACC,17
+     C                     MOVE ERGA18    ACC,18
+     C                     MOVE ERGA19    ACC,19
+     C                     MOVE ERGA20    ACC,20
+     C                     MOVE ERGA21    ACC,21
+     C                     MOVE ERGA22    ACC,22
+     C                     MOVE ERGA23    ACC,23
+     C                     MOVE ERGA24    ACC,24
+     C                     MOVE ERGA25    ACC,25
+     C                     MOVE ERGA26    ACC,26
+     C                     MOVE ERGA27    ACC,27
+     C                     MOVE ERGA28    ACC,28
+     C                     MOVE ERGA29    ACC,29
+     C                     MOVE ERGA30    ACC,30
+     C                     MOVE ERGA31    ACC,31
+     C                     MOVE ERGA32    ACC,32
+     C                     MOVE ERGA33    ACC,33
+     C                     MOVE ERGA34    ACC,34
+     C                     MOVE ERGA35    ACC,35
+     C                     MOVE ERGA36    ACC,36
+     C                     MOVE ERGA37    ACC,37
+     C                     MOVE ERGA38    ACC,38
+     C                     MOVE ERGA39    ACC,39
+     C                     MOVE ERGA40    ACC,40
+     C                     MOVE ERGA41    ACC,41
+     C                     MOVE ERGA42    ACC,42
+     C                     MOVE ERGA43    ACC,43
+     C                     MOVE ERGA44    ACC,44
+     C                     MOVE ERGA45    ACC,45
+     C                     MOVE ERGA46    ACC,46
+     C                     MOVE ERGA47    ACC,47
+     C                     MOVE ERGA48    ACC,48
+     C                     MOVE ERGA49    ACC,49
+     C                     MOVE ERGA50    ACC,50
+     C                     MOVE *OFF      *IN89
+      ***
+      *** I =index for field and for indicator
+      *** both having same value
+     C                     Z-ADD0         I       20
+     C                     DO   50        I                 B1
+      *
+      *** Test if  valid field
+     C           ACC,I     IFNE *BLANKS                     B2
+     C                     MOVE *ON       *IN89             At least one
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C**********           PARM ACC,I     P@ACCD  4                                           CER001
+     C                     PARM ACC,I     P@ACCD 10                                           CER001
+     C           SDACOD    PARM SDACOD    DSFDY
+     C                     MOVELP@ACCD    ACC,I
+      **
+      *** Translate array to field screen
+      **
+     C                     MOVE ACC,1     ERGA01
+     C                     MOVE ACC,2     ERGA02
+     C                     MOVE ACC,3     ERGA03
+     C                     MOVE ACC,4     ERGA04
+     C                     MOVE ACC,5     ERGA05
+     C                     MOVE ACC,6     ERGA06
+     C                     MOVE ACC,7     ERGA07
+     C                     MOVE ACC,8     ERGA08
+     C                     MOVE ACC,9     ERGA09
+     C                     MOVE ACC,10    ERGA10
+     C                     MOVE ACC,11    ERGA11
+     C                     MOVE ACC,12    ERGA12
+     C                     MOVE ACC,13    ERGA13
+     C                     MOVE ACC,14    ERGA14
+     C                     MOVE ACC,15    ERGA15
+     C                     MOVE ACC,16    ERGA16
+     C                     MOVE ACC,17    ERGA17
+     C                     MOVE ACC,18    ERGA18
+     C                     MOVE ACC,19    ERGA19
+     C                     MOVE ACC,20    ERGA20
+     C                     MOVE ACC,21    ERGA21
+     C                     MOVE ACC,22    ERGA22
+     C                     MOVE ACC,23    ERGA23
+     C                     MOVE ACC,24    ERGA24
+     C                     MOVE ACC,25    ERGA25
+     C                     MOVE ACC,26    ERGA26
+     C                     MOVE ACC,27    ERGA27
+     C                     MOVE ACC,28    ERGA28
+     C                     MOVE ACC,29    ERGA29
+     C                     MOVE ACC,30    ERGA30
+     C                     MOVE ACC,31    ERGA31
+     C                     MOVE ACC,32    ERGA32
+     C                     MOVE ACC,33    ERGA33
+     C                     MOVE ACC,34    ERGA34
+     C                     MOVE ACC,35    ERGA35
+     C                     MOVE ACC,36    ERGA36
+     C                     MOVE ACC,37    ERGA37
+     C                     MOVE ACC,38    ERGA38
+     C                     MOVE ACC,39    ERGA39
+     C                     MOVE ACC,40    ERGA40
+     C                     MOVE ACC,41    ERGA41
+     C                     MOVE ACC,42    ERGA42
+     C                     MOVE ACC,43    ERGA43
+     C                     MOVE ACC,44    ERGA44
+     C                     MOVE ACC,45    ERGA45
+     C                     MOVE ACC,46    ERGA46
+     C                     MOVE ACC,47    ERGA47
+     C                     MOVE ACC,48    ERGA48
+     C                     MOVE ACC,49    ERGA49
+     C                     MOVE ACC,50    ERGA50
+     C           WRTCD     IFNE *BLANKS                     B3
+     C           WRTCD     ANDNE'*NOSEL'
+     C                     MOVE *ON       *IN,I
+     C                     MOVEL'ULX0003' ZAMSID
+     C                     MOVE *ON       *IN80
+     C                     EXSR ZASNMS
+     C                     ENDIF                            E3
+     C                     ENDIF                            E2
+     C                     ENDDO                            E1
+      ***
+      *** AT least one is mandatory
+      ***
+     C           *IN89     IFNE *ON                         B1
+     C                     MOVEL'ULX0003' ZAMSID
+     C                     MOVE *ON       *IN80
+     C                     MOVEA'11111111'*IN,01
+     C                     MOVEA'11111111'*IN,09
+     C                     MOVEA'11111111'*IN,17
+     C                     MOVEA'11111111'*IN,25
+     C                     MOVEA'11111111'*IN,33
+     C                     MOVEA'11111111'*IN,41
+     C                     MOVEA'11'      *IN,49
+     C                     EXSR ZASNMS
+     C                     ENDIF                            E1
+      *
+      ***
+      *** Several  same values not authorized for account codes.
+      ***
+     C                     MOVE *OFF      *IN88
+     C                     Z-ADD0         I       20
+     C                     DO   50        I                 B1
+      ***
+      *** Index I = first value to compare
+      *** Index A = second value to compare
+      ***
+     C           I         ADD  1         A       20
+     C                     DO   50                          B2
+     C           A         IFLE 50                          B3
+     C           ACC,I     IFNE *BLANKS                     B4
+     C           ACC,I     IFEQ ACC,A                       B5
+     C                     MOVE *ON       *IN,I
+     C                     MOVE *ON       *IN,A
+     C           *IN88     IFNE *ON                         B6
+     C                     MOVEL'ULX0010' ZAMSID
+     C                     MOVE *ON       *IN80
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN,88
+     C                     ENDIF                            E6
+     C                     ENDIF                            E5
+     C                     ENDIF                            E4
+     C                     ADD  1         A
+     C                     ENDIF                            E3
+     C                     ENDDO                            E2
+     C                     ENDDO                            E1
+     C                     ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      **
+      ** #ECSE S/R : Validate Economic Sectors
+      ** Called by : #VALD
+      **
+      *================================================================
+     C           #ECSE     BEGSR
+      ***
+      ***  Economic sector at least one is mandatory ,must be a valid economic s
+      ***
+     C                     MOVE ERGE51    ECS,1
+     C                     MOVE ERGE52    ECS,2
+     C                     MOVE ERGE53    ECS,3
+     C                     MOVE ERGE54    ECS,4
+     C                     MOVE ERGE55    ECS,5
+     C                     MOVE ERGE56    ECS,6
+     C                     MOVE ERGE57    ECS,7
+     C                     MOVE ERGE58    ECS,8
+     C                     MOVE ERGE59    ECS,9
+     C                     MOVE ERGE60    ECS,10
+     C                     MOVE ERGE61    ECS,11
+     C                     MOVE ERGE62    ECS,12
+     C                     MOVE ERGE63    ECS,13
+     C                     MOVE ERGE64    ECS,14
+     C                     MOVE ERGE65    ECS,15
+     C                     MOVE ERGE66    ECS,16
+     C                     MOVE ERGE67    ECS,17
+     C                     MOVE ERGE68    ECS,18
+     C                     MOVE ERGE69    ECS,19
+     C                     MOVE ERGE70    ECS,20
+     C                     MOVE ERGE71    ECS,21
+     C                     MOVE ERGE72    ECS,22
+     C                     MOVE ERGE73    ECS,23
+     C                     MOVE ERGE74    ECS,24
+     C                     MOVE ERGE75    ECS,25
+     C                     MOVE ERGE76    ECS,26
+     C                     MOVE ERGE77    ECS,27
+     C                     MOVE ERGE78    ECS,28
+     C                     MOVE ERGE79    ECS,29
+     C                     MOVE ERGE80    ECS,30
+      ***
+      *** Test if a numeric field and valid field
+      ***
+     C                     MOVE *OFF      *IN89
+      ***
+      *** J =index for field
+      *** R =index for indicator
+      ***
+     C                     Z-ADD0         J       20
+     C                     Z-ADD50        R       20
+     C                     DO   30        J                 B1
+     C                     ADD  1         R
+     C           ECS,J     IFNE *BLANKS                    -B2
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVELECS,J     ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD4         ZADIG
+     C                     EXSR ZALIGN
+      ***
+      *** test if one position is blank
+      ***
+     C           *IN99     IFNE '1'
+     C                     MOVE *BLANKS   ECSB
+     C                     MOVE ECS,J     ECSB
+     C           ECS4      IFEQ *BLANKS
+     C           ECS3      OREQ *BLANKS
+     C           ECS2      OREQ *BLANKS
+     C           ECS1      OREQ *BLANKS
+     C                     MOVE '1'       *IN99
+     C                     ENDIF
+     C                     ENDIF
+      ***
+     C           *IN99     IFEQ '1'                         B3
+     C           R         IFEQ 65                          B4
+     C                     MOVE *ON       *IN85
+     C                     ELSE                             X4
+     C                     MOVE *ON       *IN,R
+     C                     ENDIF                            E4
+     C           R         IFEQ 80                          B4
+     C                     MOVE *ON       *IN81
+     C                     ELSE                             X4
+     C                     MOVE *ON       *IN,R
+     C                     ENDIF                            E4
+     C                     MOVEL'ULX0004' ZAMSID
+     C                     MOVE *ON       *IN80
+     C                     EXSR ZASNMS
+     C                     ENDIF                            E3
+     C                     ENDIF                            E2
+     C           ECS,J     IFNE *BLANKS                     B2
+     C                     MOVE *ON       *IN89             at least one
+     C                     MOVE ECS,J     WRKSEC  40
+     C******     WRKSEC    CHAINSDECOSPD             90                   174185
+     C           WRKSEC    CHAINSDNCOSPD             90                   174185
+     C           *IN90     IFEQ *ON                         B3
+     C           R         IFEQ 65                          B4
+     C                     MOVE *ON       *IN85
+     C                     ENDIF                            E4
+     C           R         IFEQ 80                          B4
+     C                     MOVE *ON       *IN81
+     C                     ENDIF                            E4
+     C           R         IFNE 65                          B4
+     C           R         ANDNE80                           4
+     C                     MOVE *ON       *IN,R
+     C                     ENDIF                            E4
+     C                     MOVEL'ULX0004' ZAMSID
+     C                     MOVE *ON       *IN80
+     C                     EXSR ZASNMS
+     C                     ENDIF                            E3
+     C                     ENDIF                            E2
+     C                     ENDDO                            E1
+      ***
+      *** At least one is mandatory
+      ***
+     C           *IN89     IFEQ *OFF                        B1
+     C                     MOVEL'ULX0004' ZAMSID
+     C                     MOVEA'11111111'*IN,51
+     C                     MOVEA'111111'  *IN,59
+     C                     MOVEA'11111111'*IN,66
+     C                     MOVEA'11111111'*IN,74
+     C                     MOVEA'1'       *IN,85
+     C                     EXSR ZASNMS
+     C                     ENDIF                            E1
+      ***
+      *** Several same values are not authorized for Economic Sectors
+      ***
+     C                     MOVE *OFF      *IN88
+      ***
+      *** Index I = first value to compare
+      *** Index A = second value to compare
+      *** Index R = index indicator for first value
+      *** Index V = Index indicator for second value
+      ***
+     C                     Z-ADD0         A       20
+     C                     Z-ADD0         I       20
+      ***
+      *** First indicator value is 50 .
+      ***
+     C                     Z-ADD50        R
+     C                     Z-ADD50        V       20
+     C                     DO   30        I                 B1
+     C                     ADD  1         R
+     C           I         ADD  1         A
+     C           R         ADD  1         V
+     C                     DO   30                          B2
+     C           A         IFLE 30                          B3
+     C           ECS,I     IFNE *BLANKS                     B4
+     C           ECS,I     IFEQ ECS,A                       B5
+     C           I         IFEQ 80                          B6
+     C                     MOVE *ON       *IN81
+     C                     ENDIF                            E6
+     C           I         IFEQ 65                          B6
+     C                     MOVE *ON       *IN85
+     C                     ENDIF                            E6
+     C           I         IFNE 65                          B6
+     C           I         ANDNE80                          6
+     C                     MOVE *ON       *IN,R
+     C                     ENDIF                           E6
+     C           A         IFEQ 30                         B6
+     C                     MOVE *ON       *IN81
+     C                     ENDIF                           E6
+     C           A         IFEQ 15                         B6
+     C                     MOVE *ON       *IN85
+     C                     ENDIF                           E6
+     C           A         IFNE 15                         B6
+     C           A         ANDNE30                          6
+     C                     MOVE *ON       *IN,V
+     C                     ENDIF                           E6
+     C           *IN88     IFNE *ON                        B6
+     C                     MOVEL'ULX0011' ZAMSID
+     C                     MOVE *ON       *IN80
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN88
+     C                     ENDIF                           E6
+     C                     ENDIF                           E5
+     C                     ENDIF                           E4
+     C                     ADD  1         A
+     C                     ADD  1         V
+     C                     ENDIF                           E3
+     C                     ENDDO                           E2
+     C                     ENDDO                           E1
+     C                     ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      **
+      ** #EMPL S/R : Validate Employee
+      ** Called by : #VALD
+      **
+      *================================================================
+     C           #EMPL     BEGSR
+      ***
+      ***  Employee name is mandatory
+      ***
+     C           ERRESP    IFEQ *BLANK
+     C                     MOVEL'ULX0005' ZAMSID           mandatory
+     C                     MOVE *ON       *IN80
+     C                     MOVE *ON       *IN86
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      **
+      ** #TELE S/R : Validate TELEPHONE NUMBER
+      ** Called by : #VALD
+      **
+      *================================================================
+     C           #TELE     BEGSR
+      ***  Telephone number is mandatory
+      *
+     C           ERTELE    IFEQ *BLANKS                    B1
+     C                     MOVEL'ULX0006' ZAMSID
+     C                     MOVE *ON       *IN80
+     C                     MOVE *ON       *IN87
+     C                     EXSR ZASNMS
+     C                     ENDIF                           E1
+     C                     ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      **
+      ** #TRNS S/R : Translate detail record to screen layout IF F5 PRESSED
+      ** Called by : MAIN
+      **
+      *================================================================
+      *
+     C           #TRNS     BEGSR                           ** #TRNS  BSR **
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+      ***
+      ***  Reset screen error indicators
+      ***
+     C                     MOVEA*OFF      *IN              Error entry
+      *
+     C                     MOVE *OFF      *INKE
+     C                     MOVE *BLANKS   DSER
+     C                     MOVEA*BLANKS   ACC
+     C                     MOVEA*BLANKS   ECS
+      ***
+      ***  Translate record details from file layout to screen layout
+      ***  If F5 is pressed.
+      ***
+     C                     MOVE DSAG      DSER
+      ***
+      *** Put in leading blanks for limit amount
+      ***
+     C                     EXSR #CURR                                     155076
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE AGLIMI    ZFIELD
+     C*****                Z-ADD0         ZADEC                           155076
+     C                     Z-ADDWWDCP     ZADEC                           155076
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    ERLIMI
+      ***
+      ***  Get  data
+      ***
+     C                     MOVEAAGACON    ACC
+     C                     MOVE ACC,1     ERGA01
+     C                     MOVE ACC,2     ERGA02
+     C                     MOVE ACC,3     ERGA03
+     C                     MOVE ACC,4     ERGA04
+     C                     MOVE ACC,5     ERGA05
+     C                     MOVE ACC,6     ERGA06
+     C                     MOVE ACC,7     ERGA07
+     C                     MOVE ACC,8     ERGA08
+     C                     MOVE ACC,9     ERGA09
+     C                     MOVE ACC,10    ERGA10
+     C                     MOVE ACC,11    ERGA11
+     C                     MOVE ACC,12    ERGA12
+     C                     MOVE ACC,13    ERGA13
+     C                     MOVE ACC,14    ERGA14
+     C                     MOVE ACC,15    ERGA15
+     C                     MOVE ACC,16    ERGA16
+     C                     MOVE ACC,17    ERGA17
+     C                     MOVE ACC,18    ERGA18
+     C                     MOVE ACC,19    ERGA19
+     C                     MOVE ACC,20    ERGA20
+     C                     MOVE ACC,21    ERGA21
+     C                     MOVE ACC,22    ERGA22
+     C                     MOVE ACC,23    ERGA23
+     C                     MOVE ACC,24    ERGA24
+     C                     MOVE ACC,25    ERGA25
+     C                     MOVE ACC,26    ERGA26
+     C                     MOVE ACC,27    ERGA27
+     C                     MOVE ACC,28    ERGA28
+     C                     MOVE ACC,29    ERGA29
+     C                     MOVE ACC,30    ERGA30
+     C                     MOVE ACC,31    ERGA31
+     C                     MOVE ACC,32    ERGA32
+     C                     MOVE ACC,33    ERGA33
+     C                     MOVE ACC,34    ERGA34
+     C                     MOVE ACC,35    ERGA35
+     C                     MOVE ACC,36    ERGA36
+     C                     MOVE ACC,37    ERGA37
+     C                     MOVE ACC,38    ERGA38
+     C                     MOVE ACC,39    ERGA39
+     C                     MOVE ACC,40    ERGA40
+     C                     MOVE ACC,41    ERGA41
+     C                     MOVE ACC,42    ERGA42
+     C                     MOVE ACC,43    ERGA43
+     C                     MOVE ACC,44    ERGA44
+     C                     MOVE ACC,45    ERGA45
+     C                     MOVE ACC,46    ERGA46
+     C                     MOVE ACC,47    ERGA47
+     C                     MOVE ACC,48    ERGA48
+     C                     MOVE ACC,49    ERGA49
+     C                     MOVE ACC,50    ERGA50
+      ***
+     C                     MOVEAAGECON    ECS
+     C                     MOVE ECS,1     ERGE51
+     C                     MOVE ECS,2     ERGE52
+     C                     MOVE ECS,3     ERGE53
+     C                     MOVE ECS,4     ERGE54
+     C                     MOVE ECS,5     ERGE55
+     C                     MOVE ECS,6     ERGE56
+     C                     MOVE ECS,7     ERGE57
+     C                     MOVE ECS,8     ERGE58
+     C                     MOVE ECS,9     ERGE59
+     C                     MOVE ECS,10    ERGE60
+     C                     MOVE ECS,11    ERGE61
+     C                     MOVE ECS,12    ERGE62
+     C                     MOVE ECS,13    ERGE63
+     C                     MOVE ECS,14    ERGE64
+     C                     MOVE ECS,15    ERGE65
+     C                     MOVE ECS,16    ERGE66
+     C                     MOVE ECS,17    ERGE67
+     C                     MOVE ECS,18    ERGE68
+     C                     MOVE ECS,19    ERGE69
+     C                     MOVE ECS,20    ERGE70
+     C                     MOVE ECS,21    ERGE71
+     C                     MOVE ECS,22    ERGE72
+     C                     MOVE ECS,23    ERGE73
+     C                     MOVE ECS,24    ERGE74
+     C                     MOVE ECS,25    ERGE75
+     C                     MOVE ECS,26    ERGE76
+     C                     MOVE ECS,27    ERGE77
+     C                     MOVE ECS,28    ERGE78
+     C                     MOVE ECS,29    ERGE79
+     C                     MOVE ECS,30    ERGE80
+      *
+     C                     ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      **
+      ** #UFRC S/R : Update file records
+      ** Called by : #VALD
+      ** CALLS     :
+      **
+      *================================================================
+     C           #UFRC     BEGSR                           ** #UFRC BSR **
+      ***
+      ***  Translate record details from screen layout to file layout
+      ***
+     C                     MOVE WWLIMI    ERLIMI                          155076
+     C                     MOVE DSER      DSAG
+     C**********           MOVEAERACON    ACC                                                 CER001
+     C                     Z-ADD1         X       30                                          CER001
+     C                     Z-ADD1         T       30                                          CER001
+     C           X         DOWLE25                                                            CER001
+     C           10        SUBSTERACN1:T  ACC,X                                               CER001
+     C                     ADD  1         X                                                   CER001
+     C                     ADD  10        T                                                   CER001
+     C                     ENDDO                                                              CER001
+      *                                                                                       CER001
+     C                     Z-ADD1         T                                                   CER001
+     C           X         DOWLE25                                                            CER001
+     C           10        SUBSTERACN2:T  ACC,X                                               CER001
+     C                     ADD  1         X                                                   CER001
+     C                     ADD  10        T                                                   CER001
+     C                     ENDDO                                                              CER001
+     C                     SORTAACC
+     C                     MOVEAACC       AGACON
+      ***
+     C                     MOVEAERECON    ECS
+     C                     SORTAECS
+     C                     MOVEAECS       AGECON
+     C           CHAIN     IFEQ 'Y'                        B1
+     C                     WRITEAGDLSED0
+     C                     ELSE                            X1
+     C                     UPDATAGDLSED0
+     C                     ENDIF                           E1
+      *
+      ***  Format Commitment text
+      *
+      ***  COMMIT
+      *
+     C                     COMIT
+      *
+     C                     MOVE *ON       *INKC
+     C                     ENDSR                           **#UFRC  ENDSR**
+      *================================================================
+      /EJECT
+      *================================================================
+      **
+      ** *PSSR  S/R
+      ** CALLED FROM #UFRC, #INIT
+      ** CALLS NO OTHER S/R'S
+      **
+      *================================================================
+      ***
+     C           *PSSR     BEGSR
+      ***
+      ***
+      ***  Roll back changes, print DUMP and cancel program
+      ***
+     C                     ROLBK
+     C                     DUMP
+      ***
+      ***  Call standard DB error handler
+      ***
+     C                     CALL 'DBERRCTL'
+     C                     SETON                     U7U8LR
+      ***
+     C                     RETRN
+      ***
+     C                     ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      **
+      ** #INIT S/R : Initial processing
+      ** Called    : Once at start of program (first cycle)
+      ** Calls     :*PSSR
+      **
+      *================================================================
+      *
+     C           #INIT     BEGSR                           ** #INIT BSR **
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Select the program MSGQ for error msg.
+      *
+     C                     MOVEL'*'       TOPQ
+     C                     MOVEL'*PRV'    TOPRQ
+     C                     MOVEL'*'       DDPGMQ
+     C**********           MOVEL'XXUSRMSG'PMSGF  10                                           CER001
+     C                     MOVEL'STUSRMSG'PMSGF  10                                           CER001
+      *
+      ***  Fill in fields for subroutine ZASNMS
+      *
+     C                     MOVELPGM       ZAPGM  10        Message queue
+     C**********           MOVEL'XXUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      ***
+      ***  Access to bank Details
+      ***
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check system data format (DDMMYY or MMDDYY):
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98            ON => MMDDYY
+     C                     END
+      *
+     C                     MOVELJOB       SWSID     P      contain wsid
+     C                     MOVELPGM       SJOB      P      contain pgmname
+     C                     MOVELUSER      SUSER     P
+     C                     MOVE BJMRDT    SRUNA
+      *
+     C                     MOVE *BLANK    CHAIN   1
+     C           1         CHAINAGDLSEPP             89
+     C           *IN89     IFEQ *OFF                                 B1
+     C                     MOVE DSAG      DSER
+      ***                                                                 155076
+      ***  Retrieve the number of decimal of the limit currency           155076
+      ***                                                                 155076
+     C                     MOVELAGCURR    WCYCD                           155076
+     C                     CALL 'AOCURRR0'                                155076
+     C                     PARM *BLANKS   WRTCD   7                       155076
+     C                     PARM '*KEY   ' WOPTN   7                       155076
+     C                     PARM           WCYCD   3                       155076
+     C           SDCURR    PARM SDCURR    DSSDY                           155076
+      *                                                                   155076
+     C           WRTCD     IFNE *BLANKS                                   155076
+     C                     Z-ADD0         WDCP    10                      155076
+     C                     ELSE                                           155076
+     C                     Z-ADDA6NBDP    WDCP                            155076
+     C                     ENDIF                                          155076
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE AGLIMI    ZFIELD
+     C*****                Z-ADD0         ZADEC                           155076
+     C                     Z-ADDWDCP      ZADEC                           155076
+     C           15        SUB  WDCP      ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    ERLIMI
+      ***  Get  data
+     C                     MOVEAAGACON    ACC
+     C*
+     C                     MOVE ACC,1     ERGA01
+     C                     MOVE ACC,2     ERGA02
+     C                     MOVE ACC,3     ERGA03
+     C                     MOVE ACC,4     ERGA04
+     C                     MOVE ACC,5     ERGA05
+     C                     MOVE ACC,6     ERGA06
+     C                     MOVE ACC,7     ERGA07
+     C                     MOVE ACC,8     ERGA08
+     C                     MOVE ACC,9     ERGA09
+     C                     MOVE ACC,10    ERGA10
+     C                     MOVE ACC,11    ERGA11
+     C                     MOVE ACC,12    ERGA12
+     C                     MOVE ACC,13    ERGA13
+     C                     MOVE ACC,14    ERGA14
+     C                     MOVE ACC,15    ERGA15
+     C                     MOVE ACC,16    ERGA16
+     C                     MOVE ACC,17    ERGA17
+     C                     MOVE ACC,18    ERGA18
+     C                     MOVE ACC,19    ERGA19
+     C                     MOVE ACC,20    ERGA20
+     C                     MOVE ACC,21    ERGA21
+     C                     MOVE ACC,22    ERGA22
+     C                     MOVE ACC,23    ERGA23
+     C                     MOVE ACC,24    ERGA24
+     C                     MOVE ACC,25    ERGA25
+     C                     MOVE ACC,26    ERGA26
+     C                     MOVE ACC,27    ERGA27
+     C                     MOVE ACC,28    ERGA28
+     C                     MOVE ACC,29    ERGA29
+     C                     MOVE ACC,30    ERGA30
+     C                     MOVE ACC,31    ERGA31
+     C                     MOVE ACC,32    ERGA32
+     C                     MOVE ACC,33    ERGA33
+     C                     MOVE ACC,34    ERGA34
+     C                     MOVE ACC,35    ERGA35
+     C                     MOVE ACC,36    ERGA36
+     C                     MOVE ACC,37    ERGA37
+     C                     MOVE ACC,38    ERGA38
+     C                     MOVE ACC,39    ERGA39
+     C                     MOVE ACC,40    ERGA40
+     C                     MOVE ACC,41    ERGA41
+     C                     MOVE ACC,42    ERGA42
+     C                     MOVE ACC,43    ERGA43
+     C                     MOVE ACC,44    ERGA44
+     C                     MOVE ACC,45    ERGA45
+     C                     MOVE ACC,46    ERGA46
+     C                     MOVE ACC,47    ERGA47
+     C                     MOVE ACC,48    ERGA48
+     C                     MOVE ACC,49    ERGA49
+     C                     MOVE ACC,50    ERGA50
+     C*
+     C                     MOVEAAGECON    ECS
+     C                     MOVE ECS,1     ERGE51
+     C                     MOVE ECS,2     ERGE52
+     C                     MOVE ECS,3     ERGE53
+     C                     MOVE ECS,4     ERGE54
+     C                     MOVE ECS,5     ERGE55
+     C                     MOVE ECS,6     ERGE56
+     C                     MOVE ECS,7     ERGE57
+     C                     MOVE ECS,8     ERGE58
+     C                     MOVE ECS,9     ERGE59
+     C                     MOVE ECS,10    ERGE60
+     C                     MOVE ECS,11    ERGE61
+     C                     MOVE ECS,12    ERGE62
+     C                     MOVE ECS,13    ERGE63
+     C                     MOVE ECS,14    ERGE64
+     C                     MOVE ECS,15    ERGE65
+     C                     MOVE ECS,16    ERGE66
+     C                     MOVE ECS,17    ERGE67
+     C                     MOVE ECS,18    ERGE68
+     C                     MOVE ECS,19    ERGE69
+     C                     MOVE ECS,20    ERGE70
+     C                     MOVE ECS,21    ERGE71
+     C                     MOVE ECS,22    ERGE72
+     C                     MOVE ECS,23    ERGE73
+     C                     MOVE ECS,24    ERGE74
+     C                     MOVE ECS,25    ERGE75
+     C                     MOVE ECS,26    ERGE76
+     C                     MOVE ECS,27    ERGE77
+     C                     MOVE ECS,28    ERGE78
+     C                     MOVE ECS,29    ERGE79
+     C                     MOVE ECS,30    ERGE80
+     C*
+     C                     ELSE                                    X1
+     C                     MOVE 'Y'       CHAIN
+     C                     MOVE *BLANKS   DSER
+     C**********           MOVE *BLANKS   ERACON                                              CER001
+     C                     MOVE *BLANKS   ERACN1                                              CER001
+     C                     MOVE *BLANKS   ERACN2                                              CER001
+     C                     MOVE *BLANKS   ERECON
+     C                     ENDIF                                   E1
+      *** Reset indicators
+      *
+     C                     MOVEA*OFF      *IN
+      ***  Start screen output
+      *
+      *
+     C                     ENDSR                           **#INIT ENDSR**
+      *===================================================================
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+      * for subroutine zalign used for check numeric field
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+      * for subroutine zedit  used for insert blanks.
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2005

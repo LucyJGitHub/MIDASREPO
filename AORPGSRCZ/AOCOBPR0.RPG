@@ -1,0 +1,200 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO System control ICD access object')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Access Objects                                   *
+     F*                                                               *
+     F*  AOCOBPR0 - READ ACCESS TO COB PROCESSING FILE                *
+     F*             I.C.D. RECORD - ONLY ONE RECORD IN FILE           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 100025             Date 09Feb96               *
+      *                 CAAA01             Date 10Jan95               *
+     F*                    S01517             DATE 07JUN94            *
+     F*                    S01491             DATE 07JUN94            *
+     F*                    036796             DATE 10JAN94            *
+     F*                    LN0115             DATE 21MAY90            *
+     F*                    S01230             DATE 23/11/89           *   S01230
+     F*                    S01230             DATE 06/11/89           *   S01230
+     F*                    E01168             DATE 22/02/89           *   S01230
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*     100025 - Field 'COB Control Profile' added to SDCOBPPD.   *
+     F*              Recompiled program.                              *
+     F*     CAAA01 - Field 'Graphical User Interface Active' added    *
+     F*              to SDCOBPPD, Recompiled program.                 *
+     F*     S01517 - Allow COB Component Bypass:                      *
+     F*              - Recompiled over changed SDCOBPL1.              *
+     F*     S01491 - Autocall Development:                            *
+     F*              - Recompiled over changed SDCOBPL1.              *
+     F*     036796 - A NEW FIELD HAS BEEN ADDED TO SDCOBPPD BY S01421 *
+     F*              - RECOMPILED PGM OVER AMENDED FILE.              *
+     F*     LN0115 - RECORD FORMAT SDCOBPPD CHANGED                   *
+     F*     S01230 - STANDARDISE ACCESS PROGRAMS                      *   S01230
+     F*                                                               *
+     F*****************************************************************   S01230
+     F*
+     F* ID F  C  H  L     FUNCTION OF INDICATORS
+     F*
+     F*       01       OPEN FILE
+     F*       90       FILE ERROR
+     F*       91       OPEN ERROR
+     F*       92       CLOSE ERROR
+     F*       93       EMPTY FILE
+     F*       96       OPTION ERROR
+     F*
+     F********************************************************************
+      /EJECT
+     F*FSTART
+      ************************************************************
+     FSDCOBPL1IF  E           K        DISK                           UC
+      **IN**-*@DOREG1*COB*PROCCESSING*(DXCD)*                             LN0115
+      * IN  - @D3REIR COB PROCCESSING (DXCD)                              LN0115
+      ************************************************************
+      /EJECT
+     E*ESTART
+      ***************************************************
+     E                    @MG     1   1 50
+      ***************************************************                 S01230
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+      ***************************************************                 S01230
+      /EJECT
+     I*ISTART
+      ************************************************************
+     IP@MGDA      DS
+     I                                        1  50 @MG
+      *
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     I**********D@FMT     E DSSDCOBPD0                                    S01230
+     ID@FMT     E DSSDCOBPPD                                              S01230
+      **@DOREG1*-*COB*PROCESSING*Record*Format*Data*Structure*            LN0115
+      * @D3REIR - COB PROCESSING Record Format Data Structure             LN0115
+      *
+     I*P@FMT       DS                             67                      E01168
+     I*                                       1  67 POCOPY                E01168
+     IP@FMT     E DSDSFDY                                                 S01230
+     I* External Data structure to hold the outgoing record format        S01230
+     I* of the file.                                                      S01230
+      *                                                                   S01230
+     I********P@FMT       DS                             18               S01230
+     I********                                1  18 POCOPY                S01230
+      * Copy of Record Format Data Structure to be Passed Back
+      * to the Calling Program After 1st Call.
+      *
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+      ************************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM D@FMT     P@FMT            O:Format
+      *****************************************************
+      *MAIN
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     9396   ¦ error flags
+      *
+      * First call - open file - read record - close file
+      *
+      * Subsequent calls will return the format.
+      *
+     C           P@OPTN    IFEQ '*FIRST  '                 IF 1  VALID
+     C           P@OPTN    OREQ '*NEXT   '                       Option
+     C           P@OPTN    OREQ '*PREV   '                       Has
+     C           P@OPTN    OREQ '*LAST   '                       Been
+     C           P@OPTN    OREQ '*KEY    '                       Entered
+     C           P@OPTN    OREQ '*LAST   '
+     C           P@OPTN    OREQ '*SAME   '
+     C           P@OPTN    OREQ '*VERIFY '
+     C           *IN01     IFEQ '0'                        IF 2 First Time
+     C                     SETON                     01      Set ind.
+     C                     OPEN SDCOBPL1               91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C*******************  READ @DOREG1                9093  Read record  LN0115
+     C                     READ @D3REIR                9093  Read record  LN0115
+     C                     CLOSESDCOBPL1               92    Close file
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C           *IN93     CABEQ'1'       T@SKIP         LR  Empty error
+     C                     SETON                     LR      Set ind.
+     C                     END                             FI 2
+     C                     ELSE                              Else 1
+     C                     SETON                     96      Invalid Optn
+     C                     END                             FI 1
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   96                MOVE '*OPTION' P@RTCD           Option Invalid
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 9 SEND MSG
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   96                MOVE 'ACO1007' P@MGID             OPTION INVAL
+     C                     CALL 'ZASNMG'                     <SEND MSG>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Prog name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Msg ID
+     C                     PARM *BLANK    P@MSGF 10          I:Msg file
+     C                     PARM *BLANK    P@MGKY  4          O:Msg key
+     C                     PARM           P@MGDA 50          I:Msg data
+     C                     PARM '*DIAG'   P@MGTP  7          I:Msg type
+     C                     END                             FI 9
+      *
+      * Caller Requests DB Error Handling
+      *
+     C           W@RTCD    IFEQ '*DBERR'                   IF 10
+     C           P@RTCD    ANDNE*BLANK                       AND
+     C                     DUMP                              DUMP Prog
+     C                     CALL 'DBERRCTL'                   Error Prog
+     C                     END                             FI 10
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+      *ENDMAIN
+**
+SDCOBPD0  AOCOBPR0  System Control ICD data
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

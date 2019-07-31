@@ -1,0 +1,623 @@
+     C**********************************************************************
+     C**
+     C** ZDYYR - SUBROUTINE TO CALCULATE NO OF DAYS IN INTEREST YEAR
+     C**
+     C**  INPUT  -  NCD (5,0) NEXT COUPON DATE FROM ZNCD
+     C**            DVBS (1)  DIVISOR BASIS FROM SECTYD
+     C**            LCPN (5,0) LAST COUPON DATE FROM SECTYD
+     C**            ITLD (5,0) INITIAL DATE FROM SECTYD
+     C**            MATY (5,0) MATURITY DATE FROM SECTYD
+     C**            CR01/12 (1*12) RATE/PAYMENT INDS FROM SECTYD
+     C**
+     C**
+     C**  OUTPUT -  ZINTDD (5,0) NO OF DAYS IN INTEREST YEAR
+     C**
+     C**  CALLS ZDAYS (ZDATE2)
+     C**  USES ARRAY CR FOR RATE/PAYMENT INDICATORS
+     C**
+      *  Last Amend No. 226449             Date 24Jun15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 180056             Date 28Sep00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C**                151945             Date 05JAN98               *
+     C**                100228             Date 10JAN96               *
+     C**                 S01117           DATE 21JAN91
+     C**                 E14496           DATE 02NOV89
+     C**                 E17303           DATE 15/03/89
+     C**
+     C**-----------------------------------------------------------------*
+     C**                                                                 *
+      *  226449 - Wrong interest calculated due to wrong number of       *
+      *           days in interest used for divisor basis 3. Fix is to   *
+      *           avoid comparing month of next coupon date to month     *
+      *           of maturity date. Applied fix 211867.                  *
+      *         - Applied for MD034387.                                  *
+      *  180056 - The number of days in interest year is being calcu-    *
+      *           lated incorrectly for divisor basis 5 if the coupon    *
+      *           days between the initial date and the first coupon     *
+      *           date is significantly shorter or longer than the       *
+      *           coupon days between periods as defined on the array.   *
+      *           Applied the complete version of core fix 151945.       *
+     C**  151945 - FOR SECURITIES USING DIVISOR BASIS 5, USE CORRECT LAST*
+     C**           COUPON DATE TO CALCULATE NUMBER OF DAYS IN CURRENT    *
+     C**           COUPON PERIOD. IN CASE OF FIRST COUPON DATE IN THE    *
+     C**           FUTURE AND OF INITIAL DATE HIGHER THAN HYPOTHETICAL   *
+     C**           LAST COUPON DATE, INITIAL DATE WAS CONSIDERED AS LAST *
+     C**           COUPON (NOTE THIS MUST BE KEPT FOR CALCULATION OF NB  *
+     C**           OF ACCRUAL DAYS)                                      *
+     C**  100228 - Call ZLCD and ZNCD instead of ZD5DYS for coupon date  *
+     C**           calculation to ensure 29FEB is considered valid.      *
+     C**  S01117 - New SD files (Multibranching)                         *
+     C**  E14496 - FOR DIV. BASIS 5 DETERMINATION OF LENGTH OF            E14496
+     C**           COUPON PERIOD DOES NOT HANDLE SHORT/LONG COUPONS.      E14496
+     C**  E17303 - TO SAVE FIELD 'ZDDAYS' THAT IS ALSO USED IN           *E17303
+     C**           SUBROUTINE ZDAYS.                                     *E17303
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           ZDYYR     BEGSR                           ** ZDYYR BEGSR **
+     C*
+     C* DIVISOR BASIS 1
+     C*
+     C           DVBS      IFEQ '1'
+     C                     Z-ADD360       ZINTDD  50
+     C                     ELSE
+     C*
+     C* DIVISOR BASIS 2
+     C*
+     C           DVBS      IFEQ '2'
+     C                     Z-ADD365       ZINTDD
+     C                     ELSE
+     C*
+     C* DIVISOR BASIS 3
+     C*    CHECK WHETHER INTEREST YEAR IS LEAP YEAR (DEFINED ACCORDING  TO
+     C*     TO MATURITY DATE OF THE SECURITY)
+     C*
+     C           DVBS      IFEQ '3'
+     C* GET MMDD FOR NEXT COUPON DATE
+     C                     Z-ADDNCD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     ZNCDY   20
+     C*
+     C*  CHECK FORMAT DD/MM/YY OR MM/DD/YY
+     C*
+     C********** *IN98     IFEQ '0'                                                           226449
+     C**********           MOVE ZDATE     ZNCDMD  40                                          226449
+     C**********           MOVELZDATE     ZNCDD   20                                          226449
+     C**********           MOVE ZNCDD     ZNCDMD                                              226449
+     C**********           ELSE                                                               226449
+     C**********           MOVELZDATE     ZNCDMD                                              226449
+     C**********           END                                                                226449
+     C*
+     C* GET MMDD FOR MATURITY DATE
+     C**********           Z-ADDMATY      ZDAYNO                                              226449
+     C**********           EXSR ZDATE2                                                        226449
+     C*
+     C*  CHECK FORMAT DD/MM/YY OR MM/DD/YY
+     C*
+     C           *IN98     IFEQ '0'
+     C                     MOVE ZDATE     ZMATMD  40
+     C                     MOVELZDATE     ZMATD   20
+     C                     MOVE ZMATD     ZMATMD
+     C                     MOVELZMATMD    ZMATM   20
+     C                     ELSE
+     C                     MOVELZDATE     ZMATMD
+     C                     MOVELZWRK4     ZMATM
+     C                     END
+     C*
+     C* ESTABLISH START OF YEAR, END OF YEAR, IN WHICH NEXT COUPON DATE
+     C* FALLS ( YEAR NOS ONLY NEEDED)
+     C*
+     C********** ZNCDMD    IFGT ZMATMD                                                        226449
+     C**********           Z-ADDZNCDY     ZSOY    20                                          226449
+     C********** ZNCDY     ADD  1         ZEOY    20                                          226449
+     C**********           ELSE                                                               226449
+     C********** ZNCDY     SUB  1         ZSOY                                                226449
+     C**********           Z-ADDZNCDY     ZEOY                                                226449
+     C**********           END                                                                226449
+     C* DOES THIS YEAR ALSO CONTAIN FEB29, IE IS IT A LEAP YEAR?
+     C*
+     C*  MAT MONTH GT FEB
+     C           ZMATM     IFGT 02
+     C                     Z-ADDZNCDY     ZEOY                                                226449
+     C                     ELSE                                                               226449
+     C           ZNCDY     SUB  1         ZEOY    20                                          226449
+     C                     ENDIF                                                              226449
+     C           ZEOY      DIV  4         ZWK     20
+     C                     MVR            ZREM    10
+     C           ZREM      IFNE 0
+     C                     Z-ADD365       ZINTDD
+     C                     ELSE
+     C                     Z-ADD366       ZINTDD
+     C                     END
+     C**********           ELSE                                                               226449
+     C*  MAT MONTH IS JAN OR FEB
+     C********** ZSOY      DIV  4         ZWK                                                 226449
+     C**********           MVR            ZREM                                                226449
+     C********** ZREM      IFNE 0                                                             226449
+     C**********           Z-ADD365       ZINTDD                                              226449
+     C**********           ELSE                                                               226449
+     C**********           Z-ADD366       ZINTDD                                              226449
+     C**********           END                                                                226449
+     C**********           END                                                                226449
+     C*
+     C                     ELSE
+     C*
+     C* DIVISOR BASIS 5
+     C           DVBS      IFEQ '5'
+     C*
+     C*                                                                   E14496
+     C**CALL*ZD5DYS*TO*DETERMINE*HYPOTHETICAL*NEXT*AND*LAST*COUPON*DE14496100228
+     C************         EXSR ZD5DYS                              E14496100228
+     C************                                                 100228 180056
+     C**CALL*ZLCD*+*ZNCD*TO*DETERMINE*NEXT*AND*LAST*COUPON*DATES***100228 180056
+     C***********          Z-ADDNCD       @NCD    50               100228 180056
+     C***********          EXSR ZNCD                               100228 180056
+     C***********          Z-ADDNCD       NCDD5   50               100228 180056
+     C***********          Z-ADD@NCD      NCD                      100228 180056
+     C***********          Z-ADDZZLCD     @LCD    50               100228 180056
+     C***********NCDD5     SUB  1         ZECD                     100228 180056
+     C***********          EXSR ZLCD                               100228 180056
+     C*********            Z-ADDZZLCD     LCDD5   50                100228151945
+     C***********          Z-ADDZDAYNO    LCDD5   50               151945 180056
+     C***********          Z-ADD@LCD      ZZLCD                    100228 180056
+      *                                                                   180056
+      ** Call ZD5DYS to determine the hypothetical next and last          180056
+      ** coupon dates.                                                    180056
+      *                                                                   180056
+     C                     EXSR ZD5DYS                                    180056
+     C*
+     C*     CALCULATE NO OF DAYS IN CURRENT COUPON PERIOD
+     C*
+     C* SAVE START AND END DATES                                          E14496
+     C*                                                                   E14496
+     C                     Z-ADDZSDATE    ZSSDAT  50                      E14496
+     C                     Z-ADDZEDATE    ZESDAT  50                      E14496
+     C*********************Z-ADDZDTE      ZSDATE  50                      E14496
+     C*********************Z-ADDNCD       ZEDATE  50                      E14496
+     C                     Z-ADDZDDAYS    SVDAYS  50                      E17303
+     C                     Z-ADDLCDD5     ZSDATE  50                      E14496
+     C                     Z-ADDNCDD5     ZEDATE  50                      E14496
+     C                     EXSR ZDAYS
+     C*
+     C* CALCULATE NO OF COUPON PERIODS IN A YEAR
+     C*
+     C*
+     C                     Z-ADD0         ZS
+     C                     Z-ADD0         ZWCP    20
+     C*
+     C           ZS        DOUEQ12
+     C                     ADD  1         ZS
+     C           CR,ZS     IFEQ 'P'
+     C           CR,ZS     OREQ 'C'
+     C                     ADD  1         ZWCP
+     C                     END
+     C                     END
+     C*
+     C*    CALCULATE NO OF DAYS = NO DAYS IN CURRENT COUPON PERIOD *
+     C*                           NO COUPON PERIODS IN A YEAR
+     C*
+     C           ZDDAYS    MULT ZWCP      ZINTDD
+     C                     Z-ADDSVDAYS    ZDDAYS                          E17303
+     C*
+     C*RESTORE ORIGINAL START AND END DATES FOR PASSING BACK              E14496
+     C*                                                                   E14496
+     C                     Z-ADDZSSDAT    ZSDATE                          E14496
+     C                     Z-ADDZESDAT    ZEDATE                          E14496
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR                           *** ENDSR ***
+     C*
+     C**********************************************************************
+     C********************************************************************E14496
+     C*****SUBROUTINE-*ZD5DYS***************************************E14496100228
+     C*****DETERMINE*NUMBER*OF*DAYS*IN*COUPON*PERIOD*FOR*DIV.*BASIS*514496100228
+     C*********(*ERROR*FIX*E14496*)*********************************E14496100228
+     C**************************************************************E14496100228
+     C**************************************************************E14496100228
+     C****INPUT*-*CD*ARRAY*-*COUPON*DATES*-*SECTYD*SECURITY*FILE****E14496100228
+     C************CR*ARRAY*-*RATE/PAYT*INDICS*-*SECTYD*SECURITY*FILEE14496100228
+     C************MATY*-*MATURITY*DATE*-*SECTYD*SECURITY*FILE*******E14496100228
+     C************ECD*-*EVENT*CONTROL*DTAE*-*ZEVCD*PROCESS**********E14496100228
+     C******************(EXCEPT*IN*SE0050*INTEREST*CALCULATIONS,****E14496100228
+     C*******************WHERE*THE*TRADE*VALUE*DATE*MUST*BE*USED.)**E14496100228
+     C*************IN98*-*DATE*FORMAT*-*FROM*TABTG10*REC*VIA*ZSYSTM*E14496S01117
+     C*************IN98*-*DATE*FORMAT*-*FROM*RUNDAT*VIA*PROGRAM*****S01117100228
+     C**************************************************************E14496100228
+     C****OUTPUT*-*NCDD5*(5,0)*-*HYPOTHETICAL*NEXT*COUPON*DATE******E14496100228
+     C*************LCDD5*(5,0)*-*HYPOTHETICAL*LAST*COUPON*DATE******E14496100228
+     C**************************************************************E14496100228
+     C****CALLS**-*ZDATE1*******************************************E14496100228
+     C*************ZDATE2*******************************************E14496100228
+     C**************************************************************E14496100228
+     C**************************************************************E14496100228
+     C************                                                  E14496100228
+     C***********ZD5DYS    BEGSR                           *** ZD5DYE14496100228
+     C************                                                  E14496100228
+     C**CALL*ZDATE2 TO OBTAIN MMDD FOR EVENT CONTROL DATE           E14496100228
+     C************         Z-ADDECD       ZDAYNO                    E14496100228
+     C************         EXSR ZDATE2                              E14496100228
+     C************         MOVELZDATE     ZZECD4  40                E14496100228
+     C************IN98     IFEQ '0'                                 E14496100228
+     C************         MOVELZZECD4    ZZWRKD                    E14496100228
+     C************         MOVE ZZECD4    ZZWRKM                    E14496100228
+     C************         Z-ADDZZWRKD    ZZECD4                    E14496100228
+     C************         MOVELZZWRKM    ZZECD4                    E14496100228
+     C************         END                                      E14496100228
+     C************                                                  E14496100228
+     C**IF*DATE*FORMAT IS DDMMYY TURN ROUND ARRAY OF COUPON DATES TOE14496100228
+     C************IN98     IFEQ '0'                                 E14496100228
+     C************         DO   12        ZQI     20                E14496100228
+     C************         MOVE CD,ZQI    ZZWRKM  20                E14496100228
+     C************         MOVELCD,ZQI    ZZWRKD  20                E14496100228
+     C************         Z-ADDZZWRKD    CD,ZQI                    E14496100228
+     C************         MOVELZZWRKM    CD,ZQI                    E14496100228
+     C************         END                                      E14496100228
+     C************         END                                      E14496100228
+     C**GET*YEAR*FOR ECD                                            E14496100228
+     C************         MOVE ZDATE     ZECDYR  20                E14496100228
+     C************                                                  E14496100228
+     C**FIND*NEXT*COUPON DATE FROM ARRAYS -                         E14496100228
+     C***IF*RATE/PAYT INDS ALL BLANK NCD=MATURITY DATE LCD=INITIAL DE14496100228
+     C*********SHOULD NEVER HAPPEN FOR DIVISOR BASIS 5  ***         E14496100228
+     C************         Z-ADDMATY      NCDD5   50                E14496100228
+     C************         Z-ADDITLD      LCDD5   50                E14496100228
+     C***********CRDS      IFNE *BLANKS                             E14496100228
+     C***IF*RATE/PAYT INDS NOT ALL BLANK -                          E14496100228
+     C*****SEARCH*FOR NEXT HIGHEST COUPON                           E14496100228
+     C************         MOVE '0'       ZFOUND  1                 E14496100228
+     C************         MOVE '0'       YFOUND  1                 E14496100228
+     C************         DO   12        ZQI                       E14496100228
+     C***********CR,ZQI    IFEQ 'P'                                 E14496100228
+     C***********CR,ZQI    OREQ 'C'                                 E14496100228
+     C***********ZZECD4    IFLE CD,ZQI                              E14496100228
+     C***********ZFOUND    ANDEQ'0'                                 E14496100228
+     C****NCD*FOUND - ADD ECD'S YY TO FORM DATE                     E14496100228
+     C************         Z-ADDZECDYR    ZDATE                     E14496100228
+     C************         MOVELCD,ZQI    ZDATE                     E14496100228
+     C************         MOVE '1'       ZFOUND                    E14496100228
+     C************         END                                      E14496100228
+     C************                                                  E14496100228
+     C***********ZZECD4    IFGT CD,ZQI                              E14496100228
+     C************         Z-ADDZQI       ZRI     20                E14496100228
+     C************         MOVE '1'       YFOUND  1                 E14496100228
+     C************         END                                      E14496100228
+     C************         END                                      E14496100228
+     C************         END                                      E14496100228
+     C****LCD*FOUND - ADD ECD'S YY TO FORM DATE                     E14496100228
+     C***********YFOUND    IFEQ '1'                                 E14496100228
+     C************         Z-ADDZECDYR    YDATE   60                E14496100228
+     C************         MOVELCD,ZRI    YDATE                     E14496100228
+     C************         END                                      E14496100228
+     C****NCD*NOT*FOUND - USE FIRST COUPON FOR NEXT COUPON DATE     E14496100228
+     C************        ADD NEXT YEAR'S YY TO FORM DATE           E14496100228
+     C****LCD*NOT*FOUND - USE LAST COUPON FOR LAST COUPON DATE      E14496100228
+     C************        ADD LAST YEAR'S YY TO FORM DATE           E14496100228
+     C***********ZFOUND    IFNE '1'                                 E14496100228
+     C***********YFOUND    ORNE '1'                                 E14496100228
+     C************         DO   12        ZQI                       E14496100228
+     C***********CR,ZQI    IFEQ 'P'                                 E14496100228
+     C***********CR,ZQI    OREQ 'C'                                 E14496100228
+     C************         Z-ADDZQI       ZRI                       E14496100228
+     C***********ZFOUND    IFEQ '0'                                 E14496100228
+     C************         Z-ADDZECDYR    ZDATE                     E14496100228
+     C************         ADD  1         ZDATE                     E14496100228
+     C************         MOVELCD,ZQI    ZDATE                     E14496100228
+     C************         MOVE '1'       ZFOUND                    E14496100228
+     C************         END                                      E14496100228
+     C************         END                                      E14496100228
+     C************         END                                      E14496100228
+     C************                                                  E14496100228
+     C***********YFOUND    IFEQ '0'                                 E14496100228
+     C***********ZECDYR    SUB  1         YDATE   60                E14496100228
+     C************         MOVELCD,ZRI    YDATE                     E14496100228
+     C************         MOVE '1'       YFOUND  1                 E14496100228
+     C************         END                                      E14496100228
+     C************         END                                      E14496100228
+     C************                                                  E14496100228
+     C**CONVERT*DATE TO DAY NO USING ZDATE1                         E14496100228
+     C**(NOT*DONE*IF NO RATE/PAYT IND IS P OR C)                    E14496100228
+     C**IF*DDMMYY*FORMAT TURN ROUND TO MMDDYY                       E14496100228
+     C***********ZFOUND    IFEQ '1'                                 E14496100228
+     C************IN98     IFEQ '0'                                 E14496100228
+     C************         MOVELZDATE     ZZWRK   40                E14496100228
+     C************         MOVE ZZWRK     ZZWRKM                    E14496100228
+     C************         MOVELZZWRK     ZZWRKD                    E14496100228
+     C************         Z-ADDZZWRKD    ZZWRK                     E14496100228
+     C************         MOVELZZWRKM    ZZWRK                     E14496100228
+     C************         MOVELZZWRK     ZDATE                     E14496100228
+     C************         END                                      E14496100228
+     C************         EXSR ZDATE1                              E14496100228
+     C************         Z-ADDZDAYNO    NCDD5                     E14496100228
+     C************         END                                      E14496100228
+     C************                                                  E14496100228
+     C***********YFOUND    IFEQ '1'                                 E14496100228
+     C************         MOVE YDATE     ZDATE                     E14496100228
+     C************IN98     IFEQ '0'                                 E14496100228
+     C************         MOVELZDATE     ZZWRK   40                E14496100228
+     C************         MOVE ZZWRK     ZZWRKM                    E14496100228
+     C************         MOVELZZWRK     ZZWRKD                    E14496100228
+     C************         Z-ADDZZWRKD    ZZWRK                     E14496100228
+     C************         MOVELZZWRKM    ZZWRK                     E14496100228
+     C************         MOVELZZWRK     ZDATE                     E14496100228
+     C************         END                                      E14496100228
+     C************         EXSR ZDATE1                              E14496100228
+     C************         Z-ADDZDAYNO    LCDD5                     E14496100228
+     C************         END                                      E14496100228
+     C************         END                                      E14496100228
+     C************                                                  E14496100228
+     C**IF*DATE*FORMAT IS DDMMYY TURN BACK ARRAY OF COUPON DATES TO E14496100228
+     C************IN98     IFEQ '0'                                 E14496100228
+     C************         DO   12        ZQI     20                E14496100228
+     C************         MOVELCD,ZQI    ZZWRKM  20                E14496100228
+     C************         MOVE CD,ZQI    ZZWRKD  20                E14496100228
+     C************         Z-ADDZZWRKM    CD,ZQI                    E14496100228
+     C************         MOVELZZWRKD    CD,ZQI                    E14496100228
+     C************         END                                      E14496100228
+     C************         END                                      E14496100228
+     C************                                                  E14496100228
+     C************         ENDSR                                    E14496100228
+     C**************************************************************E14496100228
+      *****************************************************************   180056
+      *    SUBROUTINE- ZD5DYS                                         *   180056
+      *    DETERMINE NUMBER OF DAYS IN COUPON PERIOD FOR DIV. BASIS 5 *   180056
+      *                                                               *   180056
+      *                                                               *   180056
+      *   INPUT - CD ARRAY - COUPON DATES - SECTYD SECURITY FILE      *   180056
+      *           CR ARRAY - RATE/PAYT INDICS - SECTYD SECURITY FILE  *   180056
+      *           MATY - MATURITY DATE - SECTYD SECURITY FILE         *   180056
+      *           ECD - EVENT CONTROL DTAE - ZEVCD PROCESS            *   180056
+      *                 (EXCEPT IN SE0050 INTEREST CALCULATIONS,      *   180056
+      *                  WHERE THE TRADE VALUE DATE MUST BE USED.)    *   180056
+      *           *IN98 - DATE FORMAT - FROM RUNDAT VIA PROGRAM       *   180056
+      *                                                               *   180056
+      *   OUTPUT - NCDD5 (5,0) - HYPOTHETICAL NEXT COUPON DATE        *   180056
+      *            LCDD5 (5,0) - HYPOTHETICAL LAST COUPON DATE        *   180056
+      *                                                               *   180056
+      *   CALLS  - ZDATE1                                             *   180056
+      *            ZDATE2                                             *   180056
+      *                                                               *   180056
+      *****************************************************************   180056
+      *                                                                   180056
+     C           ZD5DYS    BEGSR                                          180056
+      *                                                                   180056
+     C                     Z-ADD0         TX      20                      180056
+      *                                                                   180056
+      ** Call ZDATE2 to obtain MMDD for event control date                180056
+      *                                                                   180056
+     C                     Z-ADDECD       ZDAYNO                          180056
+     C                     EXSR ZDATE2                                    180056
+     C                     MOVELZDATE     ZZECD4  40                      180056
+     C           *IN98     IFEQ '0'                                       180056
+     C                     MOVELZZECD4    ZZWRKD                          180056
+     C                     MOVE ZZECD4    ZZWRKM                          180056
+     C                     Z-ADDZZWRKD    ZZECD4                          180056
+     C                     MOVELZZWRKM    ZZECD4                          180056
+     C                     END                                            180056
+      *                                                                   180056
+      ** If date format is DDMMYY turn round array of coupon dates        180056
+      ** to MM/DD                                                         180056
+      *                                                                   180056
+     C           *IN98     IFEQ '0'                                       180056
+     C                     DO   12        ZQI     20                      180056
+     C                     MOVE CD,ZQI    ZZWRKM  20                      180056
+     C                     MOVELCD,ZQI    ZZWRKD  20                      180056
+     C                     Z-ADDZZWRKD    CD,ZQI                          180056
+     C                     MOVELZZWRKM    CD,ZQI                          180056
+     C                     END                                            180056
+     C                     END                                            180056
+      *                                                                   180056
+      ** Get year for ECD                                                 180056
+      *                                                                   180056
+     C                     MOVE ZDATE     ZECDYR  20                      180056
+      *                                                                   180056
+      ** Find next coupon date from arrays -                              180056
+      ** If rate/payt inds all blank NCD=maturity date LCD=initial date   180056
+      ** Should never happen for divisor basis 5                          180056
+      *                                                                   180056
+     C                     Z-ADDMATY      NCDD5   50                      180056
+     C                     Z-ADDITLD      LCDD5   50                      180056
+     C           CRDS      IFNE *BLANKS                                   180056
+      *                                                                   180056
+      ** If rate/payt inds not all blank                                  180056
+      ** Search for next highest coupon                                   180056
+      *                                                                   180056
+     C                     MOVE '0'       ZFOUND  1                       180056
+     C                     MOVE '0'       YFOUND  1                       180056
+     C                     DO   12        ZQI                             180056
+     C           CR,ZQI    IFEQ 'P'                                       180056
+     C           CR,ZQI    OREQ 'C'                                       180056
+      *                                                                   180056
+      ** If 29Feb is used in the coupon array, then there is a need to    180056
+      ** check if the current year is a leap year. If it is not,          180056
+      ** the coupon date is changed to 28.                                180056
+      *                                                                   180056
+     C                     MOVELCD,ZQI    ZZWRKM                          180056
+     C                     MOVE CD,ZQI    ZZWRKD                          180056
+     C           ZZWRKM    IFEQ 2                                         180056
+     C           ZZWRKD    ANDEQ29                                        180056
+     C                     Z-ADDZECDYR    ZZYR    20                      180056
+     C           ZZYR      ADD  28        ZZYR                            180056
+     C           ZZYR      DIV  4         ZZYR                            180056
+     C                     MVR            ZMVR    10                      180056
+     C           ZMVR      IFGT 0                                         180056
+     C                     Z-ADDZQI       TX                              180056
+     C                     MOVE '28'      CD,ZQI                          180056
+     C                     END                                            180056
+     C                     END                                            180056
+      *                                                                   180056
+     C           ZZECD4    IFLE CD,ZQI                                    180056
+     C           ZFOUND    ANDEQ'0'                                       180056
+      *                                                                   180056
+      ** NCD Found - Add ECD'S YY to form date                            180056
+      *                                                                   180056
+     C                     Z-ADDZECDYR    ZDATE                           180056
+     C                     MOVELCD,ZQI    ZDATE                           180056
+     C                     MOVE '1'       ZFOUND                          180056
+     C                     END                                            180056
+      *                                                                   180056
+     C           ZZECD4    IFGT CD,ZQI                                    180056
+     C                     Z-ADDZQI       ZRI     20                      180056
+     C                     MOVE '1'       YFOUND  1                       180056
+     C                     END                                            180056
+     C                     END                                            180056
+     C                     END                                            180056
+      *                                                                   180056
+      ** LCD Found - Add ECD'S YY to form date                            180056
+      *                                                                   180056
+     C           YFOUND    IFEQ '1'                                       180056
+     C                     Z-ADDZECDYR    YDATE   60                      180056
+     C                     MOVELCD,ZRI    YDATE                           180056
+     C                     END                                            180056
+      *                                                                   180056
+      ** Restored array back after the check.                             180056
+      *                                                                   180056
+     C           TX        IFNE 0                                         180056
+     C                     MOVE '29'      CD,TX                           180056
+     C                     Z-ADD0         TX                              180056
+     C                     END                                            180056
+      *                                                                   180056
+      **  NCD Not Found - Use first coupon for next coupon date           180056
+      **                  Add next year's YY to form date                 180056
+      **  LCD Not Found - Use last coupon for last coupon date            180056
+      **                  Add last year's YY to form date                 180056
+      *                                                                   180056
+     C           ZFOUND    IFNE '1'                                       180056
+     C           YFOUND    ORNE '1'                                       180056
+     C                     DO   12        ZQI                             180056
+     C           CR,ZQI    IFEQ 'P'                                       180056
+     C           CR,ZQI    OREQ 'C'                                       180056
+     C                     Z-ADDZQI       ZRI                             180056
+     C           ZFOUND    IFEQ '0'                                       180056
+     C                     Z-ADDZECDYR    ZDATE                           180056
+     C                     ADD  1         ZDATE                           180056
+      *                                                                   180056
+      ** If 29Feb is used in the coupon array, then there is a need to    180056
+      ** check if the current year is a leap year. If it is not,          180056
+      ** the coupon date is changed to 28.                                180056
+      *                                                                   180056
+     C                     MOVELCD,ZQI    ZZWRKM                          180056
+     C                     MOVE CD,ZQI    ZZWRKD                          180056
+     C           ZZWRKM    IFEQ 2                                         180056
+     C           ZZWRKD    ANDEQ29                                        180056
+     C                     Z-ADDZECDYR    ZZYR    20                      180056
+     C                     ADD  1         ZZYR                            180056
+     C           ZZYR      ADD  28        ZZYR                            180056
+     C           ZZYR      DIV  4         ZZYR                            180056
+     C                     MVR            ZMVR    10                      180056
+     C           ZMVR      IFGT 0                                         180056
+     C                     Z-ADDZQI       TX                              180056
+     C                     MOVE '28'      CD,ZQI                          180056
+     C                     END                                            180056
+     C                     END                                            180056
+      *                                                                   180056
+     C                     MOVELCD,ZQI    ZDATE                           180056
+     C                     MOVE '1'       ZFOUND                          180056
+      *                                                                   180056
+      ** Restored array back after the check.                             180056
+      *                                                                   180056
+     C           TX        IFNE 0                                         180056
+     C                     MOVE '29'      CD,TX                           180056
+     C                     Z-ADD0         TX                              180056
+     C                     END                                            180056
+      *                                                                   180056
+     C                     END                                            180056
+     C                     END                                            180056
+     C                     END                                            180056
+      *                                                                   180056
+     C           YFOUND    IFEQ '0'                                       180056
+      *                                                                   180056
+      ** If ECD year is 00 and ECD year - 1, should be 99 not -01         180056
+      *                                                                   180056
+     C           ZECDYR    IFEQ 0                                         180056
+     C                     Z-ADD99        YDATE                           180056
+     C                     ELSE                                           180056
+     C           ZECDYR    SUB  1         YDATE   60                      180056
+     C                     END                                            180056
+      *                                                                   180056
+      ** If 29Feb is used in the coupon array, then there is a need to    180056
+      ** check if the current year is a leap year. If it is not,          180056
+      ** the coupon date is changed to 28.                                180056
+      *                                                                   180056
+     C                     MOVELCD,ZRI    ZZWRKM                          180056
+     C                     MOVE CD,ZRI    ZZWRKD                          180056
+     C           ZZWRKM    IFEQ 2                                         180056
+     C           ZZWRKD    ANDEQ29                                        180056
+     C                     Z-ADDZECDYR    ZZYR    20                      180056
+     C                     SUB  1         ZZYR                            180056
+     C           ZZYR      ADD  28        ZZYR                            180056
+     C           ZZYR      DIV  4         ZZYR                            180056
+     C                     MVR            ZMVR    10                      180056
+     C           ZMVR      IFGT 0                                         180056
+     C                     Z-ADDZRI       TX                              180056
+     C                     MOVE '28'      CD,ZRI                          180056
+     C                     END                                            180056
+     C                     END                                            180056
+      *                                                                   180056
+     C                     MOVELCD,ZRI    YDATE                           180056
+      *                                                                   180056
+      ** Restored array back after the check.                             180056
+      *                                                                   180056
+     C           TX        IFNE 0                                         180056
+     C                     MOVE '29'      CD,TX                           180056
+     C                     Z-ADD0         TX                              180056
+     C                     END                                            180056
+      *                                                                   180056
+     C                     MOVE '1'       YFOUND  1                       180056
+     C                     END                                            180056
+     C                     END                                            180056
+      *                                                                   180056
+      ** Convert date to day number using ZDATE1                          180056
+      ** (Not done if no rate/payt ind is P or C)                         180056
+      ** If DDMMYY format turn round to MMDDYY                            180056
+      *                                                                   180056
+     C           ZFOUND    IFEQ '1'                                       180056
+     C           *IN98     IFEQ '0'                                       180056
+     C                     MOVELZDATE     ZZWRK   40                      180056
+     C                     MOVE ZZWRK     ZZWRKM                          180056
+     C                     MOVELZZWRK     ZZWRKD                          180056
+     C                     Z-ADDZZWRKD    ZZWRK                           180056
+     C                     MOVELZZWRKM    ZZWRK                           180056
+     C                     MOVELZZWRK     ZDATE                           180056
+     C                     END                                            180056
+     C                     EXSR ZDATE1                                    180056
+     C                     Z-ADDZDAYNO    NCDD5                           180056
+     C                     END                                            180056
+      *                                                                   180056
+     C           YFOUND    IFEQ '1'                                       180056
+     C                     MOVE YDATE     ZDATE                           180056
+     C           *IN98     IFEQ '0'                                       180056
+     C                     MOVELZDATE     ZZWRK   40                      180056
+     C                     MOVE ZZWRK     ZZWRKM                          180056
+     C                     MOVELZZWRK     ZZWRKD                          180056
+     C                     Z-ADDZZWRKD    ZZWRK                           180056
+     C                     MOVELZZWRKM    ZZWRK                           180056
+     C                     MOVELZZWRK     ZDATE                           180056
+     C                     END                                            180056
+     C                     EXSR ZDATE1                                    180056
+     C                     Z-ADDZDAYNO    LCDD5                           180056
+     C                     END                                            180056
+     C                     END                                            180056
+      *                                                                   180056
+      ** If date format is DDMMYY turn back array of coupon dates         180056
+      ** to DD/MM                                                         180056
+      *                                                                   180056
+     C           *IN98     IFEQ '0'                                       180056
+     C                     DO   12        ZQI     20                      180056
+     C                     MOVELCD,ZQI    ZZWRKM  20                      180056
+     C                     MOVE CD,ZQI    ZZWRKD  20                      180056
+     C                     Z-ADDZZWRKM    CD,ZQI                          180056
+     C                     MOVELZZWRKD    CD,ZQI                          180056
+     C                     END                                            180056
+     C                     END                                            180056
+      *                                                                   180056
+     C                     ENDSR                                          180056
+     C*****************************************************************   180056

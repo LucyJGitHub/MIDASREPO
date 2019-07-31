@@ -1,0 +1,747 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Collateral Types Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0721P - Collateral Types Report                            *
+      *                                                               *
+      *  Function:  This program will generate a new report detailing *
+      *             records in the Collateral Types File.  It will be *
+      *             available on request in I/C/ and COB to produce a *
+      *             full list of all collateral types on the system.  *
+      *             It will also run automatically during COB to      *
+      *             produce an audit list of all collateral types     *
+      *             inserted, amended, or deleted that day.           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CGL011  *CREATE    Date 20Sep99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CGL011 - Collateral Processing for Midas                     *
+      *                                                               *
+      *****************************************************************
+     FSDCOTPL1IF  E           K        DISK
+      ** Collateral Types File
+      *
+     FSDFCTLL0UF  E           K        DISK
+      ** Standing Data Controls
+      *
+     FSD0721PAO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FSD0721P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   20  - AUDIT or FULL Header                                  *
+      *   21  - File out of Balance                                   *
+      *   37  - Multibranching ON                                     *
+      *   60  - READ Indicator for SDCOTPL1                           *
+      *   61  - CHAIN Indicator for SDFCTLL0                          *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    TXT     1   9  9
+      ** Array containing Processing Type Texts
+      *
+     E                    MTD     1   4 11
+      ** Array containing Revaluation Method Texts
+      *
+     E                    FRQ     1   8 10
+      ** Array containing Revaluation Frequency Texts
+      *
+      /COPY ZSRSRC,ZDATE2Z1
+      ** Array containing Conversion table for date
+      *
+      /COPY ZSRSRC,ZEDITZ1
+      ** Array containing Conversion table for amount
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Rundate
+      *
+     IPFMDS     ESDSY2PGDSP
+      ** Program Status Data Structure
+      *
+     IINFDS$    E DSY2I$DSP
+      ** Printer file information data structure.
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for SD0721P1.
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for SD0721PA.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ** Data Structure to format Date
+      *
+     I            DS
+     I                                        1   7 FDAT1
+     I                                        1   2 FDAY1
+     I                                        3   5 FMON1
+     I                                        6   7 FYER1
+      *
+      ** Data Structure to format Date
+      *
+     I            DS
+     I                                        1   7 FDAT2
+     I                                        1   3 FMON2
+     I                                        4   5 FDAY2
+     I                                        6   7 FYER2
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Main Processing Routine                             *
+      *  SRREPT - Output Details to Report                            *
+      *  SRDETL - Format and Write a Detail Record to the Report      *
+      *  SRUPDT - Update Control File                                 *
+      *  SR1END - Write End of Report                                 *
+      *  SRAUDT - Output Audit Report and End Program                 *
+      *  *PSSR  - Standard DB Error Processing                        *
+      *  SRCFP1 - Register SD0721P1 via RCF                           *
+      *  SRCFAU - Register SD0721PA via RCF                           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing
+      *
+     C                     EXSR SRPROC
+      *
+      ** Output Audit Report and End Program
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT  -  Program Initialisation                            *
+      *  Called By: Main Processing                                   *
+      *  Calls    : AOBANKR0 - Access Bank Details                    *
+      *             SRCFP1, SRCFAU                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRTCD   7
+     C                     PARM           PAURE   1
+     C                     PARM           PRSEQ   5
+     C                     PARM           PRLEV   1
+     C                     PARM           PRENT   3
+      *
+      ** Initialise LDA field
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SD0721P' DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      ** Call Access Program for Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Handle Database Error
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*FIRST  'DBKEY
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            *DB ERROR 001 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on)
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+      ** Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'M'
+     C                     MOVE '1'       *IN37
+     C                     ENDIF
+      *
+      ** Determine which header tp print
+      *
+     C           PAURE     IFEQ 'A'
+     C                     MOVE '1'       *IN20
+     C                     ENDIF
+      *
+      ** RCF Processing for Audit File
+      *
+     C                     EXSR SRCFAU
+      *
+      ** Report Work fields
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     Z-ADD0         STRTLN  30
+     C                     MOVE *BLANKS   WFIRST  1
+      *
+      ** Register SD0721P1 to RCF
+      *
+     C                     CLOSESD0721P1
+     C                     OPEN SD0721P1
+     C                     EXSR SRCFP1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC  -  Main Processing Routine                           *
+      *  Called By: Main Processing                                   *
+      *  Calls    : SRAUDT, SRREPT, SR1END, SRUPDT                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+     C                     Z-ADDSTRTLN    PRTLN1
+      *
+      ** Establish starting position
+      *
+     C           *LOVAL    SETLLSDCOTPL1
+      *
+      ** Read Collateral Locations
+      *
+     C                     READ SDCOTPL1                 60
+      *
+     C           *IN60     IFEQ '1'
+      *
+      ** Generate SD0721PA to report no Collateral Locations found
+      *
+     C                     EXSR SRAUDT
+     C                     ELSE
+      *
+     C           *IN60     DOUEQ'1'
+      *
+      ** Count records read
+      *
+     C                     ADD  1         RCOUNT
+      *
+      ** Process Report Lines
+      *
+     C                     EXSR SRREPT
+      *
+      ** Read next record
+      *
+     C                     READ SDCOTPL1                 60
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** Write final records and Totals to Report
+      *
+     C                     EXSR SR1END
+      *
+      ** Update Control File
+      *
+     C                     EXSR SRUPDT
+      *
+      ** Blank out Return Code
+      *
+     C                     MOVE *BLANKS   PRTCD
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRREPT  -  Output Details to Report                          *
+      *  Called By: SRPROC                                            *
+      *  Calls    : ZEDIT, ZDATE2, SRDETL                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREPT    BEGSR
+      *
+     C                     CLEARDETAIL
+      *
+     C                     MOVE 'Y'       W0PFM   1
+      *
+      ** Skip records not accessed today if Audit List is requested
+      *
+     C           PAURE     IFEQ 'A'
+     C           CTLCD     ANDNEBJRDNB
+     C                     MOVE 'N'       W0PFM
+     C                     ENDIF
+      *
+      ** Format Details of Report
+      *
+     C           W0PFM     IFEQ 'Y'
+      *
+      ** Collateral Type
+      *
+     C                     MOVELCTCOLT    RCOLT
+      *
+      ** Collateral Type Description
+      *
+     C                     MOVELCTCOLD    RCOLD
+      *
+      ** Collateral Processing Type
+      *
+     C                     SELEC
+     C           CTCOPT    WHEQ 'A'                        Account
+     C                     MOVELTXT,1     RCOPT
+     C           CTCOPT    WHEQ 'C'                        Charge
+     C                     MOVELTXT,2     RCOPT
+     C           CTCOPT    WHEQ 'D'                        Deposit
+     C                     MOVELTXT,3     RCOPT
+     C           CTCOPT    WHEQ 'G'                        Guarantee
+     C                     MOVELTXT,4     RCOPT
+     C           CTCOPT    WHEQ 'H'                        Holding
+     C                     MOVELTXT,5     RCOPT
+     C           CTCOPT    WHEQ 'L'                        Letter
+     C                     MOVELTXT,6     RCOPT
+     C           CTCOPT    WHEQ 'M'                        Mortgage
+     C                     MOVELTXT,7     RCOPT
+     C           CTCOPT    WHEQ 'O'                        Official Guarantee
+     C                     MOVELTXT,8     RCOPT
+     C           CTCOPT    WHEQ 'P'                        Pledge
+     C                     MOVELTXT,9     RCOPT
+     C                     ENDSL
+      *
+      ** Default Margin
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE CTMPCT    ZFIELD
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RMPCT
+      *
+      ** Retention Period
+      *
+     C                     MOVELCTRTNP    RRTNP
+      *
+      ** Revaluation Method
+      *
+     C                     SELEC
+     C           CTRVLM    WHEQ 'D'                        Daily Automatic Update
+     C                     MOVELMTD,1     RRVLM
+     C           CTRVLM    WHEQ 'M'                        Manual Revaluation
+     C                     MOVELMTD,2     RRVLM
+     C           CTRVLM    WHEQ 'P'                        Regular Application of Price Feed
+     C                     MOVELMTD,3     RRVLM
+     C           CTRVLM    WHEQ 'R'                        Restatement of Collateral Value
+     C                     MOVELMTD,4     RRVLM
+     C                     ENDSL
+      *
+      ** Revaluation Date
+      *
+     C                     MOVEL*BLANKS   FDAT1
+     C                     MOVEL*BLANKS   FDAT2
+     C                     Z-ADD0         ZDAYNO
+     C                     MOVE CTRVLD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RRVLD
+      *
+      ** Reformat date if *IN98 is *ON
+      *
+     C           *IN98     IFEQ '1'
+     C                     MOVELZADATE    FDAT1
+     C                     MOVELFDAY1     FDAY2
+     C                     MOVELFMON1     FMON2
+     C                     MOVELFYER1     FYER2
+     C                     MOVELFDAT2     RRVLD
+     C                     ENDIF
+      *
+      ** Revaluation Frequency
+      *
+     C                     SELEC
+     C           CTRVLF    WHEQ 'D'                        Daily
+     C                     MOVELFRQ,1     RRVLF
+     C           CTRVLF    WHEQ 'W'                        Weekly
+     C                     MOVELFRQ,2     RRVLF
+     C           CTRVLF    WHEQ 'F'                        Forthnightly
+     C                     MOVELFRQ,3     RRVLF
+     C           CTRVLF    WHEQ 'M'                        Monthly
+     C                     MOVELFRQ,4     RRVLF
+     C           CTRVLF    WHEQ 'T'                        Every Two Months
+     C                     MOVELFRQ,5     RRVLF
+     C           CTRVLF    WHEQ 'Q'                        Quarterly
+     C                     MOVELFRQ,6     RRVLF
+     C           CTRVLF    WHEQ 'X'                        Six Monthly
+     C                     MOVELFRQ,7     RRVLF
+     C           CTRVLF    WHEQ 'Y'                        Yearly
+     C                     MOVELFRQ,8     RRVLF
+     C                     ENDSL
+      *
+      ** Revaluation Day Number
+      *
+     C                     MOVELCTRVLN    RRVLN
+      *
+      ** Last Change Date
+      *
+     C                     MOVEL*BLANKS   FDAT1
+     C                     MOVEL*BLANKS   FDAT2
+     C                     Z-ADD0         ZDAYNO
+     C                     MOVE CTLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RLCD
+      *
+      ** Reformat date if *IN98 is *ON
+      *
+     C           *IN98     IFEQ '1'
+     C                     MOVELZADATE    FDAT1
+     C                     MOVELFDAY1     FDAY2
+     C                     MOVELFMON1     FMON2
+     C                     MOVELFYER1     FYER2
+     C                     MOVELFDAT2     RLCD
+     C                     ENDIF
+      *
+      ** Last Change Type
+      *
+     C                     SELEC
+     C           CTTYLC    WHEQ 'I'
+     C                     MOVEL'Insert'  RTYLC
+     C           CTTYLC    WHEQ 'A'
+     C                     MOVEL'Amend'   RTYLC
+     C           CTTYLC    WHEQ 'D'
+     C                     MOVEL'Delete'  RTYLC
+     C                     ENDSL
+      *
+      ** Write out the record
+      *
+     C                     EXSR SRDETL
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDETL  -  Format and Write a Detail Record to the Report    *
+      *  Called By: SRREPT                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Write out Detail Record
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPDT  -  Update Control File                               *
+      *  Called By: SRPROC                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPDT    BEGSR
+      *
+     C                     MOVEL'SDCOTPPD'KFILE  10
+     C           KFILE     CHAINSDFCTLL0             61
+      *
+     C           *IN61     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVELKFILE     DBKEY
+     C                     MOVE 'SDFCTLPA'DBFILE           ***************
+     C                     Z-ADD002       DBASE            *DB ERROR 002 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE AHNOIN    RINSER
+     C                     MOVE AHNOAM    RAMEND
+     C                     MOVE AHNODL    RDELET
+     C                     MOVE AHNORC    RAUDIT
+     C                     Z-ADD0         AHNOIN
+     C                     Z-ADD0         AHNOAM
+     C                     Z-ADD0         AHNODL
+     C                     UPDAT@AHREAU
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SR1END  -  Write End of Report                               *
+      *  Called By: SRPROC                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SR1END    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Write out Total Format
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT  -  Output Audit Report and End Program               *
+      *  Called By: Main Processing, SRPROC, *PSSR                    *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ** If there is a DB Error, Output the DB Error Information
+      *
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERROR
+     C                     MOVEL'*ERROR ' PRTCD
+     C                     ELSE
+      *
+      ** Determine if there is file out of balance
+      *
+     C           RCOUNT    IFNE RAUDIT
+     C                     MOVE '1'       *IN21
+     C                     ENDIF
+      *
+     C                     WRITECONTROL
+      *
+      ** Or, if no records read, Output "No Details" message
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** End Program and Return
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   -  Standard DB Error processing                      *
+      *  Called By: SRINIT, SRREPT                                    *
+      *  Calls    : SRAUDT                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not already been called
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCFP1  -  Register SD0721P1 via RCF                         *
+      *  Called By: SRINIT                                            *
+      *  Calls    : ZSFILE                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFP1    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C           WFIRST    IFNE 'Y'
+     C                     Z-ADDPRTLN1    STRTLN
+     C                     MOVE 'Y'       WFIRST
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCFAU  -  Register SD0721PA via RCF                         *
+      *  Called By: SRINIT                                            *
+      *  Calls    : ZSFILE                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFAU    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /TITLE SR/ZEDIT
+     C/COPY ZSRSRC,ZEDITZ2
+**  CPY@
+(c) Finastra International Limited 2001
+**  TXT
+Account
+Charge
+Deposit
+Guarantee
+Holding
+Letter
+Mortgage
+Off. Guar
+Pledge
+**  MTD
+Daily
+Manual
+Price Feed
+Restatement
+**  FRQ
+Daily
+Weekly
+Forthnight
+Monthly
+Two-Months
+Quarterly
+Six-Months
+Yearly
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,1340 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE I/c confirmations message generation')        *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - LENDING MODULE
+     F*                                                               *
+     F*  LE4500 - I/C CONFIRMATION MESSAGE GENERATION                 *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD053295           Date 13Apr19               *
+      *  Prev Amend No. MD050139           Date 23Mar18               *
+      *                 CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD045010           Date 05Apr17               *
+      *                 CGL184             Date 07Dec16               *
+      *                 CLE141A            Date 28Apr16               *
+      *                 CLE141             Date 08Feb16               *
+      *                 CSW213             Date 03Jun13               *
+      *                 AR996895           Date 25Nov12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 255986B            Date 17Nov09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CSW208             Date 15Apr08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 194176             Date 26Feb02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 209250             Date 25Oct02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSW025             Date 26Mar02               *
+      *                 179848             Date 27Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 169025             Date 05Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 157756             Date 16Apr99               *
+     F*                 137909             Date 17Jul98               *
+     F*                 063542             DATE 28OCT97               *
+     F*                 079412             DATE 30JAN95               *
+     F*                 S01518             DATE 03OCT93               *
+     F*                 056739             DATE 06DEC93               *
+     F*                 051522             DATE 24FEB93               *
+     F*                 E33003             DATE 06DEC91               *
+     F*                 E31467             DATE 08NOV91               *
+     F*                 E31801             DATE 25OCT91               *
+     F*                 E29588             DATE 17OCT91               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD053295 - Lending loan with Interest Calculation Basis      *
+      *             method 3 (30/360) has wrong interest payment      *
+      *             amount for month of March (Recompile)             *
+      *  MD050139- AOSARDR0 called every time causing performance     *
+      *            issue. Recompile due to changes in /COPY           *
+      *            ZFREQ/ZFRQ*.                                       *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD045010 - Component LEC06A 10008 looping during COB caused  *
+      *             by CGL184. Recompile due to changes in ZFRQB3.    *
+      *  CGL184 - New Frequencies for Account Statements (Recompile)  *
+      *  CLE141A - CLE141 Change Control 1                            *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           for LE Transactions                                 *
+      *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
+      *  AR996895 - Incorrect accrual interest calculation.           *
+      *             (Child:AR996897) (Recompile)                      *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  255986B - Recompiled due to changes in MGF320PD/MGF330PD     *
+      *  CSW208 - SWIFT 2008 Changes                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  194176 - Additional logic for cover message confirmations:   *
+      *           for MT320s and MT330s, field 57 for a cover message *
+      *           should not contain 'UNKNOWN' if a/c w/bank is empty.*
+      *           It should contain MGRVNO instead. Patterned fix     *
+      *           after core fix 148702.                              *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  209250 - Deletions not sending cancellation to MMM           *
+      *  CSW025 - Pass original change type                           *
+      *  179848 - Field 34 has a wrong interest amount.  Recompiled   *
+      *           over changed in PF/MGF330PD.
+      *  169025 - Remove fix 157756 as it is causing problems under   *
+      *           the dealing module.                                 *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CDL008 - Continuous Linked Settlement                        *
+      *  157756 - Additional parameter to match parameters in dele -  *
+      *           tion/cancellation control program MG9200 (Applied-  *
+      *           fix 074225).                                        *
+     F*  137909 - New settlement currency fields added to confirmation*
+     F*           messages. Only use if CEU004 is on.                 *
+     F*  063542 - If our Pay Branch or Our Receive Branch is blank    *
+     F*           (e.g. for settlement method 08), use the branch     *
+     F*           from the loan record.                               *
+     F*  079412 - For discounted loans, field :32: on an MT320 should *
+     F*           contain the discounted amount (principal less       *
+     F*           discount)                                           *
+     F*  S01518 - BLI Lending Swift Enhancements.                     *
+     F*  056739 - Recompiled when account line for fields :56: and    *
+     F*           :57: are added.                                     *
+     F*  051522 - FIELDS ON FILES NOT SET UP OR ARE INCORRECT         *
+     F*  E33003 - Database error processing should allow the          *
+     F*           record ID on CLOAN to be 'R' as well as 'D'.        *
+     F*  E31467 - SUB-TYPE CONTAINS PROCESSING TYPE                   *
+     F*  E31801 - 'CANCEL' CONFIRMATION GENERATED FOR UNSENT MSGS     *
+     F*  E29588 - POST COLLECTION SWIFT RATIONALISATION FIXES         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*****************************************************************
+     FLEEXT   IF  E           K        DISK
+     F            LEEXTAAF                          KIGNORE
+     F            LEEXTACF                          KIGNORE
+     FCLOAN   IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     F                                              KCOMIT
+     FMGF320PDO   E                    DISK
+     F                                              KCOMIT
+     FMGF330PDO   E                    DISK
+     F                                              KCOMIT
+     FMGX320PDO   E                    DISK                           UC                      CSW208
+     F                                              KCOMIT                                    CSW208
+     FLEFHSTL0IF  E           K        DISK                                                   CSW208
+     FLEFEEDL6IF  E           K        DISK                                                   CSW208
+     FLE4500AUO   E                    PRINTER                        UC
+      *
+     C/EJECT
+      *****************************************************************
+      *
+      *    Function of indicators
+      *    10    EOF LEEXTAB
+      *    11    EOF CLOAN
+      *    20    CANCELLATION PROGRAM RETURNED IN ERROR
+      *    21    MESSAGE TYPE NOT GENERATED FOR CUSTOMER
+      *    22    CONFIRMATIONS NOT GENERATED FOR CUSTOMER
+      *    23    MESSAGE GROUP NOT GENERATED FOR CUSTOMER
+      *    40    ERROR ON WRITE TO FILE
+      *    U7U8LR        DB ERROR
+      *
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+      **  Copyright array
+      *
+     E                    NGN        15  3
+      *
+      **  ARRAY OF MESSAGE TYPES NOT GENERATED FOR CUSTOMER
+      *
+     E/COPY ZSRSRC,ZHOLE                                                                      CSW208
+     E/COPY ZSRSRC,ZDATE2Z1                                                                   CSW208
+     E/COPY ZSRSRC,ZDATE9Z1                                                                   CSW208
+     E/COPY ZSRSRC,ZFRQB2Z1                                                                   CSW208
+     ILEEXTABF
+     I              RECI                            XRECI
+     I              BRCA                            XBRCA
+     I              LNRF                            XLNRF
+      *
+      **  Rename conflicting LEEXT fields
+      *
+     ICLOANCLF
+     I              RECI                            LRECI
+     I              LNRF                            LLNRF
+     I              BRCA                            LBRCA
+      *
+      **  Rename conflicting CLOAN fields
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                       13  13 MBIN
+      *
+      **  RUNDAT data area
+      *
+     IRUNDAT    E DSRUNDAT                                                                    CSW208
+      ** Data area giving installation control details                                        CSW208
+      *                                                                                       CSW208
+     ISDBANK    E DSSDBANKPD
+      *
+      **  Data structure for bank file
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      **  Data structure for customer file
+      *
+     ISDMMOD    E DSSDMMODPD
+      *
+      **  Data structure for MIDAS modules
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CLE028
+      ** External DS for SAR details                                                          CLE028
+      *                                                                                       CLE028
+     IDSFDY     E DSDSFDY
+      *
+      **  Short data structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      **  Long data structure for access programs
+      *
+     ISDGELR    E DSSDGELRPD                                                                  CSW208
+      ** General Ledger Details                                                               CSW208
+      *                                                                                       CSW208
+     I/COPY ZSRSRC,ZHOLI                                                                      CSW208
+     I/COPY ZSRSRC,ZINTDYZ1                                                                   CSW208
+     I/COPY ZSRSRC,ZDATE9Z2                                                                   CSW208
+     I/COPY ZSRSRC,ZDAT10Z1                                                                   CSW208
+      *                                                                                       CSW208
+      ** CLE141 Business Day Convention                                                       CLE141
+      *                                                                                       CLE141
+     IACCY        DS                             30                                           CLE141
+     I                                        1   3 C1PI                                      CLE141
+     I                                        4   6 C2PI                                      CLE141
+     I                                        7   9 C3PI                                      CLE141
+     I                                       10  12 C4PI                                      CLE141
+     I                                       13  15 C5PI                                      CLE141
+     I                                       16  18 C6PI                                      CLE141
+     I                                       19  21 C7PI                                      CLE141
+     I                                       22  24 C8PI                                      CLE141
+     I                                       25  27 C9PI                                      CLE141
+     I                                       28  30 C0PI                                      CLE141
+     IALOC        DS                             30                                           CLE141
+     I                                        1   3 L1PI                                      CLE141
+     I                                        4   6 L2PI                                      CLE141
+     I                                        7   9 L3PI                                      CLE141
+     I                                       10  12 L4PI                                      CLE141
+     I                                       13  15 L5PI                                      CLE141
+     I                                       16  18 L6PI                                      CLE141
+     I                                       19  21 L7PI                                      CLE141
+     I                                       22  24 L8PI                                      CLE141
+     I                                       25  27 L9PI                                      CLE141
+     I                                       28  30 L0PI                                      CLE141
+      *                                                                                       CLE141
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      **  Local data area
+      *
+     I              'LEFSWIFTConf'        C         P@LE                                      CSW208
+      *                                                                                       CSW208
+      **  Constant                                                                            CSW208
+      *                                                                                       CSW208
+     C/EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT  - initial process                                     *
+      *   SETF  - set up GDF files                                    *
+      *   TYPE  - determine message type                              *
+      *   DEST  - determine destination customer address              *
+      *   DELT  - deletion program processing                         *
+      *   VALD  - generate message type for destination customer ?    *
+      *   COMM  - format common fields                                *
+      *   F320  - format message specific fields for MT320            *
+      *   F330  - format message specific fields for MT330            *
+      *   STCY  - Set up settlement currency for MT320/30             *   137909
+      *   FX320  - format message specific fields for MT320           *                       CSW208
+      *   FX320H - format message specific fields for MT320           *                       CSW208
+      *   SRCHKF - format message specific fields for MT320           *                       CSW208
+      *   SRX320 - format message specific fields for MT320           *                       CSW208
+      *   *PSSR - error handling                                      *
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT initial process                                *
+      *           SETF set up GDF files                               *
+      *           TYPE determine message type                         *
+      *           DEST determine destination customer                 *
+      *           DELT deletion program processing                    *
+      *           VALD generate message for destination customer ?    *
+      *****************************************************************
+      *
+      **  Perform initial process
+      *
+     C                     EXSR INIT
+      *
+      **  Read first loans extract record
+      *
+     C                     READ LEEXT                    10
+      *
+      **  Do until EOF
+      *
+     C           *IN10     DOWEQ'0'
+      *
+      **  Set up generation driver file fields
+      *
+     C                     EXSR SETF
+      *
+      **  Access corresponding loan record
+      *
+     C           XLNRF     CHAINCLOAN                11
+     C                     MOVE CHTP      @CHG    1                                           CSW025
+      *
+     C************IN11     IFEQ '1'                                       E33003
+     C***********LRECI     ORNE 'D'                                       E33003
+     C           LRECI     IFNE 'D'                                       E33003
+     C           LRECI     ANDNE'R'                                       E33003
+     C           *IN11     OREQ '1'                                       E33003
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE            * * * * * * * *
+     C                     MOVELXLNRF     DBKEY            * DB ERROR 001*
+     C                     MOVEL'CLOAN'   DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Guarantees Issued (Processing type 70) do NOT generate
+      **  messages - so no processing required
+      *
+     C           PTYP      IFNE 70
+      *
+      **  Determine message type
+      *
+     C                     EXSR TYPE
+      *
+      **  Determine destination customer address
+      *
+     C                     EXSR DEST
+      *
+      **  Generate cancelation message for reversals and amendments
+      *
+     C           CHTP      IFEQ 'R'
+     C           CHTP      OREQ 'A'                                       E29588
+     C           CSW025    IFNE 'Y'                                                           CSW025
+     C           CHTP      OREQ 'R'                                                           209250
+     C                     EXSR DELT
+     C                     ENDIF                                                              CSW025
+     C                     END
+      *
+      **  Write message if message type required for customer
+      *
+     C           CHTP      IFNE 'R'
+     C           MGCHTP    OREQ 'C'                                       E29588
+     C                     EXSR VALD
+     C                     END
+      *
+     C                     END
+      *
+      **  Read next confirmation extract record
+      *
+     C                     READ LEEXT                    10
+      *
+     C                     END
+      *
+      **  Terminate program
+      *
+     C                     SETON                     LR
+      *
+     C/EJECT
+      *****************************************************************
+      *   INIT - inital process                                       *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'LE4500'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access SDBANKPD for report title
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 002*
+     C                     MOVEL'SDBANKPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access RUNDAT to find run date & multibranching indicator
+      *
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+      *                                                                                       CSW208
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY                         CSW208
+      *                                                                                       CSW208
+     C           AGDFF     IFEQ 'M'                                                           CSW208
+     C                     SETON                     98                                       CSW208
+     C                     END                                                                CSW208
+     C                     OUT  DSRUN
+     C*                                                                   S01518
+     C**  Access SAR details file to see if S01518 is installed           S01518
+      *                                                                   S01518
+     C                     CALL 'AOSARDR0'                                S01518
+     C                     PARM '       ' @RTCD   7                       S01518
+     C                     PARM '*VERIFY' @OPTN   7                       S01518
+     C                     PARM 'S01518'  @SARD   6                       S01518
+      *                                                                   S01518
+     C           @RTCD     IFEQ *BLANK                                    S01518
+     C                     MOVE 'Y'       S01518  1                       S01518
+     C                     ELSE                                           S01518
+     C           @RTCD     IFNE '*NRF   '                                 S01518
+     C           *LOCK     IN   LDA                                       S01518
+     C                     MOVEL'SCSARDPD'DBFILE           ************   S01518
+     C                     MOVEL@SARD     DBKEY            * DBERR 04 *   S01518
+     C                     Z-ADD4         DBASE            ************   S01518
+     C                     OUT  LDA                                       S01518
+     C                     EXSR *PSSR                                     S01518
+     C                     ELSE                                           S01518
+     C                     MOVE 'N'       S01518                          S01518
+     C                     END                                            S01518
+     C                     END                                            S01518
+      *                                                                   137909
+      **  Access Switchable Features file for CEU004                      137909
+      *                                                                   137909
+     C                     CALL 'AOSARDR0'                                137909
+     C                     PARM *BLANKS   @RTCD                           137909
+     C                     PARM '*VERIFY' @OPTN                           137909
+     C                     PARM 'CEU004'  @SARD   6                       137909
+     C           @RTCD     IFEQ *BLANKS                                   137909
+     C                     MOVEL'Y'       CEU004  1                       137909
+     C                     ELSE                                           137909
+     C                     MOVEL'N'       CEU004                          137909
+     C                     ENDIF                                          137909
+      *
+      ** Is CSW025 installed ?                                                                CSW025
+     C                     CALL 'AOSARDR0'                                                    CSW025
+     C                     PARM '       ' @RTCD                                               CSW025
+     C                     PARM '*VERIFY' @OPTN                                               CSW025
+     C                     PARM 'CSW025'  @SARD                                               CSW025
+     C           @RTCD     IFNE *BLANK                                                        CSW025
+     C           @RTCD     ANDNE'*NRF   '                                                     CSW025
+     C                     MOVEL'SCSARDPD'DBFILE           **************                     CSW025
+     C                     MOVEL'025'     DBASE            * DBERROR 025                      CSW025
+     C                     MOVEL@RTCD     DBKEY            **************                     CSW025
+     C                     SETON                     U7U8                                     CSW025
+     C                     EXSR *PSSR                                                         CSW025
+     C                     END                                                                CSW025
+     C           @RTCD     IFEQ *BLANK                                                        CSW025
+     C                     MOVE 'Y'       CSW025  1                                           CSW025
+     C                     END                                                                CSW025
+      *
+      ** Check if Flat Rate Personal Loans (Rule of 78s) is installed                         CLE028
+      *                                                                                       CLE028
+     C                     CALL 'AOSARDR0'                                                    CLE028
+     C                     PARM *BLANKS   PRTCD   7                                           CLE028
+     C                     PARM '*VERIFY' POPTN   7                                           CLE028
+     C                     PARM 'CLE028'  PSARD   6                                           CLE028
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFNE *BLANKS                                                       CLE028
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE028
+     C           *LOCK     IN   LDA                                                           CLE028
+     C                     Z-ADD008       DBASE                                               CLE028
+     C                     MOVELPSARD     DBKEY                                               CLE028
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE028
+     C                     OUT  LDA                                                           CLE028
+     C                     EXSR *PSSR                                                         CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFEQ *BLANKS                                                       CLE028
+     C                     MOVE 'Y'       CLE028  1                                           CLE028
+     C                     ELSE                                                               CLE028
+     C                     MOVE 'N'       CLE028                                              CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+      *
+      ** Is CSW208 installed ?                                                                CSW208
+      *                                                                                       CSW208
+     C                     CALL 'SWIF2008'                                                    CSW208
+     C                     PARM '       ' PRTCD   7                                           CSW208
+     C           PRTCD     IFEQ 'CSW2008'                                                     CSW208
+     C                     MOVEL'Y'       CSW208  1                                           CSW208
+     C                     OPEN MGX320PD                                                      CSW208
+     C                     Z-ADD0         WKSEQN  50                                          CSW208
+     C                     ELSE                                                               CSW208
+     C                     MOVEL'N'       CSW208                                              CSW208
+     C                     ENDIF                                                              CSW208
+      *                                                                                       CSW208
+     C                     MOVEL'N'       SWCONF                                              CSW208
+     C           CSW208    IFEQ 'Y'                                                           CSW208
+     C                     CALL 'AOSVALR0'                                                    CSW208
+     C                     PARM           P@RTCD  7                                           CSW208
+     C                     PARM P@LE      P@OP01 20                                           CSW208
+     C                     PARM           P@VL01200                                           CSW208
+     C                     PARM           P@OP02 20                                           CSW208
+     C                     PARM           P@VL02200                                           CSW208
+     C                     PARM           P@OP03 20                                           CSW208
+     C                     PARM           P@VL03200                                           CSW208
+     C                     PARM           P@OP04 20                                           CSW208
+     C                     PARM           P@VL04200                                           CSW208
+     C                     PARM           P@OP05 20                                           CSW208
+     C                     PARM           P@VL05200                                           CSW208
+     C                     PARM           P@OP06 20                                           CSW208
+     C                     PARM           P@VL06200                                           CSW208
+     C                     PARM           P@OP07 20                                           CSW208
+     C                     PARM           P@VL07200                                           CSW208
+     C                     PARM           P@OP08 20                                           CSW208
+     C                     PARM           P@VL08200                                           CSW208
+     C                     PARM           P@OP09 20                                           CSW208
+     C                     PARM           P@VL09200                                           CSW208
+     C                     PARM           P@OP10 20                                           CSW208
+     C                     PARM           P@VL10200                                           CSW208
+      *                                                                                       CSW208
+     C           P@VL01    IFEQ 'Y'                                                           CSW208
+     C                     MOVEL'Y'       SWCONF  1                                           CSW208
+     C                     ENDIF                                                              CSW208
+      *                                                                                       CSW208
+     C                     ENDIF                                                              CSW208
+      *                                                                                       CSW208
+      ** Check if CLE141 is installed                                                         CLE141
+      *                                                                                       CLE141
+     C                     MOVEL'N'       CLE141  1                                           CLE141
+     C                     CALL 'AOSARDR0'                                                    CLE141
+     C                     PARM *BLANKS   PRTCD                                               CLE141
+     C                     PARM '*VERIFY' POPTN                                               CLE141
+     C                     PARM 'CLE141'  PSARD                                               CLE141
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE141
+      *                                                                                       CLE141
+     C           PRTCD     IFEQ *BLANKS                                                       CLE141
+     C                     MOVE 'Y'       CLE141                                              CLE141
+     C                     ENDIF                                                              CLE141
+      *                                                                                       CLE141
+      ** Parameter list for program LEZBDYCD                                                  CLE141
+      *                                                                                       CLE141
+     C           BDCHK     PLIST                                                              CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           ACCY                                                CLE141
+     C                     PARM           ALOC                                                CLE141
+     C                     PARM           PAYIND  1                                           CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    ZADJDT  50                                          CLE141
+      *                                                                                       CLE141
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *    SETF - Set up GDF fields                                   *
+      *    Called by - main process                                   *
+      *****************************************************************
+      *
+     C           SETF      BEGSR
+      *
+      **  Clear generation driver file fields
+      *
+     C                     MOVE *BLANKS   MGMODI
+     C                     Z-ADD0         MGROTN
+     C                     Z-ADD0         MGROTA
+     C                     MOVE *BLANKS   MGPONS
+     C                     MOVE *BLANKS   MGRONS
+     C                     MOVE *BLANKS   MGPIBN
+     C                     MOVE *BLANKS   MGRIBN
+     C                     MOVE *BLANKS   MGAWBN
+     C                     MOVE *BLANKS   MGAWBA
+     C                     MOVE *BLANKS   MGRVNO
+     C                     MOVE *BLANKS   MGTTYP
+     C                     MOVE *BLANKS   MGTSTP
+     C                     MOVE *BLANKS   MGPOBR
+     C                     MOVE *BLANKS   MGROBR
+     C                     MOVE *BLANKS   MGEVTP
+     C                     Z-ADD0         MGRSTM
+     C                     Z-ADD0         MGPSTM
+     C                     MOVE *BLANKS   MGLORD
+      *
+     C                     MOVE *BLANKS   MGBRKC
+     C                     Z-ADD0         MGNAMT
+     C                     Z-ADD0         MGNOTD
+     C                     MOVE *BLANKS   MGAMTP
+     C                     MOVE *BLANKS   MGCHTP                          E29588
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT                                                                                  CSW208
+      *****************************************************************                       CSW208
+      *   SRCHKF - Check if there are fees attached to the loan.      *                       CSW208
+      *   Called by - F320 FORMAT MESSAGE SPECIFIC FIELDS FOR MT320   *                       CSW208
+      *   Calls - FX320H, FX320                                       *                       CSW208
+      *****************************************************************                       CSW208
+      *                                                                                       CSW208
+     C           SRCHKF    BEGSR                                                              CSW208
+      *                                                                                       CSW208
+     C**********           MOVELLLNRF     KLOAN   60                                   CSW208 CLE148
+     C                     MOVELLLNRF     KLOAN   6                                           CLE148
+      *                                                                                       CSW208
+     C           KLOAN     SETLLLEFHSTL0                                                      CSW208
+     C           KLOAN     READELEFHSTL0                 99                                   CSW208
+     C           *IN99     DOWEQ'0'                                                           CSW208
+     C                     EXSR FX320H                                                        CSW208
+     C           KLOAN     READELEFHSTL0                 99                                   CSW208
+     C                     ENDDO                                                              CSW208
+      *                                                                                       CSW208
+     C           KLOAN     SETLLLEFEEDL6                                                      CSW208
+     C           KLOAN     READELEFEEDL6                 99                                   CSW208
+     C           *IN99     DOWEQ*OFF                                                          CSW208
+     C                     EXSR FX320                                                         CSW208
+     C           KLOAN     READELEFEEDL6                 99                                   CSW208
+     C                     ENDDO                                                              CSW208
+      *                                                                                       CSW208
+     C                     ENDSR                                                              CSW208
+      *****************************************************************                       CSW208
+     C/EJECT
+      *****************************************************************                       CSW208
+      *   SRX320 - Details for MT320                                  *                       CSW208
+      *   Called by - FX320 - Check if the loan has fees linked to it *                       CSW208
+      *   Calls - *PSSR                                               *                       CSW208
+      *****************************************************************                       CSW208
+      *                                                                                       CSW208
+     C           SRX320    BEGSR                                                              CSW208
+      *                                                                                       CSW208
+     C                     ADD  1         WKSEQO                                              CSW208
+     C                     Z-ADDWKSEQN    MFSEQN                                              CSW208
+     C                     Z-ADDWKSEQO    MFSEQO                                              CSW208
+     C                     MOVELFEFCCY    MFPCCY                                              CSW208
+     C                     Z-ADDFEFAMT    MFPAMT                                              CSW208
+     C                     MOVELPONS      MFPONS                                              CSW208
+     C                     MOVELRVNO      MFRVNO                                              CSW208
+     C                     MOVELPIBN      MFPIBN                                              CSW208
+     C                     MOVELPIBA      MFPIBA                                              CSW208
+     C                     MOVELAWBN      MFAWBN                                              CSW208
+     C                     MOVELAWBA      MFAWBA                                              CSW208
+     C                     MOVELRONS      MFRONS                                              CSW208
+     C                     MOVELRIBN      MFRIBN                                              CSW208
+     C                     MOVELRIBA      MFRIBA                                              CSW208
+     C                     MOVELBENN      MFBENN                                              CSW208
+     C                     MOVELBENA      MFBENA                                              CSW208
+     C                     MOVELOMDB      MFPOBR                                              CSW208
+     C                     MOVELOSDB      MFROBR                                              CSW208
+     C                     Z-ADDPSTM      MFPSTM                                              CSW208
+     C                     Z-ADDRSTM      MFRSTM                                              CSW208
+     C                     MOVELFESCCY    MFSTCY                                              CSW208
+     C                     MOVELFESCCY    MFPSCY                                              CSW208
+     C                     MOVEL'L'       MFHIST                                              CSW208
+      *                                                                                       CSW208
+     C                     WRITEMGX320D0               40                                     CSW208
+      *                                                                                       CSW208
+     C           *IN40     IFEQ '1'                                                           CSW208
+     C           *LOCK     IN   LDA                                                           CSW208
+     C                     MOVE '009'     DBASE            * * * * * * * *                    CSW208
+     C                     MOVEL@TYP      DBKEY            * DB ERROR 009*                    CSW208
+     C                     MOVEL'MGX320PD'DBFILE           * * * * * * * *                    CSW208
+     C                     OUT  LDA                                                           CSW208
+     C                     EXSR *PSSR                                                         CSW208
+     C                     END                                                                CSW208
+     C                     ENDSR                                                              CSW208
+      *                                                                                       CSW208
+      *****************************************************************                       CSW208
+     C/EJECT                                                                                  CSW208
+      *****************************************************************                       CSW208
+      *   FX320H - Format fee details for MT320 from LEFHST           *                       CSW208
+      *   Called by - SRCHKF - Check if the loan has fees linked to it*                       CSW208
+      *   Calls - *PSSR                                               *                       CSW208
+      *****************************************************************                       CSW208
+      *                                                                                       CSW208
+     C           FX320H    BEGSR                                                              CSW208
+      *                                                                                       CSW208
+     C                     ADD  1         WKSEQO                                              CSW208
+     C                     Z-ADDWKSEQN    MFSEQN                                              CSW208
+     C                     Z-ADDWKSEQO    MFSEQO                                              CSW208
+     C                     Z-ADDHIHDAT    MFPDAT                                              CSW208
+     C                     MOVELHIFCCY    MFPCCY                                              CSW208
+     C                     Z-ADDHIAMTS    MFPAMT                                              CSW208
+     C                     MOVELHIPONS    MFPONS                                              CSW208
+     C                     MOVELHIRVNO    MFRVNO                                              CSW208
+     C                     MOVELHIPIBN    MFPIBN                                              CSW208
+     C                     MOVELHIPIBA    MFPIBA                                              CSW208
+     C                     MOVELHIAWBN    MFAWBN                                              CSW208
+     C                     MOVELHIAWBA    MFAWBA                                              CSW208
+     C                     MOVELHIRONS    MFRONS                                              CSW208
+     C                     MOVELHIRIBN    MFRIBN                                              CSW208
+     C                     MOVELHIRIBA    MFRIBA                                              CSW208
+     C                     MOVELHIBENN    MFBENN                                              CSW208
+     C                     MOVELHIBENA    MFBENA                                              CSW208
+     C                     MOVELHIOMDB    MFPOBR                                              CSW208
+     C                     MOVELHIOSDB    MFROBR                                              CSW208
+     C                     Z-ADDHIPSTM    MFPSTM                                              CSW208
+     C                     Z-ADDHIRSTM    MFRSTM                                              CSW208
+     C                     MOVELHIFSCY    MFSTCY                                              CSW208
+     C                     MOVELHIPSCY    MFPSCY                                              CSW208
+     C                     MOVEL'H'       MFHIST                                              CSW208
+      *                                                                                       CSW208
+     C                     WRITEMGX320D0               40                                     CSW208
+      *                                                                                       CSW208
+     C           *IN40     IFEQ '1'                                                           CSW208
+     C           *LOCK     IN   LDA                                                           CSW208
+     C                     MOVE '008'     DBASE            * * * * * * * *                    CSW208
+     C                     MOVEL@TYP      DBKEY            * DB ERROR 008*                    CSW208
+     C                     MOVEL'MGX320PD'DBFILE           * * * * * * * *                    CSW208
+     C                     OUT  LDA                                                           CSW208
+     C                     EXSR *PSSR                                                         CSW208
+     C                     ENDIF                                                              CSW208
+      *                                                                                       CSW208
+     C                     ENDSR                                                              CSW208
+      *****************************************************************                       CSW208
+     C/EJECT                                                                                  CSW208
+      *****************************************************************                       CSW208
+      *   FX320 - Format fee details for MT320 from Lending fees.     *                       CSW208
+      *   Called by - SRCHKF - Check if the loan has fees linked to it*                       CSW208
+      *   Calls - SRX320, *PSSR                                       *                       CSW208
+      *****************************************************************                       CSW208
+      *                                                                                       CSW208
+     C           FX320     BEGSR                                                              CSW208
+      *                                                                                       CSW208
+      ** If the fee is a single payment fee.                                                  CSW208
+      ** Write details to file.                                                               CSW208
+      *                                                                                       CSW208
+     C           FEPYON    IFEQ *BLANK                                                        CSW208
+     C           FEPYON    OREQ 'S'                                                           CSW208
+     C                     Z-ADDFEPSTD    MFPDAT                                              CSW208
+     C                     MOVELFEFCCY    MFPCCY                                              CSW208
+     C                     Z-ADDFEFAMT    MFPAMT                                              CSW208
+     C                     EXSR SRX320                                                        CSW208
+     C                     ENDIF                                                              CSW208
+      *                                                                                       CSW208
+      ** If payment is on next payment date.                                                  CSW208
+      *                                                                                       CSW208
+     C           FEPYON    IFEQ 'N'                                                           CSW208
+     C           FENPYD    IFEQ *ZERO                                                         CSW208
+     C                     Z-ADDFEPEND    MFPDAT                                              CSW208
+     C                     ELSE                                                               CSW208
+     C                     MOVE FENPYD    MFPDAT                                              CSW208
+     C                     ENDIF                                                              CSW208
+     C                     MOVELFEFCCY    MFPCCY                                              CSW208
+     C                     Z-ADDFEFAMT    MFPAMT                                              CSW208
+     C                     EXSR SRX320                                                        CSW208
+      *                                                                                       CSW208
+      ** Set next payment date.                                                               CSW208
+      *                                                                                       CSW208
+     C                     MOVELMFPDAT    NWNPYD  50                                          CSW208
+      *                                                                                       CSW208
+      ** If frequency not blank, calculate next payment date                                  CSW208
+      *                                                                                       CSW208
+     C           NWNPYD    DOWLTFEPEND                                                        CSW208
+     C           FEFREQ    IFNE *BLANKS                                                       CSW208
+     C                     MOVE FEFREQ    ZFREQ   1                                           CSW208
+     C                     Z-ADDNWNPYD    ZDAYNO  50                                          CSW208
+     C                     Z-ADDFEDYIM    ZMDAY   20                                          CSW208
+     C                     MOVE BJLCCY    ZCCY    3                                           CSW208
+     C                     MOVE *BLANK    ZZERR@  7                                           CSW208
+      *                                                                                       CSW208
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C           FELOAN    ANDNE*BLANKS                                                      CLE141A
+     C********** FESTTL    ANDEQ1                                                     CLE141 CLE141A
+     C********** FELOAN    ANDNE*BLANKS                                               CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** FESTTL    ANDEQ7                                                     CLE141 CLE141A
+     C********** FELOAN    ANDNE*BLANKS                                               CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** FESTTL    ANDEQ8                                                     CLE141 CLE141A
+     C********** FELOAN    ANDNE*BLANKS                                               CLE141 CLE141A
+     C                     EXSR ZFRQB3                                                        CLE141
+     C                     MOVEL*BLANKS   PAYIND                                              CLE141
+     C                     CALL 'LEZBDYCD'BDCHK                                               CLE141
+     C                     MOVELZADJDT    ZDAYNO                                              CLE141
+     C                     ELSE                                                               CLE141
+     C                     EXSR ZFREQB                                                        CSW208
+     C                     ENDIF                                                              CLE141
+      *                                                                                       CSW208
+     C           ZZERR@    IFNE *BLANK                                                        CSW208
+     C           *LOCK     IN   LDA                                                           CSW208
+     C                     MOVEL'LE4500'  DBPGM                                               CSW208
+     C                     MOVEL'ZFREQB'  DBFILE           ************                       CSW208
+     C                     MOVELFENPYD    DBKEY            * DBERR 06 *                       CSW208
+     C                     Z-ADD006       DBASE            ************                       CSW208
+     C                     OUT  LDA                                                           CSW208
+     C                     EXSR *PSSR                                                         CSW208
+     C                     ENDIF                                                              CSW208
+      *                                                                                       CSW208
+     C           ZDAYNO    IFGT FEPEND                                                        CSW208
+     C                     Z-ADDFEPEND    NWNPYD                                              CSW208
+     C                     ELSE                                                               CSW208
+     C                     Z-ADDZDAYNO    NWNPYD                                              CSW208
+     C                     ENDIF                                                              CSW208
+      *                                                                                       CSW208
+     C                     ELSE                                                               CSW208
+     C                     Z-ADDFEPEND    NWNPYD                                              CSW208
+     C                     ENDIF                                                              CSW208
+      *                                                                                       CSW208
+     C                     ADD  1         WKSEQO                                              CSW208
+     C                     Z-ADDWKSEQO    MFSEQO                                              CSW208
+     C                     Z-ADDNWNPYD    MFPDAT                                              CSW208
+     C                     WRITEMGX320D0                                                      CSW208
+     C                     ENDDO                                                              CSW208
+     C                     ENDIF                                                              CSW208
+      *                                                                                       CSW208
+     C           FEPYON    IFEQ 'E'                                                           CSW208
+     C                     Z-ADDFEPEND    MFPDAT                                              CSW208
+     C                     MOVELFEFCCY    MFPCCY                                              CSW208
+     C                     Z-ADDFEFAMT    MFPAMT                                              CSW208
+     C                     EXSR SRX320                                                        CSW208
+     C                     ENDIF                                                              CSW208
+      *                                                                                       CSW208
+     C                     ENDSR                                                              CSW208
+      *****************************************************************                       CSW208
+     C/EJECT                                                                                  CSW208
+      *****************************************************************                       CSW208
+      *   Standard Midas Subroutine                                   *                       CSW208
+      *   Called by - FX320                                           *                       CSW208
+      *   Calls - ZFREQB                                              *                       CSW208
+      *****************************************************************                       CSW208
+     C/COPY ZSRSRC,ZFREQBZ2                                                                   CSW208
+     C/COPY ZSRSRC,ZDATE2Z2                                                                   CSW208
+     C/COPY ZSRSRC,ZCHKH                                                                      CSW208
+     C/COPY ZSRSRC,ZACCH                                                                      CSW208
+     C/COPY ZSRSRC,ZDATE1Z2                                                                   CSW208
+      *****************************************************************                       CSW208
+     C/EJECT                                                                                  CSW208
+      *****************************************************************
+      *   TYPE - determine message type                               *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           TYPE      BEGSR
+      *
+      ** Check loan processing type - types allowed are :
+      *
+      *  61      Call loans
+      *  62      Time loans
+      *  63      Discounted loans
+      *  64      Participations purchased - time
+      *  65      Participations purchased - discounted
+      *  66      Participations sold - time
+      *  67      Participations sold - discounted
+      *
+     C           PTYP      IFEQ 61
+     C                     MOVE '330'     @TYP    3
+     C                     ELSE
+     C                     MOVE '320'     @TYP
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   DEST - get destination customer details                     *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           DEST      BEGSR
+      *
+      **  Using customer no. of deal
+      *
+     C                     MOVE CNUM      @DEST   8
+      *
+      **  Access SDCUSTPD with access object
+      *
+     C                     MOVE *BLANKS   @KEY1  10
+     C                     MOVE *BLANKS   @KYST   7
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM @DEST     @KEY1
+     C                     PARM *BLANKS   @KYST
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE            * * * * * * * *
+     C                     MOVEL@DEST     DBKEY            * DB ERROR 003*
+     C                     MOVEL'SDCUSTPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Load array with fields containing message types not to be
+      ** generated for this customer
+      *
+     C                     MOVE BBNG01    NGN,1
+     C                     MOVE BBNG02    NGN,2
+     C                     MOVE BBNG03    NGN,3
+     C                     MOVE BBNG04    NGN,4
+     C                     MOVE BBNG05    NGN,5
+     C                     MOVE BBNG06    NGN,6
+     C                     MOVE BBNG07    NGN,7
+     C                     MOVE BBNG08    NGN,8
+     C                     MOVE BBNG09    NGN,9
+     C                     MOVE BBNG10    NGN,10
+     C                     MOVE BBNG11    NGN,11
+     C                     MOVE BBNG12    NGN,12
+     C                     MOVE BBNG13    NGN,13
+     C                     MOVE BBNG14    NGN,14
+     C                     MOVE BBNG15    NGN,15
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   VALD - generate message type for destination customer ?     *
+      *   Called by - main process                                    *
+      *   Calls - COMM format common fields                           *
+      *         - F320 format message specific fields for MT320       *
+      *         - F330 format message specific fields for MT330       *
+      *****************************************************************
+      *
+     C           VALD      BEGSR
+      *
+      **  Check  message type to be generated for destination customer
+      *
+     C           @TYP      LOKUPNGN                      30
+      *
+     C           *IN30     IFNE '1'
+      *
+      **  Check message group is to be generated
+      *
+     C           '3**'     LOKUPNGN                      31
+     C                     MOVE @TYP      GROUP   3
+     C                     MOVE '*'       GROUP
+     C           GROUP     LOKUPNGN                      32
+      *
+     C           *IN31     IFNE '1'
+     C           *IN32     ANDNE'1'
+      *
+      **  Format common fields
+      *
+     C                     EXSR COMM
+      *
+      **  Format message specific fields
+      *
+     C           @TYP      CASEQ'320'     F320
+     C           @TYP      CASEQ'330'     F330
+     C                     END
+      *
+     C                     COMIT
+      *
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   COMM - format common fields                                 *
+      *   Called by - VALD generate message for destination customer ?*
+      *****************************************************************
+      *
+     C           COMM      BEGSR
+      *
+      ** Module ID
+      *
+     C                     MOVE 'LE'      MGMODI
+     C**********           MOVE 'L'       MGLORD                          051522
+      *
+      ** Deal details
+      *
+      ** For a discounted loan, principal amount is loan amount less      079412
+      ** discount.                                                        079412
+     C           PTYP      IFEQ 63                                        079412
+     C           PTYP      OREQ 65                                        079412
+     C           PTYP      OREQ 67                                        079412
+     C           CPAM      SUB  TOTI      CPAM                            079412
+     C                     END                                            079412
+      *                                                                   079412
+      ** If Flat Rate Personal Loans (Rule of 78s) is installed,                              CLE028
+      ** add interest and/or charges to the principal amount                                  CLE028
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+     C           ADIF      IFEQ 'Y'                                                           CLE028
+     C                     ADD  FLTI      CPAM                                                CLE028
+     C                     ENDIF                                                              CLE028
+     C           ADCF      IFEQ 'Y'                                                           CLE028
+     C                     ADD  CHGA      CPAM                                                CLE028
+     C                     ENDIF                                                              CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C                     MOVELCNUM      MGCNUM
+     C                     MOVELXLNRF     MGTNUM
+     C                     MOVELLBRCA     MGBRCA
+     C                     Z-ADDDDAT      MGTDAT
+     C                     Z-ADDVDAT      MGVDAT
+     C                     Z-ADDMDAT      MGMDAT
+     C                     MOVELCCY       MGCCY
+     C/COPY WNCPYSRC,LE4500C001
+     C                     Z-ADDCPAM      MGPCPL
+     C/COPY WNCPYSRC,LE4500C002
+     C                     Z-ADDINTR      MGINTR
+     C                     Z-ADDNIDT      MGNIDT
+     C                     Z-ADDSLID      MGSLID
+     C                     MOVELICBS      MGICBS
+     C/COPY WNCPYSRC,LE4500C003
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+     C                     Z-ADDFLTI      MGTOTI                                              CLE028
+     C                     ELSE                                                               CLE028
+     C                     Z-ADDTOTI      MGTOTI
+     C                     ENDIF                                                              CLE028
+     C/COPY WNCPYSRC,LE4500C004
+     C                     MOVELIPFR      MGIPFR
+     C                     MOVELLTYP      MGTTYP
+     C***********          MOVELPTYP      MGTSTP                          E31467
+     C                     MOVELSUTP      MGTSTP                          E31467
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   F320 - FORMAT MESSAGE SPECIFIC FIELDS FOR MT320             *
+      *   Called by - VALD generate message for destination customer ?*
+      *****************************************************************
+      *
+     C           F320      BEGSR
+      *
+      **  Determine settlement parties
+      *
+     C           PTYP      IFEQ 66
+     C           PTYP      OREQ 67
+      *
+      **  Participations Sold
+      *
+     C                     MOVELOMDA      MGPONS
+     C                     MOVELOSDA      MGRONS
+     C                     MOVELTMAN      MGAWBN
+     C                     MOVELOMDB      MGPOBR
+     C                     MOVELOSDB      MGROBR
+     C                     Z-ADDMDST      MGPSTM
+     C                     Z-ADDSDST      MGRSTM
+     C                     MOVE 'D'       MGLORD
+      *
+     C                     ELSE
+      *
+     C                     MOVELOSDA      MGPONS
+     C                     MOVELOMDA      MGRONS
+     C                     MOVELTSTN      MGAWBN
+     C                     MOVELOSDB      MGPOBR
+     C                     MOVELOMDB      MGROBR
+     C           S01518    IFEQ 'Y'                                       S01518
+     C                     MOVELBENN      MGBENN                          S01518
+     C                     ELSE                                           S01518
+     C                     MOVELCNUM      MGBENN
+     C                     END                                            S01518
+     C                     Z-ADDSDST      MGPSTM
+     C                     Z-ADDMDST      MGRSTM
+     C                     MOVE 'L'       MGLORD
+      *
+     C                     END
+     C*                                                                   S01518
+     C           S01518    IFEQ 'Y'                                       S01518
+     C                     MOVELPIBN      MGPIBN                          S01518
+     C                     MOVELPIBA      MGPIBA                          S01518
+     C                     MOVELRIBN      MGRIBN                          S01518
+     C                     MOVELRIBA      MGRIBA                          S01518
+     C                     MOVELAWBA      MGAWBA                          S01518
+     C                     MOVELRVNO      MGRVNO                          S01518
+     C                     END                                            S01518
+      *                                                                                       194176
+     C           CVMR      IFEQ 'Y'                                                           194176
+     C           AWBN      ANDEQ*BLANKS                                                       194176
+     C                     MOVELRVNO      MGAWBN                                              194176
+     C                     MOVE *BLANKS   MGRVNO                                              194176
+     C                     ENDIF                                                              194176
+      *                                                                                       194176
+      *                                                                   063542
+      **  If our rec. and our pay branch are blank use default            063542
+      **  from the loan record.                                           063542
+      *                                                                   063542
+     C           MGPOBR    IFEQ *BLANKS                                   063542
+     C                     MOVE LBRCA     MGPOBR                          063542
+     C                     END                                            063542
+     C           MGROBR    IFEQ *BLANKS                                   063542
+     C                     MOVE LBRCA     MGROBR                          063542
+     C                     END                                            063542
+      *
+      ** Move settlement currency.                                        137909
+     C           CEU004    IFEQ 'Y'                                       137909
+     C                     EXSR STCY                                      137909
+     C                     ENDIF                                          137909
+      *                                                                   137909
+     C           MGCHTP    IFEQ *BLANK                                                        CSW025
+     C                     MOVE @CHG      MGCHTP                                              CSW025
+     C                     END                                                                CSW025
+      *                                                                                       CSW208
+      ** Check if the loan has fees to it.                                                    CSW208
+      *                                                                                       CSW208
+     C           CSW208    IFEQ 'Y'                                                           CSW208
+     C           SWCONF    ANDEQ'Y'                                                           CSW208
+     C                     MOVE *ZEROS    WKSEQO  50                                          CSW208
+     C                     ADD  1         WKSEQN                                              CSW208
+     C                     EXSR SRCHKF                                                        CSW208
+     C                     Z-ADDWKSEQN    MGSEQN  50                                          CSW208
+     C                     Z-ADDWKSEQO    MGFTOT  50                                          CSW208
+     C                     ENDIF                                                              CSW208
+      *                                                                                       CSW208
+     C                     WRITEMGF320D0               40
+      *
+     C           *IN40     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '005'     DBASE            * * * * * * * *
+     C                     MOVEL@TYP      DBKEY            * DB ERROR 005*
+     C                     MOVEL'MGF320PD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   F330 - FORMAT MESSAGE SPECIFIC FIELDS FOR MT330             *
+      *   Called by - VALD generate message for destination customer ?*
+      *****************************************************************
+      *
+     C           F330      BEGSR
+      *
+      **  Format fields for MT330
+      *
+     C                     MOVELOSDA      MGPONS
+     C                     MOVELOMDA      MGRONS                          051522
+     C                     MOVELTSTN      MGAWBN
+     C                     MOVELOSDB      MGPOBR
+     C                     MOVELOMDB      MGROBR                          051522
+     C**********           MOVELSDST      MGRSTM                          051522
+     C                     MOVELSDST      MGPSTM                          051522
+     C                     MOVELMDST      MGRSTM
+     C           S01518    IFEQ 'Y'                                       S01518
+     C                     MOVELRIBN      MGRIBN                          S01518
+     C                     MOVELRIBA      MGRIBA                          S01518
+     C                     MOVELPIBN      MGPIBN                          S01518
+     C                     MOVELPIBA      MGPIBA                          S01518
+     C                     MOVELAWBA      MGAWBA                          S01518
+     C                     MOVELRVNO      MGRVNO                          S01518
+     C                     MOVELBENN      MGBENN                          S01518
+      *                                                                                       194176
+     C           CVMR      IFEQ 'Y'                                                           194176
+     C           AWBN      ANDEQ*BLANKS                                                       194176
+     C                     MOVELRVNO      MGAWBN                                              194176
+     C                     MOVE *BLANKS   MGRVNO                                              194176
+     C                     ENDIF                                                              194176
+      *                                                                                       194176
+     C                     ELSE                                           S01518
+     C                     MOVELCNUM      MGBENN                          051522
+     C                     END                                            S01518
+     C/COPY WNCPYSRC,LE4500C005
+     C                     Z-ADDCPAM      MGNAMT                          E29588
+     C/COPY WNCPYSRC,LE4500C006
+     C                     MOVE 'L'       MGLORD
+      *                                                                   063542
+      **  If our rec. and our pay branch are blank use default            063542
+      **  from the loan record.                                           063542
+      *                                                                   063542
+     C           MGPOBR    IFEQ *BLANKS                                   063542
+     C                     MOVE LBRCA     MGPOBR                          063542
+     C                     END                                            063542
+     C           MGROBR    IFEQ *BLANKS                                   063542
+     C                     MOVE LBRCA     MGROBR                          063542
+     C                     END                                            063542
+      *
+      ** Move settlement currency.                                        137909
+     C           CEU004    IFEQ 'Y'                                       137909
+     C                     EXSR STCY                                      137909
+     C                     ENDIF                                          137909
+      *                                                                   137909
+     C           MGCHTP    IFEQ *BLANK                                                        CSW025
+     C                     MOVE @CHG      MGCHTP                                              CSW025
+     C                     END                                                                CSW025
+     C                     WRITEMGF330D0               40
+      *
+     C           *IN40     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '006'     DBASE            * * * * * * * *
+     C                     MOVEL@TYP      DBKEY            * DB ERROR 006*
+     C                     MOVEL'MGF330PD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   DELT - Call deletions program MG9200                        *
+      *   Called by - Main processing                                 *
+      *****************************************************************
+      *
+     C           DELT      BEGSR
+      *********************                                               E29588
+      ****Call*cancellation program with parameters of the deal number    E29588
+      ****program*type*(CE*= confirmation), module id, an indicator to    E29588
+      ****to*determine*if*further processing is required for Nostro       E29588
+      ****Transfers*and*a*Return Code ('E' indicates a DB error)          E29588
+      *********************                                               E29588
+      *
+      **  Call cancellation program with parameters of the loan number    E29588
+      **  program type (CE = confirmation),                               E29588
+      **  module id,                                                      E29588
+      **  loan amendment value date (blank for input cycle),              E29588
+      **  loan amendment sequence number (blank for input cycle),         E29588
+      **  an indicator to determine if further processing is              E29588
+      **   Nostro Transfers (blank),                                      E29588
+      **  return Code ('E' indicates a DB error)                          E29588
+      **  return Code ('C' indicates a 'CANCEL' confirmation required)    E31801
+      *
+     C                     CALL 'MG9200'               97
+     C**********           PARM XLNRF     TRNUM   60                                          CLE148
+     C                     PARM XLNRF     TRNUM   6                                           CLE148
+     C                     PARM 'CE'      CALLP   2
+     C                     PARM 'LE'      MODID   2
+     C                     PARM 0         TRVDT   50                      E29588
+     C                     PARM 0         TRSEQ   30                      E29588
+     C                     PARM *BLANKS   REVNX   1
+     C                     PARM *BLANKS   @RTNC   1
+     C***********          PARM @TYP      @TYPE   3                157756 169025
+     C                     PARM 'N'       @CLSS   1                       CDL008
+      *
+      **  If Cancs/Dels programs ended with a DB error, use the LDA
+      **  entries set up for that error
+      *
+     C           @RTNC     IFEQ 'E'
+     C           *LOCK     IN   LDA
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** If CALL to Cancs/Dels programs ended abnormally
+      *
+     C           *IN97     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '007'     DBASE            * * * * * * * *
+     C                     MOVEL'MG9200'  DBKEY            *  DBERR 007  *
+     C                     MOVEL*BLANKS   DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Produce a confirmation message with the codeword 'CANCEL'.
+      **  This occurs when a deal is reversed to confirm the
+      **  mutually agreed cancellation of the contract.
+      *
+     C           CHTP      IFEQ 'R'                                       E29588
+     C           @RTNC     ANDEQ'C'                                       E31801
+     C                     MOVE 'C'       MGCHTP
+     C                     END                                            E29588
+      *
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************   137909
+      *****************************************************************   137909
+      *   STCY - If CEU004 (EMU enhancement) is on set up             *   137909
+      *          settlement currency.                                 *   137909
+      *   Called by - F320 F330                                       *   137909
+      *****************************************************************   137909
+      *                                                                   137909
+     C           STCY      BEGSR                                          137909
+      *                                                                   137909
+      ** Use payment settlement currency if entered. Otherwise use loan   137909
+      ** currency.                                                        137909
+     C           SCCY      IFNE *BLANKS                                   137909
+     C                     MOVE SCCY      MGSTCY                          137909
+     C                     ELSE                                           137909
+     C                     MOVE CCY       MGSTCY                          137909
+     C                     ENDIF                                          137909
+      *                                                                   137909
+     C                     ENDSR                                          137909
+     C/EJECT                                                              137909
+      *****************************************************************   137909
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Open error report printfile
+      *
+     C                     OPEN LE4500AU
+      *
+      ** Set on DB error switches and LR
+      *
+     C                     SETON                     U7U8LR
+      *
+      ** Write out header and details from LDA
+      *
+     C                     WRITELE4500D0
+     C                     WRITELE4500D1
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *                                                                                       CSW208
+      /TITLE SR/ZINTDY                                                                        CSW208
+     C/COPY ZSRSRC,ZINTDYZ2                                                                   CSW208
+      /TITLE SR/ZDATE9                                                                        CSW208
+     C/COPY ZSRSRC,ZDATE9Z3                                                                   CSW208
+      /TITLE SR/ZDAT10                                                                        CSW208
+     C/COPY ZSRSRC,ZDAT10Z2                                                                   CSW208
+     C/COPY ZSRSRC,ZFRQB3                                                                     CLE141
+      *****************************************************************
+     C/EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                                          CSW208
+0366073110961461                                                                              CSW208
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                                            CSW208
+000031059090120151181212243273304334365                                                       CSW208
+**   ZMNM - MONTHS SHORT NAMES                                                                CSW208
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC                                                          CSW208
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN                        CSW208
+00366007310109601461                                                                          CSW208
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                           CSW208
+00000000310005900090001200015100181002120024300273003040033400365                             CSW208
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH                                                     CSW208
+312831303130313130313031                                                                      CSW208

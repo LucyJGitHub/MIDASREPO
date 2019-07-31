@@ -1,0 +1,1226 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Margin Calculation')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Futures and Options Module
+      *                                                               *
+      *  FF0445 - Margin Calculations and Report                      *
+      *                                                               *
+      *  Function: To update the Markets file with the Margin         *
+      *    (EOC)   Required for each Branch, Broker and Currency      *
+      *    (COB)   combination.  Also to produce a report to show     *
+      *            how the Margin for Futures is calculated.          *
+      *                                                               *
+      *            This program replaces FF0440.                      *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 249156             Date 23Jul07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027A            Date 10May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG8984            Date  1Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 11Oct00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 108510             Date 25Apr96               *
+      *                 CFF004             DATE 02OCT96               *
+      *                 065953             DATE 01MAR94               *
+      *                 S04662             DATE 14JUL93               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  249156 - Validate Date if Normally Traded Month or  Month    *
+      *           Spot Traded.                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG8984- Prevent output of blank record to TSMKTD            *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD006 - Use long DS with SDCURRPD.                          *
+      *  108510  -  Initial margin not reversed when long and short   *
+      *             open positions become 0 (close out i.e.)          *
+      *  CFF004  -  Increase in size of Price Fields,(Recompiled Only)*
+      *  065953  -  SPREAD MONTHS NOT BEING COUNTED IN CALCULATION    *
+      *  S04662  -  Switchable Feature for Init Margins for Futures;  *
+      *             Deposit and Spread Margin Rate added to DEFLTD.   *
+      *                                                               *
+      *****************************************************************
+      *
+     FPOSTNC4 IF  E           K        DISK
+     FDEFLT   IF  E           K        DISK
+     FINTYP   IF  E           K        DISK
+     FTSMKT   UF  E           K        DISK
+     FTSMKTD  O   E                    DISK                      A
+     F            TSMKTDF                           KRENAMETSMKTDFP
+      *
+     FFF0445P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     FFF0445AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    10  - End of File on Positions file, POSTNC4               *
+      *    11  - Multi-Branching = Yes                                *
+      *    15  - P1 opened; details to report.                        *
+      *    41  - Switchable Feature, S04662 is present                *
+      *          (Initial Margin for Futures)                         *
+      *          and the positions is for a non-OTC Future.           *
+      *    42  - Error on Chain to Defaults file - DEFLTD             *
+      *    50  - ON : Subheadings to be printed with Currency Header  *
+      *    73  - Error/End of file on file TSMKT.                     *
+      *    81  - Chain fail on Instrument Type file - INTYP.          *
+      *                                                               *
+      *    98  - Date Format: DDMMYY (off); MMDDYY (on)               *
+      *  90-99 - Used by Standard Subroutines                         *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *  RDPOST - Read the Positions file, POSTNC4                    *
+      *  DELET  - Delete all records from Market file, TSMKTD         *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *  OPENP1 - Open printer file, FF0445P1.                        *
+      *  BRCAHD - Write header for Branch.                            *
+      *  BROKHD - Write header for Broker.                            *
+      *  CURRHD - Write header for Currency.                          *
+      *  INSTHD - Write header for Instrument.                        *
+      *  INSTDT - Accumulate Margin for Instrument; write to P1.      *
+      *  INSTTL - Write Instrument total line.                        *
+      *  CURRTL - Write Currency total line.                          *
+      *  TSMKWR - Write record to Market file, TSMKTD                 *
+      *  AUDIT  - Subroutine to Produce Audit Report and End Program. *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  ZFRPED - Edit an Amount                                      *
+      *  VALDAT - Validate Month and Year from POSTNC4                *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E**********          ZMNM   12  12  3                                                    249156
+     E                    TRDMN      12  1                                                    249156
+      *
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E/COPY ZSRSRC,ZDATE2Z1                                                                   249156
+      *
+     I/EJECT
+     IPOSTNCDF
+      *** Rename fields on input from POSTNCDF (because same as TSMKTD)
+      *** (Currency and Instrument Type renamed for consistency)
+     I              BRCA                            MBRCA
+     I              CBCD                            MCBCD
+     I              ISCY                            MISCY
+     I              ISTT                            MISTT
+      *
+     IRUNDAT      DS
+      ***  Data Structure to obtain Multibranching Indicator.
+     I                                    P   8  100RUND                                      249156
+     I                                       13  13 WMBIN
+      *                                                                                       249156
+     IFWPRD       DS                                                                          249156
+      ***  Data Structure for loading array with Traded Months field                          249156
+     I                                        1  12 ISMQ                                      249156
+     I                                        1  12 TRDMN                                     249156
+      *
+     ISPOOL1      DS
+      ***  File Information Data Structure for FF0445P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for FF0445AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ***  Dummy Data Structures used by Access Programs.
+     ISDBANK    E DSSDBANKPD
+     ISDBRCH    E DSSDBRCHPD
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+      *                                                                                       CGL029
+     ISDCURR    E DSSDCURRPD
+      *
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *
+     IDBERR       DS                            256
+      ***  Local Data Area DS for Database Error Information.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *                                                                                       249156
+     IDATE        DS                              6                                           249156
+      ***  Data structure for loading array with traded months field                          249156
+     I                                        1   2 DAYS                                      249156
+     I                                        3   4 MONTH                                     249156
+     I                                        5   6 YEARS                                     249156
+      *                                                                                       249156
+     IMDATE       DS                              6                                           249156
+      ***  Data structure for MMDDYY format date                                              249156
+     I                                        1   2 MMONTH                                    249156
+     I                                        3   4 MDAYS                                     249156
+     I                                        5   6 MYEARS                                    249156
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+     C                     EXSR PROCES
+      *
+      ***  End Program and Return.
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AOBANKR0 Access Program                                      *
+      *  AOSARDR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ***  Copyright Statement.
+     C                     MOVEACPY@      BIS@   80
+      *
+     C**  Key for Defaults file - DEFLT
+     C           KDEFLT    KLIST
+     C**********           KFLD           KCBCD   60                                          CSD027
+     C                     KFLD           KCBCD   6                                           CSD027
+     C                     KFLD           KMARK   2
+     C                     KFLD           KISTC   3
+      *
+      ***  Receive Entry Parameter - the Market being processed.
+     C           *ENTRY    PLIST
+     C                     PARM           PMARK   2
+      *
+      ***  Initialise LDA fields.
+     C                     MOVEL'FF0445'  DBPGM
+     C                     Z-ADD0         DBASE
+     C*
+     C** Delete all records from the Market file, TSMKTD
+     C** (done this way rather than CLRPFM to enable recovery to take
+     C** place if necessary).
+     C                     EXSR DELET
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date, Run
+      ***  Day Number and Local Currency; handle database error.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     EXSR *PSSR                      ***************
+     C                     END
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ***  Access RUNDAT Data Area for Multi-Branching Indicator.
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           WMBIN     IFEQ 'Y'
+     C                     SETON                     11
+     C                     END
+      *
+      **  Access Switchable Features file for Initial Margin for
+      **  Fututres processing - S04662.
+     C                     MOVE 'N'       S04662
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*VERIFY' WOPTN   7
+     C                     PARM 'S04662'  @SARD   6
+      *
+     C           WRTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       S04662  1
+     C                     END
+      *
+      ***  Initialise 'Previous Future/Market' fields
+     C                     MOVE *BLANKS   OBRCA   3
+     C**********           Z-ADD*ZERO     OCBCD   60                                          CSD027
+     C                     MOVE *BLANKS   OCBCD   6                                           CSD027
+     C                     MOVE *BLANKS   OISCY   3
+     C                     MOVE *BLANKS   OISTT   5
+      *
+      ***  Initialise 'Previous record' fields
+     C                     MOVE *BLANKS   LBRCA   3
+     C**********           Z-ADD*ZERO     LCBCD   60                                          CSD027
+     C                     MOVE *BLANKS   LCBCD   6                                           CSD027
+     C                     MOVE *BLANKS   LISCY   3
+      *
+      ***  Initialise Work fields.
+     C                     Z-ADD*ZERO     WACCC   70
+     C                     Z-ADD*ZERO     WACCU   70
+     C                     Z-ADD*ZERO     WMGRQ  130
+     C                     Z-ADD*ZERO     WFMGR  130
+     C                     Z-ADD*ZERO     WPRVM  130
+     C***********          Z-ADD*ZERO     WCOVD   70                      065953
+     C***********          Z-ADD*ZERO     WUNCP   70                      065953
+     C                     Z-ADD*ZERO     WWLOPE  70                      065953
+     C                     Z-ADD*ZERO     WWSOPE  70                      065953
+     C                     MOVE 'N'       DETAIL  1
+     C                     MOVE 'Y'       WFIRST  1
+     C                     Z-ADD*ZERO     RNORE
+     C                     MOVE *BLANKS   OKPROC  1                                           249156
+     C           *LIKE     DEFN ZMTH      AMNT                                                249156
+     C           *LIKE     DEFN ZMTH      QMTH                                                249156
+     C           *LIKE     DEFN ZYEAR     AYEAR                                               249156
+     C           *LIKE     DEFN TFPD      FWPD                                                249156
+     C           *LIKE     DEFN FSPM      FWSPOT                                              249156
+     C           *LIKE     DEFN RUND      EDATE                                               249156
+     C           *LIKE     DEFN RUND      FDATE                                               249156
+     C           *LIKE     DEFN RUND      ADATE                                               249156
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/DELET
+      *****************************************************************
+      *                                                               *
+      * DELET      - Delete all records from Market file, TSMKTD      *
+      *                                                               *
+      *  Called By: INIT                                              *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DELET     BEGSR
+      *
+      ***  Set lower limits on the Market file, TSMKTD
+     C           *LOVAL    SETLLTSMKT
+      *
+      ***  Read the file, delete if record found and repeat until EOF.
+     C                     READ TSMKT                  7373
+     C           *IN73     DOWEQ'0'
+     C                     DELETTSMKT
+     C                     READ TSMKT                  7373
+     C                     END
+      *
+      ***  Reposition on file
+     C           *LOVAL    SETLLTSMKT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           *** PROCES ***
+      *
+      ***  Read the Positions file; for every record on the file
+      ***  accumulate the margin.
+     C                     EXSR RDPOST
+      *
+     C           *IN10     DOWEQ'0'
+      *
+      ***  If the switchable feature, S04662 (Initial Margins for
+      ***  Futures), is present and the position is for a non-OTC
+      ***  Future then output headers and details to P1;
+      ***  Use *IN41 to indicate Feature/Future/Market.
+     C                     MOVE '0'       *IN41
+     C           S04662    IFEQ 'Y'
+     C           PMARK     ANDNE*BLANK
+     C           PCAL      ANDEQ*BLANK
+     C                     MOVE '1'       *IN41
+      *
+      ***  If change of Instrument, Currency, Broker or Branch
+     C           MISTT     IFNE OISTT
+     C           MISCY     ORNE OISCY
+     C           MCBCD     ORNE OCBCD
+     C           MBRCA     ORNE OBRCA
+      *
+      ***  If a detail record has since been written to the P1 then
+      ***  output Instrument totals.
+     C           DETAIL    IFEQ 'Y'
+     C                     EXSR INSTTL
+     C                     END
+      *
+      ***  If change of Currency, Broker or Branch
+     C           MISCY     IFNE OISCY
+     C           MCBCD     ORNE OCBCD
+     C           MBRCA     ORNE OBRCA
+      *
+      ***  If a detail record has since been written to the P1 then
+      ***  output Currency totals.
+     C           DETAIL    IFEQ 'Y'
+     C                     EXSR CURRTL
+     C                     END
+      *
+      ***  If change of Broker or Branch handle change of Branch if
+      ***  appropriate then output Broker, Currency and Instrument
+      ***  headers.
+     C           MCBCD     IFNE OCBCD
+     C           MBRCA     ORNE OBRCA
+      *
+      ***  If change of Branch then, if P1 previously opened, write
+      ***  'End of Report', close file;
+      ***  open new P1 and write Branch header
+     C           MBRCA     IFNE OBRCA
+      *
+     C           *IN15     IFEQ '1'
+     C                     WRITEEOFRP1
+     C                     CLOSEFF0445P1
+     C                     END
+      *
+     C                     EXSR OPENP1
+     C                     EXSR BRCAHD
+     C                     END
+      *
+      ***  write Broker header
+     C                     EXSR BROKHD
+     C                     END
+      *
+      ***  write Currency header
+     C                     EXSR CURRHD
+     C                     END
+      *
+      ***  write Instrument header
+     C                     EXSR INSTHD
+     C                     END
+      *
+      ***  Save the Instrument, Currency, Broker and Branch for use
+      ***  in comparing to next Future/Market record read.
+     C                     MOVE MBRCA     OBRCA
+     C**********           Z-ADDMCBCD     OCBCD                                               CSD027
+     C                     MOVE MCBCD     OCBCD                                               CSD027
+     C                     MOVE MISCY     OISCY
+     C                     MOVE MISTT     OISTT
+      *
+      ***  (end processing for Feature/Future/Margin)
+     C                     END
+      *
+      ***  If change of Currency, Broker or Branch since previous record
+      ***  read, and not the first record to be processed, then write
+      ***  a record to the Market file, TSMKTD; if a detail record exists
+      ***  on the P1 without totals then handle Instrument and Currency
+      ***  totals first.
+     C           MISCY     IFNE LISCY
+     C           MCBCD     ORNE LCBCD
+     C           MBRCA     ORNE LBRCA
+     C           WFIRST    IFEQ 'N'
+      *
+     C           DETAIL    IFEQ 'Y'
+     C                     EXSR INSTTL
+     C                     EXSR CURRTL
+     C                     END
+      *
+     C                     EXSR TSMKWR
+     C                     END
+     C                     END
+      *                                                                                       249156
+      ***  Validate Month and Year from file                                                  249156
+      *                                                                                       249156
+     C                     EXSR VALDAT                                                        249156
+      *
+      ***  Accumulate margin for Instrument; and write to P1 if
+      ***  Feature/Future/Market.
+     C           OKPROC    IFEQ 'Y'                                                           249156
+     C                     EXSR INSTDT
+     C                     ENDIF                                                              249156
+      *
+      ***  Save the Currency, Broker and Branch to compare next record read.
+     C                     MOVE MBRCA     LBRCA
+     C**********           Z-ADDMCBCD     LCBCD                                               CSD027
+     C                     MOVE MCBCD     LCBCD                                               CSD027
+     C                     MOVE MISCY     LISCY
+      *
+      ***  Indicate first record processed; read the next record
+      ***  off the Positions file, POSTNC4; repeat the do-while loop.
+     C                     MOVE 'N'       WFIRST
+     C                     EXSR RDPOST
+      *
+      ***  (end do while loop)
+     C                     END
+      *
+      ***  If accumulation outstanding then write Instrument and
+      ***  Currency totals to P1; write 'End of Report' and close file.
+     C           DETAIL    IFEQ 'Y'
+     C                     EXSR INSTTL
+     C                     EXSR CURRTL
+     C                     WRITEEOFRP1
+     C                     CLOSEFF0445P1
+     C                     END
+      *
+      ***  Write outstanding record to Market file, TSMKTD
+      ***  (nothing to write if no records read from Positions file).
+     C           WFIRST    IFEQ 'N'
+     C                     EXSR TSMKWR
+     C                     END
+      *
+      ***  Only process Audit rpeort if S04662 (Initial Margins for
+      ***  Futures) present.
+     C           S04662    IFEQ 'Y'
+     C                     EXSR AUDIT
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RDPOST
+      *****************************************************************
+      *                                                               *
+      *  RDPOST - Read the Positions file, POSTNC4                    *
+      *                                                               *
+      *  Called By:                                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RDPOST    BEGSR                           *** RDPOST ***
+      *
+      *****Read*the file until the Long Position and Short Position       108510
+      *****are*not both zero; or until the end of the file.               108510
+     C***********SOPE      DOUNE0                                         108510
+     C***********LOPE      ORNE 0                                         108510
+     C************IN10     OREQ '1'                                       108510
+      *                                                                   108510
+      ***  Read the file until the end of the file                        108510
+      ***  The long and short open position equal to 0 must be used       108510
+      ***  else the initial margin will never reversed                    108510
+      ***  i. e. : manual close out of one transaction                    108510
+     C           *IN10     IFNE '1'                                       108510
+      *
+     C                     READ POSTNC4                  10
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/OPENP1
+      *****************************************************************
+      *                                                               *
+      *  OPENP1 - Open printer file, FF0445P1.                        *
+      *                                                               *
+      *  Called By:                                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OPENP1    BEGSR                           *** OPENP1 ***
+      *
+      ***  Open the P1 and indicate as much.
+     C                     OPEN FF0445P1
+     C                     MOVE '1'       *IN15
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM MBRCA     WPARM   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/BRCAHD
+      *****************************************************************
+      *                                                               *
+      *  BRCAHD - Write header for Branch.                            *
+      *                                                               *
+      *  Called By:                                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BRCAHD    BEGSR                           *** BRCAHD ***
+      *
+      ***  Call Access Program for Branch Details.
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM MBRCA     WBRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      ***  Handle Database Error.
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBRCHPD'DBFILE           ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     MOVELMBRCA     DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Output Branch header; set on *IN50 to print sub-headings
+      ***  with Currency header.
+     C                     WRITEBRCHP1
+     C                     SETON                     50
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/BROKHD
+      *****************************************************************
+      *                                                               *
+      *  BROKHD - Write header for Broker.                            *
+      *                                                               *
+      *  Called By:                                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BROKHD    BEGSR                           *** BROKHD ***
+      *
+      ***  Chain to Customer file to access Broker Details.
+     C                     MOVELMCBCD     WCBCD  10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCBCD  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ***  Handle Database Error.
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     MOVELMCBCD     DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Output Broker header;
+      ***  if not enough lines on page then force new page and headings
+      ***  and set on *IN50 to print sub-headings with Currency header.
+     C           OFLLN1    SUB  PRTLN1    DIFLN1  30
+     C           DIFLN1    IFLT 12
+     C                     WRITEBRCHP1
+     C                     SETON                     50
+     C                     END
+     C                     WRITEBROKP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CURRHD
+      *****************************************************************
+      *                                                               *
+      *  CURRHD - Write header for Currency.                          *
+      *                                                               *
+      *  Called By:                                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CURRHD    BEGSR                           *** CURRHD ***
+      *
+      ***  Call Access Program for Currency Details.
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM MISCY     WISCY   3
+     C***********SDCURR    PARM SDCURR    DSFDY                                               CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                                               CSD006
+      *
+      ***  Handle Database Error.
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     MOVELMISCY     DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Output Currency header;
+      ***  if not enough lines on page then force new page and headings
+      ***  and set on *IN50 to ensure sub-headings output at same time
+     C           OFLLN1    SUB  PRTLN1    DIFLN1  30
+     C           DIFLN1    IFLT 7
+     C                     WRITEBRCHP1
+     C                     SETON                     50
+     C                     WRITEBROKP1
+     C                     END
+     C                     WRITECURRP1
+     C                     SETOF                     50
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/INSTHD
+      *****************************************************************
+      *                                                               *
+      *  INSTHD - Write header for Instrument.                        *
+      *                                                               *
+      *  Called By:                                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INSTHD    BEGSR                           *** INSTHD ***
+      *
+      ***  Access Instruments Type file, INTYPD, for Instrument name
+     C           MISTT     CHAININTYP                81
+      *
+      ***  Handle Database Error.
+     C           *IN81     IFEQ '1'
+     C                     MOVE 'INTYP'   DBFILE           ***************
+     C                     Z-ADD5         DBASE            * DB ERROR 05 *
+     C                     MOVELMISTT     DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Output Instrument header;
+      ***  if not enough lines on page then force new page and headings
+      ***  and set on *IN50 to print sub-headings with Currency header.
+     C           OFLLN1    SUB  PRTLN1    DIFLN1  30
+     C           DIFLN1    IFLT 5
+     C                     WRITEBRCHP1
+     C                     SETON                     50
+     C                     WRITEBROKP1
+     C                     WRITECURRP1
+     C                     END
+     C                     WRITEINSTP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/INSTDT
+      *****************************************************************
+      *                                                               *
+      *  INSTDT - Accumulate Margin for Instrument; write to P1.      *
+      *                                                               *
+      *  Called By:                                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INSTDT    BEGSR                           *** INSTDT ***
+      *
+      ***  If S04662 (Initial Margins for Futures) present, and the
+      ***  position is for a non-OTC Future, then accumulate long
+      ***  and short position within Instrument; write record to P1...
+     C           *IN41     IFEQ '1'
+      *
+      ***  Delivery Date
+     C                     MOVE YRNO      RTRSD
+     C                     MOVELZMNM,MTHN RTRSD
+      *
+      ***  Long Position
+     C                     Z-ADDLOPE      RLOPE
+      *
+      ***  Short Position
+     C                     Z-ADDSOPE      RSOPE
+     C*
+      ***  Calculate covered and uncovered position
+     C*                                                                   065953
+     C                     ADD  LOPE      WWLOPE                          065953
+     C                     ADD  SOPE      WWSOPE                          065953
+     C*                                                                   065953
+     C***********SOPE      IFLT LOPE                                      065953
+     C***********          Z-ADDSOPE      WCOVD                           065953
+     C***********          Z-ADDLOPE      WUNCP                           065953
+     C***********          SUB  SOPE      WUNCP                           065953
+     C***********          ELSE                                           065953
+     C***********          Z-ADDLOPE      WCOVD                           065953
+     C***********          Z-ADDSOPE      WUNCP                           065953
+     C***********          SUB  LOPE      WUNCP                           065953
+     C***********          END                                            065953
+      *
+     C***********          Z-ADDWCOVD     RCOVD                           065953
+     C***********          Z-ADDWUNCP     RUNCP                           065953
+      *
+      ***  Output Instrument detail;
+      ***  if not enough lines on page then force new page and headings
+      ***  and set on *IN50 to print sub-headings with Currency header.
+     C           OFLLN1    SUB  PRTLN1    DIFLN1  30
+     C           DIFLN1    IFLT 2
+     C                     WRITEBRCHP1
+     C                     SETON                     50
+     C                     WRITEBROKP1
+     C                     WRITECURRP1
+     C                     WRITEINSTP1
+     C                     END
+     C                     WRITEDETLP1
+      *
+      ***  Indicate that there is a Detail written to the P1 that has
+      ***  not got totals; and add 1 to the count of records reported.
+     C                     MOVE 'Y'       DETAIL
+     C                     ADD  1         RNORE
+      *
+      *****Accumulate covered and uncovered position                      065953
+     C***********          ADD  WCOVD     WACCC                           065953
+     C***********          ADD  WUNCP     WACCU                           065953
+      *
+      *** else...accumulate Total Margin Override from Positions file
+     C                     ELSE
+     C                     ADD  TOTM      WMGRQ
+     C                     END
+      *
+      *** Save the current Broker Indicator for update of End of EOC
+      *** Indicator when record written to Market file, TSMKTD.
+     C                     MOVE BRKI      WBRKI   1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/INSTTL
+      *****************************************************************
+      *                                                               *
+      *  INSTTL - Write Instrument total line.                        *
+      *                                                               *
+      *  Called By:                                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INSTTL    BEGSR                           *** INSTTL ***
+      *
+      *****Accumulated*covered*and*uncovered*position                     065953
+      *                                                                   065953
+      ***  Determine covered and uncovered position                       065953
+     C           WWSOPE    IFLT WWLOPE                                    065953
+     C                     Z-ADDWWSOPE    WACCC                           065953
+     C                     Z-ADDWWLOPE    WACCU                           065953
+     C                     SUB  WWSOPE    WACCU                           065953
+     C                     ELSE                                           065953
+     C                     Z-ADDWWLOPE    WACCC                           065953
+     C                     Z-ADDWWSOPE    WACCU                           065953
+     C                     SUB  WWLOPE    WACCU                           065953
+     C                     END                                            065953
+     C                     Z-ADDWACCC     RACCC
+     C                     Z-ADDWACCU     RACCU
+      *
+      ***  Chain to Defaults file for Deposit and Spread Margin Rates
+      ***  using key fields from previous Future/Market record read.
+     C**********           Z-ADDOCBCD     KCBCD                                               CSD027
+     C                     MOVE OCBCD     KCBCD                                               CSD027
+     C                     MOVELOISTT     KMARK
+     C                     MOVE OISTT     KISTC
+     C           KDEFLT    CHAINDEFLT                42
+      *
+     C           *IN42     IFEQ '1'
+     C                     Z-ADD*ZEROS    INMC
+     C                     Z-ADD*ZEROS    SPMC
+     C                     END
+     C*
+      ***  Deposit and Spread Margin Rate
+     C                     Z-ADDINMC      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RDMRG
+      *
+     C                     Z-ADDSPMC      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RSMRG
+     C*
+     C           WACCU     MULT INMC      UNCPOS 130
+     C           WACCC     MULT SPMC      COVPOS 130
+      *
+      ***  Accumulate covered and uncovered positions for Currency
+     C                     Z-ADDCOVPOS    ZFLD15
+     C                     ADD  UNCPOS    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RTOTL
+      *
+      ***  Accumulate total margin required for Currency - output to P1
+     C                     ADD  COVPOS    WFMGR
+     C                     ADD  UNCPOS    WFMGR
+      *
+      ***  Accumulate total margin required for Currency - output to
+      ***  Market file, TSMKTD; ie. this Accumulator includes Options.
+     C                     ADD  COVPOS    WMGRQ
+     C                     ADD  UNCPOS    WMGRQ
+      *
+      ***  Write Instrument total line;
+      ***  if not enough lines on page then force new page and headings
+      ***  and set on *IN50 to print sub-headings with Currency header.
+     C           OFLLN1    SUB  PRTLN1    DIFLN1  30
+     C           DIFLN1    IFLT 3
+     C                     WRITEBRCHP1
+     C                     SETON                     50
+     C                     WRITEBROKP1
+     C                     WRITECURRP1
+     C                     WRITEINSTP1
+     C                     END
+     C                     WRITEINTLP1
+      *
+      ***  Initialise accumulators for Instrument
+     C                     Z-ADD*ZERO     WACCC
+     C                     Z-ADD*ZERO     WACCU
+     C                     Z-ADD*ZERO     WWLOPE                          065953
+     C                     Z-ADD*ZERO     WWSOPE                          065953
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CURRTL
+      *****************************************************************
+      *                                                               *
+      *  CURRTL - Write Currency total line.                          *
+      *                                                               *
+      *  Called By:                                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CURRTL    BEGSR                           *** CURRTL ***
+     C*
+      ***  Accumulated total for Currency
+     C                     Z-ADDWFMGR     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RCCYM
+      *
+      ***  Write Currency total line;
+      ***  if not enough lines on page then force new page and headings
+      ***  and set on *IN50 to print sub-headings with Currency header.
+     C           OFLLN1    SUB  PRTLN1    DIFLN1  30
+     C           DIFLN1    IFLT 4
+     C                     WRITEBRCHP1
+     C                     SETON                     50
+     C                     WRITEBROKP1
+     C                     WRITECURRP1
+     C                     WRITEINSTP1
+     C                     END
+     C                     WRITECYTLP1
+      *
+      ***  Indicate that there is no Detail written to the P1 that has
+      ***  not got totals; and initialise accumulator for total Margin
+     C                     MOVE 'N'       DETAIL
+     C                     Z-ADD*ZERO     WFMGR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/TSMKWR
+      *****************************************************************
+      *                                                               *
+      *  TSMKWR - Write record to Market file, TSMKTD                 *
+      *                                                               *
+      *  Called By:                                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TSMKWR    BEGSR                           *** TSMKWR ***
+      *
+     C           LBRCA     IFNE *BLANKS                                                      BUG8984
+     C********** LCBCD     ANDNE*ZERO                                                BUG8984 CSD027A
+     C           LCBCD     ANDNE*BLANKS                                                      CSD027A
+     C           LISCY     ANDNE*BLANKS                                                      BUG8984
+      *                                                                                      BUG8984
+      ***  Update Branch/Broker/Currency from values of previous record
+     C                     MOVE LBRCA     BRCA
+     C**********           Z-ADDLCBCD     CBCD                                                CSD027
+     C                     MOVE LCBCD     CBCD                                                CSD027
+     C                     MOVE LISCY     CCY
+      *
+     C           WBRKI     IFEQ 'Y'
+     C                     MOVE 'B'       EOCI
+     C                     ELSE
+     C                     MOVE 'C'       EOCI
+     C                     END
+      *
+     C                     MOVE PMARK     MRKT
+      *
+     C                     Z-ADDWMGRQ     MGRQ
+      *
+     C                     WRITETSMKTDFP
+      *
+      ***  Initialise accumulator for Currency
+     C                     Z-ADD*ZERO     WMGRQ
+      *
+     C                     ENDIF                                                             BUG8984
+      *                                                                                      BUG8984
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZFRPED
+      *****************************************************************
+     C/COPY ZSRSRC,ZFRPEDZ3
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Produce Audit Report and End Program. *
+      *                                                               *
+      *  Called By: Main Processing, PROCES, *PSSR                    *
+      *  Calls:                                                       *
+      *  ZSFILE Access Program                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+     C                     OPEN FF0445AU
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   WPARM
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ***  Output Report Header and File Controls.
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no valid records read, Output "No Details" message.
+     C           *IN15     IFEQ '0'
+     C                     WRITENODTLS
+     C                     END
+     C                     END
+      *
+     C                     CLOSEFF0445AU
+      *
+     C                     ENDSR
+      *
+      *****************************************************************                       249156
+      /TITLE SR/VALDAT                                                                        249156
+      *****************************************************************                       249156
+      *                                                               *                       249156
+      *  VALDAT - Subroutine to Validate Month and Year               *                       249156
+      *                                                               *                       249156
+      *  Called By: Main Processing, PROCES                           *                       249156
+      *                                                               *                       249156
+      *****************************************************************                       249156
+      *                                                                                       249156
+     C           VALDAT    BEGSR                                                              249156
+      *                                                                                       249156
+     C                     MOVE 'N'       OKPROC                                              249156
+      *                                                                                       249156
+      ** Use correct Date format to check Date from file                                      249156
+      *                                                                                       249156
+     C           *IN98     IFEQ '0'                                                           249156
+     C                     MOVE '01'      DAYS                                                249156
+     C                     MOVE MTHN      MONTH                                               249156
+     C                     MOVE YRNO      YEARS                                               249156
+     C                     MOVE DATE      ZDATE                                               249156
+     C                     ELSE                                                               249156
+     C                     MOVE '01'      MDAYS                                               249156
+     C                     MOVE MTHN      MMONTH                                              249156
+     C                     MOVE YRNO      MYEARS                                              249156
+     C                     MOVE MDATE     ZDATE                                               249156
+     C                     ENDIF                                                              249156
+      *                                                                                       249156
+     C                     EXSR ZDATE1                                                        249156
+     C                     Z-ADDZDAYNO    EDATE                                               249156
+      *                                                                                       249156
+      ** Calculate Forward Period                                                             249156
+      *                                                                                       249156
+     C                     MOVE RUND      ZDAYNO                                              249156
+     C                     EXSR ZDATE2                                                        249156
+     C                     Z-ADDZMTH      AMNT                                                249156
+     C                     Z-ADDZMTH      QMTH                                                249156
+     C                     Z-ADDZYEAR     AYEAR                                               249156
+     C                     Z-ADDTFPD      FWPD                                                249156
+     C           RUND      SUB  ZDAY      ADATE                                               249156
+      *                                                                                       249156
+      ** Do while Forward Periods is not Zero                                                 249156
+      *                                                                                       249156
+     C           FWPD      DOWGT0                                                             249156
+      *                                                                                       249156
+     C           TRDMN,AMNTIFEQ 'Y'                                                           249156
+     C                     SUB  1         FWPD                                                249156
+     C                     ENDIF                                                              249156
+      *                                                                                       249156
+     C                     ADD  1         AMNT                                                249156
+      *                                                                                       249156
+     C           AMNT      IFGT 12                                                            249156
+     C                     ADD  1         AYEAR                                               249156
+     C                     Z-ADD1         AMNT                                                249156
+     C                     ENDIF                                                              249156
+      *                                                                                       249156
+     C                     ENDDO                                                              249156
+      *                                                                                       249156
+      ** Use correct Date Format to check Date from file                                      249156
+      *                                                                                       249156
+     C           *IN98     IFEQ '0'                                                           249156
+     C                     MOVE AMNT      MONTH                                               249156
+     C                     MOVE AYEAR     YEARS                                               249156
+     C                     MOVE DATE      ZDATE                                               249156
+     C                     ELSE                                                               249156
+     C                     MOVE AMNT      MMONTH                                              249156
+     C                     MOVE AYEAR     MYEARS                                              249156
+     C                     MOVE MDATE     ZDATE                                               249156
+     C                     ENDIF                                                              249156
+      *                                                                                       249156
+     C                     EXSR ZDATE1                                                        249156
+     C                     MOVE ZDAYNO    FDATE                                               249156
+      *                                                                                       249156
+      ** If Month & Year after Rundate and within Forward Period                              249156
+      *                                                                                       249156
+     C           EDATE     IFGE ADATE                                                         249156
+     C           EDATE     ANDLTFDATE                                                         249156
+      *                                                                                       249156
+      ** Set field AMNT to actual month                                                       249156
+      *                                                                                       249156
+     C                     Z-ADDQMTH      AMNT                                                249156
+      *                                                                                       249156
+      ** Is it a Normally Traded Month                                                        249156
+      *                                                                                       249156
+     C           TRDMN,MTHNIFEQ 'Y'                                                           249156
+      *                                                                                       249156
+     C                     MOVE 'Y'       OKPROC                                              249156
+      *                                                                                       249156
+     C                     ELSE                                                               249156
+      *                                                                                       249156
+      ** Move Forward Spot Months to field                                                    249156
+      *                                                                                       249156
+     C                     Z-ADDFSPM      FWSPOT                                              249156
+      *                                                                                       249156
+      ** Do while the Forward Spot Number is greater than Zero                                249156
+      *                                                                                       249156
+     C           FWSPOT    DOWGT*ZEROS                                                        249156
+     C           OKPROC    ANDNE'Y'                                                           249156
+      *                                                                                       249156
+      ** Subtract one from FWSPOT                                                             249156
+      *                                                                                       249156
+     C                     SUB  1         FWSPOT                                              249156
+      *                                                                                       249156
+      ** Is Month Spot Traded                                                                 249156
+      *                                                                                       249156
+     C           MTHN      IFEQ AMNT                                                          249156
+      *                                                                                       249156
+     C                     MOVE 'Y'       OKPROC                                              249156
+      *                                                                                       249156
+     C                     ENDIF                                                              249156
+      *                                                                                       249156
+      ** Add one to month                                                                     249156
+      *                                                                                       249156
+     C           AMNT      IFEQ 12                                                            249156
+     C                     Z-ADD0         AMNT                                                249156
+     C                     ENDIF                                                              249156
+      *                                                                                       249156
+     C                     ADD  1         AMNT                                                249156
+      *                                                                                       249156
+     C                     ENDDO                                                              249156
+      *                                                                                       249156
+     C                     ENDIF                                                              249156
+      *                                                                                       249156
+     C                     ENDIF                                                              249156
+      *                                                                                       249156
+     C                     ENDSR                                                              249156
+      *                                                                                       249156
+      *****************************************************************                       249156
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *  Calls:                                                       *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+      ***  Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8
+     C                     DUMP
+      *
+      ***  Only process Audit report if S04662 (Initial Margins for
+      ***  Futures) present.
+     C           S04662    IFEQ 'Y'
+     C                     EXSR AUDIT
+     C                     END
+      *
+     C                     END
+      *
+      ***  If *PSSR already run, then just end the program here.
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ** ZDATE1 Subroutine                                                                    249156
+      *                                                                                       249156
+     C/COPY ZSRSRC,ZDATE1Z2                                                                   249156
+      *                                                                                       249156
+      ** ZDATE2 Subroutine                                                                    249156
+      *                                                                                       249156
+     C/COPY ZSRSRC,ZDATE2Z2                                                                   249156
+      *****************************************************************
+     O/TITLE Compile Time arrays
+**   CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                                          249156
+0366073110961461                                                                              249156
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                                            249156
+000031059090120151181212243273304334365                                                       249156
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

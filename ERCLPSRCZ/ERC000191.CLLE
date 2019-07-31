@@ -1,0 +1,113 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ER Bundesbank Std Data Driver File Take-On')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - European Reporting Module                           */
+/*                                                                   */
+/*       ERC000191 - Midas ER Bundesbank Standing Data               */
+/*                   Driver File Take-On                             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2009                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG25888           Date 03Sep09              */
+/*                      CER045  *CREATE    Date 20Jul09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG25888 - No record was extracted to Meridian during       */
+/*                  Standing Data Takeon                             */
+/*       CER045 - German Features - Reporting Bundesbank             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRTCD &PMODE)
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM)   TYPE(*CHAR) LEN(50)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2009')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('ERC000191 - Midas ER Bundesbank +
+                          Standing Data Extract Initialisation') +
+                          TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/* Clear Physical Files */
+ 
+             IF         COND((&PMODE) *NE '3') THEN(DO)
+ 
+             CLRPFM     FILE(ERKNEIPD)
+             MONMSG     MSGID(CPF3142 CPF3156) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CLRPFM     FILE(ERWHGIPD)
+             MONMSG     MSGID(CPF3142 CPF3156) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Execute Initialisation Program */
+ 
+             CALL       PGM(ER000192) PARM('I')
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+                                                                                        /*BUG25888*/
+/* Execute Extract Update Program for ERKNEIFF  */                                      /*BUG25888*/
+             CALL       PGM(MXC0010) PARM('ERKNEIFF' 'ERERKNEIPD')                      /*BUG25888*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*BUG25888*/
+                GOTO       CMDLBL(ABNOR)                                                /*BUG25888*/
+             ENDDO                                                                      /*BUG25888*/
+                                                                                        /*BUG25888*/
+             CALL       PGM(MXC0020) PARM('ERKNEIFF' 'C' 'ERERKNEIPD')                  /*BUG25888*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*BUG25888*/
+                GOTO       CMDLBL(ABNOR)                                                /*BUG25888*/
+             ENDDO                                                                      /*BUG25888*/
+                                                                                        /*BUG25888*/
+/* Execute Extract Update Program for ERWHGIFF  */                                      /*BUG25888*/
+             CALL       PGM(MXC0010) PARM('ERWHGIFF' 'ERERWHGIPD')                      /*BUG25888*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*BUG25888*/
+                GOTO       CMDLBL(ABNOR)                                                /*BUG25888*/
+             ENDDO                                                                      /*BUG25888*/
+                                                                                        /*BUG25888*/
+             CALL       PGM(MXC0020) PARM('ERWHGIFF' 'C' 'ERERWHGIPD')                  /*BUG25888*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*BUG25888*/
+                GOTO       CMDLBL(ABNOR)                                                /*BUG25888*/
+             ENDDO                                                                      /*BUG25888*/
+                                                                                        /*BUG25888*/
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal terminations */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          ERC000191 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2009')
+ 
+             ENDPGM

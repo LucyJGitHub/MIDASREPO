@@ -1,0 +1,698 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                    : *
+/*EXI *  TEXT('Midas RE T&N Accounts - Notif Rtv/Upd Routine')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas     - Retail T&N Accounts                              *
+      *                                                               *
+      *  RPG/RE4012  - Notification Rtv/Upd Routine                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2009                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *                 CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 223609             Date 18Dec09               *
+      *                 118466             Date 18Dec09               *
+      *                 BUG27460           Date 18Dec09               *
+      *                 CRE015 *CREATE     Date 18Dec09               *
+      *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  223609 - Next cap date not calculated for insert of account. *
+      *  118466 - Various changes to solve problems with accrued int. *
+      *  BUG27460 - Applied client fix AS0001                         *
+      *  AS0001 - Improve update of history balance                   *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *****************************************************************
+     FRENFMVPDUF  E           K        DISK         KCOMIT       A
+     FREHISL  IF  E           K        DISK
+     F            REHISPSF                          KIGNORE
+     F            REHISPMF                          KIGNORE
+      *****************************************************************
+     IREHISPPF
+     I              BRCA                            R1BRCA
+     I              CNUM                            R1CNUM
+     I              CCY                             R1CCY
+     I              ACOD                            R1ACOD
+     I              ACSQ                            R1ACSQ
+     I              HISD                            R1HISD
+     I              HISB                            R1HISB
+      *****************************************************************
+      *
+      ** Parameters
+      *
+     IP@FMT     E DSDSSDY
+      *
+      ** Local Data Area
+      *
+     IJNSTAT    E DSJNSTAT
+      *
+      ** Account details
+     IACFMT     E DSACCNTAB
+      *
+      ** Bank details
+      *
+     IBKFMT     E DSSDBANKPD
+      *
+      ** Ccy
+      *
+     ICYFMT     E DSSDCURRPD
+      *                                                                                       AS0001
+     I              'TERMINATE'           C         CFMTP1                                    AS0001
+     I              'INTEREST '           C         CFMTP2                                    AS0001
+     I              'USER     '           C         CFMTP3                                    AS0001
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   7
+     C                     PARM           PKEY1  24
+     C                     PARM           PTRR1   8
+     C                     PARM           PREAM  150
+     C                     PARM           PDC01   1
+     C                     PARM           PCAVL  150
+     C                     PARM           PDC02   1
+     C                     PARM           PDEFF   50
+     C                     PARM           PRECD   50
+     C                     PARM           PHISB  150
+     C                     PARM           PDC03   1
+     C                     PARM           PRTDE   20                                          EEE015
+      *
+      ** FREE Mode
+      *
+     C           PMODE     IFEQ '*FREE'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *
+      ** Initialise
+      *
+     C                     EXSR INIT
+      *
+      ** Get record detail
+      *
+     C           PMODE     IFEQ '*ENQ  '
+     C                     EXSR GETRCD
+     C                     END
+      *
+      ** Update record detail
+      *
+     C           PMODE     IFEQ '*UPD  '
+     C           PTRR1     IFEQ INTREF                                                        EEE015
+     C                     MOVELCFMTP2    PFMTP  10 P                                         EEE015
+     C                     ELSE                                                               EEE015
+     C                     MOVELCFMTP3    PFMTP  10 P                                         EEE015
+     C                     END                                                                EEE015
+     C                     EXSR UPDRCD
+     C                     END
+      *
+      ** Delete record detail
+      *
+     C           PMODE     IFEQ '*DLT  '
+     C                     EXSR DLTRCD
+     C                     END
+      *
+      ** Termination request
+      *
+     C           PMODE     IFEQ '*TERMIN'
+     C                     EXSR TERMIN
+     C                     END
+      *
+      ** Create interest notification
+      *
+     C           PMODE     IFEQ '*ADDINT'
+     C                     EXSR ADDINT
+     C                     END
+      *
+      ** Remove interest notification
+      *
+     C           PMODE     IFEQ '*RMVINT'
+     C                     EXSR RMVINT
+     C                     END
+      *
+      ** Update BAL notification
+      *
+     C           PMODE     IFEQ '*BAL   '
+     C                     EXSR UPDBAL
+     C                     END
+      *
+     C           ENDHRE    TAG
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      *                                                               *
+      *  GETRCD - Get Record                                          *
+      *                                                               *
+      *****************************************************************
+     C           GETRCD    BEGSR
+      *
+      ** Fetch next record
+      *
+     C                     MOVELPKEY1     E3KEY1
+     C                     Z-ADDPDEFF     E3DEFF
+     C                     MOVELPTRR1     E3TRR1
+     C           KNFMV1    SETGTRENFMVPD
+     C                     READ RENFMVPD            N    82
+      *
+      ** Return fields
+      *
+     C           *IN82     IFEQ '1'
+     C                     MOVEL*HIVAL    PKEY1
+     C                     ELSE
+     C                     MOVELE3KEY1    PKEY1
+     C                     MOVELE3TRR1    PTRR1
+     C                     Z-ADDE3REAM    PREAM
+     C                     MOVELE3DC01    PDC01
+     C                     Z-ADDE3CAVL    PCAVL
+     C                     MOVELE3DC02    PDC02
+     C                     Z-ADDE3HISB    PHISB
+     C                     MOVELE3DC03    PDC03
+     C                     Z-ADDE3DEFF    PDEFF
+     C                     Z-ADDE3RECD    PRECD
+     C                     Z-ADDE3RTDE    PRTDE                                               EEE015
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  UPDRCD - Update Record                                       *
+      *                                                               *
+      *****************************************************************
+     C           UPDRCD    BEGSR
+      *
+      ** For insert, get next seq
+      *
+     C           PTRR1     IFEQ *BLANKS
+     C                     MOVE *ZEROS    INSREF  8
+     C                     MOVELREFPFX    INSREF
+      *
+      **   Find latest used reference
+      *
+     C                     MOVELPKEY1     E3KEY1
+     C                     Z-ADD0         E3DEFF
+     C                     MOVEL*LOVAL    E3TRR1
+     C           KNFMV1    SETLLRENFMVPD
+     C           KNFMV2    READERENFMVPD            N    72
+     C           *IN72     DOWEQ'0'
+      *
+     C           E3TRR1    IFNE TRMREF
+     C           E3TRR1    ANDGTINSREF
+     C                     MOVELE3TRR1    INSREF
+     C                     END
+     C           KNFMV2    READERENFMVPD            N    72
+     C                     END
+      *
+      ** Add 1 to current ref
+      *
+     C                     MOVE INSREF    WWSEQ   70
+     C                     ADD  1         WWSEQ
+     C                     MOVE WWSEQ     INSREF
+      *
+      ** Write rcd
+      *
+     C                     MOVELINSREF    PTRR1
+     C           PRTDE     IFEQ -2                                                            EEE015
+     C                     MOVE ACOD      PACCD                                               EEE015
+     C                     CALL 'SD0031T'                                                     EEE015
+     C                     PARM           PACCD  10                                           EEE015
+     C                     PARM           PATTY   1                                           EEE015
+     C                     PARM           PCHIA  10                                           EEE015
+     C                     PARM           PRTTY   5                                           EEE015
+     C                     PARM           PNVCD   2                                           EEE015
+     C                     PARM           PPRFC   4                                           EEE015
+     C                     PARM           PRTDN   2                                           EEE015
+     C                     PARM           PRTDI   2                                           EEE015
+     C                     PARM           PRTCD   7                                           EEE015
+     C           PRTDN     IFEQ *BLANKS                                                       EEE015
+     C                     Z-ADD-1        PRTDE                                               EEE015
+     C                     ELSE                                                               EEE015
+     C                     MOVE PRTDN     PRTDE                                               EEE015
+     C                     END                                                                EEE015
+     C                     END                                                                EEE015
+     C                     EXSR PRMFIL
+     C                     WRITERENFMVD0
+     C                     ELSE
+      *
+      ** For amend, update old record
+      *
+     C                     MOVELPKEY1     E3KEY1
+     C                     Z-ADD0         E3DEFF
+     C                     MOVEL*LOVAL    E3TRR1
+     C           KNFMV1    SETLLRENFMVPD
+     C           KNFMV2    READERENFMVPD                 72
+     C           *IN72     DOWEQ'0'
+     C           E3TRR1    ANDNEPTRR1
+     C           KNFMV2    READERENFMVPD                 72
+     C                     END
+     C           *IN72     IFEQ '0'
+     C           PRTDE     IFEQ -2                                                            EEE015
+     C                     Z-ADDE3RTDE    PRTDE                                               EEE015
+     C                     END                                                                EEE015
+     C                     EXSR PRMFIL
+     C                     UPDATRENFMVD0
+     C                     END
+     C                     END
+      *
+     C           PREAM     IFEQ *ALL'9'
+     C           PDEFF     ANDLERUNDAY                                                        223609
+     C                     EXSR UPDBAL
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DLTRCD - Delete Record                                       *
+      *                                                               *
+      *****************************************************************
+     C           DLTRCD    BEGSR
+      *
+      ** Delete old record
+      *
+     C                     MOVELPKEY1     E3KEY1
+     C                     Z-ADDPDEFF     E3DEFF
+     C                     MOVELPTRR1     E3TRR1
+     C           KNFMV1    CHAINRENFMVPD             72
+     C           *IN72     IFEQ '0'
+     C                     DELETRENFMVD0
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  PRMFIL - Process parameter fields                            *
+      *                                                               *
+      *****************************************************************
+     C           PRMFIL    BEGSR
+      *
+      ** Convert passed parms to file fields
+      **  Account
+      *
+     C                     MOVELPKEY1     E3KEY1
+      *
+     C                     MOVELBRCA      PBRCA   3
+     C                     MOVE CNUM      PCNUM   6
+     C                     MOVELCCY       PCCY    3
+     C                     MOVELACOD      PACOD  10
+     C                     MOVELACSQ      PACSQ   2
+      *
+      **  First amount
+      *
+     C                     Z-ADDPREAM     E3REAM
+     C                     MOVELPDC01     E3DC01
+      *
+      **  Second amount
+      *
+     C                     Z-ADDPCAVL     E3CAVL
+     C                     MOVELPDC02     E3DC02
+      *
+      **  Notification ref
+      *
+     C                     MOVELPTRR1     E3TRR1
+      *
+      **  Notification type
+      *
+     C                     MOVELPFMTP     E3FMTP
+     C           PFMTP     IFEQ 'USER'
+     C           PCAVL     ANDEQ*ALL'9'
+     C                     MOVEL'BALANCE' E3FMTP    P
+     C                     END
+      *
+      **  Date available
+      *
+     C                     Z-ADDPDEFF     E3DEFF
+      *
+      **  Date notified/received
+      *
+     C                     Z-ADDPRECD     E3RECD
+      *
+      **  History bal
+      *
+     C                     Z-ADDPHISB     E3HISB
+     C                     MOVELPDC03     E3DC03
+      *                                                                                       EEE015
+      **  Retention                                                                           EEE015
+      *                                                                                       EEE015
+     C                     Z-ADDPRTDE     E3RTDE                                              EEE015
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Program Initialization                              *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C           KNFMV1    KLIST
+     C                     KFLD           E3KEY1
+     C                     KFLD           E3DEFF
+     C                     KFLD           E3TRR1
+      *
+     C           KNFMV2    KLIST
+     C                     KFLD           E3KEY1
+      *
+     C           KREHI1    KLIST
+     C                     KFLD           R1BRCA
+     C                     KFLD           R1CNUM
+     C                     KFLD           R1CCY
+     C                     KFLD           R1ACOD
+     C                     KFLD           R1ACSQ
+     C                     KFLD           R1HISD
+      *
+     C           KREHI2    KLIST
+     C                     KFLD           R1BRCA
+     C                     KFLD           R1CNUM
+     C                     KFLD           R1CCY
+     C                     KFLD           R1ACOD
+     C                     KFLD           R1ACSQ
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           BKFMT     PARM *BLANKS   P@FMT
+      *
+     C           *NAMVAR   DEFN           JNSTAT
+     C                     IN   JNSTAT
+     C********** *NAMVAR   DEFN           MPHAS   1                                           CCB020
+     C**********           IN   MPHAS                                                         CCB020
+      *                                                                                       CCB020
+      ** CBFLAGQT Phase Check                                                                 CCB020
+      *                                                                                       CCB020
+     C                     MOVEL'CBC00100'@CBPRM  9                                           CCB020
+     C                     MOVE '1'       @CBPRM                                              CCB020
+     C                     CALL @CBPRM                                                        CCB020
+     C                     PARM *BLANKS   COBST   4                                           CCB020
+      *                                                                                       CCB020
+     C********** MPHAS     IFNE 'A'                                                    223609 CCB020
+     C           COBST     IFEQ '*YES'                                                        CCB020
+     C                     Z-ADDBJDNWD    NXTDAY  50                                          223609
+     C                     Z-ADDBJRDNB    RUNDAY  50                                          223609
+     C                     ELSE                                                               223609
+     C                     Z-ADDBJRDNB    NXTDAY  50                                          223609
+     C                     Z-ADDPRUN      RUNDAY  50                                          223609
+     C                     ENDIF                                                              223609
+      *
+     C                     MOVEL'N'       REFPFX  1
+      *
+     C                     MOVE *ALL'9'   TRMREF  8
+     C                     MOVEL'N'       TRMREF
+     C                     MOVE *ALL'0'   INTREF  8
+     C                     MOVEL'N'       INTREF
+      *
+     C           PKEY1     IFNE LLKEY1
+     C                     CALL 'AOACCTR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM PKEY1     P@RETL 10
+     C                     PARM *BLANKS   P@CNUM  6
+     C                     PARM *BLANKS   P@CUCD  3
+     C                     PARM *BLANKS   P@ACCD 10
+     C                     PARM *BLANKS   P@ACSQ  2
+     C                     PARM *BLANKS   P@BRCA  3
+     C           ACFMT     PARM *BLANKS   P@FMT
+     C                     MOVELPKEY1     LLKEY1 24
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  TERMIN - Termination Notification                            *
+      *                                                               *
+      *****************************************************************
+     C           TERMIN    BEGSR
+      *
+      ** Access termination notification
+      *
+     C                     MOVELPKEY1     E3KEY1
+     C                     Z-ADD0         E3DEFF
+     C                     MOVE *LOVAL    E3TRR1
+     C           KNFMV1    SETLLRENFMVPD
+     C           KNFMV2    READERENFMVPD                 82
+     C           *IN82     DOWEQ'0'
+     C           E3TRR1    ANDNETRMREF
+     C           KNFMV2    READERENFMVPD                 82
+     C                     END
+     C           *IN82     IFEQ '0'
+      *
+      ** Update if found
+      *
+     C                     MOVELPRECD     E3RECD
+     C                     MOVELPDEFF     E3DEFF
+     C                     UPDATRENFMVD0
+     C                     ELSE
+      *
+      ** Write if not yet there
+      *
+     C                     MOVELPDEFF     E3DEFF
+     C                     MOVELTRMREF    E3TRR1
+     C                     MOVELPRECD     E3RECD
+     C                     MOVE *ALL'9'   E3REAM
+     C                     MOVEL'D'       E3DC01
+     C                     MOVE *ALL'9'   E3CAVL
+     C                     MOVEL'D'       E3DC02
+     C                     Z-ADD0         E3HISB
+     C                     MOVEL'D'       E3DC03
+     C                     MOVEL'TERMINAT'E3FMTP    P
+     C           E3FMTP    CAT  'E':0     E3FMTP
+     C                     WRITERENFMVD0
+     C                     END
+      *
+      **  Remove non-termination notifs on or after termination date
+      *
+     C                     MOVELPKEY1     E3KEY1
+     C                     MOVELPDEFF     E3DEFF
+     C                     MOVE *LOVAL    E3TRR1
+     C           KNFMV1    SETLLRENFMVPD
+     C           KNFMV2    READERENFMVPD                 82
+     C           *IN82     DOWEQ'0'
+     C           E3TRR1    IFNE TRMREF
+     C                     DELETRENFMVD0
+     C                     END
+     C           KNFMV2    READERENFMVPD                 82
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  ADDINT - Interest Notification                               *
+      *                                                               *
+      *****************************************************************
+     C           ADDINT    BEGSR
+      *
+      **  Access interest notification
+      *
+     C                     MOVELPKEY1     E3KEY1
+     C                     Z-ADD0         E3DEFF
+     C                     MOVE *LOVAL    E3TRR1
+     C           KNFMV1    SETLLRENFMVPD
+     C           KNFMV2    READERENFMVPD                 82
+     C           *IN82     IFEQ '0'
+     C           E3TRR1    ANDEQINTREF
+      *
+      **  Update if found
+      *
+     C           PDC01     IFEQ E3DC01
+     C           E3REAM    ADD  PREAM     E3REAM
+     C                     END
+     C           PDC01     IFNE E3DC01
+     C           E3REAM    SUB  PREAM     E3REAM
+      *
+      **         (change sign if adjustment bigger than current amount)
+      *
+     C           E3REAM    IFLT 0
+     C                     Z-SUBE3REAM    E3REAM
+     C           E3DC01    IFEQ 'D'
+     C                     MOVEL'C'       E3DC01
+     C                     ELSE
+     C                     MOVEL'D'       E3DC01
+     C                     END
+     C                     END
+     C                     END
+     C           PDC02     IFEQ E3DC02
+     C           E3CAVL    ADD  PCAVL     E3CAVL
+     C                     END
+     C           PDC02     IFNE E3DC02
+     C           E3CAVL    SUB  PCAVL     E3CAVL
+      *
+      **         (change sign if adjustment bigger than current amount)
+      *
+     C           E3CAVL    IFLT 0
+     C                     Z-SUBE3CAVL    E3CAVL
+     C           E3DC02    IFEQ 'D'
+     C                     MOVEL'C'       E3DC02
+     C                     ELSE
+     C                     MOVEL'D'       E3DC02
+     C                     END
+     C                     END
+     C                     END
+     C           PRECD     IFEQ 0
+     C                     ELSE
+     C                     Z-ADDPRECD     E3RECD
+     C                     END
+     C                     Z-ADD0         E3DEFF
+      *                                                                                       EEE015
+      ** Use new retention period, if given                                                   EEE015
+      *                                                                                       EEE015
+     C           PRTDE     IFEQ -2                                                            EEE015
+     C                     ELSE                                                               EEE015
+     C                     Z-ADDPRTDE     E3RTDE                                              EEE015
+     C                     END                                                                EEE015
+     C                     UPDATRENFMVD0
+     C                     ELSE
+      **  Write if not yet there
+     C                     Z-ADD0         E3DEFF
+     C                     MOVELINTREF    E3TRR1
+     C           PRECD     IFEQ 0
+     C                     Z-ADDRUNDAY    E3RECD                                              223609
+     C                     ELSE
+     C                     Z-ADDPRECD     E3RECD
+     C                     END
+     C                     Z-ADDPREAM     E3REAM
+     C                     MOVELPDC01     E3DC01
+     C                     Z-ADDPCAVL     E3CAVL
+     C                     MOVELPDC02     E3DC02
+     C                     Z-ADD0         E3HISB
+     C                     MOVEL'D'       E3DC03
+     C                     MOVEL'INTEREST'E3FMTP    P
+      *                                                                                       EEE015
+      ** Determine retention period                                                           EEE015
+      **  fetch from account code, if reqd                                                    EEE015
+      *                                                                                       EEE015
+     C           PRTDE     IFEQ -2                                                            EEE015
+     C                     MOVE ACOD      PACCD                                               EEE015
+     C                     CALL 'SD0031T'                                                     EEE015
+     C                     PARM           PACCD  10                                           EEE015
+     C                     PARM           PATTY   1                                           EEE015
+     C                     PARM           PCHIA  10                                           EEE015
+     C                     PARM           PRTTY   5                                           EEE015
+     C                     PARM           PNVCD   2                                           EEE015
+     C                     PARM           PPRFC   4                                           EEE015
+     C                     PARM           PRTDN   2                                           EEE015
+     C                     PARM           PRTDI   2                                           EEE015
+     C                     PARM           PRTCD   7                                           EEE015
+     C           PRTDI     IFEQ *BLANKS                                                       EEE015
+     C                     Z-ADD-1        PRTDE                                               EEE015
+     C                     ELSE                                                               EEE015
+     C                     MOVE PRTDI     PRTDE                                               EEE015
+     C                     END                                                                EEE015
+     C                     END                                                                EEE015
+     C                     Z-ADDPRTDE     E3RTDE                                              EEE015
+     C                     WRITERENFMVD0
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  RMVINT - Remove Interest Notification                        *
+      *                                                               *
+      *****************************************************************
+     C           RMVINT    BEGSR
+      *
+      **  Access interest notification
+      *
+     C                     MOVELPKEY1     E3KEY1
+     C                     Z-ADD0         E3DEFF
+     C                     MOVE *LOVAL    E3TRR1
+     C           KNFMV1    SETLLRENFMVPD
+     C           KNFMV2    READERENFMVPD                 82
+     C           *IN82     IFEQ '1'
+     C           E3TRR1    ORNE INTREF
+     C                     Z-ADD0         E3CAVL
+     C                     END
+      *
+      **  Note details if non-zero amount found
+      *
+     C           E3CAVL    IFNE 0
+     C                     MOVELE3KEY1    PKEY1
+     C                     MOVEL*BLANKS   PTRR1
+     C                     Z-ADDE3RECD    PRECD
+     C                     Z-ADDE3DEFF    PDEFF
+     C                     Z-ADDE3REAM    PREAM
+     C                     MOVELE3DC01    PDC01
+     C                     Z-ADDE3CAVL    PCAVL
+     C                     MOVELE3DC02    PDC02
+     C                     Z-ADDE3HISB    PHISB
+     C                     MOVELE3DC03    PDC03
+     C                     MOVELE3RTDE    PRTDE                                               EEE015
+     C                     END
+      *
+      ** Delete interest notification
+      *
+     C           *IN82     IFEQ '0'
+     C           E3TRR1    ANDEQINTREF
+     C                     DELETRENFMVD0
+     C                     END
+      *
+      ** Insert interest amount as a user notification
+      *
+     C           E3CAVL    IFNE 0
+     C                     MOVELCFMTP3    PFMTP     P
+     C                     EXSR UPDRCD
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  UPDBAL - Update Balance                                      *
+      *                                                               *
+      *****************************************************************
+     C           UPDBAL    BEGSR
+      *
+      ** Position to history balance on or before BAL (avail date - 1)
+      *
+     C                     MOVELBRCA      R1BRCA
+     C                     MOVE CNUM      R1CNUM
+     C                     MOVELCCY       R1CCY
+     C                     MOVE ACOD      R1ACOD
+     C                     MOVE ACSQ      R1ACSQ
+     C                     Z-ADDPDEFF     R1HISD           (DAY + 1)
+     C           KREHI1    SETLLREHISPPF
+     C           KREHI2    READEREHISPPF                 82                                   118466
+     C           *IN82     IFEQ '0'
+     C           R1HISD    ANDGTPDEFF                                                         118466
+     C           KREHI2    REDPEREHISPPF                 82
+     C                     END
+      *
+     C           *IN82     IFEQ '1'
+     C                     Z-ADD0         R1HISB
+     C                     END
+      *
+      ** Update BAL notification to have history balance
+      *
+     C                     MOVELPKEY1     E3KEY1
+     C                     Z-ADDPDEFF     E3DEFF
+     C                     MOVE PTRR1     E3TRR1
+     C           KNFMV1    CHAINRENFMVPD             82
+     C           *IN82     IFEQ '0'
+     C           R1HISB    IFLT 0
+     C                     Z-SUBR1HISB    E3HISB
+     C                     MOVEL'C'       E3DC03
+     C                     ELSE
+     C                     Z-ADDR1HISB    E3HISB
+     C                     MOVEL'D'       E3DC03
+     C                     END
+      *                                                                                       AS0001
+      ** Customer notifs require BAL mvt to be converted to history bal                       AS0001
+      *                                                                                       AS0001
+     C           E3FMTP    IFEQ CFMTP3                                                        AS0001
+      *
+      ** Notification of intended balance movement has opposite sign
+      **   to actual balance (eg CR balance intends to DR withdrawal)
+      *
+     C                     Z-ADDE3HISB    E3REAM
+     C                     Z-ADDE3HISB    E3CAVL
+     C           E3DC03    IFEQ 'D'
+     C           E3HISB    ANDNE0
+     C                     MOVEL'C'       E3DC01
+     C                     MOVEL'C'       E3DC02
+     C                     ELSE
+     C                     MOVEL'D'       E3DC01
+     C                     MOVEL'D'       E3DC02
+     C                     END
+     C                     END                                                                AS0001
+     C                     UPDATRENFMVD0
+     C                     END
+      *
+     C                     ENDSR

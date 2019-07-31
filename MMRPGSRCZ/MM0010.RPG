@@ -1,0 +1,426 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Mndy Fields for Complete Deals File List')
+     F****************************************************************
+     F*                                                              *
+     F*  Midas  MM DEALER MODULE
+     F*                                                              *
+     F*     MM0010 - MANDATORY FIELDS FOR COMPLETE DEALS FILE LIST   *
+     F*                                                              *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01319             Date 2OCt91                *
+     F*                 E28363             Date 10SEP91               *
+     F*                    E23462              DATE  2OCT90          *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *     S01319 - Remove redundant processing                     *
+     F*     E28363 - RENAME OF DRS TO DEALING                        *
+     F*     E23462 - REPLACE DRS WITH TRADING SUPPORT, (TS).         *
+     F*                                                              *
+     F****************************************************************
+     F*
+     F**  INDICATOR FUNCTION SUMMARY
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     F*
+     F*       63         PROGRAM CALLED AT END OF DAY
+     F*       64         INPUT AND CALCULATED FILE TOTALS DO NOT AGREE
+     F*       80         DATA BASE ERROR INDICATOR
+     F*       U7         DATA BASE ERROR (JOB SWITCH)
+     F*       U8         DATA BASE ERROR (JOB SWITCH)
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFDICDRLLIF  E           K        DISK         KINFSR *PSSR
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     FMMMCOMLLIP  E           K        DISK         KINFSR *PSSR
+     F*MM0010RRO***E*******************PRINTER******KINFSR**PSSR**********S01319
+     F*MMTOTSRRO***E*******************PRINTER******KINFSR**PSSR**********S01319
+     FMM0010AUO   E                    PRINTER      KINFSR *PSSR          S01319
+     F                                              KINFDS SPOOLU         S01319
+     FMM0010P1O   E                    PRINTER      KINFSR *PSSR          S01319
+     F                                              KINFDS SPOOL          S01319
+     E                    CPY@    1   1 80
+     E* ARRAY FOR COPYRIGHT STATEMENT
+     E                    @PRNM   1   4 45
+     E*
+     E**  ARRAY TO HOLD MMTOTSRR TITLE TEXT
+     E/EJECT
+     IPSDS       SDS
+     I*
+     I**  PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I           UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     ISPOOL       DS                                                      S01319
+     I**   FILE INFORMATION DATA STRUCTURE                                S01319
+     I                                       83  92 SFILE                 S01319
+     I                                    B 123 1240SFNUM                 S01319
+     I**                                                                  S01319
+     ISPOOLU      DS                                                      S01319
+     I**   FILE INFORMATION DATA STRUCTURE                                S01319
+     I                                       83  92 SFILEU                S01319
+     I                                    B 123 1240SFNUMU                S01319
+     I/EJECT
+     C*
+     C**  INITIAL PROCESSING - ONLY PERFORM ON FIRST CYCLE
+     C           @FCYC     IFNE 'Y'                        B1
+     C                     EXSR #A                         *1
+     C                     END                             E1
+     C*
+     C**  MAIN PROCESSING
+     C                     EXSR #B
+     C*
+     C**  TERMINATION PROCESSING
+     CLR                   EXSR #C
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  INDEX TO SUBROUTINES                                         *
+     C*                                                               *
+     C*   1. #B     - MAIN PROCESSING                                 *
+     C*   2. #A     - INITIAL PROCESSING                              *
+     C*   3. #C     - TERMINATION PROCESSING                          *
+     C*   4. ZA0150 - STANDARD SUBROUTINE TO ACCESS I.C.D.            *
+     C*   5. *PSSR  - ERROR HANDLING SUBROUTINE                       *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #B - MAIN PROCESSING.                                        *
+     C*       CONTROLS SET UP OF MM0010RR DETAILS.                    *
+     C*       OUTPUTS MM0010RR DETAILS.                               *
+     C*                                                               *
+     C*  CALLED BY:  CONTROL PROCESSING                               *
+     C*                                                               *
+     C*  CALLS:                                                       *
+     C*                                                               *
+     C*  WORK FIELDS:RRCALC   CALCULATED NUMBER OF RECORDS            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C**  IF DATA BASE ERROR HAS OCCURRED, EXIT THIS ROUTINE
+     C           *IN80     IFEQ '1'                        B1
+     C                     GOTO #B9                        *1
+     C                     END                             E1
+     C*
+     C**  UPDATE CALCULATED NUMBER OF RECORDS
+     C                     ADD  1         RRCALC
+     C*
+     C**  SET UP OUTPUT FIELDS
+     C***********ICBRSM****IFEQ*'Y'************************B1*************S01319
+     C*********************MOVE*'YES'*****RRBRSM************1*************S01319
+     C*********************ELSE****************************X1*************S01319
+     C*********************MOVE*'NO'******RRBRSM************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C*
+     C           ICCNMM    IFEQ 'Y'                        B1
+     C                     MOVE 'YES'     RRCNMM           *1
+     C                     ELSE                            X1
+     C                     MOVE 'NO'      RRCNMM           *1
+     C                     END                             E1
+     C*
+     C           ICBKCM    IFEQ 'Y'                        B1
+     C                     MOVE 'YES'     RRBKCM           *1
+     C                     ELSE                            X1
+     C                     MOVE 'NO'      RRBKCM           *1
+     C                     END                             E1
+     C*
+     C           ICDSTM    IFEQ 'Y'                        B1
+     C                     MOVE 'YES'     RRDSTM           *1
+     C                     ELSE                            X1
+     C                     MOVE 'NO'      RRDSTM           *1
+     C                     END                             E1
+     C*
+     C***********ICOITM****IFEQ*'Y'************************B1*************S01319
+     C*********************MOVE*'YES'*****RROITM************1*************S01319
+     C*********************ELSE****************************X1*************S01319
+     C*********************MOVE*'NO'******RROITM************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C*
+     C***********ICOIMD****IFEQ*'Y'************************B1*************S01319
+     C*********************MOVE*'YES'*****RROIMD************1*************S01319
+     C*********************ELSE****************************X1*************S01319
+     C*********************MOVE*'NO'******RROIMD************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C*
+     C***********ICCITM****IFEQ*'Y'************************B1*************S01319
+     C*********************MOVE*'YES'*****RRCITM************1*************S01319
+     C*********************ELSE****************************X1*************S01319
+     C*********************MOVE*'NO'******RRCITM************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C*
+     C***********ICCIMD****IFEQ*'Y'************************B1*************S01319
+     C*********************MOVE*'YES'*****RRCIMD************1*************S01319
+     C*********************ELSE****************************X1*************S01319
+     C*********************MOVE*'NO'******RRCIMD************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C*
+     C**  WRITE DETAILS TO FILE LIST REPORT
+     C                     WRITEMM0010R1
+     C*
+     C           #B9       ENDSR                           **#B9**
+     C*
+     C****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*       SUBROUTINE ZA0150 - THIS SUBROUTINE CHAINS TO FILE LF/  *
+     C*       FDICDRLL TO GET THE INSTALLATION CONTROL DETAILS RECORD *
+     C*       1 (HELD ON PF/TABTB10)                                  *
+     C*       INDICATOR 80 IS SET ON IF THE CHAIN FAILS OR THE RECORD *
+     C*       IS FLAGGED FOR DELETION.                                *
+     C*       IF INDICATOR 80 IS SET ON DETAILS OF THE ATTEMPTED      *
+     C*       ACCESS ARE PLACED IN THE LDA.                           *
+     C*                                                               *
+     C*       FIELDS USED : SS0150 - KEY USED TO ACCESS FDICDRLL      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZA0150    BEGSR
+     C*
+     C** SET UP KEY TO OBTAIN FORMAT TABTB10F '01        10'
+     C                     MOVEL'01'      SS0150 12
+     C                     MOVE '10'      SS0150
+     C*
+     C** CHAIN TO FILE FDICDRLL
+     C           SS0150    CHAINFDICDRLL             80
+     C           RECI      IFNE 'D'                        B1
+     C                     MOVE '1'       *IN80            *1
+     C                     END                             E1
+     C*
+     C** DEAL WITH DATA BASE ERROR
+     C           *IN80     IFEQ '1'                        ***************
+     C                     MOVEL'FDICDRLL'DBFILE           *             *
+     C                     MOVEL'900'     DBASE            * DBERROR 900 *
+     C                     MOVELSS0150    DBKEY            *             *
+     C                     END                             ***************
+     C*
+     C           ZA0159    ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE:  #A  - INITIAL PROCESSING                        *
+     C*                                                               *
+     C*  CALLED BY :  CONTROL PROCESSING                              *
+     C*                                                               *
+     C*  CALLS     :  ZA0150                                          *
+     C*                                                               *
+     C*  USES:        @FCYC    FIRST CYCLE PROCESSING FLAG.           *
+     C*               @TYPP    FIELD TO INDICATE TYPE OF PROCESSING   *
+     C*               RRCALC   FIELD CONTAINING CALCULATED NUMBER OF  *
+     C*                        RECORDS                                *
+     C*               RRNREC   FIELD CONTAINING INPUT NUMBER OF       *
+     C*                        RECORDS                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  RECEIVE PARAMETER INDICATING TYPE OF PROCESSING
+     C           *ENTRY    PLIST
+     C                     PARM           @TYPP   2
+     C                     PARM           SEQ                             S01319
+     C*
+     C**  SET FIRST CYCLE PROCESSING FLAG.
+     C                     MOVE 'Y'       @FCYC   1
+     C*
+     C**  ACCESS INSTALLATION CONTROL DATA
+     C                     EXSR ZA0150
+     C                     MOVE RUNA      RRRUNA
+     C                     MOVE TITL      RRTITL
+     C*
+     C**  IF DATA BASE ERROR HAS OCCURRED, EXIT THIS ROUTINE
+     C           *IN80     IFEQ '1'                        B1
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+     C*
+     C**  INITIALISE FIELDS CONTAINING CALCULATED NUMBER
+     C**  OF RECORDS AND INPUT NUMBER OF RECORDS
+     C                     Z-ADD0         RRCALC
+     C                     Z-ADD1         RRNREC
+     C*
+     C**  LOAD FIELDS FOR TOTALS REPORT
+     C                     MOVEL@PRNM,1   RRPRNM
+     C                     MOVE @PRNM,2   RRPRNM
+     C                     MOVEL@PRNM,3   RRPRUL
+     C                     MOVE @PRNM,4   RRPRUL
+     C**                                                                  S01319
+     C* REPORT SPOOL FILE GENERATION                                      S01319
+     C* transfer binary data into numeric field                           S01319
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01319
+     C                     CALL 'ZSFILE'                                  S01319
+     C                     PARM           SEQ     5                       S01319
+     C                     PARM *BLANKS   @PARM   3                       S01319
+     C                     PARM           SFILE                           S01319
+     C                     PARM           ZSNUM                           S01319
+     C                     PARM *BLANK    ZSERR   1                       S01319
+     C*                                                                   S01319
+     C** Error during ZSFILE processing, return to calling program        S01319
+     C           ZSERR     IFEQ 'Y'                                       S01319
+     C                     SETON                     U7U8LR               S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     RETRN                                          S01319
+     C                     END                                            S01319
+     C*
+     C**  WRITE HEADINGS FOR FILE LIST REPORT AND TOTALS REPORT
+     C                     WRITEMM0010R0
+     C                     WRITEMMTOTSR0
+     C*
+     C           #A9       ENDSR                           **#A9**
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #C - TERMINATION PROCESSING                                  *
+     C*                                                               *
+     C*                                                               *
+     C*  CALLED BY : CONTROL PROCESSING                               *
+     C*                                                               *
+     C*  CALLS     : ZA0150                                           *
+     C*            : #CA                                              *
+     C*                                                               *
+     C*  USES:       @FCYC  - FIRST CYCLE PROCESSING FLAG             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*                                                                   S01319
+     C* REPORT SPOOL FILE GENERATION                                      S01319
+     C* transfer binary data into numeric field                           S01319
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01319
+     C                     CALL 'ZSFILE'                                  S01319
+     C                     PARM           SEQ     5                       S01319
+     C                     PARM *BLANKS   @PARM   3                       S01319
+     C                     PARM           SFILEU                          S01319
+     C                     PARM           ZSNUMU                          S01319
+     C                     PARM *BLANK    ZSERR   1                       S01319
+     C*                                                                   S01319
+     C** Error during ZSFILE processing, return to calling program        S01319
+     C           ZSERR     IFEQ 'Y'                                       S01319
+     C                     SETON                     U7U8LR               S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     RETRN                                          S01319
+     C                     END                                            S01319
+     C*
+     C**  SET UP PROGRAM NAME
+     C                     MOVEL'MM0010'  DBPGM
+     C                     MOVEL'MM0010'  RRPGM
+     C*
+     C**  IF #A HAS NOT BEEN PERFORMED BECAUSE MMMCOMLL HAS NO
+     C**  RECORDS, DATA BASE ERROR HAS OCCURRED
+     C           @FCYC     IFNE 'Y'                        B1
+     C                     MOVE '1'       *IN80            ***************
+     C                     MOVEL'MMMCOMLL'DBFILE           * DBERROR 001 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVEL'001'     DBASE            *1
+     C                     END                             E1
+     C*
+     C**  PROCESSING IF DATA BASE ERROR HAS OCCURRED IN THIS
+     C**  PROGRAM
+     C           *IN80     IFEQ '1'                        B1
+     C*
+     C**  LOAD FIELDS FOR TOTALS REPORT
+     C                     MOVEL@PRNM,1   RRPRNM           *1
+     C                     MOVE @PRNM,2   RRPRNM           *1
+     C                     MOVEL@PRNM,3   RRPRUL           *1
+     C                     MOVE @PRNM,4   RRPRUL           *1
+     C*
+     C**  OUTPUT DETAIL REPORT AND TOTALS REPORT HEADINGS
+     C                     WRITEMM0010R0                   *1
+     C                     WRITEMMTOTSR0                   *1
+     C*
+     C**  LOAD PRINTER FILE WITH ERROR DATA, PRINT ERROR MESSAGE
+     C**  AND EXIT PROGRAM
+     C                     MOVE DBASE     RRBASE           *1
+     C                     MOVE DBFILE    RRFILE           *1
+     C                     MOVELDBKEY     RRKEY            *1
+     C                     WRITEMM0010R3                   *1
+     C                     WRITEMMTOTSR3                   *1
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     GOTO #C9                        *1
+     C                     END                             E1
+     C*
+     C**  IF RUN TYPE IS 'ED', *IN63 AND *IN64 WILL CONDITION
+     C**  OUTPUT ON TOTALS REPORT
+     C           @TYPP     IFEQ 'ED'                       B1
+     C                     MOVE '1'       *IN63            *1
+     C*
+     C**  IF CALCULATED NUMBER OF RECORDS DOES NOT EQUAL INPUT
+     C**  NUMBER OF RECORDS, SET ON *IN64
+     C           RRCALC    IFNE RRNREC                     B*2
+     C                     MOVE '1'       *IN64            **2
+     C                     END                             E*2
+     C*
+     C**  IF RUN TYPE IS 'IC', TIME IS NEEDED FOR REPORT
+     C                     ELSE                            X1
+     C                     TIME           RRTIME           *1
+     C                     END                             E1
+     C*
+     C**  WRITE TOTALS REPORT
+     C                     WRITEMMTOTSR1
+     C*
+     C           #C9       ENDSR                           **#C9**
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR - ERROR HANDLING SUBROUTINE.                           *
+     C*                                                               *
+     C*  CALLED BY:  EXECUTES WHENEVER FILE OR PROGRAM EXCEPTION      *
+     C*              ERROR OCCURS.                                    *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*  USES:                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C                     ENDSR                            ***PSSR9**
+     C*
+     C*****************************************************************
+     C*
+     C***  @PRNMR ARRAY FOR MMTOTSRR TITLE TEXT                           E23462
+     C*   MIDAS DEALING ROOM SYSTEM - MANDATORY FIEL                      E23462
+     C*   MIDAS TRADER SUPPORT      - MANDATORY FIEL                      E28363
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**  @PRNMR ARRAY FOR MMTOTSRR TITLE TEXT
+             Midas           - MANDATORY FIEL
+DS FOR COMPLETE DEALS : REPORT TOTALS
+   ------------------------------------------
+-------------------------------------

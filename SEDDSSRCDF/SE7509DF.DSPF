@@ -1,0 +1,544 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SE Corporate actions - exercise & conversion')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7509DF - Corporate Actions - Exercises & Conversion        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Prev Amend No. 161732             Date 21Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 137884             Date 20Jul98               *
+      *                 CSE007  *CREATE    Date 01Dec97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  161732 - Corporate Actions Exercise and Conversion - Part    *
+      *           Stock/Keep Rest calculation.                        *
+      *  137884 - Corporate Actions: Cash fields can be changed even  *
+      *           if the Corporate action is stock authorised.        *
+      *  CSE007 - Corporate Actions                                   *
+      *                                                               *
+      *****************************************************************
+     A                                      REF(MFRFL)
+      *
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      CHGINPDFT
+     A                                      INDARA
+     A                                      PRINT(*LIBL/QSYSPRT)
+     A                                      CA03(03 'Exit.')
+     A                                      CA12(12 'Previous.')
+     A N70                                  CA15(15 'Security Maintenance')
+      *=========================================================================
+     A          R SE7509F1                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+      *
+     A            ##USR     R        O  1  2REFFLD(USER)
+     A                                  1 13'SE7509F1'
+     A                                  1 25'CORPORATE ACTION DETAILS'
+     A                                      DSPATR(HI)
+     A N70                              1 50'MAINTENANCE'
+     A                                      DSPATR(HI)
+     A  70                              1 50'ENQUIRY'
+     A                                      DSPATR(HI)
+     A                                  2 31'EXERCISES AND CONVERSIONS'
+     A                                      DSPATR(HI)
+     A                                  1 67'DATE '
+     A            ##MRDT    R        O  1 73REFFLD(RUNA)
+      *
+     A            ##JOB     R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A            ##TME          6  0   2 73EDTWRD('  :  :  ')
+      *
+     A                                  3  2'Reference'
+     A            DDCORF         6A  O  3 12
+     A                                      DSPATR(HI)
+     A                                  3 19'Security'
+     A            DDSESN        10A  O  3 28
+     A                                      DSPATR(HI)
+     A                                  3 39'Type'
+     A            DDCOAT         2A  O  3 44
+     A                                      DSPATR(HI)
+     A                                  3 47'Ex-date'
+     A            DDEXDT         6A  O  3 55
+     A                                      DSPATR(HI)
+     A                                  3 62'Option Number'
+     A            DDOPNB         2A  O  3 76
+     A                                      DSPATR(HI)
+     A            SLINE         79A  O 04 02DSPATR(UL)
+      *
+      *-------------------------------------------------------------------------
+      *
+     A                                  5  2'New Security'
+     A    N70                                COLOR(BLU)
+     A            DDNSEC        10A  B  5 15DSPATR(HI)
+     A N50
+     AAN60N61N62
+     AAN63N20N70                            DSPATR(UL)
+     A  50
+     AO 60
+     AO 61
+     AO 62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  20                                  DSPATR(PC RI)
+      *
+     A                                  5 41'Trading from'
+     A    N70                                COLOR(BLU)
+     A            DDTRAF         6A  B  5 54DSPATR(HI)
+     A N60N61N62
+     AAN63N51N70                            DSPATR(UL)
+     A  60
+     AO 61
+     AO 62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  51                                  DSPATR(PC RI)
+      *
+     A                                  5 61'to'
+     A    N70                                COLOR(BLU)
+     A            DDTRAT         6A  B  5 64DSPATR(HI)
+     A N60N61N62
+     AAN63N52N70                            DSPATR(UL)
+     A  60
+     AO 61
+     AO 62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  52                                  DSPATR(PC RI)
+      *
+     A                                  6  2'Number New Shares/Bonds'
+     A    N70                                COLOR(BLU)
+     A            DDNSHA        16A  B  6 26DSPATR(HI)
+     A*/COPY WNCPYSRC,SEH00015
+     A N60N61N62
+     AAN63N21N70                            DSPATR(UL)
+     A  60
+     AO 61
+     AO 62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  21                                  DSPATR(PC RI)
+     A                                  6 45'Old Shares/Bonds'
+     A    N70                                COLOR(BLU)
+     A            DDOSHA        16A  B  6 62DSPATR(HI)
+     A N60N61N62
+     AAN63N22N70                            DSPATR(UL)
+     A  60
+     AO 61
+     AO 62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  22                                  DSPATR(PC RI)
+     A*/COPY WNCPYSRC,SEH00016
+      *
+     A                                  7  2'Conversion Price Old'
+     A    N70                                COLOR(BLU)
+     A            DDCPRC        16A  B  7 23DSPATR(HI)
+     A*                                              Begin /137884/
+     A*N70N23***                            DSPATR(UL)
+     A N60N61N62
+     AAN63N23N70                            DSPATR(UL)
+     A**70******                            DSPATR(PR)
+     A  60
+     AO 61
+     AO 62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A*                                              End   /137884/
+     A  23                                  DSPATR(PC RI)
+      *
+     A                                  7 41'Conversion Exchange Rate'
+     A    N70                                COLOR(BLU)
+     A            DDCEXR        14A  B  7 66DSPATR(HI)
+     A*                                              Begin /137884/
+     A*N70N24***                            DSPATR(UL)
+     A N60N61N62
+     AAN63N24N70                            DSPATR(UL)
+     A**70******                            DSPATR(PR)
+     A  60
+     AO 61
+     AO 62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A*                                              End   /137884/
+     A  24                                  DSPATR(PC RI)
+      *
+     A                                  8  2'Denomination Multiplier'
+     A    N70                                COLOR(BLU)
+     A            DDDMLT        16A  B  8 26DSPATR(HI)
+     A N60N61N62
+     AAN63N25N70                            DSPATR(UL)
+     A  60
+     AO 61
+     AO 62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  25                                  DSPATR(PC RI)
+     A                                  8 48'Dividend Right'
+     A            DDDIVR         6A  B  8 63DSPATR(HI)
+     A N60N61N62
+     AAN63N26N70                            DSPATR(UL)
+     A  60
+     AO 61
+     AO 62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  26                                  DSPATR(PC RI)
+      *
+     A                                  9  2'Subscription Price'
+     A    N70                                COLOR(BLU)
+     A            DDSUPR        16A  B  9 26DSPATR(HI)
+     A*/COPY WNCPYSRC,SEH00017
+     A*                                              Begin /137884/
+     A*N70N27***                            DSPATR(UL)
+     A N60N61N62
+     AAN63N27N70                            DSPATR(UL)
+     A**70******                            DSPATR(PR)
+     A  60
+     AO 61
+     AO 62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A*/COPY WNCPYSRC,SEH00018
+     A*                                              End   /137884/
+     A  27                                  DSPATR(PC RI)
+      *
+     A                                  9 45'Subscription from'
+     A            DDSUBF         6A  B  9 63DSPATR(HI)
+     A       N62
+     AAN63N28N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  28                                  DSPATR(PC RI)
+     A                                  9 70'to'
+     A            DDSUBT         6A  B  9 73DSPATR(HI)
+     A       N62
+     AAN63N29N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  29                                  DSPATR(PC RI)
+      *
+      *                                              Begin /161732/
+     A***********                      10  2'Rounding Options:'
+     A                                 10  2'Receive/Cash Price'
+     A    N70                                COLOR(BLU)
+     A            DDRCPR        16A  B 10 22DSPATR(HI)
+     A N60N61N62
+     AAN63N53N70                            DSPATR(UL)
+     A  60
+     AO 61
+     AO 62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  53                                  DSPATR(PC RI)
+     A                                 11  2'Rounding Options:'
+      *                                              End   /161732/
+     A    N70                                COLOR(BLU)
+      *                                              Begin /161732/
+     A***********                      10 22'Type'
+     A                                 11 22'Type'
+      *                                              End   /161732/
+     A    N70                                COLOR(BLU)
+      *                                              Begin /161732/
+     A*********** DDRNDN         1A  B 10 27DSPATR(HI)
+     A            DDRNDN         1A  B 11 27DSPATR(HI)
+      *                                              End   /161732/
+     A N60N61N62
+     AAN63N30N70                            DSPATR(UL)
+     A  60
+     AO 61
+     AO 62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  30                                  DSPATR(PC RI)
+      *                                              Begin /161732/
+     A***********                      10 30'In Cash'
+     A                                 11 30'In Cash'
+      *                                              End   /161732/
+     A    N70                                COLOR(BLU)
+      *                                              Begin /161732/
+     A*********** DDRNDS         1A  B 10 38DSPATR(HI)
+     A            DDRNDS         1A  B 11 38DSPATR(HI)
+      *                                              End   /161732/
+     A*                                              Begin /137884/
+     A****N61N62***
+     A*AN63N31N70**                          DSPATR(UL)
+     A    N61
+     AAN63N31N70                             DSPATR(UL)
+     A*                                              End   /137884/
+     A  61
+     A*                                              Begin /137884/
+     A*O*62******
+     A*                                              End   /137884/
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  31                                  DSPATR(PC RI)
+      *                                              Begin /161732/
+     A***********                      10 41'Compensation Price'
+     A                                 11 41'Compensation Price'
+      *                                              End   /161732/
+     A    N70                                COLOR(BLU)
+      *                                              Begin /161732/
+     A*********** DDCOMP        16A  B 10 60DSPATR(HI)
+     A            DDCOMP        16A  B 11 60DSPATR(HI)
+      *                                              End   /161732/
+     A*                                              Begin /137884/
+     A****N61N62***
+     A*AN63N32N70**                          DSPATR(UL)
+     A    N61
+     AAN63N32N70                             DSPATR(UL)
+     A*                                              End   /137884/
+     A  61
+     A*                                              Begin /137884/
+     A*O*62******
+     A*                                              End   /137884/
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  32                                  DSPATR(PC RI)
+      *
+      *                                              Begin /161732/
+     A                                 12 33'Narr.'
+     A                                 12 74'Narr.'
+     A***********                      11  2'Customer Options:'
+     A                                 13  2'Customer Options:'
+     A                                 13 33'Code'
+     A                                 13 41'Customer Options:'
+     A                                 13 74'Code'
+     A***********                      11 22'1. Sell all rights'
+     A*********** DDOPT1         1A  B 11 60DSPATR(HI)
+     A                                 14  2'1. Sell all rights'
+     A            DDOPT1         1A  B 14 30DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N33N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  33                                  DSPATR(PC RI)
+      *                                              Begin /161732/
+     A***********                      11 64'Narr. Code'
+     A*********** DDNAR1         2A  B 11 75DSPATR(HI)
+     A            DDNAR1         2A  B 14 33DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N34N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  34                                  DSPATR(PC RI)
+      *
+      *                                              Begin /161732/
+     A***********                      12 22'2. Convert + Buy  Fraction'
+     A*********** DDOPT2         1A  B 12 60DSPATR(HI)
+     A                                 15  2'2. Convert + Buy  Fraction'
+     A            DDOPT2         1A  B 15 30DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N35N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  35                                  DSPATR(PC RI)
+      *                                              Begin /161732/
+     A*********** DDNAR2         2A  B 12 75DSPATR(HI)
+     A            DDNAR2         2A  B 15 33DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N36N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  36                                  DSPATR(PC RI)
+      *
+      *                                              Begin /161732/
+     A***********                      13 22'3. Convert + Sell Fraction'
+     A*********** DDOPT3         1A  B 13 60DSPATR(HI)
+     A                                 16  2'3. Convert + Sell Fraction'
+     A            DDOPT3         1A  B 16 30DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N37N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  37                                  DSPATR(PC RI)
+      *                                              Begin /161732/
+     A*********** DDNAR3         2A  B 13 75DSPATR(HI)
+     A            DDNAR3         2A  B 16 33DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N38N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  38                                  DSPATR(PC RI)
+      *
+      *                                              Begin /161732/
+     A***********                      14 22'4. Take Stock'
+     A*********** DDOPT4         1A  B 14 60DSPATR(HI)
+     A                                 17  2'4. Take Stock'
+     A            DDOPT4         1A  B 17 30DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N39N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  39                                  DSPATR(PC RI)
+      *                                              Begin /161732/
+     A*********** DDNAR4         2A  B 14 75DSPATR(HI)
+     A            DDNAR4         2A  B 17 33DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N40N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  40                                  DSPATR(PC RI)
+      *
+      *                                              Begin /161732/
+     A***********                      15 22'5. Take Part Cash/Rest Stock'
+     A*********** DDOPT5         1A  B 15 60DSPATR(HI)
+     A                                 14 41'5. Take Part Cash/Rest Stock'
+     A            DDOPT5         1A  B 14 71DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N41N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  41                                  DSPATR(PC RI)
+      *                                              Begin /161732/
+     A*********** DDNAR5         2A  B 15 75DSPATR(HI)
+     A            DDNAR5         2A  B 14 74DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N42N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  42                                  DSPATR(PC RI)
+      *
+      *                                              Begin /161732/
+     A***********                      16 22'6. Take Part Cash/Keep Rest'
+     A*********** DDOPT6         1A  B 16 60DSPATR(HI)
+     A                                 15 41'6. Take Part Stock/Keep Rest'
+     A            DDOPT6         1A  B 15 71DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N43N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  43                                  DSPATR(PC RI)
+      *                                              Begin /161732/
+     A*********** DDNAR6         2A  B 16 75DSPATR(HI)
+     A            DDNAR6         2A  B 15 74DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N44N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  44                                  DSPATR(PC RI)
+      *
+      *                                              Begin /161732/
+     A***********                      17 22'7. Do Nothing'
+     A*********** DDOPT7         1A  B 17 60DSPATR(HI)
+     A                                 16 41'7. Do Nothing'
+     A            DDOPT7         1A  B 16 71DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N45N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  45                                  DSPATR(PC RI)
+      *                                              Begin /161732/
+     A*********** DDNAR7         2A  B 17 75DSPATR(HI)
+     A            DDNAR7         2A  B 16 74DSPATR(HI)
+      *                                              End   /161732/
+     A       N62
+     AAN63N46N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  46                                  DSPATR(PC RI)
+      *
+     A                                 18  2'Default No Reply'
+     A            DDDFNR         1A  B 18 19DSPATR(HI)
+     A       N62
+     AAN63N47N70                            DSPATR(UL)
+     A  62
+     AO 63
+     AO 70                                  DSPATR(PR)
+     A  47                                  DSPATR(PC RI)
+      *
+     A*/COPY WNCPYSRC,SEH00021
+     A                                 18 25'Option Shortname'
+     A    N70                                COLOR(BLU)
+     A            DDOPSH        35A  B 18 42DSPATR(HI)
+     A N70N48                               DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A  48                                  DSPATR(PC RI)
+      *
+     A*/COPY WNCPYSRC,SEH00019
+     A                                 19  2'Narrative'
+     A            DDTXT1        60A  B 19 13DSPATR(HI)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A            DDTXT2        60A  B 20 13DSPATR(HI)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A            DDTXT3        60A  B 21 13DSPATR(HI)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A            DDTXT4        60A  B 22 13DSPATR(HI)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *
+     A*/COPY WNCPYSRC,SEH00020
+      *=========================================================================
+      *
+     A          R SE7509F2                  TEXT('Command keys.')
+     A                                      OVERLAY PUTOVR
+      *
+     A N70                             23  2'F3=Exit  F12=Previous  F15=Securit+
+     A                                      y Maintenance'
+     A  70                             23  2'F3=Exit  F12=Previous'
+      *
+      *=========================================================================
+      *
+     A          R SE7509S1                  TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+      *
+      *=========================================================================
+      *
+     A          R SE7509C1                  SFLCTL(SE7509S1)
+     A                                      SFLSIZ(0015)
+     A                                      SFLPAG(0001)
+     A                                      TEXT('Program messages')
+     A                                      SFLINZ
+     A                                      SFLDSP
+     A                                      SFLDSPCTL
+     A  80
+     AON80                                  SFLEND
+     A            ##PGM                     SFLPGMQ

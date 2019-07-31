@@ -1,0 +1,138 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(UPC0030MB) TOFILE(UPFDMBTPD)                    */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Prepare database upgrade')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000030 - Prepare Data Base Upgrade                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD034307           Date 05May15              */
+/*       Prev Amend No. CUP041   *CREATE   Date 23Aug13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD034307 - Better handling for empty upgrade.               */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &FILE &MBRTYPE &BRGBRGLIB &PGMLIB +
+                          &FILELIB &RTNFLAG)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBRTYPE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PGMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILELIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+ 
+             DCLF       FILE(UPC0030MB)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Delete work files. */
+             IF         COND(&MODE *EQ '*DLT') THEN(DO)
+/**********     DLTF       FILE(&BRGBRGLIB/TESTDBR)                                  */ /*MD034307*/
+                DLTF       FILE(QTEMP/TESTDBR)                                          /*MD034307*/
+                MONMSG     MSGID(CPF0000)
+                DLTF       FILE(&BRGBRGLIB/UPC0030DB)                                   /*MD034307*/
+                MONMSG     MSGID(CPF0000)                                               /*MD034307*/
+                DLTF       FILE(QTEMP/UPC0030OF)
+                MONMSG     MSGID(CPF0000)
+                DLTF       FILE(&BRGBRGLIB/UPC0030MB)
+                MONMSG     MSGID(CPF0000)
+                DLTF       FILE(&BRGBRGLIB/UPFMBRTD)
+                MONMSG     MSGID(CPF0000)
+                CLRPFM     FILE(UPDBRSTD)                                               /*MD034307*/
+             ENDDO
+ 
+/* If mode is '*BLD' then create data to outfiles. */
+             IF         COND(&MODE *EQ '*BLD') THEN(DO)
+                IF         COND(&MBRTYPE *EQ 'PF        ') THEN(DO)
+/**********        DSPDBR     FILE(&FILE) OUTPUT(*OUTFILE) +                         */ /*MD034307*/
+/**********                     OUTFILE(&BRGBRGLIB/TESTDBR) OUTMBR(*FIRST +          */ /*MD034307*/
+/**********                     *ADD)                                                */ /*MD034307*/
+                   DSPDBR     FILE(&FILE) OUTPUT(*OUTFILE) +
+                                OUTFILE(QTEMP/TESTDBR) OUTMBR(*FIRST *ADD)              /*MD034307*/
+                   MONMSG     MSGID(CPF3012)
+                ENDDO
+                IF         COND(&MBRTYPE *EQ 'SQLTBL    ') THEN(DO)
+/**********        DSPDBR     FILE(&FILE) OUTPUT(*OUTFILE) +                         */ /*MD034307*/
+/**********                     OUTFILE(&BRGBRGLIB/TESTDBR) OUTMBR(*FIRST +          */ /*MD034307*/
+/**********                     *ADD)                                                */ /*MD034307*/
+                   DSPDBR     FILE(&FILE) OUTPUT(*OUTFILE) +
+                                OUTFILE(QTEMP/TESTDBR) OUTMBR(*FIRST *ADD)              /*MD034307*/
+                   MONMSG     MSGID(CPF3012)
+                ENDDO
+                IF         COND(&MBRTYPE *EQ 'SQLVIEW   ') THEN(DO)
+/**********        DSPDBR     FILE(&FILE) OUTPUT(*OUTFILE) +                         */ /*MD034307*/
+/**********                     OUTFILE(&BRGBRGLIB/TESTDBR) OUTMBR(*FIRST +          */ /*MD034307*/
+/**********                     *ADD)                                                */ /*MD034307*/
+                   DSPDBR     FILE(&FILE) OUTPUT(*OUTFILE) +
+                                OUTFILE(QTEMP/TESTDBR) OUTMBR(*FIRST *ADD)              /*MD034307*/
+                   MONMSG     MSGID(CPF3012)
+                ENDDO
+                IF         COND(&MBRTYPE *EQ 'LF        ') THEN(DO)
+                   DSPFD      FILE(&FILE) TYPE(*MBR) OUTPUT(*OUTFILE) +
+                                OUTFILE(QTEMP/UPC0030OF) OUTMBR(*FIRST *ADD)
+                   MONMSG     MSGID(CPF3012)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&MODE *EQ '*CPY') THEN(DO)
+                CRTDUPOBJ  OBJ(UPFDMBTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                             TOLIB(&BRGBRGLIB) NEWOBJ(UPC0030MB)
+                CRTDUPOBJ  OBJ(SCFMBRTD) FROMLIB(&FILELIB) +
+                             OBJTYPE(*FILE) TOLIB(&BRGBRGLIB) +
+                             NEWOBJ(UPFMBRTD)
+                CHKOBJ     OBJ(QTEMP/UPC0030OF) OBJTYPE(*FILE)                          /*MD034307*/
+                MONMSG     MSGID(CPF9801) EXEC(DO)                                      /*MD034307*/
+                   CLRPFM     FILE(&BRGBRGLIB/UPC0030MB)                                /*MD034307*/
+                   GOTO       CMDLBL(DBR)                                               /*MD034307*/
+                ENDDO                                                                   /*MD034307*/
+                CPYF       FROMFILE(QTEMP/UPC0030OF) +
+                             TOFILE(&BRGBRGLIB/UPC0030MB) +
+                             MBROPT(*REPLACE) INCREL((*IF MBNOMB *GT +
+                             1)) FMTOPT(*MAP *DROP)                                     /*MD034307*/
+DBR:                                                                                    /*MD034307*/
+                CRTDUPOBJ  OBJ(UPDBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                             TOLIB(&BRGBRGLIB) NEWOBJ(UPC0030DB)                        /*MD034307*/
+                CHKOBJ     OBJ(QTEMP/TESTDBR) OBJTYPE(*FILE)                            /*MD034307*/
+                MONMSG     MSGID(CPF9801) EXEC(DO)                                      /*MD034307*/
+                   CLRPFM     FILE(&BRGBRGLIB/UPC0030DB)                                /*MD034307*/
+                   GOTO       CMDLBL(READNEXT)                                          /*MD034307*/
+                ENDDO                                                                   /*MD034307*/
+                CPYF       FROMFILE(QTEMP/TESTDBR) +
+                             TOFILE(&BRGBRGLIB/UPC0030DB) +
+                             MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                        /*MD034307*/
+ 
+READNEXT:
+                RCVF
+                MONMSG     MSGID(CPF0864) EXEC(DO)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+                OVRDBF     FILE(MBR022001T) TOFILE(&BRGBRGLIB/UPC0030MB)
+                OVRDBF     FILE(SCFMBRTD) TOFILE(&BRGBRGLIB/UPFMBRTD)
+                CALL       PGM(&PGMLIB/CB022001) PARM('*WRT' &MBFILE +
+                             &MBNAME 0 ' ')
+                DLTOVR     FILE(MBR022001T SCFMBRTD)
+ 
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGVAR     VAR(&RTNFLAG) VALUE('E')
+ 
+ENDPGM:
+             ENDPGM

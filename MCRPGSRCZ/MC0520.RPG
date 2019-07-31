@@ -1,0 +1,602 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Diary Update')
+     F********************************************************************
+     F*                                                               *
+     F*  Midas-  Management Accounts Module                          *
+     F*                                                               *
+     F*  MC0520 - Diary Update                                        *
+     F*                                                               *
+     F*  Function:  This program maintains the Management Accounts    *
+     F*  (C.O.B.)   Diary file, which controls the Funding Gap        *
+     F*             processing.  The diary is updated according to    *
+     F*             a string of parameters accpeted by this program,  *
+     F*             to allow events for a date to be switched on      *
+     F*             during the Close of Business process.             *
+     F*                                                               *
+     F*  Called By: MCC0520 - Diary Update                            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL023             Date 31Jul03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CMC001  *CREATE    Date 18Mar96               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL023 - Retain Ccy of Balance.                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CMC001 - Management Accounts Enhancement for PCA:            *
+     F*           Created for Management Accounts.                    *
+     F*                                                               *
+     F*****************************************************************
+     FMCDIRYL0UF  E           K        DISK         KINFSR *PSSR A
+      * Diary Events
+     FMC0520AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      * Diary Update Audit Report
+     E*****************************************************************
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    CPY@    1   1 80
+     E/SPACE 2
+     I*****************************************************************
+     I*  Data Structure for Copyright Statement
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I*
+     I* Data Structure for Printer file MC0520AU
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 188 1890OFLLNU
+     I                                    B 367 3680PRTLNU
+     I*
+     I* Data Structure Update flags
+     IFLAGS       DS                              6
+     I                                        1   1 ACCR
+     I                                        2   2 CAPI
+     I                                        3   3 XTFR
+     I                                        4   4 BTFR
+     I                                        5   5 SRVL
+     I                                        6   6 FRVL
+     I*
+     I* Data Structure Date
+     I            DS
+     I                                        1   20WDAT1
+     I                                        3   40WDAT2
+     I                                        5   60WDAT3
+     I                                        1   60WDATE
+     I*
+     I*  Local Data Area
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I*
+     IDLSTAT    E DSDLSTAT
+     I*  DLSTAT Data Area
+     I*
+     I              DLACKEY                         DLKEY
+     ISDBANK    E DSSDBANKPD
+     I**   Bank Details
+     I*
+     ISDGELR    E DSSDGELRPD
+     I**   General Ledger ICD Details
+     I*
+     IDSPERD    E DSGLPERDPD
+     I**   Period Details
+     I*
+     IDSPERS    E DSGLPERSPD
+     I**   Period Details
+     I*
+     IDSPCA     E DSSDPCACPD
+     I**   PCA ICD
+     I*
+     IDSFDY     E DSDSFDY
+     I**   First DS for Access Programs, Short Data Structure
+     I*
+     IDSSDY     E DSDSSDY
+     I**   Second DS for Access Programs, Long Data Structure
+     I*
+     ISVAL1       DS                            200                                           CGL023
+     I                                        1   1 SVAL11                                    CGL023
+      ** DS for AOSVALR0                                                                      CGL023
+      *                                                                                       CGL023
+     I              'RetainCcyofBalance'  C         SVALKK                                    CGL023
+      *                                                                                       CGL023
+     I*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  MAIN PROCESSING
+     C*****************************************************************
+     C*
+     C                     MOVEACPY@      MKI@   80
+     C*
+     C**  Define Work fields
+     C*
+     C**  Define LDA Dtaara
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           DLSTAT
+     C*
+     C**  Accept Update Parameters
+     C*
+     C           *ENTRY    PLIST
+     C           FLAGS     PARM           #FLG    6
+     C*
+     C**  Set up Fields for DB Error
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'000'     DBASE
+     C                     MOVEL'MC0520  'DBPGM
+     C                     OUT  LDA
+     C*
+     C**  Read DLSTAT
+     C*
+     C                     IN   DLSTAT
+     C*
+     C** Read Bank details for Run Date and EOY Date
+     C*
+     C                     CALL 'AOBANKR0'             99
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If record not found, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     MOVEL'001'     DBASE            * DBERR 001 *
+     C                     MOVEL@OPTN     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** Set Date format
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+     C*
+     C** Read General Ledger ICD for Accrual Profit Date
+     C*
+     C**********           CALL 'AOGELRR0'               99                                   CGL029
+     C                     CALL 'AOGELRR1'               99                                   CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C** If record not found, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ************
+     C                     MOVEL'002'     DBASE            * DBERR 02 *
+     C                     MOVEL@OPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *                                                                                       CGL023
+      ** Check if 'RetainCcyofBalance' is ON                                                  CGL023
+     C                     CALL 'AOSVALR0'                                                    CGL023
+     C                     PARM           @RTCD                                               CGL023
+     C                     PARM SVALKK    SVALK1 20                                           CGL023
+     C                     PARM           SVAL1 200                                           CGL023
+     C                     PARM *BLANK    SVALK2 20                                           CGL023
+     C                     PARM           SVAL2 200                                           CGL023
+     C                     PARM *BLANK    SVALK3 20                                           CGL023
+     C                     PARM           SVAL3 200                                           CGL023
+     C                     PARM *BLANK    SVALK4 20                                           CGL023
+     C                     PARM           SVAL4 200                                           CGL023
+     C                     PARM *BLANK    SVALK5 20                                           CGL023
+     C                     PARM           SVAL5 200                                           CGL023
+     C                     PARM *BLANK    SVALK6 20                                           CGL023
+     C                     PARM           SVAL6 200                                           CGL023
+     C                     PARM *BLANK    SVALK7 20                                           CGL023
+     C                     PARM           SVAL7 200                                           CGL023
+     C                     PARM *BLANK    SVALK8 20                                           CGL023
+     C                     PARM           SVAL8 200                                           CGL023
+     C                     PARM *BLANK    SVALK9 20                                           CGL023
+     C                     PARM           SVAL9 200                                           CGL023
+     C                     PARM *BLANK    SVALK0 20                                           CGL023
+     C                     PARM           SVAL10200                                           CGL023
+     C           @RTCD     IFNE *BLANK                                                        CGL023
+     C           *LOCK     IN   LDA                                                           CGL023
+     C                     MOVEL'SDSVALPD'DBFILE                                              CGL023
+     C                     MOVEL'007'     DBASE                                               CGL023
+     C                     MOVELSVALKK    DBKEY                                               CGL023
+     C                     OUT  LDA                                                           CGL023
+     C                     EXSR DBERR                                                         CGL023
+     C                     ENDIF                                                              CGL023
+      *                                                                                       CGL023
+     C           SVAL11    IFEQ 'Y'                                                           CGL023
+     C                     MOVE 'Y'       CGL023  1                                           CGL023
+     C                     ELSE                                                               CGL023
+     C                     MOVE 'N'       CGL023                                              CGL023
+     C                     ENDIF                                                              CGL023
+      *                                                                                       CGL023
+      ** Financial Year End ?                                                                 CGL023
+     C                     CALL 'SD2001'                                                      CGL023
+     C                     PARM           FEOY    1                                           CGL023
+     C                     PARM           EROR    1                                           CGL023
+     C           EROR      IFEQ 'Y'                                                           CGL023
+     C           *LOCK     IN   LDA                                                           CGL023
+     C                     MOVEL'CALL TO' DBFILE                                              CGL023
+     C                     MOVEL'008'     DBASE                                               CGL023
+     C                     MOVEL'SD2001'  DBKEY                                               CGL023
+     C                     OUT  LDA                                                           CGL023
+     C                     EXSR DBERR                                                         CGL023
+     C                     ENDIF                                                              CGL023
+     C*
+     C                     CALL 'AOPCACR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           DSPCA     PARM DSPCA     DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS                    --- B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AOPCACR0'DBFILE           ************
+     C                     MOVE '003'     DBASE            * Error 03 *
+     C                     MOVE @OPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END                             --- E001
+     C*
+     C** Find Current period start date
+     C*
+     C                     Z-ADD*ZERO     @PSRN
+     C                     CALL 'AORPERR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BKPSET    @PSTC   1
+     C                     PARM           @PSRN   30
+     C           DSPERD    PARM DSPERD    DSFDY
+     C           @RTCD     IFNE *BLANKS                    --- B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AOPERDR0'DBFILE           ************
+     C                     MOVE '005'     DBASE            * Error 05 *
+     C           @PSTC     CAT  '000'     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END                             --- E001
+     C/COPY WNCPYSRC,MC0520C001
+     C*
+     C**  Calculate the Event Control Date
+     C*
+     C           BJDNWD    SUB  1         EVCD    50
+     C           EVCD      IFGE BKAPDT                                    E29092
+     C                     Z-ADDBKAPDT    EVCD
+     C                     END
+     C*
+     C**  Read Diary Event for Accrual Profit Day
+     C*
+     C                     CLEARMCDIRYD0
+     C           EVCD      CHAINMCDIRYD0             81
+     C*
+     C**  If Funding Gap Capitalisation Due, Calc next Date
+     C*
+     C           CAPI      IFEQ 'Y'
+     C           FTFGCF    IFEQ 'D'
+     C           FTFGCF    OREQ 'A'
+     C           EVCD      ANDEQBKAPDT
+     C                     MOVE 'Y'       GICAPD
+     C                     ELSE
+     C                     EXSR #NCAPD
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C**  Set Diary Events for the Accrual Profit Day
+     C*
+     C           EVCD      IFEQ BKAPDT                                    E29092
+     C           ACCR      IFEQ 'Y'
+     C                     MOVE 'Y'       GIACRL           Accrual Day
+     C                     END
+     C           XTFR      IFEQ 'Y'
+     C/COPY WNCPYSRC,MC0520C002
+      *                                                                                       CGL023
+     C           CGL023    IFNE 'Y'                                                           CGL023
+     C           CGL023    OREQ 'Y'                                                           CGL023
+     C           FEOY      ANDEQ'Y'                                                           CGL023
+     C                     MOVE 'Y'       GIFTFR           F/Ccy Tfr
+     C                     ENDIF                                                              CGL023
+      *                                                                                       CGL023
+     C                     END
+     C           SRVL      IFEQ 'Y'
+     C                     MOVE 'Y'       GISRVL           Post Spt Rvl
+     C                     END
+     C                     END
+     C*
+     C           EVCD      IFEQ BJEYD                                     E29092
+     C           BJEYD     ANDNE*ZERO                                     E29092
+     C           ACCR      IFEQ 'Y'
+     C                     MOVE 'Y'       GIACRL           Accrual Day
+     C                     END
+     C           XTFR      IFEQ 'Y'
+     C                     MOVE 'Y'       GIFTFR           F/Ccy Tfr
+     C                     END
+     C           BTFR      IFEQ 'Y'
+     C                     MOVE 'Y'       GIBTFR           Base Ccy Tfr
+     C                     END
+     C           SRVL      IFEQ 'Y'
+     C                     MOVE 'Y'       GISRVL           Post Spt Rvl
+     C                     END
+     C                     END
+     C*
+     C           FRVL      IFEQ 'Y'
+     C                     MOVE 'Y'       GIFRVL           Post Fwd Rvl
+     C                     END
+     C*
+     C**  Write/Update Diary record
+     C*
+     C           *IN81     IFEQ *ON
+     C                     MOVE EVCD      GIEVDT
+     C                     WRITEMCDIRYD0
+     C                     ELSE
+     C                     UPDATMCDIRYD0
+     C                     END
+     C*
+     C** If Spot Reval set Today, Find previous and remove it providing
+     C** it is in this period
+     C*
+     C           GISRVL    IFEQ 'Y'                        Post Spt Rvl
+     C                     READPMCDIRYD0               LRLR
+     C*
+     C           GISRVL    DOWNE'Y'
+     C           *INLR     ANDEQ'0'
+     C           GIEVDT    ANDGEDTSPDD
+     C                     READPMCDIRYD0               LRLR
+     C                     ENDDO
+     C*
+     C           *INLR     IFEQ '0'
+     C           GIEVDT    ANDGEDTSPDD
+     C                     MOVE ' '       GISRVL           Post Spt Rvl
+     C                     UPDATMCDIRYD0
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     SETON                     LR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  DBERR --- Subroutine to handle Data base errors
+     C*
+     C*  CALLED FROM: After Data base error
+     C*
+     C*  CALLS: *PSSR
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** Read database error details from LDA
+     C*
+     C                     IN   LDA
+     C*
+     C** Write database error details
+     C*
+     C                     OPEN MC0520AU
+     C                     WRITEMC0520AH
+     C                     WRITEMC0520AE
+     C                     CLOSEMC0520AU
+     C*
+     C** Set on database error indicators DUMP and exit program
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR                           ** DBERR **
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C*  CALLED FROM: Abnormal Termination Processing, DBERR
+     C*
+     C*  CALLS: None
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C*
+     C********************************************************************
+     C/SPACE 3
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  #NCAPD -  Subroutine to calculate new 'Next Funding Cap Date'
+     C*
+     C*  CALLED FROM:  Main
+     C*
+     C*  CALLS: None
+     C*
+     C********************************************************************
+     C*
+     C           #NCAPD    BEGSR
+     C*
+     C           FTFGCF    IFEQ 'P'
+     C           FTFGCF    OREQ 'E'
+     C*
+     C                     CALL 'AOPERSR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BKPSET    @PSTC   1
+     C           DSPERS    PARM DSPERS    DSFDY
+     C           @RTCD     IFNE *BLANKS                    --- B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AOPERSR0'DBFILE           ************
+     C                     MOVE '006'     DBASE            * Error 06 *
+     C           @PSTC     CAT  '000'     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END                             --- E001
+     C*
+     C                     MOVE DTPDCT    WPDCT   20
+     C                     MOVE DTPDYR    WPDYR   20
+     C                     MOVE DTPDNY    WPDNY   20
+     C*
+     C           DTEPDD    IFLE EVCD
+     C*
+     C           FTFGCF    IFEQ 'E'
+     C                     MOVE 'Y'       GICAPD
+     C                     END
+     C*
+     C           FTFGCF    IFEQ 'P'
+     C           WPDNY     ANDEQSTPPAN
+     C                     MOVE 'Y'       GICAPD
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C           FTFGCF    IFEQ 'Y'
+     C*
+     C           BJEYD     IFLE EVCD
+     C           BJEYD     ANDNE*ZERO
+     C                     MOVE 'Y'       GICAPD
+     C                     END
+     C*
+     C           BJEYD     IFEQ *ZERO
+     C                     Z-ADDEVCD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     WDATE
+     C           *IN98     IFEQ '0'
+     C                     Z-ADD31        WDAT1
+     C                     Z-ADD12        WDAT2
+     C                     ELSE
+     C                     Z-ADD12        WDAT1
+     C                     Z-ADD31        WDAT2
+     C                     END
+     C                     Z-ADDWDATE     ZDATE
+     C                     EXSR ZDATE1
+     C           ZDAYNO    IFLE EVCD
+     C                     MOVE 'Y'       GICAPD
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           FTFGCF    IFEQ 'L'
+     C           FTFGCF    OREQ 'B'
+     C                     Z-ADDEVCD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     WDATE
+     C           *IN98     IFEQ '0'
+     C                     Z-ADD31        WDAT1
+     C                     ELSE
+     C                     Z-ADD31        WDAT2
+     C                     END
+     C                     Z-ADDWDATE     ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     DOWEQ'1'
+     C           *IN98     IFEQ '0'
+     C                     SUB  1         WDAT1
+     C                     ELSE
+     C                     SUB  1         WDAT2
+     C                     END
+     C                     Z-ADDWDATE     ZDATE
+     C                     EXSR ZDATE1
+     C                     END
+     C*
+     C           FTFGCF    IFEQ 'B'
+     C                     CALL 'GL0130U'
+     C                     PARM ZDAYNO    @DATE   50
+     C                     PARM BJLCCY    @CCY    3
+     C                     PARM BJSLCD    @LOC    3
+     C                     PARM *BLANKS   @HIND   1
+     C*
+     C           @HIND     IFEQ 'H'
+     C                     MOVE '1'       *IN99
+     C                     END
+     C*
+     C           *IN99     DOWEQ'1'
+     C                     SUB  1         ZDAYNO
+     C                     CALL 'GL0130U'
+     C                     PARM ZDAYNO    @DATE   50
+     C                     PARM BJLCCY    @CCY    3
+     C                     PARM BJSLCD    @LOC    3
+     C                     PARM *BLANKS   @HIND   1
+     C           @HIND     IFEQ 'H'
+     C                     MOVE '1'       *IN99
+     C                     ELSE
+     C                     MOVE '0'       *IN99
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           ZDAYNO    IFLE EVCD
+     C                     MOVE 'Y'       GICAPD
+     C                     END
+     C*
+     C                     END
+     C*
+     C           FTFGCF    IFEQ '1'
+     C           FTFGCF    OREQ '2'
+     C           FTFGCF    OREQ '3'
+     C           FTFGCF    OREQ '4'
+     C           FTFGCF    OREQ '5'
+     C           FTFGCF    OREQ '6'
+     C           FTFGCF    OREQ '7'
+     C           BJRDNB    DIV  7         WQUOT   50
+     C                     MVR            WRMND   50
+     C           WRMND     IFLT 3
+     C                     ADD  5         WRMND
+     C                     ELSE
+     C                     SUB  2         WRMND
+     C                     END
+     C*
+     C                     MOVE FTFGCF    WFGCF   10
+     C           WFGCF     IFLT WRMND
+     C                     ADD  7         WFGCF
+     C                     END
+     C*
+     C           BJRDNB    SUB  WRMND     WFLD50  50
+     C           WFLD50    ADD  WFGCF     ZDAYNO
+     C           ZDAYNO    IFLE EVCD
+     C                     MOVE 'Y'       GICAPD
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

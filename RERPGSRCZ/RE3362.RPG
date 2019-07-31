@@ -1,0 +1,1845 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE History position enquiry')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE3362  - RETAIL LINK ENQUIRY                                *
+     F*            RETAIL HISTORY POSITION                            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL186             Date 06Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 BUG12930           Date 14Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 239964             Date 30Jun06               *
+      *                 240079             Date 09Jun06               *
+      *                 206641             Date 06Jun06               *
+      *                 239966             Date 08Jun06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAAA03             Date 21Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 159536             Date 29Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 125622             Date 26Feb98               *
+     F*                 088734             DATE 28JUN95               *
+     F*                 086560             DATE 06JUN95               *
+     F*                 086559             DATE 06MAY95               *
+     F*                 086094             DATE 04may95               *
+     F*                 086093             DATE 20APR95               *
+     F*                 075071             DATE 23FEB95               *
+     F*                 078272             DATE 01NOV94               *
+     F*                 077683             DATE 27OCT94               *
+     F*                 078158             DATE 14OCT94               *
+     F*                 074590             DATE 26JUL94               *
+     F*                 067628             DATE 07MAR94               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL186 - Customer Report Name on Enquiries                   *
+      *         - Add Cust Report Name to Account Movements & OSIC.   *
+      *  BUG12930 - Change data area size (Recompile)                 *
+      *  239964 - Applied fix 239966.                                 *
+      *  240079 - Applied fix 239966.                                 *
+      *  206641 - Include BRCA as one of the key fields for LF/REIAC  *
+      *           so that the correct account will be accessed to     *
+      *           display the charge amounts correctly.               *
+      *  239966 - Remove transfer job.                                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAAA03 - Reverse image is showing in Webface without error.  *
+      *           Recompile due to changes in RE3360DF.               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  159536 - Recompile due to changes in RE3360DF.               *
+     F*  125622  -  Outstanding charge amount displayed for a/c which *
+     F*             is non-chargeable. Applied fix 076390.            *
+     F*  088734 - Show minimum/maximum amounts. Recompiled only.      *
+     F*  086560 - Following tiers/theshholds not displayed after rate *
+     F*           of 0.00000000+ encountered.                         *
+     F*  086559 - CATER FOR LACK OF RECORD ON REHPOSR3                *
+     F*  086094 - Amendment to 075071 (fix in DDS) .                  *
+     F*           Cause - Last line on last page still blanks pos79/80*
+     F*                   '  ' put out (as opposed to ' +')           *
+     F*           Action- Use SFLEND(*MORE) to display 'more' on      *
+     F*                   following line (as opposed to ' +')         *
+     F*           Result- No need for line of blanks with just '+'.   *
+     F*           (NOTE: actual code from 075071 deleted) .           *
+     F*  086093 - -ve interest rate prints as squiggle should have - .*
+     F*           Remove GHOST .                                      *
+     F*  075071 - Additional mod to prevent '+' for SflEnd overwriting*
+     F*           last two characters of SflRecord.                   *
+     F*           If bottom line on SflPag and more records to show   *
+     F*           output blank line to Sfl and display actual record  *
+     F*           on next page .                                      *
+     F*  078272 - ONLY DISPLAY RATE/BAL IF BOTH NON-ZERO EXCEPT FOR   *
+     F*           FIRST TIER WHICH IS ALWAYS SHOWN                    *
+     F*  077693 - CANNOT COPE WITH NEGATIVE TIER RATES                *
+     F*  078158 - Retail no. disappears from RE3362 on re-enter.      *
+     F*           Need to exit RE3360 and re-enter to get it back.    *
+     F*  074590 - Add account name to screen format.                  *
+     F*  067628 - Manual adjustement never appear                     *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*GHOST**CF* F      79            SPECIAL       RE#IO                086093
+     FACCNT   IF  E           K        DISK                               074590
+     F            ACCNTAAF                          KIGNORE               074590
+     F            ACCNTACF                          KIGNORE               074590
+     FREIAC   IF  E           K        DISK                               125622
+     F            REIACAF                           KIGNORE               125622
+     F            REIACZF                           KIGNORE               125622
+     FRE3360DFCF  E                    WORKSTN
+     F                                        RECNUMKSFILE RE3362PB
+     F            RE3360F1                          KIGNORE
+     F            RE3361F0                          KIGNORE
+     F            RE3361ER                          KIGNORE
+     F            RE3361F1                          KIGNORE
+     F            RE3361SB                          KIGNORE
+     F            RE3361SC                          KIGNORE
+     F            RE3363F0                          KIGNORE
+     F            RE3363F1                          KIGNORE
+     F            RE3363F2                          KIGNORE
+     F            RE3363F3                          KIGNORE
+     F            RE3363B1                          KIGNORE
+     F            RE3363C1                          KIGNORE
+     F            RE3363B2                          KIGNORE
+     F            RE3363C2                          KIGNORE
+     F            RE3364E3                          KIGNORE
+     F            RE3364F3                          KIGNORE
+     F            RE3364F1                          KIGNORE
+     F            RE3364B1                          KIGNORE
+     F            RE3364C1                          KIGNORE
+     F            RE3364B2                          KIGNORE
+     F            RE3364C2                          KIGNORE
+     F            RE3364B3                          KIGNORE
+     F            RE3364C3                          KIGNORE
+     FREHPOPL IF  E           K        DISK
+     FREHPOML2IF  E           K        DISK
+     FREHPRCD IF  E           K        DISK
+     F/COPY WNCPYSRC,RE3362F001
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       03       End of job                                     *
+     F*       12       Return to initial screen - Program RE3361      *
+     F*                Execute init and clearing of subfile           *
+     F*       13       Position cursor on 'Postings'                  *
+     F*       14       Position cursor on 'Manual adjustments'        *
+     F*       15       Position cursor on 'Rate changes'              *
+     F*       18       Read previous history date                     *
+     F*       19       Read next history date                         *
+     F*       50       Subfile clear                                  *
+     F*       85       Underline                                      *
+     F*       86       Highlight                                      *
+     F*       94       Subfile end                                    *
+     F*                                                               *
+     F*       09       Loop in main processing (while error occured   *
+     F*                or while process requested)                    *
+     F*       45       Check if a valid command key has been pressed  *
+     F*       95       Error occured                                  *
+     F*       96       Error on read operation - REHPOPL, REHPOML2,   *
+     F*                REHPRCD                                        *
+     F*       99       Error on read operation - GHOST                *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - Performs initialisation                             *
+     F*  SUBFIL - Fills subfile                                       *
+     F*  SUBCLR - Clears subfile                                      *
+     F*  LINE   - Inserts a blank line                                *
+     F*  BLANC  - Fills fields with blanks                            *
+     F*  EXIT   - Exits program or cancels job                        *
+     F*  POSIT  - Positions cursor in subfile                         *
+     F*  NEXPR  - Reads details of previous date or of next date      *
+     F*  BALRAT - Fills balance/rate arrays                           *
+     F*  FILL   - Fills ACKEY data structure                          *
+     F*  KEYRE  - Displays "MORE KEYS"                                *
+     F*  ALIN   - Aligns titles of subfile at top of page             *
+     F*  ZASNMS - Sends message to program message queue              *
+     F*  ZDATE2 - Converts a day number to date formats               *
+     F*  ZEDIT  - Insert a decimal point and suppress leading zeroes  *
+     F*  *PSSR  - Handles abnormal error conditions                   *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E/COPY ZSRSRC,ZEDITZ1
+     E*
+     E                    AR         79  1               line display     086093
+     E                    NAR     1  11 79
+     E*
+     E                    ZIB        11 15 0
+     E*
+     E                    ZIR        11 11 7
+     E*
+     E                    ZIBW       11 16
+     E*
+     E                    ZIRW       11 16
+     E*
+     E                    NEGW       11  1                                077683
+     E*                                                                   077683
+     E                    CPY@    1   1 80
+     I/EJECT
+     IREIACDF                                                             125622
+     I              CNUM                            CNUM1                 125622
+     I              CCY                             CCY1                  125622
+     I              ACOD                            ACOD1                 125622
+     I              ACSQ                            ACSQ1                 125622
+     I              BRCA                            BRCA1                                     206641
+     I*                                                                   125622
+     I*GHOST**NS*                                                         086093
+     I***********                             1  79 AREA                  086093
+     IPSDS       SDS
+     I*
+     I** Data structure to save account number
+     I*
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+     I*
+     I            DS
+     I                                        1   3 ZONE1
+     I**********                              4   90ZONE2                                     CSD027
+     I                                        4   9 ZONE2                                     CSD027
+     I                                       10  12 ZONE3
+     I**********                             13  160ZONE4                                     CGL029
+     I**********                             17  180ZONE5                                     CGL029
+     I**********                              1  18 ZONE                                      CGL029
+     I                                       13  220ZONE4                                     CGL029
+     I                                       23  240ZONE5                                     CGL029
+     I                                        1  24 ZONE                                      CGL029
+     I*
+     I            DS
+     I                                        1   3 ABRCA
+     I**********                              4   90ACNUM                                     CSD027
+     I                                        4   9 ACNUM                                     CSD027
+     I                                       10  12 ACCY
+     I**********                             13  160AACOD                                     CGL029
+     I**********                             17  180AACSQ                                     CGL029
+     I**********                              1  18 ACKEY                                     CGL029
+     I                                       13  220AACOD                                     CGL029
+     I                                       23  240AACSQ                                     CGL029
+     I                                        1  24 ACKEY                                     CGL029
+     IWBAL        DS
+     I*
+     I** Balance data structure
+     I*
+     I                                    P   1  880ZIB
+     I                                    P   1   80ZIBC1
+     I                                    P   9  160ZIBC2
+     I                                    P  17  240ZIBC3
+     I                                    P  25  320ZIBC4
+     I                                    P  33  400ZIBC5
+     I                                    P  41  480ZIBC6
+     I                                    P  49  560ZIBC7
+     I                                    P  57  640ZIBC8
+     I                                    P  65  720ZIBC9
+     I                                    P  73  800ZIBC10
+     I                                    P  81  880ZIBC11
+     I                                    P  89  960ZIBC12
+     IWRAT        DS
+     I*
+     I** Rate data structure
+     I*
+     I                                    P   1  667ZIR
+     I                                    P   1   67ZIRC1
+     I                                    P   7  127ZIRC2
+     I                                    P  13  187ZIRC3
+     I                                    P  19  247ZIRC4
+     I                                    P  25  307ZIRC5
+     I                                    P  31  367ZIRC6
+     I                                    P  37  427ZIRC7
+     I                                    P  43  487ZIRC8
+     I                                    P  49  547ZIRC9
+     I                                    P  55  607ZIRC10
+     I                                    P  61  667ZIRC11
+     I                                    P  67  727ZIRC12
+     I            DS
+     I*
+     I** Key data structure
+     I*
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM                                      CSD027
+     I                                        4   9 CNUM                                      CSD027
+     I                                       10  12 CCY
+     I**********                             13  160ACOD                                      CGL029
+     I**********                             17  180ACSQ                                      CGL029
+     I                                       13  220ACOD                                      CGL029
+     I                                       23  240ACSQ                                      CGL029
+     I*                                                                   074590
+     I** KEY DATA STRUCTURE : RKEY TO FILL DBKEY IF ERROR                 074590
+     I*                                                                   074590
+     I            DS                                                      074590
+     I**********                              1  18 RKEY                               074590 CGL029
+     I                                        1  24 RKEY                                      CGL029
+     I                                        1   6 SCNUM                 074590
+     I**********                              1   60CNUMK                              074590 CSD027
+     I                                        1   6 CNUMK                                     CSD027
+     I                                        7   9 SCCY                  074590
+     I**********                             10  13 SACOD                              074590 CGL029
+     I**********                             10  130ACODK                              074590 CGL029
+     I**********                             14  15 SACSQ                              074590 CGL029
+     I**********                             14  150ACSQK                              074590 CGL029
+     I**********                             16  18 SBRCA                              074590 CGL029
+     I                                       10  19 SACOD                                     CGL029
+     I                                       10  190ACODK                                     CGL029
+     I                                       20  21 SACSQ                                     CGL029
+     I                                       20  210ACSQK                                     CGL029
+     I                                       22  24 SBRCA                                     CGL029
+     I*
+     IDSLDA       DS
+     I*
+     I** *LDA for receiving enquiry selection criteria
+     I*
+     I                                        2   4 WBRCA
+     I                                        5  10 WCNUM
+     I                                       11  13 WCCY
+     I**********                             14  17 WACOD                                     CGL029
+     I**********                             18  19 WACSQ                                     CGL029
+     I**********                             20  240WHISD                                     CGL029
+     I**********                             25  34 WACNO                                     CGL029
+     I**********                             35  35 WZADEC                                    CGL029
+     I**********                             36  42 WRUNA                                     CGL029
+     I**********                             43  43 WDATF                                     CGL029
+     I**********                             44  44 WCANC                                     CGL029
+     I**********                             45  46 WFROM1                                    CGL029
+     I**********                             47  48 WFROM2                                    CGL029
+     I                                       14  23 WACOD                                     CGL029
+     I                                       24  25 WACSQ                                     CGL029
+     I                                       26  300WHISD                                     CGL029
+     I                                       31  40 WACNO                                     CGL029
+     I                                       41  41 WZADEC                                    CGL029
+     I                                       42  48 WRUNA                                     CGL029
+     I                                       49  49 WDATF                                     CGL029
+     I                                       50  50 WCANC                                     CGL029
+     I                                       51  52 WFROM1                                    CGL029
+     I                                       53  54 WFROM2                                    CGL029
+     I                                       83  85 FUNC                                      239966
+     I*
+     ILDA         DS                            256
+     I*
+     I** Local data area - database errors
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDRETL    E DSSDRETLPD
+     I*
+     I** Data structure for retail details
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, short data structure
+     I*
+      *
+      * Redefine work field for a line as array.                          086093
+     ISDATA       DS                                                      086093
+     I                                        1  79 AR                    086093
+      *                                                                                       CGL186
+     ISDCUST    E DSSDCUSTPD                                                                  CGL186
+      ** Data structure for Customer Details                                                  CGL186
+      *                                                                                       CGL186
+     IDSLDY     E DSDSLDY                                                                     CGL186
+      ** Second DS for access programs, Long data structure                                   CGL186
+      *                                                                                       CGL186
+     I/COPY WNCPYSRC,RE3362I001
+     C/EJECT
+     C*================================================================
+     C*
+     C** Copyright insertion
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Key list
+     C*
+     C           RECO      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           HISD
+     C*                                                                   074590
+     C** Key field to access to ACCNTAB file                              074590
+     C*                                                                   074590
+     C           RETKEY    KLIST                                          074590
+     C                     KFLD           CNUMK                           074590
+     C                     KFLD           SCCY                            074590
+     C                     KFLD           ACODK                           074590
+     C                     KFLD           ACSQK                           074590
+     C                     KFLD           SBRCA                           074590
+      *                                                                   125622
+      ** KEY FIELD TO ACCESS TO REIAC FOR UPDATE                          125622
+      *                                                                   125622
+     C           W1KEY     KLIST                                          125622
+     C                     KFLD           CNUM1                           125622
+     C                     KFLD           CCY1                            125622
+     C                     KFLD           ACOD1                           125622
+     C                     KFLD           ACSQ1                           125622
+     C                     KFLD           BRCA1                                               206641
+     C*
+     C           *LIKE     DEFN CCY       PARAM + 7
+     C************LIKE     DEFN XDATA     SDATA                     075071086093
+     C*
+     C           *NAMVAR   DEFN *LDA      DSLDA
+     C           *NAMVAR   DEFN           LDA
+     C/EJECT
+     C*================================================================
+     C** P R O G R A M     S T A R T
+     C*================================================================
+     C                     EXSR FIRST
+     C*
+     C** Start processing - loop until F3
+     C*
+     C** Reading DSLDA
+     C*
+     C           *IN09     DOWEQ'0'                        B1
+     C           EXTFLG    ANDEQ'N'                                                           239966
+     C                     IN   DSLDA
+     C                     MOVE WBRCA     BRCA
+     C                     MOVE WCNUM     CNUM
+     C                     MOVE WCCY      CCY
+     C                     MOVE WACOD     ACOD
+     C                     MOVE WACSQ     ACSQ
+     C                     Z-ADDWHISD     HISD
+     C                     MOVE WACNO     ACNO
+     C                     MOVE WZADEC    ZADEC   10
+     C                     MOVE WRUNA     SRUNA
+     C*                                                                   078158
+     C** Access SDRETLPD                                                  078158
+     C*                                                                   078158
+     C                     CALL 'AORETLR0'                                078158
+     C                     PARM '*MSG   ' @RTCD   7                       078158
+     C                     PARM '*FIRST ' @OPTN   7                       078158
+     C           SDRETL    PARM SDRETL    DSFDY                           078158
+     C*                                                                   078158
+     C** Check if error                                                   078158
+     C*                                                                   078158
+     C           @RTCD     IFNE *BLANK                                    078158
+     C           *LOCK     IN   LDA                                       078158
+     C                     Z-ADD001       DBASE            ***************078158
+     C                     MOVE 'SDRETLPD'DBFILE           * DBERROR 001 *078158
+     C                     MOVEL*BLANKS   DBKEY            ***************078158
+     C                     OUT  LDA                                       078158
+     C                     EXSR *PSSR                                     078158
+     C                     END                                            078158
+     C*                                                                   078158
+     C** Check if retail number present                                   078158
+     C*                                                                   078158
+     C           BMRANR    IFEQ 'Y'                        - B1           078158
+     C                     MOVE '1'       *IN69                           078158
+     C                     END                             - E1           078158
+     C*
+     C** Initialise fields
+     C*
+     C                     MOVEL'*'       DDPGMQ
+     C*
+     C** Prepare LDA variables
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE 'RE3362'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+     C*                                                                   074590
+     C** Chain to ACCNTAB file                                            074590
+     C*                                                                   074590
+     C                     MOVE WCNUM     CNUMK                           074590
+     C                     MOVE WCCY      SCCY                            074590
+     C                     MOVE WACOD     ACODK                           074590
+     C                     MOVE WACSQ     ACSQK                           074590
+     C                     MOVE WBRCA     SBRCA                           074590
+     C           RETKEY    CHAINACCNT                99                   074590
+     C*                                                                   074590
+     C** ERROR IN ACCNTABF                                                074590
+     C*                                                                   074590
+     C           *IN99     IFEQ '1'                        - B1           074590
+     C           *LOCK     IN   LDA                                       074590
+     C                     Z-ADD002       DBASE            ***************074590
+     C                     MOVE 'ACCNT'   DBFILE           * DBERROR 002 *074590
+     C                     MOVELRKEY      DBKEY            ***************074590
+     C                     OUT  LDA                                       074590
+     C                     EXSR *PSSR                                     074590
+     C                     END                             - E1           074590
+     C                     MOVE ANAM      WANAM                           074590
+     C*                                                                   074590
+      ** Access Customer details.                                                             CGL186
+      *                                                                                       CGL186
+     C                     CALL 'AOCUSTR2'                                                    CGL186
+     C                     PARM *BLANKS   P@RTCD  7                                           CGL186
+     C                     PARM '*KEY'    P@OPTN  7                                           CGL186
+     C                     PARM WCNUM     P@KEY1 10                                           CGL186
+     C                     PARM           P@ANY   7                                           CGL186
+     C           SDCUST    PARM SDCUST    DSLDY                                               CGL186
+      *                                                                                       CGL186
+     C/COPY WNCPYSRC,RE3362C003
+     C*
+     C** Select the program MSGQ for error message
+     C*
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C*
+     C** Fill in fields for subroutine ZASNMS
+     C*
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue
+     C                     MOVEL'REUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C** Save key to compare when previous or next read
+     C*
+     C                     MOVE BRCA      ZONE1
+     C                     MOVE CNUM      ZONE2
+     C                     MOVE CCY       ZONE3
+     C                     MOVE ACOD      ZONE4
+     C                     MOVE ACSQ      ZONE5
+     C*
+     C** Initialise fields for output formats
+     C*
+     C                     MOVE *BLANKS   SPSTD   7
+     C                     MOVE *BLANKS   SPNAR  30
+     C                     MOVE *BLANKS   SPSTA  16
+     C                     MOVE *BLANKS   SLINK   1
+     C                     MOVE *BLANKS   SDRCR   2
+     C                     MOVE *BLANKS   SCHGA  16
+     C                     MOVE *BLANK    SREBI   1
+     C                     MOVE *BLANKS   TOTA1  16
+     C                     MOVE *BLANKS   TOTA2  16
+     C                     MOVE *BLANKS   TOTA1B  2
+     C                     MOVE *BLANKS   TOTA2B  2
+     C                     MOVE *BLANKS   SVALD   7
+     C                     MOVE *BLANKS   SDRIA  16
+     C                     MOVE *BLANKS   SCRIA  16
+     C                     MOVE *BLANKS   SDRCR   2
+     C                     MOVE *BLANKS   RPSTD   7
+     C                     MOVE *BLANKS   RINTR  14
+     C                     MOVE *BLANKS   RBRT    2
+     C                     MOVE *BLANKS   RRASP  14
+     C                     MOVE *BLANKS   RDRCR   2
+     C                     MOVE *BLANKS   RBAL1  16
+     C                     MOVE *BLANKS   RBAL2  16
+     C*
+     C** Compute ZADIG following field format
+     C*
+     C           13        SUB  ZADEC     DECI1   20
+     C           11        SUB  7         DECI2   20
+     C           15        SUB  ZADEC     DECI3   20
+     C                     Z-ADDZADEC     SAVZ    10
+     C*
+     C** Convert day number in date
+     C*
+     C                     Z-ADDHISD      ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    SHISD
+     C*
+     C                     WRITERE3362HE
+     C*
+     C** Fill the subfile if we come from RE3361
+     C*
+     C           WFROM1    IFEQ '62'                       B2
+     C                     MOVELNAR,9     BOLI
+     C                     Z-ADD0         KK      10
+     C                     EXSR SUBFIL
+     C                     END                             E2
+     C*
+     C** Reset all indicators
+     C*
+     C                     MOVE '0'       *IN
+     C*
+     C** Write bottom format
+     C*
+     C                     WRITERE3362F0
+     C*
+     C** Send subfile
+     C*
+     C                     EXFMTRE3362PC
+     C*
+     C** Reset error message
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ
+     C                     PARM           TOPRQ
+     C*
+     C** Action requested - if command key not valid, *IN45 is not
+     C** set on
+     C*
+     C           *IN03     CASEQ'1'       EXIT
+     C           *IN12     CASEQ'1'       EXIT
+     C           *IN13     CASEQ'1'       POSIT
+     C           *IN14     CASEQ'1'       POSIT
+     C           *IN15     CASEQ'1'       POSIT
+     C           *IN18     CASEQ'1'       NEXPR
+     C           *IN19     CASEQ'1'       NEXPR
+     C           *IN24     CASEQ'1'       KEYRE
+     C                     CAS            EXIT
+     C                     END                             *END CASE*
+     C           *IN45     IFEQ '0'                        B2
+     C                     MOVEL'RES0004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            X2
+     C*
+     C** Format is sent if end of program not requested
+     C*
+     C           *IN09     IFEQ '0'                        B3
+     C           *IN95     OREQ '0'
+     C*
+     C** Convert day number in date
+     C*
+     C                     Z-ADDHISD      ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    SHISD
+     C*
+     C                     WRITERE3362HE
+     C*
+     C                     END                             E3
+     C*
+     C                     END                             E2
+     C*
+     C** Clearing of subfile if we come from RE3361
+     C*
+     C                     END                             E1 IF F3
+     C*
+     C** End of program
+     C*
+     C                     MOVE '1'       *INLR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  FIRST   Subroutine to perform initialisation                 *
+     C*                                                               *
+     C*  Called by:  START                                            *
+     C*                                                               *
+     C*  Calls    :  *PSSR                                            *
+     C*                                                               *
+     C*****************************************************************
+     C           FIRST     BEGSR                           **FIRST BEGSR**
+     C                     Z-ADD16        PAGSZ1  30       set up page sze075071
+     C                     MOVE 'N'       EXTFLG  1                                           239966
+     C*
+     C** Set up indicator 98 based on the date format
+     C*
+     C           WDATF     IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+     C***********                                                         078158
+     C***Access*SDRETLPD                                                  078158
+     C***********                                                         078158
+     C***********          CALL 'AORETLR0'                                078158
+     C***********          PARM '*MSG   ' @RTCD   7                       078158
+     C***********          PARM '*FIRST ' @OPTN   7                       078158
+     C***********SDRETL    PARM SDRETL    DSFDY                           078158
+     C***********                                                         078158
+     C***Check*if error                                                   078158
+     C***********                                                         078158
+     C***********@RTCD     IFNE *BLANK                                    078158
+     C************LOCK     IN   LDA                                       078158
+     C***********          Z-ADD001       DBASE            ***************078158
+     C***********          MOVE 'SDRETLPD'DBFILE           * DBERROR 001 *078158
+     C***********          MOVEL*BLANKS   DBKEY            ***************078158
+     C***********          OUT  LDA                                       078158
+     C***********          EXSR *PSSR                                     078158
+     C***********          END                                            078158
+     C***********                                                         078158
+     C***Check*if retail number present                                   078158
+     C***********                                                         078158
+     C***********BMRANR    IFEQ 'Y'                        - B1           078158
+     C***********          MOVE '1'       *IN69                           078158
+     C***********          END                             - E1           078158
+     C/COPY WNCPYSRC,RE3362C004
+     C*
+     C                     ENDSR                           **FIRST ENDSR**
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBFIL  Subroutine to fill subfile                           *
+     C*                                                               *
+     C*  Called by:  START, NEXPR                                     *
+     C*                                                               *
+     C*  Calls    :  BLANC, LINE, ALIN, BALRAT, ZDATE2, ZEDIT         *
+     C*                                                               *
+     C*****************************************************************
+     C           SUBFIL    BEGSR                           **START SUBFIL**
+     C*
+     C                     Z-ADD1         SFLRRN  40
+     C                     MOVE *OFF      SFLEND  1                       075071
+     C                     Z-ADD0         RECNUM  40
+     C                     Z-ADD0         TOT1   130
+     C                     Z-ADD0         TOT2   130
+     C*
+     C** POSTINGS RECORDS
+     C*
+     C** Prepare first header
+     C*
+     C**  Set up indicator 85 (underline)
+     C*
+     C                     MOVE '1'       *IN85
+     C*
+     C**  Set up indicator 86 (highlight)
+     C*
+     C                     MOVE '1'       *IN86
+     C                     EXSR BLANC
+     C                     MOVELNAR,1     SDATA
+     C/COPY WNCPYSRC,RE3362C005
+     C**********           ADD  1         RECNUM                          075071
+     C                     EXSR ADDREC                     Add SflRecord  075071
+     C*
+     C**  Save RECNUM
+     C*
+     C                     Z-ADDRECNUM    POSTI   40                   *
+     C**********           WRITERE3362PB                                  075071
+     C                     MOVEA'00'      *IN,85
+     C*
+     C** Add blank line
+     C*
+     C                     EXSR LINE
+     C*
+     C** Prepare columns of subfile - place headers
+     C*
+     C                     MOVELNAR,4     SDATA
+     C**********           ADD  1         RECNUM                          075071
+     C                     EXSR ADDREC                     Add SflRecord  075071
+     C**********           WRITERE3362PB                                  075071
+     C*
+     C** Add blank line
+     C*
+     C                     EXSR LINE
+     C*
+     C** Fill subfile with records of file
+     C*
+     C           RECO      CHAINREHPOPL              96                   075071
+     C***********RECO      SETLLREHPOPL                                   075071
+     C***********RECO      READEREHPOPL                  96               075071
+     C*
+     C**  Set up indicator 86 (highlight)
+     C*
+     C                     MOVE '1'       *IN86
+     C           *IN96     IFEQ '1'
+     C                     MOVE '1'       *IN95
+     C                     MOVELNAR,8     SDATA
+     C**********           ADD  1         RECNUM                          075071
+     C                     EXSR ADDREC                     Add SflRecord  075071
+     C**********           WRITERE3362PB                                  075071
+     C                     END
+     C*
+     C** Loop until end of file
+     C*
+     C           *IN96     DOWEQ'0'                        B1
+     C           RECI      IFEQ 'P'                        B2
+     C**********           ADD  1         RECNUM                          075071
+     C*
+     C** Transform posting date
+     C*
+     C                     Z-ADDPSTD      ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    SPSTD
+     C*
+     C** Add narrative
+     C*
+     C                     MOVELPNAR      SPNAR
+     C*
+     C** Load posting amount and transform it
+     C*
+     C                     MOVEL*BLANKS   ZFIELD 16
+     C                     Z-ADDDECI1     ZADIG   20
+     C           DRCR      IFEQ 0
+     C                     ADD  PSTA      TOT1
+     C                     ELSE
+     C                     SUB  PSTA      TOT1
+     C                     END
+     C                     MOVE PSTA      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SPSTA
+     C                     MOVE 'S'       SLINK
+     C           ZZ006     IFEQ *ZERO
+     C           ZZ006     OREQ *BLANK
+     C                     MOVE ' '       SLINK
+     C                     END
+     C*
+     C** Check if credit or debit
+     C*
+     C           DRCR      IFEQ 1                          B3
+     C                     MOVE 'CR'      SDRCR
+     C                     ELSE                            X3
+     C                     MOVE '  '      SDRCR
+     C           TURN      IFEQ 'Y'                        B4
+     C                     MOVE ' *'      SDRCR
+     C                     END                             E4
+     C                     END                             E3
+      *                                                                   125622
+      ** ACCESS AND UPDATE FILE REIAC IF CHARGES APPLY                    125622
+      *                                                                   125622
+     C**********           Z-ADDCNUM      CNUM1                                        125622 CSD027
+     C                     MOVE CNUM      CNUM1                                               CSD027
+     C                     MOVELCCY       CCY1                            125622
+     C                     Z-ADDACOD      ACOD1                           125622
+     C                     MOVELACSQ      ACSQ1                           125622
+     C                     MOVELBRCA      BRCA1                                               206641
+      *                                                                   125622
+     C           W1KEY     CHAINREIAC                40                   125622
+      *                                                                   125622
+     C           *IN40     IFEQ '1'                                       125622
+      *                                                                   125622
+      ** REIAC RECORD NOT FOUND                                           125622
+      *                                                                   125622
+     C           *LOCK     IN   LDA                                       125622
+     C                     Z-ADD025       DBASE            ************** 125622
+     C                     MOVEL'REIAC'   DBFILE           **DBERROR 025* 125622
+     C                     MOVELRKEY      DBKEY            ************** 125622
+     C                     OUT  LDA                                       125622
+     C                     EXSR *PSSR                                     125622
+      *                                                                   125622
+     C                     END                                            125622
+      *                                                                   125622
+     C           CHGT      IFNE 0                                         125622
+     C           CHST      ANDNE0                                         125622
+     C*
+     C** Load charge amount and transform it
+     C*
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     Z-ADDDECI1     ZADIG   20
+     C                     ADD  CHGA      TOT2
+     C                     MOVE CHGA      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SCHGA
+     C*
+     C** Load rebatable indicator
+     C*
+     C                     MOVE REBI      SREBI
+      *                                                                   125622
+     C                     ELSE                                           125622
+      *                                                                   125622
+     C                     MOVEL*BLANKS   ZFIELD                          125622
+     C                     Z-ADDDECI1     ZADIG                           125622
+     C                     MOVE '00'      ZFIELD                          125622
+     C                     EXSR ZEDIT                                     125622
+     C                     MOVE ZFIELD    SCHGA                           125622
+     C                     MOVEL*BLANKS   SREBI                           125622
+      *                                                                   125622
+     C                     END                                            125622
+      *                                                                   125622
+     C*
+     C** Write subfile record
+     C*
+     C***********          EXCPTOUTP                                      086093
+     C***********          READ GHOST                    99               086093
+     C/COPY WNCPYSRC,RE3362C001
+     C                     EXSR OUTPSR                     formatAREAType1086093
+     C***********          MOVELAREA      SDATA                           086093
+     C***********          EXSR ADDREC                     Add SflRec75071086093
+     C***********          WRITERE3362PB                                  075071
+     C*
+     C                     END                             E2
+     C           RECO      READEREHPOPL                  96
+     C*
+     C                     END                             E1
+     C*
+     C           *IN95     IFEQ '0'                        B1
+     C*
+     C** Add blank line
+     C*
+     C                     MOVE '1'       *IN85
+     C                     EXSR LINE
+     C                     MOVE '0'       *IN85
+     C*
+     C** Write postings and charges totals
+     C*
+     C**********           ADD  1         RECNUM                          075071
+     C                     MOVELNAR,7     STOT   10
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADDDECI1     ZADIG   20
+     C           TOT1      IFLT *ZERO
+     C                     MOVE 'CR'      TOTA1B
+     C                     Z-SUBTOT1      TOT1
+     C                     ELSE
+     C                     MOVE 'DR'      TOTA1B
+     C                     END
+     C           TOT1      IFEQ *ZERO
+     C                     MOVE '  '      TOTA1B
+     C                     END
+     C                     MOVE TOT1      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    TOTA1
+     C           TOT2      IFLT *ZERO
+     C                     MOVE 'CR'      TOTA2B
+     C                     Z-SUBTOT1      TOT1
+     C                     ELSE
+     C                     MOVE 'DR'      TOTA2B
+     C                     END
+     C           TOT2      IFEQ *ZERO
+     C                     MOVE '  '      TOTA2B
+     C                     END
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE TOT2      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    TOTA2
+     C*
+     C***********          EXCPTOUTT                                      086093
+     C***********          READ GHOST                    99               086093
+     C                     EXSR OUTTSR                     formatAREAType1086093
+     C**********           MOVELAREA      SDATA                           086093
+     C**********           EXSR ADDREC                     Add SflRec75071086093
+     C**********           WRITERE3362PB                                  075071
+     C                     MOVE '0'       *IN86
+     C                     MOVE '0'       *IN95
+     C                     END                             E1
+     C*
+     C** Manual adjustments
+     C*
+     C** Prepare manual adjustments header
+     C*
+     C                     EXSR ALIN
+     C***********          ADD  1         RECNUM                          075071
+     C***********          Z-ADDRECNUM    MANU    40                      075071
+     C                     MOVEA'11'      *IN,85
+     C                     MOVELNAR,2     SDATA
+     C/COPY WNCPYSRC,RE3362C006
+     C                     EXSR ADDREC                     Add SflRecord  075071
+     C**********           WRITERE3362PB                                  075071
+     C                     Z-ADDRECNUM    MANU    40                      086093
+     C                     MOVEA'00'      *IN,85
+     C*
+     C** Add blank line
+     C*
+     C                     EXSR LINE
+     C*
+     C** Write titles of columns
+     C*
+     C                     MOVELNAR,5     SDATA
+     C                     EXSR ADDREC                     Add SflRecord  075071
+     C**********           WRITERE3362PB                                  075071
+     C*
+     C** Add blank line
+     C*
+     C                     EXSR LINE
+     C*
+     C** Fill subfile with record fields
+     C*
+     C           RECO      CHAINREHPOML2             96                   075071
+     C***********RECO      SETLLREHPOML2                                  075071
+     C***********RECO      READEREHPOML2                 96               075071
+     C*
+     C                     MOVE '1'       *IN86
+     C*
+     C           *IN96     IFEQ '1'                        B1
+     C                     MOVELNAR,8     SDATA
+     C                     EXSR ADDREC                     Add SflRecord  075071
+     C**********           WRITERE3362PB                                  075071
+     C                     END                             E1
+     C*
+     C** Loop until end of file
+     C*
+     C           *IN96     DOWEQ'0'                        B1
+     C********** RECI      IFEQ 'M'                        B2             067628
+     C           RECI      IFEQ 'D'                        B2             067628
+     C***********          ADD  1         RECNUM                          075071
+     C                     Z-ADDVALD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    SVALD
+     C*
+     C           DRIA      IFNE 0                          B3
+     C           DRIA      IFLT *ZEROS
+     C                     Z-SUBDRIA      DRIA
+     C                     MOVE 'CR'      SDRCR
+     C                     ELSE
+     C                     MOVE 'DR'      SDRCR
+     C                     END
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADDDECI1     ZADIG   20
+     C                     MOVE DRIA      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SDRIA
+     C                     END                             E3
+     C*
+     C           CRIA      IFNE 0                          B3
+     C           CRIA      IFLT *ZEROS
+     C                     Z-SUBCRIA      CRIA
+     C                     MOVE 'DR'      SDRCR
+     C                     ELSE
+     C                     MOVE 'CR'      SDRCR
+     C                     END
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADDDECI1     ZADIG   20
+     C                     MOVE CRIA      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SCRIA
+     C                     END                             E3
+     C*
+     C***********          EXCPTOUTM                                      086093
+     C***********          READ GHOST                    99               086093
+     C                     EXSR OUTMSR                     formatAREAType1086093
+     C**********           MOVELAREA      SDATA                           086093
+     C**********           EXSR ADDREC                     Add SflRec75071086093
+     C**********           WRITERE3362PB                                  075071
+     C*
+     C                     END                             E2
+     C*
+     C           RECO      READEREHPOML2                 96
+     C*
+     C                     END                             E1
+     C                     MOVE '0'       *IN86
+     C*
+     C** RATE CHANGES
+     C*
+     C** Rate header
+     C*
+     C                     EXSR ALIN
+     C                     MOVEA'11'      *IN,85
+     C                     EXSR BLANC
+     C**********           ADD  1         RECNUM                          075071
+     C**********           Z-ADDRECNUM    RAT     40                      075071
+     C                     MOVELNAR,3     SDATA
+     C/COPY WNCPYSRC,RE3362C007
+     C                     EXSR ADDREC                     Add SflRecord  075071
+     C**********           WRITERE3362PB                                  075071
+     C                     Z-ADDRECNUM    RAT     40                      075071
+     C                     MOVEA'00'      *IN,85
+     C*
+     C** Add blank line
+     C*
+     C                     EXSR LINE
+     C*
+     C** Titles of columns
+     C*
+     C**********           ADD  1         RECNUM                          075071
+     C                     MOVELNAR,6     SDATA
+     C                     EXSR ADDREC                     Add SflRecord  075071
+     C**********           WRITERE3362PB                                  075071
+     C*
+     C                     EXSR LINE
+     C*
+     C** Load records of file
+     C*
+     C           RECO      CHAINREHPRCD              96                   075071
+     C***********RECO      SETLLREHPRCD                                   075071
+     C***********RECO      READEREHPRCD                  96               075071
+     C*
+     C                     MOVE '0'       *IN97
+     C                     MOVE '1'       *IN86
+     C*
+     C           *IN96     IFEQ '1'                        B1
+     C                     MOVELNAR,8     SDATA
+     C***********          ADD  1         RECNUM                          075071
+     C                     EXSR ADDREC                     Add SflRecord  075071
+     C***********          WRITERE3362PB                                  075071
+     C                     END                             E1
+     C*
+     C           *IN96     DOWEQ'0'                        B1
+     C*
+     C           RECI      IFEQ 'R'                        B2
+     C*
+     C***********          ADD  1         RECNUM                          075071
+     C*
+     C** Convert posting date
+     C*
+     C                     Z-ADDPSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RPSTD
+     C*
+     C** Interest rate
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADDDECI2     ZADIG   20
+     C                     Z-ADD7         ZADEC
+     C           INRT      IFLT 0                                         086093
+     C                     Z-SUBINRT      ABS117 117                      086093
+     C                     MOVE ABS117    ZFIELD                          086093
+     C                     MOVEL'-'       RNEG                            086093
+     C                     ELSE                                           086093
+     C                     MOVEL' '       RNEG                            086093
+     C                     MOVE INRT      ZFIELD
+     C                     ENDIF                                          086093
+     C                     EXSR ZEDIT
+     C                     MOVE *BLANK    RINTR
+     C           INTP      IFEQ 0
+     C                     MOVE ZFIELD    RINTR
+     C                     END
+     C*
+     C** Base Rate Type
+     C*
+     C                     MOVE BRT       RBRT
+     C*
+     C** Rate spread
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADDDECI2     ZADIG   20
+     C                     Z-ADD7         ZADEC
+     C           RTSP      IFLT *ZERO
+     C                     Z-SUBRTSP      RTSP
+     C                     MOVE '-'       SIGN    1
+     C                     ELSE
+     C                     MOVE ' '       SIGN
+     C                     END
+     C           *LIKE     DEFN ZFIELD    FIELD - 1
+     C                     MOVE RTSP      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVELZFIELD    FIELD1
+     C                     MOVE SIGN      FIELD1 16
+     C                     MOVE *BLANK    RRASP
+     C           INTP      IFEQ 0
+     C                     MOVE FIELD1    RRASP
+     C                     END
+     C*
+     C** Debit or credit
+     C*
+     C           DRCR      IFEQ 0                          B3
+     C                     MOVE 'DR'      RDRCR
+     C                     ELSE                            X3
+     C                     MOVE 'CR'      RDRCR
+     C                     END                             E3
+     C*
+     C** Balance/Rate
+     C*
+     C                     MOVEA*BLANKS   ZIRW
+     C                     MOVEA*BLANKS   ZIBW
+     C                     MOVEA*BLANKS   NEGW                            077683
+     C           INTP      IFNE 0
+     C                     EXSR BALRAT
+     C                     END
+     C*
+     C                     Z-ADDSAVZ      ZADEC
+     C*
+     C           INTP      IFNE 0
+     C                     MOVELINTP      RINT1   3
+     C                     MOVE '/'       RINT1
+     C                     MOVELRINT1     RINT2
+     C                     MOVE INST      RINT2   8
+     C                     MOVE *BLANK    RBAL1
+     C                     MOVELRINT2     RBAL1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADDDECI3     ZADIG
+     C                     Z-ADDSAVZ      ZADEC
+     C                     MOVE INTH      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RBAL2
+     C                     END
+     C***********          EXCPTOUTR                                      086093
+     C***********          READ GHOST                    99               086093
+     C                     EXSR OUTRSR                     formatAREAType1086093
+     C**********           MOVELAREA      SDATA                           086093
+     C**********           EXSR ADDREC                     Add SflRec75071086093
+     C**********           WRITERE3362PB                                  075071
+     C*
+     C                     EXSR BLANC
+     C*
+     C                     MOVE '0'       *IN97
+     C                     Z-ADD*ZEROS    X
+     C*
+     C           *IN97     DOWEQ'0'                        B3
+     C                     ADD  1         X
+     C           X         IFLT 12                         B4
+     C           ZIBW,X    IFEQ *BLANKS                    B5
+     C           ZIRW,X    ANDEQ*BLANKS
+     C           X         ANDGT1                                         086093
+     C                     MOVE '1'       *IN97
+     C                     ELSE                            X5
+     C                     MOVE ZIBW,X    RBAL1
+     C                     MOVE ZIRW,X    RINTR
+     C                     MOVE NEGW,X    RNEG    1                       077683
+     C***********          EXCPTOUTR                                      086093
+     C***********          READ GHOST                    99               086093
+     C                     EXSR OUTRSR                     formatAREAType1086093
+     C**********           MOVELAREA      SDATA                           086093
+     C**********           ADD  1         RECNUM                          075071
+     C**********           EXSR ADDREC                     Add SflRec75071086093
+     C**********           WRITERE3362PB                                  075071
+     C                     END                             E5
+     C                     ELSE                            X4
+     C                     MOVE '1'       *IN97
+     C                     END                             E4
+     C                     END                             E3
+     C*
+     C                     END                             E2
+     C*
+     C                     MOVE '0'       *IN97
+     C           RECO      READEREHPRCD                  96
+     C*
+     C                     END                             E1
+     C*
+     C                     MOVE *ON       SFLEND  1                       075071
+     C                     EXSR ADDREC                     Add SflRecord  075071
+      *                                                                   075071
+     C                     MOVE '0'       *IN86
+     C*
+     C                     Z-ADD1         RECNUM
+     C*
+     C                     MOVE *BLANKS   WFROM1
+     C                     OUT  DSLDA
+     C*                                                    **************
+     C                     ENDSR                           **END SUBFIL**
+     C*                                                    **************
+      /EJECT                                                              075071
+      *****************************************************************   075071
+      *                                                               *   075071
+      *  ADDREC   Subroutine to add subfile record                    *   075071
+      *                                                               *   075071
+      *  Called by:                                                   *   075071
+      *                                                               *   075071
+      *  Calls    :  -                                                *   075071
+      *                                                               *   075071
+      *****************************************************************   075071
+     C           ADDREC    BEGSR                                          075071
+      *                                                                   075071
+      * save screen attribute indicators 85,86                            075071
+     C                     MOVE XINX      XIN     2        restore        075071
+     C                     MOVEA*IN,85    XINX    2        save           075071
+      *                                                                   075071
+     C           XFIRST    IFNE *ON                        If 1st time    075071
+     C                     MOVE *ON       XFIRST  1                       075071
+     C                     Z-ADD1         RECNUM                          075071
+     C                     ELSE                                           075071
+     C                     MOVEAXIN       *IN,85           Inds 85,86     075071
+     C                     WRITERE3362PB                   Add SflRecord  075071
+     C                     MOVEAXINX      *IN,85           restore INDS   075071
+     C                     ADD  1         RECNUM                          075071
+     C                     ENDIF                                          075071
+      *                                                                   075071
+     C           SFLEND    IFEQ *ON                        If sfl end     075071
+     C                     CLEARXDATA                      trigger start  075071
+     C                     CLEARXFIRST                                    075071
+     C                     ELSE                                           075071
+     C                     MOVE SDATA     XDATA            Move next to   075071
+      *                                                    buffer .       075071
+     C                     ENDIF                                          075071
+      *                                                                   075071
+     C                     ENDSR                                          075071
+      *                                                                   075071
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBCLR   Subroutine to clear subfile                         *
+     C*                                                               *
+     C*  Called by:  NEXPR, EXIT                                      *
+     C*                                                               *
+     C*  Calls    :  -                                                *
+     C*                                                               *
+     C*****************************************************************
+     C           SUBCLR    BEGSR                           **START SUBCLR**
+     C*
+     C                     MOVE '1'       *IN50
+     C                     WRITERE3362PC
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  LINE   Subroutine to insert a blank line CALLED BY SUBFIL    *
+     C*                                                               *
+     C*  Called by:  SUBFIL                                           *
+     C*                                                               *
+     C*  Calls    :  BLANC                                            *
+     C*                                                               *
+     C*****************************************************************
+     C           LINE      BEGSR                           **START LINE**
+     C*
+     C                     EXSR BLANC
+     C**********           ADD  1         RECNUM                          075071
+     C                     EXSR ADDREC                     Add SflRecord  075071
+     C**********           WRITERE3362PB                                  075071
+     C*                                                    ************
+     C                     ENDSR                           **END LINE**
+     C*                                                    ************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  BLANC   Subroutine to fill fields with blanks                *
+     C*                                                               *
+     C*  Called by:  SUBFIL, LINE                                     *
+     C*                                                               *
+     C*  Calls    :  -                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                    ***************
+     C           BLANC     BEGSR                           **START BLANC**
+     C*                                                    ***************
+     C                     MOVE *BLANKS   SDATA
+     C*                                                    *************
+     C                     ENDSR                           **END BLANC**
+     C*                                                    *************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  EXIT   Subroutine to exit program or cancel job              *
+     C*                                                               *
+     C*  Called by:  START                                            *
+     C*                                                               *
+     C*  Calls    :  SUBCLR                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                    **************
+     C           EXIT      BEGSR                           **START EXIT**
+     C*                                                    **************
+     C                     MOVE '1'       *IN45
+     C*
+     C           *IN03     IFEQ '1'                        B1
+     C                     MOVE '1'       *IN09
+     C                     MOVE '1'       WCANC
+     C                     MOVEL'F03'     FUNC                                                239966
+     C                     OUT  DSLDA                                                         239966
+     C                     ELSE                            X1
+     C*
+     C** Return control to previous enquiry via group job
+     C*
+     C** CMD12 - Initial screen or enter key - next selection
+     C*
+     C           *IN12     IFEQ '1'                        B2
+     C                     MOVE '2'       WCANC
+      * BACK TO HISTORY POSITION ENQUIRY                                                      239966
+     C                     MOVEL'F13'     FUNC                                                239966
+     C                     OUT  DSLDA                                                         239966
+     C                     ELSE                            X2
+     C                     MOVE '0'       WCANC
+     C                     END                             E2
+     C                     EXSR SUBCLR
+     C                     MOVE '62'      WFROM1
+     C                     MOVEL'F13'     FUNC                                                239966
+     C                     OUT  DSLDA
+     C                     MOVE 'Y'       EXTFLG                                              239966
+     C**********           CALL 'RE360C'                                                      239966
+     C**********           PARM 'RE3361 ' PARAM                                               239966
+     C                     END                             E1
+     C*                                                    ************
+     C                     ENDSR                           **END EXIT**
+     C*                                                    ************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  POSIT  Subroutine to position cursor in subfile              *
+     C*                                                               *
+     C*  Called by:  START                                            *
+     C*                                                               *
+     C*  Calls    :  -                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                    ***************
+     C           POSIT     BEGSR                           **START POSIT**
+     C*                                                    ***************
+     C                     MOVE '1'       *IN45
+     C*
+     C           *IN13     IFEQ '1'                        B1
+     C                     Z-ADDPOSTI     SFLRRN
+     C                     ELSE                            X1
+     C           *IN14     IFEQ '1'                        B2
+     C                     Z-ADDMANU      SFLRRN
+     C                     ELSE                            X2
+     C                     Z-ADDRAT       SFLRRN
+     C                     END                             E2
+     C                     END                             E1
+     C*                                                    *************
+     C                     ENDSR                           **END POSIT**
+     C*                                                    *************
+     C/EJECT
+     C*********************************************************************
+     C*                                                               *
+     C*  NEXPR   Subroutine to read details of previous date or of    *
+     C*          next date                                            *
+     C*                                                               *
+     C*  Called by:  START                                            *
+     C*                                                               *
+     C*  Calls    :  FILL, SUBCLR, SUBFIL, ZASNMS                     *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                    ***************
+     C           NEXPR     BEGSR                           **START NEXPR**
+     C*                                                    ***************
+     C                     MOVE '1'       *IN45
+     C*
+     C** Read previous date
+     C*
+     C           *IN18     IFEQ '1'                        B1
+     C           RECO      SETLLREHPOPL
+     C*
+     C** Look for previous history date in file
+     C*
+     C                     READPREHPOPL                  99
+     C*
+     C** Check if begin of file
+     C*
+     C           *IN99     IFEQ '1'                        B2
+     C                     MOVEL'RES0005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     READ REHPOPL                  99
+     C                     ELSE                            X2
+     C                     EXSR FILL
+     C*
+     C** Check if same account number
+     C*
+     C           ACKEY     IFNE ZONE                       B3
+     C                     MOVEL'RES0007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     READ REHPOPL                  99
+     C                     MOVE '1'       *IN95
+     C                     ELSE                            X3
+     C                     Z-ADDHISD      WHISD
+     C                     OUT  DSLDA
+     C           RECO      SETLLREHPOPL
+     C                     EXSR SUBCLR
+     C                     EXSR SUBFIL
+     C                     END                             E3
+     C                     END                             E2
+     C                     ELSE                            X1
+     C*
+     C** Position on next date in file
+     C*
+     C           RECO      SETGTREHPOPL
+     C*
+     C** Read next date
+     C*
+     C                     READ REHPOPL                  99
+     C*
+     C** Check if end of file
+     C*
+     C           *IN99     IFEQ '1'                        B2
+     C                     MOVEL'RES0006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     READPREHPOPL                  99
+     C                     ELSE                            X2
+     C                     EXSR FILL
+     C*
+     C** Check if same account number
+     C*
+     C           ACKEY     IFNE ZONE                       B3
+     C                     MOVEL'RES0007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     READPREHPOPL                  99
+     C                     MOVE '1'       *IN95
+     C                     ELSE                            X3
+     C                     Z-ADDHISD      WHISD
+     C                     OUT  DSLDA
+     C           RECO      SETLLREHPOPL
+     C                     EXSR SUBCLR
+     C                     EXSR SUBFIL
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C*                                                    *************
+     C                     ENDSR                           **END NEXPR**
+     C*                                                    *************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  BALRAT  Subroutine to fill balance/rate arrays               *
+     C*                                                               *
+     C*  Called by:  SUBFIL                                           *
+     C*                                                               *
+     C*  Calls    :  ZEDIT                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                    ****************
+     C           BALRAT    BEGSR                           **START BALRAT**
+     C*                                                    ****************
+     C                     Z-ADD*ZERO     ZIR
+     C                     Z-ADD*ZERO     ZIB
+     C                     MOVELRAT2      WRAT
+     C           RAT3      IFNE *BLANKS                                   086559
+     C                     MOVE RAT3      WRAT
+     C                     END                                            086559
+     C                     MOVELBAL2      WBAL
+     C           BAL3      IFNE *BLANKS                                   086559
+     C                     MOVE BAL3      WBAL
+     C                     END                                            086559
+     C                     Z-ADDZIR       ZIR
+     C                     Z-ADDZIB       ZIB
+     C*
+     C** Read fields and format them - then fill array
+     C*
+     C                     Z-ADD1         X       20
+     C*
+     C           X         DOUGT11                         B1
+     C***********ZIR,X     IFNE *ZEROS                                    086560
+     C***********ZIB,X     ORNE *ZEROS                                    078272
+     C***********ZIB,X     ANDNE*ZEROS                              078272086560
+     C           ZIB,X     IFNE *ZEROS                                    086560
+     C           X         ANDGT1                                         078272
+     C           X         OREQ 1                                         078272
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADDDECI2     ZADIG
+     C                     Z-ADD7         ZADEC
+     C           ZIR,X     IFLT 0                                         077683
+     C                     Z-SUBZIR,X     ZIR,X                           077683
+     C                     MOVE '-'       NEGW,X                          077683
+     C                     END                                            077683
+     C                     MOVE ZIR,X     ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    ZIRW,X
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADDDECI3     ZADIG
+     C                     Z-ADDSAVZ      ZADEC
+     C                     MOVE ZIB,X     ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    ZIBW,X
+     C                     END
+     C*
+     C                     ADD  1         X
+     C*
+     C                     END                             E1
+     C*                                                    **************
+     C                     ENDSR                           **END BALRAT**
+     C*                                                    **************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  FILL  Subroutine to fill ACKEY data structure                *
+     C*                                                               *
+     C*  Called by:  NEXPR                                            *
+     C*                                                               *
+     C*  Calls    :  -                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                    **************
+     C           FILL      BEGSR                           **START FILL**
+     C*                                                    **************
+     C                     MOVE BRCA      ABRCA
+     C**********           Z-ADDCNUM      ACNUM                                               CSD027
+     C                     MOVE CNUM      ACNUM                                               CSD027
+     C                     MOVE CCY       ACCY
+     C                     Z-ADDACOD      AACOD
+     C                     Z-ADDACSQ      AACSQ
+     C*                                                    ************
+     C                     ENDSR                           **END FILL**
+     C*                                                    ************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  KEYRE   Subroutine to display 'MORE KEYS'                    *
+     C*                                                               *
+     C*  Called by:  START                                            *
+     C*                                                               *
+     C*  Calls    :  -                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                    ***************
+     C           KEYRE     BEGSR                           **START KEYRE**
+     C*                                                    ***************
+     C                     MOVE '1'       *IN45
+     C*
+     C                     MOVE *BLANKS   BOLI
+     C                     ADD  1         KK
+     C*
+     C           KK        IFEQ 1                          B1
+     C                     MOVELNAR,10    BOLI
+     C                     ELSE                            X1
+     C*
+     C           KK        IFEQ 2                          B2
+     C                     MOVELNAR,11    BOLI
+     C                     ELSE                            X2
+     C                     Z-ADD0         KK
+     C                     MOVELNAR,9     BOLI
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*                                                    *************
+     C                     ENDSR                           **END KEYRE**
+     C*                                                    *************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  ALIN   Subroutine to align titles of subfile at top of page  *
+     C*                                                               *
+     C*  Called by:  SUBFIL                                           *
+     C*                                                               *
+     C*  Calls    :  -                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                    **************
+     C           ALIN      BEGSR                           **START ALIN**
+     C*                                                    **************
+     C                     Z-ADDRECNUM    RECN    40
+     C                     Z-ADD0         ZZ      20
+     C                     Z-ADD0         REST    20
+     C                     Z-ADD0         LOOP    20
+     C*
+     C           RECN      DOWGT16                         B1
+     C           RECN      SUB  16        ZZ
+     C                     Z-ADDZZ        RECN
+     C                     END                             E1
+     C*
+     C           16        SUB  RECN      REST
+     C*
+     C           LOOP      DOWLTREST
+     C                     ADD  1         LOOP
+     C                     EXSR LINE
+     C                     END
+     C*                                                    ************
+     C                     ENDSR                           **END ALIN**
+     C*                                                    ************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZASNMS  Subroutine to send message to program message queue   *
+     C*                                                               *
+     C* Called by:  NEXPR                                             *
+     C*                                                               *
+     C* Calls    :  -                                                 *
+     C*                                                               *
+     C*****************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file.
+     C                     PARM           ZAMSDA           Message data.
+     C                     PARM           ZAMSTP           Message type.
+     C*
+     C** Clear all fields for default mechanism next time.
+     C*
+     C                     MOVEL*BLANK    ZAPGM            Message queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C           ZASNM9    ENDSR                           ZASNM9 TAG
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  ZDATE2  Subroutine to convert a day number to a date format  *
+     C*                                                               *
+     C*  Called by:   START, SUBFIL                                   *
+     C*                                                               *
+     C*  Calls    :   -                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*  ZEDIT  Subroutine to insert a decimal point into a numeric   *
+     C*         field and to blank out leading zeroes.                *
+     C*                                                               *
+     C*  Called by:   BALRAT, SUBFIL                                  *
+     C*                                                               *
+     C*  Calls    :   -                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C/COPY ZSRSRC,ZEDITZ2
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  Subroutine to handle abnormal error conditions        *
+     C*                                                               *
+     C*  Called by:  FIRST                                            *
+     C*                                                               *
+     C*  Calls    :  -                                                *
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           ** *PSSR **
+      *****************************************************************   086093
+      *                                                               *   086093
+      *  OUTMSR   Format SDATA (as formerly in EXCPT OUTM)            *   086093
+      *                                                               *   086093
+      *  Called by:                                                   *   086093
+      *                                                               *   086093
+      *****************************************************************   086093
+     C           OUTMSR    BEGSR                                          086093
+      *                                                                   086093
+     C                     MOVE *BLANKS   SDATA            initialize     086093
+      *                                                                   086093
+     C                     MOVEASVALD     AR,1             Value Date     086093
+     C                     MOVEASDRIA     AR,17                           086093
+     C                     MOVEASCRIA     AR,40                           086093
+     C                     MOVEASDRCR     AR,63            'CR' or Blank. 086093
+      *                                                                   086093
+     C                     RESETSVALD                                     086093
+     C                     RESETSDRIA                                     086093
+     C                     RESETSCRIA                                     086093
+     C                     RESETSDRCR                                     086093
+      *                                                                   086093
+     C                     EXSR ADDREC                     Add SflRecord  086093
+      *                                                                   086093
+     C                     ENDSR                                          086093
+      *****************************************************************   086093
+      *                                                               *   086093
+      *  OUTPSR   Format SDATA (as formerly in EXCPT OUTP)            *   086093
+      *                                                               *   086093
+      *  Called by:                                                   *   086093
+      *                                                               *   086093
+      *****************************************************************   086093
+     C           OUTPSR    BEGSR                                          086093
+      *                                                                   086093
+     C                     MOVE *BLANKS   SDATA            initialize     086093
+      *                                                                   086093
+     C                     MOVEASPSTD     AR,1             Post Date      086093
+     C                     MOVEASPNAR     AR,9                            086093
+     C                     MOVEASPSTA     AR,39                           086093
+     C                     MOVEASDRCR     AR,56            'CR' or Blank. 086093
+     C                     MOVE SLINK     AR,59                           086093
+     C                     MOVEASCHGA     AR,61                           086093
+     C                     MOVEASREBI     AR,79                           086093
+      *                                                                   086093
+     C                     RESETSVALD                                     086093
+     C                     RESETSPNAR                                     086093
+     C                     RESETSPSTA                                     086093
+     C                     RESETSDRCR                                     086093
+     C                     RESETSCHGA                                     086093
+     C                     RESETSREBI                                     086093
+     C                     RESETSPNAR                                     086093
+      *                                                                   086093
+     C                     EXSR ADDREC                     Add SflRecord  086093
+     C/COPY WNCPYSRC,RE3362C002
+      *                                                                   086093
+     C                     ENDSR                                          086093
+      *****************************************************************   086093
+      *                                                               *   086093
+      *  OUTRSR   Format SDATA (as formerly in EXCPT OUTR)            *   086093
+      *                                                               *   086093
+      *  Called by:                                                   *   086093
+      *                                                               *   086093
+      *****************************************************************   086093
+     C           OUTRSR    BEGSR                                          086093
+      *                                                                   086093
+     C                     MOVE *BLANKS   SDATA            initialize     086093
+      *                                                                   086093
+     C                     MOVEARPSTD     AR,1             Post Date .    086093
+     C                     MOVEARINTR     AR,8                            086093
+     C                     MOVE RNEG      AR,22            '-' or Blank.  086093
+     C                     MOVEARBRT      AR,25            BaseRateType . 086093
+     C                     MOVEARRASP     AR,27                           086093
+     C                     MOVEARDRCR     AR,42            'CR' or Blank. 086093
+     C                     MOVEARBAL1     AR,47                           086093
+     C                     MOVEARBAL2     AR,64                           086093
+      *                                                                   086093
+     C                     RESETRPSTD                                     086093
+     C                     RESETRINTR                                     086093
+     C                     RESETRNEG                                      086093
+     C                     RESETRBRT                                      086093
+     C                     RESETRRASP                                     086093
+     C                     RESETRDRCR                                     086093
+     C                     RESETRBAL1                                     086093
+     C                     RESETRBAL2                                     086093
+      *                                                                   086093
+     C                     EXSR ADDREC                     Add SflRecord  086093
+      *                                                                   086093
+     C                     ENDSR                                          086093
+      *****************************************************************   086093
+      *                                                               *   086093
+      *  OUTTSR   Format SDATA (as formerly in EXCPT OUTT)            *   086093
+      *                                                               *   086093
+      *  Called by:                                                   *   086093
+      *                                                               *   086093
+      *****************************************************************   086093
+     C           OUTTSR    BEGSR                                          086093
+      *                                                                   086093
+     C                     MOVE *BLANKS   SDATA            initialize     086093
+      *                                                                   086093
+     C                     MOVEASTOT      AR,3                            086093
+     C                     MOVEATOTA1     AR,39                           086093
+     C                     MOVEATOTA1B    AR,56            'CR' or Blank. 086093
+     C                     MOVEATOTA2     AR,61                           086093
+     C                     MOVEATOTA2B    AR,78            'CR' or Blank. 086093
+      *                                                                   086093
+     C                     RESETSTOT                                      086093
+     C                     RESETTOTA1                                     086093
+     C                     RESETTOTA1B                                    086093
+     C                     RESETTOTA2                                     086093
+     C                     RESETTOTA2B                                    086093
+      *                                                                   086093
+     C                     EXSR ADDREC                     Add SflRecord  086093
+      *                                                                   086093
+     C                     ENDSR                                          086093
+     C/EJECT
+     O*
+     O*GHOST**E**              OUTP                                       086093
+     O***********              SPSTD  B   7                               086093
+     O***********              SPNAR  B  38                               086093
+     O***********              SPSTA  B  54                               086093
+     O***********              SDRCR  B  57                               086093
+     O***********              SLINK  B  59                               086093
+     O***********              SCHGA  B  76                               086093
+     O***********              SREBI  B  79                               086093
+     O***********                                                         086093
+     O*GHOST**E**              OUTT                                       086093
+     O***********              STOT   B  12                               086093
+     O***********              TOTA1  B  54                               086093
+     O***********              TOTA1B B  57                               086093
+     O***********              TOTA2  B  76                               086093
+     O***********              TOTA2B B  79                               086093
+     O***********                                                         086093
+     O*GHOST**E**              OUTM                                       086093
+     O***********              SVALD  B   8                               086093
+     O***********              SDRIA  B  32                               086093
+     O***********              SCRIA  B  55                               086093
+     O***********              SDRCR  B  64                               086093
+     O***********                                                         086093
+     O*GHOST**E**              OUTR                                       086093
+     O***********              RPSTD  B   8                               077683
+     O***********              RINTR  B  22                               077683
+     O***********              RPSTD  B   7                         077683086093
+     O***********              RINTR  B  21                         077683086093
+     O***********              RNEG   B  22                         077683086093
+     O***********              RBRT   B  26                               086093
+     O***********              RRASP  B  40                               086093
+     O***********              RDRCR  B  43                               086093
+     O***********              RBAL1  B  62                               086093
+     O***********              RBAL2  B  79                               086093
+     O*
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   NAR  -  NARRATIVES
+Postings
+Manual Adjustments
+Rate changes
+ P. Date          Narrative               Posting Amount      Charges Amount  R
+Value Date   Debit Manual Adjust.   Credit Manual Adjust.   Dr/Cr
+P. Date  Interest Rate Brt  Rate Spread D/C   Type    Balance   Init. Threst.
+  Total
+                            No Records to show
+F3=Exit         F12=Previous screen    Enter=Next selection    F24=More keys
+F13=Postings    F14=Manual   F15=Rate  Enter=Next selection    F24=More keys
+F18=Prev date   F19=Next date                                  F24=More keys
+**  CPY@ OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

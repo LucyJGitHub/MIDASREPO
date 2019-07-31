@@ -1,0 +1,344 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Spot Rates Transfer To History File')            *
+      ********************************************************************
+      *                                                                  *
+      *  Midas - Standing Data Module                                 *
+      *                                                                  *
+      *      SD2438 - Spot Rates History                                 *
+      *                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 LN0662             Date 17Jun91               *
+      *                     RT0086            DATE 17May91               *
+      *                     S01267            DATE 03MAY91               *
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *      CER043 - German Features LF041-00 New Fields and Defaulting *
+      *               (Recompile)                                        *
+      *      LN0662 - File name change for Currency Retrievals           *
+      *               SDCURRL0 changed to SDCURRL1                       *
+      *      RT0086 - RECOMPILE OVER CHANGED VERSION OF SD2438AU.        *
+      *      S01267 - CREATED FOR MIS RELEASE 2.2 CHANGES                *
+      *                                                                  *
+      ********************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+      *  Indicator Summary
+      *
+      *  05  Data base Error PF/SDCUHSPA
+      ***15**End of file for LF/SDCURRL0                                  LN0062
+      *  15  End of file for LF/SDCURRL1                                  LN0062
+      *  25  Write to file SDCHSDP fails
+      *  90-99 STD SUBR INDS
+      *
+      *****************************************************************
+      *
+      ** Files used
+      *
+     F*SDCURRL0IF  E           K        DISK                              LN0662
+     FSDCURRL1IF  E           K        DISK                               LN0662
+     FSDCUHSPAUF  E                    DISK
+     FSDCUHSPDO   E                    DISK                      A
+     F            SDCUHSD0                          KRENAMESDCHSDP
+     FSD2438AUO   E                    PRINTER
+     F/COPY WNCPYSRC,SD2438F001
+      *
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     IPSDS       SDS
+     I                                      244 246 WSID
+      *
+      ** Data Structure for Work Station Id
+      *
+     I**
+     ISDBANK    E DSSDBANKPD
+     I** BANK DETAILS
+      *
+     I*
+     IDSFDY     E DSDSFDY
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I**
+     I/COPY WNCPYSRC,SD2438I001
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**     Local Data Area
+     I*
+      *
+      /EJECT
+      ******************************************************************
+      *                                                                *
+      *  Index to Subroutines                                          *
+      *                                                                *
+      *  01  INIT        04 DBERR                                      *
+      *  02  DETAIL      05 WSRHD                                      *
+      *  03  FINAL                                                     *
+      *                                                                *
+      *                                                                *
+      ******************************************************************
+      *                                                                *
+      *  MAIN                                                          *
+      *                                                                *
+      *  This section calls the subroutines INIT, DETAIL and FINAL.    *
+      *                                                                *
+      *                                                                *
+      ******************************************************************
+      *
+     C**   Define Local Data Area
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Perform Initial processing
+      *
+     C                     EXSR INIT
+      *
+      **  Perform Detail processing
+      *
+     C                     EXSR DETAIL
+      *
+      **  Perform Final processing
+      *
+     C                     EXSR FINAL
+      *
+      **  Set on LR
+      *
+     C                     SETON                         LR
+      *
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INIT  -  Calls AOBANKR0 to retrieve header information for       *
+      *          report, If Record is not found reports a Database       *
+      *          error.
+      *                                                                  *
+      * CALLED BY  :  MAIN                                               *
+      *                                                                  *
+      * CALLS      :  DBERR                                              *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      *
+     C** USE ACCESS PROGRAM AOBANKR0 TO
+     C** RETRIEVE HEADER INFORMATION FOR REPORT
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C** If error found by access program exit
+     C** program via database error subroutine
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL'SD2438'  DBPGM            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Initialise number of records written to zero
+      *
+     C                     Z-ADD0         NHRW
+     C/COPY WNCPYSRC,SD2438C001
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      **DETAIL*-*Reads*LF/SDCURRL1*and*while*records*exist*outputs       *LN0062
+      * DETAIL - Reads LF/SDCURRL1 and while records exist outputs       *LN0062
+      *          records to SDCUHSPD.                                    *
+      *                                                                  *
+      * CALLED BY  :  MAIN                                               *
+      *                                                                  *
+      * CALLS      :  WSRHD  DBERR                                       *
+      *                                                                  *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           DETAIL    BEGSR
+      *
+      ***Read*LF/SDCURRL0                                                 LN0062
+      ** Read LF/SDCURRL1                                                 LN0062
+      *
+     C***********          READ SDCURRL0                 15               LN0662
+     C                     READ SDCURRL1                 15               LN0662
+      *
+      ** While records exist process
+      *
+     C           *IN15     DOWEQ'0'
+      *
+      **
+      *
+     C                     EXSR WSRHD
+      *
+      *
+      *
+      ***Read*ahead*for*LF/SDCURRL0                                       LN0062
+      ** Read ahead for LF/SDCURRL1                                       LN0062
+      *
+     C***********          READ SDCURRL0                 15               LN0662
+     C                     READ SDCURRL1                 15               LN0662
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * FINAL - Reads PF/SDCUHSPA and if record not found reports        *
+      *         a Data base error. Otherwise, keeps count of records     *
+      *         updates SDCUHSPA and outputs audit report (SD2438AU).    *
+      *                                                                  *
+      * CALLED BY  :  MAIN                                               *
+      *                                                                  *
+      * CALLS      :                                                     *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           FINAL     BEGSR
+      *
+     C           1         CHAINSDCUHSPA             05
+      *
+      ** If record does not exist report a data base error
+      *
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'01'      DBKEY
+     C                     MOVEL'SDCUHSPA'DBFILE           **************
+     C                     MOVE 'SD2438'  DBPGM            * DBERR 002  *
+     C                     Z-ADD002       DBASE            **************
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Set up Report Details - move count of records on file (CORC)
+      ** to number of records before update (NRBU) and add count of
+      ** records written (NHRW) to count of records on file (CORC)
+      *
+     C                     Z-ADDG3CORC    NRBU
+     C                     ADD  NHRW      G3CORC
+      *
+      ** If count of record written not equal zero update PF/SDCUHSPA
+      *
+     C           NHRW      IFNE *ZERO
+     C                     UPDATSDCUHSA0
+     C                     END
+      *
+      ** Write out Report Header, Report Details and End of report text
+      *
+     C                     WRITESD2438H
+     C                     WRITESD2438D
+     C                     WRITESD2438T
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * WSRHD - Write a record to PF/SDCUHSPD and add one to the         *
+      *          number of records written                               *
+      *                                                                  *
+      * CALLED BY  :  DETAIL                                             *
+      *                                                                  *
+      * CALLS      :                                                     *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+      *                                                                  *
+     C           WSRHD     BEGSR
+      *
+      **Move Values to fields for update of PF/SDCUHSPD
+      *
+     C                     MOVELA6CYCD    G2CYCD
+     C                     MOVELBJRDNB    G2HIDT
+     C                     MOVELA6SPRT    G2SPRT
+     C                     MOVELA6MDIN    G2MDIN
+      *
+      ** Write a record to PF/SDCUHSPD
+      *
+     C                     WRITESDCHSDP                25
+      *
+     C           *IN25     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBKEY
+     C                     MOVEL'SDCHSDP' DBFILE           ***************
+     C                     MOVE 'SD2438'  DBPGM            * DBERR 003   *
+     C                     Z-ADD003       DBASE            ***************
+     C                     EXSR DBERR
+     C                     END
+     C/COPY WNCPYSRC,SD2438C002
+      *
+      ** Add one to Number of Records Written.
+      *
+     C                     ADD  1         NHRW
+      *
+     C/COPY WNCPYSRC,SD2438C003
+     C                     ENDSR
+      *
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DBERR - Database Error Processing.  Performed when SDBANKPD      *
+      *          or SDCUHSPA are in error, or write to SDCUHSPD fails.   *
+      *                                                                  *
+      * CALLED BY  :  INIT DETAIL                                        *
+      *                                                                  *
+      * CALLS      :                                                     *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+      ** Write out Header and error Texts.
+      *
+     C                     WRITESD2438H
+     C                     WRITESD2438E
+      *
+      ** Seton Data base Error inds, Dump Program and Return control
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     OUT  LDA
+     C                     RETRN
+      *
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001

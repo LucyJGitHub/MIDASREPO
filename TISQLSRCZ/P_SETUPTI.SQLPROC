@@ -1,0 +1,96 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Trade Innovation Module                                       */
+/*                                                                             */
+/*       P_SETUPTI - TI Database take-on script                                */
+/*                                                                             */
+/*       (c) Finastra International Limited. 2006                              */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 05Feb18                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*       Prev Amend No. BUG10642 *CREATE   Date 17Jan06                        */
+/*                      Xnnnnn             Date ddmmmyy                        */
+/*                                                                             */
+/*******************************************************************************/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       BUG10642 - TI Take on script no longer works                          */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE PROCEDURE                                                              :
+  **********/**********                                                         :
+  LANGUAGE SQL                                                                  :
+  BEGIN                                                                         :
+                                                                                :
+/*  Splat any existing data.....  */                                            :
+  DELETE FROM FXRATE65;                                                         :
+  DELETE FROM FXRATE86;                                                         :
+  DELETE FROM GJPF;                                                             :
+  DELETE FROM CVPF;                                                             :
+                                                                                :
+/*  ... but be a bit more selective with the codes table */                     :
+ DELETE FROM HBPF WHERE HBLNM = 'GB' AND HBCFN  IN('C4','C5','C7','C8','D4');   :
+                                                                                :
+/*  Add the FX Rate code for SYSTEM.  */                                        :
+  INSERT INTO FXRATE65 (FXDEALTYPE, CODE79, DESCRI56, WHENFIX, REF_RATE,        :
+   RATECODE, CUSER, AUSER, DUALACTION, TYPEFLAG, TSTAMP)                        :
+  VALUES ('','SYSTEM','System rate','N','S','',0,0,'',1113,1);                  :
+                                                                                :
+/*  Get around for Midas not setting BJSLCD in the SDBANKPD table.  */          :
+  INSERT INTO CHPFLOG (TIMESEQ, DBVERSION, SOURCE, ACTION, COMMENTS )           :
+  VALUES (  TIMESTAMP(CURRENT TIMESTAMP) , 'EQ420a' , 'iEQ420a_Extras',         :
+   'start TIC002001', ' ' );                                                    :
+                                                                                :
+/*  The following statements will insert (in one batch) into HBPF new rows */   :
+/*  (for table types C4, C5, C7 and C8) where values are set respectively  */   :
+/*  from Midas tables SDINSTPD, SDTIACPD, SDCTRYPD and SDCURRPD, with the  */   :
+/*  specified language mnemonic defaulted to 'GB'.                         */   :
+  INSERT INTO HBPF(HBLNM,HBCFN,HBCFL,HBRNM)                                     :
+  SELECT 'GB' AS HBLNM, 'C4' AS HBCFN, AKLINC AS HBCFL, AKLINM AS HBRNM         :
+  FROM SDINSTPD WHERE AKLINC NOT IN (SELECT HBCFL FROM HBPF                     :
+  WHERE HBLNM = 'GB' AND HBCFN = 'C4');                                         :
+  INSERT INTO HBPF(HBLNM,HBCFN,HBCFL,HBRNM) SELECT 'GB' AS HBLNM,               :
+  'C5' AS HBCFN, GDC5AT AS HBCFL, GDC5DS AS HBRNM FROM SDTIACPD                 :
+  WHERE GDC5AT NOT IN (SELECT HBCFL FROM HBPF WHERE HBLNM = 'GB'                :
+  AND HBCFN = 'C5');                                                            :
+  INSERT INTO HBPF(HBLNM,HBCFN,HBCFL,HBRNM) SELECT 'GB' AS HBLNM,               :
+  'C7' AS HBCFN, A4CNCD AS HBCFL, A4CNNM AS HBRNM FROM SDCTRYPD                 :
+  WHERE A4CNCD NOT IN (SELECT HBCFL FROM HBPF WHERE HBLNM = 'GB'                :
+  AND HBCFN = 'C7');                                                            :
+  INSERT INTO HBPF(HBLNM,HBCFN,HBCFL,HBRNM) SELECT 'GB' AS HBLNM,               :
+  'C8' AS HBCFN, A6CYCD AS HBCFL, A6CYNM AS HBRNM FROM SDCURRPD                 :
+  WHERE A6CYCD NOT IN (SELECT HBCFL FROM HBPF WHERE HBLNM = 'GB'                :
+  AND HBCFN = 'C8');                                                            :
+  INSERT INTO HBPF(HBLNM,HBCFN,HBCFL,HBRNM) SELECT 'GB' AS HBLNM,               :
+  'D4' AS HBCFN, BACYCD CONCAT CHAR(BABSRC) AS HBCFL, BABSRN AS                 :
+  HBRNM FROM SDBSRTPD WHERE BACYCD CONCAT CHAR(BABSRC)                          :
+  NOT IN (SELECT HBCFL FROM HBPF WHERE HBLNM = 'GB' AND HBCFN = 'D4');          :
+                                                                                :
+/*  The following statements will insert (in one batch) into GJPF new rows  */  :
+/*  where values are set from Midas table SDNOSTPD                          */  :
+  INSERT INTO GJPF SELECT A7CYCD CONCAT A7NONB AS GJNST,(SELECT                 :
+  BBCNA1 FROM SDCUSTPD WHERE BBCUST=A7CUST) AS GJNDS,A7CYCD                     :
+  AS GJCCY,'' AS GJABF,'' AS GJANF,'' AS GJASF,'08' AS GJXM, CASE WHEN          :
+  A7ACSN < 10 THEN (A7BRCD CONCAT A7CUST CONCAT A7CYCD CONCAT                   :
+  A7ACCD CONCAT '0' CONCAT CHAR(A7ACSN)) ELSE (A7BRCD CONCAT A7CUST             :
+  CONCAT A7CYCD CONCAT A7ACCD CONCAT CHAR(A7ACSN)) END AS GJACCT,               :
+  A7OANN AS GJOAN,'ND' AS GJXMR,'' AS DUALACTION,0 AS CUSER,0 AS                :
+  AUSER FROM SDNOSTPD;                                                          :
+                                                                                :
+/*  The following statements will insert (in one batch) into FxRate86 new  */   :
+/*  rows where values are set from Midas table SDCURRPD                    */   :
+  INSERT INTO FxRate86 SELECT 'SYSTEM' AS CODE53,A6CYCD AS                      :
+  CURREN49,0 AS BUYEXC03,DEC(A6BYSS CONCAT CHAR(A6BYSR),22,8) AS                :
+  BUYSPR07,0 AS SELLEX99,DEC(A6SLSS CONCAT CHAR(A6SLSR),22,8) AS                :
+  SELLSP03,'F' AS BUYEXBY,'F' AS SELLEXBY,0 AS BUYPERSPD,0 AS                   :
+  SELLPERSPD,0 AS CUSER,0 AS AUSER, '' AS DUALACTION, 22624 AS                  :
+  TYPEFLAG, 1 AS TSTAMP FROM SDCURRPD;                                          :
+  END                                                                           :
+/************************************************************************************/
+ ;                                                                              :
+  label on procedure **********/**********                                      :
+   is 'Midas TI Database take-on script                  ';                     :
+                                                                                :

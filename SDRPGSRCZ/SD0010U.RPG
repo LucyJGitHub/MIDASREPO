@@ -1,0 +1,1557 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Check deletion of customer')                  *
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  Midas - Standing Data Module                                 *   S01117
+      *                                                               *   S01117
+      *     SD0010U - CHECK DELETION OF CUSTOMER                      *   S01117
+      *                                                               *   S01117
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *   S01117
+      *  NOTE: PLEASE REFER TO THE STANDING DATA MODULE PROFILE       *
+      *        VOLUME 1 FOR THE USE OF DATA STRUCTURES PCDS2          *
+      *        AND PCDS3.                                             *
+      *                                                               *
+      *  Last Amend No. MD050457           Date 06Mar19               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 CDL099             Date 06Oct17               *
+      *                 AR906833           Date 22Aug17               *
+      *                 CGL165             Date 15Feb17               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 AR897319           Date 01Feb12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246639             Date 05Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL035             Date 01Mar05               *
+      *                 237063             Date 20Nov05               *
+      *                 CDL038             Date 10May05               *
+      *                 229544             Date 15Sep04               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSD023             Date 18Nov04               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 201665             Date 18Dec01               *
+      *                 CPK014             Date 05Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 181864             Date 24Apr01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 143481             Date 22Oct98               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002                Date 23Sep98            *
+      *                 099934
+      *                    S01522             DATE 20OCT94            *  *S01522
+      *                    077335             DATE 12OCT94            *
+      *                    063444             DATE 17FEB94            *
+      *                    S01453             DATE 14DEC93            *
+      *                    S01421 (S01424)    DATE 29JUN93            *
+      *                    043717             DATE 26JAN93            *
+      *                    E23879             DATE 04NOV91            *
+      *                    S01270             DATE 23MAY91            *   S01117
+      *                    S01117             DATE 26APR90            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  MD050457 - customer closure do not include checking of       *
+      *             expired or closed facilities. Patterned fix from  *
+      *             261272.                                           *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  AR906833 - Allows deletion of Sec. Trading Customers that    *
+      *             are still needed by the system.                   *
+      *             Add parmameter when calling SD0340U. Applied fix  *
+      *             AR663084. (Child: AR906834)                       *
+      *           - Applied for MD046340.                             *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  AR897319 - Cannot delete customer ever Set Up Complete in    *
+      *             ICD is "N"                                        *
+      *  246639 - FOOB in LEC08 pgm LE0710 happens due to access to a *
+      *           parent customer which is closed. Pattern fix after  *
+      *           230157 which does not allow closing of parent cust. *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CGL035 - EUSD Upgrade to Midasplus                           *
+      *  237063 - EU Tax fixes upgrade to MP build 103 (Recompile).   *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  229544 - Recompiled due to inserted fields in DLCHISPD.      *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSD023 - Automatic Customer Account Closure                  *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  201665 - Calls CGC0023 which already does not exist          *
+      *  CPK014 - Release 4 packaging:                                *
+      *           - Remove reference to the redundant FACIL file.     *
+      *  181864 - New logical file GTEESV1 added to check for         *
+      *           customer in GTEESGT as GBCN as well as CNUM.        *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CSD007 - Customer Closing:                                   *
+      *           Allow action code 'C' closure.  For closure, account*
+      *           check only to be performed on retail accounts.      *
+      *  143481 - Save the value of the Return Code before checking   *
+      *           for references in the Securities files to prevent   *
+      *           a Customer being deleted if it has live Accounts.   *
+      *  CTI002 - Recompiled : File EMLIML2 changed                   *
+      *  099934 - Add check for issuer customer number on DEALSDG     *   S01117
+      *           & DLCHISPD                                          *   S01117
+      *  S01522 - User defined correspondence.                        *  *S01522
+      *  077335 - Moved the checking of the Securities files to       *
+      *           the new program SD0340U.                            *
+      *           This program has been heavyly amended.              *
+      *           If this program is running as part of the auto-     *
+      *           deletion processing then quit the program as soon   *   S01117
+      *           as a customer reference is found.                   *   S01117
+      *           Addition of /COPYs.                                 *
+      *  063444 - To enable the manual deletion process to display    *
+      *           all reasons why a customer may not be deleted at    *
+      *           the same time, the present SD0011X return codes     *
+      *           have to be amended.                                 *
+      *         - Also the input parms must be amended to add         *
+      *           two new parameters.                                 *
+      *         - All files processed that have more than one possible*
+      *           return value must have all records for the customer *
+      *           checked.                                            *
+      *         - Add new deletion checks for files:                  *
+      *           DPTMVD, HSTTRD, TRADSD, INVTPD, POSETD, CLOANCL,    *
+      *           SECTYD, SLIMH, STDSED, UDEPPD, CDEPPD and EMLIML2.  *
+      *         - Extend existing checks for file FCLTY.              *
+      *     S01453 - MARGIN AND FX POSITIONS/POINTS AND BASE CURRENCY *
+      *              POSITIONS/POINTS ADDED TO FX INPUT (RECOMPILED)  *
+      *     S01421 - BLI Development Phase 1.                         *
+      *            - Includes changes for:                            *
+      *              S01424 - Customer deletion in COB feature:       *
+      *                     - Amend the return code to default to     *
+      *                       'DELETE' if no other return code has    *
+      *                       been selected.                          *
+      *     043717  -  CHECK EXPIRED RECORDS ON 'GTEES' FILE AND      *
+      *                USE CUSDL INSTEAD OF CUSDE TO INCLUDE MATURED  *
+      *                DEALS.                                         *
+      *     E23879  -  FILES BLOAN & LOAN ARE NO LONGER USED IN R10   *
+      *                SO ALL REFERENCES ARE BEING REMOVED.           *
+      *     S01270  -  RECOMPILED OVER NEW PF/FCLTYFM                 *   S01117
+      *     S01117  -  RELEASE 10 CHANGES                             *   S01117
+      *                REMOVE LIMIT FILE AND ADD CHECKING TO DETERMINE*   S01117
+      *                WHETHER THE RECORDS IN ANY FILES ARE LIVE/DEL  *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+     F*FACIL**IF**E****       K        DISK                                                   CPK014
+     FFCLTY   IF  E           K        DISK
+     FACCNT   IF  E           K        DISK
+     F*LIMIT   IF  E           K        DISK                              S01117
+     F*LOAN***IF  E           K        DISK                               E23879
+     FLEREF   IF  E           K        DISK
+     F***CUSDE***IF  E           K        DISK                            043717
+     FCUSDL   IF  E           K        DISK                               043717
+     FSDCUSTL4IF  E           K        DISK                                                   246639
+     FDEALDCL1IF  E           K        DISK                               099934
+     F            DEALSDCF                          KRENAMEISSUERF        099934
+     FGTEES   IF  E           K        DISK
+     FGTEESV1 IF  E           K        DISK                               181864
+     F            GTEESGTF                          KRENAMEGBCUST         181864
+     F*SECTI***IF  E           K        DISK                        063444077335
+     F*CDEPPD**IF  E                    DISK                        063444077335
+     F*CUDEP***IF  E           K        DISK                        063444077335
+     F*********   CDEPPDF                           KRENAMECDEPPD1  063444077335
+     F*INVTPD**IF  E                    DISK                        063444077335
+     F*SLIMH***IF  E           K        DISK                        063444077335
+     F*STDSED**IF  E           K        DISK                        063444077335
+     F*TRADSD**IF  E                    DISK                        063444077335
+     F*HSTTRD**IF  E                    DISK                        063444077335
+     F*POSETD**IF  E                    DISK                        063444077335
+     FEMLIML2 IF  E                    DISK                               063444
+     FCLOANCL IF  E                    DISK                               063444
+     F*DPTMVD**IF  E                    DISK                        063444077335
+     FSDBANKPDIF  E                    DISK                                                 MD050457
+     FLEFEEDL1IF  E           K        DISK                                                 MD050457
+     F/COPY WNCPYSRC,SD0010UF01
+      *
+     I*OANSCRF*****                                                       E23879
+     I************* LSWS                            LSWSX                 E23879
+      *
+     IGTEESGTF                                                                                CGL035
+     I              COLC                            COLC2                                     CGL035
+     IGBCUST                                                                                  CGL035
+     I              COLC                            COLC3                                     CGL035
+     I/COPY WNCPYSRC,SD0010UI01
+     ISTRNG1      DS                            200                                           246639
+     I                                        1 200 WUCDS1                                    246639
+     I                                        6   6 WUD006                                    246639
+     ISTRNG2      DS                            200                       063444
+     I                                        1 200 WUCDS2                063444
+     I                                        1   1 WUD201                063444
+     I                                        2   2 WUD202                063444
+     I                                        3   3 WUD203                063444
+     I                                        4   4 WUD204                063444
+     I                                        5   5 WUD205                063444
+     I                                        6   6 WUD206                063444
+     I                                        7   7 WUD207                063444
+     I                                        8   8 WUD208                063444
+     I                                        9   9 WUD209                063444
+     I                                       10  10 WUD210                063444
+     I                                       11  11 WUD211                063444
+     I                                       12  12 WUD212                063444
+     I                                       13  13 WUD213                063444
+     I                                       14  14 WUD214                063444
+     I                                       15  15 WUD215                063444
+     I                                       16  16 WUD216                063444
+     I                                       17  17 WUD217                063444
+     I                                       18  18 WUD218                063444
+     I                                       19  19 WUD219                063444
+     I                                       20  20 WUD220                063444
+     I                                       21  21 WUD221                063444
+     I                                       22  22 WUD222                063444
+     I                                       23  23 WUD223                063444
+     I                                       24  24 WUD224                063444
+     I                                       25  25 WUD225                063444
+     I                                       26  26 WUD226                063444
+     I                                       27  27 WUD227                063444
+     I                                       28  28 WUD228                063444
+     I                                       29  29 WUD229                063444
+     I                                       30  30 WUD230                063444
+     I                                       31  31 WUD231                063444
+     I                                       32  32 WUD232                063444
+     I                                       33  33 WUD233                063444
+     I                                       34  34 WUD234                063444
+     I                                       35  35 WUD235                063444
+     I                                       36  36 WUD236                063444
+     I                                       37  37 WUD237                063444
+     I                                       38  38 WUD238                063444
+     I                                       39  39 WUD239                063444
+     I                                       30  40 WUD240                063444
+     I                                       41  41 WUD241                063444
+     I                                       42  42 WUD242                063444
+     I                                       43  43 WUD243                063444
+     I                                       44  44 WUD244                063444
+     I                                       45  45 WUD245                063444
+     I                                       46  46 WUD246                063444
+     I                                       47  47 WUD247                063444
+     I                                       48  48 WUD248                063444
+     I                                       49  49 WUD249                063444
+     I                                       50  50 WUD250                063444
+      *                                                                   063444
+     ISTRNG3      DS                            200                       063444
+     I                                        1 200 WUCDS3                063444
+     I                                        1   1 WUD401                063444
+     I                                        2   2 WUD402                063444
+     I                                        3   3 WUD403                063444
+     I                                        4   4 WUD404                063444
+     I                                        5   5 WUD405                063444
+     I                                        6   6 WUD406                063444
+     I                                        7   7 WUD407                063444
+     I                                        8   8 WUD408                063444
+     I                                        9   9 WUD409                063444
+     I                                       10  10 WUD410                063444
+     I/COPY WNCPYSRC,SD0010UI02
+      *                                                                   063444
+     I*                                                                   077335
+     I** Data structure for SDMMOD access object                          077335
+     ISDMMOD    E DSSDMMODPD                                              077335
+     ISCSARD    E DSSCSARDPD                                              S01522
+      *                                                                   S01522
+      * Sar Text details *                                                S01522
+      *                                                                   S01522
+     I*                                                                   077335
+     I** Short Data Structure for Access Objects                          077335
+     IDSFDY     E DSDSFDY                                                 077353
+      /EJECT                                                              077335
+      *****************************************************************   063444
+      * Indicators:                                                   *   063444
+      **99*-*End*of*processing*for*FACIL*******************************                063444 CPK014
+      * 89 - End of processing for LEFEEDL1                           *                     MD050457
+      * 98 - End of processing for FCLTY                              *   063444
+      * 97 - End of processing for ACCNT                              *   063444
+      * 96 - End of processing for LEREF                              *   063444
+      * 95 - End of processing for CUSDL                              *   063444
+      * 94 - End of processing for GTEES                              *   063444
+      *  92 - End of processing for GTEESV1                           *   181864
+      * 91 - End of processing for FCLTYFM                            *                     MD050457
+      **93*-*End*of*processing*for*SECTI*************************** 063444077335
+      **92*-*End*of*processing*for*CDEPPD************************** 063444077335
+      **91*-*End*of*processing*for*CUDEP*************************** 063444077335
+      **90*-*End*of*processing*for*INVTPD************************** 063444077335
+      **89*-*End*of*processing*for*SLIMH*************************** 063444077335
+      **88*-*End*of*processing*for*STDSED************************** 063444077335
+      **87*-*End*of*processing*for*TRADSD************************** 063444077335
+      **86*-*End*of*processing*for*HSTTRD************************** 063444077335
+      **85*-*End*of*processing*for*POSETD************************** 063444077335
+      * 84 - End of processing for EMLIML2                            *   063444
+      * 83 - End of processing for CLOANCL                            *   063444
+      **82*-*End*of*processing*for*DPTMVD************************** 063444077335
+      * 30 - First time call of program                               *   077335
+      *****************************************************************   063444
+      *                                                                   063444
+     C           *ENTRY    PLIST
+     C                     PARM           PCNUM   6
+     C                     PARM           W0RTN   7
+     C                     PARM           PCDS1 200                                           246639
+     C                     PARM           PCDS2 200                       063444
+     C                     PARM           PCDS3 200                       063444
+     C                     PARM           QUIT    1                       077335
+     C                     PARM           PACTN   1                       CSD007
+     C/COPY WNCPYSRC,SD0010UC05
+      *                                                                   063444
+     C**********           MOVE PCNUM     NCNUM   60                                   063444 CSD027
+     C                     MOVE PCNUM     NCNUM   6                                           CSD027
+     C                     MOVELPCDS1     WUCDS1                                              246639
+     C                     MOVELPCDS2     WUCDS2                          063444
+     C                     MOVELPCDS3     WUCDS3                          063444
+      *                                                                   077335
+      ** If Quit is equal to 'L', call SD0340U with the same              077335
+      ** value, set on LR and return.                                     077335
+      ** Because when the program runs during the close of business       077335
+      ** the value of QUIT is 'Y' and LR is not set ON, this causes       077335
+      ** SDC0013 to fall over while ending journalling.                   077335
+      *                                                                   077335
+     C           QUIT      IFEQ 'L'                                       077335
+     C           BGSECS    IFEQ 'Y'                                       077335
+      *                                                                   077335
+     C                     CALL 'SD0340U'                  Check for delet077335
+     C                     PARM PCNUM     WQ0001  6        Customer Number077335
+     C           W0RTN     PARM W0RTN     WQ0002  7        *Return code   077335
+     C           WUCDS2    PARM *BLANK    WQ0003200        Customer Deln S077335
+     C           WUCDS3    PARM *BLANK    WQ0004200        Customer Deln S077335
+     C                     PARM QUIT      WQ0005  1        Quit program on077335
+     C                     PARM           PACTN                                             AR906833
+     C/COPY WNCPYSRC,SD0010UC06
+      *                                                                   077335
+     C                     SETON                         LR               077335
+     C                     RETRN                                          077335
+     C                     END                                            077335
+     C                     END                                            077335
+      *                                                                   077335
+      ** Access the Modules File.                                         077335
+      ** Access the Modules File only once.                               077335
+      *                                                                   077335
+     C           *IN30     IFEQ '0'
+      *
+     C                     CALL 'AOMMODR0'                                077335
+     C                     PARM '       ' @RTCD   7                       077335
+     C                     PARM '*FIRST ' @OPTN   7                       077335
+     C           SDMMOD    PARM SDMMOD    DSFDY                           077335
+      *                                                                   077335
+     C                     MOVE '1'       *IN30                           077335
+      *                                                                   CSD023
+      *** Call to the Switchable features file to check if CSD023         CSD023
+      *** is switched on.                                                 CSD023
+      *                                                                   CSD023
+     C                     CALL 'AOSARDR0'                                CSD023
+     C                     PARM *BLANKS   @RTCD                           CSD023
+     C                     PARM '*VERIFY' @OPTN                           CSD023
+     C                     PARM 'CSD023'  @SARD   6                       CSD023
+     C           SCSARD    PARM *BLANKS   DSFDY                           CSD023
+      *                                                                   CSD023
+     C                     MOVE 'N'       CSD023  1                       CSD023
+     C           @RTCD     IFEQ *BLANK                                    CSD023
+     C                     MOVE 'Y'       CSD023                          CSD023
+     C                     ENDIF                                          CSD023
+      *                                                                   CSD023
+     C                     END                                            077335
+     C/COPY WNCPYSRC,SD0010UC01
+      *                                                                   077335
+      ***Check*for*customer*references*in*FACIL.****************    063444077335
+      *                                                             063444077335
+     C********** CNUM      SETLLFACIL                               063444077335
+     C********** CNUM      READEFACIL                    99         063444077335
+     C********** NCNUM     SETLLFACIL                9999           063444077335
+     C**N99***** NCNUM     READEFACIL                    99         063444077335
+     C********** *IN99     IFEQ '0'                                 063444077335
+     C********** *IN99     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'D'                                 S01117077335
+     C**********           MOVEL'FACIL'   W0RTN                     063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD203                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           GOTO ESC99                               063444077335
+     C**********           END                                      S01117077335
+      *                                                             063444077335
+     C**********           END                                            077335
+     C********** ESC99     TAG                                      063444077335
+      *                                                                   077335
+      ** Check for customer references in FCLTY.                    063444077335
+      *                                                             063444077335
+     C********** CNUM      SETLLFCLTY                               063444077335
+     C********** CNUM      READEFCLTY                    99         063444077335
+     C********** NCNUM     SETLLFCLTY                9898           063444077335
+     C**N98***** NCNUM     READEFCLTY                    98         063444077335
+     C********** *IN99     IFEQ '0'                                 063444077335
+     C********** *IN98     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'D'                                 S01117077335
+     C**********           MOVEL'FCLTY'   W0RTN                     063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD204                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      S01117077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'R'                                 063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD207                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'C'                                 063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD208                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'E'                                 063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD209                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** WUD204    IFEQ 'F'                                 063444077335
+     C********** WUD207    ANDEQ'F'                                 063444077335
+     C********** WUD208    ANDEQ'F'                                 063444077335
+     C********** WUD209    ANDEQ'F'                                 063444077335
+     C**********           GOTO ESC98                               063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** NCNUM     READEFCLTY                    98         063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+     C********** ESC98     TAG                                      063444077335
+      *                                                                   077335
+      ** Check for customer references in ACCNT.                    063444077335
+      *                                                             063444077335
+     C********** CNUM      SETLLACCNT                               063444077335
+     C********** CNUM      READEACCNT                    99         063444077335
+     C********** NCNUM     SETLLACCNT                9797           063444077335
+     C**N97***** NCNUM     READEACCNT                    97         063444077335
+      *                                                             063444077335
+     C********** *IN99     IFEQ '0'                                 063444077335
+     C********** *IN97     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'D'                                 S01117077335
+     C**********           MOVEL'ACCNT'   W0RTN                     063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD201                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           GOTO ESC97                               063444077335
+     C**********           END                                      S01117077335
+      *                                                             063444077335
+     C********** NCNUM     READEACCNT                    97         063444077335
+      *                                                             063444077335
+     C**********           END                                            077335
+     C********** ESC97     TAG                                      063444077335
+      *                                                                   077335
+     C***********CNUM      SETLLLIMIT                               S01117077335
+     C***********CNUM      READELIMIT                    99         S01117077335
+     C************IN99     IFEQ '0'                                 S01117077335
+     C***********          MOVEL'LIMIT'   W0RTN                     S01117077335
+     C***********          END                                      S01117077335
+     C***********                                                   E23879077335
+     C***********CNUM      SETLLBLOAN                               E23879077335
+     C***********CNUM      READEBLOAN                    99         E23879077335
+     C************IN99     IFEQ '0'                                 E23879077335
+     C***********RECI      IFEQ 'D'                                 E23879077335
+     C***********          MOVEL'BLOAN'   W0RTN                     E23879077335
+     C***********          END                                      E23879077335
+     C***********          END                                      E23879077335
+      *                                                                   077335
+      ** Check for customer references in LEREF.                    063444077335
+      *                                                             063444077335
+     C********** CNUM      SETLLLEREF                               063444077335
+     C********** CNUM      READELEREF                    99         064444077335
+     C********** NCNUM     SETLLLEREF                9696           063444077335
+     C**N96***** NCNUM     READELEREF                    96         064444077335
+      *                                                             063444077335
+     C********** *IN99     IFEQ '0'                                 063444077335
+     C********** *IN96     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'D'                                 S01117077335
+     C**********           MOVEL'LEREF'   W0RTN                     063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD206                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           GOTO ESC96                               063444077335
+     C**********           END                                      S01117077335
+      *                                                             063444077335
+     C**********           END                                            077335
+     C********** ESC96     TAG                                      063444077335
+      *                                                                   077335
+      ** Check for customer references in CUSDL.                    063444077335
+      *                                                             063444077335
+     C***********CNUM      SETLLCUSDE                               043717077335
+     C***********CNUM      READECUSDE                    99         043717077335
+     C********** CNUM      SETLLCUSDL                               063444077335
+     C********** CNUM      READECUSDL                    99         063444077335
+     C********** NCNUM     SETLLCUSDL                9595           063444077335
+     C**N95***** NCNUM     READECUSDL                    95         063444077335
+      *                                                             063444077335
+     C********** *IN99     IFEQ '0'                                 063444077335
+     C********** *IN95     DOWEQ'0'                                 063444077335
+      *                                                             S01117077335
+     C********** RECI      IFEQ 'D'                                 S01117077335
+     C*********************MOVEL'CUSDE'   W0RTN                     043717077335
+     C**********           MOVEL'CUSDL'   W0RTN                     063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD202                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           GOTO ESC95                               063444077335
+     C**********           END                                      S01117077335
+      *                                                             063444077335
+     C********** NCNUM     READECUSDL                    95         063444077335
+      *                                                             063444077335
+     C**********           END                                            077335
+     C********** ESC95     TAG                                      063444077335
+      *                                                                   077335
+      ** Check for customer references in GTEES.                    063444077335
+      *                                                             063444077335
+     C********** CNUM      SETLLGTEES                               063444077335
+     C********** CNUM      READEGTEES                    99         063444077335
+     C********** NCNUM     SETLLGTEES                9494           063444077335
+     C**N94***** NCNUM     READEGTEES                    94         063444077335
+      *                                                             063444077335
+     C********** *IN99     IFEQ '0'                                 063444077335
+     C********** *IN94     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'D'                                 S01117077335
+     C********** RECI      OREQ 'E'                                 043717077335
+     C**********           MOVEL'GTEES'   W0RTN                     063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD205                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           GOTO ESC94                               063444077335
+     C**********           END                                      S01117077335
+      *                                                             063444077335
+     C********** NCNUM     READEGTEES                    94         063444077335
+      *                                                             063444077335
+     C**********           END                                            077335
+     C********** ESC94     TAG                                      063444077335
+      *                                                             063444077335
+      ** Check for customer references in SECTI (SECTYD).           063444077335
+      *                                                             063444077335
+     C********** NCNUM     SETLLSECTI                9393           063444077335
+     C**N93***** NCNUM     READESECTI                    93         063444077335
+     C********** *IN93     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'D'                                 063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD225                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           GOTO ESC93                               063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** NCNUM     READESECTI                    93         063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+     C********** ESC93     TAG                                      063444077335
+      *                                                             063444077335
+      ** Check for customer references in CDEPPD.                   063444077335
+      *                                                             063444077335
+     C********** 1         SETLLCDEPPD               9292           063444077335
+     C**N92*****           READ CDEPPD                   92         063444077335
+     C********** *IN92     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** CDCN      IFEQ NCNUM                               063444077335
+     C********** CDPT      OREQ NCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD213                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           GOTO ESC92                               063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           READ CDEPPD                   92         063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+     C********** ESC92     TAG                                      063444077335
+      *                                                             063444077335
+      ** Check for customer references in CUDEP (UDEPPD).           063444077335
+      *                                                             063444077335
+     C********** NCNUM     SETLLCUDEP                9191           063444077335
+     C**N91*****           READ CUDEP                    91         063444077335
+     C********** *IN91     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** UDPT      IFEQ NCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD229                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           GOTO ESC91                               063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           READ CUDEP                    91         063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+     C********** ESC91     TAG                                      063444077335
+      *                                                             063444077335
+      ** Check for customer references in INVTPD.                   063444077335
+      *                                                             063444077335
+     C********** 1         SETLLINVTPD               9090           063444077335
+     C**N90*****           READ INVTPD                   90         063444077335
+     C********** *IN90     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'D'                                 063444077335
+      *                                                             063444077335
+     C********** SDC1      IFEQ NCNUM                               063444077335
+     C********** SDC2      OREQ NCNUM                               063444077335
+     C********** SDC3      OREQ NCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD223                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           GOTO ESC90                               063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           READ INVTPD                   90         063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+     C********** ESC90     TAG                                      063444077335
+      *                                                             063444077335
+      ** Check for customer references in SLIMH.                    063444077335
+      *                                                             063444077335
+     C********** NCNUM     SETLLSLIMH                8989           063444077335
+     C**N89***** NCNUM     READESLIMH                    89         063444077335
+     C********** *IN89     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'D'                                 063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD226                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           GOTO ESC89                               063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           READ INVTPD                   89         063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+     C********** ESC89     TAG                                      063444077335
+      *                                                             063444077335
+      ** Check for customer references in STDSED.                   063444077335
+      *                                                             063444077335
+     C********** *LOVAL    SETLLSTDSED               8888           063444077335
+     C**N88*****           READ STDSED                   88         063444077335
+     C********** *IN88     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'D'                                 063444077335
+      *                                                             063444077335
+     C********** CSTM      IFEQ NCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD227                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** SDTO      IFEQ NCNUM                               063444077335
+     C********** SDFO      OREQ NCNUM                               063444077335
+     C********** SDTT      OREQ NCNUM                               063444077335
+     C********** SFAT      OREQ PCNUM                               063444077335
+     C********** SDFT      OREQ NCNUM                               063444077335
+     C********** SFAF      OREQ PCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD228                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** WUD227    IFEQ 'F'                                 063444077335
+     C********** WUD228    ANDEQ'F'                                 063444077335
+     C**********           GOTO ESC88                               063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           READ STDSED                   88         063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+     C********** ESC88     TAG                                      063444077335
+      *                                                             063444077335
+      ** Check for customer references in TRADSD.                   063444077335
+      *                                                             063444077335
+     C********** 1         SETLLTRADSD               8787           063444077335
+     C**N87*****           READ TRADSD                   87         063444077335
+     C********** *IN87     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** RECI      IFNE '*'                                 063444077335
+      *                                                             063444077335
+     C********** DELT      IFEQ NCNUM                               063444077335
+     C********** DELF      OREQ NCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD222                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** DFFA      IFEQ PCNUM                               063444077335
+     C********** DTFA      OREQ PCNUM                               063444077335
+     C********** TCNR      OREQ NCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD221                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** WUD221    IFEQ 'F'                                 063444077335
+     C********** WUD222    ANDEQ'F'                                 063444077335
+     C**********           GOTO ESC87                               063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           READ TRADSD                   87         063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+     C********** ESC87     TAG                                      063444077335
+      *                                                             063444077335
+      ** Check for customer references in HSTTRD.                   063444077335
+      *                                                             063444077335
+     C********** 1         SETLLHSTTRD               8686           063444077335
+     C**N86*****           READ HSTTRD                   86         063444077335
+     C********** *IN86     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** DELT      IFEQ NCNUM                               063444077335
+     C********** DELF      OREQ NCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD220                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** DFFA      IFEQ PCNUM                               063444077335
+     C********** DTFA      OREQ PCNUM                               063444077335
+     C********** TCNR      OREQ NCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD219                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** WUD219    IFEQ 'F'                                 063444077335
+     C********** WUD220    ANDEQ'F'                                 063444077335
+     C**********           GOTO ESC86                               063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           READ HSTTRD                   86         063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+     C********** ESC86     TAG                                      063444077335
+      *                                                             063444077335
+      ** Check for customer references in POSETD.                   063444077335
+      *                                                             063444077335
+     C********** 1         SETLLPOSETD               8585           063444077335
+     C**N85*****           READ POSETD                   85         063444077335
+     C********** *IN85     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'D'                                 063444077335
+     C********** PCPY      ANDEQNCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD224                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           GOTO ESC85                               063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           READ POSETD                   85         063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+     C********** ESC85     TAG                                      063444077335
+      *                                                             063444077335
+      ** Check for customer references in EMLIML2.                  063444077335
+      *                                                             063444077335
+     C********** 1         SETLLEMLIML2              8484           063444077335
+     C**N84*****           READ EMLIML2                  84         063444077335
+     C********** *IN84     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'D'                                 063444077335
+     C********** MLC       ANDEQPCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD212                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           GOTO ESC84                               063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           READ EMLIML2                  84         063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+     C********** ESC84     TAG                                      063444077335
+      *                                                             063444077335
+      ** Check for customer references in CLOANCL.                  063444077335
+      *                                                             063444077335
+     C********** 1         SETLLCLOANCL              8383           063444077335
+     C**N83*****           READ CLOANCL                  83         063444077335
+     C********** *IN83     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** CNUM      IFEQ NCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD230                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           GOTO ESC83                               063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           READ CLOANCL                  83         063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+     C********** ESC83     TAG                                      063444077335
+      *                                                             063444077335
+      ** Check for customer references in DPTMVD.                   063444077335
+      *                                                             063444077335
+     C********** 1         SETLLDPTMVD               8282           063444077335
+     C**N82*****           READ DPTMVD                   82         063444077335
+     C********** *IN82     DOWEQ'0'                                 063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'D'                                 063444077335
+      *                                                             063444077335
+     C********** DPID      IFEQ NCNUM                               063444077335
+     C********** DPOD      OREQ NCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD214                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** DPBN      IFEQ NCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD215                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** RECI      IFEQ 'R'                                 063444077335
+      *                                                             063444077335
+     C********** DPID      IFEQ NCNUM                               063444077335
+     C********** DPOD      OREQ NCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD216                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** DPBN      IFEQ NCNUM                               063444077335
+     C**********           MOVEL'REJECT'  W0RTN                     063444077335
+     C**********           MOVE 'F'       WUD217                    063444077335
+     C********** QUIT      IFEQ 'Y'                                       077335
+     C**********           SETON                     LR                   077335
+     C**********           RETRN                                          077335
+     C**********           END                                            077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C********** WUD214    IFEQ 'F'                                 063444077335
+     C********** WUD215    ANDEQ'F'                                 063444077335
+     C********** WUD216    ANDEQ'F'                                 063444077335
+     C********** WUD217    ANDEQ'F'                                 063444077335
+     C**********           GOTO ESC82                               063444077335
+     C**********           END                                      063444077335
+      *                                                             063444077335
+     C**********           READ DPTMVD                   82         063444077335
+      *                                                             063444077335
+     C**********           END                                      063444077335
+     C********** ESC82     TAG                                      063444077335
+      *                                                                   077335
+      ** Check for customer references in ACCNT.                          077335
+      ** only when the action code is not 'C'.                            CSD007
+      *                                                                   077335
+     C           NCNUM     SETLLACCNT                9999                 077335
+     C  N99      NCNUM     READEACCNT                    99               077335
+      *                                                                   077335
+     C           *IN99     DOWEQ'0'                                       077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010UC02
+     C           RECI      IFEQ 'D'                                       077335
+      *                                                                   CSD007
+     C           PACTN     IFEQ 'C'                                       CSD007
+     C           ATYP      ANDEQ'R'                                       CSD007
+     C           CSD023    ANDEQ'N'                                       CSD023
+     C           PACTN     OREQ 'C'                                       CSD023
+     C           ATYP      ANDEQ'R'                                       CSD023
+     C           LDBL      ANDNE0                                         CSD023
+     C           CSD023    ANDEQ'Y'                                       CSD023
+     C           PACTN     OREQ 'C'                                       CSD023
+     C           ATYP      ANDEQ'R'                                       CSD023
+     C           CLBL      ANDNE0                                         CSD023
+     C           CSD023    ANDEQ'Y'                                       CSD023
+     C           PACTN     ORNE 'C'                                       CSD007
+     C                     MOVEL'REJECT'  W0RTN                           077335
+     C                     MOVE 'F'       WUD201                          077335
+     C           QUIT      IFEQ 'Y'                                       077335
+     C**********           RETRN                                                     077335 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     END                                            077335
+     C                     ENDIF                                          CSD007
+      *                                                                   CSD023
+      ** If the Retail account exists, balances are 0 and not closed,     CSD023
+      ** check for outstanding transations                                CSD023
+      *                                                                   CSD023
+     C           CSD023    IFEQ 'Y'                                       CSD023
+     C           PACTN     ANDEQ'C'                                       CSD023
+     C           ATYP      ANDEQ'R'                                       CSD023
+     C           LDBL      ANDEQ0                                         CSD023
+     C           CLBL      ANDEQ0                                         CSD023
+      *                                                                   CSD023
+     C                     CALL 'SD000802'                                CSD023
+     C                     PARM *BLANKS   @RTCD                           CSD023
+     C                     PARM           BRCA                            CSD023
+     C                     PARM           CNUM                            CSD023
+     C                     PARM           CCY                             CSD023
+     C                     PARM           ACOD                            CSD023
+     C                     PARM           ACSQ                            CSD023
+      *                                                                   CSD023
+     C           @RTCD     IFNE *BLANKS                                   CSD023
+     C                     MOVEL'REJECT'  W0RTN                           CSD023
+     C                     MOVE 'F'       WUD201                          CSD023
+     C           QUIT      IFEQ 'Y'                                       CSD023
+     C**********           RETRN                                                     CSD023 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     ENDIF                                          CSD023
+     C                     ENDIF                                          CSD023
+      *                                                                   CSD023
+     C                     ENDIF                                          CSD023
+      *                                                                   CSD023
+     C*****                GOTO ESC99                               077335CSD023
+     C                     END                                            077335
+      *                                                                   077335
+     C           NCNUM     READEACCNT                    99               077335
+      *                                                                   077335
+     C                     END                                            077335
+     C           ESC99     TAG                                            077335
+      *                                                                   CSD023
+      ** Check for live EXSIs                                             CSD023
+      *                                                                   CSD023
+     C           CSD023    IFEQ 'Y'                                       CSD023
+     C           PACTN     ANDEQ'C'                                       CSD023
+      *                                                                   CSD023
+     C                     MOVE NCNUM     W0CNUM  6                       CSD023
+     C                     CALL 'SD000803'                                CSD023
+     C                     PARM *BLANKS   @RTCD                           CSD023
+     C                     PARM           W0CNUM                          CSD023
+      *                                                                   CSD023
+     C           @RTCD     IFNE *BLANKS                                   CSD023
+     C                     MOVEL'REJECT'  W0RTN                           CSD023
+     C                     MOVE 'F'       WUD201                          CSD023
+     C           QUIT      IFEQ 'Y'                                       CSD023
+     C**********           RETRN                                                     CSD023 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     ENDIF                                          CSD023
+     C                     ENDIF                                          CSD023
+      *                                                                   CSD023
+     C                     ENDIF                                          CSD023
+      *                                                                   CSD023
+     C/COPY WNCPYSRC,SD0010UC07
+      *                                                                   077335
+      ***Save WUD201*as*it*gets*blanked*out*when*program*SD0340U** 077335 143481
+      ***is*called.*********************************************** 077335 143481
+      ** Save WUD201 and W0RTN they get blanked out when program          143481
+      ** SD0340U is called.                                               143481
+      *                                                                   077335
+     C                     MOVE WUD201    SAVFLD  1                       077335
+     C                     MOVELW0RTN     SAVRTN  7                       143481
+      *                                                                   077335
+      ** Check references in the securities files by calling SD0340U.     077335
+      ** Check the securities files only if the securities                077335
+      ** module is present.                                               077335
+     C           BGSECS    IFEQ 'Y'                                       077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010US01                                           077335
+      *                                                                   077335
+      *                                                                   077335
+     C                     CALL 'SD0340U'                  Check for delet077335
+     C                     PARM PCNUM     WQ0001  6        Customer Number077335
+     C           W0RTN     PARM W0RTN     WQ0002  7        *Return code   077335
+     C           WUCDS2    PARM *BLANK    WQ0003200        Customer Deln S077335
+     C           WUCDS3    PARM *BLANK    WQ0004200        Customer Deln S077335
+     C                     PARM QUIT      WQ0005  1        Quit program on077335
+     C                     PARM           PACTN                                             AR906833
+     C/COPY WNCPYSRC,SD0010UC08
+      *                                                                   077335
+      ** If the return code is not blank and the program is running       077335
+      ** in close of business, return to the calling program.             077335
+      *                                                                   077335
+     C           W0RTN     IFEQ 'REJECT'                                  077335
+     C           QUIT      IFEQ 'Y'                                       077335
+     C**********           RETRN                                                     077335 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     END                                            077335
+     C                     END                                            077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010US02                                           077335
+      *                                                                   077335
+     C                     END                                            077335
+      *                                                                   077335
+      ***Move*the*'saved*value'*of*WUD201*back*into*WUD201.******* 077335 143481
+      ** Move back the 'saved values' of WUD201 and W0RTN.                143481
+      *                                                                   077335
+     C                     MOVE SAVFLD    WUD201                          077335
+      *                                                                   143481
+     C           SAVRTN    IFNE *BLANKS                                   143481
+     C                     MOVELSAVRTN    W0RTN                           143481
+     C                     ENDIF                                          143481
+      *                                                                   077335
+      ** Check the Lending files only if the lending module               077335
+      ** is present.                                                      077335
+     C           BGCSLN    IFEQ 'Y'                        Begin Lending  077335
+      *                                                                   077335
+      ***Check*for*customer*references*in*FACIL.*******                   077335 CPK014
+      ***********                                                         077335 CPK014
+     C/COPY WNCPYSRC,SD0010UL01                                           077335
+      ***********                                                         077335 CPK014
+     C***********NCNUM     SETLLFACIL                9898                 077335 CPK014
+     C**N98******NCNUM     READEFACIL                    98               077335 CPK014
+     C************IN98     DOWEQ'0'                                       077335 CPK014
+      ***********                                                         077335 CPK014
+     C***********RECI      IFEQ 'D'                                       077335 CPK014
+     C***********          MOVEL'REJECT'  W0RTN                           077335 CPK014
+     C***********          MOVE 'F'       WUD203                          077335 CPK014
+     C***********QUIT      IFEQ 'Y'                                       077335 CPK014
+     C***********          RETRN                                          077335 CPK014
+     C***********          END                                            077335 CPK014
+     C***********          GOTO ESC98                                     077335 CPK014
+     C***********          END                                            077335 CPK014
+     C***********NCNUM     READEFACIL                    98               077335 CPK014
+      ***********                                                         077335 CPK014
+     C***********          END                                            077335 CPK014
+     C***********ESC98     TAG                                            077335 CPK014
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010UL02                                           077335
+      *                                                                   077335
+      ** Check for customer references in FCLTY.                          077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010UL03                                           077335
+      *                                                                   077335
+     C           NCNUM     SETLLFCLTY                9797                 077335
+     C  N97      NCNUM     READEFCLTY                    97               077335
+     C           *IN97     DOWEQ'0'                                       077335
+      *                                                                   077335
+     C           RECI      IFEQ 'D'                                       077335
+     C                     MOVEL'REJECT'  W0RTN                           077335
+     C                     MOVE 'F'       WUD204                          077335
+     C           QUIT      IFEQ 'Y'                                       077335
+     C**********           RETRN                                                     077335 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     END                                            077335
+     C                     END                                            077335
+      *                                                                   077335
+     C           RECI      IFEQ 'R'                                       077335
+     C                     MOVEL'REJECT'  W0RTN                           077335
+     C                     MOVE 'F'       WUD207                          077335
+     C           QUIT      IFEQ 'Y'                                       077335
+     C**********           RETRN                                                     077335 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     END                                            077335
+     C                     END                                            077335
+      *                                                                   077335
+     C           RECI      IFEQ 'C'                                       077335
+     C           PACTN     ANDNE'C'                                                         MD050457
+     C                     MOVEL'REJECT'  W0RTN                           077335
+     C                     MOVE 'F'       WUD208                          077335
+     C           QUIT      IFEQ 'Y'                                       077335
+     C**********           RETRN                                                     077335 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     END                                            077335
+     C                     END                                            077335
+      *                                                                   077335
+     C           RECI      IFEQ 'E'                                       077335
+     C           PACTN     ANDNE'C'                                                         MD050457
+     C                     MOVEL'REJECT'  W0RTN                           077335
+     C                     MOVE 'F'       WUD209                          077335
+     C           QUIT      IFEQ 'Y'                                       077335
+     C**********           RETRN                                                     077335 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     END                                            077335
+     C                     END                                            077335
+      *                                                                   077335
+     C           WUD204    IFEQ 'F'                                       077335
+     C           WUD207    ANDEQ'F'                                       077335
+     C           WUD208    ANDEQ'F'                                       077335
+     C           WUD209    ANDEQ'F'                                       077335
+     C                     GOTO ESC97                                     077335
+     C                     END                                            077335
+      *                                                                   077335
+     C           NCNUM     READEFCLTY                    97               077335
+      *                                                                   077335
+     C                     END                                            077335
+      *                                                                                     MD050457
+      ** Check if there is a facility closed today.                                         MD050457
+      *                                                                                     MD050457
+     C                     READ SDBANKPD                 91                                 MD050457
+     C                     MOVE '0'       *IN91                                             MD050457
+     C           NCNUM     SETLLFCLTYFMF             9191                                   MD050457
+     C           *IN91     IFEQ '0'                                                         MD050457
+     C           NCNUM     READEFCLTYFMF                 91                                 MD050457
+     C                     ENDIF                                                            MD050457
+      *                                                                                     MD050457
+     C           *IN91     DOWEQ'0'                                                         MD050457
+      *                                                                                     MD050457
+      ** Do not close if Change Type is Close ('C') and Last Action Date is today.          MD050457
+      *                                                                                     MD050457
+     C           PACTN     IFEQ 'C'                                                         MD050457
+     C           LCD       ANDEQBJRDNB                                                      MD050457
+     C           CHTP      ANDEQ'C'                                                         MD050457
+     C                     MOVEL'REJECT'  W0RTN                                             MD050457
+     C                     MOVE 'F'       WUD210                                            MD050457
+     C           QUIT      IFEQ 'Y'                                                         MD050457
+     C                     GOTO PRETRN                                                      MD050457
+     C                     ENDIF                                                            MD050457
+     C                     ENDIF                                                            MD050457
+      *                                                                                     MD050457
+     C           WUD210    IFEQ 'F'                                                         MD050457
+     C                     GOTO ESC97                                                       MD050457
+     C                     ENDIF                                                            MD050457
+     C           NCNUM     READEFCLTYFMF                 91                                 MD050457
+     C                     ENDDO                                                            MD050457
+      *                                                                                     MD050457
+     C           ESC97     TAG                                            077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010UL04                                           077335
+      *                                                                   077335
+      ** Check for customer references in LEREF.                          077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010UL05                                           077335
+      *                                                                   077335
+     C           NCNUM     SETLLLEREF                9696                 077335
+     C  N96      NCNUM     READELEREF                    96               077335
+      *                                                                   077335
+     C           *IN96     DOWEQ'0'                                       077335
+      *                                                                   077335
+     C           RECI      IFEQ 'D'                                       077335
+     C                     MOVEL'REJECT'  W0RTN                           077335
+     C                     MOVE 'F'       WUD206                          077335
+     C           QUIT      IFEQ 'Y'                                       077335
+     C**********           RETRN                                                     077335 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     END                                            077335
+     C                     GOTO ESC96                                     077335
+     C                     END                                            077335
+     C           NCNUM     READELEREF                    96               077335
+      *                                                                   077335
+     C                     END                                            077335
+     C           ESC96     TAG                                            077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010UL06                                           077335
+      *                                                                   077335
+      ** Check for customer references in CLOANCL.                        077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010UL07                                           077335
+      *                                                                   077335
+     C           1         SETLLCLOANCL              9595                 077335
+     C  N95                READ CLOANCL                  95               077335
+     C           *IN95     DOWEQ'0'                                       077335
+      *                                                                   077335
+     C           CNUM      IFEQ NCNUM                                     077335
+     C**********           MOVEL'REJECT'  W0RTN                                      077335 MD050457
+     C                     MOVE 'F'       WUD230                          077335
+     C           PACTN     IFEQ 'C'                                                         MD050457
+     C           RECI      ANDEQ'M'                                                         MD050457
+     C                     MOVE ' '       WUD230                                            MD050457
+     C                     ENDIF                                                            MD050457
+     C                     ENDIF                                                            MD050457
+     C           WUD230    IFEQ 'F'                                                         MD050457
+     C                     MOVEL'REJECT'  W0RTN                                             MD050457
+     C           QUIT      IFEQ 'Y'                                       077335
+     C**********           RETRN                                                     077335 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     END                                            077335
+     C                     GOTO ESC95                                     077335
+     C                     END                                            077335
+      *                                                                   077335
+     C                     READ CLOANCL                  95               077335
+      *                                                                   077335
+     C                     END                                            077335
+     C           ESC95     TAG                                            077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010UL08                                           077335
+      *                                                                                     MD050457
+      ** Check for customer references in LEFEEDL1.                                         MD050457
+      *                                                                                     MD050457
+     C           NCNUM     SETLLLEFEEDL1             8989                                   MD050457
+     C  N89      NCNUM     READELEFEEDL1                 89                                 MD050457
+     C           *IN89     DOWEQ'0'                                                         MD050457
+      *                                                                                     MD050457
+     C           FECNUM    IFEQ NCNUM                                                       MD050457
+     C                     MOVE 'F'       WUD241                                            MD050457
+     C           PACTN     IFEQ 'C'                                                         MD050457
+     C           FERECI    ANDEQ'M'                                                         MD050457
+     C           PACTN     OREQ 'C'                                                         MD050457
+     C           FERECI    ANDEQ'*'                                                         MD050457
+     C                     MOVE ' '       WUD241                                            MD050457
+     C                     ENDIF                                                            MD050457
+     C                     ENDIF                                                            MD050457
+     C           WUD241    IFEQ 'F'                                                         MD050457
+     C                     MOVEL'REJECT'  W0RTN                                             MD050457
+     C           QUIT      IFEQ 'Y'                                                         MD050457
+     C                     GOTO PRETRN                                                      MD050457
+     C                     END                                                              MD050457
+     C                     GOTO ESC89                                                       MD050457
+     C                     END                                                              MD050457
+      *                                                                                     MD050457
+     C           NCNUM     READELEFEEDL1                 89                                 MD050457
+      *                                                                                     MD050457
+     C                     END                                                              MD050457
+     C           ESC89     TAG                                                              MD050457
+      *                                                                   077335
+      ** Check for customer references in GTEES.                          077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010UL09                                           077335
+      *                                                                   077335
+     C           NCNUM     SETLLGTEES                9494                 077335
+     C  N94      NCNUM     READEGTEES                    94               077335
+      *                                                                   077335
+     C           *IN94     DOWEQ'0'                                       077335
+      *                                                                   077335
+     C           RECI      IFEQ 'D'                                       077335
+     C           RECI      OREQ 'E'                                       077335
+     C                     MOVEL'REJECT'  W0RTN                           077335
+     C                     MOVE 'F'       WUD205                          077335
+     C           QUIT      IFEQ 'Y'                                       077335
+     C**********           RETRN                                                     077335 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     END                                            077335
+     C                     GOTO ESC94                                     077335
+     C                     END                                            077335
+      *                                                                   077335
+     C           NCNUM     READEGTEES                    94               077335
+      *                                                                   077335
+     C                     END                                            077335
+     C           ESC94     TAG                                            077335
+      *                                                                   077335
+      ** Check for customer references in GTEESV1 (new GTEES logical      181864
+      ** file keyed on GBCN instead of CNUM)                              181864
+      *                                                                   181864
+     C           NCNUM     SETLLGTEESV1              9292                 181864
+     C           *IN92     IFEQ '0'                                       181864
+     C           NCNUM     READEGTEESV1                  92               181864
+     C                     ENDIF                                          181864
+      *                                                                   181864
+     C                     MOVE '0'       WESC    1                       181864
+     C           *IN92     DOWEQ'0'                                       181864
+     C           WESC      ANDEQ'0'                                       181864
+      *                                                                   181864
+     C           RECI      IFEQ 'D'                                       181864
+     C           RECI      OREQ 'E'                                       181864
+     C                     MOVEL'REJECT'  W0RTN                           181864
+     C                     MOVE 'F'       WUD205                          181864
+     C           QUIT      IFEQ 'Y'                                       181864
+     C**********           RETRN                                                     181864 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     ENDIF                                          181864
+     C                     MOVE '1'       WESC                            181864
+     C                     ENDIF                                          181864
+      *                                                                   181864
+     C           NCNUM     READEGTEESV1                  92               181864
+      *                                                                   181864
+     C                     ENDDO                                          181864
+     C/COPY WNCPYSRC,SD0010UL10                                           077335
+      *                                                                   077335
+     C                     END                             End of Lending 077335
+      *                                                                   077335
+      ** Check for customer references in CUSDL.                          077335
+      ** Check CUSDL if at least one of the Dealing module flages         077335
+      ** is 'Y'.                                                          077335
+      *                                                                   077335
+     C           BGDLFX    IFEQ 'Y'                        Begin Dealing  077335
+     C           BGFIIN    OREQ 'Y'                                       077335
+     C           BGDLMM    OREQ 'Y'                                       077335
+     C           BGINCN    OREQ 'Y'                                       077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010UD01                                           077335
+      *                                                                   077335
+     C           NCNUM     SETLLCUSDL                9393                 077335
+     C  N93      NCNUM     READECUSDL                    93               077335
+      *                                                                   077335
+     C           *IN93     DOWEQ'0'                                       077335
+      *                                                                   077335
+     C           RECI      IFEQ 'D'                                       077335
+     C                     MOVEL'REJECT'  W0RTN                           077335
+     C                     MOVE 'F'       WUD202                          077335
+     C           QUIT      IFEQ 'Y'                                       077335
+     C**********           RETRN                                                     077335 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     END                                            077335
+     C                     GOTO ESC93                                     077335
+     C                     END                                            077335
+      *                                                                   077335
+     C           NCNUM     READECUSDL                    93               077335
+      *                                                                   077335
+     C                     END                                            077335
+      *                                                                   099934
+      * Also check issuer customer number on DEALSDC                      099934
+      *                                                                   099934
+     C           NCNUM     SETLLDEALDCL1             9393                 099934
+     C  N93      NCNUM     READEDEALDCL1                 93               099934
+      *                                                                   099934
+     C           *IN93     IFEQ '0'                                       099934
+      *                                                                   099934
+     C                     MOVEL'REJECT'  W0RTN                           099934
+     C                     MOVE 'F'       WUD202                          099934
+     C           QUIT      IFEQ 'Y'                                       099934
+     C**********           RETRN                                                     099934 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     ENDIF                                          099934
+     C                     GOTO ESC93                                     099934
+      *                                                                   099934
+     C                     ENDIF                                          099934
+      *                                                                   099934
+     C           ESC93     TAG                                            077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010UD02                                           077335
+      *                                                                   077335
+     C                     END                             End Dealing    077335
+      *                                                                   077335
+      ** Check for customer references in EMLIML2.                        077335
+      ** Check EMLIML2 only if the Exposure Management module             077335
+      ** is present.                                                      077335
+      *                                                                   077335
+     C           BGEXMG    IFEQ 'Y'                        Begin Exp Mngmt077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010UE01                                           077335
+      *                                                                   077335
+      *                                                                   077335
+     C           1         SETLLEMLIML2              8484                 077335
+     C  N84                READ EMLIML2                  84               077335
+     C           *IN84     DOWEQ'0'                                       077335
+      *                                                                   077335
+     C           RECI      IFEQ 'D'                                       077335
+     C           MLC       ANDEQPCNUM                                     077335
+     C                     MOVEL'REJECT'  W0RTN                           077335
+     C                     MOVE 'F'       WUD212                          077335
+     C           QUIT      IFEQ 'Y'                                       077335
+     C**********           RETRN                                                     077335 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     END                                            077335
+     C                     GOTO ESC84                                     077335
+     C                     END                                            077335
+      *                                                                   077335
+     C                     READ EMLIML2                  84               077335
+      *                                                                   077335
+     C                     END                                            077335
+     C           ESC84     TAG                                            077335
+      *                                                                   077335
+     C/COPY WNCPYSRC,SD0010UE02                                           077335
+      *                                                                   077335
+     C                     END                             End Exp Mngmt  077335
+      *                                                                   S01522
+      ** Establish whether UDC is installed. If installed call CGC0023    S01522
+      ** to establish if the customer can be deleted.                     S01522
+     C/COPY WNCPYSRC,SD0010UC03
+     C                     EXSR SRUDC                                     S01522
+     C/COPY WNCPYSRC,SD0010UC04
+      *                                                                                       246639
+      ** Retrieve number of parent - Client Details  *                                        246639
+      *                                                                                       246639
+     C           W0RTN     IFNE 'REJECT'                                                      246639
+     C                     EXSR SNRVGN                                                        246639
+      *                                                                                       246639
+      ** Check to see if the customer is a parent.                                            246639
+      ** CASE: PGM.*Return code is customer a parent                                          246639
+      *                                                                                       246639
+     C           W0RTN     IFEQ 'PARENT'                                                      246639
+     C                     MOVEL'REJECT'  W0RTN                                               246639
+     C                     MOVEL'F'       WUD006                                              246639
+      *                                                                                       246639
+      ** Quit the program if the quit parameter is 'Y'.                                       246639
+      ** CASE: PAR.Quit program on REJECT is Quit on REJECT                                   246639
+      *                                                                                       246639
+     C           QUIT      IFEQ 'Y'                                                           246639
+     C**********           RETRN                                                     246639 AR897319
+     C                     GOTO PRETRN                                                      AR897319
+     C                     ENDIF                                                              246639
+     C                     ENDIF                                                              246639
+     C                     ENDIF                                                              246639
+      *                                                                   077335
+      ** If all checks have successfully completed,                       077335
+      ** change the return code to 'DELETE'.                              077335
+      *                                                                   077335
+     C           W0RTN     IFEQ *BLANKS                                   077335
+     C/COPY WNCPYSRC,SD0010UC09
+     C                     MOVEL'DELETE'  W0RTN                           077335
+     C/COPY WNCPYSRC,SD0010UC10
+     C                     END                                            077335
+      *                                                                   077335
+      ** Move failure strings back into the paramerer fields.             077335
+      *                                                                   077335
+     C           PRETRN    TAG                                                              AR897319
+     C                     MOVELWUCDS1    PCDS1                                               246639
+     C                     MOVELWUCDS2    PCDS2                           077335
+     C                     MOVELWUCDS3    PCDS3                           077335
+      *                                                                   077335
+     C           QUIT      IFEQ 'N'                                       077335
+     C                     SETON                         LR               077335
+     C                     END                                            077335
+      *                                                                   077335
+     C                     RETRN                                          077335
+     C/EJECT                                                              S01522
+      *****************************************************************   S01522
+      *                                                               *   S01522
+      *  SRUDC    : User defined Correspondence processing.           *   S01522
+      *                                                               *   S01522
+      *  CALLED BY: Main Processing                                   *   S01522
+      *                                                               *   S01522
+      *  CALLS    :                                                   *   S01522
+      *                                                               *   S01522
+      *****************************************************************   S01522
+     CSR         SRUDC     BEGSR                                          S01522
+      *                                                                   S01522
+      *** Call to the Switchable features file to check if S01532         S01522
+      *** is switched on.                                                 S01522
+      *                                                                   S01522
+     C                     CALL 'AOSARDR0'                                S01522
+     C                     PARM *BLANKS   @RTCD                           S01522
+     C                     PARM '*VERIFY' @OPTN                           S01522
+     C                     PARM 'S01532'  @SARD   6                       S01522
+     C           SCSARD    PARM *BLANKS   DSFDY                           S01522
+      *                                                                   S01522
+      ** UDC Switched on and switchable feature S01532 NOT installed.     S01522
+      *                                                                   S01522
+     C           BGN1ST    IFEQ 'Y'                                       S01522
+     C           @RTCD     ANDNE*BLANK                                    S01522
+     C*                                                                   S01522
+     C**********           CALL 'CGC0023'                                 S01522              201665
+     C**********           PARM *BLANKS   RTCD    7                       S01522              201665
+     C/COPY WNCPYSRC,SD0010UC11
+     C**********           PARM 'D'       ACTN    1                       S01522              201665
+     C/COPY WNCPYSRC,SD0010UC12
+     C**********           PARM           PCNUM                           S01522              201665
+      *                                                                   S01522
+      ** If cannot delete                                                 S01522
+      *                                                                   S01522
+     C********** RTCD      IFEQ 'CGD1183'                                 S01522              201665
+     C**********           MOVEL'REJECT'  W0RTN                           S01522              201665
+     C**********           MOVE 'F'       WUD218                          S01522              201665
+     C**********           ENDIF                                          S01522              201665
+     C                     ENDIF                                          S01522
+      *                                                                   S01522
+     C                     ENDSR                                          S01522
+     C********************************************************************S01522
+      *                                                                                       246639
+      *****************************************************************                       246639
+      *                                                               *                       246639
+      *  SNRVGN   : Retrieve number of parent - Client Details        *                       246639
+      *                                                               *                       246639
+      *  CALLED BY: Main Processing                                   *                       246639
+      *                                                               *                       246639
+      *  CALLS    :                                                   *                       246639
+      *                                                               *                       246639
+      *****************************************************************                       246639
+     CSR         SNRVGN    BEGSR                                                              246639
+      *                                                                                       246639
+     C                     MOVEL*BLANK    W0RTN   7                                           246639
+      * Declare restrictor key work fields                                                    246639
+     C           *LIKE     DEFN BBPCNB    WQSN01           Parent Customer                    246639
+      * Define keylist                                                                        246639
+     C           KRSSN     KLIST                                                              246639
+     C                     KFLD           WQSN01           Parent Customer                    246639
+      * Move fields to key list                                                               246639
+     C                     MOVELNCNUM     WQSN01           Parent Customer                    246639
+     C           KRSSN     SETLL@CUSTFR                    *                                  246639
+     C           KRSSN     READE@CUSTFR                  90*                                  246639
+     C           *IN90     IFEQ '1'                                                           246639
+      * Data record not found                                                                 246639
+     C                     MOVEL'USR0081' W0RTN   7                                           246639
+      * USER: Processing if Data record not found                                             246639
+     C                     MOVEL*BLANK    W0RTN            *Return code                       246639
+     C                     GOTO SNEXIT                                                        246639
+     C                     ENDIF                                                              246639
+      *                                                                                       246639
+     C           *IN90     DOWEQ'0'                                                           246639
+      * USER: Process Data record                                                             246639
+      * If any of the children are still live then set the return code an                     246639
+      * exit from the READE loop                                                              246639
+      * CASE: DB1.Type of Last Change is Delete                                               246639
+     C           BBTYLC    IFEQ 'D'                        *IF                                246639
+     C           BBCLST    OREQ 'Y'                                                           246639
+     C                     ELSE                                                               246639
+      * CASE: *OTHERWISE                                                                      246639
+     C                     MOVEL*BLANK    W0RTN            *Return code                       246639
+     C                     MOVEL'PARENT'  W0RTN            *Return code                       246639
+     C                     GOTO SNEXIT                     *QUIT                              246639
+     C                     ENDIF                           *FI                                246639
+     C           KRSSN     READE@CUSTFR                  90*                                  246639
+     C                     ENDDO                                                              246639
+      *                                                                                       246639
+     CSR         SNEXIT    ENDSR                                                              246639
+     C********************************************************************                    246639

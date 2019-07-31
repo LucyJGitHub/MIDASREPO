@@ -1,0 +1,1366 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Expected coupon summary report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0835 - EXPECTED COUPONS SUMMARY REPORTS                    *
+     F*                                                               *
+     F*  Function: To print the Expected Coupons Summaries for Coupon *
+     F*   (COB)    Dates within 10 working days, on Positions per     *
+     F*            Book/Depot (for the user) and Portfolio Customer/  *
+     F*            Depot.                                             *
+     F*                                                               *
+     F*            The Expected Coupons report is produced separately.*
+     F*                                                               *
+     F*  Called by: SEC0704 - Expected Coupons Report                 *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 BUG7985            Date 07Jul05               *
+      *                 208241             Date 17Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 169512             Date 17Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 127566             Date 09May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+     F*                 179947             Date 26Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 21Dec98               *
+      *                 S01408             Date 22Aug96               *
+      *                 S01496             Date 14Jul94               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E37493             DATE 01APR92               *
+     F*                 E34039             DATE 08JAN92               *
+     F*                 E33030             DATE 09DEC91               *
+     F*                 E29170             DATE 07OCT91               *
+     F*                 S01117             DATE 17MAY91               *
+     F*                 S01269             DATE 02AUG90               *
+     F*                 E21000             DATE 09FEB90               *
+     F*                 E13663             DATE 07/09/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  BUG7985- Several components failed due to accessing TABLETR  *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  169512 - I/O error due to overflow.  The line number should  *
+      *           be checked before writing the trailer.              *
+      *  127566 - Recompiled over changed ZSDESCZ3                    *
+     F*  179947 - Currency shown in report should correspond to the   *
+     F*           actual coupon amount.  Also profit centre for last  *
+     F*           coupon by book summary not shown.                   *
+      *  CAC005 - Profit Centre Accounting - SE Enhancement           *
+     F*  S01408 - Addition of core hook SE0835CCP1
+     F*  S01496 - Incorporation of JYSKE Enhancements (S10978)        *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E37493 - Recompiled over changed printer file                *
+     F*  E34039 - Recompiled over changed printer file                *
+     F*  E33030 - Should only do diffence processing for 'ALL' reports*
+     F*  E29170 - Report Control Facility program changes             *
+     F*  S01117 - Multibranching                                      *
+     F*  S01269 - TRADE AUTHORISATION: RECOMPILED OVER CHANGED        *
+     F*           FILE TABSE.                                         *
+     F*  E21000 - Recompile over amended Print File.                  *   E21000
+     F*  E13663 - Report prints Client details in Security Section    *   E13663
+     F*           and Book Details in Client Section.                 *   E13663
+     F*                                                               *
+     F*****************************************************************
+      *
+     FECSDP   IF  E           K        DISK
+     F            UDPCDDF                           KRENAMEUDPCDPF
+     F            CDPCDDF                           KRENAMECDPCDPF
+     FECSBK   IF  E           K        DISK
+     FECSCL   IF  E           K        DISK
+     FECSSC   IF  E           K        DISK
+     F            UDPCDDF                           KRENAMEUDPCSCF
+     F            CDPCDDF                           KRENAMECDPCSCF
+     FSECTY   IF  E           K        DISK
+     FBOOKD   IF  E           K        DISK
+     FUDPCDA  IF  E                    DISK
+     FCDPCDA  IF  E                    DISK
+     FSE0835AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         E29170
+     FSE0835P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL          E29170
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     F            CLINTSEF                          KIGNORE
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F* ICD SE    TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F* CURRENCY  TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F* BRANCH    TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01  - UDPCDD READ FROM LF/ECSDP                             *
+     F*   02  - CDPCDD READ FROM LF/ECSDP                             *
+     F*   03  - UDPCDD READ FROM LF/ECSSC                             *
+     F*   04  - CDPCDD READ FROM LF/ECSSC                             *
+      *   05  - CAC005 is Installed                                   *   CAC005
+     F*                                                               *
+     F*   10  - USED IN CCY DP COMPARE AND CONDITIONS IN PRINT FILE   *
+     F*   11  - USED IN CCY DP COMPARE AND CONDITIONS IN PRINT FILE   *
+     F*   12  - USED IN CCY DP COMPARE AND CONDITIONS IN PRINT FILE   *
+     F*   13  - USED IN CCY DP COMPARE AND CONDITIONS IN PRINT FILE   *
+     F*   14  - USED IN CCY DP COMPARE AND CONDITIONS IN PRINT FILE   *
+     F*   20  - CONDITIONS DOWEQ LOOP FOR EACH CCY                    *
+     F*   21  - INDICATES WHEN THERE IS A CHANGE OF BRANCH (= 0)      *
+     F*   22  - BLANK LINE INDICATOR IN PRINT FILE SE0835P1           *
+     F*   23  - PTFR CHANGE INDICATOR                                 *   S01496
+     F*   31  - END OF FILE FOR LF/ECSDP                              *
+     F*   32  - END OF FILE FOR LF/ECSBK                              *
+     F*   33  - END OF FILE FOR LF/ECSCL                              *
+     F*   34  - END OF FILE FOR LF/ECSSC                              *
+     F*   35  - ENTITY IS NOT 'ALL' OR '   '                          *   E29170
+     F*   41  - ERROR INDICATOR IF RECORD ON CHAIN NOT FOUND          *
+     F*   50  - DIFFERENCE INDICATOR ON PRINT FILE                    *
+     F*   51  - DIFFERENCE MESSAGE INDICATOR ON PRINT FILE            *
+     F*   60  - FIRST TIME INDICATOR                                  *
+     F*   61  - PRINT PTFR FOR S01496                                 *   S01496
+     F*   88  - MULTIBRANCHING                                        *   E29170
+     F*                                                               *
+     F* 90-99 - USED IN Z-SUBROUTINES                                 *
+     F*                                                               *
+     F* U7-U8 - DATABASE ERROR                                        *
+     F*   U8  - DIFFERENCE BETWEEN CALC AND FILE TOTALS OF RECORDS    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - OBTAINS ICD INFO                                    *
+     F*  PR01   - PRINT DETAIL REPORT                                 *
+     F*  AUDIT  - PRINT AUDIT REPORT DETAILS                          *
+     F*  DEPOT  - GETS TOTALS OF CCYS FOR LF/ECSDP                    *
+     F*  BOOK   - GETS TOTALS OF CCYS FOR LF/ECSBK                    *
+     F*  CUST   - GETS TOTALS OF CCYS FOR LF/ECSCL                    *
+     F*  RCFAU  - Define AU printer file to RCF program ZSFILE        *   E29170
+     F*  RCFP1  - Define P1 printer file to RCF program ZSFILE        *   E29170
+     F*  SECUR  - GETS TOTALS OF CCYS FOR LF/ECSSC                    *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*  ZDATE2 - CONVERTS DAYS TO DATES                              *
+     F*  ZICDSE - CHAINS TO ICD TABTB11                               *
+     F*  ZSDESC - FORMATS SECURITY DETAILS FOR PRINTING               *
+     F*  ZSEDIT - FORMATS AMOUNTS FOR PRINTING                        *
+     F*  ZSYSTM - CHAINS TO ICD TABTB10                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSDESCZ1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E                    CPY@    1   1 80                                S01117
+      /EJECT
+     I*
+     I* RECORD IDENTIFYING INDICATORS
+     I*
+     IUDPCDPF     01
+     ICDPCDPF     02
+     IUDPCSCF     03
+     ICDPCSCF     04
+     I*
+     I/COPY ZSRSRC,ZSDESCZ2
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+      *                                                                   E29170
+     ISPOOL       DS                                                      E29170
+      *                                                                   E29170
+      ** Data structures for RCF spooled file names                       E29170
+      *                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+      *                                                                   E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     IRUNDT       DS                                                      E29170
+      *                                                                   E29170
+      ** RUNDAT data area                                                 E29170
+      *                                                                   E29170
+     I                                        1   7 RUNA                  E29170
+     I                                    P   8  100RUND                  E29170
+     I                                       11  11 SSF                   E29170
+     I                                       12  12 DATF                  E29170
+     I                                       13  13 MBIN                  E29170
+     I*                                                                   S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     ICPYR@#      DS                                                      S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+     ISDBRCH    E DSSDBRCHPD                                                                 BUG7985
+     I              A8BRNM                          BRNM                                     BUG7985
+     IDSSDY     E DSDSSDY                                                                    BUG7985
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*                                                                   S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM           ENT     3                       S01117
+     C*
+     C**  CLEAR LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE0835  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C**  OBTAIN ICD INFO
+     C*
+     C                     EXSR FIRST
+     C*
+     C**  CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     CABEQ'1'       EAUDIT
+     C*
+     C**  CLEAR WORK FIELDS
+     C*
+     C                     Z-ADD0         RECDPU  50
+     C                     Z-ADD0         RECDPC  50
+     C                     Z-ADD0         RECBKU  50
+     C                     Z-ADD0         RECCLC  50
+     C                     Z-ADD0         RECSEU  50
+     C                     Z-ADD0         RECSEC  50
+     C                     Z-ADD0         LNCT    20
+     C                     Z-ADD0         PAGE    40
+     C                     Z-ADD0         TOTAL  150
+     C                     MOVE *BLANKS   CHKBK   2
+     C***********          Z-ADD0         CHKBR   30                      S01117
+     C                     MOVE *BLANKS   CHKBR   3                       S01117
+     C**********           Z-ADD0         CHKCUS  60                                          CSD027
+     C                     MOVE *BLANKS   CHKCUS  6                                           CSD027
+     C                     MOVE *BLANKS   CHKPFR  4                       S01496
+     C**********           Z-ADD0         CHKDEP  60                                          CSD027
+     C                     MOVE *BLANKS   CHKDEP  6                                           CSD027
+     C                     MOVE *BLANKS   CHKSEC 10
+      *                                                                   E29170
+      ** If report is for only one branch, position files on branch       E29170
+      *                                                                   E29170
+     C           ENT       IFNE '   '                                     E29170
+     C           ENT       ANDNE'ALL'                                     E29170
+     C                     MOVE '1'       *IN35                           E29170
+     C           ENT       SETLLECSDP                                     E29170
+     C           ENT       SETLLECSBK                                     E29170
+     C           ENT       SETLLECSCL                                     E29170
+     C           ENT       SETLLECSSC                                     E29170
+     C                     END                                            E29170
+     C*
+     C**  READ FROM ONE OF THE 4 FILES
+     C**  Ignore all records after change of branch (if one branch)       E29170
+     C*
+     C                     READ ECSDP                    31
+     C  N31 35   UBRA      COMP ENT                  3131                 E29170
+     C   31                READ ECSBK                    32
+     C  N32 35   UBRA      COMP ENT                  3232                 E29170
+     C   32                READ ECSCL                    33
+     C  N33 35   UBRA      COMP ENT                  3333                 E29170
+     C   33                READ ECSSC                    34
+     C  N34 35   UBRA      COMP ENT                  3434                 E29170
+     C*
+     C**  ENTER THE MAIN PROGRAMS DO LOOP UNTIL *IN34 IS SETON
+     C*
+     C           *IN34     DOWEQ'0'
+     C*
+     C                     EXSR PR01
+     C           *INU7     CABEQ'1'       EAUDIT
+     C*
+     C                     END
+     C*
+     C**  WRITE TRAILER RECORD ON REPORT ONLY IF FIRST TIME *IN60 ON
+     C*
+     C           LNCT      IFGE 56                                        169512
+     C                     WRITEHEADS                                     169512
+     C                     END                                            169512
+      *                                                                   169512
+     C   60                WRITETRAIL
+     C*
+     C           EAUDIT    TAG                             *** EAUDIT ***
+      *
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C                     SETON                     LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST  - SUBROUTINE TO ACCESS ICD INFORMATION                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           *** FIRST  ***
+      *                                                                   E29170
+      ** Read in RUNDAT data area                                         E29170
+      *                                                                   E29170
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           E29170
+     C                     IN   RUNDT                                     E29170
+      *                                                                   E29170
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C                     SETON                         88               E29170
+     C                     END                                            E29170
+      *                                                                   E29170
+      ** RCF Processing for Audit File                                    E29170
+      *                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*
+     C**  ACCESS ICD
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C**  ACCESS ICDSE
+     C*
+     C                     EXSR ZICDSE
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 02 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C                     END
+      *                                                                   S01496
+      **  Access SAR details file to see if JYSKE Enhcmts is installed.   S01496
+      *                                                                   S01496
+     C                     CALL 'AOSARDR0'                                S01496
+     C                     PARM '       ' @RTCD   7                       S01496
+     C                     PARM '*VERIFY' @OPTN   7                       S01496
+     C                     PARM 'S01496'  WSARD   6                       S01496
+      *                                                                   S01496
+     C           @RTCD     IFEQ *BLANK                                    S01496
+     C                     MOVE 'Y'       S01496  1                       S01496
+     C                     MOVE *ON       *IN61                           S01496
+     C                     END                                            S01496
+      *                                                                   CAC005
+      ** Access Switchable feature files for CAC005                       CAC005
+      *                                                                   CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD   7                       CAC005
+     C                     PARM '*VERIFY' POPTN   7                       CAC005
+     C                     PARM 'CAC005'  PSARD   6                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVE 'Y'       CAC005  1                       CAC005
+     C                     MOVE '1'       *IN05                           CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVE 'N'       CAC005                          CAC005
+     C                     MOVE '0'       *IN05                           CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PR01 - THIS SR CONTROLS THE PRINTING OF THE REPORT, IT CALLS *
+      *         FOUR OTHER SR DEPENDING ON WHICH FILE IS BEING READ   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PR01      BEGSR                           ***  PR01  ***
+     C*
+     C**  IF CHANGE OF BRANCH CLOSE AND OPEN NEW PRINT FILES.
+     C*
+     C           *IN21     IFEQ '0'
+     C*
+     C**  IF FIRST TIME INDICATOR IS ON, WRITE TRAILER AND CLOSE OPEN
+     C**  PRINT FILE, ELSE SET ON THE INDICATOR
+     C*
+     C           *IN60     IFEQ '1'
+      *                                                                   169512
+     C           LNCT      IFGE 56                                        169512
+     C                     WRITEHEADS                                     169512
+     C                     END                                            169512
+      *                                                                   169512
+     C                     WRITETRAIL
+     C                     CLOSESE0835P1
+     C                     ELSE
+     C                     SETON                     60
+     C                     END
+     C*
+     C**  OPEN NEW PRINT FILE, INITIALISE VARIABLES AND CHAIN TO
+     C**  TABLETR FOR BRANCH INFO
+     C*
+     C                     OPEN SE0835P1
+     C                     Z-ADD0         LNCT
+     C                     Z-ADD0         PAGE
+     C                     EXSR RCFP1                                     E29170
+     C***********          MOVE UBRN      CHKBR                           S01117
+     C***********          MOVE UBRN      BRNO    30                      S01117
+     C                     MOVE UBRA      CHKBR                           S01117
+     C                     MOVE UBRA      BRNO    3                       S01117
+     C*
+     C**********           MOVEL'10'      KEYF   12                                          BUG7985
+     C***********          MOVE UBRN      KEYF                            S01117
+     C**********           MOVE UBRA      KEYF                                        S01117 BUG7985
+     C********** KEYF      CHAINTABLETRF             41                                      BUG7985
+     C*
+     C**  IF ERROR ON THE CHAIN PERFORM STD DB ERROR
+     C*
+     C********** *IN41     IFEQ '1'                                                          BUG7985
+     C********** RECI      OREQ '*'                                                          BUG7985
+     C                     CALL 'AOBRCHR1'                                                   BUG7985
+     C                     PARM *BLANKS   PRTCD   7                                          BUG7985
+     C                     PARM '*KEY   ' POPTN   7                                          BUG7985
+     C                     PARM UBRA      PBRCH   3                                          BUG7985
+     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG7985
+      *                                                                                      BUG7985
+     C           PRTCD     IFNE *BLANKS                                                      BUG7985
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C**********           MOVE 'TABLE'   DBFILE           ***************                   BUG7985
+     C**********           MOVELKEYF      DBKEY            * DB ERROR 03 *                   BUG7985
+     C                     MOVE 'SDBRCHPD'DBFILE                                             BUG7985
+     C                     MOVELUBRA      DBKEY                                              BUG7985
+     C                     Z-ADD3         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EPR01
+     C                     END
+     C**********           MOVE *BLANKS   KEYF                                               BUG7985
+     C                     MOVE *BLANKS   KEYF   12                                          BUG7985
+     C                     END
+     C*                                                                   S01496
+     C* REINITIALISE PORTFOLIO REFERENCE OUTPUT FIELD                     S01496
+     C*                                                                   S01496
+     C                     MOVE *BLANKS   PORTF                           S01496
+     C*
+     C** DEPENDING ON WHICH LF IS BEING READ, EXECUTE ONE OF THE FOLLOW-
+     C** ING SR TO TOTAL THE COUPON DUE AMOUNTS FOR EACH CCY ON EACH
+     C** DAY.  FOR EACH DEPOT,BOOK,CLIENT,SECURITY AND FOR EACH BRANCH
+     C*
+     C           *IN31     IFEQ '0'
+     C                     EXSR DEPOT
+     C                     ELSE
+     C           *IN32     IFEQ '0'
+     C                     EXSR BOOK
+     C           *INU7     CABEQ'1'       EPR01
+     C                     ELSE
+     C           *IN33     IFEQ '0'
+     C*                                                                   S01496
+     C* SETUP PORTFOLIO REFERENCE OUTPUT FIELD WITH CURRENT PORTFOLIO REF.S01496
+     C*                                                                   S01496
+     C                     MOVE PTFR      PORTF                           S01496
+     C*                                                                   S01496
+     C                     EXSR CUST
+     C                     ELSE
+     C                     EXSR SECUR
+     C           *INU7     CABEQ'1'       EPR01
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C*    Coupon amount shown in report corresponds to CCY and not       179947
+     C*    NMCY in the Security file.                                     179947
+     C**********                                                          179947
+     C***ONCE*A*TOTAL HAS BEEN CALCULATED, GET THE NOM DP FROM SECURITY   179947
+     C***FILE,USE NOMINAL CCY TO GET NOM CCY DP. IF ERROR DO STD DB ERR   179947
+     C**********                                                          179947
+     C**********           EXSR SEC                                       179947
+     C********** *INU7     IFEQ '1'                        ***************179947
+     C**********           Z-ADD4         DBASE            * DB ERROR 04 *179947
+     C**********           OUT  LDA                        *********S01117179947
+     C**********           EXSR *PSSR                               S01117179947
+     C**********           GOTO EPR01                      ***************179947
+     C**********           END                                            179947
+     C                     MOVE CCY       NMCY                            179947
+     C*
+     C                     EXSR TG10
+     C           *INU7     IFEQ '1'                        ***************
+     C                     Z-ADD5         DBASE            * DB ERROR 05 *
+     C                     OUT  LDA                        ***************S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EPR01                      ***************
+     C                     END
+     C*
+     C**  EDIT TOTAL FIELD VIA ZSEDIT WITH CDP DEC PL. COMPARE CDP TO
+     C**  1 & 3 SO THAT ZOUT21 CAN BE PUT INTO CORRECT OUTPUT FIELD AND
+     C**  THE DEC. PLACES OF EACH TOTAL ARE ALIGNED
+     C*
+     C                     Z-ADDTOTAL     ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C           CDP       COMP 1                    121011
+     C   12      CDP       COMP 3                    141213
+     C   10                MOVE ZOUT21    ZOUT20 21
+     C   12                MOVE ZOUT21    ZOUT22 21
+     C   13                MOVE ZOUT21    ZOUT23 21
+     C   14                MOVE ZOUT21    ZOUT24 21
+     C*
+     C**CHECK*LINE*COUNT,*IF*GE*57*WRITE*HEADINGS*ON*NEXT*PAGE*********   E13663
+     C***********                                                         E13663
+     C***********LNCT      IFGE 57                                        E13663
+     C***********LNCT      OREQ 0                                         E13663
+     C***********          WRITEHEADS                                     E13663
+     C***********          Z-ADD10        LNCT                            E13663
+     C***********          END                                            E13663
+     C*
+     C**  WRITE DETAIL OF REPORT, UPDATE THE LINE COUNT
+     C*
+     C                     WRITEDETAIL1
+     C** Reset PRFC to ensure only book summary report shows profit centre179947
+     C                     MOVE *BLANKS   PRFC                            179947
+     C           *IN22     IFEQ '1'
+     C                     ADD  1         LNCT
+     C                     ELSE
+     C                     ADD  2         LNCT
+     C                     END
+     C*
+     C**  INITIALISE VARIABLES
+     C*
+     C                     Z-ADD0         TOTAL
+     C                     MOVE *BLANKS   NAME
+     C                     MOVE *BLANKS   ODATE
+     C                     SETOF                     201011
+     C                     SETOF                     121314
+     C*
+     C           EPR01     TAG
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DEPOT  - SR. EXECUTED WHEN LF/ECSDP IS BEING READ, CALCULATES*
+      *           TOTALS FOR CCYS                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DEPOT     BEGSR                           *** DEPOT  ***
+     C*
+     C                     MOVE USSS      SCTY   10
+     C                     MOVE UCCY      CCY     3
+     C*
+     C**  CHECK THAT CURRENT DEPOT IS NE TO PREVIOUS DEPOT, IF SO CHAIN
+     C**  TO FILE CLINTCB FOR DEPOT NAME
+     C*
+     C           UDPO      IFNE CHKDEP
+     C           UDPO      CHAINCLINTCBF             41
+     C*
+     C**IF ERROR ON CHAIN, MOVE DEPOT NUMBER TO OUTPUT FIELD, ELSE MOVE
+     C**CUSTOMER SHORTNAME, PUT DEPOT NO. OR CUST. NAME INTO TEMP FIELD
+     C*
+     C           *IN41     IFEQ '1'
+     C           RECI      OREQ '*'
+     C           CSNM      OREQ *BLANKS
+     C                     MOVELUDPO      NAME   41
+     C                     MOVELUDPO      DEPTMP 10
+     C                     ELSE
+     C                     MOVELCSNM      NAME
+     C                     MOVE CSNM      DEPTMP
+     C                     END
+     C                     MOVE UDPO      CHKDEP
+     C                     ELSE
+     C*
+     C**  IF LINE COUNT GE 57 OR AT CHANGE OF BRANCH, OUTPUT DEPOT INFO
+     C**  AGAIN
+     C*
+     C***********LNCT      IFGE 57                                        169512
+     C           LNCT      IFGE 56                                        169512
+     C           *IN21     OREQ '0'
+     C                     MOVELDEPTMP    NAME
+     C                     END
+     C                     END
+     C*
+     C** OBTAIN DATE IN FORM DDMMMYY WHEN CURRENT DATE NE TO PREV DATE,
+     C** AT CHANGE OF BRANCH, AT CHANGE OF DEPOT AND AT OVERFLOW.
+     C** USE THE SR ZDATE2 TO GETN IN DDMMMYY
+     C*
+     C           UCDT      IFNE DATE
+     C           *IN21     OREQ '0'
+     C           *IN22     OREQ '0'
+     C***********LNCT      ORGE 57                                        169512
+     C           LNCT      ORGE 56                                        169512
+     C                     MOVE UCDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ODATE   7
+     C                     MOVE UCDT      DATE    50
+     C                     END
+     C*
+     C**  MOVE CCY TO PREVIOUS CCY
+     C*
+     C                     MOVE UCCY      PRVCCY  3
+     C*
+     C**  CHECK LINE COUNT, IF GE 57 WRITE HEADINGS ON NEXT PAGE          E13663
+     C*                                                                   E13663
+     C***********LNCT      IFGE 57                                 E13663 169512
+     C           LNCT      IFGE 56                                        169512
+     C           LNCT      OREQ 0                                         E13663
+     C                     WRITEHEADS                                     E13663
+     C                     Z-ADD10        LNCT                            E13663
+     C                     END                                            E13663
+     C*                                                                   E13663
+     C**  ENTER LOOP TO CALC TOTAL COUPON DUE. IF EOF OF ECSDP OR ANY
+     C**  CHANGE IN CONTENTS OF KEY, DROP OUT.
+     C*
+     C           *IN20     DOWEQ'0'
+     C           *IN31     ANDEQ'0'
+     C***********UBRN      COMP CHKBR                    21               S01117
+     C           UBRA      COMP CHKBR                    21               S01117
+     C           UDPO      COMP CHKDEP                   22
+     C           *IN21     IFEQ '1'
+     C           *IN22     ANDEQ'1'
+     C           UCDT      ANDEQDATE
+     C           UCCY      ANDEQPRVCCY
+     C*
+     C**  ADD 1 TO COUNT OF RECORDS READ DEPENING ON WHICH FORMAT WAS
+     C**  READ
+     C*
+     C           *IN01     IFEQ '1'
+     C                     ADD  1         RECDPU
+     C                     END
+     C           *IN02     IFEQ '1'
+     C                     ADD  1         RECDPC
+     C                     END
+     C*
+     C**  SET OFF THE RECORD IDENTIFYING INDICATORS
+     C*
+     C                     SETOF                     0102
+     C*
+     C**  ADD COUPON DUE AMOUNT TO TOTAL, READ NEXT RECORD, IF EOF READ
+     C**  NEXT FILE.
+     C*
+     C           TOTAL     ADD  UCCD      TOTAL
+     C                     READ ECSDP                    31
+     C  N31 35   UBRA      COMP ENT                  3131                 E29170
+     C           *IN31     IFEQ '1'
+     C                     SETOF                     21
+     C                     READ ECSBK                    32
+     C  N32 35   UBRA      COMP ENT                  3232                 E29170
+     C   32                READ ECSCL                    33
+     C  N33 35   UBRA      COMP ENT                  3333                 E29170
+     C   33                READ ECSSC                    34
+     C  N34 35   UBRA      COMP ENT                  3434                 E29170
+     C                     END
+     C                     ELSE
+     C*
+     C**  SET ON *IND 20 TO DROP OUT IF NOT EOF
+     C*
+     C                     SETON                     20
+     C*
+     C                     END
+     C                     END
+     C*
+     C           EDEPOT    TAG                             *** EDEPOT ***
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  BOOK   - EXECUTED WHEN READING FROM THE LF/ECSBK. CALCULATES *
+      *           TOTALS FOR CCYS                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BOOK      BEGSR                           ***  BOOK  ***
+     C*
+     C                     MOVE USSS      SCTY   10
+     C                     MOVE UCCY      CCY     3
+      *                                                                   CAC005
+     C                     MOVE UBCD      WBKCD   2                       CAC005
+      *                                                                   CAC005
+      ** If CAC005 is installed, retrieve the corresponding user book     CAC005
+      ** and profit centre.                                               CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD                           CAC005
+     C                     PARM '*USER  ' POPTN                           CAC005
+     C                     PARM           PBKCD   2                       CAC005
+     C                     PARM           PPRFC   4                       CAC005
+     C                     PARM UBCD      PPSBK   2                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVE PBKCD     WBKCD                           CAC005
+     C                     MOVE PPRFC     PRFC    4                       CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVE *BLANKS   PRFC                            CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C** CHECK TO SEE IF BOOK CODE IS = TO PREV BOOK CODE, IF NOT CHAIN
+     C** TO BOOKDD TO GET NEW BOOK DESCRIPTION. IF ERROR THEN PERFORM
+     C** STD DB ERROR
+     C*
+     C           UBCD      IFNE CHKBK
+     C***********UBCD      CHAINBOOKDDF              41                   CAC005
+     C           WBKCD     CHAINBOOKDDF              41                   CAC005
+     C*
+     C           *IN41     IFEQ '1'
+     C           RECI      OREQ '*'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE 'BOOKD'   DBFILE           ***************
+     C***********          MOVELUBCD      DBKEY            * DB ERROR 06 *CAC005
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVELWBKCD     DBKEY                           CAC005
+     C                     GOTO EBOOK
+     C                     END
+     C*
+     C** MOVE BOOK DESCRIPTION TO OUTPUT FIELD,TEMP FIELD AND BOOK CODE
+     C** TO CHECK FIELD
+     C*
+     C                     MOVELBOKD      NAME
+     C                     MOVE BOKD      BKTMP  30
+     C                     MOVE UBCD      CHKBK   2
+     C*
+     C**  IF BOOK CODES ARE EQUAL, CHECK FOR OVERFLOW OR CHANGE OF
+     C**  BRANCH SO THAT BOOK DESCRIPTION CAN BE OUTPUT AGAIN
+     C*
+     C                     ELSE
+     C***********LNCT      IFGE 57                                        169512
+     C           LNCT      IFGE 56                                        169512
+     C           *IN21     OREQ '0'
+     C                     MOVELBKTMP     NAME
+     C                     END
+     C                     END
+     C*
+     C**  CHECK FOR DIFFERENCE IN CURRENT DATE WITH OLD DATE, WHETHER
+     C**  *IN21 AND 22 ARE ON AND FOR OVERFLOW, IF SO THEN EDIT THE    TO
+     C**  DATE GET IN DDMMMYY FORMAT VIA ZDATE2
+     C*
+     C           UCDT      IFNE DATE
+     C           *IN21     OREQ '0'
+     C           *IN22     OREQ '0'
+     C***********LNCT      ORGE 57                                        169512
+     C           LNCT      ORGE 56                                        169512
+     C                     MOVE UCDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ODATE   7
+     C                     MOVE UCDT      DATE    50
+     C                     END
+     C*
+     C**  MOVE CCY TO CHECK FIELD
+     C*
+     C                     MOVE UCCY      PRVCCY  3
+     C*
+     C**  ENTER LOOP FOR TOTALLING CCYS. CHECK BRANCH AND BOOK CODES.  N
+     C**  THE CHECK CONDITIONS OF IFXX STATEMENT. IF SATISFIED, ADD 1
+     C**  TO COUNT TOTAL CCY AND READ NEXT RECORD
+     C*
+     C**  CHECK LINE COUNT, IF GE 57 WRITE HEADINGS ON NEXT PAGE          E13663
+     C*                                                                   E13663
+     C***********LNCT      IFGE 57                                 E13663 169512
+     C           LNCT      IFGE 56                                        169512
+     C           LNCT      OREQ 0                                         E13663
+     C                     WRITEHEADS                                     E13663
+     C                     Z-ADD10        LNCT                            E13663
+     C                     END                                            E13663
+     C           *IN20     DOWEQ'0'
+     C           *IN32     ANDEQ'0'
+     C*
+     C***********UBRN      COMP CHKBR                    21               S01117
+     C           UBRA      COMP CHKBR                    21               S01117
+     C           UBCD      COMP CHKBK                    22
+     C*
+     C           *IN21     IFEQ '1'
+     C           *IN22     ANDEQ'1'
+     C           UCDT      ANDEQDATE
+     C           UCCY      ANDEQPRVCCY
+     C*
+     C                     ADD  1         RECBKU
+     C           TOTAL     ADD  UCCD      TOTAL
+     C                     READ ECSBK                    32
+     C  N32 35   UBRA      COMP ENT                  3232                 E29170
+     C*
+     C**  IF EOF OF ECSBK HAS BEEN REACHED, DROP OUT OF LOOP AND READ
+     C**  FIRST RECORD OF NEXT FILE
+     C*
+     C           *IN32     IFEQ '1'
+     C                     SETOF                     21
+     C                     READ ECSCL                    33
+     C  N33 35   UBRA      COMP ENT                  3333                 E29170
+     C   33                READ ECSSC                    34
+     C  N34 35   UBRA      COMP ENT                  3434                 E29170
+     C                     END
+     C*
+     C                     ELSE
+     C                     SETON                     20
+     C                     END
+     C                     END
+     C*
+     C           EBOOK     TAG                             *** EBOOK  ***
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CUST   - SUBROUTINE FOR TOTALLING CCYS FOR CLIENTS.          *
+      *           EXECUTED WHEN ECSCL IS BEING READ                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CUST      BEGSR                           ***  CUST  ***
+     C*
+     C                     MOVE USSS      SCTY   10
+     C                     MOVE UCCY      CCY     3
+     C*
+     C** CHECK FOR DIFFERENCE IN CUSTOMER NUMBER. IF DIFFERENT, CHAIN
+     C** TO CLINTCB FOR NEW CUSTOMER SHORTNAME AND MOVE TO OUTPUT FIELD
+     C** IF ERROR MOVE CUSTOMER NUMBER TO OUTPUT FIELD AND TEMP FIELD
+     C*
+     C           UCCN      IFNE CHKCUS
+     C           UCCN      CHAINCLINTCBF             41
+     C*
+     C           *IN41     IFEQ '1'
+     C           RECI      OREQ '*'
+     C           CSNM      OREQ *BLANKS
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0835CCP1                                           S01408
+     C*                                                                   S01408
+     C                     MOVELUCCN      NAME   41
+     C                     MOVELUCCN      CUSTMP 10
+     C                     ELSE
+     C                     MOVELCSNM      NAME
+     C                     MOVELCSNM      CUSTMP
+     C                     END
+     C**********           MOVE UCCN      CHKCUS  60                                          CSD027
+     C                     MOVE UCCN      CHKCUS  6                                           CSD027
+     C*
+     C**  IF CUST NUMBER THE SAME, CHECK FOR CHANGE OF BRANCH OR
+     C**  OVERFLOW SO THAT EITHER CUST NO. OR NAME OUTPUT AGAIN
+     C*
+     C                     ELSE
+     C***********LNCT      IFGE 57                                        169512
+     C           LNCT      IFGE 56                                        169512
+     C           *IN21     OREQ '0'
+     C                     MOVELCUSTMP    NAME
+     C                     END
+     C                     END
+     C*
+     C**  CHECK FOR DIFFERENCE IN DATE, IF NOT TRUE CHECK OTHER
+     C**  CONDITIONS IF ONE IS TRUE EDIT DATE TO GET IN DDMMMYY FORMAT
+     C**  VIA ZDATE2
+     C*
+     C           UCDT      IFNE DATE
+     C           *IN21     OREQ '0'
+     C           *IN22     OREQ '0'
+     C***********LNCT      ORGE 57                                        169512
+     C           LNCT      ORGE 56                                        169512
+     C                     MOVE UCDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ODATE   7
+     C                     MOVE UCDT      DATE    50
+     C                     END
+     C*
+     C**  MOVE CCY TO PREV CCY
+     C*
+     C                     MOVE UCCY      PRVCCY  3
+     C*                                                                   S01496
+     C* MOVE PORTFOLIO REFERENCE TO PREV PORTFOLIO REFERENCE              S01496
+     C*                                                                   S01496
+     C                     MOVE PTFR      CHKPFR                          S01496
+     C*
+     C**  ENTER LOOP FOR TOTALLING CCYS, CHECK FOR CHANGE OF BRANCH,
+     C**  CHANGE OF CUSTOMER, CHANGE OF DATE, CHANGE OF CCY. IF SO DROP
+     C**  OUT, ELSE ADD 1 TO RECS READ, TOTAL CCY, READ NEXT RECORD
+     C*
+     C**  CHECK LINE COUNT, IF GE 57 WRITE HEADINGS ON NEXT PAGE          E13663
+     C*                                                                   E13663
+     C***********LNCT      IFGE 57                                 E13663 169512
+     C           LNCT      IFGE 56                                        169512
+     C           LNCT      OREQ 0                                         E13663
+     C                     WRITEHEADS                                     E13663
+     C                     Z-ADD10        LNCT                            E13663
+     C                     END                                            E13663
+     C*                                                                   E13663
+     C           *IN20     DOWEQ'0'
+     C           *IN33     ANDEQ'0'
+     C*
+     C***********UBRN      COMP CHKBR                    21               S01117
+     C           UBRA      COMP CHKBR                    21               S01117
+     C           UCCN      COMP CHKCUS                   22
+     C           PTFR      COMP CHKPFR                   23               S01496
+     C*
+     C           *IN21     IFEQ '1'
+     C           *IN22     ANDEQ'1'
+     C           UCDT      ANDEQDATE
+     C           UCCY      ANDEQPRVCCY
+     C*                                                                   S01496
+     C           S01496    IFEQ 'Y'                                       S01496
+     C           *IN23     ANDEQ'1'                                       S01496
+     C*                                                                   S01496
+     C           S01496    ORNE 'Y'                                       S01496
+     C*
+     C                     ADD  1         RECCLC
+     C           TOTAL     ADD  UCCD      TOTAL
+     C                     READ ECSCL                    33
+     C  N33 35   UBRA      COMP ENT                  3333                 E29170
+     C*
+     C**  IF EOF OF FILE ECSCL, READ RECORD FROM NEXT FILE ECSSC, DROP
+     C**  OUT OF LOOP AND PRINT DETAIL OF CCY
+     C*
+     C           *IN33     IFEQ '1'
+     C                     SETOF                     21
+     C                     READ ECSSC                    34
+     C  N35 35   UBRA      COMP ENT                  3434                 E29170
+     C                     END
+     C*                                                                   S01496
+     C                     ELSE                                           S01496
+     C                     SETON                     20                   S01496
+     C                     END                                            S01496
+     C*
+     C                     ELSE
+     C                     SETON                     20
+     C                     END
+     C                     END
+     C*
+     C           ECUST     TAG                             *** ECUST  ***
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SECUR - EXECUTED WHEN LF/ECSSC IS READ, CALCULATES THE TOTALS*
+      *          OF CCYS.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SECUR     BEGSR                           *** SECUR  ***
+     C*
+     C                     MOVE USSS      SCTY   10
+     C                     MOVE UCCY      CCY     3
+     C*
+     C** CHECK FOR DIFFERENCE IN SECURITY, IF SO EXECUTE SR SEC TO GET
+     C** NEW SECURITY DETAILS, IF ERROR PERFORM STD DB ERROR. GET THE
+     C** SECURITY SHORT DESCRIPTION VIA ZSDESC AND MOVE TO OUTPUT FIELD
+     C*
+     C           USSS      IFNE CHKSEC
+     C                     EXSR SEC
+     C*
+     C           *INU7     IFEQ '1'                        ***************
+     C                     Z-ADD7         DBASE            * DB ERROR 07 *
+     C                     GOTO ESECUR                     ***************
+     C                     END
+     C*
+     C                     MOVE USSS      CHKSEC
+     C                     MOVE SRPN      ZSRPN
+     C                     MOVE RSFD      ZRSFD                           S01117
+     C                     EXSR ZSDESC
+     C                     MOVE ZRNME     NAME
+     C*
+     C**  CHECK FOR OVERFLOW AND CHANGE OF BRANCH, IF SO MOVE SECURITY
+     C**  SHORT DESCRIPTION TO OUTPUT FIELD FOR OUTPUT AGAIN
+     C*
+     C                     ELSE
+     C***********LNCT      IFGE 57                                        169512
+     C           LNCT      IFGE 56                                        169512
+     C           *IN21     OREQ '0'
+     C                     MOVELZRNME     NAME
+     C                     END
+     C                     END
+     C*
+     C**  CHECK CURRENT DATE AGAINST PREVIOUS, CHECK OTHER CONDITIONS
+     C**  (CHANGE) IN BRANCH, SECURITY AND OVERFLOW). IF TRUE EDIT THE
+     C**  DATE TO GET IN FORM DDMMMYY AND MOVE TO OUTPUT FIELD
+     C*
+     C*
+     C           UCDT      IFNE DATE
+     C           *IN21     OREQ '0'
+     C           *IN22     OREQ '0'
+     C***********LNCT      ORGE 57                                        169512
+     C           LNCT      ORGE 56                                        169512
+     C                     MOVE UCDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ODATE   7
+     C                     MOVE UCDT      DATE    50
+     C                     END
+     C*
+     C                     MOVE UCCY      PRVCCY  3
+     C*
+     C**  ENTER  THE DO LOOP FOR TOTALLING CCYS, CHECK FOR CHANGE IN
+     C**  BRANCH AND SECURITY AND DIFFERENCE IN DATE IF ALL TRUE, ADD 1
+     C**  TO APPROPRIATE COUNT DEPENDING ON WHICH PHYSICAL FILE        CCY
+     C**  RECORD CAME FROM.  TOTAL AND READ NEXT RECORD.
+     C*
+     C**  CHECK LINE COUNT, IF GE 57 WRITE HEADINGS ON NEXT PAGE          E13663
+     C*                                                                   E13663
+     C***********LNCT      IFGE 57                                 E13663 169512
+     C           LNCT      IFGE 56                                        169512
+     C           LNCT      OREQ 0                                         E13663
+     C                     WRITEHEADS                                     E13663
+     C                     Z-ADD10        LNCT                            E13663
+     C                     END                                            E13663
+     C*                                                                   E13663
+     C           *IN20     DOWEQ'0'
+     C           *IN34     ANDEQ'0'
+     C*
+     C***********UBRN      COMP CHKBR                    21               S01117
+     C           UBRA      COMP CHKBR                    21               S01117
+     C           USSS      COMP CHKSEC                   22
+     C*
+     C           *IN21     IFEQ '1'
+     C           *IN22     ANDEQ'1'
+     C           UCDT      ANDEQDATE
+     C*
+     C           *IN03     IFEQ '1'
+     C                     ADD  1         RECSEU
+     C                     END
+     C           *IN04     IFEQ '1'
+     C                     ADD  1         RECSEC
+     C                     END
+     C                     SETOF                     0304
+     C*
+     C           TOTAL     ADD  UCCD      TOTAL
+     C                     READ ECSSC                    34
+     C  N34 35   UBRA      COMP ENT                  3434                 E29170
+     C*
+     C**  IF EOF OF LF/ECSSC, DROP OUT OF LOOP PRINT LAST RECORD AND DO
+     C**  AUDIT
+     C*
+     C                     ELSE
+     C                     SETON                     20
+     C                     END
+     C                     END
+     C*
+     C           ESECUR    TAG                             *** ESECUR ***
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SEC - THIS SR USES THE SECURITY NAME TO GET DETAILS FOR OUTPUT*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SEC       BEGSR                           ***  SEC   ***
+     C*
+     C           SCTY      CHAINSECTYDF              41
+     C*
+     C**  IF ERROR PERFORM STD DB ERROR
+     C*
+     C           *IN41     IFEQ '1'
+     C           RECI      OREQ '*'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE
+     C                     MOVELSCTY      DBKEY
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  TG10 - THIS SR OBTAINS THE CCY RECORD FOR NOMINAL CCY SO THAT*
+      *         NOM CCY DP CAN BE USED IN EDITING THE TOTAL FIELD.    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TG10      BEGSR
+     C*
+     C                     MOVEL'20'      KEYF
+     C                     MOVE '1'       KEYTMP  4
+     C                     MOVELCCY       KEYTMP
+     C                     MOVE KEYTMP    KEYF
+     C           KEYF      CHAINTABTG10F             41
+     C*
+     C**  IF ERROR PERFORM STD DB ERROR.
+     C*
+     C           *IN41     IFEQ '1'
+     C           RECI      OREQ '*'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVELKEYF      DBKEY
+     C                     END
+     C                     MOVE *BLANKS   KEYF
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - SUBROUTINE TO OUTPUT AUDIT REPORT USING INFORMATION *
+      *           FROM AUDIT RECORDS AND PROCESSING                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+     C*
+     C**  IF NO DATABASE ERRORS - READ UDPCDA AND CDPCDA AUDIT RECORDS
+     C*
+     C           *INU7     IFEQ '0'
+     C*
+     C                     READ UDPCDAF                  99
+     C*
+     C**  IF NOT FOUND - ERROR
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'UDPCD'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 08 *
+     C                     Z-ADD8         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     ELSE
+     C*
+     C**  CHECK FOR DIFFERENCE IN NUMBER OF RECORDS CALCULATED AND NO.
+     C**  ON FILE. SET ON DIFFERENCE IND. IF DIFFERENT
+     C*
+     C           NORE      IFNE RECDPU
+     C           ENT       ANDEQ'ALL'                                     E33030
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *INU8
+     C                     END
+     C           NORE      IFNE RECBKU
+     C           ENT       ANDEQ'ALL'                                     E33030
+     C                     MOVE '1'       *IN51
+     C                     MOVE '1'       *INU8
+     C                     END
+     C           NORE      IFNE RECSEU
+     C           ENT       ANDEQ'ALL'                                     E33030
+     C                     MOVE '1'       *IN52
+     C                     MOVE '1'       *INU8
+     C                     END
+     C                     Z-ADDNORE      NOREC   50
+     C*
+     C                     READ CDPCDAF                  99
+     C*
+     C**  IF NOT FOUND - ERROR
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CDPCD'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 09 *
+     C                     Z-ADD9         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     ELSE
+     C*
+     C**  CHECK FOR DIFFERENCE IN CALCULATED RECORDS AND THOSE ON FILE.
+     C**  SET ON DIFFERENCE IND. IF DIFFERENT
+     C*
+     C           NORE      IFNE RECDPC
+     C           ENT       ANDEQ'ALL'                                     E33030
+     C                     MOVE '1'       *IN53
+     C                     MOVE '1'       *INU8
+     C                     END
+     C           NORE      IFNE RECCLC
+     C           ENT       ANDEQ'ALL'                                     E33030
+     C                     MOVE '1'       *IN54
+     C                     MOVE '1'       *INU8
+     C                     END
+     C           NORE      IFNE RECSEC
+     C           ENT       ANDEQ'ALL'                                     E33030
+     C                     MOVE '1'       *IN55
+     C                     MOVE '1'       *INU8
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  WRITE THE AUDIT HEADER AND CHECK FOR ERRORS, IF *INU7 ON,
+     C**  WRITE ERROR FORMAT
+     C*
+     C                     WRITEHEADAU
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C                     ELSE
+     C*
+     C**  CHECK FOR ANY RECORDS PRINTED
+     C*
+     C           RECDPU    IFEQ 0
+     C           RECDPC    ANDEQ0
+     C           RECBKU    ANDEQ0
+     C           RECCLC    ANDEQ0
+     C           RECSEU    ANDEQ0
+     C           RECSEC    ANDEQ0
+     C                     WRITENONE
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     END
+     C*
+     C                     END
+     C*
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+      /EJECT                                                              E29170
+      *****************************************************************   E29170
+      *                                                               *   E29170
+      *  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+      *                                                               *   E29170
+      *****************************************************************   E29170
+      *                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+      *                                                                   E29170
+      ** Ensure report spool file recorded by RCF                         E29170
+      *                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+      *                                                                   E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM UBRA      SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+      *                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+      *                                                                   E29170
+      ** Error during ZSFILE processing, return to calling program        E29170
+      *                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+      *                                                                   E29170
+     C                     ENDSR                                          E29170
+      *                                                                   E29170
+      *****************************************************************   E29170
+      /EJECT                                                              E29170
+      *****************************************************************   E29170
+      *                                                               *   E29170
+      *  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+      *                                                               *   E29170
+      *****************************************************************   E29170
+      *                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+      *                                                                   E29170
+      ** Ensure audit spool file recorded by RCF                          E29170
+      *                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+      *                                                                   E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+      *                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+      *                                                                   E29170
+      ** Error during ZSFILE processing, return to calling program        E29170
+      *                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+      *                                                                   E29170
+     C                     ENDSR                                          E29170
+      *                                                                   E29170
+      *****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSDESCZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2001

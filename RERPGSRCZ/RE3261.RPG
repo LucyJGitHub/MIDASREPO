@@ -1,0 +1,1145 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Linked accounts')                             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+     F*                                                               *
+     F*  RE3261 - INTEREST STATEMENTS LINKED                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER049             Date 06Dec10               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CPK025             Date 12Oct06               *
+     F*                 241266             Date 21Jul06               *
+      *                 234505             Date 06Jun06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 169054             Date 12Jan00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 157064             Date 02Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 106240             DATE 03MAR98               *
+     F*                 098818             DATE 15APR96               *
+     F*                 094431             DATE 16OCT95               *  *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER049 - Stamp Tax (Recompile)                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CPK025 - MidasPlus 1.3 packaging. Further Customer Number    *
+      *           changes.                                            *
+     F*  241266 - Only postings AFTER capitalisation date should be   *
+     F*           duplicated to the linked account, only where        *
+     F*           BMLDAI = 'N' & system value RE3261PstAftCpDteOnl =Y *
+     F*  234505 - The 'Initial Link' posting should have a value date *
+     F*           of the last capitalisation date of the secondary    *
+     F*           account plus 1. Otherwise interest will be accrued  *
+     F*           yet again for the capitalisation date on the        *
+     F*           balance transferred to the primary account.         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  169054 - Set up SPOS correctly for GE-FU postings, else      *
+     F*           these will be ignored later, causing history        *
+     F*           balance to be incorrect.                            *
+     F*  157064 - Amended in order not to zeroise debit/credit posted *
+     F*           to income/expense field (DIIE/CIIE). This process   *
+     F*           is now performed in pgm RE3666. Narrative on report *
+     F*           RE3261P1 changed to 'INCOME/EXPENSE TO BE ADJUSTED'.*
+     F*  106240 - File error on RELINKF if first record on PF not     *
+     F*           selected by LF. Also PRTF/RE3261P1 not open.        *
+     F*  098818 - Allow for interest capital indicator on REHISPS     *
+     F*           to retain its original values of 'C' 'D' 'Y' &      *
+     F*           ' ' to be used by input cycle enquiries.            *
+     F*  094431  -  Recompiled over changed REHISSL.                  *  *
+     F*  S01413  -  Retail 3 Incorporation                            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FREDETM  IF  E           K        DISK
+     FREHISDL IF  E           K        DISK
+     FREHISSL IF  E           K        DISK
+     F*ELINKF*UF**E***********         DISK                               106240
+     FRELINKF UF  E           K        DISK                               106240
+     F            RELINKF                           KRENAMERELINKFF
+     F                                              KINFDS LNKDS
+     F                                              KINFSR LNKSR
+     FREEODPF O   E           K        DISK                      A
+     F                                              KINFDS EODDS
+     F                                              KINFSR EODSR
+     FACCNT   UF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FRECOM   UF  E           K        DISK
+     FRE3261AUO   E                    PRINTER      KINFDS SPOOLU
+     FRE3261P1O   E             01     PRINTER      KINFDS SPOOL      UC
+     F/COPY WNCPYSRC,RE3261F001
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*  01 - Overflow Indicator on RE3261P1                          *
+     F*  52 - READE on REDETM                                         *
+     F*  60 - Access on ACCNT                                         *
+     F*  61 - Access on REHISDL                                       *
+     F*  79 - Multibranching                                          *
+     F*                                                               *
+     F*  U7 - Database error                                          *
+     F*  U8 - Database error                                          *
+     F*  LR - End of program                                          *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E  I N D E X                               *
+     F*                                                               *
+     F*  FIRST  - First cycle                                         *
+     F*  MAIN   - Main processing                                     *
+     F*  TOTAL  - End processing                                      *
+     F*  *PSSR  - Database error handling                             *
+     F*  OVERP1 - Overflow on RE3261P1                                *
+     F*                                                               *
+     F*****************************************************************
+     E                    CPY@    1   1 80
+     E                    NAR     1   2 35
+     E/COPY WNCPYSRC,RE3261E001
+     E/SPACE 3
+     I*
+     IREHISPSF
+     I*
+     I** RENAME REHISPSF FORMAT - REHISSL FILE
+     I*
+     I              RECI                            SRECI
+     I              BRCA                            SBRCA
+     I              CNUM                            SCNUM
+     I              CCY                             SCCY
+     I              ACOD                            SACOD
+     I              ACSQ                            SACSQ
+     I              HISD                            SHISD
+     I              HISB                            SHISB
+     I              PCHGAR                          SPCHR
+     I              TCHGAR                          STCHR
+     I              PCHGAN                          SPCHN
+     I              TCHGAN                          STCHN
+     I              DICT                            SDICT
+     I              DRCB                            SDRCB
+     I              DRIR                            SDRIR
+     I              DRCD                            SDRCD
+     I              DAIC                            SDAIC
+     I              PMADI                           SPMADI
+     I              TMADI                           STMADI
+     I              PDID                            SPDID
+     I              DMINT                           SDMINT
+     I              SGADI                           SSGADI
+     I              DRIP                            SDRIP
+     I              SDICI                           SSDICI
+     I              DRIS                            SDRIS
+     I              SDACP                           SSDACP
+     I              SDCI                            SSDCI
+     I              CICT                            SCICT
+     I              CRCB                            SCRCB
+     I              CRIR                            SCRIR
+     I              CRCD                            SCRCD
+     I              CAIC                            SCAIC
+     I              PMACI                           SPMACI
+     I              TMACI                           STMACI
+     I              PCID                            SPCID
+     I              CMINT                           SCMINT
+     I              SGACI                           SSGACI
+     I              CRIP                            SCRIP
+     I              SCICI                           SSCICI
+     I              CRIS                            SCRIS
+     I              SCACP                           SSCACP
+     I              SCCI                            SSCCI
+     I              STBL                            SSTBL
+     I              CHGP                            SCHGP
+     I              SCHAC                           SSCHAC
+     I              MNBCP                           SMNBCP
+     I              SCHGI                           SSCHGI
+     I              TEGLIS                          STEGLI
+     I*
+     I** KEY DATA STRUCTURE : DKEY AND LKEY TO MOVE IN DBKEY IF ERROR
+     I*
+     I            DS
+     I**********                              1  23 DKEY                                      CGL029
+     I**********                              1  18 LKEY                                      CGL029
+     I**********                              4  18 PKEY                                      CGL029
+     I                                        1  29 DKEY                                      CGL029
+     I                                        1  24 LKEY                                      CGL029
+     I                                        4  24 PKEY                                      CGL029
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM                                      CSD027
+     I                                        4   9 CNUM                                      CSD027
+     I                                       10  12 CCY
+     I**********                             13  160ACOD                                      CGL029
+     I**********                             17  180ACSQ                                      CGL029
+     I**********                             19  230WDATE                                     CGL029
+     I                                       13  220ACOD                                      CGL029
+     I                                       23  240ACSQ                                      CGL029
+     I                                       25  290WDATE                                     CGL029
+     IWKEY        DS
+     I**********                              1   60WCNUM                                     CSD027
+     I                                        1   6 WCNUM                                     CSD027
+     I                                        7   9 WCCY
+     I**********                             10  130WACOD                                     CGL029
+     I**********                             14  150WACSQ                                     CGL029
+     I                                       10  190WACOD                                     CGL029
+     I                                       20  210WACSQ                                     CGL029
+     I*
+     I** DATA STRUCTURE FOR NARRATIVE IN PF/REEODPF
+     I*
+     I            DS
+     I                                        1  30 WNAR
+     I                                        1  15 WNAR1
+     I                                       16  30 WNAR2
+     I*
+     I** DATA STRUCTURE FOR RPG STATUS ERROR HANDLING
+     I*
+     ILNKDS       DS
+     I                                     *STATUS  STSLNK
+     IEODDS       DS
+     I                                     *STATUS  STSEOD
+     I*
+     I**   FILE INFORMATION DATA STRUCTURE
+     I**
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I**  Data Area RUNDAT
+     I*
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I/COPY WNCPYSRC,RE3261I001
+     I*
+     ISDBANK    E DSSDBANKPD
+     I              BJURPT                          TITL
+     I*
+     I** Bank Details
+     I*
+     ISDRETL    E DSSDRETLPD                                                                  234505
+     I*                                                                                       234505
+     I** Retail Details                                                                       234505
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, Short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Second DS for access programs, Long data structure
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I              A8BRNM                          BRNM
+     I*
+     I**  External DS for Branch Codes.
+     I*
+     ISVAL1       DS                            200                                           241266
+     I                                        1   1 SVAL11                                    241266
+      ** DS for AOSVALR0                                                                      241266
+      *                                                                                       241266
+     I              'RE3261PstAftCpDteOnl'C         SVALKK                                    241266
+     C/EJECT
+     C*
+     C** KEY LIST
+     C*
+     C** KEY LIST TO ACCESS LF/ACCNT FILE WITH PRIMARY ACCOUNT
+     C*
+     C           PRKEY     KLIST
+     C                     KFLD           LTCUST
+     C/COPY WNCPYSRC,RE3261C011
+     C                     KFLD           CCY
+     C/COPY WNCPYSRC,RE3261C012
+     C                     KFLD           LTAC
+     C                     KFLD           LTAS
+     C                     KFLD           LTAB
+     C*
+     C           PRKEY1    KLIST
+     C                     KFLD           LTAB
+     C                     KFLD           LTCUST
+     C/COPY WNCPYSRC,RE3261C013
+     C                     KFLD           CCY
+     C/COPY WNCPYSRC,RE3261C014
+     C                     KFLD           LTAC
+     C                     KFLD           LTAS
+     C*
+     C** KEY LIST TO ACCESS LF/REDETM FILE
+     C*
+     C           RKEY      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C*
+     C** KEY LIST TO ACCESS LF/REDETM FILE
+     C*
+     C           REKEY     KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           VALL
+     C*
+     C** KEY FIELD TO READ ACCNT FILE
+     C*
+     C           AKEY      KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+     C*
+     C** KEY FIELD TO READ ACCNT FILE WITH SECONDARY ACCOUNT
+     C*
+     C           WWKEY     KLIST
+     C                     KFLD           WCNUM
+     C                     KFLD           WCCY
+     C                     KFLD           WACOD
+     C                     KFLD           WACSQ
+     C                     KFLD           WBRCA
+     C*
+     C           WWKEY1    KLIST
+     C                     KFLD           WBRCA
+     C                     KFLD           WCNUM
+     C                     KFLD           WCCY
+     C                     KFLD           WACOD
+     C                     KFLD           WACSQ
+     C*
+     C** KEY FIELD TO READ REHISSL FILE WITH SECONDARY ACCOUNT
+     C*
+     C           SKEY      KLIST
+     C                     KFLD           WBRCA
+     C                     KFLD           WCNUM
+     C                     KFLD           WCCY
+     C                     KFLD           WACOD
+     C                     KFLD           WACSQ
+     C*
+     C** WORK FIELDS DEFINITION
+     C*
+     C           *LIKE     DEFN ACNO      WACNO
+     C           *LIKE     DEFN BRCA      WBRCA
+     C           *LIKE     DEFN VALL      WVALL
+     C           *LIKE     DEFN LTCUST    WLTCUS
+     C           *LIKE     DEFN LTAC      WLTAC
+     C           *LIKE     DEFN LTAS      WLTAS
+     C           *LIKE     DEFN LTAB      WLTAB
+     C           *LIKE     DEFN GVDPE     WGVDPE
+     C*
+     C/EJECT
+     C*===================================================================
+     C** P R O G R A M     S T A R T
+     C*===================================================================
+     C*
+     C** FIRST CYCLE PROCESSING
+     C*
+     C                     EXSR FIRST
+     C*
+     C** MAIN PROCESSING
+     C*
+     C                     Z-ADD98        DBASE
+     C***********1         SETLLRELINKFF                 90               106240
+     C           RKEY      SETLLRELINKFF                 90               106240
+     C                     READ RELINKFF                 LR
+     C                     Z-ADD00        DBASE
+     C                     MOVE *BLANKS   BRCA#   3
+     C*
+     C           *INLR     DOWEQ'0'                        - B1
+     C/COPY WNCPYSRC,RE3261C015
+     C                     SETOF                     41
+     C*
+     C** MULTIBRANCHING PROCESSING
+     C*
+     C           BRCA      IFNE BRCA#
+     C           *IN87     IFEQ '1'
+     C                     WRITEENDP1
+     C                     SETOF                     87
+     C                     END
+     C                     MOVE BRCA      BRCA#
+     C                     CLOSERE3261P1
+     C                     OPEN RE3261P1
+     C                     SETON                     87
+     C                     Z-ADD0         PAGE
+     C*
+     C** Ensure Report Spool File Recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   @SEQ    5
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C** Retrieve Branch Name
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BRCA      @BRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     MOVEL@BRCA     DBKEY            * DB ERROR 2  *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     WRITEERRP1
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     WRITEHEADP1
+     C                     END
+     C*
+     C                     EXSR MAIN
+     C                     END                             - E1
+     C*
+     C** TOTAL PROCESSING
+     C*
+     C                     EXSR TOTAL
+     C*
+     C*===================================================================
+     C** P R O G R A M     E N D
+     C*===================================================================
+     C/EJECT
+     C********************************************************************
+     C**
+     C** EODUPD subroutine to add a record on PF/REEODPF with the balance
+     C**        of the secondary on the primary
+     C**
+     C**     Called by       MAIN
+     C**     Calls           *PSSR
+     C**
+     C           EODUPD    BEGSR                           **EODUPD BEGSR**
+     C*
+     C** SAVE THE KEY OF THE SECONDARY ACCOUNT
+     C*
+     C/COPY WNCPYSRC,RE3261C016
+     C                     MOVE CCY       WCCY
+     C/COPY WNCPYSRC,RE3261C017
+     C                     MOVE WBRCA     BRCA
+     C                     Z-ADDWACOD     ACOD
+     C                     Z-ADDWACSQ     ACSQ
+     C**********           Z-ADDWCNUM     CNUM                                                CSD027
+     C                     MOVE WCNUM     CNUM                                                CSD027
+     C*
+     C** ACCESS B OR D RECORD WITH DATE OF LINKING
+     C*
+     C           REKEY     SETLLREHISDL                  61
+     C*
+     C           *IN61     IFEQ '1'                        - B1
+     C*
+     C** IF FOUND READ NEXT
+     C*
+     C           REKEY     READEREHISDL                  61
+     C*
+     C           *IN61     IFEQ '1'                        - B2
+     C                     Z-ADDVALL      WDATE
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVE 'HISDL'   DBFILE           **DB ERROR 01**
+     C                     MOVELDKEY      DBKEY            ***************
+     C                     WRITEERRP1
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C                     ELSE                            - X1
+     C*
+     C** IF NOT FOUND READ PREVIOUS
+     C*
+     C                     READPREHISDL                  61
+     C*
+     C           *IN61     IFEQ '1'                        - B2
+     C           BRCA      ORNE WBRCA
+     C           CNUM      ORNE WCNUM
+     C           CCY       ORNE WCCY
+     C           ACOD      ORNE WACOD
+     C           ACSQ      ORNE WACSQ
+     C                     Z-ADDVALL      WDATE
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVE 'HISDL'   DBFILE           **DB ERROR 02**
+     C                     MOVELDKEY      DBKEY            ***************
+     C                     WRITEERRP1
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** ACCESS LF/ACCNT OF THE SECONDARY ACCOUNT
+     C*
+     C           WWKEY     CHAINACCNT                60
+     C*
+     C           *IN60     IFEQ '1'                        - B1
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVE 'ACCNT'   DBFILE           **DB ERROR 03**
+     C                     MOVELWKEY      DBKEY            ***************
+     C                     WRITEERRP1
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C** SET NARRATIVE IN PF/REEODPF FOR LINKING
+     C*
+     C                     MOVELNAR,2     WNAR1
+     C                     MOVELACNO      WNAR2
+     C                     MOVE WNAR      PNAR
+     C*
+     C**********           Z-ADDWLTCUS    CNUM                                                CSD027
+     C                     MOVE WLTCUS    CNUM                                                CSD027
+     C                     Z-ADDWLTAC     ACOD
+     C                     Z-ADDWLTAS     ACSQ
+     C                     MOVE WLTAB     BRCA
+     C                     MOVE WCNUM     ZZ006
+     C                     MOVE WACOD     FTAC
+     C                     MOVE WACSQ     FTAS
+     C                     MOVE WBRCA     FTAB
+     C                     MOVE WACNO     ACNO
+     C/COPY WNCPYSRC,RE3261C018
+     C*
+     C           SKEY      SETLLREHISSL                  25
+     C           *IN25     IFEQ '1'                        - B1
+     C           SKEY      READEREHISSL                  25
+     C           *IN25     DOWEQ'0'                        - B2
+     C           SHISD     ANDLEWVALL
+     C*
+     C********** SSDICI    IFEQ 'Y'                        - B3           098818
+     C           SSDICI    IFNE ' '                        - B3           098818
+     C*
+     C           SSDCI     IFEQ 'Y'                        - B4
+     C           SSDCI     OREQ 'I'
+     C           HISB      SUB  SDAIC     HISB
+     C                     END                             - E4
+     C*
+     C                     END                             - E3
+     C*
+     C********** SSCICI    IFEQ 'Y'                        - B3           098818
+     C           SSCICI    IFNE ' '                        - B3           098818
+     C*
+     C           SSCCI     IFEQ 'Y'                        - B4
+     C           SSCCI     OREQ 'I'
+     C           HISB      SUB  SCAIC     HISB
+     C                     END                             - E4
+     C*
+     C                     END                             - E3
+     C*
+     C           SKEY      READEREHISSL                  25
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** ADJUST HISTORY BALANCE WITH TOTAL OF VALUE DATE POSTING
+     C*
+     C                     SUB  TOTHIS    HISB
+     C*
+     C           HISB      IFLT *ZEROS                     - B1
+     C                     Z-ADD1         DRCR
+     C                     Z-SUBHISB      PSTA
+     C                     ELSE                            - X1
+     C                     Z-ADD*ZEROS    DRCR
+     C                     Z-ADDHISB      PSTA
+     C                     END                             - E1
+     C/COPY WNCPYSRC,RE3261C019
+     C*
+     C                     MOVELLTCUST    ZZ006
+     C                     Z-ADDBJRDNB    PSTD
+     C           BMLDAI    IFEQ 'N'                                                           234505
+     C           WVALL     ADD  1         VALD                                                234505
+     C                     ELSE                                                               234505
+     C                     Z-ADDWVALL     VALD
+     C                     ENDIF                                                              234505
+     C                     MOVE 'P'       RECI
+     C                     MOVE '00001'   TRAT
+     C                     MOVE '1'       RIND
+     C                     MOVE 'R'       ATYP
+     C************         MOVE 'GE-FU'   SPOS                            169054
+     C                     MOVE '  GE-FU' SPOS                            169054
+     C*
+     C/COPY WNCPYSRC,RE3261C009
+     C                     WRITEREEODPFF
+     C/COPY WNCPYSRC,RE3261C001
+     C*
+     C                     ENDSR                           **EODUPD ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** FIRST subroutine to execute first cycle.
+     C**
+     C**     Called by       S T A R T
+     C**     Calls           *PSSR
+     C**
+     C           FIRST     BEGSR                           **FIRST BEGSR**
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C                     SETON                     41
+     C*
+     C** INITIALISE LDA VARIABLES
+     C*
+     C                     MOVE 'RE3261  'DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBASE
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     79
+     C                     ELSE
+     C                     SETOF                     79
+     C                     END
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 004 *
+     C                     Z-ADD004       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                                       234505
+     C                     CALL 'AORETLR0'                                                    234505
+     C                     PARM '*MSG   ' @RTCD                                               234505
+     C                     PARM '*FIRST ' @OPTN                                               234505
+     C           SDRETL    PARM SDRETL    DSFDY                                               234505
+     C           @RTCD     IFNE *BLANK                                                        234505
+     C           *LOCK     IN   LDA                                                           234505
+     C                     MOVEL'SDRETLPD'DBFILE           ***************                    234505
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 010 *                    234505
+     C                     Z-ADD010       DBASE            ***************                    234505
+     C                     OUT  LDA                                                           234505
+     C                     EXSR *PSSR                                                         234505
+     C                     END                                                                234505
+      *                                                                                       241266
+      ** Check system values                                                                  241266
+      *                                                                                       241266
+     C                     CALL 'AOSVALR0'                                                    241266
+     C                     PARM *BLANKS   @RTCD                                               241266
+     C                     PARM SVALKK    SVALK1 20                                           241266
+     C                     PARM *BLANK    SVAL1 200                                           241266
+     C                     PARM *BLANK    SVALK2 20                                           241266
+     C                     PARM *BLANK    SVAL2 200                                           241266
+     C                     PARM *BLANK    SVALK3 20                                           241266
+     C                     PARM *BLANK    SVAL3 200                                           241266
+     C                     PARM *BLANK    SVALK4 20                                           241266
+     C                     PARM *BLANK    SVAL4 200                                           241266
+     C                     PARM *BLANK    SVALK5 20                                           241266
+     C                     PARM *BLANK    SVAL5 200                                           241266
+     C                     PARM *BLANK    SVALK6 20                                           241266
+     C                     PARM *BLANK    SVAL6 200                                           241266
+     C                     PARM *BLANK    SVALK7 20                                           241266
+     C                     PARM *BLANK    SVAL7 200                                           241266
+     C                     PARM *BLANK    SVALK8 20                                           241266
+     C                     PARM *BLANK    SVAL8 200                                           241266
+     C                     PARM *BLANK    SVALK9 20                                           241266
+     C                     PARM *BLANK    SVAL9 200                                           241266
+     C                     PARM *BLANK    SVALK0 20                                           241266
+     C                     PARM *BLANK    SVAL10200                                           241266
+      *                                                                                       241266
+     C           @RTCD     IFNE *BLANK                                                        241266
+     C           *LOCK     IN   LDA                                                           241266
+     C                     MOVEL'SDSVALPD'DBFILE           ***************                    241266
+     C                     MOVEL'*KEY   ' DBKEY            * DBERROR 011 *                    241266
+     C                     Z-ADD011       DBASE            ***************                    241266
+     C                     OUT  LDA                                                           241266
+     C                     EXSR *PSSR                                                         241266
+     C                     ENDIF                                                              241266
+     C                     MOVE SVAL11    PSTCPD  1                                           241266
+     C/COPY WNCPYSRC,RE3261C002
+     C*
+     C** OUTPUT AUDIT HEADER
+     C*
+     C                     WRITEHEADAU
+     C*
+     C** INITIALIZE FIELDS TO WRITE IN AUDIT
+     C*
+     C                     Z-ADD*ZEROS    NORE1
+     C                     Z-ADD*ZEROS    NORE2
+     C                     MOVE '0'       *IN01
+     C*
+     C                     MOVE *BLANKS   BRCA                            106240
+     C**********           MOVE *ZEROS    CNUM                                         106240 CSD027
+     C                     MOVE *BLANKS   CNUM                                                CSD027
+     C                     MOVE *BLANKS   CCY                             106240
+     C                     MOVE *ZEROS    ACOD                            106240
+     C                     MOVE *ZEROS    ACSQ                            106240
+      *                                                                   106240
+     C                     ENDSR                           **FIRST ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** MAIN subroutine to execute main processing.
+     C**
+     C**     Called by       S T A R T
+     C**     Calls           *PSSR, ACCUPD
+     C**
+     C           MAIN      BEGSR                           **MAIN BEGSR**
+     C*
+     C                     ADD  1         NORE2
+     C*
+     C** SAVE THE INITIAL KEY OF THE SECONDARY KEY
+     C*
+     C                     MOVE BRCA      WBRCA
+     C                     Z-ADDACOD      WACOD
+     C                     Z-ADDACSQ      WACSQ
+     C**********           Z-ADDCNUM      WCNUM                                               CSD027
+     C                     MOVE CNUM      WCNUM                                               CSD027
+     C                     Z-ADDVALL      WVALL
+     C*
+     C** SAVE THE INITIAL KEY OF THE PRIMARY KEY
+     C*
+     C**********           Z-ADDLTCUST    WLTCUS                                              CSD027
+     C                     MOVE LTCUST    WLTCUS                                              CSD027
+     C                     MOVE LTAB      WLTAB
+     C                     Z-ADDLTAS      WLTAS
+     C                     Z-ADDLTAC      WLTAC
+     C/COPY WNCPYSRC,RE3261C003
+     C*
+     C*  ACCESS PRIME ACCOUNT DETAILS
+     C*
+     C           PRKEY     CHAINACCNT                60
+     C*
+     C           *IN60     IFEQ '1'                        - B1
+     C                     MOVE LTCUST    WCNUM
+     C/COPY WNCPYSRC,RE3261C020
+     C                     MOVE CCY       WCCY
+     C/COPY WNCPYSRC,RE3261C021
+     C                     MOVE LTAC      WACOD
+     C                     MOVE LTAS      WACSQ
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVE 'ACCNT'   DBFILE           **DB ERROR 05**
+     C                     MOVELWKEY      DBKEY            ***************
+     C                     WRITEERRP1
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C** SAVE RETAIL NUMBER OF THE PRIMARY ACCOUNT
+     C*
+     C                     Z-ADDACNO      WACNO
+     C*
+     C** RESTORE THE INITIAL KEY
+     C*
+     C                     MOVE WBRCA     BRCA
+     C                     Z-ADDWACOD     ACOD
+     C                     Z-ADDWACSQ     ACSQ
+     C**********           Z-ADDWCNUM     CNUM                                                CSD027
+     C                     MOVE WCNUM     CNUM                                                CSD027
+     C/COPY WNCPYSRC,RE3261C022
+     C*
+     C** SETLL REDETM TO FIND POSTINGS IF EXISTS
+     C*
+      * Only postings AFTER Capitalisation date should be duplicated to                       241266
+      * linked accounts, this change conditioned on last day accrual = 'N' and                241266
+      * system value RE3261PstAftCpDteOnl = 'Y'                                               241266
+      *                                                                                       241266
+     C           BMLDAI    IFEQ 'N'                                                           241266
+     C           PSTCPD    ANDEQ'Y'                                                           241266
+     C           REKEY     SETGTREDETM                                                        241266
+     C                     ELSE                                                               241266
+     C           REKEY     SETLLREDETM
+     C                     ENDIF                                                              241266
+     C*
+     C** PROCESS IF THERE IS AT LEAST ONE POSTING
+     C*
+     C           RKEY      READEREDETM                   52
+     C*
+     C** INITIALISE HISTORY BALANCE AT VALUE DATE
+     C*
+     C                     Z-ADD*ZEROS    TOTHIS 150
+     C*
+     C           *IN52     IFEQ '0'                        - B1
+     C*
+     C** CHECK IF IT IS A GOOD POSTING
+     C*
+     C           HISD      IFLT VALL                       - B2
+     C                     Z-ADDHISD      WDATE
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVE 'HISD '   DBFILE           **DB ERROR 06**
+     C                     MOVELDKEY      DBKEY            ***************
+     C                     WRITEERRP1
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C** LOOP AS LONG AS THERE IS ONE POSTING
+     C*
+     C           *IN52     DOWEQ'0'                        - B2
+     C*
+     C** CUMULATE BALANCE AT VALUE DATE
+     C*
+     C           HISD      IFEQ VALL
+     C           DRCR      IFEQ *ZEROS
+     C                     ADD  PSTA      TOTHIS
+     C                     ELSE
+     C                     SUB  PSTA      TOTHIS
+     C                     END
+     C                     END
+     C*
+     C** INITIALIZE THE FIELDS OF THE PF/REEODPF
+     C*
+     C                     Z-ADDBJRDNB    PSTD
+     C                     MOVE WLTAB     BRCA
+     C                     Z-ADDWLTAC     ACOD
+     C                     Z-ADDWLTAS     ACSQ
+     C**********           Z-ADDWLTCUS    CNUM                                                CSD027
+     C                     MOVE WLTCUS    CNUM                                                CSD027
+     C                     Z-ADDWACNO     ACNO
+     C                     MOVE WBRCA     FTAB
+     C                     Z-ADDWACOD     FTAC
+     C                     Z-ADDWACSQ     FTAS
+     C                     MOVE WCNUM     ZZ006
+     C*
+     C** WRITE DUPLICATE RECORD (ONE FOR THE PRIME AND ONE FOR THE SECOND)
+     C*
+     C/COPY WNCPYSRC,RE3261C010
+     C                     WRITEREEODPFF
+     C/COPY WNCPYSRC,RE3261C004
+     C*
+     C                     ADD  1         NORE1
+     C*
+     C** RESTORE THE INITIAL KEY
+     C*
+     C                     MOVE WBRCA     BRCA
+     C                     Z-ADDWACOD     ACOD
+     C                     Z-ADDWACSQ     ACSQ
+     C**********           Z-ADDWCNUM     CNUM                                                CSD027
+     C                     MOVE WCNUM     CNUM                                                CSD027
+     C/COPY WNCPYSRC,RE3261C023
+     C*
+     C** ACCESS NEXT POSTING RECORD
+     C*
+     C           RKEY      READEREDETM                   52
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** ADD A POSTING RECORD TO PRIME ACCOUNT WITH THE BALANCE OF THE
+     C** SECONDARY ACCOUNT
+     C*
+     C                     EXSR EODUPD
+     C*
+     C** UPDAT LF/ACCNT OF THE SECONDARY ACCOUNT
+     C*
+     C                     EXSR ACCUPD
+     C*
+     C** UPDAT LF/RECOM OF THE PRIMARY ACCOUNT
+     C*
+     C                     EXSR RECUPD
+     C*
+     C** DELETE THE RECORD AND READ THE NEXT
+     C*
+     C                     Z-ADD97        DBASE
+     C                     DELETRELINKFF
+     C                     Z-ADD96        DBASE
+     C                     READ RELINKFF                 LR
+     C                     Z-ADD00        DBASE
+     C*
+     C                     ENDSR                           **MAIN ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** ACCUPD subroutine to update account and print RE3261P1
+     C**
+     C**     Called by       MAIN
+     C**     Calls           *PSSR
+     C**
+     C           ACCUPD    BEGSR                           **ACCUPD BEGSR**
+     C*
+     C** RESTORE THE SECONDARY KEY
+     C*
+     C                     MOVE WBRCA     BRCA
+     C                     Z-ADDWACOD     ACOD
+     C                     Z-ADDWACSQ     ACSQ
+     C**********           Z-ADDWCNUM     CNUM                                                CSD027
+     C                     MOVE WCNUM     CNUM                                                CSD027
+     C/COPY WNCPYSRC,RE3261C024
+     C*
+     C** ACCESS THE SECONDARY ACCOUNT ON THE LF/ACCNT
+     C*
+     C           AKEY      CHAINACCNT                60
+     C*
+     C           *IN60     IFEQ '1'                        - B1
+     C                     Z-ADD7         DBASE            ***************
+     C                     MOVE 'ACCNT'   DBFILE           **DB ERROR 07**
+     C                     MOVELPKEY      DBKEY            ***************
+     C                     WRITEERRP1
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C** CHECK IF ACCRUED INTEREST ON LF/ACCNT IS ZERO
+     C*
+     C           DIIE      IFNE *ZEROS                     - B1
+     C           CIIE      ORNE *ZEROS
+     C*
+     C                     MOVELNAR,1     NARR
+     C/COPY WNCPYSRC,RE3261C005
+     C                     EXSR OVERP1
+     C                     WRITEDETP1
+     C*
+     C                     END                             - E1
+     C*
+     C/COPY WNCPYSRC,RE3261C007
+     C***ZEROISE*INTEREST*ACCRUED*ON*LF/ACCNT*********************        157064
+     C*
+     C***********          Z-ADD*ZEROS    DIIE                            157064
+     C***********          Z-ADD*ZEROS    CIIE                            157064
+     C*
+     C/COPY WNCPYSRC,RE3261C008
+     C** UPDAT LF/ACCNT OF THE SECONDARY ACCOUNT
+     C*
+     C                     UPDATACCNTABF
+     C*
+     C                     ENDSR                           **ACCUPD ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RECUPD subroutine to update RECOM
+     C**
+     C**     Called by       MAIN
+     C**     Calls           *PSSR
+     C**
+     C           RECUPD    BEGSR                           **RECUPD BEGSR**
+     C*
+     C** ACCESS THE SECONDARY ACCOUNT ON THE LF/RECOM
+     C*
+     C           WWKEY1    CHAINRECOM                26
+     C*
+     C           *IN26     IFEQ '1'                        - B1
+     C                     Z-ADD7         DBASE            ***************
+     C                     MOVE 'RECOM'   DBFILE           **DB ERROR 07**
+     C                     MOVELPKEY      DBKEY            ***************
+     C                     WRITEERRP1
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C** CHECK IF TURNOVER COMMISSION
+     C*
+     C           GVDPE     IFNE *ZEROS                     - B1
+     C*
+     C                     Z-ADDGVDPE     WGVDPE
+     C*
+     C**********           Z-ADDWLTCUS    LTCUST                                              CPK025
+     C**********           Z-ADDWLTCUS    LTCUST                                              CSD027
+     C                     MOVE WLTCUS    LTCUST                                              CSD027
+     C                     Z-ADDWLTAS     LTAS
+     C                     Z-ADDWLTAC     LTAC
+     C                     MOVE WLTAB     LTAB
+     C/COPY WNCPYSRC,RE3261C025
+     C*
+     C           PRKEY1    CHAINRECOM                26
+     C*
+     C           *IN26     IFEQ '1'                        - B2
+     C                     Z-ADD8         DBASE            ***************
+     C                     MOVE 'RECOM'   DBFILE           **DB ERROR 08**
+     C                     MOVELPKEY      DBKEY            ***************
+     C                     WRITEERRP1
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C/COPY WNCPYSRC,RE3261C026
+     C*
+     C                     ADD  WGVDPE    GVDPE
+     C*
+     C                     UPDATRECOMDF
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **ACCUPD ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** TOTAL subroutine to execute end processing.
+     C**
+     C**     Called by       S T A R T
+     C**     Calls           -
+     C**
+     C           TOTAL     BEGSR                           **TOTAL BEGSR**
+     C*
+     C** OUTPUT AUDIT TRAILER - NUMBER OF RECORD WRITTEN IN REEODPF
+     C*
+     C                     WRITETOTALS
+     C*
+     C** Print '*** NO DETAILS TO REPORT ***' if LF/RELINKF is empty
+     C*
+     C           *IN41     IFEQ '1'
+     C                     OPEN RE3261P1
+     C                     WRITEHEADP1
+     C                     WRITENONE
+     C                     CLOSERE3261P1
+     C                     END
+     C*
+     C**  PRINT 'END OF BRANCH' NARRATIVE AT END OF PROGRAM ALSO
+     C**
+     C           *IN87     IFEQ '1'
+     C                     WRITEENDP1
+     C                     END
+     C*
+     C                     ENDSR                           **TOTAL ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** *PSSR subroutine for database error handling
+     C**
+     C**     Called by       FIRST, MAIN
+     C**     Calls           -
+     C**
+     C           *PSSR     BEGSR                           **PSSR BEGSR**
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     WRITEERRAU
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           **PSSR ENDSR**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** EODSR subroutine for REEODPF file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           *PSSR
+     C**
+     C           EODSR     BEGSR                           **EODSR BEGSR**
+     C*
+     C                     Z-ADD8         DBASE            ***************
+     C                     MOVE 'EODPF'   DBFILE           **DB ERROR 08**
+     C                     MOVELLKEY      DBKEY            ***************
+     C                     MOVELSTSEOD    DBSTAT
+     C                     MOVE '1'       *IN88
+     C                     WRITEERRP1
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR                           **EODSR ENDSR**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** LNKSR subroutine for RELINKL file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           *PSSR
+     C**
+     C           LNKSR     BEGSR                           **LNKSR BEGSR**
+     C*
+     C*                    Z-ADD9         DBASE            ***************
+     C                     MOVE 'LINKL'   DBFILE           **DB ERROR 09**
+     C                     MOVELLKEY      DBKEY            ***************
+     C                     MOVELSTSLNK    DBSTAT
+     C                     MOVE '1'       *IN88
+      *                                                                   106240
+     C           *IN41     IFEQ '1'                                       106240
+     C                     OPEN RE3261P1                                  106240
+     C                     WRITEHEADP1                                    106240
+     C                     WRITEERRP1
+     C                     CLOSERE3261P1                                  106240
+     C                     END                                            106240
+      *                                                                   106240
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR                           **LNKSR ENDSR**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** OVERP1 subroutine for processing overflow on RE3261P1
+     C**
+     C**     Called by       BOTHSR, DAYDSR, DRSR, POSTSR, ITYPDR,
+     C**                     TOTSR, RDRSR
+     C**
+     C**     Calls           -
+     C**
+     C           OVERP1    BEGSR                           **OVERP1 BEGSR*
+     C*
+     C**  CHECK IF OVERFLOW ON RE3261P1
+     C*
+     C           *IN01     IFEQ '1'                        - B1
+     C                     ADD  1         PAGE
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN01
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **OVERP1 ENDSR*
+     C/COPY WNCPYSRC,RE3261C006
+     C********************************************************************
+     C/EJECT
+      * NAR,1 changed for 157064 (was 'MAN ADJ TO INCOMMENT EXPENSE').    157064
+**  CPY@  OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**  NAR
+INCOME/EXPENSE TO BE ADJUSTED                                             157064
+INITIAL LINK -

@@ -1,0 +1,1339 @@
+     H        1
+      *****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4235 - Teller Cross-In / Cross Out  Report                 *
+     F*                                                               *
+     F*  Function:  This program prints all cross teller (i.e.,       *
+     F*             teller to teller) transactions, as well as        *
+     F*             teller to treasury transactions.                  *
+     F*                                                               *
+     F*  Called By: REC4217 - RTS Teller Cross In / Cross Out Report  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CRT012             Date 26Nov02               *
+      * Midas Release 4.01 -------------------------------------------*
+     F*                 200412             Date 27Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 174150             Date 05Jun00               *
+     F*                 172507             Date 02Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 099938             DATE 02SEP97               *
+     F*                 CRT002             DATE 01DEC95               *
+     F*                 103722             DATE 16SEP96               *
+     F*                 093527             DATE 21SEP95               *
+     F*                 091241             DATE 17JUL95               *
+     F*                 CRT001  *CREATE    DATE 28FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CRT012 - Recompile over changed TTRANPD                      *
+     F*  200412 - Check to see if missing teller in/outs can be       *
+     F*           matched up, thus enabling reversal of a teller out  *
+     F*           which hasn't had its associated teller in, when in  *
+     F*           cashier mode  Also removal of fix 172507.           *
+     F*  174150 - Instead of printing error details at the bottom of  *
+     F*           report, they are printed at the bottom of each      *
+     F*           branch where error applies.                         *
+     F*  172507 - To prevent errors in RE4235P1 report, include       *
+     F*           the input teller branch (ITLB2) of the teller       *
+     F*           Cross Out transaction in checking for the change    *
+     F*           in branch (LVLBRK).                                 *
+     F*  099938 - Attempting to write to closed printer file          *
+     F*  CRT002 - Retail Branch Access.                               *
+     F*           Recompile due to change in PF/TTRANPD.              *
+     F*  103722 - Change definition of spool file number              *
+     F*           from 2-byte binary to 6-byte numeric so that        *
+     F*           ZSFILE is called with the correct parameter.        *
+     F*  093527 - Add recipient teller id to the report.              *
+     F*  091241 - ATM Interface.  Recompiled.                         *
+     F*  CRT001 - Retail Teller System.                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Teller cross in - cross out report')
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FTTRANL4 IF  E           K        DISK         KINFSR *PSSR
+     F**  Teller Transaction file for Cross-In transactions
+     F*
+     FTTRANL5 IF  E           K        DISK         KINFSR *PSSR
+     F**  Teller Transaction file  for Cross-out transactions
+     F            TTRANPDF                          KRENAMETTRANL5F
+     F*
+     FRE4235P1O   E             11     PRINTER      KINFDS SPOOL      UC
+     F**  Audit Trail of Teller cross-in cross-out
+     F*
+     FRE4235AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F**  RTS Teller Cross-In / Cross-Out Audit report
+     F*
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       11         Page no. reset/increment indicator           *
+     F*       12         End of file indicator for Cross -in file     *
+     F*       13         End of file indicator for Cross-out file     *
+     F*       14         End of both files indicator                  *
+     F*       16         Ind. to control reading of both files        *
+     F*                                                               *
+     F*       21         Condition printing of  Cross -in time field  *
+     F*       22         Condition printing of  Cross-out time field  *
+     F*                                                               *
+     F*       31         Seton  if cross-in less than cross-out       *
+     F*       32         Seton  if cross-out less than cross-in       *
+     F*       33         Seton  if cross-in equals    cross-out       *
+     F*                                                               *
+     F*       70         Currency record not found                    *
+     F*       71         End of file in SETLL of Cross-in file        *
+     F*       72         End of file in SETLL of Cross-out file       *
+     F*                                                               *
+     F*       98         Determine Date format - ON for MMDDYY        *
+     F*                                                               *
+     F*     U7-U8        If database error occurs                     *
+     F*       UC         Conditioned OPEN of files (RE4235P1/AU)      *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  MAIN   - Main Processing                                     *
+     F*  FIRST  - Initial Processing                                  *
+     F*  ZA0150 - Get Midas Rundate & Setup Indicator                 *
+     F*  *PSSR  - Program error                                       *
+     F*  DBERR  - Database error handling : terminate pgm.            *
+     F*  LAST   - Final Processing                                    *
+     F*                                                               *
+     F*  IFLDS  - Initialize Report Fields                            *
+     F*                                                               *
+     F*  SETUP1 - Setup Cross-in file                                 *
+     F*  SETUP2 - Setup Cross-out file                                *
+     F*  READS1 - Read TTRANL4  sequentially                          *
+     F*  READS2 - Read TTRANL5  sequentially                          *
+     F*  GETREC - Further processing                                  *
+     F*  FTPRT1 - Move TTRANL4 fields to printer file                 *
+     F*  FTPRT2 - Move TTRANL5 fields to printer file                 *
+     F*  PRTHDG - Print report heading on a new page                  *
+     F*  PRTDTL - Printing detail                                     *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E**  Array containing Copyright statement
+     E*
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E**  Array for editing amounts
+     E*
+      ** Array for balancing in/out                                       200412
+     E                    INA       999 24  A                             200412
+      ** Array for balancing in/out                                       200412
+     E                    INB       999 24  A                             200412
+     E*****************************************************************
+     I/EJECT
+     I*****************************************************************
+     I*
+     ITTRANPDF
+     I**  Renamed fields in LF/TTRANL4
+     I*
+     I              RECI                            RECI1
+     I              TBRI                            TBRI1
+     I              TBID                            TBID1
+     I              FNCD                            FNCD1
+     I              CCY1                            CCY11
+     I              AMT1                            AMT11
+     I              RTLI                            RTLI1
+     I              ITLB                            ITLB1
+     I              TIME                            TIME1
+     I*
+     I*
+     ITTRANL5F
+     I**  Renamed fields in LF/TTRANL5
+     I*
+     I              RECI                            RECI2
+     I              TBRI                            TBRI2
+     I              TBID                            TBID2
+     I              FNCD                            FNCD2
+     I              CCY1                            CCY12
+     I              AMT1                            AMT12
+     I              RTLI                            RTLI2
+     I              ITLB                            ITLB2
+     I              TIME                            TIME2
+     I*
+     I*
+     I@ENUM       DS                             19
+     I**  Data structure for splitting the edited numeric which
+     I**  has a value with 2 spaces to the right (CR,-)
+     I*
+     I                                        1  17 @EN
+     I                                       18  19 @FL
+     I*
+     I*
+     I            DS                             24
+     I**  Data structure to hold key fields of LF/TTRANL4(BASE FILE)
+     I                                        1   1 KTBRI1
+     I                                        2   4 KITLB1
+     I                                        5   7 KTBID1
+     I                                        8  10 KRTLI1
+     I                                       11  13 KFNCD1
+     I                                       14  16 KCCY11
+     I                                    P  17  240KAMT11
+     I                                        1  24 @TRAN1
+     I*
+     I            DS                             24
+     I**  Data structure to hold key fields of LF/TTRANL5(sec  FILE)
+     I                                        1   1 KTBRI2
+     I                                        2   4 KITLB2
+     I                                        5   7 KRTLI2
+     I                                        8  10 KTBID2
+     I                                       11  13 KFNCD2
+     I                                       14  16 KCCY12
+     I                                    P  17  240KAMT12
+     I                                        1  24 @TRAN2
+     I*
+     I            DS                             24                            200412
+     I**  Data structure to hold key fields of LF/TTRANL5(sec  FILE)           200412
+     I                                        1   1 KTBRI3                     200412
+     I                                        2   4 KITLB3                     200412
+     I                                        5   7 KRTLI3                     200412
+     I                                        8  10 KTBID3                     200412
+     I                                       11  13 KFNCD3                     200412
+     I                                       14  16 KCCY13                     200412
+     I                                    P  17  240KAMT13                     200412
+     I                                        1  24 @TRAN3                     200412
+     I*
+     ISPOOL       DS
+     I**  File information data structure - P1
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     I*
+     ISPOOLU      DS
+     I**  File information data structure - Audit
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I*
+     I/COPY ZSRSRC,ZFRPEDZ2
+     I**  Data structure for SR.ZFRPED
+     I*
+     I*
+     IPSDS       SDS
+     I**  Program Status Data Structure
+     I                                        1  10 @PGM
+     I**  Field containing Program name
+     I                                      244 253 @JOB
+     I**  Field containing Workstation ID
+     I                                      254 263 @USER
+     I**  Field Containing User ID
+     I*
+     I*
+     ILDA         DS                            256
+     I**  Local data area for data base errors.
+     I*
+     I                                      134 183 DBLOT
+     I**  Field combining the following fields
+     I*
+     I                                      134 141 DBFILE
+     I**  Name of database file in error
+     I*
+     I                                      142 170 DBKEY
+     I**  Key value causing database error
+     I*
+     I                                      171 180 DBPGM
+     I**  Name of program causing database error
+     I*
+     I                                      181 1830DBASE
+     I**  Number of database error
+     I*
+     I*
+     IRUNDAT    E DSRUNDAT
+     I**  Data Area giving Installation Control Details
+     I*
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Midas Bank details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I**  Midas Currency details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I**  Midas Branch details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  First DS for access programs, Short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I**  2nd DS for access programs, Long data structure
+     I*
+     I*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            MAIN   - Main Processing                           *
+     C*                                                               *
+     C* CALLS      FIRST  - Initial Processing                        *
+     C*            GETREC - Further processing                        *
+     C*            PRTHDG - Printing heading                          *
+     C*            LAST   - Final Processing                          *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Initial processing
+     C*
+     C                     EXSR FIRST
+     C*
+     C**  Read IN   file TTRANL4   while not end-of-file
+     C*
+     C           *IN14     DOWNE'1'                        ** DO  01
+     C*
+     C**  Subroutine for further processing
+     C*
+     C                     EXSR GETREC
+     C*
+     C                     ENDDO                           ** END 01
+     C*
+     C           @NORE1    IFEQ 0                          ** IF  01
+     C           @NORE2    ANDEQ0
+     C           @NOREM    ANDEQ0
+     C*
+     C                     EXSR RCFAU
+     C                     WRITENODTLS
+     C                     ELSE
+     C*
+     C**  Print error details if teller transactions don't
+     C**  have Matching In/Out
+     C*
+     C           ERRIN     IFNE 0
+     C           ERROUT    ORNE 0
+     C   11                EXSR PRTHDG
+      *                                                                    200412
+     C           ERRIN     IFNE 0                                          200412
+     C           ERROUT    ANDNE0                                          200412
+      *                                                                    200412
+     C                     Z-ADD0         COUNT   30                       200412
+     C                     Z-ADD1         C       30                       200412
+      *                                                                    200412
+     C           C         DOWLEB                                          200412
+     C                     Z-ADD1         D       30                       200412
+     C                     SETOF                     36                    200412
+      *                                                                    200412
+     C           D         DOWLEA                                          200412
+     C           *IN36     ANDEQ*OFF                                       200412
+     C                     Z-ADDD         E       30                       200412
+     C           INB,C     LOKUPINA,D                    36                200412
+      *                                                                    200412
+     C           *IN36     IFEQ *ON                                        200412
+     C                     ADD  1         COUNT                            200412
+     C                     SETON                     34                    200412
+     C                     MOVE *BLANKS   INA,D                            200412
+     C                     ELSE                                            200412
+     C                     Z-ADDE         D                                200412
+     C                     ENDIF                                           200412
+      *                                                                    200412
+     C                     ADD  1         D                                200412
+      *                                                                    200412
+     C                     ENDDO                                           200412
+      *                                                                    200412
+     C                     ADD  1         C                                200412
+      *                                                                    200412
+     C                     ENDDO                                           200412
+     C                     ENDIF                                           200412
+      *
+     C                     WRITERE4235E3
+     C                     SETOF                     34                    200412
+     C                     SETON                     U8
+     C                     END
+     C*
+     C                     WRITERE4235L1
+     C                     END                             ** END 01
+     C*
+     C** Final Processing
+     C*
+     C                     EXSR LAST
+     C*
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FIRST  - Initial processing                        *
+      *                                                               *
+      * CALLS      IFLDS  - Initialise print variables                *
+      *            ZA0150 - Routine  to fetch run-date                *
+      *            SETUP1 - Setup of file Cross-in (00E)              *
+      *            SETUP2 - Setup of file Cross-out (00F)             *
+      *                                                               *
+      * CALLED BY  MAIN   - Main processing                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *
+      ** Input parameter(s) :
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C                     PARM           ENT     3
+      *
+      ** Define program work fields
+      *
+      ** Array Indexes                                                     200412
+     C                     Z-ADD0         A       30                       200412
+     C                     Z-ADD0         B       30                       200412
+      ** @NOREM - no. of records matching condition
+     C                     Z-ADD0         @NOREM  50
+     C                     Z-ADD0         @NORE1  50
+     C                     Z-ADD0         @NORE2  50
+     C*
+     C**  Define error fields for missing transactions
+     C*
+     C                     Z-ADD0         ERRIN   30
+     C                     Z-ADD0         ERROUT  30
+      *
+      * Define Keylist (ttranl4)
+     C           KTRAN1    KLIST
+     C                     KFLD           KTBRI1
+     C                     KFLD           KITLB1
+     C                     KFLD           KTBID1
+     C                     KFLD           KRTLI1
+     C                     KFLD           KFNCD1
+     C                     KFLD           KCCY11
+     C                     KFLD           KAMT11
+      *
+      * Define Keylist (ttranl2)
+     C           KTRAN2    KLIST
+     C                     KFLD           KTBRI2
+     C                     KFLD           KITLB2
+     C                     KFLD           KRTLI2
+     C                     KFLD           KTBID2
+     C                     KFLD           KFNCD2
+     C                     KFLD           KCCY12
+     C                     KFLD           KAMT12
+      *
+      ** Init. printer fields
+     C                     EXSR IFLDS
+     C*
+     C**  Initialization of LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     OUT  LDA
+     C*
+     C**  Define and read data area RUNDAT
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN35
+     C                     ELSE
+     C                     MOVE *BLANKS   ENT
+     C                     MOVE '0'       *IN35
+     C                     END
+     C*
+     C                     MOVEL@PGM      DBPGM
+     C*
+      ** Call subroutine to access ICD file for Midas Run Date.
+     C                     EXSR ZA0150
+      *
+      *
+      **  Set start of file of Cross-in
+     C                     EXSR SETUP1
+      *
+      **  Set start of file of Cross-out
+     C                     EXSR SETUP2
+     C*
+     C**  If no records in both files
+     C*
+     C   12 13             SETON                     14
+     C*                                                                   099938
+     C* Force open of both printer files                                  099938
+     C                     OPEN RE4235P1                                  099938
+     C                     MOVE 'Y'       WOPEN                           099938
+     C                     OPEN RE4235AU                                  099938
+     C                     MOVE 'Y'       WOPAU   1                       099938
+     C                     SETON                     11                   099938
+     C*                                                                   099938
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SETUP1 - Setup of Cross-in file                    *
+      *                                                               *
+      * CALLS      READS1 - Read sequentially Cross-in file           *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial processing                        *
+      *            GETREC - Further processing                        *
+      *                                                               *
+      *****************************************************************
+     C           SETUP1    BEGSR                           ** SETUP1 **
+     C*
+     C**  Determine what branch is selected
+     C*
+     C           ENT       IFEQ 'ALL'
+     C           ENT       OREQ *BLANKS
+     C                     MOVE *BLANKS   KITLB1
+     C                     ELSE
+     C                     MOVE ENT       KITLB1
+     C                     END
+     C*
+     C                     MOVEL*BLANKS   KTBRI1
+     C                     MOVEL*BLANKS   KTBID1
+     C                     MOVEL*BLANKS   KRTLI1
+     C                     MOVEL'00E'     KFNCD1
+     C                     MOVEL*BLANKS   KCCY11
+     C                     Z-ADD0         KAMT11
+     C*
+     C           KTRAN1    SETLLTTRANPDF             71
+     C**         *IN71     IFEQ '1'
+      *
+      ** First time read of file TTRANL4 (funct.cd. as '00E')
+     C                     EXSR READS1
+      *
+     C**                   ELSE
+      *
+      ** Setting on ind. 12 so that further processing of IN file is
+      ** not executed
+     C**                   SETON                     12
+     C**                   END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SETUP2 - Setup Cross-out file                      *
+      *                                                               *
+      * CALLS      READS2 - Read sequentially Cross-out file          *
+      *                                                               *
+      * CALLED BY  FIRST  - First   processing                        *
+      *            GETREC - Further processing                        *
+      *                                                               *
+      *****************************************************************
+     C           SETUP2    BEGSR                           ** SETUP2 **
+     C*
+     C**  Determine what branch is selected
+     C*
+     C           ENT       IFEQ 'ALL'
+     C           ENT       OREQ *BLANKS
+     C                     MOVE *BLANKS   KITLB2
+     C                     ELSE
+     C                     MOVE ENT       KITLB2
+     C                     END
+     C*
+     C                     MOVEL*BLANKS   KTBRI2
+     C                     MOVEL*BLANKS   KTBID2
+     C                     MOVEL*BLANKS   KRTLI2
+     C                     MOVEL'00E'     KFNCD2
+     C                     MOVEL*BLANKS   KCCY12
+     C                     Z-ADD0         KAMT12
+     C*
+     C           KTRAN2    SETLLTTRANL5F             72
+     C*
+     C**         *IN72     IFEQ '1'
+      *
+      ** First time read of file TTRANL5 (funct.cd. as '00F')
+     C                     EXSR READS2
+      *
+     C**                   ELSE
+      *
+      ** Setting on ind. 13 so that further processing of OUT file is
+      ** not executed
+     C**                   SETON                     13
+     C**                   END
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            READS1 - Read TTRANL4 (funct. cd. 00E ) sequential *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SETUP1 - Setup Cross-in file                       *
+      *            GETREC - Further Processing                        *
+      *                                                               *
+      *****************************************************************
+     C           READS1    BEGSR                           ** READS1 **
+     C*
+     C**  Read TTRANL4  sequentially  until end-of-file
+     C**  Selecting those records where function code is '00E' i.e
+     C**  fetching   of Teller Cross-in records
+     C*
+     C                     SETOF                     16
+     C*
+     C           *IN16     DOUEQ'1'
+     C*
+     C**  Read the file
+     C*
+     C                     READ TTRANPDF                 12
+     C*
+     C**  If end of file
+     C*
+     C           *IN12     IFEQ '1'                        B1
+     C                     MOVE '1'       *IN16
+     C*
+     C**  If record is read
+     C*
+     C                     ELSE                            X1
+     C*
+     C           FNCD1     IFEQ '00E'                      B2
+     C*
+     C           ENT       IFEQ 'ALL'                      B3
+     C           ENT       OREQ *BLANKS
+     C           ENT       OREQ ITLB1
+     C                     MOVE '1'       *IN16
+     C                     END                             E3
+     C*
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C                     ENDDO
+     C*
+     C           *IN12     IFEQ '0'
+     C                     MOVELTBRI1     KTBRI1
+     C                     MOVE ITLB1     KITLB1
+     C                     MOVELTBID1     KTBID1
+     C                     MOVELRTLI1     KRTLI1
+     C                     MOVEL*BLANKS   KFNCD1
+     C                     MOVELCCY11     KCCY11
+     C                     MOVELAMT11     KAMT11
+     C                     ADD  1         @NORE1
+     C                     ELSE
+     C                     MOVEL*BLANKS   @TRAN1
+     C**********           MOVE 'XB1'     ITLB1                    172507 200412
+     C                     END
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            READS2 - Read TTRANL5 (funct. cd. 00F ) sequential *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SETUP2 - Setup of Cross-out file                   *
+      *            GETREC - Further Process                           *
+      *                                                               *
+      *****************************************************************
+     C           READS2    BEGSR                           ** READS2 **
+     C*
+     C**  Read TTRANL5  sequentially  until end-of-file
+     C**  Selecting those records where function code is '00F' i.e
+     C**  fetching   of Teller Cross-in records
+     C*
+     C                     SETOF                     16
+     C*
+     C           *IN16     DOUEQ'1'
+     C*
+     C**  Read the file
+     C*
+     C                     READ TTRANL5F                 13
+     C*
+     C**  If end of file
+     C*
+     C           *IN13     IFEQ '1'                        B1
+     C                     MOVE '1'       *IN16
+     C*
+     C**  If record is read
+     C*
+     C                     ELSE                            X1
+     C*
+     C           FNCD2     IFEQ '00F'                      B2
+     C*
+     C           ENT       IFEQ 'ALL'                      B3
+     C           ENT       OREQ *BLANKS
+     C           ENT       OREQ ITLB2
+     C                     MOVE '1'       *IN16
+     C                     END                             E3
+     C*
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C                     ENDDO
+     C           *IN13     IFEQ '0'
+     C                     MOVELTBRI2     KTBRI2
+     C                     MOVE ITLB2     KITLB2
+     C                     MOVELRTLI2     KRTLI2
+     C                     MOVELTBID2     KTBID2
+     C                     MOVEL*BLANKS   KFNCD2
+     C                     MOVELCCY12     KCCY12
+     C                     MOVELAMT12     KAMT12
+     C                     ADD  1         @NORE2
+     C                     ELSE
+     C                     MOVEL*BLANKS   @TRAN2
+     C**********           MOVE 'XB2'     ITLB2                    172507 200412
+     C                     END
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            GETREC - Subroutine for further processing         *
+      *                                                               *
+      * CALLS      PRTHDG - Print report heading on a new page        *
+      *            FTPRT1 - Move Cross-in fields to print record      *
+      *            FTPRT2 - Move Cross-out fields to print record     *
+      *            READS1 - Read sequentially Cross-in file           *
+      *            READS2 - Read sequentailly Cross-out file          *
+      *            RPTDTL - Printing detail                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main processing                           *
+      *                                                               *
+      *****************************************************************
+     C           GETREC    BEGSR                           ** GETREC **
+     C*
+     C****Check*if*there*is*a*change*in*branch*************************   172507
+     C*
+     C***********ITLB1     IFNE WITLB                                     172507
+     C***********          EXSR LVLBRK                                    172507
+     C***********          END                                            172507
+     C           ITLB1     IFNE WITLB                                     200412
+     C                     EXSR LVLBRK                                    200412
+     C                     END                                            200412
+      *
+      ** Init. ind. for printing of TIME fields in detail line
+     C                     SETOF                     2122
+     C                     SETOF                     313233
+      *
+      ** If IN file EOF , then print OUT details
+     C   12N13             SETON                     32
+      *
+      ** If OUT file EOF , then print IN details
+     C   13N12             SETON                     31
+      *
+      ** Check    OUT  key viz-a-viz  IN  key
+      *
+     C           *IN12     IFEQ '0'
+     C           *IN13     ANDEQ'0'
+     C           @TRAN2    COMP @TRAN1               313233
+     C                     END
+      *
+     C           *IN31     IFEQ '1'                        ** IF  01
+      **********                                                   172507 200412
+      ***Check*if there is a change in branch for the cross in     172507 200412
+      ***and*cross out transaction.                                172507 200412
+      **********                                                   172507 200412
+     C********** ITLB1     IFNE WITLB                              172507 200412
+     C********** ITLB2     ANDNEWITLB                              172507 200412
+     C**********           EXSR LVLBRK                             172507 200412
+     C**********           END                                     172507 200412
+      *                                                                   200412
+     C           @TRAN1    IFNE *BLANKS                                   200412
+     C                     ADD  1         B                               200412
+     C                     MOVE @TRAN1    INB,B                           200412
+     C                     ENDIF
+      *
+      **  Move fields to be printed for IN  trans
+     C                     EXSR FTPRT1
+      *
+      ** Print detail line
+     C                     EXSR PRTDTL
+      *
+     C                     EXSR READS1
+     C*
+     C**  Total error fields
+     C*
+     C                     ADD  1         ERROUT
+     C*
+     C                     END                             ** END 01
+      *
+     C           *IN33     IFEQ '1'                        ** IF  01
+      *
+      **  Move fields to be printed for IN-trans.
+     C                     EXSR FTPRT1
+      *
+      **  Move fields to be printed for OUT trans
+     C                     EXSR FTPRT2
+      *
+      ** Print detail line
+     C                     EXSR PRTDTL
+      *
+     C                     EXSR READS1
+     C                     EXSR READS2
+     C                     END                              ** END 01
+      *
+     C           *IN32     IFEQ '1'                        ** IF  01
+     C*
+     C                     ADD  1         A                               200412
+     C                     MOVE @TRAN2    @TRAN3                          200412
+     C                     MOVE KRTLI2    KTBID3                          200412
+     C                     MOVE KTBID2    KRTLI3                          200412
+     C                     MOVE @TRAN3    INA,A                           200412
+      *
+      *
+      **  Move fields to be printed for OUT trans
+     C                     EXSR FTPRT2
+      *
+      ** Print detail line
+     C                     EXSR PRTDTL
+      *
+     C                     EXSR READS2
+     C*
+     C**  Total error fields
+     C*
+     C                     ADD  1         ERRIN
+     C                     END                              ** END 01
+      *
+      **  If no records in both files
+     C   12 13             SETON                     14
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FTPRT1 - Move IN   file fields to print record     *
+      *                                                               *
+      * CALLS      IFLDS  - Initialize Report Fields                  *
+      *                                                               *
+      * CALLED BY  GETREC - Further processing                        *
+      *                                                               *
+      *****************************************************************
+     C           FTPRT1    BEGSR                           ** FTPRT1 **
+      *
+     C                     MOVELTBID1     OTBIDI
+     C                     MOVELRTLI1     ORTLII                          093527
+      *
+      ** Access currency file for no.of decimal places of  curr.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY11     @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** If record not found.
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD2         DBASE            ** DB ERR 02 **
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELCCY11     DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C                     MOVELCCY11     OCCYI
+      *
+      **  Determine Date format - 98 is SETON if MMDDYY Format
+     C           BJDFIN    COMP 'M'                      98
+      *
+      ** Convert amount field (AMT1) to
+      ** edited numerics with decimal point
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   @ENUM
+     C                     MOVE *BLANKS   OPAMTI
+     C                     MOVE AMT11     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    @ENUM
+     C                     MOVE @EN       OPAMTI
+      *
+     C                     SETON                     22
+     C                     MOVELTIME1     OTIMEI
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FTPRT2 - Move OUT  file fields to print record     *
+      *                                                               *
+      * CALLS      IFLDS  - Initialize Report Fields                  *
+      *                                                               *
+      * CALLED BY  GETREC - Further processing                        *
+      *                                                               *
+      *****************************************************************
+     C           FTPRT2    BEGSR                           ** FTPRT2 **
+      *
+     C                     MOVELTBID2     OTBIDO
+     C                     MOVELRTLI2     ORTLIO                          093527
+      *
+      ** Access currency file for no.of decimal places of  curr.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY12     @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** If record not found.
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD3         DBASE            ** DB ERR 02 **
+     C                     MOVEL'SDCURRPD'DBFILE           **************
+     C                     MOVELCCY12     DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C                     MOVELCCY12     OCCYO
+      *
+      **  Determine Date format - 98 is SETON if MMDDYY Format
+     C           BJDFIN    COMP 'M'                      98
+      *
+      ** Convert amount field (AMT1) to
+      ** edited numerics with decimal point
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   @ENUM
+     C                     MOVE *BLANKS   OPAMTO
+     C                     MOVE AMT12     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    @ENUM
+     C                     MOVE @EN       OPAMTO
+      *
+     C                     SETON                     21
+     C                     MOVELTIME2     OTIMEO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRTHDG - Print report heading on a new page        *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  GETREC - Get deal record from  FDDEALL4            *
+      *                                                               *
+      *****************************************************************
+     C           PRTHDG    BEGSR                           ** PRTHDG **
+     C********** *IN32     IFEQ '1'                                172507 200412
+     C**********           MOVE ITLB2     WTLBR   3                172507 200412
+     C**********           ELSE                                    172507 200412
+     C**********           MOVE ITLB1     WTLBR   3                172507 200412
+     C**********           ENDIF                                   172507 200412
+     C**********anch name using access object                      172507 200412
+     C**********                                                   172507 200412
+     C**********           CALL 'AOBRCHR0'                         172507 200412
+     C**********           PARM *BLANKS   @RTCD   7                172507 200412
+     C**********           PARM '*KEY   ' @OPTN   7                172507 200412
+     C**********           PARM WTLBR     @BRCA   3                172507 200412
+     C********** SDBRCH    PARM SDBRCH    DSFDY                    172507 200412
+     C*                                                            172507 200412
+     C********** @RTCD     IFNE *BLANKS                            172507 200412
+     C********** *LOCK     IN   LDA                                172507 200412
+     C**********           MOVE 'SDBRCHPD'DBFILE       **********  172507 200412
+     C**********           Z-ADD5         DBASE     * DB ERR 05 *  172507 200412
+     C**********           MOVEL@BRCA     DBKEY     *************  172507 200412
+     C**********           EXSR DBERR                              172507 200412
+     C**********           END                                     172507 200412
+      **********                                                   172507 200412
+     C                     WRITERE4235H1
+     C  NLR                WRITERE4235H2
+      *
+     C                     SETOF                     11
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRTDTL - Print detail line                         *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY                                                     *
+      *                                                               *
+      *****************************************************************
+     C           PRTDTL    BEGSR                           ** PRTDTL **
+      *
+      ** Checking for top-of page indicator
+     C   11                EXSR PRTHDG
+      *
+     C                     WRITERE4235D1
+     C                     EXSR IFLDS
+      *
+     C                     SETOF                     2122
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            IFLDS  - Initialize Report Fields                  *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                        *
+      *            PRTDTL - Print detail line                         *
+      *                                                               *
+      *****************************************************************
+     C           IFLDS     BEGSR                           ** IFLDS  **
+      *
+     C                     MOVE *BLANKS   OTBIDI
+     C                     MOVE *BLANKS   ORTLII                          093527
+     C                     MOVE *BLANKS   OCCYI
+     C                     MOVE *BLANKS   OPAMTI
+     C                     MOVE *BLANKS   OTIMEI
+     C                     MOVE *BLANKS   OTBIDO
+     C                     MOVE *BLANKS   ORTLIO                          093527
+     C                     MOVE *BLANKS   OCCYO
+     C                     MOVE *BLANKS   OPAMTO
+     C                     MOVE *BLANKS   OTIMEO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ZA0150 - This subroutine chains to file LF/SDBANKL1           *
+      *            to get Midas Rundate & setup-complete-flag         *
+      *                                                               *
+      * CALLS      DBERR  - Database error handling : terminate pgm.  *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                        *
+      *                                                               *
+      *****************************************************************
+     C           ZA0150    BEGSR                           ** ZA0150 **
+      *
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD1         DBASE            ** DB ERR 01 **
+     C                     MOVEL@OPTN     DBKEY            **************
+     C                     EXSR DBERR
+     C                     ELSE
+     C                     MOVELBJRDNB    @RDAT   50
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DBERR  - Database error handling : terminate pgm.  *
+      *                                                               *
+      * CALLED BY  ZA0150 - Get Midas Rundate & Setup Indicator  (01) *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+     C*
+     C**  Write database error in the print file, if open
+     C*
+     C           WOPEN     IFEQ 'Y'
+     C                     WRITERE4235E2
+     C                     CLOSERE4235P1
+     C                     ENDIF
+     C*
+     C**  Report the error in the audit printer file
+     C*
+     C                     EXSR RCFAU
+     C                     WRITEERRORAU
+     C                     CLOSERE4235AU
+     C*
+     C**  End the program
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            LAST   - Final Processing                          *
+      *                     (Return to the caller)                    *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  MAIN   - Control process                           *
+      *                                                               *
+      *****************************************************************
+     C           LAST      BEGSR                           ** LAST   **
+      *
+     C           WOPEN     IFEQ 'Y'
+     C                     CLOSERE4235P1
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            LVLBRK - Change of branch level break.             *
+     C*                                                               *
+     C* CALLS                                                         *
+     C*                                                               *
+     C* CALLED BY  MAIN   - Control process                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           LVLBRK    BEGSR                           ** LVLBRK SR **
+     C*
+     C           WOPEN     IFEQ 'Y'
+     C           ENT       ANDNE*BLANKS
+     C*                                                                   174150
+     C**  Print error details if teller transactions don't                174150
+     C**  have Matching In/Out                                            174150
+     C*                                                                   174150
+     C           ERRIN     IFNE 0                                         174150
+     C           ERROUT    ORNE 0                                         174150
+     C   11                EXSR PRTHDG                                    174150
+      *                                                                   200412
+      **PERFORM LOOKUP AND DELETE ONCE MATCHES ARE ADDED
+      *                                                                   200412
+     C           ERRIN     IFNE 0                                         200412
+     C           ERROUT    ANDNE0                                         200412
+      *                                                                   200412
+     C                     Z-ADD0         COUNT   30                      200412
+     C                     Z-ADD1         C       30                      200412
+      *                                                                   200412
+     C           C         DOWLEB                                         200412
+     C                     Z-ADD1         D       30                      200412
+     C                     MOVE *BLANKS   @@TRAN 24                       200412
+     C                     MOVE INB,C     @@TRAN                          200412
+     C                     SETOF                     36                   200412
+      *                                                                   200412
+     C           D         DOWLEA                                         200412
+     C           *IN36     ANDEQ*OFF                                      200412
+     C                     Z-ADDD         E                               200412
+     C           INB,C     LOKUPINA,D                    36               200412
+      *                                                                   200412
+     C           *IN36     IFEQ *ON                                       200412
+     C                     ADD  1         COUNT                           200412
+     C                     SETON                     34                   200412
+     C                     MOVE *BLANKS   INA,D                           200412
+     C                     ELSE                                           200412
+     C                     Z-ADDE         D                               200412
+     C                     ENDIF                                          200412
+      *                                                                   200412
+     C                     ADD  1         D                               200412
+      *                                                                   200412
+     C                     ENDDO                                          200412
+      *                                                                   200412
+     C                     ADD  1         C                               200412
+      *                                                                   200412
+     C                     ENDDO                                          200412
+     C                     ENDIF                                          200412
+      *                                                                   200412
+     C                     MOVEA*BLANKS   INA,1                           200412
+     C                     MOVEA*BLANKS   INB,1                           200412
+     C                     Z-ADD0         B                               200412
+     C                     Z-ADD0         A                               200412
+      *
+     C                     WRITERE4235E3                                  174150
+      *
+     C                     SETOF                     34                   200412
+     C                     SETON                     U8                   174150
+     C                     MOVE '1'       *IN55                           174150
+     C                     END                                            174150
+     C           *IN55     IFEQ '1'                                       174150
+     C                     WRITERE4235L1
+     C                     CLOSERE4235P1
+     C                     MOVE 'N'       WOPEN                           099938
+     C                     END                                            174150
+     C                     END
+     C                     MOVE '1'       *IN55                           174150
+      **********                                                   172507 200412
+      ***Use*the branch of the transaction to be printed.          172507 200412
+      **********                                                   172507 200412
+     C********** *IN32     IFEQ '1'                                172507 200412
+     C**********           MOVE ITLB2     WTLBR   3                172507 200412
+     C**********           ELSE                                    172507 200412
+     C**********           MOVE ITLB1     WTLBR   3                172507 200412
+     C**********           ENDIF                                   172507 200412
+     C**  Get branch name using access object
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C***********          PARM ITLB1     @BRCA   3                       172507
+     C                     PARM ITLB1     @BRCA   3                       200412
+     C***********          PARM WTLBR     @BRCA   3                172507 200412
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           *************
+     C                     Z-ADD5         DBASE            * DB ERR 05 *
+     C                     MOVEL@BRCA     DBKEY            *************
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C**  Open printer file RE4216P1 if entity is not blank or the
+     C**  printer file is not yet open
+     C*
+     C           ENT       IFNE *BLANKS
+     C           WOPEN     ORNE 'Y'
+     C                     EXSR RCFP1
+     C*
+     C**  Else, eject to a new page
+     C*
+     C                     ELSE
+     C                     EXSR PRTHDG
+     C                     END
+     C*
+     C**  For Branch level, it must be the same as the branch selected
+     C*
+     C           ENT       IFNE 'ALL'
+     C           ENT       ANDNE*BLANKS
+     C***********ENT       ANDNEITLB1                                     172507
+     C           ENT       ANDNEITLB1                                     200412
+     C********** ENT       ANDNEWTLBR                              172507 200412
+     C                     MOVE '1'       *IN14
+     C                     END
+     C*
+     C**  Save the new branch code
+     C*
+     C***********          MOVE ITLB1     WITLB   3                       172507
+     C                     MOVE ITLB1     WITLB   3                       200412
+     C**********           MOVE WTLBR     WITLB   3                172507 200412
+     C                     Z-ADD0         ERRIN                           174150
+     C                     Z-ADD0         ERROUT                          174150
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            RCFP1  - Subroutine to register P1 printer file    *
+     C*                     via RCF.                                  *
+     C*                                                               *
+     C* CALLS                                                         *
+     C*                                                               *
+     C* CALLED BY  MAIN   - Control process                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RCFP1     BEGSR                           ** RCFP1 SR **
+     C*
+     C**  Open printer file
+     C*
+     C           WOPEN     IFNE 'Y'                                       099938
+     C                     OPEN RE4235P1
+     C                     MOVE 'Y'       WOPEN   1
+     C                     ENDIF                                          099938
+     C*
+     C                     EXSR PRTHDG
+     C*
+     C**  Ensure Report Spool File recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60                      103722
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM           ENT
+     C                     PARM           SFILE
+     C***********          PARM           SFNUM                           103722
+     C                     PARM           ZSNUM                           103722
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C**  If an error occurred during ZSFILE processing,
+     C**  return to the calling program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            RCFAU  - Subroutine to register AU printer file    *
+     C*                     via RCF.                                  *
+     C*                                                               *
+     C* CALLS                                                         *
+     C*                                                               *
+     C* CALLED BY  MAIN   - Control process                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RCFAU     BEGSR                           ** RCFAU SR **
+     C*
+     C**  Open printer file and write heading
+     C*
+     C           WOPAU     IFNE 'Y'                                       099938
+     C                     OPEN RE4235AU
+     C                     ENDIF                                          099938
+     C*
+     C                     WRITEHEADAU
+     C*
+     C**  Ensure Audit Spool File recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUM2  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C***********          PARM           SFNUMU                          103722
+     C                     PARM           ZSNUM2                          103722
+     C                     PARM           ZSERR   1
+     C*
+     C**  If an error occurred during ZSFILE processing,
+     C**  return to the calling program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program error                             *
+      *                                                               *
+      * CALLS -                                                       *
+      *                                                               *
+      * CALLED BY                                                     *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      ** Transaction failed.  Re-input necessary.
+     C                     DUMP
+     C                     CLOSE*ALL
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      **   Insertion of decimal-points, ',' in numeric fields
+     C/COPY ZSRSRC,ZFRPEDZ3
+** COPYRIGHT OBJECT **
+(c) Finastra International Limited 2001

@@ -1,0 +1,165 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE RE/GL Profit Extract - Start Task Split')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Lending Module                                      */
+/*                                                                   */
+/*       LERC25T1 - Midas LE RE/GL Profit Extract - Start Task Split */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD022062           Date 27Aug13              */
+/*                      AR1097467 *CREATE  Date 14Apr13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD022062 - EOM COB issues                                   */
+/*       AR1097467B - Expected 15% COB run optimization not met      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
+                          VALUE('LERC25    ')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&ANWD) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOURNAL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RECEIVER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NAME1) TYPE(*CHAR) LEN(5) VALUE('LEPRE')
+             DCL        VAR(&NAME2_C) TYPE(*CHAR) LEN(5) VALUE('00001')
+             DCL        VAR(&NAME2_N) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&LOOP) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&DELRECNO) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&CURRECNO) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&TOTREC) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&NOREC) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&NOREC@) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)
+             DCLF       FILE(CBCMPNLC)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('LERC25T1 - Profitability Extract - +
+                          Start Task Split') TOMSGQ(MRUNQ)
+ 
+/* Determine full JLIB and DTAQLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&JLIB) VALUE(&SYSID *CAT 'JLIB')
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'XLIB')
+ 
+/* Define journal and receiver name */
+ 
+             CHGVAR     VAR(&JOURNAL) VALUE('J' *CAT &CNAME)
+             CHGVAR     VAR(&RECEIVER) VALUE('JR' *CAT &CNAME)
+ 
+/* Remove all members from driving file */
+ 
+             RMVM       FILE(LEEXPRPD) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+/* Create main data queue */
+ 
+             CRTDTAQ    DTAQ(&DTAQLIB/LEPRESERVE) MAXLEN(50) +
+                          AUT(*LIBCRTAUT)
+             MONMSG     MSGID(CPF9870) EXEC(DO)
+             CALL       PGM(QCLRDTAQ) PARM(LEPRESERVE &DTAQLIB)
+             ENDDO
+ 
+             IF         COND(&CSEQ *EQ 2) THEN(CHGVAR VAR(&ANWD) +
+                          VALUE('Y'))
+ 
+/* Retrieve number of sub-tasks */
+ 
+ CHAIN:      RCVF
+             IF         COND(&DHCOTT *NE &CNAME) THEN(DO)
+             GOTO       CMDLBL(CHAIN)
+             ENDDO
+ 
+/* If ANWD run then ensure that ANWD component is accessed*/
+ 
+             IF         COND(&ANWD *EQ 'Y') THEN(DO)
+             IF         COND(&DHCSEQ *NE '00002') THEN(DO)
+             GOTO       CMDLBL(CHAIN)
+             ENDDO
+             ENDDO
+ 
+/* Start loop which adds new members to driver file */
+ 
+             CHGVAR     VAR(&NAME2_C) VALUE(&DHCSEQ)
+ LOOP:       IF         COND(&LOOP *GT &DHTSNO) THEN(GOTO +
+                          CMDLBL(START))
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&NAME1 *CAT &NAME2_C)
+             ADDPFM     FILE(LEEXPRPD) MBR(&MEMBER)
+ 
+             IF         COND(&LOOP *EQ 1) THEN(DO)
+               CPYF       FROMFILE(LEEXPRPD) TOFILE(QTEMP/ACCNTNORE) +
+                            CRTFILE(*YES)
+               MONMSG     MSGID(CPF0000)
+               RTVMBRD    FILE(ACCNTAB) NBRCURRCD(&CURRECNO) +
+                          NBRDLTRCD(&DELRECNO)
+               CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)
+               CHGVAR     VAR(&TOTREC) VALUE(&CURRECNO + &DELRECNO)
+               CHGVAR     VAR(&NOREC) VALUE((&TOTREC / &DHTSNO) + 1)
+               CHGVAR     VAR(&NOREC@) VALUE(&NOREC)
+               SCRUNSQL   SQL('Insert into QTEMP/ACCNTNORE (NORE) +
+                            VALUES(' *CAT &NOREC@ *CAT ')')
+             ENDDO
+ 
+/* Write number of records to process for each sub task */
+ 
+             SCRUNSQL   SQL('Create alias ' *CAT &MEMBER *CAT ' for +
+                          LEEXPRPD (' *CAT &MEMBER *CAT ')')
+ 
+             SCRUNSQL   SQL('Insert into ' *CAT &MEMBER +
+                          *CAT ' (NORE) VALUES(SELECT NORE FROM +
+                          QTEMP/ACCNTNORE)')
+ 
+             SCRUNSQL   SQL('DROP alias ' *CAT &MEMBER)
+ 
+             IF         COND(&LOOP = 1) THEN(DO)
+             IF         COND(&DHCSEQ = '00001') THEN(DO)
+             CHGVAR     VAR(&NAME2_N) VALUE(01000)
+             ENDDO
+             ELSE       CMD(DO)
+/**********  CHGVAR     VAR(&NAME2_N) VALUE(02001)                 */                   /*MD022062*/
+             CHGVAR     VAR(&NAME2_N) VALUE(02000)                                      /*MD022062*/
+             ENDDO
+             ENDDO
+ 
+             CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
+             CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N + 1)
+             CHGVAR     VAR(&NAME2_C) VALUE(&NAME2_N)
+             GOTO       CMDLBL(LOOP)
+ 
+/* Start journalling driving/update files */
+ 
+ START:      STRJRNPF   FILE(LEEXPRPD LEEXPIPD LEPEGLD LEPERED) +
+                          JRN(&JLIB/&JOURNAL) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             GOTO       CMDLBL(END)
+ 
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program LERC251 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

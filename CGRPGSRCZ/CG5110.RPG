@@ -1,0 +1,1652 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CSD053
+/*STD *  RPGBNOCVT                                                    *                       CSD053
+/*EXS *  RPGCVTOPT1                                                   *                       CSD053
+/*EXI *  TEXT('Midas CG UDC Print Process Request')
+/*OVRF*: OVRDBF (********) (********)                               : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG5110 - UDC Print Process Request                           *
+      *                                                               *
+      *  Function:  This program displays a screen that allows a user *
+      *             to select items of correspondence to print and    *
+      *             the order to print them.                          *
+      *                                                               *
+      *  Called By: mmCnnnn - (program name)                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 245055             Date 08Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 241824             Date 06Oct06               *
+      *                 CSD053             Date 01Jun06               *
+      *                 226341             Date 08Jul04               *
+      *                 227262             Date 08Jul04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 125920             Date 05Feb98               *
+      *                 CCG009             Date 01Jun95               *
+      *                 089246             DATE 08JUN95               *
+      *                 088837             DATE 08JUN95               *
+      *                 088008             DATE 18MAY95               *
+      *                 086662             DATE 25APR95               *
+      *                 084740             DATE 15MAR95               *
+      *                 083786             DATE 16FEB95               *
+      *                 S01522             DATE 07DEC94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  245055 - Review 241824.                                      *
+      *  241824 - Allow print process request by Module Id and        *
+      *           Extract Date. Allow Correspondent type to be        *
+      *           displayed correctly and also allow selection on     *
+      *           Language ID.                                        *
+      *  CSD053 - Correspondence Manager Multilanguage Upgrade        *
+      *         - (Recompile)                                         *
+      *  226341 - Default as 'Y' the final print field.               *
+      *  227262 - Add confirm key before submitting the print process *
+      *           to minimize accidental printing.                    *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  125920 - Validation of Auto-transmission is incorrect.       *
+      *  CCG009 - Private Banking UDC                                 *
+      *  089246 - Allow *PREVD in To date                             *
+      *  088837 - Order to print being incorrectly setup.             *
+      *  088008 - Print last confirmation                             *
+      *  086662 - Add correspondence type to selection criteria       *
+      *  084740 - User is only allowed to select all Correspondents   *
+      *           if they are authorised to Action Code 'Q' in SPF    *
+      *  083786 - Correct fix of screen for periodic requests         *
+      *  S01552 - User Defined Correspondence                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  KC   -    CF03 key pressed                                   *
+      *  KE   -    CF05 key pressed                                   *
+      *  KJ   -    CF10 key pressed                                   *
+      *  KL   -    CF12 key pressed                                   *
+      *  30   -    Error on Correspondent                             *
+      *  31   -    Error on Primary Correspondent Only                *
+      *  32   -    Error on Print Type                                *
+      *  33   -    Error on Sub-Type                                  *
+      *  34   -    Error on From Date                                 *
+      *  35   -    Error on To Date                                   *
+      *  36   -    Error on Language ID                               *
+      *  37   -    Error on Status 1                                  *
+      *  38   -    Error on Status 2                                  *
+      *  39   -    Error on Status 3                                  *
+      *  40   -    Error on Status 4                                  *
+      *  41   -    Error on Status 5                                  *
+      *  42   -    Error on Access Path                               *
+      *  43   -    Error on Auto Transmission flag                    *
+      *  44   -    Final Print                                        *
+      *  46   -    Error on Correspondent type                        *   086662
+      *  47   -    Error on Print last conf.                          *   088008
+      *  50   -    No Record found on LF/CGCORRL1                     *
+      *  51   -    No Record found on LF/CGPTYPL1                     *
+      *  52   -    No Record found on Screen Format @5110S1           *
+      *  53   -    No Record found on LF/CGCTYPL0                     *   086662
+      *  80   -    CHECK indicator                                    *
+      *  90   -    General error Indicator                            *
+      *  95   -    SFLEND indicator                                   *
+      *  98   -    Error on call to AOLANGR0                          *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FCGPTYPL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FCGCORRL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FCG5110DFCF  E                    WORKSTN
+     F                                              KINFSR SRFILE
+     FCGISTSL1IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     FCGCTYPL0IF  E           K        DISK                               086662
+     F                                              KINFSR SRFILE         086662
+      * RTV : Print Item Status         Retrieval index
+      *
+      *
+      /EJECT
+      *
+      **  Status Fields
+     E                    #STS        5 80
+      *
+      **  Copyright array.
+     E                    ##CPY   1   1 80
+     E**********          ##MON  12  12  3                                              241824245055
+     E                    ##MOD   8   8  2                                                    241824
+      /COPY CGCPYSRC,SRERRE
+      /EJECT
+      *
+     I*P#PARM      DS                            100                                          241824
+     I*P#PARM      DS                            115                                    241824245055
+     IP#PARM      DS                            100                                           245055
+      **  DS to obtain Data from RCF Parm
+     I                                        1  10 ##USER
+     I                                       11  20 ##DCOR
+     I                                       21  21 ##PRIM
+     I                                       22  31 ##PTYP
+     I                                       32  41 ##PSTP
+     I                                       42  460##FRDT
+     I                                       47  510##TODT
+     I**********                             52  61 ##LGID                                    241824
+     I                                       52  53 ##LGID                                    241824
+     I                                       54  580##EXDT                                    245055
+     I                                       59  60 ##MODI                                    245055
+     I***************************************62  71 ##ACCP                CCG009
+     I                                       62  63 ##ACCP                CCG009
+     I                                       64  71 #WGPTR                CCG009
+     I                                       72  75 ##STS1
+     I                                       76  79 ##STS2
+     I                                       80  83 ##STS3
+     I                                       84  87 ##STS4
+     I                                       88  91 ##STS5
+     I                                       92  92 ##ATRM
+     I                                       93  93 ##PPFN
+     I                                       94  94 ##ARCH
+     I                                       96  96 ##COT                 086662
+     I                                       97  97 ##PLST                088008
+     I**********                             98 104 ##EXDT                              241824245055
+     I**********                            105 106 ##MODI                              241824245055
+     I/COPY WNCPYSRC,CG5110I001
+      *
+     IP1PARM      DS                            100
+      **  Data structure for Correspondent Details
+     I                                        1  10 #1CORR
+     I                                       11  16 #1CUST
+     I                                       17  19 #1BRCH
+     I                                       20  27 #1CTRN
+     I**********                             28  45 #1ACID                                    CGL029
+     I**********                             46  49 #1ACOD                                    CGL029
+     I                                       28  45 QQACID                                    CGL029
+     I                                       46  49 QQACOD                                    CGL029
+     I                                       50  57 #1PTYP
+     I                                       58  81 #1ACID                                    CGL029
+     I                                       82  91 #1ACOD                                    CGL029
+      *
+     IP2PARM      DS                             33
+      **  Data Structure to retrieve Print Type/Sub-Type information
+     I                                        1  10 #2PTYP
+     I                                       11  20 #2PSTP
+      *
+     I            DS
+      **  Data Structure to define fields as zoned.
+     I                                        1   60##DATE
+      *
+     ICPYR        DS
+      **  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+      *
+     IDSRUN       DS
+      **  Bank details
+     I                                        1   7 ##RDAT
+     I                                    P   8  100##RUND
+     I                                       11  11 ##SSF
+     I                                       12  12 ##DATF
+     I                                       13  13 ##MBIN
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+     ISDLANG    E DSSDLANGPD
+      *
+     IDSFDY     E DSDSFDY
+      **  First data structure for access program, Short data structure
+      *
+     IO3PARM      DS                              4
+      * KEY: Print Item Status         Retrieval index
+      * I : MAP Item Status
+     I                                        1   4 O3ISTS
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     I**********  DS                                                                    241824245055
+     I**********                              1   7 S#EXDT                              241824245055
+     I**********                              1   2 #DAY                                241824245055
+     I**********                              1   20#DAYN                               241824245055
+     I**********                              3   5 #MONTH                              241824245055
+     I**********                              6   7 #YEAR                               241824245055
+     I**********                              6   70#YEARN                              241824245055
+      *                                                                   084740
+      *                                                                   084740
+     IW0DATA      DS                            256                       084740
+      *                                                                   084740
+      *  Define data structure used to pass parameters                    084740
+      *                                                                   084740
+     I                                        1   3 B#BRCA                084740
+     I                                        4   4 O#ACTD                084740
+     I                                        5  14 O#CPGM                084740
+      **  Define a constant
+     I              '0123456789'          C         C#NUMB
+      *
+      /COPY CGCPYSRC,SRERRI
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   SRMAIN - Main processing                                    *
+      *   SRSCRN - Process Input Screen Data                          *
+      *   SRCLRS - Clear Data Fields on Screen                        *
+      *   SRSINT - Initialise Screen Indicators                       *
+      *   SRINIT - Initial processing - On First Call                 *
+      *   SRTERM - Termination Processing                             *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRMAIN - Main Processing                       *
+      *                SRTERM - Termination Processing                *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           P#RSEQ  5
+     C                     PARM           P#RLVL  1
+     C**********           PARM           P#RENT  1                       084740
+     C                     PARM           P#RENT  3                       084740
+     C                     PARM           P#PARM
+     C                     PARM           P#RACT  1
+     C                     PARM           P#RCMD  1
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      **  Set up screen depending on action
+     C                     EXSR SRCLRS
+      *
+      **  Detail process
+     C                     EXSR SRMAIN
+      *
+      **  Termination Process
+     C                     EXSR SRTERM
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  SRSINT - Initialise Screen Indicators          *
+      *                SRSCRN - Process Input Screen Data             *
+      *                SRCLRS - Clear Data Fields on Screen           *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Continue Processing while CF03 and CF12 have not been input
+      **  and errors exist.
+     C                     MOVE 'Y'       ##ERR
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C           *INKJ     ANDEQ*OFF
+     C           ##ERR     ANDEQ'Y'
+      *
+      **  Update the displayed time.
+     C                     TIME           S#TIME
+      *
+      **  Display and read the main screen
+     C                     WRITESFLMSGC
+     C                     WRITE@5110S9
+     C                     WRITE@5110S1
+     C                     READ @5110S1                  52
+      *
+      **  Clear the Program Message Queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM 'CG5110  'PGMQ
+     C                     PARM '*SAME'   ##REL   5
+      *
+      **  Initialise the screen indicators.
+     C                     EXSR SRSINT
+      *
+      **  If CF03 and CF12 have not been input, process input.
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+     C           *INKJ     ANDEQ*OFF
+      *
+      **  If CF05 has been input, clear fields and do not validate.
+     C           *INKE     IFEQ *ON
+     C                     EXSR SRCLRS
+     C                     MOVE 'Y'       ##ERR
+     C                     ELSE
+      *
+      **  If CF05 has not been input process the screen fields.
+      *
+      **  and either amend or insert processing
+     C           P#RACT    IFNE 'E'
+     C           P#RACT    ANDNE'D'
+     C                     EXSR SRSCRN
+     C           *INKF     IFNE *ON                                                           227262
+     C           ##ERR     ANDNE'Y'                                                           227262
+     C                     MOVEL'CGD3000' ##MGID 10                                           227262
+     C                     EXSR SRSMSG                                                        227262
+     C                     MOVE 'Y'       ##ERR                                               227262
+     C                     MOVE *ON       *IN78                                               227262
+     C                     ENDIF                                                              227262
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRSCRN                                         *
+      * Function    :  Process Input Screen Data                      *
+      *                                                               *
+      * Called by   :  SRMAIN - Main Processing                       *
+      * Calls       :  SRSMSG - Send Message                          *
+      *****************************************************************
+     C           SRSCRN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRSCRN'  @STK,Q
+      *
+      *................................................................
+      *
+      *---------------------------------------------------------------*
+      *  Correspondent                                                *
+      *---------------------------------------------------------------*
+     C           S#DCOR    IFNE *BLANKS
+      *
+      **  Determine whether selection has been requested.
+     C           ' ?'      CHECKS#DCOR                   80
+      *
+      **  If selection has been requested, process the selection
+     C           *IN80     IFEQ *OFF
+     C                     MOVEL*BLANKS   P1PARM
+     C                     CALL 'CG0021'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM 'S'       ##ACTC  1
+     C                     PARM           P1PARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+     C           ##RTCD    ANDNE'USR0790'
+     C           ##RTCD    ANDNE'Y2U9999'
+     C                     MOVEL##RTCD    W0KEY
+      *                                                    ***************
+     C                     MOVEL'CG0021  'W0FILE           * DB ERROR 01 *
+     C                     Z-ADD01        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Set up the retrieved Correspondent, and set the error flag to
+      **  cause the full selection to be redisplayed.
+     C                     MOVEL#1CORR    S#DCOR
+     C                     MOVE 'Y'       ##ERR   1
+     C                     ENDIF
+      *
+      **  Validate the Correspondent, whether input or selected.
+     C           S#DCOR    IFNE *BLANKS
+     C           S#DCOR    CHAIN@CORRL1              50
+      *
+      **  If no record found process error.
+     C           *IN50     IFEQ *ON
+     C***********CDRTYP    ORNE 'C'                                       086662
+     C                     MOVEL'CGD1157' ##MGID 10
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN30
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                   084740
+      **  If the Correspondent is blank, ie all Correspondents,           084740
+      **  determine whether the user is allowed to select 'ALL'.          084740
+     C           S#DCOR    IFEQ *BLANKS                                   084740
+      *                                                                   084740
+      **  Determine whether the user is authorised to Action Code 'Q'     084740
+      *                                                                   084740
+      *                                                                   084740
+      * Check all valid action 'Q'                                        084740
+      *                                                                   084740
+     C                     CLEARW0DATA                                    084740
+     C                     MOVEL*BLANKS   B#BRCA                          084740
+     C                     MOVEL'CG1020'  O#CPGM                          084740
+     C                     MOVEL'Q'       O#ACTD                          084740
+      *                                                                   084740
+     C                     CALL 'CG1020'               9090               084740
+     C                     PARM *BLANKS   P0RTN   7                       084740
+     C                     PARM '*ACTCODE'W0ACT   8                       084740
+     C                     PARM           W0DATA                          084740
+      *                                                                   084740
+      **  User has no authority to action                                 084740
+     C***********P0RTN     IFNE *ZEROS                              084740086662
+     C           P0RTN     IFNE *BLANKS                                   086662
+     C           *IN90     OREQ *ON                        *IF            084740
+     C                     MOVEL'CGD2415' ##MGID                          084740
+     C                     EXSR SRSMSG                                    084740
+     C                     MOVE *ON       *IN30                           084740
+     C                     MOVE 'Y'       ##ERR                           084740
+     C                     ENDIF                                          084740
+     C                     ENDIF                                          084740
+      *                                                                   086662
+      *---------------------------------------------------------------*   086662
+      *  Correspondent type?                                          *   086662
+      *---------------------------------------------------------------*   086662
+      *                                                                   086662
+     C           S#CTYP    IFNE *BLANKS                                   086662
+      *                                                                   086662
+      **  Determine whether selection has been requested.                 086662
+     C           ' ?'      CHECKS#CTYP                   80               086662
+      *                                                                   086662
+      **  If selection has been requested, process the selection          086662
+     C           *IN80     IFEQ *OFF                                      086662
+     C                     CALL 'CG0040'                                  086662
+     C                     PARM *BLANKS   ##RTCD                          086662
+     C                     PARM 'S'       ##ACTC                          086662
+     C                     PARM *BLANKS   P3PARM 10                       086662
+      *                                                                   086662
+      **  Error in called program.                                        086662
+     C           ##RTCD    IFNE *BLANK                                    086662
+     C           ##RTCD    ANDNE'USR0790'                                 086662
+     C           ##RTCD    ANDNE'Y2U9999'                                 086662
+     C                     MOVEL##RTCD    W0KEY                           086662
+      *                                                    ***************086662
+     C                     MOVEL'CG0040  'W0FILE           * DB ERROR 06 *086662
+     C                     Z-ADD06        W0ERNB           ***************086662
+     C                     MOVEL'MEM5003' W0MSGD                          086662
+     C                     MOVEL'MIDAS  ' W0MSGF                          086662
+     C                     EXSR SRERR                                     086662
+     C                     ENDIF                                          086662
+      *                                                                   086662
+      **  Set up the retrieved Correspondent type, and set the error      086662
+      **  flag to cause the full selection to be redisplayed.             086662
+     C                     MOVELP3PARM    S#CTYP                          086662
+     C                     MOVE 'Y'       ##ERR                           086662
+     C                     ENDIF                                          086662
+      *                                                                   086662
+      **  Validate the Correspondent, whether input or selected.          086662
+     C           S#CTYP    IFNE *BLANKS                                   086662
+     C           S#CTYP    CHAIN@CTYPL0              53                   086662
+      *                                                                   086662
+      **  If no record found process error.                               086662
+     C           *IN53     IFEQ *ON                                       086662
+     C           CTRECI    ORNE 'D'                                       086662
+     C                     MOVEL'CGD1279' ##MGID                          086662
+     C                     EXSR SRSMSG                                    086662
+     C                     MOVE *ON       *IN46                           086662
+     C                     MOVE 'Y'       ##ERR                           086662
+     C                     ENDIF                                          086662
+     C                     ENDIF                                          086662
+     C                     ENDIF                                          086662
+      *                                                                   086662
+      **  Correspondent and Correspondent type are mutually exclusive.    086662
+     C           S#DCOR    IFNE *BLANKS                                   086662
+     C           S#CTYP    ANDNE*BLANKS                                   086662
+     C                     MOVEL'CGD1850' ##MGID                          086662
+     C                     EXSR SRSMSG                                    086662
+     C                     SETON                     3046                 086662
+     C                     MOVE 'Y'       ##ERR                           086662
+     C                     ENDIF                                          086662
+      *
+      *---------------------------------------------------------------*
+      *  Primary Correspondent?                                       *
+      *---------------------------------------------------------------*
+      *
+      **  If the input value is not 'Y' or 'N', process an error.
+     C           S#PRIM    IFNE 'Y'
+     C           S#PRIM    ANDNE'N'
+     C                     MOVEL'CGD1571' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN31
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+      *
+      *---------------------------------------------------------------*
+      *  Print Type/Sub-Type                                          *
+      *---------------------------------------------------------------*
+     C           S#PTYP    IFNE *BLANKS
+      *
+      **  Determine whether selection has been requested.
+     C           ' ?'      CHECKS#PTYP                   80
+      *
+      **  If selection has been requested, process the selection
+     C           *IN80     IFEQ *OFF
+     C                     MOVEL*BLANKS   P2PARM
+     C                     CALL 'CG1180'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM 'S'       ##ACTC  1
+     C                     PARM           P2PARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+     C           ##RTCD    ANDNE'USR0790'
+     C           ##RTCD    ANDNE'Y2U9999'
+     C                     MOVEL##RTCD    W0KEY
+      *                                                    ***************
+     C                     MOVEL'CG1180  'W0FILE           * DB ERROR 02 *
+     C                     Z-ADD02        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Set up the retrieved Print Type/Sub-Type and set the error
+      **  flag to cause the full selection to be redisplayed.
+     C                     MOVEL#2PTYP    S#PTYP
+     C           S#PSTP    IFEQ *BLANKS
+     C                     MOVEL#2PSTP    S#PSTP
+     C                     ENDIF
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Print Sub-Type specific validation.
+     C           S#PSTP    IFNE *BLANKS
+      *
+      **  If data has been input but Print Type is blank, process an
+      **  error.
+     C           S#PTYP    IFEQ *BLANKS
+     C                     MOVEL'CGD1572' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN33
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+      *
+      **  Determine whether selection has been requested.
+     C           ' ?'      CHECKS#PSTP                   80
+      *
+      **  If selection has been requested, process an error.
+     C           *IN80     IFEQ *OFF
+     C                     MOVEL'CGD1573' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN33
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Validate the Print Type/Sub-Type, whether input or selected.
+     C           S#PTYP    IFNE *BLANKS
+     C           S#PSTP    ORNE *BLANKS
+      *
+     C           S#PTYP    SETLL@PTYPL1
+     C           S#PTYP    READE@PTYPL1                  51
+      *
+      **  If a record is found and a Sub-Type has been input, continue
+      **  until a match is found or end of file reached.
+     C                     MOVE *OFF      *IN80                           CCG009
+     C           S#PSTP    IFNE *BLANKS
+     C           *IN51     DOWEQ*OFF
+     C           S#PSTP    IFEQ ITPSTP
+      *                                                                   CCG009
+      **  If the Type/Sub-Type is part of a group,                        CCG009
+      **  only the Type may be selected for printing                      CCG009
+     C           ITGPHD    IFNE *BLANK                                    CCG009
+     C                     MOVE *ON       *IN80                           CCG009
+     C                     END                                            CCG009
+      *                                                                   CCG009
+     C                     LEAVE
+     C                     ENDIF
+     C           S#PTYP    READE@PTYPL1                  51
+     C                     ENDDO
+     C                     ENDIF
+      *
+      **  If no record found process error.
+     C           *IN51     IFEQ *ON
+     C                     MOVEL'CGD1357' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN32
+     C                     MOVE *ON       *IN33
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+      *                                                                   CCG009
+      **  If an invalid Sub-Type has been selected for printing           CCG009
+     C           *IN80     IFEQ *ON                                       CCG009
+     C                     MOVEL'CGD1529' ##MGID                          CCG009
+     C                     EXSR SRSMSG                                    CCG009
+     C                     MOVE *ON       *IN33                           CCG009
+     C                     MOVE 'Y'       ##ERR                           CCG009
+     C                     ENDIF                                          CCG009
+     C                     ENDIF
+      *
+      *---------------------------------------------------------------*
+      *  From Date                                                    *
+      *---------------------------------------------------------------*
+     C                     Z-ADD*ZEROS    ##FRDT
+     C           S#FRDT    IFNE *BLANKS
+     C           S#FRDT    IFNE '*TODAY'
+      *
+      **  Check input date is numeric.
+     C           C#NUMB    CHECKS#FRDT                   80
+     C           *IN80     IFEQ *ON
+     C                     MOVE '1'       ##RTN
+     C                     ELSE
+      *
+      **  Call ZA0270 to validate the input date and convert it to a
+      **  Day Number.
+     C                     MOVE S#FRDT    ##DATE
+     C                     Z-ADD##DATE    ##DATP
+      *
+     C                     CALL 'ZA0270'
+     C                     PARM           ##DATP  60
+     C                     PARM BJDFIN    ##DFMT  1
+     C                     PARM *ZERO     ##RTN   1
+     C                     PARM *ZERO     ##DAYN  50
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-SUB1         ##DAYN
+     C                     MOVEL'0'       ##RTN
+     C                     ENDIF
+      *
+      **  If the date is invalid, process error.
+     C           ##RTN     IFNE *ZERO
+     C                     MOVEL'CGD1574' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN34
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+      *
+      **  If the input Date is after the Run Date, process an error.
+     C           ##DAYN    IFGT ##RUND
+     C                     MOVEL'CGD1575' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN34
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+     C                     Z-ADD##DAYN    ##FRDT
+     C                     ENDIF
+      *
+      *---------------------------------------------------------------*
+      *  To Date                                                      *
+      *---------------------------------------------------------------*
+     C                     Z-ADD*ZEROS    ##TODT
+     C           S#TODT    IFNE *BLANKS
+     C           S#TODT    IFNE '*PREVD'                                  089246
+      *
+      **  Check input date is numeric.
+     C           C#NUMB    CHECKS#TODT                   80
+     C           *IN80     IFEQ *ON
+     C                     MOVE '1'       ##RTN
+     C                     ELSE
+      *
+      **  Call ZA0270 to validate the input date and convert it to a
+      **  Day Number.
+     C                     MOVE S#TODT    ##DATE
+     C                     Z-ADD##DATE    ##DATP
+      *
+     C                     CALL 'ZA0270'
+     C                     PARM           ##DATP
+     C                     PARM BJDFIN    ##DFMT  1
+     C                     PARM *ZERO     ##RTN   1
+     C                     PARM *ZERO     ##DAYN  50
+     C                     ENDIF
+      *
+     C                     ELSE                                           089246
+     C                     Z-SUB2         ##DAYN                          089246
+     C                     MOVEL'0'       ##RTN                           089246
+     C                     ENDIF                                          089246
+      **  If the date is invalid, process error.
+     C           ##RTN     IFNE *ZERO
+     C                     MOVEL'CGD1576' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN35
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+      *
+      **  If the input Date is after the Run Date, process an error.
+     C           ##DAYN    IFGT ##RUND
+     C                     MOVEL'CGD1577' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN35
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+     C                     Z-ADD##DAYN    ##TODT
+     C                     ENDIF
+      *
+      *---------------------------------------------------------------*
+      *  From Date/To Date                                            *
+      *---------------------------------------------------------------*
+      *
+      **  If the From and To dates have been entered and are both valid
+      **  check that the From Date is before the To Date.
+     C           S#FRDT    IFNE *BLANKS
+     C           S#TODT    ANDNE*BLANKS
+     C           *IN34     ANDEQ*OFF
+     C           *IN35     ANDEQ*OFF
+      *
+     C           ##FRDT    IFGT ##TODT
+     C                     MOVEL'CGD1578' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN34
+     C                     MOVE *ON       *IN35
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If the From date *TODAY then To date not allowed
+     C           S#FRDT    IFEQ '*TODAY'
+     C           S#TODT    ANDNE*BLANKS
+     C           *IN34     ANDEQ*OFF
+     C           *IN35     ANDEQ*OFF
+      *
+     C           ##FRDT    IFGT ##TODT
+     C                     MOVEL'CGD1578' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN34
+     C                     MOVE *ON       *IN35
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *---------------------------------------------------------------*
+      *  Language ID                                                  *
+      *---------------------------------------------------------------*
+     C           S#LGID    IFNE *BLANKS
+      *
+      **  Determine whether Input language ID valid
+     C                     MOVELS#LGID    #3LGID
+      *
+     C                     CALL 'AOLANGR0'             9898
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*KEY'    ##OPTN
+     C                     PARM           #3LGID  2
+     C           SDLANG    PARM *BLANKS   DSFDY
+      *
+     C           *IN98     IFEQ '1'
+     C                     MOVEL'AOLANGR0'W0FILE           ***************
+     C                     MOVEL#3LGID    W0KEY            * DB ERROR 03 *
+     C                     Z-ADD3         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  If no record is found, process an error
+     C           ##RTCD    IFNE *BLANKS
+      *
+     C                     MOVEL'CGD1280' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN36
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *---------------------------------------------------------------*
+      *  Status Fields                                                *
+      *---------------------------------------------------------------*
+      *
+      **  Load non-blank status fields into an array
+     C                     Z-ADD1         J       30
+     C                     MOVEA*BLANKS   #STS
+      *
+     C           S#STS1    IFNE *BLANKS
+     C                     MOVE S#STS1    #STS,J
+     C                     ADD  1         J
+     C                     ELSE
+     C                     MOVE 'SCHD'    #STS,1
+     C                     ENDIF
+      *
+     C           S#STS2    IFNE *BLANKS
+     C           S#STS2    ANDNES#STS1
+     C                     MOVE S#STS2    #STS,J
+     C                     ADD  1         J
+     C                     ENDIF
+      *
+     C           S#STS3    IFNE *BLANKS
+     C           S#STS3    ANDNES#STS1
+     C           S#STS3    ANDNES#STS2
+     C                     MOVE S#STS3    #STS,J
+     C                     ADD  1         J
+     C                     ENDIF
+      *
+     C           S#STS4    IFNE *BLANKS
+     C           S#STS4    ANDNES#STS1
+     C           S#STS4    ANDNES#STS2
+     C           S#STS4    ANDNES#STS3
+     C                     MOVE S#STS4    #STS,J
+     C                     ADD  1         J
+     C                     ENDIF
+      *
+     C           S#STS5    IFNE *BLANKS
+     C           S#STS5    ANDNES#STS1
+     C           S#STS5    ANDNES#STS2
+     C           S#STS5    ANDNES#STS3
+     C           S#STS5    ANDNES#STS4
+     C                     MOVE S#STS5    #STS,J
+     C                     ADD  1         J
+     C                     ENDIF
+     C                     MOVE *BLANKS   S#STS1
+     C                     MOVE *BLANKS   S#STS2
+     C                     MOVE *BLANKS   S#STS3
+     C                     MOVE *BLANKS   S#STS4
+     C                     MOVE *BLANKS   S#STS5
+      *
+      **  If an entry has been made, validate it.
+     C           J         IFNE 1
+      *
+     C           J         IFGT 1
+     C                     MOVE #STS,1    ##STAT
+     C                     EXSR SRSTAT
+     C                     MOVE ##STAT    S#STS1
+     C           W0RTN     IFNE *BLANKS
+     C                     MOVE *ON       *IN37
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           J         IFGT 2
+     C                     MOVE #STS,2    ##STAT
+     C                     EXSR SRSTAT
+     C                     MOVE ##STAT    S#STS2
+     C           W0RTN     IFNE *BLANKS
+     C                     MOVE *ON       *IN38
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           J         IFGT 3
+     C                     MOVE #STS,3    ##STAT
+     C                     EXSR SRSTAT
+     C                     MOVE ##STAT    S#STS3
+     C           W0RTN     IFNE *BLANKS
+     C                     MOVE *ON       *IN39
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           J         IFGT 4
+     C                     MOVE #STS,4    ##STAT
+     C                     EXSR SRSTAT
+     C                     MOVE ##STAT    S#STS4
+     C           W0RTN     IFNE *BLANKS
+     C                     MOVE *ON       *IN40
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           J         IFGT 5
+     C                     MOVE #STS,5    ##STAT
+     C                     EXSR SRSTAT
+     C                     MOVE ##STAT    S#STS5
+     C           W0RTN     IFNE *BLANKS
+     C                     MOVE *ON       *IN41
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *---------------------------------------------------------------*
+      *  Auto Transmission Flag                                       *
+      *---------------------------------------------------------------*
+      *
+      **  If the input value is not blank, 'L' or 'C' process an error.
+     C           S#ATRM    IFNE *BLANK
+     C***********S#ATRM    ANDNE'L'                                       125920
+     C***********S#ATRM    ANDNE'C'                                       125920
+     C           S#ATRM    ANDNE'Y'                                       125920
+     C           S#ATRM    ANDNE'N'                                       125920
+     C                     MOVEL'CGD1610' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN43
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+      *---------------------------------------------------------------*                       241824
+      *  Extract Date                                                 *                       241824
+      *---------------------------------------------------------------*                       241824
+      *                                                                                       241824
+      **  If the input value is not in correct format process an error.                       241824
+     C********** S#EXDT    IFNE *BLANK                                                  241824245055
+     C********** #MONTH    LOKUP##MON                    98                             241824245055
+     C********** *IN98     IFEQ '0'                                                     241824245055
+     C********** #DAYN     ORLT 1                                                       241824245055
+     C********** #DAYN     ORGT 31                                                      241824245055
+     C********** #YEARN    ORLT 0                                                       241824245055
+     C********** #YEARN    ORGT 99                                                      241824245055
+     C**********           MOVEL'CGD1556' ##MGID                                        241824245055
+     C**********           EXSR SRSMSG                                                  241824245055
+     C**********           MOVE *ON       *IN88                                         241824245055
+     C**********           MOVE 'Y'       ##ERR                                         241824245055
+     C**********           ENDIF                                                        241824245055
+     C**********           ENDIF                                                        241824245055
+      *                                                                                       241824
+     C                     Z-ADD*ZEROS    ##EXDT                                              245055
+     C           S#EXDT    IFNE *BLANKS                                                       245055
+     C           S#EXDT    IFNE '*TODAY'                                                      245055
+      *                                                                                       245055
+      **  Check input date is numeric.                                                        245055
+     C           C#NUMB    CHECKS#EXDT                   80                                   245055
+     C           *IN80     IFEQ *ON                                                           245055
+     C                     MOVE '1'       ##RTN                                               245055
+     C                     ELSE                                                               245055
+      *                                                                                       245055
+      **  Call ZA0270 to validate the input date and convert it to a                          245055
+      **  Day Number.                                                                         245055
+     C                     MOVE S#EXDT    ##DATE                                              245055
+     C                     Z-ADD##DATE    ##DATP                                              245055
+      *                                                                                       245055
+     C                     CALL 'ZA0270'                                                      245055
+     C                     PARM           ##DATP  60                                          245055
+     C                     PARM BJDFIN    ##DFMT  1                                           245055
+     C                     PARM *ZERO     ##RTN   1                                           245055
+     C                     PARM *ZERO     ##DAYN  50                                          245055
+     C                     ENDIF                                                              245055
+      *                                                                                       245055
+     C                     ELSE                                                               245055
+     C                     Z-SUB1         ##DAYN                                              245055
+     C                     MOVEL'0'       ##RTN                                               245055
+     C                     ENDIF                                                              245055
+      *                                                                                       245055
+      **  If the date is invalid, process error.                                              245055
+     C           ##RTN     IFNE *ZERO                                                         245055
+     C                     MOVEL'CGD1556' ##MGID                                              245055
+     C                     EXSR SRSMSG                                                        245055
+     C                     MOVE *ON       *IN88                                               245055
+     C                     MOVE 'Y'       ##ERR                                               245055
+     C                     ENDIF                                                              245055
+      *                                                                                       245055
+      **  If the input Date is after the Run Date, process an error.                          245055
+     C           ##DAYN    IFGT ##RUND                                                        245055
+     C                     MOVEL'CGD1575' ##MGID                                              245055
+     C                     EXSR SRSMSG                                                        245055
+     C                     MOVE *ON       *IN88                                               245055
+     C                     MOVE 'Y'       ##ERR                                               245055
+     C                     ENDIF                                                              245055
+     C                     Z-ADD##DAYN    ##EXDT                                              245055
+     C                     ENDIF                                                              245055
+      *                                                                                       245055
+      *---------------------------------------------------------------*                       241824
+      *  Module Id.                                                                           241824
+      *---------------------------------------------------------------*                       241824
+      *                                                                                       241824
+      **  If the module Id does not exist format process an error.                            241824
+     C           S#MODI    IFNE *BLANK                                                        241824
+     C           S#MODI    LOKUP##MOD                    99                                   241824
+     C           *IN99     IFEQ '0'                                                           241824
+     C                     MOVEL'CGD1561' ##MGID                                              241824
+     C                     EXSR SRSMSG                                                        241824
+     C                     MOVE *ON       *IN87                                               241824
+     C                     MOVE 'Y'       ##ERR                                               241824
+     C                     ENDIF                                                              241824
+     C                     ENDIF                                                              241824
+      *                                                                                       241824
+     C/COPY WNCPYSRC,CG5110C001
+      *
+      *---------------------------------------------------------------*
+      *  Access Path                                                  *
+      *---------------------------------------------------------------*
+      *
+      **  If the input value is not 'L' or 'C', process an error.
+     C           S#ACCP    IFNE 'L'
+     C           S#ACCP    ANDNE'C'
+     C                     MOVEL'CGD1580' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN42
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+      *
+      *---------------------------------------------------------------*
+      *  Print Final                                                  *
+      *---------------------------------------------------------------*
+      *
+      **  If the input value is not 'Y' or blank , process an error.
+     C           S#PPFN    IFNE 'Y'
+     C           S#PPFN    ANDNE*BLANKS
+     C                     MOVEL'CGD1651' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN44
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+      *
+      *---------------------------------------------------------------*
+      *  Current or Archive files                                     *
+      *---------------------------------------------------------------*
+      *
+      **  If the input value is not 'C' or 'A', process an error.
+     C           S#ARCH    IFNE 'C'
+     C           S#ARCH    ANDNE'A'
+     C                     MOVEL'CGD1666' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVE *ON       *IN45
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+      *
+      **  If no error then compare Final Print and "A"
+     C           S#ARCH    IFEQ 'A'
+     C           S#PPFN    ANDEQ'Y'
+     C           ##ERR     ANDEQ'N'
+     C                     MOVEL'CGD1667' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVEA'11'      *IN,44
+     C                     MOVE 'Y'       ##ERR
+     C                     ENDIF
+      *                                                                   088008
+      *---------------------------------------------------------------*   088008
+      *  Print last confirmation                                      *   088008
+      *---------------------------------------------------------------*   088008
+      *                                                                   088008
+      **  If the input value is not 'Y or blank process an error.         088008
+     C           S#PLST    IFNE 'Y'                                       088008
+     C           S#PLST    ANDNE*BLANKS                                   088008
+     C                     MOVEL'CGD2499' ##MGID                          088008
+     C                     EXSR SRSMSG                                    088008
+     C                     MOVE *ON       *IN47                           088008
+     C                     MOVE 'Y'       ##ERR                           088008
+     C                     ENDIF                                          088008
+      *                                                                   088008
+      **  If print last confirmation is Y,Current or Archive must be C.   088008
+     C           S#PLST    IFEQ 'Y'                                       088008
+     C           S#ARCH    ANDNE'C'                                       088008
+     C                     MOVEL'CGD2522' ##MGID                          088008
+     C                     EXSR SRSMSG                                    088008
+     C                     MOVE *ON       *IN45                           088008
+     C                     MOVE 'Y'       ##ERR                           088008
+     C                     ENDIF                                          088008
+      *
+      *................................................................
+      *
+     C           EXSCRN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRSTAT                                         *
+      * Function    :  Validate Status                                *
+      *                                                               *
+      * Called by   :  SRSCRN - process Input Screen Data             *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRSTAT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRSTAT'  @STK,Q
+      *
+      *................................................................
+     C                     MOVEL*BLANK    W0RTN   7
+     C           *LIKE     DEFN ISISTS    ##STAT
+      * If all low order keys not entered, exit
+     C           ##STAT    IFEQ *BLANK                     Status
+     C                     GOTO EXSTAT
+     C                     END
+      *
+      * Check for selection
+      *
+     C           ' ?'      CHECK##STAT                   90
+     C           *IN90     IFEQ '0'
+     C           ##STAT    ANDNE*BLANKS
+     C                     MOVEL*BLANKS   O3PARM
+     C                     CALL 'CG1200'               9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM 'S'       O3ACTC  1        Action Code
+     C                     PARM           O3PARM           B:RDE
+      *
+      * Analyse return code
+      *
+     C           *IN90     IFEQ '0'
+     C           P@RTCD    ANDEQ*BLANKS
+      * Record found
+     C                     MOVELO3ISTS    ##STAT
+      *
+      * Delay
+      *
+     C                     MOVEL'Y'       ##ERR
+     C                     GOTO EXSTAT
+     C                     END
+      *
+     C                     END
+      *
+     C           KLSTAT    KLIST
+     C                     KFLD           ISISTS           Item Status
+      * Setup key
+     C                     MOVEL##STAT    ISISTS           Item Status
+     C           KLSTAT    CHAIN@ISTSL1              9091  *
+     C           *IN90     IFEQ '0'
+      *
+      * Item status may not be deleted
+      *
+     C           ##STAT    IFEQ 'DLTD'
+     C                     MOVEL'CGD1669' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVEL'CGD1669' W0RTN
+     C                     END
+      *
+      * Item status may not be PRTD  for final print
+      *
+     C           ##STAT    IFEQ 'PRTD'
+     C           S#PPFN    ANDEQ'Y'
+     C                     MOVEL'CGD1670' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVEL'CGD1670' W0RTN
+     C                     END
+      * Record found - move back any virtuals
+     C                     MOVELISISTS    ##STAT           Item Status
+     C                     GOTO EXSTAT
+     C                     END
+      * Send message 'Item Status            NF'
+     C                     MOVEL'CGD1668' ##MGID
+     C                     EXSR SRSMSG
+     C                     MOVEL'CGD1668' W0RTN
+      *................................................................
+      *
+     C           EXSTAT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRSMSG                                         *
+      * Function    :  Send a Message to the Program Message Queue    *
+      *                                                               *
+      * Called by   :  SRSCRN - process Input Screen Data             *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRSMSG    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRSMSG'  @STK,Q
+     C/COPY WNCPYSRC,CG5110C002
+      *
+      *................................................................
+      *
+      **  Send the message.
+     C                     CALL 'Y2SNMGC'
+     C                     PARM 'CG5110  'PGMQ
+     C                     PARM *BLANKS   ##REL
+     C                     PARM           ##MGID
+     C/COPY WNCPYSRC,CG5110C003
+     C                     PARM 'CGUSRMSG'##MSGF 10
+     C/COPY WNCPYSRC,CG5110C004
+     C                     PARM           ##MDTA132
+     C                     PARM           ##MSTP  7
+      *
+     C                     MOVE *BLANKS   ##REL
+     C                     MOVE *BLANKS   ##MDTA
+     C                     MOVE *BLANKS   ##MSTP
+      *
+      *................................................................
+      *
+     C           EXSMSG    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRCLRS                                         *
+      * Function    :  Clear data fields on screen                    *
+      *                                                               *
+      * Called by   :  SRMAIN - Main Processing                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRCLRS    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRCLRS'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Clear all screen data fields.
+     C                     SELEC
+     C           P#RACT    WHEQ ' '
+     C           P#RACT    OREQ 'I'
+     C                     MOVE *BLANKS   S#DCOR
+     C                     MOVE *BLANKS   S#CTYP                          086662
+     C                     MOVE 'N'       S#PRIM
+     C                     MOVE *BLANKS   S#PTYP
+     C                     MOVE *BLANKS   S#PSTP
+     C                     MOVE *BLANKS   S#FRDT
+     C                     MOVE *BLANKS   S#TODT
+     C                     MOVE *BLANKS   S#LGID
+     C                     MOVEL'SCHD'    S#STS1
+     C                     MOVE *BLANKS   S#STS2
+     C                     MOVE *BLANKS   S#STS3
+     C                     MOVE *BLANKS   S#STS4
+     C                     MOVE *BLANKS   S#STS5
+     C                     MOVE 'L'       S#ACCP
+     C                     MOVE *BLANKS   S#ATRM
+     C                     MOVE *BLANKS   S#PPFN
+     C                     MOVE 'Y'       S#PPFN                                              226341
+     C                     MOVEL'C'       S#ARCH
+     C                     MOVEL*BLANKS   S#PLST                          088008
+     C                     MOVEL*BLANKS   S#EXDT                                              241824
+     C                     MOVEL*BLANKS   S#MODI                                              241824
+      *
+      **  If other set fields from that passed
+     C                     OTHER
+     C           ##COT     IFEQ 'T'                                                           241824
+     C                     MOVE ##DCOR    S#CTYP                                              241824
+     C                     ELSE                                                               241824
+     C                     MOVE ##DCOR    S#DCOR
+     C                     ENDIF                                                              241824
+     C                     MOVE ##PRIM    S#PRIM
+     C                     MOVE ##PTYP    S#PTYP
+     C                     MOVE ##PSTP    S#PSTP
+     C                     MOVE ##LGID    S#LGID
+     C                     MOVE ##STS1    S#STS1
+     C                     MOVE ##STS2    S#STS2
+     C                     MOVE ##STS3    S#STS3
+     C                     MOVE ##STS4    S#STS4
+     C                     MOVE ##STS5    S#STS5
+     C                     MOVE ##ATRM    S#ATRM
+     C                     MOVE ##PPFN    S#PPFN
+     C                     MOVE ##ARCH    S#ARCH
+     C                     MOVEL##PLST    S#PLST                          088008
+     C**********           MOVEL##EXDT    S#EXDT                                        241824245055
+     C                     MOVEL##MODI    S#MODI                                              241824
+      *                                                                   083786
+      **  Set up L or C for order to print                                083786
+     C***********##ACCP    IFEQ 'CGPGENL3'                         083786 CCG009
+     C           ##ACCP    IFEQ 'L3'                                      CCG009
+     C                     MOVEL'L'       S#ACCP                          083786
+     C                     ELSE                                           083786
+     C***********          MOVEL'C'       ##ACCP                    083786088837
+     C                     MOVEL'C'       S#ACCP                          088837
+     C                     ENDIF                                          083786
+      *
+      **  If To Date not 0 format
+     C                     MOVEL*BLANKS   S#TODT
+     C                     SELEC                                          089246
+     C           ##TODT    WHEQ -2                                        089246
+     C                     MOVEL'*PREVD'  S#TODT                          089246
+     C           ##TODT    WHNE *ZEROS                                    089246
+     C***********##TODT    IFNEC*ZEROS                                    089246
+      *
+      *  Convert Midas Day no. to system date
+      *
+     C                     CALL 'ZDATE2'               90
+     C                     PARM           W2DAYN  50       Day No.
+     C                     PARM BJDFIN    W2DTFM  1        Date Format
+     C                     PARM *ZEROS    W2DATE  60       Date
+     C                     PARM *BLANKS   W2FDAT  7        DDMMMYY
+      *
+     C                     MOVELW2DATE    S#TODT           Creation date
+     C***********          ENDIF                                          089246
+     C                     ENDSL                                          089246
+      *
+      **  If From Date not 0 format
+     C                     MOVEL*BLANKS   S#FRDT
+     C                     SELEC
+     C           ##FRDT    WHEQ -1
+     C                     MOVEL'*TODAY'  S#FRDT
+     C           ##FRDT    WHNE *ZEROS
+      *
+      *  Convert Midas Day no. to system date
+      *
+     C                     CALL 'ZDATE2'               90
+     C                     PARM           W2DAYN  50       Day No.
+     C                     PARM BJDFIN    W2DTFM  1        Date Format
+     C                     PARM *ZEROS    W2DATE  60       Date
+     C                     PARM *BLANKS   W2FDAT  7        DDMMMYY
+      *
+     C                     MOVELW2DATE    S#TODT           Creation date
+     C                     ENDSL
+      *                                                                                       245055
+      **  If Extract date not 0 format                                                        245055
+     C                     MOVEL*BLANKS   S#EXDT                                              245055
+     C                     SELEC                                                              245055
+     C           ##EXDT    WHEQ -1                                                            245055
+     C                     MOVEL'*TODAY'  S#EXDT                                              245055
+     C           ##EXDT    WHNE *ZEROS                                                        245055
+      *                                                                                       245055
+      *  Convert Midas Day no. to system date                                                 245055
+      *                                                                                       245055
+     C                     CALL 'ZDATE2'               90                                     245055
+     C                     PARM           W2DAYN  50       Day No.                            245055
+     C                     PARM BJDFIN    W2DTFM  1        Date Format                        245055
+     C                     PARM *ZEROS    W2DATE  60       Date                               245055
+     C                     PARM *BLANKS   W2FDAT  7        DDMMMYY                            245055
+      *                                                                                       245055
+     C                     MOVELW2DATE    S#EXDT           Creation date                      245055
+     C                     ENDSL                                                              245055
+     C                     ENDSL
+     C/COPY WNCPYSRC,CG5110C007
+      *
+      **  Set indicators
+     C                     EXSR SRSINT
+      *
+      *................................................................
+      *
+     C           EXCLRS    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRSINT                                         *
+      * Function    :  Initialise Screen Indicators                   *
+      *                                                               *
+      * Called by   :  SRMAIN - Main Processing                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRSINT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRSINT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise Indicators.
+     C***********          MOVEL*ALL'0'   ##OFF1 16                       086662
+     C***********          MOVEL*ALL'0'   ##OFF1 17                 086662088008
+     C                     MOVEL*ALL'0'   ##OFF1 18                       088008
+     C                     MOVEA##OFF1    *IN,30
+     C                     MOVE 'N'       ##ERR
+      *
+      **  If delete allow F10  .
+     C                     MOVEL'0'       *IN79
+     C           P#RACT    IFEQ 'D'
+     C                     MOVEL'1'       *IN79
+     C                     ENDIF
+      *
+      **  If delete or enquire inhibit input
+     C                     MOVEL'0'       *IN78
+     C           P#RACT    IFEQ 'D'
+     C           P#RACT    OREQ 'E'
+     C                     MOVEL'1'       *IN78
+     C                     ENDIF
+      *
+     C                     SETOF                     88                                       241824
+     C                     SETOF                     87                                       241824
+      *................................................................
+      *
+     C           EXSINT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Key list ...
+      *
+      **  Initialise work fields .....
+     C                     MOVEL'CG5110'  PGMQ   10
+     C                     MOVEL*BLANKS   MSGKEY  4
+      *
+     C           P#RACT    IFEQ ' '
+     C***********P#RACT    OREQ 'A'                                       083786
+     C           P#RACT    OREQ 'I'                                       083786
+     C                     CLEARP#PARM
+     C                     ENDIF
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      *
+      **  Access SDBANKPD
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBMSG  '##RTCD
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Error handling for access object
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL'AOBANKR0'W0FILE           ***************
+     C                     MOVEL'*FIRST  'W0KEY            * DB ERROR 04 *
+     C                     Z-ADD4         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Access data area DSRUN to find date
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+      *
+      **  If data area not found then perform database error processing
+     C           ##RDAT    IFEQ *BLANKS
+     C                     MOVEL'RUNDAT  'W0FILE           ***************
+     C                     MOVEL'ONLY    'W0KEY            * DB ERROR 05 *
+     C                     Z-ADD5         W0ERNB           ***************
+     C                     MOVEL'MEM5002' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Default screen fields.
+     C           P#RACT    IFEQ ' '                                       083786
+     C           P#RACT    OREQ 'I'                                       083786
+     C                     MOVE 'N'       S#PRIM
+     C                     MOVE 'L'       S#ACCP
+     C                     MOVEL'SCHD'    S#STS1
+     C                     MOVEL'C'       S#ARCH
+     C                     MOVEL'Y'       S#PPFN                                              226341
+     C                     ENDIF                                          083786
+      *
+      **  Screen header fields.
+     C                     MOVEL##USR     S#USER
+     C                     MOVEL##USR     ##USER
+     C                     MOVEL##PGM     S#PGM
+     C                     MOVEL##RDAT    S#MRDT
+     C                     MOVEL##JOB     S#JOB
+      *
+      * Option Name
+      *
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1671' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    S#TITL
+      *
+      * Function keys
+      *
+     C           P#RACT    IFNE 'D'
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1021' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C                     ELSE
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1025' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C                     ENDIF
+      *
+     C                     MOVEL#MSTX1    S#CMDT
+      *
+      **  Open Item Status
+     C                     OPEN CGISTSL1
+     C/COPY WNCPYSRC,CG5110C005
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRTERM                                         *
+      * Function    :  Termination processing                         *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRTERM    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRTERM'  @STK,Q
+      *
+      *................................................................
+      *
+      **  If F3 was pressed send termination code of 'E' back to RCF
+     C           *INKC     IFEQ *ON
+     C                     MOVE 'E'       P#RCMD
+     C                     ENDIF
+      *
+      **  If F10 was pressed send termination code of 'D' back to RCF
+     C           *INKJ     IFEQ *ON
+     C                     MOVE 'D'       P#RCMD
+     C                     ENDIF
+      *
+      **  If F12 was pressed send termination code of 'F' back to RCF
+     C           *INKL     IFEQ *ON
+     C                     MOVE 'F'       P#RCMD
+     C                     ENDIF
+      *
+      **  If there are no errors, set up the RCF data parameter with
+      **  the input data.
+     C           ##ERR     IFEQ 'N'
+      *
+      **  Correspondent type cannot be added as a seperate field to       086662
+      **  P#PARM as this would take P#PARM greater than 100 and would     086662
+      **  necessitate changes throughout RCF.Subsequently ##COT has       086662
+      **  been added which will contain 'C' if a correspondent is         086662
+      **  selected and 'T' if a correspondent type is selected.           086662
+      **                                                                  086662
+     C           S#DCOR    IFNE *BLANK                                    086662
+     C                     MOVE S#DCOR    ##DCOR
+     C                     MOVEL'C'       ##COT                           086662
+     C                     ENDIF                                          086662
+      *                                                                   086662
+     C           S#CTYP    IFNE *BLANK                                    086662
+     C                     MOVE S#CTYP    ##DCOR                          086662
+     C                     MOVEL'T'       ##COT                           086662
+     C                     ENDIF                                          086662
+      *                                                                   086662
+     C                     MOVE S#PRIM    ##PRIM
+     C                     MOVE S#PTYP    ##PTYP
+     C                     MOVE S#PSTP    ##PSTP
+     C                     MOVE S#LGID    ##LGID
+     C                     MOVE S#STS1    ##STS1
+     C                     MOVE S#STS2    ##STS2
+     C                     MOVE S#STS3    ##STS3
+     C                     MOVE S#STS4    ##STS4
+     C                     MOVE S#STS5    ##STS5
+     C                     MOVE S#ATRM    ##ATRM
+     C                     MOVE S#PPFN    ##PPFN
+     C                     MOVE S#ARCH    ##ARCH
+     C                     MOVELS#PLST    ##PLST                          088008
+     C**********           MOVELS#EXDT    ##EXDT                                        241824245055
+     C                     MOVELS#MODI    ##MODI                                              241824
+     C           S#ACCP    IFEQ 'L'
+     C***********          MOVEL'CGPGENL3'##ACCP                          CCG009
+     C                     MOVEL'L3'      ##ACCP                          CCG009
+     C                     ELSE
+     C***********          MOVEL'CGPGENL2'##ACCP                          CCG009
+     C                     MOVEL'L2'      ##ACCP                          CCG009
+     C                     ENDIF
+     C                     ENDIF
+     C/COPY WNCPYSRC,CG5110C006
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *................................................................
+      *
+     C           EXTERM    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *
+     C                     ENDSR
+      ************************************************************
+      /EJECT
+      /COPY CGCPYSRC,SRERRPSSR
+      /EJECT
+      /COPY CGCPYSRC,SRERRC
+      /EJECT
+      ** ##MON removed                                                                        245055
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+** ##MOD  **                                                                                  241824
+GLFTDLRELEPBSEFF                                                                              241824

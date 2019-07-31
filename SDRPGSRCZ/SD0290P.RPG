@@ -1,0 +1,256 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Customer safe details report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0290P - Report Customer Safe Details.                      *
+      *                                                               *
+      *  Function:  This program lists the customer safes file to     *
+      *             a hard copy.                                      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 082067  *CREATE    Date 25Jan95               *
+      *                                    Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  082067 - Creation of a new report.                           *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                  FUNCTION OF INDICATORS                       *
+      *                 ************************                      *
+      *                                                               *
+      *       10        END OF FILE SDSAFEL0                          *
+      *       98        OFF FOR DDMMMYY IN ZDATE2                     *
+      *                                                               *
+      *****************************************************************
+     FSDSAFEL0IF  E                    DISK
+     FSD0290P1O   E                    PRINTER
+     F                                              KINFDS SPOOL
+      *
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+      *
+      ** FILE INFORMATION DATA STRUCTURE - SD0290P1
+     ISPOOL       DS
+     I                                    B 123 1240SFNUM
+      *
+     ISDBANK    E DSSDBANKPD
+      ** BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     IDSFDY     E DSDSFDY
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+      /EJECT
+     C           *ENTRY    PLIST
+     C                     PARM           RTNCD   7
+     C                     PARM           MODE    1
+     C                     PARM           SEQ     5
+     C                     PARM           LEVEL   1
+     C                     PARM           ENTITY  3
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     SETOF                     98
+     C                     MOVEL'SD0290P1'SFILE   8
+      *
+      *   Call AOBANKR0 to access MIDAS run date.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     END
+     C                     WRITESD0290F1
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           *IN01     DOUEQ'1'
+     C                     READ SDSAFEL0                 01
+     C           *IN01     IFEQ '0'
+      *
+     C                     Z-ADDSASFI1    ZDAYNO
+     C                     EXSR DATE
+     C                     MOVELZADATE    DAT1
+      *
+     C                     Z-ADDSASFI2    ZDAYNO
+     C                     EXSR DATE
+     C                     MOVELZADATE    DAT2
+      *
+     C                     Z-ADDSASFI3    ZDAYNO
+     C                     EXSR DATE
+     C                     MOVELZADATE    DAT3
+      *
+     C                     Z-ADDSASFI4    ZDAYNO
+     C                     EXSR DATE
+     C                     MOVELZADATE    DAT4
+      *
+     C                     Z-ADDSASFI5    ZDAYNO
+     C                     EXSR DATE
+     C                     MOVELZADATE    DAT5
+      *
+     C                     MOVELSASFN1    NUM1    60
+     C                     MOVELSASFN2    NUM2    60
+     C                     MOVELSASFN3    NUM3    60
+     C                     MOVELSASFN4    NUM4    60
+     C                     MOVELSASFN5    NUM5    60
+      *
+     C           NUM1      IFNE 0
+     C                     MOVELNUM1      SAF1
+     C                     ELSE
+     C                     MOVEL*BLANKS   SAF1
+     C                     END
+      *
+     C           NUM2      IFNE 0
+     C                     MOVELNUM2      SAF2
+     C                     ELSE
+     C                     MOVEL*BLANKS   SAF2
+     C                     END
+      *
+     C           NUM3      IFNE 0
+     C                     MOVELNUM3      SAF3
+     C                     ELSE
+     C                     MOVEL*BLANKS   SAF3
+     C                     END
+      *
+     C           NUM4      IFNE 0
+     C                     MOVELNUM4      SAF4
+     C                     ELSE
+     C                     MOVEL*BLANKS   SAF4
+     C                     END
+      *
+     C           NUM5      IFNE 0
+     C                     MOVELNUM4      SAF5
+     C                     ELSE
+     C                     MOVEL*BLANKS   SAF5
+     C                     END
+      *
+     C                     MOVELSASFS1    NO1     20
+     C                     MOVELSASFS2    NO2     20
+     C                     MOVELSASFS3    NO3     20
+     C                     MOVELSASFS4    NO4     20
+     C                     MOVELSASFS5    NO5     20
+      *
+     C           NO1       IFNE 0
+     C                     MOVELNO1       SIZ1
+     C                     ELSE
+     C                     MOVEL*BLANKS   SIZ1
+     C                     END
+      *
+     C           NO2       IFNE 0
+     C                     MOVELNO2       SIZ2
+     C                     ELSE
+     C                     MOVEL*BLANKS   SIZ2
+     C                     END
+      *
+     C           NO3       IFNE 0
+     C                     MOVELNO3       SIZ3
+     C                     ELSE
+     C                     MOVEL*BLANKS   SIZ3
+     C                     END
+      *
+     C           NO4       IFNE 0
+     C                     MOVELNO4       SIZ4
+     C                     ELSE
+     C                     MOVEL*BLANKS   SIZ4
+     C                     END
+      *
+     C           NO5       IFNE 0
+     C                     MOVELNO5       SIZ5
+     C                     ELSE
+     C                     MOVEL*BLANKS   SIZ5
+     C                     END
+      *
+     C           LINE      IFGE 42
+     C                     WRITESD0290F1
+     C                     Z-ADD0         LINE
+     C                     END
+      *
+     C                     WRITESD0290F2
+     C                     ADD  11        LINE    20
+      *
+     C                     END
+     C                     END
+      *
+     C                     WRITESD0290F3
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      *                  SUB - ROUTINES                               *
+      *                  ~~~~~~~~~~~~~~                               *
+      * DATE   - CONVERTS DAY NO. TO DATE IF 0 REPLACE WITH BLANKS    *
+      * ZDATE2 - CONVERTS DAY NO. TO DATE                             *
+      * *PSSR  - ERROR HANDLING ROUTINE                               *
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE2Z2
+      *****************************************************************
+      *                                                               *
+      *  DATE   - Convert day no. to date subroutine.                 *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *  Calls    : ZDATE2                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DATE      BEGSR
+      *
+     C           ZDAYNO    IFEQ 0
+     C                     MOVEL*BLANKS   ZADATE
+     C                     ELSE
+     C                     EXSR ZDATE2
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

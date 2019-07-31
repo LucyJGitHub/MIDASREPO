@@ -1,0 +1,1869 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Repo/pledge collateral report')               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE0991 - REPO/PLEDGE COLLATERAL REPORT                       *
+     F*                                                               *
+     F*  Function: Report mismatches between Money Market Deals which *
+     F*   (COB)    have been designated as being Repo's/Reverse Repo's*
+     F*            or Pledges and Depot Movements that may have been  *
+     F*            entered to reflect the Collateral to cover them.   *
+     F*                                                               *
+     F*  Called by: SEC0708 - Repurchase Agreement Mismatch Report    *
+     F*                                                               *
+     F*  Frequency: Daily during COB for mismatches                   *
+     F*             On request during COB for full list               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 226449             Date 24Jun15               *
+      *                 MD034776           Date 09Jul15               *
+      *                 CGL165             Date 15Feb17               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 AR1067108          Date 11Dec12               *
+      *                 AR1001183          Date 20Nov12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG11414           Date 20Nov05               *
+      *                 CDL049             Date 11May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 237063             Date 20Nov05               *
+      *                 BUG7985            Date 07Jul05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 229857             Date 07Oct04               *
+      *                 229544             Date 15Sep04               *
+      *                 226570             Date 27Jun04               *
+      *                 222727             Date 05Nov03               *
+      *                 211407             Date 07Jan03               *
+      *                 207543             Date 17JUL02               *
+      *                 194370             Date 12Jul01               *
+      *                 180056             Date 18Oct00               *
+      *                 CSE037             Date 29Apr02               *
+      *                 CSE035             Date 22Apr02               *
+      *                 CAS006             Date 21Jan03               *
+      *                 206316             Date 19Jul02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 17Jun01               *
+      *                 CSE031             Date 09Nov01               *
+      *                 180707             Date 25Jul00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 140272             Date 20Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+     F*                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 130862             Date 18Oct98               *
+      *                 151945             Date 06Jan99               *
+     F*                 CSE005             DATE 04FEB97               *
+     F*                 084704             DATE 01AUG96               *
+     F*                 083039             DATE 01AUG96               *
+     F*                 059110             DATE 25JUL96               *
+     F*                 CAC001             DATE 01FEB96               *
+     F*                 S01408             DATE 27JUN96               *
+     F*                 088047             DATE 26JUN96               *
+     F*                 100228             DATE 30MAY96               *
+     F*                 102731             DATE 02MAY96               *
+     F*                 099886             DATE 18APR96               *
+     F*                 100017             DATE 18APR96               *
+     F*                 092961             DATE 04OCT95               *
+     F*                 091254             DATE 20OCT95               *
+     F*                 086491             DATE 15JUN95               *
+     F*                 S01444             DATE 24SEP93               *
+     F*                 064575             DATE 15AUG94               *
+     F*                 065301             DATE 12MAY94               *
+     F*                 056527             DATE 25APR94               *
+     F*                 S01445             DATE 04NOV93               *
+     F*                 053704             DATE 25NOV93               *
+     F*                 052254             DATE 25NOV93               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 054763             DATE 04MAY93               *
+     F*                 E47922             DATE 01FEB93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E32674             DATE 03DEC91               *
+     F*                 E30851             DATE 22NOV91               *
+     F*                 E26654             DATE 12NOV91               *
+     F*                 E27934             DATE 22OCT91               *
+     F*                 E29170             DATE 17OCT91               *
+     F*                 E27092             DATE 04SEP91               *
+     F*                 S01195             DATE 19JUL91               *
+     F*                 S01117             DATE 19JUL91               *
+     F*                 S01269             DATE 01AUG90               *
+     F*                 E21668             DATE 01MAY90               *
+     F*                 E21616             DATE 03APR90               *
+     F*                 S01232             DATE 20NOV89               *
+     F*                 E20380             DATE 30NOV89               *
+     F*                 E16772             DATE 19/06/89              *
+     F*                 E16765             DATE 07/06/89              *
+     F*                 E16758             DATE 12/04/89              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  MD034776 - Reverse AR1001183A to allow negative interest     *
+      *             rate. (Recompile)                                 *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  AR1067108 - PMC1140 Component failed during Clean COB.       *
+      *              Applied fix AR1001183A                           *
+      *  AR1001183A - Coupon rate was still used in computation of    *
+      *              interest instead of using the details in FRN tab *
+      *              (Reopen) (Recompile)                             *
+      *  BUG11414 - Fix will ensure that correct customer will be     *
+      *             passed.                                           *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  237063 - EU Tax fixes upgrade to MP build 103 (Recompile).   *
+      *  BUG7985- Several components failed due to accessing TABLETR  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  229857 - Recompiled due to change in ZYLDZ2.                 *
+      *  229544 - Recompiled due to inserted fields in DLCHISPD.      *
+      *  226570 - Recompiled due to change in ZYLDZ2.                 *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  211407 - Recompile after change on copy sources ZYLDZ2,      *
+      *           ZACCRZ1 and ZYCEZ1 for NX/NNX processing.           *
+      *           The change was to call subroutine ZLCD1 instead     *
+      *           of ZLCD in retrieving the PERIOD for NNX processing *
+      *           and ZNCD1 is called instead of ZNCD in retrieving   *
+      *           the WBENCD for NNX processing. Also rewrite tests   *
+      *           for identifying if position is NX,NNX or CUM.       *
+      *  207543 - CEU018 not working on a price basis.                *
+      *           Recompiled over changed ZYLDZ2.                     *
+      *  194370 - Recompile after change on copy sources ZYLDZ2,      *
+      *           For securities with divisor basis = '5' and first   *
+      *           coupon date > valuation date (rundate + 1), set     *
+      *           event control date to first coupon date before      *
+      *           processing SR/ZDYYR. This is to ensure that the     *
+      *           correct hypothetical last and next coupon dates are *
+      *           used in deriving the price/yield rate.              *
+      *  180056 - Recompiled over changed in ZDYYRZ3.                 *
+      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input     *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+      *           Recompile over changed ZACCRZ1/ZYLDZ2/ZYCEZ1
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  206316 - Recompiled over changed ZLCDZ1.                     *
+      *  CPK015 - Conversion of ZYIELD from PLI to RPG.               *
+      *           Recompile over changed ZYLDZ2.                      *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+      *           (recompilation due to change to ZNCD/ZLCD/ZACCR).   *
+      *  180707 - No Position Settlements generated. Recompile over   *
+      *           changes in /COPY ZNCDZ3.                            *
+     F*  140272 - Recompile over changed ZYLDZ2                       *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*  130862 - Recompiled over ZLCDZ1 & ZDAYSZ2 changes.           *
+     F*  151945 - Recompiled Over changed ZDYYRZ3 .                   *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD/ZACCR).   *
+     F*  084704 - RECOMPILE OVER CHANGED ZYLDZ2 SUB.                  *
+     F*  083039 - RECOMPILE OVER CHANGED ZYLDZ2 SUB.                  *
+     F*  059110 - Recompile over changed ZYLDZ2 sub.                  *
+     F*  CAC001 - Profit Centre Accounting Development:               *
+     F*           Recompiled due to change in DEALSDC.                *
+     F*  S01408 - Core hook SE0991CCP3 added.                         *
+     F*           Core hook SE0991CCP2 added.                         *
+     F*           Core hook SE0991CCP1 added.                         *
+     F*  088047 - RECOMPILE over change SR/ZYLDZ2.                    *
+     F*  100228 - RECOMPILE OVER CHANGED ZDYYRZ3, ZLCDZ1 & ZNCDZ3.    *
+     F*  102731 - Treat a maturity date of 999999 as a 'no-end date'  *
+     F*           rather than 12-OCT-2045 for example. In this        *
+     F*           case, print '******'instead.                        *
+     F*  099886 - Rounding problem for partly paid securities.        *
+     F*           Fix applied is the same as in ZACCZ subroutine.     *
+     F*  100017 - Position settlement unable to pick up day adj. on   *
+     F*           SECTYD. Change subroutine to use DADJN to stop      *
+     F*           interest day adjustment being used for amortisation.*
+     F*           Recompile over amended subroutine ZDAYS.            *
+     F*  092961 - Recompile over ZDAYSZ2 which was amended by 086491  *
+     F*           (Wrong number of days calculated for day basis 1    *
+     F*           when start or end day is last day of February)      *
+     F*  091254 - RECOMPILE OVER CHANGED ZLCDZ1 & ZNCDZ3              *
+     F*  086491 - Wrong nbr of days calculated for day basis 1        *
+     F*           when start or end day is last day of February       *
+     F*           Recompiled for ZSRSRC/ZDAYSZ2 changes.              *
+     F*  S01444 - Recompiled. (LF/DEALRP - amended to include         *
+     F*           historic deals files)                               *
+     F*  064575 - Recompiled over amended ZYLDZ2 subroutine.          *
+     F*  065301 - Recompiled over changed copy source ZACCR subr.     *
+     F*           with ZAMT increased to 15,0.                        *
+     F*  056527 - MM deals and related depot movements should not be  *
+     F*           shown on report if they are both not live.  Also,   *
+     F*           correct spurious details printed on report when a   *
+     F*           deal-depot combination with key  KDMRP>KDLRP is     *
+     F*           followed by one where  KDMRP=KDLRP.                 *
+     F*  S01445 - DEPOT MOVEMENT CHARGES ENHANCEMENT.                 *
+     F*           Recompiled due to changes in PF/DPTMVD.             *
+     F*  053704 - DISTINCTION BETWEEN REPOS AND REVERSE REPOS.        *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*           - Recompiled due to changes to files.               *
+     F*  054763 - E47922 should have added SR/ZCNSD and ZCALCD to     *
+     F*           enable recompilation.                               *
+     F*  E47922 - Recompiled over changed SR/ZYLDZ2                   *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*           - Recompiled due to changes to files and SR/ZYLD.   *
+     F*  E32674 - Recompiled due to error in DPTMVD                   *
+     F*  E30851 - Program can miss out deal records                   *
+     F*  E26654 - The Repo Amount conflicts with that in the Deposit  *
+     F*           Confirmations.                                      *
+     F*         - The Counterparty/Town/Number is only being printed  *
+     F*           for the first Deal record.                          *
+     F*         - Computation of the Total is done unpredictably.     *
+     F*           (Applied portion of SP1209 - fix from GBBISLNB.)    *
+     F*         - The Total Amount is incorrect. Only the last Deal   *
+     F*           Amount is reflected in the Total Amount.            *
+     F*  E27934 - Recompiled over the changed version of ZACCRZ1      *
+     F*  E29170 - Report Control Facility program changes             *
+     F*  E27092 - Recompiled over changed SR/ZLCD                     *
+     F*  S01195 - Holiday Processing.                                 *
+     F*  S01117 - Multibranching.                                     *
+     F*  S01269 - Trade authorisation: recompiled over changed TABSE. *
+     F*  E21668 - Recompiled over changed SR/ZYLDZ2                   *
+     F*  E21616 - Recompiled over changed SR/ZLCD.                    *
+     F*  S01232 - Australian yield modification.                      *
+     F*  E20380 - Recompile for changed ZYLDZ1/2 and include ZLCDZ1.  *
+     F*  E16772 - Recompiled for the Dividend Payment Amount field    *
+     F*           changes.                                            *
+     F*  E16765 - LEAVE PROGRAM AFTER DATABASE ERROR                  *
+     F*  E16758 - Database error if security side of repo not         *
+     F*           entered.                                            *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSE0991AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         E29170
+     FSE0991P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL          E29170
+     FDEALRP  IF  E           K        DISK
+     F            DEALSDCF                          KRENAMEDEALRPF
+     F/COPY WNCPYSRC,SE0991F001
+     FDPMVRP  IF  E           K        DISK
+     F            DPTMVDF                           KRENAMEDPMVRPF
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FSEDEV   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK                               S01232
+     F            SEDEVDF                           KRENAMESEDEVDO        S01232
+     F            SNDEVDF                           KRENAMESNDEVDO        S01232
+     FDEALS   IF  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     FDPTMVR  IF  E           K        DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTSEF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE
+     F* ICD SE    TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F* CCY 1     TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F**********  TABLETJF                          KIGNORE               S01232
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F* BRC 1     TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   L1  - CHANGE IN DEAL NUMBER                                 *
+     F*   L2  - CHANGE IN CUSTOMER                                    *
+     F*   L3  - CHANGE IN REPO/PLEDGE                                 *
+     F*   L4  - CHANGE IN BRANCH                                      *
+     F*                                                               *
+     F*   01  - EOF - LF/DEALRP                                       *
+     F*   02  - EOF - LF/DPMVRP                                       *
+     F*   10  - DEAL NOT FOUND ON DEALSDC                             *
+     F*   11  - FAILED CHAIN - DB ERROR                               *
+     F****20**-*Processing*loop*indicator*for*SR/RECPRC*************S01117E30851
+     F*   88  - Multibranching set on                                 *   S01117
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F*   U7  - Database Error.                                       *
+     F*   U8  - Database / Control Error                              *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  *PSSR  - DUMP program on error                               *   S01117
+     F*  MAIN   - PRODUCE REPO/PLEDGE CLLATERAL REPORT                *
+     F*           (CALLS ZSYSTEM, ZICD2, RECRDS, AUDIT)               *
+     F*  RECRDS - MAKES FIRST READS & CALLS RECPRC UNTIL EOFs.        *
+     F*           (CALLS READDL, READDM, RECPRC)                      *
+     F*  RECPRC - PROCESS DEALS AND DEPOT MOVEMENTS                   *
+     F*           (CALLS PRO1, PRO2, PRO3, COLCAL, READDL, READDM)    *
+     F*  COLCAL - PREPARES COLLATERAL CALCULATION                     *
+     F*           (CALLS CVLDL, CVLNM)                                *
+     F*  PRO1   - PRINT DEAL HEADINGS                                 *
+     F*           (CALLS ZDATE2, ZSEDIT)                              *
+     F*  PRO2   - PRINT DEPOT MOVEMENT DETAILS                        *
+     F*           (CALLS ZDATE2, ZSEDIT)                              *
+     F*  PRO3   - PRINT DEAL TOTALS                                   *
+     F*           (CALLS ZSEDIT)                                      *
+     F*  RCFAU  - Define AU printer file to RCF program ZSFILE        *   E29170
+     F*  RCFP1  - Define P1 printer file to RCF program ZSFILE        *   E29170
+     F*  READDL - READ FILE DEALRP & DETERMINE LEVEL BREAKS           *
+     F*  READDM - READ FILE DPMVRP & DETERMINE LEVEL BREAKS           *
+     F*  CVLDL  - CALCULATE SECURTY COLLATERAL VALUE IN DEAL          *
+     F*           CURRENCY   (CALLS ZCOLLV)                           *
+     F*  CVLNM  - CALCULATE SECURTY COLLATERAL VALUE IN SECURITY      *
+     F*         - NOMINAL CURRENCY   (CALLS ZCOLLV)                   *
+     F*  AUDIT  - AUDIT PROCESS                                       *
+     F*                                                               *
+     F***XDATE3*-*TO*CALCULATE*ANY*NUMBER*OF*WORKING*DAYS*BACK.*****S01232S01195
+     F*  ZACCR  - SUB TO CALCULATE INTEREST ACCRUED BETWEEN TWO DATES *   S01232
+     F*  ZACCZ  - SUBROUTINE TO CALCULATE INTEREST ACCRUED ON A       *   S01232
+     F*           SECURITY (NOT SCHULDSHEIN) UP TO A SPECIFIED DATE.  *   S01232
+     F*  ZCOLLV - CALCULATE COLLATERAL VALUE                          *
+     F*  ZCONV  - CONVERT AMOUNTS FROM ONE CURRENCY TO ANOTHER        *
+     F*  ZDATE1 - TO VALIDATE DATES SUBMITTED AND CONVERT TO A NUMBER *
+     F*           OF DAYS.                                            *
+     F*  ZDATE2 - TO CONVERT A DAY NUMBER TO DATE FORMATS.            *
+     F*  ZDAYS  - TO CALCULATE NUMBER OF DAYS BETWEEN TWO DATES FOR   *
+     F*           INTEREST CALCULATIONS                               *
+     F*  ZDYYR  - TO CALCULATE NO OF DAYS IN INTEREST YEAR            *
+     F*  ZD5DYS - TO CALCULATE NO OF DAYS IN INT. YEAR FOR DVBS 5.    *
+     F*  ZEVCD  - DETERMINE EVENT CONTROL DATE                        *
+     F*  ZICD2  - ACCESS ICD2 RECORD                                  *
+     F*  ZLCD   - DETERMINE LAST COUPON DATE                          *   E20085
+     F*  ZNCD   - DETERMINE NEXT COUPON DATE                          *
+     F*  ZPRCI  - TO CONVERT PRICE TO PERCENTAGE PRICE                *
+     F*  ZRATE  - TO CALCULATE EFFECTIVE RATE                         *
+     F*  ZSEDIT - FORMAT AMOUNT FIELDS FOR DISPLAY                    *
+     F*  ZSYSTM - ACCESS ICD1 RECORD                                  *
+     F*  ZXRATE - GET CROSS-EXCHANGE RATE & MULTIPLY/DIVIDE IN  D.    *
+     F*  ZYCE   - SET UP CUM/EX PARAMETER FOR AUSTRALIAN YIELDS       *   S01232
+     F*  ZYLDI  - TO CONVERT YIELD TO PERCENTAGE PRICE                *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E***/COPY*ZSRSRC,ZDATE6Z1                                      S01232S01195
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZPOWERZ1
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E                    MES     1   9 65
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+      /EJECT
+     I*                                                                   S01232
+     I********RENAME*NOMINAL*CCY****                                      S01232
+     I*                                                                   S01232
+     I*EDEVDF                                                             S01232
+     I***********   NMCY                            NMCYA                 S01232
+     I/COPY WNCPYSRC,SE0991I002
+     I*
+      *                                                                                       CSE037
+     IINVTPDF                                                                                 CSE037
+     I              SFLG                            ISFLG                                     CSE037
+      *                                                                                       CSE037
+     IKDLRP       DS
+     I***********                             1   30BRDL                  S01117
+     I                                        1   3 BRDL                  S01117
+     I                                        4   4 RPDL
+     I**********                              5  100CLDL                                      CSD027
+     I                                        5  10 CLDL                                      CSD027
+     I                                       11  160DLDL
+     I*
+     IOKDLRP      DS
+     I***********                             1   30OBRDL                 S01117
+     I                                        1   3 OBRDL                 S01117
+     I                                        4   4 ORPDL
+     I**********                              5  100OCLDL                                     CSD027
+     I                                        5  10 OCLDL                                     CSD027
+     I                                       11  160ODLDL
+     I*
+     IKDMRP       DS
+     I***********                             1   30BRDM                  S01117
+     I                                        1   3 BRDM                  S01117
+     I                                        4   4 RPDM
+     I**********                              5  100CLDM                                      CSD027
+     I                                        5  10 CLDM                                      CSD027
+     I                                       11  160DLDM
+     I*
+     IOKDMRP      DS
+     I***********                             1   30OBRDM                 S01117
+     I                                        1   3 OBRDM                 S01117
+     I                                        4   4 ORPDM
+     I**********                              5  100OCLDM                                     CSD027
+     I                                        5  10 OCLDM                                     CSD027
+     I                                       11  160ODLDM
+     I*
+     I***LDA*****   UDS                            256                    S01117
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+      *                                                                   S01117
+     ILDA         DS                            256                       S01117
+      *                                                                   S01117
+      ** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+      ** after each database error handling.                              S01117
+      *                                                                   S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     I/COPY ZSRSRC,ZNCDZ2
+     I/COPY ZSRSRC,ZSEDITZ2
+     I/COPY ZSRSRC,ZYLDZ1
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     ISPOOL       DS                                                      E29170
+      *                                                                   E29170
+      ** Data structures for RCF spooled file names                       E29170
+      *                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+      *                                                                   E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+      *                                                                   S01195
+      ** Data structures for holiday processing.                          S01195
+      *                                                                   S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+      *                                                                   S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+      *                                                                   S01117
+     IRUNDT       DS                                                      S01117
+      *                                                                   S01117
+      ** RUNDAT data area                                                 S01117
+      *                                                                   S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+     ISDCURR    E DSSDCURRPD                                              S01117
+      *                                                                   S01117
+      ** Currency Details                                                 S01117
+     ISDBRCH    E DSSDBRCHPD                                                                 BUG7985
+      *                                                                   S01117
+     I/COPY WNCPYSRC,SE0991I001
+     C/EJECT
+     C*
+     C**  DEFINE KEY LIST FOR CHAINING TO INVTP FILE
+     C*
+     C           INVKA     KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C*                                                                   S01117
+     C* INPUT PARAMETERS                                                  S01117
+     C*                                                                   S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM           ENT     3                       S01117
+     C*
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C*
+     C                     EXSR INIT
+     C*
+     C  NU7                EXSR RECRDS
+     C*
+     C                     EXSR AUDIT
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    INIT SR                                                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR                           * INIT BEGSR *
+     C*
+     C***OPEN*PRINTER*FILE*                                               E29170
+     C***********                                                         E29170
+     C***********          OPEN SE0991P1                                  E29170
+      *                                                                   E29170
+      ** RCF Processing for Audit File                                    E29170
+      *                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*
+     C** PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE0991'  DBPGM
+     C                     OUT  LDA                                       S01117
+      *                                                                   S01117
+      ** Read in RUNDAT data area                                         S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+      *                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETON                         88               S01117
+     C                     END                                            S01117
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C                     READ TABTB10F                 99*
+     C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+     C           *IN99     IFEQ '0'
+     C*
+     C** IF FOUND CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C*
+     C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+     C                     ELSE
+     C*
+     C** OTHERWISE DB ERROR
+     C*
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'01'      DBASE            ***************S01117
+     C                     Z-ADD1         DBASE            **DB ERROR 01**S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVEL'01'      ZTABKY 12
+     C                     MOVE '10'      ZTABKY
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR AUDIT                                     E16765
+     C                     END                             *IN99=0
+     C*
+     C* Get Installation Control Data record 2
+     C*
+     C  NU7                EXSR ZICD2
+     C*
+     C* If error in ZICD2, abend program
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE '02'      DBASE            ***************S01117
+     C                     Z-ADD2         DBASE            **DB ERROR 02**S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR AUDIT                                     E16765
+     C                     END
+     C*
+     C* Get Installation Control Data record for Securities trading
+     C*
+     C  NU7                EXSR ZICDSE
+     C*
+     C* If error in ZICDSE, abend program
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE '03'      DBASE            ***************S01117
+     C                     Z-ADD3         DBASE            **DB ERROR 03**S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR AUDIT                                     E16765
+     C                     END
+     C*
+     C                     MOVE *BLANKS   OKDLRP
+     C                     MOVE *BLANKS   KDLRP
+     C                     MOVE *BLANKS   KDMRP
+     C                     Z-ADD0         NORE                            E30851
+     C                     Z-ADD0         NORES                           E30851
+     C*
+      ** Access SAR details file to see if CSE035 is installed                                CSE035
+      *                                                                                       CSE035
+     C                     CALL 'AOSARDR0'                                                    CSE035
+     C                     PARM *BLANKS   @RTCD                                               CSE035
+     C                     PARM '*VERIFY' @OPTN                                               CSE035
+     C                     PARM 'CSE035'  @SARD   6                                           CSE035
+      *                                                                                       CSE035
+     C           @RTCD     IFEQ *BLANK                                                        CSE035
+     C                     MOVE 'Y'       CSE035  1                                           CSE035
+     C                     ELSE                                                               CSE035
+     C                     MOVE 'N'       CSE035                                              CSE035
+     C                     ENDIF                                                              CSE035
+      *                                                                                       207543
+      ** Access SAR details file to see if CEU018 is installed                                207543
+      *                                                                                       207543
+     C                     CALL 'AOSARDR0'                                                    207543
+     C                     PARM *BLANKS   @RTCD                                               207543
+     C                     PARM '*VERIFY' @OPTN                                               207543
+     C                     PARM 'CEU018'  @SARD                                               207543
+      *                                                                                       207543
+     C           @RTCD     IFEQ *BLANK                                                        207543
+     C                     MOVE 'Y'       CEU018  1                                           207543
+     C                     ELSE                                                               207543
+     C                     MOVE 'N'       CEU018                                              207543
+     C                     ENDIF                                                              207543
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0991CCP1                                           S01408
+     C*                                                                   S01408
+     C           XTINIT    ENDSR                           ** XTINIT ESR**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    RECRDS SR                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RECRDS    BEGSR
+     C*
+     C*  Read LF/DEALRP
+     C*
+     C                     EXSR READDL
+     C*
+     C*  Read LF/DPMVRP
+     C*
+     C                     EXSR READDM
+     C*
+     C*****If*no*details*to*report*output*single*page*                    E29170
+      ** If no details to report then this will be printed in AUDIT       E29170
+     C*
+     C           *IN01     IFEQ '1'
+     C           *IN02     ANDEQ'1'
+     C***********          WRITEHEAD1                                     E29170
+     C*
+     C*    Otherwise process input records until EOF is reached
+     C*    for both LF/DEALRP & LF/DPMVRP
+     C*
+     C                     ELSE
+     C                     SETON                     L1L2L3
+     C                     SETON                     L4
+     C           *IN01     DOUEQ'1'
+     C           *IN02     ANDEQ'1'
+     C                     EXSR RECPRC
+     C                     END
+     C                     END
+     C***********          WRITETRAIL                                     E29170
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    RECPRC SR                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RECPRC    BEGSR
+     C*
+     C                     EXSR PRO1
+     C*
+     C*    If DPMVRP record is less than or Equal DEALRP record
+     C*    then process collateral calculations, print details &
+     C*****read*another*record*from*DPMVRP.*******************************E30851
+     C*    read another record from DPMVRP and/or DEALRP depending on     E30851
+     C*    the keys of records.                                           E30851
+     C*
+     C***********          MOVE '0'       *IN20                           E30851
+     C************IN20     DOUEQ'1'                                       E30851
+     C************INL1     OREQ '1'                                       E30851
+     C           *INL1     DOUEQ'1'                                       E30851
+     C           KDMRP     IFLE KDLRP
+     C           *IN12     IFEQ '0'                                       056527
+     C                     EXSR COLCAL
+     C                     EXSR PRO2
+     C                     END                                            056527
+     C***********          EXSR READDM                                    E30851
+     C***********          ELSE                                           E30851
+     C***********          MOVE '1'       *IN20                           E30851
+     C                     END
+     C           KDMRP     IFLT KDLRP                                     E30851
+     C                     EXSR READDM                                    E30851
+     C                     ELSE                                           E30851
+     C           KDMRP     IFEQ KDLRP                                     E30851
+     C                     EXSR READDM                                    E30851
+     C                     EXSR READDL                                    E30851
+     C                     ELSE                                           E30851
+     C           KDMRP     IFGT KDLRP                                     E30851
+     C                     EXSR READDL                                    E30851
+     C                     END                                            E30851
+     C                     END                                            E30851
+     C                     END                                            E30851
+     C                     END
+     C*
+     C******else*DEALRP*is*greater*than*DPMVRP*so*read*another*record**   E26654
+      *****Else*DPMVRP*is*Greater*Than*DEALRP*so*read*another*recordE26654E30851
+     C******from*DEALRP***************************************************E30851
+     C***********                                                         E30851
+     C***********          EXSR READDL                                    E30851
+     C*
+     C*     If the key matching fields have changed in the last read
+     C*     from either DEALSRP or DPMVRP then print Deal Total line.
+     C*
+     C************INL1     IFEQ '1'                                       E26654
+     C           *INL2     IFEQ '1'                                       E26654
+     C           MESSAG    ORNE *BLANK                                    E26654
+     C                     EXSR PRO3
+     C                     END
+     C*
+     C           *INU7     IFEQ '1'
+     C                     MOVE '1'       *IN01
+     C                     MOVE '1'       *IN02
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    COLCAL SR                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           COLCAL    BEGSR
+     C*
+     C*                                                                   E16758
+     C** Skip record if depot movement details not entered.               E16758
+     C*                                                                   E16758
+     C           DPRN      IFNE *BLANK                                    E16758
+     C*                                                                   E16758
+     C*    Access Security details
+     C*
+     C                     MOVE DPSS      KSECTY 10
+     C           KSECTY    CHAINSECTYDF              11
+     C*
+     C           *IN11     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE '06'      DBASE            ***************S01117
+     C                     Z-ADD6         DBASE            **DB ERROR 06**S01117
+     C                     MOVEL'SECTY'   DBFILE           ***************
+     C                     MOVELKSECTY    DBKEY
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR AUDIT                                     E16765
+     C                     END
+     C                     END                                            E16758
+     C*
+     C*    Access Investment Type details
+     C*
+     C           *IN11     IFEQ '0'
+     C           INVKA     CHAININVTPDF              11
+     C*
+     C           *IN11     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE '07'      DBASE            ***************S01117
+     C                     Z-ADD7         DBASE            **DB ERROR 07**S01117
+     C                     MOVEL'INVTP'   DBFILE           ***************
+     C                     MOVELNMCY      KINVTP  6
+     C                     MOVE SITP      KINVTP
+     C                     MOVELKINVTP    DBKEY
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR AUDIT                                     E16765
+     C                     END
+     C                     END
+     C*
+     C*    Access Beneficiary Customer details
+     C*
+     C           *IN11     IFEQ '0'
+     C**********           MOVE DPBN      KCLINT  60                                          CSD027
+     C                     MOVE DPBN      KCLINT  6                                           CSD027
+     C           KCLINT    CHAINCLINTCBF             11
+     C*
+     C           *IN11     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE '08'      DBASE            ***************S01117
+     C                     Z-ADD8         DBASE            **DB ERROR 08**S01117
+     C                     MOVEL'CLINTCBF'DBFILE           ***************
+     C                     MOVELKCLINT    DBKEY
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR AUDIT                                     E16765
+     C                     END
+     C                     END
+     C*
+     C           *IN11     IFEQ '0'
+     C*
+     C*    If Deal exists for the Deal number on this record
+     C*    calculate the collateral value of this security in
+     C*    Deal currency & add to Total Collateral Amount.
+     C*
+     C           *IN10     IFEQ '0'
+     C                     EXSR CVLDL
+     C                     ADD  ZCLVL     TCLVL  150
+     C*
+     C*    otherwise calculate the collateral value of this security in
+     C*    the security's nominal currency.
+     C*
+     C                     ELSE
+     C                     EXSR CVLNM
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   PRO1 S/R - Print Branch, Repo/Pledge, Deal headings.        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           PRO1      BEGSR
+     C*
+     C*    Branch Headings
+     C*
+     C           *INL4     IFEQ '1'
+      *                                                                   E29170
+      **  Write trailer and close printer file if open                    E29170
+      *                                                                   E29170
+     C           OBRCD     IFNE '   '                                     E29170
+     C                     WRITETRAIL                                     E29170
+     C                     CLOSESE0991P1                                  E29170
+     C                     END                                            E29170
+     C*
+     C           KDLRP     IFLT KDMRP
+     C***********          MOVE BRCD      OBRCD                           S01117
+     C                     MOVE BRCA      OBRCD                           S01117
+     C                     ELSE
+     C***********          MOVE DPBC      OBRCD                           S01117
+     C                     MOVE DPBA      OBRCD                           S01117
+     C                     END
+     C*
+     C                     MOVE *BLANKS   KEY12A 12
+     C**********           MOVEL'10'      KEY12A                                             BUG7985
+     C**********           MOVE OBRCD     KEY12A                                             BUG7985
+     C********** KEY12A    CHAINTABLETRF             11                                      BUG7985
+     C**N11***** RECI      COMP '*'                      11                                  BUG7985
+     C********** *IN11     IFEQ '1'                                                          BUG7985
+     C                     CALL 'AOBRCHR1'                                                   BUG7985
+     C                     PARM *BLANKS   PRTCD   7                                          BUG7985
+     C                     PARM '*KEY   ' POPTN   7                                          BUG7985
+     C                     PARM OBRCD     PBRCH   3                                          BUG7985
+     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG7985
+      *                                                                                      BUG7985
+     C           PRTCD     IFNE *BLANKS                                                      BUG7985
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE '09'      DBASE            ***************S01117
+     C                     Z-ADD9         DBASE            **DB ERROR 09**S01117
+     C**********           MOVEL'TABLETRF'DBFILE           ***************                   BUG7985
+     C**********           MOVELKEY12A    DBKEY                                              BUG7985
+     C                     MOVE 'SDBRCHPD'DBFILE                                             BUG7985
+     C                     MOVELOBRCD     DBKEY                                              BUG7985
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR AUDIT                                     E16765
+     C                     ELSE
+     C**********           MOVE BRNM      OBRNM                                              BUG7985
+     C                     MOVE A8BRNM    OBRNM                                              BUG7985
+     C                     END
+      *                                                                   E29170
+      ** Open report file and reset page no.                              E29170
+      *                                                                   E29170
+     C                     OPEN SE0991P1                                  E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     Z-ADD*ZEROS    PAGE                            E29170
+     C                     END
+     C*
+     C*    Repo/Pledge Narrative
+     C*
+     C           *INL3     IFEQ '1'
+     C*
+     C           KDLRP     IFLT KDMRP
+     C           RPDL      COMP 'P'                      40
+     C                     ELSE
+     C           RPDM      COMP 'P'                      40
+     C                     END
+     C*
+     C                     END
+     C*
+     C*    Customer
+     C*
+     C           *INL2     IFEQ '1'
+     C*
+     C           KDLRP     IFLT KDMRP
+     C                     MOVE CNUM      OCNUM
+     C                     ELSE
+     C                     MOVE DPBN      OCNUM
+     C                     END
+     C**********           MOVELOCNUM     WOCNUM  60                                        BUG11414
+     C                     MOVELOCNUM     WOCNUM  6                                  BUG11414 CSD031
+     C*
+     C********** CNUM      CHAINCLINTCBF             11                                     BUG11414
+     C           WOCNUM    CHAINCLINTCBF             11                                     BUG11414
+     C           *IN11     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE '04'      DBASE            ***************S01117
+     C                     Z-ADD4         DBASE            **DB ERROR 04**S01117
+     C                     MOVEL'CLINTCBF'DBFILE           ***************
+     C**********           MOVELCNUM      DBKEY                                             BUG11414
+     C                     MOVELOCNUM     DBKEY                                             BUG11414
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR AUDIT                                     E16765
+     C                     END
+     C                     END
+     C*
+     C*    Deal
+     C*
+     C           *INL1     IFEQ '1'
+     C                     MOVE '0'       *IN10
+     C                     MOVEL*BLANK    MESSAG 65
+     C                     MOVE '0'       *IN12                           056527
+     C*
+     C** Depot movement read but no matching deal read
+     C*
+     C           KDMRP     IFLT KDLRP
+     C                     MOVE '1'       *IN10
+     C/COPY WNCPYSRC,SE0991C003
+     C                     MOVE DPAD      KDEALS  60
+     C           KDEALS    CHAINDEALSDCF             11
+     C/COPY WNCPYSRC,SE0991C004
+     C           *IN11     IFEQ '0'
+     C*
+     C** If deal present then determine reason for mismatch
+     C*
+     C           RECI      IFNE 'D'
+     C                     Z-ADD1         RS      10
+     C*                                                                   056527
+     C           RCDM      IFNE 'D'                                       056527
+     C                     MOVE '1'       *IN12                           056527
+     C                     END                                            056527
+     C*                                                                   056527
+     C                     ELSE
+     C           DRID      IFNE RPDM
+     C                     Z-ADD2         RS
+     C                     ELSE
+     C***********BRCD      IFNE BRDM                                      S01117
+     C           BRCA      IFNE BRDM                                      S01117
+     C                     Z-ADD3         RS
+     C                     ELSE
+     C                     Z-ADD4         RS
+     C                     END
+     C                     END
+     C                     END
+     C                     MOVELMES,RS    MESSAG
+     C                     ELSE
+     C                     MOVELMES,1     MESSAG
+     C                     END
+     C                     END
+     C*
+     C** Deal read but no matching depot movement read
+     C*
+     C           KDMRP     IFGT KDLRP
+     C                     MOVE DDMR      KDPTMV  6
+     C           KDPTMV    CHAINDPTMVDF              11
+     C           *IN11     IFEQ '0'
+     C*
+     C** If depot movement present then determine reason for mismatch
+     C*
+     C           RECI      IFNE 'D'
+     C                     Z-ADD5         RS
+     C*                                                                   056527
+     C           RCDL      IFNE 'D'                                       056527
+     C                     MOVE '1'       *IN12                           056527
+     C                     END                                            056527
+     C*                                                                   056527
+     C                     ELSE
+     C                     MOVELDPMV      DRID
+     C           DRID      IFNE RPDL
+     C                     Z-ADD6         RS
+     C                     ELSE
+     C***********DPBC      IFNE BRDL                                      S01117
+     C           DPBA      IFNE BRDL                                      S01117
+     C                     Z-ADD7         RS
+     C                     ELSE
+     C                     Z-ADD8         RS
+     C                     END
+     C                     END
+     C                     END
+     C                     MOVELMES,RS    MESSAG
+     C                     ELSE
+     C                     MOVELMES,5     MESSAG
+     C                     END
+     C                     END
+     C*
+     C           *IN12     IFEQ '1'                                       056527
+     C                     MOVE *BLANKS   MESSAG                          056527
+     C                     END                                            056527
+     C*                                                                   056527
+     C           KDMRP     IFEQ KDLRP                                     056527
+     C                     MOVE DDMR      KDPTMV                          056527
+     C           KDPTMV    CHAINDPTMVDF              11                   056527
+     C                     END                                            056527
+     C*                                                                   056527
+     C                     END
+     C*
+     C*    Determine deal currency decimal places
+     C*
+     C           *IN10     IFEQ '0'
+     C                     MOVEL*BLANKS   KEY12  12
+     C                     MOVEL'20'      KEY12
+     C                     MOVE '1'       WFLD4   4
+     C                     MOVELCCY       WFLD4
+     C                     MOVE WFLD4     KEY12
+     C           KEY12     CHAINTABTG10F             11
+     C           *IN11     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE '05'      DBASE            ***************S01117
+     C                     Z-ADD5         DBASE            **DB ERROR 05**S01117
+     C                     MOVEL'TABTG10F'DBFILE           ***************
+     C                     MOVELCCY       DBKEY
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR AUDIT                                     E16765
+     C                     END
+     C                     END
+     C*
+     C*    Edit Deal Heading Fields
+     C*
+     C*    Counterparty Name
+     C*
+     C           *IN10     IFEQ '0'
+     C                     MOVE CRNM      OCRNM
+     C                     ELSE
+     C                     MOVE *BLANKS   OCRNM
+     C                     END
+     C*
+     C*    Counterparty Town
+     C*
+     C           *IN10     IFEQ '0'
+     C                     MOVE CTWN      OCTWN
+     C                     ELSE
+     C                     MOVE *BLANKS   OCTWN
+     C                     END
+     C*
+     C*    Counterparty Number
+     C*
+     C           *IN10     IFEQ '0'
+     C                     MOVE CNUM      OCNUM
+     C                     ELSE
+     C                     MOVE *BLANKS   OCNUM
+     C                     END
+     C*
+     C*    Deal Number
+     C*
+     C           KDLRP     IFLT KDMRP
+     C                     MOVE DLNO      ODLNO
+     C                     ELSE
+     C                     MOVE DPAD      ODLNO
+     C                     END
+     C*                                                                   053704
+     C**   Deal Type                                                      053704
+     C*                                                                   053704
+     C           *IN10     IFEQ '0'                                       053704
+     C                     MOVE DTYP      ODLTP                           053704
+     C                     ELSE                                           053704
+     C                     MOVE *BLANKS   ODLTP                           053704
+     C                     END                                            053704
+     C*
+     C*    Deal Amount
+     C*
+     C           *IN10     IFEQ '0'
+     C                     Z-ADDPCPL      ZFLD15
+      *                                                                   E26654
+      ***  If the Deal has not yet Matured then add the Total Interest    E26654
+      ***  to the Principal, else add Interest Paid/Received to Date.     E26654
+      *                                                                   E26654
+     C           MDAT      IFGT RUND                                      E26654
+     C                     ADD  TOTI      ZFLD15
+     C                     ELSE                                           E26654
+     C                     ADD  IPRD      ZFLD15                          E26654
+     C                     END                                            E26654
+      *                                                                   E26654
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0991CCP2                                           S01408
+     C*                                                                   S01408
+     C***********          Z-ADDZFLD15    SDLAM  150                      E26654
+     C                     ADD  ZFLD15    SDLAM  150                      E26654
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ODLAMT
+     C                     ELSE
+     C                     MOVE *BLANKS   ODLAMT
+     C                     END
+     C*
+     C*    Deal Start Date
+     C*
+     C           *IN10     IFEQ '0'
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    OVDAT
+     C                     ELSE
+     C                     MOVE *BLANKS   OVDAT
+     C                     END
+     C*
+     C*    Deal Maturity Date
+     C*
+     C           *IN10     IFEQ '0'
+     C                     Z-ADDMDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    OMDAT
+     C                     ELSE
+     C                     MOVE *BLANKS   OMDAT
+     C                     END
+     C*
+     C*    Deal Currency
+     C*
+     C           *IN10     IFEQ '0'
+     C                     MOVE CCY       ODLCCY
+     C                     MOVE CCY       SCCY    3                       E26654
+     C                     ELSE
+     C                     MOVE *BLANKS   ODLCCY
+     C                     END
+     C*
+     C*    Depot movement ref
+     C*
+     C           *IN10     IFEQ '0'
+     C                     MOVE DDMR      ODDMR
+     C                     ELSE
+     C                     MOVE *BLANKS   ODDMR
+     C                     END
+     C*
+     C*
+     C           *INL4     IFEQ '1'
+     C                     WRITEHEAD1
+     C                     WRITEHEAD2
+     C                     WRITEHEAD3
+     C                     MOVE '0'       *INL1
+     C                     MOVE '0'       *INL2
+     C                     MOVE '0'       *INL3
+     C                     MOVE '0'       *INL4
+     C***********          Z-ADD15        LNCNT   20                      E26654
+     C                     Z-ADD16        LNCNT   20                      E26654
+     C                     ELSE
+     C***********LNCNT     IFGE 55                                        E26654
+     C           LNCNT     IFGE 52                                        E26654
+     C                     WRITEHEAD1
+     C                     WRITEHEAD2
+     C                     WRITEHEAD3
+     C***********          Z-ADD15        LNCNT                           E26654
+     C                     Z-ADD16        LNCNT                           E26654
+     C                     ELSE
+     C           *INL2     IFEQ '1'
+     C                     WRITEHEAD3
+     C***********          ADD  5         LNCNT                           E26654
+     C                     ADD  6         LNCNT                           E26654
+     C                     END
+     C                     END
+     C                     END
+     C           *IN12     IFNE '1'                                       056527
+     C                     WRITEDET1
+     C***********          ADD  2         LNCNT                           E26654
+     C                     ADD  1         LNCNT                           E26654
+     C                     END                                            056527
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   PRO2 - Print Depot Movement Details.                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C*
+     C           PRO2      BEGSR
+     C*
+     C*   Move fields for output.
+     C*
+     C                     MOVE DPSS      OSEC
+     C                     MOVE DPRN      ODMR
+     C                     MOVE DPBN      OOWN
+     C                     MOVE CTWN      OLOC
+     C*
+     C*   Edit Collateral value .
+     C*
+     C*   If Deal exists use Deal currency decimal places
+     C*
+     C           *IN10     IFEQ '0'
+     C                     Z-ADDCDP       ZDECS
+     C                     ELSE
+     C*
+     C*   otherwise use security nominal currency decimal places
+     C*
+     C                     Z-ADDNMDP      ZDECS
+     C                     END
+     C*
+     C                     Z-ADDZCLVL     ZFLD15
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0991CCP3                                           S01408
+     C*                                                                   S01408
+     C                     MOVE 'J'       ZECODE
+     C*
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    OCLVL
+     C*
+     C*   Determine Start Date & End Date, and convert for output.
+     C*
+     C           DPMD      IFGT DPDO
+     C           DPMD      IFNE 99999                                     102731
+     C                     Z-ADDDPMD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    OEDDT
+     C                     ELSE                                           102731
+     C                     MOVE '*******' OEDDT                           102731
+     C                     END                                            102731
+     C                     Z-ADDDPDO      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    OSTDT
+     C                     ELSE
+     C           DPMD      IFNE 99999                                     102731
+     C                     Z-ADDDPDO      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    OEDDT
+     C                     ELSE                                           102731
+     C                     MOVE '*******' OEDDT                           102731
+     C                     END                                            102731
+     C                     Z-ADDDPMD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    OSTDT
+     C                     END
+     C*
+     C***********LNCNT     IFGE 55                                        E26654
+     C           LNCNT     IFGE 52                                        E26654
+     C                     WRITEHEAD1
+     C                     WRITEHEAD2
+     C                     WRITEHEAD3
+     C***********          Z-ADD15        LNCNT                           E26654
+     C                     Z-ADD16        LNCNT                           E26654
+     C                     END
+     C*
+     C                     WRITEDET2
+     C                     ADD  1         LNCNT
+      *                                                                   E26654
+      ***  If the Deal has already Matured, the text 'DEAL DOES NOT       E26654
+      ***  EXIST OR IS MATURED' will be printed.                          E26654
+      *                                                                   E26654
+     C           MDAT      IFLE RUND                                      E26654
+     C                     MOVELMES,1     MESSAG                          E26654
+     C                     EXSR PRO3                                      E26654
+     C                     END                                            E26654
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    PR03 SR - Print Deal Totals Line                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C*
+     C           PRO3      BEGSR
+     C*
+     C*   Deal Amount.
+     C*
+     C           *IN10     IFEQ '0'
+     C                     Z-ADDCDP       ZDECS
+     C                     Z-ADDSDLAM     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ODLAM
+     C***********          MOVE CCY       ODCCY                           E26654
+     C                     MOVE SCCY      ODCCY                           E26654
+     C                     ELSE
+     C                     MOVE *BLANKS   ODLAM
+     C                     MOVE *BLANKS   ODCCY
+     C                     END
+     C*
+     C*   Total Collateral Amount.
+     C*
+     C           *IN10     IFEQ '0'
+     C                     Z-ADDCDP       ZDECS
+     C                     Z-ADDTCLVL     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    OTCVL
+     C                     ELSE
+     C                     MOVE *BLANKS   OTCVL
+     C                     END
+     C*
+     C***********LNCNT     IFGE 55                                        E26654
+     C           LNCNT     IFGE 52                                        E26654
+     C                     WRITEHEAD1
+     C                     WRITEHEAD2
+     C                     WRITEHEAD3
+     C***********          Z-ADD15        LNCNT                           E26654
+     C                     Z-ADD16        LNCNT                           E26654
+     C                     END
+     C*
+     C                     SETOF                     8085
+     C                     MOVEL*BLANK    MESAG2
+     C           MESSAG    IFNE *BLANK
+     C                     MOVE '1'       *IN80
+     C                     ELSE
+     C           SDLAM     IFGT TCLVL
+     C                     MOVELMES,9     MESAG2
+     C                     END
+     C                     END
+     C                     WRITETOT1
+     C**N80******          ADD  5         LNCNT                           E26654
+     C***80******          ADD  3         LNCNT                           E26654
+     C***********          MOVEL*BLANK    MESSAG                          E26654
+     C***********          Z-ADD*ZERO     TCLVL  150                      E26654
+      *                                                                   E26654
+      ***  If a Message Text is printed, there is no need to reset the    E26654
+      ***  Accumulators for the Amount and Collateral Value.              E26654
+      *                                                                   E26654
+     C           *IN80     IFEQ '1'                                       E26654
+     C                     ADD  3         LNCNT                           E26654
+     C                     MOVEL*BLANK    MESSAG                          E26654
+     C                     ELSE                                           E26654
+     C                     ADD  5         LNCNT                           E26654
+     C                     Z-ADD0         SDLAM                           E26654
+     C                     MOVE *BLANKS   ODLAM                           E26654
+     C                     Z-ADD0         TCLVL  150                      E26654
+     C                     MOVE *BLANKS   OTCVL                           E26654
+     C                     END                                            E26654
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    READDM SR                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           READDM    BEGSR
+     C*
+     C**  Read Depot Movements for Repos & Pledges File
+     C*
+     C                     MOVE '0'       *INL1
+     C                     MOVE '0'       *INL2
+     C                     MOVE '0'       *INL3
+     C                     MOVE '0'       *INL4
+     C                     READ DPMVRP                   02
+      *                                                                   E29170
+      ** Only process if record is the same as that requested             E29170
+      *                                                                   E29170
+     C           ENT       IFNE 'ALL'                                     E29170
+     C           ENT       ANDNE'   '                                     E29170
+     C           ENT       ANDNEDPBA                                      E29170
+     C                     MOVE '1'       *IN02                           E29170
+     C                     END                                            E29170
+     C           *IN02     IFEQ '0'
+     C                     ADD  1         IDPMV   50
+     C***********          MOVELDPMV      RPDM                            E30851
+     C                     MOVELRPIN      RPDM                            E30851
+     C***********          MOVE DPBC      BRDM                            S01117
+     C                     MOVE DPBA      BRDM                            S01117
+     C                     MOVE DPBN      CLDM
+     C                     MOVE DPAD      DLDM
+     C                     MOVE RECI      RCDM    1                       056527
+     C*
+     C*   Test for change in Branch, Repo/Pledge Ind. or Cust no.
+     C*
+     C           BRDM      IFNE OBRDM
+     C                     MOVE '1'       *INL4
+     C                     MOVE '1'       *INL3
+     C                     MOVE '1'       *INL2
+     C                     MOVE '1'       *INL1
+     C                     ELSE
+     C           RPDM      IFNE ORPDM
+     C                     MOVE '1'       *INL3
+     C                     MOVE '1'       *INL2
+     C                     MOVE '1'       *INL1
+     C                     ELSE
+     C           CLDM      IFNE OCLDM
+     C                     MOVE '1'       *INL2
+     C                     MOVE '1'       *INL1
+     C                     ELSE
+     C           DLDM      IFNE ODLDM
+     C                     MOVE '1'       *INL1
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     ADD  1         NORE                            E30851
+     C***********          MOVE KDMRP     OKDLRP                          E26654
+     C*
+     C                     ELSE
+     C                     MOVE *HIVAL    KDMRP
+     C           *IN01     IFEQ '1'
+     C                     MOVE '1'       *INL1
+     C                     MOVE '1'       *INL2
+     C                     MOVE '1'       *INL3
+     C                     MOVE '1'       *INL4
+     C                     END
+     C                     END
+     C*
+     C                     MOVE KDMRP     OKDMRP
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    READDL SR                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           READDL    BEGSR
+     C*
+     C**  Read Deals in Repo Sequence file
+     C*
+     C                     MOVE '0'       *INL1
+     C                     MOVE '0'       *INL2
+     C                     MOVE '0'       *INL3
+     C                     MOVE '0'       *INL4
+     C                     MOVE DCCY      ODCCY                           E26654
+     C                     READ DEALRP                   01
+     C/COPY WNCPYSRC,SE0991C005
+      *                                                                   E29170
+      ** Only process if record is the same as that requested             E29170
+      *                                                                   E29170
+     C           ENT       IFNE 'ALL'                                     E29170
+     C           ENT       ANDNE'   '                                     E29170
+     C***********ENT       ANDNEDPBA                                E29170E30851
+     C           ENT       ANDNEBRCA                                      E30851
+     C                     MOVE '1'       *IN01                           E29170
+     C                     END                                            E29170
+     C           *IN01     IFEQ '0'
+     C                     ADD  1         IDEAL   50
+     C                     MOVE DRID      RPDL
+     C***********          MOVE BRCD      BRDL                            S01117
+     C                     MOVE BRCA      BRDL                            S01117
+     C                     MOVE CNUM      CLDL
+     C                     MOVE DLNO      DLDL
+     C                     MOVE RECI      RCDL    1                       056527
+     C*
+     C*   Test for change in Branch, Repo/Pledge Ind. or Deal no.
+     C*
+     C           BRDL      IFNE OBRDL
+     C                     MOVE '1'       *INL4
+     C                     MOVE '1'       *INL3
+     C                     MOVE '1'       *INL2
+     C                     MOVE '1'       *INL1
+     C                     ELSE
+     C           RPDL      IFNE ORPDL
+     C                     MOVE '1'       *INL3
+     C                     MOVE '1'       *INL2
+     C                     MOVE '1'       *INL1
+     C                     ELSE
+     C           CLDL      IFNE OCLDL
+     C                     MOVE '1'       *INL2
+     C                     MOVE '1'       *INL1
+     C                     ELSE
+     C           DLDL      IFNE ODLDL
+     C                     MOVE '1'       *INL1
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     ADD  1         NORES                           E30851
+     C***********          MOVE KDLRP     OKDMRP                          E26654
+     C*
+     C                     ELSE
+     C                     MOVE *HIVAL    KDLRP
+     C           *IN02     IFEQ '1'
+     C                     MOVE '1'       *INL1
+     C                     MOVE '1'       *INL2
+     C                     MOVE '1'       *INL3
+     C                     MOVE '1'       *INL4
+     C                     END
+     C                     END
+     C*
+     C                     MOVE KDLRP     OKDLRP
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    CVLDL SR                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CVLDL     BEGSR
+     C*
+     C*    Set up the input fields for the sub-routine ZCOLLV.
+     C*
+     C                     Z-ADDDPNA      ZNOML
+     C                     Z-ADDNMDP      ZNMDP
+     C           MKTP      IFNE *ZERO
+     C                     Z-ADDMKTP      ZPRCE
+     C                     ELSE
+     C                     Z-ADDMKPR      ZPRCE
+     C                     END
+     C                     MOVE SPBS      ZPRCB
+     C                     MOVE STBS      ZTRDB
+     C                     Z-ADDCMGN      ZCLMG
+     C                     Z-ADDCCCV      ZCLCC
+     C                     MOVE NMCY      ZNMCY
+     C           NMCY      IFEQ CCY
+     C                     MOVE *BLANKS   ZCLCY
+     C                     ELSE
+     C                     MOVE CCY       ZCLCY
+     C                     END
+     C                     Z-ADDCFCT      ZCFCT
+     C*
+     C                     Z-ADDDNWD      ZZDNWD                          S01117
+     C                     Z-ADDAPDA      ZZAPDT                          S01117
+     C                     Z-ADDCDP       ZCDP                            S01117
+     C                     EXSR ZCOLLV
+     C*
+     C* Check for database error
+     C*
+     C           *INU8     IFEQ '1'
+     C           *INU7     OREQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'10'      DBASE            ***************S01117
+     C                     Z-ADD10        DBASE            **DB ERROR 10**S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVEL'ZCOLLV'  ZTABKY
+     C                     MOVELZTABKY    DBKEY
+     C                     SETON                     LR0102
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR AUDIT                                     E16765
+     C                     END
+     C/COPY WNCPYSRC,SE0991C001
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    CVLNM SR                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CVLNM     BEGSR
+     C*
+     C*    Set up the input fields for the sub-routine ZCOLLV.
+     C*
+     C                     Z-ADDDPNA      ZNOML
+     C                     Z-ADDNMDP      ZNMDP
+     C           MKTP      IFNE *ZERO
+     C                     Z-ADDMKTP      ZPRCE
+     C                     ELSE
+     C                     Z-ADDMKPR      ZPRCE
+     C                     END
+     C                     MOVE SPBS      ZPRCB
+     C                     MOVE STBS      ZTRDB
+     C                     Z-ADDCMGN      ZCLMG
+     C                     Z-ADDCCCV      ZCLCC
+     C                     MOVE NMCY      ZNMCY
+     C                     MOVE *BLANKS   ZPRCB
+     C                     Z-ADDCFCT      ZCFCT
+     C                     Z-ADDDNWD      ZZDNWD                          S01117
+     C                     Z-ADDAPDA      ZZAPDT                          S01117
+     C                     Z-ADDCDP       ZCDP                            S01117
+     C*
+     C                     EXSR ZCOLLV
+     C*
+     C* Check for database error
+     C*
+     C           *INU8     IFEQ '1'
+     C           *INU7     OREQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'11'      DBASE            ***************S01117
+     C                     Z-ADD11        DBASE            **DB ERROR 11**S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVEL'ZCOLLV'  ZTABKY
+     C                     MOVELZTABKY    DBKEY
+     C                     SETON                     LR0102
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR AUDIT                                     E16765
+     C                     END
+     C/COPY WNCPYSRC,SE0991C002
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    AUDIT SR                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AUDIT     BEGSR
+     C*
+     C**  Write audit record
+     C*
+     C                     WRITEHEADAU
+     C           *INU8     IFEQ '0'
+     C                     WRITEDETLAU
+     C                     ELSE
+     C*
+     C                     WRITEERROR
+     C*
+     C                     END
+     C*
+     C***********          WRITETRAILAU                                   S01117
+     C*
+     C*
+     C***CLOSE*PRINTER*FILE*                                              E29170
+      *                                                                   E29170
+      ** If details have been printed the close the P1 file               E29170
+      *                                                                   E29170
+     C           *INU7     IFEQ '0'                                       E29170
+     C           IDPMV     IFNE 0                                         E29170
+     C           IDEAL     ANDNE0                                         E29170
+     C                     WRITETRAIL                                     E29170
+     C                     CLOSESE0991P1
+     C                     ELSE                                           E29170
+      *                                                                   E29170
+      ** Else print no details to report on the AU file                   E29170
+      *                                                                   E29170
+     C                     WRITENONE                                      E29170
+     C                     END                                            E29170
+     C                     END                                            E29170
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN                                          E16765
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      * *PSSR  - Database error subroutine.                           *   S01117
+      *          This subroutine DUMPs the program just once.         *   S01117
+      *                                                               *   S01117
+      * Called by: DB ERROR PROCESSING                                *   S01117
+      *                                                               *   S01117
+      * Calls: None                                                   *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR SR ** S01117
+      *                                                                   S01117
+     C           @RUN      IFEQ *BLANK                                    S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      ********************************************************************S01117
+      /EJECT                                                              E29170
+      *****************************************************************   E29170
+      *                                                               *   E29170
+      *  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+      *                                                               *   E29170
+      *****************************************************************   E29170
+      *                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+      *                                                                   E29170
+      ** Ensure report spool file recorded by RCF                         E29170
+      *                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+      *                                                                   E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM OBRCD     SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+      *                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+      *                                                                   E29170
+      ** Error during ZSFILE processing, return to calling program        E29170
+      *                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+      *                                                                   E29170
+     C                     ENDSR                                          E29170
+      *                                                                   E29170
+      *****************************************************************   E29170
+      /EJECT                                                              E29170
+      *****************************************************************   E29170
+      *                                                               *   E29170
+      *  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+      *                                                               *   E29170
+      *****************************************************************   E29170
+      *                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+      *                                                                   E29170
+      ** Ensure audit spool file recorded by RCF                          E29170
+      *                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+      *                                                                   E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+      *                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+      *                                                                   E29170
+      ** Error during ZSFILE processing, return to calling program        E29170
+      *                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+      *                                                                   E29170
+     C                     ENDSR                                          E29170
+      *                                                                   E29170
+      *****************************************************************   E29170
+      /EJECT                                                              S01232
+     C/COPY ZSRSRC,ZACCRZ1                                                S01232
+      /EJECT                                                              S01232
+     C/COPY ZSRSRC,ZACCZZ1                                                S01232
+      ***/EJECT**                                                   S01232S01195
+     C***/COPY*ZSRSRC,XDATE3Z1                                      S01232S01195
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZBKDT                                                  S01195
+      /EJECT                                                              054763
+     C/COPY ZSRSRC,ZCALCD                                                 054763
+      /EJECT                                                              054763
+     C/COPY ZSRSRC,ZCNSDZ1                                                054763
+      /EJECT
+     C/COPY ZSRSRC,ZCOLLVZ1
+      /EJECT
+     C/COPY ZSRSRC,ZCONVZ1
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDYYRZ3
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT                                                              S01232
+     C/COPY ZSRSRC,ZLCDZ1                                                 E20380
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZPRCIZ1
+      /EJECT                                                              S01232
+     C/COPY ZSRSRC,ZRATEZ1                                                S01232
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT                                                              E20380
+     C/COPY ZSRSRC,ZXRATEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZYCEZ1                                                 S01232
+      /EJECT
+     C/COPY ZSRSRC,ZYLDIZ1
+      /EJECT
+     C/COPY ZSRSRC,ZYLDZ2
+      /EJECT
+      ***
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  POWER8 - ARRAY OF POWERS FOR NOMINAL DP TO CURRENCY DP CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+** MES
+DEAL DOES NOT EXIST OR IS MATURED
+DEAL EXISTS BUT IS NOT COVERED BY THIS DEPOT MOVEMENT TYPE
+DEAL EXISTS BUT IN A DIFFERENT BRANCH
+DEAL EXISTS BUT FOR A DIFFERENT COUNTERPARTY
+DEPOT MOVEMENT DOES NOT EXIST OR IS MATURED
+DEPOT MOVEMENT EXISTS BUT IS NOT COVERED BY THIS DEAL TYPE
+DEPOT MOVEMENT EXISTS BUT IN A DIFFERENT BRANCH
+DEPOT MOVEMENT EXISTS BUT FOR A DIFFERENT COUNTERPARTY
+COLLATERAL VALUE OF DEPOT MOVEMENTS IS LESS THAN VALUE OF DEAL
+**  CPY@
+(c) Finastra International Limited 2001

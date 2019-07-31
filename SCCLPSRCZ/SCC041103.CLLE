@@ -1,0 +1,107 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Input cycle initiation - B SE')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC041103 - Input Cycle Initiation SE                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC056  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSC056 - COB Restructure - SC COB Optimisation Phase 1      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)
+ 
+             DCLF       FILE(SDBANKPD)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* If CDE002 on and CDE001 is off, send a bank message to CRM */
+ 
+             CHGVAR     VAR(&RTN) VALUE('       ')
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CDE002')
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)
+             IF         COND(&RTN *EQ '       ') THEN(DO)
+                CHGVAR     VAR(&SARD) VALUE('CDE001')
+                CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)
+                IF         COND(&RTN *NE '       ') THEN(DO)
+                   CALL       PGM(DEC0050) PARM('BK')
+                ENDDO
+             ENDDO
+ 
+/* Check if CRE075 is installed */
+ 
+             CHGVAR     VAR(&RTN) VALUE('       ')
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CRE075')
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)
+ 
+             IF         COND(&RTN *EQ '       ') THEN(DO)
+ 
+/* Call Block/Refer Debit/Credit Field Update program  */
+ 
+                CALL       PGM(RE004600)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   SNDPGMMSG  MSG('Error on RE004600 Update of Block +
+                            & Refer Fields Program') TOMSGQ(MOPERQ)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+ 
+/* Call Accounts becoming effective today report */
+ 
+                CALL       PGM(RE000567)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   SNDPGMMSG  MSG('Error on RE000567 Accounts becoming +
+                            effective today report') TOMSGQ(MOPERQ)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+ 
+/* Successful completion */
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Database error processing */
+ 
+DBETAG:
+ 
+/* Retrieve database error information from LDA */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ)
+             ENDDO
+ 
+/* Abnormal error processing */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             SNDPGMMSG  MSG('Program SCC041103 ended abnormally.') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,55 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Synchronize LEAGFTQD with LEAGFMPD')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00310 - Utility to synchronize LEAGFTQD with LEAGFMPD   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2016                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD040963 *CREATE   Date 07Sep16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*        MD040963 - CLE106 initialisation program ended in error    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          Systems Ltd. 2016')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             CHGJOB     SWS(00000000)
+ 
+             CALL       PGM(SMU00310)
+ 
+ 
+/** Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                             CMDLBL(ABNOR))
+                                                                                        /*AR740267*/
+             GOTO       CMDLBL(END)                                                     /*AR740267*/
+ 
+/** Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMUC00310 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** End program */
+ 
+ END:
+             ENDPGM

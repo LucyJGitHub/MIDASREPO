@@ -1,0 +1,1880 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE CI Trickle Feed')                             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE4445 - CI Trickle Feed                                     *
+      *                                                               *
+      *  Function:  This program will run in batch, retrieving        *
+      *  (I/C)      details of transactions performed across an       *
+      *             account which are carried out at any location     *
+      *             that is not the branch at which the account is    *
+      *             held.  This will allow the Retail Banking Hall    *
+      *             product at the remote branch, at which the        *
+      *             account is held, to update the account balance in *
+      *             the database in that branch.  It will also        *
+      *             retrieve any maintenence to an account, eg. holds *
+      *             placed on an account, opening an account, account *
+      *             closure, account referrals, in order to update    *
+      *             the account record in the database in that branch.*
+      *                                                               *
+      *             This program is the exit program for the 'Receive *
+      *             Journal Entry' command in REC4445 and will run if *
+      *             any entry of the following type appears on the    *
+      *             journal ICJRN:                                    *
+      *                                                               *
+      *  File = RSACMTPD, ACCNTAB, STOPCSD                            *
+      *                                                               *
+      *  Journal Code = R, U                                          *
+      *                                                               *
+      *  Entry Type = PT, UP, UR, XJ, XE                              *
+      *                                                               *
+      *  Called By: REC4445 - CI Trickle Feed                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3755            Date 06Aug04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 214662             Date 28Mar03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 200641             Date 03Jan02               *
+      *                 198870             Date 12Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 192665             Date 08May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 184203             Date 07Feb01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 163524             Date 19APR99               *
+      *                 163529             Date 02JUL99               *
+      *                 163532             Date 02JUL99               *
+      *                 152024             Date 02JUL99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCB002             Date 25JUL96               *
+      *                 CRT003  *CREATE    Date 22JUL96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3755 - This program failed to open an account because of  *
+      *            the 10-digit account code change.                  *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  214662 - Correction to 192665. Non-Cashier bal change lost.  *
+      *  200641 - If an account is flagged for closure the system     *
+      *           sends an instruction to delete to Cashier, results  *
+      *           in an error message in the cashier event log when   *
+      *           trickle feed sends a batch entry to cashier.        *
+      *  198870 - Trickle feed is not left justfying available        *
+      *           balance and uncleared funds as cashier requires     *
+      *  192665 - DB error 5 when processing non-retail account       *
+      *         - Also wrong return code used by fix 163524           *
+      *  184203 - Change Account download for Saving accounts.        *
+      *  163524 - A/c Maint.- If Overdraft line is amended the        *
+      *           Available Balance will change.                      *
+      *           The Held Items and Overdraft Line should be taken   *
+      *           be taken into the Available Balance calculation.    *
+      *           (AVBL=CLBLN+ODLN-HELD)                              *
+      *  163529 - Select for TF only if the A/c is in a Cashier branch*
+      *  163532 - Account Maint. TF should be for Retail Accounts only*
+      *  152024 - When processing RSACMTPD journal entries, program   *
+      *           should only retrieve teller details for records     *
+      *           added by RBA programs                               *
+      *  CCB002 - COB Performance Enhancements.                       *
+      *           Access now via access object.                       *
+      *           MEMOS is now accessed via GL/RE key rather than old *
+      *           relative record number.                             *
+      *  CRT003 - Cashier Interface.                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FRECITHL0UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      **  CI Trickle Feed Header
+      *
+     FRECITFPDO   E                    DISK         KINFSR *PSSR
+      **  CI Trickle Feed Details
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                  FUNCTION OF INDICATORS                       *
+      *                  ----------------------                       *
+      *                                                               *
+      *  11 - Chain fail, Setll fail, EOF                             *
+      *  12 - Shut Down                                               *
+      *  13 - Positive numeric value                                  *
+      *  14 - Negative numeric value                                  *
+      *  15 - Test of bits of WARETB (Retail Indicators)              *
+      *  16 - LOKUP of RBA Programs                                   *
+      *  17 - Test of bits of WARETB (Retail Indicators)              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INZSR -  Initialisation.                                    *
+      *  *PSSR  -  Program Error.                                     *
+      *  DBERR  -  Database Error Handling.                           *
+      *  SRRSAC -  Retrieve Balance Processing                        *
+      *  SRACNT -  Account Processing                                 *
+      *  SRSTOP -  Stopped Cheque Processing                          *
+      *  SREDIT -  Edit Signed Balance Value                          *
+      *  SRTRDT -  Trickle Feed to PF/RECITFPD and to branch dtaq     *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    PGM     1   9 10
+      **  Array containing Program Names
+      *
+      /COPY ZSRSRC,ZDATE9Z1
+      ** Array for ZDATE9
+      *
+      /COPY ZSRSRC,ZEDITZ1
+      ** Array for SR.ZEDIT
+      *
+      /EJECT
+      *
+     ICITFSQ    E DSCITFSQ                        6
+      ** Data area for Trickle Feed Seq No
+      *
+     I                                        1   6 WTFSQ
+      *
+     ICITFTS    E DSCITFTS                        2
+      ** Data area for Trickle Feed Time Stamp
+      *
+     I                                        1   2 WNNSS
+      *
+     IDSMEMS    E DSMEMOS                                                 CCB002
+      ** External data structure for MEMOS Details                        CCB002
+      ** Renamed fields in PF/MEMOS                                       CCB002
+      *                                                                   CCB002
+     I              CNUM                            MECNUM                CCB002
+     I              CCY                             MECCY                 CCB002
+     I              ACOD                            MEACOD                CCB002
+     I              ACSQ                            MEACSQ                CCB002
+     I              ACNO                            MEACNO                CCB002
+      *                                                                   CCB002
+     I***JRNENT*     DS                            562                                        CGL029
+     I***JRNENT*     DS                            698                                CGL029 BUG3755
+     IJRNENT      DS                            688                                          BUG3755
+      ** Data Structure for journal entries
+      *
+     I                                        6  150WJRSQ
+     I                                       16  16 WJRCD
+     I                                       17  18 WJRENT
+     I                                       57  66 WJRPGM
+     I                                       87  96 WJRFIL
+     I                                       97 1060WJRCTR
+      *
+     I***DSRSAC*     DS                            226                                        CGL029
+     I***DSRSAC*     DS                            236                                CGL029 BUG3755
+     IDSRSAC      DS                            249                                          BUG3755
+      ** Data Structure for RSACMTPD
+      *
+     I**********                            126 1310WRCUSN                                    CSD027
+     I                                      126 131 WRCUSN                                    CSD027
+     I                                      126 131 WHCUSN                163524
+     I                                      132 134 WRCCYD
+     I                                      132 134 WHCCYD                163524
+     I**********                            135 1380WRACDE                                    CGL029
+     I**********                            135 138 WHACDE                             163524 CGL029
+     I                                      135 138 ACDEQQ                                    CGL029
+     I                                      139 1400WRASNC
+     I                                      139 140 WHASNC                163524
+     I                                      141 143 WRBRCA
+     I                                      141 143 WHBRCA                163524
+     I                                      221 223 WRTBID
+     I**********                            227 2360WRACDE                            CGL029 BUG3755
+     I**********                            227 236 WHACDE                            CGL029 BUG3755
+     I                                      240 2490WRACDE                                   BUG3755
+     I                                      240 249 WHACDE                                   BUG3755
+      *
+     IDSTFBL      DS
+      ** Data Structure for trickle feed data
+      ** of MEMOS changes
+      *
+     I                                        1   4 WBLTYP
+     I                                        5  17 WBLACO
+     I                                       18  34 WBLAVB
+     I                                       35  50 WBLFDC
+     I                                       51  65 WBLDTT
+     I                                       66  85 WBLEXA
+      *
+     I***DSACNT*     DS                            562                                        CGL029
+     I***DSACNT*     DS                            698                                CGL029 BUG3755
+     IDSACNT      DS                            688                                          BUG3755
+      ** Data structure for ACCNTAB
+      *
+     I**********                            127 1320WACNUM                                    CSD027
+     I                                      127 132 WACNUM                                    CSD027
+     I                                      133 135 WACCY
+     I**********                            136 1390WAACOD                                    CGL029
+     I                                      136 1390ACDQQ1                                    CGL029
+     I                                      140 1410WAACSQ
+     I                                      148 150 WABRCA
+     I                                      151 151 WAATYP
+     I                                      152 152 WASTYP                184203
+     I                                      154 154 WAACST
+     I                                      161 180 WAANAM
+     I                                      315 3240WAACNO
+     I                                      325 325 WARETB
+     I                                    P 327 3320WAODLN                163524
+     I                                    P 333 3350WAODED                163524
+     I                                    P 345 3520WAHELD                163524
+     I**********                            689 6980WAACOD                            CGL029 BUG3755
+     I                                      679 6880WAACOD                                   BUG3755
+      *
+     IDSTFAD      DS
+      ** Data Struc for trickle feed data
+      ** of ACCNTAB changes - type TFAD, Trickle Feed Accnt Delete
+      *
+     I                                        1   4 WADTYP
+     I                                        5  17 WADACO
+     I                                       18  37 WADEXA
+      *
+     IDSTFAO      DS                            149
+      ** Data Struc for trickle feed data
+      ** of ACCNTAB changes - type TFAO, Trickle Feed Accnt Open
+      *
+     I                                        1   4 WAOTYP
+     I                                        5  17 WAOACO
+     I                                       18  37 WAOEXA
+     I                                       38  72 WAOCNM
+     I                                       73  87 WAOANM
+     I                                       89  91 WAOACY
+     I                                      148 149 WAOCTP                184203
+      *
+     I*DSTFAM*****DS**                          157                       184203
+     IDSTFAM      DS                            159                       184203
+      ** Data Struc for trickle feed data
+      ** of ACCNTAB changes - type TFAM, Trickle Feed Accnt Maintenance
+      *
+     I                                        1   4 WAMTYP
+     I                                        5  17 WAMACO
+     I                                       18  52 WAMCNM
+     I                                       53  67 WAMANM
+     I                                       69  71 WAMACY
+     I                                       72  72 WAMRL
+     I                                       73  73 WAMRLC
+     I                                       74  74 WAMRLD
+     I                                       75  75 WAMADL
+     I                                       76  76 WAMABL
+     I                                       77  77 WAMADM
+     I                                       78  78 WAMACL
+     I                                       79  79 WAMSGO
+     I                                       80  80 WAMR9
+     I                                       81  81 WAMR10
+     I                                      138 157 WAMEXA
+     I                                      158 159 WAMCTP                184203
+      *
+     I***DSSTOP*     DS                            221                                        CGL029
+     IDSSTOP      DS                            231                                           CGL029
+      ** Data structure for STOPCSD
+      *
+     I                                      126 126 WQRECI
+     I**********                            127 1320WQCNUM                                    CSD027
+     I                                      127 132 WQCNUM                                    CSD027
+     I                                      133 135 WQCCY
+     I**********                            136 1390WQACOD                                    CGL029
+     I                                      136 1390ACDQQ2                                    CGL029
+     I                                      140 1410WQACSQ
+     I/COPY WNCPYSRC,RE4445I001
+     I                                      142 1440WQSTCR
+     I/COPY WNCPYSRC,RE4445I002
+     I                                      145 1540WQACNO
+     I                                      155 157 WQBRCA
+     I                                      158 1650WQFCHQ
+     I                                      166 1730WQTCHQ
+     I                                    P 174 1800WQSTPA
+     I                                    P 222 2310WQACOD                                    CGL029
+     I/COPY WNCPYSRC,RE4445I003
+      *
+     IDSTFSU      DS
+      ** Data Struc for trickle feed data
+      ** of STOPCSD changes - type TFSU, Trickle Feed Stop Maintenance
+      *
+     I                                        1   4 WSUTYP
+     I                                        5  17 WSUACO
+     I                                       18  22 WSUREF
+     I                                       23  38 WSU1SN
+     I                                       39  54 WSULSN
+     I                                       55  70 WSUSAM
+     I                                       71  90 WSUEXA
+      *
+     IDSTFSD      DS
+      ** Data Struc for trickle feed data
+      ** of STOPCSD changes - type TFSD, Trickle Feed Stop Deletion
+      *
+     I                                        1   4 WSDTYP
+     I                                        5  17 WSDACO
+     I                                       18  22 WSDREF
+     I                                       23  42 WSDEXA
+      *
+     I            DS
+      ** Data Structure for editted values
+      *
+     I                                        1  17 WC17
+     I                                        2  17 WC16
+     I                                        3  17 WC15
+     I                                        4  17 WC14
+     I                                        5  17 WC13
+     I                                        6  17 WC12
+     I                                        7  17 WC11
+     I                                        8  17 WC10
+     I                                        9  17 WC9
+     I                                       10  17 WC8
+     I                                       11  17 WC7
+     I                                       12  17 WC6
+     I                                       13  17 WC5
+     I                                       14  17 WC4
+     I                                       15  17 WC3
+     I                                       16  17 WC2
+     I                                       17  17 WC1
+      *
+     IDATS        DS                             29
+      ** Data to be sent to the corresponding branch dtaq
+      *
+     I                                        1   3 RRBRCA
+     I                                        4  13 RRACNT
+     I                                       14  15 RRTFTP
+     I                                       16  21 RRTFSQ
+     I                                       22  22 RRTFST
+      *
+     IUMEMER      DS                                                      CCB002
+      ** Data structure for database error on call to AOMEMSR0/AOMEMSU0   CCB002
+      *                                                                   CCB002
+     I**********                              1   60U0CNUM                             CCB002 CSD027
+     I                                        1   6 U0CNUM                                    CSD027
+     I                                        7   9 U0CUCD                CCB002
+     I**********                             10  130U0ACCD                             CCB002 CGL029
+     I**********                             14  150U0ACSQ                             CCB002 CGL029
+     I**********                             16  18 U0BRCA                             CCB002 CGL029
+     I                                       10  190U0ACCD                                    CGL029
+     I                                       20  210U0ACSQ                                    CGL029
+     I                                       22  24 U0BRCA                                    CGL029
+      *                                                                   CCB002
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IACKLST      DS
+      ** Data structure for klist KLACNT
+      *
+     I                                        1   6 KCNUMX
+     I                                        7   9 KCCYX
+     I**********                             10  13 KACODX                                    CGL029
+     I**********                             14  15 KACSQX                                    CGL029
+     I**********                             16  18 KBRCAX                                    CGL029
+     I                                       10  19 KACODX                                    CGL029
+     I                                       20  21 KACSQX                                    CGL029
+     I                                       22  24 KBRCAX                                    CGL029
+     I*
+      /COPY ZSRSRC,ZDATE9Z2
+      ** Data structure for ZDATE9
+      *
+     ISDBANK    E DSSDBANKPD
+      **  SD Bank ICD
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     ISDTELD    E DSSDTELDPD
+      ** RTS Teller details
+      *
+     ISCSARD    E DSSCSARDPD
+      ** Switchable SARs
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Switchable SARs
+     I              QQDFAC                          QQDFAX                                    CGL029
+      *                                                                   163524
+     IGLACCT    E DSACCNTAB                                               163524
+      ** Customer details                                                 163524
+      ** Renamed fields in PF/ACCNTAB                                     163524
+      *                                                                   163524
+     I              RECI                            ACRECI                163524
+     I              BRCA                            ACBRCA                163524
+     I              LCD                             ACLCD                 163524
+     I              ACODQQ                          ACDQQ3                                    CGL029
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** 2nd   DS for access programs, Long  data structure
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Processing.                       *
+      *                                                               *
+      * CALLS      SRRSAC - Retrieve Balance Processing               *
+      *            SRACNT - Account Processing                        *
+      *            SRSTOP - Stopped Cheque Processing                 *
+      *            DBERR  - Database Error Handling                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Entry Parameter from exitpgm of RCVJRNE Command
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           JRNENT
+     C                     PARM           CTRLCD  1
+      *
+      ** Main Body
+      ** CTRLCD eq 1 => There is data for journalling
+      ** Execute appropiate subroutine based on file name on journal
+      *
+     C           CTRLCD    IFEQ '1'
+      *
+     C                     SELEC
+     C           WJRFIL    WHEQ 'RSACMTPD'
+     C                     EXSR SRRSAC
+     C           WJRFIL    WHEQ 'ACCNTAB'
+     C                     EXSR SRACNT
+     C           WJRFIL    WHEQ 'STOPCSD'
+     C                     EXSR SRSTOP
+     C                     ENDSL
+      *
+     C           WJRENT    IFEQ 'XJ'
+     C                     MOVE '9'       CTRLCD
+     C                     MOVE '1'       *INU6
+     C                     MOVE '1'       *INLR
+     C                     END
+      *
+     C           WJRENT    IFEQ 'XE'
+     C                     MOVE '9'       CTRLCD
+     C                     MOVE '1'       *INLR
+     C                     END
+      *
+      ** Read the Trickle Feed Header and update its' sequence no
+      *
+     C           *LOVAL    SETLLRECITHD0             1111
+      *
+     C           *IN11     IFEQ '0'
+     C                     READ RECITHD0                 11
+     C           *IN11     IFEQ '0'
+     C                     Z-ADDWJRSQ     RSJOSQ
+     C                     UPDATRECITHD0
+     C                     COMIT
+     C                     END
+     C                     END
+      *
+     C           *IN11     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   LDA
+     C                     Z-ADD02        DBASE
+     C                     MOVEL'RECITHL0'DBFILE
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     END
+      *
+      ** If shut down is requested, seton LR
+      *
+     C                     SHTDN                     12
+     C           *IN12     IFEQ '1'
+     C                     MOVE '9'       CTRLCD
+     C                     MOVE '1'       *INU6
+     C                     MOVE '1'       *INLR
+     C                     END
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRRSAC - Retrieve Balance Processing               *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * CALLS      SREDIT - Edit Signed Balance Value                 *
+      *            ZDATE9 - Convert Midas dayno to YYYYMMDD date fmt  *
+      *            SRTRDT - Trickle Feed to PF/RECITFPD and to dtaq   *
+      *            DBERR  - Database Error Handling                   *
+      *                                                               *
+      *****************************************************************
+     C           SRRSAC    BEGSR                           ** SRRSAC **
+      *
+      ** Move the journal entries to RSACMTPD data struc
+      ** Process only the PT journal entry type
+      *
+     C                     MOVELJRNENT    DSRSAC
+      *
+     C           WJRENT    IFEQ 'PT'
+      *
+      ** Check if record was added to RSACMTPD by an RBA program          152024
+      *                                                                   152024
+     C           WJRPGM    LOKUPPGM                      16               152024
+      *                                                                   152024
+     C           *IN16     IFEQ '1'                                       152024
+      *                                                                   152024
+      ** Get teller details
+      *
+     C                     CALL 'AOTELDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WRTBID    @TELR   3
+     C           SDTELD    PARM SDTELD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   LDA
+     C                     Z-ADD03        DBASE
+     C                     MOVEL'SDTELDL1'DBFILE
+     C                     MOVELWRTBID    DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *                                                                   152024
+     C                     ENDIF                                          152024
+      *
+      ** Check if branch status = 'N' (No cashier) so no trickle feeding
+      ** is needed.
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           WRBRCA
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C**  Check if error occurred
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           ************
+     C                     Z-ADD10        DBASE            * DBERR 10 *
+     C                     MOVELWRBRCA    DBKEY            ************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      ** Do trickle feed if the journal entry was done by a RBA pgm
+      ** and the teller id branch is different from the account branch.
+      ** Also, still do trickle feed if the journal entry was done by
+      ** a non-RBA pgm.
+      *
+     C***********WJRPGM    LOKUPPGM                      16               152024
+      *
+     C           *IN16     IFEQ '1'
+     C           WRBRCA    ANDNEFRTLBC
+     C           CRT001    ANDEQ'N'
+     C           CRT003    ANDEQ'Y'
+      *
+     C           *IN16     OREQ '1'
+     C           WRBRCA    ANDNEFRTLBC
+     C           CRT001    ANDEQ'Y'
+     C           CRT003    ANDEQ'Y'
+     C           A8BRST    ANDNE'N'
+      *
+     C           *IN16     OREQ '0'
+      *                                                                   CCB002
+      ** Chain access object AOMEMSR0                                     CCB002
+      *                                                                   CCB002
+     C                     CALL 'AOMEMSR0'                                CCB002
+     C                     PARM *BLANK    W0RTCD  7        I:Return code  CCB002
+     C                     PARM '*KEY   ' W0OPTN  7        O:Option       CCB002
+     C                     PARM 0         W0RETL 100       O:Retail A/C NoCCB002
+     C**********           PARM WRCUSN    W0CNUM  60       O:Customer No.              CCB002 CSD027
+     C                     PARM WRCUSN    W0CNUM  6        O:Customer No.                     CSD027
+     C                     PARM WRCCYD    W0CCY   3        O:Currency     CCB002
+     C**********           PARM WRACDE    W0ACCD  40       O:Account Code              CCB002 CGL029
+     C                     PARM WRACDE    W0ACCD 100                                          CGL029
+     C                     PARM WRASNC    W0ACSQ  20       O:Account Seq. CCB002
+     C                     PARM WRBRCA    W0BRCA  3        O:Branch       CCB002
+     C           DSMEMS    PARM DSMEMS    DSFDY                           CCB002
+      *                                                                   CCB002
+      *  When no record found in MEMOS this means this is not a retail    192665
+      *  account so no further processing is needed                       192665
+     C********** W0RTCD    IFNE *BLANK                             CCB002 214662
+      *                                                                   192665
+     C********** *LOCK     IN   LDA                                       192665
+     C**********           MOVE *BLANKS   LDA                             192665
+     C**********           Z-ADD05        DBASE                           192665
+     C**********           MOVE 'AOMEMSR0'DBFILE                   CCB002 192665
+     C**********           Z-ADDW0CNUM    U0CNUM                   CCB002 192665
+     C**********           MOVE W0CCY     U0CUCD                   CCB002 192665
+     C**********           Z-ADDW0ACCD    U0ACCD                   CCB002 192665
+     C**********           Z-ADDW0ACSQ    U0ACSQ                   CCB002 192665
+     C**********           MOVE W0BRCA    U0BRCA                   CCB002 192665
+     C**********           MOVELUMEMER    DBKEY                    CCB002 192665
+     C**********           EXSR DBERR                                     192665
+     C**********           END                                            192665
+      *                                                                   214662
+     C           W0RTCD    IFEQ *BLANK                                    214662
+      *
+      ** Get the no of decimal places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WRCCYD    @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   LDA
+     C                     Z-ADD06        DBASE
+     C                     MOVEL'SDCURRL1'DBFILE
+     C                     MOVELWRCCYD    DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+     C                     Z-ADDA6NBDP    WDEC    10
+      *                                                                   163524
+      ** Retrieve HELD and Overdraft Line from Account Details            163524
+      *                                                                   163524
+     C                     CALL 'AOACCTR0'                                163524
+     C**********           PARM *BLANK    W1RTCD  7        I:Return163524 192665
+     C                     PARM *BLANK    W0RTCD  7        I:Return code  192665
+     C                     PARM '*KEY   ' W1OPTN  7        O:Option       163524
+     C                     PARM *BLANK    W1RETL 10        O:Retail A/C No163524
+     C                     PARM WHCUSN    W1CNUM  6        O:Customer No. 163524
+     C                     PARM WHCCYD    W1CCY   3        O:Currency     163524
+     C**********           PARM WHACDE    W1ACCD  4        O:Account Code              163524 CGL029
+     C                     PARM WHACDE    W1ACCD 10                                           CGL029
+     C                     PARM WHASNC    W1ACSQ  2        O:Account Seq. 163524
+     C                     PARM WHBRCA    W1BRCA  3        O:Branch       163524
+     C           GLACCT    PARM GLACCT    DSSDY                           163524
+      *                                                                   163524
+     C           W0RTCD    IFNE *BLANK                                    163524
+     C           *LOCK     IN   LDA                                       163524
+     C                     MOVE *BLANKS   LDA                             163524
+     C                     Z-ADD15        DBASE                           163524
+     C                     MOVE 'AOACCTR0'DBFILE                          163524
+     C                     MOVELW1CNUM    U0CNUM                          163524
+     C                     MOVELW1CCY     U0CUCD                          163524
+     C                     MOVELW1ACCD    U0ACCD                          163524
+     C                     MOVELW1ACSQ    U0ACSQ                          163524
+     C                     MOVELW1BRCA    U0BRCA                          163524
+     C                     MOVELUMEMER    DBKEY                           163524
+     C                     EXSR DBERR                                     163524
+     C                     END                                            163524
+      *
+      ** Get available balance
+      *
+     C                     MOVE *BLANK    WSGN    1
+     C                     Z-ADDCLBLN     WSNUM  150 1314
+      *                                                                   163524
+      ** Apply Overdraft Line only if it has not expired.                 163524
+     C           ODED      IFGE BJRDNB                                    163524
+      *                                                                   163524
+      ** If overdraft limit is not zero                                   163524
+     C           ODLN      IFNE 0                                         163524
+      *                                                                   163524
+      ** If currency decimal place is 1                                   163524
+     C           WDEC      IFEQ 1                                         163524
+     C           ODLN      MULT 10        ODLN                            163524
+     C                     END                                            163524
+      *                                                                   163524
+      ** If currency decimal place is 2                                   163524
+     C           WDEC      IFEQ 2                                         163524
+     C           ODLN      MULT 100       ODLN                            163524
+     C                     END                                            163524
+      *                                                                   163524
+      ** If currency decimal place is 3                                   163524
+     C           WDEC      IFEQ 3                                         163524
+     C           ODLN      MULT 1000      ODLN                            163524
+     C                     END                                            163524
+      *                                                                   163524
+     C                     END                                            163524
+      *                                                                   163524
+     C                     SUB  ODLN      WSNUM                           163524
+     C                     END                                            163524
+     C                     ADD  HELD      WSNUM      1314                 163524
+     C                     MOVE 'Y'       WSIND   1
+      *
+     C                     EXSR SREDIT
+     C**********           MOVE WC17      WBLAVB                   198870
+     C                     MOVEL@WKAM     WBLAVB                   198870
+      *
+      *
+      ** Get Funds to be cleared
+      *
+     C                     MOVE *BLANK    WSGN
+     C           CLBLN     SUB  LDBLN     WSNUM      1314
+     C                     MOVE 'N'       WSIND
+      *
+     C                     EXSR SREDIT
+     C**********           MOVE WC17      WBLFDC                   198870
+     C                     MOVEL@WKAM     WBLFDC                   198870
+     C                     END
+      *
+      ** Set date/time stamp
+      *
+     C           *LOCK     IN   CITFTS
+     C                     Z-ADD0         WNSN    20
+     C                     MOVE WNNSS     WNSN
+     C                     ADD  1         WNSN
+      *
+     C                     MOVE *BLANKS   WNNSS
+     C                     MOVE WNSN      WNNSS
+     C                     OUT  CITFTS
+      *
+     C                     Z-ADDBJRDNB    @@DAYN  50
+     C                     EXSR ZDATE9
+     C           @@RTN     IFEQ '0'
+     C                     MOVE @@VDT     WCDAT   7
+     C                     END
+     C           @@YR      IFGE 2000
+     C                     MOVEL'1'       WCDAT
+     C                     ELSE
+     C                     MOVEL'0'       WCDAT
+     C                     END
+      *
+     C                     TIME           WTIME   60
+     C                     MOVE WTIME     WTIMEC  6
+      *
+     C           WCDAT     CAT  WTIMEC    WDT13  13
+     C           WDT13     CAT  WNNSS     WBLDTT
+      *
+      ** Set trickle feed type and account
+      ** and the details to be written RECITFPD
+      *
+     C                     MOVEL'TFBL'    WBLTYP
+     C***********          MOVE WAACNO    WBLACO                          163524
+     C                     MOVE MEACNO    WBLACO                          163524
+     C                     MOVELBRCA      WBLACO
+     C                     MOVE *BLANKS   WBLEXA
+     C                     MOVELWBLACO    WBLEXA
+      *
+     C                     MOVELBRCA      WTFBRC  3
+     C***********          MOVE WAACNO    WTFACO 10                       163524
+     C                     MOVE MEACNO    WTFACO 10                       163524
+     C                     MOVE *BLANKS   WTFDA
+     C**********           MOVELDSTFBL    WTFDA 150                       184203
+     C                     MOVELDSTFBL    WTFDA 159                       184203
+      ** Write trickle feed record to Trickle Feed Details file
+      ** and send it to the branch dtaq
+      *
+     C                     EXSR SRTRDT
+      **  Retail account                                                  192665
+     C                     END                                            192665
+      *
+      **  Trickle Feed Needed
+     C                     END
+      *
+      **  WJRENT = PT
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRACNT - Account Processing                        *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * CALLS      SRTRDT - Trickle Feed to PF/RECITFPD and to dtaq   *
+      *            DBERR  - Database Error Handling                   *
+      *                                                               *
+      *****************************************************************
+     C           SRACNT    BEGSR                           ** SRACNT **
+      *
+     C                     MOVELJRNENT    DSACNT
+      *
+      ** Check if this account's branch status = 'N' (Not Cashier Branch) 163529
+      ** so no trickle feed is needed.                                    163529
+      *                                                                   163529
+     C**********           CALL 'AOBRCHR0'                                163529              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7                       163529
+     C                     PARM '*KEY   ' @OPTN   7                       163529
+     C                     PARM           WABRCA                          163529
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           163529              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *                                                                   163529
+     C**  Check if error occurred                                         163529
+      *                                                                   163529
+     C           @RTCD     IFNE *BLANKS                                   163529
+     C           *LOCK     IN   LDA                                       163529
+     C                     MOVE 'SDBRCHPD'DBFILE           ************   163529
+     C                     Z-ADD11        DBASE            * DBERR 11 *   163529
+     C                     MOVELWABRCA    DBKEY            ************   163529
+     C                     EXSR DBERR                                     163529
+     C                     ENDIF                                          163529
+      *                                                                   163529
+     C                     MOVELA8BRST    WABRST  3                       163529
+     C           WABRST    IFNE 'N'                                       163529
+      *                                                                   163529
+     C                     SELEC
+      *
+      ** Retail account opened, trickle feed type 'TFAO'
+      *
+     C           WJRENT    WHEQ 'PT'
+     C           WAATYP    ANDEQ'R'
+     C                     MOVE WAACNO    WAOACO
+     C                     MOVELWABRCA    WAOACO
+     C                     MOVE *BLANKS   WAOEXA
+     C                     MOVELWAOACO    WAOEXA
+      *
+     C                     MOVE WACNUM    WACCNM  6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WACCNM    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   LDA
+     C                     Z-ADD07        DBASE
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     MOVE WACCNM    DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+     C                     MOVELBBCNA1    WAOCNM
+     C                     END
+      *
+     C***********          MOVELWAANAM    WAOANM                          163529
+     C***********          MOVELWACCY     WAOACY                          163529
+     C***********          MOVEL'TFAO'    WAOTYP                          163529
+      *
+      ***Set*the*details*to*be*written*to*PF/RECITFPD*********            163529
+      *
+     C***********          MOVELWABRCA    WTFBRC                          163529
+     C***********          MOVE WAACNO    WTFACO                          163529
+     C***********          MOVE *BLANKS   WTFDA                           163529
+     C***********          MOVELDSTFAO    WTFDA                           163529
+      *
+      ** Refer all credits
+      *
+     C                     TESTB'0'       WARETB         15
+     C                     TESTB'1'       WARETB         17
+     C           *IN15     IFEQ '1'
+     C           *IN17     ANDEQ'1'
+     C                     MOVE 'Y'       WAMRL
+     C                     ELSE
+     C                     MOVE 'N'       WAMRL
+     C                     END
+      *
+     C           *IN17     IFEQ '1'
+     C                     MOVE 'Y'       WAMRLC
+     C                     ELSE
+     C                     MOVE 'N'       WAMRLC
+     C                     END
+      *
+      ** Refer all debits
+      *
+     C           *IN15     IFEQ '1'
+     C                     MOVE 'Y'       WAMRLD
+     C                     ELSE
+     C                     MOVE 'N'       WAMRLD
+     C                     END
+      *
+      ** A/c deceased/liquidated
+      *
+     C                     TESTB'6'       WARETB         15
+     C           *IN15     IFEQ '1'
+     C                     MOVE 'Y'       WAMADL
+     C                     ELSE
+     C                     MOVE 'N'       WAMADL
+     C                     END
+      *
+      ** A/c blocked
+      *
+     C                     TESTB'2'       WARETB         15
+     C                     TESTB'3'       WARETB         17
+     C           *IN15     IFEQ '1'
+     C           *IN17     OREQ '1'
+     C                     MOVE 'Y'       WAMABL
+     C                     ELSE
+     C                     MOVE 'N'       WAMABL
+     C                     END
+      *
+      ** A/c dormant
+      *
+     C                     TESTB'4'       WARETB         15
+     C           *IN15     IFEQ '1'
+     C                     MOVE 'Y'       WAMADM
+     C                     ELSE
+     C                     MOVE 'N'       WAMADM
+     C                     END
+      *
+      ** A/c closed
+      *
+     C                     MOVE 'N'       WAMACL
+      *
+      ** System generated only, refer cond. no. 9, refer cond. no. 10
+      *
+     C                     MOVE *BLANK    WAMSGO
+     C                     MOVE *BLANK    WAMR9
+     C**********           MOVE *BLANK    WAMR10                          184203
+      *                                                                   184203
+      ** Set the refer flag to prevent debit balance.                     184203
+     C           WASTYP    IFEQ 'S'                                       184203
+     C                     MOVEL'Y'       WAMR10                          184203
+     C                     ELSE                                           184203
+     C                     MOVEL'N'       WAMR10                          184203
+     C                     END                                            184203
+      *                                                                   184203
+      ** Add in the Account type.                                         184203
+     C                     MOVELWAATYP    WAOCTP                          184203
+     C           WASTYP    IFNE *BLANKS                                   184203
+     C                     MOVE WASTYP    WAOCTP                          184203
+     C                     ELSE                                           184203
+     C                     MOVE 'C'       WAOCTP                          184203
+     C                     END                                            184203
+      *
+     C                     MOVELWAANAM    WAOANM                          163529
+     C                     MOVELWACCY     WAOACY                          163529
+     C                     MOVEL'TFAO'    WAOTYP                          163529
+      *
+      ** Set the details to be written to PF/RECITFPD                     163529
+      *
+     C                     MOVELWABRCA    WTFBRC                          163529
+     C                     MOVE WAACNO    WTFACO                          163529
+     C                     MOVE *BLANKS   WTFDA                           163529
+     C                     MOVELDSTFAO    WTFDA                           163529
+      *
+      ** Write trickle feed record to Trickle Feed Details file
+      ** and send it to the branch dtaq
+      ** 'TFAO'
+      *
+     C                     EXSR SRTRDT
+      *                                                                   163524
+     C                     EXSR SRBALC                                    163524
+      *                                                                   184203
+      ** New Account also sends TFAM because                              184203
+      ** Cashier TFAO doesn't include referrals flags.                    184203
+      *                                                                   184203
+     C                     MOVE WAACNO    WAMACO                          184203
+     C                     MOVELWABRCA    WAMACO                          184203
+     C                     MOVE *BLANKS   WAMEXA                          184203
+     C                     MOVELWAMACO    WAMEXA                          184203
+      *                                                                   184203
+     C                     MOVE WACNUM    WACCNM                          184203
+     C                     MOVELBBCNA1    WAMCNM                          184203
+     C                     MOVELWAANAM    WAMANM                          184203
+     C                     MOVELWACCY     WAMACY                          184203
+      *                                                                   184203
+      ** Set the details to be written to PF/RECITFPD                     184203
+      *                                                                   184203
+     C                     MOVELWABRCA    WTFBRC                          184203
+     C                     MOVE WAACNO    WTFACO                          184203
+      *                                                                   184203
+     C                     MOVEL'TFAM'    WAMTYP                          184203
+      *                                                                   184203
+      ** Add in the Account type.                                         184203
+     C                     MOVELWAATYP    WAMCTP                          184203
+     C           WASTYP    IFNE *BLANKS                                   184203
+     C                     MOVE WASTYP    WAMCTP                          184203
+     C                     ELSE                                           184203
+     C                     MOVE 'C'       WAMCTP                          184203
+     C                     END                                            184203
+     C                     MOVE *BLANKS   WTFDA                           184203
+     C                     MOVELDSTFAM    WTFDA                           184203
+      *                                                                   184203
+      ** Write trickle feed record to Trickle Feed Details file           184203
+      ** and send it to the branch dtaq                                   184203
+      ** 'TFAM'                                                           184203
+      *                                                                   184203
+     C                     EXSR SRTRDT                                    184203
+      *                                                                   184203
+      *
+      ** Entry type 'UR' and 'UP', Account Maintenance or closed
+      *
+     C           WJRENT    WHEQ 'UR'
+     C           WAATYP    ANDEQ'R'                                       163532
+     C           WJRENT    OREQ 'UP'
+     C           WAATYP    ANDEQ'R'                                       163532
+      *
+      ***Account*closed                                                                       200641
+      ***********                                                                             200641
+     C***********WAACST    IFEQ 'C'                                                           200641
+     C***********          MOVE WAACNO    WADACO                                              200641
+     C***********          MOVELWABRCA    WADACO                                              200641
+     C***********          MOVE *BLANKS   WADEXA                                              200641
+     C***********          MOVELWADACO    WADEXA                                              200641
+     C***********          MOVEL'TFAD'    WADTYP                                              200641
+      ***********                                                                             200641
+      ***Set*the*details to be written to PF/RECITFPD                                         200641
+      ***********                                                                             200641
+     C***********          MOVELWABRCA    WTFBRC                                              200641
+     C***********          MOVE WAACNO    WTFACO                                              200641
+     C***********          MOVE *BLANKS   WTFDA                                               200641
+     C***********          MOVELDSTFAD    WTFDA                                               200641
+      ***********                                                                             200641
+      ***Write*trickle feed record to Trickle Feed Details file                               200641
+      ***and*send it to the branch dtaq                                                       200641
+      ***'TFAD'**                                                                             200641
+      ***********                                                                             200641
+     C***********          EXSR SRTRDT                                                        200641
+      *
+      ** Account not closed
+      *
+     C**********           ELSE                                                               200641
+     C                     MOVE WAACNO    WAMACO
+     C                     MOVELWABRCA    WAMACO
+     C                     MOVE *BLANKS   WAMEXA
+     C                     MOVELWAMACO    WAMEXA
+      *
+     C                     MOVE WACNUM    WACCNM
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WACCNM    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   LDA
+     C                     Z-ADD08        DBASE
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     MOVE WACCNM    DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+     C                     MOVELBBCNA1    WAMCNM
+     C                     END
+      *
+     C                     MOVELWAANAM    WAMANM
+     C                     MOVELWACCY     WAMACY
+      *
+      ** Refer all credits
+      *
+     C                     TESTB'0'       WARETB         15
+     C                     TESTB'1'       WARETB         17
+     C           *IN15     IFEQ '1'
+     C           *IN17     ANDEQ'1'
+     C                     MOVE 'Y'       WAMRL
+     C                     ELSE
+     C                     MOVE 'N'       WAMRL
+     C                     END
+      *
+     C           *IN17     IFEQ '1'
+     C                     MOVE 'Y'       WAMRLC
+     C                     ELSE
+     C                     MOVE 'N'       WAMRLC
+     C                     END
+      *
+      ** Refer all debits
+      *
+     C           *IN15     IFEQ '1'
+     C                     MOVE 'Y'       WAMRLD
+     C                     ELSE
+     C                     MOVE 'N'       WAMRLD
+     C                     END
+      *
+      ** A/c deceased/liquidated
+      *
+     C                     TESTB'6'       WARETB         15
+     C           *IN15     IFEQ '1'
+     C                     MOVE 'Y'       WAMADL
+     C                     ELSE
+     C                     MOVE 'N'       WAMADL
+     C                     END
+      *
+      ** A/c blocked
+      *
+     C                     TESTB'2'       WARETB         15
+     C                     TESTB'3'       WARETB         17
+     C           *IN15     IFEQ '1'
+     C           *IN17     OREQ '1'
+     C                     MOVE 'Y'       WAMABL
+     C                     ELSE
+     C                     MOVE 'N'       WAMABL
+     C                     END
+      *
+      ** A/c dormant
+      *
+     C                     TESTB'4'       WARETB         15
+     C           *IN15     IFEQ '1'
+     C                     MOVE 'Y'       WAMADM
+     C                     ELSE
+     C                     MOVE 'N'       WAMADM
+     C                     END
+      *
+      ** A/c closed
+      *
+     C           WAACST    IFNE 'C'                                                           200641
+     C                     MOVE 'N'       WAMACL
+     C                     ELSE                                                               200641
+     C                     MOVE 'Y'       WAMACL                                              200641
+     C                     ENDIF                                                              200641
+      *
+      ** System generated only, refer cond. no. 9, refer cond. no. 10
+      *
+     C                     MOVE *BLANK    WAMSGO
+     C                     MOVE *BLANK    WAMR9
+     C**********           MOVE *BLANK    WAMR10                          184203
+      *                                                                   184203
+      ** Set the refer flag to prevent debit balance.                     184203
+     C           WASTYP    IFEQ 'S'                                       184203
+     C                     MOVEL'Y'       WAMR10                          184203
+     C                     ELSE                                           184203
+     C                     MOVEL'N'       WAMR10                          184203
+     C                     END                                            184203
+      *
+     C                     MOVEL'TFAM'    WAMTYP
+      *                                                                   184203
+      ** Add in the Account type.                                         184203
+     C                     MOVELWAATYP    WAMCTP                          184203
+     C           WASTYP    IFNE *BLANKS                                   184203
+     C                     MOVE WASTYP    WAMCTP                          184203
+     C                     ELSE                                           184203
+     C                     MOVE 'C'       WAMCTP                          184203
+     C                     END                                            184203
+      *
+      ** Set the details to be written to PF/RECITFPD
+      *
+     C                     MOVELWABRCA    WTFBRC
+     C                     MOVE WAACNO    WTFACO
+     C                     MOVE *BLANKS   WTFDA
+     C**********           MOVELDSTFAM    WTFDA 150                       184203
+     C                     MOVELDSTFAM    WTFDA                           184203
+      *
+      ** Write trickle feed record to Trickle Feed Details file
+      ** and send it to the branch dtaq
+      ** 'TFAM'
+      *
+     C                     EXSR SRTRDT
+      *                                                                   163524
+     C                     EXSR SRBALC                                    163524
+      *                                                                   163524
+     C***********          END                                                                200641
+      *
+     C                     ENDSL
+      *                                                                   163529
+     C                     ENDIF                                          163529
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRSTOP - Stopped Cheque Processing                 *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * CALLS      SRTRDT - Trickle Feed to PF/RECITFPD and to dtaq   *
+      *                                                               *
+      *****************************************************************
+     C           SRSTOP    BEGSR                           ** SRSTOP **
+      *
+     C                     MOVELJRNENT    DSSTOP
+      *
+      ** Check if this account's branch status = 'N' (Not Cashier Branch) 163529
+      ** so no trickle feed is needed.                                    163529
+      *                                                                   163529
+     C**********           CALL 'AOBRCHR0'                                163529              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7                       163529
+     C                     PARM '*KEY   ' @OPTN   7                       163529
+     C                     PARM           WQBRCA                          163529
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           163529              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *                                                                   163529
+     C**  Check if error occurred                                         163529
+      *                                                                   163529
+     C           @RTCD     IFNE *BLANKS                                   163529
+     C           *LOCK     IN   LDA                                       163529
+     C                     MOVE 'SDBRCHPD'DBFILE           ************   163529
+     C                     Z-ADD12        DBASE            * DBERR 12 *   163529
+     C                     MOVELWQBRCA    DBKEY            ************   163529
+     C                     EXSR DBERR                                     163529
+     C                     ENDIF                                          163529
+      *                                                                   163529
+     C                     MOVELA8BRST    WQBRST  3                       163529
+     C           WQBRST    IFNE 'N'                                       163529
+      *                                                                   163529
+      ** Trickle Feed Stop Deleted
+      *
+     C           WJRENT    IFEQ 'UP'
+     C           WQRECI    ANDEQ'*'
+     C                     MOVEL'TFSD'    WSDTYP
+     C                     MOVE WQACNO    WSDACO
+     C                     MOVELWQBRCA    WSDACO
+     C                     MOVE *BLANKS   WSDEXA
+     C                     MOVELWSDACO    WSDEXA
+     C                     MOVE *BLANKS   WSDREF
+     C                     MOVE WQSTCR    WSDREF
+      *
+      ** Set the details to be written to PF/RECITFPD
+      *
+     C                     MOVELWQBRCA    WTFBRC
+     C                     MOVE WQACNO    WTFACO
+     C                     MOVE *BLANKS   WTFDA
+     C                     MOVELDSTFSD    WTFDA
+      *
+      ** Write trickle feed record to Trickle Feed Details file
+      ** and send it to the branch dtaq
+      *
+     C                     EXSR SRTRDT
+     C                     END
+      *
+      ** Trickle Feed Stop Maintenance update or add
+      *
+     C           WJRENT    IFEQ 'UP'
+     C           WQRECI    ANDEQ'D'
+     C           WJRENT    OREQ 'PT'
+     C                     MOVEL'TFSU'    WSUTYP
+     C                     MOVE WQACNO    WSUACO
+     C                     MOVELWQBRCA    WSUACO
+     C                     MOVE *BLANKS   WSUEXA
+     C                     MOVELWSUACO    WSUEXA
+     C                     MOVE *BLANKS   WSUREF
+     C                     MOVE WQSTCR    WSUREF
+     C                     MOVE *BLANKS   WSU1SN
+     C                     MOVE WQFCHQ    WSU1SN
+     C                     MOVE *BLANKS   WSULSN
+     C                     MOVE WQTCHQ    WSULSN
+      *
+      ** Get the no of decimal places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WQCCY     @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   LDA
+     C                     Z-ADD09        DBASE
+     C                     MOVEL'SDCURRL1'DBFILE
+     C                     MOVELWQCCY     DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+     C                     Z-ADDA6NBDP    WDEC
+      *
+      ** Get stopped amount
+      *
+     C                     MOVE *BLANK    WSGN
+     C                     Z-ADDWQSTPA    WSNUM      1314
+     C                     MOVE 'N'       WSIND
+      *
+     C                     EXSR SREDIT
+     C                     MOVE WC17      WSUSAM
+     C                     END
+      *
+      ** Set the details to be written to PF/RECITFPD
+      *
+     C                     MOVELWQBRCA    WTFBRC
+     C                     MOVE WQACNO    WTFACO
+     C                     MOVE *BLANKS   WTFDA
+     C                     MOVELDSTFSU    WTFDA
+      *
+      ** Write trickle feed record to Trickle Feed Details file
+      ** and send it to the branch dtaq
+      *
+     C                     EXSR SRTRDT
+     C                     END
+      *                                                                   163529
+     C                     ENDIF                                          163529
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************   163524
+      *                                                               *   163524
+      *            SRBALC - Calculate Available Balance               *   163524
+      *                                                               *   163524
+      * CALLED BY  SRRSAC - Retrieve Balance Processing               *   163524
+      *                                                               *   163524
+      * CALLS             -                                           *   163524
+      *                                                               *   163524
+      *****************************************************************   163524
+     C           SRBALC    BEGSR                           ** SRBALC **   163524
+      *                                                                   163524
+      ** Chain access object AOMEMSR0                                     163524
+      *                                                                   163524
+     C                     CALL 'AOMEMSR0'                                163524
+     C                     PARM *BLANK    W0RTCD  7        I:Return code  163524
+     C                     PARM '*KEY   ' W0OPTN  7        O:Option       163524
+     C                     PARM 0         W0RETL 100       O:Retail A/C No163524
+     C**********           PARM WACNUM    W0CNUM  60       O:Customer No.              163524 CSD027
+     C                     PARM WACNUM    W0CNUM  6        O:Customer No.                     CSD027
+     C                     PARM WACCY     W0CCY   3        O:Currency     163524
+     C**********           PARM WAACOD    W0ACCD  40       O:Account Code              163524 CGL029
+     C                     PARM WAACOD    W0ACCD                                              CGL029
+     C                     PARM WAACSQ    W0ACSQ  20       O:Account Seq. 163524
+     C                     PARM WABRCA    W0BRCA  3        O:Branch       163524
+     C           DSMEMS    PARM DSMEMS    DSFDY                           163524
+      *                                                                   163524
+     C           W0RTCD    IFNE *BLANK                                    163524
+     C           *LOCK     IN   LDA                                       163524
+     C                     MOVE *BLANKS   LDA                             163524
+     C                     Z-ADD13        DBASE                           163524
+     C                     MOVE 'AOMEMSR0'DBFILE                          163524
+     C**********           Z-ADDW0CNUM    U0CNUM                                       163524 CSD027
+     C                     MOVE W0CNUM    U0CNUM                                              CSD027
+     C                     MOVE W0CCY     U0CUCD                          163524
+     C                     Z-ADDW0ACCD    U0ACCD                          163524
+     C                     Z-ADDW0ACSQ    U0ACSQ                          163524
+     C                     MOVE W0BRCA    U0BRCA                          163524
+     C                     MOVELUMEMER    DBKEY                           163524
+     C                     EXSR DBERR                                     163524
+     C                     END                                            163524
+      *                                                                   163524
+      ** Get the no of decimal places                                     163524
+      *                                                                   163524
+     C                     CALL 'AOCURRR0'                                163524
+     C                     PARM *BLANKS   @RTCD   7                       163524
+     C                     PARM '*KEY   ' @OPTN   7                       163524
+     C                     PARM WACCY     @CCY    3                       163524
+     C           SDCURR    PARM SDCURR    DSSDY                           163524
+      *                                                                   163524
+     C           @RTCD     IFNE *BLANK                                    163524
+     C           *LOCK     IN   LDA                                       163524
+     C                     MOVE *BLANKS   LDA                             163524
+     C                     Z-ADD14        DBASE                           163524
+     C                     MOVEL'SDCURRL1'DBFILE                          163524
+     C                     MOVELWACCY     DBKEY                           163524
+     C                     EXSR DBERR                                     163524
+      *                                                                   163524
+     C                     ELSE                                           163524
+     C                     Z-ADDA6NBDP    WDEC    10                      163524
+      *                                                                   163524
+      ** Get available balance                                            163524
+      *                                                                   163524
+     C                     MOVE *BLANK    WSGN    1                       163524
+     C                     Z-ADDCLBLN     WSNUM  150                      163524
+      *                                                                   163524
+      ** Apply Overdraft Line only if it has not expired.                 163524
+     C           WAODED    IFGE BJRDNB                                    163524
+      *                                                                   163524
+      ** If overdraft limit is not zero                                   163524
+     C           WAODLN    IFNE 0                                         163524
+      *                                                                   163524
+      ** If currency decimal place is 1                                   163524
+     C           WDEC      IFEQ 1                                         163524
+     C           WAODLN    MULT 10        WAODLN                          163524
+     C                     END                                            163524
+      *                                                                   163524
+      ** If currency decimal place is 2                                   163524
+     C           WDEC      IFEQ 2                                         163524
+     C           WAODLN    MULT 100       WAODLN                          163524
+     C                     END                                            163524
+      *                                                                   163524
+      ** If currency decimal place is 3                                   163524
+     C           WDEC      IFEQ 3                                         163524
+     C           WAODLN    MULT 1000      WAODLN                          163524
+     C                     END                                            163524
+      *                                                                   163524
+     C                     END                                            163524
+      *                                                                   163524
+     C                     SUB  WAODLN    WSNUM                           163524
+     C                     END                                            163524
+     C                     ADD  WAHELD    WSNUM      1314                 163524
+     C                     MOVE 'Y'       WSIND   1                       163524
+      *                                                                   163524
+     C                     EXSR SREDIT                                    163524
+     C**********           MOVE WC17      WBLAVB                   163524 198870
+     C                     MOVEL@WKAM     WBLAVB                          198870
+      *                                                                   163524
+      ** Get Funds to be cleared                                          163524
+      *                                                                   163524
+     C                     MOVE *BLANK    WSGN                            163524
+     C           CLBLN     SUB  LDBLN     WSNUM      1314                 163524
+     C                     MOVE 'N'       WSIND                           163524
+      *                                                                   163524
+     C                     EXSR SREDIT                                    163524
+     C**********           MOVE WC17      WBLFDC                   163524 198870
+     C                     MOVEL@WKAM     WBLFDC                          198870
+     C                     END                                            163524
+      *                                                                   163524
+      ** Set date/time stamp                                              163524
+      *                                                                   163524
+     C           *LOCK     IN   CITFTS                                    163524
+     C                     Z-ADD0         WNSN    20                      163524
+     C                     MOVE WNNSS     WNSN                            163524
+     C                     ADD  1         WNSN                            163524
+      *                                                                   163524
+     C                     MOVE *BLANKS   WNNSS                           163524
+     C                     MOVE WNSN      WNNSS                           163524
+     C                     OUT  CITFTS                                    163524
+      *                                                                   163524
+     C                     Z-ADDBJRDNB    @@DAYN  50                      163524
+     C                     EXSR ZDATE9                                    163524
+     C           @@RTN     IFEQ '0'                                       163524
+     C                     MOVE @@VDT     WCDAT   7                       163524
+     C                     END                                            163524
+     C           @@YR      IFGE 2000                                      163524
+     C                     MOVEL'1'       WCDAT                           163524
+     C                     ELSE                                           163524
+     C                     MOVEL'0'       WCDAT                           163524
+     C                     END                                            163524
+      *                                                                   163524
+     C                     TIME           WTIME   60                      163524
+     C                     MOVE WTIME     WTIMEC  6                       163524
+      *                                                                   163524
+     C           WCDAT     CAT  WTIMEC    WDT13  13                       163524
+     C           WDT13     CAT  WNNSS     WBLDTT                          163524
+      *                                                                   163524
+      ** Set trickle feed type and account                                163524
+      ** and the details to be written RECITFPD                           163524
+      *                                                                   163524
+     C                     MOVEL'TFBL'    WBLTYP                          163524
+     C                     MOVE WAACNO    WBLACO                          163524
+     C                     MOVELBRCA      WBLACO                          163524
+     C                     MOVE *BLANKS   WBLEXA                          163524
+     C                     MOVELWBLACO    WBLEXA                          163524
+      *                                                                   163524
+     C                     MOVELBRCA      WTFBRC  3                       163524
+     C                     MOVE WAACNO    WTFACO 10                       163524
+     C                     MOVE *BLANKS   WTFDA                           163524
+     C**********           MOVELDSTFBL    WTFDA 150                163524 184203
+     C                     MOVELDSTFBL    WTFDA                           184203
+      *                                                                   163524
+      ** Write trickle feed record to Trickle Feed Details file           163524
+      ** and send it to the branch dtaq                                   163524
+      *                                                                   163524
+     C                     EXSR SRTRDT                                    163524
+      *                                                                   163524
+     C                     ENDSR                                          163524
+      *****************************************************************   163524
+      /EJECT                                                              163524
+      *****************************************************************
+      *                                                               *
+      *            SREDIT - Edit Signed Balance Value                 *
+      *                                                               *
+      * CALLED BY  SRRSAC - Retrieve Balance Processing               *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SREDIT    BEGSR                           ** SREDIT **
+      *
+     C                     MOVEL*BLANKS   @WKAM  17                       198870
+      *                                                                   198870
+     C           *IN13     IFEQ '1'
+     C                     MOVE '+'       WSGN
+     C                     END
+      *
+     C           *IN14     IFEQ '1'
+     C                     MOVE '-'       WSGN
+     C                     Z-SUBWSNUM     WSNUM
+     C                     END
+      *
+     C                     MOVE *BLANKS   WC17
+      *
+      ** Put the decimal pt if any
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WSNUM     ZFIELD
+     C                     Z-ADDWDEC      ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    WC16
+      *
+      ** Put the appropiate numeric value sign
+      *
+     C********** WSIND     IFEQ 'Y'                                       198870
+     C********** WSNUM     IFNE 0                                         198870
+     C                     Z-ADD0         WP      20
+     C           ' '       CHECKWC16:1    WP
+      *
+     C                     SELEC
+      *
+     C           WP        WHEQ 1
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC17
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC16      @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC17      @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 2
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC16
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC15      @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC16      @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 3
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC15
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC14      @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC15      @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 4
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC14
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC13      @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC14      @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 5
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC13
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC12      @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC13      @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 6
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC12
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC11      @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC12      @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 7
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC11
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC10      @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC11      @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 8
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC10
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC9       @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC10      @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 9
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC9
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC8       @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC9       @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 10
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC8
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC7       @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC8       @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 11
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC7
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC6       @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC7       @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 12
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC6
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC5       @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC6       @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 13
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC5
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC4       @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC5       @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 14
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC4
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC3       @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC4       @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 15
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC3
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC2       @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC3       @WKAM                           198870
+     C                     END                                            198870
+      *                                                                   198870
+     C           WP        WHEQ 16
+     C           WSIND     IFEQ 'Y'                                       198870
+     C                     MOVELWSGN      WC2
+     C                     ENDIF                                          198870
+     C           WSNUM     IFEQ 0                                         198870
+     C                     MOVELWC1       @WKAM                           198870
+     C                     ELSE                                           198870
+     C                     MOVELWC2       @WKAM                           198870
+     C                     END                                            198870
+      *
+     C                     ENDSL
+     C**********           ENDIF                                          198870
+     C**********           ENDIF                                          198870
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRTRDT - Trickle Feed to RECITFPD and to dtaq      *
+      *                                                               *
+      * CALLED BY  SRRSAC - Retrieve Balance Processing               *
+      *            SRACNT - Account Processing                        *
+      *            SRSTOP - Stopped Cheque Processing                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRTRDT    BEGSR                           ** SRTRDT **
+      *
+     C           *LOCK     IN   CITFSQ
+     C                     Z-ADD0         WTSQN   60
+     C                     MOVE WTFSQ     WTSQN
+     C                     ADD  1         WTSQN
+      *
+     C                     MOVE *BLANKS   WTFSQ
+     C                     MOVE WTSQN     WTFSQ
+     C                     OUT  CITFSQ
+      *
+     C                     MOVELWTFBRC    RRBRCA
+     C                     MOVELWTFACO    RRACNT
+     C                     MOVEL'TF'      RRTFTP
+     C                     MOVELWTFSQ     RRTFSQ
+     C                     MOVE *BLANK    RRTFST
+     C                     MOVELWTFDA     RRTFDT
+      *
+     C                     WRITERECITFD0
+      *
+      ** Send trickle feed to the corresponding branch dtaq
+      *
+     C           'CASHTF_' CAT  RRBRCA    DTAQS
+     C                     CALL 'QSNDDTAQ'DTQSND
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE9Z3
+      *
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZEDITZ2
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             DBERR - Database Error Handling.                  *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                   -                                           *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL'RE4445'  DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR             - Program error                             *
+      *                                                               *
+      * CALLS      DBERR  -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      **  Check to see that *PSSR has not been called yet
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *INZSR - Initialisation Subroutine                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR                           ** *INZSR **
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+      *
+     C           *NAMVAR   DEFN           CITFSQ
+     C                     IN   CITFSQ
+      *
+     C           *NAMVAR   DEFN           CITFTS
+     C                     IN   CITFTS
+      *
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+      *
+      ** Get the Bank ICD
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      ** Check if SAR CRT001 is set on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CRT001'  @SARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+     C*
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CRT001  1
+     C                     ELSE
+     C                     MOVE 'N'       CRT001
+     C                     END
+      *
+      ** Check if SAR CRT003 is set on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CRT003'  @SARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+     C*
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CRT003  1
+     C                     ELSE
+     C                     MOVE 'N'       CRT003
+     C                     END
+      *
+      ** Account master
+      *
+     C           KLACNT    KLIST
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KCCY    3
+     C**********           KFLD           KACOD   40                                          CGL029
+     C                     KFLD           KACOD  100                                          CGL029
+     C                     KFLD           KACSQ   20
+     C                     KFLD           KBRCA   3
+      *
+      **  Parameters for QSNDDTAQ
+      *
+     C           DTQSND    PLIST
+     C                     PARM           DTAQS
+     C                     PARM           LIBS
+     C                     PARM           LENS
+     C                     PARM           DATS
+      *
+      **  Set up parameters for send data queue
+      *
+     C                     MOVEL*BLANKS   DTAQS  10
+     C                     MOVEL'*LIBL'   LIBS   10
+     C                     Z-ADD29        LENS    50
+     C                     MOVEL*BLANKS   DATS
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**  PGM  RTS PROGRAMS
+RE4112
+RE4114
+RE4115
+RE4116
+RE4117
+RE4118
+RE4119
+RE4120
+RE4124
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

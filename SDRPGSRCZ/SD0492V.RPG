@@ -1,0 +1,1854 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Display profit centre default')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0492V - Display Profit Centre Default                      *
+      *                                                               *
+      *  Function:  This program displays the profit centre default   *
+      *             details.                                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD009             Date 10Oct00               *
+      *                 CSD003             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 LN0592             Date:03Aug90               *
+      *                 S01212             Date: 15MAR90              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD009 - Profit Centre Accounting Default Matrix Enhancement *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  LN0592 - BRANCH CODE IS NOT TO BE DISPLAYED IF MBIN = N      *
+      *  S01212 - /Copy and Window Processing                         *
+      *                                                               *
+      *****************************************************************
+     F*00/Copy Member SD0492V   Initialise Program F-Spec
+     F/COPY WNCPYSRC,SD0492VFPG
+     FSD0492V#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Display Prof Centre Dft
+      *
+     FSDGELRL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD General ledger ICD details retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     E**
+     E                    SHR1        8 20
+     E** Profit Centre Def Matrix Array to hold ordered Base Field
+     E** LHS Texts according to their associated field priorities.
+     E**
+     E**********          SHR2    1   8 20                                CSD009
+     E                    SHR2    1  20 20                                CSD009
+     E** Profit Centre Def Matrix Array to hold LHS Text Text for all
+     E** base fields.
+     E**
+     E/EJECT
+     E**
+     E                    IAR1        8 14
+     E** Profit Centre Default Matrix Array to hold ordered Base Fields
+     E** according to their priorities.
+     E**
+     E/EJECT
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E*00/Copy Member SD0492V   Initialise Program E-Spec
+     E/COPY WNCPYSRC,SD0492VEPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I/COPY QWINDSRC,SD0490GDTA                                           S01229
+     I*00/Copy Member SD0492V   Initialise Program I-Spec
+     I/COPY WNCPYSRC,SD0492VIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     ISCSARD    E DSSCSARDPD                                              CSD009
+      ** External DS for SAR Details                                      CSD009
+      *                                                                   CSD009
+     IDSFDY     E DSDSFDY                                                 CSD009
+      ** First DS for Access Programs, Short Data Structure               CSD009
+      *                                                                   CSD009
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     I*P1PARM***   DS                             41                      CSD009
+     IP1PARM      DS                             74                       CSD009
+      * RCD: Midas SD Profit centre dft matrix retrieval
+      * I : MAP Book Code
+     I                                        1   2 P1BKCD
+      * I : MAP Profit Centre Trans Type
+     I                                        3   7 P1PCTT
+      * I : MAP Sub Type
+     I                                        8   9 P1SBTY
+      * I : MAP Branch code
+     I                                       10  12 P1BRCD
+      * I : MAP Dept Code
+     I                                       13  15 P1DPCD
+      * I : MAP User
+     I                                       16  25 P1USID
+      * I : MAP Account Officer Code
+     I                                       26  27 P1ACOC
+      * I : MAP Customer Number
+     I                                       28  33 P1CUST
+      * I : MAP Profit Centre Code
+     I                                       34  37 P1PCCD
+      * I : MAP Local Industry code                                       CSD009
+     I                                       42  44 P1LICD                CSD009
+      * I : MAP Bank/Non-bank indicator                                   CSD009
+     I                                       45  45 P1BNBI                CSD009
+      * I : MAP Country of location                                       CSD009
+     I                                       46  47 P1CLOC                CSD009
+      * I : MAP Region of location                                        CSD009
+     I                                       48  49 P1RLOC                CSD009
+      * I : MAP Country of citizenship                                    CSD009
+     I                                       50  51 P1CNCZ                CSD009
+      * I : MAP Region of citizenship                                     CSD009
+     I                                       52  53 P1RNCZ                CSD009
+      * I : MAP Customer type                                             CSD009
+     I                                       54  54 P1CSTY                CSD009
+      * I : MAP Marketing group code 1                                    CSD009
+     I                                       55  58 P1GPC1                CSD009
+      * I : MAP Marketing group code 2                                    CSD009
+     I                                       59  62 P1GPC2                CSD009
+      * I : MAP Marketing group code 3                                    CSD009
+     I                                       63  66 P1GPC3                CSD009
+      * I : MAP Marketing group code 4                                    CSD009
+     I                                       67  70 P1GPC4                CSD009
+      * I : MAP Marketing group code 5                                    CSD009
+     I                                       71  74 P1GPC5                CSD009
+     IP2PARM      DS
+      * I :  Action Code
+     I                                        1   1 P2ANCD
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           RCD: Profit Cen
+     C           P2ANCD    PARM           WP0001  1        Action Code
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Conduct screen conversation
+     C                     DO   *HIVAL
+      * Start new transaction
+     C                     MOVEL'Y'       W0TRN   1
+      * Process current transaction
+     C           W0TRN     DOWEQ'Y'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            MALDSC
+      * Process screen input
+     C                     CAS            DAPRSC
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *****************************************************************
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDDTL1
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPRSC    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * USER: Process command keys
+      * /Copy Processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0492VPCK - Profit Centre Dft Matrix  *
+     C*00/Copy Member SD0492V   Process Command Keys
+     C/COPY WNCPYSRC,SD0492VPCK
+     C                     END                             *FI
+      * CASE: DTL.*CMD key is CF12
+     C           *IN12     IFEQ '1'                        *IF
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+      * Validate screen input
+     C                     EXSR DBVLSC
+      * If error, exit
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * USER: User defined action
+      * /Copy Processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0492VUDA - Profit Centre Dft Matrix  *
+     C*00/Copy Member SD0492V   User Defined Action
+     C/COPY WNCPYSRC,SD0492VUDA
+     C                     END                             *FI
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+      * Request new transaction
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBVLSC    BEGSR
+      *================================================================
+      * Validate screen input
+      *================================================================
+      * USER: Validate fields
+      * /Copy Processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0492VVFI - Profit Centre Dft Matrix  *
+     C*00/Copy Member SD0492V   Validate Fields
+     C/COPY WNCPYSRC,SD0492VVFI
+     C                     END                             *FI
+      * Bypass ref file checks if error already detected
+     C   99                GOTO DBEXIT
+      * CALC: Screen function fields
+      * /Copy Processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0492VSFI - Profit Centre Dft Matrix  *
+     C*00/Copy Member SD0492V   Calculate Function Flds
+     C/COPY WNCPYSRC,SD0492VSFI
+     C                     END                             *FI
+      * USER: Validate relations
+      * /Copy Processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'E'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DBEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DBEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DBEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy Member SD0492VVRW - Profit Centre Dft Matrix  *
+     C*
+     C/COPY WNCPYSRC,SD0492VVRW
+     C                     END                             *FI
+      * 00/Copy Member SD0492VVRE - Profit Centre Dft Matrix  *
+     C*00/Copy Member SD0492V   Validate Screen Relations
+     C/COPY WNCPYSRC,SD0492VVRE
+     C                     END                             *FI
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         MALDSC    BEGSR
+      *================================================================
+      * Load screen from passed parameters
+      *================================================================
+     C                     MOVELP1BKCD    #1BKCD           Book Code
+     C                     MOVELP1PCTT    #1PCTT           Profit Centre T
+     C                     MOVELP1SBTY    #1SBTY           Sub Type
+     C                     MOVELP1BRCD    #1BRCD           Branch code
+     C                     MOVELP1DPCD    #1DPCD           Dept Code
+     C                     MOVELP1USID    #1USID           User
+     C                     MOVELP1ACOC    #1ACOC           Account Officer
+     C                     MOVELP1CUST    #1CUST           Customer Number
+      *                                                                   CSD009
+      ** Move the passed parameter fields to screen flds                  CSD009
+      *                                                                   CSD009
+     C           CSD009    IFEQ 'Y'                                       CSD009
+     C                     MOVELP1LICD    #1LICD           Local Ind Code CSD009
+     C                     MOVELP1BNBI    #1BNBI           Bank/Non-bank  CSD009
+     C                     MOVELP1CLOC    #1CLOC           Country of Loc CSD009
+     C                     MOVELP1RLOC    #1RLOC           Region of Loc  CSD009
+     C                     MOVELP1CNCZ    #1CNCZ           Ctry of Ctzn   CSD009
+     C                     MOVELP1RNCZ    #1RNCZ           Region of Ctzn CSD009
+     C                     MOVELP1CSTY    #1CSTY           Customer type  CSD009
+     C                     MOVELP1GPC1    #1GPC1           Group Code 1   CSD009
+     C                     MOVELP1GPC2    #1GPC2           Group Code 2   CSD009
+     C                     MOVELP1GPC3    #1GPC3           Group Code 3   CSD009
+     C                     MOVELP1GPC4    #1GPC4           Group Code 4   CSD009
+     C                     MOVELP1GPC5    #1GPC5           Group Code 5   CSD009
+     C                     ENDIF                                          CSD009
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #DPPT1           Pty Def Prof Ma
+     C                     MOVEL*BLANK    #DPPM1           Priority Def Pr
+     C                     MOVEL*BLANK    #DPPT2           Pty Def Prof Ma
+     C                     MOVEL*BLANK    #DPPM2           Priority Def Pr
+     C                     MOVEL*BLANK    #DPPT3           Pty Def Prof Ma
+     C                     MOVEL*BLANK    #DPPM3           Priority Def Pr
+     C                     MOVEL*BLANK    #DPPT4           Pty Def Prof Ma
+     C                     MOVEL*BLANK    #DPPM4           Priority Def Pr
+     C                     MOVEL*BLANK    #DPPT5           Pty Def Prof Ma
+     C                     MOVEL*BLANK    #DPPM5           Priority Def Pr
+     C                     MOVEL*BLANK    #DPPT6           Pty Def Prof Ma
+     C                     MOVEL*BLANK    #DPPM6           Priority Def Pr
+     C                     MOVEL*BLANK    #DPPT7           Pty Def Prof Ma
+     C                     MOVEL*BLANK    #DPPM7           Priority Def Pr
+     C                     MOVEL*BLANK    #DPPT8           Pty Def Prof Ma
+     C                     MOVEL*BLANK    #DPPM8           Priority Def Pr
+     C                     MOVELP1PCCD    #1PCCD           Profit Centre C
+      * CALC: Screen function fields
+      * /Copy Processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0492VSFI - Profit Centre Dft Matrix  *
+     C*00/Copy Member SD0492V   Calculate Function Flds
+     C/COPY WNCPYSRC,SD0492VSFI
+     C                     END                             *FI
+      * USER: Load screen
+      * Load DTL Screen Headers - Profit Centre Dft Matrix  *
+     C**
+     C** Move each DB field LHS Text into the associated section of the
+     C** array in order to move the correct LHS Text into the screen
+     C** LHS Text output fields.
+     C**
+     C** To place the text into the correct portion of the array make
+     C** use of the priorities specified for each base field off the
+     C** General Ledger File, the fields of which are passed into this
+     C** user source.
+     C**
+     C** Set-up Book Code LHS Text
+     C**
+     C           WUPMBK    IFNE '0'                           IF 1
+     C                     MOVE WUPMBK    B       10
+     C** Move LHS Text into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVE SHR2,1    SHR1,B
+     C                     END                               IF 1
+     C** Set-up Sub Type  LHS Text
+     C**
+     C           WUPMST    IFNE '0'                           IF 1
+     C                     MOVE WUPMST    S       10
+     C** Move LHS Text into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVE SHR2,2    SHR1,S
+     C                     END                               IF 1
+     C** Set-up Trans Type LHS Text
+     C**
+     C           WUPMTT    IFNE '0'                           IF 1
+     C                     MOVE WUPMTT    T       10
+     C** Move LHS Texts 1 & 2 into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVE SHR2,3    SHR1,T
+     C                     END                               IF 1
+     C** Set-up Branch Code LHS Text
+     C**
+     C**  IF Multibranching Switched On then Branch Code Will be          LN0592
+     C**  displayed if the priority on SDGELRPD is GT 0.........          LN0592
+     C           WUMBIN    IFEQ 'Y'                                       LN0592
+     C**                                                                  LN0592
+     C           WUPMBH    IFNE '0'                           IF 1
+     C                     MOVE WUPMBH    H       10
+     C** Move LHS Text into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVE SHR2,4    SHR1,H
+     C                     END                               IF 1
+     C**                                                                  LN0592
+     C                     END                                            LN0592
+     C** Set-up Dept Code LHS Text
+     C**
+     C           WUPMDT    IFNE '0'                           IF 1
+     C                     MOVE WUPMDT    D       10
+     C** Move LHS Text into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVE SHR2,5    SHR1,D
+     C                     END                               IF 1
+     C** Set-up User Id LHS Text
+     C**
+     C           WUPMUR    IFNE '0'                           IF 1
+     C                     MOVE WUPMUR    U       10
+     C** Move LHS Texts 1 & 2 into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVE SHR2,6    SHR1,U
+     C                     END                               IF 1
+     C** Set-up A/c Officer LHS Text
+     C**
+     C           WUPMAO    IFNE '0'                           IF 1
+     C                     MOVE WUPMAO    A       10
+     C** Move LHS Text into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVE SHR2,7    SHR1,A
+     C                     END                               IF 1
+     C** Set-up Customer Number LHS Text
+     C**
+     C           WUPMCU    IFNE '0'                           IF 1
+     C                     MOVE WUPMCU    C       10
+     C** Move LHS Texts 1 & 2 into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVE SHR2,8    SHR1,C
+     C                     END                               IF 1
+      *                                                                   CSD009
+      ** Move LHS Texts 1 & 2 into array element according to the         CSD009
+      ** fields priority on General Ledger Details.                       CSD009
+      *                                                                   CSD009
+     C           CSD009    IFEQ 'Y'                                       CSD009
+      *                                                                   CSD009
+      ** Set-up Local Industry Code LHS Text                              CSD009
+      *                                                                   CSD009
+     C           WUPMLI    IFNE '0'                                       CSD009
+     C                     MOVE WUPMLI    V       10                      CSD009
+     C                     MOVE SHR2,9    SHR1,V                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Bank/Non-bank indicator                                   CSD009
+      *                                                                   CSD009
+     C           WUPMBN    IFNE '0'                                       CSD009
+     C                     MOVE WUPMBN    W       10                      CSD009
+     C                     MOVE SHR2,10   SHR1,W                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Country of Location                                       CSD009
+      *                                                                   CSD009
+     C           WUPMCL    IFNE '0'                                       CSD009
+     C                     MOVE WUPMCL    G       10                      CSD009
+     C                     MOVE SHR2,11   SHR1,G                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Region of Location                                        CSD009
+      *                                                                   CSD009
+     C           WUPMRL    IFNE '0'                                       CSD009
+     C                     MOVE WUPMRL    I       10                      CSD009
+     C                     MOVE SHR2,12   SHR1,I                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Country of Citizenship                                    CSD009
+      *                                                                   CSD009
+     C           WUPMCZ    IFNE '0'                                       CSD009
+     C                     MOVE WUPMCZ    J       10                      CSD009
+     C                     MOVE SHR2,13   SHR1,J                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Region of Citizenship                                     CSD009
+      *                                                                   CSD009
+     C           WUPMRZ    IFNE '0'                                       CSD009
+     C                     MOVE WUPMRZ    L       10                      CSD009
+     C                     MOVE SHR2,14   SHR1,L                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Customer Type                                             CSD009
+      *                                                                   CSD009
+     C           WUPMCT    IFNE '0'                                       CSD009
+     C                     MOVE WUPMCT    M       10                      CSD009
+     C                     MOVE SHR2,15   SHR1,M                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Group Code 1                                              CSD009
+      *                                                                   CSD009
+     C           WUPMG1    IFNE '0'                                       CSD009
+     C                     MOVE WUPMG1    N       10                      CSD009
+     C                     MOVE SHR2,16   SHR1,N                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Group Code 2                                              CSD009
+      *                                                                   CSD009
+     C           WUPMG2    IFNE '0'                                       CSD009
+     C                     MOVE WUPMG2    O       10                      CSD009
+     C                     MOVE SHR2,17   SHR1,O                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Group Code 3                                              CSD009
+      *                                                                   CSD009
+     C           WUPMG3    IFNE '0'                                       CSD009
+     C                     MOVE WUPMG3    P       10                      CSD009
+     C                     MOVE SHR2,18   SHR1,P                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Group Code 4                                              CSD009
+      *                                                                   CSD009
+     C           WUPMG4    IFNE '0'                                       CSD009
+     C                     MOVE WUPMG4    Q       10                      CSD009
+     C                     MOVE SHR2,19   SHR1,Q                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Group Code 5                                              CSD009
+      *                                                                   CSD009
+     C           WUPMG5    IFNE '0'                                       CSD009
+     C                     MOVE WUPMG5    R       10                      CSD009
+     C                     MOVE SHR2,20   SHR1,R                          CSD009
+     C                     ENDIF                                          CSD009
+     C                     ENDIF                                          CSD009
+     C** Load Screen Function Fields With LHS Text
+     C**
+     C                     MOVEASHR1,1    #DPPT1
+     C                     MOVEASHR1,2    #DPPT2
+     C                     MOVEASHR1,3    #DPPT3
+     C                     MOVEASHR1,4    #DPPT4
+     C                     MOVEASHR1,5    #DPPT5
+     C                     MOVEASHR1,6    #DPPT6
+     C                     MOVEASHR1,7    #DPPT7
+     C                     MOVEASHR1,8    #DPPT8
+     C**
+     C**
+      * Blank out Asterisks in Key Fields
+     C                     EXSR UASUBR                     Blank out Aster
+      * Set Screen Fun Fields to Input Parms - File Fields.
+     C                     EXSR UJSUBR                     Set Screen Fun
+      * Load DTL Screen Fields - Profit Centre Dft Matrix  *
+     C**
+     C** Move each database field into the associated section of the
+     C** array in order to display all the details into the screen
+     C** output fields.
+     C**
+     C** To place the field into the correct portion of the array make
+     C** use of the priorities specified for each field off the
+     C** General Ledger File, the fields of which are passed into this
+     C** user source.
+     C**
+     C** Set-up Book Code
+     C**
+     C           WUPMBK    IFNE '0'                           IF 1
+     C                     MOVE WUPMBK    B       10
+     C** Initialise Base Storage Field
+     C**                   ¦
+     C                     MOVE *BLANKS   UUBFLD 10
+     C                     MOVELWUBKSN    UUBFLD
+     C** Move Store Book Code to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUBFLD    IAR1,B
+     C                     END                               IF 1
+     C** Set-up Sub Type
+     C**
+     C           WUPMST    IFNE '0'                           IF 1
+     C                     MOVE WUPMST    S       10
+     C** Initialise Base Storage Field
+     C**                   ¦
+     C                     MOVE *BLANKS   UUBFLD
+     C                     MOVELWUSTSN    UUBFLD
+     C** Move Long Store Trans Type  to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUBFLD    IAR1,S
+     C                     END                               IF 1
+     C** Set-up Transaction Type
+     C**
+     C           WUPMTT    IFNE '0'                           IF 1
+     C                     MOVE WUPMTT    T       10
+     C** Initialise Base Storage Field
+     C**                   ¦
+     C                     MOVE *BLANKS   UUBFLD
+     C                     MOVELWUTTSN    UUBFLD
+     C** Move Long Store Trans Type  to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUBFLD    IAR1,T
+     C                     END                               IF 1
+     C** Set-up Branch Code
+     C**
+     C**  IF Multibranching Switched On then Branch Code Will be          LN0592
+     C**  displayed if the priority on SDGELRPD is GT 0.........          LN0592
+     C           WUMBIN    IFEQ 'Y'                                       LN0592
+     C**                                                                  LN0592
+     C           WUPMBH    IFNE '0'                           IF 1
+     C                     MOVE WUPMBH    H       10
+     C** Initialise Branch Code Storage Fields
+     C**                   ¦
+     C                     MOVE *BLANKS   UUBFLD
+     C                     MOVELWUBRSF    UUBFLD
+     C** Move Long Store Bch Code  to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUBFLD    IAR1,H
+     C                     END                               IF 1
+     C**                                                                  LN0592
+     C                     END                                            LN0592
+     C** Set-up Dept. Code
+     C**
+     C           WUPMDT    IFNE '0'                           IF 1
+     C                     MOVE WUPMDT    D       10
+     C** Initialise Base Storage Field
+     C**                   ¦
+     C                     MOVE *BLANKS   UUBFLD
+     C                     MOVELWUDPSN    UUBFLD
+     C** Move Long Store Dept Code  to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUBFLD    IAR1,D
+     C                     END                               IF 1
+     C** Set-up User Id
+     C**
+     C           WUPMUR    IFNE '0'                           IF 1
+     C                     MOVE WUPMUR    U       10
+     C** Initialise User Id Storage Fields
+     C**                   ¦
+     C                     MOVE *BLANKS   UUBFLD
+     C                     MOVELWUUSSN    UUBFLD
+     C** Move Long Store User Id to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUBFLD    IAR1,U
+     C                     END                               IF 1
+     C** Set-up A/c Officer
+     C**
+     C           WUPMAO    IFNE '0'                           IF 1
+     C                     MOVE WUPMAO    A       10
+     C** Initialise Base Storage Fields
+     C**                   ¦
+     C                     MOVE *BLANKS   UUBFLD
+     C                     MOVELWUAOSN    UUBFLD
+     C** Move Long Store A/c Off to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUBFLD    IAR1,A
+     C                     END                               IF 1
+     C** Set-up Customer No
+     C**
+     C           WUPMCU    IFNE '0'                           IF 1
+     C                     MOVE WUPMCU    C       10
+     C** Initialise Base Storage Field
+     C**                   ¦
+     C                     MOVE *BLANKS   UUBFLD
+     C                     MOVELWUCUSN    UUBFLD
+     C** Move Long Store Cust No to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUBFLD    IAR1,C
+     C                     END                               IF 1
+      *                                                                   CSD009
+      ** Set-up the ff. New PCDM fields only if CSD009 is installed       CSD009
+      *                                                                   CSD009
+     C           CSD009    IFEQ 'Y'                                       CSD009
+      *                                                                   CSD009
+      ** Set-up Local Industry Code                                       CSD009
+      *                                                                   CSD009
+     C           WUPMLI    IFNE '0'                                       CSD009
+     C                     MOVE WUPMLI    V                               CSD009
+      *                                                                   CSD009
+      ** Initialise Base Storage Field                                    CSD009
+      *                                                                   CSD009
+     C                     MOVE *BLANKS   UUBFLD                          CSD009
+     C                     MOVELWULISN    UUBFLD                          CSD009
+     C                     MOVEAUUBFLD    IAR1,V                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Bank/Non-bank indicator                                   CSD009
+      *                                                                   CSD009
+     C           WUPMBN    IFNE '0'                                       CSD009
+     C                     MOVE WUPMBN    W                               CSD009
+      *                                                                   CSD009
+      ** Initialise Base Storage Field                                    CSD009
+      *                                                                   CSD009
+     C                     MOVE *BLANKS   UUBFLD                          CSD009
+     C                     MOVELWUBNSN    UUBFLD                          CSD009
+     C                     MOVEAUUBFLD    IAR1,W                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Country of Location                                       CSD009
+      *                                                                   CSD009
+     C           WUPMCL    IFNE '0'                                       CSD009
+     C                     MOVE WUPMCL    G                               CSD009
+      *                                                                   CSD009
+      ** Initialise Base Storage Field                                    CSD009
+      *                                                                   CSD009
+     C                     MOVE *BLANKS   UUBFLD                          CSD009
+     C                     MOVELWUCLSN    UUBFLD                          CSD009
+     C                     MOVEAUUBFLD    IAR1,G                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Region of Location                                        CSD009
+      *                                                                   CSD009
+     C           WUPMRL    IFNE '0'                                       CSD009
+     C                     MOVE WUPMRL    I                               CSD009
+      *                                                                   CSD009
+      ** Initialise Base Storage Field                                    CSD009
+      *                                                                   CSD009
+     C                     MOVE *BLANKS   UUBFLD                          CSD009
+     C                     MOVELWURLSN    UUBFLD                          CSD009
+     C                     MOVEAUUBFLD    IAR1,I                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Country of Citizenship                                    CSD009
+      *                                                                   CSD009
+     C           WUPMCZ    IFNE '0'                                       CSD009
+     C                     MOVE WUPMCZ    J                               CSD009
+      *                                                                   CSD009
+      ** Initialise Base Storage Field                                    CSD009
+      *                                                                   CSD009
+     C                     MOVE *BLANKS   UUBFLD                          CSD009
+     C                     MOVELWUCZSN    UUBFLD                          CSD009
+     C                     MOVEAUUBFLD    IAR1,J                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Region of Citizenship                                     CSD009
+      *                                                                   CSD009
+     C           WUPMRZ    IFNE '0'                                       CSD009
+     C                     MOVE WUPMRZ    L                               CSD009
+      *                                                                   CSD009
+      ** Initialise Base Storage Field                                    CSD009
+      *                                                                   CSD009
+     C                     MOVE *BLANKS   UUBFLD                          CSD009
+     C                     MOVELWURZSN    UUBFLD                          CSD009
+     C                     MOVEAUUBFLD    IAR1,L                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Customer type                                             CSD009
+      *                                                                   CSD009
+     C           WUPMCT    IFNE '0'                                       CSD009
+     C                     MOVE WUPMCT    M                               CSD009
+      *                                                                   CSD009
+      ** Initialise Base Storage Field                                    CSD009
+      *                                                                   CSD009
+     C                     MOVE *BLANKS   UUBFLD                          CSD009
+     C                     MOVELWUCTSN    UUBFLD                          CSD009
+     C                     MOVEAUUBFLD    IAR1,M                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Group Code 1                                              CSD009
+      *                                                                   CSD009
+     C           WUPMG1    IFNE '0'                                       CSD009
+     C                     MOVE WUPMG1    N                               CSD009
+      *                                                                   CSD009
+      ** Initialise Base Storage Field                                    CSD009
+      *                                                                   CSD009
+     C                     MOVE *BLANKS   UUBFLD                          CSD009
+     C                     MOVELWUG1SN    UUBFLD                          CSD009
+     C                     MOVEAUUBFLD    IAR1,N                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Group Code 2                                              CSD009
+      *                                                                   CSD009
+     C           WUPMG2    IFNE '0'                                       CSD009
+     C                     MOVE WUPMG2    O                               CSD009
+      *                                                                   CSD009
+      ** Initialise Base Storage Field                                    CSD009
+      *                                                                   CSD009
+     C                     MOVE *BLANKS   UUBFLD                          CSD009
+     C                     MOVELWUG2SN    UUBFLD                          CSD009
+     C                     MOVEAUUBFLD    IAR1,O                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Group Code 3                                              CSD009
+      *                                                                   CSD009
+     C           WUPMG3    IFNE '0'                                       CSD009
+     C                     MOVE WUPMG3    P                               CSD009
+      *                                                                   CSD009
+      ** Initialise Base Storage Field                                    CSD009
+      *                                                                   CSD009
+     C                     MOVE *BLANKS   UUBFLD                          CSD009
+     C                     MOVELWUG3SN    UUBFLD                          CSD009
+     C                     MOVEAUUBFLD    IAR1,P                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Group Code 4                                              CSD009
+      *                                                                   CSD009
+     C           WUPMG4    IFNE '0'                                       CSD009
+     C                     MOVE WUPMG4    Q                               CSD009
+      *                                                                   CSD009
+      ** Initialise Base Storage Field                                    CSD009
+      *                                                                   CSD009
+     C                     MOVE *BLANKS   UUBFLD                          CSD009
+     C                     MOVELWUG4SN    UUBFLD                          CSD009
+     C                     MOVEAUUBFLD    IAR1,Q                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      ** Set-up Group Code 5                                              CSD009
+      *                                                                   CSD009
+     C           WUPMG5    IFNE '0'                                       CSD009
+     C                     MOVE WUPMG5    R                               CSD009
+      *                                                                   CSD009
+      ** Initialise Base Storage Field                                    CSD009
+      *                                                                   CSD009
+     C                     MOVE *BLANKS   UUBFLD                          CSD009
+     C                     MOVELWUG5SN    UUBFLD                          CSD009
+     C                     MOVEAUUBFLD    IAR1,R                          CSD009
+     C                     ENDIF                                          CSD009
+     C                     ENDIF                                          CSD009
+     C/EJECT
+     C** Move Final Array Contents to Output Screen Field
+     C**
+     C                     MOVEAIAR1,1    #DPPM1
+     C                     MOVEAIAR1,2    #DPPM2
+     C                     MOVEAIAR1,3    #DPPM3
+     C                     MOVEAIAR1,4    #DPPM4
+     C                     MOVEAIAR1,5    #DPPM5
+     C                     MOVEAIAR1,6    #DPPM6
+     C                     MOVEAIAR1,7    #DPPM7
+     C                     MOVEAIAR1,8    #DPPM8
+     C**
+      * Set-up Screen Ftr PMTVAL - Standard Functions  *
+     C*****************************************************************
+     C*
+     C*  CHANGE THE CONTENTS OF THE FOOTER COMMAND KEY TEXT ACCORDING
+     C*  TO THE ACTION CODE OF THE PROGRAM - THIS CODE IS TO BE USED
+     C*  IN PROMPT & VALIDATE RECORDS WHICH DIRECTLY UPDATE A FILE
+     C*  AND USE A PROMPT & VALIDATE RECORD FUNCTION INSTEAD OF AN EDIT
+     C*  RECORD OR AN EDIT FILE
+     C*
+     C*****************************************************************
+     C*
+     C*  DETAIL LINE COMMAND KEY TEXT
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C*  If Action Code is Delete :
+     C*
+     C           'A'       IFEQ 'D'                                       S01229
+     C* Setup footer text:
+     C* F3=Main Menu   F10=Delete   F12=Previous
+     C                     MOVEL'USR3350' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    KE0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    KE0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    KE0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C*  If Action Code is Insert :
+     C*
+     C           'A'       IFEQ 'I'                                       S01229
+     C* Setup footer text:
+     C* F3=Main Menu   F12=Previous
+     C                     MOVEL'USR3346' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    KE0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    KE0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    KE0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C*  If Action Code is Amend :
+     C*
+     C           'A'       IFEQ 'A'                                       S01229
+     C* Setup footer text:
+     C* F3=Main Menu   F12=Previous
+     C                     MOVEL'USR3346' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    KE0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    KE0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    KE0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+      * /Copy Processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0492VLSR - Profit Centre Dft Matrix  *
+     C*00/Copy Member SD0492V   Load Screen
+     C/COPY WNCPYSRC,SD0492VLSR
+     C                     END                             *FI
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Obtain Prof Cent Def Pty - General Ledger Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BKGNLG           General Ledger
+      * Move fields to key list
+     C                     MOVE *BLANK    BKGNLG           General Ledger
+     C                     MOVEL'GELR'    BKGNLG           General Ledger
+     C           KRSSA     CHAIN@BKREEC              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0199' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBKPMBK    WUPMBK           Prof C Def Matr
+     C                     MOVELBKPMTT    WUPMTT           Prof C Def Matr
+     C                     MOVELBKPMST    WUPMST           Prof C Def Matr
+     C                     MOVELBKPMBH    WUPMBH           Prof C Def Matr
+     C                     MOVELBKPMDT    WUPMDT           Prof C Def Matr
+     C                     MOVELBKPMUR    WUPMUR           Prof C Def Matr
+     C                     MOVELBKPMAO    WUPMAO           Prof C Def Matr
+     C                     MOVELBKPMCU    WUPMCU           Prof C Def Matr
+      *                                                                   CSD009
+      ** Initialise work fields to general ledger fields                  CSD009
+      *                                                                   CSD009
+     C           CSD009    IFEQ 'Y'                                       CSD009
+     C                     MOVELBKLICD    WUPMLI           Prof C Def MatrCSD009
+     C                     MOVELBKBNBI    WUPMBN           Prof C Def MatrCSD009
+     C                     MOVELBKCLOC    WUPMCL           Prof C Def MatrCSD009
+     C                     MOVELBKRLOC    WUPMRL           Prof C Def MatrCSD009
+     C                     MOVELBKCNCZ    WUPMCZ           Prof C Def MatrCSD009
+     C                     MOVELBKRNCZ    WUPMRZ           Prof C Def MatrCSD009
+     C                     MOVELBKCSTY    WUPMCT           Prof C Def MatrCSD009
+     C                     MOVELBKGPC1    WUPMG1           Prof C Def MatrCSD009
+     C                     MOVELBKGPC2    WUPMG2           Prof C Def MatrCSD009
+     C                     MOVELBKGPC3    WUPMG3           Prof C Def MatrCSD009
+     C                     MOVELBKGPC4    WUPMG4           Prof C Def MatrCSD009
+     C                     MOVELBKGPC5    WUPMG5           Prof C Def MatrCSD009
+     C                     ENDIF                                          CSD009
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSB     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         UASUBR    BEGSR
+      *================================================================
+      * Blank out Asterisks in Key Fields
+      *================================================================
+      * Book
+     C                     EXSR UBSUBR                     Book
+      * Trans Type
+     C                     EXSR UCSUBR                     Trans Type
+      * Sub Type
+     C                     EXSR UDSUBR                     Sub Type
+      * Branch
+     C                     EXSR UESUBR                     Branch
+      * Department
+     C                     EXSR UFSUBR                     Department
+      * User
+     C                     EXSR UGSUBR                     User
+      * A/c Officer
+     C                     EXSR UHSUBR                     A/c Officer
+      * Customer Number
+     C                     EXSR UISUBR                     Customer Number
+      *                                                                   CSD009
+      ** Blank out new PCDM fields if value on file is "*'s"              CSD009
+      *                                                                   CSD009
+     C           CSD009    IFEQ 'Y'                                       CSD009
+      *                                                                   CSD009
+      ** Local Industry Code                                              CSD009
+      *                                                                   CSD009
+     C                     EXSR SRBLLI                                    CSD009
+      *                                                                   CSD009
+      ** Bank/Non-bank indicator                                          CSD009
+      *                                                                   CSD009
+     C                     EXSR SRBLBN                                    CSD009
+      *                                                                   CSD009
+      ** Country of Location                                              CSD009
+      *                                                                   CSD009
+     C                     EXSR SRBLCL                                    CSD009
+      *                                                                   CSD009
+      ** Region of Location                                               CSD009
+      *                                                                   CSD009
+     C                     EXSR SRBLRL                                    CSD009
+      *                                                                   CSD009
+      ** Country of Citizenship                                           CSD009
+      *                                                                   CSD009
+     C                     EXSR SRBLCZ                                    CSD009
+      *                                                                   CSD009
+      ** Region of Citizenship                                            CSD009
+      *                                                                   CSD009
+     C                     EXSR SRBLRZ                                    CSD009
+      *                                                                   CSD009
+      ** Customer Type                                                    CSD009
+      *                                                                   CSD009
+     C                     EXSR SRBLCT                                    CSD009
+      *                                                                   CSD009
+      ** Group Code 1                                                     CSD009
+      *                                                                   CSD009
+     C                     EXSR SRBLG1                                    CSD009
+      *                                                                   CSD009
+      ** Group Code 2                                                     CSD009
+      *                                                                   CSD009
+     C                     EXSR SRBLG2                                    CSD009
+      *                                                                   CSD009
+      ** Group Code 3                                                     CSD009
+      *                                                                   CSD009
+     C                     EXSR SRBLG3                                    CSD009
+      *                                                                   CSD009
+      ** Group Code 4                                                     CSD009
+      *                                                                   CSD009
+     C                     EXSR SRBLG4                                    CSD009
+      *                                                                   CSD009
+      ** Group Code 5                                                     CSD009
+      *                                                                   CSD009
+     C                     EXSR SRBLG5                                    CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================
+     CSR         UAEXIT    ENDSR
+      /EJECT
+     CSR         UBSUBR    BEGSR
+      *================================================================
+      * Book
+      *================================================================
+     C                     MOVEL#1BKCD    WUCAKY           Check For Aster
+      * CASE: WRK.Check For Asterisk in Key is Asterisk
+     C           WUCAKY    IFEQ '*'                        *IF
+     C                     MOVEL*BLANK    #1BKCD           Book Code
+     C                     END                             *FI
+      *================================================================
+     CSR         UBEXIT    ENDSR
+      /EJECT
+     CSR         UCSUBR    BEGSR
+      *================================================================
+      * Trans Type
+      *================================================================
+     C                     MOVEL#1PCTT    WUCAKY           Check For Aster
+      * CASE: WRK.Check For Asterisk in Key is Asterisk
+     C           WUCAKY    IFEQ '*'                        *IF
+     C                     MOVEL*BLANK    #1PCTT           Profit Centre T
+     C                     END                             *FI
+      *================================================================
+     CSR         UCEXIT    ENDSR
+      /EJECT
+     CSR         UDSUBR    BEGSR
+      *================================================================
+      * Sub Type
+      *================================================================
+     C                     MOVEL#1SBTY    WUCAKY           Check For Aster
+      * CASE: WRK.Check For Asterisk in Key is Asterisk
+     C           WUCAKY    IFEQ '*'                        *IF
+     C                     MOVEL*BLANK    #1SBTY           Sub Type
+     C                     END                             *FI
+      *================================================================
+     CSR         UDEXIT    ENDSR
+      /EJECT
+     CSR         UESUBR    BEGSR
+      *================================================================
+      * Branch
+      *================================================================
+     C                     MOVEL#1BRCD    WUCAKY           Check For Aster
+      * CASE: WRK.Check For Asterisk in Key is Asterisk
+     C           WUCAKY    IFEQ '*'                        *IF
+     C                     MOVEL*BLANK    #1BRCD           Branch code
+     C                     END                             *FI
+      *================================================================
+     CSR         UEEXIT    ENDSR
+      /EJECT
+     CSR         UFSUBR    BEGSR
+      *================================================================
+      * Department
+      *================================================================
+     C                     MOVEL#1DPCD    WUCAKY           Check For Aster
+      * CASE: WRK.Check For Asterisk in Key is Asterisk
+     C           WUCAKY    IFEQ '*'                        *IF
+     C                     MOVEL*BLANK    #1DPCD           Dept Code
+     C                     END                             *FI
+      *================================================================
+     CSR         UFEXIT    ENDSR
+      /EJECT
+     CSR         UGSUBR    BEGSR
+      *================================================================
+      * User
+      *================================================================
+     C                     MOVEL#1USID    WUCAKY           Check For Aster
+      * CASE: WRK.Check For Asterisk in Key is Asterisk
+     C           WUCAKY    IFEQ '*'                        *IF
+     C                     MOVEL*BLANK    #1USID           User
+     C                     END                             *FI
+      *================================================================
+     CSR         UGEXIT    ENDSR
+      /EJECT
+     CSR         UHSUBR    BEGSR
+      *================================================================
+      * A/c Officer
+      *================================================================
+     C                     MOVEL#1ACOC    WUCAKY           Check For Aster
+      * CASE: WRK.Check For Asterisk in Key is Asterisk
+     C           WUCAKY    IFEQ '*'                        *IF
+     C                     MOVEL*BLANK    #1ACOC           Account Officer
+     C                     END                             *FI
+      *================================================================
+     CSR         UHEXIT    ENDSR
+      /EJECT
+     CSR         UISUBR    BEGSR
+      *================================================================
+      * Customer Number
+      *================================================================
+     C                     MOVEL#1CUST    WUCAKY           Check For Aster
+      * CASE: WRK.Check For Asterisk in Key is Asterisk
+     C           WUCAKY    IFEQ '*'                        *IF
+     C                     MOVEL*BLANK    #1CUST           Customer Number
+     C                     END                             *FI
+      *================================================================
+     CSR         UIEXIT    ENDSR
+      /EJECT                                                              CSD009
+     C           SRBLLI    BEGSR                                          CSD009
+      *================================================================   CSD009
+      * Blank out Local industry code                                     CSD009
+      *================================================================   CSD009
+     C                     MOVEL#1LICD    WUCAKY                          CSD009
+      *                                                                   CSD009
+      ** Check if first character is '*'                                  CSD009
+      *                                                                   CSD009
+     C           WUCAKY    IFEQ '*'                                       CSD009
+     C                     MOVEL*BLANK    #1LICD                          CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================   CSD009
+     C                     ENDSR                                          CSD009
+      /EJECT                                                              CSD009
+     C           SRBLBN    BEGSR                                          CSD009
+      *================================================================   CSD009
+      * Blank out Bank/Non-bank indicator                                 CSD009
+      *================================================================   CSD009
+     C                     MOVEL#1BNBI    WUCAKY                          CSD009
+      *                                                                   CSD009
+      ** Check if first character is '*'                                  CSD009
+      *                                                                   CSD009
+     C           WUCAKY    IFEQ '*'                                       CSD009
+     C                     MOVEL*BLANK    #1BNBI                          CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================   CSD009
+     C                     ENDSR                                          CSD009
+      /EJECT                                                              CSD009
+     C           SRBLCL    BEGSR                                          CSD009
+      *================================================================   CSD009
+      * Blank out Country of Location                                     CSD009
+      *================================================================   CSD009
+     C                     MOVEL#1CLOC    WUCAKY                          CSD009
+      *                                                                   CSD009
+      ** Check if first character is '*'                                  CSD009
+      *                                                                   CSD009
+     C           WUCAKY    IFEQ '*'                                       CSD009
+     C                     MOVEL*BLANK    #1CLOC                          CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================   CSD009
+     C                     ENDSR                                          CSD009
+      /EJECT                                                              CSD009
+     C           SRBLRL    BEGSR                                          CSD009
+      *================================================================   CSD009
+      * Blank out Region of Location                                      CSD009
+      *================================================================   CSD009
+     C                     MOVEL#1RLOC    WUCAKY                          CSD009
+      *                                                                   CSD009
+      ** Check if first character is '*'                                  CSD009
+      *                                                                   CSD009
+     C           WUCAKY    IFEQ '*'                                       CSD009
+     C                     MOVEL*BLANK    #1RLOC                          CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================   CSD009
+     C                     ENDSR                                          CSD009
+      /EJECT                                                              CSD009
+     C           SRBLCZ    BEGSR                                          CSD009
+      *================================================================   CSD009
+      * Blank out Country of Citizenship                                  CSD009
+      *================================================================   CSD009
+     C                     MOVEL#1CNCZ    WUCAKY                          CSD009
+      *                                                                   CSD009
+      ** Check if first character is '*'                                  CSD009
+      *                                                                   CSD009
+     C           WUCAKY    IFEQ '*'                                       CSD009
+     C                     MOVEL*BLANK    #1CNCZ                          CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================   CSD009
+     C                     ENDSR                                          CSD009
+      /EJECT                                                              CSD009
+     C           SRBLRZ    BEGSR                                          CSD009
+      *================================================================   CSD009
+      * Blank out Region of Citizenship                                   CSD009
+      *================================================================   CSD009
+     C                     MOVEL#1RNCZ    WUCAKY                          CSD009
+      *                                                                   CSD009
+      ** Check if first character is '*'                                  CSD009
+      *                                                                   CSD009
+     C           WUCAKY    IFEQ '*'                                       CSD009
+     C                     MOVEL*BLANK    #1RNCZ                          CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================   CSD009
+     C                     ENDSR                                          CSD009
+      /EJECT                                                              CSD009
+     C           SRBLCT    BEGSR                                          CSD009
+      *================================================================   CSD009
+      * Blank out Customer Type                                           CSD009
+      *================================================================   CSD009
+     C                     MOVEL#1CSTY    WUCAKY                          CSD009
+      *                                                                   CSD009
+      ** Check if first character is '*'                                  CSD009
+      *                                                                   CSD009
+     C           WUCAKY    IFEQ '*'                                       CSD009
+     C                     MOVEL*BLANK    #1CSTY                          CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================   CSD009
+     C                     ENDSR                                          CSD009
+      /EJECT                                                              CSD009
+     C           SRBLG1    BEGSR                                          CSD009
+      *================================================================   CSD009
+      * Blank out Group Code 1                                            CSD009
+      *================================================================   CSD009
+     C                     MOVEL#1GPC1    WUCAKY                          CSD009
+      *                                                                   CSD009
+      ** Check if first character is '*'                                  CSD009
+      *                                                                   CSD009
+     C           WUCAKY    IFEQ '*'                                       CSD009
+     C                     MOVEL*BLANK    #1GPC1                          CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================   CSD009
+     C                     ENDSR                                          CSD009
+      /EJECT                                                              CSD009
+     C           SRBLG2    BEGSR                                          CSD009
+      *================================================================   CSD009
+      * Blank out Group Code 2                                            CSD009
+      *================================================================   CSD009
+     C                     MOVEL#1GPC2    WUCAKY                          CSD009
+      *                                                                   CSD009
+      ** Check if first character is '*'                                  CSD009
+      *                                                                   CSD009
+     C           WUCAKY    IFEQ '*'                                       CSD009
+     C                     MOVEL*BLANK    #1GPC2                          CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================   CSD009
+     C                     ENDSR                                          CSD009
+      /EJECT                                                              CSD009
+     C           SRBLG3    BEGSR                                          CSD009
+      *================================================================   CSD009
+      * Blank out Group Code 3                                            CSD009
+      *================================================================   CSD009
+     C                     MOVEL#1GPC3    WUCAKY                          CSD009
+      *                                                                   CSD009
+      ** Check if first character is '*'                                  CSD009
+      *                                                                   CSD009
+     C           WUCAKY    IFEQ '*'                                       CSD009
+     C                     MOVEL*BLANK    #1GPC3                          CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================   CSD009
+     C                     ENDSR                                          CSD009
+      /EJECT                                                              CSD009
+     C           SRBLG4    BEGSR                                          CSD009
+      *================================================================   CSD009
+      * Blank out Group Code 4                                            CSD009
+      *================================================================   CSD009
+     C                     MOVEL#1GPC4    WUCAKY                          CSD009
+      *                                                                   CSD009
+      ** Check if first character is '*'                                  CSD009
+      *                                                                   CSD009
+     C           WUCAKY    IFEQ '*'                                       CSD009
+     C                     MOVEL*BLANK    #1GPC4                          CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================   CSD009
+     C                     ENDSR                                          CSD009
+      /EJECT                                                              CSD009
+     C           SRBLG5    BEGSR                                          CSD009
+      *================================================================   CSD009
+      * Blank out Group Code 5                                            CSD009
+      *================================================================   CSD009
+     C                     MOVEL#1GPC5    WUCAKY                          CSD009
+      *                                                                   CSD009
+      ** Check if first character is '*'                                  CSD009
+      *                                                                   CSD009
+     C           WUCAKY    IFEQ '*'                                       CSD009
+     C                     MOVEL*BLANK    #1GPC5                          CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================   CSD009
+     C                     ENDSR                                          CSD009
+      /EJECT
+     CSR         UJSUBR    BEGSR
+      *================================================================
+      * Set Screen Fun Fields to Input Parms - File Fields.
+      *================================================================
+     C                     MOVEL*BLANK    WUBKSN           Book Code Scree
+     C                     MOVEL#1BKCD    WUBKSN           Book Code Scree
+     C                     MOVEL*BLANK    WUTTSN           T Type    Scree
+     C                     MOVEL#1PCTT    WUTTSN           T Type    Scree
+     C                     MOVEL*BLANK    WUSTSN           S Type    Scree
+     C                     MOVEL#1SBTY    WUSTSN           S Type    Scree
+     C                     MOVEL*BLANK    WUBRSF           Branch    Scree
+     C                     MOVEL#1BRCD    WUBRSF           Branch    Scree
+     C                     MOVEL*BLANK    WUDPSN           Dept      Scree
+     C                     MOVEL#1DPCD    WUDPSN           Dept      Scree
+     C                     MOVEL#1USID    WUUSSN           User      Scree
+     C                     MOVEL*BLANK    WUAOSN           Ac Off    Scree
+     C                     MOVEL#1ACOC    WUAOSN           Ac Off    Scree
+     C                     MOVEL*BLANK    WUCUSN           Customer  Scree
+     C                     MOVEL#1CUST    WUCUSN           Customer  Scree
+      *                                                                   CSD009
+      ** Initialise the ff. fields to value of scrn flds                  CSD009
+      *                                                                   CSD009
+     C           CSD009    IFEQ 'Y'                                       CSD009
+     C                     MOVEL#1LICD    WULISN           Local ind Code CSD009
+     C                     MOVEL#1BNBI    WUBNSN           Bank/Non-bank  CSD009
+     C                     MOVEL#1CLOC    WUCLSN           Ctry of Loc    CSD009
+     C                     MOVEL#1RLOC    WURLSN           Regn of Loc    CSD009
+     C                     MOVEL#1CNCZ    WUCZSN           Ctry of Citzn  CSD009
+     C                     MOVEL#1RNCZ    WURZSN           Regn of Citzn  CSD009
+     C                     MOVEL#1CSTY    WUCTSN           Customer Type  CSD009
+     C                     MOVEL#1GPC1    WUG1SN           Group code 1   CSD009
+     C                     MOVEL#1GPC2    WUG2SN           Group code 2   CSD009
+     C                     MOVEL#1GPC3    WUG3SN           Group code 3   CSD009
+     C                     MOVEL#1GPC4    WUG4SN           Group code 4   CSD009
+     C                     MOVEL#1GPC5    WUG5SN           Group code 5   CSD009
+     C                     ENDIF                                          CSD009
+      *================================================================
+     CSR         UJEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM *ZERO     YYLGCT  50       # of grps
+     C                     PARM *BLANK    YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+      * USER: Exit program processing
+      * /Copy Processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0492VEPP - Profit Centre Dft Matrix  *
+     C*00/Copy Member SD0492V   Exit Program Processing
+     C/COPY WNCPYSRC,SD0492VEPP
+     C                     END                             *FI
+      * CASE: DTL.*CMD key is CF03
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      *                                                                   CSD009
+      **  Access SAR details file to see if switchable feature            CSD009
+      **  CSD009 is installed                                             CSD009
+      *                                                                   CSD009
+     C                     CALL 'AOSARDR0'                                CSD009
+     C                     PARM *BLANKS   PRTCD   7                       CSD009
+     C                     PARM '*VERIFY' POPTN   7                       CSD009
+     C                     PARM 'CSD009'  PSARD   6                       CSD009
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD009
+      *                                                                   CSD009
+     C           PRTCD     IFEQ *BLANK                                    CSD009
+     C                     MOVE 'Y'       CSD009  1                       CSD009
+     C                     ELSE                                           CSD009
+     C                     MOVE 'N'       CSD009                          CSD009
+     C                     ENDIF                                          CSD009
+      *                                                                   CSD009
+      * Define work field S01212
+     C                     MOVEL*BLANK    WUMFTS  1
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Prof C Def Matrix-Book
+     C                     MOVEL*BLANK    WUPMBK  1
+      * Define work field Prof C Def Matrix-T Type
+     C                     MOVEL*BLANK    WUPMTT  1
+      * Define work field Prof C Def Matrix-S Type
+     C                     MOVEL*BLANK    WUPMST  1
+      * Define work field Prof C Def Matrix-Branch
+     C                     MOVEL*BLANK    WUPMBH  1
+      * Define work field Prof C Def Matrix-Dept
+     C                     MOVEL*BLANK    WUPMDT  1
+      * Define work field Prof C Def Matrix-User
+     C                     MOVEL*BLANK    WUPMUR  1
+      * Define work field Prof C Def Matrix-Ac Off
+     C                     MOVEL*BLANK    WUPMAO  1
+      * Define work field Prof C Def Matrix-Cust
+     C                     MOVEL*BLANK    WUPMCU  1
+      *                                                                   CSD009
+      ** Initialise the ff. wrk flds to blank only if CSD009 is on        CSD009
+      *                                                                   CSD009
+     C           CSD009    IFEQ 'Y'                                       CSD009
+      * Define work field Prof C Def Matrix-Loc Ind                       CSD009
+     C                     MOVEL*BLANK    WUPMLI  1                       CSD009
+      * Define work field Prof C Def Matrix-Bnk/NB                        CSD009
+     C                     MOVEL*BLANK    WUPMBN  1                       CSD009
+      * Define work field Prof C Def Matrix-C.Locn                        CSD009
+     C                     MOVEL*BLANK    WUPMCL  1                       CSD009
+      * Define work field Prof C Def Matrix-R.Locn                        CSD009
+     C                     MOVEL*BLANK    WUPMRL  1                       CSD009
+      * Define work field Prof C Def Matrix-C.Ctzn                        CSD009
+     C                     MOVEL*BLANK    WUPMCZ  1                       CSD009
+      * Define work field Prof C Def Matrix-R.Ctzn                        CSD009
+     C                     MOVEL*BLANK    WUPMRZ  1                       CSD009
+      * Define work field Prof C Def Matrix-Cus Tp                        CSD009
+     C                     MOVEL*BLANK    WUPMCT  1                       CSD009
+      * Define work field Prof C Def Matrix-Grp 1                         CSD009
+     C                     MOVEL*BLANK    WUPMG1  1                       CSD009
+      * Define work field Prof C Def Matrix-Grp 2                         CSD009
+     C                     MOVEL*BLANK    WUPMG2  1                       CSD009
+      * Define work field Prof C Def Matrix-Grp 3                         CSD009
+     C                     MOVEL*BLANK    WUPMG3  1                       CSD009
+      * Define work field Prof C Def Matrix-Grp 4                         CSD009
+     C                     MOVEL*BLANK    WUPMG4  1                       CSD009
+      * Define work field Prof C Def Matrix-Grp 5                         CSD009
+     C                     MOVEL*BLANK    WUPMG5  1                       CSD009
+     C                     ENDIF                                          CSD009
+      * Define work field Check For Asterisk in Key
+     C                     MOVEL*BLANK    WUCAKY  1
+      * Define work field Book Code Screen Fld
+     C                     MOVEL*BLANK    WUBKSN 10
+      * Define work field T Type    Screen Fld
+     C                     MOVEL*BLANK    WUTTSN 10
+      * Define work field S Type    Screen Fld
+     C                     MOVEL*BLANK    WUSTSN 10
+      * Define work field Branch    Screen Fld
+     C                     MOVEL*BLANK    WUBRSF 10
+      * Define work field Dept      Screen Fld
+     C                     MOVEL*BLANK    WUDPSN 10
+      * Define work field User      Screen Fld
+     C                     MOVEL*BLANK    WUUSSN 10
+      * Define work field Ac Off    Screen Fld
+     C                     MOVEL*BLANK    WUAOSN 10
+      * Define work field Customer  Screen Fld
+     C                     MOVEL*BLANK    WUCUSN 10
+      *                                                                   CSD009
+      ** Initialise the ff. wrk flds to blank only if CSD009 is on        CSD009
+      *                                                                   CSD009
+     C           CSD009    IFEQ 'Y'                                       CSD009
+      * Define work field Local ind Screen Fld                            CSD009
+     C                     MOVEL*BLANK    WULISN 10                       CSD009
+      * Define work field Bank/Non-bank Screen Fld                        CSD009
+     C                     MOVEL*BLANK    WUBNSN 10                       CSD009
+      * Define work field Ctry of Loc Screen Fld                          CSD009
+     C                     MOVEL*BLANK    WUCLSN 10                       CSD009
+      * Define work field Regn of Loc Screen Fld                          CSD009
+     C                     MOVEL*BLANK    WURLSN 10                       CSD009
+      * Define work field Ctry of Ctzn Screen Fld                         CSD009
+     C                     MOVEL*BLANK    WUCZSN 10                       CSD009
+      * Define work field Regn of Ctzn Screen Fld                         CSD009
+     C                     MOVEL*BLANK    WURZSN 10                       CSD009
+      * Define work field Customer Type Screen Fld                        CSD009
+     C                     MOVEL*BLANK    WUCTSN 10                       CSD009
+      * Define work field Group Code 1 Screen Fld                         CSD009
+     C                     MOVEL*BLANK    WUG1SN 10                       CSD009
+      * Define work field Group Code 2 Screen Fld                         CSD009
+     C                     MOVEL*BLANK    WUG2SN 10                       CSD009
+      * Define work field Group Code 3 Screen Fld                         CSD009
+     C                     MOVEL*BLANK    WUG3SN 10                       CSD009
+      * Define work field Group Code 4 Screen Fld                         CSD009
+     C                     MOVEL*BLANK    WUG4SN 10                       CSD009
+      * Define work field Group Code 5 Screen Fld                         CSD009
+     C                     MOVEL*BLANK    WUG5SN 10                       CSD009
+     C                     ENDIF                                          CSD009
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD0492V#
+     C                     OPEN SDGELRL1
+     C                     OPEN SDMMODL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD0492V PRECOMPILER - Profit Centre Dft Matrix  *
+      * Copyright Statement 1988 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Obtain Prof Cent Def Pty - General Ledger Details  *
+     C                     EXSR SARVGN
+     C                     MOVEL'Y'       WUMFTS           S01212
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * Prof Cent Def Mat DATA DS - Profit Centre Dft Matrix  *
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SBRVGN
+      * 00/Copy Member SD0492VIPG - Profit Centre Dft Matrix  *
+     C*00/Copy Member SD0492V   Initialise Program C-Spec
+     C/COPY WNCPYSRC,SD0492VCPG
+     C                     END                             *FI
+      * Load screen
+     C                     EXSR MALDSC
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0492VPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0492VPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0492VPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*00/Copy Member SD0492V   Initialise Program O-Spec
+     O/COPY WNCPYSRC,SD0492VOPG
+** SHR1 - Header Line 1 - Base Field LHS Text
+Book Code..........:
+Sub-Type...........:
+Transaction Type...:
+Branch Code........:
+Department Code....:
+User...............:
+Account Officer....:
+Customer...........:
+Local Industry Code:                                                      CSD009
+Bank/Non-bank......:                                                      CSD009
+Ctry of Location...:                                                      CSD009
+Regn of Location...:                                                      CSD009
+Ctry of Citizenship:                                                      CSD009
+Regn of Citizenship:                                                      CSD009
+Customer Type......:                                                      CSD009
+Group Code 1.......:                                                      CSD009
+Group Code 2.......:                                                      CSD009
+Group Code 3.......:                                                      CSD009
+Group Code 4.......:                                                      CSD009
+Group Code 5.......:                                                      CSD009
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

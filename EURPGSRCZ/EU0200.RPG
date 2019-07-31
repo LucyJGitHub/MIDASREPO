@@ -1,0 +1,379 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU EURO currency conversion')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  EU0200 - EURO Currency Conversion                            *
+      *                                                               *
+      *  Function:  This program will be used to convert:             *
+      *            -   an amount in Euros to an amount in a 'in'      *
+      *            currency; or                                       *
+      *            -   an amount in an 'in' currency to an amount in  *
+      *            Euros.                                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 247438             Date 09May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242547             Date 21Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 154043             Date 04Mar99               *
+      *                 CEU003  *CREATE    Date 05Nov97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  247438 - If non IN currency used for EUR conversion, system  *
+      *           just crashes. Send meaningful error message instead.*
+      *  242547 - Add database error information - including dumps.   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  154043 - Amend the decimal places of WAM15 to correct the    *
+      *           conversion amount from EUR to IN currency.          *
+      *  CEU003 - EMU Dealing Settlement Ccy Conversion               *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT   - Program Initialisation                            *
+      *  SRCURR   - Checks for the FROM and To currency in the        *
+      *           currency details and checks for the 'in' currency   *
+      *  SRCAMT   - Calculates the outright and interim to currency   *
+      *           amounts                                             *
+      *  SRAMNT   - Calculates the TO currency amount when the no. of *
+      *           decimal places are not the same                     *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    POWER   1   7  7 3             Power Array
+      /SPACE 3
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for Currency Details
+     ISDGELR    E DSSDGELRPD
+      ***  External data structures for General Ledger Details
+     IDSFDY     E DSDSFDY
+      **  First data structure for Access Programs, short DS
+     IDSSDY     E DSDSSDY
+      **  Second data structure for Access Programs, long DS
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+     C**  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      MKI@   80
+     C*
+     C                     EXSR SRINIT
+     C*
+     C                     EXSR SRCURR
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*================================================================
+     C*  P R O G R A M   E N D                                        *
+     C*================================================================
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRINIT - Subroutine to do Program Initialisation.            *
+     C*                                                               *
+     C*  Called By: Main Processing                                   *
+     C*                                                               *
+     C*  Calls    : AOGELRR0 Access Program                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRINIT    BEGSR
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTCD  7        Return Code
+     C                     PARM           P@FRAM 183       FROM Ccy Amount
+     C                     PARM           P@FRCY  3        FROM Currency
+     C                     PARM           P@TOCY  3        TO Currency
+     C                     PARM           P@OUTA 150       Outright Amount
+     C                     PARM           P@INTA 183       Interim Amount
+     C                     PARM           P@EXRT 159       Exchange Rate
+     C                     PARM           P@MDIN  1        Mult/Div Ind.
+     C*
+     C                     Z-ADD0         P@INTA
+     C                     Z-ADD0         P@OUTA
+     C*
+     C**   Call Access Program for General Ledger Details
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C**   Return to the calling program when no record is found
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'*ERROR* 'P@RTCD
+     C                     MOVEL'SDGELRPD'DBFILE 10        ************   242547
+     C                     MOVE '01'      DBASE   3        * DBERR 01 *   242547
+     C                     MOVE POPTN     DBOPTN  7        ************   242547
+     C                     MOVELPOPTN     DBKEY  29                       242547
+     C                     DUMP                                           242547
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*  SRCURR - Checks for the FROM and To currency in the currency *
+     C*         details and checks for the 'in' currency              *
+     C*                                                               *
+     C*  Called By: Main Processing                                   *
+     C*                                                               *
+     C*  Calls    : AOCURRR0 Access Program                           *
+     C*             SRCAMT - Calculates the outright and interim to   *
+     C*                    currency amounts                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRCURR    BEGSR
+     C*
+     C**  Access currency details for the FROM currency
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM P@FRCY    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C**  Return to the calling program when record is not found
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'*ERROR* 'P@RTCD
+     C                     MOVEL'SDCURRPD'DBFILE 10        ************   242547
+     C                     MOVE '02'      DBASE   3        * DBERR 02 *   242547
+     C                     MOVE POPTN     DBOPTN  7        ************   242547
+     C                     MOVELPOPTN     DBKEY  29                       242547
+     C                     DUMP                                           242547
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C                     Z-ADDA6EUER    WFRER  159
+     C                     MOVE A6EUMD    WFRMD   1
+     C                     MOVE A6INCY    WFRIN   1
+     C                     Z-ADDA6NBDP    WFRDP   10
+     C*
+     C**  Access currency details for the TO currency
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM P@TOCY    PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C**  Return to the calling program when record is not found
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'*ERROR* 'P@RTCD
+     C                     MOVEL'SDCURRPD'DBFILE 10        ************   242547
+     C                     MOVE '03'      DBASE   3        * DBERR 03 *   242547
+     C                     MOVE POPTN     DBOPTN  7        ************   242547
+     C                     MOVELPOPTN     DBKEY  29                       242547
+     C                     DUMP                                           242547
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C                     Z-ADDA6EUER    WTOER  159
+     C                     MOVE A6EUMD    WTOMD   1
+     C                     MOVE A6INCY    WTOIN   1
+     C                     Z-ADDA6NBDP    WTODP   10
+     C*
+     C**  Determine the 'in' currency
+     C*
+     C           P@FRCY    IFEQ BKEURO
+     C           P@TOCY    ANDNEBKEURO
+     C           WTOIN     ANDEQ'Y'
+     C           P@FRCY    ORNE BKEURO
+     C           P@TOCY    ANDEQBKEURO
+     C           WFRIN     ANDEQ'Y'
+     C*
+     C**  FROM currency is the 'in' currency
+     C*
+     C           P@TOCY    IFEQ BKEURO
+     C                     Z-ADDWFRER     ZEXRT  159
+     C                     MOVE WFRMD     P@MDIN
+     C                     MOVE WFRMD     ZMDIN
+     C*
+     C                     ELSE
+     C*
+     C**  TO currency is the 'in' currency
+     C*
+     C                     Z-ADDWTOER     ZEXRT
+     C                     MOVE WTOMD     P@MDIN
+     C*
+     C           WTOMD     IFEQ 'M'
+     C                     MOVE 'D'       ZMDIN   1
+     C                     ELSE
+     C                     MOVE 'M'       ZMDIN
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     EXSR SRCAMT
+     C*
+     C                     ELSE
+     C*
+     C                     MOVEL'*ERROR* 'P@RTCD
+      *                                                                                       247438
+      * If 'From currency' not an IN currency, report this back.                              247438
+     C           P@FRCY    IFNE BKEURO                                                        247438
+     C           P@TOCY    ANDEQBKEURO                                                        247438
+     C           WFRIN     ANDNE'Y'                                                           247438
+     C                     MOVEL'*NotIN  'P@RTCD                                              247438
+     C                     ELSE                                                               247438
+     C                     MOVEL'IN CCY  'DBFILE 10        ************   242547
+     C                     MOVE '04'      DBASE   3        * DBERR 04 *   242547
+     C                     MOVE POPTN     DBOPTN  7        ************   242547
+     C                     MOVELPOPTN     DBKEY  29                       242547
+     C                     DUMP                                           242547
+     C*
+     C                     ENDIF
+     C                     ENDIF                                                              247438
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*  SRCAMT - Calculates the outright and interim to currency     *
+     C*         amounts                                               *
+     C*                                                               *
+     C*  Called By: SRCURR - Checks the FROM and TO currency in       *
+     C*                    SDCURRPD                                   *
+     C*                                                               *
+     C*  Calls    : SRAMNT - Calculates the TO currency amount when   *
+     C*                    the no. of dec. places are not the same    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRCAMT    BEGSR
+     C*
+     C           ZEXRT     IFEQ 0
+     C                     Z-ADD0         P@OUTA
+     C                     Z-ADD0         P@INTA
+     C                     Z-ADDZEXRT     P@EXRT
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C**  The number of decimal places are the same for both currency
+     C*
+     C           WFRDP     IFEQ WTODP
+     C*
+     C           ZMDIN     IFEQ 'D'
+     C           P@FRAM    DIV  ZEXRT     P@INTA
+     C           P@FRAM    DIV  ZEXRT     P@OUTA    H
+     C                     ELSE
+     C           P@FRAM    MULT ZEXRT     P@INTA
+     C           P@FRAM    MULT ZEXRT     P@OUTA    H
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  The number of decimal places are not the same for both
+     C**  currency
+     C*
+     C           WFRDP     IFNE WTODP
+     C*
+     C                     Z-ADD0         WPX     10
+     C*
+     C**  Calculates the difference in decimal places
+     C*
+     C           WTODP     SUB  WFRDP     WPX
+     C           WPX       ADD  4         WPX
+     C*
+     C                     EXSR SRAMNT
+     C*
+     C                     ENDIF
+     C*
+     C                     Z-ADDZEXRT     P@EXRT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*  SRAMNT - Calculates the TO currency amount when the no. of   *
+     C*         decimal places are not the same                       *
+     C*                                                               *
+     C*  Called by: SRCAMT - Calculates the outright and interim to   *
+     C*                    currency amounts                           *
+     C*                                                               *
+     C*  Calls    : NONE                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRAMNT    BEGSR
+     C*
+     C           POWER,WPX IFLT 1
+     C***********          Z-ADD0         WAM15  153                      154043
+     C                     Z-ADD0         WAM15  246                      154043
+     C                     Z-ADD0         P@INTX 246                      154043
+     C                     MOVE *BLANKS   P@INTY 15                       154043
+     C           P@FRAM    MULT POWER,WPX WAM15
+     C*
+     C           ZMDIN     IFEQ 'D'
+     C***********WAM15     DIV  ZEXRT     P@INTA                          154043
+     C           WAM15     DIV  ZEXRT     P@INTX                          154043
+     C                     MOVELP@INTX    P@INTY                          154043
+     C                     MOVE P@INTY    P@INTA                          154043
+     C           WAM15     DIV  ZEXRT     P@OUTA    H
+     C                     ELSE
+     C***********WAM15     MULT ZEXRT     P@INTA                          154043
+     C           WAM15     MULT ZEXRT     P@INTX                          154043
+     C                     MOVELP@INTX    P@INTY                          154043
+     C                     MOVE P@INTY    P@INTA                          154043
+     C           WAM15     MULT ZEXRT     P@OUTA    H
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C*
+     C           P@FRAM    MULT POWER,WPX P@FRAM
+     C*
+     C           ZMDIN     IFEQ 'D'
+     C           P@FRAM    DIV  ZEXRT     P@INTA
+     C           P@FRAM    DIV  ZEXRT     P@OUTA    H
+     C                     ELSE
+     C           P@FRAM    MULT ZEXRT     P@INTA
+     C           P@FRAM    MULT ZEXRT     P@OUTA    H
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+**   CPY@
+(c) Finastra International Limited 2001
+**   POWER - Array of Powers for Currency Conversion
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

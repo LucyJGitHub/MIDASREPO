@@ -1,0 +1,1858 @@
+     H***********                                                                CGL011
+     H        1                                                                  CGL011
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Rollover warning report')                     *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - MONEY MARKET MODULE                              *
+     F*                                                               *
+     F*  MM5330 - Rollover Warning Report                             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 243842             Date 29Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL013             Date 08Jun06               *
+      *                 CDL049             Date 11Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 BUG8148            Date 16Aug05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 BUG6212            Date 09Mar05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 205212             Date 20May02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 193029             Date 25Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CGL011             Date 20Sep99               *
+      *                 CPB001            DATE 18Jun99                *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                  095714            DATE 08NOV95               *
+     F*                  074677            DATE 11AUG94               *
+     F*                  071032            DATE 19MAY94               *
+     F*                  066156            DATE 08FEB94               *
+     F*                  066159            DATE 08FEB94               *
+     F*                  066155            DATE 01FEB94               *
+     F*                  S01434            DATE 10AUG93               *
+     F*                  049421            DATE 19JAN93               *
+     F*                  ROLLOV            DATE 19JAN93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  243842 - Prevent looping when daily accrual and rollover     *
+      *           frequency is 'A'.                                   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL013 - Tiered Withholding Tax                              *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  BUG8148 - Need to call CHKHOL to check for holiday before    *
+      *            setting the new maturity date. Patterned from      *
+      *            BUGFIX 7853.                                       *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  BUG6212- Replace Deal Type with Midas Deal Type              *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  205212 - Report does not work with American Date format.     *
+      *  193029 - Deal not on report two working days before          *
+      *           maturity.  Assign a unique variable to hold the     *
+      *           location dealing currency.                          *
+      *  CGL011 - Collateral Processing for Midas. Print              *
+      *           'Collateral' narrative if Collateral Flag = 'Y'.    *
+     F*   CPB001 - 'Private Banking' Module                           *
+     F*   095714 - Add portfolio reference                            *
+     F*   074677 - ARRAY NOT LARGE ENOUGH                             *
+     F*   071032 - CALCULATION OF FORWARD PERIOD SHOULD USE JOINT     *
+     F*            WORKING DAYS IN THE DEAL CURRENCY AND THE BRANCH   *
+     F*            LOCATION CURRENCY                                  *
+     F*   066156 - CALCULATION OF FORWARD PERIOD SHOULD USE LOCAL     *
+     F*            CURRENCY OF BRANCH.                                *
+     F*   066159 - HIGHLIGHT OVERDUE DEALS ON REPORT                  *
+     F*   066155 - MULTIBRANCHING                                     *
+     F*   S01434 - ROLLOVER ENHANCEMENT                               *
+     F*   049421 - HEADER BOX STANDARDISATION                         *
+     F*   ROLLOV - WRITTEN FOR ROLLOVER DEALS                         *
+     F*****************************************************************
+     F*
+     F***MM5330AUO***E***********         PRINTER                         S01434
+     FMM5330AUO   E                    PRINTER      KINFDS SPOOLU         S01434
+     F*                                Print Audit Trail                  S01434
+     F***MM5330P1O***E***********  01     PRINTER                         S01434
+     FMM5330P1O   E             01     PRINTER      KINFDS SPOOL      UC  S01434
+     F*                                Print Rollover Warning Report      S01434
+     F***TABTB11*IF**E***********         DISK                            S01434
+     F*                                                                   S01434
+     F***TA11111*IF**E***********K        DISK                            S01434
+     F*                                                                   S01434
+     F***SDBANKL0IF**E***********K        DISK                            S01434
+     F*                                                                   S01434
+     F***SDDEALY0IF**E***********K        DISK                            S01434
+     F*                                                                   S01434
+     F*MMDELDPOIF  E                    DISK                              066155
+     FMMDELDPOIF  E           K        DISK                               066155
+     F*
+     F***MMDELDY0UF**E***********K        DISK                            S01434
+     FDEALS   IF  E           K        DISK                               S01434
+     F            DEALSDAF                          KIGNORE               S01434
+     F            DEALSDBF                          KIGNORE               S01434
+     F            DEALSDDF                          KIGNORE               S01434
+     F            DEALSDEF                          KIGNORE               S01434
+     F            DEALSDFF                          KIGNORE               S01434
+     F            DEALSDGF                          KIGNORE               S01434
+     F/COPY WNCPYSRC,MM5330F001
+     F*                                                                   S01434
+     F*****************************************************************   S01434
+     F*                                                                   S01434
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                           S01434
+     F*                                                                   S01434
+     F*     01  -  Overflow on MM5330P1                                   S01434
+      *     11  -  Print  *** COLLATERAL ***  text narrative          *   CGL011
+     F*                                                                   S01434
+     F*     20  -  Deal Overdue for rollover                              066155
+     F*     38  -  OPEN PRINTER FILE - MM5330P1                           S01434
+     F*     43  -  MBIN = 'Y'                                             066155
+     F*     46  -  Portfolio Reference                                    095714
+     F*     58  -  CLOSE PRINTER FILE - MM5330P1                          S01434
+     F*                                                                   S01434
+     F*     72  -  Rollover Indicator                                     S01434
+     F*                                                                   S01434
+     F*     80  -  Combination of currencies has been worked out before   071032
+     F*     81  -  END OF REPORT                                          S01434
+     F*     82  -  NO DETAILS TO REPORT                                   S01434
+     F*     85  -  DATABASE error                                         S01434
+     F******87**-**FAILED*READ*ON*SDBANKL0*AND*TABTB11********************S01434
+     F******88**-**CHAIN*failed*on*SDDEALY0*******************************S01434
+     F******89**-**CHAIN*failed*on*MMDELDX0*******************************S01434
+     F*     89  -  CHAIN failed on DEALS                                  S01434
+     F*                                                                   S01434
+     F*     LR  -  End processing                                         S01434
+     F*                                                                   S01434
+     F*****************************************************************   S01434
+     F*                                                                   S01434
+      /EJECT
+     E***********         MES     1   2 80               DB error msg.    S01434
+     E                    ZA1        16  1               ZALIGN/ZEDIT ARRAY
+     E                    ZA2        16  1               ZALIGN/ZEDIT ARRAY
+     E/COPY ZSRSRC,ZDATE2Z1                                               S01434
+     E*                                                                   S01434
+     E***********         ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAYS01434
+     E***********         ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAYS01434
+     E***********         ZMNM   12  12  3               ZDATE2 SR. ARRAY S01434
+     E*   ZDATE3 S/R ARRAR FOR HOLIDAYS
+     E***********         HCCY       25  3                                S01434
+     E*
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PERIOD
+     E                    @YD     4   4  5 0A
+     E*
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR PER MONTH
+     E                    @MD    13  13  5 0A
+     E*
+     E                    ZFMD   12  12  2               ZFREQ SR. ARRAY
+     E                    ZHC        50  3               ZDATE5 ARRAY
+     E*                                                                   071032
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR PER MONTH        071032
+     E*                                                                   071032
+     E********************COMB      200  6   FWD     5 0           071032 074677
+     E                    COMB      500  6   FWD     5 0                  074677
+     E*
+     E                    CPY@    1   1 80
+     E*                                                                   S01434
+     E/COPY ZSRSRC,ZHOLE                                                  S01434
+     E*                                                                   S01434
+     E***/COPY*ZSRSRC,ZSEDITZ1                                      S01434071032
+     E***********                                                   S01434071032
+      /EJECT
+     I***Rename*of*holiday*currencies*array*on*Holidays*file**************S01434
+     I***TABLETJF                                                         S01434
+     I***********   HCCY                            HOLC                  S01434
+     I*
+     I/COPY ZSRSRC,ZHOLI                                                  S01434
+     I*                                                                   S01434
+     I/COPY ZSRSRC,ZHOLDS                                                 S01434
+     I*                                                                   S01434
+     I***/COPY*ZSRSRC,ZSEDITZ2                                      S01434071032
+     I***********                                                   S01434071032
+     I            DS
+     I                                        1   40HKMDYY
+     I                                        5   60HKMDMM
+     I                                        7   80HKMDDD
+     I                                        1   80WWMATD
+     I            DS
+     I                                        1   20HKVDDD
+     I                                        3   40HKVDMM
+     I                                        5   60HKVDY2
+     I                                        1   60WWVALD
+     I                                        1   6 HKVALD
+     I            DS
+     I                                        1   20HKDDDD
+     I                                        3   40HKDDMM
+     I                                        5   60HKDDY2
+     I                                        1   60WWDEAD
+     I                                        1   6 HKDEAD
+     I            DS
+     I                                        1   20HKMDD2
+     I                                        3   40HKMDM2
+     I                                        5   60HKMDY2
+     I                                        1   60WWMATS
+     I                                        1   6 HKMATD
+     I**Data*structure*to*load*up*holiday*currency*array******************S01434
+     I*********** DS                                                      S01434
+     I***********                             1  75 HOLC                  S01434
+     I***********                             1  75 HCCY                  S01434
+     I/COPY WNCPYSRC,MM5330I001
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**  DATA STRUCTURE FOR SR. ZA0680 - DATE INPUT TO SUBROUTINE
+     I            DS
+     I                                        1   80@@DTIN
+     I                                        1   40@@YYYY
+     I                                        3   40@@YY
+     I                                        1   20@@CC
+     I                                        5   60@@MTH
+     I                                        7   80@@DAY
+     I            DS                                                      071032
+     I*                                                                   071032
+     I**  DATA STRUCTURE OF BOTH CURRENCIES FOR FORWARD DATE              071032
+     I*                                                                   071032
+     I                                        1   6 CCCY                  071032
+     I                                        1   3 CCY1                  071032
+     I                                        4   6 CCY2                  071032
+     I*
+      * Get program name from PSDS
+     I           SDS
+     I                                     *PROGRAM WWPGM
+     I*                                                                   066155
+     ILDA         DS                            256                       066155
+     I                                      134 141 DBFILE                066155
+     I                                      142 170 DBKEY                 066155
+     I                                      171 180 DBPGM                 066155
+     I                                      181 183 DBASE                 066155
+     I*                                                                   S01434
+     ISCSARD    E DSSCSARDPD                                              S01434
+     I** DATA STRUCTURE FOR ROLLOVER SWITCH ON FILE                       S01434
+     I*                                                                   S01434
+     ISDGELR    E DSSDGELRPD                                              S01434
+     I** DATA STRUCTURE FOR GENERAL LEDGER SWITCH ON FILE                 S01434
+     I*                                                                   S01434
+     ISDBANK    E DSSDBANKPD                                              S01434
+     I** DATA STRUCTURE FOR BANK DETAILS SWITCH ON FILE                   S01434
+     I*                                                                   S01434
+     ISDDEAL    E DSSDDEALPD                                              S01434
+     I** DATA STRUCTURE FOR DEALING DETAILS SWITCH ON FILE                S01434
+     I              QQACCD                          QQACD1                                    CGL029
+     I*                                                                   S01434
+     ISDBRCH    E DSSDBRCHPD                                              066155
+     I** DATA STRUCTURE FOR BRANCH DETAILS                                066155
+     I*                                                                   066155
+     ISDLOCN    E DSSDLOCNPD                                              066156
+     I** DATA STRUCTURE FOR LOCATION DETAILS                              066156
+     I*                                                                   066156
+     ISDMMOD    E DSSDMMODPD                                              095714
+     I** DATA STRUCTURE FOR MODULE DETAILS                                095714
+     I*                                                                   095714
+     IDSFDY     E DSDSFDY                                                 S01434
+     I** DATA STRUCTURE FOR ACCESS PROGRAMS                               S01434
+     I*                                                                   S01434
+     ISPOOL       DS                                                      S01434
+     I**    SPOOL FILE INFORMATION DATA STRUCTURE                         S01434
+     I                                       83  92 SFILE                 S01434
+     I                                    B 123 1240SFNUM                 S01434
+     I*                                                                   S01434
+     ISPOOLU      DS                                                      S01434
+     I**    SPOOL FILE INFORMATION DATA STRUCTURE                         S01434
+     I                                       83  92 SFILEU                S01434
+     I                                    B 123 1240SFNUMU                S01434
+     I*                                                                   S01434
+     IRUNDAT      DS                                                      S01434
+     I                                       13  13 MBIN                  S01434
+     I*                                                                   S01434
+      /EJECT                                                              S01434
+      *-------------------------------------------------------------------------
+      * Main processing
+      *-------------------------------------------------------------------------
+      *
+     C           *ENTRY    PLIST                                          S01434
+     C                     PARM           RUN     1                       S01434
+     C                     PARM           SEQ     5                       S01434
+     C                     PARM           BRNCH   3                       066155
+     C*                                                                   S01434
+     C                     MOVE *BLANKS   @BRCA   3                       066155
+     C                     MOVEL'MM5330'  DBPGM  10                       066155
+     C                     EXSR SRINIT
+      *
+      *  LOOP ON MMDELDPP
+      *
+     C                     READ MMDELDPO                 LR
+      *
+      * If file empty, output '*** NO DETAILS TO REPORT ***'
+      *
+     C           *INLR     IFEQ '1'
+     C                     MOVE '1'       *IN82                           S01434
+     C                     END                                            S01434
+      *
+     C           *INLR     DOWEQ'0'
+      *
+      *  Convert maturity date in midas format
+      *
+     C                     MOVE HKVDYY    HKVDY2
+     C                     MOVE HKDDYY    HKDDY2
+     C                     MOVE HKMDDD    HKMDD2
+     C                     MOVE HKMDMM    HKMDM2
+     C                     MOVE HKMDYY    HKMDY2
+      *
+     C           WWMATD    IFNE *ZEROS
+     C***********HKDN38    CHAINMMDELDY0             89                   S01434
+     C           HKDN38    CHAINDEALS                89                   S01434
+      *
+     C           *IN89     IFEQ '0'
+     C***********MMWRPI    ANDNE'Y'                                       S01434
+     C           RECI      ANDEQ'D'                                       S01434
+     C           WRPI      ANDNE'Y'                                       S01434
+      *
+     C                     MOVE WWMATD    @@DTIN  80
+     C                     EXSR ZA0680
+     C                     Z-ADD@@MDNO    WWMDAT  50
+      *
+     C*******    @@MDNO    IFLE WWFOWD                                    066156
+      **
+      ****INCREMENT*TOTAL*OF*RECORDS*READ                                 066156
+      **
+     C*******              ADD  1         TREC    50                      066156
+      *
+     C                     EXSR SPRINT
+      *
+     C***********          MOVE 'Y'       MMWRPI                          S01434
+     C***********          UPDATMMDELDD0                                  S01434
+      *
+     C*******              END                                            066156
+     C                     END
+     C                     END
+      *
+     C                     READ MMDELDPO                 LR
+     C                     END
+      *
+     C                     MOVE '1'       *IN81
+     C                     EXSR SPRINT
+      *
+     C*  CLOSE PRINTER FILE - MM5330P1                                    S01434
+     C*                                                                   S01434
+     C                     CLOSEMM5330P1               58                 S01434
+     C*                                                                   S01434
+     C***********          Z-ADDSFNUM     ZSNUMU  60                S01434071032
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      071032
+     C*                                                                   S01434
+     C                     CALL 'ZSFILE'                                  S01434
+     C                     PARM           SEQ     5                       S01434
+     C                     PARM *BLANKS   ENTITY  3                       S01434
+     C                     PARM           SFILEU 10                       S01434
+     C                     PARM           ZSNUMU                          S01434
+     C                     PARM *BLANKS   ZSERR   1                       S01434
+     C*                                                                   S01434
+     C** Error during ZSFILE processing, return to calling program        S01434
+     C*                                                                   S01434
+     C           ZSERR     IFEQ 'Y'                                       S01434
+     C                     SETON                     U7U8LR               S01434
+     C                     ENDIF                                          S01434
+     C*                                                                   S01434
+      /EJECT
+      *----------------------------------------------------------------
+      * SPRINT - Print subroutine
+      *----------------------------------------------------------------
+      *
+     C           SPRINT    BEGSR
+      *
+     C           *INLR     IFEQ '0'
+     C*                                                                   071032
+     C**  Calculate number of working days forward.                       071032
+     C*                                                                   071032
+     C                     EXSR SRFOWD                                    071032
+      *
+     C***OPEN*PRINTER*FILE - MM5330P1                              S01434 066156
+     C** If no records yet written to file                                066155
+     C*                                                                   S01434
+     C           FILOPN    IFNE 'Y'                                       S01434
+     C*                                                                   S01434
+     C                     MOVE BRCA      @BRCA                           066155
+     C***********                                                   066155071032
+     C****Calculate*number*of*working*days*forward.*****************066156071032
+     C***********          EXSR SRFOWD                              066156071032
+     C*                                                                   066156
+     C**  Only report those deals with mdate within the forward period    066156
+     C           @@MDNO    IFLE WWFOWD                                    066156
+     C                     ADD  1         TREC    50                      066156
+     C*                                                                   066155
+     C                     OPEN MM5330P1               38                 S01434
+     C                     MOVEL'Y'       FILOPN  1                       S01434
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01434
+     C*                                                                   S01434
+     C                     CALL 'ZSFILE'                                  S01434
+     C                     PARM           SEQ     5                       S01434
+     C*******              PARM *BLANKS   ENTITY  3                S01434 066155
+     C                     PARM BRCA      ENTITY  3                       066155
+     C                     PARM           SFILE  10                       S01434
+     C                     PARM           ZSNUM                           S01434
+     C                     PARM *BLANKS   ZSERR   1                       S01434
+     C*                                                                   S01434
+     C** Error during ZSFILE processing, return to calling program        S01434
+     C*                                                                   S01434
+     C           ZSERR     IFEQ 'Y'                                       S01434
+     C                     SETON                     U7U8LR               S01434
+     C                     GOTO SPREND                                    S01434
+     C                     ENDIF                                          S01434
+     C*                                                                   S01434
+     C** MDATE not within reporting period - skip deal                    066155
+     C                     ELSE                                           066155
+     C                     GOTO SPREND                                    066155
+     C*                                                                   066155
+     C                     END                                            066156
+     C*                                                                   066155
+     C** At least one record printed.                                     066155
+     C                     ELSE                                           066155
+     C*                                                                   066155
+     C** If Multibranching on and branch changes need to                  066155
+     C** recalculate forward reporting period                             066155
+     C*                                                                   066155
+     C           MBIN      IFEQ 'Y'                                       066155
+     C           BRCA      ANDNE@BRCA                                     066155
+     C***********                                                   066155071032
+     C****Calculate*number*of*working*days*forward.*****************066156071032
+     C***********          EXSR SRFOWD                              066156071032
+     C*                                                                   066156
+     C**  Only report those deals with mdate within the forward period    066156
+     C           @@MDNO    IFLE WWFOWD                                    066156
+     C                     ADD  1         TREC    50                      066156
+     C*                                                                   066155
+     C** Open/close printer file on change of branch.                     066155
+     C*                                                                   066155
+     C                     MOVE '1'       *IN81                           066155
+     C                     WRITEMM5330F2                                  066155
+     C                     CLOSEMM5330P1               58                 066155
+     C                     MOVE '0'       *IN81                           066155
+     C                     OPEN MM5330P1               38                 066155
+     C                     MOVE BRCA      @BRCA                           066155
+     C*                                                                   066155
+     C                     Z-ADDSFNUM     ZSNUM   60                      066155
+     C*                                                                   066155
+     C                     CALL 'ZSFILE'                                  066155
+     C                     PARM           SEQ     5                       066155
+     C                     PARM BRCA      ENTITY  3                       066155
+     C                     PARM           SFILE  10                       066155
+     C                     PARM           ZSNUM                           066155
+     C                     PARM *BLANKS   ZSERR   1                       066155
+     C*                                                                   066155
+     C** Error during ZSFILE processing, return to calling program        066155
+     C*                                                                   066155
+     C           ZSERR     IFEQ 'Y'                                       066155
+     C                     SETON                     U7U8LR               066155
+     C                     GOTO SPREND                                    066155
+     C                     ENDIF                                          066155
+     C*                                                                   066155
+     C** MDATE not within reporting period - skip deal                    066155
+     C                     ELSE                                           066155
+     C                     GOTO SPREND                                    066155
+     C*                                                                   066155
+     C                     ENDIF                                          066155
+     C*                                                                   066155
+     C** Branch unchanged                                                 066155
+     C                     ELSE                                           066155
+     C*                                                                   066155
+     C**  Only report those deals with mdate within the forward period    066156
+     C           @@MDNO    IFLE WWFOWD                                    066156
+     C                     ADD  1         TREC    50                      066156
+     C                     ELSE                                           066155
+     C                     GOTO SPREND                                    066155
+     C                     END                                            066155
+     C*                                                                   066155
+     C                     ENDIF                                          066155
+     C*                                                                   066155
+     C                     ENDIF                                          S01434
+     C*                                                                   S01434
+      * Write report headings
+      *
+     C           *IN82     IFEQ '0'                                       S01434
+     C                     WRITEMM5330F0
+     C                     ENDIF                                          S01434
+      *
+      * Write Deal with Rollover Warning Period.
+      *
+     C** Deal is overdue if Maturity Date less or equal to date           066159
+     C** of next working day.                                             066159
+     C           @@MDNO    IFLE BJDNWD                                    066159
+     C                     MOVE '1'       *IN20                           066159
+     C                     ELSE                                           066159
+     C                     MOVE '0'       *IN20                           066159
+     C                     END                                            066159
+     C*                                                                   066159
+      ** Print Collateral text narrative if Collateral Flag is 'Y'.       CGL011
+      *                                                                   CGL011
+     C           CGL011    IFEQ 'Y'                                       CGL011
+     C           HKCOLF    ANDEQ'Y'                                       CGL011
+     C                     MOVE *ON       *IN11                           CGL011
+     C                     ELSE                                           CGL011
+     C                     MOVE *OFF      *IN11                           CGL011
+     C                     ENDIF                                          CGL011
+      *                                                                   CGL011
+     C                     MOVE HKDN38    ##DN38
+     C                     MOVE HKDN38    ##DLNO
+      **********           MOVE HKTYPE    ##TYPE                                             BUG6212
+     C                     MOVE HKMTYP    ##TYPE                                             BUG6212
+     C                     MOVE HKSTYP    ##STYP
+     C                     MOVE HKDEAD    ##DEAD
+     C***********          MOVE HKBRCD    ##BRCD                          S01434
+     C                     MOVE HKBRCA    ##BRCA                          S01434
+     C                     MOVE HKBOKC    ##BOKC
+      *
+     C                     MOVE HKCSNM    ##CSNM
+     C                     MOVE HKCNUM    ##CNUM
+     C                     MOVE BBACOC    ##ACOC
+      *
+     C                     MOVE HKVALD    ##VALD
+     C                     MOVE HKMATD    ##MATD
+      *
+     C***********          MOVE HKPTFR    ##PTFR                          S01434
+     C                     MOVE PTFR      ##PTFR                          095714
+     C                     MOVE HKCCY     ##CCY
+     C                     MOVE HKICMT    ##ICMT
+     C                     MOVE HKBSRC    ##BSRC
+     C                     MOVE HKNGVI    ##NGVI
+      *
+     C           HKAMNP    IFLT 0
+     C                     Z-SUBHKAMNP    WWAMNP 150
+     C                     MOVE WWAMNP    ZFIELD
+     C                     ELSE
+     C                     MOVE HKAMNP    ZFIELD
+     C                     END
+     C                     Z-ADDHKCYDP    ZADEC
+     C           15        SUB  ZADEC     ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    ##AMNP
+     C           HKMTTI    SUB  HKIMAT    WWWHTA 150                                          CDL013
+     C           WWWHTA    IFLT 0                                                             CDL013
+     C                     Z-SUBWWWHTA    WWWHTM 150                                          CDL013
+     C                     MOVE WWWHTM    ZFIELD                                              CDL013
+     C                     ELSE                                                               CDL013
+     C                     MOVE WWWHTA    ZFIELD                                              CDL013
+     C                     ENDIF                                                              CDL013
+     C                     Z-ADDHKCYDP    ZADEC                                               CDL013
+     C           15        SUB  ZADEC     ZADIG                                               CDL013
+     C                     EXSR ZEDIT                                                         CDL013
+     C                     MOVE ZFIELD    ##WHTA                                              CDL013
+      *
+     C/COPY WNCPYSRC,MM5330C003
+     C           HKIIRT    IFEQ *ZEROS
+     C                     MOVE *BLANKS   ##IIRT
+     C                     ELSE
+     C                     MOVE HKIIRT    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C           11        SUB  ZADEC     ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    ##IIRT
+     C                     END
+      *
+     C           HKMTTI    IFLT 0
+     C                     Z-SUBHKMTTI    WWMTTI 150
+     C                     MOVE WWMTTI    ZFIELD
+     C                     ELSE
+     C                     MOVE HKMTTI    ZFIELD
+     C                     END
+     C                     Z-ADDHKCYDP    ZADEC
+     C           15        SUB  ZADEC     ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    ##MTTI
+      *
+     C***********MMCUMA    IFEQ *ZEROS                                    S01434
+     C***********          MOVE *BLANKS   ##CUMA                          S01434
+     C***********          ELSE                                           S01434
+     C***********          MOVE MMCUMA    ZFIELD                          S01434
+     C***********          Z-ADD7         ZADEC                           S01434
+     C***********11        SUB  ZADEC     ZADIG                           S01434
+     C***********          EXSR ZEDIT                                     S01434
+     C***********          MOVE ZFIELD    ##CUMA                          S01434
+     C***********          END                                            S01434
+      *
+     C                     MOVELAURO      ##AURO                          S01434
+     C                     MOVELIPDS      ##IPDS                          S01434
+     C***********          MOVELFREQ      ##FREQ                          S01434
+     C                     MOVELROFQ      ##ROFQ                          S01434
+     C                     MOVE RLDN      ##RLDN                          S01434
+     C                     MOVELCNNA      ##CNNA                          S01434
+     C                     MOVELIMET      ##IMET                          S01434
+     C                     MOVELINSA      ##INSA                          S01434
+     C*                                                                   S01434
+     C                     MOVELFUID      ##FUID                          S01434
+     C                     MOVELJFLID     #JFLID                          S01434
+     C                     MOVELJRDFC     #JRDFC                          S01434
+     C                     MOVE PRFC      ##PRFC                          S01434
+     C                     MOVE ORBR      ##ORBR                          S01434
+     C*                                                                   S01434
+     C           HKAMNP    IFLT 0
+     C                     Z-SUBHKAMNP    WWAMNP
+     C                     ELSE
+     C                     Z-ADDHKAMNP    WWAMNP
+     C                     END
+     C***********MMIPDS    IFEQ 'N'                                       S01434
+     C           IPDS      IFEQ 'N'                                       S01434
+     C/COPY WNCPYSRC,MM5330C004
+     C********** HKMTTI    IFLT 0                                                             CDL013
+     C**********           Z-SUBHKMTTI    WWMTTI                                              CDL013
+     C           HKIMAT    IFLT 0                                                             CDL013
+     C                     Z-SUBHKIMAT    WWMTTI                                              CDL013
+     C                     ELSE
+     C**********           Z-ADDHKMTTI    WWMTTI                                              CDL013
+     C                     Z-ADDHKIMAT    WWMTTI                                              CDL013
+     C                     END
+     C/COPY WNCPYSRC,MM5330C001
+     C           WWAMNP    ADD  WWMTTI    WWAMNP
+     C                     END
+     C                     MOVE WWAMNP    ZFIELD
+     C                     Z-ADDHKCYDP    ZADEC
+     C           15        SUB  ZADEC     ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    ##AMNW
+      *
+     C***********          MOVE MMFREQ    ZFREQ                           S01434
+      *                                                                                       243842
+      ** HKROFQ=A means Monthly on Accrual Profit Date.                                       243842
+      ** If system is not Monthly accrual, force HKROFQ to be = M Monthly                     243842
+      *                                                                                       243842
+     C           ROFQ      IFEQ 'A'                                                           243842
+     C           BKAPFQ    ANDEQ'D'                        Daily                              243842
+     C           ROFQ      OREQ 'A'                                                           243842
+     C           BKAPFQ    ANDEQ'F'                        Fortnightly                        243842
+     C           ROFQ      OREQ 'A'                                                           243842
+     C           BKAPFQ    ANDEQ'W'                        Weekly                             243842
+     C                     MOVE 'M'       ZFREQ                                               243842
+     C                     ELSE                                                               243842
+     C                     MOVE ROFQ      ZFREQ                           S01434
+     C                     ENDIF                                                              243842
+      *                                                                                       243842
+     C                     MOVE WWMDAT    ZDAYNO
+     C***********          MOVE MMDNUM    ZMDAY                           S01434
+     C                     MOVE RLDN      ZMDAY                           S01434
+     C                     MOVE HKCCY     ZCCY
+     C                     EXSR ZFRQA
+     C**********           MOVE '0'       *IN98                           205212
+     C                     Z-ADDZDAYNO    @NMDAT  50                                         BUG8148
+     C                     EXSR CHKHOL                                                       BUG8148
+     C                     Z-ADD@NMDAT    ZDAYNO                                             BUG8148
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     ##NMAD
+      *
+     C           *IN82     IFEQ '0'                                       S01434
+     C                     WRITEMM5330F1
+     C                     ENDIF                                          S01434
+      *
+     C                     END
+      *
+      * Write report End if end of file
+      *
+     C           *INLR     IFEQ '1'
+     C***********TREC      IFEQ 0                                         S01434
+     C***********          WRITEMM5330F0                                  S01434
+     C***********          MOVE '1'       *IN82                           S01434
+     C***********          MOVE '0'       *IN81                           S01434
+     C***********          ELSE                                           S01434
+     C***********          MOVE '0'       *IN82                           S01434
+     C***********          END                                            S01434
+     C           TREC      IFGT 0                                         S01434
+     C           FILOPN    ANDEQ'Y'                                       S01434
+     C                     MOVE '0'       *IN82                           S01434
+     C                     WRITEMM5330F2
+     C                     ELSE                                           S01434
+     C                     MOVE '1'       *IN82                           S01434
+     C                     MOVE '0'       *IN81                           S01434
+     C                     END                                            S01434
+     C                     WRITEAUDIT                                     S01434
+     C                     MOVE '0'       *IN01
+     C                     END
+      *
+     C***********          ENDSR                                          S01434
+     C           SPREND    ENDSR                                          S01434
+      /EJECT                                                              066156
+      *-------------------------------------------------------------------066156
+      * SRFOWD - Routine to Calculate Forward period for reporting        066156
+      *-------------------------------------------------------------------066156
+      *                                                                   066156
+     C           SRFOWD    BEGSR                                          066156
+      *                                                                   066156
+     C** Get Branch Details                                               066155
+     C** only if branch details have changed                              071032
+     C*                                                                   066155
+     C           BRCA      IFNE @BRCA                                     071032
+     C**********           CALL 'AOBRCHR0'                                066155              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       066155
+     C                     PARM '*KEY   ' @OPTN   7                       066155
+     C                     PARM BRCA      @DSNB   3                       066155
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           066155              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   066155
+     C           @RTCD     IFNE *BLANK                     B1             066155
+     C                     MOVEL@DSNB     DBKEY            ***************066155
+     C                     MOVEL'SDBRCHPD'DBFILE           * DBERROR 001 *066155
+     C                     MOVE '001'     DBASE            ***************066155
+     C                     EXSR *PSSR                      *1             066155
+     C                     GOTO FWDEND                     *1             066155
+     C                     END                             E1             066155
+     C*                                                                   066155
+     C                     MOVE BRCA      ##BRCA                          066155
+     C                     MOVE A8BRNM    ##BRNM                          066155
+      *                                                                   066156
+     C** If branch location blank use system local currency.              066156
+      *                                                                   066156
+     C           A8LCCD    IFEQ *BLANKS                    B1             066156
+     C**********           MOVE BJLCCY    ZCCY                                         066156 193029
+     C                     MOVE BJLCCY    WCCY    3                                           193029
+      *                                                                   066156
+     C** Else access the location file for the local deal currency        066156
+      *                                                                   066156
+     C                     ELSE                            X1             066156
+     C                     CALL 'AOLOCNR0'                                066156
+     C                     PARM '*MSG   ' @RTCD                           066156
+     C                     PARM '*KEY   ' @OPTN                           066156
+     C                     PARM A8LCCD    @DVKEY  3                       066156
+     C           SDLOCN    PARM SDLOCN    DSFDY                           066156
+     C*                                                                   066156
+     C           @RTCD     IFNE *BLANK                     B*2            066156
+     C                     MOVEL@DVKEY    DBKEY            ***************066156
+     C                     MOVEL'SDLOCNPD'DBFILE           * DBERROR 005 *066156
+     C                     MOVE '005'     DBASE            ***************066156
+     C                     EXSR *PSSR                                     066156
+     C                     GOTO FWDEND                                    066156
+     C                     END                             E*2            066156
+      *                                                                   066156
+     C**********           MOVE DVLDCY    ZCCY                                         066156 193029
+     C                     MOVE DVLDCY    WCCY                                                193029
+     C***********          MOVE A8LCCD    LOC1                            071032
+     C                     END                             E1             066156
+     C                     END                                            071032
+     C***********                                                   066156071032
+     C***Calculate*forward*period*for*reporting.********************066156071032
+     C***********                                                   066156071032
+     C***********          Z-ADDBJRDNB    ZDAYNO                    066156071032
+     C***********          Z-ADDBNNWDM    ZNRDYS                    066156071032
+     C***********          EXSR ZFWDT                               066156071032
+     C***********          MOVE ZDYNBR    WWFOWD  50                066156071032
+     C*                                                                   071032
+     C** See if combination of branch location and deal currencies has    071032
+     C** already been worked out                                          071032
+     C*                                                                   071032
+     C**********           MOVELZCCY      CCY1                                         071032 193029
+     C                     MOVELWCCY      CCY1                                                193029
+     C                     MOVELCCY       CCY2                            071032
+     C                     Z-ADD1         X       30                      071032
+     C           CCCY      LOKUPCOMB,X                   80               071032
+     C*                                                                   071032
+     C** If it has use that date else work it out                         071032
+     C*                                                                   071032
+     C           *IN80     IFEQ '1'                                       071032
+     C                     Z-ADDFWD,X     WWFOWD                          071032
+     C                     ELSE                                           071032
+     C                     EXSR SFWDCL                                    071032
+     C                     Z-ADDTSTDTE    WWFOWD                          071032
+     C                     END                                            071032
+      *                                                                   066156
+     C           FWDEND    ENDSR                                          066156
+     C/EJECT                                                              071032
+     C*****************************************************************   071032
+     C*                                                               *   071032
+     C* SFWDCL - Subroutine to calculate the forward date using the   *   071032
+     C*          branch location currency and the deal currency       *   071032
+     C*                                                               *   071032
+     C*****************************************************************   071032
+     C*                                                                   071032
+     C           SFWDCL    BEGSR                                          071032
+     C*                                                                   071032
+     C                     Z-ADD0         NJWD    30                      071032
+     C                     Z-ADDBJRDNB    TSTDTE                          071032
+     C*                                                                   071032
+     C           NJWD      DOUEQBNNWDM                                    071032
+     C                     ADD  1         TSTDTE                          071032
+     C                     Z-ADDTSTDTE    ZDAYNO                          071032
+     C*                                                                   071032
+     C** See if this date is a working day in the branch location ccy     071032
+     C*                                                                   071032
+     C                     MOVELCCY1      ZCCY                            071032
+     C***********          MOVELLOC1      ZLOC                            071032
+     C                     EXSR ZCHKH                                     071032
+     C           ZIND      IFEQ 'W'                                       071032
+     C*                                                                   071032
+     C** See if this date is a working day in the deal currency           071032
+     C*                                                                   071032
+     C                     MOVELCCY2      ZCCY                            071032
+     C***********          MOVEL*BLANKS   ZLOC                            071032
+     C                     EXSR ZCHKH                                     071032
+     C           ZIND      IFEQ 'W'                                       071032
+     C                     ADD  1         NJWD                            071032
+     C                     END                                            071032
+     C                     END                                            071032
+     C                     END                                            071032
+     C*                                                                   071032
+     C** Set up table of currencies with forward date                     071032
+     C*                                                                   071032
+     C                     ADD  1         C                               071032
+     C                     MOVELCCCY      COMB,C                          071032
+     C                     Z-ADDTSTDTE    FWD,C                           071032
+     C                     ADD  1         C                               071032
+     C                     MOVELCCY1      TMPCCY                          071032
+     C                     MOVELCCY2      CCY1                            071032
+     C                     MOVELTMPCCY    CCY2                            071032
+     C                     MOVELCCCY      COMB,C                          071032
+     C                     Z-ADDTSTDTE    FWD,C                           071032
+     C                     ENDSR                                          071032
+     C*                                                                   071032
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRINIT - Routine to handle initial processing
+      *-------------------------------------------------------------------------
+      *
+     C           SRINIT    BEGSR
+     C*                                                                   S01434
+     C* Read AOSARDR0 to retrieve Rollover Switch                         S01434
+     C*                                                                   S01434
+     C                     CALL 'AOSARDR0'                                S01434
+     C                     PARM '*MSG   ' @RTCD   7                       S01434
+     C                     PARM '*KEY   ' @OPTN   7                       S01434
+     C                     PARM 'S01434'  @SARD   6                       S01434
+     C           SCSARD    PARM SCSARD    DSFDY                           S01434
+     C*                                                                   S01434
+     C           @RTCD     IFEQ *BLANKS                                   S01434
+     C                     MOVE 'Y'       S01434  1                       S01434
+     C                     SETON                     72                   S01434
+     C                     ELSE                                           S01434
+     C                     MOVE 'N'       S01434                          S01434
+     C                     SETOF                     72                   S01434
+     C                     ENDIF                                          S01434
+      *                                                                   CGL011
+      ** Access Switchable Features file and check if CGL011              CGL011
+      ** is switched on or not.                                           CGL011
+      *                                                                   CGL011
+     C                     CALL 'AOSARDR0'                                CGL011
+     C                     PARM *BLANKS   PRTCD   7                       CGL011
+     C                     PARM '*VERIFY' POTPN   7                       CGL011
+     C                     PARM 'CGL011'  PSARD   6                       CGL011
+     C           SCSARD    PARM SCSARD    DSFDY                           CGL011
+      *                                                                   CGL011
+     C           PRTCD     IFEQ *BLANKS                                   CGL011
+     C                     MOVE 'Y'       CGL011  1                       CGL011
+      *                                                                   CGL011
+     C                     ELSE                                           CGL011
+     C                     MOVE 'N'       CGL011                          CGL011
+     C           PRTCD     IFNE '*NRF   '                                 CGL011
+     C                     MOVEL'006'     DBASE            ***************CGL011
+     C                     MOVEL'SCSARDPD'DBFILE           * DB ERROR 006*CGL011
+     C                     MOVEL'CGL011  'DBKEY            ***************CGL011
+     C                     EXSR *PSSR                                     CGL011
+     C                     WRITEAUDIT                                     CGL011
+     C                     RETRN                                          CGL011
+     C                     ENDIF                                          CGL011
+     C                     ENDIF                                          CGL011
+      *                                                                   CGL011
+     C/COPY WNCPYSRC,MM5330C002
+     C*                                                                   S01434
+     C**Read*SDBANKL0*to*retrieve*base*currency***************************S01434
+     C*                                                                   S01434
+     C************LOVAL    SETLLSDBANKL0                                  S01434
+     C***********          READ SDBANKL0                 87               S01434
+     C*                                                                   S01434
+     C**Execute*DB*error*routine******************************************S01434
+     C************IN87     IFEQ '1'                                       S01434
+     C***********          MOVEL'01'      P2ERR            ***************S01434
+     C***********          Z-ADD1         X       20       * DB ERROR 01  S01434
+     C***********          MOVE *BLANKS   P2EDTA           ***************S01434
+     C***********          MOVE '1'       *IN85                           S01434
+     C***********          EXSR SAUDIT                                    S01434
+     C***********          RETRN                                          S01434
+     C***********          END                                            S01434
+     C*                                                                   S01434
+     C* Read AOBANKR0 to retrieve bank information                        S01434
+     C*                                                                   S01434
+     C                     CALL 'AOBANKR0'                                S01434
+     C                     PARM '*MSG   ' @RTCD   7                       S01434
+     C                     PARM '*FIRST ' @OPTN   7                       S01434
+     C           SDBANK    PARM SDBANK    DSFDY                           S01434
+     C*                                                                   S01434
+     C           @RTCD     IFNE *BLANK                                    066155
+     C                     MOVE *BLANKS   DBKEY            ***************066155
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERROR 002 *066155
+     C                     MOVE '002'     DBASE            ***************066155
+     C                     EXSR *PSSR                                     066155
+     C                     RETRN                                          066155
+     C                     END                                            066155
+     C                     MOVELBJLCCY    @LOCY   3                                          BUG8148
+     C*                                                                   S01434
+     C* Read AOGELRR0 to retrieve accrual/profit date                     S01434
+     C*                                                                   S01434
+     C**********           CALL 'AOGELRR0'                                S01434              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01434
+     C                     PARM '*FIRST ' @OPTN   7                       S01434
+     C********** SDGELR    PARM SDGELR    DSFDY                           S01434              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*                                                                   S01434
+     C           @RTCD     IFNE *BLANK                                    066155
+     C                     MOVE *BLANKS   DBKEY            ***************066155
+     C                     MOVEL'SDGELRPD'DBFILE           * DBERROR 003 *066155
+     C                     MOVE '003'     DBASE            ***************066155
+     C                     EXSR *PSSR                                     066155
+     C                     RETRN                                          066155
+     C                     END                                            066155
+     C*                                                                   S01434
+     C           BKPRCU    IFEQ 'Y'                                       S01434
+     C                     MOVE *ON       *IN41                           S01434
+     C                     ENDIF                                          S01434
+     C*                                                                   S01434
+     C           BKOBRU    IFEQ 'Y'                                       S01434
+     C                     MOVE *ON       *IN42                           S01434
+     C                     ENDIF                                          S01434
+     C*                                                                   S01434
+     C           *NAMVAR   DEFN           RUNDAT                          S01434
+     C                     IN   RUNDAT                                    S01434
+     C*                                                                   S01434
+     C           MBIN      IFEQ 'Y'                                       S01434
+     C                     MOVE *ON       *IN43                           S01434
+     C                     ENDIF                                          S01434
+     C*                                                                   S01434
+     C*                                                                   S01434
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE 1         *IN98
+     C                     END
+     C                     MOVE BJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ##MRDT
+      *
+     C****Read*TABTB11*to*retrieve*accrual/profit*date********************S01434
+     C*                                                                   S01434
+     C***********          READ TABTB11                  87               S01434
+     C*                                                                   S01434
+     C****Execute*DB*error*routine****************************************S01434
+     C*********** IN87     IFEQ '1'                                       S01434
+     C***********          MOVEL'02'      P2ERR            ***************S01434
+     C***********          Z-ADD2         X       20       * DB ERROR 02  S01434
+     C***********          MOVE *BLANKS   P2EDTA           ***************S01434
+     C***********          MOVE '1'       *IN85                           S01434
+     C***********          EXSR SAUDIT                                    S01434
+     C***********          RETRN                                          S01434
+     C***********          END                                            S01434
+     C*                                                                   S01434
+     C***Access*SDDEALY0*to*retrieve*Warning*Period***********************S01434
+     C*                                                                   S01434
+     C***********          MOVEL'DEAL    'KDEAL  10                       S01434
+     C***********KDEAL     CHAINSDDEALY0             88                   S01434
+     C*                                                                   S01434
+     C**Execute*DB*error*routine******************************************S01434
+     C************IN88     IFEQ '1'                                       S01434
+     C***********          MOVEL'03'      P2ERR            ***************S01434
+     C***********          Z-ADD3         X       20       * DB ERROR 03  S01434
+     C***********          MOVE *BLANKS   P2EDTA           ***************S01434
+     C***********          MOVE '1'       *IN85                           S01434
+     C***********          EXSR SAUDIT                                    S01434
+     C***********          RETRN                                          S01434
+     C***********          END                                            S01434
+     C*                                                                   S01434
+     C* Read AODEALR0 to retrieve Warning Period                          S01434
+     C*                                                                   S01434
+     C**********           CALL 'AODEALR0'                                S01434              CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01434
+     C                     PARM '*FIRST ' @OPTN   7                       S01434
+     C********** SDDEAL    PARM SDDEAL    DSFDY                           S01434              CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*                                                                   S01434
+     C           @RTCD     IFNE *BLANK                                    066155
+     C                     MOVE *BLANKS   DBKEY            ***************066155
+     C                     MOVEL'SDDEALPD'DBFILE           * DBERROR 004 *066155
+     C                     MOVE '004'     DBASE            ***************066155
+     C                     EXSR *PSSR                                     066155
+     C                     RETRN                                          066155
+     C                     END                                            066155
+     C*                                                                   095714
+     C** Read AOMMODR0 to retrieve MODULE information                     095714
+     C*                                                                   095714
+     C                     CALL 'AOMMODR0'                                095714
+     C                     PARM '*MSG   ' @RTCD   7                       095714
+     C                     PARM '*FIRST ' @OPTN   7                       095714
+     C           SDMMOD    PARM SDMMOD    DSFDY                           095714
+     C*                                                                   095714
+     C           @RTCD     IFNE *BLANK                                    095714
+     C                     MOVE *BLANKS   DBKEY            ***************095714
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERROR 022 *095714
+     C                     MOVE '022'     DBASE            ***************095714
+     C                     EXSR *PSSR                                     095714
+     C                     RETRN                                          095714
+     C                     END                                            095714
+     C*                                                                   095714
+     C           BGPFMG    IFEQ 'Y'                                       095714
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C                     MOVE *ON       *IN46                           095714
+     C                     ENDIF                                          095714
+      *
+      ***Calculate*the*forward date with the warning period               066156
+      *
+      *
+     C*******              Z-ADDBJRDNB    ZDAYNO                          066156
+     C***********          Z-ADDDLROWA    ZNRDYS                          S01434
+     C*******              Z-ADDBNNWDM    ZNRDYS                   S01434 066156
+     C*******              MOVE BJCYCD    ZCCY                            066156
+     C***********          EXSR ZDATE3                                    S01434
+     C*******              EXSR ZFWDT                              S01434 066156
+     C*******              MOVE ZDYNBR    WWFOWD  50                      066156
+     C************LIKE     DEFN A8LCCD    LOC1                            071032
+     C           *LIKE     DEFN CCY       TMPCCY                          071032
+     C           *LIKE     DEFN BJRDNB    TSTDTE                          071032
+     C           *LIKE     DEFN BJRDNB    WWFOWD                          071032
+     C                     Z-ADD0         C       30                      071032
+      *
+     C           RUN       IFEQ 'I'                                       S01434
+     C                     MOVE *ON       *IN40                           S01434
+     C                     ENDIF                                          S01434
+      *                                                                   S01434
+     C                     ENDSR
+      *-------------------------------------------------------------------------
+      **SAUDIT*-*Subroutine*for*audit*report******************************S01434
+      *-------------------------------------------------------------------S01434
+      ***********                                                         S01434
+     C***********SAUDIT    BEGSR                                          S01434
+      ***********                                                         S01434
+      **If*DB*error, setup message and switches                           S01434
+      ***********                                                         S01434
+     C************IN85     IFEQ '1'                                       S01434
+     C***********          MOVEAMES,X     P2MSG                           S01434
+     C***********          MOVE '1'       *INU7                           S01434
+     C***********          MOVE '1'       *INU8                           S01434
+     C***********          END                                            S01434
+      ***********                                                         S01434
+     C***********          WRITEAUDIT                                     S01434
+     C***********          MOVE '1'       *INLR                           S01434
+     C***********          RETRN                                          S01434
+      ***********                                                         S01434
+     C***********          ENDSR                                          S01434
+      /EJECT
+     C*******************************************************************
+     C*                                                                   066155
+     C*   *PSSR SR HANDLES DATABASE ERROR IN NEW STANDING DATA FILES      066155
+     C*                                                                   066155
+     C           *PSSR     BEGSR                                          066155
+     C           @RUN      IFEQ *BLANK                                    066155
+     C                     MOVE 'Y'       @RUN    1                       066155
+     C                     DUMP                                           066155
+     C                     SETON                     U7U8LR               066155
+     C                     SETON                     85                   066155
+     C                     END                                            066155
+     C                     ENDSR                                          066155
+     C*                                                                   066155
+     C********************************************************************066155
+      /EJECT                                                              066155
+     C*
+     C           ZA0680    BEGSR
+     C*
+     C**  CLEAR OUT ANY 'OLD' DATA IN FIELD
+     C                     Z-ADD0         @@MDNO  50
+     C*
+     C**   IF DATE GREATER THAN 31/12/2071 NEED EXTRA PROCESSING
+     C           @@YYYY    IFGE 2072                       B1
+     C*
+     C**    MULTIPLY BY NUMBER OF DAYS IN CENTURY (SINCE 1971)
+     C           @@CC      SUB  19        @@WK2   20       *1
+     C           @@WK2     MULT 36524     @@MDNO           *1
+     C*
+     C**  YEAR 2000 IS A LEAP YEAR MUST ALLOW EXTRA DAY
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+     C*
+     C           @@YYYY    ADD  28        @@WK2
+     C*
+     C           @@WK2     DIV  4         @@WK2
+     C                     MVR            @@REM   10
+     C*
+     C**    MULTIPLY BY NUMBER OF DAYS IN FOUR YEAR PERIOD
+     C           @@WK2     MULT 1461      @@WK5   50
+     C                     ADD  @@WK5     @@MDNO
+     C*
+     C**  CHECK REMAINDER AND MONTH NUMBER
+     C           @@REM     IFEQ 0                          B1
+     C           @@MTH     ANDGT2                          B1
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  YEAR NOT LEAP YEAR,  ADD CUMULATIVE DAYS FOR YEAR
+     C           @@REM     IFNE 0                          B1
+     C                     ADD  @YD,@@REM @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  ADD MONTHS THIS YEAR
+     C                     ADD  @MD,@@MTH @@MDNO
+     C*
+     C**  ADD DAYS THIS MONTH
+     C                     ADD  @@DAY     @@MDNO
+     C*
+     C           ZA0689    ENDSR                           **ZA0689 TAG**
+     C*****************************************************************
+     C********************************************************************
+     C**                                                                 *
+     C**  ZEDIT SUBROUTINE TO INSERT A DECIMAL POINT INTO A NUMERIC FIELD*
+     C**  AND TO BLANK OUT LEADING ZEROES.                               *
+     C**      INPUT FIELDS:   ZFIELD 16/                                 *
+     C*                       ZADEC                                      *
+     C*                       ZADIG - NOT ACTUALLY USED                  *
+     C*                                                                  *
+     C*       ARRAYS    ZA1 ,ZA2   BOTH 16 ELEMENTS, EACH ONE BYTE LONG. *
+     C*                                                                  *
+     C*       OUTPUT FIELD   ZFIELD                                      *
+     C*                                                                  *
+     C           ZEDIT     BEGSR                           ***  ZEDIT  ***
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**                                                                 *
+     C*       SET UP WORK FIELDS                                         *
+     C*                                                                  *
+     C                     MOVEA' '       ZA1                            *
+     C                     MOVEA' '       ZA2                            *
+     C*                                                                  *
+     C                     Z-ADD16        Z1      20                     *
+     C                     Z-ADD16        Z2      20                     *
+     C*                                                                  *
+     C           16        SUB  ZADEC     ZADEC2  20                     *
+     C*                                                                  *
+     C*
+     C                     MOVEAZFIELD    ZA1                            *
+     C*                                                                  *
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES               *
+     C*                                                                  *
+     C           ZADEC     COMP 0                        91              *
+     C   91                GOTO ZT20                                     *
+     C**                                                                 *
+     C           ZT10      TAG                             ** ZT10 TAG ***
+     C**                                                                 *
+     C*                                                                  *
+     C*       SET UP DECIMALS                                            *
+     C*                                                                  *
+     C                     MOVE ZA1,Z1    ZA2,Z2                         *
+     C           Z1        SUB  1         Z1                             *
+     C           Z2        SUB  1         Z2                             *
+     C*                                                                  *
+     C           Z2        COMP 0                        90              *
+     C   90                GOTO ZT30                                     *
+     C*                                                                  *
+     C*       CHECK IF END OF DECIMALS                                   *
+     C**                                                                 *
+     C           Z2        COMP ZADEC2               90                  *
+     C   90                GOTO ZT10                                     *
+     C*                                                                  *
+     C**                                                                 *
+     C*       PUT IN DECIMAL PLACE                                       *
+     C*                                                                  *
+     C                     MOVE '.'       ZA2,Z2                         *
+     C           Z2        SUB  1         Z2                             *
+     C*                                                                  *
+     C           ZT20      TAG                             ** ZT20 TAG ***
+     C*                                                                  *
+     C*       SET UP INTEGERS                                            *
+     C*                                                                  *
+     C                     MOVE ZA1,Z1    ZA2,Z2                         *
+     C           Z1        SUB  1         Z1                             *
+     C           Z2        SUB  1         Z2                             *
+     C**                                                                 *
+     C           Z2        COMP 0                    90                  *
+     C   90                GOTO ZT20                                     *
+     C*                                                                  *
+     C*       PUT IN LEADING BLANKS                                      *
+     C*                                                                  *
+     C           ZT30      TAG                             ** ZT30 TAG ***
+     C**                                                                 *
+     C                     Z-ADD1         Z2                             *
+     C**                                                                 *
+     C           ZT40      TAG                             ** ZT40 TAG ***
+     C*                                                                  *
+     C           ZA2,Z2    COMP '0'                  9090                *
+     C   90      ZA2,Z2    COMP ' '                  9090                *
+     C*                                                                  *
+     C   90                GOTO ZT50                                     *
+     C*                                                                  *
+     C                     MOVE ' '       ZA2,Z2                         *
+     C           Z2        ADD  1         Z2                             *
+     C*                                                                  *
+     C           Z2        COMP 16                     90                *
+     C   90                GOTO ZT40                                     *
+     C*                                                                  *
+     C*       IF NO INTEGERS PUT IN LEADING ZERO                         *
+     C*                                                                  *
+     C           ZT50      TAG                             ** ZT50 TAG ***
+     C*                                                                  *
+     C                     Z-ADDZADEC2    Z2                             *
+     C  N91      Z2        SUB  1         Z2                             *
+     C           ZA2,Z2    COMP ' '                      90              *
+     C   90                MOVE '0'       ZA2,Z2                         *
+     C*                                                                  *
+     C*       SET UP OUTPUT FIELD                                        *
+     C*                                                                  *
+     C           ZT60      TAG                             ** ZT60 TAG ***
+     C*                                                                  *
+     C                     MOVEAZA2       ZFIELD 16                      *
+     C**                                                                 *
+     CSR         ZEND      ENDSR                           ** ZEND **    *
+     C*****************************************************************
+     C********************************************************************
+     C***********                                                         S01434
+     C*****ZDATE1*SR.*TO*VALIDATE*DATES*SUBMITTED*AND*********************S01434
+     C****************CONVERT*TO*A*NUMBER*OF*DAYS.************************S01434
+     C***********                                                         S01434
+     C*****THE*YEAR*2000,*BEING*DIVISIBLE*BY*400,*IS*A*LEAP*YEAR.*********S01434
+     C***********                                                         S01434
+     C***********ZDATE1    BEGSR                           *** ZDATE1 *** S01434
+     C***********                                                         S01434
+     C*****CLEAR*DAY*NUMBER.*RESET*ERROR*INDICATOR************************S01434
+     C***********          Z-ADD0         ZDAYNO  50                      S01434
+     C***********          SETOF                     99                   S01434
+     C***********                                                         S01434
+     C*****CALCULATION*TO*DEFINE*INPUT*DATE*FIELD.************************S01434
+     C***********          Z-ADDZDATE     ZDATE   60                      S01434
+     C***********                                                         S01434
+     C********************************************************************S01434
+     C***********          MOVE ZDATE     ZYEAR   20                      S01434
+     C**N98******          MOVELZDATE     ZDAY    20                      S01434
+     C***98******          MOVELZDATE     ZMTH    20                      S01434
+     C***********          MOVE ZDATE     ZWRK4   40                      S01434
+     C**N98******          MOVELZWRK4     ZMTH                            S01434
+     C***98******          MOVELZWRK4     ZDAY                            S01434
+     C***********                                                         S01434
+     C*****ENSURE*MONTH*IS*VALID.*BYPASS*IF*ERROR*************************S01434
+     C***********ZMTH      IFLE 0                                         S01434
+     C***********ZMTH      ORGT 12                                        S01434
+     C***********          SETON                     99                   S01434
+     C***********          GOTO ZDEND1                                    S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****ENSUREDDAYDISLVALID.MBYPASSNIFYERRORIELDS.*********************S01434
+     C***********ZDAY      IFLE 0                                         S01434
+     C***********          SETON                     99                   S01434
+     C***********          GOTO ZDEND1                                    S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****CHECK*FORI30ADAYAMONTHS.HBYPASSEIF*ERRORS.*********************S01434
+     C***********ZMTH      IFEQ 4                                         S01434
+     C***********ZMTH      OREQ 6                                         S01434
+     C***********ZMTH      OREQ 9                                         S01434
+     C***********ZMTH      OREQ 11                                        S01434
+     C***********                                                         S01434
+     C***********ZDAY      IFGT 30                                        S01434
+     C***********          SETON                     99                   S01434
+     C***********          GOTO ZDEND1                                    S01434
+     C*****GET*INDIVIDUAL*DAY,*MONTH*AND*YEAR*FIELDS.*********************S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C***********          ELSE                                           S01434
+     C***********                                                         S01434
+     C*****CHECK*FOR*31*DAY*MONTHS*(ALL*OTHERS*BUT*FEB).*BYPASS*IF*ERROR**S01434
+     C***********ZDAY      IFGT 31                                        S01434
+     C***********ZMTH      ANDNE2                                         S01434
+     C***********          SETON                     99                   S01434
+     C***********          GOTO ZDEND1                                    S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****CHECK*FOR*LEAP*YEAR:*REMAINDER*WILL*BE*ZERO*IF*IT*IS*A*LEAP*YR*S01434
+     C***********ZYEAR     ADD  28        ZYEAR                           S01434
+     C***********ZYEAR     DIV  4         ZLYR    20                      S01434
+     C***********          MVR            ZLY     10                      S01434
+     C***********                                                         S01434
+     C*****IF*FEBUARY*FURTHER*VALIDATE*DAY.*******************************S01434
+     C***********ZMTH      IFEQ 2                                         S01434
+     C***********                                                         S01434
+     C*****INVALID*IF*GREATER*THAN*28*AND*NOT*A*LEAP*YEAR*****************S01434
+     C***********ZLY       IFGT 0                                         S01434
+     C***********ZDAY      ANDGT28                                        S01434
+     C***********          SETON                     99                   S01434
+     C***********          GOTO ZDEND1                     BYPASS IF ERRORS01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****INVALID*IF*GREATER*THAN*29*AND*A*LEAP*YEAR*-*BYPASS*IF*ERROR***S01434
+     C***********ZLY       IFEQ 0                                         S01434
+     C***********ZDAY      ANDGT29                                        S01434
+     C***********          SETON                     99                   S01434
+     C***********          GOTO ZDEND1                                    S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****DETERMINE*NUMBER*OF*DAYS*FROM*31/12/1971.**********************S01434
+     C***********                                                         S01434
+     C*****MULTIPLY*NO.*OF*FOUR-YEAR*SPANS,*BY*NO.*OF*DAYS*IN*SPAN********S01434
+     C***********ZLYR      MULT 1461      ZDAYNO                          S01434
+     C***********                                                         S01434
+     C*****IF*NOT*A*LEAP*YEAR,*ADD*APPROPRIATE*NO.*OF*DAYS*FOR*EXTRA******S01434
+     C*****YEARS*USING*REMAINDER*FIELD*(IE.*1,*2*OR*3*X*356)**************S01434
+     C***********ZLY       IFGT 0                                         S01434
+     C***********ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO                          S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****IF*IT*IS*A*LEAP*YEAR,*AND*LATER*THAN*FEBRUARY,*ADD*ONE*FOR*****S01434
+     C*****29TH*OF FEB                                                    S01434
+     C***********ZLY       IFEQ 0                                         S01434
+     C***********ZMTH      ANDGT2                                         S01434
+     C***********ZDAYNO    ADD  1         ZDAYNO                          S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****ADD*APPROPRIATE*NUMBER*OF*DAYS*FOR*THE*MONTH*NUMBER************S01434
+     C***********ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO                          S01434
+     C***********                                                         S01434
+     C*****ADD*NUMBER*OF*DAYS*IN*MONTH************************************S01434
+     C***********ZDAYNO    ADD  ZDAY      ZDAYNO                          S01434
+     C***********                                                         S01434
+     C***********ZDEND1    ENDSR                           * ZDEND1 ENDSR*S01434
+     C***********                                                         S01434
+     C********************************************************************S01434
+     C********************************************************************S01434
+     C***********                                                         S01434
+     C*****ZDATE2*SR.*TO*CONVERT*A*DAY*NUMBER*TO*DATE*FORMATS.************S01434
+     C***********                                                         S01434
+     C*****THE*YEAR*2000,*BEING*DIVISIBLE*BY*400,*IS*A*LEAP*YEAR.*********S01434
+     C***********                                                         S01434
+     C***********ZDATE2    BEGSR                           *** ZDATE2 *** S01434
+     C***********                                                         S01434
+     C*****CLEAR*LEAP*YEAR*WORK*FIELD.************************************S01434
+     C***********          MOVE 'N'       ZLEAP   1                       S01434
+     C***********                                                         S01434
+     C*****CLEAR*DATE*FIELDS.*********************************************S01434
+     C***********          Z-ADD0         ZDATE   60                      S01434
+     C***********          MOVEL'       ' ZADATE  7                       S01434
+     C***********                                                         S01434
+     C*****CALCULATION*TO*DEFINE*INPUT*DAY*NUMBER.************************S01434
+     C***********          Z-ADDZDAYNO    ZDAYNO  50                      S01434
+     C***********                                                         S01434
+     C*****DETERMINE*YEAR*NUMBER.*****************************************S01434
+     C***********                                                         S01434
+     C*****ADJUST*DAY*NUMBER*IN*CASE*LAST*DAY*OF*YEAR.********************S01434
+     C***********ZDAYNO    SUB  1         ZDAYN1  50                      S01434
+     C***********ZDAYN1    IFLT 0                                         S01434
+     C***********          GOTO ZDEND2                                    S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****CALCULATE*NUMBER*OF*4*YEAR*SPANS*SINCE*31/12/1971.*************S01434
+     C***********ZDAYN1    DIV  1461      ZLYR    20                      S01434
+     C***********          MVR            ZDAYN1           SAVE REMAINING S01434
+     C***********                                          DAYS           S01434
+     C*****CALCULATE*NUMBER*OF*REMAINING*YEARS.***************************S01434
+     C***********          Z-ADD1         ZWRK2   20                      S01434
+     C***********ZDTAG1    TAG                             ** ZDTAG1 TAG *S01434
+     C***********ZDAYN1    IFGE ZYDY,ZWRK2                                S01434
+     C***********ZWRK2     ADD  1         ZWRK2                           S01434
+     C***********          GOTO ZDTAG1                                    S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C***********ZWRK2     SUB  1         ZWRK2                           S01434
+     C***********                                                         S01434
+     C*****DECREMENT*DAY*NO.*BY*DAYS*IN*REMAINING*YEARS.******************S01434
+     C***********ZWRK2     IFNE 0                                         S01434
+     C***********ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1                          S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****CALCULATE*ACTUAL*YEAR*NUMBER.**********************************S01434
+     C***********ZLYR      MULT 4         ZWRK3   30                      S01434
+     C***********ZWRK3     ADD  72        ZWRK3            BASE IS 1972   S01434
+     C***********          Z-ADDZWRK3     ZYEAR   20                      S01434
+     C***********ZYEAR     ADD  ZWRK2     ZYEAR            YEAR           S01434
+     C***********                                                         S01434
+     C*****DETERMINE*MONTH*NUMBER.****************************************S01434
+     C***********                                                         S01434
+     C*****ADJUST*DAY*NO.*IN*CASE*LAST*DAY*OF*LEAP*YEAR*FEBRUARY.*********S01434
+     C***********ZWRK2     IFEQ 0                                         S01434
+     C***********ZDAYN1    IFEQ 59                                        S01434
+     C***********          MOVE 'Y'       ZLEAP                           S01434
+     C***********          END                                            S01434
+     C***********ZDAYN1    IFGE 59                                        S01434
+     C***********ZDAYN1    SUB  1         ZDAYN1                          S01434
+     C***********          END                                            S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****CALCULATE*MONTH*NUMBER.****************************************S01434
+     C***********          Z-ADD2         ZWRK2                           S01434
+     C***********ZDTAG2    TAG                             ** ZDTAG2 TAG *S01434
+     C***********ZDAYN1    IFGE ZMDY,ZWRK2                                S01434
+     C***********ZWRK2     ADD  1         ZWRK2                           S01434
+     C***********          GOTO ZDTAG2                                    S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C***********ZWRK2     SUB  1         ZWRK2                           S01434
+     C***********                                                         S01434
+     C***********          Z-ADDZWRK2     ZMTH    20       MONTH          S01434
+     C***********                                                         S01434
+     C*****DETERMINE*DAY*OF*MONTH.****************************************S01434
+     C***********                                                         S01434
+     C*****ADD*BACK*LAST*DAY*OF*YEAR*ADJUSTMENT.**************************S01434
+     C***********ZDAYN1    ADD  1         ZDAYN1                          S01434
+     C***********                                                         S01434
+     C*****CALCULATE*DAY*OF*MONTH.****************************************S01434
+     C***********ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY            S01434
+     C***********                                                         S01434
+     C*****ADD*BACK*LEAP*YEAR*29TH*FEBUARY*ADJUSTMENT,*IF*REQUIRED.*******S01434
+     C***********ZLEAP     IFEQ 'Y'                                       S01434
+     C***********ZDAY      ADD  1         ZDAY                            S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****FORMAT*DATE,*DDMMYY*OR*MMDDYY.*********************************S01434
+     C**N98******          MOVELZDAY      ZWRK4   40                      S01434
+     C***98******          MOVE ZDAY      ZWRK4                           S01434
+     C**N98******          MOVE ZMTH      ZWRK4                           S01434
+     C***98******          MOVELZMTH      ZWRK4                           S01434
+     C***********          MOVELZWRK4     ZDATE                           S01434
+     C***********          MOVE ZYEAR     ZDATE                           S01434
+     C***********                                                         S01434
+     C*****FORMAT*ALPHA*DATE,*DDMMMYY.************************************S01434
+     C***********          MOVELZDAY      ZWRK5   5                       S01434
+     C***********ZDAY      IFLT 10                                        S01434
+     C***********          MOVEL' '       ZWRK5                           S01434
+     C***********          END                                            S01434
+     C***********          MOVE ZMNM,ZMTH ZWRK5                           S01434
+     C***********          MOVELZWRK5     ZADATE                          S01434
+     C***********          MOVE ZYEAR     ZADATE                          S01434
+     C***********                                                         S01434
+     C***********ZDEND2    ENDSR                           * ZDEND2 ENDSR*S01434
+     C***********                                                         S01434
+     C***********                                                         S01434
+     C********************************************************************S01434
+     C********************************************************************S01434
+     C***********                                                         S01434
+     C*****ZDATE3*SR.*TO*CALCULATE*ANY*NUMBER*OF*WORKING******************S01434
+     C****************DAYS*FORWARD*IN*ANY*CURRENCY.***********************S01434
+     C****************HOLIDAYS*FILE*ACCESSED*BY*CHAIN.********************S01434
+     C***********                                                         S01434
+     C***********ZDATE3    BEGSR                           *** ZDATE3 *** S01434
+     C***********                                                         S01434
+     C*****CALCULATIONS*TO*DEFINE*INPUT*FIELDS.***************************S01434
+     C***********          Z-ADDZDAYNO    ZDAYNO  50       STARTING DATE  S01434
+     C***********          MOVE ZCCY      ZCCY    3        DATE CURRENCY  S01434
+     C***********          Z-ADDZNRDYS    ZNRDYS  20       NBR OF WORKING S01434
+     C***********                                          DAYS FORWARD   S01434
+     C*****CLEAR*COUNT*OF*NBR*OF*DAYS*ADDED,*&*DEFINE*ZDYNBR.*************S01434
+     C***********          Z-ADD0         ZDCNT   20                      S01434
+     C***********          Z-ADDZDAYNO    ZDYNBR  50                      S01434
+     C***********                                                         S01434
+     C*****LOOP*TO*INCREMENT*DAY*NUMBER*AND*CHECK*FOR*HOLIDAY.************S01434
+     C***********ZDCNT     DOWLTZNRDYS                                    S01434
+     C***********                                                         S01434
+     C***********          ADD  1         ZDYNBR                          S01434
+     C***********                                                         S01434
+     C*****CHAIN*FOR*HOLIDAY*RECORD*1*-*IF*NOT*FOUND,*NO*HOLIDAY**********S01434
+     C***********ZDYNBR    CHAINTABLETJF             90                   S01434
+     C************IN90     IFEQ '1'                                       S01434
+     C***********RECI      ORNE 'D'                                       S01434
+     C***********          ADD  1         ZDCNT                           S01434
+     C***********          GOTO ZDLOP1                                    S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****CHECK*IF*DAY*IS*HOLIDAY*FOR*CURRENCY.**************************S01434
+     C***********ZCCY      LOKUPHCCY                     93               S01434
+     C***********                                                         S01434
+     C*****DETERMINE*TYPE*FOUND,*IF*INCLUDE*AND*NOT*IN*ARRAY/EXCLUDE*AND**S01434
+     C*****IN*ARRAY,*THEN*MUST*CHAIN*TO*RECORD*2*TO*SEE*IF*IT*IS*A*HOL.***S01434
+     C***********INEX      IFEQ 'E'                                       S01434
+     C************IN93     ANDEQ'1'                                       S01434
+     C***********INEX      OREQ 'I'                                       S01434
+     C************IN93     ANDEQ'0'                                       S01434
+     C***********                                                         S01434
+     C*****IF*BLANK*ENTRIES*IN*HCCY,*THEN*NO*RECORD*2*WILL*BE*PRESENT*****S01434
+     C***********'   '     LOKUPHCCY                     94ON IF NO RCD.2 S01434
+     C************IN94     IFEQ '1'                                       S01434
+     C***********          ADD  1         ZDCNT                           S01434
+     C***********          GOTO ZDLOP1                                    S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****CHAIN*FOR*HOLIDAY*RECORD,*RECORD*2*****************************S01434
+     C***********          READ TABLETJF                 90               S01434
+     C************IN90     IFEQ '1'                                       S01434
+     C***********RECI      ORNE 'D'                                       S01434
+     C***********HOL       ORNE ZDYNBR                                    S01434
+     C***********          ADD  1         ZDCNT                           S01434
+     C***********          GOTO ZDLOP1                                    S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****CHECK*IF*DAY*IS*HOLIDAY*FOR*CURRENCY.**************************S01434
+     C***********ZCCY      LOKUPHCCY                     93               S01434
+     C***********                                                         S01434
+     C*****DETERMINE*TYPE*FOUND,*IF*INCLUDE*AND*NOT*IN*ARRAY/EXCLUDE*AND**S01434
+     C*****IN*ARRAY,*THEN*NOT*A*HOLIDAY***********************************S01434
+     C***********INEX      IFEQ 'E'                                       S01434
+     C************IN93     ANDEQ'1'                                       S01434
+     C***********INEX      OREQ 'I'                                       S01434
+     C************IN93     ANDEQ'0'                                       S01434
+     C***********ZDCNT     ADD  1         ZDCNT                           S01434
+     C***********          END                                            S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C****END*OF*DO*LOOP**************************************************S01434
+     C***********ZDLOP1    TAG                             *** ZDLOP1 *** S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C***********          ENDSR                                          S01434
+     C***********                                                         S01434
+     C***********                                                         S01434
+     C********************************************************************S01434
+     C********************************************************************
+     C**
+     C**   ZFRQA-SR. TO INCREMENT A DAY NUMBER DATE BY A
+     C**             PERIOD VALUE DETERMINED BY A CODE.
+     C**
+     C           ZFRQA     BEGSR                           *** ZFRQA ****
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ZFREQ     ZFREQ   1
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C                     Z-ADDZMDAY     ZMDAY   20
+     C                     MOVE ZCCY      ZCCY    3
+     C**
+     C                     MOVE '   '     ZHC
+     C**
+     C**   CONVERT DAY NUMBER TO DATE.
+     C                     EXSR ZDATE2
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE D-DAILY-WORKING DAY.
+     C           ZFREQ     IFEQ 'D'
+     C           ZDAYNO    ADD  1         ZDAYNO
+     C                     GOTO ZFHCHK
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE W-WEEKLY.
+     C           ZFREQ     IFEQ 'W'
+     C           ZDAYNO    ADD  7         ZDAYNO
+     C                     GOTO ZFEND
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE F-FORTNIGHTLY.
+     C           ZFREQ     IFEQ 'F'
+     C           ZDAYNO    ADD  14        ZDAYNO
+     C                     GOTO ZFEND
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE S-SEMI-MONTHLY.
+     C           ZFREQ     IFEQ 'S'
+     C           ZDAY      IFLE 15
+     C                     Z-ADD31        ZDAY
+     C                     ELSE
+     C                     Z-ADD15        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE M-MONTHLY.
+     C           ZFREQ     IFEQ 'M'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE R-SIX DAYS BEFORE END OF MONTH
+     C           ZFREQ     IFEQ 'R'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE T-BIMONTHLY.
+     C           ZFREQ     IFEQ 'T'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  2         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE Q-QUARTERLY.
+     C           ZFREQ     IFEQ 'Q'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  3         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE X-SIX MONTHLY.
+     C           ZFREQ     IFEQ 'X'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  6         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE Y-YEARLY.
+     C           ZFREQ     IFEQ 'Y'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZYEAR     ADD  1         ZYEAR
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE L-LAST CALENDAR DAY OF MONTH.
+     C           ZFREQ     IFEQ 'L'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE B-LAST WORKING DAY OF MONTH.
+     C           ZFREQ     IFEQ 'B'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE P-PENULT. WORK/DAY OF MONTH
+     C           ZFREQ     IFEQ 'P'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE K-PENULT. WORK/DAY OF QUARTER
+     C           ZFREQ     IFEQ 'K'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  3         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE H-PENULT. WORK/DAY OF HLF YR.
+     C           ZFREQ     IFEQ 'H'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  6         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE G-PENULT. WORK/DAY OF YEAR
+     C           ZFREQ     IFEQ 'G'
+     C                     Z-ADD31        ZDAY
+     C           ZYEAR     ADD  1         ZYEAR
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE A-MONTHLY ACCRUAL/PROFIT DATE.
+     C           ZFREQ     IFEQ 'A'
+     C***********          Z-ADDAPDA      ZDAYNO                          S01434
+     C                     Z-ADDBKAPDT    ZDAYNO                          S01434
+     C                     GOTO ZFEND
+     C                     END
+     C**
+     C**   REFORMAT DATE AND ENSURE VALID.
+     C**
+     C**   VALIDATE MONTH.
+     C           ZMTH      IFGT 12
+     C           ZMTH      SUB  12        ZMTH
+     C           ZYEAR     ADD  1         ZYEAR
+     C                     END
+     C**
+     C**   CHECK FOR LEAP YEAR.
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10
+     C**
+     C**   VALIDATE DAY NUMBER.
+     C                     MOVE ZFMD,ZMTH ZWRK2   20
+     C           ZMTH      IFEQ 2
+     C           ZLY       ANDEQ0
+     C                     Z-ADD29        ZWRK2
+     C                     END
+     C**
+     C           ZDAY      IFGT ZWRK2
+     C                     Z-ADDZWRK2     ZDAY
+     C                     END
+     C**
+     C**   CHECK IF CODE R, TO SUBTRACT 6 DAYS.
+     C           ZFREQ     IFEQ 'R'
+     C           ZDAY      SUB  6         ZDAY
+     C                     END
+     C**
+     C**   REFORMAT DATE, DDMMYY OR MMDDYY, AND CONVERT TO DAY NUMBER.
+     C                     MOVELZDAY      ZWRK4   40
+     C                     MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C   98                MOVE ZDAY      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C                     EXSR ZDATE1
+     C**   RESET IND. 90 - USED TO ENSURE SUBTRACTION FOR CODES P,K,H,G,
+     C**   IS ONLY DONE ONCE.
+     C                     SETOF                     90
+     C**
+     C**   CHECK IF CODE B,TO BE CHECKED FOR HOLIDAY.
+     C           ZFREQ     COMP 'B'                      91
+     C**   CODES P,K,H,G, ALSO TO BE CHECKED FOR HOLIDAY
+     C  N91      ZFREQ     COMP 'P'                      91
+     C  N91      ZFREQ     COMP 'K'                      91
+     C  N91      ZFREQ     COMP 'H'                      91
+     C  N91      ZFREQ     COMP 'G'                      91
+     C   91N99             GOTO ZFHCHK
+     C**
+     C                     GOTO ZFEND
+     C**
+     C**   CHECK IF DAY NUMBER IS A HOLIDAY.
+     C           ZFHCHK    TAG                             ** ZFHCHK TAG *
+     C                     SETOF                     94
+     C**
+     C**   DETERMINE CODE.
+     C           ZFREQ     COMP 'D'                      91
+     C           ZFREQ     COMP 'B'                      92
+     C  N92      ZFREQ     COMP 'P'                      92
+     C  N92      ZFREQ     COMP 'K'                      92
+     C  N92      ZFREQ     COMP 'H'                      92
+     C  N92      ZFREQ     COMP 'G'                      92
+     C                     MOVE '   '     ZHC
+     C***********ZDAYNO    CHAINTABLETJF             93                   S01434
+     C************IN93     IFEQ '0'                                       S01434
+     C***********RECI      ANDEQ'D'                                       S01434
+     C***********                                                         S01434
+     C*****STORE*CURRENCIES*IF*RECORD*FOUND.******************************S01434
+     C***********          MOVEAHCCY      ZHC,1                           S01434
+     C***********                                                         S01434
+     C*****DETERMINE*HOLIDAY*RECORD*TYPE.*********************************S01434
+     C***********INEX      COMP 'E'                      95               S01434
+     C***********INEX      COMP 'I'                      96               S01434
+     C***********                                                         S01434
+     C*****EXIT*IF*NO*RECORD*FOUND****************************************S01434
+     C***********          ELSE                                           S01434
+     C***********          GOTO ZPNCHK                                    S01434
+     C***********          END                                            S01434
+     C***********                                                         S01434
+     C*****GET*SECOND*RECORD,*IF*NOT*ALREADY*DONE.************************S01434
+     C***********          READ TABLETJF                 93               S01434
+     C************IN93     IFEQ '0'                                       S01434
+     C***********RECI      ANDEQ'D'                                       S01434
+     C***********HOL       ANDEQZDAYNO                                    S01434
+     C***********          MOVEAHCCY      ZHC,26                          S01434
+     C***********          END                                            S01434
+     C**                                                                  S01434
+     C                     MOVE CCY       ZCCY                            S01434
+     C***********          MOVE *BLANKS   ZLOC                      S01434071032
+     C                     EXSR ZCHKH                                     S01434
+     C**                                                                  S01434
+     C*****CHECK*IF*CURRENCY*ON*HOLIDAY.**********************************S01434
+     C***********ZCCY      LOKUPZHC                      97               S01434
+     C***********                                                         S01434
+     C*****BYPASS*IF*NOT*HOLIDAY*FOR*CURRENCY.****************************S01434
+     C***95*97***                                          EXCLUDE FOUND  S01434
+     C*R*96N97***          GOTO ZPNCHK                     INCL. NOT FOUNDS01434
+     C*                                                                   S01434
+     C           ZIND      IFEQ 'W'                                       S01434
+     C                     GOTO ZPNCHK                                    S01434
+     C                     ELSE                                           S01434
+     C**
+     C**   INCREMENT OR DECREMENT DAY NUMBER AS REQUIRED.
+     C***91*95N97                                          EXCL. NOT FOUNDS01434
+     C*R*91*96*97ZDAYNO    ADD  1         ZDAYNO           INCLUDE FOUND  S01434
+     C*                                                                   S01434
+     C           *IN91     IFEQ *ON                                       S01434
+     C                     ADD  1         ZDAYNO                          S01434
+     C                     ENDIF                                          S01434
+     C**
+     C***92*95N97                                          EXCL. NOT FOUNDS01434
+     C*R*92*96*97ZDAYNO    SUB  1         ZDAYNO           INCLUDE FOUND  S01434
+     C*                                                                   S01434
+     C           *IN92     IFEQ *ON                                       S01434
+     C                     SUB  1         ZDAYNO                          S01434
+     C                     ENDIF                                          S01434
+     C                     ENDIF                                          S01434
+     C*                                                                   S01434
+     C                     GOTO ZFHCHK
+     C**
+     C           ZPNCHK    TAG                             ** ZPNCHK TAG*
+     C**   FOR CODES REQUIRING PENULTIMATE WORKING DAY (P,K,H,G) SUBTRACT
+     C**   ONE AND CHECK THIS FOR HOLIDAY.
+     C   90                GOTO ZFEND                      ALREADY DONE
+     C**
+     C           ZFREQ     COMP 'P'                      92
+     C  N92      ZFREQ     COMP 'K'                      92
+     C  N92      ZFREQ     COMP 'H'                      92
+     C  N92      ZFREQ     COMP 'G'                      92
+     C  N92                GOTO ZFEND
+     C           ZDAYNO    SUB  1         ZDAYNO
+     C                     SETON                     90
+     C                     GOTO ZFHCHK
+     C           ZFEND     ENDSR
+     C*****************************************************************
+     C           CHKHOL    BEGSR                                                             BUG8148
+      *                                                                                      BUG8148
+      *  FIND FD CCY WORKING DATE                                                            BUG8148
+     C                     MOVE HKCCY     ZCCY                                               BUG8148
+     C                     MOVE @NMDAT    ZDAYNO                                             BUG8148
+     C                     MOVE *BLANKS   ZLOC                                               BUG8148
+     C                     Z-ADD0         ZNRDYS                                             BUG8148
+     C                     EXSR ZFWDT                                                        BUG8148
+     C                     MOVE ZDYNBR    FDWRKD  50       FD CCY WORK DAY                   BUG8148
+      *                                                                                      BUG8148
+      *  FIND LOCAL CCY WORKING DATE                                                         BUG8148
+     C                     MOVE @LOCY     ZCCY                                               BUG8148
+     C                     MOVE @NMDAT    ZDAYNO                                             BUG8148
+     C                     MOVE *BLANKS   ZLOC                                               BUG8148
+     C                     Z-ADD0         ZNRDYS                                             BUG8148
+     C                     EXSR ZFWDT                                                        BUG8148
+     C                     MOVE ZDYNBR    LOWRKD  50       LOCY WORK DAY                     BUG8148
+      *                                                                                      BUG8148
+     C           LOWRKD    DOWNEFDWRKD                                                       BUG8148
+      *                                                                                      BUG8148
+     C           LOWRKD    IFGT FDWRKD                                                       BUG8148
+     C                     MOVE HKCCY     ZCCY                                               BUG8148
+     C           FDWRKD    ADD  1         ZDAYNO                                             BUG8148
+     C                     MOVE *BLANKS   ZLOC                                               BUG8148
+     C                     Z-ADD0         ZNRDYS                                             BUG8148
+     C                     EXSR ZFWDT                                                        BUG8148
+     C                     MOVE ZDYNBR    FDWRKD           FD CCY WORK DAY                   BUG8148
+     C                     ELSE                                                              BUG8148
+      *                                                                                      BUG8148
+     C                     MOVE @LOCY     ZCCY                                               BUG8148
+     C           LOWRKD    ADD  1         ZDAYNO                                             BUG8148
+     C                     MOVE *BLANKS   ZLOC                                               BUG8148
+     C                     Z-ADD0         ZNRDYS                                             BUG8148
+     C                     EXSR ZFWDT                                                        BUG8148
+     C                     MOVE ZDYNBR    LOWRKD           LOCY WORK DAY                     BUG8148
+     C                     END                                                               BUG8148
+     C                     END                                                               BUG8148
+     C                     MOVE LOWRKD    @NMDAT                                             BUG8148
+     C                     ENDSR                                                             BUG8148
+      ********************************************************************                   BUG8148
+     C/EJECT                                                              S01434
+     C/COPY ZSRSRC,ZACCH                                                  S01434
+     C*                                                                   S01434
+     C/COPY ZSRSRC,ZCHKH                                                  S01434
+     C*                                                                   S01434
+     C***/COPY*ZSRSRC,ZFWDT                                         S01434071032
+     C/COPY ZSRSRC,ZFWDT                                                                     BUG8148
+     C***********                                                   S01434071032
+     C*****************************************************************   S01434
+     C***  N.B. These next lines were removed from array literals  ***    S01434
+     C* MES -  Array to contain error messages for audit report           S01434
+     C*Record not found on SDDEALX0 extension file                        S01434
+     C*ICD  Record not found on SDBANKPD                                  S01434
+     C*                                                                   S01434
+      /EJECT
+     C***/COPY*ZSRSRC,ZSEDITZ3                                      S01434071032
+     C***********                                                   S01434071032
+     C***/EJECT*****                                                S01434071032
+     C/COPY ZSRSRC,ZDATE1Z2                                               S01434
+     C*                                                                   S01434
+     C/EJECT                                                              S01434
+     C/COPY ZSRSRC,ZDATE2Z2                                               S01434
+     C*                                                                   S01434
+     C/EJECT                                                              S01434
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** @YD  USED BY SR. ZA0680 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZA0680 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**  CPY@
+(c) Finastra International Limited 2001

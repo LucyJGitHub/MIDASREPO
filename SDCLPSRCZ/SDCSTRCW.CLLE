@@ -1,0 +1,228 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SD Start Compliance Watch Engine')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Standing Data Module                             */
+/*                                                                   */
+/*       SDCSTRCW - Start Compliance Watch Engine                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSD083             Date 27May10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG3641            Date 07Jul04              */
+/*                      CSC023             Date 02Feb04              */
+/*                      CSD015  *CREATE    Date 03Mar03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSD083 - Watch List Compliance Upgrade                      */
+/*       BUG3641- MMM/Compliance Interface for Global Prcessing      */
+/*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
+/*                OUTQ must always be *JOBD.                         */
+/*       CSD015 - Midas Compliance Watch - Watch List Checking       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&DSSDY) TYPE(*CHAR) LEN(800)
+             DCL        VAR(&CSC011) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CSW025) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CSW034) TYPE(*CHAR) LEN(1) VALUE('N')                       /*BUG3641*/
+             DCL        VAR(&CURR) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MAIN) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&W1OFSR) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CSD083*/
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                   /*CSD083*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2003')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Check if Midas Message Manager is on */
+ 
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN 'CSW025' +
+                          &DSSDY)
+             IF         COND(&PRTCD *EQ '       ') +
+                           THEN(CHGVAR VAR(&CSW025) VALUE('Y'))
+ 
+/** Check if Midas Message Manager Global Processing is on */                            /*BUG3641*/
+                                                                                         /*BUG3641*/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')                                     /*BUG3641*/
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')                                     /*BUG3641*/
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN 'CSW034' +
+                          &DSSDY)                                                        /*BUG3641*/
+             IF         COND(&PRTCD *EQ '       ') +
+                           THEN(CHGVAR VAR(&CSW034) VALUE('Y'))                          /*BUG3641*/
+                                                                                         /*BUG3641*/
+/** Check if 24x7 Midas Availability Feature is on */
+ 
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN 'CSC011' +
+                          &DSSDY)
+ 
+/** If CSC011 is installed, get the current system prefix from */
+/** SDSTAT and the main system prefix from SC24X7 data areas   */
+ 
+               RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&CURR)
+               IF         COND(&PRTCD *EQ '       ') THEN(DO)
+                 CHGVAR     VAR(&CSC011) VALUE('Y')
+                 RTVDTAARA  DTAARA(SC24X7 (1 2)) RTNVAR(&MAIN)
+               ENDDO
+ 
+/** If CSC011 is installed, check if current system is support */
+/** system. If yes, compliance watch engine cannot be started  */
+ 
+               IF         COND((&CSC011 *EQ 'Y') *AND (&CURR *NE +
+                            &MAIN)) THEN(DO)
+                 SNDPGMMSG  MSG('SDCSTRCW - Attempt to start the +
+                              Compliance Watch OFAC-AGENT Server and +
+                              Compliance Watch List Engine has failed.  +
+                              Cause: This Option not allowed in the +
+                              support system') TOMSGQ(MOPERQ)
+                 GOTO       CMDLBL(ABNOR)
+               ENDDO
+ 
+               ELSE (DO)
+ 
+/** Access compliance watch configuration file */
+ 
+                 CHGVAR     VAR(&PRTCD) VALUE('       ')
+                 CHGVAR     VAR(&POPTN) VALUE('*FIRST')
+                 CALL       PGM(AOCWCDR0) PARM(&PRTCD &POPTN &DSSDY)
+ 
+                 CHGVAR     VAR(&W1OFSR) VALUE(%SUBSTRING(&DSSDY 54 32))
+ 
+                 IF         COND((&PRTCD *NE ' ') *OR (&W1OFSR *EQ ' ')) +
+                          THEN(DO)
+                   SNDPGMMSG  MSG('SCC0103 - Attemp to start the +
+                              Compliance Watch OFAC-AGENT Server and +
+                              Compliance Watch List Engine has failed.  +
+                              Cause: OFAC-Agent Server ID is not yet +
+                              defined') TOMSGQ(MOPERQ)
+                   GOTO       CMDLBL(ABNOR)
+                 ENDDO
+ 
+                 ELSE (DO)
+ 
+/** Check if Switchable Feature CSD083 is switched on */                                  /*CSD083*/
+                                                                                          /*CSD083*/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')                                      /*CSD083*/
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')                                      /*CSD083*/
+             CHGVAR     VAR(&SARD) VALUE('CSD083')                                        /*CSD083*/
+                                                                                          /*CSD083*/
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &SARD &SFMT)                     /*CSD083*/
+                                                                                          /*CSD083*/
+/** If error occured in AOSARDR0, perform abnormal termination */                         /*CSD083*/
+                                                                                          /*CSD083*/
+             IF         COND(&PRTCD *NE '       ' *AND &PRTCD *NE +
+                        '*NRF   ') THEN(DO)                                               /*CSD083*/
+                SNDPGMMSG  MSG('Program error in AOSARDR0') +
+                           TOMSGQ(MOPERQ)                                                 /*CSD083*/
+                GOTO       CMDLBL(ABNOR)                                                  /*CSD083*/
+             ENDDO                                                                        /*CSD083*/
+                                                                                          /*CSD083*/
+             IF         COND(&PRTCD *EQ '       ') THEN(GOTO ECHECK)                      /*CSD083*/
+                                                                                          /*CSD083*/
+/** Allocate dataarea COMPWTCH with a lock state of *EXCL       */
+ 
+                   ALCOBJ     OBJ((COMPWTCH *DTAARA *EXCL)) WAIT(1)
+                   MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(EWATCH))
+                   DLCOBJ     OBJ((COMPWTCH *DTAARA *EXCL))
+/************      SBMJOB     CMD(CALL PGM(SDFOFSRV) PARM(&CURR &W1OFSR)) +               /*CSC023*/
+/************                   JOB(COMPWATCH) JOBD(MBATCH) +                             /*CSC023*/
+/************                   JOBQ(INTERFACE) USER(*JOBD) RTGDTA(*JOBD) +               /*CSC023*/
+/************                   INLLIBL(*JOBD) ALWMLTTHD(*YES)                            /*CSC023*/
+                   SBMJOB     CMD(CALL PGM(SDFOFSRV) PARM(&CURR &W1OFSR)) +
+                                JOB(COMPWATCH) JOBD(MBATCH) +
+                                JOBQ(INTERFACE) USER(*JOBD) RTGDTA(*JOBD) +
+                                INLLIBL(*JOBD) ALWMLTTHD(*YES) OUTQ(*JOBD)                /*CSC023*/
+ 
+/** Allocate dataarea SDWLENGN with a lock state of *EXCL       */
+ 
+ EWATCH:
+                   ALCOBJ     OBJ((SDWLENGN *DTAARA *EXCL)) WAIT(1)
+                   MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ECHECK))
+                   DLCOBJ     OBJ((SDWLENGN *DTAARA *EXCL))
+/************      SBMJOB     CMD(CALL PGM(SDCWENGN)) JOB(CWLCHECK) +                     /*CSC023*/
+/************                   JOBD(MBATCH) JOBQ(INTERFACE) USER(*JOBD) +                /*CSC023*/
+/************                   RTGDTA(*JOBD) INLLIBL(*JOBD)                              /*CSC023*/
+                   SBMJOB     CMD(CALL PGM(SDCWENGN)) JOB(CWLCHECK) +
+                                JOBD(MBATCH) JOBQ(INTERFACE) USER(*JOBD) +
+                                RTGDTA(*JOBD) INLLIBL(*JOBD) OUTQ(*JOBD)                  /*CSC023*/
+ 
+/** Allocate dataarea SDWLMENG with a lock state of *EXCL       */
+ 
+ ECHECK:
+                   ALCOBJ     OBJ((SDWLMENG *DTAARA *EXCL)) WAIT(1)
+                   MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ELMENG))
+                   DLCOBJ     OBJ((SDWLMENG *DTAARA *EXCL))
+/************      SBMJOB     CMD(CALL PGM(SDCWMENG)) JOB(CWLMENG) +                      /*CSC023*/
+/************                   JOBD(MEJOBD) JOBQ(INTERFACE) USER(*JOBD) +                /*CSC023*/
+/************                   RTGDTA(*JOBD) INLLIBL(*JOBD)                              /*CSC023*/
+                   SBMJOB     CMD(CALL PGM(SDCWMENG)) JOB(CWLMENG) +
+                                JOBD(MEJOBD) JOBQ(INTERFACE) USER(*JOBD) +
+                                RTGDTA(*JOBD) INLLIBL(*JOBD) OUTQ(*JOBD)                  /*CSC023*/
+ 
+/** Allocate dataarea SDWLSENG with a lock state of *EXCL       */
+ 
+ ELMENG:
+                   IF COND(&CSW025 *EQ 'N') THEN(DO)
+                        ALCOBJ     OBJ((SDWLSENG *DTAARA *EXCL)) WAIT(1)
+                        MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ELSENG))
+                        DLCOBJ     OBJ((SDWLSENG *DTAARA *EXCL))
+/************           SBMJOB     CMD(CALL PGM(SDCWSENG)) JOB(CWLSENG) +                 /*CSC023*/
+/************                      JOBD(MEJOBD) JOBQ(INTERFACE) USER(*JOBD) +             /*CSC023*/
+/************                      RTGDTA(*JOBD) INLLIBL(*JOBD)                           /*CSC023*/
+                        SBMJOB     CMD(CALL PGM(SDCWSENG)) JOB(CWLSENG) +
+                                   JOBD(MEJOBD) JOBQ(INTERFACE) USER(*JOBD) +
+                                   RTGDTA(*JOBD) INLLIBL(*JOBD) OUTQ(*JOBD)               /*CSC023*/
+                   ENDDO
+ 
+                   IF COND(&CSW034 *EQ 'Y') THEN(DO)                                     /*BUG3641*/
+                        ALCOBJ     OBJ((SDTOCOMP *DTAARA *EXCL)) WAIT(1)                 /*BUG3641*/
+                        MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ELSENG))              /*BUG3641*/
+                        DLCOBJ     OBJ((SDTOCOMP *DTAARA *EXCL))                         /*BUG3641*/
+                        SBMJOB     CMD(CALL PGM(SDCTOCMP)) JOB(CWTOCMP) +
+                                   JOBD(MEJOBD) JOBQ(INTERFACE) USER(*JOBD) +
+                                   RTGDTA(*JOBD) INLLIBL(*JOBD) OUTQ(*JOBD)              /*BUG3641*/
+                   ENDDO                                                                 /*BUG3641*/
+                                                                                         /*BUG3641*/
+ ELSENG:
+                 ENDDO
+ 
+               ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDCSTRCW ended abnormally - see previous +
+                          job log for details') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End program */
+ 
+END:
+ 
+             ENDPGM

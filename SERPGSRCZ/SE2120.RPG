@@ -1,0 +1,753 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Extract mkt prices and update files')         *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2120 - EXTRACT MARKET PRICES AND UPDATE FILES              *
+     F*                                                               *
+     F*  Function: This program reads through the changes to Market   *
+     F*            Price on the Prices file and if a change is due, a *
+     F*            record is written to the Security Non-Diary Events *
+     F*            file with details of that change. The Security     *
+     F*            File is also updated with the Current Market Price.*
+     F*                                                               *
+     F*  Called by: SEC0602B - Extract Market Prices                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE075             Date 17Nov05               *
+      *                 CGL031             Date 05Jul04               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CAS008             Date 11May04               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSD010             Date 03May02               *
+      *                 188670             Date 22Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 16May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP137             Date 07Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01455             DATE 05NOV93               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E29170             DATE 05NOV91               *
+     F*                 S01117             DATE 06JUN91               *
+     F*                 E2065              DATE 30JAN90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *           (Recompile)                                         *
+      *  CGL031 - Taxation of Savings Income                          *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CAS008 - Delayed Hedge Assessment                            *
+      *  CAS006 - Hedge Accounting Phase B                            *
+      *  CSD010 - Collateralised Lending (Securities and FX Pricing)  *
+      *  188670 - Message error issued by system during input of      *
+      *           price was due to incosistency of PF/PRICED and      *
+      *           PF/SEPRICPD.  Fix is to update SEPRICPD everytime   *
+      *           PRICED is being updated.                            *
+      *  CSD006 - Market Data Feed (Recompiled)                       *
+      *  CSE023 - Treaty Withholding Tax (Recompiled)                 *
+      *  CAP137 - Conversion of SE Security inputs into modular       *
+      *           structure to use as APIs.                           *
+      *           Recompiled over changed in PF/SECTYD.               *
+     F*  S01455 - 'FF' ACCOUNT KEY ENHANCEMENTS.                      *
+     F*           Recompiled due to changes in PF/TABTB80.            *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching                                      *
+     F*  E20651 - DB Error Numbers used in more than one place.       *   E20651
+     F*           New Error Numbers as follows:                       *   E20651
+     F*           DB ERROR 01 -> 05                                   *   E20651
+     F*           DB ERROR 01 -> 06                                   *   E20651
+     F*                                                               *   E20651
+     F*****************************************************************
+     FPRICM   UP  E           K        DISK         KINFDS PRCDS
+     F                                              KINFSR PRCSR
+     FSEPRICL2UF  E           K        DISK                               188670
+     FTABICD  IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTB30F                          KIGNORE
+     F            TABTB35F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTB50F                          KIGNORE
+     F            TABTB55F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FSECTY   UF  E           K        DISK         KINFDS SECDS
+     F                                              KINFSR SECSR
+     FPRICEA  UF  E                    DISK         KINFDS PRADS
+     F                                              KINFSR PRASR
+     FSNDEVA  UF  E                    DISK         KINFDS SNADS
+     F                                              KINFSR SNASR
+     FSNDEVD  O   E           K        DISK         KINFDS SNDDS
+     F                                              KINFSR SNDSR
+     FSE2120AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   15 - CHAIN INDICATOR FOR SECTYDF                            *
+     F*   16 - READ INDICATOR FOR PRICE AUDIT RECORD                  *
+     F*   17 - READ INDICATOR FOR NON-DIARY EVENTS AUDIT              *
+     F*   20 - FIRST CYCLE INDICATOR                                  *
+     F*                                                               *
+     F*   99 - INDICATOR USED IN ZSYSTM AND ZICD2                     *
+     F*                                                               *
+     F*   U7 - DATABASE ERROR                                         *
+     F*   U8 - DATABASE ERROR                                         *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  AUDIT  - PERFORM RUN CONTROL PROCESS                         *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*  ZEVCD  - CALCULATE EVENT CONTROL DATE                        *
+     F*  ZICD2  - RETRIEVE INSTALLATION CONTROL RECORD NO 2           *
+     F*  ZSYSTM - RETRIEVE INSTALLATION CONTROL RECORD                *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /EJECT
+     IPRICEDF
+     I              RECI                            PRECI
+     ISEPRICD0                                                            188670
+     I              RECI                            SRECI                 188670
+     I*
+     IPRCDS       DS
+     I                                     *STATUS  STSPRC
+     I*
+     ISECDS       DS
+     I                                     *STATUS  STSSEC
+     I*
+     IPRADS       DS
+     I                                     *STATUS  STSPRA
+     I*
+     ISNADS       DS
+     I                                     *STATUS  STSSNA
+     I*
+     ISNDDS       DS
+     I                                     *STATUS  STSSND
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     ICPYR@#      DS                                                      S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+      *                                                                                       CGL031
+     IDSSDY     E DSDSSDY                                                                     CGL031
+      *                                                                                       CSD010
+     IDSFDY     E DSDSFDY                                                                     CSD010
+      ** Data Structure for Access Objects, Short Data Structure                              CSD010
+      *                                                                                       CSD010
+     ISCSARD    E DSSCSARDPD                                                                  CSD010
+      ** External Data Structure for SAR Details                                              CSD010
+      *                                                                                       CSD010
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C           KEY1      KLIST                                          188670
+     C                     KFLD           PSSN                            188670
+     C                     KFLD           PCNM                            188670
+     C                     KFLD           PMKT                            188670
+     C                     KFLD           PBRA                            188670
+     C                     KFLD           PBOK                            188670
+     C                     KFLD           PPRT                            188670
+     C                     KFLD           PTFR                            188670
+      *                                                                   188670
+      ***  Check if CAC005 is on                                          188670
+      *                                                                   188670
+     C                     CALL 'AOSARDR0'                                188670
+     C                     PARM *BLANKS   PRTCD   7                       188670
+     C                     PARM '*VERIFY' POPTN   7                       188670
+     C                     PARM 'CAC005'  PSARD   6                       188670
+      *                                                                   188670
+     C           PRTCD     IFEQ *BLANKS                                   188670
+     C                     MOVE 'Y'       CAC005  1                       188670
+     C                     ELSE                                           188670
+     C                     MOVE 'N'       CAC005                          188670
+     C                     ENDIF                                          188670
+      *                                                                                       CSD010
+      **  Access SAR details file to see if CSD010 is installed.                              CSD010
+      *                                                                                       CSD010
+     C                     CALL 'AOSARDR0'                                                    CSD010
+     C                     PARM *BLANKS   PRTCD                                               CSD010
+     C                     PARM '*VERIFY' POPTN                                               CSD010
+     C                     PARM 'CSD010'  PSARD                                               CSD010
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD010
+      *                                                                                       CSD010
+     C           PRTCD     IFNE *BLANKS                                                       CSD010
+     C           PRTCD     ANDNE'*NRF    '                                                    CSD010
+     C                     MOVE *ON       *INU7                                               CSD010
+     C                     MOVE *ON       *INU8                                               CSD010
+     C                     MOVE *ON       *INLR                                               CSD010
+     C           *LOCK     IN   LDA                                                           CSD010
+     C                     MOVE 'SCSARDPD'DBFILE                                              CSD010
+     C                     Z-ADD7         DBASE                                               CSD010
+     C                     MOVEL'CSD010'  DBKEY                                               CSD010
+     C                     OUT  LDA                                                           CSD010
+     C                     EXSR *PSSR                                                         CSD010
+     C                     GOTO MEND                                                          CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CSD010
+     C           PRTCD     IFEQ *BLANKS                                                       CSD010
+     C                     MOVE 'Y'       CSD010  1                                           CSD010
+     C                     ELSE                                                               CSD010
+     C                     MOVE 'N'       CSD010                                              CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CAS006
+      **  Access SAR details file to see if CAS006 is installed.                              CAS006
+      *                                                                                       CAS006
+     C                     CALL 'AOSARDR0'                                                    CAS006
+     C                     PARM *BLANKS   PRTCD                                               CAS006
+     C                     PARM '*VERIFY' POPTN                                               CAS006
+     C                     PARM 'CAS006'  PSARD                                               CAS006
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS006
+      *                                                                                       CAS006
+     C           PRTCD     IFNE *BLANKS                                                       CAS006
+     C           PRTCD     ANDNE'*NRF    '                                                    CAS006
+     C           *LOCK     IN   LDA                                                           CAS006
+     C                     MOVE 'SCSARDPD'DBFILE                                              CAS006
+     C                     Z-ADD46        DBASE                                               CAS006
+     C                     MOVEL'CAS006'  DBKEY                                               CAS006
+     C                     MOVE *ON       *INU7                                               CAS006
+     C                     MOVE *ON       *INU8                                               CAS006
+     C                     OUT  LDA                                                           CAS006
+     C                     EXSR *PSSR                                                         CAS006
+     C                     GOTO MEND                                                          CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CAS006
+     C           PRTCD     IFEQ *BLANKS                                                       CAS006
+     C                     MOVE 'Y'       CAS006  1                                           CAS006
+     C                     ELSE                                                               CAS006
+     C                     MOVE 'N'       CAS006                                              CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CAS006
+      **  Access SAR details file to see if CAS008 is installed.                              CAS008
+      *                                                                                       CAS008
+     C                     CALL 'AOSARDR0'                                                    CAS008
+     C                     PARM *BLANKS   PRTCD                                               CAS008
+     C                     PARM '*VERIFY' POPTN                                               CAS008
+     C                     PARM 'CAS008'  PSARD                                               CAS008
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS008
+      *                                                                                       CAS008
+     C           PRTCD     IFNE *BLANKS                                                       CAS008
+     C           PRTCD     ANDNE'*NRF    '                                                    CAS008
+     C           *LOCK     IN   LDA                                                           CAS008
+     C                     MOVE 'SCSARDPD'DBFILE                                              CAS008
+     C                     Z-ADD47        DBASE                                               CAS008
+     C                     MOVEL'CAS008'  DBKEY                                               CAS008
+     C                     MOVE *ON       *INU7                                               CAS008
+     C                     MOVE *ON       *INU8                                               CAS008
+     C                     OUT  LDA                                                           CAS008
+     C                     EXSR *PSSR                                                         CAS008
+     C                     GOTO MEND                                                          CAS008
+     C                     ENDIF                                                              CAS008
+      *                                                                                       CAS008
+     C           PRTCD     IFEQ *BLANKS                                                       CAS008
+     C                     MOVE 'Y'       CAS008  1                                           CAS008
+     C                     ELSE                                                               CAS008
+     C                     MOVE 'N'       CAS008                                              CAS008
+     C                     ENDIF                                                              CAS008
+     C*
+     C* SAVE FIELDS THAT MAY BE OVERWRITTEN
+     C*
+     C                     MOVE LCD       PLCD    50
+     C                     MOVE CHTP      PCHTP   1
+     C                     MOVE TNLU      PTNLU   50
+     C*
+     C* FIRST TIME THROUGH PROCESS
+     C*
+     C           *IN20     IFEQ '0'
+     C*
+     C* RETRIEVE ICD 1 RECORD IF NOT THERE DATABASE ERROR
+     C*
+     C* PREPARE LDA                                                       S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL'SE2120'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01117
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     SETON                     LRU7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 05 *
+     C***********          MOVE '01'      DBASE            ***************E20651
+     C***********          MOVE '05'      DBASE            ********E20651 S01117
+     C                     Z-ADD5         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO MEND
+     C                     END
+     C*
+     C* RETRIEVE ICD 2 RECORD IF NOT THERE DATABASE ERROR
+     C*
+     C                     EXSR ZICD2
+     C           *IN99     IFEQ '1'
+     C                     SETON                     LRU7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 02 *
+     C***********          MOVE '02'      DBASE            ***************S01117
+     C                     Z-ADD2         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO MEND
+     C                     END
+      *                                                                                       CGL031
+      ** Check CGL031 feature                                                                 CGL031
+      *                                                                                       CGL031
+     C                     CALL 'AOSARDR0'                                                    CGL031
+     C                     PARM *BLANKS   PRTCD   7                                           CGL031
+     C                     PARM '*VERIFY' POPTN   7                                           CGL031
+     C                     PARM 'CGL031'  PSARD   6                                           CGL031
+     C           SCSARD    PARM SCSARD    DSSDY                                               CGL031
+      *                                                                                       CGL031
+     C                     MOVE 'N'       CGL031  1                                           CGL031
+     C           PRTCD     IFEQ *BLANKS                                                       CGL031
+     C                     MOVE 'Y'       CGL031                                              CGL031
+     C                     ELSE                                                               CGL031
+     C           PRTCD     IFNE '*NRF   '                                                     CGL031
+     C           *LOCK     IN   LDA                                                           CGL031
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL031
+     C                     MOVEL'CGL031 ' DBKEY                                               CGL031
+     C                     Z-ADD8         DBASE                                               CGL031
+     C                     OUT  LDA                                                           CGL031
+     C                     MOVE *ON       *INU7                                               CGL031
+     C                     MOVE *ON       *INU8                                               CGL031
+     C                     MOVE *ON       *INLR                                               CGL031
+     C                     EXSR *PSSR                                                         CGL031
+     C                     ENDIF                                                              CGL031
+     C                     ENDIF                                                              CGL031
+     C*
+     C* CALCULATE EVENT CONTROL DATE
+     C*
+     C                     Z-ADDDNWD      ZZDNWD                          S01117
+     C                     Z-ADDAPDA      ZZAPDT                          S01117
+     C                     EXSR ZEVCD
+     C                     SETON                     20
+     C                     END
+     C*
+     C* Ignore deleted records
+     C*
+     C           PRECI     CABEQ'*'       MEND
+     C*
+     C* ADD 1 TO INPUT COUNT AND IF PRICE VALUE DATE LE EVENT CONTROL
+     C*     DATE, OUTPUT TO NON DIARY EVENTS FILE
+     C*
+     C                     ADD  1         PINCNT  50
+     C           PVDT      IFLE ECD
+     C                     MOVE 'D'       RECI
+     C                     MOVE PSSN      SNSN
+     C                     MOVE PVDT      SNDT
+     C                     MOVE 'PR'      SNET
+     C                     MOVE PPRC      SNPR
+      *                                                                                       CGL031
+      ** Check if CGL031 feature is on                                                        CGL031
+      *                                                                                       CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C                     MOVE PEXI      SNFP                                                CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+     C                     MOVEL'MARKET'  SNNA
+     C                     MOVE 'PRICE   'SNNA
+     C                     MOVE *ZEROS    SNCR
+     C                     MOVE *ZEROS    SNCF
+     C                     MOVE *ZEROS    SNCP
+     C                     MOVE *ZEROS    SNCA
+      *                                                                                       CAS008
+     C           CAS008    IFEQ 'Y'                                                           CAS008
+     C           PPRC      ADD  PRCRSK    SNPN                                                CAS008
+     C                     ADD  PRLQPR    SNPN                                                CAS008
+     C                     ENDIF                                                              CAS008
+      *                                                                                       CAS008
+     C                     WRITESNDEVDF
+     C*
+     C*  ADD 1 TO OUTPUT COUNT
+     C*
+     C                     ADD  1         NDOUT   50
+     C*
+     C* RETRIEVE SECURITY RECORD AND IF DATE OF LAST PRICE UPDATE LT
+     C* PRICE VALUE DATE AND MARKET PRICES ARE NE UPDATE SECURITY
+     C*
+     C           PSSN      CHAINSECTYDF              15
+     C*
+     C           *IN15     IFEQ '0'
+     C*
+     C           RECI      IFEQ '*'
+     C                     SETON                     15
+     C                     END
+     C*
+     C                     END
+      *                                                                                       CAS006
+     C                     Z-ADD0         MKPN                                                CAS006
+     C                     Z-ADD0         MCRK                                                CAS006
+     C                     Z-ADD0         MLQP                                                CAS006
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C           PPRC      ADD  PRCRSK    MKPA   158                                          CAS006
+     C                     ADD  PRLQPR    MKPA                                                CAS006
+     C                     Z-ADDPRCRSK    MCRK                                                CAS006
+     C                     Z-ADDPRLQPR    MLQP                                                CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CAS006
+     C*
+     C* ONLY UPDATE RECORD IF FOUND AND REC ID NE *
+     C*
+     C           *IN15     IFEQ '0'
+     C*
+     C           LPRU      IFLE PVDT
+     C           MKPR      ANDNEPPRC
+     C           CAS006    OREQ 'Y'                                                           CAS006
+     C           LPRU      ANDLEPVDT                                                          CAS006
+     C           MKPN      ANDNEMKPA                                                          CAS006
+     C                     MOVE MKPA      MKPN                                                CAS006
+     C                     MOVE PVDT      LPRU
+     C                     MOVE PPRC      MKPR
+     C                     UPDATSECTYDF
+     C                     ADD  1         SECUPD  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C* UPDATE REC ID ON PRICE FILE AND ADD TO DELETED RECORD COUNT
+     C*
+     C                     MOVE PLCD      LCD
+     C                     MOVE PCHTP     CHTP
+     C                     MOVE PTNLU     TNLU
+     C                     MOVE '*'       PRECI
+     C                     MOVE 'D'       CHTP
+      *                                                                                       CSD010
+      ** If CSD010 is installed, Mid-price will be overwritten with the                       CSD010
+      ** Closing Price                                                                        CSD010
+      *                                                                                       CSD010
+     C           CSD010    IFEQ 'Y'                                                           CSD010
+     C                     Z-ADDPRCLPR    PPRC                                                CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CSD010
+     C                     UPDATPRICEDF
+     C                     ADD  1         DELCNT  50
+      *                                                                   188670
+     C           CAC005    IFEQ 'Y'                                       188670
+     C           KEY1      CHAINSEPRICD0             40                   188670
+     C                     MOVE PLCD      LCD                             188670
+     C                     MOVE PCHTP     CHTP                            188670
+     C                     MOVE PTNLU     TNLU                            188670
+     C                     MOVE '*'       SRECI                           188670
+     C                     MOVE 'D'       CHTP                            188670
+     C                     UPDATSEPRICD0                                  188670
+     C                     ENDIF                                          188670
+     C*
+     C                     END
+     C*
+     C           MEND      TAG
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     CLR                   EXSR AUDIT
+      *                                                               *
+      *================================================================
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  AUDIT - SUBROUTINE TO PERFORM RUN CONTROL PROCESS            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AUDIT     BEGSR
+     C*
+     C* IF ALREADY HAD DATABASE ERROR, REPORT IT
+     C*
+     C   U7 U8             GOTO REPORT
+     C*
+     C* READ PRICE AUDIT RECORD, IF NOT THERE DATABASE ERROR
+     C*
+     C                     READ PRICEAF                  16
+     C           *IN16     IFEQ '1'
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'PRICE'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            **DB ERROR 03**
+     C***********          MOVE '03'      DBASE            ***************S01117
+     C                     Z-ADD3         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO REPORT
+     C                     END
+     C*
+     C* SUBTRACT DELETE COUNT FROM RECORDS ON AUDIT FILE
+     C*     AND UPDATE AUDIT FILE
+     C*
+     C                     Z-ADDNORE      PNORE   50
+     C           NORE      SUB  DELCNT    NNORE   50
+     C                     Z-ADDNNORE     NORE
+     C                     Z-ADDNNORE     SLRB
+     C**********           ADD  DELCNT    SDEL
+     C                     UPDATPRICEAF
+     C*
+     C* READ SECURITY NON-DIARY EVENTS AUDIT RECORD - IF NOT THERE
+     C*      DATA BASE ERROR
+     C*
+     C                     READ SNDEVAF                  17
+     C           *IN17     IFEQ '1'
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SNDEV'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            **DB ERROR 04**
+     C***********          MOVE '04'      DBASE            ***************S01117
+     C                     Z-ADD4         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO REPORT
+     C                     END
+     C*
+     C* ADD NO OF RECORDS OUTPUT TO RECORD COUNT AND UPDATE FILE
+     C*
+     C                     Z-ADDNORE      SNORE   50
+     C           NORE      ADD  NDOUT     ONORE   50
+     C                     Z-ADDONORE     NORE
+     C                     UPDATSNDEVAF
+     C*
+     C           REPORT    TAG
+     C*
+     C* IF NO RECORDS ON PRICE FILE RETRIEVE ICD 1 RECORD FOR HEADINGS
+     C*                ETC.
+     C*
+     C           *IN20     IFEQ '0'
+     C*
+     C                     MOVEL'SE2120'  DBPGM
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     SETON                     LRU7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 06 *
+     C***********          MOVE '01'      DBASE            ***************E20651
+     C***********          MOVE '06'      DBASE            ********E20651 S01117
+     C                     Z-ADD6         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C                     END
+     C*
+     C* WRITE OUT CONTROL REPORT OR DATABASE ERROR
+     C*
+     C                     WRITEHEADAU
+     C  NU7                WRITECONTROL
+     C   U7 U8             WRITEERROR
+     C***********          WRITETRAIL                                     E29170
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   PRCSR  - SUBROUTINE FOR ERROR HANDLING OF PRICES FILE       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           PRCSR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TRDBR'   DBFILE           ***************
+     C                     MOVELPSSN      PKEY   15        * DB ERROR 90 *
+     C                     MOVE PVDT      PKEY             ***************
+     C                     MOVELPKEY      DBKEY
+     C***********          MOVE '90'      DBASE                           S01117
+     C                     Z-ADD90        DBASE                           S01117
+     C                     MOVE STSPRC    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE '1'       *IN87
+     C                     SETON                     LRU7U8
+     C                     GOTO MEND
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*   SECSR  - SUBROUTINE FOR ERROR HANDLING OF SECURITIES FILE   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SECSR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE           ***************
+     C                     MOVELPSSN      DBKEY            * DB ERROR 91 *
+     C***********          MOVE '91'      DBASE            ***************
+     C                     Z-ADD91        DBASE            ***************
+     C                     MOVE STSSEC    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE '1'       *IN87
+     C                     SETON                     LRU7U8
+     C                     GOTO MEND
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*   PRASR  - SUBROUTINE FOR ERROR HANDLING OF PRICES FILE       *
+     C*               AUDIT RECORD                                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           PRASR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'PRICE'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 92 *
+     C***********          MOVE '92'      DBASE            ***************S01117
+     C                     Z-ADD92        DBASE            ***************S01117
+     C                     MOVE STSPRA    DBSTAT
+     C                     MOVE '1'       *IN87
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     LRU7U8
+     C                     GOTO MEND
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*   SNASR  - SUBROUTINE FOR ERROR HANDLING OF SECURITIES NON-   *
+     C*               DIARY EVENTS AUDIT RECORD                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SNASR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SNDEV'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 93 *
+     C***********          MOVE '93'      DBASE            ***************S01117
+     C                     Z-ADD93        DBASE            ***************S01117
+     C                     MOVE STSSNA    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE '1'       *IN87
+     C                     SETON                     LRU7U8
+     C                     GOTO MEND
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*   SNDSR  - SUBROUTINE FOR ERROR HANDLING OF SECURITIES NON -  *
+     C*               DIARY EVENTS FILE                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SNDSR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SNDEV'   DBFILE           ***************
+     C                     MOVELPSSN      SNKEY  17        * DB ERROR 94 *
+     C                     MOVELPVDT      SNKEYA  7        ***************
+     C                     MOVE 'PR'      SNKEYA
+     C                     MOVE SNKEYA    SNKEY
+     C                     MOVELSNKEY     DBKEY
+     C***********          MOVE '94'      DBASE                           S01117
+     C                     Z-ADD94        DBASE                           S01117
+     C                     MOVE STSSND    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE '1'       *IN87
+     C                     SETON                     LRU7U8
+     C                     GOTO MEND
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+**  CPY@
+(c) Finastra International Limited 2001

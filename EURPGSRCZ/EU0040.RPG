@@ -1,0 +1,919 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU EMU BCE account balance transfer')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Module                                           *
+      *                                                               *
+      *  EU0040 - Midas EMU BCE Account Balance Transfer              *
+      *                                                               *
+      *  Function:  This program clear the old base currency equiva-  *
+      *  (COB)      lent account balance and new base currency        *
+      *             equivalent account balances will be set up in     *
+      *             their place.  This will be achieved by generating *
+      *             postings that represent 'Selling' or 'Buying' a   *
+      *             balance in one currency - the old base currency   *
+      *             in exchange for a balance in another currency     *
+      *             the new base currency.  Thus the spot  trade      *
+      *             accounts will be impacted as well.  The balances  *
+      *             involved will be either the financial account     *
+      *             or the management account balances depending      *
+      *             upon whether the profit centre accounting is      *
+      *             installed.  The specific accounts be identified   *
+      *             by their account codes: the account codes will    *
+      *             those defined as base currency equivalent account *
+      *             codes on the currencies file.  The postings gene- *
+      *             rated will be put into a journal entry batch      *
+      *             whose batch number, branch and department will be *
+      *             those supplied to the base currency conversion    *
+      *             prompt.  They will carry a narrative of 'Base     *
+      *             Currency Equivalent Transfer'. The accounting     *
+      *             ivolved is:                                       *
+      *                                                               *
+      *             In the old base currency -  Debit/Credit base     *
+      *                                         currency equivalent   *
+      *                                         Credit/Debit          *
+      *                                         Spot Trade            *
+      *                                                               *
+      *             In the new base currency -  Credit/Debit base     *
+      *                                         currency equivalent   *
+      *                                         Credit/Debit          *
+      *                                         Spot Trade            *
+      *                                                               *
+      *                                                               *
+      *  Called By: EUC0020 - EMU Base Currency Conversion - Part I   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP207             Date 10Feb11               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSC024             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL008             Date 03Mar99               *
+      *                 148332             Date 22Dec98               *
+      *                 148771             Date 02Dec98               *
+      *                 CEU001 *CREATE     Date 08Sep97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CAP207 - Account Balance Check extended to other APIs        *
+      *           (Recompile)                                         *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC024 - Open Month End (Recompile)                          *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  CGL008 - Security on Journal Entry. Recompile.               *
+      *  148332 - DON'T CREATE HEADER IF NO ITEM ARE CREATED :        *
+      *           TO AVOID PROBLEM IN NEXT EOD WITH EMPTY FILE        *
+      *  148771 - Hash totals should match the ccy totals and not be  *
+      *           zero .                                              *
+      *  CEU001 - EMU Base Currency for Accounting Conversion.        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FEUBCACPDIF  E           K        DISK         KINFSR *PSSR
+     FSDCURRL1IF  E           K        DISK         KINFSR *PSSR
+     FSDBRCHL1IF  E           K        DISK         KINFSR *PSSR
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+     FGLHIBLL0IF  E           K        DISK         KINFSR *PSSR      UC
+     FGLJENHPDO   E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FGLJENPPDO   E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FGLJENSPDO   E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      /SPACE 3
+      ****************************************************************
+      *  S U B R O U T I N E    I N D E X                            *
+      *                                                              *
+      *  SRINIT - program initialization                             *
+      *  SRMABT - process management account balance transfer        *
+      *  SRFABT - process financial account balance transfer         *
+      *  SRCBCH - create new batch                                   *
+      *  SRJRNE - create journal entry summary                       *
+      *  SRJRNH - create journal entry header                        *
+      *  *PSSR  - handles database errors                            *
+      *                                                              *
+      ****************************************************************
+      /EJECT
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZPOWERZ1
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ISDMMOD    E DSSDMMODPD
+     ISDCURR    E DSSDCURRPD
+     ISDPCAC    E DSSDPCACPD
+     ISDTRAD    E DSSDTRADPD
+     ISDACOD    E DSSDACODPD
+     I              QQACCD                          QQACCX                                    CGL029
+     I              QQFNIC                          QQFNIX                                    CGL029
+     I              QQFNAA                          QQFNAX                                    CGL029
+     ISDBANK    E DSSDBANKPD
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ICONV        DS
+     I**********                              1   60@CNUM                                     CSD027
+     I                                        1   6 @CNUM                                     CSD027
+     I**********                              7  100@ACOD                                     CGL029
+     I                                        7  160@ACOD                                     CGL029
+     I            DS                                                      148771
+     I                                        1  180HASHT                 148771
+     I                                        1  150HASHI                 148771
+     I                                       16  180HASHD                 148771
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for Access Programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Second DS for Access Programs, Long Data Structure
+      *
+      *
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      **  MAIN PROCESSING
+      *
+     C                     EXSR SRINIT
+      *
+     C           *LOVAL    SETLLSDBRCHL1
+     C                     READ SDBRCHL1                 11
+     C           *IN11     DOWEQ'0'
+      *
+     C                     Z-ADD*ZERO     WODBTT 150
+     C                     Z-ADD*ZERO     WOCRTT 150
+     C                     Z-ADD*ZERO     WNDBTT 150
+     C                     Z-ADD*ZERO     WNCRTT 150
+      *
+     C           *LOVAL    SETLLSDCURRL1
+     C                     READ SDCURRL1                 12
+     C           *IN12     DOWEQ'0'
+     C           A6SPAE    IFNE *BLANKS
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C**********           PARM A6SPAE    @AFNB   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM A6SPAE    @AFNB  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+      *
+      ** Data base error in file SDACOFPD
+      *
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDACODPD'DBFILE           *DB ERROR 001 *
+     C                     MOVELA6SPAE    DBKEY            ***************
+     C                     MOVEL'EU0040  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C           BGN0ST    IFEQ 'Y'
+     C                     EXSR SRMABT
+     C                     ELSE
+     C                     EXSR SRFABT
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     READ SDCURRL1                 12
+     C                     ENDDO
+      *
+      **  Create Journal Entry Summary
+      *
+     C           BTBINB    IFNE *ZERO                                     148332
+     C                     EXSR SRJRNE
+     C                     ADD  1         WKBINB                          148332
+     C                     ENDIF                                          148332
+     C                     READ SDBRCHL1                 11
+     C                     ENDDO
+      *
+      **  Create Journal Entry Header
+      *
+     C           WKBINB    IFNE *ZERO                                     148332
+     C                     EXSR SRJRNH
+     C                     ENDIF                                          148332
+      *
+     C                     COMIT
+     C                     SETON                     LR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Program Initialisation.                             *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: RPG/AOCURR0  - Access SDCURRPD.                       *
+      *         RPG/AOMMODR0 - Access SDMMODPD.                       *
+      *         RPG/AOPCACR0 - Access SDPCACPD.                       *
+      *         RPG/AOTRADR0 - Access SDTRADPD.                       *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+     C                     READ EUBCACPD                 10
+     C           *IN10     IFEQ '0'
+     C           BCRUNC    ANDNE'Y'
+     C           *IN10     OREQ '1'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      **  Access currency details for the old base currency.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           BCOBCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Data base error in file SDCURRPD
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 002 *
+     C                     MOVELBCOBCY    DBKEY            ***************
+     C                     MOVEL'EU0040  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     Z-ADDA6EUER    ZEXCH
+     C                     MOVELA6EUMD    ZMD
+     C                     Z-ADDA6NBDP    ZCDPI
+     C*                                                                   148771
+     C           ZCDPI     COMP 1                    323031               148771
+     C           *IN32     IFEQ *ON                                       148771
+     C           ZCDPI     COMP 2                    33                   148771
+     C                     END                                            148771
+     C*                                                                   148771
+     C**********           MOVE A6SPAE    ZACODO  4        Old Spot trade                     CGL029
+     C                     MOVE A6SPAE    ZACODO 10                                           CGL029
+     C                     ENDIF
+      *
+      **  Access currency details for the new base currency.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           BCNBCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Data base error in file SDCURRPD
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 003 *
+     C                     MOVELBCNBCY    DBKEY            ***************
+     C                     MOVEL'EU0040  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     Z-ADDA6NBDP    ZCDPO
+     C*                                                                   148771
+     C           ZCDPO     COMP 1                    424041               148771
+     C           *IN42     IFEQ *ON                                       148771
+     C           ZCDPO     COMP 2                    43                   148771
+     C                     END                                            148771
+     C*                                                                   148771
+     C**********           MOVE A6SPAE    ZACODN  4        New Spot trade                     CGL029
+     C                     MOVE A6SPAE    ZACODN 10                                           CGL029
+     C                     ENDIF
+      *
+      **  Access Module Details
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'SDMMODPD'DBFILE           *DB ERROR 004 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'EU0040  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C/COPY WNCPYSRC,EU0040C001
+      **  Access PCA ICD Details
+      *
+     C           BGN0ST    IFEQ 'Y'
+     C                     CALL 'AOPCACR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDPCAC    PARM SDPCAC    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'SDPCACPD'DBFILE           *DB ERROR 005 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'EU0040  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Access Record in the Trading ICD File
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVEL'SDTRADPD'DBFILE           *DB ERROR 006 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'EU0040  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADD*ZERO     WKBINB  20                      148332
+     C                     Z-ADD*ZERO     BTBINB
+      *
+      **  Access SDBANKPD to get the system run date.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD7         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 007 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'EU0040  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BGN0ST    IFEQ 'Y'
+     C                     OPEN GLHIBLL0
+     C                     ENDIF
+      *
+      **  Key used to access records on GLHIBLL0
+      *
+     C           @KEY1     KLIST
+     C                     KFLD           FTPRCG
+     C                     KFLD           A8BRCD
+     C                     KFLD           BCOBCY
+     C                     KFLD           A6SPAE
+     C                     KFLD           A8BICN
+     C                     KFLD           @SEQ1   2
+      *
+      **  Key used to access records on ACCNT
+      *
+     C           @KEY2     KLIST
+     C                     KFLD           @CNUM
+     C                     KFLD           BCOBCY
+     C                     KFLD           @ACOD
+     C                     KFLD           @SEQ2   20
+     C                     KFLD           A8BRCD
+      *
+     C                     MOVE '01'      @SEQ1
+     C                     Z-ADD1         @SEQ2
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMABT - Management Account Balance Transfer                 *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRMABT    BEGSR
+     C           @KEY1     SETLLGLHIBLL0                 10
+     C           *IN10     IFEQ '1'
+     C           @KEY1     READEGLHIBLL0                 10
+     C           *IN10     DOWEQ'0'
+     C           HBPDCB    IFNE *ZERO
+      *
+      **  If the batch cannot anymore accomodate 4 entries, create
+      **  a new batch.
+      *
+     C           BTBINB    IFGT 995
+     C                     EXSR SRCBCH
+     C                     ENDIF
+      *
+      **  First Entry
+      *
+     C                     MOVELBCBTNB    BTBTNB
+     C                     ADD  1         BTBINB
+     C                     MOVELA8BRCD    BTIBCA
+     C                     MOVELA8BICN    BTCUST
+     C                     MOVELBCOBCY    BTCYCD
+     C                     MOVELA6SPAE    BTACCD
+     C                     MOVEL'01'      BTACSN
+     C           HBPDCB    IFGT 0
+     C                     Z-ADDHBPDCB    BTPTAM
+     C                     MOVEL'C'       BTDCIN
+     C                     ADD  BTPTAM    WOCRTT
+     C                     ELSE
+     C                     Z-SUBHBPDCB    BTPTAM
+     C                     MOVEL'D'       BTDCIN
+     C                     ADD  BTPTAM    WODBTT
+     C                     ENDIF
+     C                     Z-ADDBJRDNB    BTPTDT
+     C                     Z-ADDBJRDNB    BTVLDT
+     C                     MOVEL*BLANKS   BTNVCD
+     C                     MOVEL'BASE CUR'TEMP1   8
+     C                     MOVEL'RENCY EQ'TEMP2   8
+     C           TEMP1     CAT  TEMP2     TEMP3  16
+     C                     MOVEL'UIV TRAN'TEMP1
+     C                     MOVEL'SFER    'TEMP2
+     C           TEMP1     CAT  TEMP2     TEMP4  16
+     C           TEMP3     CAT  TEMP4     BTNRDC
+     C                     MOVELA5ACTY    BTACTY
+     C                     MOVELHBPCCD    BTPRCN
+     C                     MOVELBCBRCA    BTBCBH
+     C                     Z-ADD1         BTNITM
+     C                     MOVEL*BLANKS   BTNNBI
+     C                     Z-ADD*ZERO     BTRACN
+     C                     MOVEL*BLANKS   BTRINO
+     C                     MOVEL*BLANKS   BTRINE
+     C                     MOVEL*BLANKS   BTTRTY
+     C                     MOVEL*BLANKS   BTACNB
+     C                     MOVEL*BLANKS   BTCQNB
+     C                     MOVEL*BLANKS   BTCOIN
+     C                     MOVEL*BLANKS   BTSWCR
+     C                     MOVEL*BLANKS   BTRADP
+     C                     MOVEL*BLANKS   BTSHPI
+     C                     Z-ADD*ZERO     BTRRNM
+     C                     MOVEL*BLANKS   BTRNBE
+     C                     MOVEL*BLANKS   BTRARC
+     C                     MOVEL*BLANKS   BTTSTY
+     C                     MOVEL*BLANKS   BTBKCD
+     C                     Z-ADD*ZERO     BTSPFC
+     C                     MOVEL*BLANKS   BTRVDI
+     C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
+     C                     WRITE@BTREMG
+      *
+      **  Second Entry
+      *
+     C                     ADD  1         BTBINB
+     C                     MOVELBLSPTA    BTACCD
+     C           HBPDCB    IFGT 0
+     C                     MOVEL'D'       BTDCIN
+     C                     ADD  BTPTAM    WODBTT
+     C                     ELSE
+     C                     MOVEL'C'       BTDCIN
+     C                     ADD  BTPTAM    WOCRTT
+     C                     ENDIF
+     C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
+     C                     WRITE@BTREMG
+      *
+      **  Third Entry
+      *
+     C                     ADD  1         BTBINB
+     C                     MOVELBCNBCY    BTCYCD
+     C                     MOVELA6SPAE    BTACCD
+     C                     Z-ADDHBPDCB    ZAMTCI
+     C                     EXSR ZCONV
+     C           HBPDCB    IFGT 0
+     C                     Z-ADDZAMTCO    BTPTAM
+     C                     MOVEL'D'       BTDCIN
+     C                     ADD  BTPTAM    WNDBTT
+     C                     ELSE
+     C                     Z-SUBZAMTCO    BTPTAM
+     C                     MOVEL'C'       BTDCIN
+     C                     ADD  BTPTAM    WNCRTT
+     C                     ENDIF
+     C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
+     C                     WRITE@BTREMG
+      *
+      **  Fourth Entry
+      *
+     C                     ADD  1         BTBINB
+     C           ZACODN    IFEQ *BLANKS
+     C                     MOVELZACODO    BTACCD
+     C                     ELSE
+     C                     MOVELBLSPTA    BTACCD
+     C                     ENDIF
+     C           HBPDCB    IFGT 0
+     C                     MOVEL'C'       BTDCIN
+     C                     ADD  BTPTAM    WNCRTT
+     C                     ELSE
+     C                     MOVEL'D'       BTDCIN
+     C                     ADD  BTPTAM    WNDBTT
+     C                     ENDIF
+     C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
+     C                     WRITE@BTREMG
+      *
+     C                     ENDIF
+     C           @KEY1     READEGLHIBLL0                 10
+     C                     ENDDO
+     C                     ENDIF
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFABT - Financial Account Balance Transfer                  *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRFABT    BEGSR
+     C                     MOVE A8BICN    @CNUM
+     C                     MOVE A6SPAE    @ACOD
+     C           @KEY2     SETLLACCNT                    10
+     C           *IN10     IFEQ '1'
+     C           @KEY2     READEACCNT                    10
+     C           *IN10     DOWEQ'0'
+     C           RECI      IFEQ 'D'
+     C           LDBL      ANDNE*ZERO
+      *
+      **  If the batch cannot anymore accomodate 4 entries, create
+      **  a new batch.
+      *
+     C           BTBINB    IFGT 995
+     C                     EXSR SRCBCH
+     C                     ENDIF
+      *
+     C                     MOVELBCBTNB    BTBTNB
+     C                     ADD  1         BTBINB
+     C                     MOVELA8BRCD    BTIBCA
+     C                     MOVELA8BICN    BTCUST
+     C                     MOVELBCOBCY    BTCYCD
+     C                     MOVELA6SPAE    BTACCD
+     C                     MOVEL'01'      BTACSN
+     C           LDBL      IFGT 0
+     C                     Z-ADDLDBL      BTPTAM
+     C                     MOVEL'C'       BTDCIN
+     C                     ADD  BTPTAM    WOCRTT
+     C                     ELSE
+     C                     Z-SUBLDBL      BTPTAM
+     C                     MOVEL'D'       BTDCIN
+     C                     ADD  BTPTAM    WODBTT
+     C                     ENDIF
+     C                     Z-ADDBJRDNB    BTPTDT
+     C                     Z-ADDBJRDNB    BTVLDT
+     C                     MOVEL*BLANKS   BTNVCD
+     C                     MOVEL'BASE CUR'TEMP1   8
+     C                     MOVEL'RENCY EQ'TEMP2   8
+     C           TEMP1     CAT  TEMP2     TEMP3  16
+     C                     MOVEL'UIV TRAN'TEMP1
+     C                     MOVEL'SFER    'TEMP2
+     C           TEMP1     CAT  TEMP2     TEMP4  16
+     C           TEMP3     CAT  TEMP4     BTNRDC
+     C                     MOVELA5ACTY    BTACTY
+     C                     MOVEL*BLANKS   BTPRCN
+     C                     MOVELBCBRCA    BTBCBH
+     C                     Z-ADD1         BTNITM
+     C                     MOVEL*BLANKS   BTNNBI
+     C                     Z-ADD*ZERO     BTRACN
+     C                     MOVEL*BLANKS   BTRINO
+     C                     MOVEL*BLANKS   BTRINE
+     C                     MOVEL*BLANKS   BTTRTY
+     C                     MOVEL*BLANKS   BTACNB
+     C                     MOVEL*BLANKS   BTCQNB
+     C                     MOVEL*BLANKS   BTCOIN
+     C                     MOVEL*BLANKS   BTSWCR
+     C                     MOVEL*BLANKS   BTRADP
+     C                     MOVEL*BLANKS   BTSHPI
+     C                     Z-ADD*ZERO     BTRRNM
+     C                     MOVEL*BLANKS   BTRNBE
+     C                     MOVEL*BLANKS   BTRARC
+     C                     MOVEL*BLANKS   BTTSTY
+     C                     MOVEL*BLANKS   BTBKCD
+     C                     Z-ADD*ZERO     BTSPFC
+     C                     MOVEL*BLANKS   BTRVDI
+     C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
+     C                     WRITE@BTREMG
+      *
+      **  Second Entry
+      *
+     C                     ADD  1         BTBINB
+     C                     MOVELBLSPTA    BTACCD
+     C           LDBL      IFGT 0
+     C                     MOVEL'D'       BTDCIN
+     C                     ADD  BTPTAM    WODBTT
+     C                     ELSE
+     C                     MOVEL'C'       BTDCIN
+     C                     ADD  BTPTAM    WOCRTT
+     C                     ENDIF
+     C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
+     C                     WRITE@BTREMG
+      *
+      **  Third Entry
+      *
+     C                     ADD  1         BTBINB
+     C                     MOVELBCNBCY    BTCYCD
+     C                     MOVELA6SPAE    BTACCD
+     C                     Z-ADDLDBL      ZAMTCI
+     C                     EXSR ZCONV
+     C           LDBL      IFGT 0
+     C                     Z-ADDZAMTCO    BTPTAM
+     C                     MOVEL'D'       BTDCIN
+     C                     ADD  BTPTAM    WNDBTT
+     C                     ELSE
+     C                     Z-SUBZAMTCO    BTPTAM
+     C                     MOVEL'C'       BTDCIN
+     C                     ADD  BTPTAM    WNCRTT
+     C                     ENDIF
+     C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
+     C                     WRITE@BTREMG
+      *
+      **  Fourth Entry
+      *
+     C                     ADD  1         BTBINB
+     C           ZACODN    IFEQ *BLANKS
+     C                     MOVELZACODO    BTACCD
+     C                     ELSE
+     C                     MOVELBLSPTA    BTACCD
+     C                     ENDIF
+     C           LDBL      IFGT 0
+     C                     MOVEL'C'       BTDCIN
+     C                     ADD  BTPTAM    WNCRTT
+     C                     ELSE
+     C                     MOVEL'D'       BTDCIN
+     C                     ADD  BTPTAM    WNDBTT
+     C                     ENDIF
+     C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
+     C                     WRITE@BTREMG
+      *
+     C                     ENDIF
+     C           @KEY2     READEACCNT                    10
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCBCH - Create New Batch                                    *
+      *                                                               *
+      *  Called by: SRMABT - Management Account Balance Transfer      *
+      *             SRFABT - Financial Account Balance Transfer       *
+      *                                                               *
+      *  Calls:     SRJRNE - Create Journal Entry Summary             *
+      *             SRJRNH - Create Journal Entry Header              *
+      *                                                               *
+      *****************************************************************
+     C           SRCBCH    BEGSR
+      *
+      **  Create Journal Entry Summary
+      *
+     C                     EXSR SRJRNE
+      *
+      **  Create Journal Entry Header
+      *
+     C                     EXSR SRJRNH
+      *
+      ** Initialise Debit and Credit Totals
+      *
+     C                     Z-ADD*ZERO     WODBTT 150
+     C                     Z-ADD*ZERO     WOCRTT 150
+     C                     Z-ADD*ZERO     WNDBTT 150
+     C                     Z-ADD*ZERO     WNCRTT 150
+      *
+      **  Initialise Batch item no.
+      *
+     C                     Z-ADD*ZERO     BTBINB
+      *
+      **  Add 1 to Batch no.
+      *
+     C                     ADD  1         BCBTNB
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRJRNE - Create Journal Entry Summary                        *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRJRNE    BEGSR
+     C*                                                                   148771
+     C                     MOVELBCBTNB    BSBTNB
+     C                     MOVELBCOBCY    BSCYCD
+     C                     MOVELA8BRCD    BSBRCD
+     C                     Z-ADDWODBTT    BSDBTT
+     C                     Z-ADDWOCRTT    BSCRTT
+     C           BSCRTT    ADD  BSDBTT    @HASHO 180                      148771
+     C                     WRITE@BSREMD
+     C*                                                                   148771
+     C                     MOVELBCNBCY    BSCYCD
+     C                     Z-ADDWNDBTT    BSDBTT
+     C                     Z-ADDWNCRTT    BSCRTT
+     C           BSCRTT    ADD  BSDBTT    @HASHN 180                      148771
+     C*                                                                   148771
+     C                     WRITE@BSREMD
+     C*                                                                   148771
+     C                     ADD  @HASHO    HASHTO 180                      148771
+     C                     ADD  @HASHN    HASHTN 180                      148771
+     C*                                                                   148771
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRJRNH - Create Journal Entry Header                         *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRJRNH    BEGSR
+     C                     MOVELBCBTNB    BRBTNB
+     C                     MOVELBCBRCA    BRBCDA
+     C                     MOVELBCDEPT    BRDPCD
+     C                     MOVEL*BLANKS   BRWSID
+     C*
+     C           *IN30     IFEQ *ON                                       148771
+     C           HASHTO    MULT 1000      #HASHO 180                      148771
+     C                     END                                            148771
+     C           *IN31     IFEQ *ON                                       148771
+     C           HASHTO    MULT 100       #HASHO                          148771
+     C                     END                                            148771
+     C           *IN32     IFEQ *ON                                       148771
+     C           HASHTO    MULT 10        #HASHO                          148771
+     C                     END                                            148771
+     C           *IN33     IFEQ *ON                                       148771
+     C           HASHTO    MULT 1         #HASHO                          148771
+     C                     END                                            148771
+     C           *IN40     IFEQ *ON                                       148771
+     C           HASHTN    MULT 1000      #HASHN 180                      148771
+     C                     END                                            148771
+     C           *IN41     IFEQ *ON                                       148771
+     C           HASHTN    MULT 100       #HASHN                          148771
+     C                     END                                            148771
+     C           *IN42     IFEQ *ON                                       148771
+     C           HASHTN    MULT 10        #HASHN                          148771
+     C                     END                                            148771
+     C           *IN43     IFEQ *ON                                       148771
+     C           HASHTN    MULT 1         #HASHN                          148771
+     C                     END                                            148771
+     C           #HASHO    ADD  #HASHN    HASHT                           148771
+     C***********          Z-ADD*ZERO     BRHICC                          148771
+     C***********          Z-ADD*ZERO     BRHDCC                          148771
+     C***********          Z-ADD*ZERO     BRHINC                          148771
+     C***********          Z-ADD*ZERO     BRHIIN                          148771
+     C***********          Z-ADD*ZERO     BRHDIN                          148771
+     C***********          Z-ADD*ZERO     BRHINI                          148771
+     C                     Z-ADDHASHI     BRHICC                          148771
+     C                     Z-ADDHASHI     BRHIIN                          148771
+     C                     Z-ADDHASHD     BRHDCC                          148771
+     C                     Z-ADDHASHD     BRHDIN                          148771
+     C                     Z-ADDBTBINB    BRHINC                          148771
+     C                     Z-ADDBTBINB    BRHINI                          148771
+     C                     MOVEL'A'       BRBTSF
+     C                     MOVEL*BLANKS   BRBIUF
+     C                     MOVEL*BLANKS   BRSHPI
+     C                     MOVEL'N'       BRRAPI
+     C                     MOVEL'Y'       BRMBRB
+     C                     MOVEL*BLANKS   BRRVVD
+     C                     MOVEL'BASE CUR'TEMP1   8
+     C                     MOVEL'RENCY EQ'TEMP2   8
+     C           TEMP1     CAT  TEMP2     TEMP3  16
+     C                     MOVEL'UIV TRAN'TEMP1
+     C                     MOVEL'SFER    'TEMP2
+     C           TEMP1     CAT  TEMP2     TEMP4  16
+     C           TEMP3     CAT  TEMP4     BRBDES
+     C                     Z-ADD*ZERO     BRSPTT
+     C                     Z-ADD*ZERO     BRNIST
+     C                     MOVEL*BLANKS   BRSPRF
+     C                     MOVEL*BLANKS   BRDCIN
+     C                     MOVEL*BLANKS   BRIBCF
+     C                     MOVEL*BLANKS   BRCUSF
+     C                     MOVEL*BLANKS   BRCYCF
+     C                     MOVEL*BLANKS   BRACCF
+     C                     MOVEL*BLANKS   BRACSF
+     C                     MOVEL*BLANKS   BRNNBF
+     C                     Z-ADD*ZERO     BRRACF
+     C                     MOVEL*BLANKS   BRPRCF
+     C                     Z-ADD*ZERO     BRAMTF
+     C                     MOVEL*BLANKS   BRIBCT
+     C                     MOVEL*BLANKS   BRCYCT
+     C                     MOVEL*BLANKS   BRCNAT
+     C                     MOVEL*BLANKS   BRACCT
+     C                     MOVEL*BLANKS   BRASNT
+     C                     MOVEL*BLANKS   BRNNBT
+     C                     Z-ADD*ZERO     BRRACT
+     C                     MOVEL*BLANKS   BRTOJE
+     C                     MOVEASTAMP,1   BRTMST           Default Timestamp                  CPK015
+     C                     WRITE@BRREMA
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C                     ROLBK
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+     C/COPY ZSRSRC,ZCONVZ1
+      ********************************************************************
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+**  CPY@
+(c) Finastra International Limited 2001
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

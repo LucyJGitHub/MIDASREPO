@@ -1,0 +1,86 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Remove all triggers from the database')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control                                      */
+/*                                                                   */
+/*       SCRMVALTRG - Remove all triggers from the database          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2005                     */
+/*                                                                   */
+/*       Last Amend No. MD051000           Date 01Jun18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB023             Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG6989  *CREATE   Date 11May05              */
+/*                      Xnnnnn             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD051000 - SCRMVALTRG is insensitive to RMVPFTRG errors.    */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CCB023 - COB Restructure - Input Cycle Termination          */
+/*                Restructuring                                      */
+/*       BUG6989 - New shell program to call RMVALLTRG in COB.       */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                               */                         /*CCB023*/
+             PGM        PARM(&SUFFIX)                                                     /*CCB023*/
+
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+/**********  DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)             */                    /*CCB023*/
+/**********  DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)             */                    /*CCB023*/
+/**********  DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)            */                    /*CCB023*/
+             DCL        VAR(&SUFFIX) TYPE(*CHAR) LEN(8)                                   /*CCB023*/
+             DCL        VAR(&LIBNAM) TYPE(*CHAR) LEN(10)                                  /*CCB023*/
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2005')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     SWS(XXXXXX00)
+
+/* Get the system prefix and build the database library names */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+
+/**********  CHGVAR     VAR(&DMLIB) VALUE(&PREFIX *CAT 'DMLIB')   */                      /*CCB023*/
+/**********  CHGVAR     VAR(&DPLIB) VALUE(&PREFIX *CAT 'DPLIB')   */                      /*CCB023*/
+/**********  CHGVAR     VAR(&DTALIB) VALUE(&PREFIX *CAT 'DTALIB') */                      /*CCB023*/
+             CHGVAR     VAR(&LIBNAM) VALUE(&PREFIX *CAT &SUFFIX)                          /*CCB023*/
+
+/* Remove the triggers from the database */
+
+/**********  RMVALLTRG  LIBRARY(&DMLIB)    */                                             /*CCB023*/
+
+/**********  RMVALLTRG  LIBRARY(&DPLIB)    */                                             /*CCB023*/
+
+/**********  RMVALLTRG  LIBRARY(&DTALIB)   */                                             /*CCB023*/
+                                                                                          /*CCB023*/
+             RMVALLTRG  LIBRARY(&LIBNAM)                                                  /*CCB023*/
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*MD051000*/
+                GOTO       CMDLBL(ABNOR)                                                /*MD051000*/
+             ENDDO                                                                      /*MD051000*/
+                                                                                        /*MD051000*/
+             GOTO       CMDLBL(END)
+
+/* Abnormal termination */
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCRMVALTRG ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+END:
+             ENDPGM

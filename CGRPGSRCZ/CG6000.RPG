@@ -1,0 +1,711 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Lending commencement confirmations driv5r')   *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG6000 - Lending Commencement Confirmations Driver           *
+     F*                                                               *
+     F*  Function:  This program will read through file LTRIXL1 and   *
+     F*   ( I/C )   will pick out records with 'Confirmation printed  *
+     F* (I/C Term)  indicator' = 'N'. If the 'Confirmation required   *
+     F*             indicator' = 'Y', this program will call CG6005   *
+     F*             and once the confirmation has been produced, this *
+     F*             will set the 'Confirmation printed indicator' to  *
+     F*             'Y', otherwise it will set it to 'S'. If the      *
+     F*             confirmation produced requires auto-transmission, *
+     F*             this program will write to LEEXTAA, LEEXTAB and   *
+     F*             LEEXTAC. An audit report is produced when the     *
+     F*             information has been extracted.                   *
+     F*                                                               *
+     F*  Called By: LEC0212A - Lending I/C Confirmation Print         *
+     F*             LEC0401  - Lending I/C Term Confirmation Print    *
+     F*                                                               *
+     F*  Calls:     CG6005   - Lending Commencement Confirmations     *
+     F*             CG9020   - Write Data to UDC Extract Files        *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE141             Date 08Feb16               *
+      *                 AR322731           Date 01Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 AR322732           Date 23Jul12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER038             Date 19May08               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 248755A            Date 30Jul07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CAS009             Date 16May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CAP074             Date 08Aug03               *
+      *                 CLE031             Date 05Feb03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 136778             Date 11Jun98               *
+      *                 136573             Date 05Jun98               *
+     F*                 CLE004             Date 28APR97               *
+     F*                 110183             Date 12NOV96               *
+     F*                 CCG008 *CREATE     Date 30OCT95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*  AMENDMENT HISTORY                                            *
+      *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  AR322732 - LEC0212A and APISERVER locks LTRIX file.          *
+      *           - Prevent LTRIX RRN 1 from being locked (Recompile) *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER038 - Additional fields added to Correspondence           *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  248755A- Add SETON LR to avoid CPF3130 in LEC0212A.          *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CAP074 - Lending API enhancements - Loans input. (Recompile) *
+      *  CLE031 - Lending Enhancements (recompile).                   *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*  136778 - CLE004 not switchable and conditioning for          *
+     F*           confirmation when consolidated confirmation feature *
+     F*           off is incorrect                                    *
+     F*  136573 - Select records from LTRIX with record i.d. 'D'.     *
+     F*  CLE004 - Syndications & Authorisations                       *
+     F*  110183 - Rename LTRIX fields to prevent overwriting on       *
+     F*           update                                              *
+     F*  CCG008 - User Defined Correspondence - Lending               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FLTRIXL1 UF  E           K        DISK         KCOMIT
+     F                                              KINFSR SRFILE
+     FCLOAN   UF  E           K        DISK         KCOMIT
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     F                                              KINFSR SRFILE
+     FLEEXTAA UF  E                    DISK                      A
+     FLEEXTAB O   E                    DISK
+     FLEEXTAC UF  E                    DISK                      A
+     F/COPY WNCPYSRC,CG6000F001
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N  C T I O N    O F    I N D I C A T O R S               *
+     F*                                                               *
+     F*  50   -    EOF indicator for LTRIXL1                          *
+     F*  99   -    General work indicator                             *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  Main routine                                                 *
+     F*  SRINIT  -  Initial Processing - On First Call                *
+     F*  SRINZF  -  Initialise Fields on Each Invocation              *
+     F*  SRMAIN  -  Main Processing                                   *
+     F*  SRWLEN  -  Write to LEEXTAA, LEEXTAB, LEEXTAC                *
+     F*  SRAUDT  -  Audit Report Processing                           *
+     F*  *PSSR   -  Error Subroutine                                  *
+     F*  AOCUSTR0 - Retrieve Customer Details                         *
+     F*  AOCLNDR0 - Retrieve Customer Lending ICD                     *   CLE004
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*
+     E**  Copyright array.
+     E                    CPY@    1   1 80
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     I/EJECT
+     I*  Rename conflicting LTRIX fields                                  110183
+     ILTRIXF                                                              110183
+     I              RECI                            LRECI                 110183
+     I              LASN                            LLASN                 110183
+     I*
+     ICLOANCLF                                                            CLE004
+     I** Rename fields on CLOANCL                                         CLE004
+     I              RECI                            LORECI                CLE004
+     I              RCDT                            LORCDT                CLE004
+     I              BRCA                            LOBRCA                CLE004
+     I              VDAT                            LOVDAT                CLE004
+     I              CHTP                            LOCHTP                CLE004
+     I              TNLU                            LOTNLU                CLE004
+     I*                                                                   CLE004
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I*
+     IDSPARM    E DSLTRIX
+     I** External DS for parameter passed to CG6005
+     I              RCDT                            ##RCD1
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I**  External DS for customer details
+     I*
+     ISDCLND    E DSSDCLNDPD                                              CLE004
+     I**  External DS for Customer Lending ICD                            CLE004
+     I*                                                                   CLE004
+     IDSFDY     E DSDSFDY
+     I**  First DS for access programs, short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Second DS for access programs, long data structure
+     I*
+     IW0FMT     E DSCGUDTAPD
+     I**  Record format of PF/CGUDTAPD for use as a parameter
+     I*
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Process     :  MAINLINE                                      *
+     C*  Function    :  Mainline processing                           *
+     C*                                                               *
+     C*  Called by   :  None                                          *
+     C*  Calls       :  SRINIT - Initial Processing - On First Call   *
+     C*                 SRINZF - Initialise Fields on Each Invocation *
+     C*                 SRMAIN - Main Processing                      *
+     C*                 SRAUDT - Audit Report Processing              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C/COPY WNCPYSRC,CG6000C001
+     C**  Parameter list for current program invocation.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0CMT   3
+     C*
+     C**  Set up subroutine stack name.
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C**  Initial processing - Once Only.
+     C*
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+     C*
+     C**  Initialisation processing.
+     C*
+     C                     EXSR SRINZF
+     C*
+     C**  Main processing.
+     C*
+     C                     EXSR SRMAIN
+     C*
+     C**  Audit Processing.
+     C*
+     C                     EXSR SRAUDT
+     C*
+     C**  Unwind subroutine stack name.
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C**  Terminate program.
+     C*
+     C                     SETON                     LR                                      248755A
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRMAIN                                        *
+     C*  Function    :  Main Processing                               *
+     C*                                                               *
+     C*  Called by   :  MAINLINE - Mainline Processing                *
+     C*  Calls       :  CG6005 - Lending Commencement Confirmations   *
+     C*                 SRWLEN - Write to LEEXTAA, LEEXTAB, LEEXTAC   *
+     C*                 SRAUDT - Audit Report Processing              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRMAIN    BEGSR                           ** SRMAIN **
+     C*
+     C**  Set up subroutine stack name.
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+     C*
+     C** Read through LTRIXL1 file                                        CLE004
+     C*
+     C           *LOVAL    SETLLLTRIXL1
+     C                     READ LTRIXL1                  50
+     C*
+     C**  Read until End of File.
+     C*
+     C           *IN50     DOWEQ'0'
+     C*                                                                   CLE004
+     C**  Select records with RECI='D' only                               CLE004
+     C***********RECI      IFEQ 'D'                                 CLE004136573
+     C           LRECI     IFEQ 'D'                                       136573
+     C*
+     C**  If the 'Confirmation required indicator' = 'Y',
+     C*
+     C           CNRQ      IFEQ 'Y'
+     C*
+     C/COPY WNCPYSRC,CG6000C004
+     C**  Increment the count of LTRIXL1 records read.
+     C*
+     C                     ADD  1         ##DREC  50
+     C*                                                                   CLE004
+     C*  Access CLOAN file for Linked to Syndicate and                    CLE004
+     C*  Loan Status Indicator fields                                     CLE004
+     C*                                                                   CLE004
+     C           KCLOAN    KLIST                                          CLE004
+     C                     KFLD           LNRF                            CLE004
+     C                     KFLD           LORCDT                          CLE004
+     C*                                                                   CLE004
+     C                     MOVEL'A'       LORCDT                          CLE004
+     C           KCLOAN    CHAINCLOAN                88                   CLE004
+     C           *IN88     IFEQ '1'                                       CLE004
+     C                     EXSR SRAUDT                                    CLE004
+     C                     MOVEL'CLOAN   'W0FILE           ************   CLE004
+     C                     MOVELLNRF      W0KEY            * DBERR 02 *   CLE004
+     C                     Z-ADD2         W0ERNB           ************   CLE004
+     C                     MOVEL'MEM5004' W0MSGD                          CLE004
+     C                     MOVEL'MIDAS  ' W0MSGF                          CLE004
+     C                     EXSR SRERR                                     CLE004
+     C                     ENDIF                                          CLE004
+     C*
+     C*  If Loan is authorised and Loan is not 'Linked to Syndicate'      CLE004
+     C*                                                                   CLE004
+     C********** LSTS      IFEQ 'A'                                 CLE004136778
+     C           CLE004    IFEQ 'Y'                                       136778
+     C           LSTS      ANDEQ'A'                                       136778
+     C           LNKS      ANDNE'Y'                                       CLE004
+     C           CLE004    OREQ 'N'                                       136778
+     C*                                                                   CLE004
+     C* If Consolidated Confirmations is 'Y' call CG6005                  CLE004
+     C*                                                                   CLE004
+     C********** BPCONR    IFEQ 'Y'                                 CLE004136778
+     C           BPCONR    IFNE 'Y'                                       136778
+     C/COPY WNCPYSRC,CG6000C002
+     C*                                                                   CLE004
+     C**  Produce Confirmation.
+     C*
+     C                     CALL 'CG6005'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM *BLANK    ##COPD  1
+     C                     PARM *BLANK    ##AUTO  1
+     C                     PARM *BLANKS   ##SPPS  1                                           CER038
+     C                     PARM           DSPARM
+     C*
+     C**  If call ended in error, execute error processing.
+     C*
+     C           ##RTCD    IFNE *BLANK
+     C                     EXSR SRAUDT
+     C                     MOVEL'CG6005  'W0FILE           ************
+     C                     MOVEL##RTCD    W0KEY            * DBERR 01 *
+     C                     Z-ADD1         W0ERNB           ************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C/COPY WNCPYSRC,CG6000C003
+     C                     ELSE                                           CLE004
+     C                     MOVE 'Y'       ##COPD                          CLE004
+     C*                                                                   CLE004
+     C                     ENDIF                           BPCONR = 'Y'   CLE004
+     C**  If a confirmation is produced,
+     C*
+     C           ##COPD    IFEQ 'Y'
+     C           ##SPPS    ANDEQ'N'                                                           CER038
+     C*
+     C**  Set the 'Confirmation printed indicator' in LTRIXL1 to 'Y'.
+     C*
+     C                     MOVEL'Y'       CNPR
+     C                     UPDATLTRIXF
+     C*
+     C**  Update the Confirmations bit setting on CLOANCL.
+     C*
+     C***********KCLOAN    KLIST                                          CLE004
+     C***********          KFLD           LNRF                            CLE004
+     C***********          KFLD           RCDT                            CLE004
+     C*
+     C***********          MOVEL'A'       RCDT                            CLE004
+     C***********KCLOAN    CHAINCLOAN                88                   CLE004
+     C************IN88     IFEQ '1'                                       CLE004
+     C************         EXSR SRAUDT                                    CLE004
+     C************         MOVEL'CLOAN   'W0FILE           ************   CLE004
+     C************         MOVELLNRF      W0KEY            * DBERR 02 *   CLE004
+     C************         Z-ADD2         W0ERNB           ************   CLE004
+     C************         MOVEL'MEM5004' W0MSGD                          CLE004
+     C************         MOVEL'MIDAS  ' W0MSGF                          CLE004
+     C************         EXSR SRERR                                     CLE004
+     C************         ENDIF                                          CLE004
+     C*
+     C                     BITON'01'      CNFI
+     C           ##RCD1    IFEQ 'R'
+     C                     BITON'2'       CNFI
+     C                     ENDIF
+     C*
+     C                     UPDATCLOANCLF
+     C*
+     C**  If the confirmation produced also requires auto-transmission,
+     C**  Write to LEEXTAA, LEEXTAB and LEEXTAC.
+     C*
+     C           ##AUTO    IFEQ 'Y'
+     C                     EXSR SRWLEN
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C*
+     C**  If a confirmation is not produced, set the 'Confirmation
+     C**  printed indicator' in LTRIXL1 to 'S'.
+     C*
+     C                     MOVEL'S'       CNPR
+     C                     MOVE LRECI     RECI                            110183
+     C                     MOVE LLASN     LASN                            110183
+     C                     UPDATLTRIXF
+     C*
+     C                     ENDIF                                       '
+     C*
+     C**  Commit changes.
+     C*
+     C                     COMIT
+     C*                                                                   CLE004
+     C                     ENDIF                           LSTS,LNKS      CLE004
+     C/COPY WNCPYSRC,CG6000C005
+     C*                                                                   CLE004
+     C                     ENDIF                           CNRQ='Y'       CLE004
+     C*                                                                   CLE004
+     C                     ENDIF                           RECI='D'       CLE004
+     C*
+     C** Read next record from LTRIXL1.
+     C*
+     C                     READ LTRIXL1                  50
+     C*
+     C                     ENDDO
+     C*
+     C           EXMAIN    TAG
+     C*
+     C**  Unwind subroutine stack name.
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C           SRMAI9    ENDSR                           ** SRMAI9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRWLEN                                        *
+     C*  Function    :  Write to LEEXTAA, LEEXTAB, LEEXTAC            *
+     C*                                                               *
+     C*  Called by   :  SRMAIN - Main processing                      *
+     C*  Calls       :  AOCUSTR0 - Retrieve Customer Details          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRWLEN    BEGSR                           ** SRWLEN **
+     C*
+     C**  Set up subroutine stack name.
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRWLEN'  @STK,Q
+     C*
+     C**  Get Customer Details.
+     C*
+     C                     MOVELCNUM      ##KEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*KEY   ' ##OPTN  7
+     C                     PARM           ##KEY1 10
+     C                     PARM *BLANKS   ##KYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C           ##RTCD    IFNE *BLANK
+     C                     MOVEL'SDCUSTPD'W0FILE
+     C                     MOVELCNUM      W0KEY            ************
+     C                     Z-ADD3         W0ERNB           * DBERR 03 *
+     C                     MOVEL'MEM5004' W0MSGD           ************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C*
+     C**  Write to detail file - LEEXTAB.
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE 'C'       CIND
+     C                     MOVELBBCSID    CSID
+     C                     WRITELEEXTABF
+     C*
+     C**  Write to header file - LEEXTAA.
+     C*
+     C           1         CHAINLEEXTAA              99
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'H'       RECI
+     C                     WRITELEEXTAAF
+     C                     END
+     C*
+     C**  Write to trailer file - LEEXTAC.
+     C*
+     C           1         CHAINLEEXTAC              99
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'T'       RECI
+     C                     Z-ADD1         NORES
+     C                     WRITELEEXTACF
+     C                     ELSE
+     C                     ADD  1         NORES
+     C                     UPDATLEEXTACF
+     C                     END
+     C*
+     C           EXWLEN    TAG
+     C*
+     C**  Unwind subroutine stack name.
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C           SRWLE9    ENDSR                           ** SRWLE9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRINZF                                        *
+     C*  Function    :  Initialise Fields on Each Invocation          *
+     C*                                                               *
+     C*  Called by   :  MAINLINE - Mainline Processing                *
+     C*  Calls       :  CGZAUDIT - Audit Processing                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRINZF    BEGSR                           ** SRINZF **
+     C*
+     C**  Set up subroutine stack name.
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZF'  @STK,Q
+     C*
+     C**  Open the Audit Print File.
+     C*
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6000AU'I#SPLN
+     C                     MOVEL'CG6000  'I#REF
+     C                     MOVE 'CGD2525' I#TITL
+     C                     MOVE 'CGD2526' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+     C*
+     C           EXINZF    TAG
+     C*
+     C**  Unwind subroutine stack name.
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C           SRINZ9    ENDSR                           ** SRINZ9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRINIT                                        *
+     C*  Function    :  Initial processing - On First Call            *
+     C*                                                               *
+     C*  Called by   :  MAINLINE - Mainline Processing                *
+     C*  Calls       :  AOCLNDPD - Retrieve Customer Lending ICD      *   CLE004
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRINIT    BEGSR                           ** SRINIT **
+     C*
+     C**  Set up subroutine stack name.
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C**  Initialise work fields.
+     C*
+     C                     Z-ADD*ZEROS    ##DREC
+     C*                                                                   CLE004
+     C**  Get Customer Lending ICD                                        CLE004
+     C*                                                                   CLE004
+     C                     CALL 'AOCLNDR0'                                CLE004
+     C                     PARM *BLANKS   ##RTCD                          CLE004
+     C                     PARM '*FIRST ' ##OPTN  7                       CLE004
+     C********** SDCLND    PARM SDCLND    DSFDY                                        CLE004 CLE134
+     C           SDCLND    PARM SDCLND    DSSDY                                               CLE134
+      *                                                                   136778
+      ** Access switchable features file to check for CLE004              136778
+     C                     CALL 'AOSARDR0'                                136778
+     C                     PARM *BLANKS   W@RTCD  7                       136778
+     C                     PARM '*VERIFY' W@OPTN  7                       136778
+     C                     PARM 'CLE004'  W@SARD  6                       136778
+      *                                                                   136778
+     C           W@RTCD    IFEQ *BLANK                                    136778
+     C                     MOVE 'Y'       CLE004  1                       136778
+     C                     ELSE                                           136778
+     C                     MOVE 'N'       CLE004                          136778
+     C                     ENDIF                                          136778
+     C*
+     C**  Copyright Statement.
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C           EXINIT    TAG
+     C*
+     C**  Unwind subroutine stack name.
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C           SRINI9    ENDSR                           ** SRINI9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRAUDT                                        *
+     C*  Function    :  Audit Report Processing                       *
+     C*                                                               *
+     C*  Called by   :  MAINLINE - Mainline Processing                *
+     C*                 SRMAIN   - Main Processing                    *
+     C*  Calls       :  CGZAUDIT - Audit Processing                   *
+     C*                 CG9020   - Write Data to UDC Extract Files    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRAUDT    BEGSR                           ** SRAUDT **
+     C*
+     C**  Set up subroutine stack name.
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+     C*
+     C**  Output the Count of records read.
+     C*
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6000  'I#REF
+     C                     MOVE 'CGD2525' I#TITL
+     C                     MOVE 'CGD2526' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'LTRIX   'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##DREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+     C*
+     C**  Skip a line.
+     C*
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+     C*
+     C**  Produce the Audit Report.
+     C*
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD2525' W0TITL  7
+     C                     PARM 'CGD2526' W0ULIN  7
+     C                     PARM           W0CMT
+     C*
+     C**  Close the Audit Print File.
+     C*
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6000  'I#REF
+     C                     MOVE 'CGD2525' I#TITL
+     C                     MOVE 'CGD2526' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+     C*
+     C           EXAUDT    TAG
+     C*
+     C**  Unwind subroutine stack name.
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C           SRAUD9    ENDSR                           ** SRAUD9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+** CPY@  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

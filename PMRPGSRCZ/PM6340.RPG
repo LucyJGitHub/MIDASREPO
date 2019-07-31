@@ -1,0 +1,492 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Setup Currency Total Information')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Portfolio Management Module                          *
+      *                                                               *
+      *  PM6340 - PM Setup Currency Total Information                 *
+      *                                                               *
+      *  Function:                                                    *
+      *  (I/C)                                                        *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 19Jun96               *
+      *                 S01124             Date 02Jun94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPM005 - Private Banking Phase II                            *
+      *           Focus Group Changes Upgraded to DBA                 *
+      *  S01124 - PBFG/7 - Net Commitment By Currency                 *
+      *         - PBFG/8 - Display Positions Split By Currency        *
+      *                                                               *
+      *****************************************************************
+     F*** PMTECYPPIF**E                    DISK                           CPM005
+     FPMTECYPDIF  E                    DISK                               CPM005
+     F* Total Events by Currency - Prefix 'FH'
+     F*
+     FPMNTCMLLUF  E           K        DISK                      A
+     F* Net Commitment by Currency Totals - Prefix 'FJ'
+     F*
+     F***PMEVCYPPIF**E                    DISK                            CPM005
+     FPMEVCYPDIF  E                    DISK                               CPM005
+     F* Forward Events by Currency - Prefix 'FG'
+     F*
+     FPMCIALL0UF  E           K        DISK                      A
+     F* Currency/Instrument Asset Liability 'FI'
+     F*
+     FPMICALL0O   E           K        DISK
+     F* Instrument/Currency Asset Liability 'FM'
+     F*
+     F***SDBANKL1IF**E           K        DISK                            CPM005
+     F* Bank Details file
+     F*
+     FSDPLINPDIF  E           K        DISK
+     F* Instrument Types - Prefix 'PD'
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * 81   82   83   84   ..   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I***LDA*****   UDS                            256                    CPM005
+     I***********                           132 183 DBLOT                 CPM005
+     I***********                           132 141 DBFILE                CPM005
+     I***********                           142 170 DBKEY                 CPM005
+     I***********                           171 180 DBPGM                 CPM005
+     I***********                           181 1830DBASE                 CPM005
+     ILDA       E DSLDA                         256                       CPM005
+      *                                                                   CPM005
+      ** Local data area for database error details                       CPM005
+      ** *LOCK IN LDA immediately before and OUT LDA immediately          CPM005
+      ** after each database error handling.                              CPM005
+      **                                                                  CPM005
+      **                                    134 141 DBFILE                CPM005
+      **       Defines:                     142 170 DBKEY                 CPM005
+      **                                    171 180 DBPGM                 CPM005
+      **                                    181 1830DBASE                 CPM005
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I***
+     ISDBANK    E DSSDBANKPD                                              CPM005
+      *                                                                   CPM005
+      **  SD Bank Details                                                 CPM005
+      *                                                                   CPM005
+     ISDPORT    E DSSDPORTPD                                              CPM005
+      *                                                                   CPM005
+      **  SD Portfolio Management ICD Details                             CPM005
+      *                                                                   CPM005
+     IDSFDY     E DSDSFDY                                                 CPM005
+      *                                                                   CPM005
+      ** Short Data Structure                                             CPM005
+      *                                                                   CPM005
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C** DEFINE KEY
+     C           KKEY      KLIST
+     C                     KFLD           WWCNUM
+     C                     KFLD           WWPTFR
+     C                     KFLD           WWCURR
+     C*
+     C           KKEY2     KLIST
+     C                     KFLD           FGCNUM
+     C                     KFLD           FGPTFR
+     C                     KFLD           FGCURR
+     C*
+     C*================================================================
+     C*
+     C** INITIALIZATION PROCESSING
+     C                     EXSR #INIT
+     C*
+     C** MAIN PROCESSING
+     C                     EXSR MAIN
+     C*
+     C** TERMINATION PROCESSING
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C**=================================================================
+      **
+      **  #INIT       SUBROUTINE TO INITIALIZE STATIC FIELDS AND ACCESS STANDING
+      **              DATA CALLED ONCE AT START OF PROGRAM FROM MAIN LINE.
+     C**
+      **     CALLED BY PROGRAM
+      **     CALLS     *PSSR
+      **
+     C**=================================================================
+     C**                                                   *****************
+     C           #INIT     BEGSR                           ** #INIT BEGSR **
+     C**                                                   *****************
+     C**  PREPARE LDA:
+     C**
+     C***********          MOVEL*BLANK    DBLOT                           CPM005
+     C           *NAMVAR   DEFN           LDA                             CPM005
+     C                     MOVEL'PM6340'  DBPGM
+     C*
+     C**  INITIALIZE INDICATORS:
+     C                     MOVE '0'       *IN
+     C**
+     C**  GET INSTALLATION CONTROL DATA RECORD 1:
+     C************LOVAL    SETLLSDBANKL1                                  CPM005
+     C***********          READ SDBANKL1                 81               CPM005
+     C***********                                                         CPM005
+     C**  IF RECORD NOT FOUND:                                            CPM005
+     C************IN81     IFEQ '1'                        - B1           CPM005
+     C***********          MOVEL'001'     DBASE          *****************CPM005
+     C***********          MOVEL'SDBANKL1'DBFILE         ** DB ERROR 01 **CPM005
+     C***********          MOVEL' NONE '  DBKEY          *****************CPM005
+     C***********          EXSR *PSSR                                     CPM005
+     C***********          END                             - E1           CPM005
+      *                                                                   CPM005
+      ** Access the Bank Details                                          CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOBANKR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD   7                       CPM005
+     C                     PARM '*FIRST ' WOPTN   7                       CPM005
+     C           SDBANK    PARM SDBANK    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD001       DBASE            ***************CPM005
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 01 *CPM005
+     C                     MOVEL'*FIRST'  DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+      ** Access the Portfolio Management Details                          CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOPORTR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*FIRST ' WOPTN                           CPM005
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD002       DBASE            ***************CPM005
+     C                     MOVE 'SDPORTPD'DBFILE           * DB ERROR 02 *CPM005
+     C                     MOVEL'*FIRST'  DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+     C**
+     C**  INITIALIZE WORK FIELDS
+     C                     Z-ADD*ZEROS    WWCAPC 150
+     C                     Z-ADD*ZEROS    WWFFOR 150
+     C                     Z-ADD*ZEROS    WWFORX 150
+     C*
+     C                     ENDSR
+     C**=================================================================
+      **
+      **  MAIN        M A I N       P R O C E S S I N G&
+      **
+      **     CALLED BY PROGRAM
+      **     CALLS     *PSSR
+      **
+     C**=================================================================
+     C**                                                   *************
+     C           MAIN      BEGSR                           ** SR/MAIN **
+     C*                                                    *************
+     C***POSITION*ON*FILE*PF/PMTECYPP**********************************   CPM005
+     C***********1         SETLLPMTECYPP                                  CPM005
+     C***********          READ PMTECYPP                 80               CPM005
+      *                                                                   CPM005
+      ** Position on file PF/PMTECYPD                                     CPM005
+      *                                                                   CPM005
+     C           1         SETLLPMTECYPD                                  CPM005
+     C                     READ PMTECYPD                 80               CPM005
+     C*
+     C** SETUP WORK FIELDS
+     C           *IN80     IFEQ '0'                        - B1
+     C**********           Z-ADDFHCNUM    WWCNUM  60                                          CSD027
+     C                     MOVE FHCNUM    WWCNUM  6                                           CSD027
+     C                     MOVELFHPTFR    WWPTFR  4
+     C                     MOVELFHCURR    WWCURR  3
+     C                     END                             - E1
+     C*
+     C** DO WHILE NOT EOF
+     C           *IN80     DOWEQ'0'                        - B1
+     C*
+     C** IF CHANGE OF CUSTOMER OR PORTFOLIO OR CURRENCY
+     C           FHCNUM    IFNE WWCNUM                     - B2
+     C           FHPTFR    ORNE WWPTFR
+     C           FHCURR    ORNE WWCURR
+     C*
+     C           KKEY      CHAINPMNTCMLL             85
+     C*
+     C** IF RECORD FOUND
+     C           *IN85     IFEQ '0'                        - B3
+     C*
+     C** CAPITAL CHANGE
+     C                     ADD  WWCAPC    FJCAPC
+     C*
+     C** FORWARD FX CUSTOMER
+     C                     ADD  WWFFOR    FJFFOR
+     C*
+     C** FUTURE & OPTION
+     C                     ADD  WWFORX    FJFORX
+      *                                                                   CPM005
+      ** If Bank Portfolio is ON, reverse the amounts                     CPM005
+      *                                                                   CPM005
+     C           FCPORS    IFEQ 'B'                                       CPM005
+     C           *ZERO     SUB  FJCAPC    FJCAPC                          CPM005
+     C           *ZERO     SUB  FJFFOR    FJFFOR                          CPM005
+     C           *ZERO     SUB  FJFORX    FJFORX                          CPM005
+     C                     ENDIF                                          CPM005
+     C*
+     C** UPDATE RECORD
+     C                     UPDATPMNTCMD0
+     C*
+     C** NO RECORD FOUND
+     C                     ELSE                            - X3
+     C*
+     C                     MOVE 'D'       FJRECI
+     C**********           Z-ADDWWCNUM    FJCNUM                                              CSD027
+     C                     MOVE WWCNUM    FJCNUM                                              CSD027
+     C                     MOVE WWPTFR    FJPTFR
+     C                     MOVE WWCURR    FJCURR
+     C                     Z-ADD0         FJCVAL
+     C*
+     C** CAPITAL CHANGE
+     C                     Z-ADDWWCAPC    FJCAPC
+     C*
+     C** FORWARD FX CUSTOMER
+     C                     Z-ADDWWFFOR    FJFFOR
+     C*
+     C** FUTURE & OPTION
+     C                     Z-ADDWWFORX    FJFORX
+      *                                                                   CPM005
+      ** If Bank Portfolio is ON, reverse the amounts                     CPM005
+      *                                                                   CPM005
+     C           FCPORS    IFEQ 'B'                                       CPM005
+     C           *ZERO     SUB  FJCAPC    FJCAPC                          CPM005
+     C           *ZERO     SUB  FJFFOR    FJFFOR                          CPM005
+     C           *ZERO     SUB  FJFORX    FJFORX                          CPM005
+     C                     ENDIF                                          CPM005
+     C*
+     C** WRITE A NEW RECORD
+     C                     WRITEPMNTCMD0
+     C*
+     C                     END                             - E3
+     C*
+     C** RESET WORK FIELDS
+     C                     Z-ADD*ZEROS    WWCAPC
+     C                     Z-ADD*ZEROS    WWFFOR
+     C                     Z-ADD*ZEROS    WWFORX
+     C**********           Z-ADDFHCNUM    WWCNUM                                              CSD027
+     C                     MOVE FHCNUM    WWCNUM                                              CSD027
+     C                     MOVELFHPTFR    WWPTFR
+     C                     MOVELFHCURR    WWCURR
+     C                     END                             - E2
+     C*
+     C** CAPITAL CHANGE
+     C***********FHEVDT    IFEQ 'CC'                       - B2           CPM005
+     C           FHEVTY    IFEQ 'CC'                       - B2           CPM005
+     C           FHPTFR    IFNE '9997'                     - B3
+     C           FHPTFR    ANDNE'9998'
+     C           FHPTFR    ANDNE'9999'
+     C                     ADD  FHMNT1    WWCAPC
+     C                     ELSE                            - X3
+     C                     ADD  FHMNT2    WWCAPC
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C** FORWARD FX CUSTOMER
+     C***********FHEVDT    IFEQ 'FX'                       - B2           CPM005
+     C           FHEVTY    IFEQ 'FX'                       - B2           CPM005
+     C           FHPTFR    IFNE '9997'                     - B3
+     C           FHPTFR    ANDNE'9998'
+     C           FHPTFR    ANDNE'9999'
+     C                     ADD  FHMNT1    WWFFOR
+     C                     ELSE                            - X3
+     C                     ADD  FHMNT2    WWFFOR
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C** FUTURE & OPTION
+     C***********FHEVDT    IFEQ 'FO'                       - B2           CPM005
+     C           FHEVTY    IFEQ 'FO'                       - B2           CPM005
+     C           FHPTFR    IFNE '9997'                     - B3
+     C           FHPTFR    ANDNE'9998'
+     C           FHPTFR    ANDNE'9999'
+     C                     ADD  FHMNT1    WWFORX
+     C                     ELSE                            - X3
+     C                     ADD  FHMNT2    WWFORX
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C** READ NEXT RECORD
+     C***********          READ PMTECYPP                 80               CPM005
+     C                     READ PMTECYPD                 80               CPM005
+     C*
+     C** END OF LOOP
+     C                     END                             - E1
+     C*
+     C** PROCESSING FOR CURRENCY/INSTRUMENT ASSET LIABILITY
+     C***********1         SETLLPMEVCYPP                                  CPM005
+     C***********          READ PMEVCYPP                 80               CPM005
+     C           1         SETLLPMEVCYPD                                  CPM005
+     C                     READ PMEVCYPD                 80               CPM005
+     C*
+     C** DO WHILE NOT EOF
+     C           *IN80     DOWEQ'0'                        - B1
+     C*
+     C           FGEVTY    IFEQ 'FX'                       - B2
+     C*
+     C           KKEY2     CHAINPMCIALL0             85
+     C*
+     C** IF NOT FOUND, WRITE A RECORD FOR THE INSTRUMENT TOTAL ON PF/PMCIALPP
+     C           *IN85     IFEQ '1'                        - B3
+     C                     MOVE 'D'       FIRECI
+     C**********           Z-ADDFGCNUM    FICNUM                                              CSD027
+     C                     MOVE FGCNUM    FICNUM                                              CSD027
+     C                     MOVE FGPTFR    FIPTFR
+     C                     MOVE FGCURR    FICURR
+     C                     MOVE FGEVFX    FIPOTY
+     C                     MOVE 'I'       FITOTT
+     C*
+     C                     MOVE *BLANKS   FIDGRC
+     C*
+     C           FGINSC    IFNE *BLANKS                    - B4
+     C           FGINSC    CHAINSDPLINPD             81
+     C*
+     C           *IN81     IFEQ '1'                        - B5
+     C***********          MOVEL'002'     DBASE          *****************CPM005
+     C***********          MOVEL'SDPLINPD'DBFILE         ** DB ERROR 02 **CPM005
+     C                     Z-ADD003       DBASE            ***************CPM005
+     C                     MOVE 'SDPLINPD'DBFILE           * DB ERROR 03 *CPM005
+     C                     MOVELFGINSC    DBKEY            ***************CPM005
+     C                     EXSR *PSSR
+     C                     ELSE                            - X5
+     C                     MOVE PDDSPG    FIDGRC
+     C                     END                             - E5
+     C*
+     C                     END                             - E4
+     C*
+     C                     Z-ADDFGDGRS    FIDGRS
+     C                     MOVE FGINSC    FIINSC
+     C                     Z-ADDFGINDS    FIINDS
+     C                     Z-ADD0         FIASVL
+     C                     Z-ADD0         FILIVL
+     C                     WRITEPMCIALD0
+     C*
+     C** WRITE A RECORD FOR THE INSTRUMENT TOTAL ON PF/PMICALPP
+     C                     MOVE 'D'       FMRECI
+     C**********           Z-ADDFGCNUM    FMCNUM                                              CSD027
+     C                     MOVE FGCNUM    FMCNUM                                              CSD027
+     C                     MOVE FGPTFR    FMPTFR
+     C                     MOVE FGEVFX    FMPOTY
+     C                     MOVE 'I'       FMTOTT
+     C                     MOVE FGINSC    FMINSC
+     C                     Z-ADDFGINDS    FMINDS
+     C                     MOVE *BLANKS   FMCURR
+     C                     MOVE PDDSPG    FMDGRC
+     C                     Z-ADDFGDGRS    FMDGRS
+     C                     Z-ADD0         FMASVL
+     C                     Z-ADD0         FMLIVL
+     C                     WRITEPMICALD0
+     C** WRITE A RECORD FOR THE DISPLAY GROUP TOTAL ON PF/PMCIALPP
+     C                     MOVE 'B'       FITOTT
+     C                     MOVE *BLANKS   FIDGRC
+     C                     Z-ADD*ZEROS    FIDGRS
+     C                     MOVE *BLANKS   FIINSC
+     C                     Z-ADD*ZEROS    FIINDS
+     C                     WRITEPMCIALD0
+     C*
+     C** WRITE A RECORD FOR THE CURRENCY TOTAL ON PF/PMICALPP
+     C                     MOVE 'R'       FMTOTT
+     C                     MOVE FGCURR    FMCURR
+     C                     Z-ADD0         FMASVL
+     C                     Z-ADD0         FMLIVL
+     C                     WRITEPMICALD0
+     C** WRITE A RECORD FOR THE INSTRUMENT TOTAL ON PF/PMCIALPP
+     C                     MOVE *BLANKS   FIPOTY
+     C                     MOVE 'A'       FITOTT
+     C                     WRITEPMCIALD0
+     C*
+     C** WRITE A RECORD FOR THE POSITION TYPE TOTAL ON PF/PMICALPP
+     C                     MOVE 'B'       FMTOTT
+     C                     MOVE *BLANKS   FMINSC
+     C                     Z-ADD*ZEROS    FMINDS
+     C                     MOVE *BLANKS   FMCURR
+     C                     MOVE *BLANKS   FMDGRC
+     C                     Z-ADD*ZEROS    FMDGRS
+     C                     Z-ADD0         FMASVL
+     C                     Z-ADD0         FMLIVL
+     C                     WRITEPMICALD0
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C** READ NEXT RECORD
+     C***********          READ PMEVCYPP                 80               CPM005
+     C                     READ PMEVCYPD                 80               CPM005
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR
+     C*================================================================
+     C** *PSSR  S/R
+     C*================================================================
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C*================================================================
+**  CPY@
+(c) Finastra International Limited 2001

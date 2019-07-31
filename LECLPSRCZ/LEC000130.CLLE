@@ -1,0 +1,91 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Start MQ Mananger and Channels')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LERC000130 - Midas LE - Start MQ queue manager and channel  */
+/*                                                                   */
+/*       Function: This program ensures that sending of transaction  */
+/*                 to MQ will not fail since it will start the       */
+/*                 queue managers and channels                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1092031          Date 28Feb13              */
+/*                      AR1073035 *CREATE  Date 29Dec12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1092031 - Handle bank's configuration of MQ Channel       */
+/*       AR1073035 - Error in adding QMQM library because it         */
+/*                   already exist                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&MQMGR)  TYPE(*CHAR) LEN(200)
+             DCL        VAR(&MQCHL)  TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited +
+                           2012')
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE 'MQQueueMgrCOB' +
+                          &MQMGR 'MQQueueChnCOB' &MQCHL &SVALK3 +
+                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK0 &SVAL10)
+ 
+/* If there is an error finding any system value then end abnormally */
+ 
+             IF         COND(&RTNCDE *NE '       ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Start MQ Manager */
+             STRMQM     MQMNAME(&MQMGR)
+             MONMSG     MSGID(CPF0000)
+ 
+             IF         COND(&MQCHL = *BLANKS) THEN(GOTO CMDLBL(END))                  /*AR1092031*/
+ 
+/** Start MQ Channel */
+             STRMQMCHL  CHLNAME(&MQCHL) MQMNAME(&MQMGR)
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(END)
+ 
+ 
+ABNOR:       SNDPGMMSG  MSG('Job terminated, database in error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX11)
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2012')
+ 
+             ENDPGM

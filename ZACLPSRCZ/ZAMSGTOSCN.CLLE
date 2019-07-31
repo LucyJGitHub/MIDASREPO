@@ -1,0 +1,72 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas ZA Send program message: ILE compatible')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas Standard routines                                     */
+/*                                                                   */
+/*       ZAMSGTOSCN - Send message to program message queue with     */
+/*                    variables - ILE compatible version.            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CAP002  *CREATE    Date 18Nov97              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CAP002 - Conversion of Midas inputs to modular API structure*/
+/*                                                                   */
+/*********************************************************************/
+/**/
+             PGM        PARM(&MSGFL &MSGID &MSGDAT &PROGRAM &MODULE +
+                          &PROCEDURE)
+/**/
+/** Declares                                                         */
+/** Message file name **/
+             DCL        VAR(&MSGFL) TYPE(*CHAR) LEN(10)
+ 
+/** Message ID to send **/
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+ 
+/** Message data to include **/
+             DCL        VAR(&MSGDAT) TYPE(*CHAR) LEN(45)
+ 
+/** Bound program to send the message to **/
+             DCL        VAR(&PROGRAM) TYPE(*CHAR) LEN(10)
+ 
+/** Module to send the message to **/
+             DCL        VAR(&MODULE) TYPE(*CHAR) LEN(10)
+ 
+/** Procedure to send the message to **/
+             DCL        VAR(&PROCEDURE) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2001')
+/** +
+    The global monitor sends an escape message, which will end the +
+    program instantly if it is executed. +
+**/
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFL) MSGDTA(&MSGDAT) +
+                          TOPGMQ(*SAME (&PROCEDURE &MODULE &PROGRAM))
+ 
+             MONMSG     MSGID(CPF2469) EXEC(SNDPGMMSG MSGID(CPF9898) +
+                          MSGF(QCPFMSG) MSGDTA('Unable to send +
+                          message' *BCAT &MSGID))
+ 
+             RETURN
+ 
+ABNOR:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                          while sending message' *BCAT &MSGID) +
+                          MSGTYPE(*ESCAPE)
+             ENDPGM

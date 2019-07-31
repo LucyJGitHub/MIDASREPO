@@ -1,0 +1,229 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  RULE78 - Calculate ountstanding interest for a given period  *
+      *           based on Rule of 78                                 *
+      *                                                               *
+      *  Input fields:                                                *
+      *    W78VDT (5,0)  - Value date (Start of loan)                 *
+      *    W78MDT (5,0)  - Maturity date (End of the term)            *
+      *    W78FLT (15,0) - Total flat interest                        *
+      *    W78RPF (1A)   - Repayment frequency                        *
+      *    W78FRD (5,0)  - First repayment date                       *
+      *    W78RPM (2,0)  - Repayment day in month (for frequencies    *
+      *                    requiring day in month)                    *
+      *    W78CCY (3A)   - Currency (for holiday checks)              *
+      *    W78LCN (3A)   - Location (for holiday checks)              *
+      *    W78BEG (5,0)  - Start date of interest period              *
+      *    W78END (5,0)  - End date of interest period                *
+      *    W78ROA (1A)   - Repayment or Accrual/Amortisation flag     *
+      *                                                               *
+      *  Output field:                                                *
+      *    W78INT (30,9) - Computed interest amount                   *
+      *    W78SUM (6,0)  - Sum of digits                              *
+      *    W78NPY (5,0)  - Total number of payments for the life      *
+      *                    of the loan                                *
+      *    W78NTH (3,0)  - Number of payments to date                 *
+      *    W78PRD (3,0)  - Number of periods from the Nth payment     *
+      *                    to the given end date                      *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR830785           Date 07May13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CLE028  *CREATE    Date 27Jun02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR830785 - Looping on insert of accrued interest adjustment  *
+      *             Extended core fix 263533. (Child: AR830786)       *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78)               *
+      *                                                               *
+      *****************************************************************
+     C           RULE78    BEGSR
+      *
+      ** Define input and output fields
+      *
+     C                     Z-ADDW78VDT    W78VDT  50
+     C                     Z-ADDW78MDT    W78MDT  50
+     C                     Z-ADDW78FLT    W78FLT 150
+     C                     MOVE W78RPF    W78RPF  1
+     C                     Z-ADDW78FRD    W78FRD  50
+     C                     Z-ADDW78RPM    W78RPM  20
+     C                     MOVE W78CCY    W78CCY  3
+     C                     MOVE W78LCN    W78LCN  3
+     C                     Z-ADDW78BEG    W78BEG  50
+     C                     Z-ADDW78END    W78END  50
+     C                     MOVE W78ROA    W78ROA  1
+     C                     Z-ADD*ZERO     W78INT 309
+     C                     Z-ADD*ZERO     W78SUM  60
+     C                     Z-ADD*ZERO     W78NPY  50
+     C                     Z-ADD*ZERO     W78NTH  30
+     C                     Z-ADD*ZERO     W78PRD  30
+      *
+      ** Save fields, may be used in other programs
+      *
+     C                     Z-ADDZDAYNO    WZDAYN  60
+     C                     MOVE ZFREQ     WZFREQ  1
+     C                     Z-ADDZMDAY     WZMDAY  20
+     C                     MOVE ZCCY      WZCCY   3
+     C                     MOVE ZLOC      WZLOC   3
+      *
+      ** Compute for the total number of payments during the life of
+      ** the loan, depending on the repayment frequency
+      *
+     C           W78RPF    IFEQ *BLANKS
+     C                     GOTO ERUL78
+     C                     ENDIF
+      *
+     C                     Z-ADD1         W78NPY
+     C                     Z-ADDW78FRD    ZDAYNO
+     C                     MOVE W78RPF    ZFREQ
+     C                     Z-ADDW78RPM    ZMDAY
+     C                     MOVE W78CCY    ZCCY
+     C                     MOVE W78LCN    ZLOC
+     C                     EXSR ZFREQB
+     C           ZDAYNO    DOWLTW78MDT
+     C           ZDAYNO    ANDGEW78FRD                                                      AR830785
+     C                     ADD  1         W78NPY
+     C                     EXSR ZFREQB
+     C                     ENDDO
+      *
+      ** Add 1 to total number of payments to include repayment on
+      ** maturity date
+      *
+     C                     ADD  1         W78NPY
+      *
+      ** Compute for the sum of digits
+      *
+     C           W78NPY    ADD  1         WKSUM   82
+     C                     DIV  2         WKSUM
+     C           WKSUM     MULT W78NPY    W78SUM
+      *
+      ** If first repayment date is a holiday, move to next working day
+      *
+     C                     Z-ADDW78FRD    ZDAYNO
+     C                     MOVE W78CCY    ZCCY
+     C                     MOVE W78LCN    ZLOC
+     C                     MOVE *BLANKS   ZIND
+     C           ZIND      DOUNE'H'
+     C                     EXSR ZCHKH
+     C           ZIND      IFEQ 'H'
+     C                     ADD  1         ZDAYNO
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Compute for the Nth payment for interest for a given period
+      *
+     C           W78ROA    IFEQ 'A'
+     C           W78VDT    IFEQ W78BEG
+     C                     Z-ADD1         W78NTH
+     C                     ELSE
+     C                     Z-ADD2         W78NTH
+     C                     ENDIF
+     C                     ELSE
+     C           W78BEG    IFLT ZDAYNO
+     C           W78BEG    IFEQ W78END
+     C                     Z-ADDZDAYNO    W78END
+     C                     ENDIF
+     C                     Z-ADDZDAYNO    W78BEG
+     C                     ENDIF
+     C                     Z-ADD1         W78NTH
+     C                     ENDIF
+      *
+     C                     MOVE W78RPF    ZFREQ
+     C                     Z-ADDW78RPM    ZMDAY
+     C                     MOVE W78CCY    ZCCY
+     C                     MOVE W78LCN    ZLOC
+     C                     MOVE ZDAYNO    TDAYNO  50                                        AR830785
+     C           ZDAYNO    DOWLTW78BEG
+     C           ZDAYNO    ANDGETDAYNO                                                      AR830785
+     C                     EXSR ZFREQB
+     C                     ADD  1         W78NTH
+      *
+      ** If next  repayment date is a holiday, move to next working day
+      *
+     C           ZIND      DOUNE'H'
+     C                     EXSR ZCHKH
+     C           ZIND      IFEQ 'H'
+     C                     ADD  1         ZDAYNO
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDDO
+      *
+      ** If end date < start date, OR amortisation date same or after
+      ** maturity date, OR repayment date is after maturity date,
+      ** OR repayment date earlier than the first repayment date
+      ** - zeroise the interest amount
+      *
+     C           W78END    IFLT W78BEG
+     C           W78BEG    ORGE W78MDT
+     C           W78ROA    ANDEQ'A'
+     C           W78BEG    ORLT W78VDT
+     C           W78ROA    ANDEQ'A'
+     C           W78BEG    ORGT W78MDT
+     C           W78ROA    ANDEQ'R'
+     C           W78BEG    ORLT W78FRD
+     C           W78END    ANDLTW78FRD
+     C           W78ROA    ANDEQ'R'
+     C                     Z-ADD*ZERO     W78INT
+     C                     GOTO ERUL78
+     C                     ENDIF
+      *
+     C                     Z-ADDW78NTH    WKSAV   30
+      *
+      ** Compute for outstanding interest for the period
+      ** until given end date or until
+      *
+     C           ZDAYNO    DOUGTW78END
+     C           W78NTH    ORGT W78NPY
+     C           W78NPY    SUB  W78NTH    WINTPD 309
+     C                     ADD  1         WINTPD
+     C                     MULT W78FLT    WINTPD
+     C                     DIV  W78SUM    WINTPD
+     C                     ADD  WINTPD    W78INT
+      *
+      ** Do not process frequency date calculation on first payment
+      ** date, i.e., beginning date is less than FRPD
+      *
+     C           W78NTH    IFNE 1
+     C           W78ROA    ANDEQ'A'
+     C           W78ROA    OREQ 'R'
+     C                     EXSR ZFREQB
+      *
+      ** If next  repayment date is a holiday, move to next working day
+      *
+     C           ZIND      DOUNE'H'
+     C                     EXSR ZCHKH
+     C           ZIND      IFEQ 'H'
+     C                     ADD  1         ZDAYNO
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ADD  1         W78NTH
+     C                     ADD  1         W78PRD
+     C                     ENDDO
+     C                     SUB  1         W78PRD
+     C                     Z-ADDWKSAV     W78NTH  30
+      *
+      ** Restore fields, may be used in other programs
+      *
+     C           ERUL78    TAG
+     C                     Z-ADDWZDAYN    ZDAYNO
+     C                     MOVE WZFREQ    ZFREQ
+     C                     Z-ADDWZMDAY    ZMDAY
+     C                     MOVE WZCCY     ZCCY
+     C                     MOVE WZLOC     ZLOC
+      *
+     C                     ENDSR
+      *****************************************************************
+      * End of /COPY RULE78Z1                                         *
+      *****************************************************************

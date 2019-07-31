@@ -1,0 +1,133 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas AS Wipe Out request record for DL0410/DL0411')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Accounting Standards Module                      */
+/*                                                                   */
+/*       ASC100007 - Wipe out any on request record for DL0410       */
+/*                   and DL0411 when switching CAS001 on             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      224165  *CREATE    Date 07Jan04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       224165 - Wipe any on-request record for DL0410 and DL0411   */
+/*                when switching CAS001 on                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('ASC100007 - Wipe out any on request record +
+                          DL0410 and DL0411 when switching CAS001 on') +
+                          TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+/* Create a backup for FCPREQPD, SDFCTLPA, FCPARPPD, FCRREQPD and FCPARDPD */
+ 
+             CPYF       FROMFILE(FCPREQPD) TOFILE(&DPLIB/XFCPREQPD) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(SDFCTLPA) TOFILE(&DPLIB/XSDFCTLPA) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(FCPARPPD) TOFILE(&DPLIB/XFCPARPPD) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(FCRREQPD) TOFILE(&DPLIB/XFCRREQPD) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(FCPARDPD) TOFILE(&DPLIB/XFCPARDPD) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+/* Call Midas Wipe Out Request record for DL0410/DL0411 */
+ 
+             CALL       PGM(AS100007)
+ 
+/* If no error occured in the program, delete backup files */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+                  DLTF       FILE(XFCPREQPD)
+                  MONMSG     MSGID(CPF2105)
+                  DLTF       FILE(XSDFCTLPA)
+                  MONMSG     MSGID(CPF2105)
+                  DLTF       FILE(XFCPARPPD)
+                  MONMSG     MSGID(CPF2105)
+                  DLTF       FILE(XFCRREQPD)
+                  MONMSG     MSGID(CPF2105)
+                  DLTF       FILE(XFCPARDPD)
+                  MONMSG     MSGID(CPF2105)
+             ENDDO
+ 
+/** Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                  RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                  SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(MOPERQ MRUNQ)
+                  CPYF       FROMFILE(&DPLIB/XFCPREQPD) TOFILE(FCPREQPD) +
+                             MBROPT(*REPLACE)
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                  CPYF       FROMFILE(&DPLIB/XSDFCTLPA) TOFILE(SDFCTLPA) +
+                             MBROPT(*REPLACE)
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                  CPYF       FROMFILE(&DPLIB/XFCPARPPD) TOFILE(FCPARPPD) +
+                             MBROPT(*REPLACE)
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                  CPYF       FROMFILE(&DPLIB/XFCRREQPD) TOFILE(FCRREQPD) +
+                             MBROPT(*REPLACE)
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                  CPYF       FROMFILE(&DPLIB/XFCPARDPD) TOFILE(FCPARDPD) +
+                             MBROPT(*REPLACE)
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                  GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination - batch job */
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          ASC100007 ended abnormally - see job log')   +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+             ENDPGM

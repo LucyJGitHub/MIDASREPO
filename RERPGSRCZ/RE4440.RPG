@@ -1,0 +1,476 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Branch download to alternate Branch.')
+     H        1
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4440 - Database download to other branch                   *
+     F*                                                               *
+     F*  Function:  This program allows the database of a branch that *
+     F*  (I/C)      is offline to be sent to a branch online.         *
+     F*                                                               *
+     F*  Called By: Midas Menu.                                       *
+     F*                                                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 189857 *C *CREATE  Date 31May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     A*  189857 - Database download to other branch                   *
+     F*  CRT001 - Retail Teller System.                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSDBRCHL1IF  E           K        DISK         KINFSR *PSSR
+     F**  Branch codes file
+     F*
+     FRE4440DFCF  E                    WORKSTN      KINFSR *PSSR
+     F**  Display file - Database download
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*     F U N C T I O N   O F   I N D I C A T O R S               *
+     F*                                                               *
+     F*       10         Message display indicator                    *
+     F*                                                               *
+     F*     90-99        Standard Subroutine indicators               *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  Control routines                                             *
+     F*                                                               *
+     F*  DBERR  - Database error handling                             *
+     F*  FIRST  - Initial Processing                                  *
+     F*  IFLDS  - Initialise fields
+     F*  SNDDAT - Send the data to the dataq                          *
+     F*  MAIN   - Control Process                                     *
+     F*                                                               *
+     F*                                                               *
+     F*                                                               *
+     F*  ZA0150 - Get Midas Rundate & Setup Indicator                 *
+     F*  *PSSR  - Program error                                       *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*
+     E** Copyright.
+     E                    CPY@    1   1 80
+     E**  Array for errors
+     E*
+     E                    ERR     1   7 70
+     I*****************************************************************
+     I/SPACE 3
+     I*
+     I*
+     IPSDS       SDS
+     I**  Program Status Data Structure
+     I*
+     I**  Field containing Program name
+     I                                        1  10 @PGM
+     I**  Field containing Workstation ID
+     I                                      244 253 @JOB
+     I**  Field Containing User ID
+     I                                      254 263 @USER
+     I*
+     ILDA        UDS                            256
+     I**  Local data area for data base errors.
+     I                                        1   3 ERTLID
+     I                                       11  20 ERTWID
+     I                                       21  30 ERWSID
+     I**  Field combining the following fields
+     I                                      134 183 DBLOT
+     I**  Name of database file in error
+     I                                      134 141 DBFILE
+     I**  Key value causing database error
+     I                                      142 170 DBKEY
+     I**  Name of program causing database error
+     I                                      171 180 DBPGM
+     I**  Number of database error
+     I                                      181 1830DBASE
+     I*
+     IRTSDTA     UDS                            256
+     I**  Job dataarea data structure
+     I*
+     I                                        1   3 @TLID
+     I                                        4   6 @TLBC
+     I                                        7   7 @SPVI
+     I                                        8  32 @OVRI
+     I                                    P  33  390@CHTL
+     I                                    P  40  460@NCTL
+     I                                       47  76 @TLNM
+     I                                       77  800@TLMG
+     I                                       81  840@TLSL
+     I                                       85  890@TLTO
+     I                                       90  92 @DEPC
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Bank Details
+     I*
+     ISDTELD    E DSSDTELDPD
+     I**  Teller ID Details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  Short data structure for access programs (200 long)
+     I*
+     I*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            MAIN   - Control Process                           *
+     C*                                                               *
+     C* CALLS      FIRST  - Initial Processing                        *
+     C*            DSPF0  - Display screen format                     *
+     C*            VALDAT - Validate screen input                     *
+     C*            SNDDAT - Puts data onto dataq                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C                     MOVEACPY@      CPY2@  80
+     C*
+     C*
+     C**  Initial processing
+     C                     EXSR FIRST
+     C*
+     C**  Display screen
+     C                     EXSR DSPF0
+     C*
+     C**  Send message to download DB if user not exited
+     C           *IN03     IFNE *ON
+     C                     EXSR SNDDAT
+     C                     ENDIF
+     C*
+     C                     SETON                     LR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            DSPF0  - Display screen format                     *
+     C*                                                               *
+     C* CALLS      SCC0250- Clear Message Queue                       *
+     C*                                                               *
+     C* CALLED BY  MAIN   - Control Process                           *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           DSPF0     BEGSR                           ** DSPF0  **
+     C*
+     C**  Do while F3 not pressed and not a valid entry
+     C*
+     C           *INKC     DOUEQ'1'
+     C           VALID     OREQ 'Y'
+     C*
+     C**  Display and accept screen format
+     C*
+     C                     EXFMTRE4440F0
+     C*
+     C           *IN03     IFNE *ON
+     C                     EXSR VALDAT
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            VALDAT - Validates screen input                    *
+     C*                                                               *
+     C* CALLS                                                         *
+     C*                                                               *
+     C* CALLED BY  DSPF0  - Display screen                            *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C********************************************************************
+     C           VALDAT    BEGSR
+     C*
+     C**  Reset screen indicators
+     C*
+     C                     MOVE *OFF      *IN10
+     C                     MOVE *OFF      *IN31
+     C                     MOVE *OFF      *IN32
+     C** And error field
+     C                     MOVE *BLANKS   DFERR
+     C*
+     C** Is host branch left blank
+     C           OLBRCH    IFEQ *BLANKS
+     C                     MOVELERR,1     DFERR     P
+     C                     MOVE *ON       *IN10
+     C                     MOVE 'N'       VALID
+     C                     MOVE *ON       *IN32
+     C                     ELSE
+     C** Is offline branch left blank
+     C           FLBRCH    IFEQ *BLANKS
+     C                     MOVELERR,2     DFERR     P
+     C                     MOVE *ON       *IN10
+     C                     MOVE 'N'       VALID
+     C                     MOVE *ON       *IN31
+     C                     ELSE
+     C** Are the branches entered the same
+     C           OLBRCH    IFEQ FLBRCH
+     C                     MOVELERR,3     DFERR     P
+     C                     MOVE *ON       *IN10
+     C                     MOVE 'N'       VALID
+     C                     MOVE *ON       *IN31
+     C                     MOVE *ON       *IN32
+     C                     ELSE
+     C** Look at branch file for host branch
+     C           OLBRCH    CHAINSDBRCHL1             9091
+     C**  If error reading file
+     C           *IN91     IFEQ *ON
+     C                     EXSR DBERR
+     C                     ELSE
+     C** If the online branch can not be found
+     C           *IN90     IFEQ *ON
+     C                     MOVELERR,4     DFERR     P
+     C                     MOVE *ON       *IN10
+     C                     MOVE 'N'       VALID
+     C                     MOVE *ON       *IN32
+     C                     ELSE
+     C** If the host branch is open online
+     C           A8BRST    IFEQ 'O'
+     C           A8BRST    OREQ 'F'
+     C                     MOVELERR,5     DFERR     P
+     C                     MOVE *ON       *IN10
+     C                     MOVE 'N'       VALID
+     C                     MOVE *ON       *IN32
+     C                     ELSE
+     C** Now chech the offline branch
+     C           FLBRCH    CHAINSDBRCHL1             9293
+     C**  If error reading file
+     C           *IN93     IFEQ *ON
+     C                     EXSR DBERR
+     C                     ELSE
+     C** If the offline branch can not be found
+     C           *IN92     IFEQ *ON
+     C                     MOVELERR,6     DFERR     P
+     C                     MOVE *ON       *IN10
+     C                     MOVE 'N'       VALID
+     C                     MOVE *ON       *IN31
+     C                     ELSE
+     C** If the branch is  open online
+     C           A8BRST    IFEQ 'O'
+     C                     MOVELERR,7     DFERR     P
+     C                     MOVE *ON       *IN10
+     C                     MOVE 'N'       VALID
+     C                     MOVE *ON       *IN31
+     C                     ELSE
+     C                     MOVE 'Y'       VALID
+     C                     ENDIF                           Branch open
+     C                     ENDIF                           Not valid branch offline
+     C                     ENDIF                           File error
+     C                     ENDIF                           Not online
+     C                     ENDIF                           Not valid br
+     C                     ENDIF                           File error
+     C                     ENDIF                           Brnch same
+     C                     ENDIF                           Blank brnch
+     C                     ENDIF                           Blank brnch
+     C*
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            SNDDAT - Sends message to dataq                    *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY  MAIN   - Control Process                           *
+     C*                                                               *
+     C*****************************************************************
+     C           SNDDAT    BEGSR
+     C*
+     C** Initialise fields ready to send
+     C*
+     C                     MOVE OLBRCH    DQNAME
+     C                     MOVE FLBRCH    DQDATA
+     C*
+     C** Send to the dataq
+     C*
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM           DQNAME
+     C                     PARM           DQLIB
+     C                     PARM           DQLNTH
+     C                     PARM           DQDATA
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            *PSSR  - Program error                             *
+     C*                                                               *
+      * CALLS      DBERRCTL                                           *
+     C*                                                               *
+      * CALLED BY  DBERR  - Database Error Handling                   *
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C*
+     C** Check to see that *PSSR has not been called yet
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     LR
+     C                     DUMP
+     C*
+     C** Call standard database error program
+     C*
+     C                     CALL 'DBERRCTL'
+     C*
+     C                     END
+     C*
+     C** If *PSSR already run, then just end the program here
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            FIRST  - Initial Processing                        *
+     C*                                                               *
+     C* CALLS      ZA0150 - Get Midas Rundate & Setup Indicator       *
+     C*            IFLDS  - Initialize screen/work fields             *
+     C*                                                               *
+     C* CALLED BY  MAIN   - Control Process                           *
+     C*                                                               *
+     C*****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+     C*
+     C**  Prepare LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     OUT  LDA
+     C*
+     C*
+     C**  Initialize program work fields
+     C*
+     C                     EXSR IFLDS
+     C*
+     C**  Call subroutine to access ICD file for Midas Run Date.
+     C*
+     C                     EXSR ZA0150
+     C*
+     C                     MOVELBJMRDT    SMRDT
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            IFLDS  - Initialize screen/work fields             *
+     C*                                                               *
+     C* CALLS                                                         *
+     C*                                                               *
+     C* CALLED BY  FIRST  - Initial Processing                        *
+     C*            VALF0  - Validate screen input                     *
+     C*                                                               *
+     C*****************************************************************
+     C           IFLDS     BEGSR                           ** IFLDS  **
+     C*
+     C                     MOVE *BLANKS   OLBRCH  3
+     C                     MOVE *BLANKS   FLBRCH  3
+     C                     MOVE 'Y'       VALID   1
+     C                     MOVEL'CASHTF_' DQNAME 10
+     C                     MOVEL'*LIBL'   DQLIB  10 P
+     C                     Z-ADD7         DQLNTH  50
+     C                     MOVEL'DBDL'    DQDATA  7
+     C                     MOVE *OFF      *IN03
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            ZA0150 - Get Midas Rundate & Setup Indicator       *
+     C*                                                               *
+     C*        - This subroutine chains to file LF/SDBANKL1           *
+     C*            to get Midas Rundate & setup-complete-flag         *
+     C*                                                               *
+     C*            Indicator 70 is set on if the chain fails          *
+     C*                                                               *
+     C*            if indicator 70 is on, details of the              *
+     C*            attempted access is placed in the LDA              *
+     C*                                                               *
+     C* CALLS      DBERR  - Database error handling                   *
+     C*                                                               *
+     C* CALLED BY  FIRST  - Initial Processing                        *
+     C*                                                               *
+     C*****************************************************************
+     C           ZA0150    BEGSR                           ** ZA0150 **
+     C*
+     C**  Access bank details for midas-run-date
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*            DBERR  - Database error handling                   *
+      *                                                               *
+      * CALLS      *PSSR  - Program  error                            *
+     C*                                                               *
+     C* CALLED BY  ZA0150 - Get Midas Rundate & Setup Indicator       *
+     C*            VALF0  - Validate screen input                     *
+     C*            UPDRTN - Update control routine                    *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+     C*
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*
+      /EJECT
+      *****************************************************************
+      *
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+** ERR    ** Errors
+You must enter a valid branch to receive the data.
+You must enter a valid offline branch.
+The two branches should not be the same.
+The branch you wish to send the DB to is not valid.
+The branch to send the DB to is open online.
+The branch who's details you wish to send is not valid.
+The branch who's details you wish to send is open online.

@@ -1,0 +1,3527 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LB Total Commitment Line Maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Lending Module                         *
+     F*                                                               *
+     F*  LB0210 - Total Commitment Line Maintenance                   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01498             Date 11Aug94               *
+      *                 066235             Date 27Jan93               *
+     F*                 33320  ADI         DATE 18DEC91               *
+     F*                 B8086              DATE 26SEP91               *
+     F*                 R00173 SC          DATE 15FEB91               *
+     F*                 R00172 SC          DATE 15FEB91               *
+     F*                 R00300             DATE 17AUG90               *
+     F*                 LB0009             DATE 03JUL90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  S01498 - Portfolio Lending Upgrade to Release 10.            *
+     F*  066235 - Recompile program due to changes in DSPF            *
+     F*  33320  - Suppression of FIX R00172 : More than one commit    *
+     F*           ment line may exist with different value date.      *
+     F*           When the value date of a new line is reached the    *
+     F*           previous is no more taken in consideration.         *
+     F*  B8086  - Enquiry by Customer short name doesn't work         *
+     F*           correctly                                           *
+     F*  R00173 - No commitment line can be entered for a parent      *
+     F*  R00172 - The system should not accept more than one          *
+     F*           commitment line by customer                         *
+     F*  R00300 - Message file changes                                *
+     F*  LB0009 - CHANGE REVIEW FROM SUBFILE TO PROCESS MORE THAN     *
+     F*           ONE ENTRY                                           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F********************************************************************
+     F**
+     F** FILE DEFINITIONS
+     F** ----------------
+     F*
+     F** Workstation File
+     FLB0210DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        SFLRR2KSFILE LB0210S2
+     F                                        SFLRR3KSFILE LB0210S3
+     F                                        SFLRR4KSFILE LB0210S4
+     F                                              KINFDS WSDS
+     F*
+     F***Bank*Details*File.*Prefix*-*BJ***********************************S01498
+     F*SDBANKPDIF  E                    DISK         KINFSR *PSSR         S01498
+     F*
+     F***Currency*Codes.*Prefix*-*A6**************************************S01498
+     F*SDCURRL1IF  E           K        DISK         KINFSR *PSSR         S01498
+     F********************************************************************
+     F*
+     F** Commitment Line Auth. Prefix - CA
+     FLBCOMAPDUF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     F*
+     F** Commitment Line Auth. Prefix - CA
+     FLBCOMAL2IF  E           K        DISK         KINFSR *PSSR
+     F            LBCOMAD0                          KRENAMELBCOMAD2
+     F                                              KINFDS ERF2DS
+     F*
+     F** Commitment Line Auth. Prefix - CA
+     FLBCOMAL4IF  E           K        DISK         KINFSR *PSSR
+     F            LBCOMAD0                          KRENAMELBCOMAD4
+     F*
+     F** Commitment Line Auth. Prefix - CA
+     FLBCOMAL5IF  E           K        DISK         KINFSR *PSSR
+     F            LBCOMAD0                          KRENAMELBCOMAD5
+     F********************************************************************
+     F*
+     F** Commitment Line Trans. Prefix - CT
+     FLBCOMTPDUF  E                    DISK         KINFSR *PSSR A
+     F                                              KINFDS ERF1DS
+     F                                              KCOMIT
+     F*
+     F** Commitment Line Trans. Prefix - CT (CTCNUM/CTSEQN order)
+     FLBCOMTL1IF  E           K        DISK         KINFSR *PSSR
+     F            LBCOMTD0                          KRENAMELBCOMTD1
+     F*
+     F** Commitment Line Trans. Prefix - CT (CTCNUM/CTSTTD order)
+     FLBCOMTL4IF  E           K        DISK         KINFSR *PSSR
+     F            LBCOMTD0                          KRENAMELBCOMTD4
+     F*
+     F** Commitment Line Trans. Prefix - CT (CTCNUM/CTSTTD order, omit del)
+     FLBCOMTL5IF  E           K        DISK         KINFSR *PSSR
+     F                                              KINFDS ERF3DS
+     F            LBCOMTD0                          KRENAMELBCOMTD5
+     F********************************************************************
+     F*
+     F** Client Master File (Customer Number). Prefix - BB & CU
+     F*SDLBCSL0IF  E           K        DISK         KINFSR *PSSR         S01498
+     FLBLBCSJ0IF  E           K        DISK         KINFSR *PSSR          S01498
+     F*
+     F***Client*Master*File*(Customer*Shortname).*Prefix*-*BB*&*CU********S01498
+     F*SDLBCSL5IF  E           K        DISK         KINFSR *PSSR         S01498
+     F*********** SDLBCSJ0                          KRENAMESDLBCSJS       S01498
+     F*
+     F**   TRAILER FILE. PREFIX TR.
+     FLBTRAIPDUF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     F*
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F**                                                                 *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F**                  ----------------------                         *
+     F**      01          EOF/NF on file LBCOMTL1                        *
+     F**      02          EOF/NF on file LBCOMAL2                        *
+     F**      03          EOF on both above files                        *
+     F**      04          EOF/NF on file LBCOMTL4                        *
+     F**      05          EOF/NF on file LBCOMAL5                        *
+     F**      06          EOF/NF on file LBCOMAL4                        *
+     F**      07          EOF/NF on file LBCOMTL5                        *
+     F**      08          EOF/NF on file LBCOMTPD                        *
+     F**      09          EOF/NF on file LBCOMAPD                        *
+     F**      11          '1' D, '0' E, for delete/enquire screen        *
+     F**      12          '1' Authorised, '0' Unauth, file A/D/E screens *
+     F**      13          '1' I, '0' A, for insert/amend screen          *
+     F**      20          WRITE fail to LBCOMTPD                         *
+     F**      21          EOF on LB0210S2 Subfile                        *
+     F**                                                                 *
+     F**      25          SFLEND    ------) Message Subfile              *
+     F**                                                                 *
+     F**      26          ROLLUP    ------)                              *
+     F**      27          ROLLDOWN        )                              *
+     F**      28          SFLDSP          )                              *
+     F**      29          SFLDSPCTL       ) Input Screen 2 Subfile       *
+     F**      30          SFLCLR          )                              *
+     F**      31          SFLEND          )                              *
+     F**      32          SFLNXTCHG ------)                              *
+     F**                                                                 *
+     F**      33          Selected customer exists                       *
+     F**      34          First character of customer number/shortname   *
+     F**                  is (1) Alphanumeric (2) Numeric                *
+     F**      35          Access to LBTRAIPD                             *
+     F**      39          Screen 1 invalid                               *
+     F**      40          Invalid Action code on screen 1                *
+     F**      41          Invalid customer number/shortname on screen 1  *
+     F**      42          Invalid Review From field on screen 1          *
+     F**      43          Invalid Review From field on screen 2          *
+     F**                                                                 *
+     F**      48          SFLDSP    ------)                              *
+     F**      49          SFLDSPCTL       )                              *
+     F**      50          SFLCLR          ) Input Screen 4 Subfile 1     *
+     F**      51          SFLEND          )                              *
+     F**      52          SFLNXTCHG ------)                              *
+     F**                                                                 *
+     F**      53          ROLLUP on both screen 4 Subfiles               *
+     F**                                                                 *
+     F**      58          SFLDSP    ------)                              *
+     F**      59          SFLDSPCTL       )                              *
+     F**      60          SFLCLR          ) Input Screen 4 Subfile 2     *
+     F**      61          SFLEND          )                              *
+     F**      62          SFLNXTCHG ------)                              *
+     F**                                                                 *
+     F**      63          Error on Delete screen                         *
+     F**      64          Input error on Input/Amend screen (3/5)        *
+     F**      65          Start Date error on Input/Amend screen (3/5)   *
+     F**      66          Currency error on Input/Amend screen (3/5)     *
+     F**      67          Amount error on Input/Amend screen (3/5)       *
+     F**      68          Expiry Date error on Input/Amend screen (3/5)  *
+     F**      69          Review Date error on Input/Amend screen (3/5)  *
+     F**      70          Review Freq error on Input/Amend screen (3/5)  *
+     F**      71          Review Day error on Input/Amend screen (3/5)   *
+     F**                                                                 *
+     F**      79          Read fail on SD-- file                         *
+     F**      80          Error on review from screen (2)                *
+     F**      81          Subfile selection field error on screen 2      *
+     F**      82          Subfile 1 selection field error on screen 4    *
+     F**      83          Subfile 2 selection field error on screen 4    *
+     F**      84          No data found for customer                     *
+     F**      85          At least one error on subfile 1, screen 4      *
+     F**      86          Any error on screen 4                          *
+     F**      87          At least one non blank selection on screen 2   *LB0009
+     F**      88          Multibranching Indicator                       *S01498
+     F**                                                                 *
+     F********************************************************************
+     F/EJECT
+     E********************************************************************
+     E*
+     E** Array for copyright statement
+     E                    CPY@    1   1 80
+     E*
+     E***Array*of*alphanumerics*******************************************S01498
+     E***********         ALPNU  37  37  1                                S01498
+     E*
+     E***Array*of*numbers*************************************************S01498
+     E***********         NUM    10  10  1                                S01498
+     E*
+     E** Array to split customer field into individual characters
+     E                    CUS        10  1                                  0006
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E/COPY ZSRSRC,ZALIGNZ1
+     E*
+     E/COPY ZSRSRC,ZSEDITZ1
+     E*
+     E********************************************************************
+     E/EJECT
+     I********************************************************************
+     I*
+     I** Data Structure for compilation - copyright insertion
+     ICPY@#       DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** Display file information data structure
+     IWSDS        DS
+     I                                    B 370 3710WSPOSN
+     I                                    B 378 3790WSDSRN
+     I*
+     I** DATA STRUCTURE TO UPDATE LAST TRANSACTION NUMBER DTAARA
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I*
+     I** DATA STRUCTURE TO PROVIDE TEXT ON COMIT ENTRY IN JOURNAL
+     ICMTTXT      DS                             55
+     I                                        1   50WWNATN
+     I                                        6   7 MDID
+     I                                        8  17 PGMN
+     I                                       18  27 WSIDX
+     I                                       28  330MTIME
+     I                                       34  34 WWACT
+     I                                       35  42 USIDX
+     I                                       43  48 DDCNUM
+     I                                       49  54 DDSTTD
+     I*
+     I** Program status data structure
+     IPSDS       SDS
+     I                                      244 253 DDWSID
+     I                                      254 263 WWUSER
+     I*
+     I** File information data structure - LBCOMTPD
+     IERF1DS      DS
+     I                                     *STATUS  STATS1
+     I*
+     I** FILE INFORMATION DATA STRUCTURE - LBCOMAL2
+     IERF2DS      DS
+     I                                    B 397 4000ER2RRN
+     I*
+     I** FILE INFORMATION DATA STRUCTURE - LBCOMTL5
+     IERF3DS      DS
+     I                                    B 397 4000ER3RRN
+     I*
+     I** Local data area
+     I*LDA*******UDS                            256                       S01498
+     ILDA         DS                            256                       S01498
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   S01498
+     IRUNDAT    E DS                                                      S01498
+     I** Rundate data area                                                S01498
+     I*                                                                   S01498
+     ISDBANK    E DSSDBANKPD                                              S01498
+     I** Bank details                                                     S01498
+     I*                                                                   S01498
+     ISDCUST    E DSSDCUSTPD                                              S01498
+     I** Customer details                                                 S01498
+     I*                                                                   S01498
+     ISDCURR    E DSSDCURRPD                                              S01498
+     I** Currency codes                                                   S01498
+     I*                                                                   S01498
+     IDSSDY     E DSDSSDY                                                 S01498
+     I** Second DS for access programs, long data structure               S01498
+     I*
+     I** Data Structure to split customer number/shortname field
+     I            DS
+     I                                        1  10 WW1CNS
+     I                                        1  10 CUS
+     I                                        1   1 WWCCH1
+     I                                        7  10 WWC710
+     I*
+     I** Data Structure to split date into day month year
+     I            DS
+     I***********                             1   7 BJMRDT                S01498
+     I                                        1   7 WWMRDT                S01498
+     I                                        1   20WWDAY
+     I                                        3   5 WWMNTH
+     I                                        6   70WWYEAR
+     I*
+     I** Data structure for ZSEDIT
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*
+     I********************************************************************
+     I/EJECT
+     C********************************************************************
+     C*
+     C** PARAMETER LIST DECLARATIONS - NONE
+     C** ---------------------------   ----
+     C*
+     C********************************************************************
+     C*
+     C**             START MAINLINE
+     C**             --------------
+     C** Initialisation
+     C                     EXSR #A
+     C*
+     C** Main processing
+     C                     EXSR #B
+     C*
+     C** End program
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**                    INDEX TO SUBROUTINES                         *
+     C**                    --------------------                         *
+     C**  1.#ZL750 - Convert from Portfolio curency to display in 000's  *
+     C**  2.#ZC750 - Convert from customer curency to display in 000's   *
+     C**  3.#ZA750 - Convert value to display format                     *
+     C**  4.#ZCONV - Convert an amount from one currency to another      *
+     C**  5.#A     - Initialisation                                      *
+     C**  6.#B     - Main processing                                     *
+     C**  7.#BA    - selects a valid customer                            *
+     C**  8.#BAA   - Validate input screen 1                             *
+     C**  9.#BB    - Calculates the totals for screen 2                  *
+     C** 10.#BBA   - Calculates the totals for a parent                  *
+     C** 11.#ZF    - Calculates the totals for child/orphan              *
+     C** 12.#BC    - Calculates the next page of records for the subfile *
+     C** 13.#BCA   - Reads all extract records for all instr in group    *
+     C** 14.#ZE    - Reads the group file for the group name for display *
+     C** 15.#BD    - Process a CMD/9 for Available/Limits change         *
+     C** 16.#BE    - Process a CMD/11 to change currency                 *
+     C** 17.#BF    - Process a CMD/15 to call LB0310                     *
+     C** 18.#BG    - Process a CMD/24 to call PM Documentation Program   *
+     C** 19.#BH    - Process an ENTER from input screen 2                *
+     C** 20.#BHA   - Validates input fields on screen 2                  *
+     C** 21.#ZB    - Read currency file & set up work fields             *
+     C** 22.#ZA    - Database error handling routine                     *
+     C** 23.$ZD    - Calc Available and convert to cust currency         *
+     C** 24.#ZC    - Move subfile hidden fields to display field         *
+     C** 25.*PSSR  - Program error handling routine                      *
+     C**                                                                 *
+     C********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #A          - This subroutine performs the initial processing   *
+     C**                                                                 *
+     C** CALLS       - #ZA #ZB                                           *
+     C**                                                                 *
+     C** CALLED BY   - MAINLINE                                          *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #A        BEGSR
+     C*                                                                   S01498
+     C***  Copyright Statement                                            S01498
+     C                     MOVEACPY@      ACT@   80                       S01498
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C***********          MOVEL'LB0305'  DBPGM                           S01498
+     C                     MOVEL'LB0210'  DBPGM                           S01498
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA                                       S01498
+     C*
+     C** Read the record on the bank details file
+     C*
+     C***********1         SETLLSDBANKPD                                  S01498
+     C***********          READ SDBANKPD                 79               S01498
+     C                     CALL 'AOBANKR0'                                S01498
+     C                     PARM '*DBERR ' @RTCD   7                       S01498
+     C                     PARM '*FIRST ' @OPTN   7                       S01498
+     C           SDBANK    PARM SDBANK    DSSDY                           S01498
+     C*                                                                   S01498
+     C                     MOVE BJMRDT    WWMRDT                          S01498
+     C*
+     C************IN79     IFEQ '1'                                       S01498
+     C***********BJTYLC    OREQ 'D'                        ***************S01498
+     C***********          MOVEL'SDBANKPD'DBFILE           * DBERROR 001 *S01498
+     C***********          Z-ADD1         DBASE            ***************S01498
+     C***********          EXSR #ZA                                       S01498
+     C***********          END                                            S01498
+     C*
+     C** Set up indicator 98 for ZDATE S/R's as per BJFKST
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+     C*
+     C** Initialise and clear the program message queue
+     C*
+     C                     MOVE *BLANKS   DDPGMQ
+     C                     MOVEL'*'       DDPGMQ
+     C*
+     C** CLEAR SCREEN MESSAGE QUEUE
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C*********************MOVEL'LXGBMSGF'ZAMSGF                          R00300
+     C*
+     C                     MOVE '1'       *IN25
+     C*
+     C                     Z-ADD0         LSTRR3  40
+     C                     Z-ADD0         LSTRR4  40
+     C                     MOVE *BLANKS   DD1ACT
+     C                     MOVE *BLANKS   DD1CNS                            0006
+     C                     MOVE *BLANKS   DD1RVF
+     C                     MOVE *BLANKS   DDULNE
+     C                     MOVE '0'       *IN33
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN29
+     C                     MOVE '1'       *IN48
+     C                     MOVE '1'       *IN49
+     C                     MOVE '1'       *IN58
+     C                     MOVE '1'       *IN59
+     C                     MOVE '0'       *IN64
+     C*                                                                   LB0009
+     C** Initialise 'at least one selection' indicator                    LB0009
+     C*                                                                   LB0009
+     C                     MOVE '0'       *IN87                           LB0009
+     C*
+     C           *LIKE     DEFN BBCUST    WWCUNA
+     C           *LIKE     DEFN CTCNUM    WWCUNO
+     C           *LIKE     DEFN CTCNUM    WWRVFN
+     C           *LIKE     DEFN CTCMTL    WWCMTL
+     C           *LIKE     DEFN CTTNLU    WWDSTN
+     C           *LIKE     DEFN CTSEQN    WWSEQN
+     C           *LIKE     DEFN CTSEQN    WWTSQN
+     C           *LIKE     DEFN CASEQN    WWASQN
+     C           *LIKE     DEFN CTSTTD    WWSTTD
+     C           *LIKE     DEFN TRFILE    WWFILE
+     C           *LIKE     DEFN CTLCD     WWLCD
+     C           *LIKE     DEFN CTCHTP    WWCHTP
+     C           *LIKE     DEFN CTCCY     WWCCY
+     C*
+     C                     MOVE 'N'       WWVLD1  1
+     C                     MOVE 'Y'       WWVLD2  1
+     C                     MOVE 'N'       WWVLD3  1
+     C*
+     C                     Z-ADD0         WWSFCT  40
+     C                     Z-ADD0         WWSTR3  40
+     C                     Z-ADD0         WWSTR4  40
+     C*
+     C** Set up screen processing field to display screen 1 first time in
+     C                     MOVE '1'       WWSCRN  1
+     C*
+     C** Set up edit code field for ZSEDIT for no commas
+     C                     MOVE 'L'       ZECODE
+     C*
+     C** Read data area RUNDAT to test for multibranching                 S01498
+     C           *NAMVAR   DEFN           RUNDAT                          S01498
+     C                     IN   RUNDAT                                    S01498
+     C           AGMBIN    IFEQ 'Y'                                       S01498
+     C                     MOVE '1'       *IN88                           S01498
+     C                     ELSE                                           S01498
+     C                     MOVE '0'       *IN88                           S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #B          - This subroutine performs the main processing      *
+     C**                                                                 *
+     C** CALLS       - #BA #BB #BC #BD                                   *
+     C**                                                                 *
+     C** CALLED BY   - MAINLINE                                          *
+     C**                                                                 *
+     C********************************************************************
+     C           #B        BEGSR
+     C*
+     C** Process until a termination request F3 pressed
+     C           *INKC     DOWEQ'0'
+     C*
+     C                     MOVE 'N'       WWVLD1
+     C                     MOVE 'N'       WWVLD3
+     C*
+     C** Process appropriate screen
+     C           WWSCRN    CASEQ'1'       #BA              Screen 1
+     C*                                                                   LB0009
+     C** Command key 12 does not always go to screen one now              LB0009
+     C************INKL     CASEQ'1'       #BA              Screen 1       LB0009
+     C           WWSCRN    CASEQ'2'       #BB              Screen 2
+     C           WWSCRN    CASEQ'3'       #BC              Screens 3,5,6,7
+     C           WWSCRN    CASEQ'4'       #BD              Screen 4
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #B0       ENDSR                           **  #B0      **
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BA         - Display and validate screen 1                     *
+     C**                                                                 *
+     C** CALLS       - #BAA #ZA                                          *
+     C**                                                                 *
+     C** CALLED BY   - #B                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #BA       BEGSR
+     C*
+     C** Clear the display fields for screen 1
+     C                     MOVE *BLANKS   DD1ACT
+     C                     MOVE *BLANKS   DD1CNS                            0006
+     C                     MOVE *BLANKS   DD1RVF
+     C*                                                                   LB0009
+     C** Reset screen 2 valid indicator                                   LB0009
+     C                     MOVE '0'       *IN80                           LB0009
+     C*
+     C** Process screen 1 until a termination request or valid screen
+     C           *INKC     DOWEQ'0'
+     C           WWVLD1    ANDEQ'N'
+     C*
+     C                     WRITELB0210F0
+     C           *IN39     IFEQ '1'
+     C                     WRITELB0210C1
+     C                     END
+     C                     WRITELB0210F1
+     C                     READ LB0210F1                 79
+     C*
+     C** Perform validation
+     C           *INKC     IFEQ '0'
+     C                     EXSR #BAA
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BAA        - Performs screen 1 validation and selection of a   *
+     C**               valid customer number                             *
+     C**                                                                 *
+     C** CALLS       - #BAA #ZA                                          *
+     C**               LB0315                                            *
+     C**                                                                 *
+     C** CALLED BY   - #BA                                               *
+     C**                                                                 *
+     C********************************************************************
+     C           #BAA      BEGSR
+     C*
+     C** Clear error indicators
+     C                     MOVE '0'       *IN39
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN41
+     C                     MOVE '0'       *IN42
+     C*
+     C                     MOVE 'N'       WWVLD1
+     C*
+     C** CLEAR SCREEN MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+     C*
+     C** Check correct combination of fields entered
+     C           DD1RVF    IFNE *BLANKS
+     C           DD1ACT    IFNE *BLANKS
+     C           DD1CNS    ORNE *BLANKS
+     C*
+     C** Review From details cannot be entered with other fields
+     C                     MOVEL'LBM0054' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN39
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN42
+     C                     GOTO #BAA0
+     C                     END
+     C                     END
+     C*
+     C** If Action and Customer fields are blank, then process screen 2
+     C** using review from field (*BLANKS is valid)
+     C           DD1ACT    IFEQ *BLANKS
+     C           DD1CNS    ANDEQ*BLANKS
+     C                     MOVE '2'       WWSCRN
+     C*
+     C** Test Review from field is numeric
+     C                     MOVE DD1RVF    WWNUM7
+     C                     MOVE WWNUM7    WWALF6
+     C           DD1RVF    IFEQ WWALF6
+     C                     MOVE DD1RVF    WWRVFN
+     C                     ELSE
+     C**********           Z-ADD0         WWRVFN                                              CSD027
+     C                     MOVE *BLANKS   WWRVFN                                              CSD027
+     C                     END
+     C                     MOVE 'Y'       WWVLD1
+     C                     GOTO #BAA0
+     C                     END
+     C*
+     C** Validate Action and Customer Number / Short Name
+     C           DD1ACT    IFNE 'I'
+     C           DD1ACT    ANDNE'A'
+     C           DD1ACT    ANDNE'D'
+     C           DD1ACT    ANDNE'E'
+     C*
+     C** Action Code must be 'I', 'A', 'D' or 'E'
+     C                     MOVEL'LBM0039' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN39
+     C                     MOVE '1'       *IN40
+     C                     GOTO #BAA0
+     C                     END
+     C*
+     C** If action code has been entered, customer must also be entered
+     C           DD1CNS    IFEQ *BLANKS
+     C*
+     C** Customer must be entered
+     C                     MOVEL'LBM0072' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN39
+     C                     MOVE '1'       *IN41
+     C                     GOTO #BAA0
+     C                     END
+     C*
+     C** Validate Customer Number / Short Name field
+     C                     MOVE DD1CNS    WW1CNS
+     C                     EXSR #BAAA
+     C           WWVLD1    IFEQ 'N'
+     C                     MOVE '1'       *IN39
+     C                     GOTO #BAA0
+     C                     END
+     C*
+     C** If action I, customer must not be a parent
+     C***********DD1ACT****IFEQ 'I'                                       R00173
+     C***********BBPAIN****ANDEQ'P'                                       R00173
+     C*********************MOVEL'LBM0021' ZAMSID                          R00173
+     C*********************EXSR ZASNMS                                    R00173
+     C*********************MOVE '1'       *IN39                           R00173
+     C*********************MOVE '1'       *IN41                           R00173
+     C*********************MOVE 'N'       WWVLD1                          R00173
+     C*********************GOTO #BAA0                                     R00173
+     C*********************END                                            R00173
+     C*
+     C                     MOVE BBCUST    WWCUNO
+     C                     MOVE BBCUST    WWCNSN  6                       S01498
+     C*                                                                   S01498
+     C** Check if User is authorised to Action Code                       S01498
+     C           *IN88     IFEQ '0'                                       S01498
+     C*                                                                   S01498
+     C** Single entity                                                    S01498
+     C                     CALL 'ZVACTU'                                  S01498
+     C                     PARM DD1ACT    @ACT    1                       S01498
+     C                     PARM           @ERR    10                      S01498
+     C*                                                                   S01498
+     C*  If action invalid for user, send error message                   S01498
+     C           @ERR      IFEQ 1                                         S01498
+     C                     MOVEL'LBM0302' ZAMSID                          S01498
+     C                     EXSR ZASNMS                                    S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     ELSE                                           S01498
+     C*                                                                   S01498
+     C** Multi-entity                                                     S01498
+     C                     CALL 'ZVACTBU'                                 S01498
+     C                     PARM DD1ACT    @ACT    1                       S01498
+     C                     PARM BBBRCD    @BCH    3                       S01498
+     C                     PARM           @ERR    10                      S01498
+     C*                                                                   S01498
+     C*  If action invalid for user, send error message                   S01498
+     C           @ERR      IFEQ 1                                         S01498
+     C                     MOVEL'LBM0303' ZAMSID                          S01498
+     C                     EXSR ZASNMS                                    S01498
+     C                     END                                            S01498
+     C           @ERR      IFEQ 2                                         S01498
+     C                     MOVEL'LBM0304' ZAMSID                          S01498
+     C                     EXSR ZASNMS                                    S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C           @ERR      IFNE *ZERO                                     S01498
+     C                     MOVE 'N'       WWVLD1                          S01498
+     C                     MOVE '1'       *IN39                           S01498
+     C                     MOVE '1'       *IN40                           S01498
+     C                     GOTO #BAA0                                     S01498
+     C                     END                                            S01498
+     C*
+     C** If A, D or E then a record must exist on one of the commitment
+     C** files
+     C           DD1ACT    IFNE 'I'
+     C           WWCUNO    SETLLLBCOMTL1                 01
+     C           WWCUNO    SETLLLBCOMAL2                 02
+     C           *IN01     IFEQ '0'
+     C           *IN02     ANDEQ'0'
+     C                     MOVEL'LBM0049' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWVLD1
+     C                     MOVE '1'       *IN39
+     C                     MOVE '1'       *IN41
+     C                     GOTO #BAA0
+     C                     END
+     C                     END
+     C*
+     C** If we have got to here, must be valid action code and customer
+     C** so prepare for next screen
+     C                     MOVE DD1ACT    WWACT   1
+     C           DD1ACT    IFEQ 'I'
+     C                     MOVE '3'       WWSCRN
+     C                     ELSE
+     C*
+     C** A, D or E display subfile selection screen next
+     C                     MOVE '4'       WWSCRN
+     C                     MOVE DD1ACT    DD4ACT
+     C                     MOVE WWCNSN    DD4CST
+     C                     MOVE BBCSSN    DD4CSN
+     C                     MOVE BBBRCD    DD4BCH                          S01498
+     C*********************MOVE WWCNSN    WWCUNO                          B8086
+     C                     MOVE '0'       *IN86
+     C*                                                                   LB0009
+     C** Identify origin of call to screen 4                              LB0009
+     C** ie from initial screen or from 'review from' screen              LB0009
+     C*                                                                   LB0009
+     C                     MOVE 'INITIAL' WWORIG                          LB0009
+     C*
+     C                     END
+     C*
+     C           #BAA0     ENDSR                           **  #BAA0    **
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BAAA       - This subroutine validates a customer number /     *
+     C**               shortname field WW1CNS                            *
+     C**                                                                 *
+     C** CALLS       - NONE                                              *
+     C**                                                                 *
+     C** CALLED BY   - #BAA                                              *
+     C**                                                                 *
+     C********************************************************************
+     C           #BAAA     BEGSR
+     C*
+     C** Validate the customer number or shortname
+     C*
+     C***The*first*character*must*be*alphanumeric*or*blank****************S01498
+     C********************************************************************S01498
+     C***********WWCCH1    LOKUPALPNU                    34               S01498
+     C************IN34     IFEQ '0'                                       S01498
+     C***********          MOVE '1'       *IN41                           S01498
+     C***********          GOTO #BAAA9                                    S01498
+     C***********          END                                            S01498
+     C********************************************************************S01498
+     C***If*the*first*char.*is*non-numeric,*check*for*a*valid*shortname***S01498
+     C********************************************************************S01498
+     C***********WWCCH1    LOKUPNUM                      34               S01498
+     C********************************************************************S01498
+     C************IN34     IFEQ '0'                                       S01498
+     C********************************************************************S01498
+     C***********WW1CNS    SETLLSDLBCSL5             41  33               S01498
+     C************IN41     IFEQ '1'                                       S01498
+     C***********          GOTO #BAAA9                                    S01498
+     C***********          END                                            S01498
+     C************IN33     IFEQ '1'                                       S01498
+     C***********          READ SDLBCSL5                 77               S01498
+     C************IN77     IFEQ '1'                                       S01498
+     C***********          MOVE '1'       *IN41                           S01498
+     C***********          GOTO #BAAA9                                    S01498
+     C***********          END                                            S01498
+     C***********          END                                            S01498
+     C********************************************************************S01498
+     C***********          ELSE                                           S01498
+     C********************************************************************S01498
+     C***The*first*character*is*numeric*so*check*that*the*next*5*chars.***S01498
+     C***are*also*numeric*and*the*last*4*are*blank.*If*still*valid*then***S01498
+     C***check*that*the*customer*number*exists****************************S01498
+     C********************************************************************S01498
+     C***********          Z-ADD1         WWFLD1  20                      S01498
+     C***********WWFLD1    DOWLT6                                         S01498
+     C***********          ADD  1         WWFLD1                          S01498
+     C***********CUS,WWFLD1LOKUPNUM                      34               S01498
+     C************IN34     IFEQ '0'                                       S01498
+     C***********          MOVE '1'       *IN41                           S01498
+     C***********          GOTO #BAAA9                                    S01498
+     C***********          END                                            S01498
+     C***********          END                                            S01498
+     C********************************************************************S01498
+     C***********WWC710    IFNE *BLANKS                                   S01498
+     C***********          MOVE '1'       *IN41                           S01498
+     C***********          GOTO #BAAA9                                    S01498
+     C***********          END                                            S01498
+     C********************************************************************S01498
+     C***********          MOVELWW1CNS    WWCNSN  6                       S01498
+     C***********WWCNSN    SETLLSDLBCSL0             41  33               S01498
+     C************IN41     IFEQ '1'                                       S01498
+     C***********          GOTO #BAAA9                                    S01498
+     C***********          END                                            S01498
+     C************IN33     IFEQ '1'                                       S01498
+     C***********          READ SDLBCSL0                 77               S01498
+     C************IN77     IFEQ '1'                                       S01498
+     C***********          MOVE '1'       *IN41                           S01498
+     C***********          GOTO #BAAA9                                    S01498
+     C***********          END                                            S01498
+     C***********          END                                            S01498
+     C********************************************************************S01498
+     C***********          END                                            S01498
+     C*                                                                   S01498
+     C** Call AOCUSTR0 to check if customer number/shortname exists       S01498
+     C                     CALL 'AOCUSTR0'                                S01498
+     C                     PARM *BLANKS   @RTCD   7                       S01498
+     C                     PARM '*KEY   ' @OPTN   7                       S01498
+     C                     PARM WW1CNS    @KEY1  10                       S01498
+     C                     PARM *BLANKS   @KYST   7                       S01498
+     C           SDCUST    PARM SDCUST    DSSDY                           S01498
+     C*                                                                   S01498
+     C           @RTCD     IFEQ '*NOSEL '                                 S01498
+     C                     MOVE *BLANKS   DD1CNS                          S01498
+     C                     MOVEL'LBM0072' ZAMSID                          S01498
+     C                     EXSR ZASNMS                                    S01498
+     C                     MOVE '1'       *IN41                           S01498
+     C                     ELSE                                           S01498
+     C*                                                                   S01498
+     C           @RTCD     IFEQ *BLANKS                                   S01498
+     C                     MOVE *BLANKS   DD1CNS                          S01498
+     C           @KYST     IFEQ '*CNUM  '                                 S01498
+     C                     MOVELBBCUST    DD1CNS                          S01498
+     C                     ELSE                                           S01498
+     C                     MOVELBBCSSN    DD1CNS                          S01498
+     C                     END                                            S01498
+     C                     MOVE '1'       *IN33                           S01498
+     C                     ELSE                                           S01498
+     C                     MOVE '0'       *IN33                           S01498
+     C                     END                                            S01498
+     C*
+     C** Validation successful
+     C*
+     C           *IN33     IFEQ '1'
+     C                     MOVE 'Y'       WWVLD1
+     C                     END
+     C*
+     C** Invalid customer found, load message to message subfile
+     C           #BAAA9    TAG                             **  #BAAA9   **
+     C           *IN33     IFEQ '0'
+     C                     MOVE '1'       *IN41
+     C                     MOVEL'LBM0112' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END                                            S01498
+     C*
+     C           #BAAA0    ENDSR                           **  #BAAA0   **
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BB         - Processes screen 2 (Review From screen)           *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   - #B                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #BB       BEGSR
+     C*
+     C** Do until F3 or new screen selected
+     C           *INKC     DOWEQ'0'
+     C           WWSCRN    ANDEQ'2'
+     C*
+     C** If an error was not previously found, rebuild the subfile screen
+     C           *IN80     IFEQ '0'
+     C*
+     C** Clear subfile
+     C                     MOVE '1'       *IN30
+     C                     WRITELB0210C2
+     C                     MOVE '0'       *IN30
+     C*
+     C***If*ROLLDOWN was pressed, read from start of file                 LB0009
+     C*                                                                   LB0009
+     C** If ROLLDOWN was pressed and no records selected                  LB0009
+     C**    read from start of file                                       LB0009
+     C           *IN27     IFEQ '1'
+     C           *IN87     ANDEQ'0'                                       LB0009
+     C**********           Z-ADD0         WWRVFN                                              CSD027
+     C                     MOVE *BLANKS   WWRVFN                                              CSD027
+     C                     END
+     C*
+     C** Read the next record from both of the Commitment files
+     C           WWRVFN    SETLLLBCOMTL1
+     C                     READ LBCOMTL1                 01
+     C           WWRVFN    SETLLLBCOMAL2
+     C                     READ LBCOMAL2                 02
+     C*
+     C           *IN01     IFEQ '1'
+     C           *IN02     ANDEQ'1'
+     C*
+     C** Set off the subfile display indicator
+     C                     MOVE '0'       *IN28
+     C                     MOVE *BLANKS   DD2RVF
+     C**********           Z-ADD0         WWRVFN                                              CSD027
+     C                     MOVE *BLANKS   WWRVFN                                              CSD027
+     C                     ELSE
+     C*
+     C** Load a page of the subfile
+     C                     MOVE '1'       *IN28
+     C                     MOVE '0'       *IN03
+     C                     EXSR #BBA
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Output screen 2 with error messages if apropriate
+     C                     WRITELB0210F0
+     C                     WRITELB0210F2
+     C           *IN80     IFEQ '1'
+     C                     WRITELB0210C1
+     C                     END
+     C                     WRITELB0210C2
+     C                     READ LB0210C2                 79
+     C*
+     C           *INKC     IFEQ '0'
+     C*
+     C** If F12 was pressed, return to screen 1
+     C           *INKL     IFEQ '1'
+     C                     MOVE '1'       WWSCRN
+     C                     ELSE
+     C*
+     C** Else validate screen
+     C                     EXSR #BBB
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BBA        - Load a page of Review screen subfile              *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   - #BB                                               *
+     C**                                                                 *
+     C********************************************************************
+     C           #BBA      BEGSR
+     C*
+     C                     Z-ADD0         WWSFCT  40
+     C                     Z-ADD0         SFLRR2  40
+     C                     MOVE *BLANKS   DD2SEL
+     C*                                                                   LB0009
+     C** Reset SFLNXTCHG & (RI PC) indicator                              LB0009
+     C*                                                                   LB0009
+     C                     MOVE '0'       *IN32                           LB0009
+     C                     MOVE '0'       *IN81                           LB0009
+     C*
+     C** Do while page not full and records to process
+     C           *IN03     DOWEQ'0'
+     C           WWSFCT    ANDLT13
+     C*
+     C** If the last read was successful on both commitment files
+     C           *IN01     IFEQ '0'
+     C           *IN02     ANDEQ'0'
+     C*
+     C           CTCNUM    IFGT CACNUM
+     C*
+     C** Read client file for details of Cust on AUTH Comm't file
+     C                     EXSR #BBAA
+     C                     ELSE
+     C           CTCNUM    IFLT CACNUM
+     C*
+     C** Read client file for details of Cust on TRANS Comm't file
+     C                     EXSR #BBAB
+     C                     ELSE
+     C*
+     C** CTCNUM must equal CACNUM
+     C                     MOVE CACNUM    WWCNSN
+     C                     EXSR #ZC
+     C*
+     C** Read the next record from both of the Commitment files
+     C           CTCNUM    SETGTLBCOMTL1
+     C                     READ LBCOMTL1                 01
+     C           CACNUM    SETGTLBCOMAL2
+     C                     READ LBCOMAL2                 02
+     C                     END
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           *IN01     IFEQ '1'
+     C           *IN02     ANDEQ'0'
+     C*
+     C** Read client file for details of Cust on AUTH Comm't file
+     C                     EXSR #BBAA
+     C*
+     C                     ELSE
+     C*
+     C           *IN01     IFEQ '0'
+     C           *IN02     ANDEQ'1'
+     C*
+     C** Read client file for details of Cust on AUTH Comm't file
+     C                     EXSR #BBAB
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *IN01     IFEQ '1'
+     C           *IN02     ANDEQ'1'
+     C                     MOVE '1'       *IN03
+     C                     END
+     C*
+     C                     ADD  1         SFLRR2
+     C                     ADD  1         WWSFCT
+     C*
+     C                     WRITELB0210S2
+     C*
+     C                     END
+     C*
+     C                     Z-ADDWWSFCT    WWWRRN  40
+     C*
+     C**   Read the next record for the review from field
+     C           *IN03     IFEQ '0'
+     C*
+     C**   Set up WWCNSN for #ZC
+     C           *IN01     IFEQ '0'
+     C           *IN02     ANDEQ'0'
+     C*
+     C           CTCNUM    IFGT CACNUM
+     C                     MOVE CACNUM    WWCNSN
+     C                     ELSE
+     C                     MOVE CTCNUM    WWCNSN
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           *IN01     IFEQ '1'
+     C           *IN02     ANDEQ'0'
+     C                     MOVE CACNUM    WWCNSN
+     C                     ELSE
+     C                     MOVE CTCNUM    WWCNSN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     EXSR #ZC
+     C                     MOVE BBCUST    DD2RVF
+     C                     MOVE '0'       *IN31
+     C                     ELSE
+     C                     MOVE *BLANKS   DD2RVF
+     C                     MOVE '1'       *IN31
+     C                     END
+     C*
+     C                     MOVE DD2RVF    WWRVFN
+     C*
+     C           #BBA0     ENDSR                           **  #BBA0    **
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZC         - Reads the required record from the client master  *
+     C**               file to get the customer shortname                *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   -                                                   *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZC       BEGSR
+     C*
+     C***********WWCNSN    CHAINSDLBCSL0             77                   S01498
+     C           WWCNSN    CHAINLBLBCSJ0             77                   S01498
+     C           *IN77     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVEL'LB0210'  DBPGM            ***************
+     C***********          MOVEL'SDLBCSL0'DBFILE           * DBERROR 004 *S01498
+     C                     MOVE 'LBLBCSJ0'DBFILE           * DBERROR 004 *S01498
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVELWWCNSN    DBKEY
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C** Set up subfile display fields
+     C                     MOVE BBCUST    DD2CST
+     C                     MOVE BBCSSN    DD2CSN
+     C                     MOVE BBBRCD    DD2BCH                          S01498
+     C*
+     C           #ZC0      ENDSR                           **  #ZC0     **
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BBAA       - Reads the required record from the client master  *
+     C**               file to get the customer shortname, and read the  *
+     C**               record for the next customer on LBCOMAL2          *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   -                                                   *
+     C**                                                                 *
+     C********************************************************************
+     C           #BBAA     BEGSR
+     C*
+     C                     MOVE CACNUM    WWCNSN
+     C                     EXSR #ZC
+     C           CACNUM    SETGTLBCOMAL2             02
+     C                     READ LBCOMAL2                 02
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BBAB       - Reads the required record from the client master  *
+     C**               file to get the customer shortname, and read the  *
+     C**               record for the next customer on LBCOMTL1          *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   -                                                   *
+     C**                                                                 *
+     C********************************************************************
+     C           #BBAB     BEGSR
+     C*
+     C                     MOVE CTCNUM    WWCNSN
+     C                     EXSR #ZC
+     C           CTCNUM    SETGTLBCOMTL1             01
+     C                     READ LBCOMTL1                 01
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BBB        - Validate Review from screen                       *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   -                                                   *
+     C**                                                                 *
+     C********************************************************************
+     C           #BBB      BEGSR
+     C*                                                                   LB0009
+     C** Initialise 'at least one selection' indicator                    LB0009
+     C*                                                                   LB0009
+     C                     MOVE '0'       *IN87                           LB0009
+     C*
+     C* Clear error indicator and program message queue
+     C                     MOVE '0'       *IN81
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+     C*
+     C                     MOVE 'N'       WWVLD2
+     C*
+     C** If blank subfile displayed, assume review from required
+     C           *IN28     IFEQ '0'
+     C                     MOVE '1'       *IN21
+     C                     ELSE
+     C*
+     C** Identify whether review from or selection required
+     C                     READCLB0210S2                 21
+     C                     END
+     C*
+     C** No records changed => review from required
+     C           *IN21     IFEQ '1'
+     C                     MOVE '0'       *IN80
+     C*
+     C** Set up WWRVFN to redisplay screen
+     C*
+     C** Test Review from field is numeric
+     C                     MOVE DD2RVF    WWNUM7
+     C                     MOVE WWNUM7    WWALF6
+     C           DD2RVF    IFEQ WWALF6
+     C                     MOVE DD2RVF    WWRVFN
+     C                     ELSE
+     C**********           Z-ADD0         WWRVFN                                              CSD027
+     C                     MOVE *BLANKS   WWRVFN                                              CSD027
+     C                     END
+     C*
+     C                     ELSE
+     C***********                                                         LB0009
+     C***Validate selection                                               LB0009
+     C***********DD2SEL    IFEQ 'A'                                       LB0009
+     C***********DD2SEL    OREQ 'D'                                       LB0009
+     C***********DD2SEL    OREQ 'E'                                       LB0009
+     C***********                                                         LB0009
+     C***Next*screen is screen 4                                          LB0009
+     C***********          MOVE '0'       *IN80                           LB0009
+     C***********                                                         LB0009
+     C***A,*D*or*E display subfile selection screen next                  LB0009
+     C***********          MOVE '4'       WWSCRN                          LB0009
+     C***********          MOVE DD2SEL    DD4ACT                          LB0009
+     C***********          MOVE DD2CST    DD4CST                          LB0009
+     C***********          MOVE DD2CSN    DD4CSN                          LB0009
+     C***********          MOVE DD2CST    WWCUNO                          LB0009
+     C***********          MOVE '0'       *IN86                           LB0009
+     C***********                                                         LB0009
+     C***********          ELSE                                           LB0009
+     C***********                                                         LB0009
+     C***Invalid*selection                                                LB0009
+     C***********          MOVE '1'       *IN80                           LB0009
+     C***********          MOVEL'LBM0046' ZAMSID                          LB0009
+     C***********          EXSR ZASNMS                                    LB0009
+     C***********                                                         LB0009
+     C***Reverse*image selected subfile record and remove RI from rest    LB0009
+     C***********          Z-ADDSFLRR2    WWSRRN  40                      LB0009
+     C***********          MOVE DD2SEL    WWSSEL  1                       LB0009
+     C***********                                                         LB0009
+     C***********          MOVE '0'       *IN81                           LB0009
+     C***********          DO   WWWRRN    WWSFCT                          LB0009
+     C***********WWSFCT    CHAINLB0210S2             21                   LB0009
+     C***********          MOVE *BLANKS   DD2SEL                          LB0009
+     C***********          UPDATLB0210S2                                  LB0009
+     C***********          END                                            LB0009
+     C***********                                                         LB0009
+     C***********          MOVE '1'       *IN81                           LB0009
+     C***********WWSRRN    CHAINLB0210S2             21                   LB0009
+     C***********          MOVE WWSSEL    DD2SEL                          LB0009
+     C***********          UPDATLB0210S2                                  LB0009
+     C***********          MOVE '0'       *IN81                           LB0009
+     C***********                                                         LB0009
+     C***********          END                                            LB0009
+     C*                                                                   LB0009
+     C** Set off error on review from subfile indicator                   LB0009
+     C*                                                                   LB0009
+     C                     MOVE '0'       *IN80                           LB0009
+     C*                                                                   LB0009
+     C** Dowhile changed records exist                                    LB0009
+     C*                                                                   LB0009
+     C           *IN21     DOWEQ'0'                                       LB0009
+     C*                                                                   LB0009
+     C** Validate selection                                               LB0009
+     C*                                                                   LB0009
+     C           DD2SEL    IFNE 'A'                                       LB0009
+     C           DD2SEL    ANDNE'D'                                       LB0009
+     C           DD2SEL    ANDNE'E'                                       LB0009
+     C           DD2SEL    ANDNE' '                                       LB0009
+     C*                                                                   LB0009
+     C** Invalid selection                                                LB0009
+     C*                                                                   LB0009
+     C           *IN80     IFEQ '0'                                       LB0009
+     C                     MOVE '1'       *IN80                           LB0009
+     C                     MOVEL'LBM0046' ZAMSID                          LB0009
+     C                     EXSR ZASNMS                                    LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C** Seton SFLNXTCHG & (RI PC) indicators                             LB0009
+     C*                                                                   LB0009
+     C                     MOVE '1'       *IN81                           LB0009
+     C                     MOVE '1'       *IN32                           LB0009
+     C*                                                                   LB0009
+     C                     ELSE                                           LB0009
+     C*                                                                   LB0009
+     C** Valid selection - setof SFLNXTCHG & (RI PC) indicators           LB0009
+     C*                                                                   LB0009
+     C                     MOVE '0'       *IN81                           LB0009
+     C                     MOVE '0'       *IN32                           LB0009
+     C*                                                                   LB0009
+     C** If selection not blank                                           LB0009
+     C*                                                                   LB0009
+     C           DD2SEL    IFNE *BLANKS                                   LB0009
+     C*                                                                   LB0009
+     C** Only seton indicator once                                        LB0009
+     C*                                                                   LB0009
+     C           *IN87     IFEQ '0'                                       LB0009
+     C                     MOVE '1'       *IN87                           LB0009
+     C                     END                                            LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C                     END                                            LB0009
+     C*                                                                   S01498
+     C** If selection not blank                                           S01498
+     C*                                                                   S01498
+     C           DD2SEL    IFNE *BLANKS                                   S01498
+     C*                                                                   S01498
+     C** Check if User is authorised to Action Code                       S01498
+     C           *IN88     IFEQ '0'                                       S01498
+     C*                                                                   S01498
+     C** Single entity                                                    S01498
+     C                     CALL 'ZVACTU'                                  S01498
+     C                     PARM DD2SEL    @ACT    1                       S01498
+     C                     PARM           @ERR    10                      S01498
+     C*                                                                   S01498
+     C*  If action invalid for user, send error message                   S01498
+     C           @ERR      IFEQ 1                                         S01498
+     C                     MOVEL'LBM0302' ZAMSID                          S01498
+     C                     EXSR ZASNMS                                    S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     ELSE                                           S01498
+     C*                                                                   S01498
+     C** Multi-entity                                                     S01498
+     C                     CALL 'ZVACTBU'                                 S01498
+     C                     PARM DD2SEL    @ACT    1                       S01498
+     C                     PARM DD2BCH    @BCH    3                       S01498
+     C                     PARM           @ERR    10                      S01498
+     C*                                                                   S01498
+     C*  If action invalid for user, send error message                   S01498
+     C           @ERR      IFEQ 1                                         S01498
+     C                     MOVEL'LBM0303' ZAMSID                          S01498
+     C                     EXSR ZASNMS                                    S01498
+     C                     END                                            S01498
+     C           @ERR      IFEQ 2                                         S01498
+     C                     MOVEL'LBM0304' ZAMSID                          S01498
+     C                     EXSR ZASNMS                                    S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C           @ERR      IFNE *ZERO                                     S01498
+     C                     MOVE '1'       *IN80                           S01498
+     C                     MOVE '1'       *IN81                           S01498
+     C                     MOVE '1'       *IN32                           S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     END                                            S01498
+     C*                                                                   LB0009
+     C                     UPDATLB0210S2                                  LB0009
+     C*                                                                   LB0009
+     C** Read next changed subfile record                                 LB0009
+     C*                                                                   LB0009
+     C                     READCLB0210S2                 21               LB0009
+     C*                                                                   LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C** If not CMD-3                                                     LB0009
+     C*                                                                   LB0009
+     C           *INKC     IFEQ '0'                                       LB0009
+     C*                                                                   LB0009
+     C** If CMD-12 go to initial screen & reset screen 2 valid indicator  LB0009
+     C*                                                                   LB0009
+     C           *INKL     IFEQ '1'                                       LB0009
+     C                     MOVE '1'       WWSCRN                          LB0009
+     C                     MOVE '0'       *IN80                           LB0009
+     C                     ELSE                                           LB0009
+     C*                                                                   LB0009
+     C** If screen valid                                                  LB0009
+     C*                                                                   LB0009
+     C           *IN80     IFEQ '0'                                       LB0009
+     C*                                                                   LB0009
+     C** If no records selected ie. all changed records blank             LB0009
+     C**    process 'review from'                                         LB0009
+     C*                                                                   LB0009
+     C           *IN87     IFEQ '0'                                       LB0009
+     C*                                                                   LB0009
+     C                     MOVE '0'       *IN80                           LB0009
+     C*                                                                   LB0009
+     C** Set up WWRVFN to redisplay screen                                LB0009
+     C*                                                                   LB0009
+     C** Test Review from field is numeric                                LB0009
+     C                     MOVE DD2RVF    WWNUM7                          LB0009
+     C                     MOVE WWNUM7    WWALF6                          LB0009
+     C           DD2RVF    IFEQ WWALF6                                    LB0009
+     C                     MOVE DD2RVF    WWRVFN                          LB0009
+     C                     ELSE                                           LB0009
+     C**********           Z-ADD0         WWRVFN                                       LB0009 CSD027
+     C                     MOVE *BLANKS   WWRVFN                                              CSD027
+     C                     END                                            LB0009
+     C                     ELSE                                           LB0009
+     C*                                                                   LB0009
+     C** else goto screen 4 (origin 'review from')                        LB0009
+     C*                                                                   LB0009
+     C                     MOVE 'REVIEW ' WWORIG  7                       LB0009
+     C                     MOVE '4'       WWSCRN                          LB0009
+     C*                                                                   LB0009
+     C                     END                                            LB0009
+     C                     END                                            LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C                     END                                            LB0009
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BC         - Display and validate screen 3 = INSERT            *
+     C**                                                                 *
+     C** CALLS       - #BAA #ZA                                          *
+     C**                                                                 *
+     C** CALLED BY   - #B                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #BC       BEGSR
+     C*
+     C** Set off all screen error indicators
+     C                     MOVE '0'       *IN64
+     C                     MOVE '0'       *IN65
+     C                     MOVE '0'       *IN66
+     C                     MOVE '0'       *IN67
+     C                     MOVE '0'       *IN68
+     C                     MOVE '0'       *IN69
+     C                     MOVE '0'       *IN70
+     C                     MOVE '0'       *IN71
+     C*
+     C** Clear program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+     C*
+     C** Set up customer number and shortname fields
+     C                     MOVE BBCUST    DDCNUM
+     C                     MOVE BBCSSN    DDCNSN
+     C                     MOVE BBBRCD    DDBRCH                          S01498
+     C*
+     C** Clear the display fields for screen 3
+     C                     MOVE '1'       *IN13
+     C                     MOVE *BLANKS   DDSTTD
+     C                     MOVE *BLANKS   DDCCY
+     C                     MOVE *BLANKS   DDCMTL
+     C                     MOVE *BLANKS   DDEXPD
+     C                     MOVE *BLANKS   DDREVD
+     C                     MOVE *BLANKS   DDREVF
+     C                     MOVE *BLANKS   DDREVN
+     C                     MOVE *BLANKS   DDNOT1
+     C                     MOVE *BLANKS   DDNOT2
+     C                     MOVE *BLANKS   DDNOT3
+     C                     MOVE *BLANKS   DDNOT4
+     C*
+     C** Process screen 3 until a termination request or valid screen
+     C** or request for another screen
+     C           *INKC     DOWEQ'0'
+     C           WWVLD3    ANDEQ'N'
+     C           WWSCRN    ANDEQ'3'
+     C*
+     C                     WRITELB0210F0
+     C           *IN64     IFEQ '1'
+     C                     WRITELB0210C1
+     C                     END
+     C                     WRITELB0210F5
+     C                     READ LB0210F5                 79
+     C*
+     C** Perform validation
+     C           *INKC     IFEQ '0'
+     C*
+     C** If F12 was pressed, return to screen 1
+     C           *INKL     IFEQ '1'
+     C                     MOVE '1'       WWSCRN
+     C                     ELSE
+     C*
+     C** Validate Input/Amend screen
+     C                     EXSR #BCA
+     C*
+     C** If validation was successful update Transaction File
+     C           WWVLD3    IFEQ 'Y'
+     C                     EXSR #BCB
+     C                     END
+     C*
+     C** If updates were successful, return to screen 1
+     C           WWVLD3    IFEQ 'Y'
+     C                     MOVE '1'       WWSCRN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BCA        - Validates Input/Amend screen                      *
+     C**                                                                 *
+     C** CALLS       - #BHA #ZA                                          *
+     C**                                                                 *
+     C** CALLED BY   - #B                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #BCA      BEGSR
+     C*
+     C** Set off all screen error indicators
+     C                     MOVE '0'       *IN64
+     C                     MOVE '0'       *IN65
+     C                     MOVE '0'       *IN66
+     C                     MOVE '0'       *IN67
+     C                     MOVE '0'       *IN68
+     C                     MOVE '0'       *IN69
+     C                     MOVE '0'       *IN70
+     C                     MOVE '0'       *IN71
+     C*
+     C** Clear program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+     C*
+     C**=================================================================*
+     C** Validate START DATE If INSERT                                   *
+     C**=================================================================*
+     C*
+     C           WWACT     IFEQ 'I'
+     C*
+     C** Check date entered is numeric
+     C                     MOVE DDSTTD    WWNUM7  70
+     C                     MOVE WWNUM7    WWALF6  6
+     C           DDSTTD    IFEQ WWALF6
+     C*
+     C** Validate date and convert from input format to MIDAS day number
+     C                     MOVE DDSTTD    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    WWSDN   50
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN65
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVE '1'       *IN65
+     C                     END
+     C*
+     C           *IN65     IFEQ '1'
+     C*
+     C                     MOVEL'LBM0023' ZAMSID
+     C*
+     C                     ELSE
+     C*
+     C** A record must not exist on either file for this customer and
+     C**   if deleted before for this start date.
+     C           CMTKEY    KLIST
+     C                     KFLD           WWCUNO
+     C                     KFLD           WWSDN
+     C*
+     C***********CMTKEY****CHAINLBCOMAL5             05                   R00172
+     C***********WWCUNO    CHAINLBCOMAL5             05            R00172 33320
+     C           CMTKEY    CHAINLBCOMAL5             05                   33320
+     C           *IN05     IFEQ '0'
+     C*
+     C*********************MOVE '1'       *IN65                           R00172
+     C                     MOVE '1'       *IN65                           33320
+     C           CARECI    IFEQ '*'
+     C***********WWSDN     IFEQ CASTTD                             R00172 33320
+     C***********          MOVE '1'       *IN65                    R00172 33320
+     C                     MOVEL'LBM0126' ZAMSID
+     C***********          END                                     R00172 33320
+     C                     ELSE
+     C***********          MOVE '1'       *IN65                    R00172 33320
+     C                     MOVEL'LBM0037' ZAMSID
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           CMTKEY    CHAINLBCOMTL4             04
+     C           *IN04     IFEQ '0'
+     C                     MOVE '1'       *IN65
+     C           CTRECI    IFEQ '*'
+     C                     MOVEL'LBM0127' ZAMSID
+     C                     ELSE
+     C                     MOVEL'LBM0038' ZAMSID
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *IN65     IFEQ '1'
+     C                     MOVE '1'       *IN64
+     C                     EXSR ZASNMS
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** Else AMEND
+     C                     MOVE DDSTTD    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    WWSDN   50
+     C*
+     C                     END
+     C*
+     C**=================================================================*
+     C** Validate CURRENCY                                               *
+     C**=================================================================*
+     C*
+     C***********DDCCY     CHAINSDCURRL1             79                   S01498
+     C                     CALL 'AOCURRR0'                                S01498
+     C                     PARM *BLANKS   @RTCD   7                       S01498
+     C                     PARM '*KEY   ' @OPTN   7                       S01498
+     C                     PARM DDCCY     @CYCD   3                       S01498
+     C           SDCURR    PARM SDCURR    DSSDY                           S01498
+     C*
+     C           @RTCD     IFEQ '*NOSEL '                                 S01498
+     C                     MOVE *BLANKS   DDCCY                           S01498
+     C                     END                                            S01498
+     C************IN79     IFEQ '1'                                       S01498
+     C***********A6TYLC    OREQ 'D'                                       S01498
+     C           @RTCD     IFNE *BLANKS                                   S01498
+     C                     MOVEL'LBM0024' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN66
+     C                     MOVE '1'       *IN64
+     C                     ELSE                                           S01498
+     C                     MOVE A6CYCD    DDCCY                           S01498
+     C                     END
+     C*
+     C**=================================================================*
+     C** Validate AMOUNT                                                 *
+     C**=================================================================*
+     C*
+     C** Call ZALIGN to validate amount
+     C*
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     Z-ADD0         ZADIG
+     C           13        SUB  A6NBDP    ZADIG
+     C                     MOVE '0'       *IN99
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE DDCMTL    ZFIELD
+     C                     EXSR ZALIGN
+     C*
+     C           *IN99     IFEQ '0'
+     C                     MOVE ZFIELD    WWCMTL
+     C*
+     C** If valid numeric, call ZSEDIT to redisplay on screen
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE ZFIELD    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAL15 15
+     C                     MOVELWWAL15    DDCMTL
+     C*
+     C                     ELSE
+     C*
+     C** Amount entered is invalid
+     C                     MOVEL'LBM0026' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN67
+     C                     MOVE '1'       *IN64
+     C*
+     C                     END
+     C*
+     C**=================================================================*
+     C** Validate EXPIRY DATE                                            *
+     C**=================================================================*
+     C*
+     C** Check date entered is numeric
+     C                     MOVE DDEXPD    WWNUM7
+     C                     MOVE WWNUM7    WWALF6
+     C           DDEXPD    IFEQ WWALF6
+     C*
+     C** Validate date and convert from input format to MIDAS day number
+     C                     MOVE DDEXPD    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    WWEDN   50
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN68
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVE '1'       *IN68
+     C                     END
+     C*
+     C           *IN68     IFEQ '1'
+     C*
+     C                     MOVEL'LBM0023' ZAMSID
+     C*
+     C                     ELSE
+     C*
+     C** Check Expiry Date is after Today's Date
+     C           WWEDN     IFLE BJRDNB
+     C                     MOVE '1'       *IN68
+     C                     MOVEL'LBM0028' ZAMSID
+     C                     ELSE
+     C*
+     C** If Start Date was valid, check Expiry Date is after Start Date
+     C           *IN65     IFEQ '0'
+     C           WWEDN     ANDLEWWSDN
+     C                     MOVE '1'       *IN68
+     C                     MOVEL'LBM0029' ZAMSID
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *IN68     IFEQ '1'
+     C                     MOVE '1'       *IN64
+     C                     EXSR ZASNMS
+     C                     END
+     C*
+     C**=================================================================*
+     C** Validate REVIEW DATE if entered                                 *
+     C**=================================================================*
+     C*
+     C           DDREVD    IFNE *BLANKS
+     C*
+     C** Check date entered is numeric
+     C                     MOVE DDREVD    WWNUM7
+     C                     MOVE WWNUM7    WWALF6
+     C           DDREVD    IFEQ WWALF6
+     C*
+     C** Validate date and convert from input format to MIDAS day number
+     C                     MOVE DDREVD    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    WWRDN   50
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN69
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVE '1'       *IN69
+     C                     END
+     C*
+     C           *IN69     IFEQ '1'
+     C*
+     C                     MOVEL'LBM0023' ZAMSID
+     C*
+     C                     ELSE
+     C*
+     C** Check Review Date is after Today's Date
+     C           WWRDN     IFLE BJRDNB
+     C                     MOVE '1'       *IN69
+     C                     MOVEL'LBM0030' ZAMSID
+     C                     ELSE
+     C*
+     C** Check Review Date is after Start Date if it was valid
+     C           *IN65     IFEQ '0'
+     C           WWRDN     ANDLEWWSDN
+     C                     MOVE '1'       *IN69
+     C                     MOVEL'LBM0031' ZAMSID
+     C*
+     C                     ELSE
+     C*
+     C** Check Review Date is before Expiry Date if it was valid
+     C           *IN68     IFEQ '0'
+     C           WWRDN     ANDGEWWEDN
+     C                     MOVE '1'       *IN69
+     C                     MOVEL'LBM0032' ZAMSID
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Else if review date is blank...
+     C                     ELSE
+     C*
+     C                     Z-ADD0         WWRDN
+     C*
+     C                     END
+     C*
+     C           *IN69     IFEQ '1'
+     C                     MOVE '1'       *IN64
+     C                     EXSR ZASNMS
+     C                     END
+     C*
+     C**=================================================================*
+     C** Validate REVIEW FREQUENCY                                       *
+     C**=================================================================*
+     C*
+     C** If Review Date was NOT entered, Review Frequency must be blank
+     C           DDREVD    IFEQ *BLANKS
+     C*
+     C           DDREVF    IFNE *BLANKS
+     C                     MOVE '1'       *IN70
+     C                     MOVEL'LBM0033' ZAMSID
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** Review Date WAS entered, validate Review Frequency
+     C           DDREVF    IFNE 'M'
+     C           DDREVF    ANDNE'Q'
+     C           DDREVF    ANDNE'X'
+     C           DDREVF    ANDNE'Y'
+     C                     MOVE '1'       *IN70
+     C                     MOVEL'LBM0036' ZAMSID
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *IN70     IFEQ '1'
+     C                     MOVE '1'       *IN64
+     C                     EXSR ZASNMS
+     C                     END
+     C*
+     C**=================================================================*
+     C** Validate REVIEW DAY NUMBER                                      *
+     C**=================================================================*
+     C*
+     C** If Review Date was NOT entered, Review Day Number must be blank
+     C           DDREVD    IFEQ *BLANKS
+     C                     Z-ADD0         WWREVN
+     C*
+     C           DDREVN    IFNE *BLANKS
+     C                     MOVE '1'       *IN71
+     C                     MOVEL'LBM0034' ZAMSID
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** Review Date WAS entered, validate Review Day Number
+     C*
+     C** If Review Day was NOT entered, but a valid Review Date was,
+     C** set the Day Number to the day of the Review Date
+     C           DDREVN    IFEQ *BLANKS
+     C*
+     C           *IN69     IFEQ '0'
+     C                     Z-ADDZDAY      WWREVN
+     C                     MOVE ZDAY      DDREVN
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** Day Number is not blank, check numeric
+     C                     MOVE DDREVN    WWNUM3  30
+     C                     MOVE WWNUM3    WWALF2  2
+     C           DDREVN    IFEQ WWALF2
+     C*
+     C** Check Day Number is between 1 and 31
+     C                     MOVE DDREVN    WWREVN  20
+     C           WWREVN    IFLT 1
+     C           WWREVN    ORGT 31
+     C                     MOVE '1'       *IN71
+     C                     MOVEL'LBM0035' ZAMSID
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE '1'       *IN71
+     C                     MOVEL'LBM0035' ZAMSID
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *IN71     IFEQ '1'
+     C                     MOVE '1'       *IN64
+     C                     EXSR ZASNMS
+     C                     END
+     C*
+     C           *IN64     IFEQ '0'
+     C                     MOVE 'Y'       WWVLD3
+     C                     ELSE
+     C                     MOVE 'N'       WWVLD3
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BCB        - Updates Transaction and Trailer files for INSERT  *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   -                                                   *
+     C**                                                                 *
+     C********************************************************************
+     C           #BCB      BEGSR
+     C*
+     C** Get next transaction number for updates
+     C                     EXSR ZTNLU1
+     C*
+     C** Get next SEQUENCE number
+     C           WWACT     IFEQ 'I'
+     C                     EXSR #ZD
+     C                     ELSE
+     C                     MOVE CASEQN    WWSEQN
+     C                     END
+     C*
+     C** Set up fields for write new record
+     C                     MOVE 'D'       CTRECI
+     C**********           Z-ADDWWCUNO    CTCNUM                                              CSD027
+     C                     MOVE WWCUNO    CTCNUM                                              CSD027
+     C                     Z-ADDWWSEQN    CTSEQN
+     C                     MOVE DDCCY     CTCCY
+     C                     Z-ADDWWCMTL    CTCMTL
+     C                     Z-ADDWWSDN     CTSTTD
+     C                     Z-ADDWWEDN     CTEXPD
+     C                     Z-ADDWWRDN     CTREVD
+     C                     MOVE DDREVF    CTREVF
+     C                     Z-ADDWWREVN    CTREVN
+     C                     MOVE DDNOT1    CTNOT1
+     C                     MOVE DDNOT2    CTNOT2
+     C                     MOVE DDNOT3    CTNOT3
+     C                     MOVE DDNOT4    CTNOT4
+     C                     Z-ADDBJRDNB    CTORED
+     C                     Z-ADDBJRDNB    CTLCD
+     C                     Z-ADDWWDAY     CTDLUP
+     C                     MOVE WWMNTH    CTMLUP
+     C                     Z-ADDWWYEAR    CTYLUP
+     C                     TIME           CTTLUP
+     C                     MOVE WWUSER    CTUSR
+     C                     MOVE 'I'       CTCHTP
+     C                     Z-ADDWWDSTN    CTTNLU
+     C*
+     C** Write new record to physical LBCOMTPD
+     C                     WRITELBCOMTD0               20
+     C*
+     C**   IF DUPLICATE KEY ERROR
+     C           *IN20     IFEQ '1'
+     C           STATS1    IFEQ 01021
+     C                     ROLBK
+     C*
+     C**   CLEAR MESSAGES CAUSED BY STATUS ERROR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+     C*
+     C                     MOVE '1'       *IN64
+     C                     MOVE 'N'       WWVLD3
+     C           WWACT     IFEQ 'I'
+     C                     MOVEL'LBM0057' ZAMSID
+     C                     ELSE
+     C                     MOVEL'LBM0129' ZAMSID
+     C                     END
+     C                     EXSR ZASNMS
+     C*
+     C                     ELSE
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** WRITE to LBCOMTPD was successful
+     C*
+     C** Update trailer file
+     C                     MOVE 'LBCOMTPD'WWFILE
+     C           WWFILE    CHAINLBTRAIPD             35
+     C*
+     C**   IF RECORD NOT FOUND OR RECORD-ID NOT = 'T'
+     C*
+     C           *IN35     IFEQ '1'
+     C           TRRECI    ORNE 'T'
+     C                     ROLBK
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           *             *
+     C***********          MOVEL'LBTRAIPD'DBFILE           * DBERROR 005 *S01498
+     C                     MOVE 'LBTRAIPD'DBFILE                          S01498
+     C                     MOVE *BLANKS   DBKEY            *             *
+     C                     MOVELWWFILE    DBKEY            ***************
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C                     ADD  1         TRINS
+     C                     ADD  1         TRLIVE
+     C                     Z-ADDBJRDNB    TRLCD
+     C                     MOVE 'A'       TRCHTP
+     C*
+     C**   UPDATE TRAILER FILE
+     C*
+     C                     UPDATLBTRAID0
+     C*
+     C**   SET UP COMMITMENT TEXT
+     C*
+     C                     MOVEL'LB'      MDID
+     C                     MOVEL'LB0210'  PGMN
+     C                     MOVELDDWSID    WSIDX
+     C                     MOVELWWUSER    USIDX
+     C                     TIME           MTIME
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   ZTNLU1    - RETREIVE/UPDATE TRANS NO. OF LAST UPDATE       *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #ZBA                                           *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     Z-ADDFNATN     WWDSTN
+     C                     Z-ADDFNATN     WWNATN
+     C                     ADD  1         FNATN
+     C                     OUT  DNATN
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BD         - Processes screen 4                                *
+     C**               A, D, or E record selection for customer          *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   - #B                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #BD       BEGSR
+     C*                                                                   LB0009
+     C                     MOVE '0'       *IN21                           LB0009
+     C*                                                                   LB0009
+     C** If called from 'review from' screen                              LB0009
+     C*                                                                   LB0009
+     C           WWORIG    IFEQ 'REVIEW '                                 LB0009
+     C*                                                                   LB0009
+     C** Retrieve first subfile record with non blank action              LB0009
+     C*                                                                   LB0009
+     C                     Z-ADD1         WWCOUN  40                      LB0009
+     C           WWCOUN    CHAINLB0210S2             21                   LB0009
+     C*                                                                   LB0009
+     C** Store key for use when returning to 'review from' screen         LB0009
+     C*                                                                   LB0009
+     C                     MOVE DD2CST    WWRVFN                          LB0009
+     C*                                                                   LB0009
+     C           DD2SEL    DOWEQ' '                                       LB0009
+     C           *IN21     ANDEQ'0'                                       LB0009
+     C                     ADD  1         WWCOUN                          LB0009
+     C           WWCOUN    CHAINLB0210S2             21                   LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C** If no records found return to screen 2                           LB0009
+     C*                                                                   LB0009
+     C           *IN21     IFEQ '1'                                       LB0009
+     C                     MOVE '2'       WWSCRN                          LB0009
+     C                     END                                            LB0009
+     C***********                                                         LB0009
+     C***Set*up*customer number and shortname fields for A, D and E scrns LB0009
+     C***********          MOVE DD4CST    DDCNUM                          LB0009
+     C***********          MOVE DD4CSN    DDCNSN                          LB0009
+     C*
+     C**   Do while this screen required
+     C           *INKC     DOWEQ'0'
+     C           WWSCRN    ANDEQ'4'
+     C*                                                                   LB0009
+     C** If called from 'review from' screen - set up current fields      LB0009
+     C*                                                                   LB0009
+     C           WWORIG    IFEQ 'REVIEW '                                 LB0009
+     C                     MOVE DD2SEL    DD4ACT                          LB0009
+     C                     MOVE DD2CST    DD4CST                          LB0009
+     C                     MOVE DD2CSN    DD4CSN                          LB0009
+     C                     MOVE DD2BCH    DD4BCH                          S01498
+     C                     MOVE DD2CST    WWCUNO                          LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C** Set up customer number and shortname fields for A, D and E scrns LB0009
+     C*                                                                   LB0009
+     C                     MOVE DD4CST    DDCNUM                          LB0009
+     C                     MOVE DD4CSN    DDCNSN                          LB0009
+     C                     MOVE DD4BCH    DDBRCH                          S01498
+     C*
+     C** Set relative record numbers to 0
+     C                     Z-ADD0         LSTRR3
+     C                     Z-ADD0         LSTRR4
+     C*
+     C                     MOVE DD4ACT    WWACT
+     C*
+     C** Clear subfiles
+     C                     MOVE '1'       *IN50
+     C                     WRITELB0210C3
+     C                     MOVE '0'       *IN50
+     C                     MOVE '1'       *IN60
+     C                     WRITELB0210C4
+     C                     MOVE '0'       *IN60
+     C*
+     C** Read the first record from the Authorised file
+     C           WWCUNO    SETLLLBCOMAL2
+     C           WWCUNO    READELBCOMAL2                 02
+     C*
+     C           *IN02     IFEQ '1'
+     C*
+     C** Set off the subfile display indicator
+     C                     MOVE '0'       *IN48
+     C                     ELSE
+     C*
+     C** Load a page of subfile 1
+     C                     MOVE '1'       *IN48
+     C                     EXSR #BDA
+     C                     END
+     C*
+     C** Read the first record from the Transaction file
+     C           WWCUNO    SETLLLBCOMTL5
+     C           WWCUNO    READELBCOMTL5                 07
+     C*
+     C           *IN07     IFEQ '1'
+     C*
+     C** Set off the subfile display indicator
+     C                     MOVE '0'       *IN58
+     C                     ELSE
+     C*
+     C** Load a page of subfile 1
+     C                     MOVE '1'       *IN58
+     C                     EXSR #BDB
+     C                     END
+     C*
+     C                     MOVE 'N'       WWRBSF  1
+     C*
+     C** Do while display of this screen required
+     C**   and subfile rebuild not required
+     C           *INKC     DOWEQ'0'
+     C           WWSCRN    ANDEQ'4'
+     C           WWRBSF    ANDEQ'N'
+     C*
+     C** Output screen 2 with error messages if apropriate
+     C                     WRITELB0210F0
+     C                     WRITELB0210F3
+     C           *IN86     IFEQ '1'
+     C                     WRITELB0210C1
+     C                     END
+     C                     WRITELB0210C4
+     C                     WRITELB0210C3
+     C*
+     C** If anything to display on subfile 1
+     C           *IN48     IFEQ '1'
+     C                     READ LB0210C3                 79
+     C                     END
+     C*
+     C** Store relative record number of subfile
+     C           WSDSRN    IFEQ 0
+     C                     Z-ADDSFLRR3    WWSTR3
+     C                     ELSE
+     C                     Z-ADDWSDSRN    WWSTR3
+     C                     END
+     C*
+     C** If anything to display on subfile 2, or nothing to display on
+     C** subfile 1
+     C           *IN58     IFEQ '1'
+     C           *IN48     OREQ '0'
+     C                     READ LB0210C4                 79
+     C                     END
+     C*
+     C** Store relative record number of subfile
+     C           WSDSRN    IFEQ 0
+     C                     Z-ADDSFLRR4    WWSTR4
+     C                     ELSE
+     C                     Z-ADDWSDSRN    WWSTR4
+     C                     END
+     C*
+     C           *INKC     IFEQ '0'
+     C*
+     C** If F12 was pressed
+     C           *INKL     IFEQ '1'
+     C*                                                                   LB0009
+     C** Goto screen 1 or 2 depending on origin                           LB0009
+     C*                                                                   LB0009
+     C           WWORIG    IFEQ 'INITIAL'                                 LB0009
+     C                     MOVE '1'       WWSCRN
+     C                     ELSE                                           LB0009
+     C                     MOVE '2'       WWSCRN                          LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C                     ELSE
+     C*
+     C** If Rolllup was pressed, load next page of appropriate subfile
+     C           *IN53     IFEQ '1'
+     C                     EXSR #BDD
+     C                     ELSE
+     C*
+     C**   Else enter pressed - validate screen
+     C                     EXSR #BDC
+     C*                                                                   LB0009
+     C** If called from 'review from' screen                              LB0009
+     C*                                                                   LB0009
+     C           WWORIG    IFEQ 'REVIEW '                                 LB0009
+     C*                                                                   LB0009
+     C** Retrieve next subfile record with non blank action               LB0009
+     C*                                                                   LB0009
+     C                     ADD  1         WWCOUN                          LB0009
+     C           WWCOUN    CHAINLB0210S2             21                   LB0009
+     C*                                                                   LB0009
+     C           DD2SEL    DOWEQ' '                                       LB0009
+     C           *IN21     ANDEQ'0'                                       LB0009
+     C                     ADD  1         WWCOUN                          LB0009
+     C           WWCOUN    CHAINLB0210S2             21                   LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C** If no further records found return to screen 2                   LB0009
+     C*                                                                   LB0009
+     C           *IN21     IFEQ '1'                                       LB0009
+     C                     MOVE '2'       WWSCRN                          LB0009
+     C                     END                                            LB0009
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** end of do while
+     C                     END
+     C*
+     C** end of do while
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BDA        - Adds a page to subfile 1, screen 4                *
+     C**               from the Authorised file                          *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   - #BD                                               *
+     C**                                                                 *
+     C********************************************************************
+     C           #BDA      BEGSR
+     C*
+     C** Load a page of subfile records
+     C                     Z-ADDLSTRR3    SFLRR3
+     C                     Z-ADD0         WWSFCT
+     C                     MOVE *BLANKS   DD4SEL
+     C*
+     C           *IN02     DOWEQ'0'
+     C           WWSFCT    ANDLT4
+     C*
+     C** set up hidden fields
+     C**                      - relative record number
+     C                     Z-ADDER2RRN    DD4RRN
+     C**                      - start date as day number
+     C                     Z-ADDCASTTD    DD4STN
+     C**                      - transaction number of last update
+     C                     Z-ADDCATNLU    DD4TNL
+     C**                      - notes fields
+     C                     MOVE CANOT1    DD4NT1
+     C                     MOVE CANOT2    DD4NT2
+     C                     MOVE CANOT3    DD4NT3
+     C                     MOVE CANOT4    DD4NT4
+     C*
+     C** Convert start date (dayno) to date
+     C                     Z-ADDCASTTD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DD4STD
+     C*
+     C                     MOVE CACCY     DD4CCY
+     C*
+     C** Chain to currency file to get number of decimal places for stored
+     C**  currency
+     C                     MOVE CACCY     WWCCY
+     C                     EXSR #ZB
+     C*
+     C** Convert Amount to display format
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDCACMTL    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DD4AMT
+     C*
+     C** Convert expiry date (dayno) to date
+     C                     Z-ADDCAEXPD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DD4EXD
+     C*
+     C** Convert review date (dayno) to date
+     C                     Z-ADDCAREVD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DD4RVD
+     C           CAREVD    IFEQ 0
+     C                     MOVE *BLANKS   DD4RVD
+     C                     END
+     C*
+     C                     MOVE CAREVF    DD4FRQ
+     C*
+     C                     MOVE CAREVN    DD4DYN
+     C           CAREVN    IFEQ 0
+     C                     MOVE *BLANKS   DD4DYN
+     C                     END
+     C*
+     C** Convert Authorised date (dayno) to date
+     C                     Z-ADDCAAUTD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DD4AUD
+     C*
+     C                     ADD  1         WWSFCT
+     C                     ADD  1         SFLRR3
+     C                     WRITELB0210S3
+     C*
+     C           WWCUNO    READELBCOMAL2                 02
+     C*
+     C                     END
+     C*
+     C                     Z-ADDSFLRR3    LSTRR3
+     C*
+     C** Set the SFLEND indicator
+     C           *IN02     IFEQ '0'
+     C                     MOVE '0'       *IN51
+     C                     ELSE
+     C                     MOVE '1'       *IN51
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BDB        - Adds a page to subfile 2, screen 4                *
+     C**               from the Transaction file                         *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   - #BD                                               *
+     C**                                                                 *
+     C********************************************************************
+     C           #BDB      BEGSR
+     C*
+     C** Load a page of subfile records
+     C                     Z-ADDLSTRR4    SFLRR4
+     C                     Z-ADD0         WWSFCT
+     C                     MOVE *BLANKS   DD5SEL
+     C*
+     C           *IN07     DOWEQ'0'
+     C           WWSFCT    ANDLT4
+     C*
+     C** set up hidden fields
+     C**                      - relative record number
+     C                     Z-ADDER3RRN    DD5RRN
+     C**                      - transaction number of last update
+     C                     Z-ADDCTTNLU    DD5TNL
+     C**                      - notes fields
+     C                     MOVE CTNOT1    DD5NT1
+     C                     MOVE CTNOT2    DD5NT2
+     C                     MOVE CTNOT3    DD5NT3
+     C                     MOVE CTNOT4    DD5NT4
+     C*
+     C** Convert start date (dayno) to date
+     C                     Z-ADDCTSTTD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DD5STD
+     C*
+     C                     MOVE CTCCY     DD5CCY
+     C*
+     C** Chain to currency file to get number of decimal places for stored
+     C**  currency
+     C                     MOVE CTCCY     WWCCY
+     C                     EXSR #ZB
+     C*
+     C** Convert Amount to display format
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDCTCMTL    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DD5AMT
+     C*
+     C** Convert expiry date (dayno) to date
+     C                     Z-ADDCTEXPD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DD5EXD
+     C*
+     C** Convert review date (dayno) to date
+     C                     Z-ADDCTREVD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DD5RVD
+     C           CTREVD    IFEQ 0
+     C                     MOVE *BLANKS   DD5RVD
+     C                     END
+     C*
+     C                     MOVE CTREVF    DD5FRQ
+     C*
+     C                     MOVE CTREVN    DD5DYN
+     C           CTREVN    IFEQ 0
+     C                     MOVE *BLANKS   DD5DYN
+     C                     END
+     C*
+     C                     ADD  1         WWSFCT
+     C                     ADD  1         SFLRR4
+     C                     WRITELB0210S4
+     C*
+     C           WWCUNO    READELBCOMTL5                 07
+     C*
+     C                     END
+     C*
+     C                     Z-ADDSFLRR4    LSTRR4
+     C*
+     C** Set the SFLEND indicator
+     C           *IN07     IFEQ '0'
+     C                     MOVE '0'       *IN61
+     C                     ELSE
+     C                     MOVE '1'       *IN61
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BDC        - Processes ENTER on screen 4                       *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   - #BD                                               *
+     C**                                                                 *
+     C********************************************************************
+     C           #BDC      BEGSR
+     C*
+     C** Validate input fields on screen 4
+     C                     EXSR #BDCA
+     C*
+     C           *IN86     IFEQ '1'
+     C                     GOTO #BDC0
+     C                     END
+     C*
+     C** Process each selection on first subfile
+     C                     MOVE 'A'       WWCOMF  1
+     C                     DO   LSTRR3    WWSFCT
+     C           WWSFCT    CHAINLB0210S3             79
+     C*
+     C           DD4SEL    IFEQ 'X'
+     C*
+     C** Process as appropriate for A, D or E
+     C           WWACT     IFEQ 'A'
+     C                     EXSR #BF
+     C                     ELSE
+     C                     EXSR #BE
+     C                     END
+     C*
+     C           WWSCRN    IFNE '4'
+     C           *INKC     OREQ '1'
+     C                     Z-ADDWWSTR3    SFLRR3
+     C                     GOTO #BDC0
+     C                     END
+     C                     MOVE ' '       DD4SEL
+     C                     UPDATLB0210S3
+     C                     END
+     C*
+     C**         End of DO
+     C                     END
+     C*
+     C                     Z-ADDWWSTR3    SFLRR3
+     C*
+     C** Process each selection on second subfile
+     C                     MOVE 'T'       WWCOMF  1
+     C                     DO   LSTRR4    WWSFCT
+     C           WWSFCT    CHAINLB0210S4             79
+     C*
+     C           DD5SEL    IFEQ 'X'
+     C*
+     C** Process as appropriate for A, D or E
+     C           WWACT     IFEQ 'A'
+     C                     EXSR #BF
+     C                     ELSE
+     C                     EXSR #BE
+     C                     END
+     C*
+     C           WWSCRN    IFNE '4'
+     C           *INKC     OREQ '1'
+     C                     Z-ADDWWSTR4    SFLRR4
+     C                     GOTO #BDC0
+     C                     END
+     C                     MOVE ' '       DD5SEL
+     C                     UPDATLB0210S4
+     C                     END
+     C*
+     C**         End of DO
+     C                     END
+     C*
+     C                     Z-ADDWWSTR4    SFLRR4
+     C*
+     C           WWACT     IFEQ 'A'
+     C           WWACT     OREQ 'D'
+     C*                                                                   LB0009
+     C** Rebuild of subfile required for each enquiry processed           LB0009
+     C           WWACT     OREQ 'E'                                       LB0009
+     C                     MOVE 'Y'       WWRBSF
+     C                     END
+     C*
+     C           #BDC0     ENDSR                           **  #BDC0    **
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BDCA       - Validates input fields on screen 4                *
+     C**                                                                 *
+     C** CALLS       - NONE                                              *
+     C**                                                                 *
+     C** CALLED BY   - #BDC                                              *
+     C**                                                                 *
+     C********************************************************************
+     C           #BDCA     BEGSR
+     C*
+     C                     MOVE '0'       *IN86
+     C*
+     C** CLEAR SCREEN MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+     C*
+     C** Check all selection fields either blank or 'X' for first subfile
+     C                     Z-ADD0         WW1STE  40
+     C                     DO   LSTRR3    WWSFCT
+     C           WWSFCT    CHAINLB0210S3             79
+     C*
+     C           DD4SEL    IFNE ' '
+     C           DD4SEL    ANDNE'X'
+     C           WW1STE    IFEQ 0
+     C                     MOVE WWSFCT    WW1STE
+     C                     END
+     C                     MOVE '1'       *IN82
+     C                     ELSE
+     C                     MOVE '0'       *IN82
+     C                     END
+     C                     UPDATLB0210S3
+     C*
+     C**         End of DO
+     C                     END
+     C*
+     C** Check all selection fields either blank or 'X' for second subfile
+     C                     Z-ADD0         WW2STE  40
+     C                     DO   LSTRR4    WWSFCT
+     C           WWSFCT    CHAINLB0210S4             79
+     C*
+     C           DD5SEL    IFNE ' '
+     C           DD5SEL    ANDNE'X'
+     C           WW2STE    IFEQ 0
+     C                     MOVE WWSFCT    WW2STE
+     C                     END
+     C                     MOVE '1'       *IN83
+     C                     ELSE
+     C                     MOVE '0'       *IN83
+     C                     END
+     C                     UPDATLB0210S4
+     C*
+     C**         End of DO
+     C                     END
+     C*
+     C           WW1STE    IFNE 0
+     C                     Z-ADDWW1STE    SFLRR3
+     C                     ELSE
+     C                     Z-ADDWWSTR3    SFLRR3
+     C                     END
+     C*
+     C           WW2STE    IFNE 0
+     C                     Z-ADDWW2STE    SFLRR4
+     C                     ELSE
+     C                     Z-ADDWWSTR4    SFLRR4
+     C                     END
+     C*
+     C           WW1STE    IFNE 0
+     C           WW2STE    ORNE 0
+     C                     MOVE '1'       *IN86
+     C                     END
+     C*
+     C           *IN86     IFEQ '1'
+     C*
+     C** Invalid selection, load message to message subfile
+     C                     MOVEL'LBM0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BDD        - Check on which subfile roll-up occurs             *
+     C**                                                                 *
+     C** CALLS       - #BDA #BDB                                         *
+     C**                                                                 *
+     C** CALLED BY   - #B                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #BDD      BEGSR
+     C*
+     C** Check if cursor is in subfile 1 or 2
+     C           WSPOSN    IFLT 3585
+     C                     Z-ADDLSTRR3    SFLRR3
+     C                     EXSR #BDA
+     C                     ELSE
+     C                     Z-ADDWWSTR3    SFLRR3
+     C                     EXSR #BDB
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BE         - Display screen 3 for Enquire & Delete             *
+     C**                                                                 *
+     C** CALLS       - #BAA #ZA                                          *
+     C**                                                                 *
+     C** CALLED BY   - #B                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #BE       BEGSR
+     C*
+     C** Set up indicator 12 according to file selected
+     C           WWCOMF    IFEQ 'A'
+     C                     MOVE '1'       *IN12
+     C                     ELSE
+     C                     MOVE '0'       *IN12
+     C                     END
+     C*
+     C** Set up indicator 11 according to Action (Delete/Enquire)
+     C           WWACT     IFEQ 'D'
+     C                     MOVE '1'       *IN11
+     C                     ELSE
+     C                     MOVE '0'       *IN11
+     C                     END
+     C*
+     C** Clear program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+     C*
+     C** customer number and shortname fields should already be set up
+     C*
+     C** Set up display fields
+     C           WWCOMF    IFEQ 'T'
+     C                     MOVE DD5STD    DDSTTD
+     C                     MOVE DD5CCY    DDCCY
+     C                     MOVELDD5AMT    DDCMTL
+     C                     MOVE DD5EXD    DDEXPD
+     C                     MOVE DD5RVD    DDREVD
+     C                     MOVE DD5FRQ    DDREVF
+     C                     MOVE DD5DYN    DDREVN
+     C                     MOVE DD5NT1    DDNOT1
+     C                     MOVE DD5NT2    DDNOT2
+     C                     MOVE DD5NT3    DDNOT3
+     C                     MOVE DD5NT4    DDNOT4
+     C*
+     C                     ELSE
+     C*
+     C** Must be Authorised file
+     C                     MOVE DD4STD    DDSTTD
+     C                     MOVE DD4CCY    DDCCY
+     C                     MOVELDD4AMT    DDCMTL
+     C                     MOVE DD4EXD    DDEXPD
+     C                     MOVE DD4RVD    DDREVD
+     C                     MOVE DD4FRQ    DDREVF
+     C                     MOVE DD4DYN    DDREVN
+     C                     MOVE DD4NT1    DDNOT1
+     C                     MOVE DD4NT2    DDNOT2
+     C                     MOVE DD4NT3    DDNOT3
+     C                     MOVE DD4NT4    DDNOT4
+     C                     END
+     C*
+     C                     MOVE '0'       *IN63
+     C                     MOVE 'N'       WWDVLD  1
+     C*
+     C           WWDVLD    DOWEQ'N'
+     C           *INKC     ANDEQ'0'
+     C*
+     C** Write Delete/Enquire screen
+     C*
+     C                     WRITELB0210F0
+     C           *IN63     IFEQ '1'
+     C                     WRITELB0210C1
+     C                     END
+     C                     WRITELB0210F4
+     C                     READ LB0210F4                 79
+     C*
+     C** Perform validation
+     C           *INKC     IFEQ '0'
+     C*
+     C** If F12 was pressed, return to screen 1
+     C           *INKL     IFEQ '1'
+     C*                                                                   LB0009
+     C** Goto screen 1 or 2 depending on origin                           LB0009
+     C*                                                                   LB0009
+     C           WWORIG    IFEQ 'INITIAL'                                 LB0009
+     C                     MOVE '1'       WWSCRN
+     C                     MOVE 'Y'       WWDVLD
+     C                     ELSE                                           LB0009
+     C                     MOVE '2'       WWSCRN                          LB0009
+     C                     MOVE 'Y'       WWDVLD                          LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C                     ELSE
+     C*
+     C** If F10 was pressed, delete this record
+     C           *INKJ     IFEQ '1'
+     C                     EXSR #BEA
+     C                     ELSE
+     C*
+     C** If Enter pressed, return to previous screen
+     C                     MOVE 'Y'       WWDVLD
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BEA     - Delete selected record                               *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #BE                                                 *
+     C**                                                                 *
+     C********************************************************************
+     C           #BEA      BEGSR                           **  #BEA     **
+     C*
+     C** If Transaction file, update it and the trailer file
+     C           WWCOMF    IFEQ 'T'
+     C                     EXSR #BEAA
+     C                     ELSE
+     C*
+     C** Else update the Authorised file and its trailer record
+     C                     EXSR #BEAB
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BEAA    - Delete selected record from Transaction file         *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #BEA                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #BEAA     BEGSR                           **  #BEAA    **
+     C*
+     C                     MOVE 'Y'       WWDVLD
+     C*
+     C** Get next transaction number for updates
+     C                     EXSR ZTNLU1
+     C*
+     C** Access Transaction file using saved RRN
+     C           DD5RRN    CHAINLBCOMTPD             08
+     C*
+     C           *IN08     IFEQ '1'
+     C           CTTNLU    ORNE DD5TNL
+     C*
+     C                     MOVE '1'       *IN63
+     C                     MOVE 'Y'       WWDVLD
+     C                     MOVEL'LBM0057' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C           *IN08     IFEQ '0'
+     C                     EXCPTLBCOMT
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** UPDAT to LBCOMTPD was successful
+     C*
+     C** Save previous last change type and date for later use
+     C                     Z-ADDCTLCD     WWLCD
+     C                     MOVE CTCHTP    WWCHTP
+     C*
+     C** Update other fields to delete record
+     C                     MOVE '*'       CTRECI
+     C                     Z-ADDBJRDNB    CTLCD
+     C                     Z-ADDWWDAY     CTDLUP
+     C                     MOVE WWMNTH    CTMLUP
+     C                     Z-ADDWWYEAR    CTYLUP
+     C                     TIME           CTTLUP
+     C                     MOVE WWUSER    CTUSR
+     C                     MOVE 'D'       CTCHTP
+     C                     Z-ADDWWDSTN    CTTNLU
+     C*
+     C                     UPDATLBCOMTD0
+     C*
+     C**   ACCESS TRAILER FILE USING TRANSACTION FILE NAME
+     C*
+     C** Update trailer file
+     C                     MOVE 'LBCOMTPD'WWFILE
+     C           WWFILE    CHAINLBTRAIPD             35
+     C*
+     C**   IF RECORD NOT FOUND OR RECORD-ID NOT = 'T'
+     C*
+     C           *IN35     IFEQ '1'
+     C           TRRECI    ORNE 'T'
+     C                     ROLBK
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           *             *
+     C***********          MOVEL'LBTRAIPD'DBFILE           * DBERROR 005 *S01498
+     C                     MOVE 'LBTRAIPD'DBFILE                          S01498
+     C                     MOVE *BLANKS   DBKEY            *             *
+     C                     MOVELWWFILE    DBKEY            ***************
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C           WWLCD     IFEQ BJRDNB
+     C*
+     C** If record has been inserted today
+     C           WWCHTP    IFEQ 'I'
+     C                     SUB  1         TRINS
+     C                     END
+     C*
+     C** If record has been amended today
+     C           WWCHTP    IFEQ 'A'
+     C                     SUB  1         TRAMD
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ADD  1         TRDEL
+     C                     SUB  1         TRLIVE
+     C                     Z-ADDBJRDNB    TRLCD
+     C                     MOVE 'A'       TRCHTP
+     C*
+     C**   UPDATE TRAILER FILE
+     C*
+     C                     UPDATLBTRAID0
+     C*
+     C**   SET UP COMMITMENT TEXT
+     C*
+     C                     MOVEL'LB'      MDID
+     C                     MOVEL'LB0210'  PGMN
+     C                     MOVELDDWSID    WSIDX
+     C                     MOVELWWUSER    USIDX
+     C                     TIME           MTIME
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BEAB    - Delete selected record from Authorised file          *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #BEA                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #BEAB     BEGSR                           **  #BEAB    **
+     C*
+     C                     MOVE 'Y'       WWDVLD
+     C*
+     C** Get next transaction number for updates
+     C                     EXSR ZTNLU1
+     C*
+     C** Access Authorised file using saved RRN
+     C           DD4RRN    CHAINLBCOMAPD             09
+     C*
+     C           *IN09     IFEQ '1'
+     C           CATNLU    ORNE DD4TNL
+     C*
+     C                     MOVE '1'       *IN63
+     C                     MOVE 'Y'       WWDVLD
+     C                     MOVEL'LBM0057' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C           *IN09     IFEQ '0'
+     C                     EXCPTLBCOMA
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** UPDAT to LBCOMAPD was successful
+     C*
+     C** Save previous last change type and date for later use
+     C                     Z-ADDCALCD     WWLCD
+     C                     MOVE CACHTP    WWCHTP
+     C*
+     C** Update other fields to delete record
+     C                     MOVE '*'       CARECI
+     C                     Z-ADDBJRDNB    CALCD
+     C                     Z-ADDWWDAY     CADLUP
+     C                     MOVE WWMNTH    CAMLUP
+     C                     Z-ADDWWYEAR    CAYLUP
+     C                     TIME           CATLUP
+     C                     MOVE WWUSER    CAUSR
+     C                     MOVE 'D'       CACHTP
+     C                     Z-ADDWWDSTN    CATNLU
+     C*
+     C                     UPDATLBCOMAD0
+     C*
+     C**   ACCESS TRAILER FILE USING TRANSACTION FILE NAME
+     C*
+     C** Update trailer file
+     C                     MOVE 'LBCOMAPD'WWFILE
+     C           WWFILE    CHAINLBTRAIPD             35
+     C*
+     C**   IF RECORD NOT FOUND OR RECORD-ID NOT = 'T'
+     C*
+     C           *IN35     IFEQ '1'
+     C           TRRECI    ORNE 'T'
+     C                     ROLBK
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           *             *
+     C***********          MOVEL'LBTRAIPD'DBFILE           * DBERROR 005 *S01498
+     C                     MOVE 'LBTRAIPD'DBFILE                          S01498
+     C                     MOVE *BLANKS   DBKEY            *             *
+     C                     MOVELWWFILE    DBKEY            ***************
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C           WWLCD     IFEQ BJRDNB
+     C*
+     C** If record has been inserted today
+     C           WWCHTP    IFEQ 'I'
+     C                     SUB  1         TRINS
+     C                     END
+     C*
+     C** If record has been amended today
+     C           WWCHTP    IFEQ 'A'
+     C                     SUB  1         TRAMD
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ADD  1         TRDEL
+     C                     SUB  1         TRLIVE
+     C                     Z-ADDBJRDNB    TRLCD
+     C                     MOVE 'A'       TRCHTP
+     C*
+     C**   UPDATE TRAILER FILE
+     C*
+     C                     UPDATLBTRAID0
+     C*
+     C**   SET UP COMMITMENT TEXT
+     C*
+     C                     MOVEL'LB'      MDID
+     C                     MOVEL'LB0210'  PGMN
+     C                     MOVELDDWSID    WSIDX
+     C                     MOVELWWUSER    USIDX
+     C                     TIME           MTIME
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BF         - Display and validate screen 5 = AMEND             *
+     C**                                                                 *
+     C** CALLS       - #BAA #ZA                                          *
+     C**                                                                 *
+     C** CALLED BY   - #BDC                                              *
+     C**                                                                 *
+     C********************************************************************
+     C           #BF       BEGSR
+     C*
+     C** Set off all screen error indicators
+     C                     MOVE '0'       *IN64
+     C                     MOVE '0'       *IN65
+     C                     MOVE '0'       *IN66
+     C                     MOVE '0'       *IN67
+     C                     MOVE '0'       *IN68
+     C                     MOVE '0'       *IN69
+     C                     MOVE '0'       *IN70
+     C                     MOVE '0'       *IN71
+     C*
+     C** Clear program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+     C*
+     C** Set up indicator 12 according to file selected
+     C           WWCOMF    IFEQ 'A'
+     C                     MOVE '1'       *IN12
+     C                     ELSE
+     C                     MOVE '0'       *IN12
+     C                     END
+     C                     MOVE '0'       *IN13
+     C*
+     C** Customer number and shortname fields should already be set up
+     C*
+     C** Set up display fields
+     C           WWCOMF    IFEQ 'T'
+     C                     MOVE DD5STD    DDSTTD
+     C                     MOVE DD5CCY    DDCCY
+     C                     MOVELDD5AMT    DDCMTL
+     C                     MOVE DD5EXD    DDEXPD
+     C                     MOVE DD5RVD    DDREVD
+     C                     MOVE DD5FRQ    DDREVF
+     C                     MOVE DD5DYN    DDREVN
+     C                     MOVE DD5NT1    DDNOT1
+     C                     MOVE DD5NT2    DDNOT2
+     C                     MOVE DD5NT3    DDNOT3
+     C                     MOVE DD5NT4    DDNOT4
+     C*
+     C                     ELSE
+     C*
+     C** Must be Authorised file
+     C                     MOVE DD4STD    DDSTTD
+     C                     MOVE DD4CCY    DDCCY
+     C                     MOVELDD4AMT    DDCMTL
+     C                     MOVE DD4EXD    DDEXPD
+     C                     MOVE DD4RVD    DDREVD
+     C                     MOVE DD4FRQ    DDREVF
+     C                     MOVE DD4DYN    DDREVN
+     C                     MOVE DD4NT1    DDNOT1
+     C                     MOVE DD4NT2    DDNOT2
+     C                     MOVE DD4NT3    DDNOT3
+     C                     MOVE DD4NT4    DDNOT4
+     C*
+     C**   If Transaction record already exists for this start date,
+     C**   output warning message
+     C                     Z-ADDDD4STN    WWSDN
+     C           CMTKEY    CHAINLBCOMTL5             07
+     C           *IN07     IFEQ '0'
+     C                     MOVE 'LBM0128' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN64
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     MOVE 'N'       WWVLD3
+     C*
+     C** Process Amend screen until a termination request or valid screen
+     C** or request for another screen
+     C           *INKC     DOWEQ'0'
+     C           WWVLD3    ANDEQ'N'
+     C           WWSCRN    ANDEQ'4'
+     C*
+     C                     WRITELB0210F0
+     C           *IN64     IFEQ '1'
+     C                     WRITELB0210C1
+     C                     END
+     C                     WRITELB0210F5
+     C                     READ LB0210F5                 79
+     C*
+     C** Perform validation
+     C           *INKC     IFEQ '0'
+     C*
+     C** If F12 was pressed, return to screen 1
+     C           *INKL     IFEQ '1'
+     C*                                                                   LB0009
+     C** Goto screen 1 or 2 depending on origin                           LB0009
+     C*                                                                   LB0009
+     C           WWORIG    IFEQ 'INITIAL'                                 LB0009
+     C                     MOVE '1'       WWSCRN
+     C                     ELSE                                           LB0009
+     C                     MOVE '2'       WWSCRN                          LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C                     ELSE
+     C*
+     C** Validate Input/Amend screen
+     C                     EXSR #BCA
+     C*
+     C** If validation was successful update Appropriate File
+     C           WWVLD3    IFEQ 'Y'
+     C                     EXSR #BFA
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BFA     - Amend  selected record                               *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #BF                                                 *
+     C**                                                                 *
+     C********************************************************************
+     C           #BFA      BEGSR                           **  #BFA     **
+     C*
+     C** If Transaction file, update it and the trailer file
+     C           WWCOMF    IFEQ 'T'
+     C                     EXSR #BFAA
+     C                     ELSE
+     C*
+     C** If Authorised file, check if CCY, CMTL or EXPD have been changed
+     C** - If so, Insert new record to Transaction file,
+     C** Else update the Authorised file and its trailer record
+     C*
+     C** Access Authorised  file using saved RRN
+     C           DD4RRN    CHAINLBCOMAPD             09
+     C*
+     C           DDCCY     IFNE CACCY
+     C           WWCMTL    ORNE CACMTL
+     C           WWEDN     ORNE CAEXPD
+     C*
+     C**   Insert a Transaction record - if one doesn't already exist
+     C                     EXSR #BCB
+     C*
+     C                     ELSE
+     C*
+     C**   Update the Authorised file
+     C                     EXSR #BFAB
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BFAA    - Amend selected record from Transaction file          *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #BFA                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #BFAA     BEGSR                           **  #BFAA    **
+     C*
+     C                     MOVE 'Y'       WWVLD3
+     C*
+     C** Get next transaction number for updates
+     C                     EXSR ZTNLU1
+     C*
+     C** Access Transaction file using saved RRN
+     C           DD5RRN    CHAINLBCOMTPD             08
+     C*
+     C           *IN08     IFEQ '1'
+     C           CTTNLU    ORNE DD5TNL
+     C*
+     C                     MOVE '1'       *IN64
+     C                     MOVE 'Y'       WWVLD3
+     C                     MOVEL'LBM0057' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C           *IN08     IFEQ '0'
+     C                     EXCPTLBCOMT
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** UPDAT to LBCOMTPD was successful
+     C*
+     C** Save previous last change type and date for later use
+     C                     Z-ADDCTLCD     WWLCD
+     C                     MOVE CTCHTP    WWCHTP
+     C*
+     C** Update other fields to AMEND record
+     C                     MOVE DDCCY     CTCCY
+     C                     MOVE WWCMTL    CTCMTL
+     C                     MOVE WWEDN     CTEXPD
+     C                     MOVE WWRDN     CTREVD
+     C                     MOVE DDREVF    CTREVF
+     C                     MOVE WWREVN    CTREVN
+     C                     MOVE DDNOT1    CTNOT1
+     C                     MOVE DDNOT2    CTNOT2
+     C                     MOVE DDNOT3    CTNOT3
+     C                     MOVE DDNOT4    CTNOT4
+     C                     MOVE WWUSER    CTUSR
+     C*
+     C** If the record has been Inserted today, do not update CHTP to 'A'
+     C           WWLCD     IFEQ BJRDNB
+     C           WWCHTP    ANDEQ'I'
+     C*
+     C** This record will be shown as an insertion
+     C                     ELSE
+     C                     MOVE 'A'       CTCHTP
+     C                     Z-ADDBJRDNB    CTLCD
+     C                     Z-ADDWWDAY     CTDLUP
+     C                     MOVE WWMNTH    CTMLUP
+     C                     Z-ADDWWYEAR    CTYLUP
+     C                     TIME           CTTLUP
+     C                     END
+     C                     Z-ADDWWDSTN    CTTNLU
+     C*
+     C                     UPDATLBCOMTD0
+     C*
+     C**   ACCESS TRAILER FILE USING TRANSACTION FILE NAME
+     C*
+     C** Update trailer file
+     C                     MOVE 'LBCOMTPD'WWFILE
+     C           WWFILE    CHAINLBTRAIPD             35
+     C*
+     C**   IF RECORD NOT FOUND OR RECORD-ID NOT = 'T'
+     C*
+     C           *IN35     IFEQ '1'
+     C           TRRECI    ORNE 'T'
+     C                     ROLBK
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           *             *
+     C***********          MOVEL'LBTRAIPD'DBFILE           * DBERROR 005 *S01498
+     C                     MOVE 'LBTRAIPD'DBFILE                          S01498
+     C                     MOVE *BLANKS   DBKEY            *             *
+     C                     MOVELWWFILE    DBKEY            ***************
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C*
+     C** If the record has been Inserted OR AMENDED TODAY
+     C** do not update TRAMD
+     C           WWLCD     IFEQ BJRDNB
+     C           WWCHTP    ANDEQ'I'
+     C           WWLCD     OREQ BJRDNB
+     C           WWCHTP    ANDEQ'A'
+     C*
+     C                     ELSE
+     C                     ADD  1         TRAMD
+     C                     END
+     C                     Z-ADDBJRDNB    TRLCD
+     C                     MOVE 'A'       TRCHTP
+     C*
+     C**   UPDATE TRAILER FILE
+     C*
+     C                     UPDATLBTRAID0
+     C*
+     C**   SET UP COMMITMENT TEXT
+     C*
+     C                     MOVEL'LB'      MDID
+     C                     MOVEL'LB0210'  PGMN
+     C                     MOVELDDWSID    WSIDX
+     C                     MOVELWWUSER    USIDX
+     C                     TIME           MTIME
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BFAB    - Amend selected record from Authorised  file          *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #BFA                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #BFAB     BEGSR                           **  #BFAA    **
+     C*
+     C                     MOVE 'Y'       WWVLD3
+     C*
+     C** Get next transaction number for updates
+     C                     EXSR ZTNLU1
+     C*
+     C           *IN09     IFEQ '1'
+     C           CATNLU    ORNE DD4TNL
+     C*
+     C                     MOVE '1'       *IN64
+     C                     MOVE 'Y'       WWVLD3
+     C                     MOVEL'LBM0057' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C           *IN09     IFEQ '0'
+     C                     EXCPTLBCOMA
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** UPDAT to LBCOMAPD was successful
+     C*
+     C** Save previous last change type and date for later use
+     C                     Z-ADDCALCD     WWLCD
+     C                     MOVE CACHTP    WWCHTP
+     C*
+     C** Update other fields to AMEND record
+     C                     MOVE WWRDN     CAREVD
+     C                     MOVE DDREVF    CAREVF
+     C                     MOVE WWREVN    CAREVN
+     C                     MOVE DDNOT1    CANOT1
+     C                     MOVE DDNOT2    CANOT2
+     C                     MOVE DDNOT3    CANOT3
+     C                     MOVE DDNOT4    CANOT4
+     C                     MOVE WWUSER    CAUSR
+     C*
+     C** If the record has been Inserted today, do not update CHTP to 'A'
+     C           WWLCD     IFEQ BJRDNB
+     C           WWCHTP    ANDEQ'I'
+     C*
+     C** This record will be shown as an insertion
+     C                     ELSE
+     C                     MOVE 'A'       CACHTP
+     C                     Z-ADDBJRDNB    CALCD
+     C                     Z-ADDWWDAY     CADLUP
+     C                     MOVE WWMNTH    CAMLUP
+     C                     Z-ADDWWYEAR    CAYLUP
+     C                     TIME           CATLUP
+     C                     END
+     C                     Z-ADDWWDSTN    CATNLU
+     C*
+     C                     UPDATLBCOMAD0
+     C*
+     C**   ACCESS TRAILER FILE USING AUTHORISED  FILE NAME
+     C*
+     C** Update trailer file
+     C                     MOVE 'LBCOMAPD'WWFILE
+     C           WWFILE    CHAINLBTRAIPD             35
+     C*
+     C**   IF RECORD NOT FOUND OR RECORD-ID NOT = 'T'
+     C*
+     C           *IN35     IFEQ '1'
+     C           TRRECI    ORNE 'T'
+     C                     ROLBK
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           *             *
+     C***********          MOVEL'LBTRAIPD'DBFILE           * DBERROR 005 *S01498
+     C                     MOVE 'LBTRAIPD'DBFILE                          S01498
+     C                     MOVE *BLANKS   DBKEY            *             *
+     C                     MOVELWWFILE    DBKEY            ***************
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C*
+     C** If the record has been Inserted today, do not update TRAMD
+     C           WWLCD     IFEQ BJRDNB
+     C           WWCHTP    ANDEQ'I'
+     C*
+     C                     ELSE
+     C                     ADD  1         TRAMD
+     C                     END
+     C                     Z-ADDBJRDNB    TRLCD
+     C                     MOVE 'A'       TRCHTP
+     C*
+     C**   UPDATE TRAILER FILE
+     C*
+     C                     UPDATLBTRAID0
+     C*
+     C**   SET UP COMMITMENT TEXT
+     C*
+     C                     MOVEL'LB'      MDID
+     C                     MOVEL'LB0210'  PGMN
+     C                     MOVELDDWSID    WSIDX
+     C                     MOVELWWUSER    USIDX
+     C                     TIME           MTIME
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZA      - Database error handling routine.                     *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #A     #BB #BBA #ZF #ZE #BF #BG                     *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZA       BEGSR                           **  #ZA      **
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     ROLBK
+     C                     RETRN
+     C*
+     C           #ZA0      ENDSR                           **  #ZA0     **
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZB       - Read Currency file                                  *
+     C**                                                                 *
+     C** CALLS     - #ZA                                                 *
+     C**                                                                 *
+     C** CALLED BY - #A #BB                                              *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZB       BEGSR                           **  #ZB      **
+     C*
+     C***********WWCCY     CHAINSDCURRL1             79                   S01498
+     C                     CALL 'AOCURRR0'                                S01498
+     C                     PARM *BLANKS   @RTCD   7                       S01498
+     C                     PARM '*KEY   ' @OPTN   7                       S01498
+     C                     PARM WWCCY     @CYCD   3                       S01498
+     C           SDCURR    PARM SDCURR    DSSDY                           S01498
+     C*
+     C************IN79     IFEQ '1'                                       S01498
+     C***********A6TYLC    OREQ 'D'                        ***************S01498
+     C           @RTCD     IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                        ***************S01498
+     C***********          MOVEL'SDCURRL1'DBFILE           * DBERROR 003 *S01498
+     C                     MOVE 'SDCURRPD'DBFILE           * DBERROR 003 *S01498
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'LB0210'  DBPGM
+     C                     MOVELWWCCY     DBKEY
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZD       - Calculate next sequence number for customer WWCUNO  *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY -                                                     *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZD       BEGSR                           **  #ZD      **
+     C*
+     C** Obtain the largest sequence number on the transaction file
+     C** for this customer, if any.
+     C           WWCUNO    SETGTLBCOMTL1             01
+     C                     READPLBCOMTL1                 01
+     C           *IN01     IFEQ '0'
+     C           CTCNUM    ANDNEWWCUNO
+     C                     MOVE '1'       *IN01
+     C                     END
+     C*
+     C** Now, if *IN01 is ON, no record was found for this customer
+     C** If *IN01 is OFF, we have read the customer record with the
+     C** largest sequence number on the file.
+     C*
+     C           *IN01     IFEQ '0'
+     C                     Z-ADDCTSEQN    WWTSQN
+     C                     ELSE
+     C                     Z-ADD0         WWTSQN
+     C                     END
+     C*
+     C** Obtain the largest sequence number on the authorised file
+     C** for this customer, if any.
+     C           WWCUNO    SETGTLBCOMAL4             06
+     C                     READPLBCOMAL4                 06
+     C           *IN06     IFEQ '0'
+     C           CACNUM    ANDNEWWCUNO
+     C                     MOVE '1'       *IN06
+     C                     END
+     C*
+     C** Now, if *IN06 is ON, no record was found for this customer
+     C** If *IN06 is OFF, we have read the customer record with the
+     C** largest sequence number on the file.
+     C*
+     C           *IN06     IFEQ '0'
+     C                     Z-ADDCASEQN    WWASQN
+     C                     ELSE
+     C                     Z-ADD0         WWASQN
+     C                     END
+     C*
+     C** Now find the largest of the two sequence numbers
+     C           WWASQN    IFGT WWTSQN
+     C           WWASQN    ADD  1         WWSEQN
+     C                     ELSE
+     C           WWTSQN    ADD  1         WWSEQN
+     C                     END
+     C*
+     C           #ZD0      ENDSR                           **  #ZD0     **
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** ZASNMS    - Send message to program's message queue             *
+     C**                                                                 *
+     C** CALLED BY -                                                     *
+     C**                                                                 *
+     C** CALLS     - Y2SNMGC                                             *
+     C**                                                                 *
+     C********************************************************************
+     C           ZASNMS    BEGSR                           ** ZASNMS    **
+     C*
+     C                     MOVEL'LBUSRMSG'ZAMSGF                          R00300
+     C*                                                                   R00300
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** *PSSR       - This subroutine processes a program file error    *
+     C**                                                                 *
+     C** CALLS       - *NONE                                             *
+     C**                                                                 *
+     C** CALLED BY   - *NONE                                             *
+     C**                                                                 *
+     C********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     ROLBK
+     C                     DUMP
+     C*
+     C                     ENDSR
+     C/EJECT
+     O*****************************************************************
+     O*
+     O**   RELEASE THE RECORD FROM LBCOMTPD
+     OLBCOMTD0E                LBCOMT
+     O*
+     O**   RELEASE THE RECORD FROM LBCOMAPD
+     OLBCOMAD0E                LBCOMA
+     O*****************************************************************
+     O/EJECT
+** CPY@ - OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,116 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Initialise GPINSTPD for FF Instruments')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000004 - Initialise GPINSTPD for FF Instruments          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2005                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. BG7731  *CREATE    Date 28Jun05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BG7731 - Initialise GPINSTPD for FF Instruments             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+ 
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2005')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SMC000004')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/* Delete existing records */
+             CHGVAR     VAR(&STM_STR) VALUE(' delete from GPINSTXPD +
+                          where INGINS in (''FUT-INT'',')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             CHGVAR     VAR(&STM_STR) VALUE(' ''FUT-CCY'', +
+                          ''FUT-COM'', ''OPT-INT'', ''OPT-CCY'', +
+                          ''OPT-COM'');')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+ 
+/* Create new records */
+             CHGVAR     VAR(&STM_STR) VALUE('insert into GPINSTXPD +
+                          (INZONE, INMOD, INTRTP, INTRST, INGINS) ')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             CHGVAR     VAR(&STM_STR) VALUE('select +
+                          ZOZONE,''FF'',''1'','''', ''FUT-INT'' +
+                          from GPZONEPD where ZOCHTP <> ''D'';')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('insert into GPINSTXPD +
+                          (INZONE, INMOD, INTRTP, INTRST, INGINS) ')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE(' select +
+                          ZOZONE,''FF'',''2'','''', ''FUT-CCY'' +
+                          from GPZONEPD where ZOCHTP <> ''D'';')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('insert into GPINSTXPD +
+                          (INZONE, INMOD, INTRTP, INTRST, INGINS) ')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE(' select +
+                          ZOZONE,''FF'',''3'','''', ''FUT-COM'' +
+                          from GPZONEPD where ZOCHTP <> ''D''; ')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('insert into GPINSTXPD +
+                          (INZONE, INMOD, INTRTP, INTRST, INGINS) ')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE(' select +
+                          ZOZONE,''FF'',''4'','''', ''OPT-INT'' from +
+                          GPZONEPD where ZOCHTP <> ''D'';')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('insert into GPINSTXPD +
+                          (INZONE, INMOD, INTRTP, INTRST, INGINS) ')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE(' select +
+                          ZOZONE,''FF'',''5'','''', ''OPT-CCY'' +
+                          from GPZONEPD where ZOCHTP <> ''D'';')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('insert into GPINSTXPD +
+                          (INZONE, INMOD, INTRTP, INTRST, INGINS) ')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE(' select +
+                          ZOZONE,''FF'',''6'','''', ''OPT-COM'' +
+                          from GPZONEPD where ZOCHTP <> ''D'';')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

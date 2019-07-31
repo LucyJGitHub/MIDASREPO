@@ -1,0 +1,350 @@
+      *****************************************************************
+/*STD *  LFBASE                                                       *
+/*EXS *  LF_IMIP                                                      *
+/*EXI *  TEXT('Midas ME Part dtl join FT parts to FT trans')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  LF/MEINFTJ1 - Incoming Message Part Dtl Join Ft Parts to FT  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 CFT120             Date 28Sep12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG15107           Date 23Oct07               *
+      *                 CSW207             Date 08Jun07               *
+      *                 CFT032             Date 11Sep06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 07Apr06               *
+      *                 CAP086             Date 08Jun05               *
+      *                 221534             Date 05Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 05Jun00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+     A*                 175479             DATE 08FEB00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+     A*                 CPB001             DATE 01JUN99               *
+     A*                 CAP031             DATE 07MAY99               *  *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*                 CEU006             DATE 24MAR98               *
+     A*                 CAC001             DATE 01FEB96               *
+     A*                 S01494             DATE 25MAY94               *
+     A*                 S01435             DATE 29JUL93               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CFT157 - Stop FT Transaction after Authorisation.            *
+      *           (Recompile)                                         *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
+      *  BUG15107 - Consistency to add the 5th line                   *
+      *  CSW207 - SWIFT 2007 Changes (Recompile)                      *
+      *  CFT032 - Account line in field 50X in MT103                  *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Change Customer Number to alpha.                    *
+      *  CAP086 - Introduce Auto Authorisation to the API's           *
+      *           without it. (Recompile)                             *
+      *  221534 - Not possible to enquire MT101s in VFTM.             *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CFT009 - Recompiled for pf changes                           *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *           Recompiled over changed PF/INPAYDD.                 *
+     A*  175479 - Recompiled over changes in INPAYDD and OTPAYDD      *
+     A*  CPB001 - Meridian DBA Middleware Replication Customization.  *
+     A*           Recompiled over changed INPAYDD and OTPAYDD.        *
+     A*  CAP031 - Conversion of Midas inputs to modular API structure *
+     A*           Recompiled over amended OTPAYDD.                    *
+     A*  CEU006 - EMU Funds Transfer Payments and Settlements:        *
+     A*           Recompiled over changed INPAYDD and OTPAYDD.        *
+     A*  CAC001 - Profit Centre Accounting Development:               *
+     A*           Recompiled due to changes in file.                  *
+     A*  S01494 - BLI Funds Transfer Enhancement.                     *
+     A*           Recompiled.                                         *
+     A*  S01435 - Incoming Message Management                         *
+     A*                                                               *
+     A*****************************************************************
+     A                                      JDFTVAL
+     A*=====================================================================
+     A          R @INFTJ1
+     A                                      TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      JFILE(MEINFTPD +
+     A                                            INPAYDD  +
+     A                                            OTPAYDD  +
+     A**Start of change 221534
+     A                                            FT101HPD +                                  221534
+     A                                            FT102HPD +                                  221534
+     A**End of change 221534
+     A                                           )
+     A*---------------------------------------------------------------------
+     A* Join from Incoming Message FT Parts to Incoming Payments Trans.
+     A          J                           JOIN(1 2)
+     A                                      JFLD(FTIPRF PREF)
+     A*---------------------------------------------------------------------
+     A* Join from Incoming Message FT Parts to Outgoing Paymants Trans.n
+     A          J                           JOIN(1 3)
+     A                                      JFLD(FTOPRF PREF)
+     A*---------------------------------------------------------------------
+     A**Start of change 221534
+     A* Join from Incoming Message FT Parts to RFT                                            221534
+     A          J                           JOIN(1 4)                                         221534
+     A                                      JFLD(FTIPRF RFTID)                                221534
+     A*---------------------------------------------------------------------                  221534
+     A* Join from Incoming Message FT Parts to CCT                                            221534
+     A          J                           JOIN(1 5)                                         221534
+     A                                      JFLD(FTOPRF CCTID)                                221534
+     A*---------------------------------------------------------------------                  221534
+     A**End of change 221534
+     A            FTMSGR                    TEXT('Msg Unique Reference')
+     A                                      JREF(1)
+     A            FTKPRT                    TEXT('Part Number (Key)')
+     A                                      JREF(1)
+     A            FTBRCA                    TEXT('Branch Code')
+     A                                      JREF(1)
+     A            FTINFG                    TEXT('Incoming Flag')
+     A                                      JREF(1)
+     A            FTIPRF                    TEXT('Incoming Payment Ref.')
+     A                                      JREF(1)
+     A            FTOTFG                    TEXT('Outgoing Flag')
+     A                                      JREF(1)
+     A            FTOPRF                    TEXT('Outgoing Payment Ref.')
+     A                                      JREF(1)
+     A            FTFRGL                    TEXT('Funds From')
+     A                                      JREF(1)
+     A            FTTOGL                    TEXT('Funds To')
+     A                                      JREF(1)
+     A            FTAJOB                    TEXT('Job name')
+     A                                      JREF(1)
+     A            FTAUSR                    TEXT('User name')
+     A                                      JREF(1)
+     A            FTATIM                    TEXT('Action Time')
+     A                                      JREF(1)
+     A            FTARDT                    TEXT('Action Date')
+     A                                      JREF(1)
+     A            FTAACT                    TEXT('Action Type')
+     A                                      JREF(1)
+     A            FTRDNB                    TEXT('Run day number')
+     A                                      JREF(1)
+     A            INRECI                    TEXT('Incoming Record Id.')
+     A                                      JREF(2)
+     A                                      RENAME(RECI)
+     A            INPYTP                    TEXT('Incoming Payment Type')
+     A                                      JREF(2)
+     A                                      RENAME(PYTP)
+     A            INPYST                    TEXT('Incoming Sub-type')
+     A                                      JREF(2)
+     A                                      RENAME(PYST)
+     A            INSNTP                    TEXT('Incoming Sender Type')
+     A                                      JREF(2)
+     A                                      RENAME(SNTP)
+     A            INSND1                    TEXT('Incoming Sender Line 1')
+     A                                      JREF(2)
+     A                                      RENAME(SND1)
+     A            INSND2                    TEXT('Incoming Sender Line 2')
+     A                                      JREF(2)
+     A                                      RENAME(SND2)
+     A            INSND3                    TEXT('Incoming Sender Line 3')
+     A                                      JREF(2)
+     A                                      RENAME(SND3)
+     A            INSND4                    TEXT('Incoming Sender Line 4')
+     A                                      JREF(2)
+     A                                      RENAME(SND4)
+     A            INRCRT                    TEXT('Incoming Rec. Cors Type')
+     A                                      JREF(2)
+     A                                      RENAME(RCRT)
+     A            INRCCO                    TEXT('Incoming Rec. Corresp.')
+     A                                      JREF(2)
+     A                                      RENAME(RCCO)
+     A            INSMAM                    TEXT('Incoming Settlement Amt.')
+     A                                      JREF(2)
+     A                                      RENAME(SMAM)
+     A            INSMCY                    TEXT('Incoming Settle currency')
+     A                                      JREF(2)
+     A                                      RENAME(SMCY)
+     A            INSLDT                    TEXT('Incoming Settle Date')
+     A                                      JREF(2)
+     A                                      RENAME(SLDT)
+     A            INRATE                    TEXT('Incoming rate')
+     A                                      JREF(2)
+     A                                      RENAME(RATE)
+     A            INMDIN                    TEXT('Incoming Mult/Div Ind.')
+     A                                      JREF(2)
+     A                                      RENAME(MDIN)
+     A            INOVRD                    TEXT('Incoming rate override')
+     A                                      JREF(2)
+     A                                      RENAME(OVRD)
+     A            INPYAM                    TEXT('Incoming Payment Amount')
+     A                                      JREF(2)
+     A                                      RENAME(PYAM)
+     A            INPCCY                    TEXT('Incoming Pay Currency')
+     A                                      JREF(2)
+     A                                      RENAME(PCCY)
+     A            INPVDT                    TEXT('Incoming Pay date')
+     A                                      JREF(2)
+     A                                      RENAME(PVDT)
+     A            INACBT                    TEXT('Incoming A/c with Type.')
+     A                                      JREF(2)
+     A                                      RENAME(ACBT)
+     A            INACBK                    TEXT('Incoming A/c with Inst.')
+     A                                      JREF(2)
+     A                                      RENAME(ACBK)
+     A            INBNCT                    TEXT('Incoming Benef. Type')
+     A                                      JREF(2)
+     A                                      RENAME(BNCT)
+     A            INBNC1                    TEXT('Incoming Benef. Line 1')
+     A                                      JREF(2)
+     A                                      RENAME(BNC1)
+     A            INBNC2                    TEXT('Incoming Benef. Line 2')
+     A                                      JREF(2)
+     A                                      RENAME(BNC2)
+     A            INBNC3                    TEXT('Incoming Benef. Line 3')
+     A                                      JREF(2)
+     A                                      RENAME(BNC3)
+     A            INBNC4                    TEXT('Incoming Benef. Line 4')
+     A                                      JREF(2)
+     A                                      RENAME(BNC4)
+     A            INBNC5                    TEXT('Incoming Benef. Line 5')
+     A                                      JREF(2)
+     A                                      RENAME(BNC5)
+     A            INADDC                    TEXT('Incoming Add/Deduct ind.')
+     A                                      JREF(2)
+     A                                      RENAME(ADDC)
+     A            INLVL1                    TEXT('Incoming Level 1 ind.')
+     A                                      JREF(2)
+     A            INLVL2                    TEXT('Incoming Level 2 ind.')
+     A                                      JREF(2)
+     A            INAUIN                    TEXT('Incoming Authorised ind.')
+     A                                      JREF(2)
+     A                                      RENAME(AUIN)
+     A            OPRECI                    TEXT('Outgoing Record Id.')
+     A                                      JREF(3)
+     A                                      RENAME(RECI)
+     A            OPPYTP                    TEXT('Outgoing Payment Type')
+     A                                      JREF(3)
+     A                                      RENAME(PYTP)
+     A            OPPYST                    TEXT('Outgoing Sub-type')
+     A                                      JREF(3)
+     A                                      RENAME(PYST)
+     A            OPDSTT                    TEXT('Outgoing Dest. Type')
+     A                                      JREF(3)
+     A                                      RENAME(DSTT)
+     A            OPDST1                    TEXT('Outgoing Dest. Line 1')
+     A                                      JREF(3)
+     A                                      RENAME(DST1)
+     A            OPDST2                    TEXT('Outgoing Dest. Line 2')
+     A                                      JREF(3)
+     A                                      RENAME(DST2)
+     A            OPDST3                    TEXT('Outgoing Dest. Line 3')
+     A                                      JREF(3)
+     A                                      RENAME(DST3)
+     A            OPDST4                    TEXT('Outgoing Dest. Line 4')
+     A                                      JREF(3)
+     A                                      RENAME(DST4)
+      ** Start of change CFT032
+      ** Start of change BUG15107
+     A************OPORC5                    TEXT('Outgoing O Cus. Line 5')                 BUG15107
+     A************                          JREF(3)                                        BUG15107
+     A************                          RENAME(ORC5)                                   BUG15107
+      ** End of change BUG15107
+      ** End of change CFT032
+     A            OPSNCT                    TEXT('Outgoing Send. Crs Type')
+     A                                      JREF(3)
+     A                                      RENAME(SNCT)
+     A            OPSNCO                    TEXT('Outgoing Send. Corresp.')
+     A                                      JREF(3)
+     A                                      RENAME(SNCO)
+     A            OPSMAM                    TEXT('Outgoing Settlement Amt.')
+     A                                      JREF(3)
+     A                                      RENAME(SMAM)
+     A            OPSMCY                    TEXT('Outgoing Settle currency')
+     A                                      JREF(3)
+     A                                      RENAME(SMCY)
+     A            OPSLDT                    TEXT('Outgoing Settle Date')
+     A                                      JREF(3)
+     A                                      RENAME(SLDT)
+     A            OPRATE                    TEXT('Outgoing rate')
+     A                                      JREF(3)
+     A                                      RENAME(RATE)
+     A            OPMDIN                    TEXT('Outgoing Mult/Div Ind.')
+     A                                      JREF(3)
+     A                                      RENAME(MDIN)
+     A            OPOVRD                    TEXT('Outgoing rate override')
+     A                                      JREF(3)
+     A                                      RENAME(OVRD)
+     A            OPPYAM                    TEXT('Outgoing Payment Amount')
+     A                                      JREF(3)
+     A                                      RENAME(PYAM)
+     A            OPPCCY                    TEXT('Outgoing Pay Currency')
+     A                                      JREF(3)
+     A                                      RENAME(PCCY)
+     A            OPPVDT                    TEXT('Outgoing Pay date')
+     A                                      JREF(3)
+     A                                      RENAME(PVDT)
+     A            OPORBT                    TEXT('Outgoing Order Bk Type.')
+     A                                      JREF(3)
+     A                                      RENAME(ORBT)
+     A            OPORBK                    TEXT('Outgoing Order Bank')
+     A                                      JREF(3)
+     A                                      RENAME(ORBK)
+     A            OPORCT                    TEXT('Outgoing Benef. Type')
+     A                                      JREF(3)
+     A                                      RENAME(ORCT)
+     A            OPORC1                    TEXT('Outgoing O Cus. Line 1')
+     A                                      JREF(3)
+     A                                      RENAME(ORC1)
+     A            OPORC2                    TEXT('Outgoing O Cus. Line 2')
+     A                                      JREF(3)
+     A                                      RENAME(ORC2)
+     A            OPORC3                    TEXT('Outgoing O Cus. Line 3')
+     A                                      JREF(3)
+     A                                      RENAME(ORC3)
+     A            OPORC4                    TEXT('Outgoing O Cus. Line 4')
+     A                                      JREF(3)
+     A                                      RENAME(ORC4)
+      ** Start of change BUG15107
+     A            OPORC5                    TEXT('Outgoing O Cus. Line 5')
+     A                                      JREF(3)
+     A                                      RENAME(ORC5)
+      ** End of change BUG15107
+     A            OPADDC                    TEXT('Outgoing Add/Deduct ind.')
+     A                                      JREF(3)
+     A                                      RENAME(ADDC)
+     A            OPLVL1                    TEXT('Outgoing Level 1 ind.')
+     A                                      JREF(3)
+     A                                      RENAME(LVL1)
+     A            OPLVL2                    TEXT('Outgoing Level 2 ind.')
+     A                                      JREF(3)
+     A                                      RENAME(LVL2)
+     A            OPAUIN                    TEXT('Outgoing Authorised ind.')
+     A                                      JREF(3)
+     A                                      RENAME(AUIN)
+     A**Start of change 221534
+     A            RIAUIN                    TEXT('RFT Authorised ind.')                       221534
+     A                                      JREF(4)                                           221534
+     A                                      RENAME(AUIN)                                      221534
+     A            BIAUIN                    TEXT('CCT Authorised ind.')                       221534
+     A                                      JREF(5)                                           221534
+     A                                      RENAME(AUIN)                                      221534
+     A**End of change 221534
+     A*.....................................................................
+     A* Key fields
+     A          K FTMSGR
+     A          K FTKPRT
+     A*.....................................................................
+     A*=====================================================================

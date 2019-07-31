@@ -1,0 +1,550 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD TOF ICD maintenance')                         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9461R - PB ICD Maintenance                                 *
+      *                                                               *
+      *  Function:  This program Maintains PB ICD                     *
+      *  (phase(s)) I/C                                               *
+      *                                                               *
+      *  Called By: SDC9002 - Midas SD ICD Enquiry control            *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 207288             Date 11Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 243771             Date 31Jul06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CAS010R            Date 04Jul04               *
+      *                 207378             Date 11Sep02               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSD011             Date 04Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001  *CREATE    Date 9JUn99                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  207288 - Introduce new field TQSPOT to hold number of days   *
+      *           from deal date to value date for FX spot deals.     *
+      *           Applied for AR999664 (Child: AR999668)              *
+      *  243771 - to properly handle field appearance (Recompile).    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS010R- Duplicate Message ID.                               *
+      *  207378 - Add 'Automatic complete market trades' field to     *
+      *           default the incomplete/complete indicator from      *
+      *           TRADSD                                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD011 - Performance Incentive Fees.                         *
+      *  CPB001 - Private Banking Module                              *
+      *                                                               *
+      *****************************************************************
+     FSDTOFPD UF  E                    DISK         KINFSR *PSSR A
+      *
+     FSD9461R#CF  E                    WORKSTN
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *                                                                                       CSD011
+     E/COPY ZSRSRC,ZALIGNZ1                                                                   CSD011
+      **  ZALIGN Subroutine Array                                                             CSD011
+      *                                                                                       CSD011
+     E                    @TB    10  10  1                                                    207288
+      /EJECT
+      *****************************************************************
+      *
+     IP1PARM      DS                             10
+      ** I: Midas SD Midas/PB ICD retrieval
+      *
+     I                                        1  10 WTOFID
+     IP2PARM      DS
+      ** O :  *Return code
+     I                                        1   7 P2RTN
+     IP3PARM      DS
+      ** B : MAP Work Return code
+     I                                        1   5 P3WRTC
+      *
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+      *
+     ILDA       E DSLDA                         256
+      ** Data Area giving Installation Control Details
+      *
+     IRUNDT       DS
+      **  Data area RUNDAT
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     IPSDS       SDS
+      **  Program Status DS
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IZMUSER    E DSZMUSER
+      * User default data structure (DBRN : Default branch)
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External DS for Bank Details
+      *
+     IFDDLNM    E DSFDDLNMPP
+      ***  External DS for Deal Number Record
+      *
+     ISDBROK    E DSSDBROKPD
+      ***  External DS for Broker
+      *
+     ISDBOOK    E DSSDBOOKPD
+      ***  External DS for Book Codes
+      *
+     ISDMMOD    E DSSDMMODPD
+      ***  External DS for Midas Module Details
+      *
+     ISDSTRD    E DSSDSTRDPD
+      ***  External DS for Securities Trading I.C.D.
+      *
+     ISDSECS    E DSSDSECSPD
+      ***  External DS for Security Customer Details
+      *
+     ISDACOD    E DSSDACODPD
+      ***  External DS for Account Codes Details
+     I              QQACCD                          QQACD1                                    CGL029
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CSD011
+      ** SAR descriptions                                                                     CSD011
+      *                                                                                       CSD011
+     IDSFDY     E DSDSFDY
+      ***  DS for access programs
+      *
+     IDSSDY     E DSDSSDY
+      ***  DS for access programs
+      *
+      **************************************************************************
+      *
+     C           1         SETLLSDTOFPD
+     C                     READ SDTOFPD                  89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      **  Move file fields to screen fields
+     C           TQOMS     IFEQ *BLANKS
+     C                     MOVE 'N'       SOMS
+     C                     ELSE
+     C                     MOVE TQOMS     SOMS
+     C                     ENDIF
+      *
+     C           TQCYDE    IFEQ *BLANKS
+     C                     MOVE 'N'       SCYDE
+     C                     ELSE
+     C                     MOVE TQCYDE    SCYDE
+     C                     ENDIF
+      *                                                                                       207288
+      ** Move number of days for spot FX deals.                                               207288
+      *                                                                                       207288
+     C                     Z-ADDTQSPOT    WSPOT   10                                          207288
+     C                     MOVE TQSPOT    SSPOT                                               207288
+      *                                                                                       CSD011
+      *                                                                                       CSD011
+     C           CSD011    IFEQ 'Y'                                                           CSD011
+      *                                                                                       CSD011
+      ** Number of processing days (Incentive Fees).                                          CSD011
+      *                                                                                       CSD011
+     C                     MOVE TQIFNB    SIFNB                                               CSD011
+     C                     ENDIF                                                              CSD011
+      *                                                                                       CSD011
+      * 'Automatic complete market trade'                                                     207378
+      *                                                                                       207378
+     C           TQACMT    IFEQ *BLANKS                                                       207378
+     C                     MOVE 'N'       SACMT                                               207378
+     C                     ELSE                                                               207378
+     C                     MOVE TQACMT    SACMT                                               207378
+     C                     ENDIF                                                              207378
+      *                                                                                       207378
+     C                     ENDIF
+      *
+     C           WEND      DOUEQ*ON
+      *
+     C                     EXSR SRDSPL
+      *
+      ** If F5 -> Refresh
+     C           *INKE     IFEQ *ON
+      *
+     C                     MOVEA'00'      *IN,54
+     C                     MOVE *OFF      *IN75
+      *
+      **  Move file fields to screen fields
+     C           TQOMS     IFEQ *BLANKS
+     C                     MOVE 'N'       SOMS
+     C                     ELSE
+     C                     MOVE TQOMS     SOMS
+     C                     ENDIF
+      *
+     C           TQCYDE    IFEQ *BLANKS
+     C                     MOVE 'N'       SCYDE
+     C                     ELSE
+     C                     MOVE TQCYDE    SCYDE
+     C                     ENDIF
+     C                     Z-ADDTQSPOT    WSPOT                                               207288
+     C                     MOVE TQSPOT    SSPOT                                               207288
+      *                                                                                       CSD011
+     C           CSD011    IFEQ 'Y'                                                           CSD011
+     C                     MOVE TQIFNB    SIFNB                                               CSD011
+     C                     ENDIF                                                              CSD011
+      *                                                                                       CSD011
+      * 'Automatic complete market trade'                                                     207378
+      *                                                                                       207378
+     C           TQACMT    IFEQ *BLANKS                                                       207378
+     C                     MOVE 'N'       SACMT                                               207378
+     C                     ELSE                                                               207378
+     C                     MOVE TQACMT    SACMT                                               207378
+     C                     ENDIF                                                              207378
+      *                                                                                       207378
+     C                     ITER
+     C                     ENDIF
+      *
+      ** F3
+     C           *INKC     IFEQ *ON
+     C                     GOTO END
+     C                     ENDIF
+      ** Validate Input
+     C                     EXSR SRVAL
+      *
+      ** Update files
+     C           *IN75     IFEQ *OFF
+      *
+     C           *IN89     IFEQ *OFF
+     C           SOMS      IFNE TQOMS
+     C           SCYDE     ORNE TQCYDE
+     C           W0IFNB    ORNE TQIFNB                                                        CSD011
+     C           WSPOT     ORNE TQSPOT                                                        207288
+     C           SACMT     ORNE TQACMT                                                        207378
+     C                     MOVE SIFNB     TQIFNB                                              CSD011
+     C                     MOVE SOMS      TQOMS
+     C                     MOVE SCYDE     TQCYDE
+     C                     MOVELWTOFID    TQTOID
+     C                     Z-ADDWSPOT     TQSPOT                                              207288
+     C                     MOVE SACMT     TQACMT                                              207378
+      *
+     C                     UPDATSDTODPF
+     C                     ENDIF
+     C                     ELSE
+      *
+     C                     MOVE SOMS      TQOMS
+     C                     MOVE SCYDE     TQCYDE
+     C                     MOVELWTOFID    TQTOID
+     C                     Z-ADDWSPOT     TQSPOT                                              207288
+     C           CSD011    IFEQ 'Y'                                                           CSD011
+     C                     MOVE SIFNB     TQIFNB                                              CSD011
+     C                     ENDIF                                                              CSD011
+     C                     MOVE SACMT     TQACMT                                              207378
+     C                     WRITESDTODPF
+     C                     ENDIF
+      *
+     C                     MOVE *ON       WEND
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           END       TAG
+     C                     SETON                     LR
+     C                     RETRN
+      **************************************************************************
+      **  SRDSPL  Subroutine to display screen
+      **************************************************************************
+     C           SRDSPL    BEGSR
+      ** Display screen
+     C                     WRITE#MSGCTL
+     C                     EXFMTSD9461F0
+     C                     CALL 'CLRERMSG'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+     C                     ENDSR
+      **************************************************************************
+      **  SRVAL  Subroutine to execute validations
+      **************************************************************************
+     C           SRVAL     BEGSR
+      *
+     C                     MOVEA'00'      *IN,54
+     C                     MOVE *OFF      *IN75
+      *
+      ***  Check if OMS is present
+      *
+     C                     EXSR SROMS
+      *
+      ***  Check if City Dealer is present
+      *
+     C                     EXSR SRCYDE
+      *
+      ***  Validate the Number of Processing Days (Incentive Fees).                           CSD011
+      *                                                                                       CSD011
+     C           CSD011    IFEQ 'Y'                                                           CSD011
+     C                     EXSR SRIFNB                                                        CSD011
+     C                     ENDIF                                                              CSD011
+      *                                                                                       207288
+      ** Validate number of days for spot FX deals.                                           207288
+      *                                                                                       207288
+     C                     EXSR SRSPT                                                         207288
+      *
+      ***  Validate 'Automatic complete market trades'                                        207378
+      *                                                                                       207378
+     C                     EXSR SRACMT                                                        207378
+      *                                                                                       207378
+     C                     ENDSR
+      /EJECT
+      **************************************************************************
+      **  SROMS Subroutine to validate if OMS is present
+      **************************************************************************
+     C           SROMS     BEGSR
+      *
+     C           SOMS      IFEQ ' '
+     C                     MOVE 'N'       SOMS
+     C                     ENDIF
+      *
+      **  Check if OMS is present must be 'Y' or 'N'
+     C           SOMS      IFNE 'Y'
+     C           SOMS      ANDNE'N'
+     C                     MOVEL'USR4520' ZAMSID
+     C                     MOVE *ON       *IN54
+     C                     MOVE *ON       *IN75
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      **************************************************************************              207378
+      **  SRACMT Subroutine to validate Automatic complete market trade                       207378
+      **************************************************************************              207378
+     C           SRACMT    BEGSR                                                              207378
+      *                                                                                       207378
+     C           SACMT     IFEQ ' '                                                           207378
+     C                     MOVE 'N'       SACMT                                               207378
+     C                     ENDIF                                                              207378
+      *                                                                                       207378
+      **  Possible values are 'Y' or 'N'                                                      207378
+     C           SACMT     IFNE 'Y'                                                           207378
+     C           SACMT     ANDNE'N'                                                           207378
+     C**********           MOVEL'USR4595' ZAMSID                                      207378 CAS010R
+     C                     MOVEL'USR4702' ZAMSID                                             CAS010R
+     C                     MOVE *ON       *IN57                                               207378
+     C                     MOVE *ON       *IN75                                               207378
+     C                     EXSR SRSMSG                                                        207378
+     C                     ENDIF                                                              207378
+      *                                                                                       207378
+     C                     ENDSR                                                              207378
+      /EJECT                                                                                  207378
+      **************************************************************************
+      **  SRCYDE Subroutine to validate if City Dealer is present
+      **************************************************************************
+     C           SRCYDE    BEGSR
+      *
+     C           SCYDE     IFEQ ' '
+     C                     MOVE 'N'       SCYDE
+     C                     ENDIF
+      *
+      **  Check if City Dealer is present must be 'Y' or 'N'
+     C           SCYDE     IFNE 'Y'
+     C           SCYDE     ANDNE'N'
+     C                     MOVEL'USR4521' ZAMSID
+     C                     MOVE *ON       *IN55
+     C                     MOVE *ON       *IN75
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      **************************************************************************              CSD011
+      **  SRIFNB Subroutine to validate the Number of Processing Days.                        CSD011
+      **************************************************************************              CSD011
+      *                                                                                       CSD011
+     C           SRIFNB    BEGSR                                                              CSD011
+      *                                                                                       CSD011
+     C                     MOVE *OFF      *IN56            Error Indicator                    CSD011
+      *                                                                                       CSD011
+      * Check if the entered value is numeric.                                                CSD011
+      *                                                                                       CSD011
+     C                     MOVE *BLANKS   ZFIELD                                              CSD011
+     C                     MOVE SIFNB     ZFIELD                                              CSD011
+     C                     Z-ADD0         ZADEC                                               CSD011
+     C                     Z-ADD2         ZADIG                                               CSD011
+     C                     MOVE '0'       *IN99                                               CSD011
+     C                     EXSR ZALIGN                                                        CSD011
+      *                                                                                       CSD011
+     C           *IN99     IFEQ '1'                                                           CSD011
+     C           SIFNB     OREQ *ZEROS                                                        CSD011
+     C           SIFNB     OREQ *BLANKS                                                       CSD011
+     C                     MOVEL'USR9001' ZAMSID                                              CSD011
+     C                     MOVE *ON       *IN56                                               CSD011
+     C                     MOVE *ON       *IN75                                               CSD011
+     C                     EXSR SRSMSG                                                        CSD011
+     C                     ELSE                                                               CSD011
+     C                     MOVE SIFNB     W0IFNB  20                                          CSD011
+     C                     ENDIF                                                              CSD011
+      *                                                                                       CSD011
+     C                     ENDSR                                                              CSD011
+      *                                                                                       CSD011
+      /EJECT
+      **************************************************************************
+      **  SRSMSG  Subroutine to Send message to message queue
+      **************************************************************************
+     C           SRSMSG    BEGSR
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     ENDIF
+     C                     CALL 'SNDERMSG'
+     C                     PARM ##PGM     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ** Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     ENDSR
+      /EJECT
+      **************************************************************************
+      **  *INZSR  Subroutine to Initialise field
+      **************************************************************************
+     C           *INZSR    BEGSR
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   RUNDT
+     C                     IN   ZMUSER
+      *
+      ** Redefine data-base error fields for program
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Midas/TI I
+     C           P2RTN     PARM P2RTN     WP0001  7        *Return code
+     C           P3WRTC    PARM P3WRTC    WP0002  5        Work Return cod
+      *
+     C                     MOVE *BLANKS   P0RTN
+      *
+      ** Access Bank details via access program
+      ** (database error handling done in access program)
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     MOVELUSER      SUSER
+     C                     MOVELRUNA      SRUNA
+     C                     MOVELWSID      SWSID
+     C                     MOVEL*BLANK    WUZASF 16
+     C                     MOVEL*BLANK    WUZAFF 16
+      *
+     C                     MOVE *OFF      *IN75
+     C                     MOVE *OFF      WEND    1
+      *
+      ** Access AOSARDR0 to check if CSD011 is switched ON.                                   CSD011
+      *                                                                                       CSD011
+     C                     CALL 'AOSARDR0'                                                    CSD011
+     C                     PARM *BLANKS   RTCD    7                                           CSD011
+     C                     PARM '*VERIFY' OPTN    7                                           CSD011
+     C                     PARM 'CSD011'  L0SARD  6                                           CSD011
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD011
+      *                                                                                       CSD011
+     C           RTCD      IFEQ *BLANKS                                                       CSD011
+     C                     MOVE 'Y'       CSD011  1                                           CSD011
+     C                     MOVE '0'       *IN30                                               CSD011
+     C                     ELSE                                                               CSD011
+     C                     MOVE 'N'       CSD011                                              CSD011
+     C                     MOVE '1'       *IN30                                               CSD011
+     C                     END                                                                CSD011
+      *                                                                                       CSD011
+     C                     ENDSR
+      **************************************************************************              207288
+      /EJECT                                                                                  207288
+      **************************************************************************              207288
+      ** SRSPT Subroutine to validate spot days.                                              207288
+      **************************************************************************              207288
+     C           SRSPT     BEGSR                                                              207288
+      *                                                                                       207288
+     C           SSPOT     IFEQ ' '                                                           207288
+     C                     MOVE '2'       SSPOT                                               207288
+     C                     Z-ADD2         WSPOT                                               207288
+     C                     ENDIF                                                              207288
+      *                                                                                       207288
+      ** Test if numeric                                                                      207288
+      *                                                                                       207288
+     C                     Z-ADD1         X       10                                          207288
+     C           SSPOT     LOKUP@TB                      90                                   207288
+     C           *IN90     IFEQ '0'                                                           207288
+     C                     MOVEL'USR9292' ZAMSID                                              207288
+     C                     MOVE '1'       *IN57                                               207288
+     C                     MOVE '1'       *IN75                                               207288
+     C                     EXSR SRSMSG                                                        207288
+     C                     ELSE                                                               207288
+     C                     MOVE SSPOT     WSPOT                                               207288
+     C                     ENDIF                                                              207288
+      *                                                                                       207288
+     C                     ENDSR                                                              207288
+      **************************************************************************              207288
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8
+      *
+     C                     ENDSR
+      *
+     C/COPY ZSRSRC,ZALIGNZ2                                                                   CSD011
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**  @TB
+0123456789

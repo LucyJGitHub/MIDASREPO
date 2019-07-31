@@ -1,0 +1,373 @@
+     H            D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Create disk file of Telekurs numbers')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE5980 - Create Disk File of Telekurs Numbers                *
+     F*                                                               *
+     F*  Function: This program creates a file containing telekurs no *
+     F*   (I/C)    of securities that holds a position.               *
+     F*                                                               *
+     F*  Called By: SEC5980 - Input Cycle Processing                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSE009             Date 16Mar99               *
+      *                 S01408             Date 22Aug96               *
+     F*                 S01502  *CREATE    Date 08Jul94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+     F*  CSE009 - Telekurs Changes                                    *
+     F*  S01408 - Core Hook SE5980CCP1 Added                          *
+     F*  S01502 - BLI Telekurs Processing.                            *
+     F*                                                               *
+     F*****************************************************************
+     FDPOSN   IP  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FSEMKC   IF  E           K        DISK
+     F/COPY WNCPYSRC,SE5980F001
+     F***STSECPO2O***E**                  DISK                                                CSE009
+     FSTSECPO2O   E                    DISK                           UC                      CSE009
+     F/COPY WNCPYSRC,SE5980F002
+     FSETKSEPDUF  E                    DISK                      A    UC                      CSE009
+     FSE5980P1O   E             31     PRINTER      KINFDS SPOOL      UC
+     FSE5980AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       21      FIRST CYCLE INDICATOR                           *
+     F*       25      P1 WAS OPENED                                   *
+     F*       31      OVERFLOW INDICATOR                              *
+     F*       80      CHAIN FAILED INDICATOR                          *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E*
+     E/COPY ZSRSRC,ZSERPT1
+     E                    CPY@    1   1 80
+     I*
+     IDPOSNDF
+     I                                              DSSC  L1
+     ISEMKCDF
+     I              RECI                            RECIM
+     I/COPY WNCPYSRC,SE5980I003
+     ISETKSED0                                                                                CSE009
+     I              STTELK                          STTEL9                                    CSE009
+     I/COPY WNCPYSRC,SE5980I004
+     I*
+     I            DS
+     I                                        1  12 T2RF
+     I/COPY WNCPYSRC,SE5980I001
+     I                                        1   6 TVRF
+     I                                        1   60TELEK
+     I/COPY WNCPYSRC,SE5980I002
+     I                                        1   9 TVRF2                                     CSE009
+     I                                        1   90TELEK2                                    CSE009
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I@SARD     E DSSCSARDPD                                                                  CSE009
+     ISDBANK    E DSSDBANKPD
+     IDSFDY     E DSDSFDY
+     I*
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** MAIN PROCESSING
+     C*
+     C  N21                EXSR INITSR
+     C                     SETON                     21
+     C*
+     C           DSNV      IFNE 0
+     C           DSNT      ORNE 0
+     C                     SETON                     20
+     C                     END
+     C*
+     C** ON CHANGE OF SECURITY
+     C*
+     CL1         *IN20     IFEQ '1'
+     CL1         DSSC      CHAINSECTY                80
+     CL1         *IN80     IFEQ '0'
+     CL1         RECI      ANDEQ'D'
+     C*
+     CL1         TELEK     IFNE 0
+     CL1         TVRF      ANDNE' '
+     CL1         *IN50     ANDEQ'0'                                                           CSE009
+     C/COPY WNCPYSRC,SE5980C004
+     CL1         TELEK2    ORNE 0                                                             CSE009
+     CL1         TVRF2     ANDNE' '                                                           CSE009
+     CL1         *IN50     ANDEQ'1'                                                           CSE009
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE5980CCP1                                           S01408
+     C*                                                                   S01408
+     C*L1*******           MOVELTELEK     STTELK                                              CSE009
+     CL1N50                MOVELTELEK     STTELK                                              CSE009
+     CL1 50                MOVELTELEK2    STTEL9                                              CSE009
+     C*
+     C** CHAIN TO MARKET CENTRE FILE FOR STOCK EXCHANGE CODE.
+     C*
+     CL1         SMCC      CHAINSEMKC                80
+     CL1         *IN80     IFEQ '0'
+     CL1         RECIM     ANDNE'*'
+     CL1                   MOVE TKSECD    STBOUR
+     CL1                   ELSE
+     CL1                   MOVE *BLANKS   STBOUR
+     CL1                   END
+     C*L1*******           WRITESTSECPOS                                                      CSE009
+     CL1N50                WRITESTSECPOS                                                      CSE009
+     C/COPY WNCPYSRC,SE5980C001
+     CL1 50                WRITESETKSED0                                                      CSE009
+     C*
+     CL1                   ELSE
+     CL1                   EXSR FORMAT
+     CL1         *IN25     IFEQ '0'
+     CL1                   OPEN SE5980P1
+     CL1                   EXSR RCFP1
+     CL1                   SETON                     25
+     CL1                   WRITESE5980H1
+     CL1                   END
+     C*
+     CL1                   WRITESE5980D1
+     CL1         *IN31     IFEQ '1'
+     CL1                   WRITESE5980H1
+     CL1                   SETOF                     31
+     CL1                   END
+     C*
+     CL1                   END
+     CL1                   END
+     CL1                   END
+     CL1                   SETOF                     20
+     C*
+     C** LR PROCESSING
+     C*
+     CLR         *IN21     IFEQ '0'
+     CLR         *IN25     OREQ '0'
+     C*
+     CLR         *IN21     IFEQ '0'
+     CLR                   EXSR INITSR
+     CLR                   END
+     C*
+     CLR                   OPEN SE5980AU
+     CLR                   EXSR RCFAU
+     CLR                   WRITESE5980AH
+     CLR                   WRITESE5980AN
+     CLR                   CLOSESE5980AU
+     CLR                   END
+     C*
+     CLR         *IN25     IFEQ '1'
+     CLR                   WRITESE5980D2
+     CLR                   CLOSESE5980P1
+     CLR                   END
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*   FORMAT - FORMAT REPORT OUTPUT
+     C*
+     C*   CALLED FROM   MAIN PROCESSING
+     C*   CALLS SR
+     C*****************************************************************
+     C           FORMAT    BEGSR                           ** PRINT  SR **
+     C*
+     C           MATY      IFGT 0
+     C                     Z-ADDMATY      ZDAYNO
+     C                     Z-ADD0         ZDATE
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50       DAY NUMBER
+     C                     PARM ' '       ZDATFM  1        DATE FORMAT IND
+     C                     PARM           ZDATE   60       DATE-DDMMYY
+     C                     PARM           WQ0004  7        DATE-DDMMMYY
+     C                     Z-ADDZDATE     ZMADAT
+     C                     ELSE
+     C                     Z-ADD0         ZMADAT
+     C                     END
+     C*
+     C                     MOVE *BLANKS   SECNAM
+     C                     MOVELSRPN      ZTITLE
+     C                     Z-ADDCPNR      ZCPRAT
+     C                     MOVE '0'       *IN98
+     C                     EXSR ZSERPT
+     C*
+     C                     MOVELZRPNAM    SECNAM
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C* INITSR - INITIAL PROCESSING SUBROUTINE
+     C*
+     C*  CALLED FROM   MAIN PROCESSING
+     C*  CALLS SR
+     C*
+     C*****************************************************************
+     C*
+     C           INITSR    BEGSR                           *** INITSR **
+     C*
+     C** INITIALISE FIELDS.
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SE5980  'DBPGM
+     C                     OUT  LDA
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM 'BLANKS'  @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'*FIRST ' DBKEY            ************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR RETSR
+     C                     END
+     C*                                                                                       CSE009
+     C** Check if SAR CSE009 is ON.                                                           CSE009
+     C*                                                                                       CSE009
+     C                     CALL 'AOSARDR0'                                                    CSE009
+     C                     PARM *BLANKS   @RTCD                                               CSE009
+     C                     PARM '*VERIFY' @OPTN                                               CSE009
+     C                     PARM 'CSE009'  @SARC   6                                           CSE009
+     C           @SARD     PARM @SARD     DSFDY                                               CSE009
+     C*                                                                                       CSE009
+     C**  Set indicator if installed or run date > or = than 26 April 99                      CSE009
+     C/COPY WNCPYSRC,SE5980C003
+     C*                                                                                       CSE009
+     C           @RTCD     IFEQ *BLANKS                    B*1                                CSE009
+     C           BJRDNB    ORGE 09978                                                         CSE009
+     C                     MOVE 'Y'       CSE009  1                                           CSE009
+     C                     MOVE '1'       *IN50                                               CSE009
+     C                     OPEN SETKSEPD                                                      CSE009
+     C           1         SETLLSETKSEPD                                                      CSE009
+     C                     ELSE                            X*1                                CSE009
+     C                     MOVE 'N'       CSE009                                              CSE009
+     C                     MOVE '0'       *IN50                                               CSE009
+     C                     OPEN STSECPO2                                                      CSE009
+     C                     END                             E*1                                CSE009
+     C*
+     C/COPY WNCPYSRC,SE5980C002
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     C*
+     C*****************************************************************
+     C*
+     C           RCFP1     BEGSR                            ** RCFP1 **
+     C*
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF
+     C*
+     C*****************************************************************
+     C*
+     C           RCFAU     BEGSR                            ** RCFAU **
+     C*
+     C** ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  RETSR -  END OF PROGRAM PROCESSING
+     C*
+     C*  CALLED FROM   MAIN PROCESSING, INITSR
+     C*  CALLS SR
+     C*****************************************************************
+     C*
+     C           RETSR     BEGSR                           *** RETSR   ***
+     C*
+     C                     SETON                     LR
+     C*
+     C                     OPEN SE5980AU
+     C                     EXSR RCFAU
+     C                     WRITESE5980AH
+     C                     WRITESE5980AE
+     C                     CLOSESE5980AU
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZSERPT2
+     C/COPY ZSRSRC,ZSERPT3
+**  CPY@ - OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

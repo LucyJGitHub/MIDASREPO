@@ -1,0 +1,909 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Validate Field 77D: Conditions')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME9960 - Validate Field 77D: Conditions                      *
+      *                                                               *
+      *  Function:  This program handles the validation of Field 77D: *
+      *             Conditions                                        *
+      *                                                               *
+      *  Called By: SD2410 - Extended Settlement Instructions         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023071           Date 31Oct13               *
+      *                 MD022945           Date 18Oct13               *
+      *                 CSW213             Date 03Jun13               *
+      *                 CSW212             Date 03May12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSW097             Date 02DEC99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSW005  *CREATE    Date 01Aug96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD023071 - No error message shown when /VALD/ is inputted in *
+      *             a line other than the first, or when /SETC/ is    *
+      *             inputted in a line other than the second, or when *
+      *             /VALD/ is inputted on the first line but not      *
+      *             followed by a date.                               *
+      *  MD022945 - Incorrect message shown for /SRCE/ validation.    *
+      *  CSW213 - SWIFT Changes 2013                                  *
+      *  CSW212 - SWIFT 2012 Changes                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CSW097 - MT34*s and MT36*s Message Generation.               *
+      *           Remove the codeword validation.                     *
+      *  CSW005 - FRAIRS MG34n & MG34n Message Generation             *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N    O F   I N D I C A T O R S                 *
+      *                                                               *
+      *  90    General Error Indicator                                *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRCOND   : Validate Field 77D:  Conditions                   *
+      *  SROTHR   : Validate Other Details                            *
+      ***SRKYWD***:*Validate*keywords*used*****************************   CSW097
+      *  SRNEBL   : Check for embedded blanks                         *
+      *  SRSWCH   : Check for valid SWIFT characters                  *
+      *  SRSNMS   : Send Message to Calling program                   *
+      *                                                               *
+      *****************************************************************
+     FSDISOCL0IF  E           K        DISK                                                   CSW212
+     FSDCURRL1IF  E           K        DISK                                                   CSW212
+      /EJECT
+     E                    CPY@    1   1 80
+      *  Array containing Copyright statement
+      *
+     E                    ERCD       50  3
+      *  Error codes array
+      *
+     E***********         CDEW    1  15 35                                CSW097
+      ***Swift*codewords*                                                 CSW097
+      *
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+      *                                                                                       CSC022
+     E/COPY MECPYSRC,SRERRE
+     E/COPY ZSRSRC,ZDATE1Z1                                                                   CSW212
+      * Data structures:
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+      *
+      *  Copysource for error processing
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+     II#PARM      DS                            512
+      * Field to be validated
+     I                                        1   5 I#VFLD
+      * Message Type                                                                          CSW213
+     I                                       62  64 I#MTYP                                    CSW213
+      * Transaction type
+     I                                      144 145 I#TTYP
+      * Conditions
+     I                                      257 466 I#CND
+     I                                      257 291 I#CND1
+     I                                      292 326 I#CND2
+     I                                      327 361 I#CND3
+     I                                      362 396 I#CND4
+     I                                      397 431 I#CND5
+     I                                      432 466 I#CND6
+     I                                      263 270 I#C1DT                                    CSW212
+     I                                      265 270 I#C1DY                                    CSW212
+     I                                      271 291 I#C1BL                                    CSW212
+     I                                      298 300 I#C2IS                                    CSW212
+     I                                      301 326 I#C2BL                                    CSW212
+      *
+      * Output Parameters
+      *
+     IO#PARM      DS                            512
+      * Conditions
+     I                                      257 466 O#CND
+     I                                      257 291 O#CND1
+     I                                      292 326 O#CND2
+     I                                      327 361 O#CND3
+     I                                      362 396 O#CND4
+     I                                      397 431 O#CND5
+     I                                      432 466 O#CND6
+      *
+      * Error Parameters
+      *
+     IE#PARM      DS                            256
+      * Calling Program
+     I                                        1  10 E#CPGM
+      * Error message sent
+     I                                       12  12 E#ERRM
+      * Warning message sent
+     I                                       13  13 E#WARN
+      * Error index
+     I                                       14  180E#INDX
+      * Message text to prefix error message
+     I                                       19  25 E#MSGD
+     I                                       26  35 E#MSGF
+      * Error codes array
+     I                                       51 200 E#ERCD
+     I                                       51 200 ERCD
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *                                                                                       CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+      *                                                                                       CSC022
+     IWDATE       DS                                                                          CSW212
+     I                                        1   2 WDAY                                      CSW212
+     I                                        3   4 WMTH                                      CSW212
+     I                                        5   6 WYRS                                      CSW212
+      *                                                                                       CSW212
+      * Extended ISO
+     I              'ABCDEFGHIJKLMNOPQRST-C         ISOEX
+     I              'UVWXYZ 1234567890/-?-
+     I              '?:().,''+abcdefghijk-
+     I              'lmnopqrstuvwxyz'
+      *
+      /EJECT
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      * Entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           I#PARM           I Input Parms
+     C                     PARM           O#PARM           O Output Parms
+     C                     PARM           E#PARM           E Error Inform
+     C                     PARM           Z#PARM256        B User Defined
+      *
+      * Initialise return code etc
+      *
+     C                     MOVEL*BLANK    P#RTCD  7
+     C                     MOVEL*BLANK    E#ERRM
+     C                     MOVEL*BLANK    E#WARN
+     C                     MOVEL*BLANK    E#ERCD
+     C                     Z-ADD1         E       50
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL*BLANKS   WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSW212
+      ** Check if SWIFT Changes 2012 (CSW212) is installed                                    CSW212
+      *                                                                                       CSW212
+     C                     CALL 'SWIF2012'                                                    CSW212
+     C                     PARM *BLANKS   P@RTCD  7                                           CSW212
+      *                                                                                       CSW212
+     C           P@RTCD    IFEQ 'CSW2012'                                                     CSW212
+     C                     MOVE 'Y'       CSW212  1                                           CSW212
+     C                     ELSE                                                               CSW212
+     C                     MOVE 'N'       CSW212                                              CSW212
+     C                     ENDIF                                                              CSW212
+      *                                                                                       CSW213
+      ** Check if SWIFT Changes 2013 (CSW213) is installed                                    CSW213
+      *                                                                                       CSW213
+     C                     CALL 'SWIF2013'                                                    CSW213
+     C                     PARM *BLANKS   P@RTCD                                              CSW213
+      *                                                                                       CSW213
+     C           P@RTCD    IFEQ 'CSW2013'                                                     CSW213
+     C                     MOVE 'Y'       CSW213  1                                           CSW213
+     C                     ELSE                                                               CSW213
+     C                     MOVE 'N'       CSW213                                              CSW213
+     C                     ENDIF                                                              CSW213
+      *
+      ** Depending on field call relevant subroutine
+      *
+     C                     SELEC
+      *  Conditions flds
+     C           I#VFLD    WHEQ ':77D:'
+     C                     EXSR SRCOND
+      * Catch all
+     C                     OTHER
+     C                     EXSR SROTHR
+     C                     ENDSL
+      *
+      *
+      ** Set return depending errors found
+     C           P#RTCD    IFNE *BLANKS
+     C                     MOVELP#RTCD    W0RTN
+     C                     ENDIF
+     C           E         IFNE 0
+     C                     Z-ADDE         E#INDX
+     C                     ENDIF
+     C                     MOVELI#CND     O#CND
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMAIN    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCOND   : Validate Field 77D: Conditions                    *
+      *                                                               *
+      *  CALLED BY: Main                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCOND    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCOND'  @STK,Q
+      ***********                                                         CSW097
+      ***Check*valid*keywords*on*line*1*                                  CSW097
+      ***********                                                         CSW097
+     C***********I#TTYP    IFEQ 'FR'                                      CSW097
+     C***********E#CPGM    OREQ 'SSI '                                    CSW097
+     C***********I#TTYP    ANDEQ'AT'                                      CSW097
+     C***********          EXSR SRKYWD                                    CSW097
+     C***********E#ERRM    IFNE *BLANKS                                   CSW097
+     C***********          GOTO EXCOND                                    CSW097
+     C***********          ENDIF                                          CSW097
+     C***********          ENDIF                                          CSW097
+      *
+      *  No embedded blank lines allowed
+      *
+     C                     EXSR SRNEBL
+     C           E#ERRM    IFNE *BLANKS
+     C                     GOTO EXCOND
+     C                     ENDIF
+      *
+      *  Check SWIFT Character Set
+      *
+     C                     EXSR SRSWCH
+     C           E#ERRM    IFNE *BLANKS
+     C                     GOTO EXCOND
+     C                     ENDIF
+      *                                                                                       CSW213
+     C           I#MTYP    IFEQ '300'                                                         CSW213
+      *                                                                                       CSW212
+     C           CSW212    IFEQ 'Y'                                                           CSW212
+     C           I#TTYP    IFEQ 'AT'                                                          CSW212
+     C           I#TTYP    OREQ 'FX'                                                          CSW212
+     C           I#TTYP    OREQ 'OP'                                                          CSW212
+     C           I#TTYP    OREQ 'FF'                                                          CSW212
+     C           I#TTYP    OREQ 'CL'                                                          CSW212
+      *                                                                                       CSW212
+      ** 77D Condition line 1                                                                 CSW212
+      *                                                                                       CSW212
+     C                     MOVEL' '       WVALD   1                                           CSW212
+     C           '/VALD/'  SCAN I#CND1    COND1   20                                          CSW212
+     C           '/VALD/'  SCAN I#CND2    COND2                                             MD023071
+     C           '/VALD/'  SCAN I#CND3    COND3                                             MD023071
+     C           '/VALD/'  SCAN I#CND4    COND4                                             MD023071
+     C           '/VALD/'  SCAN I#CND5    COND5                                             MD023071
+     C           '/VALD/'  SCAN I#CND6    COND6                                             MD023071
+     C                     SELEC                                                              CSW212
+     C           COND1     WHEQ 0                                                             CSW212
+     C           COND2     ANDEQ0                                                           MD023071
+     C           COND3     ANDEQ0                                                           MD023071
+     C           COND4     ANDEQ0                                                           MD023071
+     C           COND5     ANDEQ0                                                           MD023071
+     C           COND6     ANDEQ0                                                           MD023071
+     C                     MOVEL'N'       WVALD                                               CSW212
+     C           COND1     WHGT 1                                                             CSW212
+     C           COND2     ORNE 0                                                           MD023071
+     C           COND3     ORNE 0                                                           MD023071
+     C           COND4     ORNE 0                                                           MD023071
+     C           COND5     ORNE 0                                                           MD023071
+     C           COND6     ORNE 0                                                           MD023071
+      *                                                                                       CSW212
+      ** If /VALD/ is input, it must be put on as 6 first characters                          CSW212
+      ** on the first line                                                                    CSW212
+      *                                                                                       CSW212
+     C                     MOVEL'N'       WVALD                                               CSW212
+     C           E#CPGM    IFEQ 'ME9960'                                                      CSW212
+     C                     MOVEL'751'     ERCD,E                                              CSW212
+     C                     ELSE                                                               CSW212
+     C                     MOVEL'X03'     ERCD,E                                              CSW212
+     C                     ENDIF                                                              CSW212
+     C                     ADD  1         E                                                   CSW212
+     C                     MOVEL'Y'       E#ERRM                                              CSW212
+     C                     MOVEL'MEC2304' E#MSGD                                              CSW212
+     C                     MOVEL*BLANKS   MEMSDT                                              CSW212
+     C                     MOVEL'MEC2304' MEMSID                                              CSW212
+     C                     MOVEL'MEMSG'   MEMSGF                                              CSW212
+     C                     EXSR SRSNMS                                                        CSW212
+      *                                                                                       CSW212
+     C           COND1     WHEQ 1                                                             CSW212
+      *                                                                                       CSW212
+      ** If /VALD/ is input, it must be followed by a date in YYYYMMDD                        CSW212
+      *                                                                                       CSW212
+     C                     MOVEL'Y'       WVALD                                               CSW212
+     C           I#C1DT    IFNE *BLANKS                                                       CSW212
+     C                     MOVEL'0'       WC1DT   8                                           CSW212
+     C                     MOVELI#C1DT    WC1DT                                               CSW212
+     C                     TESTN          WC1DT      60                                       CSW212
+     C           *IN60     IFEQ *ON                                                           CSW212
+     C                     MOVE *OFF      *IN98                                               CSW212
+     C                     MOVE *OFF      *IN99                                               CSW212
+      *                                                                                       CSW212
+     C                     MOVE I#C1DY    WDAY                                                CSW212
+     C                     MOVELI#C1DY    WYRS                                                CSW212
+     C                     MOVE I#C1DY    WRK4    4                                           CSW212
+     C                     MOVELWRK4      WMTH                                                CSW212
+     C                     MOVELWDATE     ZDATE                                               CSW212
+     C                     EXSR ZDATE1                                                        CSW212
+     C                     ENDIF                                                              CSW212
+     C                     ENDIF                                                            MD023071
+      *                                                                                       CSW212
+     C           *IN60     IFEQ *OFF                                                          CSW212
+     C           I#C1DT    ANDNE*BLANKS                                                     MD023071
+     C           *IN99     OREQ *ON                                                           CSW212
+     C           I#C1DT    ANDNE*BLANKS                                                     MD023071
+     C           I#C1DT    OREQ *BLANKS                                                     MD023071
+     C**********           MOVEL'N'       WVALD                                      CSW212 MD023071
+     C           E#CPGM    IFEQ 'ME9960'                                                      CSW212
+     C                     MOVEL'752'     ERCD,E                                              CSW212
+     C                     ELSE                                                               CSW212
+     C                     MOVEL'X03'     ERCD,E                                              CSW212
+     C                     ENDIF                                                              CSW212
+     C                     ADD  1         E                                                   CSW212
+     C                     MOVEL'Y'       E#ERRM                                              CSW212
+     C                     MOVEL'MEC2305' E#MSGD                                              CSW212
+     C                     MOVEL*BLANKS   MEMSDT                                              CSW212
+     C                     MOVEL'MEC2305' MEMSID                                              CSW212
+     C                     MOVEL'MEMSG'   MEMSGF                                              CSW212
+     C                     EXSR SRSNMS                                                        CSW212
+      *                                                                                       CSW212
+      ** No character is allowed after the date                                               CSW212
+      *                                                                                       CSW212
+     C                     ELSE                                                               CSW212
+     C           I#C1BL    IFNE *BLANKS                                                       CSW212
+     C**********           MOVEL'N'       WVALD                                      CSW212 MD023071
+     C           E#CPGM    IFEQ 'ME9960'                                                      CSW212
+     C                     MOVEL'753'     ERCD,E                                              CSW212
+     C                     ELSE                                                               CSW212
+     C                     MOVEL'X03'     ERCD,E                                              CSW212
+     C                     ENDIF                                                              CSW212
+     C                     ADD  1         E                                                   CSW212
+     C                     MOVEL'Y'       E#ERRM                                              CSW212
+     C                     MOVEL'MEC2306' E#MSGD                                              CSW212
+     C                     MOVEL*BLANKS   MEMSDT                                              CSW212
+     C                     MOVEL'MEC2306' MEMSID                                              CSW212
+     C                     MOVEL'MEMSG'   MEMSGF                                              CSW212
+     C                     EXSR SRSNMS                                                        CSW212
+     C                     ENDIF                                                              CSW212
+     C                     ENDIF                                                              CSW212
+     C**********           ENDIF                                                     CSW212 MD023071
+     C                     ENDSL                                                              CSW212
+      *                                                                                       CSW212
+      ** 77D Condition Line 2                                                                 CSW212
+      *                                                                                       CSW212
+     C           '/SETC/'  SCAN I#CND2    COND2   20                                          CSW212
+     C           '/SETC/'  SCAN I#CND1    COND1                                             MD023071
+     C           '/SETC/'  SCAN I#CND3    COND3                                             MD023071
+     C           '/SETC/'  SCAN I#CND4    COND4                                             MD023071
+     C           '/SETC/'  SCAN I#CND5    COND5                                             MD023071
+     C           '/SETC/'  SCAN I#CND6    COND6                                             MD023071
+     C                     SELEC                                                              CSW212
+     C           COND2     WHEQ 0                                                             CSW212
+     C           COND3     ANDEQ0                                                           MD023071
+     C           COND4     ANDEQ0                                                           MD023071
+     C           COND5     ANDEQ0                                                           MD023071
+     C           COND6     ANDEQ0                                                           MD023071
+     C           WVALD     ANDEQ'Y'                                                           CSW212
+     C           COND2     OREQ 1                                                             CSW212
+     C           WVALD     ANDNE'Y'                                                           CSW212
+      *                                                                                       CSW212
+      ** If /VALD/ is input on the first line, /SETC/ must be present on                      CSW212
+      ** on the second line and conversely                                                    CSW212
+      *                                                                                       CSW212
+     C           E#CPGM    IFEQ 'ME9960'                                                      CSW212
+     C                     MOVEL'754'     ERCD,E                                              CSW212
+     C                     ELSE                                                               CSW212
+     C                     MOVEL'X03'     ERCD,E                                              CSW212
+     C                     ENDIF                                                              CSW212
+     C                     ADD  1         E                                                   CSW212
+     C                     MOVEL'Y'       E#ERRM                                              CSW212
+     C                     MOVEL'MEC2307' E#MSGD                                              CSW212
+     C                     MOVEL*BLANKS   MEMSDT                                              CSW212
+     C                     MOVEL'MEC2307' MEMSID                                              CSW212
+     C                     MOVEL'MEMSG'   MEMSGF                                              CSW212
+     C                     EXSR SRSNMS                                                        CSW212
+      *                                                                                       CSW212
+     C           COND2     WHEQ 1                                                             CSW212
+     C           WVALD     ANDEQ'Y'                                                           CSW212
+      *                                                                                       CSW212
+      ** /SETC/ must be followed by an ISO Currency code                                      CSW212
+      *                                                                                       CSW212
+     C           I#C2IS    SETLLSDISOCL0                                                      CSW212
+     C           I#C2IS    IFNE *BLANKS                                                       CSW212
+     C           I#C2IS    CHAINSDISOCL0             81                                       CSW212
+     C                     ENDIF                                                              CSW212
+      *                                                                                       CSW212
+     C           *IN81     IFEQ *ON                                                           CSW212
+     C           I#C2IS    SETLLSDCURRL1                                                      CSW212
+     C           I#C2IS    CHAINSDCURRL1             81                                       CSW212
+     C                     ENDIF                                                              CSW212
+      *                                                                                       CSW212
+     C           *IN81     IFEQ *ON                                                           CSW212
+     C           I#C2IS    ANDNE'XXX'                                                         CSW212
+     C           I#C2IS    OREQ *BLANKS                                                       CSW212
+     C           E#CPGM    IFEQ 'ME9960'                                                      CSW212
+     C                     MOVEL'755'     ERCD,E                                              CSW212
+     C                     ELSE                                                               CSW212
+     C                     MOVEL'X03'     ERCD,E                                              CSW212
+     C                     ENDIF                                                              CSW212
+     C                     ADD  1         E                                                   CSW212
+     C                     MOVEL'Y'       E#ERRM                                              CSW212
+     C                     MOVEL'MEC2308' E#MSGD                                              CSW212
+     C                     MOVEL*BLANKS   MEMSDT                                              CSW212
+     C                     MOVEL'MEC2308' MEMSID                                              CSW212
+     C                     MOVEL'MEMSG'   MEMSGF                                              CSW212
+     C                     EXSR SRSNMS                                                        CSW212
+     C                     ELSE                                                               CSW212
+      *                                                                                       CSW212
+      ** No character is allowed after the currency.                                          CSW212
+      *                                                                                       CSW212
+     C           I#C2BL    IFNE *BLANKS                                                       CSW212
+     C           E#CPGM    IFEQ 'ME9960'                                                      CSW212
+     C                     MOVEL'756'     ERCD,E                                              CSW212
+     C                     ELSE                                                               CSW212
+     C                     MOVEL'X03'     ERCD,E                                              CSW212
+     C                     ENDIF                                                              CSW212
+     C                     ADD  1         E                                                   CSW212
+     C                     MOVEL'Y'       E#ERRM                                              CSW212
+     C                     MOVEL'MEC2309' E#MSGD                                              CSW212
+     C                     MOVEL*BLANKS   MEMSDT                                              CSW212
+     C                     MOVEL'MEC2309' MEMSID                                              CSW212
+     C                     MOVEL'MEMSG'   MEMSGF                                              CSW212
+     C                     EXSR SRSNMS                                                        CSW212
+     C                     ENDIF                                                              CSW212
+     C                     ENDIF                                                              CSW212
+     C           COND2     WHGT 1                                                             CSW212
+     C           COND1     ORNE 0                                                           MD023071
+     C           COND3     ORNE 0                                                           MD023071
+     C           COND4     ORNE 0                                                           MD023071
+     C           COND5     ORNE 0                                                           MD023071
+     C           COND6     ORNE 0                                                           MD023071
+      *                                                                                       CSW212
+      ** If /SECT/ is input, it must be put on as 6 first characters                          CSW212
+      ** on the second line                                                                   CSW212
+      *                                                                                       CSW212
+     C           E#CPGM    IFEQ 'ME9960'                                                      CSW212
+     C                     MOVEL'757'     ERCD,E                                              CSW212
+     C                     ELSE                                                               CSW212
+     C                     MOVEL'X03'     ERCD,E                                              CSW212
+     C                     ENDIF                                                              CSW212
+     C                     ADD  1         E                                                   CSW212
+     C                     MOVEL'Y'       E#ERRM                                              CSW212
+     C                     MOVEL'MEC2310' E#MSGD                                              CSW212
+     C                     MOVEL*BLANKS   MEMSDT                                              CSW212
+     C                     MOVEL'MEC2310' MEMSID                                              CSW212
+     C                     MOVEL'MEMSG'   MEMSGF                                              CSW212
+     C                     EXSR SRSNMS                                                        CSW212
+      *                                                                                       CSW212
+     C                     ENDSL                                                              CSW212
+     C                     ENDIF                                                              CSW212
+     C                     ENDIF                                                              CSW212
+      *                                                                                       CSW213
+     C           CSW213    IFEQ 'Y'                                                           CSW213
+     C           I#TTYP    IFEQ 'AT'                                                          CSW213
+     C           I#TTYP    OREQ 'FX'                                                          CSW213
+     C           I#TTYP    OREQ 'OP'                                                          CSW213
+     C           I#TTYP    OREQ 'FF'                                                          CSW213
+     C           I#TTYP    OREQ 'CL'                                                          CSW213
+      *                                                                                       CSW213
+      ** Validate line 3 for /SRCE/                                                           CSW213
+      *                                                                                       CSW213
+     C           '/SRCE/'  SCAN I#CND1    COND1                                               CSW213
+     C           '/SRCE/'  SCAN I#CND2    COND2                                               CSW213
+     C           '/SRCE/'  SCAN I#CND3    COND3   20                                          CSW213
+     C           '/SRCE/'  SCAN I#CND4    COND4   20                                          CSW213
+     C           '/SRCE/'  SCAN I#CND5    COND5   20                                          CSW213
+     C           '/SRCE/'  SCAN I#CND6    COND6   20                                          CSW213
+      *                                                                                       CSW213
+     C           COND1     IFNE 0                                                             CSW213
+     C           COND2     ORNE 0                                                             CSW213
+     C           COND3     ORGT 1                                                             CSW213
+     C           COND4     ORNE 0                                                             CSW213
+     C           COND5     ORNE 0                                                             CSW213
+     C           COND6     ORNE 0                                                             CSW213
+      *                                                                                       CSW213
+     C           E#CPGM    IFEQ 'ME9960'                                                      CSW213
+     C*******              MOVEL'431'     ERCD,E                                     CSW213 MD022945
+     C                     MOVEL'143'     ERCD,E                                            MD022945
+     C                     ELSE                                                               CSW213
+     C                     MOVEL'X03'     ERCD,E                                              CSW213
+     C                     ENDIF                                                              CSW213
+     C                     ADD  1         E                                                   CSW213
+     C                     MOVEL'Y'       E#ERRM                                              CSW213
+     C                     MOVEL*BLANKS   MEMSDT                                              CSW213
+     C                     MOVEL'MEC0121' MEMSID                                              CSW213
+     C                     MOVEL'MEMSG'   MEMSGF                                              CSW213
+     C                     EXSR SRSNMS                                                        CSW213
+      *                                                                                       CSW213
+     C                     ELSE                                                               CSW213
+      *                                                                                       CSW213
+     C           COND3     IFEQ 1                                                             CSW213
+      *                                                                                       CSW213
+      ** Validate line 1 for /VALD/ and line 2 for /SETC/                                     CSW213
+      *                                                                                       CSW213
+     C           '/VALD/'  SCAN I#CND1    COND1                                               CSW213
+     C           '/SETC/'  SCAN I#CND2    COND2                                               CSW213
+     C           COND1     IFNE 1                                                             CSW213
+     C           COND2     ORNE 1                                                             CSW213
+      *                                                                                       CSW213
+     C           E#CPGM    IFEQ 'ME9960'                                                      CSW213
+     C*********            MOVEL'432'     ERCD,E                                     CSW213 MD022945
+     C                     MOVEL'144'     ERCD,E                                            MD022945
+     C                     ELSE                                                               CSW213
+     C                     MOVEL'X03'     ERCD,E                                              CSW213
+     C                     ENDIF                                                              CSW213
+     C                     ADD  1         E                                                   CSW213
+     C                     MOVEL'Y'       E#ERRM                                              CSW213
+     C                     MOVEL*BLANKS   MEMSDT                                              CSW213
+     C                     MOVEL'MEC0122' MEMSID                                              CSW213
+     C                     MOVEL'MEMSG'   MEMSGF                                              CSW213
+     C                     EXSR SRSNMS                                                        CSW213
+      *                                                                                       CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+     C                     ENDIF                                                              CSW213
+     C                     ENDIF                                                              CSW213
+     C                     ENDIF                                                              CSW213
+     C                     ENDIF                                                              CSW213
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCOND    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROTHR   : Validate Other Details                            *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SROTHR    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SROTHR'  @STK,Q
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXOTHR    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNEBL   : Check for embedded blanks                         *
+      *                                                               *
+      *  CALLED BY: SRCOND Validate Field :77D:                       *
+      *                                                               *
+      *****************************************************************
+     CSR         SRNEBL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRNEBL'  @STK,Q
+      *
+      *  No blank lines allowed between lines
+      *
+     C           I#CND     IFNE *BLANKS
+      * Line 2 input line 1 blank
+     C           I#CND1    IFEQ *BLANKS
+     C           I#CND2    ANDNE*BLANKS
+      * Line 3 input line 2 blank
+     C           I#CND2    OREQ *BLANKS
+     C           I#CND3    ANDNE*BLANKS
+      * Line 4 input line 3 blank
+     C           I#CND3    OREQ *BLANKS
+     C           I#CND4    ANDNE*BLANKS
+      * Line 5 input line 4 blank
+     C           I#CND4    OREQ *BLANKS
+     C           I#CND5    ANDNE*BLANKS
+      * Line 6 input line 5 blank
+     C           I#CND5    OREQ *BLANKS
+     C           I#CND6    ANDNE*BLANKS
+     C                     MOVEL'X03'     ERCD,E
+     C                     ADD  1         E
+      *
+     C                     MOVEL'Y'       E#ERRM
+     C                     MOVEL*BLANKS   MEMSDT
+     C                     MOVEL'MEC0105' MEMSID
+     C                     MOVEL'MEMSG'   MEMSGF
+     C                     EXSR SRSNMS
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXNEBL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************   CSW097
+      *****************************************************************   CSW097
+      ***SRKYWD***:*Validate*Keywords**********************************   CSW097
+      *****************************************************************   CSW097
+      ***CALLED*BY:*SRCOND*Validate*Field*:77D*************************   CSW097
+      *****************************************************************   CSW097
+      *****************************************************************   CSW097
+     C*SR*********SRKYWD    BEGSR                                         CSW097
+      ***********                                                         CSW097
+      ***Set*up*subroutine*stack*name*                                    CSW097
+      ***********                                                         CSW097
+     C***********          ADD  1         Q       50                      CSW097
+     C***********          MOVEL'SRKYWD'  @STK,Q                          CSW097
+      ***********                                                         CSW097
+      ***Validate*first*line:*                                            CSW097
+      ***********                                                         CSW097
+     C***********          Z-ADD1         #S      50                      CSW097
+     C***********          Z-ADD1         #X      50                      CSW097
+     C***********          MOVE *BLANKS   WERR    1                       CSW097
+      ***********                                                         CSW097
+      ***If*not*equal*to*blanks*validate*                                 CSW097
+      ***********                                                         CSW097
+     C***********I#CND1    IFNE *BLANKS                                   CSW097
+      ***********                                                         CSW097
+      **First*position*must*be*a*'/'*                                     CSW097
+      ***********                                                         CSW097
+     C***********1         SUBSTI#CND1:1  ##001   1                       CSW097
+      ***********                                                         CSW097
+     C***********##001     IFNE '/'                                       CSW097
+     C***********          MOVEL'Y'       WERR                            CSW097
+     C***********          ENDIF                                          CSW097
+      ***********                                                         CSW097
+8888  ****Look*up*for*next*'/'*8                                          CSW097
+      ***********                                                         CSW097
+     C***********WERR      IFNE 'Y'                                       CSW097
+      ***********                                                         CSW097
+     C***********'/'       SCAN I#CND1:2  #R      30     90               CSW097
+      ***********                                                         CSW097
+     C************IN90     IFEQ *ON                                       CSW097
+     C***********#R        SUBSTI#CND1:1  ##KYWD 35 P                     CSW097
+      ***********                                                         CSW097
+      ***Determine*if*codeword*found*in*array:*                           CSW097
+      ***********                                                         CSW097
+     C***********          Z-ADD1         #Y      50                      CSW097
+     C***********##KYWD    LOKUPCDEW,#Y                  90               CSW097
+     C************IN90     IFEQ *OFF                                      CSW097
+     C***********          MOVE 'Y'       WERR                            CSW097
+     C***********          ENDIF                                          CSW097
+      ***********                                                         CSW097
+     C***********          ELSE                                           CSW097
+     C***********          MOVEL'Y'       WERR                            CSW097
+     C***********          ENDIF                                          CSW097
+      ***********                                                         CSW097
+     C***********          ENDIF                                          CSW097
+      ***********                                                         CSW097
+      **Codeword*invalid*                                                 CSW097
+      ***********                                                         CSW097
+     C***********WERR      IFEQ 'Y'                                       CSW097
+     C***********          MOVEL'X04'     ERCD,E                          CSW097
+     C***********          ADD  1         E                               CSW097
+      ***********                                                         CSW097
+     C***********          MOVEL'Y'       E#ERRM                          CSW097
+     C***********          MOVEL*BLANKS   MEMSDT    P                     CSW097
+     C***********MEMSDT    CAT  ##KYWD:0  MEMSDT                          CSW097
+     C***********          MOVEL'MEC0200' MEMSID                          CSW097
+     C***********          MOVEL'MEMSG'   MEMSGF                          CSW097
+     C***********          EXSR SRSNMS                                    CSW097
+     C***********          GOTO EXKYWD                                    CSW097
+      ***********                                                         CSW097
+     C***********          ENDIF                                          CSW097
+      ***********                                                         CSW097
+     C***********          ENDIF                                          CSW097
+      ***Unwind*subroutine*stack*name*                                    CSW097
+      ***********                                                         CSW097
+     C***********EXKYWD    TAG                                            CSW097
+     C***********          MOVEA*BLANKS   @STK,Q                          CSW097
+     C***********          SUB  1         Q                               CSW097
+      ***********                                                         CSW097
+     C*SR********           ENDSR                                         CSW097
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSWCH   : Validate SWIFT EXtended Characters                *
+      *                                                               *
+      *  CALLED BY: SRCOND Validate Field :77D:                       *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSWCH    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRSWCH'  @STK,Q
+      *
+     C           ISOEX     CHECKI#CND     V#      50     90
+      *
+      * If invalid then get character and format number
+      *
+     C           *IN90     IFEQ *ON
+     C           1         SUBSTI#CND:V#  ##001   1
+     C           V#        DIV  35        V#
+     C                     MVR            R#      50
+      *
+     C                     MOVE 'X03'     ERCD,E
+     C                     ADD  1         E
+      *
+     C                     MOVEL'Y'       E#ERRM
+     C           R#        IFNE 0
+     C                     ADD  1         V#
+     C                     ELSE
+     C                     Z-ADD35        R#
+     C                     ENDIF
+     C                     MOVELV#        ##005A  5 P
+     C                     MOVELR#        MEMSDT
+     C           MEMSDT    CAT  ##005A:0  MEMSDT    P
+     C           MEMSDT    CAT  ##001:0   MEMSDT    P
+     C                     MOVEL'MEC0118' MEMSID
+     C                     MOVEL'MEMSG'   MEMSGF
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXSWCH    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSNMS   : Send Message to Calling program                   *
+      *                                                               *
+      *  CALLED BY: *Any Error                                        *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSNMS    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRSNMS'  @STK,Q
+      *
+      * Obtain leading text for field
+      *
+     C           E#MSGD    IFNE *BLANKS
+     C                     CALL 'MEC1150'              9090
+     C                     PARM E#MSGD    #MSGID
+     C                     PARM E#MSGF    #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C           MEMSDT    CAT  #MSTX1:0  MEMSDT
+     C                     END
+      *
+      * Send message
+      *
+     C                     MOVELE#CPGM    MEPGMQ
+     C                     EXSR MESNMS
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXSNMS    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *  File and Program Error Processing
+     C/COPY MECPYSRC,SRERRC
+      *  Standard send-program-message routine /COPY
+     C/COPY MECPYSRC,SMESNMSC
+     C/COPY ZSRSRC,ZDATE1Z2                                                                   CSW212
+      *
+      ** This compile time array has been removed as                      CSW097
+      ** codeword validation is no longer required.                       CSW097
+      ** (originally it's positioned after the copyright array)           CSW097
+      *                                                                   CSW097
+      ***********CDEW*-*Condition*Codewords*                              CSW097
+      ***********/FRABBA/                                                 CSW097
+      ***********/VARYFRAB/                                               CSW097
+      ***********/MASTER/                                                 CSW097
+      ***********/VMASTER/                                                CSW097
+      ***********/OTHER/                                                  CSW097
+      ***********/*spare/*spare/*spare/*spare/*spare                      CSW097
+      ***********/*spare/*spare/*spare/*spare/*spare                      CSW097
+      ***********/*spare/*spare/*spare/*spare/*spare                      CSW097
+      ***********/*spare/*spare/*spare/*spare/*spare                      CSW097
+      ***********/*spare/*spare/*spare/*spare/*spare                      CSW097
+      ***********/*spare/*spare/*spare/*spare/*spare                      CSW097
+      ***********/*spare/*spare/*spare/*spare/*spare                      CSW097
+      ***********/*spare/*spare/*spare/*spare/*spare                      CSW097
+      ***********/*spare/*spare/*spare/*spare/*spare                      CSW097
+      ***********/*spare/*spare/*spare/*spare/*spare                      CSW097
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                                          CSW212
+0366073110961461                                                                              CSW212
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                                            CSW212
+000031059090120151181212243273304334365                                                       CSW212

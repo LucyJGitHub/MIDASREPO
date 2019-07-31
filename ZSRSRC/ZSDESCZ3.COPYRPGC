@@ -1,0 +1,362 @@
+     C*****************************************************************
+     C*                                                               *
+     C*  ZSDESC- SUBROUTINE TO FORMAT SECURITY DESCRIPTIONS           *
+     C*                                                               *
+     C*  INPUT  - ZSRPN  (20) SECURITY REPORT NAME                    *
+     C*             ZSFN1  (30) SECURITY FULL NAME 1                  *
+     C*             ZSFN2  (30) SECURITY FULL NAME 2                  *
+     C*             CPNR   (11,7) COUPON RATE FROM SECURITY           *
+     C*             MATY   (5,0) MATURITY DATE FROM SECURITY          *
+     C*             SCPP   (15,8) REDEMPTION PRICE FROM SECURITY      *
+     C*             SCPD   (5,0) FIRST REDEMPTION DATE FROM SECURITY  *
+     C**************RSFD***(1)*REDEMPTION*IN*SEC.DESC.*IND*(TABTB36)***   S01117
+     C*             ZRSFD  (1) REDEMPTION IN SEC. FULL IND (SDSTRDPD  *   S01117
+     C*                        OR TABTB36)                            *   S01117
+     C*             SCPI   (1) PUT/CALL INDICATOR                     *
+     C*                                                               *
+     C*   OUTPUT -  ZRNME  (41) SECURITY REPORT NAME DESCRIPTION      *
+     C*             ZFNM1  (30) SECURITY FULL NAME DESCRIPTION 1      *
+     C*             ZFNM2  (50) SECURITY FULL NAME DESCRIPTION 2      *
+     C*             ZFNM3  (50) SECURITY FULL NAME DESCRIPTION 3      *
+     C*                                                               *
+     C*  CALLS  -  ZDATE2                                             *
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 208241             Date 17Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. 127566             Date 09May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01117             Date 21Nov90               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+      *  208241 - Century field is blank. Populate 'CC' field for     *
+      *           output.                                             *
+     C*  127566 - For Zero Coupon bonds, show a coupon rate of 0      *
+     C*         - Display maturity date as DDMMCCYY.                  *
+     C*  S01117 - MULTIBRANCHING                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZSDESC    BEGSR                           ** ZSDESC **
+     C*
+     C* DEFINE INPUT FIELDS AND CLEAR OUTPUT FIELDS
+     C*
+     C                     MOVE ZSRPN     ZSRPN  20
+     C                     MOVE ZSFN1     ZSFN1  30
+     C                     MOVE ZSFN2     ZSFN2  30
+     C**********           MOVE CC        CC      2                                    127566 208241
+     C                     MOVE ZRSFD     ZRSFD   1                       S01117
+     C*
+     C                     MOVE *BLANK    ZRNME  41
+     C                     MOVE *BLANK    ZFNM1  30
+     C                     MOVE *BLANK    ZFNM2  50
+     C                     MOVE *BLANK    ZFNM3  50
+     C                     MOVEA*BLANK    AON
+     C*
+     C* CHECK WHICH INPUT FIELD/S ENTERED
+     C*
+     C* IF REPORT NAME BLANK - FULL NAME FORMAT REQUIRED
+     C*
+     C           ZSRPN     IFEQ *BLANK
+     C                     GOTO FLLFMT
+     C                     END
+     C*
+     C* MOVE REPORT NAME TO ARRAY
+     C*
+     C                     MOVEAZSRPN     ASS
+     C                     Z-ADD20        ZE      20
+     C*
+     C* FIND FIRST BLANK WORKING BACKWARDS THROUGH NAME ARRAY
+     C*
+     C           ASS,ZE    DOUNE' '
+     C           ZE        OREQ 0
+     C           ASS,ZE    IFEQ ' '
+     C           ZE        SUB  1         ZE
+     C                     END
+     C                     END
+     C*
+     C* MOVE NAME TO OUTPUT DESCRIPTION
+     C*
+     C                     Z-ADD0         ZO      20
+     C                     Z-ADD0         ZS      20
+     C           ZE        DOUEQZS
+     C                     ADD  1         ZO
+     C                     ADD  1         ZS
+     C                     MOVE ASS,ZS    AON,ZO
+     C                     END
+     C*
+     C*INSERT SEPARATOR BLANK BETWEEN NAME AND COUPON RATE
+     C*
+     C                     ADD  1         ZO
+     C                     MOVE ' '       AON,ZO
+     C*
+     C                     GOTO CPRFMT
+     C*
+     C           FLLFMT    TAG                             **  FLLFMT **
+     C*
+     C* CHECK THAT FULL NAME HAS BEEN ENTERED
+     C*
+     C           ZSFN1     IFEQ *BLANK
+     C                     GOTO EZDESC
+     C                     END
+     C*
+     C                     Z-ADD0         ZO
+     C*
+     C* IF REDEMPTION IN SEC.DESC IS 'Y' -
+     C*         FORMAT CALL/PUT IND, REDEMPTION PRICE AND REDEMPTION DATE
+     C*
+     C***********RSFD      IFEQ 'Y'                                       S01117
+     C           ZRSFD     IFEQ 'Y'                                       S01117
+     C*
+     C* MOVE PUT/CALL IND TO OUTPUT IF PRESENT
+     C*
+     C           SCPI      IFNE *BLANK
+     C                     MOVE SCPI      AON,1
+     C                     MOVE ' '       AON,2
+     C                     Z-ADD2         ZO
+     C                     END
+     C*
+     C* MOVE REDEMPTION PRICE TO ARRAY TO FIND LEADING AND TRAILING ZEROS
+     C*
+     C           SCPP      IFEQ 0
+     C                     GOTO RDTFMT
+     C                     END
+     C*
+     C                     MOVE SCPP      ZSCPP  15
+     C                     MOVEAZSCPP     APR
+     C*
+     C                     Z-ADD1         ZS
+     C           APR,ZS    DOUNE'0'
+     C           ZS        ORGT 7
+     C           APR,ZS    IFEQ '0'
+     C                     ADD  1         ZS
+     C                     END
+     C                     END
+     C*
+     C* MOVE 1ST 7 DIGITS TO OUTPUT IGNORING LEADING ZEROS
+     C*
+     C           ZS        IFLE 7
+     C           ZS        DOUGT7
+     C                     ADD  1         ZO
+     C                     MOVE APR,ZS    AON,ZO
+     C                     ADD  1         ZS
+     C                     END
+     C                     END
+     C*
+     C* FIND TRAILING ZEROS
+     C*
+     C                     Z-ADD15        ZE
+     C           ZE        DOULT8
+     C           APR,ZE    ORNE '0'
+     C           APR,ZE    IFEQ '0'
+     C           ZE        SUB  1         ZE
+     C                     END
+     C                     END
+     C*
+     C* MOVE DIGITS AFTER DEC POINT TO OUTPUT IGNORING TRAILING ZEROS
+     C*
+     C           ZE        IFGT 7
+     C                     ADD  1         ZO
+     C                     MOVE '.'       AON,ZO
+     C                     Z-ADD8         ZS
+     C           ZS        DOUGTZE
+     C                     ADD  1         ZO
+     C                     MOVE APR,ZS    AON,ZO
+     C                     ADD  1         ZS
+     C                     END
+     C                     END
+     C*
+     C* INSERT SEPARATOR BLANK BETWEEN REDEMPTION PRICE AND DATE
+     C*
+     C                     ADD  1         ZO
+     C                     MOVE ' '       AON,ZO
+     C*
+     C           RDTFMT    TAG                             ** RDTFMT **
+     C*
+     C* CALL ZDATE2 TO CONVERT REDEMPTION DATE TO DDMMMYY
+     C*
+     C           SCPD      IFEQ 0
+     C                     GOTO CPRFMT
+     C                     END
+     C*
+     C                     Z-ADDSCPD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVEAZADATE    ADT
+     C*
+     C* CHECK FOR LEADING BLANK
+     C*
+     C           ADT,1     IFEQ ' '
+     C                     Z-ADD2         ZS
+     C                     ELSE
+     C                     Z-ADD1         ZS
+     C                     END
+     C*
+     C* MOVE REDEMPTION DATE TO OUTPUT
+     C*
+     C           ZS        DOUGT7
+     C                     ADD  1         ZO
+     C                     MOVE ADT,ZS    AON,ZO
+     C                     ADD  1         ZS
+     C                     END
+     C*
+     C* MOVE SEPARATOR BLANK BETWEEN NAME AND COUPON RATE
+     C*
+     C                     ADD  1         ZO
+     C                     MOVE ' '       AON,ZO
+     C*
+     C                     END
+     C*
+     C* MOVE COUPON RATE TO ARRAY TO FIND LEADING AND TRAILING ZEROS
+     C*
+     C           CPRFMT    TAG                             ** CPRFMT **
+     C*
+     C           CPNR      IFEQ 0
+     C           MATY      ANDEQ0                                                             127566
+     C                     GOTO MATFMT
+     C                     END
+     C*
+     C           CPNR      IFEQ 0                                                             127566
+     C           MATY      ANDNE0                                                             127566
+     C           ZE        ADD  2         ZZ      20                                          127566
+     C                     MOVEA'0'       AON,ZZ                                              127566
+     C                     ADD  1         ZO                                                  127566
+     C                     END                                                                127566
+     C*
+     C           *LIKE     DEFN CPNR      ZZCPNR
+     C                     Z-ADDCPNR      ZZCPNR
+     C           CPNR      IFLT 0
+     C                     MULT -1        ZZCPNR
+     C                     END
+     C                     MOVE ZZCPNR    ZCPNRX 11
+     C                     MOVEAZCPNRX    ACR
+     C*
+     C* FIND LEADING ZEROS
+     C*
+     C                     Z-ADD1         ZS      20
+     C           ACR,ZS    DOUNE'0'
+     C           ZS        ORGT 4
+     C           ACR,ZS    IFEQ '0'
+     C                     ADD  1         ZS
+     C                     END
+     C                     END
+     C*
+     C* MOVE FIRST 4 DIGITS OF COUPON RATE TO OUTPUT LINE IGNORING
+     C*  LEADING ZEROS
+     C*
+     C           ZS        IFLE 4
+     C           ZS        DOUGT4
+     C                     ADD  1         ZO
+     C                     MOVE ACR,ZS    AON,ZO
+     C                     ADD  1         ZS
+     C                     END
+     C                     END
+     C*
+     C* FIND TRAILING ZEROS OF COUPON RATE
+     C*
+     C                     Z-ADD11        ZE      20
+     C           ZE        DOULT5
+     C           ACR,ZE    ORNE '0'
+     C           ACR,ZE    IFEQ '0'
+     C           ZE        SUB  1         ZE
+     C                     END
+     C                     END
+     C*
+     C* IF DIGITS PRESENT AFTER DECIMAL POINT - MOVE TO OUTPUT LINE
+     C*   IGNORING TRAILING ZEROS
+     C*
+     C           ZE        IFGT 4
+     C                     ADD  1         ZO
+     C                     MOVE '.'       AON,ZO
+     C                     Z-ADD5         ZS
+     C           ZS        DOUGTZE
+     C                     ADD  1         ZO
+     C                     MOVE ACR,ZS    AON,ZO
+     C                     ADD  1         ZS
+     C                     END
+     C                     END
+     C*
+     C* INSERT MINUS SIGN IF COUPON RATE NEGATIVE
+     C*
+     C           CPNR      IFLT 0
+     C                     ADD  1         ZO
+     C                     MOVE '-'       AON,ZO
+     C                     END
+     C*
+     C* INSERT SEPARATOR BLANK BETWEEN COUPON RATE AND MATURITY DATE
+     C*
+     C                     ADD  1         ZO
+     C                     MOVE ' '       AON,ZO
+     C*
+     C* IF MATURITY DATE PRESENT - CONVERT TO DATE DD/MMM/YY
+     C*
+     C           MATFMT    TAG                             ** MATFMT **
+     C*
+     C           MATY      IFEQ 00000
+     C           MATY      OREQ 99999
+     C                     GOTO MDESC
+     C                     END
+     C*
+     C* CALL ZDATE2 TO CONVERT DATE AND MOVE DATE TO ARRAY TO TEST
+     C*   FOR LEADING BLANK
+     C*
+     C                     Z-ADDMATY      ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVEAZADATE    ADT
+     C*
+     C           ADT,1     IFEQ ' '
+     C                     Z-ADD2         ZS
+     C                     ELSE
+     C                     Z-ADD1         ZS
+     C                     END
+      *                                                                                       208241
+      ** Populate century field                                                               208241
+      *                                                                                       208241
+     C           ZWRK3     DIV  100       CCR     20                                          208241
+     C           CCR       ADD  19        CCR                                                 208241
+     C                     MOVE CCR       CC      2                                           208241
+     C*
+     C* MOVE MATURITY DATE TO OUTPUT LINE
+     C*
+     C***********ZS        DOUGT7                                                             127566
+     C           ZS        DOUGT5                                                             127566
+     C                     ADD  1         ZO
+     C                     MOVE ADT,ZS    AON,ZO
+     C                     ADD  1         ZS
+     C                     END
+     C*                                                                                       127566
+     C* Move redemption century to output                                                     127566
+     C*                                                                                       127566
+     C                     ADD  1         ZO                                                  127566
+     C                     MOVEACC        AON,ZO                                              127566
+     C                     ADD  1         ZO                                                  127566
+     C*                                                                                       127566
+     C* Move redemption year to output                                                        127566
+     C*                                                                                       127566
+     C           ZS        DOUGT7                                                             127566
+     C                     ADD  1         ZO                                                  127566
+     C                     MOVE ADT,ZS    AON,ZO                                              127566
+     C                     ADD  1         ZS                                                  127566
+     C                     END                                                                127566
+     C*
+     C           MDESC     TAG
+     C*
+     C* MOVE FORMATTED OUTPUT LINE TO OUTPUT PARAMETER
+     C*
+     C           ZSRPN     IFNE *BLANK
+     C                     MOVELAONM      ZRNME
+     C                     ELSE
+     C                     MOVE ZSFN1     ZFNM1
+     C           ZSFN2     IFNE *BLANK
+     C                     MOVELZSFN2     ZFNM2
+     C                     MOVELAONM      ZFNM3
+     C                     ELSE
+     C                     MOVELAONM      ZFNM2
+     C                     END
+     C                     END
+     C*
+     C           EZDESC    ENDSR                           ** EZDESC **
+     C*****************************************************************

@@ -1,0 +1,654 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                  /*CGL061A*/
+/*STD    CLPBASEMOD                                                  */                  /*CGL061A*/
+/*EXI    TEXT('Midas GL Balance Statements')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC43 - BALANCE STATEMENTS                                  */
+/*                                                                   */
+/*   WARNING - THIS PROGRAM IS RUNNING IN TASK SPLIT MODE.           */                  /*CGL061A*/
+/*             DO NOT ADD ANY NEW PROGRAMS TO THIS CL IF IT IS NOT   */                  /*CGL061A*/
+/*             ABLE TO RUN IN TASK SPLIT.                            */                  /*CGL061A*/
+/*                                                                   */                  /*CGL061A*/
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. CGL188             Date 19Feb18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD021578           Date 05Aug13              */
+/*                      MD002850           Date 08Apr13              */
+/*                      CGL061A            Date 06Aug12              */
+/*                      AR787620           Date 10Jun11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      252196             Date 07Jan08              */
+/*                      242915             Date 10Oct06              */
+/*                      242191             DATE 08Sep06              */
+/*                      CGL061             DATE 27Jun06              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      216937             DATE 23APR03              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      S01408             DATE 10APR96              */
+/*                      S01408             DATE 20FEB96              */
+/*                      S01408             DATE 25JUL95              */
+/*                      S01413             DATE 13APR93              */
+/*                      056524             DATE 17JAN94              */
+/*                      BHF982             DATE 19FEB91              */
+/*                      S01189             DATE 12/10/89             */
+/*                      E19541             DATE 08/09/89             */
+/*                      E19060             DATE 09AUG89              */
+/*                      E16853             DATE 17/02/89             */
+/*                      S01194             DATE 16/03/89             */
+/*                      S01117             DATE 01/03/89             */
+/*                      S01161             DATE 08/07/88             */
+/*                      E13386             DATE 23/05/88             */
+/*                      E13055             DATE 03/05/88             */
+/*                      E11699             DATE 20/11/87             */
+/*                      S05452             DATE 20/08/87             */
+/*                      E10877             DATE 12/05/87             */
+/*                      S01098             DATE 08/07/86             */
+/*                      S01110             DATE 18/06/86             */
+/*                      S01091             DATE 18/06/86             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL188 - COB Optimisation of GL0420                         */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD021578 - Reconciliation: ACCNTAB differences              */
+/*       MD002850 - Correct the processing for restart of subtasks   */
+/*                  after failure.                                   */
+/*       CGL061A - Statements Task Split Processing                  */
+/*       AR787620 - Hooks Incorporation                              */
+/*                  WNCPYSRC,GLH00317                                */
+/*                  WNCPYSRC,GLH00318                                */
+/*       252196 - Extend wait time for QRCVDTAQ to 1 hour            */
+/*       242915 - Retry if DataQueue does not exist                  */
+/*       242191 - Task Split parcel not clearing each time           */
+/*       CGL061 - Multi-streaming GL Statements - Task Split         */
+/*                Call GL0420 as specified by Dtaq STMTSERVE         */
+/*       216937- Include source of posting if GA posting             */
+/*       S01408 - Addition of core hook GLC43001                     */
+/*       S01408 - Addition of core hook GLC43INT                     */
+/*       S01408 - Addition of core hook GLC43MP1                     */
+/*                Addition of core hook GLC43MP2                     */
+/*       S01413 - Retail 3 Incorporation                             */
+/*       056524 - EODPOPD file missing Real time postings            */
+/*                GLC42 created to replace APOST merge               */
+/*                Restart/Recovery redundant                         */
+/*                Auto Recs processing removed                       */
+/*       BHF982 - ADDLFM SHOULD BE SHARE(*YES)                       */
+/*       S01189 - COB recovery processing.                           */
+/*                The use of the data area GLSTAT has been           */
+/*                replaced by programs CB0150 and CB0160 and         */
+/*                the status field &BUSY. This program calls         */
+/*                RCC0270 where RCSTAT, &BUSY are used in the        */
+/*                same way.  The field &BUSY can be one of           */
+/*                four values : N,O,P or Q. These values             */
+/*                relate to the previous use of GLSTAT and           */
+/*                RCSTAT in the following way :-                     */
+/*                &BUSY   RCSTAT GLSTAT                              */
+/*                         03,3   57,1                               */
+/*                ~~~~~    ~~~~~~~~~~~                               */
+/*                  N      OLD      N                                */
+/*                  O      NEW      N                                */
+/*                  P      OLD      Y                                */
+/*                  Q      NEW      Y                                */
+/*       E19541 - REMOVE FIX E19060 WHICH INTRODUCED REDUNDANT       */
+/*                & INCORRECT CODE.                                  */
+/*       E19060 - REINSERTION OF 'ALCOBJ' AND 'DLCOBJ' COMMANDS      */
+/*                FOR ERROR NO. 11699.                               */
+/*       E16853 - REINTRODUCE RECOVERY PROCEDURE ON APOST            */
+/*       S01194 - NEW STANDING DATA                                  */
+/*       S01117 - MULTIBRANCHING                                     */
+/*       S01161 - COB IMPROVEMENTS: REMOVE ACCNT BACKUP              */
+/*       E13386 - IF FOOB GOTO ABNOR, NOT ENDPGM                     */
+/*       E13055 - CHANGE LIBRARY TOLIB TO &TOLIB                     */
+/*       E11699 - REMOVE JOURNALLING OF ACCNT FILE. BACKUP ACCNT     */
+/*                USING CPYF.                                        */
+/*       S05452 - INCLUSION OF AUTO RECONCILIATIONS                  */
+/*       E10877 - MONMSG ADDED TO END JOURNALLING                    */
+/*       S01098 - APOST COPIED FROM DILIB IF ERROR                   */
+/*       S01110 - INCLUDE U1 TO CONDITION RETAIL ON                  */
+/*       S01091 - REWRITTEN TO INTRODUCE JOUNALLING                  */
+/*                                                                   */
+/*********************************************************************/
+/*********** PGM                                                                   /*056524*CGL061*/
+             PGM     PARM(&CNAM &CSEQ)                                                    /*CGL061*/
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC43INT                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+/* */                                                                /*056524*/
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(50)                                   /*CGL061*/
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                                    /*CGL061*/
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)                                    /*CGL061*/
+             DCL        VAR(&CSEQC) TYPE(*CHAR) LEN(5)                                    /*CGL061*/
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(12)                                  /*CGL061*/
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10)                                /*CGL061*/
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)                     /*CGL061*/
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)                                 /*CGL061*/
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10)                                 /*CGL061*/
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(600)                      /*CGL061*/
+             DCL        VAR(&RESTART) TYPE(*CHAR) LEN(1)                                  /*CGL061*/
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)                                     /*CGL061*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2001')
+/*/COPY WNCPYSRC,GLH00317                                            */
+/**********  DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)              */             /*056524 CGL061A*/
+             DCL        VAR(&RE) TYPE(*CHAR) LEN(1)                  /*056524*/
+             DCL        VAR(&IA) TYPE(*CHAR) LEN(1)                   /*S01413*/
+/**********  DCL        VAR(&COUNT) TYPE(*DEC) LEN(3 0) VALUE(0)   */             /*242915 CGL061A*/
+             DCL        VAR(&SNDMSG) TYPE(*CHAR) LEN(1) VALUE('N')                       /*CGL061A*/
+             DCL        VAR(&SKEYVALUE) TYPE(*CHAR) LEN(25)                              /*CGL061A*/
+             DCL        VAR(&EKEYVALUE) TYPE(*CHAR) LEN(25)                              /*CGL061A*/
+             DCL        VAR(&RECORDS) TYPE(*DEC) LEN(10 0)                               /*CGL061A*/
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC43001                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+                             EXEC(GOTO ABNOR)                        /*056524*/
+/* */                                                                /*056524*/
+/**********  SNDPGMMSG  MSG('GLC43 - Balance Statements') +                        /*056524*CGL061*/
+/**********                  TOMSGQ(MRUNQ)                                         /*056524*CGL061*/
+             SNDPGMMSG  MSG('GLC43 - Balance Statements file split') +
+                             TOMSGQ(MRUNQ)                                                /*CGL061*/
+/*/COPY WNCPYSRC,GLC43003                                            */
+/* */                                                                /*056524*/
+             RTVDTAARA  DTAARA(MMOD (16 1)) RTNVAR(&RE)               /*E11699*/
+                RTVDTAARA  DTAARA(MMOD (23 1)) RTNVAR(&IA)            /*S01413*/
+/***************IF         COND(&RE = 'Y') THEN(CHGJOB SWS(1XXXXXXX)) /*S01413*/
+                IF         COND(&RE = 'Y' *OR &IA = 'Y') THEN(CHGJOB +
+                          SWS(1XXXXXXX))                              /*S01413*/
+/* */                                                                /*056524*/
+/** PRINT STATEMENTS                                              */ /*056524*/
+/* */                                                                /*056524*/
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC43MP1                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+             OVRDBF     FILE(GLAPSGL0) TOFILE(GLAPSGAL0)              /*216937*/
+                                                                                          /*CGL061*/
+/* Check if normal run or restart */                                                      /*CGL061*/
+                                                                                          /*CGL061*/
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)                               /*CGL061*/
+                                                                                          /*CGL061*/
+/* Check if any problems with COB components file */                                      /*CGL061*/
+                                                                                          /*CGL061*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                  /*CGL061*/
+             GOTO       CMDLBL(ABNOR)                                                     /*CGL061*/
+             ENDDO                                                                        /*CGL061*/
+                                                                                          /*CGL061*/
+             CHGVAR     VAR(&RESTART) VALUE(&STAT)                                        /*CGL061*/
+                                                                                          /*CGL061*/
+/* Set restart status to 'Y' */                                                           /*CGL061*/
+                                                                                          /*CGL061*/
+             CHGVAR     VAR(&STAT) VALUE('Y')                                             /*CGL061*/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                               /*CGL061*/
+                                                                                          /*CGL061*/
+/* Set up call to QSNDDTAQ and override files to their members */                         /*CGL061*/
+                                                                                          /*CGL061*/
+             CHGVAR     VAR(&CSEQC) VALUE(&CSEQ)                                          /*CGL061*/
+             CHGVAR     VAR(&MEMBER) VALUE('STMT' *CAT &CSEQC)                            /*CGL061*/
+             CHGVAR     VAR(&DTAQLIBL) VALUE('*LIBL')                                     /*CGL061*/
+             CHGVAR     VAR(&SNDDTAQ) VALUE('STMTSERVE')                                  /*CGL061*/
+                                                                                          /*CGL061*/
+             OVRDBF     FILE(GLSTAMPD) TOFILE(GLSTAMPD) MBR(&MEMBER)                      /*CGL061*/
+/**********  OVRDBF     FILE(GLSTAMPA) TOFILE(GLSTAMPA) MBR(&MEMBER)*/            /*CGL061 CGL061A*/
+                                                                                          /*CGL061*/
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                                       /*CGL061*/
+                                                                                          /*CGL061*/
+/* If restart from component failed because of no response from */                       /*CGL061A*/
+/* Server, resend message and wait.                             */                       /*CGL061A*/
+                                                                                         /*CGL061A*/
+             IF         COND(&RESTART = 'F') THEN(DO)                                    /*CGL061A*/
+             GOTO       CMDLBL(LOOP)                                                     /*CGL061A*/
+             ENDDO                                                                       /*CGL061A*/
+                                                                                         /*CGL061A*/
+/* If restart, do not wait for the data queue entry */                                    /*CGL061*/
+/* Clear any old data queue message from server but ensure that an */                     /*CGL061*/
+/* 'END' message, sent from the end proc job is not lost */                               /*CGL061*/
+                                                                                          /*CGL061*/
+             IF         COND(&RESTART = 'Y') THEN(DO)                                     /*CGL061*/
+             CHGVAR     VAR(&RCVWAIT) VALUE(5)                                            /*CGL061*/
+             CALL       PGM(QRCVDTAQ) PARM(&MEMBER &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)                                   /*CGL061*/
+             CHGVAR     VAR(&RCVWAIT) VALUE(600)                                          /*CGL061*/
+             CHGVAR     VAR(&MSGLENGTH) VALUE(50)                                         /*CGL061*/
+             IF         COND(%SST(&MSGDATA 1 3) = 'END') THEN(DO)                         /*CGL061*/
+             CALL       PGM(QSNDDTAQ) PARM(&MEMBER &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)                                            /*CGL061*/
+             ENDDO                                                                        /*CGL061*/
+             GOTO       CMDLBL(RESTART)                                                   /*CGL061*/
+             ENDDO                                                                        /*CGL061*/
+                                                                                          /*CGL061*/
+/**Check*that*Data*Queue*exists*-*if*not*retry*10*times********/                  /*242915 CGL061A*/
+/*CHKDTAQ:*   CHKOBJ     OBJ(&DTAQLIBL/&MEMBER) OBJTYPE(*DTAQ)     */             /*242915 CGL061A*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(DO)                    */             /*242915 CGL061A*/
+/**********             CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)   */             /*242915 CGL061A*/
+/**********             IF         COND(&COUNT *LT 11) THEN(DO)    */             /*242915 CGL061A*/
+/**********                        DLYJOB     DLY(10)              */             /*242915 CGL061A*/
+/**********                        GOTO       CMDLBL(CHKDTAQ)      */             /*242915 CGL061A*/
+/**********             ENDDO                                      */             /*242915 CGL061A*/
+/**********             ELSE (DO)                                  */             /*242915 CGL061A*/
+/**********                        GOTO       CMDLBL(ABNOR)        */             /*242915 CGL061A*/
+/**********             ENDDO                                      */             /*242915 CGL061A*/
+/**********  ENDDO                                                 */             /*242915 CGL061A*/
+LOOP:                                                                                     /*CGL061*/
+                                                                                          /*CGL061*/
+/* Request response from DTAQ whether to run job again or end */                          /*CGL061*/
+                                                                                          /*CGL061*/
+             CHGVAR     VAR(&MSGDATA) VALUE(&MEMBER)                                      /*CGL061*/
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)                                            /*CGL061*/
+/**********  CHGVAR     VAR(&STAT) VALUE('F')                      */           /*CGL061A MD002850*/
+/**********  CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)        */           /*CGL061A MD002850*/
+                                                                                          /*CGL061*/
+/**Wait*on*reply*for*5*minutes**/                                     /*CGL061*           /*252196*/
+/**Wait*on*reply*for*1*hour**/                                                    /*252196 CGL061A*/
+/**********  CHGVAR     VAR(&RCVWAIT) VALUE(3600)                  */             /*252196 CGL061A*/
+/**********  CHGVAR     VAR(&RCVWAIT) VALUE(300)                   */             /*CGL061 CGL061A*/
+DTAQWAIT:                                                                                /*CGL061A*/
+             CALL       PGM(QRCVDTAQ) PARM(&MEMBER &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)                                   /*CGL061*/
+                                                                                          /*CGL061*/
+/* If no reply, error message and terminate */                                            /*CGL061*/
+             IF         COND(&MSGLENGTH = 0) THEN(DO)                                     /*CGL061*/
+             ALCOBJ     OBJ((GLSTMIPD *FILE *EXCL)) WAIT(0)                              /*CGL061A*/
+             MONMSG     MSGID(CPF1002) EXEC(DO)                                          /*CGL061A*/
+             IF         COND(&SNDMSG *EQ 'Y') THEN(DO)                                   /*CGL061A*/
+             CHGVAR     VAR(&STAT) VALUE('F')                                           /*MD002850*/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                             /*MD002850*/
+             SNDPGMMSG  MSG('No response from server for GLC43') +
+                          TOMSGQ(MOPERQ MRUNQ)                                            /*CGL061*/
+             GOTO       CMDLBL(ABNOR)                                                     /*CGL061*/
+             ENDDO                                                                        /*CGL061*/
+             ELSE       CMD(DO)                                                          /*CGL061A*/
+             CHGVAR     VAR(&SNDMSG) VALUE('Y')                                          /*CGL061A*/
+             GOTO       CMDLBL(LOOP)                                                     /*CGL061A*/
+             ENDDO                                                                       /*CGL061A*/
+             ENDDO                                                                       /*CGL061A*/
+                                                                                        /*MD002850*/
+             CHGVAR     VAR(&STAT) VALUE('F')                                           /*MD002850*/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                             /*MD002850*/
+             SNDPGMMSG  MSG('Server for GLC43 not active') +
+                          TOMSGQ(MOPERQ MRUNQ)                                           /*CGL061A*/
+             GOTO       CMDLBL(ABNOR)                                                    /*CGL061A*/
+             ENDDO                                                                       /*CGL061A*/
+                                                                                          /*CGL061*/
+/* If reply = END, terminate */                                                           /*CGL061*/
+             IF         COND(%SST(&MSGDATA 1 3) = 'END') THEN(DO)                         /*CGL061*/
+             GOTO       CMDLBL(ENDCL)                                                     /*CGL061*/
+             ENDDO                                                                        /*CGL061*/
+                                                                                          /*CGL061*/
+/************CALL       PGM(GL0420)                                               /*056524* CGL061*/
+/**/                                                                                      /*CGL061*/
+ RESTART:                                                                                 /*CGL061*/
+/**/                                                                                      /*CGL061*/
+/**********  RTVMBRD    FILE(GLSTAMPD) NBRCURRCD(&RECORDS)                      /*CGL061A MD021578*/
+             RTVMBRD    FILE(GLSTAMPD) MBR(&MEMBER) +
+                          NBRCURRCD(&RECORDS)                                           /*MD021578*/
+             IF         COND(&RECORDS *EQ 0) THEN(GOTO DTAQWAIT)                         /*CGL061A*/
+             ELSE       DO                                                               /*CGL061A*/
+             CALL       PGM(GLC43RD) PARM(&SKEYVALUE &EKEYVALUE)                         /*CGL061A*/
+             ENDDO                                                                       /*CGL061A*/
+/**/                                                                                     /*CGL061A*/
+/**********  OVRDBF     FILE(STMTS) TOFILE(STMTS) POSITION(*KEY 6 STMTAHF +
+                          &SKEYVALUE)                                             /*CGL061A CGL188*/
+             OVRDBF     FILE(GLSTPRL0) TOFILE(GLSTPRL0) POSITION(*KEY 6 STMTAHF +
+                          &SKEYVALUE)                                                     /*CGL188*/
+/**/                                                                                     /*CGL061A*/
+/*/COPY WNCPYSRC,GLH00318                                            */
+/**********  CALL       PGM(GL0420) PARM(&RESTART)                 */             /*CGL061 CGL061A*/
+             CALLPRC    PRC(GL0420) PARM(&RESTART &EKEYVALUE)                            /*CGL061A*/
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC43MP2                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+/**  SUCCESSFUL COMPLETION */                                                             /*CGL061*/
+                                                                                          /*CGL061*/
+               IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+                                                                                          /*CGL061*/
+             CHGVAR     VAR(&RESTART) VALUE('N')                                          /*CGL061*/
+                                                                                          /*CGL061*/
+/* Clear physical file member */                                                          /*242191*/
+             CLRPFM     FILE(GLSTAMPD) MBR(&MEMBER)                                       /*242191*/
+                                                                                          /*242191*/
+             GOTO       CMDLBL(LOOP)                                                      /*CGL061*/
+                                                                                          /*CGL061*/
+               ENDDO                                                                      /*CGL061*/
+/**/                                                                                      /*CGL061*/
+/*   UNSUCCESSFUL COMPLETION - REMOVE CHANGES   */                                        /*CGL061*/
+/**/                                                                                      /*CGL061*/
+               ELSE       CMD(DO)                                                         /*CGL061*/
+                                                                                          /*CGL061*/
+                 ROLLBACK                                                                 /*CGL061*/
+                 ENDCMTCTL                                                                /*CGL061*/
+/* */                                                                /*056524*/
+/** FILE OUT OF BALANCE                                           */ /*056524*/
+/* */                                                                /*056524*/
+/************IF         COND(%SWITCH(XXXXXX01)) THEN(DO)                           /*056524*CGL061*/
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)                                  /*CGL061*/
+/*********************  RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)               /*S01194*CGL061*/
+/*********************  SNDPGMMSG  MSG('JOB TERMINATED - FILE +
+/*********************                  CONTROLS OUT OF BALANCE') +
+/*********************                  TOMSGQ(MOPERQ MRUNQ)                       /*056524*CGL061*/
+               SNDPGMMSG  MSG('DATABASE ERROR - GL0420') +
+                          TOMSGQ(MOPERQ)                                                  /*CGL061*/
+             ENDDO                                                   /*056524*/
+/* */                                                                /*056524*/
+/** DATABASE ERROR                                                */ /*056524*/
+/* */                                                                /*056524*/
+/************IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                           /*056524*CGL061*/
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)                                  /*CGL061*/
+/********************** RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)               /*056524*CGL061*/
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&ERROR)
+/********************** SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +                           /*CGL061*/
+/**********************            MSGDTA(&MEM) TOPGMQ(*EXT) +                            /*CGL061*/
+/**********************            TOMSGQ(MOPERQ)                                 /*056524 *CGL061*/
+               SNDPGMMSG  MSGID(MEM0001) MSGF(REUSRMSG) MSGDTA(&ERROR) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)                                     /*CGL061*/
+               SNDPGMMSG  MSG('DATABASE IN ERROR - GL0420') +
+                          TOMSGQ(MOPERQ)                                                  /*CGL061*/
+             ENDDO                                                   /*056524*/
+             ENDDO                                                                        /*CGL061*/
+/*/COPY WNCPYSRC,GLC43002                                            */
+/*********** GOTO       ENDPGM                                                     /*056524*CGL061*/
+/********ABNOR: ******** CHGJOB     SWS(XXXXXX11)                                  /*056524*CGL061*/
+                                                                                          /*CGL061*/
+ABNOR:                                                                                    /*CGL061*/
+                                                                                          /*CGL061*/
+             SNDPGMMSG  MSG('Program GLC43 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)                                            /*CGL061*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                            /*CGL061*/
+             CHGJOB     SWS(XXXXXX11)                                                     /*CGL061*/
+                                                                                          /*CGL061*/
+                                                                                          /*CGL061*/
+ENDCL:       IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                                  /*CGL061*/
+             CHGVAR     VAR(&STAT) VALUE('N')                                             /*CGL061*/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                               /*CGL061*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                    /*CGL061*/
+             ENDDO                                                                        /*CGL061*/
+                                                                                          /*CGL061*/
+             DLTOVR     FILE(*ALL)                                                        /*CGL061*/
+                                                                                          /*CGL061*/
+             ENDCMTCTL                                                                    /*CGL061*/
+             MONMSG     MSGID(CPF0000)                                                    /*CGL061*/
+                                                                                          /*CGL061*/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+/******ENDPGM:    ENDPGM                                                           /*056524*CGL061*/
+             ENDPGM                                                                /*CGL061*/
+/*           PGM                                                   */ /*S01189*/
+/************PGM        PARM(&CNAM &CSEQ)                  */ /*S01189 056524*/
+/**/
+/*********** DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)     */          /*S01194*/
+/************DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)      */ /*S01194 056524*/
+/************                                             /*S01161*/
+/************DCL       VAR(&JLIB) TYPE(*CHAR) LEN(6) VALUE('  JLIB')*  *E11699*/
+/************DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)     */
+/************                                             /*S01161*/
+/************DCL        VAR(&RE) TYPE(*CHAR) LEN(1)               */ /*056524*/
+/************DCL        VAR(&RC) TYPE(*CHAR) LEN(1)               */ /*056524*/
+/************                                                /*S01161*/
+/************DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)    */
+/************DCL        VAR(&LIB1) TYPE(*CHAR) LEN(7) VALUE('  DMLIB*  *S01098*/
+/************DCL        VAR(&LIB2) TYPE(*CHAR) LEN(7) VALUE('  DILIB*  *S01098*/
+/************DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)   */          /*E11699*/
+/************                                                /*S01161*/
+                                                                      /*E16853*/
+/************DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)      */ /*E16853 056524*/
+/************DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)     */ /*E16853 056524*/
+/************DCL        VAR(&LIB1) TYPE(*CHAR) LEN(7)      */ /*E16853 056524*/
+/************                VALUE('  DMLIB')              */ /*E16853 056524*/
+/************DCL        VAR(&LIB2) TYPE(*CHAR) LEN(7)      */ /*E16853 056524*/
+/************                VALUE('  DILIB')              */ /*E16853 056524*/
+/************DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)     */ /*S01189 056524*/
+/************DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)     */ /*S01189 056524*/
+/************MONMSG     MSGID(CPF0000 RPG0000 MCH0000)     */ /*E10877 056524*/
+/************                EXEC(GOTO ABNOR)              */ /*E10877 056524*/
+/**/
+/************RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID) */        /*S01161*/
+/************RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)*/ /*E16853 056524*/
+/**/
+/************SNDPGMMSG  MSG('GLC43 - Balance Statements')         */ /*056524*/
+/************                TOMSGQ(MRUNQ)                        */ /*056524*/
+/**/
+/************CHGVAR     VAR(%SST(&LIB1 1 2)) VALUE(&SYSID)    /*E16853 056524*/
+/************CHGVAR     VAR(%SST(&LIB2 1 2)) VALUE(&SYSID)    /*E16853 056524*/
+/************                                             /*S01161*/
+/************CHGVAR     VAR(%SST(&LIB1 1 2)) VALUE(&SYSID)    */      /*S01098*/
+/************CHGVAR     VAR(%SST(&LIB2 1 2)) VALUE(&SYSID)    */      /*S01098*/
+/************CHGVAR     VAR(&TOLIB) VALUE(&SYSID *TCAT 'DLIB')*/      /*E11699*/
+/************OVRDBF     FILE(ACCNTAB) SEQONLY(*YES 100)       */      /*E11699*/
+/************OVRDBF     FILE(XACCNTAB) SEQONLY(*YES 100)      */      /*E11699*/
+/************RTVDTAARA  DTAARA(GLSTAT (57 1)) RTNVAR(&BUSY)   */
+/************                                             /*S01161*/
+/****IF*RESTART,*REMOVE*JOURNALLED*CHANGES****/
+/****IF*RESTART,*RESTORE*SAVED*ACCNT*AND*POSTING*FILES*OVER*UPDATED**  *S01161*/
+/****VERSIONS***/                                                     /*S01161*/
+/************IF         COND(&BUSY = 'Y') THEN(DO)*/                  /*S01161*/
+/***************CHKOBJ     OBJ(JRGLC43) OBJTYPE(*JRNRCV)            *  *E11699*/
+/***************MONMSG     MSGID(CPF9801) EXEC(GOTO +               *  *E11699*/
+/***************          CMDLBL(NOJRNRCV))                         *  *E11699*/
+/***************CHKOBJ     OBJ(JGLC43) OBJTYPE(*JRN)                *  *E11699*/
+/***************MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOJRN))  *  *E11699*/
+/***************                                       /*S01161*/
+/***************RMVM       FILE(APOST) MBR(APOST)                   */
+/***************MONMSG     MSGID(CPF0000)                           */
+/***************CPYF FROMFILE(XACCNTAB) TOFILE(ACCNTAB) +           */
+/***************     MBROPT(*REPLACE) FMTOPT(*NOCHK)                *  *E11699*/
+/***************MONMSG MSGID(CPF2817)                               *  *E11699*/
+/***************                                       /*S01161*/
+/*              RMVJRNCHG  JRN(JGLC43) FILE((ACCNTAB) (APOSTPD) +   *  *S01098*/
+/*                           (APOSTRA) (APOSTZZ))                   *  *S01098*/
+/***************                                    /*S01161*/
+/***************RSTOBJ     OBJ(APOSTPD APOSTRA APOSTZZ) SAVLIB(&LIB1*/+
+/***************          OBJTYPE(*FILE) SAVF(DBIC.&LIB2)           *  *S01098*/
+/***************                                    /*S01161*/
+/***************ALCOBJ     OBJ((ACCNTAB *FILE *EXCLRD)) WAIT(9999)  *  *E11699*/
+/*********ALCOBJ     OBJ((ACCNTAB *FILE *EXCLRD)) WAIT(9999)   *E19060 *E19541*/
+/***************RMVJRNCHG  JRN(JGLC43) FILE(ACCNTAB)                *  *E11699*/
+/***************MONMSG     (CPF7042 CPF7049)                        *  *E11699*/
+/***************DLCOBJ     OBJ((ACCNTAB *FILE *EXCLRD))             *  *E11699*/
+/***************DLCOBJ     OBJ((ACCNTAB *FILE *EXCLRD))       * E19060 *E19541*/
+/***************ENDJRNPF   FILE(*ALL) JRN(JGLC43)                   *  *E11699*/
+/***************MONMSG     MSGID(CPF7032)                           *  *E11699*/
+/***************DLTJRN     JRN(JGLC43)                              *  *E11699*/
+/***************ADDLFM     FILE(APOST) MBR(APOST)                   *  *S01161*/
+/***************MONMSG     MSGID(CPF0000)                           *  *S01161*/
+/*JRN:**********CHGJOB     INQMSGRPY(*DFT)                          *  *E11699*/
+/***************DLTJRNRCV  JRNRCV(JRGLC43)                          *  *E11699*/
+/***************CHGJOB     INQMSGRPY(*RQD)                          *  *S01161*/
+/*JRNRCV:*******CHGDTAARA**DTAARA(GLSTAT*(57*1))*VALUE('N')**********  *E11699*/
+/***************                                       /*S01161*/
+/***************CHGDTAARA  DTAARA(GLSTAT (57 1)) VALUE('N')         *  *E11699*/
+/************ENDDO                                                  */
+/************ELSE CMD(DO)                                           *  *E11699*/
+/***************CPYF FROMFILE(ACCNTAB) TOFILE(XACCNTAB.TOLIB) +     */
+/*****************MBROPT(*REPLACE) FMTOPT(*NOCHK) CRTFILE(*YES)     *  *E11699*/
+/***************MONMSG MSGID(CPF2817)                               *  *E11699*/
+/************ENDDO                                                  *  *E11699*/
+/****CREATE*JOURNAL*&*RECEIVER****/
+/************CHGDTAARA  DTAARA(GLSTAT (57 1)) VALUE('Y')            */
+/***************                                       /*S01161*/
+/************CHGVAR     VAR(%SUBSTRING(&JLIB 1 2)) VALUE(&SYSID)    *  *E11699*/
+/************CRTJRNRCV  JRNRCV(JRGLC43.&JLIB)                       *  *E11699*/
+/************CRTJRN     JRN(JGLC43.&JLIB) JRNRCV(JRGLC43.&JLIB)     *  *E11699*/
+/************ALCOBJ     OBJ((ACCNT *FILE *EXCLRD)) WAIT(9999)  *E19060 *E19541*/
+/*           JRNPF      FILE(ACCNTAB APOSTPD APOSTRA APOSTZZ) +     *  *S01098*/
+/*                        JRN(JGLC43) IMAGES(*BOTH)                 *  *S01098*/
+/************JRNPF      FILE(ACCNTAB) +                             *  *E11699*/
+/*************************JRN(JGLC43) IMAGES(*BOTH)                 *  *E11699*/
+/*   AUTO RECS PROCESSING  */                                         /*S05452*/
+/*           CHGJOB     SWS(XXXXXXX0)       */                        /*S05452*/
+/*           RTVDTAARA  DTAARA(MMOD (22 1)) RTNVAR(&RC)      */       /*S05452*/
+/*           IF         COND(&RC = 'Y') THEN(DO)             */       /*S05452*/
+/*              CPYF       FROMFILE(RCSMTUA) TOFILE(RCSMZUA) +      *  *S05452*/
+/*                                  MBROPT(*REPLACE) FMTOPT(*NOCHK) *  *S05452*/
+/*              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +         *  *S05452*/
+/*                                  EXEC(CLRPFM FILE(RCSMZUA))      *  *S05452*/
+/*              CPYF       FROMFILE(RCSMTUM) TOFILE(RCSMZUM) +      *  *S05452*/
+/*                                  MBROPT(*REPLACE) FMTOPT(*NOCHK) *  *S05452*/
+/*              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +         *  *S05452*/
+/*                                  EXEC(CLRPFM FILE(RCSMZUM))      *  *S05452*/
+/*              OVRDBF     FILE(TABLE) TOFILE(TABICD)               *  *S05452*/
+/*              CALL       PGM(RCC90)                               *  *S05452*/
+/*              DLTOVR     FILE(TABLE)                              *  *S05452*/
+/*           ENDDO                                                  *  *S05452*/
+/*NORC:      IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)            *  *S05452*/
+/*              RTVDTAARA  DTAARA(MMOD (16 1)) RTNVAR(&RE)          *  *S05452*/
+/*RC:***********RTVDTAARA**DTAARA(MMOD (16 1))*RTNVAR(&RE)***********  *E11699*/
+/***/                                                         /*E16853 056524*/
+/***IF*RESTART,*RESTORE*SAVED*POSTING*FILES*OVER*UPDATED****/ /*E16853 056524*/
+/***/                                                         /*E16853 056524*/
+/*           RTVDTAARA  DTAARA(GLSTAT (57 1)) RTNVAR(&BUSY)/*E16853*/ /*S01189*/
+/************CALL       PGM(CB0160) PARM(&CNAM &CSEQ &BUSY)*/ /*S01189 056524*/
+                                                                      /*E16853*/
+/*           IF         COND(&BUSY = 'Y') THEN(DO)         /*E16853*/ /*S01189*/
+/************IF         COND((&BUSY *EQ 'P') *OR +            /*S01189 056524*/
+/************                (&BUSY *EQ 'Q')) THEN(DO)     */ /*S01189 056524*/
+/************     RMVM       FILE(APOST) MBR(APOST)        */ /*E16853 056524*/
+/************     MONMSG     MSGID(CPF0000)                */ /*E16853 056524*/
+                                                                      /*E16853*/
+/************     RSTOBJ     OBJ(APOSTPD APOSTRA APOSTZZ)+ */ /*E16863 056524*/
+/************                     SAVLIB(&LIB1) DEV(*SAVF)+*/ /*E16863 056524*/
+/************                     OBJTYPE(*FILE) +         */ /*E16863 056524*/
+/************                     SAVF(&LIB2/DBIC)         */ /*E16863 056524*/
+                                                                      /*E16853*/
+/*              ADDLFM     FILE(APOST) MBR(APOST) */       /*E16853*/ /*BHF982*/
+/************   ADDLFM     FILE(APOST) MBR(APOST) +        */ /*BHF982 056524*/
+/************                   SHARE(*YES)                */ /*BHF982 056524*/
+/************     MONMSG     MSGID(CPF0000)                */ /*E16853 056524*/
+                                                                      /*E16853*/
+/************ENDDO                                         */ /*E16853 056524*/
+                                                                      /*E16853*/
+/*              CHGDTAARA  DTAARA(GLSTAT (57 1)) VALUE('Y')/*E16853*/ /*S01189*/
+/************IF         COND(&BUSY *EQ 'N') THEN(DO)       */ /*S01189 056524*/
+/************     CHGVAR     VAR(&BUSY) VALUE('P')         */ /*S01189 056524*/
+/************ENDDO                                         */ /*S01189 056524*/
+/************ELSE       CMD(DO)                            */ /*S01189 056524*/
+/************     CHGVAR     VAR(&BUSY) VALUE('Q')         */ /*S01189 056524*/
+/************ENDDO                                         */ /*S01189 056524*/
+/************CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)*/ /*S01189 056524*/
+/***/                                                                /*056524*/
+/***COPY*TODAY'S*POSTINGS*TO*APOST*********************************/ /*056524*/
+/***/                                                                /*056524*/
+/************RTVDTAARA  DTAARA(MMOD (16 1)) RTNVAR(&RE)    */ /*E11699 056524*/
+/************IF         COND(&RE = 'Y') THEN(CHGJOB SWS(1XXXXXXX))*/ /*056524*/
+/************RMVM       FILE(APOST) MBR(APOST)                    */ /*056524*/
+/************MONMSG     MSGID(CPF0000)                            */ /*056524*/
+/************OVRDBF     FILE(EODPOPD) SEQONLY(*YES 250)           */ /*056524*/
+/************OVRDBF     FILE(EODPORA) SEQONLY(*YES 250)           */ /*056524*/
+/************OVRDBF     FILE(APOSTPD) SEQONLY(*YES 250)           */ /*056524*/
+/************OVRDBF     FILE(APOSTRA) SEQONLY(*YES 250)           */ /*056524*/
+/************CPYF       FROMFILE(EODPOPD) TOFILE(APOSTPD)         */ /*056524*/
+/************                MBROPT(*ADD)                         */ /*056524*/
+/************CPYF       FROMFILE(EODPORA) TOFILE(APOSTRA)         */ /*056524*/
+/************                MBROPT(*ADD)                         */ /*056524*/
+/************DLTOVR     FILE(EODPOPD EODPORA APOSTPD APOSTRA)     */ /*056524*/
+/*              ADDLFM     FILE(APOST) MBR(APOST) */                  /*BHF982*/
+/************ADDLFM     FILE(APOST) MBR(APOST)             */ /*BHF982 056524*/
+/************                SHARE(*YES)                   */ /*BHF982 056524*/
+/************MONMSG     MSGID(CPF0000)                            */ /*056524*/
+/***/                                                         /*S05452 056524*/
+/***AUTO*RECS*PROCESSING************************************/ /*S05452 056524*/
+/***/                                                         /*S05452 056524*/
+/************CHGJOB     SWS(XXXXXXX0)                      */ /*S05452 056524*/
+/************RTVDTAARA  DTAARA(MMOD (22 1)) RTNVAR(&RC)    */ /*S05452 056524*/
+/*           IF         COND(&RC = 'Y')THEN(CALLPGM(RCC0270))/*S05452//*S01189*/
+/************IF         COND(&RC = 'Y') THEN(CALL +        */ /*S01189 056524*/
+/************                PGM(RCC0270) PARM(&CNAM +     */ /*S01189 056524*/
+/************                &CSEQ))                       */ /*S01189 056524*/
+/***/                                                         /*S05452 056524*/
+/************IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)   */ /*S05452 056524*/
+/***/                                                                /*056524*/
+/***PRINT*STATEMENTS***********************************************/ /*056524*/
+/***/                                                                /*056524*/
+/***********    OVRDBF     FILE(TABLE) TOFILE(TABGL)*/                /*S01194*/
+/************     CALL       PGM(GL0420)                          */ /*056524*/
+/************     MONMSG     MSGID(RPG0000 CPF0000 MCH0000) +     */ /*056524*/
+/************                     EXEC(GOTO CMDLBL(ABNOR))        */ /*056524*/
+/************     CHGJOB SWS(0XXXXXXX)                     */ /*S01110 056524*/
+/***********    DLTOVR     FILE(TABLE)*/                              /*S01194*/
+/***/                                                                /*056524*/
+/***DATABASE*ERROR*************************************************/ /*056524*/
+/***/                                                                /*056524*/
+/************     IF         COND(%SWITCH(XXXXXX11)) THEN(DO)     */ /*056524*/
+/***********       RTVDTAARA  DTAARA(LDA (134 44)) RTNVAR(&MEM) */    /*S01194*/
+/************          RTVDTAARA  DTAARA(LDA (134 50)) +   */ /*S01194 056524*/
+/************                          RTNVAR(&MEM)        */ /*S01194 056524*/
+/************          SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +    */ /*056524*/
+/************                          MSGDTA(&MEM) TOPGMQ(*EXT)+ */ /*056524*/
+/************                          TOMSGQ(MOPERQ)             */ /*056524*/
+/************          GOTO       ABNOR                           */ /*056524*/
+/************     ENDDO                                           */ /*056524*/
+/***/                                                                /*056524*/
+/***FILE*OUT*OF*BALANCE********************************************/ /*056524*/
+/***/                                                                /*056524*/
+/************     IF         COND(%SWITCH(XXXXXX01)) THEN(DO)     */ /*056524*/
+/**/
+/************          SNDPGMMSG  MSG('JOB TERMINATED - FILE +    */ /*056524*/
+/************                          CONTROLS OUT OF BALANCE')+ */ /*056524*/
+/************                          TOMSGQ(MOPERQ MRUNQ)       */ /*056524*/
+/**/
+/***************   GOTO ENDPGM                                      *  *E13386*/
+                                                                      /*E13386*/
+/************          GOTO ABNOR                                 */ /*056524*/
+                                                                      /*E13386*/
+/************     ENDDO                                           */ /*056524*/
+/****SUCCESSFUL*COMPLETION*-*DELETE*JOURNAL*&*RECEIVER****/
+/*  SUCCESSFUL COMPLETION - DELETE ACCNT BACKUP FILE AND REORGANISE */
+/*  POSTING BACKUP FILES */
+/***************ENDJRNPF   FILE(*ALL) JRN(JGLC43)                   *  *E11699*/
+/***************DLTJRN     JGLC43                                   *  *E11699*/
+/***************CHGJOB     INQMSGRPY(*DFT)                          *  *E11699*/
+/***************DLTJRNRCV  JRGLC43                                  *  *E11699*/
+/***************                                    /*S01161*/
+/***************DLTF       FILE(XACCNTAB)                           *  *E11699*/
+/***************MONMSG     MSGID(CPF0000)                           *  *E11699*/
+/***************CHGJOB     INQMSGRPY(*RQD)                          */
+/***************RGZPFM     FILE(APOSTRA)                            *  *S01098*/
+/***************MONMSG     MSGID(CPF2981)                           *  *S01098*/
+/***************RGZPFM     FILE(APOSTPD)                            *  *S01098*/
+/***************MONMSG     MSGID(CPF2981)                           *  *S01098*/
+/***************                                    /*S01161*/
+/***************                                    /*S01161*/
+/*              CHGDTAARA  DTAARA(GLSTAT (57 1)) VALUE('N')        */ /*S01189*/
+/************     IF         COND(&BUSY *EQ 'P') THEN(DO)  */ /*S01189 056524*/
+/************          CHGVAR     VAR(&BUSY) VALUE('N')    */ /*S01189 056524*/
+/************     ENDDO                                    */ /*S01189 056524*/
+/************     ELSE       CMD(DO)                       */ /*S01189 056524*/
+/************          CHGVAR     VAR(&BUSY) VALUE('O')    */ /*S01189 056524*/
+/************     ENDDO                                    */ /*S01189 056524*/
+/************     CALL  PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)*/ /*S01189 056524*/
+/************ENDDO                                                */ /*056524*/
+/************GOTO ENDPGM                                          */ /*056524*/
+/****UNSUCCESSFUL*COMPLETION*-*REMOVE*JOURNALLED*CHANGES****/
+/*   UNSUCCESSFUL COMPLETION - REMOVE POSTING CHANGES   */
+/*NOR:*******RMVM       FILE(APOST) MBR(APOST)                      *  *S01161*/
+/************MONMSG     MSGID(CPF0000)                              *  *S01161*/
+/*           RMVJRNCHG  JRN(JGLC43) FILE((ACCNTAB) (APOSTPD) +      *  *S01098*/
+/*                        (APOSTRA) (APOSTZZ))                      *  *S01098*/
+/***************                                       /*S01161*/
+/************RSTOBJ     OBJ(APOSTPD APOSTRA APOSTZZ) SAVLIB(&LIB1) +*/
+/************             OBJTYPE(*FILE) SAVF(DBIC.&LIB2)           *  *S01098*/
+/***************                                       /*S01161*/
+/************RMVJRNCHG  JRN(JGLC43) FILE(ACCNTAB)                   *  *E11699*/
+/************MONMSG     (CPF7049)                                   *  *E11699*/
+/************ADDLFM     FILE(APOST) MBR(APOST)                      *  *S01161*/
+/************MONMSG     MSGID(CPF0000)                              *  *S01161*/
+/************ENDJRNPF   FILE(*ALL) JRN(JGLC43)                      *  *E11699*/
+/************DLTJRN     JRN(JGLC43)                                 *  *E11699*/
+/************CHGJOB     INQMSGRPY(*DFT)                             *  *E11699*/
+/************DLTJRNRCV  JRNRCV(JRGLC43)                             *  *E11699*/
+/************CHGJOB     INQMSGRPY(*RQD)                             *  *S01161*/
+/*** ABNOR:      CHGJOB     INQMSGRPY(*RQD)                  *S01161*  *E16853*/
+/***             CHGDTAARA  DTAARA(GLSTAT (57 1)) VALUE('N')          /*E16853*/
+/***             CHGJOB     SWS(XXXXXXX1)                             /*E16853*/
+                                                                      /*E16853*/
+/*ABNOR:     CHGJOB     SWS(XXXXXXX1)                      /*E16853*/ /*S01189*/
+/***ABNOR:       CHGJOB     SWS(XXXXXX11)                  */ /*S01189 056524*/
+                                                                      /*E16853*/
+/************DLCOBJ     OBJ((ACCNT *FILE *EXCLRD))            *E19060  *E19541*/
+/***ENDPGM:      ENDPGM                                           */ /*056524*/

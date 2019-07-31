@@ -1,0 +1,252 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Bank of England ICD Audit Report')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY0010P - BoE Installation Control Data Audit Report         *
+      *                                                               *
+      *  Called By: BYC0010P - BoE ICD Audit Report Control Program   *
+      *                                                               *
+      *  (c) Finastra International Limited 1999                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. LLN018             Date 17Apr01               *
+      *                 LLN014             Date 19Jan00               *
+      *                 LLN012             Date 06May99               *
+      *                 LLN013   *CREATE   Date 06May99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Amendment History                                            *
+      *  -----------------                                            *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  LLN018 - Upgrade BoE to APIs and addition of 2 new fields    *
+      *           on ICD.
+      *  LLN014 - Negotiable Assets Face Value Required               *
+      *  LLN012 - Additional BoE Changes (Patch B)                    *
+      *  LLN013 - Introduction of BoE Euro Bills and ISAs             *
+      *                                                               *
+      *****************************************************************
+      *
+      *  Indicator Usage                                              *
+      *  ---------------                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     FBY0010P1O   E                    PRINTER      KINFSR *PSSR
+      *  Bank of England ICD Audit Report
+      *
+      *  Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM ULPGMN
+     I                                      244 253 ULWSID
+     I                                      254 263 ULUSER
+      *
+      * File information data structure (for database files only)
+     IINFDS1    E DSY2I1DSP
+      *
+      * DS to define layout of data area BYSTAT
+     IBYSTAT    E DSBYSTATPP
+      *
+      ** Data Structure using Bank file format
+     ISDBANK    E DSSDBANKPD
+      *
+      * First DS For Access Programs, Short Data Structure
+     IDSFDY     E DSDSFDY
+      *
+      * DS For Access Programs, Long Data Structure
+     IDSSDY     E DSDSSDY
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LMAIN - Main Processing                            *
+      *        SR/#LTERM - Termination Processing                     *
+      *                                                               *
+      *****************************************************************
+      *
+      *
+      *  Main Processing
+     C                     EXSR #LMAIN
+      *
+      *
+      *  Termination Processing
+     C                     EXSR #LTERM
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SR/#LMAIN - Main Processing                                   *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           #LMAIN    BEGSR                           ** SR/#LMAIN**
+      *
+      ** Check switchable feature to see if LLN007 is on                  LLN012
+     C                     MOVE 'N'       LLN007  1                       LLN012
+     C                     CALL 'AOSARDR0'                                LLN012
+     C                     PARM '       ' @RTCD   7                       LLN012
+     C                     PARM '*VERIFY' @OPTN   7                       LLN012
+     C                     PARM 'LLN007'  @SARD   6                       LLN012
+     C           @RTCD     IFEQ *BLANKS                                   LLN012
+     C                     MOVE 'Y'       LLN007                          LLN012
+     C                     ELSE
+     C                     EXSR #LTERM
+     C                     END                                            LLN012
+      *
+      *  Get Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C                     PARM           SDBANK
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           BJTYLC    OREQ 'D'                        D = Deleted
+     C                     MOVEL'*NONE '  ULKEY            ************
+     C                     MOVEL'SDBANKPD'ULFILE           * DBERR 02 *
+     C                     Z-ADD2         ULBASE           ************
+     C           *LOCK     IN   LDA
+     C                     MOVELULPGMN    DBPGM
+     C                     MOVELULKEY     DBKEY
+     C                     MOVELULFILE    DBFILE
+     C                     Z-ADDULBASE    DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** RCF processing for printer file BY0010P1
+     C                     CALL 'ZSFILE'
+     C                     PARM           ULRSEQ  5
+     C                     PARM           ULBRCD  3
+     C                     PARM 'BY0010P1'ULFNAM 10
+     C                     PARM           ULSFNO
+     C                     PARM           ULRTCD
+      *
+      **  Error occurred on call to ZSFILE
+     C           ULRTCD    IFNE *BLANK
+     C                     MOVEL'*NONE'   ULKEY            ************
+     C                     MOVEL'ZSFILE  'ULFILE           * DBERR 01 *
+     C                     Z-ADD1         ULBASE           ************
+     C           *LOCK     IN   LDA
+     C                     MOVELULPGMN    DBPGM
+     C                     MOVELULKEY     DBKEY
+     C                     MOVELULFILE    DBFILE
+     C                     Z-ADDULBASE    DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Retrieve required values for report
+     C                     IN   BYSTAT
+      *
+      **  Write report
+     C                     MOVELBJURPT    L#URPT    P
+     C                     MOVE BJMRDT    L#DATE
+     C                     Z-ADD1         L#PAGE
+     C                     MOVE LCLLD     L#CLLD
+     C                     MOVE LBTEX     L#BTEX
+     C                     MOVE LFACE     L#FACE                          LLN014
+     C                     MOVE LDICD     L#DICD                          LLN018
+     C                     MOVE LDINC     L#DINC                          LLN018
+     C                     WRITEBY0010H1
+     C                     WRITEBY0010Z1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+      *  Check if error has previously been reported
+     C           ULERRF    IFNE 'Y'
+     C                     MOVE 'Y'       ULERRF
+     C                     MOVE '*ERROR'  ULRTCD
+     C                     DUMP
+     C                     ENDIF
+      *
+      *  Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      *  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           #LTERM    BEGSR                           ** SR/#LTERM**
+      *
+      ** Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR                           ** *INZSR SR**
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ULRTCD  7        Return code
+      *
+      *  Initialise work fields
+      *
+      *  Copyright statement
+     C                     MOVEACPY@      ULCPY@ 80
+      *
+      ** Define external data areas
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           BYSTAT
+      *
+      ** Define and initialise work fields
+     C           *LIKE     DEFN DBASE     ULBASE
+     C           *LIKE     DEFN DBFILE    ULFILE
+     C           *LIKE     DEFN DBKEY     ULKEY
+     C                     Z-ADD1         ULSFNO  60
+     C                     MOVE 'N'       ULERRF  1
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 1999

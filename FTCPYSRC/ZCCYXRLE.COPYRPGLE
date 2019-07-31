@@ -1,0 +1,137 @@
+     C**************************************************************************
+     C*                                                                        *
+     C*    ZCCYXR SR. TO CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER          *
+     C*    CURRENCY USING AN EXCHANGE RATE BETWEEN THE TWO CURRENCIES          *
+     C*                                                                        *
+     C*   INPUT  FIELDS                                                        *
+     C*       ZAMTF  150     AMOUNT IN 'FROM' CURRENCY                         *
+     C*       ZCRSRT 138     CROSS EXCHANGE RATE                               *
+     C*       ZCRSMD  1A     CROSS RATE MULTIPLY/DIVIDE INDICATOR              *
+     C*                      NOTE: FIELD EITHER SET UP IN SR/ZCCYCN OR IF ONE  *
+     C*                      M / D INDICATOR FOR NON-BASE CURRENCY             *
+     C*       ZCDPF   10     CURRENCY DECIMAL PLACES FOR 'FROM' CURRENCY       *
+     C*       ZCDPT   10     CURRENCY DECIMAL PLACES FOR 'TO' CURRENCY         *
+     C*                                                                        *
+     C*   OUTPUT  FIELDS                                                       *
+     C*       ZAMTT  150     AMOUNT IN 'TO' CURRENCY (IE. CONVERTED AMOUNT)    *
+     C*                                                                        *
+     C*   WORK FIELDS                                                          *
+     C*       ZWKPX   10     POWER INDEX                                       *
+     C*       ZWK153 153                                                       *
+     C*                                                                        *
+     C*   ALSO REQUIRED                                                        *
+     C*       POWER ARRAY                                                      *
+     C*                                                                        *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+     C*  LAST AMEND NO. S01486             DATE 13JUL94                        *
+     C*  PREV AMEND NO. 47719              DATE 24NOV92                        *
+     C*                                                                        *
+     C**************************************************************************
+     C*                                                                        *
+     C*   S01486 - Created for Private Banking (Portfolio Management)          *
+     C*   47719  - FIXES TO CONVERSION OF CURRENCY AMOUNTS                     *
+     C*                                                                        *
+     C**************************************************************************
+     C*
+     C     ZCCYXR        BEGSR                                                  *** ZCCYXR ***
+     C*
+     C**   DEFINE ALL FIELDS
+     C                   Z-ADD     ZAMTF         ZAMTF            15 0
+     C                   Z-ADD     ZCDPF         ZCDPF             1 0
+     C                   Z-ADD     ZCDPT         ZCDPT             1 0
+     C                   Z-ADD     ZAMTT         ZAMTT            15 0
+     C                   Z-ADD     ZCRSRT        ZCRSRT           13 8
+     C                   MOVE      ZCRSMD        ZCRSMD            1
+     C                   Z-ADD     ZWKPX         ZWKPX             1 0
+     C                   Z-ADD     ZWK153        ZWK153           15 3
+     C*
+     C** IF CROSS EXCHANGE RATE IS EQUAL TO ZERO
+     C** SET ZAMTT  TO *ZERO  & EXIT
+     C     ZCRSRT        IFEQ      0
+     C                   Z-ADD     *ZEROS        ZAMTT
+     C                   GOTO      ZCCEND
+     C                   END
+     C*
+     C** IF DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF) EQUALS DECIMAL
+     C** DECIMAL PLACES  FOR 'TO' CURRENCY
+     C     ZCDPF         IFEQ      ZCDPT
+     C*
+     C** IF CROSS RATE MULTIPLY/DIVIDE INDICATOR EQUALS 'D'
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT IN FROM CURRENCY (ZAMTF)
+     C** DIVIDED BY CROSS EXCHANGE RATE
+     C     ZCRSMD        IFEQ      'D'
+     C                   Z-ADD     ZAMTF         ZAMTT
+     C     ZAMTT         DIV(H)    ZCRSRT        ZAMTT
+     C                   END
+     C*
+     C** IF CROSS RATE MULTIPLY/DIVIDE INDICATOR EQUALS 'M'
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT IN FROM CURRENCY (ZAMTF)
+     C** MULTIPLIED BY CROSS EXCHANGE RATE
+     C     ZCRSMD        IFEQ      'M'
+     C                   Z-ADD     ZAMTF         ZAMTT
+     C     ZAMTT         MULT(H)   ZCRSRT        ZAMTT
+     C                   END
+     C                   END
+     C*
+     C** IF DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF)  NOT EQUALS DECIMAL
+     C** DECIMAL PLACES  FOR 'TO' CURRENCY
+     C     ZCDPF         IFNE      ZCDPT
+     C*
+     C** SUBTRACT DECIMAL PLACES 'FROM' FROM DECIMAL PLACES 'TO' IN POWER INDEX
+     C     ZCDPT         SUB       ZCDPF         ZWKPX
+     C****       ZWKPX     ADD  4         Z       10                      47719
+     C     ZWKPX         ADD       4             B                 3 0                         47719
+     C*
+     C** IF POWER ELEMENT (8,4) LESS THAN 1
+     C****       POWER,Z   IFLT 1                                         47719
+     C     POWER(B)      IFLT      1                                                           47719
+     C*
+     C** MULTIPLY AMOUNT IN FROM CURRENCY BY ELEMENT IN POWER ARRAY
+     C****       POWER,Z   MULT ZAMTF     ZWK153                          47719
+     C     POWER(B)      MULT      ZAMTF         ZWK153                                        47719
+     C*
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT WORK FIELD ZWK153
+     C** DIVIDED    BY CROSS EXCHANGE RATE
+     C     ZCRSMD        IFEQ      'D'
+     C     ZWK153        DIV(H)    ZCRSRT        ZAMTT
+     C                   END
+     C*
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT WORK FIELD ZWK153
+     C** MULTIPLIED BY CROSS EXCHANGE RATE
+     C     ZCRSMD        IFEQ      'M'
+     C     ZWK153        MULT(H)   ZCRSRT        ZAMTT
+     C                   END
+     C                   END
+     C*
+     C** IF POWER ELEMENT (8,4) GREATER OR EQUAL TO 1
+     C****       POWER,Z   IFGE 1                                         47719
+     C     POWER(B)      IFGE      1                                                           47719
+     C*
+     C** MULTIPLY AMOUNT IN FROM CURRENCY BY ELEMENT IN POWER ARRAY
+     C****       ZAMTF     MULT POWER,Z   ZAMTF                           47719
+     C     ZAMTF         MULT      POWER(B)      ZAMTF                                         47719
+     C*
+     C** TEST CROSS MULT/DIV INDICATOR
+     C     ZCRSMD        IFEQ      'D'
+     C*
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT IN 'FROM' CURRENCY
+     C** DIVIDED    BY CROSS EXCHANGE RATE
+     C     ZAMTF         DIV(H)    ZCRSRT        ZAMTT
+     C                   END
+     C*
+     C** TEST CROSS MULT/DIV INDICATOR
+     C     ZCRSMD        IFEQ      'M'
+     C*
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT IN 'FROM' CURRENCY
+     C** MULTIPLIED BY CROSS EXCHANGE RATE
+     C     ZAMTF         MULT(H)   ZCRSRT        ZAMTT
+     C                   END
+     C                   END
+     C                   END
+     C     ZCCEND        ENDSR
+     C**************************************************************************

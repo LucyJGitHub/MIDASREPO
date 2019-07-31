@@ -1,0 +1,188 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas GL Retrieve Postings by Network Account')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - General Ledger Module                           */
+/*                                                                   */
+/*       GLC001425 - Midas GL Retrieve Postings by Network Account   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CGL013  *CREATE    Date 31Apr02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL013 - MT94x Message Generation                           */
+/*                                                                   */
+/*********************************************************************/
+/*/COPY WNCPYSRC,GLC001425A                                          */
+             PGM        PARM(&CNAM &CSEQ)
+ 
+/*/COPY WNCPYSRC,GLC001425A                                          */
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7) VALUE('       ')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOURNAL) TYPE(*CHAR) LEN(10) +
+                          VALUE('JRNGL1425')
+             DCL        VAR(&RECEIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE('RCVGL1425')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2002')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Check feature CGL013 MT94x Message Generation */
+ 
+             CHGVAR     VAR(&RTNCDE) VALUE('       ')
+             CALL       PGM(AOSARDR0) PARM(&RTNCDE '*VERIFY' 'CGL013')
+             IF         COND(&RTNCDE *NE '       ') THEN(GOTO +
+                          CMDLBL(END))
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*/COPY WNCPYSRC,GLC001425B                                          */
+ 
+/* Prepare the Jounaling environment if the feature CCB009 is off */
+ 
+             CHGVAR     VAR(&RTNCDE) VALUE('       ')
+             CALL       PGM(AOSARDR0) PARM(&RTNCDE '*VERIFY' 'CCB009')
+             IF         COND(&RTNCDE = '       ') THEN(CHGVAR +
+                          VAR(&CCB009) VALUE('Y'))
+ 
+             IF         COND(&CCB009 = 'N') THEN(DO)
+ 
+               RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+               CHGVAR     VAR(&JLIB) VALUE(&SYSID *CAT 'JLIB')
+ 
+               ENDCMTCTL
+               MONMSG     MSGID(CPF0000)
+ 
+               ENDJRNPF   FILE(*ALL) JRN(&JLIB/&JOURNAL)
+               MONMSG     MSGID(CPF7032 CPF9801)
+ 
+               DLTJRN     JRN(&JLIB/&JOURNAL)
+               MONMSG     MSGID(CPF2105 CPF9801)
+ 
+               CHGJOB     INQMSGRPY(*DFT)
+ 
+               DLTJRNRCV  JRNRCV(&JLIB/&RECEIVER)
+               MONMSG     MSGID(CPF2105 CPF9801)
+ 
+               CHGJOB     INQMSGRPY(*RQD)
+ 
+               CRTJRNRCV  JRNRCV(&JLIB/&RECEIVER) AUT(*LIBCRTAUT)
+               CRTJRN     JRN(&JLIB/&JOURNAL) JRNRCV(&JLIB/&RECEIVER) +
+                          AUT(*LIBCRTAUT)
+ 
+               STRJRNPF   FILE(GLPOSTPD GLUCTLPD) JRN(&JLIB/&JOURNAL) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+ 
+/*/COPY WNCPYSRC,GLC001425C                                          */
+ 
+             ENDDO
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))
+ 
+/* Clear the control file at the first run */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+             IF         COND(&STAT *NE 'Y') THEN(CLRPFM FILE(GLUCTLPD))
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/*/COPY WNCPYSRC,GLC001425D                                          */
+ 
+/* Retrieve Postings by Network Account */
+ 
+             CALLPRC    PRC(GL001425)
+ 
+/*/COPY WNCPYSRC,GLC001425E                                          */
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(GBMIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/*/COPY WNCPYSRC,GLC001425F                                          */
+ 
+/* Remove the Jounaling environment if the feature CCB009 is off */
+ 
+             IF         COND(&CCB009 = 'N') THEN(DO)
+ 
+               ENDCMTCTL
+               MONMSG     MSGID(CPF0000)
+ 
+               ENDJRNPF   FILE(*ALL) JRN(&JLIB/&JOURNAL)
+               MONMSG     MSGID(CPF7032 CPF9801)
+ 
+/*/COPY WNCPYSRC,GLC001425G                                          */
+ 
+               DLTJRN     JRN(&JLIB/&JOURNAL)
+               MONMSG     MSGID(CPF2105 CPF9801)
+ 
+               CHGJOB     INQMSGRPY(*DFT)
+ 
+               DLTJRNRCV  JRNRCV(&JLIB/&RECEIVER)
+               MONMSG     MSGID(CPF2105 CPF9801)
+ 
+               CHGJOB     INQMSGRPY(*RQD)
+ 
+             ENDDO
+ 
+/*/COPY WNCPYSRC,GLC001425H                                          */
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+/* Abnormal termination  */
+ 
+/*/COPY WNCPYSRC,GLC001425I                                          */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC001425 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/*/COPY WNCPYSRC,GLC001425J                                          */
+ 
+END:
+ 
+/*/COPY WNCPYSRC,GLC001425K                                          */
+ 
+             ENDPGM

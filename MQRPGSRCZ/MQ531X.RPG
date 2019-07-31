@@ -1,0 +1,1153 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ RTCUSTLEND OPNQRYF stmnt generator')          *
+      *****************************************************************
+     F*                                                               *
+     F*  Midas - Midas/Q Module                                       *
+     F*                                                               *
+     F*    MQ531X    -  INTERFACE  TO GENERATE THE MIDAS/Q            *
+     F*                 OPEN QUERY FILE COMMANDS FOR THE SUBSETS.     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 22Aug01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CMQ001             Date 04NOV97               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+     F*  CPK014 - Packaging of Release 4.  /COPYs from MQCPYSRC not   *
+     F*           in core.  Included these in main body of program.   *
+     F*  CMQ001 - MidasQ rationalisation.                             *
+     F*                                                               *
+      *****************************************************************
+      *
+      ** Parameter list.
+      ** ~~~~~~~~~~~~~~~
+      ** Name    Type    Size  Description                            Change
+      ** ~~~~    ~~~~    ~~~~  ~~~~~~~~~~~                            ~~~~~~
+      ** FILE    Char      10  File for open query file command         NO
+      ** FORMAT  Char      10  Format for open query file command       NO
+      ** DSP05#  Struct   n/a  MIDAS/Q subset defintion record          NO
+      ** DSP08#  Struct   n/a  MIDAS/Q report defintion record          NO
+      ** @SO@DS  Struct   n/a  MIDAS/Q select / omit values             NO
+      ** TPR#PG  Char      10  Name of report module to be called       NO
+      ** TPR#IA  Char     200  Permanent report interface area          YES
+      ** @Q@CMD  Char     400  Command                                  NO
+      *
+      ** File declarations.
+      ** ~~~~~~~~~~~~~~~~~~
+     FO#XL16V2IF  E           K        DISK
+     FO#XL07V2IF  E           K        DISK
+     FO#XL21V2IF  E           K        DISK
+     FO#XL39V1IF  E           K        DISK
+      *
+      ** Array declarations.
+      ** ~~~~~~~~~~~~~~~~~~~
+      *
+      ** Open query file command structure.
+     E                    QRY     1   4 80
+      *
+      ** Decimal data error for select/omit values.
+     E                    DERR    1   2 15
+      * Start CPK014
+     E*COPY*MQCPYSRC,DATEE******                                                              CPK014
+     ** @Z1 - Years in Days  -  Cumulative in Four Year Span
+     E                    @Z1     4   4  5 0A
+     ** @Z2 - Months in Days  -  Cumulative Through Year
+     E                    @Z2    13  13  5 0A
+      * End   CPK014
+      *
+      ** Array Used in Date Subroutines
+     E                    U$A1      100  1
+      *
+      ** Open query file command.
+     E                    COM      4000  1
+      *
+      ** Select/Omit values.
+     E                    @SO      4000  1
+     E                    @SO@DS   4000  1
+      **
+      ** Copyright insertion.
+      **
+     E                    CPY@    1   1 80
+      *
+      **********************************************************************
+     E/EJECT
+      *
+      ** Data structure specifications.
+      ** ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      *
+      ** Data structure to hold the command created.
+     I@Q@CMD      DS                           4000
+      *
+      ** Data structure to create the command.
+     I@QRYDS      DS                            100
+     I                                        1  80 LINE1
+     I                                       15  24 FILNAM
+     I                                       37  46 FILFMT
+     I                                       81 100 LINE2
+      *
+     ITPR#UR      DS                            500
+      *
+      ** Copy of Temporary Data Structure
+     IXXX#UR      DS
+     I                                        1   3 $$FLIV
+     I                                        4   6 $$FREV
+     I                                        7   9 $$FEXP
+     I                                       10  12 $$LLIV
+     I                                       13  15 $$LREV
+     I                                       16  18 $$LMAT
+      *
+      ** Select/omit values work field.
+     I@SOWRK      DS
+     I                                    P   1   85PACKED
+     I                                        1   8 NUMBER
+      *
+      ** Define decimal data error test field.
+     I            DS
+     I                                    P   1   85DETST2
+     I                                        1   8 DECERR
+      *
+      ** Externally described MIDAS/Q subset definition record.
+     IDSP05#    E DSO#XP05
+      *
+      ** Externally described MIDAS/Q field definition record.
+     IDSP08#    E DSO#XP08
+      **
+      ** Copyright Array for compilation
+      **
+     IA@CPY       DS
+     I                                        1  80 CPY@
+      *
+      **********************************************************************
+     I/EJECT
+      *
+      * Parameter list specifications.
+      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C           *ENTRY    PLIST
+     C                     PARM           FILE   10        FILE NAME
+     C                     PARM           FORMAT 10        FILE FORMAT
+     C                     PARM           DSP05#           SUBSET DEFINITI
+     C                     PARM           DSP08#           REPORT DEFINITI
+     C                     PARM           @SO@DS           SELECT/OMIT CRI
+     C                     PARM           TPR#PG 10        PGM TO BE CALLE
+     C                     PARM           TPR#UR           USER REPORT DEF
+     C                     PARM           @Q@CMD           COMMAND
+     C                     PARM           @Q@CLN 155       COMMAND LENGTH
+      *
+      ** Initialise
+     C                     EXSR $$INIT
+      *
+      ** Retrieve the first SELECT/OMIT field.
+     C           KL$001    CHAINO#XR16V2             30
+     **
+     ** Process all Records in O#XR16V2, then continue while adding
+     ** Selection on RECI ($$SR = Y)
+     **
+     C           *IN30     DOUEQ'1'
+     C           $$SR      ANDEQ'N'
+      *
+      ** Only If records were found for file                           s.
+      *
+     C           *IN30     IFEQ '0'
+     C           $$SR      OREQ 'Y'
+      *
+      ** Check that the SELECT/OMIT field is from                      s.
+      *  the facility or loans files
+      *
+      ** Initialise the O#XP07 file's fields.
+     C                     MOVEL*BLANKS   P07#OF
+     C                     MOVEL*BLANKS   P07#FT
+      *
+     C           KL$002    CHAINO#XR07V2             31
+      ** Record found
+     C           *IN31     IFEQ '0'
+      *
+      * Determine If Field is a Virtual Field
+      *
+     C           P07SP1    IFEQ 'V'
+     C                     EXSR #VF
+     **
+     ** Convert the field names for each format.
+     **
+     C                     EXSR RNMFLD
+     C                     MOVE 'Y'       DONE
+     **
+     ** Determine if P07#FN is on the FILE
+     **
+     C                     EXSR #FILE
+     C                     END
+      **
+      ** Further processing only if the field is on the file,
+      ** or we are adding RECI Selection
+      **
+     C           P07#OF    IFEQ FILE
+     C           $$SR      OREQ 'Y'
+     **
+     ** Convert the field names for each format if not already done.
+     ** But not if we are adding the RECI selction
+     **
+     C           DONE      IFEQ 'N'
+     C           $$SR      ANDEQ'N'
+     C                     EXSR RNMFLD
+     C                     END
+     **
+     ** Add Select Criteria if Required
+     **
+     C                     EXSR #SET
+     **
+     C                     ELSE
+      *
+      ** If field is not from the required file, increment the array
+      ** index according to field type attributes.
+     C           P07#FT    IFEQ 'A'
+     C                     ADD  15        $X
+     C                     ELSE
+     C           P07#FT    IFEQ 'P'
+     C           P07#FT    OREQ 'S'
+     C                     ADD  8         $X
+     C                     END
+     C                     END
+      *
+      * P07#OF = FILE
+     C                     END
+      * *IN31 = '0'.
+     C                     END
+      * *IN30 = '1' *AND $$SR = 'N'
+     C                     END
+     **
+     ** Reset the DONE flag for the next field
+     **
+     C                     MOVE 'N'       DONE
+     **
+     ** Reset the VFDATE, VFAMT Flags for the next field
+     **
+     C                     MOVE 'N'       VFDATE
+     C                     MOVE 'N'       VFAMT
+      *
+      ** Retrieve next SELECT/OMIT field.
+     C           *IN30     IFEQ '0'
+     C           KL$001    READEO#XR16V2                 30
+     C                     END
+      **
+      ** Add Criteria to Select on RECI
+      **
+     C           *IN30     IFEQ '1'
+     C                     MOVE 'Y'       $$SR    1
+     C                     EXSR $$SEL
+     C                     END
+      **
+      * *IN30 DOWEQ '0', $$SR OREQ 'Y'
+     C                     END
+      *
+      *
+      ** Close the open query file command array.
+     C                     MOVEAQRY,3     COM,$I
+     C                     ADD  5         $I
+      *
+      *
+      ** If Loans Format, Add KEYFLD(*FILE) to OPNQRYF Statement
+     C           FORMAT    IFEQ 'CLOANCLF'
+     C                     ADD  1         $I
+     C                     MOVEAQRY,4     COM,$I
+     C                     ADD  13        $I
+     C                     END
+      *
+      ** Move the array to the command structure field.
+     C           NEEDED    IFEQ 'Y'
+     C                     MOVEACOM,1     @Q@CMD
+     C                     Z-ADD$I        @Q@CLN
+     C                     END
+      *
+      ** Return control to the calling programme.
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      **********************************************************************
+      * SUBROUTINES                                                   *
+      **********************************************************************
+      **********************************************************************
+      * #SET - To determine if Select/Omit has been used, then Load   *
+      **********************************************************************
+     C           #SET      BEGSR
+      *
+      ** Initialise the DROP field.
+     C                     MOVE 'N'       DROP    1
+      **
+      * For case where select field defined, but has no select criteria
+      **
+     C           P16#CO    IFEQ *BLANKS
+     C                     MOVE 'Y'       DROP
+     C                     GOTO SETEND
+     C                     END
+      *
+      ** Set the select/omit values fields.
+     C           P07#FT    IFEQ 'A'
+     C                     MOVEL*BLANKS   ALPHA  15
+     C                     MOVEA@SO,$X    ALPHA
+     C                     ADD  15        $X
+     C           ALPHA     IFEQ *BLANKS
+     C           ALPHA     OREQ DETST1
+     C                     MOVE 'Y'       DROP
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           P07#FT    IFEQ 'P'
+     C           P07#FT    OREQ 'S'
+     C                     MOVEL*BLANKS   NUMBER
+     C                     MOVEA@SO,$X    NUMBER
+     C                     ADD  8         $X
+      *
+     C           NUMBER    IFEQ *BLANKS
+     C           NUMBER    OREQ DETST1
+     C           PACKED    OREQ DETST2
+     C                     MOVE 'Y'       DROP
+     C                     END
+      *
+     C                     Z-ADDPACKED    ZONED  155
+     C                     MOVEL*BLANKS   INTEGR 10
+     C                     MOVELZONED     INTEGR
+     C                     MOVEL*BLANKS   DECIML  5
+     C                     MOVE ZONED     DECIML
+      *
+     C                     END
+     C                     END
+      **
+      ** If a virtual field Date, Convert to CCYYMMDD format to Dayno
+      **
+     C           VFDATE    IFEQ 'Y'
+     C           DROP      ANDEQ'N'
+     C                     Z-ADDZONED     ZZDTIN
+     C                     EXSR CNVDN
+     C                     Z-ADDZZDAYN    ZONED
+     C                     MOVEL*BLANKS   INTEGR
+     C                     MOVELZONED     INTEGR
+     C                     END
+      **
+      ** If a virtual field Amount, Add Required D.P
+      **
+     C           VFAMT     IFEQ 'Y'
+     C           DROP      ANDEQ'N'
+      **
+      ** At Present there is no processing for this, therefore
+      ** drop the field, and allow selection to be done in the
+      ** Report module
+      **
+     C                     MOVE 'Y'       DROP
+     C                     END
+      *
+      ** Load each SELECT/OMIT field if it not to be dropped.
+     C           DROP      IFNE 'Y'
+     C                     EXSR #LOAD
+     C                     END
+      *
+      *
+     C           SETEND    ENDSR
+      **********************************************************************
+      *
+      /EJECT
+      /TITLE  #LOAD  -   To Load Each Select/Omit Field Into The Command.
+      *
+      **********************************************************************
+     C           #LOAD     BEGSR
+      **********************************************************************
+      *
+      ** For each new relationship record.
+     C           P16#RL    IFEQ 'IF'
+      *
+     C           P16#S1    IFNE 1
+     C           P16#S2    ORNE 1
+     C           SRPASS    IFEQ 'Y'
+     C                     MOVEA'))'      COM,$I
+     C                     ADD  3         $I
+     C                     MOVEA'*AND'    COM,$I
+     C                     ADD  5         $I
+     C                     END
+     C                     END
+      *
+     C                     MOVEA'(('      COM,$I
+     C                     ADD  2         $I
+      *
+     C                     ELSE
+      *
+      ** Continuation of relationship grouping ( OR types).
+     C           P16#RL    IFEQ 'OR'
+      ** For SELECT logic.
+     C           P16#SO    IFEQ 'S'
+     C                     MOVEA'*OR'     COM,$I
+     C                     ADD  4         $I
+      ** For OMIT logic.
+     C                     ELSE
+     C                     MOVEA'*AND'    COM,$I
+     C                     ADD  5         $I
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** Continuation of relationship grouping ( OR types).
+     C           P16#RL    IFEQ 'AND'
+     C                     MOVEA'*AND'    COM,$I
+     C                     ADD  5         $I
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Set up the ignore sign/case if requested and the field is alpha.
+     C           P07#FT    IFEQ 'A'
+     C           P16#AT    ANDNE*BLANK
+     C                     MOVEA'%XLATE(' COM,$I
+     C                     ADD  7         $I
+     C                     END
+      *
+      ** Load the field name into the open query file command.
+     C                     MOVEAP16#FN    COM,$I
+     C                     ADD  11        $I
+      *
+      ** Set the OPNQRYF needed flag.
+     C                     MOVEL'Y'       NEEDED
+      *
+      ** Close the ignore sign/case if requested and the field is alpha.
+     C           P07#FT    IFEQ 'A'
+     C           P16#AT    ANDNE*BLANK
+     C                     MOVEA'QSYSTRN' COM,$I
+     C                     ADD  7         $I
+     C                     MOVEA'TBL)'    COM,$I
+     C                     ADD  5         $I
+     C                     END
+      *
+      ** Move the operator to the command array.
+     C                     MOVEL'*'       COM,$I
+     C                     ADD  1         $I
+      ** For SELECT logic.
+     C           P16#SO    IFEQ 'S'
+      ** If a Range was Defined
+     C           P16#CO    IFEQ 'RB'
+     C                     MOVEA'GE'      COM,$I
+     C                     ELSE
+     C           P16#CO    IFEQ 'RE'
+     C                     MOVEA'LE'      COM,$I
+     C                     ELSE
+     C                     MOVEAP16#CO    COM,$I
+     C                     END
+     C                     END
+     C                     ADD  3         $I
+      ** For OMIT logic.
+     C                     ELSE
+      ** If a Range was Defined
+     C           P16#CO    IFEQ 'RB'
+     C                     MOVE 'GE'      P16#CO
+     C                     ELSE
+     C           P16#CO    IFEQ 'RE'
+     C                     MOVE 'LE'      P16#CO
+     C                     END
+     C                     END
+      **
+     C           P16#CO    IFEQ 'EQ'
+     C                     MOVEA'NE'      COM,$I
+     C                     ADD  3         $I
+     C                     ELSE
+     C           P16#CO    IFEQ 'NE'
+     C                     MOVEA'EQ'      COM,$I
+     C                     ADD  3         $I
+     C                     ELSE
+     C           P16#CO    IFEQ 'GT'
+     C                     MOVEA'LE'      COM,$I
+     C                     ADD  3         $I
+     C                     ELSE
+     C           P16#CO    IFEQ 'GE'
+     C                     MOVEA'LT'      COM,$I
+     C                     ADD  3         $I
+     C                     ELSE
+     C           P16#CO    IFEQ 'LT'
+     C                     MOVEA'GE'      COM,$I
+     C                     ADD  3         $I
+     C                     ELSE
+     C           P16#CO    IFEQ 'LE'
+     C                     MOVEA'GT'      COM,$I
+     C                     ADD  3         $I
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Depending upon the attributes of the field.
+     C           P07#FT    IFEQ 'S'
+     C           P07#FT    OREQ 'P'
+      *
+      ** Move the operand to command array.
+     C                     MOVEAINTEGR    COM,$I
+     C                     ADD  10        $I
+     C                     MOVEA'.'       COM,$I
+     C                     ADD  1         $I
+     C                     MOVEADECIML    COM,$I
+     C                     ADD  6         $I
+      *
+     C                     ELSE
+      *
+     C           P07#FT    IFEQ 'A'
+     C                     MOVEA'"'       COM,$I
+     C                     ADD  1         $I
+     C           P16#CT    IFEQ 'F'
+     C                     MOVEAP16#CV    COM,$I
+     C                     ADD  15        $I
+     C                     ELSE
+     C                     MOVEAALPHA     COM,$I
+     C                     ADD  15        $I
+     C                     END
+     C                     MOVEA'"'       COM,$I
+     C                     ADD  2         $I
+     C                     END
+     C                     END
+      *
+      ** Set field passed through subroutine flag.
+     C                     MOVEL'Y'       SRPASS
+      *
+     C                     ENDSR
+      **
+      **********************************************************************
+     C           RNMFLD    BEGSR
+      **********************************************************************
+      **
+      ** Subroutine to rename fields for each format
+      **
+      *
+      ** Set up correct field names depending upon the format.
+      ** Loan Details
+      *
+     C           FORMAT    IFEQ 'CLOANCLF'
+     C           P16#FN    IFEQ 'ER0028'
+     C                     MOVEL'ACOF    'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0033'
+     C                     MOVEL'BLDY    'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0024'
+     C                     MOVEL'BRCA    'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0032'
+     C                     MOVEL'BTIN    'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0025'
+     C                     MOVEL'CCY     'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0036'
+     C                     MOVEL'CHTP    'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0023'
+     C                     MOVEL'CNUM    'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0027'
+     C                     MOVEL'CRSK    'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0026'
+     C                     MOVEL'FCCY    'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0035'
+     C                     MOVEL'LCD     'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0029'
+     C                     MOVEL'NACD    'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0030'
+     C                     MOVEL'ORBR    'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0034'
+     C                     MOVEL'ORED    'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0031'
+     C                     MOVEL'PRFC    'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0022'
+     C                     MOVEL'RECI    'P16#FN
+     C                     END
+     C           P16#FN    IFEQ 'ER0037'
+     C                     MOVEL'TNLU    'P16#FN
+     C                     END
+     C                     END
+      **
+     C                     ENDSR
+      **********************************************************************
+      **
+      ** SELECT RECI
+      **
+      **********************************************************************
+     C           $$SEL     BEGSR
+      **********************************************************************
+     C           $$LIVE    IFEQ 'YES'
+     C           $$REV     ANDEQ'YES'
+     C           $$MAT     ANDEQ'YES'
+     C                     MOVE 'N'       $$SR
+     C                     GOTO $$END
+     C                     END
+      **
+      ** If First Time in Subroutine, $$LIVE *EQ YES OR NO, retrieve
+      ** the format of the previously read O#XP16 record
+      **
+     C           $$LIVE    IFEQ 'YES'
+     C           $$LIVE    OREQ 'NO'
+     C           KL$001    REDPEO#XR16V2                 01
+     C                     END
+      **
+      ** Select Live?
+      **
+     C           $$LIVE    IFEQ 'YES'
+     C                     MOVE *BLANKS   $$LIVE
+      **
+      ** Create a Select format
+      **
+     C                     ADD  1         P16#S1
+     C                     Z-ADD1         P16#S2
+     C                     MOVE 'RECI  '  P16#FN
+     C                     MOVE 'S'       P16#SO
+     C                     MOVE 'EQ'      P16#CO
+     C                     MOVE 'F'       P16#CT
+     C                     MOVE *BLANKS   P16#CV
+     C                     MOVEL'D'       P16#CV
+     C                     MOVE *BLANKS   $$VAL  15
+     C                     MOVEL'D'       $$VAL
+     C                     MOVEA$$VAL     @SO,$X
+     C                     MOVE 'IF '     P16#RL
+     C                     MOVE *BLANKS   P16#H1
+     C                     MOVE *BLANKS   P16#H2
+     C                     MOVE *BLANKS   P16#H3
+     C                     MOVE *BLANKS   P16#AT
+     C                     GOTO $$END
+      **
+     C                     END
+      **
+      ** Select Reversed?
+      **
+     C           $$REV     IFEQ 'YES'
+     C                     MOVE *BLANKS   $$REV
+      **
+      ** Create a Select format
+      **
+     C           $$LIVE    IFEQ *BLANKS
+     C                     ADD  1         P16#S2
+     C                     MOVE 'OR '     P16#RL
+     C                     ELSE
+     C                     ADD  1         P16#S1
+     C                     Z-ADD1         P16#S2
+     C                     MOVE 'IF '     P16#RL
+     C                     END
+     C                     MOVE 'RECI  '  P16#FN
+     C                     MOVE 'S'       P16#SO
+     C                     MOVE 'EQ'      P16#CO
+     C                     MOVE 'F'       P16#CT
+     C                     MOVE *BLANKS   P16#CV
+     C                     MOVEL'R'       P16#CV
+     C                     MOVE *BLANKS   $$VAL  15
+     C                     MOVEL'R'       $$VAL
+     C                     MOVEA$$VAL     @SO,$X
+     C                     MOVE *BLANKS   P16#H1
+     C                     MOVE *BLANKS   P16#H2
+     C                     MOVE *BLANKS   P16#H3
+     C                     MOVE *BLANKS   P16#AT
+     C                     GOTO $$END
+      **
+     C                     END
+      **
+      ** Select Matured or Expired?
+      **
+     C           $$MAT     IFEQ 'YES'
+     C                     MOVE *BLANKS   $$MAT
+      **
+      ** Create a Select format
+      **
+     C           $$LIVE    IFEQ *BLANKS
+     C           $$REV     OREQ *BLANKS
+     C                     ADD  1         P16#S2
+     C                     MOVE 'OR '     P16#RL
+     C                     ELSE
+     C                     ADD  1         P16#S1
+     C                     Z-ADD1         P16#S2
+     C                     MOVE 'IF '     P16#RL
+     C                     END
+     C                     MOVE 'RECI  '  P16#FN
+     C                     MOVE 'S'       P16#SO
+     C                     MOVE 'EQ'      P16#CO
+     C                     MOVE 'F'       P16#CT
+     C                     MOVE *BLANKS   P16#CV
+      **
+      ** Either Matured or Expired
+      **
+     C           FILE      IFEQ 'FCLTYFM'
+     C                     MOVEL'E'       P16#CV
+     C                     MOVE *BLANKS   $$VAL  15
+     C                     MOVEL'E'       $$VAL
+     C                     ELSE
+     C                     MOVEL'M'       P16#CV
+     C                     MOVE *BLANKS   $$VAL  15
+     C                     MOVEL'M'       $$VAL
+     C                     END
+     C                     MOVEA$$VAL     @SO,$X
+     C                     MOVE *BLANKS   P16#H1
+     C                     MOVE *BLANKS   P16#H2
+     C                     MOVE *BLANKS   P16#H3
+     C                     MOVE *BLANKS   P16#AT
+     C                     GOTO $$END
+      **
+     C                     END
+      **
+     C                     MOVE 'N'       $$SR
+      **
+     C           $$END     ENDSR
+      **********************************************************************
+      *      SR #FILE
+      **********************************************************************
+     C           #FILE     BEGSR
+      **
+      ** MQ502XC returns FILE in P07#OF if P16#FN was found in a
+      ** DSPFFD of FILE, otherwise P07#OF is *BLANKS
+      **
+      ** If FILE has changed then set MQ502 back to BLANKS
+      **
+     C           FILE      IFNE OLDFIL
+     C                     MOVE *BLANKS   MQ502
+     C                     END
+      **
+     C                     CALL 'MQ502XC'
+     C                     PARM           P16#FN
+     C                     PARM           FILE
+     C                     PARM           P07#OF
+     C                     PARM           MQ502   1
+      **
+      ** Retain Oldfile Details
+      **
+     C                     MOVE FILE      OLDFIL 10
+      **
+     C                     ENDSR
+      **********************************************************************
+      *      SR #VF - Virtual Fields Subroutine
+      **********************************************************************
+     C           #VF       BEGSR
+     C                     MOVELP16#FN    FN2     2
+      **
+      ** First Two character of Field are DT - Therefore Date Field
+      ** - Use First Associated Field
+      **
+     C           FN2       IFEQ 'DT'
+     C                     Z-ADD1         P39#SQ
+     C                     MOVE 'Y'       VFDATE
+     C                     END
+      **
+      ** First Two character of Field are AM - Therefore Amount Field
+      ** - Use Second Associated Field
+      **
+     C           FN2       IFEQ 'AM'
+     C                     Z-ADD2         P39#SQ
+     C                     MOVE 'Y'       VFAMT
+      **
+      ** Amount processing not yet catered for, so jump to ENDSR
+      **
+     C                     GOTO #VFEND
+     C                     END
+      **
+      ** Get The original Field Name (P39#LI in O#XL39V1)
+      **
+     C                     MOVE P05#SI    P21#MS
+     C                     MOVE *BLANKS   P21#FN
+     C                     MOVELP16#FN    P21#FN
+     C           KL$003    CHAINO#XR21V2             95
+     C           *IN95     IFEQ '0'
+     C                     MOVE P21#MB    P39#MC
+     C                     MOVEL'A#F'     P39#MC
+     C                     MOVE 'A'       P39#IO
+     C           KL$004    CHAINO#XR39V1             95
+      **
+      ** Set up P16#FN field
+      **
+     C                     MOVELP39#LI    P16#FN
+      **
+     C                     END
+      **
+     C           #VFEND    ENDSR
+      **********************************************************************
+      ** SR CNVDN  - Convert CCYYMMDD to Dayno
+      **********************************************************************
+      * Start CPK014
+     C*COPY*MQCPYSRC,DATEC******                                                              CPK014
+     C           CNTCVT    BEGSR
+      **
+      ** Convert Dayno Format to CCYYMMDD
+      **
+      ** INPUTS  - Dayno                - DTXXIN
+      ** OUTPUTS - Date CCYYMMDD Format - DTXOUT
+      *
+      * Clear output field.
+     C                     Z-ADD0         DTXOUT  80
+      *
+      ** Clear work field.
+     C                     MOVEA*BLANKS   U$A1
+     C                     MOVEL*BLANKS   ZCENT   2
+     C                     MOVEL*BLANKS   ZYEAR   2
+     C                     Z-ADD0         ZYEARN  30
+     C                     MOVEL*BLANKS   ZMTH    2
+     C                     Z-ADD0         ZMTHN   20
+     C                     MOVEL*BLANKS   ZDAY    2
+     C                     Z-ADD0         ZDAYN   20
+     C                     MOVEL*BLANKS   ZDATEA  8
+     C                     Z-ADD0         ZDATEN  80
+      *
+      ** Set the day already established flag.
+     C                     MOVEL'N'       DAYFLG  1
+      *
+      ** Ensure day number is not zero or negative.
+     C           DTXXIN    IFGT 0
+      *
+      ** Determine the year.
+      **   (a) Calculate the number of 4 year spans since 31/12/1971.
+     C           DTXXIN    DIV  1461      ZLYR    30
+     C                     MVR            DTXXIN  50
+      *
+      **   (b) Calculate the number of remaining years.
+     C                     Z-ADD1         P1      30
+     C           DTXXIN    LOKUP@Z1,P1               90  90
+     C                     SUB  1         P1             91
+      *
+     C           P1        IFGT *ZERO
+     C           DTXXIN    SUB  @Z1,P1    DTXXIN
+     C                     END
+      *
+      **   (c) Calculate the actual year.
+     C           ZLYR      MULT 4         ZYEARN
+     C                     ADD  72        ZYEARN
+     C                     ADD  P1        ZYEARN
+      *
+      ** Adjust for 31/12 in year preceeding leap year.
+     C           *IN91     IFEQ '1'
+     C           DTXXIN    ANDEQ*ZERO
+     C                     SUB  1         ZYEARN
+     C                     END
+      *
+     C                     MOVE ZYEARN    ZYEAR
+     C                     MOVEAZYEAR     U$A1,3
+      *
+      **   (d) Check for 20th. or 21st. century.
+     C           ZYEARN    IFLT 72
+     C                     MOVEL'20'      ZCENT
+     C                     ELSE
+     C                     MOVEL'19'      ZCENT
+     C                     END
+     C                     MOVEAZCENT     U$A1,1
+      *
+      **   (e) If DTXXIN is zero, month/day is 12/31.
+     C           DTXXIN    IFEQ *ZERO
+     C                     MOVEL'12'      ZMTH
+     C                     MOVEL'31'      ZDAY
+     C                     MOVEAZMTH      U$A1,5
+     C                     MOVEAZDAY      U$A1,7
+     C                     MOVEL'Y'       DAYFLG
+     C                     END
+      *
+      ** Determine the month.
+     C           DAYFLG    IFNE 'Y'
+      **   (f) Adjust for Februry 29th.
+     C           *IN91     IFEQ '1'
+     C           DTXXIN    IFEQ 60
+     C                     MOVEL'02'      ZMTH
+     C                     MOVEL'29'      ZDAY
+     C                     MOVEAZMTH      U$A1,5
+     C                     MOVEAZDAY      U$A1,7
+     C                     MOVEL'Y'       DAYFLG
+     C                     END
+      *
+     C           DAYFLG    IFNE 'Y'
+     C           DTXXIN    IFGT 60
+     C                     SUB  1         DTXXIN
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      **   (g) Calculate the month and the day.
+     C           DAYFLG    IFNE 'Y'
+     C                     Z-ADD2         ZMTHN
+     C           DTXXIN    LOKUP@Z2,ZMTHN            90  90
+     C                     SUB  1         ZMTHN
+     C                     MOVELZMTHN     ZMTH
+     C                     MOVEAZMTH      U$A1,5
+     C           DTXXIN    SUB  @Z2,ZMTHN ZDAYN
+     C                     MOVELZDAYN     ZDAY
+     C                     MOVEAZDAY      U$A1,7
+     C                     END
+      *
+     C                     END
+     C                     MOVEAU$A1,1    ZDATEA
+      * Load output field.
+     C                     MOVE ZDAY      ZDAYN
+     C                     MOVE ZMTH      ZMTHN
+     C                     MOVE ZYEAR     ZYEARN
+     C                     MOVELZDATEA    ZDATEN
+     C                     Z-ADDZDATEN    DTXOUT
+      *                                                                   111722
+      ** Change dates before 1972 to 21st century.                        111722
+      *                                                                   111722
+     C           DTXOUT    IFLT 19720101                                  111722
+     C                     ADD  1000000   DTXOUT                          111722
+     C                     ENDIF                                          111722
+      *                                                                   111722
+     C                     END
+     C                     ENDSR
+      **
+     C           CNVDN     BEGSR
+      **
+      **  Standard Subroutine to convert CCYYMMDD to Dayno Format
+      **
+      *
+      ** INPUTS  - Date CCYYMMDD Format - ZZDTIN
+      ** OUTPUTS - Dayno                - ZZDAYN
+      *
+      ** Initialise Output Field
+      *
+     C                     Z-ADD0         ZZDAYN  50
+      * Clear work field ZWRK2
+     C                     Z-ADD0         ZWRK2
+      *
+      ** Calc To define Input Field
+      *
+     C                     Z-ADDZZDTIN    ZZDTIN  80
+      *
+      ** If input is zero then end Subroutine
+      *
+     C           ZZDTIN    CABEQ0         DNEND
+      *
+      ** Divide Date into Cent,Year,Month And Day
+      *
+     C                     Z-ADD0         ZCNYR   40
+     C                     Z-ADD0         ZCENTN  20
+     C                     Z-ADD0         ZMTHN   20
+     C                     Z-ADD0         ZDAYN   20
+     C                     MOVELZZDTIN    ZCNYR
+     C                     MOVELZZDTIN    ZCENTN
+     C                     MOVE ZZDTIN    ZWRK4   4
+     C                     MOVE ZWRK4     ZDAYN
+     C                     MOVELZWRK4     ZMTHN
+     C*
+     C** If date greater than 31/12/2071 then calculate number of
+     C** centuries passed since 1971, by subtracting 1972 from the
+     C** year field.
+     C           ZCNYR     IFGE 2072
+     C           ZCNYR     SUB  1972      ZCNYR
+     C*
+     C** Multiply by number of days in century (since 1971)
+     C** then restore the year which was input back to the
+     C** original value before continuing with normal calculations.
+     C           ZCENTN    MULT 36525     ZZDAYN
+     C           ZCNYR     ADD  1972      ZCNYR
+     C                     END
+     C*
+     C** Add 28 to the year - the right two digits of the result will
+     C** give the number of years from 1971 - disregarding centuries
+     C           ZCNYR     ADD  28        ZWRK2   20
+     C*
+     C** calculate how many groups of four years there are
+     C           ZWRK2     DIV  4         ZWRK2
+     C                     MVR            ZWRK10  10
+     C*
+     C** and multiply by number of days in four year period
+     C           ZWRK2     MULT 1461      ZWRK5   50
+     C                     ADD  ZWRK5     ZZDAYN
+     C*
+     C** If a leap year and past February then add an extra day
+     C           ZWRK10    IFEQ 0
+     C           ZMTHN     ANDGT2
+     C                     ADD  1         ZZDAYN
+     C                     END
+     C*
+     C** Year not leap year,  add cumulative days for year
+     C           ZWRK10    IFNE 0
+     C                     ADD  @Z1,ZWRK10ZZDAYN
+     C                     END
+     C*
+     C** Add months this year
+     C                     ADD  @Z2,ZMTHN ZZDAYN
+     C*
+     C** Add days this month
+     C                     ADD  ZDAYN     ZZDAYN
+     C*
+     C           DNEND     ENDSR
+      *
+     C           CVTDMY    BEGSR
+      **
+      ** Convert a Date in CCYYMMDD Format to DDMMMYY Format
+      **
+      ** INPUTS  - Date CCYYMMDD Format - ZZCYMD
+      ** OUTPUTS - Date DDMMMYY Format  - ZZDMY
+      *
+      **
+      ** Define Input Field
+      **
+     C                     Z-ADDZZCYMD    ZZCYMD  80
+      **
+      ** Clear Output Field
+      **
+     C                     MOVE *BLANKS   ZZDMY   7
+      **
+      ** Only Process further if Date is entered
+      **
+     C           ZZCYMD    IFGT 0
+      **
+      ** Load Input Field into Individual Components
+      **
+     C                     MOVE ZZCYMD    A4      4
+     C                     MOVE A4        DAY     2
+     C                     Z-ADD0         MT      20
+     C                     MOVELA4        MT
+     C                     MOVELZZCYMD    A4
+     C                     MOVE A4        YR      2
+      **
+      ** Extract the Month in Letters
+      ** If it is in the valid range
+      **
+     C           MT        IFGE 1
+     C           MT        ANDLE12
+     C                     ADD  30        MT
+     C                     MOVE '1'       *IN,MT
+     C   31                MOVE 'JAN'     MTH     3
+     C   32                MOVE 'FEB'     MTH
+     C   33                MOVE 'MAR'     MTH
+     C   34                MOVE 'APR'     MTH
+     C   35                MOVE 'MAY'     MTH
+     C   36                MOVE 'JUN'     MTH
+     C   37                MOVE 'JUL'     MTH
+     C   38                MOVE 'AUG'     MTH
+     C   39                MOVE 'SEP'     MTH
+     C   40                MOVE 'OCT'     MTH
+     C   41                MOVE 'NOV'     MTH
+     C   42                MOVE 'DEC'     MTH
+     C                     MOVE '0'       *IN,MT
+      **
+      ** Set up Output Field
+      **
+     C                     MOVELMTH       A5      5
+     C                     MOVE YR        A5
+     C                     MOVELDAY       ZZDMY
+     C                     MOVE A5        ZZDMY
+      *
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      * End   CPK014
+      **********************************************************************
+      *
+      * Initialise Subroutine
+      *
+      **********************************************************************
+     C           $$INIT    BEGSR
+      **********************************************************************
+      *
+      * Key list specifications.
+      * ~~~~~~~~~~~~~~~~~~~~~~~~
+      ** For chains to files which have report name as the key.
+     C           KL$001    KLIST
+     C                     KFLD           TPR#PG
+      *
+      ** For chains to files which have subset and field name as the key.
+     C           KL$002    KLIST
+     C                     KFLD           P05#SI
+     C                     KFLD           P16#FN
+      *
+      ** For chains to files which have Subset, and Long field as key.
+     C           KL$003    KLIST
+     C                     KFLD           P21#MS
+     C                     KFLD           P21#FN
+      *
+      ** For chains to files which have Macro, I/O, and Seq as the key.
+     C           KL$004    KLIST
+     C                     KFLD           P39#MC
+     C                     KFLD           P39#IO
+     C                     KFLD           P39#SQ
+      /EJECT
+      *
+      ** Move the select/omit values to work array.
+     C                     Z-ADD1         $X      50
+     C                     MOVEA@SO@DS    @SO,$X
+     C                     Z-ADD1         $X      50
+      *
+      ** Set up temporary data structure.
+     C                     MOVELTPR#UR    XXX#UR
+      *
+      ** Clear the Command
+     C                     MOVEL*BLANKS   @Q@CMD
+      *
+      ** Clear the file name and format name fields.
+     C                     MOVEL*BLANKS   FILNAM
+     C                     MOVEL*BLANKS   FILFMT
+      *
+      ** Initialise the decimal data error fields.
+     C                     MOVELDERR,1    DETST1 15
+     C                     MOVELDERR,2    DECERR
+      *
+      ** Set up flag to show whether OPNQRYF is needed or not.
+     C                     MOVEL'N'       NEEDED  1
+      *
+      ** Initialise the field passed through subroutine flag.
+     C                     MOVEL'N'       SRPASS  1
+      *
+      ** Set up the basic open query file command structure.
+     C                     MOVELQRY,1     LINE1
+     C                     MOVELQRY,2     LINE2
+     C                     MOVELFILE      FILNAM
+     C                     MOVELFORMAT    FILFMT
+      *
+      ** Move the basic open query file command structure to command array.
+     C                     Z-ADD1         $I      50
+     C                     MOVEA@QRYDS    COM,$I
+     C                     ADD  98        $I
+      **
+      ** Set Work Fields
+      **
+     C                     MOVE 'N'       $$SR    1
+     C                     MOVE 'N'       VFDATE  1
+     C                     MOVE 'N'       VFAMT   1
+     C                     MOVE 'N'       DONE    1
+      **
+      ** Set $$LIVE, $$REV, $$MAT Depending On File Used
+      **
+      ** $$MAT is used for Expired Facilities and Matured Loans
+      **
+     C           FILE      IFEQ 'FCLTYFM'
+     C                     MOVE $$FLIV    $$LIVE  3
+     C                     MOVE $$FREV    $$REV   3
+     C                     MOVE $$FEXP    $$MAT   3
+     C                     ELSE
+     C           FILE      IFEQ 'FLEND'
+     C                     MOVE $$LLIV    $$LIVE  3
+     C                     MOVE $$LREV    $$REV   3
+     C                     MOVE $$LMAT    $$MAT   3
+     C                     END
+     C                     END
+      **
+     C                     ENDSR
+      *****************************************************************
+**  QRY - To set up the basic open query file command structure.
+OPNQRYF FILE((           *FIRST               )) OPTION(*INP) OPNID(*FILE) FORMA
+T(*FILE) QRYSLT('(
+)))')
+KEYFLD(*FILE)
+** DERR - Decimal data error. There are TWO entries here - DO NOT REMOVE.
+ 
+rrrrrrr¸
+**   @Z1 - Years In Days  -  Cumulative in Four Year Span
+00366007310109601461
+**   @Z2 - Months in Days  -  Cumulative Through Year
+00000000310005900090001200015100181002120024300273003040033400365
+**  CPY@
+(c) Finastra International Limited 2001

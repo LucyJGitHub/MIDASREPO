@@ -1,0 +1,129 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Update 'Today's work' indicator')
+      *****************************************************************
+      *                                                               *
+      *  Midas - MESSAGE MANAGEMENT                                   *
+      *                                                               *
+      *   ME0210 - UPDATE 'TODAY'S WORK' INDICATOR                    *
+      *                                                               *
+      *   Written for BHF enhancement E32330                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21SEP98               *
+      *                  113352            DATE 13FEB97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *   CDL008 - Continuous Linked Settlement (Recompiled MGOREFPD) *
+      *  141572 - Recompile over MGOREFPD                             *
+      *  113352 - RE-COMPILE OVER CHANGES IN MGOREFPD                 *
+      *                                                               *
+      *****************************************************************
+     FMGOREFL0UF  E           K        DISK
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      ** LDA
+      *
+      *
+      ** Set up LDA for database errors
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ME0210'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Read first refernce record
+     C                     READ MGOREFL0                 89
+      *
+      ** Do-while records exist
+     C           *IN89     DOWEQ'0'                                   1
+      *
+      ** Re-set update indicator
+     C                     SETOF                     50
+      *
+      ** If this record is a part of a multiple...
+     C           TRNF      IFNE *BLANKS                               2
+      *
+      ** If status is part-deleted, this part is complete
+     C           PTST      IFEQ 'D'                                   3
+     C                     SETON                     50
+      *
+      ** else check status of header
+     C                     ELSE                                      X3
+     C                     MOVE TRNO      SAVTRN 16
+     C           TRNF      CHAINMGOREFL0             88
+      *
+     C           *IN88     IFEQ '1'                                   4
+     C           *LOCK     IN   LDA
+     C                     MOVEL'01'      DBASE             ***********
+     C                     MOVEL'MGOREF'  DBFILE            * DBERR 1 *
+     C                     MOVELMTRN      DBKEY             ***********
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E4
+      *
+      ** If status group of header is 3 or 4, part is complete
+     C           MGSG      IFEQ '3'
+     C           MGSG      OREQ '4'                                   4
+     C                     SETON                     50
+     C                     END                                       E4
+      *
+      ** Re-access part - re-position file pointer
+     C           SAVTRN    CHAINMGOREFL0             87
+      *
+     C                     END                                       E3
+      *
+      ** Else (message is header or single)
+     C                     ELSE                                      X2
+      *
+     C           MGSG      IFEQ '3'
+     C           MGSG      OREQ '4'                                   3
+     C                     SETON                     50
+     C                     END                                       E3
+     C/COPY WNCPYSRC,ME0210C001
+      *
+     C                     END                                       E2
+      *
+      ** Update today's work indicator
+     C           *IN50     IFEQ '1'
+     C           TODY      ANDNE'N'
+     C                     MOVE 'N'       TODY
+     C                     UPDATMGOREFD0
+     C                     END
+      *
+      ** Read next reference record
+     C                     READ MGOREFL0                 89
+      *
+     C                     END                             DOW       E1
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      *   *PSSR - Error handling                                      *
+      *   Called by - REF, DETL, MLTTRN                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR

@@ -1,0 +1,274 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PB Take for Retail Account')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Private Banking Module                               *
+      *                                                               *
+      *  PB7202 - Take-on for Retail Account                          *
+      *                                                               *
+      *  Function:  This program updates Replication Indicator field  *
+      *             for retail Account feature CPB004.                *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CPB004   *CREATE   Date 11Jul02               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPB004 - Set replication indicator for all Retail accounts.  *
+      *                                                               *
+      *****************************************************************
+      *
+     FACACOD  UF  E                    DISK         KINFSR *PSSR
+     FPB7202AUO   E             70     PRINTER      KINFSR *PSSR
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      * 70    - Overflow PB7202AU                                     *
+      * 82    - EOF ACCNT                                             *
+      * 88    - EOF ACACOD                                            *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /TITLE ARRAY SPECIFICATIONS
+      /COPY ZSRSRC,ZSEDITZ1
+     E                    CPY@    1   1 80
+      **  Array for Object Copyright Statement.
+      *****************************************************************
+      /COPY ZSRSRC,ZSEDITZ2
+     IA@CPY       DS
+      **  Copyright Array
+     I                                        1  80 CPY@
+      *-------------------------------------------------------------------------
+      *
+     IWLDA      E DSLDA                         256
+      *
+      **  Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      **  Program Status Data Structure - gives Prog/Job/Workstn name
+      **  and user ID
+      *
+     I                                        1  10 PRGNAM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     IDSSDY     E DSDSSDY
+      **  DS for access programs, long data structure
+     ISDBANK    E DSSDBANKPD
+      **  External DS for Bank Details
+     ISDCURR    E DSSDCURRPD
+      **  External DS for Currency Details
+     ISDCUST    E DSSDCUSTPD
+     I** CUSTOMER DETAILS
+      *
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #INIT  - Program Initialisation                              *
+      *  #SETUP - Setup file fields                                   *
+      *  #PRINT - Setup printer file fields                           *
+      *                                                               *
+      *  *PSSR  - Error Processing Subroutine - DUMPs and ends Program*
+      *           (This is called automatically if an unexpected      *
+      *            Error occurs, or specifically for DB Error.)       *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+      **  Program initialisation
+     C                     EXSR #INIT
+      *
+      **  Main loop processing
+     C           1         SETLLACACOD                     Begin ACACOD
+     C                     READ ACACOD                   88
+     C           *IN88     DOWEQ*OFF
+      *
+      **  Select Live RE Account for All customer
+     C           RECI      IFEQ 'D'                        Begin Retail
+     C           ATYP      ANDEQ'R'
+      *
+      **  Update Replication Indicator field.
+     C                     TESTN          REPI       77
+      *
+      **  If Replication Indicator is numeric.
+     C           *IN77     IFEQ *ON                        Begin *IN77
+     C                     MOVE REPI      WREPI   20
+     C                     ADD  1         WREPI
+      *
+      **  If Replication Indicator is not numeric.
+     C                     ELSE
+     C                     Z-ADD1         WREPI
+     C                     ENDIF                           End *IN77
+     C                     MOVE WREPI     REPI
+      *
+      **  Update Account Master Details file record.
+     C                     UPDATACCNTABF
+      *
+      **  Print Retail Account informations on report.
+     C                     EXSR #PRINT
+     C                     ENDIF                           End retail
+      *
+      **  Read next record
+     C                     READ ACACOD                   88
+     C                     ENDDO                           End ACACOD
+      *
+     C           *IN70     IFEQ *ON
+     C                     WRITEHEADAU
+     C                     MOVE *OFF      *IN70
+     C                     ENDIF
+     C                     WRITECOUNTER
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #PRINT - Subroutine to setup printer file PB7202AU            *
+      * Called by: - main process                                     *
+      *                                                               *
+      *****************************************************************
+     C           #PRINT    BEGSR
+      *
+     C           *IN70     IFEQ *ON
+     C                     WRITEHEADAU
+     C                     MOVE *OFF      *IN70
+     C                     ENDIF
+      *
+     C                     MOVELACOD      RACOD     P
+     C                     MOVELCNUM      RCNUM     P
+     C                     MOVELCCY       RCCY
+     C                     MOVELACSQ      RACSQ     P
+     C                     MOVELATYP      RATYP
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   WLDA
+     C                     SETON                       U7U8
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 002 *
+     C                     MOVELCCY       DBKEY            ***************
+     C                     OUT  WLDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE LDBL      ZFLD15
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RLDBL
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE CLBL      ZFLD15
+     C                     MOVEL'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RCLBL
+      *
+     C                     ADD  1         NREC
+      *
+     C                     WRITEDETAP1
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #INIT  - Initial process                                      *
+      * Called by: - main process                                     *
+      * Calls: none                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      **  Redefine data error fields
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      **  Access Bank details via access program
+      **  (database error handling done in access program)
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      **  Set Date indicator to DDMMYY
+     C                     MOVE *OFF      *IN98
+      *
+      **  Make sure Header is printed
+     C                     MOVE *ON       *IN70
+      *
+      **  Initialise record counter for printer file
+     C                     Z-ADD0         NREC
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL'PB7202'  DBPGM     P
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      /COPY ZSRSRC,ZSEDITZ3
+**  CPY@ - OBJECT COPYRIGHT
+(c) Finastra International Limited 2002

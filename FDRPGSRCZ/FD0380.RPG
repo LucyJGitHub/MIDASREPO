@@ -1,0 +1,930 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FD Exch Rates Currency Points Audit Report')
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - Standing Data Module
+     F*                                                              *
+     F*     FD0380 - Exchange Rates Currency Points Audit Report     *
+     F*                                                              *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01319             Date 4OCt91                *
+     F*                 E17574             Date  17NOV89              *
+     F*                    E11112             DATE  07/03/88         *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     S01319 - Remove redundant processing, bring program up to*
+     F*              R10 standards.                                  *
+     F*     E17574 - INTRODUCE A NEW FIELD TO ACCOMODATE LONGER      *    E17574
+     F*              REPORT HEADINGS.                                *    E17574
+     F*     E11112 - PLACE LF/FDTTOTLL UNDER COMMITTMENT CONTROL     *
+     F*                                                              *
+     F****************************************************************
+     F*
+     F**  Indicator Function Summary
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     F*
+     F*             61 Currency code group continued on new page.
+     F*             65 Overflow line of printer file passed.
+     F*             66 Print Difference line on audit report
+     F*
+     F*       80       Database error on chain to ICD file.
+     F*
+     F*          U7    Set on with U8 if a database error occurs.
+     F*          U8    File out of balance if on on its own.
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFDRCVRLLIF  E           K        DISK         KINFSR *PSSR
+     F*FDAUDIRRO***E*******************PRINTER******KINFSR**PSSR**********S01319
+     FFD0380AUO   E                    PRINTER      KINFSR *PSSR          S01319
+     F                                              KINFDS SPOOLU         S01319
+     FFDCCYLLLIF  E           K        DISK         KINFSR *PSSR
+     F                                              KINFDS DSAUDT
+     FFDTTOTLLUF  E           K        DISK         KINFSR *PSSR
+     F****                                          KCOMIT
+     F                                              KCOMIT                E11112
+     FFDICDRLLIF  E           K        DISK         KINFSR *PSSR
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     FFDAUDELLIP  E           K        DISK         KINFSR *PSSR
+     F*FD0380RRO***E************65*****PRINTER******KINFSR**PSSR**********S01319
+     FFD0380P1O   E             65     PRINTER      KINFSR *PSSR      UC  S01319
+     F                                              KINFDS SPOOL          S01319
+     F/EJECT
+     E                    CPY@    1   1 80
+     E**  ARRAY TO HOLD COPYRIGHT STATEMENT
+     E                    @P      4  12  9
+     E*
+     E**  Array containing period descriptions.
+      /EJECT
+     I*
+     I**  Currency code sets on level break indicator when input value
+     I**  is different from preceding record.
+     IQJORDJE
+     I                                              AECCY L1
+      /SPACE
+      /SPACE
+     IDNATN       DS                              5
+     I* DATA STRUCTURE TO UPDATE LAST TRANSACTION NUMBER
+     I                                        1   50FNATN
+     ICMTTXT      DS                             79
+     I* COMIT TEXT
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCDX
+     I                                       26  35 USRIDX
+     I                                       51  62 KEY
+     I                                       63  660NREC
+     I                                       67  700NINS
+     I                                       71  740NDEL
+     I                                       75  780NAMD
+     IDSAUDT      DS
+     I                                    B 156 1590RRNORE
+     IPSDS       SDS
+     I*
+     I**  Program status data structure.
+     I**  Field containing workstaion  ID.
+     I                                      244 253 @JOB
+     I**  Field containing user ID.
+     I                                      254 263 @USER
+     I*
+     I**
+     I           UDS                            256
+     I**  Local data area for data base errors.
+     I**  Field containing name of database file in error.
+     I                                      134 141 DBFILE
+     I**  Field containing key value causing database error.
+     I                                      142 170 DBKEY
+     I**  Field containing name of program causing database error.
+     I                                      171 180 DBPGM
+     I**  Field containing number of database error.
+     I                                      181 183 DBASE
+     ISPOOL       DS                                                      S01319
+     I**   FILE INFORMATION DATA STRUCTURE                                S01319
+     I                                       83  92 SFILE                 S01319
+     I                                    B 123 1240SFNUM                 S01319
+     I**                                                                  S01319
+     ISPOOLU      DS                                                      S01319
+     I**   FILE INFORMATION DATA STRUCTURE                                S01319
+     I                                       83  92 SFILEU                S01319
+     I                                    B 123 1240SFNUMU                S01319
+      /EJECT
+     C*
+     C**  Initial processing.
+     C*
+     C**  If it is the first cycle, process #A, otherwise not.
+     C           @FCYC     IFNE 'Y'                        B1
+     C                     EXSR #A
+     C                     END
+     C*
+     C**  Main processing
+     C                     EXSR #B
+     C*
+     C** IF DATABASE ERROR SET LAST RECORD INDICATOR
+     C           *INU7     IFEQ '1'                        B1
+     C                     MOVE '1'       *INLR            *1
+     C                     END                             E1
+     C*
+     C**  Termination processing - executed only when Last Record
+     C**  indicator on.
+     CLR                   EXSR #C
+     C*
+     C           ENDPGM    TAG                             **ENDPGM**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Index to subroutines - Order of listing due to frequency of  *
+     C*                         usage.                                *
+     C*                                                               *
+     C*   1. #B     - Main processing - Output and amendment of data. *
+     C*   2. #BA    - Output of period description to printer; type D *
+     C*   3. #BB    - Output of period description to printer; type W *
+     C*   4. #BC    - Output of period description to printer; type M *
+     C*   5. #BD    - Output of period description to printer; type Y *
+     C*   6. #ZB    - Output headers - Output of headers if required. *
+     C*   7. #ZA    - Read ICD file - Call ZA0150 and process results.*
+     C*   8. ZA0150 - Standard subroutine to chain to ICD file.       *
+     C*   9. #A     - Initial processing.                             *
+     C*  10. #C     - Termination processing.                         *
+     C*  11. *PSSR  - Error handling subroutine.                      *
+     C*                                                               *
+     C*                                                               *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #B     - Main processing; output of detail       *
+     C*                       records of audit file LF/FDAUDELL       *
+     C*                                                               *
+     C*                                                               *
+     C*  FIELDS DEFINED:                                              *
+     C*                                                               *
+     C*  CALLED BY : MAIN PROGRAM                                     *
+     C*  CALLS     : #BA #BB #BC #BD #ZB                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C**  If *INU7 is on, omit detail processing.
+     C           *INU7     CABEQ'1'       #B9
+     C*
+     C**  Blank out output fields.
+     C****                 MOVE *BLANKS   RRCCY
+     C                     MOVE *BLANKS   RRUSID
+     C                     MOVE *BLANKS   RRPDES
+     C                     MOVE *BLANKS   RRTYPE
+     C*
+     C**  Fields that require no processing, move file values to
+     C**  printer file fields.
+     C                     Z-ADDAETIME    RRCHGT
+     C                     MOVE AELUID    RRUSID
+     C*** File Fields loaded to before/after fields
+     C***   depending on Change Type
+     C**
+     C           AECHTP    IFEQ 'D'
+     C           AEENTT    OREQ 'UB'
+     C           AEENTT    OREQ 'BR'
+     C                     Z-ADDAELOPT    RRLOPB
+     C                     Z-ADDAEHIPT    RRHIPB
+     C                     Z-ADDAEPRDD    RRPDTB
+     C                     MOVE AEPRDX    RRXDTB
+     C                     ELSE
+     C                     Z-ADDAELOPT    RRLOPA
+     C                     Z-ADDAEHIPT    RRHIPA
+     C                     Z-ADDAEPRDD    RRPDTA
+     C                     MOVE AEPRDX    RRXDTA
+     C                     END
+     C**
+     C                     MOVE AEPGM     RRPGM
+     C                     MOVE AETIME    RRCHGT
+     C                     MOVE AELUID    RRUSID
+     C*
+     C**  Output currency code if Level break or overflow indicator is
+     C**  on, showing that a new code group has started.
+     C           *INL1     IFEQ '1'                        B1
+     C           *IN66     OREQ '1'                        X1
+     C*
+     C                     MOVE AECCY     RRCCY            *1
+     C*
+     C                     END                             E1
+     C*
+     C** BLANK OUT AFTER FIELDS IF NO CHANGE
+     C           AECHTP    IFEQ 'A'
+     C           RRPDTA    IFEQ RRPDTB
+     C                     Z-ADD0         RRPDTA
+     C                     END
+     C           RRLOPA    IFEQ RRLOPB
+     C                     Z-ADD0         RRLOPA
+     C                     END
+     C           RRHIPA    IFEQ RRHIPB
+     C                     Z-ADD0         RRHIPA
+     C                     END
+     C           RRXDTB    IFEQ RRXDTA
+     C                     MOVE *BLANKS   RRXDTA
+     C                     END
+     C                     END
+     C*
+     C**  Set up other fields.
+     C*
+     C**  Set up Period field using Period Type and Period field to
+     C**  access the Period array.
+     C           AETPRD    CASEQ'D'       #BA
+     C           AETPRD    CASEQ'W'       #BB
+     C           AETPRD    CASEQ'M'       #BC
+     C           AETPRD    CASEQ'Y'       #BD
+     C                     END
+     C*
+     C**  Set up last change type field
+     C           AECHTP    IFEQ 'A'                        B1
+     C*
+     C                     MOVE 'AMD'     RRTYPE           *1
+     C*
+     C                     END                             E1
+     C*
+     C           AECHTP    IFEQ 'D'                        B1
+     C*
+     C                     MOVE 'DEL'     RRTYPE           *1
+     C*
+     C                     END                             E1
+     C*
+     C           AECHTP    IFEQ 'I'                        B1
+     C*
+     C                     MOVE 'INS'     RRTYPE           *1
+     C*
+     C                     END                             E1
+     C*
+     C**  If Level break indicator is off, and overflow is required
+     C**  set on *IN61 to output '(Ctd.)'  after the Ccy Code field.
+     C           *INL1     IFEQ '0'                        B1
+     C           *IN66     ANDEQ'1'                        X1
+     C*
+     C                     MOVE '1'       *IN61            *1
+     C*
+     C                     END                             E1
+     C*
+     C**  Write headers if required.
+     C                     EXSR #ZB
+     C*
+     C** *IN63 SET ON IF PROGRAM PERFORMING UPDATE IS NOT NORMAL
+     C           AEPGM     IFNE 'FD0140'
+     C                     MOVE '1'       *IN63
+     C                     ELSE
+     C                     MOVE '0'       *IN63
+     C                     END
+     C*
+     C** CHAIN TO THE RECOVERY SEQUENCE FILE TO SEE IF ENTRY HAS
+     C** NOT BEEN RECOVERED
+     C           AESEQN    SETGTFDRCVRLL
+     C                     READPFDRCVRLL                 99
+     C           *IN99     IFEQ '0'
+     C           FRPNT     ANDLEAESEQN
+     C           TOPNT     ANDGEAESEQN
+     C                     MOVE '1'       *IN64
+     C                     ELSE
+     C                     MOVE '0'       *IN64
+     C                     END
+     C*
+     C** PRINT DETAIL LINE IF THE ENTRY TYPE IS INSERT UPDATE AFTER
+     C** IMAGE UPDATE AFTER ROLLBACK DELETE OR DELETE BY ROLLBACK
+     C           AEENTT    IFEQ 'UP'
+     C           AEENTT    OREQ 'UR'
+     C           AEENTT    OREQ 'PT'
+     C           AEENTT    OREQ 'DR'
+     C           AEENTT    OREQ 'DL'
+     C           AECHTP    IFEQ 'I'
+     C           @SCHTP    OREQ 'D'
+     C           AEENTT    ANDEQ'UR'
+     C                     Z-ADD0         RRPDTB
+     C                     Z-ADD0         RRHIPB
+     C                     Z-ADD0         RRLOPB
+     C                     MOVE *BLANKS   RRXDTB
+     C                     END
+     C*
+     C** IF THE ENTRY TYPE IS ROLLBACK AFTER IMAGE, AND THE PREVIOUS
+     C** CHANGE TYPE IS DELETE THEN CHANGE RRTYPE TO INSERT
+     C           AEENTT    IFEQ 'UR'
+     C           @SCHTP    ANDEQ'D'
+     C                     MOVE 'INS'     RRTYPE
+     C                     END
+     C*
+     C** IF THE ENTRY TYPE IS ROLLBACK AFTER IMAGE, AND THE PREVIOUS
+     C** CHANGE TYPE IS AMEND THEN CHANGE RRTYPE TO AMEND
+     C           AEENTT    IFEQ 'UR'
+     C           @SCHTP    ANDEQ'A'
+     C                     MOVE 'AMD'     RRTYPE
+     C                     END
+     C*
+     C** IF THE ENTRY TYPE IS ROLLBACK AFTER IMAGE, AND THE PREVIOUS
+     C** CHANGE TYPE IS INSERT THEN CHANGE RRTYPE TO INSERT
+     C           AEENTT    IFEQ 'UR'
+     C           @SCHTP    ANDEQ'I'
+     C                     Z-ADD0         RRPDTB
+     C                     Z-ADD0         RRHIPB
+     C                     Z-ADD0         RRLOPB
+     C                     MOVE *BLANKS   RRXDTB
+     C                     MOVE 'DEL'     RRTYPE
+     C                     END
+     C*
+     C** RECORD DELETED FOR ROLLBACK
+     C           AEENTT    IFEQ 'DR'
+     C                     MOVE 'DEL'     RRTYPE
+     C                     Z-ADD0         RRPDTA
+     C                     Z-ADD0         RRHIPA
+     C                     Z-ADD0         RRLOPA
+     C                     MOVE *BLANKS   RRXDTA
+     C                     END
+     C*
+     C** RECORD PHYSICALLY DELETED
+     C           AEENTT    IFEQ 'DL'
+     C                     MOVE 'DEL'     RRTYPE
+     C                     Z-ADD0         RRPDTA
+     C                     Z-ADD0         RRHIPA
+     C                     Z-ADD0         RRLOPA
+     C                     MOVE *BLANKS   RRXDTA
+     C                     END
+     C                     WRITEFD0380R1
+     C*
+     C**  Blank out output fields.
+     C                     MOVE *BLANKS   RRCCY
+     C*
+     C**  Set off indicator *IN61
+     C                     MOVE '0'       *IN61
+     C                     END
+     C*
+     C** SAVE CHANGE TYPE INCASE IT IS A ROLLBACK RECORD
+     C                     MOVE AECHTP    @SCHTP  1
+     C*
+     C           #B9       ENDSR                           **#B9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BA    - Output of period description to print   *
+     C*                       file; specifically for the case where   *
+     C*                       the period type is 'D'.                 *
+     C*                                                               *
+     C*  FIELDS DEFINED:    @P     - Array to hold period descriptions*
+     C*                                                               *
+     C*  CALLED BY : #B                                               *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C**  If the period type is 'D' and the period is '0', output
+     C**  'Overnight' as Period Description.
+     C           AEPRD     IFEQ 0                          B1
+     C*
+     C                     MOVE @P,1      RRPDES           *1
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'D' and the period is '1', output
+     C**  'Tom/Next' as Period Description.
+     C           AEPRD     IFEQ 1                          B1
+     C*
+     C                     MOVE @P,2      RRPDES           *1
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'D' and the period is '2','3','4','5'
+     C**  or '6' output 'Spot Next' as Period Description.
+     C           AEPRD     IFGE 2                          B1
+     C           AEPRD     ANDLE6                          X1
+     C*
+     C                     MOVE @P,3      RRPDES           *1
+     C*
+     C                     END                             E1
+     C*
+     C           #BA9      ENDSR                           **#BA9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BB    - Output of period description to print   *
+     C*                       file; specifically for the case where   *
+     C*                       the period type is 'W'.                 *
+     C*                                                               *
+     C*  FIELDS DEFINED:    @P     - Array to hold period descriptions*
+     C*                                                               *
+     C*  CALLED BY : #B                                               *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR
+     C*
+     C**  If the period type is 'W' and the period is '1', output
+     C**  '1 Week' as Period Description.
+     C           AEPRD     IFEQ 1                          B1
+     C*
+     C                     MOVE @P,4      RRPDES           *1
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'W' and the period is '2', output
+     C**  '2 Weeks' as Period Description.
+     C           AEPRD     IFEQ 2                          B1
+     C*
+     C                     MOVE @P,5      RRPDES           *1
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'W' and the period is '3',
+     C**  output '3 Weeks' as Period Description.
+     C           AEPRD     IFEQ 3                          B1
+     C*
+     C                     MOVE @P,6      RRPDES           *1
+     C*
+     C                     END                             E1
+     C*
+     C           #BB9      ENDSR                           **#BB9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BC    - Output of period description to print   *
+     C*                       file; specifically for the case where   *
+     C*                       the period type is 'M'.                 *
+     C*                                                               *
+     C*  FIELDS DEFINED:    @P     - Array to hold period descriptions*
+     C*                                                               *
+     C*  CALLED BY : #B                                               *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BC       BEGSR
+     C*
+     C**  If the period type is 'M' and the period is '1', output
+     C**  '1 Month' as Period Description.
+     C           AEPRD     IFEQ 1                          B1
+     C*
+     C                     MOVE @P,7      RRPDES           *1
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'M' and the period is '2', output
+     C**  '2 Months' as Period Description.
+     C           AEPRD     IFEQ 2                          B1
+     C*
+     C                     MOVE @P,8      RRPDES           *1
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'M' and the period is '3',
+     C**  output '3 Months' as Period Description.
+     C           AEPRD     IFEQ 3                          B1
+     C*
+     C                     MOVE @P,9      RRPDES           *1
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'M' and the period is '6', output
+     C**  '6 Months' as Period Description.
+     C           AEPRD     IFEQ 6                          B1
+     C*
+     C                     MOVE @P,10     RRPDES           *1
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'M' and the period is '9',
+     C**  output '9 Months' as Period Description.
+     C           AEPRD     IFEQ 9                          B1
+     C*
+     C                     MOVE @P,11     RRPDES           *1
+     C*
+     C                     END                             E1
+     C*
+     C           #BC9      ENDSR                           **#BC9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BD    - Output of period description to print   *
+     C*                       file; specifically for the case where   *
+     C*                       the period type is 'Y'.                 *
+     C*                                                               *
+     C*  FIELDS DEFINED:    @P     - Array to hold period descriptions*
+     C*                                                               *
+     C*  CALLED BY : #B                                               *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BD       BEGSR
+     C*
+     C**  If the period type is 'Y' and the period is '1', output
+     C**  '1 Year' as Period Description.
+     C           AEPRD     IFEQ 1                          B1
+     C*
+     C                     MOVE @P,12     RRPDES           *1
+     C*
+     C                     END                             E1
+     C*
+     C           #BD9      ENDSR                           **#BD9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #ZB    - Output headers; prints page headers if  *
+     C*                       required.                               *
+     C*                                                               *
+     C*                                                               *
+     C*  FIELDS DEFINED:                                              *
+     C*                                                               *
+     C*  CALLED BY : #B #C                                            *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ZB       BEGSR
+     C*
+     C**  Output headings if overflow line reached or first page of
+     C**  report.
+     C           *IN65     IFEQ '1'                        B1
+     C*
+     C                     WRITEFD0380R0                   *1
+     C                     WRITEFD0380R5                   *1
+     C*
+     C**  Reset overflow indicator.
+     C                     MOVE '0'       *IN65            *1
+     C*
+     C                     END                             E1
+     C*
+     C           #ZB9      ENDSR                           **#ZB9**
+      /EJECT
+     C****************************************************************
+     C*                                                              *
+     C*    #CA CHECKS RECORD COUNTS.                                 *
+     C*       CALLED BY  : #C                                        *
+     C*       CALLS      :                                           *
+     C*       WORK FIELDS:                                           *
+     C*                                                              *
+     C****************************************************************
+     C           #CA       BEGSR
+     C*
+     C** GET HEADER RECORD FOR UPDATE
+     C                     MOVE *BLANKS   @XKEY  12
+     C                     MOVEL'XP'      @XKEY
+     C           @XKEY     CHAINFDTTOTLL             7674
+     C*
+     C**  DATA BASE ERROR
+     C           *IN76     IFEQ '1'                        B1
+     C           RECI      ORNE 'H'                        B1
+     C                     MOVEL@XKEY     DBKEY            ***************
+     C                     MOVEL'FDTTOTLL'DBFILE           * DB ERROR 008*
+     C                     MOVE '008'     DBASE            ***************
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C*
+     C**  - set up output fields for DBERROR printer format.
+     C                     MOVE DBASE     RRBASE           *1
+     C                     MOVE DBPGM     RRPGM            *1
+     C                     MOVE DBFILE    RRFILE           *1
+     C                     MOVELDBKEY     RRKEY            *1
+     C                     GOTO #CA9                       *1
+     C                     END                             E1
+     C*
+     C** IF RECORD LOCKED SEND MESSAGE AND RELEASE MAIN UPDATE RECORD
+     C           *IN74     IFEQ '1'                        B1
+     C                     CALL 'ZA0250'                   *1
+     C                     MOVEL'FDM0120' @MSGID 10        *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+     C                     EXCPT@RLSFL                     *1
+     C                     GOTO #CA9                       *1
+     C                     END                             E1
+     C**
+     C***** Calculate Record Totals and Report
+     C**
+     C                     Z-ADDNREC      RRNREC
+     C                     Z-ADDNINS      RRNINS
+     C                     Z-ADDNAMD      RRNAMD
+     C                     Z-ADDNDEL      RRNDEL
+     C           NREC      ADD  NINS      RRNCAL
+     C                     SUB  NDEL      RRNCAL
+     C           RRNORE    IFNE RRNCAL
+     C                     MOVE '1'       *IN66
+     C                     MOVE '1'       *INU8
+     C                     ELSE
+     C                     MOVE '0'       *IN66
+     C                     Z-ADD*ZERO     NAMD
+     C                     Z-ADD*ZERO     NINS
+     C                     Z-ADD*ZERO     NDEL
+     C                     Z-ADDRRNCAL    NREC
+     C                     EXSR ZTNLU1
+     C                     UPDATTABLETXF
+     C****       CMTTXT    COMIT
+     C                     END
+     C**
+     C           #CA9      ENDSR
+     C**
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZTNLU - TO LOCK AND UPDATE THE TRANSACTION NUMBER DATA AREA   *
+     C*                                                               *
+     C* CALLED BY :                                                   *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C* USES :                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     MOVE 'FD'      MDID
+     C                     MOVEL'FD0390'  PGMN
+     C                     MOVEL@JOB      WSIDX
+     C                     TIME           MTIME
+     C                     MOVE 'A'       ACTCDX
+     C                     MOVE @USER     USRIDX
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #ZA  - Retrieve installation control data; read  *
+     C*                     LF/FDICDRLL.                              *
+     C*                                                               *
+     C*                                                               *
+     C*  FIELDS DEFINED:                                              *
+     C*                                                               *
+     C*  CALLED BY : #A #C                                            *
+     C*  CALLS     : ZA0150 (Standard Subroutine)                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C**  Call standard subroutine ZA0150 to read LF/FDICDRLL
+     C                     EXSR ZA0150
+     C*
+     C**  If indicator 80 is on, then file LF/FDICDRLL is empty
+     C**  - set on *INU7 *INU8
+     C**  - set up output fields for DBERROR printer format.
+     C           *IN80     IFEQ '1'                        B1
+     C*
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE DBASE     RRBASE           *1
+     C                     MOVE DBPGM     RRPGM            *1
+     C                     MOVE DBFILE    RRFILE           *1
+     C                     MOVELDBKEY     RRKEY            *1
+     C*
+     C*
+     C                     END                             E1
+     C                     TIME           RRRUNT
+     C*
+     C**  If *INU7 is on, go to end of subroutine.
+     C           *INU7     CABEQ'1'       #ZA9             B1
+     C*
+     C**  Move rundate and title into printer file fields.
+     C                     MOVE RUNA      RRRUNA
+     C                     MOVE TITL      RRTITL
+     C                     MOVEL'EXCHANGE'RRTIT2
+     C                     MOVE '/RATES  'RRTIT2
+     C                     MOVEL'    '    RRTIT3                          E17574
+     C*
+     C           #ZA9      ENDSR                           **#ZA9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*       SUBROUTINE ZA0150 - THIS SUBROUTINE CHAINS TO FILE LF/  *
+     C*       FDICDRLL TO GET THE INSTALLATION CONTROL DETAILS RECORD *
+     C*       1 (HELD ON PF/TABTB10)                                  *
+     C*       INDICATOR 80 IS SET ON IF THE CHAIN FAILS OR THE RECORD *
+     C*       IS FLAGGED FOR DELETION.                                *
+     C*       IF INDICATOR 80 IS SET ON DETAILS OF THE ATTEMPTED      *
+     C*       ACCESS ARE PLACED IN THE LDA.                           *
+     C*                                                               *
+     C*       FIELDS USED : SS0150 - KEY USED TO ACCESS FDICDRLL      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZA0150    BEGSR
+     C*
+     C** SET UP KEY TO OBTAIN FORMAT TABTB10F '01        10'
+     C                     MOVEL'01'      SS0150 12
+     C                     MOVE '10'      SS0150
+     C*
+     C** CHAIN TO FILE FDICDRLL
+     C           SS0150    CHAINFDICDRLL             80
+     C           RECI      IFNE 'D'                        B1
+     C                     MOVE '1'       *IN80            *1
+     C                     END                             E1
+     C*
+     C** DEAL WITH DATA BASE ERROR
+     C           *IN80     IFEQ '1'                        ***************
+     C                     MOVEL'FDICDRLL'DBFILE           *             *
+     C                     MOVEL'900'     DBASE            * DBERROR 900 *
+     C                     MOVELSS0150    DBKEY            *             *
+     C                     END                             ***************
+     C*
+     C           ZA0159    ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE:  #A  - Initial processing; initialisation and    *
+     C*                     retrieval of ICD and user data.           *
+     C*                                                               *
+     C*  FIELDS DEFINED:    @FCYC  - (1 byte alpha) First cycle pro-  *
+     C*                              cessing has been executed if set *
+     C*                              to 'Y'.                          *
+     C*                                                               *
+     C*  CALLED BY :  MAIN PROGRAM                                    *
+     C*  CALLS     :  #ZA                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Initialise program variables and indicators.
+     C*
+     C**  Move program name into LDA in case of database error.
+     C                     MOVEL'FD0380'  DBPGM
+     C*********************MOVE*'FD0380'**RRPROG**************************S01319
+     C*
+     C**  Set first cycle completed flag, @FCYC, to 'Y' to prevent
+     C**  further execution.
+     C                     MOVE 'Y'       @FCYC   1
+     C                     MOVE '1'       *IN62                           S01319
+     C**                                                                  S01319
+     C                     OPEN FD0380P1                                  S01319
+     C**                                                                  S01319
+     C* REPORT SPOOL FILE GENERATION                                      S01319
+     C* transfer binary data into numeric field                           S01319
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01319
+     C                     CALL 'ZSFILE'                                  S01319
+     C                     PARM           SEQ     5                       S01319
+     C                     PARM *BLANKS   @PARM   3                       S01319
+     C                     PARM           SFILE                           S01319
+     C                     PARM           ZSNUM                           S01319
+     C                     PARM *BLANK    ZSERR   1                       S01319
+     C*                                                                   S01319
+     C** Error during ZSFILE processing, return to calling program        S01319
+     C           ZSERR     IFEQ 'Y'                                       S01319
+     C                     SETON                     U7U8LR               S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     RETRN                                          S01319
+     C                     END                                            S01319
+     C*
+     C**  Seton indicator to print first page headings.
+     C                     MOVE '1'       *IN65
+     C*
+     C**  Retrieve Installation Control Data.
+     C*
+     C                     EXSR #ZA
+     C*
+     C**  If *INU7 is on, go to end of subroutine.
+     C           *INU7     CABEQ'1'       #A9
+     C*
+     C**
+     C                     READ FDCCYLLL                 99
+     C*
+     C*
+     C           #A9       ENDSR                           **#A9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #C     - Termination processing;  outputs        *
+     C*                       relevant last print file format and     *
+     C*                       also report headings if no record found *
+     C*                       on audit file.                          *
+     C*                                                               *
+     C*  FIELDS DEFINED:    @FCYC  - (1 byte alpha) First cycle pro-  *
+     C*                              cessing has been executed if set *
+     C*                              to 'Y'.                          *
+     C*                                                               *
+     C*  CALLED BY : Main processing                                  *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C** IF NO DATA BASE ERROR CHECK FDTTOTLL FILE
+     C           *INU7     IFEQ '0'                        B1
+     C                     EXSR #CA                        *1
+     C                     END                             E1
+     C*
+     C*
+     C**  Output headings if first cycle flag is not 'Y', i.e. no
+     C**  record read from audit file and hence no detail time calcs.
+     C**  processed.
+     C           @FCYC     IFNE 'Y'                        B1
+     C*
+     C**  Move program name into LDA in case of database error.
+     C                     MOVEL'FD0380'  DBPGM            *1
+     C*********************MOVEL'FD0380'**RRPROG************1*************S01319
+     C*
+     C**  First chain to ICD file for header fields.
+     C                     EXSR #ZA                        *1
+     C*
+     C                     END                             E1
+     C*                                                                   S01319
+     C* REPORT SPOOL FILE GENERATION                                      S01319
+     C* transfer binary data into numeric field                           S01319
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01319
+     C                     CALL 'ZSFILE'                                  S01319
+     C                     PARM           SEQ     5                       S01319
+     C                     PARM *BLANKS   @PARM   3                       S01319
+     C                     PARM           SFILEU                          S01319
+     C                     PARM           ZSNUMU                          S01319
+     C                     PARM *BLANK    ZSERR   1                       S01319
+     C*                                                                   S01319
+     C** Error during ZSFILE processing, return to calling program        S01319
+     C           ZSERR     IFEQ 'Y'                                       S01319
+     C                     SETON                     U7U8LR               S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     RETRN                                          S01319
+     C                     END                                            S01319
+     C*
+     C*
+     C** WRITE CONTROL REPORT
+     C                     WRITEFDAUDIR0
+     C*
+     C*
+     C**  If *INU7 is on then a database error has occurred
+     C**  - write database error printer format.
+     C           *INU7     IFEQ '1'                        B1
+     C*
+     C**  Write headers if required.
+     C                     EXSR #ZB                        *1
+     C*
+     C           @FCYC     IFEQ 'Y'                        B1             S01319
+     C                     WRITEFD0380R3                   *1
+     C                     END                             E1             S01319
+     C                     WRITEFDAUDIR1                   *1             S01319
+     C*
+     C                     END                             E1
+     C*
+     C** Write 'End of report' format.
+     C           @FCYC     IFEQ 'Y'                        B1
+     C                     WRITEFD0380R2                   *1
+     C                     END                             E1
+     C*
+     C************IN66*****IFEQ*'1'************************B1*************S01319
+     C*********************WRITEFD0380R0********************1*************S01319
+     C*********************WRITEFD0380R4********************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C*
+     C           #C9       ENDSR                           **#C9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: *PSSR - Error handling subroutine.               *
+     C*                                                               *
+     C*  FIELDS DEFINED:                                              *
+     C*                                                               *
+     C*  CALLED BY : This routine is called if there are any program  *
+     C*              or file errors.                                  *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C           #PSSR9    ENDSR                            ***PSSR9**
+     C*
+     OTABLETXFE                @RLSFL
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2001
+** Array containing period descriptions.
+OvernightTom/Next Spot Next1 Week
+2 Weeks  3 Weeks  1 Month  2 Months
+3 Months 6 Months 9 Months 1 Year

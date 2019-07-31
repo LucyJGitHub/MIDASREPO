@@ -1,0 +1,1226 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Corporate action allocation resume report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7548 - Corporate Action Allocation Resume Report           *
+      *                                                               *
+      *  Function:  Report Program for Corporate Action Allocation.   *
+      *  (I/C)                                                        *
+      *                                                               *
+      *  Called by: SEC7548 - Corporate Action Allocation Report.     *
+      *                                                               *
+      *  Calls: AOBANKR0 - Midas AO Bank ICD access object.           *
+      *         AOCUSTR0 - Midas AO Client details access object.     *
+      *         AOCURRR0 - Midas AO Currency codes access object.     *
+      *         ZSFILE   - Midas FC Set-up spool file numbers file.   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CSE020             Date 21Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 29Dec98               *
+      *                 149692             Date 04Dec98               *
+      *                 136928  *CREATE    Date 16JUN98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSE020 - Corporate Actions Domino Effect Processing          *
+      *           SECORFPD (Recompiled)                               *
+      *  CAC005 - PCA-SE Enhancement.                                 *
+      *  149692 - Sort SE7548P1 by Bulk instead of Corporate Act. Ref.*
+      *  136928 - New Report created for CEU017, because the existing *
+      *           report SE7534P1 and SE7534P2 is too detail to be    *
+      *           used as a quick check list.                         *
+      *                                                               *
+      *****************************************************************
+      *
+      ***  Midas SE Securities                                                 - Prefixe   .
+      *
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      *
+      ***  Midas SE Corporate Actions - Reference Upd Idx                      - Prefixe MA.
+      *
+     FSECORFL0IF  E           K        DISK         KINFSR *PSSR
+      *                                                                   149692
+      ***  Midas SE Corporate Actions - Join File                         149692
+      *                                                                   149692
+     FSECORFJ0IF  E           K        DISK         KINFSR *PSSR          149692
+     F            SECOCCD0                          KRENAMESECOCCD1       149692
+      *
+      ***  Midas SE Corporate Actions - Depots Live records                    - Prefixe MB.
+      *
+     FSECODPL5IF  E           K        DISK         KINFSR *PSSR
+      *
+      ***  Midas SE Corporate Actions - Depots Reference                       - Prefixe MS.
+      *
+     FSECODRL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      ***  Midas SE Corporate Actions - Allocations by Depots, Book, Customers - Prefixe MC.
+      *
+     FSECOALL7IF  E           K        DISK         KINFSR *PSSR
+      *
+      ***  Midas SE Corporate Action Type                                      - Prefixe MM.
+      *
+     FSECOATL0IF  E           K        DISK         KINFSR *PSSR
+      *
+     FSECOCCL0IF  E           K        DISK         KINFSR *PSSR
+      *
+     FSE7548P1O   E                    PRINTER      KINFDS SPOOL1     UC
+      *
+      ***  Midas SE Corporate Action Allocation Audit Report.
+      *
+     FSE7548AUO   E                    PRINTER      KINFDS SPOOLU
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N    O F    I N D I C A T O R S                *
+      *                                                               *
+      *  37    Multibranching Indicator.                       (*ON)  *
+      *  70    Change in Depot and/or Branch.                  (*ON)  *
+      *  80    Chain Fail ON SECORFL0, SECOALL3, SECOATL0,     (*ON)  *
+      *        SECODRL1 OR SECTY.                                     *
+      *  81    End of file SECORFL0.                           (*ON)  *
+      *  82    End of file SECODPL5.                           (*ON)  *
+      *  83    End of file SECOALL7.                           (*ON)  *
+      *  89    Live record not found on SECOxxL1 or SECOCCL2   (*ON)  *
+      *        (where xx = 'DV', 'FR', 'RG', 'OF', 'EX' or 'NC'.      *
+      *  98    Date in format DDMMYY,                          (*OFF) *
+      *        Date in formAt MMDDYY.                          (*ON)  *
+      *                                                               *
+      *  LR    End Program indicator                           (*ON)  *
+      *  U7-U8 Database error indicator                        (*ON)  *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E    I N D E X                             *
+      *                                                               *
+      *  SRINIT - Program initialisation.                             *
+      *  SRCUST - Customers/Books processing.                         *
+      *  SRDEPO - Depot processing.                                   *
+      *  SRREF  - Move CO Reference fields to P1 and P2 headers.      *
+      *  SRAUDT - Audit processing.                                   *
+      *  SRSFIL - Register printer files via RCF.                     *
+      *  SRCDEP - Chain MACORF from PF/SECODPPD.                      *
+      *  SRSEC  - Chain Security Shortname from LF/SECTY.             *
+      *  *PSSR  - Error Routine.                                      *
+      *                                                               *
+      *  ZDATE2 - Standart subroutine to convert a Day Number to      *
+      *           date formats.                                       *
+      *   ZSEDIT  -  STANDARD EDITING ROUTINE                         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ***  Arrays used by standart subroutine ZDATE2:
+      ***    ZYDY containing Years in days cumulative, four year span,
+      ***    ZMDY containing Months in days cumulative through year,
+      ***    ZMNM containing Months short name.
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+      ***  Arrays ZS1 and ZS2 used by standart subroutine ZFRPED.
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+      *
+      ***  Array containing Copyright statement.
+      *
+     E                    CPY@    1   1 80
+      /SPACE 3
+      *
+      ***  Local data area for database error details
+      ***  *LOCK IN LDA immediately before and OUT LDA immediately
+      ***  after each database error handling.
+      ***
+      ***                                   134 141 DBFILE
+      ***      Defines:                     142 170 DBKEY
+      ***                                   171 180 DBPGM
+      ***                                   181 1830DBASE
+      *
+     ILDA       E DSLDA                         256
+      *
+      ***  Program Status Data Structure.
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ***  File Information Data Structure for SE7548P1.
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+      ***  File Information Data Structure for SE7548AU.
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ***  External data structure for Rundate data area.                      - Prefixe AG
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ***  External data structures for Bank Details                           - Prefixe BJ.
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ***  External data structures for Customer Details                       - Prefixe BB.
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ***  External data structure for Currency details                        - Prefixe A6.
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ***  Data structure for Securities Trading Details _ Prefixe BV
+      *
+     ISDSTRD    E DSSDSTRDPD
+      *
+      ***  First DS for access programs, Long  data structure.
+      *
+     IDSSDY     E DSDSSDY
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+      /EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Process initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ***  Process Depot.
+      *
+     C                     EXSR SRDEPO
+      *
+      ***  Process Audit.
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Program initialisation.                             *
+      *                                                               *
+      *  Called by: Main processing.                                  *
+      *                                                               *
+      *  Call: SRREF    - Move CO Reference fields to P1 and P2       *
+      *                   headers.                                    *
+      *        SRAUDT   - Audit processing.                           *
+      *        SRSFIL   - Register printer files via RCF.             *
+      *        *PSSR    - Error Routine.                              *
+      *        AOBANKR0 -  Midas AO Bank ICD access object            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           ** SRINIT SR **
+      *
+      ***  Set-up Copyright parameter.
+      *
+     C                     MOVEACPY@      CPY2@  80
+     C*
+     C*** Set up work fields
+     C*
+     C           *LIKE     DEFN MBSESN    WSESN
+     C           *LIKE     DEFN MBCORF    WCORF
+     C           *LIKE     DEFN MBOPTN    WOPTN2
+     C           *LIKE     DEFN MBBRCD    WBRCH
+     C           *LIKE     DEFN MBDDPT    WDPOT
+     C           *LIKE     DEFN NMDP      NSNMDP
+     C           *LIKE     DEFN NMCY      NSNMCY
+     C           *LIKE     DEFN A6NBDP    WNBDP
+     C           *LIKE     DEFN MCCOTP    WUCOTP           Cust./Book ind.
+     C           *LIKE     DEFN MCBOOK    WUBOOK           Book
+     C           *LIKE     DEFN MCCNUM    WUERCU
+     C           *LIKE     DEFN MCPTFR    WPTFR
+     C           *LIKE     DEFN NMDP      ESNBDP
+     C           *LIKE     DEFN MCCNUM    WDUMMY
+     C*
+     C*** Define Total fields
+     C*
+     C           *LIKE     DEFN MBASTA    TSACT            Stock Actual
+     C           *LIKE     DEFN MBASTR    TSRUN            Stock Rounding
+     C           *LIKE     DEFN MBACAA    TCACT            Cash Actual
+     C           *LIKE     DEFN MBACAR    TCRUN            Cash Rounding
+     C           *LIKE     DEFN MBEXPO    TEXPO            Ex-date position
+     C*
+     C*** Define print field for Dummy Customer
+     C*
+     C           *LIKE     DEFN RBKCT     DBKCT
+     C           *LIKE     DEFN RPRF      DRPRF
+     C           *LIKE     DEFN RCCY3     DRCCY3
+     C           *LIKE     DEFN RCEXDT    DEXDT
+     C           *LIKE     DEFN RCSACT    DSACT
+     C           *LIKE     DEFN RCSRUN    DSRUN
+     C           *LIKE     DEFN RCCACT    DCACT
+     C           *LIKE     DEFN RCCRUN    DCRUN
+     C*
+      ***  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WRSEQ   5        Sequence Number
+     C                     PARM           WRLEV   1        Level
+     C                     PARM           WRENT   3        Entity
+     C                     PARM           WSLAL   1        Select all CO
+     C                     PARM           WCARF   6        CO Reference
+     C                     PARM           WOPNO   2        Option Number
+     C                     PARM           WBRCD   3        Branch
+     C                     PARM           WDPRF   6        Depot
+      *
+      ***  Search key for SECODRL1: Midas SE CO Depots Reference.
+      *
+     C           WKEY1     KLIST
+     C                     KFLD           MBCORF           CO Reference from SECODPL1
+     C                     KFLD           MBBRCD           Branch from SECODPL1
+     C                     KFLD           MBDDPT           Depot from SECODPL1
+      *
+      ***  Search key for SECOALL7: Midas SE CO Allocation file.
+      *
+     C           CKEY1     KLIST
+     C                     KFLD           MBCORF           CO Reference from SECODPL1
+     C                     KFLD           MBOPTN           Option Number from SECODPL1
+     C                     KFLD           MBBRCD           Branch from SECODPL1
+     C                     KFLD           MBDDPT           Depot from SECODPL1
+     C                     KFLD           MBSESN
+      *
+      ***  Search key for SECOALL7: Midas SE CO Allocation file.
+      *
+     C           CKEY2     KLIST
+     C                     KFLD           MBCORF           CO Reference
+     C                     KFLD           MBOPTN           Option Number
+     C                     KFLD           MBBRCD           Branch
+     C                     KFLD           MBDDPT           Depot
+     C                     KFLD           MBSESN
+     C                     KFLD           WUCOTP           Cust./Book ind.
+     C                     KFLD           WUBOOK           Book
+     C                     KFLD           WUERCU           Dummy Cust.
+     C                     KFLD           WPTFR
+     C*
+     C*** Key to Access SECODPL5 - Depot record
+     C*
+     C           DPKEY1    KLIST
+     C                     KFLD           WCORF
+     C                     KFLD           WOPTN2
+     C                     KFLD           WSESN
+     C                     KFLD           WBRCH
+     C                     KFLD           WDPOT
+     C*
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ***  If ICD Bank not found, handle database error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'*FIRST  'DBKEY            ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     MOVEL'SE7548'  DBPGM            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+      ***  Access RUNDAT for multibranching indicator.
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ***  If Multibranching on, set on *IN37.
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN37
+     C                     ENDIF
+      *
+      ***  Call Access Program for Securities Trading Details,
+      ***  to retrieve Dummy Customer.
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+      ***  Handle Database Error.
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD015       DBASE            ***************
+     C                     MOVEL'SDSTRDPD'DBFILE           * DB ERROR 15 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE BVERCU    WDUMMY
+      *                                                                   CAC005
+      ***  Check if CAC005 - PCA-SE Enhancement is on.                    CAC005
+      *                                                                   CAC005
+     C                     MOVE 'N'       CAC005  1                       CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   @RTCD   7                       CAC005
+     C                     PARM '*VERIFY' @OPTN   7                       CAC005
+     C                     PARM 'CAC005'  @SARD   6                       CAC005
+      *                                                                   CAC005
+     C           @RTCD     IFEQ *BLANK                                    CAC005
+     C                     MOVE 'Y'       CAC005                          CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                   CAC005
+      *                                                                   149692
+      ***  Check if CSE007 is installed                                   149692
+      *                                                                   149692
+     C                     CALL 'AOSARDR0'                                149692
+     C                     PARM *BLANKS   @RTCD   7                       149692
+     C                     PARM '*VERIFY' @OPTN   7                       149692
+     C                     PARM 'CSE007'  @SARC   6                       149692
+      *                                                                   149692
+      ***  Set indicator if installed.                                    149692
+      *                                                                   149692
+     C           @RTCD     IFEQ *BLANK                                    149692
+     C                     MOVE 'Y'       CSE007  1                       149692
+     C                     ELSE                                           149692
+     C                     MOVE 'N'       CSE007                          149692
+     C                     END                                            149692
+      *
+      ***  Define local data area.
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     MOVELSFILEU    ZSILEU
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C                     EXSR SRSFIL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDEPO - Depot processing.                                   *
+      *                                                               *
+      *  Called by: Main processing.                                  *
+      *                                                               *
+      *  Calls: SRCUST   - Customers/Books processing.                *
+      *         SRREF    - Move CO Reference fields to P1 and P2      *
+      *                    headers.                                   *
+      *         SRCDEP   - Chain MACORF from PF/SECODPPD.             *
+      *         SRSEC    - Chain Security Shortname from LF/SECTY.    *
+      *         *PSSR    - Error Routine.                             *
+      *         ZDATE2   - Standart subroutine to convert a Day       *
+      *                    Number to date formats.                    *
+      *         AOCUSTR0 - Midas AO Client details access object.     *
+      *         AOCURRR0 - Midas AO Currency codes access object.     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDEPO    BEGSR                           ** SRDEPO SR **
+      *
+      ***  Read CO Reference file.
+      *
+     C           CSE007    IFEQ 'Y'                                       149692
+     C                     READ SECORFD0                 81
+     C                     ELSE                                           149692
+     C                     READ SECORFJ0                 81               149692
+     C                     ENDIF                                          149692
+      *
+      ***  If CO Reference file empty, process audit: null report.
+      *
+     C           *IN81     IFEQ '1'
+     C                     MOVE *BLANKS   RCCY
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ***  If CO Reference received as parameter not blank, retrieve CO Reference details.
+      *
+     C           WCARF     IFNE *BLANKS
+     C           WCARF     CHAINSECORFD0             81
+      *
+      ***  If CO Reference not found, handle database error.
+      *
+     C           *IN81     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECORFL0'DBFILE
+     C                     MOVELWCARF     DBKEY            ***************
+     C                     Z-ADD002       DBASE            * DB ERROR 02 *
+     C                     MOVEL'SE7548'  DBPGM            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Open printer files and set work fields printer open to 'Y'.
+      *
+     C                     OPEN SE7548P1                   CO Allocation by Depots report
+     C                     MOVE 'Y'       WOPEN1  1        Printer CO Alloc. by Depot opened
+     C*
+     C           *IN81     DOWEQ'0'
+     C*
+     C*** Set up Key
+     C*
+     C**********           Z-ADD*ZERO     WDPOT                                               CSD027
+     C                     MOVE *BLANKS   WDPOT                                               CSD027
+     C                     MOVE *LOVAL    WBRCH
+     C                     MOVE *LOVAL    WSESN
+     C                     MOVE MACORF    WCORF
+     C                     Z-ADD*ZERO     WOPTN2
+      *
+     C*
+     C***  Get Bulk Reference Number
+     C*
+     C           WCARF     IFNE *BLANKS                                   149692
+     C           CSE007    OREQ 'Y'                                       149692
+     C           MACORF    CHAINSECOCCL0             84
+     C           *IN84     IFEQ '0'
+     C                     MOVE NABLKR    RREFNO
+     C                     ELSE
+     C                     MOVE *BLANKS   RREFNO
+     C                     END
+     C                     ELSE                                           149692
+     C                     MOVE NABLKR    RREFNO                          149692
+     C                     ENDIF                                          149692
+     C*
+      ***  Retrieve first live record on CO Depot details file.
+      *
+     C           DPKEY1    SETLLSECODPL5
+     C                     MOVE '0'       *IN82
+      *
+      ***  Do while not end of file CO References and CO Reference received as parameter blank, or
+      ***  do for CO Reference received as parameter (= if not blank).
+      *
+     C           *IN82     DOWEQ'0'
+     C*
+     C*** Initiallise Total fields
+     C*
+     C                     Z-ADD0         TSACT
+     C                     Z-ADD0         TSRUN
+     C                     Z-ADD0         TCACT
+     C                     Z-ADD0         TCRUN
+     C                     Z-ADD0         TEXPO
+      *
+      ***  Move CO Reference fields to P1
+      *
+     C                     EXSR SRREF
+     C*
+     C           MACORF    READESECODPL5                 82
+     C*
+      ***  If record found, setup header informations
+      *
+     C           *IN82     IFEQ '0'
+     C                     MOVE MBOPTN    ROPTNO           for CO Allocation by Depot report
+     C                     MOVE MBBRCD    RBRCH
+     C                     MOVE *BLANKS   RNSENA
+     C                     MOVE *BLANKS   RNSEC
+     C*
+     C*** Get New Security details
+     C*
+     C           MBSESN    IFEQ '**CASH**'
+     C                     MOVELMBSESN    RNSENA
+     C                     ELSE
+     C                     MOVE MBSESN    RNSEC
+     C                     MOVE MBSESN    WSESN
+     C                     EXSR SRSEC
+     C                     MOVE SRPN      RNSENA
+     C                     END
+     C                     MOVE NMDP      NSNMDP           New Security Decimal Places
+     C                     MOVE NMCY      NSNMCY           New Security nominal Currency
+     C                     MOVE NMCY      RCCY
+     C                     MOVE NMCY      RCCY2
+     C                     MOVE NMCY      RCCY3
+      *
+      ***  Set Number of Decimal Places used in standart subroutine to New Currency Decimal
+      ***  Places.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM NMCY      WAJCD
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ***  If record not found, handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD011       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 11 *
+     C                     MOVELWAJCD     DBKEY            ***************
+     C                     MOVEL'SE7548'  DBPGM
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     Z-ADDA6NBDP    WNBDP
+      *
+      ***  Load Cash line fields for CO Allocation by Depot report.
+      *
+     C                     Z-ADDESNBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE MBEXPO    ZFLD15           Ex-Date Position
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   REXPOS
+     C                     MOVE ZOUT21    REXPOS             for CO Alloc. by Depot report
+      *
+     C                     Z-ADDNSNMDP    ZDECS
+     C                     MOVE MBASTA    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RSACT
+     C                     MOVE ZOUT21    RSACT
+     C*
+     C                     Z-ADD8         ZDECS            8 Decimal Places
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE MBASTR    ZFLD15           Actual Stock Rounding
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RSRUN
+     C                     MOVE ZOUT21    RSRUN
+      *
+     C                     Z-ADDWNBDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE MBACAA    ZFLD15           Actual Cash Allocation
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RCACT
+     C                     MOVE ZOUT21    RCACT
+      *
+     C                     MOVE MBACAR    ZFLD15           Actual Cash Rounding
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RCRUN
+     C                     MOVE ZOUT21    RCRUN
+      *
+      ***  Retrieve Depot Reference details for CO Reference, Branch and Depot processed.
+      *
+     C           WKEY1     CHAINSECODRL1             80
+      *
+      ***  If record not found, handle database error.
+      *
+     C           *IN80     IFEQ '1'
+     C           MSRECI    ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECODRL1'DBFILE           ***************
+     C                     Z-ADD009       DBASE            * DB ERROR 09 *
+     C                     MOVEL'SE7548'  DBPGM            ***************
+     C                     MOVELMBCORF    DBKEY1  9
+     C                     MOVE MBBRCD    DBKEY1
+     C                     MOVELDBKEY1    DBKEY2 15
+     C                     MOVE MBDDPT    DBKEY2 15
+     C                     MOVELDBKEY2    DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVE MSCOST    RSTAT
+      *
+      ***  Retrieve Depot Report Name by calling access object.
+      *
+     C                     MOVE *BLANKS   WKEYC
+     C                     MOVELMBDDPT    WKEYC
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR'  WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WKEYC  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ***  If record not found, handle database error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD010       DBASE            ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DB ERROR 10 *
+     C                     MOVELWKEYC     DBKEY            ***************
+     C                     MOVEL'SE7548'  DBPGM
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Load Depot Report Name fields for reports.
+      *
+     C                     MOVELBBCSSN    RDEPO            for CO Allocation by Depot report
+      *
+      ***  Print header and details for CO Allocation by Depots report (SE7548P1).
+      *
+     C                     WRITEHEADP1                     write header
+     C                     WRITEHEADP2                     write details for CO Reference
+     C                     WRITEDETHP1                     write sub-heading for Branch/Depot
+     C                     WRITEDETHP12                    write sub-heading for Branch/Depot
+     C                     WRITEDETHP13                    write sub-heading for Branch/Depot
+     C                     WRITEDETLP1                     write details for Branch/Depot
+     C                     WRITEDETHP2                     write details for Branch/Depot
+     C                     WRITEDETHP3
+      *
+      ***  Process Customers/Books details for the Depot processed.
+      *
+     C                     EXSR SRCUST
+      *
+     C                     END
+     C                     ENDDO
+      *
+      ***  Read next record on CO References file.
+      *
+     C           CSE007    IFEQ 'Y'                                       149692
+     C                     READ SECORFD0                 81
+     C                     ELSE                                           149692
+     C                     READ SECORFJ0                 81               149692
+     C                     ENDIF                                          149692
+      *
+      ***  If CO Reference selected (= CO Reference received as parameter not blank), stop
+      ***  processing (only this CO Reference to process).
+      *
+     C           WCARF     IFNE *BLANKS
+     C                     MOVE '1'       *IN81
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRREF  - Move SECORFPD fields to P1                          *
+      *                                                               *
+      *  Called by: SRINIT - Program initialisation.                  *
+      *             SRDEPO - Depot processing.                        *
+      *                                                               *
+      *  Calls: SRSEC    - Chain Security Shortname from LF/SECTY.    *
+      *         *PSSR    - Error Routine.                             *
+      *         ZDATE2   - Standart subroutine to convert a Day       *
+      *                    Number to date formats.                    *
+      *         AOCURRR0 - Midas AO Currency codes access object.     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREF     BEGSR                           ** SRREF SR **
+      *
+      ***  Retrieve Decimal Places, Currency and Security Report Name for the Event Security.
+      *
+     C                     MOVE MASESN    WSESN
+     C                     EXSR SRSEC
+     C                     MOVE NMDP      ESNBDP           Event Security Decimal Places
+      *
+      ***  Load fields for CO Allocation by Depot report (SE7548P1).
+      *
+     C                     MOVE NMCY      RCCY1            Nominal Currency
+     C                     MOVE *BLANKS   RREPNA
+     C                     MOVE SRPN      RREPNA           Security Report Name
+      *
+      ***  Retrieve Number of Decimal Places of Event Currency by calling access objet.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM NMCY      WAJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ***  If record not found, handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD012       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 12 *
+     C                     MOVELWAJCD     DBKEY            ***************
+     C                     MOVEL'SE7548'  DBPGM
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    ECNBDP  10       Event Currency Decimal Places
+      *
+      ***  Retrieve CO Type Description and CO Processing Type.
+      *
+     C           MACOAT    CHAINSECOATD0             80
+      *
+      ***  If record not found, handle database error.
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECOATL0'DBFILE
+     C                     MOVELMACOAT    DBKEY            ***************
+     C                     Z-ADD013       DBASE            * DB ERROR 13 *
+     C                     MOVEL'SE7548'  DBPGM            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Load reports fields (P1 = for CO Allocation by Depot report (SE7548P1)
+      *
+     C                     MOVE MASESN    RSEC             Security Shortname (P1)
+      *
+     C                     MOVE MACORF    RCAREF           CO Reference (P1)
+      *
+     C                     MOVE MACOAN    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RDATAN           Date of Announcement (P1)
+      *
+     C                     MOVE MACOEX    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXDAT           Ex-Date (P1)
+      *
+     C                     MOVE MANBOP    RNOOPT           Number of Options (P1)
+      *
+     C                     MOVE MAALEF    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RALEFF           Allocation Effective Date (P1)
+      *
+     C                     MOVE MMDESC    RNARRA           CO Type Description (P1) = Narrative
+      *
+     C                     MOVE MACOPD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RPAYDT           Payment Date (P1)
+      *
+     C                     MOVE MAEVDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REVDT            Event Date (P1)
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCUST - Customers/Books Processing.                         *
+      *                                                               *
+      *  Called by: SRDEPO - Depot processing.                        *
+      *                                                               *
+      *  Calls: SRSEC    - Chain Security Shortname from LF/SECTY.    *
+      *         *PSSR    - Error Routine.                             *
+      *         ZSEDIT   - Standard subroutine to insert a decimal    *
+      *                    point and sign into a numeric field and    *
+      *                    to blank out leading zeros (optionaly      *
+      *                    inserting commas).                         *
+      *         AOCUSTR0 - Midas AO Client details access object.     *
+      *         AOCURRR0 - Midas AO Currency codes access object.     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCUST    BEGSR                           ** SRCUST SR **
+     C*
+     C                     MOVE *LOVAL    WUCOTP
+     C                     MOVE *LOVAL    WUBOOK
+     C                     MOVE *LOVAL    WUERCU
+     C                     MOVE *LOVAL    WPTFR
+     C                     MOVE '0'       *IN83
+     C*
+     C           CKEY2     SETLLSECOALL7
+      *
+      ***  Retrieve CO Allocation details for CO Reference, Option Number, Branch and Depot from
+      ***  CO Depots details.
+      *
+     C           *IN83     DOWEQ'0'
+      *
+     C           CKEY1     READESECOALD0                 83
+      ***  If no CO Allocation detail live record found, set report detail fields to blanks and
+      ***  write Null report.
+      *
+     C           *IN83     IFEQ '0'
+      *
+     C                     MOVE *BLANKS   RBKCT
+      *
+      ***  If Customer from CO Allocation detail file not = 0.
+      *
+     C********** MCCNUM    IFNE 0                                                             CSD027
+     C           MCCNUM    IFNE *BLANKS                                                       CSD027
+      *
+      ***  Save Customer and Portfolio.
+      *
+     C                     MOVE MCCNUM    RBKCT            Customer
+     C                     MOVE MCPTFR    RPRF             Portfolio
+     C                     MOVE MCCNUM    RBKCT     P
+      *
+      ***  Else, if Customer Number = 0, save Book code and load 'Book code' report field.
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   RBKCT
+     C                     MOVE MCBOOK    RBKCT
+      *                                                                   CAC005
+      ** If CAC005 is on, retrieve user book from AOBKPCR0.               CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM           PRTCD   7                       CAC005
+     C                     PARM '*USER  ' POPTN   7                       CAC005
+     C           PMBKCD    PARM *BLANKS   PMBKCD  2                       CAC005
+     C           PMPRFC    PARM *BLANKS   PMPRFC  4                       CAC005
+     C                     PARM MCBOOK    PMPSBK  2                       CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVELPMBKCD    RBKCT                           CAC005
+     C                     MOVE PMPRFC    RBKCT                           CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                   CAC005
+     C                     ENDIF
+      *
+      ***  Load report fields.
+      *
+     C                     MOVE MCPTFR    RPRF             Portfolio
+      *
+     C                     Z-ADDESNBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE MCEXPO    ZFLD15           Ex-Date Position
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RCEXDT
+     C                     MOVE ZOUT21    RCEXDT
+     C                     ADD  MCEXPO    TEXPO
+      *
+      ***  Write Stock Allocation details.
+      *
+     C                     MOVE NSNMDP    ZDECS
+     C                     MOVE MCASTA    ZFLD15           Actual Stock Allocation
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RCSACT
+     C                     MOVE ZOUT21    RCSACT
+     C                     ADD  MCASTA    TSACT
+     C*
+     C***  Write Stock Rounding details.
+     C*
+     C                     Z-ADD8         ZDECS            8 Decimal Places
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE MCASTR    ZFLD15           Actual Stock Rounding
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RCSRUN
+     C                     MOVE ZOUT21    RCSRUN
+     C                     ADD  MCASTR    TSRUN
+     C*
+     C***  Write Book/Customer Details.
+     C*
+     C                     MOVE WNBDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE MCACAA    ZFLD15           Actual Cash Allocation
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RCCACT
+     C                     MOVE ZOUT21    RCCACT
+     C                     ADD  MCACAA    TCACT
+     C*
+     C***  Write Cash Rounding details.
+     C*
+     C                     MOVE MCACAR    ZFLD15           Actual Cash Rounding
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RCCRUN
+     C                     MOVE ZOUT21    RCCRUN
+     C                     ADD  MCACAR    TCRUN
+     C*
+     C***  Print Customers' CO Allocation, but save the dummy customer until last
+     C*
+     C           MCCNUM    IFNE WDUMMY
+     C*
+     C           OFLLN1    SUB  PRTLN1    WREM1   20
+     C           WREM1     IFLT 6                          If end of page
+     C                     WRITEHEADP1                     write header
+     C                     WRITEHEADP2
+     C                     WRITEDETHP1
+     C                     WRITEDETHP12
+     C                     WRITEDETHP13
+     C                     WRITEDETLP1
+     C                     WRITEDETHP2
+     C                     WRITEDETHP3
+     C                     ENDIF
+      *
+     C                     WRITEDETLP2                     Write Customer/Bks details
+     C*
+     C                     ELSE
+     C*
+     C*** Save the Dummy record to be printed out later
+     C*
+     C                     MOVE RBKCT     DBKCT
+     C                     MOVE RPRF      DRPRF
+     C                     MOVE RCCY3     DRCCY3
+     C                     MOVE RCEXDT    DEXDT
+     C                     MOVE RCSACT    DSACT
+     C                     MOVE RCSRUN    DSRUN
+     C                     MOVE RCCACT    DCACT
+     C                     MOVE RCCRUN    DCRUN
+     C*
+     C                     END
+      *
+      ***  Read newt record on CO Allocation details fiel.
+      *
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C*** Print Dummy Customer record before Total Line
+     C*
+     C                     MOVE DBKCT     RBKCT
+     C                     MOVE DRPRF     RPRF
+     C                     MOVE DRCCY3    RCCY3
+     C                     MOVE DEXDT     RCEXDT
+     C                     MOVE DSACT     RCSACT
+     C                     MOVE DSRUN     RCSRUN
+     C                     MOVE DCACT     RCCACT
+     C                     MOVE DCRUN     RCCRUN
+     C*
+     C           OFLLN1    SUB  PRTLN1    WREM1   20
+     C           WREM1     IFLT 6                          If end of page
+     C                     WRITEHEADP1                     write header
+     C                     WRITEHEADP2
+     C                     WRITEDETHP1
+     C                     WRITEDETHP12
+     C                     WRITEDETHP13
+     C                     WRITEDETLP1
+     C                     WRITEDETHP2
+     C                     WRITEDETHP3
+     C                     ENDIF
+      *
+     C                     WRITEDETLP2                     Write Customer/bks details
+     C*
+     C**  Print Total Line
+     C*
+     C                     Z-ADDESNBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE TEXPO     ZFLD15           Ex-date Position
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RTEXDT
+     C                     MOVE ZOUT21    RTEXDT
+      *
+      ***  Write Stock Allocation details.
+      *
+     C                     MOVE NSNMDP    ZDECS
+     C                     MOVE TSACT     ZFLD15           Actual Stock Allocation
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RTSACT
+     C                     MOVE ZOUT21    RTSACT
+     C*
+     C***  Write Stock Rounding details.
+     C*
+     C                     Z-ADD8         ZDECS            8 Decimal Places
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE TSRUN     ZFLD15           Actual Stock Rounding
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RTSRUN
+     C                     MOVE ZOUT21    RTSRUN
+     C*
+     C***  Write Book/Customer Details.
+     C*
+     C                     MOVE WNBDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE TCACT     ZFLD15           Actual Cash Allocation
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RTCACT
+     C                     MOVE ZOUT21    RTCACT
+     C*
+     C***  Write Cash Rounding details.
+     C*
+     C                     MOVE TCRUN     ZFLD15           Actual Cash Rounding
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RTCRUN
+     C                     MOVE ZOUT21    RTCRUN
+     C*
+     C                     WRITEDETHP2
+     C                     WRITEDETTP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Audit processing.                                   *
+      *                                                               *
+      *  Called by: Main processing.                                  *
+      *             SRINIT - Program initialisation.                  *
+      *             *PSSR  - Error Routine.                           *
+      *                                                               *
+      *  Calls: SRSFIL - Register printer files via RCF.              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR                           ** SRAUDT SR **
+      *
+      ***  If there is a database error, output the database error information.
+      *
+     C           *INU7     IFEQ '1'
+      *
+      ***  If CO Allocation by Depot report opened, write database error information.
+      *
+     C           WOPEN1    IFEQ 'Y'
+     C                     WRITEDBERP1
+     C                     ENDIF
+      *
+      ***  Write the database error information on Audit report.
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  If no records read, output "No Details" message.
+      *
+     C           RCCY      IFEQ *BLANKS
+      *
+      ***  On Audit report.
+      *
+     C                     WRITEHEADAU
+     C                     WRITENODTLS
+     C                     ELSE
+      *
+      ***  If records read, output "End of Report" message.
+      *
+     C                     WRITETRAILP1                    On CO Allocation by Depot report
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  If CO Allocation by Depot report opened, process RCF for SE7548P1 file.
+      *
+     C           WOPEN1    IFEQ 'Y'
+     C                     MOVELSFILE1    ZSILEU
+     C                     Z-ADDSFNUM1    ZSNUMU  60
+     C                     EXSR SRSFIL
+     C                     ENDIF
+      *
+      ***  End of program: close all files and return.
+      *
+     C                     CLOSE*ALL
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSFIL - Register Printer Files via RCF.                     *
+      *                                                               *
+      *  Called by: SRINIT - Program initialisation.                  *
+      *             SRAUDT - Audit processing.                        *
+      *                                                               *
+      *  Calls: ZSFILE - Midas FC Set-up spool file numbers file.     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSFIL    BEGSR                           ** SRSFIL SR **
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM WRSEQ     SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           ZSILEU 10
+     C                     PARM           ZSNUMU  60
+     C                     PARM *BLANK    ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the Calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSEC  - Chain Security Shortname from LF/SECTY.             *
+      *                                                               *
+      *  Called by: SRCUST - Customers/Books Processing.              *
+      *             SRDEPO - Depot processing.                        *
+      *             SRREF  - Move SECORFPD fields to P1 and P2        *
+      *                      headers.                                 *
+      *                                                               *
+      *  Calls: *PSSR  - Error Routine.                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSEC     BEGSR                           ** SRSEC SR **
+      *
+      ***  Retrieve details for the Security.
+      *
+     C           WSESN     CHAINSECTYDF              80
+      *
+      ***  If record not found, handle database error.
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECTY'   DBFILE
+     C                     MOVELWSESN     DBKEY            ***************
+     C                     Z-ADD014       DBASE            * DB ERROR 14 *
+     C                     MOVEL'SE7548'  DBPGM            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error Routine.                                      *
+      *                                                               *
+      *  Called by: SRINIT - Program initialisation.                  *
+      *             SRCUST - Customers/Books Processing.              *
+      *             SRDEPO - Depot processing.                        *
+      *             SRREF  - Move SECORFPD fields to P1 and P2        *
+      *                      headers.                                 *
+      *             SRSEC  - Chain Security Shortname from LF/SECTY.  *
+      *                                                               *
+      *  Calls: SRAUDT - Audit processing.                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     OUT  LDA
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     EXSR SRAUDT                     Output Audit
+     C                     ENDIF
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZSEDITZ3
+      *****************************************************************
+      /EJECT
+**  ZYDY - Years in days cumulative, four year span,
+0366073110961461
+**  ZMDY - Months in days cumulative through year,
+000031059090120151181212243273304334365
+**  ZMNM - Months short name.
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@ - Copyright statement.
+(c) Finastra International Limited 2001

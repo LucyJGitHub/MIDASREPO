@@ -1,0 +1,454 @@
+     H        1                                                           S01390
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Cheque audit report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module
+     F*                                                               *
+     F*  DL9030 - CHEQUE AUDIT REPORT.                                *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 051159             Date 05Jan94               *
+      *                 S01390             Date 10Aug92               *
+     F*                 AUS006             DATE 18DEC90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  051159 - Correct the overprint of address                    *
+     F*         - Ensure TOTINT is printed for last cheque            *
+     F*         - Remove stupid headers                               *
+     F*  S01390 - Release 10 Changes for Australianisation            *
+     F*  AUS006 - AUSTRALIAN PRODUCT - INTEREST HISTORY               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F* INPUT FILES
+     F*
+     FCHQNOZZ IF  E                    DISK
+     F***TABTB10*IF**E                    DISK                            S01390
+     FCHQNO   IF  E           K        DISK
+     F***CLINT***IF**E           K        DISK                            S01390
+     F*********** CLINTCAF                          KIGNORE               S01390
+     F*********** CLINTCBF                          KIGNORE               S01390
+     F*********** CLINTC1F                          KIGNORE               S01390
+     F*
+     F* PRINTER FILES
+     F***DL9030P1O***E                    PRINTER                         S01390
+     FDL9030P1O   E                    PRINTER      KINFDS SPOOL      UC  S01390
+     E*
+     E                    AR1        20 15 0
+     E                    AR2        20  6
+     E                    CPY@    1   1 80                                S01390
+     I*
+     I*                                                                   PS0040
+     ICHQNOZZF
+     I              CNUM                            ZZCNUM
+     I***CLINTCCF***                                                      S01390
+     I***********   CNUM                            CNUM1                 S01390
+     ICQSTAT     UDS
+     I                                        1  10 JNAM
+     I                                       11  20 UNAM
+     I                                       21  30 JNUM
+     I***********                            31  40 PNAM                  S01390
+     I                                       31  36 STRNO                 S01390
+     I                                       41  98 NAR1
+     I                                       99 156 NAR2
+     I                                      157 214 NAR3
+     I                                      215 272 NAR4
+     I                                      273 512 FILL
+     I            DS
+     I                                        1 120 AR2
+     I                                        1   60DLNA1
+     I                                        7  120DLNA2
+     I                                       13  180DLNA3
+     I                                       19  240DLNA4
+     I                                       25  300DLNA5
+     I                                       31  360DLNA6
+     I                                       37  420DLNA7
+     I                                       43  480DLNA8
+     I                                       49  540DLNA9
+     I                                       55  600DLNA10
+     I                                       61  660DLNA11
+     I                                       67  720DLNA12
+     I                                       73  780DLNA13
+     I                                       79  840DLNA14
+     I                                       85  900DLNA15
+     I                                       91  960DLNA16
+     I                                       97 1020DLNA17
+     I                                      103 1080DLNA18
+     I                                      109 1140DLNA19
+     I                                      115 1200DLNA20
+     I            DS
+     I                                        1 300 AR1
+     I                                        1  150IAMD1
+     I                                       16  300IAMD2
+     I                                       31  450IAMD3
+     I                                       46  600IAMD4
+     I                                       61  750IAMD5
+     I                                       76  900IAMD6
+     I                                       91 1050IAMD7
+     I                                      106 1200IAMD8
+     I                                      121 1350IAMD9
+     I                                      136 1500IAMD10
+     I                                      151 1650IAMD11
+     I                                      166 1800IAMD12
+     I                                      181 1950IAMD13
+     I                                      196 2100IAMD14
+     I                                      211 2250IAMD15
+     I                                      226 2400IAMD16
+     I                                      241 2550IAMD17
+     I                                      256 2700IAMD18
+     I                                      271 2850IAMD19
+     I                                      286 3000IAMD20
+     I*                                                                   S01390
+     ISPOOL       DS                                                      S01390
+     I**    SPOOL FILE INFORMATION DATA STRUCTURE FOR P1                  S01390
+     I                                       83  92 SFILE                 S01390
+     I                                    B 123 1240SFNUM                 S01390
+     I*                                                                   S01390
+     ISDBANK    E DSSDBANKPD                                              S01390
+     I* Bank Details Accesses Via Access Program                          S01390
+     I*                                                                   S01390
+     ISDCUST    E DSSDCUSTPD                                              S01390
+     I* Customer Details Accessed Via Access Program                      S01390
+     I*                                                                   S01390
+     IDSFDY     E DSDSFDY                                                 S01390
+     I* First DS For Access Programs, Short Data Structure                S01390
+     I*                                                                   S01390
+     IDSSDY     E DSDSSDY                                                 S01390
+     I* Second DS For Access Programs, Long Data Structure                S01390
+     C*
+     C                     EXSR #INIT                      INITIALISATION
+     C*
+     C************IN99     DOWEQ#OFF                                      S01390
+     C           *IN19     DOWEQ'0'                                       S01390
+     C*
+     C***********          READ CHQNO                    99               S01390
+     C                     READ CHQNO                    19               S01390
+     C*                                                                   051159
+     C** If last cheque, ensure TOTINT gets printed                       051159
+     C*                                                                   051159
+     C           *IN19     IFEQ '1'                                       051159
+     C                     MOVE *BLANKS   CNUM                            051159
+     C                     END                                            051159
+     C*
+     C************IN92     IFEQ #ON                                       S01390
+     C           *IN12     IFEQ '1'                                       S01390
+     C           CNUM      ANDNEOLDCUS
+     C           TINT      ANDNE0
+     C                     WRITETOTINT                 77
+     C************IN77     CASEQ#ON       PRTHED                          S01390
+     C           *IN77     CASEQ'1'       PRTHED                          S01390
+     C                     END
+     C**********           Z-ADDCNUM      OLDCUS                                              CSD027
+     C                     MOVE CNUM      OLDCUS                                              CSD027
+     C                     Z-ADD0         TINT
+     C                     END
+     C*
+     C************IN99     IFEQ #OFF                                   LS S01390
+     C           *IN19     IFEQ '0'                                       S01390
+     C           FILOPN    IFNE 'Y'                                       S01390
+     C                     OPEN DL9030P1                                  S01390
+     C                     Z-ADD0         PAGE                            S01390
+     C                     MOVEL'Y'       FILOPN  1                       S01390
+     C                     EXSR PRTHED                                    S01390
+     C*                                                                   S01390
+     C** Report printer file to RCF via ZSFILE                            S01390
+     C*                                                                   S01390
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01390
+     C                     CALL 'ZSFILE'                                  S01390
+     C                     PARM           SEQ                             S01390
+     C                     PARM *BLANKS   @ENT    3                       S01390
+     C                     PARM           SFILE                           S01390
+     C                     PARM           ZSNUM                           S01390
+     C                     PARM *BLANKS   ZSERR   1                       S01390
+     C*                                                                   S01390
+     C** Error during ZSFILE processing, return to calling program        S01390
+     C*                                                                   S01390
+     C           ZSERR     IFEQ 'Y'                                       S01390
+     C                     SETON                     U7U8LR               S01390
+     C                     END                                            S01390
+     C                     END                                            S01390
+     C*                                                                   S01390
+     C           CNCQ      IFEQ 'Y'
+     C                     WRITEP1DET3                 77
+     C************IN77     CASEQ#ON       PRTHED                          S01390
+     C           *IN77     CASEQ'1'       PRTHED                          S01390
+     C                     END
+     C                     END
+     C           CNCQ      CASNE'Y'       LIVE
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C************IN92     IFEQ #ON                                       S01390
+     C           FILOPN    IFNE 'Y'                                       S01390
+     C                     OPEN DL9030P1                                  S01390
+     C                     Z-ADD0         PAGE                            S01390
+     C                     MOVEL'Y'       FILOPN  1                       S01390
+     C                     EXSR PRTHED                                    S01390
+     C*                                                                   S01390
+     C** Report printer file to RCF via ZSFILE                            S01390
+     C*                                                                   S01390
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01390
+     C                     CALL 'ZSFILE'                                  S01390
+     C                     PARM           SEQ                             S01390
+     C                     PARM *BLANKS   @ENT    3                       S01390
+     C                     PARM           SFILE                           S01390
+     C                     PARM           ZSNUM                           S01390
+     C                     PARM *BLANKS   ZSERR   1                       S01390
+     C*                                                                   S01390
+     C** Error during ZSFILE processing, return to calling program        S01390
+     C*                                                                   S01390
+     C           ZSERR     IFEQ 'Y'                                       S01390
+     C                     SETON                     U7U8LR               S01390
+     C                     END                                            S01390
+     C                     END                                            S01390
+     C           *IN12     IFEQ '1'                                       S01390
+     C           TCQA      DIV  100       YY
+     C                     WRITEAUDIT                  77
+     C************IN77     CASEQ#ON       PRTHED                          S01390
+     C           *IN77     CASEQ'1'       PRTHED                          S01390
+     C                     END
+     C                     WRITEOPRNAR                 77
+     C************IN77     CASEQ#ON       PRTHED                          S01390
+     C           *IN77     CASEQ'1'       PRTHED                          S01390
+     C                     END
+     C                     ELSE
+     C                     WRITENOINFO
+     C                     END
+     C                     WRITEP1END
+     C*
+     C***********          MOVE #ON       *INLR                           S01390
+     C                     MOVE '1'       *INLR                           S01390
+     C*
+      /TITLE PROCESS LINE CHEQUES
+     C           LIVE      BEGSR
+      **---------------------------------------------------------LIVE
+      **                                                           **
+      ** LIVE  - PROCESS LIVE CHEQUES.                             **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C***********ADDKEY    CHAINCLINT                98                   S01390
+     C                     MOVE *BLANKS   KYCN                            051159
+     C                     MOVE CNUM      KYCN   10                       S01390
+     C                     CALL 'AOCUSTR0'                                S01390
+     C                     PARM *BLANKS   RTCD                            S01390
+     C                     PARM '*KEY   ' OPTN                            S01390
+     C                     PARM           KYCN                            S01390
+     C                     PARM *BLANKS   KYST    7                       S01390
+     C           SDCUST    PARM SDCUST    DSSDY                           S01390
+     C*
+     C***********          Z-ADD0         X                               S01390
+     C                     Z-ADD0         X       20                      S01390
+     C***********          MOVE #OFF      *IN90                           S01390
+     C                     MOVE '0'       *IN10                           S01390
+     C                     MOVE *BLANKS   CNAX
+     C***********          MOVE #ON       *IN92                           S01390
+     C                     MOVE '1'       *IN12                           S01390
+     C*
+     C                     DO   20        X
+     C           X         IFEQ 1
+     C***********          MOVE CNA1      CNAX                            S01390
+     C                     MOVE BBCNA1    CNAX                            S01390
+     C           IAMD1     IFNE 0
+     C           PCQI      COMP 'R'                      91
+     C***********          MOVE #ON       *IN90                           S01390
+     C                     MOVE '1'       *IN10                           S01390
+     C                     MOVE DLNA1     DLNO1
+     C           IAMD1     DIV  100       AMT1
+     C                     ADD  AMT1      TINT
+     C                     WRITEP1DET1                 77
+     C************IN77     CASEQ#ON       PRTHED                          S01390
+     C           *IN77     CASEQ'1'       PRTHED                          S01390
+     C                     END
+     C***********          MOVE #OFF      *IN90                           S01390
+     C                     MOVE '0'       *IN10                           S01390
+     C                     END
+     C                     ELSE
+     C           X         IFEQ 2
+     C***********          MOVE CNA2      CNAX                            S01390
+     C                     MOVE BBCNA2    CNAX                            S01390
+     C           IAMD2     IFNE 0
+     C***********          MOVE #ON       *IN90                           S01390
+     C                     MOVE '1'       *IN10                           S01390
+     C                     MOVE DLNA2     DLNO2
+     C           IAMD2     DIV  100       AMT2
+     C                     ADD  AMT2      TINT
+     C                     END                                            051159
+     C                     WRITEP1DET2                 77
+     C************IN77     CASEQ#ON       PRTHED                          S01390
+     C           *IN77     CASEQ'1'       PRTHED                          S01390
+     C                     END
+     C***********          MOVE #OFF      *IN90                           S01390
+     C                     MOVE '0'       *IN10                           S01390
+     C***********          END                                            051159
+     C                     ELSE
+     C           X         IFEQ 3
+     C***********          MOVE CNA3      CNAX                            S01390
+     C                     MOVE BBCNA3    CNAX                            S01390
+     C           IAMD3     IFNE 0
+     C***********          MOVE #ON       *IN90                           S01390
+     C                     MOVE '1'       *IN10                           S01390
+     C                     MOVE DLNA3     DLNO2
+     C           IAMD3     DIV  100       AMT2
+     C                     ADD  AMT2      TINT
+     C                     END                                            051159
+     C                     WRITEP1DET2                 77
+     C************IN77     CASEQ#ON       PRTHED                          S01390
+     C           *IN77     CASEQ'1'       PRTHED                          S01390
+     C                     END
+     C***********          MOVE #OFF      *IN90                           S01390
+     C                     MOVE '0'       *IN10                           S01390
+     C***********          END                                            051159
+     C                     ELSE
+     C           X         IFEQ 4
+     C***********          MOVE CNA4      CNAX                            S01390
+     C                     MOVE BBCNA4    CNAX                            S01390
+     C           IAMD4     IFNE 0
+     C***********          MOVE #ON       *IN90                           S01390
+     C                     MOVE '1'       *IN10                           S01390
+     C                     MOVE DLNA4     DLNO2
+     C           IAMD4     DIV  100       AMT2
+     C                     ADD  AMT2      TINT
+     C                     END                                            051159
+     C                     WRITEP1DET2                 77
+     C************IN77     CASEQ#ON       PRTHED                          S01390
+     C           *IN77     CASEQ'1'       PRTHED                          S01390
+     C                     END
+     C***********          MOVE #OFF      *IN90                           S01390
+     C                     MOVE '0'       *IN10                           S01390
+     C***********          END                                            051159
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           X         IFGT 4
+     C           AR1,X     IFNE *ZEROS
+     C                     MOVE *BLANKS   CNAX
+     C           AR1,X     DIV  100       AMT2
+     C                     MOVE AR2,X     DLNO2
+     C***********          MOVE #ON       *IN90                           S01390
+     C                     MOVE '1'       *IN10                           S01390
+     C                     ADD  AMT2      TINT
+     C                     WRITEP1DET2                 77
+     C************IN77     CASEQ#ON       PRTHED                          S01390
+     C           *IN77     CASEQ'1'       PRTHED                          S01390
+     C                     END
+     C***********          MOVE #OFF      *IN90                           S01390
+     C                     MOVE '0'       *IN10                           S01390
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /TITLE INITIALISACTION ROUTINE
+     C           #INIT     BEGSR
+      **--------------------------------------------------------#INIT
+      **                                                           **
+      ** #INIT - INITIALISATION ROUTINE.                           **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C***********          MOVE '1'       #ON     1                       S01390
+     C***********          MOVE '0'       #OFF    1                       S01390
+     C***********          MOVE 'B'       RCDT                            S01390
+     C*
+     C                     TIME           TIME    60
+     C                     MOVEACPY@      BIS@   80                       S01390
+     C*
+     C***********          READ TABTB10                  H1               S01390
+     C                     CALL 'AOBANKR0'                                S01390
+     C                     PARM '*DBERR ' RTCD    7                       S01390
+     C                     PARM '*FIRST ' OPTN    7                       S01390
+     C           SDBANK    PARM SDBANK    DSFDY                           S01390
+     C*
+     C***********          READ CHQNOZZ                  97               S01390
+     C                     READ CHQNOZZ                  17               S01390
+     C***********                                                         S01390
+     C***********          CAS            PRTHED                          S01390
+     C***********          END                                            S01390
+     C*
+     C                     ENDSR
+     C*
+      /TITLE DEFINITION ROUTINE
+     C           #DEFN     BEGSR
+      **--------------------------------------------------------#DEFN
+      **                                                           **
+      ** #DEFN - DEFINITION ROUTINE.                               **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C***********ADDKEY    KLIST                                          S01390
+     C***********          KFLD           CNUM                            S01390
+     C***********          KFLD           RCDT                            S01390
+     C*
+     C************LIKE     DEFN RCDE      X                               S01390
+     C           *LIKE     DEFN CNUM      OLDCUS
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           STAT    1
+     C                     PARM           SEQ     5                       S01390
+     C*
+     C                     ENDSR
+     C*
+      /TITLE PRINT HEADINGS ROUTINE
+     C           PRTHED    BEGSR
+      **-------------------------------------------------------PRTHED
+      **                                                           **
+      ** PRTHED - PRINT HEADINGS.                                  **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C*
+     C                     WRITEHEAD1
+     C*
+     C           STAT      IFEQ '2'
+     C                     WRITEHEAD2
+     C                     ELSE
+     C           STAT      IFEQ '3'
+     C                     WRITEHEAD3
+     C                     END
+     C                     END
+     C*
+     C                     WRITEHEAD4
+     C*
+     C***********          MOVE #OFF      *IN77                           S01390
+     C                     MOVE '0'       *IN77                           S01390
+     C*
+     C                     ENDSR
+** CPY@   **      OBJECT COPYRIGHT                                        S01390
+(c) Finastra International Limited 2001

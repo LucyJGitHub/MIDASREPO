@@ -1,0 +1,2289 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE T&N calculate + apply rates')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas     - Retail T&N Accounts                              *
+      *                                                               *
+      *  RPG/RE4017  - T&N Utility to check correct rates applied     *
+      *                                                               *
+      *  Function:  For a particular Term & Notice accounts           *
+      *             works out the rate to be applied, then applies it *
+      *             to the rate files.                                *
+      *             Note that PMODE = 'RERCH' means update RERCH..    *
+      *             files (i.e. I/C or I/C initiation) whereas        *
+      *             PMODE = 'RCHGR' means update RCHG.. files         *
+      *             (i.e. middle of COB just before retail history    *
+      *             update).                                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2009                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034366           Date 09Sep15               *
+      *                 CCB020             Date 06Aug12               *
+      *                 AR989169           Date 19Jun12               *
+      *                 AR947093A          Date 04May12               *
+      *                 AR947093           Date 26Apr12               *
+      *                 AR943718           Date 03Apr12               *
+      *                 AR847249           Date 28Jan12               *
+      *                 AR851899           Date 06Nov11               *
+      *                 CER049             Date 06Dec10               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CRE005             Date 18Jan10               *
+      *                 241299             Date 18Dec09               *
+      *                 230355             Date 18Dec09               *
+      *                 228714             Date 18Dec09               *
+      *                 228618             Date 18Dec09               *
+      *                 223607             Date 18Dec09               *
+      *                 223609             Date 18Dec09               *
+      *                 CRE015 *CREATE     Date 18Dec09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD034366 - CRE005 failuers in COB. Added timestamp field to  *
+      *             ensure that latest rate change record is used.    *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  AR989169 - Interest tab was not properly updated             *
+      *  AR947093A - Base Rate amendment resulted to 0 interest rate  *
+      *  AR947093 - Base Rate amendment resulted to 0 interest rate   *
+      *  AR943718 - Base Rate change did not apply the rounding       *
+      *             information on the accounts                       *
+      *  AR847249 - Perform exception handling when Final rate is     *
+      *             negative or zero.                                 *
+      *  AR851899 - Term and notice base rate change did not apply    *
+      *             the rounding information on the accounts          *
+      *  CER049 - Stamp Tax (Recompile)                               *
+      *  CRE073 - Interest Rate Rounding                              *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CRE005 - Changes to STRAN                                    *
+      *  241299 - Use "Previous Value Date" instead of "Last change   *
+      *           date" on REINHSPD.                                  *
+      *  230355 - Recompile over changes to REPRPNPD.                 *
+      *         - Recompile over changes to REPPA1PD.                 *
+      *         - Recompile over changes to REPPA2PD.                 *
+      *         - Amend data transfer to DACP & CACP.                 *
+      *         - Populate DRBR & CRBR appropriately.                 *
+      *  228714 - When an account is inserted with a base rate code,  *
+      *           use new rate BANBRT when term/notice value date is  *
+      *           greater than or equal to new rate value date.       *
+      *  228618 - If base rate or threshold rate not found then       *
+      *           use rates on retail history instead of DBASE error  *
+      *  223607 - Pass on Alternative account to REIACD               *
+      *  223609 - Next cap date not calculated for insert of account  *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  Indicator    Description                                     *
+      *  ~~~~~~~~~    ~~~~~~~~~~~                                     *
+      *  01 - 19      Input Control.                                  *
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)      *
+      *   20          Record Not Found                                *
+      *   21          File Error Occurred                             *
+      *   22          Start/End Of File Reached                       *
+      *   25          Lookup/Scan.                                    *
+      *  30 - 39      Program Work Indicators                         *
+      *  40 - 49      Output Control.                                 *
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)    *
+      *  90 - 99      Error Control.                                  *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  Routine      Description                                     *
+      *  ~~~~~~~      ~~~~~~~~~~~                                     *
+      *  *PSSR        Program Error Routine                           *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  File         Description                                     *
+      *  ~~~~         ~~~~~~~~~~~                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     F/EJECT
+      *
+      **  Account details
+      *
+     FACCNT   UF  E           K        DISK         KINFSR *PSSR
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     F                                              KCOMIT
+      *
+      ** Credit Interest rates
+      *
+     FREHRCJ  IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Debit Interest rates
+      *
+     FREHRDJ  IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Interest threshold rates
+      *
+     FREINT   IF  E           K        DISK
+     F            REINTAF                           KIGNORE
+     F            REINTZF                           KIGNORE
+      *
+      ** Historical Interest threshold rates
+      *
+     FREINHSL0IF  E           K        DISK
+      *
+      ** Base Rates
+      *
+     FSDBSRTL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Historical Base Rates
+      *
+     FSDBSHSL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Retail Interest & Charges Output
+      *
+     FREIAC   UF  E           K        DISK         KCOMIT
+      *
+      ** Rate changes (Input Cycle)
+      *
+     FRERCH1PDUF  E           K        DISK         KINFSR *PSSR A
+     F            RERCH1D0                          KRENAMERERCH1
+     F                                              KCOMIT
+      *
+     FRERCH2PDUF  E           K        DISK         KINFSR *PSSR A
+     F            RERCH2D0                          KRENAMERERCH2
+     F                                              KCOMIT
+      *
+     FRERCH3PDUF  E           K        DISK         KINFSR *PSSR A
+     F            RERCH3D0                          KRENAMERERCH3
+     F                                              KCOMIT
+      *
+      ** Rate changes trailer (Input Cycle)
+      *
+     FRERCHHPAUF  E                    DISK         KINFSR *PSSR
+     F            RERCHHA0                          KRENAMERERCHH
+     F                                              KCOMIT
+      *
+      ** Rate changes Output (COB)
+      *
+     FREDPOSL UF  E           K        DISK         KINFSR *PSSR A
+     F            REEODPFF                          KIGNORE
+     F            MADJPFF                           KIGNORE
+     F            ICHGR1F                           KRENAMERCHGR1
+     F            ICHGR2F                           KRENAMERCHGR2
+     F            ICHGR3F                           KRENAMERCHGR3
+     F                                              KCOMIT
+      *
+      ** Audit file
+      *
+     FREPPA1PDO   E                    DISK
+      *
+      ** Audit file 2
+      *
+     FREPPA2PDO   E                    DISK
+      *
+      *****************************************************************
+      *
+     E/EJECT
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Arrays for Balance and Rate structures
+      *
+     E                    BAL        11 15 0
+     E                    RAT        11 11 7
+      *
+      *****************************************************************
+      *
+     IREHRCJF
+      *
+      ** Rename fields in REHRCJ
+      *
+     I              RECI                            CRECI
+     I              CNUM                            CCNUM
+     I              CCY                             CCCY
+     I              ACOD                            CACOD
+     I              ACSQ                            CACSQ
+     I              BRCA                            CBRCA
+     I              ACNO                            CACNO
+      *
+     IREHRDJF
+      *
+      ** Rename fields in REHRDJ
+      *
+     I              RECI                            DRECI
+     I              CNUM                            DCNUM
+     I              CCY                             DCCY
+     I              ACOD                            DACOD
+     I              ACSQ                            DACSQ
+     I              BRCA                            DBRCA
+     I              ACNO                            DACNO
+      *
+     IREINTDF
+      *
+      ** Rename fields in REINTD
+      *
+     I              RECI                            HRECI
+     I              BRT                             HBRT
+     I              INTH                            HINTH
+     I              RAT2                            HRAT2
+     I              BAL2                            HBAL2
+      *
+      ** Account details
+      *
+     IACFMT     E DSACCNTAB
+      *
+      ** Rate changes to be actioned
+      *
+     IREPFMT    E DSREPRPNPD
+      *
+      ** External data structure for MEMOS Details
+      *
+     IDSMEMS    E DSMEMOS
+      *
+      ** Rename fields in PF/MEMOS
+      *
+     I              RECI                            MERECI
+     I              BRCA                            MEBRCA
+     I              CNUM                            MECNUM
+     I              CCY                             MECCY
+     I              ACOD                            MEACOD
+     I              ACSQ                            MEACSQ
+     I              ACNO                            MEACNO
+     I              ACODQQ                          MEACDQ
+      *
+      ** First DS for access programs, short data structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Local Data Area
+      *
+     ILDA       E DSLDA
+      *
+      ** Local Data Area
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Local Data Area
+      *
+     IJNSTAT    E DSJNSTAT
+      *
+      ** Program data structure
+      *
+     IPGMDS      SDS
+     I                                        1  10 SPGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+      *
+      ** Parameters
+      *
+     IP@FMT     E DSDSSDY
+     I/EJECT
+      *
+      ** Key fields for REINTD
+      *
+     I            DS
+     I                                        1  12 HKEY
+     I                                        1   1 HBLANK
+     I                                        2   3 HTYPE
+     I                                        4   8 HSBTYP
+     I                                        9  11 HCURR
+     I                                       12  12 HD
+      *
+      ** Balance fields
+      *
+     I            DS
+     I                                        1  88 BALDS
+     I                                    P   1   80WBAL1
+     I                                    P   9  160WBAL2
+     I                                    P  17  240WBAL3
+     I                                    P  25  320WBAL4
+     I                                    P  33  400WBAL5
+     I                                    P  41  480WBAL6
+     I                                    P  49  560WBAL7
+     I                                    P  57  640WBAL8
+     I                                    P  65  720WBAL9
+     I                                    P  73  800WBAL10
+     I                                    P  81  880WBAL11
+      *
+      ** Rate fields
+      *
+     I            DS
+     I                                        1  66 RATDS
+     I                                    P   1   67WRAT1
+     I                                    P   7  127WRAT2
+     I                                    P  13  187WRAT3
+     I                                    P  19  247WRAT4
+     I                                    P  25  307WRAT5
+     I                                    P  31  367WRAT6
+     I                                    P  37  427WRAT7
+     I                                    P  43  487WRAT8
+     I                                    P  49  547WRAT9
+     I                                    P  55  607WRAT10
+     I                                    P  61  667WRAT11
+      *                                                                                       CRE005
+      ** Data Structure for Rate Spread in File ICHGR2                                        CRE005
+      *                                                                                       CRE005
+     I            DS                                                                          CRE005
+     I                                        1  36 @X2RAT                                    CRE005
+     I                                    P   1   67X2RATA                                    CRE005
+     I                                    P   7  127X2RATB                                    CRE005
+     I                                    P  13  187X2RATC                                    CRE005
+     I                                    P  19  247X2RATD                                    CRE005
+     I                                    P  25  307X2RATE                                    CRE005
+     I                                    P  31  367X2RATF                                    CRE005
+      *                                                                                       CRE005
+      ** Data Structure Balance in File ICHGR2                                                CRE005
+      *                                                                                       CRE005
+     I            DS                                                                          CRE005
+     I                                        1  48 @X2BAL                                    CRE005
+     I                                    P   1   80X2BALA                                    CRE005
+     I                                    P   9  160X2BALB                                    CRE005
+     I                                    P  17  240X2BALC                                    CRE005
+     I                                    P  25  320X2BALD                                    CRE005
+     I                                    P  33  400X2BALE                                    CRE005
+     I                                    P  41  480X2BALF                                    CRE005
+      *                                                                                       CRE005
+      ** Data Structure for Rate Spread in File ICHGR3                                        CRE005
+      *                                                                                       CRE005
+     I            DS                                                                          CRE005
+     I                                        1  36 @X3RAT                                    CRE005
+     I                                    P   1   67X3RATG                                    CRE005
+     I                                    P   7  127X3RATH                                    CRE005
+     I                                    P  13  187X3RATI                                    CRE005
+     I                                    P  19  247X3RATJ                                    CRE005
+     I                                    P  25  307X3RATK                                    CRE005
+     I                                    P  31  367X3RATL                                    CRE005
+      *                                                                                       CRE005
+      ** Data Structure Balance in File ICHGR3                                                CRE005
+      *                                                                                       CRE005
+     I            DS                                                                          CRE005
+     I                                        1  48 @X3BAL                                    CRE005
+     I                                    P   1   80X3BALG                                    CRE005
+     I                                    P   9  160X3BALH                                    CRE005
+     I                                    P  17  240X3BALI                                    CRE005
+     I                                    P  25  320X3BALJ                                    CRE005
+     I                                    P  33  400X3BALK                                    CRE005
+     I                                    P  41  480X3BALL                                    CRE005
+      *                                                                                       CRE005
+     I            DS                                                                          230355
+     I                                        1  24 W2DACP                                    230355
+     I                                        1   3 WKDRBR                                    230355
+     I                                        4  24 WKDACP                                    230355
+      *                                                                                       230355
+      ** Redine E2CACP                                                                        230355
+      *                                                                                       230355
+     I            DS                                                                          230355
+     I                                        1  24 W2CACP                                    230355
+     I                                        1   3 WKCRBR                                    230355
+     I                                        4  24 WKCACP                                    230355
+      *                                                                                     MD034366
+     IQUSEC       DS                                                                        MD034366
+     I                                    B   1   40QUSBPR                                  MD034366
+     I                                    B   5   80QUSBAV                                  MD034366
+     I                                        9  15 QUSEI                                   MD034366
+     I                                       16  16 QUSERE                                  MD034366
+     I                                       17  32 QUSED0                                  MD034366
+      *                                                                                     MD034366
+     IOUTDAT      DS                                                                        MD034366
+     I                                        1   4 APIYR                                   MD034366
+     I                                        5   6 APIMH                                   MD034366
+     I                                        7   8 APIDY                                   MD034366
+     I                                        9  10 APIHR                                   MD034366
+     I                                       11  12 APIMN                                   MD034366
+     I                                       13  14 APISC                                   MD034366
+     I                                       15  17 APIML                                   MD034366
+     ISTAMP       DS                                                                        MD034366
+     I                                        1   4 RETYR                                   MD034366
+     I                                        5   5 TMST1                                   MD034366
+     I                                        6   7 RETMH                                   MD034366
+     I                                        8   8 TMST2                                   MD034366
+     I                                        9  10 RETDY                                   MD034366
+     I                                       11  11 TMST3                                   MD034366
+     I                                       12  13 RETHR                                   MD034366
+     I                                       14  14 TMST4                                   MD034366
+     I                                       15  16 RETMN                                   MD034366
+     I                                       17  17 TMST5                                   MD034366
+     I                                       18  19 RETSC                                   MD034366
+     I                                       20  20 TMST6                                   MD034366
+     I                                       21  23 RETML                                   MD034366
+     I                                       24  26 RETMC                                   MD034366
+      *                                                                                       CRE073
+     I              'ZACALCSPRT'          C         CALCSR                                    CRE073
+     I** Constant                                                                             CRE073
+      *                                                                                       CRE073
+      *
+      *****************************************************************
+      *
+      ** Initial Processing
+      *
+     C                     EXSR INIT
+      *
+      ** Main Processing
+      *
+     C                     EXSR MAIN
+      *
+      ** End Processing
+      *
+     C                     EXSR END
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Initial Processing                                  *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      MKI@@  80
+      *
+      ** ACCNTAB key list
+      *
+     C           AKEY1     KLIST
+     C                     KFLD           ACNUM   6
+     C                     KFLD           ACCY    3
+     C                     KFLD           AACOD  100
+     C                     KFLD           AACSQ   20
+     C                     KFLD           ABRCA   3
+      *
+     C           KREHR1    KLIST
+     C                     KFLD           RHBRCA  3
+     C                     KFLD           RHCNUM  6
+     C                     KFLD           RHCCY   3
+     C                     KFLD           RHACOD 100
+     C                     KFLD           RHACSQ  20
+      *
+      ** Key fields for SDBRSTL0
+      *
+     C           BASKEY    KLIST
+     C                     KFLD           BSCCY   3
+     C                     KFLD           BSRAT   2
+      *
+      ** Key fields for SDBSHSL1
+      *
+     C           BASKE1    KLIST
+     C                     KFLD           HSCCY   3
+     C                     KFLD           HSRAT   20
+     C                     KFLD           HVDAT   50
+      *
+     C           BASKE2    KLIST
+     C                     KFLD           HSCCY   3
+     C                     KFLD           HSRAT   20
+      *
+      ** Key fields for REINHSPD
+      *
+     C           H2KEY     KLIST
+     C                     KFLD           HKEY
+     C                     KFLD           H2VDPC  50
+      *
+     C           KREIA1    KLIST
+     C                     KFLD           R1CNUM  6
+     C                     KFLD           R1CCY   3
+     C                     KFLD           R1ACOD 100
+     C                     KFLD           R1ACSQ  20
+     C                     KFLD           R1BRCA  3
+      *
+      ** Key for rate changes output ICHR..
+      *
+     C           RKEY1     KLIST
+     C                     KFLD           KBRCA   3
+     C                     KFLD           KCNUM   6
+     C                     KFLD           KCCY    3
+     C                     KFLD           KACOD  100
+     C                     KFLD           KACSQ   20
+     C                     KFLD           KVDAT   50
+      *
+      ** Define LDA Dtaara
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C********** *NAMVAR   DEFN           MPHAS   1                                           CCB020
+     C**********           IN   MPHAS                                                         CCB020
+     C                     MOVEL'CBC00100'@CBPRM  9                                           CCB020
+     C                     MOVE '1'       @CBPRM                                              CCB020
+     C                     CALL @CBPRM                                                        CCB020
+     C                     PARM *BLANKS   COBST   4                                           CCB020
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           *ENTRY    PLIST
+      *
+      ** Input of REPRPNPD record in format of REPRPNPD
+      *
+     C                     PARM           REPFMT
+      *
+      ** Return Code
+      *
+     C                     PARM           P@RTCD  7
+      *                                                                                       217717
+      ** Mode                                                                                 217717
+      *                                                                                       217717
+     C                     PARM           PMODE   5                                           217717
+      *
+      ** Effective debit rates
+      *
+     C                     PARM           PDRIB   20
+     C                     PARM           PDRIS  117
+     C                     PARM           PDICT   20
+     C                     PARM           PDCST   50
+      *
+      ** Effective credit rates
+      *
+     C                     PARM           PCRIB   20
+     C                     PARM           PCRIS  117
+     C                     PARM           PCICT   20
+     C                     PARM           PCCST   50
+      *                                                                                       CRE073
+      ** Check if Interest Rate Rounding feature is switched on                               CRE073
+      *                                                                                       CRE073
+     C                     MOVE 'N'       CRE073  1                                           CRE073
+     C                     CALL 'AOSARDR0'                                                    CRE073
+     C                     PARM *BLANKS   W0RTCD  7                                           CRE073
+     C                     PARM '*VERIFY' W0OPTN  7                                           CRE073
+     C                     PARM 'CRE073'  W0SARD  6                                           CRE073
+      *                                                                                       CRE073
+     C           W0RTCD    IFNE *BLANKS                                                       CRE073
+     C           W0RTCD    ANDNE'*NRF   '                                                     CRE073
+     C           *LOCK     IN   LDA                                                           CRE073
+     C                     MOVEL'RE4017  'DBPGM                                               CRE073
+     C                     MOVEL'CRE073'  DBKEY                                               CRE073
+     C                     MOVE 'SCSARDPD'DBFILE                                              CRE073
+     C                     Z-ADD13        DBASE                                               CRE073
+     C                     OUT  LDA                                                           CRE073
+     C                     EXSR *PSSR                                                         CRE073
+     C                     ENDIF                                                              CRE073
+      *                                                                                       CRE073
+     C           W0RTCD    IFEQ *BLANKS                                                       CRE073
+     C                     MOVE 'Y'       CRE073                                              CRE073
+     C                     ENDIF                                                              CRE073
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  MAIN   - Main Processing Control                             *
+      *                                                               *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+      ** Only do records where item = 1, no defaults,
+      *
+     C           E2ITEM    IFEQ 1
+     C           E2CNUM    ANDNE*BLANKS
+     C           E2CCY     ANDNE*BLANKS
+     C           E2ACOD    ANDNE0
+     C           E2ACSQ    ANDNE0
+     C           E2BRCA    ANDNE*BLANKS
+      *
+      ** CALCULATE NEW RATES
+      ** Set up work variables
+      ** Account details
+      *
+     C                     MOVELE2CNUM    W3CNUM  6
+     C                     MOVE E2CCY     W3CCY   3
+     C                     Z-ADDE2ACOD    W3ACOD 100
+     C                     Z-ADDE2ACSQ    W3ACSQ  20
+     C                     MOVE E2BRCA    W3BRCA  3
+      *
+      ** Initialise fields to contain new rates
+      *
+     C                     Z-ADD0         X1NRIB  20
+     C                     Z-ADD0         X1NRIS 117
+     C                     Z-ADD0         X1NICT  20
+     C                     Z-ADD0         X1NCST  50
+     C                     Z-ADD0         X1INRT 117
+      *
+      ** CREDIT PROCESSING
+      ** Get account details
+      *
+     C                     EXSR GETACC
+     C                     Z-ADDACNO      W3ACNO 100
+      *                                                                                       223609
+      ** Do not process if a closed account;                                                  223609
+      ** If record not found then process only if in input cycle                              223609
+      ** (i.e. implies it is an insert)                                                       223609
+      *                                                                                       223609
+     C           CLOSED    IFNE 'Y'                                                           223609
+     C           NOACRD    ANDNE'Y'                                                           223609
+     C           NOACRD    OREQ 'Y'                                                           223609
+     C********** MPHAS     ANDEQ'A'                                                    223609 CCB020
+     C           COBST     ANDEQ'*NO'                                                         CCB020
+      *
+      ** Set up credit work variables
+      *
+     C                     EXSR SETCRT
+      *
+      ** Get current interest details from REHPOSR1
+      *
+     C                     EXSR GETREH
+      *
+      ** Calculate rates
+      *
+     C                     EXSR CALRAT
+      *
+     C           'ENQUI'   IFEQ PMODE
+     C           'INSER'   OREQ PMODE
+     C                     EXSR ENQ
+     C                     ENDIF
+      *
+      ** Write to audit file
+      *
+     C           'RCHGR'   IFEQ PMODE
+     C           'RERCH'   OREQ PMODE
+     C           'AUDIT'   OREQ PMODE
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+     C           'RCHGR'   IFEQ PMODE
+     C           'RERCH'   OREQ PMODE
+      *
+      ** Apply rates if different
+      *
+     C                     EXSR APLRAT
+     C                     ENDIF
+      *
+      ** DEBIT PROCESSING
+      ** Initialise fields to contain new rates
+      *
+     C                     Z-ADD0         X1NRIB  20
+     C                     Z-ADD0         X1NRIS 117
+     C                     Z-ADD0         X1NICT  20
+     C                     Z-ADD0         X1NCST  50
+     C                     Z-ADD0         X1INRT 117
+      *
+      ** Get account details
+      *
+     C                     EXSR GETACC
+      *
+      * Set up credit work variables
+      *
+     C                     EXSR SETDRT
+      *
+      ** Get current interest details from REHPOSR1
+      *
+     C                     EXSR GETREH
+      *
+      ** Calculate rates
+      *
+     C                     EXSR CALRAT
+      *
+     C           'ENQUI'   IFEQ PMODE
+     C           'INSER'   OREQ PMODE
+     C                     EXSR ENQ
+     C                     ENDIF
+      *
+      ** Write to audit file
+      *
+     C           'RCHGR'   IFEQ PMODE
+     C           'RERCH'   OREQ PMODE
+     C           'AUDIT'   OREQ PMODE
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+     C           'RCHGR'   IFEQ PMODE
+     C           'RERCH'   OREQ PMODE
+      *
+      ** Apply rates if different
+      *
+     C                     EXSR APLRAT
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  END    - End Processing                                      *
+      *                                                               *
+      *****************************************************************
+     C           END       BEGSR
+      *
+     C                     EXSR CLOMEM
+      *
+     C                     SETON                     LR
+     C                     RETRN                           End Pgm
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ENQ    - Return rates for enquiry purposes only              *
+      *                                                               *
+      *****************************************************************
+     C           ENQ       BEGSR
+      *
+     C           W3DRCR    IFEQ 0
+     C                     Z-ADDX1NRIB    PDRIB
+     C                     Z-ADDX1NRIS    PDRIS
+     C                     Z-ADDX1NICT    PDICT
+     C                     Z-ADDX1NCST    PDCST
+     C                     ELSE
+     C                     Z-ADDX1NRIB    PCRIB
+     C                     Z-ADDX1NRIS    PCRIS
+     C                     Z-ADDX1NICT    PCICT
+     C                     Z-ADDX1NCST    PCCST
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Write to Audit file                                 *
+      *                                                               *
+      *****************************************************************
+     C           AUDIT     BEGSR
+      *
+      ** Get current interest type/subtype details from REIACD
+      *
+     C                     EXSR GETREI
+      *
+      ** Get MEMOS balance (for comparison only)
+      *
+     C                     EXSR GETMEM
+      *
+     C                     Z-ADDW3DRCR    ODRCR
+      *
+     C           W3DRCR    IFEQ 1
+     C                     Z-ADDCRIB      ORIB
+     C                     Z-ADDCRIS      ORIS
+     C                     Z-ADDCICT      OICT
+     C                     Z-ADDCCST      OCST
+     C                     ELSE
+     C                     Z-ADDDRIB      ORIB
+     C                     Z-ADDDRIS      ORIS
+     C                     Z-ADDDICT      OICT
+     C                     Z-ADDDCST      OCST
+     C                     ENDIF
+      *
+     C                     WRITEREPPA1D0
+      *
+      ** Determine if rate changes are to be made.
+      * Check if new rate different from what is on ACCNTAB/REIACD
+      ** Accounts file does not store base rate associated with
+      ** with Interest type/subtype, so set to zero for that case.
+      *
+     C                     Z-ADD0         Y1NRIB 150
+     C           X1NICT    IFNE 0
+     C           X1NRIB    ANDNE0
+     C                     Z-ADD0         Y1NRIB
+     C                     ELSE
+     C                     Z-ADDX1NRIB    Y1NRIB
+     C                     ENDIF
+      *
+     C                     MOVE ' '       ACCDIF  1
+      *
+     C           ORIB      IFNE Y1NRIB
+     C           ORIS      ORNE X1NRIS
+     C           OICT      ORNE X1NICT
+     C           OCST      ORNE X1NCST
+     C                     MOVE 'Y'       ACCDIF
+     C                     ENDIF
+      *
+     C                     MOVE ' '       REHDIF  1
+      *
+     C           BRT       IFNE X1NRIB
+     C           RTSP      ORNE X1NRIS
+     C           INTP      ORNE X1NICT
+     C           INST      ORNE X1NCST
+     C                     MOVE 'Y'       REHDIF
+     C                     ENDIF
+      *                                                                                       CRE073
+      ** Write interest rate rounding fields                                                  CRE073
+      *                                                                                       CRE073
+     C           CRE073    IFEQ 'Y'                                                           CRE073
+     C           W3DRCR    IFEQ 0                                                             CRE073
+     C                     Z-ADD@XCSP     E2DCSP                                              CRE073
+     C                     MOVE @XCSG     E2DCSG                                              CRE073
+     C                     MOVE @XRMT     E2DRMT                                              CRE073
+     C                     MOVE @XRFD     E2DRFD                                              CRE073
+     C                     ELSE                                                               CRE073
+     C                     Z-ADD@XCSP     E2CCSP                                              CRE073
+     C                     MOVE @XCSG     E2CCSG                                              CRE073
+     C                     MOVE @XRMT     E2CRMT                                              CRE073
+     C                     MOVE @XRFD     E2CRFD                                              CRE073
+     C                     ENDIF                                                              CRE073
+     C                     ENDIF                                                              CRE073
+      *
+     C           REHDIF    IFEQ 'Y'
+     C           ACCDIF    OREQ 'Y'
+     C                     WRITEREPPA2D0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  GETMEM - Get shadow balance from MEMOS                       *
+      *                                                               *
+      *****************************************************************
+     C           GETMEM    BEGSR
+      *
+      ** Call Access Object AOMEMSR0
+      *
+     C                     CALL 'AOMEMSR0'
+     C                     PARM *BLANKS   W0RTCD  7
+     C                     PARM '*KEY   ' W0OPTN  7
+     C                     PARM 0         W0RETL 100
+     C                     PARM E2CNUM    W0CNUM  6
+     C                     PARM E2CCY     W0CUCD  3
+     C                     PARM E2ACOD    W0ACCD 100
+     C                     PARM E2ACSQ    W0ACSQ  20
+     C                     PARM E2BRCA    W0BRCA  3
+     C           DSMEMS    PARM DSMEMS    DSFDY
+      *
+     C           W0RTCD    IFNE '       '
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE4017  'DBPGM
+     C                     MOVEL'MEMOS   'DBFILE
+     C                     Z-ADD10        DBASE
+     C                     MOVELW0OPTN    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CLOMEM - Close MEMOS                                         *
+      *                                                               *
+      *****************************************************************
+     C           CLOMEM    BEGSR
+      *
+      ** Call Access Object AOMEMSR0
+      *
+     C                     CALL 'AOMEMSR0'
+     C                     PARM *BLANKS   W0RTCD  7
+     C                     PARM '*FREE  ' W0OPTN  7
+     C                     PARM           W0RETL 100
+     C                     PARM           W0CNUM  6
+     C                     PARM           W0CUCD  3
+     C                     PARM           W0ACCD 100
+     C                     PARM           W0ACSQ  20
+     C                     PARM           W0BRCA  3
+     C           DSMEMS    PARM DSMEMS    DSFDY
+      *
+     C           W0RTCD    IFNE '       '
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE4017  'DBPGM
+     C                     MOVEL'MEMOS   'DBFILE
+     C                     Z-ADD12        DBASE
+     C                     MOVELW0OPTN    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GETACC - Get Account Details                                 *
+      *                                                               *
+      *****************************************************************
+     C           GETACC    BEGSR
+      *
+     C                     Z-ADD0         CRIB
+     C                     Z-ADD0         CRIS
+     C                     Z-ADD0         CRIC
+     C                     Z-ADD0         CRCD
+     C                     MOVE *BLANKS   CRIF
+     C                     Z-ADD0         CRDY
+     C                     Z-ADD0         NCID
+     C                     Z-ADD0         DRIB
+     C                     Z-ADD0         DRIS
+     C                     Z-ADD0         DRIC
+     C                     Z-ADD0         DRCD
+     C                     MOVE *BLANKS   DRIF
+     C                     Z-ADD0         DRDY
+     C                     Z-ADD0         NDID
+      *
+     C           PMODE     IFNE 'INSER'
+     C                     MOVELE2CNUM    ACNUM
+     C                     MOVE E2CCY     ACCY
+     C                     Z-ADDE2ACOD    AACOD
+     C                     Z-ADDE2ACSQ    AACSQ
+     C                     MOVE E2BRCA    ABRCA
+     C                     MOVE ' '       CLOSED  1
+     C                     MOVE ' '       NOACRD  1
+     C                     CLEARACFMT
+     C           AKEY1     CHAINACCNT                87
+      *
+     C           *IN87     IFEQ '1'                                                           223609
+     C                     MOVE 'Y'       NOACRD  1
+     C                     ENDIF
+      *
+     C           ACST      IFEQ 'C'
+     C                     MOVE 'Y'       CLOSED  1
+     C                     ENDIF
+      *
+     C           CLOSED    IFNE 'Y'
+     C           NOACRD    ANDNE'Y'
+      *
+      ** Find most recent debit rate change date
+      *
+     C           DRCD      IFGT OLDR
+     C                     Z-ADDDRCD      W3DRCD  50
+     C                     ELSE
+     C                     Z-ADDOLDR      W3DRCD
+     C                     ENDIF
+      *
+      ** Find most recent credit rate change date
+      *
+     C           CRCD      IFGT OLDR
+     C                     Z-ADDCRCD      W3CRCD  50
+     C                     ELSE
+     C                     Z-ADDOLCR      W3CRCD
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  GETREH - Get rate from REHPOSR1                              *
+      *                                                               *
+      *****************************************************************
+     C           GETREH    BEGSR
+      *
+      ** Initialise variables that might be used for output
+      *
+     C                     Z-ADD0         AODR
+     C                     Z-ADD0         INTP
+     C                     Z-ADD0         INST
+     C                     Z-ADD0         BRT
+     C                     Z-ADD0         RTSP
+     C                     Z-ADD0         INRT
+      *
+      ** Variable to say rate record already exists for that date
+      *
+     C                     MOVE ' '       UPDICH  1
+      *
+      ** Set up key
+      *
+     C                     MOVE E2BRCA    RHBRCA
+     C                     MOVELE2CNUM    RHCNUM
+     C                     MOVE E2CCY     RHCCY
+     C                     Z-ADDE2ACOD    RHACOD
+     C                     Z-ADDE2ACSQ    RHACSQ
+      *
+      ** Credit rate
+      *
+     C           W3DRCR    IFEQ 1
+      *
+      ** Read last rate change
+      *
+     C           KREHR1    SETGTREHRCJ
+     C           KREHR1    REDPEREHRCJ                 8989
+      *
+      ** If record not found, initialise fields to zero
+      *
+     C           *IN89     IFNE '0'
+     C                     Z-ADD0         INTP
+     C                     Z-ADD0         INST
+     C                     Z-ADD0         BRT
+     C                     Z-ADD0         RTSP
+     C                     Z-ADD0         INRT
+     C                     ENDIF
+      *
+      ** Debit rate
+      *
+     C                     ELSE
+      *
+     C           KREHR1    SETGTREHRDJ
+     C           KREHR1    REDPEREHRDJ                 8888
+     C           *IN88     IFNE '0'
+     C                     Z-ADD0         INTP
+     C                     Z-ADD0         INST
+     C                     Z-ADD0         BRT
+     C                     Z-ADD0         RTSP
+     C                     Z-ADD0         INRT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  SETCRT - Set up credit work variables                        *
+      *                                                               *
+      *****************************************************************
+     C           SETCRT    BEGSR
+      *
+      ** Set up Credit work variables for rate calculations
+      *
+     C                     Z-ADD1         W3DRCR  10
+     C                     Z-ADDE2CRIB    W3XRIB  20
+     C                     Z-ADDE2CRIS    W3XRIS 117
+     C                     Z-ADDE2CICT    W3XICT  20
+     C                     Z-ADDE2CCST    W3XCST  50
+     C                     MOVE E2CNIR    W3XNIR  1
+     C                     MOVE ' '       BASNFD  1                                           228618
+     C                     MOVE ' '       THRNFD  1                                           228618
+     C                     Z-ADDE2CCSP    @XCSP  117                                          CRE073
+     C                     MOVE E2CCSG    @XCSG   1                                           CRE073
+     C                     MOVE E2CRMT    @XRMT   7                                           CRE073
+     C                     MOVE E2CRFD    @XRFD   4                                           CRE073
+      *
+      ** Value date of rate change:
+      ** If term account or future-valued then use beginning of term
+      ** as rate change date, else use run date.
+      *
+     C           E2TPRD    IFEQ 'T'
+     C           E2VDAT    ORGE AGRDNB
+     C                     Z-ADDE2VDAT    W3VDAT  50
+     C                     ELSE
+     C                     Z-ADDAGRDNB    W3VDAT
+     C                     ENDIF
+      *
+      ** If balance is negative, then in credit,
+      ** else use zero balance.
+      *
+     C           E2BALN    IFLT 0
+     C                     Z-SUBE2BALN    W3XBAL 150
+     C                     ELSE
+     C                     Z-ADD0         W3XBAL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SETDRT - Set up debit work variables                         *
+      *                                                               *
+      *****************************************************************
+     C           SETDRT    BEGSR
+      *
+      ** Set up debit work variables for rate calculations
+      *
+     C                     Z-ADD0         W3DRCR  10
+     C                     Z-ADDE2DRIB    W3XRIB  20
+     C                     Z-ADDE2DRIS    W3XRIS 117
+     C                     Z-ADDE2DICT    W3XICT  20
+     C                     Z-ADDE2DCST    W3XCST  50
+     C                     MOVE E2DNIR    W3XNIR  1
+     C                     MOVE ' '       BASNFD  1                                           228618
+     C                     MOVE ' '       THRNFD  1                                           228618
+     C                     Z-ADDE2DCSP    @XCSP                                               CRE073
+     C                     MOVE E2DCSG    @XCSG                                               CRE073
+     C                     MOVE E2DRMT    @XRMT                                               CRE073
+     C                     MOVE E2DRFD    @XRFD                                               CRE073
+      *
+      ** Value date of rate change:
+      ** If term account or future-valued then use beginning of term
+      ** as rate change date, else use run date.
+      *
+     C           E2TPRD    IFEQ 'T'
+     C           E2VDAT    ORGE AGRDNB
+     C                     Z-ADDE2VDAT    W3VDAT  50
+     C                     ELSE
+     C                     Z-ADDAGRDNB    W3VDAT
+     C                     ENDIF
+      *
+      ** If balance is positive, then in debit,
+      ** else use zero balance.
+      *
+     C           E2BALN    IFGT 0
+     C                     Z-ADDE2BALN    W3XBAL 150
+     C                     ELSE
+     C                     Z-ADD0         W3XBAL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CALRAT - Calculate Rates                                     *
+      *                                                               *
+      *****************************************************************
+     C           CALRAT    BEGSR
+      *
+      ** If fixed periodic rate, need to convert rate structure into
+      ** a fixed spread rate.
+      *
+     C           W3XNIR    IFEQ 'P'
+      *
+      ** Determine whether simple or complex (int type/subtype
+      ** threshold) interest structure.
+      *
+     C           W3XICT    IFEQ 0
+     C                     EXSR FIXSIM
+     C                     ELSE
+     C                     EXSR FIXCOM
+     C                     ENDIF
+      *
+      ** If Daily rate
+      *
+     C                     ELSE
+      *
+      ** Determine whether simple or complex (int type/subtype
+      ** threshold) interest structure.
+      *
+     C           W3XICT    IFEQ 0
+     C                     EXSR DAYSIM
+     C                     ELSE
+     C                     EXSR DAYCOM
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *                                                                                       228618
+      ** If base rate or threshold rate was not found, use previous rate                      228618
+      ** as retrieved from retail history                                                     228618
+      *                                                                                       228618
+     C           BASNFD    IFEQ 'Y'                                                           228618
+     C           THRNFD    OREQ 'Y'                                                           228618
+     C                     Z-ADDINTP      X1NICT                                              228618
+     C                     Z-ADDINST      X1NCST                                              228618
+     C                     Z-ADDBRT       X1NRIB                                              228618
+     C                     Z-ADDRTSP      X1NRIS                                              228618
+     C                     Z-ADDINRT      X1INRT                                              228618
+     C                     ENDIF                                                              228618
+      *                                                                                       228618
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GETBAS - Get base Rate if specified                          *
+      *                                                               *
+      *****************************************************************
+     C           GETBAS    BEGSR
+      *
+     C                     Z-ADD0         BASRAT 117
+     C           W3XRIB    IFNE 0
+      *
+     C                     MOVE W3CCY     BSCCY
+     C                     MOVE W3XRIB    BSRAT
+     C           BASKEY    CHAINSDBSRTL0             81
+      *
+      ** If base rate
+      ** not found, or value date earlier, use historic base rate.
+      *                                                                                       228714
+     C           *IN81     IFEQ '1'
+      *                                                                                       228714
+      ** Take rate from SDBSHSPD when value date is less than rate                            228714
+      ** change value date. Otherwise, take it from SDBSRTPD.                                 228714
+      *                                                                                       228714
+      ** Removed this condition is not applicable at this point                             AR943718
+      **  because SDBRSTPD is already updated(Base Rate Changed)                            AR943718
+     C********** BAVDRC    ORGT W3VDAT                                               228714 AR943718
+      *
+     C                     MOVE W3CCY     HSCCY
+     C                     MOVE W3XRIB    HSRAT
+     C                     Z-ADDW3VDAT    HVDAT
+     C           BASKE1    SETLLSDBSHSL1             80
+     C           BASKE2    READESDBSHSL1                 80
+     C           *IN80     DOWEQ'0'
+     C           G0HIDT    ANDGTW3VDAT
+     C           BASKE2    REDPESDBSHSL1                 80
+     C                     ENDDO
+      *
+     C           *IN80     IFEQ '1'
+      *                                                                                       228618
+      ** Flag base rate as not found                                                          228618
+      *                                                                                       228618
+     C                     MOVE 'Y'       BASNFD                                              228618
+     C                     Z-ADD0         BASRAT
+     C                     ELSE
+     C                     Z-ADDG0CBSR    BASRAT
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           W3VDAT    IFGE BAVDNR                                                        228714
+     C                     Z-ADDBANBRT    BASRAT                                              228714
+     C                     ELSE                                                               228714
+     C                     Z-ADDBACBSR    BASRAT
+     C                     ENDIF                                                              228714
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DAYSIM - Daily Rate : Simple Interest Structure              *
+      *                                                               *
+      *****************************************************************
+     C           DAYSIM    BEGSR
+      *
+      ** Get base rate
+      *
+     C                     EXSR GETBAS
+      *
+      ** Pass on base and spread rate unchanged
+      *
+     C                     Z-ADDW3XRIB    X1NRIB
+      *                                                                                       CRE073
+      ** Calculate new spread rate                                                            CRE073
+      *                                                                                       CRE073
+     C           CRE073    IFEQ 'Y'                                                           CRE073
+      *                                                                                       CRE073
+     C                     CALL CALCSR                                                        CRE073
+     C                     PARM *BLANK    @RTCD   7                                           CRE073
+     C                     PARM BASRAT    @NBRT  117                                          CRE073
+     C                     PARM           @XCSP                                               CRE073
+     C                     PARM           @XCSG                                               CRE073
+     C                     PARM           @XRMT                                               CRE073
+     C                     PARM           @XRFD                                               CRE073
+     C                     PARM *ZERO     @XRIS  117                                          CRE073
+     C                     PARM *ZERO     @FRAT  117                                        AR847249
+      *                                                                                       CRE073
+     C           @RTCD     IFNE *BLANK                                                        CRE073
+     C********** @FRAT     ORLE 0                                                  AR847249 AR947093
+     C********** @XRMT     ANDNE*BLANKS                                            AR847249 AR947093
+     C           *LOCK     IN   LDA                                                           CRE073
+     C                     MOVELCALCSR    DBPGM                                               CRE073
+     C                     Z-ADD14        DBASE                                               CRE073
+     C                     MOVELBASRAT    DBKEY                                               CRE073
+     C                     OUT  LDA                                                           CRE073
+     C                     EXSR *PSSR                                                         CRE073
+     C                     ENDIF                                                              CRE073
+      *                                                                                       CRE073
+     C                     Z-ADD@XRIS     W3XRIS                                              CRE073
+     C           @XCSG     IFEQ '-'                                                         AR947093
+     C           W3XRIS    MULT -1        W3XRIS                                            AR947093
+     C                     ENDIF                                                            AR947093
+     C**********           Z-ADD@XRIS     X1NRIS                                   AR947093 AR989169
+     C                     Z-ADDW3XRIS    X1NRIS                                            AR989169
+      *                                                                                       CRE073
+     C**********           ENDIF                                                     CRE073 AR947093
+     C                     ELSE                                                             AR947093
+      *                                                                                       CRE073
+     C                     Z-ADDW3XRIS    X1NRIS
+     C                     ENDIF                                                            AR947093
+      *
+      ** Interest type/subtype are zero
+      *
+     C                     Z-ADD0         X1NICT
+     C                     Z-ADD0         X1NCST
+      *
+      ** Set final rate =  base rate + spread rate
+      *
+     C           BASRAT    ADD  W3XRIS    X1INRT
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DAYCOM - Daily Rate : Complex (threshold) interest structure *
+      *                                                               *
+      *****************************************************************
+     C           DAYCOM    BEGSR
+      *
+      ** Pass on spread rate unchanged
+      *
+     C                     Z-ADDW3XRIS    X1NRIS
+     C                     Z-ADD0         X1INRT
+      *
+      ** Interest type/subtype
+      *
+     C                     MOVE W3XICT    X1NICT
+     C                     Z-ADDW3XCST    X1NCST
+      *
+      ** Get Interest Structure
+      *
+     C                     EXSR GETINT
+      *
+      ** Get Base rate
+      *
+     C                     MOVE WHBRT     W3XRIB
+     C                     EXSR GETBAS
+      *
+      ** Pass on base rate from Interest type/subtype
+      *
+     C                     Z-ADDWHBRT     X1NRIB
+      *
+      ** Add base rate to rates array
+      *
+     C                     ADD  BASRAT    RAT,1
+     C                     Z-ADD2         X       20
+     C           X         DOWLT12
+     C           BAL,X     IFNE 0
+     C                     ADD  BASRAT    RAT,X
+     C                     ENDIF
+     C                     ADD  1         X
+     C                     ENDDO
+      *
+      ** Pass on initial threshold from Interest type/subtype
+      *
+     C                     Z-ADDWHINTH    X2INTH 150
+      *
+      ** Balance records
+      ** Records for ICHGR2F
+      *
+     C                     Z-ADDBAL,1     X2BALA 150
+     C                     Z-ADDBAL,2     X2BALB 150
+     C                     Z-ADDBAL,3     X2BALC 150
+     C                     Z-ADDBAL,4     X2BALD 150
+     C                     Z-ADDBAL,5     X2BALE 150
+     C                     Z-ADDBAL,6     X2BALF 150
+      *
+      ** Records for ICHGR3F
+      *
+     C                     Z-ADDBAL,7     X3BALG 150
+     C                     Z-ADDBAL,8     X3BALH 150
+     C                     Z-ADDBAL,9     X3BALI 150
+     C                     Z-ADDBAL,10    X3BALJ 150
+     C                     Z-ADDBAL,11    X3BALK 150
+      *
+      ** Rate records
+      ** Records for ICHGR2F
+      *
+     C                     Z-ADDRAT,1     X2RATA 117
+     C                     Z-ADDRAT,2     X2RATB 117
+     C                     Z-ADDRAT,3     X2RATC 117
+     C                     Z-ADDRAT,4     X2RATD 117
+     C                     Z-ADDRAT,5     X2RATE 117
+     C                     Z-ADDRAT,6     X2RATF 117
+      *
+      ** Records for ICHGR3F
+      *
+     C                     Z-ADDRAT,7     X3RATG 117
+     C                     Z-ADDRAT,8     X3RATH 117
+     C                     Z-ADDRAT,9     X3RATI 117
+     C                     Z-ADDRAT,10    X3RATJ 117
+     C                     Z-ADDRAT,11    X3RATK 117
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  FIXSIM - Calculate rate for periodically fixed interest :    *
+      *           Simple interest structure                           *
+      *                                                               *
+      *****************************************************************
+     C           FIXSIM    BEGSR
+      *
+      ** If base rate tupe specified, then get base rate
+      *
+     C                     EXSR GETBAS
+      *
+      ** Set base rate type to zero
+      ** as we are using a fixed flat rate instead
+      *
+     C                     MOVE '00'      X1NRIB
+      *                                                                                       CRE073
+      ** Calculate new spread rate                                                            CRE073
+      *                                                                                       CRE073
+     C           CRE073    IFEQ 'Y'                                                           CRE073
+      *                                                                                       CRE073
+     C                     CALL CALCSR                                                        CRE073
+     C                     PARM *BLANK    @RTCD                                               CRE073
+     C                     PARM BASRAT    @NBRT                                               CRE073
+     C                     PARM           @XCSP                                               CRE073
+     C                     PARM           @XCSG                                               CRE073
+     C                     PARM           @XRMT                                               CRE073
+     C                     PARM           @XRFD                                               CRE073
+     C                     PARM *ZERO     @XRIS                                               CRE073
+     C                     PARM *ZERO     @FRAT                                             AR847249
+      *                                                                                       CRE073
+     C           @RTCD     IFNE *BLANK                                                        CRE073
+     C********** @FRAT     ORLE 0                                                  AR847249 AR947093
+     C********** @XRMT     ANDNE*BLANKS                                            AR847249 AR947093
+     C           *LOCK     IN   LDA                                                           CRE073
+     C                     MOVELCALCSR    DBPGM                                               CRE073
+     C                     Z-ADD15        DBASE                                               CRE073
+     C                     MOVELBASRAT    DBKEY                                               CRE073
+     C                     OUT  LDA                                                           CRE073
+     C                     EXSR *PSSR                                                         CRE073
+     C                     ENDIF                                                              CRE073
+      *                                                                                       CRE073
+     C                     Z-ADD@XRIS     W3XRIS                                              CRE073
+     C           @XCSG     IFEQ '-'                                                         AR947093
+     C           W3XRIS    MULT -1        W3XRIS                                            AR947093
+     C                     ENDIF                                                            AR947093
+      *                                                                                       CRE073
+     C                     ENDIF                                                              CRE073
+      *
+      ** Set new spread rate = Base rate + spread rate
+      *
+     C           BASRAT    ADD  W3XRIS    X1NRIS
+      *
+      ** Interest type/subtype
+      *
+     C                     Z-ADD0         X1NICT
+     C                     Z-ADD0         X1NCST
+      *
+      ** Set final rate = new spread rate
+      *
+     C                     Z-ADDX1NRIS    X1INRT
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIXCOM - Calculate rate for periodically fixed interest :    *
+      *           Complex (threshold) interest structure              *
+      *           For this type of structure we need to use           *
+      *           balance to find threshold at which to set rate      *
+      *                                                               *
+      *****************************************************************
+     C           FIXCOM    BEGSR
+      *
+      ** Get Interest Details
+      *
+     C                     EXSR GETINT
+      *
+      ** Rate is zero if less than or equal to initial threshold
+      *
+     C           W3XBAL    IFGT HINTH
+      *
+      ** Get Base rate
+      *
+     C                     MOVE WHBRT     W3XRIB
+     C                     EXSR GETBAS
+      *
+      ** Get threshold rate
+      *
+     C                     EXSR GETTHR
+      *
+      ** Set interest type/subtype to zero
+      ** as we are using a fixed flat rate instead
+      *
+     C                     Z-ADD0         X1NICT
+     C                     Z-ADD0         X1NCST
+      *
+      ** Set new spread rate =
+      **  Base rate (from int type/subt) + threshold rate + spread rate
+      *
+     C           BASRAT    ADD  THRRAT    WX1RAT 117
+      *                                                                                       CRE073
+      ** Calculate new spread rate                                                            CRE073
+      *                                                                                       CRE073
+     C           CRE073    IFEQ 'Y'                                                           CRE073
+      *                                                                                       CRE073
+     C                     CALL CALCSR                                                        CRE073
+     C                     PARM *BLANK    @RTCD                                               CRE073
+     C                     PARM BASRAT    @NBRT                                               CRE073
+     C                     PARM           @XCSP                                               CRE073
+     C                     PARM           @XCSG                                               CRE073
+     C                     PARM           @XRMT                                               CRE073
+     C                     PARM           @XRFD                                               CRE073
+     C                     PARM *ZERO     @XRIS                                               CRE073
+     C                     PARM *ZERO     @FRAT                                             AR847249
+      *                                                                                       CRE073
+     C           @RTCD     IFNE *BLANK                                                        CRE073
+     C********** @FRAT     ORLE 0                                                  AR847249 AR947093
+     C********** @XRMT     ANDNE*BLANKS                                            AR847249 AR947093
+     C           *LOCK     IN   LDA                                                           CRE073
+     C                     MOVELCALCSR    DBPGM                                               CRE073
+     C                     Z-ADD16        DBASE                                               CRE073
+     C                     MOVELBASRAT    DBKEY                                               CRE073
+     C                     OUT  LDA                                                           CRE073
+     C                     EXSR *PSSR                                                         CRE073
+     C                     ENDIF                                                              CRE073
+      *                                                                                       CRE073
+     C                     Z-ADD@XRIS     W3XRIS                                              CRE073
+      *                                                                                       CRE073
+     C                     ENDIF                                                              CRE073
+      *                                                                                       CRE073
+     C           WX1RAT    ADD  W3XRIS    X1NRIS
+      *
+      ** Final rate = new spread rate
+      *
+     C                     Z-ADDX1NRIS    X1INRT
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * GETINT - Get interest details                                 *
+      *                                                               *
+      *****************************************************************
+     C           GETINT    BEGSR
+      *
+     C                     MOVE *BLANKS   HBLANK
+     C                     MOVE W3XICT    HTYPE     P
+     C                     MOVE W3XCST    HSBTYP    P
+     C                     MOVE W3CCY     HCURR     P
+     C                     MOVE 'D'       HD
+      *
+     C           HKEY      CHAINREINT                82
+      *
+      ** move in balance fields and update records
+      *
+     C           *IN82     IFEQ '0'
+     C           VDPC      ANDLEW3VDAT                                                        241299
+     C                     MOVELHBAL2     BALDS
+     C                     MOVELHRAT2     RATDS
+     C                     Z-ADDHINTH     WHINTH 150
+     C                     Z-ADDHBRT      WHBRT   20
+     C                     ELSE
+      *
+      ** If base rate
+      ** not found, or value date earlier, use historic base rate.
+      *
+     C                     Z-ADDW3VDAT    H2VDPC                                              241299
+     C           H2KEY     SETGTREINHSL0             83
+     C           HKEY      REDPEREINHSL0                 83
+      *
+     C           *IN83     IFEQ '1'
+      *                                                                                       228618
+      ** Flag threshold rate as not found                                                     228618
+      *                                                                                       228618
+     C                     MOVE 'Y'       THRNFD                                              228618
+     C                     Z-ADD0         BAL,1                                               228618
+     C                     Z-ADD0         BAL,2                                               228618
+     C                     Z-ADD0         BAL,3                                               228618
+     C                     Z-ADD0         BAL,4                                               228618
+     C                     Z-ADD0         BAL,5                                               228618
+     C                     Z-ADD0         BAL,6                                               228618
+     C                     Z-ADD0         BAL,7                                               228618
+     C                     Z-ADD0         BAL,8                                               228618
+     C                     Z-ADD0         BAL,9                                               228618
+     C                     Z-ADD0         BAL,10                                              228618
+     C                     Z-ADD0         BAL,11                                              228618
+      *                                                                                       228618
+     C                     Z-ADD0         RAT,1                                               228618
+     C                     Z-ADD0         RAT,2                                               228618
+     C                     Z-ADD0         RAT,3                                               228618
+     C                     Z-ADD0         RAT,4                                               228618
+     C                     Z-ADD0         RAT,5                                               228618
+     C                     Z-ADD0         RAT,6                                               228618
+     C                     Z-ADD0         RAT,7                                               228618
+     C                     Z-ADD0         RAT,8                                               228618
+     C                     Z-ADD0         RAT,9                                               228618
+     C                     Z-ADD0         RAT,10                                              228618
+     C                     Z-ADD0         RAT,11                                              228618
+     C                     ELSE
+      *
+      ** move in historic balance fields and update records
+      *
+     C                     MOVELH@BAL2    BALDS
+     C                     MOVELH@RAT2    RATDS
+     C                     Z-ADDH@INTH    WHINTH 150
+     C                     Z-ADDH@BRT     WHBRT   20
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     Z-ADDWBAL1     BAL,1
+     C                     Z-ADDWBAL2     BAL,2
+     C                     Z-ADDWBAL3     BAL,3
+     C                     Z-ADDWBAL4     BAL,4
+     C                     Z-ADDWBAL5     BAL,5
+     C                     Z-ADDWBAL6     BAL,6
+     C                     Z-ADDWBAL7     BAL,7
+     C                     Z-ADDWBAL8     BAL,8
+     C                     Z-ADDWBAL9     BAL,9
+     C                     Z-ADDWBAL10    BAL,10
+     C                     Z-ADDWBAL11    BAL,11
+      *
+     C                     Z-ADDWRAT1     RAT,1
+     C                     Z-ADDWRAT2     RAT,2
+     C                     Z-ADDWRAT3     RAT,3
+     C                     Z-ADDWRAT4     RAT,4
+     C                     Z-ADDWRAT5     RAT,5
+     C                     Z-ADDWRAT6     RAT,6
+     C                     Z-ADDWRAT7     RAT,7
+     C                     Z-ADDWRAT8     RAT,8
+     C                     Z-ADDWRAT9     RAT,9
+     C                     Z-ADDWRAT10    RAT,10
+     C                     Z-ADDWRAT11    RAT,11
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * GETTHR - Get threshold rate                                   *
+      *                                                               *
+      *****************************************************************
+     C           GETTHR    BEGSR
+      *
+     C                     Z-ADD0         THRRAT 117
+     C                     Z-ADD1         Z       20
+      *
+      ** Go through through each threhold level until balance is within
+      ** threshold. The threshold rate will be the last rate stored.
+      *
+     C           Z         DOWLE11
+     C           W3XBAL    ANDGTBAL,Z
+      *
+     C           BAL,Z     IFNE 0
+     C           Z         OREQ 1
+     C                     Z-ADDRAT,Z     THRRAT 117
+     C                     ENDIF
+      *
+     C                     ADD  1         Z
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  APLRAT -  Apply rate changes                                 *
+      *                                                               *
+      *****************************************************************
+     C           APLRAT    BEGSR
+      *
+      ** Update ACCNTAB
+      *
+     C                     EXSR ACCOUT
+      *
+      ** Update REIAC...
+      *
+     C                     EXSR REIOUT
+      *
+      ** Update ICHGR...
+      *
+     C                     EXSR ICHOUT
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  ACCOUT - Processing to output rate changes to ACCNTAB        *
+      *                                                               *
+      * Called by: SRRATE                                             *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           ACCOUT    BEGSR
+      *
+     C                     MOVE ' '       ACOUT   1
+      *
+      ** Check if rate change
+      ** i.e. interest details different from what is on REHPOSR1
+      *
+     C                     MOVE ' '       RATCHG  1
+     C           INTP      IFNE X1NICT
+     C           INST      ORNE X1NCST
+     C           BRT       ORNE X1NRIB
+     C           RTSP      ORNE X1NRIS
+     C                     MOVE 'Y'       RATCHG
+     C                     ENDIF
+      *
+      ** Accounts file does not store base rate associated with
+      ** with Interest type/subtype, so set to zero for that case.
+      *
+     C                     Z-ADD0         Y1NRIB 150
+     C           X1NICT    IFNE 0
+     C           X1NRIB    ANDNE0
+     C                     Z-ADD0         Y1NRIB
+     C                     ELSE
+     C                     Z-ADDX1NRIB    Y1NRIB
+     C                     ENDIF
+      *
+     C           W3DRCR    IFEQ 1
+      *
+      ** Credit rate change
+      ** If newly calculated rates are different
+      *
+     C           CRIB      IFNE Y1NRIB
+     C           CRIS      ORNE X1NRIS
+      *
+      ** Or details from REPRPNPD are different
+      *
+     C           CRIC      ORNE E2CRIC
+      *
+      ** Or a rate change anyway
+      *
+     C           RATCHG    OREQ 'Y'
+      *
+      ** Then update with new rates
+      *
+     C                     Z-ADDY1NRIB    CRIB
+     C                     Z-ADDX1NRIS    CRIS
+     C                     Z-ADDE2CRIC    CRIC
+     C           CRE073    IFEQ 'Y'                                                         AR851899
+     C           PMODE     ANDEQ'RCHGR'                                                     AR851899
+     C                     Z-ADDX1NRIS    E2CRIS                                            AR851899
+     C                     ENDIF                                                            AR851899
+      *
+      ** Update last rate change date....
+      *
+     C           RATCHG    IFEQ 'Y'
+      *
+      ** For term accounts with value date or date account opened...
+      *
+     C           E2TPRD    IFEQ 'T'
+     C           E2VDAT    IFGE DACO
+     C                     Z-ADDE2VDAT    CRCD
+     C                     Z-ADDE2VDAT    OLCR
+     C                     ELSE
+     C                     Z-ADDDACO      CRCD
+     C                     Z-ADDDACO      OLCR
+     C                     ENDIF
+      *
+      ** ...else for notice accounts use run date
+      *
+     C                     ELSE
+     C                     Z-ADDAGRDNB    CRCD
+     C                     Z-ADDAGRDNB    OLCR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     EXCPTACOUC
+     C                     MOVE 'Y'       ACOUT   1
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Debit rate change
+      ** If newly calculated rates are different
+      *
+     C           DRIB      IFNE Y1NRIB
+     C           DRIS      ORNE X1NRIS
+      *
+      ** Or details from REPRPNPD are different
+      *
+     C           DRIC      ORNE E2DRIC
+      *
+      ** Or a rate change anyway
+      *
+     C           RATCHG    OREQ 'Y'
+      *
+      ** Then update with new rates
+      *
+     C                     Z-ADDY1NRIB    DRIB
+     C                     Z-ADDX1NRIS    DRIS
+     C                     Z-ADDE2DRIC    DRIC
+     C           CRE073    IFEQ 'Y'                                                         AR851899
+     C           PMODE     ANDEQ'RCHGR'                                                     AR851899
+     C                     Z-ADDX1NRIS    E2DRIS                                            AR851899
+     C                     ENDIF                                                            AR851899
+      *
+      ** Update last rate change date
+      *
+     C           RATCHG    IFEQ 'Y'
+      *
+      ** For term accounts with value date or date account opened
+      *
+     C           E2TPRD    IFEQ 'T'
+     C           E2VDAT    IFGE DACO
+     C                     Z-ADDE2VDAT    DRCD
+     C                     Z-ADDE2VDAT    OLDR
+     C                     ELSE
+     C                     Z-ADDDACO      DRCD
+     C                     Z-ADDDACO      OLDR
+     C                     ENDIF
+      *
+      ** Else for notice accounts use run date
+      *
+     C                     ELSE
+     C                     Z-ADDAGRDNB    DRCD
+     C                     Z-ADDAGRDNB    OLDR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     EXCPTACOUD
+     C                     MOVE 'Y'       ACOUT   1
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * REIOUT - Processing to output rate changes to REIACD          *
+      *                                                               *
+      * Called by: SRRATE                                             *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           REIOUT    BEGSR
+      *
+     C                     MOVE ' '       REIOT   1
+     C                     MOVELE2BRCA    R1BRCA
+     C                     MOVELE2CNUM    R1CNUM
+     C                     MOVELE2CCY     R1CCY
+     C                     MOVE E2ACOD    R1ACOD
+     C                     MOVE E2ACSQ    R1ACSQ
+      *                                                                                       230355
+      ** Analyse value stored in E2DACP,does it contain a *BLANK?                             230355
+      *                                                                                       230355
+     C           ' '       SCAN E2DACP                   73                                   230355
+     C           *IN73     IFEQ *ON                                                           230355
+      *                                                                                       230355
+      ** Contains a blank, cannot be a complete GL acc/no.                                    230355
+      *                                                                                       230355
+     C                     MOVE *BLANKS   WKDRBR                                              230355
+     C                     MOVELE2DACP    WKDACP                                              230355
+     C                     ELSE                                                               230355
+      *                                                                                       230355
+      ** Contains no blank, a complete GL acc/no.                                             230355
+      *                                                                                       230355
+     C                     MOVE E2DACP    W2DACP                                              230355
+     C                     ENDIF                                                              230355
+      *                                                                                       230355
+      ** Analyse value stored in E2CACP,does it contain a *BLANK?                             230355
+      *                                                                                       230355
+     C           ' '       SCAN E2CACP                   73                                   230355
+     C           *IN73     IFEQ *ON                                                           230355
+      *                                                                                       230355
+      ** Contains a blank, cannot be a complete GL acc/no.                                    230355
+      *                                                                                       230355
+     C                     MOVE *BLANKS   WKCRBR                                              230355
+     C                     MOVELE2CACP    WKCACP                                              230355
+     C                     ELSE                                                               230355
+      *                                                                                       230355
+      ** Contains no blank, a complete GL acc/no.                                             230355
+      *                                                                                       230355
+     C                     MOVE E2CACP    W2CACP                                              230355
+     C                     ENDIF                                                              230355
+      *                                                                                       230355
+     C           KREIA1    CHAINREIAC                73
+     C           *IN73     IFEQ '0'
+      *
+     C           W3DRCR    IFEQ 1
+      *
+      ** Credit rate change
+      *
+     C           CICT      IFNE X1NICT
+     C           CCST      ORNE X1NCST
+     C           CACP      ORNE WKCACP                                                        230355
+     C                     MOVELX1NICT    CICT
+     C                     Z-ADDX1NCST    CCST
+     C                     MOVELWKCACP    CACP                                                230355
+     C                     MOVELWKCRBR    CRBR                                                230355
+     C                     EXCPTREIC
+     C                     MOVE 'Y'       REIOT   1
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Debit rate change
+      *
+     C           DICT      IFNE X1NICT
+     C           DCST      ORNE X1NCST
+     C           DACP      ORNE WKDACP                                                        230355
+     C                     MOVELX1NICT    DICT
+     C                     Z-ADDX1NCST    DCST
+     C                     MOVELWKDACP    DACP                                                230355
+     C                     MOVELWKDRBR    DRBR                                                230355
+     C                     EXCPTREID
+     C                     MOVE 'Y'       REIOT   1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * GETREI - Processing to get details from REIACD                *
+      *                                                               *
+      * Called by: SRRATE                                             *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           GETREI    BEGSR
+      *
+     C                     MOVELE2BRCA    R1BRCA
+     C                     MOVELE2CNUM    R1CNUM
+     C                     MOVELE2CCY     R1CCY
+     C                     MOVE E2ACOD    R1ACOD
+     C                     MOVE E2ACSQ    R1ACSQ
+     C           KREIA1    CHAINREIAC                73
+     C           *IN73     IFEQ '1'
+      *
+      ** If record not found, then blanks
+      *
+     C                     MOVE *BLANKS   CICT
+     C                     Z-ADD0         CCST
+     C                     MOVE *BLANKS   DICT
+     C                     Z-ADD0         DCST
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ICHOUT - Processing to output rate changes to ICHGR1, ICHGR2.*
+      *           and ICHGR3.                                         *
+      *                                                               *
+      *****************************************************************
+     C           ICHOUT    BEGSR
+      *
+      ** If interest details different from what is on REHPOSR1
+      ** or change in ACCNTAB or REIACD details
+      *
+     C           INTP      IFNE X1NICT
+     C           INST      ORNE X1NCST
+     C           BRT       ORNE X1NRIB
+     C           RTSP      ORNE X1NRIS
+     C           INRT      ORNE X1INRT
+     C           ACOUT     OREQ 'Y'
+     C           REIOT     OREQ 'Y'
+      *
+      ** PMODE is either blank  (no update)
+      **             or 'RCHGR' (update RCHG... files - middle of COB)
+      **             or 'RERCH' (update RERCH...files - Input Cycle)
+      *
+     C                     MOVELPMODE     OUTFIL  5
+      *
+      ** For output to RCHGR1, RCHGR2, RCHGR3 :-
+      *
+     C           'RCHGR'   IFEQ OUTFIL
+      *
+      ** See if this is already a record on REDPOSL for this account
+      *
+     C                     MOVE BRCA      KBRCA   3
+     C                     MOVE CNUM      KCNUM   6
+     C                     MOVE CCY       KCCY    3
+     C                     Z-ADDACOD      KACOD  100
+     C                     Z-ADDACSQ      KACSQ   20
+     C                     Z-ADDE2VDAT    KVDAT   50
+     C           RKEY1     CHAINREDPOSL              86
+      *
+      ** If so, then delete all the records
+      **         (if they have the same debit/credit indicator)
+      *
+     C           *IN86     DOWEQ*OFF
+     C           W3DRCR    IFEQ DRCR
+     C                     DELETREDPOSL
+     C                     ENDIF
+     C           RKEY1     READEREDPOSL                  86
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** For output to RERCH1PD, RERCH2PD, RERCH3PD, RERCHHPA :-
+      *
+     C           'RERCH'   IFEQ OUTFIL
+      *
+      ** Read for update
+      *
+     C                     READ RERCH1PD                 94
+     C                     READ RERCH2PD                 95
+     C                     READ RERCH3PD                 96
+     C           1         SETLLRERCHHPA
+     C                     READ RERCHHPA                 97
+     C                     Z-ADDNOREC     #NOREC  90
+      *
+     C                     ENDIF
+      *
+      ** ICHGR1F
+      *
+     C                     MOVEL'R'       RECI
+     C                     MOVELE2CNUM    CNUM
+     C                     MOVELE2ACOD    ACOD
+     C                     MOVELE2ACSQ    ACSQ
+     C                     MOVELE2CCY     CCY
+     C                     MOVE '1'       RSEQ
+      *
+      ** This field has 'X' if it is a complex (tiered) structure
+      *
+     C           X1NICT    IFEQ 0
+     C                     MOVEL' '       CONI
+     C                     ELSE
+     C                     MOVEL'X'       CONI
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   ZZ004
+      *
+     C                     Z-ADDW3ACNO    ACNO
+      *
+      ** Use run date for posting date
+      *
+     C                     Z-ADDAGRDNB    PSTD
+      *
+      ** For term accounts use start of term for value date
+      *
+     C           E2TPRD    IFEQ 'T'
+     C                     Z-ADDE2VDAT    VALD
+      *
+      ** For notice accounts use run date for value date
+      *
+     C                     ELSE
+     C                     Z-ADDAGRDNB    VALD
+     C                     ENDIF
+     C                     Z-ADD90100     TRAT
+      *
+     C                     MOVE 'RATE'    W1NARR  4
+     C                     MOVE 'CHANGE'  W2NARR  6
+     C           W1NARR    CAT  W2NARR:1  PNAR
+      *
+     C                     Z-ADDX1NICT    INTP
+     C                     Z-ADDX1NCST    INST
+     C                     Z-ADDW3DRCR    DRCR
+      *
+     C********** MPHAS     IFEQ 'A'                                                           CCB020
+     C           COBST     IFEQ '*NO'                                                         CCB020
+     C                     TIME           TIME
+     C                     ELSE
+     C                     Z-ADD235959    TIME
+     C                     END
+     C           'RERCH'   IFEQ OUTFIL                                                      MD034366
+     C                     EXSR W#TIME                                                      MD034366
+     C                     ENDIF                                                            MD034366
+      *
+     C                     MOVEL'GE/RC   'SPOS
+     C                     MOVELE2BRCA    BRCA
+     C                     MOVEL*BLANKS   ZZ017
+     C                     Z-ADD0         NEIN
+     C                     MOVEL'R'       ZZ001
+     C                     Z-ADD0         RVLD
+     C                     MOVELX'00'     PRIN
+     C                     MOVEL*BLANKS   ZZ009
+      *
+      ** For term accounts use start of term for value date
+      *
+     C           E2TPRD    IFEQ 'T'
+     C           E2VDAT    IFGE DACO
+     C                     Z-ADDE2VDAT    LRCD
+     C                     ELSE
+     C                     Z-ADDDACO      LRCD
+     C                     END
+     C                     ELSE
+      *
+      ** For notice accounts use run date for value date
+      *
+     C                     Z-ADDAGRDNB    LRCD
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   ZZ006
+     C                     Z-ADDX1INRT    INRT
+     C           INRT      IFLT *ZEROS                                                     AR947093A
+     C                     Z-ADD*ZEROS    INRT                                             AR947093A
+     C                     ENDIF                                                           AR947093A
+     C                     Z-ADDX1NRIB    BRT
+     C                     Z-ADDX1NRIS    RTSP
+      *
+      ** Use overdraft interest rate found on REHPOSR1
+      *
+     C                     Z-ADDAODR      AODR
+      *                                                                                       CRE073
+      ** Write interest rate rounding fields                                                  CRE073
+      *                                                                                       CRE073
+     C           CRE073    IFEQ 'Y'                                                           CRE073
+     C                     Z-ADD@XCSP     TCSP                                                CRE073
+     C                     MOVE @XCSG     TCSG                                                CRE073
+     C                     MOVE @XRMT     TRMT                                                CRE073
+     C                     MOVE @XRFD     TRFD                                                CRE073
+     C                     ENDIF                                                              CRE073
+      *
+      ** Write to ICHGR1F
+      *
+     C           'RCHGR'   IFEQ OUTFIL
+     C                     WRITERCHGR1
+     C                     ELSE
+     C                     WRITERERCH1
+     C                     ADD  1         #NOREC
+     C                     ENDIF
+      *
+      ** If interest type/subtype structure
+      ** write to ICHGR2F and ICHGR3F as well
+      *
+     C           X1NICT    IFNE 0
+      *
+      ** ICHGR2F
+      *
+     C                     MOVEL'R'       RECI
+     C                     MOVELE2CNUM    CNUM
+     C                     MOVELE2ACOD    ACOD
+     C                     MOVELE2ACSQ    ACSQ
+     C                     MOVELE2CCY     CCY
+     C                     MOVE '2'       RSEQ
+     C                     MOVEL'X'       CONI
+     C                     MOVELX2INTH    INTH
+     C                     MOVEL*BLANKS   ZZ009
+      *
+      ** For term accounts use start of term for value date
+      *
+     C           E2TPRD    IFEQ 'T'
+     C                     Z-ADDE2VDAT    VALD
+      *
+      ** For notice accounts use run date for value date
+      *
+     C                     ELSE
+     C                     Z-ADDAGRDNB    VALD
+     C                     ENDIF
+     C                     MOVE @X2RAT    RAT1
+     C                     MOVEL*BLANKS   ZZ006
+     C                     Z-ADDW3DRCR    DRCR
+      *
+     C********** MPHAS     IFEQ 'A'                                                           CCB020
+     C           COBST     IFEQ '*NO'                                                         CCB020
+     C                     TIME           TIME
+     C                     ELSE
+     C                     Z-ADD1         TIME
+     C                     END
+      *
+     C                     MOVEL*BLANKS   ZZ015
+     C                     MOVELE2BRCA    BRCA
+     C                     MOVE @X2BAL    BAL1
+     C                     MOVEL*BLANKS   ZZ007
+      *
+      ** Write to ICHGR2F
+      *
+     C           'RCHGR'   IFEQ OUTFIL
+     C                     WRITERCHGR2
+     C                     ELSE
+     C                     WRITERERCH2
+     C                     ADD  1         #NOREC
+     C                     ENDIF
+      *
+      ** ICHGR3F
+      *
+     C                     MOVEL'R'       RECI
+     C                     MOVELE2CNUM    CNUM
+     C                     MOVELE2ACOD    ACOD
+     C                     MOVELE2ACSQ    ACSQ
+     C                     MOVELE2CCY     CCY
+     C                     MOVE '3'       RSEQ
+     C                     MOVEL'X'       CONI
+     C                     MOVEL*BLANKS   ZZ017
+      *
+      ** For term accounts use start of term for value date
+      *
+     C           E2TPRD    IFEQ 'T'
+     C                     Z-ADDE2VDAT    VALD
+      *
+      ** For notice accounts use run date for value date
+      *
+     C                     ELSE
+     C                     Z-ADDAGRDNB    VALD
+     C                     ENDIF
+     C                     MOVE @X3RAT    RAT1
+     C                     MOVEL*BLANKS   ZZ006
+     C                     Z-ADDW3DRCR    DRCR
+      *
+     C********** MPHAS     IFEQ 'A'                                                           CCB020
+     C           COBST     IFEQ '*NO'                                                         CCB020
+     C                     TIME           TIME
+     C                     ELSE
+     C                     Z-ADD1         TIME
+     C                     END
+      *
+     C                     MOVEL*BLANKS   ZZ015
+     C                     MOVELE2BRCA    BRCA
+     C                     MOVE @X3BAL    BAL1
+     C                     MOVEL*BLANKS   ZZ007
+      *
+      ** Write to ICHGR3F
+      *
+     C           'RCHGR'   IFEQ OUTFIL
+     C                     WRITERCHGR3
+     C                     ELSE
+     C                     WRITERERCH3
+     C                     ADD  1         #NOREC
+     C                     ENDIF
+      *
+      ** End of complex interest structure processing
+      *
+     C                     ENDIF
+      *
+     C           'RCHGR'   IFEQ OUTFIL
+      *
+      ** No trailer to update
+      *
+     C                     ELSE
+      *
+      ** Update RERCHHPA trailer
+      *
+     C                     MOVE 'H'       RECI
+     C                     Z-ADD#NOREC    NOREC
+     C                     UPDATRERCHH
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ******************************************************************                    MD034366
+      *                                                                                     MD034366
+     C           W#TIME    BEGSR                                                            MD034366
+      *                                                                                     MD034366
+     C                     Z-ADD16        QUSBPR                                            MD034366
+     C                     Z-ADD0         QUSBAV                                            MD034366
+     C                     MOVE *BLANKS   INFORM 10                                         MD034366
+     C                     MOVEL'*CURRENT'INFORM                                            MD034366
+     C                     MOVE *BLANKS   INVARI  1                                         MD034366
+     C                     MOVE *BLANKS   OUTFOR 10                                         MD034366
+     C                     MOVEL'*YYMD'   OUTFOR 10                                         MD034366
+      *                                                                                     MD034366
+      ** Use the API to get a 17-byte date/time value (down to the                          MD034366
+      ** microsecond).                                                                      MD034366
+      *                                                                                     MD034366
+     C                     CALL 'QWCCVTDT'                                                  MD034366
+     C                     PARM           INFORM                                            MD034366
+     C                     PARM           INVARI                                            MD034366
+     C                     PARM           OUTFOR                                            MD034366
+     C                     PARM           OUTDAT                                            MD034366
+     C                     PARM           QUSEC                                             MD034366
+      *                                                                                     MD034366
+      ** The OutDate field returned from the API and TimeStamp fields                       MD034366
+      ** returned from this procedure have been broken down by data                         MD034366
+      ** structures.  Copy the data from one to the other and exit.                         MD034366
+      *                                                                                     MD034366
+     C                     MOVE '-'       TMST1                                             MD034366
+     C                     MOVE '-'       TMST2                                             MD034366
+     C                     MOVE '-'       TMST3                                             MD034366
+     C                     MOVE '.'       TMST4                                             MD034366
+     C                     MOVE '.'       TMST5                                             MD034366
+     C                     MOVE '.'       TMST6                                             MD034366
+     C                     MOVE '000'     RETMC                                             MD034366
+     C                     MOVELAPIYR     RETYR                                             MD034366
+     C                     MOVELAPIMH     RETMH                                             MD034366
+     C                     MOVELAPIDY     RETDY                                             MD034366
+     C                     MOVELAPIHR     RETHR                                             MD034366
+     C                     MOVELAPIMN     RETMN                                             MD034366
+     C                     MOVELAPISC     RETSC                                             MD034366
+     C                     MOVELAPIML     RETML                                             MD034366
+      *                                                                                     MD034366
+     C                     MOVELSTAMP     TSTMP                                             MD034366
+      *                                                                                     MD034366
+     C                     ENDSR                                                            MD034366
+      *                                                                                     MD034366
+      *****************************************************************                     MD034366
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS     *
+      *                                                               *
+      *  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                 *
+      *                                                               *
+      *  CALLS: NOTHING                                               *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ROLBK
+     C                     MOVE '*ERROR'  P@RTCD
+     C                     SETON                     U7U8LR
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *
+      *****************************************************************
+      *
+     OACCNTABFE                ACOUC
+      *
+      ** Credit interest fields
+      *
+     O                         CRIB
+     O                         CRIS
+     O                         CRIC
+     O                         CRCD
+     O                         OLCR
+     OACCNTABFE                ACOUD
+      *
+      ** Debit interest fields
+      *
+     O                         DRIB
+     O                         DRIS
+     O                         DRIC
+     O                         DRCD
+     O                         OLDR
+     OREIACDF E                REIC
+      *
+      ** Credit interest fields
+      *
+     O                         CICT
+     O                         CCST
+     O                         CACP                                                           223607
+     O                         CRBR                                                           230355
+     OREIACDF E                REID
+      *
+      ** Debit interest fields
+      *
+     O                         DICT
+     O                         DCST
+     O                         DACP                                                           223607
+     O                         DRBR                                                           230355
+** CPY@: Object Copyright
+(C) Copyright Finastra International Limited 2009

@@ -1,0 +1,1378 @@
+0001 H        1                                                           S01117
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Accnts Extract for Lending Portfolio')           *
+0001 H***********                                                         S01117
+0002 F********************************************************************LE0734
+0003 F*                                                                  *LE0734
+     F*  Midas - Customer Lending Module
+0005 F*                                                                  *LE0734
+0006 F*       LE0734 - CUSTOMER LENDING PORTFOLIO - ACCOUNTS EXTRACT     *LE0734
+0007 F*                                                                  *LE0734
+      *  (c) Finastra International Limited 2001                      *
+0009 F*                                                                  *LE0734
+      *  Last Amend No. MD050457           Date 06Mar19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 260507             Date 01Jun09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 107640             Date 24Mar97               *
+     F*                 S01194             Date 11Jan90                  *
+     F*                       S01117            DATE 22/08/89            *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD050457 - Use AOCUSTR1 instead of AOCUSTR0. Patterned fix   *
+      *             from 263371 and 261272.                           *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  260507 - Unnecessary accesses to AOBRCHR1 and AOCURRR0.      *
+      *           Keep arrays for holding branch codes and currencies *
+      *           used. Check if branch/currency is found at array,   *
+      *           else check in branch codes file via AOBRCHR1 or     *
+      *           currency codes file via AOCURRR0.                   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*     107640 - CUSTOMER APPEARED TWICE ON RPT LE0748P1             *
+     F*              RECORD IN FPORTFP FOUND ERR WITH DIFFERENT PARENT   *
+     F*              NUMBER FOR ONE CUSTOMER                             *
+     F*     S01194 - STANDING DATA CHANGES                               *
+     F*       S01117 - MULTIBRANCHING                                    *
+     F*                                                                  *
+0011 F*                                                                  *LE0734
+0012 F********************************************************************LE0734
+0013 F**                                                                  LE0734
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0014 F*CCNT***IP**F     400 15AI     2 DISK                               S01117
+0014 F***ACCNT** IP  F     400 18AI     2 DISK                                         S01117 CGL029
+     FACCNT   IP  F     573 18AI     2 DISK                                                   CGL029
+0015 F*ABLE***IF**F*     96 12AI     2 DISK                               S01194
+0016 F*LINT***IF**F*    256  7AI     2 DISK                               S01194
+0017 F***FPORTFP O   F      96            DISK                                         LE0734 CGL029
+     F*FPORTFP*O***F*****122            DISK                                           CGL029 CLE042
+     FFPORTFP O   F     126            DISK                                                   CLE042
+0017 FFPORTT2 O   F      96            DISK                               LE0734
+0018 F*E0734P1O***F     132            PRINTER                   S01124   S01117
+0018 FLE0734AUO   F     132            PRINTER                            S01117
+0019 F**                                                                  LE0734
+0020 F* ID F  C  H  L    FUNCTION OF INDICATORS                           LE0734
+0021 F* 01            ACCOUNTS MASTER - LIVE RECORD                       LE0734
+0022 F* 02                            - TRAILER                           LE0734
+0023 F**03**********  TABLES-INST. CONTROL RECORD 1                       S01194
+0024 F**04**********        -CURRENCIES RECORD                            S01194
+0025 F**06**********  CLINT FILE - DETAIL RECORD                          S01194
+0026 F*       30      FIRST CYCLE INDICATOR                               LE0734
+0027 F*       31      WORK INDICATOR                                      LE0734
+0028 F*       32      CURRENCY - INE DECIMAL PLACE                        LE0734
+0029 F*       33               - 2 DECIMAL PLACES                         LE0734
+0030 F*       34               - 3 DECIMAL PLACES                         LE0734
+0031 F*    20         PARENT NO. ZERO                                     LE0734
+0032 F*    21         A/C STATUS-OPEN                                     LE0734
+0033 F*    22         O/D LINE ZERO                                       LE0734
+0034 F*****23*********LEDGER*BALANCE*-VE**********************************LE0734
+0035 F*    23         LEDGER BALANCE +VE                                  LE0734
+0036 F*    24         FACILITY TYPE AND NO. ZERO                          LE0734
+0037 F*    25         ON-PARENT, OFF-CHILD EXTRACT RECORD                 LE0734
+0038 F*    26         LEDGER BALANCE -VE                                  LE0734
+0039 F*       35      RETAIL ACCOUNT                                      LE0734
+0040 F*       36      LONER - PARENT/CHILD/LONER GRANTED RECORD           LE0734
+0041 F*       37      PARENT/CHILD/LONER UTILISED RECORD                  LE0734
+0042 F*          U7 U8DATABASE ERROR                                      LE0734
+     E                    CPY@    1   1 80
+     E                    ##BR      999  3               Branch codes                         260507
+     E                    ##BC      999  3               Company codes                        260507
+     E                    ##BI      999  6               BICN                                 260507
+     E                    CURR      150  3               Currency                             260507
+     E                    #CDP      150  1 0             Decimal Places                       260507
+      *                                                                                       260507
+0043 F*          U8   CONTROLS OUT OF BALANCE                             LE0734
+0044 I**                                                                  LE0734
+0045 I**   ACCOUNTS MASTER FILE - DETAIL RECORD                           LE0734
+0046 I**                                                                  LE0734
+0047 IACCNT   NS  01   1 CD                                               LE0734
+0048 I       OR   05   1 CC                                               LE0734
+0049 I       OR   07   1 CH                                               LE0734
+0050 I                                        1   1 RECI                  LE0734
+0051 I**********                              2   70CNUM                  LE0734              CSD027
+0051 I                                        2   7 CNUM                                      CSD027
+0052 I                                        8  10 CCY                   LE0734
+0053 I**********                             11  140ACOD                               LE0734 CGL029
+     I                                       11  140ACODQQ                                    CGL029
+0054 I                                       15  160ACSQ                  LE0734
+0055 I***********                            23  250BRCD                  S01117
+0055 I                                       23  25 BRCA                  S01117
+0056 I                                       26  26 ATYP                  LE0734
+0057 I                                       27  27 STYP                  LE0734
+0058 I                                       29  29 ACST            21    LE0734
+0059 I                                    P  30  320DACO                  LE0734
+0060 I                                    P  33  350DACC                  LE0734
+0061 I                                       36  55 ANAM                  LE0734
+0062 I                                    P  56  630LDBL        2326      LE0734
+0063 I                                    P  64  710CLBL                  LE0734
+0064 I                                       72  72 STFQ                  LE0734
+0065 I                                       73  740STDY                  LE0734
+0066 I                                    P  75  770LSTD                  LE0734
+0067 I                                    P  78  800NSTD                  LE0734
+0068 I                                    P  81  820LSTP                  LE0734
+0069 I                                    P  83  900CFSB                  LE0734
+0070 I                                    P  91  930LMVD                  LE0734
+0071 I                                    P  94 1010EPLB                  LE0734
+0072 I                                    P 102 1090EPCB                  LE0734
+0073 I                                    P 110 1170YTDB                  LE0734
+0074 I                                    P 110 1170CFCB                  LE0734
+0075 I                                      118 118 GLBT                  LE0734
+0076 I                                    P 138 1400DLIM                  LE0734
+0077 I                                    P 141 1430LRCR                  LE0734
+0078 I                                    P 144 1510RTCB                  LE0734
+0079 I                                    P 152 1590RTLB                  LE0734
+0080 I                                    P 160 1660DITM                  LE0734
+0081 I                                    P 167 1730CITM                  LE0734
+0082 I                                    P 178 1837CDIR                  LE0734
+0083 I                                    P 184 1897CCIR                  LE0734
+0084 I                                    P 178 1837CDIR                  LE0734
+0085 I                                    P 184 1897CCIR                  LE0734
+0086 I                                      190 1990ACNO                  LE0734
+0087 I                                      200 200 RETB                  LE0734
+0088 I                                      201 201 ODSC                  LE0734
+0089 I                                    P 202 2070ODLN            22    LE0734
+0090 I                                    P 208 2100ODED                  LE0734
+0091 I                                    P 211 2120DIOD                  LE0734
+0092 I                                      213 2150FACT            24    LE0734
+0093 I                                      216 2170FCNO                  LE0734
+0094 I                                      218 219 EFAC                  LE0734
+0095 I                                    P 220 2270HELD                  LE0734
+0096 I                                    P 228 2330MINB                  LE0734
+0097 I                                    P 234 2360LACD                  LE0734
+0098 I                                    P 237 2380LISP                  LE0734
+0099 I                                    P 239 2410RRNM                  LE0734
+0100 I                                      242 2430DRIB                  LE0734
+0101 I                                    P 244 2497DRIS                  LE0734
+0102 I                                    P 250 2520DRCD                  LE0734
+0103 I                                      253 2530DRIC                  LE0734
+0104 I                                      254 254 DRIF                  LE0734
+0105 I                                      255 2560DRDY                  LE0734
+0106 I                                    P 257 2590NDID                  LE0734
+0107 I                                    P 260 2620LDID                  LE0734
+0108 I                                    P 263 2690LDIA                  LE0734
+0109 I                                      270 270 SDAP                  LE0734
+0110 I                                    P 271 2730LPAR                  LE0734
+0111 I                                    P 274 2800DIIE                  LE0734
+0112 I                                    P 281 2880DAIC                  LE0734
+0113 I                                    P 289 2950MADI                  LE0734
+0114 I                                    P 296 3020GADI                  LE0734
+0115 I                                      303 303 DDIS                  LE0734
+0116 I                                    P 304 3060DDIA                  LE0734
+0117 I                                    P 307 3090OLDR                  LE0734
+0118 I                                      310 3110OLDB                  LE0734
+0119 I                                    P 312 3177OLDS                  LE0734
+0120 I                                      318 3190CRIB                  LE0734
+0121 I                                    P 320 3257CRIS                  LE0734
+0122 I                                    P 326 3280CRCD                  LE0734
+0123 I                                      329 3290CRIC                  LE0734
+0124 I                                      330 330 CRIF                  LE0734
+0125 I                                      331 3320CRDY                  LE0734
+0126 I                                    P 333 3350NCID                  LE0734
+0127 I                                    P 336 3380LCID                  LE0734
+0128 I                                    P 339 3450LCIA                  LE0734
+0129 I                                      346 346 SCAP                  LE0734
+0130 I                                    P 347 3490LPAP                  LE0734
+0131 I                                    P 350 3560CIIE                  LE0734
+0132 I                                    P 357 3640CAIC                  LE0734
+0133 I                                    P 365 3710MACI                  LE0734
+0134 I                                    P 372 3780GACI                  LE0734
+0135 I                                      379 379 CDIS                  LE0734
+0136 I                                    P 380 3820DCIA                  LE0734
+0137 I                                    P 383 3850OLCR                  LE0734
+0138 I                                      386 3870OLCB                  LE0734
+0139 I                                    P 388 3937OLCS                  LE0734
+0140 I                                    P 394 3960LCD                   LE0734
+0141 I                                      397 397 CHTP                  LE0734
+0142 I                                    P 398 4000TNLU                  LE0734
+     I                                      554 5630ACOD                                      CGL029
+0143 I*                                                                   LE0734
+0144 I*    ACCOUNTS MASTER FILE - TRAILER RECORD.                         LE0734
+0145 I*                                                                   LE0734
+0146 IACCNT   NS  02   1 CT                                               LE0734
+0147 I                                        1   1 RECI                  LE0734
+0148 I                                    P  23  250NORE                  LE0734
+0149 I                                    P  29  310NOOA                  LE0734
+0150 I                                    P  32  340NINU                  LE0734
+0151 I                                    P  35  370NOAM                  LE0734
+0152 I                                    P  38  400NOCL                  LE0734
+0153 I                                    P  41  430NOAU                  LE0734
+0154 I                                    P  44  460NINP                  LE0734
+0155 I                                    P  47  490NORD                  LE0734
+0156 I                                    P  50  520NOCF                  LE0734
+0157 I                                    P  53  550NAMP                  LE0734
+0158 I                                    P  56  580NAUP                  LE0734
+0159 I                                    P  59  660HWND                  LE0734
+0160 I                                    P  67  680HDCD                  LE0734
+0161 I                                    P  69  760HWNC                  LE0734
+0162 I                                    P  77  780HDCC                  LE0734
+0163 I                                    P 395 3970LCD                   LE0734
+0164 I                                    P 398 4000TNLU                  LE0734
+0165 I**  ACCOUNTS MASTER FILE - CATCHALL                                 LE0734
+0166 I        NS                                                          LE0734
+0167 I**********                                                          S01194
+0168 I*****TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.               S01194
+0169 I**********                                                          S01194
+0170 I*ABLE***NS  03   2 C0   3 C1  12 C1                                 S01194
+0171 I*******AND      13 C0   1 CD                                        S01194
+0172 I**********                              1   1 RECI                  S01194
+0173 I**********                              2   30RECT                  S01194
+0174 I**********                             12  130RCDE                  S01194
+0175 I**********                             14  66 TITL                  S01194
+0176 I**********                             67  67 DATF                  S01194
+0177 I***********                            68  700DFBR                  S01194
+0178 I**********                             74  74 MODI1                 S01194
+0179 I**********                             75  75 MODI2                 S01194
+0180 I**********                             76  76 MODI3                 S01194
+0181 I**********                          P  77  790RUND                  S01194
+0182 I**********                             80  86 RUNA                  S01194
+0183 I**********                             87  870SFLG                  S01194
+0184 I**********                          P  90  920LCD                   S01194
+0185 I**********                             93  93 CHTP                  S01194
+0186 I**********                          P  94  960TNLU                  S01194
+0187 I**********                                                          S01194
+0188 I*****TABLE FILE - CURRENCIES RECORD 1.                              S01194
+0189 I**********                                                          S01194
+0190 I*ABLE***NS  04   1 CD   2 C2   3 C0                                 S01194
+0191 I*******AND      13 C1                                               S01194
+0192 I**********                              1   1 RECI                  S01194
+0193 I**********                              2   30RECT                  S01194
+0194 I**********                             13  130SREC                  S01194
+0195 I**********                             14  27 CCNM                  S01194
+0196 I**********                          P  28  348SPOT                  S01194
+0197 I**********                             35  37 CCYS                  S01194
+0198 I**********                             38  380CDP                   S01194
+0199 I**********                             39  390TNOT                  S01194
+0200 I**********                             40  40 DCCY                  S01194
+0201 I**********                             41  44 SRC1                  S01194
+0202 I**********                             45  48 SRC2                  S01194
+0203 I**********                             49  520TACC                  S01194
+0204 I**********                             53  560TEQV                  S01194
+0205 I**********                             57  600SWQV                  S01194
+0206 I**********                             61  640TAC4                  S01194
+0207 I**********                             65  680TAC5                  S01194
+0208 I**********                             69  69 HIND                  S01194
+0209 I**********                          P  70  768PART                  S01194
+0210 I**********                             77  780SSNO                  S01194
+0211 I**********                          P  79  858ERLC                  S01194
+0212 I**********                          P  90  920LCD                   S01194
+0213 I**********                             93  93 CHTP                  S01194
+0214 I**********                          P  94  960TNLU                  S01194
+0215 I****TABLE*FILE CATCHALL                                             S01194
+0216 I**********                                                          S01194
+0217 I********NS                                                          S01194
+0218 I**********                                                          S01194
+0219 I*****CLIENT FILE - CUSTOMER STANDING DATA RECORD.                   S01194
+0220 I*                                                                   S01194
+0221 I*LINT***NS  06   1 CD   8 CA                                        S01194
+0222 I**********                              1   1 RECI                  S01194
+0223 I**********                              8   8 RCDT                  S01194
+0224 I**********                              9  28 CRNM                  S01194
+0225 I**********                             29  38 CTWN                  S01194
+0226 I**********                             39  48 CSNM                  S01194
+0227 I**********                             49  56 CASK                  S01194
+0228 I**********                             57  68 TELX                  S01194
+0229 I**********                             69  80 CSID                  S01194
+0230 I**********                             81  82 ACOC                  S01194
+0231 I**********                             83  83 CBSI                  S01194
+0232 I**********                             84  85 CCTZ                  S01194
+0233 I**********                             86  87 CLOC                  S01194
+0234 I**********                             88  930CPAR            20    S01194
+0235 I*****FIELD NAME CHANGED FOR PROGRAM                                 S01194
+0236 I**********                             94  960BRCDA                 S01194
+0237 I**********                             97  980LINS                  S01194
+0238 I**********                             99 1010LIND                  S01194
+0239 I**********                          P 102 1040DASU                  S01194
+0240 I**********                          P 105 1070CDIC                  S01194
+0241 I**********                          P 108 1100DADE                  S01194
+0242 I**********                            111 111 CMIN                  S01194
+0243 I**********                            112 112 CTYP                  S01194
+0244 I**********                            113 124 TELF                  S01194
+0245 I**********                            125 133 CHID                  S01194
+0246 I**********                            134 136 CHAB                  S01194
+0247 I**********                          P 250 2520LCD                   S01194
+0248 I**********                            253 253 CHTP                  S01194
+0249 I**********                          P 254 2560TNLU                  S01194
+0250 I****CLINT*FILE CATCHALL                                             S01194
+0251 I********NS                                                          S01194
+     I**********                                                          S01194
+     ISDCURR    E DSSDCURRPD                                              S01194
+      **   CURRENCY TYPE                                                  S01194
+     I              A6NBDP                          CDP                   S01194
+      *                                                                   S01194
+     ISCSARD    E DSSCSARDPD                                                                MD050457
+      ** SARS INSTALLED                                                                     MD050457
+      *                                                                                     MD050457
+     ISDCUST    E DSSDCUSTPD                                              S01194
+      **   CUSTOMER                                                       S01194
+      *                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+      ** BANK DETAILS                                                     S01194
+     I              BJURPT                          TITL                  S01194
+     I              BJMRDT                          RUNA                  S01194
+      **
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+     I** EXTERNAL DS FOR BRANCHES DETAILS                                 S01117
+     I**                                                                  S01117
+     I              A8CMCD                          CMPYM                 S01194
+     I              QQDFAC                          QQDFA1                                    CGL029
+0252 I**********                                                          S01194
+0253 I****DATA*STRUCTURE FOR CLINT FILE                                   S01194
+0254 I**********  DS                                                      S01194
+0255 I**********                              1   7 CLNKEY                S01194
+0256 I**********                              1   60CNUM                  S01194
+0257 I**********                              7   7 A                     S01194
+0258 I**********                                                          S01194
+0259 I**  DATA STRUCTURE FOR TABLES FILE KEY                              S01194
+0260 I**********  DS                                                      S01194
+0261 I**********                              1  12 TBKEY                 S01194
+0262 I**********                              1   2 TBKY1                 S01194
+0263 I**********                              9  11 CCY                   S01194
+0264 I**********                             12  12 TBKY2                 S01194
+0265 I**                                                                  LE0734
+0266 I**  FLIO DETAIL OUTPUT - DATA STRUCTURE                             LE0734
+0267 I            DS                                                      LE0734
+0268 I                                        1   8 CLNDET                LE0734
+0269 I                                        1   2 ACOC                  LE0734
+0270 I**********                              3   80CPAR                  LE0734              CSD027
+0270 I                                        3   8 CPAR                                      CSD027
+0271 I**   LOCAL DATA AREA FOR DATABASE ERROR IDENTIFICATION              LE0734
+0272 ILDA        UDS                            256                       LE0734
+0273 I***********                           134 138 DBFILE                S01117
+0274 I***********                           139 167 DBKEY                 S01117
+0275 I***********                           168 175 DBPGM                 S01117
+0276 I***********                           176 1770DBASE                 S01117
+0273 I                                      134 141 DBFILE                S01117
+0274 I                                      142 170 DBKEY                 S01117
+0275 I                                      171 180 DBPGM                 S01117
+0276 I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+     I*    FILE INFORMATION DATA STRUCTURE                                S01117
+     I*                                                                   S01117
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     C**********           MOVEACPY@      BIS@   80                                           260507
+     C           PLIST2    PLIST                                          S01194
+     C                     PARM '*MSG   ' @RTCD                           S01194
+     C                     PARM '*KEY   ' @OPTN                           S01194
+     C                     PARM           CKEY    3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C           PLIST3    PLIST                                          S01194
+     C                     PARM '*MSG   ' @RTCD                           S01194
+     C                     PARM '*KEY   ' @OPTN                           S01194
+     C                     PARM           KEYC   10                       S01194
+     C                     PARM '       ' KEYSTS  7                       S01194
+     C           SDCUST    PARM SDCUST    DSSDY                           S01194
+     C**                                                                  S01194
+0278 C**  FIRST CYCLE CALCULATIONS                                        LE0734
+0279 C   30                GOTO ENDFC                                     LE0734
+0280 C                     SETON                     30                   LE0734
+     C                     MOVEACPY@      BIS@   80                                           260507
+     C                     Z-ADD0         ##BNDX  40                                          260507
+     C           *LIKE     DEFN ##BNDX    B                                                   260507
+     C           *LIKE     DEFN ##BNDX    ##BSV                                               260507
+      *                                                                                       260507
+      ** Set up index used by ccy arrays                                                      260507
+      *                                                                                       260507
+     C                     Z-ADD0         ##QNDX                                              260507
+      *                                                                                       260507
+0281 C**                                                                  LE0734
+0282 C**  OBTAIN INST. CONTROL RECORD 1 - D/B ERROR IF NOT FOUND          LE0734
+0283 C**********           MOVE '01'      TBKY1                           S01194
+0284 C**********           MOVE '10'      TBKEY                           S01194
+0285 C**********           EXSR TABCHN                                    S01194
+0286 C**                                                                  LE0734
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+0287 C**N03******          SETON                     U7U8LR               S01194
+0288 C**N03******          MOVE 'TABLE'   DBFILE                          S01194
+0289 C**N03******          MOVE TBKEY     DBKEY                           S01194
+0290 C**N03******          Z-ADD1         DBASE            DBASE 1        S01194
+0291 C**N03******          GOTO END                                       S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+0287 C                     SETON                     U7U8LR               S01194
+0288 C                     MOVE 'SDBANKPD'DBFILE                          S01194
+0290 C                     Z-ADD1         DBASE            DBASE 1        S01194
+     C                     GOTO END                                       S01194
+     C                     END                                            S01194
+      *                                                                                     MD050457
+      ** Check if CSD007 is switched on.                                                    MD050457
+      *                                                                                     MD050457
+     C                     CALL 'AOSARDR0'                                                  MD050457
+     C                     PARM '       ' @RTCD                                             MD050457
+     C                     PARM '*VERIFY' @OPTN                                             MD050457
+     C                     PARM 'CSD007'  @SARD   6                                         MD050457
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD050457
+      *                                                                                     MD050457
+     C                     MOVE 'N'       CSD007  1                                         MD050457
+     C           @RTCD     IFEQ *BLANKS                                                     MD050457
+     C                     MOVE 'Y'       CSD007                                            MD050457
+     C                     ENDIF                                                            MD050457
+0292 C**                                                                  S01194
+0293 C**********           MOVE 'A'       A                               S01194
+0294 C**********           MOVE '20'      TBKY1                           S01194
+0295 C**********           MOVE '1'       TBKY2                           S01194
+0296 C                     Z-ADD0         ZERO5   50                      LE0734
+0297 C           ENDFC     TAG                             * ENDFC TAG    LE0734
+0298 C**                                                                  LE0734
+0299 C**  SKIP PROCESSING FOR NON-DETAIL RECORDS                          LE0734
+0300 C   02                                                               LE0734
+0301 COR 07                                                               LE0734
+0302 COR 05      TOTCNT    ADD  1         TOTCNT                          LE0734
+0303 C  N01                GOTO END                                       LE0734
+0304 C**                                                                  LE0734
+     C** To get COMPANY OF ORIGINATING BRANCH (COOB) :                    S01117
+     C** To get COMPANY OF BOOKING BRANCH (CMPYM) :                       S01117
+     C*                                                                   S01117
+      ** Check whether details for Branch already in array                                    260507
+      *                                                                                       260507
+     C                     MOVELBRCA      ##KB                                                260507
+     C                     EXSR ##CHKB                                                        260507
+      *                                                                                       260507
+      ** If branch is in the array then use the details                                       260507
+      *                                                                                       260507
+     C           ##FIC     IFEQ 'Y'                                                           260507
+     C                     EXSR ##SETB                                                        260507
+     C                     ELSE                                                               260507
+      *                                                                                       260507
+      ** If branch is not in the array then get details from DB                               260507
+      *                                                                                       260507
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM BRCA      @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01117              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     MOVEL'SDBRCHPD'DBFILE                          S01117
+     C                     MOVEL@DSNB     DBKEY            ************** S01117
+     C                     MOVEL@OPTN     DBOPTN  7        *DBASE 10 **** S01117
+     C                     Z-ADD10        DBASE            ************** S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO END                                       S01117
+     C                     ELSE                                                               260507
+      *                                                                                       260507
+      ** Details found on the DB so add them to the array                                     260507
+      ** if the array still has room                                                          260507
+      *                                                                                       260507
+     C                     EXSR ##ADDB                                                        260507
+     C                     END                                            S01117
+     C                     ENDIF                                                              260507
+     C*                                                                   S01117
+     C                     MOVE CMPYM     COOB    3                       S01117
+     C*                                                                   S01117
+0305 C**  ACCUMULATE COUNT AND HASH OF LIVE RECORDS                       LE0734
+0306 C           TOTCNT    ADD  1         TOTCNT  50                      LE0734
+0307 C                     Z-ADDTOTWHN    ZZTOTI                          LE0734
+0308 C                     Z-ADDTOTDC     ZZTOTD                          LE0734
+0309 C   26                Z-SUBLDBL      LDBL             REVERSE SIGN   LE0734
+0310 C                     MOVE LDBL      ZZAMT                           LE0734
+0311 C                     EXSR GLZADD                                    LE0734
+0312 C**                                                                  LE0734
+0313 C                     Z-ADDZZTOTI    TOTWHN 150                      LE0734
+0314 C                     Z-ADDZZTOTD    TOTDC   30                      LE0734
+0315 C**                                                                  LE0734
+0316 C**  ONLY LIVE RETAIL OPEN A/C'S ARE EXTRACTED                       LE0734
+0317 C                     SETOF                     35                   LE0734
+0318 C   21      ATYP      COMP 'R'                      35               LE0734
+0319 C  N35                GOTO END                                       LE0734
+0320 C****RECORD*EXTRACTED*ONLY*IF*LEDGER*BALANCE*-VE*OR*O/D*LINE*NON-ZEROLE0734
+0321 C*   RECORD EXTRACTED ONLY IF LEDGER BALANCE +VE OR O/D LINE NON-ZEROLE0734
+0322 C   22                                                               LE0734
+0323 CANN23                SETOF                     35                   LE0734
+0324 C**                                                                  LE0734
+0325 C  N35                GOTO END                                       LE0734
+0326 C**  IF O/D LINE NON-ZERO - GRANTED RECORD EXTRACTED - 1 IF CUST.    LE0734
+0327 C**  IS A LONER,2 IF CUST. IS A CHILD                                LE0734
+0328 C                     EXSR CLNCHN                                    LE0734
+0329 C**N06*****           GOTO END                        D/B ERROR      S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C           CSD007    IFEQ 'N'                                                         MD050457
+     C           CSD007    OREQ 'Y'                                                         MD050457
+     C           @RTCD     ANDNE'*CUSCLS'                                                   MD050457
+0329 C                     GOTO END                        D/B ERROR      S01194
+     C                     ENDIF                                                            MD050457
+     C                     END                                            S01194
+0330 C***********          MOVE CNUM      SAVC    60                      S01194
+0330 C**********           MOVE BBCUST    SAVC    60                                   S01194 CSD027
+0330 C                     MOVE BBCUST    SAVC    6                                           CSD027
+0331 C***********          MOVE CPAR      SAVP    60                      S01194
+0331 C**********           MOVE BBPCNB    SAVP    60                                   S01194 CSD027
+0331 C                     MOVE BBPCNB    SAVP    6                                           CSD027
+0332 C***********          MOVE ACOC      SAVACC  2                       S01194
+0332 C                     MOVE BBACOC    SAVACC  2                       S01194
+     C           BBPCNB    COMP *BLANKS                  20               S01194
+0333 C   20                GOTO CCYCHN                     * NO PARENT    LE0734
+0334 C**********           MOVE CPAR      CNUM                            S01194
+0334 C                     MOVE BBPCNB    CNUM                            S01194
+0335 C                     EXSR CLNCHN                     * PARENT DETS  LE0734
+0336 C**N06*****           GOTO END                                       S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C           CSD007    IFEQ 'N'                                                         MD050457
+     C           CSD007    OREQ 'Y'                                                         MD050457
+     C           @RTCD     ANDNE'*CUSCLS'                                                   MD050457
+0329 C                     GOTO END                        D/B ERROR      S01194
+     C                     ENDIF                                                            MD050457
+     C                     END                                            S01194
+0337 C**********           MOVE ACOC      SAVACP  2                       S01194
+0332 C                     MOVE BBACOC    SAVACP  2                       S01194
+0338 C                     SETOF                     20                   LE0734
+0339 C           CCYCHN    TAG                                            LE0734
+0340 C**                                                                  LE0734
+0341 C                     EXSR TABCHN                                    LE0734
+0342 C**N04*******         SETON                     U7U8LR               S01194
+0343 C**N04*******         MOVE 'TABLE'   DBFILE                          S01194
+0344 C**N04*******         MOVE TBKEY     DBKEY                           S01194
+0345 C**N04*******         Z-ADD3         DBASE            DBASE 3        S01194
+0346 C**N04*******         GOTO END                                       S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+0342 C                     SETON                     U7U8LR               S01194
+0343 C                     MOVE 'SDCURRPD'DBFILE                          S01194
+0345 C                     Z-ADD3         DBASE            DBASE 3        S01194
+0346 C                     GOTO END                                       S01194
+     C                     END                                            S01194
+0347 C**  IF NO GRANTED DETAILS ,GOTO UTILISED DETAILS EXTRACT            LE0734
+0348 C   22                GOTO LEGBVE                                    LE0734
+0349 C**  CONVERT TO FULL AMOUNT FROM WHOLE INITS                         LE0734
+0350 C                     Z-ADDODLN      ODLNN                           LE0734
+0351 C   32      ODLN      MULT 10        ODLNN  130                      LE0734
+0352 C   33      ODLN      MULT 100       ODLNN                           LE0734
+0353 C   34      ODLN      MULT 1000      ODLNN                           LE0734
+0354 C**                                                                  LE0734
+0355 C                     Z-ADD0         ZZAMT                           LE0734
+0356 C                     MOVE ODLNN     ZZAMT                           LE0734
+0357 C**                                                                  LE0734
+0358 C  N20                GOTO PARCHL                                    LE0734
+0359 C**  EXTRACT ONE GRANTED FOR LONER                                   LE0734
+0360 C                     EXSR HASTOT                                    LE0734
+0361 C                     SETON                     36                   LE0734
+     C                     MOVE SAVACC    ACOC                            107640
+     C                     MOVE SAVP      CPAR                            107640
+     C                     MOVE SAVC      CNUM                            107640
+0362 C                     EXSR EXCPTN                                    LE0734
+0363 C                     GOTO LEGBVE                                    LE0734
+0364 C**                                                                  LE0734
+0365 C           PARCHL    TAG                             * PARCHL TAG   LE0734
+0366 C**                                                                  LE0734
+0367 C**  IF CUST. IS A CHILD EXTRACT ONE GRANTED FOR PARENT AND          LE0734
+0368 C**  ONE GRANTED FOR CHILD                                           LE0734
+0369 C                     EXSR HASTOT                     PARENT TOTS.   LE0734
+0370 C                     EXSR HASTOT                     CHILD TOTS.    LE0734
+0371 C                     SETON                     36                   LE0734
+0372 C                     SETOF                     25    * CHILD        LE0734
+0373 C                     MOVE SAVACC    ACOC                            LE0734
+0374 C                     MOVE SAVP      CPAR                            LE0734
+0375 C                     MOVE SAVC      CNUM                            LE0734
+0376 C                     EXSR EXCPTN                                    LE0734
+0377 C                     SETON                     2536  * PARENT       LE0734
+0378 C                     MOVE SAVACP    ACOC                            LE0734
+0379 C                     EXSR EXCPTN                                    LE0734
+0380 C**                                                                  LE0734
+0381 C           LEGBVE    TAG                             * LEGBVE TAG   LE0734
+0382 C  N23                GOTO END                                       LE0734
+0383 C**                                                                  LE0734
+0384 C                     MOVE LDBL      ZZAMT                           LE0734
+0385 C**                                                                  LE0734
+0386 C  N20                GOTO CHLPAR                                    LE0734
+0387 C**  EXTRACT ONE UTILISED FOR LONER                                  LE0734
+0388 C                     EXSR HASTOT                                    LE0734
+0389 C                     SETON                     37                   LE0734
+     C                     MOVE SAVACC    ACOC                            107640
+     C                     MOVE SAVP      CPAR                            107640
+     C                     MOVE SAVC      CNUM                            107640
+0390 C                     EXSR EXCPTN                                    LE0734
+0391 C                     GOTO END                                       LE0734
+0392 C**                                                                  LE0734
+0393 C           CHLPAR    TAG                             * CHLPAR TAG   LE0734
+0394 C**  EXTRACT UTILISED FOR PARENT/CHILD                               LE0734
+0395 C                     EXSR HASTOT                     PARENT         LE0734
+0396 C                     EXSR HASTOT                     CHILD          LE0734
+0397 C                     SETON                     37                   LE0734
+0398 C                     SETOF                     25    * CHILD        LE0734
+0399 C                     MOVE SAVACC    ACOC                            LE0734
+0400 C                     MOVE SAVP      CPAR                            LE0734
+0401 C                     MOVE SAVC      CNUM                            LE0734
+0402 C                     EXSR EXCPTN                                    LE0734
+0403 C                     SETON                     2537  * PARENT       LE0734
+0404 C                     MOVE SAVACP    ACOC                            LE0734
+0405 C                     EXSR EXCPTN                                    LE0734
+0406 C**                                                                  LE0734
+0407 C           END       TAG                             * END TAG      LE0734
+0408 C**                                                                  LE0734
+0409 C**  AT LR TOTALS BALANCE CHECH                                      LE0734
+0410 CLR U7                Z-ADD0         ZZTOTI                          LE0734
+0411 CLR U7                Z-ADD0         ZZTOTD                          LE0734
+0412 CLR U7                MOVE 'LE0734'  DBPGM                           LE0734
+0413 CLR U7                GOTO FIN                                       LE0734
+0414 CLR         FLIOCT    ADD  1         FLIOCT                          LE0734
+0415 C**  ADD THE D/R AND C/R TOTALS TO GIVE FILE TOTAL SIGN IGNORED      LE0734
+0416 CLR         NORE      ADD  NINU      NORE                            LE0734
+0417 CLR         NORE      ADD  NINP      NORE                            LE0734
+0418 CLR         TOTCNT    COMP NORE                 U8U8                 LE0734
+0419 CLR                   Z-ADDHWND      ZZTOTI                          LE0734
+0420 CLR                   Z-ADDHDCD      ZZTOTD                          LE0734
+0421 CLR                   Z-ADDHWNC      ZZAMTI                          LE0734
+0422 CLR                   Z-ADDHDCC      ZZAMTD                          LE0734
+0423 C**                                                                  LE0734
+0424 CLR                   EXSR GLZSUM                                    LE0734
+0425 CLRNU8      ZZTOTI    COMP TOTWHN               U8U8                 LE0734
+0426 CLRNU8      ZZTOTD    COMP TOTDC                U8U8                 LE0734
+0427 C**                                                                  LE0734
+0428 CLR         FIN       TAG                             * FIN TAG      LE0734
+     C**                                                                  S01117
+     CLR U7 U8             EXSR *PSSR                                     S01117
+0430 C********************************************************************LE0734
+      /EJECT                                                                                  260507
+      ********************************************************************                    260507
+      *                                                                  *                    260507
+      * ##CHKB - Subroutine to check the Branch in the arrays            *                    260507
+      *                                                                  *                    260507
+      ********************************************************************                    260507
+     C           ##CHKB    BEGSR                                                              260507
+      *                                                                                       260507
+     C           *LIKE     DEFN A8BRCD    ##KB                                                260507
+      *                                                                                       260507
+      ** Set off the branch found indicator                                                   260507
+      *                                                                                       260507
+     C                     MOVEL*BLANK    ##FIC   1                                           260507
+      *                                                                                       260507
+      ** Save the state of indicator 30 so it can be reset at the end                         260507
+      ** of the SR as it may be used elsewhere in the code                                    260507
+      *                                                                                       260507
+     C           *IN30     IFEQ *ON                                                           260507
+     C                     MOVEL'Y'       #IN30   1                                           260507
+     C                     ELSE                                                               260507
+     C                     MOVEL'N'       #IN30                                               260507
+     C                     ENDIF                                                              260507
+      *                                                                                       260507
+     C                     SETOF                         30                                   260507
+      *                                                                                       260507
+      ** Restore the saved value of B                                                         260507
+      *                                                                                       260507
+     C                     Z-ADD##BSV     B                                                   260507
+      *                                                                                       260507
+      ** Check whether details for Branch already in array                                    260507
+      *                                                                                       260507
+      ** Is this the same as the last LOKUP, if so we can bypass                              260507
+      ** the LOKUP                                                                            260507
+      ** Defend against B being 0                                                             260507
+      *                                                                                       260507
+     C           B         IFEQ 0                                                             260507
+     C                     Z-ADD1         B                                                   260507
+     C                     ENDIF                                                              260507
+      *                                                                                       260507
+      ** If the branch being checked is the same then use these                               260507
+      ** details rather than doing a LOKUP                                                    260507
+      *                                                                                       260507
+     C           ##KB      IFEQ ##BR,B                                                        260507
+      *                                                                                       260507
+      ** Found, so seton 30                                                                   260507
+      *                                                                                       260507
+     C                     SETON                         30                                   260507
+     C                     ELSE                                                               260507
+     C                     Z-ADD1         B                                                   260507
+     C           ##KB      LOKUP##BR,B                   30                                   260507
+     C                     ENDIF                                                              260507
+      *                                                                                       260507
+      ** Save the last update to B                                                            260507
+      *                                                                                       260507
+     C           *IN30     IFEQ *ON                                                           260507
+     C                     Z-ADDB         ##BSV                                               260507
+      *                                                                                       260507
+      ** Set the indicator to show the data was found                                         260507
+      *                                                                                       260507
+     C                     MOVEL'Y'       ##FIC                                               260507
+     C                     ENDIF                                                              260507
+      *                                                                                       260507
+      ** Reset the state of indicator 30.                                                     260507
+      *                                                                                       260507
+     C           #IN30     IFEQ 'Y'                                                           260507
+     C                     MOVEL*ON       *IN30                                               260507
+     C                     ELSE                                                               260507
+     C                     MOVEL*OFF      *IN30                                               260507
+     C                     ENDIF                                                              260507
+      *                                                                                       260507
+     C                     ENDSR                                                              260507
+      ********************************************************************                    260507
+      /EJECT                                                                                  260507
+      ********************************************************************                    260507
+      *                                                                  *                    260507
+      * ##SETB - Sets up the SDBRCHPD fields used in the code from the   *                    260507
+      *          arrays                                                  *                    260507
+      *                                                                  *                    260507
+      ********************************************************************                    260507
+     C           ##SETB    BEGSR                                                              260507
+      *                                                                                       260507
+     C                     MOVEL##BR,B    A8BRCD                                              260507
+     C                     MOVEL##BC,B    CMPYM                                               260507
+     C                     MOVEL##BI,B    A8BICN                                              260507
+      *                                                                                       260507
+     C                     ENDSR                                                              260507
+      *                                                                                       260507
+      ********************************************************************                    260507
+      /EJECT                                                                                  260507
+      ********************************************************************                    260507
+      *                                                                  *                    260507
+      * ##ADDB - Adds the SDBRCHPD fields used in the code to the arrays *                    260507
+      *                                                                  *                    260507
+      ********************************************************************                    260507
+     C           ##ADDB    BEGSR                                                              260507
+      *                                                                                       260507
+      ** If there is still room in the array then add the details                             260507
+      *                                                                                       260507
+     C           ##BNDX    IFLT 999                                                           260507
+     C                     ADD  1         ##BNDX                                              260507
+     C                     Z-ADD##BNDX    B                                                   260507
+     C                     MOVELA8BRCD    ##BR,B                                              260507
+     C                     MOVELCMPYM     ##BC,B                                              260507
+     C                     MOVELA8BICN    ##BI,B                                              260507
+     C                     ENDIF                                                              260507
+      *                                                                                       260507
+      ** Update ##BSV so next call to ##CHKB checks this latest addition                      260507
+      ** to the array first                                                                   260507
+      *                                                                                       260507
+     C                     Z-ADDB         ##BSV                                               260507
+      *                                                                                       260507
+     C                     ENDSR                                                              260507
+      ********************************************************************                    260507
+      /EJECT                                                                                  260507
+      ********************************************************************                    260507
+0431 C**  CLNCHN SUBR. TO RANDOM ACCESS CLINT FILE - FOR CHILD/LONER      LE0734
+0432 C           CLNCHN    BEGSR                           **  CLNCHN   **LE0734
+0433 C**                                                                  LE0734
+0434 C**************       SETOF                     0631                 S01194
+0434 C                     SETOF                       31                 S01194
+0435 C********** CLNKEY    CHAINCLINT                31                   S01194
+     C                     MOVELCNUM      KEYC                            S01194
+     C                     CALL 'AOCUSTR0'PLIST3                          S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+      *                                                                                     MD050457
+      ** Allow processing of closed records                                                 MD050457
+      *                                                                                     MD050457
+     C           CSD007    IFEQ 'N'                                                         MD050457
+     C           CSD007    OREQ 'Y'                                                         MD050457
+     C           @RTCD     ANDNE'*CUSCLS'                                                   MD050457
+      *                                                                                     MD050457
+0436 C**N06*****           SETON                     U7U8LR               S01194
+0437 C**N06*****           MOVE 'CLINT'   DBFILE                          S01194
+0436 C                     SETON                     U7U8LR               S01194
+0437 C                     MOVE 'SDCUSTPD'DBFILE                          S01194
+0438 C**N06*****           MOVE CLNKEY    DBKEY                           S01194
+0439 C**N06*****           Z-ADD2         DBASE            DBASE 2        S01194
+0439 C                     Z-ADD2         DBASE            DBASE 2        S01194
+      *                                                                                     MD050457
+     C                     ENDIF                                                            MD050457
+     C                     ELSE                                           S01194
+     C                     MOVE BBACOC    ACOC                            S01194
+0440 C                     END                                            S01194
+0441 C                     ENDSR                                          LE0734
+0442 C********************************************************************LE0734
+0443 C**                                                                  LE0734
+0444 C********************************************************************LE0734
+0445 C****TABCHN*SUBR.*TO*RANDOM*ACCESS*TABLE*FILE*AND*             LE0734S01194
+0445 C**  TABCHN SUBR. TO RANDOM ACCESS SDCURRPD FILE AND           LE0734S01194
+0446 C**  DETERMINE NO.OF DECIMAL PLACES IN CCY                           LE0734
+0447 C           TABCHN    BEGSR                           **  TABCHN   **LE0734
+0448 C**********           SETOF                     030431               S01194
+0448 C**********           SETOF                     0331                 S01194
+0448 C                     SETOF                       31                 S01194
+     C                     MOVELCCY       CKEY                            S01194
+      *                                                                                       260507
+      ** Are the details for this CCY already stored in the arrays                            260507
+      *                                                                                       260507
+     C                     MOVELCKEY      ##KC                                                260507
+     C                     EXSR ##CHKC                                                        260507
+     C           ##FIC     IFEQ 'Y'                                                           260507
+      *                                                                                       260507
+      ** Found in the arrays so use the details from there                                    260507
+      *                                                                                       260507
+     C                     EXSR ##SETC                                                        260507
+     C                     ELSE                                                               260507
+0449 C********** TBKEY     CHAINTABLE                31                   S01194
+     C                     CALL 'AOCURRR0'PLIST2                          S01194
+0450 C**  NOT FOUND D/B ERROR                                             S01194
+0451 C**N04*****           GOTO TABEND                                    S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+0451 C                     GOTO TABEND                                    S01194
+     C                     ELSE                                                               260507
+      *                                                                                       260507
+      ** Found on the DB and not in the array so add to the array                             260507
+      *                                                                                       260507
+     C                     EXSR ##ADDC                                                        260507
+     C                     END                                            S01194
+     C                     ENDIF                                                              260507
+0452 C**                                                                  LE0734
+0453 C**  DETERMINE NO. OF DECIMAL PLACES FOR CCY                         LE0734
+0454 C           CDP       COMP 1                        32               LE0734
+0455 C           CDP       COMP 2                    34  33               LE0734
+0456 C**                                                                  LE0734
+0457 C           TABEND    ENDSR                                          LE0734
+0458 C**                                                                  LE0734
+0459 C********************************************************************LE0734
+      /EJECT                                                                                  260507
+      ********************************************************************                    260507
+      *                                                                  *                    260507
+      * ##CHKC  - Check the currency details                             *                    260507
+      *                                                                  *                    260507
+      ********************************************************************                    260507
+     C           ##CHKC    BEGSR                                                              260507
+      *                                                                                       260507
+     C           *LIKE     DEFN BJCYCD    ##KC                                                260507
+     C           *LIKE     DEFN Q         ##QSV                                               260507
+      *                                                                                       260507
+      ** Set off the currency found indicator                                                 260507
+      *                                                                                       260507
+     C                     MOVEL*BLANK    ##FIC   1                                           260507
+      *                                                                                       260507
+      ** Save the state of indicator 87 so it can be reset at the end                         260507
+      ** of the SR as it may be used elsewhere in the code                                    260507
+      *                                                                                       260507
+     C           *IN87     IFEQ *ON                                                           260507
+     C                     MOVEL'Y'       #IN87   1                                           260507
+     C                     ELSE                                                               260507
+     C                     MOVEL'N'       #IN87                                               260507
+     C                     ENDIF                                                              260507
+      *                                                                                       260507
+     C                     SETOF                         87                                   260507
+      *                                                                                       260507
+      ** Restore Q from ##QSV in case Q is used elsewhere in the code                         260507
+      *                                                                                       260507
+     C                     Z-ADD##QSV     Q       40                                          260507
+      *                                                                                       260507
+      ** Are we looking for the same details as the last time this                            260507
+      ** subroutine was called i.e. is Q already set correctly?                               260507
+      ** If so then use the data rather than do another LOKUP                                 260507
+      ** First make sure that we don't reference the 0th array element                        260507
+      *                                                                                       260507
+     C           Q         IFEQ 0                                                             260507
+     C                     Z-ADD1         Q                                                   260507
+     C                     ENDIF                                                              260507
+      *                                                                                       260507
+      ** Now see if this search is same as last one performed                                 260507
+      ** If we have a match then seton 87 so the code after this                              260507
+      ** subroutine knows it can use Q directly                                               260507
+      *                                                                                       260507
+     C           ##KC      IFEQ CURR,Q                                                        260507
+     C                     SETON                         87                                   260507
+     C                     ELSE                                                               260507
+      *                                                                                       260507
+      ** Otherwise hunt in the array and seton 87 if found                                    260507
+      *                                                                                       260507
+     C                     Z-ADD1         Q                                                   260507
+     C           ##KC      LOKUPCURR,Q                   87                                   260507
+     C                     ENDIF                                                              260507
+      *                                                                                       260507
+      ** Save Q for next time                                                                 260507
+      *                                                                                       260507
+     C           *IN87     IFEQ *ON                                                           260507
+     C                     Z-ADDQ         ##QSV                                               260507
+      *                                                                                       260507
+      ** Set the indicator to show the data was found                                         260507
+      *                                                                                       260507
+     C                     MOVEL'Y'       ##FIC                                               260507
+     C                     ENDIF                                                              260507
+      *                                                                                       260507
+      ** Reset the state of indicator 87.                                                     260507
+      *                                                                                       260507
+     C           #IN87     IFEQ 'Y'                                                           260507
+     C                     MOVEL*ON       *IN87                                               260507
+     C                     ELSE                                                               260507
+     C                     MOVEL*OFF      *IN87                                               260507
+     C                     ENDIF                                                              260507
+      *                                                                                       260507
+     C                     ENDSR                                                              260507
+      *                                                                                       260507
+      ********************************************************************                    260507
+      /EJECT                                                                                  260507
+      ********************************************************************                    260507
+      *                                                                  *                    260507
+      * ##SETC - Set up the SDCURRPD fields as expected by this program  *                    260507
+      *          from the array fields                                   *                    260507
+      *                                                                  *                    260507
+      ********************************************************************                    260507
+     C           ##SETC    BEGSR                                                              260507
+      *                                                                                       260507
+     C                     MOVELCURR,Q    A6CYCD                                              260507
+     C                     Z-ADD#CDP,Q    CDP                                                 260507
+      *                                                                                       260507
+     C                     ENDSR                                                              260507
+      ********************************************************************                    260507
+      /EJECT                                                                                  260507
+      ********************************************************************                    260507
+      *                                                                  *                    260507
+      * ##ADDC - Adds the SDCURRPD fields used in the code to the arrays *                    260507
+      *                                                                  *                    260507
+      ********************************************************************                    260507
+     C           ##ADDC    BEGSR                                                              260507
+      *                                                                                       260507
+     C           *LIKE     DEFN Q         ##QNDX                                              260507
+      *                                                                                       260507
+      ** If there is still room in the array then add the details                             260507
+      *                                                                                       260507
+     C           ##QNDX    IFLT 150                                                           260507
+     C                     ADD  1         ##QNDX                                              260507
+     C                     Z-ADD##QNDX    Q                                                   260507
+     C                     MOVELA6CYCD    CURR,Q                                              260507
+     C                     Z-ADDCDP       #CDP,Q                                              260507
+     C                     ENDIF                                                              260507
+      *                                                                                       260507
+      ** Update ##QSV so next call to ##CHKC checks this latest adddition                     260507
+      ** to the array firss                                                                   260507
+      *                                                                                       260507
+     C                     Z-ADDQ         ##QSV                                               260507
+      *                                                                                       260507
+     C                     ENDSR                                                              260507
+      ********************************************************************                    260507
+      /EJECT                                                                                  260507
+0460 C**                                                                  LE0734
+0461 C********************************************************************LE0734
+0462 C**  HASTOT SUBR. TO KEEP COUNT AND HASH OF RECORDS OUTPUT TO FLIO   LE0734
+0463 C           HASTOT    BEGSR                           **  HASTOT   **LE0734
+0464 C           FLIOCT    ADD  1         FLIOCT  50                      LE0734
+0465 C                     Z-ADDFLWHN     ZZTOTI                          LE0734
+0466 C                     Z-ADDFLDC      ZZTOTD                          LE0734
+0467 C                     EXSR GLZADD                                    LE0734
+0468 C**                                                                  LE0734
+0469 C                     Z-ADDZZTOTI    FLWHN  150                      LE0734
+0470 C                     Z-ADDZZTOTD    FLDC    30                      LE0734
+0471 C**                                                                  LE0734
+0472 C                     ENDSR                                          LE0734
+0473 C********************************************************************LE0734
+0474 C**                                                                  LE0734
+0475 C********************************************************************LE0734
+0476 C**  EXCPTN SUBR. TO OUTPUT TO FLIO AT EXCEPTION TIME                LE0734
+0477 C           EXCPTN    BEGSR                           **  EXCPTN   **LE0734
+0478 C                     EXCPT                                          LE0734
+0479 C                     SETOF                     3637                 LE0734
+0480 C**                                                                  LE0734
+0481 C                     ENDSR                                          LE0734
+0482 C********************************************************************LE0734
+0483 C**                                                                  LE0734
+0484 C********************************************************************LE0734
+0485 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)  LE0734
+0486 C*   IND '99' IS SET BY AN OVERFLOW ERROR                            LE0734
+0487 C*                                                                   LE0734
+0488 CSR         GLZADD    BEGSR                           *** GLZADD ****LE0734
+0489 C*                                                                   LE0734
+0490 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT  LE0734
+0491 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS LE0734
+0492 C*                                                                   LE0734
+0493 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS                       LE0734
+0494 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD  LE0734
+0495 CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD  LE0734
+0496 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW                  LE0734
+0497 C*                                                                   LE0734
+0498 CSR                   EXSR GLZSUM                                    LE0734
+0499 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *LE0734
+0500 C*                                                                   LE0734
+0501 C********************************************************************LE0734
+0502 C********************************************************************LE0734
+0503 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -            LE0734
+0504 C*                        GLZADD, GLZSUB, GLZCMP.                    LE0734
+0505 C*          PARAMETERS PASSED -                                      LE0734
+0506 C*                     I/P ZZAMTI ZZAMTD                             LE0734
+0507 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.       LE0734
+0508 C*                                                                   LE0734
+0509 CSR         GLZSUM    BEGSR                           *** GLZSUM ****LE0734
+0510 C*                                                                   LE0734
+0511 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI  LE0734
+0512 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD  LE0734
+0513 CSR                   SETOF                     919293               LE0734
+0514 CSR                   SETOF                     949599               LE0734
+0515 C*                                                                   LE0734
+0516 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG                      LE0734
+0517 CSR         ZZAMTI    COMP 0                      9293               LE0734
+0518 CSR 93      ZZAMTD    COMP 0                      9293               LE0734
+0519 CSR 93                GOTO ZZSEND                     ZERO BYPASS    LE0734
+0520 C*                                                                   LE0734
+0521 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.                       LE0734
+0522 CSR         ZZTOTI    COMP 0                      9193               LE0734
+0523 CSR 93      ZZTOTD    COMP 0                      9193               LE0734
+0524 C*                                                                   LE0734
+0525 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.                           LE0734
+0526 CSR 93                Z-ADDZZAMTI    ZZTOTI                          LE0734
+0527 CSR 93                Z-ADDZZAMTD    ZZTOTD                          LE0734
+0528 CSR 93                GOTO ZZSEND                     ZERO BYPASS    LE0734
+0529 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.                        LE0734
+0530 CSR 91N92                                                            LE0734
+0531 CORN91 92             GOTO ZZOFPS                                    LE0734
+0532 C*                                                                   LE0734
+0533 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40                      LE0734
+0534 CSR         ZZWK2     COMP 999                  93    '93' = CARRY   LE0734
+0535 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.LE0734
+0536 C*                                                                   LE0734
+0537 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VELE0734
+0538 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VELE0734
+0539 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3                           LE0734
+0540 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3                           LE0734
+0541 C*                                                                   LE0734
+0542 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED    LE0734
+0543 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS. LE0734
+0544 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE      LE0734
+0545 CSRN99                Z-ADDZZWK2     ZZTOTD                          LE0734
+0546 CSRN99                Z-ADDZZWK3     ZZTOTI                          LE0734
+0547 C*                                                                   LE0734
+0548 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT. LE0734
+0549 CSR 99                Z-ADD0         ZZAMT  153                      LE0734
+0550 CSR                   GOTO ZZSEND                                    LE0734
+0551 C*                                                                   LE0734
+0552 C* THE 'SIGNS' ARE DIFFERENT                                         LE0734
+0553 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**LE0734
+0554 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT            LE0734
+0555 C*                                                                   LE0734
+0556 CSR 92                Z-SUBZZAMTI    ZZAMTI 150                      LE0734
+0557 CSR 92                Z-SUBZZAMTD    ZZAMTD  30                      LE0734
+0558 C*                                                                   LE0734
+0559 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.           LE0734
+0560 C*                                                                   LE0734
+0561 CSR 91                Z-SUBZZTOTI    ZZTOTI                          LE0734
+0562 CSR 91                Z-SUBZZTOTD    ZZTOTD                          LE0734
+0563 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.                            LE0734
+0564 C*                                                                   LE0734
+0565 CSR         ZZTOTI    COMP ZZAMTI               93  95               LE0734
+0566 CSR 95      ZZTOTD    COMP ZZAMTD               93  95               LE0734
+0567 C*                                                                   LE0734
+0568 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.                                   LE0734
+0569 CSR 95                Z-ADD0         ZZTOTI                          LE0734
+0570 CSR 95                Z-ADD0         ZZTOTD                          LE0734
+0571 CSR 95                GOTO ZZSEND                                    LE0734
+0572 C*                                                                   LE0734
+0573 C* IF ZZTOT GT. ZZAMT.                                               LE0734
+0574 CSR 93      ZZAMTD    COMP ZZTOTD               94                   LE0734
+0575 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI                          LE0734
+0576 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2                           LE0734
+0577 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI                          LE0734
+0578 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD                          LE0734
+0579 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD                          LE0734
+0580 C*                                                                   LE0734
+0581 C*                                                                   LE0734
+0582 C* IF ZZAMT GT. ZZTOT.                                               LE0734
+0583 CSRN93      ZZTOTD    COMP ZZAMTD               94                   LE0734
+0584 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150                      LE0734
+0585 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2                           LE0734
+0586 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI                          LE0734
+0587 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI                          LE0734
+0588 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD                          LE0734
+0589 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD                          LE0734
+0590 C*                                                                   LE0734
+0591 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE          LE0734
+0592 CSR                   SETOF                     94                   LE0734
+0593 CSR 93 91                                                            LE0734
+0594 CORN93 92             SETON                     94                   LE0734
+0595 CSR 94                Z-SUBZZTOTI    ZZTOTI                          LE0734
+0596 CSR 94                Z-SUBZZTOTD    ZZTOTD                          LE0734
+0597 C**                                                                  LE0734
+0598 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.            LE0734
+0599 CSR 92                Z-SUBZZAMTI    ZZAMTI                          LE0734
+0600 CSR 92                Z-SUBZZAMTD    ZZAMTD                          LE0734
+0601 CSR         ZZSEND    TAG                             ** ZZSEND TAG *LE0734
+0602 C**                                                                  LE0734
+0603 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.           LE0734
+0604 CSR                   SETOF                     96                   LE0734
+0605 CSR         ZZTOTD    COMP 0                        91               LE0734
+0606 CSR 91      ZZTOTI    COMP 0                      96                 LE0734
+0607 CSR 96                MOVE '.000-'   ZZNEGD  5                       LE0734
+0608 CSR                   ENDSR                             ** ENDSR **  LE0734
+0609 C********************************************************************LE0734
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C*  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C*  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+     C*                                                                   S01117
+     C*  CALLS: NOTHING                                                   S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+0610 O**  FPORT FILE OUTPUT                                               LE0734
+0611 O**  LONER GRANTED RECORD                                            LE0734
+0612 OFPORTFP E        36 20                                              LE0734
+0613 O                                    1 'D'                           LE0734
+0614 O                         CLNDET     9                               LE0734
+0615 O                         CNUM      15                               LE0734
+0616 O                                   16 'L'                           LE0734
+0617 O                                   17 '1'                           LE0734
+0618 O                                   18 'G'                           LE0734
+0619 O                         CCY       21                               LE0734
+0620 O                         ODLNN     29P                              LE0734
+0621 O**********               ACOD      33                                            LE0734 CGL029
+0622 O**********               ACSQ      35                                            LE0734 CGL029
+0623 O                         ODED      38P                              LE0734
+0624 O                                   47 'A'                           LE0734
+0625 O***********              BRCD      50                               S01117
+0625 O                         BRCA      50                               S01117
+     O                         CMPYM     70                               S01117
+     O                         BRCA      73                               S01117
+     O                         COOB      76                               S01117
+     O                         ACOD     106                                                   CGL029
+     O                         ACSQ     108                                                   CGL029
+0626 O** GRANTED FOR PARENT                                               LE0734
+0627 O        E        36N20 25                                           LE0734
+0628 O                                    1 'D'                           LE0734
+0629 O                         CLNDET     9                               LE0734
+0630 O                                   15 '999999'                      LE0734
+0631 O                                   16 'P'                           LE0734
+0632 O                                   17 '1'                           LE0734
+0633 O                                   18 'G'                           LE0734
+0634 O                         CCY       21                               LE0734
+0635 O                         ODLNN     29P                              LE0734
+0636 O**********               ACOD      33                                            LE0734 CGL029
+0637 O**********               ACSQ      35                                            LE0734 CGL029
+0638 O                         ODED      38P                              LE0734
+0639 O                                   47 'A'                           LE0734
+0640 O***********              BRCD      50                               S01117
+0640 O                         BRCA      50                               S01117
+     O                         CMPYM     70                               S01117
+     O                         BRCA      73                               S01117
+     O                         COOB      76                               S01117
+     O                         ACOD     106                                                   CGL029
+     O                         ACSQ     108                                                   CGL029
+0641 O**  GRANTED FOR CHILD                                               LE0734
+0642 O        E        36N20N25                                           LE0734
+0643 O                                    1 'D'                           LE0734
+0644 O                         CLNDET     9                               LE0734
+0645 O                         CNUM      15                               LE0734
+0646 O                                   16 'C'                           LE0734
+0647 O                                   17 '1'                           LE0734
+0648 O                                   18 'G'                           LE0734
+0649 O                         CCY       21                               LE0734
+0650 O                         ODLNN     29P                              LE0734
+0651 O**********               ACOD      33                                            LE0734 CGL029
+0652 O**********               ACSQ      35                                            LE0734 CGL029
+0653 O                         ODED      38P                              LE0734
+0654 O                                   47 'A'                           LE0734
+0655 O***********              BRCD      50                               S01117
+0655 O                         BRCA      50                               S01117
+     O                         CMPYM     70                               S01117
+     O                         BRCA      73                               S01117
+     O                         COOB      76                               S01117
+     O                         ACOD     106                                                   CGL029
+     O                         ACSQ     108                                                   CGL029
+0656 O** UTILISED FOR LONER                                               LE0734
+0657 O        E        37 20                                              LE0734
+0658 O                                    1 'D'                           LE0734
+0659 O                         CLNDET     9                               LE0734
+0660 O                         CNUM      15                               LE0734
+0661 O                                   16 'L'                           LE0734
+0662 O                                   17 '2'                           LE0734
+0663 O                    24             17 '1'                           LE0734
+0664 O                                   18 'U'                           LE0734
+0665 O                         CCY       21                               LE0734
+0666 O                         LDBL      29P                              LE0734
+0667 O                         FACT      32                               LE0734
+0668 O                                   33 '-'                           LE0734
+0669 O                         FCNO      35                               LE0734
+0670 O**********          24   ACOD      33                                            LE0734 CGL029
+0671 O**********          24   ACSQ      35                                            LE0734 CGL029
+0672 O                         ZERO5     38P                              LE0734
+0673 O**********               ACOD      42                                            LE0734 CGL029
+0674 O**********                         43 '-'                                        LE0734 CGL029
+0675 O**********               ACSQ      45                                            LE0734 CGL029
+0676 O                                   47 'A'                           LE0734
+0677 O***********              BRCD      50                               S01117
+0677 O                         BRCA      50                               S01117
+     O                         CMPYM     70                               S01117
+     O                         BRCA      73                               S01117
+     O                         COOB      76                               S01117
+     O                    24   ACOD     106                                                   CGL029
+     O                    24   ACSQ     108                                                   CGL029
+     O                         ACOD     118                                                   CGL029
+     O                                  119 '-'                                               CGL029
+     O                         ACSQ     121                                                   CGL029
+0678 O** UTILISED FOR PARENT                                              LE0734
+0679 O        E        37N20 25                                           LE0734
+0680 O                                    1 'D'                           LE0734
+0681 O                         CLNDET     9                               LE0734
+0682 O                                   15 '999999'                      LE0734
+0683 O                                   16 'P'                           LE0734
+0684 O                                   17 '2'                           LE0734
+0685 O                    24             17 '1'                           LE0734
+0686 O                                   18 'U'                           LE0734
+0687 O                         CCY       21                               LE0734
+0688 O                         LDBL      29P                              LE0734
+0689 O                         FACT      32                               LE0734
+0690 O                                   33 '-'                           LE0734
+0691 O                         FCNO      35                               LE0734
+0692 O**********          24   ACOD      33                                            LE0734 CGL029
+0693 O**********          24   ACSQ      35                                            LE0734 CGL029
+0694 O                         ZERO5     38P                              LE0734
+0695 O**********               ACOD      42                                            LE0734 CGL029
+0696 O**********                         43 '-'                                        LE0734 CGL029
+0697 O**********               ACSQ      45                                            LE0734 CGL029
+0698 O                                   47 'A'                           LE0734
+0699 O***********              BRCD      50                               S01117
+0699 O                         BRCA      50                               S01117
+     O                         CMPYM     70                               S01117
+     O                         BRCA      73                               S01117
+     O                         COOB      76                               S01117
+     O                    24   ACOD     106                                                   CGL029
+     O                    24   ACSQ     108                                                   CGL029
+     O                         ACOD     118                                                   CGL029
+     O                                  119 '-'                                               CGL029
+     O                         ACSQ     121                                                   CGL029
+0700 O**  UTILISED FOR CHILD                                              LE0734
+0701 O        E        37N20N25                                           LE0734
+0702 O                                    1 'D'                           LE0734
+0703 O                         CLNDET     9                               LE0734
+0704 O                         CNUM      15                               LE0734
+0705 O                                   16 'C'                           LE0734
+0706 O                                   17 '2'                           LE0734
+0707 O                    24             17 '1'                           LE0734
+0708 O                                   18 'U'                           LE0734
+0709 O                         CCY       21                               LE0734
+0710 O                         LDBL      29P                              LE0734
+0711 O                         FACT      32                               LE0734
+0712 O                                   33 '-'                           LE0734
+0713 O                         FCNO      35                               LE0734
+0714 O**********          24   ACOD      33                                            LE0734 CGL029
+0715 O**********          24   ACSQ      35                                            LE0734 CGL029
+0716 O                         ZERO5     38P                              LE0734
+0717 O**********               ACOD      42                                            LE0734 CGL029
+0718 O**********                         43 '-'                                        LE0734 CGL029
+0719 O**********               ACSQ      45                                            LE0734 CGL029
+0720 O                                   47 'A'                           LE0734
+0721 O***********              BRCD      50                               S01117
+0721 O                         BRCA      50                               S01117
+     O                         CMPYM     70                               S01117
+     O                         BRCA      73                               S01117
+     O                         COOB      76                               S01117
+     O                    24   ACOD     106                                                   CGL029
+     O                    24   ACSQ     108                                                   CGL029
+     O                         ACOD     118                                                   CGL029
+     O                                  119 '-'                                               CGL029
+     O                         ACSQ     121                                                   CGL029
+0722 O** TRAILER                                                          LE0734
+0723 OFPORTT2 T        LRNU7                                              LE0734
+0724 O                                    1 'T'                           LE0734
+0725 O                         FLIOCT     4P                              LE0734
+0726 O                         FLWHN     12P                              LE0734
+0727 O                         FLDC      14P                              LE0734
+0728 O**                                                                  LE0734
+0729 O**   CONTROL REPORT                                                 LE0734
+0730 O**                                                                  LE0734
+0731 O*E0734P1T**203   LR U7                                     S01124   S01117
+0731 OLE0734AUT  203   LR U7                                              S01117
+0732 O***********                        22 'REFERENCE LE0734'            S01117
+0732 O                                   24 'REFERENCE LE0734AU'          S01117
+0733 O                         TITL      89                               LE0734
+0734 O                                  104 'DATE'                        LE0734
+0735 O                         RUNA     112                               LE0734
+0736 O                                  122 'PAGE'                        LE0734
+0737 O                         PAGE  Z  127                               LE0734
+0738 O        T  1     LR U7                                              LE0734
+0739 O                                   67 'ACCOUNTS EXTRACT FOR CUS'    LE0734
+0740 O                                   90 'TOMER LENDING PORTFOLIO'     LE0734
+0741 O        T  3     LR U7                                              LE0734
+0742 O                                   67 '------------------------'    LE0734
+0743 O                                   90 '-----------------------'     LE0734
+0744 O        T 32     LR U7                                              LE0734
+0745 O                                   51 '*** REFERENCE LE0734'        LE0734
+0746 O                                   71 '- DATABASE ERROR AT'         LE0734
+0747 O***********              DBASE     74                               S01117
+0747 O                         DBASE     75                               S01117
+0748 O        T        LR U7                                              LE0734
+0749 O                                   37 'FILENAME'                    LE0734
+0750 O***********              DBFILE    43                               S01117
+0751 O***********                        48 'KEY'                         S01117
+0752 O***********              DBKEY     78                               S01117
+0750 O                         DBFILE    46                               S01117
+0751 O                                   51 'KEY'                         S01117
+0752 O                         DBKEY     81                               S01117
+0753 O        T   03   LR                                                 LE0734
+0754 O***********                        22 'REFERENCE LE0734'            S01117
+0754 O                                   24 'REFERENCE LE0734AU'          S01117
+0755 O                         TITL      89                               LE0734
+0756 O                                  104 'DATE'                        LE0734
+0757 O                         RUNA     112                               LE0734
+0758 O                                  122 'PAGE'                        LE0734
+0759 O                         PAGE  Z  127                               LE0734
+0760 O        T 2      LR                                                 LE0734
+0761 O                                   59 'ACCOUNTS EXTRACT FOR CUS'    LE0734
+0762 O                                   82 'TOMER LENDING PORTFOLIO'     LE0734
+0763 O                                   98 '- FILE CONTROLS'             LE0734
+0764 O        T 1      LR                                                 LE0734
+0765 O                                   59 '------------------------'    LE0734
+0766 O                                   83 '------------------------'    LE0734
+0767 O                                   98 '---------------'             LE0734
+0768 O        T 3      LR                                                 LE0734
+0769 O                                   28 'S/ACCNT - RUN CONTROLS'      LE0734
+0770 O                                   59 'NUMBER'                      LE0734
+0771 O                                   84 'VALUE'                       LE0734
+0772 O        T 1      LR                                                 LE0734
+0773 O                                   28 '----------------------'      LE0734
+0774 O                                   59 'OF RECORDS'                  LE0734
+0775 O                                   84 'OF RECORDS'                  LE0734
+0776 O        T 2      LR                                                 LE0734
+0777 O                                   29 'TOTAL RECORDS ON FILE'       LE0734
+0778 O                      NU7NORE  3   59                               LE0734
+0779 O                      NU7ZZTOTI4   81                               LE0734
+0780 O                      NU7ZZTOTD    84                               LE0734
+0781 O        T 2      LR                                                 LE0734
+0782 O                                   29 'TOTAL RECORDS ON FILE'       LE0734
+0783 O                                   42 '- CALCULATED'                LE0734
+0784 O                         TOTCNT3   59                               LE0734
+0785 O                         TOTWHN4   81                               LE0734
+0786 O                         TOTDC     84                               LE0734
+0787 O                   NU7 U8         111 '***   DIFFERENCE   ***'      LE0734
+0788 O        T 3      LR                                                 LE0734
+0789 O                                   28 'S/FPORT - RUN CONTROLS'      LE0734
+0790 O        T 1      LR                                                 LE0734
+0791 O                                   28 '----------------------'      LE0734
+0792 O        T 2      LR                                                 LE0734
+0793 O                                   29 'RECORDS ADDED TO FILE'       LE0734
+0794 O                         FLIOCT3   59                               LE0734
+0795 O                         FLWHN 4   81                               LE0734
+0796 O                         FLDC      84                               LE0734
+0797 O********T*3      LR                                                 S01117
+0798 O***********                        76 '*** END OF REPORT ***'       S01117
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

@@ -1,0 +1,156 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas GP Management Limits initialisation')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing                                   */
+/*                                                                   */
+/*       GPCINITML - Management Limits initialisation                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BUG16389           Date 04Mar08              */
+/*                      BG12126 *CREATE    Date 28Sep06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG16389 - Cannot create Management Limits for some         */
+/*                  customers.                                       */
+/*       BG12126 - Management Limits initialisation                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+ 
+             DCL        VAR(&SQLDELETE1) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&SQLDELETE2) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&SQLINSERT ) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&SQLINSERT1) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&SQLINSERT2) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&SQLINSERT3) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&SQLINSERT4) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&SQLINSERT5) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&SQLINSERT6) TYPE(*CHAR) LEN(80)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create file for UTWRTSQL in QTEMP */
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF FILE(QTEMP/RUNSQLSTM) RCDLEN(112) MBR(RUNSQLSTM)
+             RNMOBJ OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+             NEWOBJ(RUNSQL)
+ 
+/* Call GPTUTLGEN to update T_GPUTILSR            */
+             CLRPFM     FILE(T_GPUTILSR)
+             CALL       PGM(GPTUTLGEN)
+ 
+/**Call*GPTCSTGEN*to*update*T_MLCCYRT**************/                                    /*BUG16389*/
+/**********  CLRPFM     FILE(T_MLCCYRT)                                                 /*BUG16389*/
+/* Call GPTCSTGEN to update GPCUSGPD              */                                    /*BUG16389*/
+             CLRPFM     FILE(GPCUSGPD)                                                  /*BUG16389*/
+             CALL       PGM(GPTCSTGEN)
+ 
+/**Call*GPTMLCRGEN*to*update*T_MLCCYRT*************/                                    /*BUG16389*/
+/**********  CLRPFM     FILE(T_MLCCYRT)                                                 /*BUG16389*/
+/* Call GPTMLCRGEN to update GPMLCSPD             */                                    /*BUG16389*/
+             CLRPFM     FILE(GPMLCSPD)                                                  /*BUG16389*/
+             CALL       PGM(GPTMLCRGEN)
+ 
+/* Run the following scripts to update GPINSTXPD              */
+ 
+/* delete from GPINSTXPD where INGINS in ('FUT-INT','FUT-CCY','FUT-COM',  */
+/* OPT-INT','OPT-CCY','OPT-COM');                                         */
+/*                                                                        */
+/* insert into GPINSTXPD (INZONE, INMOD, INTRTP, INTRST, INGINS) select   */
+/* ZOZONE,'FF','1','','FUT-INT' from GPZONEPD where ZOCHTP <> 'D';        */
+/* insert into GPINSTXPD (INZONE, INMOD, INTRTP, INTRST, INGINS) select   */
+/* ZOZONE,'FF','2','','FUT-CCY' from GPZONEPD where ZOCHTP <> 'D';        */
+/* insert into GPINSTXPD (INZONE, INMOD, INTRTP, INTRST, INGINS) select   */
+/* ZOZONE,'FF','3','','FUT-COM' from GPZONEPD where ZOCHTP <> 'D';        */
+/* insert into GPINSTXPD (INZONE, INMOD, INTRTP, INTRST, INGINS) select   */
+/* ZOZONE,'FF','4','','OPT-INT' from GPZONEPD where ZOCHTP <> 'D';        */
+/* insert into GPINSTXPD (INZONE, INMOD, INTRTP, INTRST, INGINS) select   */
+/* ZOZONE,'FF','5','','OPT-CCY' from GPZONEPD where ZOCHTP <> 'D';        */
+/* insert into GPINSTXPD (INZONE, INMOD, INTRTP, INTRST, INGINS) select   */
+/* ZOZONE,'FF','6','','OPT-COM' from GPZONEPD where ZOCHTP <> 'D';        */
+ 
+             CHGVAR     VAR(&SQLDELETE1) VALUE('delete from GPINSTXPD +
+                          where INGINS in +
+                          (''FUT-INT'',''FUT-CCY'',''FUT-COM'',')
+             CHGVAR     VAR(&SQLDELETE2) +
+                          VALUE('''OPT-INT'',''OPT-CCY'',''OPT-COM'')')
+             CHGVAR     VAR(&SQLINSERT) VALUE('insert into GPINSTXPD +
+                          (INZONE, INMOD, INTRTP, INTRST, INGINS) +
+                          select ')
+             CHGVAR     VAR(&SQLINSERT1) +
+                          VALUE('ZOZONE,''FF'',''1'','''',''FUT-INT'' +
+                          from GPZONEPD where ZOCHTP <> ''D''')
+             CHGVAR     VAR(&SQLINSERT2) +
+                          VALUE('ZOZONE,''FF'',''2'','''',''FUT-INT'' +
+                          from GPZONEPD where ZOCHTP <> ''D''')
+             CHGVAR     VAR(&SQLINSERT3) +
+                          VALUE('ZOZONE,''FF'',''3'','''',''FUT-INT'' +
+                          from GPZONEPD where ZOCHTP <> ''D''')
+             CHGVAR     VAR(&SQLINSERT4) +
+                          VALUE('ZOZONE,''FF'',''4'','''',''FUT-INT'' +
+                          from GPZONEPD where ZOCHTP <> ''D''')
+             CHGVAR     VAR(&SQLINSERT5) +
+                          VALUE('ZOZONE,''FF'',''5'','''',''FUT-INT'' +
+                          from GPZONEPD where ZOCHTP <> ''D''')
+             CHGVAR     VAR(&SQLINSERT6) +
+                          VALUE('ZOZONE,''FF'',''6'','''',''FUT-INT'' +
+                          from GPZONEPD where ZOCHTP <> ''D''')
+             CALL       PGM(UTWRTSQL) PARM(&SQLDELETE1 '*CLEAR')
+             CALL       PGM(UTWRTSQL) PARM(&SQLDELETE2 '      ')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLINSERT '*CLEAR')
+             CALL       PGM(UTWRTSQL) PARM(&SQLINSERT1 '      ')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLINSERT '*CLEAR')
+             CALL       PGM(UTWRTSQL) PARM(&SQLINSERT2 '      ')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLINSERT '*CLEAR')
+             CALL       PGM(UTWRTSQL) PARM(&SQLINSERT3 '      ')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLINSERT '*CLEAR')
+             CALL       PGM(UTWRTSQL) PARM(&SQLINSERT4 '      ')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLINSERT '*CLEAR')
+             CALL       PGM(UTWRTSQL) PARM(&SQLINSERT5 '      ')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLINSERT '*CLEAR')
+             CALL       PGM(UTWRTSQL) PARM(&SQLINSERT6 '      ')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal end processing. */
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GPCINITML ended abnormally.  See joblog +
+                          for more details') TOPGMQ(*PRV) +
+                          MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+ 
+ END:
+             ENDPGM

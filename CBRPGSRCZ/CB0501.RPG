@@ -1,0 +1,275 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Dummy pgm to clear looping comps')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing
+     F*                                                               *
+     F*  CB0501 - DUMMY PROGRAM TO CLEAR LOOPING COMPONENTS           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Prev Amend No. CCB009             Date 01Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCB003             Date 16Oct96               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  CCB009 - Journal files throughout the close of business.     *
+     F*           Update the record on CBAUDTPD instead of writing it.*
+     F*  CCB003 - COB Performance Enhancements - Task Split           *
+     F*           Prevent Task Split Jobs appearing on COB monitor.   *
+     F*                                                               *
+     F*****************************************************************
+     F*CBAUDTPDO**E***        K        DISK                           UC  CCB009
+     FCBAUDTL1UF  E           K        DISK                           UC  CCB009
+     FCBCOMSL7IF  E           K        DISK                               S01117
+     FCBCOMSL0UF  E           K        DISK                               S01117
+     E*
+     E** COPYRIGHT ARRAY
+     E                    CPY@    1   1 80
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*
+     I** LOCAL DATA AREA STRUCTURE
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IMSGDS       DS
+     I                                        1  10 NAM
+     I                                       11  15 SEQ
+     I                                       16  16 STATUS
+     I*
+     IMSG1        DS
+     I                                        1  10 NAM1
+     I                                       11  70 TXT1
+     I                                       71  78 FAI1
+     I                                       79  86 POL1
+     I*
+     IMSG2        DS
+     I                                        1  10 NAM2
+     I                                       11  15 SEQ2
+     I                                       16  16 STS2
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IAUDKDS      DS                                                      CCB009
+     I                                        1  10 CCOTX                 CCB009
+     I                                       11  15 CSEQX                 CCB009
+     I                                       16  20 CSDEX                 CCB009
+     I                                       21  26 CSTIX                 CCB009
+     I** DATA STRUCTURE FOR KEY FIELD AUDKEY TO BE MOVED INTO DBKEY FIELD CCB009
+     I*                                                                   CCB009
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           CMTNAM 10
+     C                     PARM           CMTSEQ  5
+     C                     PARM           POOLNO  8
+     C*                                                                   CCB009
+     C** Key to chain to CBAUDTL1                                         CCB009
+     C*                                                                   CCB009
+     C           AUDKEY    KLIST                                          CCB009
+     C                     KFLD           CCOT                            CCB009
+     C                     KFLD           CSEQ                            CCB009
+     C                     KFLD           CSDE                            CCB009
+     C                     KFLD           CSTI                            CCB009
+     C*
+     C** DEFINE LDA TO PROGRAM
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** KEY LIST FOR CBCOMSL7 AND CBCOMSL0
+     C*
+     C           COMKEY    KLIST
+     C                     KFLD           CMTNAM
+     C                     KFLD           CMTSEQ
+      *                                                                   CCB009
+      ** Set up numeric version of sequence number.                       CCB009
+      *                                                                   CCB009
+     C                     MOVE CMTSEQ    CMTSEN  50                      CCB009
+     C*
+     C** CHECK THAT PROGRAM PASSED AS PARAMETER IS PROCESSING
+     C*
+     C           COMKEY    CHAIN@CMPNHN              30
+     C*
+     C** IF HAS NOT FAILED,DATABASE ERROR
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVEL'CB0500'  DBPGM
+     C                     MOVEL'CBCOMSPD'DBFILE
+     C                     MOVELCMTNAM    DBKEY
+     C                     MOVE CMTSEQ    DBKEY
+     C                     Z-ADD02        DBASE
+     C                     SETON                     U7U8LR
+     C                     GOTO END
+     C                     END
+     C*
+     C** ACCESS RECORD FROM CBCOMSPD AND CHANGE COMPONENT STATUS FIELD
+     C** TO FAILED, AND THEN UPDATE THE RECORD
+     C*
+     C           COMKEY    CHAIN@DHREGG              30
+     C                     MOVE 'A'       DHCSTS
+     C                     MOVE 'Y'       DHCFAL
+     C*
+     C                     EXCPTCOMS1
+     C*
+     C***OPEN*FAILED*DETAILS*FILE*CBAUDTPD**************                  CCB009
+     C***********          OPEN CBAUDTPD                                  CCB009
+     C**********************************************************          CCB009
+     C***SET*UP*COMPONENT*NAME*AND*SEQ*NUMBER*TO*WRITE*OUT*TO***          CCB009
+     C***LF/CBAUDTL1.*******************************************          CCB009
+     C**********************************************************          CCB009
+     C***********          MOVE CMTNAM    CCOT                            CCB009
+     C***********          MOVE CMTSEQ    CSEQ                            CCB009
+      *                                                                   CCB009
+     C** OPEN FAILED DETAILS FILE CBAUDTL1                                CCB009
+     C                     OPEN CBAUDTL1                                  CCB009
+      *                                                                   CCB009
+     C*  Set up key to failed components file, LF/CBAUDTL1.               CCB009
+      *                                                                   CCB009
+     C                     MOVE CMTNAM    CCOT                            CCB009
+     C                     MOVE CMTSEQ    CSEQ                            CCB009
+     C                     MOVE *HIVAL    CSDE                            CCB009
+     C                     MOVE *HIVAL    CSTI                            CCB009
+      *                                                                   CCB009
+      ** Set high limit on record on LF/CBAUDTL1.                         CCB009
+      *                                                                   CCB009
+     C           AUDKEY    SETGTCBAUDTL1                                  CCB009
+      *                                                                   CCB009
+      ** Use read previous to obtain the most recent record.              CCB009
+      *                                                                   CCB009
+     C                     READPCBAUDTL1                 36               CCB009
+      *                                                                   CCB009
+      ** If no record found on CBAUDTL1, database error.                  CCB009
+      *                                                                   CCB009
+     C           CCOT      IFNE CMTNAM                                    CCB009
+     C           CSEQ      ORNE CMTSEN                                    CCB009
+     C           *LOCK     IN   LDA                                       CCB009
+     C                     MOVE CCOT      CCOTX                           CCB009
+     C                     MOVE CSEQ      CSEQX                           CCB009
+     C                     MOVELAUDKDS    DBKEY                           CCB009
+     C                     MOVEL'CBAUDTL1'DBFILE           ***************CCB009
+     C                     Z-ADD6         DBASE            * DB ERROR 06 *CCB009
+     C                     EXSR DBERR                      ***************CCB009
+     C                     END                                            CCB009
+     C*
+     C** SET COMPONENT END TIME (DHCETI) TO SYSTEM TIME
+     C*
+     C                     CALL 'CBTIME'                                  LN0278
+     C                     PARM           DAYNOA  5                       LN0278
+     C                     PARM           STIME   6                       LN0278
+     C                     PARM           DFMT    1                       LN0278
+     C                     MOVE STIME     CETI                            LN0278
+     C*
+     C** SET COMPONENT END DATE (CEDE) TO SYSTEM DATE USING
+     C** VALUE FROM PROGRAM CBTIME                                        LN0278
+     C*
+     C                     MOVE DAYNOA    CEDE                            LN0278
+     C**************************************************************      CCB009
+     C***RETREIVE*COMPONENT*START*TIME*AND*DATE*FROM*WORK*FIELDS****      CCB009
+     C**************************************************************      CCB009
+     C***********          MOVE DHCSTI    CSTI                            CCB009
+     C***********          MOVE DHCSDE    CSDE                            CCB009
+     C*
+     C***WRITE*RECORD*TO*FAILED*DETAILS*FILE********                      CCB009
+     C***********          WRITECBAUDTP0                                  CCB009
+      *                                                                   CCB009
+     C*  Update record on failed details file.                            CCB009
+     C                     UPDATCBAUDTP0                                  CCB009
+     C*
+     C** CLOSE FAILED DETAILS FILE
+     C*
+     C***********          CLOSECBAUDTPD                                  CCB009
+     C                     CLOSECBAUDTL1                                  CCB009
+     C*
+     C** SEND MESSAGE TO SAY THAT THIS COMPONENT HAS FAILED
+     C** THIS DOES THE COMPONENTS FILE UPDATE AND AMENDMENT TO CBSTAT
+     C** AND CLEARS THE STREAM
+     C*
+     C**  SEND MESSAGES TO DATA QUEUE
+     C                     Z-ADD86        LEN
+     C                     MOVE CMTNAM    NAM1
+     C                     MOVE DHCTXT    TXT1
+     C                     MOVEL'FAILED'  FAI1
+     C                     MOVE POOLNO    POL1
+     C*
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM 'CBDTQD'  DTAQ   10
+     C                     PARM '*LIBL'   LIB    10
+     C                     PARM           LEN     50
+     C                     PARM           MSG1
+     C*
+     C                     Z-ADD16        LEN
+     C                     MOVE CMTNAM    NAM2
+     C                     MOVE CMTSEQ    SEQ2
+     C                     MOVE DHCSTS    STS2
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM 'CBDTQA'  DTAQ   10
+     C                     PARM '*LIBL'   LIB    10
+     C                     PARM           LEN     50
+     C                     PARM           MSG2
+     C*
+     C**  SEND AVAILABLE STREAM NUMBER TO STREAM CONTROLLER DATA QUEUE
+     C**  DO NOT SEND MESSAGE FOR TASK SPLIT JOBS, AS THEY DO NOT         CCB003
+     C**  APPEAR ON THE SCREEN                                            CCB003
+     C*
+     C           POOLNO    IFNE 'STREAMXX'                                CCB003
+     C                     Z-ADD8         LEN
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM 'CBDTQB'  DTAQ   10
+     C                     PARM '*LIBL'   LIB    10
+     C                     PARM           LEN     50
+     C                     PARM           POOLNO
+     C                     ENDIF                                          CCB003
+     C*
+     C           END       TAG
+     C*
+     C/EJECT
+     C********************************************************************
+     C*
+     C** DATABASE ERROR SUBROUTINE TO PERFORM DATABASE ERROR
+     C** EXIT FROM PROGRAM
+     C*
+     C** CALLED FROM MAIN CYCLE
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** SETON INDICATORS U7 U8 LR AND RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     O*
+     O** OUTPUT FOR COMPONENT STATUS FIELD ON CBCOMSPD
+     O*
+     O@DHREGG E                COMS1
+     O*
+     O                         DHCSTS
+     O                         DHCEDE
+     O                         DHCETI
+     O*
+**  CPY@
+(c) Finastra International Limited 2001

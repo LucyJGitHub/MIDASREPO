@@ -1,0 +1,1375 @@
+0001 H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Retail accounts excess report - brch')        *
+0001 H***********
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE0790 - RETAIL ACCOUNTS EXCESS REPORT - BY BRANCH           *
+0007 F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+0009 F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD033537           Date 08Jun15               *
+      *                 CGL165             Date 17Feb15               *
+      *                 AR1095876          Date 30Sep13               *
+      *                 CRE083BO           Date 06Aug12               *
+      *                 CRE083AJ           Date 06Aug12               *
+      *                 AR821135           Date 26Aug11               *
+      *                 CER055             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 239617             Date 18May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CRE024             Date 07Oct05               *
+      *                 CGL029             Date 03Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 28Jan99               *
+      *                 S01408             Date 03Jun96               *
+     F*                 S01408             DATE 07MAY96               *
+0010 F*                 S01408             DATE 05OCT95               *
+0010 F*                 S01408             DATE 07OCT94               *
+0010 F*                 S01413             DATE 13APR93               *
+0010 F*                 S01117                  13DEC89               *
+0010 F*                 E12487                  13APR88               *
+0010 F*                 E10763                  14SEP87               *
+0009 F*                 S01124                  10NOV83               *
+0011 F*                                                               *
+0011 F*****************************************************************
+0011 F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD033537 - Potential performance enhancement for REC3760.    *
+      *             Recompile due to changes in SODAC.                *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *
+      *             RUND (Child: AR1095877) (Recompile)               *
+      *  CRE083BO - COB Restructure - RE COB Optimisation Phase 1     *
+      *  CRE083AJ - COB Restructure - RE COB Optimisation Phase 1     *
+     F*  AR821135 - Retail Account Excess Report overlap              *
+      *  CER055 - Penalty Interest on Exceeding Overdraft Limit       *
+      *  239617 - retrieve Account Officer name from SDACOFPD and not *
+      *           from TABLE to reflect the correct Account Officer   *
+      *           in RE0790P1.                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CRE024 - Country Level Switchable Feature :                  *
+     F*           Security Features for Restricted Accounts.          *
+     F*  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01408 - Correction of blank hook names:                     *
+     F*         - Addition of core hook RE0790ITC1                    *
+     F*         - Addition of core hook RE0790CTC1                    *
+     F*  S01408 - Addition of core hook RE0790OOP6                    *
+     F*         - Addition of core hook RE0790OOP5                    *
+     F*         - Addition of core hook RE0790OOP4                    *
+     F*         - Addition of core hook RE0790OOP3                    *
+     F*         - Addition of core hook RE0790IIP3                    *
+     F*         - Addition of core hook RE0790CCP3                    *
+     F*         - Addition of core hook RE0790CCP2                    *
+     F*  S01408 - Addition of core hook RE0790OOP2                    *
+     F*         - Addition of core hook RE0790OOP1                    *
+     F*  S01408 - Addition of core hook RE0790CCP1                    *
+     F*           Addition of core hook RE0790IIP1                    *
+     F*           Addition of core hook RE0790IIP2                    *
+     F*  S01408 - Addition of core hook RE0790FFPG                    *
+     F*           Addition of core hook RE0790CCPG                    *
+     F*           Addition of core hook RE0790OOPG                    *
+0011 F*  S01413 - Header Box Standardised                             *
+0011 F*  S01117 - Multibranching                                      *
+0011 F*  E12487 - The words 'NOT ASSIGNED' should be printed if       *
+0011 F*           the account officer record is not found.            *
+0011 F*  E10763 - ACOC Field defined incorrectly as numeric.          *
+     F*  S01124 - Printer file changes.                               *
+0011 F*                                                               *
+0012 F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,RE0790F001
+0013 F***SODAC** IP  F     128 20AI     2 DISK                                         RE0790 CGL029
+     F***SODAC** IP  F     138 20AI     2 DISK                                         CGL029 CRE024
+0014 F***TABLE** IF  F      96 12AI     2 DISK                                         RE0790 CRE024
+     FSODAC   UP  F     138 20AI     2 DISK                                                   CRE024
+     FTABLE   IF  F      96 12AI     2 DISK                                                   CRE024
+     FSFRACRPAIF  E           K        DISK                           UC                      CRE024
+     FRE0790P2O   F     132     OV     PRINTER      KINFDS SPOOL2     UC                      CRE024
+     F***SDACOFL0IF  E           K        DISK                                       239617 CRE083AJ
+     F/COPY WNCPYSRC,RE0790FFPG                                           S01408
+0016 F*E0790P1O** F     132     OF     PRINTER                      S01124S01117
+     FRE0790P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  S01117
+     FRE0790AUO   F     132     OA     PRINTER      KINFDS SPOOLU         S01117
+     FACCNTL0 IF  E           K        DISK                                                   CER055
+     FACCNTBY0IF  E           K        DISK                                                   CER055
+     FGLACNTL3IF  E           K        DISK                                                   CER055
+0017 F* ID F  C  H  L    FUNCTION OF INDICATORS                           RE0790
+0018 F* 02            SODAC - DETAIL                                      RE0790
+0019 F* 03            SODAC - TRAILER                                     RE0790
+0020 F* 04            SODAC - CATCHALL, TABLE - CATCHALL                  RE0790
+0021 F* 05            TABLE - ICR 1                                       RE0790
+0022 F* 06            TABLE - ACCOUNT OFFICERS                            RE0790
+0023 F* 07            TABLE - CURRENCIES 1                                RE0790
+0024 F* 08            TABLED CATCHALL                                     RE0790
+0025 F*    20         NO RETAIL ACCOUNT NUMBER                            RE0790
+0026 F*       40      FIRST CYCLE                                         RE0790
+0027 F*       41      CHAIN FAIL                                          RE0790
+      *       42      Cache hit for Account Officer array                                   CRE083AJ
+0028 F*       50      CCY HAS 0 D.P.                                      RE0790
+0029 F*       51      CCY HAS 1 D.P.                                      RE0790
+0030 F*       52      CCY HAS 2 D.P.                                      RE0790
+0031 F*       53      CCY HAS 3 D.P.                                      RE0790
+0032 F**   REASONS FOR REFERRAL                                           RE0790
+0033 F*       61      OVERDRAWN                                           RE0790
+0034 F*       62      DEPOSIT IN DEBIT                                    RE0790
+0035 F*       63      LOAN IN CREDIT                                      RE0790
+0036 F*       64      LIMIT CHANGED                                       RE0790
+0037 F*       65      HOLD EXCEEDS BALANCE                                RE0790
+0038 F*       66      NO CREDIT FOR 31 DAYS                               RE0790
+0039 F*       67      O/D LIMIT EXPIRED                                   RE0790
+     F*       85      ALLOW MULTIBRANCHING PRINTER FILE OUTPUT            S01117
+     F*       88      MBIN = 'Y'                                          S01117
+0040 F*       U7      DATABASE ERROR                                      S01117
+0040 F*       U8      FILE CONTROLS OUT OF BALANCE                        RE0790
+     F*       57      CER055 IS INSTALLED                                                     CER055
+     F*       58      CFT004 IS INSTALLED                                                     CER055
+     F*       59      CHAIN IND FOR ACCNTL0                                                   CER055
+     F*       60      CHAIN IND FOR ACCNTBY0                                                  CER055
+     F*       55      CHAIN IND FOR GLACNTL3                                                  CER055
+     F*       56      CAP205 IS INSTALLED                                                     CER055
+0041 F*             L1CURRENCY                                            RE0790
+0042 F*             L2ACCOUNT OFFICER                                     RE0790
+0043 F*             L3BRANCH                                              RE0790
+0044 E                    CCYA      150  3                                RE0790
+0045 E                    DPA       150  1 0                              RE0790
+     E                    CPY@    1   1 80
+      *                                                                                     CRE083AJ
+      ** Account Officer Code (Key for Cache)                                               CRE083AJ
+      *                                                                                     CRE083AJ
+     E                    CDAO      200  2                                                  CRE083AJ
+      *                                                                                     CRE083AJ
+      ** Least recently used array and sorted LRU array                                     CRE083AJ
+      *                                                                                     CRE083AJ
+     E                    LRUA      200 13 0                                                CRE083AJ
+     E                    LRUS      200 13 0                                                CRE083AJ
+     E/COPY ZSRSRC,ZDATE2Z1                                                                   CER055
+     E/EJECT
+0046 I*                                                                   RE0790
+0047 I*    SORTED RETAIL ACCOUNTS EXCESS FILE                             RE0790
+0048 I*                                                                   RE0790
+0049 ISODAC   NS  02   1 CD                                               RE0790
+0050 I***********                             2   40BRCD  L3              S01117
+     I                                        2   4 BRCA  L3              S01117
+0051 I****************************************5   60ACOC  L2              E10763
+0051 I                                        5   6 ACOC  L2              E10763
+0052 I**********                              7  120CNUM                               RE0790 CSD027
+0052 I                                        7  12 CNUM                                      CSD027
+0053 I                                       13  15 CCY   L1              RE0790
+0054 I**********                             16  190ACOD                               RE0790 CGL029
+     I                                       16  190ACODQQ                                    CGL029
+0055 I                                       20  210ACSQ                  RE0790
+0056 I**********                              7  21 KEYACC                             RE0790 CGL029
+     I                                      129 1380ACOD                                      CGL029
+     I/COPY WNCPYSRC,RE0790IIP1                                           S01408
+0057 I                                       22  310ACNO            20    RE0790
+     I/COPY WNCPYSRC,RE0790IIP2                                           S01408
+0058 I                                       32  51 CRNM                  RE0790
+0059 I                                    P  52  570ODLN                  RE0790
+0060 I                                    P  58  650GRBL0                 RE0790
+0061 I                                    P  58  651GRBL1                 RE0790
+0062 I                                    P  58  652GRBL2                 RE0790
+0063 I                                    P  58  653GRBL3                 RE0790
+0064 I                                    P  66  730NETB0                 RE0790
+0065 I                                    P  66  731NETB1                 RE0790
+0066 I                                    P  66  732NETB2                 RE0790
+0067 I                                    P  66  733NETB3                 RE0790
+0068 I                                    P  74  810HELD0                 RE0790
+0069 I                                    P  74  811HELD1                 RE0790
+0070 I                                    P  74  812HELD2                 RE0790
+0071 I                                    P  74  813HELD3                 RE0790
+0072 I                                       82  82 RSN1                  RE0790
+0073 I                                       83  83 RSN2                  RE0790
+0074 I                                       84  84 RSN3                  RE0790
+0075 I                                       85  85 RSN4                  RE0790
+0076 I                                       86  86 RSN5                  RE0790
+0077 I                                       87  87 RSN6                  RE0790
+0078 I                                       88  88 RSN7                  RE0790
+     I/COPY WNCPYSRC,RE0790ITC1                                           S01408
+0079 I        NS  03   1 CT                                               RE0790
+0080 I                                    P   2   40NORE                  RE0790
+0081 I        NS  78   1 CH                                               RE0790
+0082 I*                                                                   RE0790
+0083 I*    CATCHALL                                                       RE0790
+0084 I*                                                                   RE0790
+0085 I        NS  04                                                      RE0790
+0086 I*                                                                   RE0790
+0087 I*    TABLE FILE                                                     RE0790
+0088 I*                                                                   RE0790
+0089 I**   ICR 1                                                          RE0790
+0090 I*                                                                   RE0790
+0091 ITABLE   NS  05   1 CD   2 C0   3 C1                                 RE0790
+0092 I       AND      12 C1  13 C0                                        RE0790
+0093 I                                        1   1 RECI                  RE0790
+0094 I                                       14  66 TITL                  RE0790
+0095 I**********                             67  67 DATF                  S01117
+0096 I**********                             80  86 RUNA                  S01117
+0097 I**   ACCOUNT OFFICERS                                               RE0790
+0098 I*                                                                   RE0790
+0099 I********NS  06   1 CD   2 C1   3 C4                                 RE0790              239617
+0100 I**********                             14  43 ACON                  RE0790              239617
+0105 I*                                                                   RE0790
+0106 I**    CURRENCIES RECORD 1                                           RE0790
+0107 I*                                                                   RE0790
+0108 I        NS  07   2 C2   3 C0                                        RE0790
+0109 I                                        1   1 RECIX                 RE0790
+0110 I                                        2   30RECTX                 RE0790
+0111 I                                       10  12 CCYX                  RE0790
+0112 I                                       13  130SRECX                 RE0790
+0113 I                                       38  380CDPX                  RE0790
+0114 I        NS  08                                                      RE0790
+0115 I                                        2   30RECTX                 RE0790
+0218 I*                                                                   S01117
+0219 I*    LDA - DIAGNOSTICS FOR PROGRAM ABORT                            S01117
+0220 I*                                                                   S01117
+0221 ILDA        UDS                            256                       S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     I**   FILE INFORMATION DATA STRUCTURE                                S01117
+     I**                                                                  S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     ISPOOL2      DS                                                      CRE024
+     I**  Data structure for detail spool file information                CRE024
+     I                                       83  92 SFILE2                CRE024
+     I                                    B 123 1240SFNUM2                CRE024
+     I/COPY WNCPYSRC,RE0790I001
+     I**                                                                  S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I**                                                                  S01117
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+     I**  EXTERNAL DS FOR BRANCH DETAILS                                  S01117
+     I              A8BRNM                          BRNM                  S01117
+     I**                                                                                      239617
+     I***SDACOC*   E DSSDACOFPD                                                      239617 CRE083AJ
+     ISDACOC    E DSSDACOFPD                200                                             CRE083AJ
+     I**  EXTERNAL DS FOR ACCOUNT OFFICER DETAILS                                             239617
+     I              AZACON                          ACON                                      239617
+     I**                                                                  S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01117
+     I*                                                                   S01117
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,RE0790IIP3                                           S01408
+     I*                                                                   S01408
+     I*
+     I/EJECT
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE0790CCP2                                           S01408
+     C*                                                                   S01408
+     C**********           MOVEACPY@      BIS@   80                                         CRE083BO
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C**                                                                  S01117
+     C******IN*THE*DATAAREA*RUNDAT*************************************              S01117 CRE083BO
+     C**                                                                  S01117
+     C********** *NAMVAR   DEFN RUNDAT    RUNDT                                      S01117 CRE083BO
+     C**********           IN   RUNDT                                                S01117 CRE083BO
+     C**                                                                  S01117
+0116 C*                                                                   RE0790
+0117 C*    FIRST CYCLE                                                    RE0790
+0118 C*                                                                   RE0790
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE0790CCP3                                           S01408
+     C*                                                                   S01408
+0119 C   40                GOTO START                                     RE0790
+0120 C                     SETON                     40                   RE0790
+     C                     MOVEACPY@      BIS@   80                                         CRE083BO
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                                             CRE083BO
+     C                     IN   RUNDT                                                       CRE083BO
+     C                     MOVE *BLANK    DBFILE                          S01117
+     C                     MOVE *BLANK    DBKEY                           S01117
+     C                     MOVE *BLANK    DBASE                           S01117
+     C                     MOVE *BLANK    DBPGM                           S01117
+     C                     MOVE 'RE0790'  DBPGM                           S01117
+0121 C                     EXSR ZSYSTM                                    RE0790
+     C   99                SETON                     U7U8  ***************S01117
+     C   99                Z-ADD1         DBASE            * DATABASE 01 *S01117
+     C   99                MOVE ZTABKY    DBKEY            ***************S01117
+     C   99                MOVE 'TABLE'   DBFILE                          S01117
+     C   99                GOTO END                                       S01117
+0122 C                     EXSR CCYARR                                    RE0790
+     C*
+     C/COPY WNCPYSRC,RE0790CCP1                                           S01408
+     C*
+     C**                                                                  S01117
+     C**    TEST FOR MULTIBRANCHING                                       S01117
+     C**                                                                  S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETON                     88                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+0123 C                     MOVEL'14'      KEYT   12                       RE0790
+0124 C           START     TAG                             ** START **    RE0790
+0125 C**************************                                          RE0790
+0126 C   03                                                               RE0790
+0127 COR 78      TOTAC     ADD  1         TOTAC                           RE0790
+0128 C**                                                                  RE0790
+0129 C  N02                GOTO END                                       RE0790
+     C*                                                                   S01117
+     C**  MULTIBRANCH TEST FOR OUTPUT                                     S01117
+     C*                                                                   S01117
+     C           *INL3     IFEQ '1'                        NEW BRANCH     S01117
+     C                     CLOSERE0790P1                                  S01117
+     C                     SETON                     85                   S01117
+     C                     MOVE 'Y'       P1OP    1        P1 OPENED      S01117
+     C                     OPEN RE0790P1                   NEW BRANCH RPT.S01117
+     C                     Z-ADD0         PAGE             RESET AT L3    S01117
+     C                     Z-ADD0         BRTOT                           S01117
+     C**                                                                  S01117
+     C*    ENSURE REPORT SPOOL FILE RECORDED BY RCF                       S01117
+     C**                                                                  S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C**                                                                  S01117
+     C                     OUT  LDA                                       S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM BRCA      SENTY                           S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C** RETRIEVE BRANCH NAME                                             S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM BRCA      @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01117              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     MOVEL'SDBRCHPD'DBFILE                          S01117
+     C                     MOVEL@DSNB     DBKEY            ***************S01117
+     C                     MOVEL'002'     DBASE            * DBERROR 002 *S01117
+     C                     GOTO END                        ***************S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END                             END L3 PROCESS S01117
+     C**                                                                  S01117
+     C           *INL3     IFEQ '1'                                       CRE024
+      *                                                                   CRE024
+      * Access SAR file to see if feature is on                           CRE024
+     C           CRE024    IFEQ *BLANKS                                   CRE024
+     C                     CALL 'AOSARDR0'                                CRE024
+     C                     PARM *BLANKS   UMRTCD  7                       CRE024
+     C                     PARM '*VERIFY' UMOPTN  7                       CRE024
+     C                     PARM 'CRE024'  UMKEY   6                       CRE024
+     C                     PARM *BLANKS   DSFDY                           CRE024
+      *                                                                   CRE024
+      * If feature on, set indicators and open Restricted                 CRE024
+      * Account Ranges file                                               CRE024
+     C           UMRTCD    IFEQ *BLANKS                                   CRE024
+     C                     MOVE 'Y'       CRE024  1                       CRE024
+     C                     MOVE '1'       *IN09                           CRE024
+     C                     OPEN SFRACRPA                                  CRE024
+     C                     ELSE                                           CRE024
+     C                     MOVE 'N'       CRE024                          CRE024
+     C                     END                                            CRE024
+     C                     END                                            CRE024
+      *                                                                   CRE024
+      * If feature on, open P2 report file and initialise work fields     CRE024
+     C           CRE024    IFEQ 'Y'                                       CRE024
+     C                     CLOSERE0790P2                                  CRE024
+     C                     OPEN RE0790P2                                  CRE024
+      *                                                                   CRE024
+     C                     Z-ADD0         BRTOT2                          CRE024
+     C                     Z-ADD0         PAGE2                           CRE024
+     C                     MOVE '**'      UMAC1                           CRE024
+     C                     MOVE '**'      UMAC2                           CRE024
+      *                                                                   CRE024
+      * Ensure report spool file recorded by RCF                          CRE024
+     C                     Z-ADDSFNUM2    ZSNUM   60                      CRE024
+      *                                                                   CRE024
+     C                     OUT  LDA                                       CRE024
+     C                     CALL 'ZSFILE'                                  CRE024
+     C                     PARM           SEQ                             CRE024
+     C                     PARM BRCA      SENTY   3                       CRE024
+     C                     PARM           SFILE2                          CRE024
+     C                     PARM           ZSNUM                           CRE024
+     C                     PARM           ZSERR   1                       CRE024
+     C           *LOCK     IN   LDA                                       CRE024
+      *                                                                   CRE024
+     C           ZSERR     IFEQ 'Y'                                       CRE024
+      * Error during ZSFILE processing, return to calling program         CRE024
+     C                     SETON                     U7LR                 CRE024
+     C                     RETRN                                          CRE024
+     C                     END                                            CRE024
+     C                     END                                            CRE024
+     C                     END                                            CRE024
+      *                                                                   CRE024
+      * If feature on, set level break and output indicators              CRE024
+      * (09 = change of branch, 10 = change of account officer,           CRE024
+      *  11 = restricted account detail)                                  CRE024
+     C           CRE024    IFEQ 'Y'                                       CRE024
+     C                     MOVE '0'       *INL2                           CRE024
+     C                     MOVEA'00'      *IN,10                          CRE024
+      *                                                                   CRE024
+      * Check if account restricted                                       CRE024
+     C                     MOVE ACOD      UMACOD 10                       CRE024
+     C           UMACOD    SETGTSFRACRP0                                  CRE024
+     C                     READPSFRACRP0                 90               CRE024
+      *                                                                   CRE024
+      * If account restricted, adjust branch totals and output range      CRE024
+      * onto SODAC (required for sequencing P3 report)                    CRE024
+     C           *IN90     IFEQ '0'                        B4             CRE024
+     C           UMACOD    ANDLEMTOAC                                     CRE024
+     C           BRTOT     SUB  1         BRTOT                           CRE024
+     C           BRTOT2    ADD  1         BRTOT2  40                      CRE024
+     C                     MOVE '0'       *IN02                           CRE024
+     C                     MOVE '1'       *IN11                           CRE024
+      *                                                                   CRE024
+     C           ACOC      IFNE UMAC2                                     CRE024
+     C                     MOVE ACOC      UMAC2   2                       CRE024
+     C                     MOVE '1'       *IN10                           CRE024
+     C                     END                                            CRE024
+      *                                                                   CRE024
+      * If account not restricted, clear restricted account codes and     CRE024
+      * check for change of account officer for P1 report                 CRE024
+     C                     ELSE                                           CRE024
+     C                     MOVE *BLANKS   MFRAC                           CRE024
+     C                     MOVE *BLANKS   MTOAC                           CRE024
+      *                                                                   CRE024
+     C           ACOC      IFNE UMAC1                                     CRE024
+     C                     MOVE ACOC      UMAC1   2                       CRE024
+     C                     MOVE '1'       *INL2                           CRE024
+     C                     END                                            CRE024
+     C                     END                                            CRE024
+      *                                                                   CRE024
+      * Output range details into filler field for REC79A                 CRE024
+     C                     EXCPTRANGE                                     CRE024
+      *                                                                   CRE024
+     C                     END                                            CRE024
+     C/COPY WNCPYSRC,RE0790C001
+0130 C*                                                                   RE0790
+0131 C*    SET INDICATORS ACCORDING TO CURRENCY DECIMAL PLACES            RE0790
+0132 C*                                                                   RE0790
+0133 C   L1                MOVE CCY       XCCY                            RE0790
+0134 C   L1                EXSR CCYDEP                                    RE0790
+0135 C   L1      XDECP     COMP 1                      5051               RE0790
+0136 C   L1      XDECP     COMP 2                    53  52               RE0790
+0137 C***50***             Z-ADDHELD0     HELD   150                      RE0790
+0138 C***51***   HELD0     DIV  10        HELD                            RE0790
+0139 C***52***   HELD0     DIV  100       HELD                            RE0790
+0140 C***53***   HELD0     DIV  1000      HELD                            RE0790
+0141 C*                                                                   RE0790
+0142 C*    ACCUMULATE NUMBER OF ACCOUNTS PER BRANCH IN BRTOT              RE0790
+0143 C*    ACCUMULATE TOTAL NUMBER OF ACCOUNTS REPORTED IN TOTAC          RE0790
+0144 C*                                                                   RE0790
+0145 C           BRTOT     ADD  1         BRTOT   50                      RE0790
+0146 C           TOTAC     ADD  1         TOTAC   50 45                   RE0790
+0147 C*    SET INDICATORS FOR REFERRAL REASONS                            RE0790
+0148 C           RSN1      COMP 'O'                      61               RE0790
+0149 C           RSN2      COMP 'D'                      62               RE0790
+0150 C           RSN3      COMP 'L'                      63               RE0790
+0151 C           RSN4      COMP 'C'                      64               RE0790
+0152 C           RSN5      COMP 'H'                      65               RE0790
+0153 C           RSN6      COMP 'N'                      66               RE0790
+0154 C           RSN7      COMP 'E'                      67               RE0790
+     C/COPY WNCPYSRC,RE0790CTC1                                           S01408
+0155 C*                                                                   RE0790
+0156 C*    AT CHANGE OF ACCOUNT OFFICER, CHAIN TO TABLE FILE              RE0790
+0157 C   L2                SETOF                     70                   E12487
+0157 C***L2*****           MOVE ACOC      KEYT                            RE0790              239617
+0158 C***L2***** KEYT      CHAINTABLE                41                   RE0790              239617
+0157 C***L2*06**           SETON                     70                                E12487 239617
+     C***L2***** ACOC      CHAINSDACOFL0             41                              239617 CRE083AJ
+     C**                                                                                      239617
+     C** RETRIEVE ACCOUNT OFFICER NAME                                                        239617
+     C           *INL2     IFEQ *ON                                                         CRE083AJ
+     C           CRE024    OREQ 'Y'                                                         CRE083AJ
+     C           *IN10     ANDEQ*ON                                                         CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     SETOF                     70                                     CRE083AJ
+     C           ACOC      IFNE *BLANKS                                                     CRE083AJ
+     C                     ADD  1         RCSQ                                              CRE083AJ
+     C                     MOVELACOC      KEYACO                                            CRE083AJ
+     C                     EXSR CHKACO                                                      CRE083AJ
+      *                                                                                     CRE083AJ
+      ** Use details from array if ACOC is found, otherwise,                                CRE083AJ
+      ** retrieve details from program call                                                 CRE083AJ
+      *                                                                                     CRE083AJ
+     C           AOFIC     IFEQ 'Y'                                                         CRE083AJ
+      *                                                                                     CRE083AJ
+      ** Set occurence to index found from CDAO array                                       CRE083AJ
+      *                                                                                     CRE083AJ
+     C           C         OCUR SDACOC                                                      CRE083AJ
+     C                     SETON                     70                                     CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     ELSE                                                             CRE083AJ
+      *                                                                                     CRE083AJ
+     C           TIDX      IFNE 0                                                           CRE083AJ
+     C                     Z-ADDTIDX      C                                                 CRE083AJ
+     C                     ELSE                                                             CRE083AJ
+     C                     Z-ADD1         C                                                 CRE083AJ
+     C                     MOVEALRUA      LRUS                                              CRE083AJ
+     C                     SORTALRUS                                                        CRE083AJ
+     C                     Z-ADDLRUS,1    LEASTE                                            CRE083AJ
+     C           LEASTE    LOKUPLRUA,C                   42                                 CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+     C           C         OCUR SDACOC                                                      CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     CALL 'AOACOFR0'                                                  CRE083AJ
+     C                     PARM '*MSG   ' WRTCD   7                                         CRE083AJ
+     C                     PARM '*KEY   ' WOPTN   7                                         CRE083AJ
+     C                     PARM ACOC      WACOC   2                                         CRE083AJ
+     C           SDACOC    PARM SDACOC    DSSDY                                             CRE083AJ
+      *                                                                                     CRE083AJ
+      ** Add account officer details to array if no error                                   CRE083AJ
+      *                                                                                     CRE083AJ
+     C           WRTCD     IFNE *BLANKS                                                     CRE083AJ
+     C                     SETON                     U7U8LR                                 CRE083AJ
+     C                     MOVEL'SDACOFPD'DBFILE                                            CRE083AJ
+     C                     MOVELWACOC     DBKEY                                             CRE083AJ
+     C                     MOVEL'003'     DBASE                                             CRE083AJ
+     C                     GOTO END                                                         CRE083AJ
+     C                     ELSE                                                             CRE083AJ
+     C                     EXSR ADDACO                                                      CRE083AJ
+     C                     SETON                     70                                     CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+     C********** *IN41     IFEQ *OFF                                                 239617 CRE083AJ
+     C**********           CALL 'AOACOFR0'                                           239617 CRE083AJ
+     C**********           PARM '*MSG   ' @RTCD   7                                  239617 CRE083AJ
+     C**********           PARM '*KEY   ' @OPTN   7                                  239617 CRE083AJ
+     C**********           PARM ACOC      @ACOC   2                                  239617 CRE083AJ
+     C********** SDACOC    PARM SDACOC    DSSDY                                      239617 CRE083AJ
+     C********** @RTCD     IFNE *BLANK                                               239617 CRE083AJ
+     C**********           SETON                     U7U8LR                          239617 CRE083AJ
+     C**********           MOVEL'SDACOFPD'DBFILE                                     239617 CRE083AJ
+     C**********           MOVEL@ACOC     DBKEY            ***************           239617 CRE083AJ
+     C**********           MOVEL'003'     DBASE            * DBERROR 003 *           239617 CRE083AJ
+     C**********           GOTO END                        ***************           239617 CRE083AJ
+     C**********           ELSE                                                      239617 CRE083AJ
+     C**********           SETON                     70                              239617 CRE083AJ
+     C**********           END                                                       239617 CRE083AJ
+     C**********           END                                                       239617 CRE083AJ
+      * Access table file on change of account officer (restricted        CRE024
+      * accounts)                                                         CRE024
+     C***********CRE024    IFEQ 'Y'                                       CRE024              239617
+     C***10******          SETOF                     70                   CRE024              239617
+     C***10******          MOVE ACOC      KEYT                            CRE024              239617
+     C***10******KEYT      CHAINTABLE                41                   CRE024              239617
+     C***10*06***          SETON                     70                   CRE024              239617
+     C***********          END                                            CRE024              239617
+      *
+     C********** CRE024    IFEQ 'Y'                                                  239617 CRE083AJ
+     C********** *IN10     IFEQ *ON                                                  239617 CRE083AJ
+     C**********           SETOF                     70                              239617 CRE083AJ
+     C**********           CALL 'AOACOFR0'                                           239617 CRE083AJ
+     C**********           PARM '*MSG   ' @RTCD   7                                  239617 CRE083AJ
+     C**********           PARM '*KEY   ' @OPTN   7                                  239617 CRE083AJ
+     C**********           PARM ACOC      @ACOC                                      239617 CRE083AJ
+     C********** SDACOC    PARM SDACOC    DSSDY                                      239617 CRE083AJ
+     C********** @RTCD     IFNE *BLANK                                               239617 CRE083AJ
+     C**********           SETON                     U7U8LR                          239617 CRE083AJ
+     C**********           MOVEL'SDACOFPD'DBFILE                                     239617 CRE083AJ
+     C**********           MOVEL@ACOC     DBKEY            ***************           239617 CRE083AJ
+     C**********           MOVEL'004'     DBASE            * DBERROR 004 *           239617 CRE083AJ
+     C**********           GOTO END                        ***************           239617 CRE083AJ
+     C**********           ELSE                                                      239617 CRE083AJ
+     C**********           SETON                     70                              239617 CRE083AJ
+     C**********           END                                                       239617 CRE083AJ
+     C**********           END                                                       239617 CRE083AJ
+     C**********           END                                                       239617 CRE083AJ
+      *****************************************************************              CER055 CRE083AJ
+      ****Check*if*Overdraft*Processing*feature*is*installed***********              CER055 CRE083AJ
+      *****************************************************************              CER055 CRE083AJ
+     C**********           CALL 'AOSARDR0'                                           CER055 CRE083AJ
+     C**********           PARM *BLANKS   UMRTCD                                     CER055 CRE083AJ
+     C**********           PARM '*VERIFY' UMOPTN                                     CER055 CRE083AJ
+     C**********           PARM 'CER055'  UMKEY                                      CER055 CRE083AJ
+     C**********           PARM *BLANKS   DSFDY                                      CER055 CRE083AJ
+      *****************************************************************              CER055 CRE083AJ
+     C********** UMRTCD    IFEQ *BLANKS                                              CER055 CRE083AJ
+     C**********           MOVE *ON       *IN57                                      CER055 CRE083AJ
+     C**********           ELSE                                                      CER055 CRE083AJ
+     C**********           MOVE *OFF      *IN57                                      CER055 CRE083AJ
+     C********** UMRTCD    IFNE '*NRF'                                               CER055 CRE083AJ
+     C**********           MOVEL'SCSARDPD'DBFILE           ************              CER055 CRE083AJ
+     C**********           MOVELUMKEY     DBKEY            * DBERR 05 *              CER055 CRE083AJ
+     C**********           Z-ADD05        DBASE            ************              CER055 CRE083AJ
+     C**********           SETON                     U7LR                            CER055 CRE083AJ
+     C**********           GOTO END                                                  CER055 CRE083AJ
+     C**********           ENDIF                                                     CER055 CRE083AJ
+     C**********           ENDIF                                                     CER055 CRE083AJ
+      *****************************************************************              CER055 CRE083AJ
+      ****Check*if*IBAN*Numbers*feature*is*installed*******************              CER055 CRE083AJ
+      *****************************************************************              CER055 CRE083AJ
+     C**********           CALL 'AOSARDR0'                                           CER055 CRE083AJ
+     C**********           PARM *BLANKS   UMRTCD                                     CER055 CRE083AJ
+     C**********           PARM '*VERIFY' UMOPTN                                     CER055 CRE083AJ
+     C**********           PARM 'CFT004'  UMKEY                                      CER055 CRE083AJ
+     C**********           PARM *BLANKS   DSFDY                                      CER055 CRE083AJ
+      *****************************************************************              CER055 CRE083AJ
+     C********** UMRTCD    IFEQ *BLANKS                                              CER055 CRE083AJ
+     C**********           MOVE *ON       *IN58                                      CER055 CRE083AJ
+     C**********           ELSE                                                      CER055 CRE083AJ
+     C**********           MOVE *OFF      *IN58                                      CER055 CRE083AJ
+     C********** UMRTCD    IFNE '*NRF'                                               CER055 CRE083AJ
+     C**********           MOVEL'SCSARDPD'DBFILE           ************              CER055 CRE083AJ
+     C**********           MOVELUMKEY     DBKEY            * DBERR 06 *              CER055 CRE083AJ
+     C**********           Z-ADD06        DBASE            ************              CER055 CRE083AJ
+     C**********           SETON                     U7LR                            CER055 CRE083AJ
+     C**********           GOTO END                                                  CER055 CRE083AJ
+     C**********           ENDIF                                                     CER055 CRE083AJ
+     C**********           ENDIF                                                     CER055 CRE083AJ
+      *****************************************************************              CER055 CRE083AJ
+      ****Check*if*Account*Balance*Check*is*installed******************              CER055 CRE083AJ
+      *****************************************************************              CER055 CRE083AJ
+     C**********           CALL 'AOSARDR0'                                           CER055 CRE083AJ
+     C**********           PARM *BLANKS   UMRTCD                                     CER055 CRE083AJ
+     C**********           PARM '*VERIFY' UMOPTN                                     CER055 CRE083AJ
+     C**********           PARM 'CAP205'  UMKEY                                      CER055 CRE083AJ
+     C**********           PARM *BLANKS   DSFDY                                      CER055 CRE083AJ
+      *****************************************************************              CER055 CRE083AJ
+     C********** UMRTCD    IFEQ *BLANKS                                              CER055 CRE083AJ
+     C**********           MOVE *ON       *IN56                                      CER055 CRE083AJ
+     C**********           ELSE                                                      CER055 CRE083AJ
+     C**********           MOVE *OFF      *IN56                                      CER055 CRE083AJ
+     C********** UMRTCD    IFNE '*NRF'                                               CER055 CRE083AJ
+     C**********           MOVEL'SCSARDPD'DBFILE           ************              CER055 CRE083AJ
+     C**********           MOVELUMKEY     DBKEY            * DBERR 07 *              CER055 CRE083AJ
+     C**********           Z-ADD07        DBASE            ************              CER055 CRE083AJ
+     C**********           SETON                     U7LR                            CER055 CRE083AJ
+     C**********           GOTO END                                                  CER055 CRE083AJ
+     C**********           ENDIF                                                     CER055 CRE083AJ
+     C**********           ENDIF                                                     CER055 CRE083AJ
+      *                                                                                       CER055
+      ** If CER055 is On, access account files to display overdraft fields.                   CER055
+      *                                                                                       CER055
+     C           *IN57     IFEQ *ON                                                           CER055
+      *                                                                                       CER055
+     C           KACCNT    KLIST                                                              CER055
+     C                     KFLD           CNUM                                                CER055
+     C                     KFLD           CCY                                                 CER055
+     C                     KFLD           ACOD                                                CER055
+     C                     KFLD           ACSQ                                                CER055
+     C                     KFLD           BRCA                                                CER055
+      *                                                                                       CER055
+     C           KACCNT    CHAINACCNTL0              59                                       CER055
+      *                                                                                       CER055
+     C           *IN59     IFEQ *OFF                                                          CER055
+      *                                                                                       CER055
+     C                     Z-ADDODED      ZDAYNO                                              CER055
+     C                     EXSR ZDATE2                                                        CER055
+     C                     MOVE ZADATE    ODEDA   7                                           CER055
+      *                                                                                       CER055
+     C           KACCNT    CHAINACCNTBY0             60                                       CER055
+      *                                                                                       CER055
+     C           *IN60     IFEQ *OFF                                                          CER055
+     C                     Z-ADDATOLVD    ZDAYNO                                              CER055
+     C                     EXSR ZDATE2                                                        CER055
+     C                     MOVE ZADATE    DTOLV   7                                           CER055
+     C                     Z-ADDATDOBE    ZDAYNO                                              CER055
+     C                     EXSR ZDATE2                                                        CER055
+     C                     MOVE ZADATE    DOBEA   7                                           CER055
+     C                     ENDIF                                                              CER055
+      *                                                                                       CER055
+     C           KACCNT    CHAINGLACNTL3             55                                       CER055
+      *                                                                                       CER055
+     C                     ENDIF                                                              CER055
+     C                     ENDIF                                                              CER055
+      *                                                                                       CER055
+     C/COPY WNCPYSRC,RE0790CCPG                                           S01408
+0159 C           END       TAG                             ** END **      RE0790
+     C**                                                                  S01117
+     C*       ENSURE TOTAL SPOOL FILE RECORDED BY RCF                     S01117
+     C**                                                                  S01117
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     CLR                   OUT  LDA                                       S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     CLR                   PARM           SEQ     5                       S01117
+     CLR                   PARM *BLANK    SENTY   3                       S01117
+     CLR                   PARM           SFILEU                          S01117
+     CLR                   PARM           ZSNUMU                          S01117
+     CLR                   PARM           ZSERR   1                       S01117
+     CLR         *LOCK     IN   LDA                                       S01117
+      *                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+0160 CLR         NORE      COMP TOTAC                U8U8                 RE0790
+     C**                                                                  S01117
+0146 CLR U7                EXSR *PSSR                                     S01117
+0479 C/EJECT                                                              S01117
+0161 C********************************************************************RE0790
+0162 C**                                                                  RE0790
+0163 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   RE0790
+0164 C**                                                                  RE0790
+0165 C           ZSYSTM    BEGSR                           *** ZSYSTM *** RE0790
+0166 C**                                                                  RE0790
+0167 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.                    RE0790
+0168 C                     MOVEL'01      'ZTABKY 12                       RE0790
+0169 C                     MOVE '  10'    ZTABKY                          RE0790
+0170 C**                                                                  RE0790
+0171 C           ZTABKY    CHAINTABLE                99    ON NOT THERE   RE0790
+0172 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED RE0790
+0173 C**                                                                  RE0790
+0174 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    RE0790
+0175 C           DATF      COMP 'M'                      98MMDDYY, 98 ON  RE0790
+0176 C**                                                                  RE0790
+0177 C                     ENDSR                                          RE0790
+0178 C**                                                                  RE0790
+0179 C**                                                                  RE0790
+0180 C********************************************************************RE0790
+0181 C**                                                                  RE0790
+0182 C**   SR. TO SET UP AN ARRAY OF CURRENCIES AND AN ARRAY OF           RE0790
+0183 C**   DECIMAL PLACES FOR THOSE CURRENCIES.                           RE0790
+0184 C**                                                                  RE0790
+0185 C           CCYARR    BEGSR                           *** CCYARR  ***RE0790
+0186 C**                                                                  RE0790
+0187 C**   SET ARRAY INDEX TO ZERO.                                       RE0790
+0188 C                     Z-ADD0         X       30                      RE0790
+0189 C**                                                                  RE0790
+0190 C**   SET UP KEY FOR CURRENCY TABLE.                                 RE0790
+0191 C                     MOVEL'20      'XCYKEY 12                       RE0790
+0192 C                     MOVE '    '    XCYKEY                          RE0790
+0193 C**                                                                  RE0790
+0194 C**   SET LOWER LIMIT AND READ CURRENCY TABLE HEADER.                RE0790
+0195 C           XCYKEY    SETLLTABLE                                     RE0790
+0196 C**                                                                  RE0790
+0197 C**   LOOP TO READ CURRENCY DETAIL RECORDS.                          RE0790
+0198 C           XLOOP     TAG                             ** XLOOP TAG **RE0790
+0199 C                     READ TABLE                    99               RE0790
+0200 C  N99      RECTX     COMP 20                   9999                 RE0790
+0201 C**                                                                  RE0790
+0202 C**   END IF ALL CURRENCY RECORDS PROCESSED                          RE0790
+0203 C   99                GOTO XEND                                      RE0790
+0204 C**                                                                  RE0790
+0205 C**   IGNORE DELETED RECORDS AND NON-SUB-RECORD ONE.                 RE0790
+0206 C           RECIX     COMP 'D'                  9797                 RE0790
+0207 C   97                GOTO XLOOP                                     RE0790
+0208 C           SRECX     COMP 1                    9797                 RE0790
+0209 C   97                GOTO XLOOP                                     RE0790
+0210 C**                                                                  RE0790
+0211 C**   INCREMENT ARRAY INDEX.                                         RE0790
+0212 C           X         ADD  1         X                               RE0790
+0213 C**                                                                  RE0790
+0214 C**   MOVE DATA INTO ARRAYS.                                         RE0790
+0215 C                     MOVE CCYX      CCYA,X                          RE0790
+0216 C                     MOVE CDPX      DPA,X                           RE0790
+0217 C**                                                                  RE0790
+0218 C**   CHECK FOR FULL ARRAY.96 ON IF FULL.                            RE0790
+0219 C           X         COMP 150                      96               RE0790
+0220 C**                                                                  RE0790
+0221 C**   GO TO READ NEXT RECORD.                                        RE0790
+0222 C  N96                GOTO XLOOP                                     RE0790
+0223 C**                                                                  RE0790
+0224 C           XEND      TAG                             ** XEND TAG  **RE0790
+0225 C                     ENDSR                                          RE0790
+0226 C**                                                                  RE0790
+0227 C********************************************************************RE0790
+0228 C**                                                                  RE0790
+0229 C**   SR. TO OBTAIN NO. OF DECIMAL PLACES FOR A CURRENCY.            RE0790
+0230 C**                                                                  RE0790
+0231 C           CCYDEP    BEGSR                           *** CCYDEP  ***RE0790
+0232 C**                                                                  RE0790
+0233 C**   SET ARRAY INDEX TO ONE AND RESET ERROR INDICATOR.              RE0790
+0234 C                     Z-ADD1         X            99                 RE0790
+0235 C**                                                                  RE0790
+0236 C**   INITIALIZE INPUT-OUTPUT FIELDS.                                RE0790
+0237 C                     Z-ADD0         XDECP   10                      RE0790
+0238 C                     MOVE XCCY      XCCY    3                       RE0790
+0239 C**                                                                  RE0790
+0240 C**   LOOK UP NO. OF DECIMAL PLACES FOR CURRENCY.                    RE0790
+0241 C**   99 SETON FOR INVALID CURRENCY.                                 RE0790
+0242 C           XCCY      LOKUPCCYA,X                   95               RE0790
+0243 C   95                MOVE DPA,X     XDECP                           RE0790
+0244 C  N95                SETON                     99                   RE0790
+0245 C**                                                                  RE0790
+0246 C                     ENDSR                                          RE0790
+0247 C**                                                                  RE0790
+      *****************************************************************                     CRE083AJ
+      *                                                               *                     CRE083AJ
+      *  *INZSR - Initial Subroutine                                  *                     CRE083AJ
+      *                                                               *                     CRE083AJ
+      *****************************************************************                     CRE083AJ
+     C           *INZSR    BEGSR                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+      ** LRU element key and record arrival sequence                                        CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     Z-ADD0         LEASTE 130                                        CRE083AJ
+     C           *LIKE     DEFN LEASTE    RCSQ                                              CRE083AJ
+      *                                                                                     CRE083AJ
+      ** Set start index to upper limit of account officer arrays                           CRE083AJ
+      ** Define current index and previous index as same with TIDX                          CRE083AJ
+      ** Define KEYACO to be the same with ACOC                                             CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     Z-ADD200       TIDX    40                                        CRE083AJ
+     C           *LIKE     DEFN TIDX      PIDX                                              CRE083AJ
+     C           *LIKE     DEFN TIDX      C                                                 CRE083AJ
+     C           *LIKE     DEFN ACOC      KEYACO                                            CRE083AJ
+      *                                                                                     CRE083AJ
+      ** Initialize work fields of account officer arrays routines                          CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     MOVE *BLANK    AOFIC   1                                         CRE083AJ
+     C                     MOVE *BLANKS   KEYACO                                            CRE083AJ
+     C                     Z-ADD200       PIDX                                              CRE083AJ
+     C                     Z-ADD200       C                                                 CRE083AJ
+      *                                                                                     CRE083AJ
+      ** Check if Overdraft Processing feature is installed                                 CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     CALL 'AOSARDR0'                                                  CRE083AJ
+     C                     PARM *BLANKS   UMRTCD                                            CRE083AJ
+     C                     PARM '*VERIFY' UMOPTN                                            CRE083AJ
+     C                     PARM 'CER055'  UMKEY                                             CRE083AJ
+     C                     PARM *BLANKS   DSFDY                                             CRE083AJ
+      *                                                                                     CRE083AJ
+     C           UMRTCD    IFEQ *BLANKS                                                     CRE083AJ
+     C                     MOVE *ON       *IN57                                             CRE083AJ
+     C                     ELSE                                                             CRE083AJ
+     C                     MOVE *OFF      *IN57                                             CRE083AJ
+     C           UMRTCD    IFNE '*NRF'                                                      CRE083AJ
+     C                     MOVEL'SCSARDPD'DBFILE                                            CRE083AJ
+     C                     MOVELUMKEY     DBKEY                                             CRE083AJ
+     C                     Z-ADD05        DBASE                                             CRE083AJ
+     C                     SETON                     U7LR                                   CRE083AJ
+     C                     GOTO END                                                         CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+      ** Check if IBAN Numbers feature is installed                                         CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     CALL 'AOSARDR0'                                                  CRE083AJ
+     C                     PARM *BLANKS   UMRTCD                                            CRE083AJ
+     C                     PARM '*VERIFY' UMOPTN                                            CRE083AJ
+     C                     PARM 'CFT004'  UMKEY                                             CRE083AJ
+     C                     PARM *BLANKS   DSFDY                                             CRE083AJ
+      *                                                                                     CRE083AJ
+     C           UMRTCD    IFEQ *BLANKS                                                     CRE083AJ
+     C                     MOVE *ON       *IN58                                             CRE083AJ
+     C                     ELSE                                                             CRE083AJ
+     C                     MOVE *OFF      *IN58                                             CRE083AJ
+     C           UMRTCD    IFNE '*NRF'                                                      CRE083AJ
+     C                     MOVEL'SCSARDPD'DBFILE                                            CRE083AJ
+     C                     MOVELUMKEY     DBKEY                                             CRE083AJ
+     C                     Z-ADD06        DBASE                                             CRE083AJ
+     C                     SETON                     U7LR                                   CRE083AJ
+     C                     GOTO END                                                         CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+      **  Check if Account Balance Check is installed                                       CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     CALL 'AOSARDR0'                                                  CRE083AJ
+     C                     PARM *BLANKS   UMRTCD                                            CRE083AJ
+     C                     PARM '*VERIFY' UMOPTN                                            CRE083AJ
+     C                     PARM 'CAP205'  UMKEY                                             CRE083AJ
+     C                     PARM *BLANKS   DSFDY                                             CRE083AJ
+      *                                                                                     CRE083AJ
+     C           UMRTCD    IFEQ *BLANKS                                                     CRE083AJ
+     C                     MOVE *ON       *IN56                                             CRE083AJ
+     C                     ELSE                                                             CRE083AJ
+     C                     MOVE *OFF      *IN56                                             CRE083AJ
+     C           UMRTCD    IFNE '*NRF'                                                      CRE083AJ
+     C                     MOVEL'SCSARDPD'DBFILE                                            CRE083AJ
+     C                     MOVELUMKEY     DBKEY                                             CRE083AJ
+     C                     Z-ADD07        DBASE                                             CRE083AJ
+     C                     SETON                     U7LR                                   CRE083AJ
+     C                     GOTO END                                                         CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     ENDSR                                                            CRE083AJ
+      *****************************************************************                     CRE083AJ
+      *                                                               *                     CRE083AJ
+      *  CHKACO - Check Account Officer details in array              *                     CRE083AJ
+      *                                                               *                     CRE083AJ
+      *****************************************************************                     CRE083AJ
+     C           CHKACO    BEGSR                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+      ** Reinitialize work fields                                                           CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     MOVEL*BLANK    AOFIC                                             CRE083AJ
+     C                     SETOF                         42                                 CRE083AJ
+      *                                                                                     CRE083AJ
+      ** Check previous account officer details if                                          CRE083AJ
+      ** same with current details                                                          CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     Z-ADDPIDX      C                                                 CRE083AJ
+      *                                                                                     CRE083AJ
+      ** Defend against index being 0                                                       CRE083AJ
+      ** Set current index to starting index                                                CRE083AJ
+      *                                                                                     CRE083AJ
+     C           C         IFEQ 0                                                           CRE083AJ
+     C                     Z-ADDTIDX      C                                                 CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+      ** If the ACOC being checked is the same then use the index                           CRE083AJ
+      ** of the current detail rather than doing a LOKUP                                    CRE083AJ
+      *                                                                                     CRE083AJ
+     C           KEYACO    IFEQ CDAO,C                                                      CRE083AJ
+     C                     SETON                         42                                 CRE083AJ
+     C                     ELSE                                                             CRE083AJ
+      *                                                                                     CRE083AJ
+     C           TIDX      IFEQ 0                                                           CRE083AJ
+     C                     Z-ADD1         C                                                 CRE083AJ
+     C                     ELSE                                                             CRE083AJ
+     C                     Z-ADDTIDX      C                                                 CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+     C           KEYACO    LOKUPCDAO,C                   42                                 CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+      ** Save the last accessed detail to PIDX                                              CRE083AJ
+      ** Set the indicator to show the data was found                                       CRE083AJ
+      *                                                                                     CRE083AJ
+     C           *IN42     IFEQ *ON                                                         CRE083AJ
+     C                     MOVE RCSQ      LRUA,C                                            CRE083AJ
+     C                     Z-ADDC         PIDX                                              CRE083AJ
+     C                     MOVEL'Y'       AOFIC                                             CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     ENDSR                                                            CRE083AJ
+      *****************************************************************                     CRE083AJ
+      *                                                               *                     CRE083AJ
+      *  ADDACO - Add Account Officer details to array                *                     CRE083AJ
+      *                                                               *                     CRE083AJ
+      *****************************************************************                     CRE083AJ
+     C           ADDACO    BEGSR                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+      ** If there is still room in the array then add the details                           CRE083AJ
+      *                                                                                     CRE083AJ
+     C           TIDX      IFNE 0                                                           CRE083AJ
+     C                     SUB  1         TIDX                                              CRE083AJ
+     C                     ENDIF                                                            CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     MOVELACOC      CDAO,C                                            CRE083AJ
+     C                     MOVE RCSQ      LRUA,C                                            CRE083AJ
+      *                                                                                     CRE083AJ
+      ** Set last accessed detail to PIDX so that CHKACO checks this                        CRE083AJ
+      ** latest detail first                                                                CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     Z-ADDC         PIDX                                              CRE083AJ
+      *                                                                                     CRE083AJ
+     C                     ENDSR                                                            CRE083AJ
+0248 C********************************************************************RE0790
+     C*                                                                   S01117
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C********************************************************************S01117
+     C/EJECT
+     C/TITLE SR/ZDATE2                                                                        CER055
+     C/COPY ZSRSRC,ZDATE2Z2                                                                   CER055
+0254 O*E0790P1H**203   L3                                           S01124S01117
+0255 O*******OR**      OFNL3                                              S01117
+     ORE0790P1H  203   L3 85                                              S01117
+     O       OR        OFNL3 85                                           S01117
+0256 O***********                        25 'REFERENCE RE0790'            S01117
+     O                                   24 'REFERENCE RE0790P1'          S01117
+0257 O                         TITL      92                               RE0790
+0258 O                                  104 'DATE'                        RE0790
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,RE0790OOP5                                           S01408
+     O*                                                                   S01408
+0259 O                         RUNA     113                               RE0790
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,RE0790OOP6                                           S01408
+     O*                                                                   S01408
+0260 O                                  122 'PAGE'                        RE0790
+0261 O                         PAGE  Z  127                               RE0790
+0262 O********H**1     L3                                                 S01117
+0263 O*******OR**      OFNL3                                              S01117
+     O        H  1     L3 85                                              S01117
+     O       OR        OFNL3 85                                           S01117
+0264 O                                   69 'RETAIL ACCOUNTS EXCESS'      RE0790
+0265 O                                   76 ' REPORT'                     RE0790
+     O                 88                86 'BRANCH'                      S01117
+     O                 88      BRCA      90                               S01117
+     O                 88                91 '-'                           S01117
+     O                 88      BRNM     121                               S01117
+0266 O***********                       106 'BRANCH'                      S01117
+0267 O***********              BRCD     110                               S01117
+0268 O********H**2     L3                                                 S01117
+0269 O*******OR**      OFNL3                                              S01117
+     O        H  2     L3 85                                              S01117
+     O       OR        OFNL3 85                                           S01117
+0270 O                                   69 '----------------------'      RE0790
+0271 O                                   76 '-------'                     RE0790
+0272 O********H**2     L3                                                 S01117
+0273 O*******OR**      OFNL3                                              S01117
+     O        H  2     L3 85                                              S01117
+     O       OR        OFNL3 85                                           S01117
+0274 O                                   14 'ACCOUNT NO'                  RE0790
+0275 O                                   43 'CUSTOMER NAME        CCY'    RE0790
+0276 O                                   62 'CLEARED BALANCE'             RE0790
+0277 O                                   84 'LEDGER BALANCE'              RE0790
+0278 O                                  108 'LIMIT/HELD AMOUNT'           RE0790
+0279 O                                  120 'REASON'                      RE0790
+     O        H  2     L3 85 57                                                               CER055
+     O       OR        OFNL3 85                                                               CER055
+     O       AND       57                                                                     CER055
+     O                 58                13 'IBAN'                                            CER055
+     O                                   47 'ACCOUNT NAME'                                    CER055
+     O                                   68 'O/D LIMIT'                                       CER055
+     O                                   82 'O/D LIMIT'                                       CER055
+     O                                   93 'O/D LIMIT'                                       CER055
+     O                                  103 'DATE O/D'                                        CER055
+     O                                  113 'NBR DAYS'                                        CER055
+     O                 56               128 'O/D TOLERANCE'                                   CER055
+     O        H  2     L3 85 57                                                               CER055
+     O       OR        OFNL3 85                                                               CER055
+     O       AND       57                                                                     CER055
+     O                                   82 'CHG VDATE'                                       CER055
+     O                                   93 'EXP DATE'                                        CER055
+     O                                  103 'BALN EXS'                                        CER055
+     O                                  113 'EXCESS'                                          CER055
+     O                 56               121 'AMOUNT'                                          CER055
+0280 O*    SPACE FIVE LINES IF NEW ACCOUNT OFFICER WITHIN BRANCH          RE0790
+0281 O        D 3     NL3 L2NOF                                           RE0790
+     O       AND       85                                                 S01117
+0282 O        D 2     NL3 L2NOF                                           RE0790
+     O       AND       85                                                 S01117
+0283 O*                                                                   RE0790
+0284 O*    OUTPUT A/C OFFICER NAME IF NEW ACCOUNT OFFICER                 RE0790
+0285 O********D**2     L2                                                 S01117
+0286 O*******OR**      OFNL2                                              S01117
+     O        D  2     L2 85                                              S01117
+     O       OR        OFNL2 85                                           S01117
+0287 O                                   11 'A/C OFFICER'                 RE0790
+0288 O*********                ACON      42                               E12487
+0288 O                 70      ACON      42                               E12487
+0288 O                N70                24 'NOT ASSIGNED'                E12487
+0289 O**                                                                  RE0790
+0290 O**                                                                  RE0790
+     O/COPY WNCPYSRC,RE0790OOPG                                           S01408
+0291 O********D*10     02                                                 S01117
+     O        D 10     02 85                                              S01117
+0292 O                      N20ACNO      14                               RE0790
+0293 O**********             20          16 '-   -    -'                               RE0790 CGL029
+     O                       20          22 '-   -          -'                                CGL029
+0294 O                       20CNUM       6                               RE0790
+0295 O                       20CCY       10                               RE0790
+0296 O**********             20ACOD      15                                            RE0790 CGL029
+0297 O**********             20ACSQ      18                                            RE0790 CGL029
+0298 O**********               CRNM      39                                            RE0790 CGL029
+0299 O**********               CCY       43                                            RE0790 CGL029
+0300 O**********             50NETB0 A   64                                            RE0790 CGL029
+0301 O**********             51NETB1 A   66                                            RE0790 CGL029
+0302 O**********             52NETB2 A   67                                            RE0790 CGL029
+0303 O**********             53NETB3 A   68                                            RE0790 CGL029
+0304 O**********             50GRBL0 A   86                                            RE0790 CGL029
+0305 O**********             51GRBL1 A   88                                            RE0790 CGL029
+0306 O**********             52GRBL2 A   89                                            RE0790 CGL029
+0307 O**********             53GRBL3 A   90                                            RE0790 CGL029
+     O                       20ACOD      21                                                   CGL029
+     O                       20ACSQ      24                                                   CGL029
+     O                         CRNM      45                                                   CGL029
+     O                         CCY       49                                                   CGL029
+     O                       50NETB0 A   70                                                   CGL029
+     O                       51NETB1 A   72                                                   CGL029
+     O                       52NETB2 A   73                                                   CGL029
+     O                       53NETB3 A   74                                                   CGL029
+     O                       50GRBL0 A   92                                                   CGL029
+     O                       51GRBL1 A   94                                                   CGL029
+     O                       52GRBL2 A   95                                                   CGL029
+     O                       53GRBL3 A   96                                                   CGL029
+     O********D 10     02 85 57                                                      CER055 AR821135
+     O**********          58   IBAN      34                                          CER055 AR821135
+     O**********               ANAM      55                                          CER055 AR821135
+     O**********               ODLN  1   71                                          CER055 AR821135
+     O**********               ODEDA     82                                          CER055 AR821135
+     O**********               ODEDA     93                                          CER055 AR821135
+     O**********               DOBEA    103                                          CER055 AR821135
+     O**********               ATNDYE1  113                                          CER055 AR821135
+     O**********          56   F1TOLR1  132                                          CER055 AR821135
+0308 O********D**1     02 61                                              S01117
+     O        D  1     02 61 85                                           S01117
+0309 O                         ODLN  1  106                               RE0790
+0310 O                                  120 'OVERDRAWN'                   RE0790
+0311 O********D**1     02 62                                              S01117
+     O        D  1     02 62 85                                           S01117
+0312 O                                  127 'DEPOSIT IN DEBIT'            RE0790
+0313 O********D**1     02 63                                              S01117
+     O        D  1     02 63 85                                           S01117
+0314 O                                  125 'LOAN IN CREDIT'              RE0790
+0315 O********D**1     02 64                                              S01117
+     O        D  1     02 64 85                                           S01117
+0316 O                   N61   ODLN  1  106                               RE0790
+0317 O                                  124 'LIMIT CHANGED'               RE0790
+0318 O********D**1     02 67                                              S01117
+     O        D  1     02 67 85                                           S01117
+0319 O                   N61N64ODLN  1  106                               RE0790
+0320 O                                  124 'LIMIT EXPIRED'               RE0790
+0321 O********D**1     02 65                                              S01117
+     O        D  1     02 65 85                                           S01117
+0322 O                       50HELD0 1  106                               RE0790
+0323 O                       51HELD1 1  108                               RE0790
+0324 O                       52HELD2 1  109                               RE0790
+0325 O                       53HELD3 1  110                               RE0790
+0326 O                                  131 'HOLD EXCEEDS BALANCE'        RE0790
+0327 O********D**2     02 66                                              S01117
+     O        D  2     02 66 85                                           S01117
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,RE0790OOP1                                           S01408
+     O*                                                                   S01408
+0328 O                                  131 'NO CREDIT FOR 31DAYS'        RE0790
+      *                                                                                     AR821135
+     O        D 1      02 85 57                                                             AR821135
+     O                    58   IBAN      34                                                 AR821135
+     O                         ANAM      55                                                 AR821135
+     O                         ODLN  1   71                                                 AR821135
+     O                         DTOLV     82                                                 AR821135
+     O                         ODEDA     93                                                 AR821135
+     O                         DOBEA    103                                                 AR821135
+     O                         ATNDYE1  113                                                 AR821135
+     O                    56   F1TOLR1  132                                                 AR821135
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,RE0790OOP2                                           S01408
+     O*                                                                   S01408
+0329 O********T*22     L3 45                                              S01117
+0329 O        T 22     L3 45 88                                           S01117
+0330 O                                   61 'BRANCH TOTALS-'              RE0790
+0331 O********T**      L3 45                                              S01117
+     O        T  2     L3 45 85                                           S01117
+     O       AND             88                                           S01117
+0332 O                                   70 'NO OF ACCOUNTS REPORTED'     RE0790
+0333 O                         BRTOT 3B  76                               RE0790
+     O        T 3      LR U7 85                                           S01117
+     O                                   68 '*** DATABASE IN'             S01117
+     O                                   78 ' ERROR ***'                  S01117
+     O        T 3      L3 85                                              S01117
+     O                       88          66 '*** END OF REPORT FOR'       S01117
+     O                       88          74 ' BRANCH '                    S01117
+     O                       88BRCA      77                               S01117
+     O                       88          81 '***'                         S01117
+     O                N88                76 '*** END OF REPORT ***'       S01117
+     O/COPY WNCPYSRC,RE0790O001
+     ORE0790P2H  203   L3 85 09                                           CRE024
+     O       OR        OVNL3 85                                           CRE024
+     O       AND       09                                                 CRE024
+     O                                   24 'REFERENCE RE0790P2'          CRE024
+     O                         TITL      92                               CRE024
+     O                                  104 'DATE'                        CRE024
+     O                         RUNA     113                               CRE024
+     O                                  122 'PAGE'                        CRE024
+     O                         PAGE2 Z  127                               CRE024
+     O        H  1     L3 85 09                                           CRE024
+     O       OR        OVNL3 85                                           CRE024
+     O       AND       09                                                 CRE024
+     O                                   51 'RESTRICTED '                 CRE024
+     O                                   73 'RETAIL ACCOUNTS EXCESS'      CRE024
+     O                                   80 ' REPORT'                     CRE024
+     O                 88                90 'BRANCH'                      CRE024
+     O                 88      BRCA      94                               CRE024
+     O                 88                95 '-'                           CRE024
+     O                 88      BRNM     125                               CRE024
+     O        H  2     L3 85 09                                           CRE024
+     O       OR        OVNL3 85                                           CRE024
+     O       AND       09                                                 CRE024
+     O                                   51 '-----------'                 CRE024
+     O                                   73 '----------------------'      CRE024
+     O                                   80 '-------'                     CRE024
+     O        H  2     L3 85 09                                           CRE024
+     O       OR        OVNL3 85                                           CRE024
+     O       AND       09                                                 CRE024
+     O                                   14 'ACCOUNT NO'                  CRE024
+     O                                   49 'CUSTOMER NAME        CCY'    CRE024
+     O                                   68 'CLEARED BALANCE'             CRE024
+     O                                   90 'LEDGER BALANCE'              CRE024
+     O                                  114 'LIMIT/HELD AMOUNT'           CRE024
+     O                                  126 'REASON'                      CRE024
+     O*    SPACE FIVE LINES IF NEW ACCOUNT OFFICER WITHIN BRANCH          CRE024
+     O        D 3     NL3 10NOV                                           CRE024
+     O       AND       11                                                 CRE024
+     O        D 2     NL3 10NOV                                           CRE024
+     O       AND       11                                                 CRE024
+     O*                                                                   CRE024
+     O*    OUTPUT A/C OFFICER NAME IF NEW ACCOUNT OFFICER                 CRE024
+     O        D  2     10 11                                              CRE024
+     O       OR        OVN10 11                                           CRE024
+     O                                   11 'A/C OFFICER'                 CRE024
+     O                 70      ACON      42                               CRE024
+     O                N70                24 'NOT ASSIGNED'                CRE024
+     O        D 10     11 85N03                                           CRE024
+     O                      N20ACNO      14                               CRE024
+     O                       20          22 '-   -          -'            CRE024
+     O                       20CNUM       6                               CRE024
+     O                       20CCY       10                               CRE024
+     O                       20ACOD      21                               CRE024
+     O                       20ACSQ      24                               CRE024
+     O                         CRNM      45                               CRE024
+     O                         CCY       49                               CRE024
+     O                       50NETB0 A   70                               CRE024
+     O                       51NETB1 A   72                               CRE024
+     O                       52NETB2 A   73                               CRE024
+     O                       53NETB3 A   74                               CRE024
+     O                       50GRBL0 A   92                               CRE024
+     O                       51GRBL1 A   94                               CRE024
+     O                       52GRBL2 A   95                               CRE024
+     O                       53GRBL3 A   96                               CRE024
+     O        D  1     11 61 85                                           CRE024
+     O       AND      N03                                                 CRE024
+     O                         ODLN  1  106                               CRE024
+     O                                  120 'OVERDRAWN'                   CRE024
+     O        D  1     11 62 85                                           CRE024
+     O       AND      N03                                                 CRE024
+     O                                  127 'DEPOSIT IN DEBIT'            CRE024
+     O        D  1     11 63 85                                           CRE024
+     O       AND      N03                                                 CRE024
+     O                                  125 'LOAN IN CREDIT'              CRE024
+     O        D  1     11 64 85                                           CRE024
+     O       AND      N03                                                 CRE024
+     O                   N61   ODLN  1  106                               CRE024
+     O                                  124 'LIMIT CHANGED'               CRE024
+     O        D  1     11 67 85                                           CRE024
+     O       AND      N03                                                 CRE024
+     O                   N61N64ODLN  1  106                               CRE024
+     O                                  124 'LIMIT EXPIRED'               CRE024
+     O        D  1     11 65 85                                           CRE024
+     O       AND      N03                                                 CRE024
+     O                       50HELD0 1  106                               CRE024
+     O                       51HELD1 1  108                               CRE024
+     O                       52HELD2 1  109                               CRE024
+     O                       53HELD3 1  110                               CRE024
+     O                                  131 'HOLD EXCEEDS BALANCE'        CRE024
+     O        D  2     11 66 85                                           CRE024
+     O       AND      N03 09                                              CRE024
+     O                                  131 'NO CREDIT FOR 31DAYS'        CRE024
+     O        T 22     L3 45 88                                           CRE024
+     O       AND       09                                                 CRE024
+     O                                   61 'BRANCH TOTALS-'              CRE024
+     O        T  2     L3 45 85                                           CRE024
+     O       AND       88 09                                              CRE024
+     O                                   70 'NO OF ACCOUNTS REPORTED'     CRE024
+     O                         BRTOT23B  76                               CRE024
+     O        T 3      LR U7 85                                           CRE024
+     O                                   68 '*** DATABASE IN'             CRE024
+     O                                   78 ' ERROR ***'                  CRE024
+     O        T 3      L3 85 09                                           CRE024
+     O                       88          66 '*** END OF REPORT FOR'       CRE024
+     O                       88          74 ' BRANCH '                    CRE024
+     O                       88BRCA      77                               CRE024
+     O                       88          81 '***'                         CRE024
+     O                N88                76 '*** END OF REPORT ***'       CRE024
+      *                                                                   CRE024
+     OSODAC   E                RANGE                                      CRE024
+     O                         MFRAC     98                               CRE024
+     O                         MTOAC    108                               CRE024
+0334 O********T**203   LR                                                 S01117
+     ORE0790AUT  203   LR                                                 S01117
+0335 O***********                        25 'REFERENCE RE0790'            S01117
+     O                                   24 'REFERENCE RE0790AU'          S01117
+0336 O                         TITL      92                               RE0790
+0337 O                                  104 'DATE'                        RE0790
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,RE0790OOP3                                           S01408
+     O*                                                                   S01408
+0338 O                         RUNA     113                               RE0790
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,RE0790OOP4                                           S01408
+     O*                                                                   S01408
+0339 O                                  122 'PAGE'                        RE0790
+0340 O***********              PAGE  Z  127                               S01117
+     O                         PAGE1 Z  126                               S01117
+0341 O        T  1     LR                                                 RE0790
+0342 O                                   69 'RETAIL ACCOUNTS EXCESS'      RE0790
+0343 O                                   76 ' REPORT'                     RE0790
+     O                                   92 'RUN CONTROLS'                S01117
+0344 O        T  2     LR                                                 RE0790
+0345 O                                   69 '----------------------'      RE0790
+0346 O                                   76 '-------'                     RE0790
+0347 O        T  215   LR                                                 RE0790
+0348 O                                   61 'FILE CONTROLS-'              RE0790
+0349 O        T  2     LR                                                 RE0790
+0350 O                                   65 'NO.OF RECORDS READ'          RE0790
+0351 O                         NORE  3   76                               RE0790
+0352 O        T  2     LR U8                                              RE0790
+0353 O                                   47 'CALCULATED -'                RE0790
+0354 O                                   65 'NO.OF RECORDS READ'          RE0790
+0355 O                         TOTAC 3   76                               RE0790
+0356 O********T* 2     LR U8                                              S01117
+0356 O        T  2     LR U8NU7                                           S01117
+0357 O                                   75 '***  OUT OF BALANCE  ***'    RE0790
+0868 O*                                                                   S01117
+0797 O*  DATABASE ERROR OUTPUT                                            S01117
+0798 O*                                                                   S01117
+0799 O        T 32     LR U7                                              S01117
+0800 O                                   58 'DATABASE ERROR '             S01117
+0801 O                         DBASE     61                               S01117
+0802 O                                   75 'IN PROGRAM '                 S01117
+0803 O                         DBPGM     85                               S01117
+0799 O        T  2     LR U7                                              S01117
+0804 O                                   48 'FILE '                       S01117
+0805 O                         DBFILE    56                               S01117
+0804 O                                   62 ', KEY '                      S01117
+0805 O                         DBKEY     91                               S01117
+0868 O*                                                                   S01117
+0797 O*  NO DETAILS OUTPUT                                                S01117
+0798 O*                                                                   S01117
+     O        T 3      LRN85                                              S01117
+     O                                   70 '***   NO DETAILS TO REPO'    S01117
+     O                                   78 'RT   ***'                    S01117
+0358 O********T*  30   LR                                                 S01117
+0359 O**********                         72 '*** END OF REPORT ***'       S01117
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                                          CER055
+0366073110961461                                                                              CER055
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                                            CER055
+000031059090120151181212243273304334365                                                       CER055
+**   ZMNM - MONTHS SHORT NAMES                                                                CER055
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC                                                          CER055

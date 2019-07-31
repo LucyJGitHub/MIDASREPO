@@ -1,0 +1,1581 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Drop off book positions')                     *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2550 - DROP OFF BOOK POSITIONS                             *
+     F*                                                               *
+     F*  Function: 1. To drop off all Book Position data for Matured  *
+     F*   (COB)    Book posns past retention for the security (from   *
+     F*            retention of Matured Security on ICD).             *
+     F*            (Matured Book Position = Book Position in a        *
+     F*                                     matured security).        *
+     F*            2. To drop off dated Book Positions and Historic   *
+     F*            Book Position Actions past back value period.      *
+     F*            Unless they are from this year.                    *   S11029
+     F*                                                               *
+     F*  Called by: SEC1004 - Drop off Positions - Depot/Cust/Book    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 095907             Date 25Jan07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSE087             Date 17Feb06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 228173             Date 02Jul04               *
+      *                 226007             Date 24Mar04               *
+      *                 219865             Date 11May03               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 202113             Date 28Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS002             Date 14Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU017             Date 07Apr98               *
+      *                 CSE007             Date 17Mar98               *
+     F*                 106644             DATE 28APR97               *
+     F*                 S01408             DATE 11JUL96               *
+     F*                 S01408             DATE 05MAR96               *
+     F*                 054257             DATE 10JAN94               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S11029             DATE 19APR93               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E35053             DATE 28JAN92               *
+     F*                 E31379             DATE 29NOV91               *
+     F*                 E29170             DATE 08NOV91               *
+     F*                 E30380             DATE 24OCT91               *
+     F*                 E22489             DATE 25SEP91               *
+     F*                 S01117             DATE 07JUN91               *
+     F*                 S01269             DATE 31JUL90               *
+     F*                 E22957             DATE 16AUG90               *
+     F*                 E22613             DATE 11JUL90               *
+     F*                 E21574             DATE 14JUN90               *
+     F*                 E21640             DATE 06APR90               *
+     F*                 E14797             DATE 14FEB90               *
+     F*                 E17997             DATE 14NOV89               *
+     F*                 E20085             DATE 08NOV89               *
+     F*                 E18819             DATE 18/07/89              *
+     F*                 E18828             DATE 17/07/89              *
+     F*                 E16772             DATE 19/06/89              *
+     F*                 E16833             DATE 21/02/89              *
+     F*                 E16806             DATE 21/02/89              *
+     F*                 E13948             DATE 26/07/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  095907 - BKPOSD FILE CONTROL OUT OF BALANCE. USE SETLL TO    *
+      *           READ BKPSO1 FROM THE FIRST RECORD                   *
+      *         - MODIFICATIONS CALCULATIONS FOR OUTPUT TRAILER       *
+      *         - UPDATES OF RECI WITH '*' REPLACED BY DELETES        *
+      *         - REMOVE OF FIX E18828                                *
+      *         - IF INTEREST BEARING DONT REMOVE RECS IN CURR.COUP   *
+      *           PERIOD                                              *
+      *         - USE RETENTION PERIOD INSTEAD OF BACK-VALUE PERIOD   *
+      *         - USE WORK FIELD OF 6,0 TO OUPTPUT DETAILS FOR BKMTHD *
+      *           BKPOSD AND BPACHD ON SE2550AU                       *
+      *         - KEEP FILE BPACH1 TO COUNT ALL RECORDS INCLUDING '*' *
+      *           OTHERWISE BPACHA IS WRONGLY UPDATED AND CAUSES FOOB *
+      *           IN SE2250 THE EOD FOLLOWING THE DROP                *
+      *         - also include 243026, 243027                         *
+      *  243027 - Complete Fix 095907                                 *
+      *  243026 - 6,0 is not enough on printer. Increase to 7,0       *
+      *  CSE087 - Database error occurred in SE2220 in SR/CLOSE due to*
+      *           the historic trade record referred by the 1st trade *
+      *           reference had been dropped.                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  228173 - BKPHDD is corrupted                                 *
+      *  226007 - BKPHHD is being corrupted                           *
+      *  219865 - Book position file corrupted due to incorrect       *
+      *           setup of record id.                                 *
+      *  CAS006 - Hedge Accounting Phase B                            *
+      *  202113 - DBERROR at 011, File BKPHD, at SE1440. Records from *
+      *           PF/BKPOSD should be removed if the corresponding    *
+      *           record in PF/BKPHDD is dropped.                     *
+      *  CAS002 - Hedge Strategy/Linkage                              *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*           Just recompile                                      *
+     F*  CSE007 - Corporate Actions - Just recompile                  *
+     F*  106644 - Need to drop all the incorrect book position records*
+     F*           which do not have corresponding header record.      *
+     F*  S01408 - Addition of core hook SE2550CCP3
+     F*  S01408 - Addition of core hook SE2550FFP1
+     F*           Addition of core hook SE2550CCP1
+     F*           Addition of core hook SE2550CCP2
+     F*  054257 - RECOMPILED as PREV CURRENT FACTOR amended from 9,8  *
+     F*           to 10,9                                             *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S11029 - Program changed to not drop Positions since Last    *
+     F*           End of Year as they may be required for the Cost of *
+     F*           Funds Report.                                       *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E35053 - Book position records still being dropped           *
+     F*           prematurely                                         *
+     F*  E31379 - Use LPSD not LPCD to drop BKPHDD records            *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  E30380 - Use BPACH instead of BPACH1.  This will mean one    *
+     F*           fewer, unnecessary logical file.                    *
+     F*  E22489 - Drop off BKPHDD record if BKPOSD is going, and only *
+     F*           delete BKPOSD if NPSN and ECNP are both zero.       *
+     F*  S01117 - Multi-branching                                     *
+     F*  S01269 - TRADE AUTHORISATION: RECOMPILED FOR CHANGE TO FILE  *
+     F*           TABSE                                               *
+     F*  E22957 - Recompiled over amended LF/BKPHH - key change from  *
+     F*           File now keyed on LPSD instead of LPCD              *
+     F*  E22613 - Correct test for flat posn. in E14797 for BKPOS.    *
+     F*  E21574 - The critical date for determining whether to drop   *   E21574
+     F*           BKPHHD records should be LPCD, not LPSD (see SE2230)*   E21574
+     F*         - LF/BKPHO changed to key on LPCD and omit RECI = '*'.*   E21574
+     F*  E21640 - BKPOSD FILE CONTROL OUT OF BALANCE. USE SETLL TO    *   E21640
+     F*           READ BKPSO FROM THE FIRST RECORD.                   *   E21640
+     F*  E14797 - DROP MOST RECENT POSITION BEFORE BACK-VALUED PERIOD *   E14797
+     F*           AS WELL AS EARLIER ONES, IF MOST RECENT POSITION IS *   E14797
+     F*           FLAT.                                               *   E14797
+     F*  E17997 - RECOMPILED OVER CHANGED AUDIT FILE.                 *   E17997
+     F*  E20085 - Interest and Coupon Calculations Rewrite:           *   E20085
+     F*          - BPACH1 format now correctly called BPACHDF.        *   E20085
+     F*  E18819 - NOT DROPPING OFF BKMTH RECORDS CORRECTLY            *   E18819
+     F*  E18828 - CHANGE OF FILE BKPSO1 TO BKPSO TO ONLY PROCESS      *   E18828
+     F*           RECORDS WITH RECI *NE '*'.                          *   E18828
+     F*  E16772 - Recompiled for the Dividend Payment Amount field    *   E16772
+     F*           changes.                                            *   E16772
+     F*  E16833 - EXCLUDE DELETED RECORDS FROM COUNT FOR HISTORIC     *   E16833
+     F*           BOOK POSITION HEADERS.                              *   E16833
+     F*  E16806 - INTRODUCE TWO NEW LOGICALS TO CORRECT A FILE        *   E16806
+     F*           CONTROLS OUT OF BALANCE ERROR.                      *   E16806
+     F*  E13948 - USING SETLL TO READ SECTY INSTEAD OF CHAIN          *   E13948
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FBKPHD   UF  E           K        DISK
+     FBKPHO   UF  E           K        DISK
+     F            BKPHDDF                           KRENAMEBKPHHDF
+     F***BKPOSD  UF  E           K        DISK                            E16806
+     F***BKPSO1**UF**E***********K        DISK                      E16806E18828
+     F***BKPSO   UF  E           K        DISK                            E18828              095907
+     FBKPSO1  UF  E           K        DISK                                                   095907
+     F***BPACH   UF  E           K        DISK                            E16806
+     F*BPACH1**UF**E           K        DISK                       E16806 E30380
+     F*BPACH***UF**E           K        DISK                              E30380              095907
+     FBPACH1  UF  E           K        DISK                                                   095907
+     FBKMTH   UF  E           K        DISK
+     FBKPHDA  UF  E                    DISK
+     FBKPHHA  UF  E                    DISK
+     FBKPOSA  UF  E                    DISK
+     FBPACHA  UF  E                    DISK
+     FBKMTHA  UF  E                    DISK
+     FSECTY   IF  E           K        DISK
+     FSE2550AUO   E                    PRINTER
+     F/COPY WNCPYSRC,SE2550F001
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE               S11029
+     F* ICD SE    TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F**SENPVLL0UF* E           K        DISK                                          CAS002 CAS006
+      ***UPD:*Revalued*Securities*Trading*Position*File****************                CAS002 CAS006
+      *                                                                                       CAS006
+     FSEMKVLL0UF  E           K        DISK                                                   CAS006
+      ** Midas SE Market values using Net-Treasury Prices                                     CAS006
+      *                                                                                       CAS006
+     FSEMKVAL0UF  E           K        DISK                                                   CAS006
+      ** Midas SE Market values using All-in-Prices                                           CAS006
+      *                                                                                       CAS002
+     FASHTRNL7IF  E           K        DISK                                                   CAS002
+      ** RTV: Hedge Linkage Transaction Detail File                                           CAS002
+      ** by Hedge Indicator,Module,Position,Branch,Book & Put Call                            CAS002
+      *                                                                                       CAS002
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SE2550FFP1                                           S01408
+     F*                                                                   S01408
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   50 - FIRST RECORD IN GROUP                                  *
+     F*   51 - CHAIN TO BKPSO                                         *   E14797
+     F*   80 - ERROR ON CHAIN                                         *
+     F*   89 - END OF FILE                                            *
+     F*90-99 - USED IN Z-SUBROUTINES                                  *
+     F*                                                               *
+     F*   U7 - DATABASE ERROR                                         *
+     F*   U8 - DATABASE ERROR                                         *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   FIRST       - ACCESSES ICD 1 AND SE                         *
+     F*   AUDIT       - OUTPUTS CONTROL REPORT                        *
+     F*   *PSSR       - Error handling                                *   S01117
+     F*   ZSYSTM      - ACCESSES ICD 1                                *
+     F*   ZICD2       - ACCESSES ICD 2                                *   S11029
+     F*   ZICDSE      - ACCESSES ICD FOR SE                           *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F/COPY WNCPYSRC,SE2550F002
+     E                    CPY@    1   1 80
+      /EJECT
+     I*                                                                   E14797
+     IBKPOSDF                                                             E14797
+     I              RECI                            BPRECI                E14797
+     I*                                                                   E14797
+     I            DS
+     I*                                                                   E14797
+     I* DATA STRUCTURE FOR TABLE FILE KEY
+     I*                                                                   E14797
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I                                        3   8 ZZ006
+     I                                        9  11 RCCY
+     I                                       12  12 ZZ001
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     IDSFDY     E DSDSFDY                                                                     CAS002
+      ** Data structure for access objects, short data structure                              CAS002
+      *                                                                                       CAS002
+     ISCSARD    E DSSCSARDPD                                                                  CAS002
+      ** SAR file details accessed via access program AOSARDR0                                CAS002
+      *                                                                                       CAS002
+     I*
+     I/COPY WNCPYSRC,SE2550I001
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C* KEY LISTS FOR CHAINING TO :-
+     C*     TABTB36
+     C*
+     C           TABKEY    KLIST
+     C                     KFLD           TKEY
+     C*                                                                   E14797
+     C*    KEY FOR BKPSO - USED WHEN CHECKING BKPHH                       E14797
+     C*                                                                   E14797
+     C           BOKKEY    KLIST                                          E14797
+     C                     KFLD           BHSC                            E14797
+     C***********          KFLD           BHBR                     E14797 S01117
+     C                     KFLD           BHBA                            S01117
+     C                     KFLD           BHBK                            E14797
+     C                     KFLD           BHMK                            E14797
+     C                     KFLD           BHTV                            E14797
+     C*********************KFLD           LPSD                     E14797 E21574
+     C                     KFLD           LPCD                            E21574
+      *                                                                                       202113
+      **   Key for PF/BKPHD                                                                   202113
+      *                                                                                       202113
+     C           BKPKEY    KLIST                                                              202113
+     C                     KFLD           SBPSC                                               202113
+     C                     KFLD           SBPBA                                               202113
+     C                     KFLD           SBPBK                                               202113
+     C                     KFLD           SBPMK                                               202113
+     C                     KFLD           SBPTV                                               202113
+     C*                                                                   E35053
+     C* KEY FOR CHAINING TO BKPOSD                                        E35053
+     C*                                                                   E35053
+     C           BKPOSK    KLIST                                          E35053
+     C                     KFLD           BHSC                            E35053
+     C                     KFLD           BHBA                            E35053
+     C                     KFLD           BHBK                            E35053
+     C                     KFLD           BHMK                            E35053
+     C                     KFLD           BHTV                            E35053
+     C                     KFLD           LPSD                            E35053
+     C*                                                                   106644
+     C* KEY FOR CHAINING TO BKPHD                                         106644
+     C*                                                                   106644
+     C           BKPHDK    KLIST                                          106644
+     C                     KFLD           BPSC                            106644
+     C                     KFLD           BPBA                            106644
+     C                     KFLD           BPBK                            106644
+     C                     KFLD           BPMK                            106644
+     C                     KFLD           BPTV                            106644
+     C*
+     C* PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE2550'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C* CLEAR COUNTS AND WORKFIELDS
+     C*
+     C                     Z-ADD0         IREC1
+     C                     Z-ADD0         IREC2
+     C                     Z-ADD0         IREC3
+     C                     Z-ADD0         IREC4
+     C                     Z-ADD0         IREC5
+     C                     Z-ADD0         IREC37                                              243026
+     C                     Z-ADD0         IREC47                                              243026
+     C                     Z-ADD0         IREC57                                              243026
+     C                     Z-ADD0         LREC1
+     C                     Z-ADD0         LREC2
+     C                     Z-ADD0         LREC3
+     C                     Z-ADD0         LREC4
+     C                     Z-ADD0         LREC5
+     C                     Z-ADD0         LREC37                                              243026
+     C                     Z-ADD0         LREC47                                              243026
+     C                     Z-ADD0         LREC57                                              243026
+     C                     Z-ADD0         DREC1
+     C                     Z-ADD0         DREC2
+     C                     Z-ADD0         DREC3
+     C                     Z-ADD0         DREC4
+     C                     Z-ADD0         DREC5
+     C                     Z-ADD0         DREC37                                              243026
+     C                     Z-ADD0         DREC47                                              243026
+     C                     Z-ADD0         DREC57                                              243026
+     C*
+     C* GENERATE STORAGE FIELDS
+     C*
+     C           *LIKE     DEFN BHSC      SBHSC
+     C************LIKE     DEFN BHBR      SBHBR                           S01117
+     C           *LIKE     DEFN BHBA      SBHBA                           S01117
+     C           *LIKE     DEFN BHBK      SBHBK
+     C           *LIKE     DEFN BHMK      SBHMK
+     C           *LIKE     DEFN BHTV      SBHTV
+     C           *LIKE     DEFN BPSC      SBPSC
+     C************LIKE     DEFN BPBR      SBPBR                           S01117
+     C           *LIKE     DEFN BPBA      SBPBA                           S01117
+     C           *LIKE     DEFN BPBK      SBPBK
+     C           *LIKE     DEFN BPMK      SBPMK
+     C           *LIKE     DEFN BPTV      SBPTV
+     C           *LIKE     DEFN BCSS      SBCSS
+     C           *LIKE     DEFN BKSS      SBKSS
+      *                                                                                       CAS002
+      ***Keylist*for*CAS002*Revalued*Securities*Trading*Positions*file*                CAS002 CAS006
+      ***(SENPVLL0)*using*key*fields*from*PF/BKPHDD*or*PF/BKPHHD.******                CAS002 CAS006
+      ** Keylist for CAS006 Market Values using Net-Treasury-Prices                           CAS006
+      ** (SEMKVLL0) and Market Values using All-in-Prices (SEMKVAL0)                          CAS006
+      ** using key fields from PF/BKPHDD or PF/BKPHHD.                                        CAS006
+      *                                                                                       CAS002
+     C           KLIST0    KLIST                                                              CAS002
+     C                     KFLD           BHSC                                                CAS002
+     C                     KFLD           BHBA                                                CAS002
+     C                     KFLD           BHBK                                                CAS002
+     C                     KFLD           BHMK                                                CAS002
+     C                     KFLD           BHTV                                                CAS002
+      *                                                                                       CAS002
+      ** Keylist for CAS002 Hedge Transactions Details file                                   CAS002
+      ** Securities 'SE' can only be set up as Hedged Items 'H'.                              CAS002
+      *                                                                                       CAS002
+     C                     MOVE 'H'       KDHIND  1                                           CAS002
+     C                     MOVE 'SE'      KMODSE  2                                           CAS002
+      *                                                                                       CAS002
+     C           KLIST7    KLIST                                                              CAS002
+     C                     KFLD           KDHIND                                              CAS002
+     C                     KFLD           KMODSE                                              CAS002
+     C                     KFLD           BHSC                                                CAS002
+      *                                                                                       CAS002
+      ** Check if Hedge Strategy / Linkage (CAS002) is installed                              CAS002
+      *                                                                                       CAS002
+     C                     CALL 'AOSARDR0'                                                    CAS002
+     C                     PARM *BLANKS   PRTCD   7                                           CAS002
+     C                     PARM '*VERIFY' POPTN   7                                           CAS002
+     C                     PARM 'CAS002'  PSARD   6                                           CAS002
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS002
+      *                                                                                       CAS002
+     C           PRTCD     IFNE *BLANKS                                                       CAS002
+     C           PRTCD     ANDNE'*NRF   '                                                     CAS002
+     C                     MOVE *ON       *INU7                                               CAS002
+     C                     MOVE *ON       *INU8                                               CAS002
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS002
+     C                     MOVELPSARD     DBKEY                                               CAS002
+     C                     Z-ADD8         DBASE                                               CAS002
+     C                     EXSR *PSSR                                                         CAS002
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C           PRTCD     IFEQ *BLANK                                                        CAS002
+     C                     MOVE 'Y'       CAS002  1                                           CAS002
+     C                     ELSE                                                               CAS002
+     C                     MOVE 'Y'       CAS002                                              CAS002
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CSE087
+     C                     CALL 'AOSARDR0'                                                    CSE087
+     C                     PARM *BLANKS   PRTCD                                               CSE087
+     C                     PARM '*VERIFY' POPTN                                               CSE087
+     C                     PARM 'CSE087'  PSARD                                               CSE087
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSE087
+      *                                                                                       CSE087
+     C           PRTCD     IFEQ *BLANK                                                        CSE087
+     C                     MOVE 'Y'       CSE087  1                                           CSE087
+     C                     ELSE                                                               CSE087
+     C                     MOVE 'N'       CSE087                                              CSE087
+     C                     ENDIF                                                              CSE087
+     C/COPY WNCPYSRC,SE2550C001
+     C*
+     C*  FIRST CYCLE PROCESS
+     C*
+     C                     EXSR FIRST
+     C/EJECT
+     C*
+     C*  P R O C E S S    B K P H D    F I L E
+     C*
+     C                     MOVEL*BLANKS   SBHSC
+     C*
+     C*  READ BKPHD FILE
+     C*
+     C                     READ BKPHD                    89
+     C*
+     C*  DO UNTIL EOF
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C*  INCREMENT COUNT
+     C*
+     C                     ADD  1         IREC1
+     C           RECI      IFNE '*'
+     C*
+     C*  TEST FOR SECURITIES RECORD
+     C*
+     C           BHSC      IFNE SBHSC
+     C                     MOVE BHSC      SBHSC
+     C***********BHSC      SETLLSECTY                    80               E13948
+     C************IN80     IFEQ '1'                                       E13948
+     C***********RECI      IFEQ '*'                                       E13948
+     C*********************SETOF                     80                   E13948
+     C*********************END                                            E13948
+     C*********************END                                            E13948
+     C           BHSC      CHAINSECTY                80                   E13948
+     C           *IN80     IFEQ '0'                                       E13948
+     C           RECI      ANDEQ'*'                                       E13948
+     C                     SETON                         80               E13948
+     C                     END                                            E13948
+     C                     END
+     C*
+     C**IF**IN80*OFF*THEN*SECURITY*RECORD*NOT*FOUND*FOR*THIS*GROUP**      E13948
+     C*
+      *                                                                                       CAS002
+      ** Do not drop a matured book position header if it is still re-                        CAS002
+      ** ferenced as hedged item on the Hedge Transaction Linkage file.                       CAS002
+      *                                                                                       CAS002
+     C                     MOVE ' '       WKEEP   1                                           CAS002
+      *                                                                                       CAS002
+      ** If switchable feature CAS002 is present                                              CAS002
+      ** and security already deleted (SECTY, RECI = '*')                                     219865
+      *                                                                                       CAS002
+     C           CAS002    IFEQ 'Y'                                                           CAS002
+     C           *IN80     ANDEQ*ON                                                           219865
+     C                     MOVE *IN75     WIN75   1                                           CAS002
+     C                     MOVE *OFF      *IN75                                               CAS002
+      *                                                                                       CAS002
+      ** Keylist for CAS002 Hedge Transactions Details file                                   CAS002
+      ** Securities 'SE' can only be set up as Hedged Items 'H'.                              CAS002
+      ** Verify if record exists (*IN75 ON)                                                   CAS002
+      ** but there is no need to READ the record.                                             CAS002
+      *                                                                                       CAS002
+     C********** KLIST7    SETLLASHTRNL7                 75                            CAS002 219865
+     C           KLIST7    CHAINASHTRNL7             75                                       219865
+      *                                                                                       CAS002
+      ** Check if the security is specified on the CAS002                                     CAS002
+      ** Hedge Transaction Details file.                                                      CAS002
+      ** If found (*IN75 *ON), the book positions header record                               CAS002
+      ** BKPHDDF for this security cannot be dropped.                                         CAS002
+      ** (*IN80 *ON = drop the book positions header.)                                        CAS002
+      *                                                                                       CAS002
+     C********** *IN75     IFEQ *ON                                                    CAS002 219865
+     C           *IN75     IFEQ *OFF                                                          219865
+     C           FSHTID    ANDEQ'D'                                                           219865
+     C                     MOVE *OFF      *IN80                                               CAS002
+     C                     MOVE 'Y'       WKEEP                                               CAS002
+      *                                                                                       CAS002
+      ** Update the Book Position Header with a record id of 'T'                              CAS002
+      ** to stop the record from being dropped.                                               CAS002
+      *                                                                                       CAS002
+     C                     MOVE 'T'       RECI                                                CAS002
+     C                     UPDATBKPHDDF                                                       CAS002
+      *                                                                                       CAS002
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C                     MOVE WIN75     *IN75                                               CAS002
+      *                                                                                       CAS002
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C************IN80     IFEQ '0'                                       E13948
+     C*
+     C/COPY WNCPYSRC,SE2550C025
+     C* IF *IN80 ON THEN SECURITY RECORD NOT FOUND FOR THIS GROUP         E13948
+     C*
+     C           *IN80     IFEQ '1'                                       E13948
+     C                     ADD  1         DREC1   50
+     C***                  MOVE '*'       RECI                                                095907
+     C***                  UPDATBKPHDDF                                                       095907
+     C                     DELETBKPHDDF                                                       095907
+      *                                                                                       CAS002
+     C           CAS002    IFEQ 'Y'                                                           CAS002
+     C                     MOVE *IN99     WIN99   1                                           CAS002
+     C                     MOVE *OFF      *IN99                                               CAS002
+      *                                                                                       CAS002
+      ** If the Revalued Securities Trading Positions Record exists,                          CAS002
+      ** then delete it.                                                                      CAS002
+      *                                                                                       CAS002
+     C********** KLIST0    CHAINSENPVLD0             99                                CAS002 CAS006
+     C           KLIST0    CHAINSEMKVLD0             99                                       CAS006
+     C           *IN99     IFEQ *OFF                                                          CAS002
+     C**********           DELETSENPVLD0                                               CAS002 CAS006
+     C                     DELETSEMKVLD0                                                      CAS006
+     C           KLIST0    CHAINSEMKVAD0             99                                       CAS006
+     C           *IN99     IFEQ *OFF                                                          CAS006
+     C                     DELETSEMKVAD0                                                      CAS006
+     C                     ENDIF                                                              CAS006
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C                     MOVE WIN99     *IN99                                               CAS002
+     C                     ENDIF                                                              CAS002
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE2550CCP3                                           S01408
+     C*                                                                   S01408
+     C                     ELSE
+      *                                                                   E22489
+     C           LPSD      IFGE RTDATE                                                        095907
+     C           CD01      ORNE *ZERO                                                         095907
+     C           LPSD      ANDGELCPN                                                          095907
+     C                     ADD  1         LREC1                                               095907
+     C                     ELSE                                                               095907
+     C***********LPCD      IFLT BVDATE                             E22489 E31379
+     C***********LPSD      IFLT BVDATE                                    E31379              095907
+     C           LPSD      IFLT RTDATE                                                        095907
+      *                                                                   E22489
+      ** If record with date less than backvalue date and position not    E22489
+      ** flat                                                             E22489
+      *                                                                   E22489
+     C***********BOKKEY    CHAINBKPSO                51            E22489 E35053
+     C***********BKPOSK    CHAINBKPSO                51                   E35053              243027
+     C           BKPOSK    CHAINBKPSO1               51                   E35053              243027
+     C           *IN51     IFEQ '1'                                       E22489
+     C/COPY WNCPYSRC,SE2550C026
+      *                                                                                       CAS002
+      ** Field KEEP indicates whether or not to drop the BKPHDDF record.                      CAS002
+      ** If KEEP not = 'Y', then record may be dropped.                                       CAS002
+      *                                                                                       CAS002
+     C           WKEEP     ANDNE'Y'                                                           CAS002
+     C           *IN51     OREQ '0'                                       E22489
+     C           NPSN      ANDEQ0                                         E22489
+     C           ECNP      ANDEQ0                                         E22489
+     C/COPY WNCPYSRC,SE2550C027
+      *                                                                                       CAS002
+      ** Field KEEP indicates whether or not to drop the BKPHDDF record.                      CAS002
+      ** If KEEP not = 'Y', then record may be dropped.                                       CAS002
+      *                                                                                       CAS002
+     C           WKEEP     ANDNE'Y'                                                           CAS002
+     C                     ADD  1         DREC1                           E22489
+     C/COPY WNCPYSRC,SE2550C002
+     C                     DELETBKPHDDF                                   E22489              095907
+     C**********           MOVE '*'       RECI                            E22489              095907
+     C**********           UPDATBKPHDDF                                   E22489              095907
+     C/COPY WNCPYSRC,SE2550C028
+      *                                                                                       CAS002
+     C           CAS002    IFEQ 'Y'                                                           CAS002
+     C                     MOVE *IN99     WIN99   1                                           CAS002
+     C                     MOVE *OFF      *IN99                                               CAS002
+      *                                                                                       CAS002
+      ** If the Revalued Securities Trading Positions Record exists,                          CAS002
+      ** then delete it.                                                                      CAS002
+      *                                                                                       CAS002
+     C********** KLIST0    CHAINSENPVLD0             99                                CAS002 CAS006
+     C           KLIST0    CHAINSEMKVLD0             99                                       CAS006
+     C           *IN99     IFEQ *OFF                                                          CAS002
+     C**********           DELETSENPVLD0                                               CAS002 CAS006
+     C                     DELETSEMKVLD0                                                      CAS006
+     C           KLIST0    CHAINSEMKVAD0             99                                       CAS006
+     C           *IN99     IFEQ *OFF                                                          CAS006
+     C                     DELETSEMKVAD0                                                      CAS006
+     C                     ENDIF                                                              CAS006
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C                     MOVE WIN99     *IN99                                               CAS002
+     C                     ENDIF                                                              CAS002
+      *                                                                   E22489
+     C                     ELSE                                           E22489
+     C                     ADD  1         LREC1   50
+     C                     END
+      *                                                                   E22489
+     C**********           ELSE                                           E22489              095907
+     C**********           ADD  1         LREC1                           E22489              095907
+     C                     END                                            E22489
+     C                     END                                                                095907
+     C                     END                                            E22489
+     C*
+     C                     ELSE
+     C                     ADD  1         DREC1
+     C/COPY WNCPYSRC,SE2550C003
+     C                     DELETBKPHDDF                                                       095907
+     C                     END
+     C*
+     C*  READ NEXT RECORD
+     C*
+     C                     READ BKPHD                    89
+     C*
+     C                     END
+     C/COPY WNCPYSRC,SE2550C004
+     C/EJECT
+     C*
+     C*  P R O C E S S    B K P H O    F I L E
+     C*
+     C                     MOVEL*BLANKS   SBHSC
+     C***********          Z-ADD0         SBHBR                           S01117
+     C                     MOVE *BLANKS   SBHBA                           S01117
+     C                     MOVEL*BLANKS   SBHBK
+     C                     MOVEL*BLANKS   SBHMK
+     C                     MOVE *BLANKS   SBHTV
+     C*
+     C*  READ BKPHO FILE
+     C*
+     C                     READ BKPHO                    89
+     C*
+     C*  DO UNTIL EOF
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C*  INCREMENT COUNT
+     C*
+     C****************     ADD  1         IREC2   50                      E16833
+     C                     ADD  1         IREC2   50                      095907
+     C           RECI      IFNE '*'
+     C***                  ADD  1         IREC2   50                      E16833              095907
+     C*
+     C* IF BR/SEC/DEPOT/BOOK/MARKET CHANGED SET OFF FLAG TO INDICATE
+     C* FIRST RECORD OF GROUP PROCESSED
+     C*
+     C***********BHBR      IFNE SBHBR                                     S01117
+     C           BHBA      IFNE SBHBA                                     S01117
+     C           BHSC      ORNE SBHSC
+     C           BHBK      ORNE SBHBK
+     C           BHMK      ORNE SBHMK
+     C           BHTV      ORNE SBHTV
+     C***********          MOVE BHBR      SBHBR                           S01117
+     C                     MOVE BHBA      SBHBA                           S01117
+     C                     MOVE BHBK      SBHBK
+     C                     MOVE BHMK      SBHMK
+     C                     MOVE BHTV      SBHTV
+     C                     SETOF                     50
+     C                     END
+     C*
+     C*  TEST FOR SECURITIES RECORD
+     C*
+     C           BHSC      IFNE SBHSC
+     C                     MOVE BHSC      SBHSC
+     C***********BHSC      SETLLSECTY                    80               E13948
+     C************IN80     IFEQ '1'                                       E13948
+     C***********RECI      IFEQ '*'                                       E13948
+     C*********************SETOF                     80                   E13948
+     C*********************END                                            E13948
+     C*********************END                                            E13948
+     C           BHSC      CHAINSECTY                80                   E13948
+     C           *IN80     IFEQ '0'                                       E13948
+     C           RECI      ANDEQ'*'                                       E13948
+     C                     SETON                         80               E13948
+     C                     END                                            E13948
+     C                     END
+     C*
+     C**IF**IN80*OFF*THEN*SECURITY*RECORD*NOT*FOUND*FOR*THIS*GROUP****    E13948
+     C*
+     C************IN80     IFEQ '0'                                       E13948
+     C*
+      *                                                                                       CAS002
+      ** Do not drop a historic book position header if it is still re-                       CAS002
+      ** ferenced as hedged item on the Hedge Transaction Linkage file.                       CAS002
+      *                                                                                       CAS002
+     C                     MOVE ' '       WKEEP                                               CAS002
+      *                                                                                       CAS002
+      ** If switchable feature CAS002 is present                                              CAS002
+      ** and security already deleted (SECTY, RECI = '*')                                     228173
+      *                                                                                       CAS002
+     C           CAS002    IFEQ 'Y'                                                           CAS002
+     C           *IN80     ANDEQ*ON                                                           228173
+     C                     MOVE *IN75     WIN75                                               CAS002
+     C                     MOVE *OFF      *IN75                                               CAS002
+      *                                                                                       CAS002
+      ** Keylist for CAS002 Hedge Transactions Details file                                   CAS002
+      ** Securities 'SE' can only be set up as Hedged Items 'H'.                              CAS002
+      ** Verify if record exists (*IN75 ON)                                                   CAS002
+      ** but there is no need to READ the record.                                             CAS002
+      ** and security already deleted (SECTY, RECI = '*')                                     226007
+      *                                                                                       CAS002
+     C********** KLIST7    SETLLASHTRNL7                 75                            CAS002 226007
+     C           KLIST7    CHAINASHTRNL7             75                                       226007
+      *                                                                                       CAS002
+      ** Check if the security is specified on the CAS002                                     CAS002
+      ** Hedge Transaction Details file.                                                      CAS002
+      ** If found (*IN75 *ON), the book positions header record                               CAS002
+      ** BKPHHDF for this security cannot be dropped.                                         CAS002
+      ** (*IN80 *ON = drop the book positions header.)                                        CAS002
+      *                                                                                       CAS002
+     C********** *IN75     IFEQ *ON                                                    CAS002 226007
+     C           *IN75     IFEQ *OFF                                                          226007
+     C           FSHTID    ANDEQ'D'                                                           226007
+     C                     MOVE *OFF      *IN80                                               CAS002
+     C                     MOVE 'Y'       WKEEP                                               CAS002
+      *                                                                                       CAS002
+      ** Update the Book Position Header with a record id of 'T'                              CAS002
+      ** to stop the record from being dropped.                                               CAS002
+      *                                                                                       CAS002
+     C                     MOVE 'T'       RECI                                                CAS002
+     C                     UPDATBKPHHDF                                                       CAS002
+      *                                                                                       CAS002
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C                     MOVE WIN75     *IN75                                               CAS002
+      *                                                                                       CAS002
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C/COPY WNCPYSRC,SE2550C029
+     C* IF *IN80 ON THEN SECURITY RECORD NOT FOUND FOR THIS GROUP         E13948
+     C*
+     C           *IN80     IFEQ '1'                                       E13948
+     C                     ADD  1         DREC2   50
+     C***                  MOVE '*'       RECI                                                095907
+     C***                  UPDATBKPHHDF                                                       095907
+     C                     DELETBKPHHDF                                                       095907
+      *                                                                                       CAS002
+     C           CAS002    IFEQ 'Y'                                                           CAS002
+     C                     MOVE *IN99     WIN99   1                                           CAS002
+     C                     MOVE *OFF      *IN99                                               CAS002
+      *                                                                                       CAS002
+      ** If the Revalued Securities Trading Positions Record exists,                          CAS002
+      ** then delete it.                                                                      CAS002
+      *                                                                                       CAS002
+     C********** KLIST0    CHAINSENPVLD0             99                                CAS002 CAS006
+     C           KLIST0    CHAINSEMKVLD0             99                                       CAS006
+     C           *IN99     IFEQ *OFF                                                          CAS002
+     C**********           DELETSENPVLD0                                               CAS002 CAS006
+     C                     DELETSEMKVLD0                                                      CAS006
+     C           KLIST0    CHAINSEMKVAD0             99                                       CAS006
+     C           *IN99     IFEQ *OFF                                                          CAS006
+     C                     DELETSEMKVAD0                                                      CAS006
+     C                     ENDIF                                                              CAS006
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C                     MOVE WIN99     *IN99                                               CAS002
+     C                     ENDIF                                                              CAS002
+     C/COPY WNCPYSRC,SE2550C005
+     C*
+     C* ELSE SECURITY FOUND
+     C*
+     C                     ELSE
+     C*
+     C**IF*LATEST*NP*DATE**GE**B/V**DATE*****                             E21574
+     C** Retrieval of information from BKPHHD is now based on LPCD, not   E21574
+     C** LPSD (see SE2230), so purge criteria must be amended accordingly.E21574
+     C*
+     C***********LPSD      IFGE BVDATE                                    E21574
+     C***        LPCD      IFGE BVDATE                                    E21574              095907
+     C           LPSD      IFGE RTDATE                                                        095907
+     C           CD01      ORNE *ZERO                                                         095907
+     C           LPSD      ANDGELCPN                                                          095907
+     C                     ADD  1         LREC2   50
+     C*
+     C* ELSE IF 1ST RECORD FOR THIS GROUP WITH DATE LT B/V DATE
+     C*
+     C                     ELSE
+     C           *IN50     IFEQ '0'
+     C*                                                                   E14797
+     C*   CHAIN TO BKPSO TO CHECK NOMINAL FOR THIS HEADER - IF NOMINAL IS E14797
+     C*   FLAT, THEN DELETE THIS RECORD EVEN THOUGH IT IS THE FIRST BACK  E14797
+     C*   FROM BV DATE. THIS PREVENTS ENQUIRIES AND REPORTS SHOWING       E14797
+     C*   EMPTY POSITIONS.  THE BKPOS RECORD WILL BE DELETED LATER.       E14797
+     C*                                                                   E14797
+     C********   BOKKEY    CHAINBKPSO                51                   E14797              095907
+     C           BOKKEY    CHAINBKPSO1               51                                       095907
+     C           *IN51     IFEQ '1'                                       E14797
+     C           *IN51     OREQ '0'                                       E14797
+     C           NPSN      ANDEQ0                                         E14797
+     C           ECNP      ANDEQ0                                         E14797
+     C           ANMP      ANDEQ0                                         E14797
+     C                     ADD  1         DREC2                           E14797
+     C***                  MOVE '*'       RECI                            E14797              095907
+     C***                  UPDATBKPHHDF                                   E14797              095907
+     C                     DELETBKPHHDF                                                       095907
+      *                                                                                       CAS002
+     C           CAS002    IFEQ 'Y'                                                           CAS002
+     C                     MOVE *IN99     WIN99   1                                           CAS002
+     C                     MOVE *OFF      *IN99                                               CAS002
+      *                                                                                       CAS002
+      ** If the Revalued Securities Trading Positions Record exists,                          CAS002
+      ** then delete it.                                                                      CAS002
+      *                                                                                       CAS002
+     C********** KLIST0    CHAINSENPVLD0             99                                CAS002 CAS006
+     C           KLIST0    CHAINSEMKVLD0             99                                       CAS006
+     C           *IN99     IFEQ *OFF                                                          CAS002
+     C**********           DELETSENPVLD0                                               CAS002 CAS006
+     C                     DELETSEMKVLD0                                                      CAS006
+     C           KLIST0    CHAINSEMKVAD0             99                                       CAS006
+     C           *IN99     IFEQ *OFF                                                          CAS006
+     C                     DELETSEMKVAD0                                                      CAS006
+     C                     ENDIF                                                              CAS006
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C                     MOVE WIN99     *IN99                                               CAS002
+     C                     ENDIF                                                              CAS002
+     C/COPY WNCPYSRC,SE2550C006
+     C                     SETON                     50                   E14797
+     C                     ELSE                                           E14797
+     C                     ADD  1         LREC2   50
+     C                     SETON                     50
+     C                     END                                            E14797
+     C*
+     C* ELSE SET RECI TO '*' AND UPDATE RECORD
+     C*
+     C                     ELSE
+     C                     ADD  1         DREC2   50
+     C***                  MOVE '*'       RECI                                                095907
+     C***                  UPDATBKPHHDF                                                       095907
+     C                     DELETBKPHHDF                                                       095907
+      *                                                                                       CAS002
+     C           CAS002    IFEQ 'Y'                                                           CAS002
+     C                     MOVE *IN99     WIN99   1                                           CAS002
+     C                     MOVE *OFF      *IN99                                               CAS002
+      *                                                                                       CAS002
+      ** If the Revalued Securities Trading Positions Record exists,                          CAS002
+      ** then delete it.                                                                      CAS002
+      *                                                                                       CAS002
+     C********** KLIST0    CHAINSENPVLD0             99                                CAS002 CAS006
+     C           KLIST0    CHAINSEMKVLD0             99                                       CAS006
+     C           *IN99     IFEQ *OFF                                                          CAS002
+     C**********           DELETSENPVLD0                                               CAS002 CAS006
+     C                     DELETSEMKVLD0                                                      CAS006
+     C           KLIST0    CHAINSEMKVAD0             99                                       CAS006
+     C           *IN99     IFEQ *OFF                                                          CAS006
+     C                     DELETSEMKVAD0                                                      CAS006
+     C                     ENDIF                                                              CAS006
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C                     MOVE WIN99     *IN99                                               CAS002
+     C                     ENDIF                                                              CAS002
+     C/COPY WNCPYSRC,SE2550C007
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ELSE
+     C                     ADD  1         DREC2
+     C                     DELETBKPHHDF                                                       095907
+     C/COPY WNCPYSRC,SE2550C008
+     C                     END
+     C*
+     C*  READ NEXT RECORD
+     C*
+     C                     READ BKPHO                    89
+     C*
+     C                     END
+     C/COPY WNCPYSRC,SE2550C009
+     C/EJECT
+     C*
+     C*  P R O C E S S   B K M T H    F I L E
+     C*
+     C                     MOVEL*BLANKS   SBKSS
+     C*  READ BKMTH FILE
+     C                     READ BKMTH                    89
+     C*
+     C*  DO UNTIL EOF
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C*  INCREMENT COUNT
+     C*
+     C                     ADD  1         IREC5   50
+     C                     ADD  1         IREC57  50                                          243026
+     C           BKID      IFNE '*'
+     C*
+     C*  TEST FOR  SECURITIES  RECORD
+     C*
+     C           BKSS      IFNE SBKSS
+     C                     MOVE BKSS      SBKSS
+     C***********BKSS      SETLLSECTY                    80               E13948
+     C************IN80     IFEQ '1'                                       E13948
+     C***********RECI      IFEQ '*'                                       E13948
+     C*********************SETOF                     80                   E13948
+     C*********************END                                            E13948
+     C*********************END                                            E13948
+     C           BKSS      CHAINSECTY                80                   E13948
+     C           *IN80     IFEQ '0'                                       E13948
+     C           RECI      ANDEQ'*'                                       E13948
+     C                     SETON                         80               E13948
+     C                     END                                            E13948
+     C                     END
+     C*
+     C**IF**IN80*OFF*THEN*SECURITY*RECORD*NOT*FOUND*FOR*THIS*GROUP***     E13948
+     C*
+     C************IN80     IFEQ '0'                                       E13948
+     C*
+     C* IF *IN80 ON THEN SECURITY RECORD NOT FOUND FOR THIS GROUP         E13948
+     C*
+     C           *IN80     IFEQ '1'                                       E13948
+     C                     ADD  1         DREC5   50
+     C                     ADD  1         DREC57  70                                          243026
+     C*********************MOVE '*'       RECI                            E18819
+     C***                  MOVE '*'       BKID                            E18819              095907
+     C***                  UPDATBKMTHDF                                                       095907
+     C                     DELETBKMTHDF                                                       095907
+     C/COPY WNCPYSRC,SE2550C010
+     C                     ELSE
+     C/COPY WNCPYSRC,SE2550C011
+     C           BKED      IFLT RTDATE                                                        095907
+     C                     ADD  1         DREC5                                               095907
+     C                     ADD  1         DREC57  70                                          243026
+     C                     DELETBKMTHDF                                                       095907
+     C***                  ADD  1         LREC5   50                                          095907
+     C***                  END                                                                095907
+     C*
+     C                     ELSE
+     C***                  ADD  1         DREC5                                               095907
+     C                     ADD  1         LREC5   50                                          095907
+     C                     ADD  1         LREC57                                              243026
+     C/COPY WNCPYSRC,SE2550C012
+     C                     END
+     C                     END                                                                095907
+     C                     ELSE                                                               095907
+     C                     ADD  1         DREC5                                               095907
+     C                     ADD  1         DREC57  70                                          243026
+     C                     DELETBKMTHDF                                                       095907
+     C                     END                                                                095907
+     C*
+     C*  READ NEXT RECORD
+     C*
+     C                     READ BKMTH                    89
+     C*
+     C                     END
+     C/COPY WNCPYSRC,SE2550C013
+     C/EJECT
+     C*
+     C*  P R O C E S S     B K P O S D    F I L E
+     C*
+     C                     MOVEL*BLANKS   SBPSC
+     C***********          Z-ADD0         SBPBR                           S01117
+     C                     MOVE *BLANKS   SBPBA                           S01117
+     C                     MOVEL*BLANKS   SBPBK
+     C                     MOVEL*BLANKS   SBPMK
+     C                     MOVE *BLANKS   SBPTV
+     C*
+     C*  READ BKPOSD FILE
+     C*
+     C*********************READ BKPOSD                   89               E16806
+     C*********************READ BKPSO1                   89         E16806E18828
+     C*                                                                   E21640
+     C* READ FIRST RECORD IN FILE BKPSO                                   E21640
+     C*                                                                   E21640
+     C***        *LOVAL    SETLLBKPSO                                     E21640             095907
+     C***                  READ BKPSO                    89               E18828             095907
+     C           *LOVAL    SETLLBKPSO1                                                       095907
+     C                     READ BKPSO1                   89                                  095907
+     C*
+     C*  DO UNTIL EOF
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C*  INCREMENT COUNT
+     C*
+     C                     ADD  1         IREC3   50
+     C                     ADD  1         IREC37  70                                         243026
+     C***********RECI      IFNE '*'                                       E14797
+     C           BPRECI    IFNE '*'                                       E14797
+     C*
+     C* IF BR/SEC/DEPOT/BOOK/MARKET CHANGED SET OFF FLAG TO INDICATE
+     C* FIRST RECORD OF GROUP PROCESSED
+     C*
+     C***********BPBR      IFNE SBPBR                                     S01117
+     C           BPBA      IFNE SBPBA                                     S01117
+     C           BPSC      ORNE SBPSC
+     C           BPBK      ORNE SBPBK
+     C           BPMK      ORNE SBPMK
+     C           BPTV      ORNE SBPTV
+     C***********          MOVE BPBR      SBPBR                           S01117
+     C                     MOVE BPBA      SBPBA                           S01117
+     C                     MOVE BPBK      SBPBK
+     C                     MOVE BPMK      SBPMK
+     C                     MOVE BPTV      SBPTV
+     C                     SETOF                     50
+     C                     MOVE '0'       *IN53                           106644
+     C                     END
+     C*
+     C*  TEST FOR SECURITIES RECORD
+     C*
+     C           BPSC      IFNE SBPSC
+     C                     MOVE BPSC      SBPSC
+     C***********BPSC      SETLLSECTY                    80               E13948
+     C************IN80     IFEQ '1'                                       E13948
+     C***********RECI      IFEQ '*'                                       E13948
+     C*********************SETOF                     80                   E13948
+     C*********************END                                            E13948
+     C*********************END                                            E13948
+     C           BPSC      CHAINSECTY                80                   E13948
+     C           *IN80     IFEQ '0'                                       E13948
+     C           RECI      ANDEQ'*'                                       E13948
+     C                     SETON                         80               E13948
+     C                     END                                            E13948
+     C                     END
+     C*
+     C**IF**IN80*OFF*THEN*SECURITY*RECORD*NOT*FOUND*FOR*THIS*GROUP****    E13948
+     C*
+     C************IN80     IFEQ '0'                                       E13948
+     C*
+     C* IF *IN80 ON THEN SECURITY RECORD NOT FOUND FOR THIS GROUP         E13948
+     C*
+     C           *IN80     IFEQ '1'                                       E13948
+     C                     ADD  1         DREC3   50
+     C                     ADD  1         DREC37  70                                          243026
+     C****************     MOVE '*'       RECI                            E14797
+     C***                  MOVE '*'       BPRECI                          E14797              095907
+     C***                  UPDATBKPOSDF                                                       095907
+     C                     DELETBKPOSDF                                                       095907
+     C/COPY WNCPYSRC,SE2550C014
+     C*
+     C* ELSE SECURITY FOUND
+     C*
+     C                     ELSE
+     C*                                                                   106644
+     C** Check if the the 1st record for this group have a                106644
+     C** corresponding Header in BKPHDD                                   106644
+     C*                                                                   106644
+     C           *IN53     IFEQ '0'                                       106644
+     C                     MOVE '1'       *IN53                           106644
+     C           BKPHDK    CHAINBKPHD                38                   106644
+     C           *IN38     IFEQ '0'                                       106644
+     C           LPSD      ANDNEBPPD                                      106644
+     C                     ADD  1         DREC3                           106644
+     C                     MOVE '*'       BPRECI                          106644
+     C                     UPDATBKPOSDF                                   106644
+     C                     END                                            106644
+     C*                                                                   106644
+     C                     END                                            106644
+      *                                                                                       202113
+      ** Check for Header record if existing                                                  202113
+      *                                                                                       202113
+     C           BKPKEY    CHAINBKPHD                52                                       202113
+      *                                                                                       202113
+     C           *IN52     IFEQ '0'                                                           202113
+     C           RECI      ANDEQ'*'                                                           202113
+     C                     MOVE '1'       *IN52                                               202113
+     C                     ENDIF                                                              202113
+     C*                                                                   106644
+     C           BPRECI    IFNE '*'                                       106644
+     C*
+     C* IF POSITION DATE  GE  B/V  DATE
+     C*
+     C***        BPPD      IFGE BVDATE                                                        095907
+     C           BPPD      IFGE RTDATE                                                        095907
+     C           CD01      ORNE *ZERO                                                         095907
+     C           BPPD      ANDGELCPN                                                          095907
+     C           *IN52     ANDEQ'0'                                                           202113
+     C                     ADD  1         LREC3   50
+     C                     ADD  1         LREC37                                              243026
+     C*
+     C* ELSE IF 1ST RECORD FOR THIS GROUP WITH DATE LT B/V DATE
+     C* AND POSITION NOT FLAT                                             E14797
+     C*
+     C                     ELSE
+     C           *IN50     IFEQ '0'
+     C           NPSN      ANDNE0                                         E14797
+     C           *IN52     ANDEQ'0'                                                           202113
+     C           *IN50     OREQ '0'                                       E14797
+     C***********ECNP      ANDEQ0                                  E14797 E22613
+     C           ECNP      ANDNE0                                         E22613
+     C           *IN52     ANDEQ'0'                                                           202113
+     C************IN50     OREQ '0'                                E14797 E22489
+     C***********ANMP      ANDEQ0                                  E14797 E22613
+     C***********ANMP      ANDNE0                                  E22613 E22489
+     C                     ADD  1         LREC3   50
+     C                     ADD  1         LREC37                                              243026
+     C                     SETON                     50
+     C*
+     C* ELSE SET RECI TO '*' AND UPDATE RECORD
+     C*
+     C                     ELSE
+     C                     ADD  1         DREC3   50
+     C                     ADD  1         DREC37  70                                          243026
+     C****************     MOVE '*'       RECI                            E14797
+     C***                  MOVE '*'       BPRECI                          E14797              095907
+     C***                  UPDATBKPOSDF                                                       095907
+     C                     DELETBKPOSDF                                                       095907
+     C/COPY WNCPYSRC,SE2550C015
+     C                     SETON                     50                   E14797
+     C                     END
+     C                     END
+     C                     END
+     C*                                                                   106644
+     C                     END                                            106644
+     C*
+     C                     ELSE
+     C                     ADD  1         DREC3
+     C                     ADD  1         DREC37  70                                          243026
+     C                     DELETBKPOSDF                                                       095907
+     C/COPY WNCPYSRC,SE2550C016
+     C                     END
+     C*
+     C*  READ NEXT RECORD
+     C*
+     C*********************READ BKPOSD                   89               E16806
+     C*********************READ BKPSO1                   89         E16806E18828
+     C***                  READ BKPSO                    89               E18828              095907
+     C                     READ BKPSO1                   89               E18828              095907
+     C*
+     C                     END
+     C/COPY WNCPYSRC,SE2550C017
+     C/EJECT
+     C*
+     C*  P R O C E S S    B P A C H    F I L E
+     C*
+     C                     MOVEL*BLANKS   SBPSC
+     C*
+     C*  READ BPACH FILE
+     C*
+     C*********************READ BPACH                    89               E16806
+     C***********          READ BPACH1                   89        E16806 E30380
+     C************         READ BPACH                    89               E30380              095907
+     C                     READ BPACH1                   89                                   095907
+     C*
+     C*  DO UNTIL EOF
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C*  INCREMENT COUNT
+     C*
+     C                     ADD  1         IREC4   50
+     C                     ADD  1         IREC47  70                                          243026
+     C           RECI      IFNE '*'
+     C*
+     C*  TEST FOR SECURITIES  RECORD
+     C*
+     C           BCSS      IFNE SBCSS
+     C                     MOVE BCSS      SBCSS
+     C***********BCSS      SETLLSECTY                    80               E13948
+     C************IN80     IFEQ '1'                                       E13948
+     C***********RECI      IFEQ '*'                                       E13948
+     C*********************SETOF                     80                   E13948
+     C*********************END                                            E13948
+     C*********************END                                            E13948
+     C           BCSS      CHAINSECTY                80                   E13948
+     C           *IN80     IFEQ '0'                                       E13948
+     C           RECI      ANDEQ'*'                                       E13948
+     C                     SETON                         80               E13948
+     C                     END                                            E13948
+     C                     END
+     C*
+     C**IF**IN80*OFF*THEN*SECURITY*RECORD*NOT*FOUND*FOR*THIS*GROUP****    E13948
+     C*
+     C************IN80     IFEQ '0'                                       E13948
+     C*
+     C* IF *IN80 ON THEN SECURITY RECORD NOT FOUND FOR THIS GROUP         E13948
+     C*
+     C           *IN80     IFEQ '1'                                       E13948
+     C                     ADD  1         DREC4   50
+     C                     ADD  1         DREC47  70                                          243026
+     C***                  MOVE '*'       RECI                                                095907
+     C**************       UPDATBPACCDF                                   E20085
+     C***                  UPDATBPACHDF                                   E20085              095907
+     C                     DELETBPACHDF                                                       095907
+     C/COPY WNCPYSRC,SE2550C018
+     C*
+     C* ELSE SECURITY FOUND
+     C*
+     C                     ELSE
+     C*
+     C* IF POSITION DATE  GE  B/V  DATE
+     C*
+      * IF CSE087 is OFF then do the following                                                CSE087
+B1   C           CSE087    IFEQ 'N'                                                           CSE087
+     C***        BCAD      IFGE BVDATE                                                        095907
+     C           BCAD      IFGE RTDATE                                                        095907
+     C           CD01      ORNE *ZERO                                                         095907
+     C           BCAD      ANDGELCPN                                                          095907
+     C                     ADD  1         LREC4   50
+     C                     ADD  1         LREC47                                              243026
+     C*
+     C* ELSE SET RECI TO '*' AND UPDATE RECORD
+     C*
+     C                     ELSE
+     C                     ADD  1         DREC4   50
+     C                     ADD  1         DREC47  70                                          243026
+     C***                  MOVE '*'       RECI                                                095907
+     C*******************  UPDATBPACCDF                                   E20085
+     C***                  UPDATBPACHDF                                   E20085              095907
+     C                     DELETBPACHDF                                   E20085              095907
+     C/COPY WNCPYSRC,SE2550C019
+     C                     END
+X1   C                     ELSE                                           CSE087
+     C                     ADD  1         LREC4                           CSE087
+E1   C                     END                                            CSE087
+     C                     END
+     C*
+     C                     ELSE
+     C                     ADD  1         DREC4
+     C                     ADD  1         DREC47  70                                          243026
+     C                     DELETBPACHDF                                   E20085              095907
+     C/COPY WNCPYSRC,SE2550C020
+     C                     END
+     C*
+     C*  READ NEXT RECORD
+     C*
+     C******************** READ BPACH                    89               E16806
+     C***********          READ BPACH1                   89        E16806 E30380
+     C************         READ BPACH                    89               E30380              095907
+     C                     READ BPACH1                   89                                   095907
+     C*
+     C                     END
+     C/COPY WNCPYSRC,SE2550C021
+     C*
+     C* OUTPUT CONTROL REPORT AND WRITE AUDIT RECORD
+     C*
+     C           EAUDIT    TAG                             ** EAUDIT **
+     C*
+     C                     EXSR AUDIT
+     C*
+     C                     SETON                     LR
+     C*
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SUBROUTINE TO ACCESS ICD 1 AND ICD FOR SE                     *
+     C* CALLS: ZSYSTM, ZICDSE                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C                     EXSR ZSYSTM
+     C*
+     C* ERROR IN ZSYSTM
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            ***************
+     C                     Z-ADD1         DBASE            **DB ERROR 01**
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C*
+     C                     ELSE
+      *                                                                   S11029
+      ***  Access ICD 2.                                                  S11029
+      *                                                                   S11029
+     C                     EXSR ZICD2                                     S11029
+     C           *IN99     IFEQ '1'                                       S11029
+     C                     SETON                     U7U8                 S11029
+     C           *LOCK     IN   LDA                                       S11029
+     C                     MOVE 'TABLE'   DBFILE           ***************S11029
+     C                     MOVEL'ICDR2'   DBKEY            * DB ERROR 04 *S11029
+     C                     Z-ADD4         DBASE            ***************S11029
+     C                     OUT  LDA                                       S11029
+     C                     EXSR *PSSR                                     S11029
+     C                     ELSE                                           S11029
+     C*
+     C                     EXSR ZICDSE
+     C*
+     C* ERROR IN ZICDSE
+     C*
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'TABLE'   DBFILE           **DB ERROR 02**
+     C                     MOVELTKEY      DBKEY            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C                     ENDIF                                          S11029
+     C                     END
+     C*
+      ***  Retention Date is not used anywhere in this program.           S11029
+      *                                                                   S11029
+     C**CALCULATE*RETENTION*DATE***************************************   S11029
+     C**=*RUN*DATE*LESS*(RETENTION*OF*SETTLED*TRADES * 31)*************   S11029
+     C***********                                                         S11029
+     C***********RTST      MULT 31        WRK5P   50                      S11029
+     C***********RUND      SUB  WRK5P     RTDATE  50                      S11029
+     C* CALCULATE RETENTION DATE                                                              095907
+     C* = RUN DATE LESS (RETENTION OF SETTLED TRADES * 31)                                    095907
+     C           RTST      MULT 31        WRK5P   50                                          095907
+     C           RUND      SUB  WRK5P     RTDATE  50                                          095907
+     C*
+     C* CALCULATE B/V DATE
+     C* = RUN DATE LESS BACK VALUE PERIOD
+     C*
+     C***        RUND      SUB  BKVP      BVDATE  50                                          095907
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE2550CCP1                                           S01408
+     C*                                                                   S01408
+      *                                                                   S11029
+      ***  If Backvalue Date is after End of Last Year, then change       S11029
+      ***  it to Beginning of Year, (done for Cost of Funds Report).      S11029
+      *                                                                   S11029
+     C***        BVDATE    IFGT LEOY                                      S11029              095907
+     C***        LEOY      ADD  1         BVDATE                          S11029              095907
+     C***                  ENDIF                                          S11029              095907
+     C/COPY WNCPYSRC,SE2550C022
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SUBROUTINE TO OUTPUT CONTROL REPORT                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C* READ BKPHD  AUDIT RECORD
+     C*
+     C           *INU8     IFEQ '0'
+     C                     READ BKPHDAF                  99
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            ***************
+     C                     Z-ADD3         DBASE            **DB ERROR 03**
+     C                     MOVEL'BKPHDA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C                     END
+     C*
+     C* IF RECORD COUNT NOT EQUAL TO AUDIT COUNT
+     C*
+     C           NORE      IFNE IREC1
+     C                     SETON                     57U8
+     C                     END
+     C                     Z-ADDNORE      NORE1
+     C*
+     C* UPDATE BKPHDA RECORD
+     C*
+     C           *INU8     IFEQ '0'
+     C                     Z-ADDLREC1     NORE
+     C                     UPDATBKPHDAF
+     C                     END
+     C*
+     C* READ BKPHH AUDIT RECORD
+     C*
+     C                     READ BKPHHAF                  99
+     C           *INU8     IFEQ '0'
+     C           *IN99     ANDEQ'1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            ***************
+     C                     Z-ADD4         DBASE            **DB ERROR 04**
+     C                     MOVEL'BKPHHA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C* IF RECORD COUNT NOT EQUAL TO AUDIT COUNT
+     C*
+     C           NORE      IFNE IREC2
+     C                     SETON                     58U8
+     C                     END
+     C                     Z-ADDNORE      NORE2
+     C*
+     C* UPDATE BKPHHA RECORD
+     C*
+     C           *INU8     IFEQ '0'
+     C                     Z-ADDLREC2     NORE
+     C                     UPDATBKPHHAF
+     C                     END
+     C*
+     C* READ BKMTH  AUDIT RECORD
+     C*
+     C                     READ BKMTHAF                  99
+     C           *INU8     IFEQ '0'
+     C           *IN99     ANDEQ'1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            ***************
+     C                     Z-ADD5         DBASE            **DB ERROR 05**
+     C                     MOVEL'BKMTHA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C* IF RECORD COUNT NOT EQUAL TO AUDIT COUNT
+     C*
+     C           NORE      IFNE IREC5
+     C                     SETON                     61U8
+     C                     END
+     C************         Z-ADDNORE      NORE5                                               095907
+     C                     Z-ADDNORE      NORE5   50                                          095907
+     C*
+     C* UPDATE BKMTHA RECORD
+     C*
+     C           *INU8     IFEQ '0'
+     C                     Z-ADDLREC5     NORE
+     C                     UPDATBKMTHAF
+     C                     END
+     C*
+     C* READ BKPOS AUDIT RECORD
+     C*
+     C                     READ BKPOSAF                  99
+     C           *INU8     IFEQ '0'
+     C           *IN99     ANDEQ'1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            ***************
+     C                     Z-ADD6         DBASE            **DB ERROR 06**
+     C                     MOVEL'BKPOSA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C* IF RECORD COUNT NOT EQUAL TO AUDIT COUNT
+     C*
+     C           NORE      IFNE IREC3
+     C                     SETON                     59U8
+     C                     END
+     C************         Z-ADDNORE      NORE3                                               095907
+     C                     Z-ADDNORE      NORE3   50                                          095907
+     C*
+     C* UPDATE UDEPPA RECORD
+     C*
+     C           *INU8     IFEQ '0'
+     C                     Z-ADDLREC3     NORE
+     C                     UPDATBKPOSAF
+     C                     END
+     C*
+     C* READ BPACH AUDIT RECORD
+     C*
+     C                     READ BPACHAF                  99
+     C           *INU8     IFEQ '0'
+     C           *IN99     ANDEQ'1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            ***************
+     C                     Z-ADD7         DBASE            **DB ERROR 07**
+     C                     MOVEL'BPACHA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C* IF RECORD COUNT NOT EQUAL TO AUDIT COUNT
+     C*
+     C           NORE      IFNE IREC4
+     C                     SETON                     60U8
+     C                     END
+     C************         Z-ADDNORE      NORE4                                               095907
+     C                     Z-ADDNORE      NORE4   50                                          095907
+     C*
+     C* UPDATE UDEPPA RECORD
+     C*
+     C           *INU8     IFEQ '0'
+     C                     Z-ADDLREC4     NORE
+     C                     UPDATBPACHAF
+     C                     END
+     C*
+     C* OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADR
+     C           *INU7     IFEQ '0'
+     C*
+     C***********IREC1     IFEQ 0                                         E29170
+     C***********IREC2     ANDEQ0                                         E29170
+     C***********IREC3     ANDEQ0                                         E29170
+     C***********IREC4     ANDEQ0                                         E29170
+     C***********          WRITENONE                                      E29170
+     C***********          ELSE                                           E29170
+     C                     WRITECONTROL
+     C***********          END                                            E29170
+     C*
+     C                     ELSE
+     C                     WRITEERROR
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITETRAIL                                     E29170
+     C*
+     C                     ENDSR
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE2550CCP2                                           S01408
+     C*                                                                   S01408
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+     C/COPY WNCPYSRC,SE2550C023
+      *                                                                   S01117
+     C**********************************************************************
+      /EJECT                                                              S11029
+     C/COPY ZSRSRC,ZICD2Z1                                                S11029
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+     C/COPY WNCPYSRC,SE2550C024
+**  CPY@
+(c) Finastra International Limited 2001

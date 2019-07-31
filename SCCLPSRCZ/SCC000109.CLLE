@@ -1,0 +1,149 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC PEA Initiation Program')                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000109 - PEA Initiation Program                          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD020185           Date 29Apr13              */
+/*                      AR1009800          Date 20Nov12              */
+/*                      CSC054  *CREATE    Date 23Feb12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD020185 - Replace GO000129 with GPGLCSGEN                  */
+/*       AR1009800 - Report field in SDBANKPD of PEA system should   */
+/*                   be restored to its original value               */
+/*       CSC054 - Period End Adjustments                             */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&PRFL &PRFP)
+ 
+             DCL        VAR(&PRFL) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PRFP) TYPE(*CHAR) LEN(2)
+ 
+             DCL        VAR(&DMLIBP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JLIBP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(128)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          Ltd. 2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SCC000109 - SC PEA Initiation Program') +
+                          TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Create LDA data area */                                                            /*AR1009800*/
+                                                                                       /*AR1009800*/
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)                         /*AR1009800*/
+             MONMSG     MSGID(CPF0000)                                                 /*AR1009800*/
+                                                                                       /*AR1009800*/
+/** Update data areas */
+ 
+             CHGVAR     VAR(&DMLIBP) VALUE(&PRFP *CAT 'DMLIB')
+             CHGVAR     VAR(&JLIBP) VALUE(&PRFP *CAT 'JLIB')
+ 
+SDSTAT:      CHGDTAARA  DTAARA(&DMLIBP/SDSTAT (6 2)) VALUE(&PRFP)
+ 
+             CALL       PGM(AOMMODR0) PARM('*DBERR' '*FIRST' &MMOD)
+ 
+TIDTA:       IF         COND(%SST(&MMOD 103 1) *EQ 'Y') THEN(+
+                CHGDTAARA  DTAARA(&DMLIBP/TIDTA (11 2)) VALUE(&PRFP))
+ 
+ 
+CGDTA:       IF         COND(%SST(&MMOD 101 1) *EQ 'Y') THEN(+
+                CHGDTAARA  DTAARA(&DMLIBP/CGDTA (7 2)) VALUE(&PRFP))
+ 
+CFSTAT:      IF         COND(%SST(&MMOD 70 1) *EQ 'Y') THEN(DO)
+                CHGDTAARA  DTAARA(&DMLIBP/CFSTAT (1 2)) VALUE(&PRFP)
+                CHGDTAARA  DTAARA(&DMLIBP/CFSTAT (4 2)) VALUE(&PRFP)
+             ENDDO
+ 
+MSSTAT:      CHGDTAARA  DTAARA(&DMLIBP/MSSTAT (255 2)) VALUE(&PRFP)
+             MONMSG     MSGID(CPF1015)
+ 
+RPTRG:       CHGDTAARA  DTAARA(&DMLIBP/RPTRG (1 2)) VALUE(&PRFP)
+             MONMSG     MSGID(CPF1015)
+             CHGDTAARA  DTAARA(&DMLIBP/RPTRG (21 2)) VALUE(&PRFP)
+             MONMSG     MSGID(CPF1015)
+             CHGDTAARA  DTAARA(&DMLIBP/RPTRG (39 2)) VALUE(&PRFP)
+             MONMSG     MSGID(CPF1015)
+             CHGDTAARA  DTAARA(&DMLIBP/RPTRG (49 2)) VALUE(&PRFP)
+             MONMSG     MSGID(CPF1015)
+ 
+CFBRCHPD:    OVRDBF     FILE(CFBRCHPD) TOFILE(&DMLIBP/CFBRCHPD)
+             CALL       PGM(UP8005) PARM(&PRFP)
+             DLTOVR     FILE(CFBRCHPD)
+ 
+MSSENDPD:    OVRDBF     FILE(MSSENDPD) TOFILE(&DMLIBP/MSSENDPD)
+             CALL       PGM(UP8006) PARM(&PRFL &PRFP)
+             DLTOVR     FILE(MSSENDPD)
+ 
+MSRCVFPD:    OVRDBF     FILE(MSRCVFPD) TOFILE(&DMLIBP/MSRCVFPD)
+             CALL       PGM(UP8016) PARM(&PRFL &PRFP)
+             DLTOVR     FILE(MSRCVFPD)
+ 
+MPHAS:       CHGDTAARA  DTAARA(&DMLIBP/MPHAS (1 1)) VALUE('A')
+ 
+/** Clear journal sequence events file */
+ 
+             CLRPFM     FILE(&DMLIBP/SCJSEQPD)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** Change previous run date field in JNSTAT; override to correct version */
+/**  of SDBANKPD                                                          */
+ 
+             OVRDBF     FILE(SDBANKPD) TOFILE(&DMLIBP/SDBANKPD) +
+                          OVRSCOPE(*JOB)
+             CALL       PGM(SM000004)
+             DLTOVR     FILE(SDBANKPD) LVL(*JOB)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** Restore PEA value of User Report Title in SDBANKPD file */                         /*AR1009800*/
+                                                                                       /*AR1009800*/
+             CALL      PGM(SC000120)                                                   /*AR1009800*/
+                                                                                       /*AR1009800*/
+/** Setup the zonal system */
+ 
+             CALL      PGM(UPC0014) PARM(&PRFP)
+ 
+/** Add all triggers and rebuild global files */
+ 
+             TRIGZONE   FILE(*ALL) ACTION(*ADDTRIG)
+ 
+             CALL       GOC0100A
+             CALL       GPGLCSGEN                                                       /*MD020185*/
+             MONMSG     MSGID(CPF0000)
+ 
+/** Start Up Input Cycle Background Jobs */
+ 
+             CALL       PGM(SCC0204)
+ 
+/** Start MQ transaction listener */
+ 
+             CALL       PGM(LSNPORCTL) PARM('START')
+ 
+             GOTO       CMDLBL(ENDP)
+ 
+ABNOR:       CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000109 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDP:        ENDPGM

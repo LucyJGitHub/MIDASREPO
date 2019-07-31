@@ -1,0 +1,258 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Load standing JE into batch input')           *
+     H/TITLE Create Journal Postings From Interface File
+     F*****************************************************************
+     F*                                                               *
+     F*                                                               *
+     F*  Midas  GENERAL LEDGER MODULE                                 *
+     F*                                                               *
+     F*   GL0180U - CREATE JOURNAL POSTINGS FROM STANDING JOURNALS    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*   CREATED FOR SAR S01234. GL TEMPLATE ENHANCEMENTS            *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027838           Date 02Jul14               *
+      *                 AR1093096          Date 30Sep13               *
+      *                 CAP207             Date 10Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL013             Date 29Mar02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 154869           DATE : 25MAR99               *
+      *                099867            DATE : 16APR97               *
+     F*              : 080984            DATE : 11DEC95               *
+     F*              : 088225            DATE : 11OCT95               *
+     F*              : S01408            DATE : 18AUG94               *
+     F*              : S01340            DATE : 21FEB92               *
+     F*              : S01199            DATE : 02MAY90               *
+     F*              : S01251            DATE : 03FEB90               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD027838 - Match the structure of GLJENPL1 for GLJESPL1.     *
+      *             (Recompile)                                       *
+      *  AR1093096 - ABC - Reservations not removed for JRNE.         *
+      *              (Child: AR1093097) (Recompile)                   *
+      *  CAP207 - Account Balance Check extended to other APIs        *
+      *           (Recompile)                                         *
+      *  CGL013 - MT94x Messages Generation                           *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+     F*   154869 - Initialise original ccy amount to zero, so that    *
+     F*            it is written to the file.                         *
+     F*  099867 - Journal entry template retains value date.  If value*
+     F*           date is 0, default to run date.                     *
+     F*   080984 - Initialise 'NO. OF ITEMS.'  This ensures correct   *
+     F*            processing in GL0121M.                             *
+     F*   088225 - Incorporate fix from 070674                        *
+     F*            Posting Date and Value Date should use current     *
+     F*            Run Date.                                          *
+     F*   S01408 - Core hook GL0180UFPG added                         *
+     F*            Core hook GL0180UIPG added                         *
+     F*            Core hook GL0180UCAU added                         *
+     F*   S01340 - RECOMPILED FOR MIS RELEASE 10                      *
+     F*   S01199 - RECOMPILED FOR CURSOR SENSITIVE HELP               *
+     F*   S01251 - Synon Field/Program Name Changes.
+     F*****************************************************************
+     F************GLBTTEL1IF  E           K        DISK                   S01251
+     FGLJESPL1IF  E           K        DISK                               S01251
+      * RTV: GL Batch Posting Standing Journal File  Retrieval index
+      *
+     F************GLBTREL0O   E           K        DISK            A      S01251
+     FGLJENPL0O   E           K        DISK                      A        S01251
+      * UPD: GL Batch Posting          Update index
+     F*                                                                   S01408
+     FGLJESXL2IF  E           K        DISK         KINFSR *PSSR                              CGL013
+     F            GLJENXD0                          KRENAMEGLJESXD0                           CGL013
+      ** RTV: Midas GL Standing Journals - Additional Information                             CGL013
+      *                                                                                       CGL013
+     FGLJENXL3O   E           K        DISK         KINFSR *PSSR A                            CGL013
+      ** UPD: Midas GL Journal Entry File - Additional Information                            CGL013
+      *                                                                                       CGL013
+     F** Core hook for externalisation.                                   S01408
+     F/COPY WNCPYSRC,GL0180UFPG                                           S01408
+     F*                                                                   S01408
+      *
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80               Copyright     array
+      /EJECT
+      * Data structures:-
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+     I*                                                                   088225
+     I** Retrieve Rundate                                                 088225
+     I*                                                                   088225
+     IRUNDAT      DS                             13                       088225
+     I                                    P   8  100RDNO                  088225
+     ILDA       E DSLDA                         256                                           CGL013
+      ** Local Data Area for Database Error Details                                           CGL013
+      *                                                                                       CGL013
+     ISCSARD    E DSSCSARDPD                                                                  CGL013
+      ** Switchable Features DS                                                               CGL013
+      *                                                                                       CGL013
+     IDSFDY     E DSDSFDY                                                                     CGL013
+      ** 200 Byte Data Structure for Incoming Data from Access Program                        CGL013
+     I*                                                                   S01408
+     I** Core hook for externalisation.                                   S01408
+     I/COPY WNCPYSRC,GL0180UIPG                                           S01408
+     I*                                                                   S01408
+      /EJECT
+      *****************************************************************
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P@IFBN  3        St/Je  Batch No
+     C                     PARM           P@BHNO  3        ADD Batch No
+      *****************************************************************
+     C/COPY WNCPYSRC,GL0180UC01
+     C*
+     C* Locate Stand Journ Posting Records using Batch Number
+     C*
+     C           P@IFBN    SETLL@BTREAL
+     C                     READ @BTREAL                  86
+     C*
+     C* Check Record Read is from the same batch and not EOF
+     C*
+     C           *IN86     DOWEQ'0'                        .DOW =/= E  OF
+     C********** BTJDNB    ANDEQP@IFBN                     ¦              S01251
+     C           BTBTNB    ANDEQP@IFBN                     ¦              S01251
+     C*                                                    ¦
+     C* Once Stand Jou Posting Record found Write it to GL Batch Posting
+     C* File with ADD Batch Number as key to the record.
+     C*                                                    ¦
+     C******************** MOVE P@BHNO    BTJDNB           ¦              S01251
+     C           *NAMVAR   DEFN           RUNDAT                          088225
+     C                     IN   RUNDAT                                    088225
+     C           BTVLDT    IFEQ *ZEROS                                    099867
+     C                     MOVE RDNO      BTVLDT                          088225
+     C                     ENDIF                                          099867
+     C/COPY WNCPYSRC,GL0180UC02
+     C                     MOVE RDNO      BTPTDT                          088225
+     C                     MOVE P@BHNO    BTBTNB           ¦              S01251
+     C                     Z-ADD1         BTNITM           ¦              080984
+     C                     Z-ADD0         BTOAMT                          154869
+     C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
+     C                     WRITE@BTREAK                    ¦
+      *                                                                                       CGL013
+      ** If MT94x Messages Generation (CGL013) is installed, if                               CGL013
+      ** additional information exists in GLJESXPD for the same                               CGL013
+      ** batch and item number, output to GLJENXPD.                                           CGL013
+      *                                                                                       CGL013
+     C           CGL013    IFEQ 'Y'                                                           CGL013
+     C           KJESX     CHAINGLJESXL2             30                                       CGL013
+     C           *IN30     IFEQ *OFF                                                          CGL013
+     C           BAPTDT    IFEQ *ZEROS                                                        CGL013
+     C                     MOVE RDNO      BAPTDT                                              CGL013
+     C                     ENDIF                                                              CGL013
+     C                     MOVE P@BHNO    BABTNB                                              CGL013
+     C                     WRITEGLJENXD0                                                      CGL013
+     C                     ENDIF                                                              CGL013
+     C                     ENDIF                                                              CGL013
+      *                                                                                       CGL013
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,GL0180UCAU                                           S01408
+     C*                                                                   S01408
+     C*                                                    ¦
+     C* Locate Next Stand Jou Posting Record using Batch Number
+     C*                                                    ¦
+     C           P@IFBN    READE@BTREAL                  86¦
+     C*                                                    ¦
+     C                     END                             'DOW 1
+     C*
+     C                     SETON                         LR
+     C*
+      *                                                                                       CGL013
+      *****************************************************************                       CGL013
+      *                                                               *                       CGL013
+      * *INZSR - Program Initialisation routine                       *                       CGL013
+      *                                                               *                       CGL013
+      * Called by: Implicitly on program activation                   *                       CGL013
+      *                                                               *                       CGL013
+      * Calls: None                                                   *                       CGL013
+      *                                                               *                       CGL013
+      *****************************************************************                       CGL013
+      *                                                                                       CGL013
+     C           *INZSR    BEGSR                                                              CGL013
+      *                                                                                       CGL013
+      ** Access SAR details file to see if CGL013 is installed.                               CGL013
+      *                                                                                       CGL013
+     C           *NAMVAR   DEFN           LDA                                                 CGL013
+     C                     CALL 'AOSARDR0'                                                    CGL013
+     C                     PARM *BLANKS   PRTCD   7                                           CGL013
+     C                     PARM '*VERIFY' POPTN   7                                           CGL013
+     C                     PARM 'CGL013'  PSARD   6                                           CGL013
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL013
+      *                                                                                       CGL013
+     C           PRTCD     IFNE *BLANKS                                                       CGL013
+     C           PRTCD     ANDNE'*NRF    '                                                    CGL013
+     C           *LOCK     IN   LDA                                                           CGL013
+     C                     MOVE 'SCSARDPD'DBFILE                                              CGL013
+     C                     MOVEL'001'     DBASE                                               CGL013
+     C                     MOVEL'CGL013'  DBKEY                                               CGL013
+     C                     OUT  LDA                                                           CGL013
+     C                     EXSR *PSSR                                                         CGL013
+     C                     ENDIF                                                              CGL013
+      *                                                                                       CGL013
+     C           PRTCD     IFEQ *BLANK                                                        CGL013
+     C                     MOVE 'Y'       CGL013  1                                           CGL013
+     C                     ELSE                                                               CGL013
+     C                     MOVE 'N'       CGL013                                              CGL013
+     C                     ENDIF                                                              CGL013
+      *                                                                                       CGL013
+     C           KJESX     KLIST                                                              CGL013
+     C                     KFLD           P@IFBN                                              CGL013
+     C                     KFLD           BTBINB                                              CGL013
+      *                                                                                       CGL013
+     C                     ENDSR                                                              CGL013
+      *                                                                                       CGL013
+      *****************************************************************                       CGL013
+      /EJECT                                                                                  CGL013
+      *****************************************************************                       CGL013
+      *                                                                                       CGL013
+      *****************************************************************                       CGL013
+      *                                                               *                       CGL013
+      * *PSSR  - Program exception error routine                      *                       CGL013
+      *          Called automatically if a program error occurs,      *                       CGL013
+      *          or directly by the program code using EXSR.          *                       CGL013
+      *          This subroutine DUMPs the program just once.         *                       CGL013
+      *                                                               *                       CGL013
+      * Called by: ZZINIT                                             *                       CGL013
+      *                                                               *                       CGL013
+      * Calls: None                                                   *                       CGL013
+      *                                                               *                       CGL013
+      *****************************************************************                       CGL013
+      *                                                                                       CGL013
+     C           *PSSR     BEGSR                                                              CGL013
+      *                                                                                       CGL013
+     C           @RUN      IFEQ *BLANK                                                        CGL013
+     C                     MOVE 'Y'       @RUN    1                                           CGL013
+     C                     DUMP                                                               CGL013
+     C                     CALL 'DBERRCTL'                                                    CGL013
+     C                     ENDIF                                                              CGL013
+      *                                                                                       CGL013
+     C                     MOVE *ON       *INU7                                               CGL013
+     C                     MOVE *ON       *INU8                                               CGL013
+     C                     MOVE *ON       *INLR                                               CGL013
+     C                     RETRN                                                              CGL013
+      *                                                                                       CGL013
+     C                     ENDSR                                                              CGL013
+      *                                                                                       CGL013
+      *****************************************************************                       CGL013
+      /EJECT                                                                                  CGL013
+      *****************************************************************                       CGL013
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+** CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,214 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Daily Exchange Rates List')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE8405 -Daily Exchange Rates List                            *
+      *                                                               *
+      *  Called by: SEC0301                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2017                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSE108 *CREATE     Date 06Oct17               *
+      *                 nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSE108 - Yearly Profitability Report and Enquiry             *
+      *                                                               *
+      *****************************************************************
+     FSE8405P1O   E                    PRINTER      KINFDS SPOOL      UC
+     FSEDEXRPDIF  E           K        DISK
+     FSDBANKPDIF  E           K        DISK
+      /COPY ZSRSRC,ZEDITZ1
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISPOOL       DS
+      *
+      **  DS FOR SPOOL FILE NAME
+      *
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+     IRUNDT       DS
+      *
+      ** RUNDAT data area
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+      **  Execute initial processing
+      *
+     C                     EXSR INIT
+      *
+      **  Execute detail processing
+      *
+     C                     EXSR DETL
+      *
+      **  Execute final processing
+      *
+     C                     EXSR FINAL
+     C*
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  DETL - DETAIL PROCESSING SUBROUTINE                          *
+      *                                                               *
+      *****************************************************************
+     C           DETL      BEGSR
+      *
+     C                     READ SEDEXRPD                 50
+     C                     MOVE *BLANKS   PRCCCY  3
+     C                     MOVE *BLANKS   PRYEAR  2
+      *
+     C           *IN50     IFEQ '1'
+      *
+     C           *IN12     IFEQ '0'
+     C                     MOVE '1'       *IN12
+     C                     OPEN SE8405P1
+     C                     EXSR RCFP1
+     C                     ENDIF
+      *
+     C                     WRITEHEADER
+     C                     WRITENODETS
+     C                     WRITETRAILER
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *
+     C           *IN50     DOWEQ'0'
+      *
+     C           *IN12     IFEQ '0'
+     C                     MOVE '1'       *IN12
+     C                     OPEN SE8405P1
+     C                     EXSR RCFP1
+     C                     ENDIF
+      *
+     C                     MOVE DLEXRT    ZFIELD
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    EXCRAT
+      *
+     C           LCOUNT    IFGE 58
+     C           DLCCCY    ORNE PRCCCY
+     C           DLYEAR    ORNE PRYEAR
+     C                     WRITEHEADER
+     C                     Z-ADD12        LCOUNT
+     C                     END
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         LCOUNT
+     C                     MOVE DLCCCY    PRCCCY
+     C                     MOVE DLYEAR    PRYEAR
+     C                     READ SEDEXRPD                 50
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT - INITIAL PROCESSING SUBROUTINE                         *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C                     PARM           SEQ     5
+      *
+      ** Access bank details
+      *
+     C                     READ SDBANKPD                 55
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     Z-ADD0         LCOUNT  20
+      *
+      ** Read in RUNDAT data area
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN30
+     C                     ENDIF
+      *
+     C                     MOVE '0'       *IN12
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *    FINAL - Final processing                                   *
+      *                                                               *
+      *    CALLED BY: MAIN - Main processing                          *
+      *    CALLS:                                                     *
+      *                                                               *
+      *****************************************************************
+     C           FINAL     BEGSR
+      *
+      ** Check if new page required
+      *
+     C           LCOUNT    IFGE 55
+     C                     WRITEHEADER
+     C                     END
+      *
+      ** Write 'END OF REPORT' line to report
+      *
+     C                     WRITETRAILER
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            ** RCFP1 **
+      *
+      ** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+     C/EJECT
+      /COPY ZSRSRC,ZEDITZ2
+      *

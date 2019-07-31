@@ -1,0 +1,158 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Spot Rate History Purge')                       */
+/*********************************************************************/
+/*                                                                   */
+/*     MIDAS GENERAL LEDGER MODULE                                   */
+/*                                                                   */
+/*     GLC0696 - SPOT RATE HISTORY FILE PURGE                        */
+/*                                                                   */
+/*       (C) FINASTRA INTERNATIONAL LIMITED 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021155           Date 09Jul13              */
+/*                      CGL127AE *CREATE   Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD021155 - COB Restructure Phase 1 remnants                 */
+/*                - CPY and RGZ of *X files is unneccessary          */
+/*                - RGZ of *PA files (single record) is pointless    */
+/*       CGL127AE - COB Restructure - GL COB Optimisation Phase 1    */
+/*                                                                   */
+/*********************************************************************/
+/**/
+             PGM        PARM(&CNAM &CSEQ)
+/**/
+/*   Declare Variables    */
+/**/
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&SEVENT) TYPE(*CHAR) LEN(15)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&START) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2001')
+/**/
+/* Write current journal sequence number to file SCJSEQPD  */
+/**/
+             CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)
+             CHGVAR     VAR(&STEXT) VALUE('Start of ' *CAT &CNAM +
+                          *CAT &CSEQA)
+             CHGVAR     VAR(&SEVENT) VALUE(&CNAM *TCAT &CSEQA)
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                          FLAG('S') TEXT(&STEXT)
+/**/
+/*   Set off Switches                     */
+/**/
+             CHGJOB     SWS(XXXXXX00)
+/**/
+/*  Set up Library Name                   */
+/**/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+             CHGVAR     VAR(&DMLIB) VALUE(&PREFIX *CAT 'DMLIB')
+/**/
+/* CALL SPOT RATES HISTORY PURGE PROGRAM */
+/**/
+             CALL       PGM(GL0696)
+/*******************************************************************/                   /*MD021155*/
+/**IF*PURGES*ARE*SUCCESSFUL*THEN*REORGANIZE*MASTER*FILES************/                   /*MD021155*/
+/*******************************************************************/                   /*MD021155*/
+/**********  IF         COND(%SWITCH(XXXXXX00)) THEN(DO)           */                   /*MD021155*/
+/**********  CPYF       FROMFILE(&DMLIB/SDCUHSPD) +                */                   /*MD021155*/
+/**********               TOFILE(QTEMP/SDCUHSPDX) MBROPT(*REPLACE) +*/                  /*MD021155*/
+/**********               CRTFILE(*YES)                            */                   /*MD021155*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)             */                   /*MD021155*/
+/**********  CALL       PGM(SCC000060) PARM('SDCUHSPDX' '*FIRST')  */                   /*MD021155*/
+/**********                                                        */                   /*MD021155*/
+/**********  CPYF       FROMFILE(QTEMP/SDCUHSPDX) +                */                   /*MD021155*/
+/**********               TOFILE(&DMLIB/SDCUHSPD) MBROPT(*REPLACE) +*/                  /*MD021155*/
+/**********               CRTFILE(*NO)                             */                   /*MD021155*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +*/                  /*MD021155*/
+/**********               FILE(&DMLIB/SDBSHSPD))                   */                   /*MD021155*/
+/**********  CPYF       FROMFILE(&DMLIB/SDCUHSPA) +                */                   /*MD021155*/
+/**********               TOFILE(QTEMP/SDCUHSPAX) MBROPT(*REPLACE) +*/                  /*MD021155*/
+/**********               CRTFILE(*YES)                            */                   /*MD021155*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)             */                   /*MD021155*/
+/**********  CALL       PGM(SCC000060) PARM('SDCUHSPAX' '*FIRST')  */                   /*MD021155*/
+/*******************************************************************/                   /*MD021155*/
+/**********  CPYF       FROMFILE(QTEMP/SDCUHSPAX) +                */                   /*MD021155*/
+/**********               TOFILE(&DMLIB/SDCUHSPA) MBROPT(*REPLACE) +*/                  /*MD021155*/
+/**********               CRTFILE(*NO)                             */                   /*MD021155*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +*/                  /*MD021155*/
+/**********               FILE(&DMLIB/SDCUHSPA))                   */                   /*MD021155*/
+/**********  ENDDO                                                 */                   /*MD021155*/
+/*******************************************************************/                   /*MD021155*/
+/**********  ELSE       CMD(DO)                                    */                   /*MD021155*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*MD021155*/
+ 
+/**/
+/* Retrieve Attributes of current job  */
+/**/
+ABNOR:       RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)
+ 
+/**/
+/* Retrieve the most recent journal entry sequence number */
+/* for the specific job                                   */
+/**/
+ 
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) +
+                          TOENT(*FIRST) SEARCH(*DESCEND) +
+                          JOB(&NBR/&USR/&JOB) RTNSEQNBR(&START) +
+                          RTNRCV(&SJRNRCVR)
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
+             CHGVAR     VAR(&START) VALUE(0)
+             ENDDO
+ 
+/**/
+/* Determine starting journal sequence number of current job */
+/**/
+             SCRTVJEVT  EVENT(&SEVENT) FLAG('S') RECEIVER(&FJRNRCVR) +
+                           SEQ(&FINISH)
+ 
+/**/
+/* Remove journal changes */
+/**/
+ 
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                          THEN(DO)
+             RMVJRNCHG  JRN(ICJRN) FILE((SDCUHSPD) (SDCUHSPA)) +
+                          FROMENT(&START) TOENT(&FINISH) +
+                          RCVRNG(&SJRNRCVR &FJRNRCVR)
+             MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)
+             ENDDO
+/**/
+/* DATABASE ERROR ROUTINE */
+/**/
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             ENDDO
+/**/
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Banking Systems Ltd.')
+ 
+/**/
+/* Write current journal sequence number to file SCJSEQPD, using     */
+/* command SCWRTJREG */
+/**/
+             CHGVAR     VAR(&STEXT) VALUE(' ')
+             CHGVAR     VAR(&STEXT) VALUE('End of ' *CAT &CNAM +
+                          *CAT &CSEQA)
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                          FLAG('E') TEXT(&STEXT)
+             ENDPGM

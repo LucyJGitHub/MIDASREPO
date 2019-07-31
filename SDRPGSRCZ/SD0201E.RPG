@@ -1,0 +1,1108 @@
+     H        1   Y
+      *****************************************************************
+/*OVR *  OVRDBF FILE(GPACFXL0) TOFILE(GPACOFXL0)                      *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Display account officer enquiry subfile')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0201E - Midas SD Display account officer.                  *
+      *                                                               *
+      *  Function:  This program displays an account officer record   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 242538             Date 16Oct06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD003             Date 01Jul99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             DATE 05Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01486             DATE 21JUN94               *
+      *                 S01459             DATE 21JUN94               *
+      *                 S01212             Date 14APR90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  242538 - Show Global Account Officer Code.                   *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  CPB001 - 'Private Banking' Module                            *
+      *  S01486 - Private Banking development: addition of            *
+      *           Account officer telephone number and                *
+      *           Account officer extention number                    *
+      *  S01459 - Addition of headerbox and PSSR processing.          *
+      *  S01212 - /Copy and Window Processing                         *
+      *                                                               *
+      *****************************************************************
+     F*Display A/c Officers wdw Initialise Program F-Spec
+     F/COPY WNCPYSRC,SD0201EFPG
+     FSD0201E#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Display account officer enquiry subfile
+      *
+     FSDACOFL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Account officers retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     FGPACFXL0IF  E           K        DISK                           UC                      242538
+     F                                              KINFSR *PSSR                              242538
+     F            GPACOFXD0                         KRENAMEGPACFXD0                           242538
+      *                                                                                       242538
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E                    OVRC    1   1 80                                                    242538
+     E*Display A/c Officers wdw Initialise Program E-Spec
+     E/COPY WNCPYSRC,SD0201EEPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I/COPY QWINDSRC,SD0200GDTA                                           S01229
+     I*Display A/c Officers wdw Initialise Program I-Spec
+     I/COPY WNCPYSRC,SD0201EIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     ILDA         DS                            256                                           242538
+      ** Local data area for database error details                                           242538
+      *                                                                                       242538
+     I                                      134 141 DBFILE                                    242538
+     I                                      142 170 DBKEY                                     242538
+     I                                      171 180 DBPGM                                     242538
+     I                                      181 1830DBASE                                     242538
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IDSFDY     E DSDSFDY                                                                     242538
+      * DS for Access Programs, short data structure.                                         242538
+      *-------------------------------------------------------------------                    242538
+     IDSSARD    E DSSCSARDPD                                                                  242538
+      * Definition: Switchable Features Accessed Via Access Program.                          242538
+      *-------------------------------------------------------------------                    242538
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                              2
+      * KEY: Midas SD Account officers retrieval
+      * I : MAP Account Officer Code
+     I                                        1   2 P1ACOC
+      *                                                                                       242538
+     I              'GOGETZONE'           C         GOPGM                                     242538
+     I              'ERROR IN GOGETZONE'  C         GOMSG                                     242538
+      ** Global Processing Constants                                                          242538
+      *                                                                                       242538
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Account Of
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Check passed parameters
+     C                     EXSR FACKPM
+      * Perform once if all passed, else repeat
+     C           W0RPT     DOUEQ'N'
+      * Display and process key screen
+     C                     EXSR BADSKY
+     C                     END
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+      *
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1ACOC    IFEQ *BLANK                     Account Officer
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           AZACOC           Account Officer
+      * Setup key
+     C                     MOVEL#1ACOC    AZACOC           Account Officer
+     C           KRTV      CHAIN@AZREBO              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     9931  *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, then signal error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     9931  *
+      * Send message 'Account Officers       NF'
+     C                     MOVEL'USR0057' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0201ESFF - Account Officers  *
+     C*Display A/c Officers wdw Calculate Detail Func Fld
+     C/COPY WNCPYSRC,SD0201ESFF
+     C                     END                             *FI
+      * USER: Load detail screen from DBF record
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0201ELDS - Account Officers  *
+     C*Display A/c Officers wdw Load Detail Screen
+     C/COPY WNCPYSRC,SD0201ELDS
+     C                     END                             *FI
+     C                     END
+      *
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * Select existing record
+     C                     EXSR VACKRL
+      * USER: Validate key screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0201EVKS - Account Officers  *
+     C*Display A/c Officers wdw Validate Key Screen
+     C/COPY WNCPYSRC,SD0201EVKS
+     C                     END                             *FI
+      * Account Officer Code required
+     C           #1ACOC    IFEQ *BLANK                     IF
+     C                     SETON                     9931  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+      * Process detail screen input
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Process key screen input
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      *****************************************************************                       242538
+      /EJECT                                                                                  242538
+      *****************************************************************                       242538
+      *                                                               *                       242538
+      *  SRGPGZ - Gets the Zone via GOGETZONE.                        *                       242538
+      *                                                               *                       242538
+      *****************************************************************                       242538
+     C           SRGPGZ    BEGSR                                                              242538
+      *                                                                                       242538
+     C                     CALL GOPGM                                                         242538
+     C                     PARM *BLANKS   PZRTCD  7                                           242538
+     C                     PARM *BLANKS   PZERMS 50                                           242538
+     C                     PARM 'N'       PZFCHK  1                                           242538
+     C                     PARM *BLANKS   PZZONE 10                                           242538
+     C                     PARM *BLANKS   PZSHTC  4                                           242538
+     C                     PARM *ZERO     PZRDNB  50                                          242538
+     C                     PARM *ZERO     PZDNWD  50                                          242538
+     C                     PARM *BLANKS   PZBCCY  3                                           242538
+     C                     PARM *ZERO     PZNJOB  10                                          242538
+      *                                                                                       242538
+     C           PZRTCD    IFEQ *BLANKS                                                       242538
+     C                     MOVE PZZONE    KZONE                                               242538
+     C                     ELSE                                                               242538
+      *                                                                                       242538
+     C           PZRTCD    IFEQ '*ERROR'                                                      242538
+     C                     MOVELGOMSG     PZERMS                                              242538
+     C                     MOVE *ON       *INU7                                               242538
+     C                     MOVE *ON       *INU8                                               242538
+     C                     MOVE *ON       *INLR                                               242538
+     C                     EXSR *PSSR                                                         242538
+     C                     ENDIF                                                              242538
+      *                                                                                       242538
+     C                     ENDIF                                                              242538
+      *                                                                                       242538
+     C                     ENDSR                                                              242538
+      *****************************************************************                       242538
+      /EJECT                                                                                  242538
+      *****************************************************************                       242538
+      *                                                               *                       242538
+      *  SRGPOF - Opens the Global Processing Cross-Reference Files.  *                       242538
+      *                                                               *                       242538
+      *****************************************************************                       242538
+     C           SRGPOF    BEGSR                                                              242538
+      *                                                                                       242538
+     C                     Z-ADD80        PLEN   155                                          242538
+      *                                                                                       242538
+     C                     MOVE OVRC,1    PCMD   80                                           242538
+      *                                                                                       242538
+     C                     CALL 'QCMDEXC'                                                     242538
+     C                     PARM           PCMD                                                242538
+     C                     PARM           PLEN                                                242538
+      *                                                                                       242538
+     C                     OPEN GPACFXL0                                                      242538
+      *                                                                                       242538
+     C                     ENDSR                                                              242538
+      *****************************************************************                       242538
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0201EPKR - Account Officers  *
+     C*Display A/c Officers wdw Process Key Screen Rqst
+     C/COPY WNCPYSRC,SD0201EPKR
+     C                     END                             *FI
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C   05                MOVEL'Y'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+     C                     MOVEL'Y'       W0TRN
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * Process record:
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * CALC: Detail screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0201ESFF - Account Officers  *
+     C*Display A/c Officers wdw Calculate Detail Func Fld
+     C/COPY WNCPYSRC,SD0201ESFF
+     C                     END                             *FI
+      * USER: Validate detail screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'E'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy Member SD0201EVSW - Account Officers  *
+     C*Display A/c Officers wdw Validate Detail Scrn Wdw
+     C/COPY WNCPYSRC,SD0201EVSW
+     C                     END                             *FI
+      * 00/Copy Member SD0201EVDS - Account Officers  *
+     C*Display A/c Officers wdw Validate Detail Screen
+     C/COPY WNCPYSRC,SD0201EVDS
+     C                     END                             *FI
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * USER: Perform confirmed action
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0201EPCA - Account Officers  *
+     C*Display A/c Officers wdw Perform Confrimed Action
+     C/COPY WNCPYSRC,SD0201EPCA
+     C                     END                             *FI
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * USER: Process command keys
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0201EPCK - Account Officers  *
+     C*Display A/c Officers wdw Process Command Keys
+     C/COPY WNCPYSRC,SD0201EPCK
+     C                     END                             *FI
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         FACKPM    BEGSR
+      *================================================================
+      * Check passed parameters
+      *================================================================
+      * Is full key present?
+     C           P1ACOC    IFEQ *BLANK                     Account Officer
+      * Not every key field passed - loop program
+     C                     MOVEL'Y'       W0RPT   1
+     C                     ELSE
+      * Full key passed, so single shot program
+     C                     MOVEL'N'       W0RPT
+     C                     END
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #1DPCD           Dept Code
+     C                     MOVEL*BLANK    #1ACON           Account Officer
+     C                     MOVEL*BLANK    #1APHN           A/C Officer Tel
+     C                     MOVEL*BLANK    #1AEXT           A/C Officer Tel
+     C                     MOVEL*BLANK    #1ACOT           Manager Type   CPB001
+     C                     MOVEL*BLANK    #1GAOC           Global Account Officer Code        242538
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @AZREBO fields to screen
+      *================================================================
+     C                     Z-ADDAZLCD     #1LCD            Last Change Dat
+     C                     MOVELAZTYLC    #1TYLC           Type of Last Ch
+     C                     MOVELAZACOC    #1ACOC           Account Officer
+     C                     MOVELAZDPCD    #1DPCD           Dept Code
+     C                     MOVELAZACON    #1ACON           Account Officer
+     C                     MOVELAZAPHN    #1APHN           A/C Officer Tel
+     C                     MOVELAZAEXT    #1AEXT           A/C Officer Tel
+     C           *IN85     IFEQ *ON                                       CPB001
+     C           AZACOT    IFEQ *ZERO                                     CPB001
+     C                     MOVEL*BLANK    #1ACOT                          CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVELAZACOT    #1ACOT           Manager Type   CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                                          CPB001
+      *                                                                                       242538
+     C           CGP001    IFEQ 'Y'                                                           242538
+     C                     EXSR SRGPAO                                                        242538
+     C                     ENDIF                                                              242538
+      *                                                                                       242538
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVELP1ACOC    #1ACOC           Account Officer
+      * USER: Load key screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0201ELKS - Account Officers  *
+     C*Display A/c Officers wdw Load Key Screen
+     C/COPY WNCPYSRC,SD0201ELKS
+     C*Display A/c Officers wdw Load Key Screen
+     C/COPY WNCPYSRC,SD0201ELKS
+     C                     END                             *FI
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSA     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+      *                                                                   CPB001
+      * Chek if the PB Module is present                                  CPB001
+     C                     MOVELBGN4ST    WUN4ST           Private BankingCPB001
+     C*                                                                   CPB001
+     C** Sets indacator 85 ON if PB presents                              CPB001
+     C           WUN4ST    IFEQ 'Y'                                       CPB001
+     C                     MOVE *ON       *IN85                           CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVE *OFF      *IN85                           CPB001
+     C                     ENDIF                                          CPB001
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         VACKRL    BEGSR
+      *================================================================
+      * Select existing record
+      *================================================================
+      * Name search required?
+     C                     MOVEL#1ACOC    WK1X01  1
+     C           WK1X01    IFEQ '?'                        Account Officer
+     C                     CALL 'SD0201S'              90  Select Account
+     C                     PARM *BLANK    W0RTN   7
+     C           #1ACOC    PARM #1ACOC    WQ0001  2        Account Officer
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0201S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     99    *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *================================================================
+     CSR         VAEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT                                                                                  242538
+      *****************************************************************                       242538
+      *                                                               *                       242538
+      *  SRGPAO - Gets the Global Account Officer Code                *                       242538
+      *                                                               *                       242538
+      *****************************************************************                       242538
+     C           SRGPAO    BEGSR                                                              242538
+      *                                                                                       242538
+     C                     MOVE *BLANKS   #1GAOC                                              242538
+     C                     MOVE *BLANKS   KACOC                                               242538
+      *                                                                                       242538
+     C                     MOVELAZACOC    KACOC                                               242538
+      *                                                                                       242538
+     C           KGPAOC    CHAINGPACFXL0             46                                       242538
+      *                                                                                       242538
+     C           *IN46     IFEQ '0'                                                           242538
+     C                     MOVELACGACO    #1GAOC                                              242538
+     C                     ELSE                                                               242538
+     C                     MOVE *BLANKS   #1GAOC                                              242538
+     C                     ENDIF                                                              242538
+      *                                                                                       242538
+     C                     ENDSR                                                              242538
+      *****************************************************************                       242538
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0201EEPP - Account Officers  *
+     C*Display A/c Officers wdw Exit Program Processing
+     C/COPY WNCPYSRC,SD0201EEPP
+     C                     END                             *FI
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+      *                                                                                       242538
+      ** Global Processing X-Reference Key Defn                                               242538
+      *                                                                                       242538
+     C           *LIKE     DEFN PZZONE    KZONE                                               242538
+     C           *LIKE     DEFN AZACOC    KACOC                                               242538
+     C*                                                                                       242538
+     C           KGPAOC    KLIST                                                              242538
+     C                     KFLD           KZONE                                               242538
+     C                     KFLD           KACOC                                               242538
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field S01212
+     C                     MOVEL*BLANK    WUMFTS  1
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field PB Module                                       CPB001
+     C                     MOVEL*BLANK    WUN4ST  1                       CPB001
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD0201E#
+     C                     OPEN SDACOFL1
+     C                     OPEN SDMMODL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * Start of S01459
+      * Remove the last amend box and creation parameter functions
+      * SD0201E precompiler - Account Officers  *
+      * End of S01459
+      * Copyright Statement 1988 - Standard Functions  * copyright
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * A/c Officers DATA DS - Account Officers  *
+     C                     MOVEL'Y'       WUMFTS           S01212
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SARVGN
+      * 00/Copy Member SD0201EFPG - Account Officers  *
+     C*Display A/c Officers wdw Initialise Program C-Spec
+     C/COPY WNCPYSRC,SD0201ECPG
+      *                                                                                       242538
+      ** Check if CGP001 is enabled.                                                          242538
+      *                                                                                       242538
+     C           *NAMVAR   DEFN           LDA                                                 242538
+      *                                                                                       242538
+     C                     CALL 'AOSARDR0'                                                    242538
+     C                     PARM *BLANKS   PRTCD   7                                           242538
+     C                     PARM '*VERIFY' POPTN   7                                           242538
+     C                     PARM 'CGP001'  PSARD   6                                           242538
+     C           DSSARD    PARM *BLANKS   DSFDY                                               242538
+      *                                                                                       242538
+     C                     MOVE 'N'       CGP001  1                                           242538
+     C                     MOVE *OFF      *IN75                                               242538
+     C           PRTCD     IFEQ *BLANKS                                                       242538
+     C                     MOVE 'Y'       CGP001                                              242538
+     C                     MOVE *ON       *IN75                                               242538
+      *                                                                                       242538
+      ** Open the Global Processing Files.                                                    242538
+      *                                                                                       242538
+     C                     EXSR SRGPOF                                                        242538
+      *                                                                                       242538
+      ** Get the Zone.                                                                        242538
+      *                                                                                       242538
+     C                     EXSR SRGPGZ                                                        242538
+      *                                                                                       242538
+     C                     ELSE                                                               242538
+      *                                                                                       242538
+     C           PRTCD     IFNE '*NRF'                                                        242538
+     C                     MOVEL'SCSARDPD'DBFILE                                              242538
+     C                     MOVEL'CGP001'  DBKEY                                               242538
+     C                     MOVEL'01'      DBASE                                               242538
+     C                     MOVE *ON       *INU7                                               242538
+     C                     MOVE *ON       *INU8                                               242538
+     C                     MOVE *ON       *INLR                                               242538
+     C                     EXSR *PSSR                                                         242538
+     C                     ENDIF                                                              242538
+      *                                                                                       242538
+     C                     ENDIF                                                              242538
+     C                     END                             *FI
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0201EPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0201EPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0201EPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*Display A/c Officers wdw Initialise Program O-Spec
+     O/COPY WNCPYSRC,SD0201EOPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001
+** OVRC                                                                                       242538
+OVRDBF FILE(GPACFXL0) TOFILE(GPACOFXL0)                                                       242538

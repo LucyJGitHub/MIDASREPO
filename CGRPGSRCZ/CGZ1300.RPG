@@ -1,0 +1,926 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Standard rates formatting.')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CGZ1300 - - - - Format rates for display or printing.        *
+     F*                                                               *
+     F*  Function:   - - This program edits a rate. The format        *
+     F*                   used depends on an input parameter.         *
+     F*                                                               *
+     F*  Parameters: - - P0RTN  --   7    -- Return code;             *
+     F*                  P0VIN  -- 256    -- Input value;             *
+     F*                  P0VOUT -- 256    -- Output value;            *
+     F*                  P0VLEN --   3(0) -- Output value length;     *
+     F*                  P0FTYP --  10    -- Format type;             *
+     F*                  P0FOPT --  15    -- Format option.           *
+     F*                                                               *
+     F*  The leftmost 8 characters of P0FOPT determine the editing    *
+     F*   pattern, and the rightmost character gives the number of    *
+     F*   decimal places in the output value (with a default value    *
+     F*   of 7 -- seven decimal places).                              *
+     F*                                                               *
+     F*  Valid patterns are:                                          *
+     F*                                                               *
+     F*    STANDARD -- With a decimal point,                          *
+     F*                 with leading zeros suppressed;                *
+     F*    EUROPEAN -- With a decimal comma,                          *
+     F*                 with leading zeros suppressed;                *
+     F*    ISO      -- With a decimal comma (even if no fractional    *
+     F*                 part) and no delimiters;                      *
+     F*    SWIFT    -- As for ISO;                                    *
+     F*    STD SIGN -- As for STANDARD, but a percentage              *
+     F*                 sign is appended;                             *
+     F*    EUROSIGN -- As for EUROPEAN, but a percentage              *
+     F*                 sign is appended;                             *
+     F*    STD PAD  -- As for STANDARD, but leading zeros             *
+     F*                 are replaced by asterisks;                    *
+     F*    EURO PAD -- As for EUROPEAN, but leading zeros             *
+     F*                 are replaced by asterisks.                    *
+     F*                                                               *
+     F*  Called by:  - - CGxxxx.                                      *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      *                 128959             Date 16Jun03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 087940             Date 18May95               *
+      *                 086834             Date 28Apr95               *
+     F*                 084227             DATE 03MAR95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  128959 - Program dumped because of array index problems.     *
+     F*  087940 - Correct 086834                                      *
+     F*  086834 - If rate of 0.0000000 on format looses leading zero. *
+     F*  084227 - Correct overlay error when extending decimal        *
+     F*            places (last entered digit was being zeroed)       *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*  90 -- Error detected.                                        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Subroutine usage                                             *
+     F*  ~~~~~~~~~~~~~~~~                                             *
+     F*  SRSPLT -- Split the rate into integer and fraction.          *
+     F*  SRSTD  -- Edit the rate with the standard format.            *
+     F*  SREURO -- Edit the rate with the European/ISO/SWIFT format.  *
+     F*  SRSPCT -- Edit the rate with the standard format plus a %.   *
+     F*  SREPCT -- Edit the rate with the European format plus a %.   *
+     F*  SRSPAD -- Edit the rate with the standard padded format.     *
+     F*  SREPAD -- Edit the rate with the European padded format.     *
+     F*  SRBADF -- Handle an invalid format flag.                     *
+     F*  SRINIT -- Provide initialisation and definitions.            *
+     F*                                                               *
+     F*  Copied in routines:                                          *
+     F*                                                               *
+     F*  *PSSR  -- Program error routine.                             *
+     F*  SRFILE -- File error routine.                                *
+     F*  SRERR  -- Error reporting routine.                           *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*-------------------------------------------------------------------
+     E* Error processing array:
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E                    CPY@    1   1 80               Copyright
+     E                    AMT       256  1               Amount in.
+     E                    INT       256  1               Integer part.
+     E                    FRC       256  1               Fractional part.
+     E                    EDT       256  1               Amount out.
+     E*
+     E* Copied-in array definitions:
+     E*
+     E/COPY WNCPYSRC,CGZ1300EPG
+     E*
+     E*-------------------------------------------------------------------
+     I/SPACE
+     I*-------------------------------------------------------------------
+     I/COPY WNCPYSRC,CGZ1300IPG
+     I*
+     I* Copied-in data structures
+     I*
+     I*...................................................................
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I* Error processing data structures
+     I*
+     I*...................................................................
+     IAMNTDS      DS
+     I*
+     I* The incoming amount
+     I                                        1 256 AMT
+     I*...................................................................
+     IINTEDS      DS
+     I*
+     I* Integer part
+     I                                        1 256 INT
+     I*...................................................................
+     IFRACDS      DS
+     I*
+     I* Fractional part
+     I                                        1 256 FRC
+     I*...................................................................
+     IEDITDS      DS
+     I*
+     I* The outgoing amount
+     I                                        1 256 EDT
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P0VIN 256
+     C                     PARM           P0VOUT256
+     C                     PARM           P0VLEN  30
+     C                     PARM           P0FTYP 10
+     C                     PARM           P0FOPT 15
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     Z-ADD1         Q
+     C                     MOVEL'@Main@'  @STK,Q
+     C*
+     C* Initialise:
+     C                     EXSR SRINIT
+     C*
+     C* Split the value:
+     C*
+     C           P0VIN     IFNE *BLANKS
+     C                     EXSR SRSPLT
+     C*
+     C* Format:
+     C/COPY WNCPYSRC,CGZ1300C03
+     C           #ETYPE    CASEQ'STANDARD'SRSTD
+     C           #ETYPE    CASEQ'EUROPEAN'SREURO
+     C           #ETYPE    CASEQ'ISO     'SRISO
+     C           #ETYPE    CASEQ'SWIFT   'SRISO
+     C           #ETYPE    CASEQ'STD SIGN'SRSPCT
+     C           #ETYPE    CASEQ'EUROSIGN'SREPCT
+     C           #ETYPE    CASEQ'STD PAD 'SRSPAD
+     C           #ETYPE    CASEQ'EURO PAD'SREPAD
+     C                     CAS            SRBADF
+     C/COPY WNCPYSRC,CGZ1300C01
+     C                     ENDCS
+     C*
+     C* Return the edited value:
+     C*
+     C                     MOVE EDITDS    P0VOUT
+     C                     ENDIF
+     C*
+     C           EXMAIN    TAG                             <<<=== EXMAIN
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSPLT divides the rate into two parts --          **
+     C**    the integer part (before the decimal point); and            **
+     C**    the fractional part (after the decimal point).              **
+     C********************************************************************
+     C           SRSPLT    BEGSR                           * S R S P L T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSPLT'  @STK,Q
+     C*
+     C* Move the input value:
+     C*
+     C                     MOVE P0VIN     AMNTDS
+     C*
+     C* Prepare flags, index values and lengths:
+     C*
+     C                     MOVE 'N'       #ERROR  1
+     C*
+     C                     Z-ADD*ZERO     #VS     30
+     C*
+     C                     Z-ADD*ZERO     #IS     30
+     C                     Z-ADD*ZERO     #IE     30
+     C                     Z-ADD*ZERO     #IL     30
+     C*
+     C                     Z-ADD*ZERO     #FS     30
+     C                     Z-ADD*ZERO     #FE     30
+     C                     Z-ADD*ZERO     #FL     30
+     C*
+     C                     Z-ADD*ZERO     #X      30
+     C                     Z-ADD*ZERO     #Y      30
+     C                     Z-ADD*ZERO     #Z      30
+     C*
+     C* If leading blanks, search for a non-blank character:
+     C*
+     C                     MOVE AMT,1     #CHAR   1
+     C           #CHAR     IFEQ *BLANK
+     C           #X        DOUEQ256
+     C           #CHAR     ORNE *BLANK
+     C                     ADD  1         #X
+     C                     MOVE AMT,#X    #CHAR
+     C                     ENDDO
+     C                     SUB  1         #X
+     C                     ENDIF
+     C*
+     C           #X        ADD  1         #VS
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Read the incoming amount until a decimal marker,
+     C*  a negative sign or the end of the array:
+     C*
+     C           #X        DOUEQ256
+     C           #CHAR     OREQ '.'
+     C           #CHAR     OREQ ','
+     C           #CHAR     OREQ '-'
+     C           #CHAR     OREQ *BLANK
+     C           #IS       ANDGT*ZERO
+     C                     ADD  1         #X
+     C                     MOVE AMT,#X    #CHAR
+     C*
+     C* If the first significant digit, save the integer start position:
+     C*
+     C           #CHAR     IFGE '1'
+     C           #CHAR     ANDLE'9'
+     C           #IS       ANDEQ*ZERO
+     C                     Z-ADD#X        #IS
+     C                     ENDIF
+     C*
+     C* Save significant integer digits:
+     C*
+     C           #CHAR     IFGE '0'
+     C           #CHAR     ANDLE'9'
+     C           #IS       ANDGT*ZERO
+     C                     ADD  1         #Y
+     C                     MOVE #CHAR     INT,#Y
+     C                     ENDIF
+     C                     ENDDO
+      *                                                                  086834
+      ** If input amount of 0.0000000 set variables so that the leading  086834
+      ** zero is not lost.                                               086834
+     C           #IS       IFEQ *ZEROS                                   086834
+     C           #CHAR     ANDEQ'.'                                      086834
+     C           #IS       OREQ *ZEROS                                   087940
+     C           #CHAR     ANDEQ','                                      086834
+     C           #IS       OREQ *ZEROS                                   087940
+     C           #CHAR     ANDEQ'-'                                      086834
+     C                     MOVEL'0'       INT,1                          086834
+     C                     Z-ADD1         #Y                             086834
+     C                     ENDIF                                         086834
+     C*
+     C* Save the length of the integer part:
+     C*
+     C           #X        SUB  1         #IE
+     C                     Z-ADD#Y        #IL
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If a decimal marker found,
+     C*  extract the fractional part:
+     C*
+     C           #X        IFLT 256
+     C           #CHAR     ANDEQ'.'
+     C           #X        ORLT 256
+     C           #CHAR     ANDEQ','
+     C                     Z-ADD#X        #Y
+     C           #X        ADD  1         #FS
+     C*
+     C           #Y        DOUEQ256
+     C           #CHAR     ORLT '0'
+     C           #CHAR     ORGT '9'
+     C                     ADD  1         #Y
+     C                     MOVE AMT,#Y    #CHAR
+     C*
+     C           #CHAR     IFGE '0'
+     C           #CHAR     ANDLE'9'
+     C                     ADD  1         #Z
+     C                     MOVE #CHAR     FRC,#Z
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C           #Y        SUB  1         #FE
+     C                     Z-ADD#Z        #FL
+     C                     ENDIF
+     C*
+     C* If the fraction is too short, append zeroes:
+     C*
+     C           #FL       IFLT #FLEN
+     C********** #FL       DO   #FLEN     #Z                              084227
+     C           #FL       ADD  1         #Y                              084227
+     C           #Y        DO   #FLEN     #Z                              084227
+     C                     MOVE '0'       FRC,#Z
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Overwrite the length:
+     C*
+     C                     Z-ADD#FLEN     #FL
+     C*
+     C           EXSPLT    TAG                             <<<=== EXSPLT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSTD formats the rate with                        **
+     C**                                                                **
+     C**    comma delimiters;                                           **
+     C**    a decimal point;                                            **
+     C**    leading zeros replaced by blanks.                           **
+     C**                                                                **
+     C**  For example: 1,234.5678                                       **
+     C********************************************************************
+     C           SRSTD     BEGSR                           * S R S T D   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSTD '  @STK,Q
+     C*
+     C* Calculate the number of commas required,
+     C*  giving the length of the edited integer:
+     C*
+     C           #IL       DIV  3         #CM     30
+     C                     MVR            #REM    10
+     C*
+     C* Avoid a leading comma (for 3, 6, 9, ... digits):
+     C*
+     C           #REM      IFEQ *ZERO
+     C           #CM       ANDGT*ZERO
+     C                     SUB  1         #CM
+     C                     ENDIF
+     C           #IL       ADD  #CM       #EL     30
+     C*
+     C* #A is the pointer to the current input digit;
+     C* #B is the pointer to the current output character;
+     C* #C is the counter of digits for inserting commas:
+     C*
+     C           #IL       ADD  1         #A      30
+     C           #EL       ADD  1         #B      30
+     C                     Z-ADD*ZERO     #C      30
+     C*
+     C* Move the length of the result:
+     C*
+     C                     Z-ADD#EL       P0VLEN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move integer characters to the output array (from right to left):
+     C*
+     C           #A        IFGT 1
+     C           #A        DOUEQ1
+     C                     SUB  1         #A
+     C                     SUB  1         #B
+     C                     ADD  1         #C
+     C                     MOVE INT,#A    EDT,#B
+     C           #C        IFEQ 3
+     C           #A        ANDGT1
+     C                     SUB  1         #B
+     C                     MOVE ','       EDT,#B
+     C                     Z-ADD*ZERO     #C
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* If any decimal places exist, move the fractional part:
+     C*
+     C           #FL       IFGT *ZERO
+     C           #EL       ADD  1         #B
+     C                     MOVE '.'       EDT,#B
+     C                     DO   #FL       #D      30
+     C                     ADD  1         #B
+     C                     MOVE FRC,#D    EDT,#B
+     C                     ENDDO
+     C*
+     C* Adjust the length of the result:
+     C*
+     C                     Z-ADD#B        P0VLEN
+     C                     ENDIF
+     C*
+     C           EXSTD     TAG                             <<<=== EXSTD
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREURO formats the rate with                       **
+     C**                                                                **
+     C**    no delimiters;                                              **
+     C**    a decimal comma;                                            **
+     C**    leading zeros replaced by blanks.                           **
+     C**                                                                **
+     C**  For example: 123,4567                                         **
+     C********************************************************************
+     C           SREURO    BEGSR                           * S R E U R O *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREURO'  @STK,Q
+     C*
+     C* Set the index values:
+     C*
+     C                     Z-ADD*ZERO     #A
+     C                     Z-ADD*ZERO     #B
+     C*
+     C* Move the integer part to the output array (from left to right):
+     C*
+     C                     DO   #IL       #A
+     C                     ADD  1         #B
+     C                     MOVE INT,#A    EDT,#B
+     C                     ENDDO
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If any decimal places exist, move the fractional part:
+     C*
+     C           #FL       IFGT *ZERO
+     C           #IL       ADD  1         #B
+     C                     MOVE ','       EDT,#B
+     C                     DO   #FL       #D
+     C                     ADD  1         #B
+     C                     MOVE FRC,#D    EDT,#B
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Move the length of the result:
+     C*
+     C                     Z-ADD#B        P0VLEN
+     C*
+     C           EXEURO    TAG                             <<<=== EXEURO
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRISO formats the rate with                        **
+     C**                                                                **
+     C**    no delimiters;                                              **
+     C**    a decimal comma (even if no decimal places);                **
+     C**    leading zeros replaced by blanks.                           **
+     C**                                                                **
+     C**  For example: 123,4567                                         **
+     C********************************************************************
+     C           SRISO     BEGSR                           * S R I S O   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRISO '  @STK,Q
+     C*
+     C* Set the index values:
+     C*
+     C                     Z-ADD*ZERO     #A
+     C                     Z-ADD*ZERO     #B
+     C*
+     C* Move the integer part to the output array (from left to right):
+     C*
+     C                     DO   #IL       #A
+     C                     ADD  1         #B
+     C                     MOVE INT,#A    EDT,#B
+     C                     ENDDO
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C           #IL       ADD  1         #B
+     C                     MOVE ','       EDT,#B
+     C*
+     C* If any decimal places exist, move the fractional part:
+     C*
+     C           #FL       IFGT *ZERO
+     C                     DO   #FL       #D
+     C                     ADD  1         #B
+     C                     MOVE FRC,#D    EDT,#B
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Move the length of the result:
+     C*
+     C                     Z-ADD#B        P0VLEN
+     C*
+     C           EXISO     TAG                             <<<=== EXISO
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSPCT formats the rate with                       **
+     C**                                                                **
+     C**    comma delimiters;                                           **
+     C**    a decimal point;                                            **
+     C**    leading zeros replaced by blanks;                           **
+     C**    a trailing "%" sign.                                        **
+     C**                                                                **
+     C**  For example: 1,234.5678%                                      **
+     C********************************************************************
+     C           SRSPCT    BEGSR                           * S R S P C T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSPCT'  @STK,Q
+     C*
+     C* Use subroutine SRSTD to edit the rate:
+     C*
+     C                     EXSR SRSTD
+     C*
+     C* Append a percentage sign:
+     C*
+     C           P0VLEN    ADD  1         #B
+     C                     MOVE '%'       EDT,#B
+     C*
+     C* Move the length of the result:
+     C*
+     C                     Z-ADD#B        P0VLEN
+     C*
+     C           EXSPCT    TAG                             <<<=== EXSPCT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREPCT formats the rate with                       **
+     C**                                                                **
+     C**    no delimiters;                                              **
+     C**    a decimal comma;                                            **
+     C**    leading zeros replaced by blanks;                           **
+     C**    a trailing "%" sign.                                        **
+     C**                                                                **
+     C**  For example: 123,4567%                                        **
+     C********************************************************************
+     C           SREPCT    BEGSR                           * S R E P C T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREPCT'  @STK,Q
+     C*
+     C* Use subroutine SREURO to edit the rate:
+     C*
+     C                     EXSR SREURO
+     C*
+     C* Append a percentage sign:
+     C*
+     C           P0VLEN    ADD  1         #B
+     C                     MOVE '%'       EDT,#B
+     C*
+     C* Move the length of the result:
+     C*
+     C                     Z-ADD#B        P0VLEN
+     C*
+     C           EXEPCT    TAG                             <<<=== EXEPCT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSPAD formats the rate with                       **
+     C**                                                                **
+     C**    a comma delimiter;                                          **
+     C**    a decimal point;                                            **
+     C**    leading zeros replaced by asterisks.                        **
+     C**                                                                **
+     C**  For example: *****1,234.5678                                  **
+     C********************************************************************
+     C           SRSPAD    BEGSR                           * S R S P A D *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSPAD'  @STK,Q
+     C*
+     C* Fill the array with asterisks until the end of the integer:
+     C*
+     C           #IE       IFGT #VS
+     C                     Z-ADD*ZERO     #A
+     C           #VS       DO   #IE
+     C                     ADD  1         #A
+     C                     MOVE '*'       EDT,#A
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Calculate the number of commas required,
+     C*  giving the length of the edited integer:
+     C*
+     C           #IL       DIV  3         #CM
+     C                     MVR            #REM
+     C*
+     C* Avoid a leading comma (for 3, 6, 9, ... digits):
+     C*
+     C           #REM      IFEQ *ZERO
+     C           #CM       ANDGT*ZERO
+     C                     SUB  1         #CM
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* #A is the pointer to the current input digit;
+     C* #B is the pointer to the current output character;
+     C* #C is the counter of digits for inserting commas:
+     C*
+     C           #IL       ADD  1         #A
+     C           #EL       ADD  1         #B
+     C           #IE       SUB  #VS       #B
+     C                     ADD  #CM       #B
+     C                     ADD  2         #B
+     C           #B        IFGE 256                                                           128959
+     C                     SUB  #FL       #B                                                  128959
+     C                     END                                                                128959
+     C                     Z-ADD*ZERO     #C
+     C*
+     C* Save the value in #B:
+     C*
+     C                     Z-ADD#B        #SV     30
+     C*
+     C* Move the length of the result:
+     C*
+     C                     Z-ADD#EL       P0VLEN
+     C*
+     C* Move integer characters to the output array (from right to left):
+     C*
+     C           #A        IFGT 1
+     C           #A        DOUEQ1
+     C                     SUB  1         #A
+     C                     SUB  1         #B
+     C                     ADD  1         #C
+     C                     MOVE INT,#A    EDT,#B
+     C           #C        IFEQ 3
+     C           #A        ANDGT1
+     C                     SUB  1         #B
+     C                     MOVE ','       EDT,#B
+     C                     Z-ADD*ZERO     #C
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If the units digit is an asterisk, replace it with a zero:
+     C*
+     C           #SV       SUB  1         #B
+     C           EDT,#B    IFEQ '*'
+     C                     MOVE '0'       EDT,#B
+     C                     ENDIF
+     C*
+     C* If any decimal places exist, move the fractional part:
+     C*
+     C           #FL       IFGT *ZERO
+     C                     Z-ADD#SV       #B
+     C                     MOVE '.'       EDT,#B
+     C                     DO   #FL       #D
+     C                     ADD  1         #B
+     C                     MOVE FRC,#D    EDT,#B
+     C                     ENDDO
+     C*
+     C* Adjust the length of the result:
+     C*
+     C                     Z-ADD#B        P0VLEN
+     C                     ENDIF
+     C*
+     C           EXSPAD    TAG                             <<<=== EXSPAD
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREPAD formats the rate with                       **
+     C**                                                                **
+     C**    no delimiter;                                               **
+     C**    a decimal comma;                                            **
+     C**    leading zeros replaced by asterisks.                        **
+     C**                                                                **
+     C**  For example: *****123,4567                                    **
+     C********************************************************************
+     C           SREPAD    BEGSR                           * S R E P A D *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREPAD'  @STK,Q
+     C*
+     C* Fill the array with asterisks until the end of the integer:
+     C*
+     C           #IE       IFGT #VS
+     C                     Z-ADD*ZERO     #C
+     C           #VS       DO   #IE
+     C                     ADD  1         #C
+     C                     MOVE '*'       EDT,#C
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Set the index values:
+     C*
+     C           #IL       ADD  1         #A
+     C           #IE       SUB  #VS       #B
+     C                     ADD  2         #B
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move integer characters to the output array (from right to left):
+     C*
+     C           #A        IFGT 1
+     C           #A        DOUEQ1
+     C                     SUB  1         #A
+     C                     SUB  1         #B
+     C                     MOVE INT,#A    EDT,#B
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* If the units digit is an asterisk, replace it with a zero:
+     C*
+     C           #IE       SUB  #VS       #B
+     C                     ADD  1         #B
+     C           EDT,#B    IFEQ '*'
+     C                     MOVE '0'       EDT,#B
+     C                     ENDIF
+     C*
+     C* If any decimal places exist, move the fractional part:
+     C*
+     C           #FL       IFGT *ZERO
+     C                     ADD  1         #B
+     C                     MOVE ','       EDT,#B
+     C                     DO   #FL       #D
+     C                     ADD  1         #B
+     C                     MOVE FRC,#D    EDT,#B
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Move the length of the result:
+     C*
+     C                     Z-ADD#B        P0VLEN
+     C*
+     C           EXEPAD    TAG                             <<<=== EXEPAD
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRBADF handles an invalid format flag.             **
+     C********************************************************************
+     C           SRBADF    BEGSR                           * S R B A D F *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRBADF'  @STK,Q
+     C*
+     C* Flag the error:
+     C                     MOVE 'CGD1629' P0RTN
+     C*
+     C           EXBADF    TAG                             <<<=== EXBADF
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C/COPY WNCPYSRC,CGZ1300C02
+     C********************************************************************
+     C**  Subroutine SRINIT provides initialisation.                    **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C* Define and clear error return code:
+     C*
+     C                     MOVE *BLANKS   P0RTN
+     C*
+     C* Move the copyright parameter:
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C* /Copy point for calculations:
+     C*
+     C/COPY WNCPYSRC,CGZ1300CPG
+     C*
+     C* Split the options value:
+     C*
+     C                     MOVELP0FOPT    #ETYPE  8
+     C                     MOVE P0FOPT    #FLENA  1
+     C*
+     C* Extract the required number of decimal places:
+     C*
+     C           #FLENA    IFLT '0'
+     C           #FLENA    ORGT '9'
+     C                     Z-ADD7         #FLEN   10        Default -- 7
+     C                     ELSE                              dec places
+     C                     MOVE #FLENA    #FLEN
+     C                     ENDIF
+     C*
+     C* Clear output length and values:
+     C*
+     C                     Z-ADD*ZERO     P0VLEN
+     C*
+     C                     MOVE *BLANKS   P0VOUT
+     C                     MOVE *BLANKS   EDITDS
+     C/COPY WNCPYSRC,CGZ1300C04
+     C*
+     C           EXINIT    TAG                             <<<=== EXINIT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** Subroutine *PSSR handles program errors.                       **
+     C********************************************************************
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* File and Program Error Processing
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for calculation specifications:
+     C*
+     C/COPY WNCPYSRC,CGZ1300CPG
+     C*
+     C********************************************************************
+     O/EJECT
+     O********************************************************************
+     C* /Copy point for output:
+     C*
+     O/COPY WNCPYSRC,CGZ1300OPG
+     C*
+     O********************************************************************
+** CPY@
+(c) Finastra International Limited 2001

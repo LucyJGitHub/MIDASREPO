@@ -1,0 +1,916 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Total Holdings by Portfolio & Customer')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1949 - Total Holdings by Portfolio & Customer              *
+      *                                                               *
+      *  Function:  This program will cumulate Holding total to       *
+      *   (COB)     create Total Record by Portfolio & Customer.      *
+      *             (REM: Nominals are never cumulate)                *
+      *                                                               *
+      *  Called By: GLC1949 - Total Holdings by Portfolio & Customer  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008   *CREATE   Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+     FGLHOLDL1IF  E           K        DISK
+      ** Holding File Extract by : Customer, Portfolio Reference
+      *
+     F            GLHOLDD0                          KRENAMEGLHOLDD1
+      *
+     FPMPORTL1IF  E           K        DISK
+      ** Portfolio Details (Prefix PN)
+      *
+     FGLHOLDPDO   E                    DISK
+      ** Holding File for Adding Total Records
+      *
+     FGL1949AUO   E                    PRINTER
+      ** Total Holdings by Portfolio & Customer - Audit
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   88  - CHAIN indicator                                       *
+      *   89  - End of File                                           *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *   LR  - Terminate Program                                     *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Detail Processing                                   *
+      *  SRTERM - Termination Processing                              *
+      *  SRPDET - Portfolio Details                                   *
+      *  SRPCCY - Convert Holding Amount into Portfolio Currency      *
+      *  SRBCCY - Convert Holding Amount into Base Currency           *
+      *  SRRESP - Reset Portfolio Counters                            *
+      *  SRRESC - Reset Customer Counters                             *
+      *  SRPTFR - Write Total Record for Portfolio at break level     *
+      *  SRCUST - Write Total Record for Customer at break level      *
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  ZCCYCN - Convert Amount from 1 Currency to Another thru      *
+      *           Spot Rates                                          *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    POWER   1   7  7 3
+      /EJECT
+      *
+     IGLHOLDD1
+     I              F8CNUM                          I8CNUM
+     I              F8PTFR                          I8PTFR
+     I              F8SRHO                          I8SRHO
+     I              F8DPRF                          I8DPRF
+     I              F8SESN                          I8SESN
+     I              F8INVT                          I8INVT
+     I              F8CCY                           I8CCY
+     I              F8INST                          I8INST
+     I              F8ASNV                          I8ASNV
+     I              F8LINV                          I8LINV
+     I              F8ASMV                          I8ASMV
+     I              F8LIMV                          I8LIMV
+     I              F8ASFX                          I8ASFX
+     I              F8LIFX                          I8LIFX
+     I              F8ASAC                          I8ASAC
+     I              F8LIAC                          I8LIAC
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM @@PGM
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External data structures for Currency
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data area forn Access object details
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *
+      ** Termination Processing.
+      *
+     C                     EXSR SRTERM
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0  - Access Program for Bank Details                  *
+      *  AOCURRR0  - Access Program for Currency Details              *
+      *  SRRESP    - Reset Portfolio Counters                         *
+      *  SRRESC    - Reset Customer Counters                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+      ** Set up copyright parameter.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Set up Program Name.
+      *
+     C                     MOVEL@@PGM     DBPGM     P
+      *
+      ** Setup LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define Customer Counters : Total for Assets
+      *
+     C           *LIKE     DEFN F8ASMV    WCASMV
+     C           *LIKE     DEFN F8ASFX    WCASFX
+     C           *LIKE     DEFN F8ASAC    WCASAC
+      *
+      ** Define Customer Counters : Total for Liabilities
+      *
+     C           *LIKE     DEFN F8LIMV    WCLIMV
+     C           *LIKE     DEFN F8LIFX    WCLIFX
+     C           *LIKE     DEFN F8LIAC    WCLIAC
+      *
+      ** Define Portfolio Counters : Total for Assets
+      *
+     C           *LIKE     DEFN F8ASMV    WOASMV
+     C           *LIKE     DEFN F8ASFX    WOASFX
+     C           *LIKE     DEFN F8ASAC    WOASAC
+      *
+      ** Define Portfolio Counters : Total for Liabilities
+      *
+     C           *LIKE     DEFN F8LIMV    WOLIMV
+     C           *LIKE     DEFN F8LIFX    WOLIFX
+     C           *LIKE     DEFN F8LIAC    WOLIAC
+      *
+      ** Define Customer Counters : Assets in Base CCY
+      *
+     C           *LIKE     DEFN F8ASMV    WBASMV
+     C           *LIKE     DEFN F8ASFX    WBASFX
+     C           *LIKE     DEFN F8ASAC    WBASAC
+      *
+      ** Define Customer Counters : Liabilities in Base CCY
+      *
+     C           *LIKE     DEFN F8LIMV    WBLIMV
+     C           *LIKE     DEFN F8LIFX    WBLIFX
+     C           *LIKE     DEFN F8LIAC    WBLIAC
+      *
+      ** Define Portfolio Counters : Assets in Portfolio CCY
+      *
+     C           *LIKE     DEFN F8ASMV    WRASMV
+     C           *LIKE     DEFN F8ASFX    WRASFX
+     C           *LIKE     DEFN F8ASAC    WRASAC
+      *
+      ** Define Portfolio Counters : Liabilities in Portfolio CCY
+      *
+     C           *LIKE     DEFN F8LIMV    WRLIMV
+     C           *LIKE     DEFN F8LIFX    WRLIFX
+     C           *LIKE     DEFN F8LIAC    WRLIAC
+      *
+      ** Define Work Fields
+      *
+     C           *LIKE     DEFN F8CNUM    WPCNUM
+     C           *LIKE     DEFN F8PTFR    WPPTFR
+     C           *LIKE     DEFN F8CCY     WPCCY
+      *
+     C                     MOVE *BLANKS   WPCNUM
+     C                     MOVE *BLANKS   WPPTFR
+     C                     MOVE *BLANKS   WPCCY
+      *
+      ** Define key For PMPORTL1
+      *
+     C           KPORT     KLIST
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KPTFR   4
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE BJCYCD    WSBCCY  3
+      *
+      ** Call Access Program for bank's currency details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM WSBCCY    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCURRPD'DBFILE
+     C                     MOVELWSBCCY    DBKEY
+     C                     Z-ADD2         DBASE
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6SPRT    WSBSPR 138
+     C                     MOVE A6MDIN    WSBMDI  1
+     C                     Z-ADDA6NBDP    WSBNDP  10
+      *
+      ** Reset Customer counters
+      *
+     C                     EXSR SRRESC
+      *
+      ** Reset Portfolio Counters
+      *
+     C                     EXSR SRRESP
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRPTFR    - Write Total Record for Portfolio at break level  *
+      *  SRCUST    - Write Total Record for Customer at break level   *
+      *  SRPDET    - Portfolio Details                                *
+      *  SRPCCY    - Convert Holding Amount into Portfolio Currency   *
+      *  SRBCCY    - Convert Holding Amount into Base Currency        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR                           *** SRPROC ***
+      *
+      ** Acumulate Balances by Account & Portfolio
+      *
+     C                     READ GLHOLDD1                 89
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      ** Be sure to read only Holding details (not Total records)
+      *
+     C           I8SRHO    IFNE 'CT'
+     C           I8SRHO    ANDNE'PT'
+      *
+      ** Is it a new customer  ?
+      *
+     C           I8CNUM    IFNE WPCNUM
+      *
+     C           WPCNUM    IFNE *BLANKS
+     C                     EXSR SRPTFR
+     C                     EXSR SRCUST
+     C                     ENDIF
+      *
+      ** Keep Customer/Portfolio for Total records
+      *
+     C                     MOVELI8CNUM    WPCNUM
+     C                     MOVELI8PTFR    WPPTFR
+      *
+      ** Access portfolio details to convert Amounts in Portfolio CCY
+      *
+     C                     EXSR SRPDET
+      *
+     C                     ENDIF
+      *
+     C           I8CNUM    IFEQ WPCNUM
+     C           I8PTFR    ANDNEWPPTFR
+      *
+     C                     EXSR SRPTFR
+      *
+      ** Keep Portfolio for Total record
+      *
+     C                     MOVELI8PTFR    WPPTFR
+      *
+      ** Access portfolio details to convert Amounts in Portfolio CCY
+      *
+     C                     EXSR SRPDET
+      *
+     C                     ENDIF
+      *
+      ** Convert Amounts From Holding CCY to Portfolio CCY
+      *
+     C                     EXSR SRPCCY
+      *
+      ** Convert Amounts From Holding CCY to Base CCY for Customer
+      *
+     C                     EXSR SRBCCY
+      *
+      ** Addittion of Assets/liabilities until break happens.
+      ** Customer counters : Assets
+      *
+     C                     ADD  WBASMV    WCASMV
+     C                     ADD  WBASFX    WCASFX
+     C                     ADD  WBASAC    WCASAC
+      *
+      ** Customer counters : Liabilities
+      *
+     C                     ADD  WBLIMV    WCLIMV
+     C                     ADD  WBLIFX    WCLIFX
+     C                     ADD  WBLIAC    WCLIAC
+      *
+      ** Portfolio Counters : Assets
+      *
+     C                     ADD  WRASMV    WOASMV
+     C                     ADD  WRASFX    WOASFX
+     C                     ADD  WRASAC    WOASAC
+      *
+      ** Portfolio Counters : Liabilities
+      *
+     C                     ADD  WRLIMV    WOLIMV
+     C                     ADD  WRLIFX    WOLIFX
+     C                     ADD  WRLIAC    WOLIAC
+      *
+     C                     ENDIF
+      *
+      ** Read next record
+      *
+     C                     READ GLHOLDD1                 89
+      *
+     C                     ENDDO
+      *
+     C                     EXSR SRPTFR
+     C                     EXSR SRCUST
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPDET
+      *****************************************************************
+      *                                                               *
+      *  SRPDET - Portfolio Details                                   *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOCURRR0  - Access Program for Currency Details              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPDET    BEGSR                           *** SRPDET ***
+      *
+      ** Reset Portfolio Currency details
+      *
+     C                     MOVE *BLANKS   WSPCCY  3
+     C                     Z-ADD0         WSPSPR 138
+     C                     MOVE ' '       WSPMDI  1
+     C                     Z-ADD0         WSPNDP  10
+      *
+      ** Build Portfolio Key
+      *
+     C                     MOVE I8CNUM    KCNUM
+     C                     MOVE I8PTFR    KPTFR
+      *
+      ** Retrieve details
+      *
+     C           KPORT     CHAINPMPORTL1             88
+     C           *IN88     IFNE *ON
+     C                     MOVE PNPTCY    WSPCCY
+     C                     ELSE
+     C                     MOVE WSBCCY    WSPCCY
+     C                     ENDIF
+      *
+      ** Access Portfolio currency details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WSPCCY    PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     Z-ADD3         DBASE
+     C                     MOVELWSPCCY    DBKEY     P
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6SPRT    WSPSPR
+     C                     MOVE A6MDIN    WSPMDI
+     C                     Z-ADDA6NBDP    WSPNDP
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPCCY
+      *****************************************************************
+      *                                                               *
+      *  SRPCCY - Convert Holding Amount into Portfolio Currency      *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOCURRR0  - Access Program for Currency Details              *
+      *  ZCCYCN    - Convert Amount from 1 Currency to Another thru   *
+      *              Spot Rates                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPCCY    BEGSR                           *** SRPCCY ***
+      *
+      ** Reset Working Amounts : Assets in Portfolio CCY
+      *
+     C                     Z-ADD0         WRASMV
+     C                     Z-ADD0         WRASFX
+     C                     Z-ADD0         WRASAC
+      *
+      ** Reset Working Amounts : Liabilities in Portfolio CCY
+      *
+     C                     Z-ADD0         WRLIMV
+     C                     Z-ADD0         WRLIFX
+     C                     Z-ADD0         WRLIAC
+      *
+     C           I8CCY     IFNE WSPCCY
+      *
+      ** Access Holding currency Details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM I8CCY     PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Initialise ZCCYCN 'From' CCY fields with Currencies details
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     Z-ADD4         DBASE
+     C                     MOVELI8CCY     DBKEY     P
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE I8CCY     ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVE A6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+      *
+      ** Initialise ZCCYCN 'To' CCY fields with Portfolio Currency de-
+      ** tails.
+      *
+     C                     MOVE WSPCCY    ZCCYT
+     C                     MOVE WSPSPR    ZRATET
+     C                     MOVE WSPMDI    ZMDINT
+     C                     MOVE WSPNDP    ZCDPT
+      *
+      ** Convert Assets amount in Portfolio Currency when required
+      *
+     C           I8ASMV    IFNE 0
+     C                     Z-ADDI8ASMV    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WRASMV
+     C                     ENDIF
+      *
+     C           I8ASFX    IFNE 0
+     C                     Z-ADDI8ASFX    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WRASFX
+     C                     ENDIF
+      *
+     C           I8ASAC    IFNE 0
+     C                     Z-ADDI8ASAC    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WRASAC
+     C                     ENDIF
+      *
+      ** Convert Liabilities amount in Portfolio Currency when re -
+      ** quired.
+      *
+     C           I8LIMV    IFNE 0
+     C                     Z-ADDI8LIMV    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WRLIMV
+     C                     ENDIF
+      *
+     C           I8LIFX    IFNE 0
+     C                     Z-ADDI8LIFX    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WRLIFX
+     C                     ENDIF
+      *
+     C           I8LIAC    IFNE 0
+     C                     Z-ADDI8LIAC    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WRLIAC
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Assets in Portfolio CCY
+      *
+     C                     Z-ADDI8ASMV    WRASMV
+     C                     Z-ADDI8ASFX    WRASFX
+     C                     Z-ADDI8ASAC    WRASAC
+      *
+      ** Liabilities in Portfolio CCY
+      *
+     C                     Z-ADDI8LIMV    WRLIMV
+     C                     Z-ADDI8LIFX    WRLIFX
+     C                     Z-ADDI8LIAC    WRLIAC
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRBCCY
+      *****************************************************************
+      *                                                               *
+      *  SRBCCY - Convert Holding Amount into Base Currency           *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOCURRR0  - Access Program for Currency Details              *
+      *  ZCCYCN    - Convert Amount from 1 Currency to Another thru   *
+      *              Spot Rates                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBCCY    BEGSR                           *** SRBCCY ***
+      *
+      ** Reset Working Amounts : Assets in Base CCY
+      *
+     C                     Z-ADD0         WBASMV
+     C                     Z-ADD0         WBASFX
+     C                     Z-ADD0         WBASAC
+      *
+      ** Reset Working Amounts : Liabilities in Base CCY
+      *
+     C                     Z-ADD0         WBLIMV
+     C                     Z-ADD0         WBLIFX
+     C                     Z-ADD0         WBLIAC
+      *
+     C           I8CCY     IFNE WSBCCY
+      *
+      ** Access Holding currency Details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM I8CCY     PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Initialise ZCCYCN 'From' CCY fields with Currencies details
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     Z-ADD5         DBASE
+     C                     MOVELI8CCY     DBKEY
+     C                     MOVEL@@PGM     DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE I8CCY     ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVE A6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+      *
+      ** Initialise ZCCYCN 'To' CCY fields with Base Currency details
+      *
+     C                     MOVE WSBCCY    ZCCYT
+     C                     MOVE WSBSPR    ZRATET
+     C                     MOVE WSBMDI    ZMDINT
+     C                     MOVE WSBNDP    ZCDPT
+      *
+      ** Convert Assets amount in Base Currency when required
+      *
+     C           I8ASMV    IFNE 0
+     C                     Z-ADDI8ASMV    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WBASMV
+     C                     ENDIF
+      *
+     C           I8ASFX    IFNE 0
+     C                     Z-ADDI8ASFX    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WBASFX
+     C                     ENDIF
+      *
+     C           I8ASAC    IFNE 0
+     C                     Z-ADDI8ASAC    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WBASAC
+     C                     ENDIF
+      *
+      ** Convert Liabilities amount in Base Currency when required
+      *
+     C           I8LIMV    IFNE 0
+     C                     Z-ADDI8LIMV    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WBLIMV
+     C                     ENDIF
+      *
+     C           I8LIFX    IFNE 0
+     C                     Z-ADDI8LIFX    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WBLIFX
+     C                     ENDIF
+      *
+     C           I8LIAC    IFNE 0
+     C                     Z-ADDI8LIAC    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WBLIAC
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Assets in Base CCY
+      *
+     C                     Z-ADDI8ASMV    WBASMV
+     C                     Z-ADDI8ASFX    WBASFX
+     C                     Z-ADDI8ASAC    WBASAC
+      *
+      ** Liabilities in Base CCY
+      *
+     C                     Z-ADDI8LIMV    WBLIMV
+     C                     Z-ADDI8LIFX    WBLIFX
+     C                     Z-ADDI8LIAC    WBLIAC
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRESP
+      *****************************************************************
+      *                                                               *
+      *  SRRESP - Reset Portfolio Counters                            *
+      *                                                               *
+      *  Called By: SRINIT and SRPTFR Subroutines                     *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRESP    BEGSR                           *** SRRESP ***
+      *
+      ** Assets
+      *
+     C                     Z-ADD0         WOASMV
+     C                     Z-ADD0         WOASFX
+     C                     Z-ADD0         WOASAC
+      *
+      ***  Liabilities
+      *
+     C                     Z-ADD0         WOLIMV
+     C                     Z-ADD0         WOLIFX
+     C                     Z-ADD0         WOLIAC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRESC
+      *****************************************************************
+      *                                                               *
+      *  SRRESC - Reset Customer Counters                             *
+      *                                                               *
+      *  Called By: SRINIT and SRCUST Subroutines                     *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRESC    BEGSR                           *** SRRESC ***
+      *
+      ** Assets
+      *
+     C                     Z-ADD0         WCASMV
+     C                     Z-ADD0         WCASFX
+     C                     Z-ADD0         WCASAC
+      *
+      ** Liabilities
+      *
+     C                     Z-ADD0         WCLIMV
+     C                     Z-ADD0         WCLIFX
+     C                     Z-ADD0         WCLIAC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPTFR
+      *****************************************************************
+      *                                                               *
+      *  SRPTFR - Write Total Record for Portfolio at break level     *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRRESP    - Reset Portfolio Counters                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPTFR    BEGSR                           *** SRPTFR ***
+      *
+     C                     CLEARGLHOLDD0
+      *
+     C                     MOVE WPCNUM    F8CNUM
+     C                     MOVE WPPTFR    F8PTFR
+     C                     MOVE 'PT'      F8SRHO
+     C                     MOVE WSPCCY    F8CCY
+      *
+      ** Write Total for Portfolio Assets
+      *
+     C                     Z-ADDWOASMV    F8ASMV
+     C                     Z-ADDWOASFX    F8ASFX
+     C                     Z-ADDWOASAC    F8ASAC
+      *
+      ** Write Total for Portfolio Liabilities
+      *
+     C                     Z-ADDWOLIMV    F8LIMV
+     C                     Z-ADDWOLIFX    F8LIFX
+     C                     Z-ADDWOLIAC    F8LIAC
+      *
+     C                     WRITEGLHOLDD0
+      *
+      ** Reset Portfolio counters
+      *
+     C                     EXSR SRRESP
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCUST
+      *****************************************************************
+      *                                                               *
+      *  SRCUST - Write Total Record for Customer at break level      *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRRESC    - Reset Customer Counters                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCUST    BEGSR                           *** SRCUST ***
+      *
+     C                     CLEARGLHOLDD0
+      *
+     C                     MOVE WPCNUM    F8CNUM
+     C                     MOVE 'CT'      F8SRHO
+     C                     MOVE WSBCCY    F8CCY
+      *
+      ** Write Total for Customer Assets
+      *
+     C                     Z-ADDWCASMV    F8ASMV
+     C                     Z-ADDWCASFX    F8ASFX
+     C                     Z-ADDWCASAC    F8ASAC
+      *
+      ** Write Total for Customer Liabilities
+      *
+     C                     Z-ADDWCLIMV    F8LIMV
+     C                     Z-ADDWCLIFX    F8LIFX
+     C                     Z-ADDWCLIAC    F8LIAC
+      *
+     C                     WRITEGLHOLDD0
+      *
+      ** Reset Portfolio counters
+      *
+     C                     EXSR SRRESC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTERM
+      *****************************************************************
+      *                                                               *
+      *  SRTERM - Termination Processing                              *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR                           *** SRTERM ***
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /COPY ZSRSRC,ZCCYCN
+      *****************************************************************
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2001
+**  POWER (7,3) - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

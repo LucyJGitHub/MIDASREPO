@@ -1,0 +1,165 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Caching of Feature')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000351 - Midas SC Caching of Feature                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. CSW219  *CREATE    Date 04Mar19              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSW219 - SWIFT 2019 Changes                                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&CACHE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SYSID)     TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBTYPE)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JAVA_PATH) TYPE(*CHAR) LEN(1024)
+             DCL        VAR(&JAVA_HOME) TYPE(*CHAR) LEN(1024)
+             DCL        VAR(&JAVAPATH2) TYPE(*CHAR) LEN(210)
+             DCL        VAR(&READCTR)   TYPE(*CHAR) LEN(1) VALUE('F')
+
+/** System value variables */
+             DCL        VAR(&RTNCDE)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&JAVAPATH)  TYPE(*CHAR) LEN(200)
+             DCL        VAR(&JAVAHOME)  TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK10)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10)    TYPE(*CHAR) LEN(200)
+
+             DCLF       FILE(SDJARFL5)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                           2019')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Retrieve data area CACHEDT        */
+             RTVDTAARA  DTAARA(CACHEDT) RTNVAR(&CACHE)
+             IF         COND(&CACHE *NE 'Y') THEN(GOTO CMDLBL(END))
+
+/** Create data area LDA */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGJOB     SWS(XXXXXX00)
+
+/** Setup system prefix variable from SDSTAT data area */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+
+/** Get system values from file SDSVALPD  */
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE 'JavaPathStem' +
+                          &JAVAPATH 'JavaHome' &JAVAHOME +
+                          &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK10 &SVAL10)
+
+/** If the 'JavaPathStem' system value is missing then end abnormally*/
+             IF         COND(%SST(&JAVAPATH 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))
+             ELSE       CHGVAR VAR(&JAVAPATH2) VALUE(&JAVAPATH *TCAT +
+                          '/lib/ext')
+
+/** If the 'JavaHome' system value is missing then end abnormally */
+             IF         COND(%SST(&JAVAHOME 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+             RMVLNK     OBJLNK(A)
+             MONMSG     MSGID(CPFA0A9)
+
+/** Add links to system */
+             ADDLNK     OBJ(&JAVAPATH2) NEWLNK(A)
+             MONMSG     MSGID(CPFA0A0)
+
+/** Setup environment variable CLASSPATH with the necessary           */
+/** directories for invoking the get method */
+             RMVENVVAR  ENVVAR(CLASSPATH)
+             MONMSG     MSGID(CPFA981)
+
+/** Setup environment variable JAVA_HOME */
+             CHGVAR     VAR(&JAVA_HOME) VALUE(&JAVAHOME)
+             RMVENVVAR  ENVVAR(JAVA_HOME)
+             MONMSG     MSGID(CPFA981)
+
+ SETUP_PATH: RCVF       RCDFMT(SDJARFD0)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ADD_ENVVAR))
+
+             IF         COND(&READCTR *EQ 'F') THEN(DO)
+                CHGVAR VAR(&READCTR) VALUE('S')
+                CHGVAR     VAR(&JAVA_PATH) VALUE('A/:')
+             ENDDO
+             ELSE       CHGVAR VAR(&JAVA_PATH)  VALUE(&JAVA_PATH *TCAT ':')
+             CHGVAR     VAR(&JAVA_PATH) VALUE(&JAVA_PATH *TCAT &JFNAME)
+
+             GOTO       CMDLBL(SETUP_PATH)
+
+ ADD_ENVVAR: ADDENVVAR  ENVVAR(CLASSPATH) VALUE(&JAVA_PATH)
+             MONMSG     MSGID(CPFA0A0)
+
+             ADDENVVAR  ENVVAR(JAVA_HOME) VALUE(&JAVA_HOME)
+             MONMSG     MSGID(CPFA0A0)
+
+/** Create Directory                  */
+             CRTDIR     DIR('/RestWeb')
+             MONMSG     MSGID(CPF0000)
+
+/** Remove link if existing           */
+             RMVLNK     OBJLNK('/RestWeb/d*')
+             MONMSG     MSGID(CPF0000)
+
+             RMVLNK     OBJLNK('/RestWeb/r*')
+             MONMSG     MSGID(CPF0000)
+
+/** Call to get User and Password     */
+/** and execute REST HTTPAPI          */
+             CALL       PGM(SC000351) PARM(&SYSID)
+
+/** Database error processing */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                           CMDLBL(ABNOR))
+
+             GOTO       CMDLBL(END)
+
+/** Database error processing */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                           CMDLBL(ABNOR))
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+/* Error processing */
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000351 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+
+END:
+             ENDPGM

@@ -1,0 +1,951 @@
+0001 H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Pay/Rec Settlements in Oth Branches')            *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module
+     F*                                                               *
+     F*  LE0550  -  PAY/RECEIVE SETTLEMENTS IN OTHER BRANCHES         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR859174           Date 27Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 219063             Date 22Oct03               *
+      *                 CAS009             Date 16May05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU004             Date 02Feb98               *
+      *                 S01408             Date 20May96               *  *BHF216
+     F*                 058008             Date 05Aug93               *  *BHF216
+     F*                 054013             DATE 31AUG93               *
+     F*                 E45727             DATE 23NOV92               *
+     F*                 S01392             DATE 07OCT92               *
+     F*                 E32193             DATE 14MAR92               *
+     F*                 E27263             DATE 12AUG91               *
+     F*                 BHF216             DATE 08AUG90               *
+     F*                 BHF311             DATE 24JUL90               *
+     F*                 BHF072             DATE 18MAY90               *
+     F*                 LN0144             DATE 01MAY90               *
+     F*                 LN0069             DATE 01MAY90               *
+     F*                                                               *
+0014 F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR859174 - LE0213 goes into MSGW because of RPG0121.         *
+      *             Increased array size of ACCY and ACDP to 900.     *
+      *             (Child: AR859175)                                 *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  219063 - Allow File Control Amounts to be negative.          *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CEU004 - LE Settlement Ccy conversion Upgrade to DBA R2.0    *
+      *         - Recompiled                                          *
+     F*  S01408 - Addition of Core Hooks - LE0550CCP1                    *
+     F*         -                        - LE0550CCP2                    *
+     F*  058008 - FALSE FILE OUT OF BALANCE CONDITION BECAUSE OF         *
+     F*           FIELD OVERFLOW                                         *
+     F*  054013 - Increase size of currencies array to 200            *
+     F*  E45727 - Recompile for addition of fee seq in LETX3PR.       *
+     F*  S01392 - JAPANESE SUB MODULE ENHANCEMENTS                    *
+     F*  E32193 - REVERSE THE SIGN OF NEGATIVE AMOUNTS WHEN CALCULATING
+     F*           FILE CONTROLS. THIS MAKES THIS PROGRAM CONSISTENT   *
+     F*           WITH OTHER PROGRAMS CALLED WITHIN LEC0701.          *
+     F*  E27263 - THE RCF PROCESSING IS INCORRECT AND RESULTS IN      *
+     F*           AN ADDITIONAL EMPTY SPOOL FILE ALWAYS BEING PRODUCED*
+     F*  BHF311 - TURN *IN30 OFF IF FILE CLOSED                       *
+     F*  BHF072 - CURRENCY THAT WAS PRINTED FOR THE FIRST DETAIL      *
+     F*           RECORD CAME FROM THE CURRENCY ARRAY.                *
+     F*  LN0144 - ACCESS OF BANK DETAILS INCORRECTLY CODED            *
+     F*  LN0069 - REPORT GENERATION NOT CORRECT                       *
+0014 F*****************************************************************
+0015 F*                                                                  *
+     F*  C R E A T I O N     P A R A M E T E R S                         *
+     F*                                                                  *
+     F*                                                                  *
+     F********************************************************************
+     F/SPACE 3
+     F*
+     FPRTXS2  IP  E           K        DISK
+     FSDCURRPDIF  E                    DISK
+     FLE0550P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC
+     FLE0550AUO   F     132     OA     PRINTER      KINFDS SPOOLU
+     F*
+     F/SPACE 2
+     F* ID F  C  H  L    Function of indicators
+     F*
+     F*
+     F*
+     F*       01      PRTXS2 Detail record
+     F*       03      PRTXS2 Trailer record
+     F*       12      Currency not found in SDCURRPD - DB error
+     F*       15      Output detail line
+     F*       20      Conditions first cycle
+     F*       30      INPUT FILE HAS AT LEAST ONE DETAIL RECORD
+     F*       32      SET ON TO INDICATE A P1 PRINTER FILE HAS BEEN       E27263
+     F*               OPENED AND LEFT ON FOR REMAINDER OF PROGRAM         E27263
+     F*       50      PREVENT OPEN FILE WHEN SETT. BRANCH CHANGED,
+     F*               BUT NOT BOOKING BRANCH
+     F*       60      Dec. Places 0
+     F*       61       "     "    1
+     F*       62       "     "    2
+     F*       63       "     "    3
+     F*       64      Credit
+     F*       65      Pay
+     F*       66      Receive
+     F*       67      Event amount is negative                            E32193
+     F*       70      MULTI-BRANCHING OUTPUT
+     F*       72      SUPPRESS THE CONTROL TOTAL
+     F*       98      Date format = ddmmyy
+     F*
+     F*       U1      Called by I/C or I/C Termination
+     F*       U7+U8   Database error
+     F*
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1                                               S01392
+     E                    INT         3 15 0             Records o/p int.
+     E                    DEC         3  3 0             Records o/p dec.
+     E**********          REC         3  3 0             Records o/p - NO.058008
+     E                    REC         3  4 0             Records o/p - NO.058008
+     E***********         ACCY      100  3               Currency codes   054013
+     E***********         ACDP      100  1 0             Ccy dec. postns. 054013
+     E**********          ACCY      200  3               Currency codes              054013 AR859174
+     E                    ACCY      900  3               Currency codes                     AR859174
+     E**********          ACDP      200  1 0             Ccy dec. postns.            054013 AR859174
+     E                    ACDP      900  1 0             Ccy dec. postns.                   AR859174
+     E                    CPY@    1   1 80
+     I**
+     I**
+     I* LF/PRSBR detail record
+     I**
+     ILETX1PRF    01
+     I                                              BRCA  L5
+     I                                              OSBR  L4
+     I                                              PYRC  L3
+     I                                              CCY   L2
+     I                                              VDAT  L1
+     I                                              EAMT          67      E32193
+     ILETX2PRF    01
+     I                                              BRCA  L5
+     I                                              OSBR  L4
+     I                                              PYRC  L3
+     I                                              CCY   L2
+     I                                              VDAT  L1
+     I                                              EAMT          67      E32193
+     ILETX3PRF    01
+     I                                              BRCA  L5
+     I                                              OSBR  L4
+     I                                              PYRC  L3
+     I                                              CCY   L2
+     I                                              VDAT  L1
+     I                                              EAMT          67      E32193
+     I**
+     I* Trailer
+     I**
+     ILETX1ZZF    03
+     ILETX2ZZF    03
+     ILETX3ZZF    03
+     ISDCURRD0
+      **   CURRENCY DETAILS
+     I              A6NBDP                          CDP
+     I**************A6CYCD                          CCY                   BHF072
+     I**
+     I*    Local data area
+     I**
+0254 I*
+0255 I*    LDA - DIAGNOSTICS FOR PROGRAM ABORT
+0256 I*
+     ILDA        UDS                            256
+0232 I                                      134 141 DBFILE
+0233 I                                      142 170 DBKEY
+0234 I                                      171 180 DBPGM
+0235 I                                      181 1830DBASE
+     I/EJECT
+     I**
+     I**   FILE INFORMATION DATA STRUCTURE
+     I**
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I              A8BRNM                          BRNM
+     ISDBANK    E DSSDBANKPD
+      ** BANK DETAILS
+     I              BJURPT                          TITL
+     I              BJMRDT                          RUNA
+     I              BJDFIN                          DATF
+      **
+     I**  EXTERNAL DS FOR BRANCH CODES
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     I**
+     C/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5         SEQUENCE NUM.
+     C**
+     C/SPACE 3
+     C**
+     C*   If first cycle, set up local data area, and access ICD 1
+     C**
+     C           *IN20     IFEQ '0'
+     C           *INU7     IFEQ '1'                                       LN0069
+0358 C                     SETON                     80                   LN0069
+0359 C                     SETOF                     U7                   LN0069
+     C                     END                                            LN0069
+     C**
+     C******Hard*code*program*to*process*'ALL'*branches                   E27263
+     C*********************                                               E27263
+     C*********************MOVE 'ALL'     BRNCH   3                       E27263
+     C*    DEFINE LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C**
+     C****SETON*INDICATOR*TO*SUPPRESS*THE*CONTROL*TOTAL*CHECKING*AND*OUTPUE27263
+     C**
+     C***********BRNCH     IFNE 'ALL'                                     E27263
+     C***********          SETON                     72                   E27263
+     C***********          END                                            E27263
+     C**
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'LE0550'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C**
+     C**   ACCESS BANK DETAILS
+     C**
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7U8LR
+     C                     MOVE '01'      DBASE            *** DBERR01 **
+     C*************        MOVE 'SDBANK'  DBFILE                          LN0144
+     C                     MOVE 'SDBANKPD'DBFILE                          LN0144
+     C                     GOTO END                                       LN0144
+     C                     END
+     C*****************    GOTO END                                       LN0144
+     C**
+     C*     Check system date format. ddmmyy or mmddyy.
+     C**
+     C           DATF      COMP 'M'                      98mmddyy, 98 on
+     C**
+     C*     Set up currency arrays - top down;  A = lowest entry
+     C**
+     C***********          Z-ADD101       A       30                      054013
+     C                     Z-ADD201       A       30                      054013
+     C**
+     C           LOOP      TAG                             *** LOOP ***
+     C                     READ SDCURRPD                 12 = E.O.F.
+     C           *IN12     IFEQ '0'
+     C                     SUB  1         A
+     C                     Z-ADDCDP       ACDP,A
+     C***********          MOVE CCY       ACCY,A                          BHF072
+     C                     MOVE A6CYCD    ACCY,A                          BHF072
+     C                     GOTO LOOP
+     C                     END
+     C**
+     C                     SETON                     20
+     C*
+     C**
+     C*     End of first cycle processing
+     C**
+     C                     END
+     C**
+     C*   SETOF INDICATOR FOR NO OUTPUT
+     C**
+     C  N01                SETOF                     70
+     C  N01                GOTO END
+     C                     SETOF                     1531
+     C**
+     C***GET*THE*BOOKING*BRANCH*NAME*IF*BRNCH*=*BRCA*OR*BRNCH*=*'ALL      E27263
+     C**
+     C***********BRNCH     IFEQ 'ALL'                                     E27263
+     C***********BRNCH     OREQ BRCA                                      E27263
+     C***L5******          EXSR CHGBBR                                    E27263
+     C**                                                                  E27263
+     C** GET THE BOOKING BRANCH NAME ON CHANGE OF BRANCH                  E27263
+     C**                                                                  E27263
+     C           *INL5     IFEQ '1'                                       E27263
+     C                     EXSR CHGBBR                                    E27263
+     C***********          ELSE                                           E27263
+     C***********          SETOF                     70                   E27263
+     C***********          GOTO END                                       E27263
+     C                     END
+     C**
+     C*     If booking branch = settle. branch, add values to run
+     C*     totals, bypass print.
+     C**
+     C                     MOVE BRCA      BRANCH  3
+     C           BRANCH    IFEQ OSBR
+     C                     Z-ADD1         X       10
+     C                     ELSE
+     C**
+     C*     Add values to printed run totals & check for level breaks
+     C*     before printing.
+     C**
+     C                     Z-ADD2         X
+     C                     SETON                     15
+     C   L1                EXSR CHGDAT
+     C   L2                EXSR CHGCCY
+     C   L3                EXSR CHGPRC
+     C   L4N50             EXSR CHGORB
+     C                     END
+     C**
+     C                     ADD  1         REC,X
+     C                     EXSR HASH
+     C**
+     C           END       TAG                             *** END ***
+     C**
+     C*     If trailer record, add file hash totals
+     C**
+     C           *IN03     IFEQ '1'
+     C                     ADD  2         HDTRL   50
+     C                     ADD  NORE      TNORE   40
+     C                     ADD  HRWN      THRWN  100
+     C                     ADD  HRDC      THRDC   40
+     C                     END
+     C**
+     C*   SETON INDICATOR FOR OUTPUT
+     C**
+     C**LR*******BRNCH     IFEQ 'ALL'                                     E27263
+     C**LR*******BRNCH     OREQ BRCA                                      E27263
+     CLR                   SETON                     70
+     C**LR*******          END                                            E27263
+     C*                                                                   E27263
+     C** IF P1 PRINTER FILE HAS NOT BEEN OPENED                           E27263
+     C** THEN PRINT 'NO DETAILS' TO REPORT FOR 'ALL' BRANCHES             E27263
+     C*                                                                   E27263
+     CLR         *IN32     IFEQ '0'                                       E27263
+     CLR                   EXSR #ZZ                                       E27263
+     CLR                   END                                            E27263
+     C**
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60
+     CLR                   OUT  LDA
+     C**
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ
+     CLR                   PARM *BLANK    SENTY   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUMU
+     CLR                   PARM           ZSERR   1
+      *
+     CLR         *LOCK     IN   LDA
+     CLR         ZSERR     IFEQ 'Y'
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     CLR                   SETON                     U7U8
+     CLR                   RETRN
+     CLR                   END
+     C**
+     C** THIS SECTION MOVED BEFORE 'AU' REPORT PRINTED                    E27263
+     C**LR********IN30     IFEQ '0'                                       E27263
+     C**LR********         EXSR #ZZ                                       E27263
+     C**LR********         END                                            E27263
+     CLR                   EXSR FINISH
+     CLR    U7 U8          EXSR *PSSR
+     C**
+     C*****************************************************************
+     C**
+     C*     Calculate values, and add to integer and decimal tables
+     C**
+     C           HASH      BEGSR                           ***  HASH  ***
+     C**
+     C                     Z-ADDINT,X     ZZTOTI
+     C                     Z-ADDDEC,X     ZZTOTD
+     C           EAMT      DIV  1000      ZZAMT
+     C***67*****           Z-SUBZZAMT     ZZAMT                                        E32193 219063
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    INT,X
+     C                     Z-ADDZZTOTD    DEC,X
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+     C**
+     C*    Convert date to ddmmmyy format for printing
+     C**
+     C           CHGDAT    BEGSR                           *** CHGDAT ***
+     C**
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C**
+     C*     Find no. of dec. positions for this currency from tables
+     C**
+     C           CHGCCY    BEGSR                           *** CHGCCY ***
+     C**
+     C                     Z-ADDA         Y       30
+     C           CCY       LOKUPACCY,Y                   12
+     C**
+     C           *IN12     IFEQ '0'
+     C                     MOVE '02'      DBASE            *** DBERR02 ***
+     C                     MOVE 'SDCURRPD'DBFILE
+     C                     MOVELCCY       DBKEY
+     C                     SETON                     U7U8LR
+     C                     GOTO ENDCCY
+     C                     END
+     C**
+     C           ACDP,Y    COMP 1                    626061
+     C           ACDP,Y    COMP 2                    63  62
+     C**
+     C           ENDCCY    ENDSR                           *** ENDCCY ***
+     C**
+     C*****************************************************************
+     C**
+     C*     Set indicators for printing 'Pay', 'Receive', or 'Credit'
+     C**
+     C           CHGPRC    BEGSR                           *** CHGPRC ***
+     C**
+     C           PYRC      COMP 'P'                  666465
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+     C**
+     C*     Open print file, and set indicator
+     C**
+     C           CHGORB    BEGSR                           *** CHGPRC ***
+     C**
+     C*    SET ON *IN70 TO ALLOW O/P TO LE0550P1
+     C**
+     C                     OPEN LE0550P1
+     C                     SETON                     703031
+     C***********          SETON                     50                   E27263
+     C                     SETON                     5032                 E27263
+     C**
+     C                     Z-ADDSFNUM     ZSNUM
+     C                     OUT  LDA
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM BRCA      SENTY
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+     C           *LOCK     IN   LDA
+     C           ZSERR     IFEQ 'Y'
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C                     Z-ADD0         PAGE
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+     C/SPACE 3
+     C********************************************************************
+     C/SPACE 3
+     C**
+     C*    Find booking branch name
+     C**
+     C           CHGBBR    BEGSR                           *** CHGBBR ***
+     C**
+     C                     CLOSELE0550P1
+     C**
+     C*    SET OFF *IN70 TO PREVENT O/P TO LE0550P1
+     C**
+     C*****************    SETOF                     7050                 BHF311
+     C                     SETOF                     705030               BHF311
+     C**
+     C** RETRIEVE BRANCH NAME
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7U8LR
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVEL@DSNB     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 003 *
+     C                     MOVEL'003'     DBASE            ***************
+     C                     MOVE *BLANKS   BRNM
+     C                     END
+     C**
+     C           ENDBBR    ENDSR                           *** ENDBBR ***
+     C**
+     C*****************************************************************
+     C**
+     C*     Add to whole numbers total, if decimal total more than
+     C*     3 positions
+     C**
+     C           FINISH    BEGSR                           *** FINISH ***
+     C**
+     C           THRDC     IFGT 1999
+     C                     ADD  2         THRWN
+     C                     ELSE
+     C           THRDC     IFGT 999
+     C                     ADD  1         THRWN
+     C                     END
+     C                     END
+     C                     Z-ADDTHRDC     TOTDC   30
+     C**
+     C*     Add and compare run totals
+     C*      - Ignore control checking when request for specific branch
+     C**
+     C           REC,1     ADD  REC,2     REC,3
+     C                     ADD  HDTRL     REC,3
+      *
+     C***********BRNCH     IFEQ 'ALL'                                     E27263
+     C           REC,3     COMP TNORE                U8U8
+     C***********          END                                            E27263
+      *
+     C           INT,1     ADD  INT,2     INT,3
+     C           DEC,1     ADD  DEC,2     DCFOUR  40
+     C           DCFOUR    IFGT 999
+     C                     ADD  1         INT,3
+     C                     END
+     C                     Z-ADDDCFOUR    DEC,3
+      *
+     C***********BRNCH     IFEQ 'ALL'                                     E27263
+      /COPY WNCPYSRC,LE0550CCP1                                           S01408
+     C  NU8      INT,3     COMP THRWN                U8U8
+     C  NU8      DEC,3     COMP TOTDC                U8U8
+      /COPY WNCPYSRC,LE0550CCP2                                           S01408
+     C***********          END                                            E27263
+     C**
+     C                     ENDSR
+     C**
+0932 C********************************************************************
+0945 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+0946 C*   IND '99' IS SET BY AN OVERFLOW ERROR
+0947 C*
+0948 C           GLZADD    BEGSR                           *** GLZADD ****
+0949 C*
+0950 C                     Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+0951 C   91                GOTO ZZAEND                     AMT = 0.BYPASS
+0952 C*
+0953 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+0954 C                     Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+0955 C                     MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+0956 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+0957 C*
+0958 C                     EXSR GLZSUM
+0959 C           ZZAEND    ENDSR                           ** ZZAEND TAG *
+0960 C*
+0961 C********************************************************************
+0962 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+0963 C*                        GLZADD, GLZSUB, GLZCMP.
+0964 C*          PARAMETERS PASSED -
+0965 C*                     I/P ZZAMTI ZZAMTD
+0966 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+0967 C*
+0968 C           GLZSUM    BEGSR                           *** GLZSUM ****
+0969 C*
+0970 C                     Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+0971 C                     Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+0972 C                     SETOF                     919293
+0973 C                     SETOF                     949599
+0974 C*
+0975 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+0976 C           ZZAMTI    COMP 0                      9293
+0977 C   93      ZZAMTD    COMP 0                      9293
+0978 C   93                GOTO ZZSEND                     ZERO BYPASS
+0979 C*
+0980 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+0981 C           ZZTOTI    COMP 0                      9193
+0982 C   93      ZZTOTD    COMP 0                      9193
+0983 C*
+0984 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+0985 C   93                Z-ADDZZAMTI    ZZTOTI
+0986 C   93                Z-ADDZZAMTD    ZZTOTD
+0987 C   93                GOTO ZZSEND                     ZERO BYPASS
+0988 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+0989 C   91N92
+0990 CORN91 92             GOTO ZZOFPS
+0991 C*
+0992 C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+0993 C           ZZWK2     COMP 999                  93    '93' = CARRY
+0994 C  N93      ZZWK2     COMP -999                   93    INTO INTEGER.
+0995 C*
+0996 C   93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+0997 C      93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+0998 C   93      ZZTOTI    ADD  ZZWK3     ZZWK3
+0999 C  N93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+1000 C*
+1001 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+1002 C  N92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+1003 C   92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+1004 C  N99                Z-ADDZZWK2     ZZTOTD
+1005 C  N99                Z-ADDZZWK3     ZZTOTI
+1006 C*
+1007 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+1008 C   99                Z-ADD0         ZZAMT  153
+1009 C                     GOTO ZZSEND
+1010 C*
+1011 C* THE 'SIGNS' ARE DIFFERENT
+1012 C           ZZOFPS    TAG                             ** ZZOFPS TAG**
+1013 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+1014 C*
+1015 C   92                Z-SUBZZAMTI    ZZAMTI 150
+1016 C   92                Z-SUBZZAMTD    ZZAMTD  30
+1017 C*
+1018 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+1019 C*
+1020 C   91                Z-SUBZZTOTI    ZZTOTI
+1021 C   91                Z-SUBZZTOTD    ZZTOTD
+1022 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+1023 C*
+1024 C           ZZTOTI    COMP ZZAMTI               93  95
+1025 C   95      ZZTOTD    COMP ZZAMTD               93  95
+1026 C*
+1027 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+1028 C   95                Z-ADD0         ZZTOTI
+1029 C   95                Z-ADD0         ZZTOTD
+1030 C   95                GOTO ZZSEND
+1031 C*
+1032 C* IF ZZTOT GT. ZZAMT.
+1033 C   93      ZZAMTD    COMP ZZTOTD               94
+1034 C   93 94   ZZTOTI    SUB  1         ZZTOTI
+1035 C   93 94   ZZTOTD    ADD  1000      ZZWK2
+1036 C   93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+1037 C   93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+1038 C   93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+1039 C*
+1040 C*
+1041 C* IF ZZAMT GT. ZZTOT.
+1042 C  N93      ZZTOTD    COMP ZZAMTD               94
+1043 C  N93 94   ZZAMTI    SUB  1         ZZWK3  150
+1044 C  N93 94   ZZAMTD    ADD  1000      ZZWK2
+1045 C  N93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+1046 C  N93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+1047 C  N93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+1048 C  N93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+1049 C*
+1050 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+1051 C                     SETOF                     94
+1052 C   93 91
+1053 CORN93 92             SETON                     94
+1054 C   94                Z-SUBZZTOTI    ZZTOTI
+1055 C   94                Z-SUBZZTOTD    ZZTOTD
+1056 C**
+1057 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+1058 C   92                Z-SUBZZAMTI    ZZAMTI
+1059 C   92                Z-SUBZZAMTD    ZZAMTD
+1060 C           ZZSEND    TAG                             ** ZZSEND TAG *
+1061 C**
+1062 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+1063 C                     SETOF                     96
+1064 C           ZZTOTD    COMP 0                        91
+1065 C   91      ZZTOTI    COMP 0                      96
+1066 C   96                MOVE '.000-'   ZZNEGD  5
+1067 C                     ENDSR                             ** ENDSR **
+     C*
+     C*
+     C* SUBROUTINE : #ZZ
+     C*
+     C* CALLED BY MAIN PROCESSING DURING TOTAL TIME CALCULATIONS IF
+     C* THE P1 FILES HAVE NOT ALREADY BEEN OPENED (IE, IF THERE ARE
+     C* NO RECORDS READ AND THEREFORE FILES OPENING NOT PERFORMED)
+     C**
+0454 C           #ZZ       BEGSR                           *** NODETL ***
+     C**
+     C                     OPEN LE0550P1
+     C                     Z-ADD*ZEROS    PAGE
+     C                     Z-ADD*ZEROS    PAGE1
+     C*
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C**
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     OUT  LDA
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           *LOCK     IN   LDA
+     C           ZSERR     IFEQ 'Y'
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ***AND*GET*ENTITY*DETAILS*FOR*REPORT*HEADINGS*WHEN*MULTIBRANCHING   E27263
+      *
+     C***********BRNCH     IFNE 'ALL'                                     E27263
+     C**
+     C***********          CALL 'AOBRCHR0'                                E27263
+     C***********          PARM '*MSG   ' @RTCD   7                       E27263
+     C***********          PARM '*KEY   ' @OPTN   7                       E27263
+     C***********          PARM BRNCH     @DSNB   3                       E27263
+     C***********SDBRCH    PARM SDBRCH    DSFDY                           E27263
+     C***********@RTCD     IFNE *BLANKS                                   E27263
+     C***********          MOVEL@DSNB     DBKEY                           E27263
+     C***********          MOVEL'SDBRCHPD'DBFILE           ***************E27263
+     C***********          Z-ADD13        DBASE            * DBERROR 013 *E27263
+     C***********          MOVEL@OPTN     DBOPTN  7        ***************E27263
+     C***********          SETON                     U7U8                 E27263
+     C***********          EXSR *PSSR                                     E27263
+     C***********          END                                            E27263
+     C***********          END                                            E27263
+     C**
+      ** OUTPUT 'NO DETAILS TO REPORT' IN P1
+     C                     MOVE 'ALL'     BRNCH   3                       E27263
+     C                     SETON                     72                   E27263
+     C                     EXCPTNODTL
+     C**
+0466 C                     ENDSR
+     C*
+0497 C********************************************************************
+     C*
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C*
+     C* CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+     C/COPY ZSRSRC,ZDATE2Z4                                               S01392
+     C********************************************************************S01392
+     O/EJECT
+     OLE0550P1H 1 03   OF 70
+     O       OR        31 70
+     O                                   23 'REFERENCE LE0550P1'
+     O                         TITL      91
+     O                                  102 'DATE'
+     O                         RUNA     110
+     O                                  119 'PAGE'
+     O                 31      PAGE  Z  124
+     O        H 2      OF 70
+     O       OR        31 70
+     O                                   44 'CUSTOMER LENDING'
+     O                                   66 'PAY/RECEIVE - SETTLEM'
+     O                                   88 'ENTS IN OTHER BRANCHES'
+     O                                   96 'BRANCH'
+     O                         BRCA     100
+     O                                  101 '-'
+     O                 U7               101 ' '
+     O                         BRNM     131
+     O        H 1      OF 70
+     O       OR        31 70
+     O                                   45 '-----------------'
+     O                                   66 '---------------------'
+     O                                   88 '----------------------'
+     O        H 2      OF 70
+     O       OR        31 70
+     O***********      U1               113 'EXCEPTION'                   LN0069
+     O***********     NU1               126 'NON-EXCEPTION'               LN0069
+     O                 80               113 'EXCEPTION'                   LN0069
+     O                N80               126 'NON-EXCEPTION'               LN0069
+     O        H 2      OF 70
+     O       OR        31 70
+     O                                   18 'SETTL.   PAY/REC/'
+     O                                   46 'VALUE    SETTL.'
+     O                                   62 'OUR PAY/REC'
+     O**********                         74 'TRANS.'                                          CGL029
+     O                                   80 'TRANS.'                                          CGL029
+     O                                   94 'TRANS.'
+     O                                  107 'CUST.'
+     O        H 11     OF 70
+     O       OR        31 70
+     O                                   17 ' BRANCH    CREDIT'
+     O                                   25 'CCY'
+     O                                   45 'DATE     TYPE '
+     O**********                         74 ' ACCOUNT         NO.  '                          CGL029
+     O                                   74 ' ACCOUNT              '                          CGL029
+     O                                   78 ' NO.'                                            CGL029
+     O                                  106 'TYPE           NO.'
+     O                                  125 'AMOUNT'
+     O**
+     O        D 1      L1 30 70
+     O                                    1 ' '
+     O**
+     O        D 1      01 15 70
+     O                         OSBR       5
+     O                 64                17 'CREDIT'
+     O                 65                17 ' PAY  '
+     O                 66                17 ' REC  '
+     O                         CCY       25
+     O                         ZADATE    37
+     O                         SETP      43
+     O**********               OSAC      63                                                   CGL029
+     O                         OSAC      72                                                   CGL029
+     O**********               FCLN      74                                                   CGL029
+     O                         FCLN      80                                                   CGL029
+     O                         LTYP      90
+     O                                   91 '-'
+     O                         SUTP      93
+     O                         CLAS      97                                                   CLE042
+     O                         CNUM     107
+     O                 60      EAMT     127 ' ,   ,   ,   , 0 -'
+     O                 61      EAMT     129 '   ,   ,   , 0 . -'
+     O                 62      EAMT     130 '  ,   ,   , 0 .  -'
+     O                 63      EAMT     131 ' ,   ,   , 0 .   -'
+     O**
+     O        T 33     LR U7 70
+     O                                   71 '*** DATABASE ERROR ***'
+     O**
+     O        T 3      L5 30 70
+     O       OR        LR 30 70
+     O                                   66 '*** END OF REPORT FOR'
+     O                                   73 ' BRANCH'
+     O                         BRCA      77
+     O                                   81 '***'
+0409 OLE0550P1E   03           NODTL
+0412 O                                   24 'REFERENCE  LE0550P1'
+0413 O                         TITL      89
+0414 O                                  103 'DATE'
+0415 O                         RUNA     112
+0416 O                                  122 'PAGE'
+0417 O                         PAGE  3  128
+0632 O        E   05           NODTL
+     O                                   44 'CUSTOMER LENDING'
+     O                                   66 'PAY/RECEIVE - SETTLEM'
+     O                                   88 'ENTS IN OTHER BRANCHES'
+     O                                   96 'BRANCH'
+     O                         BRNCH    100
+     O                 72               101 '-'
+     O                 72      BRNM     131
+0637 O        E   06           NODTL
+     O                                   45 '-----------------'
+     O                                   66 '---------------------'
+     O                                   88 '----------------------'
+     O        E   08           NODTL
+     O***********      U1               113 'EXCEPTION'                   LN0069
+     O***********     NU1               126 'NON-EXCEPTION'               LN0069
+     O                 80               113 'EXCEPTION'                   LN0069
+     O                N80               126 'NON-EXCEPTION'               LN0069
+     O        E   20  NU7      NODTL
+     O                                   63 '***   NO DETAILS TO REPO'
+     O                                   71 'RT   ***'
+     O        E   20   U8 U7   NODTL
+     O                                   74 '** DATABASE IN ERROR **'
+     O        E   25           NODTL
+     O                                   66 '*** END OF REPORT FOR'
+     O                                   74 ' BRANCH '
+     O                         BRNCH     77
+     O                                   81 ' ***'
+     O*
+     OLE0550AUT  203   LR
+     O                                   23 'REFERENCE LE0550AU'
+     O                         TITL      91
+     O                                  102 'DATE'
+     O                         RUNA     110
+     O                                  119 'PAGE'
+     O                         PAGE1 Z  124
+     O        T  1     LR
+     O**********                         46 'CUSTOMER LENDING'            LN0069
+     O**********                         66 'PAY/RECEIVE SETTLEM'         LN0069
+     O**********                         85 'ENTS - FILE CONTROL'         LN0069
+     O**********                         92 'REPORT'                      LN0069
+     O**********             U1         113 'EXCEPTION'                   LN0069
+     O**********            NU1         113 'NON-EXCEPTION'               LN0069
+     O                                   36 'CUSTOMER LENDING'            LN0069
+     O                                   56 'PAY/RECEIVE SETTLEM'         LN0069
+     O                                   75 'ENTS IN OTHER BRANC'         LN0069
+     O                                   94 'HES - FILE CONTROL '         LN0069
+     O                                  100 'REPORT'                      LN0069
+     O                 80               120 'EXCEPTION'                   LN0069
+     O                N80               120 'NON-EXCEPTION'               LN0069
+     O        T  3     LR
+     O**********                         47 '-----------------'           BHF216
+     O                                   37 '-----------------'           BHF216
+     O**********                         66 '-------------------'         BHF216
+     O                                   56 '-------------------'         BHF216
+     O**********                         86 '-------------------'         BHF216
+     O                                   75 '-------------------'         BHF216
+     O**********                         92 '------'                      BHF216
+     O                                   78 '---'                         BHF216
+     O        T  1     LR
+     O                                   29 'S/PRTXS2 - RUN CONTROLS'
+     O                                   59 'NUMBER'
+     O                                   84 'VALUE'
+     O        T  2     LR
+     O                                   29 '-----------------------'
+     O                                   59 'OF RECORDS'
+     O                                   84 'OF RECORDS'
+     O        T  2     LRN72
+     O                                   31 'TOTAL RECORDS - ON FILE'
+     O                         TNORE 3   59
+     O                         THRWN Z   81
+     O**********               TOTDC     84                                                   219063
+     O                         TOTDC L   85                                                   219063
+     O        T  2     LR
+     O                                   31 'TOTAL RECORDS - PRINTED'
+     O                         REC,2 3   59
+     O                         INT,2 Z   81
+     O**********               DEC,2     84                                                   219063
+     O                         DEC,2 L   85                                                   219063
+     O        T  2     LR
+     O                                   27 'TOTAL RECORDS - NOT'
+     O                                   35 'PRINTED'
+     O                         REC,1 3   59
+     O                         INT,1 Z   81
+     O**********               DEC,1     84                                                   219063
+     O                         DEC,1 L   85                                                   219063
+     O        T  3     LR
+     O                                   32 'TOTAL RECORDS - CALCULAT'
+     O                                   34 'ED'
+     O                         REC,3 3   59
+     O                         INT,3 Z   81
+     O**********               DEC,3     84                                                   219063
+     O                         DEC,3 L   85                                                   219063
+     O                 U8               118 '***   DIFFERENCE   ***'
+     O        T  1     LR U7
+     O                                   39 '*** REFERENCE LE0550'
+     O                                   59 'DATABASE ERROR AT'
+     O                         DBASE     62
+     O        T  3     LR U7
+     O                                   33 'FILENAME'
+     O                         DBFILE    42
+     O                                   46 'KEY'
+     O                         DBKEY     80
+     O********T*3      LRN30                                              BHF216
+     O**********                         63 '***  NO DETAILS TO REPO'     BHF216
+     O**********                         70 'RT  ***'                     BHF216
+     O*
+** ZYDY -- YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+** ZMDY -- MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+** ZMNM -- MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

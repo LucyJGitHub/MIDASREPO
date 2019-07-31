@@ -1,0 +1,443 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LB Portfolio Lending Group/Instru Select')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Lending Module                         *
+     F*                                                               *
+     F*  LB0386 - Portfolio Lending Group/Instrument Report Selection *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01498             Date 11Aug94               *
+      *                 066235             Date 27Jan93               *
+     F*                 R00300             DATE 20AUG90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  S01498 - Portfolio Lending Upgrade to Release 10             *
+     F*  066235 -  Recompile program due to changes in DSPF           *
+     F*  R00300 -  Message file changes                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F*****BANK*DETAILS.*PREFIX*-*BJ***********************************   S01498
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       S01498
+     F*
+     F*****DATABASE*JOB*FILE*-*INPUT*SPOOL*FILE*FOR*REPORT*************   S01498
+     F***STRDBJWKO***F      96            DISK         KINFSR *PSSR A     S01498
+     F*
+     F**   SCREEN FORMAT
+     FLB0386DFCF  E                    WORKSTN      KINFSR *PSSR
+     F*
+     F**   PORTFOLIO LENDING GROUPS LOGICAL 1. PREFIX - GP
+     FLBGROUL1IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F**                                                                 *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F**                 ------------------------                        *
+     F** 26 - END OF MESSAGE SUBFILE                                     *
+     F******50*-*FILE*INDICATOR*ON*SDBANKPD****************************  *S01498
+     F**    51 - FILE INDICATOR ON LBGROUL1                              *
+     F**    52 - READ INDICATOR ON LB0386F1                              *
+     F**    56 - INVALID PORTFOLIO LENDING GROUP                         *
+     F**       60 - HEADER RECORD WRITTEN TO INPUT FILE                  *
+     F**          70 - ERROR INDICATOR                                   *
+     F**          71 - 'INVALID' INDICATOR                               *
+     F********************************************************************
+     F/EJECT
+     E********************************************************************
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E********************************************************************
+     I/EJECT
+     I********************************************************************
+     I*
+     I** DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I**
+     I            DS
+     I                                        1   4 DDLCGR
+     I                                        1   3 WWLCGR
+     I                                        4   4 WWBLNK
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 253 DDWID
+     I                                      254 263 USER
+     I*
+     I**  LOCAL DATA AREA FOR DATA BASE ERRORS
+     I***LDA********UDS                            256                    S01498
+     ILDA         DS                            256                       S01498
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   S01498
+     I@RPARM      DS                                                      S01498
+     I*** Parameters for @RPARM - 100 long string passed to RCF           S01498
+     I*                                                                   S01498
+     I                                        1 100 @@RPRM                S01498
+     I                                        1   4 WWLGRP                S01498
+     I*                                                                   S01498
+     ISDBANK    E DSSDBANKPD                                              S01498
+     I**  Data structure for bank details                                 S01498
+     I*                                                                   S01498
+     IDSFDY     E DSDSFDY                                                 S01498
+     I**  Short data structure for access objects                         S01498
+     I*                                                                   S01498
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** PARAMETER LIST DECLARATIONS
+     C           *ENTRY    PLIST
+     C***********          PARM           WWRTCD  1                       S01498
+     C                     PARM           @SEQ    5                       S01498
+     C                     PARM           @LVL    1                       S01498
+     C                     PARM           @ENT    3                       S01498
+     C                     PARM           @RPARM100                       S01498
+     C                     PARM           RACT    1                       S01498
+     C                     PARM           RCMD    1                       S01498
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INITIALISATION
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C           *INKC     DOWEQ'0'
+     C*
+     C                     MOVEL*BLANKS   DDLCGR
+     C                     EXSR #B
+     C                     MOVE '1'       *IN71
+     C*
+     C                     END
+     C*
+     C*****TERMINATION*PROCESSING**************************************   S01498
+     C***********          EXSR #C                                        S01498
+     C*                                                                   S01498
+     C                     MOVE 'E'       RCMD                            S01498
+     C*
+     C**   END PROGRAM
+     C                     MOVE '1'       *INLR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**          INDEX TO SUBROUTINES                                   *
+     C**         ----------------------                                  *
+     C**                                                                 *
+     C**   1.  #B     - MAIN REPORT PROCESSING                           *
+     C**   2.  #BA    - PERFORMS SCREEN VALIDATION                       *
+     C**   5.  #A     - ACCESSES SDBANKPD AND INITIALISES WORK FIELDS    *
+     C**   6.  #C     - TERMINATION PROCESSING                           *
+     C**   9.  ZASNMS - SENDS A MESSAGE TO PROGRAM QUEUE                 *
+     C**  10.  #PSSR  - ERROR HANDLING SUBROUTINE                        *
+     C**                                                                 *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #B        - MAIN PROCESSING                                     *
+     C**                                                                 *
+     C** CALLS     - #B                                                  *
+     C**                                                                 *
+     C** CALLED BY - MAINLINE                                            *
+     C**                                                                 *
+     C********************************************************************
+     C           #B        BEGSR
+     C*
+     C** WHILE NOT END REQUESTED AND INVALID DATA
+     C           *INKC     DOWEQ'0'
+     C           *IN71     ANDEQ'1'
+     C*
+     C**  DISPLAY SELECTION SCREEN
+     C                     WRITELB0386F1
+     C*
+     C**  IF ERROR, WRITE MESSAGE SUBFILE
+     C           *IN70     IFEQ '1'
+     C                     WRITELB0386C2
+     C                     END
+     C*
+     C**  READ SELECTION SCREEN
+     C                     READ LB0386F1                 52
+     C*
+     C** IF NOT END REQUESTED, VALIDATE SCREEN
+     C           *INKC     IFEQ '0'
+     C*
+     C                     EXSR #BA
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** IF THE SCREEN WAS VALID WRITE HEADER RECORDS (IF NOT
+     C** ALREADY WRITTEN) AND A DETAIL RECORD
+     C           *IN71     IFEQ '0'
+     C*
+     C           DDLCGR    IFEQ '*ALL'
+     C                     MOVEL'*ALL'    WWLGRP  4
+     C                     ELSE
+     C                     MOVELWWLCGR    WWLGRP
+     C                     END
+     C*                                                                   S01498
+     C                     RETRN                                          S01498
+     C*
+     C************IN60     IFEQ '0'                                       S01498
+     C***********          EXCPTFIRST                                     S01498
+     C***********          MOVE '1'       *IN60                           S01498
+     C***********          END                                            S01498
+     C***********                                                         S01498
+     C***********          EXCPTDETL                                      S01498
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BA       - THIS SUBROUTINE PERFORMS SCREEN VALIDATION          *
+     C**                                                                 *
+     C** CALLS     - ZASNMS                                              *
+     C**                                                                 *
+     C** CALLED BY - #B                                                  *
+     C**                                                                 *
+     C********************************************************************
+     C           #BA       BEGSR
+     C*
+     C** CLEAR SCREEN MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C*
+     C** CLEAR SCREEN ERROR INDICATORS
+     C                     MOVE '0'       *IN56
+     C                     MOVEA'00'      *IN,70
+     C*
+     C**   IF PORTFOLIO LENDING GROUP <> '*ALL'
+     C           DDLCGR    IFNE '*ALL'
+     C*
+     C**   IF PORTFOLIO LENDING GROUP EQUALS BLANKS ERROR LBM0071 -
+     C**    'ENTER EITHER A VALID PORTFOLIO LENDING GROUP OR *ALL'
+     C           DDLCGR    IFEQ *BLANKS
+     C                     MOVE '1'       *IN56
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0071' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C**   IF LAST CHARACTER IS NOT BLANK ERROR LBM0070 -
+     C**    'INVALID PORTFOLIO LENDING GROUP USE ONLY FIRST
+     C**                               THREE CHARACTERS'
+     C                     ELSE
+     C           WWBLNK    IFNE *BLANKS
+     C                     MOVE '1'       *IN56
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0070' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C*
+     C**   IF PORTFOLIO LENDING GROUP ENTERED, CHAIN LBGROUL1 WITH
+     C**                                      SELECTED GROUP
+     C           DDLCGR    IFNE *BLANKS
+     C           WWLCGR    CHAINLBGROUL1             51
+     C*
+     C**   IF NO RECORD FOUND ERROR LBM0005 - 'PORTFOLIO LENDING GROUP
+     C**                                       DOES NOT EXIST'
+     C           *IN51     IFEQ '1'
+     C           GPRECI    ORNE 'D'
+     C                     MOVE '1'       *IN56
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #A         - THIS SUBROUTINE PERFORMS INITIALISATION            *
+     C**                                                                 *
+     C**  CALLS     - NONE                                               *
+     C**                                                                 *
+     C**  CALLED BY - MAINLINE                                           *
+     C**                                                                 *
+     C********************************************************************
+     C           #A        BEGSR
+     C*                                                                   S01498
+     C                     MOVEACPY@      ACT@   80                       S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           LDA                             S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C*
+     C**   INITIALISE DB ERROR FIELDS AND STORE PROGRAM NAME FOR
+     C**   DB ERROR FIELD.
+     C                     MOVE '1'       *IN26
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVEL'LB0386'  DBPGM
+     C                     OUT  LDA                                       S01498
+     C*                                                                   R00300
+     C**   Fill in fields for subroutine ZASNMS                           R00300
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue  R00300
+     C                     MOVEL*BLANKS   ZAMSGF                          R00300
+     C*********************MOVEL'LXGBMSGF'ZAMSGF                          R00300
+     C                     MOVEL'LBUSRMSG'ZAMSGF 10        Message file   R00300
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue      R00300
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.    R00300
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.  R00300
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.  R00300
+     C*
+     C**   ACCESS ICD RECORD 1
+     C***********1         SETLLSDBANKPD                                  S01498
+     C***********          READ SDBANKPD                 50               S01498
+     C                     CALL 'AOBANKR0'                                S01498
+     C                     PARM '*DBERR'  P@RTCD  7                       S01498
+     C                     PARM '*FIRST'  P@OPTN  7                       S01498
+     C           SDBANK    PARM SDBANK    DSFDY                           S01498
+     C***********                                                         S01498
+     C*****IF*ICD*1*NOT*FOUND*THEN*DB*ERROR****************************   S01498
+     C************IN50     IFEQ '1'                                       S01498
+     C***********BJTYLC    OREQ 'D'                                       S01498
+     C***********                                                         S01498
+     C***********          MOVE '001'     DBASE            ***************S01498
+     C***********          MOVE *BLANKS   DBFILE           *             *S01498
+     C***********          MOVEL'SDBANKPD'DBFILE           * DBERROR  001*S01498
+     C***********          MOVE *BLANKS   DBKEY            *             *S01498
+     C***********          MOVE '1'       *INU7            ***************S01498
+     C***********          MOVE '1'       *INU8                           S01498
+     C***********          MOVE '1'       *INLR                           S01498
+     C***********          RETRN                                          S01498
+     C***********          END                                            S01498
+     C*
+     C**   INITIALISE MESSAGE HANDLING INDICATORS
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+     C                     MOVE '1'       *IN71
+     C*
+     C** INITIALISE SCREEN MESSAGE QUEUE
+     C                     MOVEL'*'       DDPGMQ
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C***********                                                        *S01498
+     C***#C********-*THIS*SUBROUTINE*PERFORMS*TERMINATION*PROCESSING******S01498
+     C***********                                                        *S01498
+     C***CALLS*****-*NONE*************************************************S01498
+     C***********                                                        *S01498
+     C***CALLED*BY*-*MAINLINE*********************************************S01498
+     C***********                                                        *S01498
+     C********************************************************************
+     C***********#C        BEGSR                                          S01498
+     C***********                                                         S01498
+     C************IN60     IFEQ '1'                                       S01498
+     C************INU7     ANDEQ'0'                                       S01498
+     C***********          EXCPTENDJOB                                    S01498
+     C***********          MOVE '1'       WWRTCD                          S01498
+     C***********          ELSE                                           S01498
+     C***********          MOVE '0'       WWRTCD                          S01498
+     C***********          END                                            S01498
+     C***********                                                         S01498
+     C***********          ENDSR                                          S01498
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** ZASNMS    - Send message to program's message queue             *
+     C**                                                                 *
+     C** CALLED BY -                                                     *
+     C**                                                                 *
+     C** CALLS     - Y2SNMGC                                             *
+     C**                                                                 *
+     C********************************************************************
+     C           ZASNMS    BEGSR                           ** ZASNMS    **
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** *PSSR     - PROGRAM ERROR HANDLING ROUTINE                      *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - NONE                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     O********************************************************************
+     O***STRDBJWKEADD             FIRST                                   S01498
+     O***********                        24 '//BCHJOB LB0385J JOBD(MB'    S01498
+     O***********                        29 'ATCH)'                       S01498
+     O********EADD             FIRST                                      S01498
+     O***********                        21 'CALL LB0385 PARM(''1'')'     S01498
+     O********EADD             FIRST                                      S01498
+     O***********                         6 '//DATA'                      S01498
+     O***********                                                         S01498
+     O********EADD             DETL                                       S01498
+     O***********              WWLGRP     4                               S01498
+     O***********                                                         S01498
+     O********EADD             ENDJOB                                     S01498
+     O***********                        11 '//ENDBCHJOB'                 S01498
+** CPY@
+(c) Finastra International Limited 2001

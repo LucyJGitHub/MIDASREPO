@@ -1,0 +1,2654 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Revaluation a/c key generation')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Lending Module                                       *
+      *                                                               *
+      ***LE4210*-*Revaluation*A/C*Key*Generation***********************                       CAS005
+      *  LE4210 - Revaluation Using Net-Treasury-Rate                 *                       CAS005
+      *                                                               *
+      *  Function:  This program will generate A/C keys for Cash      *
+      *  (COB)      Flow Revaluation.                                 *
+      *                                                               *
+      *  NOTE: Check LE4410 for changes that may apply to it if there *                       CAS005
+      *        are amendments done to this program.                   *                       CAS005
+      *                                                               *                       CAS005
+      *  Called By: LEC4210 - Revaluation A/C Key Generation          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD053295           Date 13Apr19               *
+      *  Prev Amend No. MD052583           Date 22Jan19               *
+      *                 CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *      
+      *                 CLE141             Date 08Feb16               *
+      *                 255454             Date 19Aug14               *
+      *                 AR996895           Date 25Nov12               *
+      *                 AR1056323          Date 14Nov12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 AR821740           Date 29Aug11               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      *                 262540             Date 20Jan11               *
+      *                 244019             Date 03Nov09               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246141             Date 26Mar07               *
+      *                 246135             Date 05Mar07               *
+      *                 164847             Date 30Nov06               *
+      *                 230321             Date 27Nov06               *
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG12972           Date 21Dec06               *
+      *                 242286             Date 25Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE036             Date 22Sep03               *
+      *                 CIR013             Date 25Apr05               *
+      *                 CAS011             Date 16May05               *
+      *                 CAS009             Date 04May04               *
+      *                 229373             Date 13Sep04               *
+      *                 226871             Date 14May04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CGL020             Date 12Dec02               *
+      *                 217211             Date 24Apr03               *
+      *                 212429             Date 26Sep02               *
+      *                 212416             Date 26Sep02               *
+      *                 212414             Date 26Sep02               *
+      *                 CAS004             Date 26Jun02               *
+      *                 220004             Date 24Jul03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001  *CREATE    Date 23Nov01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD053295 - Lending loan with Interest Calculation Basis      *
+      *             method 3 (30/360) has wrong interest payment      *
+      *             amount for month of March (Recompile)             *
+      *  MD052583 - Rebranding changes (47K Sources) during SP17 have *
+      *             removed some fixes that was already incorporated  *
+      *             in previous SP                                    *
+      *           - Reinstate overridden MD047993/MD035545            *      
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  255454 - Unrealised Profit/Loss for Hedge Accounting use     *
+      *           All in Rate instead of Net Treasury Rate.           *
+      *           Transferred code 224214 from LE4410. Applied fix    *
+      *           231175.                                             *
+      *  AR996895 - Incorrect accrual interest calculation.           *
+      *             (Child:AR996897) (Recompile)                      *
+      *  AR1056323 - Revert back changes of CLE134 for LKEY1DP and    *
+      *              LKEYFED                                          *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  AR821740 - COB - No stamp tax account keys generated         *
+      *             (Recompile)                                       *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  262540 - Incorrect accrual due to incorrect value of fields  *
+      *           added by CAS005. Increase length of HISTS* files.   *
+      *           Applied 257328.                                     *
+      *  257328 - Generate account keys here to correct postings of   *
+      *           UP/UL.                                              *
+      *  244019 - Arrays TKEY, TPAM and TLAM are not large enough so  *
+      *           replace with a work file                            *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *            to Midas Plus (Recompile)                          *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  246141 - Recompiled due to changes in ZINTDYZ2               *
+      *  246135 - Lending fees are not being included in the calcula- *
+      *           tion of the NPV amount.                             *
+      *  164847 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  230321 - Incorrect Unrealise figure in Revaluation Report.   *
+      *  BUG12990 - Recompiled due to changes in ZINTDYZ2/ZINTDYZ2LE  *
+      *  BUG12972 - Display correct customer number and loan number   *
+      *             when generating the account keys report.          *
+      *  242286 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CLE036 - LE Enh for Nordea Phase 1 Pty 2- Specific Base Rate *
+      *           (Recompile)                                         *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over GLINTC and ZINTDY.                   *
+      *  CAS011 - EIR/AC Accounting Upgrade to MP1                    *
+      *  CAS009 - Effective Interest Rate/Amortised Cost Accounting   *
+      *  229373 - Subtract interest capitalized to date and interest  *
+      *           w/o to date when computing the accrued interest.    *
+      *  226871 - Fees should be incorporated in the computation      *
+      *           of NPV.                                             *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+      *           Information                                         *
+      *  217211 - Principal Amount in LE4210 incorrect                *
+      *  212429 - Reversal amount of deleted loan is wrong.           *
+      *  212416 - Declaration of field is wrong (Recompile)           *
+      *  212414 - Report is not sorted by loan type and subtype       *
+      *  CAS004 - Hedge Accounting Phase A                            *
+      *           Changes to CAS001 processing to include non-working *
+      *           day processing and a new generated account keys rpt.*
+      *  220004 - Change call to AOCURRR0 to use DSSDY not DSFDY.     *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *                                                               *
+      *****************************************************************
+     FLECFLWL1IF  E           K        DISK
+      ** Cash flows by brch/ccy/book/loan type/loan no.
+      *
+     FCLOAN   UF  E           K        DISK         KINFSR *PSSR
+      ** Customer Loans File
+      *
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+      *                                                                                       255454
+     FLELOANLBUF  E           K        DISK         KINFSR *PSSR                              255454
+      ** Customer Matured Loans File                                                          255454
+      *                                                                                       255454
+     F            CLOANCLF                          KRENAMECLOANA                             255454
+      *
+     FLKEY1ZZ UF  E           K        DISK         KINFSR *PSSR
+      ** LE Loan Account Keys Trailer
+      *
+     FLENPVLPDO   E                    DISK         KINFSR *PSSR
+      ***Revalued*Customer*Loans*File**********************************                       CAS005
+      ** Revalued Loans Using Net-Treasury-Rate File                                          CAS005
+      *
+     FLENPVLL0IF  E           K        DISK         KINFSR *PSSR                              255454
+      ** Revalued Customer Loans File                                                         255454
+     F            LENPVLD0                          KRENAMELENPVL                             255454
+      *                                                                                       255454
+     F*LKEY1DPO***F     153            DISK         KINFSR *PSSR A                            CGL020
+     F*LKEY1DP*O***F*****348            DISK         KINFSR *PSSR A                    CGL020 CLE042
+     F***LKEY1DP O   F     392            DISK         KINFSR *PSSR A                  CLE042 CLE134
+     F***LKEY1DP O   F     396            DISK         KINFSR *PSSR A               CLE134 AR1056323
+     FLKEY1DP O   F     392            DISK         KINFSR *PSSR A                         AR1056323
+      ** LE Loan Account Keys Detail
+      *
+     F***LEFEEDL6IF  E           K        DISK                                         226871 CAS011
+     F***LEFEEDL7IF  E           K        DISK                                         CAS011 246135
+     FLEFEEDLIIF  E           K        DISK                                                   246135
+      ** Lending Fee Details                                                                  226871
+      *                                                                                       226871
+     FLE4210PDUF  E           K        DISK         KINFSR *PSSR A                            244019
+      ** Summary keys work file                                                               244019
+      *                                                                                       244019
+     FLE4210AUO   E                    PRINTER      KINFDS SPOOLU
+      ** Revaluation A/C Key Generation Report - Audit
+      *
+     FLE4210P1O   E                    PRINTER      KINFDS SPOOL1     UC
+      ** Revaluation A/C Key Generation Report
+      *
+     FLE4210P2O   E                    PRINTER      KINFDS SPOOL2     UC                      CAS004
+      ** LE Revaluation Report                                                                CAS004
+      *                                                                                       CAS004
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  31 - Hedge Accounting installed                              *                       CAS004
+      *  32 - CAS005 is installed                                     *                       CAS005
+      *  70 - Write record to LKEY1DP                                 *
+      *  80 - End of File                                             *
+      *  81 - LOKUP indicator                                         *
+      *  98 - System Date Format                                      *
+      *                                                               *
+      *  LR - Last record indicator (program termination)             *
+      *  U7 and U8 - DB error processing indicator                    *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  SRINIT - Initialisation Processing                           *
+      *  SRPRNT - Print transaction details                           *
+      *  SRBLNK - Blank out detail fields                             *
+      *  SRLOAD - Load details line                                   *
+      *  SRCLPL - Calculate unrealized profit/loss                    *
+      *  SRTDAY - Calculate today's profit/loss and write out         *
+      *           account keys                                        *
+      *  SRBLTT - Blank out total fields                              *
+      *  SRLDTT - Load totals line                                    *
+      *  SREXCP - Write out to LKEY1DP File                           *
+      *  SRGNAK - Generate account keys                               *
+      *  SRLNOU - Update loans files and write to LENPVLPD            *
+      *  SRASUM - A/Key Summary                                       *
+      *  SRRCFP - Subroutine to register the P1 Printer File via RCF  *
+      *  SRRCFA - Subroutine to register the AU Printer File via RCF  *
+      *  SRTOTL - Process Totals                                      *
+      *  SRTERM - Termination process                                 *
+      *  SRAUDT - Audit report processing                             *
+      *                                                               *
+      *  *PSSR  - DB Error Processing                                 *
+      *  GLZADD - Subroutine to add an amount to the total            *
+      *  GLZSUM - Subroutine to carry out the additon for subroutine  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E********************AKY        10  1                                                    CLE042
+     E********************KEY        12  1                                                    CLE042
+     E********************TKEY      500 12                                                    CLE042
+     E********************TPAM      500 13 0                                                  CLE042
+     E********************TLAM      500 13 0                                                  CLE042
+     E                    AKY        14  1                                                    CLE042
+     E                    KEY        16  1                                                    CLE042
+     E**********          TKEY      990 16                                             CLE042 244019
+     E**********          TPAM      990 13 0                                           CLE042 244019
+     E**********          TLAM      990 13 0                                           CLE042 244019
+     E**********          AKCN      990  6                                           BUG12972 244019
+     E**********          AKLN      990  6                                           BUG12972 244019
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E/COPY ZSRSRC,ZDATE9Z1
+      /EJECT
+      *
+     ILKEY1ZZF
+     I              RECI                            ZRECI
+      *
+     I/COPY ZSRSRC,ZINTDYZ1
+     I/COPY ZSRSRC,ZFRPEDZ2
+     I/COPY ZSRSRC,ZDATE9Z2
+     I/COPY ZSRSRC,ZDAT10Z1
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for LE4210P1.
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+     ISPOOL2      DS                                                                          CAS004
+      ** File Information Data Structure for LE4210P2.                                        CAS004
+      *                                                                                       CAS004
+     I                                       83  92 SFILE2                                    CAS004
+     I                                    B 123 1240SFNUM2                                    CAS004
+     I                                    B 188 1890OFLLN2                                    CAS004
+     I                                    B 367 3680PRTLN2                                    CAS004
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for LE4210AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IXXKYDS      DS
+     I                                        1   3 XXBRCA
+     I                                        4   5 XXBKCD
+     I                                        6   7 XXLTYP
+     I                                        8   9 XXLNST
+     I                                       10  12 XXCYCD
+     I                                       13  16 XXLNCL                                    CLE042
+      *
+     ILVELDS      DS                              6
+     I                                        1   1 WL6
+     I                                        2   2 WL5
+     I                                        3   3 WL4
+     I                                        4   4 WL3
+     I                                        5   5 WL2
+     I                                        6   6 WL1
+     I            DS                                                                          CLE042
+     I                                        1  14 AKY                                       CLE042
+     I                                        1  10 SHAKY                                     CLE042
+      *
+     ILECFLC    E DSLECFLWPD
+      *
+     ILECFLP    E DSLECFLWPD
+      *
+     I              LCLNRF                          RCLNRF
+     I              LCLTYP                          RCLTYP
+     I              LCLNST                          RCLNST
+     I              LCFLDT                          RCFLDT
+     I              LCDATE                          RCDATE
+     I              LCNDYP                          RCNDYP
+     I              LCNDYY                          RCNDYY
+     I              LCCAMT                          RCCAMT
+     I              LCFTYP                          RCFTYP
+     I              LCIRAT                          RCIRAT
+     I              LCSPRR                          RCSPRR
+     I              LCYLDC                          RCYLDC
+     I              LCFYLD                          RCFYLD
+     I              LCDSCF                          RCDSCF
+     I              LCNPVA                          RCNPVA
+     I              LCIOIN                          RCIOIN
+     I              LCCNUM                          RCCNUM
+     I              LCBRCA                          RCBRCA
+     I              LCCYCD                          RCCYCD
+     I              LCBKCD                          RCBKCD
+     I              LCADLN                          RCADLN
+     I              LCICBS                          RCICBS
+     I              LCFSEQ                          RCFSEQ                                    CAS009
+     I              LCLNCL                          RCLNCL                                    CLE042
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External data structures for Currency Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** External data structures for branch details
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CAS004
+      ** Switchable Features Details accessed via access program                              CAS004
+      *                                                                                       CAS004
+     ISDGELR    E DSSDGELRPD
+      ** External data structures for General Ledger Details
+      *
+     ISDBOOK    E DSSDBOOKPD
+      ** External data structures for Book Details
+      *
+     ISDCLND    E DSSDCLNDPD
+      ** External data structures for Loan Data Details
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+     IDSFDY     E DSDSFDY
+      ** Dummy Data Structures used by Access Programs.
+      *
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C           *LOVAL    SETLLLECFLWL1
+     C                     READ LECFLWL1                 80
+      *                                                                                       230321
+     C**********           Z-ADD*ZEROS    WLALN   60                                   230321 CLE148
+     C                     MOVEL*BLANKS   WLALN   6                                           CLE148
+      *
+      ** No details to report
+      *
+     C           *IN80     IFEQ *ON
+     C                     EXSR SRAUDT
+     C                     EXSR SRTERM
+     C                     ELSE
+      *
+      ** Open files for the first branch reporting
+      *
+     C                     CLOSELE4210P1
+     C                     OPEN LE4210P1
+      *
+      ** Ensure report spool file recorded by RCF
+      ** transfer binary data into numeric field
+      *
+     C                     EXSR SRRCFP
+      *                                                                                       CAS004
+      ** Open files for the first branch reporting                                            CAS004
+      *                                                                                       CAS004
+     C                     CLOSELE4210P2                                                      CAS004
+     C                     OPEN LE4210P2                                                      CAS004
+      *                                                                                       CAS004
+      ** Ensure report spool file recorded by RCF                                             CAS004
+      ** transfer binary data into numeric field                                              CAS004
+      *                                                                                       CAS004
+     C                     EXSR SRRCF2                                                        CAS004
+     C                     ENDIF
+      *
+      ** Print transaction details
+      *
+     C           *IN80     DOWEQ*OFF
+     C           CAS005    IFNE 'Y'                                                           226871
+     C           CAS005    OREQ 'Y'                                                           226871
+     C           LCFTYP    ANDNE'SFAN'                                                        226871
+     C           LCFTYP    ANDNE'EFAN'                                                        226871
+     C           LCFTYP    ANDNE'SFBN'                                                        226871
+     C                     EXSR SRPRNT
+     C                     ENDIF                                                              226871
+     C                     READ LECFLWL1                 80
+     C                     ENDDO
+      *
+      ** Write 'End of Report for Branch'
+      *
+     C           WCOUNT    IFNE *ZERO
+      *
+     C                     EXSR SRCHLN
+      *
+     C********** PRTLN1    IFGT 52                                                            CAS004
+     C**********           WRITELE4210D1                                                      CAS004
+     C           PRTLN2    IFGT 52                                                            CAS004
+     C                     WRITELE4210D5                                                      CAS004
+     C                     ENDIF
+      *
+     C                     EXSR SRBLTT
+     C                     EXSR SRLDTT
+      *
+     C**********           WRITELE4210D3                                                      CAS004
+     C                     WRITELE4210D7                                                      CAS004
+      *
+     C********** PRTLN1    IFGT 56                                                            CAS004
+     C**********           WRITELE4210D1                                                      CAS004
+     C           PRTLN2    IFGT 56                                                            CAS004
+     C                     WRITELE4210D5                                                      CAS004
+     C                     ENDIF
+      *
+     C**********           WRITELE4210D4                                                      CAS004
+     C                     WRITELE4210D8                                                      CAS004
+     C                     ENDIF
+      *
+      ** Process Totals
+      *
+     C                     EXSR SRTOTL
+      *                                                                                       CAS004
+     C           PRTLN1    IFGT 52                                                            CAS004
+     C                     WRITELE4210D1                                                      CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C                     MOVE WCNT2     PTOTAL                                              CAS004
+     C                     Z-ADD0         WCNT2                                               CAS004
+     C                     WRITELE4210D3                                                      CAS004
+      *                                                                                       CAS004
+     C           PRTLN1    IFGT 56                                                            CAS004
+     C                     WRITELE4210D1                                                      CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C                     WRITELE4210D4                                                      CAS004
+      *
+      ** Terminate Program
+      *
+     C                     EXSR SRTERM
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0 - Access Program for Bank Details                   *
+      *  AOGELRR0 - Access Program for GL Details                     *
+      *  AOCLNDR0 - Access Program for LE Details                     *
+      *  SRRCFA   - Subroutine to register the AU Printer File via RCF*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define break fields
+      *
+     C           *LIKE     DEFN LCBRCA    WBRCA
+     C           *LIKE     DEFN LCCYCD    WCYCD
+     C           *LIKE     DEFN LCBKCD    WBKCD
+     C           *LIKE     DEFN LCLTYP    WLTYP
+     C           *LIKE     DEFN LCLNST    WLNST
+     C           *LIKE     DEFN LCLNCL    WLNCL                                               CLE042
+     C           *LIKE     DEFN LCLNRF    WLNRF
+     C           *LIKE     DEFN A6NBDP    WNBDPP
+      *
+     C*********************Z-ADD0         Z       20                                          CLE042
+     C*********            Z-ADD0         Z       30                                   CLE042 244019
+     C                     Z-ADD0         Z5      50
+     C                     Z-ADD0         Z13    130
+      *
+      ** Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBFILE
+     C                     MOVE *BLANK    DBKEY
+     C                     Z-ADD*ZERO     DBASE
+     C                     MOVEL'LE4210'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Call Access Program for General Ledger details
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDGELRPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                                       CAS004
+      ** Check if Hedge Accounting is installed                                               CAS004
+      *                                                                                       CAS004
+     C                     MOVE 'N'       CAS004  1                                           CAS004
+     C                     MOVE *OFF      *IN31                                               CAS004
+     C                     CALL 'AOSARDR0'                                                    CAS004
+     C                     PARM *BLANKS   PRTCD                                               CAS004
+     C                     PARM '*VERIFY' POPTN                                               CAS004
+     C                     PARM 'CAS004'  PSARD   6                                           CAS004
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFNE *BLANKS                                                       CAS004
+     C           PRTCD     ANDNE'*NRF   '                                                     CAS004
+     C                     MOVE 'SCSARDPD'DBFILE                                              CAS004
+     C                     Z-ADD10        DBASE                                               CAS004
+     C                     MOVEL'CAS004'  DBKEY                                               CAS004
+     C                     EXSR *PSSR                                                         CAS004
+      *                                                                                       CAS004
+     C                     ELSE                                                               CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFEQ *BLANKS                                                       CAS004
+     C                     MOVE 'Y'       CAS004                                              CAS004
+     C                     MOVE *ON       *IN31                                               CAS004
+      *                                                                                       CAS004
+      ** Get Event Control Date as the lesser between (Next Working Day - 1)                  CAS004
+      ** and Accrual Profit Date                                                              CAS004
+      *                                                                                       CAS004
+     C           BJDNWD    SUB  1         EVCD    50                                          CAS004
+      *                                                                                       CAS004
+     C           BKAPDT    IFLT EVCD                                                          CAS004
+     C                     Z-ADDBKAPDT    EVCD                                                CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** Convert the event control date to ddmmmyy format                                     CAS004
+      *                                                                                       CAS004
+     C                     Z-ADDEVCD      ZDAYNO                                              CAS004
+     C                     EXSR ZDATE2                                                        CAS004
+     C                     MOVELZADATE    PEVCD                                               CAS004
+      *                                                                                       CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS005
+      ** Check if CAS005 is installed                                                         CAS005
+      *                                                                                       CAS005
+     C                     MOVE 'N'       CAS005  1                                           CAS005
+     C                     MOVE *OFF      *IN32                                               CAS005
+     C                     CALL 'AOSARDR0'                                                    CAS005
+     C                     PARM *BLANKS   PRTCD                                               CAS005
+     C                     PARM '*VERIFY' POPTN                                               CAS005
+     C                     PARM 'CAS005'  PSARD                                               CAS005
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS005
+      *                                                                                       CAS005
+     C           PRTCD     IFEQ *BLANKS                                                       CAS005
+     C                     MOVE 'Y'       CAS005                                              CAS005
+     C                     MOVE *ON       *IN32                                               CAS005
+     C                     ELSE                                                               CAS005
+     C           PRTCD     IFNE '*NRF   '                                                     CAS005
+     C                     MOVE 'SCSARDPD'DBFILE                                              CAS005
+     C                     Z-ADD11        DBASE                                               CAS005
+     C                     MOVEL'CAS005'  DBKEY                                               CAS005
+     C                     EXSR *PSSR                                                         CAS005
+     C                     ENDIF                                                              CAS005
+     C                     ENDIF                                                              CAS005
+      *
+      ** Call Access Program for Customer Lending Data
+      *
+     C                     CALL 'AOCLNDR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDCLND    PARM SDCLND    DSFDY                                               CLE134
+     C           SDCLND    PARM SDCLND    DSSDY                                               CLE134
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCLNDPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD3         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                                     MD035545
+      ** Retrieve system value setting.                                                     MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   PRTCD                                             MD035545
+     C                     PARM           P@OP01 20                                         MD035545
+     C                     PARM           P@VL01200                                         MD035545
+     C                     PARM           P@OP02 20                                         MD035545
+     C                     PARM           P@VL02200                                         MD035545
+     C                     PARM           P@OP03 20                                         MD035545
+     C                     PARM           P@VL03200                                         MD035545
+     C                     PARM           P@OP04 20                                         MD035545
+     C                     PARM           P@VL04200                                         MD035545
+     C                     PARM           P@OP05 20                                         MD035545
+     C                     PARM           P@VL05200                                         MD035545
+     C                     PARM           P@OP06 20                                         MD035545
+     C                     PARM           P@VL06200                                         MD035545
+     C                     PARM           P@OP07 20                                         MD035545
+     C                     PARM           P@VL07200                                         MD035545
+     C                     PARM           P@OP08 20                                         MD035545
+     C                     PARM           P@VL08200                                         MD035545
+     C                     PARM           P@OP09 20                                         MD035545
+     C                     PARM           P@VL09200                                         MD035545
+     C                     PARM           P@OP10 20                                         MD035545
+     C                     PARM           P@VL10200                                         MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'.                            MD035545
+      *                                                                                     MD035545
+     C           PRTCD     IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
+      *
+     C                     READ LKEY1ZZ                  80
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE 'LKEY1ZZ 'DBFILE
+     C                     MOVEL'*READ'   DBKEY
+     C                     Z-ADD4         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDNORE      WDKREC  50
+     C                     Z-ADDVLRF      WTODKI 150
+     C                     Z-ADDVLRL      WTODKD  30
+     C                     ENDIF
+      *
+      ** RCF Processing for Audit File
+      *
+     C                     EXSR SRRCFA
+      *
+     C                     Z-ADD*ZERO     WCOUNT  30
+     C                     MOVE *BLANK    WBRCA
+     C                     MOVE *BLANK    WCYCD
+     C                     MOVE *BLANK    WBKCD
+     C                     MOVE *BLANK    WLTYP
+     C                     MOVE *BLANK    WLNST
+     C                     MOVE *BLANK    WLNCL                                               CLE042
+     C**********           Z-ADD*ZERO     WLNRF                                               CLE148
+     C                     MOVEL*BLANKS   WLNRF                                               CLE148
+     C                     Z-ADD0         WCNT2   50                                          CAS004
+      *
+     C                     MOVE *BLANK    F1FFLG  1                                           CGL020
+     C                     Z-ADD0         F1FVAL 130                                          CGL020
+     C                     Z-ADD0         F1FPCT  52                                          CGL020
+     C                     MOVE *BLANKS   F1RACT 20                                           CGL020
+     C                     MOVE *BLANKS   F1RCTY  2                                           CGL020
+     C                     MOVE *BLANKS   F1RBNK 20                                           CGL020
+     C                     MOVE *BLANKS   F1RCDE 11                                           CGL020
+     C                     MOVE *BLANKS   F1PACT 20                                           CGL020
+     C                     MOVE *BLANKS   F1PCTY  2                                           CGL020
+     C                     MOVE *BLANKS   F1PBNK 20                                           CGL020
+     C                     MOVE *BLANKS   F1PCDE 11                                           CGL020
+     C                     MOVE *BLANKS   F1DACT 35                                           CGL020
+     C                     MOVE *BLANKS   F1DCTY  2                                           CGL020
+     C                     MOVE *BLANKS   F1DBNK 20                                           CGL020
+     C                     Z-ADD0         F1SDAT  50                                          CGL020
+     C                     Z-ADD0         QQLNNO  50                                          CLE134
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPRNT - Print transaction details                           *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBRCHR0 - Access Program for Branch Details                 *
+      *  AOCURRR0 - Access Program for Currency Details               *
+      *  AOBOOKR0 - Access Program for Book Details                   *
+      *  SRBLNK   - Blank out detail fields                           *
+      *  SRLOAD   - Load details line                                 *
+      *  SRBLTT   - Blank out total fields                            *
+      *  SRLDTT   - Load totals line                                  *
+      *  SRCHLN   - Process change in loan number                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPRNT    BEGSR
+      *
+      ** Determine which field has changed upon read to LECFLWL1
+      *
+     C                     MOVE *ALL'N'   LVELDS
+      *
+     C                     SELEC
+      *
+     C           LCBRCA    WHNE WBRCA
+     C                     MOVEL'YYYYYY'  LVELDS
+     C           LCCYCD    WHNE WCYCD
+     C                     MOVEL'NYYYYY'  LVELDS
+     C           LCBKCD    WHNE WBKCD
+     C                     MOVEL'NNYYYY'  LVELDS
+     C           LCLTYP    WHNE WLTYP
+     C                     MOVEL'NNNYYY'  LVELDS
+     C           LCLNST    WHNE WLNST
+     C           LCLNCL    ORNE WLNCL                                                         CLE042
+     C                     MOVEL'NNNNYY'  LVELDS
+     C           LCLNRF    WHNE WLNRF
+     C                     MOVEL'NNNNNY'  LVELDS
+      *
+     C                     ENDSL
+      *
+     C********** LCADLN    IFNE *ZERO                                                         217211
+     C********** LCFTYP    IFEQ 'SMAM'                                                        217211
+     C********** LCFTYP    OREQ 'SSAM'                                                        217211
+      *
+     C********** LCADLN    CHAINCLOAN                80                                       217211
+      *                                                                                       217211
+     C********** *IN80     IFEQ *ON                                                           217211
+     C********** *LOCK     IN   LDA                                                           217211
+     C**********           MOVE 'CLOAN   'DBFILE                                              217211
+     C**********           MOVELLCADLN    DBKEY                                               217211
+     C**********           Z-ADD5         DBASE                                               217211
+     C**********           OUT  LDA                                                           217211
+     C**********           EXSR *PSSR                                                         217211
+     C**********           ENDIF                                                              217211
+      *
+      ***For*participation*sold,*subtract*transaction*amount*to*the****                       217211
+      ***original*loan*plus*the*accrued*interest***********************                       217211
+      *
+     C********** LCFTYP    IFEQ 'SMAM'                                                        217211
+     C**********           Z-SUBAIPD      WINTA                                               217211
+     C**********           SUB  AIMN      WINTA                                               217211
+     C**********           ADD  IPRD      WINTA                                               217211
+      *
+      ***Remove*margin*from*accrued*interest***************************                       CAS004
+      ** Add margin to accrued interest                                                       CAS004
+      *
+     C********** MARG      IFNE *ZERO                                                         217211
+     C********** MARG      DIV  100       WMARG   97H                                         CAS004
+     C********** WMARG     MULT WINTA     WMARA  150H                                         CAS004
+     C**********           ADD  WMARA     WINTA                                               CAS004
+      *                                                                                       CAS004
+     C********** WINTA     DIV  INTR      WAINT  205H                                  CAS004 217211
+     C********** INTR      ADD  MARG      WMARG  117                                   CAS004 217211
+     C********** WAINT     MULT WMARG     WINTA     H                                  CAS004 217211
+      *                                                                                       CAS004
+     C****       INTR      ADD  MARG      WMARG  117                                          CAS004
+     C****       WINTA     DIV  WMARG     WAINT  205H                                         CAS004
+     C****                 SUB  MARG      WMARG                                               CAS004
+     C****       WAINT     MULT WMARG     WINTA     H                                         CAS004
+     C**********           ENDIF                                                              217211
+      *
+     C**********           ADD  WINTA     WINTA2 150                                          217211
+      *
+     C**********           SUB  LCCAMT    WAMT                                                217211
+     C**********           ELSE                                                               217211
+     C**********           ADD  LCCAMT    WAMT                                                217211
+     C**********           ENDIF                                                              217211
+      *
+     C**********           ENDIF                                                              217211
+     C**********           ENDIF                                                              217211
+      *
+      ** Change in branch code
+      *
+     C           WL6       IFEQ 'Y'
+      *
+      ** Initialise page number field
+      *
+     C                     Z-ADD*ZERO     PAGE
+      *
+      ** Use access program to read branch codes file
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM LCBRCA    PBRCH   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVELPBRCH     DBKEY
+     C                     Z-ADD6         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELLCBRCA    PBRCA
+     C                     MOVELA8BRNM    PBRNM
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Change in currency code
+      *
+     C           WL5       IFEQ 'Y'
+      *
+      ** Use access program to read currency codes file
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM LCCYCD    PCURR   3
+     C***********SDCURR    PARM SDCURR    DSFDY                                               220004
+     C           SDCURR    PARM SDCURR    DSSDY                                               220004
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVELPCURR     DBKEY
+     C                     Z-ADD7         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELLCCYCD    PCYCD
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Change in book code
+      *
+     C           WL4       IFEQ 'Y'
+      *
+      ** Use access program to read book codes file
+      *
+     C                     CALL 'AOBOOKR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM LCBKCD    PBOOK   2
+     C           SDBOOK    PARM SDBOOK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBOOKPD'DBFILE
+     C                     MOVELPBOOK     DBKEY
+     C                     Z-ADD8         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+     C                     MOVELLCBKCD    PBKCD
+     C                     MOVELBDBKD     PBKD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     SELEC
+      *
+      ** Process record upon change of key fields
+      *
+     C           WL6       WHEQ 'Y'
+      *
+      ** Write 'End of Report for Branch'
+      *
+     C           WBRCA     IFNE *BLANK
+      *
+      ** Process end of loan number
+      *
+     C                     EXSR SRCHLN
+      *
+     C           PRTLN1    IFGT 52
+     C                     WRITELE4210D1
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           PRTLN2    IFGT 52                                                            CAS004
+     C                     WRITELE4210D5                                                      CAS004
+     C                     ENDIF
+      *
+     C                     EXSR SRBLTT
+     C                     EXSR SRLDTT
+      *
+     C                     MOVE WCNT2     PTOTAL                                              CAS004
+     C                     Z-ADD0         WCNT2                                               CAS004
+     C                     WRITELE4210D3
+     C                     WRITELE4210D7                                                      CAS004
+      *
+     C           PRTLN1    IFGT 56
+     C                     WRITELE4210D1
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           PRTLN2    IFGT 56                                                            CAS004
+     C                     WRITELE4210D5                                                      CAS004
+     C                     ENDIF
+      *
+     C                     WRITELE4210D4
+     C                     WRITELE4210D8                                                      CAS004
+      *
+      ** Write header for the next record
+      *
+     C                     CLOSELE4210P1
+     C                     OPEN LE4210P1
+      *
+      ** Ensure report spool file recorded by RCF
+      ** transfer binary data into numeric field
+      *
+     C                     EXSR SRRCFP
+      *                                                                                       CAS004
+     C                     CLOSELE4210P2                                                      CAS004
+     C                     OPEN LE4210P2                                                      CAS004
+      *                                                                                       CAS004
+      ** Ensure report spool file recorded by RCF                                             CAS004
+      ** transfer binary data into numeric field                                              CAS004
+      *                                                                                       CAS004
+     C                     EXSR SRRCF2                                                        CAS004
+     C                     ENDIF
+      *
+     C                     WRITELE4210D1
+     C                     WRITELE4210D5                                                      CAS004
+      *
+      ** Change in currency, book code, loan type/subtype or loan number
+      *
+     C           WL5       WHEQ 'Y'
+     C           WL4       OREQ 'Y'
+     C           WL3       OREQ 'Y'
+     C           WL2       OREQ 'Y'
+     C           WL1       OREQ 'Y'
+      *
+     C           WBKCD     IFNE *BLANK
+     C           WCYCD     ORNE *BLANK
+     C           WLTYP     ORNE *BLANK
+     C           WLNST     ORNE *BLANK
+     C********** WLNRF     ORNE *ZERO                                                         CLE148
+     C           WLNRF     ORNE *BLANKS                                                       CLE148
+      *
+      ** Process end of loan number
+      *
+     C                     EXSR SRCHLN
+      *
+     C           WL5       IFEQ 'Y'
+     C           WL4       OREQ 'Y'
+     C           WL3       OREQ 'Y'                                                           212414
+     C           WL2       OREQ 'Y'                                                           212414
+      *
+     C********** PRTLN1    IFGT 52                                                            CAS004
+     C**********           WRITELE4210D1                                                      CAS004
+     C           PRTLN2    IFGT 52                                                            CAS004
+     C                     WRITELE4210D5                                                      CAS004
+     C                     ENDIF
+      *
+     C                     EXSR SRBLTT
+     C                     EXSR SRLDTT
+      *
+     C**********           WRITELE4210D3                                                      CAS004
+     C                     WRITELE4210D7                                                      CAS004
+      *
+      ** Write header for the next record
+      *
+     C**********           WRITELE4210D1                                                      CAS004
+     C           WL5       IFEQ 'Y'                                                           212414
+     C           WL4       OREQ 'Y'                                                           212414
+     C                     WRITELE4210D5                                                      CAS004
+     C                     ENDIF                                                              212414
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *                                                                                       217211
+     C********** LCADLN    IFNE *ZERO                                                  217211 CLE148
+     C           LCADLN    IFNE *BLANKS                                                       CLE148
+     C********** LCFTYP    IFEQ 'SMAM'                                                 217211 230321
+     C********** LCFTYP    OREQ 'SSAM'                                                 217211 230321
+     C           LCADLN    IFNE WLALN                                                         230321
+     C                     MOVELLCADLN    WLALN                                               230321
+      *                                                                                       217211
+     C           LCADLN    CHAINCLOAN                80                                       217211
+      *                                                                                       217211
+     C           *IN80     IFEQ *ON                                                           217211
+     C           *LOCK     IN   LDA                                                           217211
+     C                     MOVE 'CLOAN   'DBFILE                                              217211
+     C                     MOVELLCADLN    DBKEY                                               217211
+     C                     Z-ADD5         DBASE                                               217211
+     C                     OUT  LDA                                                           217211
+     C                     EXSR *PSSR                                                         217211
+     C                     ENDIF                                                              217211
+      *                                                                                       217211
+      ** For participation sold, subtract transaction amount to the                           217211
+      ** original loan plus the accrued interest                                              217211
+      *                                                                                       217211
+     C********** LCFTYP    IFEQ 'SMAM'                                                 217211 230321
+     C           CAS005    IFEQ 'N'                                                           CAS005
+     C                     Z-SUBAIPD      WINTA                                               217211
+     C                     SUB  AIMN      WINTA                                               217211
+     C                     ADD  IPRD      WINTA                                               217211
+     C                     ADD  ICTD      WINTA                                               229373
+     C                     ADD  IWOD      WINTA                                               229373
+      *                                                                                       217211
+      ** Add margin to accrued interest                                                       217211
+      *                                                                                       217211
+     C           MARG      IFNE *ZERO                                                         217211
+      *                                                                                       217211
+     C           WINTA     DIV  INTR      WAINT  205H                                         217211
+     C           INTR      ADD  MARG      WMARG  117                                          217211
+     C           WAINT     MULT WMARG     WINTA     H                                         217211
+      *                                                                                       217211
+     C                     ENDIF                                                              217211
+      *                                                                                       CAS005
+     C                     ELSE                                                               CAS005
+     C                     Z-SUBAIPN      WINTA                                               CAS005
+     C                     SUB  AINN      WINTA                                               CAS005
+     C                     ADD  IPRN      WINTA                                               CAS005
+     C                     ADD  ICTN      WINTA                                               229373
+     C                     ADD  IWON      WINTA                                               229373
+     C                     ENDIF                                                              CAS005
+      *                                                                                       217211
+     C                     ADD  WINTA     WINTA2 150                                          217211
+      *                                                                                       217211
+     C                     SUB  CPAM      WAMTS                                               230321
+     C**********           SUB  CPAM      WAMT                                         217211 230321
+     C**********           ELSE                                                        217211 230321
+     C**********           ADD  CPAM      WAMT                                         217211 230321
+     C**********           ENDIF                                                       217211 230321
+      *                                                                                       217211
+     C                     ENDIF                                                              217211
+     C                     ENDIF                                                              217211
+      *
+      ** Process each record from LECFLWPD
+      *
+     C           LCIOIN    IFEQ 'I'
+     C                     ADD  LCNPVA    WINPVA
+     C                     ELSE
+     C           LCIOIN    IFEQ 'O'                                                           217211
+     C                     ADD  LCNPVA    WONPVA
+     C                     ENDIF                                                              217211
+     C                     ENDIF
+      *
+      ** Save break fields
+      *
+     C                     MOVE LCBRCA    WBRCA
+     C                     MOVE LCCYCD    WCYCD
+     C                     MOVE LCBKCD    WBKCD
+     C                     MOVE LCLTYP    WLTYP
+     C                     MOVE LCLNST    WLNST
+     C                     MOVE LCLNCL    WLNCL                                               CLE042
+     C**********           Z-ADDLCLNRF    WLNRF                                               CLE148
+     C                     MOVELLCLNRF    WLNRF                                               CLE148
+      *
+      ** Save number of decimal places to a workfield for future use
+      *
+     C                     Z-ADDA6NBDP    WNBDPP
+      *
+      ** Save previous record
+      *
+     C                     MOVELLECFLC    LECFLP
+      *
+      ** Increment record counter
+      *
+     C                     ADD  1         WCOUNT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCHLN - Process End of Loan Number                          *
+      *                                                               *
+      *  Called By: SRPRNT subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHLN    BEGSR
+      *
+      ** Load details onto detail line
+      *
+     C********** PRTLN1    IFGT 56                                                            CAS004
+     C**********           WRITELE4210D1                                                      CAS004
+     C           PRTLN2    IFGT 56                                                            CAS004
+     C                     WRITELE4210D5                                                      CAS004
+     C                     ENDIF
+      *
+     C                     EXSR SRBLNK
+     C                     EXSR SRLOAD
+      *
+     C**********           WRITELE4210D2                                                      CAS004
+     C                     WRITELE4210D6                                                      CAS004
+      *
+     C           WTOPL     IFGT 0
+     C                     ADD  WTOPL     WTOTP
+     C                     ELSE
+     C                     ADD  WTOPL     WTOTL
+     C                     ENDIF
+      *
+      ** Previous
+      *
+     C           WPREV     IFGT 0
+     C                     ADD  WPREV     WTOTPV
+     C                     ELSE
+     C                     ADD  WPREV     WTOTLV
+     C                     ENDIF
+      *
+      ** Unrealized
+      *
+     C           WUNRL     IFGT 0
+     C                     ADD  WUNRL     WTOTPU
+     C                     ELSE
+     C                     ADD  WUNRL     WTOTLU
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WAMTS  150                                          230321
+     C                     Z-ADD0         WAMT   150
+     C                     Z-ADD0         WINPVA 150
+     C                     Z-ADD0         WONPVA 150
+     C                     Z-ADD0         WTNPVA 150
+     C                     Z-ADD0         WINTA2 150
+     C                     Z-ADD0         WUNRL  150
+     C                     Z-ADD0         WPREV  150
+     C                     Z-ADD0         WPUPL  150
+     C                     Z-ADD0         WTOPL  150
+     C                     Z-ADD0         WYUPL  150
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBLNK - Blank out detail fields                             *
+      *                                                               *
+      *  Called By: SRPRNT subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBLNK    BEGSR
+      *
+     C                     MOVE *BLANKS   PLTYP
+     C                     MOVE *BLANKS   PLNST
+     C                     MOVE *BLANKS   PLNCL                                               CLE042
+     C                     MOVE *BLANKS   PLNRF
+     C                     MOVE *BLANKS   PCNUM
+     C                     MOVE *BLANKS   PYLDC
+     C                     MOVE *BLANKS   PAMT
+     C                     MOVE *BLANKS   PTNPVA
+     C                     MOVE *BLANKS   PINTA
+     C                     MOVE *BLANKS   PUNRL
+     C                     MOVE *BLANKS   PPREV
+     C                     MOVE *BLANKS   PVDAT
+     C                     MOVE *BLANKS   PACKY                                               CAS004
+     C                     MOVE *BLANKS   PYAMT                                               CAS004
+     C                     MOVE *BLANKS   PREVI                                               CAS004
+     C                     MOVE *BLANKS   PTOTAL                                              CAS004
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOAD - Load details line                                   *
+      *                                                               *
+      *  Called By: SRPRNT subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  ZDATE2   - Date conversion                                   *
+      *  SRCLPL   - Calculate unrealized profit/loss                  *
+      *  ZFRPED   - Edit numeric field                                *
+      *  SRTDAY   - Calculate today's profit/loss and write out       *
+      *             account keys                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLOAD    BEGSR
+      *
+     C                     MOVE RCLTYP    PLTYP
+     C                     MOVE RCLNST    PLNST
+     C                     MOVE RCLNCL    PLNCL                                               CLE042
+     C                     MOVE RCLNRF    PLNRF
+     C                     MOVE RCCNUM    PCNUM
+     C                     MOVE RCYLDC    PYLDC
+      *                                                                                       CAS005
+     C           CAS005    IFEQ 'Y'                                                           CAS005
+      *                                                                                       CAS005
+      ** CURVE missing, print '* CURVE MISSING - NOT VALUED *' narrative                      CAS005
+      *                                                                                       CAS005
+     C           RCYLDC    IFEQ *BLANKS                                                       CAS005
+     C                     MOVE *ON       *IN29                                               CAS005
+     C                     ELSE                                                               CAS005
+     C                     MOVE *OFF      *IN29                                               CAS005
+     C                     ENDIF                                                              CAS005
+     C                     ENDIF                                                              CAS005
+      *
+      ** Rates missing, print '* RATES MISSING - NOT VALUED *' narrative
+      *
+     C           RCDSCF    IFEQ *ZERO
+     C                     MOVE *ON       *IN30
+     C                     ELSE
+     C                     MOVE *OFF      *IN30
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      *IN04
+     C                     MOVE *OFF      *IN05
+      *
+     C           RCLNRF    CHAINCLOAN                80
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE
+     C                     MOVELRCLNRF    DBKEY
+     C                     Z-ADD9         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Value Date
+      *
+     C                     Z-ADDVDAT      WMIDS5  50
+     C                     Z-ADD*ZEROS    PMDY
+      *
+     C                     CALL 'ZDATE2'               90
+     C                     PARM WMIDS5    PQ0001  50
+     C                     PARM BJDFIN    PQ0002  1
+     C                     PARM *ZEROS    PMDY    60
+     C                     PARM *BLANKS   PVDAT
+      *
+      ** NET NPV Amount
+      *
+     C           WINPVA    SUB  WONPVA    WTNPVA
+      *
+      ** Accrued interest
+      *
+     C           CAS005    IFEQ 'N'                                                           CAS005
+     C           AIPD      ADD  AIMN      WINTA  150
+     C                     SUB  IPRD      WINTA
+     C                     SUB  ICTD      WINTA                                               229373
+     C                     SUB  IWOD      WINTA                                               229373
+      *
+      ** Remove margin from accrued interest
+      *
+     C           MARG      IFNE *ZERO
+     C********** MARG      DIV  100       WMARG   97H                                         CAS004
+     C********** WMARG     MULT WINTA     WMARA  150H                                         CAS004
+     C**********           SUB  WMARA     WINTA                                               CAS004
+      *                                                                                       CAS004
+     C           WINTA     DIV  INTR      WAINT  205H                                         CAS004
+     C           INTR      SUB  MARG      WMARG  117                                          CAS004
+     C           WAINT     MULT WMARG     WINTA     H                                         CAS004
+      *                                                                                       CAS004
+     C******     INTR      ADD  MARG      WMARG                                               CAS004
+     C******     WINTA     DIV  WMARG     WAINT     H                                         CAS004
+     C******               SUB  MARG      WMARG                                               CAS004
+     C******     WAINT     MULT WMARG     WINTA     H                                         CAS004
+     C                     ENDIF
+      *                                                                                       CAS005
+     C                     ELSE                                                               CAS005
+     C           AIPN      ADD  AINN      WINTA                                               CAS005
+     C                     SUB  IPRN      WINTA                                               CAS005
+     C                     SUB  ICTN      WINTA                                               229373
+     C                     SUB  IWON      WINTA                                               229373
+     C                     ENDIF                                                              CAS005
+      *
+     C                     ADD  WINTA     WINTA2 150
+      *
+      ** Calculate loans unrealized profit/loss
+      *
+     C                     EXSR SRCLPL
+      *
+      ** Edit the amount fields according to the number of
+      ** decimal places of the Currency, if currency is not blanks.
+      *
+     C           RCCYCD    IFNE *BLANKS
+      *
+     C                     Z-ADDWNBDPP    ZDECS
+     C                     MOVE 'J'       ZECODE
+      *
+     C                     Z-ADDWAMT      ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE *BLANKS   WRKF19 19
+     C                     MOVE ZOUT22    WRKF19
+     C                     MOVELWRKF19    PAMT
+      *
+      ** NPV amount
+      *
+     C                     Z-ADDWTNPVA    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE *BLANKS   WRKF19 19
+     C                     MOVE ZOUT22    WRKF19
+     C                     MOVELWRKF19    PTNPVA
+      *
+      ** Accrued interest
+      *
+     C                     Z-ADDWINTA2    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     PINTA
+      *
+      ** Unrealized P/L
+      *
+     C                     Z-ADDWUNRL     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     PUNRL
+      *
+     C                     ENDIF
+      *
+     C***********          Z-ADDFSURPL    WPREV                                               CAS005
+     C                     Z-ADDFSURPL    WPREV                                               255454
+     C**********           Z-ADDFSPLAM    WPREV                                        CAS005 257328
+     C                     Z-ADDFSPLDT    WPUPL
+     C                     Z-ADDFSYUPL    WYUPL
+      *
+      ** Edit the previous unrl p/l according to the number of
+      ** decimal places of the Currency, if currency is not blanks.
+      *
+     C           RCCYCD    IFNE *BLANKS
+     C                     Z-ADDWPREV     ZFLD15
+     C                     Z-ADDWNBDPP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     PPREV
+     C                     ENDIF
+      *
+      ** Today's profit/loss
+      *
+     C                     EXSR SRTDAY
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRCLPL - Calculate unrealized profit/loss                    *
+      *                                                               *
+      *  Called By:  SRLOAD subroutine                                *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCLPL    BEGSR
+      *
+      ** Forward valued
+      *
+     C           VDAT      IFGT BJRDNB
+     C           CAS004    ANDEQ'N'                                                           CAS004
+      *                                                                                       CAS004
+      ** If Hedge Accounting feature is on, use Event Control Date                            CAS004
+      ** instead of run date                                                                  CAS004
+      *                                                                                       CAS004
+     C           VDAT      ORGT EVCD                                                          CAS004
+     C           CAS004    ANDEQ'Y'                                                           CAS004
+      *
+      ** Only calculate unrealised P/L when the rate is not missing
+      *
+     C           *IN30     IFEQ *OFF
+     C           WINPVA    SUB  WONPVA    WUNRL
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** Not forward valued
+      *
+     C                     ADD  CPAM      WAMT
+     C           WAMTS     IFNE 0                                                             230321
+     C                     ADD  WAMTS     WAMT                                                230321
+     C                     ENDIF                                                              230321
+      *
+      ** Only calculate unrealised P/L when the rate is not missing
+      *
+     C           *IN30     IFEQ *OFF
+     C           WINPVA    SUB  WONPVA    WEMV   150
+     C                     SUB  WINTA2    WEMV
+     C           CAS005    IFEQ 'Y'                                                           226871
+     C           RCLNRF    SETLLLEFEEDF                                                       226871
+     C           RCLNRF    READELEFEEDF                  50                                   226871
+     C                     Z-ADD0         WFEAD  150                                          226871
+     C           *IN50     DOWEQ*OFF                                                          226871
+     C           RCLNRF    ANDEQFELOAN                                                        226871
+      *                                                                                       CAS009
+      ** Convert total fees accrued to date if its currency is different                      CAS009
+      ** from that of the loan currency.                                                      CAS009
+     C           FEFCCY    IFNE RCCYCD                                                        CAS009
+     C                     EXSR SRCADA                                                        CAS009
+     C                     ADD  PZAMTT    WFEAD                                               CAS009
+     C                     ELSE                                                               CAS009
+     C                     ADD  FEADAT    WFEAD                                               226871
+     C                     ENDIF                                                              CAS009
+     C           RCLNRF    READELEFEEDF                  50                                   226871
+     C                     ENDDO                                                              226871
+     C                     SUB  WFEAD     WEMV                                                226871
+     C                     ENDIF                                                              226871
+     C           WEMV      SUB  WAMT      WUNRL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRTDAY - Calculate today's profit/loss and write out         *
+      *           account keys                                        *
+      *                                                               *
+      *  Called By:  SRLOAD subroutine                                *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRGNAK   - Genenate account keys                             *
+      *  SRLNOU   - Update loans file and write to LENPVLPD           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTDAY    BEGSR
+      *
+     C                     Z-ADDWUNRL     WTOPL
+      *
+     C                     Z-ADD0         WPAMT  150
+     C                     Z-ADD0         WLAMT  150
+      *
+      ** Reverse the previous unrealised P/L
+      *
+     C           WPREV     IFGT *ZERO
+     C**********           Z-SUBWPUPL     WPAMT                                               CAS004
+     C                     Z-SUBWPREV     WPAMT                                               CAS004
+     C                     ELSE
+     C**********           Z-ADDWPUPL     WLAMT                                               CAS004
+     C                     Z-ADDWPREV     WLAMT                                               CAS004
+     C                     ENDIF
+      *
+      ** Generate reversal unrealized p/l account keys
+      *
+     C                     EXSR SRGNAK
+      *
+     C                     Z-ADD0         WPAMT
+     C                     Z-ADD0         WLAMT
+      *
+     C           WUNRL     IFGT *ZERO
+     C                     Z-ADDWUNRL     WPAMT
+     C                     ELSE
+     C                     Z-SUBWUNRL     WLAMT
+     C                     ENDIF
+      *
+      ** Generate unrealized p/l account keys
+      *
+     C                     EXSR SRGNAK
+      *
+     C                     EXSR SRLNOU
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRGNAK - Generate Account Keys                               *
+      *                                                               *
+      *  Called By:  SRTDAY subroutine                                *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SREXCP   - Write out to LKEY1DP File                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRGNAK    BEGSR
+      *
+      ** If accrual key summary indicator is off, generate A/Key per
+      ** loan
+      *
+     C           BKAKSI    IFNE 'Y'
+      *
+      ** Generate profit account key
+      *
+     C           WPAMT     IFNE 0
+     C                     MOVEARCLTYP    AKY,1
+     C                     MOVE 'A'       AKY,3
+     C                     MOVEARCLNST    AKY,4
+     C                     MOVEARCLNCL    AKY,11                                              CLE042
+     C           BPBCPL    IFEQ 'Y'
+     C                     MOVEARCBKCD    AKY,6
+     C                     ENDIF
+     C                     MOVEA'UP'      AKY,9
+     C                     MOVE RCLTYP    WKLTYP  2
+     C**********           Z-ADDRCLNRF    WKLNRF  60                                          CLE148
+     C                     MOVELRCLNRF    WKLNRF  6                                           CLE148
+     C**********           Z-ADDRCCNUM    WKCNUM  60                                          CSD027
+     C                     MOVE RCCNUM    WKCNUM  6                                           CSD027
+      *                                                                                       CAS004
+      ** If Hedge Accounting feature is on, use Event Control Date                            CAS004
+      ** instead of run date                                                                  CAS004
+      *                                                                                       CAS004
+     C           CAS004    IFEQ 'Y'                                                           CAS004
+     C                     Z-ADDEVCD      WKYDAT                                              CAS004
+     C                     ELSE                                                               CAS004
+     C                     Z-ADDBJRDNB    WKYDAT  50
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C                     Z-ADDWPAMT     WKYAMT 130
+     C                     MOVE RCCYCD    WKYCCY  3
+     C                     MOVE RCBRCA    WKBRCA  3
+     C                     MOVE RCBKCD    WKBKCD  3
+     C********** CAS005    IFEQ 'N'                                                    CAS005 257328
+     C                     EXSR SREXCP
+     C**********           ENDIF                                                       CAS005 257328
+     C                     ENDIF
+      *
+      ** Generate loss account key
+      *
+     C           WLAMT     IFNE 0
+     C                     MOVEARCLTYP    AKY,1
+     C                     MOVE 'A'       AKY,3
+     C                     MOVEARCLNST    AKY,4
+     C                     MOVEARCLNCL    AKY,11                                              CLE042
+     C           BPBCPL    IFEQ 'Y'
+     C                     MOVEARCBKCD    AKY,6
+     C                     ENDIF
+     C                     MOVEA'UL'      AKY,9
+     C                     MOVE RCLTYP    WKLTYP
+     C**********           Z-ADDRCLNRF    WKLNRF                                              CLE148
+     C                     MOVELRCLNRF    WKLNRF                                              CLE148
+     C**********           Z-ADDRCCNUM    WKCNUM                                              CSD027
+     C                     MOVE RCCNUM    WKCNUM                                              CSD027
+      *                                                                                       CAS004
+      ** If Hedge Accounting feature is on, use Event Control Date                            CAS004
+      ** instead of run date                                                                  CAS004
+      *                                                                                       CAS004
+     C           CAS004    IFEQ 'Y'                                                           CAS004
+     C                     Z-ADDEVCD      WKYDAT                                              CAS004
+     C                     ELSE                                                               CAS004
+     C                     Z-ADDBJRDNB    WKYDAT
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C                     Z-ADDWLAMT     WKYAMT
+     C                     MOVE RCCYCD    WKYCCY
+     C                     MOVE RCBRCA    WKBRCA
+     C                     MOVE RCBKCD    WKBKCD
+     C********** CAS005    IFEQ 'N'                                                    CAS005 257328
+     C                     EXSR SREXCP
+     C**********           ENDIF                                                       CAS005 257328
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If accrual key summary indicator is on, store totals
+      ** by loan type/sub type and book code
+      ** if book on A/KEY set to 'Y'
+      *
+     C           BKAKSI    IFEQ 'Y'
+     C           WPAMT     IFNE *ZERO                                                         244019
+     C           WLAMT     ORNE *ZERO                                                         244019
+     C                     MOVEA*BLANK    KEY
+     C                     MOVEARCBRCA    KEY,1
+     C           BPBCPL    IFEQ 'Y'
+     C                     MOVEARCBKCD    KEY,4
+     C                     ENDIF
+     C                     MOVEARCLTYP    KEY,6
+     C                     MOVEARCLNST    KEY,8
+     C                     MOVEARCCYCD    KEY,10
+     C                     MOVEARCLNCL    KEY,13                                              CLE042
+      *
+     C*********************Z-ADD1         M       20                                          CLE042
+     C*********************MOVEAKEY       LKEY   12                                           CLE042
+     C**********           Z-ADD1         M       30                                   CLE042 244019
+     C**********           MOVEAKEY       LKEY   16                                    CLE042 244019
+     C********** LKEY      LOKUPTKEY,M                   81                                   244019
+     C********** *IN81     IFEQ *ON                                                           244019
+     C**********           ADD  WLAMT     TLAM,M                                              244019
+     C**********           ADD  WPAMT     TPAM,M                                              244019
+     C**********           ELSE                                                               244019
+     C*********************ADD  1         Z       20                                          CLE042
+     C**********           ADD  1         Z       30                                   CLE042 244019
+     C**********           MOVEAKEY       TKEY,Z                                              244019
+     C**********           Z-ADDWLAMT     TLAM,Z                                              244019
+     C**********           Z-ADDWPAMT     TPAM,Z                                              244019
+     C**********           MOVE PCNUM     AKCN,Z                                     BUG12972 244019
+     C**********           MOVE PLNRF     AKLN,Z                                     BUG12972 244019
+     C**********           ENDIF                                                              244019
+     C                     MOVEAKEY       TKEY                                                244019
+     C           TKEY      CHAINLE4210PF             81                                       244019
+     C           *IN81     IFEQ *OFF                                                          244019
+     C                     ADD  WLAMT     TLAM                                                244019
+     C                     ADD  WPAMT     TPAM                                                244019
+     C                     UPDATLE4210PF                                                      244019
+     C                     ELSE                                                               244019
+     C                     Z-ADDWLAMT     TLAM                                                244019
+     C                     Z-ADDWPAMT     TPAM                                                244019
+     C                     MOVE PCNUM     AKCN                                                244019
+     C                     MOVE PLNRF     AKLN                                                244019
+     C                     WRITELE4210PF                                                      244019
+     C                     ENDIF                                                              244019
+     C                     ENDIF                                                              244019
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRBLTT - Blank out total fields                              *
+      *                                                               *
+      *  Called By:  SRPRNT subroutine                                *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBLTT    BEGSR
+      *
+      ** Previous
+      *
+     C                     MOVE *BLANKS   PTOTPV
+     C                     MOVE *BLANKS   PTOTLV
+     C                     MOVE *BLANKS   PNETV
+      *
+      ** Unrealized
+      *
+     C                     MOVE *BLANKS   PTOTPU
+     C                     MOVE *BLANKS   PTOTLU
+     C                     MOVE *BLANKS   PNETU
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRLDTT - Load totals line                                    *
+      *                                                               *
+      *  Called By:  SRPRNT subroutine                                *
+      *                                                               *
+      *  Calls:                                                       *
+      *  ZFRPED   - Edit numeric field                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLDTT    BEGSR
+      *
+      ** Previous
+      *
+     C           RCCYCD    IFNE *BLANKS
+     C                     Z-ADDWTOTPV    ZFLD15
+     C                     Z-ADDWNBDPP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     PTOTPV
+     C                     ENDIF
+      *
+      ** Unrealized
+      *
+     C           RCCYCD    IFNE *BLANKS
+     C                     Z-ADDWTOTPU    ZFLD15
+     C                     Z-ADDWNBDPP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     PTOTPU
+     C                     ENDIF
+      *
+      ** Previous
+      *
+     C           RCCYCD    IFNE *BLANKS
+     C                     Z-ADDWTOTLV    ZFLD15
+     C                     Z-ADDWNBDPP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     PTOTLV
+     C                     ENDIF
+      *
+      ** Unrealized
+      *
+     C           RCCYCD    IFNE *BLANKS
+     C                     Z-ADDWTOTLU    ZFLD15
+     C                     Z-ADDWNBDPP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     PTOTLU
+     C                     ENDIF
+      *
+      ** Previous
+      *
+     C                     Z-SUBWTOTLV    WTOTLV
+     C           WTOTPV    SUB  WTOTLV    WNETV
+      *
+     C           RCCYCD    IFNE *BLANKS
+     C                     Z-ADDWNETV     ZFLD15
+     C                     Z-ADDWNBDPP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     PNETV
+     C                     ENDIF
+      *
+      ** Unrealized
+      *
+     C                     Z-SUBWTOTLU    WTOTLU
+     C           WTOTPU    SUB  WTOTLU    WNETU
+      *
+     C           RCCYCD    IFNE *BLANKS
+     C                     Z-ADDWNETU     ZFLD15
+     C                     Z-ADDWNBDPP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     PNETU
+     C                     ENDIF
+      *
+      ** Reset totals work fields
+      *
+     C                     Z-ADD0         WTOTP  150
+     C                     Z-ADD0         WTOTL  150
+     C                     Z-ADD0         WNET   150
+     C                     Z-ADD0         WTOTPV 150
+     C                     Z-ADD0         WTOTLV 150
+     C                     Z-ADD0         WNETV  150
+     C                     Z-ADD0         WTOTPU 150
+     C                     Z-ADD0         WTOTLU 150
+     C                     Z-ADD0         WNETU  150
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SREXCP - Write out to LKEY1DP File                           *
+      *                                                               *
+      *  Called By:  SRTDAY and SRASUM subroutines                    *
+      *                                                               *
+      *  Calls:                                                       *
+      *  GLZADD   - Subroutine to add an amount to the total          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREXCP    BEGSR
+      *
+     C                     MOVE *ON       *IN70
+     C                     EXCPT
+     C                     MOVE *OFF      *IN70
+      *
+     C                     ADD  1         WCNT2                                               CAS004
+      *                                                                                       CAS004
+     C           WDKREC    ADD  1         WDKREC
+      *
+     C           WKYAMT    DIV  1000      ZZAMT
+      *
+     C           ZZAMT     IFLT 0
+     C                     Z-SUBZZAMT     ZZAMT
+     C                     ENDIF
+      *
+     C                     Z-ADDWTODKI    ZZTOTI
+     C                     Z-ADDWTODKD    ZZTOTD
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    WTODKI 150
+     C                     Z-ADDZZTOTD    WTODKD  30
+      *
+     C                     MOVE WKCNUM    PCNUM                                             BUG12972
+     C                     MOVE WKLNRF    PLNRF                                             BUG12972
+     C                     MOVEAAKY       PACKY                                               CAS004
+     C                     MOVE WKYCCY    PCYCD2                                              CAS004
+     C                     MOVE '0'       PREVI                                               CAS004
+      *                                                                                       CAS004
+     C                     Z-ADDWKYAMT    ZFLD15                                              CAS004
+     C                     Z-ADDWNBDPP    ZDECS                                               CAS004
+     C                     MOVE 'J'       ZECODE                                              CAS004
+     C                     EXSR ZFRPED                                                        CAS004
+     C                     MOVE *BLANKS   WRKF19                                              CAS004
+     C                     MOVE ZOUT22    WRKF19                                              CAS004
+     C                     MOVELWRKF19    PYAMT                                               CAS004
+      *                                                                                       CAS004
+     C           PRTLN1    IFGT 56                                                            CAS004
+     C                     WRITELE4210D1                                                      CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C                     WRITELE4210D2                                                      CAS004
+      *                                                                                       CAS004
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRLNOU - Update loans file files and write to LENPVLPD       *
+      *                                                               *
+      *  Called By:  SRTDAY subroutine                                *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLNOU    BEGSR
+      *
+     C***********          Z-ADDWUNRL     FSURPL                                              CAS005
+     C                     Z-ADDWUNRL     FSURPL                                              255454
+     C                     Z-ADDWTOPL     FSPLAM
+      *
+     C********** FSPLDT    ADD  WTOPL     FSPLDT                                              212429
+     C***********          Z-ADDWUNRL     FSPLDT                                       212429 CAS005
+     C                     Z-ADDWUNRL     FSPLDT                                              255454
+      *
+     C                     UPDATCLOANCLF
+      *
+      ** Write out LENPVLPD record
+      *
+     C                     MOVE RCBRCA    LEBRCA
+     C                     MOVE RCCYCD    LECYCD
+     C                     MOVE RCBKCD    LEBKCD
+     C                     MOVE RCLTYP    LELTYP
+     C                     MOVE RCLNST    LELNST
+     C                     MOVE RCLNCL    LELNCL                                              CLE042
+     C                     MOVE RCLNRF    LELNRF
+     C                     MOVE RCCNUM    LECNUM
+     C                     MOVE RCYLDC    LEYLDC
+     C                     Z-ADDWAMT      LELAMT
+     C                     Z-ADDWTNPVA    LENPVA
+     C                     Z-ADDWINTA2    LEAINT
+     C                     Z-ADDWUNRL     LEURPL
+     C                     Z-ADDWPREV     LEPUPL
+     C                     Z-ADDWTOPL     LETUPL
+     C                     Z-ADDWYUPL     LEYUPL
+      *
+     C                     WRITELENPVLD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRASUM - A/Key Summary                                       *
+      *                                                               *
+      *  Called By: SRTOTL subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SREXCP   - Write out to LKEY1DP File                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRASUM    BEGSR
+      *
+      ** Generate profit account key
+      *
+     C**********           Z-ADD1         Y       20                                          244019
+     C********** Y         DOWLEZ                                                             244019
+     C           *LOVAL    SETLLLE4210PD                                                      244019
+     C                     READ LE4210PD                 81                                   244019
+     C           *IN81     DOWEQ*OFF                                                          244019
+      *
+     C********** TPAM,Y    IFNE 0                                                             244019
+     C           TPAM      IFNE 0                                                             244019
+     C                     MOVE *BLANK    XXKYDS
+     C**********           MOVE TKEY,Y    XXKYDS                                              244019
+     C                     MOVE TKEY      XXKYDS                                              244019
+     C                     MOVEAXXLTYP    AKY,1
+     C                     MOVE 'A'       AKY,3
+     C                     MOVEAXXLNST    AKY,4
+     C                     MOVEAXXLNCL    AKY,11                                              CLE042
+     C           BPBCPL    IFEQ 'Y'
+     C                     MOVEAXXBKCD    AKY,6
+     C                     ENDIF
+     C                     MOVEA'UP'      AKY,9
+     C                     MOVE XXLTYP    WKLTYP
+     C**********           Z-ADD0         WKLNRF                                              CLE148
+     C                     MOVEL*BLANK    WKLNRF                                              CLE148
+     C**********           Z-ADD0         WKCNUM                                              CSD027
+     C                     MOVE *BLANKS   WKCNUM                                              CSD027
+     C**********           MOVE AKCN,Y    WKCNUM                                     BUG12972 244019
+     C**********           MOVE AKLN,Y    WKLNRF                                     BUG12972 244019
+     C                     MOVE AKCN      WKCNUM                                              244019
+     C                     MOVE AKLN      WKLNRF                                              244019
+      *                                                                                       CAS004
+      ** If Hedge Accounting feature is on, use Event Control Date                            CAS004
+      ** instead of run date                                                                  CAS004
+      *                                                                                       CAS004
+     C           CAS004    IFEQ 'Y'                                                           CAS004
+     C                     Z-ADDEVCD      WKYDAT                                              CAS004
+     C                     ELSE                                                               CAS004
+     C                     Z-ADDBJRDNB    WKYDAT
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C**********           Z-ADDTPAM,Y    WKYAMT                                              244019
+     C                     Z-ADDTPAM      WKYAMT                                              244019
+     C                     MOVE XXCYCD    WKYCCY
+     C                     MOVE XXBRCA    WKBRCA
+     C                     MOVE XXBKCD    WKBKCD
+     C           CAS005    IFEQ 'N'                                                           CAS005
+     C                     EXSR SREXCP
+     C                     ENDIF                                                              CAS005
+     C                     ENDIF
+      *
+      ** Generate loss account key
+      *
+     C********** TLAM,Y    IFNE 0                                                             244019
+     C           TLAM      IFNE 0                                                             244019
+     C                     MOVE *BLANK    XXKYDS
+     C**********           MOVE TKEY,Y    XXKYDS                                              244019
+     C                     MOVE TKEY      XXKYDS                                              244019
+     C                     MOVEAXXLTYP    AKY,1
+     C                     MOVE 'A'       AKY,3
+     C                     MOVEAXXLNST    AKY,4
+     C                     MOVEAXXLNCL    AKY,11                                              CLE042
+     C           BPBCPL    IFEQ 'Y'
+     C                     MOVEAXXBKCD    AKY,6
+     C                     ENDIF
+     C                     MOVEA'UL'      AKY,9
+     C                     MOVE XXLTYP    WKLTYP
+     C**********           Z-ADD0         WKLNRF                                              CLE148
+     C                     MOVEL*BLANK    WKLNRF                                              CLE148
+     C**********           Z-ADD0         WKCNUM                                              CSD027
+     C                     MOVE *BLANKS   WKCNUM                                              CSD027
+     C**********           MOVE AKCN,Y    WKCNUM                                     BUG12972 244019
+     C**********           MOVE AKLN,Y    WKLNRF                                     BUG12972 244019
+     C                     MOVE AKCN      WKCNUM                                              244019
+     C                     MOVE AKLN      WKLNRF                                              244019
+      *                                                                                       CAS004
+      ** If Hedge Accounting feature is on, use Event Control Date                            CAS004
+      ** instead of run date                                                                  CAS004
+      *                                                                                       CAS004
+     C           CAS004    IFEQ 'Y'                                                           CAS004
+     C                     Z-ADDEVCD      WKYDAT                                              CAS004
+     C                     ELSE                                                               CAS004
+     C                     Z-ADDBJRDNB    WKYDAT
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C**********           Z-ADDTLAM,Y    WKYAMT                                              244019
+     C                     Z-ADDTLAM      WKYAMT                                              244019
+     C                     MOVE XXCYCD    WKYCCY
+     C                     MOVE XXBRCA    WKBRCA
+     C                     MOVE XXBKCD    WKBKCD
+     C           CAS005    IFEQ 'N'                                                           CAS005
+     C                     EXSR SREXCP
+     C                     ENDIF                                                              CAS005
+     C                     ENDIF
+      *
+     C**********           ADD  1         Y                                                   244019
+     C                     READ LE4210PD                 81                                   244019
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************                       CAS009
+      /EJECT                                                                                  CAS009
+      *****************************************************************                       CAS009
+      *                                                               *                       CAS009
+      *  SRCADA - Converts the total fees accrued to date to loan     *                       CAS009
+      *           currency.                                           *                       CAS009
+      *                                                               *                       CAS009
+      *****************************************************************                       CAS009
+     C           SRCADA    BEGSR                                                              CAS009
+      *                                                                                       CAS009
+      ** Amount to convert.                                                                   CAS009
+      *                                                                                       CAS009
+     C                     Z-ADDFEADAT    PZAMTF                                              CAS009
+      *                                                                                       CAS009
+      ** 'From' currency details.                                                             CAS009
+      *                                                                                       CAS009
+     C                     MOVE FEFCCY    PCURR                                               CAS009
+     C                     EXSR SRCURR                                                        CAS009
+     C                     MOVE FEFCCY    PZCCYF                                              CAS009
+     C                     Z-ADDA6SPRT    PZRATF                                              CAS009
+     C                     MOVE A6MDIN    PZMDIF                                              CAS009
+     C                     Z-ADDA6NBDP    PZCDPF                                              CAS009
+      *                                                                                       CAS009
+      ** 'To' currency details.                                                               CAS009
+      *                                                                                       CAS009
+     C                     MOVE RCCYCD    PCURR                                               CAS009
+     C                     EXSR SRCURR                                                        CAS009
+     C                     MOVE RCCYCD    PZCCYT                                              CAS009
+     C                     Z-ADDA6SPRT    PZRATT                                              CAS009
+     C                     MOVE A6MDIN    PZMDIT                                              CAS009
+     C                     Z-ADDA6NBDP    PZCDPT                                              CAS009
+      *                                                                                       CAS009
+      ** Convert amount to target currency.                                                   CAS009
+      *                                                                                       CAS009
+     C                     CALL 'ZCCYCN'                                                      CAS009
+     C                     PARM           PZAMTF 150                                          CAS009
+     C                     PARM           PZCCYF  3                                           CAS009
+     C                     PARM           PZCCYT  3                                           CAS009
+     C                     PARM           PZRATF 138                                          CAS009
+     C                     PARM           PZRATT 138                                          CAS009
+     C                     PARM           PZMDIF  1                                           CAS009
+     C                     PARM           PZMDIT  1                                           CAS009
+     C                     PARM           PZCDPF  10                                          CAS009
+     C                     PARM           PZCDPT  10                                          CAS009
+     C                     PARM *ZERO     PZAMTT 150                                          CAS009
+     C                     PARM *ZERO     PZCRSR 138                                          CAS009
+     C                     PARM *ZERO     PZCRSI  1                                           CAS009
+      *                                                                                       CAS009
+     C                     ENDSR                                                              CAS009
+      *****************************************************************                       CAS009
+      /EJECT                                                                                  CAS009
+      *****************************************************************                       CAS009
+      *                                                               *                       CAS009
+      *  SRCURR - Gets currency details.                              *                       CAS009
+      *                                                               *                       CAS009
+      *****************************************************************                       CAS009
+     C           SRCURR    BEGSR                                                              CAS009
+      *                                                                                       CAS009
+     C                     CALL 'AOCURRR0'                                                    CAS009
+     C                     PARM *BLANKS   PRTCD                                               CAS009
+     C                     PARM '*KEY   ' POPTN                                               CAS009
+     C                     PARM           PCURR   3                                           CAS009
+     C           SDCURR    PARM SDCURR    DSSDY                                               CAS009
+      *                                                                                       CAS009
+     C           PRTCD     IFNE *BLANKS                                                       CAS009
+     C                     MOVEL'SDCURRPD'DBFILE                                              CAS009
+     C                     MOVELPCURR     DBKEY                                               CAS009
+     C                     Z-ADD101       DBASE                                               CAS009
+     C                     EXSR *PSSR                                                         CAS009
+     C                     ENDIF                                                              CAS009
+      *                                                                                       CAS009
+     C                     ENDSR                                                              CAS009
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRCFP - Subroutine to register P1 Printer File via RCF      *
+      *                                                               *
+      *  Called By: SRPRNT subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  ZSFILE   - Setup spool file                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFP    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    PZSNUM  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM           PSENTY  3
+     C                     PARM           SFILE1
+     C                     PARM           PZSNUM
+     C                     PARM *BLANK    PZSERR  1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           PZSERR    IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************                       CAS004
+      /EJECT                                                                                  CAS004
+      *****************************************************************                       CAS004
+      *                                                               *                       CAS004
+      *  SRRCF2 - Subroutine to register P2 Printer File via RCF      *                       CAS004
+      *                                                               *                       CAS004
+      *  Called By: SRPRNT subroutine                                 *                       CAS004
+      *                                                               *                       CAS004
+      *  Calls:                                                       *                       CAS004
+      *  ZSFILE   - Setup spool file                                  *                       CAS004
+      *                                                               *                       CAS004
+      *****************************************************************                       CAS004
+      *                                                                                       CAS004
+     C           SRRCF2    BEGSR                                                              CAS004
+      *                                                                                       CAS004
+      ** Ensure Report Spool File recorded by RCF.                                            CAS004
+      *                                                                                       CAS004
+     C                     Z-ADDSFNUM2    PZSNUM                                              CAS004
+      *                                                                                       CAS004
+     C                     CALL 'ZSFILE'                                                      CAS004
+     C                     PARM           PSEQ                                                CAS004
+     C                     PARM           PSENTY                                              CAS004
+     C                     PARM           SFILE2                                              CAS004
+     C                     PARM           PZSNUM                                              CAS004
+     C                     PARM *BLANK    PZSERR                                              CAS004
+      *                                                                                       CAS004
+      ** If Error occurs during ZSFILE processing, then return to the                         CAS004
+      ** Calling Program.                                                                     CAS004
+      *                                                                                       CAS004
+     C           PZSERR    IFEQ 'Y'                                                           CAS004
+     C                     MOVE *ON       *INU7                                               CAS004
+     C                     MOVE *ON       *INU8                                               CAS004
+     C                     MOVE *ON       *INLR                                               CAS004
+     C                     RETRN                                                              CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C                     ENDSR                                                              CAS004
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRRCFA - Subroutine to register the AU Printer File via RCF  *
+      *                                                               *
+      *  Called By: SRINIT subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  ZSFILE   - Setup spool file                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFA    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    PZSNMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   PSENTY
+     C                     PARM           SFILEU
+     C                     PARM           PZSNMU
+     C                     PARM *BLANK    PZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           PZSERR    IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTOTL - Process Totals                                      *
+      *                                                               *
+      *  Called By: Main processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRASUM   - A/Key Summary                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTOTL    BEGSR
+      *
+     C           BKAKSI    IFEQ 'Y'
+     C                     EXSR SRASUM
+     C                     ENDIF
+      *
+     C                     Z-ADDWDKREC    NORE
+     C                     Z-ADDWTODKI    VLRF
+     C                     Z-ADDWTODKD    VLRL
+      *
+     C                     UPDATLKEY1ZZF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTERM - Termination process                                 *
+      *                                                               *
+      *  Called By: Main processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR
+      *
+     C                     READ CLOANA                   80                                   255454
+     C           *IN80     DOWEQ'0'                                                           255454
+     C           LNRF      CHAINLENPVL               82                                       255454
+     C           *IN82     IFEQ '1'                                                           255454
+     C           MDAT      ANDGEBJRDNB                                                        255454
+     C           MDAT      ANDLEEVCD                                                          255454
+      *                                                                                       255454
+      ** Unrealised Profit and Loss                                                           255454
+      *                                                                                       255454
+     C           AIPD      ADD  AIMN      WINTA                                               255454
+     C                     SUB  IPRD      WINTA                                               255454
+     C                     SUB  ICTD      WINTA                                               255454
+     C                     SUB  IWOD      WINTA                                               255454
+     C           WINTA     SUB  CPAM      WUNRL                                               255454
+      *                                                                                       255454
+     C                     Z-ADDWUNRL     FSURPL                                              255454
+     C                     Z-ADDWUNRL     FSPLDT                                              255454
+     C                     UPDATCLOANA                                                        255454
+     C                     ENDIF                                                              255454
+      *                                                                                       255454
+     C                     READ CLOANA                   80                                   255454
+     C                     ENDDO                                                              255454
+      *                                                                                       255454
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Audit report processing                             *
+      *                                                               *
+      *  Called By: Main and *PSSR subroutine                         *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** Or, if no records read, Output "No Details" message.
+      *
+     C           WCOUNT    IFEQ 0
+     C                     WRITENODET
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *  Called By: SRINIT, SRPRNT, and SRLOAD subroutines            *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRAUDT - Audit report processing                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GLZADD - Subroutine to add an amount to the total            *
+      *                                                               *
+      *  Called by: SREXCP subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  GLZSUM   - Subroutine to carry out the addition              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GLZADD    BEGSR
+      *
+     C                     Z-ADDZZAMT     ZZAMT  153     91Define ZZAMT
+     C   91                GOTO ZZAEND                     AMT = 0.BYPASS
+      *
+      ** Split ZZAMT into integer and decimal fields
+      *
+     C                     Z-ADDZZAMT     ZZAMTI 150       Integer Field
+     C                     MOVE ZZAMT     ZZAMTD  30       Decimal Field
+      *
+      ** Both ZZAMTI and ZZAMTD contain a 'SIGN' zone now
+      *
+     C                     EXSR GLZSUM
+      *
+     C           ZZAEND    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GLZSUM - Subroutine to carry out the additon for subroutine  *
+      *                                                               *
+      *  Called by: GLZADD Subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GLZSUM    BEGSR
+      *
+     C                     Z-ADDZZTOTI    ZZTOTI 150       Define ZZTOTI
+     C                     Z-ADDZZTOTD    ZZTOTD  30       Define ZZTOTD
+     C                     SETOF                     919293
+     C                     SETOF                     949599
+      *
+      ** Determine sign of ZZAMTI & D, 92 if neg.
+      *
+     C           ZZAMTI    COMP 0                      9293
+     C   93      ZZAMTD    COMP 0                      9293
+     C   93                GOTO ZZSEND                     Zero Bypass
+      *
+      ** Determine sign of ZZTOTI & D, 91 if neg.
+      *
+     C           ZZTOTI    COMP 0                      9193
+     C   93      ZZTOTD    COMP 0                      9193
+      *
+      ** If ZZTOTAL is zero, return ZZAMOUNT.
+      *
+     C   93                Z-ADDZZAMTI    ZZTOTI
+     C   93                Z-ADDZZAMTD    ZZTOTD
+     C   93                GOTO ZZSEND                     Zero Bypass
+      *
+      ** If signs differ bypass overflow checks.
+      *
+     C   91N92
+     CORN91 92             GOTO ZZOFPS
+      *
+     C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     C           ZZWK2     COMP 999                  93    '93' = CARRY
+     C  N93      ZZWK2     COMP -999                   93    Into Integer.
+      *
+     C   93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     C      93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     C   93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     C  N93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+      *
+      ** If the modulus of ZZWK3 is lt mod. ZZTOTI then O/F has occurred
+      *
+     C  N92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     C   92      ZZWK3     COMP ZZTOTI               99     Negative
+     C  N99                Z-ADDZZWK2     ZZTOTD
+     C  N99                Z-ADDZZWK3     ZZTOTI
+      *
+      ** If O/F zeroise ZZAMT, ind '99' set and ZZTOT fields left intact
+      *
+     C   99                Z-ADD0         ZZAMT  153
+     C                     GOTO ZZSEND
+      *
+      ** The 'SIGNS' are different
+      *
+     C           ZZOFPS    TAG
+      *
+      ** If ZZAMT was negative, make it pos. to comp with ZZTOT
+      *
+     C   92                Z-SUBZZAMTI    ZZAMTI 150
+     C   92                Z-SUBZZAMTD    ZZAMTD  30
+      *
+      ** If ZZTOT was negative, make it pos. to comp with ZZAMT.
+      *
+     C   91                Z-SUBZZTOTI    ZZTOTI
+     C   91                Z-SUBZZTOTD    ZZTOTD
+      *
+      ** Both ZZAMT and ZZTOT are noe positive
+      *
+     C           ZZTOTI    COMP ZZAMTI               93  95
+     C   95      ZZTOTD    COMP ZZAMTD               93  95
+      *
+      ** If ZZTOT eq. ZZAMT return zero.
+      *
+     C   95                Z-ADD0         ZZTOTI
+     C   95                Z-ADD0         ZZTOTD
+     C   95                GOTO ZZSEND
+      *
+      ** If ZZTOT gt. ZZAMT.
+      *
+     C   93      ZZAMTD    COMP ZZTOTD               94
+     C   93 94   ZZTOTI    SUB  1         ZZTOTI
+     C   93 94   ZZTOTD    ADD  1000      ZZWK2
+     C   93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     C   93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     C   93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+      *
+      ** If ZZAMT gt. ZZTOT.
+      *
+     C  N93      ZZTOTD    COMP ZZAMTD               94
+     C  N93 94   ZZAMTI    SUB  1         ZZWK3  150
+     C  N93 94   ZZAMTD    ADD  1000      ZZWK2
+     C  N93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     C  N93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     C  N93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     C  N93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+      *
+      ** Reverse sign of ZZTOT if larger I/P fields were negative
+      *
+     C                     SETOF                     94
+     C   93 91
+     CORN93 92             SETON                     94
+     C   94                Z-SUBZZTOTI    ZZTOTI
+     C   94                Z-SUBZZTOTD    ZZTOTD
+      *
+      ** Restore sign of ZZAMTI & ZZAMTD If It was reversed.
+      *
+     C   92                Z-SUBZZAMTI    ZZAMTI
+     C   92                Z-SUBZZAMTD    ZZAMTD
+     C           ZZSEND    TAG
+      *
+      ** If ZZTOTD is zero, and ZZTOTI is neg. set up ZZNEGD.
+      *
+     C                     SETOF                     96
+     C           ZZTOTD    COMP 0                        91
+     C   91      ZZTOTI    COMP 0                      96
+     C   96                MOVE '.000-'   ZZNEGD  5
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZINTDYZ2
+     C/COPY ZSRSRC,ZDATE9Z3
+     C/COPY ZSRSRC,GLINTCZ1
+     C/COPY ZSRSRC,ZDAT10Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZFRPEDZ3
+      *****************************************************************
+     OLKEY1DP EADD     70
+     O                                    1 'D'
+     O                         WKLTYP     3
+     O*************************AKY       11                                                   CLE042
+     O                         SHAKY     11                                                   CLE042
+     O**********               WKLNRF    17                                                   CLE134
+     O**********               WKCNUM    23                                                   CLE134
+     O**********               WKBRCA    26                                                   CLE134
+     O**********               LASQ      28                                                   CLE134
+     O**********               WKYDAT    31P                                                  CLE134
+     O**********               WKYAMT    38P                                                  CLE134
+     O**********               WKYCCY    41                                                   CLE134
+     O**********                         43 '00'                                              CLE134
+     O**********                         56 '0'                                               CLE134
+     O**********               Z13       63P                                                  CLE134
+     O**********               Z13       73P                                                  CLE134
+     O**********               VDAT      76P                                                  CLE134
+     O**********               SLID      79P                                                  CLE134
+     O**********               MDAT      82P                                                  CLE134
+     O**********               BRTT      84                                                   CLE134
+     O**********               BRTE      90P                                                  CLE134
+     O**********               RTSP      96P                                                  CLE134
+     O**********               INTR     102P                                                  CLE134
+     O**********                        103 '2'                                               CLE134
+     O**********               CPAM     110P                                                  CLE134
+     O**********               Z5       113P                                                  CLE134
+     O**********                        114 '0'                                               CLE134
+     O**********               IACD     113P                                                  CLE134
+     O**********               ICBS     114                                                   CLE134
+     O**********               ACOF     116                                                   CLE134
+     O**********               FACO     128                                                   CLE134
+     O**********               PRFC     132                                                   CLE134
+     O**********               WKBKCD   137                                                   CLE134
+     O**********               Z5       140P                                                  CLE134
+     O**********               ORED     143P                                                  CLE134
+     O**********               OLNO     149                                                   CLE134
+     O**********               PTFR     153                                                   CLE134
+     O**********               F1FFLG   170                                            CGL020 CLE134
+     O**********               F1FVAL   177P                                           CGL020 CLE134
+     O**********               F1FPCT   182                                            CGL020 CLE134
+     O**********               F1RACT   202                                            CGL020 CLE134
+     O**********               F1RCTY   204                                            CGL020 CLE134
+     O**********               F1RBNK   224                                            CGL020 CLE134
+     O**********               F1RCDE   235                                            CGL020 CLE134
+     O**********               F1PACT   255                                            CGL020 CLE134
+     O**********               F1PCTY   257                                            CGL020 CLE134
+     O**********               F1PBNK   277                                            CGL020 CLE134
+     O**********               F1PCDE   288                                            CGL020 CLE134
+     O**********               F1DACT   323                                            CGL020 CLE134
+     O**********               F1DCTY   325                                            CGL020 CLE134
+     O**********               F1DBNK   345                                            CGL020 CLE134
+     O**********               F1SDAT   348P                                           CGL020 CLE134
+     O**********               AKY      392                                            CLE042 CLE134
+     O**********               WKLNRF   396                                         CLE134 AR1056323
+     O**********               QQLNNO    15P                                        CLE134 AR1056323
+     O**********               WKCNUM    21                                         CLE134 AR1056323
+     O**********               WKBRCA    24                                         CLE134 AR1056323
+     O**********               LASQ      26                                         CLE134 AR1056323
+     O**********               WKYDAT    29P                                        CLE134 AR1056323
+     O**********               WKYAMT    36P                                        CLE134 AR1056323
+     O**********               WKYCCY    39                                         CLE134 AR1056323
+     O**********                         41 '00'                                    CLE134 AR1056323
+     O**********                         54 '0'                                     CLE134 AR1056323
+     O**********               Z13       61P                                        CLE134 AR1056323
+     O**********               Z13       71P                                        CLE134 AR1056323
+     O**********               VDAT      74P                                        CLE134 AR1056323
+     O**********               SLID      77P                                        CLE134 AR1056323
+     O**********               MDAT      80P                                        CLE134 AR1056323
+     O**********               BRTT      82                                         CLE134 AR1056323
+     O**********               BRTE      88P                                        CLE134 AR1056323
+     O**********               RTSP      94P                                        CLE134 AR1056323
+     O**********               INTR     100P                                        CLE134 AR1056323
+     O**********                        101 '2'                                     CLE134 AR1056323
+     O**********               CPAM     108P                                        CLE134 AR1056323
+     O**********               Z5       111P                                        CLE134 AR1056323
+     O**********                        112 '0'                                     CLE134 AR1056323
+     O**********               IACD     113P                                        CLE134 AR1056323
+     O**********               ICBS     112                                         CLE134 AR1056323
+     O**********               ACOF     114                                         CLE134 AR1056323
+     O**********               FACO     126                                         CLE134 AR1056323
+     O**********               PRFC     130                                         CLE134 AR1056323
+     O**********               WKBKCD   135                                         CLE134 AR1056323
+     O**********               Z5       138P                                        CLE134 AR1056323
+     O**********               ORED     141P                                        CLE134 AR1056323
+     O**********               OLNO     147                                         CLE134 AR1056323
+     O**********               PTFR     151                                         CLE134 AR1056323
+     O**********               F1FFLG   168                                         CLE134 AR1056323
+     O**********               F1FVAL   175P                                        CLE134 AR1056323
+     O**********               F1FPCT   180                                         CLE134 AR1056323
+     O**********               F1RACT   200                                         CLE134 AR1056323
+     O**********               F1RCTY   202                                         CLE134 AR1056323
+     O**********               F1RBNK   222                                         CLE134 AR1056323
+     O**********               F1RCDE   233                                         CLE134 AR1056323
+     O**********               F1PACT   253                                         CLE134 AR1056323
+     O**********               F1PCTY   255                                         CLE134 AR1056323
+     O**********               F1PBNK   275                                         CLE134 AR1056323
+     O**********               F1PCDE   286                                         CLE134 AR1056323
+     O**********               F1DACT   321                                         CLE134 AR1056323
+     O**********               F1DCTY   323                                         CLE134 AR1056323
+     O**********               F1DBNK   343                                         CLE134 AR1056323
+     O**********               F1SDAT   346P                                        CLE134 AR1056323
+     O**********               AKY      390                                         CLE134 AR1056323
+     O                         WKLNRF    17                                                AR1056323
+     O                         WKCNUM    23                                                AR1056323
+     O                         WKBRCA    26                                                AR1056323
+     O                         LASQ      28                                                AR1056323
+     O                         WKYDAT    31P                                               AR1056323
+     O                         WKYAMT    38P                                               AR1056323
+     O                         WKYCCY    41                                                AR1056323
+     O                                   43 '00'                                           AR1056323
+     O                                   56 '0'                                            AR1056323
+     O                         Z13       63P                                               AR1056323
+     O                         Z13       73P                                               AR1056323
+     O                         VDAT      76P                                               AR1056323
+     O                         SLID      79P                                               AR1056323
+     O                         MDAT      82P                                               AR1056323
+     O                         BRTT      84                                                AR1056323
+     O                         BRTE      90P                                               AR1056323
+     O                         RTSP      96P                                               AR1056323
+     O                         INTR     102P                                               AR1056323
+     O                                  103 '2'                                            AR1056323
+     O                         CPAM     110P                                               AR1056323
+     O                         Z5       113P                                               AR1056323
+     O                                  114 '0'                                            AR1056323
+     O                         IACD     113P                                               AR1056323
+     O                         ICBS     114                                                AR1056323
+     O                         ACOF     116                                                AR1056323
+     O                         FACO     128                                                AR1056323
+     O                         PRFC     132                                                AR1056323
+     O                         WKBKCD   137                                                AR1056323
+     O                         Z5       140P                                               AR1056323
+     O                         ORED     143P                                               AR1056323
+     O                         OLNO     149                                                AR1056323
+     O                         PTFR     153                                                AR1056323
+     O                         F1FFLG   170                                                AR1056323
+     O                         F1FVAL   177P                                               AR1056323
+     O                         F1FPCT   182                                                AR1056323
+     O                         F1RACT   202                                                AR1056323
+     O                         F1RCTY   204                                                AR1056323
+     O                         F1RBNK   224                                                AR1056323
+     O                         F1RCDE   235                                                AR1056323
+     O                         F1PACT   255                                                AR1056323
+     O                         F1PCTY   257                                                AR1056323
+     O                         F1PBNK   277                                                AR1056323
+     O                         F1PCDE   288                                                AR1056323
+     O                         F1DACT   323                                                AR1056323
+     O                         F1DCTY   325                                                AR1056323
+     O                         F1DBNK   345                                                AR1056323
+     O                         F1SDAT   348P                                               AR1056323
+     O                         AKY      392                                                AR1056323
+      *****************************************************************
+** CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Stamp Tax Daily Journal Control')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger                                      */
+/*                                                                   */
+/*       GLC008140 - Stamp Tax Daily Journal Control                 */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR864045           Date 20Nov11              */
+/*                      CER049  *CREATE    Date 06Dec10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR864045 - GLC008140 00001 failed                           */
+/*       CER049 - Stamp Tax                                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+             DCL        VAR(&DSIN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2010')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             CHGDTAARA  DTAARA(QTEMP/LDA) VALUE(*BLANK)
+             CHGJOB     SWS(XXXXXX00)
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+             SNDPGMMSG  MSG('GLC008140 - Stamp Tax Daily Journal +
+                          Control') TOMSGQ(MRUNQ)
+ 
+             RTVDTAARA  DTAARA(GLSTAT (70 1)) RTNVAR(&DSIN)
+ 
+             CLRPFM     FILE(GLGESTPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             CALL       PGM(GLC008141) PARM('0' GLC008140 X'00001F' &DSIN)
+             DLTOVR     FILE(*ALL)
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             CALL       PGM(GLC008142)
+             ENDDO
+ 
+/** Copy records from GLSTDTPD (DPLIB) to GLGESTPD (DMLIB). GLGESTPD is copied to REEODPF */
+/** by REC3065 and it is cleared by REC3650 */
+ 
+             CPYF       FROMFILE(GLSTDTPD) TOFILE(GLGESTPD) +
+                          MBROPT(*REPLACE)                                              /*AR864045*/
+/**********               MBROPT(*REPLACE) CRTFILE(*YES)                                /*AR864045*/
+             MONMSG     MSGID(CPF2817)
+ 
+ 
+/** Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             COMMIT
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ /** Send error message */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC008140 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Banking Systems Ltd')
+             ENDPGM

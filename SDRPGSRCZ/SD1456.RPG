@@ -1,0 +1,557 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Begin/End messages for data feed request')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing data module                                 *
+      *                                                               *
+      *  SD1456 - Begin / End messages for data feed request (MDF)    *
+      *                                                               *
+      *  Function:  Depending the action code (*START/*END), this     *
+      *  send messages to Market Watch in order to                    *
+      *  initialize/terminate the data feed                           *
+      *                                                               *
+      *  Called By: SD1450 - Data Feed Request List                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Prev Amend No. CSD006  *CREATE    Date 12Sep00               *
+      *                                    Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD006 - Market Data Feed                                    *
+      *                                                               *
+      *****************************************************************
+      * INDICATORS                                                    *
+      * 90 - Work indicator                                           *
+      *****************************************************************
+     FSDMDFRL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      /EJECT
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      ** Array of QCMDEXC commands
+     E                    CMD@    1   1 80
+      ** Array of QCMDEXC command to edit
+      /COPY SDCPYSRC,SD1453E001
+      *
+      *
+      ** Array for different values of Modes
+     E                    @M      1   2 22
+      ** Array for different warning message codes
+     E                    @WMC    1   4 29
+      ** Named constants
+     I              2                     C         @MSIZ
+     I              4                     C         @WMCSZ
+     ISDY       E DSDSSDY
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+      ** Midas SD MDF ICD
+     ISDMDFC    E DSSDMDFCPD
+      *
+      ** Detail of request
+     IP2RQRC    E DSSDMDFRPD                   9999
+     I              MRRECI                          P2RECI
+     I              MRREQI                          P2REQI
+     I              MRDESC                          P2DESC
+     I              MRMAPC                          P2MAPC
+     I              MRFRST                          P2FRST
+     I              MRLAST                          P2LAST
+     I              MRITRV                          P2ITRV
+     I              MRSP01                          P2SP01
+     I              MRSP02                          P2SP02
+     I              MRSP03                          P2SP03
+     I              MRSP04                          P2SP04
+     I              MRSP05                          P2SP05
+     I              MRSP06                          P2SP06
+     I              MRSP07                          P2SP07
+     I              MRSP08                          P2SP08
+     I              MRSP09                          P2SP09
+     I              MRSP10                          P2SP10
+     I              MRACCY                          P2ACCY
+     I              MRASEC                          P2ASEC
+     I              MRASBP                          P2ASBP
+     I              MRABRT                          P2ABRT
+     I              MRREFD                          P2REFD
+     I              MRACTF                          P2ACTF
+     I              MRTOLX                          P2TOLX
+     I              MRDTSC                          P2DTSC
+     I              MRLRQT                          P2LRQT
+     I              MRMSGC                          P2MSGC
+     I              MRLCD                           P2LCD
+     I              MRTYLC                          P2TYLC
+     I              MRTNLU                          P2TNLU
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Structure of each index of @M
+      ** - Mode
+      ** - Semi column
+      ** - Value of active flag
+      ** - Semi column
+      ** - Error on active flag
+      ** - Semi column
+      ** - Further update
+     IMDTL        DS
+     I                                        1  10 MMODE
+     I                                       11  11 MSCL1
+     I                                       12  12 MACFVL
+     I                                       13  13 MSCL2
+     I                                       14  20 MMGACF
+     I                                       21  21 MSCL3
+     I                                       22  22 MFTHUP
+      *
+      ** Structure of each index of @WMC
+      ** - Mode
+      ** - Semi column
+      ** - Error Code returned by S/R MRKWCH
+      ** - Semi column
+      ** - Warning Message
+     IWMCDTL      DS
+     I                                        1  10 MCMOD
+     I                                       11  11 MCSCL1
+     I                                       12  21 MCERC
+     I                                       22  22 MCSCL2
+     I                                       23  29 MCWMSG
+      /EJECT
+      *****************************************************************
+      ** Entry parameters
+     C           *ENTRY    PLIST
+      ** Return Code / Error Message Id (Causes ROLLBACK)
+     C                     PARM           P@RTN   7
+      ** Warning Message Id
+     C                     PARM           P@WMSI
+      ** Message Data
+     C                     PARM           P@MSGD256
+      ** Mode
+     C                     PARM           P@MODE
+      ** Request Id
+     C                     PARM           P@REQI
+      *
+     C           *LIKE     DEFN P@RTN     P@WMSI
+     C           *LIKE     DEFN MRREQI    P@REQI
+     C           *LIKE     DEFN MMODE     P@MODE
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     EXSR INZPGM
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR MAIN
+     C                     ENDIF
+      *
+     C           P@RTN     IFEQ *BLANK
+     C                     COMIT
+     C                     ELSE
+      *
+      ** Unlock all the files opened in update
+     C                     UNLCKSDMDFRL0               90
+     C                     ROLBK
+     C                     ENDIF
+      *
+     C                     EXSR TERPGM
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      * INZPGM - Initialize program                                   *
+      *****************************************************************
+     C           INZPGM    BEGSR
+     C                     MOVEL*BLANK    P@RTN
+     C                     MOVEL*BLANK    P@WMSI
+     C                     MOVEL*BLANK    P@MSGD
+     C                     MOVEL'N'       WEND    1
+      *
+      ** Open file with option SHARE *NO
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'SDMDFRL0'WARG10
+     C                     EXSR EXECMD
+     C                     OPEN SDMDFRL0
+      *
+      ** Retrieve system data
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR RTVSYD
+     C                     ENDIF
+      *
+     C           EINZPG    ENDSR
+      *****************************************************************
+      * TERPGM - Terminate program                                    *
+      *****************************************************************
+     C           TERPGM    BEGSR
+     C                     CLOSESDMDFRL0
+     C                     ENDSR
+      *****************************************************************
+      * MAIN - Main                                                   *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+     C                     MOVELP@MODE    WMODTY
+     C                     EXSR IDXMOD
+     C           WIDXRT    IFNE *BLANK
+     C                     MOVEL'SDM0062' P@RTN
+     C                     MOVELP@MODE    P@MSGD
+     C                     ELSE
+      ** Memorize range of the index for later use
+     C           *LIKE     DEFN WIDXMO    WRAN@M
+     C                     Z-ADDWIDXMO    WRAN@M
+     C                     MOVEA@M,WRAN@M MDTL
+      ** Memorize values that are used on other parts of this routine
+     C           *LIKE     DEFN MFTHUP    WFTHUP
+     C                     MOVELMFTHUP    WFTHUP
+     C                     ENDIF
+      *
+      ** Read Request
+     C           P@RTN     IFEQ *BLANK
+     C                     Z-ADDWRAN@M    WIXRED
+     C                     EXSR REDREQ
+     C                     ENDIF
+      *
+      ** Send message to Market Watch
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR MRKWCH
+     C           P2RTN     IFNE *BLANK
+     C                     MOVELP2RTN     P@RTN
+     C                     MOVELP2MSGD    P@MSGD
+     C                     ELSE
+     C           *LIKE     DEFN P2ERRC    WERRC
+      ** Memorize values that are used on other parts of this routine
+     C                     MOVELP2ERRC    WERRC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Update Request
+     C           P@RTN     IFEQ *BLANK
+      ** Update further fields ?
+     C           WFTHUP    IFEQ 'Y'
+     C                     Z-ADDP2LRQT    MRLRQT
+     C                     MOVELP2MSGC    MRMSGC
+     C                     ELSE
+     C                     Z-ADD0         MRLRQT
+     C                     MOVEL*BLANK    MRMSGC
+     C                     ENDIF
+     C                     Z-ADDWRAN@M    WIXUPD
+     C                     EXSR UPDREQ
+     C                     ENDIF
+      *
+      ** Update Request Items
+     C           P@RTN     IFEQ *BLANK
+     C           WFTHUP    IFEQ 'Y'
+     C                     MOVEL*BLANK    P2TOLX
+     C                     EXSR UPDITM
+     C           P2RTN     IFNE *BLANK
+     C                     MOVELP2RTN     P@RTN
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Return message codes
+     C           P@RTN     IFEQ *BLANK
+     C           WERRC     IFNE *BLANK
+     C                     MOVELWERRC     WMGERC
+     C                     MOVELP@MODE    WMGMOD
+     C                     EXSR RTNMSG
+     C           WMGRTN    IFEQ *BLANK
+     C                     MOVELWMGMSI    P@WMSI
+     C                     MOVELWMGMSD    P@MSGD
+     C                     ELSE
+     C                     MOVEL'SDM0067' P@RTN
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           EMAIN     ENDSR
+      *****************************************************************
+      * RTVSYD - Retrieve System Data                                 *
+      *****************************************************************
+     C           RTVSYD    BEGSR
+      ** Retrieve MDF ICD
+     C                     CALL 'AOMDFCR0'             90
+     C                     PARM           P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDMDFC    PARM           SDY
+     C           P@RTCD    IFNE *BLANK
+     C           *IN90     OREQ '1'
+     C                     MOVEL'SDM0041' P@RTN
+     C                     GOTO ERTSYD
+     C                     ENDIF
+      *
+     C           ERTSYD    ENDSR
+      *****************************************************************
+      * REDREQ - Read Request                                         *
+      *****************************************************************
+     C           REDREQ    BEGSR
+     C           *LIKE     DEFN WRAN@M    WIXRED
+      *
+     C           P@REQI    CHAINSDMDFRL0             90
+     C           *IN90     IFEQ '0'
+     C                     MOVEA@M,WIXRED MDTL
+     C           MRACTF    IFEQ MACFVL
+     C                     MOVELMMGACF    P@RTN
+     C                     GOTO EREDRQ
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVEL'SDM0046' P@RTN
+     C                     ENDIF
+      *
+     C           EREDRQ    TAG
+     C                     Z-ADD0         WIXRED
+     C                     ENDSR
+      *****************************************************************
+      * MRKWCH - Dialog with Market Watch                             *
+      *****************************************************************
+     C           MRKWCH    BEGSR
+     C           *LIKE     DEFN P@RTN     P2RTN
+     C           *LIKE     DEFN P@MODE    P2MODE
+     C           *LIKE     DEFN P@MSGD    P2MSGD
+      *
+     C                     MOVEL*BLANK    P2ERRC 10
+     C                     MOVEL*BLANK    P2MSGD
+     C                     MOVEL*BLANK    P2RTN
+      ** Default parameters when not filled before EXSR MRKWCH
+     C           P2MODE    IFEQ *BLANK
+     C                     MOVELP@MODE    P2MODE
+     C                     ENDIF
+     C           P2RQRC    IFEQ *BLANK
+     C                     MOVELMRREQI    P2REQI
+     C                     MOVELMRMAPC    P2MAPC
+     C                     MOVELMRDTSC    P2DTSC
+     C                     Z-ADDMRFRST    P2FRST
+     C                     Z-ADDMRLAST    P2LAST
+     C                     Z-ADDMRITRV    P2ITRV
+     C                     Z-ADDMRSP01    P2SP01
+     C                     Z-ADDMRSP02    P2SP02
+     C                     Z-ADDMRSP03    P2SP03
+     C                     Z-ADDMRSP04    P2SP04
+     C                     Z-ADDMRSP05    P2SP05
+     C                     Z-ADDMRSP06    P2SP06
+     C                     Z-ADDMRSP07    P2SP07
+     C                     Z-ADDMRSP08    P2SP08
+     C                     Z-ADDMRSP09    P2SP09
+     C                     Z-ADDMRSP10    P2SP10
+     C                     ENDIF
+      *
+     C                     CALL 'SD1460'
+     C                     PARM           P2RTN
+     C                     PARM           P2MSGD
+     C                     PARM           P2ERRC
+     C                     PARM           P2MODE
+     C                     PARM           P2RQRC
+      *
+     C                     MOVEL*BLANK    P2MODE
+      * Blank out the ONLY input part of P2RQRC
+     C                     MOVEL*BLANK    P2REQI
+     C                     MOVEL*BLANK    P2MAPC
+     C                     MOVEL*BLANK    P2DTSC
+     C                     Z-ADD0         P2FRST
+     C                     Z-ADD0         P2LAST
+     C                     Z-ADD0         P2ITRV
+     C                     Z-ADD0         P2SP01
+     C                     Z-ADD0         P2SP02
+     C                     Z-ADD0         P2SP03
+     C                     Z-ADD0         P2SP04
+     C                     Z-ADD0         P2SP05
+     C                     Z-ADD0         P2SP06
+     C                     Z-ADD0         P2SP07
+     C                     Z-ADD0         P2SP08
+     C                     Z-ADD0         P2SP09
+     C                     Z-ADD0         P2SP10
+      *
+     C                     ENDSR
+      *****************************************************************
+      * UPDREQ - Update Request                                       *
+      *****************************************************************
+     C           UPDREQ    BEGSR
+     C           *LIKE     DEFN WRAN@M    WIXUPD
+      ** Depending the mode retrieve value of the active flag
+     C                     MOVEA@M,WIXUPD MDTL
+     C                     MOVELMACFVL    MRACTF
+      *
+     C                     UPDATSDMDFRD0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDM0063' P@RTN
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WIXUPD
+     C                     ENDSR
+      *****************************************************************
+      * UPDITM - Update Items                                         *
+      *****************************************************************
+     C           UPDITM    BEGSR
+      *
+     C                     MOVEL*BLANK    P2RTN
+      *
+      ** Default parameters when not filled before EXSR UPDITM
+     C           P2REQI    IFEQ *BLANK
+     C                     MOVELP@REQI    P2REQI
+     C                     ENDIF
+     C           P2CMT     IFEQ *BLANK
+     C                     MOVEL'N'       P2CMT
+     C                     ENDIF
+      *
+     C                     CALL 'SD1457'
+     C                     PARM           P2RTN
+     C                     PARM           P2REQI
+     C                     PARM           P2TOLX
+     C                     PARM           P2CMT
+      *
+     C                     MOVEL*BLANK    P2REQI
+     C                     MOVEL*BLANK    P2TOLX
+     C                     MOVEL*BLANK    P2CMT   1
+      *
+     C                     ENDSR
+      *****************************************************************
+      * ERR002 - Error type 002, unlock SDMDFIL0 failed               *
+      *****************************************************************
+     C           ERR002    BEGSR
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDMDFIL0'DBFILE    P      *DB ERROR 002 *
+     C                     MOVEL'*UNLCK'  DBKEY     P      ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDSR
+      *****************************************************************
+      * IDXMOD - Retrieve index of Mode                               *
+      *****************************************************************
+     C           IDXMOD    BEGSR
+     C           *LIKE     DEFN MMODE     WMODTY
+     C                     Z-ADD0         WIDXMO  30
+     C                     MOVEL*BLANK    WIDXRT  2
+      *
+     C                     DO   @MSIZ     I       30
+     C                     MOVEA@M,I      MDTL
+     C           MMODE     IFEQ P@MODE
+     C                     Z-ADDI         WIDXMO
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Argument not found : return an error
+     C           WIDXMO    IFEQ 0
+     C                     MOVEL'01'      WIDXRT  2
+     C                     ENDIF
+     C                     MOVEL*BLANK    WMODTY
+      *
+     C                     ENDSR
+      *****************************************************************
+      * RTNMSG - Return Message                                       *
+      *****************************************************************
+     C           RTNMSG    BEGSR
+     C           *LIKE     DEFN WERRC     WMGERC
+     C           *LIKE     DEFN MCMOD     WMGMOD
+     C           *LIKE     DEFN P@WMSI    WMGMSI
+     C           *LIKE     DEFN P@MSGD    WMGMSD
+     C                     MOVEL*BLANK    WMGRTN  2
+     C                     MOVEL*BLANK    WMGMSI
+     C                     MOVEL*BLANK    WMGMSD
+      *
+     C                     DO   @WMCSZ    I       30
+     C                     MOVEA@WMC,I    WMCDTL
+     C           WMGMOD    IFEQ MCMOD
+     C           WMGERC    ANDEQMCERC
+     C                     MOVELMCWMSG    WMGMSI
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+      ** Not found => error
+     C           WMGMSI    IFEQ *BLANK
+     C                     MOVEL'01'      WMGRTN
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANK    WMGERC
+     C                     MOVEL*BLANK    WMGMOD
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ******************
+      *
+     C                     CALL 'DBERRCTL'
+      *
+      ********************************************************************
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      **  Execute an OS400 command
+      /COPY SDCPYSRC,SD1453C002
+**  CPY@
+(c) Finastra International Limited 2001
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)
+**  @M
+*START    ;Y;SDM0060;Y
+*END      ; ;SDM0061;
+**  @WMC
+*START    ;NOMSG     ;SDM0064
+*START    ;PARTMSG   ;SDM0065
+*END      ;NOMSG     ;SDM0064
+*END      ;PARTMSG   ;SDM0066

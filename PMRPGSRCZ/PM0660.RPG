@@ -1,0 +1,1413 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Search and Select Function')                  *
+     H***********                                                         081239
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                                 *
+     F*                                                               *
+     F*  PM0660 - PM F4 SEARCH AND SELECT FUNCTION                    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 01Jul96               *
+      *                 CFF004             Date 02Oct96               *
+     F*                 085817             DATE 13MAR95               *
+     F*                 081239             DATE 03FEB95               *
+     F*                 080388             DATE 30JAN95               *
+     F*                 SA9108             DATE 06NOV91               *
+     F*                 S01313             DATE 25SEP92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*           PBFG/5 - INSTRUMENT ASSET/LIABILITY SPLIT           *
+     F*           PBFG/6 - ADDITIONAL CUSTOMER DETAILS                *
+     F*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     F*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  085817 - Recompile due to changes in PMLDAPD                 *
+     F*  081239 - R10 Private Banking Rework.                         *
+     F*  080388 - Display file changes.                               *
+     F*  SA9108 - POOL SECURITIES TRANSACTIONS (ONLY RECOMPILED       *
+     F*           FOR DTAARA/LDA)                                     *
+     F*  S01313 - REWRITTEN FOR PORTFOLIO PERFORMANCE                 *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSECTY   IF  E           K        DISK                               TA0000
+     F                                              KINFSR *PSSR          TA0000
+     F*                                                                   TA0000
+     FINVTP   IF  E           K        DISK                               TA0000
+     F                                              KINFSR *PSSR          TA0000
+     F*                                                                   TA0000
+     FSDPLINPDIF  E           K        DISK                               TA0000
+     F            SDPLINP0                          KRENAMESDPLINPX       TA0000
+     F                                              KINFSR *PSSR          TA0000
+     F*                                                                   TA0000
+     F**PM0660DDCF  E                    WORKSTN                        UCS01486
+     FPM0660DFCF  E                    WORKSTN                        UC  S01486
+     F**PREFIX 'DD'**
+     F****PMPORTPPIF  E           K        DISK                           S01486
+     FPMPORTPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX 'PN' **
+     F**
+     F****SDPORTPDIF  E                    DISK                           S01486
+     F********************************************* KINFSR *PSSR          S01486
+     F** PREFIX 'P9' **
+     F**
+     F****SDPLCSPDIF  E           K        DISK                           S01486
+     F********************************************* KINFSR *PSSR          S01486
+     F** PREFIX 'QA' **
+     F**
+     FPMDSPGL3IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F** PREFIX '  ' **
+     F**
+     FSDPLINLLIF  E           K        DISK                               R05602
+     F                                              KINFSR *PSSR
+     F** PREFIX '  ' **
+     F**
+     F****PMPOTTPPIF  E           K        DISK                           S01486
+     FPMPOTTPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX '  ' **
+     F**
+     F****PMDSGTPPIF  E           K        DISK                           S01486
+     FPMDSGTPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX '  ' **
+     F**
+     F****PMISTTPPIF  E           K        DISK                           S01486
+     FPMISTTPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX '  ' **
+     F****PMMFHLPPIF  E           K        DISK                           S01486
+     FPMMFHLPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX 'QG' **                                                   CPM005
+     FPMCCYTPDIF  E           K        DISK                               CPM005
+     F                                              KINFSR *PSSR          CPM005
+     F** PREFIX 'QF' **                                                   CPM005
+     FPMHOLDL6IF  E           K        DISK                               CPM005
+     F            PMHOLDP0                          KRENAMEPMHOLDP6       CPM005
+     F                                              KINFSR *PSSR          CPM005
+     F**
+     F*************************************************************
+     F**                                                         **
+     F**                  FUNCTION OF INDICATORS                 **
+     F**                                                         **
+     F*************************************************************
+     F**
+     F**
+     E**
+     E** TABLES AND ARRAYS
+     E*********************************************************************
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZSEDITZ1
+     E**
+     I*************************************************************
+     I**
+     I** EXTERNAL FORMAT FOR GROUP DATA AREA
+     I**
+     I****WWGDA     E DSPMGRDAPP                                          S01486
+     I**
+     I****WWLDA     E DSPMLDAPP                                           S01486
+     IWWLDA     E DSPMLDAPD                                               S01486
+     I*                                                                   CPM005
+     ISDCURR    E DSSDCURRPD                                              CPM005
+     I* DS FOR CURRENCIES DETAILS                                         CPM005
+     I**
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* First DS For Access Programs, Short Data Structure                S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* Second DS For Access Programs, Long Data Structure                S01486
+     I*                                                                   S01486
+     I*
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I*
+     IPSDS       SDS
+     I**********                            244 253 WSID                  S01486
+     I**********                            254 263 USID                  S01486
+     I                                      244 253 WKSTN                 S01486
+     I                                      254 263 USER                  S01486
+     ISDPLCS    E DSSDPLCSPD                                              S01486
+     I* Portfolio Customer Details Accessed Via Access Program            S01486
+     I*                                                                   S01486
+     ISDPORT    E DSSDPORTPD                                              S01486
+      ** PM MODULE ACCESSED VIA ACCESS PROGRAM                            S01486
+     I*                                                                   S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I** DUMMY RECORD FORMAT FOR CUSTOMER DETAILS                         S01486
+     I*                                                                   S01486
+      /COPY ZSRSRC,ZSEDITZ2
+     I**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #P1001   - PREPARE SCREEN                                        *
+      * #V1001   - PROCESS VALIDATION OF PORTFOLIO REFERENCE             *
+      * #INIT    - PROCESS INITIALIZATION                                *
+      * #U1001   - PROCESS PORTFOLIO REFERENCE                           *
+      * #U1002   - PROCESS PORTFOLIO REFERENCE '9997','9998','9999'      *
+      * #U1003   - PROCESS VALID PORTFOLIO REFERENCE                     *
+      * #U1004   - PROCESS DISPLAY GROUP DETAILS                         *
+      * #U1005   - PROCESS INSTRUMENT DETAILS                            *
+      * ZSEDIT   - FORMAT A NUMERIC FIELD WITH DECIMAL POINT             *
+      * ZDATE2   - CONVERT MIDAS DATE IN ALPHA DATE                      *
+      * *PSSR    - PROCESS DATA BASE ERRORS                              *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * PMC1003  - RETRIEVE DATAAREA *LDA                                *
+      * PMC1001  - UPDATE DATAAREA *LDA                                  *
+      **PMC1002**-*UPDATE*DATAAREA *GDA***********************************S01486
+      **PMC1020**-*RETRIEVE*DATAAREA *GDA*********************************S01486
+      *                                                                  *
+      ********************************************************************
+     C***************************************************************
+     C**                  CALCULATIONS                             **
+     C***************************************************************
+     C**
+     C** KLIST
+     C**
+     C           PMPORT    KLIST
+     C                     KFLD           QMCNUM
+     C                     KFLD           WWPTFR  4
+     C           PMDSGT    KLIST
+     C                     KFLD           QMCNUM
+     C                     KFLD           WWPTFR
+     C                     KFLD           WWDSPS  20
+     C                     KFLD           WWDSPG  3
+     C           PMISTT    KLIST
+     C                     KFLD           QMCNUM
+     C                     KFLD           WWPTFR
+     C                     KFLD           WWDSPS
+     C                     KFLD           WWDSPG
+     C                     KFLD           WWITDS  20
+     C                     KFLD           WWINNR  3
+     C           SDPLIN    KLIST
+     C                     KFLD           WWDSPG
+     C                     KFLD           WWINNR
+     C           KINVTP    KLIST
+     C                     KFLD           KCCYI   3
+     C                     KFLD           KINVT   3
+     C**                                                                  CPM005
+     C           PMCCYT    KLIST                                          CPM005
+     C                     KFLD           QMCNUM                          CPM005
+     C                     KFLD           WWPTFR                          CPM005
+     C                     KFLD           KCCY    3                       CPM005
+     C**                                                                  CPM005
+     C           HOLDL6    KLIST                                          CPM005
+     C                     KFLD           DDSECU                          CPM005
+     C                     KFLD           QMCNUM                          CPM005
+     C                     KFLD           FCTVPS                          CPM005
+     C                     KFLD           WWPTFR                          CPM005
+     C**
+     C           *ENTRY    PLIST
+     C***********          PARM           #JOBN  10                       081239
+     C                     PARM           #F12    1
+     C                     PARM           #RTRN   1
+     C                     PARM           #INDIC  1                       CPM005
+     C**
+     C** PERFORM INITIAL PROCESSING
+     C**
+     C           WWFLAG    IFNE 'Y'
+     C                     EXSR #INIT
+     C                     END
+     C**
+     C** OPEN DISPLAY FILE
+     C**
+     C**********           OPEN PM0660DD                                  S01486
+     C                     OPEN PM0660DF                                  S01486
+     C**
+     C** SET UP SCREEN DETAILS
+     C**
+     C                     EXSR #P1001
+     C**
+     C** PERFORM UNTIL VALID ENTRIES OR F12 TAKEN
+     C**
+     C           *IN80     DOUEQ'0'
+     C           *INKL     OREQ '1'
+     C**
+     C                     EXFMTPM0660F1
+     C**
+     C           *IN60     IFEQ '0'
+     C**
+     C** PERFORM VALIDATION
+     C**
+     C                     EXSR #V1001
+     C**
+     C** IF VALID DETAILS ENTERED, UPDATE *LDA
+     C**
+     C           *IN80     IFEQ '0'
+     C**                                                                  CPM005
+     C           *IN01     IFEQ '0'                                       CPM005
+     C**
+     C                     EXSR #U1001
+     C**                                                                  CPM005
+     C                     ELSE                                           CPM005
+     C**                                                                  CPM005
+     C                     EXSR #U1006                                    CPM005
+     C                     END                                            CPM005
+     C**
+     C                     END
+     C                     END
+     C**
+     C           *INKL     IFEQ '1'
+     C                     MOVEL'Y'       #F12
+     C                     END
+     C**
+     C                     END
+     C**
+     C**********           CLOSEPM0660DD                                  S01486
+     C                     CLOSEPM0660DF                                  S01486
+     C                     RETRN
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1001   - PREPARE SCREEN                                        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PMC1003  - RETRIEVE DATAAREA *LDA                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWLDA    -                                                       *
+      **WWJOBN***-********************************************************081239
+      *                                                                  *
+      ********************************************************************
+     C           #P1001    BEGSR
+     C**
+     C** RETRIEVE DATA AREA *GDA
+     C**
+     C                     CALL 'PMC1003'
+     C                     PARM           WWLDA
+     C                     MOVELQMRUNA    DDRUNA                          080388
+     C**
+     C** CHECK CONTENTS OF DATA AREA AND PARAMETERS PASSED
+     C** TO PROGRAM
+     C**
+     C                     MOVEL'J'       ZECODE
+     C***********          MOVEL*BLANKS   WWJOBN                          081239
+     C***********          MOVEL#JOBN     WWJOBN  6                       081239
+     C**
+     C** RESET INDICATORS
+     C**
+     C                     MOVE '0'       *INKL
+     C                     MOVE '0'       *IN
+     C                     MOVE '0'       *IN98
+     C**                                                                  CPM005
+     C** DETERMINE IF PGM IS CALLED BY PM0671 OR BY PM6070                CPM005
+     C           #INDIC    IFEQ 'Y'                                       CPM005
+     C                     MOVE '1'       *IN01                           CPM005
+     C                     END                                            CPM005
+     C**                                                                  CPM005
+     C** SETUP OTHERS FIELD ONLY IF IT IS NOT CALLED BY PM6070            CPM005
+     C           *IN01     IFEQ '0'                        B0             CPM005
+     C**
+     C** ACCESS SDPLCSPD TO OBTAIN CUSTOMER DETAILS
+     C**
+     C                     MOVE QMCNUM    WWCNUM  6
+     C                     MOVELQMCNUM    PLCUS                           S01486
+     C**
+     C********** WWCNUM    CHAINSDPLCSPD             70                   S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   RTCD    7                       S01486
+     C                     PARM '*KEY'    POPTN   7                       S01486
+     C                     PARM           PLCUS  10                       S01486
+     C           SDPLCS    PARM SDPLCS    DSFDY                           S01486
+     C           RTCD      IFEQ *BLANKS                                   S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   RTCD                            S01486
+     C                     PARM '*KEY'    POPTN                           S01486
+     C                     PARM           PLCUS                           S01486
+     C                     PARM           KEYST   7                       S01486
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C                     END                                            S01486
+     C           RTCD      IFNE *BLANKS                                   S01486
+     C**
+     C********** *IN70     IFEQ '1'                        ***************S01486
+     C                     Z-ADD2         QMERRN           **DB ERROR 02**
+     C                     MOVEL'SDPLCSPD'QMFILE           ***************
+     C                     MOVELQMCNUM    QMKEY
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C***********WWJOBN    IFEQ 'PORTFO'                                  081239
+     C***********QMPTF1    ANDEQ*BLANKS                                   081239
+     C           QMPTF1    IFEQ *BLANKS                                   081239
+     C**********           MOVELP9R999    DDPTFR                    R05583S01486
+     C                     MOVELFCR999    DDPTFR                          S01486
+     C                     MOVEL*BLANKS   DDDSPG
+     C                     MOVEL*BLANKS   DDINNR
+     C                     MOVEL*BLANKS   DDSECU
+     C                     MOVEL*BLANKS   DDDCCY                          CPM005
+     C                     MOVEL'Y'       #RTRN
+     C                     ELSE                                           081239
+     C***********          END                                            081239
+     C***********                                                         081239
+     C***********WWJOBN    IFEQ 'SCROLL'                                  081239
+     C***********          MOVE '1'       *IN50                           081239
+     C***********          MOVELQMPTF2    DDPTFR                          081239
+     C***********          MOVELQMDSPG    DDDSPG                    R05602081239
+     C***********          MOVELQMINNR    DDINNR                    R05602081239
+     C***********          MOVELQMSESN    DDSECU                    R05602081239
+     C***********          END                                            081239
+     C***********                                                         081239
+     C***********WWJOBN    IFNE 'SCROLL'                                  081239
+     C***********QMPTF1    ANDNE*BLANKS                                   081239
+     C           QMPTF1    IFNE *BLANKS                                   081239
+     C           QMDSPG    ANDEQ*BLANKS
+     C           QMINNR    ANDEQ*BLANKS
+     C                     MOVE '1'       *IN50
+     C                     MOVELQMPTF2    DDPTFR
+     C                     MOVEL*BLANKS   DDDSPG
+     C                     MOVEL*BLANKS   DDINNR
+     C                     MOVEL*BLANKS   DDSECU
+     C                     MOVEL*BLANKS   DDDCCY                          CPM005
+     C                     MOVEL'Y'       #RTRN
+     C***********          END                                            081239
+     C                     ELSE                                           081239
+     C**
+     C***********WWJOBN    IFNE 'SCROLL'                                  081239
+     C***********QMPTF1    ANDNE*BLANKS                                   081239
+     C           QMPTF1    IFNE *BLANKS                                   081239
+     C           QMDSPG    ANDNE*BLANKS
+     C           QMINNR    ANDEQ*BLANKS
+     C                     MOVE '1'       *IN50
+     C                     MOVELQMPTF2    DDPTFR
+     C                     MOVE '1'       *IN51
+     C                     MOVELQMDSPG    DDDSPG
+     C                     MOVEL*BLANKS   DDINNR
+     C                     MOVEL*BLANKS   DDSECU
+     C                     MOVEL*BLANKS   DDDCCY                          CPM005
+     C***********          END                                            081239
+     C                     ELSE                                           081239
+     C**
+     C***********WWJOBN    IFNE 'SCROLL'                                  081239
+     C***********QMPTF1    ANDNE*BLANKS                                   081239
+     C           QMPTF1    IFNE *BLANKS                                   081239
+     C           QMINNR    ANDNE*BLANKS
+     C                     MOVE '1'       *IN50
+     C                     MOVELQMPTF2    DDPTFR
+     C                     MOVE '1'       *IN51
+     C                     MOVELQMDSPG    DDDSPG
+     C                     MOVE '1'       *IN52
+     C                     MOVELQMINNR    DDINNR
+     C                     MOVEL*BLANKS   DDSECU
+     C                     MOVEL*BLANKS   DDDCCY                          CPM005
+     C                     END
+     C                     END                             E3             081239
+     C                     END                             E2             081239
+     C                     END                             E1             081239
+     C**
+     C                     ELSE                            X1             CPM005
+     C                     MOVELQMPTF2    DDPTFR                          CPM005
+     C                     MOVELQMCCY1    DDCURR                          CPM005
+     C                     END                             E1             CPM005
+     C**                                                                  CPM005
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #V1001   - PROCESS VALIDATION OF PORTFOLIO REFERENCE             *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPTFR   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #V1001    BEGSR
+     C**
+     C                     MOVE '0'       *IN02                           CPM005
+     C                     MOVE '0'       *IN58
+     C                     MOVE '0'       *IN59
+     C                     MOVE '0'       *IN69                           CPM005
+     C                     MOVE '0'       *IN76                           CPM005
+     C                     MOVE '0'       *IN77                           CPM005
+     C                     MOVE '0'       *IN78                           CPM005
+     C                     MOVE '0'       *IN79                           CPM005
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN81
+     C                     MOVE '0'       *IN82
+     C                     MOVE '0'       *IN83
+     C                     MOVE '0'       *IN84
+     C                     MOVE '0'       *IN85
+     C                     MOVE '0'       *IN86
+     C                     MOVE '0'       *IN87                           CPM005
+     C                     MOVE '0'       *IN88                           R05602
+     C                     MOVE '0'       *IN89                           CPM005
+     C                     MOVE '0'       *IN90                           R05602
+     C*
+     C** IF PROGRAM CALLED FROM PM0630 'PORTFOLIO SUMMARY SCREEN'
+     C** VALIDATE PORTFOLIO REFERENCE
+     C           *IN50     IFEQ '0'                        B1
+     C**ACCESS*PF/PMPORTPP                                                S01486
+     C**ACCESS PF/PMPORTPD                                                S01486
+     C                     MOVELDDPTFR    WWPTFR
+     C**
+     C********** PMPORT    CHAINPMPORTPP             71                   S01486
+     C           PMPORT    CHAINPMPORTPD             71                   S01486
+     C**
+     C           *IN71     IFEQ '1'                        B2
+     C**
+     C** CHECK IF NOT REFERENCE ATTACHED TO '9997','9998', OR '9999'
+     C**
+     C********** DDPTFR    IFNE P9R997                     B3             S01486
+     C********** DDPTFR    ANDNEP9R998                                    S01486
+     C********** DDPTFR    ANDNEP9R999                                    S01486
+     C           DDPTFR    IFNE FCR997                     B3             S01486
+     C           DDPTFR    ANDNEFCR998                                    S01486
+     C           DDPTFR    ANDNEFCR999                                    S01486
+     C                     MOVE '1'       *IN58
+     C                     MOVE '1'       *IN80
+     C                     GOTO #V1009                                    R10030
+     C                     END                             B3
+     C**
+     C** IF EQUAL TO REFENCE ATTACHED TO '9997' OR '9998'
+     C** STANDARD PORTFOLIO VIEWS MUST BE AVAILABLE
+     C**
+     C********** DDPTFR    IFEQ P9R997                     B3             S01486
+     C********** P9DP97    ANDEQ'N'                                       S01486
+     C********** DDPTFR    OREQ P9R998                                    S01486
+     C********** P9DP98    ANDEQ'N'                                       S01486
+     C           DDPTFR    IFEQ FCR997                     B3             S01486
+     C           FCDP97    ANDEQ'N'                                       S01486
+     C           DDPTFR    OREQ FCR998                                    S01486
+     C           FCDP98    ANDEQ'N'                                       S01486
+     C                     MOVE '1'       *IN59
+     C                     MOVE '1'       *IN80
+     C                     GOTO #V1009                                    R10030
+     C                     END                             E3
+     C**
+     C                     END                             E2
+     C**
+     C                     END                             E1
+     C**
+     C** SET UP STANDARD PORTFOLIO VIEW DETAILS
+     C           *IN80     IFEQ '0'                        B1
+     C                     MOVE DDPTFR    WWPTFR
+     C********** DDPTFR    IFEQ P9R997                     B2             S01486
+     C           DDPTFR    IFEQ FCR997                     B2             S01486
+     C                     MOVE '9997'    WWPTFR
+     C                     END                             E2
+     C*
+     C********** DDPTFR    IFEQ P9R998                     B2             S01486
+     C           DDPTFR    IFEQ FCR998                     B2             S01486
+     C                     MOVE '9998'    WWPTFR
+     C                     END                             E2
+     C*
+     C********** DDPTFR    IFEQ P9R999                     B2             S01486
+     C           DDPTFR    IFEQ FCR999                     B2             S01486
+     C                     MOVE '9999'    WWPTFR
+     C                     END                             E2
+     C**
+     C** CHECK THAT TOTALS EXIST FOR PORTFOLIO
+     C                     MOVE 'Y'       WWPOTT  1
+     C********** PMPORT    CHAINPMPOTTPP             71                   S01486
+     C           PMPORT    CHAINPMPOTTPD             71                   S01486
+     C           *IN71     IFEQ '1'                        B2
+     C                     MOVE 'N'       WWPOTT
+     C                     END                             E2
+     C*
+     C** CHECK WHETHER MATURE/FLAT POSITIONS EXIST IN PORTFOLIO
+     C********** PMPORT    SETLLPMMFHLPP                                  S01486
+     C********** PMPORT    READEPMMFHLPP                 71               S01486
+     C           PMPORT    SETLLPMMFHLPD                                  S01486
+     C           PMPORT    READEPMMFHLPD                 71               S01486
+     C*
+     C** IF NEITHER CURRENT TOTAL EXISTS FOR THE PORTFOLIO NOR MATURE/
+     C** FLAT POSITIONS OUTPUT ERROR
+     C           *IN71     IFEQ '1'                        B2
+     C           WWPOTT    ANDEQ'N'
+     C                     MOVE '1'       *IN81
+     C                     MOVE '1'       *IN80
+     C                     GOTO #V1009                                    R10030
+     C                     END                             E2
+     C                     END                             E1
+     C*                                                                   CPM005
+     C** IF PROGRAM CALLED FROM PM6070 'PORTFOLIO SUMMARY SCREEN'         CPM005
+     C           *IN01     IFEQ '1'                        *B1            CPM005
+     C                     MOVELDDCURR    @AJCD                           CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM '*VERIFY' @RTCD   7                       CPM005
+     C                     PARM '*KEY   ' @OPTN   7                       CPM005
+     C                     PARM           @AJCD   3                       CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+     C           @RTCD     IFNE *BLANKS                    **B2           CPM005
+     C                     MOVE '1'       *IN02                           CPM005
+     C                     MOVE '1'       *IN80                           CPM005
+     C                     GOTO #V1009                                    CPM005
+     C                     ENDIF                           **E2           CPM005
+     C*                                                                   CPM005
+     C                     MOVE DDCURR    KCCY                            CPM005
+     C*                                                                   CPM005
+     C           PMCCYT    CHAINPMCCYTPD             71                   CPM005
+     C           *IN71     IFEQ '1'                                       CPM005
+     C                     MOVE '1'       *IN76                           CPM005
+     C                     MOVE '1'       *IN80                           CPM005
+     C                     GOTO #V1009                                    CPM005
+     C                     END                                            CPM005
+     C*                                                                   CPM005
+     C                     GOTO #V1009                                    CPM005
+     C                     ENDIF                           *E1            CPM005
+     C*
+     C** SET UP DEFAULT VALUES FOR INSTRUMENT AND DISPLAY GROUP IF
+     C** REQUIRED
+     C*                                                                   R05583
+     C** IF VALID INSTRUMENT TYPE ENTERED AND DISPLAY GROUP BLANK         R05583
+     C** DEFAULT DISPLAY GROUP TO THE DISPLAY GROUP ON THE INSTRUMENT     R05583
+     C           DDDSPG    IFEQ *BLANKS                    B1             R05583
+     C           DDINNR    ANDNE*BLANKS                                   R05583
+     C           DDINNR    CHAINSDPLINPD             71                   R05583
+     C           *IN71     IFEQ '0'                        B2             R05583
+     C           PDRECI    ANDNE'*'                                       R05583
+     C                     MOVE PDDSPG    DDDSPG                          R05583
+     C                     END                             E2             R05583
+     C                     END                             E1             R05583
+     C*                                                                   TA0000
+     C** IF SECURITY REFERENCE ENTERED BUT DISPLAY GROUP AND INSTRUMENT   TA0000
+     C** ARE BLANK, OR INSTRUMENT IS BLANK ATTEMPT TO SET UP DEFAULT      TA0000
+     C** DETAILS                                                          TA0000
+     C           DDDSPG    IFEQ *BLANK                     B1             TA0000
+     C           DDINNR    ANDEQ*BLANK                                    TA0000
+     C           DDSECU    ANDNE*BLANK                                    TA0000
+     C           DDINNR    OREQ *BLANK                                    TA0000
+     C           DDSECU    ANDNE*BLANK                                    TA0000
+     C*
+     C           DDSECU    CHAINSECTY                71                   TA0000
+     C*                                                                   CPM005
+     C** IF SECURITY ENTERED MUST BE VALID SECURITY                       CPM005
+     C           *IN71     IFEQ '1'                        B2             CPM005
+     C           RECI      ORNE 'D'                                       CPM005
+     C                     MOVE '1'       *IN84                           CPM005
+     C                     MOVE '1'       *IN80                           CPM005
+     C                     GOTO #V1009                                    CPM005
+     C                     END                             E2             CPM005
+     C*                                                                   CPM005
+     C************IN71     IFEQ '0'                        B2      TA0000 CPM005
+     C*
+     C** OBTAIN INSTRUMENT FROM INVESTMENT TYPE
+     C                     MOVE NMCY      KCCYI                           TA0000
+     C                     MOVE SITP      KINVT                           TA0000
+     C           KINVTP    CHAININVTP                71                   TA0000
+     C*                                                                   TA0000
+     C** OBTAIN INSTRUMENT TYPE FROM SDPLINPD                             TA0000
+     C           INNR      CHAINSDPLINPD             71                   TA0000
+     C           DDDSPG    IFEQ *BLANKS                    B3
+     C                     MOVE PDDSPG    DDDSPG                          TA0000
+     C                     END                             E3             TA0000
+     C                     MOVE PDINNR    DDINNR                          TA0000
+     C*********************END                             E2      TA0000 CPM005
+     C                     END                             E1             TA0000
+     C*                                                                   S01313
+     C** DISPLAY GROUP CODE MUST BE ENTERED IF INSTRUMENT OR SECURITY
+     C** DEFINED                                                          S01313
+     C           DDDSPG    IFEQ *BLANKS                    B1             S01313
+     C           DDINNR    ANDNE*BLANKS                                   S01313
+     C           DDDSPG    OREQ *BLANKS                                   S01313
+     C           DDSECU    ANDNE*BLANKS                                   S01313
+     C                     MOVE '1'       *IN82                           S01313
+     C                     MOVE '1'       *IN80                           S01313
+     C                     GOTO #V1009                                    S01313
+     C                     END                             E1             S01313
+     C*
+     C** INSTRUMENT CODE MUST BE ENTERED IF SECURITY ENTERED
+     C           DDINNR    IFEQ *BLANKS                                   R05583
+     C           DDSECU    ANDNE*BLANKS                                   R05583
+     C                     MOVE '1'       *IN83                           S01313
+     C                     MOVE '1'       *IN80                           S01313
+     C                     GOTO #V1009                                    S01313
+     C                     END                                            S01313
+     C*                                                                   R05602
+     C** CHECK THAT A VALID DISPLAY GROUP CODE HAS BEEN ENTERED           R05602
+     C           DDDSPG    IFNE *BLANKS                                   R05602
+     C           DDDSPG    CHAINPMDSPGL3             71                   R05602
+     C           *IN71     IFEQ '1'                                       R05602
+     C           PADSPG    OREQ '*'                                       R05602
+     C                     MOVE '1'       *IN88                           R05602
+     C                     MOVE '1'       *IN80                           R05602
+     C                     GOTO #V1009                                    R05602
+     C                     END                                            R05602
+     C                     END                                            R05602
+     C*                                                                   CPM005
+     C                     MOVE ' '       #F12                            CPM005
+     C*                                                                   CPM005
+     C** CHECK THAT A VALID CURRENCY CODE HAS BEEN ENTERED                CPM005
+     C           DDDCCY    IFNE *BLANKS                                   CPM005
+     C                     MOVELDDDCCY    @AJCD                           CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM '*VERIFY' @RTCD   7                       CPM005
+     C                     PARM '*KEY   ' @OPTN   7                       CPM005
+     C                     PARM           @AJCD   3                       CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+     C           @RTCD     IFNE *BLANKS                                   CPM005
+     C                     MOVE '1'       *IN79                           CPM005
+     C                     MOVE '1'       *IN80                           CPM005
+     C                     GOTO #V1009                                    CPM005
+     C                     END                                            CPM005
+     C*                                                                   CPM005
+     C                     MOVE DDDCCY    KCCY                            CPM005
+     C*                                                                   CPM005
+     C           PMCCYT    CHAINPMCCYTPD             71                   CPM005
+     C           *IN71     IFEQ '1'                                       CPM005
+     C                     MOVE '1'       *IN76                           CPM005
+     C                     MOVE '1'       *IN80                           CPM005
+     C                     GOTO #V1009                                    CPM005
+     C                     END                                            CPM005
+     C                     MOVE 'C'       #F12                            CPM005
+     C                     END                                            CPM005
+     C*                                                                   R05602
+     C** CHECK THAT VALID INSTRUMENT CODE INPUT                           R05602
+     C           DDINNR    IFNE *BLANKS                                   R05602
+     C           DDINNR    CHAINSDPLINPD             71                   R05583
+     C           *IN71     IFEQ '1'                                       R05602
+     C                     MOVE '1'       *IN90                           R05602
+     C                     MOVE '1'       *IN80                           R05602
+     C                     GOTO #V1009                                    R05602
+     C                     END                                            R05602
+     C                     END                                            R05602
+     C*                                                                   R05602
+     C** CHECK THAT INSTRUMENT ASSIGNED TO DISPLAY GROUP                  R05602
+     C           DDDSPG    IFNE *BLANKS                                   R05602
+     C           DDINNR    ANDNE*BLANKS                                   R05602
+     C           DDDSPG    ANDNEPDDSPG                                    R05602
+     C                     MOVE '1'       *IN85                           R05602
+     C                     MOVE '1'       *IN80                           R05602
+     C                     GOTO #V1009                                    R05602
+     C                     END                                            R05602
+     C*                                                                   CPM005
+     C                     Z-ADDPADSPS    WWDSPS                          CPM005
+     C                     MOVE DDDSPG    WWDSPG                          CPM005
+     C*                                                                   CPM005
+     C           DDDSPG    IFNE *BLANKS                                   CPM005
+     C           PMDSGT    CHAINPMDSGTPD             71                   CPM005
+     C*                                                                   CPM005
+     C           *IN71     IFEQ '1'                                       CPM005
+     C                     MOVE '1'       *IN77                           CPM005
+     C                     MOVE '1'       *IN80                           CPM005
+     C                     GOTO #V1009                                    CPM005
+     C                     END                                            CPM005
+     C                     END                                            CPM005
+     C*                                                                   CPM005
+     C           DDINNR    IFNE *BLANKS                                   CPM005
+     C                     Z-ADDPDITDS    WWITDS                          CPM005
+     C                     MOVE DDINNR    WWINNR                          CPM005
+     C*                                                                   CPM005
+     C           PMISTT    CHAINPMISTTPD             71                   CPM005
+     C*                                                                   CPM005
+     C           *IN71     IFEQ '1'                                       CPM005
+     C                     MOVE '1'       *IN89                           CPM005
+     C                     MOVE '1'       *IN80                           CPM005
+     C                     GOTO #V1009                                    CPM005
+     C                     END                                            CPM005
+     C                     END                                            CPM005
+     C*
+     C** IF SECURITY ENTERED MUST BE VALID SECURITY                       R05602
+     C           DDSECU    IFNE *BLANKS                    B1             R05602
+     C           DDSECU    CHAINSECTY                71                   TA0000
+     C           *IN71     IFEQ '1'                        B2             TA0000
+     C           RECI      ORNE 'D'                                       TA0000
+     C                     MOVE '1'       *IN84                           R05602
+     C                     MOVE '1'       *IN80                           R05602
+     C                     GOTO #V1009                                    R05602
+     C                     ELSE                            X2             R05602
+     C*
+     C** .... IF VALID SECURITY CHECK THAT ASSIGNED TO SAME INSTRUMENT
+     C** AS ENTERED
+     C                     MOVE NMCY      KCCYI                           TA0000
+     C                     MOVE SITP      KINVT                           TA0000
+     C           KINVTP    CHAININVTP                71                   TA0000
+     C           INNR      IFNE DDINNR                     B3             TA0000
+     C                     MOVE '1'       *IN86                           R05602
+     C                     MOVE '1'       *IN80                           R05602
+     C                     GOTO #V1009                                    R05602
+     C                     END                             E3             R05602
+     C                     END                             E2             R05602
+     C*                                                                   CPM005
+     C           HOLDL6    CHAINPMHOLDL6             71                   CPM005
+     C           *IN71     IFEQ '1'                        B2             CPM005
+     C                     MOVE '1'       *IN69                           CPM005
+     C                     MOVE '1'       *IN80                           CPM005
+     C                     GOTO #V1009                                    CPM005
+     C                     END                             E2             CPM005
+     C*                                                                   CPM005
+     C                     END                             E1             R05602
+     C** IF THE CURRENCY IS ENTERED & VALID, ALL THE OTHERS FIELDS        CPM005
+     C** (EXCEPT THE PORTFOLIO REF) MUST BE BLANKS                        CPM005
+     C           DDDCCY    IFNE *BLANKS                    B1             CPM005
+     C           *IN76     ANDEQ'0'                                       CPM005
+     C           *IN79     ANDEQ'0'                                       CPM005
+     C           DDDSPG    IFNE *BLANKS                    B2             CPM005
+     C                     MOVE '1'       *IN78                           CPM005
+     C                     MOVE '1'       *IN80                           CPM005
+     C                     END                             E2             CPM005
+     C           DDINNR    IFNE *BLANKS                    B2             CPM005
+     C                     MOVE '1'       *IN78                           CPM005
+     C                     MOVE '1'       *IN80                           CPM005
+     C                     END                             E2             CPM005
+     C           DDSECU    IFNE *BLANKS                    B2             CPM005
+     C                     MOVE '1'       *IN78                           CPM005
+     C                     MOVE '1'       *IN80                           CPM005
+     C                     END                             E2             CPM005
+     C                     END                             E1             CPM005
+     C*                                                                   TA0000
+     C*
+     C           #V1009    ENDSR                                          R10030
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - PROCESS INITIALIZATION                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROCESS DATA BASE ERRORS                              *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWFLAG   - PROCESS FLAG                                          *
+      * WWCNUM   - CUSTOMER NUMBER                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+     C**
+     C                     MOVEL'Y'       WWFLAG  1
+     C**
+     C** ACCESS SDPORTPD TO OBTAIN PM INSTALLATION CONTROL
+     C**
+     C********** 1         SETLLSDPORTPD                                  S01486
+     C**
+     C**********           READ SDPORTPD                 70               S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM '*DBERR ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C**
+     C********** *IN70     IFEQ '1'                        ***************S01486
+     C                     Z-ADD1         QMERRN           **DB ERROR 01**
+     C                     MOVEL'SDPORTPD'QMFILE           ***************
+     C                     MOVEL*BLANKS   QMKEY
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #U1001   - PROCESS PORTFOLIO REFERENCE                           *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #U1002   - PROCESS PORTFOLIO REFERENCE '9997','9998','9999'      *
+      * #U1003   - PROCESS VALID PORTFOLIO REFERENCE                     *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #U1001    BEGSR
+     C**
+     C** PORTFOLIO REFERENCE
+     C********** DDPTFR    IFEQ P9R997                                    S01486
+     C********** DDPTFR    OREQ P9R998                                    S01486
+     C********** DDPTFR    OREQ P9R999                                    S01486
+     C           DDPTFR    IFEQ FCR997                                    S01486
+     C           DDPTFR    OREQ FCR998                                    S01486
+     C           DDPTFR    OREQ FCR999                                    S01486
+     C                     EXSR #U1002
+     C                     ELSE
+     C                     EXSR #U1003
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #U1002   - PROCESS PORTFOLIO REFERENCE '9997','9998','9999'      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   - FORMAT A NUMERIC FIELD WITH DECIMAL POINT             *
+      * #U1004   - PROCESS DISPLAY GROUP DETAILS                         *
+      * #U1005   - PROCESS INSTRUMENT DETAILS                            *
+      * PMC1001  - UPDATE DATAAREA *LDA                                  *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #U1001   - PROCESS PORTFOLIO REFERENCE                           *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWLDA    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #U1002    BEGSR
+     C**
+     C           *IN50     IFEQ '0'
+     C**
+     C** PORTFOLIO REFERENCE
+     C********** DDPTFR    IFEQ P9R997                                    S01486
+     C           DDPTFR    IFEQ FCR997                                    S01486
+     C                     MOVEL'9997'    QMPTF1
+     C**********           MOVELP9R997    QMPTF2                          S01486
+     C**********           MOVELP9N997    QMPTFN                          S01486
+     C                     MOVELFCR997    QMPTF2                          S01486
+     C                     MOVELFCN997    QMPTFN                          S01486
+     C                     END
+     C**
+     C********** DDPTFR    IFEQ P9R998                                    S01486
+     C           DDPTFR    IFEQ FCR998                                    S01486
+     C                     MOVEL'9998'    QMPTF1
+     C**********           MOVELP9R998    QMPTF2                          S01486
+     C**********           MOVELP9N998    QMPTFN                          S01486
+     C                     MOVELFCR998    QMPTF2                          S01486
+     C                     MOVELFCN998    QMPTFN                          S01486
+     C                     END
+     C**
+     C********** DDPTFR    IFEQ P9R999                                    S01486
+     C           DDPTFR    IFEQ FCR999                                    S01486
+     C                     MOVEL'9999'    QMPTF1
+     C**********           MOVELP9R999    QMPTF2                          S01486
+     C**********           MOVELP9N999    QMPTFN                          S01486
+     C                     MOVELFCR999    QMPTF2                          S01486
+     C                     MOVELFCN999    QMPTFN                          S01486
+     C                     END
+     C**
+     C** TRADE DATE PORTFOLIO MARKET VALUE , VALUE DATE PORTFOLIO
+     C** MARKET VALUE, TRADE DATE ACCRUED INTEREST,VALUE DATE ACCRUED INTEREST
+     C**
+     C********** PMPORT    CHAINPMPOTTPP             72                   S01486
+     C           PMPORT    CHAINPMPOTTPD             72                   S01486
+     C**
+     C           *IN72     IFEQ '0'
+     C           QCPTPA    SUB  QCPTNA    QCPTPA
+     C           QCPTPA    SUB  QCPTMV    QCPTPA
+     C**
+     C** EDIT AMOUNT CONVERTED USING ZSEDIT
+     C**
+     C                     Z-ADDQCPTPA    ZFLD15
+     C**
+     C                     Z-ADDQMBYDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    QMTPMV
+     C**
+     C           QCPVPA    SUB  QCPVNA    QCPVPA
+     C           QCPVPA    SUB  QCPVMV    QCPVPA
+     C**
+     C** EDIT AMOUNT CONVERTED USING ZSEDIT
+     C**
+     C                     Z-ADDQCPVPA    ZFLD15
+     C                     Z-ADDQMBYDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    QMVPMV
+     C**
+     C** EDIT INTEREST AMOUNTS CONVERTED USING ZSEDIT
+     C**
+     C                     Z-ADDQCPTAI    ZFLD15
+     C                     Z-ADDQMBYDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    QMPTAI
+     C                     MOVE ZOUT21    QMPVAI
+     C**
+     C                     ELSE
+     C                     MOVE *BLANKS   QMTPMV
+     C                     MOVE *BLANKS   QMVPMV
+     C                     MOVE *BLANKS   QMPTAI
+     C****                 MOVE *BLANKS   QMPVAI                          B08040
+     C                     END
+     C**
+     C** PORTFOLIO CURRENCY AND CURRENCY DECIMAL PLACES
+     C** FOR '9997','9998' AND '9999' USE CUSTOMER BASE CURRENCY
+     C**
+     C                     MOVELQBCSBY    QMPTCY
+     C                     Z-ADDQMBYDP    QMPCDP
+     C**
+     C** PORTFOLIO TYPE,
+     C** DATE PORTFOLIO OPENED, PORTFOLIO PLEDGED INDICATOR
+     C**
+     C                     MOVEL*BLANKS   QMPTFT
+     C                     MOVEL*BLANKS   QMDPO1
+     C                     MOVEL*BLANKS   QMPPDG
+     C**
+     C                     END
+     C**                                                                  CPM005
+     C           *IN01     IFEQ '0'                                       CPM005
+     C**
+     C** DISPLAY GROUP CODE & DETAILS
+     C**
+     C                     EXSR #U1004
+     C**
+     C** INSTRUMENT CODE & DETAILS
+     C**
+     C                     EXSR #U1005
+     C**
+     C** SECURITY SHORT NAME AND TRANSACTION NUMBER, ATTENTION KEY
+     C**
+     C                     MOVELDDSECU    QMSESN
+     C*                                                                   S01313
+     C** SET UP SECURITY CURRENCY 1                                       S01313
+     C           DDSECU    CHAINSECTY                71                   S01313
+     C           *IN71     IFEQ '0'                        B1             S01313
+     C           RECI      ANDEQ'D'                                       S01313
+     C                     MOVE NMCY      QMCCY1                          S01313
+     C                     ELSE                            X1             S01313
+     C                     MOVE *BLANKS   QMCCY1                          S01313
+     C                     END                             E1             S01313
+     C**                                                                  CPM005
+     C           DDDCCY    IFNE *BLANKS                                   CPM005
+     C                     MOVELDDDCCY    QMCCY1                          CPM005
+     C                     END                                            CPM005
+     C                     END                                            CPM005
+     C**
+     C***UPDATE**GDA                                                      CPM005
+     C** UPDATE *LDA                                                      CPM005
+     C**
+     C                     CALL 'PMC1001'
+     C                     PARM           WWLDA
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #U1003   - PROCESS VALID PORTFOLIO REFERENCE                     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   - FORMAT A NUMERIC FIELD WITH DECIMAL POINT             *
+      * ZDATE2   - CONVERT MIDAS DATE IN ALPHA DATE                      *
+      * #U1004   - PROCESS DISPLAY GROUP DETAILS                         *
+      * #U1005   - PROCESS INSTRUMENT DETAILS                            *
+      * PMC1001  - UPDATE DATAAREA *LDA                                  *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #U1001   - PROCESS PORTFOLIO REFERENCE                           *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWTEMP   -                                                       *
+      * WWLDA    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #U1003    BEGSR
+     C**
+     C           *IN50     IFEQ '0'
+     C**
+     C** PORTFOLIO REFERENCE
+     C**
+     C                     MOVELDDPTFR    QMPTF1
+     C                     MOVELDDPTFR    QMPTF2
+     C** PORTFOLIO NARRATIVE
+     C                     MOVELPNPTFN    QMPTFN
+     C**
+     C** TRADE DATE PORTFOLIO MARKET VALUE, VALUE DATE PORTFOLIO
+     C** MARKET VALUE, TRADE DATE ACCRUED INTEREST,VALUE DATE ACCRUED INTEREST
+     C**
+     C********** PMPORT    CHAINPMPOTTPP             72                   S01486
+     C           PMPORT    CHAINPMPOTTPD             72                   S01486
+     C**
+     C           *IN72     IFEQ '0'
+     C                     Z-ADDQCPTPA    WWTEMP 150
+     C           WWTEMP    SUB  QCPTNA    WWTEMP
+     C           WWTEMP    SUB  QCPTMV    WWTEMP
+     C**
+     C** EDIT AMOUNT CONVERTED USING ZSEDIT
+     C**
+     C                     Z-ADDWWTEMP    ZFLD15
+     C                     Z-ADDQMBYDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    QMTPMV
+     C**
+     C                     Z-ADDQCPVPA    WWTEMP
+     C           WWTEMP    SUB  QCPVNA    WWTEMP
+     C           WWTEMP    SUB  QCPVMV    WWTEMP
+     C**
+     C** EDIT AMOUNT CONVERTED USING ZSEDIT
+     C**
+     C                     Z-ADDWWTEMP    ZFLD15
+     C                     Z-ADDQMBYDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    QMVPMV
+     C**
+     C** EDIT INTEREST AMOUNTS CONVERTED USING ZSEDIT
+     C**
+     C                     Z-ADDQCPTAI    ZFLD15
+     C                     Z-ADDQMBYDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    QMPTAI
+     C                     MOVE ZOUT21    QMPVAI
+     C                     END
+     C**
+     C** PORTFOLIO CURRENCY AND PORTFOLIO CURRENCY DECIMAL PLACES
+     C**
+     C                     MOVELPNPTCY    QMPTCY
+     C                     Z-ADDPNPCDP    QMPCDP
+     C**
+     C** PORTFOLIO TYPE
+     C**
+     C                     MOVELPNPTFT    QMPTFT
+     C**
+     C** DATE PORTFOLIO OPENED
+     C**
+     C                     Z-ADDPNDPOP    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    QMDPO1
+     C**
+     C** PORTFOLIO PLEDGED INDICATOR
+     C**
+     C           QMRDNB    IFGT PNPDGS
+     C           QMRDNB    ANDLTPNPDGF
+     C                     MOVEL'Y'       QMPPDG
+     C                     ELSE
+     C                     MOVEL'N'       QMPPDG
+     C                     END
+     C**
+     C                     END
+     C**
+     C** DISPLAY GROUP CODE & DETAILS
+     C**
+     C                     EXSR #U1004
+     C**
+     C** INSTRUMENT CODE & DETAILS
+     C**
+     C                     EXSR #U1005
+     C**
+     C** SECURITY SHORT NAME AND TRANSACTION NUMBER, ATTENTION KEY
+     C**
+     C                     MOVELDDSECU    QMSESN
+     C*                                                                   S01313
+     C** SET UP SECURITY CURRENCY 1                                       S01313
+     C           DDSECU    CHAINSECTY                71                   S01313
+     C           *IN71     IFEQ '0'                        B1             S01313
+     C           RECI      ANDEQ'D'                                       S01313
+     C                     MOVE NMCY      QMCCY1                          S01313
+     C                     ELSE                            X1             S01313
+     C                     MOVE *BLANKS   QMCCY1                          S01313
+     C                     END                             E1             S01313
+     C**                                                                  CPM005
+     C           DDDCCY    IFNE *BLANKS                                   CPM005
+     C                     MOVELDDDCCY    QMCCY1                          CPM005
+     C                     END                                            CPM005
+     C**
+     C***UPDATE**GDA                                                      CPM005
+     C** UPDATE *LDA                                                      CPM005
+     C**
+     C                     CALL 'PMC1001'
+     C                     PARM           WWLDA
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #U1004   - PROCESS DISPLAY GROUP DETAILS                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   - FORMAT A NUMERIC FIELD WITH DECIMAL POINT             *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #U1002   - PROCESS PORTFOLIO REFERENCE '9997','9998','9999'      *
+      * #U1003   - PROCESS VALID PORTFOLIO REFERENCE                     *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPTFR   -                                                       *
+      * WWDSPG   - DISPLAY GROUP                                         *
+      * WWDSPS   - DISPLAY SEQUENCE                                      *
+      * WWPTPA   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #U1004    BEGSR
+     C*
+     C** SET DETAILS OUTPUT TO DTAARA/*LDA TO BLANK
+     C                     MOVE *BLANKS   QMDSPG
+     C                     MOVE *BLANKS   QMNDSP
+     C                     MOVE *BLANKS   QMDSPT
+     C                     Z-ADD0         QMDSPS
+     C                     MOVE *BLANKS   QMDGMV
+     C                     MOVE *BLANKS   QMDGAI
+     C*
+     C** IF DISPLAY GROUP ENTERED OBTAIN GROUP DETAILS
+     C           DDDSPG    IFNE *BLANKS                    B1
+     C**
+     C** POSITION IN FILE
+     C**
+     C           DDDSPG    CHAINPMDSPGL3             73
+     C**
+     C** DISPLAY GROUP CODE, DISPLAY GROUP TITLE
+     C** DISPLAY GROUP SEQUENCE
+     C**
+     C                     MOVELPADSPG    QMDSPG
+     C                     MOVELPADSPT    QMDSPT
+     C                     Z-ADDPADSPS    QMDSPS
+     C**
+     C** TRADE OR VALUE DATE DISPLAY GROUP MARKET VALUE
+     C**
+     C***ACCESS*PMDSGTPP                                                  S01486
+     C** ACCESS PMDSGTPD                                                  S01486
+     C**
+     C                     MOVELQMPTF1    WWPTFR
+     C                     MOVELPADSPG    WWDSPG
+     C                     Z-ADDPADSPS    WWDSPS
+     C**
+     C********** PMDSGT    CHAINPMDSGTPP             75                   S01486
+     C           PMDSGT    CHAINPMDSGTPD             75                   S01486
+     C**
+     C           *IN75     IFEQ '0'                        B2
+     C**
+     C                     Z-ADD0         WWPTPA 150
+     C**
+     C           QMTVPS    IFEQ 'T'                        B3
+     C                     Z-ADDQDPTPA    WWPTPA
+     C           WWPTPA    SUB  QDPTNA    WWPTPA
+     C           WWPTPA    SUB  QDPTMV    WWPTPA
+     C                     ELSE                            X3
+     C                     Z-ADDQDPVPA    WWPTPA
+     C           WWPTPA    SUB  QDPVNA    WWPTPA
+     C           WWPTPA    SUB  QDPVMV    WWPTPA
+     C                     END                             E3
+     C**
+     C                     Z-ADDWWPTPA    ZFLD15
+     C                     Z-ADDQMPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    QMDGMV
+     C**
+     C** TRADE OR VALUE DATE DISPLAY GROUP ACCRUED INTEREST
+     C**
+     C                     Z-ADDQDPTAI    ZFLD15
+     C                     Z-ADDQMPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    QMDGAI
+     C**
+     C                     END                             E2
+     C**
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #U1005   - PROCESS INSTRUMENT DETAILS                            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   - FORMAT A NUMERIC FIELD WITH DECIMAL POINT             *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #U1002   - PROCESS PORTFOLIO REFERENCE '9997','9998','9999'      *
+      * #U1003   - PROCESS VALID PORTFOLIO REFERENCE                     *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWDSPG   - DISPLAY GROUP                                         *
+      * WWINNR   -                                                       *
+      * WWPTFR   -                                                       *
+      * WWDSPS   - DISPLAY SEQUENCE                                      *
+      * WWITDS   -                                                       *
+      * WWPTPA   -                                                       *
+      * WWPVPA   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #U1005    BEGSR
+     C*
+     C** RESET ALL INSTRUMENT DETAILS TO BLANK / ZERO
+     C                     MOVE *BLANKS   QMINNR
+     C                     MOVE *BLANKS   QMISTN
+     C                     Z-ADD0         QMITDS
+     C                     MOVE *BLANKS   QMTIMV
+     C                     MOVE *BLANKS   QMVIMV
+     C                     MOVE *BLANKS   QMITAI
+     C                     MOVE *BLANKS   QMIVAI
+     C*
+     C** IF INSTRUMENT ENTERED OBTAIN DETAILS AND TOTALS
+     C           DDINNR    IFNE *BLANKS                    B1
+     C                     MOVELQMDSPG    WWDSPG
+     C                     MOVELDDINNR    WWINNR
+     C           SDPLIN    CHAINSDPLINLL             73                   R05602
+     C**
+     C** INSTRUMENT CODE, INSTRUMENT NARRATIVE
+     C** INSTRUMENT DISPLAY SEQUENCE
+     C**
+     C                     MOVELPDINNR    QMINNR
+     C                     MOVELPDISTN    QMISTN
+     C                     Z-ADDPDITDS    QMITDS
+     C**
+     C** TRADE AND VALUE DATE INSTRUMENT TYPE MARKET VALUE
+     C**
+     C***ACCESS*PMISTTPP                                                  S01486
+     C** ACCESS PMISTTPD                                                  S01486
+     C**
+     C                     MOVELQMPTF1    WWPTFR
+     C                     MOVELQMDSPG    WWDSPG
+     C                     Z-ADDQMDSPS    WWDSPS
+     C                     MOVELPDINNR    WWINNR
+     C                     Z-ADDPDITDS    WWITDS
+     C*
+     C                     MOVE *BLANKS   QMTIMV
+     C                     MOVE *BLANKS   QMVIMV
+     C                     MOVE *BLANKS   QMITAI
+     C                     MOVE *BLANKS   QMIVAI
+     C*
+     C** OBTAIN INSTRUMENT TOTALS
+     C********** PMISTT    CHAINPMISTTPP             75                   S01486
+     C           PMISTT    CHAINPMISTTPD             75                   S01486
+     C**
+     C           *IN75     IFEQ '0'                        B2
+     C**
+     C                     Z-ADD0         WWPTPA 150
+     C                     Z-ADD0         WWPVPA 150
+     C**
+     C                     Z-ADDQEPTPA    WWPTPA
+     C           WWPTPA    SUB  QEPTNA    WWPTPA
+     C           WWPTPA    SUB  QEPTMV    WWPTPA
+     C                     Z-ADDQEPVPA    WWPVPA                          B08040
+     C           WWPTPA    SUB  QEPVNA    WWPVPA                          B08040
+     C           WWPTPA    SUB  QEPVMV    WWPVPA                          B08040
+     C**
+     C                     Z-ADDWWPTPA    ZFLD15
+     C                     Z-ADDQMPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    QMTIMV
+     C**
+     C                     Z-ADDWWPVPA    ZFLD15
+     C                     Z-ADDQMPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    QMVIMV
+     C**
+     C** TRADE AND VALUE DATE INSTRUMENT TYPE ACCRUED INTEREST
+     C                     Z-ADDQEPTAI    ZFLD15
+     C                     Z-ADDQMPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    QMITAI
+     C                     MOVE ZOUT21    QMIVAI                          B08040
+     C                     END                             E2
+     C**
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************CPM005
+     C/EJECT                                                              CPM005
+     C********************************************************************CPM005
+     C*                                                                  *CPM005
+     C* #U1005   - PROCESS INSTRUMENT DETAILS                            *CPM005
+     C*                                                                  *CPM005
+     C* SUBROUTINE CALLS:                                                *CPM005
+     C*                                                                  *CPM005
+     C* SUBROUTINE CALLED FROM:                                          *CPM005
+     C*                                                                  *CPM005
+     C* ROUTINE USES VARIABLES:                                          *CPM005
+     C*                                                                  *CPM005
+     C********************************************************************CPM005
+     C           #U1006    BEGSR                                          CPM005
+     C**                                                                  CPM005
+     C                     MOVELDDCURR    QMCCY1                          CPM005
+     C**                                                                  CPM005
+     C** UPDATE *LDA                                                      CPM005
+     C**                                                                  CPM005
+     C                     CALL 'PMC1001'                                 CPM005
+     C                     PARM           WWLDA                           CPM005
+     C**                                                                  CPM005
+     C                     ENDSR                                          CPM005
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - PROCESS DATA BASE ERRORS                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **PMC1002**-*UPDATE*DATAAREA *GDA***********************************S01486
+      **PMC1020**-*RETRIEVE*DATAAREA *GDA*********************************S01486
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - PROCESS INITIALIZATION                                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWGDA    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVEL'PM0660'  QMPGM
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'Y'       QMENQT
+     C**
+     C***UPDATE *GDA                                                      S01486
+     C** UPDATE *LDA                                                      S01486
+     C**
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C**
+     C                     DUMP
+     C**
+     C**
+     C******************** CALL 'PMC1020'                                 S01486
+     C**
+     C                     ENDSR
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,91 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas RE Cash Management Input Cycle Job Submissio')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC100834 - Cash Management Input Cycle Job Submission      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CSC023             Date 30Jan04              */
+/*                      215906             Date 04Apr03              */
+/*                      214360  *CREATE    Date 03Feb03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
+/*                OUTQ must always be *JOBD.                         */
+/*       215906 - Restart the Group Acount Replication job at end    */
+/*                of COB                                             */
+/*       214360 - Cash Management Deferred Posting                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(70)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2002')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('REC100834 - Cash Management Input Cycle +
+                          Job Submission') TOMSGQ(MRUNQ)
+ 
+/* Submit SWIFT Message Generation */
+ 
+             ALCOBJ     OBJ((RESWPMSG *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(NEXT1))
+ 
+             DLCOBJ     OBJ((RESWPMSG *DTAARA *EXCL))
+ 
+/************SBMJOB     JOB(CM_SWP_MSG) JOBD(MBATCH) JOBQ(MICJOBQ) +                      /*CSC023*/
+/************             USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +                        /*CSC023*/
+/************             REC101303') INLLIBL(*CURRENT) MSGQ(MOPERQ)                      /*CSC023*/
+ 
+             SBMJOB     JOB(CM_SWP_MSG) JOBD(MBATCH) JOBQ(MICJOBQ) +
+                          USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +
+                          REC101303') INLLIBL(*CURRENT) MSGQ(MOPERQ) OUTQ(*JOBD)          /*CSC023*/
+ 
+/* Start Input Cycle Zero Balancing/Sweeping Controller */
+ 
+NEXT1:       CALL       PGM(REC101201)
+             CALL       PGM(REC101501)                                          /*215906*/
+ 
+/* Normal ending: */
+/*================*/
+ 
+NORMAL:
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+/*==================*/
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Report an error */
+ 
+             CHGVAR     VAR(&MEM) VALUE('REC100834 - Cash Management +
+                          Input Cycle Job Submission FAILED')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             SNDPGMMSG  MSGID(MEM5052) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ENDPGM:
+             ENDPGM

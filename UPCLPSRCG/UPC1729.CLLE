@@ -1,0 +1,97 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Menu Files Validation and X-Check Control')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC1729 - Menu Files Validation and Cross Check Report      */
+/*                 - Control.                                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2005                     */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. 256038  *CREATE    Date 11Mar05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       256038 - This program will call program UP1729 to perform   */
+/*                validity check of T_GRMENU* files and then call    */
+/*                UP000150 to cross check of menu item codes between */
+/*                GPMTXTPD, GPMENUPD/GZSFMENUDP and T_GRMENUL.       */
+/*                At the end, program UP008020 is called to generate */
+/*                reports for the above checks.                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/* Parameters passed to UP008020 */
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(7) VALUE(*REPORT)
+             DCL        VAR(&PASSDTL) TYPE(*CHAR) LEN(197)
+ 
+             DCL        VAR(&RPTTITLE) TYPE(*CHAR) LEN(60) +
+                          VALUE('Menu Files Validation and Cross +
+                          Check Reports')
+             DCL        VAR(&GENPGM) TYPE(*CHAR) LEN(10) VALUE(UPC1729)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2005')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create temporary files used by progarm UP008020 and output from UP1729 and */
+/* UP000150. */
+             DLTF       FILE(QTEMP/UPSHDRPD)
+             MONMSG     MSGID(CPF2105)
+             CRTDUPOBJ  OBJ(UPSHDRPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) DATA(*NO)
+ 
+             DLTF       FILE(QTEMP/UPSERRPD)
+             MONMSG     MSGID(CPF2105)
+             CRTDUPOBJ  OBJ(UPSERRPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) DATA(*NO)
+ 
+/* Perform validity check of files T_GRMENU* files. */
+             OVRDBF     FILE(UPSHDRPD) TOFILE(QTEMP/UPSHDRPD) +
+                          OVRSCOPE(*JOB)
+             OVRDBF     FILE(UPSERRPD) TOFILE(QTEMP/UPSERRPD) +
+                          OVRSCOPE(*JOB)
+             CALL       PGM(UP1729)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                DLTOVR     FILE(*ALL) LVL(*JOB)
+                GOTO       ABNOR
+             ENDDO
+ 
+/* Perform cross check of GPMTXTPD, SFMENUPD/GZSFMENUPD and T_GRMENUL.  */
+             CALL       PGM(UP000150)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                DLTOVR     FILE(*ALL) LVL(*JOB)
+                GOTO       ABNOR
+             ENDDO
+ 
+/* Call program to produce report. */
+             CHGVAR     VAR(&PASSDTL) VALUE(&RPTTITLE)
+             CALL       PGM(UP008020) PARM('*REPORT' &PASSDTL)
+             DLTOVR     FILE(*ALL) LVL(*JOB)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Change the user data of the report to the this  name */
+             CHGSPLFA FILE(UP008020P1) SPLNBR(*LAST) USRDTA(&GENPGM)
+ 
+             GOTO  END
+ 
+ABNOR:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('UPC1729 ended abnormally - +
+                          check the joblog and dump.') MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

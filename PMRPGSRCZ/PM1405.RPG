@@ -1,0 +1,1171 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Generate SE Portfolio Cashflow Events')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM1405 - Generate SE Portfolio Cashflow Events               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM004             Date 08Feb96               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+     F*  CPM004 - Bank Portfolios (NEW PROGRAM)                       *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FEVSEC   IF  E           K        DISK
+     F            DMEVEDF                           KIGNORE
+     F            CPEVEDF                           KIGNORE
+     F                                              KINFSR *PSSR
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FINVTP   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FPMPORTLLIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FPMEVNTPDO   E           K        DISK                      A
+     F                                              KINFSR *PSSR
+     FPMEVNTPAO   E           K        DISK                      A
+     F                                              KINFSR *PSSR
+     FPM1405AUO   E                    PRINTER
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*
+     F*****************************************************************
+     E*
+     E** TABLES/ARRAYS USED TO AVOID FILE ACCESS OPERATIONS
+     E                    CYCD      200  3
+     E                    SPRT      200 13 8
+     E                    MDIN      200  1
+     E                    NBDP      200  1 0
+     E                    PRTK      200 10
+     E                    PRTD      200  3
+     E*
+     E** FORMAT SE DETAILS FOR OUTPUT  (SR/ZFRELN)
+     E                    ZLI        20  1
+     E*
+     E/COPY ZSRSRC,ZPOWERZ1
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E** NARRATIVE
+     E                    NAR     1   7 20               NARRATIVE ARRAY
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     I*****************************************************************
+     ITREVEDF     01
+     IBPEVEDF     02
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I*
+     I** Input parameters on call to AOPLCSR1
+     II@PARM      DS                            256
+     I                                        1   1 I#PORS
+     I                                        2   5 I#R997
+     I                                        6  15 I#CUST
+     I                                       16  18 I#BRCA
+     I                                       19  20 I#BOOK
+     I                                       21  24 I#PTFR
+     I                                       25  34 I#CPGM
+     I*
+     I** Output parameters on call to AOPLCSR1
+     IO@PARM      DS                            256
+     I                                        1   2 O#BOOK
+     I                                        3   6 O#PTFR
+     I                                        7  12 O#BICN
+     I                                       13  22 O#CRNM
+     I                                       23  24 O#ACOF
+     I            DS
+     I                                        1  10 ##PRTK
+     I**********                              1   60##BICN                                    CSD027
+     I                                        1   6 ##BICN                                    CSD027
+     I                                        7  10 ##PTFR
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     ILDA         DS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank details
+     ISDPORT    E DSSDPORTPD
+     I**  SD Portfolio Management ICD details
+     ISDCURR    E DSSDCURRPD
+     I** Currency codes
+     ISDPLCS    E DSSDPLCSPD
+     I** Portfolio Customer details
+     IDSFDY     E DSDSFDY
+     I** First DS for access programs
+     IDSSDY     E DSDSSDY
+     I** Second DS for access programs, long data structure
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * INIT     - INITIAL PROCESSING                                    *
+      * AUDIT    - PRODUCE THE AUDIT REPORT                              *
+      * PROTRD   - PROCESS TRADE EVENTS                                  *
+      * PROBKP   - PROCESS BOOK POSITION EVENTS                          *
+      * CSTDET   - ACCESS CUSTOMER DETAILS                               *
+      * PORDET   - ACCESS PORTFOLIO DETAILS                              *
+      * INST     - ACCESS INSTRUMENT DETAILS                             *
+      * UPCTRD   - UPDATE THE PORTFOLIO CASHFLOW EVENTS WITH TRADE EVENTS*
+      * UPCBKP   - UPDATE THE PORTFOLIO CASHFLOW EVENTS WITH BOOK EVENTS *
+      * WPCE     - WRITE TO PORTFOLIO CASHFLOW EVENTS                    *
+      * WPCEA    - WRITE TO PORTFOLIO CASHFLOW EVENTS AUDIT              *
+      * ZCCYCN   - CONVERT AN AMOUNT FROM ONE CURRENCY TO ANOTHER        *
+      * ZFSELN   - FORMAT THE 20A PORTF. MANAGEMENT DESCRIPT. TO SE 2    *
+      * ZDATE2   - CONVERT A DAY NUMBER TO A DATE FORMAT                 *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      ********************************************************************
+     C/SPACE 5
+      ********************************************************************
+     C*
+     C* COPYRIGHT
+     C                     MOVEA##CPY     ##CPY2 80
+     C*
+     C* INITIAL PROCESSING
+     C*
+     C                     EXSR INIT
+     C*
+     C* MAIN PROCESSING
+     C*
+     C                     EXSR MAIN
+     C*
+     C* PRODUCE THE AUDIT REPORT
+     C*
+     C                     EXSR AUDIT
+     C*
+     C** END THE PROGRAM
+     C                     MOVE '1'       *INLR
+     C*****************************************************************
+     C/SPACE 5
+      ********************************************************************
+      *                                                                  *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      ********************************************************************
+     C           MAIN      BEGSR
+     C*
+     C** READ FROM LF/EVSEC UNTIL END OF FILE
+     C*
+     C                     READ EVSEC                    99
+     C           *IN99     DOWEQ'0'
+     C*
+     C** PROCESS TRADE EVENTS (IF EVENT IS NOT MULTI-BRANCH)
+     C*
+     C           *IN01     IFEQ '1'
+     C           IBRE      ANDEQ'N'
+     C                     EXSR PROTRD
+     C                     END
+     C*
+     C** PROCESS BOOK POSITION EVENTS
+     C*
+     C           *IN02     IFEQ '1'
+     C                     EXSR PROBKP
+     C                     END
+     C*
+     C                     MOVEA'00'      *IN,01
+     C*
+     C                     READ EVSEC                    99
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      ********************************************************************
+      *                                                                  *
+      * PROTRD   - PROCESS TRADE EVENTS                                  *
+      *                                                                  *
+      ********************************************************************
+     C           PROTRD    BEGSR
+     C*
+     C** ON CHANGE OF BRANCH OR BOOK
+     C*
+     C           ##TRBA    IFNE TRBA
+     C           ##TRBK    ORNE TRBK
+     C*
+     C                     MOVELTRBA      I#BRCA
+     C                     MOVELTRBK      I#BOOK
+     C*
+     C** ACCESS CUSTOMER DETAILS
+     C*
+     C                     EXSR CSTDET
+     C*
+     C** ACCESS PORTFOLIO DETAILS (IF PORTFOLIO CUSTOMER)
+     C*
+     C           ##PORC    IFEQ 'Y'
+     C                     EXSR PORDET
+     C                     END
+     C*
+     C                     END
+     C*
+     C** IF THE SECURITY HAS CHANGED
+     C*
+     C           ##TRSS    IFNE TRSS
+     C*
+     C                     MOVELTRSS      ##SECU 10
+     C*
+     C** ACCESS THE INSTRUMENT DETAILS
+     C*
+     C                     EXSR INST
+     C                     END
+     C*
+     C** UPDATE THE CONTROL FIELDS
+     C*
+     C                     MOVELTRBA      ##TRBA  3
+     C                     MOVELTRBK      ##TRBK  2
+     C                     MOVELTRSS      ##TRSS 10
+     C*
+     C** IF THE COUNTERVALUE IN SETTLEMENT CURRENCY IS NON-ZERO
+     C** AND THE BRANCH IS A PORTFOLIO CUSTOMER
+     C*
+     C           TRVS      IFNE 0
+     C           ##PORC    ANDEQ'Y'
+     C*
+     C** UPDATE THE PORTFOLIO CASHFLOW EVENTS WITH TRADE EVENTS
+     C*
+     C                     EXSR UPCTRD
+     C                     END
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C/SPACE 5
+      ********************************************************************
+      *                                                                  *
+      * PROBKP   - PROCESS BOOK POSITION EVENTS                          *
+      *                                                                  *
+      ********************************************************************
+     C           PROBKP    BEGSR
+     C*
+     C** ON CHANGE OF BRANCH OR BOOK
+     C*
+     C           ##CCBA    IFNE CCBA
+     C           ##CCBK    ORNE CCBK
+     C*
+     C                     MOVELCCBA      I#BRCA
+     C                     MOVELCCBK      I#BOOK
+     C*
+     C** ACCESS CUSTOMER DETAILS
+     C*
+     C                     EXSR CSTDET
+     C*
+     C** ACCESS PORTFOLIO DETAILS (IF PORTFOLIO CUSTOMER)
+     C*
+     C           ##PORC    IFEQ 'Y'
+     C                     EXSR PORDET
+     C                     END
+     C*
+     C                     END
+     C*
+     C** IF THE SECURITY HAS CHANGED
+     C*
+     C           ##CCSS    IFNE CCSS
+     C*
+     C                     MOVELCCSS      ##SECU
+     C*
+     C** ACCESS THE INSTRUMENT DETAILS
+     C*
+     C                     EXSR INST
+     C                     END
+     C*
+     C** UPDATE THE CONTROL FIELDS
+     C*
+     C                     MOVELCCBA      ##CCBA  3
+     C                     MOVELCCBK      ##CCBK  2
+     C                     MOVELCCSS      ##CCSS 10
+     C*
+     C** IF THE EVENT AMOUNT IS NON-ZERO
+     C** AND THE BRANCH IS A PORTFOLIO CUSTOMER
+     C*
+     C           CCEA      IFNE 0
+     C           ##PORC    ANDEQ'Y'
+     C*
+     C** UPDATE THE PORTFOLIO CASHFLOW EVENTS WITH BOOK POSITION EVENTS
+     C*
+     C                     EXSR UPCBKP
+     C                     END
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C/SPACE 5
+      ********************************************************************
+      *
+      * CSTDET - ACCESS CUSTOMER DETAILS
+      *
+      ********************************************************************
+     C           CSTDET    BEGSR
+     C*
+     C** ACCESS DETAILS
+     C*
+     C                     MOVEL'B'       I#PORS
+     C                     MOVELFCR997    I#R997
+     C*
+     C                     CALL 'AOPLCSR1'
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*KEY   ' P@OPTN  7        I:Option
+     C                     PARM           I@PARM           I:Parameters
+     C                     PARM *BLANKS   O@PARM           O:Parameters
+     C           SDPLCS    PARM SDPLCS    DSFDY            O:Format
+     C*
+     C** ERROR
+     C           P@RTCD    IFEQ 'PMA0007'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD10        DBASE            ***************
+     C                     MOVE 'SDBRCHPD'DBFILE           * DB ERROR 10 *
+     C                     MOVELI#BRCA    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** IS BRANCH A PORTFOLIO CUSTOMER?
+     C*
+     C                     MOVE 'Y'       ##PORC  1
+     C           P@RTCD    IFNE *BLANK
+     C                     MOVE 'N'       ##PORC
+     C                     GOTO ECSTDT
+     C                     END
+     C*
+     C** STORE THE PORTFOLIO CUSTOMER
+     C*
+     C**********           MOVELO#BICN    ##CNUM  60                                          CSD027
+     C                     MOVELO#BICN    ##CNUM  6                                           CSD027
+     C*
+     C** GET THE CUSTOMER BASE CURRENCY DETAILS
+     C*
+     C                     Z-ADD1         B
+     C           QBCSBY    LOKUPCYCD,B                   99
+     C*
+     C** ERROR
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD11        DBASE            ***************
+     C                     MOVE 'SDCURRL0'DBFILE           * DB ERROR 11 *
+     C                     MOVELQBCSBY    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** STORE SOME CUSTOMER DETAILS
+     C*
+     C                     MOVELO#ACOF    ##ACOC  2
+     C                     MOVELQBCSBY    ##CSBY  3
+     C*
+     C                     Z-ADDSPRT,B    #CSPRT 138
+     C                     MOVE MDIN,B    #CMDIN  1
+     C                     Z-ADDNBDP,B    #CNBDP  10
+     C*
+     C           ECSTDT    ENDSR
+     C**************************************************************************
+      /SPACE 5
+      ********************************************************************
+      *
+      * PORDET - ACCESS PORTFOLIO DETAILS
+      *
+      ********************************************************************
+     C           PORDET    BEGSR
+     C*
+     C* IF '9997' PORTFOLIO, THE PORTFOLIO CURRENCY IS THE CUSTOMER CURRENCY
+     C*
+     C           O#PTFR    IFEQ FCR997
+     C                     MOVEL'9997'    ##PTFR
+     C                     MOVELQBCSBY    PNPTCY
+     C                     ELSE
+     C*
+     C** ELSE, GET THE PORTFOLIO DETAILS
+     C*
+     C                     MOVELO#BICN    ##BICN
+     C                     MOVELO#PTFR    ##PTFR  4
+     C                     Z-ADD1         B
+     C           ##PRTK    LOKUPPRTK,B                   99
+     C*
+     C** IF PREVIOUSLY ACCESSED, SET THE PORTFOLIO CURRENCY
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVELPRTD,B    PNPTCY
+     C                     ELSE
+     C*
+     C** NOT PREVIOUSLY ACCESSED
+     C*
+     C           KPMPOR    KLIST
+     C                     KFLD           ##BICN
+     C                     KFLD           ##PTFR
+     C           KPMPOR    CHAINPMPORTLL             99
+     C*
+     C** ERROR
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD12        DBASE            ***************
+     C                     MOVE 'PMPORTLL'DBFILE           * DB ERROR 12 *
+     C                     MOVEL##PRTK    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADD1         B
+     C           *BLANK    LOKUPPRTK,B                   99
+     C                     MOVEL##PRTK    PRTK,B
+     C                     MOVELPNPTCY    PRTD,B
+     C*
+     C                     END
+     C                     END
+     C*
+     C** GET THE PORTFOLIO CURRENCY DETAILS
+     C*
+     C                     Z-ADD1         B
+     C           PNPTCY    LOKUPCYCD,B                   99
+     C*
+     C** ERROR
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD13        DBASE            ***************
+     C                     MOVE 'SDCURRL0'DBFILE           * DB ERROR 13 *
+     C                     MOVELPNPTCY    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** STORE SOME PORTFOLIO DETAILS
+     C*
+     C                     MOVELPNPTCY    ##PTCY  3
+     C*
+     C                     Z-ADDSPRT,B    #PSPRT 138
+     C                     MOVELMDIN,B    #PMDIN  1
+     C                     Z-ADDNBDP,B    #PNBDP  10
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * INST     - ACCESS INSTRUMENT DETAILS                                   *
+      *                                                                        *
+      **************************************************************************
+     C           INST      BEGSR
+     C*
+     C** ACCESS THE SECURITIES DETAILS
+     C*
+     C           ##SECU    CHAINSECTY                99
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD14        DBASE            ***************
+     C                     MOVE 'SECTYD  'DBFILE           * DB ERROR 14 *
+     C                     MOVEL##SECU    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** STORE OTHER SECURITY DETAILS
+     C*
+     C                     Z-ADDNMDP      ##NMDP  10
+     C                     MOVELNMCY      ##NMCY  3
+     C*
+     C** ACCESS THE INVESTMENT TYPE DETAILS
+     C*
+     C           KINVTP    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C           KINVTP    CHAININVTP                99
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD15        DBASE            ***************
+     C                     MOVE 'INVTP   'DBFILE           * DB ERROR 15 *
+     C                     MOVELSITP      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** STORE PM INSTRUMENT TYPE
+     C*
+     C                     MOVELINNR      ##INNR  3
+     C*
+     C           EINST     ENDSR
+      ********************************************************************
+      /SPACE 5
+      ********************************************************************
+      *                                                                  *
+      * UPCTRD   - UPDATE THE PORTFOLIO CASHFLOW EVENTS WITH TRADE EVENTS*
+      *                                                                  *
+      ********************************************************************
+     C           UPCTRD    BEGSR
+     C*
+     C** TRANSACTION REFERENCE: TRADE REFERENCE
+     C*
+     C                     MOVELTRTR      ##TTRF  6
+     C*
+     C** FORMAT SE LINE DESCRIPTION
+     C*
+     C                     MOVELSRPN      ##T1XT 20
+     C                     MOVEL##NMCY    ZNMCY
+     C                     Z-ADDCPNR      ZCPNR
+     C                     Z-ADDMATY      ZMATY
+     C                     MOVE PROT      ZPROT
+     C                     EXSR ZFSELN
+     C                     MOVELZLIN      ##T2XT 20
+     C*
+     C** EVENT DATE: VALUE DATE
+     C*
+     C                     Z-ADDTRVD      ##EVTD  50
+     C*
+     C** IF THE TRADE TYPE FROM LF/TREVPT IS 'TP'
+     C*
+     C           TRTT      IFEQ 'TP'
+     C*
+     C** SET THE EVENT NARRATIVE TO 'TRADE PURCHASE'
+     C** AND THE EVENT AMOUNT PAY/RECEIVE IND. TO 'P'
+     C*
+     C                     MOVELNAR,1     ##ENAR 20
+     C                     MOVEL'P'       ##AMTR  1
+     C*
+     C** OTHERWISE
+     C** SET THE EVENT NARRATIVE TO 'TRADE SALE'
+     C** AND THE EVENT AMOUNT PAY/RECEIVE IND. TO 'R'
+     C*
+     C                     ELSE
+     C                     MOVELNAR,2     ##ENAR
+     C                     MOVEL'R'       ##AMTR
+     C                     END
+     C*
+     C** EVENT CURRENCY : SETTLEMENT CURRENCY
+     C*
+     C                     MOVELTRSC      ##ECCY  3
+     C*
+     C** EVENT AMOUNT: COUNTERVALUE IN SETTLEMENT CURRENCY
+     C*
+     C                     Z-ADDTRVS      ##ETAM 150
+     C*
+     C** ACCESS THE SETTLEMENT CURRENCY DETAILS
+     C*
+     C                     Z-ADD1         B
+     C           TRSC      LOKUPCYCD,B                   99
+     C*
+     C** ERROR
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD16        DBASE            ***************
+     C                     MOVE 'SDCURRL0'DBFILE           * DB ERROR 16 *
+     C                     MOVELTRSC      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADDSPRT,B    #SSPRT 138
+     C                     MOVELMDIN,B    #SMDIN  1
+     C                     Z-ADDNBDP,B    #SNBDP  10
+     C*
+     C** CONVERT THE EVENT AMOUNT (WHICH IS IN SETTLEMENT CURRENCY)
+     C** INTO AN AMOUNT IN PORTFOLIO CURRENCY USING ZCCYCN
+     C*
+     C                     Z-ADDTRVS      ZAMTF
+     C                     MOVELTRSC      ZCCYF
+     C                     MOVEL##PTCY    ZCCYT
+     C                     Z-ADD#SSPRT    ZRATEF
+     C                     Z-ADD#PSPRT    ZRATET
+     C                     MOVEL#SMDIN    ZMDINF
+     C                     MOVEL#PMDIN    ZMDINT
+     C                     Z-ADD#SNBDP    ZCDPF
+     C                     Z-ADD#PNBDP    ZCDPT
+     C                     EXSR ZCCYCN
+     C*
+     C** SET THE EVENT AMOUNT IN PORTFOLIO CURRENCY
+     C*
+     C                     Z-ADDZAMTT     ##PTFA 150
+     C*
+     C** CONVERT THE EVENT AMOUNT (WHICH IS IN SETTLEMENT CURRENCY)
+     C** INTO AN AMOUNT IN CUSTOMER CURRENCY USING ZCCYCN
+     C*
+     C                     Z-ADDTRVS      ZAMTF
+     C                     MOVELTRSC      ZCCYF
+     C                     MOVEL##CSBY    ZCCYT
+     C                     Z-ADD#SSPRT    ZRATEF
+     C                     Z-ADD#CSPRT    ZRATET
+     C                     MOVEL#SMDIN    ZMDINF
+     C                     MOVEL#CMDIN    ZMDINT
+     C                     Z-ADD#SNBDP    ZCDPF
+     C                     Z-ADD#CNBDP    ZCDPT
+     C                     EXSR ZCCYCN
+     C*
+     C** SET THE EVENT AMOUNT IN CUSTOMER CURRENCY
+     C*
+     C                     Z-ADDZAMTT     ##CUCA 150
+     C*
+     C** CONVERT THE EVENT AMOUNT (WHICH IS IN SETTLEMENT CURRENCY)
+     C** INTO AN AMOUNT IN BASE CURRENCY USING ZCCYCN
+     C*
+     C                     Z-ADDTRVS      ZAMTF
+     C                     MOVELTRSC      ZCCYF
+     C                     MOVELBJCYCD    ZCCYT
+     C                     Z-ADD#SSPRT    ZRATEF
+     C                     Z-ADD#BSPRT    ZRATET
+     C                     MOVEL#SMDIN    ZMDINF
+     C                     MOVEL#BMDIN    ZMDINT
+     C                     Z-ADD#SNBDP    ZCDPF
+     C                     Z-ADD#BNBDP    ZCDPT
+     C                     EXSR ZCCYCN
+     C*
+     C** SET THE EVENT AMOUNT IN BASE CURRENCY
+     C*
+     C                     Z-ADDZAMTT     ##BCYA 150
+     C*
+     C** WRITE A RECORD TO THE PORTFOLIO CASHFLOW EVENTS FILE
+     C*
+     C                     EXSR WPCE
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+      ********************************************************************
+      *                                                                  *
+      * UPCBKP   - UPDATE THE PORTFOLIO CASHFLOW EVENTS WITH BOOK EVENTS *
+      *                                                                  *
+      ********************************************************************
+     C           UPCBKP    BEGSR
+     C*
+     C** TRANSACTION REFERENCE
+     C*
+     C                     MOVEL*BLANK    ##TTRF
+     C*
+     C** FORMAT SE LINE DESCRIPTION
+     C*
+     C                     MOVELSRPN      ##T1XT
+     C                     MOVEL##NMCY    ZNMCY
+     C                     Z-ADDCPNR      ZCPNR
+     C                     Z-ADDMATY      ZMATY
+     C                     MOVE PROT      ZPROT
+     C                     EXSR ZFSELN
+     C                     MOVELZLIN      ##T2XT
+     C*
+     C** EVENT DATE
+     C*
+     C                     Z-ADDCCDT      ##EVTD
+     C*
+     C** SET THE EVENT NARRATIVE
+     C*
+     C           CCET      IFEQ 'CP'
+     C                     MOVELNAR,3     ##ENAR
+     C                     END
+     C*
+     C           CCET      IFEQ 'DV'
+     C           CCET      OREQ 'DE'
+     C                     MOVELNAR,4     ##ENAR
+     C                     END
+     C*
+     C           CCET      IFEQ 'MA'
+     C                     MOVELNAR,5     ##ENAR
+     C                     END
+     C*
+     C           CCET      IFEQ 'MP'
+     C                     MOVELNAR,6     ##ENAR
+     C                     END
+     C*
+     C           CCET      IFEQ 'PP'
+     C                     MOVELNAR,7     ##ENAR
+     C                     END
+     C*
+     C** SET THE EVENT AMOUNT PAY/RECEIVE IND
+     C*
+     C           CCIO      IFEQ 'I'
+     C                     MOVEL'R'       ##AMTR
+     C                     ELSE
+     C                     MOVEL'P'       ##AMTR
+     C                     END
+     C*
+     C** EVENT CURRENCY
+     C*
+     C                     MOVELCCEC      ##ECCY
+     C*
+     C** EVENT AMOUNT
+     C*
+     C                     Z-ADDCCEA      ##ETAM
+     C*
+     C** ACCESS THE EVENT CURRENCY DETAILS
+     C*
+     C                     Z-ADD1         B
+     C           CCEC      LOKUPCYCD,B                   99
+     C*
+     C** ERROR
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD17        DBASE            ***************
+     C                     MOVE 'SDCURRL0'DBFILE           * DB ERROR 17 *
+     C                     MOVELCCEC      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADDSPRT,B    #ESPRT 138
+     C                     MOVELMDIN,B    #EMDIN  1
+     C                     Z-ADDNBDP,B    #ENBDP  10
+     C*
+     C** CONVERT THE EVENT AMOUNT (WHICH IS IN EVENT CURRENCY)
+     C** INTO AN AMOUNT IN PORTFOLIO CURRENCY USING ZCCYCN
+     C*
+     C                     Z-ADDCCEA      ZAMTF
+     C                     MOVELCCEC      ZCCYF
+     C                     MOVEL##PTCY    ZCCYT
+     C                     Z-ADD#ESPRT    ZRATEF
+     C                     Z-ADD#PSPRT    ZRATET
+     C                     MOVEL#EMDIN    ZMDINF
+     C                     MOVEL#PMDIN    ZMDINT
+     C                     Z-ADD#ENBDP    ZCDPF
+     C                     Z-ADD#PNBDP    ZCDPT
+     C                     EXSR ZCCYCN
+     C*
+     C** SET THE EVENT AMOUNT IN PORTFOLIO CURRENCY
+     C*
+     C                     Z-ADDZAMTT     ##PTFA 150
+     C*
+     C** CONVERT THE EVENT AMOUNT (WHICH IS IN EVENT CURRENCY)
+     C** INTO AN AMOUNT IN CUSTOMER CURRENCY USING ZCCYCN
+     C*
+     C                     Z-ADDCCEA      ZAMTF
+     C                     MOVELCCEC      ZCCYF
+     C                     MOVEL##CSBY    ZCCYT
+     C                     Z-ADD#ESPRT    ZRATEF
+     C                     Z-ADD#CSPRT    ZRATET
+     C                     MOVEL#EMDIN    ZMDINF
+     C                     MOVEL#CMDIN    ZMDINT
+     C                     Z-ADD#ENBDP    ZCDPF
+     C                     Z-ADD#CNBDP    ZCDPT
+     C                     EXSR ZCCYCN
+     C*
+     C** SET THE EVENT AMOUNT IN CUSTOMER CURRENCY
+     C*
+     C                     Z-ADDZAMTT     ##CUCA 150
+     C*
+     C** CONVERT THE EVENT AMOUNT (WHICH IS IN EVENT CURRENCY)
+     C** INTO AN AMOUNT IN BASE CURRENCY USING ZCCYCN
+     C*
+     C                     Z-ADDCCEA      ZAMTF
+     C                     MOVELCCEC      ZCCYF
+     C                     MOVELBJCYCD    ZCCYT
+     C                     Z-ADD#ESPRT    ZRATEF
+     C                     Z-ADD#BSPRT    ZRATET
+     C                     MOVEL#EMDIN    ZMDINF
+     C                     MOVEL#BMDIN    ZMDINT
+     C                     Z-ADD#ENBDP    ZCDPF
+     C                     Z-ADD#BNBDP    ZCDPT
+     C                     EXSR ZCCYCN
+     C*
+     C** SET THE EVENT AMOUNT IN BASE CURRENCY
+     C*
+     C                     Z-ADDZAMTT     ##BCYA 150
+     C*
+     C** WRITE A RECORD TO THE PORTFOLIO CASHFLOW EVENTS FILE
+     C*
+     C                     EXSR WPCE
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C/SPACE 5
+      ********************************************************************
+      *                                                                  *
+      * WPCE     - WRITE TO PORTFOLIO CASHFLOW EVENTS                    *
+      *                                                                  *
+      ********************************************************************
+     C           WPCE      BEGSR
+     C*
+     C                     MOVEL'D'       Q9RECI
+     C*
+     C** ACCOUNT OFFICER
+     C*
+     C                     MOVEL##ACOC    Q9ACOC
+     C*
+     C** CUSTOMER NUMBER
+     C*
+     C**********           Z-ADD##CNUM    Q9CNUM                                              CSD027
+     C                     MOVE ##CNUM    Q9CNUM                                              CSD027
+     C*
+     C** PORTFOLIO REFERENCE
+     C*
+     C                     MOVEL##PTFR    Q9PTFR
+     C*
+     C** TRANSACTION REFERENCE
+     C*
+     C                     MOVEL##TTRF    Q9TTRF
+     C*
+     C** SECURITY SHORTNAME
+     C*
+     C                     MOVEL##SECU    Q9SEPR
+     C*
+     C** MODULE ID: 'SE'
+     C*
+     C                     MOVEL'SE'      Q9MODI
+     C*
+     C** CUSTOMER BASE CURRENCY
+     C*
+     C                     MOVEL##CSBY    Q9CSBY
+     C*
+     C** CUSTOMER BASE CURRENCY DEC. PLACES
+     C*
+     C                     Z-ADD#CNBDP    Q9BYDP
+     C*
+     C** PORTFOLIO CURRENCY
+     C*
+     C                     MOVEL##PTCY    Q9PTCY
+     C*
+     C** PORTFOLIO CURRENCY DEC. PLACES
+     C*
+     C                     Z-ADD#PNBDP    Q9PCDP
+     C*
+     C** PM INSTRUMENT TYPE
+     C*
+     C                     MOVEL##INNR    Q9INNR
+     C*
+     C** INSTRUMENT ENQUIRY DETAILS
+     C*
+     C                     MOVEL##T1XT    Q9T1XT
+     C                     MOVEL##T2XT    Q9T2XT
+     C*
+     C** EVENT DATE: VALUE DATE
+     C*
+     C                     Z-ADD##EVTD    Q9EVTD
+     C*
+     C** EVENT NARRATIVE
+     C*
+     C                     MOVEL##ENAR    Q9ENAR
+     C*
+     C** EVENT CURRENCY : SETTLEMENT CURRENCY
+     C*
+     C                     MOVEL##ECCY    Q9ECCY
+     C*
+     C** EVENT AMOUNT: COUNTERVALUE IN SETTLEMENT CURRENCY
+     C*
+     C                     Z-ADD##ETAM    Q9ETAM
+     C*
+     C** EVENT AMOUNT PAY/RECEIVE
+     C*
+     C                     MOVEL##AMTR    Q9AMTR
+     C*
+     C** EVENT AMOUNT PORTFOLIO CURRENCY
+     C*
+     C                     Z-ADD##PTFA    Q9PTFA
+     C*
+     C** EVENT AMOUNT CUSTOMER CURRENCY
+     C*
+     C                     Z-ADD##CUCA    Q9CUCA
+     C*
+     C** EVENT AMOUNT BASE CURRENCY
+     C*
+     C                     Z-ADD##BCYA    Q9BCYA
+     C*
+     C** WRITE A RECORD TO FILE PMEVNTPP
+     C*
+     C                     WRITEPMEVNTP0
+     C*
+     C** ADD 1 TO A COUNT OF CASHFLOW EVENTS GENERATED
+     C*
+     C                     ADD  1         PPCFEV
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C/SPACE 5
+      ********************************************************************
+      *                                                                  *
+      * WPCEA    - WRITE TO PORTFOLIO CASHFLOW EVENTS AUDIT              *
+      *                                                                  *
+      ********************************************************************
+     C           WPCEA     BEGSR
+     C*
+     C                     MOVEL'D'       Q9RECI
+     C                     Z-ADDPPCFEV    Q9NORE
+     C                     WRITEPMEVNTZ0
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C/SPACE 5
+      ********************************************************************
+      *                                                                  *
+      * INIT     - INITIAL PROCESSING                                    *
+      *                                                                  *
+      ********************************************************************
+     C           INIT      BEGSR
+     C*
+     C**  Define local data area
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** PREPARE LDA
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM1405'  DBPGM
+     C                     OUT  LDA
+     C*
+     C**  Access bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** TEST DATE FORMAT FOR SR/ZDATE2
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+     C*
+     C**  Access Portfolio Management ICD
+     C*
+     C                     CALL 'AOPORTR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*FIRST'  P@OPTN
+     C           SDPORT    PARM SDPORT    DSFDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVE 'SDPORTPD'DBFILE           * DB ERROR 02 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  Read the first Currency record
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*FIRST'  P@OPTN
+     C                     PARM           P@CYCD  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVE 'SDCURRPD'DBFILE           * DB ERROR 03 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Set up array of currencies
+     C*
+     C                     Z-ADD1         B       30
+     C           P@RTCD    DOWNE'*EOF'
+     C*
+     C                     MOVE A6CYCD    CYCD,B
+     C                     Z-ADDA6SPRT    SPRT,B
+     C                     MOVE A6MDIN    MDIN,B
+     C                     Z-ADDA6NBDP    NBDP,B
+     C*
+     C                     ADD  1         B
+     C*
+     C**  Read the next record in currencies file
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*NEXT '  P@OPTN
+     C                     PARM           P@CYCD  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           P@RTCD    ANDNE'*EOF'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVE 'SDCURRPD'DBFILE           * DB ERROR 04 *
+     C                     MOVEL'*NEXT '  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     END
+     C*
+     C** Access the Base Currency Spot Rate and Decimal Places
+     C*
+     C                     Z-ADD1         B
+     C           BJCYCD    LOKUPCYCD,B                   99
+     C*
+     C** ERROR
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD05        DBASE            ***************
+     C                     MOVE 'SDCURRL0'DBFILE           * DB ERROR 05 *
+     C                     MOVELBJCYCD    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADDSPRT,B    #BSPRT 138
+     C                     MOVELMDIN,B    #BMDIN  1
+     C                     Z-ADDNBDP,B    #BNBDP  10
+     C*
+     C           EINIT     ENDSR
+     C**************************************************************************
+     C/SPACE 5
+      ********************************************************************
+      *                                                                  *
+      * AUDIT    - PRODUCE THE AUDIT REPORT                              *
+      *                                                                  *
+      ********************************************************************
+     C           AUDIT     BEGSR
+     C*
+     C                     WRITEPM1405AR
+     C           PPCFEV    IFEQ 0
+     C                     WRITENODTLS
+     C                     END
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C/SPACE 5
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     WRITEDBERROR
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 5
+     C********************************************************************
+     C*
+     C*  ZFSELN SR. TO FORMAT THE 20A PORTFOLIO MANAGMENT LINE DESCRIPTION
+     C*                                 FOR SECURITIES TRADING REL.2
+     C*
+     C*  FORMAT: XXX 999.9999 DDMMMYY
+     C*          XXX =  NOMINAL CURRENCY
+     C*          999.9999 = CONPON RATE
+     C*          DDMMMYY = MATURITY DATE
+     C*
+     C*  INPUT  FIELDS
+     C*       ZNMCY   3A     NOMINAL CURRENCY
+     C*       ZCPNR  117     COUPON RATE
+     C*       ZMATY   50     MATURITY DATE
+     C*       ZPROT   1A     PROCESSING TYPE
+     C*
+     C*  OUTPUT  FIELDS
+     C*       ZLIN   20A     LINE DESCRIPTION
+     C*
+     C*  ARRAY USED
+     C*       ZLI    20 ELEMENTS, EACH 1 CHARACTER LONG
+     C*
+     C********************************************************************
+     C           ZFSELN    BEGSR                           *** ZFSELN ***
+     C*
+     C** CLEAR LINE DESCRIPTION .
+     C                     MOVEA*BLANKS   ZLI
+     C*
+     C** MOVE NOMINNAL CURRENCY TO LINE DESCRIPTION
+     C                     MOVEAZNMCY     ZLI,01
+     C*
+     C** IF PROCESSING TYPE     NOT COMMODITIES ZPROT = 2
+     C**                        NOT EQUITIES    ZPROT = 4
+     C**                        NOT UNIT TRUSTS ZPROT = 7
+     C           ZPROT     IFNE '2'
+     C           ZPROT     ANDNE'4'
+     C           ZPROT     ANDNE'7'
+     C*
+     C** MOVE COUPON  RATE  TO LINE DESCRIPTION
+     C                     Z-ADDZCPNR     ZWRKN   74
+     C                     MOVELZWRKN     ZWRKA3  3
+     C                     MOVE ZWRKN     ZWRKA4  4
+     C                     MOVELZWRKA3    ZWRKA2  2
+     C*
+     C** SUPRESS LEADING ZEROES
+     C           ZWRKA2    IFEQ '00'
+     C                     MOVEL'  '      ZWRKA3
+     C                     END
+     C                     MOVELZWRKA3    ZWRKA1  1
+     C           ZWRKA1    IFEQ '0'
+     C                     MOVEL' '       ZWRKA3
+     C                     END
+     C                     MOVEAZWRKA3    ZLI,05
+     C                     MOVEA'.'       ZLI,08
+     C                     MOVEAZWRKA4    ZLI,09
+     C*
+     C** MOVE MATURITY DATE TO LINE DESCRIPTION
+     C                     Z-ADDZMATY     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZWRKA1  1
+     C           ZADATE    IFNE *BLANK
+     C           ZWRKA1    IFEQ ' '
+     C                     MOVEL'0'       ZADATE
+     C                     END
+     C                     MOVEAZADATE    ZLI,14
+     C                     END
+     C                     END
+     C*
+     C** SET ALL   FIELDS TO BLANKS OR ZEROS
+     C                     MOVE *BLANKS   ZNMCY   3
+     C                     MOVE *BLANKS   ZPROT   1
+     C                     Z-ADD*ZEROS    ZCPNR  117
+     C                     Z-ADD*ZEROS    ZMATY   50
+     C*
+     C                     MOVEAZLI       ZLIN   20
+     C*
+     C                     ENDSR
+     C*******************************************************************
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/SPACE 5
+     C/COPY ZSRSRC,ZCCYCN
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** NAR
+TRADE PURCHASE
+TRADE SALE
+COUPON DUE
+DIVIDEND DUE
+MATURITY
+MORTGAGE PAYMENT
+PART PAYMENT
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

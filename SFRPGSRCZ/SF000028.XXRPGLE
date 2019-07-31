@@ -1,0 +1,217 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Profile Facility                            *
+      *                                                               *
+      *  SF000028 - Midas Users Maintenance                           *
+      *             - Flags All User's Details for Deletion.          *
+      *                                                               *
+      *  Function: This program updates the Valid Booking Branches,   *
+      *  I/C       Valid Companies, Valid Originating Branches and    *
+      *            Valid Action Codes files,by flagging user's        *
+      *            records for deletion.                              *
+      *                                                               *
+      *  Called By: SF000020                                          *
+      *  Calls: None                                                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. AR904191*REDUNDANT Date 03Feb12               *
+      *  Prev Amend No. AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSF002 *RENAME     Date 11Aug03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 197434             Date 09Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 25Oct01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSF001             Date 14Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAAA01             Date 19Apr95               *
+      *                 S01408             Date 06Mar95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR904191 - Replaced as per BF requirement                    *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,SFH00204                                 *
+      *             WNCPYSRC,SFH00205                                 *
+      *             WNCPYSRC,SFH00206                                 *
+      *             WNCPYSRC,SFH00207                                 *
+      *             WNCPYSRC,SFH00208                                 *
+      *             WNCPYSRC,SFH00209                                 *
+      *             WNCPYSRC,SFH00210                                 *
+      *             WNCPYSRC,SFH00211                                 *
+      *             WNCPYSRC,SFH00212                                 *
+      *             WNCPYSRC,SFH00213                                 *
+      *             WNCPYSRC,SFH00214                                 *
+      *             WNCPYSRC,SFH00215                                 *
+      *             WNCPYSRC,SFH00216                                 *
+      *             WNCPYSRC,SFH00217                                 *
+      *  CSF002 - Global Processing                                   *
+      *           SF0028 has been converted to ILE and renamed.       *
+      *           Commented out program codes have been stripped out  *
+      *           for clarity.                                        *
+      *  197434 - Array index error on SF0021. Recompile only.        *
+      *  CPK014 - Release 4 packaging.  SDUBUT* files redundant.      *
+      *  CSF001 - Menu enhancements (Favourite menus, History)        *
+      *  CAAA01 - GUI/400 Development,                                *
+      *           Amended to flag the user's records on PF/SFUBUTPD   *
+      *           as deleted.                                         *
+      *  S01408 - Core hooks added - SF0028CEPP                       *
+      *                            - SF0028FFPG                       *
+      *                                                               *
+      *****************************************************************
+     F/COPY WNCPYSRC,SFH00204
+     FMBRBS     UF   E           K DISK
+     FMCMPS     UF   E           K DISK
+     FMBROS     UF   E           K DISK
+     FMACBR1    UF   E           K DISK
+     F/COPY WNCPYSRC,SFH00205
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *    20         MDAFS - CHAIN FAIL OR RECORD NOT LIVE           *
+      *    21         MBRBS - CHAIN FAIL OR RECORD NOT LIVE           *
+      *    22         MCMPS - CHAIN FAIL OR RECORD NOT LIVE           *
+      *    23         MBROS - CHAIN FAIL OR RECORD NOT LIVE           *
+      *    24         MACBR1 - END OF FILE FOR USER PROFILE           *
+      *    25         MACBR1 - RECORD NOT LIVE                        *
+      *                                                               *
+      *****************************************************************
+      *
+      ** RECEIVE USER PROFILE, RUN-DATE, MULTIBR. AND ORIGBR.
+      ** PARAMETERS FROM CALLING PROGRAM. (SF000020)
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    USRPRF           10
+     C                   PARM                    RUNDD             5 0
+     C                   PARM                    MBRIND            1
+     C                   PARM                    OBRIND            1
+     C/COPY WNCPYSRC,SFH00206
+      /SPACE 2
+      *********************************************************************
+      * MAIN PROCEDURE                                                    *
+      *********************************************************************
+      *
+      ** KEY TO ACCESS LF/MACBR1 (USER'S VALID ACTION CODES BY BRANCH)
+      *
+     C     ACBRKY        KLIST
+     C                   KFLD                    USRPK            10
+     C                   KFLD                    BRCAK             3
+     C                   KFLD                    INDXK            10
+      /SPACE 2
+     C                   MOVE      USRPRF        USRPK
+     C                   MOVE      '   '         BRCAK
+     C                   MOVE      *BLANKS       INDXK
+      *
+     C                   TIME                    TIMEP             6 0
+      /SPACE 2
+     C/COPY WNCPYSRC,SFH00207
+      *
+      ** USER'S DAF FILES
+      *
+      /SPACE 2
+      *
+      ** ONLY CHECK BOOKING BRANCHES, ORIGINATING BRANCHES AND
+      ** COMPANIES IF MULTIBRANCH IND. IS ON
+      *
+     C     MBRIND        IFEQ      'Y'
+      *
+      ** USER'S BOOKING BRANCHES
+      *
+     C/COPY WNCPYSRC,SFH00208
+     C     USRPK         CHAIN     MBRBS                              21
+     C  N21RECI          COMP      'D'                                2121
+     C/COPY WNCPYSRC,SFH00209
+      *
+     C     *IN21         IFEQ      '0'
+     C                   MOVE      'C'           RECI
+     C                   Z-ADD     RUNDD         LCD
+     C                   MOVE      'D'           CHTP
+     C                   Z-ADD     TIMEP         LCT
+     C/COPY WNCPYSRC,SFH00210
+     C                   UPDATE    MBRBSDDF
+     C/COPY WNCPYSRC,SFH00211
+     C                   END
+      *
+      ** ONLY CHECK ORIGINATING BRANCHES IF ORIGINATING BR. IND IS ON
+      *
+     C     OBRIND        IFEQ      'Y'
+      *
+      ** USER'S ORIGINATING BRANCHES
+      *
+     C     USRPK         CHAIN     MBROS                              23
+     C  N23RECI          COMP      'D'                                2323
+      *
+     C     *IN23         IFEQ      '0'
+     C                   MOVE      'C'           RECI
+     C                   Z-ADD     RUNDD         LCD
+     C                   MOVE      'D'           CHTP
+     C                   Z-ADD     TIMEP         LCT
+     C                   UPDATE    MBROSDDF
+     C                   END
+      *
+     C                   END
+      *
+      ** USER'S COMPANIES
+      *
+     C/COPY WNCPYSRC,SFH00212
+     C     USRPK         CHAIN     MCMPS                              22
+     C  N22RECI          COMP      'D'                                2222
+     C/COPY WNCPYSRC,SFH00213
+      *
+     C     *IN22         IFEQ      '0'
+     C                   MOVE      'C'           RECI
+     C                   Z-ADD     RUNDD         LCD
+     C                   MOVE      'D'           CHTP
+     C                   Z-ADD     TIMEP         LCT
+     C/COPY WNCPYSRC,SFH00214
+     C                   UPDATE    MCMPSDDF
+     C/COPY WNCPYSRC,SFH00215
+     C                   END
+      *
+     C                   END
+     C/SPACE 2
+      *
+      ** USER'S ACTION CODES
+      *
+     C/COPY WNCPYSRC,SFH00216
+     C     ACBRKY        SETLL     MACBR1
+      *
+     C     *IN24         DOWEQ     '0'
+      *
+     C     READ          TAG
+     C                   SETOFF                                       25
+      *
+     C                   READ      MACBR1                                 24
+     C  N24USRP          COMP      USRPK                              2424
+     C  N24RECI          COMP      'D'                                2525
+      *
+     C     *IN24         IFEQ      '0'
+      *
+     C     *IN25         IFEQ      '0'
+     C                   MOVE      'C'           RECI
+     C                   Z-ADD     RUNDD         LCD
+     C                   MOVE      'D'           CHTP
+     C                   Z-ADD     TIMEP         LCT
+     C                   UPDATE    MACBRDDF
+     C                   ELSE
+     C                   GOTO      READ
+     C                   END
+      *
+     C                   END
+      *
+     C                   END
+     C/COPY WNCPYSRC,SFH00217
+     C                   SETON                                        LR
+      *

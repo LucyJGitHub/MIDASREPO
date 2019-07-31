@@ -1,0 +1,2221 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Report Todays Proj. Movements')                  *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - General Ledger Module                                   *
+     F*                                                                  *
+     F*     GL4430 - Report Today's Projected Movements                  *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 243906             Date 13Mar15               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP204             Date 27Jan10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCB002             Date 19Aug96               *  *
+      *                 S01408             Date 03Jul96               *  *
+     F*                  087591             DATE  15MAY95                *
+     F*                  068096             DATE  06JAN94                *
+     F*                  058468             DATE  21JUL93                *
+     F*                  057431             DATE  20JUL93                *
+     F*                  041693             DATE  05JAN93                *
+     F*                  045014             DATE  01DEC92                *
+     F*                  042779             DATE  16NOV92                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  243906 - Projected Account Movements Enquiry problems        *
+      *           Passed paremeters are in wrong order and not all    *
+      *           calues are passed from GL4443  - Post CGL029        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CAP204 - Retail Accounts Transfer - Projected Account        *
+      *           Movements                                           *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+     F*     CCB002 - COB Performance Enhancements                        *
+     F*              Access now via access object                        *
+     F*              Change MEMOS processing to use access objects.      *
+     F*                                                                  *
+     F*     S01408 - Core hook GL4430CCP4 added.                         *
+     F*              Core hook GL4430CCP3 added.                         *
+     F*              Core hook GL4430CCP2 added.                         *
+     F*              Core hook GL4430CCP1 added.                         *
+     F*                                                                  *
+     F*     087591 - Redefine field NRTC from FFACMV file                *
+     F*                                                                  *
+     F*     068096 - Only add posting amount after value date change     *
+     F*                                                                  *
+     F*     058468 - Incorrect movement printed after C/F print          *
+     F*                                                                  *
+     F*     057431 - Program does not print correct info if FF not       *
+     F*              installed.                                          *
+     F*                                                                  *
+     F*     041693 - Delivered as part of fix.                           *
+     F*                                                                  *
+     F*     045014 - Add call to AOCNTLR0 for access control             *
+     F*              Add database error format                           *
+     F*              Include SDMMODL1 processing                         *
+     F*              Add action code *CLOSESP to close spool file only   *
+     F*              Correct carried forward balance print               *
+     F*              Override RSACMTL1 share *no                         *
+     F*              Initialise ##NOS and ##RET in SRCHCK                *
+     F*                                                                  *
+     F*     042779 - New program to report Shadow Post Movements         *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                                  *
+     F*  Indicator usage                                                 *
+     F*  ~~~~~~~~~~~~~~~                                                 *
+     F*                                                                  *
+     F*  01   -    Record format RSACMTPO read                           *
+     F*  02   -    Record format CLEARPDF read                           *
+     F*  03   -    Record format FFACMVDF read                           *
+     F*  37   -    Cleared Balance                                       *
+     F*  38   -    Brought forward balance                               *
+     F*  39   -    Carried forward balance                               *
+     F*  40   -    Zero decimal places                                   *
+     F*  41   -    One decimal place                                     *
+     F*  42   -    Two decimal places                                    *
+     F*  43   -    Three decimal places                                  *
+     F*  44   -    No nostro or retail details                           *
+     F*  45   -    No nostro details                                     *
+     F*  46   -    No retail details                                     *
+     F*  50   -    First Cycle processing                                *
+     F*  88   -    No more records on RSACMTL1                           *
+     F*  89   -    No more records on FFACMV2                            *
+     F*  90   -    General work indicator                                *
+     F*                                                                  *
+     F*                                                                  *
+     F********************************************************************
+     FACCNT   IF  E           K        DISK         KINFSR SRFILE     UC
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+      *
+      * Define Accounts file
+      *
+     FACNUMA  IF  E           K        DISK         KINFSR SRFILE     UC
+     F            ACCNTABF                          KRENAMEREACNOF
+      *
+      * Define Retail Accounts file
+      *
+     FSDNOSTL1IF  E           K        DISK         KINFSR SRFILE     UC
+     F            @A7REB9                           KRENAME@NOSTL1
+      *
+      * Define Nostros file (Key nostro currency nostro number)
+      *
+     FSDNOSTL2IF  E           K        DISK         KINFSR SRFILE     UC
+     F            @NOSTBH                           KRENAME@NOSTL2
+      *
+      * Define Nostros file (Key customer account number)
+      *
+     FPRONO   IF  E           K        DISK         KINFSR SRFILE     UC
+     F            PRONOHHF                          KIGNORE
+      *
+      * Define Prono file
+      *
+     F****MEMOS   IF  E                    DISK         KINFSR SRFILE  UC CCB002
+      ***********                                                         CCB002
+      **Define*MEMOS file                                                 CCB002
+      ***********                                                         CCB002
+     FRSACMTL1IF  E           K        DISK         KINFSR SRFILE     UC
+     F            APOSTPDF                          KRENAMECLEARPDF
+      *
+      * Define RSACMTL1 file for movements today
+      *
+     FFFACMV2 IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      * Define FFACMV2 file for Future's and Option's Movements
+      *
+     FSDBANKL1IF  E           K        DISK         KINFSR SRFILE     UC
+     F            @BJREEF                           KRENAME@BANKL1
+      *
+      * Define SDBANKL1 for working day & next working day
+      *
+     FSDMMODL1IF  E           K        DISK         KINFSR SRFILE     UC  045014
+     F            @BGREC8                           KRENAME@MMODL1        045014
+      *                                                                   045014
+      * Define SDMMODL1 for modules present                               045014
+      *                                                                   045014
+     FSDCURRL1IF  E           K        DISK         KINFSR SRFILE     UC
+     F            @A6REA3                           KRENAME@CURRL1
+      *
+      * Define SDCURRL1 for currency information
+      *
+     FGL4430P1O   E             03     PRINTER      KINFSR SRFILE     UC
+     F                                              KINFDS PRTINF         E36338
+      *
+      * Define GL4430P1 - Report of positions
+      *
+     F/EJECT
+      *
+      *  Copyright table
+      *
+     E                    CPY@    1   1 80
+      *
+      *  List of valid calling programs
+      *
+     E                    PGM@    1   4 10
+      *
+      *  Error texts
+      *
+     E***********         ERR@    1   7 80                                045014
+     E                    ERR@    1   8 80                                045014
+      *
+      *  Subroutine stack
+      *
+     E                    @STK       20 10
+      *
+      *  Array of QCMDEXC commands
+      *
+     E***********         CMD@    1   1 80                                045014
+     E                    CMD@    1   2 80                                045014
+      *
+      *  Array of QCMDEXC command to edit
+      *
+     E                    EDT        80  1
+      *
+      *  Array of currencies already processed
+      *
+     E                    @CCY      150  3
+      *
+      *  Array of currency decimal places
+      *
+     E                    @CDP      150  1 0
+      *
+      *  Array of nostro balances
+      *
+     E                    @PB         5 15 0
+      *
+      *  Array of currency decimal places
+      *
+     E                    @PD         5  5 0
+     E/EJECT
+      *
+      *  Define RSACMTL1 formats for processing
+      *
+     IRSACMTPO    01
+      *
+      *  Projected Movements
+      *
+     I              CUSN                            CNUM
+     I              CCYD                            CCY
+     I              ACDE                            ACOD
+     I              ASNC                            ACSQ
+     I              VUDT                            VALD
+     I              PTDT                            PSTD
+     I              MVAM                            PSTA
+     I              DORC                            DRCR
+     I              CQNR                            CHQN
+     I              TNMR                            GLTNMR
+     I              TRYP                            GLTRYP
+     I              FUND                            GLFUND
+     ICLEARPDF    02
+      *
+      *  Items in Clearing
+      *
+     IFFACMVDF    03
+      *
+      *  Futures Movements
+      *
+     I              CUSN                            CNUM
+     I              CCYD                            CCY
+     I              ACDE                            ACOD
+     I              ASNC                            ACSQ
+     I              VUDT                            FFVALD
+     I              PTDT                            FFPSTD
+     I              MVAM                            FFPSTA
+     I              DORC                            FFDRCR
+     I              CQNR                            FFCHQN
+     I              TNMR                            FFTNMR
+     I              TRYP                            FFTRYP
+     I              NRTC                            FFNRTC                087591
+     I@CURRL1
+      *
+      *  Renames for fields used
+      *
+     I              A6CYCD                          CCY
+     I              A6SPRT                          SPT
+     I              A6NBDP                          CDP
+     I              A6MDIN                          MDIN
+     I              A6BYSR                          BRT
+     I              A6BYSS                          BSPR
+     I              A6SLSR                          SRT
+     I              A6SLSS                          SSPR
+     I/EJECT
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *  Data structure used to divide projected nostro balances field
+      *  into subfields representing daily balances
+      *
+     IPNB         DS
+     I                                    P   1  400@PB
+      *                                                                   E12279
+      *  Data structure used to separate dates received from LF/PRONO
+      *  into separate fields
+      *                                                                   E12279
+     IPND         DS
+     I                                    P   1  150@PD
+      *
+      *  Program data structure
+      *
+     IDSPGM     ESDSY2PGDSP
+      *
+      *  Send message data structure
+      *
+     IDBDTA       DS
+     I                                        1  10 DBPGM
+     I                                       11  20 DBFILE
+     I                                       21  50 DBKEY
+     I                                       51  550DBERNB
+     I                                       56 135 DBNARR
+     I                                      136 145 DBSTK
+     I                                      146 175 DBPREF                045014
+      *
+      * Printer file information data structure.
+      *
+     IPRTINF      DS                                                      E36338
+     I                                       83  92 SFILEU                E36338
+     I                                    B 123 1240SFNUMU                E36338
+      *
+      *  Input parameters data structure
+      *
+     II#DTA       DS                            256
+      *  Account type F=Full nostro G=General Ledger
+      *               R= Retail Number
+     I                                        1   1 I#ATYP
+      *               Full General Ledger - CNUM/CCY/ACOD/ACSQ
+     I**********                              2  16 I#ACCT                                    243906
+     I                                        2  22 I#ACCT                                    243906
+     I**********                              2   70I#CNUM                                    CSD027
+     I                                        2   7 I#CNUM                                    CSD027
+     I                                        8  10 I#CCY
+     I**********                             11  140I#ACOD                                    CGL029
+     I**********                             15  160I#ACSQ                                    CGL029
+     I**********                             17  19 I#BRCA                                    CGL029
+     I                                       11  200I#ACOD                                    CGL029
+     I                                       21  220I#ACSQ                                    CGL029
+     I                                       23  25 I#BRCA                                    CGL029
+      *               Full Nostro - CCY/NOSN
+     I                                        2   6 I#NOS
+      *               Retail Number
+     I                                        2  110I#ACNO
+      *               FT Memos ledger balance override
+      *                        'Y' calculate ledger balance irrespective of
+      *                        posting date
+     I**********                             20  20 I#FTOV                                    CGL029
+     I                                       26  26 I#FTOV                                    CGL029
+      *               Spool file name
+      *                        If blank name unchanged
+      *                        Note to change name I#SPLR must be Y
+      *                        Unless first call of program
+     I**********                             21  30 I#SPLN                                    CGL029
+     I                                       27  36 I#SPLN                                    CGL029
+      *               Repeat open and close of spool file
+      *                        If Y create new spool file
+     I**********                             31  31 I#SPLR                                    CGL029
+     I                                       37  37 I#SPLR                                    CGL029
+      *                                                                   045014
+      *  Report Reference if Access checking is off                       045014
+      *                                                                   045014
+     I**********                             32  41 I#REFN                             045014 CGL029
+     I                                       38  47 I#REFN                                    CGL029
+      *                                                                   045014
+      *  Input parameters data structure for AOCNTLR0                     045014
+      *                                                                   045014
+     IP#CNTL      DS                            256                       045014
+      *                                       Access Check                045014
+     I                                        1   1 P#ACCK                045014
+      *
+      *  Account key structure for DB error
+      *
+     IAC#KEY      DS
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM                                      CSD027
+     I                                        4   9 CNUM                                      CSD027
+     I                                       10  12 CCY
+     I**********                             13  160ACOD                                      CGL029
+     I**********                             17  180ACSQ                                      CGL029
+     I                                       13  220ACOD                                      CGL029
+     I                                       23  240ACSQ                                      CGL029
+      *
+      *  Data structures for formatting amounts
+      *
+     ILDBL1       DS
+     I                                        1  150F1LDBL
+     I                                        1  150F1LDB0
+     I                                        1  151F1LDB1
+     I                                        1  152F1LDB2
+     I                                        1  153F1LDB3
+     ICLBL1       DS
+     I                                        1  150F1CLBL
+     I                                        1  150F1CLB0
+     I                                        1  151F1CLB1
+     I                                        1  152F1CLB2
+     I                                        1  153F1CLB3
+     ILDBL2       DS
+     I                                        1  150F1LDPB
+     I                                        1  150F1LDP0
+     I                                        1  151F1LDP1
+     I                                        1  152F1LDP2
+     I                                        1  153F1LDP3
+     ICLBL2       DS
+     I                                        1  150F1CLPB
+     I                                        1  150F1CLP0
+     I                                        1  151F1CLP1
+     I                                        1  152F1CLP2
+     I                                        1  153F1CLP3
+     IPLDB0       DS
+     I                                        1  150F1BL00
+     I                                        1  151F1BL01
+     I                                        1  152F1BL02
+     I                                        1  153F1BL03
+     IPLDB1       DS
+     I                                        1  150F1BL10
+     I                                        1  151F1BL11
+     I                                        1  152F1BL12
+     I                                        1  153F1BL13
+     IPLDB2       DS
+     I                                        1  150F1BL20
+     I                                        1  151F1BL21
+     I                                        1  152F1BL22
+     I                                        1  153F1BL23
+     IPLDB3       DS
+     I                                        1  150F1BL30
+     I                                        1  151F1BL31
+     I                                        1  152F1BL32
+     I                                        1  153F1BL33
+     IPLDB4       DS
+     I                                        1  150F1BL40
+     I                                        1  151F1BL41
+     I                                        1  152F1BL42
+     I                                        1  153F1BL43
+     IPLDB5       DS
+     I                                        1  150F1BL50
+     I                                        1  151F1BL51
+     I                                        1  152F1BL52
+     I                                        1  153F1BL53
+     IPSTAMT      DS
+     I                                        1  150F1PST0
+     I                                        1  151F1PST1
+     I                                        1  152F1PST2
+     I                                        1  153F1PST3
+     ICFAMT       DS                                                      058648
+     I                                        1  150F2PST0                058648
+     I                                        1  151F2PST1                058648
+     I                                        1  152F2PST2                058648
+     I                                        1  153F2PST3                058648
+     I@DSFDY    E DSDSFDY                                                 CCB002
+     I*  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               CCB002
+     I*                                                                   CCB002
+     IDSMEMS    E DSMEMOS                                                 CCB002
+     I** External data structure for MEMOS Details                        CCB002
+     I** Renamed fields in PF/MEMOS                                       CCB002
+     I              CNUM                            MECNUM                CCB002
+     I              CCY                             MECCY                 CCB002
+     I              ACOD                            MEACOD                CCB002
+     I              ACSQ                            MEACSQ                CCB002
+     I              BRCA                            MEBRCA                CCB002
+     IUMEMER      DS                                                      CCB002
+      ** Data structure for database error on call to AOMEMSR0.           CCB002
+     I**********                              1   60U0CNUM                             CCB002 CSD027
+     I                                        1   6 U0CNUM                                    CSD027
+     I                                        7   9 U0CUCD                CCB002
+     I**********                             10  130U0ACCD                             CCB002 CGL029
+     I**********                             14  150U0ACSQ                             CCB002 CGL029
+     I**********                             16  18 U0BRCA                             CCB002 CGL029
+     I                                       10  190U0ACCD                                    CGL029
+     I                                       20  210U0ACSQ                                    CGL029
+     I                                       22  24 U0BRCA                                    CGL029
+     I/EJECT
+      *
+      *  Incoming parameter list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           I#RSQN  5
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *                                                                   045014
+      *  Reset primary transaction reference                              045014
+      *                                                                   045014
+     C                     MOVEL*BLANKS   W0PREF                          045014
+      *
+      * If action is *CLOSE then call SROPT and close down program
+      *
+     C           W0ACT     IFEQ '*CLOSE'
+     C                     EXSR SROPRT
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+      * Check action code
+      *
+     C                     EXSR SRCHCK
+      *
+      * Call subroutine depending on action code
+      *
+     C           P0ACT     CASEQ'*NOSTRO' SRNOST
+     C           P0ACT     CASEQ'*RETAIL' SRRETL
+     C           P0ACT     CASEQ'*BOTH'   SRBOTH
+     C           P0ACT     CASEQ'*NONE'   SRNONE
+     C           P0ACT     CASEQ'*CLOSESP'SROPRT                          045014
+     C                     CAS            SRACT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      * Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCHCK   : Check true action code                            *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCHCK    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHCK'  @STK,Q
+      *                                                                   045014
+      *  Initialise ##NOS and ##RET                                       045014
+      *                                                                   045014
+     C                     MOVEL*BLANKS   ##NOS                           045014
+     C                     MOVEL*BLANKS   ##RET                           045014
+      *
+      *  Check that it is a valid action code
+      *
+     C           W0ACT     IFEQ '*CLOSESP'                 Close spool fil045014
+     C                     MOVELW0ACT     P0ACT                           045014
+     C                     GOTO EXCHCK                                    045014
+     C                     END                                            045014
+      *                                                                   045014
+     C           W0ACT     IFEQ '*NOSTRO'                  Nostro Report
+     C           W0ACT     OREQ '*RETAIL'                  Retail Report
+     C           W0ACT     OREQ '*BOTH'                    Both Reports
+      *                                                                   045014
+      *  If retail or both and retail not installed error                 045014
+      *                                                                   045014
+     C           W0ACT     IFEQ '*RETAIL'                  Retail Report  045014
+     C           W0ACT     OREQ '*BOTH'                    Both Reports   045014
+     C           BGIOAC    IFNE 'Y'                                       045014
+     C           BGRTBN    ANDNE'Y'                                       045014
+     C                     MOVEL'*ACTION 'W0FILE                          045014
+     C                     MOVEL'*INVALID'W0KEY                           045014
+     C                     Z-ADD7         W0ERNB                          045014
+     C                     MOVELERR@,8    W0NARR                          045014
+     C                     EXSR SRERR                                     045014
+     C                     END                                            045014
+     C                     END                                            045014
+      *                                                                   045014
+     C                     ELSE
+     C                     MOVEL'*ACTION 'W0FILE
+     C                     MOVEL'*INVALID'W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,6    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Check that it is a valid account type
+      *
+     C           I#ATYP    IFEQ 'F'                        Full Nostro
+     C           I#ATYP    OREQ 'R'                        Retail Nbr
+     C           I#ATYP    OREQ 'G'                        Ledger
+     C                     ELSE
+     C                     MOVEL'*ACCOUNT'W0FILE
+     C                     MOVEL'*INVALID'W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVELERR@,7    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  If account is Full nostro look up on SDNOSTL1
+      *
+     C           I#ATYP    IFEQ 'F'
+      *
+     C           K#NOS1    KLIST
+     C                     KFLD           A7CYCD
+     C                     KFLD           A7NONB
+      *
+      *  Format key for SDNOSTL1 and read file for nostro
+      *
+     C                     MOVELI#NOS     A7CYCD
+     C                     MOVE I#NOS     A7NONB
+      *
+     C           K#NOS1    CHAIN@NOSTL1              90
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDNOSTL1'W0FILE
+     C                     MOVELI#NOS     W0KEY
+     C                     MOVELI#NOS     W0KEY
+     C                     Z-ADD3         W0ERNB
+     C                     MOVELERR@,3    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     MOVEL'Y'       ##NOS
+      *
+     C                     END
+      *
+      *  If account is not Retail look up on ACCNT
+      *
+     C           I#ATYP    IFNE 'R'
+      *
+     C           K#ACCT    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+      *
+      * Format key to ACCNT and read file for details
+      *
+     C           I#ATYP    IFEQ 'F'
+     C                     MOVELA7CUST    CNUM
+     C                     MOVELA7CYCD    CCY
+     C                     MOVELA7ACCD    ACOD
+     C                     Z-ADDA7ACSN    ACSQ
+     C                     MOVELA7BRCD    BRCA
+     C                     END
+      *
+     C           I#ATYP    IFEQ 'G'
+     C**********           Z-ADDI#CNUM    CNUM                                                CSD027
+     C                     MOVE I#CNUM    CNUM                                                CSD027
+     C                     MOVELI#CCY     CCY
+     C                     Z-ADDI#ACOD    ACOD
+     C                     Z-ADDI#ACSQ    ACSQ
+      *
+      *  If branch is blank then assume single branch
+      *
+     C           I#BRCA    IFNE *BLANKS
+     C                     MOVELI#BRCA    BRCA
+     C                     ELSE
+     C                     MOVELBJSBRC    BRCA
+     C                     END
+     C                     END
+      *
+     C           K#ACCT    CHAINACCNTABF             90
+     C           *IN90     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVEL'ACCNT   'W0FILE
+     C                     MOVELAC#KEY    W0KEY
+     C                     Z-ADD4         W0ERNB
+     C                     MOVELERR@,3    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           ATYP      IFEQ 'R'
+     C                     MOVEL'Y'       ##RET
+     C                     END
+      *
+     C                     END
+      *
+      *  If account is Retail look up on ACNUMA
+      *
+     C           I#ATYP    IFEQ 'R'
+      *
+     C           K#RETN    KLIST
+     C                     KFLD           ACNO
+     C                     MOVELI#ACNO    ACNO
+      *
+      * Read retail accounts for details
+      *
+     C           K#RETN    CHAINREACNOF              90
+     C           *IN90     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVEL'ACNUMA  'W0FILE
+     C                     MOVELI#ACNO    W0KEY
+     C                     Z-ADD5         W0ERNB
+     C                     MOVELERR@,3    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     MOVEL'Y'       ##RET   1
+      *
+     C                     END
+      *                                                                   045014
+      *  Set primary transaction reference                                045014
+      *                                                                   045014
+     C                     MOVELAC#KEY    W0PREF                          045014
+      *
+      *  Look up account (if not a nostro) to see if a nostro
+      *
+     C           I#ATYP    IFNE 'F'
+      *
+     C           K#NOS2    KLIST
+     C                     KFLD           A7CUST
+     C                     KFLD           A7CYCD
+     C                     KFLD           A7ACCD
+     C                     KFLD           A7ACSN
+     C                     KFLD           A7BRCD
+      *
+     C                     MOVELCNUM      A7CUST
+     C                     MOVELCCY       A7CYCD
+     C                     MOVELACOD      A7ACCD
+     C                     Z-ADDACSQ      A7ACSN
+     C                     MOVELBRCA      A7BRCD
+      *
+     C           K#NOS2    CHAIN@NOSTL2              90
+      *
+      * If nostro found then set up data structure fields
+      *
+     C           *IN90     IFEQ '0'
+     C                     MOVEL'Y'       ##NOS   1
+     C                     END
+      *
+     C                     END
+      *
+      *  If a retail account get MEMOS information
+      *
+     C           ATYP      IFEQ 'R'
+     C***********RRNM      CHAINMEMOSMDF             90
+      *                                                                   CCB002
+      ** Call Access Object AOMEMSR0                                      CCB002
+     C                     CALL 'AOMEMSR0'                                CCB002
+     C                     PARM *BLANKS   W0RTCD  7        I:Return code  CCB002
+     C                     PARM '*KEY   ' W0OPTN  7        O:Option       CCB002
+     C                     PARM 0         W0RETL 100       O:Retail A/C NoCCB002
+     C**********           PARM CNUM      W0CNUM  60       O:Customer No.              CCB002 CSD027
+     C                     PARM CNUM      W0CNUM  6        O:Customer No.                     CSD027
+     C                     PARM CCY       W0CUCD  3        O:Currency     CCB002
+     C**********           PARM ACOD      W0ACCD  40       O:Account Code              CCB002 CGL029
+     C                     PARM ACOD      W0ACCD 100       O:Account Code                     CGL029
+     C                     PARM ACSQ      W0ACSQ  20       O:Account Seq. CCB002
+     C                     PARM BRCA      W0BRCA  3        O:Branch       CCB002
+     C           DSMEMS    PARM DSMEMS    @DSFDY                          CCB002
+     C************IN90     IFEQ '1'                                       CCB002
+     C           W0RTCD    IFNE '       '                                 CCB002
+     C***********RECI      ORNE 'D'                                       CCB002
+     C***********          MOVEL'MEMOSDF 'W0FILE                          CCB002
+     C***********          MOVELAC#KEY    W0KEY                           CCB002
+     C                     MOVE 'AOMEMSU0'DBFILE                          CCB002
+     C**********           Z-ADDW0CNUM    U0CNUM                                       CCB002 CSD027
+     C                     MOVE W0CNUM    U0CNUM                                              CSD027
+     C                     MOVE W0CUCD    U0CUCD                          CCB002
+     C                     Z-ADDW0ACCD    U0ACCD                          CCB002
+     C                     Z-ADDW0ACSQ    U0ACSQ                          CCB002
+     C                     MOVE W0BRCA    U0BRCA                          CCB002
+     C                     MOVELUMEMER    DBKEY                           CCB002
+     C                     Z-ADD6         W0ERNB
+     C                     MOVELERR@,3    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C                     END
+      *
+      *  If a nostro check prono record exists
+      *
+     C           ##NOS     IFEQ 'Y'
+      *
+     C           K#PRON    KLIST
+     C                     KFLD           CCY
+     C                     KFLD           NOSN
+      *
+     C                     MOVE A7NONB    NOSN
+      *
+     C           K#PRON    CHAINPRONOPNF             90
+     C           *IN90     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVEL'N'       ##NOS
+     C                     END
+     C                     END
+      *
+      *  Check that action code meets requirements
+      *
+     C                     MOVELW0ACT     P0ACT  10
+     C           W0ACT     IFEQ '*NOSTRO'                  Nostro Report
+     C           ##NOS     ANDNE'Y'
+     C                     MOVEL*BLANKS   P0ACT
+     C                     MOVEL'*NONE'   P0ACT
+     C                     END
+      *
+     C           W0ACT     IFEQ '*RETAIL'                  Retail Report
+     C           ##RET     ANDNE'Y'
+     C                     MOVEL*BLANKS   P0ACT
+     C                     MOVEL'*NONE'   P0ACT
+     C                     END
+      *
+     C           W0ACT     IFEQ '*BOTH'                    Both Reports
+     C           ##RET     ANDNE'Y'
+     C           ##NOS     ANDNE'Y'
+     C                     MOVEL*BLANKS   P0ACT
+     C                     MOVEL'*NONE'   P0ACT
+     C                     END
+      *
+     C           W0ACT     IFEQ '*BOTH'                    Both Reports
+     C           ##RET     ANDEQ'Y'
+     C           ##NOS     ANDNE'Y'
+     C                     MOVEL*BLANKS   P0ACT
+     C                     MOVEL'*RETAIL' P0ACT
+     C                     END
+      *
+     C           W0ACT     IFEQ '*BOTH'                    Both Reports
+     C           ##RET     ANDNE'Y'
+     C           ##NOS     ANDEQ'Y'
+     C                     MOVEL*BLANKS   P0ACT
+     C                     MOVEL'*NOSTRO' P0ACT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCHCK    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNOST   : Print Nostro Statement                            *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *             SRBOTH - Print both statement types               *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRNOST    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRNOST'  @STK,Q
+      *
+      *  Open printer file etc
+      *
+     C                     EXSR SROPRT
+      *
+      *  Print header of report
+      *
+     C                     MOVEA'0000000' *IN,37
+     C                     EXSR SRHDR1
+      *
+      *  Get account details and print
+      *
+     C                     MOVEL*BLANKS   P0ACT
+     C                     MOVEL'*NOSTRO' P0ACT
+     C                     EXSR SRHDR2
+      *
+      *  Process posting and balance information
+      *
+     C                     EXSR SRPOST
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXNOST    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRETL   : Print Retail Statement                            *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *             SRBOTH - Print both statement types               *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRRETL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRRETL'  @STK,Q
+      *
+      *  Open printer file etc
+      *
+     C                     EXSR SROPRT
+      *
+      *  Print header of report
+      *
+     C                     MOVEA'0000000' *IN,37
+     C                     EXSR SRHDR1
+      *
+      *  Get account details and print
+      *
+     C                     MOVEL*BLANKS   P0ACT
+     C                     MOVEL'*RETAIL' P0ACT
+     C                     EXSR SRHDR2
+      *
+      *  Process posting and balance information
+      *
+     C                     EXSR SRPOST
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXRETL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBOTH   : Print Both Statement Types                        *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRBOTH    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRBOTH'  @STK,Q
+      *
+      * If nostro then print nostro report
+      *
+     C                     EXSR SRNOST
+      *
+      * If retail then print retail report
+      *
+     C                     EXSR SRRETL
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXBOTH    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPOST   : Print Posting Information                         *
+      *                                                               *
+      *  CALLED BY: SRRETL - Print retail information                 *
+      *             SRNOST - Print nostro information                 *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPOST    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPOST'  @STK,Q
+      *
+      * Print brought forward figures
+      *
+     C                     MOVEL*BLANKS   #POSTP                          068096
+      *                                                                   068096
+      * If Nostro report as General Ledger balances exclude cleared
+      * movements on CLEARPD.
+      *
+      * If Retail then report as Cleared.
+      *
+     C                     MOVELBJMRDT    F1VALD
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL4430CCP1                                           S01408
+     C*                                                                   S01408
+     C           P0ACT     IFEQ '*NOSTRO'
+     C***********          Z-ADDLDBL      F1PST0                          058648
+     C                     Z-ADDLDBL      F2PST0                          058648
+     C                     Z-ADDLDBL      @BFBAL
+     C                     ELSE
+     C***********          Z-ADDCLBL      F1PST0                          058648
+     C                     Z-ADDCLBL      F2PST0                          058648
+     C                     Z-ADDCLBL      @BFBAL
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL4430CCP2                                           S01408
+     C*                                                                   S01408
+      *
+     C                     MOVEA'01'      *IN,38
+     C                     WRITEF1DET1
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRHDR1
+     C                     END
+     C                     MOVEA'10'      *IN,38
+     C                     MOVEL*BLANKS   @PRINT
+     C                     MOVEL*BLANKS   @CFPRT  1
+      *
+      * Read records from RSACMTL1
+      *
+     C           @ACKEY    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+      *
+     C                     EXSR SRSETL
+      *
+      *  Read further records and print
+      *
+     C                     EXSR SRPSTR
+     C                     Z-ADDVUDT      ##PDAY
+      *
+      *  If no records print no details to report
+      *
+     C           *IN90     IFEQ '1'
+     C                     WRITEF1DET3
+     C                     ELSE
+      *                                                                   068096
+      * If posting to print then add to balance                           068096
+      *                                                                   068096
+     C           #POSTP    IFEQ 'Y'                                       068096
+     C                     ADD  F1PST0    @BFBAL 150                      068096
+     C                     MOVEL*BLANKS   #POSTP                          068096
+     C                     END                                            068096
+      *                                                                   068096
+     C           *IN90     DOWEQ'0'
+      *
+      *  Print record
+      *
+     C                     WRITEF1DET2
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRHDR1
+     C                     EXSR SRHDR2
+     C                     END
+      *
+     C                     EXSR SRPSTR
+      *
+      * If date change and date greater than today print C/F
+      *
+     C           ##PDAY    IFLT VUDT
+     C           VUDT      ANDGTBJRDNB
+     C           @CFPRT    ANDEQ'Y'
+     C           *IN90     OREQ '1'
+     C           @CFPRT    ANDEQ'Y'
+     C           *LIKE     DEFN VUDT      ##PDAY
+     C                     Z-ADDVUDT      ##PDAY
+     C                     MOVEL*BLANKS   @CFPRT
+     C***********          Z-ADD@BFBAL    F1PST0                          058648
+     C                     Z-ADD@BFBAL    F2PST0                          058648
+      *
+     C                     WRITEF1DET1
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRHDR1
+     C                     END
+     C                     ELSE
+     C           *IN90     IFEQ '1'
+     C           @PRINT    ANDEQ*BLANKS
+      *
+      *  No details kept for combination
+      *
+     C                     WRITEF1DET3
+      *
+     C                     END
+     C                     END
+      *                                                                   068096
+      * If posting to print then add to balance                           068096
+      *                                                                   068096
+     C           #POSTP    IFEQ 'Y'                                       068096
+     C                     ADD  F1PST0    @BFBAL 150                      068096
+     C                     MOVEL*BLANKS   #POSTP                          068096
+     C                     END                                            068096
+      *
+     C                     END
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPOST    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSETL   : Set position for read of movements files          *
+      *                                                               *
+      *  CALLED BY: SRPOST - Print retail information                 *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSETL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRSETL'  @STK,Q
+      *
+      *  Position RSACMTL1
+      *
+     C                     MOVEL*BLANKS   ##RSAC
+     C                     MOVEA'000'     *IN,1
+     C           @ACKEY    SETLLRSACMTL1                 88
+      *
+      *  Position FFACMV2 if Futures is on
+      *
+     C                     MOVEL*BLANKS   ##FFAC
+     C           BGFUOP    IFEQ 'Y'
+     C           @ACKEY    SETLLFFACMV2                  89
+     C                     ELSE
+     C                     MOVEL'0'       *IN89
+     C                     END
+      *
+      *  No records for this account set EOF indicator
+      *
+     C           *IN88     IFEQ '0'
+     C           *IN89     ANDEQ'0'
+     C                     MOVEL'1'       *IN90
+     C                     ELSE
+     C                     MOVEL'0'       *IN90
+     C                     END
+      *
+      *  Set indicators to allow read
+      *
+     C                     MOVEA'00'      *IN,88
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXSETL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPSTR   : Read next posting record for print                *
+      *                                                               *
+      *  CALLED BY: SRPOST - Print retail information                 *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPSTR    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPSTR'  @STK,Q
+      *
+      *  Read files depending on read flags
+      *
+      *  Read RSACMTL1 records
+      *
+     C           ##RSAC    IFEQ ' '
+     C           *IN88     ANDEQ'0'
+     C                     MOVEA'00'      *IN,1
+     C                     DO   *HIVAL
+     C           @ACKEY    READERSACMTL1                 88
+      *
+      *  If record read then check it is OK
+      *
+     C           *IN88     IFEQ '0'
+     C           P0ACT     IFEQ '*RETAIL'
+     C           P0ACT     OREQ '*NOSTRO'
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL4430CCP3                                           S01408
+     C*                                                                   S01408
+     C           *IN01     ANDEQ'1'
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL4430CCP4                                           S01408
+     C*                                                                   S01408
+     C                     MOVEL'Y'       ##RSAC  1
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *  If no record leave loop
+      *
+     C           *IN88     IFEQ '1'
+     C                     MOVEL*BLANKS   ##RSAC
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+     C                     END
+      *
+      *  Read FFACMV2 records
+      *
+     C           BGFUOP    IFEQ 'Y'
+     C           ##FFAC    IFEQ ' '
+     C           *IN89     ANDEQ'0'
+     C                     MOVEL'0'       *IN03
+     C           @ACKEY    READEFFACMV2                  89
+     C           *IN89     IFEQ '0'
+     C                     MOVEL'Y'       ##FFAC  1
+     C                     ELSE
+     C                     MOVEL*BLANKS   ##FFAC
+     C                     END
+     C                     END
+     C                     END                                            057431
+      *
+      *  No more records for this account set EOF indicator
+      *
+     C           ##RSAC    IFEQ *BLANKS
+     C           ##FFAC    ANDEQ*BLANKS
+     C                     MOVEL'1'       *IN90
+     C                     GOTO EXPSTR
+     C                     ELSE
+     C                     MOVEL'0'       *IN90
+     C                     END
+      *
+      * Select record to print
+      *
+     C                     SELEC
+     C           ##RSAC    WHEQ 'Y'
+     C           ##FFAC    ANDEQ'Y'
+      *
+      * Check movement data to see which to print
+      *
+     C           VALD      IFLE FFVALD
+     C           PSTA      ANDLEFFPSTA
+     C           DRCR      ANDLEFFDRCR
+     C                     MOVEL'RS'      PRTDTA
+     C                     MOVEL*BLANKS   ##RSAC
+     C                     ELSE
+     C                     MOVEL'FF'      PRTDTA  2
+     C                     MOVEL*BLANKS   ##FFAC
+     C                     END
+      *
+      * Futures record only to print
+      *
+     C           ##FFAC    WHEQ 'Y'
+     C                     MOVEL'FF'      PRTDTA
+     C                     MOVEL*BLANKS   ##FFAC
+     C                     OTHER
+      *
+      * RSACMT record only to print
+      *
+     C                     MOVEL'RS'      PRTDTA
+     C                     MOVEL*BLANKS   ##RSAC
+     C                     ENDSL
+      *
+     C           *LIKE     DEFN FFVALD    VUDT
+     C                     MOVEL'Y'       @CFPRT
+     C                     MOVEL'Y'       @PRINT  1
+     C                     MOVEL*BLANKS   F1CHQN
+      *
+      * Format data depending on record selected
+      *
+     C           PRTDTA    IFEQ 'RS'
+     C                     Z-ADDPSTD      I#DAY
+     C                     EXSR SRDATE
+     C                     MOVELO#ADTE    F1PSTD
+     C                     Z-ADDVALD      I#DAY                           045014
+     C                     Z-ADDVALD      VUDT                            045014
+     C                     EXSR SRDATE                                    045014
+     C                     MOVELO#ADTE    F1VALD                          045014
+     C                     MOVEL*BLANKS   F1PNAR
+     C           *IN02     IFEQ '1'
+     C                     MOVEL'CR'      F1TRYP
+     C                     MOVELPNAR      F1PNAR
+     C                     ELSE
+     C                     MOVELGLTRYP    F1TRYP
+     C           GLFUND    IFEQ *BLANKS
+     C           GLTRYP    IFEQ 'ZT'                                                          CAP204
+     C           CAP204    ANDEQ'Y'                                                           CAP204
+     C                     MOVELOTR1      F1PNAR                                              CAP204
+     C                     ELSE                                                               CAP204
+     C                     MOVELGLTNMR    F1PNAR
+     C                     ENDIF                                                              CAP204
+     C                     ELSE
+     C                     MOVELGLFUND    F1PNAR
+     C                     END
+     C                     END
+     C           CHQN      IFGT 0
+     C                     MOVE CHQN      F1CHQN
+     C                     END
+     C           DRCR      IFEQ 0
+     C                     Z-ADDPSTA      F1PST0
+     C                     ELSE
+     C                     Z-SUBPSTA      F1PST0
+     C                     END
+     C                     ELSE
+     C                     Z-ADDFFPSTD    I#DAY
+     C                     EXSR SRDATE
+     C                     MOVELO#ADTE    F1PSTD
+     C                     Z-ADDFFVALD    I#DAY                           045014
+     C                     Z-ADDFFVALD    VUDT                            045014
+     C                     EXSR SRDATE                                    045014
+     C                     MOVELO#ADTE    F1VALD                          045014
+     C                     MOVEL*BLANKS   F1PNAR
+     C                     MOVELFFTRYP    F1TRYP
+     C                     MOVELFFTNMR    F1PNAR
+     C           FFCHQN    IFGT 0
+     C                     MOVE FFCHQN    F1CHQN
+     C                     END
+     C           FFDRCR    IFEQ 0
+     C                     Z-ADDFFPSTA    F1PST0
+     C                     ELSE
+     C                     Z-SUBFFPSTA    F1PST0
+     C                     END
+     C                     END
+     C***********          END                                            057431
+      *
+      * Update balance information
+      *
+     C**********           ADD  F1PST0    @BFBAL 150                      068096
+     C                     MOVEL'Y'       #POSTP  1                       068096
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPSTR    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNONE   : Print no information for combination              *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRNONE    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRNONE'  @STK,Q
+      *
+      *  Open printer file etc
+      *
+     C                     EXSR SROPRT
+      *
+      *  Print header of report
+      *
+     C                     MOVEA'0000000' *IN,37
+     C                     EXSR SRHDR1
+      *
+      *  Get account details and print
+      *
+     C                     MOVEL*BLANKS   P0ACT
+     C                     MOVEL'*NONE  ' P0ACT
+     C                     EXSR SRHDR2
+      *
+      *  No details kept for combination
+      *
+     C                     EXSR SRNDTL
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXNONE    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHDR1   : Print Page Header                                 *
+      *                                                               *
+      *  CALLED BY: SRNONE - Print no information for combination     *
+      *             SRRETL - Print retail information                 *
+      *             SRNOST - Print nostro information                 *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRHDR1    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRHDR1'  @STK,Q
+      *
+      *  Write page header and switch off overflow indicator
+      *
+     C                     WRITEF1HDR1
+     C                     MOVEL'0'       *IN03
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXHDR1    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHDR2   : Print account information                         *
+      *                                                               *
+      *  CALLED BY: SRNONE - Print no information for combination     *
+      *             SRRETL - Print retail information                 *
+      *             SRNOST - Print nostro information                 *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRHDR2    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRHDR2'  @STK,Q
+      *
+      *  Print Accntab information
+      *
+     C                     MOVELBRCA      F1BRCD
+     C                     MOVELCNUM      F1CNUM
+     C                     MOVELCCY       F1CCY
+     C                     MOVELACOD      F1ACOD
+     C                     MOVELACSQ      F1ACSQ
+     C                     MOVELANAM      F1ANAM
+     C                     Z-ADDLDBL      F1LDBL
+     C                     Z-ADDCLBL      F1CLBL
+      *
+      *  If retail account print cleared information as well
+      *
+     C           ATYP      IFEQ 'R'
+     C                     MOVEL'1'       *IN37
+     C                     END
+      *
+      *  Find currency details
+      *
+     C                     EXSR SRCURR
+      *
+      *  Print record
+      *
+     C                     WRITEF1HDR2
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRHDR1
+     C                     END
+      *
+      *  If *IN38 is off then first page therefore print info
+      *
+     C           *IN38     IFEQ '0'
+      *
+      *  If *Retail extract MEMOS information and print
+      *
+     C           P0ACT     IFEQ '*RETAIL'
+     C                     Z-ADDLDBLN     F1LDPB
+     C                     Z-ADDCLBLN     F1CLPB
+      *
+      *  Print record for retail balances
+      *
+     C                     WRITEF1HDR4
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRHDR1
+     C                     END
+     C                     END
+      *
+      *  If *Nostro extract PRONOPN information and print
+      *
+     C           P0ACT     IFEQ '*NOSTRO'
+     C                     Z-ADD@PD,1     I#DAY
+     C                     EXSR SRDATE
+     C                     MOVELO#ADTE    F1DAT1
+     C                     Z-ADD@PD,2     I#DAY
+     C                     EXSR SRDATE
+     C                     MOVELO#ADTE    F1DAT2
+     C                     Z-ADD@PD,3     I#DAY
+     C                     EXSR SRDATE
+     C                     MOVELO#ADTE    F1DAT3
+     C                     Z-ADD@PD,4     I#DAY
+     C                     EXSR SRDATE
+     C                     MOVELO#ADTE    F1DAT4
+     C                     Z-ADD@PD,5     I#DAY
+     C                     EXSR SRDATE
+     C                     MOVELO#ADTE    F1DAT5
+     C                     Z-ADD@PB,1     F1BL10
+     C                     Z-ADD@PB,2     F1BL20
+     C                     Z-ADD@PB,3     F1BL30
+     C                     Z-ADD@PB,4     F1BL40
+     C                     Z-ADD@PB,5     F1BL50
+      *
+      *  Print record for nostro balances
+      *
+     C                     WRITEF1HDR3
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRHDR1
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      *  Print column headings
+      *
+     C                     WRITEF1HDR5
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRHDR1
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXHDR2    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNDTL   : Print no information for combination              *
+      *                                                               *
+      *  CALLED BY: SRNONE - Print no information for combination     *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRNDTL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRNDTL'  @STK,Q
+      *
+      *  Set indicators depending on action
+      *
+     C                     MOVEA'000'     *IN,44
+     C           W0ACT     IFEQ '*BOTH'
+     C                     MOVEL'1'       *IN44
+     C                     END
+     C           W0ACT     IFEQ '*NOSTRO'
+     C                     MOVEL'1'       *IN45
+     C                     END
+     C           W0ACT     IFEQ '*RETAIL'
+     C                     MOVEL'1'       *IN46
+     C                     END
+      *
+      *  Print record
+      *
+     C                     WRITEF1DET4
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRHDR1
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXNDTL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCURR   : Find currency information                         *
+      *                                                               *
+      *  CALLED BY: SRHDR2 - Print account information                *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCURR    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCURR'  @STK,Q
+      *
+      * Define key list to SDCURRL1
+      *
+     C           @CURK     KLIST
+     C                     KFLD           W#CCY
+      *
+      *  Check if currency information exits
+      *
+     C                     Z-ADD1         X
+     C           CCY       LOKUP@CCY,X                   90
+      *
+      *  Chain to currency record if no information
+      *
+     C           *IN90     IFEQ '0'
+     C                     MOVELCCY       W#CCY   3
+     C           @CURK     CHAIN@CURRL1              90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDCURRL1'W0FILE
+     C                     MOVELW#CCY     W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,3    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C                     ADD  1         K       50
+     C                     Z-ADDCDP       @CDP,K
+     C                     MOVEACCY       @CCY,K
+     C                     Z-ADDK         X
+     C                     END
+      *
+     C           @CDP,X    IFEQ 0
+     C                     MOVEL'1'       *IN40
+     C                     END
+     C           @CDP,X    IFEQ 1
+     C                     MOVEL'1'       *IN41
+     C                     END
+     C           @CDP,X    IFEQ 2
+     C                     MOVEL'1'       *IN42
+     C                     END
+     C           @CDP,X    IFEQ 3
+     C                     MOVEL'1'       *IN43
+     C                     END
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCURR    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROPRT   : Control open and close of spool file GL4430P1     *
+      *                                                               *
+      *  CALLED BY: SRNOST - Process Nostro                           *
+      *             SRRETL - Process Retail                           *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SROPRT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SROPRT'  @STK,Q
+      *
+      *  If first open or I#SPLR is 'Y', open and close file
+      *  or close action specified                                        045014
+      *
+     C           ##OPRT    IFEQ *BLANKS
+     C           I#SPLR    OREQ 'Y'
+     C           W0ACT     OREQ '*CLOSE'
+     C           W0ACT     OREQ '*CLOSESP'                                045014
+      *
+      *  If open and spool repeat is yes close the file
+      *  or if close specified and file open                              045014
+      *
+     C           ##OPRT    IFNE *BLANKS
+     C           I#SPLR    ANDEQ'Y'
+     C           ##OPRT    ORNE *BLANKS
+     C           W0ACT     ANDEQ'*CLOSE'
+     C           ##OPRT    ORNE *BLANKS                                   045014
+     C           W0ACT     ANDEQ'*CLOSESP'                                045014
+      *
+      *  Print end of report before processing close of file
+      *
+     C                     WRITEF1TRL1
+      *
+      *  Close file
+      *
+     C                     CLOSEGL4430P1
+     C                     MOVEL*BLANKS   ##OPRT
+     C                     Z-ADD0         PAGE1
+      *
+      *  If *CLOSE exit section as no more processing
+      *
+     C           W0ACT     IFEQ '*CLOSE'
+     C           W0ACT     OREQ '*CLOSESP'                                045014
+     C                     GOTO EXOPRT
+     C                     END
+     C                     END
+      *
+      *  If spool file name is requested change override
+      *
+     C           ##OPRT    IFEQ *BLANKS
+     C           I#SPLN    ANDNE*BLANKS
+      *
+      *  Override file GL4430P1 share(*NO) and spool file name
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEAI#SPLN    EDT,49
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'QCMDEXC' W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     END
+      *
+      *  Open GL4430P1 for output
+      *
+     C                     OPEN GL4430P1               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'GL4430P1'W0FILE
+     C                     MOVEL'*OPEN'   W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     EXSR SRERR
+     C                     END
+      *
+      * ZSFILE - Log Spool File
+      *
+      * Set up spool file number
+      *
+     C                     Z-ADDSFNUMU    WUSFNB  60
+     C                     MOVE *BLANKS   UUSRSQ  5
+     C           *LIKE     DEFN UUZSER    WUZSER                          E36338
+      *
+      * ZSFILE - write report rqs
+      *
+     C                     CALL 'ZSFILE'               90
+     C           UUSRSQ    PARM I#RSQN    UURSQN  5
+     C                     PARM BRCA      UUENTY  3
+     C                     PARM SFILEU    UUSFNM 10
+     C                     PARM WUSFNB    UUSFNB  60
+     C           WUZSER    PARM *BLANK    UUZSER  1
+      *
+      * Report error on call to ZSFILE
+      *
+     C           *IN90     IFEQ '1'
+     C           WUZSER    OREQ 'Y'                                       E36338
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'ZSFILE'  W0KEY
+     C                     Z-ADD3         W0ERNB
+     C                     MOVELERR@,4    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     MOVEL'Y'       ##OPRT  1
+      *
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXOPRT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDATE   : Format Midas Day to Date                          *
+      *                                                               *
+      *  CALLED BY: SRHDR2 - Print account information                *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDATE    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDATE'  @STK,Q
+      *
+      *  Call ZDATE2 to format date
+      *
+     C                     CALL 'ZDATE2'               9090
+     C                     PARM           I#DAY   50
+     C                     PARM BJDFIN    I#DFMT  1
+     C                     PARM           O#DATE  60
+     C                     PARM           O#ADTE  7
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'ZDATE2  'W0FILE
+     C                     MOVEL'*CALL'   W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,4    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXDATE    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE
+     C                     MOVELW0ACT     W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,6    W0NARR
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACCS   : Check for valid access                            *
+      *                                                               *
+      *  CALLED BY: SRINIT  - Initialise and define fields            *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACCS    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACCS'  @STK,Q
+      *                                                                   045014
+      *  Call AOCNTLR0 to see if access should be checked                 045014
+      *                                                                   045014
+     C                     CALL 'AOCNTLR0'             9090               045014
+     C           R#RTN     PARM *BLANKS   O#RTN   7                       045014
+     C                     PARM           P#CNTL                          045014
+      *                                                                   045014
+     C           *IN90     IFEQ '1'                                       045014
+     C           R#RTN     ORNE *BLANKS                                   045014
+     C                     MOVEL'AOCNTLR0'W0FILE                          045014
+     C                     MOVEL'*CALL'   W0KEY                           045014
+     C                     Z-ADD1         W0ERNB                          045014
+     C                     MOVELERR@,4    W0NARR                          045014
+     C                     EXSR SRERR                                     045014
+     C                     MOVEL*BLANKS   R#RTN   7                       045014
+     C                     END                                            045014
+      *                                                                   045014
+      * No access validation required                                     045014
+      *                                                                   045014
+     C           P#ACCK    IFEQ 'N'                                       045014
+     C           I#REFN    IFNE *BLANKS                                   045014
+     C                     MOVELI#REFN    #PRGM                           045014
+     C                     ELSE                                           045014
+     C                     MOVEL'GL4430'  #PRGM                           045014
+     C                     END                                            045014
+     C                     GOTO EXACCS                                    045014
+     C                     END                                            045014
+      *
+      *  Check for valid access
+      *
+     C                     MOVEL*BLANKS   @PGMF  10
+     C                     MOVEL*BLANKS   @PGMFA 10
+      *
+      *  If already found only test for change
+      *
+     C           @T        IFGE 1
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'CPF9898' #MSGID  7
+     C                     PARM 'QCPFMSG' #MSGF  10
+     C                     PARM *BLANKS   #MSGFL 10
+     C                     PARM 'Check'   #MSGDT256
+     C                     PARM '*PRV'    #MSGR   5
+     C                     PARM PGM@,@T   #PRGM  10
+     C                     PARM *BLANKS   #MSGQ  10
+     C                     PARM '*INFO  ' #MSGT   7
+      *
+      *  If found set flag to stop checking of all valid programs
+      *
+     C           *IN90     IFEQ '0'
+     C           PGM@,1    ANDNEPGM@,X
+     C                     MOVEL'PG_FND'  @PGMF
+     C                     ELSE
+     C                     Z-ADD0         @T      50
+     C                     END
+     C                     END
+      *
+     C                     DO   4         X       50
+      *
+      *  Check for program in stack
+      *
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'CPF9898' #MSGID
+     C                     PARM 'QCPFMSG' #MSGF
+     C                     PARM *BLANKS   #MSGFL
+     C                     PARM 'Check'   #MSGDT
+     C                     PARM '*PRV'    #MSGR
+     C                     PARM PGM@,X    #PRGM
+     C                     PARM *BLANKS   #MSGQ
+     C                     PARM '*INFO  ' #MSGT
+      *
+      *  Set flag if program found
+      *
+     C           *IN90     IFEQ '0'
+     C           PGM@,1    ANDNEPGM@,X
+     C                     MOVEL'PG_FND'  @PGMF
+     C                     Z-ADDX         @T      50
+     C           @PGMFA    IFEQ 'PG_FND'
+     C                     GOTO ENDLOP
+     C                     END
+     C                     END
+     C           *IN90     IFEQ '0'
+     C           PGM@,1    ANDEQPGM@,X
+     C                     MOVEL'PG_FND'  @PGMFA
+     C           @PGMF     IFEQ 'PG_FND'
+     C                     GOTO ENDLOP
+     C                     END
+     C                     END
+     C                     END
+     C           ENDLOP    TAG
+      *
+      *  Set flag if program found
+      *
+     C           @PGMF     IFNE 'PG_FND'
+     C           @PGMFA    ORNE 'PG_FND'
+     C                     MOVEL'*PROGRAM'W0FILE
+     C                     MOVEL'*ONLY'   W0KEY
+     C                     Z-ADD4         W0ERNB
+     C                     MOVELERR@,2    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACCS    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRERR    : Report error and close down program               *
+      *                                                               *
+      *  CALLED BY: *All routines                                     *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRERR     BEGSR
+      *
+      *  Dump program
+      *
+     C                     DUMP
+      *
+      *  Send message to MOPERQ
+      *
+     C                     MOVEL*BLANKS   DBDTA
+     C                     MOVEL'GL4430  'DBPGM
+     C                     MOVEL@STK,Q    DBSTK
+     C                     MOVELW0KEY     DBKEY
+     C                     MOVELW0ERNB    DBERNB
+     C                     MOVELW0FILE    DBFILE
+     C                     MOVELW0PREF    DBPREF                          045014
+     C           W0NARR    IFEQ *BLANKS
+     C                     MOVELERR@,1    DBNARR
+     C                     ELSE
+     C                     MOVELW0NARR    DBNARR
+     C                     END
+      *
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'MEM5000' #MSGID
+     C                     PARM 'MIDAS  ' #MSGF
+     C                     PARM *BLANKS   #MSGFL
+     C                     PARM DBDTA     #MSGDT
+     C                     PARM '*PRV'    #MSGR
+     C                     PARM '*'       #PRGM
+     C                     PARM 'MOPERQ ' #MSGQ
+     C                     PARM '*INFO  ' #MSGT
+      *                                                                   045014
+      *  Write database error message on new page                         045014
+      *                                                                   045014
+     C           ##OPRT    IFEQ 'Y'                                       045014
+     C                     WRITEF1HDR1                                    045014
+     C                     WRITEF1DBERR                                   045014
+     C                     END                                            045014
+      *
+      *  Close down program
+      *
+     C                     SETON                     LR
+     C                     MOVEL'*ERROR*' W0RTN
+     C                     RETRN
+      *
+     CSR         EXERR     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFILE   : *PSSR routine for all files                       *
+      *                                                               *
+      *  CALLED BY: IBM controlled - invalid access to file           *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFILE    BEGSR
+      *
+      *  Dump program
+      *
+     C                     DUMP
+      *
+      *  If called again seton LR and return
+      *
+     C           @@FILE    IFNE *BLANKS
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+     C                     END
+     C                     MOVEL'Y'       @@FILE  1
+      *
+      *  Send message to MOPERQ
+      *
+     C                     MOVEL*BLANKS   DBDTA
+     C                     MOVEL'GL4430  'DBPGM
+     C                     MOVEL@STK,Q    DBSTK
+     C                     MOVEL##ERST    DBKEY
+     C                     MOVEL1         DBERNB
+     C                     MOVEL##ERFL    DBFILE
+     C                     MOVELERR@,5    DBNARR
+     C                     MOVELW0PREF    DBPREF                          045014
+      *
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'MEM5000' #MSGID
+     C                     PARM 'MIDAS  ' #MSGF
+     C                     PARM *BLANKS   #MSGFL
+     C                     PARM DBDTA     #MSGDT
+     C                     PARM '*PRV'    #MSGR
+     C                     PARM '*'       #PRGM
+     C                     PARM 'MOPERQ ' #MSGQ
+     C                     PARM '*INFO  ' #MSGT
+      *                                                                   045014
+      *  Write database error message on new page                         045014
+      *                                                                   045014
+     C           ##OPRT    IFEQ 'Y'                                       045014
+     C                     WRITEF1HDR1                                    045014
+     C                     WRITEF1DBERR                                   045014
+     C                     END                                            045014
+      *
+      *  Close down program
+      *
+     C                     SETON                     LR
+     C                     MOVEL'*ERROR*' W0RTN
+     C                     RETRN
+      *
+     CSR         EXFILE    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : SRACCS - valid access                             *
+      *           : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Define W0 database error variables
+      *
+     C           *LIKE     DEFN DBFILE    W0FILE
+     C           *LIKE     DEFN DBKEY     W0KEY
+     C           *LIKE     DEFN DBERNB    W0ERNB
+     C           *LIKE     DEFN DBNARR    W0NARR
+     C           *LIKE     DEFN DBPREF    W0PREF
+      *
+      *  Check for programs in stack if none found error
+      *
+     C                     EXSR SRACCS
+      *
+      *  Open Prono file for update
+      *
+     C                     OPEN PRONO
+      *
+      *  Open SDBANKL1 file for working day & next working day
+      *
+     C                     OPEN SDBANKL1
+      *
+     C                     MOVEL'BANK'    BJBANK
+     C           BJBANK    CHAIN@BANKL1              9090
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDBANKL1'W0FILE
+     C                     MOVEL'*ONLY'   W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,3    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C                     CLOSESDBANKL1
+      *
+      *  Open ACCNT file for general ledger details
+      *
+     C                     OPEN ACCNT
+      *
+      *  Open ACNUMA file for retail accounts details
+      *
+     C                     OPEN ACNUMA
+      *
+      *  Open SDNOSTL1 file for nostro details
+      *
+     C                     OPEN SDNOSTL1
+      *
+      *  Open SDNOSTL2 file for Nostros by general ledger Number
+      *
+     C                     OPEN SDNOSTL2
+      *
+      ***Open*MEMOS file for Retail balances                              CCB002
+      ***********                                                         CCB002
+     C***********          OPEN MEMOS                                     CCB002
+      *                                                                   045014
+      *  Override file RSACMTL1 to share(*NO)                             045014
+      *                                                                   045014
+     C                     MOVEACMD@,2    EDT                             045014
+     C                     MOVEL'RSACMTL1'U#FILE 10                       045014
+     C                     MOVEAU#FILE    EDT,17                          045014
+     C                     MOVEAEDT       OVRDBF 80                       045014
+     C                     Z-ADD80        CMDLEN 155                      045014
+     C                     CALL 'QCMDEXC'                9090             045014
+     C                     PARM           OVRDBF                          045014
+     C                     PARM           CMDLEN                          045014
+      *                                                                   045014
+     C           *IN90     IFEQ '1'                                       045014
+     C                     MOVEL'*CALL  ' W0FILE                          045014
+     C                     MOVEL'QCMDEXC' W0KEY                           045014
+     C                     Z-ADD2         W0ERNB                          045014
+     C                     EXSR SRERR                                     045014
+     C                     END                                            045014
+      *
+      *  Open RSACMTL1 file for Todays Postings
+      *
+     C                     OPEN RSACMTL1
+      *
+      *  Open SDCURRL1 file for Currency information
+      *
+     C                     OPEN SDCURRL1
+      *                                                                   045014
+      *  Open SDMMODL1 file modules present                               045014
+      *                                                                   045014
+     C                     OPEN SDMMODL1                                  045014
+      *                                                                   045014
+     C                     MOVEL'MMOD'    BGMODS                          045014
+     C           BGMODS    CHAIN@MMODL1              9090                 045014
+     C           *IN90     IFEQ '1'                                       045014
+     C                     MOVEL'SDMMODL1'W0FILE                          045014
+     C                     MOVEL'*ONLY'   W0KEY                           045014
+     C                     Z-ADD3         W0ERNB                          045014
+     C                     MOVELERR@,3    W0NARR                          045014
+     C                     EXSR SRERR                                     045014
+     C                     END                                            045014
+     C                     CLOSESDMMODL1                                  045014
+      *                                                                   045014
+      *  Open FFACMV2 file if Futures is switched on                      045014
+      *                                                                   045014
+     C           BGFUOP    IFEQ 'Y'                                       045014
+     C                     OPEN FFACMV2                                   045014
+     C                     END                                            045014
+      *                                                                                       CAP204
+      *** Check the switchable features file to see if CAP204 is on.                          CAP204
+      *                                                                                       CAP204
+     C                     MOVE 'N'       CAP204  1                                           CAP204
+     C                     CALL 'AOSARDR0'                                                    CAP204
+     C                     PARM '       ' @RTCD   7                                           CAP204
+     C                     PARM '*VERIFY' @OPTN   7                                           CAP204
+     C                     PARM 'CAP204 ' @SARD   6                                           CAP204
+     C                     PARM           @DSFDY                                              CAP204
+      *                                                                                       CAP204
+      ** Database error                                                                       CAP204
+      *                                                                                       CAP204
+     C           @RTCD     IFNE *BLANKS                                                       CAP204
+     C           @RTCD     ANDNE'*NRF   '                                                     CAP204
+     C                     MOVEL'SCSARDPD'W0FILE                                              CAP204
+     C                     Z-ADD8         W0ERNB                                              CAP204
+     C                     MOVEL'CAP204  'W0KEY                                               CAP204
+     C                     EXSR SRERR                                                         CAP204
+     C                     ENDIF                                                              CAP204
+      *                                                                                       CAP204
+     C           @RTCD     IFEQ *BLANKS                                                       CAP204
+     C                     MOVE 'Y'       CAP204                                              CAP204
+     C                     END                                                                CAP204
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+**  CPY@ table
+(c) Finastra International Limited 2001
+**  List of valid access programs
+GL4430        Report Movements for an account
+GLC4430       Control of Print Today's Movements
+FT0262        Check balance Movements
+QCL           Command Entry
+**  Error text
+See dump for further information
+Invalid Access to update object
+Record not found or marked as deleted
+Error occurred on call to program - see dumps for further details
+File access error occurred - see dump for full details - see key for opcode
+Invalid Action code, must be *NOSTRO, *RETAIL, *BOTH or blank.
+Invalid account type specified not F,R or G
+Invalid action *RETAIL included but retail modules not present
+** Command Array
+OVRPRTF    FILE(GL4430P1  ) SHARE(*NO) SPLFNAME(XXXXXXXXXX) SECURE(*YES)
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

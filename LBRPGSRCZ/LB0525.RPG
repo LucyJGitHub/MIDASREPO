@@ -1,0 +1,550 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LB Unattached Instruments report')
+     F********************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Lending Module                         *
+     F*                                                               *
+     F*  LB0525 - Unattached Instruments Report.                      *
+     F*                                                               *
+     F*  Function:  This program produces a Report of Unattached      *
+     F*  (COB)      Instuments.                                       *
+     F*                                                               *
+     F*  Called By: LBC0525 - LB Not Attached Instument Report.       *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 093962             Date 29Sep95               *
+      *                 S01498             Date 14Jul94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  093962 - ZSFILE need only be called once for each spool file *
+     F*  S01498 - Portfolio Lending Upgrade to Rel 10.                *
+     F**                                                              *
+     F*****************************************************************
+     F** C R E A T I O N     P A R A M E T E R S                      *
+     F**                                                              *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F*****Bank*Details*File***********-*PrefiX*-*BJ*******************
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR
+     F*
+     F**   Instrument Types trailer file - Prefix - PD
+     F****SDPLINZZIF  E                    DISK         KINFSR *PSSR      S01498
+     FSDPLINPAIF  E                    DISK         KINFSR *PSSR          S01498
+     F*
+     F**   Instrument Types detail file - Prefix - PD
+     FSDPLINL4UF  E           K        DISK         KINFSR *PSSR
+     F**********************************************KCOMIT
+     F*
+     F**   Run Controls Report
+     FLB0525AUO   E             21     PRINTER      KINFDS SPOOLU         S01498
+     F***LB0525AUO***E             21     PRINTER      KINFDS ERF1DS      S01498
+     F***********                                   KINFSR *PSSR          S01498
+     F*
+     F**   Unattached instruments report
+     FLB0525P1O   E             22     PRINTER      KINFDS SPOOL      UC  S01498
+     F***LB0525P1O***E             22     PRINTER      KINFDS ERF2DS      S01498
+     F***********                                   KINFSR *PSSR          S01498
+     F*
+     F/EJECT
+     F*****************************************************************
+     F**                                                              *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F**                 ------------------------                     *
+     F**                                                              *
+     F**    21         - OVERFLOW INDICATOR ON LB0525AU               *
+     F**    22         - OVERFLOW INDICATOR ON LB0525P1               *
+     F**                                                              *
+     F**       20      - FILE ERROR                                   *
+     F**       36      - PRINT *** DIFFERENCE ***                     *
+     F**       37      - Multibranching indicator                     *   S01498
+     F**       38      - Report no details found.                     *   S01498
+     F**       39      - OPEN printer file LB0525P1.                  *   S01498
+     F**       98      - Used by ZDATE2                               *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     E********************************************************************
+     E*
+     E**   ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E********************************************************************
+     E/EJECT
+     E*****************************************************************
+     E/COPY ZSRSRC,ZDATE2Z1
+     I*****************************************************************
+     I/EJECT
+     I*
+     ISDBANK    E DSSDBANKPD                                              S01498
+      **  Data structure for bank file                                    S01498
+      *                                                                   S01498
+     IDSFDY     E DSDSFDY                                                 S01498
+      **  Short data structure for access programs                        S01498
+      *                                                                   S01498
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     I**   FILE INFORMATION DATA STRUCTURE
+     I***ERF1DS******DS                                                   S01498
+     I*
+     I**   FOR OVERFLOW - RUN CONTROL
+     ISPOOL       DS                                                      S01498
+     I                                       83  92 SFILE                 S01498
+     I                                    B 123 1240SFNUM                 S01498
+     I                                    B 367 3680LINE
+     I*
+     I***ERF2DS******DS                                                   S01498
+     I*
+     I**   FOR OVERFLOW - PRINT
+     ISPOOLU      DS                                                      S01498
+     I                                       83  92 SFILEU                S01498
+     I                                    B 123 1240SFNUMU                S01498
+     I                                    B 367 3680LINE1
+     I*
+     IRUNDAT    E DS                                                      S01498
+     I**  Standard Data Area Layout for System flags and Run Date         S01498
+     I*                                                                   S01498
+     I**   LOCAL DATA AREA
+     I***LDA********UDS                            256                    S01498
+     ILDA         DS                            256                       S01498
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INITIAL PROCESSING
+     C*
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C*
+     C                     EXSR #B
+     C*
+     C**   TERMINATION PROCESSING
+     C*
+     C                     EXSR #C
+     C*
+     C**   END PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    INDEX TO SUBROUTINES                                      *
+     C**   ----------------------                                     *
+     C**                                                              *
+     C**                                                              *
+     C**   ZDATE2  - Convert 5-figure day no. to date fmt             *
+     C**   #B      - Main Processing                                  *
+     C**   #A      - Initial Processing                               *
+     C**   #C      - Termination Process                              *
+     C**   #ZA     - Database Errors                                  *
+     C**   *PSSR   - Program error handling routine                   *
+     C**                                                              *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZDATE2   -  Convert date from 5 numeric to DDMMMYY format     *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED BY-  #B                                                *
+     C*                                                               *
+     C*****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #B        - This subroutine performs Main processing       *
+     C**                                                              *
+     C**   CALLS     - ZDATE2                                         *
+     C**                                                              *
+     C**   CALLED BY - Main Line                                      *
+     C**                                                              *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C** Read Instrument types file
+     C*
+     C           *LOVAL    SETLLSDPLINL4
+     C                     READ SDPLINL4                 20
+     C*
+     C**  DOW NOT EOF(SDPLINL0)
+     C*
+     C           *IN20     DOWEQ'0'
+     C                     ADD  1         RRNORE
+      *                                                                   S01498
+     C** If display group code equals blanks                              S01498
+      *                                                                   S01498
+     C           PDLOMG    IFEQ *BLANKS                                   S01498
+      *                                                                   S01498
+      ** OPEN detail printer file                                         S01498
+      *                                                                   S01498
+     C           *IN39     IFEQ *OFF                                      S01498
+     C                     OPEN LB0525P1                                  S01498
+     C                     MOVE *ON       *IN39                           S01498
+     C***********          END                                      S01498093962
+     C*                                                                   S01498
+     C** Output headings                                                  S01498
+     C                     WRITEHEADER1                                   S01498
+     C                     WRITEHEADER2                                   S01498
+      *                                                                   S01498
+      ** Ensure Report Spool File recorded by RCF                         S01498
+      *                                                                   S01498
+     C                     Z-ADDSFNUM     ZSNUM1  60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           SEQ                             S01498
+     C                     PARM *BLANK    SENTY   3                       S01498
+     C                     PARM           SFILE                           S01498
+     C                     PARM           ZSNUM1                          S01498
+     C                     PARM           ZSERR   1                       S01498
+     C           *LOCK     IN   LDA                                       S01498
+      *                                                                   S01498
+      ** If an error occurred during ZSFILE processing,                   S01498
+      ** Return to the calling program.                                   S01498
+      *                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C                     END                                            093962
+     C*
+     C***If*display*group*code*equals*blanks***********************       S01498
+     C***********PDLOMG    IFEQ *BLANKS                                   S01498
+     C*
+     C** At least one record to be output on report
+     C                     MOVE 'Y'       WWRECF
+     C*
+     C** Move instrument type fields to PRTF fields for output
+     C                     MOVE PDINNR    RRITYP
+     C                     MOVE PDISTN    RRDESC
+     C*
+     C** Convert a 5 figure day number into date format - last change date
+     C                     Z-ADDPDLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRLCDT
+     C*
+     C** Get time of last update
+     C                     Z-ADDPDTLUP    RRTIME
+     C*
+     C           PDCHTP    IFEQ 'A'
+     C*
+     C** Last change type equals 'A' for amendment
+     C                     MOVE 'AMEND '  RRLCTE
+     C                     ELSE
+     C           PDCHTP    IFEQ 'I'                                       **
+     C*
+     C** Last change type equals 'I' for insert
+     C                     MOVEL'INSERT'  RRLCTE
+     C                     END
+     C                     END
+     C*
+     C** Cash Instrument equals 'Y' or 'N'
+     C                     MOVE PDCSHI    RRINST
+     C           LINE1     IFGT 55
+     C*
+     C** Output headings in case of overflow
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C*
+     C** Write detail line to unattached instruments report
+     C                     WRITEDETAILF
+     C                     MOVE '999'     PDLOMG
+     C                     UPDATSDPLINP0
+     C                     MOVE *BLANKS   RRLCTE
+     C*********************COMIT
+     C                     END
+     C                     READ SDPLINL4                 20
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #A        - This subroutine performs initiaL PROCESSING    *
+     C**                                                              *
+     C**   CALLS     - #ZA                                            *
+     C**                                                              *
+     C**   CALLED BY - Main line                                      *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+      *                                                                   S01498
+      ***  Copyright Statement.                                           S01498
+     C                     MOVEACPY@      ACT@   80                       S01498
+     C*
+     C** Initialize record not found flag
+     C                     MOVE 'N'       WWRECF  1
+     C*
+     C                     Z-ADD*ZEROS    LINE
+     C                     Z-ADD*ZEROS    LINE1
+     C*
+     C** Initialise DB error fields annd store program name for DB
+     C** error field
+     C*
+      ** Define LDA                                                       S01498
+     C           *NAMVAR   DEFN           LDA                             S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'LB0525'  DBPGM
+     C                     OUT  LDA                                       S01498
+     C*                                                                   S01498
+     C**  Read in DTAARA/RUNDAT to get multibranching indicator           S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           RUNDAT                          S01498
+     C                     IN   RUNDAT                                    S01498
+     C           AGMBIN    IFEQ 'Y'                                       S01498
+     C                     MOVE '1'       *IN37                           S01498
+     C                     END                                            S01498
+     C*
+     C** Access Bank details file to get run date & title
+     C*
+     C***********1         SETLLSDBANKPD                                  S01498
+     C***********          READ SDBANKPD                 20               S01498
+     C*
+     C***If*record*not*found*or*last*change*type*=*'D'*(DELETED)*******   S01498
+     C*
+     C************IN20     IFEQ '1'                                       S01498
+     C***********BJTYLC    OREQ 'D'                                       S01498
+      *                                                                   S01498
+      **  Access SDBANKPD for report title                                S01498
+      *                                                                   S01498
+     C                     CALL 'AOBANKR0'                                S01498
+     C                     PARM '*MSG   ' @RTCD   7                       S01498
+     C                     PARM '*FIRST ' @OPTN   7                       S01498
+     C           SDBANK    PARM SDBANK    DSFDY                           S01498
+      *                                                                   S01498
+      ** Error                                                            S01498
+     C           @RTCD     IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD1         DBASE            ****************
+     C***********          MOVEL'SDBANKPD'DBFILE           * DBERROR  001 S01498
+     C                     MOVE 'SDBANKPD'DBFILE           *              S01498
+     C                     MOVE *BLANKS   DBKEY            *              *
+     C                     EXSR #ZA                        ****************
+     C                     OUT  LDA                                       S01498
+     C                     END
+     C*
+     C** Check contents of date format indicator
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVE '0'       *IN98
+     C                     END
+     C                     END
+     C*
+     C***Output*headings***********************************************   S01498
+     C***********          WRITEHEADER1                                   S01498
+     C***********          WRITEHEADER2                                   S01498
+     C*
+     C** Initialise run controls work fields
+     C                     Z-ADD*ZEROS    RRNORE
+     C                     Z-ADD*ZEROS    TRLIVE
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #C        - Termination Processing                         *
+     C**                                                              *
+     C**   CALLS     - #ZA                                            *
+     C**                                                              *
+     C**   CALLED BY - Mainline                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C                     SETOF                     36
+     C*
+     C** Print 'No Details to Report' If no unattached instruments
+     C           WWRECF    IFEQ 'N'
+     C***********          WRITENULL1                                     S01498
+     C                     MOVE *ON       *IN38
+     C                     ELSE
+     C*
+     C           LINE1     IFGT 55
+     C           *IN39     ANDEQ*ON                                       S01498
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C                     END
+     C*
+     C           *IN39     IFEQ *ON                                       S01498
+     C                     WRITEFOOTING1
+     C                     END                                            S01498
+     C*
+     C*****READ*INSTRUMENT*TYPES*TRAILER*FILE*-*SDPLINZZ                  S01498
+     C**   READ INSTRUMENT TYPES TRAILER FILE - SDPLINPA                  S01498
+     C*
+     C**********           READ SDPLINZZ                 20               S01498
+     C                     READ SDPLINPA                 20               S01498
+     C           *IN20     IFEQ '1'
+     C***********PDRECI    ORNE 'T'  ***EMERGENCY***
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD2         DBASE            *****************
+     C***********          MOVEL'SDPLINZZ'DBFILE           * DBERROR  002 S01498
+     C                     MOVE 'SDPLINPA'DBFILE           *              S01498
+     C                     MOVE *BLANKS   DBKEY            *****************
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZA
+     C                     ELSE
+     C*
+     C                     Z-ADDPDNORE    TRLIVE
+     C*
+     C***Records*read*from*SDPLINZZ*<>*Trailer*No.*of*records*print       S01498
+     C** Records read from SDPLINPA <> Trailer No. of records print       S01498
+     C** ***Difference***
+     C*
+     C           RRNORE    IFNE TRLIVE
+     C                     MOVE '1'       *IN36
+     C                     MOVE '1'       *INU8
+     C                     END
+     C*
+     C** Produce Run Controls
+     C*
+     C                     WRITEHDRCTRL1
+     C                     WRITEDTRCTRL1
+      *                                                                   S01498
+      ** No details to report.                                            S01498
+      *                                                                   S01498
+     C           *IN38     IFEQ *ON
+     C                     WRITENODTLS                                    S01498
+     C                     MOVE *OFF      *IN38
+     C                     END                                            S01498
+      *                                                                   S01498
+      ** Ensure Audit Spool File recorded by RCF                          S01498
+      *                                                                   S01498
+     C                     Z-ADDSFNUMU    ZSNUM2  60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           SEQ     5                       S01498
+     C                     PARM *BLANK    @PARM   3                       S01498
+     C                     PARM           SFILEU                          S01498
+     C                     PARM           ZSNUM2                          S01498
+     C                     PARM           ZSERR                           S01498
+     C           *LOCK     IN   LDA                                       S01498
+      *                                                                   S01498
+      ** If an error occurred during ZSFILE processing,                   S01498
+      ** Return to the calling program.                                   S01498
+      *                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZA       - Process Database Errors                        *
+     C**                                                              *
+     C**   CALLS     - None                                           *
+     C**                                                              *
+     C**   CALLED BY - #A #C                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C                     WRITEHDRCTRL1
+     C*
+     C                     WRITEFCDBERR1
+     C           *IN39     IFEQ *ON                                       S01498
+     C                     WRITEDBERROR                                   S01498
+     C                     ENDIF                                          S01498
+     C                     EXSR *PSSR                                     S01498
+      *                                                                   S01498
+      ** Ensure Audit Spool File recorded by RCF                          S01498
+      *                                                                   S01498
+     C                     Z-ADDSFNUMU    ZSNUM2  60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           SEQ     5                       S01498
+     C                     PARM *BLANK    @PARM   3                       S01498
+     C                     PARM           SFILEU                          S01498
+     C                     PARM           ZSNUM2                          S01498
+     C                     PARM           ZSERR                           S01498
+     C           *LOCK     IN   LDA                                       S01498
+      *                                                                   S01498
+      ** If an error occurred during ZSFILE processing,                   S01498
+      ** Return to the calling program.                                   S01498
+      *                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - Program error handling routine                 *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C** Rollback for commitment control
+     C*                    ROLBK
+     C                     DUMP
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,206 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE PDCL Maturity')                              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC007051 - PDCL maturity                                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR700107           Date 01Aug12              */
+/*                      AR318445 *CREATE   Date 01Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR700107 - Prevent maturity of PDCLs that have              */
+/*                  Outstanding Interest/Principal and have          */
+/*                  Settlement account block all debit = 'Y'.        */
+/*                  Print a Report of PDCLs MR/RE events that are    */
+/*                  going to be deleted because the block all debit  */
+/*                  is Y. (Child AR700108)                           */
+/*       AR318445 - Automatic update of PDCL maturity date           */
+/*                  (Child: AR318446)                                */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ)    TYPE(*DEC) LEN(5 0)
+ 
+             DCL        VAR(&STAT)    TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&FLAG)    TYPE(*CHAR) LEN(1) VALUE('Y')
+ 
+             DCL        VAR(&PRE)     TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT)  TYPE(*CHAR) LEN(256)
+             DCL        VAR(&TOLIB)   TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&SLC)     TYPE(*CHAR) LEN(512)
+             DCL        VAR(&BJRDNBX) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&BJDNWDX) TYPE(*CHAR) LEN(5)                                /*AR700107*/
+ 
+             DCL        VAR(&CPYFLD)  TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2012')
+ 
+             DCLF       FILE(SDBANKPD)
+             RCVF
+ 
+/** Initialisation */
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&TOLIB) VALUE(&PRE *TCAT 'DPLIB')
+ 
+/** Main Processing Control */
+ 
+             SNDPGMMSG  MSG('PDCL maturity') +
+                          TOMSGQ(MRUNQ)
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351) EXEC(CHGVAR VAR(&FLAG) +
+                          VALUE('N'))
+ 
+/** Check the current status of this component */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+ 
+/** Update Component Status */
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+ 
+/** Extract Active PDCL Records */
+ 
+QRY010:
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&BJRDNBX) VALUE(&BJRDNB)
+ 
+/**********  CHGVAR     VAR(&SLC) VALUE('%SST(LTYP 1 1) *EQ +
+                          %VALUES(''X'' ''Y'' ''Z'') *AND RECI = +
+                          ''D'' *AND ORED *LE ' *CAT &BJRDNBX *TCAT +
+                          ' *AND (CPAM *EQ 0 *AND MDAT *EQ 0)')      */                 /*AR700107*/
+ 
+/**********  OPNQRYF    FILE((CLOANCL)) OPTION(*ALL) QRYSLT(&SLC) +
+                          OPNID(LEPDCLQRY)                           */                 /*AR700107*/
+ 
+             CHGVAR     VAR(&BJDNWDX) VALUE(&BJDNWD)                                    /*AR700107*/
+             CHGVAR     VAR(&SLC) VALUE('%SST(LTYP 1 1) *EQ +
+                          %VALUES(''X'' ''Y'' ''Z'') *AND RECI = +
+                          ''D'' *AND ORED *LE ' *CAT &BJRDNBX *TCAT +
+                          ' *AND CPAM *EQ 0 *AND MDAT *EQ 0 *OR +
+                           %SST(LTYP 1 1) *EQ                   +
+                          %VALUES(''X'' ''Y'' ''Z'') *AND RECI = +
+                          ''D'' *AND ORED *LE ' *CAT &BJRDNBX *TCAT ' +
+                           *AND MDAT *GE ' *CAT &BJRDNBX *TCAT ' +
+                            *AND MDAT *LT  ' *CAT &BJDNWDX *TCAT '  ')                  /*AR700107*/
+                                                                                        /*AR700107*/
+             OVRDBF     FILE(CLOANCL) SHARE(*YES)                                       /*AR700107*/
+                                                                                        /*AR700107*/
+             OPNQRYF    FILE((CLOANCL)) OPTION(*ALL) QRYSLT(&SLC) +
+                          OPNID(CLOANCL)                                                /*AR700107*/
+ 
+/** Extract record to LEACCTPD */
+ 
+             CALL       PGM(LE007051)
+             DLTOVR     FILE(CLOANCL)                                                   /*AR700107*/
+             CLOF       OPNID(CLOANCL)                                                  /*AR700107*/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+/** Check if there are MR/RE events that are going to be deleted */                     /*AR700107*/
+                                                                                        /*AR700107*/
+             CHGVAR     VAR(&SLC) VALUE(' ')                                            /*AR700107*/
+             CHGVAR     VAR(&SLC) VALUE('%SST(LTYP 1 1) *EQ +
+                          %VALUES(''X'' ''Y'' ''Z'') *AND RECI = +
+                          ''D'' *AND VDAT *GE ' *CAT &BJRDNBX *TCAT +
+                          ' *AND VDAT *LT  ' *CAT &BJDNWDX *TCAT ' +
+                           *AND AMTP *EQ ''MR''  *OR         +
+                           %SST(LTYP 1 1) *EQ                   +
+                          %VALUES(''X'' ''Y'' ''Z'') *AND RECI = +
+                          ''D'' *AND VDAT *GE ' *CAT &BJRDNBX *TCAT ' +
+                           *AND VDAT *LT ' *CAT &BJDNWDX *TCAT ' +
+                            *AND AMTP *EQ ''RE'' ')                                     /*AR700107*/
+                                                                                        /*AR700107*/
+             OVRDBF     FILE(LOAMSDK) SHARE(*YES)                                       /*AR700107*/
+                                                                                        /*AR700107*/
+             OPNQRYF    FILE((LOAMSDK)) OPTION(*ALL) QRYSLT(&SLC) +
+                          OPNID(LOAMSDK)                                                /*AR700107*/
+                                                                                        /*AR700107*/
+/** Generate Report */                                                                  /*AR700107*/
+                                                                                        /*AR700107*/
+             CALL       PGM(LE007055)                                                   /*AR700107*/
+             DLTOVR     FILE(LOAMSDK)                                                   /*AR700107*/
+             CLOF       OPNID(LOAMSDK)                                                  /*AR700107*/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)                               /*AR700107*/
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)                      /*AR700107*/
+ 
+ 
+/** Reset Component Status */
+ 
+             CHGVAR     VAR(&STAT) VALUE('N')
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+ 
+/** Commit Database Changes */
+ 
+             COMMIT
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ 
+/** Process Errors */
+ 
+ERR_DIE:
+             SNDPGMMSG  MSG('Job terminated, database in error.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_PGM:
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_CDE:
+ 
+/** Check CBCOMSPD */
+ 
+             SNDPGMMSG  MSG('Job terminated, component doesn''t +
+                          exist.') TOMSGQ(MOPERQ MRUNQ)
+ 
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Termination Process */
+ 
+ENDPGM:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             IF         COND(&FLAG *EQ 'Y') THEN(ENDCMTCTL)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+             ENDPGM

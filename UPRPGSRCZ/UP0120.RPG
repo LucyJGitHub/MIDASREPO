@@ -1,0 +1,139 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UP Change subsystem routing entries')
+/*OVR *  CRTPF FILE(QTEMP/UPSBSD) RCDLEN(132)                         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade Module                                       *
+      *                                                               *
+      *  UP0120 - Change subsystem routing entries                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CPK016             Date 02Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CUP001 *C *CREATE  Date 21Jan98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CPK016 - Release 5 packaging.  Additional routing entries.   *
+      *  CUP001 - Introduction of BRIDGE                              *
+      *                                                               *
+      *****************************************************************
+     FUPSBSD  IF  E                    DISK
+     F            UPSBSD                            KRENAMERTGE
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    CMD     1   1 80
+      /SPACE 3
+      *
+     IRTGE
+      * Renamed input format fields
+     I              UPSBSD                          SBSDTA
+      *
+     I              '0123456789 '         C         DIGITS                                    CPK016
+      *
+     ICMDDTA      DS                             80
+     I                                        1  80 CHGRTG
+     I                                       14  15 SBS1
+     I                                       22  23 SBS2
+     I                                       36  39 SEQN
+     I                                       52  61 PGM
+      * Breakdown of CHGRTGE instruction
+      *
+     IINPUT       DS                            132
+     I                                       14  17 SEQNI
+     I                                       14  170SEQNO
+     I                                       27  36 PGMI
+     I                                       34  39 ROUTIN
+      * Breakdown of field input from UPSBSD
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           SBSID   2
+     C                     PARM           ERROR   1
+      *
+      * Set up parameters for call to QCMDEXC
+     C                     Z-ADD80        MSGLEN 155
+     C                     MOVELCMD,1     CHGRTG
+     C                     MOVELSBSID     SBS1
+     C                     MOVELSBSID     SBS2
+      *
+      * Read file until Routing Entry section found
+     C                     READ UPSBSD                 6970
+     C           *IN69     IFEQ *ON                        I01
+     C                     MOVE 'Y'       ERROR
+     C                     ELSE                            X01
+      *
+     C                     MOVELSBSDTA    INPUT
+     C           *IN70     DOUEQ*ON                        DO01
+     C           ROUTIN    IFEQ 'Routin'                   I02
+     C                     SETON                     89
+     C                     ENDIF                           E02
+      *
+     C                     READ UPSBSD                 6970
+     C           *IN69     IFEQ *ON                        I02
+     C                     MOVE 'Y'       ERROR
+     C                     ELSE                            X02
+      *
+     C                     MOVELSBSDTA    INPUT
+     C           *IN89     IFEQ *ON                        I03
+      *
+      **Ignore*heading*lines*in*file*                                                         CPK016
+     C***********SEQNI     IFNE ' Seq'                     I04                                CPK016
+     C***********SEQNI     ANDNE' Nbr'                                                        CPK016
+      * Ignore non-numeric entries in sequence number 'field'.                                CPK016
+     C           DIGITS    CHECKSEQNI                    60                                   CPK016
+     C           *IN60     IFEQ *OFF                       I04                                CPK016
+     C           SEQNI     ANDNE*BLANKS                                                       CPK016
+      *
+      * If PGM is blank this should indicate end of routing entries; also ignore
+      * 'special case' routing entries
+     C           PGMI      IFNE *BLANK                     I05
+     C           PGMI      ANDNE'QCMD'
+     C           PGMI      ANDNE'QARDRIVE'
+     C           PGMI      ANDNE'*RTGDTA'
+     C                     MOVELPGMI      PGM
+     C                     MOVELSEQNO     SEQN
+     C                     CALL 'QCMDEXC'              9393
+     C                     PARM           CHGRTG
+     C                     PARM           MSGLEN
+     C                     ELSE                            X05
+      **If*blank*then*finish*processing*                                                      CPK016
+     C***********PGMI      IFEQ *BLANK                     I06                                CPK016
+      * If sequence number = 999 then finish processing                                       CPK016
+     C           SEQNO     IFEQ 999                        I06                                CPK016
+     C                     SETOF                     89
+     C                     SETON                     70
+     C                     ENDIF                           E06
+     C                     ENDIF                           E05
+      *
+     C                     ELSE                            X04                                CPK016
+     C                     SETOF                     60                                       CPK016
+     C                     ENDIF                           E04
+     C                     ENDIF                           E03
+     C                     ENDIF                           E02
+      *
+     C                     ENDDO                           ED01
+     C                     ENDIF                           E01
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**  CMD
+CHGRTGE SBSD(xxXLIB/MxxSBS) SEQNBR(nnnn) PGM(*LIBL/pppppppppp)

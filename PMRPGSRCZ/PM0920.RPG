@@ -1,0 +1,583 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Extract current turnover - FF extract')       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module.                         *
+     F*                                                               *
+     F*  PM0920 - EXTRACT CURRENT TURNOVER - FF EXTRACT               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 AR746662           Date 03May11               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23967           Date 15May09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247517             Date 09May07               *
+      *                 CPK027             Date 17Apr07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 241147A            Date 07Nov06               *
+      *                 241147             Date 26Oct06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 215528             Date 21Mar03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 17Jun02               *
+      *                 182961             Date 21Apr01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF004             Date 11Sep96               *
+      *                 CPM003             Date 26Jan96               *
+     F*                 33615              DATE 01JUL91               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  AR746662 - Discrepancy in premium amount in Currency OTC     *
+      *             screen and Projected Available Balance Enquiry    *
+      *             Applied fix 249171. (Recompile)                   *
+      *             (Child: Artf746663)                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23967 - Add Local Industry Code Field.                    *
+      *  247517 - Reversed fix 241147.                                *
+      *  CPK027 - Errors in compiling MP1_3_TTTS - recompile over     *
+      *           changed FFTVCLZ2.                                   *
+      *  241147A - Recompile.                                         *
+      *  241147 - Recompile.                                          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  215528 - System is associating a wrong premium amount.       *
+      *           Recompiled only.                                    *
+      *  CPK015 - Conversion of ZYIELD from PLI to RPG.               *
+      *           Recompile over changed FFYTOPZ1.                    *
+      *  182961 - Database error occurred due to a blank key field    *
+      *           (Instrument Type).  The default Instrument type in  *
+      *           PF/SDPORTPD is taken if a blank instrument type is  *
+      *           encountered.                                        *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  CPM003 - FF PM Interface Upgrade to R10.                     *
+     F*  33615  - OUTPUT INSTRUMENT DISPLAY GROUP TO FILE             *
+     F*                                                               *
+     F*****************************************************************
+     F**SDBANKPDIF**E           K        DISK                             CPM003
+     F***********                                     KINFSR *PSSR        CPM003
+     F*
+     FTRANS2  IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     FINTYP   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F***SDPLINPDIF**E           K        DISK                      33615 CPM003
+     F***PREFIX:*PD*************************************************33615 CPM003
+     F***********                                   KINFSR *PSSR    33615 CPM003
+     F*
+     F***PMCUTVPPUF**E           K        DISK                      A     CPM003
+     FPMCUTVPDUF  E           K        DISK                      A        CPM003
+     F* PREFIX SB
+     F                                              KINFSR *PSSR
+     F                                              KINFDS INFDS
+     FSDPORTPDIF  E                    DISK         KINFSR *PSSR          182961
+     F*
+     FPM0920AUO   E                    PRINTER
+     F                                              KINFSR *PSSR
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       01  02  03  04  05  06  07  08  09  10
+     F*       11  12  13  14  15  16  17  18  19  20
+     F*       21  22  23  24  25  26  27  28  29  30
+     F*       31  32  33  34  35  36  37  38  39  40
+     F*       41  42  43  44  45  46  47  48  49  50
+     F*       51  52  53  54  55  56  57  58  59  60
+     F*       61  62  63  64  65  66  67  68  69  71
+     F*       ..  ..  ..  ..  75  76  77  78  79  80
+     F*       81  82  83  84  85  86  87  88  89  90
+     F*       91  92  93  94  95  96  ..  ..  ..
+     F*
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*       LR         END OF PROGRAM
+     F*
+     F********71*********DB*ERROR*01*SDBANKPD*****************************CPM003
+     F*       72         EOF TRANS2
+     F*       73         DB ERROR 02 INTYPD
+     F********74*********CHAIN*ON*PMCUTVPP********************************CPM003
+     F*       74         CHAIN ON PMCUTVPD                                CPM003
+     F*
+     F*       97         USED IN ZDATE2
+     F*       98         USED IN ZDATE2
+     F*       99         USED IN ZDATE2
+     F*
+     F*
+     E*=========================================================================
+     E* ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E* ARRAY FOR SR ZDATE2
+      /COPY ZSRSRC,ZDATE2Z1
+     IINTYPDF                                                             CPM003
+     I*    Instrument Types                                               CPM003
+     I*                                                                   CPM003
+     I              CTAM                            FFCTAM                CPM003
+     I              CNTT                            FFCNTT                CPM003
+     I*                                                                   CPM003
+     ISDBANK    E DSSDBANKPD                                              CPM003
+     I** EXTERNAL DS FOR BANK DETAILS                                     CPM003
+     ISDPLIN    E DSSDPLINPD                                              CPM003
+      ** INSTRUMENT TYPES DETAILS ACCESSED VIA ACCESS PROGRAM             CPM003
+     IDSFDY     E DSDSFDY                                                 CPM003
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                CPM003
+     I*                                                                   CPM003
+     IDSSDY     E DSDSSDY                                                 CPM003
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                CPM003
+     I*
+      /COPY ZSRSRC,FFSRDSZ1
+     I*
+     I*
+     I** DATA STRUCTURE FOR RPG 01021 ERROR HANDLING
+     I*
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I***LDA********UDS                            256                    CPM003
+     I************                          132 183 DBLOT                 CPM003
+     I************                          132 141 DBFILE                CPM003
+     ILDA         DS                            256                       CPM003
+     I                                      134 183 DBLOT                 CPM003
+     I                                      134 141 DBFILE                CPM003
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** DATA STRUCTURE FOR ZTNLU1
+     I*
+     I*    MIDAS 'Next Available Transaction No.' Data Area  MNATN .
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I** DATA TO FORMAT DATE MM/DD/YY
+     I*
+     IDATE        DS
+     I                                        1   20DAY
+     I                                        3   40MONTH
+     I                                        5   60YEAR
+     I**
+     I** DATA STRUCTURE FOR LAST UPDATE
+     I**
+     I            DS
+     I                                        1   20WWDLUP
+     I                                        3   5 WWMLUP
+     I                                        6   70WWYLUP
+     I                                        1   7 WWHLUP
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/COPY ZSRSRC,ZYLDZ1                                                 CPM003
+     C*================================================================
+     C*
+     C** CALCULATION SPECIFICATIONS:KEY LISTS
+     C*
+     C**  DEFINE KEY LIST FOR CHAINING TO LF/TRANS2
+     C*
+     C           P1KEY     KLIST
+     C                     KFLD           KKISTT
+     C*
+     C**  DEFINE KEY LIST FOR CHAINING TO LF/INTYP
+     C*
+     C           P2KEY     KLIST
+     C                     KFLD           KKISTT
+     C*
+     C****DEFINE*KEY*LIST*FOR*CHAINING*TO*PF/PMCUTVPP*********************CPM003
+     C**  DEFINE KEY LIST FOR CHAINING TO PF/PMCUTVPD                     CPM003
+     C*
+     C           P3KEY     KLIST
+     C                     KFLD           KKCUSC
+     C                     KFLD           KKPTFR
+     C                     KFLD           KKINNR
+     C                     KFLD           KKISCY
+     C**********           KFLD           KKLIND                                            BUG23967
+     C                     KFLD           KKLOIC                                            BUG23967
+     C                     KFLD           KKYRNO
+     C                     KFLD           KKMTHN
+     C*================================================================
+      /EJECT
+     C*================================================================
+     C*  MAIN PROCESSING
+     C*================================================================
+     C*
+     C** PERFORM SETUP OF STANDARD FIELDS & ACCESS ICD1
+     C*
+     C                     EXSR #A
+     C*
+     C** READ LF/TRANS2
+     C*
+     C                     READ TRANS2                   72
+     C*
+     C           *IN72     DOWEQ'0'                        B1      ** DOWE **
+     C*
+     C*  ON CHANGE OF INSTRUMENT TYPE
+     C** ACCESS PF/INTYP  TO OBTAIN THE INSTRUMENT DETAILS
+     C*
+     C           WWISTT    IFNE ISTT                       B*2
+     C           WWISTT    OREQ *BLANK
+     C*
+     C                     MOVE ISTT      KKISTT
+     C           P2KEY     CHAININTYPDF              73
+     C*  DB ERROR IF NO RECORD FOUND
+     C           *IN73     IFEQ '1'                        B**3 **********
+     C           *LOCK     IN   LDA                                       CPM003
+     C***********          MOVEL'02'      DBASE            **DB ERROR 02**CPM003
+     C                     Z-ADD2         DBASE            **DB ERROR 02**CPM003
+     C                     MOVEL'INTYPD'  DBFILE           ***************
+     C                     MOVELISTT      DBKEY
+     C                     OUT  LDA                                       CPM003
+     C                     EXSR *PSSR
+     C                     END                             E**3
+      *                                                                   182961
+      ** Instrument type is defaulted from PF/SDPORTPD if a blank         182961
+      ** instrument type is found.                                        182961
+      ** Indicator 35 was used as the operation's resulting indicator.    182961
+      *                                                                   182961
+     C           INNR      IFEQ *BLANKS                                   182961
+     C           1         SETLLSDPORTPD                                  182961
+     C                     READ SDPORTPD                 35               182961
+     C                     MOVE FCDINR    INNR                            182961
+     C                     ENDIF                                          182961
+     C*                                                                   33615
+     C***OBTAIN*DISPLAY*GROUP*CODE*FROM*PF/SDPLINPD******************33615CPM003
+     C** OBTAIN DISPLAY GROUP USING A.O.                                  CPM003
+     C***********INNR      CHAINSDPLINPD             73              33615CPM003
+     C                     CALL 'AOPLINR0'                                CPM003
+     C                     PARM *BLANKS   PRTCD   7                       CPM003
+     C                     PARM '*KEY'    POPTN   7                       CPM003
+     C                     PARM INNR      PLIN    3                       CPM003
+     C           SDPLIN    PARM SDPLIN    DSFDY                           CPM003
+     C           PRTCD     IFNE *BLANKS                                   CPM003
+     C           *LOCK     IN   LDA                                       CPM003
+     C************IN73     IFEQ '1'                        B**3     33615 CPM003
+     C***********          MOVEL'22'      DBASE       **DB ERROR 02*33615 CPM003
+     C                     Z-ADD4         DBASE            **DB ERROR 04* CPM003
+     C                     MOVEL'SDPLINPD'DBFILE           ***************33615
+     C                     MOVELINNR      DBKEY                           33615
+     C                     OUT  LDA                                       CPM003
+     C                     EXSR *PSSR                                     33615
+     C                     END                             E**3           33615
+     C*
+     C                     END                             E*2
+     C* NO FURTHER PROCESSING IF RECORD NOT FOUND
+     C           *IN73     IFEQ '0'                        B*2
+     C*
+     C** CONVERT TRANSACTION DATE FROM MIDAS DAY NUMBER USING ZDATE2
+     C** AND EXTRACT YEAR AND MONTH FROM DATE
+     C*
+     C                     MOVE TRSD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DATE
+     C*
+     C** IF PROCESSING TYPE IS 1, 2 OR 3 CALCULATE AMOUNT 2 (FX TURNOVER)
+     C***AS*NUMBER*OF*CONTRACTS*(NUCO)*X*CONTINGENT*AMOUNT*(CTAM)*********CPM003
+     C*  AS NUMBER OF CONTRACTS (NUCO) X CONTINGENT AMOUNT (FFCTAM)       CPM003
+     C*
+     C           ISPT      IFEQ 1                          B**3
+     C           ISPT      OREQ 2
+     C           ISPT      OREQ 3
+     C           ISPT      OREQ 7                                         CPM003
+     C***********NUCO      MULT CTAM      WWAMT2                          CPM003
+     C           NUCO      MULT FFCTAM    WWAMT2                          CPM003
+     C                     Z-ADD*ZERO     WWAMT1
+     C                     ELSE
+     C*
+     C** ELSE  CALCULATE AMOUNT 1 (TURNOVER) USING FFPMCL
+     C*
+     C                     MOVE NUCO      FFNOC
+     C*                                                                   CPM003
+     C**   Use the strike price in the Premium calculation.               CPM003
+     C**   for processing type 8                                          CPM003
+     C*                                                                   CPM003
+     C           ISPT      IFEQ 8                                         CPM003
+     C                     Z-ADDSTRP      FFPRIC                          CPM003
+     C*                                                                   CPM003
+     C**   for other types of options use the contract price              CPM003
+     C*                                                                   CPM003
+     C                     ELSE                                           CPM003
+     C                     MOVE COPR      FFPRIC
+     C                     END                                            CPM003
+     C*                                                                   CPM003
+     C                     MOVE TKDM      FFTKDM
+     C                     MOVE MNPF      FFMNPF
+     C                     MOVE TKVL      FFTKVL
+     C                     EXSR FFPMCL
+     C*                                                                   CPM003
+     C**   for processing type 8, multiply the amount calculated          CPM003
+     C**   by the contract price.                                         CPM003
+     C*                                                                   CPM003
+     C           ISPT      IFEQ 8                                         CPM003
+     C                     MULT COPR      FFPREM                          CPM003
+     C                     END                                            CPM003
+     C*                                                                   CPM003
+     C                     Z-ADDFFPREM    WWAMT1
+     C                     Z-ADD*ZERO     WWAMT2
+     C                     END                             E**3
+     C*
+     C***CHAIN*TO*PF*PMCUTVPP*********************************************CPM003
+     C** CHAIN TO PF/PMCUTVPD                                             CPM003
+     C*
+     C                     MOVE CUSC      KKCUSC
+     C                     MOVE PTFR      KKPTFR
+     C                     MOVE INNR      KKINNR
+     C                     MOVE ISCY      KKISCY
+     C**********           MOVE *BLANK    KKLIND                                            BUG23967
+     C                     MOVE *BLANK    KKLOIC                                            BUG23967
+     C                     MOVE YEAR      KKYRNO
+     C                     MOVE MONTH     KKMTHN
+     C*
+     C           P3KEY     CHAINPMCUTVP0             74
+     C*
+     C***IF*A*RECORD*WITH*THAT*KEY*EXISTS,*UPDATE*PF/PMCUTVPP*PER*#U01****CPM003
+     C** IF A RECORD WITH THAT KEY EXISTS, UPDATE PF/PMCUTVPD PER #U01    CPM003
+     C*  ELSE WRITE THE RECORD PER #W01
+     C*
+     C           *IN74     IFEQ '0'                        B**3
+     C                     EXSR #U01
+     C                     ADD  1         WWCOU1
+     C                     ELSE                            X**3
+     C                     EXSR #W01
+     C                     ADD  1         WWCOUN
+     C                     END                             E**3
+     C*
+     C                     END                             E*2
+     C* KEEP INSTRUMENT TYPE
+     C                     MOVE ISTT      WWISTT  5
+     C*
+     C                     READ TRANS2                   72
+     C*
+     C                     END                             E1      ** ENDDO **
+     C*
+     C** PRODUCE AUDIT REPORT TO SHOW HOW MANY NEW RECORDS HAVE BEEN WRITTEN
+     C*
+     C                     EXSR #W03
+     C*
+     C** TERMINATE PROGRAM
+     C*
+     C                     SETON                         LR
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      /EJECT
+     C*=========================================================================
+      ** INDEX OF SUBROUTINES
+      **
+      ** #A       INITIALISATION OF STANDARD FIELDS,
+      **          ACCESS OF STANDING DATA
+      **
+      ***#U01*****UPDATE*PF/PMCUTVPP**************************************CPM003
+      ** #U01     UPDATE PF/PMCUTVPD                                      CPM003
+      **
+      ***#W01*****WRITE*TO*PF/PMCUTVPP,*RECORD*READ*OFF*LF/CLOANP2********CPM003
+      ** #W01     WRITE TO PF/PMCUTVPD, RECORD READ OFF LF/PMCLONL2       CPM003
+      **
+      ** #W02     PRODUCE AUDIT REORT
+      **
+      ** FFPMCL   CALCULATES PREMIUM PAYABLE
+      **          ON A GIVEN NUMBER OF CONTRACTS AT A GIVEN CONTRACT PRICE
+      **
+      ** FFTVCL   CALCULATES TRANSACTION VALUE FOR A
+      **                GIVEN NUMBER OF CONTRACTS AT A GIVEN
+      **                PRICE IN UNITS OF THE APPROPRIATE
+      **                TICKS DENOMINATOR OR MINIMUM PRICE
+      **                FLUCTUATION ( DEPENDING ON WHETHER THE
+      **                TICKS DENOMINATOR IS 100 )
+      **
+      ** ZDATE2   CONVERT MIDAS DAY NUMBER TO DDMMYY
+      **
+      ** *PSSR    FILE ERROR HANDLING S/R
+      **
+     C*=========================================================================
+      /EJECT
+     C*=========================================================================
+      **
+      ** #A   S/R - TO INITIALISE STATIC FIELDS AND ACCESS STANDING DATA
+      ** CALLED ONCE AT START OF PROGRAM FROM MAIN LINE
+      ** CALLS NO OTHER ROUTINES
+      **
+     C*=========================================================================
+     C*
+     C           #A        BEGSR                           ** #A    BSR **
+     C*
+     C** DEFINE FIELDS
+     C*
+     C           *LIKE     DEFN ISTT      KKISTT
+     C           *LIKE     DEFN INNR      KKINNR
+     C           *LIKE     DEFN CUSC      KKCUSC
+     C           *LIKE     DEFN PTFR      KKPTFR
+     C           *LIKE     DEFN ISCY      KKISCY
+     C********** *LIKE     DEFN SBLIND    KKLIND                                            BUG23967
+     C           *LIKE     DEFN SBLOIC    KKLOIC                                            BUG23967
+     C           *LIKE     DEFN SBYRNO    KKYRNO
+     C           *LIKE     DEFN SBMTHN    KKMTHN
+     C           *LIKE     DEFN SBTNVR    WWAMT1
+     C           *LIKE     DEFN SBTNVF    WWAMT2
+     C*
+     C** PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             CPM003
+     C           *LOCK     IN   LDA                                       CPM003
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM0920'  DBPGM
+     C                     OUT  LDA                                       CPM003
+     C** INITIALIZE INDICATORS
+     C*
+     C                     MOVE '0'       *IN
+     C**
+     C** INITIALIZE COUNTER
+     C*
+     C                     Z-ADD0         WWCOUN  50
+     C                     Z-ADD0         WWCOU1  50
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C                     CALL 'AOBANKR0'                                CPM003
+     C                     PARM '*DBERR ' @RTCD   7                       CPM003
+     C                     PARM '*FIRST ' @OPTN   7                       CPM003
+     C           SDBANK    PARM SDBANK    DSFDY                           CPM003
+     C           @RTCD     IFNE *BLANKS                                   CPM003
+     C           *LOCK     IN   LDA                                       CPM003
+     C                     MOVEL'SDBANKPD'DBFILE           ***************CPM003
+     C                     Z-ADD1         DBASE            * DBERROR  01 *CPM003
+     C                     MOVEL@OPTN     DBKEY            ***************CPM003
+     C                     MOVEL@OPTN     DBOPTN  7                       CPM003
+     C                     OUT  LDA                                       CPM003
+     C*********************READ SDBANKPD                 71               CPM003
+     C************IN71*****IFEQ '1'                                       CPM003
+     C*********************                                               CPM003
+     C***OTHERWISE*DB*ERROR                                               CPM003
+     C*********************                                ***************CPM003
+     C*********************MOVEL'01'      DBASE            **DB ERROR 01**CPM003
+     C*********************MOVEL'SDBANKPD'DBFILE           ***************CPM003
+     C*********************MOVEL*BLANKS   DBKEY                           CPM003
+     C*
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           XT#A      ENDSR                           ** XT#A   ESR**
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      ***#U01********:*******S/R*TO*UPDATE*PF/PMCUTVPP********************CPM003
+      ** #U01        :       S/R TO UPDATE PF/PMCUTVPD                    CPM003
+      ** CALLED FROM :       MAIN PROCESSING
+      ** CALLS       :
+     C*===================================================================
+     C*
+     C           #U01      BEGSR                           ** #U01  BSR **
+     C*
+     C                     ADD  WWAMT1    SBTNVR
+     C                     ADD  WWAMT2    SBTNVF
+     C                     ADD  NUCO      SBNUCO
+     C                     UPDATPMCUTVP0
+     C*
+     C           XT#BA     ENDSR                           ** XT#BA  ESR**
+     C*=========================================================================
+      /EJECT
+     C**========================================================================
+     C***#W01********:****S/R*TO*WRITE*TO*PF/PMCUTVPP*********************CPM003
+     C** #W01        :    S/R TO WRITE TO PF/PMCUTVPD                     CPM003
+     C** CALLED FROM :    MAIN PROCESSING
+     C** CALLS       :
+     C**========================================================================
+     C           #W01      BEGSR                           ** #W01   BSR  **
+     C                     MOVE 'D'       SBRECI
+     C                     MOVE CUSC      SBCNUM
+     C                     MOVE PTFR      SBPTFR
+     C                     MOVE INNR      SBINNR
+     C                     MOVE PDDSPG    SBDSPG                          33615
+     C                     MOVE ISCY      SBICCY
+     C**********           MOVE *BLANK    SBLIND                                            BUG23967
+     C                     MOVE *BLANK    SBLOIC                                            BUG23967
+     C                     MOVE YEAR      SBYRNO
+     C                     MOVE MONTH     SBMTHN
+     C                     Z-ADDWWAMT1    SBTNVR
+     C                     Z-ADDWWAMT2    SBTNVF
+     C                     Z-ADDNUCO      SBNUCO
+     C**
+     C                     WRITEPMCUTVP0
+     C**
+     C                     ENDSR                           ** #W01   ESR  **
+     C*=========================================================================
+      /EJECT
+     C*=========================================================================
+      ** #W03        :  S/R TO WRITE THE AUDIT REPORT
+      ** CALLED FROM :  MAIN PROCESSING
+      ** CALLS       :
+     C*=========================================================================
+     C*
+     C           #W03      BEGSR                           ** #W03   BSR **
+     C*
+     C***********          MOVE BJURPT    RRHEAD                          CPM003
+     C***********          MOVE BJMRDT    RRDATE                          CPM003
+     C                     MOVE WWCOUN    RRCOUN
+     C                     MOVE WWCOU1    RRCOU1
+     C                     WRITEPM0920A0
+     C*
+     C                     ENDSR                           ** #W03    ESR **
+     C*=========================================================================
+      /EJECT
+      /COPY ZSRSRC,FFPMCLZ1
+     C*=========================================================================
+      /EJECT
+      /COPY ZSRSRC,FFTVCLZ2
+     C*=========================================================================
+      /EJECT
+     C*=========================================================================
+      ** ZDATE2      :  S/R TO CONVERT MIDAS DAY NUMBER TO DDMMYY
+      ** CALLED FROM :  MAIN PROCESSING
+      ** CALLS       :
+     C*=========================================================================
+      /COPY ZSRSRC,ZDATE2Z2
+     C*=========================================================================
+      /EJECT
+     C*=========================================================================
+      ** *PSSR       :      FILE EXCEPTION ERROR HANDLING SUBROUTINE
+      ** CALLED FROM :      #A  ,  #CC
+      ** CALLS       :
+     C*=========================================================================
+     C           *PSSR     BEGSR                            ** *PSRR BSR**
+     C**
+     C** ROLL BACK CHANGES , DUMP AND RETURN TO THE CALLING PROGRAM
+     C**
+     C           @RUN      IFEQ *BLANK                                    CPM003
+     C                     MOVE 'Y'       @RUN    1                       CPM003
+     C                     WRITEPM0920A0                                  CPM003
+     C***********          SETON                     LRU7U8               CPM003
+     C                     SETON                     U7U8                 CPM003
+     C                     WRITEERRORAU                                   CPM003
+     C                     END                                            CPM003
+     C                     DUMP
+     C                     SETON                         LR               CPM003
+     C                     RETRN
+     C**
+     C                     ENDSR                            ** *PSRR ESR**
+     C*=========================================================================
+     C/EJECT                                                              CPM003
+     C/COPY ZSRSRC,FFYTOPZ1                                               CPM003
+     C/EJECT                                                              CPM003
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

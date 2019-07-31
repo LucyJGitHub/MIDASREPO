@@ -1,0 +1,1217 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('DL Consolidated Deal Amendments - Consolidation')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL9911 - Consolidated Deal Amendments - Consolidation        *
+      *                                                               *
+      *  (c) Finastra International Limited 2008                      *
+      *                                                               *
+      *  Last Amend No. MD053295           Date 13Apr19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 AR996895           Date 25Nov12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER040  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD053295 - Lending loan with Interest Calculation Basis      *
+      *             method 3 (30/360) has wrong interest payment      *
+      *             amount for month of March (Recompile)             *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  AR996895 - Incorrect acrrual interest calculation            *
+      *             (Child: AR996897) (Recompile)                     *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER040 - Consolidated MM Deal Confirmation Correspondence    *
+      *           (upgFGE097)                                         *
+      *                                                               *
+      *****************************************************************
+      *
+      ** DL Cons Deal Amendments - Extract
+      *
+     FDLDABRL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Deals file
+      *
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+      *
+      ** DL Deal Amendments - Update Index
+      *
+     FDLDAINL0UF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Midas DL Deal Amendments
+      *
+     FDEAMS   IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** DL Deal Amendments Consolidation
+      *
+     FDLDACOPDUF  E           K        DISK         KINFSR *PSSR A
+      *
+      ** MIDAS Deal Amendments Consolidation Audit Report
+      *
+     FDL9911AUO   E             90     PRINTER      KINFDS SPOOLU
+      *
+      *****************************************************************
+     F/EJECT
+      *****************************************************************
+      *  ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *  05      DAMBRDI - DETAIL RECORD
+      *  06      DATABASE ERROR - DEALS
+      *  07      BLANK PREVIOUS VALUE DATE
+      *  08      DATABASE ERROR - DEALS
+      *  09      DATABASE ERROR - DLDABRL0
+      *  10      DATABASE ERROR - DEAMS
+      *  11      AMENDMENT TYPE - CI
+      *  12                     - SC
+      *  13      AN SI HAS OCCURED FOR A DEAL
+      *  14      DATABASE ERROR - DLDAINL0
+      *  15      AMENDMENT TYPE - PI
+      *  16      AMENDMENT TYPE - PD
+      *  23      BACK VALUED AMENTMENT
+      *  90      SETTLEMENT TYPE IS NON-ZERO
+      *  91 - 97 USED IN STANDARD SUBROUTINES
+      *  98      DATE FORMAT
+      *  98      AN ERROR HAS OCCURED
+      *  U2      NON-WORKING DAY PROCESSING
+      *  U7/U8   DATABASE ERROR
+      *  L1      CHANGE IN VALUE DATE
+      *  L2      CHANGE IN DEAL NUMBER
+      *
+      *                Unused indicators
+      *                -----------------
+      *
+      *       01  02  03  04  --  --  --  --  --  --
+      *       --  --  --  --  15  16  17  18  19  11
+      *       21  22  23  24  25  26  27  28  29  30
+      *       31  32  33  34  35  36  37  38  39  40
+      *       41  42  43  44  45  46  47  48  49  50
+      *       51  52  53  54  55  56  57  58  59  60
+      *       61  62  63  64  65  66  67  68  69  70
+      *       71  72  73  74  75  76  77  78  79  80
+      *       81  82  83  84  85  86  87  88  89
+      *       --  --  --  --  --  --  --  --  --
+      *****************************************************************
+     E/EJECT
+      *****************************************************************
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /SPACE
+      /COPY ZSRSRC,ZDATE2Z1
+      /SPACE
+      /COPY ZSRSRC,ZDATE9Z1
+      *
+      *****************************************************************
+     E/EJECT
+      *****************************************************************
+      *
+      ** Data structures:-
+      *
+     IDTRIEPHF
+     I              VDAT                            YYVDAT
+      *
+     IDLDABRD0
+     I              FDLNO                           EXDLNO
+     I              FVDAT                           EXVDAT
+     I              FDASN                           EXDASN
+     I              FBRCA                           EXBRCA
+      *
+      ** DAMBR file - detail record
+      *
+     IDAMBRDIF    05
+     I              DLNO                            EXDLNO
+     I              VDAT                            EXVDAT
+     I              DASN                            EXDASN
+     I              DTYP                            BRDTYP
+     I              BRTT                            DABT
+     I              RTSP                            DASP
+     I              BRCA                            EXBRCA
+      *
+      ** DEALS AMENDMENT file - detail record.
+      *
+     IDEAMSDIF
+     I              BRTT                            DEBT
+     I              RTSP                            DESP
+     I              VDAT                            AMVDAT
+      *
+      ** DEALS file - detail record
+      *
+     IDEALSDCF
+     I              BRCA                            UFBRCA
+     I              VDAT                            VDATD
+     I              BRTT                            DLBT
+     I              RTSP                            DLSP
+     I              SDST                            WKSDST
+     I              OSDA                            WKOSDA
+     I              TSTN                            WKTSTN
+     I              MDST                            WKMDST
+     I              OMDA                            WKOMDA
+     I              TMAN                            WKTMAN
+     I              FACO                            WKFACO
+     I              SPI                             WKSPI
+     I              DASN                            WKDASN
+      *
+      ** First DS for access programs, Short data structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Second DS for access progrmas, Long data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Dummy record format for baserate details
+      *
+     I@BSRT     E DSSDBSRTPD
+      *
+      ** Data structures:-
+      *
+      ** AU printer file information data structure
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ** Local Data Area
+      *
+     ILDA         DS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IPGMDS     ESDSY2PGDSP
+      *
+      **  DS  to format the run date
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 UFDFF
+     I                                       13  13 MBIN
+      *
+      /COPY ZSRSRC,ZINTDYZ1
+      *
+      /COPY ZSRSRC,ZDATE9Z2
+      /COPY ZSRSRC,ZDAT10Z1
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #FINIT - Initial Processing                                  *
+      *  #FMAIN - Main Processing                                     *
+      *  #FDEAL - New Deal Processing                                 *
+      *  #FBRCH - New Branch Processing                               *
+      *  #FCHKA - Check and Process Amendment Type                    *
+      *  #FSTTL - Set up Settlement Instructions                      *
+      *  #FNWRT - Access New Base Rate                                *
+      *  #FFMTR - Format Output Record (DLDACOPD)                     *
+      *  #FDBER - Print Database Error                                *
+      *  *PSSR  - Error Subroutine                                    *
+      *                                                               *
+      *  EXTERNAL ROUTINES CALLED                                     *
+      *  AOBANKR0 - BANK DETAILS ACCESS PROGRAM                       *
+      *  AOBSRTR0 - BASE RATE CODES ACCESS PROGRAM                    *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Process initialization subroutine
+      *
+     C                     EXSR #FINIT
+      *
+      ** Process main  subroutine
+      *
+     C                     EXSR #FMAIN
+      *
+      ** Exit program
+      *
+     C                     WRITEENDREP
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FMAIN - MAIN processing                                     *
+      *                                                               *
+      *  Called by: Start                                             *
+      *                                                               *
+      *  Calls: #FDEAL, #FDBRCH, #FCHKA, #FFMTR                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FMAIN    BEGSR
+      *
+     C                     READ DLDABRL0                 09
+      *
+     C           *IN09     IFEQ '1'
+     C                     WRITEAUDHDR
+     C                     WRITENODTLS
+     C                     ELSE
+      *
+      ** Set up new Deal details
+      *
+     C                     EXSR #FDEAL
+      *
+      ** Set up new Branch details
+      *
+     C                     EXSR #FBRCH
+      *
+      ** Process while not end of file
+      *
+     C           *IN09     DOWEQ'0'
+      *
+      ** Do while same Branch. Deal Number & not end of file
+      *
+     C           UFBRCA    DOWEQFBRCA
+     C           EXDLNO    ANDEQFDLNO
+     C           *IN09     ANDEQ'0'
+      *
+      ** Do while same Branch,Deal Number, Value Date & not end of file
+      *
+     C           UFBRCA    DOWEQFBRCA
+     C           EXDLNO    ANDEQFDLNO
+     C           EXVDAT    ANDEQFVDAT
+     C           *IN09     ANDEQ'0'
+      *
+      ** Check & Process Amendment Type
+      *
+     C                     EXSR #FCHKA
+      *
+      ** Read file LF/DLDABRL0
+      *
+     C                     MOVE '0'       *IN05
+     C                     READ DLDABRL0                 09
+     C                     END
+      *
+      ** Format DLDACOPD record
+      *
+     C                     EXSR #FFMTR
+     C/COPY WNCPYSRC,DLF051C001
+     C                     MOVE 'Y'       FCRQD   1
+     C                     WRITEDLDACOD0
+     C                     MOVEA'000'     *IN,11
+     C                     MOVEA'00'      *IN,15
+      *
+      ** Maintain new principal amount for value date
+      ** within deal (DAID2)
+      *
+     C                     Z-ADDFNPPL     UFOPPL 130
+     C                     Z-ADDFNINT     FOINT
+     C                     Z-ADD0         FPCHG
+     C                     Z-ADD0         FINTP
+     C                     Z-ADD0         FNPPL
+     C                     MOVE *BLANK    FCAPT
+     C                     Z-ADD*ZERO     FINTA
+      *
+      ** Clear Pay/Receive Instructions
+      *
+     C                     MOVE *BLANK    FPRFL
+     C                     Z-ADD*ZERO     FSETP
+     C                     MOVE *BLANKS   FOSAR
+     C                     MOVE *BLANKS   FTSAR
+     C                     Z-ADD*ZERO     FPSET
+     C                     MOVE *BLANKS   FOSAP
+     C                     MOVE *BLANKS   FISEP
+     C                     MOVE *BLANKS   FSPI
+     C                     MOVE *BLANKS   FFACO
+     C                     MOVE VDATD     FVDAT
+      *
+     C                     Z-ADDFVDAT     FPVDT   50
+     C                     MOVE EXVDAT    FVDAT
+      *
+     C                     END
+      *
+     C           EXDLNO    IFNE FDLNO
+     C                     EXSR #FDEAL
+     C                     END
+      *
+     C           UFBRCA    IFNE FBRCA
+     C                     EXSR #FBRCH
+     C                     END
+      *
+      ** END of File
+      *
+     C                     END
+     C                     EXSR #FBRCH
+     C                     END
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FCHKA - Check and process amendment type                    *
+      *                                                               *
+      *  Called by: #FMAIN                                            *
+      *                                                               *
+      *  Calls: #FDBER, #FSTTL, GLINTC, #FNWRT                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FCHKA    BEGSR
+      *
+     C                     MOVE '0'       *IN23
+      *
+      ** Access Deals File
+      *
+     C           FDLNO     CHAINDEALSDCF             06
+      *
+      ** If no record found , data base error
+      *
+     C           *IN06     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DEALS   'DBFILE
+     C                     MOVELFDLNO     DBKEY
+     C                     MOVE '006'     DBASE
+     C                     EXSR #FDBER
+     C                     END
+      *
+      ** Set up the key for DEAMS & DLDAINL0
+      *
+     C                     Z-ADDEXDLNO    K2DLNO
+     C                     Z-ADDEXVDAT    K2VDAT
+     C                     Z-ADDEXDASN    K2DASN
+      *
+      ** If no base rate change  (*IN05 on DRAMBRDIF)
+      *
+     C           *IN05     IFEQ '0'
+      *
+      ** Access DEAMS
+      *
+     C           K2LIST    CHAINDEAMS                10
+      *
+      ** If no record found , data base error
+      *
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DEAMS   'DBFILE
+     C                     MOVELEXDLNO    DBKEY
+     C                     MOVE EXVDAT    DBKEY
+     C                     MOVE '003'     DBASE
+     C                     EXSR #FDBER
+     C                     END
+      *
+      ** If amendment is back value
+      *
+     C           UFHSTD    IFGT AMVDAT
+     C                     MOVE '1'       *IN23
+     C                     ELSE
+     C                     MOVE '0'       *IN23
+     C                     END
+      *
+      ** If deal type BR/SC & amendment is back value
+      *
+     C           AMTP      IFEQ 'SC'
+     C                     MOVE '1'       *IN12
+     C                     ADD  1         UFW1CT  20
+     C           INTR      SUB  UFDLSP    UFOLD  117
+     C                     ADD  DESP      UFOLD
+     C                     Z-ADDUFOLD     FNINT
+     C           UFW1CT    IFLE 1
+     C                     Z-ADDINTR      FOINT
+     C                     Z-ADDUFOLD     UFWKRT
+     C                     ELSE
+     C                     Z-ADDUFWKRT    FOINT
+     C                     Z-ADDFNINT     UFWKRT 117
+     C                     END
+      *
+     C           DLBT      IFNE 0
+     C                     Z-ADDDESP      DLSP
+     C                     END
+     C                     END
+      *
+      ** Check which rate to use
+      ** No rate change yet on this value date
+      *
+     C           *IN12     IFEQ '0'
+      *
+      ** No Back-valued rate change processed. use rate from DEAL.
+      *
+     C           UFOLD     IFEQ 0
+     C                     Z-ADDINTR      FOINT
+     C                     Z-ADDINTR      FNINT
+      *
+      ** Back-valued rate change processed. use updated rate.
+      *
+     C                     ELSE
+     C                     Z-ADDUFOLD     FOINT
+     C                     Z-ADDUFOLD     FNINT
+     C                     END
+      *
+     C                     ELSE
+     C                     END
+      *
+      ** If amend. type PI or PD or SI - set up settl. instruction
+      *
+     C           SETP      IFNE 00
+     C           AMTP      IFEQ 'PI'
+     C           AMTP      OREQ 'PD'
+     C           AMTP      OREQ 'SI'
+     C                     EXSR #FSTTL
+     C                     END
+     C                     END
+      *
+      ** If amend. type CI or SI - calculate interest
+      *
+     C           AMTP      IFEQ 'CI'
+     C           AMTP      OREQ 'SI'
+      *
+      ** Set up fields for ZINTDY subroutine
+      ** - Calculate interest between any 2 day numbers
+      *
+     C           UFWKDT    IFEQ *ZERO
+     C                     Z-ADDIACD      ZIBEG
+     C                     ELSE
+     C                     Z-ADDUFWKDT    ZIBEG
+     C                     END
+      *
+      ** If back-valued amendment, check for accrued interest which
+      ** has been calculated for another back-valued amendment today.
+      ** If work field is not 0, another back-valued amendment has been
+      ** processed. Use value date of that amendment as start date.
+      *
+     C           *IN23     IFEQ '1'
+     C           INTRA     ANDNE0
+     C                     Z-ADDFPVDT     ZIBEG
+      *
+     C                     ENDIF
+      *
+      ** Use start rate for value date for interest calculation
+      *
+     C                     Z-ADDFOINT     ZIRATE 117
+      *
+     C                     Z-ADDFVDAT     UFWKDT  50
+     C                     Z-ADDFVDAT     ZIEND   50
+     C                     Z-ADDICBS      ZICALC  10
+     C                     Z-ADDUFOPPL    ZIAMT  150
+     C                     EXSR GLINTC
+      *
+      ** Find interest amount
+      *
+     C                     Z-ADDZINTR     INTAMT 130H
+     C           UFWKAI    IFNE *ZERO
+     C           INTAMT    ADD  UFWKAI    INTAMT
+     C                     Z-ADD*ZERO     UFWKAI
+     C                     END
+     C           INTAMT    ADD  AIAP      INTAMT
+     C           INTAMT    ADD  AIAN      INTAMT
+     C           INTAMT    SUB  UFOPRD    INTAMT
+     C           INTAMT    SUB  ICTD      INTAMT
+     C                     ADD  INTRB     INTAMT
+      *
+     C                     END
+     C                     END
+      *
+      ** IF base rate change (*IN05 on DRAMBRDIF), get new rate
+      ** get new rate if : record comes from DRAMBRDIF AND amendment
+      ** value date greater than value date for base rate
+      ** OR record doesn't come from this file AND
+      ** value date greater than value date for base rate
+      *
+     C           *IN05     IFEQ '1'
+     C           AMVDAT    ANDGEBAVDNR
+     C           *IN05     OREQ '0'
+     C           EXVDAT    ANDGEBAVDNR
+      *
+     C           DLBT      IFNE 0
+     C                     EXSR #FNWRT
+     C                     END
+     C                     END
+      *
+     C                     ADD  1         UFTTAM
+      *
+      ** Update fields to be output to DLDACOPD
+      *
+     C                     MOVE RECI      FRCID
+     C                     MOVE RCDT      FRCDT
+      *
+      ** ADD DEAL AMD AMNT
+      *
+     C           AMTP      IFEQ 'PI'
+     C                     MOVE '1'       *IN15
+     C           FPCHG     ADD  DAAM      FPCHG
+     C                     END
+      *
+     C           AMTP      IFEQ 'PD'
+     C                     MOVE '1'       *IN16
+     C           FPCHG     SUB  DAAM      FPCHG
+     C                     END
+      *
+     C           AMTP      IFEQ 'CI'
+     C           FPCHG     ADD  INTAMT    FPCHG
+     C                     MOVE '1'       *IN11
+      *
+      ** Signal that interest has been capitalised
+      *
+     C                     MOVE 'Y'       FCAPT
+      *
+     C                     END
+      *
+     C           AMTP      IFEQ 'SI'
+     C           FINTP     ADD  INTAMT    FINTP
+     C                     MOVE '1'       *IN13
+     C                     END
+      *
+      ** Update DAINDDL Records Confirmatation Requested Flag
+      ** but only for deal amendments, not base rate changes.
+      *
+     C           *IN05     IFEQ '0'
+      *
+     C           K2LIST    CHAINDLDAINL0             14
+      *
+      ** If no record found , data base error
+      *
+     C           *IN14     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DLDAINL0'DBFILE
+     C                     MOVELK2DLNO    DBKEY
+     C                     MOVELK2VDAT    UFWK9   9
+     C                     MOVE K2DASN    UFWK9
+     C                     MOVE UFWK9     DBKEY
+     C                     MOVE '007'     DBASE
+     C                     EXSR #FDBER
+     C                     END
+      *
+     C                     UPDATDTRIEPHF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FDEAL - New Deal processing                                 *
+      *                                                               *
+      *  Called by: #FMAIN                                            *
+      *                                                               *
+      *  Calls: #FDBER                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FDEAL    BEGSR
+      *
+      ** Find Deals  CD,CL,only
+      *
+     C                     MOVE 'N'       UFDLOK  1
+      *
+     C           UFDLOK    DOUEQ'Y'
+      *
+      ** Access Deals
+      *
+     C                     Z-ADDEXDLNO    K1DLNO  60
+     C           K1DLNO    CHAINDEALS                08
+      *
+      ** If no record found, data base error
+      *
+     C           *IN08     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DEALS   'DBFILE
+     C                     MOVE '002'     DBASE
+     C                     MOVELEXDLNO    DBKEY
+     C                     EXSR #FDBER
+     C                     END
+      *
+      ** IF deal type CL, CD
+      *
+     C           DTYP      IFEQ 'CL'
+     C           DTYP      OREQ 'CD'
+     C                     MOVE 'Y'       UFDLOK
+     C           UFBRCA    IFEQ FBRCA
+     C                     ADD  1         UFTTDL
+     C                     END
+     C                     ELSE
+     C                     READ DLDABRL0                 09
+      *
+     C           *IN09     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     END
+     C                     END
+      *
+      ** Store fields from DEALS
+      *
+     C                     Z-ADDPCPL      UFOPPL 130
+     C                     Z-ADDIPRD      UFOPRD 130
+     C                     Z-ADDDLSP      UFDLSP 117
+      *
+      ** Fill OTHER/break fields (OUTPUT - DLDACOPD)
+      *
+     C                     Z-ADDEXVDAT    FVDAT
+     C                     Z-ADDEXDLNO    FDLNO
+      *
+      ** Initialise output fields
+      *
+     C                     Z-ADD0         FPCHG
+     C                     Z-ADD0         FINTP
+     C                     Z-ADD0         FNPPL
+     C                     Z-ADD0         FINTA
+     C                     Z-ADD0         UFOLD
+     C                     Z-ADD0         UFWKRT
+     C                     Z-ADD0         UFWKDT
+     C                     Z-ADD0         UFW1CT
+     C                     Z-ADD0         INTRA  130
+     C                     Z-ADD0         INTRB  130
+     C                     MOVE *BLANK    FCAPT
+     C                     Z-ADDAITC      UFWKAI 130
+      *
+     C                     MOVEA'000'     *IN,11
+     C                     MOVE '0'       *IN23
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FBRCH - New Branch processing                               *
+      *                                                               *
+      *  Called by: #FMAIN                                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FBRCH    BEGSR
+      *
+     C           UFLNC     IFGE 65
+     C                     WRITEAUDHDR
+     C                     Z-ADD7         UFLNC   20
+     C                     END
+      *
+     C           FBRCA     IFNE *BLANK
+     C                     WRITEBTOTS
+     C                     ADD  7         UFLNC
+     C                     END
+      *
+      ** Store Branch Deatils for break check
+      *
+     C                     MOVE UFBRCA    FBRCA
+     C                     Z-ADD0         UFTTAM
+     C                     Z-ADD1         UFTTDL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FSTTL - Set up settlement instructions if taken from deal   *
+      *           amendment                                           *
+      *                                                               *
+      *  Called by: #FCHKA                                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FSTTL    BEGSR
+      *
+      ** Maturity instructions : Principal decrease for Deposit
+      **                         Principal decrease for Loan
+      **                         Settlement of interest for Deposit
+      **                         Settlement of interest for Loan
+      *
+     C           AMTP      IFEQ 'PD'
+     C           DTYP      ANDEQ'CD'
+      *
+     C           AMTP      OREQ 'PD'
+     C           DTYP      ANDEQ'CL'
+      *
+     C           AMTP      OREQ 'SI'
+     C           DTYP      ANDEQ'CL'
+      *
+     C           AMTP      OREQ 'SI'
+     C           DTYP      ANDEQ'CD'
+      *
+     C                     Z-ADDSETP      WKMDST
+     C                     MOVE OSAC      WKOMDA
+     C                     MOVE TSEN      WKTMAN
+     C                     END
+      *
+      ** Start instructions : Principal increase for Deposit
+      **                      Principal increase for Loan
+      *
+     C           AMTP      IFEQ 'PI'
+     C           DTYP      ANDEQ'CL'
+      *
+     C           AMTP      OREQ 'PI'
+     C           DTYP      ANDEQ'CD'
+      *
+     C                     Z-ADDSETP      WKSDST
+     C                     MOVE OSAC      WKOSDA
+     C                     MOVE TSEN      WKTSTN
+     C                     END
+      *
+     C                     MOVE FACO      WKFACO 10
+     C                     MOVE SPI       WKSPI  35
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FNWRT - Access Base Rates file via access boject            *
+      *                                                               *
+      *  Called by: #FCHKA                                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FNWRT    BEGSR
+      *
+      ** Set up the key
+      *
+     C                     MOVE CCY       @AJCD
+     C                     MOVE DLBT      @DWNB
+      *
+      ** Call access program for Base Rate Details
+      *
+     C                     CALL 'AOBSRTR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           @AJCD   3
+     C                     PARM           @DWNB   2
+     C           @BSRT     PARM @BSRT     DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBSRTPD'DBFILE
+     C                     MOVEL'004'     DBASE
+     C                     MOVEL@OPTN     DBOPTN  7
+     C                     MOVE DLBT      BKEY    5
+     C                     MOVELCCY       BKEY
+     C                     MOVELBKEY      DBKEY
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Check spread rate different than zero
+      *
+     C           DLSP      IFNE 0
+      *
+      ** Check positive or negative spread rate
+      *
+     C           DLSP      IFLT 0
+     C                     Z-SUBDLSP      DLSP
+     C                     END
+      *
+      ** Calcul used rate for the deal
+      *
+     C           BANBRT    ADD  DLSP      RATE   117
+     C                     ELSE
+     C                     Z-ADDBANBRT    RATE
+     C                     END
+      *
+      ** Output new interest rate in DLDACOPD file's field
+      *
+     C                     Z-ADDRATE      FNINT
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FFMTR - Format Output Record (DLDACOPD)                     *
+      *                                                               *
+      *  Called by: #FMAIN                                            *
+      *                                                               *
+      *  Calls: GLINTC                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FFMTR    BEGSR
+      *
+      ** Maintain new principal amount for value date within deal
+      ** (DAI  D2)
+      *
+     C                     ADD  UFOPPL    FNPPL
+      *
+      ** Only udpate New Principal when amendment not Cap Int.
+      *
+     C           FNPPL     ADD  FPCHG     FNPPL
+      *
+      ** Maintain new principal amount for deal (DEALS)
+      *
+     C           PCPL      ADD  FPCHG     PCPL
+      *
+      ** Compare FPCHG to zero. If pos.then change is net increase
+      ** else it is net decrease.  Update pay/receive instructions
+      ** accordingly.  Do not set inds if AMTP 'CI' OR 'SC'.
+      *
+      ** Ensure that either *IN15 or *IN16 is 'ON' when setting up
+      ** pay/receive flag
+      *
+     C           *IN15     IFEQ '1'
+     C           *IN16     OREQ '1'
+      *
+      ** Pay instructions
+      *
+     C           FPCHG     IFGT 0
+     C           DTYP      ANDEQ'CL'
+     C           FPCHG     ORLT 0
+     C           DTYP      ANDEQ'CD'
+     C           FINTP     ORNE 0
+     C           DTYP      ANDEQ'CD'
+      *
+      ** Verify if Pay instructions exist
+      *
+     C                     MOVE 'P'       FPRFL
+     C   15 16             MOVE 'B'       FPRFL
+      *
+     C                     END
+      *
+      ** Receive instructions
+      *
+     C           FPCHG     IFLT 0
+     C           DTYP      ANDEQ'CL'
+     C           FPCHG     ORGT 0
+     C           DTYP      ANDEQ'CD'
+     C           FINTP     ORNE 0
+     C           DTYP      ANDEQ'CL'
+      *
+      ** Verify if Pay instructions exist
+      *
+     C                     MOVE 'R'       FPRFL
+     C   15 16             MOVE 'B'       FPRFL
+      *
+     C                     END
+     C                     ENDIF
+      *
+      ** If increasing a loan move start date instructions into
+      ** pay fields
+      *
+     C           *IN11     IFNE '1'
+      *
+     C           FPCHG     IFGT 0
+     C           DTYP      ANDEQ'CL'
+      *
+     C                     Z-ADDWKSDST    FPSET
+     C                     MOVE WKOSDA    FOSAP
+     C                     MOVE WKTSTN    FISEP
+      *
+     C                     MOVE WKFACO    FFACO
+     C                     MOVE WKSPI     FSPI
+      *
+     C                     ENDIF
+      *
+      ** If increasing a deposit move start date instructions into
+      ** receive fields
+      *
+     C           FPCHG     IFGT 0
+     C           DTYP      ANDEQ'CD'
+      *
+     C                     Z-ADDWKSDST    FSETP
+     C                     MOVE WKOSDA    FOSAR
+     C                     MOVE WKTSTN    FTSAR
+      *
+     C                     MOVE WKFACO    FFACO
+     C                     MOVE WKSPI     FSPI
+      *
+     C                     ENDIF
+      *
+      ** If decreasing a deposit or settling interest on a deposit,
+      **  move maturity instructions into pay fields
+      *
+     C           FPCHG     IFLT 0
+     C           DTYP      ANDEQ'CD'
+     C           FINTP     ORNE 0
+     C           DTYP      ANDEQ'CD'
+      *
+     C                     Z-ADDWKMDST    FPSET
+     C                     MOVE WKOMDA    FOSAP
+     C                     MOVE WKTMAN    FISEP
+      *
+     C                     MOVE WKFACO    FFACO
+     C                     MOVE WKSPI     FSPI
+      *
+     C                     ENDIF
+      *
+      ** If decreasing a loan or settling interest on a loan,
+      ** move maturity instructions into receive fields
+      *
+     C           FPCHG     IFLT 0
+     C           DTYP      ANDEQ'CL'
+     C           FINTP     ORNE 0
+     C           DTYP      ANDEQ'CL'
+      *
+     C                     Z-ADDWKMDST    FSETP
+     C                     MOVE WKOMDA    FOSAR
+     C                     MOVE WKTMAN    FTSAR
+      *
+     C                     MOVE WKFACO    FFACO
+     C                     MOVE WKSPI     FSPI
+      *
+     C                     ENDIF
+      *
+     C                     END
+      *
+     C           *IN11     IFEQ '1'
+     C           *IN12     OREQ '1'
+     C                     MOVE *BLANKS   FFACO
+     C                     MOVE *BLANKS   FSPI
+     C                     END
+      *
+      ** Calculate interest accrued since last deal amendment
+      *
+     C           *IN11     IFEQ '1'
+     C           *IN13     OREQ '1'
+     C                     Z-ADD*ZERO     FINTA
+     C                     ELSE
+      *
+      ** Set up fields for GLINTC subroutine
+      *
+     C                     Z-ADDFPVDT     ZIBEG   50
+     C                     Z-ADDFVDAT     ZIEND   50
+     C                     Z-ADDICBS      ZICALC  10
+     C                     Z-ADDUFOPPL    ZIAMT  150
+     C                     Z-ADDFOINT     ZIRATE 117
+      *
+     C                     EXSR GLINTC
+     C                     Z-ADDZINTR     FINTA     H
+     C                     END
+      *
+      ** If back-valued amendment, and value date greater than
+      ** interest control date,calculate interest accrued between
+      ** the two.
+      *
+     C           *IN23     IFEQ '1'
+      *
+     C           FVDAT     IFGT IACD
+      *
+      ** If no previous amendment processed, use IACD, else use
+      ** previous amendment value date.
+      *
+     C           INTRA     IFEQ 0
+     C                     Z-ADDIACD      ZIBEG
+     C                     ELSE
+      *
+     C                     Z-ADDFPVDT     ZIBEG
+     C                     ENDIF
+      *
+     C                     Z-ADDFVDAT     ZIEND
+     C                     Z-ADDICBS      ZICALC
+     C                     Z-ADDUFOPPL    ZIAMT
+     C                     Z-ADDFOINT     ZIRATE
+     C                     EXSR GLINTC
+     C                     Z-ADDZINTR     INTRA     H
+     C                     ADD  INTRA     INTRB
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           FINTA     IFLT 0
+     C                     Z-ADD*ZERO     FINTA
+     C                     END
+      *
+     C                     MOVE CCY       FCCY
+     C           STCY      IFNE *BLANKS
+     C           STCY      ANDNECCY
+     C                     MOVE STCY      FCCY
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,GLINTCZ1
+     C/EJECT
+     C/COPY ZSRSRC,ZINTDYZ2
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE9Z3
+     C/EJECT
+     C/COPY ZSRSRC,ZDAT10Z2
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FDBER - Print Data base error                               *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FDBER    BEGSR
+      *
+      ** Release the LDA
+      *
+     C                     OUT  LDA
+      *
+      ** Ensure totals spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    UUSFNB  60
+      *
+      ** Call ZSFILE for DL9911AU
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           UUSEQN  5
+     C                     PARM *BLANKS   UUENTY  3
+     C                     PARM SFILEU    UUSFNM 10
+     C                     PARM           UUSFNB  60
+     C                     PARM           UUZSER  1
+      *
+     C           UUZSER    IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     WRITEDBERR
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FINIT - Initial processing                                  *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls: #FDBER                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FINIT    BEGSR
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Define Local Data Area
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+      *
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVEL'DL9911'  DBPGM
+      *
+      ** Use access program AOBANKR0 to retrieve DATE details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' UFRTCD  7
+     C                     PARM '*FIRST ' UFOPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If error in access program, exit via DBERR subroutine
+      *
+     C           UFRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVE '001'     DBASE
+     C                     EXSR #FDBER
+      *
+      ** Dummy access to DLDACOPD
+      *
+     C                     READ DLDACOPD                 08
+     C                     END
+      *
+      ** Store RUNDATE in work fields for control on back value
+      *
+     C                     Z-ADDBJRDNB    UFHSTD  50
+      *
+      ** Ensure totals spool file recorded by RCF
+      *
+     C                     OUT  LDA
+      *
+      ** Get Rundate - Rundate
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Check system date format, DDMMYY OR MMDDYY.
+      *
+     C           UFDFF     IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+      *
+      ** Initialize break/work fields
+      *
+     C                     Z-ADD0         FDLNO   60
+     C                     Z-ADD0         FVDAT   50
+     C                     Z-ADD65        UFLNC
+     C                     Z-ADD0         UFTTAM
+     C                     Z-ADD0         UFTTDL
+      *
+      ** Define key list
+      *
+     C           K2LIST    KLIST
+     C                     KFLD           K2DLNO  60
+     C                     KFLD           K2VDAT  50
+     C                     KFLD           K2DASN  30
+      *
+     C           EINIT     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Error Subroutine                                     *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C           #PSSR9    ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+** CPY@
+(c) Finastra International Limited 2008
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

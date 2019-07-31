@@ -1,0 +1,431 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE T&N Accounts - Account Action Enquiry')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail T&N Accounts                                  *
+      *                                                               *
+      *  RPG/RE4009E - Account Action Enquiry                         *
+      *                                                               *
+      *  Function:  This program will perform the routines for account*
+      *  (I/C)      action enquiry processing.                        *
+      *                                                               *
+      *  (c) Finastra International Limited 2009                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. BUG27460           Date 18Dec09               *
+      *                 CRE015 *C *CREATE  Date 18Dec09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG27460 - Applied client fix AH0016                         *
+      *  AH0016 - Correct test for retail accounts                    *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FREPRPNPDIF  E           K        DISK
+      *
+      *****************************************************************
+      *
+      ** Rate changes to be actioned
+      *
+     IREPFMT    E DSREPRPNPD
+      *
+      ** Local Data Area
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+     IDSACCT      DS
+     I                                        1   3 XBRCA
+     I                                        4   9 XCNUM
+     I                                       10  12 XCCY
+     I                                       13  22 XACOD
+     I                                       23  24 XACSQ
+     I                                       25  34 XACNO
+     I                                        1  34 SAC
+      *
+     IDSWDET      DS
+     I                                        1 112 WWDET
+     I                                        1   2 WWXRIB
+     I                                        3  14 WWXRIS
+     I                                       15  15 WWXSIG
+     I                                       16  17 WWXICT
+     I                                       18  22 WWXCST
+     I                                       23  28 WWXRCD
+     I                                       29  29 WWXRIC
+     I                                       30  35 WWNXID
+     I                                       36  36 WWXRIF
+     I                                       37  38 WWXNCD
+     I                                       39  41 WWXRBR
+     I                                       42  62 WWXACP
+     I                                       63  74 WWOXLN
+     I                                       75  75 WWOXSC
+     I                                       76  81 WWITRD
+     I                                       82  87 WWOLVD
+     I                                       88  93 WWODED
+     I                                       94 105 WWAODR
+     I                                      106 106 WWAODX
+     I                                      107 112 WWORTC
+      *
+      *****************************************************************
+      *
+     C           KPRPN2    KLIST
+     C                     KFLD           KBRCA   3
+     C                     KFLD           KCNUM   6
+     C                     KFLD           KCCY    3
+     C                     KFLD           KACOD  100
+     C                     KFLD           KACSQ   20
+     C                     KFLD           KEVNT   1
+      *
+     C           KPRPN3    KLIST
+     C                     KFLD           KBRCA
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           POPTN   7
+     C           XBRCA     PARM           SBRCA   3
+     C           XCNUM     PARM           SCNUM   6
+     C           XCCY      PARM           SCCY    3
+     C           XACOD     PARM           SACOD  10
+     C           XACSQ     PARM           SACSQ   2
+     C           XACNO     PARM           SACNO  10
+     C                     PARM           SXRIB   2
+     C                     PARM           SXSIG   1
+     C                     PARM           SXRIS  12
+     C                     PARM           SXICT   2
+     C                     PARM           SXCST   5
+     C                     PARM           SXRCD   6
+     C                     PARM           SXRIC   1
+     C                     PARM           SNXID   6
+     C                     PARM           SXRIF   1
+     C                     PARM           SXNCD   2
+     C                     PARM           SXACP  21
+     C                     PARM           SXRBR   3
+     C                     PARM           PRTCD   7
+      *
+      ** Global values
+      ** Periods and Penalties before first maintenance
+      *
+     C           POPTN     IFEQ 'EEF2'
+     C           POPTN     OREQ '2EF2'
+     C           POPTN     OREQ '3EF3'
+     C                     MOVEL'*ENQ '   SMODE   7 P
+     C                     CALL 'REC4003'
+     C                     PARM           SMODE
+     C                     PARM           SAC
+     C                     END
+      *
+     C           SMODE     IFEQ '*EXIT'
+     C           SMODE     OREQ '*PREV'
+     C                     MOVELSMODE     PRTCD
+     C                     GOTO ENDHRE
+     C                     END
+      *
+      ** P+P details
+      *
+     C                     EXSR GETPP
+      *
+      ** DR pickup
+      *
+     C           POPTN     IFEQ 'EEF2    '
+     C           POPTN     OREQ '2EF2    '
+      *
+      ** Rates
+      *
+     C                     MOVELPDRIB     PXRIB   2
+     C                     MOVE PDRIS     PXRIS  117
+     C                     MOVELPDICT     PXICT   2
+     C                     Z-ADDPDCST     PXCST   50
+      *
+      ** Other details
+      *
+     C                     Z-ADDE2DRIC    PXRIC   10
+     C                     MOVELE2DRIF    PXRIF   1
+     C                     MOVELE2DRDY    PXRDY   4
+     C                     MOVELE2DACP    PXACP  24
+     C                     MOVELE2NDID    PNXID   50
+     C                     MOVELE2RTTD    PRTTX   5
+     C                     MOVELE2DYBD    PDYBX   1
+     C                     MOVELE2DRST    PXRST   1
+      *
+     C                     EXSR GENPIC
+      *
+     C                     ENDIF
+      *
+      ** CR Pickup
+      *
+     C           POPTN     IFEQ 'EEF3    '
+     C           POPTN     OREQ '3EF3    '
+      *
+      ** Rates
+      *
+     C                     MOVELPCRIB     PXRIB   2
+     C                     Z-ADDPCRIS     PXRIS  117
+     C                     MOVELPCICT     PXICT   2
+     C                     Z-ADDPCCST     PXCST   50
+      *
+      ** Other details
+      *
+     C                     Z-ADDE2CRIC    PXRIC   10
+     C                     MOVELE2CNIR    PXNIR   1
+     C                     MOVELE2CRIF    PXRIF   1
+     C                     MOVELE2CRDY    PXRDY   4
+     C                     MOVELE2CACP    PXACP  24
+     C                     MOVELE2NCID    PNXID   50
+     C                     MOVELE2RTTC    PRTTX   5
+     C                     MOVELE2DYBC    PDYBX   1
+     C                     MOVELE2CRST    PXRST   1
+      *
+     C                     EXSR GENPIC
+      *
+     C                     ENDIF
+      *
+     C           ENDHRE    TAG
+      *
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GETPP  - P+P details Processing                              *
+      *                                                               *
+      *****************************************************************
+     C           GETPP     BEGSR
+      *
+      ** Get first details
+      *
+     C                     MOVELSBRCA     KBRCA
+     C           SCNUM     IFEQ *BLANKS
+     C                     MOVE *BLANKS   KCNUM
+     C                     ELSE
+     C                     MOVE SCNUM     KCNUM
+     C                     END
+      *
+     C                     MOVELSCCY      KCCY
+      *
+     C           SACOD     IFEQ *BLANKS
+     C                     MOVE *ZEROS    KACOD
+     C                     ELSE
+     C                     MOVE SACOD     KACOD
+     C                     END
+      *
+     C           SACSQ     IFEQ *BLANKS
+     C                     MOVE *ZEROS    KACSQ
+     C                     ELSE
+     C                     MOVE SACSQ     KACSQ
+     C                     END
+     C                     MOVEL*BLANKS   KEVNT
+      *
+      ** Read through P&P details until active account found
+      *
+     C                     MOVE 'N'       ACTIVE  1
+     C           KPRPN2    SETLLREPRPNPD
+     C           KPRPN3    READEREPRPNPD                 81
+     C           *IN81     DOWEQ'0'
+     C           ACTIVE    ANDEQ'N'
+      *
+      ** If run date lies between value and maturity then active
+      *
+     C           AGRDNB    IFGE E2VDAT
+     C           AGRDNB    ANDLEE2MDAT
+     C                     MOVE 'Y'       ACTIVE
+     C                     ELSE
+     C           KPRPN3    READEREPRPNPD                 81
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** If active account found
+      *
+     C           *IN81     IFEQ '0'
+     C           ACTIVE    ANDEQ'Y'
+      *
+      ** Get effective rates
+      *
+     C                     EXSR CALRAT
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CALRAT - Rate Calculation Processing                         *
+      *                                                               *
+      *****************************************************************
+     C           CALRAT    BEGSR
+      *
+      ** If there is a periodic rate fixing, then the effective rate
+      ** must be calculated
+      *
+     C           'P'       IFEQ E2DNIR
+     C           'P'       OREQ E2CNIR
+      *
+     C                     MOVEL'ENQUI'   P@MODE
+      *
+     C                     CALL 'RE4017'
+     C                     PARM           REPFMT
+     C                     PARM           R@RTCD  7
+     C                     PARM           P@MODE  5
+      *
+      ** Effective debit rates
+      *
+     C                     PARM           X1DRIB  20
+     C                     PARM           X1DRIS 117
+     C                     PARM           X1DICT  20
+     C                     PARM           X1DCST  50
+      *
+      ** Effective credit rates
+      *
+     C                     PARM           X1CRIB  20
+     C                     PARM           X1CRIS 117
+     C                     PARM           X1CICT  20
+     C                     PARM           X1CCST  50
+      *
+     C                     ENDIF
+      *
+      ** Debit rates (for fixed rate, use effective rate)
+      *
+     C           'P'       IFEQ E2DNIR
+     C                     Z-ADDX1DRIB    PDRIB   20
+     C                     Z-ADDX1DRIS    PDRIS  117
+     C                     Z-ADDX1DICT    PDICT   20
+     C                     Z-ADDX1DCST    PDCST   50
+     C                     ELSE
+     C                     Z-ADDE2DRIB    PDRIB
+     C                     Z-ADDE2DRIS    PDRIS
+     C                     Z-ADDE2DICT    PDICT
+     C                     Z-ADDE2DCST    PDCST
+     C                     ENDIF
+      *
+      ** Credit rates (for fixed rate, use effective rate)
+      *
+     C           'P'       IFEQ E2CNIR
+     C                     Z-ADDX1CRIB    PCRIB   20
+     C                     Z-ADDX1CRIS    PCRIS  117
+     C                     Z-ADDX1CICT    PCICT   20
+     C                     Z-ADDX1CCST    PCCST   50
+     C                     ELSE
+     C                     Z-ADDE2CRIB    PCRIB
+     C                     Z-ADDE2CRIS    PCRIS
+     C                     Z-ADDE2CICT    PCICT
+     C                     Z-ADDE2CCST    PCCST
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  GENPIC - Other details Processing                            *
+      *                                                               *
+      *****************************************************************
+     C           GENPIC    BEGSR
+      *
+     C                     MOVEL*BLANKS   SXRIB
+     C           PXRIB     IFNE '00'
+     C                     MOVELPXRIB     SXRIB
+     C                     END
+      *
+     C                     MOVEL*BLANKS   SXRIS
+     C                     MOVEL*BLANKS   SXSIG
+      *
+     C           PXRIS     IFNE 0
+     C                     MOVEL'+'       SXSIG
+     C           PXRIS     IFLT 0
+     C                     Z-SUBPXRIS     PXRIS
+     C                     MOVEL'-'       SXSIG
+     C                     END
+     C           PXRIS     MULT 10000000  ZFLD15
+      *
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM 7         ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+      *
+     C                     MOVE ZOUT21    SXRIS
+     C                     MOVE SXRIS     ZFIELD    P
+     C                     Z-ADD4         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     EXSR NEDIT
+     C                     MOVE ZAFLD1    SXRIS
+     C                     END
+      *
+     C                     MOVEL*BLANKS   SXICT
+      *
+     C           PXICT     IFNE '00'
+     C                     MOVELPXICT     SXICT
+     C                     END
+      *
+     C                     MOVEL*BLANKS   SXCST
+      *
+     C           PXCST     IFNE 0
+     C                     MOVELPXCST     SXCST
+     C                     END
+      *
+     C                     MOVELPXRIC     SXRIC
+     C                     Z-ADDPNXID     ZDAYNO
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50
+     C                     PARM           BJDFIN  1
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+      *
+     C                     MOVELZDATE     SNXID
+     C           E2MDAT    IFLT 26664
+     C                     MOVEL'Z'       SXRIF
+     C                     MOVEL*BLANKS   SXNCD
+     C                     ELSE
+     C                     MOVELPXRIF     SXRIF
+     C                     MOVELPXRDY     SXNCD
+     C                     END
+     C                     MOVEL*BLANKS   SXACP
+     C                     MOVEL*BLANKS   SXRBR
+     C           1         SUBSTPXACP:11  W1A     1
+     C********** W1A       IFEQ ' '                                                           AH0016
+     C           W1A       IFNE ' '                                                           AH0016
+     C           3         SUBSTPXACP:1   SXRBR
+     C           21        SUBSTPXACP:4   SXACP
+     C                     ELSE
+     C                     MOVELPXACP     SXACP
+     C                     END
+      *
+     C                     MOVEL*BLANKS   SXRCD
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  NEDIT  - Numeric Edit and Format Processing                  *
+      *                                                               *
+      *****************************************************************
+     C           NEDIT     BEGSR
+      *
+      ** Use standard routine to check and format
+      *
+     C                     MOVE ZFIELD    ZAFLD1 16 P
+      *
+     C                     CALL 'ZALIGN'
+     C                     PARM *BLANKS   ZRTN    7
+     C                     PARM           ZFIELD 16
+     C                     PARM           ZADEC   10
+     C                     PARM           ZADIG   20
+     C                     PARM           ZAFLD  16
+      *
+     C           ZRTN      IFEQ *BLANKS
+     C                     MOVE ZAFLD     ZFLD15
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM ZADEC     ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  ZAFLD1
+     C                     END
+      *
+     C                     ENDSR

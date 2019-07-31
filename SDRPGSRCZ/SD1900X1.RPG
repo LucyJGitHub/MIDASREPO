@@ -1,0 +1,3988 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Customer Service Fee Types Maintenance')
+/*OVRF*: OVRDBF FILE(SDCFTPXX) TOFILE(SDCFTPL0) SHARE(*NO)          : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1900 - Customer Service Fee Types Maintenance              *
+      *                                                               *
+      *  Function: This program allows the maintenance of             *
+      *            Customer Service Fee Types                         *
+      *                                                               *
+      *  Called By: SDC1900  - Input Cycle Processing                 *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Aug05               *
+      *                 UPG402             Date 06Oct04               *
+      *                 UPGCSW             Date 27Sep02               *
+      *                 210004             Date 26Sep02               *
+      *                 PB0181             Date 29JUN01               *
+      *                 CSD008  *CREATE    Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompiled due to change in ZALIGNZ2.               *
+      *  UPGCSW - Due to an upgrade of swift changes 2002 rename      *
+      *           variable V to W (confict with hook ZSRSRC/ZCOTRZ1   *
+      *           Amend ZSRSRC,ZALIGNZ2
+      *  210004 - Mismatch between ',' and '.' in Amend mode.         *
+      *           Link with fix 206456 in ZEDIT. So, apply same fix   *
+      *           in SR/ZALIGN and SR/ZFRPED.                         *
+      *  PB0181 - Performance Incentive Fees.                         *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+     FSDCGFRL1IF  E           K        DISK         KINFSR *PSSR
+      ** Charge Group/Fee Rate
+      *
+     FSDVATCL0IF  E           K        DISK         KINFSR *PSSR
+      ** VAT Codes
+      *
+     FSDCFTPXXIF  E           K        DISK         KINFSR *PSSR
+      ** Fee types
+      *
+     F            SDCFTPD0                          KRENAMESDCFTPX0
+      *
+     FSDCFTPL0UF  E           K        DISK         KINFSR *PSSR A
+      ** Fee types Maintenance
+      *
+     F                                              KINFDS FIL1DS
+     F                                              KCOMIT
+      *
+     FSDFCTLL0UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      ** Standing data controls by filename - update
+      *
+     FSD1900DFCF  E                    WORKSTN      KINFSR *PSSR
+      ** Screen Format
+      *
+     F                                        #0SFLRKSFILE SD1900S0
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   03  - F3 Exit                                               *
+      *   14  - Display Text for line 23 if Enquiry                   *
+      *   15  - Indicator for F5                                      *
+      *   21  - Subfile End                                           *
+      *   23  - Subfile Next Change                                   *
+      *   25  - Protect fields                                        *
+      *   29  - Subfile Clear                                         *
+      *   30  - Subfile Display                                       *
+      *   31  - Error indicator for Fee Narrative                     *
+      *   32  - Error indicator for Fee per Customer/Portfolio        *
+      *   34  - Error indicator for Taxable Indicator                 *
+      *   35  - Error indicator for VAT Tax Code                      *
+      *   36  - Error indicator for VAT A/c Code                      *
+      *   37  - Error indicator for Sequence Number                   *
+      *   38  - Error indicator for Automatic Posting                 *
+      *   39  - Error indicator for Fee Charging Currency             *
+      *   40  - Error indicator for Income Account                    *
+      *   41  - Error indicator for Accrual Account                   *
+      *   42  - Error indicator for Accrual Frequency                 *
+      *   43  - Error indicator for Accrual Day in Month              *
+      *   44  - Error indicator for Next Accrual Date                 *
+      *   45  - Error indicator for Settlement Generation Day         *
+      *   46  - Error indicator for Settlement Frequency              *
+      *   47  - Error indicator for Settlement Day in Month           *
+      *   48  - Error indicator for Next Settlement Date              *
+      *   49  - Error indicator for Assets, Liabs, Net, Both          *
+      *   50  - Error indicator for Include Accruals                  *
+      *   51  - Error indicator for Include Forward FX                *
+      *   52  - Error indicator for Income Received Account           *
+      *   53  - Error indicator for Retail Transaction Type           *
+      *   54  - Error indicator for Minimum Fee Amount                *
+      *   56  - Blink for Type                                        *
+      *   57  - Display Text 'DELETED'                                *
+      *   59  - Non-display Title                                     *
+      *   61  - Error indicator for Action Code                       *
+      *   62  - Error indicator for Fee Type                          *
+      *   63  - Error indicator for Review from                       *
+      *   64  - Error indicator for Charge Group                      *
+      *   66  - Error indicator for Select                            *
+      *   67  - Error indicator for Expired Fees Retention Period     *
+      *   70  - Rollup                                                *
+      *   75  - Error indicator for Maximum Fee Amount                *
+      *   86  - Non-display for Action Code                           *
+      *   87  - Non-dsiplay for Action Code 'E'                       *
+      *   88  - Non-display for Action Code 'D'                       *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRMAIN - Main Processing                                     *
+      *  SRVALD - Validation of Initial Screen                        *
+      *  SRPRRS - Process Review Screen                               *
+      *  SRIZSF - Subfile initialisation and Load Routine             *
+      *  SRDSPS - Display Screen Processing                           *
+      *  SRLOAD - Load one page of subfile                            *
+      *  SRCLR  - Clear messages in program queue                     *
+      *  SRCMD5 - Refresh for detail screen                           *
+      *  SRPSC5 - Refresh for Subfile screen                          *
+      *  SRPROC - Screen Input Processing                             *
+      *  SRVALS - Validate Selection field on Subfile                 *
+      *  SRSFPR - Subfile Processing                                  *
+      *  SREXIT - Exit of program processing                          *
+      *  SRCMFS - Refresh subfile screen                              *
+      *  SRUPSC - Process Update Screen                               *
+      *  SRUPPR - Update Processing                                   *
+      *  SRVUPD - Validate update screen                              *
+      *  SRPCMD - Process command 12                                  *
+      *  SRISEC - Setup file tables with fields file details          *
+      *  SRITAB - Setup screen tables with fields file details        *
+      *  SRFRBK - Compute current date backwards using frequency      *
+      *  SRTNLU - Retrieve/update Trans. No. of last update           *
+      *  SRSNMS - Send message to program's message queue             *
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array for Copyright
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZALIGNZ1
+     E/COPY ZSRSRC,ZFREQBZ1
+      *
+     E********            #PRO    5   5  2                                                    PB0181
+     E                    #PRO    6   6  2                                                    PB0181
+      ** Fee processing type
+      *
+      /EJECT
+     IPSDS       SDS
+      ** Program status data structure
+      *
+     I                                     *PROGRAM ##PGMQ
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IFIL1DS      DS
+      ** File information data strucutre
+      *
+     I                                     *STATUS  STATUS
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     ISDACOD    E DSSDACODPD
+      ** @A5REA6 - Account code record format data structure
+      *
+     ISDRETD    E DSSDRETRPD
+      ** @A1RECW - Retail transactions record format data structure
+      *
+     ISDGELR    E DSSDGELRPD
+     I              QQACCD                          QQACCX                                    CER001
+      ** General Ledger Details
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** Private Banking Module
+      *
+     IDNATN       DS                              5
+      ** Data Area for Update Processing
+      *
+     I                                        1   50FNATN
+      *
+     I********WWDATA      DS                            124                                   PB0181
+     I***WWDATA*     DS                            131                                 PB0181 CER001
+     IWWDATA      DS                            161                                           CER001
+      ** Data structure (Screen fields inputted)
+      *
+     I                                        1   2 #1PRTP
+     I                                        3  32 #1NARR
+     I                                       33  33 #1FECP
+     I                                       34  34 #1TAXE
+     I                                       35  36 #1VATC
+     I**********                             37  40 #1VATA                                    CER001
+     I**********                             41  42 #1VATS                                    CER001
+     I**********                             43  43 #1AUTO                                    CER001
+     I**********                             44  46 #1CCCY                                    CER001
+     I**********                             47  50 #1INAC                                    CER001
+     I**********                             51  54 #1ACAC                                    CER001
+     I**********                             55  55 #1ACFR                                    CER001
+     I**********                             56  57 #1ACDM                                    CER001
+     I**********                             58  59 #1STGE                                    CER001
+     I**********                             60  60 #1STFR                                    CER001
+     I**********                             61  62 #1STDM                                    CER001
+     I**********                             63  63 #1ALNB                                    CER001
+     I**********                             64  64 #1IACC                                    CER001
+     I**********                             65  65 #1INFF                                    CER001
+     I**********                             66  69 #1IRAC                                    CER001
+     I**********                             70  74 #1RETR                                    CER001
+     I**********                             75  78 #1VAIA                                    CER001
+     I**********                             79  80 #1RETP                                    CER001
+     I**********                             81  96 #1MINA                                    CER001
+     I**********                             97 112 #1MAXA                                    CER001
+     I**********                            113 118 #1ACDT                                    CER001
+     I**********                            119 124 #1STDT                                    CER001
+     I**********                            125 125 #1FEPV                             PB0181 CER001
+     I**********                            126 126 #1WMIN                             PB0181 CER001
+     I**********                            127 127 #1BFPV                             PB0181 CER001
+     I**********                            128 129 #1BDIM                             PB0181 CER001
+     I**********                            130 131 #1MIQT                             PB0181 CER001
+     I                                       37  46 #1VATA                                    CER001
+     I                                       47  48 #1VATS                                    CER001
+     I                                       49  49 #1AUTO                                    CER001
+     I                                       50  52 #1CCCY                                    CER001
+     I                                       53  62 #1INAC                                    CER001
+     I                                       63  72 #1ACAC                                    CER001
+     I                                       73  73 #1ACFR                                    CER001
+     I                                       74  75 #1ACDM                                    CER001
+     I                                       76  77 #1STGE                                    CER001
+     I                                       78  78 #1STFR                                    CER001
+     I                                       79  80 #1STDM                                    CER001
+     I                                       81  81 #1ALNB                                    CER001
+     I                                       82  82 #1IACC                                    CER001
+     I                                       83  83 #1INFF                                    CER001
+     I                                       84  93 #1IRAC                                    CER001
+     I                                       94  98 #1RETR                                    CER001
+     I                                       99 108 #1VAIA                                    CER001
+     I                                      109 110 #1RETP                                    CER001
+     I                                      111 126 #1MINA                                    CER001
+     I                                      127 142 #1MAXA                                    CER001
+     I                                      143 148 #1ACDT                                    CER001
+     I                                      149 154 #1STDT                                    CER001
+     I                                      155 155 #1FEPV                                    CER001
+     I                                      156 156 #1WMIN                                    CER001
+     I                                      157 157 #1BFPV                                    CER001
+     I                                      158 159 #1BDIM                                    CER001
+     I                                      160 161 #1MIQT                                    CER001
+      *
+     I**********DSFDEF      DS                             92
+     I***DSFDEF*     DS                            131                                        CER001
+     IDSFDEF      DS                            161                                           CER001
+      ** Data structure Fee type default detail
+      *
+     I                                        1   2 DFPRTP
+     I                                        3  32 DFNARR
+     I                                       33  33 DFFECP
+     I                                       34  34 DFTAXE
+     I                                       35  36 DFVATC
+     I**********                             37  40 DFVATA                                    CER001
+     I**********                             41  42 DFVATS                                    CER001
+     I**********                             43  43 DFAUTO                                    CER001
+     I**********                             44  46 DFCCCY                                    CER001
+     I**********                             47  50 DFINAC                                    CER001
+     I**********                             51  54 DFACAC                                    CER001
+     I**********                             55  55 DFACFR                                    CER001
+     I**********                             56  57 DFACDM                                    CER001
+     I**********                             58  59 DFSTGE                                    CER001
+     I**********                             60  60 DFSTFR                                    CER001
+     I**********                             61  62 DFSTDM                                    CER001
+     I**********                             63  63 DFALNB                                    CER001
+     I**********                             64  64 DFIACC                                    CER001
+     I**********                             65  65 DFINFF                                    CER001
+     I**********                             66  69 DFIRAC                                    CER001
+     I**********                             70  74 DFRETR                                    CER001
+     I**********                             75  78 DFVAIA                                    CER001
+     I**********                             79  80 DFRETP                                    CER001
+     I**********                          P  81  830DFCADT                                    CER001
+     I**********                          P  84  860DFLADT                                    CER001
+     I**********                          P  87  890DFCSTD                                    CER001
+     I**********                          P  90  920DFLSTD                                    CER001
+     I**********                            125 125 DFFEPV                             PB0181 CER001
+     I**********                            126 126 DFWMIN                             PB0181 CER001
+     I**********                            127 127 DFBFPV                             PB0181 CLG029
+     I**********                            128 129 DFBDIM                             PB0181 CER001
+     I**********                            130 131 DFMIQT                             PB0181 CER001
+     I                                       37  46 DFVATA                                    CER001
+     I                                       47  48 DFVATS                                    CER001
+     I                                       49  49 DFAUTO                                    CER001
+     I                                       50  52 DFCCCY                                    CER001
+     I                                       53  62 DFINAC                                    CER001
+     I                                       63  72 DFACAC                                    CER001
+     I                                       73  73 DFACFR                                    CER001
+     I                                       74  75 DFACDM                                    CER001
+     I                                       76  77 DFSTGE                                    CER001
+     I                                       78  78 DFSTFR                                    CER001
+     I                                       79  80 DFSTDM                                    CER001
+     I                                       81  81 DFALNB                                    CER001
+     I                                       82  82 DFIACC                                    CER001
+     I                                       83  83 DFINFF                                    CER001
+     I                                       84  93 DFIRAC                                    CER001
+     I                                       94  98 DFRETR                                    CER001
+     I                                       99 108 DFVAIA                                    CER001
+     I                                      109 110 DFRETP                                    CER001
+     I                                    P 111 1130DFCADT                                    CER001
+     I                                    P 114 1160DFLADT                                    CER001
+     I                                    P 117 1190DFCSTD                                    CER001
+     I                                    P 120 1220DFLSTD                                    CER001
+     I                                      155 155 DFFEPV                                    CER001
+     I                                      156 156 DFWMIN                                    CER001
+     I                                      157 157 DFBFPV                                    CER001
+     I                                      158 159 DFBDIM                                    CER001
+     I                                      160 161 DFMIQT                                    CER001
+      *
+     I**********W1DATA      DS                             92
+     I***W1DATA*     DS                            131                                        CER001
+     IW1DATA      DS                            161                                           CER001
+      ** Data structure (fields from SDCFTPPD)
+      *
+     I                                        1   2 F1PRTP
+     I                                        3  32 F1NARR
+     I                                       33  33 F1FECP
+     I                                       34  34 F1TAXE
+     I                                       35  36 F1VATC
+     I**********                             37  400F1VATA                                    CER001
+     I**********                             41  420F1VATS                                    CER001
+     I**********                             43  43 F1AUTO                                    CER001
+     I**********                             44  46 F1CCCY                                    CER001
+     I**********                             47  500F1INAC                                    CER001
+     I**********                             51  540F1ACAC                                    CER001
+     I**********                             55  55 F1ACFR                                    CER001
+     I**********                             56  570F1ACDM                                    CER001
+     I**********                             58  590F1STGE                                    CER001
+     I**********                             60  60 F1STFR                                    CER001
+     I**********                             61  620F1STDM                                    CER001
+     I**********                             63  63 F1ALNB                                    CER001
+     I**********                             64  64 F1IACC                                    CER001
+     I**********                             65  65 F1INFF                                    CER001
+     I**********                             66  690F1IRAC                                    CER001
+     I**********                             70  740F1RETR                                    CER001
+     I**********                             75  780F1VAIA                                    CER001
+     I**********                             79  800F1RETP                                    CER001
+     I**********                          P  81  830F1CADT                                    CER001
+     I**********                          P  84  860F1LADT                                    CER001
+     I**********                          P  87  890F1CSTD                                    CER001
+     I**********                          P  90  920F1LSTD                                    CER001
+     I**********                            125 125 F1EXPO                             PB0181 CER001
+     I**********                            126 126 F1WAIV                             PB0181 CER001
+     I**********                            127 127 F1BASP                             PB0181 CER001
+     I**********                            128 1290F1DAYM                             PB0181 CER001
+     I**********                            130 1310F1MONQ                             PB0181 CER001
+     I                                       37  460F1VATA                                    CER001
+     I                                       47  480F1VATS                                    CER001
+     I                                       49  49 F1AUTO                                    CER001
+     I                                       50  52 F1CCCY                                    CER001
+     I                                       53  620F1INAC                                    CER001
+     I                                       63  720F1ACAC                                    CER001
+     I                                       73  73 F1ACFR                                    CER001
+     I                                       74  750F1ACDM                                    CER001
+     I                                       76  770F1STGE                                    CER001
+     I                                       78  78 F1STFR                                    CER001
+     I                                       79  800F1STDM                                    CER001
+     I                                       81  81 F1ALNB                                    CER001
+     I                                       82  82 F1IACC                                    CER001
+     I                                       83  83 F1INFF                                    CER001
+     I                                       84  930F1IRAC                                    CER001
+     I                                       94  980F1RETR                                    CER001
+     I                                       99 1080F1VAIA                                    CER001
+     I                                      109 1100F1RETP                                    CER001
+     I                                    P 111 1130F1CADT                                    CER001
+     I                                    P 114 1160F1LADT                                    CER001
+     I                                    P 117 1190F1CSTD                                    CER001
+     I                                    P 120 1220F1LSTD                                    CER001
+     I                                      155 155 F1EXPO                                    CER001
+     I                                      156 156 F1WAIV                                    CER001
+     I                                      157 157 F1BASP                                    CER001
+     I                                      158 1590F1DAYM                                    CER001
+     I                                      160 1610F1MONQ                                    CER001
+      *
+     IRUNDT       DS
+      ** Data area RUNDAT
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     IZMUSER      DS                             17
+      ** Data area ZMUSER
+      *
+     I                                       11  13 USRBCH
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     ISCSARD    E DSSCSARDPD                                                                  PB0181
+      ** SAR descriptions                                                                     PB0181
+      *                                                                                       PB0181
+     IDSFDY     E DSDSFDY                                                                     PB0181
+      ***  DS for access programs                                                             PB0181
+      *
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+     C                     EXSR SRINIT
+      *
+      ** Main Processing
+      *
+     C                     EXSR SRMAIN
+      *
+      ** End Program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *               E N D    O F    M A I N L I N E S               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRINIT    - Program Initialisation                           *
+      *                                                               *
+      *  Called by - Mainline                                         *
+      *                                                               *
+      *  Calls     - None                                             *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive parameter passed from the menu
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   1
+      *
+      ** Initialize LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVE 'SD1900'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Read in ZMUSER
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      ** Read in RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+     C                     Z-ADD*ZERO     WWDSTN  50
+     C                     Z-ADD*ZERO     LSTRR2  40
+     C                     Z-ADD*ZERO     #0SFLR  40
+     C                     Z-ADD*ZERO     WWSRRN  40
+     C                     Z-ADD*ZERO     WWSFLC  40
+     C                     Z-ADD*ZERO     WWLRRN  40
+     C                     Z-ADD13        WSFPG   50
+      *
+     C                     MOVE *BLANKS   WWMSGD  7
+     C                     MOVE *BLANKS   WWSSEL  1
+     C                     MOVE '1'       *IN26
+     C                     MOVE 'Y'       WWVALD  1
+     C                     MOVE 'N'       WREACT  1
+      *
+     C                     MOVEL'SDUSRMSG'PAMSGF    P
+      *
+      ** Read General Ledger I.C.D.
+      *
+     C**********           CALL 'AOGELRR0'                                                    CER001
+     C                     CALL 'AOGELRR1'                                                    CER001
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDGELR    PARM SDGELR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDGELRPD'DBFILE    P
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Handle Database Error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL'CSD008'  DBKEY
+     C                     Z-ADD003       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Check to see whether Private BAnking Module is ON
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST'  POPTN
+     C           SDMMOD    PARM SDMMOD    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'SDMMODPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Initialise header screen
+      *
+     C                     MOVELUSER      #0USER
+     C                     MOVELRUNA      #0RUNA
+     C                     MOVELWSID      #0WSID
+      *
+     C                     MOVELUSER      #1USER
+     C                     MOVELRUNA      #1RUNA
+     C                     MOVELWSID      #1WSID
+      *
+     C                     MOVELUSER      #0USRN
+     C                     MOVELRUNA      #0RUND
+     C                     MOVELWSID      #0WKID
+      *
+     C           KCFEE     KLIST
+     C                     KFLD           KWFETP  2
+     C                     KFLD           KWCHGR  2
+      *
+     C           KCGFR     KLIST
+     C                     KFLD           KKFETP  2
+     C                     KFLD           KKCHGR  2
+      *
+     C           PMODE     IFEQ 'E'
+     C                     MOVE *OFF      *IN59
+     C                     ELSE
+     C                     MOVE *ON       *IN59
+     C                     ENDIF
+     C           *LIKE     DEFN WWDATA    WCHDTA
+      *
+      *
+      ** Access AOSARDR0 to check if PB0181 is switched ON.                                   PB0181
+      *                                                                                       PB0181
+     C                     CALL 'AOSARDR0'                                                    PB0181
+     C                     PARM *BLANKS   PRTCD   7                                           PB0181
+     C                     PARM '*VERIFY' POPTN   7                                           PB0181
+     C                     PARM 'PB0181'  L0SARD  6                                           PB0181
+     C           SCSARD    PARM SCSARD    DSFDY                                               PB0181
+      *                                                                                       PB0181
+     C           PRTCD     IFEQ *BLANKS                                                       PB0181
+     C                     MOVE 'Y'       PB0181  1                                           PB0181
+     C                     MOVE '0'       *IN55                                               PB0181
+     C                     ELSE                                                               PB0181
+     C                     MOVE 'N'       PB0181                                              PB0181
+     C                     MOVE '1'       *IN55                                               PB0181
+     C                     END                                                                PB0181
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRMAIN    - Main Processing                                  *
+      *                                                               *
+      *  Called by - Mainline                                         *
+      *                                                               *
+      *  Calls     - SRVALD, SRPRRS, SRUPSC, SRCLR                    *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      ** Do while not CMD-3
+      *
+     C           *INKC     DOWEQ*OFF
+      *
+      ** If error, write message subfile
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESD1900C1
+     C                     ENDIF
+      *
+      ** Read selection screen
+      *
+     C                     EXFMTSD1900F0
+      *
+      ** Perform validation if not F3 and not F5
+      *
+     C           *INKC     IFEQ *OFF
+     C           *INKE     ANDEQ*OFF
+      *
+      ** Perform validation
+      *
+     C                     EXSR SRVALD
+      *
+      ** If valid details
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ** Display next screen as necessary
+      *
+     C           WWSFL     IFEQ 'Y'
+      *
+      ** Review from subfile
+      *
+     C                     EXSR SRPRRS
+      *
+     C                     ELSE
+      *
+      ** Detail screen
+      *
+     C                     EXSR SRUPSC
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** To refresh the screen
+      *
+     C           *INKE     IFEQ *ON
+     C                     MOVE *BLANKS   #0ACT
+     C                     MOVE *BLANKS   #0FETP
+     C                     MOVE *BLANKS   #0CHGR
+     C                     MOVE *BLANKS   #0REV1
+     C                     MOVE *BLANKS   #0REV2
+     C                     MOVE *OFF      *IN61
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN64
+     C                     MOVE *OFF      *IN87
+     C                     EXSR SRCLR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRVALD    - Validation of Initial Screen                     *
+      *                                                               *
+      *  Called by - SRMAIN                                           *
+      *                                                               *
+      *  Calls     - SRSNMS, SRCLR                                    *
+      *****************************************************************
+     C           SRVALD    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Set of error indicators
+      *
+     C                     MOVE *OFF      *IN57
+     C                     MOVE *OFF      *IN61
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN63
+     C                     MOVE *OFF      *IN64
+     C                     MOVE *OFF      *IN69            Fees on excess                     PB0181
+     C                     MOVE *OFF      *IN70            Waive minimum                      PB0181
+     C                     MOVE *OFF      *IN71            Basis for P Val                    PB0181
+     C                     MOVE *OFF      *IN72            Basis Day in M                     PB0181
+     C                     MOVE *OFF      *IN73            Month in Qrt                       PB0181
+      *                                                                                       PB0181
+      ** Set ON valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+      ** If all fields blanks - SUBFILE Required
+      *
+     C           #0ACT     IFEQ *BLANKS
+     C           #0FETP    ANDEQ*BLANKS
+     C           #0CHGR    ANDEQ*BLANKS
+     C           #0REV1    ANDEQ*BLANKS
+     C           #0REV2    ANDEQ*BLANKS
+      *
+     C                     MOVE *BLANKS   #0RVF1
+     C                     MOVE *BLANKS   #0RVF2
+      *
+     C                     MOVE 'Y'       WWSFL   1
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'N'       WWSFL
+      *
+      ** If review from entered
+      *
+     C           #0REV1    IFNE *BLANKS
+     C           #0REV2    ORNE *BLANKS
+      *
+     C                     MOVE #0REV1    #0RVF1
+     C                     MOVE #0REV2    #0RVF2
+      *
+      ** If Fee type not blank - ERROR
+      *
+     C           #0ACT     IFNE *BLANKS
+     C           #0FETP    ORNE *BLANKS
+     C           #0CHGR    ORNE *BLANKS
+      *
+     C           #0ACT     IFNE *BLANKS
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9153' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C           #0FETP    IFNE *BLANKS
+     C                     MOVE *ON       *IN62
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9001' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C           #0CHGR    IFNE *BLANKS
+     C                     MOVE *ON       *IN64
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9153' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      ** Review from subfile screen Required
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'Y'       WWSFL
+      *
+     C                     ENDIF
+      *
+      ** Review from not entered
+      *
+     C                     ELSE
+      *
+      ** Action must be 'I', 'A', 'E', OR 'D'
+      *
+     C           #0ACT     IFNE 'I'
+     C           #0ACT     ANDNE'A'
+     C           #0ACT     ANDNE'E'
+     C           #0ACT     ANDNE'D'
+      *
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9004' PAMSID
+     C                     EXSR SRSNMS
+      *
+      ** Valid action code
+      *
+     C                     ELSE
+      *
+     C           PMODE     IFEQ 'E'
+     C           #0ACT     ANDNE'E'
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9006' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      ** If action = 'D' - System set up flag must = 'N'
+      *
+     C           #0ACT     IFEQ 'D'
+     C           BJSUC     ANDEQ'Y'
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9005' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      ** If valid, check spf
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ** For single-Branch environment
+      *
+     C           MBIN      IFNE 'Y'
+     C                     CALL 'ZVACTU'
+     C                     PARM #0ACT     PZACTN  1
+     C                     PARM           PERR    10
+      *
+      ** If action invalid for user
+      *
+     C           PERR      IFNE *ZERO
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9006' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** For multi-branch environment
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM #0ACT     PZACTN
+     C                     PARM USRBCH    PZBR    3
+     C                     PARM           PERR
+      *
+      ** If action invalid for user
+      *
+     C           PERR      IFEQ 1
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9007' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C           PERR      IFEQ 2
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9008' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Action is blank => Fee type ONLY ENTERED
+      *
+     C           #0ACT     IFEQ *BLANKS
+      *
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9002' PAMSID
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+      *
+      ** Action not blank => Fee type MUST BE ENTERED
+      ** If Charge Group is entered, Fee type alone must exist in the system
+      *
+     C                     MOVE *OFF      *IN25
+     C           #0FETP    IFEQ *BLANKS
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9003' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C           #0CHGR    IFNE *BLANKS
+     C                     MOVE #0FETP    KWFETP
+     C                     MOVE *BLANKS   KWCHGR
+     C           KCFEE     CHAINSDCFTPXX             28
+     C           *IN28     IFEQ *ON
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9088' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     MOVE *ON       *IN25
+      *
+      ** Take main Fee type details (charge group is left blanks)
+      *
+     C                     CLEARDSFDEF
+     C                     MOVELW1DATA    DSFDEF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Action entered & Valid so FAR
+      *
+     C           #0ACT     IFNE *BLANKS
+     C           WWVALD    ANDEQ'Y'
+      *
+      ** If valid so far
+      *
+      *
+      ** Validate Fee type
+      *
+     C                     MOVEL#0CHGR    KWCHGR    P
+     C                     MOVEL#0FETP    KWFETP    P
+     C                     Z-ADD*ZERO     WWCADT 150
+     C                     Z-ADD*ZERO     WWLADT 150
+     C                     Z-ADD*ZERO     WWCSTD 150
+     C                     Z-ADD*ZERO     WWLSTD 150
+      *
+     C           KCFEE     CHAINSDCFTPXX             28
+      *
+      ** If record FOUND
+      *
+     C           *IN28     IFEQ *OFF
+     C                     Z-ADDF1CADT    WWCADT
+     C                     Z-ADDF1LADT    WWLADT
+     C                     Z-ADDF1CSTD    WWCSTD
+     C                     Z-ADDF1LSTD    WWLSTD
+      *
+      ** Action = 'I'
+      *
+     C           #0ACT     IFEQ 'I'
+      *
+      ** If record not flagged as Deleted, then reuse it else stop
+      *
+     C           F1RECI    IFNE '*'
+      *
+      ** Live record and therefore CANNOT BE RE-INSERTED
+      *
+     C                     MOVE *OFF      *IN61
+     C                     MOVE *OFF      *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9009' PAMSID
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+      *
+      ** Deleted record, allow re-insertion
+      *
+     C                     MOVEL'IA'      WWFMT   2
+     C                     Z-ADDF1TNLU    #1TNLU
+     C                     Z-ADDF1TNLU    #0TNLU
+      *
+     C           #0CHGR    IFNE *BLANKS
+      *
+      ** Take default details (existancy already checked)
+      *
+     C                     MOVEL#0CHGR    #1CHGR
+     C                     MOVELDFPRTP    #1PRTP    P
+     C                     MOVELDFNARR    #1NARR    P
+     C                     MOVELDFFECP    #1FECP    P
+     C                     MOVELDFCCCY    #1CCCY    P
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Action Code = 'A', 'D' OR 'E'
+      *
+     C                     ELSE
+      *
+      ** If record flagged as DELETED, don't work with it (only enquire)
+      *
+     C           F1RECI    IFEQ '*'
+      *
+      ** If action code = 'A' OR 'D' - ERROR
+      *
+     C           #0ACT     IFEQ 'A'
+     C           #0ACT     OREQ 'D'
+      *
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9010' PAMSID
+     C                     EXSR SRSNMS
+      *
+      ** Enquiry on Deleted record
+      *
+     C                     ELSE
+      *
+     C                     MOVE *ON       *IN57
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Record does NOT EXIST
+      *
+     C                     ELSE
+      *
+     C           #0ACT     IFNE 'I'
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+      *
+     C                     MOVEL'CSF9010' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Fill Record details : when Not insert, or re-intstate Existing detail
+      *
+     C           #0ACT     IFNE 'I'
+     C           #0ACT     OREQ 'I'
+     C           *IN28     ANDEQ*OFF
+      *
+     C                     MOVE #0FETP    #1FETP
+     C                     MOVE #0CHGR    #1CHGR
+     C                     EXSR SRITAB
+     C                     ENDIF
+      *
+      ** Set Format flag depending on type
+      *
+     C           #0ACT     IFEQ 'I'
+     C                     MOVEL'IA'      WWFMT
+      *
+      ** If *IN28 is *OFF in insert that means that record Exist
+      *
+     C           *IN28     IFEQ *ON
+     C                     CLEARWWDATA
+     C                     MOVE #0ACT     #1ACT
+     C                     MOVE #0FETP    #1FETP
+     C                     MOVE #0CHGR    #1CHGR
+     C                     MOVE *BLANKS   #1ACDT
+     C                     MOVE *BLANKS   #1STDT
+     C                     MOVE *BLANKS   #1MINA
+     C                     MOVE *BLANKS   #1MAXA
+     C                     ENDIF
+      *
+     C           #0CHGR    IFNE *BLANKS
+     C                     MOVELDFPRTP    #1PRTP    P
+     C                     MOVELDFNARR    #1NARR    P
+     C                     MOVELDFFECP    #1FECP    P
+     C                     MOVELDFCCCY    #1CCCY    P
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           #0ACT     IFEQ 'A'
+     C                     MOVEL'IA'      WWFMT
+     C                     ENDIF
+      *
+     C           #0ACT     IFEQ 'E'
+     C                     MOVEL'EN'      WWFMT
+     C                     ENDIF
+      *
+     C           #0ACT     IFEQ 'D'
+     C                     MOVEL'DL'      WWFMT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRPRRS    - Process Review Screen                            *
+      *                                                               *
+      *  Called by - SRMAIN                                           *
+      *                                                               *
+      *  Calls     - SRPERS, SRIZSF, SRPCMD, SRCLR, SRDSPS            *
+      *****************************************************************
+     C           SRPRRS    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Do while not CMD-3 and CMD-12
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+      *
+      ** Initialise and load subfile page
+      *
+     C           #0RVF1    IFNE *BLANKS
+     C           #0RVF2    ORNE *BLANKS
+     C                     MOVE #0RVF1    #0REV1
+     C                     MOVE #0RVF2    #0REV2
+     C                     ENDIF
+     C                     EXSR SRIZSF
+      *
+      ** Initialise reset field
+      *
+     C                     MOVEL'N'       W0RSF   1
+      *
+      ** Display screen
+      *
+     C           W0RSF     DOWEQ'N'
+      *
+      ** Display Screen
+      *
+     C                     EXSR SRDSPS
+      *
+      ** Perform detailed processing
+      *
+     C           *INKC     CASEQ'1'       SREXIT
+     C           *INKE     CASEQ'1'       SRPSC5
+     C           *INKL     CASEQ'1'       SRPCMD
+     C           *IN70     CASEQ'1'       SRLOAD
+     C                     CAS            SRPROC
+     C                     ENDCS
+      *
+     C                     ENDDO
+      *
+     C                     ENDDO
+      *
+     C                     MOVEL*BLANKS   #0REV1
+     C                     MOVEL*BLANKS   #0REV2
+     C                     MOVEL*BLANKS   #0RVF1
+     C                     MOVEL*BLANKS   #0RVF2
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRIZSF  -  Subfile Initialisation and Load routine           *
+      *                                                               *
+      *  Called By: SRMAIN                                            *
+      *                                                               *
+      *  Calls    : SRLOAD, SRCLR                                     *
+      *****************************************************************
+      *
+     C           SRIZSF    BEGSR
+      *
+      ** Clear subfile
+      *
+     C                     MOVE '1'       *IN29
+     C                     WRITESD1900C0
+     C                     MOVE '0'       *IN29
+      *
+      ** Reset number of records in subfile
+      *
+     C                     Z-ADD0         WLRCD   40
+      *
+      ** Set Collateral Type file to appropriate record
+      *
+     C           *LOVAL    SETLLSDCFTPXX
+      *
+     C           #0REV1    IFNE *BLANKS
+     C           #0REV2    ORNE *BLANKS
+     C           W#EROR    IFEQ 'Y'
+     C                     EXSR SRCLR
+     C                     ENDIF
+     C                     MOVE #0REV1    KWFETP
+     C                     MOVE #0REV2    KWCHGR
+     C           KCFEE     SETLLSDCFTPXX
+     C                     ENDIF
+      *
+      ** Save previous selection criteria
+      *
+     C                     MOVEL#0REV1    WREV1   2
+     C                     MOVEL#0REV2    WREV2   2
+      *
+      ** Load subfile page
+      *
+     C                     EXSR SRLOAD
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRDSPS  -  Display  Screen Processing                        *
+      *                                                               *
+      *  Called By: SRMAIN                                            *
+      *                                                               *
+      *  Calls    : SRCLR                                             *
+      *****************************************************************
+      *
+     C           SRDSPS    BEGSR
+      *
+      ** Display subfile page
+      *
+     C                     WRITESD1900F0
+     C                     WRITESD1900F2
+     C                     WRITESD1900C1
+     C                     EXFMTSD1900C0
+      *
+      ** Clear messages from program message queue
+      *
+     C                     EXSR SRCLR
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRLOAD  -  Load one page of subfile                          *
+      *                                                               *
+      *  Called By: SRIZSF,SRPRRS                                     *
+      *                                                               *
+      *  Calls    : SRCLR, SRSNMS                                     *
+      *****************************************************************
+      *
+     C           SRLOAD    BEGSR
+      *
+      ** Set subfile record load counter to 1
+      *
+     C                     Z-ADD1         WRCTR   50
+     C                     Z-ADDWLRCD     #0SFLR
+     C                     MOVE *BLANKS   #0SEL
+     C                     MOVE *OFF      *IN21
+      *
+      ** Read Collateral Types retrieval index
+      *
+     C                     READ SDCFTPXX                 80
+      *
+      ** No data to display
+      *
+     C           *IN80     IFEQ '1'
+     C                     EXSR SRCLR
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE *OFF      *IN28
+     C                     MOVEL'Y2U0008' PAMSID
+     C                     MOVEL'Y2USRMSG'PAMSGF    P
+     C                     EXSR SRSNMS
+     C                     MOVEL'SDUSRMSG'PAMSGF    P
+     C                     ELSE
+      *
+      ** Seton SFLDSP
+      *
+     C                     MOVE '1'       *IN28
+     C                     ENDIF
+      *
+      ** Load records until EOF
+      *
+     C           *IN80     DOWEQ'0'
+     C           WRCTR     ANDLEWSFPG
+      *
+      ** Load fields here
+      *
+     C           F1RECI    IFEQ '*'
+     C                     MOVEL'D'       #0TYP
+     C                     MOVE *ON       *IN56
+     C                     ELSE
+     C                     MOVEL*BLANKS   #0TYP
+     C                     MOVE *ON       *IN56
+     C                     ENDIF
+      *
+     C                     MOVELF1FETP    #0FTYP
+     C                     MOVELF1CHGR    #0CGRP
+     C                     MOVELF1PRTP    #0PRTP
+     C                     MOVELF1NARR    #0NARR
+     C                     MOVELF1FECP    #0FECP
+     C                     MOVELF1AUTO    #0AUTO
+     C                     MOVELF1CCCY    #0CCCY
+     C                     Z-ADDF1TNLU    #1TNLU
+     C                     Z-ADDF1TNLU    #0TNLU
+      *
+      ** Write records to SFL
+      *
+     C                     ADD  1         #0SFLR
+     C                     ADD  1         WRCTR
+     C                     WRITESD1900S0
+      *
+     C                     READ SDCFTPXX                 80
+     C                     ENDDO
+      *
+      ** Seton SFLEND indicator if EOF
+      *
+     C           *IN80     IFEQ '1'
+     C                     MOVE '1'       *IN21
+     C                     ELSE
+     C                     READPSDCFTPXX                 80
+     C                     ENDIF
+      *
+      ** No records on subfile
+      *
+     C           #0SFLR    IFEQ 0
+     C                     MOVE 'Y'       WNODAT  1
+     C                     MOVE *BLANKS   #0TYP
+     C                     ELSE
+     C                     MOVE 'N'       WNODAT
+     C                     ENDIF
+      *
+      ** Save last relative record number to workfield
+      *
+     C                     Z-ADD#0SFLR    WLRCD
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRCLR   -  Clear messages in program queue                   *
+      *                                                               *
+      *  Called By: SRLOAD, SRDSPS, SRPROC, SRVALS, SRIZSF, SRSFPR    *
+      *                                                               *
+      *  Calls    : Y2CLMSC - Clears messages from program queue      *
+      *****************************************************************
+      *
+     C           SRCLR     BEGSR
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGMQ    PAPGMQ 10
+     C                     PARM '*SAME'   PAPGRL
+     C                     WRITESD1900C1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRPROC  -  Screen Input Processing                           *
+      *                                                               *
+      *  Called By: SRPRRS                                            *
+      *                                                               *
+      *  Calls    : SRVALS, SRSFPR                                    *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+     C                     MOVE *OFF      *IN23
+     C                     MOVE *OFF      *IN66
+     C                     MOVE 'N'       W0DCF   1
+      *
+      ** Change in selection criteria, exit subroutine
+      *
+     C           #0RVF1    IFNE WREV1
+     C           #0RVF2    ORNE WREV2
+      *
+     C                     MOVE 'Y'       WWVALD
+     C                     MOVE 'Y'       W0RSF
+     C                     MOVE #0RVF1    #0REV1
+     C                     MOVE #0RVF2    #0REV2
+      *
+     C                     ELSE
+      *
+      ** Validate selection fields
+      *
+     C           WNODAT    IFEQ 'N'
+     C                     EXSR SRVALS
+      *
+      ** Process subfile records if valid
+      *
+     C           WWVALD    IFEQ 'Y'
+     C                     EXSR SRSFPR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRVALS  -  Validate selection field on subfile               *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *                                                               *
+      *  Calls    : SRCLR, SRSNMS, ZEDIT, SRITAB                      *
+      *****************************************************************
+      *
+     C           SRVALS    BEGSR
+      *
+      ** Clear messages from program message queue
+      *
+     C                     MOVE 'Y'       WWVALD
+     C                     EXSR SRCLR
+      *
+      ** Set subfile record pointer to top of subfile
+      *
+     C                     Z-ADD1         #0SFLR
+     C                     Z-ADD0         WSLCTR  30
+      *
+     C                     READCSD1900S0                 81
+      *
+     C           *IN81     DOWEQ'0'
+     C           #0SEL     IFNE *BLANK
+      *
+      ** Validation of selection field
+      *
+     C                     MOVE *OFF      *IN57
+      *
+      ** Selection must = 'A' 'E' OR 'D'
+      *
+     C           #0SEL     IFNE 'A'
+     C           #0SEL     ANDNE'E'
+     C           #0SEL     ANDNE'D'
+      *
+     C                     MOVE *ON       *IN66
+     C                     MOVEL'CSF9853' PAMSID
+     C                     MOVE 'N'       WWVALD
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+      *
+      ** SPF check
+      ** for single-branch environment
+      *
+     C           MBIN      IFNE 'Y'
+     C                     CALL 'ZVACTU'
+     C                     PARM #0SEL     PZACTN
+     C                     PARM           PERR
+      *
+      ** If action invalid for user
+      *
+     C           PERR      IFNE *ZERO
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9006' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** for multi-branch environment
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM #0SEL     PZACTN
+     C                     PARM USRBCH    PZBR
+     C                     PARM           PERR
+      *
+      ** If action invalid for user
+      *
+     C           PERR      IFEQ 1
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9007' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C           PERR      IFEQ 2
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9008' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If action = 'D' - System set up flag must = 'N'
+      *
+     C           #0SEL     IFEQ 'D'
+     C           BJSUC     ANDEQ'Y'
+      *
+     C                     MOVEL'CSF9005' PAMSID
+     C                     MOVE 'N'       WWVALD
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+      *
+      ** If action = 'I' , Record must be flagged as DELETED
+      *
+     C           #0SEL     IFEQ 'I'
+     C           #0TYP     ANDNE'D'
+      *
+     C                     MOVEL'CSF9009' PAMSID
+     C                     MOVE 'N'       WWVALD
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+      *
+      ** If record flagged as DELETED
+      *
+     C           #0TYP     IFEQ 'D'
+      *
+     C           #0SEL     IFEQ 'D'
+     C                     MOVE *ON       *IN57
+     C                     ELSE
+     C                     MOVE *OFF      *IN57
+     C                     ENDIF
+      *
+      ** Action cannot equal 'A' OR 'D'
+      *
+     C           #0SEL     IFEQ 'A'
+     C           #0SEL     OREQ 'D'
+      *
+     C                     MOVEL'CSF9010' PAMSID
+     C                     MOVE 'N'       WWVALD
+     C                     EXSR SRSNMS
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Switch *ON SFLNXTCHG
+      *
+     C                     MOVE *ON       *IN23
+     C                     UPDATSD1900S0
+     C                     MOVE *OFF      *IN23
+     C                     MOVE *OFF      *IN66
+     C                     READCSD1900S0                 81
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRSFPR  -  Subfile Processing                                *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *                                                               *
+      *  Calls    : SRUPSC, SRCLR                                     *
+      *****************************************************************
+      *
+     C           SRSFPR    BEGSR
+      *
+     C                     MOVE 'N'       W#EROR  1
+      *
+      ** Set subfile record pointer to top of subfile
+      *
+     C                     Z-ADD1         #0SFLR
+      *
+     C                     READCSD1900S0                 81
+      *
+     C           *IN81     DOWEQ'0'
+      *
+     C           #0SEL     IFNE *BLANKS
+      *
+      ** If valid entry
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+     C                     MOVEL#0SEL     #0ACT
+      *
+      ** Take main Fee type details (charge group is left blanks)
+      ** Whatever Action code is
+      *
+     C                     MOVEL#0FTYP    KWFETP
+     C                     MOVEL*BLANKS   KWCHGR
+     C           KCFEE     CHAINSDCFTPL0             88
+     C                     CLEARDSFDEF
+     C           *IN88     IFEQ *OFF
+     C                     MOVELW1DATA    DSFDEF
+     C                     ENDIF
+      *
+     C                     MOVEL#0FTYP    #1FETP
+     C                     MOVEL#0CGRP    #1CHGR
+      *
+     C                     MOVE *OFF      *IN25
+     C           #0CGRP    IFNE *BLANKS
+     C                     MOVE *ON       *IN25
+     C                     ENDIF
+      *
+      ** Set format flag depending on type
+      *
+     C           #0SEL     IFEQ 'I'
+     C                     MOVEL'IA'      WWFMT
+     C           #0TYP     IFNE 'D'
+     C                     CLEARWWDATA
+     C                     MOVE *BLANKS   #1ACDT
+     C                     MOVE *BLANKS   #1STDT
+     C                     MOVE *BLANKS   #1MINA
+     C                     MOVE *BLANKS   #1MAXA
+     C                     ENDIF
+      *
+     C           #0CHGR    IFNE *BLANKS
+     C                     MOVELDFPRTP    #1PRTP    P
+     C                     MOVELDFNARR    #1NARR    P
+     C                     MOVELDFFECP    #1FECP    P
+     C                     MOVELDFCCCY    #1CCCY    P
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           #0SEL     IFEQ 'A'
+     C                     MOVEL'IA'      WWFMT
+     C                     ENDIF
+      *
+     C           #0SEL     IFEQ 'E'
+     C                     MOVEL'EN'      WWFMT
+     C                     ENDIF
+      *
+     C           #0SEL     IFEQ 'D'
+     C                     MOVEL'DL'      WWFMT
+     C                     ENDIF
+      *
+     C           #0SEL     IFNE 'I'
+     C           #0SEL     OREQ 'I'
+     C           #0TYP     ANDEQ'D'
+      *
+      ** Read fee Definition details of record to manage
+      *
+     C                     MOVE #0FTYP    KWFETP
+     C                     MOVE #0CGRP    KWCHGR
+     C           KCFEE     CHAINSDCFTPL0             88
+     C           F1RECI    IFEQ '*'
+     C                     MOVE *ON       *IN57
+     C                     ELSE
+     C                     MOVE *OFF      *IN57
+     C                     ENDIF
+     C                     EXSR SRITAB
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Process action entered
+      *
+     C                     EXSR SRUPSC
+      *
+      ** Exit from detail screen if F12 is pressed
+      *
+     C           *INKL     IFEQ '1'
+     C                     EXSR SRCLR
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   #0SEL
+      *
+      ** Update subfile record
+      *
+     C                     MOVE *ON       *IN23
+     C                     UPDATSD1900S0
+     C                     MOVE *OFF      *IN23
+     C                     ENDIF
+     C                     READCSD1900S0                 81
+      *
+     C                     ENDDO
+     C                     MOVE 'Y'       W0RSF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SREXIT  -  Exit of Program Processing                        *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *                                                               *
+      *  Calls    : None                                              *
+      *****************************************************************
+      *
+     C           SREXIT    BEGSR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRUPSC    - Process Update Screen                            *
+      *                                                               *
+      *  Called by - SRMAIN                                           *
+      *                                                               *
+      *  Calls     - SRUPPR, SRVUPD, SRPCMD                           *
+      *****************************************************************
+     C           SRUPSC    BEGSR
+      *
+      ** Set of valid flag
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE #0ACT     #1ACT
+      *
+      ** Dowhile exit not requested
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C           WWVALD    ANDEQ'N'
+     C           *INKE     OREQ *ON
+      *
+     C                     MOVE *OFF      *IN14
+     C                     MOVE *OFF      *IN15
+      *
+     C           #0ACT     IFEQ 'E'
+     C           #0ACT     OREQ 'D'
+     C                     MOVE *ON       *IN14
+      *
+     C           #0ACT     IFEQ 'D'
+     C                     MOVE *ON       *IN15
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If error and not help, write message subfile
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESD1900C1
+     C                     ENDIF
+      *
+      ** Read screen depending on WWFMT
+      *
+     C                     EXFMTSD1900F1
+      *
+      ** Perform key pressed
+      *
+     C           *INKC     CASEQ*ON       SREXIT
+     C           *INKJ     CASEQ*ON       SRUPPR
+     C           *INKL     CASEQ*ON       SRPCMD
+     C           *INKE     CASEQ*ON       SRCMD5
+     C                     CAS            SRVUPD
+     C                     ENDCS
+      *
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+     C           *INKE     ANDEQ*OFF
+     C           WWVALD    ANDEQ'Y'
+      *
+     C           #1ACT     IFEQ 'I'
+     C           #1ACT     OREQ 'A'
+      *
+      ** Update files
+      *
+     C                     EXSR SRUPPR
+     C                     ENDIF
+      *
+     C           WWVALD    IFEQ 'Y'
+     C                     MOVE *BLANKS   #0ACT
+     C                     MOVE *BLANKS   #0FETP
+     C                     MOVE *BLANKS   #0CHGR
+     C                     MOVE *BLANKS   #0REV1
+     C                     MOVE *BLANKS   #0REV2
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRUPPR    - Update Processing                                *
+      *                                                               *
+      *  Called by - SRUPSC                                           *
+      *                                                               *
+      *  Calls     - SRSNMS, SRTNLU, *PSSR, SRCLR                     *
+      *****************************************************************
+     C           SRUPPR    BEGSR
+      *
+     C                     EXSR SRTNLU
+     C                     MOVE 'Y'       WWVALD
+     C                     MOVE *OFF      *IN82
+      *
+      ** Action = 'I', new insert or Re-instate
+      *
+     C           #0ACT     IFEQ 'I'
+     C           #0SEL     OREQ 'I'
+      *
+      ** Access Fee type
+      *
+     C                     MOVE #1FETP    KWFETP
+     C                     MOVE #1CHGR    KWCHGR
+     C                     Z-ADD*ZERO     WWCADT
+     C                     Z-ADD*ZERO     WWLADT
+     C                     Z-ADD*ZERO     WWCSTD
+     C                     Z-ADD*ZERO     WWLSTD
+      *
+     C           KCFEE     CHAINSDCFTPL0             27
+      *
+      ** If a record already exists
+      *
+     C           *IN27     IFEQ *OFF
+      *
+      ** If trans. no of Last update has changed - ERROR
+      *
+     C           F1TNLU    IFNE #1TNLU
+     C           F1TNLU    ORNE #0TNLU
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9011' PAMSID
+     C                     EXSR SRSNMS
+      *
+      ** Else - UPDATE Record
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDF1CADT    WWCADT
+     C                     Z-ADDF1LADT    WWLADT
+     C                     Z-ADDF1CSTD    WWCSTD
+     C                     Z-ADDF1LSTD    WWLSTD
+     C                     MOVE 'D'       F1RECI
+     C                     MOVEL#1FETP    F1FETP
+     C                     MOVEL#1CHGR    F1CHGR
+      *
+      ** Fill details with existing/new ones
+      *
+     C                     EXSR SRISEC
+      *
+     C                     Z-ADDWWDSTN    F1TNLU
+     C                     Z-ADDBJRDNB    F1LCD
+     C                     TIME           F1LCTM
+     C                     MOVE 'I'       F1CHTP
+     C                     MOVE 'Y'       WREACT
+     C                     UPDATSDCFTPD0               82
+      *
+     C                     ENDIF
+      *
+      ** Else - Record does not exist, thus create it
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'D'       F1RECI
+     C                     MOVEL#1FETP    F1FETP
+     C                     MOVEL#1CHGR    F1CHGR
+      *
+      ** Fill up details from screen to file
+      *
+     C                     EXSR SRISEC
+      *
+     C                     Z-ADDWWDSTN    F1TNLU
+     C                     Z-ADDBJRDNB    F1LCD
+     C                     TIME           F1LCTM
+     C                     MOVE 'I'       F1CHTP
+     C                     MOVE 'N'       WREACT
+     C                     WRITESDCFTPD0               82
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Action = 'A'
+      *
+     C           #0ACT     IFEQ 'A'
+     C           #0SEL     OREQ 'A'
+      *
+      ** Access Fee type
+      *
+     C                     MOVEL#1CHGR    KWCHGR    P
+     C                     MOVEL#1FETP    KWFETP    P
+     C                     Z-ADD*ZERO     WWCADT
+     C                     Z-ADD*ZERO     WWLADT
+     C                     Z-ADD*ZERO     WWCSTD
+     C                     Z-ADD*ZERO     WWLSTD
+      *
+     C           KCFEE     CHAINSDCFTPL0             27
+      *
+      ** If a record not found or TNLU has CHANGED
+      *
+     C           *IN27     IFEQ *ON
+     C           F1TNLU    ORNE #1TNLU
+     C           F1TNLU    ANDNE#0TNLU
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9011' PAMSID
+     C                     EXSR SRSNMS
+      *
+      ** Else - UPDATE record
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDF1CADT    WWCADT
+     C                     Z-ADDF1LADT    WWLADT
+     C                     Z-ADDF1CSTD    WWCSTD
+     C                     Z-ADDF1LSTD    WWLSTD
+     C                     MOVEL#1FETP    F1FETP
+     C                     MOVEL#1CHGR    F1CHGR
+      *
+      ** Fill Up details from screen to File
+      *
+     C                     EXSR SRISEC
+     C                     Z-ADDWWDSTN    F1TNLU
+     C           F1LCD     IFNE BJRDNB
+     C                     MOVE 'A'       F1CHTP
+     C                     ENDIF
+     C                     Z-ADDBJRDNB    F1LCD
+     C                     TIME           F1LCTM
+     C                     UPDATSDCFTPD0               82
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Action = 'D'
+      *
+     C           #0ACT     IFEQ 'D'
+     C           #0SEL     OREQ 'D'
+      *
+      ** Access Fee type
+      *
+     C                     MOVEL#1CHGR    KWCHGR    P
+     C                     MOVEL#1FETP    KWFETP    P
+     C                     Z-ADD*ZERO     WWCADT
+     C                     Z-ADD*ZERO     WWLADT
+     C                     Z-ADD*ZERO     WWCSTD
+     C                     Z-ADD*ZERO     WWLSTD
+      *
+     C           KCFEE     CHAINSDCFTPL0             27
+      *
+      ** If a record not found or TNLU has CHANGED
+      *
+     C           *IN27     IFEQ *ON
+     C           F1TNLU    ORNE #1TNLU
+     C           F1TNLU    ANDNE#0TNLU
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9011' PAMSID
+     C                     EXSR SRSNMS
+      *
+      ** Else - DELETE record
+      *
+     C                     ELSE
+     C                     MOVE '*'       F1RECI
+     C                     Z-ADDWWDSTN    F1TNLU
+     C                     MOVE 'D'       F1CHTP
+     C                     Z-ADDBJRDNB    F1LCD
+     C                     TIME           F1LCTM
+     C                     UPDATSDCFTPD0               82
+     C                     MOVE '0'       *IN58
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN82     IFEQ *ON
+      *
+     C           STATUS    IFEQ 01021
+      *
+     C                     ROLBK
+      *
+      ** Clear messages caused by status error
+      *
+     C                     EXSR SRCLR
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9011' PAMSID
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+      *
+     C           STATUS    IFEQ 01218
+      *
+      ** Clear messages caused by status error
+      *
+     C                     EXSR SRCLR
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9011' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+      *
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ELSE
+      *
+     C                     MOVEL'SDCFTPPD'KFLNM  10
+      *
+     C           KFLNM     CHAIN@AHREAU              17
+      *
+     C           *IN17     IFEQ *OFF
+      *
+     C                     SELEC
+     C           #1ACT     WHEQ 'I'
+     C           WREACT    ANDEQ'N'
+     C                     ADD  1         AHNOIN
+     C                     ADD  1         AHNORC
+      *
+     C           #1ACT     WHEQ 'I'
+     C           WREACT    ANDEQ'Y'
+     C                     ADD  1         AHNOIN
+     C                     SUB  1         AHNODL
+      *
+     C           #1ACT     WHEQ 'A'
+     C                     ADD  1         AHNOAM
+      *
+     C           #1ACT     WHEQ 'D'
+     C                     ADD  1         AHNODL
+      *
+     C                     ENDSL
+      *
+     C                     UPDAT@AHREAU
+     C                     ENDIF
+      *
+     C                     COMIT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRVUPD    - Validate Update Screen                           *
+      *                                                               *
+      *  Called by - SRUPSC                                           *
+      *                                                               *
+      *  Calls     - SRSNMS, SRCLR                                    *
+      *****************************************************************
+     C           SRVUPD    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Set off indicators
+      *
+     C                     MOVEA'00000000'*IN,30
+     C                     MOVEA'00000000'*IN,38
+     C                     MOVEA'0000000' *IN,46
+     C                     MOVE *OFF      *IN53
+     C                     MOVE *OFF      *IN54
+     C                     MOVE *OFF      *IN75
+      *
+     C                     MOVE *OFF      *IN60
+     C                     MOVE *OFF      *IN67
+      *
+     C                     MOVE *OFF      *IN69            Fees on excess                     PB0181
+     C                     MOVE *OFF      *IN70            Waive minimum                      PB0181
+     C                     MOVE *OFF      *IN71            Basis for P Val                    PB0181
+     C                     MOVE *OFF      *IN72            Basis Day in M                     PB0181
+     C                     MOVE *OFF      *IN73            Month in Qrt                       PB0181
+      *
+      ** Set on valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+     C           WWFMT     IFEQ 'DL'
+     C                     MOVEL'CSF9097' PAMSID
+     C                     EXSR SRSNMS
+     C                     MOVE 'N'       WWVALD
+     C                     ENDIF
+      *
+     C           WWFMT     IFEQ 'IA'
+      *
+      ** Fee processing type must be a valid processing type
+      *
+     C           #1PRTP    LOKUP#PRO                     90
+     C           *IN90     IFEQ *OFF
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN30
+     C                     MOVEL'CSF9012' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      ** Narrative must be entered
+      *
+     C           #1NARR    IFEQ *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN31
+     C                     MOVEL'CSF9013' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      ** Valid values for Fee per Customer/Portfolio are 'C' and 'P'
+      ** 'P' is allowed when Touch of Finance is beging used (BGN4ST)
+      *
+     C           #1FECP    IFNE 'C'
+     C           #1FECP    ANDNE'P'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN32
+     C                     MOVEL'CSF9014' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+      *
+      ** Fee per portfolio may be  used only when TOF Interface is installed
+      *
+     C           #1FECP    IFEQ 'P'
+     C           BGN4ST    ANDEQ'N'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN32
+     C                     MOVEL'CSF9124' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      ** Fee per customer/portfolio can only be 'P' if the fee processing                     PB0181
+      *  type is 'PP'.                                                                        PB0181
+      *                                                                                       PB0181
+     C           PB0181    IFEQ 'Y'                                                           PB0181
+      *                                                                                       PB0181
+     C           #1PRTP    IFEQ 'PP'                                                          PB0181
+     C           #1FECP    ANDNE'P'                                                           PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN32                                               PB0181
+     C                     MOVEL'CSF9201' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C                     ENDIF                                                              PB0181
+      *
+      ** If Processing type is Hold Mail (HM) or Number Account (NA)
+      ** Fee Customer/Portfolio indicator must be 'C' (Customer)
+      *
+     C           #1PRTP    IFEQ 'HM'
+     C           #1FECP    ANDNE'C'
+     C           #1PRTP    OREQ 'NA'
+     C           #1FECP    ANDNE'C'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN32
+     C                     MOVEL'CSF9107' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Retail transaction type (used fo retail posting) must be checked
+      ** on transaction file
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1RETR    ORNE *BLANKS
+     C                     CALL 'AORETRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY'    POPTN   7
+     C                     PARM #1RETR    PRETR   5
+     C           SDRETD    PARM SDRETD    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELA1RTTY    #1RETR
+     C                     ELSE
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN53
+     C                     MOVEL'CSF9089' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Taxable indicates whether VAT is applicable for this fee type or not
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1TAXE    ORNE *BLANKS
+     C           #1TAXE    IFNE 'Y'
+     C           #1TAXE    ANDNE'C'
+     C           #1TAXE    ANDNE'N'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN34
+     C                     MOVEL'CSF9015' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Income received account must be a valid account, when
+      ** Taxable indicator is not "Y"
+      *
+     C           #1IRAC    IFEQ *BLANKS
+      *
+      ** Verify that entry is done
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1TAXE    ANDEQ*BLANKS
+     C           #1TAXE    OREQ 'N'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN52
+      *
+      ** VAT details have to be input due to Taxable Ind is NOT 'Y'
+      *
+     C                     MOVEL'CSF9158' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** Verify Income received account exists
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C**********           PARM #1IRAC    PACCD   4                                           CER001
+     C                     PARM #1IRAC    PACCD  10                                           CER001
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELA5ACCD    #1IRAC
+     C                     ELSE
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN52
+      *
+      ** VAT income received accoutn isn't valid. '?' for list.
+      *
+     C                     MOVEL'CSF9046' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** VAT Code must exist in VAT Code file
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1VATC    ORNE *BLANKS
+     C           #1TAXE    OREQ 'Y'
+      *
+      ** Verify entry is allowed
+      *
+     C           #1TAXE    IFEQ 'N'
+     C           #1TAXE    OREQ ' '
+     C           #1VATC    IFNE *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN35
+      *
+      ** Taxable indicator must be 'Y' to input this field
+      *
+     C                     MOVEL'CSF9090' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ELSE
+      *
+     C           #1VATC    IFEQ *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN35
+      *
+      ** Tax. Ind. = 'Y', input VAT details is required.
+      *
+     C                     MOVEL'CSF9093' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+      *
+      ** Valid value should be numeric in VAT code table
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1VATC    ZFIELD    P
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD1         ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *OFF
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN35
+      *
+      ** VAT code must exist in VAT code table. Num. Value between 0 and 99
+      *
+     C                     MOVEL'CSF9047' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     MOVE #1VATC    WNVATC  2
+     C           WNVATC    CHAINSDVATCL0             89
+     C           *IN89     IFEQ *ON
+     C           F9RECI    OREQ '*'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN35
+      *
+      ** VAT code must exist in VAT code table. Num. Value between 0 and 9
+      *
+     C                     MOVEL'CSF9047' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** VAT Account must be a valid account
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1VATA    ORNE *BLANKS
+     C           #1TAXE    OREQ 'Y'
+      *
+      ** Check if entry is Allowed
+      *
+     C           #1TAXE    IFEQ 'N'
+     C           #1TAXE    OREQ ' '
+      *
+     C           #1VATA    IFNE *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN36
+     C                     MOVEL'CSF9090' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Verify that entry is input
+      *
+     C           #1VATA    IFEQ *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN36
+     C                     MOVEL'CSF9093' PAMSID
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM #1VATA    PACCD
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELA5ACCD    #1VATA
+     C           A5ACTY    IFEQ 'R'
+     C           A5TOIN    OREQ 'Y'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN36
+      *
+      ** Account code couldn't be Retail or Title Account code
+      *
+     C                     MOVEL'CSF9044' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN36
+      *
+      ** VAT Accound Code isn't valid. '?' for list.
+      *
+     C                     MOVEL'CSF9048' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** VAT Sequence must be numeric
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1VATS    ORNE *BLANKS
+     C           #1TAXE    OREQ 'Y'
+      *
+      ** Verify entry is allowed
+      *
+     C           #1TAXE    IFEQ 'N'
+     C           #1TAXE    OREQ ' '
+     C           #1VATS    IFNE *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN37
+     C                     MOVEL'CSF9090' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** Verify that input is done
+      *
+     C           #1VATS    IFEQ *BLANKS
+     C           #1VATS    OREQ '00'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN37
+      *
+      ** Taxable Ind. is 'Y', VAT Details are required.
+      *
+     C                     MOVEL'CSF9093' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+      *
+      ** Sequence between 01 and 99
+      *
+     C                     MOVEL#1VATS    WVTNUM  30
+     C                     MOVELWVTNUM    WVTALF  2
+      *
+     C           #1VATS    IFNE WVTALF
+     C           #1VATS    ORLT '01'
+     C           #1VATS    ORGT '99'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN37
+     C                     MOVEL'CSF9049' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Automatic posting defines if settlements are either settled automatic
+      **  settlement date (if 'Y') or held until authorisation
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1AUTO    ORNE *BLANKS
+     C           #1AUTO    IFNE 'Y'
+     C           #1AUTO    ANDNE'N'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN38
+      *
+      ** Automatic posting, Y or 'N'
+      *
+     C                     MOVEL'CSF9016' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** VAT Income Received Account must be a valid account code,
+      ** when Taxable indicator is not "N"
+      *
+     C           #1VAIA    IFEQ *BLANKS
+      *
+      ** Verify that entry is done
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1TAXE    ANDEQ*BLANKS
+     C           #1TAXE    OREQ 'Y'
+     C           #1TAXE    OREQ 'C'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN60
+      *
+      ** VAT details have to be input due to Taxable Ind is NOT 'N'
+      *
+     C                     MOVEL'CSF9159' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** Verify Income received account exists
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM #1VAIA    PACCD
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELA5ACCD    #1VAIA
+     C                     ELSE
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN60
+      *
+      ** VAT income received accoutn isn't valid. '?' for list.
+      *
+     C                     MOVEL'CSF9046' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Fee charging CCY must be a valid currency
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #1CCCY    PCKEY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE A6CYCD    #1CCCY
+     C                     Z-ADDA6NBDP    SDEC
+     C                     ELSE
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN39
+      *
+      ** Currency is mandatory and must exist
+      *
+     C                     MOVEL'CSF9017' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      ** If minimum charge is not blank
+      *
+     C                     Z-ADD*ZERO     WWMINA 150
+     C           #1MINA    IFNE *BLANKS
+     C           *IN39     ANDEQ*OFF
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1MINA    ZFIELD    P
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN54
+      *
+      ** Minimum Annual Fee Amount isn't Valid
+      *
+     C                     MOVEL'CSF9091' PAMSID
+     C                     MOVEL'Minimum' PAMSDA
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     MOVE ZFIELD    WWMINA 150
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MINA
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If maximum charge is not blank
+      *
+     C                     Z-ADD*ZERO     WWMAXA 150
+     C           #1MAXA    IFNE *BLANKS
+     C           *IN39     ANDEQ*OFF
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1MAXA    ZFIELD    P
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN75
+      *
+      ** Maximum Annual Fee Amount isn't Valid
+      *
+     C                     MOVEL'CSF9091' PAMSID
+     C                     MOVEL'Maximum' PAMSDA
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     MOVE ZFIELD    WWMAXA 150
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MAXA
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           #1MINA    IFNE *BLANKS
+     C           #1MAXA    ANDEQ*BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN54
+     C                     MOVE *ON       *IN75
+      *
+      ** Minimum AND Maximum Annual Fee Amounts together
+      *
+     C                     MOVEL'CSF9156' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C           WWMINA    IFGE WWMAXA
+     C           WWVALD    ANDEQ'Y'
+     C           #1MAXA    ANDNE*BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN54
+     C                     MOVE *ON       *IN75
+      *
+      ** Maximum fee Amount is less than Minimum Fee Amount
+      *
+     C                     MOVEL'CSF9092' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      ** Income account must be a valid account
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1INAC    ORNE *BLANKS
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM #1INAC    PACCD
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELA5ACCD    #1INAC
+     C           A5ACTY    IFEQ 'R'
+     C           A5TOIN    OREQ 'Y'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN40
+      *
+      ** Account code couldnt be Retail or Title Account code
+      *
+     C                     MOVEL'CSF9044' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN40
+      *
+      ** Income Account isn't valid. '?' for list
+      *
+     C                     MOVEL'CSF9018' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Accrual account must be a valid account
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1ACAC    ORNE *BLANKS
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM #1ACAC    PACCD
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELA5ACCD    #1ACAC
+     C           A5ACTY    IFEQ 'R'
+     C           A5TOIN    OREQ 'Y'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN41
+      *
+      ** Account code couldn't be Retail or Title Account code
+      *
+     C                     MOVEL'CSF9044' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN41
+      *
+      ** Accruals Account isn't valid. '?' for List .
+      *
+     C                     MOVEL'CSF9019' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Valid values for accrual frequency are W(weekly), M(monthly), Q(quarterly)
+      ** X(six-monthly) , Y(yearly) or D(Daily)
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1ACFR    ORNE *BLANKS
+     C           #1ACFR    IFNE 'D'
+     C           #1ACFR    ANDNE'W'
+     C           #1ACFR    ANDNE'M'
+     C           #1ACFR    ANDNE'Q'
+     C           #1ACFR    ANDNE'X'
+     C           #1ACFR    ANDNE'Y'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN42
+      *
+      ** Accruals Frequency isn't valid. See 2nd level for valid entries
+      *
+     C                     MOVEL'CSF9020' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Accrual day in month is mandatory for frequency M, Q, X and Y
+      *
+     C           #1ACFR    IFEQ 'M'
+     C           #1ACFR    OREQ 'Q'
+     C           #1ACFR    OREQ 'X'
+     C           #1ACFR    OREQ 'Y'
+      *
+     C           #1ACDM    IFEQ *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN43
+     C                     MOVEL'CSF9021' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1ACDM    ZFIELD    P
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN43
+      *
+      ** Accrual Day of Month is mandatory for Accrual Frequency M, Q, X or Y.
+      *
+     C                     MOVEL'CSF9021' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     MOVE ZFIELD    #1ACDM
+     C           #1ACDM    IFLT '01'
+     C           #1ACDM    ORGT '31'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN43
+      *
+      ** Accrual Day of Month is mandatory for Accrual Frequency M, Q, X or Y.
+      ** Valid value between 01 and 31.
+      *
+     C                     MOVEL'CSF9021' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           #1ACDM    IFNE *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN43
+     C                     MOVEL'CSF9855' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate new Accrual Frequency Vs Default Settlement Frequency
+      *
+     C           *IN42     IFEQ *OFF
+     C           #1CHGR    ANDNE*BLANKS
+     C           #1ACFR    ANDNE*BLANKS
+     C           #1STFR    ANDEQ*BLANKS
+     C           DFSTFR    IFLT #1ACFR
+     C           #1ACFR    ANDNE'W'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN42
+      *
+      ** Accruals Freq. is Longer than Default Settlement Freq.
+      *
+     C                     MOVEL'CSF9157' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Next accrual date must be greater than or equal to the run date
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1ACDT    ORNE *BLANKS
+      *
+     C           #1ACDT    IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1ACDT    ZFIELD    P
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD6         ZADIG
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *OFF
+     C                     MOVE ZFIELD    #1ACDT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVEL#1ACDT    WNUM7   70
+     C                     MOVELWNUM7     WALF6   6
+     C                     MOVEL#1ACDT    ZDATE
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    WACDT   50P
+      *
+     C           *IN99     IFEQ *ON
+     C           #1ACDT    ORNE WALF6
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN44
+     C                     MOVEL'CSF9022' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C           WACDT     IFLT RUND
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN44
+      *
+      ** Next Accruals Date couldn't be before Midas Rundate.
+      *
+     C                     MOVEL'CSF9023' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *  Input in Settlement Frequency, Settlement Generation Days,                           PB0181
+      ** Settlement Day in Month and Next Settlement Date field is                            PB0181
+      *  forbidden if the Fee Processing Type is equal to 'PP'.                               PB0181
+      *                                                                                       PB0181
+     C           PB0181    IFEQ 'Y'                                                           PB0181
+     C           #1PRTP    ANDEQ'PP'                                                          PB0181
+      *                                                                                       PB0181
+      ** Settlement Generation Days                                                           PB0181
+     C           #1STGE    IFNE *BLANKS                                                       PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN45                                               PB0181
+     C                     MOVEL'CSF9202' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+      ** Settlement Frequency                                                                 PB0181
+     C           #1STFR    IFNE *BLANKS                                                       PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN46                                               PB0181
+     C                     MOVEL'CSF9203' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+      ** Settlement Day in Month                                                              PB0181
+     C           #1STDM    IFNE *ZEROS                                                        PB0181
+     C           #1STDM    ANDNE*BLANKS                                                       PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN47                                               PB0181
+     C                     MOVEL'CSF9204' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+      ** Next Settlement Date                                                                 PB0181
+     C           #1STDT    IFNE *BLANKS                                                       PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN48                                               PB0181
+     C                     MOVEL'CSF9205' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C                     ELSE                                                               PB0181
+      *                                                                                       PB0181
+      ** Settlement generation days must be in range 01 to 14
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1STGE    ORNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1STGE    ZFIELD    P
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C           #1STGE    OREQ *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN45
+     C                     MOVEL'CSF9024' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     MOVE ZFIELD    #1STGE
+     C           #1STGE    IFLT '01'
+     C           #1STGE    ORGT '14'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN45
+     C                     MOVEL'CSF9024' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+      ** Valid values for Settlement frequency are M(monthly), Q(quarterly)
+      ** X(six-monthly) or Y(yearly)
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1STFR    ORNE *BLANKS
+     C           #1STFR    IFNE 'M'
+     C           #1STFR    ANDNE'Q'
+     C           #1STFR    ANDNE'X'
+     C           #1STFR    ANDNE'Y'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN46
+      *
+      ** Settl. Freq. is M, Q, X or Y
+      *
+     C                     MOVEL'CSF9025' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+      *
+      ** SSTFR must be longer or Equivalent to SACFR
+      ** OR SACFR if Blank, longer or Equivalent to Default Fee Definition DFA
+      *
+     C           #1ACFR    IFNE ' '
+      *
+     C           #1STFR    IFLT #1ACFR
+     C           #1ACFR    ANDNE'W'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN46
+      *
+      ** Settl. Freq. is equivalent or Longer than Accrual Freq.
+      *
+     C                     MOVEL'CSF9031' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           #1STFR    IFLT DFACFR
+     C           DFACFR    ANDNE'W'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN46
+      *
+      ** Settl. Freq. is equivalent or Longer than Accrual Freq.
+      *
+     C                     MOVEL'CSF9031' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Settlement day in month is mandatory for frequency M, Q, X and Y.
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1STDM    ORNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1STDM    ZFIELD    P
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN47
+     C                     MOVEL'CSF9030' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     MOVE ZFIELD    #1STDM
+     C           #1STDM    IFLT '01'
+     C           #1STDM    ORGT '31'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN47
+     C                     MOVEL'CSF9030' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Next settlement date must be greater than or equal to the run date
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1STDT    ORNE *BLANKS
+      *
+     C           #1STDT    IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1STDT    ZFIELD    P
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD6         ZADIG
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *OFF
+     C                     MOVE ZFIELD    #1STDT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVEL#1STDT    WNUM7
+     C                     MOVELWNUM7     WALF6
+     C                     MOVEL#1STDT    ZDATE
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    WSTDT   50P
+      *
+     C           *IN99     IFEQ *ON
+     C           #1STDT    ORNE WALF6
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN48
+     C                     MOVEL'CSF9022' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C           WSTDT     IFLT RUND
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN48
+     C                     MOVEL'CSF9026' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+      ** Valid values for Assets 'A', Liabilities 'L', Net of assets and Both
+      ** total of assets and liabilities (B)
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1ALNB    ORNE *BLANKS
+      *
+      ** Default Fee Definition : MANDATORY.
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1ALNB    ANDEQ*BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN49
+      *
+     C                     MOVEL'CSF9848' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+      *
+      ** When Apply, Should be 'A'ssets, 'L'iabilities, 'N'et or 'B'oth
+      *
+     C           #1ALNB    IFNE 'A'
+     C           #1ALNB    ANDNE'L'
+     C           #1ALNB    ANDNE'N'
+     C           #1ALNB    ANDNE'B'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN49
+      *
+      ** A, L , N or B
+      *
+     C                     MOVEL'CSF9849' PAMSID
+     C                     EXSR SRSNMS
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Valid values for include accruals are 'Y' or 'N'
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1IACC    ORNE *BLANKS
+      *
+      ** Value is mandatory
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1IACC    ANDEQ*BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN50
+      *
+      ** Accrual on Flag is mandatory
+      *
+     C                     MOVEL'CSF9847' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+      *
+      ** Valid values are 'Y' or 'N' , 'Y' means that accruals will take part
+      *
+     C           #1IACC    IFNE 'Y'
+     C           #1IACC    ANDNE'N'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN50
+      *
+      ** Y or N
+      *
+     C                     MOVEL'CSF9028' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Valid values for include Forward FX are 'Y' or 'N'
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1INFF    ORNE *BLANKS
+      *
+      ** Mandatory when Main Fee definition
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1INFF    ANDEQ*BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN51
+      *
+      ** Include Forward FX flag is mandatory
+      *
+     C                     MOVEL'CSF9846' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+      *
+      ** When Applied, Y or N
+      *
+     C           #1INFF    IFNE 'Y'
+     C           #1INFF    ANDNE'N'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN51
+     C                     MOVEL'CSF9850' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Expired fees retention period must be numeric and the value
+      ** must be between 0 and 99
+      *
+     C           #1CHGR    IFEQ *BLANKS
+     C           #1RETP    ORNE *BLANKS
+      *
+      ** Verify that entry is between 0 and 99
+      *
+     C           #1RETP    IFEQ *BLANKS
+     C                     MOVE BKAPRP    #1RETP    P
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1RETP    ZFIELD    P
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN67
+      *
+      ** Not numeric
+      *
+     C                     MOVEL'CSF9161' PAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     MOVE ZFIELD    #1RETP
+     C                     MOVEL#1RETP    WRETP   20
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If the charge group is not blank, and one of Accrual frequency
+      ** Next Accrual date is entered, than all three must be entered
+      *
+     C           #1CHGR    IFNE *BLANKS
+     C           #1ACFR    IFNE *BLANKS
+     C           #1ACDM    ORNE *BLANKS
+     C           #1ACDT    ORNE *BLANKS
+      *
+     C           #1ACFR    IFEQ *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN42
+      *
+      ** Accruals Frequency --> input also other accrual details
+      *
+     C                     MOVEL'CSF9114' PAMSID
+     C                     MOVEL'Accrual' PAMSDA    P
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C           #1ACDM    IFEQ *BLANKS
+     C           #1ACFR    IFNE 'W'
+     C           #1ACFR    ANDNE'D'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN43
+     C                     MOVEL'CSF9114' PAMSID
+     C                     MOVEL'Accrual' PAMSDA    P
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           #1ACDT    IFEQ *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN44
+     C                     MOVEL'CSF9114' PAMSID
+     C                     MOVEL'Accrual' PAMSDA    P
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If the charge group is not blank, and one of Settlement frequency,
+      ** Settlement Day in month or Next Settlement date must be entered. All
+      ** All of three must be entered.
+      *
+     C           #1CHGR    IFNE *BLANKS
+     C           #1STFR    IFNE *BLANKS
+     C           #1STDM    ORNE *BLANKS
+     C           #1STDT    ORNE *BLANKS
+      *
+     C           #1STFR    IFEQ *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN46
+     C                     MOVEL'CSF9114' PAMSID
+     C           'Settle'  CAT  'ment':0  PAMSDA    P
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C           #1STDM    IFEQ *BLANKS
+     C           #1STFR    ANDNE'W'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN47
+     C                     MOVEL'CSF9114' PAMSID
+     C           'Settle'  CAT  'ment':0  PAMSDA    P
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C           #1STDT    IFEQ *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN48
+     C                     MOVEL'CSF9114' PAMSID
+     C           'Settle'  CAT  'ment':0  PAMSDA    P
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check if the Fee type exist on Charge Group/Fee Rate file
+      ** if not send a warning message
+      *
+     C           WWVALD    IFEQ 'Y'
+     C           WWARN     ANDEQ1
+     C                     MOVE #1FETP    KKFETP
+     C                     MOVE #1CHGR    KKCHGR
+     C           KCGFR     CHAINSDCGFRL1             89
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE *BLANKS   KKCHGR
+     C           KCGFR     CHAINSDCGFRL1             89
+     C                     ENDIF
+      *
+     C           *IN89     IFEQ *ON
+     C           F4RECI    OREQ '*'
+     C                     ADD  1         WWARN
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Warning : Fee Type not yet defined in Charge Group/Fee Rate File
+      *
+     C                     MOVEL'CSF9117' PAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADD1         WWARN   10
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+     C           PB0181    IFEQ 'Y'                                                           PB0181
+      *                                                                                       PB0181
+      ** Waive Minimum is mandatory for all Fee Processing types.                             PB0181
+      *  Possible values are 'Y' or 'N'.                                                      PB0181
+      *                                                                                       PB0181
+     C           #1WMIN    IFEQ *BLANKS                                                       PB0181
+     C                     MOVE 'N'       #1WMIN                                              PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C           #1WMIN    IFNE 'Y'                                                           PB0181
+     C           #1WMIN    ANDNE'N'                                                           PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN70                                               PB0181
+     C                     MOVEL'CSF9206' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C           #1PRTP    IFEQ 'PP'                                                          PB0181
+      *                                                                                       PB0181
+      ** Fee on Excess or Portfolio value is Mandatory if Fee Processing                      PB0181
+      *  type is 'PP', forbidden for other fee processing type.                               PB0181
+      *  Possible values are: 'E'   Excess                                                    PB0181
+      *                       'P'   Portfolio Value.                                          PB0181
+      *                                                                                       PB0181
+     C           #1FEPV    IFEQ *BLANKS                                                       PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN69                                               PB0181
+     C                     MOVEL'CSF9207' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C           #1FEPV    IFNE *BLANKS                                                       PB0181
+     C           #1FEPV    ANDNE'E'                                                           PB0181
+     C           #1FEPV    ANDNE'P'                                                           PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN69                                               PB0181
+     C                     MOVEL'CSF9207' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+      ** Basis for Portfolio Value is mandatory if Fee Processing type                        PB0181
+      *  is 'PP', forbidden for other fee type processing.                                    PB0181
+      *  Possible values are:                                                                 PB0181
+      *          'S'  Value at start of period.                                               PB0181
+      *          'E'  Value at end of period.                                                 PB0181
+      *          'D'  Average daily value during the period.                                  PB0181
+      *          'M'  Average monthly value during the period.                                PB0181
+      *          'Q'  Average quarterly value during the period.                              PB0181
+      *                                                                                       PB0181
+     C           #1BFPV    IFEQ *BLANKS                                                       PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN71                                               PB0181
+     C                     MOVEL'CSF9208' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C           #1BFPV    IFNE *BLANKS                                                       PB0181
+     C           #1BFPV    ANDNE'S'                                                           PB0181
+     C           #1BFPV    ANDNE'E'                                                           PB0181
+     C           #1BFPV    ANDNE'D'                                                           PB0181
+     C           #1BFPV    ANDNE'M'                                                           PB0181
+     C           #1BFPV    ANDNE'Q'                                                           PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN71                                               PB0181
+     C                     MOVEL'CSF9208' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+      ** Basis Day in Month is mandatory if Fee Processing type is 'PP'                       PB0181
+      *  and if Basis for Portfolio Value is 'M' or 'Q', forbidden                            PB0181
+      *  for other cases.                                                                     PB0181
+      *  Must be a numeric value between 01 and 31.                                           PB0181
+      *                                                                                       PB0181
+     C           #1BDIM    IFEQ *BLANKS                                                       PB0181
+     C           #1BFPV    ANDEQ'M'                                                           PB0181
+     C           #1BDIM    OREQ *BLANKS                                                       PB0181
+     C           #1BFPV    ANDEQ'Q'                                                           PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN72                                               PB0181
+     C                     MOVEL'CSF9209' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+      *                                                                                       PB0181
+     C           #1BDIM    IFNE *BLANKS                                                       PB0181
+     C           #1BFPV    ANDEQ'M'                                                           PB0181
+     C           #1BDIM    ORNE *BLANKS                                                       PB0181
+     C           #1BFPV    ANDEQ'Q'                                                           PB0181
+      *                                                                                       PB0181
+     C                     MOVE *BLANKS   ZFIELD                                              PB0181
+     C                     MOVE #1BDIM    ZFIELD                                              PB0181
+     C                     Z-ADD0         ZADEC                                               PB0181
+     C                     Z-ADD2         ZADIG                                               PB0181
+     C                     EXSR ZALIGN                                                        PB0181
+      *                                                                                       PB0181
+     C           *IN99     IFEQ *OFF                                                          PB0181
+     C                     MOVE ZFIELD    WWBDIM  20                                          PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C           *IN99     IFEQ *ON                                                           PB0181
+     C           WWBDIM    OREQ *ZEROS                                                        PB0181
+     C           WWBDIM    ORGT 31                                                            PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN72                                               PB0181
+     C                     MOVEL'CSF9210' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C           #1BFPV    IFNE 'M'                                                           PB0181
+     C           #1BDIM    ANDNE*BLANKS                                                       PB0181
+     C           #1BFPV    ORNE 'Q'                                                           PB0181
+     C           #1BDIM    ANDNE*BLANKS                                                       PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN72                                               PB0181
+     C                     MOVEL'CSF9211' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+      *                                                                                       PB0181
+      ** Month in Quarter is mandatory if fee processing type is 'PP',                        PB0181
+      *  and basis for portfolio value is 'Q'.                                                PB0181
+      *  Must be numeric and between 01 and 03.                                               PB0181
+      *                                                                                       PB0181
+     C           #1MIQT    IFEQ *BLANKS                                                       PB0181
+     C           #1BFPV    ANDEQ'Q'                                                           PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN73                                               PB0181
+     C                     MOVEL'CSF9212' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C           #1MIQT    IFNE *BLANKS                                                       PB0181
+     C           #1BFPV    ANDEQ'Q'                                                           PB0181
+      *                                                                                       PB0181
+     C                     MOVE *BLANKS   ZFIELD                                              PB0181
+     C                     MOVE #1MIQT    ZFIELD                                              PB0181
+     C                     Z-ADD0         ZADEC                                               PB0181
+     C                     Z-ADD2         ZADIG                                               PB0181
+     C                     EXSR ZALIGN                                                        PB0181
+      *                                                                                       PB0181
+     C           *IN99     IFEQ *OFF                                                          PB0181
+     C                     MOVE ZFIELD    WWMIQT  20                                          PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C           *IN99     IFEQ *ON                                                           PB0181
+     C           WWMIQT    OREQ *ZEROS                                                        PB0181
+     C           WWMIQT    ORGT 03                                                            PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN73                                               PB0181
+     C                     MOVEL'CSF9213' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C           #1MIQT    IFNE *BLANKS                                                       PB0181
+     C           #1BFPV    ANDNE'Q'                                                           PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN73                                               PB0181
+     C                     MOVEL'CSF9214' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+      *                                                                                       PB0181
+     C                     ELSE                                                               PB0181
+      *                                                                                       PB0181
+     C           #1FEPV    IFNE *BLANKS                                                       PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN69                                               PB0181
+     C                     MOVEL'CSF9215' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C           #1BFPV    IFNE *BLANKS                                                       PB0181
+     C                     MOVE 'N'       WWVALD                                              PB0181
+     C                     MOVE *ON       *IN71                                               PB0181
+     C                     MOVEL'CSF9216' PAMSID                                              PB0181
+     C                     EXSR SRSNMS                                                        PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C                     ENDIF                                                              PB0181
+      *                                                                                       PB0181
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRPCMD    - Process Cmd-12                                   *
+      *                                                               *
+      *  Called by - SRPRRS, SRUPSC                                   *
+      *                                                               *
+      *  Calls     - SRCLR                                            *
+      *****************************************************************
+     C           SRPCMD    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Clear screen error indicators
+      *
+     C                     MOVEA'00000000'*IN,30
+     C                     MOVEA'00000000'*IN,38
+     C                     MOVEA'0000000' *IN,46
+     C                     MOVE *OFF      *IN53
+     C                     MOVE *OFF      *IN54
+     C                     MOVE *OFF      *IN58
+     C                     MOVE *OFF      *IN61
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN63
+     C                     MOVE *OFF      *IN65
+     C                     MOVE *OFF      *IN66
+     C                     MOVE *OFF      *IN67
+     C                     MOVE *OFF      *IN69
+     C                     MOVE *OFF      *IN75
+      *
+     C                     MOVE *OFF      *IN60
+      *
+      ** Initialise fields
+      *
+     C                     MOVEL*BLANKS   #0ACT
+     C                     MOVEL*BLANKS   #0SEL
+     C                     MOVEL*BLANKS   #0FETP
+     C                     MOVEL*BLANKS   #0CHGR
+     C                     MOVEL*BLANKS   #0REV1
+     C                     MOVEL*BLANKS   #0REV2
+     C                     CLEARWWDATA
+     C                     MOVE *BLANKS   #1ACDT
+     C                     MOVE *BLANKS   #1STDT
+     C                     MOVE *BLANKS   #1MINA
+     C                     MOVE *BLANKS   #1MAXA
+     C                     MOVEL*BLANKS   #1TNLU
+     C                     MOVEL*BLANKS   #0RVF1
+     C                     MOVEL*BLANKS   #0RVF2
+     C                     MOVE 'Y'       W0RSF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRCMD5    - Process CMD-5                                    *
+      *                                                               *
+      *  Called by - SRUPSC                                           *
+      *                                                               *
+      *  Calls     - SRCLR                                            *
+      *****************************************************************
+     C           SRCMD5    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Clear screen error indicators
+      *
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *OFF      *IN31
+     C                     MOVE *OFF      *IN32
+     C                     MOVE *OFF      *IN53
+     C                     MOVE *OFF      *IN34
+     C                     MOVE *OFF      *IN52
+     C                     MOVE *OFF      *IN35
+     C                     MOVE *OFF      *IN36
+     C                     MOVE *OFF      *IN37
+     C                     MOVE *OFF      *IN38
+     C                     MOVE *OFF      *IN60
+     C                     MOVE *OFF      *IN39
+     C                     MOVE *OFF      *IN54
+     C                     MOVE *OFF      *IN40
+     C                     MOVE *OFF      *IN75
+     C                     MOVE *OFF      *IN41
+     C                     MOVE *OFF      *IN42
+     C                     MOVE *OFF      *IN43
+     C                     MOVE *OFF      *IN44
+     C                     MOVE *OFF      *IN45
+     C                     MOVE *OFF      *IN46
+     C                     MOVE *OFF      *IN47
+     C                     MOVE *OFF      *IN48
+     C                     MOVE *OFF      *IN49
+     C                     MOVE *OFF      *IN67
+     C                     MOVE *OFF      *IN50
+     C                     MOVE *OFF      *IN51
+      *
+      ** Initialise fields for refresh if Action code = 'I'
+      *
+     C           #1ACT     IFEQ 'I'
+     C                     CLEARWWDATA
+     C                     MOVE *BLANKS   #1ACDT
+     C                     MOVE *BLANKS   #1STDT
+     C                     MOVE *BLANKS   #1MINA
+     C                     MOVE *BLANKS   #1MAXA
+      *
+     C           #0CHGR    IFNE *BLANKS
+     C                     MOVELDFPRTP    #1PRTP    P
+     C                     MOVELDFNARR    #1NARR    P
+     C                     MOVELDFFECP    #1FECP    P
+     C                     MOVELDFCCCY    #1CCCY    P
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Refresh if Action code = 'A'
+      *
+     C           #1ACT     IFEQ 'A'
+     C                     MOVE WCHDTA    WWDATA
+     C                     MOVEL'Y'       WWVALD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRPSC5    - Process CMD-5 for Subfile                        *
+      *                                                               *
+      *  Called by - SRPRRS                                           *
+      *                                                               *
+      *  Calls     - SRCLR                                            *
+      *****************************************************************
+     C           SRPSC5    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Clear screen error indicators
+      *
+     C                     MOVE *OFF      *IN66
+     C                     MOVE *OFF      *IN65
+      *
+      ** Initialise fields
+      *
+     C                     MOVE 'Y'       W0RSF
+     C                     MOVE *BLANKS   #0RVF1
+     C                     MOVE *BLANKS   #0RVF2
+     C                     MOVE *BLANKS   #0REV1
+     C                     MOVE *BLANKS   #0REV2
+     C                     MOVE *BLANKS   WREV1
+     C                     MOVE *BLANKS   WREV2
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRISEC    - Setup screen fields with file detail fields      *
+      *                                                               *
+      *  Called by - SRMAIN                                           *
+      *                                                               *
+      *  Calls     - *None                                            *
+      *****************************************************************
+     C           SRISEC    BEGSR
+      *
+     C                     CLEARW1DATA
+     C                     MOVELWWDATA    W1DATA
+      *
+      ** Details to manage if they are entered.
+      *
+     C           #1ACDT    IFNE *BLANKS
+      *
+     C                     MOVEL#1ACDT    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    KPACDT  50
+      *
+      ** Setup the current accrual date with the Frequency Backward date
+      ** while Accruals are not calculated
+      *
+     C           WWCADT    IFEQ *ZERO
+     C           WWLADT    OREQ 0
+      *
+      ** Execute Frequency backward calculation for current Accrual date
+      ** Input : ZFREQ 1A : Frequency : D, W, M, Q, X, Y.
+      **         ZMDAY 2,0 : Day in mounth
+      **         ZDAYNO 5,0 : Start Date
+      ** Output : ZDAYNO 5,0 : Previous Date
+      *
+     C                     MOVE #1ACFR    ZFREQ   1
+     C                     Z-ADD0         ZMDAY   20
+     C           #1ACDM    IFNE *BLANKS
+     C                     MOVE #1ACDM    ZMDAY
+     C                     ENDIF
+     C                     Z-ADDKPACDT    ZDAYNO  50
+      *
+     C                     EXSR SRFRBK
+      *
+     C                     Z-ADDZDAYNO    WWCADT
+     C                     ENDIF
+     C                     Z-ADDKPACDT    F1ACDT
+     C                     Z-ADDWWCADT    F1CADT
+     C                     Z-ADDWWLADT    F1LADT
+      *
+     C                     ENDIF
+      *
+      ** Evaluate settlement details when there are entered
+      *
+     C           #1STDT    IFNE *BLANKS
+     C                     MOVE #1STDT    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    KPSTDT  50
+      *
+      ** Setup the current Settlement Date with the Frequency Backward date
+      ** While Settlements aren't process by the system (EOD)
+      *
+     C           WWCSTD    IFEQ *ZERO
+     C           WWLSTD    OREQ 0
+      *
+      ** If the current accrual date is less than the next settlement date
+      ** load the current accrual date into the current settlement date
+      *
+     C           WWCADT    IFLT KPSTDT
+     C                     Z-ADDWWCADT    WWCSTD
+      *
+      ** Otherwise, retrieve the previous settlement period
+      *
+     C                     ELSE
+      *
+      ** Execute Frequency backward calculation for current Settlement date
+      ** Input : ZFREQ 1A : Frequency : D, W, M, Q, X, Y.
+      **         ZMDAY 2,0 : Day in mounth
+      **         ZDAYNO 5,0 : Start Date
+      ** Output : ZDAYNO 5,0 : Previous Date
+      *
+     C                     MOVE #1STFR    ZFREQ
+     C                     Z-ADD0         ZMDAY
+     C           #1STDM    IFNE *BLANKS
+     C                     MOVE #1STDM    ZMDAY
+     C                     ENDIF
+     C                     Z-ADDKPSTDT    ZDAYNO
+      *
+     C                     EXSR SRFRBK
+      *
+     C                     Z-ADDZDAYNO    WWCSTD
+     C                     ENDIF
+     C                     ENDIF
+     C                     Z-ADDWWCSTD    F1CSTD
+     C                     Z-ADDKPSTDT    F1STDT
+     C                     Z-ADDWWLSTD    F1LSTD
+     C                     ENDIF
+      *
+      ** If not Default Fee Type (charge isn't blank), And Accrual date is Blank
+      ** and never Accrued, take default Accrual period, else don't change
+      ** any more
+      *
+     C           F1CHGR    IFNE *BLANKS
+     C           #1ACDT    ANDEQ*BLANKS
+     C           WWLADT    ANDEQ0
+     C                     Z-ADDDFCADT    F1CADT
+     C                     ENDIF
+      *
+      ** If not Default Fee Type (charge isn't blank), And Settlement date is
+      ** and never Setlle, take default Settle period, else don't change
+      ** any more
+      *
+     C           F1CHGR    IFNE *BLANKS
+     C           #1STDT    ANDEQ*BLANKS
+     C           WWLSTD    ANDEQ0
+     C                     Z-ADDDFCSTD    F1CSTD
+     C                     ENDIF
+      *
+      ** If SCCCY is blanks take DFCCCY (never)
+      *
+     C           #1CCCY    IFEQ *BLANKS
+     C                     MOVE DFCCCY    #1CCCY
+     C                     ENDIF
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #1CCCY    PCKEY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     Z-ADDA6NBDP    SDEC    10
+      *
+      ** If minimum charge is not blank, write in numeric format
+      *
+     C           #1MINA    IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1MINA    ZFIELD    P
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD*ZEROS    F1MINA
+     C                     ELSE
+     C                     MOVE ZFIELD    F1MINA
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    F1MINA
+     C                     ENDIF
+      *
+      ** If maximum charge is not blank, write in numeric format
+      *
+     C           #1MAXA    IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1MAXA    ZFIELD    P
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD*ZEROS    F1MAXA
+     C                     ELSE
+     C                     MOVE ZFIELD    F1MAXA
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    F1MAXA
+     C                     ENDIF
+      *
+      ** Zeroise Numeric field of File when Screen Field is left Blank
+      *
+     C           #1VATA    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     F1VATA
+     C                     ENDIF
+     C           #1VATS    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     F1VATS
+     C                     ENDIF
+     C           #1RETR    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     F1RETR
+     C                     ENDIF
+     C           #1IRAC    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     F1IRAC
+     C                     ENDIF
+     C           #1INAC    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     F1INAC
+     C                     ENDIF
+     C           #1ACAC    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     F1ACAC
+     C                     ENDIF
+     C           #1ACDM    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     F1ACDM
+     C                     ENDIF
+     C           #1ACDT    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     F1ACDT
+     C                     ENDIF
+     C           #1STGE    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     F1STGE
+     C                     ENDIF
+     C           #1STDM    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     F1STDM
+     C                     ENDIF
+     C           #1STDT    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     F1STDT
+     C                     ENDIF
+      *
+     C           #1VAIA    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     F1VAIA
+     C                     ENDIF
+     C           #1RETP    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     F1RETP
+     C                     ENDIF
+      *
+      ** Accrual Frequency
+      *
+     C           #1ACFR    IFNE *BLANKS
+     C                     MOVE #1ACFR    F1ACFR
+     C                     ENDIF
+      *
+      ** Settlement Frequency
+      *
+     C           #1STFR    IFNE *BLANKS
+     C                     MOVE #1STFR    F1STFR
+     C                     ENDIF
+      *
+     C           #1CHGR    IFNE *BLANKS
+     C                     MOVE *BLANKS   F1PRTP
+     C                     MOVE *BLANKS   F1NARR
+     C                     MOVE *BLANKS   F1FECP
+     C                     MOVE *BLANKS   F1CCCY
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRITAB    - Setup screen fields with file detail fields      *
+      *                                                               *
+      *  Called by - SRMAIN                                           *
+      *                                                               *
+      *  Calls     - None                                             *
+      *****************************************************************
+     C           SRITAB    BEGSR
+      *
+     C                     MOVELW1DATA    WWDATA
+      *
+     C                     Z-ADD1         WWARN   10
+     C                     MOVE F1ACDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     #1ACDT
+     C                     MOVE F1STDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     #1STDT
+      *
+      ** When file field is 0, move *blanks in Screen field
+      *
+     C           F1VATA    IFEQ *ZERO
+     C                     MOVE *BLANKS   #1VATA
+     C                     ENDIF
+     C           F1VATS    IFEQ *ZERO
+     C                     MOVE *BLANKS   #1VATS
+     C                     ENDIF
+     C           F1RETR    IFEQ *ZERO
+     C                     MOVE *BLANKS   #1RETR
+     C                     ENDIF
+     C           F1IRAC    IFEQ *ZERO
+     C                     MOVE *BLANKS   #1IRAC
+     C                     ENDIF
+     C           F1INAC    IFEQ *ZERO
+     C                     MOVE *BLANKS   #1INAC
+     C                     ENDIF
+     C           F1ACAC    IFEQ *ZERO
+     C                     MOVE *BLANKS   #1ACAC
+     C                     ENDIF
+     C           F1ACDM    IFEQ *ZERO
+     C                     MOVE *BLANKS   #1ACDM
+     C                     ENDIF
+     C           F1ACDT    IFEQ *ZERO
+     C                     MOVE *BLANKS   #1ACDT
+     C                     ENDIF
+     C           F1STGE    IFEQ *ZERO
+     C                     MOVE *BLANKS   #1STGE
+     C                     ENDIF
+     C           F1STDM    IFEQ *ZERO
+     C                     MOVE *BLANKS   #1STDM
+     C                     ENDIF
+     C           F1STDT    IFEQ *ZERO
+     C                     MOVE *BLANKS   #1STDT
+     C                     ENDIF
+     C           F1VAIA    IFEQ *ZERO
+     C                     MOVE *BLANKS   #1VAIA
+     C                     ENDIF
+     C           F1RETP    IFEQ *ZERO
+     C           #1CHGR    ANDNE*BLANKS
+     C                     MOVE *BLANKS   #1RETP
+     C                     ENDIF
+     C           #1CCCY    IFEQ *BLANKS
+     C                     MOVE DFCCCY    #1CCCY
+     C                     ENDIF
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #1CCCY    PCKEY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     Z-ADDA6NBDP    SDEC    10
+      *
+      ** If minimum charge is not zero, Fill up Amount with right dec. places
+      *
+     C           F1MINA    IFNE *ZERO
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE F1MINA    ZFIELD
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MINA    P
+     C                     ELSE
+     C                     MOVE *BLANKS   #1MINA
+     C                     ENDIF
+      *
+      ** If maximum charge is not zero, Fill up Amount with right dec. places
+      *
+     C           F1MAXA    IFNE *ZERO
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE F1MAXA    ZFIELD
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MAXA    P
+     C                     ELSE
+     C                     MOVE *BLANKS   #1MAXA
+     C                     ENDIF
+      *
+     C                     Z-ADDF1TNLU    #1TNLU
+     C                     Z-ADDF1TNLU    #0TNLU
+      *
+     C           #1CHGR    IFNE *BLANKS
+     C                     MOVE #1FETP    KWFETP
+     C                     MOVE *BLANKS   KWCHGR
+      *
+     C           KCFEE     CHAINSDCFTPL0             88
+      *
+     C                     MOVE F1PRTP    #1PRTP
+     C                     MOVE F1NARR    #1NARR
+     C                     MOVE F1FECP    #1FECP
+     C                     MOVE DFCCCY    #1CCCY
+     C                     ENDIF
+     C                     MOVELWWDATA    WCHDTA
+      *
+     C                     ENDSR
+      *****************************************************************
+      * SRFRBK - Compute current date backwards using frequency       *
+      * ------                                                        *
+      * Inout  : ZFREQ  : 1A  Frequency Code                          *
+      *          ZMDAY  : 2,0 Day in month                            *
+      *          ZDAYNO : 5,0 Start Date                              *
+      * Inout  : ZDAYNO : 5,0 Previous date                           *
+      *****************************************************************
+     C           SRFRBK    BEGSR
+      *
+      ** Convert day number to date
+      *
+     C                     EXSR ZDATE2
+      *
+      ** If the day number input (zmday ) is zero set it equal to the
+      ** day number of the current date.
+      *
+     C           ZMDAY     IFEQ 0
+      *
+     C                     MOVELZADATE    ZZWRK2  2
+     C                     MOVE ZZWRK2    ZMDAY
+      *
+     C                     ENDIF
+      *
+      ** Check for and decrement for code D-Daily
+      *
+     C           ZFREQ     IFEQ 'D'
+     C           ZDAYNO    SUB  1         ZDAYNO
+     C                     GOTO ZLEND
+     C                     ENDIF
+      *
+      ** Check for and decrement for code W-Weekly
+      *
+     C           ZFREQ     IFEQ 'W'
+     C           ZDAYNO    SUB  7         ZDAYNO
+     C                     GOTO ZLEND
+     C                     ENDIF
+      *
+      ** Check for and decrement for Code M-Monthly
+      *
+     C           ZFREQ     IFEQ 'M'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      SUB  1         ZMTH         9090
+     C   90      12        ADD  ZMTH      ZMTH
+     C   90      ZYEAR     SUB  1         ZYEAR
+     C                     ENDIF
+      *
+      ** Check for and decrement for code Q-Quarterly
+      *
+     C           ZFREQ     IFEQ 'Q'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      SUB  3         ZMTH         9090
+     C   90      12        ADD  ZMTH      ZMTH
+     C   90      ZYEAR     SUB  1         ZYEAR
+     C                     ENDIF
+      *
+      ** Check for and decrement for code X-Six monthly
+      *
+     C           ZFREQ     IFEQ 'X'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      SUB  6         ZMTH         9090
+     C   90      12        ADD  ZMTH      ZMTH
+     C   90      ZYEAR     SUB  1         ZYEAR
+     C                     ENDIF
+      *
+      ** Check for and decrement for code Y-Yearly
+      *
+     C           ZFREQ     IFEQ 'Y'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZYEAR     SUB  1         ZYEAR
+     C                     ENDIF
+      *
+      ** Reformat date and ensure valid
+      ** Check for leap year
+      *
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10
+      *
+      ** Validate day number
+      *
+     C                     MOVE ZFMD,ZMTH ZWRK2   20
+     C           ZMTH      IFEQ 2
+     C           ZLY       ANDEQ0
+     C           ZDAY      ANDGT29
+     C                     Z-ADD29        ZWRK2
+     C                     ENDIF
+      *
+     C           ZDAY      IFGT ZWRK2
+     C                     Z-ADDZWRK2     ZDAY
+     C                     ENDIF
+      *
+      ** Reformat date, DDMMYY or MMDDYY, and convert to day number
+      *
+     C                     MOVELZDAY      ZWRK4   40
+     C                     MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C   98                MOVE ZDAY      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           ZLEND     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRTNLU    - Retrieve/Update Trans No. of Last Update         *
+      *                                                               *
+      *  Called by - SRUPPR                                           *
+      *                                                               *
+      *  Calls     - None                                             *
+      *****************************************************************
+     C           SRTNLU    BEGSR
+      *
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     Z-ADDFNATN     WWDSTN
+     C                     ADD  1         FNATN
+     C                     OUT  DNATN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRSNMS    - Send message to program's message queue          *
+      *                                                               *
+      *  Called by - SRVALD, #BAA, SRUPPR, SRVUPD                     *
+      *                                                               *
+      *  Calls     - Y2SNMGC                                          *
+      *****************************************************************
+     C           SRSNMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM ##PGMQ    PAPGM  10
+     C                     PARM           PAPGRL  5
+     C                     PARM           PAMSID  7
+     C                     PARM           PAMSGF 10
+     C                     PARM           PAMSDA132
+     C                     PARM           PAMSTP  7
+      *
+     C                     MOVEL*BLANKS   PAMSDA
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  *PSSR     - Program Error Handling Routine                   *
+      *                                                               *
+      *  Called by - SRUPPR                                           *
+      *                                                               *
+      *  Calls     - None                                             *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ ' '
+     C                     MOVEL'Y'       WRUN    1
+     C                     DUMP
+     C                     ROLBK
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+      *
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2005
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**  #PRO
+SCMGFIHMNAPP                                                                                  PB0181

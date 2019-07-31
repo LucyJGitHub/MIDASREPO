@@ -1,0 +1,471 @@
+     H        1                                                           S01390
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UDC - format file update maintenance')
+     H***********                                                   S37004S01390
+     F********************************************************************
+     F*  Midas  Standing Data Module
+     F*                                                                  *
+     F*       SD6811 - CONFIRMATION FORMAT LINK FILE MAINTENANCE.        *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+     F*   FUNCTION :  PROGRAM IS PART OF USE-DEFINED CONFIRMATIONS SAR.  *
+     F*               IT LINKS UP A PARTICULAR DEAL TYPE/SUB-TYPE AND    *
+     F*               EVENT CODE COMBINATION TO A CONF. FORMAT NAME.     *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CDL038             Date 10May05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 065935             Date 20Jan94               *
+      *                 S01405             Date 30Nov92               *
+     F*                      S01390      DATE 22JUN92                    *AUS009
+     F*                      AUS009      DATE 20DEC90                    *AUS009
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *     CDL038 - Extended Deal Sub Type (Recompile)               *
+     F*     065935  -  Display file has been changed to use the SD       *
+     F*                Instruction Manual - Program Recompiled           *
+     F*     S01405  -  User defined confirmations file names changed.    *
+     F*     S01390  -  Release 10 Changes for Australianisation          *
+     F*     AUS009  -  AUSTRALIAN PRODUCT - USER DEFINED CONFIRMATIONS    AUS009
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*  C R E A T I O N     P A R A M E T E R S                         *
+     F*                                                                  *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     FSD6811FMCF  E                    WORKSTN
+     F***TABTB10*IF**E                    DISK                            S01390
+     F***TABLET5*IF**E           K        DISK                            S01390
+     F***********CONFNAMEIF  E           K        DISK                    S01405
+     F***********CONFLINKUF  E           K        DISK           A        S01405
+     FSDUDCNPDIF  E           K        DISK                               S01405
+     FSDUDCLPDUF  E           K        DISK                      A        S01405
+     F/SPACE 3
+     E********************************************************************
+     E*             T A B L E S    AND    A R R A Y S                    *
+     E*------------------------------------------------------------------*
+     E*
+     E                    TABFX   8   8  2               FX DEAL TYPES
+     E                    TABLD   9   9  2               LOAN/DEPOSIT TYPE
+     E                    TABNA  13  13  2               NA DEAL TYPES
+     E***********         TABPS  10  10  2               SECURITIES TYPE  S01390
+     E                    TABEFX  2   2  2               FX EVENT CODES
+     E                    TABELD 10  10  2               LOAN/DEPOSIT EVNT
+     E                    TABENA  2   2  2               NA EVENT TYPES
+     E***********         TABEPS  9   9  2               PS EVENT TYPES   S01390
+     E                    ERRMSG  1   9 48               ERROR MESSAGES
+     E                    ERCD        4  4               ERROR CODE OUTPUT
+     E                    CPY@    1   1 80                                S01390
+     I*                                                                   S01390
+     ISDBANK    E DSSDBANKPD                                              S01390
+     I* Bank Details Accesses Via Access Program                          S01390
+     I*                                                                   S01390
+     ISDDLST    E DSSDBRCHPD                                              S01390
+     I* Deal Subtype Details Accessed Via Access Program                  S01390
+     I*                                                                   S01390
+     ISDMMOD    E DSSDMMODPD                                              S01390
+     I* Midas Modules Details Accessed Via Access Program                 S01390
+     I*                                                                   S01390
+     IDSFDY     E DSDSFDY                                                 S01390
+     I* First DS For Access Programs, Short Data Structure                S01390
+     I*                                                                   S01390
+     C/EJECT
+     C********************************************************************
+     C*             M A I N L I N E    P R O C E S S I N G               *
+     C*------------------------------------------------------------------*
+     C*
+     C                     EXSR INIT
+     C*
+     C                     EXSR SCREEN
+     C                     SETON                     LR
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*         INITIALIZATION ROUTINE                                   *
+     C*------------------------------------------------------------------*
+     C           INIT      BEGSR
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           WSID   10
+     C                     MOVE '1'       ON      1
+     C                     MOVE '0'       OFF     1
+     C                     MOVEACPY@      BIS@   80                       S01390
+     C***********          READ TABTB10F                 99               S01390
+     C***********          MOVE RUNA      MDATE   7                       S01390
+     C*                                                                   S01390
+     C** READ BANK DETAILS VIA ACCESS PROGRAM                             S01390
+     C*                                                                   S01390
+     C                     CALL 'AOBANKR0'                                S01390
+     C                     PARM '*DBERR ' RTCD    7                       S01390
+     C                     PARM '*FIRST ' OPTN    7                       S01390
+     C           SDBANK    PARM SDBANK    DSFDY                           S01390
+     C*                                                                   S01390
+     C                     MOVE BJMRDT    MDATE                           S01390
+     C*                                                                   S01390
+     C** READ MIDAS MODULES DETAILS VIA ACCESS PROGRAM                    S01390
+     C*                                                                   S01390
+     C                     CALL 'AOMMODR0'                                S01390
+     C                     PARM '*DBERR ' RTCD    7                       S01390
+     C                     PARM '*FIRST ' OPTN    7                       S01390
+     C           SDMMOD    PARM SDMMOD    DSFDY                           S01390
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 3
+     C********************************************************************
+     C*         SUBROUTINE TO CONTROL THE MAINTENANCE SCREEN             *
+     C*------------------------------------------------------------------*
+     C           SCREEN    BEGSR
+     C           *INKC     DOUEQ'1'
+     C                     MOVE '1'       *IN09
+     C                     MOVE *BLANK    ACTION
+     C                     MOVE *BLANK    IDTYPE
+     C                     MOVE *BLANK    IDSUBT
+     C                     MOVE *BLANK    IECODE
+     C                     MOVE *BLANK    IMTIND
+     C                     MOVE *BLANK    IMFMT
+     C                     MOVE *BLANK    ITFMT
+     C                     MOVE *BLANK    IFMTNA
+     C*
+     C                     EXFMTSD6811F1
+     C*
+     C                     EXSR VALID1
+     C*
+     C           *INKC     IFEQ '1'                         F3
+     C           *INKL     OREQ '1'                         F12
+     C                     GOTO FINISH
+     C                     END
+     C*
+     C                     EXSR GETFMT
+     C*
+     C                     WRITESD6811F1
+     C                     EXFMTSD6811F2
+     C*
+     C*
+     C                     EXSR VALID2
+     C*
+     C           *INKC     IFEQ '1'                         F3
+     C           *INKL     OREQ '1'                         F12
+     C           ACTION    OREQ 'E'                         ENQUIRY
+     C                     GOTO FINISH
+     C                     END
+     C*
+     C                     EXSR UPDATE
+     C*
+     C           FINISH    TAG
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*         VALIDATE FIELDS FROM THE FIRST SCREEN.                   *
+     C*------------------------------------------------------------------*
+     C           VALID1    BEGSR
+     C*
+     C           E         DOUEQ*ZERO
+     C                     MOVE *BLANK    ERMSG  76
+     C                     MOVE *BLANK    ERCD
+     C                     Z-ADD*ZERO     E       10
+     C                     SETOF                     010203
+     C                     SETOF                     048899
+     C*
+     C           *INKC     IFEQ '1'                         F3
+     C           *INKL     OREQ '1'                         F12
+     C                     GOTO ENDV1
+     C                     END
+     C*
+     C*
+     C*    VALIDATE ACTION CODE.
+     C           ACTION    IFNE 'I'                        INSERT
+     C           ACTION    ANDNE'A'                        AMEND
+     C           ACTION    ANDNE'D'                        DELETE
+     C           ACTION    ANDNE'E'                        ENQUIRY
+     C                     Z-ADD1         E
+     C                     MOVE ' 001'    ERCD,E
+     C                     MOVE ERRMSG,1  ERMSG
+     C                     MOVE '1'       *IN01
+     C                     END
+     C*
+     C*    VALIDATE DEAL TYPE.
+     C           IDTYPE    LOKUPTABFX                    13  F/X DEAL TYPE
+     C           IDTYPE    LOKUPTABLD                    14  LOAN/DEPOSIT
+     C           IDTYPE    LOKUPTABNA                    15  NEGOTIABLE ASSETS
+     C***********IDTYPE    LOKUPTABPS                    16  PLEDGED SECURS01390
+     C           *IN13     IFNE '1'
+     C           *IN14     ANDNE'1'
+     C           *IN15     ANDNE'1'
+     C************IN16     ANDNE'1'                                       S01390
+     C                     ADD  1         E
+     C                     MOVE '002'     ERCD,E
+     C                     MOVE '1'       *IN02
+     C                     END
+     C*
+     C*    VALIDATE DEAL SUB-TYPE.
+     C***********IDSUBT    CHAINTABLET5F             03     ON, NOT FOUND S01390
+     C                     CALL 'AODLSTR0'                                S01390
+     C                     PARM *BLANKS   RTCD                            S01390
+     C                     PARM '*KEY   ' OPTN                            S01390
+     C                     PARM IDSUBT    KYBR    3                       S01390
+     C           SDDLST    PARM SDDLST    DSFDY                           S01390
+     C           RTCD      IFNE *BLANKS                                   S01390
+     C                     SETON                     03                   S01390
+     C                     END                                            S01390
+     C   03                ADD  1         E
+     C   03                MOVE '003'     ERCD,E
+     C   02                GOTO ECHK1
+     C*
+     C*    VALIDATE EVENT CODE.
+     C                     MOVELIECODE    WK02    2
+     C   13      WK02      LOKUPTABEFX                   04
+     C   14      WK02      LOKUPTABELD                   04
+     C   15      WK02      LOKUPTABENA                   04
+     C***16******WK02      LOKUPTABEPS                   04               S01390
+     C*
+     C           *IN04     IFEQ '1'
+     C                     MOVE '0'       *IN04
+     C                     ELSE
+     C                     MOVE '1'       *IN04
+     C                     ADD  1         E
+     C                     MOVE '004'     ERCD,E
+     C           ERMSG     IFEQ *BLANK
+     C   13                MOVE ERRMSG,6  ERMSG
+     C   14                MOVE ERRMSG,7  ERMSG
+     C   15                MOVE ERRMSG,8  ERMSG
+     C***16******          MOVE ERRMSG,9  ERMSG                           S01390
+     C                     END
+     C                     END
+     C*
+     C*    DETERMINE IF INSERT ALREADY ON LINK FILE
+     C*    OR AMEND/DELETE/ENQUIRY NOT ON FILE.
+     C*
+     C           E         IFEQ *ZERO
+     C           FMTKEY    KLIST
+     C                     KFLD           IDTYPE
+     C                     KFLD           IDSUBT
+     C                     KFLD           WK02
+     C***********FMTKEY    CHAINCONFLNKR             99                   S01405
+     C           FMTKEY    CHAINSDUDCLR1             99                   S01405
+     C           ACTION    IFEQ 'I'                        FOR INSERT
+     C           *IN99     IFEQ '0'                        IF FOUND
+     C                     Z-ADD1         E                ERROR
+     C                     MOVE ERRMSG,2  ERMSG
+     C                     END
+     C                     ELSE                            FOR OTHERS
+     C           *IN99     IFEQ '1'                        IF NOT FOUND
+     C                     Z-ADD1         E                ERROR
+     C                     MOVE ERRMSG,3  ERMSG
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           ECHK1     TAG
+     C           E         IFNE *ZERO
+     C                     MOVE '1'       *IN88
+     C                     MOVEAERCD      ERCODE 76
+     C                     EXFMTSD6811F1
+     C                     END
+     C                     END
+     C*
+     C           ENDV1     ENDSR
+     C********************************************************************
+     C/SPACE 3
+     C********************************************************************
+     C*         VALIDATE FIELDS FROM THE SECOND SCREEN.                  *
+     C*------------------------------------------------------------------*
+     C           VALID2    BEGSR
+     C*
+     C           E         DOUEQ*ZERO
+     C                     MOVE *BLANK    ERMSG
+     C                     MOVE *BLANK    ERCD
+     C                     Z-ADD*ZERO     E
+     C                     SETOF                     050607
+     C                     SETOF                       88
+     C*
+     C           *INKC     IFEQ '1'                         F3
+     C           *INKL     OREQ '1'                         F12
+     C                     GOTO ENDV2
+     C                     END
+     C*
+     C           ACTION    IFEQ 'D'                         DELETE   &
+     C           *INKJ     IFEQ '0'                         NOT F10
+     C                     Z-ADD1         E
+     C                     MOVE ERRMSG,5  ERMSG             INVALID KEY
+     C                     END
+     C                     GOTO ECHK2
+     C                     ELSE                             NOT DELETE &
+     C           *INKJ     IFEQ '1'                         F10
+     C                     Z-ADD1         E
+     C                     MOVE ERRMSG,4  ERMSG             INVALID CMD KEY
+     C                     END
+     C           ACTION    IFEQ 'E'                         ENQUIRY
+     C                     GOTO ECHK2
+     C                     END
+     C                     END
+     C*
+     C*
+     C*    VALIDATE MAIL/TELEX INDICATOR.
+     C           IMTIND    IFNE 'M'                        INSERT
+     C           IMTIND    ANDNE'T'                        DELETE
+     C                     MOVE '1'       *IN05
+     C                     ADD  1         E
+     C                     MOVE '005'     ERCD,E
+     C                     END
+     C*
+     C*    TELEX INTERFACE MODULE MUST EXIST, IF 'T' SPECIFIED.
+     C           IMTIND    IFEQ 'T'
+     C***********          TESTB'0'       TLXM       05                   S01390
+     C           BGMTMI    IFEQ 'Y'                                       S01390
+     C                     SETON                     05                   S01390
+     C                     END                                            S01390
+     C   05                ADD  1         E
+     C   05                MOVE '006'     ERCD,E
+     C*
+     C           IMFMT     IFNE *BLANK
+     C                     MOVE '1'       *IN06
+     C                     ADD  1         E
+     C                     MOVE '008'     ERCD,E
+     C                     END
+     C*
+     C           ITFMT     IFEQ *BLANK
+     C                     MOVE '1'       *IN07
+     C                     ADD  1         E
+     C                     MOVE '008'     ERCD,E
+     C                     ELSE
+     C*
+     C*    VALIDATE FORMAT NAME FOR TELEX.
+     C***********ITFMT     CHAINCONFNAMR             07                   S01405
+     C           ITFMT     CHAINSDUDCNR1             07                   S01405
+     C   07                ADD  1         E
+     C   07                MOVE '008'     ERCD,E
+     C                     END
+     C                     END
+     C*
+     C*    MAILING FORMAT NAME IS MANDATORY IF MAIL/TELEX IND. = 'M'
+     C           IMTIND    IFEQ 'M'
+     C*
+     C           ITFMT     IFNE *BLANK
+     C                     MOVE '1'       *IN07
+     C                     ADD  1         E
+     C                     MOVE '008'     ERCD,E
+     C                     END
+     C*
+     C           IMFMT     IFEQ *BLANK
+     C                     MOVE '1'       *IN06
+     C                     ADD  1         E
+     C                     MOVE '008'     ERCD,E
+     C                     ELSE
+     C*
+     C*    VALIDATE FORMAT NAME FOR MAILING.
+     C***********IMFMT     CHAINCONFNAMR             06    ON, NOT FOUND  S01405
+     C           IMFMT     CHAINSDUDCNR1             06    ON, NOT FOUND  S01405
+     C   06                ADD  1         E
+     C   06                MOVE '007'     ERCD,E
+     C                     END
+     C                     END
+     C*
+     C           ECHK2     TAG
+     C           E         IFNE *ZERO
+     C                     MOVE '1'       *IN88
+     C                     MOVEAERCD      ERCODE
+     C                     EXFMTSD6811F2
+     C                     END
+     C                     END
+     C*
+     C           ENDV2     ENDSR
+     C********************************************************************
+     C**********UPDATE CONFLINK FILE ACCORDING TO THE ACTION REQUESTED   *S01405
+     C*         UPDATE SDUDCLPD FILE ACCORDING TO THE ACTION REQUESTED   *S01405
+     C*------------------------------------------------------------------*
+     C           UPDATE    BEGSR
+     C*
+     C           ACTION    IFEQ 'D'                        FOR DELETION
+     C***********FMTKEY    DELETCONFLNKR             99                   S01405
+     C           FMTKEY    DELETSDUDCLR1             99                   S01405
+     C                     ELSE
+     C                     MOVE IDTYPE    DTYPEL
+     C                     MOVE IDSUBT    DSTYPL
+     C                     MOVE WK02      ECODEL
+     C                     MOVE IMTIND    MTINDL
+     C                     MOVE IMFMT     MFMTL
+     C                     MOVE ITFMT     TFMTL
+     C                     MOVE IFMTNA    FMTNAL
+     C           ACTION    IFEQ 'I'                        FOR INSERT
+     C***********          WRITECONFLNKR               99                 S01405
+     C                     WRITESDUDCLR1               99                 S01405
+     C                     ELSE
+     C***********          UPDATCONFLNKR               99                 S01405
+     C                     UPDATSDUDCLR1               99                 S01405
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 3
+     C********************************************************************
+     C*         GET THE DETAILS FOR THE CURRENT REQUEST.                 *
+     C*------------------------------------------------------------------*
+     C           GETFMT    BEGSR
+     C*
+     C                     MOVE '0'       *IN09
+     C           ACTION    IFEQ 'A'                         AMEND
+     C           ACTION    OREQ 'D'                         DELETE
+     C           ACTION    OREQ 'E'                         ENQUIRY
+     C                     MOVE MTINDL    IMTIND
+     C                     MOVE MFMTL     IMFMT
+     C                     MOVE TFMTL     ITFMT
+     C                     MOVE FMTNAL    IFMTNA
+     C                     END
+     C*
+     C*    SETUP INDICATORS FOR THE SECOND SCREEN.
+     C           ACTION    IFEQ 'I'                         INSERT
+     C           ACTION    OREQ 'A'                         AMEND
+     C                     MOVE '1'       *IN08
+     C                     ELSE
+     C                     MOVE '0'       *IN08
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C*****  TABPS  -- TABLE OF VALID PLEDGED SECURITIES TYPES            S01390
+     C***BBNBSTNCPNTNSGBNDBBI                                             S01390
+     C*****  TABEPS -- TABLE OF VALID PLEDGED SECURITIES EVENT CODES      S01390
+     C***P S M E I PSSSPBSP                                               S01390
+     C*****   ERRMSG - ERROR MESSAGES                                     S01390
+     C***INVALID EVENT CODE NOT P,S,M,E,I,PS,SS,PB,SP     9               S01390
+**  TABFX  -- TABLE OF VALID FX DEAL TYPES
+FPFSCXPISIOPOTSW
+**  TABLD  -- TABLE OF VALID LOAN AND DEPOST DEAL TYPES
+ITIPTDTICILNCDCLDL
+**  TABNA  -- TABLE OF VALID NEGOTIABLE ASSET DEAL TYPES
+CSC1C2BSBPBRBDTSTBRADATRTA
+**  TABEFX -- TABLE OF VALID FX EVENT CODES
+V M
+**  TABELD -- TABLE OF VALID LOAN & DEPOSIT EVENT CODES
+V M I PDPISCNCICCISI
+**  TABENA -- TABLE OF VALID NEGOTIABLE ASSET EVENT CODES
+V M
+**   ERRMSG - ERROR MESSAGES
+INVALID ACTION CODE                              1
+ALREADY ON FILE                                  2
+RECORD NOT ON FILE                               3
+INVALID COMMAND KEY                              4
+INVALID KEY                                      5
+INVALID EVENT CODE NOT V ,M                      6
+INVALID EVENT CODE NOT V ,M ,I ,PD,PI,SC,NC,IC   7
+INVALID EVENT CODE NOT V ,M                      8
+** CPY@   **      OBJECT COPYRIGHT                                        S01390
+(c) Finastra International Limited 2001

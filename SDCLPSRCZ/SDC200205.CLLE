@@ -1,0 +1,79 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Local Tax Office Statement')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - German Withholding Tax Module                       */
+/*                                                                   */
+/*       SDC200205 - Local Tax Office Statement                      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2009                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      CER054  *CREATE    Date 07Apr09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       CER054 - German Feature - Church Tax                        */
+/*                                                                   */
+/*********************************************************************/
+ 
+/***  Start Program.  */
+             PGM        PARM(&RSEQ &RLEV &RENT &RPARM)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2009')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&PACT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PCMD) TYPE(*CHAR) LEN(1)
+ 
+/***  Monitor for Error Messages from System.  */
+             MONMSG     MSGID(CPF0000 CPI0000 CPA0000 MCH0000 +
+                          RPG0000) EXEC(GOTO CMDLBL(ERROR))
+ 
+/***  Reset Error values - switches and LDA.  */
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/***  Send execution message.  */
+             SNDPGMMSG  MSG('SDC200205 - Local Tax Office +
+                          Statement') TOMSGQ(MRUNQ)
+ 
+/*** If &RPARM empty, clear physical files SDCHTXPD and SDWTGSPD  */
+             IF         COND(&RPARM = '*BLANKS') THEN(DO)
+             CLRPFM     FILE(*LIBL/SDCHTXPD)
+             CLRPFM     FILE(*LIBL/SDWTGSPD)
+             ENDDO
+ 
+/***  Call program.  */
+             CALL       PGM(SD200205) PARM(&RSEQ &RLEV &RENT &RPARM +
+                          &PACT &PCMD)
+ 
+/***  U7 and U8 on : database error.  */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0011) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             SNDPGMMSG  MSG('SD200205 - JOB TERMINATED ABNORMALLY ') +
+                          TOMSGQ(MRUNQ MOPERQ)
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:      DMPCLPGM
+             MONMSG     MSGID(CPF0000)
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSG('SDC200205 - JOB TERMINATED - PROGRAM +
+                          ERROR') TOMSGQ(MRUNQ MOPERQ)
+             MONMSG     MSGID(CPF0000)
+ 
+ ENDPGM:      ENDPGM

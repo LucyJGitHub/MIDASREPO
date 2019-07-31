@@ -1,0 +1,1787 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Deposits commission/charge group')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1520 - Deposits Commission/Charge Groups                   *
+      *                                                               *
+      *  Function: This program allows the maintenance of             *
+      *            Deposits Commission/Charge Groups.                 *
+      *                                                               *
+      *  Called By: SDC1520 - Midas SD Deposits Commission/           *
+      *                       Charge Groups                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006  *CREATE    Date 26Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CDL006 - Dealing Fiduciary                                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FSD1520DFCF  E                    WORKSTN
+     F                                        SFLRR2KSFILE SD1520S1
+     FDLCCGDL0IF  E           K        DISK
+     FSDCCGRL0IF  E           K        DISK
+     FSDCCGRL2IF  E           K        DISK
+     FSDCCGRL1UF  E           K        DISK         KCOMIT       A
+     F                                              KINFDS FIL1DS
+     FSDCCGRPAUF  E                    DISK         KCOMIT
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                   Function of Indicators                      *
+      *                  ------------------------                     *
+      *                                                               *
+      *  26 - SFLEND                                                  *
+      *  28 - ROLLUP                                                  *
+      *  28 - SFLDSP                                                  *
+      *  29 - SFLDSPCTL                                               *
+      *  30 - SFLCLR                                                  *
+      *  31 - SFLEND                                                  *
+      *  32 - ROLLDOWN                                                *
+      *  33 - SFLNXTCHG                                               *
+      *  37 - File Indicator on SDCCGRL1                              *
+      *  38 - File Indicator on SDCCGRL0                              *
+      *  39 - File Indicator on SD1520DF                              *
+      *  41 - File Indicator on SDCCGRPA                              *
+      *  42 - Write Indicator on SDCCGRL1                             *
+      *  50 - Enable F12                                              *
+      *  52 - Write Command Line for Initial Screen                   *
+      *  56 - Display Status on Review From Screen                    *
+      *  57 - Display 'DELETED' Text                                  *
+      *  58 - Enable F10                                              *
+      *  61 - Error on Action Code                                    *
+      *  62 - Error in Commission/Charge Group                        *
+      *  63 - Error on Review From Commission/Charge Group            *
+      *  64 - Error on Group Name                                     *
+      *  65 - Error on Review From Commission/Charge Group            *
+      *  66 - Error on Subfile Select                                 *
+      *  67 - Error on Commission Code                                *
+      *  68 - Error on Charge Code                                    *
+      *  69 - Error on Deal Amendment Charge Code                     *
+      *  72 - Display Screen for Insert/Amend/Delete/Enquire          *
+      *  73 - Protect Fields                                          *
+      *  99 - File Error Indicator                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array for Copyright
+      *
+     E*****************************************************************
+      /EJECT
+     I*****************************************************************
+     ICPYR@$      DS
+      ** Data Structure for Compilation - Copyright Insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     IFIL1DS      DS
+      ** File Information Data Structure
+      *
+     I                                     *STATUS  STATUS
+     IFIL2DS      DS
+      ** File Information Data Structure
+      *
+     I                                    B 397 4000WWHRRN
+     ILDA       E DSLDA                         256
+      ** Local Data Area for Database Errors
+      *
+      **                                    134 141 DBFILE
+      **                                    142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IDNATN       DS                              5
+      ** Data Area for Update Processing
+      *
+     I                                        1   50FNATN
+     ICMTTXT      DS                             56
+      ** Data Structure to Provide Text on COMIT Entry in Journal
+      *
+     I                                        1   50WWNATN
+     I                                        6   7 MDID
+     I                                        8  17 PGMN
+     I                                       18  27 WSIDX
+     I                                       28  330MTIME
+     I                                       34  34 ACTCDX
+     I                                       35  42 USIDX
+     I                                       43  44 S1CHRG
+     IWWDATE      DS
+      ** Day, month & year of last update
+      *
+     I                                        1   7 WWDAT
+     I                                        1   20FIDLUP
+     I                                        3   5 FIMLUP
+     I                                        6   70FIYLUP
+     IRUNDT       DS
+      ** Data area RUNDAT
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     IZMUSER      DS                             17
+      ** Data area ZMUSER
+      *
+     I                                       11  13 USRBCH
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDDEAL    E DSSDDEALPD
+      ** Dealing Details
+      *
+     IDSSDY     E DSDSSDY
+      ** DS for Access Programs, Long Data Structure
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           Index to Subroutines                                *
+      *          ----------------------                               *
+      *                                                               *
+      *    1.  SRINIT - Initialisation                                *
+      *    2.  SRPROC - Main Processing                               *
+      *    3.  SRVAL1 - Validation of Initial Screen                  *
+      *    4.  SRPREV - Process Review Screen                         *
+      *    5.  SRPREN - Process an Entry on Review Screen             *
+      *    6.  SRVREV - Validate Selection on Review From Subfile     *
+      *    7.  SRPUPD - Process Update Screen                         *
+      *    8.  SRUPDF - Update Files                                  *
+      *    9.  SRUPDT - Update Trailer File                           *
+      *   10.  SRVALD - Validation of Update Screen                   *
+      *   11.  SRLOAD - Loads a Page of Subfile Records               *
+      *   12.  SRPF12 - Process F12                                   *
+      *   13.  ZTNLU1 - Transaction Number Processing                 *
+      *   14.  ZASNMS - Send Message to Programs Message Queue        *
+      *   15.  #PSSR  - Program Error Handling Routine                *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     C*****************************************************************
+      *
+      ** Initial Processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Main Processing
+      *
+     C                     EXSR SRPROC
+      *
+      ** End Program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT    - Initialisation Routine                           *
+      *                                                               *
+      *  Calls     - *PSSR                                            *
+      *                                                               *
+      *  Called by - Main Routine                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** LDA Definition
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Read in ZMUSER
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      ** Read in RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      ** Initialise DB error fields and store program name for
+      ** DB error field
+      *
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVEL'SD1520'  DBPGM
+      *
+     C                     Z-ADD*ZERO     WWDSTN  50
+     C                     Z-ADD*ZERO     SFLRR2  40
+     C                     Z-ADD*ZERO     WWSRRN  40
+     C                     Z-ADD*ZERO     WWSFLC  40
+     C                     Z-ADD*ZERO     WWLRRN  40
+      *
+     C                     MOVE *BLANKS   WWMSGD  7
+     C                     MOVE *BLANKS   WWSSEL  1
+     C                     MOVE *ON       *IN26
+     C                     MOVE 'Y'       WWVALD  1
+      *
+     C                     MOVE *BLANKS   ZAMSGF
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+      *
+      ** Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @@RTCD  7
+     C                     PARM '*FIRST ' @@OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           @@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Dealing Details
+      *
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*DBERR ' @@RTCD
+     C                     PARM '*FIRST ' @@OPTN
+     C           SDDEAL    PARM SDDEAL    DSSDY
+      *
+     C           @@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD3         DBASE            ************
+     C                     MOVEL'SDDEALPD'DBFILE           * DBERR 03 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+      *
+      ** Initialise screen message queue
+      *
+     C                     MOVEL'*'       ##PGMQ
+      *
+      ** Initialise Header screen
+      *
+     C                     MOVELUSER      SUSER
+     C                     MOVELRUNA      SRUNA
+     C                     MOVELWSID      SWSID
+      *
+      ** Declare KLIST for Access DLCCGDL0
+      *
+     C           KEYX8     KLIST
+     C                     KFLD           KCCY    3
+     C                     KFLD           KCCOM   2
+     C                     MOVELBJCYCD    KCCY
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC    - Main Processing                                  *
+      *                                                               *
+      *  Calls     - SRVAL1, SRPREV, SRPUPD                           *
+      *                                                               *
+      *  Called by - Main Routine                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      ** Do While Not F3
+      *
+     C           *INKC     DOWEQ*OFF
+      *
+      ** Display Selection screen
+      *
+     C                     MOVE *ON       *IN52
+     C                     MOVE *OFF      *IN72
+      *
+     C                     WRITESD1520F1
+     C                     WRITESD1520F2
+      *
+      ** If error, write message subfile
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESD1520C2
+     C                     ENDIF
+      *
+      ** Read Selection screen
+      *
+     C                     READ SD1520F1                 39
+      *
+      ** If Not F3
+      *
+     C           *INKC     IFEQ *OFF
+      *
+      ** Perform validation
+      *
+     C                     EXSR SRVAL1
+      *
+     C                     ENDIF
+      *
+      ** If valid details
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ** Enable F12
+      *
+     C                     MOVE *ON       *IN50
+      *
+      ** Display next screen as necessary
+      *
+     C           WWSFL     IFEQ 'Y'
+      *
+      ** Review from subfile
+      *
+     C                     EXSR SRPREV
+      *
+     C                     ELSE
+      *
+      ** Detail screen
+      *
+     C                     EXSR SRPUPD
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVAL1    - Validation of Initial Screen                     *
+      *                                                               *
+      *  Calls     - ZASNMS                                           *
+      *                                                               *
+      *  Called by - SRPROC                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVAL1    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+      *
+      ** Set off error indicators
+      *
+     C                     MOVE *OFF      *IN61
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN63
+      *
+      ** Set on valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+      ** If all fields are blank, subfile required
+      *
+     C           SACT      IFEQ *BLANKS
+     C           S1CHRG    ANDEQ*BLANKS
+     C           S1RCRG    ANDEQ*BLANKS
+      *
+     C                     MOVE 'Y'       WWSFL   1
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'N'       WWSFL
+      *
+      ** If Review From entered
+      *
+     C           S1RCRG    IFNE *BLANKS
+      *
+      ** If Action and Commission/Charge Group not blank, error
+      *
+     C           SACT      IFNE *BLANKS
+     C           S1CHRG    ORNE *BLANKS
+      *
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8631' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      ** Review From subfile screen required
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'Y'       WWSFL
+      *
+     C                     ENDIF
+      *
+      ** Review From not entered
+      *
+     C                     ELSE
+      *
+      ** Action is blank => Commission/Charge Group only entered
+      *
+     C           SACT      IFEQ *BLANKS
+      *
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8632' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      ** Action not blank => Commission/Charge Group must be entered
+      *
+     C           S1CHRG    IFEQ *BLANKS
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8633' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Action entered & valid so far
+      *
+     C           SACT      IFNE *BLANKS
+     C           WWVALD    ANDEQ'Y'
+      *
+      ** Action must be 'I', 'A', 'E', or 'D'
+      *
+     C           SACT      IFNE 'I'
+     C           SACT      ANDNE'A'
+     C           SACT      ANDNE'E'
+     C           SACT      ANDNE'D'
+      *
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8634' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      ** Valid Action Code
+      *
+     C                     ELSE
+      *
+      ** If Action = 'D', System Set Up flag must = 'N'
+      *
+     C           SACT      IFEQ 'D'
+     C           BJSUC     ANDEQ'Y'
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8635' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** If valid, check SPF
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ** For single-branch environment
+      *
+     C           MBIN      IFNE 'Y'
+     C                     CALL 'ZVACTU'
+     C                     PARM SACT      @ZACTN  1
+     C                     PARM           @ERR    10
+      *
+      ** If action invalid for user
+      *
+     C           @ERR      IFNE *ZERO
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8636' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** For multi-branch environment
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM SACT      @ZACTN  1
+     C                     PARM USRBCH    @ZBR    3
+     C                     PARM           @ERR    10
+      *
+      ** If action invalid for user
+      *
+     C           @ERR      IFEQ 1
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8637' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           @ERR      IFEQ 2
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8638' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If valid so far
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ** Validate Charge/Commission Group code
+      *
+     C           S1CHRG    CHAINSDCCGRL0             38
+      *
+      ** If record found
+      *
+     C           *IN38     IFEQ *OFF
+      *
+      ** Action = 'I'
+      *
+     C           SACT      IFEQ 'I'
+      *
+      ** If record not flagged as deleted
+      *
+     C           CCRECI    IFNE '*'
+      *
+      ** Live record and therefore cannot be re-inserted
+      *
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8639' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      ** Deleted record so allow re-insertion
+      *
+     C                     MOVEL*BLANKS   SCHNR
+     C                     MOVE *BLANKS   SCCOM
+     C                     MOVEL*BLANKS   SCHRC
+     C                     MOVE *BLANKS   SCHRA
+     C                     MOVEL'IA'      WWFMT   2
+     C                     Z-ADDCCTNLU    STNLU
+     C                     Z-ADDWWHRRN    S2RRN
+      *
+     C                     ENDIF
+      *
+      ** Action Code = 'A', 'D' or 'E'
+      *
+     C                     ELSE
+      *
+      ** If record flagged as deleted
+      *
+     C           CCRECI    IFEQ '*'
+      *
+      ** If Action Code = 'A' or 'D', error
+      *
+     C           SACT      IFEQ 'A'
+     C           SACT      OREQ 'D'
+      *
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8640' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      ** Enquiry on deleted record
+      *
+     C                     ELSE
+      *
+     C                     MOVE *ON       *IN57
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Record does not exist
+      *
+     C                     ELSE
+      *
+     C           SACT      IFNE 'I'
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+      *
+     C           SACT      IFEQ 'E'
+     C                     MOVEL'USR8640' ZAMSID
+     C                     ELSE
+     C                     MOVEL'USR8640' ZAMSID
+     C                     ENDIF
+      *
+     C                     EXSR ZASNMS
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVELCCNARR    SCHNR
+     C                     MOVELCCCCOD    SCCOM
+     C                     MOVELCCCHOD    SCHRC
+     C                     MOVELCCDACD    SCHRA
+      *
+     C                     Z-ADDWWHRRN    S2RRN
+     C                     Z-ADDCCTNLU    STNLU
+      *
+      ** Set format flag depending on type
+      *
+     C           SACT      IFEQ 'I'
+     C                     MOVEL'IA'      WWFMT
+     C                     MOVEL*BLANKS   SCHNR
+     C                     MOVEL*BLANKS   SCCOM
+     C                     MOVEL*BLANKS   SCHRC
+     C                     MOVEL*BLANKS   SCHRA
+     C                     ENDIF
+      *
+     C           SACT      IFEQ 'A'
+     C                     MOVEL'IA'      WWFMT
+     C                     ENDIF
+      *
+     C           SACT      IFEQ 'E'
+     C                     MOVEL'EN'      WWFMT
+     C                     ENDIF
+      *
+     C           SACT      IFEQ 'D'
+     C                     MOVEL'DL'      WWFMT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPREV    - Process Review Screen                            *
+      *                                                               *
+      *  Calls     - SRPREN, SRLOAD, SRPF12                           *
+      *                                                               *
+      *  Called by - SRPROC                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPREV    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+      *
+      ** Load first page of subfile
+      *
+     C                     EXSR SRLOAD
+      *
+      ** Do While Not F3 and F12
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+      *
+     C                     MOVE *OFF      *IN52
+      *
+     C                     WRITESD1520C1
+     C                     WRITESD1520F2
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESD1520C2
+     C                     ENDIF
+      *
+     C                     READ SD1520C1                 59
+      *
+      ** If Not F3
+      *
+     C           *INKC     IFEQ *OFF
+      *
+     C           *IN27     CASEQ*ON       SRLOAD
+     C           *IN32     CASEQ*ON       SRLOAD
+     C           *INKL     CASEQ*ON       SRPF12
+     C                     CAS            SRPREN
+     C                     END
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPREN    - Process Entry on Review Screen                   *
+      *                                                               *
+      *  Calls     - SRVREV, SRPUPD, SRLOAD, ZASNMS                   *
+      *                                                               *
+      *  Calles by - SRPREV                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPREN    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+      *
+      ** Set on valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+      ** If blank subfile displayed, assume Review From required
+      *
+     C           *IN28     IFEQ *OFF
+      *
+     C                     MOVE *ON       *IN59
+      *
+      ** Else identify whether 'REVIEW FROM' or selection required
+      *
+     C                     ELSE
+      *
+     C                     READCSD1520S1                 59
+      *
+     C                     ENDIF
+      *
+      ** No records changed => 'REVIEW FROM' required
+      *
+     C           *IN59     IFEQ *ON
+      *
+     C                     EXSR SRLOAD
+      *
+     C                     ELSE
+      *
+      ** Validate selection
+      *
+     C                     EXSR SRVREV
+      *
+      ** If valid
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ** Process Detail screen
+      *
+     C                     EXSR SRPUPD
+      *
+      ** If Not F3 or F12
+      *
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+      *
+      ** Chain to subfile to get first record
+      *
+     C           1         CHAINSD1520S1             39
+     C                     MOVELS2CHRG    S1RCRG
+      *
+      ** Rebuild subfile
+      *
+     C                     EXSR SRLOAD
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Save RRN of changed subfile record
+      *
+     C                     Z-ADDSFLRR2    WWSRRN
+     C                     MOVE S2SEL     WWSSEL
+      *
+      ** Remove reverse image from subfile
+      *
+     C                     Z-ADD0         WWSFLC
+      *
+     C           WWSFLC    DOWLTWWLRRN
+      *
+     C                     ADD  1         WWSFLC
+      *
+     C           WWSFLC    CHAINSD1520S1             39
+     C                     MOVE *BLANKS   S2SEL
+     C                     MOVE *OFF      *IN66
+      *
+     C                     UPDATSD1520S1
+      *
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *IN66
+     C                     MOVE 'N'       WWVALD
+     C                     MOVELWWMSGD    ZAMSID
+     C                     EXSR ZASNMS
+     C           WWSRRN    CHAINSD1520S1             39
+     C                     MOVE WWSSEL    S2SEL
+     C                     UPDATSD1520S1
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVREV    - Validate Selection on Review From Subfile        *
+      *                                                               *
+      *  Calls     - None                                             *
+      *                                                               *
+      *  Called by - SRPREN                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVREV    BEGSR
+      *
+     C                     MOVE *OFF      *IN57
+      *
+      ** Selection must = 'I' 'A' 'E' or 'D'
+      *
+     C           S2SEL     IFNE 'I'
+     C           S2SEL     ANDNE'A'
+     C           S2SEL     ANDNE'E'
+     C           S2SEL     ANDNE'D'
+      *
+     C                     MOVEL'USR8634' WWMSGD
+     C                     MOVE 'N'       WWVALD
+      *
+     C                     ELSE
+      *
+      ** SPF Check
+      ** For single-branch environment
+      *
+     C           MBIN      IFNE 'Y'
+     C                     CALL 'ZVACTU'
+     C                     PARM S2SEL     @ZACTN
+     C                     PARM           @ERR
+      *
+      ** If action invalid for user
+      *
+     C           @ERR      IFNE *ZERO
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8636' WWMSGD
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** For multi-branch environment
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM S2SEL     @ZACTN
+     C                     PARM USRBCH    @ZBR
+     C                     PARM           @ERR
+      *
+      ** If action invalid for user
+      *
+     C           @ERR      IFEQ 1
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8637' WWMSGD
+     C                     ELSE
+     C           @ERR      IFEQ 2
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8638' WWMSGD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Action = 'D', System Set Up flag must = 'N'
+      *
+     C           S2SEL     IFEQ 'D'
+     C           BJSUC     ANDEQ'Y'
+      *
+     C                     MOVEL'USR8635' WWMSGD
+     C                     MOVE 'N'       WWVALD
+      *
+     C                     ELSE
+      *
+      ** If Action = 'I', record must be flagged as deleted
+      *
+     C           S2SEL     IFEQ 'I'
+     C           S2TYP     ANDNE'D'
+      *
+     C                     MOVEL'USR8639' WWMSGD
+     C                     MOVE 'N'       WWVALD
+      *
+     C                     ELSE
+      *
+      ** If record flagged as deleted
+      *
+     C           S2TYP     IFEQ 'D'
+      *
+     C           S2SEL     IFEQ 'E'
+     C                     MOVE *ON       *IN57
+     C                     ENDIF
+      *
+      ** Action cannot equal 'A' or 'D'
+      *
+     C           S2SEL     IFEQ 'A'
+     C           S2SEL     OREQ 'D'
+      *
+     C                     MOVEL'USR8640' WWMSGD
+     C                     MOVE 'N'       WWVALD
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If valid entry
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+     C                     MOVELS2SEL     SACT
+     C                     MOVELS2CHRG    S1CHRG
+      *
+      ** Set format flag depending on type
+      *
+     C           S2SEL     IFEQ 'I'
+     C                     MOVEL'IA'      WWFMT
+     C                     MOVE *BLANKS   SCHNR
+     C                     MOVE *BLANKS   SCCOM
+     C                     MOVE *BLANKS   SCHRC
+     C                     MOVE *BLANKS   SCHRA
+     C                     ENDIF
+      *
+     C           S2SEL     IFEQ 'A'
+     C                     MOVEL'IA'      WWFMT
+     C                     ENDIF
+      *
+     C           S2SEL     IFEQ 'E'
+     C                     MOVEL'EN'      WWFMT
+     C                     ENDIF
+      *
+     C           S2SEL     IFEQ 'D'
+     C                     MOVEL'DL'      WWFMT
+     C                     ENDIF
+      *
+     C           S2SEL     IFNE 'I'
+     C                     MOVELS2CHNR    SCHNR
+     C                     MOVELS2CCOM    SCCOM
+     C                     MOVELS2CHRC    SCHRC
+     C                     MOVELS2CHRA    SCHRA
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPUPD    - Process Update Screen                            *
+      *                                                               *
+      *  Calls     - SRUPDF, SRVALD, SRPF12                           *
+      *                                                               *
+      *  Called by - SRPROC, SRPREN                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPUPD    BEGSR
+      *
+      ** Set off valid flag
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN72
+     C                     MOVE *OFF      *IN73
+      *
+      ** Do While Not F3 and F12
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C           WWVALD    ANDEQ'N'
+      *
+     C           WWFMT     IFEQ 'IA'
+     C           WWFMT     OREQ 'EN'
+     C           WWFMT     OREQ 'DL'
+      *
+     C           SACT      IFEQ 'D'
+     C                     MOVE *ON       *IN58
+     C                     ELSE
+     C                     MOVE *OFF      *IN58
+     C                     ENDIF
+      *
+     C           SACT      IFEQ 'D'
+     C           SACT      OREQ 'E'
+     C                     MOVE *ON       *IN73
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      *IN52
+      *
+     C                     WRITESD1520F1
+     C                     WRITESD1520F2
+     C                     ENDIF
+      *
+      ** If error and not help, write message subfile
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESD1520C2
+     C                     ENDIF
+      *
+      ** Read screen
+      *
+     C           WWFMT     IFEQ 'IA'
+     C           WWFMT     OREQ 'EN'
+     C           WWFMT     OREQ 'DL'
+     C                     READ SD1520F1                 39
+     C                     ENDIF
+      *
+      ** If Not F3
+      *
+     C           *INKC     IFEQ *OFF
+      *
+     C           *INKJ     CASEQ*ON       SRUPDF
+     C           *INKL     CASEQ*ON       SRPF12
+     C                     CAS            SRVALD
+     C                     END
+      *
+     C                     ENDIF
+      *
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+     C           WWVALD    ANDEQ'Y'
+      *
+     C           SACT      IFEQ 'I'
+     C           SACT      OREQ 'A'
+      *
+      ** Update files
+      *
+     C                     EXSR SRUPDF
+      *
+     C                     ENDIF
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+     C                     MOVE *BLANKS   SACT
+     C                     MOVE *BLANKS   S1CHRG
+     C                     MOVE *BLANKS   S1RCRG
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPDF    - Update Processing                                *
+      *                                                               *
+      *  Calls     - SRUPDT, ZASNMS, ZTNLU1, *PSSR                    *
+      *                                                               *
+      *  Called by - SRPUPD                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPDF    BEGSR
+      *
+     C                     EXSR ZTNLU1
+     C                     MOVE 'Y'       WWVALD
+      *
+      ** Action = 'I'
+      *
+     C           SACT      IFEQ 'I'
+      *
+      ** Access Fid. Deposits Commission/Charge Groups
+      *
+     C           S1CHRG    CHAINSDCCGRL1             37
+      *
+      ** Set up day, month, year of last update
+      *
+     C                     MOVE BJMRDT    WWDAT
+      *
+      ** If a record already exists
+      *
+     C           *IN37     IFEQ *OFF
+      *
+      ** If trans. no. of last update has changed, error
+      *
+     C           CCTNLU    IFNE STNLU
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8641' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     EXCPTFICCGR
+      *
+      ** Else, update record
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'D'       CCRECI
+     C                     MOVELS1CHRG    CCCGRP
+     C                     MOVELSCHNR     CCNARR
+     C                     MOVELSCCOM     CCCCOD
+     C                     MOVELSCHRC     CCCHOD
+     C                     MOVELSCHRA     CCDACD
+     C                     Z-ADDWWDSTN    CCTNLU
+     C                     Z-ADDBJRDNB    CCLCD
+     C                     TIME           CCTLUP
+     C                     MOVE 'I'       CCCHTP
+      *
+     C                     UPDAT@CCGRL1
+      *
+     C                     ENDIF
+      *
+      ** Else, record does not exist
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'D'       CCRECI
+     C                     MOVELS1CHRG    CCCGRP
+     C                     MOVELSCHNR     CCNARR
+     C                     MOVELSCCOM     CCCCOD
+     C                     MOVELSCHRC     CCCHOD
+     C                     MOVELSCHRA     CCDACD
+     C                     Z-ADDWWDSTN    CCTNLU
+     C                     Z-ADDBJRDNB    CCLCD
+     C                     TIME           CCTLUP
+     C                     MOVE 'I'       CCCHTP
+      *
+     C                     WRITE@CCGRL1                42
+      *
+      ** If duplicate key error
+      *
+     C           *IN42     IFEQ *ON
+      *
+     C           STATUS    IFEQ 01021
+      *
+     C                     ROLBK
+      *
+      ** Clear messages caused by status error
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8641' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Action = 'A'
+      *
+     C           SACT      IFEQ 'A'
+      *
+      ** Access Fid. Deposits Commission/Charge Groups
+      *
+     C           S1CHRG    CHAINSDCCGRL1             37
+      *
+      ** Set up day, month, year of last update
+      *
+     C                     MOVE BJMRDT    WWDAT
+      *
+      ** If a record not found or TNLU has changed
+      *
+     C           *IN37     IFEQ *ON
+     C           CCTNLU    ORNE STNLU
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8641' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C           *IN37     IFEQ *OFF
+     C                     EXCPTFICCGR
+     C                     ENDIF
+      *
+      ** Else, update record
+      *
+     C                     ELSE
+      *
+     C                     MOVELS1CHRG    CCCGRP
+     C                     MOVELSCHNR     CCNARR
+     C                     MOVELSCCOM     CCCCOD
+     C                     MOVELSCHRC     CCCHOD
+     C                     MOVELSCHRA     CCDACD
+     C                     Z-ADDWWDSTN    CCTNLU
+      *
+     C           CCLCD     IFNE BJRDNB
+     C                     MOVE 'A'       CCCHTP
+     C                     ENDIF
+      *
+     C                     Z-ADDBJRDNB    CCLCD
+     C                     TIME           CCTLUP
+      *
+     C                     UPDAT@CCGRL1
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Action = 'D'
+      *
+     C           SACT      IFEQ 'D'
+      *
+      ** Access Fid. Deposits Commission/Charge Groups
+      *
+     C           S1CHRG    CHAINSDCCGRL1             37
+      *
+      ** Set up day, month, year of last update
+      *
+     C                     MOVE BJMRDT    WWDAT
+      *
+      ** If record not found or TNLU has changed
+      *
+     C           *IN37     IFEQ *ON
+     C           CCTNLU    ORNE STNLU
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'USR8641' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C           *IN37     IFEQ *OFF
+     C                     EXCPTFICCGR
+     C                     ENDIF
+      *
+      ** Else, delete record
+      *
+     C                     ELSE
+      *
+     C                     MOVE '*'       CCRECI
+      *
+     C                     Z-ADDWWDSTN    CCTNLU
+     C                     MOVE 'D'       CCCHTP
+     C                     Z-ADDBJRDNB    CCLCD
+     C                     TIME           CCTLUP
+      *
+     C                     UPDAT@CCGRL1
+     C                     MOVE *OFF      *IN58
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If no error
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ** If Action = 'I' or 'D'
+      *
+     C           SACT      IFEQ 'I'
+     C           SACT      OREQ 'D'
+      *
+      ** Update Trailer File
+      *
+     C                     EXSR SRUPDT
+      *
+     C                     ENDIF
+      *
+      ** COMIT updates
+      *
+     C           CMTTXT    COMIT
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPDT    - Update Trailer File                              *
+      *                                                               *
+      *  Calls     - None                                             *
+      *                                                               *
+      *  Called by - SRUPDF                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPDT    BEGSR
+      *
+      ** Access Safe Custody Fees Group Trailer
+      *
+     C           1         CHAINSDCCGRPA             41
+      *
+     C           *IN41     IFEQ *ON
+     C           FIRECI    ORNE 'Z'
+     C                     ROLBK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCCGRPA'DBFILE           ************
+     C                     MOVEL*BLANKS   DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     OUT  LDA
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** If Action = 'I', add 1 to no. of records
+      *
+     C           SACT      IFEQ 'I'
+      *
+     C                     ADD  1         FINORE
+      *
+     C                     ENDIF
+      *
+      ** If Action = 'D', subtract 1 from no. of records
+      *
+     C           SACT      IFEQ 'D'
+      *
+     C                     SUB  1         FINORE
+      *
+     C                     ENDIF
+      *
+      ** Update Trailer file
+      *
+     C                     UPDATSDCCGRA0
+      *
+      ** Set up commitment text
+      *
+     C                     MOVEL'  '      MDID
+     C                     MOVEL'SD1520'  PGMN
+     C                     MOVELSWSID     WSIDX
+     C                     MOVELSUSER     USIDX
+     C                     MOVE *BLANKS   ACTCDX
+     C                     TIME           MTIME
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVALD    - Validate Update Screen                           *
+      *                                                               *
+      *  Calls     - ZASNMS                                           *
+      *                                                               *
+      *  Called by - SRPUPD                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVALD    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+      *
+      ** Set off indicators
+      *
+     C                     MOVE *OFF      *IN64
+     C                     MOVE *OFF      *IN67
+     C                     MOVE *OFF      *IN68
+     C                     MOVE *OFF      *IN69
+      *
+      ** Set on valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+      ** Group name must be entered
+      *
+     C           SCHNR     IFEQ *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN64
+     C                     MOVEL'USR8642' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Commission Code must be blank if Commission Taken on
+      ** the Dealing extension is 'N'.
+      *
+     C           SCCOM     IFEQ *BLANKS
+     C           BNCOTK    ANDNE'N'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN67
+     C                     MOVEL'USR8620' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Commission Code must be a valid Commission Code on
+      ** DLCCGDPD with Threshold Flag Held equal to 'Y'
+      *
+     C           SCCOM     IFNE *BLANKS
+     C           BNCOTK    ANDNE'N'
+     C                     MOVEL*BLANKS   KCCOM
+     C                     MOVELSCCOM     KCCOM
+     C           KEYX8     CHAINDLCCGDL0             81
+     C           *IN81     IFEQ *ON
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN67
+     C                     MOVEL'USR8643' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           FDTHRI    IFNE 'Y'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN67
+     C                     MOVEL'USR8647' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Charge Code must be blank if Charge Taken on
+      ** the Dealing extension file is 'N'.
+      *
+     C           SCHRC     IFEQ *BLANKS
+     C           BNCHTK    ANDNE'N'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN68
+     C                     MOVEL'USR8622' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Charge Code must be a valid Commission Code on
+      ** DLCCGDPD with Charge Basis equal to 'Y'
+      *
+     C           SCHRC     IFNE *BLANKS
+     C           BNCHTK    ANDNE'N'
+     C                     MOVEL*BLANKS   KCCOM
+     C                     MOVELSCHRC     KCCOM
+     C           KEYX8     CHAINDLCCGDL0             81
+     C           *IN81     IFEQ *ON
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN68
+     C                     MOVEL'USR8644' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           FDCHGB    IFNE 'F'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN68
+     C                     MOVEL'USR8648' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Deal Amend Charge Code must be blank if Commission Taken On
+      ** the Dealing extension is 'N'.
+      *
+     C           SCHRA     IFEQ *BLANKS
+     C           BNCHPC    ANDNE'N'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN69
+     C                     MOVEL'USR8649' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     ENDIF
+      *
+      ** Deal Amend Charge Code must be a valid Commission Code on
+      ** DLCCGDPD with Charge Basis equal to 'Y'
+      *
+     C           SCHRA     IFNE *BLANKS
+     C           BNCHPC    ANDNE'N'
+     C                     MOVEL*BLANKS   KCCOM
+     C                     MOVELSCHRA     KCCOM
+     C           KEYX8     CHAINDLCCGDL0             81
+     C           *IN81     IFEQ *ON
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN69
+     C                     MOVEL'USR8645' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           FDCHGB    IFNE 'F'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN69
+     C                     MOVEL'USR8648' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOAD    - Load a Page of Subfile Records                   *
+      *                                                               *
+      *  Calls     - None                                             *
+      *                                                               *
+      *  Called by - SRPREV, SRPREN                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLOAD    BEGSR
+      *
+     C                     Z-ADD*ZERO     WWLRRN
+     C                     Z-ADD*ZERO     SFLRR2
+     C                     Z-ADD*ZERO     WWSFLC
+     C                     MOVEL*BLANKS   S2SEL
+     C                     MOVE *OFF      *IN28
+     C                     MOVE *OFF      *IN29
+     C                     MOVE *OFF      *IN31
+     C                     MOVE *OFF      *IN56
+     C                     MOVE *OFF      *IN66
+      *
+      ** Clear subfile screen
+      *
+     C                     MOVE *OFF      *IN28
+     C                     MOVE *OFF      *IN29
+     C                     MOVE *ON       *IN30
+      *
+     C                     WRITESD1520C1
+      *
+     C                     MOVE *OFF      *IN28
+     C                     MOVE *OFF      *IN29
+     C                     MOVE *OFF      *IN30
+      *
+      ** Set pointer to file
+      *
+     C           *IN32     IFEQ *ON
+     C           *LOVAL    SETLLSDCCGRL2
+     C                     ELSE
+     C           S1RCRG    SETLLSDCCGRL2
+     C                     ENDIF
+      *
+      ** Read file
+      *
+     C                     READ SDCCGRL2                 37
+      *
+      ** If EOF
+      *
+     C           *IN37     IFEQ *ON
+      *
+     C                     MOVE *ON       *IN29
+      *
+     C                     ELSE
+      *
+      ** Set on indicators
+      *
+     C                     MOVE *ON       *IN28
+     C                     MOVE *ON       *IN29
+      *
+     C           *IN37     DOWEQ*OFF
+     C           WWSFLC    ANDLT13
+      *
+      ** If record is deleted, move deleted flag to subfile
+      *
+     C           CCRECI    IFEQ '*'
+     C                     MOVEL'D'       S2TYP
+     C                     MOVE *ON       *IN56
+     C                     ELSE
+     C                     MOVEL*BLANKS   S2TYP
+     C                     MOVE *OFF      *IN56
+     C                     ENDIF
+      *
+      ** Move file fields to screen fields
+      *
+     C                     MOVELCCCGRP    S2CHRG
+     C                     MOVELCCNARR    S2CHNR
+     C                     MOVELCCCCOD    S2CCOM
+     C                     MOVELCCCHOD    S2CHRC
+     C                     MOVELCCDACD    S2CHRA
+     C                     Z-ADDWWHRRN    S2RRN
+     C                     Z-ADDCCTNLU    STNLU
+      *
+      ** Add 1 to counter
+      *
+     C                     ADD  1         WWSFLC
+     C                     ADD  1         SFLRR2
+      *
+     C                     WRITESD1520S1
+      *
+     C                     READ SDCCGRL2                 37
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** If EOF
+      *
+     C           *IN37     IFEQ *OFF
+     C                     MOVELCCCGRP    S1RCRG
+     C                     ELSE
+     C                     MOVE *ON       *IN31
+     C                     MOVEL*BLANKS   S1RCRG
+     C                     ENDIF
+      *
+      ** Save RRN of subfile
+      *
+     C                     Z-ADDSFLRR2    WWLRRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPF12    - Process F12                                      *
+      *                                                               *
+      *  Calls     - None                                             *
+      *                                                               *
+      *  Called by - SRPREV, SRPUPD                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPF12    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+      *
+      ** Clear screen error indicators
+      *
+     C                     MOVE *OFF      *IN50
+     C                     MOVE *OFF      *IN57
+     C                     MOVE *OFF      *IN58
+     C                     MOVE *OFF      *IN61
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN63
+     C                     MOVE *OFF      *IN64
+     C                     MOVE *OFF      *IN65
+     C                     MOVE *OFF      *IN66
+     C                     MOVE *OFF      *IN67
+     C                     MOVE *OFF      *IN68
+     C                     MOVE *OFF      *IN69
+      *
+      ** Initialise fields
+      *
+     C                     MOVEL*BLANKS   SACT
+     C                     MOVEL*BLANKS   S1CHRG
+     C                     MOVEL*BLANKS   S1RCRG
+     C                     MOVEL*BLANKS   SCHNR
+     C                     MOVE *BLANKS   SCCOM
+     C                     MOVEL*BLANKS   SCHRC
+     C                     MOVE *BLANKS   SCHRA
+     C                     MOVEL*BLANKS   S2RRN
+     C                     MOVEL*BLANKS   STNLU
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZTNLU1    - Retrieve/Update Trans. No. of Last Update        *
+      *                                                               *
+      *  Calls     - None                                             *
+      *                                                               *
+      *  Called by - SRUPDF                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZTNLU1    BEGSR
+      *
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     Z-ADDFNATN     WWDSTN
+     C                     Z-ADDFNATN     WWNATN
+     C                     ADD  1         FNATN
+     C                     OUT  DNATN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS    - Send Message to Program's Message Queue          *
+      *                                                               *
+      *  Calls     - Y2SNMGC                                          *
+      *                                                               *
+      *  Called by - SRVAL1, SRPREN, SRUPDF, SRVALD                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR     - Program Error Handling Routine                   *
+      *                                                               *
+      *  Calls     - None                                             *
+      *                                                               *
+      *  Called by - SRUPDF, SRINIT                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+      *
+     C                     ROLBK
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     O@CCGRL1 E                FICCGR
+      ** Release the record from SDCCGRL1
+      *
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2001

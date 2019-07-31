@@ -1,0 +1,586 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Chart of Accounts Report - detail')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas General Ledger Module
+     F*                                                               *
+     F*  GL0036 - Chart of Accounts Report - detailed                 *
+     F*                                                               *
+     F*  Function: This program will will produce a Chart of Accounts *
+     F*  I/C Int   which includes the Balance Sheet/Profit Loss codes *
+     F*  COB       by set.                                            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 238916             Date 12Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 23Feb99               *
+      *                 CTI002             Date 23Sep98               *
+     F*                    097172             DATE 19Feb98               *
+     F*                    063184             DATE 03Feb98            *
+     F*                    E40399             DATE 08May92            *
+     F*                                                               *
+     F*****************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+      *  238916 - If CSD005 is ON, print the last 23 characters of the*
+      *           account narrative on the next line.                 *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *     CSD005 - Switchable feature- if account narrative feature *  *
+      *              is active the current account description shall be  *
+      *              replaced with the account narrative.                *
+      *     CTI002 - Recompiled : File SDACODPD changed               *
+      *     097172 - Some account code doesn't appear in GL0035P1        *
+     F*     063184 - Do not convert a/c titles to lower case          *
+     F*     E40399 - NO DATABASE ERROR IF NO BALANCE SHEET CODES      *
+     F*              ALSO FIXS E40404                                 *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSDACODL1IF  E           K        DISK
+     FSDACRCL4IF  E           K        DISK
+     FGL0036P1O   E             09     PRINTER      KINFDS SPOOL
+     FGL0036AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      /EJECT
+     F*****************************************************************
+     F* F U N C T I O N  O F  I N D I C A T O R S                     *
+     F*                                                               *
+     F*  09 =    Overflow indicator                                   *
+     F*                                                               *
+     F*  10      End of file for SDACODL1                             *
+     F*  11      End of file for SDACRCL4                             *
+     F*  20      End of file for SDBANKPD                             *
+      *                                                               *
+      *  21      ZSFILE ended in error                                *
+      *                                                               *
+      ***50******Capital letter exists in array alphabet              *   063184
+      *  60      Title only indicator                                 *
+      *  70      Last record on page is title only record             *
+      *          output as start of next page                         *
+      *                                                               *
+      *  73      Conditions field for switchable feature Account      *   CSD005
+      *          Narrative                                            *   CSD005
+      *
+     C*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*           INDEX TO SUBROUTINES                                *
+     F*                                                               *
+     F*      1.   SUB01 - Find Balance Sheet/Profit Loss Codes        *
+     F*******2.   SUB02 - Convert account title to lower case.        *   063184
+     F*      3.   *PSSR - Database error processing.                  *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E**********          ALPHBT 26  26  1                                063184
+     E                    ACCN       25  1
+      *
+     E                    CPY@    1   1 80
+      * Copyright Array
+     E/EJECT
+     I            DS
+     I                                        1  25 ACCN
+     I                                        1  25 A5ACCN
+     ICPYR@#      DS
+      * Data Structure For Compilation  - Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     ISPOOL       DS
+      * P1 printer file information data structure
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 152 1530SFLIN
+      *
+     ISPOOLU      DS
+      * AU printer file information data structure
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISDBANK    E DSSDBANKPD
+      * Bank Details
+      *
+     ISCSARD    E DSSCSARDPD                                              CSD005
+      * Switchable Features File Details                                  CSD005
+      *                                                                   CSD005
+     IDSFDY     E DSDSFDY
+      * First DS for Access Programs, Short Data Structure
+      *
+     ILDA         DS                            256
+      * Local Data Area
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I****************************************************************
+     I/EJECT
+      *
+      * Receive entry parameter
+     C           *ENTRY    PLIST
+     C                     PARM           SEQNO   5
+      *
+      * Set up work field
+     C                     MOVE 'Y'       RUN1    1
+      *
+      * Use access program AOBANKR0 to retrieve header details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      * If error in access program, exit via *PSSR subroutine
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL0036'  ERRPGM 10
+     C                     MOVE *BLANKS   ERRKEY  4
+     C                     MOVEL'SDBANKPD'ERRFIL 10        ***************
+     C                     Z-ADD001       ERRBAS  30       * DBERROR 001 *
+     C                     EXSR *PSSR                      ***************
+     C                     END
+      *
+     C                     MOVE BJURPT    RURPT
+     C                     MOVE BJMRDT    RMRDT
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      * Ensure totals spool file recorded by RCF
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+      * Call ZSFILE for GL0036P1
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM *BLANKS   ENTY    3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      * If error in ZSFILE, exit via *PSSR subroutine
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     21
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   CSD005
+      *** Use access program AOSARDR0 to retrieve switchable features     CSD005
+      *                                                                   CSD005
+     C                     CALL 'AOSARDR0'                                CSD005
+     C                     PARM *BLANKS   @RTCD   7                       CSD005
+     C                     PARM '*VERIFY' @OPTN   7                       CSD005
+     C                     PARM 'CSD005'  @KEY    6                       CSD005
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD005
+      *                                                                   CSD005
+      *** Switch on Account Narrative feature if appropriate              CSD005
+      *                                                                   CSD005
+     C                     SELEC                                          CSD005
+     C           @RTCD     WHEQ *BLANK                                    CSD005
+     C                     MOVE *ON       *IN73                           CSD005
+     C           @RTCD     WHEQ '*NRF'                                    CSD005
+     C                     MOVE *OFF      *IN73                           CSD005
+     C                     OTHER                                          CSD005
+      *                                                                   CSD005
+      *** If error in access program, exit via *PSSR subroutine           CSD005
+      *                                                                   CSD005
+     C           *LOCK     IN   LDA                                       CSD005
+     C                     MOVEL'SCSARDPD'DBFILE            ************* CSD005
+     C                     Z-ADD001       DBASE             *DBERROR 001* CSD005
+     C                     MOVEL@OPTN     DBKEY             ************* CSD005
+     C                     SETON                     U7U8LR               CSD005
+     C                     OUT  LDA                                       CSD005
+     C                     EXSR *PSSR                                     CSD005
+     C                     ENDSL                                          CSD005
+      *
+      *   Read File SDACODL1
+     C                     READ @A5REA6                  10
+      *
+      *   Print page headings and details
+     C                     WRITEPAGHDG
+     C                     WRITECHTHDG
+     C                     WRITEDETHDG
+      *
+      * Set Line Counter
+     C**********           Z-ADD8         LNCNT   30                                          CGL029
+     C                     Z-ADD10        LNCNT   30                                          CGL029
+      *
+      * If indicator 10 is Off continue processing else output
+      * No Records format.
+     C           *IN10     IFEQ '0'
+      *
+      * Do While Not Last Record
+     C           *IN10     DOWEQ'0'
+      *
+      * Convert Account Title to lower case.
+     C**********           EXSR SUB02                                     063184
+      *
+      * If the Title Only indicator is on, move Account Code and
+      * Account Title into the output fields and also move them into
+      * work fields for use at time of overflow.
+     C           A5TOIN    IFEQ 'Y'
+     C                     SETON                     60
+      *                                                                   CSD005
+      *** If Account Narrative is required then move account narrative    CSD005
+      ****into*account*description*field*displaying*first*27*chars*only                CSD005 238916
+      ** into account description                                                             238916
+      *                                                                   CSD005
+     C                     MOVELA5ACCD    ACCD
+     C                     MOVELA5ACCN    ACCNO
+     C                     MOVELA5ACCD    ACCODE
+     C           *IN73     IFEQ *OFF                                      CSD005
+     C                     MOVELA5ACCN    TITLE
+     C                     ELSE                                           CSD005
+     C                     MOVELA5NARR    TITLE                           CSD005
+     C                     MOVE A5NARR    TITLE2                                              238916
+     C                     MOVELA5NARR    ACCNO                                               238916
+     C                     MOVE A5NARR    TITLEY 23                                           238916
+     C                     ENDIF                                          CSD005
+     C                     MOVE A5ACSC    ACSC1
+      *
+      * If the Title Only indicator is off, move Account Code and
+      * Account Title into the output fields.
+     C                     ELSE
+      *                                                                   CSD005
+      *** If Account Narrative is required then move account narrative    CSD005
+      ****into*account*description*field*displaying*first*27*chars*only                CSD005 238916
+      ** into account description                                                             238916
+      *                                                                   CSD005
+     C                     MOVE A5ACCD    ACCODE
+     C                     MOVEAACCN,1    TITLE1 25
+     C           *IN73     IFEQ *OFF                                      CSD005
+     C                     MOVE TITLE1    TITLE
+     C                     ELSE                                           CSD005
+     C                     MOVELA5NARR    TITLE                           CSD005
+     C                     MOVE A5NARR    TITLE2                                              238916
+     C                     ENDIF                                          CSD005
+     C                     MOVE A5ACTY    TYPE
+     C                     MOVE A5ACSC    ACSC
+      *
+      * Find Balance Sheet/Profit Loss Codes for account code.
+     C                     EXSR SUB01
+      *
+     C                     END
+      *
+      * If last line of page is a Title Only record, set on indicator
+      * to output record at the start of the next page.
+     C********** LNCNT     IFEQ 57                                                            CGL029
+     C           LNCNT     IFEQ 53                                                            CGL029
+     C           A5TOIN    ANDEQ'Y'
+     C********** LNCNT     OREQ 58                                                            CGL029
+     C           LNCNT     OREQ 54                                                            CGL029
+     C           A5TOIN    ANDEQ'Y'
+     C                     SETON                     70
+     C                     END
+      *
+      * Write details except for condition where last
+      * record is a Title Only record.
+     C           *IN70     IFEQ '0'
+     C                     WRITEDETFMT
+     C                     END
+      *
+      * Increase line count for each record output.
+     C           *IN70     IFEQ '0'
+     C           *IN60     IFEQ '1'
+     C           TITLE2    IFEQ *BLANKS                                                       238916
+     C**********           ADD  2         LNCNT                                               CGL029
+     C                     ADD  4         LNCNT                                               CGL029
+     C                     ELSE                                                               238916
+     C                     ADD  5         LNCNT                                               238916
+     C                     ENDIF                                                              238916
+     C                     ELSE
+     C**********           ADD  1         LNCNT                                               CGL029
+     C                     ADD  3         LNCNT                                               CGL029
+     C                     END
+     C                     END
+     C*********************SETOF                     60                   097172
+      *
+      * Reset output fields to blank.
+     C                     MOVE *BLANK    ACCODE
+     C                     MOVE *BLANK    TITLE
+     C                     MOVE *BLANKS   TITLE2                                              238916
+     C                     MOVE *BLANK    TYPE
+     C                     MOVE *BLANK    ACSC
+     C                     MOVE *BLANKS   RC1D
+     C                     MOVE *BLANKS   RC1C
+     C                     MOVE *BLANKS   RC2D
+     C                     MOVE *BLANKS   RC2C
+     C                     MOVE *BLANKS   RC3D
+     C                     MOVE *BLANKS   RC3C
+     C                     MOVE *BLANKS   RC4D
+     C                     MOVE *BLANKS   RC4C
+     C                     MOVE *BLANKS   RC5D
+     C                     MOVE *BLANKS   RC5C
+     C                     MOVE *BLANKS   RC6D
+     C                     MOVE *BLANKS   RC6C
+     C                     MOVE *BLANKS   RC7D
+     C                     MOVE *BLANKS   RC7C
+     C                     MOVE *BLANKS   RC8D
+     C                     MOVE *BLANKS   RC8C
+     C                     MOVE *BLANKS   RC9D
+     C                     MOVE *BLANKS   RC9C
+      *
+      * Read file SDACODL1.
+     C                     READ @A5REA6                  10
+      *
+      * Check for Overflow. Check for last record being a Title Only
+      * record. Print page headings and details.
+     C           *IN09     IFEQ '1'
+     C           *IN70     OREQ '1'
+     C                     WRITEPAGHDG
+     C                     WRITECHTHDG
+     C                     WRITEDETHDG
+      *
+      * To continue with records of same type at start of next
+      * page, then rewrite the last Title Only record stored
+      * in work fields.
+     C           A5TOIN    IFNE 'Y'
+     C           *IN60     OREQ '1'                                       097172
+     C                     WRITEDETFMT1
+     C           TITLEY    IFNE *BLANKS                                                       238916
+     C           *IN73     ANDEQ*ON                                                           238916
+     C                     MOVE TITLEY    TITLE2                                              238916
+     C                     WRITEDETFMT2                                                       238916
+     C                     ENDIF                                                              238916
+     C                     END
+      *
+      * Reset Line Counter
+     C**********           Z-ADD10        LNCNT                                               CGL029
+     C                     Z-ADD12        LNCNT                                               CGL029
+      *
+     C                     SETOF                     09
+     C                     SETOF                     70
+     C                     END
+     C                     SETOF                     60                   097172
+     C                     END
+      *
+      * End of Report
+     C                     WRITEENDFMT
+     C                     ELSE
+      *
+      * No Records to Report.
+     C                     WRITENORECFMT
+     C                     END
+      *
+     C                     SETON                     LR
+     C********************************************************************
+     C/EJECT
+     C**
+     C** SUB01 Subroutine to find the Balance Sheet/Profit Loss Codes
+     C**       for each Account Code.
+     C**
+     C**  CALLED BY : Main Processing
+     C**
+     C**  CALLS     : None
+      *
+     C           SUB01     BEGSR
+      *
+      * Find first record for Account Code.
+     C           A5ACCD    SETLLSDACRCL4                 11
+      *
+     C           *IN11     IFEQ '1'
+     C                     READESDACRCL4                 11
+      *
+      **Database*error*handling.                                          E40399
+     C**                   ELSE                                           E40399
+     C**                   MOVEL'GL0036'  ERRPGM                          E40399
+     C**                   MOVE A5ACCD    ERRKEY                          E40399
+     C**                   MOVEL'SDACRCPD'ERRFIL           ***************E40399
+     C**                   Z-ADD002       ERRBAS           * DBERROR 002 *E40399
+     C**                   EXSR *PSSR                       ************* E40399
+     C**                   END                                            E40399
+      *
+      * Find each Balance Sheet/Profit Loss Code until and move into the
+      * appropriate fields until there are no more records for the
+      * Account Code.
+     C           A5ACCD    DOWEQG6ACCD
+     C           *IN11     ANDNE'1'
+      *
+     C           G6RSNO    IFEQ '1'
+      *
+      * Check if debit or credit.
+     C           G6DRCR    IFEQ '1'
+     C                     MOVE G6RSCD    RC1C
+     C                     ELSE
+     C                     MOVE G6RSCD    RC1D
+     C                     END
+     C                     END
+      *
+     C           G6RSNO    IFEQ '2'
+      *
+      * Check if debit or credit.
+     C           G6DRCR    IFEQ '1'
+     C                     MOVE G6RSCD    RC2C
+     C                     ELSE
+     C                     MOVE G6RSCD    RC2D
+     C                     END
+     C                     END
+      *
+     C           G6RSNO    IFEQ '3'
+      *
+      * Check if debit or credit.
+     C           G6DRCR    IFEQ '1'
+     C                     MOVE G6RSCD    RC3C
+     C                     ELSE
+     C                     MOVE G6RSCD    RC3D
+     C                     END
+     C                     END
+      *
+     C           G6RSNO    IFEQ '4'
+      *
+      * Check if debit or credit.
+     C           G6DRCR    IFEQ '1'
+     C                     MOVE G6RSCD    RC4C
+     C                     ELSE
+     C                     MOVE G6RSCD    RC4D
+     C                     END
+     C                     END
+      *
+     C           G6RSNO    IFEQ '5'
+      *
+      * Check if debit or credit.
+     C           G6DRCR    IFEQ '1'
+     C                     MOVE G6RSCD    RC5C
+     C                     ELSE
+     C                     MOVE G6RSCD    RC5D
+     C                     END
+     C                     END
+      *
+     C           G6RSNO    IFEQ '6'
+      *
+      * Check if debit or credit.
+     C           G6DRCR    IFEQ '1'
+     C                     MOVE G6RSCD    RC6C
+     C                     ELSE
+     C                     MOVE G6RSCD    RC6D
+     C                     END
+     C                     END
+      *
+     C           G6RSNO    IFEQ '7'
+      *
+      * Check if debit or credit.
+     C           G6DRCR    IFEQ '1'
+     C                     MOVE G6RSCD    RC7C
+     C                     ELSE
+     C                     MOVE G6RSCD    RC7D
+     C                     END
+     C                     END
+      *
+     C           G6RSNO    IFEQ '8'
+      *
+      * Check if debit or credit.
+     C           G6DRCR    IFEQ '1'
+     C                     MOVE G6RSCD    RC8C
+     C                     ELSE
+     C                     MOVE G6RSCD    RC8D
+     C                     END
+     C                     END
+      *
+     C           G6RSNO    IFEQ '9'
+      *
+      * Check if debit or credit.
+     C           G6DRCR    IFEQ '1'
+     C                     MOVE G6RSCD    RC9C
+     C                     ELSE
+     C                     MOVE G6RSCD    RC9D
+     C                     END
+     C                     END
+      *
+      * Read next record.
+     C                     READ SDACRCL4                 11
+     C                     END
+     C                     END                                            E40399
+      *
+     C                     ENDSR
+      *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C***SUB02*Subroutine to convert the account title to lower           063184
+     C*********case when the title only indicator is not on. The          063184
+     C*********first letter is left as upper case.                        063184
+     C**
+     C**  CALLED BY : Main Processing
+     C**
+     C**  CALLS     : None
+     C*
+     C********** SUB02     BEGSR                                          063184
+     C********** A5TOIN    IFNE 'Y'                                       063184
+     C**********           MOVE 02        X       20                      063184
+     C********** X         DOWLE25                                        063184
+     C********** ACCN,X    LOKUPALPHBT                   50               063184
+     C********** *IN50     IFEQ '1'                                       063184
+     C**********           BITOF'1'       ACCN,X                          063184
+     C**********           END                                            063184
+     C**********           ADD  1         X                               063184
+     C**********           END                                            063184
+     C**********           END                                            063184
+     C********** SUB02E    ENDSR                                          063184
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      *
+      *  *PSSR Subroutine to handle program error
+      *
+      *    CALLED BY : Main Processing
+      *
+      *    CALLS     : PGM/ZSFILE
+      *
+     C           *PSSR     BEGSR
+      *
+      * Check that this is the first time through the routine
+      * to prevent recursive calling which would loop the progam.
+     C           RUN1      IFEQ 'Y'
+     C                     MOVE 'N'       RUN1
+      *
+      * Check if any of the calls to ZSFILE ended in error.  ZSFILE
+      * has its own error handling so most of this routine can be
+      * skipped.
+     C           *IN21     IFEQ '0'
+     C                     DUMP
+      *
+      * Database error handling.
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELERRPGM    DBPGM
+     C                     MOVELERRKEY    DBKEY
+     C                     MOVELERRFIL    DBFILE
+     C                     Z-ADDERRBAS    DBASE
+     C                     OUT  LDA
+      *
+      * Open audit file and perform ZSFILE processing.
+     C                     OPEN GL0036AU
+      *
+      * Ensure totals spool file recorded by RCF
+     C                     Z-ADDSFNUMU    ZSNUM
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM *BLANKS   ENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+      * Write audit report.
+     C                     WRITEGL0036AH
+     C                     WRITEGL0036AE
+     C                     END
+     C                     END
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+      **
+     C**  (Following table removed)                                       063184
+     C**********ABCDEFGHIJKLMNOPQRSTUVWXYZ                                063184
+**  CPY@
+(c) Finastra International Limited 2001

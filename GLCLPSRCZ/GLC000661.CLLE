@@ -1,0 +1,741 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Reports Management')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000661 - Midas GL Reports Management                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2015                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL154  *CREATE    Date 13Oct14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL154 - FATCA Reporting                                    */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2015')
+ 
+             DCL        VAR(&PYRNO) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PYEAR) TYPE(*CHAR) LEN(4) VALUE('    ')
+             DCL        VAR(&PYRNO2) TYPE(*CHAR) LEN(4) VALUE('    ')
+             DCL        VAR(&PEND)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PBuild)  TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&LDA)   TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM)   TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBID) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&YEARN) TYPE(*DEC) LEN(4 0)
+             DCL        VAR(&PBRCD) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&PCTRY) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PSTTS) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&PCOMM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PCADD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DALIB) TYPE(*CHAR) LEN(7) VALUE('  DALIB')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(7) VALUE('  DVLIB')
+             DCL        VAR(&GLCAPAPD) TYPE(*CHAR) LEN(10) VALUE('GLCAPAPD  ')
+             DCL        VAR(&GLCSBAPD) TYPE(*CHAR) LEN(10) VALUE('GLCSBAPD  ')
+             DCL        VAR(&GLRMDTPD) TYPE(*CHAR) LEN(10) VALUE('GLRMDTPD  ')
+             DCL        VAR(&GLRMIEPD) TYPE(*CHAR) LEN(10) VALUE('GLRMIEPD  ')
+             DCL        VAR(&GLRPMGPD) TYPE(*CHAR) LEN(10) VALUE('GLRPMGPD  ')
+ 
+/* Monitor for any errors and send appropriate message to MOPERQ */
+ 
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Send Pgm Message */
+ 
+             CHGVAR     VAR(&MEM) VALUE('GLC000661 - Report Management')
+             SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ)
+ 
+/* Clear switches */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Get system prefix */
+ 
+             RTVJOBA    JOB(&JOBID)
+             RTVDTAARA  DTAARA(GLFEOYDA) RTNVAR(&PYEAR)
+             CHGVAR     VAR(&YEARN) VALUE(&PYEAR)
+             CHGVAR     VAR(&YEARN) VALUE(&YEARN - 1)
+             CHGVAR     VAR(&PYEAR) VALUE(&YEARN)
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DALIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DVLIB 1 2)) VALUE(&SYSID)
+             DLTF       FILE(QTEMP/GLRMEXPD)
+             MONMSG     MSGID(CPF0000)
+             CPYF       FROMFILE(&DPLIB/GLRMEXPD) TOFILE(QTEMP/GLRMEXPD) +
+                          TOMBR(GLRMEXPD) MBROPT(*REPLACE) CRTFILE(*YES)
+ 
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+LOOP:
+             CHGVAR     VAR(&PYRNO) VALUE(%SUBSTRING(&PYEAR 3 2))
+ 
+             CHGVAR     VAR(%SUBSTRING(&GLCAPAPD 9 2)) VALUE(&PYRNO)
+             CHGVAR     VAR(%SUBSTRING(&GLCSBAPD 9 2)) VALUE(&PYRNO)
+             CHGVAR     VAR(%SUBSTRING(&GLRMDTPD 9 2)) VALUE(&PYRNO)
+             CHGVAR     VAR(%SUBSTRING(&GLRMIEPD 9 2)) VALUE(&PYRNO)
+             CHGVAR     VAR(%SUBSTRING(&GLRPMGPD 9 2)) VALUE(&PYRNO)
+ 
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+             CLRPFM     FILE(QTEMP/GLRMEXPD)
+             IF         COND(&PYRNO *NE '  ') THEN(DO)
+ 
+             IF         COND(&PBuild *EQ 'Y') THEN(DO)
+ 
+             CPYF       FROMFILE(QTEMP/GLRMDTPD) +
+                          TOFILE(&DALIB/&GLRMDTPD) +
+                          TOMBR(GLRMDTPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/GLRMIEPD) +
+                          TOFILE(&DALIB/&GLRMIEPD) +
+                          TOMBR(GLRMIEPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/GLRPMGPD) +
+                          TOFILE(&DALIB/&GLRPMGPD) +
+                          TOMBR(GLRPMGPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             ENDDO
+ 
+             DLTF       FILE(QTEMP/GLCAPAL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCAPAL1)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCAPAL2)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCSBAL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCSBAL1)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL1)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL2)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL3)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL4)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL5)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL6)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL7)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL8)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL9)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTLA)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTLB)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMEXL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMEXL1)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMEXL2)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMEXL3)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMIEL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMIEL1)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRPMGL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRPMGL1)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRPMGL2)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCAPAPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCSBAPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMIEPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRPMGPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHKOBJ     OBJ(&DALIB/&GLCAPAPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NODATA))
+ 
+/* Create backup file of FATCA files to QTEMP */
+ 
+             CPYF       FROMFILE(&DALIB/&GLCAPAPD) +
+                          TOFILE(QTEMP/GLCAPAPD) CRTFILE(*YES) +
+                          TOMBR(GLCAPAPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             CPYF       FROMFILE(&DALIB/&GLCSBAPD) +
+                          TOFILE(QTEMP/GLCSBAPD) CRTFILE(*YES) +
+                          TOMBR(GLCSBAPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             CPYF       FROMFILE(&DALIB/&GLRMDTPD) +
+                          TOFILE(QTEMP/GLRMDTPD) CRTFILE(*YES) +
+                          TOMBR(GLRMDTPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             CPYF       FROMFILE(&DALIB/&GLRMIEPD) +
+                          TOFILE(QTEMP/GLRMIEPD) CRTFILE(*YES) +
+                          TOMBR(GLRMIEPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             CPYF       FROMFILE(&DALIB/&GLRPMGPD) +
+                          TOFILE(QTEMP/GLRPMGPD) CRTFILE(*YES) +
+                          TOMBR(GLRPMGPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             GOTO       CMDLBL(OVERRIDE)
+ 
+NODATA:
+ 
+             CRTDUPOBJ  OBJ(GLCAPAPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) DATA(*NO)
+ 
+             CRTDUPOBJ  OBJ(GLCSBAPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) DATA(*NO)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) DATA(*NO)
+ 
+             CRTDUPOBJ  OBJ(GLRMIEPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) DATA(*NO)
+ 
+             CRTDUPOBJ  OBJ(GLRPMGPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) DATA(*NO)
+ 
+             CRTDUPOBJ  OBJ(GLCAPAPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(&DALIB) DATA(*NO) NEWOBJ(&GLCAPAPD)
+ 
+             CRTDUPOBJ  OBJ(GLCSBAPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(&DALIB) DATA(*NO) NEWOBJ(&GLCSBAPD)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(&DALIB) DATA(*NO) NEWOBJ(&GLRMDTPD)
+ 
+             CRTDUPOBJ  OBJ(GLRMIEPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(&DALIB) DATA(*NO) NEWOBJ(&GLRMIEPD)
+ 
+             CRTDUPOBJ  OBJ(GLRPMGPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(&DALIB) DATA(*NO) NEWOBJ(&GLRPMGPD)
+ 
+OVERRIDE:
+ 
+/** Override files */
+ 
+             CRTDUPOBJ  OBJ(GLCAPAL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLCAPAL0)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLCAPAL1) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(GLCAPAL1)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLCAPAL2) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(GLCAPAL2)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLCSBAL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLCSBAL0)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLCSBAL1) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(GLCSBAL1)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRMDTL0)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTL1) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRMDTL1)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTL2) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRMDTL2)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTL3) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRMDTL3)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTL4) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRMDTL4)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTL5) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRMDTL5)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTL6) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRMDTL6)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTL7) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRMDTL7)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTL8) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRMDTL8)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTL9) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRMDTL9)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTLA) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(GLRMDTLA)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMDTLB) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(GLRMDTLB)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMEXL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(GLRMEXL0)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DPLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMEXL1) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(GLRMEXL1)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DPLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMEXL2) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+ 
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(GLRMEXL2)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DPLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMEXL3) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(GLRMEXL3)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DPLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMIEL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRMIEL0)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRMIEL1) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRMIEL1)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRPMGL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRPMGL0)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRPMGL1) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRPMGL1)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             CRTDUPOBJ  OBJ(GLRPMGL2) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+ 
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(GLRPMGL2)
+             MONMSG     MSGID(CPF2130 CPD2104)
+ 
+             DLTF       FILE(&DMLIB/&JOBID)
+ 
+             OVRDBF     FILE(GLCAPAL0) TOFILE(QTEMP/GLCAPAL0) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLCAPAL1) TOFILE(QTEMP/GLCAPAL1) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLCAPAL2) TOFILE(QTEMP/GLCAPAL2) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLCSBAL0) TOFILE(QTEMP/GLCSBAL0) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLCSBAL1) TOFILE(QTEMP/GLCSBAL1) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMDTL0) TOFILE(QTEMP/GLRMDTL0) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMDTL1) TOFILE(QTEMP/GLRMDTL1) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMDTL2) TOFILE(QTEMP/GLRMDTL2) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMDTL3) TOFILE(QTEMP/GLRMDTL3) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMDTL4) TOFILE(QTEMP/GLRMDTL4) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMDTL5) TOFILE(QTEMP/GLRMDTL5) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMDTL6) TOFILE(QTEMP/GLRMDTL6) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMDTL7) TOFILE(QTEMP/GLRMDTL7) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMDTL8) TOFILE(QTEMP/GLRMDTL8) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMDTL9) TOFILE(QTEMP/GLRMDTL9) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMDTLA) TOFILE(QTEMP/GLRMDTLA) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMDTLB) TOFILE(QTEMP/GLRMDTLB) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMEXL0) TOFILE(QTEMP/GLRMEXL0) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMEXL1) TOFILE(QTEMP/GLRMEXL1) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMEXL2) TOFILE(QTEMP/GLRMEXL2) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMEXL3) TOFILE(QTEMP/GLRMEXL3) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMIEL0) TOFILE(QTEMP/GLRMIEL0) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMIEL1) TOFILE(QTEMP/GLRMIEL1) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRPMGL0) TOFILE(QTEMP/GLRPMGL0) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRPMGL1) TOFILE(QTEMP/GLRPMGL1) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRPMGL2) TOFILE(QTEMP/GLRPMGL2) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMDTPD) TOFILE(QTEMP/GLRMDTPD) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMIEPD) TOFILE(QTEMP/GLRMIEPD) OVRSCOPE(*CALLLVL)
+ 
+             OVRDBF     FILE(GLRMEXPD) TOFILE(QTEMP/GLRMEXPD) OVRSCOPE(*CALLLVL)
+ 
+ 
+             ENDDO
+ 
+             IF         COND(&PYear *EQ '    ') THEN(DO)
+                CHGVAR     VAR(&PYear) VALUE(&PYRNO2)
+             ENDDO
+ 
+             CALL       PGM(GL000661) PARM(&PYear &PYRNO2 &PEnd &PBuild &PBRCD +
+                          &PCTRY &PSTTS &PCOMM &PCADD)
+ 
+             IF         COND(&PEND *NE 'Y') THEN(DO)
+             GOTO       CMDLBL(LOOP)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC000661 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             DLTF       FILE(QTEMP/GLCAPAL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCAPAL1)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCAPAL2)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCSBAL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCSBAL1)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL1)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL2)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL3)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL4)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL5)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL6)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL7)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL8)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTL9)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTLA)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTLB)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMEXL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMEXL1)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMEXL2)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMEXL3)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMIEL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMIEL1)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRPMGL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRPMGL1)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRPMGL2)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCAPAPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCSBAPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMDTPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMIEPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRPMGPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLRMEXPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM
+ 

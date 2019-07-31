@@ -1,0 +1,190 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Load DL/LE Interest Scale Qualfy Acct codes')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing/ Lending Modules                            */
+/*                                                                   */
+/*       CGC7180 - Load DL/LE Interest Scale Qualifying Acct Codes   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR815785           Date 17Aug11              */
+/*                      CER042  *CREATE    Date 11May11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR815785 - Interest Scale DL/LE Load Account Codes maint ;  */
+/*                  replaced CG7180 program to revise the DL/LE      */
+/*                  loading functionality                            */
+/*       CER042 - Interest Scale Report Correspondence               */
+/*                (Upgrade of FGE178/179)                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PGMQ) TYPE(*CHAR) LEN(10) VALUE('+
+                          CGC7180')
+             DCL        VAR(&RELQ) TYPE(*CHAR) LEN(5) VALUE('*SAME')
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7) VALUE('  ')
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10) +
+                          VALUE('CGUSRMSG')
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(132) VALUE(' ')
+             DCL        VAR(&MSGTYP) TYPE(*CHAR) LEN(7) VALUE(' ')
+/**********  DCL        VAR(&WSTERM) TYPE(*CHAR) LEN(4) VALUE(' ')        */            /*AR815785*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2011')
+ 
+/* Declare the screen */
+             DCLF       FILE(CGC7180DF)
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Override Message file */
+             OVRMSGF    MSGF(CGUSRMSG) TOMSGF(GBCGUSRMSG)
+ 
+/* Create LDA if it does not exist */
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG MSGID(CPF9801) EXEC(DO)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          TEXT('Midas SD Local Data Area')
+ 
+             CALL       PGM(Y2CLMSC) PARM(&PGMQ &RELQ)
+             ENDDO
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             RTVJOBA    JOB(&D0WSID) USER(&D0USER)
+             RTVDTAARA  (RUNDAT (1 7)) RTNVAR(&D0RUNA)
+             CHGJOB     SWS(XXXXXX00)
+             CHGVAR     VAR(&DPGM) VALUE(&PGMQ)
+ 
+/* Write/read the screen */
+DSPLY:
+             SNDF      RCDFMT(DMSGCTL)
+             SNDRCVF    RCDFMT(CGC7180F0)
+ 
+/* Clear the program message queue */
+             CALL Y2CLMSC PARM(&PGMQ &RELQ)
+ 
+/* Function termination */
+             IF         COND(&IN03) THEN(GOTO CMDLBL(END))
+ 
+/* Confirm refresh file */
+             IF &IN06 THEN(DO)
+ 
+/* Allocate the DL/LE Interest Scale Qualifying Account Codes file */
+             ALCOBJ     OBJ((CGISDQPD *FILE *EXCLRD)) WAIT(1)
+ 
+/* File is currently in use */
+                MONMSG CPF1002 EXEC(DO)
+ 
+/* Clear the program message queue */
+                   CALL Y2CLMSC PARM(&PGMQ &RELQ)
+ 
+/* Display file in use message */
+                   CHGVAR &MSGID VALUE('ISR0027')
+ 
+/* Write message/s to the program message queue */
+                   CALL Y2SNMGC PARM(&PGMQ &RELQ &MSGID &MSGF &MSGDTA +
+                                     &MSGTYP)
+ 
+                   CHGVAR &MSGID   VALUE(' ')
+                   CHGVAR &MSGDTA  VALUE(' ')
+                   CHGVAR &MSGTYP  VALUE(' ')
+ 
+                   GOTO DSPLY
+                ENDDO
+ 
+/* Clear the DL/LE Interest Scale qualifying account codes file of data */
+             CLRPFM     FILE(CGISDQPD)
+ 
+/* File is currently in use */
+                MONMSG (CPF3130) EXEC(DO)
+ 
+/* Clear the program message queue */
+                   CALL Y2CLMSC PARM(&PGMQ &RELQ)
+ 
+/* Display file in use message */
+                   CHGVAR &MSGID VALUE('ISR0027')
+ 
+/* Write message/s to the program message queue */
+                   CALL Y2SNMGC PARM(&PGMQ &RELQ &MSGID &MSGF &MSGDTA +
+                                     &MSGTYP)
+ 
+                   CHGVAR &MSGID   VALUE(' ')
+                   CHGVAR &MSGDTA  VALUE(' ')
+                   CHGVAR &MSGTYP  VALUE(' ')
+ 
+                   GOTO DSPLY
+                ENDDO
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+/* Re-build the DL/LE Interest Scale qualifying account codes file */
+/**********  CALL       PGM(CG7180) PARM(&WSTERM)                         */            /*AR815785*/
+             CALL       PGM(CG007023)                                                   /*AR815785*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*AR815785*/
+                GOTO       CMDLBL(ABNOR)                                                /*AR815785*/
+             ENDDO                                                                      /*AR815785*/
+ 
+/**********     IF (&WSTERM *NE '    ') THEN(DO)                          */            /*AR815785*/
+ 
+/**Clear*the*program*message*queue***********************************/                  /*AR815785*/
+/**********        CALL Y2CLMSC PARM(&PGMQ &RELQ)                         */            /*AR815785*/
+ 
+/**Display*array*limit*exceeded*message******************************/                  /*AR815785*/
+/**********        CHGVAR &MSGID VALUE('ISR0028')                         */            /*AR815785*/
+ 
+/**Write*messages*to*the*program*message*queue***********************/                  /*AR815785*/
+/**********        CALL Y2SNMGC PARM(&PGMQ &RELQ &MSGID &MSGF &MSGDTA +   */            /*AR815785*/
+/**********                          &MSGTYP)                             */            /*AR815785*/
+ 
+/**********        CHGVAR &MSGID   VALUE(' ')                             */            /*AR815785*/
+/**********        CHGVAR &MSGDTA  VALUE(' ')                             */            /*AR815785*/
+/**********        CHGVAR &MSGTYP  VALUE(' ')                             */            /*AR815785*/
+ 
+/**********        GOTO DSPLY                                             */            /*AR815785*/
+/**********     ENDDO                                                     */            /*AR815785*/
+ 
+/* Function termination */
+                GOTO END
+             ENDDO
+ 
+             GOTO DSPLY
+ 
+/* Abnormal termination */
+ ABNOR:
+             DMPCLPGM
+             MONMSG (CPF0000 MCH0000 RPG0000)
+ 
+             CHGJOB    SWS(XXXXXX11)
+             MONMSG (CPF0000 MCH0000 RPG0000)
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                           CGC7180 ended abnormally - see job log') +
+                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             MONMSG (CPF0000 MCH0000 RPG0000)
+ 
+ 
+/* Normal termination */
+ 
+ END:
+ 
+/* De-allocate the DL/LE Interest Scale qualifying account codes file  */
+ 
+             DLCOBJ OBJ((CGISDQPD *FILE *EXCLRD))
+             MONMSG (CPF0000 MCH0000 RPG0000)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
+             ENDPGM
+ 

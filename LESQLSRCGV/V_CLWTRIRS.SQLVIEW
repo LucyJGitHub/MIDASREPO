@@ -1,0 +1,229 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Customer Lending Module                                       */
+/*                                                                             */
+/*       V_CLWTRIRS - CIRS/SIRS/CFCO linked to a facility and SD used to       */
+/*                    identify DF trigger recalculation                        */
+/*                                                                             */
+/*       (c) Finastra International Limited 2006                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CGL165             Date 23Feb15                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER048             Date 19May08                        */
+/*                      CER047             Date 19May08                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      242201  *CREATE    Date 13Sep06                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CGL165 - Dual Withholding Tax (Recompile)                             */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER048 - German Features - Taxes (Recompile)                          */
+/*       CER047 - German Features LF037-00 Reporting §24c                      */
+/*                (Recompile)                                                  */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       242201 - Rejected loan still taken into account                       */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+  T_ZONE ,                                                                      :
+  T_CCID ,                                                                      :
+  T_ID ,                                                                        :
+  T_MOD ,                                                                       :
+  T_SMOD ,                                                                      :
+  T_SNAM ,                                                                      :
+  RCCY ,                                                                        :
+  T_RCCY ,                                                                      :
+  T_NBDP ,                                                                      :
+  T_SPRT ,                                                                      :
+  T_MDIN ,                                                                      :
+  T_TDAT ,                                                                      :
+  T_SDAT ,                                                                      :
+  T_EDAT ,                                                                      :
+  T_MKVL ,                                                                      :
+  T_TRTP ,                                                                      :
+  T_TRST ,                                                                      :
+  RECI,                                                                         :
+  F1DLNO ,                                                                      :
+  BRCA ,                                                                        :
+  CNUM ,                                                                        :
+  FACT ,                                                                        :
+  FCNO ,                                                                        :
+  FCCY ,                                                                        :
+  FCNBDP ,                                                                      :
+  FCSPRT ,                                                                      :
+  FCMDIN ,                                                                      :
+  DTPE11 ,                                                                      :
+  DLST11 ,                                                                      :
+  BBCUST ,                                                                      :
+  BBINOF ,                                                                      :
+  PDINNR ,                                                                      :
+  PDINOF ,                                                                      :
+  PDWEIG ,                                                                      :
+  PDPERC )                                                                      :
+  AS                                                                            :
+  SELECT                                                                        :
+  T_ZONE                                                                        :
+  ,T_CCID                                                                       :
+  ,T_ID                                                                         :
+  ,T_MOD                                                                        :
+  ,T_SMOD                                                                       :
+  ,T_SNAM                                                                       :
+  ,T_RCCY AS RCCY                                                               :
+  ,CASE WHEN T_VCCY = TRIM('') THEN T_RCCY                                      :
+  ELSE T_VCCY END AS T_RCCY                                                     :
+  ,CASE WHEN T_VCCY = TRIM('') THEN RCCY.A6NBDP                                 :
+  ELSE VCCY.A6NBDP END AS T_NBDP                                                :
+  ,CASE WHEN T_VCCY = TRIM('') THEN RCCY.A6SPRT                                 :
+  ELSE VCCY.A6SPRT END AS T_SPRT                                                :
+  ,CASE WHEN T_VCCY = TRIM('') THEN RCCY.A6MDIN                                 :
+  ELSE VCCY.A6MDIN END AS T_MDIN                                                :
+  ,T_TDAT                                                                       :
+  ,T_SDAT                                                                       :
+  ,T_EDAT                                                                       :
+  ,T_MKVL                                                                       :
+  ,T_TRTP                                                                       :
+  ,T_TRST                                                                       :
+  ,IRS.RECI AS RECI                                                             :
+  ,F1DLNO                                                                       :
+  ,FCLTY.BRCA                                                                   :
+  ,FCLTY.CNUM                                                                   :
+  ,FCLTY.FACT                                                                   :
+  ,FCLTY.FCNO                                                                   :
+  ,FCLTY.FCCY                                                                   :
+  ,FCCY.A6NBDP AS FCNBDP                                                        :
+  ,FCCY.A6SPRT AS FCSPRT                                                        :
+  ,FCCY.A6MDIN AS FCMDIN                                                        :
+  ,DTPE11                                                                       :
+  ,DLST11                                                                       :
+  ,BBCUST                                                                       :
+  ,BBINOF                                                                       :
+  ,PDINNR                                                                       :
+  ,PLIN.PDINOF                                                                  :
+  ,WEIG.PDWEIG                                                                  :
+  ,WEIG.PDPERC                                                                  :
+  FROM                                                                          :
+  GPWTRAPPD                                                                     :
+  LEFT OUTER JOIN                                                               :
+  GZSDCURRPD AS VCCY                                                            :
+  ON                                                                            :
+  T_VCCY = VCCY.A6CYCD                                                          :
+  AND T_ZONE = VCCY.A6ZONE                                                      :
+  ,GZSDBRCHPD IRSBR                                                             :
+  ,GZSDBRCHPD FCLTBR                                                            :
+  ,GZDEALSDG IRS                                                                :
+  ,GZDLDLDGQD                                                                   :
+  ,GZFCLTYFM FCLTY                                                              :
+  ,GZSDCUSTPD                                                                   :
+  ,GZSDPLINPD PLIN                                                              :
+  ,GZFDDTSTPD                                                                   :
+  ,GPWEIGPD WEIG                                                                :
+  ,GZSDCURRPD RCCY                                                              :
+  ,GZSDCURRPD FCCY                                                              :
+  WHERE                                                                         :
+  T_MOD = 'DL'                                                                  :
+  AND T_SMOD IN ('SIRS','CIRS','CFCO')                                          :
+  AND T_TR6N = IRS.DLNO                                                         :
+  AND T_TRTP = IRS.DTYP                                                         :
+  AND T_TRST = IRS.DLST                                                         :
+  AND T_ZONE = IRSBR.A8ZONE                                                     :
+  AND IRS.BRCA = IRSBR.A8BRCD                                                   :
+  AND T_TR6A = F1DLNO                                                           :
+  AND F1BRCA = FCLTBR.A8BRCD                                                    :
+  AND T_ZONE = FCLTBR.A8ZONE                                                    :
+  AND F1BRCA = FCLTY.BRCA                                                       :
+  AND F1FCCU = FCLTY.CNUM                                                       :
+  AND F1FACT = FCLTY.FACT                                                       :
+  AND F1FCNO = FCLTY.FCNO                                                       :
+  AND FCLTY.FCCY = FCCY.A6CYCD                                                  :
+  AND T_ZONE = FCCY.A6ZONE                                                      :
+  AND T_RCCY = RCCY.A6CYCD                                                      :
+  AND T_ZONE = RCCY.A6ZONE                                                      :
+  AND T_CNMA = BBCUST                                                           :
+  AND T_BRCA = BBBRCD                                                           :
+  AND T_TRTP = DTPE11                                                           :
+  AND T_TRST = DLST11                                                           :
+  AND T_ZONE = FDZONE                                                           :
+  AND INNR = PLIN.PDINNR                                                        :
+  AND FDZONE = PLIN.PDZONE                                                      :
+  AND PLIN.PDWEIG = WEIG.PDWEIG ;                                               :
+                                                                                :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  (                                                                             :
+  T_ZONE IS 'Zone' ,                                                            :
+  T_CCID IS 'Commit ID' ,                                                       :
+  T_ID IS 'Identifier' ,                                                        :
+  T_MOD IS 'Module' ,                                                           :
+  T_SMOD IS 'Sub-Module' ,                                                      :
+  T_SNAM IS 'Shortname' ,                                                       :
+  T_TDAT IS 'Transaction Date' ,                                                :
+  T_SDAT IS 'Start Date' ,                                                      :
+  T_EDAT IS 'End Date' ,                                                        :
+  T_MKVL IS 'Current Market Value' ,                                            :
+  T_TRTP IS 'Transaction Type' ,                                                :
+  T_TRST IS 'Transaction Sub Type' ,                                            :
+  F1DLNO IS 'Deal Number' ,                                                     :
+  BRCA IS 'Brch Code' ,                                                         :
+  CNUM IS 'Customer Number' ,                                                   :
+  FACT IS 'Facil Type' ,                                                        :
+  FCNO IS 'Fac No' ,                                                            :
+  FCCY IS 'Facil Curr' ,                                                        :
+  DTPE11 IS 'DEAL TYPE' ,                                                       :
+  DLST11 IS 'SUB TYPE' ,                                                        :
+  BBCUST IS 'Customer Number' ,                                                 :
+  BBINOF IS 'Include Offsets Flag' ,                                            :
+  PDINNR IS 'Inst Type' ,                                                       :
+  PDINOF IS 'Include Offsets Flag' ,                                            :
+  PDWEIG IS 'Weighting Code' ,                                                  :
+  PDPERC IS 'Percentage' ) ;                                                    :
+                                                                                :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  (                                                                             :
+  T_ZONE TEXT IS 'Zone' ,                                                       :
+  T_CCID TEXT IS 'Commit ID' ,                                                  :
+  T_ID TEXT IS 'Identifier' ,                                                   :
+  T_MOD TEXT IS 'Module' ,                                                      :
+  T_SMOD TEXT IS 'Sub-Module' ,                                                 :
+  T_SNAM TEXT IS 'Shortname' ,                                                  :
+  RCCY TEXT IS 'Risk Currency' ,                                                :
+  T_TDAT TEXT IS 'Transaction Date' ,                                           :
+  T_SDAT TEXT IS 'Start Date' ,                                                 :
+  T_EDAT TEXT IS 'End Date' ,                                                   :
+  T_MKVL TEXT IS 'Current Market Value' ,                                       :
+  T_TRTP TEXT IS 'Transaction Type' ,                                           :
+  T_TRST TEXT IS 'Transaction Sub Type' ,                                       :
+  F1DLNO TEXT IS 'Deal Number' ,                                                :
+  BRCA TEXT IS 'Branch Code - Alpha' ,                                          :
+  CNUM TEXT IS 'Customer number' ,                                              :
+  FACT TEXT IS 'Facility type' ,                                                :
+  FCNO TEXT IS 'Facility number' ,                                              :
+  FCCY TEXT IS 'Facility currency' ,                                            :
+  FCNBDP TEXT IS 'Number of Decimal Places' ,                                   :
+  FCSPRT TEXT IS 'Spot Rate' ,                                                  :
+  FCMDIN TEXT IS 'Multiply/Divide Indicator' ,                                  :
+  DTPE11 TEXT IS 'DEAL TYPE' ,                                                  :
+  DLST11 TEXT IS 'SUB TYPE' ,                                                   :
+  BBCUST TEXT IS 'Customer Number' ,                                            :
+  BBINOF TEXT IS 'Include Offsets Flag' ,                                       :
+  PDINNR TEXT IS 'Instrument Type' ,                                            :
+  PDINOF TEXT IS 'Include Offsets Flag' ,                                       :
+  PDWEIG TEXT IS 'Weighting Code' ,                                             :
+  PDPERC TEXT IS 'Percentage' ) ;                                               :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas LE IRS/CFCO Deals                           ';                     :
+                                                                                :

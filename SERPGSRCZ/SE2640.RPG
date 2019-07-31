@@ -1,0 +1,778 @@
+     H            D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Reconcile Book and Depot Posns')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2640  - RECONCILE USER POSITIONS WITH BOOK POSITIONS       *
+     F*                                                               *
+     F*  Function: To reconcile user book positions with user depot   *
+     F*   (COB)    positions and to output the User Positions/Depot   *
+     F*            Positions Reconciliation Report                    *
+     F*                                                               *
+     F*  Called by: SEC0606J - Run Reconciliation Reports             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 21Dec98               *
+      *                 123066             Date 24Feb98               *
+      *                 052254             Date 10Jan94               *
+     F*                 062101             DATE 15NOV93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E35257             DATE 31JAN92               *
+     F*                 E32864             DATE 04DEC91               *
+     F*                 E29170             DATE 30OCT91               *
+     F*                 S01117             DATE 02NOV90               *
+     F*                 E18827             DATE 08AUG89               *
+     F*                 E18549             DATE 03JUL89               *
+     F*                 E18623             DATE 30JUN89               *
+     F*                 E18554             DATE 06/06/89              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAC005 - PCA-SE Enhancement.                                 *
+     F*  123066 - Use correct field for output BRANCH in End of Report*
+     F*           and applied fix 062101:                             *
+     F*             Increase accumulator field sizes, space out fields*
+     F*             and display date in a non internal form.          *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  062101 - Increase accumulator field sizes, space out fields  *
+     F*           and display date in a non internal form.            *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E35257 - Ignore grey market positions                        *
+     F*  E32864 - Tries to write header before opening P1 printer file*
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multi-branching                                     *
+     F*  E18827 - IF FIRST BOOK POSITION IS MATURED THEN AN INBALANCE *   E18827
+     F*           IS REPORTED.                                        *   E18827
+     F*  E18549 - 'NO ERRORS TO REPORT' PRINTED IF NO DIFFERENCES     *   E18549
+     F*  E18623 - 'END OF REPORT' TRAILER PRINTED                     *   E18623
+     F*  E18554 - Creation Parameters Added.                          *   E18554
+     F*                                                               *   E18554
+     F*****************************************************************   E18554
+     F*  C R E A T I O N     P A R A M E T E R S                      *   E18554
+     F*                                                               *   E18554
+     F*                                                               *   E18554
+     F*****************************************************************   E18554
+     F*
+     F***BKPHD***IP**E           K        DISK                            E29170
+     F***BKPOS***IF**E           K        DISK                            E29170
+     FBKPHDBR IP  E           K        DISK                               E29170
+     FBKPOSBR IF  E           K        DISK                               E29170
+     FUDEPR   IF  E           K        DISK
+     F*TABSE***IF* E           K        DISK                              S01117
+     F**ICD*1**** TABTB10F                          KIGNORE               S01117
+     F*********** TABTB11F                          KIGNORE               S01117
+     F*********** TABTB36F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABTG20F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETJF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     F*********** TABLETXF                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*********** TABLET3F                          KIGNORE               S01117
+     F*********** TABLET5F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABLETNF                          KIGNORE               S01117
+     F*********** TABLETKF                          KIGNORE               S01117
+     F*********** TABLETPF                          KIGNORE               S01117
+     F*********** TABLETAF                          KIGNORE               S01117
+     F*********** TABTE20F                          KIGNORE               S01117
+     F*SE2640P1O** F     132     OV     PRINTER                           S01117
+     FSE2640P1O   F     132     OV     PRINTER                        UC  S01117
+     F                                              KINFDS SPOOL          S01117
+     FSE2640AUO   F     132            PRINTER                            S01117
+     F                                              KINFDS SPOOLU         S01117
+     F*
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z1                                               062101
+     E                    CPY@    1   1 80                                S01117
+      /EJECT                                                              S01117
+     IBKPHDDF     01
+     I              RECI                            RECIBH                E18827
+     I*                                                                   S01117
+     ICPYR@#      DS                                                      S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I                                    B 367 3680LINE                  S01117
+     I*                                                                   S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I*                                                                   S01117
+     I*LDA********UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     I**  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I              BJURPT                          TITL                  S01117
+      *                                                                   S01117
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+      ** EXTERNAL DS FOR BRANCHES DETAILS                                 S01117
+     I              A8BRCD                          BRCA                  S01117
+      *                                                                   S01117
+     I**                                                                  S01117
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I**                                                                  S01117
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE          S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I**                                                                  S01117
+      /EJECT
+     C           *ENTRY    PLIST
+     C                     PARM           ECOUNT  5
+     C                     PARM           SEQ     5                       S01117
+     C*
+     C           *IN69     IFEQ '0'
+     C*
+     C*  PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE2640'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C**Fetch*ICD*record*1************************************************S01117
+     C**
+     C*****ZSYSTM*SR.*TO*CHAIN*TO*THE*INSTALLATION*CONTROL*DATA*RECORD.***S01117
+     C**
+     C***********          EXSR ZSYSTM                                    S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELZTABKY    DBKEY            ** DB ERROR 01 S01117
+     C***********          Z-ADD1         DBASE            ***************S01117
+     C***********          SETON                     U7U8LR               S01117
+     C***********          RETRN                                          S01117
+     C***********          END                                            S01117
+     C**                                                                  S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C**                                                                  S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**                                                                  S01117
+     C**   CHECK WHETHER MULTIBRANCHING                                   S01117
+     C**                                                                  S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     MOVE '1'       *IN13                           S01117
+     C                     ELSE                                           S01117
+     C                     MOVE '0'       *IN13                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**   ACCESS BANK DETAILS FOR TITLE                                  S01117
+     C**                                                                  S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE           ***************S01117
+     C                     MOVEL@OPTN     DBKEY            ** DB ERROR 01 S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     EXSR PRTAU                                     S01117
+     C                     EXSR RCFAU                                     S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+      *                                                                   CAC005
+      ** Check if CAC005 - PCA-SE Enhancement is on.                      CAC005
+      *                                                                   CAC005
+     C                     MOVE 'N'       CAC005  1                       CAC005
+     C                     MOVE *OFF      *IN30                           CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   @RTCD   7                       CAC005
+     C                     PARM '*VERIFY' @OPTN   7                       CAC005
+     C                     PARM 'CAC005'  @SARD   6                       CAC005
+      *                                                                   CAC005
+     C           @RTCD     IFEQ *BLANK                                    CAC005
+     C                     MOVE 'Y'       CAC005                          CAC005
+     C                     MOVE *ON       *IN30                           CAC005
+     C                     ENDIF                                          CAC005
+     C*                                                                   S01117
+     C*
+     C**Print*header******************************************************S01117
+     C*
+     C***********          EXCPTHEADER                                    S01117
+     C*
+     C           BKPOKA    KLIST
+     C***********          KFLD           BHSC                            E29170
+     C***********          KFLD           BHBR                            S01117
+     C                     KFLD           BHBA                            S01117
+     C                     KFLD           BHSC                            E29170
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+     C                     KFLD           LPSD
+     C*
+     C           UDEPKA    KLIST
+     C***********          KFLD           BPBR                            S01117
+     C                     KFLD           BPBA                            S01117
+     C                     KFLD           BPSC
+     C                     KFLD           BPBK
+     C                     KFLD           BPMK
+     C*
+     C                     SETON                     69
+     C*
+     C                     END
+     C***********                                                   S01117E29170
+     C************IN14     IFEQ '0'                                 S01117E29170
+     C***********          OPEN SE2640P1                            S01117E29170
+     C***********          EXSR RCFP1                               S01117E29170
+     C***********          SETON                     14             S01117E29170
+     C***********          END                                      S01117E29170
+     C***********                                                   S01117E29170
+     C***********          ADD  1         CNT     50                S01117E29170
+     C***********                                                   S01117E29170
+     C***Separate*print*files*for*different*branch******************S01117E29170
+     C***********                                                   S01117E29170
+     C***********MBIN      IFEQ 'Y'                                 S01117E29170
+     C***********BHBA      IFNE PBHBA                               S01117E29170
+     C************IN15     IFEQ '1'                                 S01117E29170
+     C***********          EXCPTERRLIN                              S01117E29170
+     C***********          EXCPTTRAIL                               S01117E29170
+     C***********          CLOSESE2640P1                            S01117E29170
+     C***********          SETOF                     14             S01117E29170
+     C***********          OPEN SE2640P1                            S01117E29170
+     C***********          EXSR RCFP1                               S01117E29170
+     C***********          SETON                     14             S01117E29170
+     C***********          SETOF                     9697           S01117E29170
+     C***********          Z-ADD0         PAGE                      S01117E29170
+     C***********          END                                      S01117E29170
+     C***********                                                   S01117E29170
+      ***GET*BRANCH*NAME********************************************S01117E29170
+     C***********                                                   S01117E29170
+     C***********          CALL 'AOBRCHR0'                          S01117E29170
+     C***********          PARM '*MSG   ' @RTCD   7                 S01117E29170
+     C***********          PARM '*KEY   ' @OPTN   7                 S01117E29170
+     C***********          PARM BHBA      @DSNB   3                 S01117E29170
+     C***********SDBRCH    PARM SDBRCH    DSFDY                     S01117E29170
+     C***********                                                   S01117E29170
+     C***********@RTCD     IFNE *BLANKS                             S01117E29170
+     C************LOCK     IN   LDA                                 S01117E29170
+     C***********          MOVEL'SDBRCHPD'DBFILE                    S01117E29170
+     C***********          MOVEL@DSNB     DBKEY      ***************S01117E29170
+     C***********          MOVEL@OPTN     DBOPTN  7  * DB ERROR 2  *S01117E29170
+     C***********          Z-ADD2         DBASE      ***************S01117E29170
+     C***********          OUT  LDA                                 S01117E29170
+     C***********          MOVEL*BLANKS   SEBN   30                 S01117E29170
+     C***********          SETON                     U7U8LR         S01117E29170
+     C***********          EXCPTP1DBER                              S01117E29170
+     C***********          EXSR PRTAU                               S01117E29170
+     C***********          EXSR RCFAU                               S01117E29170
+     C***********          EXSR *PSSR                               S01117E29170
+     C***********          RETRN                                    S01117E29170
+     C***********          END                                      S01117E29170
+     C***********          MOVELA8BRNM    SEBN                      S01117E29170
+     C***********          END                                      S01117E29170
+     C***********          END                                      S01117E29170
+     C***********                                                         E29170
+     C**Print*heading*for*the*first*cycle*or*next*branch************S01117E29170
+     C**Skip*to*new*page*if*required**************************************E29170
+     C***********                                                         E29170
+     C************INOV     IFEQ '1'                                       E29170
+     C***********BHBA      ORNE PBHBA                               S01117E29170
+     C***********          EXCPTHEADER                                    E29170
+     C***********          SETON                     15             S01117E29170
+     C***********          SETOF                     OV                   E29170
+     C***********          MOVE BHBA      PBHBA   3                 S01117E29170
+     C***********          END                                            E29170
+     C*
+     C* Ignore matured security
+     C*  and grey market positions                                        E35257
+     C*
+     C********** RECI      IFNE 'M'                                       E18827
+     C           RECIBH    IFNE 'M'                                       E18827
+     C           BHMK      ANDNE'G'                                       E35257
+     C*
+     C* Fetch latest balance
+     C*
+     C           BKPOKA    CHAINBKPOSDF              90
+     C*
+     C* Accumulate balances
+     C*
+     C           UDEPKA    SETLLUDEPPDF
+     C                     SETOF                     909899
+     C***********          Z-ADD*ZEROS    TBAL   110                      062101
+     C***********          Z-ADD*ZEROS    VBAL   110                      062101
+     C                     Z-ADD*ZEROS    TBAL   150                      062101
+     C                     Z-ADD*ZEROS    VBAL   150                      062101
+     C           *IN90     DOWEQ'0'
+     C           UDEPKA    READEUDEPPDF                  90
+     C           *IN90     IFEQ '0'
+     C                     ADD  UDNT      TBAL
+     C                     ADD  UDNV      VBAL
+     C                     END
+     C                     END
+     C*
+     C* Compare accumulated balance with book position
+     C*
+     C           BPTV      IFEQ 'T'
+     C           TBAL      ANDNENPSN
+     C                     ADD  1         ERROR   50 98
+     C***********          MOVE '1'       *IN97                     E18549E29170
+     C***********          MOVE '1'       *IN96                     S01117E29170
+     C                     END
+     C*
+     C           BPTV      IFEQ 'V'
+     C           VBAL      ANDNENPSN
+     C                     ADD  1         ERROR   50 99
+     C***********          MOVE '1'       *IN97                     E18549E29170
+     C***********          MOVE '1'       *IN96                     S01117E29170
+     C                     END
+     C*                                                                   E29170
+     C** If there are details to be printed then check whether the        E29170
+     C** detail printer file needs opening and whether new headings       E29170
+     C** are needed                                                       E29170
+     C*                                                                   E29170
+     C           *IN98     IFEQ '1'                                       E29170
+     C           *IN99     OREQ '1'                                       E29170
+      *                                                                   CAC005
+     C                     MOVE BPBK      PBKCD   2                       CAC005
+      *                                                                   CAC005
+      ** If CAC005 is on, retrieve user book from AOBKPCR0.               CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM           PRTCD   7                       CAC005
+     C                     PARM '*USER  ' POPTN   7                       CAC005
+     C           PMBKCD    PARM *BLANKS   PMBKCD  2                       CAC005
+     C           PMPRFC    PARM *BLANKS   PMPRFC  4                       CAC005
+     C                     PARM BPBK      PMPSBK  2                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVELPMBKCD    PBKCD                           CAC005
+     C                     MOVE PMPRFC    PPRFC   4                       CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVEL*BLANKS   PPRFC                           CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+     C*                                                                   062101
+     C** Convert date to User format                                      062101
+     C*                                                                   062101
+     C                     Z-ADDBPPD      ZDAYNO                          062101
+     C                     EXSR ZDATE2                                    062101
+     C                     MOVE ZADATE    BPPDOP  7                       062101
+     C*                                                                   E29170
+     C** Separate print files for different branch                        E29170
+     C*                                                                   E29170
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C           BHBA      IFNE PBHBA                                     E29170
+     C           *IN15     IFEQ '1'                                       E29170
+     C                     EXCPTTRAIL                                     E29170
+     C                     CLOSESE2640P1                                  E29170
+     C                     END                                            E32864
+     C                     SETOF                     14                   E29170
+     C                     OPEN SE2640P1                                  E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     SETON                     14                   E29170
+     C                     Z-ADD0         PAGE                            E29170
+     C***********          END                                      E29170E32864
+     C*                                                                   E29170
+     C** GET BRANCH NAME                                                  E29170
+     C*                                                                   E29170
+     C**********           CALL 'AOBRCHR0'                                E29170              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       E29170
+     C                     PARM '*KEY   ' @OPTN   7                       E29170
+     C                     PARM BHBA      @DSNB   3                       E29170
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           E29170              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   E29170
+     C           @RTCD     IFNE *BLANKS                                   E29170
+     C           *LOCK     IN   LDA                                       E29170
+     C                     MOVEL'SDBRCHPD'DBFILE                          E29170
+     C                     MOVEL@DSNB     DBKEY            ***************E29170
+     C                     MOVEL@OPTN     DBOPTN  7        * DB ERROR 2  *E29170
+     C                     Z-ADD2         DBASE            ***************E29170
+     C                     OUT  LDA                                       E29170
+     C                     MOVEL*BLANKS   SEBN   30                       E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     EXSR PRTAU                                     E29170
+     C                     EXSR RCFAU                                     E29170
+     C                     EXSR *PSSR                                     E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C                     MOVELA8BRNM    SEBN                            E29170
+     C                     END                                            E29170
+     C                     END                                            E29170
+     C                     ADD  1         CNT     50                      E29170
+     C*                                                                   E29170
+     C** Print heading for the first cycle or next branch                 E29170
+     C** Skip to new page if required                                     E29170
+     C*                                                                   E29170
+     C           *INOV     IFEQ '1'                                       E29170
+     C           BHBA      ORNE PBHBA                                     E29170
+     C                     EXCPTHEADER                                    E29170
+     C                     SETON                     15                   E29170
+     C                     SETOF                     OV                   E29170
+     C                     MOVE BHBA      PBHBA   3                       E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     END                                            E29170
+     C*
+     C                     END
+     C*
+     CLRN69                EXSR GTITL                                     S01117
+     CLR                   EXSR PRTAU                                     S01117
+     CLR                   EXSR RCFAU                                     S01117
+     CLR                   MOVE ERROR     ECOUNT
+     C*
+     C*****************************************************************
+      /EJECT
+     C********************************************************************S01117
+      *  GETHD -- SUBROUTINE TO GET TITLE AND RUN DATE FOR NO DETAILS     S01117
+      *  CALLS: NOTHING                                                   S01117
+     C********************************************************************S01117
+     C           GTITL     BEGSR                                          S01117
+     C**                                                                  S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL'SE2640'  DBPGM                           S01117
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+     C**   ACCESS BANK DETAILS FOR TITLE                                  S01117
+     C*                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE           ***************S01117
+     C                     MOVEL@OPTN     DBKEY            ** DB ERROR 03 S01117
+     C                     Z-ADD3         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     EXSR PRTAU                                     S01117
+     C                     EXSR RCFAU                                     S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+      *   PRTAU -- SUBROUTINE TO PRINT AU REPORT                          S01117
+      *   CALLS: NOTHING                                                  S01117
+     C********************************************************************S01117
+     C           PRTAU     BEGSR                                          S01117
+     C*                                                                   S01117
+     C                     EXCPTHDRAU                                     S01117
+     C*                                                                   S01117
+     C           *INU7     IFNE '1'                                       S01117
+     C                     EXCPTFCOUNT                                    S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C           *INU7     IFNE '1'                                       S01117
+     C           CNT       ANDEQ*ZERO                                     S01117
+     C                     EXCPTNODETS                                    S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C           *INU7     IFEQ '1'                                       S01117
+     C                     EXCPTDBERR                                     S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C*   *PSSR SR.- DATABASE ERROR SUBROUTINE                            S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR SR ** S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+      *                                                                   S01117
+      *  RCFP1 -- SUBROUTINE TO SPOOL P1 THROUGH RCF                      S01117
+      *  CALLED FROM: BEFORE END OF PROGRAM                               S01117
+      *  CALLS: NOTHING                                                   S01117
+      *                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFP1     BEGSR                           ** RCFSPL **   S01117
+     C*                                                                   S01117
+     C**   ENSURE REPORT SPOOL FILE RECORDED BY RCF                       S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM BHBA      SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C*                                                                   S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C*                                                                   S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+      *                                                                   S01117
+      *  RCFAU -- SUBROUTINE TO SPOOL AU THROUGH RCF                      S01117
+      *  CALLED FROM: BEFORE END OF PROGRAM                               S01117
+      *  CALLS: NOTHING                                                   S01117
+      *                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFAU     BEGSR                           ** RCFSPL **   S01117
+     C*                                                                   S01117
+     C**  ENSURE TOTAL SPOOL FILE RECORDED BY RCF                         S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    SENTY   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C*                                                                   S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C*                                                                   S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+      /COPY ZSRSRC,ZDATE2Z2                                               062101
+      /EJECT
+     C*COPY*ZSRSRC,ZSYSTMZ1**                                             S01117
+     O/EJECT
+     OSE2640P1E  103           HEADER
+     O                                   23 'REFERENCE SE2640P1'
+     O                         TITL      91
+     O                                  104 'DATE'
+     O***********              RUNA     106                               S01117
+     O                         RUNA     112                               S01117
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        E  1             HEADER
+     O***********                        60 'BOOK POSITION RECONCILIA'    S01117
+     O***********                        71 'TION REPORT'                 S01117
+     O                                   70 'BOOK POSITION RECONCILIA'    S01117
+     O                                   81 'TION REPORT'                 S01117
+     O                 13                95 'BRANCH'                      S01117
+     O                 13      BHBA      99                               S01117
+     O                 13               100 '-'                           S01117
+     O                 13      SEBN     130                               S01117
+     O        E  3             HEADER
+     O***********                        60 '------------------------'    S01117
+     O***********                        71 '-----------'                 S01117
+     O                                   70 '------------------------'    S01117
+     O                                   81 '-----------'                 S01117
+     O        E  1             HEADER
+     O                                    9 'Security'
+     O***********                        19 'Book'                        CAC005
+     O                                   17 'Book'                        CAC005
+     O                 30                22 'Pctr'                        CAC005
+     O                                   30 'Market'
+     O                                   40 'T/V'
+     O                                   50 'Date'
+     O***********************************65 'Book Nominal'                062101
+     O***********************************80 'Depot Nominal'               062101
+     O                                   72 'Book Nominal'                062101
+     O                                   94 'Depot Nominal'               062101
+     O        E  2             HEADER
+     O                                    9 '--------'
+     O***********                        19 '----'                        CAC005
+     O                                   17 '----'                        CAC005
+     O                 30                22 '----'                        CAC005
+     O                                   30 '------'
+     O                                   40 '---'
+     O                                   50 '----'
+     O***********************************65 '------------'                062101
+     O***********************************80 '-------------'               062101
+     O                                   72 '------------'                062101
+     O                                   94 '-------------'               062101
+     O********E*3     N96      ERRLIN                               S01117E29170
+     O***********                       83 '**NO ERRORS TO REPORT**'S01117E29170
+     O        E 3              TRAIL                                      S01117
+     O                N13                76 '*** END OF REPORT ***'       S01117
+     O                 13                76 '*** END OF REPORT FOR'       S01117
+     O                 13                83 'BRANCH'                      S01117
+     O                 13      PBHBA     87                               S01117
+     O                 13                91 '***'                         S01117
+     O        D  1     01 98
+     O       OR        01 99
+     O                         BPSC      10
+     O***********              BPBK      18                               CAC005
+     O                         PBKCD     16                               CAC005
+     O                 30      PPRFC     22                               CAC005
+     O                         BPMK      28
+     O                         BPTV      39
+     O*************************NPSN**J***66                               062101
+     O*****************98******TBAL**J***81                               062101
+     O*****************99******VBAL**J***81                               062101
+     O*************************BPPD**4***50                               062101
+     O                         BPPDOP    51                               062101
+     O                         NPSN  J   73                               062101
+     O                 98      TBAL  J   95                               062101
+     O                 99      VBAL  J   95                               062101
+     O********E*3              P1DBER                               S01117E29170
+     O***********                      57 '************************'S01117E29170
+     O***********                      80 '************************'S01117E29170
+     O***********                        84 '*****'                 S01117E29170
+     O********E*1              P1DBER                               S01117E29170
+     O***********                        34 '*'                     S01117E29170
+     O***********                        84 '*'                     S01117E29170
+     O********E*1              P1DBER                               S01117E29170
+     O***********                        34 '*'                     S01117E29170
+     O***********                        55 'DATABASE ERROR AT'     S01117E29170
+     O***********              DBASE     59                         S01117E29170
+     O***********                        68 ', PROGRAM'             S01117E29170
+     O***********              DBPGM     79                         S01117E29170
+     O***********                        84 '*'                     S01117E29170
+     O********E*1              P1DBER                               S01117E29170
+     O***********                        34 '*'                     S01117E29170
+     O***********                        84 '*'                     S01117E29170
+     O********E*1              P1DBER                               S01117E29170
+     O***********                      57 '************************'S01117E29170
+     O***********                      80 '************************'S01117E29170
+     O***********                        84 '*****'                 S01117E29170
+     O********T*3      LR
+     O***********                        45 '**NO ERRORS TO REPORT**'
+     O********T*3      LRN97                                        E18549S01117
+     O***********                       45 '**NO ERRORS TO REPORT**'E18549S01117
+     O********T*3      LR                                           E18623S01117
+     O***********                       76 '*** END OF REPORT ***'  E18623S01117
+     O********T*3      LRN97 15                                     S01117E29170
+     O***********                       83 '**NO ERRORS TO REPORT**'S01117E29170
+     O        T 3      LR 15N13                                           S01117
+     O                                   76 '*** END OF REPORT ***'       S01117
+     O        T 3      LR 15 13                                           S01117
+     O                                   76 '*** END OF REPORT FOR'       S01117
+     O                                   83 'BRANCH'                      S01117
+     O****************         BHBA      87                         S01117123066
+     O                         PBHBA     87                               123066
+     O                                   91 '***'                         S01117
+     O*                                                                   S01117
+     OSE2640AUE  203           HDRAU                                      S01117
+     O                                   23 'REFERENCE SE2640AU'          S01117
+     O                         TITL      91                               S01117
+     O                                  104 'DATE'                        S01117
+     O                         RUNA     112                               S01117
+     O                                  122 'PAGE'                        S01117
+     O                                  127 '1'                           S01117
+     O        E 1              HDRAU                                      S01117
+     O                                   70 'BOOK POSITION RECONCILIA'    S01117
+     O                                   81 'TION REPORT'                 S01117
+     O                                   97 'RUN CONTROLS'                S01117
+     O        E 1              HDRAU                                      S01117
+     O                                   70 '------------------------'    S01117
+     O                                   81 '-----------'                 S01117
+     O        E 3              FCOUNT                                     S01117
+     O                                   55 'LF/BKPHD'                    S01117
+     O        E 1              FCOUNT                                     S01117
+     O                                   55 '--------'                    S01117
+     O        E 2              FCOUNT                                     S01117
+     O                                   68 'TOTAL RECORDS ON FILE'       S01117
+     O                                   81 '- CALCULATED'                S01117
+     O                         CNT   3   88                               S01117
+     O        E 3              NODETS                                     S01117
+     O                                   76 '*** NO DETAILS TO REPORT'    S01117
+     O                                   80 '***'                         S01117
+     O        E 3              DBERR                                      S01117
+     O                                   57 '************************'    S01117
+     O                                   80 '************************'    S01117
+     O                                   84 '*****'                       S01117
+     O        E 1              DBERR                                      S01117
+     O                                   34 '*'                           S01117
+     O                                   84 '*'                           S01117
+     O        E 1              DBERR                                      S01117
+     O                                   34 '*'                           S01117
+     O                                   55 'DATABASE ERROR AT'           S01117
+     O                         DBASE     59                               S01117
+     O                                   68 ', PROGRAM'                   S01117
+     O                         DBPGM     79                               S01117
+     O                                   84 '*'                           S01117
+     O        E 1              DBERR                                      S01117
+     O                                   34 '*'                           S01117
+     O                                   47 'FILE NAME'                   S01117
+     O                         DBFILE    56                               S01117
+     O                                   61 ', KEY'                       S01117
+     O                         DBKEY     91                               S01117
+     O                                   84 '*'                           S01117
+     O        E 1              DBERR                                      S01117
+     O                                   34 '*'                           S01117
+     O                                   84 '*'                           S01117
+     O        E 1              DBERR                                      S01117
+     O                                   57 '************************'    S01117
+     O                                   80 '************************'    S01117
+     O                                   84 '*****'                       S01117
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z3                                               062101
+**  CPY@
+(c) Finastra International Limited 2001

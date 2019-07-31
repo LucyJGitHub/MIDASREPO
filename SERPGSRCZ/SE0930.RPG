@@ -1,0 +1,601 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Frequency-Based Cust. Valn. stmnt')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0930 - FREQUENCY-BASED CUSTOMER VALUATION STATEMENTS       *
+     F*                                                               *
+     F*  Function: To extract the Customers/Branches for which        *
+     F*   (COB)    Customer Valuation Statements are required on a    *
+     F*            frequency defined for the Customer.                *
+     F*            For each Customer with a Next Valuation Date due,  *
+     F*            one record is extracted for each Branch in which   *
+     F*            the Customer currently has a Position. The Next    *
+     F*            Valuation Date for the Customer is updated on the  *
+     F*            specified frequency basis.                         *
+     F*                                                               *
+     F*  Called by: SEC0904 - Customer Valuation Statements           *
+     F*                                                               *
+     F*            Frequency:                                         *
+     F*            - Automatically at frequency defined               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 17May06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP039             Date 29Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 091367             Date 28Aug96               *
+     F*                 039081             DATE 30APR96               *  *
+     F*                 040591             DATE 30APR96               *  *
+     F*                 052254             DATE 10JAN94               *
+     F*                 048926             DATE 10JAN93               *
+     F*                 E30860             DATE 30OCT91               *
+     F*                 S01195             DATE 01AUG91               *
+     F*                 S01117             DATE 01AUG91               *
+     F*                 E22975             DATE 11AUG90               *
+     F*                 E21235             DATE 26FEB90               *
+     F*                 E20651             DATE 07FEB90               *
+     F*                 E18607             DATE 31AUG89               *
+     F*                 S01158             DATE 05/05/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAP039 - Security customer details API. Fields added to      *
+      *           SDSECSPD (recompile)                                *
+     F*  091367 - Program looped.                                     *
+     F*  039081 - PGM LOOPS WHEN C1VF IS 'Z'                          *
+     F*           FIX E18607 WAS INCOMPLETE                           *
+     F*  040591 - Does not produce a valuation for a market customer  *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  048926 - SE0930AU DOES NOT PRINT A TITLE                     *
+     F*  E30860 - Output blank sequence number                        *
+     F*  S01195 - Holiday Processing                                  *
+     F*  S01117 - Multibranching                                      *
+     F*  E22975 - NEXT STATEMENT DATE SHOULD BE UPDATED IN NEW CLIENT *
+     F*           DETAILS FILE SDSECSPD (USED IN STANDING DATA MAINT.)*
+     F*           AS WELL AS OLD CUSTOMER DETAILS FILE CLINTSE.       *
+     F*  E21235 - Corruption of Record Id.                            *   E21235
+     F*  E20651 - DB Error Numbers used in more than one place.       *   E20651
+     F*           New Error Numbers as follows:                       *   E20651
+     F*           DB ERROR 01 -> 04                                   *   E20651
+     F*           DB ERROR 01 -> 05                                   *   E20651
+     F*  E18607 - Calculated Next Valuation Date should not be Less   *   E18607
+     F*           Than DNWD.                                          *   E18607
+     F*  S01158 - Post Incorporation Development fixes.               *   S01158
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FCLINTSE UP  E                    DISK
+     FSDSECSL0UF  E           K        DISK                               E22975
+     FCLINTCA IF  E                    DISK
+     FCPOSCS  IF  E           K        DISK
+     F***TABICD**IF* E           K        DISK                            S01117
+     F*********** TABLETAF                          KIGNORE               S01117
+     F**ICD****** TABTB10F                          KIGNORE               S01117
+     F**ICD*2**** TABTB11F                          KIGNORE               S01117
+     F*********** TABTB20F                          KIGNORE               S01117
+     F*********** TABTB30F                          KIGNORE               S01117
+     F*********** TABTB35F                          KIGNORE               S01117
+     F*********** TABTB36F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTB50F                          KIGNORE               S01117
+     F*********** TABTB55F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTE20F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABTG20F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     F*********** TABLETXF                          KIGNORE               S01117
+     F*********** TABLET5F                          KIGNORE               S01117
+     F***TABLETJ IF  E           K        DISK                            S01195
+     FCVALSD  O   E                    DISK                      A
+     FCVALSA  O   E                    DISK                      A
+     FSE0930AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   30  - Chain Fail on SDSECSPD                                *   E22975
+     F*   33  - General work indicator                                *
+     F*   34  - Branch found on array LOKUP                           *
+     F*   51  - Print difference message on audit report              *
+     F*   69  - Control once only calculations                        *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F*   U7  - Database Error.                                       *
+     F*   U8  - Database / Control Error                              *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  *PSSR  - DUMP program on error                               *   S01117
+     F*  ZDATE1 - DATE - DAYNO conversion                             *
+     F*  ZDATE2 - DAYNO - DATE conversion                             *
+     F*  ZEVCD  - Determine Event Control date                        *
+     F*  ZFRQA  - Calculate Next Valuation date                       *
+     F***ZICD2**-*ACCESS*ICD2*RECORD**************************************S01117
+     F***ZSYSTM*-*ACCESS*ICD1*RECORD**************************************S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRQAZ1
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E***********         BRC        50  3 0                              S01117
+     E                    BRC        50  3                                S01117
+      /EJECT
+     ICLINTSEF                                                            E21235
+     I              RECI                            SRECI                 E21235
+      *
+     I***LDA*****   UDS                            256                    S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+      *                                                                   S01117
+     ILDA         DS                            256                       S01117
+      *                                                                   S01117
+      ** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+      ** after each database error handling.                              S01117
+      *                                                                   S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+      *                                                                   S01117
+      ** Data structure for compilation - copyright insertion             S01117
+      *                                                                   S01117
+     ICPYR@#      DS                                                      S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+      *                                                                   S01195
+      ** Data structures for holiday processing.                          S01195
+      *                                                                   S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+      *                                                                   S01117
+     IRUNDT       DS                                                      S01117
+      *                                                                   S01117
+      ** RUNDAT data area                                                 S01117
+      *                                                                   S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I              BJURPT                          TITLE                 048926
+      *                                                                   S01117
+      ** Bank Details                                                     S01117
+      *                                                                   S01117
+     ISDGELR    E DSSDGELRPD                                              S01117
+      *                                                                   S01117
+      ** General Ledger Details                                           S01117
+      *                                                                   S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+      *                                                                   S01117
+      ** Short data structure for access programs (200 long)              S01117
+      *                                                                   S01117
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C* Process once only
+     C*
+     C           *IN69     IFEQ '0'
+     C*                                                                   S01117
+     C************ENTRY    PLIST                                   S01117 E30860
+     C***********          PARM           SEQ     5                S01117 E30860
+     C*
+     C* Prepare LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE0930'  DBPGM
+     C                     OUT  LDA                                       S01117
+      *                                                                   S01117
+      ** Read in RUNDAT data area                                         S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+      *                                                                   S01117
+      ** Check system date format, DDMMYY or MMDDYY.                      S01117
+      *                                                                   S01117
+     C           DATF      COMP 'M'                      98               S01117
+      *                                                                   S01117
+     C***********                                                         S01117
+     C**Get*installation*Control*data*record*1*                           S01117
+     C***********                                                         S01117
+     C***********          EXSR ZSYSTM                                    S01117
+     C***********                                                         S01117
+     C**Error*in*ZSYSTM*                                                  S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVEL'01'      DBASE                     E20651S01117
+     C***********          MOVEL'04'      DBASE                     E20651S01117
+     C***********          MOVEL'TABLE'   DBFILE                          S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+      *                                                                   S01117
+      ** Access bank details                                              S01117
+      *                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     Z-ADD4         DBASE            ***************S01117
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 04 *S01117
+     C                     MOVEL'*FIRST'  DBKEY            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   S01117
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C***********                                                         S01117
+     C**Get*Installation*Control*Data*record*2*                           S01117
+     C***********                                                         S01117
+     C***********          EXSR ZICD2                                     S01117
+     C***********                                                         S01117
+     C**Error*in*ZICD2*                                                   S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVEL'02'      DBASE                           S01117
+     C***********          MOVEL'TABLE'   DBFILE                          S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+      *                                                                   S01117
+      ** Access General Ledger details                                    S01117
+      *                                                                   S01117
+     C**********           CALL 'AOGELRR0'                                S01117              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C********** SDGELR    PARM SDGELR    DSFDY                           S01117              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     Z-ADD2         DBASE            ***************S01117
+     C                     MOVEL'SDGELRPD'DBFILE           * DB ERROR 02 *S01117
+     C                     MOVEL'*FIRST'  DBKEY            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   S01117
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C* Fetch Event Control date
+     C*
+     C                     Z-ADDBJDNWD    ZZDNWD                          S01117
+     C                     Z-ADDBKAPDT    ZZAPDT                          S01117
+     C                     EXSR ZEVCD
+     C*
+     C                     SETON                     69
+     C                     END
+     C*
+     C* Count records read
+     C*
+     C***********RECI      IFEQ 'D'                                S01158 E21235
+     C           SRECI     IFEQ 'D'                                       E21235
+     C                     ADD  1         COUNT   50
+     C*
+     C* If Next valuation date is zero or after event control date, take
+     C* no further action
+     C*
+     C           C1NV      IFNE *ZEROS
+     C           C1NV      ANDLEECD
+     C           C1DI      ANDNE'M'                                       040591
+     C*
+     C* Read all current positions for this customer
+     C*
+     C***********          Z-ADD*ZEROS    BRC                             S01117
+     C                     MOVE *BLANKS   BRC                             S01117
+     C                     SETOF                     33
+     C           CNUM      SETLLCPOSNDF
+     C           *IN33     DOWEQ'0'
+     C           CNUM      READECPOSNDF                  33
+     C           *IN33     IFEQ '0'
+     C           RECI      ANDNE'*'
+     C*
+     C* Store branch as requiring statement, if not already done so
+     C*
+     C                     Z-ADD1         X       20
+     C***********CSBR      LOKUPBRC,X                    34               S01117
+     C           CSBA      LOKUPBRC,X                    34               S01117
+     C           *IN34     IFEQ '0'
+     C                     Z-ADD1         X
+     C************ZEROS    LOKUPBRC,X                    34               S01117
+     C***********          Z-ADDCSBR      BRC,X                           S01117
+     C           *BLANKS   LOKUPBRC,X                    34               S01117
+     C                     MOVE CSBA      BRC,X                           S01117
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C* Write out extract record for each branch stored
+     C*
+     C                     Z-ADD1         X
+     C           X         DOUEQ51
+     C***********BRC,X     OREQ *ZEROS                                    S01117
+     C           BRC,X     OREQ *BLANKS                                   S01117
+     C*
+     C***********BRC,X     IFNE *ZEROS                                    S01117
+     C           BRC,X     IFNE *BLANKS                                   S01117
+     C                     MOVE 'D'       RECI
+     C***********          Z-ADDBRC,X     CVBR                            S01117
+     C                     MOVE BRC,X     CVBA                            S01117
+     C***********          MOVE SEQ       CVSEQ                    S01117 E30860
+     C                     MOVE *BLANKS   CVSEQ                           E30860
+     C**********           Z-ADDCNUM      CVCN                                               CSD027A
+     C                     MOVE CNUM      CVCN                                               CSD027A
+     C                     WRITECVALSDF
+     C                     ADD  1         WRITES  50
+     C                     END
+     C*
+     C                     ADD  1         X
+     C*
+     C                     END
+     C*
+     C* Calculate next valuation date.THIS SHOULD BE >= DATE OF NEXT     *E18607
+     C* WORKING DAY AS CUSTOMER HOLDINGS WILL NOT CHANGE BETWEEN RUND    *E18607
+     C* AND DNWD.                                                        *E18607
+     C*
+     C           C1VF      IFEQ 'Z'                        IF001          039081
+     C                     Z-ADD0         ZDAYNO                          039081
+     C                     ELSE                                           039081
+     C                     MOVE C1VF      ZFREQ
+     C                     Z-ADDC1NV      ZDAYNO
+     C                     Z-ADDC1VB      ZMDAY
+     C***********          MOVE LOCY      ZCCY                            S01117
+     C***********ZDAYNO    DOUGEDNWD                                E18607S01117
+     C                     MOVE BJLCCY    ZCCY                            S01117
+     C                     MOVE BJSLCD    ZLOC                            S01195
+     C           ZDAYNO    DOUGEBJDNWD                     DO-1           S01117
+     C           *LIKE     DEFN ZDAYNO    SVDAY                           091367
+     C                     Z-ADDZDAYNO    SVDAY                           091367
+     C                     EXSR ZFRQA
+     C           ZZERR@    IFEQ '*ERROR'                   IF002          S01195
+     C           *LOCK     IN   LDA                                       S01195
+     C                     Z-ADD7         DBASE            ***************S01195
+     C                     MOVEL'ZFRQA   'DBFILE           * DB ERROR 07 *S01195
+     C                     MOVEL'ERROR'   DBKEY            ***************S01195
+     C                     OUT  LDA                                       S01195
+     C                     EXSR *PSSR                                     S01195
+     C                     WRITEHEADAU                                    S01195
+     C                     WRITEERROR                                     S01195
+     C                     SETON                     U7U8LR               S01195
+     C                     RETRN                                          S01195
+     C                     END                             END002         S01195
+      * If ZDAYNO has not changed then set it to next working day and     091367
+      * LEAVE DO loop. This is to avoid never ending loop.                091367
+     C           ZDAYNO    IFEQ SVDAY                      IF003          091367
+     C                     Z-ADDBJDNWD    ZDAYNO                          091367
+     C                     LEAVE                                          091367
+     C                     END                             END003         091367
+     C                     ENDDO                           ENDDO-1       *E18607
+     C*                                                                   039081
+     C                     END                             END001         039081
+     C*
+     C* and update client record
+     C*
+     C                     Z-ADDZDAYNO    C1NV
+     C*                                                                   E22975
+     C* and update SDSECSPD record                                        E22975
+     C                     MOVELCNUM      BFCUST                          E22975
+     C           BFCUST    CHAIN@BFREDP              30                   E22975
+     C           *IN30     IFEQ '1'                                       E22975
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'06'      DBASE                     E22975S01117
+     C***********          MOVEL'SDSEC'   DBFILE                    E22975S01117
+     C                     Z-ADD6         DBASE            ***************S01117
+     C                     MOVEL'SDSECSPD'DBFILE           **DB ERROR 06**S01117
+     C                     MOVELBFCUST    DBKEY            ***************E22975
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEHEADAU                                    E22975
+     C                     WRITEERROR                                     E22975
+     C***********          WRITETRAILAU                             E22975S01117
+     C                     SETON                     U7U8LR               E22975
+     C                     RETRN                                          E22975
+     C                     ELSE                                           E22975
+     C                     Z-ADDZDAYNO    BFNSDT                          E22975
+     C                     END                                            E22975
+     C*                                                                   E22975
+     C                     EXCPTNXTVDT
+     C*
+     C                     END
+     C                     END                                            S01158
+     C*
+     C* LR - Audit process
+     C*
+     CLR                   DO
+     C*
+     C* If no records read, perform 1st time calcs for audit report
+     C*
+     CL0         COUNT     IFEQ *ZEROS
+     C*
+     C* Prepare LDA
+     C*
+     CL0         *LOCK     IN   LDA                                       S01117
+     CL0                   MOVE *BLANKS   DBLOT
+     CL0                   MOVE 'SE0930  'DBPGM
+     CL0                   OUT  LDA                                       S01117
+      *                                                                   S01117
+      ** Read in RUNDAT data area                                         S01117
+      *                                                                   S01117
+     CL0                   IN   RUNDT                                     S01117
+     C***********                                                         S01117
+     C**Get*Installation Control Data record 1                            S01117
+     C***********                                                         S01117
+     C***L0******          EXSR ZSYSTM                                    S01117
+     C***********                                                         S01117
+     C**If*error*in ZSYSTM, terminate program                             S01117
+     C***********                                                         S01117
+     C***L0*******IN99     IFEQ '1'                                       S01117
+     C**L0*******          MOVE '01'      DBASE                     E20651S01117
+     C***L0******          MOVE '05'      DBASE                     E20651S01117
+     C***L0******          MOVEL'TABLE'   DBFILE                          S01117
+     C***L0******          MOVELZTABKY    DBKEY                           S01117
+      *                                                                   S01117
+      ** Access bank details                                              S01117
+      *                                                                   S01117
+     CL0                   CALL 'AOBANKR0'                                S01117
+     CL0                   PARM '*MSG   ' @RTCD   7                       S01117
+     CL0                   PARM '*FIRST ' @OPTN   7                       S01117
+     CL0         SDBANK    PARM SDBANK    DSFDY                           S01117
+     CL0         @RTCD     IFNE *BLANKS                                   S01117
+     CL0         *LOCK     IN   LDA                                       S01117
+     CL0                   Z-ADD5         DBASE            ***************S01117
+     CL0                   MOVEL'SDBANKPD'DBFILE           * DB ERROR 05 *S01117
+     CL0                   MOVEL'*FIRST'  DBKEY            ***************S01117
+     CL0                   OUT  LDA                                       S01117
+     CL0                   EXSR *PSSR                                     S01117
+     CL0                   WRITEHEADAU
+     CL0                   WRITEERROR
+     C***L0******          WRITETRAILAU                                   S01117
+     CL0                   SETON                     U7U8LR
+     CL0                   RETRN
+     CL0                   END
+     C*
+     CL0                   END
+     C*
+     C* Fetch Clients audit file
+     C*
+     CL0         1         CHAINCLINTCAF             33
+     CL0         *IN33     IFEQ '1'
+     CL0         *LOCK     IN   LDA                                       S01117
+     C***L0******          MOVEL'03'      DBASE                           S01117
+     CL0                   Z-ADD3         DBASE            ***************S01117
+     CL0                   MOVEL'CLINT'   DBFILE           * DB ERROR 03 *
+     CL0                   MOVEL'AUDIT'   DBKEY            ***************
+     CL0                   OUT  LDA                                       S01117
+     CL0                   EXSR *PSSR                                     S01117
+     CL0                   WRITEHEADAU
+     CL0                   WRITEERROR
+     C***L0******          WRITETRAILAU                                   S01117
+     CL0                   SETON                     U7U8
+     CL0                   RETRN
+     CL0                   ELSE
+     C*
+     C* Compare control total to number of records read
+     C*
+     CL0         TSTR      COMP COUNT                U8U8
+     CL0 U8                SETON                     51
+     C*
+     C* If totals same, write extract audit record
+     C*
+     CL0         *INU8     IFEQ '0'
+     CL0                   MOVE 'D'       RECI
+     CL0                   Z-ADDWRITES    NORE
+     CL0                   WRITECVALSAF
+     C*
+     CL0                   END
+     C*
+     C* Print audit report
+     C*
+     CL0                   WRITEHEADAU
+     CL0                   WRITEDETLAU
+     C***L0******          WRITETRAILAU                                   S01117
+     C*
+     CL0                   END
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     CLR                   END
+      *                                                               *
+      *================================================================
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      * *PSSR  - Database error subroutine.                           *   S01117
+      *          This subroutine DUMPs the program just once.         *   S01117
+      *                                                               *   S01117
+      * Called by: Database Error Processing                          *   S01117
+      *                                                               *   S01117
+      * Calls: None                                                   *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR SR ** S01117
+      *                                                                   S01117
+     C           @RUN      IFEQ *BLANK                                    S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      ********************************************************************S01117
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZFRQAZ2
+      ***/EJECT*                                                          S01117
+     C***/COPY ZSRSRC,ZICD2Z1                                             S01117
+      ***/EJECT*                                                          S01117
+     C***/COPY ZSRSRC,ZSYSTMZ1                                            S01117
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     O/EJECT
+     OCLINTSEFE                NXTVDT
+     O                         C1NV
+     O@BFREDP E                NXTVDT                                     E22975
+     O                         BFNSDT                                     E22975
+      /EJECT
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031

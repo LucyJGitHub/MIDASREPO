@@ -1,0 +1,821 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LEofitability Report Select Prompt')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module
+     F*                                                               *
+     F*  LER471 - Profitability Report Selection Prompt               *
+     F*                                                               *
+     F*  Function: Prompt program for Input Cycle On Request          *
+     F*            Profitability by Business Group, and               *
+     F*            Profitability by Facility reports.                 *
+     F*                                                               *
+     F*            Depending on authority level - determined by       *
+     F*            calling program - user may select the following    *
+     F*            levels of reporting:                               *
+     F*                                                               *
+     F*            Bank, Department, Account Officer or Customer.     *
+     F*                                                               *
+     F*  Called By: LERC47R - Prompt program as specified on RCF      *
+     F*                                                               *
+     F*  Calls: GPCLRM   - Clear Program Subfile Message Queue        *
+     F*         GPADDM   - Add Message to Subfile Message Queue       *
+     F*         DBERRCTL - Program to handle database errors          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 MOF60              Date 02Oct92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  176443 - Avoid MCH3601 to be sent.                           *
+     F*           Pass correct parameter to AOCUSTR0.                 *
+     F*  MOF60  - Customer Profitability and Fees Processing.         *
+     F*****************************************************************
+     FLER471DFCF  E                    WORKSTN
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01  - ON = Processing completed normally - return           *
+     F*                                                               *
+     F*   02  - F12 pressed for previous screen.                      *
+     F*   03  - F3 pressed for exit.                                  *
+     F*                                                               *
+     F*   04  - Redisplay input if '?' passed to access program.      *
+     F*                                                               *
+     F*   05  - Disable input.                                        *
+     F*                                                               *
+     F*   10  - OFF = First cycle - perform initial processing.       *
+     F*                                                               *
+     F*   16  - Customer Number entered on screen for selection.      *
+     F*   17  - Account Officer entered on screen for selection.      *
+     F*   18  - Department Code entered on screen for selection.      *
+     F*                                                               *
+     F*   20  - User authorised to access Account Officer level data. *
+     F*   21  - User authorised to access Department level data.      *
+     F*                                                               *
+     F*   40  - Highlight error on 'Full Report (Y)' input field.     *
+     F*   41  - Highlight error on Customer selection field.          *
+     F*   42  - Highlight error on Account Officer selection field.   *
+     F*   43  - Highlight error on Department selection field.        *
+     F*                                                               *
+     F*   44  - SFLDSP and SFLDSPCTL enabled.                         *
+     F*   45  - SFLEND.                                               *
+     F*                                                               *
+     F*   98  - Date Format Flag = 'M'                                *
+     F*                                                               *
+     F*   LR  - Last record indicator.                                *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  PROMPT  - Set up prompt parameters for RCF.                  *
+     F*                                                               *
+     F*  LVL0    - Validate level 0 input (Account Officer).          *
+     F*  LVL1    - Validate level 1 input (Department).               *
+     F*  LVL2    - Validate level 2 input (Bank).                     *
+     F*                                                               *
+     F*  CUSVAL  - Validate Customer.                                 *
+     F*  ACOVAL  - Validate Account Officer.                          *
+     F*  DPTVAL  - Validate Department.                               *
+     F*                                                               *
+     F*  PROMPT  - Set up prompt parameters for RCF.                  *
+     F*                                                               *
+     F*  INIT    - Initial Processing.                                *
+     F*                                                               *
+     F*  *PSSR   - Error processing routine - DUMPs and ends          *
+     F*             (This is called automatically if an unexpected    *
+     F*             error occurs).                                    *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     I/EJECT
+     ILER471D1
+     I                                              CNUM            16
+     I                                              ACOF            17
+     I                                              DEPT            18
+     IRPARM       DS
+     I*
+     I** Data structure for prompt parameters to pass to RCF.
+     I*
+     I                                        1   2 @PM1
+     I                                        3  12 @PM2
+     I                                       13  13 @RTYP
+     I                                       14  19 @CNUM
+     I                                       20  21 @ACOF
+     I                                       22  24 @DEPT
+     I*
+     IPSDS       SDS
+     I*
+     I** Program status
+     I*
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     IRUNDAT    E DS
+     I*
+     I** Standard Data Area Layout for System Flags and Run Date.
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details, read by access program.
+     ISDCUST    E DSSDCUSTPD
+     I*
+     I** Customer Details, read by access program.
+     ISDACOF    E DSSDACOFPD
+     I*
+     I** Account Officer Details, read by access program.
+     ISDDEPT    E DSSDDEPTPD
+     I*
+     I** Department Details, read by access program.
+     IDSFDY     E DSDSFDY
+     I*
+     I** Short data structure for access program.
+     IDSSDY     E DSDSSDY
+     I*
+     I** Long data structure for access program.
+     C/EJECT
+     C*
+     C** Perform initial processing.
+     C*
+     C           *IN10     CASEQ'0'       INIT
+     C                     END
+     C*
+     C** Main Loop.
+     C*
+     C           *IN01     DOWEQ'0'
+     C*
+     C** Write/Read screen.
+     C*
+     C                     EXFMTLER471D1
+     C*
+     C** F3 pressed - exit from request.
+     C*
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'E'       CMD
+     C                     GOTO EXIT
+     C                     END
+     C*
+     C** F12 pressed - previous screen requested - exit from prompt.
+     C*
+     C           *IN02     IFEQ '1'
+     C                     MOVE 'F'       CMD
+     C                     GOTO EXIT
+     C                     END
+     C*
+     C** Clear screen message queue.
+     C*
+     C                     MOVEA'0000'    *IN,40
+     C                     CALL 'GPCLRM'
+     C                     MOVE *BLANKS   MSGID
+     C*
+     C** If Not F3 or F12 then validate input
+     C** - validation common to all levels.
+     C*
+     C** Only one field must be entered.
+     C*
+     C                     MOVEA*IN,16    INTEST
+     C           FULL      IFNE ' '
+     C           INTEST    IFNE '111'
+     C                     MOVEA'1111'    *IN,40
+     C                     MOVEL'LER0105' MSGID
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     END
+     C*
+     C** Full report request field must be 'Y' or blank.
+     C*
+     C           FULL      IFNE 'Y'
+     C                     MOVE '1'       *IN,40
+     C                     MOVEL'LER0125' MSGID
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** All input fields are blank - one field must be entered.
+     C*
+     C           INTEST    IFEQ '111'
+     C                     MOVEA'1111'    *IN,40
+     C                     MOVEL'LER0109' MSGID
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C*
+     C** Only one field must be entered.
+     C*
+     C                     ELSE
+     C           INTEST    IFEQ '100'
+     C           INTEST    OREQ '010'
+     C           INTEST    OREQ '001'
+     C           INTEST    OREQ '000'
+     C                     MOVEA'1111'    *IN,40
+     C                     MOVEL'LER0105' MSGID
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Perform validation specific to level unless nothing entered.
+     C*
+     C           MSGID     IFNE 'LER0109'
+     C*
+     C           ALVL      CASEQ0         LVL0
+     C           ALVL      CASEQ1         LVL1
+     C           ALVL      CASEQ2         LVL2
+     C                     END
+     C*
+     C                     END
+     C*
+     C** If no errors set up prompt parameters for RCF ...
+     C*
+     C           MSGID     IFEQ *BLANKS
+     C                     EXSR PROMPT
+     C*
+     C** Reset message queue.
+     C*
+     C                     CALL 'GPCLRM'
+     C*
+     C** ... Else write messages record format.
+     C*
+     C                     ELSE
+     C*
+     C** If '?' processing was used by access object then need to
+     C** redisplay main format with selected data.
+     C*
+     C           *IN04     IFEQ '1'
+     C                     WRITELER471D1
+     C                     END
+     C*
+     C                     WRITELER471D3
+     C                     END
+     C*
+     C** If no error has occurred then processing completed
+     C** normally so exit program ...
+     C*
+     C           MSGID     IFEQ *BLANKS
+     C*
+     C** ... unless '?' processing has been used by access object in
+     C** which case the main format has to be re-displayed to confirm
+     C** selections.
+     C*
+     C           *IN04     ANDEQ'0'
+     C*
+     C                     MOVE '1'       *IN01
+     C                     END
+     C*
+     C** Re-set '?' processing indicator.
+     C*
+     C                     MOVE '0'       *IN04
+     C*
+     C** End of main loop (Do while indicator 01 is Off).
+     C*
+     C                     END
+     C*
+     C** Exit program.
+     C*
+     C           EXIT      TAG
+     C/COPY WNCPYSRC,LER471C001
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  LVL0 --- Subroutine to validate level 0 (Account Officer)    *
+      *           input.                                              *
+      *                                                               *
+      *  CALLED FROM: Main Processing                                 *
+      *  CALLS: CUSVAL, GPADDM.                                       *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           LVL0      BEGSR
+     C*
+     C           FULL      IFEQ 'Y'
+     C           MSGID     ANDEQ*BLANKS
+     C                     MOVE USAC      ACOF
+     C                     MOVE 'A'       RTYP    1
+     C                     END
+     C*
+     C** Check whether Customer is valid if entered.
+     C*
+     C           CNUM      IFNE *BLANKS
+     C                     EXSR CUSVAL
+     C           PRTCD     IFEQ *BLANKS
+     C*
+     C** Check whether Account Officer authorised to this Customer.
+     C*
+     C           CUSACO    IFNE USAC
+     C                     MOVE '1'       *IN41
+     C                     MOVEL'LER0106' MSGID
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     ELSE
+     C                     MOVE 'C'       RTYP
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  LVL1 --- Subroutine to validate level 1 (Department) input.  *
+      *                                                               *
+      *  CALLED FROM: Main Processing                                 *
+      *  CALLS: ACOVAL, GPADDM, CUSVAL, AOACOFR0                      *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           LVL1      BEGSR
+     C*
+     C** If full details requested
+     C*
+     C           FULL      IFEQ 'Y'
+     C           MSGID     ANDEQ*BLANKS
+     C                     MOVE USRDPT    DEPT
+     C                     MOVE 'D'       RTYP
+     C                     END
+     C*
+     C** Validate Account Officer if entered.
+     C*
+     C           ACOF      IFNE *BLANKS
+     C*
+     C                     EXSR ACOVAL
+     C           PRTCD     IFEQ *BLANKS
+     C*
+     C** Check whether Department authorised to this Account Officer.
+     C*
+     C           AZDPCD    IFNE USRDPT
+     C                     MOVE '1'       *IN42
+     C                     MOVEL'LER0108' MSGID
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     ELSE
+     C                     MOVE 'A'       RTYP
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Validate Customer Number if entered.
+     C*
+     C           CNUM      IFNE *BLANKS
+     C*
+     C                     EXSR CUSVAL
+     C           PRTCD     IFEQ *BLANKS
+     C           CUSACO    IFNE USAC
+     C*
+     C** Access Account Officer Details.
+     C*
+     C                     CALL 'AOACOFR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM CUSACO    PUSAC   2
+     C           SDACOF    PARM SDACOF    DSFDY
+     C*
+     C** Check whether Department authorised to this Customer.
+     C*
+     C           AZDPCD    IFNE USRDPT
+     C                     MOVEL'LER0107' MSGID
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN41
+     C                     END
+     C                     END
+     C                     END
+     C           MSGID     IFEQ *BLANKS
+     C                     MOVE 'C'       RTYP
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  LVL2 --- Subroutine to validate level 2 (Bank) input.        *
+      *                                                               *
+      *  CALLED FROM: Main Processing                                 *
+      *  CALLS: DPTVAL, ACOVAL, CUSVAL                                *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           LVL2      BEGSR
+     C*
+     C           FULL      IFEQ 'Y'
+     C           MSGID     ANDEQ*BLANKS
+     C                     MOVE 'T'       RTYP
+     C                     ELSE
+     C*
+     C** Validate Department if entered.
+     C*
+     C           DEPT      IFNE *BLANKS
+     C                     EXSR DPTVAL
+     C           MSGID     IFEQ *BLANKS
+     C                     MOVE 'D'       RTYP
+     C                     END
+     C                     END
+     C*
+     C** Validate Account Officer if entered
+     C*
+     C           ACOF      IFNE *BLANKS
+     C                     EXSR ACOVAL
+     C           MSGID     IFEQ *BLANKS
+     C                     MOVE 'A'       RTYP
+     C                     END
+     C                     END
+     C*
+     C** Validate Customer if entered.
+     C*
+     C           CNUM      IFNE *BLANKS
+     C                     EXSR CUSVAL
+     C           MSGID     IFEQ *BLANKS
+     C                     MOVE 'C'       RTYP
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CUSVAL --- Validate Customer number/shortname input.         *
+      *                                                               *
+      *  CALLED FROM: LVL0, LVL1, LVL2                                *
+      *  CALLS: AOCUSTR0, GPADDM                                      *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           CUSVAL    BEGSR
+     C*
+     C** Check whether '?' processing is to be used.
+     C*
+     C                     MOVELCNUM      CNUMQ   1
+     C           CNUMQ     IFEQ '?'
+     C                     MOVE '1'       *IN04
+     C                     END
+     C*
+     C** Access Customer Details.
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY'    POPTN   7
+     C                     PARM CNUM      PCUST  10
+     C                     PARM           PKYST   7
+     C***********SDCUST    PARM SDCUST    DSFDY                           176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+     C*
+     C** Output error message if Customer not on file.
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'LER0102' MSGID
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN41
+     C*
+     C** Else set up Customer Account Officer & Customer Number fields.
+     C*
+     C                     ELSE
+     C/COPY WNCPYSRC,LER471C002
+     C                     MOVE BBACOC    CUSACO
+     C                     MOVE *BLANKS   CNUM
+     C                     MOVE BBCUST    CNUM
+     C/COPY WNCPYSRC,LER471C003
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ACOVAL --- Validate Account Officer code input.              *
+      *                                                               *
+      *  CALLED FROM: LVL1, LVL2                                      *
+      *  CALLS: AOACOFR0, GPADDM                                      *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           ACOVAL    BEGSR
+     C*
+     C** Check whether '?' processing is to be used.
+     C*
+     C           '?'       SCAN ACOF                     04
+     C*
+     C                     CALL 'AOACOFR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM ACOF      PUSAC
+     C           SDACOF    PARM SDACOF    DSFDY
+     C*
+     C** If '?' processing used then fill screen field
+     C** with Account Officer code selected.
+     C*
+     C           *IN04     IFEQ '1'
+     C                     MOVELPUSAC     ACOF
+     C                     END
+     C*
+     C** Output error message if Account Officer not on file.
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'LER0103' MSGID
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN42
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DPTVAL --- Validate Department code input.                   *
+      *                                                               *
+      *  CALLED FROM: LVL2                                            *
+      *  CALLS: AODEPTR0, GPADDM                                      *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           DPTVAL    BEGSR
+     C*
+     C** Check whether '?' processing is to be used.
+     C*
+     C           '?'       SCAN DEPT                     04
+     C*
+     C                     CALL 'AODEPTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM DEPT      PDEPT   3
+     C           SDDEPT    PARM SDDEPT    DSFDY
+     C*
+     C** If '?' processing used then fill screen field
+     C** with Department code selected.
+     C*
+     C           *IN04     IFEQ '1'
+     C                     MOVELPDEPT     DEPT
+     C                     END
+     C*
+     C** Output error message if Department not on file.
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'LER0104' MSGID
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN43
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PROMPT --- Subroutine to set up prompt parameters for RCF.   *
+      *                                                               *
+      *  CALLED FROM: Main Processing                                 *
+      *  CALLS: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           PROMPT    BEGSR
+     C*
+     C                     MOVE PM1       @PM1
+     C                     MOVE PM2       @PM2
+     C                     MOVE RTYP      @RTYP
+     C                     MOVE CNUM      @CNUM
+     C                     MOVE ACOF      @ACOF
+     C                     MOVE DEPT      @DEPT
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT --- Initial processing.                                 *
+      *                                                               *
+      *  CALLED FROM: Main processing                                 *
+      *  CALLS: AOACOFR0, GPADDM                                      *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C** Receive entry parameters.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           USAC    2
+     C                     PARM           ALVL    10
+     C                     PARM           RPARM  24
+     C                     PARM           RACT    1
+     C                     PARM           CMD     1
+     C*
+     C** Ensure Copyright text appears in compiled object.
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Define DTAARA/RUNDAT as an external data area, and read it
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C/COPY WNCPYSRC,LER471C004
+     C*
+     C** Test Date Format Flag for Standard Routines
+     C*
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C** If action 'A' then move existing parameters to screen fields.
+     C*
+     C           RACT      IFEQ 'A'
+     C*
+     C** If Full report was requested move 'Y' into full field.
+     C*
+     C           ALVL      IFEQ 2
+     C           @RTYP     ANDEQ'T'
+     C           ALVL      OREQ 1
+     C           @RTYP     ANDEQ'D'
+     C           ALVL      OREQ 0
+     C           @RTYP     ANDEQ'A'
+     C                     MOVE 'Y'       FULL
+     C*
+     C** Else set up Customer, Account Officer or Department requested.
+     C*
+     C                     ELSE
+     C                     MOVEL@CNUM     CNUM
+     C                     MOVEL@ACOF     ACOF
+     C                     MOVEL@DEPT     DEPT
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Set off first cycle indicator
+     C*
+     C                     MOVE '1'       *IN10
+     C*
+     C** Set on SFLDSP, SFLDSPCTL & SFLEND indicators and
+     C** set up message queue for message subfile.
+     C*
+     C                     MOVEA'11'      *IN,44
+     C                     MOVEL'*'       MSGQ
+     C*
+     C** If User Account Officer has been passed from calling program
+     C** as blank then user is not authorised to Profitability
+     C** information so set up message field.
+     C*
+     C           USAC      IFEQ *BLANKS
+     C                     MOVEL'LER0126' MSGID
+     C*
+     C** Else validate that user has a valid Account Officer code.
+     C*
+     C                     ELSE
+     C*
+     C                     CALL 'AOACOFR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM USAC      PUSAC
+     C           SDACOF    PARM SDACOF    DSFDY
+     C*
+     C** If invalid then set up message field ...
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'LER0124' MSGID
+     C                     END
+     C                     END
+     C*
+     C** If error has occurred then blank out all fields ...
+     C*
+     C           MSGID     IFNE *BLANKS
+     C                     MOVE *BLANKS   CNUM
+     C                     MOVE *BLANKS   ACOF
+     C                     MOVE *BLANKS   DEPT
+     C*
+     C** ... disable input ...
+     C*
+     C                     MOVE '1'       *IN05
+     C*
+     C** ... then send error message before exiting.
+     C*
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     WRITELER471D3
+     C                     EXFMTLER471D1
+     C*
+     C** User not authorised to request Profitability report -
+     C** there is no code to represent this in RCF so 'pretend' F3
+     C** has been pressed to exit without update.
+     C*
+     C                     MOVE 'E'       CMD
+     C                     GOTO EXIT
+     C                     END
+     C*
+     C** Define work fields.
+     C*
+     C                     MOVE *BLANKS   USRDPT  3
+     C                     MOVE *BLANKS   CUSACO  2
+     C                     MOVE *BLANKS   MSGID   8
+     C                     MOVE *BLANKS   INTEST  3
+     C*
+     C** Set up user's department field for later validation.
+     C*
+     C                     MOVE AZDPCD    USRDPT
+     C*
+     C** Set up parameters for report request.
+     C*
+     C                     MOVE USAC      PM1     2
+     C                     MOVELJOB       PM2    10
+     C*
+     C** Initialise screen fields if action code is 'I'.
+     C*
+     C           RACT      IFEQ 'I'
+     C                     MOVE *BLANKS   FULL
+     C                     MOVE *BLANKS   CNUM
+     C                     MOVE *BLANKS   ACOF
+     C                     MOVE *BLANKS   DEPT
+     C                     END
+     C*
+     C** Set screen indicators for authority level.
+     C*
+     C                     MOVEA'0000'    *IN,40
+     C                     MOVEA'00'      *IN,20
+     C           ALVL      IFGT 0
+     C                     MOVE '1'       *IN20
+     C           ALVL      IFGT 1
+     C                     MOVE '1'       *IN21
+     C                     END
+     C                     END
+     C*
+     C** Set input indicators for field(s) not displayed.
+     C*
+     C           ALVL      IFEQ 0
+     C                     MOVEA'11'      *IN,17
+     C                     END
+     C           ALVL      IFEQ 1
+     C                     MOVE '1'       *IN18
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR --- Subroutine to handle abnormal error conditions     *
+      *                                                               *
+      *  CALLED FROM: After abnormal operation occurs                 *
+      *  CALLS: DBERRCTL                                              *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C** Ensure dump is executed only once
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C** Call database error program
+     C*
+     C                     CALL 'DBERRCTL'
+     C                     ENDSR
+     C*
+      *****************************************************************
+** CPY@   OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

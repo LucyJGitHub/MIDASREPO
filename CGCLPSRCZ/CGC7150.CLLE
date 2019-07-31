@@ -1,0 +1,75 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Historic Interest Scale Report Print Request')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing/ Lending & Retail Modules                   */
+/*                                                                   */
+/*       CGC7150 - Historic Interest Scale Report Print Request      */
+/*                 (Input Cycle Component)                           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER042  *CREATE    Date 11May11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER042 - Interest Scale Report Correspondence               */
+/*                (Upgrade of FGE178/179)                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2011')
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create LDA if it does not already exist */
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas SD AS400 Local +
+                          Date Area'))
+             CHKOBJ     OBJ(ZMUSER) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/ZMUSER) TYPE(*CHAR) LEN(17) +
+                          VALUE(' ') TEXT('Midas SD Local Date Area'))
+ 
+/* Set-off Database Error Switches */
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+ 
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
+ 
+/* Historic Interest Scale Account Print Request */
+ 
+             CALL       PGM(CG7150)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             ENDCMTCTL
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('Program CGC7150 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/* Normal termination */
+ 
+ END:        ENDPGM

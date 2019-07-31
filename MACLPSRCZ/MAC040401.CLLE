@@ -1,0 +1,67 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas MA Initial next day set up component')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Microfiche Archiving module                         */
+/*                                                                   */
+/*       MAC040401 - Initial Next Day set up component               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD022045 *CREATE   Date 27Aug13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD022045 - SCC0404 performance degradation                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&OUTQ0) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OUTQ1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OUTQ2) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OUTQ3) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OUTQ4) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OUTQ5) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OUTQ6) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OUTQ7) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OUTQ8) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OUTQ9) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/*  Check end of year processing                                   */
+ 
+             CALL       PGM(MA000011) PARM(&MFLAG &OUTQ0 &OUTQ1 +
+                          &OUTQ2 &OUTQ3 &OUTQ4 &OUTQ5 &OUTQ6 &OUTQ7 +
+                          &OUTQ8 &OUTQ9)
+             IF         COND(&MFLAG *EQ 'N') THEN(DO)
+                GOTO       CMDLBL(ENDCLPGM)
+             ENDDO
+             CALL       PGM(MAC000011)
+ 
+             IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+                GOTO       CMDLBL(ENDCLPGM)
+             ENDDO
+ABNOR:
+             SNDPGMMSG  MSG('Program SCC040401 ended abnormally - job +
+                          cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDCLPGM:
+             ENDPGM

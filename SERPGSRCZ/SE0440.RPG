@@ -1,0 +1,1161 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Euroclear Cash Telexes')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0440   EUROCLEAR CASH TELEXES.                             *
+     F*                                                               *
+     F*  Function:  This program produces pre-formatted telexes for   *
+     F*  (COB & IC) cash payments to and from Euroclear.              *
+     F*                                                               *
+     F*  Called By: SEC0603 - COB Pay/Receive Telexes                 *
+     F*             SEC3305 - I/C Pay/Receive Telexes                 *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. BUG13147           Date 25Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 240924             Date 21Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 208241             Date 17Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE022             Date 29Mar01               *
+      *                 127566             Date 09May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 090639             Date 18Oct95               *
+      *                 052254             Date 10Jan94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E29170             DATE 07OCT91               *
+     F*                 S01117             DATE 10MAY91               *
+     F*                 S01269             DATE 02AUG90               *
+     F*                 S01271             DATE 07JUN90               *
+     F*                 E20134             DATE 11NOV89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG13147 - SEC0606 failed due to wrong condition introduced  *
+      *             by CSD027                                         *
+      *  240924 - SEC0603 database error. Applied fix 223319.  DB     *
+      *           error 14 because of ISO15022 changes.               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  208241 - Recompiled over changes in /CPY ZSDESCZ3.           *
+      *  CSE022 - Depository Definition Enhancement                   *
+      *  127566 - Recompiled over changed ZSDESCZ3                    *
+     F*  090639 - Actual requirement is that CHAIN should be condit-  *
+     F*           ioned on client classification being equal to 'S'   *
+     F*           'D' or 'I' rather than not equal to 'E' as present. *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E29170 - RCF CHANGES                                         *
+     F*  S01117 - Multibranching                                      *
+     F*  S01269 - Trade authorisation: recompiled over changed        *
+     F*           file TABSE.                                         *
+     F*  S01271 - Pay/Receive in Input Cycle                          *
+     F*  E20134 - Rename BRCD from CLINTCB in Telex programs to avoid *
+     F*           accidentally overwriting Settlement Branch Code.    *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FECASH   IP  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F**ICD*1*****TABTB10F                          KIGNORE
+     F**ICD*11****TABTB11F                          KIGNORE
+     F**ICD*36*SE*TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F***CCY******TABTG10F                          KIGNORE
+     F***CCY 2****TABTG20F                          KIGNORE
+     F**C/NOSTRO**TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F***SE0440P1O***F     132     OF     PRINTER                         E29170
+     FSE0440P1O   F     132     OF     PRINTER                        UC  E29170
+     F                                              KINFDS SPOOL          E29170
+     FSE0440AUO   F     132            PRINTER                            E29170
+     F                                              KINFDS SPOOLU         E29170
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   31      When = 0, Input Cycle run; when = 1, COB run        *   S01271
+     F*   36      DETAIL PRINTER FILE OPEN                            *   E29170
+     F*   40      FIRST CYCLE INDICATOR                               *
+     F*   41      ECASH - DETAIL                                      *
+     F*   43      DETAIL RECORD HAS BEEN READ                         *
+     F*   44      CASH TYPE - A                                       *
+     F*   45                - B                                       *
+     F*   46                - W                                       *
+     F*   47      TRADE REFERENCE SAME AS PREVIOUS RECORD             *
+     F*   48      RECORD IS A CANCELLATION                            *
+     F*   49      MULTIBRANCHING IS ON                                *   E29170
+     F*   53      'FOR ACCOUNT OF' IS A CUSTOMER NUMBER.              *
+     F*   54      WORK INDICATOR                                      *
+     F*   56      MATURITY DATE = 99999                               *
+     F*   98      ZSYSTM, DATE FORMAT MMDDYY IF ON.                   *
+     F*   99      ZSYSTM, INSTALLATION CONTROL DATA RECORD NOT FOUND. *
+     F*   U7U8    DATA BASE ERROR                                     *
+     F*   U8      FILE CONTROLS OUT OF BALANCE                        *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSDESCZ1
+     E                    CPY@    1   1 80
+      /EJECT
+     IECASHABF
+     I              RECI                            RECIP
+     I                                              BRCA  L1              E29170
+     IECASHACF
+     I              RECI                            RECIP
+      *                                                                   E20134
+     ICLINTCBF                                                            E20134
+     I***********   BRCD                            BRCDCL         E20134 S01117
+     I              BRCB                            BRCDCL                S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR SPOOL FILE NAME                                          E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     I*                                                                   E29170
+     ISDBRCH    E DSSDBRCHPD                                              E29170
+     I*                                                                   E29170
+     I** BRANCH DETAILS                                                   E29170
+     I*                                                                   E29170
+     IDSFDY     E DSDSFDY                                                 E29170
+     I*                                                                   E29170
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               E29170
+     I*                                                                   E29170
+      *                                                                   E20134
+     I*LDA********UDS                            256                      S01117
+      *
+      **  LOCAL DATA AREA
+      *
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+      *
+     I/COPY ZSRSRC,ZSDESCZ2
+     I            DS
+     I                                        1   7 CLINTE
+     I**********                              1   60KCNUM                                     CSD027
+     I                                        1   6 KCNUM                                     CSD027
+     I                                        7   7 KRCDT
+      *
+     I            DS
+     I                                        1   7 ECAKEY
+     I                                        1   1 RECI
+     I                                        2   70TRDR
+     I*   TIME DATA STRUCTURE                                             S01271
+     I*                                                                   S01271
+     I            DS                                                      S01271
+     I                                        1   60CTIME                 S01271
+     I                                        1   2 CHOUR                 S01271
+     I                                        3   4 CMINT                 S01271
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+      *
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C************************************************************
+     C*                                                          *
+     C* F I R S T   C Y C L E   O N L Y   C A L C U L A T I O N S*
+     C*                                                          *
+     C************************************************************
+     C*
+     C           *IN40     IFEQ '0'
+     C                     MOVE '1'       *IN40
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'SE0440  'DBPGM
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA                                       S01117
+      *
+      **  DEFINE KEY LIST FOR CHAIN TO CLINT
+      *
+     C           CLIKEY    KLIST
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KRCDT   1
+      *
+      **  GET INSTALLATION CONTROL DATA RECORD 1.
+      *
+     C                     EXSR ZSYSTM
+      *
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'TABSE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            ** DB ERR 01 **
+     C                     Z-ADD01        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+      *
+      **  GET INSTALLATION CONTROL DATA RECORD 11.
+      *
+     C                     MOVE *BLANKS   TABKEY 12
+     C                     MOVEL'01'      TABKEY
+     C                     MOVE '11'      TABKEY
+      *
+     C           TABKEY    CHAINTABTB11F             99
+      *
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'TABSE'   DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY            ** DB ERR 02 **
+     C                     Z-ADD02        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+     C*                                                                   E29170
+     C**  TEST FOR MULTIBRANCHING                                         E29170
+     C*                                                                   E29170
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C                     SETON                     49                   E29170
+     C                     END                                            E29170
+      /EJECT
+      *
+      **  GET INSTALLATION CONTROL DATA RECORD 36. (SE 2)
+      *
+     C                     MOVE *BLANKS   TABKEY
+     C                     MOVEL'01'      TABKEY
+     C                     MOVE '36'      TABKEY
+      *
+     C           TABKEY    CHAINTABTB36F             99
+      *
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'TABSE'   DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY            ** DB ERR 03 **
+     C                     Z-ADD03        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+      *
+      **  INITIALIZE RECORD COUNT FIELDS.
+      *
+     C                     Z-ADD0         NORR    50
+      *                                                                   S01271
+     C*    INPUT CYCLE / CLOSE OF BUSINESS PARAMETER                      S01271
+     C*                                                                   S01271
+     C           *ENTRY    PLIST                                          S01271
+     C                     PARM           PRPHAS  1                       S01271
+     C                     PARM           SEQ     5                       S01117
+     C           PRPHAS    IFEQ 'I'                                       S01271
+     C                     SETOF                     31                   S01271
+     C                     TIME           CTIME                           S01271
+     C                     MOVE ':  '     ATIME   5                       S01271
+     C                     MOVE CMINT     ATIME                           S01271
+     C                     MOVELCHOUR     ATIME                           S01271
+     C                     ELSE                                           S01271
+     C                     SETON                     31                   S01271
+     C                     END                                            S01271
+     C                     END
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C/EJECT
+      ************************************************************
+      *                                                          *
+      *      D E T A I L   C A L C U L A T I O N S               *
+      *                                                          *
+      ************************************************************
+      *
+      **  RESET INDICATORS.
+      *
+     C                     MOVEA'00'      *IN,41            *IN 41,42
+     C                     MOVEA'000'     *IN,44            *IN 44,45,46
+      *
+      **  INVALID RECORD FOUND  ?
+      *
+     C           RECIP     IFNE 'D'
+     C           RECIP     ANDNE'T'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'ECASH'   DBFILE           ***************
+     C                     MOVELECAKEY    DBKEY            ** DB ERR 04 **
+     C                     Z-ADD04        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+      *
+     C           RECIP     IFEQ 'D'
+      *
+      **  IF A DETAIL RECORD HAS BEEN READ SETON 41, 43
+      *
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN41            DETAIL RECORD
+     C*                                                                   E29170
+     C** If there are details to report and a new branch then open        E29170
+     C** detail printer file for it and do RCF processing                 E29170
+     C*                                                                   E29170
+     C           *INL1     IFEQ '1'                                       E29170
+     C                     SETON                     36                   E29170
+     C                     CLOSESE0440P1                                  E29170
+     C                     OPEN SE0440P1                                  E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     Z-ADD0         PAGE                            E29170
+     C*                                                                   E29170
+     C** FIND OUT BRANCH NAME IF MULTIBRANCHING ON                        E29170
+     C*                                                                   E29170
+     C           *IN49     IFEQ '1'                                       E29170
+     C**********           CALL 'AOBRCHR0'                                E29170              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7                       E29170
+     C                     PARM '*KEY   ' @OPTN   7                       E29170
+     C                     PARM BRCA      BRKEY   3                       E29170
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           E29170              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   E29170
+     C           @RTCD     IFNE *BLANKS                                   E29170
+     C           *LOCK     IN   LDA                                       E29170
+     C                     Z-ADD9         DBASE                           E29170
+     C                     MOVEL'SDBRCHPD'DBFILE                          E29170
+     C                     MOVELBRCA      DBKEY                           E29170
+     C                     OUT  LDA                                       E29170
+     C                     END                                            E29170
+     C                     END                                            E29170
+     C                     END                                            E29170
+      *
+      **  MAINTAIN RECORD COUNT.
+      *
+     C                     ADD  1         NORR
+      *
+      **  CHECK FOR INVALID CASH TYPE.
+      *
+     C           CSHT      IFNE 'A'
+     C           CSHT      ANDNE'B'
+     C           CSHT      ANDNE'W'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'ECASH'   DBFILE           ***************
+     C                     MOVELECAKEY    DBKEY            ** DB ERR 05 **
+     C                     Z-ADD05        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+      *
+      **  PRODUCE REPORT AS ACCORDING TO CASH TYPE.
+      *
+     C           CSHT      COMP 'A'                      44
+     C           CSHT      COMP 'B'                      45
+     C           CSHT      COMP 'W'                      46
+      /EJECT
+      *
+      **  CHECK IF TRADE REFERENCE IS SAME AS PREVIOUS TRADE REFERENCE
+      **   (ie. set up 'CANCEL', 'REPLACE WITH' headers)
+      *
+     C           TRDR      COMP TRDRX                    47
+     C                     Z-ADDTRDR      TRDRX   60
+     C  N48                SETOF                         47
+      *
+     C           ACTC      COMP 'C'                      48 CANCELLATION
+      *
+      **  SAVE INTEGER PART OF EUROCLEAR AMOUNT.
+      *
+     C                     MOVELECAM      ECAMI  130
+      *
+      **  GET CCY TABLES RECORD 1 & 2 (PF/ TABTG10, TABTG20)
+      *
+     C                     MOVE *BLANKS   TABKEY
+     C                     MOVEL'20'      TABKEY
+     C                     MOVELECCC      CHAR4   4
+     C                     MOVE '1'       CHAR4
+     C                     MOVE CHAR4     TABKEY
+      *
+     C           TABKEY    CHAINTABTG10F             99
+      *
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'TABSE'   DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY            ** DB ERR 06 **
+     C                     Z-ADD06        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+      *
+     C                     MOVE '2'       TABKEY
+      *
+     C           TABKEY    CHAINTABTG20F             99
+      *
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'TABSE'   DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY            ** DB ERR 07 **
+     C                     Z-ADD07        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+      *
+      **  PRE-ADVICE GOES TO WRONG ACCOUNT ##
+      *
+     C           *IN44     IFEQ '1'
+     C                     ADD  1         ECC1
+     C                     ADD  2         ECC2
+     C                     END
+      /EJECT
+      *  For the Euroclear Customer :             Cash Type 'A', 'B' & 'W'
+      *  -----------------------------
+      *      Get the Euroclear Ref.No
+     C                     MOVE *BLANKS   #8A
+     C                     MOVELECLN      #8A
+     C                     EXSR SREURO
+     C                     Z-ADD#EURO     EUROXX  50
+      *
+      *      and the customer address
+     C                     EXSR SRNAME
+     C                     MOVE #CRNM     CRNMX  20
+     C                     MOVE #CTWN     CTWNX  10
+      *
+      *  For the Settlement Customer :
+      *  -----------------------------
+     C                     MOVE SCNM      #8A
+     C                     Z-ADD0         #EURO
+     C                     MOVE CRNM      CRNMY  20
+     C                     MOVE CTWN      CTWNY  10
+      *                                               Cash Type  'B' only
+      **  Get the Euroclear Ref.No
+      *                                               Cash Type  'B' only
+     C                     MOVEL#8A       TEST7   7
+     C                     MOVE '0'       TEST7
+     C***********          TESTN          TEST7      53    ON = Numeric                       CSD027
+     C************IN53     IFEQ '1'                        If numeric                         CSD027
+     C           CSHT      CASEQ'B'       SREURO
+     C                     END
+     C***********          END                                                                CSD027
+     C                     Z-ADD#EURO     EUROXY  50
+      *                                               Cash Type 'A'  & 'W'
+      **  Get the customer address
+      *                                               Cash Type 'A'  & 'W'
+     C           CSHT      CASNE'B'       SRNAME
+     C                     END
+     C                     MOVE #CRNM     CRNMY  20
+     C                     MOVE #CTWN     CTWNY  10
+      *
+      *  For the 'For Account Of'   :        Cash Type 'A' & 'B'
+      *  -----------------------------
+     C                     MOVE *BLANKS   CRNMZ
+     C                     MOVE *BLANKS   CTWNZ
+     C                     MOVE *BLANKS   CPNMZ
+     C                     MOVELFACO      #8A
+      *
+      **  Get the customer address
+      *
+     C           CSHT      IFNE 'W'
+     C                     EXSR SRNAME
+     C                     MOVE #CRNM     CRNMZ  20
+     C                     MOVE #CTWN     CTWNZ  10
+     C                     MOVEL#CPNM     CPNMZ  35
+     C                     END
+      /EJECT
+      *
+      **  Access the security details record  (LF/SECTY)
+      **  for non-PRE-ADVICE cash transactions (ie. NE 'A').
+      *
+     C                     MOVE *BLANKS   ZRNME  41
+      *
+      **  Cash Type 'B' & 'W'
+      *
+     C           *IN44     IFEQ '0'
+      *
+      **  Chain to the Securities file
+      *
+     C           SECS      CHAINSECTY                99
+      *
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           RECI      ANDNE'M'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SECTY'   DBFILE           ***************
+     C                     MOVELSECS      DBKEY            ** DB ERR 08 **
+     C                     Z-ADD08        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+      *
+      **  Format the security description.
+      *
+     C                     MOVELSRPN      ZSRPN
+     C                     MOVELSFN1      ZSFN1
+     C                     MOVELSFN2      ZSFN2
+     C                     MOVELRSFD      ZRSFD                           S01117
+      *
+     C                     EXSR ZSDESC
+      *
+     C                     END
+      *
+      **  Convert DAY No.of NEXT WORKING DAY to a calendar date
+      **  (6 NUMERIC)
+      *
+     C                     MOVE '0'       *IN99
+     C                     Z-ADDDNWD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     DNWDX   60
+      *
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'ZDATE'   DBFILE           ***************
+     C                     MOVELDNWD      DBKEY            ** DB ERR 10 **
+     C                     Z-ADD10        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVE '1'       *IN42            TRAILER RECORD
+     C                     END
+      *
+      *================================================================*
+      /EJECT
+      *================================================================*
+      *
+     C           ENDD      TAG                             ** ENDD **
+      *
+      *================================================================*
+      *
+      *     T O T A L   T I M E   C A L C U L A T I O N S
+      *
+      *================================================================*
+      *
+      **  ACCESS ICD RECORD 1, IF FILE EMPTY
+      *
+     CL0         *INLR     IFEQ '1'
+     CL0         *IN40     ANDEQ'0'
+      *
+     CL0                   EXSR ZSYSTM
+     CL0         *IN99     IFEQ '1'
+     CL0                   SETON                     U7U8
+     CL0         *LOCK     IN   LDA                                       S01117
+     CL0                   MOVEL'TABSE'   DBFILE           ***************
+     CL0                   MOVELZTABKY    DBKEY            ** DB ERR 11 **
+     CL0                   Z-ADD11        DBASE            ***************
+     CL0                   OUT  LDA                                       S01117
+     CL0                   EXSR *PSSR                                     S01117
+     CL0                   END
+     CL0                   END
+      *
+      *
+     CL0         *INLR     IFEQ '1'
+     CL0         *INU7     ANDEQ'0'
+      *
+      **  TRAILER MISSING ON ECASH
+      *
+     CL0         RECIP     IFNE 'T'
+      *
+     CL0                   SETON                     U7U8
+     CL0         *LOCK     IN   LDA                                       S01117
+     CL0                   MOVE 'ECASH'   DBFILE           ***************
+     CL0                   MOVE 'TRAILER' CHAR15 15        ** DB ERR 12 **
+     CL0                   MOVEL'MISSING' CHAR15           ***************
+     CL0                   MOVELCHAR15    DBKEY
+     CL0                   Z-ADD12        DBASE
+     CL0                   OUT  LDA                                       S01117
+     CL0                   EXSR *PSSR                                     S01117
+      *
+     CL0                   ELSE
+      *
+      **  FILE CONTROL CHECKING.
+      *
+     CL0                   ADD  1         NORR
+     CL0         NORE      IFNE NORR
+     CL0                   MOVE '1'       *INU8
+     CL0                   END
+      *
+     CL0                   END
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     CL0                   END
+      ********************************************************************
+      /EJECT
+      ***************************************************************
+      *                                                             *
+      *  SREURO  - SR TO GET THE EUROCLEAR REFERENCE NUMBER FROM THE*
+      *            'E' RECORD ON CLIENT FILE PF/CLINTSE             *
+      *                                                             *
+      *    INPUT  :   #8A     8   A   Customer Number               *
+      *               DC01    6   A   Default Cust No (PF/TABTB36)  *
+      *    OUTPUT :   #EURO   5/0 N   Euroclear Ref. No.            *
+      *                                                             *
+      ***************************************************************
+      *
+     C           SREURO    BEGSR
+      *
+      ** Chain to CLINTSE file.
+      *
+     C                     MOVEL#8A       KCNUM
+     C                     MOVE '1'       KRCDT
+      *
+     C           CLIKEY    CHAINCLINTSEF             99
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'CLINT'   DBFILE           ***************
+     C                     MOVELCLINTE    DBKEY            ** DB ERR 13 **
+     C                     Z-ADD13        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+      *                                                                   CSE022
+      ** C101 needs to be updated by the 1st 6 characters of C201.        CSE022
+      *                                                                   CSE022
+     C                     MOVELC201      C101                            CSE022
+      *
+      ** The following lines are now changed to read CHAIN should only    090639
+      ** be conditioned on client classification equal to 'S', 'D' or     090639
+      *  'I' rather than not equal to 'E' as at present.                  090639
+      ****IF*the*record*found*is*not an 'E' type (Discretionary Ind)      090639
+      ****access*the*customer's*euroclear record.                         090639
+      *
+     C********** C1DI      IFNE 'E'                                       090639
+     C           C1DI      IFEQ 'S'                                       090639
+     C           C1DI      OREQ 'D'                                       090639
+     C********** C1DI      OREQ 'I'                                                    090639 240924
+      *
+      **  IF Euroclear Cust No EQ blank, or zero (DEPOT1 on CLINTSE)
+      **  use the Default Value from SE ICD table (TABTB36).
+      *
+     C           C101      IFLE '000000'
+     C                     MOVE DC01      C101
+     C                     END
+      *
+     C                     MOVE C101      KCNUM
+     C           CLIKEY    CHAINCLINTSEF             99
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'CLINT'   DBFILE           ***************
+     C                     MOVELCLINTE    DBKEY            ** DB ERR 14 **
+     C                     Z-ADD14        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+     C                     END
+      *
+     C                     MOVELC101      #EURO   50
+     C                     ENDSR
+      ***************************************************************
+      /EJECT
+      ***************************************************************
+      *                                                             *
+      *  SRNAME  - SR TO GET CLIENT'S NAME AND ADDRESS FROM CLIENT  *
+      *            DETAIL RECORD ON CLINTCB, OR FROM HIS NOSTRO     *
+      *            (TABLET2)                                        *
+      *    INPUT  :   #8A     8  A   Counterparty Cust No/Nostro    *
+      *    OUTPUT :   #CRNM  20  A   Report Name                    *
+      *               #CTWN  10  A   Town                           *
+      *               #CPNM  35  A   Counterparty Nostro Address    *
+      *                                                             *
+      ***************************************************************
+      *
+     C           SRNAME    BEGSR
+      *
+     C                     MOVE #8A       #8A     8
+     C                     MOVE *BLANKS   #CRNM  20
+     C                     MOVE *BLANKS   #CTWN  10
+     C                     MOVE *BLANKS   #CPNM  35
+      *
+      **  Get the address from the client's detail record (PF/CLINTCB),
+      **  if the Cust.No. available (numeric entry), else from the
+      **  counterparty nostro record (PF/TABLET2).
+      *
+     C***********          MOVEL#8A       TEST7   7                                           CSD027
+     C***********          MOVE '0'       TEST7                                               CSD027
+     C***********          TESTN          TEST7      53    ON = Numeric                       CSD027
+      *
+      **  Get the Customer Address from the Client's detail record
+      *
+     C************IN53     IFEQ '1'                        Numeric entry                      CSD027
+      *
+     C                     MOVEL#8A       KCNUM
+     C                     MOVE 'A'       KRCDT
+      *
+     C           CLIKEY    CHAINCLINTCBF             99
+     C************IN99     IFEQ '1'                                                           CSD027
+     C***********RECI      ORNE 'D'                                                           CSD027
+     C***********          SETON                     U7U8LR                                   CSD027
+     C************LOCK     IN   LDA                                       S01117              CSD027
+     C***********          MOVEL'CLINT'   DBFILE           ***************                    CSD027
+     C***********          MOVELCLINTE    DBKEY            ** DB ERR 15 **                    CSD027
+     C***********          Z-ADD15        DBASE            ***************                    CSD027
+     C***********          OUT  LDA                                       S01117              CSD027
+     C***********          EXSR *PSSR                                     S01117              CSD027
+     C***********          GOTO ENDD                                                          CSD027
+     C***********          END                                                                CSD027
+      *
+     C           *IN99     IFEQ *OFF                                                          CSD027
+     C           RECI      ANDEQ'D'                                                           CSD027
+     C                     MOVE CRNM      #CRNM
+     C                     MOVE CTWN      #CTWN
+     C                     ELSE                                                               CSD027
+     C**************       END                                                                CSD027
+      /EJECT
+      *
+      **  IF non-numeric and non-blank entry access client's address
+      **  on the Counterparty Nostro table (PF/TABLET2).
+      *
+     C************IN53     IFEQ '0'                        Non-Numeric                        CSD027
+     C***********#8A       ANDNE*BLANKS                     & Non-Blank                       CSD027
+     C********** #8A       IFEQ *BLANKS                                              CSD027 BUG13147
+     C           #8A       IFNE *BLANKS                                                     BUG13147
+      *
+     C                     MOVEL'71  '    TABKEY
+     C                     MOVE #8A       TABKEY
+      *
+     C           TABKEY    CHAINTABLET2F             99
+      *
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'TABSE'   DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY            ** DB ERR 16 **
+     C                     Z-ADD16        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+      *
+     C                     MOVE CPNM      #CRNM
+     C                     MOVE CPTN      #CTWN
+     C                     MOVE CPNM      #CPNM
+     C                     END                                                                CSD027
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      ***************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM *BLANKS   SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZSDESCZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+     O/EJECT
+      ********************************************************************
+      *
+      *    EUCLID INSTRUCTIONS
+      *    ~~~~~~~~~~~~~~~~~~~
+     OSE0440P1H  203   41N47NU7
+     O*******OR********42N43NU7                                           E29170
+     O                                   15 'REFERENCE'
+     O*************************          23 'SE0440A'                     E29170
+     O                                   24 'SE0440P1'                    E29170
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE     127
+     O        H  1     41N47NU7                                           E29170
+     O       AND       49                                                 E29170
+     O                                   89 'BRANCH'                      E29170
+     O                         BRCA      93                               E29170
+     O                         A8BRNM   125                               E29170
+     O********H  1     42N43NU7                                           S01271
+     O********                           72 'EUROCLEAR CASH TELEXES'      S01271
+     O********H  2     42N43NU7                                           S01271
+     O********                           72 '----------------------'      S01271
+     O********H**1**** 42N43NU7                                     S01271E29170
+     O*************************          42 'EUROCLEAR CASH TELEXES'S01271E29170
+     O****************N31                63 '- INPUT CYCLE - TIME'  S01271E29170
+     O****************N31      ATIME     70                         S01271E29170
+     O**************** 31                62 '- CLOSE OF BUSINESS'   S01271E29170
+     O********H**2**** 42N43NU7                                     S01271E29170
+     O*************************          42 '----------------------'S01271E29170
+     O****************N31                63 '---------------------' S01271E29170
+     O****************N31                70 '-------'               S01271E29170
+     O**************** 31                62 '--------------------'  S01271E29170
+      *
+      *=================================*
+     O        D  1     41N47NU7
+      *
+     O                 44                62 'EUROCLEAR PRE-ADVICE'
+     O                 44               106 'TRADE REF'
+     O                 44      TRDR     114
+     O                    45             73 'EUROCLEAR BOOK TRANSFER'
+     O                       46          73 'EUROCLEAR WIRE TRANSFER'
+      *
+     O        D  2     41N47NU7
+      *
+     O                 44                62 '--------------------'
+     O                      N44          73 '-----------------------'
+      *
+     O        D  2     41NU7
+      *
+     O                       48          48 'CANCEL'
+     O                       47          54 'REPLACE WITH'
+      *
+      *=================================*
+     O        D  2     41NU7
+     O                                   54 'A. TO EUROCLEAR'
+     O                                   70 'PAYMENT SECTION'
+      *
+     O        D  2     41NU7
+     O                                   41 'B.'
+     O                         CRNMX     62
+     O                         CTWNX     73
+      *
+     O        D  2     41NU7
+     O                                   41 'C.'
+     O                         DNWDX     50 '  /  /  '
+      *
+     O        D  2     41NU7
+     O                 44                60 'D. PREADVICE OF FUNDS'
+     O                 44                75 'TO BE RECEIVED'
+     O                    45             55 'D. BOOK TRANSFER'
+     O                       46          55 'D. WIRE TRANSFER'
+      *
+     O        D  2     41NU7
+     O                                   46 'E. TEST'
+     O                                   68 'ON'
+     O                         CCYS      73
+     O                         ECAMI     93 ' ,   ,   ,   , 0 '
+      *
+      * 'A' cash transactions
+     O        D  2     44NU7
+     O                                   47 'F. VALUE'
+     O                         DNWDX  B  57 '  /  /  '
+     O                                   64 'FOR OUR ACCOUNT NUMBER'
+     O                                   70 '687-'
+     O                         EUROXX B  75
+     O                                   76 '/'
+     O                         ECC1      78
+     O                                   79 '-'
+     O                         ECC2      81
+      *
+      * 'B' & 'W' cash transactions
+     O        D  2     41N44NU7
+     O                                   41 'F.'
+     O                         DNWDX  B  50 '  /  /  '
+     O        D  2     41N44NU7
+     O                                   57 'G. BY DEBIT OF OUR'
+     O                                   72 'ACCOUNT NUMBER'
+     O                                   78 '687-'
+     O                         EUROXX B  83
+     O                                   84 '/'
+     O                         ECC1      86
+     O                                   87 '-'
+     O                         ECC2      89
+      *
+     O        D  2     41NU7
+     O                 44                58 'G. YOU WILL RECEIVE'
+     O                 44      CCYS      63
+     O                 44      ECAM      85 ' ,   ,   ,   , 0 .  '
+     O                    45             50 'H. TRANSFER'
+     O                    45   CCYS      54
+     O                    45   ECAM      76 ' ,   ,   ,   , 0 .  '
+     O                       46          45 'H. PAY'
+     O                       46CCYS      49
+     O                       46ECAM      71 ' ,   ,   ,   , 0 .  '
+      *
+      * 'B'  cash transactions
+     O        D  2     45NU7
+     O                                   54 'I. TO EUROCLEAR'
+     O                                   72 'ACCOUNT NO. 687-'
+     O                         EUROXY B  77
+     O                                   78 '/'
+     O                         ECC1      80
+     O                                   81 '-'
+     O                         ECC2      83
+      *
+      * 'A' & 'W' cash transactions
+     O        D  2     41N45NU7
+     O                 44                46 'H. FROM'
+     O                 44      CRNMY  B  67
+     O                 44      CTWNY  B  78
+     O                       46          44 'I. TO'
+     O                       46CRNMY  B  66
+     O                       46CTWNY  B  77
+      *
+      * 'W'  cash transactions
+     O        D  2     46NU7
+     O                                   54 'J. IN FAVOUR OF'
+     O                         CRNMZ  B  75
+     O                         CTWNZ  B  86
+     O                         CPNMZ  B  90
+      *
+      * 'B' & 'W' cash transactions
+     O        D  2     41N44NU7
+     O                    45             49 'J. OUR REF'
+     O                       46          49 'K. OUR REF'
+     O                         TRDR   B  56
+     O                         ZRNME  B  98
+      *
+      *=================================*
+      *
+     O        D  1     41NU7
+     O                                  107 'CHECKED-'
+     O        D  1     41NU7
+     O                                  110 'AUTHORISED-'
+      *
+      *=================================*
+     O********T***25   42N43NU7                                           E29170
+     O*************************          70 '** NO DETAILS TO REPORT'     E29170
+     O*************************          73 '**'                          E29170
+      *************************                                           E29170
+      *=================================*
+     O        T   53   LR 42N47
+     O*******AND******NU7                                                 E29170
+     O       AND      NU7 36                                              E29170
+     O*************************          69 '*** END OF REPORT ***'       E29170
+     O                N49                69 '*** END OF REPORT ***'       E29170
+     O                 49                64 '*** END OF REPORT FOR'       E29170
+     O                 49                86 'BRANCH ***'                  E29170
+      *
+     O        T   60   LR 42 47
+     O       AND      NU7
+     O*************************          69 '*** END OF REPORT ***'       E29170
+     O                N49                69 '*** END OF REPORT ***'       E29170
+     O                 49                64 '*** END OF REPORT FOR'       E29170
+     O                 49                86 'BRANCH ***'                  E29170
+      *
+      *=================================*
+      *
+      *      FILE CONTROLS REPORT
+      *      ~~~~~~~~~~~~~~~~~~~~
+      *
+     O********T**203   LR                                                 E29170
+     OSE0440AUT  203   LR                                                 E29170
+     O                                   15 'REFERENCE'
+     O*************************          23 'SE0440B'                     E29170
+     O                                   24 'SE0440AU'                    E29170
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE1    127
+      *
+     O        T  1     LR
+     O***********                        62 'EUROCLEAR CASH TELEXES'      S01271
+     O***********                        84 '- FILE CONTROL REPORT'       S01271
+     O                                   42 'EUROCLEAR CASH TELEXES'      S01271
+     O                                   64 '- FILE CONTROL REPORT'       S01271
+     O                N31                85 '- INPUT CYCLE - TIME'        S01271
+     O                N31      ATIME     92                               S01271
+     O                 31                83 '- CLOSE OF BUSINESS'         S01271
+      *
+     O        T     13 LR
+      *
+     O***********                        62 '----------------------'      S01271
+     O***********                        84 '----------------------'      S01271
+     O                                   42 '----------------------'      S01271
+     O                                   64 '----------------------'      S01271
+     O                N31                85 '---------------------'       S01271
+     O                N31                92 '--------'                    S01271
+     O                 31                83 '--------------------'        S01271
+      *__________________________
+      *
+     O        T  2     LR 42
+     O                                   53 '-------- RECORDS -------'
+     O                                   54 '-'
+     O        T  3     LR 42
+     O                                   41 'FILE CONTROL'
+     O                                   54 'CALCULATED'
+      *
+     O        T  2     LR 42
+     O                                   14 'S/ECASH'
+     O                         NORE  3   41
+     O                         NORR  3   54
+     O                 U8NU7           +  2 '*** DIFFERENCE ***'
+      *                                                                   E29170
+     O        T   25   LRNU7N43                                           E29170
+     O                                   70 '** NO DETAILS TO REPORT'     E29170
+     O                                   73 '**'                          E29170
+      *__________________________
+      *
+     O        T   42   LR U7
+     O                                   56 'DATABASE ERROR AT'
+     O***********              DBASE     59                               S01117
+     O***********                        64 ', KEY'                       S01117
+     O***********              DBKEY     94                               S01117
+     O                         DBASE     60                               S01117
+     O                                   65 ', KEY'                       S01117
+     O                         DBKEY     95                               S01117
+     O        T   45   LR U7
+     O                                   64 'FILE NAME'
+     O***********              DBFILE    70                               S01117
+     O                         DBFILE    73                               S01117
+      *__________________________
+      *
+     O        T   49   LR U8NU7
+     O                                   64 '*** FILE CONTROLS OUT OF'
+     O                                   76 'BALANCE ***'
+      *__________________________
+      *
+     O********T***53   LR                                                 E29170
+     O*************************          69 '*** END OF REPORT ***'       E29170
+      *****************************************************************
+      /EJECT
+      ***
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2001

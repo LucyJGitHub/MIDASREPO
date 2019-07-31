@@ -1,0 +1,486 @@
+     H        1                                                           S01117
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Outstanding LE facilities extrt(EM)')            *
+     H***********                                                  CL0560 S01117
+     F********************************************************************CL0560
+     F*                                                                  *CL0560
+     F*  Midas - Customer Lending Module
+     F*                                                                  *CL0560
+     F*    LE0485  -  O/S LE FACILITIES EXTRACT FOR EXPOSURE MANAGEMENT  *CL0560
+     F*                    S01128 - NEW PROGRAM                          *CL0560
+     F*                                                                  *CL0560
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *CL0560
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 223967             Date 06Jun06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01194             Date 12Jan90               *
+      *                 S01117             Date 05/09/89              *
+     F*                                                                  *CL0560
+     F********************************************************************CL0560
+     F*                                                                  *CL0560
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  223967 - "CA" facility amount is included in Granted Limit   *
+      *           calculation.  Amend program such that records       *
+      *           processed are tranche and ordinary facilities only. *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*    S01194  -  STANDING DATA CHANGES                              *S01194
+     F*    S01117  -  RELEASE TEN MULTIBRANCHING                         *CL0560
+     F*                                                                  *CL0560
+     F********************************************************************CL0560
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*:*OVRDBF*TABLE*TABLEEI*                                      : *   S01194
+     F*                                                               *
+     F*****************************************************************
+     FFCLTYFM IF  E           K        DISK                               CL0560
+     FFCLTYZZ IF  E           K        DISK                               CL0560
+     F*TABLE***IF**E*****      K        DISK                              S01194
+     FEMXT4F1 O   E                    DISK                      A        CL0560
+     FEMXT4T1 O   E                    DISK                      A        CL0560
+     FEMTE4E4 O   E                    DISK                      A        CL0560
+     FEMTE4T1 O   E                    DISK                      A        CL0560
+     F*E0485P1O** F     132     OF     PRINTER                    S01124  S01117
+     FLE0485AUO   F     132     OA     PRINTER                            S01117
+     F*                                                                  *CL0560
+     F********************************************************************CL0560
+     F*                                                                  *CL0560
+     F* ID  F  C  H  L   FUNCTION OF INDICATORS                           CL0560
+     F*                                                                  *CL0560
+     F*  10           FCLTYFM CHAIN UNSUCESSFUL                           CL0560
+     F*  11           FCLTYZZ END OF FILE                                 CL0560
+     F*                                                                  *CL0560
+     F*       91-96   USED IN GLZADD & GLZSUM                             CL0560
+     F********97******TABLE RECORD NOT FOUND                              S01194
+     F*       98      DATE FORMAT IN ICDR1 IS 'M'                         CL0560
+     F*          U7   DATABASE IN ERROR                                   CL0560
+     F*          U8   FILE CONTROLS OUT OF BALANCE                        CL0560
+     F*                                                                  *CL0560
+     F********************************************************************CL0560
+     F*                                                                  *CL0560
+     E                    CPY@    1   1 80
+     I*****TABLETXF*
+     I**********    NINS                            NINSXX
+     I**********    NDEL                            NDELXX
+     I**********    NAMD                            NAMDXX
+     IFCLTYZZF
+     I              NORE                            NOREXX
+     I*
+     I*    LDA - DIAGNOSTIC FOR PROGRAM ABORT
+     I*
+     ILDA        UDS                            256
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     ISDBANK    E DSSDBANKPD                                              S01194
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01194
+     I              BJDNWD                          DNWD                  S01194
+     I              BJURPT                          TITL                  S01194
+      *                                                                   S01194
+     ISDGELR    E DSSDGELRPD                                              S01194
+      **  EXTERNAL DS FOR GENERAL LEDGER DETAILS                          S01194
+      *                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+      **                                                                  S01117
+     I**   FILE INFORMATION DATA STRUCTURE                                S01117
+     I**                                                                  S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+      **  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I/EJECT                                                              S01117
+     C********************************************************************
+     C**                                                                  CL0560
+     C** PARAMETER LIST FOR PROGRAM 'AOBANKR0'                            S01194
+     C           PLISTA    PLIST                                          S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C*                                                                   S01194
+     C** PARAMETER LIST FOR PROGRAM 'AOGELRR0'                            S01194
+     C           PLISTB    PLIST                                          S01194
+     C                     PARM '*MSG   ' @RTCD                           S01194
+     C                     PARM '*FIRST ' @OPTN                           S01194
+     C           SDGELR    PARM SDGELR    DSFDY                           S01194
+     C**                                                                  S01117
+     C*    1ST CYCLE                                                      CL0560
+     C**                                                                  CL0560
+     C*    DEFINE LDA                                                     S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'LE0485'  DBPGM
+     C                     MOVEACPY@      BIS@   80
+     C**
+     C                     Z-ADD0         COUNT1  50                      CL0560
+     C                     Z-ADD0         XNCLR   50                      CL0560
+     C                     Z-ADD0         TNCLR   50                      CL0560
+     C**                                                                  CL0560
+     C*    GET ICDR1                                                      CL0560
+     C**                                                                  CL0560
+     C**********           MOVEL'01'      TABKEY 12                       S01194
+     C**********           MOVE '10'      TABKEY                          S01194
+     C********** TABKEY    CHAINTABLE                97    * CHAIN CLINT *S01194
+     C**N97***** RECI      COMP 'D'                  9797                 S01194
+     C                     CALL 'AOBANKR0'PLISTA                          S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     SETON                     U7U8                 S01194
+     C                     Z-ADD1         DBASE                           S01194
+     C                     MOVE 'SDBANKPD'DBFILE                          S01194
+     C                     GOTO END                                       S01194
+     C                     END                                            S01194
+     C***97*****           SETON                     U7U8                 S01194
+     C***97*****           MOVE TABKEY    DBKEY                           S01194
+     C***97*****           Z-ADD1         DBASE                           S01194
+     C***97*****           MOVE 'TABLE'   DBFILE                          S01194
+     C***97*****           GOTO END                                       S01194
+     C***********DATF      COMP 'M'                      98               S01117
+     C**
+     C**   ACCESS ICD 2
+     C**
+     C**********           MOVE '11'      TABKEY
+     C********** TABKEY    CHAINTABLE                97    * CHAIN CLINT *S01194
+     C**N97***** RECI      COMP 'D'                  9797                 S01194
+     C**********           CALL 'AOGELRR0'PLISTB                          S01194              CGL029
+     C                     CALL 'AOGELRR1'PLISTB                                              CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     MOVE '02'      DBASE                           S01194
+     C                     MOVE 'SDGELRPD'DBFILE                          S01194
+     C                     GOTO END                                       S01194
+     C                     END                                            S01194
+     C***97*****           SETON                     U7U8                 S01194
+     C***97*****           MOVE TABKEY    DBKEY                           S01194
+     C***97*****           Z-ADD2         DBASE                           S01194
+     C***97*****           MOVE 'TABLE'   DBFILE                          S01194
+     C***97*****           GOTO END                                       S01194
+     C           DNWD      SUB  1         ECD     50
+     C**                                                                  S01117
+     C**   IN THE DATAAREA RUNDAT                                         S01117
+     C**                                                                  S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**                                                                  S01117
+     C****
+     C                     EXSR DETAIL
+     C****
+     C           END       TAG                                         T *CL0560
+     C****
+     C                     SETON                     LR
+     C           *INLR     IFEQ '1'
+     C                     DIV  1000      ZZTOTI
+     C                     READ FCLTYZZF                 11
+     C   11                SETON                     U7U8                 CL0560
+     C**NU8      COUNT1    COMP NOREXX               U8U8                 CL0560
+     C**NU8      ZZTOTI    COMP VLAF                 U8U8                 CL0560
+     C**NU8      ZZTOTD    COMP VLAL                 U8U8                 CL0560
+     C                     MOVE 'T'       RECI                            CL0560
+     C                     MOVE 'F'       RECJ                            CL0560
+     C**********           Z-ADD999999    MCUN                                         CL0560 CSD027
+     C                     MOVE *HIVAL    MCUN                                                CSD027
+     C                     Z-ADDXNCLR     NONE                            CL0560
+     C                     WRITEEMXT4T1F
+     C                     MOVE 'T'       RECI                            CL0560
+     C                     MOVE 'F'       RECJ                            CL0560
+     C**********           Z-ADD999999    MCUN                                         CL0560 CSD027
+     C                     MOVE *HIVAL    MCUN                                                CSD027
+     C                     Z-ADDTNCLR     NORE                            CL0560
+     C                     WRITEEMTE4T1F
+     C                     EXCPT
+      **                                                                  S01117
+     C   U7 U8             EXSR *PSSR                                     S01117
+     C                     END                                         T *CL0560
+     C****
+     C*                                                                  *CL0560
+     C********************************************************************CL0560
+     C*                                                                  *CL0560
+     C           DETAIL    BEGSR                                       T *CL0560
+     C           *IN10     DOWEQ'0'
+     C                     READ FCLTYFMF                 10
+     C           *IN10     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C           TRCA      ANDNE'CA'                                                          223967
+     C                     ADD  1         COUNT1                          CL0560
+     C                     Z-ADDFAMT      ZZAMT                           CL0560
+     C                     EXSR GLZADD                     * EXSR GLZADD *CL0560
+     C           DTAP      IFLE ECD
+     C           ECD       ANDLTDTEX
+     C                     ADD  1         XNCLR                           CL0560
+     C                     MOVE 'F'       RECI                            CL0560
+     C**********           Z-ADDCNUM      MCUN                                         CL0560 CSD027
+     C                     MOVE CNUM      MCUN                                                CSD027
+     C                     Z-ADDDTAP      MFAD                            CL0560
+     C                     Z-ADDDTEX      MFED                            CL0560
+     C                     Z-ADDFACT      MFTP                            CL0560
+     C                     Z-ADDFCNO      MFN                             CL0560
+     C                     Z-ADDFAMT      MCYA                            CL0560
+     C                     MOVE FCCY      MCYC                            CL0560
+     C                     WRITEEMXT4F1F                                  CL0560
+     C                     END                                            CL0560
+     C           DTAP      IFEQ DNWD
+     C                     ADD  1         TNCLR                           CL0560
+     C                     MOVE 'F'       RECI                            CL0560
+     C**********           Z-ADDCNUM      MCUN                                         CL0560 CSD027
+     C                     MOVE CNUM      MCUN                                                CSD027
+     C                     MOVE '60A1'    MEVT                            CL0560
+     C                     MOVE FCCY      MEVC                            CL0560
+     C                     Z-ADDFAMT      MEVA                            CL0560
+     C                     WRITEEMTE4E4F                                  CL0560
+     C                     ELSE                                           CL0560
+     C           DTEX      IFEQ DNWD
+     C                     ADD  1         TNCLR                           CL0560
+     C                     MOVE 'F'       RECI                            CL0560
+     C**********           Z-ADDCNUM      MCUN                                         CL0560 CSD027
+     C                     MOVE CNUM      MCUN                                                CSD027
+     C                     MOVE '60E1'    MEVT                            CL0560
+     C                     MOVE FCCY      MEVC                            CL0560
+     C                     Z-ADDFAMT      MEVA                            CL0560
+     C                     WRITEEMTE4E4F                                  CL0560
+     C                     END                                            CL0560
+     C                     END                                            CL0560
+     C                     END                                            CL0560
+     C                     END                                            CL0560
+     C           ENDDET    ENDSR                                          CL0560
+     C*                                                                  *CL0560
+     C********************************************************************CL0560
+     C*                                                                  *CL0560
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)  CL0560
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR                            CL0560
+     C*                                                                   CL0560
+     C           GLZADD    BEGSR                           *** GLZADD ****CL0560
+     C*                                                                   CL0560
+     C                     Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT  CL0560
+     C   91                GOTO ZZAEND                     AMT = 0.BYPASS CL0560
+     C*                                                                   CL0560
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS                       CL0560
+     C                     Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD  CL0560
+     C                     MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD  CL0560
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW                  CL0560
+     C*                                                                   CL0560
+     C                     EXSR GLZSUM                                    CL0560
+     C           ZZAEND    ENDSR                           ** ZZAEND TAG *CL0560
+     C*                                                                   CL0560
+     C********************************************************************CL0560
+     C********************************************************************CL0560
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -            CL0560
+     C*                        GLZADD, GLZSUB, GLZCMP.                    CL0560
+     C*          PARAMETERS PASSED -                                      CL0560
+     C*                     I/P ZZAMTI ZZAMTD                             CL0560
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.       CL0560
+     C*                                                                   CL0560
+     C           GLZSUM    BEGSR                           *** GLZSUM ****CL0560
+     C*                                                                   CL0560
+     C                     Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI  CL0560
+     C                     Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD  CL0560
+     C                     SETOF                     919293               CL0560
+     C                     SETOF                     949599               CL0560
+     C*                                                                   CL0560
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG                      CL0560
+     C           ZZAMTI    COMP 0                      9293               CL0560
+     C   93      ZZAMTD    COMP 0                      9293               CL0560
+     C   93                GOTO ZZSEND                     ZERO BYPASS    CL0560
+     C*                                                                   CL0560
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.                       CL0560
+     C           ZZTOTI    COMP 0                      9193               CL0560
+     C   93      ZZTOTD    COMP 0                      9193               CL0560
+     C*                                                                   CL0560
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.                           CL0560
+     C   93                Z-ADDZZAMTI    ZZTOTI                          CL0560
+     C   93                Z-ADDZZAMTD    ZZTOTD                          CL0560
+     C   93                GOTO ZZSEND                     ZERO BYPASS    CL0560
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.                        CL0560
+     C   91N92                                                            CL0560
+     CORN91 92             GOTO ZZOFPS                                    CL0560
+     C*                                                                   CL0560
+     C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40                      CL0560
+     C           ZZWK2     COMP 999                  93    '93' = CARRY   CL0560
+     C  N93      ZZWK2     COMP -999                   93    INTO INTEGER.CL0560
+     C*                                                                   CL0560
+     C   93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VECL0560
+     C      93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VECL0560
+     C   93      ZZTOTI    ADD  ZZWK3     ZZWK3                           CL0560
+     C  N93      ZZTOTI    ADD  ZZAMTI    ZZWK3                           CL0560
+     C*                                                                   CL0560
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED    CL0560
+     C  N92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS. CL0560
+     C   92      ZZWK3     COMP ZZTOTI               99     NEGATIVE      CL0560
+     C  N99                Z-ADDZZWK2     ZZTOTD                          CL0560
+     C  N99                Z-ADDZZWK3     ZZTOTI                          CL0560
+     C*                                                                   CL0560
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT. CL0560
+     C   99                Z-ADD0         ZZAMT  153                      CL0560
+     C                     GOTO ZZSEND                                    CL0560
+     C*                                                                   CL0560
+     C* THE 'SIGNS' ARE DIFFERENT                                         CL0560
+     C           ZZOFPS    TAG                             ** ZZOFPS TAG**CL0560
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT            CL0560
+     C*                                                                   CL0560
+     C   92                Z-SUBZZAMTI    ZZAMTI 150                      CL0560
+     C   92                Z-SUBZZAMTD    ZZAMTD  30                      CL0560
+     C*                                                                   CL0560
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.           CL0560
+     C*                                                                   CL0560
+     C   91                Z-SUBZZTOTI    ZZTOTI                          CL0560
+     C   91                Z-SUBZZTOTD    ZZTOTD                          CL0560
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.                            CL0560
+     C*                                                                   CL0560
+     C           ZZTOTI    COMP ZZAMTI               93  95               CL0560
+     C   95      ZZTOTD    COMP ZZAMTD               93  95               CL0560
+     C*                                                                   CL0560
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.                                   CL0560
+     C   95                Z-ADD0         ZZTOTI                          CL0560
+     C   95                Z-ADD0         ZZTOTD                          CL0560
+     C   95                GOTO ZZSEND                                    CL0560
+     C*                                                                   CL0560
+     C* IF ZZTOT GT. ZZAMT.                                               CL0560
+     C   93      ZZAMTD    COMP ZZTOTD               94                   CL0560
+     C   93 94   ZZTOTI    SUB  1         ZZTOTI                          CL0560
+     C   93 94   ZZTOTD    ADD  1000      ZZWK2                           CL0560
+     C   93      ZZTOTI    SUB  ZZAMTI    ZZTOTI                          CL0560
+0272 C   93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD                          CL0560
+0273 C   93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD                          CL0560
+0274 C*                                                                   CL0560
+0275 C*                                                                   CL0560
+0276 C* IF ZZAMT GT. ZZTOT.                                               CL0560
+0277 C  N93      ZZTOTD    COMP ZZAMTD               94                   CL0560
+0278 C  N93 94   ZZAMTI    SUB  1         ZZWK3  150                      CL0560
+0279 C  N93 94   ZZAMTD    ADD  1000      ZZWK2                           CL0560
+0280 C  N93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI                          CL0560
+0281 C  N93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI                          CL0560
+0282 C  N93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD                          CL0560
+0283 C  N93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD                          CL0560
+0284 C*                                                                   CL0560
+0285 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE          CL0560
+0286 C                     SETOF                     94                   CL0560
+0287 C   93 91                                                            CL0560
+0288 CORN93 92             SETON                     94                   CL0560
+0289 C   94                Z-SUBZZTOTI    ZZTOTI                          CL0560
+0290 C   94                Z-SUBZZTOTD    ZZTOTD                          CL0560
+0291 C**                                                                  CL0560
+0292 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.            CL0560
+0293 C   92                Z-SUBZZAMTI    ZZAMTI                          CL0560
+0294 C   92                Z-SUBZZAMTD    ZZAMTD                          CL0560
+0295 C           ZZSEND    TAG                             ** ZZSEND TAG *CL0560
+0296 C**                                                                  CL0560
+0297 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.           CL0560
+0298 C                     SETOF                     96                   CL0560
+0299 C           ZZTOTD    COMP 0                        91               CL0560
+0300 C   91      ZZTOTI    COMP 0                      96                 CL0560
+0301 C   96                MOVE '.000-'   ZZNEGD  5                       CL0560
+0302 C                     ENDSR                             ** ENDSR **  CL0560
+0303 C********************************************************************CL0560
+     C/SPACE 3                                                            S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C*  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C*  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+     C*                                                                   S01117
+     C*  CALLS: NOTHING                                                   S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+0321 C**                                                                  CL0560
+0322 C**                                                                  CL0560
+0323 C********************************************************************CL0560
+     C/EJECT                                                              S01117
+0336 O*E0485P1E**203   LR                                        S01124   S01117
+0336 OLE0485AUE  203   LR                                                 S01117
+0337 O***********                        22 'REFERENCE LE0485'            S01117
+0337 O                                   24 'REFERENCE LE0485AU'          S01117
+0338 O                         TITL      89                               CL0560
+0339 O                                  104 'DATE'                        CL0560
+0340 O                         RUNA     112                               CL0560
+0341 O                                  122 'PAGE'                        CL0560
+0342 O                         PAGE  3  127                               CL0560
+0343 O        E  1     LR                                                 CL0560
+0344 O                                   58 'OUTSTANDING FACILITIES'      CL0560
+0345 O                                   81 'REPORT - EXTRACT - RUN'      CL0560
+0346 O                                   90 'CONTROLS'                    CL0560
+0347 O        E  1     LR                                                 CL0560
+0348 O                                   59 '-----------------------'     CL0560
+0349 O                                   81 '----------------------'      CL0560
+0350 O                                   90 '---------'                   CL0560
+0351 O        E  220   LR                                                 CL0560
+0352 O                                   28 'RUN CONTROLS - EXTRACT'      CL0560
+0353 O                                   36 'PROGRAM'                     CL0560
+0354 O                                   72 '------------ REPORT'         CL0560
+0355 O                                   84 '-----------'                 CL0560
+0356 O                                  115 '--------- FILE CONTROL'      CL0560
+0357 O                                  124 '--------'                    CL0560
+0358 O        E  3     LR                                                 CL0560
+0359 O                                   59 'NUMBER'                      CL0560
+0360 O                                   85 'VALUE'                       CL0560
+0361 O                                   99 'NUMBER'                      CL0560
+0362 O                                  124 'VALUE'                       CL0560
+0363 O        E  2     LR                                                 CL0560
+0364 O                                   30 'TOTAL RECORDS ON INPUT'      CL0560
+0365 O                                   35 'FILE'                        CL0560
+0366 O                         COUNT13   59                               CL0560
+0367 O                         ZZTOTD    85 '0   '                        CL0560
+0368 O                         ZZTOTIZ   82                               CL0560
+0369 O                         NOREXX3   99                               CL0560
+0370 O                         VLAL     124 '0   '                        CL0560
+0371 O                         VLAF  Z  121                               CL0560
+0372 O                       U8         129 '***'                         CL0560
+0373 O        E  1     LR                                                 CL0560
+0374 O                                   32 'TOTAL RECORDS ON EXTRACT'    CL0560
+0375 O                                   37 'FILE'                        CL0560
+0376 O                         COUNT13   59                               CL0560
+0377 O                         ZZTOTD    85 '0   '                        CL0560
+0378 O                         ZZTOTIZ   82                               CL0560
+0379 O        E   30   LR U7                                              CL0560
+0380 O                                   22 'REFERENCE LE0485'            CL0560
+0381 O                                   62 'EXTRACT TERMINATED, '        CL0560
+0382 O                                   80 'DATABASE IN ERROR.'          CL0560
+     O        E 32     LR U7                                              S01117
+     O                                   51 '*** REFERENCE LE0485'        S01117
+     O                                   71 'DATABASE ERROR AT'           S01117
+     O                         DBASE     75                               S01117
+     O        E        LR U7                                              S01117
+     O                                   39 'FILENAME'                    S01117
+     O                         DBFILE    48                               S01117
+     O                                   52 'KEY'                         S01117
+     O                         DBKEY     82                               S01117
+0383 O        E   54   LR    U8                                           CL0560
+0384 O                                  100 '***   DIFFERENCE   ***'      CL0560
+0385 O********E** 57   LRNU7                                              S01117
+0386 O***********                        73 '*** END OF REPORT ***'       S01117
+**  CPY@
+(c) Finastra International Limited 2001

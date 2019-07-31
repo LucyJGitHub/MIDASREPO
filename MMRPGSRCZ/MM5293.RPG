@@ -1,0 +1,137 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Penalty Termination Unauth Check')
+      *****************************************************************
+      *                                                               *
+      *  MIDAS¦ABS - Dealing Money Market Module                      *
+      *                                                               *
+      *  MM5293 - Penalty Termination Unauthorised Check              *
+      *                                                               *
+      *  Function:  This program checks if there are unauthorised     *
+      *             penalty termination records in the system.        *
+      *                                                               *
+      *  Called By: MMC5293 - MM Penalty Termination Unauth. Check    *
+      *                                                               *
+      *  (C) Copyright Finastra International Limited 2008            *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. BUG26488           Date 19Oct09               *
+      *                 258692             Date 02Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 256795   *Create   Date 25Sep08               *
+      *                 xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG26488 - MMPTRMPD compiled with error - attributes are     *
+      *             incompatible (Recompile)                          *
+      *  258692 - Incorrect type of PTCNUM field in MMPTRMPD          *
+      *           (Recompile).                                        *
+      *  256795 - Penalty Termination of Time Deposits (CDL052).      *
+      *                                                               *
+      *****************************************************************
+      *
+     FMMPTRMPDIF  E           K        DISK         KINFSR *PSSR
+      *
+      *-------------------------------------------------------------------
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *   90 - General Purpose Indicator
+      *
+      *-------------------------------------------------------------------
+      *
+     E                    CPY@    1   1 80               MKI Copyright array
+      *-------------------------------------------------------------------
+      *
+     ILDA       EUDSLDA                         256
+      *
+      *-------------------------------------------------------------------
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@CHCK           Check Ind
+      *
+     C                     EXSR SRINIT
+     C  N90                EXSR SRCHCK
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRCHCK - Unauthorised Check Subroutine                          *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRCHCK    BEGSR
+      *
+     C                     READ MMPTRMPD                 90
+      *
+     C           *IN90     DOWEQ'0'
+     C           W#STOP    ANDNE'Y'
+      *
+      ** If Record is not deleted, and CHTP <> 'X', flag Check ind
+      ** to 'N'
+     C           PTRECI    IFNE '*'                        B2
+     C           PTCHTP    ANDNE'X'
+     C                     MOVE 'N'       P@CHCK
+     C                     MOVE 'Y'       W#STOP
+     C                     END                             E1
+      *
+     C                     READ MMPTRMPD                 90
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRINIT - Initial Program Subroutine                             *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Define work field
+     C                     MOVE *BLANKS   W#STOP  1
+      *
+      ** Define the parameter
+     C                     MOVE *BLANKS   P@CHCK  1
+      *
+      ** Set up copyright
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Check if any records on file
+     C           *LOVAL    SETLLMMPTRMPD             90
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * *PSSR  - Program Exception Error Routine                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MM5293'  DBPGM
+     C                     MOVEL'MMPTRMPD'DBFILE
+     C                     MOVEL'*FIRST'  DBASE
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     END
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+** CPY@     : Copyright notice for inclusion in all FINASTRA programs
+(C) Copyright Finastra International Limited 2008

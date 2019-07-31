@@ -1,0 +1,127 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Year end check for time/call stmnts')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  RPG/DL0766 - Check for Year End Date                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CDL012  *CREATE    Date 12Aug03               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL012 - Interest Statement for Call/Time Deposits           *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Data structure to access bank details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** First DS for Access Programs, Short Data Structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Program status Data structure
+      *
+     IPGMDS     ESDSY2PGDSP
+      *
+     ILDA         DS                            256
+      * Local Data Area
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      *================================================================
+      *
+      * Use access program AOBANKR0 to retrieve header details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If error in access program, exit via *PSSR subroutine
+      *
+     C           @RTCD     IFNE *BLANKS                    B001
+     C                     MOVEL##PGM     AUDBP  10           1
+     C                     MOVE *BLANKS   AUDBK   5           1
+     C                     MOVEL'SDBANKPD'AUDBS  10        ***************
+     C                     Z-ADD001       AUDBL   30       * DBERROR 001 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF                           E001
+      *
+      ** Check if next working day is after the last day of the year
+      *
+     C           BJDNWD    IFGT BJEYD
+      *
+     C                     MOVE 'Y'       WQ0002
+     C                     Z-ADDBJEYD     WQ0001
+     C                     CALL 'ZDATE2'  PLIST1
+     C                     MOVE WQ0003    @TODT
+      *
+      ** Retrieve first day of the year by adding 1 to last day of
+      ** previous year
+      *
+     C                     MOVE 'Y'       WQ0002
+     C                     Z-ADDBJPEYD    WQ0001
+     C                     ADD  1         WQ0001
+     C                     CALL 'ZDATE2'  PLIST1
+     C                     MOVE WQ0003    @FRMDT
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   @FRMDT
+     C                     MOVE *BLANKS   @TODT
+     C                     ENDIF
+      *
+     C           END       TAG
+     C                     SETON                     LR
+      *
+      *================================================================
+      ** Initial subroutine for plists etc.
+      *================================================================
+      *
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @FRMDT  6
+     C                     PARM           @TODT   6
+      *
+     C           PLIST1    PLIST
+     C                     PARM           WQ0001  50
+     C                     PARM           WQ0002  1
+     C                     PARM           WQ0003  60
+     C                     PARM           WQ0004  7
+      *
+     C                     ENDSR
+      *================================================================
+      * ERROR PROCESSING
+      *================================================================
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVELAUDBK     DBKEY
+     C                     MOVELAUDBS     DBFILE
+     C                     Z-ADDAUDBL     DBASE
+     C                     OUT  LDA
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR

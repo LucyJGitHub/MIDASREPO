@@ -1,0 +1,375 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB COB component level file report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing Utilities
+     F*                                                               *
+     F*  CHKLVLRPT  - CLOSE OF BUSINESS COMPONENT LEVEL REPORT        *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  PREV AMEND NO.                    DATE 00/00/00              *
+     F*                                                               *
+     F*****************************************************************
+     FCHKLVLL0IF  E                    DISK
+     FCHKLVLL1IF  E           K        DISK
+     FCHKDPRL1IF  E           K        DISK
+     FCHKDPRL2IF  E           K        DISK
+     FCHKLVLP1O   E                    PRINTER
+     F                                              KINFDS PRINT
+     F*
+      /SPACE 2
+     F********************************************************************
+     F*
+     F*     C  L   FUNCTION OF INDICATORS
+     F*
+     F*    30      RECORDS FOUND ON THE LEVEL FILE
+     F*    31      DEPENDENCIES BEFORE THE COMPONENT FOUND
+     F*    32      ERROR ON ACCESS OF LEVEL OF DEPENDED-ON COMPONENT
+     F*    33      DEPENDENCIES AFTER THE COMPONENT FOUND
+     F*    34      ERROR ON ACCESS OF LEVEL OF DEPENDS-ON COMPONENT
+     F*    60      SET ON TO WRITE COMPONENT DETAILS ON FIRST LINE ONLY
+     F*
+     F*       LR   LAST RECORD INDICATOR
+     F*
+     F*    U7&U8   DATABASE ERROR
+     F*
+     F*
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E                    @CN     1   1 25
+     E** ARRAY OF ODD NAMES
+     E*
+     E                    BEF      1000  7
+     E** BEF - ARRAY FOR DEPENDED-ON COMPONENT LEVEL NUMBERS
+     E*
+     E                    AFT      1000  7
+     E** AFT - ARRAY FOR DEPENDS-ON COMPONENT LEVEL NUMBERS
+     E*
+     E                    OUT1        6  8
+     E** OUT1 - ARRAY FOR OUTPUT OF DEPENDS-ON COMPONENT ORDER NUMBERS
+     E*
+     E                    OUT2        6  8
+     E** OUT2 - ARRAY FOR OUTPUT OF DEPENDED-ON COMPONENT ORDER NUMBERS
+     E*
+     E*****************************************************************
+     E/EJECT
+     ICHKLVLD0
+     I              DHFLVL                          D0FLVL
+     I              DHSLVL                          D0SLVL
+     I              DHCOTT                          D0COTT
+     I              DHCSEQ                          D0CSEQ
+     I*
+     ICHKLVLD1
+     I              DHFLVL                          D1FLVL
+     I              DHSLVL                          D1SLVL
+     I              DHCOTT                          D1COTT
+     I              DHCSEQ                          D1CSEQ
+     I*
+     ICHKDPRD1
+     I              DIDSON                          D1DSON
+     I              DIDSOS                          D1DSOS
+     I              DIDRUN                          D1DRUN
+     I              DIDDON                          D1DDON
+     I              DIDDOS                          D1DDOS
+     I              DICDST                          D1CDST
+     I*
+     ICHKDPRD2
+     I              DIDSON                          D2DSON
+     I              DIDSOS                          D2DSOS
+     I              DIDRUN                          D2DRUN
+     I              DIDDON                          D2DDON
+     I              DIDDOS                          D2DDOS
+     I              DICDST                          D2CDST
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**     LOCAL DATA AREA
+     I*
+     IPRINT       DS
+     I                                    B 367 3680LINE
+     I** DATA STRUCTURE FOR LINE VARIABLE
+     I*
+     ILEVEL       DS
+     I                                        1   30D1FLVL
+     I                                        4   4 FULSTP
+     I                                        5   70D1SLVL
+     I                                        8   8 BLANK
+     I** DATA STRUCTURE FOR LINE VARIABLE
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DATA STRUCTURE FOR ACCESS OBJECT FORMAT
+     I*
+     IDSFDY     E DSDSFDY
+     I** FIRST DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     I*
+     I*****************************************************************
+     I/EJECT
+     C********************************************************************
+     C                     MOVEACPY@      CPY    80
+     C*
+     C** DEFINE KEY LISTS
+     C*
+     C           COMLVL    KLIST
+     C                     KFLD           D0COTT
+     C                     KFLD           D0CSEQ
+     C*
+     C           COMBEF    KLIST
+     C                     KFLD           D1DDON
+     C                     KFLD           D1DDOS
+     C*
+     C           COMAFT    KLIST
+     C                     KFLD           D2DSON
+     C                     KFLD           D2DSOS
+     C*
+     C** USE ACCESS OBJECT AOBANKR0 TO
+     C** RETRIEVE HEADER INFORMATION FOR REPORT
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** SET UP LEVEL FIELD STANDARD CHARACTERS
+     C*
+     C                     MOVE '.'       FULSTP
+     C                     MOVE *BLANK    BLANK
+     C*
+     C** READ ALL RECORDS IN THE LEVEL FILE
+     C*
+     C                     READ CHKLVLL0                 30
+     C*
+     C           *IN30     DOWNE'1'
+     C*
+     C** RESET THE ARRAY COUNTS FOR EACH RECORD
+     C*
+     C                     Z-ADD0         X       40
+     C                     Z-ADD0         Y       40
+     C*
+     C** READ ALL DEPENDS-ON COMPONENTS FOR
+     C** THE COMPONENT BEING REPORTED ON
+     C*
+     C           COMLVL    SETLLCHKDPRL1
+     C           COMLVL    READECHKDPRL1                 31
+     C*
+     C           *IN31     DOWNE'1'
+     C*
+     C** WRITE EACH BEFORE LEVEL NUMBER FOUND TO ARRAY
+     C*
+     C           COMBEF    CHAINCHKLVLL1             32
+     C*
+     C** IF THE COMPONENT IS NOT FOUND IN THE LEVEL FILE
+     C** EXIT THE PROGRAM VIA DATABASE ERROR SUBROUTINE
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVELD1DDON    ERCANM 15
+     C                     MOVE D1DDOS    ERCANM
+     C                     MOVEL'CHKLVLL1'DBFILE           ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     ADD  1         X
+     C                     MOVELLEVEL     BEF,X
+     C           COMLVL    READECHKDPRL1                 31
+     C                     END
+     C*
+     C** READ ALL DEPENDED-ON COMPONENTS FOR
+     C** THE COMPONENT BEING REPORTED ON
+     C*
+     C           COMLVL    SETLLCHKDPRL2
+     C           COMLVL    READECHKDPRL2                 33
+     C*
+     C           *IN33     DOWNE'1'
+     C*
+     C** WRITE EACH TO AFTER LEVEL NUMBER TO ARRAY
+     C*
+     C           COMAFT    CHAINCHKLVLL1             34
+     C*
+     C** IF THE COMPONENT IS NOT FOUND IN THE LEVEL FILE
+     C** EXIT THE PROGRAM VIA DATABASE ERROR SUBROUTINE
+     C*
+     C           *IN34     IFEQ '1'
+     C                     MOVELD1DDON    ERCANM
+     C                     MOVE D1DDOS    ERCANM
+     C                     MOVEL'CHKLVLL1'DBFILE           ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     ADD  1         Y
+     C                     MOVELLEVEL     AFT,Y
+     C           COMLVL    READECHKDPRL2                 33
+     C                     END
+     C*
+     C** SET UP PRINTER ARRAY AND OUTPUT
+     C** CONTROL INDICATOR AND FIELDS
+     C*
+     C                     Z-ADD1         A       40
+     C                     Z-ADD1         B       10
+     C                     Z-ADD1         C       40
+     C                     Z-ADD1         D       10
+     C                     SETOF                     60
+     C*
+     C** WHILE THERE ARE STILL LEVEL NUMBERS IN THE ARRAY
+     C*
+     C           BEF,A     DOWNE*BLANKS
+     C           AFT,C     ORNE *BLANKS
+     C*
+     C** OUTPUT TO PRINTER FILE IN BLOCKS OF SIX THE
+     C** DEPENDS-ON COMPONENT LEVEL NUMBERS FROM THE ARRAY
+     C*
+     C           BEF,A     IFNE *BLANKS
+     C                     DO   6
+     C                     MOVE BEF,A     OUT1,B
+     C                     ADD  1         A
+     C                     ADD  1         B
+     C                     END
+     C                     MOVEAOUT1      ARR1W
+     C                     Z-ADD1         B
+     C                     END
+     C*
+     C** IF PRINTER IS ON LINE 56 OR BELOW START NEW PAGE
+     C*
+     C           LINE      IFGE 56
+     C                     WRITERPTHDG
+     C                     WRITESUBHDG
+     C                     END
+     C*
+     C** WRITE DEPENDED ON DETAILS FORMAT
+     C*
+     C                     WRITEDEPDON
+     C*
+     C** IF PRINTER IS ON LINE 57 OR BELOW START NEW PAGE
+     C** CHECK ON LINE 57 AS THIS IS SECOND FORMAT FOR SAME COMPONENT
+     C*
+     C           LINE      IFGE 57
+     C                     WRITERPTHDG
+     C                     WRITESUBHDG
+     C                     END
+     C*
+     C** WRITE COMPONENT DETAILS ON FIRST LINE FOR EACH COMPONENT ONLY
+     C*
+     C           *IN60     IFEQ '0'
+     C                     WRITECOMDET
+     C                     SETON                     60
+     C                     END
+     C*
+     C** OUTPUT TO PRINTER FILE IN BLOCKS OF SIX THE
+     C** DEPENDED-ON COMPONENT LEVEL NUMBERS FROM THE ARRAY
+     C*
+     C           AFT,C     IFNE *BLANKS
+     C                     DO   6
+     C                     MOVE AFT,C     OUT2,D
+     C                     ADD  1         C
+     C                     ADD  1         D
+     C                     END
+     C                     MOVEAOUT2      ARR2W
+     C                     Z-ADD1         D
+     C                     END
+     C*
+     C** IF PRINTER IS ON LINE 57 OR BELOW START NEW PAGE
+     C** CHECK ON LINE 57 AS THIS IS THIRD FORMAT FOR SAME COMPONENT
+     C*
+     C           LINE      IFGE 57
+     C                     WRITERPTHDG
+     C                     WRITESUBHDG
+     C                     END
+     C*
+     C** WRITE DEPENDS ON DETAILS FORMAT
+     C*
+     C                     WRITEDEPSON
+     C*
+     C** CLEAR OUTPUT FIELDS BEFORE FURTHER
+     C** RECORDS ADDED TO OUTPUT ARRAYS
+     C*
+     C                     MOVE *BLANKS   ARR1W
+     C                     MOVE *BLANKS   ARR2W
+     C                     END
+     C*
+     C** CLEAR THE OUTPUT ARRAYS AND READ
+     C** THENEXT RECORD FROM THE LEVEL FILE
+     C*
+     C                     MOVEA*BLANKS   BEF
+     C                     MOVEA*BLANKS   AFT
+     C                     READ CHKLVLL0                 30
+     C                     END
+     C*
+     C** OUTPUT 'END OF REPORT' LINE TO PRINTER FILE.
+     C*
+     C                     WRITERPTEND
+     C*
+     C                     SETON                     LR
+     C********************************************************************
+     C**
+     C** INDEX OF SUBROUTINES
+     C**
+     C** DBERR  - DATABASE ERROR HANDLING
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** DATABASE ERROR SUBROUTINE TO PERFORM DATABASE ERROR
+     C** EXIT FROM PROGRAM
+     C*
+     C** CALLED FROM MAIN CYCLE
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** SET UP LDA VARIABLES FOR KEY AND PROGRAM
+     C*
+     C                     MOVEA@CN,1     DBPGM
+     C                     MOVELERCANM    DBKEY
+     C*
+     C** IF PRINTER IS ON LINE 56 OR BELOW START NEW PAGE
+     C*
+     C           LINE      IFGE 56
+     C                     WRITERPTHDG
+     C                     WRITESUBHDG
+     C                     END
+     C*
+     C** OUTPUT DATABASE ERROR LINE TO PRINTER FILE.
+     C*
+     C                     WRITEDBELIN
+     C*
+     C** OUTPUT 'END OF REPORT' LINE TO PRINTER FILE.
+     C*
+     C                     WRITERPTEND
+     C*
+     C** SETON INDICATORS U7 U8 LR AND RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**  @CN
+CHKLVLRPT

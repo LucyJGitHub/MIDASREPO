@@ -1,0 +1,169 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Interest processing method reset')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL9902 -  Interest Processing Method Reset                   *
+      *                                                               *
+      *  Function:  This program will reset the interest processsing  *
+      *             methods for live FRA/IRS deals, from 'C' and 'K'  *
+      *             to their equivalents 'A' and 'I', respectively.   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 217684             Date 12May03               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP056             Date 13Mar02               *
+      *                 CIR008             Date 13Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CIR006  *CREATE    Date 13Sep00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  217684 - Authorisation User Malfunction (Recompile)          *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CAP056 - Automatic Authorisation of Interface deals          *
+      *           (Recompile)                                         *
+      *  CIR008 - FRA/IRS Deals Authorisation (Recompile)             *
+      *  CIR006 - Amortisation of Caps/Collars/Floors and Individual  *
+      *           Compounding Swaps.                                  *
+      *                                                               *
+      *****************************************************************
+     FDLDLDGLDUF  E           K        DISK         KINFSR *PSSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Entry Parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRTCD   7
+     C                     PARM           PMOD    1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C                     MOVE *BLANKS   PRTCD
+      *
+      ** Read DLDLDGLD
+      *
+     C           PMOD      IFEQ '1'
+     C           PMOD      OREQ '2'
+     C           PMOD      OREQ '3'
+      *
+     C                     READ DLDLDGLD                 80
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+     C           PMOD      IFNE '3'
+      *
+     C           UINPM     IFEQ 'C'
+     C                     MOVE 'A'       UINPM
+     C                     ENDIF
+      *
+     C           UINPM     IFEQ 'K'
+     C                     MOVE 'I'       UINPM
+     C                     ENDIF
+      *
+     C           TINPM     IFEQ 'C'
+     C                     MOVE 'A'       TINPM
+     C                     ENDIF
+      *
+     C           TINPM     IFEQ 'K'
+     C                     MOVE 'I'       TINPM
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           UINPM     IFEQ 'A'
+     C                     MOVE 'C'       UINPM
+     C                     ENDIF
+      *
+     C           UINPM     IFEQ 'I'
+     C                     MOVE 'K'       UINPM
+     C                     ENDIF
+      *
+     C           TINPM     IFEQ 'A'
+     C                     MOVE 'C'       TINPM
+     C                     ENDIF
+      *
+     C           TINPM     IFEQ 'I'
+     C                     MOVE 'K'       TINPM
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     UPDATDEALSDGF
+      *
+     C                     READ DLDLDGLD                 80
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C                     MOVE 'ERROR'   PRTCD
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

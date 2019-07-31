@@ -1,0 +1,243 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UP Report of potential COB mut. excl. probs.')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade module                                       *
+      *                                                               *
+      *  UP0812 - Report of potential CoB Mut. Excl. problems         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 140586             Date 13Aug98               *
+      *                 CUP004 *CREATE     Date 30Mar98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  140586  -  Handling for 'no records' was incorrect           *
+      *  CUP004  -  Make upgrade of DTALIB files easier               *
+      *                                                               *
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       20      EOF for UPCMPNPD
+      *       21      EOF for CBMEXCL0
+      *       21      EOF for CBMEXCL2
+      *       30      NR for chain
+      *       37      Overflow indicator
+      *       69      Read or write errors
+      *
+     FUPCMPNPDIF  E                    DISK
+     FCBMEXCL0IF  E           K        DISK
+     FCBMEXCL2IF  E           K        DISK
+     FUPMEXCL3IF  E           K        DISK
+     FUP0812P1O   E             37     PRINTER                        UC
+      *
+      /EJECT
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           HDRTXT
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      * Key for CBMEXCL0 (partial)
+     C           L0        KLIST
+     C                     KFLD           COTT   10
+     C                     KFLD           CSEQ    5
+      *
+      * Key for CBMEXCL2
+     C           L2        KLIST
+     C                     KFLD           MECN   10
+     C                     KFLD           MECS    5
+      *
+      * Key for UPMEXCL3
+     C           L3        KLIST
+     C                     KFLD           COTTK  10
+     C                     KFLD           CSEQK   5
+     C                     KFLD           MECNK  10
+     C                     KFLD           MECSK   5
+      *
+     C                     OPEN UP0812P1
+      *
+      * Set write flag to 'N' to indicate no records written
+     C                     MOVE 'N'       WFLAG   1
+      *
+      * Set on overflow for first header
+     C                     SETON                     37
+      *
+     C           1         SETLLUPCMPND0
+      *
+     C                     READ UPCMPNPD               6920
+     C           *IN69     IFEQ *ON
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+      * If there are no records at all write 'no records'
+     C           *IN20     IFEQ *ON
+     C                     WRITEHEADH                  69
+     C                     WRITENORECS                 69
+     C           *IN69     IFEQ *ON
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     WRITETRAILP                 69
+     C           *IN69     IFEQ *ON
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     MOVE 'T'       WFLAG
+      *
+     C           *IN20     DOWEQ*OFF
+      *
+      * Only process if record has been deleted
+     C           DHACTC    IFEQ 'D'
+      *
+     C                     MOVELDHCOTT    COTT
+     C                     MOVELDHCSEQ    CSEQ
+     C                     MOVELDHCOTT    MECN
+     C                     MOVELDHCSEQ    MECS
+      *
+     C           L0        CHAIN@DKREGP              3069
+     C           *IN69     IFEQ *ON
+     C************IN30     OREQ *ON                                       140586
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *                                                                   140586
+      * If no record found then skip processing                           140586
+     C           *IN30     IFEQ *ON                                       140586
+     C                     SETON                     21                   140586
+     C                     ENDIF                                          140586
+      *
+     C           *IN21     DOWEQ*OFF
+      *
+     C                     EXSR UPCMPN
+      *
+      * Read next record with matching key
+     C           L0        READE@DKREGP                  21
+      *
+     C                     ENDDO
+      *
+     C           L2        CHAIN@MEXCG8              3069
+     C           *IN69     IFEQ *ON
+     C************IN30     OREQ *ON                                       140586
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *                                                                   140586
+      * If no record found then skip processing                           140586
+     C           *IN30     IFEQ *ON                                       140586
+     C                     SETON                     22                   140586
+     C                     ENDIF                                          140586
+      *
+     C           *IN22     DOWEQ*OFF
+      *
+     C                     EXSR UPCMPN
+      *
+      * Read next record with matching key
+     C           L2        READE@MEXCG8                  22
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     SETOF                     2122
+     C                     READ UPCMPNPD               6920
+     C           *IN69     IFEQ *ON
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      * If no dependencies found then write it on report else just
+      *   write trailer
+     C           WFLAG     IFEQ 'T'
+     C                     WRITEHEADH                  69
+     C                     WRITENOMEXS                 69
+     C                     ENDIF
+     C                     WRITETRAILP                 69
+     C           *IN69     IFEQ *ON
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           ENDPGM    TAG
+     C                     CLOSEUP0812P1
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *
+      * UPCMPN subroutine - check if depency exists on UPCMPNPD
+      *
+      *****************************************************************
+     C           UPCMPN    BEGSR
+      *
+     C                     MOVELDKCOTT    COTTK
+     C                     MOVELDKCSEQ    CSEQK
+     C                     MOVELDKMEUN    MEUN    2
+     C                     MOVELDKMECN    MECNK
+     C                     MOVELDKMECS    MECSK
+     C           L3        CHAINUPMEXCD3             3069
+     C           *IN69     IFEQ *ON
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * If existing record on Mut. Excl. action file then do not
+      *  report; otherwise write record
+     C           *IN30     IFEQ *ON
+      * Write headers if overflow on
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADH                  69
+     C                     WRITESUBHDR                 69
+     C           *IN69     IFEQ *ON
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     SETOF                     37
+     C                     ENDIF
+     C                     MOVE 'Y'       WFLAG
+     C                     MOVE COTTK     #COMP1
+     C                     MOVE CSEQK     #SEQ1
+     C                     MOVE MEUN      #UNQ
+     C                     MOVE MECNK     #COMP2
+     C                     MOVE MECSK     #SEQ2
+     C                     WRITEDTL1                   69
+     C           *IN69     IFEQ *ON
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

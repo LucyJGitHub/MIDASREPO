@@ -1,0 +1,1185 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Currencies codes maintenance (MDF)')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing data module                                 *
+      *                                                               *
+      *  SD0021 - Currency codes maintenance (MDF)                    *
+      *                                                               *
+      *  Function:  This program maintains data related to market     *
+      *  data feed                                                    *
+      *                                                               *
+      *  Called By: SD0021R - Currency codes maintenance              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CMG003             Date 04Oct12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER048             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CAP185             Date 21Apr06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD012             Date 15Oct02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSC011             Date 18Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CAP059             Date 18May01               *
+      *                 CAP058             Date 18May01               *
+      *                 CAP057             Date 18May01               *
+      *                 CSD006  *CREATE    Date 13Sep00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CMG003 - SWIFT MT600 Message Generation                      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CAP185 - MQ Series Interface                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD012 - Standing Data Authorisation.                        *
+      *  CSC011 - 24x7 Midas Availability                             *
+      *  CAP059 - Conversion of Forward Rates into Modular APIs       *
+      *  CAP058 - Conversion of MM Interest Rates into Modular APIs   *
+      *  CAP057 - Conversion of SPOT Rates into Modular APIs          *
+      *  CSD006 - Market Data Feed                                    *
+      *                                                               *
+      *****************************************************************
+      * INDICATORS                                                    *
+      * 10 - Enable F10                                               *
+      * 20 - CSD006 Market Data Feeds                                 *
+      * 29 - Protect all screen fields                                *
+      * 30-37 - Handle screen fields error                            *
+      * 90 - Work indicator                                           *
+      *****************************************************************
+     FSD0021DFCF  E                    WORKSTN
+     F                                              KINFSR *PSSR
+      ** Midas SD Currency codes
+     FSDCURRL0UF  E           K        DISK
+     F            @A6REA4                           KRENAMESDCURRD0
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     FSDCURRL1IF  E           K        DISK
+     F            @A6REA3                           KRENAMESDCURRD1
+     F                                              KINFSR *PSSR
+     FSDCURRL8IF  E           K        DISK
+     F            SDCURRD0                          KRENAMESDCURRD8
+     F                                              KINFSR *PSSR
+     FSDCURRL9IF  E           K        DISK
+     F            SDCURRD0                          KRENAMESDCURRD9
+     F                                              KINFSR *PSSR
+     FSDCURRLAIF  E           K        DISK
+     F            SDCURRD0                          KRENAMESDCURRDA
+     F                                              KINFSR *PSSR
+     FSDCURRLBIF  E           K        DISK
+     F            SDCURRD0                          KRENAMESDCURRDB
+     F                                              KINFSR *PSSR
+      ** Extension File                                                                       CAP185
+     FSDCURQL0UF  E           K        DISK                                                   CAP185
+     F                                              KCOMIT                                    CAP185
+      *                                                                                       CSD012
+     FSDCUSHL0UF  E           K        DISK                                                   CSD012
+     F                                              KCOMIT                                    CSD012
+      * UPD : Currency Details Shadow file                                                    CSD012
+      *                                                                                       CSD012
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ISDY       E DSDSSDY
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Parameter declarations
+     IP1PARM      DS                              3
+      * I : MAP Currency Code
+     I                                        1   3 P1CYCD
+      *
+      ** Midas SD Currency codes update
+     I@1DBRC    E DSSDCURRL0
+     I#1DBRC      DS                           9999
+      *
+      ** Midas SD MDF source code
+     ISDMDFS    E DSSDMDFSPD
+      *                                                                                       CSC011
+      ** External DS for SAR Derails                                                          CSC011
+     ISCSARD    E DSSCSARDPD                                                                  CSC011
+      *                                                                                       CSC011
+      ** Short Data Structure for Access Objects                                              CSC011
+     IDSFDY     E DSDSFDY                                                                     CSC011
+      *                                                                                       CSC011
+      * Data structure for AOSVALR0 string                                                    CSD012
+     I            DS                                                                          CSD012
+     I                                        1 200 SVAL1                                     CSD012
+     I                                        1   1 SVAL11                                    CSD012
+      *                                                                                       CSD012
+      * System Value                                                                          CSD012
+     I            DS                                                                          CSD012
+     I I            'AuthReqCurrencyMaint'    1  20 SVALK1                                    CSD012
+      *                                                                                       CSD012
+      * Function Description                                                                  CSD012
+     I            DS                                                                          CSD012
+     I I            'CURRENCY DETAILS'        1  21 FUNCD                                     CSD012
+      *                                                                                       CSD012
+     IDATALX      DS                           1024                                           CMG003
+     I                                        1   3 #1CYCO                                    CMG003
+     I                                        4  13 #1SPAE                                    CMG003
+      /EJECT
+      *****************************************************************
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTN   7
+     C                     PARM           P1PARM
+      ** Final screen
+     C                     PARM           P@FNSC  1
+      ** Action code
+     C                     PARM           P@ANCD  1
+     C           P3WRTC    PARM P3WRTC    WP0001  5                                           CMG003
+     C           WULUXS    PARM           WULUXS  1                                           CMG003
+     C           WCOMMS    PARM           WCOMMS  1                                           CMG003
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     MOVEL'N'       WULTPM  1                                           CMG003
+     C           WULUXS    IFEQ 'N'                                                           CMG003
+     C           WCOMMS    IFEQ 'N'                                                           CMG003
+     C                     MOVEL'Y'       WULTPM                                              CMG003
+     C                     ENDIF                                                              CMG003
+     C                     ENDIF                                                              CMG003
+      *                                                                                       CMG003
+     C                     EXSR APICHK
+      *
+      ** Bypass this screen is CSD006, CAP057, CAP058 and CAP059 are all OFF and
+      ** then call the next one
+     C           CSD006    IFEQ 'Y'
+     C           CAP057    OREQ 'Y'                                       CAP057
+     C           CAP058    OREQ 'Y'                                       CAP058
+     C           CAP059    OREQ 'Y'                                       CAP059
+     C                     EXSR INZPGM
+     C                     EXSR MAIN
+     C                     ELSE                                                               CMG003
+     C           WULTPM    IFEQ 'N'                                                           CMG003
+     C           P@ANCD    ANDEQ'E'                                                           CMG003
+     C                     EXSR SCNEXT                                                        CMG003
+     C                     ENDIF                                                              CMG003
+     C                     ENDIF
+      *
+      ** Special processing for enquire mode
+     C           P@ANCD    IFEQ 'E'
+     C                     EXSR ENQPRC
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      * APICHK - Check which APIs are switched on                     *
+      *****************************************************************
+     C           APICHK    BEGSR
+      *
+      ** MDF installed ?
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*VERIFY' P@OPTN
+     C                     PARM 'CSD006'  @SARD   6
+     C                     PARM *BLANKS   SDY
+     C           P@RTCD    IFEQ *BLANKS
+     C           *IN90     ANDEQ'0'
+     C                     MOVEL'Y'       CSD006  1
+     C                     ELSE
+     C                     MOVEL'N'       CSD006
+     C                     ENDIF
+     C*                                                                   CAP057
+     C** CAP057 on?                                                       CAP057
+     C                     CALL 'AOSARDR0'                                CAP057
+     C                     PARM *BLANKS   P@RTCD                          CAP057
+     C                     PARM '*VERIFY' P@OPTN                          CAP057
+     C                     PARM 'CAP057'  @SARD   6                       CAP057
+     C                     PARM *BLANKS   SDY                             CAP057
+     C           P@RTCD    IFEQ *BLANKS                                   CAP057
+     C           *IN90     ANDEQ'0'                                       CAP057
+     C                     MOVEL'Y'       CAP057  1                       CAP057
+     C                     ELSE                                           CAP057
+     C                     MOVEL'N'       CAP057                          CAP057
+     C                     ENDIF                                          CAP057
+     C*                                                                   CAP057
+     C*                                                                   CAP058
+     C** CAP058 on?                                                       CAP058
+     C                     CALL 'AOSARDR0'                                CAP058
+     C                     PARM *BLANKS   P@RTCD                          CAP058
+     C                     PARM '*VERIFY' P@OPTN                          CAP058
+     C                     PARM 'CAP058'  @SARD   6                       CAP058
+     C                     PARM *BLANKS   SDY                             CAP058
+     C           P@RTCD    IFEQ *BLANKS                                   CAP058
+     C           *IN90     ANDEQ'0'                                       CAP058
+     C                     MOVEL'Y'       CAP058  1                       CAP058
+     C                     ELSE                                           CAP058
+     C                     MOVEL'N'       CAP058                          CAP058
+     C                     ENDIF                                          CAP058
+     C*                                                                   CAP057
+     C** CAP059 on?                                                       CAP059
+     C                     CALL 'AOSARDR0'                                CAP059
+     C                     PARM *BLANKS   P@RTCD                          CAP059
+     C                     PARM '*VERIFY' P@OPTN                          CAP059
+     C                     PARM 'CAP059'  @SARD   6                       CAP059
+     C                     PARM *BLANKS   SDY                             CAP059
+     C           P@RTCD    IFEQ *BLANKS                                   CAP059
+     C           *IN90     ANDEQ'0'                                       CAP059
+     C                     MOVEL'Y'       CAP059  1                       CAP059
+     C                     ELSE                                           CAP059
+     C                     MOVEL'N'       CAP059                          CAP059
+     C                     ENDIF                                          CAP059
+     C*                                                                   CAP059
+     C                     ENDSR
+      *****************************************************************
+      * INZPGM - Initialise program                                   *
+      *****************************************************************
+     C           INZPGM    BEGSR
+      *
+     C                     MOVEL*BLANK    P@RTN
+     C                     MOVEL'N'       WEND    1
+      *
+      ** Initialise msg sub file pgmq
+     C                     MOVELPGM       ##PGM
+      *
+      ** Screen variables
+     C                     MOVELAGMRDT    SRUNA
+     C                     MOVELWSID      SWSID
+     C                     MOVELUSER      SUSER
+      *
+      ** Currency Code
+     C                     MOVELP1CYCD    SCYCD
+      *                                                                                       CSD012
+      * Check if CSD012 is switched on                                                        CSD012
+     C                     CALL 'AOSARDR0'                                                    CSD012
+     C                     PARM           PRTCD   7                                           CSD012
+     C                     PARM '*VERIFY' POPTN   7                                           CSD012
+     C                     PARM 'CSD012'  PSARD   6                                           CSD012
+      *                                                                                       CSD012
+     C           PRTCD     IFEQ *BLANKS                                                       CSD012
+     C                     MOVE 'Y'       CSD012  1                                           CSD012
+     C                     ELSE                                                               CSD012
+     C                     MOVE 'N'       CSD012                                              CSD012
+     C                     ENDIF                                                              CSD012
+      *                                                                                       CSD012
+      * Check if Currency Authorisation is on                                                 CSD012
+     C           CSD012    IFEQ 'Y'                                                           CSD012
+      *                                                                                       CSD012
+     C                     CALL 'AOSVALR0'                                                    CSD012
+     C                     PARM *BLANKS   RTNCDE  7                                           CSD012
+     C                     PARM           SVALK1 20                                           CSD012
+     C                     PARM           SVAL1 200                                           CSD012
+     C                     PARM           SVALK2 20                                           CSD012
+     C                     PARM           SVAL2 200                                           CSD012
+     C                     PARM           SVALK3 20                                           CSD012
+     C                     PARM           SVAL3 200                                           CSD012
+     C                     PARM           SVALK4 20                                           CSD012
+     C                     PARM           SVAL4 200                                           CSD012
+     C                     PARM           SVALK5 20                                           CSD012
+     C                     PARM           SVAL5 200                                           CSD012
+     C                     PARM           SVALK6 20                                           CSD012
+     C                     PARM           SVAL6 200                                           CSD012
+     C                     PARM           SVALK7 20                                           CSD012
+     C                     PARM           SVAL7 200                                           CSD012
+     C                     PARM           SVALK8 20                                           CSD012
+     C                     PARM           SVAL8 200                                           CSD012
+     C                     PARM           SVALK9 20                                           CSD012
+     C                     PARM           SVAL9 200                                           CSD012
+     C                     PARM           SVALK0 20                                           CSD012
+     C                     PARM           SVAL10200                                           CSD012
+      *                                                                                       CSD012
+     C           RTNCDE    IFNE *BLANKS                                                       CSD012
+     C           SVAL10    IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK0    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL9     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK9    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL8     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK8    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL7     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK7    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL6     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK6    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL5     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK5    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL4     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK4    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL3     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK3    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL2     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK2    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL1     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK1    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           *LOCK     IN   LDA                                                           CSD012
+     C                     Z-ADD5         DBASE                                               CSD012
+     C                     MOVE 'SDSVALPD'DBFILE                                              CSD012
+     C                     MOVE 'SD0021'  DBPGM                                               CSD012
+     C                     OUT  LDA                                                           CSD012
+     C                     EXSR *PSSR                                                         CSD012
+     C                     ENDIF                                                              CSD012
+      *                                                                                       CSD012
+     C                     ENDIF                                                              CSD012
+      *
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           A6CYCD           Currency Code
+      * Setup key
+     C                     MOVELP1CYCD    A6CYCD           Currency Code
+     C           CSD012    IFEQ 'Y'                                                           CSD012
+     C           SVAL11    ANDEQ'Y'                                                           CSD012
+     C           KRTV      CHAINSDCUSHD0             91                                       CSD012
+     C                     ELSE                                                               CSD012
+     C           KRTV      CHAINSDCURRD1             91
+     C                     ENDIF                                                              CSD012
+      *
+     C           *IN91     IFNE '1'
+     C                     MOVELA6CYNM    SCYNM
+     C                     MOVELA6CYCD    #1CYCO                                              CMG003
+     C                     MOVELA6SPAE    #1SPAE                                              CMG003
+     C                     ENDIF
+      *
+      ** MDF installed ?
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*VERIFY' P@OPTN
+     C                     PARM 'CSD006'  @SARD   6
+     C                     PARM *BLANKS   SDY
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVE '0'       *IN20
+     C                     ELSE
+     C                     MOVE '1'       *IN20
+     C                     ENDIF
+      *                                                                   CAP057
+      ** CAP057 on ?                                                      CAP057
+     C                     CALL 'AOSARDR0'                                CAP057
+     C                     PARM *BLANKS   P@RTCD                          CAP057
+     C                     PARM '*VERIFY' P@OPTN                          CAP057
+     C                     PARM 'CAP057'  @SARD   6                       CAP057
+     C                     PARM *BLANKS   SDY                             CAP057
+      *                                                                   CAP057
+     C           P@RTCD    IFEQ *BLANKS                                   CAP057
+     C                     MOVE '0'       *IN21                           CAP057
+     C                     ELSE                                           CAP057
+     C                     MOVE '1'       *IN21                           CAP057
+     C                     ENDIF                                          CAP057
+      *                                                                   CAP058
+      ** CAP058 on ?                                                      CAP058
+     C                     CALL 'AOSARDR0'                                CAP058
+     C                     PARM *BLANKS   P@RTCD                          CAP058
+     C                     PARM '*VERIFY' P@OPTN                          CAP058
+     C                     PARM 'CAP058'  @SARD   6                       CAP058
+     C                     PARM *BLANKS   SDY                             CAP058
+      *                                                                   CAP058
+     C           P@RTCD    IFEQ *BLANKS                                   CAP058
+     C                     MOVE '0'       *IN22                           CAP058
+     C                     ELSE                                           CAP058
+     C                     MOVE '1'       *IN22                           CAP058
+     C                     ENDIF                                          CAP058
+      *                                                                   CAP059
+      ** CAP059 on ?                                                      CAP059
+     C                     CALL 'AOSARDR0'                                CAP059
+     C                     PARM *BLANKS   P@RTCD                          CAP059
+     C                     PARM '*VERIFY' P@OPTN                          CAP059
+     C                     PARM 'CAP059'  @SARD   6                       CAP059
+     C                     PARM *BLANKS   SDY                             CAP059
+      *                                                                   CAP059
+     C           P@RTCD    IFEQ *BLANKS                                   CAP059
+     C                     MOVE '0'       *IN23                           CAP059
+     C                     ELSE                                           CAP059
+     C                     MOVE '1'       *IN23                           CAP059
+     C                     ENDIF                                          CAP059
+      *                                                                                       CSC011
+      ** Check if CSC011 is installed                                                         CSC011
+      *                                                                                       CSC011
+     C                     MOVE 'N'       CSC011  1                                           CSC011
+     C                     CALL 'AOSARDR0'                                                    CSC011
+     C                     PARM *BLANKS   PRTCD   7                                           CSC011
+     C                     PARM '*VERIFY' POPTN   7                                           CSC011
+     C                     PARM 'CSC011'  PSARD   6                                           CSC011
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC011
+      *                                                                                       CSC011
+     C           PRTCD     IFEQ *BLANKS                                                       CSC011
+     C                     MOVE 'Y'       CSC011                                              CSC011
+     C                     ELSE                                                               CSC011
+     C           PRTCD     IFNE '*NRF'                                                        CSC011
+     C           *LOCK     IN   LDA                                                           CSC011
+     C                     MOVE *ON       *INU7                                               CSC011
+     C                     MOVE *ON       *INU8                                               CSC011
+     C                     Z-ADD004       DBASE                                               CSC011
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSC011
+     C                     MOVEL'CSC011'  DBKEY                                               CSC011
+     C                     OUT  LDA                                                           CSC011
+     C                     EXSR *PSSR                                                         CSC011
+     C                     ENDIF                                                              CSC011
+     C                     ENDIF                                                              CSC011
+      *                                                                                       CMG003
+      ** Check for the last program/screen                                                    CMG003
+      *                                                                                       CMG003
+     C           WULUXS    IFEQ 'N'                                                           CMG003
+     C           WCOMMS    IFEQ 'N'                                                           CMG003
+     C                     MOVEL'Y'       WULTPM                                              CMG003
+     C                     ENDIF                                                              CMG003
+     C                     ENDIF                                                              CMG003
+      *
+      ** Check if CAP185 is switched on                                                       CAP185
+     C                     CALL 'AOSARDR0'                                                    CAP185
+     C                     PARM           PRTCD   7                                           CAP185
+     C                     PARM '*VERIFY' POPTN   7                                           CAP185
+     C                     PARM 'CAP185'  PSARD   6                                           CAP185
+      *                                                                                       CAP185
+     C           PRTCD     IFEQ *BLANKS                                                       CAP185
+     C                     MOVE 'Y'       CAP185  1                                           CAP185
+     C                     ELSE                                                               CAP185
+     C                     MOVE 'N'       CAP185                                              CAP185
+     C                     ENDIF                                                              CAP185
+      *                                                                                       CAP185
+      ** Enable Fields
+     C                     EXSR ENAFLD
+      *
+      ** Enable Function Keys
+     C                     EXSR ENAKEY
+      *
+      ** Fill with currency details
+     C                     EXSR FILCUR
+      *
+     C                     ENDSR
+      *****************************************************************
+      * MAIN - Main                                                   *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+     C           WEND      DOUEQ'Y'
+     C                     EXSR DSPSCR
+     C           WEND      IFNE 'Y'
+     C                     EXSR VALSCR
+     C                     ENDIF
+     C           P@ANCD    IFEQ 'E'                                                           CMG003
+     C           P@RTN     ANDEQ'*NEXT  '                                                     CMG003
+     C                     EXSR SCNEXT                                                        CMG003
+     C                     ENDIF                                                              CMG003
+     C                     ENDDO
+      *
+      ** Update if no exit requested, delete or enquire mode
+     C           *INKC     IFNE '1'
+     C           *INKL     ANDNE'1'
+     C           P@ANCD    ANDNE'D'
+     C           P@ANCD    ANDNE'E'
+     C                     EXSR UPDFIL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * ENQPRC - Enquire mode special processing                      *
+      *****************************************************************
+     C           ENQPRC    BEGSR
+      ** If enter has been pressed call the next program
+     C           *INKC     IFNE '1'
+     C           *INKL     ANDNE'1'
+      ** <-------- PUT HERE THE CALL OF THE NEXT SCREEN
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * DSPSCR - Display screen                                       *
+      *****************************************************************
+     C           DSPSCR    BEGSR
+      *
+      ** Display the screen
+     C                     WRITE#MSGCTL
+     C                     EXFMTSD0021F0
+      *
+      ** Clear Message Q and highligthed fields
+     C                     CALL 'ZA0250'
+     C                     SETOF                     30
+     C                     SETOF                     31
+     C                     SETOF                     32
+     C                     SETOF                     33
+     C                     SETOF                     34
+     C                     SETOF                     35
+     C                     SETOF                     36
+     C                     SETOF                     37
+      *
+     C                     SELEC
+      ** F3 pressed
+     C           *INKC     WHEQ '1'
+     C                     MOVEL'Y'       WEND
+     C                     MOVEL'Y2U9999' P@RTN
+      ** F10 pressed
+     C           *INKJ     WHEQ '1'
+     C                     SELEC
+     C           P@ANCD    WHEQ 'D'
+     C                     MOVEL'Y'       WEND
+     C                     MOVEL'DEL'     P@RTN
+     C                     OTHER
+     C                     ENDSL
+      ** F12 pressed
+     C           *INKL     WHEQ '1'
+     C                     MOVEL'Y'       WEND
+     C                     MOVEL'USR0790' P@RTN
+      ** Enter pressed
+     C                     OTHER
+     C                     SELEC
+     C           P@ANCD    WHEQ 'E'
+     C                     MOVEL'Y'       WEND
+     C           WULTPM    IFEQ 'N'                                                           CMG003
+     C                     MOVEL'*NEXT  ' P@RTN                                               CMG003
+     C                     ENDIF                                                              CMG003
+     C           P@ANCD    WHEQ 'D'
+     C                     MOVEL'Y'       WEND
+     C                     OTHER
+     C                     ENDSL
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      * VALSCR - Validate screen                                      *
+      *****************************************************************
+     C           VALSCR    BEGSR
+      ** Used as a flag to determine whether validation error occured
+     C                     MOVEL*BLANK    P@MSGI
+      ** Help requested
+     C                     EXSR HLPREQ
+      *
+      ** Check spot rate data source
+     C                     EXSR CKSPDS
+      ** Check spot rate Front Office ID
+     C                     EXSR CKSPMI
+      ** Check forward rate data source
+     C                     EXSR CKFWDS
+      ** Check forward rate Front Office ID
+     C                     EXSR CKFWMI
+      ** Check borrowing rate data source
+     C                     EXSR CKBWDS
+      ** Check borrowing rate Front Office ID
+     C                     EXSR CKBWMI
+      ** Check lending rate data source
+     C                     EXSR CKLEDS
+      ** Check lending rate Front Office ID
+     C                     EXSR CKLEMI
+      *
+      ** Help requested redisplay the screen
+     C           WQUERY    IFEQ '1'
+     C                     GOTO EXVSCR
+     C                     ENDIF
+      *
+      ** Lock records if no errors
+     C           P@MSGI    IFEQ *BLANK
+     C                     EXSR LCKRCD
+     C                     ENDIF
+      *
+      *
+      ** No validation error => end of the transaction
+     C           P@MSGI    IFEQ *BLANK
+     C                     MOVEL'Y'       WEND
+     C                     ENDIF
+      *
+     C           EXVSCR    ENDSR
+      *****************************************************************
+      * UPDFIL - Update files                                         *
+      *****************************************************************
+     C           UPDFIL    BEGSR
+      *
+      ** Update currency file
+     C                     MOVELSSRDS     A6SRDS
+     C                     MOVELSSRID     A6SRID
+     C                     MOVELSFRDS     A6FRDS
+     C                     MOVELSFRNT     A6FRNT
+     C                     MOVELSBODS     A6BODS
+     C                     MOVELSBOID     A6BOID
+     C                     MOVELSLEDS     A6LEDS
+     C                     MOVELSLEID     A6LEID
+      *
+      * If CSD012 is ON and Currency Maintenance is ON, output                                CSD012
+      * details to Shadow file then exit.                                                     CSD012
+     C           CSD012    IFEQ 'Y'                                                           CSD012
+     C           SVAL11    ANDEQ'Y'                                                           CSD012
+     C                     UPDATSDCUSHD0               90                                     CSD012
+     C                     SETON                     LR                                       CSD012
+     C                     RETRN                                                              CSD012
+      *                                                                                       CSD012
+     C                     ELSE                                                               CSD012
+     C                     UPDATSDCURRD0               90
+      *                                                                                       CAP185
+      ** If CAP185 is on, update the extension file                                           CAP185
+     C           CAP185    IFEQ 'Y'                                                           CAP185
+     C           A6CYCD    CHAINSDCURQL0             85                                       CAP185
+     C           *IN85     IFEQ *OFF                                                          CAP185
+     C                     MOVELA6SRID    CQFRID    P                                         CAP185
+     C                     UPDATSDCURQD0                                                      CAP185
+     C                     ENDIF                                                              CAP185
+     C                     ENDIF                                                              CAP185
+      *                                                                                       CAP185
+     C                     ENDIF                                                              CSD012
+      *                                                                                       CSD012
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2U0004' P@RTN
+     C                     EXSR ERR003
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * LCKRCD - Lock Records                                         *
+      *****************************************************************
+     C           LCKRCD    BEGSR
+      ** Check record hasn't been updated by another workstation
+      ** And prepare the update
+      ** Otherwise send error messages
+      *
+      ** Currency file
+     C           CSD012    IFEQ 'Y'                                                           CSD012
+     C           SVAL11    ANDEQ'Y'                                                           CSD012
+     C           P1CYCD    CHAINSDCUSHD0             90                                       CSD012
+     C                     ELSE                                                               CSD012
+     C           P1CYCD    CHAINSDCURRL0             90                C
+     C                     ENDIF                                                              CSD012
+      ** Record deleted by another workstation ?
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2USRMSG'P@MSGF
+     C                     MOVEL'Y2U0007' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      ** Record updated by another workstation ?
+     C           *IN90     IFEQ '0'
+     C           @1DBRC    IFNE #1DBRC
+     C           CSD012    IFEQ 'Y'                                                           CSD012
+     C           SVAL11    ANDEQ'Y'                                                           CSD012
+     C                     UNLCKSDCUSHL0               90                                     CSD012
+     C                     ELSE                                                               CSD012
+     C                     UNLCKSDCURRL0               90
+     C                     ENDIF                                                              CSD012
+     C           *IN90     IFEQ '1'
+     C                     EXSR ERR002
+     C                     ENDIF
+     C                     MOVEL'Y2USRMSG'P@MSGF
+     C                     MOVEL'Y2U0007' P@MSGI
+     C                     EXSR SNDMSG
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * FILCUR - Fill currency details                                *
+      *****************************************************************
+     C           FILCUR    BEGSR
+      *                                                                                       CSD012
+     C           CSD012    IFEQ 'Y'                                                           CSD012
+     C           SVAL11    ANDEQ'Y'                                                           CSD012
+     C           P@ANCD    ANDNE'E'                                                           CSD012
+     C           P1CYCD    CHAINSDCUSHD0             90                                       CSD012
+     C                     ELSE                                                               CSD012
+     C           P1CYCD    CHAINSDCURRL0             90                C
+     C                     ENDIF                                                              CSD012
+     C           *IN90     IFEQ '1'
+     C                     EXSR ERR001
+     C                     ENDIF
+      ** Unlock record
+     C           CSD012    IFEQ 'Y'                                                           CSD012
+     C           SVAL11    ANDEQ'Y'                                                           CSD012
+     C                     UNLCKSDCUSHL0               90                                     CSD012
+     C                     ELSE                                                               CSD012
+     C                     UNLCKSDCURRL0               90              C
+     C                     ENDIF                                                              CSD012
+     C           *IN90     IFEQ '1'
+     C                     EXSR ERR002
+     C                     ENDIF
+      *
+      ** Memorise to monitor updates done by other workstations
+     C                     MOVEL@1DBRC    #1DBRC
+      *
+      ** Fill screen
+     C           P@ANCD    IFNE 'I'
+     C                     MOVELA6SRDS    SSRDS
+     C                     MOVELA6SRID    SSRID
+     C                     MOVELA6FRDS    SFRDS
+     C                     MOVELA6FRNT    SFRNT
+     C                     MOVELA6BODS    SBODS
+     C                     MOVELA6BOID    SBOID
+     C                     MOVELA6LEDS    SLEDS
+     C                     MOVELA6LEID    SLEID
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * ENAKEY - Enable Function Keys                                 *
+      *****************************************************************
+     C           ENAKEY    BEGSR
+      *
+     C                     SETOF                     10
+      ** Enable F10 ?
+     C           P@ANCD    IFEQ 'D'
+     C                     SETON                     10
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * ENAFLD - Enable Fields                                        *
+      *****************************************************************
+     C           ENAFLD    BEGSR
+     C                     SETOF                     29
+      *
+      ** Protect fields
+     C           P@ANCD    IFEQ 'D'
+     C           P@ANCD    OREQ 'E'
+     C                     SETON                     29
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * SNDMSG - Send messages                                        *
+      *****************************************************************
+     C           SNDMSG    BEGSR
+      ** Default parameters if they haven't been filled before the
+      ** call of this sub routine
+     C           P@MSGF    IFEQ *BLANK
+     C                     MOVEL'SDUSRMSG'P@MSGF
+     C                     ENDIF
+     C           P@MSGL    IFEQ *BLANK
+     C                     MOVEL'*LIBL'   P@MSGL
+     C                     ENDIF
+      *
+     C                     CALL 'AOCREPT'
+     C                     PARM           P@MSGI  7
+     C                     PARM           P@MSGF 10
+     C                     PARM           P@MSGL 10
+     C                     PARM           P@MSGD256
+     C                     PARM '*SAME'   P@MSGR  5
+     C                     PARM           ##PGM
+     C                     PARM *BLANK    P@MSGQ 10
+     C                     PARM *BLANK    P@MSGT  7
+      *
+      ** Blank out some parameters to allow them to return to
+      ** their default value for the next call
+     C                     MOVEL*BLANK    P@MSGF
+     C                     MOVEL*BLANK    P@MSGL
+      ** Not blank P@MSGI because it can be used as a flag elsewhere
+     C                     MOVEL*BLANK    P@MSGD
+      *
+     C                     ENDSR
+      *****************************************************************
+      * HLPREQ - Help Requested                                       *
+      *****************************************************************
+     C           HLPREQ    BEGSR
+      ** Flag set to Y if '?' entered somewhere on the screen
+     C                     MOVEL'0'       WQUERY  1
+     C           '?'       SCAN SSRDS     WIQM    30
+     C           WIQM      IFNE 0
+     C                     MOVEL'1'       WQUERY
+     C                     ENDIF
+      *
+     C           '?'       SCAN SFRDS     WIQM
+     C           WIQM      IFNE 0
+     C                     MOVEL'1'       WQUERY
+     C                     ENDIF
+      *
+     C           '?'       SCAN SBODS     WIQM
+     C           WIQM      IFNE 0
+     C                     MOVEL'1'       WQUERY
+     C                     ENDIF
+      *
+     C           '?'       SCAN SLEDS     WIQM
+     C           WIQM      IFNE 0
+     C                     MOVEL'1'       WQUERY
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKSPDS - Check spot rate data source                          *
+      *****************************************************************
+     C           CKSPDS    BEGSR
+      *
+     C           SSRDS     IFNE *BLANK                                          I:Key field
+     C                     MOVELSSRDS     P@DTSC    P                           I:Key field
+     C                     CALL 'AOMDFSR0'
+     C                     PARM           P@RTCD  7                             B:Return code
+     C                     PARM '*KEY'    P@OPTN  7                             I:Option
+     C                     PARM           P@DTSC 32                             I:Key field
+     C           SDMDFS    PARM           SDY                                   O:FORMAT
+     C           P@RTCD    IFEQ *BLANK                                          B:Return code
+     C                     MOVELP@DTSC    SSRDS                                 I:Key field
+     C                     ELSE
+     C           P@RTCD    IFNE *BLANK                                          B:Return code
+     C                     MOVEL'SDM0005' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     30
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKSPMI - Check spot rate Front Office ID                      *
+      *****************************************************************
+     C           CKSPMI    BEGSR
+      *
+     C           SSRID     IFNE *BLANK
+      ** Field value is unique
+     C           SSRID     CHAINSDCURRL8             90
+     C           *IN90     IFEQ '0'
+     C           A6CYCD    ANDNEP1CYCD
+     C                     MOVEL'SDM0001' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     31
+     C                     ENDIF
+      *                                                                                       CSC011
+     C                     ELSE                                                               CSC011
+      *                                                                                       CSC011
+     C           CSC011    IFEQ 'Y'                                                           CSC011
+     C                     MOVEL'SDM0097' P@MSGI                                              CSC011
+     C                     EXSR SNDMSG                                                        CSC011
+     C                     MOVE *ON       *IN31                                               CSC011
+     C                     ENDIF                                                              CSC011
+      *                                                                                       CSC011
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKFWDS - Check forward rate data source                       *
+      *****************************************************************
+     C           CKFWDS    BEGSR
+      *
+     C           SFRDS     IFNE *BLANK                                          I:Key field
+     C                     MOVELSFRDS     P@DTSC    P                           I:Key field
+     C                     CALL 'AOMDFSR0'
+     C                     PARM           P@RTCD  7                             B:Return code
+     C                     PARM '*KEY'    P@OPTN  7                             I:Option
+     C                     PARM           P@DTSC 32                             I:Key field
+     C           SDMDFS    PARM           SDY                                   O:FORMAT
+     C           P@RTCD    IFEQ *BLANK                                          B:Return code
+     C                     MOVELP@DTSC    SFRDS                                 I:Key field
+     C                     ELSE
+     C           P@RTCD    IFNE *BLANK                                          B:Return code
+     C                     MOVEL'SDM0005' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     32
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKFWMI - Check forward rate Front Office ID                   *
+      *****************************************************************
+     C           CKFWMI    BEGSR
+      *
+     C           SFRNT     IFNE *BLANK
+      ** Field value is unique
+     C           SFRNT     CHAINSDCURRL9             90
+     C           *IN90     IFEQ '0'
+     C           A6CYCD    ANDNEP1CYCD
+     C                     MOVEL'SDM0002' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     33
+     C                     ENDIF
+      *                                                                                       CSC011
+     C                     ELSE                                                               CSC011
+      *                                                                                       CSC011
+     C           CSC011    IFEQ 'Y'                                                           CSC011
+     C                     MOVEL'SDM0098' P@MSGI                                              CSC011
+     C                     EXSR SNDMSG                                                        CSC011
+     C                     MOVE *ON       *IN33                                               CSC011
+     C                     ENDIF                                                              CSC011
+      *                                                                                       CSC011
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKBWDS - Check borrowing rate data source                     *
+      *****************************************************************
+     C           CKBWDS    BEGSR
+      *
+     C           SBODS     IFNE *BLANK                                          I:Key field
+     C                     MOVELSBODS     P@DTSC    P                           I:Key field
+     C                     CALL 'AOMDFSR0'
+     C                     PARM           P@RTCD  7                             B:Return code
+     C                     PARM '*KEY'    P@OPTN  7                             I:Option
+     C                     PARM           P@DTSC 32                             I:Key field
+     C           SDMDFS    PARM           SDY                                   O:FORMAT
+     C           P@RTCD    IFEQ *BLANK                                          B:Return code
+     C                     MOVELP@DTSC    SBODS                                 I:Key field
+     C                     ELSE
+     C           P@RTCD    IFNE *BLANK                                          B:Return code
+     C                     MOVEL'SDM0005' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     34
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKBWMI - Check borrowing rate Front Office ID                 *
+      *****************************************************************
+     C           CKBWMI    BEGSR
+      *
+     C           SBOID     IFNE *BLANK
+      ** Field value is unique
+     C           SBOID     CHAINSDCURRLA             90
+     C           *IN90     IFEQ '0'
+     C           A6CYCD    ANDNEP1CYCD
+     C                     MOVEL'SDM0003' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     35
+     C                     ENDIF
+      *                                                                                       CSC011
+     C                     ELSE                                                               CSC011
+      *                                                                                       CSC011
+     C           CSC011    IFEQ 'Y'                                                           CSC011
+     C                     MOVEL'SDM0095' P@MSGI                                              CSC011
+     C                     EXSR SNDMSG                                                        CSC011
+     C                     MOVE *ON       *IN35                                               CSC011
+     C                     ENDIF                                                              CSC011
+      *                                                                                       CSC011
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKLEDS - Check lending rate data source                       *
+      *****************************************************************
+     C           CKLEDS    BEGSR
+      *
+     C           SLEDS     IFNE *BLANK                                          I:Key field
+     C                     MOVELSLEDS     P@DTSC    P                           I:Key field
+     C                     CALL 'AOMDFSR0'
+     C                     PARM           P@RTCD  7                             B:Return code
+     C                     PARM '*KEY'    P@OPTN  7                             I:Option
+     C                     PARM           P@DTSC 32                             I:Key field
+     C           SDMDFS    PARM           SDY                                   O:FORMAT
+     C           P@RTCD    IFEQ *BLANK                                          B:Return code
+     C                     MOVELP@DTSC    SLEDS                                 I:Key field
+     C                     ELSE
+     C           P@RTCD    IFNE *BLANK                                          B:Return code
+     C                     MOVEL'SDM0005' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     36
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKLEMI - Check lending rate Front Office ID                   *
+      *****************************************************************
+     C           CKLEMI    BEGSR
+      *
+     C           SLEID     IFNE *BLANK
+      ** Field value is unique
+     C           SLEID     CHAINSDCURRLB             90
+     C           *IN90     IFEQ '0'
+     C           A6CYCD    ANDNEP1CYCD
+     C                     MOVEL'SDM0004' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     37
+     C                     ENDIF
+      *                                                                                       CSC011
+     C                     ELSE                                                               CSC011
+      *                                                                                       CSC011
+     C           CSC011    IFEQ 'Y'                                                           CSC011
+     C                     MOVEL'SDM0096' P@MSGI                                              CSC011
+     C                     EXSR SNDMSG                                                        CSC011
+     C                     MOVE *ON       *IN37                                               CSC011
+     C                     ENDIF                                                              CSC011
+      *                                                                                       CSC011
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * ERR001 - Error type 001, record SDCURRL0 not found            *
+      *****************************************************************
+     C           ERR001    BEGSR
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDCURRL0'DBFILE    P      *DB ERROR 001 *
+     C                     MOVELP1CYCD    DBKEY     P      ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDSR
+      *****************************************************************
+      * ERR002 - Error type 002, unlock SDCURRL0 failed               *
+      *****************************************************************
+     C           ERR002    BEGSR
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDCURRL0'DBFILE    P      *DB ERROR 002 *
+     C                     MOVEL'*UNLCK'  DBKEY     P      ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDSR
+      *****************************************************************
+      * ERR003 - Error type 003, update SDCURRL0 failed               *
+      *****************************************************************
+     C           ERR003    BEGSR
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'SDCURRL0'DBFILE    P      *DB ERROR 003 *
+     C                     MOVEL'*UPDATE' DBKEY     P      ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDSR
+      *
+      *****************************************************************                       CMG003
+      /EJECT                                                                                  CMG003
+      *****************************************************************                       CMG003
+      * SCNEXT - Display Next Screen                                  *                       CMG003
+      *****************************************************************                       CMG003
+     C           SCNEXT    BEGSR                                                              CMG003
+      *                                                                                       CMG003
+     C                     MOVEL*BLANK    WUWRTC  5                                           CMG003
+      *                                                                                       CMG003
+     C                     MOVELP1CYCD    A6CYCD                                              CMG003
+     C           CSD012    IFEQ 'Y'                                                           CMG003
+     C           SVAL11    ANDEQ'Y'                                                           CMG003
+     C           KRTV      CHAINSDCUSHD0             91                                       CMG003
+     C                     ELSE                                                               CMG003
+     C           KRTV      CHAINSDCURRD1             91                                       CMG003
+     C                     ENDIF                                                              CMG003
+      *                                                                                       CMG003
+     C           *IN91     IFNE '1'                                                           CMG003
+     C                     MOVELA6CYCD    #1CYCO                                              CMG003
+     C                     MOVELA6SPAE    #1SPAE                                              CMG003
+     C                     ENDIF                                                              CMG003
+      *                                                                                       CMG003
+     C                     CALL 'SD0038'               90                                     CMG003
+     C                     PARM           RTCODE  1                                           CMG003
+     C                     PARM 'E'       ACTION  1                                           CMG003
+     C                     PARM           DATALX                                              CMG003
+     C                     PARM           W0RTN   7                                           CMG003
+     C           WUWRTC    PARM *BLANK    WQ0009  5                                           CMG003
+     C                     PARM           WCOMMS  1                                           CMG003
+      *                                                                                       CMG003
+     C           *IN90     IFEQ '1'                                                           CMG003
+     C                     MOVEL'Y2USRMSG'P@MSGF                                              CMG003
+     C                     MOVEL'Y2U0032' P@MSGI                                              CMG003
+     C                     EXSR SNDMSG                                                        CMG003
+     C                     ENDIF                                                              CMG003
+      *                                                                                       CMG003
+     C           W0RTN     IFNE *BLANK                                                        CMG003
+     C                     SETON                     99                                       CMG003
+     C                     ENDIF                                                              CMG003
+      *                                                                                       CMG003
+     C           W0RTN     IFEQ 'Y2U9999'                                                     CMG003
+     C                     MOVELW0RTN     P@RTN                                               CMG003
+     C                     EXSR ZYEXPG                                                        CMG003
+     C                     ELSE                                                               CMG003
+      *                                                                                       CMG003
+     C           W0RTN     IFEQ 'USR0790'                                                     CMG003
+     C                     MOVEL'N'       WEND                                                CMG003
+     C                     MOVELW0RTN     P@RTN                                               CMG003
+     C                     ELSE                                                               CMG003
+      *                                                                                       CMG003
+     C           WUWRTC    IFEQ 'PEND'                                                        CMG003
+     C                     MOVEL*BLANK    P3WRTC  5                                           CMG003
+     C                     MOVEL'PEND'    P3WRTC                                              CMG003
+     C                     MOVEL*BLANK    P@RTN                                               CMG003
+     C                     EXSR ZYEXPG                                                        CMG003
+     C                     ENDIF                                                              CMG003
+     C                     ENDIF                                                              CMG003
+     C                     ENDIF                                                              CMG003
+      *                                                                                       CMG003
+     C                     ENDSR                                                              CMG003
+      *****************************************************************                       CMG003
+      /EJECT                                                                                  CMG003
+      *****************************************************************                       CMG003
+      * ZYEXPG - Terminate Program                                    *                       CMG003
+      *****************************************************************                       CMG003
+     C           ZYEXPG    BEGSR                                                              CMG003
+     C                     SETON                     LR                                       CMG003
+     C                     RETRN                                                              CMG003
+     C                     ENDSR                                                              CMG003
+      *****************************************************************                       CMG003
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ******************
+      *
+     C                     CALL 'DBERRCTL'
+      *
+      ********************************************************************
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

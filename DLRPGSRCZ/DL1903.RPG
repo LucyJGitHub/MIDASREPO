@@ -1,0 +1,914 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL FRA dealing positions rebuild')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FRA/IRS Module
+     F*                                                               *
+     F* DL1903 - REBUILD FRA DEALING POSITIONS & DEAL HISTORY FILES   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 217684             Date 12May03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP056             Date 13Mar02               *
+      *                 CIR008             Date 13Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 E46068             Date 09Mar93               *
+     F*                  E31696                 DATE 11NOV91          *
+     F*                  E30746                 DATE 29OCT91          *
+     F*                  E28496                 DATE 17SEP91          *
+     F*                  S01194                 DATE 10APR90          *
+     F*                  S01157                 DATE 03/06/88         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  217684 - Authorisation User Malfunction (Recompile)          *
+      *  CAP056 - Automatic Authorisation of Interface deals          *
+      *           (Recompile)                                         *
+      *  CIR008 - FRA/IRS Deals Authorisation (Recompile)             *
+     F*   CSD006 - Use long DS with SDBSRTPD.                         *
+     F*   E46068 - DLDSMBPP being set up incorrectly causing dbase    *
+     F*            errors and incorrect positions.                    *
+     F*   E31696 - #BAA should chain using CURRENT Base Rate Code     *
+     F*   E30746 - Using UCUCY when should use @OCCY.                 *
+     F*   E28496 - Recompile for SDFAISPD changes (BQHEOC - Hedged    *
+     F*            Events on Cashflow removed).                       *
+     F*   S01194 - NEW STANDING DATA CHANGES                          *
+     F*   S01157 - NEW PROGRAM WRITTEN FOR FRA/IRS                    *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F/EJECT
+     F* ID  F  C  H  L    FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F* INDICATORS TO REPORT ERRORS ON FILE READS                     *
+     F*                                                               *
+     F*        09  END OF FILE MARKER FOR DEALS FILE      - DLDLDGLC  *
+     F*                                                               *
+     F*        55  'ALREADY DONE' INDICATOR FOR *PSSR SUBROUTINE      *
+     F*                                                               *
+     F*********75**REC NOT FOUND (DB ERROR) ON FDICDRLL   - TABTB10   *   S01194
+     F*********76**REC NOT FOUND (DB ERROR) ON TABLE FILE - DLTB70LL  *   S01194
+     F*********77**REC NOT FOUND (DB ERROR) ON BASE RATES - FDBSRTLL  *   S01194
+     F*********78**REC NOT FOUND (DB ERROR) ON CURRENCY   - FDCCYTLL  *   S01194
+     F*********79**REC NOT FOUND (DB ERROR) ON BRANCH FILE- FDBRNCLL  *   S01194
+     F*                                                               *
+     F*        U7  DATABASE ERROR, RETURNED FROM CALLED DL1940 PGM    *
+     F*        LR  CLOSES ALL FILES WHEN THIS PGM IS EXITED           *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*FDICDRLLIF**E*******   K        DISK         KINFSR *PSSR      UC  S01194
+     F*********************                                               S01194
+     F*DLTB70LLIF**E*******   K        DISK         KINFSR *PSSR      UC  S01194
+     F*********************                                               S01194
+     F*FDBSRTLLIF**E*******   K        DISK         KINFSR *PSSR      UC  S01194
+     F*********************                                               S01194
+     F*FDBRNCLLIF**E*******   K        DISK         KINFSR *PSSR      UC  S01194
+     F*********************                                               S01194
+     F*FDCCYTLLIF  E          K        DISK         KINFSR *PSSR      UC  S01194
+     F*
+     FDLDLDGLCIF  E           K        DISK         KINFSR *PSSR      UC
+     F*
+     FDLDSMBPPO   E                    DISK                           UC
+     F*
+     FDLDLHBPPO   E                    DISK                           UC
+     F*
+     F*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E** COMPILE TIME ARRAY FOR COPYRIGHT STATEMENT
+     I*********************
+     I*@CPYRT******DS******
+     I*********************
+     I***DATA*STRUCTURE*FOR COMPILATION - COPYRIGHT INSERTION
+     I*********************
+     I*********************                   1  80 CPY@
+     I*********************                   1  20 CPY@##
+     I*********************
+     I*********************                                               S01194
+     I*********************                                               S01194
+     I*@KYT70******DS******                       12                      S01194
+     I*********************                                               S01194
+     I***DATA*STRUCTURE*FOR KEY TO READ DLTB70LL FILE                     S01194
+     I*********************                                               S01194
+     I*********************                   1   2 @K1T70                S01194
+     I*********************                  11  12 @K2T70                S01194
+     I*********************                                               S01194
+     I*@KYT10******DS******                       12                      S01194
+     I*********************                                               S01194
+     I***DATA*STRUCTURE*FOR KEY TO READ TABTB10 FILE                      S01194
+     I*********************                                               S01194
+     I*********************                   1   2 @K1T10                S01194
+     I*********************                  11  12 @K2T10                S01194
+     I*********************                                               S01194
+     I*@KYCCY******DS******                       12                      S01194
+     I*********************                                               S01194
+     I***DATA*STRUCTURE*FOR KEY TO CURRENCY FILE                          S01194
+     I*********************                                               S01194
+     I*********************                   1   2 @K1CCY                S01194
+     I*********************                   9  11 @K2CCY                S01194
+     I*********************                  12  12 @K3CCY                S01194
+     I*********************                                               S01194
+     I*********************                                               S01194
+     I*@KYBCH******DS******                       12                      S01194
+     I*********************                                               S01194
+     I***DATA*STRUCTURE*FOR KEY TO BRANCH FILE                            S01194
+     I*********************                                               S01194
+     I*********************                   1   2 @K1BCH                S01194
+     I*********************                  10  120@K2BCH                S01194
+     I*********************                                               S01194
+     I*********************                                               S01194
+     I*@KYBSR******DS******                       12                      S01194
+     I*********************                                               S01194
+     I***DATA*STRUCTURE*FOR KEY TO BASE RATE FILE                         S01194
+     I*********************                                               S01194
+     I*********************                   1   2 @K1BSR                S01194
+     I*********************                   8  10 @K2BSR                S01194
+     I*********************                  11  120@K3BSR                S01194
+     I*********************                                               S01194
+     I*
+     I*
+     IDBERR       DS                            256
+     I*
+     I** DATA STRUCTURE FOR DATABASE ERROR HANDLING
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I*
+      *                                                                   S01194
+      ** Dummy data structures used by access programs                    S01194
+      ** (DSSDY only used if file records over 150 chars long)            S01194
+      *                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I*                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** RECORD FORMATS FOR ACCESS TO BANK DETAILS                        S01194
+     I*                                                                   S01194
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I** RECORD FORMATS FOR ACCESS TO CURRENCY DETAILS                    S01194
+     I*                                                                   S01194
+     ISDBSRT    E DSSDBSRTPD                                              S01194
+     I** RECORD FORMATS FOR ACCESS TO BASE RAETE DETAILS                  S01194
+     I*                                                                   S01194
+     ISDFAIS    E DSSDFAISPD                                              S01194
+     I** RECORD FORMATS FOR FWD RATE AGMT/INT RATE SWAP DETAILS           S01194
+     I*                                                                   S01117
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* MAIN     - Main controlling routine                           *
+     C*                                                               *
+     C* CALLS      #A      -  INITIAL PROCESSING                      *
+     C*            #B      -  MAIN PROCESSING                         *
+     C*            #C      -  TERMINATION PROCESSING                  *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED                                                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C                     EXSR #A
+     C*
+     C                     EXSR #B
+     C*
+     C                     EXSR #C
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #A       - INITIAL PROCESSING                                 *
+     C*                                                               *
+     C* CALLS    - *PSSR   -  DATABASE ERROR HANDLING                 *
+     C*                                                               *
+     C* CALLED BY  MAIN CONTROLLING ROUTINE                           *
+     C*                                                               *
+     C* FLDS USED  @TERM      -    TERMINATION PARAMETER              *
+     C*            @ACTD      -    ACTION CODE                        *
+     C*            @DLNUM     -    DEAL NUMBER                        *
+     C*            @FIRST     -    1ST TIME INDICATOR                 *
+     C*************@K1T10*****-    DS FIELD TO READ TABTB10           *   S01194
+     C*************@K2T10*****-       -    "    -                     *   S01194
+     C*************@KYT10*****-       -    "    -                     *   S01194
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C                     MOVEL'DL1903'  DBPGM
+     C*
+     C** Receive input parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @TERM   1
+     C*
+     C* Define and set up 1st time indicator
+     C*
+     C                     MOVE ' '       @FIRST  1
+     C*
+     C** Because is the first call to the program, open the files and
+     C** read Table File for default FRA Trading Book
+     C*
+     C*********************OPEN FDICDRLL                                  S01194
+     C*********************OPEN DLTB70LL                                  S01194
+     C*********************OPEN FDCCYTLL                                  S01194
+     C*********************OPEN FDBSRTLL                                  S01194
+     C                     OPEN DLDLDGLC
+     C*********************OPEN FDBRNCLL                                  S01194
+     C                     OPEN DLDLHBPP
+     C                     OPEN DLDSMBPP
+     C*********************                                               S01194
+     C***Read*FDICDRLL***(To obtain Midas Run Day)                        S01194
+     C*********************                                               S01194
+     C*********************MOVE '01'      @K1T10                          S01194
+     C*********************MOVE '10'      @K2T10                          S01194
+     C*********************                                               S01194
+     C***********@KYT10****CHAINFDICDRLL             75                   S01194
+     C*********************                                               S01194
+     C************IN75*****IFEQ '1'                        B1             S01194
+     C***********RECI******ORNE 'D'                        *1             S01194
+     C*********************                                ***************S01194
+     C*********************MOVEL'FDICDRLL'DBFILE           *             *S01194
+     C*********************MOVEL'001'     DBASE            * DBERROR 001 *S01194
+     C*********************MOVEL@KYT10    DBKEY            *             *S01194
+     C*********************                                ***************S01194
+     C*********************EXSR *PSSR                      *1             S01194
+     C*********************END                             E1             S01194
+     C*********************                                               S01194
+     C***Read*TABTB70**(To*obtain Default Trading Book)                   S01194
+     C*********************                                               S01194
+     C*********************MOVE '01'      @K1T70                          S01194
+     C*********************MOVE '70'      @K2T70                          S01194
+     C*********************                                               S01194
+     C***********@KYT70****CHAINDLTB70LL             76                   S01194
+     C*********************                                               S01194
+     C************IN76*****IFEQ '1'                        B1             S01194
+     C***********RECI******ORNE 'D'                        *1             S01194
+     C*********************                                ***************S01194
+     C*********************MOVEL'FDTB70LL'DBFILE           *             *S01194
+     C*********************MOVEL'002'     DBASE            * DBERROR 002 *S01194
+     C*********************MOVEL@KYT70    DBKEY            *             *S01194
+     C*********************                                ***************S01194
+     C*********************EXSR *PSSR                      *1             S01194
+     C*********************END                             E1             S01194
+      *                                                                   S01194
+      ** Call Access Program for Bank Details                             S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*DBERR ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+      *                                                                   S01194
+      ** Call Access Program for FAIS Details                             S01194
+     C                     CALL 'AOFAISR0'                                S01194
+     C                     PARM '*DBERR ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDFAIS    PARM SDFAIS    DSFDY                           S01194
+     C*
+     C* Initialise and define all work fields
+     C*
+     C                     Z-ADD0         @DSIGN  10
+     C                     MOVE *BLANKS   @BOKC   2
+     C                     MOVE *BLANKS   @OCCY   3
+     C*********************Z-ADD0         @BCODE  30                      S01194
+     C                     MOVE *BLANKS   @BCODE  3                       S01194
+     C                     Z-ADD0         @VDATE  60
+     C                     Z-ADD0         @MDATE  60
+     C                     Z-ADD0         @BRATE 117
+     C                     Z-ADD0         @CUMAP 117
+     C                     Z-ADD0         @CUMNP 130
+     C                     Z-ADD0         @CUMPL 130
+     C                     Z-ADD0         @DECPL  10
+     C                     Z-ADD0         @DYEAR  30
+     C                     Z-ADD0         @TENOR  50
+     C                     Z-ADD0         @POSGN  10
+     C                     Z-ADD0         @@RATE 117
+     C                     Z-ADD0         @DDATE  60
+     C                     Z-ADD0         @DDONE  60
+     C                     Z-ADD0         @TDONE  60
+     C                     Z-ADD0         @BRSQ   20
+     C                     MOVE *BLANKS   @BSRS   5                       S01117
+      *                                                                   S01194
+      ** Set up FRAB with FRA Enquiry Branch Code                         S01194
+      **     from SDFAISPD                                                S01194
+     C                     MOVE BQFIDB    FRAB    3                       S01194
+     C*
+     C           #A9       ENDSR                           *** #A9 ***
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #B       - MAIN PROCESSING                                    *
+     C*                                                               *
+     C* CALLS    - #BA     -  PROCESS THE DEAL                        *
+     C*          - *PSSR   -  DATABASE ERROR HANDLING                 *
+     C*                                                               *
+     C* CALLED BY  MAIN CONTROLLING ROUTINE                           *
+     C*                                                               *
+     C* FLDS USED  VDAT       -      VALUE DATE OF DEAL               *
+     C*************RUND*******-      RUN DATE OFF TABTB10 (MIDAS NO)  *   S01194
+     C*            BJRDNB     -      RUN DATE OFF SDBANKPD            *   S01194
+     C*            BOKC       -      BOOK CODE OF DEAL                *
+     C*            FRAB       -      DEFAULT TRADING BOOK             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C* Read Deals file
+     C*
+     C                     READ DLDLDGLC                 09
+     C*
+     C* If File is empty (*IN09 = 1) AND 1st time (@FIRST NE 'N')
+     C* then avoid any processing
+     C*
+     C           *IN09     IFEQ '1'                        B1
+     C           @FIRST    ANDNE'N'                        *1
+     C                     GOTO #B9                        *1
+     C                     END                             E1
+     C*
+     C* Do While Not END-OF-FILE:  If Value Date => Run Date
+     C*
+     C           *IN09     DOUEQ'1'                        B1
+     C*
+     C***********VDAT******IFGE RUND                       B*2            S01194
+     C           VDAT      IFGE BJRDNB                                    S01194
+     C                     EXSR #BA                        **2
+     C                     END                             E*2
+     C*
+     C                     READ DLDLDGLC                 09*1
+     C*
+     C                     END                             E1
+     C*
+     C* NECESSARY TO EXECUTE #BAA TO WRITE LAST RECORD READ
+     C*
+     C           *IN09     IFEQ '1'                        B1
+     C           @FIRST    ANDEQ'N'                        *1
+     C                     EXSR #BAA                       *1
+     C                     END                             E1
+     C*
+     C           #B9       ENDSR                           *** #B9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BA      - PROCESS EACH RELEVANT DEAL                         *
+     C*                                                               *
+     C* CALLS    - #BAA    -  WRITE SUMMARY FILE RECORD               *
+     C*          - *PSSR   -  DATABASE ERROR HANDLING                 *
+     C*          - DL1940  -  REWORK OF AVERAGE PRICE ETC (RPG PGM)   *
+     C*          - #BAB    -  WRITE HISTORY FILE RECORD               *
+     C*          - ZDINY   -  STANDARD SUBR TO OBTAIN DAYS IN YEAR    *
+     C*          - #C      -  TERMINATION PROCESSING                  *
+     C*                                                               *
+     C* CALLED BY  #B                                                 *
+     C*                                                               *
+     C* FLDS USED  @DSIGN     -    DEAL SIGN  (+1 OR -1)              *
+     C*            @FIRST     -    FIRST TIME INDICATOR               *
+     C*            BYSL       -    BUY/SELL IND (DEALS FILE)          *
+     C*            UCUCY      -    OUR CURRENCY (DEALS FILE)          *
+     C*            UPAMT      -    OUR PRINCIPLE AMT (DEALS FILE)     *
+     C*************BRCD*******-    BRANCH CODE  (DEALS FILE)          *   S01194
+     C*            BRCA       -    BRANCH CODE  (DEALS FILE)          *   S01194
+     C*            BRSQ       -    BASE RATE SEQ(DEALS FILE)          *
+     C*            VDAT       -    VALUE DATE   (DEALS FILE)          *
+     C*            MDAT       -    MATURITY DATE(DEALS FILE)          *
+     C*            DICM       -    CALC METHOD  (CCY DETAILS FILE)    *
+     C*            @BOKC      -    BOOK CODE                          *
+     C*            @OCCY      -    OUR CURRENCY                       *
+     C*            @TENOR     -    TENOR                              *
+     C*            @BCODE     -    BRANCH CODE                        *
+     C*            @VDATE     -    VALUE DATE                         *
+     C*            @MDATE     -    MATURITY DATE                      *
+     C*            @BRATE     -    BASE RATE                          *
+     C*            @POSGN     -    NET POSITION SIGN                  *
+     C*            @DDATE     -    DEAL DATE                          *
+     C*            @DDONE     -    DEAL DONE DATE                     *
+     C*            @TDONE     -    DEAL DONE TIME                     *
+     C*            @CUMAP     -    CUMULATIVE AVERAGE PRICE           *
+     C*            @CUMNP     -    CUMULATIVE NET POSITION            *
+     C*            @CUMPL     -    CUMULATIVE PROFIT & LOSS           *
+     C*            @@DAYO     -    DAYS IN YEAR (FROM SR. ZDINY)      *
+     C*            CDP        -    DECIMAL PLACES (FDCCYTLL FILE)     *
+     C*            @NAVEP     -    AVE PRICE (RETURNED FRM DL1940)    *
+     C*            @NNETP     -    NET POSN  (RETURNED FRM DL1940)    *
+     C*            @NCDPL     -    CLOSED P&L(RETURNED FRM DL1940)    *
+     C*            @NNTPS     -    NET POSN SIGN (RETD FRM DL1940)    *
+     C*************@K1CCY*****-    FIELD IN KEY TO READ CURRENCY FILE *   S01194
+     C*************@K2CCY*****-         -          "          -       *   S01194
+     C*************@K3CCY*****-         -          "          -       *   S01194
+     C*************@KYCCY*****-    KEY USED TO READ CURRENCY FILE     *   S01194
+     C*            @@CALC     -    WORK FIELD USED AS INPUT TO ZDINY  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C** Calculate the Deal Sign: If BUY/SELL = 'B' DEAL SIGN = +1
+     C*                           If BUY/SELL = 'S' DEAL SIGN = -1
+     C** Calculate the Deal Rate: If 'B', Rate = OUR-SPREAD from DEALS
+     C*                           If 'S' ,Rate = THEIR-SPREAD from DEALS
+     C*
+     C           BYSL      IFEQ 'B'                        B1
+     C                     Z-ADD1         @DSIGN           *1
+     C                     Z-ADDURTSP     @@RATE           *1
+     C*
+     C                     ELSE                            X1
+     C*
+     C           BYSL      IFEQ 'S'                        B*2
+     C                     Z-SUB1         @DSIGN           **2
+     C                     Z-ADDTRTSP     @@RATE           **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C* Check if any of BOOK-CODE, CURRNCY, BRNCH-CODE, VALUE-DATE,
+     C* MATURITY-DATE, OR BASE-RATE fields have changed from previous
+     C* rec. If any of these conds true, write record to summary file
+     C* (#BB) (BUT NOT ON FIRST TIME THROUGH)
+     C*
+     C           BOKC      IFNE @BOKC                      B1
+     C           UCUCY     ORNE @OCCY                      *1
+     C***********BRCD******ORNE @BCODE                     *1             S01194
+     C           BRCA      ORNE @BCODE                                    S01194
+     C           VDAT      ORNE @VDATE                     *1
+     C           MDAT      ORNE @MDATE                     *1
+     C           BRSQ      ORNE @BRSQ                      *1
+     C*
+      ** If not first time round, write record to DLDSMBPP                S01117
+     C           @FIRST    IFEQ 'N'                        B*2
+     C                     EXSR #BAA                       **2
+     C                     ELSE                                           S01117
+      *                                                                   S01117
+      ** Move base rate into alpha field                                  S01117
+     C                     MOVE BRSQ      @BSRT   2                       S01117
+      *                                                                   S01117
+      ** Call Access Program for Base Rate Details                        S01117
+     C                     CALL 'AOBSRTR0'                                S01117
+     C                     PARM '*DBERR  '@RTCD                           S01117
+     C                     PARM '*KEY   ' @OPTN                           S01117
+     C                     PARM UCUCY     @CCY    3                       S01117
+     C                     PARM @BSRT     @BBSRT  2                       S01117
+     C********** SDBSRT    PARM SDBSRT    DSFDY                     S01117CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                           CSD006
+      *                                                                   S01117
+      ** Set up the work field for the base rate shortname                S01117
+     C                     MOVE BABSRS    @BSRS                           S01117
+     C                     END                             E*2
+     C*
+     C* Now set to zero the accumulated values in AVE PRICE, NET POSN
+     C* and CLOSED P & L.
+     C*
+     C                     Z-ADD0         @CUMAP           *1
+     C                     Z-ADD0         @CUMNP           *1
+     C                     Z-ADD0         @CUMPL           *1
+     C*
+     C* Now set the NET POSITION SIGN eq to the CURRENT DEAL SIGN
+     C*
+     C                     Z-ADD@DSIGN    @POSGN           *1
+     C*
+     C                     END                             E1
+     C*
+     C*Check if OUR-CURRENCY field in Deals rec not eq to prev rec
+     C*
+     C           UCUCY     IFNE @OCCY                      B1
+     C*********************                                               S01194
+     C***Set*up*the*key*and read the currency file for the default        S01194
+     C***Interest*Calculation Method (used by ZDINY) and the number of    S01194
+     C***decimal*places*(SENT TO DL1940) for the deal currency            S01194
+     C*********************                                               S01194
+     C*********************MOVE '20'      @K1CCY           *1             S01194
+     C*********************MOVE UCUCY     @K2CCY           *1             S01194
+     C*********************MOVE '1'       @K3CCY           *1             S01194
+     C*********************                                               S01194
+     C***********@KYCCY****CHAINFDCCYTLL             78    *1             S01194
+     C*********************                                               S01194
+     C************IN78*****IFEQ '1'                        B*2            S01194
+     C*********************                                ***************S01194
+     C*********************MOVEL'FDCCYTLL'DBFILE           *             *S01194
+     C*********************MOVEL'003'     DBASE            * DBERROR 003 *S01194
+     C*********************MOVEL@KYCCY    DBKEY            *             *S01194
+     C*********************                                ***************S01194
+     C*********************EXSR *PSSR                      **2            S01194
+     C*********************END                             E*2            S01194
+      *                                                                   S01194
+      ** Call Access Program for Currency Details                         S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM '*DBERR  '@RTCD                           S01194
+     C                     PARM '*KEY   ' @OPTN                           S01194
+     C                     PARM UCUCY     @CCY    3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+      *                                                                   S01194
+      ** Set up currency decimal places and                               S01194
+      **    default interest calculation basis.                           S01194
+     C                     MOVE A6NBDP    CDP     10                      S01194
+     C                     MOVE A6DICB    DICM    10                      S01194
+     C*
+     C*  Execute Subroutine ZDINY to calculate the days in the year
+     C*  (setting up input field) first. Output field is @@DAYO.
+     C*
+     C                     MOVE DICM      @@CALC           *1
+     C                     EXSR ZDINY                      *1
+     C*
+     C                     END                             E1
+     C*
+     C*  The values in fields:  CDP    (DEC PLACES FROM FDCCYTLL)
+     C*                         @@DAYO (DAYS IN YEAR FROM ZDINY)
+     C*  will be passed to called pgm DL1940 as input parameters
+     C*
+     C* Now calculate the TENOR:  MATURITY DATE SUB VALUE DATE
+     C*
+     C           MDAT      SUB  VDAT      @TENOR
+     C*
+     C*  Use the rework RPG pgm DL1940 to calculate new (cumulative)
+     C*  values of NET POSITION, AVERAGE PRICE AND CLOSED P & L, with
+     C*  parms passed.  The newly calculated AVERAGE PRICE etc. will
+     C*  be returned in the 'new' work fields.
+     C*
+     C*
+     C                     CALL 'DL1940'
+     C                     PARM           @CUMAP
+     C                     PARM           @CUMNP
+     C                     PARM           @CUMPL
+     C                     PARM           @POSGN
+     C                     PARM           UPAMT
+     C                     PARM           @@RATE
+     C                     PARM           @DSIGN
+     C                     PARM           @TENOR
+     C                     PARM           @@DAYO
+     C                     PARM           CDP
+     C                     PARM           @NAVEP 117
+     C                     PARM           @NNETP 130
+     C                     PARM           @NCDPL 130
+     C                     PARM           @NNTPS  10
+     C*
+     C** If there has been an error in DL1940 then exit via #C
+     C*
+     C           *INU7     IFEQ '1'                        B1
+     C                     EXSR #C                         *1
+     C                     END                             E1
+     C*
+     C* Move values (cumulative) in returned parms to work fields
+     C*
+     C                     Z-ADD@NAVEP    @CUMAP
+     C                     Z-ADD@NNETP    @CUMNP
+     C                     Z-ADD@NCDPL    @CUMPL
+     C                     Z-ADD@NNTPS    @POSGN
+     C*
+     C* Output record details to History file, by BRANCH
+     C*
+     C                     EXSR #BAB
+     C*
+     C** If 1st time indicator is ON, set it OFF
+     C*
+     C           @FIRST    IFNE 'N'                        B1
+     C                     MOVE 'N'       @FIRST           *1
+     C                     END                             E1
+     C*
+     C* Move values of current Deals rec into work field, ready for
+     C* compare next time round.
+     C*
+     C                     MOVE UCUCY     @OCCY
+     C                     MOVE BOKC      @BOKC
+     C*********************Z-ADDBRCD      @BCODE                          S01194
+     C                     MOVE BRCA      @BCODE                          S01194
+     C                     Z-ADDVDAT      @VDATE
+     C                     Z-ADDMDAT      @MDATE
+     C                     Z-ADD@@RATE    @BRATE
+     C                     Z-ADDDDAT      @DDATE
+     C                     Z-ADDORED      @DDONE
+     C                     Z-ADDDDTM      @TDONE
+     C                     Z-ADDBRSQ      @BRSQ
+     C                     MOVE BABSRS    @BSRS                           S01117
+     C*
+     C           #BA9      ENDSR                           *** #BA9***
+     C*
+     C*****************************************************************
+     C/COPY ZSRSRC,ZDINYZ1
+     C*****************************************************************
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BAA     - WRITE RECORD TO DLDSMBPP  (SUMMARY FILE)           *
+     C*                                                               *
+     C* CALLS                                                         *
+     C*                                                               *
+     C* CALLED BY  #BA    - PROCESS FOR EACH DEAL                     *
+     C*          - *PSSR   -  DATABASE ERROR HANDLING                 *
+     C*                                                               *
+     C* FLDS USED  @BOKC   -  BOOK CODE               }               *
+     C*            @OCCY   -  OUR CCY                 }               *
+     C*            @BRSQ   -  BRANCH CODE SEQUENCE    }               *
+     C*            @BCODE  -  BRANCH CODE             }               *
+     C*            @VDATE  -  VALUE DATE    (MIDAS NO)} DEALS FILE    *
+     C*            @MDATE  -  MATURITY DATE (MIDAS NO)} (Prev rec)    *
+     C*            @DDATE  -  DEAL DATE     (MIDAS NO)}               *
+     C*            @DDONE  -  DEAL-DONE DATE(MIDAS NO)}               *
+     C*            @TDONE  -  DEAL-DONE TIME          }               *
+     C*                                                               *
+     C*            @NAVEP - NEW AVERAGE PRICE         }               *
+     C*            @NNETP - NEW NET POSITION          }               *
+     C*            @NCDPL - NEW CLOSED PROFIT & LOSS  } DL1940        *
+     C*            @NNTPS - NEW NET POSITION SIGN     }               *
+     C*                                                               *
+     C*************BRSN****-  BRANCH CODE ON FILE FDBRNCLL            *   S01194
+     C*************@IBRSN**-  BRANCH CODE (DRS FORMAT)                *   S01194
+     C*************@IFSRT**-  BASE RATE CODE (DRS FORMAT)             *   S01194
+     C*************FSRT****-  BASE RATE ON FILE FDBSRTLL              *   S01194
+     C*                                                               *
+     C*************@K1BCH**-  FIELD IN KEY TO READ BRANCH DETAILS FILE*   S01194
+     C*************@K2BCH**-         -          "          -          *   S01194
+     C*************@KYBCH**-  KEY TO READ BRANCH DETAILS FILE         *   S01194
+     C*                                                               *
+     C*            KCBOKC  -  BOOK FIELD            }                 *
+     C*            KCCCY   -  CURRENCY FIELD        }                 *
+     C*************KCBRSN**-  BRANCH CODE FIELD     }                 *   S01194
+     C*            KCBRCA  -  BRANCH CODE FIELD     }                 *   S01194
+     C*            KCVDAT  -  VALUE DATE            }                 *
+     C*            KCMDAT  -  MATURITY DATE         }                 *
+     C*            KCBSRD  -  BASE RATE CODE        } FIELDS          *
+     C*            KCDDAT  -  DEAL DATE             } COMPRISING THE  *
+     C*            KCORED  -  ORIGINAL ENTRY DATE   } SUMMARY FILE    *
+     C*            KCDDTM  -  DEAL DONE TIME        } RECORD          *
+     C*            KCAVEP  -  AVERAGE PRICE         }                 *
+     C*            KCNETP  -  NET POSITION          }                 *
+     C*            KCCDPL  -  NO OF DEC PLACES      }                 *
+     C*            KCNTPS  -  NET POSN SIGN         }                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BAA      BEGSR
+     C*********************                                               S01194
+     C***Convert*the*Midas*Branch Code to the DRS Branch Code             S01194
+     C***(Using*the*stored*Branch Code of the previous record)            S01194
+     C*********************                                               S01194
+     C*********************MOVE '10'      @K1BCH                          S01194
+     C*********************Z-ADD@BCODE    @K2BCH                          S01194
+     C*********************                                               S01194
+     C***********@KYBCH****CHAINFDBRNCLL             79                   S01194
+     C*********************                                               S01194
+     C************IN79*****IFEQ '1'                        B1             S01194
+     C***********RECI******ORNE 'D'                        *1             S01194
+     C*********************                                ***************S01194
+     C*********************MOVEL'FDBRNCLL'DBFILE           *             *S01194
+     C*********************MOVEL@KYBCH    DBKEY            * DBERROR 004 *S01194
+     C*********************MOVE '004'     DBASE            *             *S01194
+     C*********************                                ***************S01194
+     C*********************EXSR *PSSR                      *1             S01194
+     C*********************END                             E1             S01194
+     C*********************                                               S01194
+     C*********************MOVE BRSN      @IBRSN  3                       S01194
+     C*********************                                               S01194
+     C***Convert*the*Midas*Base Rate to the DRS Base Rate                 S01194
+     C***(Using*the*stored*Base Rate Code of the previous record)         S01194
+     C*********************                                               S01194
+     C*********************MOVE '21'      @K1BSR                          S01194
+     C*********************MOVE @OCCY     @K2BSR                          S01194
+     C*********************Z-ADD@BRSQ     @K3BSR                          S01194
+     C*********************                                               S01194
+     C***********@KYBSR****CHAINFDBSRTLL             77                   S01194
+     C*********************                                               S01194
+     C************IN77*****IFEQ '1'                        B1             S01194
+     C***********RECI******ORNE 'D'                        *1             S01194
+     C*********************                                ***************S01194
+     C*********************MOVEL'FDBSRTLL'DBFILE           *             *S01194
+     C*********************MOVEL@KYBSR    DBKEY            * DBERROR 005 *S01194
+     C*********************MOVE '005'     DBASE            *             *S01194
+     C*********************                                ***************S01194
+     C*********************EXSR *PSSR                      *1             S01194
+     C*********************END                             E1             S01194
+     C*********************                                               S01194
+     C*********************MOVE FSRT      @IFSRT  5                       S01194
+      *                                                                   S01194
+      ***Move*base*rate*into*alpha*field*****                       S01194E31696
+     C*********************MOVE @BRSQ     @BSRT   2                 S01194E31696
+      ** Access base rate shortname for current record                    E31696
+     C                     MOVE BRSQ      @BSRT   2                       E31696
+      *                                                                   S01194
+      ** Call Access Program for Base Rate Details                        S01194
+     C                     CALL 'AOBSRTR0'                                S01194
+     C                     PARM '*DBERR  '@RTCD                           S01194
+     C                     PARM '*KEY   ' @OPTN                           S01194
+     C*********************PARM UCUCY     @CCY    3                 S01194E30746
+     C***********          PARM @OCCY     @CCY    3                 E30746E46068
+     C                     PARM UCUCY     @CCY    3                       E46068
+     C                     PARM @BSRT     @BBSRT  2                       S01194
+     C********** SDBSRT    PARM SDBSRT    DSFDY                     S01194CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                           CSD006
+     C*
+     C** Move the details from the Previous Rec into the
+     C** Deal Summary Branch file (DLDSMBPP)
+     C*
+     C                     MOVE @BOKC     KCBOKC
+     C                     MOVE @OCCY     KCCCY
+     C*********************MOVE @IBRSN    KCBRSN                          S01194
+     C                     MOVE @BCODE    KCBRCA                          S01194
+     C                     Z-ADD@VDATE    KCVDAT
+     C                     Z-ADD@MDATE    KCMDAT
+     C*********************MOVE @IFSRT    KCBSRD                          S01194
+     C                     MOVE @BSRS     KCBSRD                          S01194
+     C                     Z-ADD@DDATE    KCDDAT
+     C                     Z-ADD@DDONE    KCORED
+     C                     Z-ADD@TDONE    KCDDTM
+     C*
+     C** Move the calculated AVERAGE PRICE, NET POSITION, NET POSITION
+     C** SIGN and CLOSED PROFIT AND LOSS into the Deal Summary Branch
+     C** file (DLDSMBPP)
+     C*
+     C                     Z-ADD@NAVEP    KCAVEP
+     C                     Z-ADD@NNETP    KCNETP
+     C                     Z-ADD@NCDPL    KCCDPL
+     C                     Z-ADD@NNTPS    KCNTPS
+     C*
+     C** Write the record to the file
+     C*
+     C                     WRITEDLDSMBP0
+     C*
+     C           #BAA9     ENDSR                           *** #BAA9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BAB     - WRITE RECORD TO DLDLHBPP  (HISTORY FILE)           *
+     C*                                                               *
+     C* CALLS                                                         *
+     C*                                                               *
+     C* CALLED BY  #BA    - PROCESS FOR EACH DEAL                     *
+     C*                                                               *
+     C* FLDS USED  DLNO    -  DEAL NUMBER             }               *
+     C*            UCUCY   -  OUR CCY                 }               *
+     C*            BYSL    -  BUY/SELL INDICATOR      }               *
+     C*            BRSQ    -  BASE RATE CODE          }               *
+     C*************BRCD****-  BRANCH CODE             } DEALS FILE    *   S01194
+     C*            BRCA    -  BRANCH CODE             } DEALS FILE    *   S01194
+     C*            UPAMT   -  OUR PRINCIPLE AMOUNT    }               *
+     C*            VDAT    -  VALUE DATE    (MIDAS NO)}               *
+     C*            MDAT    -  MATURITY DATE (MIDAS NO)}               *
+     C*            DDAT    -  DEAL DATE     (MIDAS NO)}               *
+     C*            ORED    -  DEAL-DONE DATE(MIDAS NO)}               *
+     C*            DDTM    -  DEAL-DONE TIME          }               *
+     C*                                                               *
+     C*            @NAVEP - NEW AVERAGE PRICE         }               *
+     C*            @NNETP - NEW NET POSITION          }               *
+     C*            @NCDPL - NEW CLOSED PROFIT & LOSS  } DL1940        *
+     C*            @NNTPS - NEW NET POSITION SIGN     }               *
+     C*                                                               *
+     C*            @DSIGN  -  DEAL SIGN (+1 OR -1)    } PREVIOUS CALC *
+     C*                                                               *
+     C*            KADLNO  -  DEAL NUMBER           }                 *
+     C*            KABOKC  -  BOOK CODE             }                 *
+     C*            KACCY   -  CURRENCY FIELD        }                 *
+     C*************KABRCD**-  BRANCH CODE FIELD     }                 *   S01194
+     C*            KABRCA  -  BRANCH CODE FIELD     }                 *   S01194
+     C*            KAVDAT  -  VALUE DATE            }                 *
+     C*            KAMDAT  -  MATURITY DATE         }                 *
+     C*            KABCOD  -  BASE RATE CODE        } FIELDS          *
+     C*            KADDAT  -  DEAL DATE             } COMPRISING THE  *
+     C*            KAORED  -  ORIGINAL ENTRY DATE   } HISTORY FILE    *
+     C*            KADDTM  -  DEAL DONE TIME        } RECORD          *
+     C*            KADLAM  -  DEAL AMOUNT           }                 *
+     C*            KADAMS  -  DEAL SIGN             }                 *
+     C*            KADLRT  -  SPREAD RATE           }                 *
+     C*            KAAVEP  -  AVERAGE PRICE         }                 *
+     C*            KANETP  -  NET POSITION          }                 *
+     C*            KACDPL  -  NO OF DEC PLACES      }                 *
+     C*            KANTPS  -  NET POSN SIGN         }                 *
+     C*****************************************************************
+     C*
+     C           #BAB      BEGSR
+     C*
+     C** Move the Deal details from the Deals file (DLDLDGLC) into the
+     C** Deal History Branch file (DLDLHBPP)
+     C*
+     C                     Z-ADDDLNO      KADLNO
+     C                     MOVE BOKC      KABOKC
+     C                     MOVE UCUCY     KACCY
+     C*********************Z-ADDBRCD      KABRCD                          S01194
+     C                     MOVE BRCA      KABRCA                          S01194
+     C                     Z-ADDVDAT      KAVDAT
+     C                     Z-ADDMDAT      KAMDAT
+     C                     Z-ADDBRSQ      KABCOD
+     C                     Z-ADDDDAT      KADDAT
+     C                     Z-ADDORED      KAORED
+     C                     Z-ADDDDTM      KADDTM
+     C                     Z-ADDUPAMT     KADLAM
+     C                     Z-ADD@DSIGN    KADAMS
+     C                     Z-ADD@@RATE    KADLRT
+     C*
+     C** Move the calculated AVERAGE PRICE, NET POSITION, NET POSITION
+     C** SIGN and CLOSED PROFIT AND LOSS into the Deal History Branch
+     C** file (DLDLHBPP)
+     C*
+     C                     Z-ADD@NAVEP    KAAVEP
+     C                     Z-ADD@NNETP    KANETP
+     C                     Z-ADD@NCDPL    KACDPL
+     C                     Z-ADD@NNTPS    KANTPS
+     C*
+     C** Write the record to the file
+     C*
+     C                     WRITEDLDLHBP0
+     C*
+     C           #BAB9     ENDSR                           *** #BAB9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #C       - TERMINATION PROCESSING                             *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED BY  MAIN CONTROLLING ROUTINE                           *
+     C*                                                               *
+     C* FLDS USED                                                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C* Set LR to terminate & return after closing down program & files
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR    - DATABASE ERROR SUBROUTINE                          *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED IF ANY PROGRAM OR FILE ERRORS                          *
+     C*                                                               *
+     C* FLDS USED  @LDA  - VARIABLE TO SET UP LDA WITH DB ERRORS      *
+     C*            DBERR - DS TO HOLD DATABASE ERROR                  *
+     C*            @TERM - TERMINATION PARAMETER                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C** Set on 'DONE' indicator to prevent looping (*IN55 = '1')
+     C*
+     C           *IN55     IFEQ '0'                        B1
+     C                     MOVE '1'       *IN55            *1
+     C*
+     C** Set up termination parameter, turn on error switches,
+     C** Set on LR, DUMP and RETURN
+     C*
+     C                     MOVE 'E'       @TERM            *1
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *INLR            *1
+     C                     DUMP                            *1
+     C           *NAMVAR   DEFN LDA       @LDA  256        *1
+     C           *LOCK     IN   @LDA                       *1
+     C                     MOVELDBERR     @LDA             *1
+     C                     OUT  @LDA                       *1
+     C*
+     C                     END                             E1
+     C*
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+**  CPY@  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

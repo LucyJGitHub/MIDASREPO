@@ -1,0 +1,286 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Collateral Locations File Purge Audit Rpt')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0732 - Collateral Locations File Purge Audit Report        *
+      *                                                               *
+      *  Function:  This program is a housekeeping program for the    *
+      *  (COB)      Collateral Locations File. This is used to purge  *
+      *             all reversed records without any validation if    *
+      *             the locatiion is being used by the collateral     *
+      *             details file.                                     *
+      *                                                               *
+      *  Called By: SDC0732 - Collateral Locations File Purge         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CGL011  *CREATE    Date 20Sep99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL011 - Collateral Processing for Midas                     *
+      *                                                               *
+      *****************************************************************
+     FSDCOLOL3UF  E           K        DISK         KCOMIT
+     FSDFCTLL0UF  E           K        DISK         KCOMIT
+     FSD0732AUO   E                    PRINTER                        UC
+     F                                              KINFDS SPOOLU
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   70  - End of File on SDCOLOL3                               *
+      *   71  _ No record found on Chain to SDFCTLL0                  *
+      *   80  - Error on deletion of SDCOLOL3 record                  *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report Routine                        *
+      *  SRINIT - Initialisation Routine                              *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for SD0732AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for Access Objects
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Read SDCOLOL3.
+      *
+     C                     READ SDCOLOL3                 70
+      *
+     C           *IN70     DOWEQ*OFF
+     C                     DELETSDCOLOL3               80
+      *
+      ** If error occurred on deletion, do DB Error processing.
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCOLOPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+      *
+      ** Otherwise,
+      *
+     C                     ELSE
+     C                     ADD  1         RNORP
+     C           OPENAU    IFEQ 'N'
+     C                     MOVE 'Y'       OPENAU
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ SDCOLOL3                 70
+      *
+     C                     ENDDO
+      *
+      ** If OPENAU is 'Y'
+      *
+     C           OPENAU    IFEQ 'Y'
+     C                     MOVEL'SDCOLOPD'WFILE  10
+     C           WFILE     CHAIN@AHREAU              71
+      *
+     C           *IN71     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDFCTLPA'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DB ERROR 02 *
+     C                     MOVELWFILE     DBKEY            ***************
+     C                     OUT  LDA
+     C                     OPEN SD0732AU
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C           WFILE     CHAIN@AHREAU              71
+     C                     SUB  RNORP     AHNORC
+     C                     UPDAT@AHREAU
+     C                     OPEN SD0732AU
+     C                     Z-ADDAHNORC    RNORC
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** End the program.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialisation Routine.                             *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *  Calls     : *PSSR, AOBANKR0                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SD0732'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Initialise work fields.
+      *
+     C                     Z-ADD0         RNORP
+     C                     MOVE 'N'       OPENAU  1
+      *
+      ** Call Access Program for Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DB ERROR 03 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format: *IN98 is on if MMDDYY.
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Produce Audit Report Routine.                       *
+      *                                                               *
+      *  Called By : Main Processing, *PSSR                           *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Open Audit Report.
+      *
+     C           OPENAU    IFEQ 'N'
+     C                     MOVE 'Y'       OPENAU
+     C                     OPEN SD0732AU
+     C                     ENDIF
+      *
+      ** Output Report Header.
+      *
+     C                     WRITEHEADAU
+      *
+      ** If there is a DB Error, output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C           *INU8     OREQ *ON
+     C                     WRITEDBERROR
+      *
+      ** Otherwise, output File Control.
+      *
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C                     CLOSESD0732AU
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *  Called By : Main Processing, SRINIT                          *
+      *  Calls     : SRAUDT                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     EXSR SRAUDT
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

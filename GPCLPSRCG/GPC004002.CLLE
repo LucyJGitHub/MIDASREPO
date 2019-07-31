@@ -1,0 +1,108 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GP Roles By User Report')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GPC004002 - Midas GP Roles By User Report                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR993650A          Date 25Nov12              */
+/*                      AR993650           Date 25Nov12              */
+/*                      AR878597           Date 13Dec11              */
+/*                      CBF005  *CREATE    Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR993650A- Unable to generate report of user list           */
+/*                  (Reopened)                                       */
+/*       AR993650 - Unable to generate report of user list           */
+/*                  (Child: AR993651)                                */
+/*       AR878597 - Global Compilation Issues                        */
+/*       CBF005 - BF Infrastructure: Single Security User Maintenance*/
+/*                Profile                                            */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&CNSLD &PSEQ &LEVL &PENTY &LONGPARM)                       /*AR993650*/
+/**********  PGM        PARM(&CNSLD &PSEQ &PENTY &LONGPARM)               /*AR993650*/ /*AR993650A*/
+             PGM        PARM(&CNSLD &PSEQ &LEVL &PENTY)                                /*AR993650A*/
+ 
+             DCL        VAR(&CNSLD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&LEVL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PENTY) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&LONGPARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&ALLPARM) TYPE(*CHAR) LEN(100)
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             SNDPGMMSG  MSG('GPC004002 - Midas SF Roles By User +
+                          Report') TOMSGQ(MRUNQ)
+ 
+/** Initialise job switches and create data area */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+/** Call Report Program */
+ 
+             CHGVAR     VAR(&ALLPARM) VALUE(&CNSLD *CAT &PSEQ *CAT +
+                          &LEVL *CAT &PENTY)
+                                                                                       /*AR993650A*/
+             MONMSG     MSGID(MCH3601) EXEC(GOTO CMDLBL(END))                          /*AR993650A*/
+ 
+             CALL       PGM(GPCADPTWRP) PARM(GP004002 &ALLPARM)
+ 
+/** Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(GPOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal terminations */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            GPC004002 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/** Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+             SNDUSRMSG  MSG('Program GPC004002 ended abnormally - see job log')
+             ENDDO
+ 
+END:
+             ENDPGM

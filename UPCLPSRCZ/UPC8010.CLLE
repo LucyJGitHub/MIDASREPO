@@ -1,0 +1,62 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Add job queue to subsystem - DIJOBQ')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC8010 - Midas UP Add job queue to subsystem - DIJOBQ      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2017           */
+/*                                                                   */
+/*       Last Amend No. MD046675 *Create   Date 31Jul17              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046675 - Create a new jobq allocated for job GLC000585.   */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSBS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ADOPT) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2017')
+
+/* Global monitor message. */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+
+             CHGVAR     VAR(&XLIB) VALUE(&PREFIX *CAT 'XLIB')
+             CHGVAR     VAR(&MSBS) VALUE('M' *CAT &PREFIX *CAT 'SBS')
+             CHGVAR     VAR(&OWNER) VALUE(&PREFIX *CAT 'OWNER')
+             CHGVAR     VAR(&ADOPT) VALUE(&PREFIX *CAT 'ADOPT')
+
+/* Create job description MBATCHIC */
+
+             CRTJOBQ    JOBQ(&XLIB/DIJOBQ) TEXT('Midas DI Input +
+                          Cycle JOBQ')
+             MONMSG     MSGID(CPF3323)
+
+             CHGOBJOWN  OBJ(DIJOBQ) OBJTYPE(*JOBQ) NEWOWN(&OWNER)
+             GRTOBJAUT  OBJ(DIJOBQ) OBJTYPE(*JOBQ) AUTL(&ADOPT)
+
+/* Add job queue entry */
+
+             ADDJOBQE   SBSD(&XLIB/&MSBS) JOBQ(&XLIB/DIJOBQ) +
+                          SEQNBR(340)
+
+             GOTO       CMDLBL(ENDPGM)
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+
+ENDPGM:
+             ENDPGM

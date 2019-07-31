@@ -1,0 +1,4256 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Customer Cheque Handling')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0241R - CHEQUE HANDLING                                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG5139            Date 10Mar05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG4322            Date 24Sep04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 100997             Date 23Jan98               *
+      *                 CPM005             Date 26Aug96               *
+      *                 082061             DATE 24JAN95               *
+      *                 076002             DATE 12OCT94               *
+      *                 063568             DATE 25NOV93               *
+      *                 S01413 *CREATE     DATE 13APR93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG5139 - Unable to process additional customer during       *
+      *            insert                                             *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG4322 - Change the error message to infrom users that they *
+      *            should insert 10 digits for Cheque Numbers.        *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  100997 - Only allow numeric values for 'Cheque Card' numbers *
+      *           and 'Cheque' numbers.                               *
+      *  CPM005 - Private Banking Phase II                            *
+      *           Focus Group Changes Upgraded to DBA                 *
+      *  082061 - Replace the use of PF/SDCHEQPD with LF/SDCHEQL0.    *
+      *  076002 - SET RTCD CORRECTLY IF EXIT REQUESTED                *
+      *  063568 - Deleted records could not be reinserted if Run date *
+      *           is same as Last change date .                       *
+      *  S01413 - Retail 3 Incorporation                              *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      ** RTV : Customer Details Shadow file by key                                           BUG5139
+      *                                                                                      BUG5139
+     FSDCDSHL1IF  E           K        DISK                           UC                     BUG5139
+     F            @BBREBF                           KRENAME@BBREBFZ                          BUG5139
+     F                                              KINFSR *PSSR                             BUG5139
+     FSDFCTLL0UF  E           K        DISK
+     F** PREFIX : AH
+     F                                              KCOMIT
+     F*SDCHEQPDUF*E***        K        DISK                      A        082061
+     FSDCHEQL0UF  E           K        DISK                      A        082061
+     F** PREFIX : SC
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     F                                              KINFDS INFDS1
+     FSD0241R#CF  E                    WORKSTN
+     F** PREFIX : DD
+     F                                              KINFDS INFDS#
+     F*
+     F/EJECT
+     F****************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       01         Command key 1
+     F*       02         Command key 2
+     F*       03         Command key 3
+     F*
+     F*       05         Command key 5
+     F*
+     F*       09         Command key 9
+     F*       10         Command key 10
+     F*
+     F*       12         Command key 12
+     F*
+     F*
+     F*       18         Invalid Expiry date 3
+     F*       19         Invalid Customer No
+     F*       20         Invalid Cheque card 1
+     F*       21         Invalid Issued date 1
+     F*       22         Invalid Expiry date 1
+     F*       23         Invalid Cheque card 2
+     F*       24         Invalid Issued date 2
+     F*
+     F*       25         Used in SD0241R#
+     F*
+     F*       26         Invalid Expiry date 2
+     F*       27         Invalid Cheque card 3
+     F*       28         Invalid Issued date 3
+     F*
+     F*       29         Valid CMD KEY
+     F*
+     F*       30         Invalid Cheque card 4
+     F*       31         Invalid Issued date 4
+     F*       32         Invalid Expiry date 4
+     F*       33         Invalid Cheque card 5
+     F*       34         Invalid Issued date 5
+     F*       35         Invalid Expiry date 5
+     F*       36         Invalid Cheque F No 1
+     F*       37         Invalid Cheque T No 1
+     F*       38         Invalid Quantity 1
+     F*       39         Invalid Issued Date 1
+     F*       40         Invalid Cheque F No 2
+     F*       41         Invalid Cheque T No 2
+     F*       42         Invalid Quantity 2
+     F*       43         Invalid Issued Date 2
+     F*       44         Invalid Cheque F No 3
+     F*       45         Invalid Cheque T No 3
+     F*       46         Invalid Quantity 3
+     F*       47         Invalid Issued Date 3
+     F*       48         Invalid Cheque F No 4
+     F*       49         Invalid Cheque T No 4
+     F*       50         Invalid Quantity 4
+     F*       51         Invalid Issued Date 4
+     F*       52         Invalid Cheque F No 5
+     F*       53         Invalid Cheque T No 5
+     F*       54         Invalid Quantity 5
+     F*       55         Invalid Issued Date 5
+     F*       56         Invalid Credit card 1
+     F*       57         Invalid Credit card Text 1
+     F*       58         Invalid Issued date 1
+     F*       59         Invalid Expiry date 1
+     F*       60         Invalid Credit card 2
+     F*       61         Invalid Credit card Text 2
+     F*       62         Invalid Issued date 2
+     F*       63         Invalid Expiry date 2
+     F*       64         Invalid Credit card 3
+     F*       65         Invalid Credit card Text 3
+     F*       66         Invalid Issued date 3
+     F*       67         Invalid Expiry date 3
+     F*       68         Invalid Credit card 4
+     F*       69         Invalid Credit card Text 4
+     F*       70         Invalid Issued date 4
+     F*       71         Invalid Expiry date 4
+     F*       72         Invalid Credit card 5
+     F*       73         Invalid Credit card Text 5
+     F*       74         Invalid Issued date 5
+     F*       75         Invalid Expiry date 5
+     F*
+     F*       77         Flip to change mode
+     F*       78         Global error indicator
+     F*       79         Protect key field
+     F*
+     F*       86         Condition putovr
+     F*       87         Enable cmd key
+     F*       88         Protect key field
+     F*       89         ADD mode
+     F*       90-99      Standard subroutine indicators.
+     F*
+     F*          U7    Set on with U8 if a database error occurs.
+     F*          U8    File out of balance if on on its own.
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       ..  ..  ..  04  ..  06  07  08  ..  ..
+     F*       11  ..  13  14  15  16  17  ..  ..  ..
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..  ..
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..  ..
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..  ..
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..  ..
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..  ..
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..  80
+     F*       81  82  83  84  85  ..  ..  ..  ..  ..
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..
+     F*
+     F/EJECT
+     E*
+     E** Copyright.
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** Tables for standard subroutines ZDATE1 / ZDATE2
+     E*
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E*
+     E/EJECT
+     E*****************************************************************
+     E                    @F         16  1
+      * input array for za0840
+     E                    @G         16  1
+      * output array for za0840
+     E                    @H      1  15 15 0
+      * array of powers of ten
+     F*****************************************************************
+     E/EJECT
+     I*
+     I** Data structure for compilation - copyright insertion.
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** Program data structure.
+     I*
+     IPGMDS     ESDSY2PGDSP
+     I*
+     I** Job date/time.
+     I*
+     IJBDTTM      DS
+     I                                        1   60WWJDT
+     I                                        1   20WWJYY
+     I                                        3   40WWJMM
+     I                                        5   60WWJDD
+     I                                        7  120WWJTM
+     I                                        7   80WWJHH
+     I                                        9  100WWJNN
+     I                                       11  120WWJSS
+     I*
+     I** Display file data structure.
+     I*
+     IINFDS#    E DSY2I#DSP
+     I*
+     I** File information data structure.
+     I*
+     IINFDS1    E DSY2I1DSP
+     I*
+     I** Local Data Area for database error details
+     I*
+     ILDA       E DSLDA
+     I*
+     I** Current/previous master file format fields for change control.
+     I*
+     I@1DBRC    E DSSDCHEQPD
+     I*
+     I** Stored master file format fields.
+     I*
+     I#1DBRC      DS                            502
+     I                                        1   1 #1DB1
+     I*
+     IRUNDAT    E DS
+     I                                        1   20RDLUP
+     I                                        3   5 RMLUP
+     I                                        6   70RYLUP
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      **   CUSTOMER
+      *                                                                   CPM005
+     ISCSARD    E DSSCSARDPD                                              CPM005
+      **   SWITCHABLE FEATURES DETAILS                                    CPM005
+      *                                                                   CPM005
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     I/EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     -                                                       *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      * KEYDSP   - DISPLAY KEY SCREEN AND PROCESS HELP REQUESTS          *
+      * KEYVAL   - VALIDATE KEY FIELD                                    *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      * DETPRC   - PROCESS DETAILS                                       *
+      * DETDSP   - DISPLAY DETAIL SCREEN AND PROCESS HELP REQUESTS       *
+      * DETVAL   - VALIDATE DETAILS                                      *
+      * DETINZ   - INITIALIZE SCREEN FIELDS                              *
+      * DETFIL   - MOVE RECORD FIELDS TO SCREEN FIELDS                   *
+      * RECPRC   - PROCESS RECORD                                        *
+      * RECADD   - PROCESS ADD REQUEST                                   *
+      * RECUPD   - PROCESS AMEND/DELETE REQUEST                          *
+      * DETDEF   - MOVE DEFAULT VALUES TO SCREEN FIELDS                  *
+      * RECCNT   - UPDATE NO OF RECORDS IN STANDING DATA CONTROLS        *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      * PGMCLS   - CLOSE CALLED PROGRAMS                                 *
+      * PGMEND   - EXIT PROGRAM                                          *
+      * ZDATE1   - VALIDATE DATES SUBMITTED AND CONVERT                  *
+      *            TO A NUMBER OF DAYS.                                  *
+      * ZDATE2   - CONVERT A DAY NUMBER TO DATE FORMATS.                 *
+      * INIT     -                                                       *
+      * *PSSR    -                                                       *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * Y2CLMSC  -                                                       *
+      * SDEMSRR  -                                                       *
+      * Y2SNMGC  -                                                       *
+      * Y2BGCMC  -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           WWRET7  7
+     C                     PARM           DDCUST
+     C                     PARM           WBCSSN 10                                          BUG5139
+     C                     PARM           WBCRNM 20                                          BUG5139
+     C                     PARM           WBCRTN 10                                          BUG5139
+     C*
+     C** Initialise
+     C*
+     C                     EXSR INIT
+     C*
+     C** Perform once if Customer parameter passed, else repeat
+     C*
+     C           WWRPT     DOUEQ'N'
+     C                     EXSR KEYPRC
+     C                     END
+     C*
+     C** Terminate program.
+     C*
+     C                     MOVEL*BLANKS   WWRET7                          076002
+     C                     EXSR PGMCLS
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * DETINZ   - INITIALIZE SCREEN FIELDS                              *
+      * KEYDSP   - DISPLAY KEY SCREEN AND PROCESS HELP REQUESTS          *
+      * PGMCLS   - CLOSE CALLED PROGRAMS                                 *
+      * KEYVAL   - VALIDATE KEY FIELD                                    *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWBYP    -                                                       *
+      * WWTRN    -                                                       *
+      * WWPMD    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         KEYPRC    BEGSR
+     C*
+     C** Initialise key screen
+     C*
+     C** Bypass first display of key screen is possible.
+     C*
+     C                     MOVEL'Y'       WWBYP   1
+     C*
+     C** Signal start of transaction.
+     C*
+     C                     MOVEL'Y'       WWTRN   1
+     C*
+     C           WWTRN     DOWEQ'Y'
+     C           WWTRN     OREQ 'R'
+     C*
+     C** Ensure transaction continues (if reset).
+     C*
+     C                     MOVEL'Y'       WWTRN
+     C*
+     C** Initialise Detail screen.
+     C*
+     C                     EXSR DETINZ
+     C*
+     C** Conduct screen conversation:
+     C*
+     C           WWTRN     DOWEQ'Y'
+     C*
+     C** Key field is blank: display key screen.
+     C*
+     C           WWBYP     IFEQ 'Y'
+     C           DDCUST    ANDEQ*BLANK
+     C                     MOVEL'N'       WWBYP
+     C                     EXSR KEYDSP
+     C                     END
+     C*
+     C** Process response to key screen:
+     C** Cancel & exit program.
+     C*
+     C           *IN03     IFEQ '1'
+     C                     MOVEL'Y2U9999' WWRET7                          076002
+     C                     EXSR PGMCLS
+     C                     END
+     C*
+     C** Switch between *ADD/*CHANGE modes.
+     C*
+     C           *IN09     IFEQ '1'
+     C*
+     C           WWPMD     IFEQ 'ADD'
+     C                     MOVEL'CHG'     WWPMD   3
+     C                     ELSE
+     C                     MOVEL'ADD'     WWPMD
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** HOME: Reset screen fields.
+     C*
+     C           *IN05     IFEQ '1'
+     C                     MOVEL'N'       WWTRN
+     C                     ELSE
+     C*
+     C** Validate key field.
+     C*
+     C                     EXSR KEYVAL
+     C*
+     C** Process key screen input.
+     C*
+     C           *IN78     IFEQ '0'
+     C                     EXSR KEYDET
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     CSR                   ENDSR                           * KEYPRC ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * KEYDSP   -                                                       *
+      * KEYDSP   - DISPLAY KEY SCREEN AND PROCESS HELP REQUESTS          *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * Y2CLMSC  -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPMD    -                                                       *
+      * WWHLP    -                                                       *
+      * WWIN89   -                                                       *
+      * WWJTM    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         KEYDSP    BEGSR
+     C*
+     C** Set screen conditioning indicators.
+     C*
+     C           WWPMD     IFEQ 'ADD'
+     C                     MOVE '1'       *IN89
+     C                     END
+     C*
+     C** Update screen time.
+     C*
+     C                     TIME           DDTIME           Screen time.
+     C*
+     C** PUTOVR unless conditioned fields change.
+     C*
+     C           WWHLP     DOUEQ'N'
+     C                     MOVE '1'       *IN86
+     C*
+     C           *IN89     IFNE WWIN89
+     C                     MOVE '0'       *IN86
+     C                     END
+     C*
+     C                     MOVE *IN89     WWIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+     C                     MOVEL'N'       WWHLP   1        Reset help requ
+     C                     END
+     C*
+     C** Update job time.
+     C*
+     C                     TIME           WWJTM            Job time.
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+     C*
+     C** Reset first message only flag.
+     C*
+     C                     MOVEL'Y'       ZAFSMS  1
+     C*
+     C** Reset global error indicator.
+     C*
+     C                     MOVE '0'       *IN78
+     C*
+     CSR                   ENDSR                           * KEYDSP ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * KEYVAL   - VALIDATE KEY FIELD                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * SDEMSRR  -                                                       *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      * WWCUSX   -                                                       *
+      * WWDFCF   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         KEYVAL    BEGSR
+     C*
+     C** Check relations.
+     C** Check reference to Client Details.
+     C*
+     C                     MOVE *BLANKS   WWRET7
+     C                     MOVELDDCUST    WWCUSX  1
+     C*
+     C** Name search required ?
+     C*
+     C           WWCUSX    IFEQ '?'
+     C                     CALL 'SD0010S'              90
+     C                     PARM           WWRET7
+     C           DDCUST    PARM DDCUST    WQ0009  6
+     C*
+     C** Call to program ended in error.
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SD99913' WWRET7
+     C                     END
+     C*
+     C                     MOVE 'Y'       WWDFCF  1        Defer confirm
+     C*
+     C           WWRET7    IFEQ *BLANKS
+     C           DDCUST    ANDNE*BLANKS
+     C                     CALL 'AOCUSTR0'AOCUST
+      *                                                                                      BUG5139
+      ** If not found in SDCUSTPD then check if it is in the                                 BUG5139
+      ** shadow file SDCDSHPD                                                                BUG5139
+      *                                                                                      BUG5139
+     C           @RTCD     IFNE *BLANKS                                                      BUG5139
+     C           DDCUST    CHAIN@BBREBFZ             90                                      BUG5139
+     C           *IN90     IFEQ *OFF                                                         BUG5139
+     C                     MOVE *BLANKS   @RTCD                                              BUG5139
+     C                     ENDIF                                                             BUG5139
+     C                     ENDIF                                                             BUG5139
+     C*
+     C** Send message 'Client Details not found'
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SD60200' ZAMSID
+     C                     EXSR PGMMSG
+     C                     MOVEL'SD60200' WWRET7
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           WWRET7    IFNE *BLANK
+     C                     MOVE '1'       *IN78
+     C                     MOVE '1'       *IN19
+     C                     END
+     C*
+     C** Customer Number required.
+     C*
+     C           DDCUST    IFEQ *BLANK
+     C                     MOVE '1'       *IN78
+     C                     MOVE '1'       *IN19
+     C                     MOVEL'LZP1102' ZAMSID           Message id.
+     C                     EXSR PGMMSG                     Send message
+     C                     END
+     C*
+     CSR                   ENDSR                           * KEYVAL ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    -                                                       *
+      * DETDEF   - MOVE DEFAULT VALUES TO SCREEN FIELDS                  *
+      * DETFIL   - MOVE RECORD FIELDS TO SCREEN FIELDS                   *
+      * DETPRC   - PROCESS DETAILS                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPMD    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         KEYDET    BEGSR
+     C*
+     C** Access Customer details
+     C*
+     C           DDCUST    CHAINSDCDSHL1             90                                      BUG5139
+     C           *IN90     IFEQ *ON                                                          BUG5139
+      *                                                                                      BUG5139
+     C           WWPMD     IFNE 'CHG'                                                        BUG5139
+     C                     MOVEL'*DBERR ' @RTCD
+     C                     CALL 'AOCUSTR0'AOCUST
+     C*
+     C                     MOVE BBCSSN    DDCSSN
+     C                     MOVE BBCRNM    DDCRNM
+     C                     MOVE BBCRTN    DDCRTN
+     C                     ELSE                                                              BUG5139
+     C                     MOVE WBCSSN    DDCSSN                                             BUG5139
+     C                     MOVE WBCRNM    DDCRNM                                             BUG5139
+     C                     MOVE WBCRTN    DDCRTN                                             BUG5139
+     C                     ENDIF                                                             BUG5139
+      *                                                                                      BUG5139
+     C                     ELSE                                                              BUG5139
+     C                     MOVE BBCSSN    DDCSSN                                             BUG5139
+     C                     MOVE BBCRNM    DDCRNM                                             BUG5139
+     C                     MOVE BBCRTN    DDCRTN                                             BUG5139
+     C                     ENDIF                                                             BUG5139
+     C*
+     C** Check for existing record.
+     C*
+     C********** DDCUST    CHAINSDCHEQPD             9091  *              082061
+     C           DDCUST    CHAINSDCHEQL0             9091  *              082061
+     C*
+     C** Record locked.
+     C*
+     C           *IN91     IFEQ '1'
+     C                     MOVE '1'       *IN78
+     C                     MOVE '1'       *IN19
+     C                     ELSE
+     C*
+     C** If record does not exist, flip to add mode.
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'ADD'     WWPMD
+     C                     MOVEL'I'       DDACTN                                             BUG5139
+     C                     MOVE '0'       *IN77
+     C*
+     C** USER: Initialise detail screen (new record)
+     C** Retrieve for other screen - Client Details  *
+     C*
+     C                     EXSR DETDEF
+     C*
+     C** If record does exist, flip to change mode.
+     C*
+     C                     ELSE
+     C                     MOVE '1'       *IN77
+     C                     MOVEL'CHG'     WWPMD
+     C                     MOVEL'A'       DDACTN                                             BUG5139
+     C*
+     C** Load screen fields from DBF.
+     C*
+     C                     EXSR DETFIL
+     C*
+     C** CASE:     WRK.Set Up Complete is No
+     C*
+     C           WWSUC     IFEQ 'N'
+     C                     MOVEL'Y'       WWDELA           Deletion Allowed
+     C                     ELSE
+     C                     MOVEL'N'       WWDELA
+     C                     END
+     C*
+     C** Retrieve for other screen - Client Details  *
+     C*
+     C                     MOVEL*BLANKS   WWRET7
+     C                     MOVE *BLANKS   @RTCD
+     C                     CALL 'AOCUSTR0'AOCUST
+     C*
+     C** DBF Record not found.
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SD99908' WWRET7
+     C                     MOVEL'SD99908' ZAMSID
+     C                     EXSR PGMMSG
+     C*
+     C** USER: Process DBF record
+     C*
+     C                     ELSE
+     C                     MOVEL*BLANKS   WWRET7
+     C                     MOVELBBCSSN    DDCSSN
+     C                     MOVELBBCRNM    DDCRNM
+     C                     MOVELBBCRTN    DDCRTN
+     C                     END
+     C*
+     C** CASE:     WRK.Set Up Complete is Yes
+     C*
+     C           WWSUC     IFEQ 'Y'
+     C                     MOVEL'Y'       WWBINS           broker indicator
+     C                     END
+     C*
+     C                     END
+     C*
+     C** No errors: Display and process details
+     C*
+     C           *IN78     IFEQ '0'
+     C                     EXSR DETPRC
+     C                     END
+     C*
+     C                     END
+     C*
+     CSR                   ENDSR                           * KEYDET ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DETPRC   - PROCESS DETAILS                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * DETDSP   - DISPLAY DETAIL SCREEN AND PROCESS HELP REQUESTS       *
+      * PM0601   - CUSTOMER NOTEPAD MAINTENANCE PGM                      *
+      * DETVAL   - VALIDATE DETAILS                                      *
+      * RECPRC   - PROCESS RECORD                                        *
+      * PGMCLS   - CLOSE CALLED PROGRAMS                                 *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWTRN    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         DETPRC    BEGSR
+     C*
+     C** Conduct detail screen conversation:
+     C** - repeat until screen control flag is reset:
+     C*
+     C           WWTRN     DOWEQ'Y'                        - B1
+     C           *IN03     ANDEQ'0'
+     C                     MOVE '0'       *IN01
+     C                     MOVE '0'       *IN02
+     C*
+     C** Display detail screen.
+     C*
+     C                     EXSR DETDSP
+     C*
+     C** Redisplay previous screen
+     C*
+     C           *IN12     IFEQ '1'                        - B2
+     C                     MOVEL'R'       WWTRN
+     C                     END                             - E2
+     C*
+     C** Process detail screen input.
+     C*
+     C           *IN03     IFEQ '0'                        - B2
+     C           *IN12     ANDEQ'0'
+     C           *IN01     ANDEQ'0'
+     C           *IN02     ANDEQ'0'
+     C                     MOVE 'N'       WWDFCF
+     C*
+     C** If delete is not pending....
+     C** Validate details.
+     C*
+     C           *IN10     IFEQ '0'                        - B3
+     C                     EXSR DETVAL
+     C                     END                             - E3
+     C*
+     C** Update record if no error
+     C*
+     C           *IN78     IFEQ '0'                        - B3
+     C           WWDFCF    ANDNE'Y'
+     C                     EXSR RECPRC
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** Process response to F3:
+     C** Cancel & exit program.
+     C*
+     C           *IN03     IFEQ '1'                        - B1
+     C                     MOVEL'Y2U9999' WWRET7                          076002
+     C                     EXSR PGMCLS
+     C                     END                             - E1
+     C*
+     CSR                   ENDSR                           * DETPRC ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DETDSP   - DISPLAY DETAIL SCREEN AND PROCESS HELP REQUESTS       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * Y2CLMSC  -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * DETPRC   - PROCESS DETAILS                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPMD    -                                                       *
+      * WWRPT    -                                                       *
+      * WWHLP    -                                                       *
+      * WWJTM    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         DETDSP    BEGSR
+     C*
+     C** Set screen conditioning indicators.
+     C*
+     C           WWPMD     IFEQ 'ADD'
+     C                     MOVE '1'       *IN89
+     C                     END
+     C*
+     C** Protect key field  on detail screen.
+     C*
+     C                     MOVE '1'       *IN88
+     C                     MOVE '0'       *IN79
+     C*
+     C           WWBINS    IFEQ 'Y'
+     C                     MOVE '1'       *IN79
+     C                     END
+     C*
+     C** Disable key screen - not applicable.
+     C*
+     C           WWRPT     IFEQ 'N'
+     C                     MOVE '0'       *IN87
+     C*
+     C** Enable key screen.
+     C*
+     C                     ELSE
+     C                     MOVE '1'       *IN87
+     C                     END
+     C*
+     C** Update screen time.
+     C*
+     C                     TIME           DDTIME           Screen time.
+     C           SCCHTP    COMP 'D'                      76
+     C*
+     C** PUTOVR unless conditioned fields change.
+     C*
+     C           WWHLP     DOUEQ'N'
+     C                     MOVE '1'       *IN86
+     C*
+     C           *IN89     IFNE CBIN89
+     C                     MOVE '0'       *IN86
+     C                     END
+     C*
+     C                     MOVE *IN89     CBIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMTSD0241F0
+     C                     MOVEL'N'       WWHLP   1        Reset help requ
+     C                     END
+     C*
+     C** Update job time.
+     C*
+     C                     TIME           WWJTM            Job time.
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+     C*
+     C** Reset first message only flag.
+     C*
+     C                     MOVEL'Y'       ZAFSMS
+     C*
+     C** Reset global error indicator.
+     C*
+     C                     MOVE '0'       *IN78
+     C*
+     CSR                   ENDSR                           * DETDSP ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DETVAL   - VALIDATE DETAILS                                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      * ZDATE1   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * DETPRC   - PROCESS DETAILS                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     CSR         DETVAL    BEGSR
+     C*
+     C*
+     C** VALIDATE CHEQUE CARD 1
+     C** Mandatory entry
+     C*
+     C           DDCAC1    IFEQ *BLANKS
+     C           DDDIS1    IFNE *BLANKS
+     C           DDDRE1    ORNE *BLANKS
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1103' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*                                                                   100997
+     C** VALIDATE CHEQUE CARD NUMBER                                      100997
+      **   Cheque Card number MUST be numeric.                            100997
+     C           DDCAC1    IFNE *BLANKS                                   100997
+     C                     MOVE DDCAC1    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCAC1    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN20                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C                     MOVEL'LZP1121' ZAMSID                          100997
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C*
+     C*
+     C** VALIDATE ISSUED DATE 1
+     C** Mandatory entry
+     C*
+     C           DDCAC1    IFNE *BLANKS
+     C*
+     C           DDDIS1    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDDIS1    DATEN   60
+     C                     MOVE DATEN     DATEA   6
+     C           DDDIS1    IFNE DATEA
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE DDDIS1    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 1
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWDIS1  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE EXPIRY DATE 1
+     C** Mandatory entry
+     C*
+     C           DDDRE1    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDDRE1    DATEN   60
+     C                     MOVE DATEN     DATEA   6
+     C           DDDRE1    IFNE DATEA
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDDRE1    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid expiry date 1
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWDRE1  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** EXPIRY DATE 1  MUST BE SUPERIOR THAN ISSUED DATE 1
+     C*
+     C           WWDRE1    IFLT WWDIS1
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1106' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE CHEQUE CARD 2
+     C** Mandatory entry
+     C*
+     C           DDCAC2    IFEQ *BLANKS
+     C           DDDIS2    IFNE *BLANKS
+     C           DDDRE2    ORNE *BLANKS
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1103' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*
+     C*
+     C*                                                                   100997
+     C** VALIDATE CHEQUE CARD NUMBER                                      100997
+      **   Cheque Card number MUST be numeric.                            100997
+     C           DDCAC2    IFNE *BLANKS                                   100997
+     C                     MOVE DDCAC2    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCAC2    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN23                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C                     MOVEL'LZP1121' ZAMSID                          100997
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C** VALIDATE ISSUED DATE 2
+     C** Mandatory entry
+     C*
+     C           DDCAC2    IFNE *BLANKS
+     C*
+     C           DDDIS2    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDDIS2    DATEN   60
+     C                     MOVE DATEN     DATEA   6
+     C           DDDIS2    IFNE DATEA
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDDIS2    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 2
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWDIS2  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE EXPIRY DATE 2
+     C** Mandatory entry
+     C*
+     C           DDDRE2    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDDRE2    DATEN   60
+     C                     MOVE DATEN     DATEA   6
+     C           DDDRE2    IFNE DATEA
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C*
+     C                     MOVE DDDRE2    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid expiry date 2
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWDRE2  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** EXPIRY DATE 2  MUST BE SUPERIOR THAN ISSUED DATE 2
+     C*
+     C           WWDRE2    IFLT WWDIS2
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1106' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE CHEQUE CARD 3
+     C** Mandatory entry
+     C*
+     C           DDCAC3    IFEQ *BLANKS
+     C           DDDIS3    IFNE *BLANKS
+     C           DDDRE3    ORNE *BLANKS
+     C                     MOVE '1'       *IN27
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1103' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*                                                                   100997
+     C** VALIDATE CHEQUE CARD NUMBER                                      100997
+      **   Cheque Card number MUST be numeric.                            100997
+     C           DDCAC3    IFNE *BLANKS                                   100997
+     C                     MOVE DDCAC3    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCAC3    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN27                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C                     MOVEL'LZP1121' ZAMSID                          100997
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C*
+     C*
+     C** VALIDATE ISSUED DATE 3
+     C** Mandatory entry
+     C*
+     C           DDCAC3    IFNE *BLANKS
+     C*
+     C           DDDIS3    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDDIS3    DATEN   60
+     C                     MOVE DATEN     DATEA   6
+     C           DDDIS3    IFNE DATEA
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C*
+     C                     MOVE DDDIS3    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 3
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWDIS3  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE EXPIRY DATE 3
+     C** Mandatory entry
+     C*
+     C           DDDRE3    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDDRE3    DATEN   60
+     C                     MOVE DATEN     DATEA   6
+     C           DDDRE3    IFNE DATEA
+     C                     MOVE '1'       *IN18
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C*
+     C                     MOVE DDDRE3    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid expiry date 3
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN18
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWDRE3  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** EXPIRY DATE 3  MUST BE SUPERIOR THAN ISSUED DATE 3
+     C*
+     C           WWDRE3    IFLT WWDIS3
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN18
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1106' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE CHEQUE CARD 4
+     C** Mandatory entry
+     C*
+     C           DDCAC4    IFEQ *BLANKS
+     C           DDDIS4    IFNE *BLANKS
+     C           DDDRE4    ORNE *BLANKS
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1103' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*                                                                   100997
+     C** VALIDATE CHEQUE CARD NUMBER                                      100997
+      **   Cheque Card number MUST be numeric.                            100997
+     C           DDCAC4    IFNE *BLANKS                                   100997
+     C                     MOVE DDCAC4    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCAC4    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN30                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C                     MOVEL'LZP1121' ZAMSID                          100997
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C*
+     C*
+     C** VALIDATE ISSUED DATE 4
+     C** Mandatory entry
+     C*
+     C           DDCAC4    IFNE *BLANKS
+     C*
+     C           DDDIS4    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDDIS4    DATEN   60
+     C                     MOVE DATEN     DATEA   6
+     C           DDDIS4    IFNE DATEA
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDDIS4    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 4
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWDIS4  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE EXPIRY DATE 4
+     C** Mandatory entry
+     C*
+     C           DDDRE4    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDDRE4    DATEN   60
+     C                     MOVE DATEN     DATEA   6
+     C           DDDRE4    IFNE DATEA
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDDRE4    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid expiry date 4
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWDRE4  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** EXPIRY DATE 4  MUST BE SUPERIOR THAN ISSUED DATE 4
+     C*
+     C           WWDRE4    IFLT WWDIS4
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1106' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE CHEQUE CARD 5
+     C** Mandatory entry
+     C*
+     C           DDCAC5    IFEQ *BLANKS
+     C           DDDIS5    IFNE *BLANKS
+     C           DDDRE5    ORNE *BLANKS
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1103' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*                                                                   100997
+     C** VALIDATE CHEQUE CARD NUMBER                                      100997
+      **   Cheque Card number MUST be numeric.                            100997
+     C           DDCAC5    IFNE *BLANKS                                   100997
+     C                     MOVE DDCAC5    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCAC5    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN33                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C                     MOVEL'LZP1121' ZAMSID                          100997
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C*
+     C*
+     C** VALIDATE ISSUED DATE 5
+     C** Mandatory entry
+     C*
+     C           DDCAC5    IFNE *BLANKS
+     C*
+     C           DDDIS5    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDDIS5    DATEN   60
+     C                     MOVE DATEN     DATEA   6
+     C           DDDIS5    IFNE DATEA
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDDIS5    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 5
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWDIS5  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE EXPIRY DATE 5
+     C** Mandatory entry
+     C*
+     C           DDDRE5    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDDRE5    DATEN   60
+     C                     MOVE DATEN     DATEA   6
+     C           DDDRE5    IFNE DATEA
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDDRE5    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid expiry date 5
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWDRE5  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** EXPIRY DATE 5  MUST BE SUPERIOR THAN ISSUED DATE 5
+     C*
+     C           WWDRE5    IFLT WWDIS5
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1106' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+     C*
+     C** VALIDATE CHEQUES NUMBER 1
+     C*                                                                   100997
+     C** Validate Cheque numbers                                          100997
+      **   'From' Cheque number MUST be numeric.                          100997
+     C           DDCQF1    IFNE *BLANKS                                   100997
+     C                     MOVE DDCQF1    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCQF1    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN36                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C**********           MOVEL'LZP1122' ZAMSID                                      100997 BUG4322
+     C                     MOVEL'LZP1124' ZAMSID                                             BUG4322
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C*                                                                   100997
+      **   'To' Cheque number MUST be numeric.                            100997
+     C           DDCQT1    IFNE *BLANKS                                   100997
+     C                     MOVE DDCQT1    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCQT1    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN37                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C**********           MOVEL'LZP1123' ZAMSID                                      100997 BUG4322
+     C                     MOVEL'LZP1125' ZAMSID                                             BUG4322
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C** Mandatory entry
+     C*
+     C           DDCQF1    IFEQ *BLANKS
+     C           DDCQT1    IFEQ *BLANKS
+     C           DDCQQ1    IFNE *BLANKS
+     C           DDCQI1    ORNE *BLANKS
+     C                     MOVE '1'       *IN36
+     C                     MOVE '1'       *IN37
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN36
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C           DDCQT1    IFEQ *BLANKS
+     C                     MOVE '1'       *IN37
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*
+     C           DDCQF1    IFNE *BLANKS
+     C           DDCQT1    ANDNE*BLANKS
+     C*
+     C** VALIDATE QUANTITY 1
+     C** Mandatory entry
+     C*
+     C           DDCQQ1    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE DDCQQ1    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '3'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid Quantity
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN38
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1108' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDCQQ1
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE ISSUED DATE 1
+     C** Mandatory entry
+     C*
+     C           DDCQI1    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCQI1    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCQI1    IFNE DATEA
+     C                     MOVE '1'       *IN39
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCQI1    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 1
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN39
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCQI1  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE CHEQUES NUMBER 2
+     C*                                                                   100997
+     C** Validate Cheque numbers                                          100997
+      **   'From' Cheque number MUST be numeric.                          100997
+     C           DDCQF2    IFNE *BLANKS                                   100997
+     C                     MOVE DDCQF2    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCQF2    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN40                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C**********           MOVEL'LZP1122' ZAMSID                                      100997 BUG4322
+     C                     MOVEL'LZP1124' ZAMSID                                             BUG4322
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C*                                                                   100997
+      **   'To' Cheque number MUST be numeric.                            100997
+     C           DDCQT2    IFNE *BLANKS                                   100997
+     C                     MOVE DDCQT2    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCQT2    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN41                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C**********           MOVEL'LZP1123' ZAMSID                                      100997 BUG4322
+     C                     MOVEL'LZP1125' ZAMSID                                             BUG4322
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C** Mandatory entry
+     C*
+     C           DDCQF2    IFEQ *BLANKS
+     C           DDCQT2    IFEQ *BLANKS
+     C           DDCQQ2    IFNE *BLANKS
+     C           DDCQI2    ORNE *BLANKS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C           DDCQT2    IFEQ *BLANKS
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*
+     C           DDCQF2    IFNE *BLANKS
+     C           DDCQT2    ANDNE*BLANKS
+     C*
+     C** VALIDATE QUANTITY 2
+     C** Mandatory entry
+     C*
+     C           DDCQQ2    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE DDCQQ2    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '3'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid Quantity
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1108' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDCQQ2
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE ISSUED DATE 2
+     C** Mandatory entry
+     C*
+     C           DDCQI2    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCQI2    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCQI2    IFNE DATEA
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCQI2    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 2
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCQI2  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE CHEQUES NUMBER 3
+     C*                                                                   100997
+     C** Validate Cheque numbers                                          100997
+      **   'From' Cheque number MUST be numeric.                          100997
+     C           DDCQF3    IFNE *BLANKS                                   100997
+     C                     MOVE DDCQF3    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCQF3    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN44                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C**********           MOVEL'LZP1122' ZAMSID                                      100997 BUG4322
+     C                     MOVEL'LZP1124' ZAMSID                                             BUG4322
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C*                                                                   100997
+      **   'To' Cheque number MUST be numeric.                            100997
+     C           DDCQT3    IFNE *BLANKS                                   100997
+     C                     MOVE DDCQT3    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCQT3    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN45                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C**********           MOVEL'LZP1123' ZAMSID                                      100997 BUG4322
+     C                     MOVEL'LZP1125' ZAMSID                                             BUG4322
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C** Mandatory entry
+     C*
+     C           DDCQF3    IFEQ *BLANKS
+     C           DDCQT3    IFEQ *BLANKS
+     C           DDCQQ3    IFNE *BLANKS
+     C           DDCQI3    ORNE *BLANKS
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN45
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C           DDCQT3    IFEQ *BLANKS
+     C                     MOVE '1'       *IN45
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*
+     C           DDCQF3    IFNE *BLANKS
+     C           DDCQT3    ANDNE*BLANKS
+     C*
+     C** VALIDATE QUANTITY 3
+     C** Mandatory entry
+     C*
+     C           DDCQQ3    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE DDCQQ3    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '3'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid Quantity
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN46
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1108' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDCQQ3
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE ISSUED DATE 3
+     C** Mandatory entry
+     C*
+     C           DDCQI3    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCQI3    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCQI3    IFNE DATEA
+     C                     MOVE '1'       *IN47
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C*
+     C                     MOVE DDCQI3    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 3
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN47
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCQI3  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE CHEQUES NUMBER 4
+     C*                                                                   100997
+     C** Validate Cheque numbers                                          100997
+      **   'From' Cheque number MUST be numeric.                          100997
+     C           DDCQF4    IFNE *BLANKS                                   100997
+     C                     MOVE DDCQF4    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCQF4    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN48                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C**********           MOVEL'LZP1122' ZAMSID                                      100997 BUG4322
+     C                     MOVEL'LZP1124' ZAMSID                                             BUG4322
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C*                                                                   100997
+      **   'To' Cheque number MUST be numeric.                            100997
+     C           DDCQT4    IFNE *BLANKS                                   100997
+     C                     MOVE DDCQT4    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCQT4    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN49                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C**********           MOVEL'LZP1123' ZAMSID                                      100997 BUG4322
+     C                     MOVEL'LZP1125' ZAMSID                                             BUG4322
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C** Mandatory entry
+     C*
+     C           DDCQF4    IFEQ *BLANKS
+     C           DDCQT4    IFEQ *BLANKS
+     C           DDCQQ4    IFNE *BLANKS
+     C           DDCQI4    ORNE *BLANKS
+     C                     MOVE '1'       *IN48
+     C                     MOVE '1'       *IN49
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN48
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C           DDCQT4    IFEQ *BLANKS
+     C                     MOVE '1'       *IN49
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*
+     C           DDCQF4    IFNE *BLANKS
+     C           DDCQT4    ANDNE*BLANKS
+     C*
+     C** VALIDATE QUANTITY 4
+     C** Mandatory entry
+     C*
+     C           DDCQQ4    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE DDCQQ4    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '3'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid Quantity
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1108' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDCQQ4
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE ISSUED DATE 4
+     C** Mandatory entry
+     C*
+     C           DDCQI4    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCQI4    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCQI4    IFNE DATEA
+     C                     MOVE '1'       *IN51
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCQI4    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 4
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN51
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCQI4  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE CHEQUES NUMBER 5
+     C*                                                                   100997
+     C** Validate Cheque numbers                                          100997
+      **   'From' Cheque number MUST be numeric.                          100997
+     C           DDCQF5    IFNE *BLANKS                                   100997
+     C                     MOVE DDCQF5    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCQF5    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN52                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C**********           MOVEL'LZP1122' ZAMSID                                      100997 BUG4322
+     C                     MOVEL'LZP1124' ZAMSID                                             BUG4322
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C*                                                                   100997
+      **   'To' Cheque number MUST be numeric.                            100997
+     C           DDCQT5    IFNE *BLANKS                                   100997
+     C                     MOVE DDCQT5    CNUMN  100                      100997
+     C                     MOVE CNUMN     CNUMA  10                       100997
+     C           DDCQT5    IFNE CNUMA                                     100997
+     C                     MOVE '1'       *IN53                           100997
+     C                     MOVE '1'       *IN78                           100997
+     C**********           MOVEL'LZP1123' ZAMSID                                      100997 BUG4322
+     C                     MOVEL'LZP1125' ZAMSID                                             BUG4322
+     C                     EXSR PGMMSG                                    100997
+     C                     ENDIF                                          100997
+     C                     ENDIF                                          100997
+     C** Mandatory entry
+     C*
+     C           DDCQF5    IFEQ *BLANKS
+     C           DDCQT5    IFEQ *BLANKS
+     C           DDCQQ5    IFNE *BLANKS
+     C           DDCQI5    ORNE *BLANKS
+     C                     MOVE '1'       *IN52
+     C                     MOVE '1'       *IN53
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN52
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C           DDCQT5    IFEQ *BLANKS
+     C                     MOVE '1'       *IN53
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1107' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*
+     C           DDCQF5    IFNE *BLANKS
+     C           DDCQT5    ANDNE*BLANKS
+     C*
+     C** VALIDATE QUANTITY 5
+     C** Mandatory entry
+     C*
+     C           DDCQQ5    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE DDCQQ5    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '3'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid Quantity
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN54
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1108' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDCQQ5
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE ISSUED DATE 5
+     C** Mandatory entry
+     C*
+     C           DDCQI5    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCQI5    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCQI5    IFNE DATEA
+     C                     MOVE '1'       *IN55
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCQI5    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 5
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN55
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCQI5  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+     C*
+     C*
+     C** VALIDATE CREDIT CARD 1
+     C** Mandatory entry
+     C*
+     C           DDCAN1    IFEQ *BLANKS
+     C           DDCAL1    IFNE *BLANKS
+     C           DDCAI1    ORNE *BLANKS
+     C           DDCAE1    ORNE *BLANKS
+     C                     MOVE '1'       *IN56
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1120' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C*
+     C** VALIDATE CREDIT CARD LIBELLE 1
+     C** Mandatory entry
+     C*
+     C           DDCAL1    IFEQ *BLANKS
+     C                     MOVE '1'       *IN57
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1110' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C** VALIDATE ISSUED DATE 1
+     C** Mandatory entry
+     C*
+     C           DDCAI1    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCAI1    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCAI1    IFNE DATEA
+     C                     MOVE '1'       *IN58
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCAI1    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 1
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN58
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCAI1  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE EXPIRY DATE 1
+     C** Mandatory entry
+     C*
+     C           DDCAE1    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCAE1    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCAE1    IFNE DATEA
+     C                     MOVE '1'       *IN59
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCAE1    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid expiry date 1
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN59
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCAE1  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** EXPIRY DATE 1  MUST BE SUPERIOR THAN ISSUED DATE 1
+     C*
+     C           WWCAE1    IFLT WWCAI1
+     C                     MOVE '1'       *IN58
+     C                     MOVE '1'       *IN59
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1106' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE CREDIT CARD 2
+     C** Mandatory entry
+     C*
+     C           DDCAN2    IFEQ *BLANKS
+     C           DDCAL2    IFNE *BLANKS
+     C           DDCAI2    ORNE *BLANKS
+     C           DDCAE2    ORNE *BLANKS
+     C                     MOVE '1'       *IN60
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1120' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C*
+     C** VALIDATE CREDIT CARD LIBELLE 2
+     C** Mandatory entry
+     C*
+     C           DDCAL2    IFEQ *BLANKS
+     C                     MOVE '1'       *IN61
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1110' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C** VALIDATE ISSUED DATE 2
+     C** Mandatory entry
+     C*
+     C           DDCAI2    IFNE *BLANKS
+     C*
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCAI2    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCAI2    IFNE DATEA
+     C                     MOVE '1'       *IN62
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCAI2    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 2
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN62
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCAI2  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE EXPIRY DATE 2
+     C** Mandatory entry
+     C*
+     C           DDCAE2    IFNE *BLANKS
+     C*
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCAE2    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCAE2    IFNE DATEA
+     C                     MOVE '1'       *IN63
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCAE2    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid expiry date 2
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN63
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCAE2  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** EXPIRY DATE 2  MUST BE SUPERIOR THAN ISSUED DATE 2
+     C*
+     C           WWCAE2    IFLT WWCAI2
+     C                     MOVE '1'       *IN62
+     C                     MOVE '1'       *IN63
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1106' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE CREDIT CARD 3
+     C** Mandatory entry
+     C*
+     C           DDCAN3    IFEQ *BLANKS
+     C           DDCAL3    IFNE *BLANKS
+     C           DDCAI3    ORNE *BLANKS
+     C           DDCAE3    ORNE *BLANKS
+     C                     MOVE '1'       *IN64
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1120' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C*
+     C** VALIDATE CREDIT CARD LIBELLE 3
+     C** Mandatory entry
+     C*
+     C           DDCAL3    IFEQ *BLANKS
+     C                     MOVE '1'       *IN65
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1110' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C** VALIDATE ISSUED DATE 3
+     C** Mandatory entry
+     C*
+     C           DDCAI3    IFNE *BLANKS
+     C*
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCAI3    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCAI3    IFNE DATEA
+     C                     MOVE '1'       *IN66
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCAI3    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 3
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN66
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCAI3  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE EXPIRY DATE 3
+     C** Mandatory entry
+     C*
+     C           DDCAE3    IFNE *BLANKS
+     C*
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCAE3    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCAE3    IFNE DATEA
+     C                     MOVE '1'       *IN67
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCAE3    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid expiry date 3
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN67
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCAE3  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** EXPIRY DATE 3  MUST BE SUPERIOR THAN ISSUED DATE 3
+     C*
+     C           WWCAE3    IFLT WWCAI3
+     C                     MOVE '1'       *IN66
+     C                     MOVE '1'       *IN67
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1106' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE CREDIT CARD 4
+     C** Mandatory entry
+     C*
+     C           DDCAN4    IFEQ *BLANKS
+     C           DDCAL4    IFNE *BLANKS
+     C           DDCAI4    ORNE *BLANKS
+     C           DDCAE4    ORNE *BLANKS
+     C                     MOVE '1'       *IN68
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1120' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C*
+     C** VALIDATE CREDIT CARD LIBELLE 4
+     C** Mandatory entry
+     C*
+     C           DDCAL4    IFEQ *BLANKS
+     C                     MOVE '1'       *IN69
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1110' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C** VALIDATE ISSUED DATE 4
+     C** Mandatory entry
+     C*
+     C           DDCAI4    IFNE *BLANKS
+     C*
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCAI4    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCAI4    IFNE DATEA
+     C                     MOVE '1'       *IN70
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCAI4    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 4
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN70
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCAI4  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE EXPIRY DATE 4
+     C** Mandatory entry
+     C*
+     C           DDCAE4    IFNE *BLANKS
+     C*
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCAE4    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCAE4    IFNE DATEA
+     C                     MOVE '1'       *IN71
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCAE4    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid expiry date 4
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN71
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCAE4  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** EXPIRY DATE 4  MUST BE SUPERIOR THAN ISSUED DATE 4
+     C*
+     C           WWCAE4    IFLT WWCAI4
+     C                     MOVE '1'       *IN70
+     C                     MOVE '1'       *IN71
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1106' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE CREDIT CARD 5
+     C** Mandatory entry
+     C*
+     C           DDCAN5    IFEQ *BLANKS
+     C           DDCAL5    IFNE *BLANKS
+     C           DDCAI5    ORNE *BLANKS
+     C           DDCAE5    ORNE *BLANKS
+     C                     MOVE '1'       *IN72
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1120' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     ELSE
+     C*
+     C** VALIDATE CREDIT CARD LIBELLE 5
+     C** Mandatory entry
+     C*
+     C           DDCAL5    IFEQ *BLANKS
+     C                     MOVE '1'       *IN73
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1110' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C** VALIDATE ISSUED DATE 5
+     C** Mandatory entry
+     C*
+     C           DDCAI5    IFNE *BLANKS
+     C*
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCAI5    DATEN
+     C                     MOVE DATEN     DATEA
+      *
+     C           DDCAI5    IFNE DATEA
+     C                     MOVE '1'       *IN74
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCAI5    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid issued date 5
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN74
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1104' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCAI5  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE EXPIRY DATE 5
+     C** Mandatory entry
+     C*
+     C           DDCAE5    IFNE *BLANKS
+     C*
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDCAE5    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDCAE5    IFNE DATEA
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C*
+     C                     MOVE DDCAE5    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C** Invalid expiry date 5
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1105' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWCAE5  50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** EXPIRY DATE 5  MUST BE SUPERIOR THAN ISSUED DATE 5
+     C*
+     C           WWCAE5    IFLT WWCAI5
+     C                     MOVE '1'       *IN74
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1106' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+     C*
+     CSR                   ENDSR                           * DETVAL ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DETINZ   - INITIALIZE SCREEN FIELDS                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     CSR         DETINZ    BEGSR
+     C*
+     C                     MOVEL*BLANK    DDCSSN
+     C                     MOVEL*BLANK    DDCRNM
+     C                     MOVEL*BLANK    DDCRTN
+     C                     MOVEL*BLANK    DDCAC1
+     C                     MOVEL*BLANK    DDDIS1
+     C                     MOVEL*BLANK    DDDRE1
+     C                     MOVEL*BLANK    DDCAC2
+     C                     MOVEL*BLANK    DDDIS2
+     C                     MOVEL*BLANK    DDDRE2
+     C                     MOVEL*BLANK    DDCAC3
+     C                     MOVEL*BLANK    DDDIS3
+     C                     MOVEL*BLANK    DDDRE3
+     C                     MOVEL*BLANK    DDCAC4
+     C                     MOVEL*BLANK    DDDIS4
+     C                     MOVEL*BLANK    DDDRE4
+     C                     MOVEL*BLANK    DDCAC5
+     C                     MOVEL*BLANK    DDDIS5
+     C                     MOVEL*BLANK    DDDRE5
+     C                     MOVEL*BLANK    DDCTX1
+     C                     MOVEL*BLANK    DDCQF1
+     C                     MOVEL*BLANK    DDCQT1
+     C                     MOVEL*BLANK    DDCQQ1
+     C                     MOVEL*BLANK    DDCQI1
+     C                     MOVEL*BLANK    DDCQF2
+     C                     MOVEL*BLANK    DDCQT2
+     C                     MOVEL*BLANK    DDCQQ2
+     C                     MOVEL*BLANK    DDCQI2
+     C                     MOVEL*BLANK    DDCQF3
+     C                     MOVEL*BLANK    DDCQT3
+     C                     MOVEL*BLANK    DDCQQ3
+     C                     MOVEL*BLANK    DDCQI3
+     C                     MOVEL*BLANK    DDCQF4
+     C                     MOVEL*BLANK    DDCQT4
+     C                     MOVEL*BLANK    DDCQQ4
+     C                     MOVEL*BLANK    DDCQI4
+     C                     MOVEL*BLANK    DDCQF5
+     C                     MOVEL*BLANK    DDCQT5
+     C                     MOVEL*BLANK    DDCQQ5
+     C                     MOVEL*BLANK    DDCQI5
+     C                     MOVEL*BLANK    DDCTX2
+     C                     MOVEL*BLANK    DDCAN1
+     C                     MOVEL*BLANK    DDCAL1
+     C                     MOVEL*BLANK    DDCAI1
+     C                     MOVEL*BLANK    DDCAE1
+     C                     MOVEL*BLANK    DDCAN2
+     C                     MOVEL*BLANK    DDCAL2
+     C                     MOVEL*BLANK    DDCAI2
+     C                     MOVEL*BLANK    DDCAE2
+     C                     MOVEL*BLANK    DDCAN3
+     C                     MOVEL*BLANK    DDCAL3
+     C                     MOVEL*BLANK    DDCAI3
+     C                     MOVEL*BLANK    DDCAE3
+     C                     MOVEL*BLANK    DDCAN4
+     C                     MOVEL*BLANK    DDCAL4
+     C                     MOVEL*BLANK    DDCAI4
+     C                     MOVEL*BLANK    DDCAE4
+     C                     MOVEL*BLANK    DDCAN5
+     C                     MOVEL*BLANK    DDCAL5
+     C                     MOVEL*BLANK    DDCAI5
+     C                     MOVEL*BLANK    DDCAE5
+     C*
+     CSR                   ENDSR                           * DETINZ ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DETFIL   - MOVE RECORD FIELDS TO SCREEN FIELDS                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZDATE2   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      * RECUPD   - PROCESS AMEND/DELETE REQUEST                          *
+      *                                                                  *
+      ********************************************************************
+     CSR         DETFIL    BEGSR
+     C*
+     C                     MOVE SCCSSN    DDCSSN
+     C                     MOVE SCCRNM    DDCRNM
+     C                     MOVE SCCRTN    DDCRTN
+     C*
+     C                     MOVE SCCAC1    DDCAC1
+     C           SCDIS1    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCDIS1    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDDIS1
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDDIS1                          R0972
+     C                     END                                            R0972
+     C           SCDRE1    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCDRE1    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDDRE1
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDDRE1                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCAC2    DDCAC2
+     C           SCDIS2    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCDIS2    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDDIS2
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDDIS2                          R0972
+     C                     END                                            R0972
+     C           SCDRE2    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCDRE2    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDDRE2
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDDRE2                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCAC3    DDCAC3
+     C           SCDIS3    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCDIS3    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDDIS3
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDDIS3                          R0972
+     C                     END                                            R0972
+     C           SCDRE3    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCDRE3    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDDRE3
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDDRE3                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCAC4    DDCAC4
+     C           SCDIS4    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCDIS4    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDDIS4
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDDIS4                          R0972
+     C                     END                                            R0972
+     C           SCDRE4    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCDRE4    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDDRE4
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDDRE4                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCAC5    DDCAC5
+     C           SCDIS5    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCDIS5    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDDIS5
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDDIS5                          R0972
+     C                     END                                            R0972
+     C           SCDRE5    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCDRE5    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDDRE5
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDDRE5                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCTX1    DDCTX1
+     C*
+     C                     MOVE SCCQF1    DDCQF1
+     C                     MOVE SCCQT1    DDCQT1
+     C                     MOVE SCCQQ1    DDCQQ1
+     C           SCCQI1    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCCQI1    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCQI1
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCQI1                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCQF2    DDCQF2
+     C                     MOVE SCCQT2    DDCQT2
+     C                     MOVE SCCQQ2    DDCQQ2
+     C           SCCQI2    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCCQI2    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCQI2
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCQI2                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCQF3    DDCQF3
+     C                     MOVE SCCQT3    DDCQT3
+     C                     MOVE SCCQQ3    DDCQQ3
+     C           SCCQI3    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCCQI3    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCQI3
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCQI3                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCQF4    DDCQF4
+     C                     MOVE SCCQT4    DDCQT4
+     C                     MOVE SCCQQ4    DDCQQ4
+     C           SCCQI4    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCCQI4    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCQI4
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCQI4                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCQF5    DDCQF5
+     C                     MOVE SCCQT5    DDCQT5
+     C                     MOVE SCCQQ5    DDCQQ5
+     C           SCCQI5    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSCCQI5    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCQI5
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCQI5                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCTX2    DDCTX2
+     C*
+     C                     MOVE SCCAN1    DDCAN1
+     C                     MOVE SCCAL1    DDCAL1
+     C           SCCAI1    IFNE *ZEROS                                    R0972
+     C                     MOVE SCCAI1    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCAI1
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCAI1                          R0972
+     C                     END                                            R0972
+     C           SCCAE1    IFNE *ZEROS                                    R0972
+     C                     MOVE SCCAE1    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCAE1
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCAE1                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCAN2    DDCAN2
+     C                     MOVE SCCAL2    DDCAL2
+     C           SCCAI2    IFNE *ZEROS                                    R0972
+     C                     MOVE SCCAI2    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCAI2
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCAI2                          R0972
+     C                     END                                            R0972
+     C           SCCAE2    IFNE *ZEROS                                    R0972
+     C                     MOVE SCCAE2    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCAE2
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCAE2                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCAN3    DDCAN3
+     C                     MOVE SCCAL3    DDCAL3
+     C           SCCAI3    IFNE *ZEROS                                    R0972
+     C                     MOVE SCCAI3    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCAI3
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCAI3                          R0972
+     C                     END                                            R0972
+     C           SCCAE3    IFNE *ZEROS                                    R0972
+     C                     MOVE SCCAE3    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCAE3
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCAE3                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCAN4    DDCAN4
+     C                     MOVE SCCAL4    DDCAL4
+     C           SCCAI4    IFNE *ZEROS                                    R0972
+     C                     MOVE SCCAI4    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCAI4
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCAI4                          R0972
+     C                     END                                            R0972
+     C           SCCAE4    IFNE *ZEROS                                    R0972
+     C                     MOVE SCCAE4    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCAE4
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCAE4                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SCCAN5    DDCAN5
+     C                     MOVE SCCAL5    DDCAL5
+     C           SCCAI5    IFNE *ZEROS                                    R0972
+     C                     MOVE SCCAI5    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCAI5
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCAI5                          R0972
+     C                     END                                            R0972
+     C           SCCAE5    IFNE *ZEROS                                    R0972
+     C                     MOVE SCCAE5    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDCAE5
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDCAE5                          R0972
+     C                     END                                            R0972
+     C*
+     C** Hold existing record image.
+     C*
+     C                     MOVEL@1DBRC    #1DBRC
+     C*
+     CSR                   ENDSR                           * DETFIL ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * RECPRC   - PROCESS RECORD                                        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * RECADD   - PROCESS ADD REQUEST                                   *
+      * RECUPD   - PROCESS AMEND/DELETE REQUEST                          *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * DETPRC   - PROCESS DETAILS                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPMD    -                                                       *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      * WWDFCF   -                                                       *
+      * WWTRN    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         RECPRC    BEGSR
+     C*
+     C           WWPMD     IFEQ 'ADD'
+     C                     EXSR RECADD
+     C                     ELSE
+     C                     EXSR RECUPD
+     C                     END
+     C*
+     C** COMMIT any DBF changes.
+     C*
+     C           WWRET7    IFEQ *BLANK
+     C                     COMIT
+     C                     MOVE 'N'       WWDFCF           *Defer confirm
+     C*
+     C** Error: ROLLBACK any DBF changes.
+     C*
+     C                     ELSE
+     C                     ROLBK
+     C                     END
+     C*
+     CSR                   ENDSR                           * RECPRC ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * RECADD   - PROCESS ADD REQUEST                                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      * RECCNT   - UPDATE NO OF RECORDS IN STANDING DATA CONTROLS        *
+      * #ZFRQA   - TO INCREMENT A DAY NUMBER DATE BY A PERIOD VALUE      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * RECPRC   - PROCESS RECORD                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      *                                                                  *
+      ********************************************************************
+     CSR         RECADD    BEGSR
+     C*
+     C** Create CHEQUE
+     C*
+     C                     MOVEL*BLANKS   WWRET7
+     C*
+     C** Move all fields to SDCHEQPD
+     C*
+     C                     MOVE 'D'       SCRECI
+     C                     TIME           SCTLUP
+     C                     Z-ADDRDLUP     SCDLUP
+     C                     MOVELRMLUP     SCMLUP
+     C                     Z-ADDRYLUP     SCYLUP
+     C                     MOVE 'I'       SCCHTP
+     C                     Z-ADDBJRDNB    SCLCD
+     C                     Z-ADD0         SCTNLU
+     C                     MOVE DDCUST    SCCUST
+     C*
+     C                     MOVE DDCSSN    SCCSSN
+     C                     MOVE DDCRNM    SCCRNM
+     C                     MOVE DDCRTN    SCCRTN
+     C*
+     C                     MOVE DDCAC1    SCCAC1
+     C                     MOVE WWDIS1    SCDIS1
+     C                     MOVE WWDRE1    SCDRE1
+     C                     MOVE DDCAC2    SCCAC2
+     C                     MOVE WWDIS2    SCDIS2
+     C                     MOVE WWDRE2    SCDRE2
+     C                     MOVE DDCAC3    SCCAC3
+     C                     MOVE WWDIS3    SCDIS3
+     C                     MOVE WWDRE3    SCDRE3
+     C                     MOVE DDCAC4    SCCAC4
+     C                     MOVE WWDIS4    SCDIS4
+     C                     MOVE WWDRE4    SCDRE4
+     C                     MOVE DDCAC5    SCCAC5
+     C                     MOVE WWDIS5    SCDIS5
+     C                     MOVE WWDRE5    SCDRE5
+     C                     MOVE DDCTX1    SCCTX1
+     C                     MOVE DDCQF1    SCCQF1
+     C                     MOVE DDCQT1    SCCQT1
+     C                     MOVE DDCQQ1    SCCQQ1
+     C                     MOVE WWCQI1    SCCQI1
+     C                     MOVE DDCQF2    SCCQF2
+     C                     MOVE DDCQT2    SCCQT2
+     C                     MOVE DDCQQ2    SCCQQ2
+     C                     MOVE WWCQI2    SCCQI2
+     C                     MOVE DDCQF3    SCCQF3
+     C                     MOVE DDCQT3    SCCQT3
+     C                     MOVE DDCQQ3    SCCQQ3
+     C                     MOVE WWCQI3    SCCQI3
+     C                     MOVE DDCQF4    SCCQF4
+     C                     MOVE DDCQT4    SCCQT4
+     C                     MOVE DDCQQ4    SCCQQ4
+     C                     MOVE WWCQI4    SCCQI4
+     C                     MOVE DDCQF5    SCCQF5
+     C                     MOVE DDCQT5    SCCQT5
+     C                     MOVE DDCQQ5    SCCQQ5
+     C                     MOVE WWCQI5    SCCQI5
+     C                     MOVE DDCTX2    SCCTX2
+     C                     MOVE DDCAN1    SCCAN1
+     C                     MOVE DDCAL1    SCCAL1
+     C                     MOVE WWCAI1    SCCAI1
+     C                     MOVE WWCAE1    SCCAE1
+     C                     MOVE DDCAN2    SCCAN2
+     C                     MOVE DDCAL2    SCCAL2
+     C                     MOVE WWCAI2    SCCAI2
+     C                     MOVE WWCAE2    SCCAE2
+     C                     MOVE DDCAN3    SCCAN3
+     C                     MOVE DDCAL3    SCCAL3
+     C                     MOVE WWCAI3    SCCAI3
+     C                     MOVE WWCAE3    SCCAE3
+     C                     MOVE DDCAN4    SCCAN4
+     C                     MOVE DDCAL4    SCCAL4
+     C                     MOVE WWCAI4    SCCAI4
+     C                     MOVE WWCAE4    SCCAE4
+     C                     MOVE DDCAN5    SCCAN5
+     C                     MOVE DDCAL5    SCCAL5
+     C                     MOVE WWCAI5    SCCAI5
+     C                     MOVE WWCAE5    SCCAE5
+     C*
+     C** Check for duplicate primary key.
+     C*
+     C********** DDCUST    SETLLSDCHEQPD                 90               082061
+     C           DDCUST    SETLLSDCHEQL0                 90               082061
+     C*
+     C** Send message 'Cheque already defined'
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SD60202' WWRET7
+     C                     MOVEL'SD60202' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     WRITESDCHEQPF               91
+     C*
+     C** Write error detected.
+     C*
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y2U0004' WWRET7
+     C*
+     C** DBF Write successful.
+     C** Change Standing Data Cont - Standing Data Controls  *
+     C*
+     C                     ELSE
+     C                     Z-ADD1         WWNORC           No. of Records
+     C                     Z-ADD*ZERO     WWNOAM           No. of Amends
+     C                     Z-ADD*ZERO     WWNODL           No. of Deletes
+     C                     Z-ADD1         WWNOIN           No. of Inserts
+     C                     MOVEL'I'       WWTYLC           Type of Last Ch
+     C                     EXSR RECCNT
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Send message '*Record added'
+     C*
+     C           WWRET7    IFEQ *BLANK
+     C                     MOVEL'SD99905' ZAMSID           Message id.
+     C                     EXSR PGMMSG                     Send message
+     C                     END
+     C*
+     CSR                   ENDSR                           * RECADD ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * RECUPD   - PROCESS AMEND/DELETE REQUEST                          *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      * RECCNT   - UPDATE NO OF RECORDS IN STANDING DATA CONTROLS        *
+      * DETFIL   - MOVE RECORD FIELDS TO SCREEN FIELDS                   *
+      * #ZFRQA   - TO INCREMENT A DAY NUMBER DATE BY A PERIOD VALUE      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * RECPRC   - PROCESS RECORD                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      *                                                                  *
+      ********************************************************************
+     CSR         RECUPD    BEGSR
+     C*
+     C                     MOVE *BLANKS   WWRET7
+     C*
+     C** Send message 'cmd 10 not allowed'
+     C*
+     C           WWDELA    IFEQ 'N'                        - B1
+     C           *IN10     ANDEQ'1'
+     C                     MOVEL'SD99912' ZAMSID
+     C                     EXSR PGMMSG
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'SD99912' WWRET7
+     C                     MOVE '0'       *IN90
+     C                     MOVE '0'       *IN91
+     C                     MOVEL#1DBRC    @1DBRC
+     C                     ELSE                            - X1
+     C********** DDCUST    CHAINSDCHEQPD             9091                 082061
+     C           DDCUST    CHAINSDCHEQL0             9091                 082061
+     C                     MOVEL#1DBRC    @1DBRC                          063568
+     C                     END                             - E1
+     C*
+     C           *IN90     IFEQ '1'                        - B1
+     C*
+     C** Record already deleted.
+     C*
+     C           *IN10     IFEQ '1'                        - B2
+     C                     MOVEL'Y2U0009' WWRET7
+     C                     MOVEL'SD99916' ZAMSID
+     C*
+     C** Record not found.
+     C*
+     C                     ELSE                            - X2
+     C                     MOVEL'SD99908' WWRET7
+     C                     MOVEL'SD99908' ZAMSID
+     C                     END                             - E2
+     C*
+     C                     EXSR PGMMSG
+     C                     ELSE                            - X1
+     C*
+     C** Record locked.
+     C*
+     C           *IN91     IFEQ '1'                        - B2
+     C                     MOVEL'SD99910' WWRET7
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** Record changed.
+     C** Send message '*Update not accepted'
+     C*
+     C           *IN90     IFEQ '0'                        - B1
+     C           *IN91     ANDEQ'0'
+     C           #1DBRC    ANDNE@1DBRC
+     C                     MOVEL'SD99914' WWRET7
+     C                     MOVEL'SD99914' ZAMSID
+     C                     EXSR PGMMSG
+     C*
+     C** Use SETLL to release record lock.
+     C*
+     C********** DDCUST    SETLLSDCHEQPD             9091                 082061
+     C           DDCUST    SETLLSDCHEQL0             9091                 082061
+     C                     ELSE                            - X1
+     C*
+     C** Delete record
+     C*
+     C           *IN10     IFEQ '1'                        - B2
+     C                     Z-ADDRDLUP     SCDLUP
+     C                     MOVE RMLUP     SCMLUP
+     C                     Z-ADDRYLUP     SCYLUP
+     C                     TIME           SCTLUP
+     C                     MOVE 'D'       SCCHTP
+     C                     Z-ADDBJRDNB    SCLCD
+     C                     UPDATSDCHEQPF               91
+     C*
+     C** Update record
+     C*
+     C                     ELSE                            - X2
+     C*
+     C*
+     C*********  BJRDNB    IFNE SCLCD                      - B3           063568
+     C                     Z-ADDRDLUP     SCDLUP
+     C                     MOVE RMLUP     SCMLUP
+     C                     Z-ADDRYLUP     SCYLUP
+     C                     MOVE 'A'       SCCHTP
+     C                     Z-ADDBJRDNB    SCLCD
+     C*********            END                             - E3           063568
+     C*
+     C** Move all fields to SDCHEQPD
+     C*
+     C                     MOVE DDCAC1    SCCAC1
+     C                     MOVE WWDIS1    SCDIS1
+     C                     MOVE WWDRE1    SCDRE1
+     C                     MOVE DDCAC2    SCCAC2
+     C                     MOVE WWDIS2    SCDIS2
+     C                     MOVE WWDRE2    SCDRE2
+     C                     MOVE DDCAC3    SCCAC3
+     C                     MOVE WWDIS3    SCDIS3
+     C                     MOVE WWDRE3    SCDRE3
+     C                     MOVE DDCAC4    SCCAC4
+     C                     MOVE WWDIS4    SCDIS4
+     C                     MOVE WWDRE4    SCDRE4
+     C                     MOVE DDCAC5    SCCAC5
+     C                     MOVE WWDIS5    SCDIS5
+     C                     MOVE WWDRE5    SCDRE5
+     C                     MOVE DDCTX1    SCCTX1
+     C                     MOVE DDCQF1    SCCQF1
+     C                     MOVE DDCQT1    SCCQT1
+     C                     MOVE DDCQQ1    SCCQQ1
+     C                     MOVE WWCQI1    SCCQI1
+     C                     MOVE DDCQF2    SCCQF2
+     C                     MOVE DDCQT2    SCCQT2
+     C                     MOVE DDCQQ2    SCCQQ2
+     C                     MOVE WWCQI2    SCCQI2
+     C                     MOVE DDCQF3    SCCQF3
+     C                     MOVE DDCQT3    SCCQT3
+     C                     MOVE DDCQQ3    SCCQQ3
+     C                     MOVE WWCQI3    SCCQI3
+     C                     MOVE DDCQF4    SCCQF4
+     C                     MOVE DDCQT4    SCCQT4
+     C                     MOVE DDCQQ4    SCCQQ4
+     C                     MOVE WWCQI4    SCCQI4
+     C                     MOVE DDCQF5    SCCQF5
+     C                     MOVE DDCQT5    SCCQT5
+     C                     MOVE DDCQQ5    SCCQQ5
+     C                     MOVE WWCQI5    SCCQI5
+     C                     MOVE DDCTX2    SCCTX2
+     C                     MOVE DDCAN1    SCCAN1
+     C                     MOVE DDCAL1    SCCAL1
+     C                     MOVE WWCAI1    SCCAI1
+     C                     MOVE WWCAE1    SCCAE1
+     C                     MOVE DDCAN2    SCCAN2
+     C                     MOVE DDCAL2    SCCAL2
+     C                     MOVE WWCAI2    SCCAI2
+     C                     MOVE WWCAE2    SCCAE2
+     C                     MOVE DDCAN3    SCCAN3
+     C                     MOVE DDCAL3    SCCAL3
+     C                     MOVE WWCAI3    SCCAI3
+     C                     MOVE WWCAE3    SCCAE3
+     C                     MOVE DDCAN4    SCCAN4
+     C                     MOVE DDCAL4    SCCAL4
+     C                     MOVE WWCAI4    SCCAI4
+     C                     MOVE WWCAE4    SCCAE4
+     C                     MOVE DDCAN5    SCCAN5
+     C                     MOVE DDCAL5    SCCAL5
+     C                     MOVE WWCAI5    SCCAI5
+     C                     MOVE WWCAE5    SCCAE5
+     C*
+     C                     TIME           SCTLUP
+     C                     UPDATSDCHEQPF               91
+     C                     END                             - E2
+     C*
+     C** Error detected
+     C*
+     C           *IN91     IFEQ '1'                        - B2
+     C*
+     C           *IN10     IFEQ '1'                        - B3
+     C                     MOVEL'SD99915' WWRET7
+     C                     ELSE
+     C                     MOVEL'SD99911' WWRET7
+     C                     END                             - E3
+     C*
+     C** Delete/Update successful:
+     C** Change Standing Data Cont - Standing Data Controls  *
+     C*
+     C                     ELSE                            - X2
+     C                     Z-ADD0         WWNOIN           No. of Inserts
+     C*
+     C           *IN10     IFEQ '1'                        - B3
+     C                     Z-ADD-1        WWNORC           No. of Records
+     C                     Z-ADD1         WWNODL           No. of Deletes
+     C                     Z-ADD0         WWNOAM           No. of Amends
+     C                     MOVEL'D'       WWTYLC
+     C                     ELSE                            - X3
+     C                     MOVEL@1DBRC    #1DBRC
+     C                     Z-ADD0         WWNORC           No. of Records
+     C                     Z-ADD0         WWNODL           No. of Deletes
+     C                     Z-ADD1         WWNOAM           No. of Amends
+     C                     MOVEL'A'       WWTYLC
+     C                     END                             - E3
+     C*
+     C                     EXSR RECCNT
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** DBF Update error detected.
+     C** Reset screen fields if changed record.
+     C*
+     C           *IN10     IFEQ '0'                        - B1
+     C           WWRET7    ANDEQ'Y2U0007'
+     C                     EXSR DETFIL
+     C                     END                             - E1
+     C*
+     C           WWRET7    IFEQ *BLANKS                    - B1
+     C*
+     C** Send message '*Record deleted'
+     C*
+     C           *IN10     IFEQ '1'                        - B2
+     C                     MOVEL'SD99906' ZAMSID
+     C*
+     C** Send message '*Record changed'
+     C*
+     C                     ELSE
+     C                     MOVEL'SD99907' ZAMSID
+     C                     END                             - E2
+     C*
+     C                     EXSR PGMMSG
+     C                     END                             - E1
+     C*
+     CSR                   ENDSR                           * RECUPD ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DETDEF   - MOVE DEFAULT VALUES TO SCREEN FIELDS                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      * *PSSR    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      * WWLANG   - LANGUAGE CODE                                         *
+      *                                                                  *
+      ********************************************************************
+     CSR         DETDEF    BEGSR
+     C*
+     C                     MOVEL*BLANKS   WWRET7
+     C                     MOVE *BLANKS   @RTCD
+     C                     CALL 'AOCUSTR0'AOCUST
+     C*
+     C** DBF Record not found.
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SD99908' WWRET7
+     C                     MOVEL'SD99908' ZAMSID
+     C                     EXSR PGMMSG
+     C*
+     C** Move default values to screen fields
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   WWRET7
+     C                     MOVELBBCSSN    DDCSSN
+     C                     MOVELBBCRNM    DDCRNM
+     C                     MOVELBBCRTN    DDCRTN
+     C                     END
+     C*
+     CSR                   ENDSR                           * DETDEF ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * RECCNT   - UPDATE NO OF RECORDS IN STANDING DATA CONTROLS        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * RECADD   - PROCESS ADD REQUEST                                   *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      * WWAANB   -                                                       *
+      * WWABNB   -                                                       *
+      * WWACNB   -                                                       *
+      * WWADNB   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         RECCNT    BEGSR
+     C*
+     C                     MOVEL*BLANKS   WWRET7
+     C                     MOVEL'SDCHEQPD'AHFLNM           Filename
+     C           AHFLNM    CHAIN@AHREAU              9091
+     C*
+     C** Record not found.
+     C** Send message '*Record no longer on file'
+     C*
+     C           *IN90     IFEQ '1'
+     C*
+     C           WWPMD     IFEQ 'ADD'
+     C                     MOVEL'SD99909' WWRET7
+     C                     MOVEL'SD99909' ZAMSID
+     C                     ELSE
+     C                     MOVEL'SD99908' WWRET7
+     C                     MOVEL'SD99908' ZAMSID
+     C                     END
+     C*
+     C                     EXSR PGMMSG                     Send message
+     C                     ELSE
+     C*
+     C** Record locked.
+     C*
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'SD99910' WWRET7
+     C                     ELSE
+     C*
+     C** USER: Processing after DBF read
+     C*
+     C                     ADD  AHNORC    WWNORC           No. of Records
+     C                     ADD  AHNOIN    WWNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WWNOAM           No. of Amends
+     C                     ADD  AHNODL    WWNODL           No. of Deletes
+     C*
+     C** Move Non-key field  to @AHREAU
+     C*
+     C                     Z-ADDWWNORC    AHNORC           No. of Records
+     C                     Z-ADDWWNOIN    AHNOIN           No. of Inserts
+     C                     Z-ADDWWNOAM    AHNOAM           No. of Amends
+     C                     Z-ADDWWNODL    AHNODL           No. of Deletes
+     C                     UPDAT@AHREAU                91  *
+     C*
+     C** Change error detected.
+     C*
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'SD99911' WWRET7
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     CSR                   ENDSR                           * RECCNT ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * Y2SNMGC  -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYVAL   - VALIDATE KEY FIELD                                    *
+      * DETVAL   - VALIDATE DETAILS                                      *
+      * RECADD   - PROCESS ADD REQUEST                                   *
+      * RECUPD   - PROCESS AMEND/DELETE REQUEST                          *
+      * DETDEF   - MOVE DEFAULT VALUES TO SCREEN FIELDS                  *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      * RECCNT   - UPDATE NO OF RECORDS IN STANDING DATA CONTROLS        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     CSR         PGMMSG    BEGSR
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM ##PGM     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM 'MIDAS   'ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C** Clear all fields for default mechanism next time.
+     C*
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     CSR         ZAEXIT    ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * PGMCLS   - CLOSE CALLED PROGRAMS                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PM0601   - CUSTOMER NOTEPAD MAINTENANCE PGM                      *
+      * PGMEND   - EXIT PROGRAM                                          *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      * DETPRC   - PROCESS DETAILS                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      *                                                                  *
+      ********************************************************************
+     CSR         PGMCLS    BEGSR
+     C*
+     C*********************MOVEL*BLANKS   WWRET7                          076002
+     C                     EXSR PGMEND
+     C*
+     CSR         ZXEXIT    ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * PGMEND   - EXIT PROGRAM                                          *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * PGMCLS   - CLOSE CALLED PROGRAMS                                 *
+      * INIT     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     CSR         PGMEND    BEGSR
+     C*
+     C** ROLLBACK any uncommitted DBF changes.
+     C*
+     C*********************ROLBK                       90                 076002
+     C  N03                ROLBK                       90                 076002
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     CSR         ZYEXIT    ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * ZDATE1   - VALIDATE DATES SUBMITTED AND CONVERT                  *
+      *            TO A NUMBER OF DAYS.                                  *
+      *                                                                  *
+      *    THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * DETVAL   - VALIDATE DETAILS                                      *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           ZDATE1    BEGSR                           *** ZDATE1 ***
+     C**
+     C**   CLEAR DAY NUMBER. RESET ERROR INDICATOR
+     C                     Z-ADD0         ZDAYNO  50
+     C                     SETOF                     99
+     C**
+     C**   CALCULATION TO DEFINE INPUT DATE FIELD.
+     C                     Z-ADDZDATE     ZDATE   60
+     C**
+     C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+     C                     MOVE ZDATE     ZYEAR   20
+     C  N98                MOVELZDATE     ZDAY    20
+     C   98                MOVELZDATE     ZMTH    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C  N98                MOVELZWRK4     ZMTH
+     C   98                MOVELZWRK4     ZDAY
+     C**
+     C**   ENSURE MONTH IS VALID. BYPASS IF ERROR
+     C           ZMTH      IFLE 0
+     C           ZMTH      ORGT 12
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C**   ENSURE DAY IS VALID. BYPASS IF ERROR
+     C           ZDAY      IFLE 0
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C**   CHECK FOR 30 DAY MONTHS. BYPASS IF ERROR
+     C           ZMTH      IFEQ 4
+     C           ZMTH      OREQ 6
+     C           ZMTH      OREQ 9
+     C           ZMTH      OREQ 11
+     C**
+     C           ZDAY      IFGT 30
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     ELSE
+     C**
+     C**   CHECK FOR 31 DAY MONTHS (ALL OTHERS BUT FEB). BYPASS IF ERROR
+     C           ZDAY      IFGT 31
+     C           ZMTH      ANDNE2
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   CHECK FOR LEAP YEAR: REMAINDER WILL BE ZERO IF IT IS A LEAP YR
+     C           ZYEAR     ADD  28        ZYEAR
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10
+     C**
+     C**   IF FEBUARY FURTHER VALIDATE DAY.
+     C           ZMTH      IFEQ 2
+     C**
+     C**   INVALID IF GREATER THAN 28 AND NOT A LEAP YEAR
+     C           ZLY       IFGT 0
+     C           ZDAY      ANDGT28
+     C                     SETON                     99
+     C                     GOTO ZDEND1                     BYPASS IF ERROR
+     C                     END
+     C**
+     C**   INVALID IF GREATER THAN 29 AND A LEAP YEAR - BYPASS IF ERROR
+     C           ZLY       IFEQ 0
+     C           ZDAY      ANDGT29
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.
+     C**
+     C**   MULTIPLY NO. OF FOUR-YEAR SPANS, BY NO. OF DAYS IN SPAN
+     C           ZLYR      MULT 1461      ZDAYNO
+     C**
+     C**   IF NOT A LEAP YEAR, ADD APPROPRIATE NO. OF DAYS FOR EXTRA
+     C**   YEARS USING REMAINDER FIELD (IE. 1, 2 OR 3 X 356)
+     C           ZLY       IFGT 0
+     C           ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO
+     C                     END
+     C**
+     C**   IF IT IS A LEAP YEAR, AND LATER THAN FEBRUARY, ADD ONE FOR
+     C**   29TH OF FEB
+     C           ZLY       IFEQ 0
+     C           ZMTH      ANDGT2
+     C           ZDAYNO    ADD  1         ZDAYNO
+     C                     END
+     C**
+     C**   ADD APPROPRIATE NUMBER OF DAYS FOR THE MONTH NUMBER
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO
+     C**
+     C**   ADD NUMBER OF DAYS IN MONTH
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO
+     C**
+     C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * ZDATE2   - CONVERT A DAY NUMBER TO DATE FORMATS.                 *
+      *                                                                  *
+      *    THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * DETFIL   - MOVE RECORD FIELDS TO SCREEN FIELDS                   *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR LEAP YEAR WORK FIELD.
+     C                     MOVE 'N'       ZLEAP   1
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50
+     C           ZDAYN1    IFLT 0
+     C                     GOTO ZDEND2
+     C                     END
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    IFGE ZYDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG1
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C           ZWRK2     IFNE 0
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C                     END
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C           ZWRK2     IFEQ 0
+     C           ZDAYN1    IFEQ 59
+     C                     MOVE 'Y'       ZLEAP
+     C                     END
+     C           ZDAYN1    IFGE 59
+     C           ZDAYN1    SUB  1         ZDAYN1
+     C                     END
+     C                     END
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    IFGE ZMDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG2
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C           ZLEAP     IFEQ 'Y'
+     C           ZDAY      ADD  1         ZDAY
+     C                     END
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C                     MOVELZDAY      ZWRK5   5
+     C           ZDAY      IFLT 10
+     C                     MOVEL' '       ZWRK5
+     C                     END
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INIT     -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * Y2BGCMC  -                                                       *
+      * PGMEND   - EXIT PROGRAM                                          *
+      * *PSSR    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      * WWPMD    -                                                       *
+      * WWJDT    -                                                       *
+      * WWJTM    -                                                       *
+      * WWPTFR   -                                                       *
+      * WWRPT    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         INIT      BEGSR
+     C*
+     C                     MOVEL*BLANKS   WWRET7
+     C*
+     C** Open files.
+     C                     OPEN SDCDSHL1                                                     BUG5139
+     C** Begin commit control.
+     C*
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           WWRET7
+     C*
+     C           WWRET7    IFNE *BLANKS
+     C           WWRET7    ANDNE'CPF8351'
+     C                     EXSR PGMEND
+     C                     END
+     C*
+     C** Access Bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C* Select initial mode.
+     C*
+     C           @1NROP    IFEQ *ZERO
+     C                     MOVEL'ADD'     WWPMD   3        Add mode
+     C                     MOVE 'I'       DDACTN
+     C                     ELSE
+     C                     MOVEL'CHG'     WWPMD            Change mode
+     C                     MOVE 'A'       DDACTN
+     C                     END
+     C*
+     C** Setup job date/time.
+     C*
+     C                     Z-ADDUDATE     WWJDT            Job date.
+     C                     TIME           WWJTM            Job time.
+     C*                                                                   CPM005
+     C** Verify if feature "Related Customer Details" (CSD001) is on      CPM005
+     C*                                                                   CPM005
+     C                     CALL 'AOSARDR0'                                CPM005
+     C                     PARM *BLANKS   @RTCD                           CPM005
+     C                     PARM '*VERIFY' @OPTN                           CPM005
+     C                     PARM 'CSD001'  @SARD   6                       CPM005
+     C           SCSARD    PARM SCSARD    DSFDY                           CPM005
+     C*                                                                   CPM005
+     C** If feature is on, protect fields concerning Credit Card Details  CPM005
+     C*                                                                   CPM005
+     C           @RTCD     IFEQ *BLANKS                                   CPM005
+     C                     MOVE *ON       *IN08                           CPM005
+     C                     ELSE                                           CPM005
+     C                     MOVE *OFF      *IN08                           CPM005
+     C                     END                                            CPM005
+     C*
+     C** Define work field Deletion Allowed
+     C*
+     C                     MOVEL*BLANK    WWDELA  1
+     C*
+     C** Define work field broker indicator set
+     C*
+     C                     MOVEL*BLANK    WWBINS  1
+     C*
+      * Define work field No. of Records
+     C                     Z-ADD*ZERO     WWNORC  50
+      * Define work field No. of Amends
+     C                     Z-ADD*ZERO     WWNOAM  50
+      * Define work field No. of Deletes
+     C                     Z-ADD*ZERO     WWNODL  50
+      * Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WWNOIN  50
+      * Define work field Cheque Reference
+     C                     MOVE *BLANKS   WWPTFR  4
+      * Define work field Type of Last Change
+     C                     MOVE *BLANK    WWTYLC  1
+      * Define work field run day number
+     C                     Z-ADD*ZERO     WWRDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WWSUC   1
+      * Define work field date format flag
+     C                     MOVEL*BLANK    WWDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WWMBIN  1
+      *
+      * USER: Initialise program
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    DDRUND
+     C                     MOVE AGRDNB    WWRDNB
+     C                     MOVE AGSUC     WWSUC
+     C                     MOVE AGDFF     WWDFF
+     C                     MOVE AGMBIN    WWMBIN
+     C*
+     C** Not every key field passed - loop program.
+     C*
+     C           DDCUST    IFEQ *BLANK                     Customer Number
+     C                     MOVEL'Y'       WWRPT   1
+     C*
+     C** Full key passed, so single shot program.
+     C*
+     C                     ELSE
+     C                     MOVEL'N'       WWRPT
+     C                     END
+      *
+      * parameter list for aocustr0
+     C           AOCUST    PLIST
+     C                     PARM           @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM DDCUST    CUSKEY 10
+     C                     PARM '*CNUM  ' KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      * define db error work fields
+     C           *LIKE     DEFN DBFILE    WWFILE
+     C           *LIKE     DEFN DBKEY     WWKEY
+     C           *LIKE     DEFN DBASE     WWASE
+     C*
+     CSR                   ENDSR                           * INIT   ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      * DETDEF   - MOVE DEFAULT VALUES TO SCREEN FIELDS                  *
+      * INIT     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWFILE   -                                                       *
+      * WWKEY    -                                                       *
+      * WWASE    -                                                       *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      *                                                                  *
+      ********************************************************************
+     CSR         *PSSR     BEGSR
+     C*
+     C** UPDATE LDA WITH ERROR INFORMATION
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELWWFILE    DBFILE
+     C                     MOVELWWKEY     DBKEY
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVELWWASE     DBASE
+     C                     OUT  LDA
+     C*
+     C** DUMP AND RETURN TO THE CALLING PROGRAM
+     C*
+     C                     SETON                     LRU7U8
+     C                     MOVEL'1'       WWRET7
+     C                     DUMP
+     C                     RETRN
+     C*
+     CSR                   ENDSR                           * *PSSR  ESR *
+     C*****************************************************************
+     C*                                                               *
+     C*                                                               *
+     C*           This subroutine will take as input a 16A field      *
+     C*           a 1N number of integers and a 1N number of decimal  *
+     C*           places. Ignoring the leading and trailing blanks    *
+     C*           it will ensure that the field contains only numeric *
+     C*           characters and a decimal point, and that it has no  *
+     C*           embedded blanks, or more than one decimal point.    *
+     C*           It will also check that the number of figures before*
+     C*           and after the decimal point do not exceed the input *
+     C*           parameters. The subroutine will output the number as*
+     C*           a 16A field and a 15N field, along with an error    *
+     C*           code. The alpha field will be right aligned with    *
+     C*           the leading zeros blanked, and trailing blanks zero *
+     C*           filled. The number returned will be 15 long with 0  *
+     C*           decimal places. The error code will contain 0 if    *
+     C*           there was no error, 1 if there was a non-numeric    *
+     C*           character found, and 2 if the number of decimal     *
+     C*           places are wrong.                                   *
+     C*                                                               *
+     C*  Input  : @@ALPH - 16A field containing the field to validate *
+     C*           @@IDP  - number of decimal places                   *
+     C*           @@IINT - number of integers                         *
+     C*                                                               *
+     C*  Output : @@ALPH - 16A field for display                      *
+     C*           @@AMT  - 15N field for calculation                  *
+     C*           @@ERCD - 1N error code                              *
+     C*                                                               *
+     C*  Uses   : @F     - array of 16 elements 1 character long      *
+     C*           @G     - array of 16 elements 1 character long      *
+     C*           @@CADP - calculated number of decimal places        *
+     C*           @@CINT - calculated number of integers              *
+     C*           @@PIDP - position of dp in input array              *
+     C*           @@PODP - position of dp in output array             *
+     C*           @@C    - index for array @F                         *
+     C*           @@D    - index for array @G                         *
+     C*           @@WK7  - workfield used for converting array element*
+     C*                    to a 1N number.                            *
+     C*           @H     - array containing powers of 10              *
+     C*           @@E    - index to array @H                          *
+     C*           @@WK5  - work field                                 *
+     C*           @@ALP1 - feild used to right align 0 decimal places *
+     C*                                                              *
+      *****************************************************************
+      *
+     C           ZA0840    BEGSR
+      *
+      ** initialize the fields and the arrays
+     C                     MOVE '0'       *IN81
+     C                     MOVE '0'       *IN82
+     C                     Z-ADD0         @@ERCD  10
+     C                     Z-ADD0         @@AMT  150
+     C                     MOVEA*BLANKS   @G
+     C                     MOVEA@@ALPH    @F
+     C                     MOVE *BLANKS   @@ALPH 16
+     C                     Z-ADD0         @@WK7   10
+     C                     Z-ADD0         @@CADP  30
+     C                     Z-ADD0         @@CINT  30
+     C                     Z-ADD0         @@PIDP  30
+     C                     Z-ADD0         @@PODP  30
+     C                     Z-ADD0         @@C     20
+     C                     Z-ADD0         @@D     20
+     C                     Z-ADD0         @@E     20
+      *
+      ** define the input fields
+     C           *LIKE     DEFN @@CADP    @@IDP
+     C           *LIKE     DEFN @@CINT    @@IINT
+      *
+      ** first check that the number input will not produce a number
+      ** output with more than 15 figures.
+     C           @@IDP     ADD  @@IINT    @@WK2   20
+     C           @@WK2     IFGT 15                         B1
+     C                     Z-ADD2         @@ERCD           *1
+     C                     GOTO ZA0849                     *1
+     C                     END                             E1
+      *
+      ** work through input array, ignoring leading zeros and blanks,
+      ** also blanking the leading zeros in the input array.
+     C                     MOVE '0'       *IN83
+     C                     ADD  1         @@C
+     C           @@C       DOWLE16                         B1
+     C           *IN83     ANDEQ'0'                        *1
+     C           @F,@@C    IFNE ' '                        B*2
+     C           @F,@@C    ANDNE'0'                        **2
+     C                     MOVE '1'       *IN83            **2
+     C                     SUB  1         @@C              **2
+     C                     END                             E*2
+     C                     ADD  1         @@C              **2
+     C                     END                             E1
+      *
+      ** check the integer part of the number for valid characters.
+     C           @@C       DOWLE16                         B1
+     C           @F,@@C    ANDNE'.'                        *1
+     C           @F,@@C    ANDNE' '                        *1
+      *
+      ** check for non numeric characters
+     C           @F,@@C    IFGT '9'                        B*2
+     C           @F,@@C    ORLT '0'                        **2
+     C                     Z-ADD0         @@AMT            **2
+     C                     Z-ADD1         @@ERCD           **2
+     C                     GOTO ZA0849                     **2
+      *
+     C                     ELSE                            X*2
+      *
+     C                     ADD  1         @@CINT           **2
+      *
+      ** check number of integers is not greater than that required
+     C           @@CINT    IFGT @@IINT                     B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** multiply the output amount by 10 then add the number in
+      ** the input array element being processed.
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C           @@AMT     ADD  @@WK7     @@AMT            **2
+     C                     END                             E*2
+      *
+      ** increase array index
+     C                     ADD  1         @@C              *1
+     C                     END                             E1
+      *
+      ** set up position of decimal point in input array
+     C                     Z-ADD@@C       @@PIDP
+      *
+      ** if the character pointed to is a decimal point add 1 to the
+      ** index
+     C           @@C       IFLE 16                         B1
+     C           @F,@@C    ANDEQ'.'                        *1
+     C                     ADD  1         @@C              *1
+     C                     MOVE '1'       *IN82            *1
+     C                     END                             E1
+      *
+      ** now validate the decimal part of the number
+     C           @@C       DOWLE16                         B1
+      *
+      ** if a blank is found set on the blank input indicator
+     C           @F,@@C    IFEQ ' '                        B*2
+     C                     MOVE '1'       *IN81            **2
+     C                     END                             E*2
+      *
+      ** if the figure is numeric, check that the number of decimal
+      ** places does not exceed that specified, and that no blanks
+      ** have been entered.
+     C           @F,@@C    IFGE '0'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     ADD  1         @@CADP           **2
+      *
+     C           @@CADP    IFGT @@IDP                      B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C           *IN81     IFEQ '1'                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** update output amount
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C                     ADD  @@WK7     @@AMT            **2
+      *
+     C                     ELSE                            X*2
+      *
+      ** if the character is not numeric and not a blank then it is
+      ** invalid
+     C           @F,@@C    IFNE ' '                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      *
+      ** increase index
+     C                     ADD  1         @@C              *1
+      *
+     C                     END                             E1
+      *
+      ** correct the output number for any decimal places not input
+      ** in the alpha field.
+     C           @@IDP     SUB  @@CADP    @@E
+      *
+      ** increase the index by one to get correct array entry
+     C                     ADD  1         @@E
+     C           @@AMT     MULT @H,@@E    @@AMT
+      *
+      ** now format the output alpha field, first calculate where
+      ** the decimal point goes
+     C           16        SUB  @@IDP     @@PODP
+     C           @@PODP    SUB  1         @@PIDP
+      *
+      ** if there are no decimal points set the position to 17
+     C           @@IDP     IFEQ 0                          B1
+     C                     Z-ADD17        @@PODP           *1
+     C                     END                             E1
+      *
+      ** move the output number into the input array
+     C                     MOVEA*BLANKS   @F
+     C                     MOVE @@AMT     @@AMTA 15
+     C                     MOVEA@@AMTA    @F
+      *
+      ** set up indexes
+     C                     Z-ADD1         @@C
+     C                     Z-ADD1         @@D
+     C                     MOVE '0'       *IN80
+      *
+      ** now fill up the output array
+     C           @@D       DOWLE16                         B1
+      *
+      ** insert decimal point if the position is found
+     C           @@D       IFEQ @@PODP                     B*2
+     C                     MOVE '.'       @G,@@D           **2
+     C                     ADD  1         @@D              **2
+     C                     END                             E*2
+      *
+      ** insert the zero before the decimal point
+     C           *IN80     IFEQ '0'                        B*2
+     C           @@D       ANDEQ@@PIDP                     **2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE '1'       *IN80            **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** blank leading zeros
+     C           *IN80     IFEQ '0'                        B*2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE ' '       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** move a normal character
+     C           @F,@@C    IFGE '1'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     MOVE @F,@@C    @G,@@D           **2
+     C                     MOVE '1'       *IN80            **2
+     C                     END                             E*2
+      *
+      ** non blanked zero
+     C           @F,@@C    IFEQ '0'                        B*2
+     C           *IN80     ANDEQ'1'                        **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+     C                     ADD  1         @@C              *1
+     C                     ADD  1         @@D              *1
+     C                     END                             E1
+      *
+      *
+      ** put output array into output amount
+     C                     MOVEA@G        @@ALPH
+      *
+      ** align figure with zero decimal places.
+     C           @@IDP     IFEQ 0                          B1
+     C                     MOVE *BLANKS   @@ALP1 17        *1
+     C                     MOVE @@ALPH    @@ALP1           *1
+     C                     MOVEL@@ALP1    @@ALPH           *1
+     C                     END                             E1
+      *
+     C           ZA0849    ENDSR                           ZA0849 TAG
+      *
+     C*=========================================================================
+** CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** array of powers of 10 from 0 to 8
+000000000000001
+000000000000010
+000000000000100
+000000000001000
+000000000010000
+000000000100000
+000000001000000
+000000010000000
+000000100000000
+000001000000000
+000010000000000
+000100000000000
+001000000000000
+010000000000000
+100000000000000

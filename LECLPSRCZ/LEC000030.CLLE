@@ -1,0 +1,471 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas LE Credit Lines Trans Facility History Proc')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Customer Lending Module                          */
+/*                                                                   */
+/*       LEC000030 - Midas LE Credit Lines Transaction Facility      */
+/*                   History Update                                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*                      BUG27747A          Date 28Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSD028             Date 22Aug05              */
+/*                      BUG7750            Date 05Jul05              */
+/*                      CLE040             Date 12Oct04              */
+/*                      BUG3615            Date 13Jul04              */
+/*                      BUG3523            Date 07Jul04              */
+/*                      BUG3035            Date 03Jun04              */
+/*                      CLE025  *CREATE    Date 20Oct03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       BUG27747A - Error in CALCMGR_zz and LTVMNTR_zz (Reopen)     */
+/*       CSD028 - KYC (Standing Data Authorisations )                */
+/*       BUG7750 - LERC30A 00001 component failed program LER032 due */
+/*                 to database errors 002 and 012                    */
+/*       CLE040  - Collateralised Lending Phase 2 A                  */
+/*       BUG3615 - COB halt at LEC0609C, but this time with XFACACT  */
+/*       BUG3523 - Collateralised lending jobs in COB fail           */
+/*       BUG3035 - Error on calculation when a rate change is done   */
+/*       CLE025 - Credit Lines                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&JAVAPATH) TYPE(*CHAR) LEN(200)                              /*BUG3523*/
+             DCL        VAR(&JAVAPATH2) TYPE(*CHAR) LEN(210)                             /*BUG3523*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                  /*BUG3523*/
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)                                 /*BUG3523*/
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)                                 /*BUG3523*/
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)                                 /*BUG3523*/
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)                                 /*BUG3523*/
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)                                 /*BUG3523*/
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)                                 /*BUG3523*/
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)                                 /*BUG3523*/
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)                                 /*BUG3523*/
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)                                 /*BUG3523*/
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)                                 /*BUG3523*/
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)                                 /*BUG3523*/
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)                                 /*BUG3523*/
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)                                 /*BUG3523*/
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)                                 /*BUG3523*/
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)                                 /*BUG3523*/
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)                                 /*BUG3523*/
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)                                 /*BUG3523*/
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)                                /*BUG3523*/
+             DCL        VAR(&JAVA_PATH) TYPE(*CHAR) LEN(1024)                             /*CLE040*/
+             DCL        VAR(&JAVA_HOME) TYPE(*CHAR) LEN(1024)                          /*BUG27747A*/
+      /*     DCLF       FILE(SDJARFPD)        */                               /*CLE040*/ /*CSD028*/
+             DCLF       FILE(SDJARFL0)                                                    /*CSD028*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2003')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('LEC000030 - LE Credit Lines Transaction +
+                          Facility History Update') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Start commitment control */
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+/* Setup system prefix variable from SDSTAT data area */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+/* Call program CB0160 to get value of restart indicator */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+/* If it is not a restart */
+ 
+             IF         COND(&STAT *NE 'Y') THEN(DO)
+               DLTF       FILE(XDLDLDBQD)
+               MONMSG     MSGID(CPF2105)
+               DLTF       FILE(XDLDLDCQD)
+               MONMSG     MSGID(CPF2105)
+               DLTF       FILE(XDLDLDGQD)
+               MONMSG     MSGID(CPF2105)
+               DLTF       FILE(XGLACNTQD)
+               MONMSG     MSGID(CPF2105)
+/**********    DLTF       FILE(XFACHISA) */                                              /*BUG3615*/
+/**********    MONMSG     MSGID(CPF2105) */                                              /*BUG3615*/
+               DLTF       FILE(XDLFXMRPD)
+               MONMSG     MSGID(CPF2105)
+/**********    DLTF       FILE(XFACACT) */                                               /*BUG3615*/
+/**********    MONMSG     MSGID(CPF2105) */                                              /*BUG3615*/
+/**********    DLTF       FILE(XFACHISH) */                                              /*BUG3615*/
+/**********    MONMSG     MSGID(CPF2105) */                                              /*BUG3615*/
+/**********    DLTF       FILE(XHISACT) */                                               /*BUG3035*/
+/**********    MONMSG     MSGID(CPF2105) */                                              /*BUG3035*/
+ 
+               CPYF       FROMFILE(DLDLDBQD) TOFILE(&DPLIB/XDLDLDBQD) +
+                            MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+               CPYF       FROMFILE(DLDLDCQD) TOFILE(&DPLIB/XDLDLDCQD) +
+                            MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+               CPYF       FROMFILE(DLDLDGQD) TOFILE(&DPLIB/XDLDLDGQD) +
+                            MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+               CPYF       FROMFILE(GLACNTQD) TOFILE(&DPLIB/XGLACNTQD) +
+                            MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+/**********    CPYF       FROMFILE(FACHISA) TOFILE(&DPLIB/XFACHISA) + */                 /*BUG3615*/
+/**********                 MBROPT(*REPLACE) CRTFILE(*YES) */                            /*BUG3615*/
+               CPYF       FROMFILE(FACHISA) TOFILE(&DPLIB/XFACHISA) +
+                            MBROPT(*REPLACE)                                             /*BUG3615*/
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) */                              /*BUG3615*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                            FILE(XFACHISA))                                              /*BUG3615*/
+ 
+               CPYF       FROMFILE(DLFXMRPD) TOFILE(&DPLIB/XDLFXMRPD) +
+                            MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+/**********    CPYF       FROMFILE(FACACT) TOFILE(&DPLIB/XFACACT) + */                   /*BUG3615*/
+/**********                 MBROPT(*REPLACE) CRTFILE(*YES) */                            /*BUG3615*/
+/**********    CPYF       FROMFILE(FACACT) TOFILE(&DPLIB/XFACACT) + */                   /*BUG7750*/
+/**********                 MBROPT(*REPLACE) */                              /*BUG3615*/ /*BUG7750*/
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) */                              /*BUG3615*/
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*BUG7750*/
+/**********                 FILE(XFACACT)) */                                /*BUG3615*/ /*BUG7750*/
+ 
+/**********    CPYF       FROMFILE(FACHISH) TOFILE(&DPLIB/XFACHISH) + */                 /*BUG3615*/
+/**********                 MBROPT(*REPLACE) CRTFILE(*YES) */                            /*BUG3615*/
+               CPYF       FROMFILE(FACHISH) TOFILE(&DPLIB/XFACHISH) +
+                            MBROPT(*REPLACE)                                             /*BUG3615*/
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) */                              /*BUG3615*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                            FILE(XFACHISH))                                              /*BUG3615*/
+ 
+/**********    CLRPFM     FILE(HISACT) */                                                /*BUG7750*/
+             ENDDO
+ 
+/* If it is a restart */
+ 
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+               CPYF       FROMFILE(XDLDLDBQD) TOFILE(DLDLDBQD) +
+                            MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                            EXEC(CLRPFM FILE(DLDLDBQD))
+ 
+               CPYF       FROMFILE(XDLDLDCQD) TOFILE(DLDLDCQD) +
+                            MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                            EXEC(CLRPFM FILE(DLDLDCQD))
+ 
+               CPYF       FROMFILE(XDLDLDGQD) TOFILE(DLDLDGQD) +
+                            MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                            EXEC(CLRPFM FILE(DLDLDGQD))
+ 
+               CPYF       FROMFILE(XGLACNTQD) TOFILE(GLACNTQD) +
+                            MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                            EXEC(CLRPFM FILE(GLACNTQD))
+ 
+               CPYF       FROMFILE(XFACHISA) TOFILE(FACHISA) +
+                            MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                            EXEC(CLRPFM FILE(FACHISA))
+ 
+               CPYF       FROMFILE(XDLFXMRPD) TOFILE(DLFXMRPD) +
+                            MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                            EXEC(CLRPFM FILE(DLFXMRPD))
+ 
+/**********    CPYF       FROMFILE(XFACACT) TOFILE(FACACT) + */                          /*BUG7750*/
+/**********                 MBROPT(*REPLACE) */                                          /*BUG7750*/
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) + */                            /*BUG7750*/
+/**********                 EXEC(CLRPFM FILE(FACACT)) */                                 /*BUG7750*/
+ 
+               CPYF       FROMFILE(XFACHISH) TOFILE(FACHISH) +
+                            MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                            EXEC(CLRPFM FILE(FACHISH))
+ 
+/**********    CLRPFM     FILE(HISACT) */                                                /*BUG7750*/
+             ENDDO
+ 
+/* Clear Action Files */                                                                 /*BUG7750*/
+             CLRPFM     FILE(FACACT)                                                     /*BUG7750*/
+             CLRPFM     FILE(XFACACT)                                                    /*BUG7750*/
+             CLRPFM     FILE(HISACT)                                                     /*BUG7750*/
+                                                                                         /*BUG7750*/
+             CHGVAR     VAR(&STAT) VALUE('Y')
+ 
+/* Call CB0150 to update restart indicator */
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+                                                                                         /*BUG3523*/
+/* Get 'JavaPath' system value from file SDSVALPD  */                                    /*BUG3523*/
+                                                                                         /*BUG3523*/
+/**********  CALL       PGM(AOSVALR0) PARM(&RTNCDE +                                   /*BUG27747A*/
+/**********               'JavaPathStem' &JAVAPATH &SVALK2 +                           /*BUG27747A*/
+/**********               &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +                       /*BUG27747A*/
+/**********               &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +                      /*BUG27747A*/
+/**********               &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +                       /*BUG27747A*/
+/**********               &SVALK0 &SVAL10)                           */        /*BUG3523 BUG27747A*/
+                                                                                       /*BUG27747A*/
+/* Get 'JavaPathStem' and 'JavaHome' system values from file SDSVALPD  */              /*BUG27747A*/
+                                                                                       /*BUG27747A*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE 'JavaPathStem' +
+                          &JAVAPATH 'JavaHome' &JAVA_HOME &SVALK3 +
+                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK0 &SVAL10)                       /*BUG27747A*/
+ 
+/* If the 'JavaPathStem' system value is missing then end abnormally */                  /*BUG3523*/
+                                                                                         /*BUG3523*/
+             IF         COND(%SST(&JAVAPATH 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))                                                 /*BUG3523*/
+                                                                                       /*BUG27747A*/
+/* If the 'JavaHome' system value is missing then end abnormally */                    /*BUG27747A*/
+                                                                                       /*BUG27747A*/
+             IF         COND(%SST(&JAVA_HOME 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))                                               /*BUG27747A*/
+                                                                                         /*BUG3523*/
+             RMVLNK     OBJLNK(A)                                                        /*BUG3523*/
+             MONMSG     MSGID(CPFA0A9)                                                   /*BUG3523*/
+                                                                                         /*BUG3523*/
+             RMVLNK     OBJLNK(B)                                                        /*BUG3523*/
+             MONMSG     MSGID(CPFA0A9)                                                   /*BUG3523*/
+ 
+/** Add links to system */
+ 
+/**********  ADDLNK     OBJ('/QOpenSys/midasplus') NEWLNK(A)                             /*BUG3523*/
+             ADDLNK     OBJ(&JAVAPATH) NEWLNK(A)                                         /*BUG3523*/
+             MONMSG     MSGID(CPFA0A0)
+ 
+/**********  ADDLNK     OBJ('/QOpenSys/midasplus/lib') NEWLNK(B)                         /*BUG3523*/
+             CHGVAR     VAR(&JAVAPATH2) VALUE(&JAVAPATH *TCAT +
+                          '/lib/ext')                                                    /*BUG3523*/
+             ADDLNK     OBJ(&JAVAPATH2) NEWLNK(B)                                        /*BUG3523*/
+             MONMSG     MSGID(CPFA0A0)
+ 
+/* Get 'BrgMidasSystemPrefix' system value from file SDSVALPD  */                         /*CLE040*/
+                                                                                          /*CLE040*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                          'BrgMidasSystemPrefix' &JAVAPATH &SVALK2 +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK0 &SVAL10)                                                /*CLE040*/
+                                                                                          /*CLE040*/
+/* If the 'BrgMidasSystemPrefix' system value is missing then end abnormally */           /*CLE040*/
+                                                                                          /*CLE040*/
+             IF         COND(%SST(&JAVAPATH 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))                                                  /*CLE040*/
+                                                                                          /*CLE040*/
+/** Setup environment variable CLASSPATH with the necessary directories */
+/** for invoking the java calculator methods */
+ 
+             RMVENVVAR  ENVVAR(CLASSPATH)
+             MONMSG     MSGID(CPFA981)
+                                                                                       /*BUG27747A*/
+/** Setup environment variable JAVA_HOME */                                            /*BUG27747A*/
+                                                                                       /*BUG27747A*/
+             RMVENVVAR  ENVVAR(JAVA_HOME)                                              /*BUG27747A*/
+             MONMSG     MSGID(CPFA981)                                                 /*BUG27747A*/
+ 
+/**********  ADDENVVAR  ENVVAR(CLASSPATH) +                                              /*BUG3523*/
+/**********               VALUE('A:A/calculationmanager.jar:A/calcula+                   /*BUG3523*/
+/**********               tors.jar:A/collending.jar:A/frwkapi.jar:A/f+                   /*BUG3523*/
+/**********               rwkapidef.jar:A/frwkdataaccess.jar:A/frwkda+                   /*BUG3523*/
+/**********               taview.jar:A/frwkdtd.jar:A/frwkjavaext.jar:+                   /*BUG3523*/
+/**********               B/xml-apis.jar:B/xmlParserAPIs.jar:B/xsdlib+                   /*BUG3523*/
+/**********               .jar:A/midaslocalconfig:B/activation.jar:B/+                   /*BUG3523*/
+/**********               commons-beanutils.jar:B/commons-collections+                   /*BUG3523*/
+/**********               .jar:B/commons-dbcp.jar:B/commons-digester.+                   /*BUG3523*/
+/**********               jar:B/commons-logging.jar:B/commons-pool.ja+                   /*BUG3523*/
+/**********               r:B/concurrent.jar:B/getopt.jar:B/jaas.jar:+                   /*BUG3523*/
+/**********               B/jaxb-api.jar:B/jaxb-impl.jar:B/jaxb-libs.+                   /*BUG3523*/
+/**********               jar:B/jaxb-xjc.jar:B/jax-qname.jar:B/jt400.+                   /*BUG3523*/
+/**********               jar:B/jta-spec1_0_1.jar:B/junit.jar:B/log4j+                   /*BUG3523*/
+/**********               -1.2.8.jar:B/mail.jar:B/namespace.jar:B/pro+                   /*BUG3523*/
+/**********               viderutil.jar:B/relaxngDatatype.jar:B/veloc+                   /*BUG3523*/
+/**********               ity-dep-1.3.1.jar:B/xercesImpl.jar:B/rt.jar+                   /*BUG3523*/
+/**********               :B/i18n.jar:B/indicim.jar:B/JawBridge.jar:B+                   /*BUG3523*/
+/**********               /appprofile.jar:B/cm.jar:B/ecutils.jar:B/ej+                   /*BUG3523*/
+/**********               bcontainer.jar:B/ejbportable.jar:B/ivjejb35+                   /*BUG3523*/
+/**********               .jar:B/j2ee.jar:B/namingserver.jar:B/pm.jar+                   /*BUG3523*/
+/**********               :B/pmimpl.jar:B/querymd.jar:B/ras.jar:B/rsa+                   /*BUG3523*/
+/**********               daptercci.jar:B/rsadapterspi.jar:B/rsaexter+                   /*BUG3523*/
+/**********               nal.jar:B/runtime.jar')                                        /*BUG3523*/
+                                                                                         /*BUG3523*/
+/**********  ADDENVVAR  ENVVAR(CLASSPATH) +                                               /*CLE040*/
+/**********               VALUE('A:+                                                      /*CLE040*/
+/**********               A/midaslocalconfig:+                                            /*CLE040*/
+/**********               B/calculationmanager.jar:+                                      /*CLE040*/
+/**********               B/calculators.jar:+                                             /*CLE040*/
+/**********               B/frwkapi.jar:+                                                 /*CLE040*/
+/**********               B/frwkapidef.jar:+                                              /*CLE040*/
+/**********               B/frwkdataaccess.jar:+                                          /*CLE040*/
+/**********               B/frwkdataview.jar:+                                            /*CLE040*/
+/**********               B/frwkdtd.jar:+                                                 /*CLE040*/
+/**********               B/frwkjavaext.jar:+                                             /*CLE040*/
+/**********               B/xml-apis.jar:+                                                /*CLE040*/
+/**********               B/xmlParserAPIs.jar:+                                           /*CLE040*/
+/**********               B/xsdlib.jar:+                                                  /*CLE040*/
+/**********               B/activation.jar:+                                              /*CLE040*/
+/**********               B/midasplus.jar:+                                               /*CLE040*/
+/**********               B/commons-beanutils.jar:+                                       /*CLE040*/
+/**********               B/commons-collections.jar:+                                     /*CLE040*/
+/**********               B/commons-dbcp.jar:+                                            /*CLE040*/
+/**********               B/commons-digester.jar+                                         /*CLE040*/
+/**********               B/commons-logging.jar:+                                         /*CLE040*/
+/**********               B/commons-pool.jar:+                                            /*CLE040*/
+/**********               B/concurrent.jar:+                                              /*CLE040*/
+/**********               B/getopt.jar:+                                                  /*CLE040*/
+/**********               B/jaas.jar:+                                                    /*CLE040*/
+/**********               B/jaxb-api.jar:+                                                /*CLE040*/
+/**********               B/jaxb-impl.jar:+                                               /*CLE040*/
+/**********               B/jaxb-libs.jar:+                                               /*CLE040*/
+/**********               B/jaxb-xjc.jar:+                                                /*CLE040*/
+/**********               B/jax-qname.jar:+                                               /*CLE040*/
+/**********               B/jt400.jar:+                                                   /*CLE040*/
+/**********               B/jta-spec1_0_1.jar:+                                           /*CLE040*/
+/**********               B/junit.jar:+                                                   /*CLE040*/
+/**********               B/log4j-1.2.8.jar:+                                             /*CLE040*/
+/**********               B/mail.jar:+                                                    /*CLE040*/
+/**********               B/namespace.jar:+                                               /*CLE040*/
+/**********               B/providerutil.jar:+                                            /*CLE040*/
+/**********               B/relaxngDatatype.jar:+                                         /*CLE040*/
+/**********               B/velocity-dep-1.3.1.jar:+                                      /*CLE040*/
+/**********               B/xercesImpl.jar:+                                              /*CLE040*/
+/**********               B/rt.jar:+                                                      /*CLE040*/
+/**********               B/i18n.jar:+                                                    /*CLE040*/
+/**********               B/indicim.jar:+                                                 /*CLE040*/
+/**********               B/JawBridge.jar:+                                               /*CLE040*/
+/**********               B/appprofile.jar:+                                              /*CLE040*/
+/**********               B/cm.jar:+                                                      /*CLE040*/
+/**********               B/ecutils.jar:+                                                 /*CLE040*/
+/**********               B/ejbcontainer.jar:+                                            /*CLE040*/
+/**********               B/ejbportable.jar:+                                             /*CLE040*/
+/**********               B/ivjejb35.jar:+                                                /*CLE040*/
+/**********               B/j2ee.jar:+                                                    /*CLE040*/
+/**********               B/namingserver.jar:+                                            /*CLE040*/
+/**********               B/pm.jar:+                                                      /*CLE040*/
+/**********               B/pmimpl.jar:+                                                  /*CLE040*/
+/**********               B/querymd.jar:+                                                 /*CLE040*/
+/**********               B/ras.jar:+                                                     /*CLE040*/
+/**********               B/rsadaptercci.jar:+                                            /*CLE040*/
+/**********               B/rsadapterspi.jar:+                                            /*CLE040*/
+/**********               B/rsaexternal.jar:+                                             /*CLE040*/
+/**********               B/runtime.jar:+                                                 /*CLE040*/
+/**********               B/managementlimitsplugin.jar:+                                  /*CLE040*/
+/**********               A/logs:+                                                        /*CLE040*/
+/**********               A/calmancl')                                            /*BUG3523 CLE040*/
+                                                                                          /*CLE040*/
+ SETUP_PATH: RCVF       RCDFMT(SDJARFD0)                                                  /*CLE040*/
+                                                                                          /*CLE040*/
+             /* END OF FILE */                                                            /*CLE040*/
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ADD_ENVVAR))                      /*CLE040*/
+                                                                                          /*CLE040*/
+             /* CONCATENATE JAVA PATH */                                                  /*CLE040*/
+             CHGVAR     VAR(&JAVA_PATH) VALUE(&JAVA_PATH *TCAT ':' *TCAT &JFNAME)         /*CLE040*/
+                                                                                          /*CLE040*/
+             IF         COND(&JFNAME *EQ 'A/calman                      ') +
+                        THEN(+
+                        CHGVAR     VAR(&JAVA_PATH) +
+                                   VALUE(&JAVA_PATH *TCAT '/' *TCAT &JAVAPATH))           /*CLE040*/
+                                                                                          /*CLE040*/
+             /* READ NEXT RECORD */                                                       /*CLE040*/
+             GOTO       CMDLBL(SETUP_PATH)                                                /*CLE040*/
+                                                                                          /*CLE040*/
+ ADD_ENVVAR: CHGVAR     VAR(&JAVA_PATH)   VALUE('A:' *CAT &JAVA_PATH)                     /*CLE040*/
+             ADDENVVAR  ENVVAR(CLASSPATH) VALUE(&JAVA_PATH)                               /*CLE040*/
+             MONMSG     MSGID(CPFA0A0)
+                                                                                       /*BUG27747A*/
+             ADDENVVAR  ENVVAR(JAVA_HOME) VALUE(&JAVA_HOME)                            /*BUG27747A*/
+             MONMSG     MSGID(CPFA0A0)                                                 /*BUG27747A*/
+ 
+/* Call GL COB Collateral Revaluation */
+ 
+             CALL       PGM(LE000030)
+ 
+/* If no error occured in the program */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+/* Call CB0150 to update restart indicator */
+ 
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+               DLTF       FILE(XDLDLDBQD)
+               MONMSG     MSGID(CPF2105)
+               DLTF       FILE(XDLDLDCQD)
+               MONMSG     MSGID(CPF2105)
+               DLTF       FILE(XDLDLDGQD)
+               MONMSG     MSGID(CPF2105)
+               DLTF       FILE(XGLACNTQD)
+               MONMSG     MSGID(CPF2105)
+               DLTF       FILE(XDLFXMRPD)
+               MONMSG     MSGID(CPF2105)
+             ENDDO
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            LEC000030 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ MRUNQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+END:
+ 
+             ENDPGM

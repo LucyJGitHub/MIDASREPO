@@ -1,0 +1,1623 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Fclty Extract for Profitability Rept')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Customer Lending Module
+     F*                                                               *
+     F*  LER210 - Facility Extract for Profitability Reporting.       *
+     F*                                                               *
+     F*  Function: An audit trail reporting run controls and duplicate*
+     F*  (COB)     uses of facility references                        *
+     F*                                                               *
+     F*  Called By: CLP/LERC21                                        *
+     F*                                                               *
+     F*  Calls: RPG/LERDATEF - To convert a date to a day no. for     *
+     F*                        first day of month                     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD051991           Date 22Mar19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD022067           Date 27Aug13               *
+      *                 CLE064             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 201127             Date 20Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 088128             Date 17Jan96               *
+      *                 053574             Date 13Dec93               *
+     F*                 BH3509             DATE 14SEP92               *
+     F*                 BH3470             DATE 12AUG92               *
+     F*                 BH3444             DATE 29JUL92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD051991 - LERSTS' REPDAT and STARMO not updated after run   *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD022067 - LERC21 interfere with LERC30A                     *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  201127 - Recompiled over changes made in LER210P1.           *
+     F*  088128  -  Average balance on LER470P1 incorrect because     *
+     F*             information not extracted correctly if Accrual    *
+     F*             Profit Frequency is 'L'                           *
+     F*  053574 - Recompiled due to change in LEPEFCZ/PF.             *
+     F*  BH3509 - Take on all Closed facilities to ensure that        *
+     F*           when matured loans are taken on they are reported   *
+     F*           correctly. PF/LEPEFCD records for Closed            *
+     F*           facilities are dropped with the facility at the     *
+     F*           end of its retention period.                        *
+     F*  BH3470 - Facilities expired before start of year should      *
+     F*           not have any available amount                       *
+     F*  BH3444 - For monthly accruals, ensure go through non-wrkg    *
+     F*           days in advance.                                    *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F/EJECT
+     FFCLTYFM IF  E                    DISK
+     FPEFCLFM IF  E                    DISK
+     F            FCLTYFMF                          KRENAMEPEFCLFMF
+     FLEPEFCD UF  E           K        DISK                      A
+     FLEPEFCZ UF  E                    DISK
+     FSDCURRPDIF  E                    DISK
+     F*                                                                     0078
+     F** Access to ACTN5DH removed and replaced with a new date on          0078
+     F** the dataarea LERSTS because the old checking only worked           0078
+     F** for daily accruals and not monthly                                 0078
+     F*                                                                     0078
+     F*************************************                                 0078
+     F****ADDITION*OF*PF/ACTN5DH***********                                 0078
+     F*************************************                                 0078
+     F*ACTN5DH*IF**E********************DISK                                0078
+     F*************************************                                 0078
+     FLER210P1O   E             80     PRINTER      KINFDS SPOOL      UC
+     FLER210AUO   E                    PRINTER      KINFDS SPOOLU
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - For month look up                                     *
+     F*   20  - For currency look up                                  *
+     F*   80  - Detail report overflow indicator                      *
+     F*   81  - Work Indicator                                        *
+     F*   82  - Work Indicator                                        *
+     F*   88  - Work Indicator                                        *
+     F*   89  - Work Indicator                                        *
+     F*                                                               *
+     F* 90-99 - Used by Standard Subroutines                          *
+     F*                                                               *
+     F* U7-U8 - Data Base Error                                       *
+     F*    U8 - File Controls out of Balance                          *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  CCYCVT - To convert aggregate balance to base currency       *
+     F*  NEWEXT - To set up new extract record                        *
+     F*  UPDEXT - To update existing extract record                   *
+     F*  REACT  - To update facility extract for reactivated facilities
+     F*  INIT   - To perform first cycle calculations                 *
+     F*  ZDATE2 - To Convert a Day Number to Date Formats             *
+     F*  DUPSR  - To perform processing for duplicate extract records *
+     F*  DETAIL - To print detail report                              *
+     F*  AUDIT  - To print audit report                               *
+     F*  DBERR  - To perform database error processing                *
+     F*  *PSSR  - To Handle Abnormal Error Conditions                 *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E                    PWR     1   4  4 0
+     E                    COD       150  3   CYD    15
+     E                    AGG        12 15 0
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/EJECT
+     I*
+     I* SPLIT RUN DATE INTO MONTH & YEAR
+     I*
+     I            DS
+     I                                        1   7 RUNDAX
+     I                                        1   2 RDD
+     I                                        3   5 MMM
+     I                                        6   7 YY
+     I*
+     I* SPLIT UP START DATE.
+     I*
+     I            DS
+     I                                        1   6 SDATE
+     I                                        1   2 DD
+     I                                        3   6 MY
+     I*
+     I* START OF NEXT MONTH DATE
+     I*
+     I            DS
+     I                                        1   6 SMDTN
+     I                                        3   4 SMN
+     I                                        5   6 SYY
+     I*
+     I* DEFINE CURRENCY INFORMATION
+     I*
+     I            DS
+     I                                        1  15 CYDDS
+     I                                        1  138SPT
+     I                                       14  140CDP
+     I                                       15  15 MDI
+     I*
+     I* AGGREGATE BALANCES DATA STRUCTURE
+     I*
+     I            DS
+     I                                    P   1  960AGG
+     I                                    P   1   80FDJANA
+     I                                    P   9  160FDFEBA
+     I                                    P  17  240FDMARA
+     I                                    P  25  320FDAPRA
+     I                                    P  33  400FDMAYA
+     I                                    P  41  480FDJUNA
+     I                                    P  49  560FDJULA
+     I                                    P  57  640FDAUGA
+     I                                    P  65  720FDSEPA
+     I                                    P  73  800FDOCTA
+     I                                    P  81  880FDNOVA
+     I                                    P  89  960FDDECA
+     I*
+     ISPOOL       DS
+     I**   FILE INFORMATION DATA STRUCTURE - P1
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I**   FILE INFORMATION DATA STRUCTURE - AU
+     I*
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     IPSDS       SDS
+     I** PROGRAM STATUS DATA STRUCTURE - REQUIRED FOR DUMP
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     ILDA       E DSLDA
+     I* DATABASE ERROR DS
+     I*
+     IRUNDAT    E DSRUNDAT
+     I**  DATA AREA RUNDAT
+     I*                                                                     0078
+     I** Addition of LERSTS dataarea to access the date of the              0078
+     I** last run of the profitability file update programs                 0078
+     I*                                                                     0078
+     ILERSTS    E DSLERSTS                                                  0078
+      ** Fees/Profitability enhancement status data area                    0078
+     I              FACHISD                         WHISST                  0078
+     I              LERC2030                        LERC20                  0078
+     I              LERC135                         LERC13                  0078
+     I              LERC315                         LERC35                  0078
+     I              LERC425                         LERC42                  0078
+     I              EOYFLAG                         EOYFLG                  0078
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  EXTERNAL DS FOR BANK DETAILS
+     I              BJRDNB                          RUND
+     I              BJDNWD                          DNWD
+     I*
+     ISDGELR    E DSSDGELRPD
+      **  EXTERNAL DS FOR GENERAL LEDGER DETAILS
+     I              BKAPDT                          APDA
+     I              BKAPFQ                          APFQ                    0078
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     C/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C***  PERFORM INITIAL PROCESSING.
+     C*
+     C                     EXSR INIT
+     C*
+     C***  READ FCLTYFM FOR LIVE & EXPIRED FACILITIES.
+     C***  PROCESS ONLY RECORDS WITH DATE APPROVED WITHIN THIS RUN.
+     C*
+     C                     MOVE '0'       *IN88
+     C           *IN88     DOWEQ'0'
+     C                     READ FCLTYFMF                 88
+     C           *IN88     IFEQ '0'
+     C           RECI      IFEQ 'D'
+     C           DTAP      ANDLECODT
+     C           RECI      OREQ 'E'
+     C           DTAP      ANDLECODT
+     C           RECI      OREQ 'C'                                       BH3509
+     C           LASTF     ANDEQWHISST                                    BH3509
+     C*
+     C***  ACCESS FACILITY EXTRACT FILE
+     C*
+     C           KEYFCX    CHAINLEPEFCD              89
+     C*
+     C***  RECORD NOT FOUND
+     C*
+     C           *IN89     IFEQ '1'
+     C                     EXSR NEWEXT
+     C                     ELSE
+     C*
+     C***  RECORD FOUND - LIVE FACILITY TO BE MAINTAINED
+     C*
+     C           FDECFG    IFEQ 'D'
+     C                     EXSR UPDEXT
+     C                     END
+     C*
+     C***  RECORD FOUND - FACILITY TO BE REACTIVATED
+     C*
+     C           FDECFG    IFEQ 'E'
+     C           RECI      ANDEQ'D'
+     C                     EXSR REACT
+     C                     END
+     C*
+     C***  RECORD FOUND - DUPLICATE RECORD
+     C*
+     C           FDECFG    IFEQ 'C'
+     C                     EXSR DUPSR
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C***  READ PEFCLFM FOR REVERSED & CLOSED FACILITIES.
+     C*** PROCESS ONLY RECORDS WITH LAST CHANGE DATE EQUAL TO RUN DATE.
+     C***  REVERSALS ONLY PROCESSED IF ORIGINAL ENTRY DATE EARLIER THAN
+     C***  RUN DATE (IF INPUT & REVERSED TODAY NO PROCESSING REQUIRED).
+     C***  CLOSURES MUST HAVE DATE APPROVED WITHIN THIS RUN.
+     C*
+     C                     MOVE '0'       *IN88
+     C           *IN88     DOWEQ'0'
+     C                     READ PEFCLFMF                 88
+     C           *IN88     IFEQ '0'
+     C           RECI      IFEQ 'R'
+     C********** ORED      ANDLTRUNDAY                                      0078
+     C********** LCD       ANDEQRUNDAY                                      0078
+     C           ORED      ANDLTRUND                                        0078
+     C           LCD       ANDEQRUND                                        0078
+     C           LASTF     ANDLTRUND                                        0078
+     C           RECI      OREQ 'C'
+     C           DTAP      ANDLECODT
+     C********** LCD       ANDEQRUNDAY                                      0078
+     C           LCD       ANDEQRUND                                        0078
+     C           LASTF     ANDLTRUND                                        0078
+     C*
+     C***  ACCESS FACILITY EXTRACT FILE
+     C*
+     C           KEYFCX    CHAINLEPEFCD              89
+     C*
+     C***  RECORD NOT FOUND FOR CLOSURE - WRITE NEW RECORD
+     C*
+     C           *IN89     IFEQ '1'
+     C*
+     C           RECI      IFEQ 'C'
+     C                     EXSR NEWEXT
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C***  REVERSAL: RECORD FOUND - IF LIVE, REVERSAL TO BE DELETED
+     C***                         - OTHERWISE, DUPLICATE
+     C*
+     C           RECI      IFEQ 'R'
+     C*
+     C           FDECFG    IFEQ 'D'
+     C                     DELETLEPEFCDF
+     C                     ADD  1         NDEL    50
+     C                     ELSE
+     C                     EXSR DUPSR
+     C                     END
+     C*
+     C***  CLOSURE: RECORD FOUND - IF LIVE OR EXPIRED, TO BE CLOSED
+     C***                        - IF CLOSED, DUPLICATE
+     C*
+     C                     ELSE
+     C*
+     C           FDECFG    IFEQ 'D'
+     C           FDECFG    OREQ 'E'
+     C                     EXSR UPDEXT
+     C                     ELSE
+     C                     EXSR DUPSR
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C***  END OF READS, UPDATE EXTRACT TRAILER
+     C*
+     C                     READ LEPEFCZ                  82
+     C           *IN82     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*READ'   DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DBERROR 3   *
+     C                     MOVEL'LEPEFCZ' DBFILE           ***************
+     C                     MOVEL'LER210'  DBPGM
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     Z-ADDFZNREC    NPREV   50
+     C                     ADD  NADD      FZNREC
+     C                     SUB  NDEL      FZNREC
+     C                     UPDATLEPEFCZF
+     C*
+     C***  WRITE TOTAL LINES TO REPORT
+     C*
+     C           DUP       IFEQ 'Y'
+     C                     WRITELER210T1
+     C                     WRITELER210T2
+     C                     END
+     C                     EXSR AUDIT
+     C                     WRITELER210A2
+     C*                                                                     0078
+     C** Output the control date to the dataarea LERSTS for use next        0078
+     C** run                                                                0078
+     C*                                                                     0078
+     C           *LOCK     IN   LERSTS                                                      MD022067
+     C                     Z-ADDSMDY      STARMO  50                                        MD051991
+      ** If this is the first run of the day update the processing                          MD051991
+      ** date on the dataara LERSTS - this makes sure that the                              MD051991
+      ** profitability reporting is in line with the first level                            MD051991
+      ** file updates                                                                       MD051991
+     C           LASTF     IFLT RUND                                                        MD051991
+     C                     MOVE WREPDT    REPDAT  7                                         MD051991
+     C                     ENDIF                                                            MD051991
+     C                     Z-ADDCODT      LASTFN  50                        0078
+     C                     OUT  LERSTS                                      0078
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  SR/CCYCVT - TO CONVERT AGGREGATE BALANCE TO BASE CURRENCY
+     C*
+     C***  CALLED FROM: NEWEXT, UPDEXT, REACT
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C*****************************************************************
+     C*
+     C           CCYCVT    BEGSR
+     C*
+     C                     Z-ADD1         X
+     C           FCCY      LOKUPCOD,X                    20
+     C                     MOVE CYD,X     CYDDS
+     C           MDI       IFEQ 'M'
+     C                     MULT SPT       WRKAGG
+     C                     ELSE
+     C                     DIV  SPT       WRKAGG    H
+     C                     END
+     C           CDP       ADD  1         DP      10
+     C                     DIV  PWR,DP    WRKAGG    H
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  NEWEXT SUBROUTINE TO SET UP NEW EXTRACT RECORD.
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: ZDATE2, CCYCVT
+     C*
+     C*****************************************************************
+     C*
+     C           NEWEXT    BEGSR
+     C*
+     C***  CONVERT DATES REQUIRED
+     C***  - DATE APPROVED
+     C*
+     C***  CONVERT THE DATE APPROVED (DTAP) TO DDMMYY FORMAT
+     C*
+     C                     Z-ADDDTAP      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     APDT    60
+     C*
+     C***  IF THERE IS TO BE LAST DAY ACCRUALS ADD 1 TO THE
+     C***  DATE APPROVED PUTTING THIS INTO DAP1 WORKFIELD AND THEN
+     C***  CHANGE THIS INTO DDMMYY FORMAT STORED IN STORE1 WORKFIELD
+     C*
+     C           LD        IFEQ 'Y'
+     C*
+     C           DTAP      ADD  1         DAP1    50
+     C                     Z-ADDDAP1      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     STORE1  60
+     C*
+     C                     END
+     C*
+     C***  - IF NOT LIVE RECORD, EXPIRY DATE
+     C*
+     C           RECI      IFNE 'D'
+     C*
+     C                     Z-ADDDTEX      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     EXDT    60
+     C*
+     C***  - IF NOT LIVE RECORD, EXPIRY DATE - 1
+     C*
+     C           DTEX      SUB  1         ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     EXSUB   60
+     C*
+     C                     END
+     C*
+     C***  SET UP NEW FIELDS
+     C*
+     C**********           Z-ADDCNUM      FDFCUS                                              CSD027
+     C                     MOVE CNUM      FDFCUS                                              CSD027
+     C                     Z-ADDFACT      FDFTYP
+     C                     Z-ADDFCNO      FDFSEQ
+     C                     MOVE RECI      FDECFG
+     C                     MOVE *BLANKS   FDDEPT
+     C                     MOVE *BLANKS   FDACOF
+     C                     Z-ADD0         AGG
+     C*
+     C***  START DAY IN MONTH: 1 IF DATE APPROVED LESS THAN START OF
+     C***                      MONTH DATE, DATE APPROVED OTHERWISE
+     C*
+     C           DTAP      IFLT SMDY
+     C*
+     C***  USE START DAY OF YEAR
+     C*
+     C                     Z-ADDDSTORE    FDSTDY
+     C                     ELSE
+     C*
+     C***  FOR LAST DAY ACCRUALS USE THE DATE APPROVED + 1 STORED FIELD
+     C***  TO UPDATE THE START DAY OF FACILITY THIS MONTH FIELD
+     C*
+     C           LD        IFEQ 'Y'
+     C*
+     C***  CHECK THE FORMAT FOR THE DATE AND USE THE CORRECT PART OF
+     C***  THAT FORMAT
+     C*
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVELSTORE1    FDSTDY
+     C                     ELSE
+     C                     MOVE STORE1    DDYY    40
+     C                     MOVELDDYY      FDSTDY
+     C                     END
+     C*
+     C***  OR FOR FIRST DAY ACCRUALS USE THE ORIGINAL DATE APPROVED...
+     C*
+     C                     ELSE
+     C*
+     C***  CHECK THE FORMAT FOR THE DATE AND USE THE CORRECT PART OF
+     C***  THAT FORMAT
+     C*
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVELAPDT      FDSTDY
+     C                     ELSE
+     C                     MOVE APDT      DDYY
+     C                     MOVELDDYY      FDSTDY
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C*** END DAY IN MONTH & END DATE: CONTROL DATE IF LIVE, EXPIRY - 1
+     C***                              OTHERWISE, PROVIDED THIS IS > 0.
+     C***                              IF SO, EXPIRY DATE.
+     C*
+     C           RECI      IFEQ 'D'
+     C*
+     C***  CHECK THE FORMAT FOR THE DATE AND USE THE CORRECT PART OF
+     C***  THAT FORMAT
+     C*
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVELCODA      FDENDY
+     C                     ELSE
+     C                     MOVE CODA      DDYY
+     C                     MOVELDDYY      FDENDY
+     C                     END
+     C*
+     C                     Z-ADDCODT      FDENDT
+     C*
+     C                     ELSE
+     C*
+     C***  FOR EXPIRED OR CLOSED FACILITY....
+     C***  IF FIRST DAY ACCRUALS (LD ='N') AND THE FACILITY EXPIRED
+     C***  ON THE FIRST OF THE MONTH (*IN81 ='1') THEN USE THE
+     C***  EXPIRY DATE TO UPDATE THE END DATES THIS MONTH...
+     C*
+     C           LD        IFEQ 'N'
+     C*
+     C***  CHECK THE FORMAT FOR THE DATE AND USE THE CORRECT PART OF
+     C***  THAT FORMAT
+     C*
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVELEXDT      FDENDY
+     C                     ELSE
+     C                     MOVE EXDT      DDYY
+     C                     MOVELDDYY      FDENDY
+     C                     END
+     C*
+     C                     SUB  1         FDENDY         81
+     C           *IN81     IFEQ '1'
+     C                     ADD  1         FDENDY
+     C                     Z-ADDDTEX      FDENDT
+     C*
+     C***  OTHERWISE IF THE FACILITY DIDNT EXPIRE ON THE FIRST OF
+     C***  THE MONTH USE THE EXPIRY DATE - 1 TO UPDATE
+     C*
+     C                     ELSE
+     C           DTEX      SUB  1         FDENDT
+     C                     END
+     C*
+     C***  FOR LAST DAY ACCRUALS
+     C*
+     C                     ELSE
+     C*
+     C***  CHECK THE FORMAT FOR THE DATE AND USE THE CORRECT PART OF
+     C***  THAT FORMAT
+     C*
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVELEXDT      FDENDY
+     C                     ELSE
+     C                     MOVE EXDT      DDYY
+     C                     MOVELDDYY      FDENDY
+     C                     END
+     C*
+     C                     Z-ADDDTEX      FDENDT
+     C                     END
+     C*
+     C                     END
+     C*
+     C***  FACILITY START DATE: DATE APPROVED IF GREATER THAN START OF
+     C***                      YEAR DATE, START OF YEAR DATE OTHERWISE.
+     C*
+     C           DTAP      IFLT SYDY
+     C                     Z-ADDSYDY      FDFSDY
+     C                     Z-ADDSYDT      FDFSDT
+     C*
+     C                     ELSE
+     C*
+     C***  IF THE LAST DAY ACCRUAL INDICATOR IS 'Y' THEN USE THE
+     C***  DATE APPROVED + 1 TO UPDATE THE FACILITY START DATE AND
+     C***  FACILITY START DAY NO....
+     C*
+     C           LD        IFEQ 'Y'
+     C*
+     C                     Z-ADDDAP1      FDFSDY
+     C                     Z-ADDSTORE1    FDFSDT
+     C*
+     C***  OTHERWISE IF FIRST DAY ACCRUAL THEN USE ORIGINAL DATE APPR.
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADDDTAP      FDFSDY
+     C                     Z-ADDAPDT      FDFSDT
+     C*
+     C                     END
+     C*
+     C*
+     C                     END
+     C*
+     C*** FACILITY END DATE: CONTROL DATE IF LIVE, ELSE EXPIRY DATE - 1
+     C*
+     C           RECI      IFEQ 'D'
+     C                     Z-ADDCODT      FDFEDY
+     C                     Z-ADDCODA      FDFEDT
+     C*
+     C                     ELSE
+     C*
+     C***  FOR EXPIRED OR CLOSED FACILITY....
+     C***  IF FIRST DAY ACCRUAL (LD ='N') THEN UPDATE THE FACILITY
+     C*** END DAY NUMBER AND THE FACILITY END DATE WITH THE EXPIRY DATE
+     C***  - 1 ....
+     C*
+     C           LD        IFEQ 'N'
+     C*
+     C           DTEX      SUB  1         FDFEDY
+     C                     Z-ADDEXSUB     FDFEDT
+     C*
+     C***  OTHERWISE IF LAST DAY ACCRUALS THEN UPDATE WITH ORIGINAL
+     C***  EXPIRY DATE...
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADDDTEX      FDFEDY
+     C                     Z-ADDEXDT      FDFEDT
+     C*
+     C                     END
+     C*
+     C*
+     C                     END
+     C*
+     C***  ORIGINAL APPROVAL DATE:
+     C*
+     C                     Z-ADDDTAP      FDDADY
+     C                     Z-ADDAPDT      FDDADT
+     C*
+     C***  CALCULATE AGGREGATE ADJUSTMENT, CONVERT TO BASE CURRENCY
+     C***  AND ADD IN TO APPROPRIATE MONTHS AGGREGATE.
+     C*
+     C           RECI      IFEQ 'D'
+     C           CODT      ADD  1         WRKDAY  50
+     C                     SUB  FDFSDY    WRKDAY
+     C                     ELSE
+     C*
+     C***  FOR EXPIRED OR CLOSED FACILITY....
+     C*
+     C           DTEX      SUB  FDFSDY    WRKDAY
+     C*
+     C***  IF LAST DAY ACCRUAL (LD ='Y') THEN UPDATE THE WORKDAY
+     C***  BY SUBTRACTING THE FACILITY START DATE FROM THE EXPIRY DATE
+     C***  (ALREADY DONE) AND ADDING 1 TO THE WORKDAY...
+     C*
+     C           LD        IFEQ 'Y'
+     C*
+     C                     ADD  1         WRKDAY
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** If the facility expired before the start of the year set         BH3470
+     C** facility amount to zero                                          BH3470
+     C*                                                                   BH3470
+     C           DTEX      IFLT SYDY                                      BH3470
+     C                     Z-ADD0         WRKAGG                          BH3470
+     C                     ELSE                                           BH3470
+     C           WRKDAY    MULT FAMT      WRKAGG 150
+     C                     END                                            BH3470
+     C           WRKAGG    CASNE0         CCYCVT
+     C                     END
+     C                     ADD  WRKAGG    AGG,MN
+     C*
+     C***  WRITE NEW EXTRACT RECORD
+     C*
+     C                     WRITELEPEFCDF
+     C                     ADD  1         NADD    50
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  UPDEXT SUBROUTINE TO UPDATE EXISTING EXTRACT RECORD.
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: ZDATE2, CCYCVT
+     C*
+     C*****************************************************************
+     C*
+     C           UPDEXT    BEGSR
+     C*
+     C***  CONVERT DATES REQUIRED
+     C***  - IF NOT LIVE RECORD, EXPIRY DATE
+     C*
+     C           RECI      IFNE 'D'
+     C*
+     C                     Z-ADDDTEX      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     EXDT
+     C*
+     C***  - IF NOT LIVE RECORD, EXPIRY DATE - 1
+     C*
+     C           DTEX      SUB  1         ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     EXSUB
+     C*
+     C                     END
+     C*
+     C***  UPDATE EXPIRED/CLOSED FLAG
+     C*
+     C                     MOVE RECI      FDECFG
+     C*
+     C***  START DAY IN MONTH: IF TODAY IS 1ST DAY OF MONTH, RESET TO 1
+     C*
+     C***  WHERE THE RUNDATE IS EQUAL TO THE START OF MONTH DAY
+     C***  OR THE RUNDATE IS GREATER THAN THE START OF MONTH DAY
+     C***  AND THE START OF MONTH DAY IS GREATER THAN THE PREVIOUS END
+     C*** OF LAST ACTIVITY PERIOD USE THE STRT OF YEAR DD FIELD(DSTORE)
+     C***  UPDATE THE FACILITY START DAY (FDSTDY)
+     C*
+     C********** RUNDAY    IFEQ SMDY                                        0078
+     C**********                                                            0078
+     C********** RUNDAY    ORGT SMDY                                        0078
+     C           CODT      IFEQ SMDY                                        0078
+     C*                                                                     0078
+     C           CODT      ORGT SMDY                                        0078
+     C*                                                                     0078
+     C** Access to ACTN5DH removed and replaced with a new date LASTF       0078
+     C** from dataarea LERSTS because the old checking only worked          0078
+     C** for daily accruals and not monthly                                 0078
+     C*                                                                     0078
+     C***********SMDY      ANDGTPELAP                                       0078
+     C           SMDY      ANDGTLASTF                                       0078
+     C*
+     C***  USE START DAY OF YEAR
+     C*
+     C                     Z-ADDDSTORE    FDSTDY
+     C*
+     C                     END
+     C*
+     C***  END DAY IN MONTH & END DATE/FACILITY END DAY NO. & DATE:
+     C***   CONTROL DATE IF LIVE, EXPIRY - 1 OTHERWISE. N.B. IF THIS
+     C***   MAKES END DAY = 0, SET START OF MONTH DAY = 0.
+     C*
+     C           RECI      IFEQ 'D'
+     C*
+     C***  CHECK THE FORMAT FOR THE DATE AND USE THE CORRECT PART OF
+     C***  THAT FORMAT
+     C*
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVELCODA      FDENDY
+     C                     ELSE
+     C                     MOVE CODA      DDYY
+     C                     MOVELDDYY      FDENDY
+     C                     END
+     C*
+     C                     Z-ADDCODT      FDENDT
+     C                     Z-ADDCODT      FDFEDY
+     C                     Z-ADDCODA      FDFEDT
+     C                     ELSE
+     C*
+     C***  FOR EXPIRED OR CLOSED FACILITY....
+     C*
+     C***  CHECK THE FORMAT FOR THE DATE AND USE THE CORRECT PART OF
+     C***  THAT FORMAT
+     C*
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVELEXDT      FDENDY
+     C                     ELSE
+     C                     MOVE EXDT      DDYY
+     C                     MOVELDDYY      FDENDY
+     C                     END
+     C*
+     C***  IF FIRST DAY ACCRUALS
+     C*
+     C           LD        IFEQ 'N'
+     C*
+     C                     SUB  1         FDENDY         81
+     C           DTEX      SUB  1         FDENDT
+     C           DTEX      SUB  1         FDFEDY
+     C                     Z-ADDEXSUB     FDFEDT
+     C           *IN81     IFEQ '1'
+     C                     Z-ADD0         FDSTDY
+     C                     END
+     C*
+     C***  FOR LAST DAY ACCRUALS
+     C*
+     C                     ELSE
+     C*
+     C                     MOVELEXDT      FDFEDT
+     C                     Z-ADDDTEX      FDENDT
+     C                     Z-ADDDTEX      FDFEDY
+     C*
+     C                     END
+     C*
+     C*
+     C                     END
+     C*
+     C***  CALCULATE AGGREGATE ADJUSTMENT, CONVERT TO BASE CURRENCY
+     C***  AND ADD IN TO APPROPRIATE MONTHS AGGREGATE FOR LIVE OR
+     C***  EXPIRING FACILITIES ONLY.
+     C*
+     C           RECI      IFNE 'C'
+     C*
+     C           RECI      IFEQ 'D'
+     C*
+     C***  MUST CHECK WHETHER AN END OF MONTH HAS OCCURRED ON OR SINCE
+     C***  THE END OF THE LAST ACTIVITY PERIOD AND IF SO ADJUST THE
+     C***  WORKDAY CALCULATION TO TAKE ACCOUNT OF THE PROCESSING
+     C***  ALREADY PERFORMED IN THE PREVIOUS END OF DAY
+     C*
+     C*                                                                     0078
+     C** Access to ACTN5DH removed and replaced with a new date LASTF       0078
+     C** from dataarea LERSTS because the old checking only worked          0078
+     C** for daily accruals and not monthly                                 0078
+     C*                                                                     0078
+     C***********SMDY      IFGT PELAP                                       0078
+     C********** SMDY      ANDLTRUNDAY                                      0078
+     C********** CODT      ADD  1         WRKDAY                            0078
+     C**********           SUB  RUNDAY    WRKDAY                            0078
+     C**********           ELSE                                             0078
+     C***********CODT      SUB  PELAP     WRKDAY                            0078
+     C**********           END                                              0078
+     C*                                                                     0078
+     C           CODT      SUB  LASTF     WRKDAY                            0078
+     C*
+     C                     ELSE
+     C*
+     C***  FOR EXPIRED OR CLOSED FACILITY....
+     C***  AND LD = 'Y' OR 'N'
+     C*
+     C***  AMENDED TO INCREASE FLEXIBILTY OF MISSING ACCRUAL DAYS
+     C***  WHERE THE FACILITY HAS NOT EXPIRED ON THIS RUNDATE BUT WILL
+     C***  DO SO PRIOR TO THE NEXT UPDATE OF THE PROFITABILITY EXTRACT.
+     C***  SUBTRACT THE PREVIOUS END OF LAST ACTIVITY PERIOD FROM
+     C***  THE EXPIRY DATE INSTEAD OF SUBTRACTING THE RUNDATE, AND
+     C***  SUBTRACT 1 FROM THE RESULT...
+     C*
+     C*                                                                     0078
+     C** Access to ACTN5DH removed and replaced with a new date LASTF       0078
+     C** from dataarea LERSTS because the old checking only worked          0078
+     C** for daily accruals and not monthly                                 0078
+     C*                                                                     0078
+     C***********DTEX      SUB  PELAP     WRKDAY                            0078
+     C           DTEX      SUB  LASTF     WRKDAY                            0078
+     C                     SUB  1         WRKDAY
+     C*
+     C***  IF LAST DAY ACCRUAL (LD ='Y') THEN UPDATE THE WORKDAY
+     C***  BY SUBTRACTING THE RUN DATE FROM THE EXPIRY DATE
+     C***  (ALREADY DONE) AND ADDING 1 TO THE WORKDAY...
+     C*
+     C           LD        IFEQ 'Y'
+     C*
+     C                     ADD  1         WRKDAY
+     C*
+     C                     END
+     C*
+     C*
+     C                     END
+     C*
+     C           WRKDAY    MULT FAMT      WRKAGG
+     C           WRKAGG    CASNE0         CCYCVT
+     C                     END
+     C                     ADD  WRKAGG    AGG,MN
+     C*
+     C                     END
+     C*
+     C***  UPDATE EXTRACT RECORD
+     C*
+     C                     UPDATLEPEFCDF
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  REACT SUBROUTINE TO UPDATE FACILITY EXTRACT FOR REACTIVATED
+     C***  FACILITIES.
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: CCYCVT
+     C*
+     C*****************************************************************
+     C*
+     C           REACT     BEGSR
+     C*
+     C***  UPDATE EXPIRED/CLOSED FLAG
+     C*
+     C                     MOVE 'D'       FDECFG
+     C*
+     C***  START DAY IN MONTH: IF END DATE ON EXTRACT IS EARLIER THAN
+     C***                      START OF MONTH DATE, SET START DAY NO.
+     C***                      TO 1. IF EARLIER THAN START OF YEAR DATE
+     C***                     SET FACILITY START DATE TO START OF YEAR.
+     C*
+     C***                      CALCULATE ALSO NO.OF DAYS FOR ADJUSTMENT
+     C***                      AS ((CODT + 1) - SYDT) IF END DATE ON
+     C***                      EXTRACT WAS EARLIER THAN START OF YEAR.
+     C***                      OTHERWISE THIS IS (CODT - END DATE).
+     C*
+     C           CODT      SUB  FDFEDY    WRKDAY
+     C*
+     C***  IF LAST DAY ACCRUAL THEN SUBTRACT 1 FROM WRKDAY
+     C*
+     C           LD        IFEQ 'Y'
+     C*
+     C           WRKDAY    SUB  1         WRKDAY
+     C*
+     C                     END
+     C*
+     C           FDFEDY    IFLT SMDY
+     C*
+     C***  USE START DAY OF YEAR
+     C*
+     C                     Z-ADDDSTORE    FDSTDY
+     C*
+     C           FDFEDY    IFLT SYDY
+     C                     Z-ADDSYDY      FDFSDY
+     C                     Z-ADDSYDT      FDFSDT
+     C           CODT      ADD  1         WRKDAY
+     C                     SUB  SYDY      WRKDAY
+     C                     END
+     C                     END
+     C*
+     C***  END DAY IN MONTH & END DATE/FACILITY END DAY NO. & DATE:
+     C***      SET TO CONTROL DATE.
+     C*
+     C***  CHECK THE FORMAT FOR THE DATE AND USE THE CORRECT PART OF
+     C***  THAT FORMAT
+     C*
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVELCODA      FDENDY
+     C                     ELSE
+     C                     MOVE CODA      DDYY
+     C                     MOVELDDYY      FDENDY
+     C                     END
+     C*
+     C                     Z-ADDCODT      FDENDT
+     C                     Z-ADDCODT      FDFEDY
+     C                     Z-ADDCODA      FDFEDT
+     C*
+     C***  CALCULATE AGGREGATE ADJUSTMENT, CONVERT TO BASE CURRENCY
+     C***  AND ADD IN TO APPROPRIATE MONTHS AGGREGATE.
+     C*
+     C           WRKDAY    MULT FAMT      WRKAGG
+     C           WRKAGG    CASNE0         CCYCVT
+     C                     END
+     C                     ADD  WRKAGG    AGG,MN
+     C*
+     C***  UPDATE EXTRACT RECORD
+     C*
+     C                     UPDATLEPEFCDF
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  INIT SUBROUTINE TO PERFORM FIRST CYCLE CALCS.
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: *PSSR, DBERR, ZDATE2
+     C*
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C***  DATAAREA RUNDAT
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*                                                                     0078
+     C           *NAMVAR   DEFN           LERSTS                            0078
+     C********** *LOCK     IN   LERSTS                                                 0078 MD022067
+     C                     IN   LERSTS                                                      MD022067
+     C                     Z-ADDLASTFN    LASTF   50                        0078
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+     C*
+     C***  ACCESS BANK DETAILS FOR TITLE
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     Z-ADD1         DBASE            * DBERROR 1   *
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL'LER210'  DBPGM
+     C                     OUT  LDA
+     C                     SETON                     89
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     ELSE
+     C*
+     C***  CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C*
+     C           AGDFF     COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C                     END
+     C*
+     C***  ACCESS GENERAL LEDGER DETAILS FOR ACCRUALS/PROFIT DATE.
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     89
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     Z-ADD2         DBASE            * DBERROR 2   *
+     C                     MOVEL'SDGELRPD'DBFILE           ***************
+     C                     MOVEL'LER210'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+     C*                                                                     0078
+     C** Access to ACTN5DH removed and replaced with a new date on          0078
+     C** the datastructure LERSTS because the old checking only worked      0078
+     C** for daily accruals and not monthly                                 0078
+     C*                                                                     0078
+     C*********************                                                 0078
+     C****ACCESS*PF/ACTN5DH*FOR*PELAP(PREV.END*OF*LAST*ACTIVITY*PERIOD)     0078
+     C*********************                                                 0078
+     C*********************READ ACTN5DH                  89                 0078
+     C************IN89*****IFEQ '1'                                         0078
+     C************LOCK*****IN   LDA                                         0078
+     C*********************MOVEL'*READ'   DBKEY            ***************  0078
+     C*********************Z-ADD6         DBASE            * DBERROR 6   *  0078
+     C*********************MOVEL'ACTN5DH' DBFILE           ***************  0078
+     C*********************MOVEL'LER210'  DBPGM                             0078
+     C*********************OUT  LDA                                         0078
+     C*********************SETON                     U7U8LR                 0078
+     C*********************EXSR *PSSR                                       0078
+     C*********************EXSR DBERR                                       0078
+     C*********************END                                              0078
+     C*
+     C***  CALCULATE RUN DATE IN CASE SECOND RUN OF EOM. IN THIS CASE
+     C***  RUN DATE MUST BE RESET TO THE FIRST OF THE NEW MONTH.
+     C*
+     C***  THIS APPEARS TO BE ALL THE OLD ROUTINE RUNCHK USED TO DO
+     C***  FOR THIS PROGRAM, SO I'VE REPLACED IT WITH THESE 4 LINES
+     C*
+     C** The set up of this date is not conditioned on anything and is      0078
+     C** causing the amounts on th report to come out negative and of       0078
+     C** course wrong! If accruals are daily it is OK to use the            0078
+     C** accrual/profit date because except over holidays etc it will       0078
+     C** be equal to run date but with monthly accruals this is not         0078
+     C** the case                                                           0078
+     C*                                                                     0078
+     C** First calculate the date of next working day minus one             0078
+     C*                                                                     0078
+     C           DNWD      SUB  1         DNWD1   50                        0078
+     C*                                                                     0078
+     C** The use of accrual profit day is now conditioned on                0078
+     C** (i) accrual frequency being daily or (ii) accrual frequency        0078
+     C** monthly AND APDA falling between run date date of next             0078
+     C** working day minus 1                                                0078
+     C** or (iii) monthly and today is accrual profit day                 BH3444
+     C** or (iv) last working day in month and today is between accrual   088128
+     C**         profit date & date of next working day minus 1           088128
+     C** or (v) last working day in month & today is accrual profit date  088128
+     C*                                                                     0078
+     C* (i)                                                                 0078
+     C           APFQ      IFEQ 'D'                                         0078
+     C* (ii)                                                                0078
+     C           APFQ      OREQ 'M'                                         0078
+     C           APDA      ANDGTRUND                                        0078
+     C***********APDA      ANDLTDNWD1                                  0078 0111
+     C           APDA      ANDLEDNWD1                                       0111
+     C* (iii)                                                             BH3444
+     C           APFQ      OREQ 'M'                                       BH3444
+     C           APDA      ANDEQRUND                                      BH3444
+     C* (iv)                                                              088128
+     C           APFQ      OREQ 'L'                                       088128
+     C           APDA      ANDGTRUND                                      088128
+     C           APDA      ANDLEDNWD1                                     088128
+     C* (v)                                                               088128
+     C           APFQ      OREQ 'L'                                       088128
+     C           APDA      ANDEQRUND                                      088128
+     C*                                                                     0078
+     C                     Z-ADDAPDA      ZDAYNO
+     C                     ELSE                                             0078
+     C                     Z-ADDDNWD1     ZDAYNO                            0078
+     C                     END                                              0078
+     C*                                                                     0078
+     C** Either way put the correct day number into runday for later        0078
+     C*                                                                     0078
+     C                     Z-ADDZDAYNO    RUNDAY  50                        0078
+     C*                                                                     0078
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RUNDAX
+     C*                                                                     0078
+     C** If the first position of the alpha date is blank make it           0078
+     C** zero for the later date comparisons                                0078
+     C*                                                                     0078
+     C                     MOVELRUNDAX    TEST    1                         0078
+     C           TEST      IFEQ ' '                                         0078
+     C                     MOVEL'0'       RUNDAX                            0078
+     C                     END                                              0078
+     C*********************Z-ADDAPDA      RUNDAY  50                        0078
+     C*
+     C***  SET UP START OF YEAR DATE & DAY NO.
+     C*
+     C***  READ BANK DETAILS AND USE THE PREVIOUS END OF YEAR DATE
+     C***  INSTEAD OF THE HARD CODED TO DETERMINE THE START OF YEAR
+     C***  DATE...
+     C*
+     C***  START OF YEAR DATE IS DETERMINED BY ADDING ONE TO THE
+     C***  PREVIOUS END OF YEAR DAY NUMBER...
+     C***  UNLESS THE END OF YEAR FALLS ON A NON-WORKING DAY AND THIS
+     C***  IS THE END OF YEAR RUN
+     C*
+     C           BJEYD     IFGT RUND
+     C           BJEYD     ANDLTRUNDAY
+     C           BJEYD     ADD  1         SYDY    50
+     C                     ELSE
+     C           BJPEYD    ADD  1         SYDY
+     C                     END
+     C*
+     C***  CONVERT THIS TO DDMMYY FORMAT
+     C*
+     C                     Z-ADDSYDY      ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C***  AND STORE THE RESULTING DATE FORMAT IN SYDT
+     C*
+     C                     MOVE ZDATE     SYDT    60
+     C*
+     C***  STORE THE DAY OF THE DDMMMYY FORMAT FOR USE LATER ON..
+     C*
+     C                     MOVELZADATE    DSTORE  20
+     C*
+     C***  START OF YEAR PROCESSING HAS BEEN MOVED TO PRECEDE START
+     C***  OF MONTH PROCESSING
+     C*
+     C***  SET UP START OF CURRENT MONTH DATE & DAY NO.
+     C*
+     C***  INCORPORATE FLEXIBILITY OF START OF MONTH
+     C***  DAY INSTEAD OF THE HARD CODED '01'
+     C*
+     C                     MOVE DSTORE    DD
+     C*
+     C                     Z-ADD1         MN      20
+     C           MMM       LOKUPZMNM,MN                  10
+     C                     MOVE YY        MY
+     C*
+     C***  CHECK WHETHER THE DAY OF RUNDAX IS LESS THAN THE START OF
+     C***  MONTH DAY
+     C***  IF SO THE AGGREGATE FIGURE NEEDS TO BE PUT INTO THE PREVIOUS
+     C***  MONTH'S PROFITABILITY IE MN NEEDS TO BE REDUCED BY ONE
+     C*
+     C           RDD       IFLT DD
+     C           MN        SUB  1         MN
+     C*
+     C***  CHECK THAT THE MONTH NUMBER IS NOT NOW 0 AND ADJUST IF IT IS
+     C*
+     C           MN        IFEQ 0
+     C                     Z-ADD12        MN
+     C                     MOVE YY        YYN     20
+     C           YYN       SUB  1         YYN
+     C                     MOVE YYN       MY
+     C                     END
+     C*
+     C                     END
+     C                     MOVELMN        MY
+     C                     MOVE SDATE     SMDT    60
+     C                     MOVE SDATE     ZDATE
+     C                     CALL 'LERDATEF'DATDAY
+     C           GRTCD     IFEQ '1'
+     C                     SETON                     89
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     MOVELSDATE     DBKEY            ***************
+     C                     Z-ADD20        DBASE            * DBERROR 20  *
+     C                     MOVEL'LERDATEF'DBFILE           ***************
+     C                     MOVEL'LER210'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     Z-ADDZDAYNO    SMDY    50
+     C**********           Z-ADDZDAYNO    STARMO  50                        0110            MD051991
+     C*
+     C*****CHECK*WHETHER*THE*NEXT*START*OF*MONTH*FALLS*BETWEEN*RUND*AND     0078
+     C*****THE*DATE*OF*NEXT*WORKING*DAY********************************     0078
+     C*****IF*SO*CODT*IN*THE*FIRST*RUN*SHOULD*BE*START*OF*NEXT*MONTH***     0078
+     C*****MINUS*ONE*AND*IN*THE*NEXT*RUN*SHOULD*BE*********************     0078
+     C*****AS*BEFORE***************************************************     0078
+     C*****************************************************************     0078
+     C**********                                                            0078
+     C********** RUND      ADD  1         RUND1   50                        0078
+     C**********                                                            0078
+     C********** APDA      IFEQ RUND                                        0078
+     C********** DNWD      ANDGTRUND1                                       0078
+     C**********           MOVE SMDT      SMDTN   6                         0078
+     C**********           MOVE SMN       SMNN    20                        0078
+     C********** SMNN      ADD  1         SMNN                              0078
+     C**********           MOVE SMNN      SMN                               0078
+     C**********                                                            0078
+     C********** SMNN      IFGT 12                                          0078
+     C**********           Z-ADD1         SMNN                              0078
+     C**********           MOVE '01'      SMN                               0078
+     C**********           MOVE SYY       SYYN    20                        0078
+     C**********           ADD  1         SYYN                              0078
+     C**********           MOVE SYYN      SYY                               0078
+     C**********           END                                              0078
+     C*****CONVERT*SMDTN*INTO*A*DAY*NUMBER*FOR*COMPARISON**************     0078
+     C**********                                                            0078
+     C**********           MOVE SMDTN     ZDATE                             0078
+     C**********           CALL 'LERDATEF'DATDAY                            0078
+     C********** GRTCD     IFEQ '1'                                         0078
+     C**********           SETON                     89                     0078
+     C**********           SETON                     U7U8LR                 0078
+     C********** *LOCK     IN   LDA                                         0078
+     C**********           MOVELSMDTN     DBKEY            ***************  0078
+     C**********           Z-ADD21        DBASE            * DBERROR 21  *  0078
+     C**********           MOVEL'LERDATEF'DBFILE           ***************  0078
+     C**********           MOVEL'LER210'  DBPGM                             0078
+     C**********           OUT  LDA                                         0078
+     C**********           EXSR *PSSR                                       0078
+     C**********           EXSR DBERR                                       0078
+     C**********           END                                              0078
+     C**********                                                            0078
+     C**********           Z-ADDZDAYNO    SMDYN   50                        0078
+     C**********                                                            0078
+     C********** SMDYN     IFGT RUND                                        0078
+     C********** SMDYN     ANDLTDNWD                                        0078
+     C********** SMDYN     SUB  1         CODT                              0078
+     C**********           END                                              0078
+     C**********                                                            0078
+     C**********           ELSE                                             0078
+     C*
+     C*** CALC EARLIER OF ACCRUALS/PROFIT DATE & (NEXT WORKING DAY - 1)
+     C*
+     C           DNWD      SUB  1         CODT    50
+     C***********APDA      IFLT CODT                                        0078
+     C***********          Z-ADDAPDA      CODT                              0078
+     C***********          END                                              0078
+     C***********          END                                              0078
+     C*                                                                     0078
+     C** Use the new date field on LERSTS to check for setting the          0078
+     C** control date correctly. If LASTF is greater than or equal to       0078
+     C** RUND then DNWD-1 is the correct value because this is the          0078
+     C** second run of the day, otherwise if this is the first run          0078
+     C*                                                                     0078
+     C           LASTF     IFLT RUND                                        0078
+     C*                                                                     0078
+     C** and the accrual profit date is between today and DNWD-1            0078
+     C*                                                                     0078
+     C           RUND      IFLT APDA                                        0078
+     C*                                                                     0111
+     C**  Should use accrual profit date if it equals CODT otherwise        0111
+     C**  weekends do not get included if Fridays run goes straight         0111
+     C**  to the Sunday                                                     0111
+     C*                                                                     0111
+     C***********APDA      ANDLTCODT                                    00780111
+     C           APDA      ANDLECODT                                        0111
+     C*                                                                     0078
+     C***  or the accrual profit date is before run date and after last     0078
+     C***  run of facility update (ie - you missed the accrual profit       0078
+     C***  day somehow)                                                     0078
+     C*                                                                     0078
+     C           APDA      ORLT RUND                                        0078
+     C           APDA      ANDGTLASTF                                       0078
+     C*                                                                     0078
+     C** the first run should include days up to accrual day                0078
+     C*                                                                     0078
+     C                     Z-ADDAPDA      CODT                              0078
+     C                     ELSE                                             0078
+     C*                                                                     0078
+     C***  Only do if daily accruals                                      BH3444
+     C*                                                                   BH3444
+     C           APFQ      IFEQ 'D'                                       BH3444
+     C           RUND      OREQ APDA                                      BH3444
+     C*                                                                   BH3444
+     C** if neither of the above cases apply, this is a normal run          0078
+     C** or the first run when there is no EOM & CODT=RUND                  0078
+     C*                                                                     0078
+     C                     Z-ADDRUND      CODT                              0078
+     C*                                                                   BH3444
+     C                     END                                            BH3444
+     C*                                                                     0078
+     C                     END                                              0078
+     C                     END                                              0078
+     C*                                                                     0078
+     C                     Z-ADDCODT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     CODA    60
+      ****************************************************************      0111            MD051991
+      ***If*this*is*the*first*run*of*the*day*update*the*processing****      0111            MD051991
+      ***date*on*the*dataara*LERSTS*-*this*makes*sure*that*the********      0111            MD051991
+      ***profitability*reporting*is*in*line*with*the*first*level******      0111            MD051991
+      ***file*updates*************************************************      0111            MD051991
+      ****************************************************************      0111            MD051991
+     C********** LASTF     IFLT RUND                                        0111            MD051991
+     C**********           MOVE ZADATE    REPDAT  7                         0111            MD051991
+     C                     MOVE ZADATE    WREPDT  7                                         MD051991
+     C**********           END                                              0111            MD051991
+     C*********************                                                 0078
+     C*****IF*CODT*HAS*BEEN ADJUSTED TO THE END OF MONTH DATE THEN ON       0078
+     C*****SECOND*RUN*PELAP MUST BE ADJUSTED TO THAT DATE                   0078
+     C*********************                                                 0078
+     C***********SMDY******IFGT RUND                                        0078
+     C***********SMDY******ANDLTDNWD                                        0078
+     C***********SMDY******SUB  1         PELAP   50                        0078
+     C*********************END                                              0078
+     C*
+     C*** ACCESS OF PF/SDGELRPD FILE FOR 'ACCRUE ON LAST DAY' INDICATOR
+     C*** KEY:    BKALDI =  'Y' SIGNIFIES LAST DAY ACCRUAL
+     C***     OR  BKALDI =  ANY OTHER VALUE SIGNIFIES FIRST DAY ACCRUAL
+     C*
+     C*** IF LAST DAY ACCRUALS THEN USE A FLAG(LD) FOR EASE OF
+     C*** REFERENCE...
+     C*
+     C           BKALDI    IFEQ 'Y'
+     C                     MOVE 'Y'       LD      1
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE 'N'       LD      1
+     C                     END
+     C*
+     C***  READ IN INFORMATION FOR CURRENCIES.
+     C***  STORE IN ARRAY/DATASTRUCTURE.
+     C*
+     C                     MOVE *BLANK    MDI
+     C                     Z-ADD0         SPT
+     C                     Z-ADD0         CDP
+     C                     Z-ADD0         X       30
+     C           *IN88     DOWEQ'0'
+     C                     READ SDCURRPD                 88
+     C           *IN88     IFEQ '0'
+     C                     ADD  1         X
+     C                     MOVE A6CYCD    COD,X
+     C                     MOVELA6SPRT    SPT              SPOT RATE
+     C                     MOVE A6NBDP    CDP              DEC.PLACES
+     C                     MOVE A6MDIN    MDI              MULT/DIV
+     C                     MOVE CYDDS     CYD,X
+     C                     END
+     C                     END
+     C*
+     C* DEFINE PARAMETER LIST FOR LERDATEF
+     C*
+     C           DATDAY    PLIST
+     C                     PARM           ZDATE
+     C                     PARM           ZDAYNO
+     C                     PARM           GRTCD   1
+     C*
+     C***  DEFINE KEY LIST FOR LEPEFCD
+     C*
+     C           KEYFCX    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           FACT
+     C                     KFLD           FCNO
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  ZDATE2 SUBROUTINE
+     C*
+     C***  CALLED FROM: NEWEXT, UPDEXT, INIT, DUPSR
+     C*
+     C***  CALLS:
+     C*
+     C*****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  DUPSR SUBROUTINE TO PERFORM PROCESSING FOR DUPLICATE
+     C***  EXTRACT RECORDS.
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: ZDATE2, DETAIL
+     C*
+     C*****************************************************************
+     C*
+     C           DUPSR     BEGSR
+     C*
+     C***  CONVERT APPROVAL & EXPIRY DATES.
+     C*
+     C                     Z-ADDDTAP      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    APDTA
+     C*
+     C                     Z-ADDDTEX      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    EXDTA
+     C*
+     C                     MOVE *BLANKS   STATUS  8
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'LIVE'    STATUS
+     C                     ELSE
+     C           RECI      IFEQ 'E'
+     C                     MOVEL'EXPIRED' STATUS
+     C                     ELSE
+     C           RECI      IFEQ 'C'
+     C                     MOVEL'CLOSED'  STATUS
+     C                     ELSE
+     C                     MOVEL'REVERSED'STATUS
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C***  WRITE DETAILS TO REPORT AND SET FLAG TO INDICATE AT LEAST
+     C***  ONE DUPLICATE WAS FOUND.
+     C*
+     C           DUP       IFEQ ' '
+     C                     EXSR DETAIL
+     C                     ELSE
+     C           *IN80     IFEQ '1'
+     C                     WRITELER210H1
+     C                     WRITELER210H2
+     C                     MOVE '0'       *IN80
+     C                     END
+     C                     END
+     C                     MOVE 'Y'       DUP     1
+     C*
+     C                     WRITELER210D1
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  DETAIL SUBROUTINE TO PRINT DETAIL REPORT
+     C*
+     C***  CALLED FROM: DUPSR
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C*****************************************************************
+     C*
+     C           DETAIL    BEGSR
+     C*
+     C                     CLOSELER210P1
+     C                     OPEN LER210P1
+     C*
+     C                     Z-ADD0         PAGE
+     C*
+     C***  ENSURE TOTAL SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C*
+     C***  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8
+     C                     RETRN
+     C                     END
+     C*
+     C***  PUT OUT HEADERS
+     C*
+     C                     WRITELER210H1
+     C                     WRITELER210H2
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  AUDIT SUBROUTINE TO PRINT AUDIT REPORT
+     C*
+     C***  CALLED FROM: MAIN PROCESSING, DBERR
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C*****************************************************************
+     C*
+     C           AUDIT     BEGSR
+     C*
+     C***  ENSURE TOTAL SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU  60
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C***  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8
+     C                     RETRN
+     C                     END
+     C*
+     C                     Z-ADD0         PAGE1
+     C                     WRITELER210A1
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  DBERR SUBROUTINE TO PERFORM DATABASE ERROR PROCESSING
+     C*
+     C***  CALLED FROM: MAIN PROCESSING, INIT
+     C*
+     C***  CALLS: AUDIT
+     C*
+     C*****************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C***  IF  P1 OPEN, PUT OUT DBERROR MESSAGE ON IT
+     C*
+     C           DUP       IFEQ 'Y'
+     C                     WRITEDBFMTP
+     C                     END
+     C*
+     C***  PUT OUT ERROR DETAILS ON AUDIT REPORT
+     C*
+     C                     EXSR AUDIT
+     C                     WRITEDBFMT
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C***  *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C***  CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+     C/EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   PWR  - POWER ARRAY FOR CONVERSION OF AGGREGATE AMOUNTS
+0001
+0010
+0100
+1000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,70 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE PDCL Sett Acct Available Balance Report')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LE000496 - Midas LE PDCL Sett Acct Available Balance Report */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE164 *CREATE     Date 18Aug14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CLE164 - CLE134 Enhancement F (Repayment Methodology)       */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&USRD)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited +
+                           2014')
+ 
+             DCL        VAR(&USRD) TYPE(*CHAR) LEN(10)
+ 
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERR_DIE))
+ 
+/** Initialisation */
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             IF         COND(&USRD *NE '          ') THEN(DO)
+                OVRPRTF    FILE(LE000496P0) USRDTA(&USRD)
+                OVRPRTF    FILE(LE000496P1) USRDTA(&USRD)
+                OVRPRTF    FILE(LE000496P2) USRDTA(&USRD)
+             ENDDO
+ 
+             CALL       PGM(LE000496)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+ 
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Process Errors */
+ 
+ERR_DIE:
+             SNDPGMMSG  MSG('Job terminated, database in error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX11)
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_PGM:
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+ 
+             GOTO       CMDLBL(ENDPGM)
+/** Termination Process */
+ 
+ ENDPGM:
+ 
+             ENDPGM

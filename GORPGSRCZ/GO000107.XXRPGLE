@@ -1,0 +1,208 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+      *****************************************************************
+/*STD****RPGBASEBND****************************************************                       CCB023
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing                                    *
+      *                                                               *
+      *  GO000107 - Global Processing data dowload, FX deals          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CCB023  *REDUNDANT Date 06Aug12               *
+      *  Prev Amend No. AR1080680          Date 23Jan13               *
+      *                 BUG27841           Date 09Aug10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 243380             Date 02Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 07Jul06               *
+      *                 BUG9512            Date 05Dec05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CGP002  *CREATE    Date 02Jul03               *
+      *                 xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  CCB023 - COB Restructure - Input Cycle Termination           *
+      *           Restructuring                                       *
+      *  AR1080680 - Incomplete deals are added in the Unauthorised   *
+      *              Items field. Recompiled due to changes in        *
+      *              GPFXWIPL.                                        *
+      *  BUG27841 - Status changes to Requires Reauthorisation        *
+      *             during Delete Action                              *
+      *  243380 - Categorized unathorised deals by adding condition   *
+      *           that deal is not deleted.                           *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  BUG9512 - Signal errors to calling program in U7U8.          *
+      *            Make input files user open to prevent message wait *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CGP002 - Global Processing data download                     *
+      *                                                               *
+      *****************************************************************
+      **
+      ** +--------------------------------------+
+      ** ¦ Files                                ¦
+      ** ¦ =====                                ¦
+      ** +--------------------------------------+
+      *
+     F***FXICCDLL  IF   E           K DISK    INFSR(*PSSR)                                  BUG27841
+     FGPFXWIPL  IF   E           K DISK    INFSR(*PSSR)                                     BUG27841
+     F                                     USROPN                                            BUG9512
+     FGPDWNLL0  UF A E           K DISK    INFSR(*PSSR)
+     F                                     USROPN                                            BUG9512
+      **
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+     D                 DS
+     D  CountN                 1      5  0
+     D  CountA                 1      5
+      *
+      * Program Status Data Structure
+     D/COPY ZACPYSRC,PSDS
+      *
+      * Midas Local Data Area for database error reporting
+     D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
+      * The following fields are defined in the external file:
+      *                                     134 141 DBFile
+      *                                     142 170 DBKey
+      *                                     171 180 DBPgm
+      *                                     181 1830DBase
+      *                                     184 193 DBMod
+      *                                     194 203 DBProc
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+      *
+     D @RUN            S              1
+     D Value           S             50
+     D PZRTCD          S              7                                                     BUG27841
+     D PZERMS          S             50                                                     BUG27841
+     D PZFCHK          S              1                                                     BUG27841
+     D PZZONE          S             10                                                     BUG27841
+     D PZSHTC          S              4                                                     BUG27841
+     D PZRDNB          S              5  0                                                  BUG27841
+     D PZDNWD          S              5  0                                                  BUG27841
+     D PZBCCY          S              3                                                     BUG27841
+     D PZNJOB          S              1  0                                                  BUG27841
+      *
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+     C/COPY GOCPYSRC,GOUPD_PARM
+      *
+      * Unauthorised FX deals?
+     C                   IF        Key_Desc = 'UnauthFXDeals'
+      *
+      * If the Midas phase is not Input Cycle then set data to blank.
+     C                   IF        MidasPhase <> 'A'
+     C                   EVAL      Value = *blanks
+     C                   ELSE
+      *
+      ** Get Zone                                                                           BUG27841
+      *                                                                                     BUG27841
+     C                   EXSR      SRGPGZ                                                   BUG27841
+      *                                                                                     BUG27841
+     C                   EVAL      CountN = 0
+     C**********         Open      FXICCDLL                                         BUG9512 BUG27841
+      **********                                                                            BUG27841
+     C******LOVAL        SETLL     FXICCDLL                                                 BUG27841
+     C**********         READ      FXICCDLL                               01                BUG27841
+      *                                                                                     BUG27841
+     C                   OPEN      GPFXWIPL                                                 BUG27841
+     C     *LOVAL        SETLL     GPFXWIPL                                                 BUG27841
+     C                   READ      GPFXWIPL                               01                BUG27841
+      *
+     C                   DOW       *IN01 = *OFF
+     C*****FHDDLT        IFEQ      *BLANKS                                           243380 BUG27841
+     C*****FHDLTF        ANDEQ     *BLANKS                                           243380 BUG27841
+     C                   IF        MSWZONE = PZZONE                                         BUG27841
+     C                   EVAL      CountN = CountN + 1
+     C                   ENDIF                                                                243380
+     C**********         READ      FXICCDLL                               01                BUG27841
+     C                   READ      GPFXWIPL                               01                BUG27841
+     C                   ENDDO
+      *
+     C                   EVAL      Value = CountA
+     C**********         Close     FXICCDLL                                         BUG9512 BUG27841
+     C                   CLOSE     GPFXWIPL                                                 BUG27841
+      *
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C/COPY GOCPYSRC,GOUPD_DWNL
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      *****************************************************************                     BUG27841
+      /EJECT                                                                                BUG27841
+      *****************************************************************                     BUG27841
+      *                                                               *                     BUG27841
+      * SRGPGZ - Gets the Zone.                                       *                     BUG27841
+      *                                                               *                     BUG27841
+      * Called by: Main                                               *                     BUG27841
+      *                                                               *                     BUG27841
+      * Calls: GOGETZONE                                              *                     BUG27841
+      *                                                               *                     BUG27841
+      *****************************************************************                     BUG27841
+     C     SRGPGZ        BEGSR                                                              BUG27841
+      *                                                                                     BUG27841
+     C                   CALL      'GOGETZONE'                                              BUG27841
+     C                   PARM      *BLANKS       PZRTCD                                     BUG27841
+     C                   PARM      *BLANKS       PZERMS                                     BUG27841
+     C                   PARM      'N'           PZFCHK                                     BUG27841
+     C                   PARM      *BLANKS       PZZONE                                     BUG27841
+     C                   PARM      *BLANKS       PZSHTC                                     BUG27841
+     C                   PARM      *ZERO         PZRDNB                                     BUG27841
+     C                   PARM      *ZERO         PZDNWD                                     BUG27841
+     C                   PARM      *BLANKS       PZBCCY                                     BUG27841
+     C                   PARM      *ZERO         PZNJOB                                     BUG27841
+      *                                                                                     BUG27841
+     C                   IF        PZRTCD = '*ERROR'                                        BUG27841
+     C                   EXSR      *PSSR                                                    BUG27841
+     C                   ENDIF                                                              BUG27841
+      *                                                                                     BUG27841
+     C                   ENDSR                                                              BUG27841
+      *****************************************************************                     BUG27841
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+     C                   ENDIF
+      *
+     C                   EVAL      *INLR = *ON
+     C                   SetOn                                        U7U8                   BUG9512
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      *****************************************************************

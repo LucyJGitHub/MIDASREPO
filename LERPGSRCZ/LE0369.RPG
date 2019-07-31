@@ -1,0 +1,901 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Loan sub-type amendments update')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Customer Lending Module
+     F*                                                               *
+     F*  LE0369 - Loan sub-type Amendments update                     *
+     F*                                                               *
+     F*  Function:  This program takes any loans which have had their *
+     F*  (C.O.B)    subtypes changed and ensures that all forward     *
+     F*             dated loan amendments, for that loan, have the    *
+     F*             subtype and processing code updated.              *
+     F*                                                               *
+     F*  Called By: LEC0603 - Daily File Maintenance 1                *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAP075             Date 08Aug02               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 201123             Date 14Mar02               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      *                 157669             Date 07Dec00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 182576             Date 28Sep00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 166879             Date 23May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 123876             DATE 03Oct97               *
+     F*                 115635             DATE 25Mar97               *
+     F*                 CLE003             DATE 03DEC96               *
+     F*                 S01270             DATE 10JAN92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAP075 - Lending API enhancements - Loan Amendment.          *
+      *           (amendment in common with CAP079)                   *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  201123 - Include Original Borrower in this report when       *
+      *           processing type of loan is either 64, 65, 68 or 71. *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*  157669 - Cost of Funds are being reported incorrectly        *
+     F*           Recompiled due to changes in files HISTSHM,         *
+     F*           HISTSHP, and HISTSHQ.                               *
+     F*           Also RCDT is being corrupted by CHAIN to HISTSHP    *
+     F*           Reset RCDT before chain to CLOAN                    *
+     F*  182576 - Recompile over changed version of HISTS             *
+     F*  166879 - LE0369T2 overflow check.                            *
+     F*  123876 - Printer overflow is not setup correctly             *
+     F*  115635 - History updates moved to correct place.             *
+     F*           Update loan amendments up to, but not including,    *
+     F*           value date of next loan sub-type amendment.         *
+     F*           Show previous sub-type and processing type from     *
+     F*           previous loan amendment, if there is one.           *
+     F*  CLE003 - Back-Valued Loan Amendments.                        *
+     F*  S01270 - Program Created                                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*     FUNCTION OF INDICATORS                                    *
+     F*                                                               *
+     F*     19    - New Loan
+     F*     20    - Multi-Branching = 'Y'                             *
+     F*     21    - Processing Code change                            *
+     F*     30-39 - Loan amendment type passed to printer file        *
+     F*     43    - Chain fail CLOAN
+     F*     50    - Detail Printer file Overflow                      *
+     F*     51    - Eof for LOAMSL1                                   *
+     F*     61    - Supress output of change details on audit report  *
+      *     81    - Participation Purchased                           *                       201123
+     F*     89    - Work indicator. History update for backvalued     *   CLE003
+     F*             sub-type changes.                                 *   CLE003
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*     LIST OF SUBROUTINES                                       *
+     F*                                                               *
+     F*     PRINT - Write detail of loans with sub-type amendments.   *
+     F*     AUDIT - Write number of loans with Sub-type amendments.   *
+     F*     INIT  - Set-up initial fields and define PLISTs etc..     *
+     F*     *PSSR - Error handling                                    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*
+     FLOAMSDK IF  E                    DISK
+     f** Loan Subtype amendments (through a query file)
+     FLOAMSL1 UF  E           K        DISK
+     f** Loan Amendments file
+     f** Ignore Header And Trailer Formats
+     F            LOAMSDHF                          KIGNORE
+     F            LOAMSZ1F                          KIGNORE
+     f** Rename Loamsdkf Format
+     F            LOAMSDKF                          KRENAMELOAMSR
+     FLEPELND UF  E           K        DISK
+     F** Loan profitability file - for loan sub-type change
+     FHISTS   UF  E           K        DISK                               CLE003
+     F** LE History file                                                  CLE003
+     F** Ignore Formats                                                   CLE003
+     F            HISTSHHF                          KIGNORE               CLE003
+     F            HISTSHQF                          KIGNORE               CLE003
+     F            HISTSHNF                          KIGNORE               CLE003
+     F            HISTSZXF                          KIGNORE               CLE003
+     FCLOAN   IF  E           K        DISK
+     f** Loan Master file
+     f** Ignore Header,Trailer and second detail Formats
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FLE0369AUO   E                    PRINTER
+     f* Loan Amendments with subtype changes audit Report
+     F                                              KINFDS SPOOLU
+     FLE0369P1O   E                    PRINTER                        UC
+     f* Loan Amendments with subtype changes detail Report
+     F                                              KINFDS SPOOL
+     F/COPY WNCPYSRC,LE0369F001
+     **
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     I*
+     ISPOOL       DS
+     I*
+     I** Spool file information for Details Print.
+     I*
+     I                                       83  90 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OVFLW
+     I                                    B 367 3680PRTLN
+     I*
+     ISPOOLU      DS
+     I*
+     I** Spool file information for Audit Print.
+     I*
+     I                                       83  90 SFILEU
+     I                                    B 123 1240SFNUMU
+     I**
+     ISDBRCH    E DSSDBRCHPD
+     I**  EXTERNAL DS FOR BRANCH CODE DETAILS
+     I              A8BRNM                          BRNM
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+      **  EXTERNAL DS FOR BANK DETAILS
+     I*
+     I              BJURPT                          TITL
+     I*
+     ISDGELR    E DSSDGELRPD                                              CLE003
+     I**  EXTERNAL DS FOR GENERAL LEDGER DETAILS                          CLE003
+     I*                                                                   CLE003
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure for LDA
+     I*
+     IRUNDAT    E DS
+     I**  DATA AREA RUNDAT
+     ICLNKEY      DS
+     I*
+     I**  Data structure for key to CLOAN
+     I*
+     I**********                              1   60LNREF                                     CLE148
+     I                                        1   6 LNREF                                     CLE148
+     I                                        7   7 RCDT
+     I*
+     IDSFDY     E DSDSFDY
+     I**
+     I**  First DS for access program, short Data Structure
+     I*
+     I/COPY WNCPYSRC,LE0369I001
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     ******************************************************************
+     C/EJECT
+     ******************************************************************
+     C*
+     C* Initial Processing
+     C                     EXSR INIT
+     C* Main Processing
+     C                     READ LOAMSDK                  LR
+     C*
+     C*
+     C           *INLR     DOWEQ'0'                        ***B001
+     C*
+     C** If Multi-Branching get branch name for report.
+     C*
+     C           *IN20     IFEQ '1'                        ***B002
+     C*
+     C**********           CALL 'AOBRCHR0'BRNPM                                               CGL029
+     C                     CALL 'AOBRCHR1'BRNPM                                               CGL029
+     C*
+     C** Error found
+     C*
+     C           @RTCD     IFNE *BLANKS                    ***B003
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL@DSNB     DBKEY            ************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DBASE 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     OUT  LDA
+     C                     MOVE '1'       *IN61
+     C                     EXSR *PSSR
+     C                     EXSR AUDIT
+     C                     END                             ***E003
+     C                     END                             ***E002
+     C*
+     C** Open Printer file.
+     C*
+     C                     OPEN LE0369P1
+     C*
+     C** Turn on overflow indicator for branch heading
+     C*
+     C                     MOVE '1'       *IN50
+     C*
+     C           *IN20     IFEQ '0'                        ***B002
+     C                     MOVE *BLANKS   FILBR
+     C                     ELSE                            ***X002
+     C                     MOVE BRCA      FILBR
+     C                     END                             ***E002
+     C**
+     C                     Z-ADDSFNUM     FILNUM  60
+     C                     MOVELSFILE     SPLFIL
+     C                     CALL 'ZSFILE'  ZSPARM
+     C*
+     C* Error in RCF processing
+     C*
+     C           ZSERR     IFNE ' '                        ***B002
+     C                     SETON                     U7U8LR
+     C                     MOVE '1'       *IN61
+     C                     EXSR *PSSR
+     C                     EXSR AUDIT
+     C                     END                             ***E002
+     C*
+     C* Store Branch Code
+     C**********and*Value*date*****************************         CLE003115635
+     C                     MOVE BRCA      EBRC
+     C***********          MOVE VDAT      AVDAT                     CLE003115635
+     C**
+     C           *INLR     DOWEQ'0'                        ***B002
+     C           BRCA      ANDEQEBRC
+     C*
+     C* Setup work fields
+     C                     ADD  1         COUNT
+     C                     SETON                       19
+     ** Reference
+     C                     MOVE LNRF      LNREF
+     C                     MOVE VDAT      AVDAT                           115635
+     C/COPY WNCPYSRC,LE0369C003
+     ** Loan Sub-type
+     C                     MOVE SUTP      NWSTP
+     C                     MOVE CLAS      NWCLS                                               CLE042
+     ** Processing code
+     C                     MOVE PTYP      WKPTP
+     **                                                                   157669
+     ** Reset RCDT back to 'A' as may have been corrupted by chain to     157669
+     ** history file.                                                     157669
+     C                     MOVE 'A'       RCDT                            157669
+     **                                                                   157669
+     C* Get old Loan Sub-type
+     C           CLNKY     CHAINCLOAN                43
+     C*
+     C**  File Error if loan not found
+     C*
+     C           *IN43     IFEQ '1'                        ***B003
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE
+     C                     MOVELCLNKEY    DBKEY            ************
+     C                     Z-ADD2         DBASE            * DBASE 02 *
+     C                     OUT  LDA                        ************
+     C                     MOVE '1'       *IN61
+     C                     EXSR *PSSR
+     C                     EXSR AUDIT
+     C                     END                             ***E003
+     C*
+      ** Access original borrower                                                             201123
+      *                                                                                       201123
+     C                     MOVEL*BLANKS   OLNOZ                                               201123
+     C                     MOVE '0'       *IN81                                               201123
+     C           *IN43     IFEQ '0'                                                           201123
+     C           WKPTP     IFEQ 64                                                            201123
+     C           WKPTP     OREQ 65                                                            201123
+     C           WKPTP     OREQ 68                                                            201123
+     C           WKPTP     OREQ 71                                                            201123
+     C                     MOVE '1'       *IN81                                               201123
+     C                     MOVELOLNO      OLNOZ                                               201123
+     C                     ENDIF                                                              201123
+     C                     ENDIF                                                              201123
+      *                                                                                       201123
+      * On change of loan save the following                              115635
+     C           LNREF     IFNE P#LNRF                                    115635
+     C                     MOVE LNREF     P#LNRF                          115635
+     C                     MOVE SUTP      OLDTP
+     C                     MOVE CLAS      OLDCL                                               CLE042
+      *
+      ** Save Loan branch and customer number for PF/LEPELND key.
+      *
+     C                     MOVE BRCA      LEPBR
+     C**********           Z-ADDCNUM      LEPCN                                               CSD027
+     C                     MOVE CNUM      LEPCN                                               CSD027
+      *
+     C*
+     C** Find out if processing code has changed.
+     C*
+     C           PTYP      IFNE WKPTP                      ***B003
+     C                     SETON                     21
+     C                     MOVE PTYP      OLDPR
+     C                     ELSE                            ***X003
+     C                     SETOF                     21
+     C                     END                             ***E003
+     C                     ENDIF                                          115635
+     **
+     *** Read LOAMSL1 for Amendments
+     **
+     C           LOANKY    SETLLLOAMSR
+     C           LOANK1    READELOAMSR                   51               115635
+     C           *IN51     DOWEQ*OFF                       ***B003        115635
+      *                                                                   115635
+     C***********          READ LOAMSR                   51               115635
+     ************                                                         115635
+     C***********LNRF      DOWEQLNREF                      ***B003        115635
+     C************IN51     ANDEQ'0'                                       115635
+      *                                                                   115635
+      * Process up to next loan sub-type amendment.                       115635
+     C           AMTP      IFEQ 'LS'                                      115635
+     C           VDAT      ANDGTAVDAT                                     115635
+     C                     SUB  LASN      COUNT1                          115635
+     C                     ADD  1         COUNT1                          115635
+     C                     LEAVE                                          115635
+     C                     ENDIF                                          115635
+     C*
+     C** Only update records that have not been reversed
+     C*
+     C           RECI      IFEQ 'D'                        ***B004
+     C***********CLE003    IFEQ 'Y'                        ***B005  CLE003115635
+     C***********AVDAT     ANDLTVDAT                                CLE003115635
+     C***********NWSTP     ANDNESUTP                                CLE003115635
+     C***********CLE003    OREQ 'N'                                 CLE003115635
+     C*
+     C** Count the number of loan amendments changed
+     C*
+     C                     ADD  1         COUNT1
+     C*
+     C* Update LOAMSL1 record with new values
+     C*
+     C/COPY WNCPYSRC,LE0369C004
+     C                     MOVE NWSTP     SUTP
+     C                     MOVE NWCLS     CLAS                                                CLE042
+     C                     MOVE WKPTP     PTYP
+     C                     UPDATLOAMSR
+     ** Write Detail to report
+     C                     EXSR PRINT
+     C***********          ENDIF                           ***E005  CLE003115635
+      ***********                                                   CLE003115635
+      **Update*HISTS*record*with*new*values***************          CLE003115635
+      ***********                                                   CLE003115635
+     C***********CLE003    IFEQ 'Y'                        ***B005  CLE003115635
+     C***********VDAT      ANDLTBJRDNB                              CLE003115635
+     C***********          MOVE *ZEROS    #PRSQ                     CLE003115635
+     C***********          MOVE LEPBR     #BRCA                     CLE003115635
+     C***********          MOVE LNREF     #LNRF                     CLE003115635
+     C***********          MOVE LEPCN     #CNUM                     CLE003115635
+     C***********          MOVE AVDAT     #VDAT                     CLE003115635
+      ***********                                                   CLE003115635
+     C***********HISKEY    SETGTHISTSHPF               89           CLE003115635
+     C***********          READ HISTSHPF                 89         CLE003115635
+      ***********                                                   CLE003115635
+     C************IN89     IFNE *ON                        ***B006  CLE003115635
+      ***********                                                   CLE003115635
+     C***********          MOVE NWSTP     SUTP                      CLE003115635
+     C***********          MOVE WKPTP     PTYP                      CLE003115635
+     C***********          UPDATHISTSHPF                            CLE003115635
+     C***********          ENDIF                           ***E006  CLE003115635
+      ***********                                                   CLE003115635
+     C***********HISKEY    SETGTHISTSHMF               89           CLE003115635
+     C***********          READ HISTSHMF                 89         CLE003115635
+      ***********                                                   CLE003115635
+     C************IN89     IFNE *ON                        ***B006  CLE003115635
+      ***********                                                   CLE003115635
+     C***********          MOVE NWSTP     SUTP                      CLE003115635
+     C***********          MOVE WKPTP     PTYP                      CLE003115635
+     C***********          UPDATHISTSHMF                            CLE003115635
+      ***********                                                   CLE003115635
+     C***********          ENDIF                           ***E006  CLE003115635
+     C***********          ENDIF                           ***E005  CLE003115635
+     C                     END                             ***E004
+     C***********          READ LOAMSR                   51               115635
+     C           LOANK1    READELOAMSR                   51               115635
+     C                     END                             ***E003
+     C*
+     C* Update the profitability file with the new loan sub-type
+     C*
+     C           KPELN     CHAINLEPELND              05
+     C           *IN05     IFEQ '0'
+     C/COPY WNCPYSRC,LE0369C005
+     C                     MOVE NWSTP     LDSUTP
+     C                     MOVE NWCLS     LDCLAS                                              CLE042
+      *                                                                   CLE003
+     C           CLE003    IFEQ 'Y'                        ***B004        CLE003
+     C           AVDAT     ANDLTEVCD                                      CLE003
+     C           CLE003    OREQ 'N'                                       CLE003
+     C                     UPDATLEPELNDF
+     C                     ADD  1         COUNT2
+     C                     ENDIF                           ***E004        CLE003
+     C                     END
+      *                                                                   115635
+      * Update history records                                            115635
+     C           CLE003    IFEQ 'Y'                                       115635
+     C           VDAT      ANDLTBJRDNB                                    115635
+     C                     MOVE LEPBR     #BRCA                           115635
+     C                     MOVE LEPCN     #CNUM                           115635
+     C                     MOVE LNREF     #LNRF                           115635
+     C                     MOVE AVDAT     #VDAT                           115635
+     C                     Z-ADD8         #PRSQ                           115635
+      *                                                                   115635
+     C           HISKEY    CHAINHISTSHPF             89                   115635
+     C           *IN89     IFEQ *OFF                                      115635
+     C/COPY WNCPYSRC,LE0369C006
+     C                     MOVE NWSTP     SUTP                            115635
+     C                     MOVE NWCLS     CLAS                                                CLE042
+     C                     MOVE WKPTP     PTYP                            115635
+     C                     UPDATHISTSHPF                                  115635
+     C                     ENDIF                                          115635
+      *                                                                   115635
+     C           HISKEY    CHAINHISTSHMF             89                   115635
+     C           *IN89     IFEQ *OFF                                      115635
+     C/COPY WNCPYSRC,LE0369C007
+     C                     MOVE NWSTP     SUTP                            115635
+     C                     MOVE NWCLS     CLAS                                                CLE042
+     C                     MOVE WKPTP     PTYP                            115635
+     C                     UPDATHISTSHMF                                  115635
+     C                     ENDIF                                          115635
+      *                                                                   115635
+     C                     ENDIF                                          115635
+      *                                                                   115635
+      * Save sub-type and processing type.                                115635
+     C                     MOVE NWSTP     OLDTP                           115635
+     C                     MOVE WKPTP     OLDPR                           115635
+     C*
+     C                     READ LOAMSDK                  LR
+     C                     END                             ***E002
+     C*
+      *                                                                   166879
+      ** Find out if trailer can still be written on the current page     166879
+      ** (no overflow will occur) with 3 as the required number of        166879
+      ** lines for the trailer                                            166879
+      *                                                                   166879
+     C           OVFLW     SUB  PRTLN     REMLN                           166879
+     C           REMLN     IFLT 3                                         166879
+     C                     MOVE '1'       *IN50                           166879
+     C                     ENDIF                                          166879
+      *                                                                   166879
+      ** If overflow, write header                                        166879
+      *                                                                   166879
+     C           *IN50     IFEQ '1'                                       166879
+     C                     WRITELE0369H1                                  166879
+     C                     ENDIF                                          166879
+     C*
+     C** Write trailer and close file
+     C*
+     C                     WRITELE0369T2
+     C                     CLOSELE0369P1
+     C*
+     C                     END                             ***E001
+     C* Last Record - Print Audit Report
+     C                     EXSR AUDIT
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*   SR Print - Print Details of Amendments
+     C*              Called by Main processing
+     C*
+     C*      Calls - Nothing
+     C*
+     C*****************************************************************
+     C*
+     C           PRINT     BEGSR
+     C/COPY WNCPYSRC,LE0369C001
+     C*
+     C** Find out if Overflow (IN19=New Loan)
+     C*
+     C           *IN19     IFEQ '1'                        ***B001
+     C                     Z-ADD5         RQDLIN  30
+     C                     ELSE                            ***X001
+     C                     Z-ADD1         RQDLIN
+     C                     END                             ***E001
+     C*
+     C*
+     C** Find out how many lines left
+     C*
+     C           OVFLW     SUB  PRTLN     REMLN   50
+     C*
+     C** if not enough lines left, set on overflow indicator.
+     C*
+     C***********REMLN     IFLT RQDLIN                     ***B001        123876
+     C           REMLN     IFLE RQDLIN                     ***B001        123876
+     C                     SETON                     50
+     C                     END                             ***E001
+     C*
+     c** If overflow Write Header
+     c*
+     C           *IN50     IFEQ '1'                        ***B001
+     C                     WRITELE0369H1
+     C                     END                             ***E001
+     C*
+     c** if overflow or new loan, write loan details and loan amend
+     c** details header.
+     c*
+     C           *IN19     IFEQ '1'                        ***B001
+     C           *IN50     OREQ '1'
+     C                     WRITELE0369D1
+     C                     WRITELE0369H2
+     C                     SETOF                       19
+     C                     SETOF                       50
+     C                     END                             ***E001
+     C*
+     C** Initialise the amendment type indicator array
+     C*
+     C                     MOVEAZ10       *IN,30
+     C*
+     C** Find out Type of amendment and enable appropriate indicator
+     C*
+     C* Sub-Type
+     C           AMTP      IFEQ 'LS'                       ***B001
+     C                     SETON                     30
+     C                     ELSE                            ***X001
+     C* Stop Accruals
+     C           AMTP      IFEQ 'SA'                       ***B002
+     C                     SETON                     31
+     C                     ELSE                            ***X002
+     C* Principal Increase
+     C           AMTP      IFEQ 'PI'                       ***B003
+     C                     SETON                     32
+     C                     ELSE                            ***X003
+     C*  Repayment
+     C           AMTP      IFEQ 'RE'                       ***B004
+     C                     SETON                     33
+     C                     ELSE                            ***X004
+     C* Past Due
+     C           AMTP      IFEQ 'PD'                       ***B005
+     C                     SETON                     34
+     C                     ELSE                            ***X005
+     C* Spread Change
+     C           AMTP      IFEQ 'SC'                       ***B006
+     C                     SETON                     35
+     C                     ELSE                            ***X006
+     C* Base Rate Change
+     C           AMTP      IFEQ 'BR'                       ***B007
+     C                     SETON                     36
+     C                     ELSE                            ***X007
+     C* Base Code Change
+     C           AMTP      IFEQ 'BC'                       ***B008
+     C                     SETON                     37
+     C                     ELSE                            ***X008
+     C* Manual Repayment
+     C           AMTP      IFEQ 'MR'                       ***B009
+     C                     SETON                     38
+     C                     ELSE                            ***X009
+     C* Interest Payment
+     C           AMTP      IFEQ 'IN'                       ***B010
+     C                     SETON                     39
+     C                     END                             ***E010
+     C                     END                             ***E009
+     C                     END                             ***E008
+     C                     END                             ***E007
+     C                     END                             ***E006
+     C                     END                             ***E005
+     C                     END                             ***E004
+     C                     END                             ***E003
+     C                     END                             ***E002
+     C                     END                             ***E001
+     C*
+     C** Make Value Date Roman
+     C*
+     C                     Z-ADDVDAT      DAYNO
+     C                     CALL 'ZA0140'  DAYP
+     C                     MOVE DATE      VALDAT
+     C* Write Detail
+     C                     WRITELE0369D2
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*   SR AUDIT - Print Audit Report
+     C*              Called by Main processing
+     C*
+     C*      Calls - NONE
+     C*
+     C*****************************************************************
+     C*
+     C           AUDIT     BEGSR
+     C*
+     C** Direct audit report via RCF
+     C*
+     C                     Z-ADDSFNUMU    FILNUM
+     C                     MOVE *BLANKS   FILBR
+     C                     MOVELSFILEU    SPLFIL
+     C                     CALL 'ZSFILE'  ZSPARM
+     C*
+     C* Error in RCF processing
+     C*
+     C           ZSERR     IFNE ' '                        ***B001
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     ELSE                            ***X001
+     C*
+     C** Write header & number of sub-type amends
+     C*
+     C                     WRITELE0369AH
+     C                     END                             ***E001
+     C*
+     C** Output error format if an error has occurred
+     C*
+     C           *IN61     IFEQ '1'
+     C                     WRITELE0369AE
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*   Subroutine INIT - Set-up Initial values
+     C*
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C************LIKE     DEFN VDAT      VALDT                           115635
+     C           *LIKE     DEFN VDAT      AVDAT                           CLE003
+     C************LIKE     DEFN LASN      SEQN                            115635
+     C           *LIKE     DEFN BRCA      WKBR
+     C           *LIKE     DEFN BRCA      FILBR
+     C           *LIKE     DEFN BRCA      #BRCA                           CLE003
+     C           *LIKE     DEFN CNUM      #CNUM                           CLE003
+     C           *LIKE     DEFN LNRF      #LNRF                           CLE003
+     C           *LIKE     DEFN VDAT      #VDAT                           CLE003
+     C           *LIKE     DEFN PRSQ      #PRSQ                           CLE003
+     C           *LIKE     DEFN AGRDNB    DNWDM1                          CLE003
+     C           *LIKE     DEFN AGRDNB    EVCD                            CLE003
+     C           *LIKE     DEFN LNRF      P#LNRF                          115635
+     C           *NAMVAR   DEFN           LDA
+     **
+     *** Key to CLOAN
+     **
+     C           CLNKY     KLIST
+     C                     KFLD           LNREF
+     C                     KFLD           RCDT
+     **
+     *** Key to LOAMS
+     **
+     C           LOANKY    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           LNREF
+     C                     KFLD           AVDAT                           115635
+     C***********          KFLD           VALDT                           115635
+     C***********          KFLD           SEQN                            115635
+      *                                                                   115635
+     C           LOANK1    KLIST                                          115635
+     C                     KFLD           BRCA                            115635
+     C                     KFLD           LNREF                           115635
+     **
+     *** Key to LEPELND
+     **
+     C           KPELN     KLIST
+     C                     KFLD           LEPBR   3
+     C**********           KFLD           LEPCN   60                                          CSD027
+     C                     KFLD           LEPCN   6                                           CSD027
+     C                     KFLD           LNREF
+     **                                                                   CLE003
+     *** Key to HISTS                                                     CLE003
+     **                                                                   CLE003
+     C           HISKEY    KLIST                                          CLE003
+     C                     KFLD           #BRCA                           CLE003
+     C                     KFLD           #CNUM                           CLE003
+     C                     KFLD           #LNRF                           CLE003
+     C                     KFLD           #VDAT                           CLE003
+     C                     KFLD           #PRSQ                           CLE003
+     C*
+     C** Parm list for call to ZA0140 (convert day number to date)
+     C*
+     C           DAYP      PLIST
+     C                     PARM           DAYNO   50
+     C                     PARM           BJDFIN
+     C                     PARM           DAYN    60
+     C                     PARM           DATE    7
+     C                     PARM           RTNERR  10
+     C                     PARM           NUMDAT  80
+     C*
+     C*
+     C** Parm list for call to ZSFILE (RCF controlling pgm)
+     C*
+     C           ZSPARM    PLIST
+     C                     PARM *BLANKS   FILSEQ  5
+     C                     PARM           FILBR
+     C                     PARM           SPLFIL 10
+     C                     PARM           FILNUM
+     C                     PARM           ZSERR   1
+     C*
+     C** Parm list for call to AOBRCHR0 (Get Branch details)
+     C*
+     C           BRNPM     PLIST
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C** Load LDA with Program Name
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE0369'  DBPGM
+     C                     OUT  LDA
+     C*
+     C* Read first ICD details for report heading and Run Date
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM           @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** Error in ICD
+     C*
+     C           @RTCD     IFNE *BLANKS                    ***B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@RTCD     DBKEY            ************
+     C                     Z-ADD1         DBASE            * DBASE 01 *
+     C                     OUT  LDA                        ************
+     C                     MOVE '1'       *IN61
+     C                     EXSR *PSSR
+     C                     EXSR AUDIT
+     C                     END                             ***E001
+     C*
+     C** Check for Multi-Branching
+     C*
+     C*
+     C**   READ IN RUNDAT DATA AREA
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           AGMBIN    IFEQ 'Y'                        ***B001
+     C                     SETON                     20
+     C                     END                             ***E001
+      *                                                                   CLE003
+      * Read first G/L ICD details                                        CLE003
+      *                                                                   CLE003
+     C**********           CALL 'AOGELRR0'                                CLE003              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANK    @RTCD                           CLE003
+     C                     PARM '*FIRST ' @OPTN                           CLE003
+     C********** SDGELR    PARM SDGELR    DSFDY                           CLE003              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *                                                                   CLE003
+      ** Error in G/L ICD                                                 CLE003
+      *                                                                   CLE003
+     C           @RTCD     IFNE *BLANKS                    ***B001        CLE003
+     C           *LOCK     IN   LDA                                       CLE003
+     C                     MOVEL'SDGELRPD'DBFILE                          CLE003
+     C                     MOVEL@RTCD     DBKEY            ************   CLE003
+     C                     Z-ADD4         DBASE            * DBASE 04 *   CLE003
+     C                     OUT  LDA                        ************   CLE003
+     C                     MOVE '1'       *IN61                           CLE003
+     C                     EXSR *PSSR                                     CLE003
+     C                     EXSR AUDIT                                     CLE003
+      *                                                                   CLE003
+      *   No errors                                                       CLE003
+     C                     ELSE                            ***X001        CLE003
+      *                                                                   CLE003
+     C           BJDNWD    SUB  1         DNWDM1                          CLE003
+      *                                                                   CLE003
+     C           BKAPDT    IFLT DNWDM1                     ***B002        CLE003
+     C                     Z-ADDBKAPDT    EVCD                            CLE003
+     C                     ELSE                            ***X002        CLE003
+     C                     Z-ADDDNWDM1    EVCD                            CLE003
+     C                     ENDIF                           ***E002        CLE003
+     C                     ENDIF                           ***E001        CLE003
+     C*                                                                   CLE003
+     C* Access Switchable SAR details                                     CLE003
+     C*                                                                   CLE003
+     C                     CALL 'AOSARDR0'                                CLE003
+     C                     PARM *BLANK    @RTCD                           CLE003
+     C                     PARM '*VERIFY' @OPTN                           CLE003
+     C                     PARM 'CLE003'  @SARD   6                       CLE003
+     C*                                                                   CLE003
+     C** Feature found if return code is blank                            CLE003
+     C*                                                                   CLE003
+     C           @RTCD     IFEQ *BLANK                     ***B001        CLE003
+     C                     MOVE 'Y'       CLE003  1                       CLE003
+     C                     ELSE                                           CLE003
+     C                     MOVE 'N'       CLE003                          CLE003
+     C                     ENDIF                           ***E001        CLE003
+     C*                                                                   CLE003
+     C*
+     C** Initialise the counters for Sub-type amends processed
+     C*
+     C                     Z-ADD0         COUNT
+     C                     Z-ADD0         COUNT1
+     C                     Z-ADD0         COUNT2
+     C*
+     C** Initialise Second key field for CLNKY
+     C*
+     C                     MOVE 'A'       RCDT
+     C*
+     C** Initialise Field Z10 to turn off printer indicators
+     C*
+     C                     MOVE *ZEROS    Z10    10
+     C*
+     C** Initialise error indicator
+     C*
+     C                     MOVE '0'       *IN61
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C/COPY WNCPYSRC,LE0369C002
+     C                     ENDSR
+     C*
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (NONE)                                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK                     ***B001
+     C                     MOVE 'Y'       @RUN    1
+     C*
+     C           ZSERR     IFEQ ' '                        ***B002
+     C                     DUMP
+     C                     END                             ***E002
+     C                     END                             ***E001
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

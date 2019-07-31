@@ -1,0 +1,568 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Update Funding Gap Accruals History file')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounts Module                           *
+      *                                                               *
+      *  MC0430 - Update Funding Gap Accruals History File            *
+      *                                                               *
+      *  Function: This program maintains the Funding Gap Accruals    *
+      *   (COB)    History File.                                      *
+      *                                                               *
+      *  Called by: MC0320 - Value Date Adjustment Entry Generation   *
+      *             MC0410 - Transfer of Foreign Ccy Income/Expense   *
+      *             MC0420 - Transfer of Base Ccy In/Exp to P & L     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 226963             Date 23Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CMC001  *CREATE    Date 18Mar96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  226963 - Today's adjustment should not be updated when capit.*
+      *           frequency is daily and program is in accrual mode.  *
+      *           Applied Fix 218046                                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CMC001 - Management Accounts Enhancement for PCA             *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FMCACHRL0UF  E           K        DISK                      A
+      **  Funding Gap Accrual History Headers
+     F                                              KINFDS INFDS
+     F                                              KINFSR INFSR
+     FMCACDTL0UF  E           K        DISK                      A
+      **  Funding Gap Accrual History Details
+     F                                              KINFDS INFD2
+     F                                              KINFSR INFSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01  - Initial processing completed                          *
+      *                                                               *
+      *   89  - Chain Fail on LF/MCACHRL0, LF/MCACDTL0                *
+      *   99  - File error                                            *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRMAIN - Main Processing                                     *
+      *                                                               *
+      *  *PSSR  - Subroutine to Handle Abnormal Error Conditions      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ** Copyright
+     E                    CPY@    1   1 80               Copyright
+      *
+      /EJECT
+     IMCMOVE    E DSMCMOVEPD
+      **  Management Account Movements
+      *
+     ILDA       E DSLDA
+      **  Local data structure used for error handling
+      *
+     IPGMDS     ESDSY2PGDSP
+      **  Program status data structure
+      *
+     IINFDS       DS
+      **  File Data structure 1
+     I                                     *STATUS  STATUS
+     IINFD2       DS
+      **  File Data structure 2
+     I                                     *STATUS  STATU2
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     ISDPCAC    E DSSDPCACPD
+      **  PCA ICD Details
+      *
+     ISDPRFC    E DSSDPRFCPD
+      **  Profit Centres Details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      **  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Accept Parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RTNCDE  7
+     C           MCMOVE    PARM           DSFDY
+      *
+      **  Initial processing
+      *
+     C           *IN01     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     MOVE *ON       *IN01
+     C                     ENDIF
+      *
+      **  Detail processing
+      *
+     C                     EXSR SRDETL
+      *
+      **  Return to calling program
+      *
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/TITLE SR/SRINIT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to Perform Initial Processing            *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  *PSSR - Database Error Handling Subroutine       *
+      *              AOBANKR0 - Bank Details Access Program           *
+      *              AOPCACR0 - PCA ICD Access Program                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      **  Initialise database error details
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'MC0430'  DBPGM
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+      *
+      **  Call pgm for the Base currency : BJCYCD
+      **  Obtain bank details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  DB error if not found
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     MOVE PRTCD     RTNCDE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Call pgm for the 'Primary Funding Gap A/C Code' and 'End of
+      **  Year P&L Profit Centre'
+      *
+     C                     CALL 'AOPCACR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDPCAC    PARM SDPCAC    DSFDY
+      *
+      **  DB error if not found
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDPCACPD'DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBERR 02 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     MOVE PRTCD     RTNCDE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE SR/SRDETL
+      *****************************************************************
+      *                                                               *
+      *  SRDETL  - Detail Processing                                  *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  SRACLV - Calculate Account Level                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+      **  Set up key list for MCACHRL0
+      *
+     C           KEY1      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CCY
+     C**********           KFLD           WACOD   4                                           CGL029
+     C                     KFLD           WACOD  10                                           CGL029
+     C                     KFLD           WCNUM   6
+     C                     KFLD           WACSQ   2
+     C                     KFLD           PRFC
+      *
+     C                     MOVE ACOD      WACOD
+     C                     MOVE CNUM      WCNUM
+     C                     MOVE ACSQ      WACSQ
+      *
+      **  Access Funding Gap Accrual History Header file
+      *
+     C           KEY1      CHAINMCACHRL0             89
+     C           *IN89     IFEQ *OFF
+      *
+      **  If the 'Earliest Date' GE 'Event Date', set 'Event Date'
+      **  to 'Earliest Date'
+      *
+     C           GHERLD    IFGE EVDT
+     C                     Z-ADDGHERLD    EVDT
+     C                     ENDIF
+      *
+      **  If the 'Last/Rework Date' GE 'Event Date', set 'Last/Rework
+      **  Date' to 'Event Date'
+      *
+     C           GHLRDT    IFGE EVDT
+     C                     Z-ADDEVDT      GHLRDT
+     C                     UPDATMCACHRD0
+     C                     ELSE
+     C                     UNLCKMCACHRL0
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      **  Otherwise if not found, calculate Account Level
+      *
+     C                     EXSR SRACLV
+      *
+      ** Write Funding Gap Accrual Header record
+      *
+     C                     MOVE BRCA      GHBRCD
+     C                     MOVE CCY       GHCYCD
+     C                     MOVE ACOD      GHACCD
+     C                     MOVE CNUM      GHCUST
+     C                     MOVE ACSQ      GHACSN
+     C                     MOVE PRFC      GHPCCD
+     C                     Z-ADD0         GHCURB
+     C                     MOVE EVDT      GHLRDT
+     C                     Z-ADD0         GHERLD
+     C                     MOVELWWACLV    GHACLV
+     C                     WRITEMCACHRD0
+     C                     ENDIF
+      *
+      **  Set up key list for MCACDTL0
+      *
+     C           KEY2      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CCY
+     C                     KFLD           WACOD
+     C                     KFLD           WCNUM
+     C                     KFLD           WACSQ
+     C                     KFLD           PRFC
+     C                     KFLD           EVDT
+      *
+      **  Access Funding Gap Accrual Details File
+      *
+     C           KEY2      CHAINMCACDTL0             89
+     C           *IN89     IFEQ *OFF
+      *
+      **  Update Funding Gap Accrual Detail record
+      *
+     C           FTFGCF    IFNE 'D'                                                           226963
+     C           GETP      IFEQ 'X'
+     C           GETP      OREQ 'Y'
+     C                     ADD  PAMT      GDTDAJ
+     C                     ELSE
+     C                     ADD  PAMT      GDTDMV
+     C                     ENDIF
+      *                                                                                       226963
+     C                     ELSE                                                               226963
+     C           *INU6     IFEQ '0'                                                           226963
+     C           GETP      IFEQ 'X'                                                           226963
+     C           GETP      OREQ 'Y'                                                           226963
+     C                     ADD  PAMT      GDTDAJ                                              226963
+     C                     ELSE                                                               226963
+     C                     ADD  PAMT      GDTDMV                                              226963
+     C                     ENDIF                                                              226963
+     C                     ENDIF                                                              226963
+      *                                                                                       226963
+     C                     ENDIF                                                              226963
+     C                     UPDATMCACDTD0               99
+      *
+     C                     ELSE
+      *
+      **  Write Funding Gap Accrual Detail record
+      *
+     C                     CLEARMCACDTD0
+     C                     MOVE BRCA      GDBRCD
+     C                     MOVE CCY       GDCYCD
+     C                     MOVE ACOD      GDACCD
+     C                     MOVE CNUM      GDCUST
+     C                     MOVE ACSQ      GDACSN
+     C                     MOVE PRFC      GDPCCD
+     C                     MOVE EVDT      GDPSDT
+      *
+     C           FTFGCF    IFNE 'D'                                                           226963
+     C           GETP      IFEQ 'X'
+     C           GETP      OREQ 'Y'
+     C                     Z-ADDPAMT      GDTDAJ
+     C                     ELSE
+     C                     Z-ADDPAMT      GDTDMV
+     C                     ENDIF
+      *                                                                                       226963
+     C                     ELSE                                                               226963
+     C           *INU6     IFEQ '0'                                                           226963
+     C           GETP      IFEQ 'X'                                                           226963
+     C           GETP      OREQ 'Y'                                                           226963
+     C                     ADD  PAMT      GDTDAJ                                              226963
+     C                     ELSE                                                               226963
+     C                     ADD  PAMT      GDTDMV                                              226963
+     C                     ENDIF                                                              226963
+     C                     ENDIF                                                              226963
+      *                                                                                       226963
+     C                     ENDIF                                                              226963
+     C                     MOVE 'Y'       GDNEWF
+      *
+     C                     WRITEMCACDTD0
+     C                     ENDIF
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVE '*ACCUPD' RTNCDE
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE SR/SRACLV
+      *****************************************************************
+      *                                                               *
+      *  SRACLV - Calculate Account Level                             *
+      *                                                               *
+      *  Called By:  SRDETL - Detail Processing                       *
+      *                                                               *
+      *  Calls    :  AOPRFCR0 - Profit Centres Access Program         *
+      *              *PSSR - Abnormal Error Condition Handling Subr.  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACLV    BEGSR
+      *
+      **  If 'Currency' EQ 'Base Currency'
+      *
+     C           CCY       IFEQ BJCYCD
+      *
+      **  If 'End of Year P&L Profit Centre' is blank, set it to
+      **  Profit Centre
+      *
+     C           FTEYPC    IFEQ *BLANKS
+     C                     MOVE PRFC      FTEYPC
+     C                     ENDIF
+      *
+      **  If 'Account Code' is the 'Primary Funding Gap Account Code'
+      *
+     C           WACOD     IFEQ FTPFGA
+      *
+      **  If Profit Centre is the 'End of Year P&L Profit Centre', set
+      **  'Account Level' to '6'; otherwise, set it to '5'
+      *
+     C           PRFC      IFEQ FTEYPC
+     C                     MOVE '6'       WWACLV  1
+     C                     ELSE
+     C                     MOVE '5'       WWACLV
+     C                     ENDIF
+      *
+     C                     ELSE
+      **  Otherwise (not Primary Funding Gap), set 'A/c Level' to '4'.
+      *
+     C                     MOVE '4'       WWACLV
+     C                     ENDIF
+      *
+     C                     ELSE
+      **  Otherwise, (in Foreign Currency)
+      *
+      **  If 'Account Code' is the 'Primary Funding Gap A/C Code'
+      *
+     C           WACOD     IFEQ FTPFGA
+      *
+      **  If 'Profit centre' NE 'Prev. Profit centre', call AOPRFCR0
+      **  for the 'FX position unit'
+      *
+     C           PRFC      IFNE WWPRFC
+     C                     CALL 'AOPRFCR0'
+     C                     PARM *BLANK    PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM PRFC      PPRFC   4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+      *
+      **  DB error if not found
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDPRFCPD'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     MOVELPRFC      DBKEY            ************
+     C                     OUT  LDA
+     C                     MOVE PRTCD     RTNCDE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Set 'Previous Profit centre' to 'Profit Centre'
+     C                     MOVE PRFC      WWPRFC  4
+      *
+      **  If 'FX Position Profit Centre' is blank, set to Profit centre
+      *
+     C           DSFPPC    IFEQ *BLANKS
+     C                     MOVE PRFC      DSFPPC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If 'Profit centre' EQ 'FX Position Profit Centre', set
+      **  'Account Level' to '3'; otherwise, set it to '2'.
+      *
+     C           PRFC      IFEQ DSFPPC
+     C                     MOVE '3'       WWACLV
+     C                     ELSE
+     C                     MOVE '2'       WWACLV
+     C                     ENDIF
+      *
+     C                     ELSE
+      **  Otherwise (not Primary Funding Gap A/c), set 'Account
+      **  Level' to '1'.
+     C                     MOVE '1'       WWACLV
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE SR/INFSR
+      *****************************************************************
+      *                                                               *
+      *  INFSR - File Error Handling Subroutine 1                     *
+      *                                                               *
+      *  Called By:  File Error                                       *
+      *                                                               *
+      *  Calls    :  *PSSR - Abnormal Error Condition Handling Subr.  *
+      *                                                               *
+      *****************************************************************
+     C           INFSR     BEGSR
+      *
+      **  Send message - 'Error Open/Close.'
+      *
+     C           STATUS    IFEQ 01216
+     C           STATUS    OREQ 01217
+      *
+      **  Process Database Error Handling Subroutine
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE ##ERFL    DBFILE
+     C                     MOVEL'OPEN'    DBKEY            ************
+     C                     Z-ADD4         DBASE            * DBERR 04 *
+     C                     OUT  LDA                        ************
+     C                     ELSE
+      *
+      ** Other status - cancel and dump and return
+      ** Process Database Error Handling Subroutine
+     C           *LOCK     IN   LDA
+     C                     MOVE ##ERFL    DBFILE
+     C                     MOVEL'See Dump'DBKEY            ************
+     C                     Z-ADD5         DBASE            * DBERR 05 *
+     C                     OUT  LDA                        ************
+     C                     ENDIF
+      *
+     C                     MOVEL'*ERROR'  RTNCDE
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE SR/INFS2
+      *****************************************************************
+      *                                                               *
+      *  INFS2 - File Error Handling Subroutine 2                     *
+      *                                                               *
+      *  Called By:  File Error                                       *
+      *                                                               *
+      *  Calls    :  *PSSR - Abnormal Error Condition Handling Subr.  *
+      *                                                               *
+      *****************************************************************
+     C           INFS2     BEGSR
+      *
+      **  Send message - 'Error Open/Close.'
+      *
+     C           STATU2    IFEQ 01216
+     C           STATU2    OREQ 01217
+      *
+      **  Process Database Error Handling Subroutine
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE ##ERFL    DBFILE
+     C                     MOVEL'OPEN'    DBKEY            ************
+     C                     Z-ADD6         DBASE            * DBERR 06 *
+     C                     OUT  LDA                        ************
+     C                     ELSE
+      *
+      ** Other status - cancel and dump and return
+      ** Process Database Error Handling Subroutine
+     C           *LOCK     IN   LDA
+     C                     MOVE ##ERFL    DBFILE
+     C                     MOVEL'See Dump'DBKEY            ************
+     C                     Z-ADD7         DBASE            * DBERR 07 *
+     C                     OUT  LDA                        ************
+     C                     ENDIF
+      *
+     C                     MOVEL'*ERROR'  RTNCDE
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Subroutine to handle abnormal error conditions       *
+      *                                                               *
+      *  Called by:  SRINIT - Initial Processing                      *
+      *              SRACLV - Calculate Account Level                 *
+      *              INFSR  - File Error Handling Subroutine          *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR                           ** *PSSR **
+      *****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

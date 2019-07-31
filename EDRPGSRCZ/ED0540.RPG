@@ -1,0 +1,299 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Extract of changed FF trades - COB')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Export Data Module                                   *
+      *                                                               *
+      *  ED0540 - Extract of Changed FF Trades - COB                  *
+      *                                                               *
+      *  Function : This program reads through the FO Trades file,    *
+      *             writing details of any trades which have changed  *
+      *             since the previous day, to EDFFTRPD. The          *
+      *             component also takes a copy of the FO trades      *
+      *             file TRANSD to file EDPFTRPD, for use by the      *
+      *             program on the following day.                     *
+      *                                                               *
+      *  Called By: EDC0540  Extract changed FO Trades                *
+      *                                                               *
+      *  Calls    : *None                                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 28Jun02               *
+      *                 CAS002             Date 14Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 Patch E ---------------------------------------*
+      *                 170520             Date 19Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CED006             Date 29Jul97               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  CAS002 - Hedge Strategy/Linkage (Recompile)                  *
+      *  170520 - Recompile over changed TRANSD file                  *
+      *  CED006 - Midas ED Enhancements                               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     FTRANSD  IF  E           K        DISK         KINFSR *PSSR
+      * Transaction details
+     FEDPFTRL1IF  E           K        DISK         KINFSR *PSSR
+     F            TRANSDF                           KRENAMETRANSD2
+      * Previous days FO Trades by trade no.
+     FEDFFTRPDO   E                    DISK
+     F            TRANSDF                           KRENAMETRANSD3
+      * Extract of Futures Transactions
+     FEDCFTRPDO   E                    DISK
+     F            TRANSDF                           KRENAMETRANSD4
+      * Extract of Current days FO Trades
+      *
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   90  - EOF TRANSD                                            *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Initial Processing                                  *
+     F*  PROC   - Read and Process TRANSD                             *
+     F*  EXIT   - Program Termination Subroutine                      *
+     F*  *PSSR  - Error Handling Subroutine                           *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+      *
+     ITRANSD2
+      * Rename fields for Midas Previous days extract of FO Trades
+     I              RECI                            QRECI
+     I              TNBR                            QTNBR
+     I              BRCA                            QBRCA
+     I              BOCO                            QBOCO
+     I              CUSC                            QCUSC
+     I              BOKC                            QBOKC
+     I              ISTT                            QISTT
+     I              YRNO                            QYRNO
+     I              MTHN                            QMTHN
+     I              PCAL                            QPCAL
+     I              STRP                            QSTRP
+     I              TRTY                            QTRTY
+     I              ULTT                            QULTT
+     I              TRSD                            QTRSD
+     I              NUCO                            QNUCO
+     I              NOCO                            QNOCO
+     I              NOBO                            QNOBO
+     I              COPR                            QCOPR
+     I              TNAR                            QTNAR
+     I              TBLO                            QTBLO
+     I              LNKR                            QLNKR
+     I              CLSR                            QCLSR
+     I              ECPI                            QECPI
+     I              CBPI                            QCBPI
+     I              ISCY                            QISCY
+     I              FCDA                            QFCDA
+     I              FCIN                            QFCIN
+     I              FBIN                            QFBIN
+     I              LCD                             QLCD
+     I              CHTP                            QCHTP
+     I              TNLU                            QTNLU
+     I              ORBR                            QORBR
+     I              PRFC                            QPRFC
+     I              ORED                            QORED
+     I              VALD                            QVALD
+     I              PTFR                            QPTFR
+     I              ACNI                            QACNI
+     I              MABK                            QMABK
+     I              MACU                            QMACU
+     I              CUUN                            QCUUN
+     I              UNPL                            QUNPL
+     I              UPLS                            QUPLS
+     I              MHEX                            QMHEX
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C                     EXSR INIT
+     C                     EXSR PROC
+     C                     EXSR EXIT
+      *
+      *****************************************************************
+      *                                                               *
+      * INIT   - Program Initialisation                               *
+      *                                                               *
+      * Called by: Main Program Processing                            *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * PROC   - Reads file TRANSD and, upon a change of the number   *
+      *          of open contracts or a new trade encountered, a      *
+      *          record is written to EDFFTRPD.                       *
+      *                                                               *
+      * Called by: Main Program Processing                            *
+      *                                                               *
+      * Calls: *None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROC      BEGSR
+      *
+      * Read first record in TRANSD
+      *
+     C                     READ TRANSD                   90
+      *
+      * Process all records in TRANSD
+      *
+     C           *IN90     DOWEQ*OFF
+      *
+      ** Transaction Purchase or Sale write details to EDCFTRPD.
+     C           TRTY      IFEQ 'P'                        B01
+     C           TRTY      OREQ 'S'
+     C                     MOVEASTAMP,1   TMST             Default Timestamp                  CPK015
+     C                     WRITETRANSD4
+      *
+      ** Access previous days trade details
+     C           TNBR      CHAINEDPFTRL1             89
+      * Previous days record found, check for change.
+     C           *IN89     IFEQ *OFF                         B02
+      *
+      ** Number of open contracts changed from the previous days       s
+      ** write record to EDFFTRPD.
+     C           NOCO      IFNE QNOCO                          B03
+     C                     MOVEASTAMP,1   TMST             Default Timestamp                  CPK015
+     C                     WRITETRANSD3
+     C                     ENDIF                               E03
+      *
+      ** No previous record found - new trade, write details to
+      ** EDFFTRPD.
+     C                     ELSE                              X02
+     C                     MOVEASTAMP,1   TMST             Default Timestamp                  CPK015
+     C                     WRITETRANSD3
+     C                     ENDIF                             E02
+      *
+     C                     ENDIF                           E01
+      *
+      * Read next record from TRANSD
+      *
+     C                     READ TRANSD                   90
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * EXIT   - Program Termination                                  *
+      *                                                               *
+      * Called by: Main Program Processing                            *
+      *                                                               *
+      * Calls: *None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EXIT      BEGSR
+      *
+      * End Program
+     C                     SETON                         LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: PROC, EXIT                                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+**  CPY@
+(c) Finastra International Limited 2001

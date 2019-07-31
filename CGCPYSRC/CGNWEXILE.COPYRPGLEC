@@ -1,0 +1,295 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPGLE)                                 *
+      *                                                               *
+      *  CGNWEXILE - S/R to write new extract records                 *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *  Last Amend No. CCG015  *CREATE    Date 09Aug01               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCG015 - Correspondence Manager Phase 1                      *
+      *                                                               *
+      *****************************************************************
+      * Subroutine  :  Write a XML record for RDE                     *
+      *****************************************************************
+     C     WRTRDE        BEGSR
+      *
+      ** INPUTS:
+      ** -------
+      ** Correspondence item number: ##ITEM
+      ** Reference name: ##REFR (Print Item type:Print Item sub type)
+      ** RDE names: ##RN (expressed in absolute paths \..\RDENAM)
+      ** RDE data: ##DN
+      ** RDE formats: ##FM
+      *
+      ** OUTPUTS:
+      ** --------
+      ** writes records in Extracted RDE file (CGUXMRPD)
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'WRTRDE'      @STK(Q)
+      *
+     C     CCG015        IFNE      'Y'
+     C                   GOTO      EXWTRD
+     C                   ENDIF
+      *
+      ** Increment line number
+      *
+     C                   ADD       1             P@ICR
+      *
+     C                   CALL      'CG3603'
+     C                   PARM      ##ITEM        P@ITM             8 0
+     C                   PARM                    P@ICR
+     C                   PARM      ##REFR        P@RFR
+     C                   PARM                    ##RN
+     C                   PARM                    ##DN
+     C                   PARM                    ##FM
+     C                   PARM                    P@RETN           10
+     C                   PARM                    W0CMT
+      *
+     C     P@RETN        IFNE      *BLANK
+     C                   MOVEL     'CG3603'      W0FILE
+     C                   Z-ADD     950           W0ERNB
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C     EXWTRD        TAG
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+      * Subroutine  :  Write a XML record when a group set is pushed  *
+      *****************************************************************
+     C     PSHGRS        BEGSR
+      *
+      ** INPUTS:
+      ** -------
+      ** Correspondence item number: ##ITEM
+      ** Reference name: ##REFR (Print Item type:Print Item sub type)
+      ** Path explored: WPathStr
+      *
+      ** OUTPUTS:
+      ** --------
+      ** write a record in Explored group set file (CGUXMGPD)
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'PSHGRS'      @STK(Q)
+      *
+     C     CCG015        IFNE      'Y'
+     C                   GOTO      EXPSHG
+     C                   ENDIF
+      *
+      ** Increment line number
+      *
+     C                   ADD       1             P@ICR
+      *
+     C                   MOVEL     *BLANK        P@ACTN
+      *
+      ** Push the new path in the stack
+      *
+     C                   ADD       1             P
+     C                   MOVEL     WPathStr      ##PH(P)
+      *
+     C                   CALL      'CG3604'
+     C                   PARM      ##ITEM        P@ITM
+     C                   PARM                    P@ICR
+     C                   PARM      ##REFR        P@RFR
+     C                   PARM      '*GRSPSH'     P@ACTN           10
+     C                   PARM      ##PH(P)       P@PTH
+     C                   PARM                    P@RETN
+     C                   PARM                    W0CMT
+      *
+     C     P@RETN        IFNE      *BLANK
+     C                   MOVEL     'CG3604'      W0FILE
+     C                   Z-ADD     951           W0ERNB
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C     EXPSHG        TAG
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+      * Subroutine  :  Write a XML record when a group set is poped   *
+      *****************************************************************
+     C     POPGRS        BEGSR
+      *
+      ** INPUTS:
+      ** -------
+      ** Correspondence item number: ##ITEM
+      ** Reference name: ##REFR (Print Item type:Print Item sub type)
+      ** Path explored: WPathStr
+      *
+      ** OUTPUTS:
+      ** --------
+      ** write a record in Explored group set file (CGUXMGPD)
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'POPGRS'      @STK(Q)
+     C     *LIKE         DEFINE    ##RN          P@PTH
+      *
+     C     CCG015        IFNE      'Y'
+     C                   GOTO      EXPOPG
+     C                   ENDIF
+      *
+      ** Increment line number
+      *
+     C                   ADD       1             P@ICR
+     C                   MOVEL     *BLANK        P@ACTN
+      *
+     C                   CALL      'CG3604'
+     C                   PARM      ##ITEM        P@ITM
+     C                   PARM                    P@ICR
+     C                   PARM      ##REFR        P@RFR
+     C                   PARM      '*GRSPOP'     P@ACTN
+     C                   PARM      ##PH(P)       P@PTH
+     C                   PARM                    P@RETN
+     C                   PARM                    W0CMT
+      *
+     C     P@RETN        IFNE      *BLANK
+     C                   MOVEL     'CG3604'      W0FILE
+     C                   Z-ADD     952           W0ERNB
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+      *
+      ** Pop the path stack
+      *
+     C                   SUB       1             P
+      *
+      ** Unwind subroutine stack name
+      *
+     C     EXPOPG        TAG
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+      * Subroutine  :  Wrap the Reference Name                        *
+      *****************************************************************
+     C     WRAPRF        BEGSR
+      *
+      ** INPUTS:
+      ** -------
+      ** Correspondence item number: ##ITEM
+      ** Reference name: ##REFR (Print Item type:Print Item sub type)
+      *
+      ** OUTPUTS:
+      ** --------
+      ** write 2 records in Explored group set file (CGUXMGPD)
+      ** these 2 records wraps the Extraction for the Correspondence
+      ** item number.
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'WRAPRF'      @STK(Q)
+      *
+     C     *LIKE         DEFINE    ##REFR        P@RFR
+      *
+     C     CCG015        IFNE      'Y'
+     C                   GOTO      EXWRPR
+     C                   ENDIF
+      *
+      ** Initialise the increment
+      ** (Not initialised in INIXML as a same extracted message
+      ** can generate more than 1 extraction (e.g. Dealing
+      ** d04ICF and d05ICL ... )
+      *
+     C                   Z-ADD     1             P@ICR             6 0
+      *
+     C                   MOVEL     *BLANK        P@ACTN
+      *
+     C                   CALL      'CG3604'
+     C                   PARM      ##ITEM        P@ITM
+     C                   PARM                    P@ICR
+     C                   PARM      ##REFR        P@RFR
+     C                   PARM      '*WRAP  '     P@ACTN
+     C                   PARM      *BLANK        P@PTH
+     C                   PARM                    P@RETN
+     C                   PARM                    W0CMT
+      *
+     C     P@RETN        IFNE      *BLANK
+     C                   MOVEL     'CG3604'      W0FILE
+     C                   Z-ADD     954           W0ERNB
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C     EXWRPR        TAG
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+      * Subroutine  :  Initialise context for new extraction          *
+      *****************************************************************
+     C     INIXML        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'INIXML'      @STK(Q)
+      *
+      ** Ensure that the state of correspondence management is known.
+      ** Call of AOSARDR0 must be performed before this subroutine
+      ** is executed.
+      *
+     C     CCG015        IFEQ      *BLANK
+     C                   MOVEL     '*UNKNW'      W0FILE
+     C                   Z-ADD     953           W0ERNB
+     C                   MOVEL     'MEM5001'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ELSE
+     C     CCG015        IFNE      'Y'
+     C                   GOTO      EXINXM
+     C                   ENDIF
+     C                   ENDIF
+      *
+      ** If it is a master extraction program reference, and
+      ** path index must be reset as they applies to a specific
+      ** extracted message.
+      ** Otherwise the reference values and path index are retained.
+      ** The flag is then reset to blank for security reason.
+      *
+     C     ##MAST        IFNE      'N'
+     C                   Z-ADD     0             P                 2 0
+     C                   MOVEL     *BLANKS       ##REFR           21
+     C                   ENDIF
+     C                   MOVEL     *BLANK        ##MAST            1
+      *
+      ** Unwind subroutine stack name
+      *
+     C     EXINXM        TAG
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR

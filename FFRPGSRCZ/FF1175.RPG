@@ -1,0 +1,1059 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Trade number gaps report')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF1175  -  TRADE NO GAPS LIST                                  *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. BUG16455           Date 28Feb08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS002             Date 14Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 134881             Date 23Mar00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 Patch E ---------------------------------------*
+      *                 170520             Date 19Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CPL002             Date 08MAR99               *
+     F*                 CAP003             Date 18Aug98               *
+     F*                 CAC003             Date 25Feb97               *
+      *                  CFF004             Date 02OCT96                 *
+     F*                  084565             DATE 13APR95                 *
+     F*                  S01411             DATE 16APR93                 *
+     F*                  HK0000             DATE 17JUL90                 *
+     F*                  S01117             DATE 09APR90                 *
+     F*                  E14171             DATE 25/01/89                *
+     F*                  E15863             DATE 25/01/89                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG16455 - FFC0700 looping. Applied fixed 245130             *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS002 - Hedge Strategy/Linkage (Recompile)                  *
+     F*  134881 - TRADE GAPS incorrectly reported.                    *
+     F*           Applied fix 037733.                                 *
+      *  170520 - Recompile over changed TRANSD file                  *
+     F*  CPL002 - Midas-Plato Interface (Recompiled)                  *
+      *  CAP003 - Conversion of Midas inputs to modular API structure *
+      *           (phase 2) - recompiled                              *
+     F*  CAC003 - Profit Centre Accounting Development Phase 3.       *
+     F*         - Recompiled due to changes in TRANSD.                *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)     *
+     A*  084565 - SR/RCFP1 should be called from somewhere in the        *
+     A*           program, else P1 report doesn't get distributed.       *
+     A*  S01411 - RECOMPILED BECAUSE 'ORIGINAL ENTRY DATE' HAS BEEN      *
+     A*           ADDED TO TRANSD.                                       *
+     F*  HK0000  -  TO AVOID OUTPUT EXTRA TRADE NO. GAP LINE WHEN EOF    *
+     F*             FOR TRANSD                                           *
+     F*  S01117  -  MULTIBRANCHING                                       *
+     F*  E14171  -  INTERIM REPORT TO SHOW TODAYS GAPS ONLY.             *
+     F*  E15863  -  IF RANGE NO. B/F IS ZERO - NEEDS TO DEFAULT TO       *
+     F*             FIRST NO. OF RANGE.                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*ABTB10*IF* E                    DISK                               S01117
+     F*
+     F*F1175P1O** E                    PRINTER                            S01117
+     F***********                                   KINFDS PRINT          S01117
+     FFF1175P1O   E                    DISK                               S01117
+     F                                              KINFDS SPOOL          S01117
+     FFF1175AUO   E                    DISK                               S01117
+     F                                              KINFDS SPOOLU         S01117
+     FTRNOR1  UF  E           K        DISK
+     FTRANS2  UF  E           K        DISK
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*     INDICATOR TABLE
+     F*
+     F*       42           NO RANGE DETAILS                               S01117
+     F*       43           NO TRANS DETAILS                               S01117
+     F*       50           IF OFF U1 OFF: COB REPORT
+     F*                        ON U1 ON:  INTERIM REPORT
+     F*       51           END OF TABTB10 REACHED ON READ
+     F*       52           END OF TRNOR1 REACHED ON READ
+     F*       53           END OF TRANS2 REACHED ON READ
+     F*       59           INDICATE DETAILS PRINTED FOR P1                S01117
+     F*       60           SET ON IF NO TRANSACTIONS INSIDE A RANGE
+     F*                         - USED FOR REPORT RANGE LINE
+     F*       61           USED FOR 'OUT OF RANGE' REPORT LINE
+     F*       62           USED TO REPORT RANGE LINE (FMT4014)
+     F*       90-99        USED IN MIDAS STANDARD SUBROUTINES
+     F*       98           NOT SET IN PROGRAM
+     F*       U1           IF OFF: COB REPORT
+     F*                       ON : INTERIM REPORT
+     F*       U7 & U8      DATABASE ERROR
+     F*
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E*****************************************************************
+     E*
+     E                    MES     1   3 12
+     E*    ARRAY TO HOLD REPORT COMMENTS
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*****************************************************************
+     ITRANSDF
+     I              CHTP                            CHTPX
+     I              LCD                             LCDX
+     I              RECI                            RECIX
+     I*    RENAME CHTP LCD & RECI FROM FILE TRANSD
+     I*
+     I**                                                                  S01117
+     I*DA********UDS                            256                       S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                             DATA STRUCTURE FOR DATA AREA
+     I*
+     I*RINT****** DS                                                      S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I                                    B 367 3680LINE
+     I**                                                                  S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I**                                                                  S01117
+     I*                          DATA STRUCTURE FOR LINE VARIABLE
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I**  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I**                                                                  S01117
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE          S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I**                                                                  S01117
+     I**  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I              BJURPT                          TITL                  S01117
+     I*****************************************************************
+     I/EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C*****************************************************************
+     C*
+     C*    MAIN PROGRAM
+     C                     EXSR START
+     C                     EXSR BODY
+     C                     EXSR END
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*                    INDEX TO SUBROUTINES                       *
+     C*                                                               *
+     C*                                                               *
+     C*          1. START  - INITIALISATION                           *
+     C*          2. BODY   - HANDLES EMPTY FILE                       *
+     C*          3. SRTYP  - TRANSACTION SUB-RANGE TYPE               *
+     C*          4. OUTRNG - TRANSACTION OUT OF RANGE                 *
+     C*          5. OLDTRD - OLD TRADE NUMBER                         *
+     C*          6. READTR - READ NEXT VALID TRANSACTION              *
+     C*          7. NEWPGE - CHECKS ENOUGH ROOM ON REPORT PAGE        *
+     C*          8. INRNG  - TRANSACTION IN RANGE                     *
+     C*          9. TRDLOP - TRADE LOOP                               *
+     C*         10. FIRSTR - HANDLES FIRST SUB-RANGE IN EACH RANGE    *
+     C*         11. NEXTR  - HANDLES SUBSEQUENT SUB-RANGES IN RANGE   *
+     C*         12. SURRNG - SURPLUS RANGES                           *
+     C*         13. END    - TERMINATES                               *
+     C*         14. DBERR  - HANDLES DATABASE ERRORS                  *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE START:
+     C*    CHECKS EXTERNAL SWITCH U1 - ON: INTERIM REPORT
+     C*                               OFF: COB REPORT
+     C*****READS*TABTB10*&*CHECKS*FOR*DATABASE*ERROR.*********************S01117
+     C*
+     C*    CALLED FROM SUBROUTINES :
+     C*    CALLS SUBROUTINES : DBERR
+     C*
+     C           START     BEGSR                           ** SR START
+     C*
+     C*    UPDATE THE DATABASE KEY FIELD IN CASE OF DATABASE ERROR
+     C***********          MOVE *BLANKS   DBKEY                           S01117
+     C***********          MOVEL'FF1175  'DBPGM                           S01117
+     C**                                                                  S01117
+     C** INITIALISE DATABASE ERROR DATAAREA                               S01117
+     C           *LOCK     IN   LDA                        INITIALIZE     S01117
+     C                     MOVE *BLANK    DBPGM                           S01117
+     C                     MOVEL'FF1175  'DBPGM                           S01117
+     C                     MOVE *BLANK    DBFILE                          S01117
+     C                     MOVE *BLANK    DBKEY                           S01117
+     C                     Z-ADD0         DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C**                                                                  S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**                                                                  S01117
+     C**   ACCESS BANK DETAILS, FOR TITLE                                 S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C                     MOVE *BLANKS   DBKEY                           S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 001 *S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C** ACCEPT INPUT PARAMETER                                           S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5        SEQUENCE NO    S01117
+     C*
+     C*
+     C*    CHECK SWITCH U1
+     C           *INU1     IFEQ '1'
+     C                     SETON                     50
+     C                     END
+     C*
+     C*****ACCESS RECORD FROM TABLE FILE TABTB10.                         S01117
+     C***********          READ TABTB10F                 51               S01117
+     C***********                                                         S01117
+     C*****IF*TABTB10 RECORD NOT FOUND OR DELETED PERFORM DATA BASE       S01117
+     C*****ERROR*ROUTINE.                                                 S01117
+     C************IN51     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********                                                         S01117
+     C*****OUTPUT*HEADING*TO*PRINTER*FILE.********************************S01117
+     C***********          WRITEFMT9003                                   S01117
+     C***********                                                         S01117
+     C*****UPDATE*THE*LOCAL*DATA*AREA.************************************S01117
+     C***********          MOVEL'TABFF'   DBFILE                          S01117
+     C***********          MOVE '    10'  KBUFF  12                       S01117
+     C***********          MOVEL'01    '  KBUFF                           S01117
+     C***********          MOVELKBUFF     DBKEY                           S01117
+     C***********          MOVEL'01'      DBASE            ** DBERR 01    S01117
+     C***********                                                         S01117
+     C*****PERFORM*DATA*BASE*ERROR*HANDLING*SUBROUTINE.*******************S01117
+     C***********          EXSR DBERR                                     S01117
+     C***********          END                                            S01117
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE BODY:
+     C*    OUTPUTS HEADING, READS BOTH FILES FOR THE FIRST TIME &
+     C*    CHECKS THAT BOTH FILES CONTAIN VALID RECS.
+     C*
+     C*    CALLED FROM SUBROUTINES :
+     C*    CALLS SUBROUTINES : READTR
+     C*                        SRTYP
+     C*
+     C           BODY      BEGSR                           ** SR BODY *
+     C*
+     C*    OUTPUT HEADING
+     C                     WRITEFMT9003
+     C*
+     C*    READ TRNOR & TRANS
+     C                     READ TRNORDF                  52
+     C           *IN52     IFEQ '0'                                       S01117
+     C                     ADD  1         CNOR                            S01117
+     C                     END                                            S01117
+     C                     EXSR READTR
+     C*
+     C**   OUTPUT 'NO RANGE DETAILS.' MESSAGE IF NO VALID RECS IN TRNOR1
+     C           *IN52     IFEQ '1'
+     C                     WRITEFMTP102
+     C                     SETON                     42                   S01117
+     C                     END
+     C*
+     C**   OUTPUT 'NO TRANS DETAILS.' MESSAGE IF NO VALID RECS IN TRANS2
+     C           *IN53     IFEQ '1'
+     C                     WRITEFMTP103
+     C                     SETON                     43                   S01117
+     C                     END
+     C*
+     C*    IF NO ERRORS, CONTINUE PROGRAM
+     C           *IN52     IFNE '1'
+     C           *IN53     ANDNE'1'
+     C                     EXSR SRTYP
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE SRTYP:
+     C*    FOR EACH NEW RANGE, THE TYPE OF LINE TO BE OUTPUT ON THE
+     C*    REPORT IS DECIDED IN THIS SUBROUTINE.
+     C*
+     C*    CALLED FROM SUBROUTINES : BODY
+     C*    CALLS SUBROUTINES : OUTRNG
+     C*                        OLDTRD
+     C*                        INRNG
+     C*                        SURRNG
+     C*
+     C           SRTYP     BEGSR                           ** SR SRTYP
+     C*
+     C*    LOOP UNTIL END OF TRANS2 FILE
+     C           *IN53     DOWNE'1'
+     C*
+     C*    IF NO MORE TRNOR1 RECS, MAKE SURE THAT REMAINING 'OUT OF
+     C*    RANGE' TRANSACTIONS ARE REPORTED.
+     C           *IN52     IFEQ '1'
+     C                     MOVE *HIVAL    FNOR
+     C                     END
+     C*
+     C*    IF TRANSACTION IS LESS THAN RANGE LOWER LIMIT PERFORM OUTRNG
+     C           TNBR      IFLT FNOR
+     C                     EXSR OUTRNG
+     C*
+     C*    ELSE IF TRANSACTION IS LESS THAN BROUGHT FORWARD PERFORM
+     C*    SUBROUTINE OLDTRD
+     C                     ELSE
+     C           TNBR      IFLT TNBF
+     C                     EXSR OLDTRD
+     C*
+     C*    ELSE IT MUST BE A TRANS NO SET STARTING WITHIN RANGE
+     C*    AFTER BROUGHT-FORWARD VALUE
+     C                     ELSE
+     C                     EXSR INRNG
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C*    ANY SURPLUS RANGES NEED TO BE HANDLED
+     C                     EXSR SURRNG
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE OUTRNG:
+     C*    HANDLES ALL THE TRANSACTIONS THAT APPEAR OUTSIDE OF RANGE
+     C*
+     C*    CALLED FROM SUBROUTINES : SRTYP
+     C*    CALLS SUBROUTINES : READTR
+     C*                        NEWPGE
+     C*
+     C           OUTRNG    BEGSR                           ** SR OUTRNG
+     C*
+     C*    DO LOOP WHILE NOT EOF & TRANS NO. LESS THAN RANGE LOWER LIM
+     C           *IN53     DOWNE'1'
+     C           TNBR      ANDLTFNOR
+     C*
+     C*    INITIALISE SUBRANGE LOWER LIMIT & NEXT EXPECTED TRANS NO
+     C                     Z-ADDTNBR      SRLL    60
+     C                     Z-ADDTNBR      OLD     60
+     C*
+     C*    DO LOOP WHILE NOT EOF & TRANS NOS CONSECUTIVE & TRANS NO.
+     C*    LESS THAN RANGE LOWER LIMIT.
+     C           *IN53     DOWNE'1'
+     C           TNBR      ANDLTFNOR
+     C           OLD       ANDEQTNBR
+     C                     EXSR READTR
+     C                     END
+     C*
+     C*    SET UP THE SUBRANGE REPORT FIELDS
+     C           OLD       SUB  1         RSRUL   60
+     C                     Z-ADDSRLL      RSRLL   60
+     C*
+     C*    MOVE 'OUT OF RANGE' MESSAGE INTO REPORT COMMENT FIELD
+     C                     Z-ADD1         X       10
+     C                     MOVE MES,X     RCOM   12
+     C*
+     C*    CHECK ENOUGH ROOM ON PAGE
+     C                     EXSR NEWPGE
+     C*
+     C*    OUTPUT 'OUT OF RANGE' LINE ON REPORT
+     C                     SETON                     61
+     C                     WRITEFMT4015
+     C                     SETOF                     61
+     C                     END
+     C*
+     C*    IF EOF OF TRANSD OUTPUT RANGE DETAIL LINE & READ
+     C*    IN THE NEXT RECORD
+     C           *IN53     IFEQ '1'
+     C           *IN52     ANDNE'1'
+     C                     EXSR NEWPGE
+     C                     MOVE *BLANKS   RCOM
+     C                     WRITEFMT4014A
+     C                     WRITEFMT4014C
+     C*
+     C*    OUTPUT FIELDS DEPEND ON WHETHER TRADE-NO-B-F INSIDE RANGE
+     C           OLD       IFLE LNOR
+     C                     MOVE *BLANKS   RTNC
+     C*
+     C**   IF - BROUGHT FORWARD TRANS. NO = 0
+     C*
+     C           TNBF      IFEQ *ZEROS
+     C                     MOVE FNOR      RNAN
+     C*
+     C**   ELSE - TRADE NO GAP STARTS FROM BROUGHT FORWARD NUMBER
+     C*
+     C                     ELSE
+     C                     MOVE TNBF      RNAN
+     C*
+     C                     END
+     C                     ELSE
+     C                     MOVE '******'  RNAN
+     C                     MOVEL'RANGE'   RTNC
+     C                     MOVE ' FULL'   RTNC
+     C                     END
+     C*
+     C*    OUTPUT 'NEXT AVALIABLE NO' DETAIL LINE TO REPORT
+     C                     EXSR NEWPGE
+     C                     WRITEFMT4016
+     C*
+     C                     READ TRNORDF                  52
+     C           *IN52     IFEQ '0'                                       S01117
+     C                     ADD  1         CNOR                            S01117
+     C                     END                                            S01117
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE OLDTRD:
+     C*    HANDLES ALL THE TRANSACTIONS THAT APPEAR INSIDE RANGE
+     C*    BUT BELOW BROUGHT/FORWARD VALUE.
+     C*
+     C*    CALLED FROM SUBROUTINES : SRTYP
+     C*    CALLS SUBROUTINES : READTR
+     C*                        NEWPGE
+     C*
+     C           OLDTRD    BEGSR                           ** SR OLDTRD
+     C*
+     C*    DO LOOP WHILE NOT EOF & TRANS NO. LESS THAN BROUGHT/FORWARD
+     C           *IN53     DOWNE'1'
+     C           TNBR      ANDLTTNBF
+     C*
+     C*    INITIALISE SUBRANGE LOWER LIMIT & NEXT EXPECTED TRANS NO
+     C                     Z-ADDTNBR      SRLL
+     C                     Z-ADDTNBR      OLD
+     C*
+     C*    DO LOOP WHILE NOT EOF & TRANS NOS CONSECUTIVE & TRANS NO.
+     C*    LESS THAN BROUGHT FORWARD.
+     C           *IN53     DOWNE'1'
+     C           TNBR      ANDLTTNBF
+     C           OLD       ANDEQTNBR
+     C                     EXSR READTR
+     C                     END
+     C*
+     C*    SET UP THE SUBRANGE REPORT FIELDS
+     C           OLD       SUB  1         RSRUL
+     C                     Z-ADDSRLL      RSRLL
+     C*
+     C*    MOVE 'OLD TRADE NO' MESSAGE INTO REPORT COMMENT FIELD
+     C                     Z-ADD2         X
+     C                     MOVE MES,X     RCOM
+     C*
+     C*    CHECK ENOUGH ROOM ON PAGE
+     C                     EXSR NEWPGE
+     C*
+     C*    OUTPUT 'OLD TRADE NO' LINE
+     C           *IN62     IFEQ '0'
+     C                     WRITEFMT4014A
+     C                     END
+     C*
+     C           *IN60     IFEQ '0'
+     C                     WRITEFMT4014B
+     C                     END
+     C*
+     C                     WRITEFMT4014C
+     C*
+     C*    INDICATOR SET ON TO STOP RANGE BEING REPORTED MORE THAN ONCE
+     C                     SETON                     62
+     C                     END
+     C*
+     C*    IF END OF TRANSD READ IN THE NEXT RANGE
+     C           *IN53     IFEQ '1'
+     C*
+     C*    OUTPUT FIELDS DEPEND ON WHETHER TRADE-NO-B-F INSIDE RANGE
+     C           OLD       IFLE LNOR
+     C                     MOVE *BLANKS   RTNC
+     C                     MOVE OLD       RNAN
+     C                     ELSE
+     C                     MOVE '******'  RNAN
+     C                     MOVEL'RANGE'   RTNC
+     C                     MOVE ' FULL'   RTNC
+     C                     END
+     C*
+     C*    OUTPUT 'NEXT AVALIABLE NO' DETAIL LINE TO REPORT
+     C                     EXSR NEWPGE
+     C                     WRITEFMT4016
+     C                     READ TRNORDF                  52
+     C           *IN52     IFEQ '0'                                       S01117
+     C                     ADD  1         CNOR                            S01117
+     C                     END                                            S01117
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE READTR:
+     C*    READS TRANS2 RECS INTO PROGRAM
+     C*
+     C*    CALLED FROM SUBROUTINES : BODY
+     C*                              OUTRNG
+     C*                              OLDTRD
+     C*                              TRDLOP
+     C*    CALLS SUBROUTINES :
+     C*
+     C           READTR    BEGSR                           ** SR READTR
+     C                     ADD  1         OLD
+     C*
+     C*    IF A COB REPORT REQUIRED
+     C************IN50     IFEQ '0'                                       E14171
+     C*
+     C*    CHECK THAT RECORD HASN'T ALREADY BEEN PROCESSED & NOT EOF
+     C           *IN53     DOWNE'1'
+     C           CBPI      ANDNE'N'
+     C                     READ TRANSDF                  53
+     C           *IN53     IFEQ '0'                                       S01117
+     C                     ADD  1         CNNS                            S01117
+     C                     END                                            S01117
+     C**********           END                                                              BUG16455
+     C*
+     C*    UPDATE TRANSD IF NOT ALREADY PROCESSED & NOT EOF
+     C           *IN53     IFNE '1'
+     C                     MOVE 'Y'       CBPI
+     C                     END                                            E14171
+     C           *IN50     IFEQ '0'                                       E14171
+     C           *IN53     ANDNE'1'                                       E14171
+     C                     UPDATTRANSDF
+     C                     END
+     C                     END                                                              BUG16455
+     C*
+     C*********************ELSE                                           E14171
+     C*********************READ TRANSDF                  53               E14171
+     C*********************END                                            E14171
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE NEWPGE:
+     C*    CHECKS THE NUMBER OF LINES USED ON A PAGE & WILL CAUSE
+     C*    A NEW PAGE IF OVER 57 LINES USED.
+     C*
+     C*    CALLED FROM SUBROUTINES : OUTRNG
+     C*                              OLDTRD
+     C*                              INRNG
+     C*                              FIRSTR
+     C*                              NEXTR
+     C*                              SURRNG
+     C*    CALLS SUBROUTINES :
+     C*
+     C           NEWPGE    BEGSR                           ** SR NEWPGE
+     C*
+     C*    CHECK THAT PAGE IS NOT OVER 57 LINES
+     C           LINE      IFGE 57
+     C*
+     C*    OUTPUT NEW HEADING
+     C                     WRITEFMT9003
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE INRNG:
+     C*    HANDLES ALL THE TRANSACTION NOS THAT APPEAR INSIDE A RANGE
+     C*    AFTER THE BROUGHT FORWARD VALUE.
+     C*
+     C*    CALLED FROM SUBROUTINES : SRTYP
+     C*    CALLS SUBROUTINES : NEWPGE
+     C*                        TRDLOP
+     C*
+     C           INRNG     BEGSR                           ** SR INRNG
+     C*
+     C*    INITIALISE SUBRANGE LOWER LIMIT & OLD
+     C                     Z-ADDTNBR      SRLL
+     C*
+     C**   IF - TRANS NO. BROUGHT FORWARD IS ZERO TAKE FIRST NUMBER OF
+     C**        RANGE. (TNBF DEFAULTS TO FIRST NO. OF RANGE.)             E15863
+     C*
+     C           TNBF      IFEQ *ZEROS
+     C*********************Z-ADDFNOR      OLD                             E15863
+     C                     Z-ADDFNOR      TNBF                            E15863
+     C                     END                                            E15863
+     C*
+     C*********************ELSE                                           E15863
+     C                     Z-ADDTNBF      OLD
+     C*                                                                   E15863
+     C*********************END                                            E15863
+     C*
+     C*    CHECK WHETHER THE FIRST TRANSACTION NUMBER IN THAT RANGE
+     C*    STARTS AT THE BROUGHT FORWARD VALUE.
+     C           SRLL      IFNE TNBF
+     C           TNBR      ANDLELNOR
+     C*
+     C*    CHECK ENOUGH ROOM ON PAGE
+     C                     EXSR NEWPGE
+     C*
+     C*    SET UP THE SUBRANGE REPORT FIELDS
+     C*
+     C**   IF - BROUGHT FORWARD TRANS. NO < START OF RANGE
+     C*
+     C           TNBF      IFLT FNOR
+     C                     Z-ADDFNOR      RSRLL
+     C*
+     C**   ELSE - TRADE NO GAP STARTS FROM BROUGHT FORWARD NUMBER
+     C*
+     C                     ELSE
+     C                     Z-ADDTNBF      RSRLL
+     C*
+     C                     END
+     C*
+     C           TNBR      SUB  1         RSRUL
+     C*
+     C*    MOVE 'TRADE NO GAP' MESSAGE INTO REPORT COMMENT
+     C                     Z-ADD3         X
+     C                     MOVE MES,X     RCOM
+     C*
+     C*    OUTPUT 'TRADE NO GAP' LINE
+     C*
+     C           *IN62     IFEQ '0'
+     C                     WRITEFMT4014A
+     C                     END
+     C*
+     C                     WRITEFMT4014B
+     C                     WRITEFMT4014C
+     C                     END
+     C*
+     C*    CHECK IF TRANS NO IS INSIDE RANGE
+     C           TNBR      IFGT LNOR
+     C                     EXSR NEWPGE
+     C                     MOVE *BLANKS   RCOM
+     C*
+     C           *IN62     IFEQ '0'
+     C                     WRITEFMT4014A
+     C                     END
+     C*
+     C                     WRITEFMT4014C
+     C                     ELSE
+     C*
+     C*    GO INTO LOOP TO READ & PROCESS CONSECUTIVE TRANS NOS
+     C                     EXSR TRDLOP
+     C                     END
+     C*
+     C*    OUTPUT FIELDS DEPEND ON WHETHER TRADE-NO-B-F INSIDE RANGE
+     C           OLD       IFLE LNOR
+     C                     MOVE *BLANKS   RTNC
+     C                     MOVE OLD       RNAN
+     C                     ELSE
+     C                     MOVE '******'  RNAN
+     C                     MOVEL'RANGE'   RTNC
+     C                     MOVE ' FULL'   RTNC
+     C                     END
+     C*
+     C*    CHECK WHETHER COB REPORT
+     C           *IN50     IFEQ '0'
+     C*
+     C*    UPDATE RANGE B/F VALUE
+     C           OLD       IFNE TNBF
+     C                     Z-ADDOLD       TNBF
+     C                     UPDATTRNORDF
+     C                     END
+     C                     END
+     C*
+     C*    CHECK ROOM ON PAGE
+     C                     EXSR NEWPGE
+     C*
+     C*    OUTPUT 'NEXT AVALIABLE NO' LINE ONTO REPORT
+     C                     WRITEFMT4016
+     C*
+     C*    SET OFF IND 62 TO ALLOW NEXT RANGE TO BE REPORTED
+     C                     SETOF                     62
+     C*
+     C*    READ THE NEXT RANGE
+     C                     READ TRNORDF                  52
+     C           *IN52     IFEQ '0'                                       S01117
+     C                     ADD  1         CNOR                            S01117
+     C                     END                                            S01117
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE TRDLOP:
+     C*    LOOPS UNTIL THERE ARE EITHER NO MORE TRANSACTIONS OR
+     C*    THERE ARE NO MORE TRANSACTIONS WITHIN THE PRESENT RANGE.
+     C*
+     C*    CALLED FROM SUBROUTINES : INRNG
+     C*    CALLS SUBROUTINES : READTR
+     C*                        FIRSTR
+     C*                        NEXTR
+     C*
+     C           TRDLOP    BEGSR                           ** SR TRDLOP
+     C*
+     C*    DO LOOP WHILE NOT EOF & TRANSACTION NO. IN RANGE
+     C           *IN53     DOWNE'1'
+     C           TNBR      ANDLELNOR
+     C*
+     C*    INITIALISE OLD & SRLL
+     C                     Z-ADDTNBR      OLD
+     C                     Z-ADDTNBR      SRLL
+     C*
+     C*    DO LOOP WHILE NOT EOF & TRANS NO IN RANGE & TRANS NO IN
+     C*    SEQUENCE.
+     C           *IN53     DOWNE'1'
+     C           TNBR      ANDLELNOR
+     C           TNBR      ANDEQOLD
+     C                     EXSR READTR
+     C                     END
+     C*
+     C*    SET UP SUBRANGE UPPER LIMIT FIELD
+     C           OLD       SUB  1         SRUL    60
+     C*
+     C*    IF THERE ARE NO GAPS BETWEEN FIRST TRANS NO & BROUGHT
+     C*    FORWARD VALUE
+     C           SRLL      IFEQ TNBF
+     C                     EXSR FIRSTR
+     C*
+     C*    OTHERWISE A 'TRADE NO GAP' MESSAGE IS NEEDED
+     C                     ELSE
+     C                     EXSR NEXTR
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE FIRSTR:
+     C*    OUTPUTS THE FIRST LINE OF EACH RANGE
+     C*
+     C*    CALLED FROM SUBROUTINES : TRDLOP
+     C*    CALLS SUBROUTINES : NEWPGE
+     C*
+     C           FIRSTR    BEGSR                           ** SR FIRSTR
+     C*
+     C*    CHECK ROOM ON PAGE
+     C                     EXSR NEWPGE
+     C*
+     C*    MOVE SUBRANGE LIMIT VALUES INTO REPORT FIELDS
+     C                     Z-ADDSRLL      RSRLL
+     C                     Z-ADDSRUL      RSRUL
+     C*
+     C*    BLANK OUT COMMENT FIELD IN REPORT
+     C                     MOVE *BLANKS   RCOM
+     C*
+     C*    OUTPUT RANGE LINE
+     C*
+     C           *IN62     IFEQ '0'
+     C                     WRITEFMT4014A
+     C                     END
+     C*
+     C           *IN60     IFEQ '0'
+     C                     WRITEFMT4014B
+     C                     END
+     C*
+     C                     WRITEFMT4014C
+     C*
+     C*    IF TRANS NO IS LESS THAN RANGE UPPER LIMIT THEN A 'TRANS
+     C*    NO GAP' LINE NEEDS TO BE OUTPUT
+     C           TNBR      IFLE LNOR
+     C           *IN53     ANDNE'1'                                       134881
+     C*
+     C*    CHECK ROOM ON PAGE
+     C                     EXSR NEWPGE
+     C*
+     C*    MOVE GAP LIMIT VALUES INTO REPORT FIELDS
+     C                     Z-ADDOLD       RSRLL
+     C           TNBR      SUB  1         RSRUL
+     C*
+     C*    MOVE 'TRADE NO GAP' INTO REPORT FIELD
+     C                     Z-ADD3         X
+     C                     MOVE MES,X     RCOM
+     C*
+     C*    OUTPUT RANGE LINE
+     C                     WRITEFMT4015
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE NEXTR:
+     C*    OUTPUTS EACH SUBRANGE WITHIN RANGE AFTER THE FIRST ONE
+     C*
+     C*    CALLED FROM SUBROUTINES : TRDLOP
+     C*    CALLS SUBROUTINES : NEWPGE
+     C*
+     C           NEXTR     BEGSR                           ** SR NEXTR
+     C*
+     C*    CHECK ROOM ON PAGE
+     C                     EXSR NEWPGE
+     C*
+     C*    MOVE SUBRANGE LIMIT VALUES INTO REPORT FIELDS
+     C                     Z-ADDSRLL      RSRLL
+     C                     Z-ADDSRUL      RSRUL
+     C*
+     C*    BLANK OUT COMMENT FIELD IN REPORT
+     C                     MOVE *BLANKS   RCOM
+     C*
+     C*    OUTPUT RANGE LINE
+     C                     WRITEFMT4015
+     C*
+     C*    IF TRANS NO IS LESS THAN RANGE UPPER LIMIT THEN A 'TRANS
+     C*    NO GAP' LINE NEEDS TO BE OUTPUT
+     C           TNBR      IFLE LNOR
+     C           *IN53     ANDEQ'0'                                       HK0000
+     C*
+     C*    CHECK ROOM ON PAGE
+     C                     EXSR NEWPGE
+     C*
+     C*    MOVE GAP LIMIT VALUES INTO REPORT FIELDS
+     C                     Z-ADDOLD       RSRLL
+     C           TNBR      SUB  1         RSRUL
+     C*
+     C*    MOVE 'TRADE NO GAP' INTO REPORT FIELD
+     C                     Z-ADD3         X
+     C                     MOVE MES,X     RCOM
+     C*
+     C*    OUTPUT RANGE LINE
+     C                     WRITEFMT4015
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE SURRNG:
+     C*    OUTPUTS ANY SURPLUS RANGES AFTER ALL TRANSACTIONS HAVE BEEN
+     C*    PROCESSED.
+     C*
+     C*    CALLED FROM SUBROUTINES : SRTYP
+     C*    CALLS SUBROUTINES : NEWPGE
+     C*
+     C           SURRNG    BEGSR                           ** SR SURRNG
+     C*
+     C*    SET INDICATORS FOR REPORT
+     C                     SETON                     60
+     C                     SETOF                     62
+     C*
+     C*    DO LOOP UNTIL END OF TRNORD
+     C           *IN52     DOWNE'1'
+     C*
+     C*    CHECK ROOM ON PAGE
+     C                     EXSR NEWPGE
+     C*
+     C*    MOVE NEXT AVALIABLE TRANS NO TO RPT FIELD IF RANGE NOT FULL
+     C           TNBF      IFLE LNOR
+     C                     MOVE *BLANKS   RTNC
+     C*
+     C**   IF - BROUGHT FORWARD TRANS. NO = 0
+     C*
+     C           TNBF      IFEQ *ZEROS
+     C                     MOVE FNOR      RNAN
+     C*
+     C**   ELSE - TRADE NO GAP STARTS FROM BROUGHT FORWARD NUMBER
+     C*
+     C                     ELSE
+     C                     MOVE TNBF      RNAN
+     C*
+     C                     END
+     C                     ELSE
+     C                     MOVE '******'  RNAN
+     C                     MOVEL'RANGE'   RTNC
+     C                     MOVE ' FULL'   RTNC
+     C                     END
+     C*
+     C*    BLANK OUT REPORT COMMENT FIELD
+     C                     MOVE *BLANKS   RCOM
+     C*
+     C*    OUTPUT RANGE LINE
+     C                     WRITEFMT4014A
+     C                     WRITEFMT4014C
+     C                     WRITEFMT4016
+     C*
+     C                     READ TRNORDF                  52
+     C           *IN52     IFEQ '0'                                       S01117
+     C                     ADD  1         CNOR                            S01117
+     C                     END                                            S01117
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE END:
+     C*    OUTPUTS 'END OF REPORT' MESSAGE & ENDS PROGRAM
+     C*
+     C*    CALLED FROM SUBROUTINES :
+     C*    CALLS SUBROUTINES : DBERR
+     C*
+     C           END       BEGSR                           ** SR END *
+     C**                                                                  S01117
+     C**   ENSURE REPORT SPOOL FILES RECORDED BY RCF                      084565
+     C                     EXSR RCFP1                                     084565
+     C                     EXSR RCFAU                                     084565
+     C*                                                                   084565
+     C** OUTPUT AUDIT REPORT                                              S01117
+     C************         EXSR RCFAU                               S01117084565
+     C                     WRITEFMTAU00                                   S01117
+     C                     WRITEFMTAU01                                   S01117
+     C           *IN42     IFEQ '1'                                       S01117
+     C                     WRITEFMTAU02                                   S01117
+     C                     END                                            S01117
+     C           *IN43     IFEQ '1'                                       S01117
+     C                     WRITEFMTAU03                                   S01117
+     C                     END                                            S01117
+     C*
+     C*    'END OF REPORT' MESSAGE
+     C                     WRITEFMTP101
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE DBERR:
+     C*    INFORMS DATA AREA OF DATA BASE ERROR, OUTPUTS MESSAGES
+     C*    ONTO REPORT, SETS ON INDICATORS & LEAVES PROGRAM.
+     C*
+     C*    CALLED FROM SUBROUTINES : START
+     C*    CALLS SUBROUTINES :
+     C*
+     C           DBERR     BEGSR
+     C*
+     C*    MOVE PROGRAM NAME TO DATA AREA.
+     C*
+     C*    OUTPUT DATA BASE ERROR MESSAGE TO PRINTER FILE.
+     C                     WRITEFMT9001
+     C*
+     C*    OUTPUT 'END OF REPORT' MESSAGE TO PRINTER FILE.
+     C                     WRITEFMTP101
+     C*                                                                   S01117
+     C                     EXSR RCFAU                                     S01117
+     C                     WRITEFMTAU00                                   S01117
+     C                     WRITEFMTAU01                                   S01117
+     C                     WRITEFMTAU04                                   S01117
+     C*
+     C*    SET ON SWITCHES & LR INDICATOR.
+     C                     SETON                     U7U8LR
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*
+     C*    LEAVE PROGRAM.
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C** RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          S01117
+     C** CALLS FROM: SR/NEWPGE                                            S01117
+     C** CALLS     : NOTHING                                              S01117
+     C**                                                                  S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFP1     BEGSR                            ** RCFP1 **   S01117
+     C*                                                                   S01117
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C** RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          S01117
+     C** CALLS FROM: SR/END                                               S01117
+     C** CALLS: NOTHING                                                   S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFAU     BEGSR                            ** RCFAU **   S01117
+     C*                                                                   S01117
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    SENTY   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+**  CPY@
+(c) Finastra International Limited 2001
+**   MES - REPORT COMMENTS
+OUT OF RANGE
+OLD TRADE NO
+TRADE NO GAP

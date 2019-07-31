@@ -1,0 +1,988 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FD IR rates exceeding rate tolerance report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - FD Module                                            *
+      *                                                               *
+      *  FD0585 - Interest Rates Exceeding Rate Tolerance Report      *
+      *                                                               *
+      *  Function:  This program allows the On-request report during  *
+      *  (phase(s)) Input Cycle. This will print details of all       *
+      *             interest rates exceeding tolerance today or just  *
+      *             those interest rates exceeding tolerance today    *
+      *             since the last time the report was run.           *
+      *                                                               *
+      *  Called By: FDC0585 - Interest Rates Exceeding Rate Tolerance *
+      *             Report                                            *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR851109           Date 11Mar15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGP001             Date 11Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 196570             Date 13Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 04Oct01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006  *CREATE    Date 13Jul00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR851109 - Cannot enter -ve rates. Applied for MD033488.     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGP001 - Global Processing. Clash of field names.            *
+      *  196570 - Patch for MDF                                       *
+      *  CPK014 - Release 4 packaging.  Rename of field which is too  *
+      *           long for OPM program.                               *
+      *  CSD006 - Market Data Feeds                                   *
+      *                                                               *
+      *****************************************************************
+     FSDMDFHL8UF  E           K        DISK         KINFSR *PSSR
+      ** MDF Rate/Price History File
+      *
+     FFD0585AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      ** Interest Rates Exceeding Rate Tolerance Report - Audit
+      *
+     FFD0585P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+      ** Interest Rates Exceeding Rate Tolerance Report
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   80  - End of File                                           *
+      *   83  - Error on Update                                       *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Detail Processing                                   *
+      *  SRSAVR - Subroutine to save rate history detail for each     *
+      *           currency                                            *
+      *  SRREPT - Process Report Lines                                *
+      *  SRFMTR - Subroutine to format report fields                  *
+      *                                                               *
+      *  SRP1RC - Format and Write a Detail Record to the Report      *
+      *  SRREND - Write End of Report                                 *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  AOBANKR0  - Access Object for Bank Details                   *
+      *  ZSFILE    - Sets up spool file                               *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    @OB        21 11 7
+     E                    @NB        21 11 7
+     E                    @OL        21 11 7
+     E                    @NL        21 11 7
+      *
+      ** Array for old/new borrow and lending rates
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      **  File Information Data Structure for FD0585P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for FD0585AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IWTMEST      DS
+      ** Data structure for timestamp (printed)
+     I                                        1   2 WCENT
+     I                                        3   4 WYEAR
+     I                                        5   5 WSLSH1
+     I                                        6   7 WMONTH
+     I                                        8   8 WSLSH2
+     I                                        9  10 WDAY
+     I                                       12  13 WHOUR
+     I                                       14  14 WCOL1
+     I                                       15  16 WMIN
+     I                                       17  17 WCOL2
+     I                                       18  19 WSECS
+      *
+     IWTMEDS      DS
+      ** Data structure for timestamp
+     I                                        1   2 WCNT
+     I                                        3   4 WYR
+     I                                        5   6 WMNTH
+     I                                        7   8 WDY
+     I                                        9  10 WHR
+     I                                       11  12 WMN
+     I                                       13  14 WSC
+      *
+     IBEFRDS    E DSFDINTRPP
+      ** Before image details of the interest rates
+      *
+     I              HWRCID                          BFRCID
+     I              HWDLTF                          BFDLTF
+     I              HWDLUP                          BFDLUP
+     I              HWMLUP                          BFMLUP
+     I              HWYLUP                          BFYLUP
+     I              HWTLUP                          BFTLUP
+     I              HWCHTP                          BFCHTP
+     I              HWLCD                           BFLCD
+     I              HWLUSI                          BFLUSI
+     I              HWPRD                           BFPRD
+     I              HWBRRT                          BFBRRT
+     I              HWLDRT                          BFLDRT
+     I              HWCHGD                          BFCHGD
+     I              HWTPRD                          BFTPRD
+     I              HWPRDX                          BFPRDX
+     I              HWCCY                           BFCCY
+     I              HWPRDD                          BFPRDD
+     I              HWPRDN                          BFPRDN
+     I              HWREPA                          BFREPA
+     I              HWBOTS                          BFBOTS
+     I              HWBOFR                          BFBOFR
+     I              HWBOAF                          BFBOAF
+     I              HWBORP                          BFBORP
+     I              HWLETS                          BFLETS
+     I              HWLEFR                          BFLEFR
+     I              HWLEAF                          BFLEAF
+     I              HWLERP                          BFLERP
+     I              HWDTFR                          BFDTFR
+     I              HWTLEX                          BFTLEX
+     I              HWTMESTMP                       BFTMST                                    CPK014
+     I              HWZONE                          BFZONE                                    CGP001
+      *
+     IAFTRDS    E DSFDINTRPP
+      ** After image details of the interest rates
+      *
+     I              HWRCID                          AFRCID
+     I              HWDLTF                          AFDLTF
+     I              HWDLUP                          AFDLUP
+     I              HWMLUP                          AFMLUP
+     I              HWYLUP                          AFYLUP
+     I              HWTLUP                          AFTLUP
+     I              HWCHTP                          AFCHTP
+     I              HWLCD                           AFLCD
+     I              HWLUSI                          AFLUSI
+     I              HWPRD                           AFPRD
+     I              HWBRRT                          AFBRRT
+     I              HWLDRT                          AFLDRT
+     I              HWCHGD                          AFCHGD
+     I              HWTPRD                          AFTPRD
+     I              HWPRDX                          AFPRDX
+     I              HWCCY                           AFCCY
+     I              HWPRDD                          AFPRDD
+     I              HWPRDN                          AFPRDN
+     I              HWREPA                          AFREPA
+     I              HWBOTS                          AFBOTS
+     I              HWBOFR                          AFBOFR
+     I              HWBOAF                          AFBOAF
+     I              HWBORP                          AFBORP
+     I              HWLETS                          AFLETS
+     I              HWLEFR                          AFLEFR
+     I              HWLEAF                          AFLEAF
+     I              HWLERP                          AFLERP
+     I              HWDTFR                          AFDTFR
+     I              HWTLEX                          AFTLEX
+     I              HWTMESTMP                       AFTMST                                    CPK014
+     I              HWBOTM                          AFBOTM                                    CPK014
+     I              HWLETM                          AFLETM                                    CPK014
+     I              HWZONE                          AFZONE                                    CGP001
+      *
+     IDSFDY     E DSDSFDY
+      ** Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      **   External data structures for Bank Details
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *
+      ** Output Audit Report and End Program.
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+      *
+      ** Setup LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Initialise LDA field.
+      *
+     C                     MOVEL'FD0585'  DBPGM
+      *
+      *** Call Access Program for Bank Details - Title, Run Date and
+      *** Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     MOVELWOPTN     DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Key lists
+      *
+     C           KYMDF     KLIST
+     C                     KFLD           BJRDNB
+      *
+      ** Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  SRREPT - Process Report Lines                                *
+      *  SRSAVR - Save rate history to array                          *
+      *  SRREND - Write End of Report                                 *
+      *  RCFP1  - Subroutine to register P1 printer file via RCF.     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR                           *** SRPROC ***
+      *
+      ** Read first record from File.
+      *
+     C                     READ SDMDFHL8                 80
+      *
+      ** If End of Records, (*IN80), Perform: Audit Reporting (No
+      ** Records).
+      *
+     C           *IN80     IFEQ *ON
+     C                     EXSR SRAUDT
+     C                     ELSE
+     C                     EXSR RCFP1
+     C                     ENDIF
+      *
+      ** Do until end of file
+      *
+     C           *IN80     DOUEQ*ON
+     C           RHPRCD    IFEQ BJRDNB                                                        196570
+      *
+      ** Count records read.
+      *
+     C                     ADD  1         RCOUNT  50
+      *
+      ** Save rate history details to array
+      *
+     C                     EXSR SRSAVR
+      *
+      ** Process Report Lines.
+      *
+     C                     EXSR SRREPT
+     C                     ENDIF                                                              196570
+      *
+      ** Read next record.
+      *
+     C                     READ SDMDFHL8                 80
+     C                     ENDDO
+      *
+      ** Write final records and Totals to Report.
+      *
+     C                     EXSR SRREND
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRSAVR
+      *****************************************************************
+      *                                                               *
+      *  SRSAVR - Subroutine to save rate history detail for each     *
+      *           currency.                                           *
+      *                                                               *
+      *  Called By: SRPROC subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSAVR    BEGSR                           *** SRSAVR ***
+      *
+      ** Save rate history details to array before writing into the
+      ** report
+      *
+     C                     Z-ADD*ZERO     C       20
+      *
+     C           *IN80     IFEQ *OFF
+     C                     MOVELRHDITM    WPDITM 20
+     C                     ENDIF
+      *
+      ** Do while processing date is equal to todays rundate
+      *
+     C           *IN80     DOWEQ*OFF
+     C***********RHPRCD    ANDEQBJRDNB                                                       196570
+      *
+      ** If the previously read data feed item not equal to the
+      ** current data feed item, exit to the loop
+      *
+     C           RHDITM    IFNE WPDITM
+     C           RHPRCD    ORNE BJRDNB                                                       196570
+     C           C         ORGE 21
+     C                     READPSDMDFHL8                 81
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ADD  1         C
+     C                     MOVELRHBIMG    BEFRDS
+     C                     MOVELRHAIMG    AFTRDS
+     C                     Z-ADDBFBRRT    @OB,C
+     C                     Z-ADDBFLDRT    @OL,C
+     C                     Z-ADDAFBRRT    @NB,C
+     C                     Z-ADDAFLDRT    @NL,C
+     C                     READ SDMDFHL8                 80
+     C                     ENDDO
+      *
+      ** DB Error when the period is incomplete for the data
+      ** feed item
+      *
+     C***********C         IFLE 21                                                            196570
+     C***********          MOVEL'SDMDFHL8'DBFILE           ***************                    196570
+     C***********          Z-ADD2         DBASE            * DB ERROR 02 *                    196570
+     C***********          MOVELWPDITM    DBKEY            ***************                    196570
+     C***********          EXSR *PSSR                                                         196570
+     C***********          ENDIF                                                              196570
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRREPT
+      *****************************************************************
+      *                                                               *
+      *  SRREPT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls:                                                       *
+      *  SRFMTR - Format fields for output                            *
+      *  SRP1RC - Write Detail Record to the Report                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREPT    BEGSR                           *** SRREPT ***
+      *
+      ** Format report fields
+      *
+     C                     EXSR SRFMTR
+      *
+      ** Write out the record.
+      *
+     C                     EXSR SRP1RC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRFMTR
+      *****************************************************************
+      *                                                               *
+      *  SRFMTR - Subroutine to format report fields.                 *
+      *                                                               *
+      *  Called By: SRFMTR subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFMTR    BEGSR                           *** SRFMTR ***
+      *
+     C                     MOVELRHDITM    PCCY
+     C                     MOVELRHTREF    PRATID
+     C                     MOVELRHDFRI    PDFRID
+      *
+      ** Timestamp
+      *
+     C                     MOVEL'/'       WSLSH1
+     C                     MOVEL'/'       WSLSH2
+     C                     MOVEL':'       WCOL1
+     C                     MOVEL':'       WCOL2
+     C                     MOVELRHDFTS    WTMEDS
+     C                     MOVELWCNT      WCENT
+     C                     MOVELWYR       WYEAR
+     C                     MOVELWMNTH     WMONTH
+     C                     MOVELWDY       WDAY
+     C                     MOVELWHR       WHOUR
+     C                     MOVELWMN       WMIN
+     C                     MOVELWSC       WSECS
+     C                     MOVELWTMEST    PTMSTP
+     C                     Z-ADD0         @X      20                                        AR851109
+     C           @X        DOWLT21                                                          AR851109
+     C                     ADD  1         @X                                                AR851109
+     C                     EXSR FMTDET                                                      AR851109
+     C                     EXSR MOVDET                                                      AR851109
+     C                     ENDDO                                                            AR851109
+      *****************************************************************                     AR851109
+      ***Old*borrow*rate*details***************************************                     AR851109
+      *****************************************************************                     AR851109
+     C**********           Z-ADD@OB,1     POBR01                                            AR851109
+     C**********           Z-ADD@OB,2     POBR02                                            AR851109
+     C**********           Z-ADD@OB,3     POBR03                                            AR851109
+     C**********           Z-ADD@OB,4     POBR04                                            AR851109
+     C**********           Z-ADD@OB,5     POBR05                                            AR851109
+     C**********           Z-ADD@OB,6     POBR06                                            AR851109
+     C**********           Z-ADD@OB,7     POBR07                                            AR851109
+     C**********           Z-ADD@OB,8     POBR08                                            AR851109
+     C**********           Z-ADD@OB,9     POBR09                                            AR851109
+     C**********           Z-ADD@OB,10    POBR10                                            AR851109
+     C**********           Z-ADD@OB,11    POBR11                                            AR851109
+     C**********           Z-ADD@OB,12    POBR12                                            AR851109
+     C**********           Z-ADD@OB,13    POBR13                                            AR851109
+     C**********           Z-ADD@OB,14    POBR14                                            AR851109
+     C**********           Z-ADD@OB,15    POBR15                                            AR851109
+     C**********           Z-ADD@OB,16    POBR16                                            AR851109
+     C**********           Z-ADD@OB,17    POBR17                                            AR851109
+     C**********           Z-ADD@OB,18    POBR18                                            AR851109
+     C**********           Z-ADD@OB,19    POBR19                                            AR851109
+     C**********           Z-ADD@OB,20    POBR20                                            AR851109
+     C**********           Z-ADD@OB,21    POBR21                                            AR851109
+      *****************************************************************                     AR851109
+      ***Old*lending*rate*details**************************************                     AR851109
+      *****************************************************************                     AR851109
+     C**********           Z-ADD@OL,1     POLE01                                            AR851109
+     C**********           Z-ADD@OL,2     POLE02                                            AR851109
+     C**********           Z-ADD@OL,3     POLE03                                            AR851109
+     C**********           Z-ADD@OL,4     POLE04                                            AR851109
+     C**********           Z-ADD@OL,5     POLE05                                            AR851109
+     C**********           Z-ADD@OL,6     POLE06                                            AR851109
+     C**********           Z-ADD@OL,7     POLE07                                            AR851109
+     C**********           Z-ADD@OL,8     POLE08                                            AR851109
+     C**********           Z-ADD@OL,9     POLE09                                            AR851109
+     C**********           Z-ADD@OL,10    POLE10                                            AR851109
+     C**********           Z-ADD@OL,11    POLE11                                            AR851109
+     C**********           Z-ADD@OL,12    POLE12                                            AR851109
+     C**********           Z-ADD@OL,13    POLE13                                            AR851109
+     C**********           Z-ADD@OL,14    POLE14                                            AR851109
+     C**********           Z-ADD@OL,15    POLE15                                            AR851109
+     C**********           Z-ADD@OL,16    POLE16                                            AR851109
+     C**********           Z-ADD@OL,17    POLE17                                            AR851109
+     C**********           Z-ADD@OL,18    POLE18                                            AR851109
+     C**********           Z-ADD@OL,19    POLE19                                            AR851109
+     C**********           Z-ADD@OL,20    POLE20                                            AR851109
+     C**********           Z-ADD@OL,21    POLE21                                            AR851109
+      *****************************************************************                     AR851109
+      ***New*borrow*rate*details***************************************                     AR851109
+      *****************************************************************                     AR851109
+     C**********           Z-ADD@NB,1     PNBR01                                            AR851109
+     C**********           Z-ADD@NB,2     PNBR02                                            AR851109
+     C**********           Z-ADD@NB,3     PNBR03                                            AR851109
+     C**********           Z-ADD@NB,4     PNBR04                                            AR851109
+     C**********           Z-ADD@NB,5     PNBR05                                            AR851109
+     C**********           Z-ADD@NB,6     PNBR06                                            AR851109
+     C**********           Z-ADD@NB,7     PNBR07                                            AR851109
+     C**********           Z-ADD@NB,8     PNBR08                                            AR851109
+     C**********           Z-ADD@NB,9     PNBR09                                            AR851109
+     C**********           Z-ADD@NB,10    PNBR10                                            AR851109
+     C**********           Z-ADD@NB,11    PNBR11                                            AR851109
+     C**********           Z-ADD@NB,12    PNBR12                                            AR851109
+     C**********           Z-ADD@NB,13    PNBR13                                            AR851109
+     C**********           Z-ADD@NB,14    PNBR14                                            AR851109
+     C**********           Z-ADD@NB,15    PNBR15                                            AR851109
+     C**********           Z-ADD@NB,16    PNBR16                                            AR851109
+     C**********           Z-ADD@NB,17    PNBR17                                            AR851109
+     C**********           Z-ADD@NB,18    PNBR18                                            AR851109
+     C**********           Z-ADD@NB,19    PNBR19                                            AR851109
+     C**********           Z-ADD@NB,20    PNBR20                                            AR851109
+     C**********           Z-ADD@NB,21    PNBR21                                            AR851109
+      *****************************************************************                     AR851109
+      ***Old*lending*rate*details**************************************                     AR851109
+      *****************************************************************                     AR851109
+     C**********           Z-ADD@NL,1     PNLE01                                            AR851109
+     C**********           Z-ADD@NL,2     PNLE02                                            AR851109
+     C**********           Z-ADD@NL,3     PNLE03                                            AR851109
+     C**********           Z-ADD@NL,4     PNLE04                                            AR851109
+     C**********           Z-ADD@NL,5     PNLE05                                            AR851109
+     C**********           Z-ADD@NL,6     PNLE06                                            AR851109
+     C**********           Z-ADD@NL,7     PNLE07                                            AR851109
+     C**********           Z-ADD@NL,8     PNLE08                                            AR851109
+     C**********           Z-ADD@NL,9     PNLE09                                            AR851109
+     C**********           Z-ADD@NL,10    PNLE10                                            AR851109
+     C**********           Z-ADD@NL,11    PNLE11                                            AR851109
+     C**********           Z-ADD@NL,12    PNLE12                                            AR851109
+     C**********           Z-ADD@NL,13    PNLE13                                            AR851109
+     C**********           Z-ADD@NL,14    PNLE14                                            AR851109
+     C**********           Z-ADD@NL,15    PNLE15                                            AR851109
+     C**********           Z-ADD@NL,16    PNLE16                                            AR851109
+     C**********           Z-ADD@NL,17    PNLE17                                            AR851109
+     C**********           Z-ADD@NL,18    PNLE18                                            AR851109
+     C**********           Z-ADD@NL,19    PNLE19                                            AR851109
+     C**********           Z-ADD@NL,20    PNLE20                                            AR851109
+     C**********           Z-ADD@NL,21    PNLE21                                            AR851109
+      *
+     C                     ENDSR
+      *
+      *****************************************************************                     AR851109
+      *                                                               *                     AR851109
+      * FMTDET - Format Interest Rate Details                         *                     AR851109
+      *                                                               *                     AR851109
+      *****************************************************************                     AR851109
+     C           FMTDET    BEGSR                                                            AR851109
+      ** format old/new Borrow/Lending Rates                                                AR851109
+     C                     MOVE @OB,@X    WANUM                                             AR851109
+     C                     CALL 'ZA0921'                                                    AR851109
+     C                     PARM *BLANK    WRETC  10                                         AR851109
+     C                     PARM           WANUM  130                                        AR851109
+     C                     PARM 7         WNODEC  10                                        AR851109
+     C                     PARM '.'       WSEPA   1                                         AR851109
+     C                     PARM *BLANK    OBORRO 14                                         AR851109
+     C                     MOVE @OL,@X    WANUM                                             AR851109
+     C                     CALL 'ZA0921'                                                    AR851109
+     C                     PARM *BLANK    WRETC                                             AR851109
+     C                     PARM           WANUM                                             AR851109
+     C                     PARM 7         WNODEC                                            AR851109
+     C                     PARM '.'       WSEPA                                             AR851109
+     C                     PARM *BLANK    OLEND  14                                         AR851109
+     C                     MOVE @NB,@X    WANUM                                             AR851109
+     C                     CALL 'ZA0921'                                                    AR851109
+     C                     PARM *BLANK    WRETC                                             AR851109
+     C                     PARM           WANUM                                             AR851109
+     C                     PARM 7         WNODEC                                            AR851109
+     C                     PARM '.'       WSEPA                                             AR851109
+     C                     PARM *BLANK    NBORRO 14                                         AR851109
+     C                     MOVE @NL,@X    WANUM                                             AR851109
+     C                     CALL 'ZA0921'                                                    AR851109
+     C                     PARM *BLANK    WRETC                                             AR851109
+     C                     PARM           WANUM                                             AR851109
+     C                     PARM 7         WNODEC                                            AR851109
+     C                     PARM '.'       WSEPA                                             AR851109
+     C                     PARM *BLANK    NLEND  14                                         AR851109
+     C                     ENDSR                                                            AR851109
+      *****************************************************************                     AR851109
+      /EJECT                                                                                AR851109
+      *****************************************************************                     AR851109
+      *                                                               *                     AR851109
+      * SrMOVDET  - Move Data from File to Screen DS                  *                     AR851109
+      *                                                               *                     AR851109
+      *****************************************************************                     AR851109
+     C           MOVDET    BEGSR                                                            AR851109
+     C                     SELEC                                                            AR851109
+     C           @X        WHEQ 1                                                           AR851109
+     C                     MOVE OBORRO    POBR01                                            AR851109
+     C                     MOVE OLEND     POLE01                                            AR851109
+     C                     MOVE NBORRO    PNBR01                                            AR851109
+     C                     MOVE NLEND     PNLE01                                            AR851109
+     C           @X        WHEQ 2                                                           AR851109
+     C                     MOVE OBORRO    POBR02                                            AR851109
+     C                     MOVE OLEND     POLE02                                            AR851109
+     C                     MOVE NBORRO    PNBR02                                            AR851109
+     C                     MOVE NLEND     PNLE02                                            AR851109
+     C           @X        WHEQ 3                                                           AR851109
+     C                     MOVE OBORRO    POBR03                                            AR851109
+     C                     MOVE OLEND     POLE03                                            AR851109
+     C                     MOVE NBORRO    PNBR03                                            AR851109
+     C                     MOVE NLEND     PNLE03                                            AR851109
+     C           @X        WHEQ 4                                                           AR851109
+     C                     MOVE OBORRO    POBR04                                            AR851109
+     C                     MOVE OLEND     POLE04                                            AR851109
+     C                     MOVE NBORRO    PNBR04                                            AR851109
+     C                     MOVE NLEND     PNLE04                                            AR851109
+     C           @X        WHEQ 5                                                           AR851109
+     C                     MOVE OBORRO    POBR05                                            AR851109
+     C                     MOVE OLEND     POLE05                                            AR851109
+     C                     MOVE NBORRO    PNBR05                                            AR851109
+     C                     MOVE NLEND     PNLE05                                            AR851109
+     C           @X        WHEQ 6                                                           AR851109
+     C                     MOVE OBORRO    POBR06                                            AR851109
+     C                     MOVE OLEND     POLE06                                            AR851109
+     C                     MOVE NBORRO    PNBR06                                            AR851109
+     C                     MOVE NLEND     PNLE06                                            AR851109
+     C           @X        WHEQ 7                                                           AR851109
+     C                     MOVE OBORRO    POBR07                                            AR851109
+     C                     MOVE OLEND     POLE07                                            AR851109
+     C                     MOVE NBORRO    PNBR07                                            AR851109
+     C                     MOVE NLEND     PNLE07                                            AR851109
+     C           @X        WHEQ 8                                                           AR851109
+     C                     MOVE OBORRO    POBR08                                            AR851109
+     C                     MOVE OLEND     POLE08                                            AR851109
+     C                     MOVE NBORRO    PNBR08                                            AR851109
+     C                     MOVE NLEND     PNLE08                                            AR851109
+     C           @X        WHEQ 9                                                           AR851109
+     C                     MOVE OBORRO    POBR09                                            AR851109
+     C                     MOVE OLEND     POLE09                                            AR851109
+     C                     MOVE NBORRO    PNBR09                                            AR851109
+     C                     MOVE NLEND     PNLE09                                            AR851109
+     C           @X        WHEQ 10                                                          AR851109
+     C                     MOVE OBORRO    POBR10                                            AR851109
+     C                     MOVE OLEND     POLE10                                            AR851109
+     C                     MOVE NBORRO    PNBR10                                            AR851109
+     C                     MOVE NLEND     PNLE10                                            AR851109
+     C           @X        WHEQ 11                                                          AR851109
+     C                     MOVE OBORRO    POBR11                                            AR851109
+     C                     MOVE OLEND     POLE11                                            AR851109
+     C                     MOVE NBORRO    PNBR11                                            AR851109
+     C                     MOVE NLEND     PNLE11                                            AR851109
+     C           @X        WHEQ 12                                                          AR851109
+     C                     MOVE OBORRO    POBR12                                            AR851109
+     C                     MOVE OLEND     POLE12                                            AR851109
+     C                     MOVE NBORRO    PNBR12                                            AR851109
+     C                     MOVE NLEND     PNLE12                                            AR851109
+     C           @X        WHEQ 13                                                          AR851109
+     C                     MOVE OBORRO    POBR13                                            AR851109
+     C                     MOVE OLEND     POLE13                                            AR851109
+     C                     MOVE NBORRO    PNBR13                                            AR851109
+     C                     MOVE NLEND     PNLE13                                            AR851109
+     C           @X        WHEQ 14                                                          AR851109
+     C                     MOVE OBORRO    POBR14                                            AR851109
+     C                     MOVE OLEND     POLE14                                            AR851109
+     C                     MOVE NBORRO    PNBR14                                            AR851109
+     C                     MOVE NLEND     PNLE14                                            AR851109
+     C           @X        WHEQ 15                                                          AR851109
+     C                     MOVE OBORRO    POBR15                                            AR851109
+     C                     MOVE OLEND     POLE15                                            AR851109
+     C                     MOVE NBORRO    PNBR15                                            AR851109
+     C                     MOVE NLEND     PNLE15                                            AR851109
+     C           @X        WHEQ 16                                                          AR851109
+     C                     MOVE OBORRO    POBR16                                            AR851109
+     C                     MOVE OLEND     POLE16                                            AR851109
+     C                     MOVE NBORRO    PNBR16                                            AR851109
+     C                     MOVE NLEND     PNLE16                                            AR851109
+     C           @X        WHEQ 17                                                          AR851109
+     C                     MOVE OBORRO    POBR17                                            AR851109
+     C                     MOVE OLEND     POLE17                                            AR851109
+     C                     MOVE NBORRO    PNBR17                                            AR851109
+     C                     MOVE NLEND     PNLE17                                            AR851109
+     C           @X        WHEQ 18                                                          AR851109
+     C                     MOVE OBORRO    POBR18                                            AR851109
+     C                     MOVE OLEND     POLE18                                            AR851109
+     C                     MOVE NBORRO    PNBR18                                            AR851109
+     C                     MOVE NLEND     PNLE18                                            AR851109
+     C           @X        WHEQ 19                                                          AR851109
+     C                     MOVE OBORRO    POBR19                                            AR851109
+     C                     MOVE OLEND     POLE19                                            AR851109
+     C                     MOVE NBORRO    PNBR19                                            AR851109
+     C                     MOVE NLEND     PNLE19                                            AR851109
+     C           @X        WHEQ 20                                                          AR851109
+     C                     MOVE OBORRO    POBR20                                            AR851109
+     C                     MOVE OLEND     POLE20                                            AR851109
+     C                     MOVE NBORRO    PNBR20                                            AR851109
+     C                     MOVE NLEND     PNLE20                                            AR851109
+     C           @X        WHEQ 21                                                          AR851109
+     C                     MOVE OBORRO    POBR21                                            AR851109
+     C                     MOVE OLEND     POLE21                                            AR851109
+     C                     MOVE NBORRO    PNBR21                                            AR851109
+     C                     MOVE NLEND     PNLE21                                            AR851109
+     C                     ENDSL                                                            AR851109
+     C                     ENDSR                                                            AR851109
+      *****************************************************************                     AR851109
+      *****************************************************************
+      /TITLE SR/SRP1RC
+      *****************************************************************
+      *                                                               *
+      *  SRP1RC - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *  Called By: SRREPT subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP1RC    BEGSR                           *** SRP1RC ***
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD5         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     WRITEHEADP2
+     C                     ELSE
+     C                     WRITEHEADP2
+     C                     ENDIF
+      *
+      ** Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRREND
+      *****************************************************************
+      *                                                               *
+      *  SRREND - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: SRPROC subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREND    BEGSR                           *** SRREND ***
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Write out Total Format.
+      *
+     C                     WRITETRAILP1
+     C                     CLOSEFD0585P1
+      *
+      ** Update reported on audit report
+      *
+     C           KYMDF     SETLLSDMDFHL8
+     C                     READ SDMDFHL8                 80
+      *
+      ** Do while processing date is equal to todays rundate
+      *
+     C           *IN80     DOWEQ*OFF
+     C           RHPRCD    ANDEQBJRDNB
+     C                     MOVE 'Y'       RHAUDT
+     C                     UPDATSDMDFHD0               83
+      *
+      ** Error on update
+      *
+     C           *IN83     IFEQ *ON
+     C                     MOVE 'SDMDFHPD'DBFILE           ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     MOVELRHDITM    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     READ SDMDFHL8                 80
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRINIT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, SRPROC, *PSSR                    *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR                           *** SRAUDT ***
+      *
+      ** Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** End Program and Return.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     OPEN FD0585P1
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM *BLANK    SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

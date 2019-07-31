@@ -1,0 +1,218 @@
+/*******************************************************************/
+/*S*D****CLPBASEBND*************************************************/                  /*AR1096969*/
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Close of Business Processing                      */
+/*                                                                 */
+/*       CBCFMGR001 - Midas CB File Manager - Retrieve file details*/
+/*                                                                 */
+/*       (C) Misys International Banking Systems Ltd. 2012         */
+/*                                                                 */
+/*       Last Amend No. AR1096969*REDUNDANTDate 21Mar13            */
+/*       Prev Amend No. AR1072101         Date 28Dec12             */
+/*                      AR544186 *CREATE  Date 01Aug12             */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       AR1096969 - CBCFMGR_nn jobs should no longer run in our   */
+/*                   system                                        */
+/*                 - CCB022B - COB Restructure - COB File Manager  */
+/*                   (Missed out for drop2A delivery)              */
+/*       AR1072101 - Event Code error encountered when creating fee*/
+/*       AR544186 - Improve performance of LEC0604/LEC07003 in     */
+/*                  COB (Child:AR544188)                           */
+/*                                                                 */
+/*******************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MIBSCPY) TYPE(*CHAR) LEN(64) VALUE('(c+
+                           ) Copyright Misys International Banking +
+                           Systems 2012')
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SVWHRELI) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SVWHREFI) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBS) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&JOBSA) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)                                /*AR1072101*/
+ 
+             DCLF       FILE(QADSPDBR)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                           CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Send message to MOPERQ */
+ 
+             SNDPGMMSG  MSG('CBCFMGR001 - Midas CB File Manager - +
+                           Retrieve File details') TOMSGQ(MOPERQ)
+ 
+/** Retrieve system prefix and set program variables */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+ 
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DTALIB) VALUE(&PRE *TCAT 'DTALIB')
+             CHGVAR     VAR(&DVLIB) VALUE(&PRE *TCAT 'DVLIB')
+ 
+/** Delete data queue to ensure all background jobs shut down */
+ 
+             DLTDTAQ    DTAQ(&DPLIB/CBADLFDTAQ)
+             MONMSG     MSGID(CPF0000)
+ 
+/** If &MODE is not 'R'eset, skip to submit of jobs */
+ 
+             IF         COND(&MODE *NE 'R') THEN(GOTO CMDLBL(SKIP))
+ 
+/** Delete and clear temporary and work files */
+ 
+             DLTF       FILE(QTEMP/QAFDPHY)
+             MONMSG     MSGID(CPF0000)
+ 
+             DLTF       FILE(QTEMP/QAFDMBR)
+             MONMSG     MSGID(CPF0000)
+ 
+             CLRPFM     FILE(&DPLIB/CBPFATRPD)
+             CLRPFM     FILE(&DMLIB/CBLFMBRPD)
+             CLRPFM     FILE(&DMLIB/CBADLFMPD)
+ 
+/** Obtain attribute details of all physical files in DMLIB, */
+/** DPLIB and DTALIB */
+ 
+ DSPFD:      DSPFD      FILE(&DMLIB/*ALL) TYPE(*ATR) +
+                           OUTPUT(*OUTFILE) FILEATR(*PF) +
+                           OUTFILE(QTEMP/QAFDPHY) +
+                           OUTMBR(*FIRST *REPLACE)
+ 
+             DSPFD      FILE(&DPLIB/*ALL) TYPE(*ATR) +
+                           OUTPUT(*OUTFILE) FILEATR(*PF) +
+                           OUTFILE(QTEMP/QAFDPHY) OUTMBR(*FIRST *ADD)
+ 
+             DSPFD      FILE(&DTALIB/*ALL) TYPE(*ATR) +
+                           OUTPUT(*OUTFILE) FILEATR(*PF) +
+                           OUTFILE(QTEMP/QAFDPHY) OUTMBR(*FIRST *ADD)
+ 
+/** Copy temporary file in QTEMP to work file in xxDPLIB */
+ 
+             CPYF       FROMFILE(QTEMP/QAFDPHY) +
+                           TOFILE(&DPLIB/CBPFATRPD) +
+                           MBROPT(*REPLACE) +
+                           FMTOPT(*MAP *DROP)
+ 
+/** Obtain list of all logicals based over physical files in DMLIB,*/
+/** DPLIB and DTALIB */
+ 
+             DSPDBR     FILE(&DMLIB/*ALL) OUTPUT(*OUTFILE) +
+                           OUTFILE(QTEMP/QADSPDBR) +
+                           OUTMBR(*FIRST *REPLACE)
+ 
+             DSPDBR     FILE(&DPLIB/*ALL) OUTPUT(*OUTFILE) +
+                           OUTFILE(QTEMP/QADSPDBR) +
+                           OUTMBR(*FIRST *ADD)
+ 
+             DSPDBR     FILE(&DTALIB/*ALL) OUTPUT(*OUTFILE) +
+                           OUTFILE(QTEMP/QADSPDBR) +
+                           OUTMBR(*FIRST *ADD)
+ 
+/** Use OPNQRYF to sequence records and prevent duplicate DSPFD */
+/** of same LF */
+ 
+             OPNQRYF    FILE((QTEMP/QADSPDBR)) KEYFLD((WHRELI) +
+                           (WHREFI)) SEQONLY(*NO)
+             OVRDBF     FILE(QADSPDBR) TOFILE(QTEMP/QADSPDBR) +
+                           SHARE(*YES)
+ 
+ READ:       RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EOF))
+ 
+/** Skip if same logical as previous */
+ 
+             IF         COND((&WHRELI = &SVWHRELI) *AND (&WHREFI = +
+                           &SVWHREFI))  THEN(GOTO CMDLBL(READ))
+ 
+/** Skip if the logical is not in the xxDVLIB or there are no */
+/** dependent logicals */
+ 
+             IF         COND((&WHRELI *NE &DVLIB) +
+                           *OR (&WHRELI = ' ') *OR (&WHREFI = ' ')) +
+                           THEN(GOTO CMDLBL(READ))
+ 
+             CHGVAR     VAR(&SVWHRELI) VALUE(&WHRELI)
+             CHGVAR     VAR(&SVWHREFI) VALUE(&WHREFI)
+ 
+/** Obtain member details of all logicals based over physical files*/
+/** in DMLIB, DPLIB and DTALIB */
+ 
+             DSPFD      FILE(&WHRELI/&WHREFI) TYPE(*MBR) +
+                           OUTPUT(*OUTFILE) FILEATR(*LF) +
+                           OUTFILE(QTEMP/QAFDMBR) OUTMBR(*FIRST *ADD)
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(READ)
+ 
+ EOF:        DLTOVR     FILE(*ALL)
+ 
+/** Copy temporary file in QTEMP to work file in xxDMLIB */
+ 
+             CPYF       FROMFILE(QTEMP/QAFDMBR) +
+                           TOFILE(&DMLIB/CBLFMBRPD) +
+                           MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+ 
+             RCLRSC
+ 
+/** Call CBFMGR001 to determine ADDLFM parameters */
+ 
+             CALL       PGM(CBFMGR001)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                           CMDLBL(ABNOR))
+ 
+/** Create data queue */
+ 
+ SKIP:       CRTDTAQ    DTAQ(&DPLIB/CBADLFDTAQ) MAXLEN(350)
+             CHGVAR     VAR(&OWNER) VALUE(&PRE *TCAT 'OWNER')                          /*AR1072101*/
+             CHGOBJOWN  OBJ(&DPLIB/CBADLFDTAQ) OBJTYPE(*DTAQ) +
+                          NEWOWN(&OWNER)                                               /*AR1072101*/
+ 
+/** Submit jobs to add logical file members */
+ 
+ SUBMIT:     CHGVAR     VAR(&JOBSA) VALUE(&JOBS)
+             CHGVAR     VAR(&JOBNAME) VALUE('CBCFMGR_' *CAT &JOBSA)
+ 
+/**********  SBMJOB     JOB(&JOBNAME) JOBD(MEODD) JOBQ(BULKTJOBQ) +
+                           RTGDTA(*JOBD) +
+                           RQSDTA('CALL PGM(CBCFMGR003)') +
+                           INLLIBL(*JOBD) LOG(4 00) LOGCLPGM(*YES)  */                 /*AR1072101*/
+             SBMJOB     JOB(&JOBNAME) JOBD(MEODD) JOBQ(BULKTJOBQ) +
+                           OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +
+                           RQSDTA('CALL PGM(CBCFMGR003)') +
+                           INLLIBL(*JOBD) LOG(4 00) LOGCLPGM(*YES)                     /*AR1072101*/
+ 
+             CHGVAR     VAR(&JOBS) VALUE(&JOBS + 1)
+             IF         COND(&JOBS *EQ 10) THEN(GOTO CMDLBL(END))
+             GOTO       CMDLBL(SUBMIT)
+ 
+/** Error processing - Change the job switches and send message */
+/** to MOPERQ */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             CHGVAR     &MSG VALUE('Program CBCFMGR001 terminated +
+                           abnormally')
+             SNDMSG     TOMSGQ(MOPERQ) MSG(&MSG)
+             DMPCLPGM
+ 
+ END:        CLOF       OPNID(QADSPDBR)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&MIBSCPY) VALUE('(C) Copyright Misys +
+                           International Banking Systems 2012')
+ ENDPGM

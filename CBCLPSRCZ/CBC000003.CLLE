@@ -1,0 +1,356 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CB Non-Working Day CoB run controlling comp')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       CBC000003 - Midas CB non-working day COB run controlling    */
+/*                   comp                                            */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1096378          Date 20Mar13              */
+/*                      CCB021  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1096378 - NWDC issues encountered during link testing.    */
+/*       CCB021 - COB Restructure - Non Working Day COB              */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM
+ 
+             DCL        VAR(&S01420) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&BYPASS) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&PRINT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DAYNOA) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&DFMT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&INU7) TYPE(*LGL) LEN(1)
+             DCL        VAR(&INU8) TYPE(*LGL) LEN(1)
+             DCL        VAR(&CBSTAT) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&QUAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PRELIB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RSTTIM) TYPE(*CHAR) LEN(9)
+             DCL        VAR(&SRTTIM) TYPE(*CHAR) LEN(9)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&LOG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10) VALUE('  +
+                          DPLIB   ')
+ 
+             DCLF       FILE(CBRUNDF)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          Systems Ltd. 2012')
+ 
+/* Global Error trap */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNORMAL))
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRELIB)
+             CHGVAR     VAR(%SST(&DTAQLIB 1 2)) VALUE(&PRELIB)
+ 
+/* Verify if monitor is active */
+/* If monitor active - COB should be running */
+ 
+             ALCOBJ     OBJ((MONCHK *DTAARA *EXCL)) WAIT(5)
+             MONMSG     MSGID(CPF1002) EXEC(CHGVAR VAR(&BYPASS) +
+                          VALUE('Y'))
+             DLCOBJ     OBJ((MONCHK *DTAARA *EXCL))
+ 
+/* If Audit Report failed Bypass set up */
+/* processing and produce audit report  */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (110 5)) RTNVAR(&TYPE)
+ 
+             IF         COND(&TYPE *EQ 'PRINT') THEN(GOTO +
+                          CMDLBL(AUDREP))
+ 
+             IF         COND(&BYPASS *NE 'Y') THEN(DO)
+ 
+/* Call CBTIME to set up sys date/time for COB */
+ 
+             CALL       PGM(CBTIME) PARM(&DAYNOA &STIME &DFMT)
+             CHGDTAARA  DTAARA(CBSTAT (33 5)) VALUE(&DAYNOA)
+             CHGDTAARA  DTAARA(CBSTAT (38 6)) VALUE(&STIME)
+             ENDDO
+ 
+/* If not a restart */
+ 
+             IF         COND(&TYPE *EQ 'BEGIN') THEN(DO)
+ 
+             CLRPFM     FILE(CBAUDTPD)
+             CLRPFM     FILE(CBHALTPD)
+             CLRPFM     FILE(CBMESGPD)
+ 
+/* Clear halt time and date fields from Data Area CBSTAT */
+ 
+             CHGDTAARA  DTAARA(CBSTAT (5 9)) VALUE(' ')
+ 
+/* Clear data queues. */
+ 
+             CALL       PGM(QCLRDTAQ) PARM('CBDTQA' '*LIBL ')
+             CALL       PGM(QCLRDTAQ) PARM('CBDTQB' '*LIBL ')
+             CALL       PGM(QCLRDTAQ) PARM('CBDTQC' '*LIBL ')
+             CALL       PGM(QCLRDTAQ) PARM('CBDTQD' '*LIBL ')
+ 
+/* Send Messages */
+ 
+             RTVMSG     MSGID(SCM0101) MSGF(MIDASMSG) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)
+             RTVMSG     MSGID(SCM0102) MSGF(MIDASMSG) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)
+ 
+/* Clear user physical file */
+ 
+             CLRPFM     FILE(CBUSERPD)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Clear work file */
+ 
+             CLRPFM     FILE(CBDSCJPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             CLRPFM     FILE(CBTRACPD)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Delete and Create user spaces */
+ 
+             DLTUSRSPC  USRSPC(*LIBL/USRTRACE)
+             MONMSG     MSGID(CPF0000)
+             DLTUSRSPC  USRSPC(*LIBL/USERLOCK)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&QUAL) VALUE('USRTRACE  ' *CAT &DTAQLIB)
+             CALL       PGM(QUSCRTUS) PARM(&QUAL '          ' +
+                          X'00000300' ' ' '*ALL      ' 'Temporary +
+                          user space ')
+ 
+             CHGVAR     VAR(&QUAL) VALUE('USERLOCK  ' *CAT &DTAQLIB)
+             CALL       PGM(QUSCRTUS) PARM(&QUAL '          ' +
+                          X'00000030' ' ' '*ALL      ' 'Temporary +
+                          user space ')
+ 
+/* Initialise data area */
+ 
+             CHGDTAARA  DTAARA(CBLMSG (41 2)) VALUE('01')
+ 
+             CHGDTAARA  DTAARA(CBTRAN *ALL) VALUE(' ')
+             CHGDTAARA  DTAARA(CBTRAN (97 2)) VALUE('00')
+             CHGDTAARA  DTAARA(CBTRAN (105 4)) VALUE('0000')
+             CHGDTAARA  DTAARA(CBTRAN (1089 8)) VALUE('00000000')
+             CHGDTAARA  DTAARA(CBTRAN (1097 3)) VALUE('000')
+ 
+             CHGDTAARA  DTAARA(CBRECV (97 2)) VALUE('00')
+             CHGDTAARA  DTAARA(CBRECV (105 4)) VALUE('0000')
+             CHGDTAARA  DTAARA(CBRECV (1089 8)) VALUE('00000000')
+             CHGDTAARA  DTAARA(CBRECV (1022 3)) VALUE('000')
+ 
+/* Initialise components work file and */
+/* dependencies work file from master files */
+ 
+             CPYF       FROMFILE(CBCMPNPD) TOFILE(CBCOMSPD) +
+                          MBROPT(*REPLACE)
+ 
+             CPYF       FROMFILE(CBDPRLPD) TOFILE(CBDEPSPD) +
+                          MBROPT(*REPLACE)
+ 
+             CPYF       FROMFILE(CBMEXCPD) TOFILE(CBMUTXPD) +
+                          MBROPT(*REPLACE)
+ 
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&RUNA)
+             SNDF       DEV(*FILE) RCDFMT(CBRUNF2)
+ 
+ 
+/* Select components to be run today */
+ 
+             CALL       PGM(CB000001) PARM(&ERROR)
+ 
+/* Populate task split sub-task components */                                          /*AR1096378*/
+                                                                                       /*AR1096378*/
+             CALL       PGM(CB0101)                                                    /*AR1096378*/
+                                                                                       /*AR1096378*/
+             CHGVAR     VAR(&AUDTIM) VALUE('Y')
+             CHGVAR     VAR(&AUDMOD) VALUE('Y')
+             CHGVAR     VAR(&AUDHAL) VALUE(' ')
+ DISPLAY:
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&RUNA)
+             SNDRCVF    DEV(*FILE) RCDFMT(CBRUNF0) WAIT(*YES)
+             IF         COND(&AUDTIM *NE 'Y' *AND &AUDTIM *NE ' ') +
+                          THEN(DO)
+             CHGVAR     VAR(&IN50) VALUE('1')
+             GOTO       CMDLBL(DISPLAY)
+             ENDDO
+             IF         COND(&AUDMOD *NE 'Y' *AND &AUDMOD *NE ' ') +
+                          THEN(DO)
+             CHGVAR     VAR(&IN51) VALUE('1')
+             GOTO       CMDLBL(DISPLAY)
+             ENDDO
+             IF         COND(&AUDHAL *NE 'Y' *AND &AUDHAL *NE ' ') +
+                          THEN(DO)
+             CHGVAR     VAR(&IN52) VALUE('1')
+             GOTO       CMDLBL(DISPLAY)
+             ENDDO
+ 
+/* Set CBSTAT Data Area for type of audit report required */
+ 
+             IF         COND(&AUDTIM *EQ 'Y' *AND &AUDMOD *EQ 'Y') +
+                          THEN(CHGDTAARA DTAARA(CBSTAT (44 1)) +
+                          VALUE('B'))
+ 
+             IF         COND(&AUDTIM *EQ 'Y' *AND &AUDMOD *EQ ' ') +
+                          THEN(CHGDTAARA DTAARA(CBSTAT (44 1)) +
+                          VALUE('T'))
+ 
+             IF         COND(&AUDTIM *EQ ' ' *AND &AUDMOD *EQ 'Y') +
+                          THEN(CHGDTAARA DTAARA(CBSTAT (44 1)) +
+                          VALUE('M'))
+ 
+             IF         COND(&AUDTIM *EQ ' ' *AND &AUDMOD *EQ ' ') +
+                          THEN(CHGDTAARA DTAARA(CBSTAT (44 1)) +
+                          VALUE('N'))
+ 
+/* Call Program to display request halts menu */
+ 
+             IF         COND(&AUDHAL *EQ 'Y') THEN(CALL PGM(CBC0020) +
+                          PARM(&ERROR))
+ 
+/* If Error in halt program is screen time out then continue */
+/* with processing otherwise terminate through abnormal processing */
+ 
+             IF         COND(&ERROR *EQ 'T') THEN(CHGJOB SWS(0XXXXXXX))
+             IF         COND(&ERROR *EQ 'Y') THEN(GOTO +
+                          CMDLBL(ABNORMAL))
+ 
+/* Set up Data Area SDSTAT to 'EOD' */
+ 
+             CHGDTAARA  DTAARA(SDSTAT (110 5)) VALUE('EOD  ')
+ 
+/* Program to run COB counter */
+ 
+             CALL       PGM(CB000002)
+ 
+/* Call GO Download data control - CoB */                                              /*AR1096378*/
+                                                                                       /*AR1096378*/
+             CALL       PGM(GO000102)                                                  /*AR1096378*/
+                                                                                       /*AR1096378*/
+/* Submit COB monitor */
+ 
+             CALL       PGM(CBC0511)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNORMAL))
+             ENDDO
+             ELSE DO
+ 
+/* Submit COB monitor */
+ 
+             CALL       PGM(CBC0511)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNORMAL))
+ 
+             RTVDTAARA  DTAARA(CBSTAT *ALL) RTNVAR(&CBSTAT)
+ 
+             IF         COND(%SST(&CBSTAT 45 1) *EQ 'N') +
+                          THEN(CHGDTAARA DTAARA(CBSTAT (45 1)) +
+                          VALUE('Y'))
+ 
+/* Call CBTIME to set up sys date/time for COB */
+ 
+             CALL       PGM(CBTIME) PARM(&DAYNOA &STIME &DFMT)
+             CHGVAR     VAR(&RSTTIM) VALUE(&DAYNOA *CAT &STIME)
+ 
+             RTVDTAARA  DTAARA(CBSTAT (5 9)) RTNVAR(&SRTTIM)
+ 
+             IF         COND(&RSTTIM *GT &SRTTIM) THEN(CHGDTAARA +
+                          DTAARA(CBSTAT (5 9)) VALUE(' '))
+ 
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&RUNA)
+             SNDF       DEV(*FILE) RCDFMT(CBRUNF1)
+ 
+             ENDDO
+ 
+/* Display COB monitor */
+ 
+             CALL       PGM(CBCMOND)
+             CHGMSGQ    MSGQ(&JOB) DLVRY(*NOTIFY)
+             RTVJOBA    LOGCLPGM(&LOG)
+             CHGJOB     LOGCLPGM(*NO)
+ 
+/* Close of business monitor control */
+ 
+             CALL       PGM(CBC000002) PARM(&ERROR &JOB)
+             CHGJOB     LOGCLPGM(&LOG)
+             IF         COND(&ERROR *EQ 'Y') THEN(GOTO +
+                          CMDLBL(ABNORMAL))
+ 
+/* If a COB Completes normally set status to 'N' */
+ 
+             CHGDTAARA  DTAARA(CBSTAT (45 1)) VALUE('N')
+AUDREP:
+             RTVDTAARA  DTAARA(CBSTAT *ALL) RTNVAR(&CBSTAT)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('COB +
+                          Audit Report(s) being produced') +
+                          TOPGMQ(*EXT) MSGTYPE(*STATUS)
+             CHGVAR     VAR(&PRINT) VALUE(%SST(&CBSTAT 44 1))
+             CHGDTAARA  DTAARA(SDSTAT (110 5)) VALUE('PRINT')
+             IF         COND((&PRINT *EQ 'T') *OR (&PRINT *EQ 'B')) +
+                          THEN(DO)
+ 
+/* COB audit report */
+ 
+             CALL       PGM(CBC0300) PARM('T')
+             RTVJOBA    SWS(&SWS)
+             IF         COND(%SST(&SWS 7 1) *EQ '1') THEN(CHGVAR +
+                          VAR(&INU7) VALUE('1'))
+ 
+             IF         COND(%SST(&SWS 8 1) *EQ '1') THEN(CHGVAR +
+                          VAR(&INU8) VALUE('1'))
+ 
+             IF         COND((&INU7 *EQ '1') *AND (&INU8 *EQ '1')) +
+                          THEN(GOTO CMDLBL(ABNORMAL))
+             ENDDO
+ 
+             IF         COND((&PRINT *EQ 'M') *OR (&PRINT *EQ 'B')) +
+                          THEN(DO)
+ 
+/* COB audit report */
+ 
+             CALL       PGM(CBC0300) PARM('M')
+             RTVJOBA    SWS(&SWS)
+             IF         COND(%SST(&SWS 7 1) *EQ '1') THEN(CHGVAR +
+                          VAR(&INU7) VALUE('1'))
+             IF         COND(%SST(&SWS 8 1) *EQ '1') THEN(CHGVAR +
+                          VAR(&INU8) VALUE('1'))
+             IF         COND((&INU7 *EQ '1') *AND (&INU8 *EQ '1')) +
+                          THEN(GOTO CMDLBL(ABNORMAL))
+             ENDDO
+ 
+             IF         COND(&PRINT *EQ ' ') THEN(GOTO +
+                          CMDLBL(ABNORMAL))
+ 
+/* Set Data Area SDSTAT for next close of business run */
+ 
+             CHGDTAARA  DTAARA(SDSTAT (110 5)) VALUE('BEGIN')
+             CHGDTAARA  DTAARA(MPHAS (1 1)) VALUE('A')
+ 
+/* Exit from program using reroute job */
+ 
+             RRTJOB     RTGDTA(MIDASIC)
+ 
+/* Abnormal termination processing */
+ 
+ ABNORMAL:
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSG('Program CBC000003 Ended Abnormally - +
+                          Job Cancelled') TOMSGQ(MOPERQ)
+ 
+             ENDPGM

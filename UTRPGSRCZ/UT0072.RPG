@@ -1,0 +1,1080 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Edit Data Area')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Utilities Module                                     *
+      *                                                               *
+      *  UT0072 - Update data area maintenance                        *
+      *                                                               *
+      *  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+      *  (phase(s))                                                   *
+      *                                                               *
+      *  Called By: UPDDTAARA - Update data area                      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CREATE             Date 05Mar96               *
+      *                                    Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CREATE - Rewrite AMDDTAAR                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FUT0072DFCF  E                    WORKSTN
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+      * DSP: Edit Record               Edit transaction
+      *
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    MNM    12  12  3
+      *
+      ** Array of month names
+      *
+     E                    DEC@       50  1
+      *
+      ** Array of 50 1 characters fields
+      *
+     E                    PAC@       15  1
+      *
+      ** Array of 15 1 characters fields
+      *
+     E                    SIG@       29  1
+      *
+      ** Array of 29 1 characters fields
+      *
+     E                    DAT@       60 50
+      *
+      ** Array of 50 characters which represent the read data
+      *
+     E                    IND@       60 50
+      *
+      ** Array of 50 characters which represent the input data
+      *
+     E                    OUT@       60 50
+      *
+      ** Array of 50 characters which represent the output data
+      *
+     I/EJECT
+      *
+      * Input file Specification
+      *
+     IDATI        DS                           3000
+     I                                        13000 DAT@
+     I                                        1 250 FLD1
+     I                                      251 500 FLD2
+     I                                      501 750 FLD3
+     I                                      7511000 FLD4
+     I                                     10011250 FLD5
+     I                                     12511500 FLD6
+     I                                     15011750 FLD7
+     I                                     17512000 FLD8
+     I                                     20012250 FLD9
+     I                                     22512500 FLD10
+     I                                     25012750 FLD11
+     I                                     27513000 FLD12
+      *
+      * Update file Specification
+      *
+     IINDI        DS                           3000
+     I                                        13000 IND@
+     I                                        1 250 IND1
+     I                                      251 500 IND2
+     I                                      501 750 IND3
+     I                                      7511000 IND4
+     I                                     10011250 IND5
+     I                                     12511500 IND6
+     I                                     15011750 IND7
+     I                                     17512000 IND8
+     I                                     20012250 IND9
+     I                                     22512500 IND10
+     I                                     25012750 IND11
+     I                                     27513000 IND12
+      *
+      * Update file Specification
+      *
+     IOUTI        DS                           3000
+     I                                        13000 OUT@
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+      * File information data structure
+      *
+     IQWCBS       DS                           2036
+      *                                             2000 bytes of data area
+      *                                             Qwc Rdtaa Data Returned
+     I                                    B   1   40QWCBSB
+      *                                             Bytes Available
+     I                                    B   5   80QWCBSC
+      *                                             Bytes Returned
+     I                                        9  18 QWCBSD
+      *                                             Type Value Returned
+     I                                       19  28 QWCBSF
+      *                                             Library Name
+     I                                    B  29  320QWCBSG
+      *                                             Length Value Returned
+     I                                    B  33  360QWCBSH
+      *                                             Number Decimal Positions
+      * Definition of passed paramters
+     IAPIDEF      DS
+     I I            2036                  B   1   40RECLEN
+      *                                             Receive Length     ed
+     I I            -1                    B   5   80STRPOS
+      *                                             Start Position     ed
+     I I            2000                  B   9  120DATAL
+      *                                             Data Length        ed
+     IERCDE       DS                            132
+     I I            132                   B   1   40ERLEN
+      *                                             Error Lenghth      ed
+     I                                        4 128 ERDTA
+      *
+      * Definition for numeric validation
+     INUMDS       DS
+     I I            0                     P   1  150NUMP
+      *                                             Packed Number      ed
+     I                                        1  15 PAC@
+      *                                             Array of 15        ed
+     I I            0                        16  440NUMS
+      *                                             Signed Number      ed
+     I                                       16  44 SIG@
+      *                                             Array of 29        ed
+     I                                       45  94 DEC@
+     I                                       45  94 DECI
+      *                                             Array of 50        ed
+     I I            ' '                     101 129 NUMIA
+      *                                             Integer Char       ed
+     I I            '.'                     130 130 NUMDP
+      *                                             Decimal Place      ed
+     I I            ' '                     131 139 NUMDA
+      *                                             Decimal Char       ed
+     INUMO        DS
+      * Interger
+     I                                        1  24 INTS
+      * Dot
+     I I            '.'                      25  25 DOT
+      * Decimal
+     I                                       26  340DECN
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                             10
+      * Action type
+     I                                        1  10 P1ACT
+      * Parameter declarations
+     IP2PARM      DS                             20
+      * Action type
+     I                                        1  10 P2DTAN
+     I                                       11  20 P2DTAL
+     I            DS
+     I                                        1 132 ZAMSDA
+     I*Prototype for calling Retrieve Data Area (QWCRDTAA) API
+     I*****************************************************************
+     I              'QWCRDTAA'            C         QWCBRB
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM
+     C                     PARM           P2PARM
+      *****************************************************************
+      * Initialise
+     C           ERR       IFEQ *BLANKS
+     C                     EXSR ZZINIT
+     C                     END
+      *
+      * Conduct program process
+     C                     DO   *HIVAL                     DO
+      * Initialise screen
+     C           ERR       IFEQ *BLANKS
+     C                     EXSR ABIZSF
+     C                     MOVEL'Y'       W0BYP   1
+     C                     END
+     C                     MOVEL*BLANKS   ERR
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'                        DO
+      * Bypass first screen for new transaction
+     C           W0BYP     IFNE 'Y'
+      * Display screen
+     C                     EXSR CAEXFM
+     C                     ELSE
+      * Ensure all command keys set off
+     C                     MOVE *ALL'0'   WKIN30 30
+     C                     MOVEAWKIN30    *IN,1
+     C                     END
+      * Cancel screen bypass indicator
+     C                     MOVEL'N'       W0BYP
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG           CAS
+      * HOME: Request subfile reload
+     C   30                CAS            ADHMKY
+     C                     END                             SAC
+     C           W0TRN     IFEQ 'Y'
+      * Validate screen input
+     C                     CAS            DAPRSF
+     C                     END                             SAC
+     C                     END                             FI
+      *
+     C                     END                             OD
+     C                     END                             OD
+      /EJECT
+     CSR         ABIZSF    BEGSR
+      *================================================================
+      * Initialise screen
+      *================================================================
+      * Setof record error indicators
+     C                     MOVE *ALL'0'   WKIND0  3
+     C                     MOVE *ALL'1'   WKIND1  3
+     C                     MOVEAWKIND0    *IN,33
+     C                     SETOF                     81    *
+      * Clear subfile
+     C                     SETON                     80    *
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80    *
+      * Reset count of SFL records
+     C                     Z-ADD*ZERO     ##RRMX  50
+     C                     Z-ADD*ZERO     ##RR    50
+      * Position subfile on page 1
+     C                     Z-ADD1         ##SFRC
+     C                     MOVEL'Y'       W0TRN   1
+      *================================================================
+     CSR         ABEXIT    ENDSR
+      /EJECT
+     CSR         ADHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'KEY'     W0SCR
+     C                     MOVEL'N'       W0TRN   1
+      *================================================================
+     CSR         ADEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Update screen time
+     C                     TIME           ##TME
+      * PUTOVR unless conditioned fields change
+     C                     SETON                     86
+     C           *IN89     IFNE CAIN89
+     C           *IN88     ORNE CAIN88
+     C           *IN81     ORNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN89     CAIN89  1
+     C                     MOVE *IN88     CAIN88  1
+     C                     MOVE *IN81     CAIN81  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPRSF    BEGSR
+      *================================================================
+      * Process subfile records
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * Maintain subfile position where possible
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      * Validate SFL control keys if input
+     C           W0SCR     IFEQ 'KEY'
+     C                     EXSR DCVLH1
+      * QUIT if error:
+     C   99                GOTO DAEXIT
+     C                     END
+      * If keys only, now get the rest of the data
+     C           W0SCR     IFEQ 'KEY'
+     C                     EXSR DBLDSF
+     C                     GOTO DAEXIT
+     C                     END
+      *................................................................
+      * Process subfile records and unprotect
+     C           *IN81     IFEQ '1'
+     C           *IN78     ANDEQ'0'
+     C           1         DO   ##RRMX    ##RR
+     C           ##RR      CHAIN#SFLRCD              92    *
+      * Setof record error indicators
+     C                     MOVEAWKIND0    *IN,33
+     C                     SETOF                     98    No errors
+      * Validate non-null subfile record
+     C                     EXSR DIVLSF
+      * If SFLRCD invalid, note that errors present
+     C   98N99             Z-ADD##RR      ##SFRC     99    *
+     C                     UPDAT#SFLRCD
+     C                     END                             OD
+     C                     END                             FI
+      *
+      * If confirm not pressed redisplay
+      *
+     C           *IN10     IFEQ '0'
+     C                     MOVEL'Y'       W0DCF
+     C                     END
+      *................................................................
+      * Quit if subfile invalid:
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * Update DBF from screen
+     C                     EXSR EAUPFL
+      * Quit if DBF updates failed:
+     C           *IN99     CABEQ'1'       DAEXIT
+      *
+      * Exit after successful update
+     C                     EXSR ZXEXPG
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBLDSF    BEGSR
+      *================================================================
+      * Load screen fields from DBF
+      *================================================================
+      *
+      * If add mode then display blanks
+      *
+     C           P1ACT     IFEQ '*ADD'
+     C                     MOVEA*BLANKS   DAT@
+     C                     END
+      *
+      * For each 50 characters format and place on screen
+      *
+     C                     Z-ADD1         @#RCSZ  50
+     C           @#RCSZ    DOWLE##DATL
+      * For each DBF detail record read:
+      * Setof record error indicators
+     C                     MOVEAWKIND0    *IN,33
+     C                     ADD  1         ##RR    50
+     C                     EXSR MEFL#2
+      * Output DBF to subfile
+     C                     WRITE#SFLRCD
+      * Increment format length
+     C                     ADD  50        @#RCSZ
+     C                     END                             WOD
+     C                     Z-ADD##RR      ##RRMX     81    *
+     C                     MOVEL'DTL'     W0SCR   3
+      * Position subfile on page 1
+     C                     Z-ADD1         ##SFRC
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         DCVLH1    BEGSR
+      *================================================================
+      * Validate header keys
+      *================================================================
+      * Check existence of header
+     C                     EXSR DDRDH1
+     C                     MOVELP2DTAN    @1NAME
+     C           *LIKE     DEFN QWCBSG    ##DATL
+     C                     Z-ADDQWCBSG    @1DATL
+     C                     Z-ADDQWCBSG    ##DATL
+     C                     MOVELQWCBSF    @1LIBN
+     C                     MOVELQWCBSD    @1TYPE
+     C                     MOVEL'0'       *IN76
+      *
+      * If decimal then format
+      *
+     C           @1TYPE    IFEQ '*DEC'
+     C                     Z-ADD50        ##DATL
+     C                     MOVEL'1'       *IN76
+     C                     MOVE QWCBSH    @1DECP
+      *
+      * Format for screen
+      *
+     C           QWCBSG    DIV  2         ##00LN  50
+     C                     MVR            ##00RN  50
+     C           QWCBSG    DIV  2         ##00LN  50H
+      *
+      * If remainder 0 even add 1 to length
+      *
+     C           ##00RN    IFEQ 0
+     C                     ADD  1         ##00LN
+     C                     ENDIF
+      *
+      * Reset Numeric Data structure
+      *
+     C                     RESETNUMDS
+     C           2000      SUBSTQWCBS:37  DATI
+     C                     MOVELFLD1      DECI
+      *
+      * Move to packed structure
+      *
+     C           15        SUB  ##00LN    Y       50
+      *
+     C           1         DO   ##00LN    X       50
+     C                     ADD  1         Y
+     C                     MOVEADEC@,X    PAC@,Y
+     C                     ENDDO
+      *
+      * Note sign
+      *
+     C                     MOVEL*BLANKS   ##SIGN  1
+     C           NUMP      IFLT 0
+     C                     MOVEL'-'       ##SIGN
+     C                     MULT -1        NUMP
+     C                     ENDIF
+      *
+      * Move packed numeric to unpacked
+      *
+     C                     Z-ADDNUMP      NUMS
+      *
+      * Get decimal portion
+      *
+     C                     MOVEL*BLANKS   DECI
+     C                     Z-ADD29        Y
+      *
+     C                     Z-ADDQWCBSH    X
+     C           X         DOWGT0
+     C                     MOVEASIG@,Y    ##001A  1
+     C                     MOVEA##001A    DEC@,X
+     C                     SUB  1         Y
+     C                     SUB  1         X
+     C                     ENDDO
+     C                     MOVELDECI      NUMDA
+      *
+      * Get Interger portion
+      *
+     C           QWCBSG    SUB  QWCBSH    X
+     C                     MOVEL*BLANKS   DECI
+     C                     Z-ADD50        Z       50
+      *
+     C           X         DOWGT0
+     C                     MOVEASIG@,Y    ##001A
+     C                     MOVEA##001A    DEC@,Z
+     C                     SUB  1         Y
+     C                     SUB  1         X
+     C                     SUB  1         Z
+     C                     ENDDO
+     C                     MOVE DECI      NUMIA
+      *
+      * Move result into output field
+      *
+     C           *LIKE     DEFN DECI      ##DECI
+     C           39        SUBSTNUMDS:101 ##DECI
+      *
+      * Remove leading blanks
+      *
+     C                     MOVEL##DECI    DECI
+      *
+     C           1         DO   50        X
+     C           DEC@,X    IFEQ '0'
+     C           DEC@,X    OREQ ' '
+     C                     MOVEA' '       DEC@,X
+     C                     ELSE
+      *
+      * Not zero, if . reinstate last 0
+      *
+     C           DEC@,X    IFEQ '.'
+     C                     SUB  1         X
+     C                     MOVEA'0'       DEC@,X
+     C                     ENDIF
+      *
+      * If negative put in sign
+      *
+     C           ##SIGN    IFEQ '-'
+     C                     SUB  1         X
+     C                     MOVEA'-'       DEC@,X
+     C                     ENDIF
+      *
+      * Move in new definition and leave
+      *
+     C                     MOVELDECI      ##DECI
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ELSE
+      *
+      * else just get data area length
+      *
+     C           2000      SUBSTQWCBS:37  DATI
+     C                     ENDIF
+      * If header not found, error
+     C           *IN90     IFEQ '1'
+     C           P1ACT     ANDNE'*ADD'
+     C                     SETON                     99    PC
+      * Send message 'Record not found'
+     C                     MOVEL'Y2U0005' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         DDRDH1    BEGSR
+      *================================================================
+      * Read data area
+      *================================================================
+      *
+     C                     RESETAPIDEF
+     C                     RESETERCDE
+     C                     CALL QWCBRB
+     C                     PARM *BLANKS   QWCBS
+     C                     PARM           RECLEN
+     C                     PARM           P2PARM
+     C                     PARM           STRPOS
+     C                     PARM           DATAL
+     C                     PARM           ERCDE
+      *
+      *================================================================
+     CSR         DDEXIT    ENDSR
+      /EJECT
+     CSR         DIVLSF    BEGSR
+      *================================================================
+      * Validate subfile record
+      *================================================================
+      *
+      * USER: Validate subfile record fields
+      *
+     C           #2OLRC    IFEQ 'C'
+     C                     MOVEL'0'       *IN79
+     C                     ELSE
+     C           #2OLRC    IFEQ 'H'
+     C                     MOVEL'1'       *IN79
+     C                     END
+     C                     END
+      *
+      * Calculate string length
+      *
+     C           #2REND    SUB  #2RSTL    P0LEN
+     C                     ADD  1         P0LEN
+      *
+      * Convert displayable characters
+      *
+     C           #2OLRC    IFEQ 'C'
+     C                     MOVEL*BLANKS   @PROG
+     C                     MOVEL'UT0078  '@PROG
+     C                     MOVE '  '      @PROG
+     C                     MOVEL*BLANKS   P0CHAR           Chars
+     C                     MOVEL*BLANKS   P0DSPC           Display Char
+     C                     MOVEL#2CHAR    P0CHAR           Chars
+     C                     MOVEL#RDCHR    P0DSPC           Display Char
+     C                     CALL @PROG
+     C                     PARM *BLANKS   P0RTN            Return Code
+     C                     PARM '*D*C'    P0CVTT           Conv. Type
+     C                     PARM           P0CHAR           Chars
+     C                     PARM           P0DSPC           Display Char
+     C                     PARM           P0HX1            Hex first
+     C                     PARM           P0HX2            Hex Second
+     C                     PARM           P0HEX            Hex both
+     C                     PARM           P0LEN            Length
+      *
+      * Load screen fields
+      *
+     C                     MOVELP0CHAR    #2CHAR           Chars
+     C                     MOVELP0HX1     #RHEX1
+     C                     MOVELP0HX2     #RHEX2
+     C                     END
+      *
+      * Convert hexadecimal to displayable etc
+      *
+     C           #2OLRC    IFEQ 'H'
+     C                     MOVEL*BLANKS   @PROG
+     C                     MOVEL'UT0078  '@PROG
+     C                     MOVE '  '      @PROG
+     C                     MOVEL*BLANKS   P0HX1            Hex first
+     C                     MOVEL*BLANKS   P0HX2            Hex Second
+     C                     MOVEL#RHEX1    P0HX1            Hex first
+     C                     MOVEL#RHEX2    P0HX2            Hex Second
+     C                     CALL @PROG
+     C                     PARM *BLANKS   P0RTN            Return Code
+     C                     PARM '*H*C*1'  P0CVTT           Conv. Type
+     C                     PARM           P0CHAR           Chars
+     C                     PARM           P0DSPC           Display Char
+     C                     PARM           P0HX1            Hex first
+     C                     PARM           P0HX2            Hex Second
+     C                     PARM           P0HEX            Hex both
+     C                     PARM           P0LEN            Length
+      *
+      * Load screen fields
+      *
+     C           P0RTN     IFEQ '*INVF'
+     C                     SETON                     9835  PC
+      * Send message 'Hexadecimal Format error'
+     C                     MOVEL'Y2MAA03' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO DIEXIT
+     C                     ELSE
+     C                     MOVELP0DSPC    #RDCHR
+     C                     MOVELP0CHAR    #2CHAR
+     C                     END
+     C                     END
+      *
+      * If logical data area value must also be '0' or '1'
+      *
+     C           @1TYPE    IFEQ '*LGL'
+     C                     MOVELP0DSPC    ##001A  1
+     C           ##001A    IFNE '1'
+     C           ##001A    ANDNE'0'
+     C                     SETON                     9835  PC
+      * Send message 'Value Must be "1" or "0"'
+     C                     MOVEL'Y2MAA01' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO DIEXIT
+     C                     END
+     C                     END
+      *
+      * If logical data area value must also be '0' or '1'
+      *
+     C           @1TYPE    IFEQ '*DEC'
+     C                     MOVELP0DSPC    DECI      P
+     C                     MOVEL'T'       ##NUM   1
+      *
+      * Check all 50 characters
+      *
+     C                     MOVEL*BLANKS   ##SP    1
+     C                     MOVEL*BLANKS   ##SG    1
+     C                     MOVEL*BLANKS   ##IT    1
+     C                     MOVEL*BLANKS   ##DP    1
+     C                     MOVEL*BLANKS   ##TR    1
+     C                     MOVEL*BLANKS   ##DOT   1
+     C                     Z-ADD0         ##ITN   50
+     C                     Z-ADD0         ##DPN   50
+      *
+     C           1         DO   50        X
+      *
+      *  Skip all leading spaces
+      *
+     C           DEC@,X    IFEQ *BLANKS
+     C           ##SP      ANDEQ*BLANKS
+     C                     ITER
+     C                     ENDIF
+     C                     MOVEL'F'       ##SP
+      *
+      *  Check if sign
+      *
+     C           DEC@,X    IFNE *BLANKS
+     C           ##TR      ANDNE*BLANKS
+     C                     MOVEL'F'       ##NUM
+     C                     LEAVE
+     C                     ENDIF
+      *
+      *  Check if sign
+      *
+     C           DEC@,X    IFEQ '-'
+     C           ##SP      ANDNE*BLANKS
+     C           ##SG      ANDEQ*BLANKS
+     C           DEC@,X    OREQ '+'
+     C           ##SP      ANDNE*BLANKS
+     C           ##SG      ANDEQ*BLANKS
+     C                     MOVEL'F'       ##SG
+     C                     ITER
+     C                     ELSE
+      *
+      * Sign but not valid
+      *
+     C           DEC@,X    IFEQ '-'
+     C           X         ANDNE1
+     C           DEC@,X    OREQ '+'
+     C           X         ANDNE1
+     C                     MOVEL'F'       ##NUM
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *  Check interger
+      *
+     C           DEC@,X    IFGE '0'
+     C           DEC@,X    ANDLE'9'
+     C           ##DOT     IFEQ *BLANKS
+     C                     ADD  1         ##ITN   50
+     C                     MOVEL'F'       ##IT
+     C                     ELSE
+     C                     ADD  1         ##DPN   50
+     C                     MOVEL'F'       ##DP
+     C                     ENDIF
+     C                     ITER
+     C                     ENDIF
+      *
+      *  If dot check
+      *
+     C           DEC@,X    IFEQ '.'
+     C           ##IT      ANDEQ*BLANKS
+     C           DEC@,X    OREQ '.'
+     C           ##DP      ANDNE*BLANKS
+     C                     MOVEL'F'       ##NUM
+     C                     LEAVE
+     C                     ENDIF
+      *
+      *  If dot check
+      *
+     C           DEC@,X    IFEQ '.'
+     C           ##IT      ANDNE*BLANKS
+     C                     MOVEL'F'       ##DOT
+     C                     ITER
+     C                     ENDIF
+      *
+      *  Skip all trailing spaces
+      *
+     C           DEC@,X    IFEQ *BLANKS
+     C                     MOVEL'F'       ##TR
+     C                     ITER
+     C                     ENDIF
+      *
+      * Invalid if here
+      *
+     C                     MOVEL'F'       ##NUM
+     C                     LEAVE
+      *
+     C                     ENDDO
+      *
+      * If number of integers or decimals wrong error
+      *
+     C           QWCBSG    SUB  QWCBSH    ##ITL   50
+      *
+     C           QWCBSH    IFLT ##DPN
+     C           ##ITL     ORLT ##ITN
+     C                     MOVEL'F'       ##NUM
+     C                     ENDIF
+      *
+     C           ##NUM     IFNE 'T'
+     C                     SETON                     9835  PC
+      * Send message 'Invalid numeric'
+     C                     MOVEL'Y2MAA02' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO DIEXIT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Change fields available if select specified
+      *
+     C           #2SEL     IFEQ 'C'
+     C                     MOVEL'0'       *IN79
+     C                     MOVEL#2SEL     #2OLRC
+     C                     ELSE
+     C           #2SEL     IFEQ 'H'
+     C                     MOVEL'1'       *IN79
+     C                     MOVEL#2SEL     #2OLRC
+     C                     END
+     C                     END
+     C                     MOVEL*BLANKS   #2SEL
+      *================================================================
+     CSR         DIEXIT    ENDSR
+      /EJECT
+     CSR         EAUPFL    BEGSR
+      *================================================================
+      * Update DBFs from screen
+      *================================================================
+      *
+      * Check that record has not changed for amend mode
+      *
+     C           P1ACT     IFEQ '*AMEND'
+     C           P1ACT     OREQ '*DELETE'
+     C                     EXSR DDRDH1
+     C           2000      SUBSTQWCBS:37  INDI
+     C           *IN90     IFEQ '0'
+     C           P1ACT     ANDEQ'*AMEND'
+     C           1         DO   ##RRMX    X       50
+     C           DAT@,X    IFNE IND@,X
+     C                     SETON                         90
+     C                     END
+     C                     END
+     C                     END
+      *
+      * If *IN90 then update/delete performed by another workstation
+      *
+     C           *IN90     IFEQ '1'
+     C                     SETON                     99
+      * Send message 'Update/Delete by another workstation'
+     C                     MOVEL'Y2U0007' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO EAEXIT
+     C                     END
+     C                     END
+      * Process subfile records
+     C           1         DO   ##RRMX    X
+     C           X         CHAIN#SFLRCD              92    *
+     C  N92                DO
+      * Setof record error indicators
+     C                     MOVEAWKIND0    *IN,33
+      *
+      * Move data to the ouput array
+      *
+     C                     MOVEA#2CHAR    OUT@,X
+     C                     UPDAT#SFLRCD
+     C                     END                             OD
+     C  N92                END                             OD
+      * Process change request
+     C                     EXSR EFCHLN
+      *
+     C           EA999     TAG
+      *================================================================
+     CSR         EAEXIT    ENDSR
+      /EJECT
+     CSR         EFCHLN    BEGSR
+      *================================================================
+      * Add/Change/Delete detail record
+      *================================================================
+     C           P1ACT     IFEQ '*AMEND'
+      *
+      * if numeric format
+      *
+     C           @1TYPE    IFEQ '*DEC'
+     C                     RESETNUMO
+     C                     MOVELNUMO      NUMBER 50 P
+     C                     MOVELOUTI      NUMBER
+     C                     END
+      *
+      * Update data area
+      *
+     C                     CALL 'UTC0071 '
+     C                     PARM           P2PARM
+     C                     PARM QWCBSG    O#LEN   50
+     C                     PARM           @1TYPE
+     C                     PARM           NUMBER
+     C                     PARM           OUTI
+     C                     END
+      *================================================================
+     CSR         EFEXIT    ENDSR
+      /EJECT
+     CSR         MEFL#2    BEGSR
+      *================================================================
+      * Load screen detail record
+      *================================================================
+      * Existing record indicator
+     C                     MOVEL'C'       #2OLRC
+      * Update saved record image
+      *
+      * If decimal then format
+      *
+     C           @1TYPE    IFEQ '*DEC'
+     C                     MOVEL##DECI    #2CHAR
+     C                     ELSE
+     C                     MOVELDAT@,##RR #2CHAR
+     C                     ENDIF
+      *
+      * Check length to be converted
+      *
+     C                     Z-ADD@#RCSZ    #2RSTL
+     C                     Z-ADD@#RCSZ    #2DSTL
+     C           ##DATL    SUB  @#RCSZ    @#FLSZ  50
+     C           @#FLSZ    ADD  1         @#FLSZ
+     C           @#FLSZ    IFLT 50
+     C                     Z-ADD@#FLSZ    P0LEN
+     C           @#RCSZ    ADD  @#FLSZ    #2REND
+     C                     SUB  1         #2REND
+     C                     ELSE
+     C                     Z-ADD50        P0LEN
+     C           @#RCSZ    ADD  49        #2REND
+     C                     END
+     C                     Z-ADD#2REND    #2DEND
+      *
+      * Format characters for screen
+      *
+     C                     MOVEL*BLANKS   P0CHAR
+     C                     MOVEL*BLANKS   #RDCHR
+     C                     MOVEL*BLANKS   #RHEX1
+     C                     MOVEL*BLANKS   #RHEX2
+     C                     MOVEL#2CHAR    P0CHAR
+     C                     MOVEL*BLANKS   @PROG  10
+     C                     MOVEL'UT0078  '@PROG
+     C                     MOVE '  '      @PROG
+     C                     CALL @PROG
+     C                     PARM *BLANKS   P0RTN   7        Return Code
+     C                     PARM '*C*H'    P0CVTT 10        Conv. Type
+     C                     PARM           P0CHAR100        Chars
+     C                     PARM           P0DSPC100        Display Char
+     C                     PARM           P0HX1 100        Hex first
+     C                     PARM           P0HX2 100        Hex Second
+     C                     PARM           P0HEX 200        Hex both
+     C                     PARM           P0LEN   50       Length
+      *
+      * Load screen fields
+      *
+     C                     MOVELP0DSPC    #RDCHR
+     C                     MOVELP0HX1     #RHEX1
+     C                     MOVELP0HX2     #RHEX2
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         UPDERR    BEGSR
+      *================================================================
+      * File exception handling
+      *================================================================
+     C                     MOVEL'*DETC'   ERRTYP  6
+     C                     MOVEL'*DETC'   ERR     6
+      * Send message 'Record not updated/added/deleted'
+     C                     MOVEL'Y2U0004' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      *================================================================
+     CSR         UPDERX    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+      * Send if first error message or not an error message
+     C           ZAMSTP    IFNE *BLANK
+     C           ZAFSMS    ORNE 'N'
+     C           ZAMSTP    IFEQ *BLANK
+      * Signal first error message sent
+     C                     MOVEL'N'       ZAFSMS
+     C                     END
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+     C                     END
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+      * Initialise indicators for re-entry
+     C                     MOVE '0'       *IN
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C                     MOVEL'UTMSGF  'ZADFMF 10
+      * Signal first error message outstanding
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Subfile page size
+     C                     Z-ADD5         ##SFPG  30       SFLPAG
+      * Initialise subfile positioner
+     C                     Z-ADD1         ##SFRC
+      *
+      * USER: Initialise program
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      * Get System date and convert to todays date
+     C                     TIME           ##012N 120       Get date
+     C                     MOVE ##012N    ##006A  6        Move to char
+     C                     MOVEL##006A    ##YY    2        Get year
+     C                     MOVE ##006A    ##DD    2        Get day
+     C           2         SUBST##006A:3  ##MM    2        Get Month
+      * Get month name
+     C                     MOVEL##MM      ##MMN   20
+     C                     MOVEAMNM,##MMN ##MMNM  3
+      * Set up date
+     C                     MOVEL##YY      ##MRDT  7 P
+     C           ##MMNM    CAT  ##MRDT:0  ##MRDT    P
+     C           ##DD      CAT  ##MRDT:0  ##MRDT
+      *
+      * Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     MOVEL'KEY'     W0SCR
+      *
+      * Determine screen header and trailer
+      *
+     C                     MOVEL*BLANKS   @1ACT
+     C                     MOVELP1ACT     @1ACT
+     C           P1ACT     IFEQ '*ADD'
+     C           P1ACT     OREQ '*AMEND'
+     C           P1ACT     OREQ '*DELETE'
+     C           P1ACT     OREQ '*COPY'
+     C                     SETON                     77
+     C                     ELSE
+     C                     SETOF                     77
+     C                     END
+      *
+      * Determine protection of information
+      *
+     C           P1ACT     IFEQ '*ENQUIRE'
+     C           P1ACT     OREQ '*DELETE'
+     C                     SETON                     78
+     C                     ELSE
+     C                     SETOF                     78
+     C                     END
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+      *
+**  CPY@
+(c) Finastra International Limited 2001
+**   MNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

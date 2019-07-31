@@ -1,0 +1,611 @@
+     H        1                                                           S01230
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Account identifier')                          *
+     F********************************************************************S01230
+     F*                                                                  *S01230
+     F*  Midas  ACCESS OBJECTS                                        S01230
+     F*                                                                  *S01230
+     F*     AOACCTV0 - Access Account Identifier *VFY                    *S01230
+     F*                                                                  *S01230
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *S01230
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023834           Date 28Apr14               *
+      *                 MD023833           Date 28Apr14               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 108195             Date 31Oct00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CFT004             Date 19Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 135634             Date 28Apr99               *
+     F*                 E27257             DATE 12AUG91               *
+     F*                 E25570             DATE 12AUG91               *
+     F*                    S01314             DATE 05DEC90               *
+     F*                    E22186             DATE 06JUN90               *
+     F*                    LN0581             DATE 01AUG90               *
+     F*                    E311               DATE 30MAR90               *
+     F*                    S01117             DATE 15FEB90               *S01117
+     F*                    S01230             DATE 06/11/89              *
+     F*                                                                  *S01230
+     F********************************************************************S01230
+     F*                                                                   S01230
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD023834 - If not found retry using LOVAL settl first        *
+      *           - Correct SDNOSTPD chain indicator.                 *
+      *  MD023833 - Clear entry buffer                                *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  108195 - If an account is closed it should not be            *
+      *           verified as valid.                                  *
+      *  CFT004 - Straight Through Processing Phase 2  - Recompiled   *
+      *           International Bank Account Numbers (IBAN)           *
+     F*  135634 - Use LF/SDCUSTL2 (keyed on Customer Shortname)       *
+     F*           instead of LF/SDCUSTL3.  Re-applied fix 078365      *
+     F*           which was done for LEUMI-LDN R10.04.                *
+     F*     E27257  -  IF CUSTOMER/NOSTRO SHORTNAME OR NOSTRO NUMBER
+     F*                NOT FOUND PUT ERROR CODE INTO RETURN CODE
+     F*     E25570  -  PASS OUT CORRECT NOSTRO DETAILS FOR RETAIL
+     F*                NOSTROS
+     F*     S01314  -  CHANGES MADE DURING PTF INCORPORATION FOR R10
+     F*     E22186  -  RETAIL NOSTROS ARE NOW BEING DEALT WITH VIA A     *E22186
+     F*                RETAIL ACCOUNT NUMBER AS A NOSTRO ACCOUNT AND     *E22186
+     F*                NO LONGER AS A RETAIL ACCOUNT                     *E22186
+     F*     LN0581  -  IF CUSTOMER NUMBER NOT FOUND PUT ERROR             S01230
+     F*                CODE INTO RETURN CODE                              S01230
+     F*     E311    -  INCORRECT DATA STRUCTURE                          *S01117
+     F*     S01117  -  RELEASE 10 CHANGES                                *S01117
+     F*     S01230  -  STANDARDISE ACCESS PROGRAMS                       *S01117
+     F*                                                                   S01230
+     F********************************************************************
+      /EJECT
+     F*FSTART
+      ************************************************************
+     FACCNTL0 IF  E           K        DISK                           UC
+     F            ACCNTABF                          KRENAME@ACCL0
+      * IN  - ACCNTABF Account details (Full Account)
+      *...........................................................
+     FACCNTL1 IF  E           K        DISK                           UC
+     F            ACCNTABF                          KRENAME@ACCL1
+      * IN  - ACCNTABF Account details (Retail Account)
+      *...........................................................
+     FSDNOSTL1IF  E           K        DISK                           UC
+      * IN  - @A7REB9 Nostro details   (Currency/Nostro number)
+      *...........................................................
+     FSDNOSTL2IF  E           K        DISK                           UC
+      * IN  - @NOSTBH Nostro details   (Full Account)
+      *...........................................................
+     FSDCUSTL0IF  E           K        DISK                           UC
+      * IN  - @BBREBG Customers        (Customer Number)
+      *...........................................................
+     F***SDCUSTL3IF**E           K        DISK                        UC  135634
+      *****IN**-*SDCUSTD0*Customers*******(DRS*Customer*Shortname)*****   135634
+     FSDCUSTL2IF  E           K        DISK                           UC  135634
+      *                                                                   135634
+      **  IN - SDCUSTD0 Customers      (Customer Shortname)               135634
+      *                                                                   135634
+      *...........................................................
+     FSDNOSTL5IF  E           K        DISK                           UC
+      * IN  - @NOSTBK Nostro details   (Shortname/Primary Indicator)
+      ************************************************************
+      /EJECT                                                              S01230
+     E*ESTART                                                             S01230
+      ************************************************************        S01230
+     E                    @MG     1   1 50                                S01230
+      ************************************************************        S01230
+      /EJECT
+     I*ISTART
+      ********************************************************************
+     IP@MGDA      DS                                                      S01230
+     I                                        1  50 @MG                   S01230
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     I*P@ACCT    E DSACCNTAB                                              S01230
+     ID@FMT     E DSACCNTAB                                               S01230
+      * ACCNTABF - Account details record format data structure
+      *
+     I*P@FMT       DS                            400                      S01230
+      **Internal*data*structure.                                          S01230
+      *                                                                   S01230
+     I*P@FMT*****E*DSDSFDY***************************************** S01230E311
+     IP@FMT     E DSDSSDY                                                 E311
+     I* External Data structure to hold the outgoing record format        S01230
+     I* of the file.                                                      S01230
+      *                                                                   S01230
+     IW@NOSN      DS
+      * Nostro number character->numeric conversion data structure
+     I                                        1   20Z@NOSN
+      *
+     IW@CNUM      DS
+      * Customer number character->numeric conversion data structure
+     I**********                              1   60Z@CNUM                                    CSD027
+     I                                        1   6 Z@CNUM                                    CSD027
+      *
+     IW@ACCD      DS
+      * Account code key character->numeric conversion data structure
+     I**********                              1   40Z@ACCD                                    CGL029
+     I                                        1  100Z@ACCD                                    CGL029
+      *
+     IW@ACSQ      DS
+      * Account sequence key character->numeric conversion data structure
+     I                                        1   20Z@ACSQ
+      *
+     IW@BRCA      DS                                                      S01117
+      * Branch Code key                                                re S01117
+     I                                        1   3 Z@BRCA                S01117
+      *                                                                   S01117
+     IP@ACID      DS
+      * 10-Character Account identifier data structure
+     I                                        1  100Z@RETL
+     I                                        1   6 D@1TO6
+     I                                        1   3 D@1TO3
+     I                                        1   1 D@1TO1
+     I                                        2   2 D@2TO2
+     I                                        3   3 D@3TO3
+     I                                        4   5 D@4TO5
+     I                                        6  10 D@6T10
+     I                                        7  10 D@7T10
+     I****************************************1   7 K@B3TX
+     I****************************************1   7 K@DRCS                135634
+     I****************************************8  10 K@BJCD
+     I****************************************8  10 K@LCCD                135634
+     I                                        1  10 K@NOSH
+      *
+      ********************************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@ACID           I:A/c ID
+     C***********W@CUCD    PARM           P@CUCD  3        I:A/c Currency S01229
+     C           W@CUCD    PARM           P@CYCD  3        I:A/c Currency S01229
+     C********** W@ACCD    PARM           P@ACCD  4        I:A/c code                         CGL029
+     C           W@ACCD    PARM           P@ACCD 10        I:A/c code                         CGL029
+     C***********W@ACSQ    PARM           P@ACSQ  2        I:A/c sequence S01229
+     C           W@ACSQ    PARM           P@ACSN  2        I:A/c sequence S01229
+     C           W@BRCA    PARM           P@BRCA  3        I:Branch Code  S01117
+     C                     PARM W@TYPE    P@TYPE  7        O:A/c ID type
+     C                     PARM W@NOSN    P@NOSN  2        O:Nostro no.
+     C*********************PARM           P@ACCT           O:ACCNT Format S01230
+     C                     PARM           P@FMT            O:ACCNT Format S01230
+      *****************************************************
+      *MAIN
+     C*
+     C***********K@ACID    KLIST                                          135634
+     C*********************KFLD           K@B3TX
+     C***********          KFLD           K@DRCS                          135634
+     C*********************KFLD           K@BJCD
+     C***********          KFLD           K@LCCD                          135634
+     C*
+     C           K@FULL    KLIST                           <FULL A/C KEY>
+     C                     KFLD           Z@CNUM           :Client number
+     C                     KFLD           W@CUCD           :Currency code
+     C                     KFLD           Z@ACCD           :Account code
+     C                     KFLD           Z@ACSQ           :Account seq.
+     C                     KFLD           Z@BRCA           :Branch Code.  S01117
+      *
+     C           K@NOSF    KLIST                           <FULL A/C KEY>
+     C                     KFLD           W@CNUM  6        :Client number
+     C                     KFLD           W@CUCD           :Currency code
+     C**********           KFLD           W@ACCD  4        :Account code                      CGL029
+     C                     KFLD           W@ACCD 10        :Account code                      CGL029
+     C                     KFLD           Z@ACSQ           :Account seq.
+     C                     KFLD           Z@BRCA           :Branch Code.  S01117
+      *
+     C           K@NOST    KLIST                           <NOSTRO KEY>
+     C                     KFLD           D@1TO3           :Currency code
+     C                     KFLD           D@4TO5           :Nostro no.
+      *
+     C           K@NSNM    KLIST                           <NOSTRO KEY>
+     C                     KFLD           K@NOSH           :Nostro S/name
+     C                     KFLD           K@PIND  1        :Prime Nost ind
+      *MAIN                                                               S01230
+      *
+      * Reset all error indicators :
+      *
+     C                     MOVE '0'       *IN89                           108195
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     939495 ¦ error
+     C                     SETOF                     969798 ¦ indicators
+      *
+      * First time - open files :
+      *
+     C           *IN01     IFEQ '0'                        IF INITALISE
+     C                     OPEN ACCNTL0                91    Account 1
+     C           *IN91     CABEQ'1'       T@SK01         LR  Error
+     C                     OPEN ACCNTL1                91    Account 2
+     C           *IN91     CABEQ'1'       T@SK01         LR  Error
+     C                     OPEN SDNOSTL1               91    Nostros 1
+     C           *IN91     CABEQ'1'       T@SK01         LR  Error
+     C                     OPEN SDNOSTL2               91    Nostros 2
+     C           *IN91     CABEQ'1'       T@SK01         LR  Error
+     C                     OPEN SDCUSTL0               91    Clients 1
+     C           *IN91     CABEQ'1'       T@SK01         LR  Error
+     C***********          OPEN SDCUSTL3               91    Clients 2    135634
+     C                     OPEN SDCUSTL2               91    Clients 2    135634
+     C           *IN91     CABEQ'1'       T@SK01         LR  Error
+     C                     OPEN SDNOSTL5               91    Nostros 5
+     C           *IN91     CABEQ'1'       T@SK01         LR  Error
+     C                     SETON                     01      End Init
+     C           P@RTCD    CABEQ'*OPEN  ' T@SK01             Open only
+     C                     END                             FI
+      *
+      * Closedown requested - end program :
+      *
+     C           P@RTCD    IFEQ '*FREE  '                  IF CLOSEDOWN
+     C                     CLOSEACCNTL0                92    Account 1
+     C           *IN92     CABEQ'1'       T@SK01         LR  Error
+     C                     CLOSEACCNTL1                92    Account 2
+     C           *IN92     CABEQ'1'       T@SK01         LR  Error
+     C                     CLOSESDNOSTL1               92    Nostros 1
+     C           *IN92     CABEQ'1'       T@SK01         LR  Error
+     C                     CLOSESDNOSTL2               92    Nostros 2
+     C           *IN92     CABEQ'1'       T@SK01         LR  Error
+     C                     CLOSESDCUSTL0               92    Clients 1
+     C           *IN92     CABEQ'1'       T@SK01         LR  Error
+     C***********          CLOSESDCUSTL3               92    Clients 3    135634
+     C                     CLOSESDCUSTL2               92    Clients 3    135634
+     C           *IN92     CABEQ'1'       T@SK01         LR  Error
+     C                     CLOSESDNOSTL5               92    Nostros 5
+     C           *IN92     CABEQ'1'       T@SK01         LR  Error
+     C                     SETON                     LR      Close Pgm.
+     C                     GOTO T@SK01                       Return
+     C                     END                             FI
+      *
+      * Check Account ID to determine key :
+      *
+     C*********************MOVE *BLANK    P@ACCT           Clear Account  S01230
+     C                     MOVE *BLANK    P@FMT            Clear Account  S01230
+     C                     CLEARD@FMT                                                       MD023833
+     C                     MOVE *BLANK    W@CNUM           Clear Customer
+     C                     MOVE '*ERROR ' W@TYPE  7        Account type
+     C                     MOVE *BLANK    W@NOSN           Clear Nostro   E25570
+      *
+     C           P@ACID    CABEQ*BLANK    T@SK01         98 No account ID
+      *
+      * 1. Check for Retail A/C :
+      *
+     C                     TESTN          P@ACID     99    All numeric?
+      *
+     C           *IN99     IFEQ '1'                        IF ALL NUMERIC
+     C                     MOVE '*RETAIL' W@TYPE             Retail A/C
+     C                     GOTO T@SK00                       Skip
+     C                     END                             FI
+      *
+      * 2. Check for Customer number :
+      *
+     C**********           TESTN          D@1TO6     99    All numeric?                       CSD027
+     C           ' '       SCAN D@1TO6                   99All numeric?                       CSD027
+      *
+     C********** *IN99     IFEQ '1'                        IF ALL NUMERIC                     CSD027
+     C           *IN99     IFEQ '0'                        IF 6 digits                        CSD027
+     C           D@7T10    ANDEQ*BLANK                      AND 6 DIGITS
+     C           D@1TO6    CHAIN@BBREBG              99      Check Client
+     C           *IN99     IFEQ '0'                        IF CUSTOMER
+     C                     MOVE D@1TO6    W@CNUM             Cust.number
+     C                     MOVE '*NUMBER' W@TYPE             Cust.number
+     C                     GOTO T@SK00                       Skip
+     C                     ELSE
+      * If found then this is a customer                                                     CSD027
+      * but if not found then it is possible that this                                       CSD027
+      * might be a shortname                                                                 CSD027
+     C           P@ACID    CHAIN@CUSTD5              99                                      CSD027
+      * Not found then this is an error. If it found then                                    CSD027
+      * drop out of the IF and let the remaining processing work.                            CSD027
+     C           *IN99     IFEQ *ON                                                          CSD027
+     C                     MOVE '*CUSTNO' W@TYPE             Cust.number ERR
+     C                     GOTO T@SK01                       Skip
+     C                     END                                                               CSD027
+     C                     END                             FI
+     C                     END                             FI
+      *
+      * 3. Check for Nostro :
+      *
+     C                     TESTN          D@4TO5     99    All numeric?
+      *
+     C           *IN99     IFEQ '1'                        IF NUMERIC
+     C           D@1TO1    ANDNE*BLANK                      AND ¬BLANK
+     C           D@1TO1    ANDLT'0'                         AND ¬NUMERIC
+     C           D@2TO2    ANDNE*BLANK                      AND ¬BLANK
+     C           D@2TO2    ANDLT'0'                         AND ¬NUMERIC
+     C           D@3TO3    ANDNE*BLANK                      AND ¬BLANK
+     C           D@3TO3    ANDLT'0'                         AND ¬NUMERIC
+     C           D@6T10    ANDEQ*BLANK                      AND NO MORE
+     C           K@NOST    CHAIN@A7REB9              99      Check Nostro
+     C           *IN99     IFEQ '0'                        IF NOSTRO
+     C                     MOVE '*NOSTRO' W@TYPE             Nostro
+     C                     GOTO T@SK00                       Skip
+     C                     ELSE
+     C                     MOVE '*NOSTNO' W@TYPE             NOST.number ERR
+     C                     GOTO T@SK01                       Skip
+     C                     END                             FI
+     C                     END                             FI
+      *
+      * 4. Check for Customer Shortname :
+      *
+     C********** D@1TO1    IFLT '0'                        IF 1 ¬NUMERIC                      CSD027
+     C********** D@1TO1    ANDNE*BLANK                      AND ¬BLANK                        CSD027
+     C           P@ACID    IFNE *BLANKS                    IF 1 ¬BLANK                        CSD027
+     C***********K@ACID    CHAIN@CUSTD6              99      Check Client 135634
+     C           P@ACID    CHAIN@CUSTD5              99      Check Client 135634
+     C           *IN99     IFEQ '0'                        IF 2 CLIENT
+     C*********************MOVE BBAENB    W@CNUM             Customer code
+     C                     MOVE BBCUST    W@CNUM             Customer code
+     C                     MOVE '*SHNAME' W@TYPE             Shortname
+     C                     GOTO T@SK00                       Skip
+     C                     ELSE                            EL 2
+      *
+      * 5. Check for Nostro Shortname :
+      *
+     C           W@CUCD    IFEQ *BLANK                      IF 3 BLANK
+     C           W@ACCD    ANDEQ*BLANK                      AND BLANK
+     C           W@ACSQ    ANDEQ*BLANK                      AND BLANK
+     C                     MOVE '*NOSHNM' W@TYPE
+     C                     MOVE 'P'       K@PIND
+     C                     ELSE                             EL 3
+     C                     MOVE '*SHNERR' W@TYPE             NOST.number ERR
+     C                     GOTO T@SK01                       Skip
+     C                     END                             FI  3
+     C                     END                             FI  2
+     C                     END                             FI  1
+      *          _____________
+     C           T@SK00    TAG
+      *          ~~~~~~~~~~~~~
+     C           W@TYPE    CABEQ'*ERROR ' T@SK01         98 Key error
+      *
+     C           W@TYPE    IFEQ '*RETAIL'                  IF 1 RETAIL
+     C           W@TYPE    OREQ '*NOSTRO'                   OR  NOSTRO
+      *
+      * RETAIL A/C
+      *
+     C           W@TYPE    IFEQ '*RETAIL'                  IF 2 RETAIL
+     C           Z@RETL    CHAIN@ACCL1               9590    Get record
+     C           *IN95     CABEQ'1'       T@SK01             Error
+     C           *IN90     CABEQ'1'       T@SK01             Error
+     C*                                                                   108195
+     C           RECI      IFNE 'D'                                       108195
+     C           ACST      OREQ 'C'                                       108195
+     C                     MOVE '1'       *IN89                           108195
+     C                     GOTO T@SK01                                    108195
+     C                     END                                            108195
+     C*                                                                   108195
+     C/COPY WNCPYSRC,AOACCTV0C1
+     C           W@CUCD    IFNE *BLANK                       If CCY Entered
+     C           W@CUCD    ANDNECCY                          ¦ ANDNE Ac CCY
+     C                     MOVE '*RETKEY' W@TYPE             ¦
+     C                     SETON                     97      ¦ Invalid key
+     C                     GOTO T@SK01                       ¦ Exit
+     C                     END                               FI 3
+      *
+     C           W@ACCD    IFNE *BLANK                       If A/c Code Ent
+     C           Z@ACCD    ANDNEACOD                         ¦ ANDNE A/c CODE
+     C                     MOVE '*RETKEY' W@TYPE             ¦
+     C                     SETON                     97      ¦ Invalid key
+     C                     GOTO T@SK01                       ¦ Exit
+     C                     END                               FI 3
+      *
+     C           W@ACSQ    IFNE *BLANK                       If Ac Seq Enter
+     C           Z@ACSQ    ANDNEACSQ                         ¦ ANDNE A/c Seq
+     C                     MOVE '*RETKEY' W@TYPE             ¦
+     C                     SETON                     97      ¦ Invalid key
+     C                     GOTO T@SK01                       ¦ Exit
+     C                     END                               FI 3
+      *
+     C                     MOVE CNUM      W@CNUM             Customer codeE22186
+     C                     MOVE CCY       W@CUCD  3          Currency codeE22186
+     C                     MOVE ACOD      W@ACCD             Account  codeE22186
+     C                     MOVE ACSQ      Z@ACSQ             Account  seq.E22186
+     C                     MOVE BRCA      W@BRCA             Branch   codeS01314
+     C* NOSTRO A/C
+     C                     ELSE                            EL 2 NOSTRO
+     C*********************MOVE A7AENB    W@CNUM             Customer code
+     C*********************MOVE A7AJCD    W@CUCD  3          Currency code
+     C*********************MOVE A7AFNB    W@ACCD             Account  code
+     C*********************MOVE A7AGNB    W@ACSQ             Account  seq.
+     C*********************MOVE A7DRNB    W@NOSN             Nostro number
+     C                     MOVE A7CUST    W@CNUM             Customer code
+     C                     MOVE A7CYCD    W@CUCD  3          Currency code
+     C                     MOVE A7ACCD    W@ACCD             Account  code
+     C                     MOVE A7ACSN    W@ACSQ             Account  seq.
+     C                     MOVE A7BRCD    W@BRCA             Branch Code. S01117
+     C                     MOVE A7NONB    W@NOSN             Nostro number
+     C           K@FULL    CHAIN@ACCL0               9590    Get record
+     C*                                                                   108195
+     C           RECI      IFNE 'D'                                       108195
+     C           ACST      OREQ 'C'                                       108195
+     C                     MOVE '1'       *IN89                           108195
+     C                     GOTO T@SK01                                    108195
+     C                     END                                            108195
+     C*                                                                   108195
+     C           *IN95     CABEQ'1'       T@SK01             Error
+     C           *IN90     CABEQ'1'       T@SK01             Error
+     C                     END                             FI 2
+     C* NUMBER A/C
+     C                     ELSE                            EL 1 FULL A/C
+     C           W@CNUM    IFNE *BLANK                     IF 4 CUSTOMER
+     C           W@CUCD    ANDNE*BLANK                      AND CURRENCY
+     C           W@ACCD    ANDNE*BLANK                      AND A/C CODE
+     C           W@ACSQ    ANDNE*BLANK                      AND A/C SEQ.
+     C           W@BRCA    ANDNE*BLANK                      AND Branch CodS01117
+     C           K@FULL    CHAIN@ACCL0               9590    Get record
+     C*                                                                   108195
+     C           RECI      IFNE 'D'                                       108195
+     C           ACST      OREQ 'C'                                       108195
+     C                     MOVE '1'       *IN89                           108195
+     C                     GOTO T@SK01                                    108195
+     C                     END                                            108195
+     C*                                                                   108195
+     C           *IN95     CABEQ'1'       T@SK01             Error
+     C           *IN90     CABEQ'1'       T@SK01             Error
+     C                     ELSE                            EL 4 INVALID
+      *
+     C           W@TYPE    IFEQ '*NOSHNM'                  IF 5 NOST S/NAME
+     C           K@NSNM    SETLL@NOSTBK              9590    Set File
+     C           *IN95     CABEQ'1'       T@SK01             Error
+     C           *IN90     CABEQ'1'       T@SK01             Error
+     C********** K@NOSH    READE@NOSTBK                9590  Get Record                     MD023834
+     C           K@NOSH    READE@NOSTBK                9095                                 MD023834
+     C           *IN95     CABEQ'1'       T@SK01             Error
+     C           *IN90     CABEQ'1'       T@SK01             Error
+     C*********************MOVE ADCKNB    W@CNUM             Customer code
+     C*********************MOVE ADASCD    W@CUCD             Currency code
+     C*********************MOVE ADCJNB    W@ACCD             Account  code
+     C*********************MOVE ADCMNB    W@ACSQ             Account  seq.
+     C*********************MOVE ADCINB    W@NOSN             Nostro number
+     C*********************MOVE ADCUST    W@CNUM             Customer codeS01229
+     C                     MOVE A7CUST    W@CNUM             Customer codeS01229
+     C*********************MOVE ADCYCD    W@CUCD             Currency codeS01229
+     C                     MOVE A7CYCD    W@CUCD             Currency codeS01229
+     C*********************MOVE ADACCD    W@ACCD             Account  codeS01229
+     C                     MOVE A7ACCD    W@ACCD             Account  codeS01229
+     C*********************MOVE ADACSN    W@ACSQ             Account  seq.S01229
+     C                     MOVE A7ACSN    W@ACSQ             Account  seq.S01229
+     C                     MOVE A7BRCD    W@BRCA             Branch Code  S01117
+     C*********************MOVE ADNONB    W@NOSN             Nostro numberS01229
+     C                     MOVE A7NONB    W@NOSN             Nostro numberS01229
+     C           K@FULL    CHAIN@ACCL0               9590    Get record
+     C*                                                                   108195
+     C           RECI      IFNE 'D'                                       108195
+     C           ACST      OREQ 'C'                                       108195
+     C                     MOVE '1'       *IN89                           108195
+     C                     GOTO T@SK01                                    108195
+     C                     END                                            108195
+     C*                                                                   108195
+     C           *IN95     CABEQ'1'       T@SK01             Error
+     C           *IN90     CABEQ'1'       T@SK01             Error
+     C                     ELSE                            EL 5
+      *
+     C                     SETON                     97      Invalid key
+     C                     GOTO T@SK01                       Exit
+     C                     END                             FI 5
+     C                     END                             FI 4
+     C                     END                             FI 1
+      *
+      * If Nostro number has not yet been obtained, get it now :
+      *
+     C           W@TYPE    IFNE '*NOSTRO'                  IF NOSTRO REQ'D
+     C           W@TYPE    ANDNE'*NOSHNM'                  IF NOSTRO REQ'DE25570
+     C           K@NOSF    CHAIN@NOSTBH              9999    Get Nostro
+     C  N99                MOVE A7NONB    W@NOSN             Reset        E25570
+     C                     ELSE                            EL ALREADY GOT
+     C                     SETOF                     99      Reset
+     C                     END                             FI
+      *
+     C*****      *IN99     IFEQ '0'                        IF NOSTRO      E25570
+     C*********************MOVE A7DRNB    W@NOSN             Nostro No.
+     C*****                MOVE A7NONB    W@NOSN             Reset        E25570
+     C*****                ELSE                            EL NO NOSTRO   E25570
+     C*****                MOVE *BLANK    W@NOSN             Reset        E25570
+     C*****                END                             FI             E25570
+      *          _____________
+     C           T@SK01    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C           *IN89     IFEQ '1'                                       108195
+     C                     MOVE '*ACST  ' P@RTCD           Account closed 108195
+     C                     ENDIF                                          108195
+     C/COPY WNCPYSRC,AOACCTV0C2
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   94                MOVE '*EOF   ' P@RTCD           End of file
+     C   95                MOVE '*NRF   ' P@RTCD           No record found
+     C   96                MOVE '*OPTION' P@RTCD           Option error
+     C   97                MOVE '*KEY   ' P@RTCD           Invalid key
+     C   98                MOVE '*ID    ' P@RTCD           Invalid A/c ID
+     C           W@TYPE    IFEQ '*CUSTNO'                                 LN0581
+     C           W@TYPE    OREQ '*NOSTNO'                                 E27257
+     C           W@TYPE    OREQ '*SHNERR'                                 E27257
+     C   99                MOVE '*NRF   ' P@RTCD           No record foundLN0581
+     C                     END                                            LN0581
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF   SEND MSG.
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C***90                MOVE 'ACO0001' P@MGID             File error   S01314
+     C***91                MOVE 'ACO0002' P@MGID             Open error   S01314
+     C***92                MOVE 'ACO0003' P@MGID             Close error  S01314
+     C***93                MOVE 'ACO0004' P@MGID             Empty file   S01314
+     C***94                MOVE 'ACO0005' P@MGID             End of file  S01314
+     C***95                MOVE 'ACO0006' P@MGID             No rec.found S01314
+     C***96                MOVE 'ACO0007' P@MGID             Option error S01314
+     C***97                MOVE 'ACO0008' P@MGID             Inv.Key      S01314
+     C***98                MOVE 'ACO0011' P@MGID             Inv.A/c ID   S01314
+     C           *IN89     IFEQ '1'                                       108195
+     C                     MOVE 'ACO1012' P@MGID           Account closed 108195
+     C                     ENDIF                                          108195
+     C   90                MOVE 'ACO1001' P@MGID             File error   S01314
+     C   91                MOVE 'ACO1002' P@MGID             Open error   S01314
+     C   92                MOVE 'ACO1003' P@MGID             Close error  S01314
+     C   93                MOVE 'ACO1004' P@MGID             Empty file   S01314
+     C   94                MOVE 'ACO1005' P@MGID             End of file  S01314
+     C   95                MOVE 'ACO1006' P@MGID             No rec.found S01314
+     C   96                MOVE 'ACO1007' P@MGID             Option error S01314
+     C   97                MOVE 'ACO1008' P@MGID             Inv.Key      S01314
+     C   98                MOVE 'ACO1011' P@MGID             Inv.A/c ID   S01314
+     C                     CALL 'ZASNMG'               99    <SEND MSG.>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Pgm.name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Msg.ID
+     C                     PARM *BLANK    P@MSGF 10          I:Msg.file
+     C                     PARM *BLANK    P@MGKY  4          O:Msg.key
+     C*********************PARM *BLANK    P@MGDA 50          I:Msg.date   S01230
+     C                     PARM           P@MGDA 50          I:Msg.date   S01230
+     C                     PARM '*DIAG'   P@MGTP  7          I:Msg.type
+     C                     END                             FI
+      *                                                                   S01230
+      * Caller Requests DB Error Handling                                 S01230
+      *                                                                   S01230
+     C                     MOVELD@FMT     P@FMT
+      *                                                                   S01230
+     C           W@RTCD    IFEQ '*DBERR'                   IF             S01230
+     C           P@RTCD    ANDNE*BLANK                       AND          S01230
+     C                     DUMP                                           S01230
+     C                     CALL 'DBERRCTL'                                S01230
+     C                     END                             FI             S01230
+      *                                                                   S01230
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+      *ENDMAIN
+**
+ACCNTAB  AOCCTV0  Check Account Identifier

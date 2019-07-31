@@ -1,0 +1,359 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Check Create MT103')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME1730 - Check Create MT103                                  *
+      *                                                               *
+      *  Function:  This program determines whether an MT103 will     *
+      *             be created in place of an MT100.                  *
+      *                                                               *
+      *  Called By: MG0100 - Format customer transfer message         *
+      *             FT0640 - Customer transfers (input cycle)         *
+      *             FT0641 - Customer transfers (non-input cycle)     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 25May00               *
+      *                 CFT013  *CREATE    Date 25May00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CFT014 - Straight-through Processing Phase 2 MT103 Messages  *
+      *           Generation for FT.                                  *
+      *  CFT013 - Straight-through Processing Phase 2 MT103 Messages  *
+      *           Generation for non-FT.                              *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Customer details by SWIFT Id
+      *
+     FSDCUSTL7IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Bilateral Agreements retrieval index
+      *
+     FMEBAGRL1IF  E           K        DISK         KINFSR *PSSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Initialisation routine                              *
+      *  SRPROC - Main search routine                                 *
+      *  SRBAGR - Search thru Bilateral Agreements File routine       *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Array containing Copyright Statement
+      *
+     E                    CPY@    1   1 80
+      /SPACE 3
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Program Status Data Structure
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** DS for Customers details
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** Long DS for access object retrieval
+      *
+     IDSSDY     E DSDSSDY
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +------------------------------------------------------------+
+      ** ¦  Start of Main processing                                  ¦
+      ** +------------------------------------------------------------+
+      *
+      ** Entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PIBRCH  3
+     C                     PARM           PISBIC 11
+     C                     PARM           PIRBIC 11
+     C                     PARM           PIORDB256
+     C                     PARM           PIBTBI256
+     C                     PARM           PISNDC256
+     C                     PARM           PIRCVC256
+     C                     PARM           PORETC  7
+      *
+     C                     MOVE '*CRT100' PORETC
+      *
+      ** If this is the first time to run this program, perform
+      ** initialisation routine.
+      *
+     C           WINIT     IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       WINIT   1
+     C                     ENDIF
+      *
+      ** Perform main search routine.
+      *
+     C                     EXSR SRPROC
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC   - Main search routine                               *
+      *                                                               *
+      *  Called by: Main processing                                   *
+      *                                                               *
+      *  Calls    : AOCUSTR0 - Client details access object           *
+      *             SRBAGR - Search thru Bilateral Agreements File    *
+      *                      routine                                  *
+      *             *PSSR  - Program error handling routine           *
+      *                                                               *
+      *****************************************************************
+     C           SRPROC    BEGSR
+      *
+     C                     MOVELPIORDB    WCHAR4  4
+     C           WCHAR4    IFEQ '//RT'
+     C                     GOTO EXPROC
+     C                     ENDIF
+      *
+     C           '/RCB/'   SCAN PIBTBI                   89
+     C           *IN89     IFEQ *ON
+     C           PISNDC    IFEQ *BLANK
+     C           PIRCVC    OREQ *BLANK
+     C                     GOTO EXPROC
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *BLANK    KBRCA
+     C                     MOVE *BLANK    KOTHP
+     C           KBAGR     CHAINMEBAGRL1             89
+      *
+      ** Record found.
+      *
+     C           *IN89     IFEQ *OFF
+     C                     MOVE '*CRT103' PORETC
+     C                     GOTO EXPROC
+     C                     ENDIF
+      *
+     C                     MOVELPIRBIC    WOTHP  11
+      *
+     C                     EXSR SRBAGR
+      *
+     C           PORETC    IFEQ '*CRT103'
+     C                     GOTO EXPROC
+     C                     ENDIF
+      *
+     C                     MOVELPIRBIC    KCSID  12
+     C           KCSID     CHAINSDCUSTL7             89
+      *
+      ** Record found and Receiver is not a parent and
+      ** it has a parent customer.
+      *
+     C           *IN89     IFEQ *OFF
+     C           BBPAIN    ANDNE'P'
+     C           BBPCNB    ANDNE*BLANK
+      *
+      ** Access Customer details of parent customer.
+      *
+     C                     MOVELBBPCNB    PKEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM           PKEY1  10
+     C                     PARM *BLANKS   PKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVELPKEY1     DBKEY
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Parent customer has a SWIFT Id.
+      *
+     C           BBCSID    IFNE *BLANK
+     C                     MOVELBBCSID    WOTHP
+     C                     EXSR SRBAGR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           EXPROC    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBAGR   - Search thru Bilateral Agreements File routine     *
+      *                                                               *
+      *  Called by: SRPROC - Main search routine                      *
+      *                                                               *
+      *  Calls    :                                                   *
+      *                                                               *
+      *****************************************************************
+     C           SRBAGR    BEGSR
+      *
+     C                     MOVELPIBRCH    KBRCA
+     C                     MOVELWOTHP     KOTHP
+     C           KBAGR     CHAINMEBAGRL1             89
+      *
+      ** Record found.
+      *
+     C           *IN89     IFEQ *OFF
+     C                     MOVE '*CRT103' PORETC
+     C                     GOTO EXBAGR
+     C                     ENDIF
+      *
+     C                     MOVELWOTHP     WOTH2  11
+     C                     MOVE '***'     WOTH2
+     C                     MOVELPIBRCH    KBRCA
+     C                     MOVELWOTH2     KOTHP
+     C           KBAGR     CHAINMEBAGRL1             89
+      *
+      ** Record found.
+      *
+     C           *IN89     IFEQ *OFF
+     C                     MOVE '*CRT103' PORETC
+     C                     GOTO EXBAGR
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANK    KBRCA
+     C                     MOVELWOTHP     KOTHP
+     C           KBAGR     CHAINMEBAGRL1             89
+      *
+      ** Record found.
+      *
+     C           *IN89     IFEQ *OFF
+     C                     MOVE '*CRT103' PORETC
+     C                     GOTO EXBAGR
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANK    KBRCA
+     C                     MOVELWOTH2     KOTHP
+     C           KBAGR     CHAINMEBAGRL1             89
+      *
+      ** Record found.
+      *
+     C           *IN89     IFEQ *OFF
+     C                     MOVE '*CRT103' PORETC
+     C                     ENDIF
+      *
+     C           EXBAGR    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   - Initialisation routine                            *
+      *                                                               *
+      *  Called by: Main processing                                   *
+      *                                                               *
+      *  Calls    :                                                   *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA data area.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'ME1730'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Key list for lf/MEBAGRL1
+      *
+     C           KBAGR     KLIST
+     C                     KFLD           KBATY  10
+     C                     KFLD           KBRCA   3
+     C                     KFLD           KOTHP  11
+      *
+     C                     MOVEL'MT103'   KBATY
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR    - Program exception error routine                   *
+      *             Called automatically if a program error occurs,   *
+      *             or directly by the program code using EXSR.       *
+      *             This subroutine DUMPs the program just once.      *
+      *                                                               *
+      *  Called by: (**calling routines**)                            *
+      *                                                               *
+      *  Calls    : None                                               *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     MOVE '*ERROR ' PORETC
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

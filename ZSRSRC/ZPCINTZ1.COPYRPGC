@@ -1,0 +1,487 @@
+      *****************************************************************
+      **                                                             **
+      ** ZPCINT - Subroutine to calculate the Purchased Interest     **
+      **          on a Trade.                                        **
+      **                                                             **
+      ** INPUT  - ECD    (5,0)  Event Control Date.                  **
+      **          NOML   (11,0) Nominal from Trade.                  **
+      **          ZACIN  (1A)   Accrued Indicator.                   **
+      **          ZDADJ  (3,0)  Days Adjustment.                     **
+      **          ZADIN  (1A)   Actual/Difference Indicator.         **
+      **          ZCPOVR (1A)   Coupon Rate overridden IF = 'Y'.     **
+      **          TDCR   (11,7) Coupon Rate from Trade.              **
+      **          ZCDP   (1,0)  Currency decimal places              **   S01117
+      **          and various fields from Security.                  **
+      **                                                             **
+      ** OUTPUT - ZITRA  (13,0) Total Purchased Interest             **
+      **          ZTINA  (13,0) Interest Adjustment                  **
+      **                                                             **
+      ** CALLS  - ZLCD   (Calculate Last Coupon Date)                **
+      **          ZNCD   (Calculate Next Coupon Date)                **
+      **          ZRATE  (Calculate Effective Interest Rate)         **
+      **          ZACCR  (Calculate Accrued Interest)                **
+      **          ZDYYR  (Calculate Number of days in Interest Year) **
+      **                                                             **
+      ** NOTE   - Should only be called for Interest Bearing         **
+      **          Securities.                                        **
+      **                                                             **
+      *****************************************************************
+      **                                                             **
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+     C*  Last Amend No. 178500             DATE 28Aug00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      ** Prev Amend No. 088864             Date 20Apr00              **
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      **                099649             Date 17APR96              **
+      **                S01117             DATE 22JAN91              **
+      **                E23204             DATE 06AUG90              **
+      **                E21718             DATE 26APR90              **
+      **                E20654             DATE 18DEC89              **
+      **                E20085             DATE 06NOV89              **
+      **                                                             **
+      *---------------------------------------------------------------*
+      **                                                             **
+     C*  178500 - To avoid rounding errors, amend work fields ZWMLT   *
+     C*           and ZWAMT to be large enough to hold the product of *
+     C*           a 15,0 amount multiplied by a 15,9 rate.            *
+      ** 088864 - Flat interest should be the same as cum-interest   **
+      **          with purchase interest equal to 0.                 **
+      ** 099649 - If day adjustment on the trade is the same as on   **
+      **          the security, do not treat as an interest          **
+      **          discrepancy.                                       **
+      ** S01117 - SD New file changes (multibranching)               **
+      ** E23204 - DIVIDE BY ZERO, Cause by E21718                    **
+      ** E21718 - Days adjustment should be used separately to       **   E21718
+      **          calculate interest using value date interest rate  **   E21718
+      **          to avoid calculating interest for fewer days than  **   E21718
+      **          entered if 30 day months are used and to avoid     **   E21718
+      **          any difficulty with FRNs - (the user must override **   E21718
+      **          purchase interest amount if necessary)             **   E21718
+      ** E20654 - ITRA must be calculated for flat trades and        **   E20654
+      **          Schuldshceins.                                     **   E20654
+      ** E20085 - Interest and Coupon Calculations Rewrite - this    **   E20085
+      **          is a rewrite of CPCINT and CPCADJ for Input Cycle. **   E20085
+      **         - Interest Adjustments were not being calculated on **   E20085
+      **           flat Trades.                                      **   E20085
+      **         - Initial defaults were sometimes being calculated  **   E20085
+      **           incorrectly.                                      **   E20085
+      **         - Ex-Coupon calculation was incorrect and was also  **   E20085
+      **           not being done the same way as COB does it.       **   E20085
+      **         - fix to backvaluing into previous Coupon periods.  **   E20085
+      **         - work on ZLCD/ZNCD.                                **   E20085
+      **         - Generally: restructures the whole subroutine to   **   E20085
+      **           make it correct, efficient and easy to read.      **   E20085
+      **                                                             **
+      *****************************************************************
+      *
+     C           ZPCINT    BEGSR                           *** ZPCINT ***
+      *
+      ***  Define the Keylists for SEDEV/SEDEVDF and SECEO/SEDEVDO.
+      ***  NOTE: SECEO is Keyed by Security/Event Type/REVERSE Date.
+      *
+     C           KPSEDF    KLIST
+     C                     KFLD           SESN
+     C                     KFLD           ZZLCD
+     C                     KFLD           SDET
+      *
+     C           KPSEDO    KLIST
+     C                     KFLD           SESN
+     C                     KFLD           SDET
+     C                     KFLD           ZZLCD
+      *
+      ***  Define and zeroize the Purchased Interest and Interest
+      ***  Adjustment Output fields and Interest work fields.
+      *
+     C                     Z-ADD*ZEROS    ZITRA  130
+     C                     Z-ADD*ZEROS    ZTINA  130
+     C                     Z-ADD*ZEROS    ZADJ   130
+     C                     Z-ADD*ZEROS    ZCUM   130
+     C                     Z-ADD*ZEROS    ZEX    130
+     C                     MOVE ZACIN     ZACIN   1
+     C                     Z-ADDZDADJ     ZDADJ   30
+     C                     MOVE ZADIN     ZADIN   1
+     C                     MOVE ZCPOVR    ZCPOVR  1
+     C                     Z-ADDIADJ      @IADJ   30                      099649
+      *
+      ***  Initialize the fields that won't change that are required by
+      ***  other Standard SRs that are called.
+      *
+     C                     Z-ADDNOML      ZAMT
+     C                     MOVE PPDI      ZPPDI
+     C                     MOVE PROT      ZPROT
+     C                     Z-ADDSFPP      ZSFPP
+     C*****************************************************************   099649
+     C*****Zeroize*Days*Adjusted*on*SECTY*as*this*shouldn't*be*included   099649
+     C*****in*ZDAYS*routine*(Accrued*Interest*and*the*Adjustment*are***   099649
+     C*****calculated*separately*to*form*Purchased*Interest).**********   099649
+     C*****************************************************************   099649
+     C*********************Z-ADD*ZEROS    IADJ                            099649
+     C*                                                                   099649
+     C***  The interest adjustment on the trade is used to determine      099649
+     C***  whether the interest adjustment should be included in the      099649
+     C***  purchase interest caluclation.                                 099649
+     C*                                                                   099649
+     C           ZDADJ     IFEQ *ZEROS                                    099649
+     C                     Z-ADD0         IADJ                            099649
+     C                     END                                            099649
+     C*                                                                   099649
+      *
+      ***  If the Trade is Flat, or the Value Date of the Trade is Less
+      ***  Than the Initial Date, Interest Accrual is zero, so set on
+      ***  indicator 97. This will enable determination of the Interest
+      ***  Rate as at Value Date, but will skip calculations of Accrued
+      ***  Interest.
+      *
+     C***********ZACIN     IFEQ 'F'                                     E20654
+     C***********ECD       ORLT ITLD                                    E20654
+     C           ECD       IFLT ITLD                                    E20654
+     C                     SETON                     97
+     C                     ELSE
+     C                     SETOF                     97
+     C                     END
+      *---------------------------------------------------------------*
+      ***  Accrued Interest section                                   *
+      *---------------------------------------------------------------*
+      *
+      ***  Determine Coupon Dates prior to and after the Value Date
+      *
+     C                     Z-ADDECD       ZECD
+     C                     EXSR ZLCD
+     C                     EXSR ZNCD
+      *
+      ***  If the Security has no interest changes ...
+      *
+     C           CPNR      IFNE *ZEROS
+     C           PPDI      ANDEQ'N'
+     C           PROT      ANDNE'3'
+     C           PROT      ANDNE'5'
+     C           PROT      ANDNE'8'
+      *
+      ***  Set up the Interest Rate
+      ***  Trade Coupon Rate contains either CPNR or the overridden,
+      ***  Coupon Rate, as appropriate, so use TDCR.
+      *
+     C                     Z-ADDTDCR      IRATE
+      *
+      ***  Calculate the Accrued Interest
+      *
+     C           *IN97     IFEQ '0'
+      *
+      ***  Set up the Start and End Dates...
+      ***  IF Cum-Coupon, just calculate from the Last Coupon Date to
+      ***  the Event Control Date. For Ex-coupon, calculate on up to
+      ***  the Next Coupon Date and subtract the Cum-Coupon portion.
+      *
+     C                     Z-ADDZZLCD     ZSDATE
+     C                     Z-ADDECD       ZEDATE
+     C                     EXSR ZACCR
+     C                     Z-ADDZACCRD    ZITRA
+      *
+     C           ZACIN     IFEQ 'X'
+     C                     Z-ADDZZLCD     ZSDATE
+     C                     Z-ADDNCD       ZEDATE
+     C                     EXSR ZACCR
+     C                     Z-ADDZACCRD    ZITRX  130
+     C           ZITRA     SUB  ZITRX     ZITRA
+     C                     END
+      *
+     C                     END
+      *
+      *---------------------------------------------------------------*
+      ***  ELSE the Security may have Interest changes ...
+      *
+     C                     ELSE
+      *
+      ***  Initialize with the values from SECTYD.
+      ***  But use Trade Coupon Rate, if overridden.
+      *
+     C           ZCPOVR    IFNE 'Y'
+     C                     Z-ADDCPNR      ZCPNR
+     C                     ELSE
+     C                     Z-ADDTDCR      ZCPNR
+     C                     END
+      *
+     C                     Z-ADDCFCT      ZCFCT
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE CPDP      ZPPCP
+      *
+      ***  Defaults: The values on the Security File may have been
+      ***  changed since Last Coupon prior to the Value Date of the
+      ***  Trade, so check the Security Diary Events File for each one.
+      *
+     C           ZCPOVR    IFNE 'Y'
+     C                     MOVE 'IR'      SDET
+     C           KPSEDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  96
+      *
+     C           *IN96     IFEQ '0'
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'IR'
+     C                     Z-ADDSDNC      ZCPNR
+     C                     END
+     C                     END
+      *
+     C           PROT      IFEQ '8'
+     C                     MOVE 'MP'      SDET
+     C           KPSEDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  96
+      *
+     C           *IN96     IFEQ '0'
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'MP'
+     C                     Z-ADDSDCP      ZCFCT
+     C                     END
+     C                     END
+      *
+     C           PPDI      IFEQ 'Y'
+     C                     MOVE 'PP'      SDET
+     C           KPSEDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  96
+      *
+     C           *IN96     IFEQ '0'
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'PP'
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE SDTP      ZPPCP
+     C                     END
+     C                     END
+      *
+      ***  Calculate the Effective Starting Interest Rate
+      *
+     C                     EXSR ZRATE
+      *
+      *---------------------------------------------------------------*
+      ***  Access the Security Diary Events File to accumulate interest
+      ***  over the period from the Previous Coupon Date to the Event
+      ***  Control Date, taking account of Event Types IR/MP/PP.
+      *
+     C                     Z-ADDZZLCD     ZSDATE
+      *
+     C                     MOVE 'IR'      SDET
+     C           KPSEDF    SETLLSEDEVDF
+     C           SESN      READESEDEVDF                  96
+      *
+     C           *IN96     DOWEQ'0'
+     C           SDED      ANDLTECD
+      *
+     C           SDET      IFEQ 'IR'
+     C           ZCPOVR    ANDNE'Y'
+     C           SDET      OREQ 'MP'
+     C           SDET      OREQ 'PP'
+      *
+      ***  Calculate the Accrued Interest UP TO the Event Date.
+      *
+     C           *IN97     IFEQ '0'
+     C                     Z-ADDSDED      ZEDATE
+     C                     EXSR ZACCR
+     C                     ADD  ZACCRD    ZCUM
+     C                     END
+      *
+      ***  Set the fields to the new values and calculate new Rate.
+      ***  NOTE: New Rate affects the Period FROM the Event Date.
+      ***  Only update the relevant field to the Event Type.
+      *
+     C           SDET      IFEQ 'IR'
+     C                     Z-ADDSDNC      ZCPNR
+     C                     END
+     C           SDET      IFEQ 'MP'
+     C                     Z-ADDSDCP      ZCFCT
+     C                     END
+     C           SDET      IFEQ 'PP'
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE SDTP      ZPPCP
+     C                     END
+      *
+     C                     EXSR ZRATE
+     C                     Z-ADDSDED      ZSDATE
+      *
+      ***  END of Event Types IR/MP/PP
+     C                     END
+      *
+     C           SESN      READESEDEVDF                  96
+     C                     END
+      *
+      ***  At this point, if Indicator 97 is on, we have the Effective
+      ***  Interest Rate at the Event Control Date and can proceed to
+      ***  the Interest Adjustment Section.
+      *
+      ***  If Indicator 97 is off we carry on with the Accrued Interest
+      ***  calculation: Save the Interest as of the last Event Date for
+      ***  Ex-Coupon calculation and then calculate the last bit of
+      ***  the Cum-Coupon Accrued Interest up to Event Control Date.
+      *
+     C           *IN97     IFEQ '0'
+      *
+     C                     Z-ADDZCUM      ZEX
+      *
+     C                     Z-ADDECD       ZEDATE
+     C                     EXSR ZACCR
+     C                     ADD  ZACCRD    ZCUM
+      *
+      ***  If the Trade is Cum-Coupon, we now have the Accrued Interest
+      ***  and can proceed to the Interest Adjustment Section, ELSE the
+      ***  Trade must be Ex-Coupon so carry on calculating Accrued
+      ***  Interest from where we left off up to the Next Coupon Date.
+      *
+     C           ZACIN     IFEQ 'C'
+     C           ZACIN     OREQ 'F'                                       088864
+     C                     Z-ADDZCUM      ZITRA
+     C                     ELSE
+      *
+     C           *IN96     DOWEQ'0'
+     C           SDED      ANDLTNCD
+      *
+     C           SDET      IFEQ 'IR'
+     C           ZCPOVR    ANDNE'Y'
+     C           SDET      OREQ 'MP'
+     C           SDET      OREQ 'PP'
+      *
+      ***  Calculate the Accrued Interest up to the Event Date.
+      *
+     C                     Z-ADDSDED      ZEDATE
+     C                     EXSR ZACCR
+     C                     ADD  ZACCRD    ZEX
+      *
+      ***  Set the fields to the new values and calculate new Rate.
+      ***  NOTE: New Rate affects the Period AFTER the Event Date.
+      ***  Only update the relevant field to the Event Type as all the
+      ***  other fields will be set to zero.
+      *
+     C           SDET      IFEQ 'IR'
+     C                     Z-ADDSDNC      ZCPNR
+     C                     END
+     C           SDET      IFEQ 'MP'
+     C                     Z-ADDSDCP      ZCFCT
+     C                     END
+     C           SDET      IFEQ 'PP'
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE SDTP      ZPPCP
+     C                     END
+      *
+     C                     EXSR ZRATE
+     C                     Z-ADDSDED      ZSDATE
+      *
+      ***  END of Event Types IR/MP/PP
+     C                     END
+      *
+     C           SESN      READESEDEVDF                  96
+     C                     END
+      *
+      ***  When all Events before Next Coupon Date have been processed,
+      ***  calculate the last bit of Accrued Interest up to NCD.
+      *
+     C                     Z-ADDNCD       ZEDATE
+     C                     EXSR ZACCR
+     C                     ADD  ZACCRD    ZEX
+      *
+      ***  We now have the Total Accrued Interest from Last Coupon to
+      ***  Next Coupon. The Ex-Coupon Purchased Interest is obtained by
+      ***  subtracting the Cum-Coupon Accrued Interest from the Total.
+      *
+     C           ZCUM      SUB  ZEX       ZITRA
+      *
+     C                     END
+     C                     END
+     C                     END
+     C*                                                                   099649
+     C*** Only Calculate Interest Adjustment if it is different to        099649
+     C*** the interest adjustment on the security.                        099649
+     C*                                                                   099649
+     C           ZDADJ     IFNE *ZERO                                     099649
+     C                     SUB  IADJ      ZDADJ                           099649
+     C                     END                                            099649
+      *
+      *---------------------------------------------------------------*
+      ***  Interest Adjustment Section (calculated as follows)        *
+      *                                                               *
+      *    Nominal amount * Current coupon * Days adjustment          *
+      *    -------------------------------------------------          *
+      *                Days in interest year * 100                    *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+      *****Calculate*the*number*of*days*in*the*Interest*Year.             E20654
+      ***************                                                     E20654
+     C**********           EXSR ZDYYR                                     E20654
+      *******                                                             E20654
+      ***  Calculate Interest Adjustment and new Purchased Interest.
+      *
+     C***********ZDADJ     IFNE *ZEROS                             E20654 E23204
+     C***********ZINTDD    IFNE *ZEROS                                    E20654
+     C***********ZDADJ     ANDNE*ZEROS                                    E20654
+      *
+      ***  Calculate the number of days in the Interest Year.             E23204
+      *                                                                   E23204
+     C                     EXSR ZDYYR                                     E23204
+      *                                                                   E23204
+      ***  Calculate Interest Adjustment and new Purchased Interest.      E23204
+      *                                                                   E23204
+     C           ZINTDD    IFNE *ZEROS                                    E23204
+     C           ZDADJ     ANDNE*ZEROS                                    E23204
+      *
+      *****Adjust*Start*and*End*Date*for*ZACCR*for*Days*Adjustment.*******E21718
+      *
+     C***********ZDADJ     IFLT 0                                         E21718
+     C***********ECD       ADD  ZDADJ     ZSDATE                          E21718
+     C***********          Z-ADDECD       ZEDATE                          E21718
+     C***********          ELSE                                           E21718
+     C***********          Z-ADDECD       ZSDATE                          E21718
+     C***********ECD       ADD  ZDADJ     ZEDATE                          E21718
+     C***********          END                                            E21718
+      *
+     C***********          EXSR ZACCR                                     E21718
+      *                                                                   E21718
+     C***********CDP       SUB  NMDP      DC                        E21718S01117
+     C           ZCDP      SUB  NMDP      DC                              S01117
+     C           DC        ADD  5         DC      10                      E21718
+      *                                                                   E21718
+     C           PROT      IFNE '5'                                       E21718
+     C********   ZAMT      MULT IRATE     ZWMLT  150H               E21718178500
+     C********   ZWMLT     DIV  100       ZWAMT  152                E21718178500
+     C           ZAMT      MULT IRATE     ZWMLT  309H                     178500
+     C           ZWMLT     DIV  100       ZWAMT  287                      178500
+     C*                                                                   E21718
+     C                     MULT ZDADJ     ZWAMT                           E21718
+     C*                                                                   E21718
+     C           ZINTDD    DIV  POWER8,DC ZDIV   156                      E21718
+     C           ZWAMT     DIV  ZDIV      ZACCRD    H                     E21718
+     C*                                                                   E21718
+     C* If Yen Bond                                                       E21718
+     C                     ELSE                                           E21718
+     C*  Calc. Factor                                                     E21718
+     C           IRATE     MULT ZDADJ     ZFAC   157                      E21718
+     C           ZFAC      DIV  ZINTDD    ZFAC                            E21718
+     C*  Calc. Interest                                                   E21718
+     C           ZAMT      MULT ZFAC      ZWACCR 153H                     E21718
+     C*  Allow for ccy Dec Places                                         E21718
+     C           ZWACCR    MULT POWER8,DC ZACCRD                          E21718
+     C           ZACCRD    DIV  100       ZACCRD                          E21718
+     C                     END                                            E21718
+      *
+      *****If*Interest*Days*Adjustment*is*-ve,*make*interest*-ve**********E21718
+     C***********ZDADJ     IFLT 0                                         E21718
+     C***********          Z-SUBZACCRD    ZACCRD                          E21718
+     C***********          END                                            E21718
+      *
+     C           ZADIN     IFEQ 'D'
+     C                     Z-ADDZACCRD    ZTINA
+     C                     ADD  ZTINA     ZITRA
+      *
+      ***  ELSE Adjustment is Actual Interest Amount.
+     C                     ELSE
+     C           ZACCRD    SUB  ZITRA     ZTINA
+     C                     Z-ADDZACCRD    ZITRA
+     C                     END
+      *
+     C                     END
+     C*                                                                   099649
+     C                     Z-ADD@IADJ     IADJ                            099649
+      *
+     C                     ENDSR
+      *
+      *****************************************************************

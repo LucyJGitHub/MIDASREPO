@@ -1,0 +1,1031 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Yearly Profitability Report')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE8402 - Yearly Profitability Report                         *
+      *                                                               *
+      *  Called by:  SEC8400 SEC8400A                                 *
+      *                                                               *
+      *  (c) Finastra International Limited 2017                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSE108 *CREATE     Date 06Oct17               *
+      *                 nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSE108 - Yearly Profitability Report and Enquiry             *
+      *                                                               *
+      *****************************************************************
+     FSEYPEDL0IF  E           K        DISK
+     FSEYPEAPDIF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FBOOKD   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FSEYPDWPDO   E                    DISK                           U6
+     FSEYPDZPDO   E                    DISK                           U6
+     FSE8402AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FSE8402P1O   E                    PRINTER      KINFDS SPOOL      UC
+      /EJECT
+      *****************************************************************
+      *
+      *  FUNCTION OF INDICATORS
+      *
+      *    10  -  ERROR ON CHAIN
+      *    30  -  MULTIBRANCHING
+      *    40  -  PRINT 'TRADE BASIS'
+      *   N40  -  PRINT 'VALUE BASIS'
+      *    43  -  PRINT '(TOTAL) NET INC/EXP'
+      *    45  -  CONTROLS PRINTING OF  ()'S
+      *    80  -  END OF FILE ON SEYPEDL0
+      *    81  -  ON AFTER OUTPUT TO P1 FILE
+      *    82  -  ON IF DIFFERENT KEY FOR INV.TYPE TOTAL PRINT
+      *    83  -  ON IF DIFFERENT KEY FOR CURRENCY TOTAL PRINT
+      *    84  -  ON IF DIFFERENT KEY FOR BOOK TOTAL PRINT
+      *    85  -  ON IF DIFFERENT KEY FOR PAGE THROW
+      *    90-98 - USED IN Z SUBROUTINES
+      *    U7  -  DATABASE ERROR
+      *    U8  -  DATABASE ERROR
+      *
+     F/SPACE 3
+      * SUBROUTINE INDEX :-
+      *   FIRST  - FIRST TIME PROCESSING
+      *   AUDIT  - AUDIT TIME PROCESSING
+      *   ZDATE2 - DATE CONVERSION
+      *   ZSEDIT - AMOUNT EDIT
+      *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+      /EJECT
+     I/COPY ZSRSRC,ZSEDITZ2
+     ISEYPDA      DS                             15
+     I                                       11  150LECD
+     ILDA        UDS                            256
+     I                                      134 177 DBLOT
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+      ** SESTAT DATA STRUCTURE
+     IDTAARA    E DSSESTAT
+      *
+     IIKEYDS      DS
+     I                                        1   3 YPNC
+     I                                        4   6 YPIN
+      ** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     ISPOOL       DS
+      ** DS FOR SPOOL FILE NAME
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IRUNDT       DS
+      *
+      ** RUNDAT data area
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** FIRST DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+      *
+      ** EXTERNAL DS FOR BANK DETAILS
+     ISDBANK    E DSSDBANKPD
+      *
+      ** EXTERNAL DS FOR CURRENCY DETAIL
+     ISDCURR    E DSSDCURRPD
+      *
+     ISDGELR    E DSSDGELRPD
+      *
+      ** External data structures for GL Details
+     ISDSTRD    E DSSDSTRDPD
+      *
+      ** External data structures for SE Details
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ** External data structures for Branch Details
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T
+      *================================================================
+      *
+      ** FIELD DEFINITIONS
+      *
+     C           *LIKE     DEFN A6NBDP    NOMDP
+      *
+      ** KEY LISTS
+      *
+     C           IKEY      KLIST
+     C                     KFLD           YPNC
+     C                     KFLD           YPIN
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C                     PARM           RPARM   1
+     C                     MOVELRPARM     TVTYP   1
+      *
+     C           TVTYP     IFEQ 'T'
+     C                     SETON                     40
+     C                     END
+      *
+      ** ACCESS ICD INFORMATION
+      *
+     C                     MOVE 'SE8402  'DBPGM
+     C                     EXSR FIRST
+      *
+      ** CHECK FOR DATABASE ERRORS
+      *
+     C           *IN99     CABEQ'1'       EAUDIT
+      ** SET HEADINGS ON PRINT
+     C           BVCMBP    IFEQ 'Y'
+     C           BVCBAP    OREQ 'Y'
+     C                     SETON                     43
+     C                     END
+      *
+      ** READ EACH EXTRACT RECORD
+      *
+     C                     READ SEYPEDD0                 80
+     C           *IN80     DOWNE'1'
+      ** Maintain count of records input
+     C                     ADD  1         ZRIN
+     C                     SETOF                     828384
+     C                     SETOF                     85
+      ** If new branch access branch table record
+     C           YPBA      IFNE LYPBA
+     C                     SETON                     828384
+     C                     SETON                     85
+      ** Access Branch Code File
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM YPBA      WCYCD   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+      ** Database Error if not found.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     MOVELYPBA      DBKEY            * DB ERROR 04 *
+     C                     Z-ADD004       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN12     IFEQ '0'
+     C                     MOVE '1'       *IN12
+     C                     OPEN SE8402P1
+     C                     EXSR RCFP1
+     C                     ENDIF
+      *
+      ** If new book access book record
+      *
+     C           YPBK      IFNE LYPBK
+     C                     SETON                     828384
+     C                     SETON                     85
+     C           YPBK      CHAINBOOKD                10
+     C           *IN10     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     10
+     C                     END
+     C                     END
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'BOOKD'   DBFILE
+     C                     MOVE *BLANKS   DBKEY            *****************
+     C                     MOVELYPBK      DBKEY            ** DB ERROR 06 **
+     C                     Z-ADD6         DBASE            *****************
+     C                     SETON                     99U7U8
+     C                     END
+     C                     END
+      *
+      ** If new nominal currency access currency file
+      *
+     C           YPNC      IFNE LYPNC
+     C                     SETON                     828385
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM YPNC      WCYCD
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Database Error if not found.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELYPNC      DBKEY            * DB ERROR 06 *
+     C                     Z-ADD006       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C           *IN81     IFEQ '0'
+      *
+      ** First time only. Else, set edit after totals formatted.
+      *
+     C                     MOVE A6NBDP    NOMDP
+     C                     MOVELYPBK      OYPBK
+     C                     MOVELBOKD      OBOKD
+     C                     MOVELYPNC      OYPNC
+     C                     END
+     C                     END
+      *
+      ** If new investment type access investment type record
+      *
+     C           YPIN      IFNE LYPIN
+     C                     SETON                     82
+     C           IKEY      CHAININVTP                10
+     C           *IN10     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     10
+     C                     END
+     C                     END
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'INVTP'   DBFILE           *****************
+     C                     MOVELIKEYDS    DBKEY            ** DB ERROR 08 **
+     C                     Z-ADD8         DBASE            *****************
+     C                     SETON                     99U7U8
+     C                     END
+     C                     END
+      *
+      ** If previous output & new branch/book/cur/market/invest typ-
+      *        output total line
+     C           *IN81     IFEQ '1'
+     C           *IN82     ANDEQ'1'
+      *
+      ** Reformat all totals ready for output
+      *
+      ** Realised profit/loss
+     C                     Z-ADDW1TOTI    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTRPT
+      *
+      ** Un-Realised profit/loss
+      *
+     C                     Z-ADDW2TOTI    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WUPLT
+      *
+      ** Interest received/accrued
+      *
+     C                     Z-ADDW3TOTI    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WIRAT
+      *
+      ** Total income expense
+      *
+     C                     Z-ADDW4TOTI    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WCCPTT
+      *
+      ** Total Income/expense
+      *
+     C                     Z-ADDW5TOTI    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTEET
+      *
+      ** Total Base Currency Income/expense
+      *
+     C                     Z-ADDW6TOTI    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDBCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTBST
+      *
+     C           LINCNT    IFGT 54
+     C                     WRITEHEADP1
+     C                     Z-ADD15        LINCNT
+     C                     END
+     C                     WRITEINVTOT
+     C                     ADD  6         LINCNT
+      *
+      ** Zeroise total fields
+      *
+     C                     Z-ADD0         W1TOTI
+     C                     Z-ADD0         W2TOTI
+     C                     Z-ADD0         W3TOTI
+     C                     Z-ADD0         W4TOTI
+     C                     Z-ADD0         W5TOTI
+     C                     Z-ADD0         W6TOTI
+     C                     END
+      *
+      ** If previous output & new branch/book/cur/market-
+      *        output total line
+     C           *IN81     IFEQ '1'
+     C           *IN83     ANDEQ'1'
+      *
+      ** Reformat all totals ready for output
+      *
+      ** Realised profit/loss
+     C                     Z-ADDW1TOTC    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTRPT
+      *
+      ** Un-Realised profit/loss
+      *
+     C                     Z-ADDW2TOTC    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WUPLT
+      *
+      ** Interest received/accrued
+      *
+     C                     Z-ADDW3TOTC    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WIRAT
+      *
+      ** Total income expense
+      *
+     C                     Z-ADDW4TOTC    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WCCPTT
+      *
+      ** Total Income/expense
+      *
+     C                     Z-ADDW5TOTC    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTEET
+      *
+      ** Total Base Currency Income/expense
+      *
+     C                     Z-ADDW6TOTC    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDBCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTBST
+      *
+     C           LINCNT    IFGT 54
+     C                     WRITEHEADP1
+     C                     Z-ADD15        LINCNT
+     C                     END
+     C                     WRITECCYTOT
+     C                     ADD  6         LINCNT
+      *
+      ** Zeroise total fields
+      *
+     C                     Z-ADD0         W1TOTC
+     C                     Z-ADD0         W2TOTC
+     C                     Z-ADD0         W3TOTC
+     C                     Z-ADD0         W4TOTC
+     C                     Z-ADD0         W5TOTC
+     C                     Z-ADD0         W6TOTC
+      *
+      ** Set DPs for edit (from tabtg10f) after formatting totals for
+      ** previous record.
+      *
+     C                     MOVE A6NBDP    NOMDP
+     C                     END
+      *
+      ** If previous output & new branch/book
+      *        output total line
+     C           *IN81     IFEQ '1'
+     C           *IN84     ANDEQ'1'
+      *
+      ** Reformat all totals ready for output
+      *
+      ** Total Base Currency Income/expense
+     C                     Z-ADDW6TOTB    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDBCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTBST
+      *
+     C           LINCNT    IFGT 54
+     C                     WRITEHEADP1
+     C                     Z-ADD15        LINCNT
+     C                     END
+     C                     WRITEBOKTOT
+     C                     ADD  6         LINCNT
+      *
+      ** WRITE TO SMI YEARLY PROFITABILITY BOOK TOTAL EXTRACT
+      *
+     C   U6                WRITESEYPDWD0
+      *
+      ** Zeroise total field
+      *
+     C                     Z-ADD0         W6TOTB
+     C                     END
+     C           *IN81     IFEQ '1'
+      *
+      ** If previous output & new branch end that report
+      *
+     C           YPBA      IFNE LYPBA
+      *
+      ** Output headings if required
+      *
+     C           LINCNT    IFGT 54
+     C                     WRITEHEADP1
+     C                     END
+     C                     WRITETRAILP1
+     C                     Z-ADD70        LINCNT  20
+     C                     Z-ADD0         PAGE
+     C                     CLOSESE8402P1
+     C                     OPEN SE8402P1
+     C                     EXSR RCFP1
+      *
+      ** If previous output & new page required
+      *
+     C                     ELSE
+     C           *IN85     IFEQ '1'
+     C                     Z-ADD70        LINCNT  20
+     C                     MOVE '0'       *IN85
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Open printer file if first time or new branch
+      *
+     C           *IN81     IFEQ '0'
+     C                     Z-ADD70        LINCNT  20
+     C                     SETON                     81
+     C                     END
+      *
+      ** Store new values of fields
+      *
+     C                     MOVE YPBA      LYPBA
+     C                     MOVE YPBK      LYPBK
+     C                     MOVE YPIN      LYPIN
+     C                     MOVE YPSS      LYPSS
+     C                     MOVE YPNC      LYPNC
+     C                     MOVE YPBA      OYPBA
+     C                     MOVE A8BRNM    OBRNM
+     C                     MOVELYPBK      OYPBK
+     C                     MOVELBOKD      OBOKD
+     C                     MOVELYPNC      OYPNC
+      *
+      ** Output headings if required
+      *
+     C           LINCNT    IFGT 54
+     C                     WRITEHEADP1
+     C                     Z-ADD15        LINCNT
+     C                     END
+      *
+      ** Set up & output detail line
+      *
+      ** Perform all calculations required
+      *
+      **  IF TRADES VALUES REQUIRED
+      *
+     C           TVTYP     IFEQ 'T'
+      *
+     C                     Z-ADDTTRP      WREAL  150
+     C                     Z-ADDTUPN      WUREAL 150
+     C                     Z-ADDTPSN      WINTR  150
+     C                     Z-ADDTCMT      WCCPT  150
+     C                     ADD  TCCT      WCCPT
+     C                     Z-ADDTBYTD     WBASTO 150
+     C                     ADD  TBUNR     WBASTO
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDVTRP      WREAL  150
+     C                     Z-ADDVUPN      WUREAL 150
+     C                     Z-ADDVPSN      WINTR  150
+     C                     Z-ADDVCMT      WCCPT  150
+     C                     ADD  VCCT      WCCPT
+     C                     Z-ADDVBYTD     WBASTO 150
+     C                     ADD  VBUNR     WBASTO
+      *
+     C                     SETOF                         43
+     C           BVCMBP    IFEQ 'Y'
+     C           BVCBAP    OREQ 'Y'
+     C                     SETON                         43
+     C                     END
+     C                     END
+      *
+      ** CALCULATE TOTAL
+      *
+     C                     Z-ADDWREAL     WTOTAL 150
+     C                     ADD  WUREAL    WTOTAL
+     C                     ADD  WINTR     WTOTAL
+     C           BVCMBP    IFNE 'Y'
+     C           BVCBAP    ANDNE'Y'
+     C                     ADD  WCCPT     WTOTAL
+     C                     END
+      *
+      ** ADD VALUES INTO TOTAL LINE
+      *
+     C                     ADD  WREAL     W1TOTI 150
+     C                     ADD  WUREAL    W2TOTI 150
+     C                     ADD  WINTR     W3TOTI 150
+     C                     ADD  WCCPT     W4TOTI 150
+     C                     ADD  WTOTAL    W5TOTI 150
+     C                     ADD  WBASTO    W6TOTI 150
+      *
+     C                     ADD  WREAL     W1TOTC 150
+     C                     ADD  WUREAL    W2TOTC 150
+     C                     ADD  WINTR     W3TOTC 150
+     C                     ADD  WCCPT     W4TOTC 150
+     C                     ADD  WTOTAL    W5TOTC 150
+     C                     ADD  WBASTO    W6TOTC 150
+      *
+     C                     ADD  WBASTO    W6TOTB 150
+      *
+      **  Access security for security report name
+      *
+     C                     MOVEL*BLANK    SRPN
+     C           YPSS      CHAINSECTYDF              10    *
+      *
+      **  Format Realised profit/loss
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WREAL     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTRP
+      *
+      **  Format Unrealised Profit/loss
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WUREAL    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WUPL
+      *
+      **  Format Interest Received/accured
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WINTR     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WIRA
+      *
+      **  Format Total Income/expense
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WCCPT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WCCPRT
+      *
+      **  Format TOTAL  COLUMN
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WTOTAL    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTEE
+      *
+      **  Format TOTAL (IN BASE CURRENCY) COLUMN
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WBASTO    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDBCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTBS
+      *
+      ** Output record
+      *
+     C           LINCNT    IFGT 55
+     C                     WRITEHEADP1
+     C                     Z-ADD15        LINCNT
+     C                     END
+     C                     WRITEDETAIL
+     C                     ADD  1         LINCNT
+      *
+      ** WRITE TO SMI YEARLY PROFITABILITY SECURITY TOTAL EXTRACT
+      *
+     C   U6                WRITESEYPDZD0
+      *
+      ** Read next input record
+      *
+     C                     READ SEYPEDD0                 80
+     C                     END
+      *
+      ** END OF INPUT FILE -
+      ** If previous output - output total line
+      *
+     C           *IN81     IFEQ '1'
+      *
+      ** Reformat all totals ready for output
+      *
+      ** Realised profit/loss
+      *
+     C                     Z-ADDW1TOTI    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTRPT
+      *
+      ** Un-Realised profit/loss
+      *
+     C                     Z-ADDW2TOTI    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WUPLT
+      *
+      ** Interest received/accrued
+      *
+     C                     Z-ADDW3TOTI    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WIRAT
+      *
+      ** Net income expense
+      *
+     C                     Z-ADDW4TOTI    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WCCPTT
+      *
+      ** Total Income/expense
+      *
+     C                     Z-ADDW5TOTI    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTEET
+      *
+      ** Total Base Currency Income/expense
+      *
+     C                     Z-ADDW6TOTI    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDBCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTBST
+      *
+     C           LINCNT    IFGT 54
+     C                     WRITEHEADP1
+     C                     Z-ADD15        LINCNT
+     C                     END
+     C                     WRITEINVTOT
+     C                     ADD  6         LINCNT
+     C                     END
+      *
+      ** If previous output - output total line
+      *
+     C           *IN81     IFEQ '1'
+      *
+      ** Reformat all totals ready for output
+      *
+      ** Realised profit/loss
+      *
+     C                     Z-ADDW1TOTC    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTRPT
+      *
+      ** Un-Realised profit/loss
+      *
+     C                     Z-ADDW2TOTC    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WUPLT
+      *
+      ** Interest received/accrued
+      *
+     C                     Z-ADDW3TOTC    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WIRAT
+      *
+      ** Net income expense
+      *
+     C                     Z-ADDW4TOTC    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WCCPTT
+      *
+      ** Total Income/expense
+      *
+     C                     Z-ADDW5TOTC    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTEET
+      *
+      ** Total Base Currency Income/expense
+      *
+     C                     Z-ADDW6TOTC    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDBCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTBST
+      *
+     C           LINCNT    IFGT 54
+     C                     WRITEHEADP1
+     C                     Z-ADD15        LINCNT
+     C                     END
+     C                     WRITECCYTOT
+     C                     ADD  6         LINCNT
+     C                     END
+      *
+      ** If previous output - output total line
+      *
+     C           *IN81     IFEQ '1'
+      *
+      ** Reformat all totals ready for output
+      *
+      ** Total Base Currency Income/expense
+      *
+     C                     Z-ADDW6TOTB    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDBCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTBST
+      *
+     C           LINCNT    IFGT 52
+     C                     WRITEHEADP1
+     C                     Z-ADD15        LINCNT
+     C                     END
+     C                     WRITEBOKTOT
+      *
+      ** WRITE TO SMI YEARLY PROFITABILITY BOOK TOTAL EXTRACT
+      *
+     C   U6                WRITESEYPDWD0
+     C                     WRITETRAILP1
+     C                     END
+      *
+     C           EAUDIT    TAG
+      *
+      ** OUTPUT RUN CONTROL REPORT
+      *
+     C                     EXSR AUDIT
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      * FIRST - SUBROUTINE TO ACCESS ICD INFORMATION
+      *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           ** FIRST **
+      *
+      ** ACCESS ICD
+      *
+      ** Access LF/SDBANKL1
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 01 *
+     C                     MOVEL'SDBANKL1'DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C                     MOVE BJURPT    TITL
+      *
+      ** Access Currency file for Base Currency Decimal Places.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM BJCYCD    WCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Database Error if not found.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELBJCYCD    DBKEY            * DB ERROR 02 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    BCDP    10
+      *
+      ** Call Access Program for GL Details
+      *
+     C                     CALL 'AOGELRR0'
+     C                     PARM '*MSG   ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDGELR    PARM SDGELR    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVE 'SDGELRPD'DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DB ERROR 03 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** Access LF/SDSTRDPD
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDSTRD    PARM SDSTRD    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     Z-ADD07        DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 07 *
+     C                     MOVEL'SDSTRDPD'DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C           BVRBAP    IFEQ 'Y'
+     C                     SETON                         45
+     C                     END
+      *
+     C                     Z-ADDBJDNWD    ZZDNWD
+     C                     Z-ADDBKAPDT    ZZAPDT
+     C                     EXSR ZEVCD
+     C                     Z-ADDECD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RUNA
+      *
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN30
+     C                     ENDIF
+      *
+     C                     MOVE '0'       *IN12
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      * SUBROUTINE TO OUTPUT CONTROL REPORT
+      *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           ** AUDIT **
+      *
+      ** ACCESS SEYPEAPD record
+      *
+     C                     READ SEYPEAPD                 10
+     C           *IN10     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE 'SEPEX'   DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 09 **
+     C                     Z-ADD9         DBASE            *****************
+     C                     END
+      *
+      ** RCF Processing for Audit File
+      *
+     C                     EXSR RCFAU
+      *
+      ** Check for file control imbalance
+      *
+     C           *INU8     IFEQ '0'
+     C           NORE      IFNE ZRIN
+     C                     SETON                     U857
+     C                     END
+     C                     END
+      *
+      ** OUTPUT CONTROL REPORT
+      *
+     C                     WRITEHEADAU
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     WRITEERROR
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     END
+      *
+     C                     WRITETRAILAU
+      *
+      ** UPDATE THE LATEST EVENT CONTROL DATE
+      *
+     C           *INU6     IFEQ '1'
+     C           *NAMVAR   DEFN           SEYPDA
+     C           *LOCK     IN   SEYPDA
+     C                     Z-ADDECD       LECD
+     C                     OUT  SEYPDA
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C                     SETON                     U7U8LR
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C                     WRITETRAILAU
+     C                     DUMP
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      *  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+      *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            ** RCFP1 **
+      *
+      ** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM YPBA      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      *  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF
+      *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            ** RCFAU **
+      *
+      ** ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      ***
+**  CPY@
+(c) COPYRIGHT BIS BANKING SYSTEMS 1988. COMPANY CONFIDENTIAL.
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

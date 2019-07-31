@@ -1,0 +1,947 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Drop off depot positions')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2530  - DROP OFF DEPOT POSITIONS                           *
+     F*                                                               *
+     F*  Function: To drop from the files for Depot Positions, User   *
+     F*   (COB)    Depot Positions and Customer Depot Positions       *
+     F*            - all records no longer needed by back valuation   *
+     F*              processing                                       *
+     F*            - all records for which the security has expired   *
+     F*            - all records which represent the current position *
+     F*              but which are zero and prior to back-valuation   *
+     F*              date                                             *
+     F*            For backvaluations, the positions as at b/valuation*
+     F*            date are required, ie the latest position record   *
+     F*            which pre-dates back valuation date;  earlier      *
+     F*            positions are dropped; the exception is where the  *
+     F*            current positions is zero and has been since before*
+     F*            b/v date - in this case the position is dropped    *
+     F*                                                               *
+     F*  Called by: SEC1004 - Drop off Positions - Depot/Cust/Book    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 095907             Date 24Jan07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 214410             Date 28Jul05               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 207105             Date 04Jul02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 195062             Date 04Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 179469             DATE 31Aug00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 157947             DATE 07Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 075853             DATE 24JUL96               *
+     F*                 S01496             DATE 20JUL94               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E29170             DATE 07NOV91               *
+     F*                 S01117             DATE 07JUN91               *
+     F*                 S01269             DATE 02AUG90               *
+     F*                 E19103             DATE 09MAY90               *
+     F*                 E14797             DATE 14FEB90               *
+     F*                 E13948             DATE 26/07/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  095907 - MODIFICATIONS CALCULATIONS FOR OUTPUT TRAILER       *
+     F*         - UPDATES OF RECI WITH '*' REPLACED BY DELETES        *
+     F*         - IF INTEREST BEARING DONT REMOVE RECS IN CURR.COUP   *
+     F*           PERIOD                                              *
+     F*         - USE RETENTION PERIOD INSTEAD OF BACK-VALUE PERIOD   *
+     F*         - USE WORK FILED OF 6,0 TO OUPTPUT DETAILS FOR DPOSND *
+     F*           UDEPPD AND CDEPPD ON SE2530AU                       *
+     F*         - also apply 243026.                                  *
+     F*  243026 - Work field too short.                               *
+     F*           6,0 is not enough on printer. Increase to 7,0       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  214410 - SEC0602G failed due to file controls. Do not delete *
+      *           historic records unless security has been deleted.  *
+      *  207105 - retain first rec prior to backvalue                 *
+      *           period if non-zero                                  *
+      *  195062 - Undeleted historic records should be counted/added  *
+      *           to no. of records on file for trailer DPOSNA to     *
+      *           avoid FCOOB during monthend.                        *
+      *  179469 - Do not delete historic records unless security has  *
+      *           been deleted,                                       *
+      *  157947 - Customer could not be deleted due to matured/       *
+      *           historic position records beyong the backvaluation  *
+      *           period - fix is to delete historic records prior to *
+      *           backvaluation period.                               *
+      *         - FCOOB caused by RECI of the security overwriting    *
+      *           RECI of matured record, causing it to be counted as *
+      *           live - fix is to rename RECI field in security rec. *
+     F*  075853 - Ex-coupon Nominal not being reset after passed      *
+     F*           coupon date stop record being drop and created      *
+     F*           depot position out of balance.                      *
+     F*  S01496 - Incorporation of Jyske Enhancements (S10978).       *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching.                                     *
+     F*  S01269 - TRADE AUTHORISATION: RECOMPILED OVER CHANGED FILE   *
+     F*           TABSE.                                              *
+     F*  E19103 - RECOMPILED OVER CHANGES CDEPO & UDEPO FILES AS THEY *
+     F*           WERE SEQUENCED INCORRECTLY(& THUS DROPPED WRONG RECS*
+     F*  E14797 - DROP MOST RECENT POSITION BEFORE BACK-VALUED PERIOD *
+     F*           AS WELL AS EARLIER ONES, IF MOST RECENT POSITION IS *
+     F*           FLAT.                                               *
+     F*  E13948 - USING SETLL TO READ SECTY INSTEAD OF CHAIN          *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FDPOSO   UF  E           K        DISK
+     FUDEPO   UF  E           K        DISK
+     FCDEPO   UF  E           K        DISK
+     FDPOSNA  UF  E                    DISK
+     FUDEPPA  UF  E                    DISK
+     FCDEPPA  UF  E                    DISK
+     FSECTY   IF  E           K        DISK
+     FSE2530AUO   E                    PRINTER
+     F/COPY WNCPYSRC,SE2530F001
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F* ICD SE    TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   50 - FIRST RECORD IN GROUP                                  *
+     F*   60 - AMEND S01496 IS SWITCH ON                              *
+     F*   80 - ERROR ON CHAIN                                         *
+     F*   89 - END OF FILE                                            *
+     F*90-99 - USED IN Z-SUBROUTINES                                  *
+     F*   U7 - DATABASE ERROR                                         *
+     F*   U8 - DATABASE ERROR                                         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   FIRST       - ACCESSES ICD 1 AND SE                         *
+     F*   AUDIT       - OUTPUTS CONTROL REPORT                        *
+     F*   *PSSR       - Error handling                                *   S01117
+     F*   ZSYSTM      - ACCESSES ICD 1                                *
+     F*   ZICDSE      - ACCESSES ICD FOR SE                           *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F/COPY WNCPYSRC,SE2530F002
+     E                    CPY@    1   1 80
+      /EJECT
+     I*
+     ISECTYDF                                                             157947
+     I              RECI                            RECID                 157947
+     I*                                                                   157947
+     I            DS
+     I*
+     I* DATA STRUCTURE FOR TABLE FILE KEY
+     I*
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I                                        3   8 ZZ006
+     I                                        9  11 RCCY
+     I                                       12  12 ZZ001
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I/COPY WNCPYSRC,SE2530I001
+     I*
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C* KEY LISTS FOR CHAINING TO :-
+     C*     TABTB36
+     C*
+     C           TABKEY    KLIST
+     C                     KFLD           TKEY
+     C*
+     C* PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE2530'  DBPGM
+     C                     OUT  LDA                                       S01117
+      *                                                                   S01496
+      **  Access SAR details file to see if JYSKE Enhcmts is installed.   S01496
+      *                                                                   S01496
+     C                     CALL 'AOSARDR0'                                S01496
+     C                     PARM '       ' @RTCD   7                       S01496
+     C                     PARM '*VERIFY' @OPTN   7                       S01496
+     C                     PARM 'S01496'  WSARD   6                       S01496
+      *                                                                   S01496
+     C           @RTCD     IFEQ *BLANK                                    S01496
+     C                     MOVE 'Y'       S01496  1                       S01496
+     C                     MOVE *ON       *IN60                           S01496
+     C                     ENDIF                                          S01496
+     C*
+     C* CLEAR COUNTS AND WORKFIELDS
+     C*
+     C                     Z-ADD0         IREC1
+     C                     Z-ADD0         IREC2
+     C                     Z-ADD0         IREC3
+     C                     Z-ADD0         LREC1
+     C                     Z-ADD0         LREC2
+     C                     Z-ADD0         LREC3
+     C                     Z-ADD0         DREC1
+     C                     Z-ADD0         DREC2
+     C                     Z-ADD0         DREC3
+     C                     Z-ADD0         IREC17                                              243026
+     C                     Z-ADD0         IREC27                                              243026
+     C                     Z-ADD0         IREC37                                              243026
+     C                     Z-ADD0         LREC17                                              243026
+     C                     Z-ADD0         LREC27                                              243026
+     C                     Z-ADD0         LREC37                                              243026
+     C                     Z-ADD0         DREC17                                              243026
+     C                     Z-ADD0         DREC27                                              243026
+     C                     Z-ADD0         DREC37                                              243026
+     C*
+     C* GENERATE STORAGE FIELDS
+     C*
+     C************LIKE     DEFN DSBR      SDSBR                           S01117
+     C           *LIKE     DEFN DSBA      SDSBA                           S01117
+     C           *LIKE     DEFN DSSC      SDSSC
+     C           *LIKE     DEFN DDPT      SDDPT
+     C************LIKE     DEFN UDBR      SUDBR                           S01117
+     C           *LIKE     DEFN UDBA      SUDBA                           S01117
+     C           *LIKE     DEFN UDSN      SUDSN
+     C           *LIKE     DEFN UDPT      SUDPT
+     C           *LIKE     DEFN UDBK      SUDBK
+     C           *LIKE     DEFN UDMK      SUDMK
+     C************LIKE     DEFN CDBR      SCDBR                           S01117
+     C           *LIKE     DEFN CDPA      SCDPA                           S01117
+     C           *LIKE     DEFN CDCN      SCDCN
+     C           S01496    IFEQ 'Y'                                       S01496
+     C           *LIKE     DEFN PTFR      SPTFR                           S01496
+     C                     ENDIF                                          S01496
+     C           *LIKE     DEFN CDSN      SCDSN
+     C           *LIKE     DEFN CDPT      SCDPT
+     C           *LIKE     DEFN CDMK      SCDMK
+     C/COPY WNCPYSRC,SE2530C001
+     C*
+     C*  FIRST CYCLE PROCESS
+     C*
+     C                     EXSR FIRST
+     C*
+     C*  P R O C E S S      D P O S O    F I L E
+     C*
+     C***********          Z-ADD0         SDSBR                           S01117
+     C                     MOVE *BLANKS   SDSBA                           S01117
+     C                     MOVE *BLANKS   SDSSC
+     C**********           Z-ADD0         SDDPT                                               CSD027
+     C                     MOVE *BLANKS   SDDPT                                               CSD027
+     C*
+     C*  READ DPOSO FILE
+     C*
+     C                     READ DPOSO                    89
+     C*
+     C*  DO UNTIL EOF
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C*  INCREMENT COUNT
+     C*
+     C                     ADD  1         IREC1   50
+     C                     ADD  1         IREC17  70                                          243026
+     C                     ADD  1         NORE17  70                                          243026
+     C*
+     C* IF BR/SEC/DEPOT CHANGED SET OFF FLAG TO INDICATE FIRST RECORD
+     C* OF GROUP PROCESSED
+     C*
+     C***********DSBR      IFNE SDSBR                                     S01117
+     C           DSBA      IFNE SDSBA                                     S01117
+     C           DSSC      ORNE SDSSC
+     C           DDPT      ORNE SDDPT
+     C***********          MOVE DSBR      SDSBR                           S01117
+     C                     MOVE DSBA      SDSBA                           S01117
+     C                     MOVE DDPT      SDDPT
+     C                     SETOF                     50
+     C                     END
+     C*
+     C*  TEST FOR  SECURITIES  RECORD
+     C*
+     C           DSSC      IFNE SDSSC
+     C                     MOVE DSSC      SDSSC
+     C***********DSSC      SETLLSECTY                    80               E13948
+     C************IN80     IFEQ '1'                                       E13948
+     C***********RECI      IFEQ '*'                                       E13948
+     C*********************SETOF                     80                   E13948
+     C*********************END                                            E13948
+     C*********************END                                            E13948
+     C           DSSC      CHAINSECTY                80                   E13948
+     C           *IN80     IFEQ '0'                                       E13948
+     C***********RECI      ANDEQ'*'                                 E13948157947
+     C           RECID     ANDEQ'*'                                       157947
+     C                     SETON                         80               E13948
+     C                     END                                            E13948
+     C                     END
+     C*
+     C**IF**IN80*OFF*THEN*SECURITY*RECORD*NOT*FOUND*FOR*THIS*GROUP**      E13948
+     C************IN80*****IFEQ '0'********************************       E13948
+     C* IF *IN80 ON THEN SECURITY RECORD NOT FOUND FOR THIS GROUP         E13948
+     C*
+     C           *IN80     IFEQ '1'                                       E13948
+     C                     ADD  1         DREC1   50
+     C                     ADD  1         DREC17  70                                          243026
+     C***********          MOVE '*'       RECI                                                095907
+     C***********          UPDATDPOSNDF                                                       095907
+     C                     DELETDPOSNDF                                                       095907
+     C/COPY WNCPYSRC,SE2530C002
+     C*
+     C* ELSE SECURITY FOUND
+     C*
+     C                     ELSE
+     C*                                                                   075853
+     C*** Reset ex-coupon Nominal if position date LT last coupon date    075853
+     C*                                                                   075853
+     C           DDTE      IFLT LCPN                                      075853
+     C                     Z-ADD0         DEXN                            075853
+     C                     END                                            075853
+     C*
+     C* IF DATE GT B/V  DATE
+     C*
+     C***********DDTE      IFGT BVDATE                                                        095907
+     C           DDTE      IFGT RTNTDT                                                        095907
+     C           CD01      ORNE *ZERO                                                         095907
+     C           DDTE      ANDGELCPN                                                          095907
+     C                     ADD  1         LREC1   50
+     C                     ADD  1         LREC17  70                                          243026
+     C*
+     C* ELSE IF 1ST RECORD FOR THIS BR/SEC/DEPOT WITH DATE LE B/V DATE
+     C* AND POSITION IS NOT COMPLETELY FLAT THEN DO NOT DELETE,           E14797
+     C*                                                                   E14797
+     C                     ELSE
+     C           *IN50     IFEQ '0'
+     C           DEXN      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           DSNT      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           DSNV      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           DSRT      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           DSRV      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           DSNS      ANDNE0                                         E14797
+      *                                                                   157947
+     C           RECI      IFEQ 'D'                                       157947
+     C           RECI      OREQ 'H'                                                           195062
+     C                     ADD  1         LREC1   50
+     C                     ADD  1         LREC17  70                                          243026
+     C                     SETON                     50
+     C                     ENDIF                                          157947
+      *                                                                   157947
+     C*
+     C* ELSE SET RECI TO '*' AND UPDATE RECORD
+     C*
+     C                     ELSE
+     C                     ADD  1         DREC1   50
+     C                     ADD  1         DREC17  70                                          243026
+     C***********          MOVE '*'       RECI                                                095907
+     C***********          UPDATDPOSNDF                                                       095907
+     C                     DELETDPOSNDF                                                       095907
+     C/COPY WNCPYSRC,SE2530C003
+     C                     SETON                     50                   E14797
+     C                     END
+     C*                                                                   157947
+     C**  Do not drop historic positions as may be required for           179469
+     C**  coupon calculations.                                            179469
+     C****If*record is already historic/matured and and has reached 157947179469
+     C****the*Backvaluation period then this should be dropped off. 157947179469
+     C***********                                                   157947179469
+     C***********RECI      IFEQ 'H'                                 157947179469
+     C***********          ADD  1         DREC1                     157947179469
+     C***********          MOVE '*'       RECI                      157947179469
+     C***********          UPDATDPOSNDF                             157947179469
+     C***********          ENDIF                                    157947179469
+     C*                                                                   157947
+     C                     END
+     C                     END
+     C*
+     C*  READ NEXT RECORD
+     C*
+     C                     READ DPOSO                    89
+     C*
+     C                     END
+     C/COPY WNCPYSRC,SE2530C004
+     C/EJECT
+     C*
+     C*  P R O C E S S      U D E P O    F I L E
+     C*
+     C***********          Z-ADD0         SUDBR                           S01117
+     C                     MOVE *BLANKS   SUDBA                           S01117
+     C                     MOVE *BLANKS   SUDSN
+     C**********           Z-ADD0         SUDPT                                               CSD027
+     C                     MOVE *BLANKS   SUDPT                                               CSD027
+     C                     MOVE *BLANKS   SUDBK
+     C                     MOVE *BLANKS   SUDMK
+     C/COPY WNCPYSRC,SE2530C005
+     C*
+     C*  READ UDEPO FILE
+     C*
+     C                     READ UDEPO                    89
+     C*
+     C*  DO UNTIL EOF
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C*  INCREMENT COUNT
+     C*
+     C                     ADD  1         IREC2   50
+     C                     ADD  1         IREC27  70                                          243026
+     C                     ADD  1         NORE27  70                                          243026
+     C*
+     C* IF BR/SEC/DEPOT/BOOK/MARKET CHANGED SET OFF FLAG TO INDICATE
+     C* FIRST RECORD OF GROUP PROCESSED
+     C*
+     C***********UDBR      IFNE SUDBR                                     S01117
+     C           UDBA      IFNE SUDBA                                     S01117
+     C           UDSN      ORNE SUDSN
+     C           UDPT      ORNE SUDPT
+     C           UDBK      ORNE SUDBK
+     C           UDMK      ORNE SUDMK
+     C***********          MOVE UDBR      SUDBR                           S01117
+     C                     MOVE UDBA      SUDBA                           S01117
+     C                     MOVE UDPT      SUDPT
+     C                     MOVE UDBK      SUDBK
+     C                     MOVE UDMK      SUDMK
+     C                     SETOF                     50
+     C                     END
+     C*
+     C*  TEST FOR SECURITIES  RECORD
+     C*
+     C           UDSN      IFNE SUDSN
+     C                     MOVE UDSN      SUDSN
+     C***********UDSN      SETLLSECTY                    80               E13948
+     C************IN80     IFEQ '1'                                       E13948
+     C***********RECI      IFEQ '*'                                       E13948
+     C*********************SETOF                     80                   E13948
+     C*********************END                                            E13948
+     C*********************END                                            E13948
+     C           UDSN      CHAINSECTY                80                   E13948
+     C           *IN80     IFEQ '0'                                       E13948
+     C***********RECI      ANDEQ'*'                                 E13948157947
+     C           RECID     ANDEQ'*'                                       157947
+     C                     SETON                         80               E13948
+     C                     END                                            E13948
+     C                     END
+     C*
+     C**IF**IN80*OFF*THEN*SECURITY*RECORD*NOT*FOUND*FOR*THIS*GROUP****    E13948
+     C************IN80     IFEQ '0'                                       E13948
+     C* IF *IN80 ON THEN SECURITY RECORD NOT FOUND FOR THIS GROUP         E13948
+     C*
+     C           *IN80     IFEQ '1'                                       E13948
+     C                     ADD  1         DREC2   50
+     C                     ADD  1         DREC27  70                                          243026
+     C***********          MOVE '*'       RECI                                                095907
+     C***********          UPDATUDEPPDF                                                       095907
+     C                     DELETUDEPPDF                                                       095907
+     C/COPY WNCPYSRC,SE2530C006
+     C*
+     C* ELSE SECURITY FOUND
+     C*
+     C                     ELSE
+     C*                                                                   075853
+     C*** Reset ex-coupon Nominal if position date LT last coupon date    075853
+     C*                                                                   075853
+     C           UDDT      IFLT LCPN                                      075853
+     C                     Z-ADD0         UECN                            075853
+     C                     END                                            075853
+     C*
+     C* IF DATE GT B/V  DATE
+     C*
+     C***********UDDT      IFGT BVDATE                                                        095907
+     C           UDDT      IFGT RTNTDT                                                        095907
+     C           CD01      ORNE *ZERO                                                         095907
+     C           UDDT      ANDGELCPN                                                          095907
+     C                     ADD  1         LREC2   50
+     C                     ADD  1         LREC27  70                                          243026
+     C*
+     C* ELSE IF 1ST RECORD FOR THIS GROUP WITH DATE LE B/V DATE
+     C* AND POSITION IS NOT COMPLETELY FLAT THEN DO NOT DELETE,           E14797
+     C*                                                                   E14797
+     C                     ELSE
+     C           *IN50     IFEQ '0'
+     C           UECN      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           UDNT      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           UDNV      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           UDNS      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           UNRT      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           UNRV      ANDNE0                                         E14797
+     C*                                                                   157947
+     C********** RECI      IFEQ 'D'                                                    157947 207105
+     C                     ADD  1         LREC2   50
+     C                     ADD  1         LREC27  70                                          243026
+     C                     SETON                     50
+     C**********           ENDIF                                                       157947 207105
+     C*                                                                   157947
+     C*
+     C* ELSE SET RECI TO '*' AND UPDATE RECORD
+     C*
+     C                     ELSE
+     C                     ADD  1         DREC2   50
+     C                     ADD  1         DREC27  70                                          243026
+     C***********          MOVE '*'       RECI                        Edit                    095907
+     C***********          UPDATUDEPPDF                                                       095907
+     C                     DELETUDEPPDF                                                       095907
+     C/COPY WNCPYSRC,SE2530C007
+     C                     SETON                     50                   E14797
+     C                     END
+     C*                                                                                157947 214410
+     C****If*record*is*already*historic/matured*and*and*has*reached****                157947 214410
+     C****the*Backvaluation*period*then*this*should*be*dropped*off.****                157947 214410
+     C**********                                                                       157947 214410
+     C********** RECI      IFEQ 'H'                                                    157947 214410
+     C**********           ADD  1         DREC2                                        157947 214410
+     C**********           MOVE '*'       RECI                                         157947 214410
+     C**********           UPDATUDEPPDF                                                157947 214410
+     C**********           ENDIF                                                       157947 214410
+     C**********                                                                       157947 214410
+     C                     END
+     C                     END
+     C*
+     C*  READ NEXT RECORD
+     C*
+     C                     READ UDEPO                    89
+     C*
+     C                     END
+     C/COPY WNCPYSRC,SE2530C008
+     C/EJECT
+     C*
+     C*  P R O C E S S      C D E P O    F I L E
+     C*
+     C***********          Z-ADD0         SCDBR                           S01117
+     C                     MOVE *BLANKS   SCDPA                           S01117
+     C**********           Z-ADD0         SCDCN                                               CSD027
+     C                     MOVE *BLANKS   SCDCN                                               CSD027
+     C           S01496    IFEQ 'Y'                                       S01496
+     C                     MOVE *BLANKS   SPTFR                           S01496
+     C                     ENDIF                                          S01496
+     C                     MOVE *BLANKS   SCDSN
+     C**********           Z-ADD0         SCDPT                                               CSD027
+     C                     MOVE *BLANKS   SCDPT                                               CSD027
+     C                     MOVE *BLANKS   SCDMK
+     C/COPY WNCPYSRC,SE2530C009
+     C*
+     C*  READ CDEPO FILE
+     C*
+     C                     READ CDEPO                    89
+     C*
+     C*  DO UNTIL EOF
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C*  INCREMENT COUNT
+     C*
+     C                     ADD  1         IREC3   50
+     C                     ADD  1         IREC37  70                                          243026
+     C                     ADD  1         NORE37  70                                          243026
+     C*
+     C**IF*BR/CUST/SEC/DEPOT/MARKET*CHANGED*SET*OFF*FLAG*TO*INDICATE      S01496
+     C* IF BR/CUST/PTFR/SEC/DEPOT/MARKET CHANGED SET OFF FLAG TO INDICATE S01496
+     C* FIRST RECORD OF GROUP PROCESSED
+     C*
+     C***********CDBR      IFNE SCDBR                                     S01117
+     C           CDPA      IFNE SCDPA                                     S01117
+     C           CDCN      ORNE SCDCN
+     C           S01496    OREQ 'Y'                                       S01496
+     C           PTFR      ANDNESPTFR                                     S01496
+     C           CDSN      ORNE SCDSN
+     C           CDPT      ORNE SCDPT
+     C           CDMK      ORNE SCDMK
+     C***********          MOVE CDBR      SCDBR                           S01117
+     C                     MOVE CDPA      SCDPA                           S01117
+     C                     MOVE CDPT      SCDPT
+     C                     MOVE CDCN      SCDCN
+     C           S01496    IFEQ 'Y'                                       S01496
+     C                     MOVE PTFR      SPTFR                           S01496
+     C                     ENDIF                                          S01496
+     C                     MOVE CDMK      SCDMK
+     C                     SETOF                     50
+     C                     END
+     C*
+     C*  TEST FOR SECURITIES  RECORD
+     C*
+     C           CDSN      IFNE SCDSN
+     C                     MOVE CDSN      SCDSN
+     C***********CDSN      SETLLSECTY                    80               E13948
+     C************IN80     IFEQ '1'                                       E13948
+     C***********RECI      IFEQ '*'                                       E13948
+     C*********************SETOF                     80                   E13948
+     C*********************END                                            E13948
+     C*********************END                                            E13948
+     C           CDSN      CHAINSECTY                80                   E13948
+     C           *IN80     IFEQ '0'                                       E13948
+     C***********RECI      ANDEQ'*'                                 E13948157947
+     C           RECID     ANDEQ'*'                                       157947
+     C                     SETON                         80               E13948
+     C                     END                                            E13948
+     C                     END
+     C*
+     C**IF**IN80*OFF*THEN*SECURITY*RECORD*NOT*FOUND*FOR*THIS*GROUP****    E13948
+     C************IN80     IFEQ '0'                                       E13948
+     C* IF *IN80 ON THEN SECURITY RECORD NOT FOUND FOR THIS GROUP         E13948
+     C*
+     C           *IN80     IFEQ '1'                                       E13948
+     C                     ADD  1         DREC3   50
+     C                     ADD  1         DREC37  70                                          243026
+     C***********          MOVE '*'       RECI                                                095907
+     C***********          UPDATCDEPPDF                                                       095907
+     C                     DELETCDEPPDF                                                       095907
+     C/COPY WNCPYSRC,SE2530C010
+     C*
+     C* ELSE SECURITY FOUND
+     C*
+     C                     ELSE
+     C*                                                                   075853
+     C*** Reset ex-coupon Nominal if position date LT last coupon date    075853
+     C*                                                                   075853
+     C           DDTE      IFLT LCPN                                      075853
+     C                     Z-ADD0         CECN                            075853
+     C                     END                                            075853
+     C*
+     C* IF DATE GT B/V  DATE
+     C*
+     C***********DDTE      IFGT BVDATE                                                        095907
+     C           DDTE      IFGT RTNTDT                                                        095907
+     C           CD01      ORNE *ZERO                                                         095907
+     C           DDTE      ANDGELCPN                                                          095907
+     C                     ADD  1         LREC3   50
+     C                     ADD  1         LREC37  70                                          243026
+     C*
+     C* ELSE IF 1ST RECORD FOR THIS GROUP WITH DATE LE B/V DATE
+     C* AND POSITION IS NOT COMPLETELY FLAT THEN DO NOT DELETE,           E14797
+     C*                                                                   E14797
+     C                     ELSE
+     C           *IN50     IFEQ '0'
+     C           CECN      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           CDNT      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           CDNV      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           CDNS      ANDNE0                                         E14797
+     C           *IN50     OREQ '0'                                       E14797
+     C           CNSI      ANDNE0                                         E14797
+     C*                                                                   157947
+     C********** RECI      IFEQ 'D'                                                    157947 207105
+     C                     ADD  1         LREC3   50
+     C                     ADD  1         LREC37  70                                          243026
+     C                     SETON                     50
+     C**********           ENDIF                                                       157947 207105
+     C*
+     C* ELSE SET RECI TO '*' AND UPDATE RECORD
+     C*
+     C                     ELSE
+     C                     ADD  1         DREC3   50
+     C                     ADD  1         DREC37  70                                          243026
+     C***********          MOVE '*'       RECI                                                095907
+     C***********          UPDATCDEPPDF                                                       095907
+     C                     DELETCDEPPDF                                                       095907
+     C/COPY WNCPYSRC,SE2530C011
+     C                     SETON                     50                   E14797
+     C                     END
+     C**********                                                                       157947 214410
+     C****If*record*is*already*historic/matured*and*and*has*reached****                157947 214410
+     C****the*Backvaluation*period*then*this*should*be*dropped*off.****                157947 214410
+     C**********                                                                       157947 214410
+     C********** RECI      IFEQ 'H'                                                    157947 214410
+     C**********           ADD  1         DREC3                                        157947 214410
+     C**********           MOVE '*'       RECI                                         157947 214410
+     C**********           UPDATCDEPPDF                                                157947 214410
+     C**********           ENDIF                                                       157947 214410
+     C**********                                                                       157947 214410
+     C                     END
+     C                     END
+     C*
+     C*  READ NEXT RECORD
+     C*
+     C                     READ CDEPO                    89
+     C*
+     C                     END
+     C/COPY WNCPYSRC,SE2530C012
+     C*
+     C* OUTPUT CONTROL REPORT AND WRITE AUDIT RECORD
+     C*
+     C           EAUDIT    TAG                             ** EAUDIT **
+     C*
+     C                     EXSR AUDIT
+     C*
+     C                     SETON                     LR
+     C*
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SUBROUTINE TO ACCESS ICD 1 AND ICD FOR SE                     *
+     C* CALLS: ZSYSTM, ZICDSE                                         *
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C                     EXSR ZSYSTM
+     C*
+     C* ERROR IN ZSYSTM
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            ***************
+     C                     Z-ADD1         DBASE            **DB ERROR 01**
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C*
+     C                     ELSE
+     C*
+     C                     EXSR ZICDSE
+     C*
+     C* ERROR IN ZICDSE
+     C*
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'TABLE'   DBFILE           **DB ERROR 02**
+     C                     MOVELTKEY      DBKEY            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C                     END
+     C*                                                                   095907
+     C* Calculate Retention date                                          095907
+     C*                                                                   095907
+     C           31        MULT RTST      WK3N    50                      243026
+     C           RUND      SUB  WK3N      RTNTDT  50                      095907
+     C*                                                                   095907
+     C* CALCULATE B/V DATE
+     C* = RUN DATE LESS BACK VALUE PERIOD
+     C*
+     C***********RUND      SUB  BKVP      BVDATE  50                                          095907
+     C*
+     C/COPY WNCPYSRC,SE2530C013
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SUBROUTINE TO OUTPUT CONTROL REPORT                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C* READ DPOSO AUDIT RECORD
+     C*
+     C           *INU8     IFEQ '0'
+     C                     READ DPOSNAF                  99
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            ***************
+     C                     Z-ADD3         DBASE            **DB ERROR 10**
+     C                     MOVEL'DPOSNA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C                     END
+     C*
+     C* IF RECORD COUNT NOT EQUAL TO AUDIT COUNT
+     C*
+     C           NORE      IFNE IREC1
+     C                     SETON                     57U8
+     C                     END
+     C***********          Z-ADDNORE      NORE1                                               095907
+     C                     Z-ADDNORE      NORE1   50                                          095907
+     C*
+     C* UPDATE DPOSNA RECORD
+     C*
+     C           *INU8     IFEQ '0'
+     C                     Z-ADDLREC1     NORE
+     C                     UPDATDPOSNAF
+     C                     END
+     C*
+     C* READ UDEPO AUDIT RECORD
+     C*
+     C********** *INU8     IFEQ '0'
+     C                     READ UDEPPAF                  99
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            ***************
+     C                     Z-ADD4         DBASE            **DB ERROR 10**
+     C                     MOVEL'UDEPPA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C**********           END
+     C*
+     C* IF RECORD COUNT NOT EQUAL TO AUDIT COUNT
+     C*
+     C           NORE      IFNE IREC2
+     C                     SETON                     58U8
+     C                     END
+     C***********          Z-ADDNORE      NORE2                                               095907
+     C                     Z-ADDNORE      NORE2   50                                          095907
+     C*
+     C* UPDATE UDEPPA RECORD
+     C*
+     C           *INU8     IFEQ '0'
+     C                     Z-ADDLREC2     NORE
+     C                     UPDATUDEPPAF
+     C                     END
+     C*
+     C* READ CDEPO AUDIT RECORD
+     C*
+     C********** *INU8     IFEQ '0'
+     C                     READ CDEPPAF                  99
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            ***************
+     C                     Z-ADD5         DBASE            **DB ERROR 10**
+     C                     MOVEL'CDEPPA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C**********           END
+     C*
+     C* IF RECORD COUNT NOT EQUAL TO AUDIT COUNT
+     C*
+     C           NORE      IFNE IREC3
+     C                     SETON                     59U8
+     C                     END
+     C***********          Z-ADDNORE      NORE3                                               095907
+     C                     Z-ADDNORE      NORE3   50                                          095907
+     C*
+     C* UPDATE UDEPPA RECORD
+     C*
+     C           *INU8     IFEQ '0'
+     C                     Z-ADDLREC3     NORE
+     C                     UPDATCDEPPAF
+     C                     END
+     C*
+     C* OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADR
+     C           *INU7     IFEQ '0'
+     C*
+     C***********IREC1     IFEQ 0                                         E29170
+     C***********IREC2     ANDEQ0                                         E29170
+     C***********IREC3     ANDEQ0                                         E29170
+     C***********          WRITENONE                                      E29170
+     C***********          ELSE                                           E29170
+     C                     WRITECONTROL
+     C***********          END                                            E29170
+     C*
+     C                     ELSE
+     C                     WRITEERROR
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITETRAIL                                     E29170
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C/COPY WNCPYSRC,SE2530C014
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+     C/COPY WNCPYSRC,SE2530C015
+**  CPY@
+(c) Finastra International Limited 2001

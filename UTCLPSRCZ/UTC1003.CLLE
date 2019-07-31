@@ -1,0 +1,177 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas UT Source Parser Batch Control')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC1003 - Midas UT Source Parser Batch Control              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CBF011  *CREATE    Date 04Jun11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CBF011 - BF Infrastructure: Error Message Handling          */
+/*                                                                   */
+/*********************************************************************/
+             PGM       PARM(&SRCLIBS)
+ 
+             DCL        VAR(&DSTPGMS) TYPE(*CHAR) LEN(101)
+             DCL        VAR(&SRCLIBS) TYPE(*CHAR) LEN(2500)
+             DCL        VAR(&DTAARA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CURPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CNT) TYPE(*DEC) LEN(2)
+             DCL        VAR(&MONID) TYPE(*DEC) LEN(2)
+             DCL        VAR(&BATID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&POS) TYPE(*DEC) LEN(3)
+             DCL        VAR(&EOF) TYPE(*DEC) LEN(1)
+             DCL        VAR(&DONE) TYPE(*DEC) LEN(2)
+ 
+             DCLF       FILE(V_UTDPGM1)
+ 
+/** Initialise */
+ 
+             CHGVAR     VAR(&EOF) VALUE(0)
+             CHGVAR     VAR(&DONE) VALUE(0)
+             CHGVAR     VAR(&CNT) VALUE(0)
+             CHGVAR     VAR(&POS) VALUE(1)
+             CHGVAR     VAR(&DTAARA) VALUE('UTSPSTAT')
+             CHGVAR     VAR(&FLAG) VALUE(' ')
+             CHGVAR     VAR(&DSTPGMS) VALUE(' ')
+ 
+/** Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Initialise Batch Monitor Data Area */
+ 
+             CHGDTAARA  DTAARA(UTSPSTAT (1 10)) +
+                          VALUE(YYYYYYYYYY)
+/** Check if File UTEREXPD exists, if not found, end abnormally */
+ 
+             CHKOBJ     OBJ(UTERMUPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+             CLRPFM     FILE(UTERMUPD)
+ 
+/** Copy Distinct Pgms */
+ 
+             CPYF       FROMFILE(V_UTPREF1) TOFILE(UTDPGMPD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+             CPYF       FROMFILE(V_UTERCF1) TOFILE(UTDMSGPD) +
+                          MBROPT(*REPLACE)
+             CPYF       FROMFILE(V_UTERCF2) TOFILE(UTDMSFPD) +
+                          MBROPT(*REPLACE)
+ 
+/** Select 10 unprocessed programs from Distinct Programs List File */
+/** and Submit an instance of UT001003 to process batched programs  */
+ 
+READ:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(CHGVAR VAR(&EOF) +
+                          VALUE(1))
+ 
+/** Once all programs have been assigned to batch */
+ 
+             IF         COND(&EOF *EQ 1) THEN(DO)
+               GOTO       CMDLBL(SUBMIT)
+             ENDDO
+ 
+             CHGVAR     VAR(&CURPGM) VALUE(&DPDPGM)
+             CHGVAR     VAR(%SST(&DSTPGMS &POS 10)) VALUE(&CURPGM)
+             CHGVAR     VAR(&CNT) VALUE(&CNT + 1)
+             CHGVAR     VAR(&POS) VALUE(&POS + 10)
+ 
+/** Submit job when 10 programs have been populated to list */
+ 
+             IF         COND(&CNT *EQ 10) THEN(DO)
+ 
+/** Find the first available monitor ID from the */
+/** batch monitor dataarea  */
+ 
+SUBMIT:        CHGVAR     VAR(&MONID) VALUE(1)
+ 
+RTVSTAT:
+               RTVDTAARA  DTAARA(UTSPSTAT (&MONID 1)) RTNVAR(&FLAG)
+ 
+               IF         COND(&FLAG *EQ 'Y') THEN(DO)
+ 
+                 CHGVAR     VAR(&BATID) VALUE(&MONID)
+                 CHGVAR     VAR(%SST(&DSTPGMS 101 1)) VALUE('*')
+ 
+/**  Flag batch monitor position as used */
+ 
+                 CHGDTAARA  DTAARA(UTSPSTAT (&MONID 1)) VALUE(' ')
+ 
+/**  Submit batch for parsing */
+ 
+                 SBMJOB     CMD(CALL PGM(UT001003) PARM(&SRCLIBS +
+                               &DSTPGMS &BATID)) JOB(SRCPARSER) +
+                               JOBQ(MIDASJOBQ) LOGCLPGM(*YES)
+                 DLYJOB     DLY(20)
+ 
+/**  Reset variables for next batch */
+ 
+                 CHGVAR     VAR(&DSTPGMS) VALUE(' ')
+                 CHGVAR     VAR(&CNT) VALUE(0)
+                 CHGVAR     VAR(&POS) VALUE(1)
+ 
+                 IF         COND(&EOF *EQ 1) THEN(DO)
+                   GOTO       CMDLBL(ENDCLPGM)
+                 ENDDO
+ 
+               ENDDO
+ 
+               ELSE       (DO)
+                 IF         COND(&MONID *EQ 10) THEN(DO)
+                   CHGVAR     VAR(&MONID) VALUE(1)
+                   DLYJOB     DLY(300)
+                 ENDDO
+ 
+                 ELSE       CMD(CHGVAR VAR(&MONID) VALUE(&MONID + 1))
+                 GOTO       CMDLBL(RTVSTAT)
+ 
+               ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(READ)
+ 
+ ABNOR:
+ 
+ /** Terminate program   */
+ 
+             CHGJOB     SWS(XXXXXX1X)
+             SNDPGMMSG  MSG('Program UTC1003 ended abnormally - see +
+                          job log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             GOTO       CMDLBL(FINISH)
+ 
+ ENDCLPGM:
+             CHGVAR     VAR(&MONID) VALUE(1)
+ 
+ CHECKJOBS:
+             RTVDTAARA  DTAARA(UTSPSTAT (&MONID 1)) RTNVAR(&FLAG)
+             IF         COND(&FLAG *EQ 'Y') THEN(DO)
+ 
+               IF         COND(&MONID *EQ 10) THEN(DO)
+                 GOTO       CMDLBL(FINISH)
+               ENDDO
+ 
+             ELSE       CMD(CHGVAR VAR(&MONID) VALUE(&MONID + 1))
+               GOTO       CMDLBL(CHECKJOBS)
+             ENDDO
+ 
+             ELSE       CMD(DO)
+               DLYJOB     DLY(300)
+               GOTO       CMDLBL(ENDCLPGM)
+             ENDDO
+ 
+FINISH:
+             CHGDTAARA  DTAARA(UTSGSTAT (1 1)) VALUE('Y')
+             ENDPGM

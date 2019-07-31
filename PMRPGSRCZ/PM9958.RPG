@@ -1,0 +1,936 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Port.Valn Statement:Yearly cash flow')
+     H***********                                                         S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                             *
+     F*                                                               *
+     F*  PM9958 - PORTFOLIO VALUATION STATEMENT:                      *
+     F*           YEARLY CASH FLOW SUMMARY                            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 076624             Date 21Aug96               *
+     F*                 S01486             Date 07SEP94               *
+     F*                 062355             DATE 22OCT93               *
+     F*                 049421             DATE 22JAN93               *
+     F*                 47719              DATE 24NOV92               *
+     F*                 S01313             DATE 11JUN92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  076624 - PM9950P1 change - recompile                         *
+     F*  S01486 - Private Banking upgrade to Release 10               *
+     F*  062355 - IF NET CASHFLOW ZERO DO NOT REPORT                  *
+     F*  049421 - HEADER BOX STANDARDISATION                          *
+     F*  47719  - CORRECT CONVERSION OF AMOUNTS BETWEEN CURRENCIES    *
+     F*  S01313 - REWRITTEN FOR PORTFOLIO PERFORMANCE                 *
+     F*                                                               *
+     F*****************************************************************
+     F** C R E A T I O N     P A R A M E T E R S                      *
+     F**                                                              *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F*****CURRENCY*CODES*FILE.*PREFIX*:*A6*******************************S01486
+     F***SDCURRL0IF**E           K        DISK         KINFSR *PSSR       S01486
+     F**   Audit Control                                                  S01486
+     FPM9958AUO   E                    PRINTER      KINFSR *PSSR      UC  S01486
+     F                                              KINFDS SPOOLU         S01486
+     F*
+     F**   PORTFOLIO VALUATION STATEMENT YEARLY CASH FLOW SUMMARY.
+     FPM9950P1O   E             21     PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS ERF1DS
+     F*
+     F**   PORTFOLIO CASH FLOW EVENTS BY DATE AND CURRENCY. PREFIX : QL
+     F***PMCFMYPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     FPMCFMYPDIF  E           K        DISK         KINFSR *PSSR          S01486
+     F*
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F**                                                                 *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F**                 ------------------------                        *
+     F**    21          - OVERFLOW INDICATOR ON PRINTER FILE             *
+     F**       01       - READE ON PMCFMYPD FILE                         *S01486
+     F*********01*******-*READE*ON*PMCFMYPP*FILE**************************S01486
+     F*********70*******-*CHAIN*ON*SDCURRL0*FILE**************************S01486
+     F********************************************************************
+     E/EJECT
+     E********************************************************************
+     E*
+     E** Array for copyright
+     E                    CPY@    1   1 80
+     E** ZEDIT work fields
+      /COPY ZSRSRC,ZEDITZ1
+     E** ZSEDIT work fields
+      /COPY ZSRSRC,ZSEDITZ1
+     E** ZDATE2 work fields
+      /COPY ZSRSRC,ZDATE2Z1
+     E** array for powers of 10
+      /COPY ZSRSRC,ZPOWERZ1
+     E** array used for underline of date total
+     E                    UL1        21  1
+     E                    UL2        21  1
+     E** array to determine length of ZOUT21 string
+     E                    LENSTR     21  1
+     I/EJECT
+     I********************************************************************
+     ICPYR@#      DS
+     I*
+     I** Data structure for compilation - copyright insertion
+     I                                        1  80 CPY@
+     I                                        1  80 CPY@##
+     I*
+     I** Work fields for ZSEDIT
+      /COPY ZSRSRC,ZSEDITZ2
+     IPSDS       SDS
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     IERF1DS      DS
+     I*
+     I**   FILE INFORMATION DATA STRUCTURE
+     I**   FOR OVERFLOW
+     I                                    B 367 3680LINE
+     I*                                                                   S01486
+     ISPOOLU      DS                                                      S01486
+     I**    SPOOL FILE INFORMATION DATA STRUCTURE                         S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     I*
+     ILDA         DS                            256
+     I*
+     I**   LOCAL DATA AREA
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** DS USED TO PASS PARAMETERS TO CALLED PROGRAMS
+     I***WWPARM****E*DSPM095XPP                                           S01486
+     IWWPARM    E DSPM095XPD                                              S01486
+     I*                                                                   S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I** DUMMY RECORD FORMAT FOR CURRENCY DETAILS                         S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01486
+     I*                                                                   S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P01     - PROCESS CASH FLOW EVENTS                              *
+      * #P02     - PRODUCE CURRENCY TOTALS                               *
+      * #P03     - PRODUCE DATE TOTAL                                    *
+      * #P04     - ACCESS CURRENCY DETAILS                               *
+      * #P05     - SET UP UNDERLINES                                     *
+      * #P06     - DETERMINE LENGTH OF STRING                            *
+      * ZEDIT    - EDIT EXCHANGE RATE FOR OUTPUT TO REPORT               *
+      * ZDATE2   - CONVERT MIDAS DAY NUMBER TO DDMMMYY FORMAT            *
+      * ZCCYCN   - DETERMINE EXCHANGE RATE                               *
+      * ZCCYXR   - DETERMINE EXCHANGE RATE - SECONDARY SUBROUTINE        *
+      * ZSEDIT   - CONVERT A NUMERIC FIELD TO REQUIRED FORMAT            *
+      * *PSSR    - PROGRAM ERROR HANDLING ROUTINE                        *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * SUBR23R3 - OBTAIN MESSAGE TEXT FROM MESSAGE FILE                 *
+      *                                                                  *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INITIAL PROCESSING
+     C                     EXSR #INIT
+     C*
+     C**   MAIN PROCESSING
+     C                     EXSR #P01
+     C*
+     C**   END PROGRAM
+     C                     CLOSEPM9950P1
+     C                     RETRN
+     C                     MOVE '1'       *INLR
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZDATE2   - CONVERT MIDAS DAY NUMBER TO DDMMMYY FORMAT            *
+      * SUBR23R3 - OBTAIN MESSAGE TEXT FROM MESSAGE FILE                 *
+      * *PSSR    - PROGRAM ERROR HANDLING ROUTINE                        *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRTCD   - RETURN CODE PARAMETER                                 *
+      * WWCUST   - CUSTOMER NUMBER PARAMETER                             *
+      * WWCRNM   - CUSTOMER NAME PARAMETER                               *
+      * WWPTFR   - PORTFOLIO REFERENCE PARAMETER                         *
+      * WWPTFN   - PORTFOLIO NARRATIVE PARAMETER                         *
+      * WWPTCY   - PORTFOLIO CURRENCY PARAMETER                          *
+      * WWEVCD   - EVENT CONTROL DATE PARAMETER                          *
+      * WWDPL0   - 15 NUMERIC FIELD, 0 DECIMAL PLACES                    *
+      * WWDPL1   - 15 NUMERIC FIELD, 1 DECIMAL PLACE                     *
+      * WWDPL2   - 15 NUMERIC FIELD, 2 DECIMAL PLACES                    *
+      * WWDPL3   - 15 NUMERIC FIELD, 3 DECIMAL PLACES                    *
+      * WWDANB   - PORTFOLIO NUMBER OF DECIMAL PLACES                    *
+      * WWC9NB   - PORTFOLIO SPOT RATE PARAMETER                         *
+      * WWA8ST   - PORTFOLIO MULTIPLY/DIVIDE INDICATOR                   *
+      * WWTDTA   - DATE TOTAL AMOUNT                                     *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR                           ** #INIT     **
+     C*
+     C** PARAMETER LIST DECLARATIONS
+     C** ---------------------------
+     C           *ENTRY    PLIST
+     C                     PARM           WWPARM
+     C*
+     C**  SET UP PARAMETERS TO RETRIEVE MESSAGE FROM MESSAGE FILE
+     C           SUBR23    PLIST
+     C                     PARM           VARMSG  7
+     C                     PARM           TEXT   40
+     C                     PARM           LEVEL   10
+     C                     PARM           RETCD   10
+     C                     PARM           TXTL    40
+     C**
+     C** SET UP PARAMETER TO FORM OUTPUT LINE
+     C           ZA1311    PLIST
+     C                     PARM           MSGID   7
+     C                     PARM           MSGDT0 40
+     C                     PARM           MSGDT1 40
+     C                     PARM           MSGDT2 40
+     C                     PARM           MSGDT3 40
+     C                     PARM           MSGDT4 40
+     C                     PARM           MSGDT5 40
+     C                     PARM           MSGDT6 40
+     C                     PARM           MSGDT7 40
+     C                     PARM           MSGDT8 40
+     C                     PARM           MSGDT9 40
+     C                     PARM           RESULT200
+     C*
+     C                     MOVEL'PM9958'  WBPGM  10
+     C                     MOVE *ZEROS    WWDPL0 150
+     C                     MOVE *ZEROS    WWDPL1 151
+     C                     MOVE *ZEROS    WWDPL2 152
+     C                     MOVE *ZEROS    WWDPL3 153
+     C                     MOVE *ZEROS    ZFLD15 150
+     C*
+     C                     SETOF                     98
+     C*
+     C                     Z-ADD0         LINE
+     C                     Z-ADD3         LEVEL
+     C                     Z-ADD40        TXTL
+     C*
+     C/COPY WNCPYSRC,PM9958C001
+     C                     MOVE WWCRNM    P1CRNM
+     C/COPY WNCPYSRC,PM9958C002
+     C                     MOVE WWPTFN    R2PTFN
+     C                     MOVE WWCNUM    R1CNUM
+     C                     MOVELWWACON    R1ACNM
+     C                     MOVE WWAPHN    R1ACPH
+     C*
+     C** ON CHANGE OF LANGUAGE OBTAIN NEW MESSAGE TEXT
+     C           WWLANG    IFNE WSLANG
+     C                     MOVE WWLANG    WSLANG  2
+      * GET MES. YEAR
+     C***********          MOVEL'PMS5807' VARMSG                          S01486
+     C                     MOVEL'PM95481' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      MS5807 14
+     C***********          MOVELTEXT      MB5807 14                       S01486
+      * GET MES. CASH FLOW
+     C***********          MOVEL'PMS5808' VARMSG                          S01486
+     C                     MOVEL'PM95421' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      MS5808 19
+     C***********          MOVELTEXT      MB5808 19                       S01486
+      * GET MES. AMOUNT IN CASH
+     C***********          MOVEL'PMS5809' VARMSG                          S01486
+     C                     MOVEL'PM95482' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      MS5809 24
+     C***********          MOVELTEXT      MB5809 24                       S01486
+      * GET MES. AMOUNT
+     C***********          MOVEL'PMS5810' VARMSG                          S01486
+     C                     MOVEL'PM95443' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      MS5810 16
+     C***********          MOVELTEXT      MB5810 16                       S01486
+      * GET MES. TOTAL AMOUNT
+     C***********          MOVEL'PMS5711' VARMSG                          S01486
+     C                     MOVEL'PM95415' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      MS5811 16
+     C***********          MOVELTEXT      MB5811 16                       S01486
+      * GET MES. ACCUMULATED
+     C***********          MOVEL'PMS5812' VARMSG                          S01486
+     C                     MOVEL'PM95477' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      MS5812 21
+     C***********          MOVELTEXT      MB5812 21                       S01486
+      **GET*MES.*CURRENCY*************************************************S01486
+     C***********          MOVEL'PMS5813' VARMSG                          S01486
+     C***********          CALL 'SUBR23R3'SUBR23                          S01486
+     C***********          MOVELTEXT      MS5813 18                       S01486
+     C***********          MOVELTEXT      MB5813 18                       S01486
+      * GET MES. FLOW CURRENCY
+     C***********          MOVEL'PMS5814' VARMSG                          S01486
+     C                     MOVEL'PM95411' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      MS5814 23
+     C***********          MOVELTEXT      MB5814 23                       S01486
+     C*
+      * GET MES. CLIENT:
+     C***********          MOVEL'PMS5502' VARMSG                          S01486
+     C                     MOVEL'PM95401' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      M95102
+      * GET MES. YEARLY CASHFLOW
+     C***********          MOVEL'PMS5803' VARMSG                          S01486
+     C                     MOVEL'PM95480' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      P1REPT
+      * GET MES. REF.NO.
+     C***********          MOVEL'PMS5505' VARMSG                          S01486
+     C                     MOVEL'PM95407' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      M95104
+      * GET MES. YOUR ADVISER:
+     C***********          MOVEL'PMS5506' VARMSG                          S01486
+     C                     MOVEL'PM95408' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      M95105
+      **GET*MES.*INDUSTRY*************************************************S01486
+     C***********          MOVEL'PMS4908' VARMSG                          S01486
+     C***********          CALL 'SUBR23R3'SUBR23                          S01486
+     C***********          MOVELTEXT      MS5508 26                       S01486
+      **GET*MES.*TOTAL*AMOUNTS********************************************S01486
+     C***********          MOVEL'PMS5509' VARMSG                          S01486
+     C***********          CALL 'SUBR23R3'SUBR23                          S01486
+     C***********          MOVELTEXT      MS5509 23                       S01486
+      **GET*MES.*PORTFOLIO*SHARES*IN*%************************************S01486
+     C***********          MOVEL'PMS5510' VARMSG                          S01486
+     C***********          CALL 'SUBR23R3'SUBR23                          S01486
+     C***********          MOVELTEXT      MS5510 31                       S01486
+      **GET*MES.*TOTAL****************************************************S01486
+     C***********          MOVEL'PMS5511' VARMSG                          S01486
+     C***********          CALL 'SUBR23R3'SUBR23                          S01486
+     C***********          MOVELTEXT      MS5511 25                       S01486
+      **GET*MES.*AS*OF****************************************************S01486
+     C***********          MOVEL'PMS5114' VARMSG                          S01486
+     C***********          CALL 'SUBR23R3'SUBR23                          S01486
+     C***********          MOVELTEXT      M95114 15                       S01486
+      * GET MES. HOLD MAIL
+     C***********          MOVEL'PMS5117' VARMSG                          S01486
+     C                     MOVEL'PM95410' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      M95117 29
+      * GET MES. INTERNAL USE
+     C***********          MOVEL'PMS5120' VARMSG                          S01486
+     C                     MOVEL'PM95411' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      M95120 29
+     C                     END
+      * GET MES. IN
+     C                     MOVE *BLANKS   MSGDT0
+     C                     MOVELWWPTCY    MSGDT0
+     C***********          MOVE 'PMS5715' MSGID                           S01486
+     C                     MOVE 'PM95478' MSGID                           S01486
+     C                     CALL 'ZA1310'  ZA1311
+     C                     MOVELRESULT    MS5715
+     C                     MOVELRESULT    MI5715
+      * GET MES. AMOUNT IN
+     C                     MOVE *BLANKS   MSGDT0
+     C                     MOVELWWPTCY    MSGDT0
+     C***********          MOVE 'PMS5716' MSGID                           S01486
+     C                     MOVE 'PM95479' MSGID                           S01486
+     C                     CALL 'ZA1310'  ZA1311
+     C                     MOVELRESULT    MS5716
+     C           WWHLDM    IFEQ 'H'
+     C                     MOVELM95117    P1HOLD 29
+     C                     ELSE
+     C           WWHLDM    IFEQ 'A'
+     C                     MOVELM95120    P1HOLD 29
+     C                     ELSE
+     C                     MOVE *BLANKS   P1HOLD
+     C                     END
+     C                     END
+     C*
+     C** FORMAT REFERENCE CURRENCY
+     C                     MOVE *BLANKS   MSGDT0
+     C                     MOVELWWPTCY    MSGDT0
+     C***********          MOVE 'PMS5507' MSGID                           S01486
+     C                     MOVE 'PM95409' MSGID                           S01486
+     C                     CALL 'ZA1310'  ZA1311
+     C                     MOVELRESULT    R1RCCY
+     C*
+     C** FORMAT PRINTED 'AS OF' INFORMATION
+     C                     MOVE *BLANKS   MSGDT0
+     C                     MOVELWWLXDT    MSGDT0
+     C***********          MOVE 'PMS5114' MSGID                           S01486
+     C                     MOVE 'PM95406' MSGID                           S01486
+     C                     CALL 'ZA1310'  ZA1311
+     C                     MOVELRESULT    P1PRDT
+     C*
+     C** FORMAT PRINTED PLACE AND DATE
+     C                     MOVE *BLANKS   MSGDT0
+     C                     MOVELWWBMSN    MSGDT0
+     C                     MOVE *BLANKS   MSGDT1
+     C                     MOVELWWECDT    MSGDT1
+     C***********          MOVE 'PMS5116' MSGID                           S01486
+     C                     MOVE 'PM95402' MSGID                           S01486
+     C                     CALL 'ZA1310'  ZA1311
+     C                     MOVELRESULT    P1BRDT
+     C*
+     C***********WWPTCY    CHAINSDCURRL0             70                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   RTCD    7                       S01486
+     C                     PARM '*KEY'    OPTN    7                       S01486
+     C                     PARM WWPTCY    KEYCY   3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C************IN70     IFEQ '1'                                       S01486
+     C           RTCD      IFNE *BLANKS                                   S01486
+     C                     Z-ADD1         WBASE   30       ****************
+     C                     MOVEL'SDCURRL0'WBFILE 10        ** DBERROR 01 **
+     C                     MOVELWWPTCY    WBKEY  29        **            **
+     C                     EXSR *PSSR                      ****************
+     C                     END
+     C*
+     C                     Z-ADDA6RKSQ    ZRKSQT  30
+     C                     Z-ADDA6NBDP    WWNBDP  10
+     C                     Z-ADDA6SPRT    WWSPRT 138
+     C                     MOVE A6MDIN    WWMDIN  1
+     C*
+     C                     Z-ADD0         WWTDTA 150
+     C                     Z-ADD0         WWADTA 150
+     C*
+     C** OPEN PRINTER FILE
+     C                     OPEN PM9950P1
+     C*
+     C                     ENDSR                           ** #INIT
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P01     - PROCESS CASH FLOW EVENTS                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #P03     - PRODUCE DATE TOTAL                                    *
+      * ZDATE2   - CONVERT MIDAS DAY NUMBER TO DDMMMYY FORMAT            *
+      * #P04     - ACCESS CURRENCY DETAILS                               *
+      * #P02     - PRODUCE CURRENCY TOTALS                               *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWFIRS   - FIRST RECORD FLAG                                     *
+      **WWMYIN***-*MONTH/YEAR*INDICATOR*FOR*'SETLL'*ON*PMCFMYPP*FILE******S01486
+      **WWYEDN***-*MONTH/YEAR*END*DAY*NO*FOR*'SETLL'*ON*PMCFMYPP*FILE*****S01486
+      * WWMYIN   - MONTH/YEAR INDICATOR FOR 'SETLL' ON PMCFMYPD FILE     *S01486
+      * WWYEDN   - MONTH/YEAR END DAY NO FOR 'SETLL' ON PMCFMYPD FILE    *S01486
+      * WWMAXV   - VALUE OF LONGEST STRING                               *
+      * WWMAXL   - LENGTH OF LONGEST STRING                              *
+      * WWCNTR   - COUNTER FOR NO. OF CURRENCY DETAILS LINES OUTPUT      *
+      * WWLDAT   - PREVIOUS MONTH/YEAR END DAY NUMBER PROCESSED          *
+      **WWPKEY***-*KEY*USED*FOR*'SETLL'*ON*PMCFMYPP*FILE******************S01486
+      * WWPKEY   - KEY USED FOR 'SETLL' ON PMCFMYPD FILE                 *S01486
+      * WWCUST   - CUSTOMER NUMBER PARAMETER                             *
+      * WWPTFR   - PORTFOLIO REFERENCE PARAMETER                         *
+      * WWYEAR   - YEAR PART OF DDMMMYY DATE FORMAT                      *
+      *                                                                  *
+      ********************************************************************
+     C           #P01      BEGSR                           ** #P01      **
+     C*
+     C                     MOVE 'Y'       WWFIRS  1
+     C                     MOVE 'Y'       WWMYIN  1
+     C                     MOVE *LOVAL    WWYEDN  50
+     C                     MOVE *BLANKS   WWMAXV 21
+     C                     Z-ADD0         WWMAXL  20
+     C                     Z-ADD0         WWCNTR  50
+     C                     Z-ADD0         WWLDAT  50
+     C*
+     C           WWPKEY    KLIST
+     C                     KFLD           WWCNUM
+     C                     KFLD           WWPTFF
+     C                     KFLD           WWMYIN
+     C                     KFLD           WWYEDN
+     C*
+     C***********WWPKEY    SETLLPMCFMYPP                                  S01486
+     C***********          READ PMCFMYPP                 01               S01486
+     C           WWPKEY    SETLLPMCFMYPD                                  S01486
+     C                     READ PMCFMYPD                 01               S01486
+     C*
+     C           *IN01     DOWNE'1'
+     C           QLCNUM    ANDEQWWCNUM
+     C           QLPTFR    ANDEQWWPTFF
+     C           QLMYIN    ANDEQ'Y'
+     C*                                                                   062355
+     C           QLNECS    IFNE 0                                         062355
+     C*
+     C* PRODUCE DATE TOTAL
+     C           WWFIRS    IFEQ 'N'
+     C           QLMYNO    ANDNEWWLDAT
+     C                     EXSR #P03
+     C                     END
+     C*
+     C* WRITE STATEMENT HEADING IF REQUIRED
+     C           WWFIRS    IFEQ 'Y'
+     C           LINE      ORGT 40
+     C                     ADD  1         WWPNBR
+     C                     MOVE *BLANKS   MSGDT0
+     C                     MOVELWWPNBR    MSGDT0
+     C***********          MOVE 'PMS5501' MSGID                           S01486
+     C                     MOVE 'PM95405' MSGID                           S01486
+     C                     CALL 'ZA1310'  ZA1311
+     C                     MOVELRESULT    R1PAGE
+     C                     WRITEP951HD2
+     C                     WRITEP958HDR
+     C                     END
+     C*
+     C           QLMYNO    IFNE WWLDAT
+     C                     MOVE QLMYNO    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WWYEAR  2
+     C                     END
+     C*
+     C* ACCESS CURRENCY DETAILS
+     C                     EXSR #P04
+     C*
+     C* PRODUCE CURRENCY CASHFLOW DETAILS LINE
+     C                     EXSR #P02
+     C*
+     C                     MOVE 'N'       WWFIRS
+     C                     MOVE QLMYNO    WWLDAT
+     C*
+     C                     END                                            062355
+     C*                                                                   062355
+     C***********          READ PMCFMYPP                 01               S01486
+     C                     READ PMCFMYPD                 01               S01486
+     C                     END
+     C*
+     C           WWFIRS    IFEQ 'Y'
+     C                     ADD  1         WWPNBR
+     C                     MOVE *BLANKS   MSGDT0
+     C                     MOVELWWPNBR    MSGDT0
+     C***********          MOVE 'PMS5501' MSGID                           S01486
+     C                     MOVE 'PM95405' MSGID                           S01486
+     C                     CALL 'ZA1310'  ZA1311
+     C                     MOVELRESULT    R1PAGE
+     C                     WRITEP951HD2
+     C                     WRITEP958HDR
+     C                     ELSE
+     C                     EXSR #P03
+     C                     END
+     C*
+     C           #P010     ENDSR                           ** #P01      **
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P02     - PRODUCE CURRENCY TOTALS                               *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   - CONVERT A NUMERIC FIELD TO REQUIRED FORMAT            *
+      * ZCCYCN   - DETERMINE EXCHANGE RATE                               *
+      * ZEDIT    - EDIT EXCHANGE RATE FOR OUTPUT TO REPORT               *
+      * #P06     - DETERMINE LENGTH OF STRING                            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS CASH FLOW EVENTS                              *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWLDAT   - PREVIOUS MONTH/YEAR END DAY NUMBER PROCESSED          *
+      * WWYEAR   - YEAR PART OF DDMMMYY DATE FORMAT                      *
+      * WWDPL0   - 15 NUMERIC FIELD, 0 DECIMAL PLACES                    *
+      * WWDPL1   - 15 NUMERIC FIELD, 1 DECIMAL PLACE                     *
+      * WWDPL2   - 15 NUMERIC FIELD, 2 DECIMAL PLACES                    *
+      * WWDPL3   - 15 NUMERIC FIELD, 3 DECIMAL PLACES                    *
+      * WWPTCY   - PORTFOLIO CURRENCY PARAMETER                          *
+      * WWC9NB   - PORTFOLIO SPOT RATE PARAMETER                         *
+      * WWA8ST   - PORTFOLIO MULTIPLY/DIVIDE INDICATOR                   *
+      * WWDANB   - PORTFOLIO NUMBER OF DECIMAL PLACES                    *
+      * WWMAXL   - LENGTH OF LONGEST STRING                              *
+      * WWMAXV   - VALUE OF LONGEST STRING                               *
+      * WWTDTA   - DATE TOTAL AMOUNT                                     *
+      * WWCNTR   - COUNTER FOR NO. OF CURRENCY DETAILS LINES OUTPUT      *
+      *                                                                  *
+      ********************************************************************
+     C           #P02      BEGSR                           ** #P02      **
+     C*
+     C           QLMYNO    IFEQ WWLDAT
+     C                     MOVE *BLANKS   R8YEAR
+     C                     ELSE
+     C                     MOVE WWYEAR    R8YEAR
+     C                     END
+     C                     MOVE QLCCY     R8ECUR
+     C*
+     C           A6NBDP    IFEQ 0
+     C                     MOVE QLNECS    WWDPL0
+     C                     Z-ADDWWDPL0    ZFLD15
+     C                     ELSE
+     C           A6NBDP    IFEQ 1
+     C                     MOVE QLNECS    WWDPL1
+     C                     Z-ADDWWDPL1    ZFLD15    H
+     C                     ELSE
+     C           A6NBDP    IFEQ 2
+     C                     MOVE QLNECS    WWDPL2
+     C                     Z-ADDWWDPL2    ZFLD15    H
+     C                     ELSE
+     C                     MOVE QLNECS    WWDPL3
+     C                     Z-ADDWWDPL3    ZFLD15    H
+     C                     END
+     C                     END
+     C                     END
+     C                     Z-ADD0         ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    R8AMNT
+     C*
+     C* Determine exchange rate for event currency to portfolio currency
+     C                     Z-ADD0         ZAMTF
+     C                     MOVE QLCCY     ZCCYF
+     C                     MOVE WWPTCY    ZCCYT
+     C                     MOVE A6SPRT    ZRATEF
+     C                     MOVE WWSPRT    ZRATET
+     C                     MOVE A6MDIN    ZMDINF
+     C                     MOVE WWMDIN    ZMDINT
+     C                     MOVE A6NBDP    ZCDPF
+     C                     MOVE WWNBDP    ZCDPT
+     C                     EXSR ZCCYCN
+     C*
+     C*
+     C** Select with the ranking sequence field the rate's format
+     C*
+     C           ZRKSQF    IFLT ZRKSQT
+     C           ZCRSRT    ANDNE*ZEROS
+     C           1         DIV  ZCRSRT    ZCRSRT
+     C           ZMDINT    IFEQ 'M'
+     C                     MOVE 'D'       ZCRSMD
+     C                     ELSE
+     C                     MOVE 'M'       ZCRSMD
+     C                     END
+     C                     ELSE
+     C                     MOVE ZMDINF    ZCRSMD
+     C                     END
+     C                     MOVE ZCRSRT    ZFIELD
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZEDIT
+     C*
+     C           WWNBDP    IFEQ 0
+     C                     MOVE QLNEPT    WWDPL0
+     C                     Z-ADDWWDPL0    ZFLD15
+     C                     ELSE
+     C           WWNBDP    IFEQ 1
+     C                     MOVE QLNEPT    WWDPL1
+     C                     Z-ADDWWDPL1    ZFLD15    H
+     C                     ELSE
+     C           WWNBDP    IFEQ 2
+     C                     MOVE QLNEPT    WWDPL2
+     C                     Z-ADDWWDPL2    ZFLD15    H
+     C                     ELSE
+     C                     MOVE QLNEPT    WWDPL3
+     C                     Z-ADDWWDPL3    ZFLD15    H
+     C                     END
+     C                     END
+     C                     END
+     C                     Z-ADD0         ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    R8PCFA
+     C*
+     C                     EXSR #P06
+     C           WWLENG    IFGT WWMAXL
+     C                     MOVE ZOUT21    WWMAXV
+     C                     Z-ADDWWLENG    WWMAXL
+     C                     END
+     C*
+     C                     WRITEP958DET1
+     C*
+     C                     ADD  QLNEPT    WWTDTA
+     C                     ADD  QLNEPT    WWADTA
+     C                     ADD  1         WWCNTR
+     C*
+     C           #P020     ENDSR                           ** #P02      **
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P03     - PRODUCE DATE TOTAL                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   - CONVERT A NUMERIC FIELD TO REQUIRED FORMAT            *
+      * #P06     - DETERMINE LENGTH OF STRING                            *
+      * #P05     - SET UP UNDERLINES                                     *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS CASH FLOW EVENTS                              *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCNTR   - COUNTER FOR NO. OF CURRENCY DETAILS LINES OUTPUT      *
+      * WWDANB   - PORTFOLIO NUMBER OF DECIMAL PLACES                    *
+      * WWDPL0   - 15 NUMERIC FIELD, 0 DECIMAL PLACES                    *
+      * WWDPL1   - 15 NUMERIC FIELD, 1 DECIMAL PLACE                     *
+      * WWDPL2   - 15 NUMERIC FIELD, 2 DECIMAL PLACES                    *
+      * WWDPL3   - 15 NUMERIC FIELD, 3 DECIMAL PLACES                    *
+      * WWLENG   - LENGTH OF STRING CONTAINED IN 'ZOUT21'                *
+      * WWMAXV   - VALUE OF LONGEST STRING                               *
+      * WWTDTA   - DATE TOTAL AMOUNT                                     *
+      * WWMAXL   - LENGTH OF LONGEST STRING                              *
+      *                                                                  *
+      ********************************************************************
+     C           #P03      BEGSR                           ** #P03      **
+     C*
+     C           WWNBDP    IFEQ 0
+     C                     MOVE WWTDTA    WWDPL0
+     C                     Z-ADDWWDPL0    ZFLD15
+     C                     ELSE
+     C           WWNBDP    IFEQ 1
+     C                     MOVE WWTDTA    WWDPL1
+     C                     Z-ADDWWDPL1    ZFLD15    H
+     C                     ELSE
+     C           WWNBDP    IFEQ 2
+     C                     MOVE WWTDTA    WWDPL2
+     C                     Z-ADDWWDPL2    ZFLD15    H
+     C                     ELSE
+     C                     MOVE WWTDTA    WWDPL3
+     C                     Z-ADDWWDPL3    ZFLD15    H
+     C                     END
+     C                     END
+     C                     END
+     C                     Z-ADD0         ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    R8PFCT
+     C*
+     C           WWNBDP    IFEQ 0
+     C                     MOVE WWADTA    WWDPL0
+     C                     Z-ADDWWDPL0    ZFLD15
+     C                     ELSE
+     C           WWNBDP    IFEQ 1
+     C                     MOVE WWADTA    WWDPL1
+     C                     Z-ADDWWDPL1    ZFLD15    H
+     C                     ELSE
+     C           WWNBDP    IFEQ 2
+     C                     MOVE WWADTA    WWDPL2
+     C                     Z-ADDWWDPL2    ZFLD15    H
+     C                     ELSE
+     C                     MOVE WWADTA    WWDPL3
+     C                     Z-ADDWWDPL3    ZFLD15    H
+     C                     END
+     C                     END
+     C                     END
+     C                     Z-ADD0         ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    R8PFCA
+     C*
+     C                     EXSR #P06
+     C           WWMAXL    IFGT WWLENG
+     C                     MOVE WWMAXV    ZOUT21
+     C                     END
+     C*
+     C                     EXSR #P05
+     C                     WRITEP958DET2
+     C                     Z-ADD0         WWADTA
+     C                     Z-ADD0         WWCNTR
+     C                     Z-ADD0         WWMAXL
+     C                     MOVE *BLANKS   WWMAXV
+     C*
+     C           #P030     ENDSR                           ** #P03      **
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P04     - ACCESS CURRENCY DETAILS                               *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROGRAM ERROR HANDLING ROUTINE                        *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS CASH FLOW EVENTS                              *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P04      BEGSR                           ** #P04      **
+     C*
+     C***********QLCCY     CHAINSDCURRL0             70                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   RTCD                            S01486
+     C                     PARM '*KEY'    OPTN                            S01486
+     C                     PARM QLCCY     KEYCY                           S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C************IN70     IFEQ '1'                                       S01486
+     C           RTCD      IFNE *BLANKS                                   S01486
+     C                     Z-ADD3         WBASE            ****************
+     C                     MOVEL'SDCURRL0'WBFILE           ** DBERROR 03 **
+     C                     MOVELQLCCY     WBKEY            **            **
+     C                     EXSR *PSSR                      ****************
+     C                     END
+     C                     Z-ADDA6RKSQ    ZRKSQF  30
+     C           #P040     ENDSR                           ** #P04      **
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P05     - SET UP UNDERLINES                                     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P03     - PRODUCE DATE TOTAL                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P05      BEGSR                           ** #P05
+     C                     MOVEAZOUT21    UL1
+     C                     MOVE *BLANKS   UL2
+     C                     Z-ADD1         C       20
+     C           C         DOWLE20
+     C           UL1,C     IFNE ' '
+     C                     MOVE '-'       UL2,C
+     C                     END
+     C                     ADD  1         C
+     C                     END
+     C           #P050     ENDSR                           ** #P05
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P06     - DETERMINE LENGTH OF STRING                            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P02     - PRODUCE CURRENCY TOTALS                               *
+      * #P03     - PRODUCE DATE TOTAL                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWLENG   - LENGTH OF STRING CONTAINED IN 'ZOUT21'                *
+      *                                                                  *
+      ********************************************************************
+     C           #P06      BEGSR                           ** #P06
+     C                     Z-ADD0         WWLENG  20
+     C                     MOVEAZOUT21    LENSTR
+     C                     Z-ADD1         C       20
+     C           C         DOWLE20
+     C           LENSTR,C  IFNE ' '
+     C                     ADD  1         WWLENG
+     C                     END
+     C                     ADD  1         C
+     C                     END
+     C           #P060     ENDSR                           ** #P06
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      /COPY ZSRSRC,ZEDITZ2
+      /EJECT
+      /COPY ZSRSRC,ZCCYCN
+      ****/EJECT                                                          47719
+      ****/COPY ZSRSRC,ZCCYXR                                             47719
+      /EJECT                                                              S01486
+      /COPY ZSRSRC,ZCCYXR                                                 S01486
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - PROGRAM ERROR HANDLING ROUTINE                        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P04     - ACCESS CURRENCY DETAILS                               *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRTCD   - RETURN CODE PARAMETER                                 *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR                           **  *PSSR    **
+     C*
+     C** UPDATE DTAARA/LDA WITH DETAILS OF ERROR
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE WBFILE    DBFILE
+     C                     MOVE WBKEY     DBKEY
+     C                     Z-ADDWBASE     DBASE
+     C                     MOVE WBPGM     DBPGM
+     C                     OUT  LDA
+     C                     OPEN PM9958AU                                  S01486
+     C                     WRITEPM9958F0                                  S01486
+     C                     WRITEPM9958F1                                  S01486
+     C*                                                                   S01486
+     C** Report printer file to RCF via ZSFILE                            S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ     5                       S01486
+     C                     PARM           @ENT    3                       S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUMU                          S01486
+     C                     PARM *BLANKS   ZSERR   1                       S01486
+     C*                                                                   S01486
+     C** Error during ZSFILE processing, return to calling program        S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     END                                            S01486
+     C*
+     C                     MOVE '9'       WWRTCD
+     C                     SETON                     LRU7U8
+     C                     DUMP
+     C                     RETRN
+     C*
+     C           #PSSR0    ENDSR                           **  *PSSR0   **
+      ********************************************************************
+** CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** Array of powers of 10 for currency conversion S/R SCONV
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

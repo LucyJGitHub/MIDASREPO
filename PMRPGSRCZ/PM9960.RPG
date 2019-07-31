@@ -1,0 +1,2618 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Portfolio Performance Breakdown')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                             *
+     F*                                                               *
+     F*  PM9960 - PORTFOLIO VALUATION STATEMENT:                      *
+     F*           PORTFOLIO PERFORMANCE BREAKDOWN                     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 17Jul96               *
+     F*                 080828             Date 21AUG96               *
+     F*                 076624             DATE 21AUG96               *
+     F*                 070248             DATE 08MAY96               *
+     F*                 063060             DATE 29DEC93               *
+     F*                 S01486             DATE 08SEP94               *
+     F*                 072242 JSV         DATE 16SEP94               *
+     F*                 053103 JSV         DATE 16SEP94               *
+     F*                 059471             DATE 11AUG93               *
+     F*                 45365              DATE 24SEP92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*           PBFG/5 - INSTRUMENT ASSET/LIABILITY SPLIT           *
+     F*  080828 - Overlap problem - recompile over amended PM9950P1   *
+     F*  076624 - PM9950P1 change - recompile                         *
+     F*  070248 - THE TEXT 'AS OF ../../..' IS PRINTED IN OVER THE    *
+     F*           TITLE IF 1 OR 2 PERFORMANCE PERIODS REQUIRED        *
+     F*  063060 - TOP OF PAGE BEFORE PRINTING THE COMPONENTS OF       *
+     F*           PORTFOLIO PERFORMANCE                               *
+     F*  S01486 - Private Banking upgrade to Release 10               *
+     F*  072242 - RECOMPILED FOR CHANGE TO PMPSPOPP/QVPFMA            *
+     F*           SIGN OF PERCENTAGE RATE OF RETURN SHOULD ALWAYS BE  *
+     F*           THE SIGN OF THE AMOUNT                              *
+     F*  053103 - CORRECT SIGN OF RATE OF RETURN                      *
+     F*  059471 - CORRECT CURRENCY OUTPUT IN TITLE                    *
+     F*  45365  - SUNDRY FIXES TO PORTFOLIO PERFORMANCE               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  PERFORMANCE REQUIRED - PREFIX QR
+     F***PMPFMRPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     FPMPFMRPDIF  E           K        DISK         KINFSR *PSSR          S01486
+     F*
+     F*  PORTFOLIO PERFORMANCE TOTALS - PREFIX QV
+     F***PMPSPOPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     FPMPSPOQ0IF  E           K        DISK         KINFSR *PSSR          S01486
+     F**   Audit Control                                                  S01486
+     FPM9960AUO   E                    PRINTER      KINFSR *PSSR      UC  S01486
+     F                                              KINFDS SPOOLU         S01486
+     F*
+     F*  PRINTER FILE - PREFIX RR
+     FPM9950P1O   E                    PRINTER                        UC
+     F                                              KINFSR *PSSR
+     F*
+     F**    UNUSED INDICATORS
+     F**    -----------------
+     F*
+     F**       01  02  03  04  05  06  07  08  09  10
+     F**       11  12  13  14  15  16  17  18  19  20
+     F**       21  22  23  24  25  26  27  28  29  30
+     F**       31  32  33  34  35  36  37  38  39  40
+     F**       41  42  43  44  45  46  47  48  49  50
+     F**       51  52  53  54  55  56  57  58  59  ..
+     F**       ..  ..  63  64  65  66  67  68  69  70
+     F**       71  72  73  74  75  76  77  78  79  80
+     F**       81  82  83  84  85  86  87  88  89  90
+     F**       91  92  93  94  95  96  97  98  99
+     F**
+     F** ID F  C  H  L     FUNCTION OF INDICATORS
+     F**                   ----------------------
+     F**      60 - ONE OR 2 PERIODS TO BE OUTPUT
+     F********61*-*READ*EQUAL*ON*PMPSPOPP*********************************S01486
+     F**      61 - READ EQUAL ON PMPSPOQ0                                 S01486
+     F**      62 - WORK INDICATOR
+      /EJECT
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+     E***ARRAY*CONTAINING*PERFOMANCE*CATEGORIES*ON*PMPSPOPP***************S01486
+     E** ARRAY CONTAINING PERFOMANCE CATEGORIES ON PMPSPOQ0               S01486
+     E                    PFMC    1  27  6
+     E*
+     E** ARRAY USED IN CALCULATING PERFORMANCE TOTALS PERIOD 1, 2 & 3
+     E                    PFM1       27 15 0
+     E                    PFM2       27 15 0
+     E                    PFM3       27 15 0
+      /COPY ZSRSRC,ZSEDITZ1
+      /COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+     I*
+      /COPY ZSRSRC,ZSEDITZ2
+     I*
+     I** PM DATA AREA
+     IPMSTAT      DS                            256
+     I                                       29  330WWLXTR
+     I**
+     I**  LOCAL DATA AREA FOR DATA BASE ERRORS:
+     I**
+     ILDA         DS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** DS USED TO PASS PARAMETERS TO CALLED PROGRAMS
+     I***WWPARM****E*DSPM095XPP                                           S01486
+     IWWPARM    E DSPM095XPD                                              S01486
+     I*                                                                   S01486
+     ISPOOLU      DS                                                      S01486
+     I**    SPOOL FILE INFORMATION DATA STRUCTURE                         S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     -                                                       *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #TOTL    - CALCULATE PERFORMANCE CATEGORY TOTALS                 *
+      * #WRITE   - WRITE DETAILS TO VALUATION STATEMENT                  *
+      * #MOVE    - FORMAT DETAILS FOR OUTPUT                             *
+      * #CLRTN   - CALCULATE ABSOLUTE AND ANNUAL RATES OF RETURN         *
+      * *PSSR    - HANDLE FILE AND PROGRAM ERRORS                        *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * SUBR23R3 -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C** PERFORM INITIAL PROCESSING
+     C                     EXSR #INIT
+     C*
+     C***READ*FIRST*RECORD*TO*BE*REPORTED*FROM*QRYF/PMPFMRQQ**************S01486
+     C** READ FIRST RECORD TO BE REPORTED FROM PF/PMPFMRPD                S01486
+     C                     MOVE '1'       WWPFMP
+     C***********PSPOKY    SETLLPMPSPOPP                                  S01486
+     C***********PSPOK1    READEPMPSPOPP                 61               S01486
+     C           PSPOKY    SETLLPMPSPOQ0                                  S01486
+     C           PSPOK1    READEPMPSPOQ0                 61               S01486
+     C*
+     C***DO*WHILE*RECORDS*READ*FROM*PF/PMPSPOPP***************************S01486
+     C** DO WHILE RECORDS READ FROM PF/PMPSPOQ0                           S01486
+     C           *IN61     DOWEQ'0'                        B1
+     C*
+     C** MAINTAIN PORTFOLIO TOTALS
+     C                     EXSR #TOTL
+     C*
+     C***********PSPOK1    READEPMPSPOPP                 61               S01486
+     C           PSPOK1    READEPMPSPOQ0                 61               S01486
+     C                     END                             E1
+     C*
+     C** WRITE DETAILS TO REPORT
+     C                     EXSR #WRITE
+     C*
+     C** RETURN TO CALLING PROGRAM WITH LR OFF
+     C                     CLOSEPM9950P1
+     C                     RETRN
+     C                     SETON                     LR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * SUBR23R3 - RETRIEVE A MEESAGE                                    *
+      * *PSSR    - HANDLE FILE AND PROGRAM ERRORS                        *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING ROUTINE                               *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+     C*
+     C** RECEIVE PARAMETERS FROM CALLING PROGRAM
+     C           *ENTRY    PLIST
+     C                     PARM           WWPARM
+     C**
+     C** SET UP PARAMETER TO FORM OUTPUT LINE
+     C           ZA1311    PLIST
+     C                     PARM           MSGID   7
+     C                     PARM           MSGDT0 40
+     C                     PARM           MSGDT1 40
+     C                     PARM           MSGDT2 40
+     C                     PARM           MSGDT3 40
+     C                     PARM           MSGDT4 40
+     C                     PARM           MSGDT5 40
+     C                     PARM           MSGDT6 40
+     C                     PARM           MSGDT7 40
+     C                     PARM           MSGDT8 40
+     C                     PARM           MSGDT9 40
+     C                     PARM           RESULT200
+     C*
+     C***KLIST*FOR*ACCESS*OF*PMPSPOPP*************************************S01486
+     C** KLIST FOR ACCESS OF PMPSPOQ0                                     S01486
+     C           PSPOKY    KLIST
+     C                     KFLD           QRCNUM
+     C                     KFLD           QRPTFR
+     C                     KFLD           WWPFMP
+     C*
+     C           PSPOK1    KLIST
+     C                     KFLD           QRCNUM
+     C                     KFLD           QRPTFR
+     C*
+     C***KLIST*FOR*ACCESS*OF*PMPFMRPP*************************************S01486
+     C** KLIST FOR ACCESS OF PMPFMRPD                                     S01486
+     C           PFMRKY    KLIST
+     C                     KFLD           WWPFMP
+     C                     KFLD           WWCNUM
+     C**********           KFLD           WWPTFR                          CPM005
+     C                     KFLD           WWPTFF                          CPM005
+     C*
+     C           SUBR23    PLIST
+     C                     PARM           VARMSG  7
+     C                     PARM           TEXT   40
+     C                     PARM           LEVEL   10
+     C                     PARM           RETCD   10
+     C                     PARM           TXTL    40
+     C*
+     C                     Z-ADD3         LEVEL
+     C                     Z-ADD40        TXTL
+     C*
+     C                     MOVE 'J'       ZECODE
+     C*
+     C**   INITIALISE DB ERROR FIELDS AND STORE PROGRAM NAME FOR
+     C**   DB ERROR FIELD.
+     C                     MOVE *BLANKS   WBFILE 10
+     C                     MOVE *BLANKS   WBKEY  29
+     C                     MOVE *BLANKS   WBASE   30
+     C                     MOVEL'PM9960'  WBPGM  10
+     C*
+     C           WWDFIN    IFEQ 'M'                        B1
+     C                     MOVE '1'       *IN98
+     C                     END                             E1
+     C*
+     C** RESET ALL TOTALS TO ZERO
+     C                     Z-ADD1         I       30
+     C           I         DOWLE26                         B1
+     C                     Z-ADD0         PFM1,I
+     C                     Z-ADD0         PFM2,I
+     C                     Z-ADD0         PFM3,I
+     C                     ADD  1         I
+     C                     END                             E1
+     C*                                                                   063060
+     C** FORMAT PRINTED PLACE AND DATE                                    063060
+     C                     MOVE *BLANKS   MSGDT0                          063060
+     C                     MOVELWWBMSN    MSGDT0                          063060
+     C                     MOVE *BLANKS   MSGDT1                          063060
+     C                     MOVELWWECDT    MSGDT1                          063060
+     C********             MOVE 'PMS5116' MSGID                     063060CPM005
+     C                     MOVE 'PM95402' MSGID                           CPM005
+     C                     CALL 'ZA1310'  ZA1311                          063060
+     C                     MOVELRESULT    R0BRDT                          063060
+     C*
+     C** MOVE PARAMETERS TO OUTPUT FIELDS
+     C**********           MOVE WWECDT    R0DATE                          063060
+     C                     MOVE WWCNUM    R0CUST
+     C                     MOVELWWCRNM    R0CNAM
+     C**********           MOVELWWPTFR    R0PREF                          063060
+     C                     MOVELWWPTFN    R0PNAR
+     C                     MOVELWWLXDT    R0LXTD
+     C*
+     C** ON CHANGE OF LANGUAGE CODE ACCESS TEXT
+     C           WWLANG    IFNE WSLANG
+     C                     MOVE WWLANG    WSLANG  2
+     C*
+     C***********          MOVEL'PM95900' VARMSG                          S01486
+     C**********           MOVEL'PM95483' VARMSG                    S01486063060
+     C**********           CALL 'SUBR23R3'SUBR23                          063060
+     C**********           MOVELTEXT      R0LT25                          063060
+     C*
+     C***********          MOVEL'PM95901' VARMSG                          S01486
+     C                     MOVEL'PM95484' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      R0LT26
+     C*
+     C***********          MOVEL'PM95902' VARMSG                          S01486
+     C                     MOVEL'PM95401' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      R0LT27
+     C*
+     C***********          MOVEL'PM95903' VARMSG                          S01486
+     C**********           MOVEL'PM95485' VARMSG                    S01486063060
+     C**********           CALL 'SUBR23R3'SUBR23                          063060
+     C**********           MOVELTEXT      R0LT28                          063060
+     C*
+     C****                 MOVE *BLANKS   MSGDT0                          059471
+     C****                 MOVELWWPTCY    MSGDT0                          059471
+     C****                 MOVE 'PM96001' MSGID                           059471
+     C****                 CALL 'ZA1310'  ZA1311                          059471
+     C****                 MOVELRESULT    R0MS01                          059471
+     C****                 MOVELRESULT    R0M101                          059471
+     C****                 MOVELRESULT    R1M101                          059471
+     C*
+     C***********          MOVEL'PM96002' VARMSG                          S01486
+     C                     MOVEL'PM95502' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS02 30
+     C*
+     C***********          MOVEL'PM96003' VARMSG                          S01486
+     C                     MOVEL'PM95503' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS03 30
+     C*
+     C***********          MOVEL'PM96004' VARMSG                          S01486
+     C                     MOVEL'PM95504' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS04 30
+     C*
+     C***********          MOVEL'PM96047' VARMSG                          S01486
+     C                     MOVEL'PM95547' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS47 30
+     C*
+     C***********          MOVEL'PM96005' VARMSG                          S01486
+     C                     MOVEL'PM95505' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      R0MS05
+     C                     MOVELTEXT      R0M105
+     C                     MOVELTEXT      R0M205
+     C                     MOVELTEXT      R0M305
+     C                     MOVELTEXT      R0M405
+     C*
+     C***********          MOVEL'PM96017' VARMSG                          S01486
+     C                     MOVEL'PM95517' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C**********           MOVELTEXT      R0MS06                          063060
+     C**********           MOVELTEXT      R1MS06                          063060
+     C                     MOVELTEXT      #0MS06 40                       063060
+     C*
+     C***********          MOVEL'PM96006' VARMSG                          S01486
+     C                     MOVEL'PM95506' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS06 33
+     C*
+     C***********          MOVEL'PM96007' VARMSG                          S01486
+     C                     MOVEL'PM95507' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS07 33
+     C*
+     C***********          MOVEL'PM96008' VARMSG                          S01486
+     C                     MOVEL'PM95508' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS08 33
+     C*
+     C***********          MOVEL'PM96009' VARMSG                          S01486
+     C                     MOVEL'PM95509' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS09 33
+     C*
+     C***********          MOVEL'PM96010' VARMSG                          S01486
+     C                     MOVEL'PM95510' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS10 33
+     C*
+     C***********          MOVEL'PM96011' VARMSG                          S01486
+     C                     MOVEL'PM95511' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS11 33
+     C*
+     C***********          MOVEL'PM96012' VARMSG                          S01486
+     C                     MOVEL'PM95512' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS12 33
+     C*
+     C***********          MOVEL'PM96013' VARMSG                          S01486
+     C                     MOVEL'PM95513' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS13 33
+     C*
+     C***********          MOVEL'PM96014' VARMSG
+     C                     MOVEL'PM95514' VARMSG
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS14 33
+     C*
+     C***********          MOVEL'PM96015' VARMSG
+     C                     MOVEL'PM95515' VARMSG
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS15 33
+     C*
+     C***********          MOVEL'PM96016' VARMSG
+     C                     MOVEL'PM95516' VARMSG
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS16 33
+     C*
+     C***********          MOVEL'PM96017' VARMSG                          S01486
+     C***********          CALL 'SUBR23R3'SUBR23                          S01486
+     C***********          MOVELTEXT      WWMS17 33                       S01486
+     C***********                                                         S01486
+     C***********          MOVEL'PM96018' VARMSG                          S01486
+     C                     MOVEL'PM95518' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS18 33
+     C*
+     C***********          MOVEL'PM96019' VARMSG                          S01486
+     C                     MOVEL'PM95519' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS19 33
+     C*
+     C***********          MOVEL'PM96020' VARMSG                          S01486
+     C                     MOVEL'PM95520' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS20 33
+     C*
+     C***********          MOVEL'PM96021' VARMSG                          S01486
+     C                     MOVEL'PM95521' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS21 33
+     C*
+     C***********          MOVEL'PM96022' VARMSG                          S01486
+     C                     MOVEL'PM95522' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS22 33
+     C*
+     C***********          MOVEL'PM96023' VARMSG                          S01486
+     C                     MOVEL'PM95523' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS23 33
+     C*
+     C***********          MOVEL'PM96024' VARMSG                          S01486
+     C                     MOVEL'PM95524' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS24 33
+     C*
+     C***********          MOVEL'PM96025' VARMSG                          S01486
+     C                     MOVEL'PM95525' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS25 33
+     C*
+     C***********          MOVEL'PM96026' VARMSG                          S01486
+     C                     MOVEL'PM95526' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS26 33
+     C*
+     C***********          MOVEL'PM96027' VARMSG                          S01486
+     C                     MOVEL'PM95527' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS27 33
+     C*
+     C***********          MOVEL'PM96028' VARMSG                          S01486
+     C                     MOVEL'PM95528' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS28 33
+     C*
+     C***********          MOVEL'PM96029' VARMSG                          S01486
+     C                     MOVEL'PM95529' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS29 33
+     C*
+     C***********          MOVEL'PM96030' VARMSG                          S01486
+     C                     MOVEL'PM95530' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS30 33
+     C*
+     C***********          MOVEL'PM96031' VARMSG                          S01486
+     C                     MOVEL'PM95531' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS31 33
+     C*
+     C***********          MOVEL'PM96032' VARMSG                          S01486
+     C                     MOVEL'PM95532' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS32 33
+     C*
+     C***********          MOVEL'PM96033' VARMSG                          S01486
+     C                     MOVEL'PM95533' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS33 33
+     C*
+     C***********          MOVEL'PM96034' VARMSG                          S01486
+     C                     MOVEL'PM95534' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS34 33
+     C*
+     C***********          MOVEL'PM96035' VARMSG                          S01486
+     C                     MOVEL'PM95535' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS35 33
+     C*
+     C***********          MOVEL'PM96036' VARMSG                          S01486
+     C                     MOVEL'PM95536' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS36 33
+     C*
+     C***********          MOVEL'PM96037' VARMSG                          S01486
+     C                     MOVEL'PM95537' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS37 33
+     C*
+     C***********          MOVEL'PM96038' VARMSG                          S01486
+     C                     MOVEL'PM95538' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS38 33
+     C*
+     C***********          MOVEL'PM96039' VARMSG                          S01486
+     C                     MOVEL'PM95539' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS39 33
+     C*
+     C***********          MOVEL'PM96040' VARMSG                          S01486
+     C                     MOVEL'PM95540' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS40 33
+     C*
+     C***********          MOVEL'PM96041' VARMSG                          S01486
+     C                     MOVEL'PM95541' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS41 33
+     C*
+     C***********          MOVEL'PM96042' VARMSG                          S01486
+     C                     MOVEL'PM95542' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS42 33
+     C*
+     C***********          MOVEL'PM96043' VARMSG                          S01486
+     C                     MOVEL'PM95543' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS43 33
+     C*
+     C***********          MOVEL'PM96044' VARMSG                          S01486
+     C                     MOVEL'PM95544' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS44 33
+     C*
+     C***********          MOVEL'PM96045' VARMSG                          S01486
+     C                     MOVEL'PM95545' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS45 33
+     C*
+     C***********          MOVEL'PM96046' VARMSG                          S01486
+     C                     MOVEL'PM95546' VARMSG                          S01486
+     C                     CALL 'SUBR23R3'SUBR23
+     C                     MOVELTEXT      WWMS46 33
+     C                     END                             E1
+     C*
+     C** SET UP WORK VARIABLE CONTAINING PERIOD 3 TITLE
+     C           WWADPP    IFEQ 'Q'                        B1
+     C                     MOVE WWMS04    WWWORK 30
+     C                     MOVE WWMS04    R0MS04
+     C                     ELSE                            X1
+     C                     MOVE WWMS47    WWWORK
+     C                     MOVE WWMS47    R0MS04
+     C                     END                             E1
+     C*
+     C                     MOVE WWMS02    R0MS02
+     C                     MOVE WWMS03    R0MS03
+     C*
+     C** SET TITLE OF FIRST PERIOD REQUIRED
+     C           WWS3VR    IFEQ 'Y'                        B1
+     C                     MOVE R0MS02    R0M102
+     C                     MOVE '1'       WWPED1  1
+     C                     ELSE                            X1
+     C*
+     C           WWS4VR    IFEQ 'Y'                        B2
+     C                     MOVE R0MS03    R0M102
+     C                     MOVE '2'       WWPED1  1
+     C                     ELSE                            X2
+     C*
+     C                     MOVE R0MS04    R0M102
+     C                     MOVE '3'       WWPED1  1
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** SET ON INDICATOR FOR ALL 3 PERIODS REQUIRED
+     C           WWS3VR    IFEQ 'Y'                        B1
+     C           WWS4VR    ANDEQ'Y'
+     C           WWS5VR    ANDEQ'Y'
+     C                     MOVE 'Y'       WWALL3  1
+     C                     ELSE                            X1
+     C                     MOVE 'N'       WWALL3
+     C                     END                             E1
+     C*
+     C** SET TITLE OF SECOND PERIOD IF ALL 3 PERIODS REQUIRED
+     C           WWALL3    IFEQ 'Y'                        B1
+     C                     MOVE '2'       WWPED2
+     C                     ELSE                            X1
+     C*
+     C** SET TITLE OF PERIOD 2 IF ONLY 2 PERIODS REQUIRED
+     C           WWS3VR    IFEQ 'Y'                        B2
+     C           WWS4VR    ANDEQ'Y'
+     C                     MOVE R0MS03    R0M103
+     C                     MOVE '2'       WWPED2  1
+     C                     ELSE                            X2
+     C                     MOVE R0MS04    R0M103
+     C                     MOVE '3'       WWPED2
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF PERFORMANCE PERIOD 1 REQUIRED OBTAIN PERIOD DATES FROM
+     C***PF/PMPFMRPP******************************************************S01486
+     C** PF/PMPFMRPD                                                      S01486
+     C           WWS3VR    IFEQ 'Y'                        B1
+     C                     MOVE '1'       WWPFMP  1
+     C*
+     C***********PFMRKY    CHAINPMPFMRPP             62                   S01486
+     C           PFMRKY    CHAINPMPFMRPD             62                   S01486
+     C*
+     C           *IN62     IFEQ '1'                        B2
+     C                     Z-ADD1         WBASE            ****************
+     C***********          MOVEL'PMPFMRPP'WBFILE           * DBERROR  001 S01486
+     C                     MOVEL'PMPFMRPD'WBFILE           * DBERROR  001 S01486
+     C                     MOVELWWCNUM    WBKEY            ****************
+     C**********           MOVE WWPTFR    WBKEY                           CPM005
+     C                     MOVE WWPTFF    WBKEY                           CPM005
+     C                     EXSR *PSSR
+     C                     END                             E2
+     C*
+     C** FORMAT PERIOD 1 DETAILS FOR OUTPUT
+     C                     Z-ADDQRPMSD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    WWDATS  7
+     C*
+     C                     Z-ADDQRPMED    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    WWDATE  7
+     C*
+     C                     Z-ADDQRDYPP    WWDYP1  30
+     C*
+     C** MOVE TO CORRECT PRINTER FIELDS
+     C           WWALL3    IFEQ 'Y'                        B2
+     C                     MOVE WWDATS    R0PD1S
+     C                     MOVE WWDATE    R0PD1E
+     C                     ELSE                            X2
+     C*
+     C           WWPED1    IFEQ '1'                        B3
+     C                     MOVE WWDATS    R0P11S
+     C                     MOVE WWDATE    R0P11E
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF PERFORMANCE PERIOD 2 REQUIRED OBTAIN PERIOD DATES FROM
+     C***PF/PMPFMRPP******************************************************S01486
+     C** PF/PMPFMRPD                                                      S01486
+     C           WWS4VR    IFEQ 'Y'                        B1
+     C                     MOVE '2'       WWPFMP  1
+     C*
+     C***********PFMRKY    CHAINPMPFMRPP             62                   S01486
+     C           PFMRKY    CHAINPMPFMRPD             62                   S01486
+     C*
+     C           *IN62     IFEQ '1'                        B2
+     C                     Z-ADD2         WBASE            ****************
+     C***********          MOVEL'PMPFMRPP'WBFILE           * DBERROR  002 S01486
+     C                     MOVEL'PMPFMRPD'WBFILE           * DBERROR  002 S01486
+     C                     MOVELWWCNUM    WBKEY            ****************
+     C**********           MOVE WWPTFR    WBKEY                           CPM005
+     C                     MOVE WWPTFF    WBKEY                           CPM005
+     C                     EXSR *PSSR
+     C                     END                             E2
+     C*
+     C** FORMAT PERIOD 2 DETAILS FOR OUTPUT
+     C                     Z-ADDQRPMSD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    WWDATS  7
+     C*
+     C                     Z-ADDQRPMED    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    WWDATE  7
+     C*
+     C                     Z-ADDQRDYPP    WWDYP2  30
+     C*
+     C** MOVE TO CORRECT PRINTER FIELDS
+     C           WWALL3    IFEQ 'Y'                        B2
+     C                     MOVE WWDATS    R0PD2S
+     C                     MOVE WWDATE    R0PD2E
+     C                     ELSE                            X2
+     C*
+     C           WWPED1    IFEQ '2'                        B3
+     C                     MOVE WWDATS    R0P11S
+     C                     MOVE WWDATE    R0P11E
+     C                     END                             E3
+     C*
+     C           WWPED2    IFEQ '2'                        B3
+     C                     MOVE WWDATS    R0P12S
+     C                     MOVE WWDATE    R0P12E
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF PERFORMANCE PERIOD 3 REQUIRED OBTAIN PERIOD DATES FROM
+     C***PF/PMPFMRPP******************************************************S01486
+     C** PF/PMPFMRPD                                                      S01486
+     C           WWS5VR    IFEQ 'Y'                        B1
+     C                     MOVE '3'       WWPFMP  1
+     C*
+     C***********PFMRKY    CHAINPMPFMRPP             62                   S01486
+     C           PFMRKY    CHAINPMPFMRPD             62                   S01486
+     C*
+     C           *IN62     IFEQ '1'                        B2
+     C                     Z-ADD3         WBASE            ****************
+     C***********          MOVEL'PMPFMRPP'WBFILE           * DBERROR  003 S01486
+     C                     MOVEL'PMPFMRPD'WBFILE           * DBERROR  003 S01486
+     C                     MOVELWWCNUM    WBKEY            ****************
+     C**********           MOVE WWPTFR    WBKEY                           CPM005
+     C                     MOVE WWPTFF    WBKEY                           CPM005
+     C                     EXSR *PSSR
+     C                     END                             E2
+     C*
+     C** FORMAT PERIOD 3 DETAILS FOR OUTPUT
+     C                     Z-ADDQRPMSD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    WWDATS  7
+     C*
+     C                     Z-ADDQRPMED    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    WWDATE  7
+     C*
+     C                     Z-ADDQRDYPP    WWDYP3  30
+     C*
+     C** MOVE TO CORRECT PRINTER FIELDS
+     C           WWALL3    IFEQ 'Y'                        B2
+     C                     MOVE WWDATS    R0PD3S
+     C                     MOVE WWDATE    R0PD3E
+     C                     ELSE                            X2
+     C*
+     C           WWPED1    IFEQ '3'                        B3
+     C                     MOVE WWDATS    R0P11S
+     C                     MOVE WWDATE    R0P11E
+     C                     END                             E3
+     C*
+     C           WWPED2    IFEQ '3'                        B3
+     C                     MOVE WWDATS    R0P12S
+     C                     MOVE WWDATE    R0P12E
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** OPEN PRINTER FILE
+     C                     OPEN PM9950P1
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #TOTL    - CALCULATE PERFORMANCE CATEGORY TOTALS                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPFSC   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #TOTL     BEGSR
+     C*
+     C** ADD PERFORMANCE AMOUNT TO CORRECT ELEMNT OF ARRAY
+     C                     Z-ADD1         I
+     C                     MOVELQVPFMC    WWPFSC  6
+     C                     MOVE QVPFMS    WWPFSC
+     C           WWPFSC    LOKUPPFMC,I                   64
+     C*
+     C           QVPFMP    IFEQ '1'                        B1
+     C                     ADD  QVPFMA    PFM1,I
+     C                     ELSE                            X1
+     C           QVPFMP    IFEQ '2'                        B2
+     C                     ADD  QVPFMA    PFM2,I
+     C                     ELSE                            X2
+     C                     ADD  QVPFMA    PFM3,I
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #WRITE   - WRITE DETAILS TO VALUATION STATEMENT                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   - EDIT NUMERIC FIELDS FOR OUTPUT                        *
+      * #MOVE    - FORMAT DETAILS FOR OUTPUT                             *
+      * #CLRTN   - CALCULATE ABSOLUTE AND ANNUAL RATES OF RETURN         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN CONTROLLING ROUTINE                              *
+      *                                                                  *
+      ********************************************************************
+     C           #WRITE    BEGSR
+     C*                                                                   059471
+     C** SET UP REPORT TITLE                                              059471
+     C                     MOVE *BLANKS   MSGDT0                          059471
+     C                     MOVELWWPTCY    MSGDT0                          059471
+     C***********          MOVE 'PM96001' MSGID                     059471S01486
+     C                     MOVE 'PM95501' MSGID                           S01486
+     C                     CALL 'ZA1310'  ZA1311                          059471
+     C                     MOVELRESULT    R0MS01                          059471
+     C************         MOVELRESULT    R0M101                    059471070248
+     C                     MOVELRESULT    R1M101                          059471
+     C*
+     C** WRITE HEADING DETAILS
+     C                     ADD  1         WWPNBR                          CPM005
+     C                     MOVE *BLANKS   MSGDT0                          CPM005
+     C                     MOVELWWPNBR    MSGDT0                          CPM005
+     C                     MOVE 'PM95405' MSGID                           CPM005
+     C                     CALL 'ZA1310'  ZA1311                          CPM005
+     C                     MOVELRESULT    R1PAGE                          CPM005
+     C                     WRITEP960HDR                62
+     C*
+     C** WRITE HEADING IF ALL 3 PERFORMANCE PERIODS TO BE PRINTED
+     C           WWALL3    IFEQ 'Y'                        B1
+     C                     WRITEP960HD1                62
+     C                     ELSE                            X1
+     C*
+     C** SET INDICATOR FOR 1 OR 2 PERIODS TO BE OUTPUT
+     C                     MOVE '0'       *IN60
+     C           WWS3VR    IFEQ 'Y'                        B2
+     C           WWS4VR    ANDEQ'Y'
+     C           WWS3VR    OREQ 'Y'
+     C           WWS5VR    ANDEQ'Y'
+     C           WWS4VR    OREQ 'Y'
+     C           WWS5VR    ANDEQ'Y'
+     C                     MOVE '1'       *IN60
+     C                     END                             E2
+     C*
+     C                     WRITEP960HD2                62
+     C                     END                             E1
+     C*                                                                   063060
+     C** FORMAT LINE BLANKS FOR OUTPUT                                    063060
+     C                     WRITEP960SP                 62                 063060
+     C*
+     C** FORMAT 'VALUE AT END' FOR OUTPUT
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE PFM1,1    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1 16
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE PFM2,1    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2 16
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE PFM3,1    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3 16
+     C*
+     C                     MOVE WWMS06    R0TEXT
+     C                     MOVE WWMS06    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** FORMAT 'VALUE AT START' FOR OUTPUT
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE PFM1,2    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE PFM2,2    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE PFM3,2    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS07    R0TEXT
+     C                     MOVE WWMS07    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT UNDERLINE
+     C                     MOVE *BLANKS   R0TEXT
+     C                     MOVE *BLANKS   R0TXT1
+     C                     MOVE WWMS43    WWAMT1
+     C                     MOVE WWMS43    WWAMT2
+     C                     MOVE WWMS43    WWAMT3
+     C                     EXSR #MOVE
+     C*
+     C** FORMAT 'CHANGE IN MARKET VALUE' FOR OUTPUT
+     C                     Z-ADD0         ZFLD15
+     C           PFM1,1    SUB  PFM1,2    WW150  150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           PFM2,1    SUB  PFM2,2    WW150  150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           PFM3,1    SUB  PFM3,2    WW150  150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS08    R0TEXT
+     C                     MOVE WWMS08    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT BLANK LINE
+     C                     MOVE *BLANKS   R0TEXT
+     C                     MOVE *BLANKS   R0TXT1
+     C                     EXSR #MOVE
+     C*
+     C** FORMAT 'CAPITAL ADDED TO PORTFOLIO' FOR OUTPUT
+     C                     Z-ADD0         ZFLD15
+     C           WWSHCC    IFEQ 'Y'                        B1
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM1,4    WW150  150
+     C                     ELSE                            X1
+     C           PFM1,4    ADD  PFM1,24   WW150
+     C                     END                             E1
+     C*
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           WWSHCC    IFEQ 'Y'                        B1
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM2,4    WW150  150
+     C                     ELSE                            X1
+     C           PFM2,4    ADD  PFM2,24   WW150
+     C                     END                             E1
+     C*
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           WWSHCC    IFEQ 'Y'                        B1
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM3,4    WW150  150
+     C                     ELSE                            X1
+     C           PFM3,4    ADD  PFM3,24   WW150
+     C                     END                             E1
+     C*
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS09    R0TEXT
+     C                     MOVE WWMS09    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** FORMAT 'CAPITAL WITHDRAWN FROM PORTFOLIO' FOR OUTPUT
+     C                     Z-ADD0         ZFLD15
+     C           WWSHCC    IFEQ 'Y'                        B1
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM1,5    WW150  150
+     C                     ELSE                            X1
+     C           PFM1,5    SUB  PFM1,25   WW150
+     C                     END                             E1
+     C*
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           WWSHCC    IFEQ 'Y'                        B1
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM2,5    WW150  150
+     C                     ELSE                            X1
+     C           PFM2,5    SUB  PFM2,25   WW150
+     C                     END                             E1
+     C*
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           WWSHCC    IFEQ 'Y'                        B1
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM3,5    WW150  150
+     C                     ELSE                            X1
+     C           PFM3,5    SUB  PFM3,25   WW150
+     C                     END                             E1
+     C*
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS10    R0TEXT
+     C                     MOVE WWMS10    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** FORMAT 'RECALAIMABLE TAX' FOR OUTPUT IF PERFORMANCE IS
+     C** REQUIRED NET OF TAX
+     C           WWPMNG    IFEQ 'G'                        B1
+     C                     Z-ADD0         ZFLD15
+     C                     Z-SUBPFM1,19   WW150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-SUBPFM2,19   WW150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-SUBPFM3,19   WW150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS11    R0TEXT
+     C                     MOVE WWMS11    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C                     END                             E1
+     C*
+     C** IF ADJUSTMENT DUE DO DELETION NOT 0 FOR ANY PERIOD FORMAT FOR
+     C** OUTPUT
+     C           PFM1,26   IFNE 0                          B1
+     C           PFM2,26   ORNE 0
+     C           PFM3,26   ORNE 0
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDPFM1,26   WW150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDPFM2,26   WW150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDPFM3,26   WW150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS12    R0TEXT
+     C                     MOVE WWMS12    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C                     END                             E1
+     C*
+     C** OUTPUT UNDERLINE
+     C                     MOVE *BLANKS   R0TEXT
+     C                     MOVE *BLANKS   R0TXT1
+     C                     MOVE WWMS44    WWAMT1
+     C                     MOVE WWMS44    WWAMT2
+     C                     MOVE WWMS44    WWAMT3
+     C                     MOVE WWMS45    WWPRF1  8
+     C                     MOVE WWMS45    WWPRF2  8
+     C                     MOVE WWMS45    WWPRF3  8
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'RETURN ON INVESTED CAPITAL'
+     C                     Z-ADD0         WW150
+     C           PFM1,1    SUB  PFM1,2    WW150
+     C           WW150     SUB  PFM1,4    WW150
+     C           WW150     ADD  PFM1,5    WW150
+     C*
+     C           WWPMNG    IFEQ 'G'
+     C           WW150     SUB  PFM1,19   WW150
+     C                     END
+     C*
+     C           WWSHCC    IFEQ 'N'                        B1
+     C           WWVLNT    ANDNE'A'
+     C           WWVLNT    ANDNE'L'                                       45365
+     C           WW150     SUB  PFM1,24   WW150
+     C           WW150     SUB  PFM1,25   WW150
+     C                     END                             E1
+     C*
+     C                     SUB  PFM1,26   WW150
+     C                     Z-ADDWW150     WWRTN1 150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADD0         WW150
+     C           PFM2,1    SUB  PFM2,2    WW150
+     C           WW150     SUB  PFM2,4    WW150
+     C           WW150     ADD  PFM2,5    WW150
+     C*
+     C           WWPMNG    IFEQ 'G'
+     C           WW150     SUB  PFM2,19   WW150
+     C                     END
+     C*
+     C           WWSHCC    IFEQ 'N'                        B1
+     C           WWVLNT    ANDNE'A'
+     C           WWVLNT    ANDNE'L'                                       45365
+     C           WW150     SUB  PFM2,24   WW150
+     C           WW150     SUB  PFM2,25   WW150
+     C                     END                             E1
+     C*
+     C                     SUB  PFM2,26   WW150
+     C                     Z-ADDWW150     WWRTN2 150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADD0         WW150
+     C           PFM3,1    SUB  PFM3,2    WW150
+     C           WW150     SUB  PFM3,4    WW150
+     C           WW150     ADD  PFM3,5    WW150
+     C*
+     C           WWPMNG    IFEQ 'G'
+     C           WW150     SUB  PFM3,19   WW150
+     C                     END
+     C*
+     C           WWSHCC    IFEQ 'N'                        B1
+     C           WWVLNT    ANDNE'A'
+     C           WWVLNT    ANDNE'L'                                       45365
+     C           WW150     SUB  PFM3,24   WW150
+     C           WW150     SUB  PFM3,25   WW150
+     C                     END                             E1
+     C*
+     C                     SUB  PFM3,26   WW150
+     C                     Z-ADDWW150     WWRTN3 150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS13    R0TEXT
+     C                     MOVE WWMS13    R0TXT1
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS3VR    IFEQ 'Y'
+     C                     Z-ADDWWRTN1    WWRTRN 150
+     C           PFM1,6    ADD  PFM1,3    WWAVIC 150
+     C                     Z-ADDWWDYP1    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF1  8
+     C                     MOVE WWANNP    W1ANNP  8
+     C                     END
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OF RETURN
+     C           WWS4VR    IFEQ 'Y'
+     C                     Z-ADDWWRTN2    WWRTRN 150
+     C           PFM2,6    ADD  PFM2,3    WWAVIC
+     C                     Z-ADDWWDYP2    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF2
+     C                     MOVE WWANNP    W2ANNP  8
+     C                     END
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS5VR    IFEQ 'Y'
+     C                     Z-ADDWWRTN3    WWRTRN 150
+     C           PFM3,6    ADD  PFM3,3    WWAVIC
+     C                     Z-ADDWWDYP3    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF3
+     C                     MOVE WWANNP    W3ANNP  8
+     C                     END
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT ANNUALISED PERFORMANCE FIGURES
+     C                     MOVE *BLANKS   R0TEXT
+     C                     MOVE *BLANKS   R0TXT1
+     C                     MOVE *BLANKS   WWAMT1
+     C                     MOVE *BLANKS   WWAMT2
+     C                     MOVE *BLANKS   WWAMT3
+     C                     MOVE W1ANNP    WWPRF1
+     C                     MOVE W2ANNP    WWPRF2
+     C                     MOVE W3ANNP    WWPRF3
+     C*
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'CAPITAL INVESTED AT START'
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE PFM1,3    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE PFM2,3    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE PFM3,3    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS14    R0TEXT
+     C                     MOVE WWMS14    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'TIME WEIGHTED CHANGE IN CAPITAL'
+     C           WWS3VR    IFEQ 'Y'
+     C                     Z-ADD0         ZFLD15
+     C*
+     C           WWSHCC    IFEQ 'N'
+     C           WWVLNT    ANDNE'A'
+     C           WWVLNT    ANDNE'L'                                       45365
+     C           PFM1,6    ADD  PFM1,27   WW150
+     C                     ELSE
+     C                     Z-ADDPFM1,6    WW150
+     C                     END
+     C*
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C                     END
+     C*
+     C           WWS4VR    IFEQ 'Y'
+     C                     Z-ADD0         ZFLD15
+     C*
+     C           WWSHCC    IFEQ 'N'
+     C           WWVLNT    ANDNE'A'
+     C           WWVLNT    ANDNE'L'                                       45365
+     C           PFM2,6    ADD  PFM2,27   WW150
+     C                     ELSE
+     C                     Z-ADDPFM2,6    WW150
+     C                     END
+     C*
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C                     END
+     C*
+     C           WWS5VR    IFEQ 'Y'
+     C                     Z-ADD0         ZFLD15
+     C*
+     C           WWSHCC    IFEQ 'N'
+     C           WWVLNT    ANDNE'A'
+     C           WWVLNT    ANDNE'L'                                       45365
+     C           PFM3,6    ADD  PFM3,27   WW150
+     C                     ELSE
+     C                     Z-ADDPFM3,6    WW150
+     C                     END
+     C*
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C                     END
+     C*
+     C                     MOVE WWMS15    R0TEXT
+     C                     MOVE WWMS15    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT UNDERLINE
+     C                     MOVE *BLANKS   R0TEXT
+     C                     MOVE *BLANKS   R0TXT1
+     C                     MOVE WWMS44    WWAMT1
+     C                     MOVE WWMS44    WWAMT2
+     C                     MOVE WWMS44    WWAMT3
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'AVERAGE INVESTED CAPITAL'
+     C           WWS3VR    IFEQ 'Y'
+     C                     Z-ADD0         ZFLD15
+     C           PFM1,6    ADD  PFM1,3    WW150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWW150     WWAVI1 150
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C                     END
+     C*
+     C           WWS4VR    IFEQ 'Y'
+     C                     Z-ADD0         ZFLD15
+     C           PFM2,6    ADD  PFM2,3    WW150
+     C                     Z-ADDWW150     WWAVI2 150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C                     END
+     C*
+     C           WWS5VR    IFEQ 'Y'
+     C                     Z-ADD0         ZFLD15
+     C           PFM3,6    ADD  PFM3,3    WW150
+     C                     Z-ADDWW150     WWAVI3 150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C                     END
+     C*
+     C                     MOVE WWMS16    R0TEXT
+     C                     MOVE WWMS16    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*                                                                   063060
+     C** WRITE HEADING DETAILS                                            063060
+     C** WITH TOP OF PAGE                                                 063060
+     C                     MOVE *ON       *IN62                           063060
+     C*                                                                   063060
+     C                     ADD  1         WWPNBR                          CPM005
+     C                     MOVE *BLANKS   MSGDT0                          CPM005
+     C                     MOVELWWPNBR    MSGDT0                          CPM005
+     C                     MOVE 'PM95405' MSGID                           CPM005
+     C                     CALL 'ZA1310'  ZA1311                          CPM005
+     C                     MOVELRESULT    R1PAGE                          CPM005
+     C                     WRITEP960HDR                62                 063060
+     C*                                                                   063060
+     C** SAVE FIELDS                                                      063060
+     C                     MOVE *BLANKS   X0MS01 40                       063060
+     C                     MOVE *BLANKS   X0M101 40                       063060
+     C                     MOVE *BLANKS   X1M101 40                       063060
+     C*                                                                   063060
+     C                     MOVELR0MS01    X0MS01                          063060
+     C*********            MOVELR0M101    X0M101                     06306070248
+     C                     MOVELR1M101    X1M101                          063060
+     C*                                                                   063060
+     C                     MOVEL#0MS06    R0MS01                          063060
+     C********             MOVEL#0MS06    R0M101                     06306070248
+     C                     MOVEL#0MS06    R1M101                          063060
+     C*                                                                   063060
+     C** WRITE HEADING IF ALL 3 PERFORMANCE PERIODS TO BE PRINTED         063060
+     C           WWALL3    IFEQ 'Y'                        B1             063060
+     C                     WRITEP960HD1                62                 063060
+     C                     ELSE                            X1             063060
+     C*                                                                   063060
+     C** SET INDICATOR FOR 1 OR 2 PERIODS TO BE OUTPUT                    063060
+     C                     MOVE '0'       *IN60                           063060
+     C           WWS3VR    IFEQ 'Y'                        B2             063060
+     C           WWS4VR    ANDEQ'Y'                                       063060
+     C           WWS3VR    OREQ 'Y'                                       063060
+     C           WWS5VR    ANDEQ'Y'                                       063060
+     C           WWS4VR    OREQ 'Y'                                       063060
+     C           WWS5VR    ANDEQ'Y'                                       063060
+     C                     MOVE '1'       *IN60                           063060
+     C                     END                             E2             063060
+     C*                                                                   063060
+     C                     WRITEP960HD2                62                 063060
+     C                     END                             E1             063060
+     C** RESTORE FIELDS                                                   063060
+     C                     MOVE *BLANKS   R0MS01                          063060
+     C********             MOVE *BLANKS   R0M101                     06306070248
+     C                     MOVE *BLANKS   R1M101                          063060
+     C*                                                                   063060
+     C                     MOVELX0MS01    R0MS01                          063060
+     C*********            MOVELX0M101    R0M101                     06306070248
+     C                     MOVELX1M101    R1M101                          063060
+     C*
+     C** OUTPUT 'COMPONENTS OF PERFORMANCE' TEXT
+     C**********           WRITEP960TXT                62                 063060
+     C*
+     C** OUTPUT 'TRADING PROFIT/LOSS' TEXT
+     C                     MOVE WWMS18    R0TEXT
+     C                     MOVE WWMS18    R0TXT1
+     C*
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'TRADING PROFIT/LOSS' UNDERLINE
+     C                     MOVE WWMS19    R0TEXT
+     C                     MOVE WWMS19    R0TXT1
+     C*
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT REALISED TRADING PROFIT/LOSS
+     C                     Z-ADD0         ZFLD15
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM1,7    WW150
+     C                     ELSE
+     C           PFM1,7    ADD  PFM1,16   WW150
+     C           WW150     ADD  PFM1,21   WW150
+     C                     END
+     C*
+     C                     Z-ADDWW150     WWTDP1 150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM2,7    WW150
+     C                     ELSE
+     C           PFM2,7    ADD  PFM2,16   WW150
+     C           WW150     ADD  PFM2,21   WW150
+     C                     END
+     C*
+     C                     Z-ADDWW150     WWTDP2 150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM3,7    WW150
+     C                     ELSE
+     C           PFM3,7    ADD  PFM3,16   WW150
+     C           WW150     ADD  PFM3,21   WW150
+     C                     END
+     C*
+     C                     Z-ADDWW150     WWTDP3 150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS20    R0TEXT
+     C                     MOVE WWMS20    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT UNREALISED TRADING PROFIT/LOSS
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE PFM1,8    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE PFM2,8    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE PFM3,8    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS21    R0TEXT
+     C                     MOVE WWMS21    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT UNDERLINE
+     C                     MOVE *BLANKS   R0TEXT
+     C                     MOVE *BLANKS   R0TXT1
+     C                     MOVE WWMS43    WWAMT1
+     C                     MOVE WWMS43    WWAMT2
+     C                     MOVE WWMS43    WWAMT3
+     C                     MOVE WWMS46    WWPRF1
+     C                     MOVE WWMS46    WWPRF2
+     C                     MOVE WWMS46    WWPRF3
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'TOTAL TRADING PROFIT/LOSS'
+     C                     Z-ADD0         ZFLD15
+     C           WWTDP1    ADD  PFM1,8    WW150
+     C                     Z-ADDWW150     WWRTRN 150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS3VR    IFEQ 'Y'
+     C                     Z-ADDWWAVI1    WWAVIC 150
+     C                     Z-ADDWWDYP1    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF1  8
+     C                     MOVE WWANNP    W1ANNP  8
+     C                     END
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           WWTDP2    ADD  PFM2,8    WW150
+     C                     Z-ADDWW150     WWRTRN
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS4VR    IFEQ 'Y'
+     C                     Z-ADDWWAVI2    WWAVIC 150
+     C                     Z-ADDWWDYP2    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF2
+     C                     MOVE WWANNP    W2ANNP
+     C                     END
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           WWTDP3    ADD  PFM3,8    WW150
+     C                     Z-ADDWW150     WWRTRN
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS5VR    IFEQ 'Y'
+     C                     Z-ADDWWAVI3    WWAVIC 150
+     C                     Z-ADDWWDYP3    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF3
+     C                     MOVE WWANNP    W3ANNP
+     C                     END
+     C*
+     C                     MOVE WWMS22    R0TEXT
+     C                     MOVE WWMS22    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT ANNUALISED PERFORMANCE FIGURES
+     C                     MOVE *BLANKS   R0TEXT
+     C                     MOVE *BLANKS   R0TXT1
+     C                     MOVE *BLANKS   WWAMT1
+     C                     MOVE *BLANKS   WWAMT2
+     C                     MOVE *BLANKS   WWAMT3
+     C                     MOVE W1ANNP    WWPRF1
+     C                     MOVE W2ANNP    WWPRF2
+     C                     MOVE W3ANNP    WWPRF3
+     C*
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'INTEREST AND DIVIDENDS' TEXT
+     C                     MOVE WWMS23    R0TEXT
+     C                     MOVE WWMS23    R0TXT1
+     C*
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'INTEREST AND DIVIDENDS' UNDERLINE
+     C                     MOVE WWMS24    R0TEXT
+     C                     MOVE WWMS24    R0TXT1
+     C*
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT TOTAL DIVIDENDS
+     C                     Z-ADD0         WWIND1 150
+     C                     Z-ADD0         WWIND2 150
+     C                     Z-ADD0         WWIND3 150
+     C                     Z-ADD0         ZFLD15
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM1,9    WW150
+     C                     ELSE
+     C           PFM1,9    ADD  PFM1,17   WW150
+     C           WW150     ADD  PFM1,22   WW150
+     C                     END
+     C*
+     C                     Z-ADDWW150     WWIND1 150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM2,9    WW150
+     C                     ELSE
+     C           PFM2,9    ADD  PFM2,17   WW150
+     C           WW150     ADD  PFM2,22   WW150
+     C                     END
+     C*
+     C                     Z-ADDWW150     WWIND2 150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM3,9    WW150
+     C                     ELSE
+     C           PFM3,9    ADD  PFM3,17   WW150
+     C           WW150     ADD  PFM3,22   WW150
+     C                     END
+     C*
+     C                     Z-ADDWW150     WWIND3 150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS25    R0TEXT
+     C                     MOVE WWMS25    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT INTEREST EARNED AND RECEIVED
+     C                     Z-ADD0         ZFLD15
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM1,10   WW150
+     C                     ELSE
+     C           PFM1,10   ADD  PFM1,18   WW150
+     C           WW150     ADD  PFM1,23   WW150
+     C                     END
+     C*
+     C                     ADD  WW150     WWIND1
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM2,10   WW150
+     C                     ELSE
+     C           PFM2,10   ADD  PFM2,18   WW150
+     C           WW150     ADD  PFM2,23   WW150
+     C                     END
+     C*
+     C                     ADD  WW150     WWIND2
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     Z-ADDPFM3,10   WW150
+     C                     ELSE
+     C           PFM3,10   ADD  PFM3,18   WW150
+     C           WW150     ADD  PFM3,23   WW150
+     C                     END
+     C*
+     C                     ADD  WW150     WWIND3 150
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS26    R0TEXT
+     C                     MOVE WWMS26    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT INTEREST EARNED NOT RECEIVED
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM1,11   WWIND1
+     C                     MOVE PFM1,11   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM2,11   WWIND2
+     C                     MOVE PFM2,11   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM3,11   WWIND3
+     C                     MOVE PFM3,11   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS27    R0TEXT
+     C                     MOVE WWMS27    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT UNDERLINE
+     C                     MOVE *BLANKS   R0TEXT
+     C                     MOVE *BLANKS   R0TXT1
+     C                     MOVE WWMS43    WWAMT1
+     C                     MOVE WWMS43    WWAMT2
+     C                     MOVE WWMS43    WWAMT3
+     C                     MOVE WWMS46    WWPRF1
+     C                     MOVE WWMS46    WWPRF2
+     C                     MOVE WWMS46    WWPRF3
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'TOTAL INTEREST AND DIVIDENDS'
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDWWIND1    WWRTRN 150
+     C                     MOVE WWIND1    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS3VR    IFEQ 'Y'
+     C                     Z-ADDWWAVI1    WWAVIC 150
+     C                     Z-ADDWWDYP1    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF1  8
+     C                     MOVE WWANNP    W1ANNP  8
+     C                     END
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDWWIND2    WWRTRN
+     C                     MOVE WWIND2    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS4VR    IFEQ 'Y'
+     C                     Z-ADDWWAVI2    WWAVIC 150
+     C                     Z-ADDWWDYP2    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF2
+     C                     MOVE WWANNP    W2ANNP
+     C                     END
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDWWIND3    WWRTRN
+     C                     MOVE WWIND3    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS5VR    IFEQ 'Y'
+     C                     Z-ADDWWAVI3    WWAVIC 150
+     C                     Z-ADDWWDYP3    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF3
+     C                     MOVE WWANNP    W3ANNP
+     C                     END
+     C*
+     C                     MOVE WWMS28    R0TEXT
+     C                     MOVE WWMS28    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT ANNUALISED PERFORMANCE FIGURES
+     C                     MOVE *BLANKS   R0TEXT
+     C                     MOVE *BLANKS   R0TXT1
+     C                     MOVE *BLANKS   WWAMT1
+     C                     MOVE *BLANKS   WWAMT2
+     C                     MOVE *BLANKS   WWAMT3
+     C                     MOVE W1ANNP    WWPRF1
+     C                     MOVE W2ANNP    WWPRF2
+     C                     MOVE W3ANNP    WWPRF3
+     C*
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'EXCHANGE PROFIT/LOSS' TEXT
+     C                     MOVE WWMS29    R0TEXT
+     C                     MOVE WWMS29    R0TXT1
+     C*
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'EXCHANGE PROFIT/LOSS' UNDERLINE
+     C                     MOVE WWMS30    R0TEXT
+     C                     MOVE WWMS30    R0TXT1
+     C*
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT REALISED FX P&L ON TRADING
+     C                     Z-ADD0         WWFXP1 150
+     C                     Z-ADD0         WWFXP2 150
+     C                     Z-ADD0         WWFXP3 150
+     C                     Z-ADD0         ZFLD15
+     C*
+     C                     Z-ADDPFM1,14   WWFXP1
+     C                     MOVE PFM1,14   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDPFM2,14   WWFXP2
+     C                     MOVE PFM2,14   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDPFM3,14   WWFXP3
+     C                     MOVE PFM3,14   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS31    R0TEXT
+     C                     MOVE WWMS31    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT REALISED FX P&L ON INTEREST
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM1,12   WWFXP1
+     C                     MOVE PFM1,12   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM2,12   WWFXP2
+     C                     MOVE PFM2,12   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM3,12   WWFXP3
+     C                     MOVE PFM3,12   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS32    R0TEXT
+     C                     MOVE WWMS32    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT UNREALISED FX P&L ON TRADING
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM1,15   WWFXP1
+     C                     MOVE PFM1,15   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM2,15   WWFXP2
+     C                     MOVE PFM2,15   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM3,15   WWFXP3
+     C                     MOVE PFM3,15   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS33    R0TEXT
+     C                     MOVE WWMS33    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT UNREALISED FX P&L ON INTEREST
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM1,13   WWFXP1
+     C                     MOVE PFM1,13   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM2,13   WWFXP2
+     C                     MOVE PFM2,13   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM3,13   WWFXP3
+     C                     MOVE PFM3,13   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS34    R0TEXT
+     C                     MOVE WWMS34    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT UNDERLINE
+     C                     MOVE *BLANKS   R0TEXT
+     C                     MOVE *BLANKS   R0TXT1
+     C                     MOVE WWMS43    WWAMT1
+     C                     MOVE WWMS43    WWAMT2
+     C                     MOVE WWMS43    WWAMT3
+     C                     MOVE WWMS46    WWPRF1
+     C                     MOVE WWMS46    WWPRF2
+     C                     MOVE WWMS46    WWPRF3
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'TOTAL EXCHANGE P&L'
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDWWFXP1    WWRTRN 150
+     C                     MOVE WWFXP1    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS3VR    IFEQ 'Y'
+     C                     Z-ADDWWAVI1    WWAVIC 150
+     C                     Z-ADDWWDYP1    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF1  8
+     C                     MOVE WWANNP    W1ANNP  8
+     C                     END
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDWWFXP2    WWRTRN
+     C                     MOVE WWFXP2    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS4VR    IFEQ 'Y'
+     C                     Z-ADDWWAVI2    WWAVIC 150
+     C                     Z-ADDWWDYP2    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF2
+     C                     MOVE WWANNP    W2ANNP
+     C                     END
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDWWFXP3    WWRTRN
+     C                     MOVE WWFXP3    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS5VR    IFEQ 'Y'
+     C                     Z-ADDWWAVI3    WWAVIC 150
+     C                     Z-ADDWWDYP3    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF3
+     C                     MOVE WWANNP    W3ANNP
+     C                     END
+     C*
+     C                     MOVE WWMS35    R0TEXT
+     C                     MOVE WWMS35    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT ANNUALISED PERFORMANCE FIGURES
+     C                     MOVE *BLANKS   R0TEXT
+     C                     MOVE *BLANKS   R0TXT1
+     C                     MOVE *BLANKS   WWAMT1
+     C                     MOVE *BLANKS   WWAMT2
+     C                     MOVE *BLANKS   WWAMT3
+     C                     MOVE W1ANNP    WWPRF1
+     C                     MOVE W2ANNP    WWPRF2
+     C                     MOVE W3ANNP    WWPRF3
+     C*
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'OTHER ITEMS' TEXT
+     C                     MOVE WWMS36    R0TEXT
+     C                     MOVE WWMS36    R0TXT1
+     C*
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'EXCHANGE PROFIT/LOSS' UNDERLINE
+     C                     MOVE WWMS37    R0TEXT
+     C                     MOVE WWMS37    R0TXT1
+     C*
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT CHARGES IF REQUIRED
+     C                     Z-ADD0         WWOTI1 150
+     C                     Z-ADD0         WWOTI2 150
+     C                     Z-ADD0         WWOTI3 150
+     C*
+     C           WWSHCC    IFEQ 'Y'                        B1
+     C           WWSHFC    OREQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C*
+     C** IF EITHER FEES AND CHARGES OR CHARGES ON CAPITAL CHANGES ARE
+     C** TO BE SHOWN CALCULATE TOTAL CHARGES
+     C                     Z-ADD0         WW150
+     C           WWSHFC    IFEQ 'Y'                        B2
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     ADD  PFM1,21   WW150
+     C                     ADD  PFM1,22   WW150
+     C                     ADD  PFM1,23   WW150
+     C                     END                             E2
+     C*
+     C           WWSHCC    IFEQ 'Y'                        B2
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     ADD  PFM1,24   WW150
+     C                     ADD  PFM1,25   WW150
+     C                     END                             E2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  WW150     WWOTI1
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         WW150
+     C           WWSHFC    IFEQ 'Y'                        B2
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     ADD  PFM2,21   WW150
+     C                     ADD  PFM2,22   WW150
+     C                     ADD  PFM2,23   WW150
+     C                     END                             E2
+     C*
+     C           WWSHCC    IFEQ 'Y'                        B2
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     ADD  PFM2,24   WW150
+     C                     ADD  PFM2,25   WW150
+     C                     END                             E2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  WW150     WWOTI2
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         WW150
+     C           WWSHFC    IFEQ 'Y'                        B2
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     ADD  PFM3,21   WW150
+     C                     ADD  PFM3,22   WW150
+     C                     ADD  PFM3,23   WW150
+     C                     END                             E2
+     C*
+     C           WWSHCC    IFEQ 'Y'                        B2
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C                     ADD  PFM3,24   WW150
+     C                     ADD  PFM3,25   WW150
+     C                     END                             E2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  WW150     WWOTI3
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS38    R0TEXT
+     C                     MOVE WWMS38    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C                     END                             E1
+     C*
+     C** IF FEES AND COMMISSIONS ARE TO BE SHOWN CALCULATE TOTAL AND
+     C** OUTPUT FEES & COMMISSIONS
+     C           WWSHFC    IFEQ 'Y'                        B1
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'                                       45365
+     C*
+     C                     Z-ADD0         WW150
+     C                     ADD  PFM1,16   WW150
+     C                     ADD  PFM1,17   WW150
+     C                     ADD  PFM1,18   WW150
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  WW150     WWOTI1
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         WW150
+     C                     ADD  PFM2,16   WW150
+     C                     ADD  PFM2,17   WW150
+     C                     ADD  PFM2,18   WW150
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  WW150     WWOTI2
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         WW150
+     C                     ADD  PFM3,16   WW150
+     C                     ADD  PFM3,17   WW150
+     C                     ADD  PFM3,18   WW150
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  WW150     WWOTI3
+     C                     MOVE WW150     ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS39    R0TEXT
+     C                     MOVE WWMS39    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C                     END                             E1
+     C*
+     C** OUTPUT WITHHOLDING TAX IF PERFORMANCE NET OF TAX
+     C           WWPMNG    IFEQ 'N'                        B1
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM1,19   WWOTI1
+     C                     MOVE PFM1,19   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM2,19   WWOTI2
+     C                     MOVE PFM2,19   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM3,19   WWOTI3
+     C                     MOVE PFM3,19   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS40    R0TEXT
+     C                     MOVE WWMS40    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C                     END                             E1
+     C*
+     C** OUTPUT TRANSACTION TAX
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM1,20   WWOTI1
+     C                     MOVE PFM1,20   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM2,20   WWOTI2
+     C                     MOVE PFM2,20   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     ADD  PFM3,20   WWOTI3
+     C                     MOVE PFM3,20   ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C                     MOVE WWMS41    R0TEXT
+     C                     MOVE WWMS41    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT UNDERLINE
+     C                     MOVE *BLANKS   R0TEXT
+     C                     MOVE *BLANKS   R0TXT1
+     C                     MOVE WWMS43    WWAMT1
+     C                     MOVE WWMS43    WWAMT2
+     C                     MOVE WWMS43    WWAMT3
+     C                     MOVE WWMS46    WWPRF1
+     C                     MOVE WWMS46    WWPRF2
+     C                     MOVE WWMS46    WWPRF3
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT 'TOTAL OTHER ITEMS'
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDWWOTI1    WWRTRN 150
+     C                     MOVE WWOTI1    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT1
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS3VR    IFEQ 'Y'
+     C                     Z-ADDWWAVI1    WWAVIC 150
+     C                     Z-ADDWWDYP1    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF1  8
+     C                     MOVE WWANNP    W1ANNP  8
+     C                     END
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDWWOTI2    WWRTRN
+     C                     MOVE WWOTI2    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT2
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS4VR    IFEQ 'Y'
+     C                     Z-ADDWWAVI2    WWAVIC 150
+     C                     Z-ADDWWDYP2    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF2
+     C                     MOVE WWANNP    W2ANNP
+     C                     END
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDWWOTI3    WWRTRN
+     C                     MOVE WWOTI3    ZFLD15
+     C                     Z-ADDWWPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWAMT3
+     C*
+     C** CALCULATE ABSOLUTE AND ANNUALISED RATE OS RETURN
+     C           WWS5VR    IFEQ 'Y'
+     C                     Z-ADDWWAVI3    WWAVIC 150
+     C                     Z-ADDWWDYP3    WWDYPP  30
+     C                     EXSR #CLRTN
+     C                     MOVE WWABSP    WWPRF3
+     C                     MOVE WWANNP    W3ANNP
+     C                     END
+     C*
+     C                     MOVE WWMS42    R0TEXT
+     C                     MOVE WWMS42    R0TXT1
+     C*
+     C** PERFORM SR TO MOVE FORMATTED AMOUNTS TO CORRECT OUTPUT FIELDS
+     C                     EXSR #MOVE
+     C*
+     C** OUTPUT ANNUALISED PERFORMANCE FIGURES
+     C                     MOVE *BLANKS   R0TEXT
+     C                     MOVE *BLANKS   R0TXT1
+     C                     MOVE *BLANKS   WWAMT1
+     C                     MOVE *BLANKS   WWAMT2
+     C                     MOVE *BLANKS   WWAMT3
+     C                     MOVE W1ANNP    WWPRF1
+     C                     MOVE W2ANNP    WWPRF2
+     C                     MOVE W3ANNP    WWPRF3
+     C*
+     C                     EXSR #MOVE
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #MOVE    - FORMAT DETAILS FOR OUTPUT                             *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #WRITE   - WRITE DETAILS TO VALUATION STATEMENT                  *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWALL3   -                                                       *
+      * WWAMT1   -                                                       *
+      * WWAMT2   -                                                       *
+      * WWAMT3   -                                                       *
+      * WWPRF1   -                                                       *
+      * WWPRF2   -                                                       *
+      * WWPRF3   -                                                       *
+      * WWPED1   -                                                       *
+      * WWPED2   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #MOVE     BEGSR
+     C*
+     C** CLEAR ALL OUTPUT FIELDS
+     C                     MOVE *BLANKS   R0AMT1
+     C                     MOVE *BLANKS   R0AMT2
+     C                     MOVE *BLANKS   R0AMT3
+     C                     MOVE *BLANKS   R0AMT4
+     C                     MOVE *BLANKS   R0AMT5
+     C                     MOVE *BLANKS   R0PRF1
+     C                     MOVE *BLANKS   R0PRF2
+     C                     MOVE *BLANKS   R0PRF3
+     C                     MOVE *BLANKS   R0PRF4
+     C                     MOVE *BLANKS   R0PRF5
+     C*
+     C** IF ALL PERIODS REQUIRED OUTPUT FIELDS TO FORMAT P960DT2
+     C           WWALL3    IFEQ 'Y'                        B1
+     C                     MOVE WWAMT1    R0AMT1
+     C                     MOVE WWAMT2    R0AMT2
+     C                     MOVE WWAMT3    R0AMT3
+     C                     MOVE WWPRF1    R0PRF1
+     C                     MOVE WWPRF2    R0PRF2
+     C                     MOVE WWPRF3    R0PRF3
+     C*
+     C                     WRITEP960DT1                62
+     C*
+     C** OTHERWISE OUTPUT DETAILS TO FORMAT P960DT2
+     C                     ELSE                            X1
+     C*
+     C** FORMAT DETAILS FOR FIRST PERFORMANCE PERIOD
+     C           WWPED1    IFEQ '1'                        B2
+     C                     MOVE WWPRF1    R0PRF4
+     C                     MOVE WWAMT1    R0AMT4
+     C                     ELSE                            X2
+     C           WWPED1    IFEQ '2'                        B3
+     C                     MOVE WWPRF2    R0PRF4
+     C                     MOVE WWAMT2    R0AMT4
+     C                     ELSE                            X3
+     C                     MOVE WWPRF3    R0PRF4
+     C                     MOVE WWAMT3    R0AMT4
+     C                     END                             E3
+     C                     END                             E2
+     C*
+     C** IF 2 PERFORMANCE PERIODS REQUIRED OUTPUT DETAILS FOR 2ND PERIOD
+     C           *IN60     IFEQ '1'                        B2
+     C*
+     C           WWPED2    IFEQ '2'                        B3
+     C                     MOVE WWPRF2    R0PRF5
+     C                     MOVE WWAMT2    R0AMT5
+     C                     ELSE                            X3
+     C                     MOVE WWPRF3    R0PRF5
+     C                     MOVE WWAMT3    R0AMT5
+     C                     END                             E3
+     C                     END                             E2
+     C*
+     C                     WRITEP960DT2                62
+     C                     END
+     C*
+     C** SET ALL WORKFIELDS TO BLANK
+     C                     MOVE *BLANKS   WWAMT1
+     C                     MOVE *BLANKS   WWAMT2
+     C                     MOVE *BLANKS   WWAMT3
+     C                     MOVE *BLANKS   WWPRF1
+     C                     MOVE *BLANKS   WWPRF2
+     C                     MOVE *BLANKS   WWPRF3
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #CLRTN   - CALCULATE ABSOLUTE AND ANNUAL RATES OF RETURN         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #WRITE   - WRITE DETAILS TO VALUATION STATEMENT                  *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAVIC   -                                                       *
+      * WWABRT   -                                                       *
+      * WWRTRN   -                                                       *
+      * WWABSP   -                                                       *
+      * WWANNP   -                                                       *
+      * WWANNR   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #CLRTN    BEGSR
+     C*
+     C** CALCULATE ABSOLUTE PERFORMANCE AS RETURN ON CAPITAL DIVIDED
+     C** BY AVERAGE INVESTED CAPITAL
+     C           WWAVIC    IFNE 0                          B1
+     C*                                                                   72242
+     C           WWAVIC    IFLT 0                                         72242
+     C                     Z-SUBWWAVIC    WWAVIC                          72242
+     C                     END                                            72242
+     C*                                                                   72242
+     C           WWRTRN    DIV  WWAVIC    WWABRT 158H
+     C*
+     C** CONVERT ABSOLUTE AMOUNT TO PERCENTAGE FIGURE
+     C           WWABRT    MULT 100       WWABRT    H
+     C***********                                                         053103
+     C***RULES*FOR*DETERMINING*SIGN*OF*PERFORMANCE*AMOUNT*ARE*SHOWN*******053103
+     C***IN*THE*TABLE*BELOW***********************************************053103
+     C******---------------------------------------------------***********053103
+     C******I*TOP*LINE*I*BOTTOM*LINE*I*SIGN*OF*RATE*OF*RETURN*I***********053103
+     C******I----------I-------------I------------------------I***********053103
+     C******I****-*****I*****-*******I**********-*************I***********053103
+     C******I****-*****I*****+*******I**********-*************I***********053103
+     C******I****+*****I*****-*******I*SET*TO*'******'********I***********053103
+     C******I****+*****I*****+*******I**********+*************I***********053103
+     C******I**+*OR*-**I*****0*******I*SET*TO*'******'********I***********053103
+     C******---------------------------------------------------***********053103
+     C***NOTE:*NO*CALCULATIONS*FOR*LINES*2*AND*4*OF*ABOVE*TABLE*AS********053103
+     C***RESULT*OF*CALCULATIONS*ABOVE*CORRECTLY*SIGNED********************053103
+     C***********                                                         053103
+     C***SET*UP*SIGN*AS*PER*LINE*1*OF*TABLE*ABOVE*************************053103
+     C***********WWAVIC    IFLT 0                          B2             053103
+     C***********WWRTRN    ANDLT0                                         053103
+     C***********          Z-SUBWWABRT    WWABRT                          053103
+     C***********          END                             E2             053103
+     C***********                                                         053103
+     C***SET*UP*SIGN*AS*PER*LINE*3*OF*TABLE*ABOVE*************************053103
+     C***********WWAVIC    IFLT 0                          B2             053103
+     C***********WWRTRN    ANDGT0                                         053103
+     C***********WWABRT    ORGT 999.999                                   053103
+     C***********WWABRT    ORLT -999.999                                  053103
+     C***********          Z-ADD*HIVAL    WWABRT                          053103
+     C***********          END                             E2             053103
+     C***********                                                   053103072242
+     C***SIGN*OF*RETURN*ALWAYS*EQUAL*TO*SIGN*OF*RETURN**************053103072242
+     C***********WWRTRN    IFLT 0                          B2       053103072242
+     C***********          Z-SUBWWABRT    WWABRT                    053103072242
+     C***********          END                             E2       053103072242
+     C*                                                                   053103
+     C           WWABRT    IFGT 999.999                                   053103
+     C           WWABRT    ORLT -999.999                                  053103
+     C                     Z-ADD*HIVAL    WWABRT                          053103
+     C                     END                             E2             053103
+     C*
+     C** OTHERWISE IF BOTTOM LINE (INVESTED CAPITAL) SET TO 0
+     C                     ELSE                            X1
+     C*
+     C** IF A RETURN HAS BEEN EARNED SET RETURN TO *HIVAL OTHERWISE NO
+     C** RETURN EARNED IMPLIES PERFORMANCE OF 0
+     C           WWRTRN    IFNE 0                          B2
+     C                     Z-ADD*HIVAL    WWABRT
+     C                     ELSE                            X2
+     C                     Z-ADD0         WWABRT
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C** IF VALID FIGURES NOT AVAILABLE OUTPUT '******'
+     C           WWABRT    IFEQ *HIVAL                     B1
+     C                     MOVE '********'WWABSP  8
+     C                     MOVE '********'WWANNP  8
+     C                     ELSE                            X1
+     C*
+     C** OTHERWISE FORMAT ABSOLUTE RETURN AS VIA SR/ZSEDIT
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDWWABRT    WRK103 103H
+     C                     MOVE WRK103    ZFLD15
+     C                     Z-ADD3         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWABSP
+     C*
+     C** CONVERT ABSOLUTE PERFORMANCE TO AN ANNUALISED RATE AND THEN
+     C** FORMAT
+     C           WWABRT    MULT 365       WWANNR 103H
+     C           WWANNR    DIV  WWDYPP    WWANNR 103H
+     C*
+     C           WWANNR    IFGT 999.999                    B2
+     C           WWANNR    ORLT -999.999
+     C                     MOVE '********'WWANNP
+     C                     ELSE                            X2
+     C*
+     C** OTHERWISE FORMAT ABSOLUTE RETURN AS VIA SR/ZSEDIT
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDWWANNR    WRK103    H
+     C                     MOVE WRK103    ZFLD15
+     C                     Z-ADD3         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWANNP
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - HANDLE FILE AND PROGRAM ERRORS                        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C***********          DUMP                                           S01486
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       WWRTCD
+     C*
+     C** UPDATE DTAARA/LDA WITH DETAILS OF ERROR
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE WBFILE    DBFILE
+     C                     MOVE WBKEY     DBKEY
+     C                     Z-ADDWBASE     DBASE
+     C                     MOVE WBPGM     DBPGM
+     C                     OUT  LDA
+     C                     OPEN PM9960AU                                  S01486
+     C                     WRITEPM9960F0                                  S01486
+     C                     WRITEPM9960F1                                  S01486
+     C*                                                                   S01486
+     C** Report printer file to RCF via ZSFILE                            S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ     5                       S01486
+     C                     PARM           @ENT    3                       S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUMU                          S01486
+     C                     PARM *BLANKS   ZSERR   1                       S01486
+     C*                                                                   S01486
+     C** Error during ZSFILE processing, return to calling program        S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     END                                            S01486
+     C*
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+      /COPY ZSRSRC,ZSEDITZ3
+      /COPY ZSRSRC,ZDATE2Z2
+**  CPY@
+(c) Finastra International Limited 2001
+**  PFMC
+VE
+VS
+VP
+CI
+CO
+CX
+TR
+TU
+DV
+IER
+IEU
+XIR
+XIU
+XTR
+XTU
+F  TR
+F  DV
+F  IR
+T
+OT
+C  TR
+C  DV
+C  IR
+C  CI
+C  CO
+ADJ
+CX C
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

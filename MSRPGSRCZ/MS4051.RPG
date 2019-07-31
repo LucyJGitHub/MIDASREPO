@@ -1,0 +1,352 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS 3270 protocol trace extract rpt.')
+      ********************************************************************
+      *                                                                  *
+      *     Midas Midas/S.W.I.F.T. DIRECT LINK                           *
+      *                                                                  *
+      *     MS4051 - 3270 PROTOCOL TRACE EXTRACT REPORT                  *
+      *                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 032750             Date 07Apr92               *
+      *                 S01250             Date 30Jan90               *
+      *                                                                  *
+      ********************************************************************
+      *                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *     032750 - Removal of Help processing using old help pgm
+      *     S01250 - 3270 PROTOCOL TRACE FACILTY                         *
+      *                                                                  *
+      ********************************************************************
+      ********************************************************************
+      *
+     FTABTB10 IF  E                    DISK
+     FMSTRACPDIF  E           K        DISK
+     F            MSTRACPD                          KRENAMEMSTRAC
+     FMS4051DFCF  E                    WORKSTN
+     FMS4051P1O   F     132     OF     PRINTER                        UC
+      *
+      *     INDICATOR SUMMARY
+      *
+      *    02    CHAIN FAIL ON MSTRAC
+      *    04    CHAIN FAIL ON TABTB10
+      *    05    UPDATE TIME ON SCREEN HEADING
+      *****40****HELP INDICATOR                                           032750
+      *    60    START TIME INVALID
+      *    61    END TIME INVALID
+      *    62    END TIME BEFORE START TIME
+      *
+      *
+     E                    EMSG    1   3 70               ERROR MSG OUTPUT
+      *
+     ITIME        DS
+      *     DATA STRUCTURE TO FORMAT TIME FOR REPORT AND SCREEN
+     I                                        1   2 HH
+     I                                        3   3 COL1
+     I                                        4   5 MM
+     I                                        6   6 COL2
+     I                                        7   8 SS
+      *
+     ICHECK       DS
+      *     DATA STRUCTURE TO CHECK START AND END TIME
+     I                                        1   20HH1
+     I                                        3   40MM1
+     I                                        5   60SS1
+      *
+     ILDA        UDS                            256
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+      *
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I/EJECT
+      ********************************************************************
+      *
+      *     INDEX TO SUBROUTINES.
+      *
+      *     SCNOUT - Input screen.
+      *     TVALID - Validate the times entered by the user.
+      *     REPORT - Produces the report.
+      *     FTIME  - Formats time from HHMMSS to HH:MM:SS.
+      *     INIT   - Retrive run date and display input screen.
+      *
+      ********************************************************************
+     C/EJECT
+     C                     EXSR INIT
+     C*
+     C* While CMD 3 not pressed
+     C           *INKC     DOWEQ'0'
+     C*
+     C* Validate input
+     C                     EXSR TVALID
+     C*
+     C* If input ok run report
+     C           *IN60     IFEQ '0'
+     C           *IN61     ANDEQ'0'
+     C           *IN62     ANDEQ'0'
+     C                     EXSR REPORT
+     C                     END
+     C*
+     C* Output screen
+     C                     EXSR SCNOUT
+     C                     END
+     C*
+     C*
+     C                     SETON                     LR
+     C*
+      *
+     C/EJECT
+      ***************************************************************
+      *     SCNOUT SUBROUTINE - DISPLAY SCREEN AND FORMAT TIME      *
+      *       CALLED FROM MAIN                                      *
+      ***************************************************************
+     C           SCNOUT    BEGSR
+      *
+     C                     WRITEMS4051F2
+      *
+      *     Format time
+     C                     TIME           MTIME   60
+     C                     EXSR FTIME
+      *
+      *     Update time
+     C                     SETON                     05
+     C                     WRITEMS4051F1
+     C                     SETOF                     05
+      ***********                                                         032750
+      ******Help*indicator                                                032750
+     C************IN40     DOUEQ'0'                                       032750
+     C                     READ MS4051F2                 40
+      *                                                                   032750
+     C************IN40     IFEQ '1'                                       032750
+     C***********          MOVE *BLANKS   HERCD 160                       032750
+     C***********          MOVEL'MS4051'  HBPGM   8                       032750
+     C***********          CALL 'MHELP'                                   032750
+     C***********          PARM           HBPGM                           032750
+     C***********          PARM           HERCD                           032750
+     C***********          END                                            032750
+     C***********          SETOF                     40                   032750
+      *
+     C***********          END                                            032750
+     C*
+     C*
+     C                     ENDSR
+      *
+     C/EJECT
+      ***************************************************************
+      *     TVALID SUBROUTINE - VALIDATE TIMES ENTERED  T           *
+      *       CALLED FROM MAIN                                      *
+      ***************************************************************
+     C*
+     C           TVALID    BEGSR
+     C*
+     C* Initialise error indicators
+     C                     MOVEA'000'     *IN,60
+     C*
+     C           ETIME     IFEQ 0
+     C                     MOVE 235959    ETIME
+     C                     END
+     C*
+     C                     MOVE STIME     CHECK
+     C           HH1       IFGT 23
+     C           MM1       ORGT 59
+     C           SS1       ORGT 59
+     C                     SETON                     60
+     C                     END
+     C*
+     C                     MOVE ETIME     CHECK
+     C           HH1       IFGT 23
+     C           MM1       ORGT 59
+     C           SS1       ORGT 59
+     C                     SETON                     61
+     C                     END
+     C*
+     C           STIME     IFGT ETIME
+     C                     SETON                     62
+     C                     END
+     C*
+     C* Determine which error message is to be shown
+     C           *IN62     IFEQ '1'
+     C                     MOVE EMSG,3    ECD
+     C                     ELSE
+     C*
+     C           *IN60     IFEQ '1'
+     C                     MOVE EMSG,1    ECD
+     C                     ELSE
+     C           *IN61     IFEQ '1'
+     C                     MOVE EMSG,2    ECD
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+      *
+     C/EJECT
+      ***************************************************************
+      *     REPORT SUBROUTINE - TRACE EXTRACT REPORT                *
+      *       CALLED FROM MAIN                                      *
+      ***************************************************************
+     C*
+     C           REPORT    BEGSR
+     C*
+     C*  Format start and end time for report
+     C                     MOVE STIME     MTIME
+     C                     EXSR FTIME
+     C                     MOVE TIME      STIMEF  8
+     C                     MOVE ETIME     MTIME
+     C                     EXSR FTIME
+     C                     MOVE TIME      ETIMEF  8
+     C*
+     C* Convert start and end time from numeric to character fields
+     C                     MOVE STIME     STIMEC  6
+     C                     MOVE ETIME     ETIMEC  6
+     C           STIMEC    SETLLMSTRAC
+     C*
+     C                     OPEN MS4051P1
+     C                     SETOF                     06
+     C                     EXCPTHEADS
+     C                     READ MSTRAC                   02
+     C*
+     C** Extract data from MSTRACPD while not eof
+     C*      and within the limits entered.
+     C*
+     C           *IN02     DOWEQ'0'
+     C           RTIME     ANDLEETIMEC
+     C*
+     C* Retrive data from the fields in MSTRACPD.
+     C                     SETON                     06
+     C                     MOVELTEXT      DIR     3
+     C                     MOVELTEXT      HOLD6   6
+     C                     MOVE HOLD6     POS     2
+     C                     MOVE TEXT      MAJMIN  8
+     C                     MOVELDATAX     DATAY  80
+     C*
+     C*  Format RTIME for report
+     C                     MOVE RTIME     MTIME
+     C                     EXSR FTIME
+     C                     MOVE TIME      RTIMEF  8
+     C*
+     C* Print details and headers (when overflow ind. on)
+     C   OF                EXCPTHEADS
+     C                     EXCPTDETS
+     C                     READ MSTRAC                   02
+     C                     END
+     C*
+     C*  Report if no valid records found & print end of report
+     C           *IN06     IFEQ '0'
+     C                     EXCPTNOTRAC
+     C                     END
+     C   OF                EXCPTHEADS
+     C                     EXCPTTRAIL
+     C*
+     C* Initialise fields for next report
+     C                     CLOSEMS4051P1
+     C                     MOVE 0         PAGE
+     C                     MOVE *BLANKS   STIME
+     C                     MOVE *BLANKS   ETIME
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+      ***************************************************************
+      *     FTIME  SUBROUTINE - TO FORMAT TIME WITH COLONS          *
+      *       CALLED FROM SCNOUT, REPORT                            *
+      ***************************************************************
+     C*
+     C           FTIME     BEGSR
+     C*
+     C                     MOVELMTIME     HH      2
+     C                     MOVE ':'       COL1    1
+     C                     MOVE MTIME     TIMWRK  40
+     C                     MOVELTIMWRK    MM      2
+     C                     MOVE ':'       COL2    1
+     C                     MOVE MTIME     SS      2
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+      ***************************************************************
+      *     INIT SUBROUTINE - INITIAL PROCESSING                    *
+      *       CALLED FROM MAIN                                      *
+      *       CALL SCNOUT                                          *
+      ***************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+      *     ACCESS ICD TO FIND RUN DATE
+     C                     MOVEL'01'      ZTABKY 12
+     C                     MOVE '10'      ZTABKY
+     C                     READ TABTB10                  04
+     C  N04      RECI      COMP 'D'                  0404
+      *
+      *     DATABASE ERROR PROCESSING
+     C           *IN04     IFEQ '1'
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVE ZTABKY    DBKEY            * DB ERROR 01 *
+     C                     MOVE *BLANK    DBPGM            ***************
+     C                     MOVE 'MS4051  'DBPGM
+     C                     MOVE '01'      DBASE
+     C                     SETON                     U7U8LR
+     C                     END
+     C*
+     C                     EXSR SCNOUT
+     C*
+     C                     ENDSR
+     C*
+      ***************************************************************
+     O/EJECT
+     O*
+     OMS4051P1E   03           HEADS
+     O                                   19 'REFERENCE MS4051P1'
+     O                         TITL      88
+     O                                  103 'DATE'
+     O                         RUNA     111
+     O                                  118 'PAGE'
+     O                         PAGE     123
+      *
+     O        E 2              HEADS
+     O                                   11 'MODULE: MS'
+     O                                   63 'COMMUNICATIONS'
+     O                                   79 'ANALYSIS REPORT'
+      *
+     O        E 1              HEADS
+     O                                   64 '---------------'
+     O                                   79 '---------------'
+     O        E 2              HEADS
+     O                                   25 'Start time :'
+     O                         STIMEF    34
+     O                                   48 'End Time :'
+     O                         ETIMEF    57
+     O        E 21             HEADS
+     O                                 +  8 'DIR  POS    MAJMIN'
+     O                                 +  6 'TIME'
+     O                                 +  6 'DATA'
+     O        E 1              DETS
+     O                         DIR       11
+     O                         POS       15
+     O                         MAJMIN    26
+     O                         RTIMEF    38
+     O                         DATAY    122
+      *
+     O        E   22           NOTRAC
+     O                                   65 '*** NO DATA FOR THESE'
+     O                                   81 'TIMES ENTER ***'
+      *
+     O        E 3              TRAIL
+     O                                   73 '*** END OF REPORT ***'
+      ***************************************************************
+** EMSG - ERROR MESSAGE
+START TIME INVALID
+END TIME INVALID
+START TIME CAN NOT BE GREATER THAN END TIME

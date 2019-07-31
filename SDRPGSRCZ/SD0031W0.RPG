@@ -1,0 +1,489 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Account Codes Maintenance Window')
+      *****************************************************************
+      *                                                               *
+      *  MIDAS - STANDING DATA MODULE                                 *
+      *                                                               *
+      *  RPG/SD0031W0 - ACCOUNT CODES MAINTENANCE WINDOW              *
+      *                                                               *
+      *  Function:  This program allows to maintain new field         *
+      *             on Account Codes.                                 *
+      *                                                               *
+      *  (C) Copyright Finastra International Limited 2002            *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039393           Date 17Jun16               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL052             Date 03Feb06               *
+      *                 LBV058   *CREATE   Date 18Nov02               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD039393 - Database Error happens when inserting an Account  *
+      *             Code (Recompile)                                  *
+      *  CGL052 - Upgrade LBV058 to Midas Plus.                       *
+      *  LBV058 - Amend Washout Processing                            *
+      *                                                               *
+      *****************************************************************
+     FSDACODX0UF  E           K        DISK                      A    UC
+     F            SDACODF0                          KRENAMEUPDIDX
+     F                                              KCOMIT
+      *
+     FSDACODY0IF  E           K        DISK                           UC
+     F            SDACODF0                          KRENAMERTVIDX
+      *
+     FSD0031#0CF  E                    WORKSTN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+     IA@CPY       DS
+     I                                        1  80 CPY@
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+     IPSDS       SDS
+      ** Program Status
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+      ** User ID
+     I                                      254 263 USER
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     INWRCD     E DSSDACODX0
+      ** Current extension file details
+      *
+     ISVRCD       DS                            256
+      ** Previous extension file details
+      *
+     ISPARE       DS                            256
+      ** Previous return code
+     I                                      246 246 PRF12
+      *
+     I/COPY QWINDSRC,SD0030GDTA
+      ** Data member for main program
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** Standard parameter list for window manager
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           W0RTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           SPARE 256
+      *
+      *****************************************************************
+      *
+      *                M A I N  P R O C E S S I N G
+      *
+      *****************************************************************
+      *
+      ** Initialise data
+     C                     EXSR INIT
+      *
+      ** Continue to redisplay the screen if *IN30 remains off
+     C           *IN30     DOUEQ'1'
+      *
+      ** Display the window
+     C                     WRITE#MSGCTL
+     C                     EXFMT#WINDOF
+      *
+     C                     EXSR CLEAR
+      *
+     C           *INKC     CASEQ'1'       EXIT
+     C           *INKE     CASEQ'1'       RESET
+     C           *INKJ     CASEQ'1'       DELETE
+     C           *INKL     CASEQ'1'       PREV
+     C                     CAS            VALID
+     C                     ENDCS
+      *
+     C                     ENDDO
+      *
+      ** Exit from program
+     C                     EXSR END
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * VALIDATE THE SCREEN
+      *****************************************************************
+     C           VALID     BEGSR
+      *
+      ** If the action code is enquire then simply exit from program
+     C           ACTN      IFEQ 'E'
+     C                     EXSR END
+     C                     ENDIF
+      *
+      ** If the action code is delete then send message "F10 to delete"
+      ** and re-display the screen
+     C           ACTN      IFEQ 'D'
+     C                     MOVE 'BV58002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *OFF      *IN30
+     C                     GOTO VAEXIT
+     C                     END
+      *
+      ** Validate window fields
+      ** If there are any errors *IN30 must be set off
+     C                     MOVE *ON       *IN30
+      *
+     C                     EXSR SRTEYF
+      *
+      ** If there is an error in any of the fields then need to
+      ** redisplay the screen and send all error messages
+      *
+     C           *IN30     IFEQ '1'
+      *
+      ** No errors so update the extension file
+     C                     EXSR UPDAT
+     C                     ENDIF
+      *
+     C           VAEXIT    ENDSR
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      * SRTEYF - To validate "Transfer at End of Year Flag"          *
+      ****************************************************************
+     C           SRTEYF    BEGSR
+      *
+      ** Field defaulted to 'N' if blank
+     C           #0TEYF    IFEQ *BLANKS
+     C                     MOVEL'N'       #0TEYF
+     C                     MOVE *OFF      *IN30
+     C                     ELSE
+      *
+      ** Valid values are 'Y' and 'N'
+     C           #0TEYF    IFNE 'Y'
+     C           #0TEYF    ANDNE'N'
+     C                     MOVEL'BV58001' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN50
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * UPDATE THE EXTENSION FILE
+      *****************************************************************
+     C           UPDAT     BEGSR
+      *
+     C           K@KEY     CHAINUPDIDX               8491
+      *
+      ** If record locked, display screen again, with information message.
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'BV58003' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     MOVE *OFF      *IN30
+     C                     EXSR ZASNMS
+     C                     GOTO ENDUPD
+     C                     END
+      *
+      ** Insert Mode.
+     C           *IN85     IFEQ *ON
+      *
+      ** If the record exists, the details have been modified by another user
+     C           *IN84     IFEQ *OFF
+     C                     MOVEL'BV58004' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     MOVE *OFF      *IN30
+     C                     EXSR ZASNMS
+     C                     GOTO ENDUPD
+     C                     ENDIF
+      *
+     C                     MOVE #1ACCD    A5ACCD
+     C                     MOVE #0TEYF    A5TEYF
+      *
+     C                     WRITEUPDIDX
+      *
+      ** Amend Mode.
+     C                     ELSE
+      *
+      ** If the record does not exist, or has been modified by another user
+     C           *IN84     IFEQ *ON
+     C           *IN84     OREQ *OFF
+     C           NWRCD     ANDNESVRCD
+     C                     MOVEL'BV58004' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     MOVE *OFF      *IN30
+     C                     EXSR ZASNMS
+     C                     GOTO ENDUPD
+     C                     ENDIF
+      *
+     C                     MOVE #0TEYF    A5TEYF
+      *
+     C                     UPDATUPDIDX
+     C                     ENDIF
+      *
+     C           ENDUPD    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * DELETE RECORD
+      *****************************************************************
+     C           DELETE    BEGSR
+      *
+     C           K@KEY     CHAINUPDIDX               8491
+      *
+      ** If record locked, display main screen again, with information message.
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y2U0004' W0RTN
+     C                     EXSR END
+     C                     ENDIF
+      *
+      ** If record doesn't exist, no problem
+      ** (it is not mandatory for an account code)
+     C           *IN84     IFEQ *ON
+     C                     ELSE
+      *
+      ** Delete record
+     C                     DELETUPDIDX
+     C                     ENDIF
+      *
+     C                     EXSR END
+      *
+     C           ENDDEL    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *    EXIT FROM PROGRAM IF F12 HAS BEEN PRESSED
+      *****************************************************************
+     C           PREV      BEGSR
+      *
+      ** Set F12 return code and end program
+     C                     MOVE 'USR0790' W0RTN
+     C                     MOVE 'R'       PRF12
+     C                     EXSR END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * RESET/REFRESH THE SCREEN IF F5 IS PRESSED
+      *****************************************************************
+     C           RESET     BEGSR
+      *
+      ** Clear the program message queue and call SR/INIT to retrieve
+      ** the last committed data from the extension file.
+     C                     EXSR CLEAR
+     C                     EXSR INIT
+      *
+      ** Reset all error indicators
+     C                     MOVE *OFF      *IN50
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * CLEAR MESSAGE FILE
+      *****************************************************************
+     C           CLEAR     BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Send message to program's message queue.
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C           ZAEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INITIALISE FIELDS
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Only do first time through
+     C           WFIRST    IFEQ *BLANKS
+      *
+      ** Define the LDA for error handling
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define window position
+     C                     Z-ADDSROW      SWROW
+     C                     Z-ADDSCOL      SWCOL
+      *
+     C********             MOVE 'N'       LBV058  1        CGL052
+     C                     MOVE 'N'       CGL052  1        CGL052
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C********             PARM 'LBV058'  @SARD   6        CGL052
+     C                     PARM 'CGL052'  @SARD   6        CGL052
+      *
+      ** If feature is installed
+      ** and the account code is an expense/income one
+     C           @RTCD     IFEQ *BLANKS
+     C           #1ACSC    ANDEQ'EX'
+     C           @RTCD     OREQ *BLANKS
+     C           #1ACSC    ANDEQ'IN'
+     C********             MOVE 'Y'       LBV058  1        CGL052
+     C                     MOVE 'Y'       CGL052  1        CGL052
+     C                     OPEN SDACODX0
+     C                     OPEN SDACODY0
+      *
+      ** Otherwise, terminate the program normally
+     C                     ELSE
+      *
+      ** If the F12 has been actionned in the previous window,
+      ** perform an automatic command F12
+     C           PRF12     IFEQ 'R'
+     C                     EXSR PREV
+     C                     ELSE
+     C                     EXSR END
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   PRF12
+      *
+      ** Protect input fields if enquiry and enable command keys
+     C                     SELEC
+     C           ACTN      WHEQ 'E'
+     C                     MOVE *ON       *IN20            Protect fields
+     C                     MOVE *OFF      *IN40            Delete
+     C                     MOVE *OFF      *IN35            Refresh
+     C           ACTN      WHEQ 'D'
+     C                     MOVE *ON       *IN20            Protect fields
+     C                     MOVE *ON       *IN40            Delete
+     C                     MOVE *OFF      *IN35            Refresh
+     C           ACTN      WHEQ 'I'
+     C           ACTN      OREQ 'A'
+     C                     MOVE *OFF      *IN20            Protect fields
+     C                     MOVE *OFF      *IN40            Delete
+     C                     MOVE *ON       *IN35            Refresh
+     C                     ENDSL
+      *
+      ** Set up KLIST and move in key from DATA
+     C           *LIKE     DEFN A5ACCD    K@ACCD
+     C           K@KEY     KLIST
+     C                     KFLD           K@ACCD
+      *
+     C                     MOVE #1ACCD    K@ACCD
+      *
+     C                     MOVE 'N'       WFIRST  1        First time
+     C                     ENDIF
+      *----------------------------------------------------------------
+      ** If delete does not require window to be displayed, do here
+     C           ACTN      IFEQ 'D'
+     C                     EXSR DELETE
+     C                     ENDIF
+      *----------------------------------------------------------------
+      *
+     C           K@KEY     CHAINRTVIDX               85
+      *
+     C           *IN85     IFEQ '0'
+     C                     MOVE A5TEYF    #0TEYF
+      *
+      ** Save record before modification
+     C                     MOVE NWRCD     SVRCD
+      *
+     C                     ELSE
+     C                     MOVE 'N'       #0TEYF
+      *
+      ** Save record before modification
+     C                     MOVE *BLANKS   SVRCD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM
+      *****************************************************************
+     C           END       BEGSR
+      *
+      ** Close files
+     C********   LBV058    IFEQ 'Y'                        CGL052
+     C           CGL052    IFEQ 'Y'                        CGL052
+     C                     CLOSESDACODX0
+     C                     CLOSESDACODY0
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM IF F3 HAS BEEN PRESSED
+      *****************************************************************
+     C           EXIT      BEGSR
+      *
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     EXSR END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+** CPY@
+(C) Copyright Finastra International Limited 2002

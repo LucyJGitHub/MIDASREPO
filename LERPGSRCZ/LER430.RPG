@@ -1,0 +1,1902 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Profitability rpt/enq file : loans')          *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module
+     F*                                                               *
+     F*  LER430 - Produce Profitability Report/Enquiry File: Loans.   *
+     F*                                                               *
+     F*  Function:  This program outputs profitability figures by     *
+     F*  (COB)      Customer, Account Officer, Department and Group   *
+     F*             to the file LENQLND.                              *
+     F*                                                               *
+     F*  Called By: LERC430 - Produce Profitability File (Loans).     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE075AK           Date 06Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CSC042             Date 16Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CPK025             Date 28Aug06               *
+      *                 225714             Date 26May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 187394             Date 21May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 166037             Date 17Aug99               *
+      *                 163668             Date 14Jul99               *
+      *                 161257             Date 28Jun99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 158060             Date 25Mar99               *
+     F*                 157666             Date 22Mar99               *
+     F*                 148866             Date 15Dec98               *
+     F*                 157377 (E46985)    DATE 04MAY94               *
+     F*                 X52572             DATE 09DEC93               *
+     F*                 052572             DATE 09DEC93               *
+     F*                 094851             Date 18Apr96               *
+     F*                 052821             DATE 21DEC93               *
+     F*                 BH34YY             DATE 10AUG92               *
+     F*                 BH3394             DATE 30JUN92               *
+     F*                 BH3383             DATE 29JUN92               *
+     F*                 FS0058             DATE 06APR92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE075AK - COB Restructure - LE COB Optimisation Phase 1     *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c             *
+      *           (Recompile)                                         *
+      *  CSC042 - COB Performance fixes.
+      *           Pgm calls AOLOANR0 582K times but file not used by  *
+      *           code and all fields from file have * 7031 in compile*
+      *           so fields not used in code. Remove access pgm       *
+      *  CPK025 - MidasPlus 1.3 packaging.  Missing arrays.           *
+      *  225714 - LER480 report incorrect. Year to date values should *
+      *           include month to date values plus previous months'  *
+      *           amounts.                                            *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  187394 - Incorrect group total for Internal Parts Purchased. *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  166037 - Margin for risk participants reported against agent *
+      *  163668 - Profitability showing on facility customer not on   *
+      *           agent customer                                      *
+     F*  161257 - Output record to LENQLND for the internal facility  *
+     F*           where the loan is an internal part purchased.       *
+     F*  158060 - Amend margin calculation for group processing       *
+     F*  157666 - Program should access matured loans file if         *
+     F*           record is not found on live loans file.             *
+     F*  148866 - Interest calculation basis should be obtained       *
+     F*           from Loans file and not from SDCURRPD for the       *
+     F*           calculation of QLMAMR and QLMAYR.                   *
+     F*  157377 - Change calculation of average aggregate balance     *
+     F*           : Using 'LASTLN'date from LERSTS instead of run day *
+     F*           as the end date.  (PART OF 52572)                   *
+     F*  S52572 - Change calculation of average aggregate balance     *
+     F*           from active days to actual days in the month/year   *
+     F*  094851 - Array index error                                   *
+     F*  052821 - Prevent array index error if Facility Start Date    *
+     F*           is more than one year old, or matures next year.    *
+     F*  BH34YY - Should NOT multiply guarantees by four              *
+     F*  BH3394 - Keep the loan account officer for information but   *
+     F*           report loans by facility account officer            *
+     F*  BH3383 - Add the month-to-date margin adjustment to the      *
+     F*           monthly array XFOOT for monthly accruals            *
+     F*  FS0058 - Change Level break to be on Facility Customer       *
+     F*           rather than Customer number.                        *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+      *
+     F***PELNJL0*IP  E           K        DISK                            166037
+     FLEPRLNL0IP  E           K        DISK                               166037
+     F*
+     F** Add file to access loan calculation basis                        148866
+     FLBLOANL1IF  E           K        DISK                               148866
+     F*                                                                   148866
+     FLENQLND O   E                    DISK
+     F*
+     FMLOAN   IF  E           K        DISK                               148866
+     F            CLOANHHF                          KIGNORE               148866
+     F            CLOANZ1F                          KIGNORE               148866
+     F            CLOANCKF                          KIGNORE               148866
+     F            CLOANCLF                          KRENAMEMCLONCLF       148866
+     FFCLTYL1 IF  E           K        DISK                               163668
+      /EJECT
+     F*******************************************************************
+     F*                                                                 *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                    *
+     F*                                                                 *
+     F*   10  - Initial Processing indicator                            *
+     F*                                                                 *
+     F*   U7  - Database error                                          *
+     F*   U8  - Database error                                          *
+     F*                                                                 *
+     F*******************************************************************
+      /SPACE 3
+     F*******************************************************************
+     F*                                                                 *
+     F*  S U B R O U T I N E   I N D E X                                *
+     F*                                                                 *
+     F*  INIT   - Initialization subroutine                             *
+     F*  DETAIL - Detail record processing subroutine                   *
+     F*  WRITNQ - Yield and Margin rates calculations                   *
+     F*  CUSTSR - Outputs Customer totals to LENQLND                    *
+     F*  ACOFSR - Outputs Account Officer totals to LENQLND             *
+     F*  DEPTSR - Outputs Department totals to LENQLND                  *
+     F*  GRUPSR - Outputs Group totals to LENQLND                       *
+     F*  *PSSR  - Standard error processing subroutine                  *
+     F*                                                                 *
+     F*******************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    AGB        12 15 0             AGG BALANCES
+     E                    AGM        12 15 0             MARGIN AMOUNTS
+     E                    AGF        12 15 0             FEE AMOUNTS
+     E                    LMDY       31  1 0             LOAN DAYS-MTH
+     E                    LYDY      366  1 0             LOAN DAYS-YR
+     E                    CMDY       31  1 0             CUST DAYS-MTH
+     E                    CYDY      366  1 0             CUST DAYS-YR
+     E                    AMDY       31  1 0             ACOF DAYS-MTH
+     E                    AYDY      366  1 0             ACOF DAYS-YR
+     E                    DMDY       31  1 0             DEPT DAYS-MTH
+     E                    DYDY      366  1 0             DEPT DAYS-YR
+     E                    TMDY       31  1 0             GROUP DAYS-MTH
+     E                    TYDY      366  1 0             GROUP DAYS-YR
+     E                    MDAY       31  1               ALPHA DAYS-MTH
+     E                    YDAY      366  1               ALPHA DAYS-YR
+     E                    GMNM   12  12  3               MONTH NAMES
+     E                    NOS    12  12  2 0             DAYS IN MONTH
+     E/COPY ZSRSRC,ZDATE1Z1                                                                   225714
+      /EJECT
+      *                                                                   166037
+     IFCLTYFMF                                                            166037
+     I              BRCA                            BRCAX                 166037
+     I*
+     I* DEFINE CONTROL GROUPS AND RENAME BRCA FIELD
+     I*
+     I***PELNJL0F                                                         166037
+     ILEPRLND0                                                            166037
+     I              BRCA                            LDBRCA
+     I                                              LDGPIDL4
+     I                                              LDDEPTL3
+     I                                              LDACOFL2
+     I*******************************               LDCNUML1              FS0058
+     I                                              LDFCUSL1              FS0058
+     I*
+     I** SPLIT UP DATE FOR CONVERSION.
+     I            DS
+     I                                        1   6 DATE
+     I                                        1   2 DD
+     I                                        3   6 MY
+     I*
+     I** COMBINE LOAN TYPE/SUB-TYPE.
+     I            DS
+     I****************************************1   4 LSTP                                      CLE042
+     I                                        1   8 LSTP                                      CLE042
+     I                                        1   2 LDLTYP
+     I                                        3   4 LDSUTP
+     I                                        5   8 LDCLAS                                    CLE042
+     I*
+     I** AGGREGATE BALANCES DATA STRUCTURE
+     I            DS
+     I                                    P   1  960AGB
+     I                                    P   1   80LDJANA
+     I                                    P   9  160LDFEBA
+     I                                    P  17  240LDMARA
+     I                                    P  25  320LDAPRA
+     I                                    P  33  400LDMAYA
+     I                                    P  41  480LDJUNA
+     I                                    P  49  560LDJULA
+     I                                    P  57  640LDAUGA
+     I                                    P  65  720LDSEPA
+     I                                    P  73  800LDOCTA
+     I                                    P  81  880LDNOVA
+     I                                    P  89  960LDDECA
+     I*
+     I** MARGIN AMOUNTS DATA STRUCTURE
+     I            DS
+     I                                    P   1  960AGM
+     I                                    P   1   80MDJANA
+     I                                    P   9  160MDFEBA
+     I                                    P  17  240MDMARA
+     I                                    P  25  320MDAPRA
+     I                                    P  33  400MDMAYA
+     I                                    P  41  480MDJUNA
+     I                                    P  49  560MDJULA
+     I                                    P  57  640MDAUGA
+     I                                    P  65  720MDSEPA
+     I                                    P  73  800MDOCTA
+     I                                    P  81  880MDNOVA
+     I                                    P  89  960MDDECA
+     I*
+     I** FEE AMOUNTS DATA STRUCTURE
+     I            DS
+     I                                    P   1  960AGF
+     I                                    P   1   80FLDJAN
+     I                                    P   9  160FLDFEB
+     I                                    P  17  240FLDMAR
+     I                                    P  25  320FLDAPR
+     I                                    P  33  400FLDMAY
+     I                                    P  41  480FLDJUN
+     I                                    P  49  560FLDJUL
+     I                                    P  57  640FLDAUG
+     I                                    P  65  720FLDSEP
+     I                                    P  73  800FLDOCT
+     I                                    P  81  880FLDNOV
+     I                                    P  89  960FLDDEC
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA
+      * DATABASE ERROR DS
+     I*                                                                     0110
+     ILERSTS    E DSLERSTS                                                  0110
+      ** Fees/Profitability enhancement status data area                    0110
+     I              FACHISD                         WHISST                  0110
+     I              LERC2030                        LERC20                  0110
+     I              LERC135                         LERC13                  0110
+     I              LERC315                         LERC35                  0110
+     I              LERC425                         LERC42                  0110
+     I              EOYFLAG                         EOYFLG                  0110
+     I            DS                                                                          225714
+     I                                        1   7 REPDT                                     225714
+     I                                        1   20REPDD                                     225714
+     I                                        3   5 REPMM                                     225714
+     I                                        6   70REPYY                                     225714
+     I            DS                                                                          225714
+     I                                        1   60PRFDT                                     225714
+     I                                        1   20PRFDD                                     225714
+     I                                        3   40PRFMM                                     225714
+     I                                        5   60PRFYY                                     225714
+     I            DS                                                                          225714
+     I                                        1   60WSTRMO                                    225714
+     I                                        1   20WSTRDD                                    225714
+      *
+     I***SDLOAN    E DSSDLOANPD                                                               CSC042
+      ***LOAN*PROCESSING*TYPE*DETAILS                                                         CSC042
+      *
+     ISDCURR    E DSSDCURRPD
+      ** CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *                                                                   161257
+     ISDACOF    E DSSDACOFPD                                              161257
+      ** Account Officer details                                          161257
+      *                                                                   161257
+     ISDCUST    E DSSDCUSTPD                                              161257
+      ** Customer details                                                 161257
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     C/EJECT
+      *
+      ** PERFORM INITIAL PROCESSING.
+      *
+     C           *IN10     CASEQ'0'       INIT
+     C                     END
+      *                                                                   158060
+      ** Obtain Calculation basis for loan                                158060
+      *                                                                   158060
+     C           LDLNRF    CHAINLBLOANL1             80                   158060
+     C           *IN80     IFEQ *ON                                       158060
+     C           LDLNRF    CHAINMCLONCLF             80                   158060
+     C                     ENDIF                                          158060
+     C           *IN80     IFEQ *OFF                                      158060
+     C           ICBS      IFEQ 1                                         158060
+     C           ICBS      OREQ 4                                         158060
+     C                     Z-ADD365       CALCB   30                      158060
+     C                     ELSE                                           158060
+     C           ICBS      IFEQ 6                                         158060
+     C                     Z-ADD366       CALCB                           158060
+     C                     ELSE                                           158060
+     C                     Z-ADD360       CALCB                           158060
+     C                     END                                            158060
+     C                     END                                            158060
+     C                     END                                            158060
+      *
+      ** PROCESS DETAIL RECORDS UNLESS LOAN MATURED LAST YEAR AND
+      ** NO FEES OR MARGINS EXIST.
+     C                     XFOOTAGB       QLYAGG
+     C                     XFOOTAGM       QLYMGN
+      *                                                                                       225714
+     C           WNXT      IFGT 1                                                             225714
+     C           WNXT      ANDLT13                                                            225714
+     C           QLYAGG    SUB  AGB,WNXT  QLYAGG                                              225714
+     C           QLYMGN    SUB  AGM,WNXT  QLYMGN                                              225714
+     C                     ENDIF                                                              225714
+     C*                                                                  BH3383
+     C** Add in the months adjustment for accruals not yet posted        BH3383
+     C*                                                                  BH3383
+     C           QLYMGN    ADD  MDADJA    QLYMGN                         BH3383
+     C                     XFOOTAGF       QLYFEE
+      *                                                                                       225714
+     C           WNXT      IFGT 1                                                             225714
+     C           WNXT      ANDLT13                                                            225714
+     C           QLYFEE    SUB  AGF,WNXT  QLYFEE                                              225714
+     C                     ENDIF                                                              225714
+      *                                                                                       225714
+     C********** QLYAGG    IFNE 0                                           0088
+     C********** QLYMGN    ANDNE0                                           0088
+     C********** QLYFEE    ANDNE0                                           0088
+     C           QLYAGG    IFNE 0                                           0088
+     C           QLYMGN    ORNE 0                                           0088
+     C           QLYFEE    ORNE 0                                           0088
+     C                     EXSR DETAIL
+     C                     END
+      *
+      ** TOTAL TIME PROCESSING:
+      *
+      ** PROCESS LEVEL BREAK ON CUSTOMER:
+     CL1                   EXSR CUSTSR
+      *
+      ** PROCESS LEVEL BREAK ON A/C OFFICER:
+     CL2                   EXSR ACOFSR
+      *
+      ** PROCESS LEVEL BREAK ON DEPARTMENT:
+     CL3                   EXSR DEPTSR
+      *
+      ** PROCESS LEVEL BREAK ON GROUP ID:
+     CL4                   EXSR GRUPSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DETAIL - Detail record subroutine                             *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR, WRITNQ                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETAIL    BEGSR
+     C*
+     C* SET UP MONTH-TO-DATE DATA:
+     C*
+     C**
+     C** COMPARE LOAN END DAY THIS MONTH WITH THE LOAN START DAY
+     C** CALCULATE THE ADJUSTED MONTH ACCORDINGLY
+     C** USE AN ARRAY DAYS TO LOOK UP THE NUMBER OF DAYS IN THE MONTH
+     C**
+     C**  CALCULATE NO. OF DAYS LOAN LIVE THIS MONTH.
+     C**  N.B. IF LOAN NOT LIVE THIS MONTH, AGGREGATE WILL BE ZERO.
+     C*
+     C                     Z-ADD0         AM      20
+     C                     MOVE DDRD      DDRDN   20
+     C           LDENDY    IFLT LDSTDY
+     C*
+     C           DDRDN     IFLE LDENDY
+     C           MN        SUB  1         AM
+     C**
+     C** CHECK WHETHER ADJUSTED MONTH IS ZERO
+     C**
+     C           AM        IFEQ 0
+     C                     ADD  12        AM
+     C                     END
+     C**
+     C                     ELSE
+     C                     Z-ADDMN        AM
+     C                     END
+     C**
+     C** LOOK UP THE NUMBER OF DAYS IN THE MONTH
+     C**
+     C                     Z-ADDNOS,AM    NOS1    20
+     C**
+     C** ADD THE NUMBER OF DAYS IN THE MONTH TO THE LOAN END DAY
+     C** IN THE MONTH  AND SUBTRACT THE LOAN START DAY
+     C**
+     C           NOS1      ADD  LDENDY    DTOT    20
+     C***********DTOT      SUB  LDSTDY    MTOT                            052572
+     C***********MTOT      ADD  1         MTOT                            052572
+     C*
+     C** RETRIEVE AGGREGATE FOR TOTALS:
+     C*
+     C                     Z-ADDAGB,AM    QLMAGG
+     C*
+     C** RETRIEVE MARGIN AGGREGATE FOR TOTALS:
+     C*
+     C                     Z-ADDAGM,AM    QLMMGN
+     C*                                                                   BH3383
+     C** Add in the months adjustment for accruals not yet posted         BH3383
+     C*                                                                   BH3383
+     C           QLMMGN    ADD  MDADJA    QLMMGN                          BH3383
+     C*
+     C** RETRIEVE FEE AGGREGATE FOR TOTALS:
+     C*
+     C                     Z-ADDAGF,AM    QLMFEE
+     C*
+     C                     ELSE
+      *
+      ** If loan value dated at end of month and last day accruals
+      ** MTOT should be 1 day. (LDENDY will be less than LDSTDY).
+      *
+     C***********LDENDY    IFLT LDSTDY
+     C***********          Z-ADD1         MTOT
+     C***********          ELSE
+     C***********LDENDY    SUB  LDSTDY    MTOT                            052572
+     C***********          ADD  1         MTOT                            052572
+     C***********          END
+     C*
+     C** RETRIEVE AGGREGATE FOR TOTALS:
+     C*
+     C                     Z-ADDAGB,MN    QLMAGG
+     C*
+     C** RETRIEVE MARGIN AGGREGATE FOR TOTALS:
+     C*
+     C                     Z-ADDAGM,MN    QLMMGN
+     C*                                                                   BH3383
+     C** Add in the months adjustment for accruals not yet posted         BH3383
+     C*                                                                   BH3383
+     C           QLMMGN    ADD  MDADJA    QLMMGN                          BH3383
+     C*
+     C** RETRIEVE FEE AGGREGATE FOR TOTALS:
+     C*
+     C                     Z-ADDAGF,MN    QLMFEE
+     C                     END
+     C*
+     C** IF LOAN IS GUARANTEE (PROCESSING TYPE = 70), MULTIPLY
+     C** AGGREGATE BY 4 TO REFLECT TRUE GUARANTEE AMOUNT.
+     C*
+     C*********            MOVE LDLTYP    ATCD    2                                           CSC042
+     C*********            MOVE LDSUTP    AUCD    2                                           CSC042
+     C*********            MOVE LDCLAS    AUCL    4                                    CLE042 CSC042
+     C*********            CALL 'AOLOANR0'                                                    CSC042
+     C*********            PARM '*MSG   ' @RTCD                                               CSC042
+     C*********            PARM '*KEY   ' @OPTN                                               CSC042
+     C*********            PARM           ATCD                                                CSC042
+     C*********            PARM           AUCD                                                CSC042
+     C*********            PARM           AUCL                                         CLE042 CSC042
+     C*********  SDLOAN    PARM SDLOAN    DSFDY                                               CSC042
+     C*
+     C*********  @RTCD     IFNE *BLANKS                                                       CSC042
+     C*********  *LOCK     IN   LDA                                                           CSC042
+     C*********            MOVEL'LER430'  DBPGM             *************                     CSC042
+     C*********            MOVEL'SDLOANPD'DBFILE            * DBERROR 2 *                     CSC042
+     C*********            Z-ADD2         DBASE             *************                     CSC042
+     C*********************MOVELLSTP      DBKEY                                               CLE042
+     C*********  ATCD      CAT  AUCD:1    DBKEY                                        CLE042 CSC042
+     C*********            CAT  AUCL:1    DBKEY                                        CLE042 CSC042
+     C*********            OUT  LDA                                                           CSC042
+     C*********            EXSR *PSSR                                                         CSC042
+     C*********            END                                                                CSC042
+     C*
+     C***********AYLNPT    IFEQ 70                                       BH34YY
+     C***********          MULT 4         QLMAGG                         BH34YY
+     C***********          END                                           BH34YY
+     C*
+     C********** LDLNRF    CHAINLBLOANL1             53                              148866 CLE075AK
+     C********** *IN53     IFEQ *ON                                                  148866 CLE075AK
+     C********** LDLNRF    CHAINMCLONCLF             53                              148866 CLE075AK
+     C**********           ENDIF                                                     148866 CLE075AK
+     C*                                                                   148866
+     C********** MLNR      IFEQ 0                                                      148866 CLE148
+     C           MLNR      IFEQ *BLANKS                                                       CLE148
+     C*                                                                   148866
+     C                     ADD  QLMAGG    CMAG
+     C                     ADD  QLMAGG    AMAG
+     C                     ADD  QLMAGG    DMAG
+     C                     ADD  QLMAGG    TMAG
+     C                     MOVE 'Y'       CCSIND  1                       148866
+     C*                                                                   148866
+     C                     ELSE                                           148866
+     C*                                                                   148866
+     C                     SUB  QLMAGG    CMAG                            148866
+     C                     ADD  QLMAGG    CMSAV                           148866
+     C                     MOVE 'Y'       DCSIND  1                       148866
+     C*                                                                   148866
+     C                     ENDIF                                          148866
+     C*
+     C** SET UP DAY ARRAYS:
+     C** SKIP IF START & END DATES ZERO.
+     C** SKIP IF LOAN NOT LIVE THIS MONTH, I.E. IF MTD AGGREGATE = 0.
+     C*
+     C           LDSTDY    IFGT 0
+     C           LDENDY    ANDGT0
+     C           QLMAGG    ANDNE0
+     C**********************************************************            0110
+     C***CALCULATE*THE*DAYS*ACTIVE*IN*MONTH*USING*THE*MTOT*VALUE            0110
+     C***RATHER*THAN*COMPARING*THE*LOAN*START*AND*END*DATE*WHICH            0110
+     C***MAY*RESULT*IN*NO*DAYS*BEING*MADE*ACTIVE*(IE.*WHEN*THE*2            0110
+     C***DIGIT*START*DAY*IS*GREATER*THAN*THE*TWO*DIGIT*END*DAY)*            0110
+     C**********************************************************            0110
+     C*
+     C** Change the way that the array is updated so that the first         0110
+     C** element is correctly positioned using the start of month           0110
+     C** date on LERSTS                                                     0110
+     C*                                                                     0110
+     C*********************Z-ADD1         X       20                        0110
+     C***********X*********DOWLEMTOT                                        0110
+     C***********LDLSDY    IFLE STARMO                               0110 X52572
+     C                     Z-ADD0         X       20                        0110
+     C***********          ELSE                                      0110 X52572
+     C***********LDLSDY    SUB  STARMO    X                          0110 X52572
+     C***********          END                                       0110 X52572
+     C*                                                                     0110
+     C           X         ADD  MTOT      Y       20                        0110
+     C           X         ADD  1         X                                 0110
+     C           Y         IFGT 31                                        094851
+     C                     Z-ADD31        Y                               094851
+     C                     END                                            094851
+     C*                                                                     0110
+     C           X         DOWLEY                                           0110
+     C                     Z-ADD1         LMDY,X
+     C                     Z-ADD1         CMDY,X
+     C                     Z-ADD1         AMDY,X
+     C                     Z-ADD1         DMDY,X
+     C                     Z-ADD1         TMDY,X
+     C                     ADD  1         X
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     MOVE LMDY      MDAY
+     C                     MOVEAMDAY      QLMDAY
+     C*
+     C** ADD MARGIN AGGREGATE IN TO TOTALS:
+     C*
+     C** ARRAY MANIPULATION FOR MARGIN MOVED TO WHERE MONTH OR ADJUSTED
+     C** MONTH VALUE IS CALCULATED
+     C*
+      *                                                                   148866
+     C********** MLNR      IFEQ 0                                                      148866 CLE148
+     C           MLNR      IFEQ *BLANKS                                                       CLE148
+      *                                                                   148866
+     C                     ADD  QLMMGN    CMMG
+     C                     ADD  QLMMGN    AMMG
+     C                     ADD  QLMMGN    DMMG
+     C                     ADD  QLMMGN    TMMG
+      *                                                                   148866
+     C                     ELSE                                           148866
+      *                                                                   148866
+     C                     SUB  QLMMGN    CMMG                            148866
+      *                                                                   148866
+     C                     ENDIF                                          148866
+      *                                                                   148866
+     C*
+     C** ADD FEE AGGREGATE IN TO TOTALS:
+     C*
+     C** ARRAY MANIPULATION FOR FEES MOVED TO WHERE MONTH OR ADJUSTED
+     C** MONTH VALUE IS CALCULATED
+     C**
+      *                                                                   148866
+     C********** MLNR      IFEQ 0                                                      148866 CLE148
+     C           MLNR      IFEQ *BLANKS                                                       CLE148
+      *                                                                   148866
+     C                     ADD  QLMFEE    CMFE
+     C                     ADD  QLMFEE    AMFE
+     C                     ADD  QLMFEE    DMFE
+     C                     ADD  QLMFEE    TMFE
+      *                                                                   148866
+     C                     ELSE                                           148866
+      *                                                                   148866
+     C                     SUB  QLMFEE    CMFE                            148866
+      *                                                                   148866
+     C                     ENDIF                                          148866
+     C*
+     C** SET UP YEAR-TO-DATE DATA:
+     C*
+     C** CALCULATE NO. OF DAYS LOAN LIVE THIS YEAR.
+     C** N.B. IF LOAN NOT LIVE THIS YEAR, AGGREGATE WILL BE ZERO.
+     C*
+      *
+      ** If loan value dated at end of month and last day accruals
+      ** YTOT should be 1 day. (LDENDY will be less than LDSTDY).
+      *
+     C*          LDENDY    IFLT LDSTDY
+     C*                    Z-ADD1         YTOT
+     C*                    ELSE
+     C***********LDLEDY    SUB  LDLSDY    YTOT                           052572
+     C***********          ADD  1         YTOT                           052572
+     C*                    END
+     C***********                                                        BH34YY
+     C***IF*LOAN*IS GUARANTEE (PROCESSING TYPE = 70), MULTIPLY           BH34YY
+     C***AGGREGATE BY 4 TO REFLECT TRUE GUARANTEE AMOUNT.                BH34YY
+     C***********                                                        BH34YY
+     C***********AYLNPT    IFEQ 70                                       BH34YY
+     C***********          MULT 4         QLYAGG                         BH34YY
+     C***********          END                                           BH34YY
+     C*
+     C********** MLNR      IFEQ 0                                                      148866 CLE148
+     C           MLNR      IFEQ *BLANKS                                                       CLE148
+     C*                                                                   148866
+     C                     ADD  QLYAGG    CYAG
+     C                     ADD  QLYAGG    AYAG
+     C                     ADD  QLYAGG    DYAG
+     C                     ADD  QLYAGG    TYAG
+     C*
+     C                     ELSE                                           148866
+     C*                                                                   148866
+     C                     SUB  QLYAGG    CYAG                            148866
+     C                     ADD  QLYAGG    CYSAV                           148866
+     C*                                                                   148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C** SET UP DAY ARRAYS:
+     C** CALCULATE START & END DAY NO. OF LOAN IN YEAR.
+     C** SKIP IF LOAN WAS NOT LIVE THIS YEAR, I.E. IF YTD AGGREGATE = 0.
+     C*
+     C           QLYAGG    IFNE 0
+     C*
+     C           LDLSDY    SUB  PREV      S       30
+     C           LDLEDY    SUB  PREV      E       30
+     C*
+     C           S         DOWLEE
+     C           S         ANDGT0                                         052821
+     C           S         ANDLT367                                       052821
+     C                     Z-ADD1         LYDY,S
+     C                     Z-ADD1         CYDY,S
+     C                     Z-ADD1         AYDY,S
+     C                     Z-ADD1         DYDY,S
+     C                     Z-ADD1         TYDY,S
+     C                     ADD  1         S
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     MOVE LYDY      YDAY
+     C                     MOVEAYDAY      QLYDAY
+     C*
+     C** ADD MARGIN AGGREGATE TO TOTALS.
+     C*
+     C********** MLNR      IFEQ 0                                                      148866 CLE148
+     C           MLNR      IFEQ *BLANKS                                                       CLE148
+     C*                                                                   148866
+     C                     ADD  QLYMGN    CYMG
+     C                     ADD  QLYMGN    AYMG
+     C                     ADD  QLYMGN    DYMG
+     C                     ADD  QLYMGN    TYMG
+     C*                                                                   148866
+     C                     ELSE                                           148866
+     C*                                                                   148866
+     C                     SUB  QLYMGN    CYMG                            148866
+     C*                                                                   148866
+     C                     ENDIF                                          148866
+     C*
+     C** SUM FEE AGGREGATE FOR YTD TOTAL:
+     C*
+     C*
+     C********** MLNR      IFEQ 0                                                      148866 CLE148
+     C           MLNR      IFEQ *BLANKS                                                       CLE148
+     C*                                                                   148866
+     C                     ADD  QLYFEE    CYFE
+     C                     ADD  QLYFEE    AYFE
+     C                     ADD  QLYFEE    DYFE
+     C                     ADD  QLYFEE    TYFE
+     C*                                                                   148866
+     C                     ELSE                                           148866
+     C*                                                                   148866
+     C                     SUB  QLYFEE    CYFE                            148866
+     C*                                                                   148866
+     C                     ENDIF                                          148866
+     C*
+     C** SET UP FIELDS FOR INDIVIDUAL LENQLND RECORD.
+     C*
+     C                     MOVE 'L'       QLRTYP
+     C                     MOVE LDBRCA    BRCA
+     C                     Z-ADD1         QLRSEQ
+     C                     Z-ADDLDGPID    QLGPID
+     C                     MOVE LDGPNA    QLGPNA
+     C                     MOVE LDDEPT    QLDEPT
+     C                     MOVE LDACOF    QLACOF
+     C**********           Z-ADDLDFCUS    QLFCUS                                              CSD027
+     C                     MOVE LDFCUS    QLFCUS                                              CSD027
+     C                     Z-ADDLDFTYP    QLFTYP
+     C                     Z-ADDLDFSEQ    QLFSEQ
+     C***********          MOVELFCLB      WBRCA                    163668 166037
+     C***********          Z-ADDFCUS      WFCUS                    163668 166037
+     C***********          Z-ADDFTYP      WFTYP                    163668 166037
+     C***********          Z-ADDFSEQ      WFSEQ                    163668 166037
+     C***********          Z-ADDLDFCUS    QLFACL                   163668 166037
+      ***********                                                  163668 166037
+     C***********KFCLT     CHAINFCLTYL1              11            163668 166037
+      ***********                                                  163668 166037
+     C************IN11     IFEQ '0'                                163668 166037
+     C***********SYIN      ANDEQ'Y'                                163668 166037
+     C***********          Z-ADDANUM      QLFCUS                   163668 166037
+     C***********          MOVE QLFCUS    WFNUM   6                163668 166037
+     C***********          CALL 'AOCUSTR0'                         163668 166037
+     C***********          PARM *BLANKS   PRTCD   7                163668 166037
+     C***********          PARM '*KEY    'POPTN   7                163668 166037
+     C***********          PARM WFNUM     PCUST  10                163668 166037
+     C***********          PARM *BLANKS   PKYST   7                163668 166037
+     C***********SDCUST    PARM SDCUST    DSSDY                    163668 166037
+      ***********                                                  163668 166037
+     C***********          MOVE BBACOC    QLACOF                   163668 166037
+      ***********                                                  163668 166037
+     C***********          CALL 'AOACOFR0'                         163668 166037
+     C***********          PARM *BLANKS   PRTCD                    163668 166037
+     C***********          PARM '*KEY    'POPTN                    163668 166037
+     C***********          PARM BBACOC    PCUST  10                163668 166037
+     C***********SDACOF    PARM SDACOF    DSSDY                    163668 166037
+      ***********                                                  163668 166037
+     C***********          MOVE AZDPCD    QLDEPT                   163668 166037
+     C***********          ENDIF                                   163668 166037
+      ***********                                                  163668 166037
+     C**********           Z-ADDLDCNUM    QLCNUM                                              CSD027
+     C                     MOVE LDCNUM    QLCNUM                                              CSD027
+     C**********           Z-ADDLDLNRF    QLLNRF                                              CLE148
+     C                     MOVELLDLNRF    QLLNRF                                              CLE148
+     C                     MOVE LDLTYP    QLLTYP
+     C                     MOVE LDSUTP    QLSUTP
+     C                     MOVE LDCLAS    QLCLAS                                              CLE042
+     C**********           Z-ADDLDFACL    QLFACL                                       166037 CSD027
+     C                     MOVE LDFACL    QLFACL                                              CSD027
+     C*
+     C** CALCULATE REMAINING FIELDS & WRITE LENQLND RECORD.
+     C*
+     C                     EXSR WRITNQ
+      ***********                                                  161257 166037
+      **For*Internal*Part*Purchased,*write*record*for*the*internal*161257 166037
+      **facility.**************************************************161257 166037
+     C***********LPFI      IFEQ 'I'                                161257 166037
+     C***********          Z-ADDPTFC      QLFCUS                   161257 163668
+     C***********          Z-ADDFCUS      QLFCUS                   163668 166037
+     C***********          Z-ADDPTFT      QLFTYP                   161257 166037
+     C***********          Z-ADDPTFN      QLFSEQ                   161257 166037
+     C***********          Z-ADDPTFC      QLFACL                   163668 166037
+      ***********                                                  161257 166037
+      **Get*the*account*officer*of*the*customer.*******************161257 166037
+     C***********          MOVELPTFC      P@KEY1                   161257 163668
+     C***********          MOVELFCUS      P@KEY1                   163668 166037
+     C***********          CALL 'AOCUSTR0'                         161257 166037
+     C***********          PARM *BLANKS   @RTCD                    161257 166037
+     C***********          PARM '*KEY'    @OPTN                    161257 166037
+     C***********          PARM           P@KEY1 10                161257 166037
+     C***********          PARM '*CNUM'   P@KYST  7                161257 166037
+     C***********SDCUST    PARM SDCUST    DSSDY                    161257 166037
+     C***********@RTCD     IFEQ *BLANKS                            161257 166037
+     C***********          MOVE BBACOC    QLACOF                   161257 166037
+     C***********          ELSE                                    161257 166037
+     C************LOCK     IN   LDA                                161257 166037
+     C***********          Z-ADD5         DBASE                    161257 166037
+     C***********          MOVELP@KEY1    DBKEY     P              161257 166037
+     C***********          MOVEL'SDCUSTPD'DBFILE    P              161257 166037
+     C***********          MOVEL'LER430'  DBPGM     P              161257 166037
+     C***********          OUT  LDA                                161257 166037
+     C***********          EXSR *PSSR                              161257 166037
+     C***********          ENDIF                                   161257 166037
+      ***********                                                  161257 166037
+      **Get*department.********************************************161257 166037
+     C***********          CALL 'AOACOFR0'                         161257 166037
+     C***********          PARM *BLANKS   @RTCD                    161257 166037
+     C***********          PARM '*KEY'    @OPTN                    161257 166037
+     C***********          PARM BBACOC    P@ACOC  2                161257 166037
+     C***********SDACOF    PARM SDACOF    DSFDY                    161257 166037
+     C***********          SELEC                                   161257 166037
+     C***********@RTCD     WHEQ *BLANKS                            161257 166037
+     C***********          MOVE AZDPCD    QLDEPT                   161257 166037
+     C***********@RTCD     WHEQ '*NRF'                             161257 166037
+     C***********          MOVE '**'      QLACOF                   161257 166037
+     C***********          MOVE '***'     QLDEPT                   161257 166037
+     C***********          OTHER                                   161257 166037
+     C************LOCK     IN   LDA                                161257 166037
+     C***********          Z-ADD4         DBASE                    161257 166037
+     C***********          MOVELBBACOC    DBKEY     P              161257 166037
+     C***********          MOVEL'SDACOFPD'DBFILE    P              161257 166037
+     C***********          MOVEL'LER430'  DBPGM     P              161257 166037
+     C***********          OUT  LDA                                161257 166037
+     C***********          EXSR *PSSR                              161257 166037
+     C***********          ENDSL                                   161257 166037
+      ***********                                                  161257 166037
+     C***********          Z-SUBQLMAVB    QLMAVB                   161257 166037
+     C***********          Z-SUBQLMAGG    QLMAGG                   161257 166037
+     C***********          Z-SUBQLMFEE    QLMFEE                   161257 166037
+     C***********          Z-SUBQLMMGN    QLMMGN                   161257 166037
+     C***********          Z-SUBQLMAYR    QLMAYR                   161257 166037
+     C***********          Z-SUBQLMAMR    QLMAMR                   161257 166037
+     C***********          Z-SUBQLYAVB    QLYAVB                   161257 166037
+     C***********          Z-SUBQLYAGG    QLYAGG                   161257 166037
+     C***********          Z-SUBQLYFEE    QLYFEE                   161257 166037
+     C***********          Z-SUBQLYMGN    QLYMGN                   161257 166037
+     C***********          Z-SUBQLYAYR    QLYAYR                   161257 166037
+     C***********          Z-SUBQLYAMR    QLYAMR                   161257 166037
+      ***********                                                  161257 166037
+     C***Write*a*second*record*to*LENQLND**************************161257 166037
+     C***********                                                  161257 166037
+     C***********          WRITELENQLNDF                           161257 166037
+     C***********          ENDIF                                   161257 166037
+     C*
+     C** CLEAR DAY ARRAYS FOR LOAN.
+     C*
+     C                     Z-ADD0         LMDY
+     C                     Z-ADD0         LYDY
+     C*
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WRITNQ - Calculates yield and margin rate and writes          *
+      *          LENQLND record.                                      *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRITNQ    BEGSR
+     C*
+     C** CALCULATE MTD AVERAGE BALANCE.
+     C*
+     C           CUSIND    IFNE 'Y'                                       148866
+     C           ACOIND    ANDNE'Y'                                       148866
+     C           DEPIND    ANDNE'Y'                                       148866
+     C           TOTIND    ANDNE'Y'                                       148866
+     C*                                                                   148866
+     C           MTOT      IFNE 0
+     C           QLMAGG    DIV  MTOT      QLMAVB    H
+      *                                                                   148866
+     C********** MLNR      IFEQ 0                                                      148866 CLE148
+     C           MLNR      IFEQ *BLANKS                                                       CLE148
+     C*                                                                   148866
+     C** Add amount to overall totals.                                    148866
+     C*                                                                   148866
+     C                     ADD  QLMAVB    CUSMAV                          148866
+     C                     ADD  QLMAVB    ACOMAV                          148866
+     C                     ADD  QLMAVB    DEPMAV                          148866
+     C                     ADD  QLMAVB    TOTMAV                          148866
+     C*                                                                   148866
+     C                     ELSE                                           148866
+     C*                                                                   148866
+     C** Subtract amount from overall totals.                             148866
+     C*                                                                   148866
+     C                     SUB  QLMAVB    CUSMAV                          148866
+     C*                                                                   148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C                     ELSE
+     C                     Z-ADD0         QLMAVB
+     C                     END
+     C*                                                                   148866
+     C                     ELSE                                           148866
+     C*                                                                   148866
+     C           ACOIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDACOMAV    QLMAVB                          148866
+     C                     Z-ADD0         ACOMAV                          148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C           CUSIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDCUSMAV    QLMAVB                          148866
+     C                     Z-ADD0         CUSMAV                          148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C           DEPIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDDEPMAV    QLMAVB                          148866
+     C                     Z-ADD0         DEPMAV                          148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C           TOTIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDTOTMAV    QLMAVB                          148866
+     C                     Z-ADD0         TOTMAV                          148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C                     ENDIF                                          148866
+     C*
+     C** CALCULATE MTD YIELD & MARGIN RATE.
+     C*
+     C           CUSIND    IFNE 'Y'                                       158060
+     C           ACOIND    ANDNE'Y'                                       158060
+     C           DEPIND    ANDNE'Y'                                       158060
+     C           TOTIND    ANDNE'Y'                                       158060
+     C*                                                                   158060
+     C           QLMAGG    IFNE 0
+     C*
+     C           QLMFEE    ADD  QLMMGN    WRK15            YIELD
+     C           WRK15     DIV  QLMAGG    WRK158    H
+     C***********WRK158    MULT CALCB     QLMAYR                          148866
+     C           WRK158    MULT CALCB     QLMAYR    H                     148866
+     C*                                                                   BH3468
+     C** If the margin is negative the percentage yield(*) and margin     BH3468
+     C** rates should also be negative (*if the margin amount is more     BH3468
+     C** than the fee amount)                                             BH3468
+     C*                                                                   BH3468
+     C           WRK15     IFLT 0                                         BH3468
+     C           QLMAGG    ANDLT0                                         BH3468
+     C                     MULT -1        QLMAYR                          BH3468
+     C                     END                                            BH3468
+     C*
+     C           QLMMGN    DIV  QLMAGG    WRK158    H      MARGIN
+     C***********WRK158    MULT CALCB     QLMAMR                          148866
+     C           WRK158    MULT CALCB     QLMAMR    H                     148866
+     C*
+     C           QLMMGN    IFLT 0                                         BH3468
+     C           QLMAGG    ANDLT0                                         BH3468
+     C                     MULT -1        QLMAMR                          BH3468
+     C                     END                                            BH3468
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADD0         QLMAYR
+     C                     Z-ADD0         QLMAMR
+     C*
+     C                     END
+     C*                                                                   158060
+     C                     ELSE                                           158060
+     C*                                                                   158060
+     C           CUSIND    IFEQ 'Y'                                       158060
+     C           CMAG      IFNE 0                                         158060
+     C           QLMFEE    ADD  QLMMGN    WRK15            YIELD          158060
+     C           WRK15     DIV  CMAG      WRK158    H                     158060
+     C           WRK158    MULT CALCB     QLMAYR    H                     158060
+     C*                                                                   158060
+     C** If the margin is negative the percentage yield(*) and margin     158060
+     C** rates should also be negative (*if the margin amount is more     158060
+     C** than the fee amount)                                             158060
+     C*                                                                   158060
+     C           WRK15     IFLT 0                                         158060
+     C           CMAG      ANDLT0                                         158060
+     C                     MULT -1        QLMAYR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           QLMMGN    DIV  CMAG      WRK158    H      MARGIN         158060
+     C           WRK158    MULT CALCB     QLMAMR    H                     158060
+     C*                                                                   158060
+     C           QLMMGN    IFLT 0                                         158060
+     C           CMAG      ANDLT0                                         158060
+     C                     MULT -1        QLMAMR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     ELSE                                           158060
+     C*                                                                   158060
+     C                     Z-ADD0         QLMAYR                          158060
+     C                     Z-ADD0         QLMAMR                          158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           ACOIND    IFEQ 'Y'                                       158060
+     C           AMAG      IFNE 0                                         158060
+     C           QLMFEE    ADD  QLMMGN    WRK15            YIELD          158060
+     C           WRK15     DIV  AMAG      WRK158    H                     158060
+     C           WRK158    MULT CALCB     QLMAYR    H                     158060
+     C*                                                                   158060
+     C** If the margin is negative the percentage yield(*) and margin     158060
+     C** rates should also be negative (*if the margin amount is more     158060
+     C** than the fee amount)                                             158060
+     C*                                                                   158060
+     C           WRK15     IFLT 0                                         158060
+     C           AMAG      ANDLT0                                         158060
+     C                     MULT -1        QLMAYR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           QLMMGN    DIV  AMAG      WRK158    H      MARGIN         158060
+     C           WRK158    MULT CALCB     QLMAMR    H                     158060
+     C*                                                                   158060
+     C           QLMMGN    IFLT 0                                         158060
+     C           AMAG      ANDLT0                                         158060
+     C                     MULT -1        QLMAMR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     ELSE                                           158060
+     C*                                                                   158060
+     C                     Z-ADD0         QLMAYR                          158060
+     C                     Z-ADD0         QLMAMR                          158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           DEPIND    IFEQ 'Y'                                       158060
+     C           DMAG      IFNE 0                                         158060
+     C           QLMFEE    ADD  QLMMGN    WRK15            YIELD          158060
+     C           WRK15     DIV  DMAG      WRK158    H                     158060
+     C           WRK158    MULT CALCB     QLMAYR    H                     158060
+     C*                                                                   158060
+     C** If the margin is negative the percentage yield(*) and margin     158060
+     C** rates should also be negative (*if the margin amount is more     158060
+     C** than the fee amount)                                             158060
+     C*                                                                   158060
+     C           WRK15     IFLT 0                                         158060
+     C           DMAG      ANDLT0                                         158060
+     C                     MULT -1        QLMAYR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           QLMMGN    DIV  DMAG      WRK158    H      MARGIN         158060
+     C           WRK158    MULT CALCB     QLMAMR    H                     158060
+     C*                                                                   158060
+     C           QLMMGN    IFLT 0                                         158060
+     C           DMAG      ANDLT0                                         158060
+     C                     MULT -1        QLMAMR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     ELSE                                           158060
+     C*                                                                   158060
+     C                     Z-ADD0         QLMAYR                          158060
+     C                     Z-ADD0         QLMAMR                          158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           TOTIND    IFEQ 'Y'                                       158060
+     C           TMAG      IFNE 0                                         158060
+     C           QLMFEE    ADD  QLMMGN    WRK15            YIELD          158060
+     C           WRK15     DIV  TMAG      WRK158    H                     158060
+     C           WRK158    MULT CALCB     QLMAYR    H                     158060
+     C*                                                                   158060
+     C** If the margin is negative the percentage yield(*) and margin     158060
+     C** rates should also be negative (*if the margin amount is more     158060
+     C** than the fee amount)                                             158060
+     C*                                                                   158060
+     C           WRK15     IFLT 0                                         158060
+     C           TMAG      ANDLT0                                         158060
+     C                     MULT -1        QLMAYR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           QLMMGN    DIV  TMAG      WRK158    H      MARGIN         158060
+     C           WRK158    MULT CALCB     QLMAMR    H                     158060
+     C*                                                                   158060
+     C           QLMMGN    IFLT 0                                         158060
+     C           TMAG      ANDLT0                                         158060
+     C                     MULT -1        QLMAMR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     ELSE                                           158060
+     C*                                                                   158060
+     C                     Z-ADD0         QLMAYR                          158060
+     C                     Z-ADD0         QLMAMR                          158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C*
+     C** CALCULATE YTD AVERAGE BALANCE.
+     C*
+     C           CUSIND    IFNE 'Y'                                       148866
+     C           ACOIND    ANDNE'Y'                                       148866
+     C           DEPIND    ANDNE'Y'                                       148866
+     C           TOTIND    ANDNE'Y'                                       148866
+     C*                                                                   148866
+     C           YTOT      IFNE 0
+     C           QLYAGG    DIV  YTOT      QLYAVB    H
+     C*                                                                   148866
+     C********** MLNR      IFEQ 0                                                      148866 CLE148
+     C           MLNR      IFEQ *BLANKS                                                       CLE148
+     C*                                                                   148866
+     C** Add amount to overall totals.                                    148866
+     C*                                                                   148866
+     C                     ADD  QLYAVB    CUSYAV                          148866
+     C                     ADD  QLYAVB    ACOYAV                          148866
+     C                     ADD  QLYAVB    DEPYAV                          148866
+     C                     ADD  QLYAVB    TOTYAV                          148866
+     C*                                                                   148866
+     C                     ELSE                                           148866
+     C*                                                                   148866
+     C** Subtract amount from overall totals.                             148866
+     C*                                                                   148866
+     C                     SUB  QLYAVB    CUSYAV                          148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C                     ELSE
+     C                     Z-ADD0         QLYAVB
+     C                     END
+     C*                                                                   148866
+     C                     ELSE                                           148866
+     C*                                                                   148866
+     C           ACOIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDACOYAV    QLYAVB                          148866
+     C                     Z-ADD0         ACOYAV                          148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C           CUSIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDCUSYAV    QLYAVB                          148866
+     C                     Z-ADD0         CUSYAV                          148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C           DEPIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDDEPYAV    QLYAVB                          148866
+     C                     Z-ADD0         DEPYAV                          148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C           TOTIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDTOTYAV    QLYAVB                          148866
+     C                     Z-ADD0         TOTYAV                          148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C                     ENDIF                                          148866
+     C*
+     C** CALCULATE YTD YIELD & MARGIN RATE.
+     C*
+     C           CUSIND    IFNE 'Y'                                       158060
+     C           ACOIND    ANDNE'Y'                                       158060
+     C           DEPIND    ANDNE'Y'                                       158060
+     C           TOTIND    ANDNE'Y'                                       158060
+     C*                                                                   158060
+     C           QLYAGG    IFNE 0
+     C*
+     C           QLYFEE    ADD  QLYMGN    WRK15            YIELD
+     C           WRK15     DIV  QLYAGG    WRK158    H
+     C***********WRK158    MULT CALCB     QLYAYR                          148866
+     C           WRK158    MULT CALCB     QLYAYR    H                     148866
+     C*                                                                   BH3468
+     C** If the margin is negative the percentage yield(*) and margin     BH3468
+     C** rates should also be negative (*if the margin amount is more     BH3468
+     C** than the fee amount)                                             BH3468
+     C*                                                                   BH3468
+     C           WRK15     IFLT 0                                         BH3468
+     C           QLYAGG    ANDLT0                                         BH3468
+     C                     MULT -1        QLYAYR                          BH3468
+     C                     END                                            BH3468
+     C*
+     C           QLYMGN    DIV  QLYAGG    WRK158    H
+     C***********WRK158    MULT CALCB     QLYAMR           MARGIN         148866
+     C           WRK158    MULT CALCB     QLYAMR    H      MARGIN         148866
+     C*
+     C           QLYMGN    IFLT 0                                         BH3468
+     C           QLYAGG    ANDLT0                                         BH3468
+     C                     MULT -1        QLYAMR                          BH3468
+     C                     END                                            BH3468
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADD0         QLYAYR
+     C                     Z-ADD0         QLYAMR
+     C*
+     C                     END
+     C*                                                                   158060
+     C                     ELSE                                           158060
+     C*                                                                   158060
+     C           CUSIND    IFEQ 'Y'                                       158060
+     C           CYAG      IFNE 0                                         158060
+     C           QLYFEE    ADD  QLYMGN    WRK15            YIELD          158060
+     C           WRK15     DIV  CYAG      WRK158    H                     158060
+     C           WRK158    MULT CALCB     QLYAYR    H                     158060
+     C*                                                                   158060
+     C** If the margin is negative the percentage yield(*) and margin     158060
+     C** rates should also be negative (*if the margin amount is more     158060
+     C** than the fee amount)                                             158060
+     C*                                                                   158060
+     C           WRK15     IFLT 0                                         158060
+     C           CYAG      ANDLT0                                         158060
+     C                     MULT -1        QLYAYR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           QLYMGN    DIV  CYAG      WRK158    H      MARGIN         158060
+     C           WRK158    MULT CALCB     QLYAMR    H                     158060
+     C*                                                                   158060
+     C           QLYMGN    IFLT 0                                         158060
+     C           CYAG      ANDLT0                                         158060
+     C                     MULT -1        QLYAMR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     ELSE                                           158060
+     C*                                                                   158060
+     C                     Z-ADD0         QLYAYR                          158060
+     C                     Z-ADD0         QLYAMR                          158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           ACOIND    IFEQ 'Y'                                       158060
+     C           AYAG      IFNE 0                                         158060
+     C           QLYFEE    ADD  QLYMGN    WRK15            YIELD          158060
+     C           WRK15     DIV  AYAG      WRK158    H                     158060
+     C           WRK158    MULT CALCB     QLYAYR    H                     158060
+     C*                                                                   158060
+     C** If the margin is negative the percentage yield(*) and margin     158060
+     C** rates should also be negative (*if the margin amount is more     158060
+     C** than the fee amount)                                             158060
+     C*                                                                   158060
+     C           WRK15     IFLT 0                                         158060
+     C           AYAG      ANDLT0                                         158060
+     C                     MULT -1        QLYAYR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           QLYMGN    DIV  AYAG      WRK158    H      MARGIN         158060
+     C           WRK158    MULT CALCB     QLYAMR    H                     158060
+     C*                                                                   158060
+     C           QLYMGN    IFLT 0                                         158060
+     C           AYAG      ANDLT0                                         158060
+     C                     MULT -1        QLYAMR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     ELSE                                           158060
+     C*                                                                   158060
+     C                     Z-ADD0         QLYAYR                          158060
+     C                     Z-ADD0         QLYAMR                          158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           DEPIND    IFEQ 'Y'                                       158060
+     C           DYAG      IFNE 0                                         158060
+     C           QLYFEE    ADD  QLYMGN    WRK15            YIELD          158060
+     C           WRK15     DIV  DYAG      WRK158    H                     158060
+     C           WRK158    MULT CALCB     QLYAYR    H                     158060
+     C*                                                                   158060
+     C** If the margin is negative the percentage yield(*) and margin     158060
+     C** rates should also be negative (*if the margin amount is more     158060
+     C** than the fee amount)                                             158060
+     C*                                                                   158060
+     C           WRK15     IFLT 0                                         158060
+     C           DYAG      ANDLT0                                         158060
+     C                     MULT -1        QLYAYR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           QLYMGN    DIV  DYAG      WRK158    H      MARGIN         158060
+     C           WRK158    MULT CALCB     QLYAMR    H                     158060
+     C*                                                                   158060
+     C           QLYMGN    IFLT 0                                         158060
+     C           DYAG      ANDLT0                                         158060
+     C                     MULT -1        QLYAMR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     ELSE                                           158060
+     C*                                                                   158060
+     C                     Z-ADD0         QLYAYR                          158060
+     C                     Z-ADD0         QLYAMR                          158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           TOTIND    IFEQ 'Y'                                       158060
+     C           TYAG      IFNE 0                                         158060
+     C           QLYFEE    ADD  QLYMGN    WRK15            YIELD          158060
+     C           WRK15     DIV  TYAG      WRK158    H                     158060
+     C           WRK158    MULT CALCB     QLYAYR    H                     158060
+     C*                                                                   158060
+     C** If the margin is negative the percentage yield(*) and margin     158060
+     C** rates should also be negative (*if the margin amount is more     158060
+     C** than the fee amount)                                             158060
+     C*                                                                   158060
+     C           WRK15     IFLT 0                                         158060
+     C           TYAG      ANDLT0                                         158060
+     C                     MULT -1        QLYAYR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           QLYMGN    DIV  TYAG      WRK158    H      MARGIN         158060
+     C           WRK158    MULT CALCB     QLYAMR    H                     158060
+     C*                                                                   158060
+     C           QLYMGN    IFLT 0                                         158060
+     C           TYAG      ANDLT0                                         158060
+     C                     MULT -1        QLYAMR                          158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     ELSE                                           158060
+     C*                                                                   158060
+     C                     Z-ADD0         QLYAYR                          158060
+     C                     Z-ADD0         QLYAMR                          158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C*                                                                   BH3394
+     C** Transfer the loan account officer code to the LENQ file          BH3394
+     C** for the profitability report by facility                         BH3394
+     C*                                                                   BH3394
+     C                     MOVE LDOACO    QLOACO  2                       BH3394
+     C           LPFI      IFEQ 'I'                                       166037
+      *                                                                                     CLE075AK
+     C           FCLB      IFNE WBRCA                                                       CLE075AK
+     C           FCUS      ANDNEWFCUS                                                       CLE075AK
+     C           FTYP      ANDNEWFTYP                                                       CLE075AK
+     C           FSEQ      ANDNEWFSEQ                                                       CLE075AK
+     C                     MOVELFCLB      WBRCA                           166037
+     C**********           Z-ADDFCUS      WFCUS                                        166037 CSD027
+     C                     MOVE FCUS      WFCUS                                               CSD027
+     C                     Z-ADDFTYP      WFTYP                           166037
+     C                     Z-ADDFSEQ      WFSEQ                           166037
+     C           KFCLT     CHAINFCLTYL1              11                   166037
+      *                                                                   166037
+     C           LDFCUS    IFNE ANUM                                      166037
+     C           *IN11     ANDEQ'0'                                       166037
+     C                     Z-SUBQLMAVB    QLMAVB                          166037
+     C                     Z-SUBQLMAGG    QLMAGG                          166037
+     C                     Z-SUBQLMFEE    QLMFEE                          166037
+     C                     Z-SUBQLMMGN    QLMMGN                          166037
+     C                     Z-SUBQLMAYR    QLMAYR                          166037
+     C                     Z-SUBQLMAMR    QLMAMR                          166037
+     C                     Z-SUBQLYAVB    QLYAVB                          166037
+     C                     Z-SUBQLYAGG    QLYAGG                          166037
+     C                     Z-SUBQLYFEE    QLYFEE                          166037
+     C                     Z-SUBQLYMGN    QLYMGN                          166037
+     C                     Z-SUBQLYAYR    QLYAYR                          166037
+     C                     Z-SUBQLYAMR    QLYAMR                          166037
+     C                     ENDIF                                          166037
+     C                     ENDIF                                                            CLE075AK
+      *                                                                   187394
+      ** Accumulate the group total for Internal Parts Purchased          187394
+      *                                                                   187394
+     C           DEPIND    IFEQ 'Y'                                       187394
+     C                     ADD  QLYAVB    TOTIPP                          187394
+     C                     ADD  QLYMGN    IPPMGN                          187394
+     C                     ADD  QLYAGG    IPPAGG                          187394
+     C                     ENDIF                                          187394
+      *                                                                   187394
+      ** Report group total value for Internal Parts Purchased            187394
+      *                                                                   187394
+     C           TOTIND    IFEQ 'Y'                                       187394
+     C                     Z-ADDTOTIPP    QLYAVB                          187394
+     C                     Z-ADD0         TOTIPP                          187394
+     C                     ENDIF                                          187394
+      *                                                                   187394
+     C                     ENDIF                                          166037
+     C*
+     C** WRITE RECORD TO LENQLND
+     C*
+     C                     WRITELENQLNDF
+     C*
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CUSTSR - Outputs customer totals to LENQLND                   *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: WRITNQ                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CUSTSR    BEGSR
+     C*
+     C** SET UP COMMON FIELDS.
+     C*
+     C                     MOVE 'C'       QLRTYP
+     C                     Z-ADD3         QLRSEQ
+     C                     Z-ADDLDGPID    QLGPID
+     C                     MOVE LDGPNA    QLGPNA
+     C                     MOVE LDDEPT    QLDEPT
+     C                     MOVE LDACOF    QLACOF
+     C**********           Z-ADDLDCNUM    QLCNUM                                              CSD027
+     C**********           Z-ADDLDFCUS    QLFCUS                                              CSD027
+     C                     MOVE LDCNUM    QLCNUM                                              CSD027
+     C                     MOVE LDFCUS    QLFCUS                                              CSD027
+     C                     Z-ADD0         QLFTYP
+     C                     Z-ADD0         QLFSEQ
+     C**********           Z-ADD0         QLLNRF                                              CLE148
+     C                     MOVEL*BLANKS   QLLNRF                                              CLE148
+     C                     MOVE *BLANKS   QLLTYP
+     C                     MOVE *BLANKS   QLSUTP
+     C                     MOVE *BLANKS   QLCLAS                                              CLE042
+     C*
+     C** SET UP MTD FIELDS.
+     C*
+     C***********          XFOOTCMDY      MTOT                            148866
+     C                     MOVE CMDY      MDAY
+     C                     MOVEAMDAY      QLMDAY
+     C           CCSIND    IFEQ 'Y'                                       148866
+     C           DCSIND    ANDEQ'Y'                                       148866
+     C                     ADD  CMSAV     CMAG                            148866
+     C                     ENDIF                                          148866
+     C                     Z-ADD0         CMSAV                           148866
+     C                     Z-ADDCMAG      QLMAGG
+     C                     Z-ADDCMFE      QLMFEE
+     C                     Z-ADDCMMG      QLMMGN
+     C*
+     C** SET UP YTD FIELDS.
+     C*
+     C***********          XFOOTCYDY      YTOT                            148866
+     C                     MOVE CYDY      YDAY
+     C                     MOVEAYDAY      QLYDAY
+     C           CCSIND    IFEQ 'Y'                                       148866
+     C           DCSIND    ANDEQ'Y'                                       148866
+     C                     ADD  CYSAV     CYAG                            148866
+     C                     ENDIF                                          148866
+     C                     Z-ADD0         CYSAV                           148866
+     C                     MOVE ' '       CCSIND                          148866
+     C                     MOVE ' '       DCSIND                          148866
+     C                     Z-ADDCYAG      QLYAGG
+     C                     Z-ADDCYFE      QLYFEE
+     C                     Z-ADDCYMG      QLYMGN
+     C                     MOVE 'Y'       CUSIND  1                       148866
+     C*
+     C** CALCULATE REMAINING FIELDS & WRITE LENQLND RECORD.
+     C*
+     C                     EXSR WRITNQ
+     C*
+     C** CLEAR DAY ARRAYS & TOTAL FIELDS FOR CUSTOMER.
+     C*
+     C                     Z-ADD0         CMDY
+     C                     Z-ADD0         CMAG
+     C                     Z-ADD0         CMMG
+     C                     Z-ADD0         CMFE
+     C                     Z-ADD0         CYDY
+     C                     Z-ADD0         CYAG
+     C                     Z-ADD0         CYMG
+     C                     Z-ADD0         CYFE
+     C                     MOVE ' '       CUSIND                          148866
+     C*
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ACOFSR - Outputs A/C Officer totals to LENQLND                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: WRITNQ                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACOFSR    BEGSR
+     C*
+     C** SET UP COMMON FIELDS.
+     C*
+     C                     MOVE 'A'       QLRTYP
+     C                     Z-ADD3         QLRSEQ
+     C                     Z-ADDLDGPID    QLGPID
+     C                     MOVE LDGPNA    QLGPNA
+     C                     MOVE LDDEPT    QLDEPT
+     C                     MOVE LDACOF    QLACOF
+     C**********           Z-ADD0         QLCNUM                                              CSD027
+     C                     MOVE *BLANKS   QLCNUM                                              CSD027
+     C**********           Z-ADD0         QLLNRF                                              CLE148
+     C                     MOVEL*BLANKS   QLLNRF                                              CLE148
+     C**********           Z-ADD0         QLFCUS                                              CSD027
+     C                     MOVE *BLANKS   QLFCUS                                              CSD027
+     C                     Z-ADD0         QLFTYP
+     C                     Z-ADD0         QLFSEQ
+     C                     MOVE *BLANKS   QLLTYP
+     C                     MOVE *BLANKS   QLSUTP
+     C                     MOVE *BLANKS   QLCLAS                                              CLE042
+     C*
+     C** SET UP MTD FIELDS.
+     C*
+     C***********          XFOOTAMDY      MTOT                            148866
+     C                     MOVE AMDY      MDAY
+     C                     MOVEAMDAY      QLMDAY
+     C                     Z-ADDAMAG      QLMAGG
+     C                     Z-ADDAMFE      QLMFEE
+     C                     Z-ADDAMMG      QLMMGN
+     C*
+     C** SET UP YTD FIELDS.
+     C*
+     C***********          XFOOTAYDY      YTOT                            148866
+     C                     MOVE AYDY      YDAY
+     C                     MOVEAYDAY      QLYDAY
+     C                     Z-ADDAYAG      QLYAGG
+     C                     Z-ADDAYFE      QLYFEE
+     C                     Z-ADDAYMG      QLYMGN
+     C*
+     C                     MOVE 'Y'       ACOIND  1                       148866
+     C*                                                                   148866
+     C** CALCULATE REMAINING FIELDS & WRITE LENQLND RECORD.
+     C*
+     C           AYAG      IFNE 0                                         148866
+     C                     EXSR WRITNQ
+     C                     ENDIF                                          148866
+     C*
+     C** CLEAR DAY ARRAYS & TOTAL FIELDS FOR A/C OFFICER.
+     C*
+     C                     Z-ADD0         AMDY
+     C                     Z-ADD0         AMAG
+     C                     Z-ADD0         AMMG
+     C                     Z-ADD0         AMFE
+     C                     Z-ADD0         AYDY
+     C                     Z-ADD0         AYAG
+     C                     Z-ADD0         AYMG
+     C                     Z-ADD0         AYFE
+     C                     MOVE ' '       ACOIND                          148866
+     C*
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DEPTSR - Outputs Department  totals to LENQLND                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: WRITNQ                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DEPTSR    BEGSR
+     C*
+     C** SET UP COMMON FIELDS.
+     C*
+     C                     MOVE 'D'       QLRTYP
+     C                     Z-ADD3         QLRSEQ
+     C                     Z-ADDLDGPID    QLGPID
+     C                     MOVE LDGPNA    QLGPNA
+     C                     MOVE LDDEPT    QLDEPT
+     C                     MOVE *BLANKS   QLACOF
+     C**********           Z-ADD0         QLCNUM                                              CSD027
+     C                     MOVE *BLANKS   QLCNUM                                              CSD027
+     C**********           Z-ADD0         QLLNRF                                              CLE148
+     C                     MOVEL*BLANKS   QLLNRF                                              CLE148
+     C**********           Z-ADD0         QLFCUS                                              CSD027
+     C                     MOVE *BLANKS   QLFCUS                                              CSD027
+     C                     Z-ADD0         QLFTYP
+     C                     Z-ADD0         QLFSEQ
+     C                     MOVE *BLANKS   QLLTYP
+     C                     MOVE *BLANKS   QLSUTP
+     C                     MOVE *BLANKS   QLCLAS                                              CLE042
+     C*
+     C** SET UP MTD FIELDS.
+     C***********          XFOOTDMDY      MTOT                            148866
+     C                     MOVE DMDY      MDAY
+     C                     MOVEAMDAY      QLMDAY
+     C                     Z-ADDDMAG      QLMAGG
+     C                     Z-ADDDMFE      QLMFEE
+     C                     Z-ADDDMMG      QLMMGN
+     C*
+     C** SET UP YTD FIELDS.
+     C***********          XFOOTDYDY      YTOT                            148866
+     C                     MOVE DYDY      YDAY
+     C                     MOVEAYDAY      QLYDAY
+     C                     Z-ADDDYAG      QLYAGG
+     C                     Z-ADDDYFE      QLYFEE
+     C                     Z-ADDDYMG      QLYMGN
+     C                     MOVE 'Y'       DEPIND  1                       148866
+     C*
+     C** CALCULATE REMAINING FIELDS & WRITE LENQLND RECORD.
+     C           DYAG      IFNE 0                                         148866
+     C                     EXSR WRITNQ
+     C                     ENDIF                                          148866
+     C*
+     C** CLEAR DAY ARRAYS & TOTAL FIELDS FOR DEPARTMENT.
+     C                     Z-ADD0         DMDY
+     C                     Z-ADD0         DMAG
+     C                     Z-ADD0         DMMG
+     C                     Z-ADD0         DMFE
+     C                     Z-ADD0         DYDY
+     C                     Z-ADD0         DYAG
+     C                     Z-ADD0         DYMG
+     C                     Z-ADD0         DYFE
+     C                     MOVE ' '       DEPIND                          148866
+     C*
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * GRUPSR - Outputs Group totals to LENQLND                      *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: WRITNQ                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GRUPSR    BEGSR
+     C*
+     C** SET UP COMMON FIELDS.
+     C                     MOVE 'T'       QLRTYP
+     C                     Z-ADD3         QLRSEQ
+     C                     Z-ADDLDGPID    QLGPID
+     C                     MOVE LDGPNA    QLGPNA
+     C                     MOVE *BLANKS   QLDEPT
+     C                     MOVE *BLANKS   QLACOF
+     C**********           Z-ADD0         QLCNUM                                              CSD027
+     C                     MOVE *BLANKS   QLCNUM                                              CSD027
+     C**********           Z-ADD0         QLLNRF                                              CLE148
+     C                     MOVEL*BLANKS   QLLNRF                                              CLE148
+     C**********           Z-ADD0         QLFCUS                                              CSD027
+     C                     MOVE *BLANKS   QLFCUS                                              CSD027
+     C                     Z-ADD0         QLFTYP
+     C                     Z-ADD0         QLFSEQ
+     C                     MOVE *BLANKS   QLLTYP
+     C                     MOVE *BLANKS   QLSUTP
+     C                     MOVE *BLANKS   QLCLAS                                              CLE042
+     C*
+     C** SET UP MTD FIELDS.
+     C***********          XFOOTTMDY      MTOT                            148866
+     C                     MOVE TMDY      MDAY
+     C                     MOVEAMDAY      QLMDAY
+     C                     Z-ADDTMAG      QLMAGG
+     C                     Z-ADDTMFE      QLMFEE
+     C                     Z-ADDTMMG      QLMMGN
+     C*
+     C** SET UP YTD FIELDS.
+     C***********          XFOOTTYDY      YTOT                            148866
+     C                     MOVE TYDY      YDAY
+     C                     MOVEAYDAY      QLYDAY
+     C                     Z-ADDTYAG      QLYAGG
+     C                     Z-ADDTYFE      QLYFEE
+     C                     Z-ADDTYMG      QLYMGN
+      *                                                                   187394
+      ** Values for Internal Parts Purchased                              187394
+      *                                                                   187394
+     C           LPFI      IFEQ 'I'                                       187394
+     C                     Z-ADDIPPMGN    QLYMGN                          187394
+     C                     Z-ADDIPPAGG    TYAG                            187394
+     C                     Z-ADDIPPAGG    QLYAGG                          187394
+     C                     ENDIF                                          187394
+      *                                                                   187394
+     C                     MOVE 'Y'       TOTIND  1                       148866
+     C*
+     C** CALCULATE REMAINING FIELDS & WRITE LENQLND RECORD.
+     C           TYAG      IFNE 0                                         148866
+     C                     EXSR WRITNQ
+     C                     ENDIF                                          148866
+     C*
+     C** CLEAR DAY ARRAYS & TOTAL FIELDS FOR GROUP.
+     C                     Z-ADD0         TMDY
+     C                     Z-ADD0         TMAG
+     C                     Z-ADD0         TMMG
+     C                     Z-ADD0         TMFE
+     C                     Z-ADD0         TYDY
+     C                     Z-ADD0         TYAG
+     C                     Z-ADD0         TYMG
+     C                     Z-ADD0         IPPMGN                          187394
+     C                     Z-ADD0         IPPAGG                          187394
+     C                     Z-ADD0         TYFE
+     C                     MOVE ' '       TOTIND                          148866
+     C*
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INIT   - Performs First Cycle Calculations                    *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: WRITNQ, *PSSR                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+     C*                                                                     0078
+     C           *NAMVAR   DEFN           LERSTS                            0110
+     C                     IN   LERSTS                                      0110
+     C*
+     C                     MOVE '1'       *IN10
+      *
+      ** Access bank details for Previous End of Year Date.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *                                                    **************
+     C           @RTCD     IFNE *BLANKS                    * DBERROR 01 *
+     C           *LOCK     IN   LDA                        **************
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'LER430'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C*
+     C                     ELSE
+     C                     MOVELBJMRDT    DDRD    2
+     C                     MOVE BJMRDT    WRK5A   5
+     C                     MOVELWRK5A     MMM     3
+     C                     MOVE WRK5A     YY      2
+     C           BJDFIN    IFEQ 'M'                                                           225714
+     C                     MOVE '1'       *IN98                                               225714
+     C                     ENDIF                                                              225714
+      *
+     C                     END
+      *                                                                                       225714
+     C                     MOVE REPDAT    REPDT                                               225714
+     C                     MOVE REPMM     MMM                                                 225714
+     C                     Z-ADD1         X                                                   225714
+     C           REPMM     LOKUPGMNM,X                   97                                   225714
+     C           X         ADD  1         WNXT    20                                          225714
+     C                     MOVELREPDD     PRFDD                                               225714
+     C                     MOVE X         PRFMM                                               225714
+     C                     MOVE REPYY     PRFYY                                               225714
+     C                     MOVE PRFDT     ZDATE                                               225714
+     C                     EXSR ZDATE1                                                        225714
+     C                     Z-ADDZDAYNO    WPRFDT  50                                          225714
+      *                                                                                       225714
+     C                     Z-ADDPRFDT     WSTRMO                                              225714
+     C                     Z-ADD01        WSTRDD                                              225714
+     C                     MOVE WSTRMO    ZDATE                                               225714
+     C                     EXSR ZDATE1                                                        225714
+     C                     Z-ADDZDAYNO    WSTART  50                                          225714
+      *
+     C                     Z-ADDBJPEYD    PREV    50
+     C*
+     C** ACCESS CURRENCY DETAILS FOR BASE CURRENCY DECIMAL PLACES.
+     C** AND FOR THE BASE CURRENCY DEFAULT CALCULATION BASIS
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM BJCYCD    CURKEY  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           A6DICB    OREQ *BLANKS
+     C           *LOCK     IN   LDA                        ***************
+     C                     MOVELBJCYCD    DBKEY            *  DBERR 03   *
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVEL'LER430  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C*
+     C** Calculation basis needs to be set up for each loan that is       158060
+     C** Processed. Processing moved to main processing.                  158060
+     C***SETUP*THE*CORRECT*NUMBER*OF*DAYS*IN*THE*YEAR*FROM*THE*****       158060
+     C***DEFAULT*CALCULATION*BASIS*********************************       158060
+     C***********                                                         158060
+     C***********          ELSE                                           158060
+     C***********                                                   148866158060
+     C***Access*Loan*file*for*calculation*basis******************** 148866158060
+     C***********                                                   148866158060
+     C***********LDLNRF    CHAINLBLOANL1             80             148866158060
+     C************IN80     IFEQ *ON                                 157666158060
+     C***********LDLNRF    CHAINMCLONCLF             80             157666158060
+     C***********          ENDIF                                    157666158060
+     C************IN80     IFEQ *ON                                 148866158060
+     C************LOCK     IN   LDA                        *********148866158060
+     C***********          MOVELLDLNRF    DBKEY            *  DBERR*148866158060
+     C***********          Z-ADD4         DBASE            ******** 148866158060
+     C***********          MOVEL'CLOANCL 'DBFILE                    148866158060
+     C***********          MOVEL'LER430  'DBPGM                     148866158060
+     C***********          OUT  LDA                                 148866158060
+     C***********          EXSR *PSSR                               148866158060
+     C***********          ELSE                                     148866158060
+     C***********A6DICB    IFEQ '1'                                 148866158060
+     C***********A6DICB    OREQ '4'                                 148866158060
+     C***********ICBS      IFEQ 1                                   148866158060
+     C***********ICBS      OREQ 4                                   148866158060
+     C***********          Z-ADD365       CALCB   30                      158060
+     C***********          ELSE                                           158060
+     C***********A6DICB    OREQ '6'                                 148866158060
+     C***********ICBS      IFEQ 6                                   148866158060
+     C***********          Z-ADD366       CALCB                           158060
+     C***********          ELSE                                           158060
+     C***********          Z-ADD360       CALCB                           158060
+     C***********          END                                            158060
+     C***********          END                                            158060
+     C***********          END                                      148866158060
+     C                     END
+      *
+     C           A6NBDP    ADD  1         DP      10
+      *
+      ** GET CURRENT MONTH NUMBER FOR ACCESSING ARRAYS.
+     C                     Z-ADD1         MN      20
+     C           MMM       LOKUPGMNM,MN                  10
+      *
+      ** DEFINE WORK FIELDS
+     C                     Z-ADD0         MTOT    20
+     C                     Z-ADD0         YTOT    30
+     C                     Z-ADD0         WRK15  150
+     C                     Z-ADD0         WRK158 158
+     C                     Z-ADD0         TOTIPP 150                      187394
+     C                     Z-ADD0         IPPMGN 150                      187394
+     C                     Z-ADD0         IPPAGG 150                      187394
+     C           *LIKE     DEFN WRK15     CMAG
+     C           *LIKE     DEFN WRK15     AMAG
+     C           *LIKE     DEFN WRK15     DMAG
+     C           *LIKE     DEFN WRK15     TMAG
+     C           *LIKE     DEFN WRK15     CMSAV                           148866
+     C           *LIKE     DEFN WRK15     CYSAV                           148866
+     C           *LIKE     DEFN WRK15     CYAG
+     C           *LIKE     DEFN WRK15     AYAG
+     C           *LIKE     DEFN WRK15     DYAG
+     C           *LIKE     DEFN WRK15     TYAG
+     C           *LIKE     DEFN WRK15     CMMG
+     C           *LIKE     DEFN WRK15     AMMG
+     C           *LIKE     DEFN WRK15     DMMG
+     C           *LIKE     DEFN WRK15     TMMG
+     C           *LIKE     DEFN WRK15     CYMG
+     C           *LIKE     DEFN WRK15     AYMG
+     C           *LIKE     DEFN WRK15     DYMG
+     C           *LIKE     DEFN WRK15     TYMG
+     C           *LIKE     DEFN WRK15     CMFE
+     C           *LIKE     DEFN WRK15     AMFE
+     C           *LIKE     DEFN WRK15     DMFE
+     C           *LIKE     DEFN WRK15     TMFE
+     C           *LIKE     DEFN WRK15     CYFE
+     C           *LIKE     DEFN WRK15     AYFE
+     C           *LIKE     DEFN WRK15     DYFE
+     C           *LIKE     DEFN WRK15     TYFE
+     C           *LIKE     DEFN QLMAVB    CUSMAV                          148866
+     C           *LIKE     DEFN QLMAVB    ACOMAV                          148866
+     C           *LIKE     DEFN QLMAVB    DEPMAV                          148866
+     C           *LIKE     DEFN QLMAVB    TOTMAV                          148866
+     C           *LIKE     DEFN QLMAVB    CUSYAV                          148866
+     C           *LIKE     DEFN QLMAVB    ACOYAV                          148866
+     C           *LIKE     DEFN QLMAVB    DEPYAV                          148866
+     C           *LIKE     DEFN QLMAVB    TOTYAV                          148866
+     C*
+      *                                                                   052572
+      * Calculated number of actual days in the month                     052572
+     C***********BJRDNB    SUB  STARMO    MTOT                      052572157377
+     C********** LASTLN    SUB  STARMO    MTOT                                         157377 225714
+     C           STARMO    IFGT WPRFDT                                                        225714
+     C           WPRFDT    SUB  WSTART    MTOT                                                225714
+     C                     ELSE                                                               225714
+     C           WPRFDT    SUB  STARMO    MTOT                                                225714
+     C                     ENDIF                                                              225714
+     C                     ADD  1         MTOT                            052572
+      *                                                                   052572
+      * Calculated number of actual days in the year                      052572
+     C********** BJRDNB    SUB  BJPEYD    YTOT                      052572157377
+     C********** LASTLN    SUB  BJPEYD    YTOT                                         157377 255714
+     C           WPRFDT    SUB  BJPEYD    YTOT                                                225714
+      *                                                                   052572
+     C           KFCLT     KLIST                                          163668
+     C                     KFLD           WBRCA   3                       163668
+     C**********           KFLD           WFCUS   60                                   163668 CSD027
+     C                     KFLD           WFCUS   6                                           CSD027
+     C                     KFLD           WFTYP   30                      163668
+     C                     KFLD           WFSEQ   20                      163668
+      *                                                                   163668
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*    * P S S R -  T O   H A N D L E   A B N O R M A L I T I E S *
+     C*    ~~~~~~~~~    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ *
+     C*    CALLED FROM     :   ALL ABNORMAL CONDITIONS / ERRORS       *
+     C*    CALLS           :   AUDIT                                  *
+     C*                                                               *
+     C*    THIS PROGRAM HANDLES ABNORMAL CONDITIONS SUCH AS READ FAIL *
+     C*    CHAIN FAIL ETC, AND PRODUCES A FORMATTED RPG DUMP          *
+     C*                                                               *
+     C*****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2                                                                   225714
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   GMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   NUMBER OF DAYS IN MONTH
+312831303130313130313031
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

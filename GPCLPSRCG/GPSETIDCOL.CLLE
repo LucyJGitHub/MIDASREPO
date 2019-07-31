@@ -1,0 +1,53 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas GP Set start values for identity columns')      */
+/*********************************************************************/
+/*                                                                   */
+/*       MidasPlus - System Control Module                           */
+/*                                                                   */
+/*       GPSETIDCOL - Set 'start with' values for identity columns   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2005                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CSC025 *CREATE     DATE 03May05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*  MD046248 - Finastra Rebranding                                   */
+/*  CSC025 - Exit program for MidasPlus high availability switchover */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCLF       FILE(QADSPFFD)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+             DLTF       FILE(QTEMP/IDCOLFILES)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/IDCOLFIELD)
+             MONMSG     MSGID(CPF0000)
+             DSPFFD     FILE(T_*) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/IDCOLFILES)
+             CPYF       FROMFILE(QTEMP/IDCOLFILES) +
+                          TOFILE(QTEMP/IDCOLFIELD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) INCCHAR(WHIDC 1 *EQ 'Y')
+             OVRDBF     FILE(QADSPFFD) TOFILE(QTEMP/IDCOLFIELD)
+McLOOP:
+             RCVF
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(McEXIT))
+             RESETMAXID FILE(&WHFILE)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             DMPCLPGM
+             ENDDO
+             GOTO       CMDLBL(McLOOP)
+McEXIT:
+/**/
+ABNOR:
+ENDER:
+             DLTOVR     FILE(QADSPFFD)
+             RETURN
+/**/
+             ENDPGM

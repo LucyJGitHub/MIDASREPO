@@ -1,0 +1,207 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Dealing Module                              */
+/*                                                                   */
+/*       DLC00 - INITIAL FILE SET UP                                 */
+/**************- CALLED BY L1BGIN                                   * *E27937*/
+/*             - CALLED BY SCBEGIN                                  * *E27937*/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *REDUNDANT Date 13Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. 060716            DATE  17JAN94              */
+/*                      036796            DATE  10JAN94              */
+/*                      E46391            DATE  01FEB93              */
+/*                      045949            DATE  07DEC92              */
+/*                      E27937            DATE  03SEP91              */
+/*                      S01319            DATE  23SEP91              */
+/*                      RT0023            DATE  30APR91              */
+/*                      E17109            DATE  21/02/89             */
+/*                      E17109            DATE  21/02/89             */
+/*                      S01117            DATE  19/04/89             */
+/*                      S01179            DATE  10/09/88             */
+/*                      S01129            DATE  28/03/87             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP004 - Replacement for SCBEGIN.                          */
+/*     060716  -  Initialise interest history print flag.            */
+/*     036796  -  OLPOS* AND PRONT* FILES ARE NOW PART OF GENERAL    */
+/*                LEDGER AND ARE INITIALISED IN GLC92                */
+/*       E46391 - Check that dealing module is switched on before    */
+/*                running deals file setup program DL0005            */
+/*                Also, output database error messages to *EXT, and  */
+/*                to MRUNQ/MOPERQ if program terminates abnormally.  */
+/*       045949 - Prevent failure of FDC0010 by                      */
+/*                initialising DTAARA DLMMDF to zero.                */
+/*       E27937 - L1BGIN has been renamed SCBEGIN                    */
+/*       S01319 - Remove redundant processing                        */
+/*       RT0023 - Remove references to STSTAT                        */
+/*       E17109 - Dtaara SESTAT length changed                       */
+/*       S01117 - Multibranching                                     */
+/*       S01179 - AS400 conversion                                   */
+/*                                                                   */
+/*********************************************************************/
+/*********** PGM                                                      /*S01117*/
+/************PGM PARM(&RSEQ &RLEV &RENT)                              /*S01117*/
+             PGM                                                      /*S01117*/
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/**DCL*VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */ /*S01117 036796*/
+/************DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1) VALUE(B) /* RCF+/*036796*/
+/************             level flag (S/C/B)                */ /*S01117 036796*/
+/************DCL        VAR(&RENT) TYPE(*CHAR) LEN(3) VALUE(ALL)    + /*036796*/
+/************             RCF entity code (all/comp/bch)    */ /*S01117 036796*/
+             DCL        VAR(&DLSTAT) TYPE(*CHAR) LEN(256)             /*S01179*/
+/************DCL        VAR(&DLTEMP) TYPE(*CHAR) LEN(256)      //*S01179036796*/
+/*********** DCL        VAR(&STSTAT) TYPE(*CHAR) LEN(256) /*S01179*/ /*RT0023*/
+/*********** DCL        VAR(&SESTAT) TYPE(*CHAR) LEN(63)       /*S01179*E17109*/
+/************DCL        VAR(&SESTAT) TYPE(*CHAR) LEN(128)      /*S01179 036796*/
+             DCL        VAR(&CASTATAA) TYPE(*CHAR) LEN(256)           /*S01319*/
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)                /*E46391*/
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*E46391*/
+             DCL        VAR(&DL) TYPE(*CHAR) LEN(2)                   /*E46391*/
+             DCL        VAR(&NOREPLY) TYPE(*CHAR) LEN(1)              /*E46391*/
+/**/
+/**********  DCLDTAARA  DTAARA(DLSTAT)                                  S01179*/
+/**********  DCLDTAARA  DTAARA(DLTEMP)                                  S01179*/
+/**********  DCLDTAARA  DTAARA(STSTAT)                                  S01179*/
+/**********  DCLDTAARA  DTAARA(SESTAT)                          S01129  S01179*/
+/**/
+/**********  RCVDTAARA  DTAARA(DLSTAT)                                  S01179*/
+                                                                      /*E46391*/
+/*  DL must be switched on before DL file setup can be run  */        /*E46391*/
+             RTVDTAARA  DTAARA(MMOD (2 1)) RTNVAR(&DL)                /*E46391*/
+             IF COND(&DL *NE 'Y') THEN(DO)                            /*E46391*/
+             SNDPGMMSG  MSG('Switch on DL via Mode 1 Modules +
+                          Maintainance option before running +
+                          Dealing File Setup program') +
+                          TOMSGQ(MOPERQ MRUNQ)                        /*E46391*/
+                                                                      /*E46391*/
+/*  CALL SCC0010 TO INFORM USER THAT PGM CANNOT BE RUN NOW    */      /*E46391*/
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('Switch on DL +
+                          via Mode 1 Modules Maint. option')          /*E46391*/
+             CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE('before +
+                          running Dealing File Setup program')        /*E46391*/
+             CALL       PGM(SCC0010) PARM('DLC00' 'ENTER' +
+                             &NOREPLY)                                /*E46391*/
+             GOTO       CMDLBL(END)                                   /*E46391*/
+             ENDDO                                                    /*E46391*/
+                                                                      /*E46391*/
+             CHGJOB    SWS(00000000)                                  /*E46391*/
+                                                                      /*E46391*/
+             RTVDTAARA  DTAARA(DLSTAT) RTNVAR(&DLSTAT)                /*S01179*/
+/**/
+             SNDPGMMSG  MSG('Initial Dealing file setup')  TOMSGQ(MOPERQ)
+/**/
+             IF         COND(%SUBSTRING(&DLSTAT 1 5) *EQ '     ') THEN(DO)
+/**/
+                   CLRPFM     FILE(FDDLNMPP)                          /*S01319*/
+                   CLRPFM     FILE(FDDAYSPP)                          /*S01319*/
+                   CLRPFM     FILE(FDMNTHPP)                          /*S01319*/
+                   CLRPFM     FILE(CANDLNPP)                          /*S01319*/
+                   CLRPFM     FILE(FXCDAFPP)                          /*S01319*/
+                   CLRPFM     FILE(FXMCOMPP)                          /*S01319*/
+                   CLRPFM     FILE(MMCDAFPP)                          /*S01319*/
+                   CLRPFM     FILE(MMMCOMPP)                          /*S01319*/
+/**/                                                                  /*S01319*/
+/** RETRIEVE NO. OF DEALS FIELD FROM DTAARA                           /*S01319*/
+                   RTVDTAARA DTAARA(*LIBL/CASTATAA) RTNVAR(&CASTATAA) /*S01319*/
+/**/                                                                  /*S01319*/
+/*  Initialise DTAARA/CASTATAA                                        /*S01319*/
+                   CHGDTAARA  DTAARA(*LIBL/CASTATAA (1 5)) +
+                   VALUE('00500')                                     /*S01319*/
+/*  Initialise DTAARA/DLMMDF                                          /*045949*/
+             CHGDTAARA  DTAARA(*LIBL/DLMMDF (1 16)) +
+                          VALUE('0000000000000000')                   /*045949*/
+/**/                                                                  /*S01319*/
+                   CALL       PGM(DL0005)
+                                                                      /*E46391*/
+/*  If database error, output message to user  */                     /*E46391*/
+                   IF         COND(%SWITCH(XXXXXX11)) THEN(DO)        /*E46391*/
+                   RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)                /*E46391*/
+                   CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))      /*E46391*/
+                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                               TOMSGQ(MOPERQ MRUNQ) TOPGMQ(*EXT)      /*E46391*/
+                   CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('Database +
+                               error in DL File Setup program')       /*E46391*/
+                   CALL       PGM(SCC0010) PARM('DLC00' 'ENTER' +
+                               &NOREPLY)                              /*E46391*/
+                   GOTO       CMDLBL(END)                             /*E46391*/
+                   ENDDO                                              /*E46391*/
+/**/
+                   IF        COND(%SWITCH(1XXXXXXX)) THEN(CHGDTAARA +
+                            DTAARA(DLSTAT) VALUE('99999NN      NNNOLD +
+                                              YNNN'))                 /*036796*/
+/************               DTAARA(DLSTAT) VALUE('99999NN0505  NNNOLD +
+/************                                 YNNN'))                 /*036796*/
+                   ELSE       CMD(CHGDTAARA DTAARA(DLSTAT) +
+                                VALUE('99999NN      NNNOLD NNNN'))    /*036796*/
+/************                   VALUE('99999NN0505  NNNOLD NNNN'))    /*036796*/
+/*********         RCVDTAARA  DTAARA(DLSTAT)                            S01179*/
+                   CHGDTAARA  DTAARA(DLSTAT (256 1)) VALUE('N')       /*060716*/
+                   RTVDTAARA  DTAARA(DLSTAT) RTNVAR(&DLSTAT)          /*S01179*/
+                   CHGDTAARA  DTAARA(DLTEMP) VALUE(&DLSTAT)
+/**/
+/**/
+/**/
+/*****IF*SECURITY*TRADING*IN*SYSTEM*-*OLPOS,*PRONO*&*PRONT*ALREADY */ /*036796*/
+/*****EXIST*-*SO*ONLY*PART*OF*DLC00X*TO*RUN*IS*DLC01*              */ /*036796*/
+/**/
+/********          RCVDTAARA  DTAARA(STSTAT)                            S01179*/
+/********          RCVDTAARA  DTAARA(SESTAT)                     S01129 S01179*/
+/**/
+/******************RTVDTAARA DTAARA(STSTAT) RTNVAR(&STSTAT)/*S01179*/ /*RT0023*/
+/******************RTVDTAARA  DTAARA(SESTAT) RTNVAR(&SESTAT)   /*S01179 036796*/
+/**/
+/**********       IF         COND(%SST(&STSTAT 28 1) = ' ') THEN(DO)*  *S01129*/
+/******************IF         COND(%SST(&STSTAT 28 1) = ' ' *OR +
+                       %SST(&SESTAT 28 1) = ' ') THEN(DO)  *S01129*/  /*RT0023*/
+/******************IF  COND(%SST(&SESTAT 28 1) = ' ') THEN(DO) /*RT0023 036796*/
+/******************** CALL       PGM(DLC00X)                          /*S01117*/
+/******************** CALL       PGM(DLC00X) PARM(&RSEQ &RENT) /*S01117 036796*/
+/******************ENDDO                                           */ /*036796*/
+/******************ELSE       (DO)                                 */ /*036796*/
+                      CALL       PGM(DLC01)
+/******************ENDDO                                           */ /*036796*/
+/**/
+/******************IF     COND(%SWITCH(XXXXXXX0)) THEN(SNDPGMMSG +
+/******************       MSG('Dealing files set up') TOMSGQ(MOPERQ)) /*E46391*/
+                   IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)
+                   SNDPGMMSG  MSG('Dealing files set up') +
+                               TOMSGQ(MRUNQ)                          /*E46391*/
+                   CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('Dealing +
+                               files set up succesfully')             /*E46391*/
+                   CALL       PGM(SCC0010) PARM('DLC00' 'ENTER' +
+                               &NOREPLY)                              /*E46391*/
+                   GOTO       CMDLBL(END)                             /*E46391*/
+                   ENDDO                                              /*E46391*/
+/**/
+                ENDDO
+/**/
+/************ELSE        CMD(SNDPGMMSG    MSG('Dealing files already +
+/************                                exist')  TOMSGQ(MOPERQ)) /*E46391*/
+             ELSE          CMD(DO)                                    /*E46391*/
+                   SNDPGMMSG  MSG('Dealing files already exist') +
+                                TOMSGQ(MOPERQ MRUNQ)                  /*E46391*/
+                   CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('Dealing +
+                                files already exist')                 /*E46391*/
+                   CALL       PGM(SCC0010) PARM('DLC00' 'ENTER' +
+                               &NOREPLY)                              /*E46391*/
+                   GOTO       CMDLBL(END)                             /*E46391*/
+                   ENDDO                                              /*E46391*/
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+/*********ENDPGM                                                      /*E46391*/
+END:      ENDPGM                                                      /*E46391*/

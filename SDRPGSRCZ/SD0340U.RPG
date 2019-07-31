@@ -1,0 +1,837 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Check deletion of securities clients')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0340U - Check Securities Trading Files for Customer Refs.  *
+      *                                                               *
+      *  Function:  This program checks securities files for any      *
+      *             live customer references.                         *
+      *                                                               *
+      *  Called By: SD0010U                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  NOTE: PLEASE REFER TO THE STANDING DATA MODULE PROFILE       *
+      *        VOLUME 1 FOR THE USE OF DATA STRUCTURES STRNG2         *
+      *        AND STRNG3.                                            *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD037870A          Date 25May16               *
+      *                 AR906833           Date 18Dec12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 234300             Date 29Sep06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 163203             Date 10Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAP003             Date 17May98               *
+      *                 091860             Date 27Aug96               *
+      *                 077335             Date 03NOV94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD037870A - Unable to delete customer (Reopen)               *
+      *  AR906833 - Allows deletion of Sec. Trading Customers that    *
+      *             are still needed by the system.                   *
+      *           - Modify validation for TRADSD, CDEPPD and UDEPPD   *
+      *             when deleting customer.                           *
+      *           - Block deletion of securities customers with       *
+      *             settled depot movement transactions (RECI = 'S'). *
+      *           - Reconstruct the purpose of fix 091860 in order    *
+      *             to prevent the deletion of securities customers   *
+      *             that are still being used by the system.          *
+      *             Applied AR663084/A. (Child: AR906834)             *
+      *  234300 - Recompiled over changed in PF/HSTTRD.               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  163203 - Custormer deletion screen hangs.                    *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+      *  CAP003 - Conversion of SE inputs into modular structure to   *
+      *           use as APIs. Recompiled to adopt changes in DPTMVD. *
+      *  091860 - Pgm is slow because it reads all of TRADSD, HSTTRD  *
+      *           etc for each customer. Fix is to use logical files  *
+      *           and access using SETLL and READE.                   *
+      *         - Pgm was reading INVTPD in error in the processing   *
+      *           for SLIMH - change to read SLIMH instead.           *
+      *  077335 - Created for this error fix.                         *
+      *           Moved the processing of checking the Securities     *
+      *           files from SD0010U into this program.               *
+      *           If this program is running as part of the auto-     *
+      *           deletion processing then quit the program as soon   *
+      *           as a customer reference is found.                   *
+      *                                                               *
+      *****************************************************************
+     FSECTI   IF  E           K        DISK
+     F*CDEPPD*IF**E********************DISK                               091860
+     FCDEPC   IF  E           K        DISK                               091860
+     FCUDEP   IF  E           K        DISK
+     F            CDEPPDF                           KRENAMECDEPPD1
+     FINVTPD  IF  E                    DISK
+     FSLIMH   IF  E           K        DISK
+     FSTDSED  IF  E           K        DISK
+     FTRADCU1 IF  E           K        DISK                               091860
+     FTRADCU2 IF  E           K        DISK                               091860
+     FHSTTCU1 IF  E           K        DISK                               091860
+     FHSTTCU2 IF  E           K        DISK                               091860
+     FPOSETCU IF  E           K        DISK                               091860
+     F*TRADSD*IF**E********************DISK                               091860
+     F*HSTTRD*IF**E********************DISK                               091860
+     F*POSETD*IF**E********************DISK                               091860
+     FDPTMVD  IF  E                    DISK
+     F/COPY WNCPYSRC,SD0340UF01
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      *
+     ISTRNG2      DS                            200
+     I                                        1 200 WUCDS2
+     I                                       13  13 WUD213
+     I                                       14  14 WUD214
+     I                                       15  15 WUD215
+     I                                       16  16 WUD216
+     I                                       17  17 WUD217
+     I                                       19  19 WUD219
+     I                                       20  20 WUD220
+     I                                       21  21 WUD221
+     I                                       22  22 WUD222
+     I                                       23  23 WUD223
+     I                                       24  24 WUD224
+     I                                       25  25 WUD225
+     I                                       26  26 WUD226
+     I                                       27  27 WUD227
+     I                                       28  28 WUD228
+     I                                       29  29 WUD229
+      *
+     ISTRNG3      DS                            200
+     I                                        1 200 WUCDS3
+     I                                        1   1 WUD401
+     I                                        2   2 WUD402
+     I                                        3   3 WUD403
+     I                                        4   4 WUD404
+     I                                        5   5 WUD405
+     I                                        6   6 WUD406
+     I                                        7   7 WUD407
+     I                                        8   8 WUD408
+     I                                        9   9 WUD409
+     I                                       10  10 WUD410
+     I/COPY WNCPYSRC,SD0340UI01
+      *
+      *****************************************************************
+      * Indicators:                                                   *
+      * 99 - End of processing for CDEPPD                             *
+      * 98 - End of processing for CUDEP                              *
+      * 97 - End of processing for STDSED                             *
+      * 96 - End of processing for TRADSD                             *
+      * 95 - End of processing for DPTMVD                             *
+      * 94 - End of processing for POSETD                             *
+      * 93 - End of processing for SLIMH                              *
+      * 92 - End of processing for SECTI                              *
+      * 91 - End of processing for INVTPD                             *
+      * 90 - End of processing for HSTTRD                             *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PCNUM   6
+     C                     PARM           W0RTN   7
+     C                     PARM           PCDS2 200
+     C                     PARM           PCDS3 200
+     C                     PARM           QUIT    1
+     C                     PARM           PACTN   1                                         AR906833
+     C/COPY WNCPYSRC,SD0340UC05
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVE *BLANKS   W0RTN                           091860
+     C                     MOVEACPY@      BIS@   80
+      *
+     C**********           MOVE PCNUM     NCNUM   60                                          CSD027
+     C                     MOVE PCNUM     NCNUM   6                                           CSD027
+     C                     MOVELPCDS2     WUCDS2
+     C                     MOVELPCDS3     WUCDS3
+      *
+      ** If Quit is equal to 'L', close down the program.
+      ** Because when the program runs during the close of business
+      ** the value of QUIT is 'Y' and LR is not set ON, this causes
+      ** SDC0013 to fall over while ending journalling.
+      *
+     C           QUIT      IFEQ 'L'
+     C                     SETON                         LR
+     C                     RETRN
+     C                     END
+      *
+      ** Check for customer references in CDEPPD.
+      ** LF CDEPC - KEY = CDCN                                            091860
+      *
+     C/COPY WNCPYSRC,SD0340US01
+      *
+     C***********1         SETLLCDEPPD               9999                 091860
+     C**N99******          READ CDEPPD                   99               091860
+     C           NCNUM     SETLLCDEPC                9999                 091860
+     C  N99      NCNUM     READECDEPC                    99               091860
+     C           *IN99     DOWEQ'0'
+      *
+     C***********CDCN      IFEQ NCNUM                                     091860
+     C***********CDPT      OREQ NCNUM                                     091860
+     C           PACTN     IFEQ 'C'                                                         AR906833
+      *                                                                                     AR906833
+     C           CDNT      IFNE 0                                                           AR906833
+     C           CDNV      ORNE 0                                                           AR906833
+     C           CDNS      ORNE 0                                                           AR906833
+     C                     MOVEL'REJECT'  W0RTN                                             AR906833
+     C                     MOVE 'F'       WUD213                                            AR906833
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+     C                     GOTO ESC99                                                       AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C                     ELSE                                                             AR906833
+      *                                                                                     AR906833
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD213
+     C           QUIT      IFEQ 'Y'
+     C**********           RETRN                                                           MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     END
+     C                     GOTO ESC99
+      *                                                                                     AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C***********          END                                            091860
+      *
+     C***********          READ CDEPPD                   99               091860
+     C           NCNUM     READECDEPC                    99               091860
+      *
+     C                     END
+     C           ESC99     TAG
+      *
+     C/COPY WNCPYSRC,SD0340US02
+      *
+      ** Check for customer references in CUDEP (UDEPPD).
+      **                             + in CUDEP (CDEPPD).                 091860
+      * LF CUDEP - PF CDEPPD KEY CDPT/CDPA/CDSN                           091860
+      *            PF UDEPPD KEY UDPT/UDBA/UDSN                           091860
+      *
+     C/COPY WNCPYSRC,SD0340US03
+      *
+     C           NCNUM     SETLLCDEPPD1              9898                 091860
+     C  N98      NCNUM     READECDEPPD1                  98               091860
+     C           *IN98     DOWEQ'0'                                       091860
+      *
+     C           CDPT      IFEQ NCNUM                                     091860
+     C           RECI      ANDEQ'D'                                                         AR906833
+      *                                                                                     AR906833
+     C           PACTN     IFEQ 'C'                                                         AR906833
+      *                                                                                     AR906833
+     C           CDNT      IFNE 0                                                           AR906833
+     C           CDNV      ORNE 0                                                           AR906833
+     C           CDNS      ORNE 0                                                           AR906833
+     C                     MOVEL'REJECT'  W0RTN                                             AR906833
+     C                     MOVE 'F'       WUD213                                            AR906833
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+     C                     GOTO ESC98A                                                      AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C                     ELSE                                                             AR906833
+      *                                                                                     AR906833
+     C                     MOVEL'REJECT'  W0RTN                           091860
+     C                     MOVE 'F'       WUD213                          091860
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+     C                     GOTO ESC98A                                                      AR906833
+      *                                                                                     AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C                     END                                            091860
+      *                                                                                     AR906833
+     C********** QUIT      IFEQ 'Y'                                                  091860 AR906833
+     C**********           RETRN                                                     091860 AR906833
+     C**********           END                                                       091860 AR906833
+     C**********           GOTO ESC98A                                               091860 AR906833
+      *                                                                   091860
+     C           NCNUM     READECDEPPD1                  98               091860
+      *                                                                   091860
+     C                     END                                            091860
+     C           ESC98A    TAG                                            091860
+      *                                                                   091860
+      *                                                                   091860
+     C***********NCNUM     SETLLCUDEP                9898                 091860
+     C           NCNUM     SETLLUDEPPDF              9898                 091860
+     C**N98******          READ CUDEP                    98               091860
+     C  N98      NCNUM     READEUDEPPDF                  98               091860
+     C           *IN98     DOWEQ'0'
+      *
+     C***********UDPT      IFEQ NCNUM                                     091860
+     C           RECI      IFEQ 'D'                                                         AR906833
+      *                                                                                     AR906833
+     C           PACTN     IFEQ 'C'                                                         AR906833
+      *                                                                                     AR906833
+     C           UDNV      IFNE 0                                                           AR906833
+     C           UDNT      ORNE 0                                                           AR906833
+     C           UDNS      ORNE 0                                                           AR906833
+     C                     MOVEL'REJECT'  W0RTN                                             AR906833
+     C                     MOVE 'F'       WUD229                                            AR906833
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+     C                     GOTO ESC98                                                       AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C                     ELSE                                                             AR906833
+      *                                                                                     AR906833
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD229
+     C           QUIT      IFEQ 'Y'
+     C**********           RETRN                                                           MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     END
+     C                     GOTO ESC98
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C                     ENDIF                                                            AR906833
+     C***********          END                                            091860
+      *
+     C***********          READ CUDEP                    98               091860
+     C           NCNUM     READECUDEP                    98               091860
+      *
+     C                     END
+     C           ESC98     TAG
+      *
+     C/COPY WNCPYSRC,SD0340US04
+      *
+      ** Check for customer references in STDSED.
+      *
+     C/COPY WNCPYSRC,SD0340US05
+      *
+     C           *LOVAL    SETLLSTDSED               9797
+     C  N97                READ STDSED                   97
+     C           *IN97     DOWEQ'0'
+      *
+     C           RECI      IFEQ 'D'
+      *
+     C           CSTM      IFEQ NCNUM
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD227
+     C           QUIT      IFEQ 'Y'
+     C**********           RETRN                                                           MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     END
+     C                     END
+      *
+     C           SDTO      IFEQ NCNUM
+     C           SDFO      OREQ NCNUM
+     C           SDTT      OREQ NCNUM
+     C           SFAT      OREQ PCNUM
+     C           SDFT      OREQ NCNUM
+     C           SFAF      OREQ PCNUM
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD228
+     C           QUIT      IFEQ 'Y'
+     C**********           RETRN                                                           MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,SD0340UC01
+      *
+     C           WUD227    IFEQ 'F'
+     C           WUD228    ANDEQ'F'
+     C                     GOTO ESC97
+     C                     END
+      *
+     C                     END
+      *
+     C                     READ STDSED                   97
+      *
+     C                     END
+     C           ESC97     TAG
+      *
+     C/COPY WNCPYSRC,SD0340US06
+      *
+      ** Check for customer references in TRADSD.
+      *
+     C/COPY WNCPYSRC,SD0340US07
+      *
+     C***********1         SETLLTRADSD               9696                 091860
+     C**N96******          READ TRADSD                   96               091860
+     C********** NCNUM     SETLLTRADCU1              9696                            091860 AR906833
+     C**N96***** NCNUM     READETRADCU1                  96                          091860 AR906833
+     C********** *IN96     DOWEQ'0'                                                         AR906833
+      *
+     C***********RECI      IFNE '*'                                       091860
+      *
+     C********** DELT      IFEQ NCNUM                                                       AR906833
+     C********** DELF      OREQ NCNUM                                                       AR906833
+     C**********           MOVEL'REJECT'  W0RTN                                             AR906833
+     C**********           MOVE 'F'       WUD222                                            AR906833
+     C**********           END                                                       091860 AR906833
+     C********** TCNR      IFEQ NCNUM                                                091860 AR906833
+     C**********           MOVEL'REJECT'  W0RTN                                      091860 AR906833
+     C**********           MOVE 'F'       WUD221                                     091860 AR906833
+     C**********           END                                                       091860 AR906833
+     C********** QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                            AR906833
+     C**********           END                                                              AR906833
+     C***********          END                                            091860
+      *
+     C***********DFFA      IFEQ PCNUM                                     091860
+     C***********DTFA      OREQ PCNUM                                     091860
+     C***********TCNR      OREQ NCNUM                                     091860
+     C***********          MOVEL'REJECT'  W0RTN                           091860
+     C***********          MOVE 'F'       WUD221                          091860
+     C***********QUIT      IFEQ 'Y'                                       091860
+     C***********          RETRN                                          091860
+     C***********          END                                            091860
+     C***********          END                                            091860
+      *
+     C********** WUD221    IFEQ 'F'                                                         AR906833
+     C********** WUD222    ANDEQ'F'                                                         AR906833
+     C**********           GOTO ESC96                                                       AR906833
+     C**********           END                                                              AR906833
+      *
+     C***********          END                                            091860
+      *
+     C***********          READ TRADSD                   96               091860
+     C********** NCNUM     READETRADCU1                  96                          091860 AR906833
+      *
+     C**********           END                                                              AR906833
+      *                                                                                     AR906833
+     C           NCNUM     CHAINTRADSD1              96                                     AR906833
+      *                                                                                     AR906833
+     C           *IN96     IFEQ '0'                                                         AR906833
+      *                                                                                     AR906833
+     C                     MOVEL'REJECT'  W0RTN                                             AR906833
+     C                     MOVE 'F'       WUD222                                            AR906833
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C                     ELSE                                                             AR906833
+      *                                                                                     AR906833
+     C           NCNUM     CHAINTRADSD2              96                                     AR906833
+     C           *IN96     IFEQ '0'                                                         AR906833
+     C                     MOVEL'REJECT'  W0RTN                                             AR906833
+     C                     MOVE 'F'       WUD222                                            AR906833
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C           NCNUM     CHAINTRADSD3              96                                     AR906833
+     C           *IN96     IFEQ '0'                                                         AR906833
+     C                     MOVEL'REJECT'  W0RTN                                             AR906833
+     C                     MOVE 'F'       WUD221                                            AR906833
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C********** ESC96     TAG                                                              AR906833
+      *
+     C********** PCNUM     SETLLTRADCU2              9696                            091860 AR906833
+     C**N96***** PCNUM     READETRADCU2                  96                          091860 AR906833
+     C********** *IN96     DOWEQ'0'                                                  091860 AR906833
+      *                                                                              091860 AR906833
+     C**********           MOVEL'REJECT'  W0RTN                                      091860 AR906833
+     C**********           MOVE 'F'       WUD221                                     091860 AR906833
+     C********** QUIT      IFEQ 'Y'                                                  091860 AR906833
+     C**********           RETRN                                                     091860 AR906833
+     C**********           END                                                       091860 AR906833
+      *                                                                              091860 AR906833
+     C**********           GOTO ESC96B                                               091860 AR906833
+      *                                                                              091860 AR906833
+     C********** PCNUM     READETRADCU2                  96                          091860 AR906833
+      *                                                                              091860 AR906833
+     C**********           END                                                       091860 AR906833
+     C********** ESC96B    TAG                                                       091860 AR906833
+      *                                                                              091860 AR906833
+     C           PCNUM     CHAINTRADSD21             96                                     AR906833
+      *                                                                                     AR906833
+     C           *IN96     IFEQ '0'                                                         AR906833
+      *                                                                                     AR906833
+     C                     MOVEL'REJECT'  W0RTN                                             AR906833
+     C                     MOVE 'F'       WUD221                                            AR906833
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C                     ELSE                                                             AR906833
+      *                                                                                     AR906833
+     C           PCNUM     CHAINTRADSD22             96                                     AR906833
+     C           *IN96     IFEQ '0'                                                         AR906833
+     C                     MOVEL'REJECT'  W0RTN                                             AR906833
+     C                     MOVE 'F'       WUD221                                            AR906833
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C/COPY WNCPYSRC,SD0340US08
+      *
+      ** Check for customer references in DPTMVD.
+      *
+     C/COPY WNCPYSRC,SD0340US09
+      *
+     C           1         SETLLDPTMVD               9595
+     C  N95                READ DPTMVD                   95
+     C           *IN95     DOWEQ'0'
+      *
+     C           RECI      IFEQ 'D'
+     C           RECI      OREQ 'S'                                                         AR906833
+      *
+     C           DPID      IFEQ NCNUM
+     C           DPOD      OREQ NCNUM
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD214
+     C           QUIT      IFEQ 'Y'
+     C**********           RETRN                                                           MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     END
+     C                     END
+      *
+     C           DPBN      IFEQ NCNUM
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD215
+     C           QUIT      IFEQ 'Y'
+     C**********           RETRN                                                           MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C           RECI      IFEQ 'R'
+      *
+     C           DPID      IFEQ NCNUM
+     C           DPOD      OREQ NCNUM
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD216
+     C           QUIT      IFEQ 'Y'
+     C**********           RETRN                                                           MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     END
+     C                     END
+      *
+     C           DPBN      IFEQ NCNUM
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD217
+     C           QUIT      IFEQ 'Y'
+     C**********           RETRN                                                           MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C/COPY WNCPYSRC,SD0340UC02
+     C           WUD214    IFEQ 'F'
+     C           WUD215    ANDEQ'F'
+     C           WUD216    ANDEQ'F'
+     C           WUD217    ANDEQ'F'
+     C/COPY WNCPYSRC,SD0340UC03
+     C                     GOTO ESC95
+     C/COPY WNCPYSRC,SD0340UC04
+     C                     END
+      *
+     C                     READ DPTMVD                   95
+      *
+     C                     END
+     C           ESC95     TAG
+      *
+     C/COPY WNCPYSRC,SD0340US10
+      *
+      ** Check for customer references in POSETD.
+      *
+     C/COPY WNCPYSRC,SD0340US11
+      *
+     C***********1         SETLLPOSETD               9494                 091860
+     C**N94******          READ POSETD                   94               091860
+     C           NCNUM     SETLLPOSETCU              9494                 091860
+     C  N94      NCNUM     READEPOSETCU                  94               091860
+     C           *IN94     DOWEQ'0'
+      *
+     C***********RECI      IFEQ 'D'                                       091860
+     C***********PCPY      ANDEQNCNUM                                     091860
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD224
+     C           QUIT      IFEQ 'Y'
+     C**********           RETRN                                                           MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     END
+     C                     GOTO ESC94
+     C***********          END                                            091860
+      *
+     C***********          READ POSETD                   94               091860
+     C           NCNUM     READEPOSETCU                  94               091860
+      *
+     C                     END
+     C           ESC94     TAG
+      *
+     C/COPY WNCPYSRC,SD0340US12
+      *
+      ** Check for customer references in SLIMH.
+      *
+     C/COPY WNCPYSRC,SD0340US13
+      *
+     C           NCNUM     SETLLSLIMH                9393
+     C  N93      NCNUM     READESLIMH                    93
+     C           *IN93     DOWEQ'0'
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD226
+     C           QUIT      IFEQ 'Y'
+     C**********           RETRN                                                           MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     END
+     C                     GOTO ESC93
+     C                     END
+      *
+     C***********          READ INVTPD                   93               091860
+     C           NCNUM     READESLIMH                    93               091860
+      *
+     C                     END
+     C           ESC93     TAG
+      *
+     C/COPY WNCPYSRC,SD0340US14
+      *
+      ** Check for customer references in SECTI (SECTYD).
+      *
+     C/COPY WNCPYSRC,SD0340US15
+      *
+     C           NCNUM     SETLLSECTI                9292
+     C  N92      NCNUM     READESECTI                    92
+     C           *IN92     DOWEQ'0'
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD225
+     C           QUIT      IFEQ 'Y'
+     C**********           RETRN                                                           MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     END
+     C                     GOTO ESC92
+     C                     END
+      *
+     C           NCNUM     READESECTI                    92
+      *
+     C                     END
+     C           ESC92     TAG
+      *
+     C/COPY WNCPYSRC,SD0340US16
+      *
+      ** Check for customer references in INVTPD.
+      *
+     C/COPY WNCPYSRC,SD0340US17
+      *
+     C           1         SETLLINVTPD               9191
+     C  N91                READ INVTPD                   91
+     C           *IN91     DOWEQ'0'
+      *
+     C           RECI      IFEQ 'D'
+      *
+     C           SDC1      IFEQ NCNUM
+     C           SDC2      OREQ NCNUM
+     C           SDC3      OREQ NCNUM
+     C                     MOVEL'REJECT'  W0RTN
+     C                     MOVE 'F'       WUD223
+     C           QUIT      IFEQ 'Y'
+     C**********           RETRN                                                           MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     END
+     C                     GOTO ESC91
+     C                     END
+      *
+     C                     END
+      *
+     C                     READ INVTPD                   91
+      *
+     C                     END
+     C           ESC91     TAG
+      *
+     C/COPY WNCPYSRC,SD0340US18
+      *
+      ** Check for customer references in HSTTRD.
+      *
+     C/COPY WNCPYSRC,SD0340US19
+      *
+     C***********1         SETLLHSTTRD               9090                 091860
+     C**N90******          READ HSTTRD                   90               091860
+     C********** NCNUM     SETLLHSTTCU1              9090                            091860 AR906833
+     C**N90***** NCNUM     READEHSTTCU1                  90                          091860 AR906833
+     C********** *IN90     DOWEQ'0'                                                         AR906833
+      *
+     C********** DELT      IFEQ NCNUM                                                       AR906833
+     C********** DELF      OREQ NCNUM                                                       AR906833
+     C**********           MOVEL'REJECT'  W0RTN                                             AR906833
+     C**********           MOVE 'F'       WUD220                                            AR906833
+     C**********           END                                                       091860 AR906833
+     C********** TCNR      IFEQ NCNUM                                                091860 AR906833
+     C**********           MOVEL'REJECT'  W0RTN                                      091860 AR906833
+     C**********           MOVE 'F'       WUD221                                     091860 AR906833
+     C**********           END                                                       091860 AR906833
+     C********** QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                            AR906833
+     C**********           END                                                              AR906833
+     C***********          END                                            091860
+      *
+     C***********DFFA      IFEQ PCNUM                                     091860
+     C***********DTFA      OREQ PCNUM                                     091860
+     C***********TCNR      OREQ NCNUM                                     091860
+     C***********          MOVEL'REJECT'  W0RTN                           091860
+     C***********          MOVE 'F'       WUD219                          091860
+     C***********QUIT      IFEQ 'Y'                                       091860
+     C***********          RETRN                                          091860
+     C***********          END                                            091860
+     C***********          END                                            091860
+      *
+     C********** WUD219    IFEQ 'F'                                                         AR906833
+     C********** WUD220    ANDEQ'F'                                                         AR906833
+     C**********           GOTO ESC90                                                       AR906833
+     C**********           END                                                              AR906833
+      *
+     C***********          READ HSTTRD                   90               091860
+     C********** NCNUM     READEHSTTCU1                  96                            091860 163203
+     C********** NCNUM     READEHSTTCU1                  90                          163203 AR906833
+      *
+     C**********           END                                                              AR906833
+     C********** ESC90     TAG                                                              AR906833
+      *
+     C           NCNUM     CHAINHSTTRD1              90                                     AR906833
+      *                                                                                     AR906833
+     C           *IN90     IFEQ '0'                                                         AR906833
+      *                                                                                     AR906833
+     C                     MOVEL'REJECT'  W0RTN                                             AR906833
+     C                     MOVE 'F'       WUD220                                            AR906833
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C                     ELSE                                                             AR906833
+      *                                                                                     AR906833
+     C           NCNUM     CHAINHSTTRD2              90                                     AR906833
+     C           *IN90     IFEQ '0'                                                         AR906833
+     C                     MOVEL'REJECT'  W0RTN                                             AR906833
+     C                     MOVE 'F'       WUD220                                            AR906833
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C           NCNUM     CHAINHSTTRD3              90                                     AR906833
+     C           *IN90     IFEQ '0'                                                         AR906833
+     C                     MOVEL'REJECT'  W0RTN                                             AR906833
+     C                     MOVE 'F'       WUD221                                            AR906833
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C********** PCNUM     SETLLHSTTCU2              9696                            091860 AR906833
+     C**N96***** PCNUM     READEHSTTCU2                  96                          091860 AR906833
+     C********** *IN96     DOWEQ'0'                                                  091860 AR906833
+      *                                                                   091860
+     C**********           MOVEL'REJECT'  W0RTN                                      091860 AR906833
+     C**********           MOVE 'F'       WUD221                                     091860 AR906833
+     C********** QUIT      IFEQ 'Y'                                                  091860 AR906833
+     C**********           RETRN                                                     091860 AR906833
+     C**********           END                                                       091860 AR906833
+      *                                                                   091860
+     C**********           GOTO ESC90B                                               091860 AR906833
+      *                                                                   091860
+      *                                                                   091860
+     C********** PCNUM     READEHSTTCU2                  96                          091860 AR906833
+      *                                                                   091860
+     C**********           END                                                       091860 AR906833
+     C********** ESC90B    TAG                                                       091860 AR906833
+      *                                                                   091860
+     C           PCNUM     CHAINHSTTRD21             96                                     AR906833
+      *                                                                                     AR906833
+     C           *IN96     IFEQ '0'                                                         AR906833
+      *                                                                                     AR906833
+     C                     MOVEL'REJECT'  W0RTN                                             AR906833
+     C                     MOVE 'F'       WUD221                                            AR906833
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C                     ELSE                                                             AR906833
+      *                                                                                     AR906833
+     C           PCNUM     CHAINHSTTRD22             96                                     AR906833
+     C           *IN96     IFEQ '0'                                                         AR906833
+     C                     MOVEL'REJECT'  W0RTN                                             AR906833
+     C                     MOVE 'F'       WUD221                                            AR906833
+     C           QUIT      IFEQ 'Y'                                                         AR906833
+     C**********           RETRN                                                  AR906833 MD037870A
+     C                     GOTO PRETRN                                                     MD037870A
+     C                     ENDIF                                                            AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C                     ENDIF                                                            AR906833
+      *                                                                                     AR906833
+     C/COPY WNCPYSRC,SD0340US20
+      *
+      ** If all checks have successfully completed,
+      ** change the return code to 'DELETE'.
+      *
+     C           W0RTN     IFEQ *BLANKS
+     C/COPY WNCPYSRC,SD0340UC06
+     C                     MOVEL'DELETE'  W0RTN
+     C                     END
+      *
+      ** Move failure strings back into the paramerer fields.
+      *
+     C           PRETRN    TAG                                                             MD037870A
+     C                     MOVELWUCDS2    PCDS2
+     C                     MOVELWUCDS3    PCDS3
+      *
+     C           QUIT      IFEQ 'N'
+     C                     SETON                         LR
+     C                     END
+     C                     RETRN                                          091860
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

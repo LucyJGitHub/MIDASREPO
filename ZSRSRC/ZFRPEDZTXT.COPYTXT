@@ -1,0 +1,113 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+  STANDARD SUBROUTINE - ZFRPED
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Purpose:
+  ~~~~~~~~
+   When required to write the amount to an externally-described printer
+   file, or display file.
+   To format an amount field of up to 15 digits, with 0 to 3 decimal
+   places, according to the following standard edit codes:
+              Code      Print commas    Sign, if negative
+               A            YES              CR
+               C            NO               CR
+               J            YES              -
+               L            NO               -
+   The default code is "J", as this is the most commonly used format.
+   There is an option to align all amounts by decimal point.
+ 
+  Notes for when including in RPG pgm for compiling:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC,ZFRPEDZ1 should be included in the 'E' specifications
+   /COPY ZSRSRC,ZFRPEDZ2 should be included in the 'I' specifications
+   /COPY ZSRSRC,ZFRPEDZ3 should be included in the subroutine section
+ 
+   Array:
+   ~~~~~
+ 
+   ZS1     -     (15 x 1 digit numeric)
+ 
+   ZS2     -     (22 x 1A)
+ 
+   Input:
+   ~~~~~
+ 
+   ZFLD15  -     A (15,0) amount field to be edited.
+ 
+   ZDECS   -     A (1,0) No. currency decimal places field.
+ 
+   ZECODE  -     A ( 1A) Edit code.
+ 
+   Procedure:
+   ~~~~~~~~~
+ 
+   1.   If ZECODE is blank, set it to "J".
+ 
+   2.   If ZFLD15 is negative:
+ 
+     2.1   and ZECODE is "A" or "C":
+           move "CR" to position 21 & 22 of array ZS2.
+ 
+     2.2   else (ZECODE is "J" or "L"):
+           move "-" to position 21 of array ZS2.
+ 
+   3.   Starting from the last array of ZS1, built over the input
+        amount ZFLD15
+ 
+     3.1   Determine if the digit is to be output, i.e. if it has a non
+           zero vlaue, or if it is the digit immediately preceding the
+           decimal point.
+ 
+     3.2   If the digit satisfies 3.1, copy the digit to the
+           corresponding place in array ZS2, making allowance for:
+ 
+        3.2.1   The decimal point, if applicable
+ 
+        3.2.1   Commas, if ZECODE is "A" or "J"
+ 
+   4.   Set up the output fields by:
+ 
+     4.1   Moving array ZS2 to field ZOUT22
+ 
+     4.2   According to the number of decimal places move ZOUT22 to
+           ZOUT25 as follows:
+ 
+               Decimal places          End position
+                     0                      21
+                     1                      23
+                     2                      24
+                     3                      25
+ 
+   Output:
+   ~~~~~~
+ 
+   ZOUT22 - (22A) unaligned formatted amount
+ 
+   ZOUT25 - (25A)   aligned formatted amount
+ 
+   example: (for ZOUT25)
+   ~~~~~~~~
+ 
+               xxx,xxx,xxx,xxx,xxx
+                xx,xxx,xxx,xxx,xxx.x
+                 x,xxx,xxx,xxx,xxx.xx
+                   xxx,xxx,xxx,xxx.xxx
+ 

@@ -1,0 +1,236 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Access Program: Module Description')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas ACCESS OBJECTS
+     F*                                                                  *
+     F*     AOMEMOR0 - READ ACCESS TO MODULE DESCR DETAILS FILE          *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*     PREV AMEND NO.                    DATE 00/00/00              *
+     F*                                                                  *
+     F********************************************************************
+     F* ID F  C  H  L  FUNCTION OF INDICATORS
+     F*
+     F*       01       OFF ON THE FIRST RUN
+     F*       90       FILE ERROR
+     F*       91       OPEN ERROR
+     F*       92       CLOSE ERROR
+     F*       93       EMPTY FILE
+     F*       94       END OF FILE
+     F*       95       NO RECORD FOUND
+     F*       96       OPTION ERROR
+     F*       97       NO SELECTION
+     F*       98       CALL ERROR (SDMDSRR)
+     F*       99       CALL ERROR (ZASNMG)
+     F*
+      /EJECT
+     F*FSTART
+      ************************************************************
+     FSDMEMOL1IF  E           K        DISK                           UC
+      * IN  - @EBREJT MODULE  DESC DETAILS
+      ************************************************************
+      /EJECT
+     E*ESTART
+      ************************************************************
+     E                    @MG     1   1 50
+     E*
+     E* Description     : Copyright notice for inclusion in all programs
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright     arr
+      ************************************************************
+      /EJECT
+     I*ISTART
+      ************************************************************
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+     I*
+     IP@MGDA      DS
+     I                                        1  50 @MG
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     ID@FMT     E DSSDMEMOPD
+      * @EBREJT - MODULE DESCR RECORD FORMAT DATA STRUCTURE
+      *
+     IP@FMT     E DSDSFDY
+      * Internal MESG TYPE  code data structure.
+      *
+     IP@MODI      DS                              2
+      * Key slicing data structure (for Record Selection)
+     I                                        1   1 W@SL01
+      *
+      ************************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM           P@MODI  2        I:Key field
+     C                     PARM           P@FMT            O:Format
+      *****************************************************
+      *MAIN
+     C           P@OPTN    IFEQ '*SAME  '
+     C           *IN01     COMP '0'                      91
+     C                     GOTO T@SKIP
+     C                     END
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     939495 ¦ error
+     C                     SETOF                     969798 ¦ indicators
+      *
+      * First call - open file :
+      *
+     C           *IN01     IFEQ '0'                        IF 1 1'st time
+     C                     SETON                     01      Set ind.
+     C                     OPEN SDMEMOL1               91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     END                             FI 1
+      *
+      * Last call - close file and terminate program :
+      *
+     C           P@OPTN    IFEQ '*FREE  '                  IF 2 Free
+     C                     CLOSESDMEMOL1               92    Close file
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C                     SETON                     LR      Set ind.
+     C                     END                             FI 2
+      *
+      * Caller requests first record :
+      *
+     C           P@OPTN    IFEQ '*FIRST '                  IF 3 First rec
+     C           *LOVAL    SETLL@EBREJT              9390    Set file
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*NEXT  ' P@OPTN             Force *Next
+     C                     END                             FI 3
+      *
+      * Caller requests next record :
+      *
+     C           P@OPTN    IFEQ '*NEXT  '                  IF 4 Next rec
+     C                     READ @EBREJT                9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 4
+      *
+      * Caller requests last record :
+      *
+     C           P@OPTN    IFEQ '*LAST  '                  IF 5 Last rec
+     C           *HIVAL    SETGT@EBREJT                90    Set file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*PREV  ' P@OPTN             Force *Prev
+     C                     END                             FI 5
+      *
+      * Caller requests previous record :
+      *
+     C           P@OPTN    IFEQ '*PREV  '                  IF 6 Prev rec
+     C                     READP@EBREJT                9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 6
+      *
+      * Caller requests record indicated by key :
+      *
+     C           P@OPTN    IFEQ '*KEY   '                  IF 7 Keyed
+     C           P@OPTN    OREQ '*VERIFY'                   OR
+     C           W@SL01    IFEQ '?'                        IF 8 selection
+     C                     CALL 'SD2010S'              98    <SELECT>
+     C                     PARM *BLANK    P@RTC2  7          B:Return code
+     C                     PARM *BLANK    P@MODI             B:Key
+     C           P@RTC2    COMP *BLANK               97      No selection
+     C           *IN97     CABEQ'1'       T@SKIP             No selection
+     C           *IN98     CABEQ'1'       T@SKIP             Program error
+     C                     END                             FI 8
+     C           P@MODI    CHAIN@EBREJT              9590    Get record
+     C           *IN95     CABEQ'1'       T@SKIP             No rec found
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 7
+      *
+     C           P@OPTN    IFNE '*KEY   '                  IF 8 invalid
+     C           P@OPTN    ANDNE'*NEXT  '                   parameter
+     C           P@OPTN    ANDNE'*PREV  '
+     C           P@OPTN    ANDNE'*VERIFY'                   AND
+     C           P@OPTN    ANDNE'*FREE  '                   AND
+     C                     SETON                       96    Parm error
+     C                     END                             FI 8
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   94                MOVE '*EOF   ' P@RTCD           End of file
+     C   95                MOVE '*NRF   ' P@RTCD           No record found
+     C   96                MOVE '*OPTION' P@RTCD           Option error
+     C   97                MOVE '*NOSEL ' P@RTCD           No selection
+     C   98                MOVE '*CALL  ' P@RTCD           Called Pgm.err.
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 9 SND MSG
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   94                MOVE 'ACO1005' P@MGID             End of file
+     C   95                MOVE 'ACO1006' P@MGID             No rec found
+     C   96                MOVE 'ACO1007' P@MGID             Option error
+     C   97                MOVE 'ACO1009' P@MGID             No selection
+     C   98                MOVE 'ACO1010' P@MGID             Call error
+     C                     CALL 'ZASNMG'                     <SND MSG>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Prog name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Msg ID
+     C                     PARM *BLANK    P@MSGF 10          I:Msg file
+     C                     PARM *BLANK    P@MGKY  4          O:Msg key
+     C                     PARM           P@MGDA 50          I:Msg data
+     C                     PARM '*DIAG'   P@MGTP  7          I:Msg type
+     C                     END                             FI 9
+      *
+      * Caller Requests DB Error Handling
+      *
+     C           W@RTCD    IFEQ '*DBERR'                   IF
+     C           P@RTCD    ANDNE*BLANK                       AND
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END                             FI
+      *
+     C           P@OPTN    IFNE '*VERIFY'
+     C           P@OPTN    ANDNE'*FREE'
+     C           P@RTCD    ANDNE'*OPTION'
+     C                     MOVELD@FMT     P@FMT
+     C                     END
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+      *ENDMAIN
+**
+SDMEMOPD  AOMEMOR0  MOD  DESC
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

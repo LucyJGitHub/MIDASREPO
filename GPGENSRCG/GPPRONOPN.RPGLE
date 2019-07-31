@@ -1,0 +1,182 @@
+     H DEBUG
+     H COPYRIGHT('(c) Finastra International Limited 2003')
+      *****************************************************************
+/*S*D****RPGBASEBNC****************************************************                       CGP017
+/*STD *  RPGBASEMOD                                                   *                       CGP017
+/*EXI *  TEXT('Generated Code')                                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GPPRONOPN  - On-Line Update of Global File GZPRONOPN         *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR876427           Date 26Jan17               *
+      *                 MD041785           Date 29Sep16               *
+      *                 MD034693           Date 11Aug15               *
+      *                 CGP017             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10215 *REBUILD  Date 27Sep06               *
+      *                 CGP001  *CREATE    Date 23May03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR876427 - Perform /COPY GPCPYSRCG,Z1PRONOPN only after      *
+      *             UPDATE or WRITE operation.                        *
+      *           - Applied for MD-39312                              *
+      *  MD041785 - GZPRONOPN is not getting populated by GOC0100     *
+      *  MD034693 - Dump due to record locks by Job GO_ONL_OPL.       *
+      *             Detect record locks and try to chain again for    *
+      *             4 times to let locking job realease the file.     *
+      *  CGP017 - Global Layer - GOC0100 Task Split                   *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10215 - Global replication needs a global interface       *
+      *  CGP001 - Global Processing                                   *
+      *                                                               *
+      *****************************************************************
+ 
+O    FGZPRONOL1 UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
+O    F                                     USROPN
+O    FGZPRONOPN O  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
+O    F                                     RENAME(PRONOPNF    :W_PRONOPNF     )
+O    F                                     USROPN
+O
+O    D Z_PRONOPN     E DS                  EXTNAME(GZPRONOPN )
+O    D G_PRONOPN     E DS                  EXTNAME(GZPRONOPN ) PREFIX(G_)
+ 
+      * ENTRY PARAMETERS
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    I#RTCD            7
+     C                   PARM                    I#ERMS           50
+     C                   PARM                    I#ZONE           10
+     C                   PARM                    I#BFAF            1
+     C                   PARM                    I#TRAP            1
+     C                   PARM                    I#BIMG         4000
+     C                   PARM                    I#AIMG         4000
+O
+O     * Global File Updates
+O
+O    C     I#BFAF        IFEQ      'B'
+O    C                   MOVEL     I#BIMG        Z_PRONOPN
+O    C                   ELSE
+O    C                   MOVEL     I#AIMG        Z_PRONOPN
+O    C                   ENDIF
+Z    C                   MOVEL     I#ZONE        ZONE
+O
+     C                   Z-ADD     1             CNTLCK            1 0                      MD034693
+     C     CHKLCK        TAG                                                                MD034693
+O    C*****K_GZPRONOL1   CHAIN     PRONOPNF                           99                    MD034693
+     C     K_GZPRONOL1   CHAIN (E) PRONOPNF                           99                    MD034693
+     C**********         SELECT                                                    MD034693 MD041785
+      * Error retrieving record                                                             MD034693
+     C**********         WHEN      %ERROR                                          MD034693 MD041785
+     C                   IF        %ERROR                                                   MD041785
+      * Record lock error                                                                   MD034693
+     C                   IF        %STATUS = 1218                                           MD034693
+     C                   ADD       1             CNTLCK                                     MD034693
+     C                   IF        CNTLCK < 5                                               MD034693
+     C                   GOTO      CHKLCK                                                   MD034693
+     C                   ELSE                                                               MD034693
+     C                   EXSR      *PSSR                                                    MD034693
+     C                   ENDIF                                                              MD034693
+     C                   ENDIF                                                              MD034693
+      **Record*retrieved*successfully*********************************             MD034693 MD041785
+     C*************      WHEN      %FOUND                                          MD034693 MD041785
+     C                   ENDIF                                                              MD041785
+O
+O     * 'Before'
+O
+O    C     I#BFAF        IFEQ      'B'
+O    C  N99              DELETE    PRONOPNF
+O    C                   ELSE
+O
+O     * 'After'
+O
+O    C                   CLEAR                   G_PRONOPN
+O    C                   MOVEL     Z_PRONOPN     G_PRONOPN
+O     * Fix Data
+O    C**********         CALL      'GPFIXGDTA'                                                CGP017
+     C                   CALLB     'GPFIXGDTA'                                                CGP017
+O    C                   PARM                    I#ZONE
+O    C                   PARM      'GZPRONOPN '  I#FILE           10
+O    C                   PARM      G_PRONOPN     IO#BUFFER      4000
+O    C                   MOVEL     IO#BUFFER     G_PRONOPN
+O     * Update
+O    C     *IN99         IFEQ      *OFF
+O    C                   UPDATE    PRONOPNF
+O    C                   ELSE
+O    C                   WRITE     W_PRONOPNF
+O    C                   ENDIF
+     C/COPY GPCPYSRCG,Z1PRONOPN                                                             AR876427
+O    C                   ENDIF
+     C**********         OTHER                                                     MD034693 MD041785
+     C**********         ENDSL                                                     MD034693 MD041785
+     C***/COPY GPCPYSRCG,Z1PRONOPN                                                 BUG10215 AR876427
+ 
+     C                   RETURN
+ 
+     C/SPACE 5
+      ********************************************************************
+      * *INZSR - Initial subroutine called automatically at program start
+      ********************************************************************
+     C     *INZSR        BEGSR
+O
+O     * Open for commit?
+O
+O    C                   CALL      'GPCOPN4COM'
+O    C                   PARM                    D_COM             1
+O    C                   OPEN      GZPRONOL1
+O    C                   OPEN      GZPRONOPN
+O
+O     * Key lists
+O
+O    C     K_GZPRONOL1   KLIST
+O    C                   KFLD                    ZONE
+O    C                   KFLD                    CCY
+O    C                   KFLD                    NOSN
+ 
+     C                   ENDSR
+      ********************************************************************
+      /SPACE 5
+      *********************************************************************
+      * *PSSR  --- ABNORMAL ERROR CONDITIONS
+      *********************************************************************
+     C     *PSSR         BEGSR
+ 
+     C     W#RUN         IFEQ      *BLANKS
+ 
+     C                   MOVE      'Y'           W#RUN             1
+ 
+     C                   MOVEL     '*ERROR'      I#RTCD
+     C                   MOVE      '1'           *INU7
+     C                   MOVE      '1'           *INU8
+ 
+     C                   DUMP
+      *
+      * If no identified cause of error
+      *
+     C     I#ERMS        IFEQ      *BLANK
+     C                   EVAL      I#ERMS = 'UNEXPECTED ERROR'
+     C                   ENDIF
+      *
+      * Log an error on the error log
+      *
+     C                   CLEAR                   BUFFER
+     C                   EVAL      BUFFER = I#ERMS
+     C                   CALL      'GPWRTELOG'
+     C                   PARM                    BUFFER         4000
+ 
+     C                   SETON                                        LRU7U8
+     C                   RETURN
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *********************************************************************

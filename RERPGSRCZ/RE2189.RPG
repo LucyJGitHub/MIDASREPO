@@ -1,0 +1,465 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas End of Year Tax Processing')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Retail Module
+     F*                                                                  *
+     F*    RE2189 - END OF TAX YEAR PROCESSING.                          *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01383             Date 27Apr92               *
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+     F*       S01383 - BASIC RATE TAX INCORPORATION                      *
+     F*                NEW PROGRAM                                       *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FUNCTIONS OF INDICATORS :                                    *
+      *                                                               *
+      *         U7         DATABASE ERROR                             *
+      *         LR         END OF PROGRAM                             *
+      *                                                               *
+      *  INDEX TO SUBROUTINES :                                       *
+      *                                                               *
+      *          DYARS  -  Date processing                            *
+      *          EYARS  -  End of year date processing                *
+      *          DETL1  -  Detail processing                          *
+      *          INIT   -  Initial processing                         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E*
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PERIOD
+     E**        AND SR. ZA0710 -
+     E                    @YD     4   4  5 0A
+     E*
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR PER MONTH
+     E**        AND SR. ZA0710 -
+     E                    @MD    13  13  5 0A
+     E*
+     I**  DATA STRUCTURE FOR SR. ZA0680 - DATE INPUT TO SUBROUTINE
+     I            DS
+     I                                        1   80@@DTIN
+     I                                        1   40@@YYYY
+     I                                        3   40@@YY
+     I                                        1   20@@CC
+     I                                        5   60@@MTH
+     I                                        7   80@@DAY
+     I*
+     I**  DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@Z71Y
+     I            DS
+     I                                        1   40@@Z71Y
+     I                                        1   10@@SSY1
+     I                                        2   20@@SSY2
+     I                                        3   30@@SSY3
+     I                                        4   40@@SSY4
+     I**  DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@VDT
+     I            DS
+     I                                        1   80@@VDT
+     I                                        1   40@@YR
+     I                                        5   60@@Z71M
+     I                                        7   80@@Z71D
+     I**
+     ILDA        UDS
+     I                                        1 256 DBLDA
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     I* Data structure to isolate day month and year.
+     I            DS
+     I                                        1   80DAFLD
+     I                                        1   40YYFLD
+     I                                        5   60MMFLD
+     I                                        7   80DDFLD
+     I**
+     I* Data structure to isolate day month and year for BJRDNB
+     I            DS
+     I                                        1   80YYRDNB
+     I                                        1   40YRFLD1
+     I                                        3   40YRFLD2
+     I                                        5   60MRFLD
+     I                                        7   80DRFLD
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I* BANK DETAILS ACCESSED VIA ACCESS PROGRAM                          S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*
+      /EJECT
+      *
+      *****************************************************************
+      *
+      ** MAIN PROCESSING :
+      *
+      ** initial processing
+     C                     EXSR INIT
+      *
+      ** detail processing
+     C                     EXSR DYARS
+     C                     EXSR EYARS
+     C                     EXSR DETL1
+      *
+      ** end program
+     C                     MOVE '1'       *INLR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      **  DETL1      :  DETAIL PROCESSING                             *
+      *   CALLED BY  :  MAIN PROCESSING                               *
+      *   CALLS      :  ZA0680                                        *
+      *                 ZA0710                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETL1     BEGSR
+     C                     Z-ADD*ZEROS    YYRDNB
+      *
+      ** Convert BJRDNB to format YYYYMMDD
+      *
+     C                     Z-ADDBJRDNB    @@DAYN  50
+     C                     EXSR ZA0710
+     C                     Z-ADD@@VDT     YYRDNB
+      *
+      ** Move last two figures of year date into parameter
+      ** to be used later in calling progrAM
+      *
+     C                     MOVE YRFLD2    YY
+      *
+      ** If YYYY/04/06 >= RDNB =< YYYY/12/31
+      *
+     C           YYRDNB    IFGE DYAR                       **B001
+     C           YYRDNB    ANDLEEYAR
+      *
+      ** Set Year number to Year number + 1.
+      *
+     C           YRFLD1    ADD  1         YRFLD1
+     C                     END                             **E001
+      *
+     C                     Z-ADD4         MRFLD
+     C                     Z-ADD5         DRFLD
+      *
+      ** Convert YYYY0405 to MIDAS day number
+      *
+     C                     Z-ADDYYRDNB    @@DTIN
+     C                     EXSR ZA0680
+     C                     Z-ADD@@MDNO    ETAX    50
+      *
+      ** If  BJRDNB = end of tax year
+      *
+     C           BJRDNB    IFEQ ETAX                       **B001
+     C                     MOVE 'Y'       EOTY
+     C                     END                             **E001
+      *
+      ** If  BJRDNB < end of tax year
+      ** AND Next working day > end of tax year
+      *
+     C           BJRDNB    IFLT ETAX                       **B001
+     C           BJDNWD    IFGT ETAX                       **B002
+     C                     MOVE 'Y'       EOTY
+     C                     END                             **E002
+     C                     END                             **E001
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE INIT
+      *****************************************************************
+      *                                                               *
+      **  INIT       :  initial processing                            *
+      *   CALLED BY  :  main processing                               *
+      *   CALLS      :                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'RE2189'  DBPGM
+     C*
+     C* Read in End of year type parameter
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           EOTY    1
+     C                     PARM           YY      2
+     C                     MOVE *BLANKS   EOTY
+     C                     MOVE *BLANKS   YY
+     C*
+     C* CALL ACCESS PROGRAM FOR BANK DETAILS
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE  8        * * * * * * *
+     C                     MOVEL'001'     DBASE   30       * DBERR 001 *
+     C                     MOVEL@OPTN     DBOPTN  7        * * * * * * *
+     C                     MOVEL'FIRST  ' DBKEY  29
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE DYARS
+      *****************************************************************
+      *                                                               *
+      **  DYARS      :  Calculate 6th April of current year           *
+      *   CALLED BY  :  main processing                               *
+      *   CALLS      :  ZA0710                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DYARS     BEGSR
+     C                     Z-ADD*ZEROS    DAFLD
+      *
+      ** Use run date to calculate 6th April of current year
+      *
+     C                     Z-ADDBJRDNB    @@DAYN  50
+     C                     EXSR ZA0710
+     C                     Z-ADD@@VDT     DAFLD
+      *
+      ** DAFLD now contains BJRDNB in YYYYMMDD format. Change MMDD part
+      ** to 6th April for current year
+      *
+     C                     Z-ADD06        DDFLD
+     C                     Z-ADD04        MMFLD
+      *
+      ** DAFLD now contains 6th April for the current year
+      ** i.e  YYYY/04/06.
+      *
+     C                     Z-ADDDAFLD     DYAR    80
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE EYARS
+      *****************************************************************
+      *                                                               *
+      **  EYARS      :  Calculate 31st December of current year       *
+      *   CALLED BY  :  main processing                               *
+      *   CALLS      :  ZA0710                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EYARS     BEGSR
+     C                     Z-ADD*ZEROS    DAFLD
+      *
+      ** Use run date to calculate 31st December of current year
+      *
+     C                     Z-ADDBJRDNB    @@DAYN
+     C                     EXSR ZA0710
+     C                     Z-ADD@@VDT     DAFLD
+      *
+      ** DAFLD now contains BJRDNB in YYYYMMDD format. Change MMDD part
+      ** to 31st December
+      *
+      *
+     C                     Z-ADD31        DDFLD
+     C                     Z-ADD12        MMFLD
+      *
+      ** DAFLD now contains the date for the end of the current
+      ** year, i.e YYYY/12/31.
+      *
+     C                     Z-ADDDAFLD     EYAR    80
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *       TITLE:CALCULATE MIDAS DAY NO. TO DRS (YYYYMMDD) FORMAT. *
+      *                                                               *
+      *       SUBROUTINE ZA0710 EXPECTS FIELD '@@DAYN' TO BE          *
+      *       PASSED TO IT IN 5,0 FORMAT.IF THE ABOVE FIELD IS LESS   *
+      *       THAN 1 IT RETURNS 1 IN FIELD '@@RTN'.THE MAIN PROGRAM   *
+      *       SHOULD CHECK FOR THIS CONDITION AND DO THE NECESSARY.   *
+      *       IF '@@RTN' IS NOT EQUAL TO 1 IT RETURNS THE FIELD       *
+      *       '@@VDT'  IN 'YYYYMMDD' FORMAT.                          *
+      *                                                               *
+      *       INDICATORS USED ARE:                                    *
+      *                                                               *
+      *       1) 80       CHECK FOR LOW AND EQUAL ON ARRAY @YD        *
+      *       2) 81       CHECK FOR LOW ON ARRAY @MD.                 *
+      *
+     C*****************************************************************
+     C*
+     C           ZA0710    BEGSR
+     C*
+     C                     SETOF                     8081
+     C                     Z-ADD0         @@RTN   10
+     C                     Z-ADD0         @@VDT
+     C                     Z-ADD1         @@I     20
+     C                     Z-ADD1         @@J     20
+     C                     Z-ADD1         @@LEAP  10
+     C*
+     C           @@DAYN    IFLT 1
+     C                     Z-ADD1         @@RTN
+     C                     GOTO ZA0719
+     C                     END
+     C*
+     C* DIVISION TO DETERMINE WETHER LEAP YEAR.
+     C*
+     C           @@DAYN    DIV  1461      @@Z71Y
+     C                     MVR            @@RDAY  50
+     C*
+     C* CALCULATING YEAR.
+     C*
+     C           @@Z71Y    MULT 4         @@Z71Y
+     C                     ADD  1972      @@Z71Y
+     C*
+     C* CHECKING IF YEAR IS GREATER THAN OR EQUAL TO 2100
+     C*
+     C           @@Z71Y    IFGE 2100
+     C                     ADD  @@SSY2    @@RDAY
+     C                     END
+     C*
+     C* LOKUP ARRAY @YD TO SEE HOW MANY YEARS OF A FOUR YEAR CYCLE
+     C* HAVE PASSED.
+     C*
+     C           @@RDAY    LOKUP@YD,@@I                8080
+     C*
+     C* IF YEAR IS A LEAP YEAR SSLEAP IS SET TO ZERO.
+     C*
+     C           *IN80     IFEQ '0'
+     C                     Z-ADD0         @@LEAP
+     C                     END
+     C*
+     C* ADD INDEX TO YEAR TO GIVE CORRECT YEAR AND ADJUST '@@RDAY'.
+     C*
+     C           @@LEAP    IFEQ 1
+     C           @@RDAY    SUB  @YD,@@I   @@RDAY
+     C                     ADD  @@I       @@Z71Y
+     C                     END
+     C*
+     C* PROCESSING FOR A LEAP YEAR.
+     C*
+     C           @@LEAP    IFEQ 0
+     C*
+     C* IF '@@RDAY' = 60 DATE MUST BE 29TH OF FEBRUARY.
+     C*
+     C           @@RDAY    IFEQ 60
+     C                     Z-ADD29        @@Z71D
+     C                     Z-ADD2         @@Z71M
+     C                     GOTO ZA0711
+     C                     END
+     C*
+     C* IF '@@RDAY' > 60 DATE IS AFTER 29TH OF FEBRUARY,CONVERSION CAN
+     C* PROCEED AS USUAL AFTER SUBTRACTING THE EXTRA DAY FOR THE LEAP
+     C* YEAR. NOTE : '@@RDAY' < 60 CONVERSION PROCEEDS AS USUAL.
+     C*
+     C           @@RDAY    IFGT 60
+     C           @@RDAY    SUB  1         @@RDAY
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF DAY '@@DAYN' IS EXACTLY DIVISIBLE BY 1461 (NUMBER OF DAYS
+     C* IN 4 YEARS) THEN DATE MUST BE LAST DAY OF PREVIOUS FOUR YEAR
+     C* GROUP.
+     C*
+     C           @@RDAY    IFEQ 0
+     C                     Z-ADD31        @@Z71D
+     C                     Z-ADD12        @@Z71M
+     C                     SUB  1         @@Z71Y
+     C                     GOTO ZA0711
+     C                     END
+     C*
+     C* LOOK UP ARRAY ARRAY @MD TO DETERMINE WHICH MONTH '@@RDAY'
+     C* OCCURS IN
+     C*
+     C           @@RDAY    LOKUP@MD,@@J                81
+     C                     Z-ADD@@J       @@Z71M
+     C           @@RDAY    SUB  @MD,@@J   @@Z71D
+     C*
+     C* DS @@VDT  IS RETURNED IN YYYYMMDD FORMAT
+     C*
+     C           ZA0711    TAG
+     C*
+     C                     MOVE @@Z71Y    @@YR
+     C*
+     C           ZA0719    ENDSR
+      ****************************************************************
+     C/EJECT
+     C*******************************************************************
+     C*
+     C* ZA0680 - THIS SUBROUTINE CONVERTS YYYYMMDD FORMAT DATE TO
+     C*          MIDAS DAY NUMBER FORMAT (NO. DAYS FROM 31/12/71)
+     C*
+     C* CALLED BY :
+     C*
+     C* CALLS :
+     C*
+     C* INPUT  : @@DTIN DATE (YYYYMMDD) - IN DATA STRUCTURE (SIZE : 8N)
+     C*
+     C* OUTPUT : @@MDNO MIDAS DAY NUMBER  (SIZE : 5N)
+     C*
+     C*******************************************************************
+     C*
+     C           ZA0680    BEGSR
+     C*
+     C**  CLEAR OUT ANY 'OLD' DATA IN FIELD
+     C                     Z-ADD0         @@MDNO  50
+     C*
+     C**   IF DATE GREATER THAN 31/12/2071 NEED EXTRA PROCESSING
+     C           @@YYYY    IFGE 2072                       B1
+     C*
+     C**    MULTIPLY BY NUMBER OF DAYS IN CENTURY (SINCE 1971)
+     C           @@CC      SUB  19        @@WK2   20       *1
+     C           @@WK2     MULT 36524     @@MDNO           *1
+     C*
+     C**  YEAR 2000 IS A LEAP YEAR MUST ALLOW EXTRA DAY
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+     C*
+     C           @@YYYY    ADD  28        @@WK2
+     C*
+     C           @@WK2     DIV  4         @@WK2
+     C                     MVR            @@REM   10
+     C*
+     C**    MULTIPLY BY NUMBER OF DAYS IN FOUR YEAR PERIOD
+     C           @@WK2     MULT 1461      @@WK5   50
+     C                     ADD  @@WK5     @@MDNO
+     C*
+     C**  CHECK REMAINDER AND MONTH NUMBER
+     C           @@REM     IFEQ 0                          B1
+     C           @@MTH     ANDGT2                          B1
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  YEAR NOT LEAP YEAR,  ADD CUMULATIVE DAYS FOR YEAR
+     C           @@REM     IFNE 0                          B1
+     C                     ADD  @YD,@@REM @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  ADD MONTHS THIS YEAR
+     C                     ADD  @MD,@@MTH @@MDNO
+     C*
+     C**  ADD DAYS THIS MONTH
+     C                     ADD  @@DAY     @@MDNO
+     C*
+     C           ZA0689    ENDSR                           **ZA0689 TAG**
+     C*****************************************************************
+     C/EJECT
+     C*******************************************************************
+** @YD  USED BY SR. ZA0710 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZA0710 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

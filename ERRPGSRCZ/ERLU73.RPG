@@ -1,0 +1,148 @@
+     H        1   Y
+      ****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER - Issuer Detl proc.')
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module                            *
+      *                                                               *
+      *  ERLU73 - Midas ER - Issuer Detl proc.                        *
+      *                                                               *
+      *  Called By: ERLU60 - ER IML Reporting - Main Component        *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 03May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 ULX046  *CREATE    Date 29Oct02               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027A - Conversion of customer number to alpha (post       *
+      *            build 103). Recompiled.                            *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX046 - Circulars 2002/170-174-175 Integration              *
+      *                                                               *
+      *****************************************************************
+      *
+     F***ERCTRYL1IF**E           K        DISK                                                CER001
+     FERCTYXL0IF  E           K        DISK                                                   CER001
+      * VQ - ER Country Code Details
+      *
+     F***SDCUSTY6IF**E           K        DISK                                                CER001
+     FSDCUX4L0IF  E           K        DISK                                                   CER001
+      * VF - Customer Extension File
+      *
+      *****************************************************************
+      ** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      *****************************************************************
+      *
+      ** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+      *
+     ILDA        UDS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      **
+      *  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+      **
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      * Program status data structure
+     I           SDS
+     I                                     *PROGRAM PGM
+      **=================================================================
+     C                     EXSR #INIT
+      **=================================================================
+      *
+      ** Access Issuer Extension file
+     C********** EXISSR    CHAINSDCUSTY6             80                                       CER001
+     C           EXISSR    CHAINSDCUX4L0             80                                       CER001
+      ** If no record is found
+     C           *IN80     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'731'     DBASE
+     C**********           MOVEL'SDCUSTY6'DBFILE                                              CER001
+     C                     MOVEL'SDCUX4L0'DBFILE                                              CER001
+     C                     MOVELEXISSR    DBKEY
+     C                     EXSR #DBERR
+     C                     ELSE                            - X1
+     C                     Z-ADDVFNCOS    EXISEC
+     C                     ENDIF                           - E1
+      *
+      **=================================================================
+      *
+      **  Access Country Extension file  :
+      **   Retrieve Issuer ISO country code:
+     C********** EXISLC    CHAINERCTRYL1             80                                       CER001
+     C           EXISLC    CHAINERCTYXL0             80                                       CER001
+      **   If record not found:
+     C           *IN80     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'732'     DBASE
+     C**********           MOVEL'ERCTRYL1'DBFILE                                              CER001
+     C                     MOVEL'ERCTYXL0'DBFILE                                              CER001
+     C                     MOVELEXISLC    DBKEY
+     C                     EXSR #DBERR
+     C                     ELSE                            - X1
+     C                     MOVELVQISOC    EXLISS
+     C                     END                             - E1
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      **=================================================================
+      **
+      **  #INIT       Program initialisation sub-routine                STANDING
+      **
+      *----------------------------------------------------------------
+     C           #INIT     BEGSR
+      *----------------------------------------------------------------
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+      *
+      ** Parameters received/transfered to Main Component:
+     C           *ENTRY    PLIST
+      *  Input Parameters
+     C                     PARM           EXISSR  6
+     C                     PARM           EXISLC  2
+      *  Output Parameters
+     C                     PARM           EXISEC  40
+     C                     PARM           EXLISS  2
+     C                     PARM           ERROR   1
+      *
+     C                     MOVE '0'       *INU7
+      *
+     C                     ENDSR
+      *================================================================
+      **
+      **  #DBERR      DATA BASE ERROR
+      **
+      *----------------------------------------------------------------
+     C           #DBERR    BEGSR
+      *----------------------------------------------------------------
+      **
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+      **
+     C                     ENDSR
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2005

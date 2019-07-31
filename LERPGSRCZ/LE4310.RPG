@@ -1,0 +1,1747 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Cash Flow Using All-in-Rate Revaluation')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Lending Module                                       *
+      *                                                               *
+      *  LE4310 - LE Cash Flow Using All-in-Rate Revaluation          *
+      *                                                               *
+      *  NOTE: Check LE4110 for changes that may apply to it if there *
+      *        are amendments done to this program.                   *
+      *                                                               *
+      *  Called By: LEC4310 - Cash Flow Using All-in-Rate Revaluation *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. MD053295           Date 13Apr19               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
+      *                 CLE154             Date 06Aug12               *
+      *                 AR996895           Date 25Nov12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 245132             Date 31Jan07               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CAS016             Date 28Feb06               *
+      *                 246141             Date 26Mar07               *
+      *                 164847             Date 30Nov06               *
+      *                 BUG13470           Date 08Mar07               *
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242286             Date 25Sep06               *
+      *                 230229             Date 25Sep06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 BUG9244            Date 15Nov05               *
+      *                 CIR013             Date 25Apr05               *
+      *                 232628             Date 14Mar05               *
+      *                 232323             Date 28Feb05               *
+      *                 231712             Date 16Feb05               *
+      *                 229355             Date 16Feb05               *
+      *                 229919             Date 11Oct04               *
+      *                 CAS009             Date 04May04               *
+      *                 230112             Date 14Oct04               *
+      *                 226871             Date 06May04               *
+      *                 225534             Date 02Apr04               *
+      *                 223752             Date 12Dec03               *
+      *                 CAS005  *CREATE    Date 16Dec02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD053295 - Lending loan with Interest Calculation Basis      *
+      *             method 3 (30/360) has wrong interest payment      *
+      *             amount for month of March (Recompile)             *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
+      *  AR996895 - Incorrect accrual interest calculation.           *
+      *             (Child:AR996897) (Recompile)                      *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  245132 - After switching on CAS009, COB takes longer time.   *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *            to Midas Plus (Recompile)                          *
+      *  CAS016 - IAS39 EIR Recalculation (Fee Amortisation Over      *
+      *           Whole Period)                                       *
+      *  246141 - Recompiled due to changes in ZINTDYZ2               *
+      *  164847 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  BUG13470 - Maturity cash flow date has been forwarded        *
+      *  BUG12990 - Recompiled due to changes in ZINTDYZ2/ZINTDYZ2LE  *
+      *  242286 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  230229 - I2 event is not needed for call loan.               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  BUG9244 - LE4310 does not project correct interest amount on *
+      *            RO (Applied fix 23266)                             *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over GLINTC and ZINTDY.                   *
+      *  232628 - CAS009 Rollover patch (LE).                         *
+      *  232323 - Rename OLNO field in LEVENTEL                       *
+      *  231712 - Provide Default Cashflow Type for fees              *
+      *  229355 - Incorrect number of days in LE4311P1 (Recompile)    *
+      *  229919 - Wrong maturity date showing in LE4311P1.            *
+      *  CAS009 - Effective Interest Rate/Amortised Cost Accounting   *
+      *  230112 - No interest rate reported on LE4111P1 and LE4311P1  *
+      *           (Repayment of interest).                            *
+      *  226871 - Fees should be incorporated in the computation      *
+      *           of NPV.                                             *
+      *  225534 - For floating rate loans, when a forward yield curve *
+      *           exists, the system must check first if there are    *
+      *           forward dated loan rate amendments.                 *
+      *  223752 - Interest rate shown in LE4311P1 is incorrect        *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *                                                               *
+      *****************************************************************
+     FCLOAN   IF  E           K        DISK
+      ** Customer Loans File (keyed on LNRF/RCDT)
+      *
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+      *
+     FLELOANL9IF  E           K        DISK
+      ** Customer Loans File (keyed on LNRF)
+      *
+     F            CLOANCLF                          KRENAMECLOANF
+     FLEEVNPL0IF  E           K        DISK
+      ** Lending Events File (keyed on LNRF, multi-branching record omitted)
+      *
+     FLEEVNPL1IF  E           K        DISK                                                   232628
+     F            LVENTELF                          KRENAMEE1EVNTF                            232628
+     F            LOAMSDKF                          KRENAMEE1SCAMF                            232628
+     F                                              KINFDS EVNPDS                             232628
+      ** Lending Principal changes, Interest payments and Rate Changes                        232628
+      *                                                                                       232628
+     FHISTSL0 IF  E           K        DISK         KINFSR *PSSR                              232628
+      ** Lending History file by Loan Reference and Value Date                                232628
+      *                                                                                       232628
+     FLOAMSCL1IF  E           K        DISK                                                   225534
+      ** Spread Change Loan Amendments                                                        225534
+      *                                                                                       225534
+     FLECFLSL2IF  E           K        DISK                                                   CAS016
+      ** Future Cash Flows                                                                    CAS016
+      *                                                                                       CAS016
+     FLEFEEDL2IF  E           K        DISK                                                   226871
+      ** Lending Fee Details                                                                  226871
+      *                                                                                       226871
+     FLECFLAPDO   E                    DISK         KINFSR *PSSR
+      ** Lending Cash Flow All-in Rate File
+      *                                                                                       CAS009
+     FLECFLFPDO   E                    DISK         KINFSR *PSSR                              CAS009
+      ** Future Cash Flows                                                                    CAS009
+      *
+     FLE4310AUO   E                    PRINTER                        UC
+      ** Cash Flow Revaluation using the All-in-Rate Report File
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  80 - End of File                                             *
+      *  98 - System Date Format                                      *
+      *                                                               *
+      *  LR - Last record indicator (program termination)             *
+      *  U7 and U8 - DB error processing indicator                    *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  SRINIT   - Initialisation Process                            *
+      *  SRTRAN   - Process Transaction Details                       *
+      *  SRLOAD   - Load fields pertaining to CLOAN file              *
+      *  SREVNT   - Load fields pertaining to cash flow events        *
+      *  SRWRTE   - Write records to LECFLAPD file                    *
+      *                                                               *
+      *  *PSSR    - Error processing                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E/COPY ZSRSRC,ZDATE9Z1
+     E/COPY ZSRSRC,ZHOLE
+      /SPACE 3
+      *
+     ICLOANF
+     I              RECI                            RRECI
+     I              LNRF                            RLNRF
+     I              PTYP                            RPTYP
+     I              LTYP                            RLTYP
+     I              SUTP                            RSUTP
+     I              RTSP                            RRTSP
+     I              INTR                            RINTR
+     I              CNUM                            RCNUM
+     I              BOKC                            RBOKC
+     I              OLNO                            ROLNO
+     I              CCY                             RCCY
+     I              BRCA                            RBRCA
+     I              ICBS                            RICBS
+     I              MDAT                            RMDAT
+     I              CLAS                            RCLAS                                     CLE042
+      *
+     ILOAMSDKF                                                                                225534
+     I              RECI                            ARECI                                     225534
+     I              LNRF                            ALNRF                                     225534
+     I              PTYP                            APTYP                                     225534
+     I              LTYP                            ALTYP                                     225534
+     I              SUTP                            ASUTP                                     225534
+     I              RTSP                            ARTSP                                     225534
+     I              BRTT                            ABRTT                                     225534
+     I              CNUM                            ACNUM                                     225534
+     I              SPIN                            ASPIN                                     225534
+     I              VDAT                            AVDAT                                     225534
+     I              CCY                             ACCY                                      225534
+     I              BRCA                            ABRCA                                     225534
+     I              CLAS                            ACLAS                                     CLE042
+      *                                                                                       232323
+     ILVENTELF                                                                                232323
+     I              OLNO                            LOLNO                                     232323
+      *                                                                                       225534
+      ** Rename fields on HISTSL0                                                             232628
+     IHISTSHMF                                                                                232628
+     I              RECI                            HRECI                                     232628
+     I              RCDT                            HRCDT                                     232628
+     I              BRCA                            HBRCA                                     232628
+     I              CNUM                            HCNUM                                     232628
+     I              LNRF                            HLNRF                                     232628
+     I              VDAT                            HVDAT                                     232628
+     I              PRSQ                            HPRSQ                                     232628
+     I              LASN                            HLASN                                     232628
+     I              FCUS                            HFCUS                                     232628
+     I              FTYP                            HFTYP                                     232628
+     I              FSEQ                            HFSEQ                                     232628
+     I              PTYP                            HPTYP                                     232628
+     I              CCY                             HCUCY                                     232628
+     I              AMTP                            HAMTP                                     232628
+     I              PRAM                            HPRAM                                     232628
+     I              BRTT                            HBRTT                                     232628
+     I              BRTE                            HBRTE                                     232628
+     I              RTSP                            HRTSP                                     232628
+     I              SPIN                            HSPIN                                     232628
+     I              CALC                            HCALC                                     232628
+     I              WTIN                            HWTIN                                     232628
+     I              REPT                            HREPT                                     232628
+     I              INTC                            HINTC                                     232628
+     I              LTYP                            HLTYP                                     232628
+     I              SUTP                            HSUTP                                     232628
+     I              TOTI                            HTOTI                                     232628
+     I              FCLB                            HFCLB                                     232628
+     I              LCD                             HLCD                                      232628
+     I              CPAM                            HCPAM                                     232628
+     I              AITC                            HAITC                                     232628
+     I              INTR                            HINTR                                     232628
+     I              AIAP                            HAIAP                                     232628
+     I              IPRD                            HIPRD                                     232628
+     I              ACDA                            HACDA                                     232628
+     I              COFR                            HCOFR                                     232628
+     I              ACAP                            HACAP                                     232628
+     I              COFD                            HCOFD                                     232628
+     I              AITN                            HAITN                                     232628
+     I              AIAN                            HAIAN                                     232628
+     I              IPRN                            HIPRN                                     232628
+     I              FSPRAM                          HFPRAM                                    232628
+     I              FSCPAM                          HFCPAM                                    232628
+     I              CLAS                            HCLAS                                     CLE042
+      ** HISTSHP                                                                              232628
+     IHISTSHPF                                                                                232628
+     I              RECI                            HRECI                                     232628
+     I              RCDT                            HRCDT                                     232628
+     I              BRCA                            HBRCA                                     232628
+     I              CNUM                            HCNUM                                     232628
+     I              LNRF                            HLNRF                                     232628
+     I              VDAT                            HVDAT                                     232628
+     I              PRSQ                            HPRSQ                                     232628
+     I              LASN                            HLASN                                     232628
+     I              FCUS                            HFCUS                                     232628
+     I              FTYP                            HFTYP                                     232628
+     I              FSEQ                            HFSEQ                                     232628
+     I              PTYP                            HPTYP                                     232628
+     I              CCY                             HCUCY                                     232628
+     I              AMTP                            HAMTP                                     232628
+     I              PRAM                            HPRAM                                     232628
+     I              INTA                            HINTA                                     232628
+     I              WTXA                            HWTXA                                     232628
+     I              FEAM                            HFEAM                                     232628
+     I              FECD                            HFECD                                     232628
+     I              WOIN                            HWOIN                                     232628
+     I              EXVD                            HEXVD                                     232628
+     I              LTYP                            HLTYP                                     232628
+     I              SUTP                            HSUTP                                     232628
+     I              LCD                             HLCD                                      232628
+     I              CPAM                            HCPAM                                     232628
+     I              AITC                            HAITC                                     232628
+     I              INTR                            HINTR                                     232628
+     I              AIAP                            HAIAP                                     232628
+     I              IPRD                            HIPRD                                     232628
+     I              ROLN                            HROLN                                     232628
+     I              ACDA                            HACDA                                     232628
+     I              COFR                            HCOFR                                     232628
+     I              ACAP                            HACAP                                     232628
+     I              COFD                            HCOFD                                     232628
+     I              REPI                            HREPI                                     232628
+     I              AITN                            HAITN                                     232628
+     I              IPRN                            HIPRN                                     232628
+     I              INTN                            HINTN                                     232628
+     I              FSPRAM                          HFPRAM                                    232628
+     I              FSCPAM                          HFCPAM                                    232628
+     I              CLAS                            HCLAS                                     CLE042
+     IHISTSHQF                                                                                232628
+     I              RECI                            HRECI                                     232628
+     I              RCDT                            HRCDT                                     232628
+     I              BRCA                            HBRCA                                     232628
+     I              CNUM                            HCNUM                                     232628
+     I              LNRF                            HLNRF                                     232628
+     I              VDAT                            HVDAT                                     232628
+     I              PRSQ                            HPRSQ                                     232628
+     I              LASN                            HLASN                                     232628
+     I              FCUS                            HFCUS                                     232628
+     I              FTYP                            HFTYP                                     232628
+     I              FSEQ                            HFSEQ                                     232628
+     I              PTYP                            HPTYP                                     232628
+     I              CCY                             HCUCY                                     232628
+     I              AMTP                            HAMTP                                     232628
+     I              BRTT                            HBRTT                                     232628
+     I              BRTE                            HBRTE                                     232628
+     I              RTSP                            HRTSP                                     232628
+     I              SPIN                            HSPIN                                     232628
+     I              PRINRO                          PRAMQ                                     232628
+     I              LCD                             HLCD                                      232628
+     I              CPAM                            HCPAM                                     232628
+     I              AITC                            HAITC                                     232628
+     I              INTR                            HINTR                                     232628
+     I              AIAP                            HAIAP                                     232628
+     I              IPRD                            HIPRD                                     232628
+     I              MNSG                            HMNSG                                     232628
+     I              RLCY                            HRLCY                                     232628
+     I              ACDA                            HACDA                                     232628
+     I              COFR                            HCOFR                                     232628
+     I              ACAP                            HACAP                                     232628
+     I              COFD                            HCOFD                                     232628
+     I              AITN                            HAITN                                     232628
+     I              AIAN                            HAIAN                                     232628
+     I              IPRN                            HIPRN                                     232628
+     I              FSCPAM                          HFCPAM                                    232628
+      *                                                                                       232628
+     ILECFLSD0                                                                                CAS016
+     I              LFLNRF                          LSLNRF                                    CAS016
+     I              LFLTYP                          LSLTYP                                    CAS016
+     I              LFLNST                          LSLNST                                    CAS016
+     I              LFFLDT                          LSFLDT                                    CAS016
+     I              LFDATE                          LSDATE                                    CAS016
+     I              LFNDYP                          LSNDYP                                    CAS016
+     I              LFNDYY                          LSNDYY                                    CAS016
+     I              LFCAMT                          LSCAMT                                    CAS016
+     I              LFFTYP                          LSFTYP                                    CAS016
+     I              LFIRAT                          LSIRAT                                    CAS016
+     I              LFSPRR                          LSSPRR                                    CAS016
+     I              LFYLDC                          LSYLDC                                    CAS016
+     I              LFFYLD                          LSFYLD                                    CAS016
+     I              LFDSCF                          LSDSCF                                    CAS016
+     I              LFNPVA                          LSNPVA                                    CAS016
+     I              LFIOIN                          LSIOIN                                    CAS016
+     I              LFCNUM                          LSCNUM                                    CAS016
+     I              LFBRCA                          LSBRCA                                    CAS016
+     I              LFCYCD                          LSCYCD                                    CAS016
+     I              LFBKCD                          LSBKCD                                    CAS016
+     I              LFADLN                          LSADLN                                    CAS016
+     I              LFICBS                          LSICBS                                    CAS016
+     I              LFFSEQ                          LSFSEQ                                    CAS016
+     I              LFCPAM                          LSCPAM                                    CAS016
+     I              LFPSEQ                          LSPSEQ                                    CAS016
+      *                                                                                       CAS016
+     I            DS
+     I                                        1   4 ETYP
+     I                                        1   2 CODE1
+     I                                        3   4 CODE2
+      *
+      * OLNO field - alpha and numeric                                                        CSD027
+     I            DS                                                                          CSD027
+     I                                        1   6 OLNOA                                     CSD027
+     I**********                              1   60OLNON                              CSD027 CLE148
+      *                                                                                       CSD027
+     I/COPY ZSRSRC,ZINTDYZ1
+     I/COPY ZSRSRC,ZFRPEDZ2
+     I/COPY ZSRSRC,ZDATE9Z2
+     I/COPY ZSRSRC,ZDAT10Z1
+     I/COPY ZSRSRC,ZHOLI
+      /SPACE 3
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     IEVNPDS      DS                                                                          232628
+     I                                     *RECORD  EVRECF                                    232628
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDCLND    E DSSDCLNDPD
+      ** Customer Lending ICD accessed via access program
+      *                                                                                       CAS009
+     ISDCURR    E DSSDCURRPD                                                                  CAS009
+      ** Currency Details Data Structure                                                      CAS009
+      *                                                                                       CAS009
+     ILECFLA    E DSLECFLAPD                                                                  CAS009
+      ** Cash Flow File                                                                       CAS009
+      *                                                                                       CAS009
+     ILECFLF    E DSLECFLFPD                                                                  CAS009
+      ** Future Cash Flow                                                                     CAS009
+      *                                                                                       CAS009
+     ISCSARD    E DSSCSARDPD                                                                  CAS009
+      ** Switchable Features Details accessed via access program                              CAS009
+      *
+     ISDFEE     E DSSDFEEPD                                                                   226871
+      ** Fee codes Details                                                                    226871
+      *                                                                                       226871
+     IDSFDY     E DSDSFDY
+      ** Dummy Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      ** Dummy Data Structures used by Access Programs
+      *
+     I***SDGELR*   E DSSDGELRPD                                                    MD035545 MD047993
+     I**********    QQACCD                          ACCDQQ                         MD035545 MD047993
+      ***General*ledger*details****************************************            MD035545 MD047993
+      *                                                                                     MD035545
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+      /TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing
+      *
+     C           *LOVAL    SETLLCLOAN
+     C                     READ CLOAN                    80
+      *
+     C           *IN80     DOWEQ*OFF
+     C                     EXSR SRTRAN
+     C                     READ CLOAN                    80
+     C                     ENDDO
+      *
+      ** Terminate Program
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA field
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBFILE
+     C                     MOVE *BLANK    DBKEY
+     C                     Z-ADD*ZERO     DBASE
+     C                     MOVEL'LE4310'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Define necessary fields
+      *
+     C           *LIKE     DEFN EDAT      WPEDAT
+     C           *LIKE     DEFN EDAT      WEDAT
+     C           *LIKE     DEFN EAMT      WEAMT
+     C           *LIKE     DEFN CPAM      WCPAM
+     C           *LIKE     DEFN INTR      WINTR
+     C           *LIKE     DEFN NIDT      WNIDT
+     C           *LIKE     DEFN LACAMT    WCAMT                                               CAS009
+     C           *LIKE     DEFN EAMT      WPDRA                                               CAS016
+     C           *LIKE     DEFN EDAT      WPDST                                               CAS016
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on)
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Call Access Program for Customer Lending ICD details
+      *
+     C                     CALL 'AOCLNDR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDCLND    PARM SDCLND    DSFDY                                               CLE134
+     C           SDCLND    PARM SDCLND    DSSDY                                               CLE134
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCLNDPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD3         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                                       CAS009
+      ** Check if CAS009 - Effective Interest Rate/Amortised Cost Accounting                  CAS009
+      ** is installed.                                                                        CAS009
+      *                                                                                       CAS009
+     C                     CALL 'AOSARDR0'                                                    CAS009
+     C                     PARM *BLANKS   PRTCD                                               CAS009
+     C                     PARM '*VERIFY' POPTN                                               CAS009
+     C                     PARM 'CAS009'  PSARD   6                                           CAS009
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS009
+      *                                                                                       CAS009
+     C           PRTCD     IFEQ *BLANKS                                                       CAS009
+     C                     MOVE 'Y'       CAS009  1                                           CAS009
+     C                     ELSE                                                               CAS009
+     C                     MOVE 'N'       CAS009                                              CAS009
+     C           PRTCD     IFNE '*NRF   '                                                     CAS009
+     C                     MOVE 'SCSARDPD'DBFILE                                              CAS009
+     C                     Z-ADD8         DBASE                                               CAS009
+     C                     MOVEL'CAS009'  DBKEY                                               CAS009
+     C                     EXSR *PSSR                                                         CAS009
+     C                     ENDIF                                                              CAS009
+     C                     ENDIF                                                              CAS009
+      *                                                                                       CAS016
+      ** Check if CAS016 is installed                                                         CAS016
+      *                                                                                       CAS016
+     C                     CALL 'AOSARDR0'                                                    CAS016
+     C                     PARM *BLANKS   PRTCD                                               CAS016
+     C                     PARM '*VERIFY' POPTN                                               CAS016
+     C                     PARM 'CAS016'  PSARD                                               CAS016
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS016
+      *                                                                                       CAS016
+     C           PRTCD     IFEQ *BLANKS                                                       CAS016
+     C                     MOVE 'Y'       CAS016  1                                           CAS016
+     C                     ELSE                                                               CAS016
+     C                     MOVE 'N'       CAS016                                              CAS016
+     C           PRTCD     IFNE '*NRF   '                                                     CAS016
+     C                     MOVE 'SCSARDPD'DBFILE                                              CAS016
+     C                     Z-ADD8         DBASE                                               CAS016
+     C                     MOVEL'CAS016'  DBKEY                                               CAS016
+     C                     EXSR *PSSR                                                         CAS016
+     C                     ENDIF                                                              CAS016
+     C                     ENDIF                                                              CAS016
+      *                                                                                       225534
+     C                     CALL 'AOSARDR0'                                                    CLE134
+     C                     PARM *BLANKS   PRTCD                                               CLE134
+     C                     PARM '*VERIFY' POPTN                                               CLE134
+     C                     PARM 'CLE134'  PSARD                                               CLE134
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE134
+      *                                                                                       CLE134
+     C           PRTCD     IFEQ *BLANKS                                                       CLE134
+     C                     MOVE 'Y'       CLE134  1                                           CLE134
+     C                     ELSE                                                               CLE134
+     C                     MOVE 'N'       CLE134                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+      ***Access*general*ledger*details.********************************                     MD035545
+      *****************************************************************            MD035545 MD047993
+     C**********           CALL 'AOGELRR1'                                         MD035545 MD047993
+     C**********           PARM '*DBERR ' PRTCD                                    MD035545 MD047993
+     C**********           PARM '*FIRST ' POPTN                                    MD035545 MD047993
+     C********** SDGELR    PARM SDGELR    DSSDY                                    MD035545 MD047993
+      *                                                                                     MD035545
+      ** Retrieve system value setting.                                                     MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   PRTCD                                             MD035545
+     C                     PARM           P@OP01 20                                         MD035545
+     C                     PARM           P@VL01200                                         MD035545
+     C                     PARM           P@OP02 20                                         MD035545
+     C                     PARM           P@VL02200                                         MD035545
+     C                     PARM           P@OP03 20                                         MD035545
+     C                     PARM           P@VL03200                                         MD035545
+     C                     PARM           P@OP04 20                                         MD035545
+     C                     PARM           P@VL04200                                         MD035545
+     C                     PARM           P@OP05 20                                         MD035545
+     C                     PARM           P@VL05200                                         MD035545
+     C                     PARM           P@OP06 20                                         MD035545
+     C                     PARM           P@VL06200                                         MD035545
+     C                     PARM           P@OP07 20                                         MD035545
+     C                     PARM           P@VL07200                                         MD035545
+     C                     PARM           P@OP08 20                                         MD035545
+     C                     PARM           P@VL08200                                         MD035545
+     C                     PARM           P@OP09 20                                         MD035545
+     C                     PARM           P@VL09200                                         MD035545
+     C                     PARM           P@OP10 20                                         MD035545
+     C                     PARM           P@VL10200                                         MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'.                            MD035545
+      *                                                                                     MD035545
+     C           PRTCD     IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
+      *                                                                                     MD035545
+      ** Define key list for spread change loan amendment search.                             225534
+      *                                                                                       225534
+     C           KSCLA     KLIST                                                              225534
+     C                     KFLD           LNRF                                                225534
+     C                     KFLD           CNUM                                                225534
+     C                     KFLD           ECCY                                                225534
+     C                     KFLD           EDAT                                                225534
+      *
+     C           KFEE      KLIST                                                              226871
+     C                     KFLD           CUST                                                226871
+     C                     KFLD           FCLT                                                226871
+     C                     KFLD           LNRF                                                226871
+     C                     KFLD           WSEQ                                                226871
+      *                                                                                       226871
+     C           *LIKE     DEFN PZBEG     WZBEG                                               232628
+     C           *LIKE     DEFN PZEND     WZEND                                               232628
+     C           *LIKE     DEFN PZAMT     WZAMT                                               232628
+     C           *LIKE     DEFN PZRATE    WZRAT                                               232628
+     C           *LIKE     DEFN HAITC     WAITC                                               232628
+     C           *LIKE     DEFN HIPRD     WIPRD                                               232628
+     C           *LIKE     DEFN HCPAM     WROIN                                               232628
+     C           *LIKE     DEFN LNRF      KLNRF                                               232628
+     C           *LIKE     DEFN VDAT      KRODT                                               232628
+     C           *LIKE     DEFN VDAT      KEDAT                                               232628
+     C           *LIKE     DEFN VDAT      SVDAT                                               232628
+      *                                                                                      BUG9244
+     C                     Z-ADD0         WLINTD  50                                         BUG9244
+      *                                                                                       232628
+     C           KHIST0    KLIST                                                              232628
+     C                     KFLD           KLNRF                                               232628
+     C                     KFLD           KRODT                                               232628
+      *                                                                                       232628
+     C           KEVNP1    KLIST                                                              232628
+     C                     KFLD           KLNRF                                               232628
+     C                     KFLD           KEDAT                                               232628
+      *                                                                                       232628
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTRAN - Process Transaction Details                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTRAN    BEGSR
+      *
+     C           RECI      IFEQ 'D'
+      *
+      ** Determine if loan of deposit
+      *
+     C           CAS016    IFEQ 'Y'                                                           CAS016
+      *                                                                                       CAS016
+      ** Check if a Past Due Record exists in the CF file                                     CAS016
+     C           LNRF      CHAINLECFLSL2             88                                       CAS016
+      *                                                                                       CAS016
+      ** Turn Flag on and save date if there is one                                           CAS016
+     C           *IN88     IFEQ '0'                                                           CAS016
+     C                     MOVE 'Y'       WRBLDF  1                                           CAS016
+     C                     MOVE 'Y'       WPDFND  1                                           CAS016
+     C                     Z-ADDLSFLDT    WPDATE  50                                          CAS016
+      *                                                                                       CAS016
+      ** Check if there are two past due transactions on the day                              CAS016
+      ** (one for interest and principal) or if the read past due                             CAS016
+      ** transaction is a principal repayment. Set flag to rebuild                            CAS016
+      ** cashflow file if any of the cases are satisfied                                      CAS016
+      *                                                                                       CAS016
+     C           LNRF      READELECFLSL2                 88                                   CAS016
+     C           *IN88     IFEQ '0'                                                           CAS016
+     C                     MOVE ' '       WPDFND                                              CAS016
+     C                     MOVE 'Y'       WRBLDF                                              CAS016
+     C                     ENDIF                                                              CAS016
+      *                                                                                       CAS016
+     C                     ELSE                                                               CAS016
+     C                     MOVE ' '       WPDFND                                              CAS016
+     C                     ENDIF                                                              CAS016
+      *                                                                                       CAS016
+     C                     ENDIF                                                              CAS016
+     C           PTYP      IFEQ 61
+     C           PTYP      OREQ 62
+     C           PTYP      OREQ 63
+     C           PTYP      OREQ 64
+     C           PTYP      OREQ 65
+     C           PTYP      OREQ 66
+     C           PTYP      OREQ 67
+     C           PTYP      OREQ 68
+     C           PTYP      OREQ 69
+     C                     Z-ADDCPAM      WCPAM
+     C                     Z-ADDINTR      WINTR
+      *
+     C                     Z-ADD*ZERO     WEAMT
+     C                     Z-ADD*ZERO     WEDAT
+     C**********           MOVE LNRF      WLNRF   60                                          CLE148
+     C                     MOVE LNRF      WLNRF   6                                           CLE148
+     C                     MOVE FSYLDC    WYLDC   5
+     C                     MOVE FSFYLD    WFYLD   5
+      *
+      **  CURVE MISSING - NOT VALUED
+      *
+     C                     CLEARLECFLAD0
+     C                     EXSR SRLOAD
+     C           WYLDC     IFNE *BLANK
+     C           CAS009    OREQ 'Y'                                                           CAS009
+     C                     EXSR SREVNT
+     C                     ELSE
+     C                     WRITELECFLAD0
+      *                                                                                       CAS009
+      ** Write to future cash flows file                                                      CAS009
+     C           CAS009    IFEQ 'Y'                                                           CAS009
+     C                     EXSR SRFUTR                                                        CAS009
+     C                     ENDIF                                                              CAS009
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOAD - Load fields pertaining to CLOAN file                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLOAD    BEGSR
+      *
+     C**********           Z-ADDLNRF      LALNRF                                              CLE148
+     C                     MOVELLNRF      LALNRF                                              CLE148
+     C                     MOVE LTYP      LALTYP
+     C                     MOVE SUTP      LALNST
+     C                     MOVE CLAS      LALNCL                                              CLE042
+     C                     MOVE BOKC      LABKCD
+     C                     MOVE CCY       LACYCD
+     C                     MOVE BRCA      LABRCA
+     C                     MOVE ' '       WSOLD   1
+      *
+     C**********           MOVE OLNO      OLNOA                                        CSD027 CLE148
+     C********** OLNO      IFNE *ZERO                                                         CSD027
+     C********** OLNO      CHAINLELOANL9             80                                       CSD027
+     C********** OLNOA     IFNE *BLANKS                                                CSD027 CLE148
+     C           OLNO      IFNE *BLANKS                                                       CLE148
+     C********** OLNON     CHAINLELOANL9             80                                CSD027 CLE148
+     C           OLNO      CHAINLELOANL9             80                                       CLE148
+      *
+     C           *IN80     IFEQ *OFF
+     C           RRECI     ANDEQ'D'
+     C                     MOVE 'Y'       WSOLD
+     C**********           Z-ADDOLNO      LALNRF                                              CSD027
+     C**********           Z-ADDOLNON     LALNRF                                       CSD027 CLE148
+     C**********           Z-ADDLNRF      LAADLN                                              CLE148
+     C                     MOVELOLNO      LALNRF                                              CLE148
+     C                     MOVELLNRF      LAADLN                                              CLE148
+     C                     MOVE RBRCA     LABRCA
+     C                     MOVE RCCY      LACYCD
+     C                     MOVE RBOKC     LABKCD
+     C                     MOVE RLTYP     LALTYP
+     C                     MOVE RSUTP     LALNST
+     C                     MOVE RCLAS     LALNCL                                              CLE042
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDWINTR     LAIRAT
+     C                     Z-ADDRTSP      LASPRR
+     C**********           Z-ADDCNUM      LACNUM                                              CSD027
+     C                     MOVE CNUM      LACNUM                                              CSD027
+      *
+     C                     MOVE WYLDC     LAYLDC
+     C                     MOVE WFYLD     LAFYLD
+     C                     Z-ADDICBS      LAICBS
+      *
+      ** Calculation methods are:
+      *
+     C                     SELEC
+      *
+      ** 1 Actual/365, 4 365/365 (excluding 29/02)
+      *
+     C           ICBS      WHEQ 1
+     C           ICBS      OREQ 4
+     C                     Z-ADD365       LANDYY
+      *
+      ** 2 Actual/360, 3 360/360 (sometimes called 30/360), 5 365/360 (excluding 29/02)
+      *
+     C           ICBS      WHEQ 2
+     C           ICBS      OREQ 3
+     C           ICBS      OREQ 5
+     C                     Z-ADD360       LANDYY
+      *
+      ** 6 Actual/366
+      *
+     C           ICBS      WHEQ 6
+     C                     Z-ADD366       LANDYY
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREVNT - Load fields pertaining to cash flow events          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREVNT    BEGSR
+      *
+     C           SLID      IFEQ *ZERO
+     C                     Z-ADDVDAT      WPEDAT
+     C                     ELSE
+     C                     Z-ADDSLID      WPEDAT
+     C                     ENDIF
+      *
+     C           WLNRF     CHAINLEEVNPL0             80
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+     C                     MOVE *BLANK    LAFTYP
+     C           INTR      IFNE 0                                                             223752
+     C                     Z-ADDINTR      LAIRAT                                              223752
+     C                     ENDIF                                                              223752
+      *
+     C           EAMT      IFNE *ZERO
+      *
+     C                     SELEC
+      *
+      ** Start date cash flow
+      *
+     C           ETYP      WHEQ '61V1'
+     C           ETYP      OREQ '62V1'
+     C           ETYP      OREQ '63V1'
+     C           ETYP      OREQ '64V1'
+     C           ETYP      OREQ '65V1'
+     C           ETYP      OREQ '68V1'
+     C                     MOVE 'SAMT'    LAFTYP
+      *
+     C           ETYP      WHEQ '66V1'
+     C           ETYP      OREQ '67V1'
+     C           ETYP      OREQ '69V1'
+     C                     MOVE 'SSAM'    LAFTYP
+      *
+     C           ETYP      WHEQ '63V2'
+     C           ETYP      OREQ '65V2'
+     C                     MOVE 'SDAM'    LAFTYP
+      *
+     C           ETYP      WHEQ '67V2'
+     C                     MOVE 'SSDA'    LAFTYP
+      *
+      ** Principal increase
+      *
+     C           ETYP      WHEQ '61V3'
+     C           ETYP      OREQ '62V3'
+     C           ETYP      OREQ '64V3'
+     C           ETYP      OREQ '68V3'
+     C                     MOVE 'PINC'    LAFTYP
+     C                     ADD  EAMT      WCPAM
+      *
+     C           ETYP      WHEQ '66V3'
+     C           ETYP      OREQ '69V3'
+     C                     MOVE 'SPIN'    LAFTYP
+      *
+      ** Scheduled repayment
+      *
+     C           ETYP      WHEQ '61R1'
+     C           ETYP      OREQ '62R1'
+     C           ETYP      OREQ '64R1'
+     C           ETYP      OREQ '68R1'
+     C                     MOVE 'SRPY'    LAFTYP                                              230112
+     C********** ETYP      OREQ '61R2'                                                        230112
+     C           ETYP      WHEQ '61R2'                                                        230112
+     C           ETYP      OREQ '62R2'
+     C           ETYP      OREQ '64R2'
+     C           ETYP      OREQ '68R2'
+     C**********           MOVE 'SRPY'    LAFTYP                                              230112
+     C                     MOVE 'SRPI'    LAFTYP                                              230112
+      *
+     C           ETYP      WHEQ '66R1'
+     C           ETYP      OREQ '69R1'
+     C                     MOVE 'SSRP'    LAFTYP                                              230112
+     C********** ETYP      OREQ '66R2'                                                        230112
+     C           ETYP      WHEQ '66R2'                                                        230112
+     C           ETYP      OREQ '69R2'
+     C**********           MOVE 'SSRP'    LAFTYP                                              230112
+     C                     MOVE 'SSRI'    LAFTYP                                              230112
+      *
+      ** Rollover new principal
+      *
+     C           ETYP      WHEQ '63R3'
+     C           ETYP      OREQ '65R3'
+     C                     MOVE 'RPRN'    LAFTYP
+      *
+     C           ETYP      WHEQ '67R3'
+     C                     MOVE 'SRPR'    LAFTYP
+      *
+      ** Rollover current principal
+      *
+     C           ETYP      WHEQ '63R4'
+     C           ETYP      OREQ '65R4'
+     C                     MOVE 'RCPR'    LAFTYP
+      *
+     C           ETYP      WHEQ '67R4'
+     C                     MOVE 'SRCP'    LAFTYP
+      *
+      ** Rollover discount principal
+      *
+     C           ETYP      WHEQ '63R5'
+     C           ETYP      OREQ '65R5'
+     C                     MOVE 'RDSC'    LAFTYP
+      *
+     C           ETYP      WHEQ '67R5'
+     C                     MOVE 'SRDA'    LAFTYP
+      *
+      ** Repay amount
+      *
+     C           ETYP      WHEQ '62R9'
+     C           ETYP      OREQ '63R9'
+     C           ETYP      OREQ '64R9'
+     C           ETYP      OREQ '65R9'
+     C                     MOVE 'RPAY'    LAFTYP
+      *
+     C           ETYP      WHEQ '66R9'
+     C           ETYP      OREQ '67R9'
+     C           ETYP      OREQ '69R9'
+     C                     MOVE 'SRPA'    LAFTYP
+      *
+      ** Draw amount
+      *
+     C           ETYP      WHEQ '62V7'
+     C           ETYP      OREQ '63V7'
+     C           ETYP      OREQ '64V7'
+     C           ETYP      OREQ '65V7'
+     C                     MOVE 'RDRW'    LAFTYP
+      *
+     C           ETYP      WHEQ '66V7'
+     C           ETYP      OREQ '67V7'
+     C           ETYP      OREQ '69V7'
+     C                     MOVE 'SRDW'    LAFTYP
+      *
+      ** ???? amount
+      *
+     C           ETYP      WHEQ '63I3'
+     C           ETYP      OREQ '65I3'
+     C                     MOVE 'RMDA'    LAFTYP
+      *
+     C           ETYP      WHEQ '67I3'
+     C                     MOVE 'SRMD'    LAFTYP
+      *
+      ** Principal transfer from
+      *
+     C           ETYP      WHEQ '61R7'
+     C           ETYP      OREQ '62R7'
+     C           ETYP      OREQ '63R7'
+     C           ETYP      OREQ '64R7'
+     C           ETYP      OREQ '65R7'
+     C           ETYP      OREQ '68R7'
+     C                     MOVE 'PTFA'    LAFTYP
+      *
+     C           ETYP      WHEQ '66R7'
+     C           ETYP      OREQ '67R7'
+     C           ETYP      OREQ '69R7'
+     C                     MOVE 'SPTF'    LAFTYP
+      *
+      ** Principal transfer to
+      *
+     C           ETYP      WHEQ '61V5'
+     C           ETYP      OREQ '62V5'
+     C           ETYP      OREQ '63V5'
+     C           ETYP      OREQ '64V5'
+     C           ETYP      OREQ '65V5'
+     C           ETYP      OREQ '68V5'
+     C                     MOVE 'PTTA'    LAFTYP
+      *
+     C           ETYP      WHEQ '66V5'
+     C           ETYP      OREQ '67V5'
+     C           ETYP      OREQ '69V5'
+     C                     MOVE 'SPTT'    LAFTYP
+      *
+      ** Interest amount
+      *
+     C           ETYP      WHEQ '61I2'
+     C           MDAT      ANDNE0                                                             230229
+     C           ETYP      OREQ '62I2'
+     C           MDAT      ANDNE0                                                             230229
+     C           ETYP      OREQ '64I2'
+     C           MDAT      ANDNE0                                                             230229
+     C           ETYP      OREQ '68I2'
+     C           MDAT      ANDNE0                                                             230229
+     C                     MOVE 'INTP'    LAFTYP
+     C                     Z-ADDLFFLDT    WLINTD                                             BUG9244
+      *
+     C           ETYP      WHEQ '66I2'
+     C           MDAT      ANDNE0                                                             230229
+     C           ETYP      OREQ '69I2'
+     C           MDAT      ANDNE0                                                             230229
+     C                     MOVE 'SINT'    LAFTYP
+      *
+      ** Maturity date amount
+      *
+     C           ETYP      WHEQ '61M1'
+     C           ETYP      OREQ '62M1'
+     C           ETYP      OREQ '63M1'
+     C           ETYP      OREQ '64M1'
+     C           ETYP      OREQ '65M1'
+     C           ETYP      OREQ '68M1'
+     C                     MOVE 'MAMT'    LAFTYP
+      *
+     C           ETYP      WHEQ '66M1'
+     C           ETYP      OREQ '67M1'
+     C           ETYP      OREQ '69M1'
+     C                     MOVE 'SMAM'    LAFTYP
+      *
+      ** Maturity interest
+      *
+     C           ETYP      WHEQ '61M2'
+     C           ETYP      OREQ '62M2'
+     C           ETYP      OREQ '64M2'
+     C           ETYP      OREQ '68M2'
+     C                     MOVE 'MINT'    LAFTYP
+      *
+     C           ETYP      WHEQ '66M2'
+     C           ETYP      OREQ '69M2'
+     C                     MOVE 'SMIN'    LAFTYP
+      *
+     C           ETYP      WHEQ '71F1'                                                        226871
+     C                     EXSR SRFEE                                                         226871
+      *                                                                                       226871
+     C           ETYP      WHEQ '61R5'                                                        232628
+     C           ETYP      OREQ '62R5'                                                        232628
+     C           ETYP      OREQ '64R5'                                                        232628
+     C           ETYP      OREQ '68R5'                                                        232628
+     C                     MOVE 'ROPR'    LAFTYP                                              232628
+      *                                                                                       232628
+     C                     ENDSL
+      *
+     C           LAFTYP    IFNE *BLANK
+      *                                                                                       CAS016
+      ** WPDATE only has a value when a Past Due date has been found                          CAS016
+     C           CAS016    OREQ 'Y'                                                           CAS016
+     C           EDAT      ANDGEWPDATE                                                        CAS016
+     C           LAFTYP    ANDNE'SRPY'                                                        CAS016
+     C           LAFTYP    ANDNE'SSRP'                                                        CAS016
+     C           LAFTYP    ANDNE'RPAY'                                                        CAS016
+     C           LAFTYP    ANDNE'SRPA'                                                        CAS016
+     C           LAFTYP    ANDNE'MAMT'                                                        CAS016
+     C           LAFTYP    ANDNE'SMAM'                                                        CAS016
+     C           LAFTYP    ANDNE*BLANK                                                        CAS016
+     C           WRBLDF    ANDEQ' '                                                           CAS016
+     C                     EXSR SRWRTE
+     C                     ELSE                                                               CAS016
+     C           LAFTYP    IFNE *BLANK                                                        CAS016
+     C           WRBLDF    ANDEQ'Y'                                                           CAS016
+     C                     EXSR SRPDUE                                                        CAS016
+     C                     ENDIF                                                              CAS016
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           WLNRF     READELEEVNPL0                 80
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRWRTE - Write records to LECFLAPD file                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRTE    BEGSR
+      *
+      ** If CAS009 is enabled and the fee detail found is in a currency                       CAS009
+      ** different from that of the loan currency, convert the cash flow                      CAS009
+      ** amount to loan currency and use this value to update the output                      CAS009
+      ** field.                                                                               CAS009
+      *                                                                                       CAS009
+     C           CAS009    IFEQ 'Y'                                                           CAS009
+     C           WFEED     ANDEQ'Y'                                                           CAS009
+     C           FEFCCY    ANDNECCY                                                           CAS009
+     C                     EXSR SRCCFA                                                        CAS009
+     C                     Z-ADDWCAMT     LACAMT                                              CAS009
+     C                     ELSE                                                               CAS009
+     C                     Z-ADDEAMT      LACAMT
+     C                     ENDIF                                                              CAS009
+     C                     MOVE 'N'       WFEED                                               CAS009
+      *
+     C                     MOVE INOI      LAIOIN
+      *
+      ** For Call Loans
+      *
+     C           EDAT      IFEQ *ZERO
+     C           MDAT      ANDEQ0
+     C                     SELEC
+      *
+      ** Use billing days if not zero
+      *
+     C           BLDY      WHNE 0
+     C                     Z-ADDBLDY      ZNRDYS
+      *
+      ** Otherwise, use number of days to maturity from lending ICD
+      *
+     C           BPNODM    WHNE 0
+     C                     Z-ADDBPNODM    ZNRDYS
+     C                     OTHER
+     C                     Z-ADD15        ZNRDYS
+     C                     ENDSL
+      *
+     C                     MOVE ECCY      ZCCY                                                229919
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZFWDT
+     C                     Z-ADDZDYNBR    EDAT
+     C                     ENDIF
+      *
+     C           LAFTYP    IFEQ 'MAMT'                                                     BUG13470
+     C           LAFTYP    OREQ 'MINT'                                                     BUG13470
+     C           MDAT      ANDNE0                                                          BUG13470
+     C                     Z-ADDMDAT      LAFLDT                                           BUG13470
+     C                     ELSE                                                            BUG13470
+     C                     Z-ADDEDAT      LAFLDT
+     C                     ENDIF                                                           BUG13470
+      *                                                                                    BUG13470
+     C                     MOVE *BLANK    LADATE
+      *                                                                                    BUG13470
+     C           LAFTYP    IFEQ 'MAMT'                                                     BUG13470
+     C           LAFTYP    OREQ 'MINT'                                                     BUG13470
+     C           MDAT      ANDNE0                                                          BUG13470
+     C                     Z-ADDMDAT      ZDAYNO                                           BUG13470
+     C                     ELSE                                                            BUG13470
+     C                     Z-ADDEDAT      ZDAYNO
+     C                     ENDIF                                                           BUG13470
+      *                                                                                    BUG13470
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    LADATE
+      *                                                                                    BUG13470
+     C           LAFTYP    IFEQ 'MAMT'                                                     BUG13470
+     C           LAFTYP    OREQ 'MINT'                                                     BUG13470
+     C           MDAT      ANDNE0                                                          BUG13470
+     C           MDAT      SUB  BJRDNB    LANDYP                                           BUG13470
+     C                     ELSE                                                            BUG13470
+     C           EDAT      SUB  BJRDNB    LANDYP
+     C                     ENDIF                                                           BUG13470
+      *
+     C                     MOVE ICBS      PNICBS
+     C                     MOVE ECCY      LACYCD                                              225534
+      *                                                                                       225534
+      ** On rollover date, the next interest calculation basis and                            225534
+      ** spread should take effect.                                                           225534
+      *                                                                                       225534
+     C           RLDT      IFGE BJRDNB                                                        225534
+     C           EDAT      ANDGERLDT                                                          225534
+     C                     Z-ADDNRTS      LASPRR                                              225534
+     C           NCAS      IFNE 0                                                             225534
+     C                     MOVE NCAS      PNICBS                                              225534
+     C                     Z-ADDNCAS      LAICBS                                              225534
+      *                                                                                       225534
+     C                     SELEC                                                              225534
+      *                                                                                       225534
+     C           NCAS      WHEQ 1                                                             225534
+     C           NCAS      OREQ 4                                                             225534
+     C                     Z-ADD365       LANDYY                                              225534
+      *                                                                                       225534
+     C           NCAS      WHEQ 2                                                             225534
+     C           NCAS      OREQ 3                                                             225534
+     C           NCAS      OREQ 5                                                             225534
+     C                     Z-ADD360       LANDYY                                              225534
+      *                                                                                       225534
+     C           NCAS      WHEQ 6                                                             225534
+     C                     Z-ADD366       LANDYY                                              225534
+      *                                                                                       225534
+     C                     ENDSL                                                              225534
+     C                     ENDIF                                                              225534
+      *                                                                                       225534
+     C                     ENDIF                                                              225534
+      *                                                                                       225534
+      ** Check for spread change loan amendments.                                             225534
+      *                                                                                       225534
+     C           KSCLA     SETGTLOAMSCL1                                                      225534
+     C           KSCLA     REDPELOAMSCL1                 50                                   225534
+      *                                                                                       225534
+      ** If found, and if value date is greater than the rollover date,                       225534
+      ** this spread rate should be use instead.                                              225534
+      *                                                                                       225534
+     C           *IN50     IFEQ '0'                                                           225534
+     C           EDAT      ANDGEAVDAT                                                         225534
+     C           AVDAT     ANDGEBJRDNB                                                        225534
+     C           AVDAT     ANDGTRLDT                                                          225534
+     C                     Z-ADDARTSP     LASPRR                                              225534
+     C                     ENDIF                                                              225534
+      *
+      ** Calculate discount factor
+      *
+     C**********           CALL 'ZADSFCAL'                                                    245132
+     C                     CALL 'ZADSFCA2'                                                    245132
+     C                     PARM *BLANK    PNRTCD  7
+     C                     PARM *BLANK    PNPRTC  5
+     C                     PARM LAYLDC    PNYLDC  5
+     C                     PARM LACYCD    PNCYCD  3
+     C                     PARM           PNICBS  1
+     C                     PARM LAFLDT    PNFLDT  50
+     C                     PARM *ZERO     PNDSCF 139
+     C                     PARM           CAS008  1                                           245132
+     C                     PARM           CIR004  1                                           245132
+     C                     PARM           ZNPSDT  50                                          245132
+      *
+     C           PNRTCD    IFEQ '*ERROR '
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ZADSFCAL'DBFILE
+     C                     MOVELLAYLDC    DBKEY
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDPNDSCF    LADSCF
+     C                     ENDIF
+      *
+     C           LACAMT    MULT LADSCF    LANPVA
+      *
+     C           WYLDC     IFNE *BLANK                                                        CAS009
+     C                     WRITELECFLAD0
+     C                     ENDIF                                                              CAS009
+      *                                                                                       CAS009
+      ** Write to future cash flows file                                                      CAS009
+     C           CAS009    IFEQ 'Y'                                                           CAS009
+     C                     EXSR SRFUTR                                                        CAS009
+     C                     ENDIF                                                              CAS009
+      *
+     C                     ENDSR
+      *
+      *****************************************************************                       226871
+      /EJECT                                                                                  226871
+      *****************************************************************                       226871
+      *                                                               *                       226871
+      *  SRFEE  - Process Fee Details                                 *                       226871
+      *                                                               *                       226871
+      *****************************************************************                       226871
+      *                                                                                       226871
+     C           SRFEE     BEGSR                                                              226871
+      *                                                                                       226871
+     C**********           MOVE CUNR      CUST    60                                   226871 CSD027
+     C                     MOVE CUNR      CUST    6                                           CSD027
+     C                     Z-ADDLASN      WSEQ    20                                          226871
+     C                     MOVE *ZERO     FCLT    50                                          226871
+     C           KFEE      CHAINLEFEEDF              70                                       226871
+     C           *IN70     IFEQ *OFF                                                          226871
+      *                                                                                       CAS009
+     C           CAS009    IFEQ 'Y'                                                           CAS009
+     C                     Z-ADDFEFSEQ    LAFSEQ                                              CAS009
+     C                     ENDIF                                                              CAS009
+      *                                                                                       226871
+      ** Determine Fee type, A for accruing fee, M for amortizing and B for bullet fees.      226871
+      *                                                                                       226871
+     C           FEPSTD    IFNE 0                                                             226871
+     C           FEPEND    ANDEQ0                                                             226871
+     C                     MOVE 'B'       FETYP   1                                           226871
+     C                     ELSE                                                               226871
+     C           FEPYON    IFEQ 'S'                                                           226871
+     C                     MOVE 'M'       FETYP                                               226871
+     C                     ELSE                                                               226871
+     C                     MOVE 'A'       FETYP                                               226871
+     C                     ENDIF                                                              226871
+      *                                                                                       226871
+     C                     ENDIF                                                              226871
+      *                                                                                       226871
+      ** Check f fee is adjustemt to yield                                                    226871
+      *                                                                                       226871
+     C                     MOVELFEFCOD    @FCOD                                               226871
+     C                     CALL 'AOFEER0'                                                     226871
+     C                     PARM *BLANKS   @RTCD                                               226871
+     C                     PARM '*KEY   ' @OPTN                                               226871
+     C                     PARM           @FCOD   2                                           226871
+     C           SDFEE     PARM SDFEE     DSFDY                                               226871
+     C                     MOVE AUADJY    WADJY   1                                           226871
+      *                                                                                       226871
+     C           AUTO      IFEQ 'Y'                                                           226871
+     C           AUTO      OREQ 'C'                                                           CLE134
+     C           CLE134    ANDEQ'Y'                                                           CLE134
+     C                     SELEC                                                              226871
+     C           FETYP     WHEQ 'M'                                                           226871
+     C           WADJY     ANDEQ'Y'                                                           226871
+     C                     MOVE 'SFAM'    LAFTYP                                              226871
+     C           FETYP     WHEQ 'M'                                                           226871
+     C           WADJY     ANDNE'Y'                                                           226871
+     C                     MOVE 'SFAN'    LAFTYP                                              226871
+     C           FETYP     WHEQ 'A'                                                           226871
+     C           WADJY     ANDEQ'Y'                                                           226871
+     C                     MOVE 'EFAC'    LAFTYP                                              226871
+     C           FETYP     WHEQ 'A'                                                           226871
+     C           WADJY     ANDNE'Y'                                                           226871
+     C                     MOVE 'EFAN'    LAFTYP                                              226871
+     C           FETYP     WHEQ 'B'                                                           226871
+     C           WADJY     ANDEQ'Y'                                                           226871
+     C                     MOVE 'SFBT'    LAFTYP                                              226871
+     C           FETYP     WHEQ 'B'                                                           226871
+     C           WADJY     ANDNE'Y'                                                           226871
+     C                     MOVE 'SFBN'    LAFTYP                                              226871
+      *                                                                                       231712
+      ** Provide default Cashflow Type                                                        231712
+     C                     OTHER                                                              231712
+     C                     MOVE 'FFEE'    LAFTYP                                              231712
+     C                     ENDSL                                                              226871
+     C                     ELSE                                                               226871
+     C                     MOVE *BLANKS   LAFTYP                                              226871
+     C                     ENDIF                                                              226871
+      *                                                                                       CAS009
+      ** Set the fee detail flag.                                                             CAS009
+      *                                                                                       CAS009
+     C                     MOVE 'Y'       WFEED   1                                           CAS009
+      *                                                                                       CAS009
+     C                     ENDIF                                                              226871
+      *                                                                                       226871
+     C                     ENDSR                                                              226871
+      *                                                                                       226871
+      *****************************************************************
+      /EJECT
+      *****************************************************************                       CAS009
+      *                                                               *                       CAS009
+      *  SRFUTR - Write to future cash flow file                      *                       CAS009
+      *                                                               *                       CAS009
+      *****************************************************************                       CAS009
+     C           SRFUTR    BEGSR                                                              CAS009
+      *                                                                                       CAS009
+     C                     MOVELLECFLA    LECFLF                                              CAS009
+     C                     Z-ADDCPAM      LFCPAM                                              CAS009
+      *                                                                                       CAS016
+     C           WPDFND    IFNE ' '                                                           CAS016
+     C           LFFTYP    ANDEQ'SRPI'                                                        CAS016
+     C           WPDFND    ORNE ' '                                                           CAS016
+     C           LFFTYP    ANDEQ'SSRI'                                                        CAS016
+     C           WPDFND    ORNE ' '                                                           CAS016
+     C           LFFTYP    ANDEQ'INTP'                                                        CAS016
+     C           WPDFND    ORNE ' '                                                           CAS016
+     C           LFFTYP    ANDEQ'SINT'                                                        CAS016
+     C           LFCAMT    SUB  LSCAMT    LFCAMT                                              CAS016
+     C                     MOVE ' '       WPDFND                                              CAS016
+     C                     ENDIF                                                              CAS016
+      *                                                                                       CAS009
+     C********** OLNO      IFNE 0                                                      CAS009 CSD027
+      *                    MOVE OLNO      OLNOA                                               CSD027
+     C********** OLNOA     IFNE *BLANKS                                                CSD027 CLE148
+     C           OLNO      IFNE *BLANKS                                                       CLE148
+     C**********           Z-ADDLNRF      LFLNRF                                       CAS009 CLE148
+     C                     MOVELLNRF      LFLNRF                                              CLE148
+     C**********           Z-ADDOLNO      LFADLN                                       CAS009 CSD027
+     C**********           Z-ADDOLNON     LFADLN                                       CSD027 CLE148
+     C                     MOVELOLNO      LFADLN                                              CLE148
+     C                     MOVE LTYP      LFLTYP                                              CAS009
+     C                     MOVE SUTP      LFLNST                                              CAS009
+     C                     MOVE CLAS      LFLNCL                                              CLE042
+     C                     MOVE BOKC      LFBKCD                                              CAS009
+     C                     MOVE CCY       LFCYCD                                              CAS009
+     C                     MOVE BRCA      LFBRCA                                              CAS009
+     C                     ENDIF                                                              CAS009
+      *                                                                                       232628
+     C           LFFTYP    IFEQ 'ROPR'                                                        232628
+     C                     MOVE 'S'       LFIOIN                                              232628
+     C                     ENDIF                                                              232628
+      *                                                                                       CAS009
+     C                     WRITELECFLFD0                                                      CAS009
+      *                                                                                       232628
+     C           LFFTYP    IFEQ 'ROPR'                                                        232628
+     C                     EXSR SRROIN                                                        232628
+     C           WROIN     IFGT 0                                                             232628
+     C                     Z-ADDWROIN     LFCAMT                                              232628
+     C                     MOVE 'ROIN'    LFFTYP                                              232628
+     C                     WRITELECFLFD0                                                      232628
+     C                     ENDIF                                                              232628
+     C                     ENDIF                                                              232628
+      *                                                                                       CAS009
+     C                     ENDSR                                                              CAS009
+      *****************************************************************                       CAS009
+      /EJECT                                                                                  232628
+      *****************************************************************                       232628
+      *                                                               *                       232628
+      *  SRROIN - Calculate interest due on rollover.                 *                       232628
+      *                                                               *                       232628
+      *****************************************************************                       232628
+     C           SRROIN    BEGSR                                                              232628
+      *                                                                                       232628
+     C                     Z-ADD0         WROIN                                               232628
+      *                                                                                       232628
+     C                     Z-ADD0         WZBEG                                               232628
+     C                     Z-ADD0         WZEND                                               232628
+     C                     Z-ADD0         WZAMT                                               232628
+     C                     Z-ADD0         WZRAT                                               232628
+     C                     Z-ADD0         WAITC                                               232628
+     C                     Z-ADD0         WIPRD                                               232628
+     C                     Z-ADD0         SVDAT                                               232628
+      *                                                                                       232628
+     C**********           Z-ADDLNRF      KLNRF                                        232628 CLE148
+     C                     MOVELLNRF      KLNRF                                               CLE148
+     C                     Z-ADDLFFLDT    KRODT                                               232628
+      *                                                                                       232628
+     C           KHIST0    SETGTHISTSL0                                                       232628
+     C                     READPHISTSL0                  71                                   232628
+      *                                                                                       232628
+     C           *IN71     IFEQ '0'                                                           232628
+      ** IF001                                                                                232628
+      *                                                                                       232628
+     C                     Z-ADDHCPAM     WZAMT                                               232628
+     C                     Z-ADDHAITC     WAITC                                               232628
+     C                     Z-ADDHIPRD     WIPRD                                               232628
+     C                     Z-ADDHINTR     WZRAT                                               232628
+      *                                                                                       232628
+     C           LFFLDT    IFEQ HVDAT                                                         232628
+      ** IF002                                                                                232628
+     C           WAITC     SUB  WIPRD     WROIN                                               232628
+     C                     ELSE                                                               232628
+      *                                                                                      BUG9244
+      ** Check if an Interest date has occured after the History                             BUG9244
+      ** record (for Future valued interest events) and compute                              BUG9244
+      ** the interest from there instead                                                     BUG9244
+      *                                                                                      BUG9244
+     C           WLINTD    IFGT HVDAT                                                        BUG9244
+     C                     Z-ADDHVDAT     WZBEG                                               232628
+     C                     Z-ADDHVDAT     KEDAT                                               232628
+     C                     ELSE                                                              BUG9244
+     C                     Z-ADDWLINTD    WZBEG                                              BUG9244
+     C                     Z-ADDWLINTD    KEDAT                                              BUG9244
+     C                     ENDIF                                                             BUG9244
+      *                                                                                       232628
+     C           KEVNP1    SETLLLEEVNPL1                                                      232628
+     C           LNRF      READELEEVNPL1                 72                                   232628
+      *                                                                                       232628
+     C           LFFLDT    DOWGEE1EDAT                                                        232628
+     C           *IN72     ANDEQ'0'                                                           232628
+      *                                                                                       232628
+     C           E1EDAT    IFNE SVDAT                                                         232628
+      *                                                                                       232628
+     C                     Z-ADDE1EDAT    SVDAT                                               232628
+     C                     Z-ADDE1EDAT    WZEND                                               232628
+      *                                                                                       232628
+     C                     Z-ADDWZBEG     PZBEG   50                                          232628
+     C                     Z-ADDWZEND     PZEND   50                                          232628
+     C                     Z-ADDICBS      PZCALC  10                                          232628
+     C                     Z-ADDWZAMT     PZAMT  150                                          232628
+     C                     Z-ADDWZRAT     PZRATE 117                                          232628
+     C                     Z-ADD0         PZINTR 309                                          232628
+      *                                                                                       232628
+     C                     CALL 'GLINTC'                                                      232628
+     C                     PARM           PZBEG                                               232628
+     C                     PARM           PZEND                                               232628
+     C                     PARM           PZCALC                                              232628
+     C                     PARM           PZAMT                                               232628
+     C                     PARM           PZRATE                                              232628
+     C                     PARM           PZINTR                                              232628
+      *                                                                                       232628
+     C                     ADD  PZINTR    WAITC                                               232628
+      *                                                                                       232628
+     C                     Z-ADDWZEND     WZBEG                                               232628
+      *                                                                                       232628
+     C                     ENDIF                                                              232628
+      *                                                                                       232628
+     C                     MOVE E1ETYP    WEVNT   2                                           232628
+     C                     SELEC                                                              232628
+      *                                                                                       232628
+     C           EVRECF    WHEQ 'E1EVNTF'                                                     232628
+     C           WEVNT     ANDEQ'I2'                                                          232628
+     C           EVRECF    OREQ 'E1EVNTF'                                                     232628
+     C           WEVNT     ANDEQ'M2'                                                          232628
+     C                     ADD  E1EAMT    WIPRD                                               232628
+      *                                                                                       232628
+     C           EVRECF    WHEQ 'E1SCAMF'                                                     232628
+     C                     Z-ADDE1RTSP    WZRAT                                               232628
+      *                                                                                       232628
+     C                     OTHER                                                              232628
+      *                                                                                       232628
+     C           E1INOI    IFEQ 'O'                                                           232628
+     C                     ADD  E1EAMT    WZAMT                                               232628
+     C                     ENDIF                                                              232628
+      *                                                                                       232628
+     C           E1INOI    IFEQ 'I'                                                           232628
+     C                     SUB  E1EAMT    WZAMT                                               232628
+     C                     ENDIF                                                              232628
+      *                                                                                       232628
+     C                     ENDSL                                                              232628
+      *                                                                                       232628
+     C           LNRF      READELEEVNPL1                 72                                   232628
+      *                                                                                       232628
+     C                     ENDDO                                                              232628
+      *                                                                                       232628
+     C           LFFLDT    IFGT WZEND                                                         232628
+      *                                                                                       232628
+     C           WZEND     IFEQ 0                                                             232628
+     C                     Z-ADDHVDAT     WZBEG                                               232628
+     C                     ELSE                                                               232628
+     C                     Z-ADDWZEND     WZBEG                                               232628
+     C                     ENDIF                                                              232628
+     C                     Z-ADDLFFLDT    WZEND                                               232628
+      *                                                                                       232628
+     C                     Z-ADDWZBEG     PZBEG   50                                          232628
+     C                     Z-ADDWZEND     PZEND   50                                          232628
+     C                     Z-ADDICBS      PZCALC  10                                          232628
+     C                     Z-ADDWZAMT     PZAMT  150                                          232628
+     C                     Z-ADDWZRAT     PZRATE 117                                          232628
+     C                     Z-ADD0         PZINTR 309                                          232628
+      *                                                                                       232628
+     C                     CALL 'GLINTC'                                                      232628
+     C                     PARM           PZBEG                                               232628
+     C                     PARM           PZEND                                               232628
+     C                     PARM           PZCALC                                              232628
+     C                     PARM           PZAMT                                               232628
+     C                     PARM           PZRATE                                              232628
+     C                     PARM           PZINTR                                              232628
+      *                                                                                       232628
+     C                     ADD  PZINTR    WAITC                                               232628
+      *                                                                                       232628
+     C                     ENDIF                                                              232628
+      *                                                                                       232628
+     C           WAITC     SUB  WIPRD     WROIN                                               232628
+      *                                                                                       232628
+      ** ENDIF002                                                                             232628
+     C                     ENDIF                                                              232628
+      *                                                                                       232628
+      ** ENDIF001                                                                             232628
+     C                     ENDIF                                                              232628
+      *                                                                                       232628
+     C                     ENDSR                                                              232628
+      *****************************************************************                       232628
+      /EJECT                                                                                  CAS009
+      *****************************************************************                       CAS009
+      *                                                               *                       CAS009
+      *  SRCCFA - Converts the cash flow amount to loan currency.     *                       CAS009
+      *                                                               *                       CAS009
+      *****************************************************************                       CAS009
+     C           SRCCFA    BEGSR                                                              CAS009
+      *                                                                                       CAS009
+      ** Amount to convert.                                                                   CAS009
+      *                                                                                       CAS009
+     C                     Z-ADDEAMT      PZAMTF                                              CAS009
+      *                                                                                       CAS009
+      ** 'From' currency details.                                                             CAS009
+      *                                                                                       CAS009
+     C                     MOVE FEFCCY    PCURR                                               CAS009
+     C                     EXSR SRCURR                                                        CAS009
+     C                     MOVE FEFCCY    PZCCYF                                              CAS009
+     C                     Z-ADDA6SPRT    PZRATF                                              CAS009
+     C                     MOVE A6MDIN    PZMDIF                                              CAS009
+     C                     Z-ADDA6NBDP    PZCDPF                                              CAS009
+      *                                                                                       CAS009
+      ** 'To' currency details.                                                               CAS009
+      *                                                                                       CAS009
+     C                     MOVE CCY       PCURR                                               CAS009
+     C                     EXSR SRCURR                                                        CAS009
+     C                     MOVE CCY       PZCCYT                                              CAS009
+     C                     Z-ADDA6SPRT    PZRATT                                              CAS009
+     C                     MOVE A6MDIN    PZMDIT                                              CAS009
+     C                     Z-ADDA6NBDP    PZCDPT                                              CAS009
+      *                                                                                       CAS009
+      ** Convert amount to target currency.                                                   CAS009
+      *                                                                                       CAS009
+     C                     CALL 'ZCCYCN'                                                      CAS009
+     C                     PARM           PZAMTF 150                                          CAS009
+     C                     PARM           PZCCYF  3                                           CAS009
+     C                     PARM           PZCCYT  3                                           CAS009
+     C                     PARM           PZRATF 138                                          CAS009
+     C                     PARM           PZRATT 138                                          CAS009
+     C                     PARM           PZMDIF  1                                           CAS009
+     C                     PARM           PZMDIT  1                                           CAS009
+     C                     PARM           PZCDPF  10                                          CAS009
+     C                     PARM           PZCDPT  10                                          CAS009
+     C                     PARM *ZERO     PZAMTT 150                                          CAS009
+     C                     PARM *ZERO     PZCRSR 138                                          CAS009
+     C                     PARM *ZERO     PZCRSI  1                                           CAS009
+      *                                                                                       CAS009
+      ** Set the cash flow amount.                                                            CAS009
+      *                                                                                       CAS009
+     C                     Z-ADDPZAMTT    WCAMT                                               CAS009
+      *                                                                                       CAS009
+     C                     ENDSR                                                              CAS009
+      *****************************************************************                       CAS009
+      /EJECT                                                                                  CAS009
+      *****************************************************************                       CAS009
+      *                                                               *                       CAS009
+      *  SRCURR - Gets currency details.                              *                       CAS009
+      *                                                               *                       CAS009
+      *****************************************************************                       CAS009
+     C           SRCURR    BEGSR                                                              CAS009
+      *                                                                                       CAS009
+     C           PCURR     IFNE W#CCY                                                         245132
+      *                                                                                       245132
+     C                     CALL 'AOCURRR0'                                                    CAS009
+     C                     PARM *BLANKS   PRTCD                                               CAS009
+     C                     PARM '*KEY   ' POPTN                                               CAS009
+     C                     PARM           PCURR   3                                           CAS009
+     C           SDCURR    PARM SDCURR    DSSDY                                               CAS009
+      *                                                                                       CAS009
+     C           PRTCD     IFNE *BLANKS                                                       CAS009
+     C           *LOCK     IN   LDA                                                           CAS009
+     C                     MOVEL'SDCURRPD'DBFILE                                              CAS009
+     C                     MOVELPCURR     DBKEY                                               CAS009
+     C                     Z-ADD101       DBASE                                               CAS009
+     C                     OUT  LDA                                                           CAS009
+     C                     EXSR *PSSR                                                         CAS009
+     C                     ENDIF                                                              CAS009
+      *                                                                                       245132
+     C                     MOVE PCURR     W#CCY   3                                           245132
+     C                     ENDIF                                                              245132
+      *                                                                                       CAS009
+     C                     ENDSR                                                              CAS009
+      *****************************************************************                       CAS009
+      /EJECT                                                                                  CAS009
+      *****************************************************************                       CAS016
+      *                                                               *                       CAS016
+      *  SRPDUE - WRITE TO FUTURE CASH FLOW FILE                      *                       CAS016
+      *                                                               *                       CAS016
+      *****************************************************************                       CAS016
+     C           SRPDUE    BEGSR                                                              CAS016
+      *                                                                                       CAS016
+     C           LAFTYP    IFEQ 'SRPY'                                                        CAS016
+     C           LAFTYP    OREQ 'SSRP'                                                        CAS016
+     C           LAFTYP    OREQ 'RPAY'                                                        CAS016
+     C           LAFTYP    OREQ 'SRPA'                                                        CAS016
+     C           LAFTYP    OREQ 'MAMT'                                                        CAS016
+     C           LAFTYP    OREQ 'SMAM'                                                        CAS016
+     C           WPDRA     SUB  EAMT      WPDRA                                               CAS016
+     C                     ENDIF                                                              CAS016
+      *                                                                                       CAS016
+     C                     Z-ADDWPDST     PZBEG                                               CAS016
+     C                     Z-ADDEDAT      PZEND                                               CAS016
+     C                     Z-ADDICBS      PZCALC                                              CAS016
+     C                     Z-ADDWPDRA     PZAMT                                               CAS016
+     C                     Z-ADDWZRAT     PZRATE                                              CAS016
+     C                     Z-ADD0         PZINTR                                              CAS016
+      *                                                                                       CAS016
+     C                     CALL 'GLINTC'                                                      CAS016
+     C                     PARM           PZBEG                                               CAS016
+     C                     PARM           PZEND                                               CAS016
+     C                     PARM           PZCALC                                              CAS016
+     C                     PARM           PZAMT                                               CAS016
+     C                     PARM           PZRATE                                              CAS016
+     C                     PARM           PZINTR                                              CAS016
+      *                                                                                       CAS016
+     C           LAFTYP    IFEQ 'SRPI'                                                        CAS016
+     C           LAFTYP    OREQ 'SSRI'                                                        CAS016
+     C           LAFTYP    OREQ 'INTP'                                                        CAS016
+     C           LAFTYP    OREQ 'SINT'                                                        CAS016
+     C           LAFTYP    OREQ 'MINT'                                                        CAS016
+     C           LAFTYP    OREQ 'SMIN'                                                        CAS016
+     C           INTC      ANDNE'N'                                                           CAS016
+     C           WPDRA     SUB  EAMT      WPDRA                                               CAS016
+     C                     ENDIF                                                              CAS016
+      *                                                                                       CAS016
+     C                     ENDSR                                                              CAS016
+      *****************************************************************                       CAS016
+      /EJECT                                                                                  CAS016
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *  Called By: SRINIT, SRRECL and SRWRTE subroutine              *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     OPEN LE4310AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSELE4310AU
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZFRPEDZ3
+     C/COPY ZSRSRC,ZINTDYZ2
+     C/COPY ZSRSRC,ZDATE9Z3
+     C/COPY ZSRSRC,GLINTCZ1
+     C/COPY ZSRSRC,ZDAT10Z2
+     C/COPY ZSRSRC,ZFWDT
+     C/COPY ZSRSRC,ZACCH
+** CPY@
+(c) Finastra International Limited 2002
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

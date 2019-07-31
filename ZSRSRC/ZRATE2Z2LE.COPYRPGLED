@@ -1,0 +1,99 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standard Subroutines                                 *
+      *                                                               *
+      *  ZRATE2Z2LE - Edt rate dsp w/o sign/rt just-4dp               *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CAAA02  *CREATE    Date 06Sep03               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAA002 - WebFacing.                                          *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * ZRATE2 - Subroutine to convert a rate to display, no sign     *
+      *          and no right justify                                 *
+      *                                                               *
+      * INPUT  : @@INPR Rate to be edited.                            *
+      *                                                               *
+      * OUTPUT : @@OUTR Edited output rate.                           *
+      *                                                               *
+      * OTHERS   @@DECS Field to hold decimal digits for input rate.  *
+      * USED   : @@INTS Field to hold integers for input rate.        *
+      *          @@N    Counter field.                                *
+      *          @W     Work array.                                   *
+      *          @@INTR Intermediate field to half-adjust 4th         *
+      *                 decimal place                                 *
+      *****************************************************************
+     C     ZRATE2        BEGSR
+      *
+      **  Initialise fields used.
+      *
+     C                   MOVE      *BLANKS       @@OUTR           13
+     C                   MOVE      *BLANKS       @@DECS            7
+     C                   MOVE      *BLANKS       @@INTS            4
+     C                   Z-ADD     0             @@N               2 0
+      *
+      **  Initialise work array.
+      *
+     C                   MOVEA     *BLANKS       @W
+      *
+      **  If the rate is negative reverse the sign.
+      *
+     C     @@INPR        IFLT      0                                            B1
+     C                   Z-SUB     @@INPR        @@INPR           11 7          *1
+     C                   END                                                    E1
+      *
+      * NECCESARY TO HALF-ADJUST 4TH DECIMAL PLACE OF INPUT FIELD
+      * IN ORDER THAT FINAL EDITED FIELD BE CORRECT TO 4 DECIMAL PLACES
+      *
+     C                   Z-ADD(H)  @@INPR        @@INTR           11 4
+     C                   Z-ADD     @@INTR        @@INPR
+      *
+      **  Separate integers and decimal digits into two fields.
+      *
+     C                   MOVE      @@INPR        @@DECS
+     C                   MOVEL     @@INPR        @@INTS
+      *
+      **  Move integers, decimal separator and decimal digits into
+      **  work array.
+      *
+     C                   MOVEA     @@INTS        @W
+     C                   MOVE      '.'           @W(5)
+     C                   MOVEA     @@DECS        @W(6)
+      *
+      **  Remove leading zeros from the rate and replace with blanks.
+      *
+     C                   Z-ADD     1             @@N
+     C     @@N           DOWLE     3                                            B1
+     C     @W(@@N)       ANDEQ     '0'                                          X1
+     C                   MOVE      *BLANK        @W(@@N)                        *1
+     C                   ADD       1             @@N                            *1
+     C                   END                                                    E1
+      *
+      **  Truncate trailing zeros and replace with blanks. If rate is
+      **  an integer a single zero after the decimal place should be
+      **  displayed.
+      *
+     C                   Z-ADD     12            @@N
+     C     @@N           DOWGE     7                                            B1
+     C     @W(@@N)       ANDEQ     '0'                                          X1
+     C                   MOVE      *BLANK        @W(@@N)                        *1
+     C                   SUB       1             @@N                            *1
+     C                   END                                                    E1
+      *
+      **  Move the final array into the output field.
+      *
+     C                   MOVEA     @W            @@OUTR
+      *
+      *
+     C     ZRAT29        ENDSR                                                  **ZRAT29**
+      *****************************************************************
+      * End of /COPY ZRATE2Z2LE                                       *
+      *****************************************************************

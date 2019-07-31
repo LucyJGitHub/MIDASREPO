@@ -1,0 +1,1865 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Display branch codes subfile')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0060D - Display Branch Codes                               *
+      *                                                               *
+      *  Function:  This program displays Branch Codes subfile        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL013             Date 20Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CRT004             Date 04MAY00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD003             Date 27OCT97               *
+      *                 CRT003             Date 02JUL96               *
+      *                 S01459             Date 02JUL96               *
+      *                 S01449             Date 25AUG93               *  *
+      *                 S01437             Date 25AUG93               *  *
+      *                 S01383             Date 04JUN92               *  *
+      *                 LN0168             Date 26JUN90               *  *
+      *                 S01117             Date 10JAN90               *  *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL013 - MT94x Message Generation.                           *
+      *  CRT004 - Cashier Midas TCP/IP interface.                     *
+      *  CDL008 - Continuous Linked Settlement                        *
+      *           (Recompiled over changed SDBRCHPD)                  *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  CRT003 - Regenerate & recompile.                             *
+      *  S01459 - Addition of Midas Headerbox.                        *
+      *  S01449 - Recompile over changed SDBRCHPD.                    *
+      *  S01437 - Recompile over changed SDBRCHPD.                    *
+      *  S01383 - Recompile over changed SDBRCHPD.                    *
+      *  LN0168 - Set scan limit to 99999.                            *
+      *  S01117 - Release 10 changes.                                 *  *
+      *                                                               *
+      *****************************************************************
+     FSD0060D#CF  E                    WORKSTN                        UC
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Branch codes enquiry subfile
+      *
+     FSDBRCHL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Branch codes retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+      * Outward parameters
+     IPARC        DS                              3
+      * KEY : Midas SD Branch codes retrieval
+      * I : MAP Branch code
+     I                                        1   3 PABRCD
+      *
+      * Outward parameters
+     IPBRC        DS                              3
+      * KEY : Midas SD Branch codes retrieval
+      * I : MAP Branch code
+     I                                        1   3 PBBRCD
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+     IID0001      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I :  Display file mode
+     I                                        1   1 P1DFMD
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'value for field not valid'
+      * *SFLSEL
+     I                                        1   1 ZA0001
+      * Message data for 'value for field not valid'
+      * *SFLSEL
+     I                                        1   1 ZA0002
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0003
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C           P1DFMD    PARM           WP0001  1        Display file mo
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise & load subfile page
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested
+     C           W0RSF     DOWEQ'N'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload
+     C   05                CAS            FBRQRL
+      * Display next SFL page
+     C   27                CAS            BBLDSF
+      * Process screen input
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise and load subfile page
+      *================================================================
+      * Clear subfile
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * Position DBF file
+     C           KPOS      KLIST
+     C                     KFLD           A8BRCD           Branch code
+      * Setup key
+     C                     MOVEL#2BRCD    A8BRCD           Branch code
+     C           KPOS      SETLL@A8REB0
+     C                     READ @A8REB0                8782*82=EOF
+      * Save previous selector values
+     C           *LIKE     DEFN #2CMCD    WZCMCD
+     C                     MOVEL#2CMCD    WZCMCD           Company Code
+     C           *LIKE     DEFN #2LCCD    WZLCCD
+     C                     MOVEL#2LCCD    WZLCCD           Location Code
+     C           *LIKE     DEFN #2LCD     WZLCD
+     C                     MOVEL#2LCD     WZLCD            Last Change Dat
+     C           *LIKE     DEFN #2TYLC    WZTYLC
+     C                     MOVEL#2TYLC    WZTYLC           Type of Last Ch
+     C           *LIKE     DEFN #2GBCD    WZGBCD
+     C                     MOVEL#2GBCD    WZGBCD           Global Branch C
+     C           *LIKE     DEFN #2BRSN    WZBRSN
+     C                     MOVEL#2BRSN    WZBRSN           Branch Shortnam
+     C           *LIKE     DEFN #2BRCD    WZBRCD
+     C                     MOVEL#2BRCD    WZBRCD           Branch code
+     C           *LIKE     DEFN #2BICN    WZBICN
+     C                     MOVEL#2BICN    WZBICN           Branch Internal
+     C           *LIKE     DEFN #2BRNM    WZBRNM
+     C                     MOVEL#2BRNM    WZBRNM           Branch Name
+      * Translate search mask for text field
+     C                     MOVEL'QSYST'   WQB10X 10
+     C                     MOVE 'RNTBL'   WQB10X
+     C           *LIKE     DEFN #2BRNM    WQBRNM           Branch Name
+     C                     CALL 'QDCXLATE'
+      * Length
+     C                     PARM 30        WQA5N   50
+     C                     PARM #2BRNM    WQBRNM           Branch Name
+     C                     PARM           WQB10X           QSYSTRNTBL
+     C                     PARM 'QSYS'    WQC10X 10
+      * Load subfile page
+     C                     Z-ADD0         ##RROK  50
+     C                     EXSR BBLDSF
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page
+      *================================================================
+      * Re-establish fields in read-ahead record
+     C   27                DO
+     C  N82                READP@A8REB0                  90*
+     C  N82                READ @A8REB0                  90*
+     C                     END
+      *
+      * Setof record error indicators
+     C                     MOVEL*ALL'0'   WKIND0  1
+     C                     MOVEAWKIND0    *IN,34
+      * Start at previous highest record in SFL
+     C                     Z-ADD##RRMX    ##RR    50
+      * Reset count of DBF records read
+     C                     Z-ADD0         ##RRRD  50
+      * Set required pages based on *Set Cursor or *Subfile Pages
+     C           W0RR0     IFGT 0
+     C           W0RR0     DIV  ##SFPG    ##SPG   30
+     C                     MVR            ##SLIN  30
+     C           ##SLIN    IFGT 0
+     C                     ADD  1         ##SPG
+     C                     END
+     C           W0SPG     IFGT ##SPG
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+     C                     ELSE
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+      * Compute lines required based on pages
+     C           ##SPG     MULT ##SFPG    ##SFLN  90
+     C           ##SFLN    IFGT 999
+     C                     Z-ADD999       ##SFLN
+     C                     END
+      *................................................................
+      * Load next SFL page until SFL page full, or
+      * Scan limit reached
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFLN
+     C           ##RRRD    ANDLTW0SLM
+      * Check selection fields - if fail, read next record
+     C           #2CMCD    IFNE *BLANK                     Company Code
+     C           A8CMCD    CABNE#2CMCD    BB020            Company Code
+     C                     END
+     C           #2LCCD    IFNE *BLANK                     Location Code
+     C           A8LCCD    CABNE#2LCCD    BB020            Location Code
+     C                     END
+     C           #2LCD     IFNE *ZERO                      Last Change Dat
+     C           A8LCD     CABNE#2LCD     BB020            Last Change Dat
+     C                     END
+     C           #2TYLC    IFNE *BLANK                     Type of Last Ch
+     C           A8TYLC    CABNE#2TYLC    BB020            Type of Last Ch
+     C                     END
+     C           #2GBCD    IFNE *BLANK                     Global Branch C
+      * Scan for search string
+     C                     CALL 'QCLSCAN'
+     C                     PARM           A8GBCD           Global Branch C
+      * Length
+     C                     PARM 3         WQA3N   30
+      * Start
+     C                     PARM 1         WQB3N   30
+      * Mask
+     C                     PARM           #2GBCD
+      * Length
+     C                     PARM 3         WQC3N   30
+      * Translate
+     C                     PARM '1'       WQD1    1
+      * Trim
+     C                     PARM '1'       WQE1    1
+      * Wild
+     C                     PARM '?'       WQF1    1
+      * Result
+     C                     PARM           WQG3N   30
+     C           WQG3N     CABLT1         BB020
+     C                     END
+     C           #2BRSN    IFNE *BLANK                     Branch Shortnam
+      * Scan for search string
+     C                     CALL 'QCLSCAN'
+     C                     PARM           A8BRSN           Branch Shortnam
+      * Length
+     C                     PARM 3         WQA3N   30
+      * Start
+     C                     PARM 1         WQB3N   30
+      * Mask
+     C                     PARM           #2BRSN
+      * Length
+     C                     PARM 3         WQC3N   30
+      * Translate
+     C                     PARM '1'       WQD1    1
+      * Trim
+     C                     PARM '1'       WQE1    1
+      * Wild
+     C                     PARM '?'       WQF1    1
+      * Result
+     C                     PARM           WQG3N   30
+     C           WQG3N     CABLT1         BB020
+     C                     END
+     C           #2BICN    IFNE *BLANK                     Branch Internal
+     C           A8BICN    CABNE#2BICN    BB020            Branch Internal
+     C                     END
+     C           #2BRNM    IFNE *BLANK                     Branch Name
+      * Scan for search string
+     C                     CALL 'QCLSCAN'
+     C                     PARM           A8BRNM           Branch Name
+      * Length
+     C                     PARM 30        WQA3N   30
+      * Start
+     C                     PARM 1         WQB3N   30
+      * Mask
+     C                     PARM           WQBRNM
+      * Length
+     C                     PARM 30        WQC3N   30
+      * Translate
+     C                     PARM '1'       WQD1    1
+      * Trim
+     C                     PARM '1'       WQE1    1
+      * Wild
+     C                     PARM '?'       WQF1    1
+      * Result
+     C                     PARM           WQG3N   30
+     C           WQG3N     CABLT1         BB020
+     C                     END
+      * Load SFL fields
+     C                     EXSR MBFL#1
+      * Output to subfile
+     C                     ADD  1         ##RR
+     C                     ADD  1         ##RROK     81    *
+      * If SFLRCD invalid, note that errors present
+     C   98N99             SETON                     99    *
+     C                     WRITE#SFLRCD
+     C           BB020     TAG
+      * Increment scan check count
+     C                     ADD  1         ##RRRD
+     C                     READ @A8REB0                  82*82=EOF
+     C                     END                             OD 1 - ##SFPG
+      *................................................................
+     C           BB900     TAG
+      *................................................................
+      * If no DBF records found, display error message
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI ##RR = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point
+     C           ##RR      IFGT ##RRMX
+      * Calculate top line
+     C           ##RROK    DIV  ##SFPG    ##SPG
+     C                     MVR            ##SLIN
+     C           ##SLIN    IFGT 0
+     C           ##RR      SUB  ##SLIN    ##SFRC
+     C                     ELSE
+     C           ##RR      SUB  ##SFPG    ##SFRC
+     C                     END
+     C                     ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      * If scan limit reached, display error message
+     C           ##RRRD    IFGE W0SLM
+      * Send message '*Scan limit reached'
+     C                     MOVEL'Y2U0017' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     Z-ADD0         ##RROK
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen
+      *================================================================
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Update screen time
+     C                     TIME           ##TME
+      * PUTOVR unless conditioned fields change
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+      * Maintain subfile position where possible
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8392*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      *
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * Change of position specified
+     C           WZBRCD    CASNE#2BRCD    FBRQRL
+     C           WZBICN    CASNE#2BICN    FBRQRL
+     C           WZBRNM    CASNE#2BRNM    FBRQRL
+     C                     END
+      * Reload subfile requested
+     C           W0RSF     CABEQ'Y'       DAEXIT
+     C           *IN81     IFEQ '1'
+      * Process subfile records
+     C                     EXSR DBPRSF
+     C                     END
+      * If error, quit processing
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * USER: Process command keys
+      * Insert Processing.
+      * CASE: PAR.Display file mode is Maintenance mode
+     C           P1DFMD    IFEQ 'M'                        *IF
+      * Insert allowed in Maintenance Mode.
+      * CASE: CTL.*CMD key is *Go to 'Add' mode
+     C           *IN09     IFEQ '1'                        *IF
+      * CASE: WRK.Multi-branching Indicator is Non-Multi-branched
+     C           WUMBIN    IFEQ 'N'                        *IF
+      * Single Branch Environment.
+      * Check if record on file - Branch Codes  *
+     C                     EXSR SARVGN
+      * Insert only allowed if no record on Branch Codes file.
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+     C                     MOVEL'N'       WURCAD           Record added su
+      * Edit Branch Codes (1s) - Branch Codes  *
+     C                     CLEARPARC
+     C                     MOVEL*BLANK    PABRCD           Branch code
+      *
+     C                     CALL 'SD0061R'              90  Edit Branch Cod
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Branch Cod
+     C                     PARM 'I'       WQ0001  1        Action Code
+     C           WURCAD    PARM WURCAD    WQ0002  1        Record added su
+     C           WURCDL    PARM WURCDL    WQ0003  1        Record delete s
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0061R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: WRK.Record added successfully is Yes
+     C           WURCAD    IFEQ 'Y'                        *IF
+      * Set up DSPF footer -no F9 - Branch Codes  *
+     C*****************************************************************
+     C*
+     C*  Set up Footer Text in Single Branch Environment when
+     C*  F9 for insert not allowed.
+     C*
+     C*****************************************************************
+     C*  Set up Footer Text in Single Branch Environment when
+     C*  F9 for insert not allowed.
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C           P1DFMD    IFEQ 'E'
+     C* Setup footer text:
+     C* E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3341' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C           P1DFMD    IFEQ 'M'
+     C* Setup footer text:
+     C* A=Amend   D=Delete   E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3342' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+      * CASE: PGM.*Return code is *Record already exists
+     C           W0RTN     IFEQ 'Y2U0003'                  *IF
+      * Send message 'Only one Brch Code in SB'
+     C                     MOVEL'USR1024' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+      * Set up DSPF footer -no F9 - Branch Codes  *
+     C*****************************************************************
+     C*
+     C*  Set up Footer Text in Single Branch Environment when
+     C*  F9 for insert not allowed.
+     C*
+     C*****************************************************************
+     C*  Set up Footer Text in Single Branch Environment when
+     C*  F9 for insert not allowed.
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C           P1DFMD    IFEQ 'E'
+     C* Setup footer text:
+     C* E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3341' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C           P1DFMD    IFEQ 'M'
+     C* Setup footer text:
+     C* A=Amend   D=Delete   E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3342' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C                     MOVEL'Y'       WURCAD           Record added su
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Disable F9.
+      * Set up DSPF footer -no F9 - Branch Codes  *
+     C*****************************************************************
+     C*
+     C*  Set up Footer Text in Single Branch Environment when
+     C*  F9 for insert not allowed.
+     C*
+     C*****************************************************************
+     C*  Set up Footer Text in Single Branch Environment when
+     C*  F9 for insert not allowed.
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C           P1DFMD    IFEQ 'E'
+     C* Setup footer text:
+     C* E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3341' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C           P1DFMD    IFEQ 'M'
+     C* Setup footer text:
+     C* A=Amend   D=Delete   E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3342' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+      * Send message 'Only one Brch Code in SB'
+     C                     MOVEL'USR1024' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: WRK.Multi-branching Indicator is Multi-branched
+     C           WUMBIN    IFEQ 'Y'                        *IF
+      * Multi-branch Environment.
+      * Edit Branch Codes (1s) - Branch Codes  *
+     C                     CLEARPARC
+     C                     MOVEL*BLANK    PABRCD           Branch code
+      *
+     C                     CALL 'SD0061R'              90  Edit Branch Cod
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Branch Cod
+     C                     PARM 'I'       WQ0004  1        Action Code
+     C           WURCAD    PARM WURCAD    WQ0005  1        Record added su
+     C           WURCDL    PARM WURCDL    WQ0006  1        Record delete s
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0061R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Insert not allowed in Enquiry Mode.
+      * CASE: CTL.*CMD key is *Go to 'Add' mode
+     C           *IN09     IFEQ '1'                        *IF
+      * Send message 'Function key not allowed'
+     C                     MOVEL'USR0533' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO DAEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile record
+      *================================================================
+     C                     READC#SFLRCD                  92*
+     C           *IN92     DOWEQ'0'
+      * Process subfile record
+     C                     EXSR DCPRSR
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  92*
+     C                     END
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         DCPRSR    BEGSR
+      *================================================================
+      * Process subfile record
+      *================================================================
+      * Setof error indicators and SFLNXTCHG
+     C                     MOVEAWKIND0    *IN,34
+     C                     SETOF                     98    *
+      * USER: Process subfile record (Pre-confirm)
+      * Enquiry Mode processing.
+      * CASE: RCD.*SFLSEL is *Enquire
+     C           #1SEL     IFEQ 'E'                        *IF
+      * Display Branch Codes (1s) - Branch Codes  *
+     C                     CLEARPBRC
+     C                     MOVEL#1BRCD    PBBRCD           Branch code
+      *
+     C                     CALL 'SD0061E'              90  Display Branch
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PBRC             KEY: Branch Cod
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0061E' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+      * Maintenance Mode processing.
+      * CASE: PAR.Display file mode is Maintenance mode
+     C           P1DFMD    IFEQ 'M'                        *IF
+      * CASE: RCD.*SFLSEL is *Delete
+     C           #1SEL     IFEQ 'D'                        *IF
+      * Delete processing.
+      * CASE: WRK.Multi-branching Indicator is Non-Multi-branched
+     C           WUMBIN    IFEQ 'N'                        *IF
+      * Single Branch Environment - only one record to be held on file.
+     C                     MOVEL'N'       WURCDL           Record delete s
+     C                     MOVEL'N'       WURCAD           Record added su
+      * Edit Branch Codes (1s) - Branch Codes  *
+     C                     CLEARPARC
+     C                     MOVEL#1BRCD    PABRCD           Branch code
+      *
+     C                     CALL 'SD0061R'              90  Edit Branch Cod
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Branch Cod
+     C                     PARM 'D'       WQ0007  1        Action Code
+     C           WURCAD    PARM WURCAD    WQ0008  1        Record added su
+     C           WURCDL    PARM WURCDL    WQ0009  1        Record delete s
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0061R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+      * CASE: WRK.Record delete successful is Yes
+     C           WURCDL    IFEQ 'Y'                        *IF
+      * If record deleted, 'F9' displayed on Footer.
+      * Set-up Dsp. file footer - Standard Functions  *
+     C* MOVE THE CORRECT TEXT INTO THE DISPLAY FILE'S FOOTER DEPENDING ON THE
+     C* MODE
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C           P1DFMD    IFEQ 'E'
+     C* Setup footer text:
+     C* E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3341' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    KE0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    KE0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    KE0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C           P1DFMD    IFEQ 'M'
+     C                     MOVE WUMDEL    WUMDEL  1
+     C           WUMDEL    IFNE 'N'
+     C* Setup footer text:
+     C* A=Amend  D=Delete  E=Enquire  F3=Main Menu  F5=Refresh
+     C* F9=Go to 'Add'
+     C                     MOVEL'USR3334' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    KE0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    KE0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    KE0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C           WUMDEL    IFEQ 'N'
+     C* Setup footer text:
+     C* A=Amend  E=Enquire  F3=Main Menu  F5=Refresh  F9=Go to 'Add' Mode
+     C                     MOVEL'USR3335' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    KE0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    KE0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    KE0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     ELSE
+      * CASE: WRK.Record delete successful is No
+     C           WURCDL    IFEQ 'N'                        *IF
+      * If record not deleted, 'F9' not displayed on footer.
+      * Set up DSPF footer -no F9 - Branch Codes  *
+     C*****************************************************************
+     C*
+     C*  Set up Footer Text in Single Branch Environment when
+     C*  F9 for insert not allowed.
+     C*
+     C*****************************************************************
+     C*  Set up Footer Text in Single Branch Environment when
+     C*  F9 for insert not allowed.
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C           P1DFMD    IFEQ 'E'
+     C* Setup footer text:
+     C* E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3341' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C           P1DFMD    IFEQ 'M'
+     C* Setup footer text:
+     C* A=Amend   D=Delete   E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3342' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: WRK.Multi-branching Indicator is Multi-branched
+     C           WUMBIN    IFEQ 'Y'                        *IF
+      * Multi-branch Environment.
+      * Edit Branch Codes (1s) - Branch Codes  *
+     C                     CLEARPARC
+     C                     MOVEL#1BRCD    PABRCD           Branch code
+      *
+     C                     CALL 'SD0061R'              90  Edit Branch Cod
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Branch Cod
+     C                     PARM 'D'       WQ0010  1        Action Code
+     C           WURCAD    PARM WURCAD    WQ0011  1        Record added su
+     C           WURCDL    PARM WURCDL    WQ0012  1        Record delete s
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0061R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: RCD.*SFLSEL is *Amend
+     C           #1SEL     IFEQ 'A'                        *IF
+      * Amend processing.
+     C                     MOVEL'N'       WURCAD           Record added su
+      * Edit Branch Codes (1s) - Branch Codes  *
+     C                     CLEARPARC
+     C                     MOVEL#1BRCD    PABRCD           Branch code
+      *
+     C                     CALL 'SD0061R'              90  Edit Branch Cod
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Branch Cod
+     C                     PARM 'A'       WQ0013  1        Action Code
+     C           WURCAD    PARM WURCAD    WQ0014  1        Record added su
+     C           WURCDL    PARM WURCDL    WQ0015  1        Record delete s
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0061R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Amend and Delete not allowed in Enquiry Mode.
+      * CASE: RCD.*SFLSEL is *Amend
+     C           #1SEL     IFEQ 'A'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1SEL     ZA0001           *SFLSEL
+      * Send message 'value for field not valid'
+     C                     MOVEL'USR0553' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9834  *
+      *
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: RCD.*SFLSEL is *Delete
+     C           #1SEL     IFEQ 'D'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1SEL     ZA0002           *SFLSEL
+      * Send message 'value for field not valid'
+     C                     MOVEL'USR0553' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9834  *
+      *
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: PGM.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C           *IN98     IFEQ '1'
+      * SFLRCD invalid
+     C  N99                Z-ADD##RR      ##SFRC     99    *
+      * SFLNXTCHG
+     C                     SETON                     84
+     C                     ELSE
+      * SFLRCD valid
+      * SFLNXTCHG
+     C                     SETOF                     84
+     C                     MOVEL*BLANK    #1SEL
+     C                     END                             FI *IN98
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @A8REB0 fields to subfile
+      *================================================================
+     C                     MOVEL*BLANK    #1SEL
+     C                     MOVELA8CMCD    #1CMCD           Company Code
+     C                     MOVELA8DFAC    #1DFAC           Due From A/c
+     C                     MOVELA8DTAC    #1DTAC           Due To A/c
+     C                     MOVELA8LCCD    #1LCCD           Location Code
+     C                     Z-ADDA8LCD     #1LCD            Last Change Dat
+     C                     MOVELA8TYLC    #1TYLC           Type of Last Ch
+     C                     MOVELA8GBCD    #1GBCD           Global Branch C
+     C                     MOVELA8BRSN    #1BRSN           Branch Shortnam
+     C                     MOVELA8RECI    #1RECI           Record Id
+     C                     MOVELA8BTID    #1BTID           Branch TID Addr
+     C                     Z-ADDA8STCD    #1STCD           Sort Code
+     C                     MOVELA8RDFC    #1RDFC           Round Down Inte
+     C                     MOVELA8OGID    #1OGID           Midas Export Va
+     C                     MOVELA8PCSS    #1PCSS           PC Subsystem
+     C                     MOVELA8BTWN    #1BTWN           Branch Town
+     C                     Z-ADDA8SUOP    #1SUOP           Sunday Opening
+     C                     Z-ADDA8SUCL    #1SUCL           Sunday Closing
+     C                     MOVELA8SUOV    #1SUOV           Sunday Times Ov
+     C                     Z-ADDA8MOOP    #1MOOP           Monday Opening
+     C                     Z-ADDA8MOCL    #1MOCL           Monday Closing
+     C                     MOVELA8MOOV    #1MOOV           Monday Times Ov
+     C                     Z-ADDA8TUOP    #1TUOP           Tuesday Opening
+     C                     Z-ADDA8TUCL    #1TUCL           Tuesday Closing
+     C                     MOVELA8TUOV    #1TUOV           Tuesday Times O
+     C                     Z-ADDA8WEOP    #1WEOP           Wednesday Openi
+     C                     Z-ADDA8WECL    #1WECL           Wednesday Closi
+     C                     MOVELA8WEOV    #1WEOV           Wednesday Times
+     C                     Z-ADDA8THOP    #1THOP           Thursday Openin
+     C                     Z-ADDA8THCL    #1THCL           Thursday Closin
+     C                     MOVELA8THOV    #1THOV           Thursday Times
+     C                     Z-ADDA8FYOP    #1FYOP           Friday Opening
+     C                     Z-ADDA8FYCL    #1FYCL           Friday Closing
+     C                     MOVELA8FYOV    #1FYOV           Friday Times Ov
+     C                     Z-ADDA8SAOP    #1SAOP           Saturday Openin
+     C                     Z-ADDA8SACL    #1SACL           Saturday Closin
+     C                     MOVELA8SAOV    #1SAOV           Saturday Times
+     C                     MOVELA8BRST    #1BRST           Branch Status
+     C**********           Z-ADDA8SYCU    #1SYCU           Synd Agent-Cust                    CSD027
+     C                     MOVE A8SYCU    #1SYCU           Synd Agent-Cust                    CSD027
+     C                     MOVELA8MQSM    #1MQSM           MQ for Sent Mes
+     C                     MOVELA8MQRT    #1MQRT           MQ for Returned
+     C                     MOVELA8MQBU    #1MQBU           MQ for Bulk Tra
+     C                     MOVELA8MQDF    #1MQDF           MQ for Drip Fee
+     C                     MOVELA8TIBR    #1TIBR           TI Branch Numbe
+     C                     MOVELA8TIDS    #1TIDS           TI Departmental
+     C                     MOVELA8BRA1    #1BRA1           TI Brch Name an
+     C                     MOVELA8BRA2    #1BRA2           TI Brch Name an
+     C                     MOVELA8BRA3    #1BRA3           TI Brch Name an
+     C                     MOVELA8BRA4    #1BRA4           TI Brch Name an
+     C                     MOVELA8BRA5    #1BRA5           TI Brch Name an
+     C                     MOVELA8BRNB    #1BRNB           TI Branch Telep
+     C                     MOVELA8BRCD    #1BRCD           Branch code
+     C                     MOVELA8BICN    #1BICN           Branch Internal
+     C                     MOVELA8BRNM    #1BRNM           Branch Name
+     C                     MOVELA8LLIS    #1LLIS           TCP/IP Listener      CRT004
+     C                     Z-ADDA8TCPP    #1TCPP           TCP/IP Port Num      CRT004
+     C                     Z-ADDA8TMOF    #1TMOF           Time Offset          CGL013
+     C                     MOVELA8SIGN    #1SIGN           Time Offset Sign     CGL013
+     C                     Z-ADDA8STOF    #1STOF           Syst Time Offset     CGL013
+     C                     MOVELA8SSIN    #1SSIN           Syst Time Of Sign    CGL013
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control
+      *================================================================
+     C                     MOVEL*BLANK    #2CMCD           Company Code
+     C                     MOVEL*BLANK    #2LCCD           Location Code
+     C                     Z-ADD*ZERO     #2LCD            Last Change Dat
+     C                     MOVEL*BLANK    #2TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #2GBCD           Global Branch C
+     C                     MOVEL*BLANK    #2BRSN           Branch Shortnam
+     C                     MOVEL*BLANK    #2BRCD           Branch code
+     C                     MOVEL*BLANK    #2BICN           Branch Internal
+     C                     MOVEL*BLANK    #2BRNM           Branch Name
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Check if record on file - Branch Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KPSSA     KLIST
+     C                     KFLD           A8BRCD           Branch code
+      * Move fields to key list
+     C                     MOVEL*BLANK    A8BRCD           Branch code
+     C           KPSSA     SETLL@A8REB0                    *
+     C                     READ @A8REB0                  90*
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0075' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     READ @A8REB0                  90*
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Check if record on file - Branch Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KPSSB     KLIST
+     C                     KFLD           A8BRCD           Branch code
+      * Move fields to key list
+     C                     MOVEL*BLANK    A8BRCD           Branch code
+     C           KPSSB     SETLL@A8REB0                    *
+     C                     READ @A8REB0                  90*
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0075' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     READ @A8REB0                  90*
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Get DRS indicator - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KPSSC     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KPSSC     SETLL@BGREC8                    *
+     C                     READ @BGREC8                  90*
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0096' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+      * Setup message data for message
+     C                     MOVEL'SDMMODPD'ZA0003           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO SCEXIT                     *QUIT
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBGDRSD    WUDRSD           DRS Standing Da
+     C                     READ @BGREC8                  90*
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         SDRVGN    BEGSR
+      *================================================================
+      * Check if record on file - Branch Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KPSSD     KLIST
+     C                     KFLD           A8BRCD           Branch code
+      * Move fields to key list
+     C                     MOVEL*BLANK    A8BRCD           Branch code
+     C           KPSSD     SETLL@A8REB0                    *
+     C                     READ @A8REB0                  90*
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0075' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SDEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     READ @A8REB0                  90*
+     C                     END
+      *================================================================
+     CSR         SDEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM *ZERO     YYLGCT  50       # of grps
+     C                     PARM *BLANK    YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+      * USER: Exit program processing
+      * Start of SAR S01117
+      * In a single branch enviroment exit is not allowed until a branch
+      * has been defined to the system.
+      * CASE: WRK.Multi-branching Indicator is Non-Multi-branched
+     C           WUMBIN    IFEQ 'N'                        *IF
+      * CASE: PAR.Display file mode is Maintenance mode
+     C           P1DFMD    IFEQ 'M'                        *IF
+      * Check if record on file - Branch Codes  *
+     C                     EXSR SBRVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Send message 'Unable to exit no branch'
+     C                     MOVEL'USR1143' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO ZXEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * End of SAR S01117
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Record added successfully
+     C                     MOVEL*BLANK    WURCAD  1
+      * Define work field Record delete successful
+     C                     MOVEL*BLANK    WURCDL  1
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field DRS Standing Data
+     C                     MOVEL*BLANK    WUDRSD  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD0060D#
+     C                     OPEN SDBRCHL1
+     C                     OPEN SDMMODL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     Z-ADD14        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+      * Maximum record number
+     C                     Z-ADD*ZERO     ##RRMX
+      * Scan limit
+     C                     Z-ADD500       W0SLM   50
+      * Subfile pages
+     C                     Z-ADD1         W0SPG   30
+      * Processed Subfile record
+     C                     Z-ADD0         W0RR0   40
+      *................................................................
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * Start of S01459
+      * Remove the last amend box function.
+      * Remove the creation parameters function.
+      * SD0060D Precompiler - Branch Codes  *
+      * End of S01459
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Copyright Statement - Standard Functions  * copyright
+      * Get DRS indicator - MIDAS Modules  *
+     C                     EXSR SCRVGN
+      * Set up Title for Branch - Branch Codes  *
+     C*****************************************************************
+     C*
+     C* SET UP TITLE FOR BRANCH CODES
+     C*
+     C*****************************************************************
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C           P1DFMD    IFEQ 'M'
+     C* Setup header text:
+     C* Branch Codes Maintenance
+     C                     MOVEL'USR3343' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##URPT
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ELSE
+     C* Setup header text:
+     C* Branch Codes Enquiry
+     C                     MOVEL'USR3344' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##URPT
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      * Footers displayed - conditioned on Multi-Branching.
+      * CASE: WRK.Multi-branching Indicator is Non-Multi-branched
+     C           WUMBIN    IFEQ 'N'                        *IF
+      * Single Branch Environment.
+      * Check if record on file - Branch Codes  *
+     C                     EXSR SDRVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * If Single Branch and no record on Branch Codes, F9 allowed.
+      * Set-up Dsp. file footer - Standard Functions  *
+     C* MOVE THE CORRECT TEXT INTO THE DISPLAY FILE'S FOOTER DEPENDING ON THE
+     C* MODE
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C           P1DFMD    IFEQ 'E'
+     C* Setup footer text:
+     C* E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3341' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    KE0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    KE0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    KE0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C           P1DFMD    IFEQ 'M'
+     C                     MOVE WUMDEL    WUMDEL  1
+     C           WUMDEL    IFNE 'N'
+     C* Setup footer text:
+     C* A=Amend  D=Delete  E=Enquire  F3=Main Menu  F5=Refresh
+     C* F9=Go to 'Add'
+     C                     MOVEL'USR3334' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    KE0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    KE0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    KE0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C           WUMDEL    IFEQ 'N'
+     C* Setup footer text:
+     C* A=Amend  E=Enquire  F3=Main Menu  F5=Refresh  F9=Go to 'Add' Mode
+     C                     MOVEL'USR3335' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    KE0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    KE0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    KE0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * If Single Branch and records exist on Branch Codes, F9 not allowe
+      * Set up DSPF footer -no F9 - Branch Codes  *
+     C*****************************************************************
+     C*
+     C*  Set up Footer Text in Single Branch Environment when
+     C*  F9 for insert not allowed.
+     C*
+     C*****************************************************************
+     C*  Set up Footer Text in Single Branch Environment when
+     C*  F9 for insert not allowed.
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C           P1DFMD    IFEQ 'E'
+     C* Setup footer text:
+     C* E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3341' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C           P1DFMD    IFEQ 'M'
+     C* Setup footer text:
+     C* A=Amend   D=Delete   E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3342' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: WRK.Multi-branching Indicator is Multi-branched
+     C           WUMBIN    IFEQ 'Y'                        *IF
+      * Multi-branch Environment.
+      * Set-up Dsp. file footer - Standard Functions  *
+     C* MOVE THE CORRECT TEXT INTO THE DISPLAY FILE'S FOOTER DEPENDING ON THE
+     C* MODE
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C           P1DFMD    IFEQ 'E'
+     C* Setup footer text:
+     C* E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3341' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    KE0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    KE0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    KE0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C           P1DFMD    IFEQ 'M'
+     C                     MOVE WUMDEL    WUMDEL  1
+     C           WUMDEL    IFNE 'N'
+     C* Setup footer text:
+     C* A=Amend  D=Delete  E=Enquire  F3=Main Menu  F5=Refresh
+     C* F9=Go to 'Add'
+     C                     MOVEL'USR3334' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    KE0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    KE0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    KE0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C           WUMDEL    IFEQ 'N'
+     C* Setup footer text:
+     C* A=Amend  E=Enquire  F3=Main Menu  F5=Refresh  F9=Go to 'Add' Mode
+     C                     MOVEL'USR3335' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    KE0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    KE0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    KE0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END                             *FI
+     C                     END                             *FI
+      * Start of Fix LN0168
+     C                     Z-ADD99999     W0SLM            *Scan limit
+      * End of Fix LN0168
+      * Initialise subfile control
+     C                     EXSR MEIZ#2
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0060DPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0060DPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0060DPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

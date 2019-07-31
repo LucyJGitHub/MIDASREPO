@@ -1,0 +1,110 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SD Compliance Watch OFAC-AGENT Server')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Standing Data Module                             */
+/*                                                                   */
+/*       SDFOFSRV - Compliance Watch OFAC-AGENT Server               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CSD015  *CREATE    Date 03Mar03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSD015 - Midas Compliance Watch - Watch List Checking       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SPREF &OFASID)
+ 
+             DCL        VAR(&SPREF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OFASID) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(120)
+             DCL        VAR(&VAR1) TYPE(*CHAR) LEN(18)
+             DCL        VAR(&VAR2) TYPE(*CHAR) LEN(18)
+             DCL        VAR(&VAR3) TYPE(*CHAR) LEN(16)
+             DCL        VAR(&VAR4) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&VAR5) TYPE(*CHAR) LEN(43)
+             DCL        VAR(&VAR6) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&VAR7) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CALLQ) TYPE(*CHAR) LEN(150)
+             DCL        VAR(&LENQ) TYPE(*DEC) LEN(15 5)
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2003')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Begin commitment control */
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
+ 
+             ALCOBJ     OBJ((COMPWTCH *DTAARA *EXCL)) WAIT(30)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+                SNDPGMMSG  MSG('SDFOFSRV - Attempt to start the Compliance +
+                                Watch OFAC-AGENT Server has failed. +
+                                Probable Cause: server is active already.') +
+                                TOMSGQ(MOPERQ)
+                GOTO CMDLBL(END)
+             ENDDO
+ 
+             SNDPGMMSG  MSG('SDFOFSRV - Compliance Watch OFAC-AGENT +
+                             Server has started.') TOMSGQ(MOPERQ)
+ 
+             ADDENVVAR  ENVVAR(STILCOMMMAXCLTS) VALUE(25)
+             MONMSG     MSGID(CPFA980)
+ 
+             CHGVAR     VAR(&VAR1) VALUE('''-DATA=CMPWATCH' *CAT &SPREF *CAT '''')
+             CHGVAR     VAR(&VAR2) VALUE('''-SEVERITY=MEDIUM' *CAT '''')
+             CHGVAR     VAR(&VAR3) VALUE('''-MATCHING=WORD' *CAT '''')
+             CHGVAR     VAR(&VAR4) VALUE('''-RECORDS=Y' *CAT '''')
+             CHGVAR     VAR(&VAR5) VALUE('''-SERVICE=' *CAT &OFASID *TCAT '''')
+             CHGVAR     VAR(&VAR6) VALUE('''-NOLOG=N' *CAT '''')
+             CHGVAR     VAR(&VAR7) VALUE('CMPWATCH' *CAT &SPREF)
+ 
+             CHGVAR     VAR(&PARM) VALUE(&VAR1 *BCAT &VAR2 *BCAT &VAR3 +
+                          *BCAT &VAR4 *BCAT &VAR5 *BCAT &VAR6)
+ 
+             CHGVAR     VAR(&LENQ) VALUE(150)
+ 
+             CHGVAR     VAR(&CALLQ) VALUE('CALL PGM(FOFSERV) +
+                          PARM(' *CAT &PARM *TCAT ')')
+ 
+             ADDLIBLE   LIB(&VAR7) POSITION(*LAST)
+ 
+             CALL       PGM(QCMDEXC) PARM(&CALLQ &LENQ)
+ 
+             SNDPGMMSG  MSG('SDFOFSRV - Compliance Watch OFAC-AGENT +
+                          Server is now terminating.') +
+                          TOMSGQ(MOPERQ)
+ 
+             DLCOBJ     OBJ((COMPWTCH *DTAARA *EXCL))
+ 
+             RMVLIBLE   LIB(&VAR7)
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDFOFSRV ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End program */
+ 
+END:
+ 
+             ENDPGM

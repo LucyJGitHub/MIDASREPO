@@ -1,0 +1,124 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Interest Scale Retail Historic Extract')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - User Defined Correspondence                         */
+/*                                                                   */
+/*       CGC7370 - Interest Scale Retail Extract Historic            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER042  *CREATE    Date 11May11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER042 - Interest Scale Report Correspondence               */
+/*                (Upgrade of FGE178/179)                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&STDT &ENDT &BRCA &CNUM &CCY &ACOD &ACSQ)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2011')
+ 
+/*  Declare the variables */
+             DCL        VAR(&STDT) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&ENDT) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&START) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&END) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&BRCA) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&CNUM) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CNUMA) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CCY) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ACSQ) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&ACSQA) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ACOD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&ACODA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&QRYSEL) TYPE(*CHAR) LEN(250)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create LDA if it does not already exist */
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas SD AS400 Local +
+                          Date Area'))
+ 
+/* Set-off Database Error Switches */
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+ 
+             OVRDBF     FILE(REHISPS) SHARE(*YES)
+ 
+/*  Set the date as alpha and the select fields                 */
+ 
+             CHGVAR     VAR(&START) VALUE(&STDT)
+             CHGVAR     VAR(&END) VALUE(&ENDT)
+             CHGVAR     VAR(&CNUMA) VALUE(&CNUM)
+             CHGVAR     VAR(&ACODA) VALUE(&ACOD)
+             CHGVAR     VAR(&ACSQA) VALUE(&ACSQ)
+ 
+/*  Select on : Event date is between run date                   */
+/*                            and date next working day          */
+/*              Record type is interest payment                  */
+/*              Account code is account code of historic         */
+/*              Account sequence is account sequence of historic */
+/*              Branch code is branch code of historic           */
+/*              Customer number is of historic                   */
+/*              Currency is of historic                          */
+ 
+             CHGVAR     VAR(&QRYSEL) VALUE('(HISD *GE ' *CAT &START +
+                          *CAT ') *AND (HISD *LE ' *CAT &END *CAT +
+                          ') *AND (RECI = "S") *AND (ACOD *EQ ' +
+                          *CAT &ACODA *CAT ') *AND (BRCA *EQ "' +
+                          *CAT &BRCA *CAT '") *AND (CNUM *EQ "' *CAT +
+                          &CNUMA *CAT '") *AND (CCY *EQ "' *CAT &CCY +
+                          *CAT '") *AND (ACSQ *EQ ' *CAT &ACSQA +
+                          *CAT ')')
+ 
+/*  Open the query file with a selection */
+ 
+             OPNQRYF    FILE((REHISPS)) QRYSLT(&QRYSEL)
+ 
+/*  Call the extract program */
+ 
+             CALL       PGM(CG7260)
+ 
+/*  Close the query file */
+ 
+             CLOF       OPNID(REHISPS)
+ 
+/*  Database error handling */
+ 
+             IF   COND(%SWITCH(XXXXXX11))   THEN(DO)
+                RTVDTAARA   DTAARA(LDA (134 50))   RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                    TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             DMPCLPGM
+             SNDPGMMSG  MSG('Program CGC7370 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/* Normal termination */
+ 
+ END:        ENDPGM

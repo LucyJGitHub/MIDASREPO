@@ -1,0 +1,1713 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Trades Auth Extended Settle Maint')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1819 - Trades Extended Settlements for MT5xxs              *
+     F*                                                               *
+     F*  Function: This program allows input of the fields needed     *
+     F*   (I/C)    to produce the SWIFT Messages - MT5xx.             *
+     F*                                                               *
+     F*  Called By: SE1818 - Trades Input - Extension File for MT5xx  *
+     F*                                                               *
+     F*         NB. ANY CHANGE MADE TO THIS PGM WILL ALMOST           *
+     F*             DEFINITELY NEED TO BE APPLIED TO SE1808,SE1819.   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE034             Date 18Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE028             Date 06Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 084735             Date 23May95               *
+      *                 S01401             Date 16Jun93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSW210 - SWIFT 2010 Changes                                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSE034 - Standard Settlement Instruction improvements        *
+      *  CSE028 - Standing Settlement Instructions Enhancement.       *
+     F*  084735 - Recompile over changed file SE50DT.                 *
+     F*  S01401 - The generation of MT5xx SWIFT Messages if the option*
+     F*           is available.  NEW PROGRAM.                         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FTRADSDY2IF  E           K        DISK
+     F            TRADSDD2                          KRENAMERTVIDX
+     FSECTY   IF  E           K        DISK                                                   CSE034
+     F*
+     FSE1819DFCF  E                    WORKSTN
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    02  - Off=no errors on second screen                       *
+     F*    09  - Protect Input Fields                                 *
+     F*    10  - Protect Input Fields                                 *
+     F*    21  - A/c for Payment (MT510)                              *
+     F*    22  -   "                                                  *
+     F*    23  - A/c for Payment                                      *
+     F*    24  -   "                                                  *
+     F*    25  - A/c with Institution                                 *
+     F*    26  -   "                                                  *
+     F*    27  -   "                                                  *
+     F*    28  - Beneficiary of Money                                 *
+     F*    29  -   "                                                  *
+     F*    30  -   "                                                  *
+     F*    31  -   "                                                  *
+     F*    32  - A/c for Charges                                      *
+     F*    33  -   "                                                  *
+     F*    34  - Sender to Receiver Information                       *
+     F*    35  -   "                                                  *
+     F*    36  -   "                                                  *
+     F*    37  - Further Information                                  *
+     F*    38  -   "                                                  *
+     F*    39  - Registration Details                                 *
+     F*    40  -   "                                                  *
+     F*    41  - Narrative                                            *
+     F*    42  -   "                                                  *
+     F*    43  - Instructing Party                                    *
+     F*    44  -   "                                                  *
+     F*    45  - Counterparty (MT512)                                 *
+     F*    46  -   "                                                  *
+     F*    47  - Safekeeping A/c (MT510)                              *
+     F*    48  -   "                                                  *
+     F*    49  - Safekeeping A/c                                      *
+     F*    50  -   "                                                  *
+     F*    51  - Clearing Correspondent                               *
+     F*    52  - Deliverer's Instructing Party                        *
+     F*    53  - Receiver of Securities                               *
+     F*    54  -   "                                                  *
+     F*    55  -   "                                                  *
+     F*    56  -   "                                                  *
+     F*    57  -   "                                                  *
+     F*    58  -   "                                                  *
+     F*    59  - Deliverer of Securities                              *
+     F*    60  -   "                                                  *
+     F*    61  -   "                                                  *
+     F*    62  -   "                                                  *
+     F*    63  -   "                                                  *
+     F*    64  -   "                                                  *
+     F*    65  - Beneficiary Securities                               *
+     F*    66  -   "                                                  *
+     F*    67  -   "                                                  *
+     F*    68  -   "                                                  *
+     F*    69  - Indicator for SFLEND in SE1819DF                     *
+     F*    75  - General error in validation                          *
+      *    76  - CSE028 is switched on                                *                       CSE028
+      *    77  - ISO15022 is 'Y'                                      *                       CSE028
+     F*    80  - No record found on chain                             *
+     F*    81  - Work indicator                                       *
+     F*    82  - Work indicator                                       *
+      *    84  - Rollup on second screen                              *                       CSE028
+     F*    85  - Rollup on first screen                               *
+     F*    86  - Rolldown on second screen                            *
+     F*    87  - Rolldown on first screen                             *
+     F*                                                               *
+     F*  90-99 - Used by Standard Subroutines                         *
+     F*                                                               *
+     F*  U7+U8 - Database Error                                       *
+     F*                                                               *
+     F*    KL  - Previous screen requested                            *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  SRRTRY - Process Insert                                      *
+     F*  SRSMSG - Routine to send messages to message subfile.        *
+     F*  SRALOC - Routine to access record via update index           *
+     F*  SRRTRN - Routine to set up return code for calling program   *
+     F*  SRSCR1 - Routine to output messages and first screen         *
+     F*  SRSCR2 - Routine to output messages and second screen        *
+     F*  SRCLS2 - To Clear Fields on Second Screen                    *
+     F*  SRRTS2 - To Reset Fields on Second Screen to File Values     *
+     F*  SRFTOS - To Move File Fields to Screen Fields                *
+     F*  SRSTOW - To Move Screen Fields to work Fields                *
+     F*  SRINIT - Routine to handle initial processing                *
+     F*  *PSSR  - Routine to handle database errors                   *
+     F*                                                               *
+     F*  ZALIGN - Validate and right-align Numeric Fields             *
+     F*  ZSEDIT - Insert dec. point and sign into numeric field and   *
+     F*           blank out leading zeros, optionally inserting commas*
+     F*                                                               *
+     F*  ZA0340 - Send a message to the program message queue         *
+     F*  ZA0250 - Clear program message queue                         *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E                    CCO        12  1               Clearing Correspondent
+     E*
+     E/COPY ZSRSRC,ZALIGNZ1
+     E*
+     E/COPY ZSRSRC,ZSEDITZ1
+     E*
+     I/EJECT
+     I/COPY ZSRSRC,ZSEDITZ2
+      ** ZSEDIT data structure
+      *
+     IWWDS1       DS                             35
+     I                                        1  35 WWLI35
+     I                                        5   7 WW0507
+     I                                        5  10 WW0510
+     I                                        5  12 WW0512
+     I                                        5  13 WW0513
+     I                                        5  35 WW0535
+     I                                        8  35 WW0835
+     I                                       11  35 WW1135
+     I                                       13  35 WW1335
+     I                                       14  35 WW1435
+      *
+     I           SDS
+      ** Get program name and window id from PSDS
+     I                                     *PROGRAM WWPGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+      *
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Second Data Structure for Access Objects
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Branch details
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+      ** Customer details
+      *
+     ISDCNST    E DSSDCNSTPD
+      ** Counterparty Nostro details
+      *
+     IDBERR       DS                            256
+      ** Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IPDATA     E DSSE50DT
+      ** Data structure to receive parameters from SE1818 for MT5xxs
+      *                                                                                       CSE028
+      ** DS for Trade Purchase                                                                CSE028
+      *                                                                                       CSE028
+     IPRTPCS    E DSSTDADSED                                                                  CSE028
+     I              SARECI                          W4RECI                                    CSE028
+     I              SABCH                           W4BCH                                     CSE028
+     I              SACUST                          W4CUST                                    CSE028
+     I              SABK                            W4BK                                      CSE028
+     I              SACCY                           W4CCY                                     CSE028
+     I              SAINV                           W4INV                                     CSE028
+     I              SAPREF                          W4PREF                                    CSE028
+     I              SATYPE                          W4TYPE                                    CSE028
+     I              SAGMES                          W4GMES                                    CSE028
+     I              SACONG                          W4CONG                                    CSE028
+     I              SAINST                          W4INST                                    CSE028
+     I              SAINSS                          W4INSS                                    CSE028
+     I              SARPTY                          W4RPTY                                    CSE028
+     I              SAGDEL                          W4GDEL                                    CSE028
+     I              SASROL                          W4SROL                                    CSE028
+     I              SAFIND                          W4FIND                                    CSE028
+     I              SACCTN                          W4CCTN                                    CSE028
+     I              SADRSN                          W4DRSN                                    CSE028
+     I              SADRS1                          W4DRS1                                    CSE028
+     I              SADRS2                          W4DRS2                                    CSE028
+     I              SADRS3                          W4DRS3                                    CSE028
+     I              SADRS4                          W4DRS4                                    CSE028
+     I              SABSSN                          W4BSSN                                    CSE028
+     I              SABSS1                          W4BSS1                                    CSE028
+     I              SABSS2                          W4BSS2                                    CSE028
+     I              SAFIN1                          W4FIN1                                    CSE028
+     I              SAFIN2                          W4FIN2                                    CSE028
+     I              SARED1                          W4RED1                                    CSE028
+     I              SARED2                          W4RED2                                    CSE028
+     I              SANAS1                          W4NAS1                                    CSE028
+     I              SANAS2                          W4NAS2                                    CSE028
+     I              SAIMD1                          W4IMD1                                    CSE028
+     I              SAIMD2                          W4IMD2                                    CSE028
+     I              SAIMD3                          W4IMD3                                    CSE028
+     I              SAIMD4                          W4IMD4                                    CSE028
+     I              SAIMD5                          W4IMD5                                    CSE028
+     I              SAIMD6                          W4IMD6                                    CSE028
+     I              SAIMD7                          W4IMD7                                    CSE028
+     I              SAIMD8                          W4IMD8                                    CSE028
+     I              SAIMD9                          W4IMD9                                    CSE028
+     I              SAIMS1                          W4IMS1                                    CSE028
+     I              SAIMS2                          W4IMS2                                    CSE028
+     I              SAIMS3                          W4IMS3                                    CSE028
+     I              SAIMS4                          W4IMS4                                    CSE028
+     I              SAIMS5                          W4IMS5                                    CSE028
+     I              SAIMS6                          W4IMS6                                    CSE028
+     I              SAIMS7                          W4IMS7                                    CSE028
+     I              SAIMS8                          W4IMS8                                    CSE028
+     I              SAIMS9                          W4IMS9                                    CSE028
+     I              SAPSET                          W4PSET                                    CSE028
+     I              SAAWIN                          W4AWIN                                    CSE028
+     I              SAAWIL                          W4AWIL                                    CSE028
+     I              SAAFPN                          W4AFPN                                    CSE028
+     I              SAAFPL                          W4AFPL                                    CSE028
+     I              SABOFN                          W4BOFN                                    CSE028
+     I              SABOF1                          W4BOF1                                    CSE028
+     I              SABOF2                          W4BOF2                                    CSE028
+     I              SASRL1                          W4SRL1                                    CSE028
+     I              SASRL2                          W4SRL2                                    CSE028
+     I              SASRL3                          W4SRL3                                    CSE028
+     I              SANAC1                          W4NAC1                                    CSE028
+     I              SANAC2                          W4NAC2                                    CSE028
+     I              SASTMP                          W4STMP                                    CSE028
+     I              SACHID                          W4CHID                                    CSE028
+     I              SATRRM                          W4TRRM                                    CSE028
+     I              SAMKT                           W4MKT                                     CSE034
+     I              SADIDN                          W4DIDN                                    CSW210
+     I              SADAD1                          W4DAD1                                    CSW210
+     I              SADAD2                          W4DAD2                                    CSW210
+     I              SADAD3                          W4DAD3                                    CSW210
+     I              SADAD4                          W4DAD4                                    CSW210
+     I              SADLIN                          W4DLIN                                    CSW210
+     I              SAQFIN                          W4QFIN                                    CSW210
+     I              SAPCLR                          W4PCLR                                    CSW210
+      *                                                                                       CSE028
+      ** DS for Trade Sale                                                                    CSE028
+      *                                                                                       CSE028
+     IPRTSCS    E DSSTDADSED                                                                  CSE028
+     I              SARECI                          W5RECI                                    CSE028
+     I              SABCH                           W5BCH                                     CSE028
+     I              SACUST                          W5CUST                                    CSE028
+     I              SABK                            W5BK                                      CSE028
+     I              SACCY                           W5CCY                                     CSE028
+     I              SAINV                           W5INV                                     CSE028
+     I              SAPREF                          W5PREF                                    CSE028
+     I              SATYPE                          W5TYPE                                    CSE028
+     I              SAGMES                          W5GMES                                    CSE028
+     I              SACONG                          W5CONG                                    CSE028
+     I              SAINST                          W5INST                                    CSE028
+     I              SAINSS                          W5INSS                                    CSE028
+     I              SARPTY                          W5RPTY                                    CSE028
+     I              SAGDEL                          W5GDEL                                    CSE028
+     I              SASROL                          W5SROL                                    CSE028
+     I              SAFIND                          W5FIND                                    CSE028
+     I              SACCTN                          W5CCTN                                    CSE028
+     I              SADRSN                          W5DRSN                                    CSE028
+     I              SADRS1                          W5DRS1                                    CSE028
+     I              SADRS2                          W5DRS2                                    CSE028
+     I              SADRS3                          W5DRS3                                    CSE028
+     I              SADRS4                          W5DRS4                                    CSE028
+     I              SABSSN                          W5BSSN                                    CSE028
+     I              SABSS1                          W5BSS1                                    CSE028
+     I              SABSS2                          W5BSS2                                    CSE028
+     I              SAFIN1                          W5FIN1                                    CSE028
+     I              SAFIN2                          W5FIN2                                    CSE028
+     I              SARED1                          W5RED1                                    CSE028
+     I              SARED2                          W5RED2                                    CSE028
+     I              SANAS1                          W5NAS1                                    CSE028
+     I              SANAS2                          W5NAS2                                    CSE028
+     I              SAIMD1                          W5IMD1                                    CSE028
+     I              SAIMD2                          W5IMD2                                    CSE028
+     I              SAIMD3                          W5IMD3                                    CSE028
+     I              SAIMD4                          W5IMD4                                    CSE028
+     I              SAIMD5                          W5IMD5                                    CSE028
+     I              SAIMD6                          W5IMD6                                    CSE028
+     I              SAIMD7                          W5IMD7                                    CSE028
+     I              SAIMD8                          W5IMD8                                    CSE028
+     I              SAIMD9                          W5IMD9                                    CSE028
+     I              SAIMS1                          W5IMS1                                    CSE028
+     I              SAIMS2                          W5IMS2                                    CSE028
+     I              SAIMS3                          W5IMS3                                    CSE028
+     I              SAIMS4                          W5IMS4                                    CSE028
+     I              SAIMS5                          W5IMS5                                    CSE028
+     I              SAIMS6                          W5IMS6                                    CSE028
+     I              SAIMS7                          W5IMS7                                    CSE028
+     I              SAIMS8                          W5IMS8                                    CSE028
+     I              SAIMS9                          W5IMS9                                    CSE028
+     I              SAPSET                          W5PSET                                    CSE028
+     I              SAAWIN                          W5AWIN                                    CSE028
+     I              SAAWIL                          W5AWIL                                    CSE028
+     I              SAAFPN                          W5AFPN                                    CSE028
+     I              SAAFPL                          W5AFPL                                    CSE028
+     I              SABOFN                          W5BOFN                                    CSE028
+     I              SABOF1                          W5BOF1                                    CSE028
+     I              SABOF2                          W5BOF2                                    CSE028
+     I              SASRL1                          W5SRL1                                    CSE028
+     I              SASRL2                          W5SRL2                                    CSE028
+     I              SASRL3                          W5SRL3                                    CSE028
+     I              SANAC1                          W5NAC1                                    CSE028
+     I              SANAC2                          W5NAC2                                    CSE028
+     I              SASTMP                          W5STMP                                    CSE028
+     I              SACHID                          W5CHID                                    CSE028
+     I              SATRRM                          W5TRRM                                    CSE028
+     I              SAMKT                           W5MKT                                     CSE034
+     I              SADIDN                          W5DIDN                                    CSW210
+     I              SADAD1                          W5DAD1                                    CSW210
+     I              SADAD2                          W5DAD2                                    CSW210
+     I              SADAD3                          W5DAD3                                    CSW210
+     I              SADAD4                          W5DAD4                                    CSW210
+     I              SADLIN                          W5DLIN                                    CSW210
+     I              SAQFIN                          W5QFIN                                    CSW210
+     I              SAPCLR                          W5PCLR                                    CSW210
+      *                                                                                       CSE028
+      ** DS for customer/book standard settlement instruction                                 CSE028
+      **  to be passed to SESSIR0                                                             CSE028
+      *                                                                                       CSE028
+     IPCBSTD    E DSSTDSED                    2                                               CSE028
+      *                                                                                       CSE028
+      ** Data structure for standard additional settlement details                            CSE028
+      ** for customer/book to be passed to SESSIR0                                            CSE028
+      *                                                                                       CSE028
+     IPCBSAD    E DSSTDADSED                  8                                               CSE028
+      *                                                                                       CSE028
+     IPNARR       DS                                                                          CSE028
+     I                                        1  35 PNARR1                                    CSE028
+     I                                       36  70 PNARR2                                    CSE028
+      *                                                                                       CSE028
+     IPINTRM      DS                                                                          CSE028
+     I                                        1  12 PIMMD1                                    CSE028
+     I                                       13  24 PIMMD2                                    CSE028
+     I                                       25  36 PIMMD3                                    CSE028
+     I                                       37  48 PIMMD4                                    CSE028
+     I                                       49  60 PIMMD5                                    CSE028
+     I                                       61  72 PIMMD6                                    CSE028
+     I                                       73  84 PIMMD7                                    CSE028
+     I                                       85  96 PIMMD8                                    CSE028
+     I                                       97 108 PIMMD9                                    CSE028
+      *                                                                                       CSE028
+     IPSAFEA      DS                                                                          CSE028
+     I                                        1  20 PIMSA1                                    CSE028
+     I                                       21  40 PIMSA2                                    CSE028
+     I                                       41  60 PIMSA3                                    CSE028
+     I                                       61  80 PIMSA4                                    CSE028
+     I                                       81 100 PIMSA5                                    CSE028
+     I                                      101 120 PIMSA6                                    CSE028
+     I                                      121 140 PIMSA7                                    CSE028
+     I                                      141 160 PIMSA8                                    CSE028
+     I                                      161 180 PIMSA9                                    CSE028
+      *                                                                                       CSW210
+      ** Registration Details data structure                                                  CSW210
+     IPREGD       DS                                                                          CSW210
+     I                                        1  35 PREGD1                                    CSW210
+     I                                       36  70 PREGD2                                    CSW210
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      *  Initialisation routine
+     C                     EXSR SRINIT
+      *
+      ** Execute specific routine depending on action
+     C                     EXSR SRRTRY
+      *
+      ** Execute routine to setup return code and exit program
+     C                     EXSR SRRTRN
+      *
+      /EJECT
+      *****************************************************************
+      **                                                              *
+      **  SRRTRY    - To Process Re-entry Action                      *
+      **                                                              *
+      **  Calls     - *PSSR, SRSCR1, SRSCR2, SRSTOW, SRCOMP           *
+      **            - SRCLS2                                          *
+      **  Called By - MAIN                                            *
+      **                                                              *
+      *****************************************************************
+      *
+     C           SRRTRY    BEGSR
+      *
+      ** Check whether record exists
+     C           KEY001    CHAINRTVIDX               89
+      *
+      ** If no record retrieved set Return Err Comm to 'R'
+     C           *IN89     IFEQ '0'
+     C/COPY WNCPYSRC,SE1819C001
+      *
+      ** Handle screens until F3, F5 or F12 taken
+      ** or until no errors but not rolldown
+     C           *INKC     DOUEQ'1'
+     C           *INKE     OREQ '1'
+     C           *INKL     OREQ '1'
+     C           *IN75     OREQ '0'
+     C           *IN86     ANDEQ'0'
+      *
+      ** If there are no errors on the second screen or if Rolldown
+      ** taken then display the first screen; reset the Rolldown Ind.
+     C           *IN02     IFEQ '0'
+     C           *IN86     OREQ '1'
+      *                                                                                       CSE028
+      ** If CSE028 is on, call SESSIR0 for default of MT5xx information                       CSE028
+      *                                                                                       CSE028
+     C           CSE028    IFEQ 'Y'                                                           CSE028
+      *                                                                                       CSE028
+      ** Access securities file to get the market centre                                      CSE034
+      *                                                                                       CSE034
+     C                     MOVE PSESN     KSESN                                               CSE034
+     C           KSECTY    CHAINSECTY                83                                       CSE034
+      *                                                                                       CSE034
+     C           *IN83     IFEQ *OFF                                                          CSE034
+     C                     MOVE SMCC      PMRKT   2                                           CSE034
+     C                     ELSE                                                               CSE034
+     C                     MOVE *BLANK    PMRKT                                               CSE034
+     C                     ENDIF                                                              CSE034
+      *                                                                                       CSE034
+     C                     CALL 'SESSIR0'                                                     CSE028
+     C                     PARM 'D'       POTYP   1                                           CSE028
+     C                     PARM           PTDBR                                               CSE028
+     C                     PARM           PTCNR                                               CSE028
+     C                     PARM           PBOOK   2                                           CSE028
+     C                     PARM           PTNMC                                               CSE028
+     C                     PARM           PMRKT                                               CSE034
+     C                     PARM           PINVT   3                                           CSE028
+     C                     PARM           PPTFR   4                                           CSE028
+     C                     PARM           PCBSTD                                              CSE028
+     C                     PARM           PCBSAD                                              CSE028
+     C                     PARM *BLANKS   PRTCD   7                                           CSE028
+      *                                                                                       CSE028
+     C                     SELEC                                                              CSE028
+      *                                                                                       CSE028
+     C           PTDTP     WHEQ 'TP'                                                          CSE028
+     C                     DO                                                                 CSE028
+     C           5         OCUR PCBSAD                                                        CSE028
+     C                     MOVE PCBSAD    PRTPCS                                              CSE028
+     C                     ENDDO                                                              CSE028
+      *                                                                                       CSE028
+     C           PTDTP     WHEQ 'TS'                                                          CSE028
+     C                     DO                                                                 CSE028
+     C           6         OCUR PCBSAD                                                        CSE028
+     C                     MOVE PCBSAD    PRTSCS                                              CSE028
+     C                     ENDDO                                                              CSE028
+      *                                                                                       CSE028
+     C                     ENDSL                                                              CSE028
+      *                                                                                       CSE028
+     C                     EXSR SRMOFS                                                        CSE028
+      *                                                                                       CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C                     EXSR SRSCR1
+     C                     MOVE '0'       *IN86
+     C                     END
+      *
+      ** If F3, F5, F12 and Rolldown not taken continue
+      ** (else repeat 'do until').
+     C           *INKC     IFEQ '0'
+     C           *INKE     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+     C           *IN86     ANDEQ'0'
+      *
+      ** If there are errors on the second screen or if Rollup taken
+      ** then display the second screen; reset screen 2 error indicator
+     C           *IN02     IFEQ '1'
+     C           *IN85     OREQ '1'
+      *                                                                                       CSE028
+      ** If ISO15022 is equal to 'Y', enable Rollup key                                       CSE028
+      *                                                                                       CSE028
+     C           CSE028    IFEQ 'Y'                                                           CSE028
+      *                                                                                       CSE028
+     C           PSNEW     IFEQ 'Y'                                                           CSE028
+     C                     MOVE *ON       *IN84                                               CSE028
+     C                     MOVE *ON       *IN77                                               CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C                     EXSR SRSCR2
+     C                     MOVE '0'       *IN02
+     C                     END
+      *                                                                                       CSE028
+     C           CSE028    IFNE 'Y'                                                           CSE028
+     C           *IN84     ORNE *ON                                                           CSE028
+      *
+      ** Clear messages for redisplay
+     C                     CALL 'ZA0250'
+      *
+     C/COPY WNCPYSRC,SE1819C002
+     C                     EXSR SRSTOW
+     C                     EXSR SRCOMP
+      *                                                                                       CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C/COPY WNCPYSRC,SE1819C003
+      *                                                                                       CSE028
+      ** If Rollup was taken on second screen, call SE001810                                  CSE028
+      *                                                                                       CSE028
+     C           CSE028    IFEQ 'Y'                                                           CSE028
+     C           *IN84     ANDEQ*ON                                                           CSE028
+      *                                                                                       CSE028
+     C                     CALL 'SE001810'                                                    CSE028
+     C                     PARM           PACTN   1                                           CSE028
+     C                     PARM           PINTRM                                              CSE028
+     C                     PARM           PSAFEA                                              CSE028
+     C                     PARM           PPSET  12                                           CSE028
+     C                     PARM           PNARR                                               CSE028
+     C                     PARM *BLANKS   PRTCD                                               CSE028
+     C                     PARM           PREGD                                               CSW210
+     C                     PARM           PINVE  10                                           CSW210
+     C                     PARM           PQFIN  10                                           CSW210
+     C                     PARM           PPCLR  10                                           CSW210
+      *                                                                                       CSE028
+      ** Check Return Code                                                                    CSE028
+      *                                                                                       CSE028
+     C           PRTCD     IFEQ 'SE10000'                                                     CSE028
+     C                     MOVE *ON       *INKC                                               CSE028
+     C                     MOVEL'SE10000' ZAMSID                                              CSE028
+     C                     EXSR SRSMSG                                                        CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C           PRTCD     IFEQ 'SE10001'                                                     CSE028
+     C           PRTCD     OREQ 'SE10029'                                                     CSE028
+     C                     MOVE *OFF      *IN84                                               CSE028
+     C                     MOVELPRTCD     ZAMSID                                              CSE028
+     C                     EXSR SRSMSG                                                        CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C           PRTCD     IFEQ *BLANKS                                                       CSE028
+      *                                                                                       CSE028
+     C                     CALL 'ZA0250'                                                      CSE028
+      *                                                                                       CSE028
+     C                     EXSR SRSTOW                                                        CSE028
+     C                     EXSR SRCOMP                                                        CSE028
+      *                                                                                       CSE028
+     C           *IN75     IFEQ *OFF                                                          CSE028
+     C                     EXSR SRCMP2                                                        CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+      ** If F12 taken from second screen then set Rolldown Ind (*IN86);
+      ** set F12 off; and clear fields on 2nd screen.
+     C           *INKL     IFEQ '1'
+     C                     MOVE '1'       *IN86
+     C                     MOVE '0'       *INKL
+     C                     EXSR SRCLS2
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **                                                              *
+      **  SRSMSG - To Send Messages to Message Subfile                *
+      **  CALLS  - NONE                                               *
+      **  CALLED -                                                    *
+      **                                                              *
+      *****************************************************************
+      *
+     C           SRSMSG    BEGSR
+      *
+      ** Send specified message from specified message file to program
+      ** message queue; then clear message id and message file
+     C                     CALL 'ZA0340'
+     C                     PARM 'SEUSRMSG'ZAMSGF 10
+     C                     PARM           ZAMSID 10
+      *
+     C                     MOVEL*BLANK    ZAMSID
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **                                                              *
+      **  SRRTRN    - To set up return code and exit program          *
+      **                                                              *
+      **  Calls     -                                                 *
+      **  Called By -                                                 *
+      **                                                              *
+      *****************************************************************
+      *
+     C           SRRTRN    BEGSR
+      *
+     C                     MOVE 'N'       PERR
+     C                     MOVE '00'      PCMD
+      *
+      ** If error on updating file set Return Error Code to 'R'
+     C           *IN89     IFEQ '1'
+     C                     MOVE 'R'       PERR
+     C                     END
+      *
+      ** If re insert does not match settlement file - 'Y'
+     C           *IN75     IFEQ '1'
+     C                     MOVE 'Y'       PERR
+     C                     END
+      *
+      ** If Rolldown or F12 (for Previous) set Return Command to '12'
+     C           *IN87     IFEQ '1'
+     C           *INKL     OREQ '1'
+     C                     MOVE '12'      PCMD
+     C                     ELSE
+      *
+      *
+      ** If F3 (to End) taken set Return Command to '03'
+     C           *INKC     IFEQ '1'
+     C                     MOVE '03'      PCMD
+     C                     ELSE
+      *
+      ** If F5 (to Refresh) set Return Command to '05'
+     C           *INKE     IFEQ '1'
+     C                     MOVE '05'      PCMD
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Seton *INLR to exit program
+     C                     MOVE '1'       *INLR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **                                                              *
+      **  SRSCR1    - To Output Messages and First Screen             *
+      **                                                              *
+      **  Calls     -                                                 *
+      **  Called By -                                                 *
+      **                                                              *
+      *****************************************************************
+      *
+     C           SRSCR1    BEGSR
+      *
+      ** Display message format; display first screen
+     C                     WRITESE1819C1
+     C                     EXFMTSE1819F1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **                                                              *
+      **  SRSCR2    - To Output Messages and Second Screen            *
+      **                                                              *
+      **  Calls     -                                                 *
+      **  Called By -                                                 *
+      **                                                              *
+      *****************************************************************
+      *
+     C           SRSCR2    BEGSR
+      *
+      ** Display message format; display second screen
+     C                     WRITESE1819C1
+     C                     EXFMTSE1819F2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **                                                              *
+      **  SRCLS2    - To Clear Fields on Second Screen                *
+      **              and Reset Error Indicators                      *
+      **                                                              *
+      **  Calls     -                                                 *
+      **  Called By -                                                 *
+      **                                                              *
+      *****************************************************************
+      *
+     C           SRCLS2    BEGSR
+      *
+     C                     MOVE *BLANKS   SIPYN
+     C                     MOVE *BLANKS   SIPYL
+     C                     MOVE *BLANKS   SCTYN
+     C                     MOVE *BLANKS   SCTYL
+     C                     MOVE *BLANKS   SSA1L
+     C                     MOVE *BLANKS   SSA1N
+     C                     MOVE *BLANKS   SSKAN
+     C                     MOVE *BLANKS   SSKAL
+     C                     MOVE *BLANKS   SCCTN
+     C                     MOVE *BLANKS   SDCTL
+     C                     MOVE *BLANKS   SRSSA
+     C                     MOVE *BLANKS   SRSSN
+     C                     MOVE *BLANKS   SRSS1
+     C                     MOVE *BLANKS   SRSS2
+     C                     MOVE *BLANKS   SRSS3
+     C                     MOVE *BLANKS   SRSS4
+     C                     MOVE *BLANKS   SDSSA
+     C                     MOVE *BLANKS   SDSSN
+     C                     MOVE *BLANKS   SDSS1
+     C                     MOVE *BLANKS   SDSS2
+     C                     MOVE *BLANKS   SDSS3
+     C                     MOVE *BLANKS   SDSS4
+     C                     MOVE *BLANKS   SBSSA
+     C                     MOVE *BLANKS   SBSSN
+     C                     MOVE *BLANKS   SBSS1
+     C                     MOVE *BLANKS   SBSS2
+      *
+     C                     SETOF                       4344
+     C                     SETOF                     454647
+     C                     SETOF                     484950
+     C                     SETOF                     515253
+     C                     SETOF                     545556
+     C                     SETOF                     575859
+     C                     SETOF                     606162
+     C                     SETOF                     636465
+     C                     SETOF                     666768
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **                                                              *
+      **  SRRTS2    - To reset Fields on Second Screen to File Values *
+      **              and Reset Error Indicators                      *
+      **                                                              *
+      **  Calls     -                                                 *
+      **  Called By -                                                 *
+      **                                                              *
+      *****************************************************************
+      *
+     C           SRRTS2    BEGSR
+      *
+     C                     MOVE T2IPYN    SIPYN
+     C                     MOVE T2IPYL    SIPYL
+     C                     MOVE T2CTYN    SCTYN
+     C                     MOVE T2CTYL    SCTYL
+     C                     MOVE T2SA1L    SSA1L
+     C                     MOVE T2SA1N    SSA1N
+     C                     MOVE T2SKAN    SSKAN
+     C                     MOVE T2SKAL    SSKAL
+     C                     MOVE T2CCTN    SCCTN
+     C                     MOVE T2DCTL    SDCTL
+     C                     MOVE T2RSSA    SRSSA
+     C                     MOVE T2RSSN    SRSSN
+     C                     MOVE T2RSS1    SRSS1
+     C                     MOVE T2RSS2    SRSS2
+     C                     MOVE T2RSS3    SRSS3
+     C                     MOVE T2RSS4    SRSS4
+     C                     MOVE T2DSSA    SDSSA
+     C                     MOVE T2DSSN    SDSSN
+     C                     MOVE T2DSS1    SDSS1
+     C                     MOVE T2DSS2    SDSS2
+     C                     MOVE T2DSS3    SDSS3
+     C                     MOVE T2DSS4    SDSS4
+     C                     MOVE T2BSSA    SBSSA
+     C                     MOVE T2BSSN    SBSSN
+     C                     MOVE T2BSS1    SBSS1
+     C                     MOVE T2BSS2    SBSS2
+      *
+     C                     SETOF                       4344
+     C                     SETOF                     454647
+     C                     SETOF                     484950
+     C                     SETOF                     515253
+     C                     SETOF                     545556
+     C                     SETOF                     575859
+     C                     SETOF                     606162
+     C                     SETOF                     636465
+     C                     SETOF                     666768
+      *
+     C                     ENDSR
+      *
+      *****************************************************************                       CSE028
+      /EJECT                                                                                  CSE028
+      *****************************************************************                       CSE028
+      *                                                               *                       CSE028
+      *  SRMOFS    - Default Retrieved File Fields to Screen Fields   *                       CSE028
+      *                                                               *                       CSE028
+      *****************************************************************                       CSE028
+      *                                                                                       CSE028
+     C           SRMOFS    BEGSR                                                              CSE028
+      *                                                                                       CSE028
+     C           PTDTP     IFEQ 'TP'                                                          CSE028
+      *                                                                                       CSE028
+     C                     MOVE W4AFPN    SAFPN                                               CSE028
+     C                     MOVE W4AFPL    SAFPL                                               CSE028
+     C                     MOVE W4AWIN    SAWIN                                               CSE028
+     C                     MOVE W4AWIL    SAWIL                                               CSE028
+     C                     MOVE W4BOFN    SBOFN                                               CSE028
+     C                     MOVE W4BOF1    SBOF1                                               CSE028
+     C           CSW210    IFNE 'Y'                                                           CSW210
+     C                     MOVE W4BOF2    SBOF2                                               CSE028
+     C                     ENDIF                                                              CSW210
+     C                     MOVE W4SRL1    SSRL1                                               CSE028
+     C                     MOVE W4SRL2    SSRL2                                               CSE028
+     C                     MOVE W4SRL3    SSRL3                                               CSE028
+     C                     MOVE W4FIN1    SFIN1                                               CSE028
+     C                     MOVE W4FIN2    SFIN2                                               CSE028
+     C**********           MOVE W4RED1    SRED1                                        CSE028 CSW210
+     C**********           MOVE W4RED2    SRED2                                        CSE028 CSW210
+     C                     MOVE W4NAS1    SNAL1                                               CSE028
+     C                     MOVE W4NAS2    SNAL2                                               CSE028
+     C                     MOVE W4CCTN    SCCTN                                               CSE028
+     C                     MOVE W4DRSN    SDSSN                                               CSE028
+     C                     MOVE W4DRS1    SDSS1                                               CSE028
+     C                     MOVE W4DRS2    SDSS2                                               CSE028
+     C                     MOVE W4DRS3    SDSS3                                               CSE028
+     C                     MOVE W4DRS4    SDSS4                                               CSE028
+     C                     MOVE W4BSSN    SBSSN                                               CSE028
+     C                     MOVE W4BSS1    SBSS1                                               CSE028
+     C                     MOVE W4BSS2    SBSS2                                               CSE028
+     C                     MOVELW4IMD1    PIMMD1                                              CSE028
+     C                     MOVELW4IMD2    PIMMD2                                              CSE028
+     C                     MOVELW4IMD3    PIMMD3                                              CSE028
+     C                     MOVELW4IMD4    PIMMD4                                              CSE028
+     C                     MOVELW4IMD5    PIMMD5                                              CSE028
+     C                     MOVELW4IMD6    PIMMD6                                              CSE028
+     C                     MOVELW4IMD7    PIMMD7                                              CSE028
+     C                     MOVELW4IMD8    PIMMD8                                              CSE028
+     C                     MOVELW4IMD9    PIMMD9                                              CSE028
+     C                     MOVELW4IMS1    PIMSA1                                              CSE028
+     C                     MOVELW4IMS2    PIMSA2                                              CSE028
+     C                     MOVELW4IMS3    PIMSA3                                              CSE028
+     C                     MOVELW4IMS4    PIMSA4                                              CSE028
+     C                     MOVELW4IMS5    PIMSA5                                              CSE028
+     C                     MOVELW4IMS6    PIMSA6                                              CSE028
+     C                     MOVELW4IMS7    PIMSA7                                              CSE028
+     C                     MOVELW4IMS8    PIMSA8                                              CSE028
+     C                     MOVELW4IMS9    PIMSA9                                              CSE028
+     C                     MOVELW4PSET    PPSET                                               CSE028
+     C                     MOVELW4NAC1    PNARR1                                              CSE028
+     C                     MOVELW4NAC2    PNARR2                                              CSE028
+     C                     MOVE W4RED1    PREGD1                                              CSW210
+     C                     MOVE W4RED2    PREGD2                                              CSW210
+      *                                                                                       CSE028
+     C           CSW210    IFEQ 'Y'                                                           CSW210
+     C                     MOVELW4DIDN    SDIDN                                               CSW210
+     C                     MOVELW4DLIN    SDLIN                                               CSW210
+     C                     MOVELW4DAD1    SDAD1                                               CSW210
+     C                     MOVELW4DAD2    SDAD2                                               CSW210
+     C                     MOVELW4DAD3    SDAD3                                               CSW210
+     C                     MOVELW4DAD4    SDAD4                                               CSW210
+     C                     MOVELW4QFIN    PQFIN                                               CSW210
+     C                     MOVELW4PCLR    PPCLR                                               CSW210
+     C                     ENDIF                                                              CSW210
+      *                                                                                       CSW210
+     C                     ELSE                                                               CSE028
+      *                                                                                       CSE028
+     C                     MOVE W5AFPN    SAFPN                                               CSE028
+     C                     MOVE W5AFPL    SAFPL                                               CSE028
+     C                     MOVE W5AWIN    SAWIN                                               CSE028
+     C                     MOVE W5AWIL    SAWIL                                               CSE028
+     C                     MOVE W5BOFN    SBOFN                                               CSE028
+     C                     MOVE W5BOF1    SBOF1                                               CSE028
+     C           CSW210    IFNE 'Y'                                                           CSW210
+     C                     MOVE W5BOF2    SBOF2                                               CSE028
+     C                     ENDIF                                                              CSW210
+     C                     MOVE W5SRL1    SSRL1                                               CSE028
+     C                     MOVE W5SRL2    SSRL2                                               CSE028
+     C                     MOVE W5SRL3    SSRL3                                               CSE028
+     C                     MOVE W5FIN1    SFIN1                                               CSE028
+     C                     MOVE W5FIN2    SFIN2                                               CSE028
+     C**********           MOVE W5RED1    SRED1                                        CSE028 CSW210
+     C**********           MOVE W5RED2    SRED2                                        CSE028 CSW210
+     C                     MOVE W5NAS1    SNAL1                                               CSE028
+     C                     MOVE W5NAS2    SNAL2                                               CSE028
+     C                     MOVE W5CCTN    SCCTN                                               CSE028
+     C                     MOVE W5DRSN    SRSSN                                               CSE028
+     C                     MOVE W5DRS1    SRSS1                                               CSE028
+     C                     MOVE W5DRS2    SRSS2                                               CSE028
+     C                     MOVE W5DRS3    SRSS3                                               CSE028
+     C                     MOVE W5DRS4    SRSS4                                               CSE028
+     C                     MOVE W5BSSN    SBSSN                                               CSE028
+     C                     MOVE W5BSS1    SBSS1                                               CSE028
+     C                     MOVE W5BSS2    SBSS2                                               CSE028
+     C                     MOVELW5IMD1    PIMMD1                                              CSE028
+     C                     MOVELW5IMD2    PIMMD2                                              CSE028
+     C                     MOVELW5IMD3    PIMMD3                                              CSE028
+     C                     MOVELW5IMD4    PIMMD4                                              CSE028
+     C                     MOVELW5IMD5    PIMMD5                                              CSE028
+     C                     MOVELW5IMD6    PIMMD6                                              CSE028
+     C                     MOVELW5IMD7    PIMMD7                                              CSE028
+     C                     MOVELW5IMD8    PIMMD8                                              CSE028
+     C                     MOVELW5IMD9    PIMMD9                                              CSE028
+     C                     MOVELW5IMS1    PIMSA1                                              CSE028
+     C                     MOVELW5IMS2    PIMSA2                                              CSE028
+     C                     MOVELW5IMS3    PIMSA3                                              CSE028
+     C                     MOVELW5IMS4    PIMSA4                                              CSE028
+     C                     MOVELW5IMS5    PIMSA5                                              CSE028
+     C                     MOVELW5IMS6    PIMSA6                                              CSE028
+     C                     MOVELW5IMS7    PIMSA7                                              CSE028
+     C                     MOVELW5IMS8    PIMSA8                                              CSE028
+     C                     MOVELW5IMS9    PIMSA9                                              CSE028
+     C                     MOVELW5PSET    PPSET                                               CSE028
+     C                     MOVELW5NAC1    PNARR1                                              CSE028
+     C                     MOVELW5NAC2    PNARR2                                              CSE028
+     C                     MOVE W5RED1    PREGD1                                              CSW210
+     C                     MOVE W5RED2    PREGD2                                              CSW210
+     C           CSW210    IFEQ 'Y'                                                           CSW210
+     C                     MOVELW5DIDN    SDIDN                                               CSW210
+     C                     MOVELW5DLIN    SDLIN                                               CSW210
+     C                     MOVELW5DAD1    SDAD1                                               CSW210
+     C                     MOVELW5DAD2    SDAD2                                               CSW210
+     C                     MOVELW5DAD3    SDAD3                                               CSW210
+     C                     MOVELW5DAD4    SDAD4                                               CSW210
+     C                     MOVELW5QFIN    PQFIN                                               CSW210
+     C                     MOVELW5PCLR    PPCLR                                               CSW210
+     C                     ENDIF                                                              CSW210
+      *                                                                                       CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C                     ENDSR                                                              CSE028
+      *                                                                                       CSE028
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **                                                              *
+      **  SRFTOS    - To Move File Fields To Screen Fields            *
+      **                                                              *
+      **  Calls     -                                                 *
+      **  Called By -                                                 *
+      **                                                              *
+      *****************************************************************
+      *
+     C           SRFTOS    BEGSR
+      *
+     C                     MOVE T2AP1N    SAP1N
+     C                     MOVE T2AP1L    SAP1L
+     C                     MOVE T2AFPN    SAFPN
+     C                     MOVE T2AFPL    SAFPL
+     C                     MOVE T2AWIA    SAWIA
+     C                     MOVE T2AWIN    SAWIN
+     C                     MOVE T2AWIL    SAWIL
+     C                     MOVE T2BOFA    SBOFA
+     C                     MOVE T2BOFN    SBOFN
+     C                     MOVE T2BOF1    SBOF1
+     C           CSW210    IFNE 'Y'                                                           CSW210
+     C                     MOVE T2BOF2    SBOF2
+     C                     ENDIF                                                              CSW210
+     C                     MOVE T2ACL1    SACL1
+     C                     MOVE T2ACL2    SACL2
+     C                     MOVE T2SRL1    SSRL1
+     C                     MOVE T2SRL2    SSRL2
+     C                     MOVE T2SRL3    SSRL3
+     C                     MOVE T2FIN1    SFIN1
+     C                     MOVE T2FIN2    SFIN2
+     C**********           MOVE T2RED1    SRED1                                               CSW210
+     C**********           MOVE T2RED2    SRED2                                               CSW210
+     C                     MOVE T2NAL1    SNAL1
+     C                     MOVE T2NAL2    SNAL2
+     C                     MOVE T2IPYN    SIPYN
+     C                     MOVE T2IPYL    SIPYL
+     C                     MOVE T2CTYN    SCTYN
+     C                     MOVE T2CTYL    SCTYL
+     C                     MOVE T2SA1L    SSA1L
+     C                     MOVE T2SA1N    SSA1N
+     C                     MOVE T2SKAN    SSKAN
+     C                     MOVE T2SKAL    SSKAL
+     C                     MOVE T2CCTN    SCCTN
+     C                     MOVE T2DCTL    SDCTL
+     C                     MOVE T2RSSA    SRSSA
+     C                     MOVE T2RSSN    SRSSN
+     C                     MOVE T2RSS1    SRSS1
+     C                     MOVE T2RSS2    SRSS2
+     C                     MOVE T2RSS3    SRSS3
+     C                     MOVE T2RSS4    SRSS4
+     C                     MOVE T2DSSA    SDSSA
+     C                     MOVE T2DSSN    SDSSN
+     C                     MOVE T2DSS1    SDSS1
+     C                     MOVE T2DSS2    SDSS2
+     C                     MOVE T2DSS3    SDSS3
+     C                     MOVE T2DSS4    SDSS4
+     C                     MOVE T2BSSA    SBSSA
+     C                     MOVE T2BSSN    SBSSN
+     C                     MOVE T2BSS1    SBSS1
+     C                     MOVE T2BSS2    SBSS2
+     C                     MOVE T2RED1    PREGD1                                              CSW210
+     C                     MOVE T2RED2    PREGD2                                              CSW210
+      *                                                                                       CSW210
+     C           CSW210    IFEQ 'Y'                                                           CSW210
+     C                     MOVELT2DIDN    SDIDN                                               CSW210
+     C                     MOVELT2DLIN    SDLIN                                               CSW210
+     C                     MOVELT2DAD1    SDAD1                                               CSW210
+     C                     MOVELT2DAD2    SDAD2                                               CSW210
+     C                     MOVELT2DAD3    SDAD3                                               CSW210
+     C                     MOVELT2DAD4    SDAD4                                               CSW210
+     C                     MOVELT2QFIN    PQFIN                                               CSW210
+     C                     MOVELT2PCLR    PPCLR                                               CSW210
+     C                     ENDIF                                                              CSW210
+      *
+      ** If Enquiry Mode, Retrieve Customer Shortnames
+     C           PACTN     IFEQ 'E'
+      *
+     C           T2AP1N    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM T2AP1N    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFEQ *BLANK
+     C           @KYST     ANDNE'*ERROR'
+     C                     MOVE BBCSSN    SAP1N
+     C                     END
+     C                     END
+      *
+     C           T2AFPN    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM T2AFPN    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE BBCSSN    SAFPN
+     C                     END
+     C                     END
+      *
+     C           T2AWIN    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM T2AWIN    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE BBCSSN    SAWIN
+     C                     END
+     C                     END
+      *
+     C           T2BOFN    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM T2BOFN    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE BBCSSN    SBOFN
+     C                     END
+     C                     END
+      *
+     C           T2IPYN    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM T2IPYN    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE BBCSSN    SIPYN
+     C                     END
+     C                     END
+      *
+     C           T2CTYN    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM T2CTYN    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE BBCSSN    SCTYN
+     C                     END
+     C                     END
+      *
+     C           T2SA1N    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM T2SA1N    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE BBCSSN    SSA1N
+     C                     END
+     C                     END
+      *
+     C           T2SKAN    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM T2SKAN    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE BBCSSN    SSKAN
+     C                     END
+     C                     END
+      *
+     C           T2RSSN    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM T2RSSN    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE BBCSSN    SRSSN
+     C                     END
+     C                     END
+      *
+     C           T2DSSN    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM T2DSSN    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE BBCSSN    SDSSN
+     C                     END
+     C                     END
+      *
+     C           T2BSSN    IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM T2BSSN    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE BBCSSN    SBSSN
+     C                     END
+     C                     END
+      *
+     C           T2DIDN    IFNE *BLANKS                                                       CSW210
+     C                     CALL 'AOCUSTR0'                                                    CSW210
+     C                     PARM '*DBERR ' @RTCD                                               CSW210
+     C                     PARM '*KEY   ' @OPTN                                               CSW210
+     C                     PARM T2DIDN    @KEY1                                               CSW210
+     C                     PARM *BLANKS   @KYST                                               CSW210
+     C           SDCUST    PARM SDCUST    DSSDY                                               CSW210
+     C           @RTCD     IFEQ *BLANK                                                        CSW210
+     C                     MOVE BBCSSN    SDIDN                                               CSW210
+     C                     END                                                                CSW210
+     C                     END                                                                CSW210
+      *                                                                                       CSW210
+     C           T2QFIN    IFNE *BLANKS                                                       CSW210
+     C                     CALL 'AOCUSTR0'                                                    CSW210
+     C                     PARM '*DBERR ' @RTCD                                               CSW210
+     C                     PARM '*KEY   ' @OPTN                                               CSW210
+     C                     PARM T2QFIN    @KEY1                                               CSW210
+     C                     PARM *BLANKS   @KYST                                               CSW210
+     C           SDCUST    PARM SDCUST    DSSDY                                               CSW210
+     C           @RTCD     IFEQ *BLANK                                                        CSW210
+     C                     MOVE BBCSSN    PQFIN                                               CSW210
+     C                     END                                                                CSW210
+     C                     END                                                                CSW210
+      *                                                                                       CSW210
+     C           T2PCLR    IFNE *BLANKS                                                       CSW210
+     C                     CALL 'AOCUSTR0'                                                    CSW210
+     C                     PARM '*DBERR ' @RTCD                                               CSW210
+     C                     PARM '*KEY   ' @OPTN                                               CSW210
+     C                     PARM T2PCLR    @KEY1                                               CSW210
+     C                     PARM *BLANKS   @KYST                                               CSW210
+     C           SDCUST    PARM SDCUST    DSSDY                                               CSW210
+     C           @RTCD     IFEQ *BLANK                                                        CSW210
+     C                     MOVE BBCSSN    PPCLR                                               CSW210
+     C                     END                                                                CSW210
+     C                     END                                                                CSW210
+      *                                                                                       CSW210
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **                                                              *
+      **  SRSTOW    - To Move Screen Fields to work Fields            *
+      **                                                              *
+      **  Calls     -                                                 *
+      **  Called By -                                                 *
+      **                                                              *
+      *****************************************************************
+      *
+     C           SRSTOW    BEGSR
+      *
+      ** Move key fields to file fields
+     C                     MOVELKEY001    W2TDRF
+      *
+     C                     MOVE WWAP1N    W2AP1N
+     C                     MOVE SAP1L     W2AP1L
+     C                     MOVE WWAFPN    W2AFPN
+     C                     MOVE SAFPL     W2AFPL
+      *
+     C           SBOFN     IFNE *BLANKS
+     C           SBOF1     ORNE *BLANKS
+     C                     MOVE SAWIA     W2AWIA
+     C                     MOVE WWAWIN    W2AWIN
+     C                     MOVE SAWIL     W2AWIL
+     C                     ELSE
+     C                     MOVE *BLANKS   W2AWIA
+     C                     MOVE *BLANKS   W2AWIN
+     C                     MOVE *BLANKS   W2AWIL
+     C                     END
+      *
+     C           SAWIN     IFNE *BLANKS
+     C           SAWIL     ORNE *BLANKS
+     C                     MOVE SBOFA     W2BOFA
+     C                     MOVE WWBOFN    W2BOFN
+     C                     MOVE SBOF1     W2BOF1
+     C           CSW210    IFNE 'Y'                                                           CSW210
+     C                     MOVE SBOF2     W2BOF2
+     C                     ENDIF                                                              CSW210
+     C                     ELSE
+     C                     MOVE *BLANKS   W2BOFA
+     C                     MOVE *BLANKS   W2BOFN
+     C                     MOVE *BLANKS   W2BOF1
+     C                     MOVE *BLANKS   W2BOF2
+     C                     END
+      *
+     C                     MOVE SACL1     W2ACL1
+     C                     MOVE SACL2     W2ACL2
+     C                     MOVE SSRL1     W2SRL1
+     C                     MOVE SSRL2     W2SRL2
+     C                     MOVE SSRL3     W2SRL3
+     C                     MOVE SFIN1     W2FIN1
+     C                     MOVE SFIN2     W2FIN2
+     C**********           MOVE SRED1     W2RED1                                              CSW210
+     C**********           MOVE SRED2     W2RED2                                              CSW210
+     C                     MOVE SNAL1     W2NAL1
+     C                     MOVE SNAL2     W2NAL2
+     C                     MOVE WWIPYN    W2IPYN
+     C                     MOVE SIPYL     W2IPYL
+     C                     MOVE WWCTYN    W2CTYN
+     C                     MOVE SCTYL     W2CTYL
+     C                     MOVE WWSA1N    W2SA1N
+     C                     MOVE SSA1L     W2SA1L
+     C                     MOVE WWSKAN    W2SKAN
+     C                     MOVE SSKAL     W2SKAL
+     C                     MOVE SCCTN     W2CCTN
+     C                     MOVE SDCTL     W2DCTL
+     C                     MOVE SRSSA     W2RSSA
+     C                     MOVE WWRSSN    W2RSSN
+     C                     MOVE SRSS1     W2RSS1
+     C                     MOVE SRSS2     W2RSS2
+     C                     MOVE SRSS3     W2RSS3
+     C                     MOVE SRSS4     W2RSS4
+     C                     MOVE SDSSA     W2DSSA
+     C                     MOVE WWDSSN    W2DSSN
+     C                     MOVE SDSS1     W2DSS1
+     C                     MOVE SDSS2     W2DSS2
+     C                     MOVE SDSS3     W2DSS3
+     C                     MOVE SDSS4     W2DSS4
+     C                     MOVE SBSSA     W2BSSA
+     C                     MOVE WWBSSN    W2BSSN
+     C                     MOVE SBSS1     W2BSS1
+     C                     MOVE SBSS2     W2BSS2
+     C                     MOVE PREGD1    W2RED1                                              CSW210
+     C                     MOVE PREGD2    W2RED2                                              CSW210
+      *                                                                                       CSW210
+     C           CSW210    IFEQ 'Y'                                                           CSW210
+     C                     MOVELSDIDN     W2DIDN                                              CSW210
+     C                     MOVELSDLIN     W2DLIN                                              CSW210
+     C                     MOVELSDAD1     W2DAD1                                              CSW210
+     C                     MOVELSDAD2     W2DAD2                                              CSW210
+     C                     MOVELSDAD3     W2DAD3                                              CSW210
+     C                     MOVELSDAD4     W2DAD4                                              CSW210
+     C                     MOVELPQFIN     W2QFIN                                              CSW210
+     C                     MOVELPPCLR     W2PCLR                                              CSW210
+     C                     ENDIF                                                              CSW210
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCOMP - Compare screen fields with work fields.             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCOMP    BEGSR
+      *
+     C           T2TDRF    IFEQ W2TDRF
+     C           T2AP1N    ANDEQW2AP1N
+     C           T2AP1L    ANDEQW2AP1L
+     C           T2AFPN    ANDEQW2AFPN
+     C           T2AFPL    ANDEQW2AFPL
+     C           T2AWIA    ANDEQW2AWIA
+     C           T2AWIN    ANDEQW2AWIN
+     C           T2AWIL    ANDEQW2AWIL
+     C           T2AWIN    ANDEQW2AWIN
+     C           T2AWIL    ANDEQW2AWIL
+     C           T2BOFA    ANDEQW2BOFA
+     C           T2BOFN    ANDEQW2BOFN
+     C           T2BOF1    ANDEQW2BOF1
+     C           T2BOF2    ANDEQW2BOF2
+     C           T2BOFA    ANDEQW2BOFA
+     C           T2BOFN    ANDEQW2BOFN
+     C           T2BOF1    ANDEQW2BOF1
+     C           T2BOF2    ANDEQW2BOF2
+     C           T2ACL1    ANDEQW2ACL1
+     C           T2ACL2    ANDEQW2ACL2
+     C           T2SRL1    ANDEQW2SRL1
+     C           T2SRL2    ANDEQW2SRL2
+     C           T2SRL3    ANDEQW2SRL3
+     C           T2FIN1    ANDEQW2FIN1
+     C           T2FIN2    ANDEQW2FIN2
+     C********** T2RED1    ANDEQW2RED1                                                        CSW210
+     C********** T2RED2    ANDEQW2RED2                                                        CSW210
+     C           T2NAL1    ANDEQW2NAL1
+     C           T2NAL2    ANDEQW2NAL2
+     C           T2IPYN    ANDEQW2IPYN
+     C           T2IPYL    ANDEQW2IPYL
+     C           T2CTYN    ANDEQW2CTYN
+     C           T2CTYL    ANDEQW2CTYL
+     C           T2SA1N    ANDEQW2SA1N
+     C           T2SA1L    ANDEQW2SA1L
+     C           T2SKAN    ANDEQW2SKAN
+     C           T2SKAL    ANDEQW2SKAL
+     C           T2CCTN    ANDEQW2CCTN
+     C           T2DCTL    ANDEQW2DCTL
+     C           T2RSSA    ANDEQW2RSSA
+     C           T2RSSN    ANDEQW2RSSN
+     C           T2RSS1    ANDEQW2RSS1
+     C           T2RSS2    ANDEQW2RSS2
+     C           T2RSS3    ANDEQW2RSS3
+     C           T2RSS4    ANDEQW2RSS4
+     C           T2DSSA    ANDEQW2DSSA
+     C           T2DSSN    ANDEQW2DSSN
+     C           T2DSS1    ANDEQW2DSS1
+     C           T2DSS2    ANDEQW2DSS2
+     C           T2DSS3    ANDEQW2DSS3
+     C           T2DSS4    ANDEQW2DSS4
+     C           T2BSSA    ANDEQW2BSSA
+     C           T2BSSN    ANDEQW2BSSN
+     C           T2BSS1    ANDEQW2BSS1
+     C           T2BSS2    ANDEQW2BSS2
+     C           T2RED1    ANDEQW2RED1                                                        CSW210
+     C           T2RED2    ANDEQW2RED2                                                        CSW210
+     C           T2DIDN    ANDEQW2DIDN                                                        CSW210
+     C           T2DLIN    ANDEQW2DLIN                                                        CSW210
+     C           T2DAD1    ANDEQW2DAD1                                                        CSW210
+     C           T2DAD2    ANDEQW2DAD2                                                        CSW210
+     C           T2DAD3    ANDEQW2DAD3                                                        CSW210
+     C           T2DAD4    ANDEQW2DAD4                                                        CSW210
+      *
+     C                     MOVE '0'       *IN75
+     C                     ELSE
+     C                     MOVE *ON       *IN75
+     C                     MOVEL'SEW7007' ZAMSID
+     C                     EXSR SRSMSG
+     C                     END
+     C                     ENDSR
+      *
+      *****************************************************************                       CSE028
+      /EJECT                                                                                  CSE028
+      *****************************************************************                       CSE028
+      *                                                               *                       CSE028
+      *  SRCMP2 - Compare screen fields with work fields.             *                       CSE028
+      *                                                               *                       CSE028
+      *****************************************************************                       CSE028
+      *                                                                                       CSE028
+     C           SRCMP2    BEGSR                                                              CSE028
+      *                                                                                       CSE028
+     C           T2IMD1    IFEQ PIMMD1                                                        CSE028
+     C           T2IMD2    ANDEQPIMMD2                                                        CSE028
+     C           T2IMD3    ANDEQPIMMD3                                                        CSE028
+     C           T2IMD4    ANDEQPIMMD4                                                        CSE028
+     C           T2IMD5    ANDEQPIMMD5                                                        CSE028
+     C           T2IMD6    ANDEQPIMMD6                                                        CSE028
+     C           T2IMD7    ANDEQPIMMD7                                                        CSE028
+     C           T2IMD8    ANDEQPIMMD8                                                        CSE028
+     C           T2IMD9    ANDEQPIMMD9                                                        CSE028
+     C           T2IMS1    ANDEQPIMSA1                                                        CSE028
+     C           T2IMS2    ANDEQPIMSA2                                                        CSE028
+     C           T2IMS3    ANDEQPIMSA3                                                        CSE028
+     C           T2IMS4    ANDEQPIMSA4                                                        CSE028
+     C           T2IMS5    ANDEQPIMSA5                                                        CSE028
+     C           T2IMS6    ANDEQPIMSA6                                                        CSE028
+     C           T2IMS7    ANDEQPIMSA7                                                        CSE028
+     C           T2IMS8    ANDEQPIMSA8                                                        CSE028
+     C           T2IMS9    ANDEQPIMSA9                                                        CSE028
+     C           T2PSET    ANDEQPPSET                                                         CSE028
+     C           T2NAC1    ANDEQPNARR1                                                        CSE028
+     C           T2NAC2    ANDEQPNARR2                                                        CSE028
+      *                                                                                       CSE028
+     C                     MOVE '0'       *IN75                                               CSE028
+     C                     ELSE                                                               CSE028
+     C                     MOVE *ON       *IN75                                               CSE028
+     C                     MOVEL'SEW7007' ZAMSID                                              CSE028
+     C                     EXSR SRSMSG                                                        CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C                     ENDSR                                                              CSE028
+      *                                                                                       CSE028
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **                                                              *
+      **  SRINIT    - To Handle Initial Processing                    *
+      **                                                              *
+      **  Calls     -                                                 *
+      **  Called By -                                                 *
+      **                                                              *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      **  Copyright Statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      * Get parameters from calling program
+     C           *ENTRY    PLIST
+     C                     PARM           PCMD    2
+     C                     PARM           PERR    1
+     C                     PARM           PDATA
+      *
+      * Setup keys values using transaction data passed from caller
+     C           *LIKE     DEFN T2TDRF    KEY001
+     C                     MOVELPTDRF     KEY001
+      *                                                                                       CSE034
+      ** Define Key List for Chaining to file SECTY                                           CSE034
+      *                                                                                       CSE034
+     C           KSECTY    KLIST                                                              CSE034
+     C                     KFLD           KSESN                                               CSE034
+     C           *LIKE     DEFN SESN      KSESN                                               CSE034
+      *
+      * Set up display/non-display indicator for MT5xx Messages
+     C                     MOVE '0'       *IN39
+     C                     MOVE '0'       *IN40
+      *
+      * Initialise error indicators
+     C                     SETOF                     303132
+     C                     SETOF                     333435
+     C                     SETOF                     363775
+      *
+      * Define work fields
+     C           *LIKE     DEFN BBCABA    WWCABA
+     C           *LIKE     DEFN BBCSID    WWCSID
+     C           *LIKE     DEFN BBBLCD    WWBLCD
+     C           *LIKE     DEFN BBCHID    WWCHID
+     C           *LIKE     DEFN BBCHSC    WWCHSC
+     C           *LIKE     DEFN BBBNBI    WWBNBI
+     C           *LIKE     DEFN T2AFPN    WWAFPN
+     C           *LIKE     DEFN T2AP1N    WWAP1N
+     C           *LIKE     DEFN T2AWIN    WWAWIN
+     C           *LIKE     DEFN T2BOFN    WWBOFN
+     C           *LIKE     DEFN T2IPYN    WWIPYN
+     C           *LIKE     DEFN T2CTYN    WWCTYN
+     C           *LIKE     DEFN T2SKAN    WWSKAN
+     C           *LIKE     DEFN T2SA1N    WWSA1N
+     C           *LIKE     DEFN T2RSSN    WWRSSN
+     C           *LIKE     DEFN T2DSSN    WWDSSN
+     C           *LIKE     DEFN T2BSSN    WWBSSN
+      *
+      * Initialise work fields
+     C                     MOVE *BLANKS   WWRITE  1
+      *
+      ** Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C                     MOVE BJMRDT    SDATE
+      *                                                                                       CSE028
+      ** Check if CSE028 feature is installed                                                 CSE028
+      *                                                                                       CSE028
+     C                     MOVE 'N'       CSE028  1                                           CSE028
+     C                     MOVE *OFF      *IN76                                               CSE028
+     C                     CALL 'AOSARDR0'                                                    CSE028
+     C                     PARM '       ' @RTCD                                               CSE028
+     C                     PARM '*VERIFY' @OPTN                                               CSE028
+     C                     PARM 'CSE028'  @SARD   6                                           CSE028
+      *                                                                                       CSE028
+     C           @RTCD     IFNE *BLANKS                                                       CSE028
+     C           @RTCD     ANDNE'*NRF   '                                                     CSE028
+     C                     Z-ADD01        DBASE                                               CSE028
+     C                     MOVEL'SE1819'  DBPGM                                               CSE028
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSE028
+     C                     MOVEL@SARD     DBKEY                                               CSE028
+     C                     EXSR *PSSR                                                         CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C           @RTCD     IFEQ *BLANK                                                        CSE028
+     C                     MOVE 'Y'       CSE028                                              CSE028
+     C                     MOVE *ON       *IN76                                               CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSW210
+      ** Call SWIF2010 to check if CSW210 is switched on                                      CSW210
+      *                                                                                       CSW210
+     C                     CALL 'SWIF2010'             7373                                   CSW210
+     C                     PARM *BLANKS   @RTCD                                               CSW210
+      *                                                                                       CSW210
+     C           *IN73     IFEQ *ON                                                           CSW210
+     C                     Z-ADD2         DBASE                                               CSW210
+     C                     MOVEL'SE1819'  DBPGM                                               CSW210
+     C                     MOVEL'SWIF2010'DBFILE                                              CSW210
+     C                     MOVEL'*CALL'   DBKEY                                               CSW210
+     C                     EXSR *PSSR                                                         CSW210
+     C                     ELSE                                                               CSW210
+      *                                                                                       CSW210
+     C           @RTCD     IFEQ 'CSW2010'                                                     CSW210
+     C                     MOVE 'Y'       CSW210  1                                           CSW210
+     C                     MOVE *ON       *IN72                                               CSW210
+     C                     ELSE                                                               CSW210
+     C                     MOVE 'N'       CSW210                                              CSW210
+     C                     MOVE *OFF      *IN72                                               CSW210
+     C                     ENDIF                                                              CSW210
+      *                                                                                       CSW210
+     C                     ENDIF                                                              CSW210
+      *
+      ** Access Branch Details using Branch Code from TRADSD
+     C                     MOVE PTDBR     @DSNB
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      ** Save Branch Internal Customer in workfield
+     C**********           MOVE A8BICN    WWBICN  60                                          CSD027
+     C                     MOVE A8BICN    WWBICN  6                                           CSD027
+      *
+      ** Allow Safekeeping Account Fields to be Input capable
+     C                     MOVE '0'       *IN10
+      *
+      ** Initialise Clearance Type (1 to 4 is MT580 for Settlements)
+     C           PCLTY     IFEQ '1'
+     C           PCLTY     OREQ '2'
+     C           PCLTY     OREQ '3'
+     C           PCLTY     OREQ '4'
+     C                     MOVE '14'      WWCLTY  2
+     C                     END
+      *
+     C/COPY WNCPYSRC,SE1819C004
+      ** Set up non-input capable screen fields from parm received.
+     C                     MOVE PACTN     SACTN
+     C                     MOVE PTDRF     STDRF
+     C                     MOVE PBLKR     SBLKR
+     C                     MOVE PSESN     SSESN
+     C                     MOVE PSRPN     SSRPN
+      *
+     C           *LIKE     DEFN T2TDRF    W2TDRF
+     C           *LIKE     DEFN T2AP1N    W2AP1N
+     C           *LIKE     DEFN T2AP1L    W2AP1L
+     C           *LIKE     DEFN T2AFPN    W2AFPN
+     C           *LIKE     DEFN T2AFPL    W2AFPL
+     C           *LIKE     DEFN T2AWIA    W2AWIA
+     C           *LIKE     DEFN T2AWIL    W2AWIL
+     C           *LIKE     DEFN T2AWIN    W2AWIN
+     C           *LIKE     DEFN T2BOFA    W2BOFA
+     C           *LIKE     DEFN T2BOFN    W2BOFN
+     C           *LIKE     DEFN T2BOF1    W2BOF1
+     C           *LIKE     DEFN T2BOF2    W2BOF2
+     C           *LIKE     DEFN T2ACL1    W2ACL1
+     C           *LIKE     DEFN T2ACL2    W2ACL2
+     C           *LIKE     DEFN T2SRL1    W2SRL1
+     C           *LIKE     DEFN T2SRL2    W2SRL2
+     C           *LIKE     DEFN T2SRL3    W2SRL3
+     C           *LIKE     DEFN T2FIN1    W2FIN1
+     C           *LIKE     DEFN T2FIN2    W2FIN2
+     C           *LIKE     DEFN T2RED1    W2RED1
+     C           *LIKE     DEFN T2RED2    W2RED2
+     C           *LIKE     DEFN T2NAL1    W2NAL1
+     C           *LIKE     DEFN T2NAL2    W2NAL2
+     C           *LIKE     DEFN T2IPYN    W2IPYN
+     C           *LIKE     DEFN T2IPYL    W2IPYL
+     C           *LIKE     DEFN T2CTYN    W2CTYN
+     C           *LIKE     DEFN T2CTYL    W2CTYL
+     C           *LIKE     DEFN T2SA1N    W2SA1N
+     C           *LIKE     DEFN T2SA1L    W2SA1L
+     C           *LIKE     DEFN T2SKAN    W2SKAN
+     C           *LIKE     DEFN T2SKAL    W2SKAL
+     C           *LIKE     DEFN T2CCTN    W2CCTN
+     C           *LIKE     DEFN T2DCTL    W2DCTL
+     C           *LIKE     DEFN T2RSSA    W2RSSA
+     C           *LIKE     DEFN T2RSSN    W2RSSN
+     C           *LIKE     DEFN T2RSS1    W2RSS1
+     C           *LIKE     DEFN T2RSS2    W2RSS2
+     C           *LIKE     DEFN T2RSS3    W2RSS3
+     C           *LIKE     DEFN T2RSS4    W2RSS4
+     C           *LIKE     DEFN T2DSSA    W2DSSA
+     C           *LIKE     DEFN T2DSSN    W2DSSN
+     C           *LIKE     DEFN T2DSS1    W2DSS1
+     C           *LIKE     DEFN T2DSS2    W2DSS2
+     C           *LIKE     DEFN T2DSS3    W2DSS3
+     C           *LIKE     DEFN T2DSS4    W2DSS4
+     C           *LIKE     DEFN T2BSSA    W2BSSA
+     C           *LIKE     DEFN T2BSSN    W2BSSN
+     C           *LIKE     DEFN T2BSS1    W2BSS1
+     C           *LIKE     DEFN T2BSS2    W2BSS2
+     C           *LIKE     DEFN T2DIDN    W2DIDN                                              CSW210
+     C           *LIKE     DEFN T2DLIN    W2DLIN                                              CSW210
+     C           *LIKE     DEFN T2DAD1    W2DAD1                                              CSW210
+     C           *LIKE     DEFN T2DAD2    W2DAD2                                              CSW210
+     C           *LIKE     DEFN T2DAD3    W2DAD3                                              CSW210
+     C           *LIKE     DEFN T2DAD4    W2DAD4                                              CSW210
+     C           *LIKE     DEFN T2QFIN    W2QFIN                                              CSW210
+     C           *LIKE     DEFN T2PCLR    W2PCLR                                              CSW210
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **                                                              *
+      **  *PSSR     - To Handle Database Errors                       *
+      **                                                              *
+      **  Calls     -                                                 *
+      **  Called By -                                                 *
+      **                                                              *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'SE1819'  DBPGM
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVE DBERR     @LDA
+     C                     OUT  @LDA
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+      *
+      ** Call standard DB error handler
+     C                     CALL 'DBERRCTL'             81
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      ***
+**  CPY@
+(c) Finastra International Limited 2001

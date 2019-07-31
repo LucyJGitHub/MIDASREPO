@@ -1,0 +1,678 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Close of business monitor')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                         *
+      *                                                               *
+      *  CBMON - CLOSE OF BUSINESS MONITOR                            *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CPK025             Date 23Nov06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CAAA02             Date 16Jul03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 25Oct01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPK008             DATE 01JUL97               *
+      *                 CCB003             DATE 14JAN97               *
+      *                 083886             DATE 20FEB95               *
+      *                 090185             DATE 07JUL95               *
+      *                 079670             DATE 07DEC94               *
+      *                 074573             DATE 12AUG94               *
+      *                 037613             DATE 11AUG94               *
+      *                 E28730             DATE 26SEP91               *
+      *                 LN0594             DATE 03AUG90               *
+      *                 LN0545             DATE 20JUL90               *
+      *                 LN0278             DATE 11JUL90               *
+      *                 LN0382             DATE 15JUN90               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CPK025 - Revert back fix of CAAA02                           *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAAA02 - Remove use of INVITE keyword to enable WebFacing    *
+      *           to process screens. Recompile only.                 *
+      *  CPK014 - Release 4 Packaging                                 *
+      *         - Remove all 'DBA' references                         *
+      *  CPK008 - DBA R2 Packaging                                    *
+      *         - Recompile over DSPF/CBMONDF                         *
+      *  CCB003 - COB Performance Enhancements - Task Split           *
+      *           Prevent Task Split Jobs appearing on COB monitor.   *
+      *  083886 - Amend Fix 079670/037613. Do not exclude COBBEGIN/   *
+      *           COBEND from count of components held on CBRUN, as   *
+      *           these components must also run in the Close Of      *
+      *           Business run.  To display the correct number of     *
+      *           'real' components on the screen, subtract 2 from    *
+      *           the count before displaying on the screen.          *
+      *  090185 - FURTHER CHANGES TO COMPANY NAME CAUSED RELEASE      *
+      *           LEVEL TO BE IN WRONG POSITION WITHIN SCREEN TITLE.  *
+      *  079670 - REMOVE FIX 037613 AS PGM CBCMON HAS ALREADY BEEN    *
+      *           AMENDED TO EXCLUDE COBBEGIN/COBEND - CURRENTLY,     *
+      *           THE NUMBER OF OUTSTANDING COMPONENTS CAN GO TO      *
+      *           -1 WHICH CAN CAUSE THE MONITOR TO HANG INSTEAD OF   *
+      *           CONTINUING WITH NEXT DAY SETUP.                     *
+      *  074573 - WHEN ACT CHANGES WERE APPLIED, RELEASE LEVEL WAS    *
+      *           NO LONGER IN THE CORRECT POSITION WITHIN THE SCREEN *
+      *           TITLE                                               *
+      *  037613 - ALLOW PROGRAM TO REFRESH THE SCREEN IF CALLED FROM  *
+      *           CBCMON WITHOUT A CBDTQD DATA QUEUE ENTRY HAVING     *
+      *           BEEN READ. ALSO ADJUST 'STILL TO RUN' COMPONENTS    *
+      *           TOTAL TO CORRECTLY ACCOUNT FOR COBBEGIN AND COBEND  *
+      *  E28730 - ADD COUNTER TO COB SCREEN                           *
+      *  LN0594 - DISPLAY THE RELEASE LEVEL CORRECTLY IF              *
+      *           IMMEDIATE HALT AT START OR RESTART AFTER SIGNOFF    *
+      *  LN0545 - RE-TRY THE LOCK OF CBSTAT TO AVOID POTENTIAL        *
+      *           COB CRASH AS A NUMBER OF PROGRAMS PERFORM THE       *
+      *           *LOCK TO UPDATE THE DATA AREA                       *
+      *  LN0278 - USE NEW PROGRAM CBTIME TO ACCESS TIME AND           *
+      *           DATE IN CORRECT FORMAT FOR CALCULATIONS             *
+      *           AND REMOVE ZDATE1 SUBROUTINE                        *
+      *  LN0382 - REMOVE CALL TO AOBANKR0 AND USE RUNDAT TO           *
+      *           OBTAIN DATE FORMAT IN ORDER TO AVOID AOBANKR0       *
+      *           BEING CALLED BY ITSELF                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+     FCBMONDF CF  E                    WORKSTN
+     FCBMESGPDO   E                    DISK                           UC
+      *
+      /SPACE 2
+      ********************************************************************
+      *
+      *     C  L   FUNCTION OF INDICATORS
+      *
+      *    01      DISPLAY STREAM 01 INFO
+      *    02      DISPLAY STREAM 02 INFO
+      *    03      DISPLAY STREAM 03 INFO
+      *    04      DISPLAY STREAM 04 INFO
+      *    05      DISPLAY STREAM 05 INFO
+      *    06      DISPLAY STREAM 06 INFO
+      *    07      DISPLAY STREAM 07 INFO
+      *    08      DISPLAY STREAM 08 INFO
+      *    09      DISPLAY STREAM 09 INFO
+      *    20      ERROR ON WRITE TO WORKSTATION
+      *    21      EOF ON DSPF/CBMONDF
+      *    50      DISPLAY NUMBER OF FAILED COMPONENTS
+      *    70      RE-TRY LOCK OF DATA AREA                               LN0545
+      *****90-99***INDICATORS USED BY STANDARD SUBROUTINE ZDATE1          LN0278
+      *
+      *       LR   LAST RECORD INDICATOR
+      *
+      *     U7&U8  DATABASE ERROR
+      *
+      *****************************************************************
+     F/EJECT
+     E*****************************************************************
+     E*
+     E                    ST         10  1
+     E** SR. FOR SETTING ON CORRECT NUMBER OF STREAM INDICATORS
+     E*
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E***************     TITL    1   1 45                                                    CPK014
+     E***SCREEN*TITLE SET UP ARRAY                                                            CPK014
+     E*
+     E****/COPY ZSRSRC,ZDATE1Z1                                           LN0278
+     E***SR.ARRAY*FOR*ZDATE1                                              LN0278
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*****************************************************************
+     I*
+     INICTIM      DS
+     I                                        1   2 NICHR
+     I                                        1   20NICHRP
+     I                                        3   3 COLON1
+     I                                        4   5 NICMI
+     I                                        4   50NICMIP
+     I                                        6   6 COLON2
+     I                                        7   8 NICSE
+     I                                        7   80NICSEP
+     I**  CONVERT TIME INTO 'NICE' DISPLAY (HH:MM:SS)
+     I*
+     IDQMSG       DS
+     I                                        1  10 CCOT
+     I                                       11  70 CTXT
+     I                                       71  78 CBSM
+     I                                       79  86 STREAM
+     I                                       85  860STRNO
+     I                                       85  86 STRNOA                CCB003
+     I                                        1  70 SCINFO
+     I** SPLIT MESSAGE FROM DTAQ/CBDTQD INTO SEPERATE FIELDS
+     I*
+     ICURFLD      DS
+     I                                        1   20CURHR
+     I                                        3   40CURMI
+     I                                        5   60CURSE
+     I**  DATA STRUCTURE TO SPLIT CURRENT TIME INTO HOURS, MINUTES
+     I**  AND SECONDS
+     ICOBFLD      DS
+     I                                        1   20COBHR
+     I                                        3   40COBMI
+     I                                        5   60COBSE
+     I**  DATA STRUCTURE TO HOLD COMPONENTS ALREADY RAN & TOTAL TO RUN    E28730
+     ICBRUN       DS                              6                       E28730
+     I                                    P   1   30TOTAL                 E28730
+     I                                    P   4   60RUN                   E28730
+     I**  DATA STRUCTURE TO SPLIT COB START TIME INTO HOURS, MINUTES
+     I**  AND SECONDS
+     ICBSTAT      DS                             50
+     I************                            1   4 CBRELS                                    CPK014
+     I                                       14  160CBFAIL
+     I                                       17  17 CBSCHS
+     I                                       18  190CBCURA
+     I                                       33  370CBSTDT
+     I                                       38  430CBSTTI
+     I** READ REQUIRED FIELDS OFF OF DTAARA/CBSTAT
+     I*
+     I*SCREEN*****DS                          1   4 CBRELS                                    CPK014
+     I************                            1  45 TITLLS                                    CPK014
+     I***************************************23  26 SCRELS                074573              CPK014
+     I************                           19  22 SCRELS         074573 090185              CPK014
+     I************                           15  18 SCRELS                090185              CPK014
+     I***SET*UP*OF RELEASE LEVEL FIELD FOR DISPLAY4OFBSCREEN TITLE                            CPK014
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I** LOCAL DATA AREA
+     I*
+     IRUNDAT      DS                             13
+     I                                        1   7 AGMRDT
+     I**********                             12  12 AGDFF           LN0382LN0278
+     I** DATA STRUCTURE TO GET DATE FROM RUNDAT DATA AREA
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     IPSDS       SDS
+     I                                      254 263 USRID
+     I**      DATA STRUCTURE FOR WORKSTATION ID FOR SCREEN OUTPUT
+     I*
+     I**DSFDY     E DSDSFDY                                               LN0382
+     I***FIRST*DATA*STRUCTURE*FOR*ACCESS*OBJECT,*SHORT*DATA*STRUCTURE     LN0382
+     I*
+     I**SDBANK    E DSSDBANKPD                                            LN0382
+     I***EXTERNAL*DATA*STRUCTURE*FOR*ACCESS*OBJECT*FORMAT                 LN0382
+     I*
+     I*****************************************************************
+     I/EJECT
+     C*****************************************************************
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SCWSID 10
+     C                     PARM           DQMSG  86
+     C                     PARM           MAXA    2
+     C*
+     C**   DECLARE DATAAREAS USED IN PROGRAM.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           CBSTAT
+     C           *NAMVAR   DEFN           CBRUN                           E28730
+     C*
+     C**  GET RUN DATE FROM DATA AREA RUNDAT
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    RUNA
+     C*********            MOVE AGDFF     BJDFIN  1                 LN0382LN0278
+     C                     UNLCKRUNDAT
+     C*
+     C**   INITIALISE WORK FIELDS FOR SCREEN DISPLAY
+     C*
+     C                     MOVE ':'       COLON1
+     C                     MOVE ':'       COLON2
+     C*
+     C**   WRITE POSITIONS 1-78 OF DQMSG TO PF/CBMESGPD.
+     C*
+     C           CBSM      IFNE 'REFRESH '                                038706
+     C                     OPEN CBMESGPD
+     C                     WRITECBMESGP0
+     C                     CLOSECBMESGPD
+     C                     END                                            038706
+     C*
+     C**   CHECK THE STATUS TYPE OF THE MESSAGE.
+     C*
+     C           CBSM      IFEQ 'STARTED '
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C*                                                                   CCB003
+     C**   TASK SPLIT JOBS NOT SHOWN ON THE SCREEN. THEREFORE DO NOT      CCB003
+     C**   UPDATE CURRENT NO. OF ACTIVE STREAM JOBS SCREEN FIELD          CCB003
+     C*                                                                   CCB003
+     C           STRNOA    IFNE 'XX'                                      CCB003
+     C                     ADD  1         CBCURA
+     C                     END                                            CCB003
+     C                     OUT  CBSTAT
+     C                     END
+     C*
+     C           CBSM      IFEQ 'COMPLETE'
+     C                     MOVE *BLANKS   CTXT
+     C                     MOVE *BLANKS   CCOT
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C*                                                                   CCB003
+     C**   TASK SPLIT JOBS NOT SHOWN ON THE SCREEN. THEREFORE DO NOT      CCB003
+     C**   UPDATE CURRENT NO. OF ACTIVE STREAM JOBS SCREEN FIELD          CCB003
+     C*                                                                   CCB003
+     C           STRNOA    IFNE 'XX'                                      CCB003
+     C                     SUB  1         CBCURA
+     C                     END                                            CCB003
+     C                     OUT  CBSTAT
+     C           *LOCK     IN   CBRUN                                     E28730
+     C                     ADD  1         RUN                             E28730
+     C                     OUT  CBRUN                                     E28730
+     C                     END
+     C*
+     C           CBSM      IFEQ 'FAILED  '
+     C                     MOVE *BLANKS   CTXT
+     C                     MOVE *BLANKS   CCOT
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C*                                                                   CCB003
+     C**   TASK SPLIT JOBS NOT SHOWN ON THE SCREEN. THEREFORE DO NOT      CCB003
+     C**   UPDATE CURRENT NO. OF ACTIVE STREAM JOBS SCREEN FIELD          CCB003
+     C*                                                                   CCB003
+     C           STRNOA    IFNE 'XX'                                      CCB003
+     C                     SUB  1         CBCURA
+     C                     END                                            CCB003
+     C                     ADD  1         CBFAIL
+     C                     OUT  CBSTAT
+     C                     END
+     C*
+     C           CBSM      IFEQ 'END     '
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C                     MOVE 'N'       CBSCHS
+     C                     OUT  CBSTAT
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C**  IF HALTED OR RESTARTED ACCESS CBSTAT                            LN0594
+     C**  TO OBTAIN RELEASE LEVEL FOR LATER USE                           LN0594
+     C*                                                                   LN0594
+     C           CBSM      IFEQ 'HALTED  '                                LN0594
+     C           CBSM      OREQ 'RESTART '                                LN0594
+     C           *IN70     DOUEQ'0'                                       LN0594
+     C           *LOCK     IN   CBSTAT                 70                 LN0594
+     C                     END                                            LN0594
+     C                     OUT  CBSTAT                                    LN0594
+     C                     END                                            LN0594
+     C*                                                                   LN0594
+     C           CBSM      IFEQ 'ERROR   '
+     C                     SETON                         LR
+     C                     RETRN
+     C                     END
+     C*
+     C**   IF STATUS NOT RECOGNISED THEN DATABASE ERROR.
+     C*
+     C           CBSM      IFNE 'STARTED '
+     C           CBSM      ANDNE'COMPLETE'
+     C           CBSM      ANDNE'FAILED  '
+     C           CBSM      ANDNE'HALTED  '
+     C           CBSM      ANDNE'RESTART '
+     C           CBSM      ANDNE'END     '
+     C           CBSM      ANDNE'REFRESH '                                038706
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DTQD '   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELCBSM      DBKEY            ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C**   USE MAXAS FIELD TO DETERMINE HOW MANY STREAMS TO SHOW
+     C**   WHEN DISPLAYING THE MONITOR.
+     C*
+     C                     Z-ADD1         CNT     20
+     C                     MOVE MAXA      SCMAXA  20
+     C                     SUB  1         SCMAXA
+     C           CNT       DOWLESCMAXA
+     C                     MOVE '1'       ST,CNT
+     C                     ADD  1         CNT
+     C                     END
+     C                     ADD  1         SCMAXA
+     C*
+     C*****SET*UP*TITLE FIELD FOR DISPLAY FILE                                                CPK014
+     C***************                                                                         CPK014
+     C***************      MOVE CBRELS    SCRELS                                              CPK014
+     C***************      MOVEATITL      TITLE                                               CPK014
+     C*
+     C**   SET ON THE APPROPRIATE DISPLAY FILE INDICATORS.
+     C*
+     C                     MOVEAST        *IN,01
+     C*
+     C**   ACCESS CURRENT DATE/TIME AND CONVERT DATE INTO MIDAS DAY
+     C**   NUMBER.
+     C*
+     C*****                TIME           TIMDAT 120                      LN0278
+     C*****                MOVE TIMDAT    ZDATE                           LN0278
+     C*****                MOVELTIMDAT    CURFLD                          LN0278
+     C*
+     C** ACCESS DATE, TIME AND DATE FORMAT USING PROGRAM CBTIME           LN0278
+     C*                                                                   LN0278
+     C                     CALL 'CBTIME'                                  LN0278
+     C                     PARM           DAYNOA  5                       LN0278
+     C                     PARM           STIME   6                       LN0278
+     C                     PARM           DFMT    1                       LN0278
+     C*                                                                   LN0278
+     C** SET CURRENT DATE AND TIME FIELDS                                 LN0278
+     C** WITH VALUES FROM CBTIME                                          LN0278
+     C*                                                                   LN0278
+     C                     MOVE DAYNOA    CURRDT  50                      LN0278
+     C                     MOVE STIME     CURFLD                          LN0278
+     C*                                                                   LN0278
+     C***USE*ACCESS*OBJECT*AOBANKR0*TO*                                   LN0382
+     C***RETRIEVE*DATE*FORMAT*FOR*ZDATE1                                  LN0382
+     C*****                                                               LN0382
+     C*****                CALL 'AOBANKR0'                                LN0382
+     C*****                PARM '*MSG   ' P@RTCD  7                       LN0382
+     C*****                PARM '*FIRST ' P@OPTN  7                       LN0382
+     C*****      SDBANK    PARM SDBANK    DSFDY                           LN0382
+     C*****                                                               LN0382
+     C***IF ERROR FOUND BY ACCESS OBJECT EXIT                             LN0382
+     C***PROGRAM VIA DATABASE ERROR SUBROUTINE                            LN0382
+     C*****                                                               LN0382
+     C*****      P@RTCD    IFNE *BLANKS                                   LN0382
+     C*****                MOVEL'AOBNK'   DBFILE           ***************LN0382
+     C*****                Z-ADD2         DBASE            * DB ERROR 02 *LN0382
+     C*****                EXSR DBERR                      ***************LN0382
+     C*****                END                                            LN0382
+     C*
+     C***VALIDATION*OF*DATE*FORMAT*ON*RUNDAT                        LN0382LN0278
+     C***AS*REQUIRED*BY*SUBROUTINE*ZDATE1                                 LN0278
+     C*
+     C******     BJDFIN    IFEQ 'M'                                       LN0278
+     C******               SETON                     98                   LN0278
+     C******               ELSE                                           LN0278
+     C******               SETOF                     98                   LN0278
+     C******               END                                            LN0278
+     C*
+     C******               EXSR ZDATE1                                    LN0278
+     C******               MOVE ZDAYNO    CURRDT  50                      LN0278
+     C*
+     C**   MOVE REQUIRED FIELDS FROM DTAARA/CBSTAT INTO WORK FIELDS.
+     C*
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C                     Z-ADDCBSTDT    STDT    50
+     C                     Z-ADDCBSTTI    STTI    60
+     C                     Z-ADDCBFAIL    SCFAIL
+     C                     Z-ADDCBCURA    SCCURA
+     C                     OUT  CBSTAT
+     C*
+     C**   IMPROVE DISPLAY OF CURRENT TIME.
+     C*
+     C                     MOVE CURHR     NICHR
+     C                     MOVE CURMI     NICMI
+     C                     MOVE CURSE     NICSE
+     C                     MOVE NICTIM    SCCURT
+     C*
+     C**   IMPROVE DISPLAY OF COB START TIME.
+     C*
+     C                     MOVE STTI      COBFLD
+     C                     MOVE COBHR     NICHR
+     C                     MOVE COBMI     NICMI
+     C                     MOVE COBSE     NICSE
+     C                     MOVE NICTIM    SCSTTI
+     C*
+     C**   EVALUATE ELAPSED TIME BETWEEN START OF COB AND CURRENT TIME.
+     C*
+     C                     EXSR TIMCAL
+     C                     MOVE NICTIM    SCELTI
+     C*
+     C**   IF ALL FAILED COMPONENTS HAVE BEEN RESTARTED THEN DO
+     C**   NOT DISPLAY THE CORRESPONDING LINE ON THE DISPLAY FILE.
+     C*
+     C           SCFAIL    IFLE 0
+     C                     SETON                     50
+     C                     ELSE
+     C                     SETOF                     50
+     C                     END
+     C*
+     C**   UPDATE THE INFO ON THE STREAM LINE REFERED TO BY
+     C**   THE MESSAGE.
+     C**   DO NOT UPDATE IF THIS IS A TASK SPLIT JOB. THESE JOBS          CCB003
+     C**   ARE NOT SHOWN ON THE MONITOR.                                  CCB003
+     C*
+     C           STREAM    IFNE *BLANKS
+     C           STRNOA    ANDNE'XX'                                      CCB003
+     C*
+     C           STRNO     IFEQ 0
+     C                     MOVE SCINFO    SCSTR0
+     C                     END
+     C*
+     C           STRNO     IFEQ 1
+     C                     MOVE SCINFO    SCSTR1
+     C                     END
+     C*
+     C           STRNO     IFEQ 2
+     C                     MOVE SCINFO    SCSTR2
+     C                     END
+     C*
+     C           STRNO     IFEQ 3
+     C                     MOVE SCINFO    SCSTR3
+     C                     END
+     C*
+     C           STRNO     IFEQ 4
+     C                     MOVE SCINFO    SCSTR4
+     C                     END
+     C*
+     C           STRNO     IFEQ 5
+     C                     MOVE SCINFO    SCSTR5
+     C                     END
+     C*
+     C           STRNO     IFEQ 6
+     C                     MOVE SCINFO    SCSTR6
+     C                     END
+     C*
+     C           STRNO     IFEQ 7
+     C                     MOVE SCINFO    SCSTR7
+     C                     END
+     C*
+     C           STRNO     IFEQ 8
+     C                     MOVE SCINFO    SCSTR8
+     C                     END
+     C*
+     C           STRNO     IFEQ 9
+     C                     MOVE SCINFO    SCSTR9
+     C                     END
+     C*
+     C**   IF NO STREAM UPDATE TAKES PLACE - DATABASE ERROR.
+     C*
+     C           STRNO     IFLT 0
+     C           STRNO     ORGT SCMAXA
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DTQD '   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELSTRNO     DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     IN   CBRUN                                     E28730
+      *                                                                   037613
+      **ADJUST*TOTALS*FOR*COBBEGIN*AND*COBEND********************** 037613079670
+      *                                                                   037613
+     C***********          SUB  1         RUN                       037613079670
+     C***********          SUB  2         TOTAL                     037613079670
+      *                                                                   083886
+      * ADJUST TOTALS FOR COBBEGIN AND COBEND, SO THAT CORRECT NO. OF     083886
+      * COMPONENTS RUN/TO BE RUN IS DISPLAYED ON THE SCREEN               083886
+     C                     SUB  1         RUN                             083886
+     C                     SUB  2         TOTAL                           083886
+     C                     MOVE RUN       SCRANA                          E28730
+     C           RUN       SUB  TOTAL     SCRUNA                          E28730
+     C***********          UNLCKCBRUN                               E28730079670
+     C*
+     C**   DISPLAY THE MONITOR.
+     C*
+     C                     WRITECBMONF0                20
+     C*
+     C**   IF RETURN HAS BEEN PRESSED - PERFORM READ TO STOP CRASH
+     C*
+     C           *IN20     IFEQ '1'
+     C                     SETOF                       20
+     C                     READ CBMONF0                  21
+     C                     WRITECBMONF0
+     C                     END
+     C*
+     C**   RETURN FROM PROGRAM WITHOUT SETTING ON LR.
+     C*
+     C                     RETRN
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** INDEX OF SUBROUTINES
+     C**
+     C**
+     C** TIMCAL - CALCULATION OF ELAPSED TIME.
+     C**
+     C***ZDATE1*-*TO*CONVERT*DATE*INTO*MIDAS*DAY*NUMBER.                  LN0278
+     C**
+     C** DBERR  - DATABASE ERROR HANDLING.
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** SUBROUTINE TO CALCULATE THE ELAPSED TIME OF COB SO FAR.
+     C*
+     C** CALLED FROM MAIN PROCESSING
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           TIMCAL    BEGSR
+     C*
+     C** SUBTRACT COB START DATE FROM CURRENT DATE
+     C** TO GIVE NUMBER OF DAYS SO FAR TAKEN BY COB.
+     C*
+     C           CURRDT    SUB  STDT      DAYS    20
+     C*
+     C** CONVERT DAYS TAKEN INTO HOURS TAKEN.
+     C*
+     C           DAYS      MULT 24        HOURS   20
+     C*
+     C** ADD HOURS TAKEN TO CURRENT NUMBER OF HOURS
+     C** TO GIVE TOTAL END HOURS FIELD.
+     C*
+     C           HOURS     ADD  CURHR     TOTHRS  20
+     C*
+     C** MOVE COB NUMBER OF SECONDS INTO TOTAL SECONDS FIELD.
+     C*
+     C                     Z-ADDCOBSE     TOTSEC  60
+     C*
+     C** CONVERT COB START NUMBER OF MINUTES INTO SECONDS
+     C** AND ADD TO TOTAL SECONDS FIELD.
+     C*
+     C           COBMI     MULT 60        SECS    60
+     C*
+     C                     ADD  SECS      TOTSEC
+     C*
+     C** CONVERT COB START NUMBER OF HOURS INTO SECONDS
+     C** AND ADD TO TOTAL SECONDS FIELD.
+     C*
+     C           COBHR     MULT 3600      SECS
+     C*
+     C                     ADD  SECS      TOTSEC
+     C*
+     C** MOVE CURRENT NUMBER OF SECONDS INTO TOTAL END SECONDS
+     C** WORK FIELD.
+     C*
+     C                     Z-ADDCURSE     ENDSEC  60
+     C*
+     C** CONVERT CURRENT NUMBER OF MINUTES INTO SECONDS
+     C** AND ADD TO TOTAL END SECONDS FIELD.
+     C*
+     C           CURMI     MULT 60        ESECS   60
+     C*
+     C                     ADD  ESECS     ENDSEC
+     C*
+     C** CONVERT TOTAL NUMBER OF HOURS INTO SECONDS
+     C** AND ADD TO TOTAL END SECONDS FIELD.
+     C*
+     C           TOTHRS    MULT 3600      ESECS   60
+     C*
+     C                     ADD  ESECS     ENDSEC
+     C*
+     C** SUBTRACT TOTAL COB START SECONDS FROM TOTAL
+     C** END SECONDS TO OBTAIN RUN TIME IN SECONDS.
+     C*
+     C           ENDSEC    SUB  TOTSEC    DIFSEC  60
+     C*
+     C** CONVERT RUN TIME INTO HOURS, MINUTES
+     C** AND SECONDS FIELDS FOR REPORT.
+     C*
+     C           DIFSEC    DIV  3600      NICHRP
+     C*
+     C                     MVR            MINREM  40
+     C*
+     C           MINREM    DIV  60        NICMIP
+     C*
+     C                     MVR            NICSEP
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C*****/COPY ZSRSRC,ZDATE1Z2                                          LN0278
+     C/EJECT
+     C********************************************************************
+     C*
+     C** DATABASE ERROR SUBROUTINE TO PERFORM DATABASE ERROR
+     C** EXIT FROM PROGRAM
+     C*
+     C** CALLED FROM MAIN PROCESSING
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** SETON INDICATORS U7 U8 LR AND RETURN TO CALLING PROGRAM.
+     C*
+     C                     MOVEL'CBMON '  DBPGM
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001

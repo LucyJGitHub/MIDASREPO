@@ -1,0 +1,285 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Fontis FTP File Acceptance Check')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas-Fontis Interface                               *
+      *                                                               *
+      *  GL2808 - Fontis FTP File Acceptance Check                    *
+      *                                                               *
+      *  Function - This program checks the file transfer log to      *
+      *             flag accepted files. It is called by GLC2808.     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CGL004 *CREATE     Date 14MAR97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL004 - Midas-Fontis Interface                              *
+      *                                                               *
+      *****************************************************************
+     F*
+     FGLFOLSPDIF  E                    DISK         KINFSR *PSSR
+      ** TCP/IP FTP Output File
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N    O F    I N D I C A T O R S                *
+     F*                                                               *
+     F*  80 - End of file PF/GLFOLSPD                                 *
+     F*  81 - SCAN successful                                         *
+     F*  82 - Error on SUBST                                          *
+     F*  83 - SCAN successful                                         *
+     F*                                                               *
+     F*  U7 - Job switch 7                                            *
+     F*  U8 - Job switch 8                                            *
+     F*  LR - End of program                                          *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  MAIN  - Main processing                                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+      ** Copyright Statement
+      *
+     IA@CPY       DS
+     I** Copyright Array
+     I                                        1  80 CPY@
+     I*
+      *
+     I            DS
+     I                                        1   6 ZSDATE
+     I                                        1   20#YY
+     I                                        3   4 #MM
+     I                                        5   6 #DD
+      *
+     I            DS
+     I** Data Structure for FTP Output.
+     I                                        1  80 FXLN80
+     I*
+     ILDA         DS
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IGLFONT    E DSGLFONTDA                    256
+      ** Fontis Data Area Data Structure
+      *
+     I*
+     ISDBANK    E DSSDBANKPD
+      ** External DS for Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for Access programs, Short Data Structure
+      *
+     ICMD         DS
+     I I            'CLRPFM GLFOINPD     '    1  20 WCMD
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *   M A I N   P R O C E S S I N G                               *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Entry Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           HOST   30
+     C                     PARM           MAXTRY  10
+     C                     PARM           RTCD    7
+      *
+      ** Set up Copyright Parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Call Access Program to obtain Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      * Database Error.
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY             ************
+     C                     Z-ADD001       DBASE             * DBERR 001*
+     C                     EXSR *PSSR                       ************
+     C                     ENDIF
+      *
+      ** Convert Midas Day Number to SWIFT date format
+      *
+     C                     CALL 'ZM0060'
+     C                     PARM BJRDNB    ZMDAY   50
+     C                     PARM           ZSDATE  6
+      *
+     C                     MOVEL#MM       #RDNB   4
+     C                     MOVE #DD       #RDNB
+      *
+      ** Retrieve Fontis settings from Data Area.
+      *
+     C           *NAMVAR   DEFN GLFONTDA  GLFONT
+     C           *LOCK     IN   GLFONT
+     C                     OUT  GLFONT
+      *
+     C                     EXSR MAIN
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      /TITLE SR/MAIN
+      *****************************************************************
+      *                                                               *
+      *   MAIN - Subroutine to perform Main processing                *
+      *                                                               *
+      *   Called by : Main processing                                 *
+      *                                                               *
+      *   Calls :                                                     *
+      *   LOAD                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MAIN      BEGSR
+      *
+     C                     MOVE *BLANK    WSTR1   8
+      *
+      ** Position and read first record on file.
+      *
+     C           1         SETLLGLFOLSD0
+     C                     READ GLFOLSD0                 80
+      *
+     C           *IN80     DOWEQ'0'                        B001
+      *
+      ** Scan record for text '_LOADED'
+      *
+     C                     SETOF                       8183
+     C           '_LOADED' SCAN FXLN80    X1      50     81
+      *
+      ** If found, extract file name from record.(12 Characters before
+      ** _LOADED)
+      *
+     C           *IN81     IFEQ '1'                        B002
+     C           X1        SUB  12        X2      50
+     C           8         SUBSTFXLN80:X2 WSTR1        82
+      *
+      ** Call GL2806 to prepare FTP request
+      *
+      *  Clear FTP file
+     C                     CALL 'QCMDEXC'              70
+     C                     PARM           WCMD
+     C                     PARM 20        WLEN   155
+      *
+     C                     CALL 'GL2806'
+     C                     PARM '*ACCEPT' MODE    7
+     C                     PARM *BLANKS   LIBNAM 10
+     C                     PARM WSTR1     MBRNAM 10
+     C                     PARM           MTYPE   3
+     C                     PARM *BLANKS   RTCD    7
+     C                     PARM           MAXTRY  10
+     C                     PARM           HOST   30
+     C                     PARM           WAITTM  50
+      *
+      ** '_LOADED' not found, scan for text '_ERR'
+      *
+     C                     ELSE                            X002
+     C                     MOVE *BLANK    WSTR1
+     C           '_ERR'    SCAN FXLN80    X1             83
+      *
+      ** If found, extract file name.
+      *
+     C           *IN83     IFEQ '1'                        B003
+     C           X1        SUB  12        X2
+     C           8         SUBSTFXLN80:X2 WSTR1        82
+      *
+      ** Call GL2806 to prepare FTP request
+      *
+      *  Clear FTP file
+     C                     CALL 'QCMDEXC'              70
+     C                     PARM           WCMD
+     C                     PARM 20        WLEN   155
+      *
+     C                     CALL 'GL2806'
+     C                     PARM '*REJECT' MODE    7
+     C                     PARM *BLANKS   LIBNAM 10
+     C                     PARM WSTR1     MBRNAM 10
+     C                     PARM           MTYPE   3
+     C                     PARM *BLANKS   RTCD    7
+     C                     PARM           MAXTRY  10
+     C                     PARM           HOST   30
+     C                     PARM           WAITTM  50
+      *
+     C                     ENDIF                           E003
+      *
+     C                     ENDIF                           E002
+      *
+      ** Call GLC2807 to send file delete command to Fontis, if
+      ** '_LOADED' or '_ERR' file found, delete file flag is on
+      ** and no error has occurred in calling GL2806.
+      *
+     C           *IN81     IFEQ '1'                        B002
+     C           RTCD      ANDEQ*BLANKS
+     C           F6DLTF    ANDEQ'Y'
+     C           *IN83     OREQ '1'
+     C           RTCD      ANDEQ*BLANKS
+     C           F6DLTF    ANDEQ'Y'
+     C                     CALL 'GLC2807'
+     C                     PARM           HOST
+     C                     PARM           MAXTRY
+     C                     PARM *BLANKS   RTCD
+      *
+      ** Ignore any errors from delete command.
+      *
+     C                     SETOF                     U7U8
+     C                     ENDIF                           E002
+      *
+      ** Read next record
+      *
+     C                     READ GLFOLSD0                 80
+      *
+     C                     ENDDO                           E001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+** CPY@
+(c) Finastra International Limited 2001

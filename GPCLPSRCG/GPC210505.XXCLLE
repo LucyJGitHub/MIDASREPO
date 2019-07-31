@@ -1,0 +1,91 @@
+/*********************************************************************/
+/*STD****CLPBASEBND***************************************************/                   /*CCB023*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GPC210505 - Non Authorised Retail Account Transfers (COB)   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Called By: GOC210501                                        */
+/*                                                                   */
+/*       Last Amend No. CCB023 *REDUNDANT  Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BUG27543*CREATE    Date 26Apr10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB023 - COB Restructure - Input Cycle Termination          */
+/*                Restructuring                                      */
+/*       BUG27543 - COB should not proceed if there are unauthorised */
+/*                  account transfers                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRTNCD)
+ 
+             DCL        VAR(&PRTNCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MZONE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2010')
+ 
+             DCLF       FILE(GPZONEPD) OPNID(A)
+             DCLF       FILE(V_UNRATM) ALWVARLEN(*YES)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GOC210501 - Non Authorised Retail +
+                          Account Transfers Check') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Retrieve System info from SDSTAT */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSTEM)
+ 
+/* Get zone name from GPZONEPD */
+ 
+ READ1:      RCVF       RCDFMT(GPZONED0) OPNID(A)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+ 
+             IF         COND(&SYSTEM *EQ &A_ZOMSYS) THEN(CHGVAR +
+                          VAR(&ZONE) VALUE(&A_ZOZONE))
+             ELSE       CMD(GOTO CMDLBL(READ1))
+ 
+/* Check for unauthorised Account Transfers in the zone */
+ 
+ READ2:      RCVF       RCDFMT(V_UNRATM)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+             CHGVAR     VAR(&MZONE) VALUE(%SST(&MSWZONE 3 10))
+ 
+             IF         COND(&ZONE *EQ &MZONE) THEN(DO)
+             CHGJOB     SWS('XXXXXX11')
+             CHGVAR     VAR(&PRTNCD) VALUE('*ERROR')
+             GOTO       CMDLBL(END)
+             ENDDO
+             ELSE       CMD(GOTO CMDLBL(READ2))
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             CHGVAR     VAR(&PRTNCD) VALUE('*ERROR')
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGVAR     VAR(&PRTNCD) VALUE('*ERROR')
+ 
+             SNDMSG     MSG('Non Authorised Retail Account Transfers +
+                          COB Check Terminated Abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

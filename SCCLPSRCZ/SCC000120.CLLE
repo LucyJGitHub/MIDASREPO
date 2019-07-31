@@ -1,0 +1,92 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC End COB Background Jobs')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000120 - End COB Background Jobs                         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR999622 *CREATE   Date 09Jul12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR999622 - COB background still running after PEA opens     */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM
+ 
+             DCL        VAR(&DATAQN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DATAQL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DLEN) TYPE(*DEC) LEN(5 0) VALUE(10)
+             DCL        VAR(&MESS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CBCTRL) TYPE(*CHAR) LEN(2000)
+             DCL        VAR(&CBCTRLMJB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CBCTRLMUR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CBCTRLMJN) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CBCTRLSJB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CBCTRLSUR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CBCTRLSJN) TYPE(*CHAR) LEN(6)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          Ltd. 2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SCC000120 - End COB Background Jobs') +
+                          TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Retrieve job information */
+ 
+             RTVDTAARA  DTAARA(CBCTRL) RTNVAR(&CBCTRL)
+ 
+/** End COB monitor job */
+ 
+             CHGVAR     VAR(&CBCTRLMJB) VALUE(%SST(&CBCTRL 1 10))
+             CHGVAR     VAR(&CBCTRLMUR) VALUE(%SST(&CBCTRL 11 10))
+             CHGVAR     VAR(&CBCTRLMJN) VALUE(%SST(&CBCTRL 21 6))
+ 
+             ENDJOB     JOB(&CBCTRLMJN/&CBCTRLMUR/&CBCTRLMJB) +
+                          OPTION(*IMMED)
+             MONMSG     MSGID(CPF0000)
+ 
+/** End COB scheduler job */
+ 
+             CHGVAR     VAR(&CBCTRLSJB) VALUE(%SST(&CBCTRL 27 10))
+             CHGVAR     VAR(&CBCTRLSUR) VALUE(%SST(&CBCTRL 37 10))
+             CHGVAR     VAR(&CBCTRLSJN) VALUE(%SST(&CBCTRL 47 6))
+ 
+             ENDJOB     JOB(&CBCTRLSJN/&CBCTRLSUR/&CBCTRLSJB) +
+                          OPTION(*IMMED)
+             MONMSG     MSGID(CPF0000)
+ 
+/** End COB journal monitor job */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&MESS) VALUE('STOP      ')
+             CHGVAR     VAR(&DATAQN) VALUE('SCC2470MON')
+             CHGVAR     VAR(&DATAQL) VALUE(&SYSID *CAT 'XLIB')
+ 
+             CALL       PGM(QSNDDTAQ) PARM(&DATAQN &DATAQL &DLEN &MESS)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             GOTO       CMDLBL(ENDP)
+ 
+ABNOR:       CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000120 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDP:        ENDPGM

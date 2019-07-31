@@ -1,0 +1,974 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SEthholding Tax To Be Reclaimed')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas   Securities Trading Module
+     F*                                                               *
+     F*   SE1930 - Withholding Taxes to be Reclaimed                  *
+     F*                                                               *
+     F*  Function: This program produces a report listing Withholding *
+     F*            Taxes to be Reclaimed for Dividends and Coupons    *
+     F*            extracted to PF/SEWITRPD by SEC1930.               *
+     F*            Created as part of SAR S01447, Withholding Tax     *
+     F*                                                               *
+     F*                                                               *
+     F*  Called By: SEC1930 - Withholding Tax To Be Reclaimed         *
+     F*                       Report Component                        *
+     F*                                                               *
+     F*  Calls: AOBANKR0 - Access object for Bank I.C.D. details      *
+     F*         AOBRCHR0 - Access object for Branch codes             *
+     F*         AOCTRYR0 - Access object for Country codes            *
+     F*         AOCURRR0 - Access object for Currency details         *
+     F*         AOSECSR0 - Access object for Securities customers     *
+     F*         AOSTRDR0 - Access object for SE I.C.D                 *
+     F*         ZSFILE   - Log spool file                             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG3644            Date 12Jul04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 208241             Date 17Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 127566             Date 09May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01496             Date 23Aug94               *
+     F*                 S01447             Date 12NOV93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  127566 - Recompiled over changed ZSDESCZ3                    *
+     F*   S01496 - Jyske Enhancements - Change format parameter       *  *
+     F*            from DSFDY to DSSDY for AOSTRDR0                   *  *
+     F*   S01447 - Program created for SE Withholding tax enhancement *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*
+     F*       FILE DEFINITIONS
+     F*      ------------------
+     F*
+     F*    SECURITY EVENTS BY TYPE
+     FSECET   IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F*    OPEN QUERY FILE
+     F*    WITHHOLDING TAX TO BE RECLAIMED
+     FSEWITRPDIF  E           K        DISK         KINFSR *PSSR
+     F*
+     F**   WITHHOLDING TAXES TO BE RECLAIMED REPORT
+     FSE1930P1O   E             60     PRINTER      KINFDS OVRFL1     UC
+     F                                              KINFSR *PSSR
+     F*
+     F**   WITHHOLDING TAXES TO BE RECLIAMED - RUN CONTROLS
+     FSE1930AUO   E             61     PRINTER      KINFDS OVRFL2
+     F                                              KINFSR *PSSR
+     F*
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F*                  ------------------------                     *
+     F*  37 - MULTIBRANCING INDICATOR                                 *
+     F*  40 - DIVIDEND (N40 = COUPON)                                 *
+     F*  50 - MODE PASSED IS INTERIM (NOT END OF MONTH)               *
+     F*                                                               *
+     F*  60 - OVERFLOW INDICATOR ON SE1930P1                          *
+     F*  61 - OVERFLOW INDICATOR ON SE1930AU                          *
+     F*                                                               *
+     F*  72 - FILE INDICATOR ON SEWITRPD                              *
+     F*  74 - FILE INDICATOR ON SECET                                 *
+     F*                                                               *
+     F*  98 - USED BY ZDATE2                                          *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     E********************************************************************
+     E*
+     E**   ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E********************************************************************
+     E/COPY ZSRSRC,ZSEDITZ1
+     E********************************************************************
+     E/COPY ZSRSRC,ZDATE2Z1
+     E********************************************************************
+     E/COPY ZSRSRC,ZSDESCZ1
+     E********************************************************************
+     E/EJECT
+     E********************************************************************
+     E*
+     E/COPY ZSRSRC,ZPOWERZ1
+     E********************************************************************
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*
+     I/COPY ZSRSRC,ZSDESCZ2
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+      **   FILE INFORMATION DATA STRUCTURE
+     IOVRFL1      DS
+     I                                       83  92 P1FILE
+     I                                    B 123 1240P1SPNO
+     I                                    B 188 1890WWOFL1
+     I                                    B 367 3680WWPTL1
+      **   FOR OVERFLOW - RUN CONTROL
+      *
+     IOVRFL2      DS
+     I                                       83  92 AUFILE
+     I                                    B 123 1240AUSPNO
+     I                                    B 188 1890WWOFL2
+     I                                    B 367 3680WWPTL2
+      ***   FOR OVERFLOW - PRINT
+      *
+      *** Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      *** Branch Details
+     ISDBRCH    E DSSDBRCHPD
+      *
+      *** Country Details
+     ISDCTRY    E DSSDCTRYPD
+      *
+      *** Currency Details
+     ISDCURR    E DSSDCURRPD
+      *
+      *** Securities Trading Data
+     ISDSTRD    E DSSDSTRDPD
+      *
+      *** Securities Customers
+     ISDSECS    E DSSDSECSPD
+      *
+      ***   LOCAL DATA AREA
+     ILDA       E DSLDA
+      *
+      *** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+      *
+      ***  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+      *
+      ***  DATA STRUCTURE FOR RUN DATE DETAILS
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ***   KEYLIST FOR SECET
+      *
+     C           WWKEY1    KLIST
+     C                     KFLD           PSSH
+     C                     KFLD           PEVT
+     C                     KFLD           PDUD
+      *
+      *****************************************************************
+      *
+      *               START MAINLINE
+      *              ----------------
+      *
+      ***   INITIAL PROCESSING
+      *
+     C                     EXSR INIT
+      *
+      ***   MAIN PROCESSING
+      *
+     C                     EXSR MAIN
+      *
+      ***   END PROGRAM
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *     INDEX TO SUBROUTINES                                      *
+      *    ----------------------                                     *
+      *                                                               *
+      *                                                               *
+      *    INIT    - INITIAL PROCESSING                               *
+      *    MAIN    - MAIN PROCESSING                                  *
+      *    CHGBRH  - CHANGE OF BRANCH PROCESSING                      *
+      *    CHGCTY  - CHANGE OF COUNTRY PROCESSING                     *
+      *    CHGDDT  - CHANGE OF DUE DATE PROCESSING                    *
+      *    CHGSEC  - CHANGE OF SECURITY PROCESSING                    *
+      *    ACCTOT  - ACCUMULATE TOTALS PROCESSING                     *
+      *    DBERR   - DATABASE ERROR PROCESSING                        *
+      *    *PSSR   - PROGRAM ERROR HANDLING SUBROUINE                 *
+      *    ZSEDIT  - EDIT NUMERIC FIELDS                              *
+      *    ZDATE2  - CONVERT DAY NUMBER TO A DATE                     *
+      *    ZSDESC  - FORMAT SECURITY DESCRIPTION                      *
+      *    ZCONV   - CONVERT VALUES FROM ONE CURRENCY TO ANOTHER      *
+      *                                                               *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *    MAIN      - THIS SUBROUTINE PERFORMS MAIN PROCESSING       *
+      *                                                               *
+      *    CALLS     - CHGBRH, CHGCTY, CHGDDT, CHKSEC                 *
+      *                ACCTOT, ZSEDIT, ZCONV                          *
+      *                                                               *
+      *    CALLED BY - MAINLINE                                       *
+      *                                                               *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+      ***   READ OPEN QUERY FILE
+      *
+     C                     READ SEWITRPD                 72
+      *
+      *
+     C           *IN72     DOWEQ'0'                        *B1
+      *
+      *
+      ***  IF BRANCH REQUESTED IS NOT EQUAL TO BRANCH OF RCD BEING PRO-
+      ***  CESSED, THEN GET NEXT RECORD
+      *
+     C           MBIN      IFEQ 'Y'                        *B2
+     C           @ENT      ANDNEPBCA
+     C           @ENT      ANDNE'ALL'
+     C                     READ SEWITRPD                 72
+     C                     ELSE                            *X2
+      *
+      **   PERFORM CHANGE OF BRANCH PROCESSING IF NECESSARY
+     C           PBCA      IFNE WWBRCH                     *B3
+     C                     EXSR CHGBRH
+     C                     END                             *E3
+      *
+      ***   PERFORM CHANGE OF COUNTRY IF NECESSARY
+     C           S1CTTA    IFNE WWCYTX
+     C                     EXSR CHGCTY
+     C                     END
+      *
+      ***   WRITE HEADINGS IF CHANGE IN COUNTRY OR BRANCH
+     C           WWBRFG    IFEQ '1'                        *B3
+     C           WWCTFG    OREQ '1'
+      *
+      ***   MOVE HEADER FIELDS TO PRINTER FILE FOR OUTPUT
+     C                     MOVE PBCA      RRBRCH
+     C                     MOVE A8BRNM    RRBRNM
+     C                     MOVE S1CTTA    RRCYTX
+     C                     MOVE A4CNNM    RRCYNM
+      *
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END                             *E3
+      *
+      ***  PERFORM CHANGE OF DUE DATE IF NECESSARY
+     C           PDUD      IFNE WWDCDT                     *B3
+     C           WWBRFG    OREQ '1'
+     C           WWCTFG    OREQ '1'
+     C                     EXSR CHGDDT
+     C                     END                             *E3
+      *
+      ***  PERFORM CHANGE OF SECURITY IF NECESSARY
+     C           PSSH      IFNE WWSECR                     *B3
+     C           WWDDFG    OREQ '1'
+     C           WWBRFG    OREQ '1'
+     C           WWCTFG    OREQ '1'
+     C                     EXSR CHGSEC
+     C                     END                             *E3
+      *
+     C                     EXSR ACCTOT
+      *
+      ***  RESET BRANCH, COUNTRY AND DUE DATE FLAGS
+      *
+     C                     MOVE '0'       WWBRFG  1
+     C                     MOVE '0'       WWCTFG  1
+     C                     MOVE '0'       WWDDFG  1
+      *
+      ***   READ OPEN QUERY FILE
+      *
+     C                     READ SEWITRPD                 72
+      *
+     C           *IN72     IFEQ '1'                        *B3
+     C           PBCA      ORNE WWBRCH
+     C           S1CTTA    ORNE WWCYTX
+     C           PDUD      ORNE WWDCDT
+     C           PSSH      ORNE WWSECR
+      *
+      ***   FORMAT FIELDS FOR OUTPUT
+      *
+     C                     Z-ADDWWNMDP    ZDECS
+     C                     MOVE WWPNMP    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRPOSN
+      *
+     C                     Z-ADDWWNODP    ZDECS
+     C                     MOVE WWPAMD    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRGRAM
+      *
+     C                     MOVE WWTASO    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRTASO
+      *
+     C                     MOVE WWTASR    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRTASR
+      *
+      ***   CHECK FOR OVERFLOW BEFORE WRITING DETAILS
+      *
+     C           WWOFL1    SUB  WWPTL1    WWLINE
+     C           WWLINE    IFLT 5                          *B4
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER3
+     C                     END                             *E4
+      *
+     C                     WRITEDETAIL1
+      *
+      ***   ACCUMULATE COUNTRY TOTALS AS NECESSARY
+      *
+     C           WWNCCY    IFNE BJCYCD                     *B4
+      *
+     C                     Z-ADDWWSRI     ZEXCH
+     C                     MOVE WWMDI     ZMD
+      *
+     C                     MOVE WWNCCY    ZCCYI
+     C                     MOVE RRBCY1    ZCCYO
+     C                     Z-ADDWWDPI     ZCDPI
+     C                     Z-ADDWWDPO     ZCDPO
+      *
+     C                     Z-ADDWWTASO    ZAMTCI
+     C                     EXSR ZCONV
+     C                     ADD  ZAMTCO    WWCTSO
+      *
+     C                     Z-ADDWWTASR    ZAMTCI
+     C                     EXSR ZCONV
+     C                     ADD  ZAMTCO    WWCTSR
+      *
+     C                     ELSE                            *X4
+      *
+     C                     ADD  WWTASO    WWCTSO 150
+     C                     ADD  WWTASR    WWCTSR 150
+      *
+     C                     END                             *E4
+      *
+     C           *IN72     IFEQ '1'
+     C           PBCA      ORNE WWBRCH                     *B4
+     C                     MOVE '0'       WWFTT            PRT TOTAL LINE
+     C                     MOVE '1'       WWLTT            DONT RD CTY YET
+     C                     EXSR CHGCTY
+     C                     WRITETRAILER
+     C                     CLOSESE1930P1
+     C                     MOVE '1'       WWFTT            NO PRT TOTAL
+     C                     MOVE '0'       WWLTT            SET TO RD CTRY
+     C                     END                             *E4
+      *
+      ***   ZEROISE TOTALS
+      *
+     C                     Z-ADD0         WWPNMP
+     C                     Z-ADD0         WWPAMD
+     C                     Z-ADD0         WWTASO
+     C                     Z-ADD0         WWTASR
+     C                     END                             *E3
+      *
+     C                     END                             *E2
+     C                     ENDDO                           *E1
+      *
+      ***   If records were written to P1 reports then record number
+      ***   on audit report
+      *
+     C                     WRITEHEADER
+     C           WWRCDS    IFNE *ZERO                      *B1
+     C                     WRITECONTROL
+     C                     ELSE                            *X1
+     C                     WRITENONE
+     C                     END                             *E1
+      *
+     C                     WRITEFOOTING
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *    CHGBRH    - THIS SUBROUTINE PERFORMS CHANGE OF BRANCH      *
+      *                PROCESSING                                     *
+      *                                                               *
+      *    CALLS     - DBERR                                          *
+      *                                                               *
+      *    CALLED BY - MAIN                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CHGBRH    BEGSR
+      *
+     C                     Z-ADD*ZERO     PAGE
+     C                     OPEN SE1930P1
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM @SEQ      SEQ
+     C                     PARM PBCA      SENTY
+     C                     PARM P1FILE    SFILEU
+     C                     PARM P1SPNO    ZSNUMU
+     C                     PARM *BLANKS   ZSERR
+      *
+      ***  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVELP1FILE    DBKEY            ***************
+     C                     MOVEL'ZSFILE'  DBFILE           * DBERROR 001 *
+     C                     MOVEL'SE1930'  DBPGM            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM PBCA      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVELPBCA      DBKEY            ***************
+     C                     MOVEL'SDBRCHL1'DBFILE           * DBERROR 002 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+      *** Re-initialise workfields used within each change of branch
+      *
+     C                     MOVE *BLANKS   WWCYTX
+     C                     MOVE *ZEROS    WWDCDT
+     C                     MOVE *BLANKS   WWSECR
+      *
+     C                     MOVE PBCA      ZPBCA            BRCH ON TOTAL LINE
+     C                     MOVE '1'       WWBRFG
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *    CHGCTY    - THIS SUBROUTINE PERFORMS CHANGE OF COUNTRY     *
+      *                PROCESSING                                     *
+      *                                                               *
+      *    CALLS     - DBERR, ZSEDIT                                  *
+      *                                                               *
+      *    CALLED BY - MAIN                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CHGCTY    BEGSR
+      *
+     C           WWFTT     IFEQ '0'
+      *
+      ***   FORMAT COUNTRY TOTAL USING ZSEDIT & PRINT TOTALS BY COUNTRY
+      *
+     C                     Z-ADDWWDPO     ZDECS
+     C                     MOVE WWCTSO    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRTTSO
+      *
+     C                     MOVE WWCTSR    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRTTSR
+      *
+      **   CHECK FOR OVERFLOW BEFORE WRITING TOTALS
+     C           WWOFL1    SUB  WWPTL1    WWLINE
+     C           WWLINE    IFLT 3
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+      *
+     C                     WRITETOTAL1
+      *
+     C                     END
+      *
+     C           WWLTT     IFEQ '0'
+      *
+     C                     Z-ADD0         WWCTSO
+     C                     Z-ADD0         WWCTSR
+      *
+     C                     CALL 'AOCTRYR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM S1CTTA    @CNCD   2
+     C           SDCTRY    PARM SDCTRY    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVELS1CTTA    DBKEY            ***************
+     C                     MOVEL'SDCTRYL1'DBFILE           * DBERROR 003 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     MOVE S1CTTA    WWCYTX
+     C                     MOVE '1'       WWCTFG
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *    CHGDDT    - THIS SUBROUTINE PERFORMS CHANGE OF DUE DATE    *
+      *                PROCESSING                                     *
+      *                                                               *
+      *    CALLS     - ZDATE2                                         *
+      *                                                               *
+      *    CALLED BY - MAIN                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CHGDDT    BEGSR
+      *
+     C                     MOVE PDUD      WWDCDT
+     C                     Z-ADDPDUD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRDCDT
+      *
+     C                     MOVE '1'       WWDDFG
+      *
+      ***   WRITE DUE DATE DETAILS
+      *
+     C           WWOFL1    SUB  WWPTL1    WWLINE  40
+     C           WWLINE    IFLT 3
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+      *
+     C                     WRITEHEADER3
+      *
+     C           WWFTT     IFEQ '1'
+     C                     MOVE '0'       WWFTT
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *    CHGSEC    - THIS SUBROUTINE PERFORMS CHANGE OF SECURITY    *
+      *                PROCESSING                                     *
+      *                                                               *
+      *    CALLS     - DBERR, ZSEDIT, ZSDESC                          *
+      *                                                               *
+      *    CALLED BY - MAIN                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CHGSEC    BEGSR
+      *
+      **   OUTPUT CURRENCY & SECURITY CODE TO REPORT FIELDS
+      *
+     C                     MOVE PNCY      RRNCCY
+     C                     MOVE PSSH      RRSECR
+      *
+      **   FORMAT SECURITY SHORTNAME, DIVIDEND RATE & COUPON RATE
+      *
+     C                     MOVE SRPN      ZSRPN
+     C                     MOVE *BLANKS   ZSFN1
+     C                     MOVE *BLANKS   ZSFN2
+     C                     EXSR ZSDESC
+     C                     MOVE ZRNME     RRSECN
+      *
+      **   IF EVENT TYPE IS 'DV' (DIVIDEND PER UNIT)
+      *
+     C           PEVT      IFEQ 'DV'
+     C                     MOVE '1'       *IN40
+     C           WWKEY1    CHAINSECET                74
+     C           *IN74     IFEQ '1'
+     C                     MOVE *ZEROS    SDVA
+     C                     END
+     C                     Z-ADD8         ZDECS
+     C                     MOVE SDVA      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRDVPU
+     C                     END
+      *
+      *** EVENT TYPE IS 'CP' (COUPON RATE)
+      *
+     C           PEVT      IFEQ 'CP'
+     C                     MOVE '0'       *IN40
+     C                     Z-ADD7         ZDECS
+     C                     MOVE CPNR      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRCPRT
+     C                     END
+      *
+     C           *LIKE     DEFN A6SPRT    WWSRI
+     C           *LIKE     DEFN A6NBDP    WWDPI
+     C           *LIKE     DEFN A6MDIN    WWMDI
+      *
+      ***   ACCESS CURRENCY FILE FOR NOMINAL CURRENCY
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM PNCY      @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'SDCURRL1'DBFILE           * DBERROR 004 *
+     C                     MOVELPNCY      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ELSE
+      *
+      ***   STORE NUMBER OF DECIMAL PLACES
+      *
+     C                     Z-ADDA6NBDP    WWNODP  10
+     C                     Z-ADDA6NBDP    WWDPI
+     C                     Z-ADDA6SPRT    WWSRI
+     C                     MOVE A6MDIN    WWMDI
+      *
+     C                     END
+      *
+     C                     MOVE PBCA      WWBRCH
+     C                     MOVE S1CTTA    WWCYTX
+     C                     MOVE PDUD      WWDCDT
+     C                     MOVE PSSH      WWSECR
+     C                     MOVE PNCY      WWNCCY  3
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *    ACCTOT    - THIS SUBROUTINE ACCUMULATES TOTALS             *
+      *                                                               *
+      *    CALLS     - DBERR                                          *
+      *                                                               *
+      *    CALLED BY - MAIN                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACCTOT    BEGSR
+      *
+      ***   ACCESS SECURITIES CUSTOMERS FILE
+      *
+     C                     MOVE PCPY      WWPCPY  6
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM WWPCPY    @CUST   6
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'SDSECSL1'DBFILE           * DBERROR 005 *
+     C                     MOVELPCPY      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      ***   IF CLASSIFICATION IS NOT EQUAL TO 'S' OR 'D'
+      ***   CUSTOMER IS A DEPOT CUSTOMER
+      *
+     C           BFCLAS    IFNE 'S'
+     C           BFCLAS    ANDNE'D'
+      *
+     C                     ADD  PNMP      WWPNMP 130
+     C                     ADD  PAMD      WWPAMD 130
+     C                     ADD  TASO      WWTASO 130
+     C                     ADD  TASR      WWTASR 130
+      *
+     C                     ELSE
+      *
+      **   IF CLASSIFICATION IS EQUAL TO 'S' OR 'D'
+      **   CUSTOMER IS A PORTFOLIO CUSTOMER.  PORTFOLIO CUSTOMER
+      **   POSITIONS ARE SUBTRACTED FROM THE TOTAL AS THE USER'S
+      **   OWN POSITION IS THE DIFFERENCE BETWEEN THE DEPOT POSITION
+      **   AND THE CUSTOMER7S POSITION.
+      *
+     C           BFCLAS    IFEQ 'S'
+     C           BFCLAS    OREQ 'D'
+      *
+     C                     SUB  PNMP      WWPNMP 130
+     C                     SUB  PAMD      WWPAMD 130
+     C                     SUB  TASO      WWTASO 130
+     C                     SUB  TASR      WWTASR 130
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     Z-ADDNMDP      WWNMDP  10
+     C                     ADD  1         WWRCDS           INC COUNT
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *    INIT      - THIS SUBROUTINE PERFORMS INITIAL PROCESSING    *
+      *                                                               *
+      *    CALLS     - DBERR                                          *
+      *                                                               *
+      *    CALLED BY - MAINLINE                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ***   Initialise database error fields
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZERO     DBASE
+     C                     MOVEL'SE1930'  DBPGM
+     C                     OUT  LDA
+      *
+     C           *LIKE     DEFN BVROSD    RSFD
+     C                     MOVE 'J'       ZECODE
+      *
+      * Input parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ    5
+     C                     PARM           @MODE   1
+     C                     PARM           @ENT    3
+      *
+      *** Validate parameters passed
+      *
+     C           @MODE     IFEQ 'I'                        *B1
+     C                     MOVE '1'       *IN50
+     C                     ELSE                            *X1
+     C           @MODE     IFNE 'E'                        *B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE
+     C                     MOVEL@MODE     DBKEY            ***************
+     C                     MOVEL'PARAMS'  DBFILE           * DBERROR 006 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR DBERR
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM @SEQ      SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM AUFILE    SFILEU 10
+     C                     PARM AUSPNO    ZSNUMU  60
+     C                     PARM *BLANKS   ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD7         DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVELAUFILE    DBKEY            ***************
+     C                     MOVEL'ZSFILE'  DBFILE           * DBERROR 007 *
+     C                     MOVEL'SE1930'  DBPGM            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      *** Read in the data area RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      *** Get Bank Details by access object to get run date & title
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD8         DBASE            ****************
+     C                     MOVEL'SDBANKL1'DBFILE           * DBERROR  008 *
+     C                     MOVEL*BLANKS   DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      ***   Check contents of date format indicator
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVE '0'       *IN98
+     C                     END
+     C                     END
+      *
+     C                     MOVE BJCYCD    RRBCY1
+     C                     MOVE BJCYCD    RRBCY2
+      *
+      ***  Access currency file to get no. of decimal places,
+      ***  spot rate & multiply/divide indicator
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM BJCYCD    @CCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD9         DBASE            ****************
+     C                     MOVEL'SDCURRL1'DBFILE           * DBERROR  009 *
+     C                     MOVELBJCYCD    DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+     C           *LIKE     DEFN A6NBDP    WWDPO
+     C                     Z-ADDA6NBDP    WWDPO
+      *
+      ***   Initialise work fields
+      *
+     C                     MOVE '1'       WWFTT   1
+     C                     MOVE '0'       WWLTT   1
+     C                     Z-ADD*ZERO     WWRCDS
+      *
+      ***   Initialise work fields to hold BRANCH, COUNTRY, DUE DATE
+      ***   and SECURITY SHORTNAME
+      *
+     C                     MOVE *BLANKS   WWBRCH  3
+     C                     MOVE *BLANKS   WWCYTX  2
+     C                     MOVE *ZEROS    WWDCDT  50
+     C                     MOVE *BLANKS   WWSECR 10
+      *
+      ***  Test for multi-branching
+      *
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     37
+     C                     END
+      *
+      *** Get Securities Trading Data by access object
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C***********SDSTRD    PARM SDSTRD    DSFDY                           S01496
+     C           SDSTRD    PARM SDSTRD    DSSDY                           S01496
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD10        DBASE
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVEL'SDSTRDL1'DBFILE           * DBERROR 010 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *    DBERR     - PROCESS DATABASE ERRORS                        *
+      *                                                               *
+      *    CALLS     - None                                           *
+      *                                                               *
+      *    CALLED BY - INIT, CHGBRH, CHGCTY, CHGSEC, ACCTOT           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     WRITEFOOTING
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *    *PSSR     - Program error handling routine                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      *****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      *****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZSDESCZ3
+      *****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZCONVZ1
+      *****************************************************************
+     C/EJECT
+** CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

@@ -1,0 +1,638 @@
+     H        1                                                           SE1210
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Euclid Transmission')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1210 - EUCLID TRANSMISSION                                 *
+     F*                                                               *
+     F*  Function: To send the generated telex messages over EUCLID   *
+     F*   (I/C)    network to Euroclear.  Also to receive the         *
+     F*            Euroclear reports available to the user via EUCLID.*
+     F*            The reports are received via a communications file *
+     F*            and written to a file for subsequent processing.   *
+     F*            This file is commonly called the 'backlog' file.   *
+     F*                                                               *
+     F*  Called by: SEC1201 - Euclid Interface CL Control Program     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 052254             Date 10Jan94               *
+     F*                 E29170             Date 01NOV91               *
+     F*                 S01117             DATE 03JUN91               *
+     F*                 S01190             DATE 06/04/89              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching                                      *
+     F*  S01190 - EUCLID FIXES/ENHANCEMENTS                           *   S01190
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FECTRF   IP  F      80            DISK
+     FBSCF    CF  E                    WORKSTN
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F* ICD1      TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FEDUMP   O   F      80            DISK                      A    U3
+     F***SE1210P1O***F     132     OF     PRINTER                         E29170
+     FSE1210P1O   F     132     OF     PRINTER                        UC  E29170
+     F                                              KINFDS SPOOL          E29170
+     FSE1210AUO   F     132     OA     PRINTER
+     F                                              KINFDS SPOOLU         E29170
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01  - READ OF S/ECTRF FILE                                  *
+     F*   02  - READ OF S/BSCF FILE - CONTROL CHAR 'M'                *
+     F*   03  -                     - CONTROL CHAR '/'                *
+     F*   04  -                     - CONTROL CHAR 'S'                *
+     F*   05  -                     - CONTROL CHAR 'T'                *
+     F*   06  -                     - CONTROL CHAR 'A'                *
+     F*   07  -                     - CATCHALL                        *
+     F*   08  - READ OF S/TABLE FILE - FORMAT TABTB10F                *
+     F*   09  -         S/BSCF FILE - RECORD CODE '01'                *
+     F*   10  -                     - RECORD CODE '10'                *
+     F*   11  -                     - RECORD CODE '11'                *
+     F****12**-*********************-*RECORD CODE*'15'*****************   S01190
+     F*   13  -                     - RECORD CODE '20'                *   S01190
+     F*   14  -                     - RECORD CODE '21'                *   S01190
+     F*                                                               *
+     F*   20  - FIRST CYCLE INDICATOR                                 *
+     F*   21  - REPORT RECORD READ FROM S/BSCF                        *
+     F*   22  - BACKLOG RECORD READ FROM S/BSCF                       *
+     F*   23  - LAST RECORD READ FROM S/BSCF                          *
+     F*   24  - BACKLOG HEADER READ                                   *
+     F*                                                               *
+     F*   30  - ISSUE 'ALWWRT' TO BSCF - WE HAVE FINISHED TRANSMISSION*
+     F*   31  - 'TRNRND' ISSUED BY BSCF - THEY HAVE FINISHED          *
+     F*         TRANSMISSION                                          *
+     F*                                                               *   E29170
+     F*   40  - DETAIL PRINTER FILE OPEN                              *   E29170
+     F*                                                               *
+     F* 90-99 - USED IN STANDARD SUBROUTINES                          *
+     F*                                                               *
+     F*   U2  - RECEIVE OPTION(S) SELECTED                            *
+     F*   U3  - BACKLOG FILE RECEPTION REQUESTED                      *
+     F*   U4  - BACKLOG FILE RECEIVED SUCCESSFULLY (TRAILER READ)     *
+     F*   U6  - FILE/COMMUNICATION ERROR                              *
+     F* U6+U7 - FILE/COMMUNICATION ERROR - RECEIVE                    *
+     F* U6+U8 - FILE/COMMUNICATION ERROR - SEND                       *
+     F* U7+U8 - DATABASE ERROR                                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /SPACE 3
+     IECTRF   NS  01
+     I*
+     I*    S/ECTRF FILE
+     I                                        1  80 DATA1
+     I*
+     ITABTB10F    08
+     I*
+     I**  S/TABLE FILE
+     I*
+     I            DS
+     I                                        1  80 DATA4
+     I                                        3  82 DATA3
+     I                                        1   2 CRF
+     I                                        2   2 PRTF
+     I                                        1  82 ECDTA2
+     ISENDDS      DS
+     I*
+     I**  DATA STRUCTURE TO WRITE TO S/BCSF
+     I*
+     I                                        1  80 DATA1
+     I                                        1  80 ECDATA
+     I*
+     I**  LOCAL DATA AREA
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  M A I N   P R O C E S S I N G
+     C*
+     C*****************************************************************
+     C*
+     C**  DO THE FIRST CYCLE PROCESSING
+     C*
+     C  N20                EXSR FIRST
+     C*
+     C**  WRITE RECORD TO S/BSCF
+     C*
+     C   01   NU8          EXSR WRTREC
+     C*
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     C*
+     C**  DO LAST CYCLE PROCESSING
+     C*
+     CLR LR   NU8          EXSR LAST
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  FIRST SR. - TO DO THE FIRST CYCLE PROCESSING
+     C*
+     C*  CALLED FROM : MAIN
+     C*  CALLS       : ZSYSTM
+     C*
+     C********************************************************************
+     C*
+     C           FIRST     BEGSR                           *** FIRST ***
+     C*
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5                       S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVE 'SE1210  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C                     MOVE ' '       BLK080 80
+     C***********          Z-ADD0         NODUMP  50                      S01190
+     C                     Z-ADD0         NODUMP  60                      S01190
+     C*
+     C**  GET I.C.D.R. 1, DATABASE ERROR IF NOT FOUND
+     C*
+     C                     EXSR ZSYSTM
+     C   99                SETON                     U7U8LR
+     C   LR      *LOCK     IN   LDA                                       S01117
+     C   LR                MOVE 'TABLE'   DBFILE           ***************
+     C   LR                MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C   LR                Z-ADD01        DBASE            ***************
+     C   LR                OUT  LDA                                       S01117
+     C   LR                EXSR *PSSR                                     S01117
+     C*
+     C**  SET ON FIRST CYCLE INDICATOR
+     C*
+     C  NLR                SETON                     20
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  WRTREC SR. - TO WRITE A RECORD TO S/BSCF
+     C*
+     C*  CALLED FROM : MAIN
+     C*
+     C********************************************************************
+     C*
+     C           WRTREC    BEGSR                           *** WRTREC ***
+     C*
+     C**  IF LAST RECORD FROM S/ECTRF READ, SETON 30 TO ISSUE 'ALWWRT'
+     C*
+     C   LR                SETON                     30
+     C*
+     C                     WRITEBSCFF1                 U8
+     C*
+     C**  IF WRITE ERROR, TERMINATE PROGRAM WITH MESSAGE AND U6+U8
+     C*
+     C   U8                SETON                     U6LR
+     C*                                                                   E29170
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C           *INU8     IFEQ '1'                                       E29170
+     C           *IN40     ANDEQ'0'                                       E29170
+     C                     OPEN SE1210P1                                  E29170
+     C                     SETON                     40                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     END                                            E29170
+     C   U8                EXCPTSENERR
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  LAST  SR. - TO DO THE LAST RECORD PROCESSING ASSOCIATED WITH
+     C*              THE FILE S/ECTRF
+     C*
+     C*  CALLED FROM : MAIN
+     C*  CALLS       : RDREC BATNUM
+     C*
+     C********************************************************************
+     C*
+     C           LAST      BEGSR                           *** LAST ***
+     C*
+     C           LSTT01    TAG                             ** LSTT01 ***
+     C*
+     C**  READ RECORD FROM S/BSCF
+     C*
+     C                     EXSR RDREC
+     C*
+     C**  IF RECEIVE ERROR, TERMINATE WITH MESSAGE AND U6+U7
+     C*
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C           *INU7     IFEQ '1'                                       E29170
+     C           *IN40     ANDEQ'0'                                       E29170
+     C                     OPEN SE1210P1                                  E29170
+     C                     SETON                     40                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     END                                            E29170
+     C   U7                EXCPTRECERR
+     C   U7                GOTO LSTT02
+     C*
+     C**  IF REPORT & CONTROL RECORD, WRITE TO REPORT A
+     C*
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C           *IN21     IFEQ '1'                                       E29170
+     C           *IN40     ANDEQ'0'                                       E29170
+     C                     OPEN SE1210P1                                  E29170
+     C                     SETON                     40                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     END                                            E29170
+     C   21                EXCPTREPA
+     C*
+     C**  IF BACKLOG RECORD, WRITE TO S/EDUMP AND KEEP RUN CONTROLS
+     C*
+     C   22                EXCPTDUMP
+     C   22      NODUMP    ADD  1         NODUMP
+     C*
+     C**  READ NEXT RECORD (31 IS ON FOR LAST RECORD OR END OF TRANS)
+     C*
+     C  N31                GOTO LSTT01
+     C*
+     C**  IF LAST RECORD READ FROM S/BSCF, CHECK IF BACKLOG RECORDS
+     C**  READ (IF REQUESTED). RECEIVE ERROR IF NO RECORDS READ
+     C*
+     C   U3      NODUMP    COMP 0                    U4  U7
+     C   U7                SETON                     U6
+     C*                                                                   E29170
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C           *INU7     IFEQ '1'                                       E29170
+     C           *IN40     ANDEQ'0'                                       E29170
+     C                     OPEN SE1210P1                                  E29170
+     C                     SETON                     40                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     END                                            E29170
+     C   U7                EXCPTRECERR
+     C   U7                GOTO LSTT02
+     C*
+     C**  WRITE 'OK' MESSAGE, AND IF BACKLOG FILE REQUESTED OUTPUT
+     C**  TRAILER TO S/EDUMP AND WRITE FILE CONTROL REPORT B
+     C*
+     C*                                                                   E29170
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C           *IN40     IFEQ '0'                                       E29170
+     C                     OPEN SE1210P1                                  E29170
+     C                     SETON                     40                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     END                                            E29170
+     C                     EXCPTTRANOK
+     C   U3      NODUMP    ADD  1         NODUMP
+     C   U3                EXCPTDUMP
+     C   U3                EXCPTREPB
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*
+     C           LSTT02    ENDSR                           *** LSTT02 ***
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RDREC SR.- TO READ A RECORD FROM S/BSCF AND DETERMINE ITS TYPE
+     C*
+     C*  CALLED FROM : LAST
+     C*  CALLS       : CHECK
+     C*
+     C********************************************************************
+     C*
+     C           RDREC     BEGSR                           *** RDREC ***
+     C*
+     C                     SETOF                     212223
+     C                     Z-ADD1         TRIES   10
+     C*
+     C           RDRT01    TAG                             *** RDRT01 ***
+     C*
+     C**  ATTEMPT TO READ FROM S/BSCF - IF 31 ON ON RETURN THEN 'TRNRND'
+     C**  HAS BEEN ISSUED, IE THEY HAVE FINISHED THEIR TRANSMISSION
+     C*
+     C                     SETOF                     020304
+     C                     SETOF                     050607
+     C                     SETOF                     091011
+     C***********          SETOF                     12                   S01190
+     C                     SETOF                     1314                 S01190
+     C                     READ BSCFF2                 U723
+     C           PRTF      IFEQ 'M'
+     C                     SETON                     02
+     C                     ELSE
+     C           PRTF      IFEQ '/'
+     C                     SETON                     03
+     C                     ELSE
+     C           PRTF      IFEQ 'S'
+     C                     SETON                     04
+     C                     ELSE
+     C           PRTF      IFEQ 'T'
+     C                     SETON                     05
+     C                     ELSE
+     C           PRTF      IFEQ 'A'
+     C                     SETON                     06
+     C                     ELSE
+     C           CRF       IFEQ '01'
+     C                     SETON                     09
+     C                     ELSE
+     C           CRF       IFEQ '10'
+     C                     SETON                     10
+     C                     ELSE
+     C           CRF       IFEQ '11'
+     C                     SETON                     11
+     C                     ELSE
+     C***********CRF       IFEQ '15'                                      S01190
+     C***********          SETON                     12                   S01190
+     C           CRF       IFEQ '20'                                      S01190
+     C                     SETON                     13                   S01190
+     C                     ELSE                                           S01190
+     C           CRF       IFEQ '21'                                      S01190
+     C                     SETON                     14                   S01190
+     C                     ELSE
+     C                     SETON                     07
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END                                            S01190
+     C*
+     C**  IF ERROR ON RECEIVE SETON U6, U7 & LR AND TERMINATE
+     C*
+     C   U7                SETON                     U6LR
+     C   U7                GOTO RDRT02
+     C*
+     C**  IF END OF TRANSMISSION SETON LR
+     C*
+     C   23                SETON                     31
+     C   31                SETON                     LR
+     C*
+     C**  CHECK
+     C*
+     C   09                SETON                     24
+     C*
+     C**  CHECK IF REPORT RECORD READ
+     C*
+     C   02
+     COR 03
+     COR 04
+     COR 05
+     COR 06                SETON                     21
+     C*
+     C**  CHECK IF BACKLOG RECORD READ
+     C*
+     C   09
+     COR 10
+     COR 11
+     COR 13                                                               S01190
+     COR 14                SETON                     22                   S01190
+     C*R*12********        SETON                     22                   S01190
+     C*
+     C**  IF BACKLOG RECORD FOUND, SWITCH OFF INDICATOR IF IT IS BLANK
+     C*
+     C   22      DATA4     COMP BLK080               2222
+     C*
+     C           RDRT02    ENDSR                           *** RDRT02 ***
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C********************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM *BLANKS   SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+     O/EJECT
+     OEDUMP   EADD        22   DUMP
+     O*
+     O*    S/EDUMP FILE
+     O*
+     O                         DATA4     80
+     O        EADD        31   DUMP
+     O                                    2 '99'
+     O*********                NODUMP     7                               S01190
+     O                         NODUMP     8                               S01190
+     O*
+     O*   REPORT A
+     O*
+     OSE1210P1E  0     21 02   REPA
+     O                         DATA3     80
+     O        E  1     21 03   REPA
+     O                         DATA3     80
+     O        E  1     21 07   REPA
+     O                         DATA3     80
+     O        E  2     21 04   REPA
+     O                         DATA3     80
+     O        E  3     21 05   REPA
+     O                         DATA3     80
+     O        E     01 21 06   REPA
+     O                         DATA3     80
+     O*
+     O        E 3         U2   SENERR
+     O                                   70 '*** SE1210 - ERROR IN'
+     O                                   87 ' SENDING DATA ***'
+     O        E   20     NU2   SENERR
+     O                                   70 '*** SE1210 - ERROR IN'
+     O                                   87 ' SENDING DATA ***'
+     O*
+     O        E 3              RECERR
+     O                                   70 '*** SE1210 - ERROR IN'
+     O                                   89 ' RECEIVING DATA ***'
+     O*
+     O        E   20     NU2   TRANOK
+     O                                   72 'SE1210 - TRANSMISSION'
+     O                                   81 ' COMPLETE'
+     O        E 3         U2   TRANOK
+     O                                   72 'SE1210 - TRANSMISSION'
+     O                                   81 ' COMPLETE'
+     O*
+     O*   REPORT B
+     O*
+     OSE1210AUE  203           REPB
+     O                                   23 'REFERENCE SE1210AU'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE1 Z  127
+     O        E  1             REPB
+     O                                   52 'SECURITIES TRADING '
+     O                                   71 'EUCLID TRANSMISSION'
+     O                                   86 ' - RUN CONTROLS'
+     O        E  1             REPB
+     O                                   52 '-------------------'
+     O                                   71 '-------------------'
+     O        E 21             REPB
+     O                                   61 'FILE CONTROL'
+     O                                   90 'CALCULATED'
+     O        E  2             REPB
+     O                                   58 'NUMBER'
+     O                                   87 'NUMBER'
+     O        E  1             REPB
+     O                                   19 'FILE - EUCLID'
+     O                                   43 'TRANSMISSION - PF/EDUMP'
+     O        E  2             REPB
+     O                                   19 '-------------'
+     O                                   43 '------------------------'
+     O        E  2             REPB
+     O                                   23 'NO. OF RECORDS'
+     O                         NODUMPZ   87
+     O********E**153           REPB                                       E29170
+     O***********                        69 '*** END OF REPORT ***'       E29170
+**  CPY@
+(c) Finastra International Limited 2001

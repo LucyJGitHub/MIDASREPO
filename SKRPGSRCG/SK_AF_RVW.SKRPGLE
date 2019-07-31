@@ -1,0 +1,486 @@
+      *****************************************************************
+      *                                                               *
+      * How to use this skeleton                                      *
+      *                                                               *
+      * Scan for '@@@' and this will indicate where lines of code     *
+      * need to be tailored.  Some lines will need to made live and   *
+      * some will need to be deleted.                                 *
+      * Remove this section and @@@ references after carrying out     *
+      * changes.                                                      *
+      *                                                               *
+      * What needs to be known                                        *
+      *                                                               *
+      * Action File physical name - UPddddPD                          *
+      * System file physical name - mmddddPD                          *
+      * File field names - ffxxxx                                     *
+      * Fields that make up unique key - ffkkkk                       *
+      * Desription field (not necessarily used) - fftttt              *
+      * Field(s) not to be compared                                   *
+      * Program names - nnnn                                          *
+     H DEBUG
+     H COPYRIGHT('(c) Finastra International Limited 2007')
+      *****************************************************************
+/*STD *  RPGBASEBND                                                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UPnnnn - Report Action File for mmddddPD                     *               @@@
+      *                                                               *
+      *  (c) Finastra International Limited 2007                      *
+      *                                                               *
+      *  Last Amend No. Cmmnnn  *CREATE    Date ddMmmyy               *               @@@
+      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Cmmnnn - description of feature                              *               @@@
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file indicator
+      *       37      Overflow indicator
+      *       69      Read or write errors
+      *       60      Amended records
+      *       61      No amended records to report
+      *       62      Amended records headers
+      *       63      Print field description for Amend
+      *       64      Print 'before' for Amend
+      *       65      Print 'after' for Amend
+      *       70      Deleted records
+      *       71      No deleted records to report
+      *       72      Deleted records headers
+      *       80      Inserted records
+      *       81      No inserted records to report
+      *       82      Inserted records headers
+      *
+     FUPddddL0  IF   E           K DISK    INFSR(*PSSR)                               @@@
+     FUP0799P1  O    E             PRINTER INFSR(*PSSR)
+     F                                     INFDS(SPOOL)
+     F                                     OFLIND(*IN37)
+     F                                     USROPN
+      *
+      /EJECT
+      *
+      * File information data structure for P1 file; used for page end
+      *   handling
+     D SPOOL           DS
+     D  SFILE                 83     92
+     D  SFNUM                123    124B 0
+     D  OFLLN                188    189B 0
+     D  PRTLN                367    368B 0
+      *
+     D                 DS
+     D KEYHDR                  1    132
+      * @@@ KEYHDR contains column headings for the key fields. The length of HDR1, HDR2
+      * @@@  should match the length of the INZ value.
+     D* HDR1                  10     nn    INZ('Field descriptiion')                   @@@
+     D* HDR2                  nn     nn    INZ('Second field desc.')                   @@@
+      * @@@ If the file contains a useful description field but it is a field that can be amended
+      * @@@  then it can be used on the report to make it more user friendly.  Define it as the
+      * @@@  last header field with a length of 11.
+     D* HDRn                  nn     nn                                                @@@
+      *
+     D                 DS
+     D KEYDTA                  1    132
+      * @@@ KEYDTA contains the key data and should match the header fields including, if used,
+      * @@@  the description field.
+     D* DTA1                  10     nn                                                @@@
+     D* DTA2                  nn     nn                                                @@@
+     D* DTAn                  nn     nn                                                @@@
+      *
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *        Defines:                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      * Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+      * @@@ Only use this if description fields is to be used
+     D HDRnC           C                   'Description'                              @@@
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    HDRTXT
+      *
+     C                   OPEN      UP0799P1
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     *LOVAL        SETLL     UPddddD0                                           @@@
+      *
+     C                   READ      UPddddL0                             6920          @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * If there are no records at all write 'no records'.
+     C     *IN20         IFEQ      *ON
+     C                   WRITE     NORECS                               69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   WRITE     TRAILP                               69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   ENDIF
+      *
+     C     ffACTC        IFNE      'A'                                                @@@
+      * @@@ Only use if description field is to be used.
+     C                   EVAL      HDRn = HDRnC                                       @@@
+     C                   SETON                                        61
+     C                   WRITE     DTL1
+     C                   SETOFF                                       61
+     C                   ELSE
+      * @@@ Only use if description field is to be used.
+     C                   EVAL      HDRn = *blanks                                     @@@
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       62
+     C                   ENDIF
+      *
+     C     ffACTC        DOWEQ     'A'                                                @@@
+     C     *IN20         ANDNE     *ON
+      *
+      * Write headers if overflow on.
+     C     *IN37         IFEQ      *ON
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       6237
+     C                   ENDIF
+      *
+     C                   EXSR      AMEND
+      *
+     C                   READ      UPddddL0                             6920          @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        70
+     C                   WRITE     DTL2
+     C                   SETOFF                                       70
+      *
+     C     ffACTC        IFNE      'D'                                                @@@
+     C                   SETON                                        71
+     C                   WRITE     DTL2
+     C                   SETOFF                                       71
+     C                   ELSE
+      * @@@ Only use if description field is to be used.
+     C                   EVAL      HDRn = HDRnC                                       @@@
+     C                   SETON                                        72
+     C                   WRITE     DTL2
+     C                   SETOFF                                       72
+     C                   ENDIF
+      *
+     C     ffACTC        DOWEQ     'D'                                                @@@
+     C     *IN20         ANDNE     *ON
+      *
+      * Write headers if overflow on.
+     C     *IN37         IFEQ      *ON
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        70
+     C                   WRITE     DTL2
+     C                   SETOFF                                       70
+     C                   SETON                                        72
+     C                   WRITE     DTL2
+     C                   SETOFF                                       7237
+     C                   ENDIF
+      *
+     C                   EXSR      DELETE
+      *
+     C                   READ      UPddddL0                             6920          @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        80
+     C                   WRITE     DTL3
+     C                   SETOFF                                       80
+      *
+     C     ffACTC        IFNE      'I'                                                @@@
+     C                   SETON                                        81
+     C                   WRITE     DTL3
+     C                   SETOFF                                       81
+     C                   ELSE
+      * @@@ Only use if description field is to be used.
+     C                   EVAL      HDRn = HDRnC                                       @@@
+     C                   SETON                                        82
+     C                   WRITE     DTL3
+     C                   SETOFF                                       82
+     C                   ENDIF
+      *
+     C     ffACTC        DOWEQ     'I'                                                @@@
+     C     *IN20         ANDNE     *ON
+      *
+      * Write headers if overflow on.
+     C     *IN37         IFEQ      *ON
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        80
+     C                   WRITE     DTL3
+     C                   SETOFF                                       80
+     C                   SETON                                        82
+     C                   WRITE     DTL3
+     C                   SETOFF                                       8237
+     C                   ENDIF
+      *
+     C                   EXSR      INSERT
+      *
+     C                   READ      UPddddL0                             6920          @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     TRAILP                               69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     ENDPGM        TAG
+     C                   CLOSE     UP0799P1
+     C                   SETON                                        LR
+     C                   RETURN
+      *****************************************************************
+      *                                                               *
+      * AMEND subroutine - process amended records                    *
+      *                                                               *
+      *****************************************************************
+     C     AMEND         BEGSR
+      * @@@ Move key fields to print file fields
+     C                   EVAL      DTA1 = ffkkkk                                      @@@
+     C                   EVAL      DTA2 = ffkkkk                                      @@@
+      *
+      * Check values for first and second amended records of pair
+      * @@@ Move fields to be compared into work fields
+     C*                  MOVEL     ffxxxx        xxxx1            ll                  @@@
+     C*                  MOVEL     ffxxxx        xxxx1            ll                  @@@
+     C*                  MOVEL     other fields                                       @@@
+      *
+      * Read next record so that values can be compared.
+     C                   READ      UPddddL0                             6920          @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * @@@ Move fields to be compared into work fields
+     C*                  MOVEL     ffxxxx        xxxx2            ll                  @@@
+     C*                  MOVEL     ffxxxx        xxxx2            ll                  @@@
+     C*                  MOVEL     other fields                                       @@@
+      *
+      * Compare values and write records to report.
+      *
+      * @@@@ Description of field to be compared
+     C     xxxx1         IFNE      xxxx2                                              @@@
+     C                   MOVEL     'ffxxxx'      FIELD                                @@@
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     xxxx1         #VALUE                               @@@
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     xxxx2         #VALUE                               @@@
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * @@@ Repeat for each field to be compared
+      *
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * DELETE subroutine - process deleted records                   *
+      *                                                               *
+      *****************************************************************
+     C     DELETE        BEGSR
+      * @@@ Move key fields to print file fields
+     C                   EVAL      DTA1 = ffkkkk                                      @@@
+     C                   EVAL      DTA2 = ffkkkk                                      @@@
+      * @@@ If description field is to be used
+     C                   EVAL      DTAn = fftttt                                      @@@
+      *
+     C                   WRITE     DTL2                                 69
+     C     *IN69         IFEQ      *ON
+     C                   SETON                                        U7U8
+     C                   DUMP
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * INSERT subroutine - process inserted records                  *
+      *                                                               *
+      *****************************************************************
+     C     INSERT        BEGSR
+      * @@@ Move key fields to print file fields
+     C                   EVAL      DTA1 = ffkkkk                                      @@@
+     C                   EVAL      DTA2 = ffkkkk                                      @@@
+      * @@@ If description field is to be used
+     C                   EVAL      DTAn = fftttt                                      @@@
+      *
+     C                   WRITE     DTL3                                 69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * OFLOW subroutine - handle overflow for print of field details *
+      *                                                               *
+      *****************************************************************
+     C     OFLOW         BEGSR
+      *
+     C     OFLLN         SUB       PRTLN         RMLN              2 0
+     C     3             IFGE      RMLN
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       62
+      * @@@ Move key fields to print file fields
+     C                   EVAL      DTA1 = ffkkkk                                      @@@
+     C                   EVAL      DTA2 = ffkkkk                                      @@@
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   ENDIF
+      *
+     C                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WrtFldDesc - Write description of the field compared          *
+      *                                                               *
+      *****************************************************************
+     C     WrtFldDesc    BEGSR
+      *
+      * Find description of field.
+     C                   CALL      'UPC0890'
+     C                   PARM                    FIELD            10
+     C                   PARM                    #FDESC           50
+      * Write description of field.
+     C                   MOVEL     *BLANKS       #VALUE
+      * Check overflow before writing next lines.
+     C                   EXSR      OFLOW
+     C                   MOVEL     #FDESC        #VALUE
+     C                   SETON                                        63
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       63
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     WrtFldDescE   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WrtBfValue - Write before value of the field                  *
+      *                                                               *
+      *****************************************************************
+     C     WrtBfValue    BEGSR
+      *
+     C                   SETON                                        64
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       64
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     WrtBfValueE   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WrtAfValue - Write after value of the field                   *
+      *                                                               *
+      *****************************************************************
+     C     WrtAfValue    BEGSR
+      *
+     C                   SETON                                        65
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       65
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     WrtAfValueE   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      ********************************************************************

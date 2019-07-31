@@ -1,0 +1,105 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Clear down libraries - Global')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000017 - Clear down libraries - global                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. CUP002  *CREATE    Date 28Jul10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP002 - Option to clear GM and GP libraries.               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&GPFXSVAL)
+ 
+             DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)
+ 
+             DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(UPGSVALJ0)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+ 
+/* Create data area /MIDASMSG in QTEMP. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&GPSBSID) VALUE(&GIVAL)
+                ENDDO
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             GOTO       CMDLBL(VALIDATE)
+ 
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('UPC000017' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             SAVLIBL    SAVDTL(BRIDGE)
+ 
+             CALL       PGM(GPC000016) PARM(&GPSBSID)
+ 
+             CHGVAR     VAR(&GMLIB) VALUE(&GPSBSID *TCAT 'GMLIB')
+             CHGVAR     VAR(&GPLIB) VALUE(&GPSBSID *TCAT 'GPLIB')
+ 
+             ?          CLRDBLIB LIB(&GMLIB)
+             MONMSG     MSGID(CPF6801)
+ 
+             ?          CLRDBLIB LIB(&GPLIB)
+             MONMSG     MSGID(CPF6801)
+ 
+             RSTLIBL    SAVEDLIBL(BRIDGE)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ABNOR:
+/* Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC000017') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC000017' 'ENTER' ' ')
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+             ENDPGM

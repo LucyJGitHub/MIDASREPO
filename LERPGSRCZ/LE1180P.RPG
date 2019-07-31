@@ -1,0 +1,437 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Consolidated confirmations prompt program')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE1180P - Consolidated Confirmations Prompt Program          *
+      *                                                               *
+      *  Function:  This is a new prompt program for LE1180           *
+      *             Consolidated Confirmation so that a loan number,  *
+      *             a range of loan numbers or all loan numbers       *
+      *             can be selected for print.                        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CLE004   *CREATE   Date 02Dec96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CLE004 - Customer Lending Enhancements - Syndications.       *
+      *                                                               *
+      *****************************************************************
+     FLE1180DFCF  E                    WORKSTN
+      *
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    19           Consolidated Confirmation ind. is OFF         *
+      *    21           Invalid Customer No.                          *
+      *    22           Invalid From Loan No.                         *
+      *    23           Invalid To Loan No.                           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+     ILDA         DS                            256
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     I            DS
+     I                                        1 100 WPARM
+     I                                        1   1 WRUN
+     I                                        2   7 WCUS
+     I                                        8  13 WFLN
+     I                                       14  19 WTLN
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer Details
+      *
+     ISDCLND    E DSSDCLNDPD
+      ** Customer lending ICD
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+      /EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *  Main routine                                                 *
+      *  SRINIT  -  Initial processing                                *
+      *  SRDISP  -  Prompt Screen Display                             *
+      *  *PSSR   -  Error handling subroutine                         *
+      *****************************************************************
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Display Prompt Screen
+      *
+     C                     EXSR SRDISP
+      *
+      ** Terminate the Program
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      * SRDISP  -  Prompt Screen Display                              *
+      * Called by: Main routine                                       *
+      * Calls    : SRVALD                                             *
+      *****************************************************************
+     C           SRDISP    BEGSR
+      *
+     C           BPCONR    IFEQ 'N'
+     C                     MOVE '1'       *IN19
+     C                     ENDIF
+      *
+      ** Display prompt screen
+      *
+     C                     WRITELE1180F0
+     C                     WRITELE1180C0
+     C                     EXFMTLE1180F1
+      *
+     C                     EXSR CLEAR
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C           WDSP      ANDEQ'Y'
+     C           BPCONR    ANDEQ'Y'
+      *
+      ** Validate screen fields
+      *
+     C                     MOVE 'N'       WDSP
+      *
+     C           *INKE     IFEQ '1'
+     C                     MOVE 'Y'       WDSP
+     C                     MOVE *BLANK    SCUSN
+     C                     MOVE *BLANK    SFLON
+     C                     MOVE *BLANK    STLON
+     C                     ELSE
+     C                     EXSR SRVALD
+     C                     ENDIF
+      *
+     C           WDSP      IFEQ 'Y'
+     C                     WRITELE1180F0
+     C                     WRITELE1180C0
+     C                     EXFMTLE1180F1
+     C                     MOVEA'000'     *IN,21
+     C                     EXSR CLEAR
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           *INKC     IFEQ '1'
+     C           *INKL     OREQ '1'
+     C           BPCONR    OREQ 'N'
+      *
+     C           *INKC     IFEQ '1'
+     C           BPCONR    OREQ 'N'
+     C                     MOVE 'E'       PRCMD
+     C                     ELSE
+     C                     MOVE 'F'       PRCMD
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE 'A'       WRUN
+     C                     MOVE SCUSN     WCUS
+     C           SFLON     IFEQ *BLANK
+     C                     MOVE '000000'  WFLN
+     C                     ELSE
+     C                     MOVE SFLON     WFLN
+     C                     ENDIF
+     C           STLON     IFEQ *BLANK
+     C                     MOVE '999999'  WTLN
+     C                     ELSE
+     C                     MOVE STLON     WTLN
+     C                     ENDIF
+     C                     MOVELWPARM     PRPAR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRVALD  -  Screen fields Validation                           *
+      * Called by: Main routine                                       *
+      * Calls    :                                                    *
+      *****************************************************************
+     C           SRVALD    BEGSR
+      *
+      ** Validate Customer Number
+      *
+     C           SCUSN     IFNE *BLANK
+     C                     MOVELSCUSN     PCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PCUST  10
+     C                     PARM *BLANKS   PKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVELPCUST     SCUSN
+      *
+     C           PRTCD     IFNE *BLANK
+     C           PRTCD     IFEQ '*NOSEL  '
+     C                     MOVE *BLANKS   SCUSN
+     C                     ELSE
+     C                     MOVE '1'       *IN21
+     C                     MOVE 'Y'       WDSP
+     C                     MOVEL'LEC0001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SCUSN     IFEQ *BLANK
+      *
+      ** From/To Loan should not be entered if customer not entered
+      *
+     C           SFLON     IFNE *BLANK
+     C                     MOVE '1'       *IN22
+     C                     MOVE 'Y'       WDSP
+     C                     MOVEL'LEC0004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           STLON     IFNE *BLANK
+     C                     MOVE '1'       *IN23
+     C                     MOVE 'Y'       WDSP
+     C                     MOVEL'LEC0005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           *IN22     IFEQ '1'
+     C           *IN23     OREQ '1'
+     C                     GOTO EXVALD
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate From Loan Number
+      *
+     C           SFLON     IFNE *BLANK
+     C**********           MOVE SFLON     WNUM6   60                                          CLE148
+     C                     MOVE SFLON     WNUM6   6                                           CLE148
+     C                     MOVE WNUM6     WFLD6   6
+     C           SFLON     IFNE WFLD6
+     C                     MOVE '1'       *IN22
+     C                     MOVE 'Y'       WDSP
+     C                     MOVEL'LEC0002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate To Loan Number
+      *
+     C           STLON     IFNE *BLANK
+     C**********           MOVE STLON     WNUM6   60                                          CLE148
+     C                     MOVE STLON     WNUM6   6                                           CLE148
+     C                     MOVE WNUM6     WFLD6   6
+     C           STLON     IFNE WFLD6
+     C                     MOVE '1'       *IN23
+     C                     MOVE 'Y'       WDSP
+     C                     MOVEL'LEC0003' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check if From Loan no. is less than To Loan No.
+      *
+     C           SFLON     IFNE *BLANK
+     C           STLON     ANDNE*BLANK
+     C           *IN22     ANDEQ'0'
+     C           *IN23     ANDEQ'0'
+     C**********           MOVE SFLON     WFLNO   60                                          CLE148
+     C**********           MOVE STLON     WTLNO   60                                          CLE148
+     C                     MOVE SFLON     WFLNO   6                                           CLE148
+     C                     MOVE STLON     WTLNO   6                                           CLE148
+     C           WFLNO     IFGT WTLNO
+     C                     MOVEA'11'      *IN,22
+     C                     MOVE 'Y'       WDSP
+     C                     MOVEL'LEC0006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           EXVALD    ENDSR
+      /EJECT
+      *****************************************************************
+      * SRINIT  -  Initial Processing                                 *
+      * Called by: Main routine                                       *
+      * Calls    :                                                    *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRSEQ   5
+     C                     PARM           PRLEV   1
+     C                     PARM           PRENT   3
+     C                     PARM           PRPAR 100
+     C                     PARM           PRACT   1
+     C                     PARM           PRCMD   1
+      *
+      ** Define dataara LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Initialise LDA
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE1180P' DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+      *
+      ** Retrieve bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Retrieve Customer Lending ICD details
+      *
+     C                     CALL 'AOCLNDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDCLND    PARM SDCLND    DSFDY                                               CLE134
+     C           SDCLND    PARM SDCLND    DSSDY                                               CLE134
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCLNDPD'DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBERR 02 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WDSP    1
+     C                     MOVE *BLANK    WPARM
+     C                     MOVE BJMRDT    SRUNA
+     C                     MOVEL'LERMSGF 'ZAMSGF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * ZASNMS  - Sends messages to the program's message queue       *
+      * Called by: SREROR - Error processing                          *
+      * Calls    : none                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CLEAR   -  Clears the message queue                           *
+      * Called by: Main routine                                       *
+      * Calls    : Y2CLMSC                                            *
+      *****************************************************************
+     C           CLEAR     BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *  Calls    : SRPOUT - Return message Format (For Batch only)   *
+      *****************************************************************
+     C           *PSSR     BEGSR                                       **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2001

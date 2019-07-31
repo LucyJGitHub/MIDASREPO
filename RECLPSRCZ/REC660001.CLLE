@@ -1,0 +1,107 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DFTACTGRP(*NO) ACTGRP(REC660001)                            */
+/*EXI    TEXT('Midas RE REHISPD file re-sequencing')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC660001 - Midas RE Retail History File Re-Sequencing      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD024006A          Date 08Jan14              */
+/*                      CRE066  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD024006A - Inefficiency of COB File Manager                */
+/*       CRE066 - Retail History File Re-Sequencing                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM     PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('REC660001 - Midas RE REHISPD file +
+                          re-sequencing') TOMSGQ(MRUNQ)
+ 
+/* Check if normal run or restart */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+/* If it is NOT a restart. */
+ 
+             IF         COND(&STAT *EQ 'N') THEN(DO)
+ 
+/* Set restart status to 'Y' */
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+             ENDDO
+ 
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+ 
+             CPYF       FROMFILE(REHISPD) TOFILE(REHISRPD) +
+                          MBROPT(*REPLACE)
+ 
+             CHGVAR     VAR(&STAT) VALUE('Q')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+             ENDDO
+ 
+             IF         COND(&STAT *EQ 'Q') THEN(DO)
+ 
+             CALLSUBR   SUBR(DELFLE)                                                   /*MD024006A*/
+             CALL       PGM(CBC022001) PARM('REHISPD' '' '*RMV' '')
+ 
+             CPYF       FROMFILE(REHISRPD) TOFILE(REHISPD) +
+                          MBROPT(*REPLACE)
+ 
+             CALLSUBR   SUBR(DELFLE)                                                   /*MD024006A*/
+             CALL       PGM(CBC022001) PARM('REHISPD' '' '*ADD' '')
+ 
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          REC660001 ended abnormally - see joblog +
+                          ') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/******************************************************************************/       /*MD024006A*/
+/*                                                                            */       /*MD024006A*/
+/* Subroutine to delete temporary files created in CBC022001                  */       /*MD024006A*/
+/*                                                                            */       /*MD024006A*/
+/******************************************************************************/       /*MD024006A*/
+             SUBR       SUBR(DELFLE)                                                   /*MD024006A*/
+                                                                                       /*MD024006A*/
+             DLTF       FILE(QTEMP/DBR022001T)                                         /*MD024006A*/
+             MONMSG     MSGID(CPF0000)                                                 /*MD024006A*/
+             DLTF       FILE(QTEMP/MBR022001T)                                         /*MD024006A*/
+             MONMSG     MSGID(CPF0000)                                                 /*MD024006A*/
+             DLTF       FILE(QTEMP/ATR022001T)                                         /*MD024006A*/
+             MONMSG     MSGID(CPF0000)                                                 /*MD024006A*/
+                                                                                       /*MD024006A*/
+             ENDSUBR                                                                   /*MD024006A*/
+END:
+             ENDPGM

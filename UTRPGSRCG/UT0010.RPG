@@ -1,0 +1,139 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT CHGOBJ main program')                         *
+      *****************************************************************
+      *                                                               *
+      *  Midas Utilities Module                                       *
+      *                                                               *
+      *  UT0010 - CHGOBJ: Change object description                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUT008             Date 18Jan11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CPK018             Date 26Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 074291             Date 09Aug94               *
+      *                 S01516             Date 18Jul94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CUT008 - CRTOBJ rewrite. Allow change of source member name  *
+      *           to an object.                                       *
+      *           Source file, library need not to be specified.      *
+      *  CPK018 - MidasPlus packaging.  Move to global layer.         *
+      *  074291 - Further enhancements to CRTOBJ                      *
+      *  S01516 - Incorporation of enhanced CRTOBJ into core          *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+      *
+      *    Input parameters for QLICOBJD API
+      *
+     IINPUT       DS
+     I                                        1  10 OUTLIB
+     I                                       11  30 INOBJL
+     I                                       11  20 INOBJ
+     I                                       21  30 INLIB
+     I                                       31  40 INOBJT
+      *
+      *    Variable length record for change source file information
+      *
+     IOBJINF      DS
+     I                                    B   1   40NUMREC
+     I                                    B   5   80REC1
+     I                                    B   9  120LEN1
+     I                                       13  22 FILE
+     I                                       23  32 LIB
+     I                                       33  42 MEMBER
+     I                                    B  43  460REC2
+     I                                    B  47  500LEN2
+     I                                       51  63 SRCDAT
+      *
+      *    Data structure to return error information
+      *
+     IRCVERR      DS
+     I                                    B   1   40BYTPRV
+     I*                                   B   5   80BYTAVL
+     I*                                       9  15 EXCPID
+     I*                                      16  16 RESERV
+     I                                        9  15 EXCPID                                    CUT008
+     I                                       17  43 EXCPDA                                    CUT008
+      *
+      *    Parameters from CHGOBJ command
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           INPOBJ 20
+     C*********************PARM           INPTYP  5                       074291
+     C                     PARM           INPTYP  7                       074291
+     C                     PARM           NEWFIL 10
+     C                     PARM           NEWLIB 10
+     C                     PARM           NEWMBR 10                                           CUT008
+     C                     PARM           SRCCHG 13
+     C                     PARM           RODFIL 10                                           CUT008
+     C                     PARM           RODLIB 10                                           CUT008
+     C                     PARM           RODMBR 10                                           CUT008
+     C                     PARM           PEXPID  7                                           CUT008
+     C                     PARM           PEXPDA 27
+      *
+      *    Set up required parameters for QLICOBJD
+      *
+     C                     MOVELINPOBJ    INOBJ
+     C                     MOVE INPOBJ    INLIB
+     C                     MOVELINPTYP    INOBJT
+      *
+      * If a parameter is not changed, the value retrieved from the RTVOBJD                   CUT008
+      * in the CL is used.                                                                    CUT008
+     C           NEWFIL    IFEQ '*SAME'                                                       CUT008
+     C                     MOVE RODFIL    FILE                                                CUT008
+     C                     ELSE                                                               CUT008
+     C                     MOVE NEWFIL    FILE
+     C                     ENDIF                                                              CUT008
+      *
+     C           NEWLIB    IFEQ '*SAME'                                                       CUT008
+     C                     MOVE RODLIB    LIB                                                 CUT008
+     C                     ELSE                                                               CUT008
+     C                     MOVE NEWLIB    LIB
+     C                     ENDIF
+      *                                                                                       CUT008
+     C**********           MOVELINPOBJ    MEMBER                                              CUT008
+     C           NEWMBR    IFEQ '*SAME'                                                       CUT008
+     C                     MOVELRODMBR    MEMBER                                              CUT008
+     C                     ELSE                                                               CUT008
+     C                     MOVELNEWMBR    MEMBER                                              CUT008
+     C                     ENDIF                                                              CUT008
+      *                                                                                       CUT008
+     C                     Z-ADD1         NUMREC
+     C                     Z-ADD1         REC1
+     C                     Z-ADD30        LEN1
+     C                     Z-ADD0         BYTPRV
+      *
+      *    Update source last change date if entered
+      *
+     C           SRCCHG    IFNE *BLANKS
+     C                     MOVE SRCCHG    SRCDAT
+     C                     Z-ADD2         NUMREC
+     C                     Z-ADD2         REC2
+     C                     Z-ADD13        LEN2
+     C                     ENDIF
+      *
+     C                     CALL 'QLICOBJD'
+     C                     PARM           OUTLIB
+     C                     PARM           INOBJL
+     C                     PARM           INOBJT
+     C                     PARM           OBJINF
+     C                     PARM           RCVERR
+      *
+      * Check exception message from call and pass back to CL.                                CUT008
+     C                     MOVE EXCPID    PEXPID                                              CUT008
+     C                     MOVE EXCPDA    PEXPDA                                              CUT008
+      *
+     C                     SETON                     LR
+     C                     RETRN

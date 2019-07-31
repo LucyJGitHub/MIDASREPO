@@ -1,0 +1,305 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data                                       */
+/*                                                                   */
+/*       SDC000307 - Midas SD CRS Indicia Search Tool - Processing   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2016                     */
+/*                                                                   */
+/*       Last Amend No. MD040626           Date 18Aug16              */
+/*       Prev Amend No. CGL177  *CREATE    Date 11Jan16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD040626 - Database Error encountered when running          */
+/*                  Information mode in CRS Indicia Search Tool      */
+/*       CGL177 - CRS Reporting Phase 2                              */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM        PARM(&PRTCD &UPDT2 &PTYPE)
+
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RUNOK) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&UPDT2) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PTYPE) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&JOBID) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(7) VALUE('  DVLIB')
+             DCL        VAR(&MEM)   TYPE(*CHAR) LEN(50)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2016')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Determine full DPLIB library name */
+
+             RTVJOBA    JOB(&JOBID)
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DVLIB 1 2)) VALUE(&SYSID)
+
+             CHGJOB     SWS(00000000)
+
+             CLRPFM     FILE(&DPLIB/SDCRDFPD)
+             CLRPFM     FILE(&DPLIB/SDCRNFPD)
+             CLRPFM     FILE(&DPLIB/SDCRD2PD)
+             CLRPFM     FILE(&DPLIB/SDCRN2PD)
+
+             DLTF       FILE(QTEMP/SDCRD2L0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/SDCRD2L1)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/SDCRD2L2)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/SDCRN2L0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/SDCRN2L1)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/SDCRN2L2)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/SDCRDFL0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/SDCRDFL1)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/SDCRNFL0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/SDCRNFL1)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/SDCRD2PD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/SDCRN2PD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/SDCRDFPD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/SDCRNFPD)
+             MONMSG     MSGID(CPF2105)
+
+             CPYF       FROMFILE(&DPLIB/SDCRDFPD) TOFILE(QTEMP/SDCRDFPD) +
+                          TOMBR(SDCRDFPD) CRTFILE(*YES) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+             CPYF       FROMFILE(&DPLIB/SDCRNFPD) TOFILE(QTEMP/SDCRNFPD) +
+                          TOMBR(SDCRNFPD) CRTFILE(*YES) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+             CPYF       FROMFILE(&DPLIB/SDCRD2PD) TOFILE(QTEMP/SDCRD2PD) +
+                          TOMBR(SDCRD2PD) CRTFILE(*YES) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+             CPYF       FROMFILE(&DPLIB/SDCRN2PD) TOFILE(QTEMP/SDCRN2PD) +
+                          TOMBR(SDCRN2PD) CRTFILE(*YES) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+             CPYF       FROMFILE(&DMLIB/SDCRSDPD) TOFILE(QTEMP/SDCRD2PD) +
+                          TOMBR(SDCRD2PD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+             CPYF       FROMFILE(&DMLIB/SDCRSNPD) TOFILE(QTEMP/SDCRN2PD) +
+                          TOMBR(SDCRN2PD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+             CRTDUPOBJ  OBJ(SDCRD2L0) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDCRD2L0)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             DLTF       FILE(&DPLIB/&JOBID)
+
+             CRTDUPOBJ  OBJ(SDCRD2L1) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDCRD2L1)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             DLTF       FILE(&DPLIB/&JOBID)
+
+             CRTDUPOBJ  OBJ(SDCRD2L2) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDCRD2L2)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             DLTF       FILE(&DPLIB/&JOBID)
+
+             CRTDUPOBJ  OBJ(SDCRN2L0) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDCRN2L0)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             DLTF       FILE(&DPLIB/&JOBID)
+
+             CRTDUPOBJ  OBJ(SDCRN2L1) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDCRN2L1)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             DLTF       FILE(&DPLIB/&JOBID)
+
+             CRTDUPOBJ  OBJ(SDCRN2L2) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDCRN2L2)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             DLTF       FILE(&DPLIB/&JOBID)
+
+             CRTDUPOBJ  OBJ(SDCRDFL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDCRDFL0)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             DLTF       FILE(&DPLIB/&JOBID)
+
+             CRTDUPOBJ  OBJ(SDCRDFL1) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDCRDFL1)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             DLTF       FILE(&DPLIB/&JOBID)
+
+             CRTDUPOBJ  OBJ(SDCRNFL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDCRNFL0)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             DLTF       FILE(&DPLIB/&JOBID)
+
+             CRTDUPOBJ  OBJ(SDCRNFL1) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDCRNFL1)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             DLTF       FILE(&DPLIB/&JOBID)
+
+             OVRDBF     FILE(SDCRSDL0) TOFILE(QTEMP/SDCRD2L0) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+             OVRDBF     FILE(SDCRSDL1) TOFILE(QTEMP/SDCRD2L1) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+             OVRDBF     FILE(SDCRSDL2) TOFILE(QTEMP/SDCRD2L2) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+             OVRDBF     FILE(SDCRDFL0) TOFILE(QTEMP/SDCRDFL0) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+             OVRDBF     FILE(SDCRDFL1) TOFILE(QTEMP/SDCRDFL1) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+
+
+             OVRDBF     FILE(SDCRSNL0) TOFILE(QTEMP/SDCRN2L0) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+             OVRDBF     FILE(SDCRSNL1) TOFILE(QTEMP/SDCRN2L1) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+             OVRDBF     FILE(SDCRSNL2) TOFILE(QTEMP/SDCRN2L2) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+             OVRDBF     FILE(SDCRNFL0) TOFILE(QTEMP/SDCRNFL0) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+             OVRDBF     FILE(SDCRNFL1) TOFILE(QTEMP/SDCRNFL1) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+
+/** Call Report Program */
+
+             CALL       PGM(SD000307) PARM(&PRTCD &UPDT2 &PTYPE)
+             RCLACTGRP  ACTGRP(SD000307)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) TOMSGQ(MOPERQ +
+                             MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+             DLTOVR     FILE(SDCRSDPD) LVL(*JOB)
+             DLTOVR     FILE(SDCRSDL0) LVL(*JOB)
+             DLTOVR     FILE(SDCRSDL1) LVL(*JOB)
+             DLTOVR     FILE(SDCRSDL2) LVL(*JOB)
+             DLTOVR     FILE(SDCRDFPD) LVL(*JOB)
+             DLTOVR     FILE(SDCRDFL0) LVL(*JOB)
+             DLTOVR     FILE(SDCRDFL1) LVL(*JOB)
+             DLTOVR     FILE(SDCRSNPD) LVL(*JOB)
+             DLTOVR     FILE(SDCRSNL0) LVL(*JOB)
+             DLTOVR     FILE(SDCRSNL1) LVL(*JOB)
+             DLTOVR     FILE(SDCRSNL2) LVL(*JOB)
+             DLTOVR     FILE(SDCRNFPD) LVL(*JOB)
+             DLTOVR     FILE(SDCRNFL0) LVL(*JOB)
+             DLTOVR     FILE(SDCRNFL1) LVL(*JOB)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('SDC000307 Midas SD CRS Indicia Search Tool ended +
+                          abnormally - see job log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+
+ END:
+             DLTOVR     FILE(SDCRSDL1) LVL(*JOB) /*MD040626*/
+             DLTOVR     FILE(SDCRSDL2) LVL(*JOB) /*MD040626*/
+             DLTOVR     FILE(SDCRSNL1) LVL(*JOB) /*MD040626*/
+             DLTOVR     FILE(SDCRSNL2) LVL(*JOB) /*MD040626*/
+             ENDPGM

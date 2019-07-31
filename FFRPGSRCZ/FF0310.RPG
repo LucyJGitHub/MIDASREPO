@@ -1,0 +1,1751 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Prices Input - End of Centre')                *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  -  Futures and Options Module                            *
+     F*                                                                  *
+     F****FF0310**-**END*OF*CENTRE*PRICES*INPUT***                       *100497
+     F*   FF0310  -  FF PRICES INPUT                                     *100497
+     F*                                                                  *
+     F*  Called By: FFC05   - I/C Termination - Futures & Options        *
+     F*             FFC1001 - Start EOC processing control               *
+     F*             FFC0224 - Input Cycle prices maintenance             *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD040928           Date 17Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 243826A            Date 25Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 239875             Date 08Sep06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10490           Date 08Feb06               *
+      *                 CAP183             Date 24Jan06               *
+      *                 CCB014             Date 25Apr05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFF006             Date 28Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 131416             Date 04Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 134645             Date 12Oct98               *
+     F*                 CFF004             DATE 16SEP96                  *
+     F*                 104633             DATE 07NOV96               *
+     F*                 100497             DATE 09AUG96                  *
+     F*                 S71062             DATE 19DEC95                  *
+     F*                 S01456             DATE 08NOV93                  *
+     F*                 E33393             DATE 23FEB93                  *
+     F*                 S01393             DATE 30OCT92                  *
+     F*                 FUJI-FF0011        DATE 21SEP92                  *
+     F*                  AUS022             DATE 07AUG92                 *
+     F*                  E20526             DATE 25APR90                 *
+     F*                  S01199             DATE 27FEB90                 *
+     F*                  S01117             DATE 23JAN90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD040928 - Futures Market Price not prompted at Close of     *
+      *             Centre.                                           *
+      *           - Ensure Market Price Input is prompted during End  *
+      *             of Centre processing for Market Centre having Auto*
+      *             Price detail that is set to 'Y'.                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure         *
+      *  243826A- Recompiled due to changes in FFPRCSZ2, FFPRCSZ3,       *
+      *           FFPRVLZ2 and FFPRVLZ3.                                 *
+      *  239875 - In input cycle, only update current price.             *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10490 - FF Price prompt data mapping error                   *
+      *  CAP183 - Conversion of Market Prices Input into modular      *
+      *           structure to use APIs.  (Recompile)                 *
+      *  CCB014 - Pre-Scheduled Batch Close Of Business               *
+      *  CFF006 - Fractional Ticks Enhancement.  (Recompiled)         *
+     F*  131416 - No screen displayed when POSTN4 empty. Change APRP     *
+     F*           fields to #APRP (unless read from PF/MARKTD).          *
+     F*  134645 - The records of joint logical file POSTN4 are sorted *
+     F*           by YRNO in an ascending order, so the program dis-  *
+     F*           plays YRNOs 00 and 01 before the YRNOs 98 and 99.  A*
+     F*           restructuring on the way the program reads POSTN4   *
+     F*           was introduced to solve this problem.               *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)     *
+     A*  104633 - GUI Amendments to DSPF with non-standard footers    *
+     F*  100497 - This program amended to allow it to be called on       *
+     F*           request in Input Cycle. Pgm amended to ignore Auto     *
+     F*           Prices Prompt flag and always display the prices       *
+     F*           maintenance screen if this option requested from a     *
+     F*           menu item rather than as part of EOC.                  *
+     F*      Note - no action code processing required in the program    *
+     F*             since the only action code is Amend - if the option  *
+     F*             appears on his menu, user is authorised to amend.    *
+     F*  S71062 - FF/PM Interface (Just recompiled)                      *
+     F*  S01456 - 'FF' MONTHLY P&L ENHANCEMENTS.                         *
+     F*           Recompiled due to change to PF/MKCTLD.                 *
+     F*  E33393 - Previous EOC prices are not updated when amended.      *
+     F*           Move old price into the price before EOC field         *
+     F*           (PBEC) to correctly display previous prices.           *
+     F*   S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F* FUJI-FF0011 - The system does not differentiate between          *
+     F*               american and european option on exercise           *
+     F*               validation and OTC confirmation wording.           *
+     F*               *** RECOMPILE ONLY ***                             *
+     F*   AUS022  -  AUSTRALIAN CHANGE : Introduction of Processing      *
+     F*              Types 7 and 8.                                      *
+     F*   E20526  -  Add new fields PBEC (PRICE BEFORE EOC) & VOSPR      *
+     F*              VERY OLD SPOT PRICE) so that PRICES LIST is correct *
+     F*              in COB.                                             *
+     F*   S01199  -  HELP SYSTEM                                     *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO )                                              *
+     F*                                                                  *
+     F********************************************************************
+     FMKCTL   IF  E           K        DISK                           UC
+     FMARKT   IF  E           K        DISK                           UC
+     F*ABTB10*IF* E                    DISK                               S01117
+     FINTYP   IF  E           K        DISK
+     FPRICSA  UF  E                    DISK
+     FPRISPA  UF  E                    DISK
+     F/COPY WNCPYSRC,FF0310F001
+     F***FF0310DFCF  E                    WORKSTN                                             CCB014
+     F**********                              RRN   KSFILE FF0310S0                           CCB014
+     F/COPY WNCPYSRC,FF0310F002                                                               CCB014
+     FFF0310DFCF  E                    WORKSTN                        UC                      CCB014
+     F                                        RRN   KSFILE FF0310S0                           CCB014
+     FPOSTN4  IF  E           K        DISK
+     FPRISP   UF  E           K        DISK                      A
+     FPRICS   UF  E           K        DISK                      A
+     F**********************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*    01            Cmd/3 taken on screen
+     F*    05            Cmd/12 taken on screen
+     F*    08            Disallow Cmd/3 as COB run
+     F*    10            Cmd/10 taken on screen
+     F*
+     F*****20************Help key pressed*****************************    S01199
+     F*
+     F*    30            SFLNXTCHG on FF0310S0
+     F*    31            SFLDSP on FF0310C0
+     F*    32            SFLEND on FF0310C0
+     F*    33            SFLDSPCTL on FF0310C0
+     F*    34            Allow Cmd/10 on FF0310C0
+     F*    35            SFLDLT on FF0310C0
+     F*
+     F*    36            No details on POSTN4
+     F*
+     F*    40            Error on Price, FF0310S0
+     F*    41            Error on Risk Factor, FF0310S0
+     F*
+     F*    50            OTC - Non-display irrelevant fields on DSPF
+     F*    51            Future & OTCs- Protect risk factor on DSPF
+     F*
+     F*       60         End of file indicator for READ operations
+     F*       61         End of file indicator on READC operations
+     F*       62         Warning error fields have not been changed
+     F*       63         The price field is not within 10% of old price
+     F*       64         At least one subfile record is in error
+     F*       65         End of screen processing loop - Cmd/3 or enter
+     F*                  taken.
+     F*
+     F*       98         MM/DD/YY date format
+     F*
+     F*       99         Chain fail indicator
+     F*
+     F*       U1         Abort
+     F*
+     E                    CPY@    1   1 80
+     E                    ERR        19  4
+     E                    MSG     1   8 78
+     E                    STAMP   1   1 26                                                  BUG10490
+      /COPY ZSRSRC,ZALIGNZ1
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,FFPRVLZ2
+      /COPY ZSRSRC,FFFMTZ1
+      /COPY ZSRSRC,FFFMTZ2
+      /COPY ZSRSRC,FFSRDSZ1
+      /COPY ZSRSRC,FFPRCSZ3
+      /COPY ZSRSRC,ZTNLU1Z1
+     ISISTT       DS
+     I                                        2   4 MKTIN
+     IPSDS       SDS
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WORKSTATION ID
+     I                                      244 246 WSID
+     I*
+     ILDA         DS                            256                       S01117
+     I*DA********UDS                            256                       S01117
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/COPY WNCPYSRC,FF0310I001
+      **  Data-structure for DLYEOD                                                           CCB014
+     IDLYCOB      DS                            256                                           CCB014
+     I                                        2   2 SCHREQ                                    CCB014
+      **  Data-structure for MPHAS                                                            CCB014
+     I***MPHAS*******DS                              1                                 CCB014 CCB020
+     I**********                              1   1 MP                                 CCB014 CCB020
+     C********************************************************************
+     C*
+      **   Parameter Market is passed to program
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           MRKT
+     C*********************PARM           APRP                            131416
+     C                     PARM           #APRP   1                       131416
+     C                     PARM           ECOB    1
+     C*
+     C********************************************************************
+     C*
+     C           PRICSK    KLIST
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+     C*
+     C                     CLEARFRNT                                                        BUG10490
+     C                     CLEARAFRT                                                        BUG10490
+     C                     CLEARREPA                                                        BUG10490
+     C                     CLEARTMST                                                        BUG10490
+     C                     MOVEASTAMP,1   TMST                                              BUG10490
+     C********************************************************************
+     C*
+      ** SET UP PROGRAM NAME IN LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBFILE                          S01117
+     C                     MOVE *BLANKS   DBKEY                           S01117
+     C                     MOVE *BLANKS   DBPGM                           S01117
+     C                     Z-ADD*ZEROS    DBASE                           S01117
+     C                     MOVEL'FF0310  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C/COPY WNCPYSRC,FF0310C001
+     C           *NAMVAR   DEFN           DLYCOB                                              CCB014
+     C                     IN   *NAMVAR                                                       CCB014
+      *                                                                                       CCB014
+     C********** *NAMVAR   DEFN           MPHAS                                        CCB014 CCB020
+     C**********           IN   *NAMVAR                                                CCB014 CCB020
+      *                                                                                       CCB014
+     C                     MOVEL'CBC00100'@CLPRM  9                                           CCB020
+     C                     MOVE '1'       @CLPRM                                              CCB020
+     C                     CALL @CLPRM                                                        CCB020
+     C                     PARM *BLANKS   COBST   4                                           CCB020
+      *                                                                                       CCB020
+     C                     CALL 'AOSARDR0'                                                    CCB014
+     C                     PARM '       ' @RTCD   7                                           CCB014
+     C                     PARM '*VERIFY' @OPTN   7                                           CCB014
+     C                     PARM 'CCB014'  @SARD   6                                           CCB014
+      *                                                                                       CCB014
+     C           @RTCD     IFEQ *BLANKS                                                       CCB014
+     C                     MOVEL'Y'       CCB014  1                                           CCB014
+     C                     ELSE                                                               CCB014
+     C                     MOVEL'N'       CCB014                                              CCB014
+     C                     ENDIF                                                              CCB014
+     C********** MP        IFEQ 'A'                                                    CCB014 CCB020
+     C           COBST     IFEQ '*NO'                                                         CCB020
+     C           SCHREQ    ORNE 'Y'                                                           CCB014
+     C                     OPEN FF0310DF               99                                     CCB014
+     C                     ENDIF                                                              CCB014
+     C*
+      ***ACCESS*TABTB10*FOR*RUN*DATE**************************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10                  99               S01117
+     C***********                                                         S01117
+      ***DATABASE*ERROR*IF*NOT*FOUND**************************************S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          MOVE 'TABLE'   DBFILE                          S01117
+     C***********          MOVEL'ICD 1'   DBKEY            ***************S01117
+     C***********          Z-ADD1         DBASE            * DB ERROR 01 *S01117
+     C***********          EXSR DBERR                      ***************S01117
+     C***********          END                                            S01117
+     C*                                                                   S01117
+      ** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+      ** Test date format
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+      ** IF Market parameter is not blank, access Market file for
+      ** Auto pricing prompt indicator
+     C*
+     C           MRKT      IFNE *BLANK
+     C                     OPEN MARKT
+     C                     OPEN MKCTL
+     C           MRKT      CHAINMARKT                99
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MARKT'   DBFILE           ***************
+     C                     MOVELMRKT      DBKEY            * DB ERROR 02 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+      *                                                                                     MD040928
+      ** Populate #APRP field with APRP from MARKTD and ECOB to value                       MD040928
+      ** 'N' only if passed parameter fields #APRP and ECOB are both                        MD040928
+      ** blanks. This means that calling pgm FFC1001 - FF Start EOC                         MD040928
+      ** processing control is being invoked.                                               MD040928
+      *                                                                                     MD040928
+     C           *IN99     IFEQ *OFF                                                        MD040928
+     C           RECI      ANDEQ'D'                                                         MD040928
+      *                                                                                     MD040928
+     C           #APRP     IFEQ ' '                                                         MD040928
+     C           ECOB      ANDEQ' '                                                         MD040928
+     C                     MOVE APRP      #APRP                                             MD040928
+     C                     MOVE 'N'       ECOB                                              MD040928
+     C                     ENDIF                                                            MD040928
+      *                                                                                     MD040928
+     C                     ENDIF                                                            MD040928
+     C*
+     C/COPY WNCPYSRC,FF0310C002
+      ** Access Mkctl for business date
+     C*
+     C           MRKT      CHAINMKCTL                99
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MKCTL'   DBFILE
+     C                     MOVELMRKT      DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** Move business date to last change date
+     C*
+     C           *LIKE     DEFN BUSD      LCDO
+     C                     Z-ADDBUSD      LCDO
+     C*
+      ** If Auto Prices Prompt field is 'no'(APRP on PF/MARKTD *NE 'Y')
+      **    Update last EOC price on LF/PRICS.
+      ** If this option has been requested via a menu item rather than    100497
+      **    as part of EOC, should always display the Prices Maint screen 100497
+     C*
+     C           APRP      IFNE 'Y'
+     C           ECOB      ANDEQ'Y'                                       100497
+     C                     EXSR ATOINP
+     C*
+      ** Otherwise...
+     C*
+     C                     ELSE
+     C*
+      ** Format Screen headings
+     C/COPY WNCPYSRC,FF0310C005
+     C           CCB014    IFEQ 'Y'                                                           CCB014
+     C           SCHREQ    ANDEQ'Y'                                                           CCB014
+     C********** MP        ANDNE'A'                                                    CCB014 CCB020
+     C           COBST     ANDEQ'*YES'                                                        CCB020
+     C                     EXSR ATOINP                                                        CCB014
+     C                     ELSE                                                               CCB014
+     C*
+     C                     MOVE MKTN      FFNAM
+     C                     MOVE BUSD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    FFDAT
+     C                     EXSR FFFMT
+     C                     MOVELFFTXT     STITLE
+     C*
+     C                     EXSR SCREEN
+     C*
+      ** End of Auto Prices Check
+     C/COPY WNCPYSRC,FF0310C006
+     C                     ENDIF                                                              CCB014
+     C*
+     C                     END
+     C*
+      ** End of Market centre processing
+     C*
+     C                     END
+     C*
+      ** For OTCs
+     C*
+     C           MRKT      IFEQ *BLANK
+     C*
+      ** If auto prices prompt ( parameter passed is 'Y') , process DSPF
+      ** Set up screen title and set last change date to run date
+     C*
+     C***********APRP      IFEQ 'Y'                                       131416
+     C           #APRP     IFEQ 'Y'                                       131416
+     C           ECOB      OREQ 'N'                                       100497
+     C/COPY WNCPYSRC,FF0310C007
+     C           CCB014    IFEQ 'Y'                                                           CCB014
+     C           SCHREQ    ANDEQ'Y'                                                           CCB014
+     C********** MP        ANDNE'A'                                                    CCB014 CCB020
+     C           COBST     ANDEQ'*YES'                                                        CCB020
+     C                     EXSR ATOINP                                                        CCB014
+     C                     ELSE                                                               CCB014
+     C                     MOVELMSG,1     STITLE
+     C                     Z-ADDRUND      LCDO
+     C                     EXSR SCREEN
+     C/COPY WNCPYSRC,FF0310C008
+     C                     ENDIF                                                              CCB014
+     C*
+      ** Otherwise auto-input ( update latest price on LF/PRICS )
+     C*
+     C                     ELSE
+     C                     EXSR ATOINP
+     C                     END
+     C*
+     C                     END
+     C*
+      ** Terminate program
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** ATOINP S/R TO PROCESS PRICES FILE FOR AUTO PRICING PROMPT NOT RQD
+      **
+      ** CALLED FROM MAIN PROCESSING
+      **
+      ** CALLS: ZTNLU1
+      **
+     C********************************************************************
+     C*
+     C           ATOINP    BEGSR
+     C*
+      ** Process LF/PRICS. For all records , if last end of centre
+      ** price has changed, update with new price
+     C*
+     C           *LOVAL    SETLLPRICS
+     C*
+     C                     READ PRICS                    60
+     C*
+     C           *IN60     DOWEQ'0'
+     C*
+     C           NEWP      IFNE PLEC
+     C           ECOB      IFNE 'N'                                                           239875
+     C                     Z-ADDPLEC      PBEC                            E20526
+     C                     Z-ADDNEWP      PLEC
+     C                     END                                                                239875
+     C                     EXSR ZTNLU1
+     C                     Z-ADDNATN      TNLU
+     C                     UPDATPRICSDF
+     C                     END
+     C*
+     C                     READ PRICS                    60
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** SCREEN S/R TO LOAD SUBFILE AND PROCESS RESULTANT SCREENS
+      **
+      ** CALLED FROM MAIN PROCESSING
+      **
+      ** CALLS: POSTN, SCRPRC
+      **
+     C********************************************************************
+     C*
+     C           SCREEN    BEGSR
+     C*
+      ** Disallow command key 1 if close of business run
+     C*
+     C           ECOB      IFEQ 'Y'
+     C                     SETON                         08
+     C                     END
+     C*
+      ** Load subfile
+     C*
+     C                     EXSR POSTN
+     C*
+      ** Process screen input
+     C*
+     C                     EXSR SCRPRC
+     C*
+      ** If Program not aborted update LF/PRICS (prices at last EOC)
+     C*
+     C/COPY WNCPYSRC,FF0310C003
+     C           *INU1     IFEQ '0'
+     C                     EXSR ATOINP
+     C                     END
+     C/COPY WNCPYSRC,FF0310C004
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** POSTN S/R TO LOAD SUBFILE WITH RECORDS GLEANED FROM LF/POSTN4
+      **
+      ** CALLED FROM S/R SCREEN
+      **
+      ** CALLS: DBERR
+      **
+     C********************************************************************
+     C*
+     C           POSTN     BEGSR
+     C*
+      ** Read LF/POSTN4
+     C*
+     C                     MOVE *BLANK    ISTT
+     C           ISTT      SETLLPOSTN4
+     C                     READ POSTN4                   60
+     C*
+     C           *IN60     IFEQ '1'
+     C*
+     C                     SETON                     36
+     C*
+      ** If end of file and automatic prices prompt is Yes
+      ** Output 'no details' format
+     C*
+     C***********APRP      IFEQ 'Y'                                       131416
+     C           #APRP     IFEQ 'Y'                                       131416
+     C*
+      ** If command 3 is not enabled, omit 'Cmd/3' part of message text
+     C*
+     C           *IN08     IFEQ '0'
+     C                     MOVELMSG,3     MSGTXT
+     C                     ELSE
+     C                     MOVELMSG,6     MSGTXT
+     C                     END
+     C/COPY WNCPYSRC,FF0310C009
+     C           CCB014    IFEQ 'Y'                                                           CCB014
+     C                     OPEN FF0310DF               99                                     CCB014
+     C                     ENDIF                                                              CCB014
+      *                                                                                       CCB014
+     C*
+     C                     WRITEFF0310F0
+     C                     WRITEFF0310F1
+     C                     WRITEFF0310F2
+     C                     END
+     C*
+      ** If records exist, subfile will not be empty, so set display inds
+      ** and enable Cmd/10
+     C*
+     C                     ELSE
+     C                     MOVEA'11110'   *IN,31
+     C                     MOVEA'00'      *IN,40
+     C                     SETOF                     6264
+     C                     MOVEA*BLANK    ERR
+     C                     MOVE *BLANK    ERROR
+     C                     MOVE *BLANK    SIPRC
+     C                     MOVE *BLANK    SWPRC
+     C                     Z-ADD0         SUPRC
+     C                     Z-ADD0         SURSK
+     C                     Z-ADD0         RRN
+     C                     Z-ADD0         RRNSFL
+     C*
+      ** Non-display non-OTC fields if no market
+     C*
+     C           MRKT      IFEQ *BLANK
+     C                     SETON                     50
+     C                     END
+     C*
+     C                     END
+     C*
+      ** Perform while not end of file; Access LF/INTYP on change of ISTT
+     C*
+     C           *IN60     DOWEQ'0'
+     C*
+     C           ISTT      CHAININTYP                99
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INTYP'   DBFILE
+     C                     MOVELISTT      DBKEY            ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** Save minimum price fluctuation and Ticks denominator for output
+     C*
+     C           *LIKE     DEFN ISPT      IISPT
+     C                     Z-ADDISPT      IISPT
+     C           *LIKE     DEFN MNPF      IMNPF
+     C                     Z-ADDMNPF      IMNPF
+     C           *LIKE     DEFN TKDM      ITKDM
+     C                     Z-ADDTKDM      ITKDM
+     C           *LIKE     DEFN ISTT      IISTT
+     C                     MOVE ISTT      IISTT
+     C*
+      ** IF Market parameter is not blank
+      ** AND Instrument is an option
+      ** Access underlying future using future ref
+     C*
+     C           ISPT      IFGT 3
+     C           ISPT      ANDNE7                                         AUS022
+     C           MRKT      ANDNE*BLANK
+     C           *LIKE     DEFN ISTT      ISTTUL
+     C                     MOVELMRKT      ISTTUL
+     C                     MOVE FTRF      ISTTUL
+     C           ISTTUL    CHAININTYP                99
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INTYP'   DBFILE
+     C                     MOVELISTTUL    DBKEY            ***************
+     C                     Z-ADD5         DBASE            * DB ERROR 05 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** Access LF/PRISP using details from underlying instrument
+     C*
+     C           IISTT     CHAINPRISP                99
+     C*
+      ** IF no record found, blank old spot field on subfile record
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVE *BLANK    SNPRC
+     C                     Z-ADD0         SNPRCD
+     C                     ELSE
+     C*
+     C                     Z-ADDNSPR      FFPRIC
+     C                     Z-ADDTKDM      FFTKDM
+     C                     Z-ADDMNPF      FFMNPF
+     C*
+      ** Convert spot price to screen format
+     C*
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    SNPRC
+     C                     Z-ADDNSPR      SNPRCD
+     C                     END
+     C*
+      ** Format remainder of subfile record
+     C*
+     C                     MOVELMSG,2     SSTSP
+     C                     MOVE *BLANK    SYRNO
+     C                     MOVE *BLANK    SMTHN
+     C                     MOVE *BLANK    SPCAL
+     C                     MOVE *BLANK    SRSKFO
+     C                     MOVE *BLANK    SRSKFN
+     C                     MOVE IISTT     MKTIN
+     C                     Z-ADDISPT      SISPT
+     C                     Z-ADDMNPF      SMNPF
+     C                     Z-ADDTKDM      STKDM
+     C                     SETON                     51
+     C*
+      ** Output subfile detail
+     C*
+     C                     ADD  1         RRN
+     C                     WRITEFF0310S0
+     C*
+      ** End of underlying instrument processing
+     C*
+     C                     END
+     C*
+      ** Protect risk factor for market instrument futures and OTCs
+     C*
+     C           IISPT     IFLE 3
+     C           MRKT      ANDNE*BLANK
+     C           IISPT     OREQ 7                                         AUS022
+     C           MRKT      ANDNE*BLANK                                    AUS022
+     C           MRKT      OREQ *BLANK
+     C                     SETON                     51
+     C                     ELSE
+     C                     SETOF                     51
+     C                     END
+     C*
+      ** Reset key fields which may have changed due to CHAIN to INTYP
+     C*
+     C           MRKT      IFNE *BLANK
+     C                     MOVE IISTT     MKTIN
+     C                     ELSE
+     C                     MOVE IISTT     SISTT
+     C                     END
+     C*
+     C           *LIKE     DEFN ISTT      OISTT
+     C                     MOVE IISTT     OISTT
+     C                     MOVE IISTT     ISTT
+     C                     Z-ADDITKDM     STKDM
+     C                     Z-ADDIMNPF     SMNPF
+     C                     Z-ADDIISPT     SISPT
+     C*
+     C*                                                                   134645
+     C**  Check whether the normal reading of POSTN4 should               134645
+     C**  be changed.                                                     134645
+     C*                                                                   134645
+     C                     MOVE '0'       *IN67                           134645
+     C                     MOVE '0'       *IN70                           134645
+     C           ISTT      SETGTPOSTN4                                    134645
+     C                     READPPOSTN4                   60               134645
+     C           YRNO      IFLT 72                                        134645
+     C                     MOVE '1'       *IN70                           134645
+     C                     END                                            134645
+     C           ISTT      SETLLPOSTN4                                    134645
+     C                     READ POSTN4                   60               134645
+     C           *IN70     IFEQ '0'                                       134645
+     C           YRNO      ANDGT72                                        134645
+     C                     MOVE '1'       *IN70                           134645
+     C                     END                                            134645
+      ** Instrument processing. Access LF/PRICS on change of year/mth
+      ** put/call/strike price and output subfile record
+     C*
+     C           ISTT      DOWEQOISTT
+     C           *IN60     ANDEQ'0'
+     C*                                                                   134645
+     C**  Check whether read manipulation is needed                       134645
+     C*                                                                   134645
+     C           *IN70     IFEQ '0'                                       134645
+     C*                                                                   134645
+     C**  End routine once EOF has been previously found                  134645
+     C*                                                                   134645
+     C           *IN67     IFEQ '1'                                       134645
+     C           YRNO      ANDGT72                                        134645
+     C                     MOVE '1'       *IN60                           134645
+     C                     MOVE '1'       *IN68                           134645
+     C                     MOVE '0'       *IN67                           134645
+     C                     END                                            134645
+     C*                                                                   134645
+     C**  Skip all YRNO < 72                                              134645
+     C*                                                                   134645
+     C           YRNO      IFLT 72                                        134645
+     C           *IN66     ANDEQ'0'                                       134645
+     C           *IN67     ANDEQ'0'                                       134645
+     C           YRNO      DOWLT72                                        134645
+     C                     READ POSTN4                   60               134645
+     C                     END                                            134645
+     C                     MOVE '1'       *IN69                           134645
+     C                     END                                            134645
+     C*                                                                   134645
+     C**  Skip all YRNO > 72                                              134645
+     C*                                                                   134645
+     C           YRNO      IFGT 72                                        134645
+     C           *IN66     ANDEQ'1'                                       134645
+     C           YRNO      DOWGT72                                        134645
+     C           ISTT      ANDEQOISTT                                     134645
+     C                     READ POSTN4                   60               134645
+     C                     END                                            134645
+     C                     MOVE '0'       *IN66                           134645
+     C                     MOVE '1'       *IN68                           134645
+     C                     END                                            134645
+     C                     END                                            134645
+     C*
+      ** Load screen key fields
+     C*
+     C                     MOVE YRNO      SYRNO
+     C           MTHN      IFGT 0
+     C                     MOVE ZMNM,MTHN SMTHN
+     C                     END
+     C           *LIKE     DEFN YRNO      OYRNO
+     C           *LIKE     DEFN MTHN      OMTHN
+     C                     MOVE YRNO      OYRNO
+     C                     MOVE MTHN      OMTHN
+     C                     MOVE PCAL      SPCAL
+     C                     Z-ADDSTRP      SSTRP
+     C*
+      ** If an option , convert strike price to screen format
+     C*
+     C           IISPT     IFGT 3
+     C           IISPT     ANDNE7                                         AUS022
+     C                     Z-ADDSTRP      FFPRIC
+     C                     Z-ADDTKDM      FFTKDM
+     C                     Z-ADDMNPF      FFMNPF
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    SSTSP
+     C                     ELSE
+     C                     MOVEL*BLANK    SSTSP
+     C                     END
+     C*
+     C           PRICSK    CHAINPRICS                99
+     C*
+      ** IF no record found, blank all but key fields
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVE *BLANK    SNPRC
+     C                     Z-ADD0         SNPRCD
+     C                     MOVE *BLANK    SIPRC
+     C                     MOVE *BLANK    SRSKFO
+     C                     MOVE *BLANK    SRSKFN
+     C*
+      ** IF no price exists and this is a market instrument
+      ** Set on SFLNXTCHG ind (to force validation of this price)
+     C*
+     C           MRKT      IFNE *BLANK
+     C                     SETON                     30
+     C                     MOVEL'Y'       NOPRIC  1
+     C                     END
+     C*
+     C                     ELSE
+     C*
+      ** Convert new price to screen format
+     C*
+     C                     Z-ADDNEWP      SNPRCD
+     C                     Z-ADDNEWP      FFPRIC
+     C                     Z-ADDITKDM     FFTKDM
+     C                     Z-ADDIMNPF     FFMNPF
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    SNPRC
+     C*
+      ** Format remainder of subfile record
+     C*
+     C                     MOVE *BLANK    SRSKFO
+     C                     MOVE *BLANK    SRSKFN
+     C                     MOVE *BLANK    SIPRC
+     C*
+      ** Screen version of option risk factor converted by ZEDIT
+     C*
+     C           IISPT     IFGT 3
+     C           IISPT     ANDNE7                                         AUS022
+     C           MRKT      ANDNE*BLANK
+     C                     MOVE RSKF      ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SRSKFN
+     C                     MOVE ZFIELD    SRSKFO
+     C                     END
+     C*
+     C                     END
+     C*
+      ** Output subfile detail
+      ** Set off SFLNXTCHG ind
+     C*
+     C           *IN68     IFEQ '0'                                       134645
+     C                     ADD  1         RRN
+     C                     WRITEFF0310S0
+     C                     END                                            134645
+     C                     MOVE '0'       *IN68                           134645
+     C*
+     C                     SETOF                     30
+     C*
+      ** Read POSTN4 Until key changes
+     C*
+     C           ISTT      DOWEQOISTT
+     C           YRNO      ANDEQOYRNO
+     C           MTHN      ANDEQOMTHN
+     C           PCAL      ANDEQSPCAL
+     C           STRP      ANDEQSSTRP
+     C           *IN60     ANDEQ'0'
+     C                     READ POSTN4                   60
+     C                     END
+     C*                                                                   134645
+     C**  Set and reset indicators if EOF is found                        134645
+     C*                                                                   134645
+     C           *IN70     IFEQ '0'                                       134645
+     C           *IN60     IFEQ '1'                                       134645
+     C           *IN69     ANDEQ'1'                                       134645
+     C                     MOVE '0'       *IN60                           134645
+     C                     MOVE '0'       *IN69                           134645
+     C                     MOVE '1'       *IN67                           134645
+     C           ISTT      SETLLPOSTN4                                    134645
+     C                     READ POSTN4                   60               134645
+     C                     END                                            134645
+     C*                                                                   134645
+     C**  Set and reset indicators for ISTT <> OISTT                      134645
+     C*                                                                   134645
+     C           *IN60     IFEQ '0'                                       134645
+     C           *IN69     ANDEQ'1'                                       134645
+     C           ISTT      ANDNEOISTT                                     134645
+     C                     MOVE '0'       *IN69                           134645
+     C                     MOVE '1'       *IN66                           134645
+     C                     READPPOSTN4                   60               134645
+     C           ISTT      SETLLPOSTN4                                    134645
+     C                     READ POSTN4                   60               134645
+     C                     END                                            134645
+     C                     END                                            134645
+     C                     END
+     C                     END
+     C*
+      ** Output Subfile screen & control record
+      ** if at least one open position exists
+     C*
+     C           *IN36     IFEQ '0'
+     C*
+      ** and if automatic prices prompt is Yes
+      ** or  if one of these open positions has no price defined
+     C*
+     C***********APRP      IFEQ 'Y'                                       131416
+     C           #APRP     IFEQ 'Y'                                       131416
+     C           NOPRIC    OREQ 'Y'
+     C*
+      ** If command 3 is not enabled, omit 'Cmd/3' part of message text
+     C*
+     C           *IN08     IFEQ '0'
+     C                     MOVELMSG,4     MSGTXT
+     C                     ELSE
+     C                     MOVELMSG,7     MSGTXT
+     C                     END
+     C*
+     C                     Z-ADD1         RRNSFL
+     C                     WRITEFF0310F0
+     C                     WRITEFF0310C0
+     C                     WRITEFF0310F2
+     C                     ELSE
+     C                     SETON                     36
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** SCRPRC S/R TO HANDLE I/O OPERATIONS TO SCREEN
+      **
+      ** CALLED FROM S/R SCREEN
+      **
+      ** CALLS: DBERR
+      **
+     C********************************************************************
+     C*
+     C           SCRPRC    BEGSR
+     C*
+      ** While Cmd/3 & enter not taken, read and process screen
+     C*
+     C           *IN65     DOWEQ'0'
+     C*
+      ** IF Subfile screen, validate
+     C*
+     C           *IN36     IFEQ '0'
+     C*
+      ** Read Screen
+     C*
+     C                     READ FF0310F2                 99
+     C*
+      ** IF Cmd/3 taken set on U1 & exit loop.
+     C*
+     C           *IN01     IFEQ '1'
+     C                     SETON                     U165
+     C                     END
+     C*
+     C**********                                                          S01199
+     C********** *IN20     IFEQ '1'                                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM 'FF0310'  HBPGM   6                       S01199
+     C**********           PARM ERROR     HERCD 160                       S01199
+     C**********           END                                            S01199
+     C*
+      ** If command 10 or enter taken, validate
+     C*
+     C           *IN01     IFEQ '0'
+     C           *IN05     ANDEQ'0'
+     C********** *IN20     ANDEQ'0'                                       S01199
+     C                     EXSR VALIDS
+     C                     END
+     C*
+      ** IF command 10 taken,
+      ** IF No errors, and no new warnings, Update file and exit
+      ** otherwise, redisplay subfile
+     C*
+     C           *IN10     IFEQ '1'
+     C           ERR,1     ANDEQ*BLANK
+     C           *IN10     OREQ '1'
+     C           ERR,1     ANDEQ' W01'
+     C           ERR,2     ANDEQ*BLANK
+     C           *IN62     ANDEQ'0'
+     C                     EXSR UPDATE
+     C                     SETON                     65
+     C                     END
+     C*
+      ** If Cmd/12 taken, delete and re-load subfile
+     C*
+     C           *IN05     IFEQ '1'
+     C                     SETON                     35
+     C                     SETOF                     31
+     C                     WRITEFF0310C0
+     C                     EXSR POSTN
+     C                     END
+     C*
+      ** If Cmd/12 not requested, and no termination required re-write
+      ** screen
+     C*
+     C           *IN05     IFEQ '0'
+     C********** *IN20     ANDEQ'0'                                       S01199
+     C           *IN65     ANDEQ'0'
+     C*
+      ** Allow Cmd/10 only if no errors
+     C*
+     C           *IN64     IFEQ '0'
+     C           ERR,1     OREQ ' W01'
+     C                     SETON                     34
+     C*
+      ** If command 3 is not enabled, omit 'Cmd/3' part of message text
+     C*
+     C           *IN08     IFEQ '0'
+     C                     MOVELMSG,4     MSGTXT
+     C                     ELSE
+     C                     MOVELMSG,7     MSGTXT
+     C                     END
+     C*
+     C                     ELSE
+     C                     SETOF                     34
+     C*
+      ** If command 3 is not enabled, omit 'Cmd/3' part of message text
+     C*
+     C           *IN08     IFEQ '0'
+     C                     MOVELMSG,5     MSGTXT
+     C                     ELSE
+     C                     MOVELMSG,8     MSGTXT
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     MOVEAERR       ERROR
+     C                     WRITEFF0310F0
+     C                     WRITEFF0310C0
+     C                     WRITEFF0310F2
+     C                     END
+     C*
+     C                     END
+     C*
+      ** If no open positions exist
+     C*
+     C           *IN36     IFEQ '1'
+     C*
+      ** If automatic prices prompt is Yes
+      ** read screen previously output ( 'NO DETAILS' )
+     C*
+     C***********APRP      IFEQ 'Y'                                       131416
+     C           #APRP     IFEQ 'Y'                                       131416
+     C*
+     C                     READ FF0310F2                 99
+     C*
+      ** IF Cmd/3 taken set on U1 & exit loop
+     C*
+     C           *IN01     IFEQ '1'
+     C                     SETON                     U165
+     C                     ELSE
+     C****************************************************************    S01199
+     C***If*help*taken,*call*help*program*****************************    S01199
+     C****************************************************************    S01199
+     C**********                                                          S01199
+     C********** *IN20     IFEQ '1'                                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM 'FF0310'  HBPGM   6                       S01199
+     C**********           PARM *BLANK    HERCD 160                       S01199
+     C**********           ELSE                                           S01199
+     C*
+      ** Otherwise enter pressed so end
+     C*
+     C                     SETON                     65
+     C**********           END                                            S01199
+     C                     END
+     C*
+      ** Otherwise if the automatic prices prompt is NOT Yes then end
+     C*
+     C                     ELSE
+     C                     SETON                     65
+     C                     END
+     C*
+     C                     END
+     C*
+      ** End of do loop ( Dowhile IN65 )
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** VALIDS S/R TO VALIDATE SUBFILE INPUT
+      **
+      ** CALLED FROM S/R SCRPRC
+      **
+      ** CALLS: WARNER
+      **
+     C********************************************************************
+     C*
+     C           VALIDS    BEGSR
+     C*
+      ** Set on SLFNXTCHG Indicator
+      ** Set off warning error indicator
+      ** Read changed subfile records
+     C*
+     C                     Z-ADD0         RRN
+     C                     SETON                     30
+     C                     SETOF                     626489
+     C                     MOVEA*BLANK    ERR
+     C                     MOVE *BLANK    ERROR
+     C                     READCFF0310S0                 61
+     C*
+      ** DO WHILE Not end of changed subfile records
+     C*
+     C           *IN61     DOWEQ'0'
+     C*
+      ** Set off error indicators
+     C*
+     C                     SETOF                     4041
+     C           *LIKE     DEFN RRNSFL    RRN
+     C*
+      ** IF warning error data has changed, set indicator 61 to flag
+     C*
+     C           SWPRC     IFNE *BLANK
+     C           SWPRC     ANDNESIPRC
+     C                     SETON                     62
+     C                     END
+     C*
+      ** If price has been blanked, blank warning
+     C*
+     C           SIPRC     IFEQ *BLANK
+     C           SWPRC     ANDNE*BLANK
+     C                     MOVE *BLANK    SWPRC
+     C                     END
+     C*
+      ** IF New price is not blank, or New Price is the same
+      ** as Old Price , or warning has changed
+     C*
+     C           SIPRC     IFNE *BLANK
+     C           SIPRC     OREQ SNPRC
+     C           SWPRC     ORNE *BLANK
+     C           SIPRC     ANDNESWPRC
+     C*
+      ** PROCESS V9001-validate-price (Standard S/r FFPRVL)
+     C*
+     C                     MOVE SIPRC     FFSPRC
+     C                     MOVE SMNPF     FFMNPF
+     C                     MOVE STKDM     FFTKDM
+     C                     EXSR FFPRVL
+     C*
+      ** IF a market instrument is being processed and neither
+      ** a new or old price is present then a new price is required.
+     C*
+     C           *IN89     IFEQ '0'
+     C           MRKT      ANDNE*BLANK
+     C           SIPRC     ANDEQ*BLANK
+     C           SNPRC     ANDEQ*BLANK
+     C                     SETON                     89
+     C                     END
+     C*
+      ** IF new price is invalid set on screen RI indicator and blank
+      ** any warning value
+     C*
+     C           *IN89     IFEQ '1'
+     C           *IN64     IFEQ '0'
+     C                     Z-ADDRRN       RRNSFL
+     C                     END
+     C                     SETON                     4064
+     C                     MOVE *BLANK    SWPRC
+     C                     MOVE '001'     ERR,1
+     C                     ELSE
+     C                     Z-ADDFFPRIC    SUPRC
+     C                     END
+     C*
+      ** IF Old price is non-blank (it was taken from file)
+      ** Check for warning error -new must be within 10% of old price
+     C*
+     C           *IN89     IFEQ '0'
+     C           SNPRC     ANDNE*BLANK
+     C                     EXSR WARNER
+     C*
+      ** If the warning exists set on invalid price indicator and save
+      ** Warning price, otherwise blank out warning price
+     C*
+     C           *IN63     IFEQ '1'
+     C                     MOVE SIPRC     SWPRC
+     C           *IN64     IFEQ '0'
+     C                     Z-ADDRRN       RRNSFL
+     C                     END
+     C                     SETON                     4064
+     C                     MOVE ' W01'    ERR,3
+     C                     ELSE
+     C                     MOVE *BLANK    SWPRC
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+      ** IF risk factor is not blank
+      ** AND Risk factor is not numeric between 0 and 1 inc
+      ** Set on invalid risk factor indicator
+     C*
+     C           SRSKFN    IFNE SRSKFO
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE SRSKFN    ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    SURSK
+     C*
+     C           *IN99     IFEQ '1'
+     C           SURSK     ORGT 1
+     C           *IN64     IFEQ '0'
+     C                     Z-ADDRRN       RRNSFL
+     C                     END
+     C                     SETON                     4164
+     C                     MOVE ' 002'    ERR,2
+     C                     END
+     C                     END
+     C*
+      ** Protect risk factor for market instrument futures and OTCs
+     C*
+     C           SISPT     IFLE 3
+     C           MRKT      ANDNE*BLANK
+     C           SISPT     OREQ 7                                         AUS022
+     C           MRKT      ANDNE*BLANK                                    AUS022
+     C           MRKT      OREQ *BLANK
+     C                     SETON                     51
+     C                     ELSE
+     C                     SETOF                     51
+     C                     END
+     C*
+      ** Update Subfile record
+      ** Read next changed record
+     C*
+     C                     UPDATFF0310S0
+     C                     READCFF0310S0                 61
+     C*
+      ** End of subfile read loop
+     C*
+     C                     END
+     C*
+      ** Set off 'warnings have changed' indicator if no errors
+     C*
+     C           *IN64     IFEQ '0'
+     C                     SETOF                     62
+     C                     ELSE
+     C*
+      ** load errors into screen field
+     C*
+     C                     Z-ADD1         Y       10
+     C                     DO   3         X       10
+     C*
+     C           ERR,X     IFNE *BLANK
+     C                     MOVE ERR,X     ERR,Y
+     C*
+     C           X         IFGT Y
+     C                     MOVE *BLANK    ERR,X
+     C                     END
+     C*
+     C                     ADD  1         Y
+     C                     END
+     C*
+      ** End of do loop
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+      ** Set SFLNXTCHG indicator off
+     C*
+     C                     SETOF                     30
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** WARNER S/R TO VALIDATE INPUT PRICE AGAINST DATABASE PRICE
+      **
+      ** CALLED FROM S/R VALIDS
+      **
+      ** CALLS NO OTHER SUBROUTINES
+      **
+      ** OUTPUT: *IN63 IS SET OF IF THE WARNING ERROR CONDITION EXISTS
+      **
+     C********************************************************************
+     C*
+     C           WARNER    BEGSR
+     C*
+     C                     SETOF                     63
+     C*
+      ** If ticks denominator is not 100, convert entered price
+      ** and original price to whole no. in ticks denominator
+      ** Entered price in fields -1
+      ** original price in fields -2
+     C*
+     C           STKDM     IFNE 100
+     C                     Z-ADDSUPRC     INT1    40
+     C                     Z-ADDSUPRC     DEC1    77
+     C                     Z-ADDSNPRCD    INT2    40
+     C                     Z-ADDSNPRCD    DEC2    77
+     C*
+     C           INT1      MULT STKDM     AMCDN1 150
+     C           INT2      MULT STKDM     AMCDN2 150
+     C*
+     C                     END
+     C*
+      ** Multiply decimal part by required factor of 10 to give
+      ** number of ticks
+     C*
+     C           STKDM     IFLE 10
+     C           DEC1      MULT 10        RES1    30
+     C           DEC2      MULT 10        RES2    30
+     C                     END
+     C*
+     C           STKDM     IFGT 10
+     C           STKDM     ANDLT100
+     C           DEC1      MULT 100       RES1
+     C           DEC2      MULT 100       RES2
+     C                     END
+     C*
+     C           STKDM     IFGT 100
+     C           DEC1      MULT 1000      RES1
+     C           DEC2      MULT 1000      RES2
+     C                     END
+     C*
+      ** If ticks denominator is not 100, add integer and decimal parts of
+      ** amount, then find 10% of original price.
+      ** If new price is greater than original + 10%
+      ** or less than original - 10%, then issue warning error
+     C*
+     C           STKDM     IFNE 100
+     C                     ADD  RES1      AMCDN1
+     C                     ADD  RES2      AMCDN2
+     C           AMCDN2    DIV  10        TENPCT 151
+     C           AMCDN2    ADD  TENPCT    MAX    151
+     C           AMCDN2    SUB  TENPCT    MIN    151
+     C*
+     C           AMCDN1    IFLT MIN
+     C           AMCDN1    ORGT MAX
+     C                     SETON                     6364
+     C                     END
+     C*
+     C                     END
+     C*
+      ** If ticks denominator is 100, price can be validated without
+      ** conversion.
+     C*
+     C           STKDM     IFEQ 100
+     C           SNPRCD    DIV  10        TENPCD 118
+     C           SNPRCD    ADD  TENPCD    MAXD   128
+     C           SNPRCD    SUB  TENPCD    MIND   128
+     C*
+     C           SUPRC     IFLT MIND
+     C           SUPRC     ORGT MAXD
+     C                     SETON                     6364
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** UPDATE S/R TO UPDATE PRICS/PRISP FROM USER INPUT
+      **
+      ** CALLED FROM S/R VALIDS
+      **
+      ** CALLS: DBERR
+      **
+     C********************************************************************
+     C*
+     C           UPDATE    BEGSR
+     C*
+      **        Read changed subfile records
+     C*
+     C           *LIKE     DEFN NORE      PNORE
+     C           *LIKE     DEFN NINS      PINS
+     C           *LIKE     DEFN NAMD      PAMD
+     C           *LIKE     DEFN NDEL      PDEL
+     C           *LIKE     DEFN NORE      SNORE
+     C           *LIKE     DEFN NINS      SINS
+     C           *LIKE     DEFN NAMD      SAMD
+     C           *LIKE     DEFN NDEL      SDEL
+     C                     Z-ADD0         RRN
+     C                     READCFF0310S0                 61
+     C*
+     C           *IN61     DOWEQ'0'
+     C*
+      ** IF Spot price record
+      ** AND Price has changed
+      ** Access LF/PRISP for update
+     C*
+     C           SSTSP     IFEQ MSG,2
+     C           SIPRC     ANDNE*BLANK
+     C*
+     C           MRKT      IFNE *BLANK
+     C                     MOVE MKTIN     ISTT
+     C                     ELSE
+     C                     MOVELMRKT      ISTT
+     C                     END
+     C*
+     C           ISTT      CHAINPRISP                99
+     C*
+      ** IF No record exists write a new record,
+      ** and add 1 to PRISP inserts count
+     C*
+     C           *IN99     IFEQ '1'
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C                     Z-ADDLCDO      LCD
+     C                     Z-ADDNATN      TNLU
+     C*
+     C                     Z-ADD0         OSPR
+     C                     Z-ADDSUPRC     NSPR
+     C                     MOVE 'I'       CHTP
+     C                     MOVE 'D'       RECI
+     C                     WRITEPRISPDF
+     C                     ADD  1         PINS
+     C                     ADD  1         PNORE
+     C                     ELSE
+     C*
+      ** Otherwise, update existing LF/PRISP record (re-insert if neccessary)
+     C*
+      ** If currently live
+     C*
+     C           RECI      IFEQ 'D'
+     C*
+      ** If not changed today
+     C*
+     C           LCD       IFNE LCDO
+     C                     ADD  1         PAMD
+     C                     MOVE 'A'       CHTP
+     C                     END
+     C*
+      ** else if currently deleted
+     C*
+     C                     ELSE
+     C*
+      ** If deleted today
+     C*
+     C           LCD       IFEQ LCDO
+     C                     SUB  1         PDEL
+     C                     END
+     C*
+     C                     ADD  1         PINS
+     C                     ADD  1         PNORE
+     C                     MOVEL'I'       CHTP
+     C                     MOVE 'D'       RECI
+     C*
+     C                     END
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C                     Z-ADDLCDO      LCD
+     C                     Z-ADDNATN      TNLU
+     C*
+     C                     Z-ADDOSPR      VOSPR                           E20526
+     C                     Z-ADDNSPR      OSPR
+     C                     Z-ADDSUPRC     NSPR
+     C                     UPDATPRISPDF
+     C                     END
+     C                     END
+     C*
+      ** IF Not spot price record, either user input/price change
+      ** Access LF/PRICS for update
+     C*
+     C           SSTSP     IFNE MSG,2
+     C*
+     C           MRKT      IFEQ *BLANK
+     C                     MOVE SISTT     ISTT
+     C                     ELSE
+     C                     MOVELMRKT      ISTT
+     C                     MOVE MKTIN     ISTT
+     C                     END
+     C*
+     C                     MOVE SYRNO     YRNO
+     C           SMTHN     IFNE *BLANK
+     C                     Z-ADD1         MTHN
+     C           SMTHN     LOKUPZMNM,MTHN                99
+     C                     ELSE
+     C                     Z-ADD*ZERO     MTHN
+     C                     END
+     C                     MOVE SPCAL     PCAL
+     C                     Z-ADDSSTRP     STRP
+     C*
+     C           PRICSK    CHAINPRICS                99
+     C*
+      ** If no record exists and input given, write new record to LF/PRICS
+      ** and add 1 to PRICS inserts count
+     C*
+     C           *IN99     IFEQ '1'
+     C           SIPRC     ANDNE*BLANK
+     C           *IN99     OREQ '1'
+     C           SRSKFN    ANDNESRSKFO
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C                     Z-ADDLCDO      LCD
+     C                     Z-ADDNATN      TNLU
+     C*
+     C                     Z-ADDSUPRC     NEWP
+     C           ECOB      IFNE 'N'                                                           239875
+     C                     Z-ADDSUPRC     PLEC
+     C                     END                                                                239875
+     C                     Z-ADDSURSK     RSKF
+     C                     MOVE 'I'       CHTP
+     C                     MOVE 'D'       RECI
+     C                     Z-ADD0         PRSM
+     C                     ADD  1         SINS
+     C                     ADD  1         SNORE
+     C*
+     C                     WRITEPRICSDF
+     C*
+     C                     END
+     C*
+      ** Otherwise, update existing LF/PRISP record (re-insert if neccessary)
+     C*
+     C                     SETOF                     52                                       239875
+     C           *IN99     IFEQ '0'
+     C           SIPRC     ANDNE*BLANK
+     C           *IN99     OREQ '0'
+     C           SRSKFN    ANDNESRSKFO
+     C*
+      ** If currently live
+     C*
+     C           RECI      IFEQ 'D'
+     C*
+      ** If not changed today
+     C*
+     C           LCD       IFNE LCDO
+     C                     ADD  1         SAMD
+     C                     MOVE 'A'       CHTP
+     C                     END
+     C*
+      ** else if currently deleted
+     C*
+     C                     ELSE
+     C*
+      ** If deleted today
+     C*
+     C           LCD       IFEQ LCDO
+     C                     SUB  1         SDEL
+     C                     END
+     C*
+     C                     ADD  1         SINS
+     C                     ADD  1         SNORE
+     C                     MOVEL'I'       CHTP
+     C                     MOVE 'D'       RECI
+     C*
+     C                     END
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C                     Z-ADDLCDO      LCD
+     C                     Z-ADDNATN      TNLU
+     C*
+     C***********SIPRC     IFNE SNPRC                                     E33393
+     C           SUPRC     IFNE SNPRCD                                    E33393
+     C                     Z-ADDSUPRC     NEWP
+     C           ECOB      IFNE 'N'                                                           239875
+     C                     Z-ADDSNPRCD    PBEC                            E33393
+     C                     END                                                                239875
+     C                     END
+     C*
+     C           ECOB      IFNE 'N'                                                           239875
+     C                     Z-ADDNEWP      PLEC
+     C                     END                                                                239875
+     C*
+     C           SRSKFN    IFNE SRSKFO
+     C                     Z-ADDSURSK     RSKF
+     C                     END
+     C*
+     C                     UPDATPRICSDF
+     C*                                                                                       239875
+     C                     SETON                     52                                       239875
+     C*
+     C                     END
+     C*
+      ** Otherwise, update New price on LF/PRICS record
+     C*
+     C           *IN99     IFEQ '0'
+     C           NEWP      ANDNEPLEC
+     C           *IN52     ANDEQ'0'                                                           239875
+     C*
+     C                     EXSR ZTNLU1
+     C                     Z-ADDNATN      TNLU
+     C           ECOB      IFNE 'N'                                                           239875
+     C                     Z-ADDNEWP      PLEC
+     C                     END                                                                239875
+     C                     UPDATPRICSDF
+     C                     END
+     C*
+     C                     END
+     C*
+      ** End of READC loop, read next record
+     C*
+     C                     READCFF0310S0                 61
+     C                     END
+     C*
+      ** IF No. of PRISP amends non-zero
+      ** OR No. of PRISP Inserts non-zero
+      ** OR No. of PRISP DELETES non-zero
+      ** Access PF/PRISPA and update as appropriate
+     C*
+     C           PAMD      IFGT 0
+     C           PINS      ORGT 0
+     C           PDEL      ORGT 0
+     C                     READ PRISPA                   99
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'PRISP'   DBFILE
+     C                     MOVEL'AUDIT'   DBKEY            ***************
+     C                     Z-ADD6         DBASE            * DB ERROR 06 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     ADD  PNORE     NORE
+     C                     ADD  PDEL      NDEL
+     C                     ADD  PAMD      NAMD
+     C                     ADD  PINS      NINS
+     C                     UPDATPRISPAF
+     C                     END
+     C*
+      ** IF No. of PRICS amends non-zero
+      ** OR No. of PRICS Inserts non-zero
+      ** OR No. of PRICS DELETES non-zero
+      ** Access PF/PRICSA and update as appropriate
+     C*
+     C           SAMD      IFGT 0
+     C           SINS      ORGT 0
+     C           SDEL      ORGT 0
+     C                     READ PRICSA                   99
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'PRICS'   DBFILE
+     C                     MOVEL'AUDIT'   DBKEY            ***************
+     C                     Z-ADD7         DBASE            * DB ERROR 07 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     ADD  SNORE     NORE
+     C                     ADD  SDEL      NDEL
+     C                     ADD  SAMD      NAMD
+     C                     ADD  SINS      NINS
+     C                     UPDATPRICSAF
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      /COPY ZSRSRC,FFFMTZ3
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      /COPY ZSRSRC,FFPRCSZ4
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      /COPY ZSRSRC,FFPRVLZ4
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      /COPY ZSRSRC,ZDATE2Z2
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      /COPY ZSRSRC,ZEDITZ2
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      /COPY ZSRSRC,ZALIGNZ2
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      /COPY ZSRSRC,ZTNLU1Z2
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** DBERR S/R TO TERMINATE PROGRAM WHEN ERROR OCCURS
+      **
+      ** CALLED FROM
+      **
+      ** CALLS NO OTHER SUBROUTINES
+      **
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+      **     Program dump                                                 S01117
+      **     Set U7&U8
+      **     Return
+     C*
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      * /104633/ Change to Array MSG
+      * MSG,3,4,5,6,7,8.
+ Enter*to continue, Cmd/3 to abort
+ Enter*to validate, Cmd/3 to abort, Cmd/10 to accept, Cmd/12 to restartor Roll
+ Enter*to validate,Cmd/3 to abort, Cmd/12 to restart, Roll keys to page
+ Enter*to continue.
+ Enter*to validate, Cmd/10 to accept, Cmd/12 to restart or Roll
+ Enter*to validate, Cmd/12 to restart, Roll keys to page
+**  CPY@
+(c) Finastra International Limited 2001
+** MSG - SCREEN MESSAGES
+OVER THE COUNTER
+*SPOT PRICE*
+Enter to continue: F3=End
+Enter to validate: F3=End   F10=Accept   F12=Restart   Roll keys to page
+Enter to validate: F3=Abort   F12=Restart   Roll keys to page
+Enter to continue
+Enter to validate: F10=Accept   F12=Restart   Roll keys to page
+Enter to validate: F12=Restart   Roll keys to page
+** STAMP - Dummy timestamp                                                                  BUG10490
+0001-01-01-00.00.00.000000                                                                  BUG10490
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

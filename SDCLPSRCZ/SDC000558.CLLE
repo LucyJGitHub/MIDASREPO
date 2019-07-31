@@ -1,0 +1,123 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD FATCA Tools File Allocation Check - Updat')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       CLP/SDC000558 - FATCA Tools Files Allocation Check - Upd    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. CGL177             Date 11Jan16              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CGL132  *CREATE    Date 01May13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL177 - CRS Reporting Phase 2                              */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL132 - FATCA Phase 1 - Customers' Identification and      */
+/*                Classification - Master                            */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&RTCD &PGM &MODE)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2014')
+ 
+             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)
+/**********  DCL        VAR(&IFILE) TYPE(*CHAR) LEN(50) */                                /*CGL177*/
+             DCL        VAR(&IFILE) TYPE(*CHAR) LEN(80)                                   /*CGL177*/
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(7)
+ 
+/* Monitor for any errors and send appropriate message to MOPERQ */
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             SNDMSG     MSG('SDC000558 - FATCA Tools Files +
+                          Allocation Check - Update Mode') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Prepare files to check depending on the tool to call */
+             /* High  Value Account Identification Tool */
+             IF         COND(&PGM *EQ 'SD000109') THEN(DO)
+             CHGVAR     VAR(%SST(&IFILE 1 10)) VALUE('SDFTCSPD')
+             CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDFTNHPD')
+             CHGVAR     VAR(%SST(&IFILE 21 10)) VALUE('SDACRVPD')
+             ENDDO
+ 
+             /* FATCA IGA Update Tool */
+             ELSE       IF COND(&PGM *EQ 'SD000136') THEN(DO)
+             CHGVAR     VAR(%SST(&IFILE 1 10)) VALUE('SDFTCSPD')
+             CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDFTIGPD')
+             ENDDO
+ 
+             /* US Indicia Search Tool */
+             ELSE       IF COND(&PGM *EQ 'SDC000730') THEN(DO)
+             CHGVAR     VAR(%SST(&IFILE 1 10)) VALUE('SDFTCSPD')
+             CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDFTNHPD')
+             ENDDO
+ 
+             /* FATCA Customer Allocation Tool */
+             ELSE       IF COND(&PGM *EQ 'SD000102') THEN(DO)
+             CHGVAR     VAR(%SST(&IFILE 1 10)) VALUE('SDFTCSPD')
+             CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDFTCLPD')
+             ENDDO
+ 
+             /* Normal Customer/Non-Account Holder Classfn Update Tool */
+             ELSE       CMD(IF COND(&PGM *EQ 'SDC000551') THEN(DO))
+             CHGVAR     VAR(%SST(&IFILE 1 10)) VALUE('SDFTCSPD')
+             CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDFTNHPD')
+             CHGVAR     VAR(%SST(&IFILE 21 10)) VALUE('SDNACUPD')
+             ENDDO
+                                                                                          /*CGL177*/
+             /** CRS Customer Type/Subtype Allocation Tool*/                              /*CGL177*/
+             ELSE       IF COND(&PGM *EQ 'SD000302') THEN(DO)                             /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 1 10)) VALUE('SDCRSHPD')                       /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDCRSDPD')                      /*CGL177*/
+             ENDDO                                                                        /*CGL177*/
+                                                                                          /*CGL177*/
+             /** CRS Indicia Search Tool*/                                                /*CGL177*/
+             ELSE       IF COND(&PGM *EQ 'SD000306') THEN(DO)                             /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 1 10)) VALUE('SDCRSDPD')                       /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDCRSNPD')                      /*CGL177*/
+             ENDDO                                                                        /*CGL177*/
+                                                                                          /*CGL177*/
+             /** CRS High  Value Account Identification Tool */                           /*CGL177*/
+             ELSE       IF COND(&PGM *EQ 'SD000311') THEN(DO)                             /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 1 10)) VALUE('SDACRVPD')                       /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDCRSDPD')                      /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 21 10)) VALUE('SDCRSNPD')                      /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 31 10)) VALUE('SDCRSHPD')                      /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 41 10)) VALUE('SDCRNHPD')                      /*CGL177*/
+             ENDDO                                                                        /*CGL177*/
+ 
+             /** CRS Normal Accounts Tool */                                              /*CGL177*/
+             ELSE       IF COND(&PGM *EQ 'SD000315') THEN(DO)                             /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE  1 10)) VALUE('SDCRSDPD')                      /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDCRSNPD')                      /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 21 10)) VALUE('SDCRSHPD')                      /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 31 10)) VALUE('SDCRNHPD')                      /*CGL177*/
+             ENDDO                                                                        /*CGL177*/
+                                                                                          /*CGL177*/
+/* Check FATCA files allocation  */
+             CALL       PGM(SDC000162) PARM(&RTN &IFILE &MODE)
+             IF         COND(&RTN *NE ' ') THEN(CHGVAR VAR(&RTCD) +
+                          VALUE('*LOCK'))
+ 
+             GOTO       CMDLBL(END)
+ 
+ERROR:
+             SNDMSG     MSG('FATCA Tools Files Allocation Check +
+                          ended abnormally.') TOMSGQ(MOPERQ MRUNQ)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+ 
+             ENDPGM

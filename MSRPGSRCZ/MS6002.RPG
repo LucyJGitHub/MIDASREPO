@@ -1,0 +1,442 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Merva/2 - End Incoming Rx Process')
+      *****************************************************************
+      *                                                               *
+      *  Midas - SWIFT Direct Link Module                             *
+      *                                                               *
+      *   MS6002 - Merva/2 version 2 - End Incoming Reception         *
+      *                                                               *
+      *   Written for S01431 - Midas to Merva/2 interface             *
+      *                                                               *
+      *   This program uses IBM Connection/400.  The program library  *
+      *   for this API (ENMRAPI) must be in the library list before   *
+      *   this program is called.                                     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 219242             Date 01Jul03               *
+      *                 219241             Date 01Jul03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 153506             Date 27Jan99               *
+      *                 110533             Date 29Oct97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  219242 - Not possible to create MT103+ payment msg from      *
+      *           non-FT transaction (Recompile)                      *
+      *  219241 - Defaulting of "Details of Charges" assign a         *
+      *           system value (Recompile)                            *
+      *   153506  -  Correct AIX semaphore path                       *
+      *   110533  -  Semaphore path format depends on OS/2 or AIX     *
+      *              flag on ICD                                      *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+      *****************************************************************
+      *                                                               *
+      *   Indicator Usage                                             *
+      *   ---------------                                             *
+      *                                                               *
+      *   01        Fatal API error                                   *
+      *   02        Database error                                    *   110533
+      *   10        APPC started                                      *
+      *                                                               *
+      *   88        *PSSR called                                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *   Notes on the Connection/400 API                             *
+      *   -------------------------------                             *
+      *                                                               *
+      *   1. Connection/400 allows a high level of communication      *
+      *      with the Merva/2 PC via APPC.  All communications are    *
+      *      handled within the API.  Error codes are returned if     *
+      *      API calls fail.                                          *
+      *                                                               *
+      *   2. MSPRFTPD contains profile details for Connection/400.    *
+      *      It is in source file format and contains the following   *
+      *      information:                                             *
+      *                                                               *
+      *      Line 001 Logging level (1..4)                            *
+      *           002 Name of programmer's log file (1)               *
+      *           003 Name of diagnostic log file (2)                 *
+      *           004 Name of *CSI object (in this case MERVA2)       *
+      *           005 Name of message integrity control file (3)      *
+      *           006 System type (ie. AS/400)                        *
+      *                                                               *
+      *      (1)  for this program, MSLOGTPD mbr PLOG                 *
+      *      (2)  for this program, MSLOGTPD mbr DIAG                 *
+      *      (3)  for this program, MSMIPTPD                          *
+      *                                                               *
+      *****************************************************************
+      *
+      /EJECT
+     E                    CPY@    1   1 80               Copyright
+     E                    TABCOD  1  67  4   TABNAR 70   Error narrative
+     E********************NOTF****1***1 70               Narrative        110533
+     E                    NOTF    1   2 70               Narrative        110533
+     E                    ENTNAM      1100                                PROOF
+     E                    PGMNAM      1 20
+     E                    PR          1 10
+      **  Tables and arrays
+      *
+      /EJECT
+     IDSPRF       DS
+     I I            '*LIBL/MSPRFTPD(PRF)'     1  21 PRFNAM
+     I I            0                     B  21  220TERMIN
+      **  API profile name
+      *
+     IDSCLN       DS
+     I                                    B   1   40CLEAN
+      **  Flag for EPM environment
+      *
+     IDSFLTY      DS
+     I                                    B   1   20FLDTY
+      **  Variable for field type
+      *
+     IDSNETW      DS
+     I                                    B   1   20NETW
+      **  Variable for network type
+      *
+     IDSLEN       DS
+     I                                    B   1   20LENGTH
+      **  Variable for message length
+      *
+     IDSRET       DS
+     I                                    B   1   40RETVAL
+      **  Variable for API return code
+      *
+     I*DSTNTN******DS                                                     110533
+     I*I************'\SEM\TNT.SMP'            1  12 SMTNTN                110533
+     I*I************0                     B  13  140TMTNTN                110533
+      ****Termination semaphore                                           110533
+      *                                                                   110533
+     ITEROS2      DS                                                      110533
+     I I            '\SEM\TNT.SMP'            1  12 TOS2N                 110533
+     I I            0                     B  13  140TOS2T                 110533
+      **  Termination semaphore - OS/2                                    110533
+      *                                                                   110533
+     ITERAIX      DS                                                      110533
+     I I            'TNT'                     1   3 TAIXN                 153506
+     I I            0                     B   4   50TAIXT                 153506
+     I*I************'\SEM\TNT'                1   8 TAIXN           110533153506
+     I*I************0                     B   9  100TAIXT           110533153506
+      **  Termination semaphore - AIX                                     110533
+      *                                                                   110533
+     ISDBANK    E DSSDBANKPD                                              110533
+      **  Data structure for bank details table                           110533
+      *                                                                   110533
+     ISDMGME    E DSSDMGMEPD                                              110533
+      **  Data structure for bank details table                           110533
+      *
+     IDSTNT       DS
+     I                                    B   1   40SMTNT
+      **  Termination semaphore handle
+      *
+      *
+     ILDA        UDS                            256                       110533
+     I                                      134 138 DBFILE                110533
+     I                                      139 167 DBKEY                 110533
+     I                                      168 175 DBPGM                 110533
+     I                                      176 1770DBASE                 110533
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   TERM      Termination processing                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C/EJECT
+      *
+      **  Initialise object copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Initialise LDA                                                  110533
+     C           *NAMVAR   DEFN           LDA                             110533
+     C           *LOCK     IN   LDA                                       110533
+     C                     MOVE *BLANKS   DBFILE                          110533
+     C                     MOVE *BLANKS   DBKEY                           110533
+     C                     MOVEL'MS6002'  DBPGM                           110533
+     C                     MOVE *BLANKS   DBASE                           110533
+     C                     OUT  LDA                                       110533
+      *
+      **  MAIN PROCESSING
+      *
+      **  Parameter list: API return code (@RC); error narrative (@NAR)
+     C           *ENTRY    PLIST
+     C                     PARM           @RC     4
+     C                     PARM           @NAR   70
+      *
+      **  Set initial constants
+     C                     MOVE 'NOER'    @RC
+     C                     Z-ADD-1        CLEAN
+     C                     Z-ADD2         NETW
+     C                     Z-ADD2         FLDTY
+     C                     RESETPRFNAM
+     C                     MOVEAPGMNAM    PNAME  20
+     C                     MOVEAENTNAM    ENAME 100
+      *
+      *   Determine if Merva/2 or Merva/AIX from Msg Management ICD       110533
+     C                     CALL 'AOMGMER1'                                110533
+     C                     PARM '*MSG   ' @RTCD   7                       110533
+     C                     PARM '*FIRST ' @OPTN   7                       110533
+     C                     PARM           SDMGME                          110533
+      *                                                                   110533
+     C           @RTCD     IFNE *BLANKS                                   110533
+     C           *LOCK     IN   LDA                                       110533
+     C                     MOVE '002'     DBASE            * * * * * * * *110533
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 002  *110533
+     C                     MOVEL'SDMGMEPD'DBFILE           * * * * * * * *110533
+     C                     OUT  LDA                                       110533
+     C                     MOVE '1'       *IN02                           110533
+     C                     EXSR TERM                                      110533
+     C                     END                             EndIf          110533
+      *                                                                   110533
+      *** ...Parameters... if merva-aix (ie. not merva/2)                 110533
+     C           ENFRMT    IFEQ 'AIX    '                                 110533
+     C                     MOVE 'Y'       CSWAIX  1                       110533
+     C                     ENDIF                                          110533
+      *                                                                   110533
+     C           CSWAIX    IFEQ 'Y'                                       110533
+     C                     MOVELTERAIX    DSTNTN 20                       110533
+     C                     ELSE                                           110533
+     C                     MOVELTEROS2    DSTNTN 20                       110533
+     C                     ENDIF                                          110533
+      *
+      **  Set Merva/2 Connection/400 profile
+     C                     CALL 'QPXXCALL'
+     C                     PARM 'SETPROF' ENAME 100
+     C                     PARM 'ENM4RRPG'ENVID  10
+     C                     PARM 'ENM4RRPG'PNAME  20
+     C                     PARM           DSRET
+     C                     PARM           DSPRF
+      *
+      **  If API return code indicates error, terminate program
+     C           RETVAL    IFNE 0
+     C                     MOVE '01'      @API    2
+     C                     MOVE '1'       *IN01
+     C                     EXSR TERM
+     C                     END                             EndIf
+      *
+      **  Start connection to Merva/2 executer
+     C                     CALL 'QPXXCALL'
+     C                     PARM 'STRTAPPC'ENAME 100
+     C                     PARM 'ENM4RRPG'ENVID  10
+     C                     PARM 'ENM4RRPG'PNAME  20
+     C                     PARM           DSRET
+     C                     PARM 'MS6002'  APPLN  10
+      *
+      **  If API return code indicates error, terminate program
+     C           RETVAL    IFNE 0
+     C                     MOVE '02'      @API
+     C                     MOVE '1'       *IN01
+     C                     EXSR TERM
+     C                     END                             EndIf
+      *
+      **  Set APPC_started=true
+     C                     MOVE '1'       *IN10
+      *
+      **  Open a termination semaphore to access
+      **  that termination semaphore used in MS6020
+     C                     CALL 'QPXXCALL'
+     C                     PARM 'OPNSEM'  ENAME 100
+     C                     PARM 'ENM4RRPG'ENVID  10
+     C                     PARM 'ENM4RRPG'PNAME  20
+     C                     PARM           DSRET
+     C                     PARM           DSTNT
+     C                     PARM           DSTNTN
+      *
+      **  If API return code indicates error, terminate program
+     C           RETVAL    IFNE 0
+     C                     MOVE '03'      @API
+     C                     MOVE '1'       *IN01
+     C                     EXSR TERM
+     C                     END                             EndIf
+      *
+      **  Clear the termination semaphore to end MS6020
+     C                     CALL 'QPXXCALL'
+     C                     PARM 'CLRSEM'  ENAME 100
+     C                     PARM 'ENM4RRPG'ENVID  10
+     C                     PARM 'ENM4RRPG'PNAME  20
+     C                     PARM           DSRET
+     C                     PARM           DSTNT
+      *
+      **  If API return code indicates error, terminate program
+     C           RETVAL    IFNE 0
+     C                     MOVE '04'      @API
+     C                     MOVE '1'       *IN01
+     C                     EXSR TERM
+     C                     END                             EndIf
+      *
+      **  Terminate program
+     C                     EXSR TERM
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  TERM                                           *
+      * Purpose     :  Termination process                            *
+      *                                                               *
+      * Called by   :  MAIN                                           *
+      * Calls       :  Connection/400 API programs (various)          *
+      *****************************************************************
+      *
+     C           TERM      BEGSR
+      *
+      **  If fatal API error...
+     C           *IN01     IFEQ '1'
+      *
+      **  Save reason code for return to calling CL and report
+     C                     MOVELRETVAL    @RC     4
+      *
+      **  If reason code is not 2, use API call REASON to obtain
+      **  information if available
+     C           RETVAL    IFNE 2
+     C                     CALL 'QPXXCALL'
+     C                     PARM 'REASON'  ENAME 100
+     C                     PARM 'ENM4RRPG'ENVID  10
+     C                     PARM 'ENM4RRPG'PNAME  20
+     C                     PARM           DSRET
+      *
+     C           RETVAL    IFNE 0
+     C                     MOVELRETVAL    @RC     4
+     C                     END                             EndIf
+      *
+     C                     END                             EndIf
+      *
+      **  Look up cause of error on table and format message
+      **  (If details not found, return 'not found' message)
+     C           @RC       LOKUPTABCOD    TABNAR         50
+      *
+     C           *IN50     IFEQ '1'
+     C                     MOVELTABNAR    @NAR
+     C                     ELSE
+     C                     MOVELNOTF,1    @NAR
+     C                     END                             EndIf
+      *
+     C                     END                             EndIf
+      *
+      **  If the termination semaphore was opened,
+      **  attempt to close the semaphore
+     C           @API      IFGT '03'
+     C           *IN01     OREQ '0'
+     C                     CALL 'QPXXCALL'
+     C                     PARM 'CLSSEM'  ENAME 100
+     C                     PARM 'ENM4RRPG'ENVID  10
+     C                     PARM 'ENM4RRPG'PNAME  20
+     C                     PARM           DSRET
+     C                     PARM           DSTNT
+     C                     END                             EndIf
+      *
+      **  If APPC started, attempt to end APPC
+     C           *IN10     IFEQ '1'
+     C                     CALL 'QPXXCALL'
+     C                     PARM 'ENDAPPC' ENAME 100
+     C                     PARM 'ENM4RRPG'ENVID  10
+     C                     PARM 'ENM4RRPG'PNAME  20
+     C                     PARM           DSRET
+     C                     END                             EndIf
+      *
+      **  If database error set up parameter for return                   110533
+     C           *IN02     IFEQ '1'                                       110533
+     C                     MOVEL'DBER'    @RC                             110533
+     C                     MOVELNOTF,2    @NAR                            110533
+     C                     END                             EndIf          110533
+      *
+      **  delete EPM environment created by the first call
+     C                     CALL 'QPXXDLTE'
+     C                     PARM           DSCLN
+     C                     PARM 'ENM4RRPG'ENVID  10
+      *
+      **  Terminate and exit program
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR                           TERM
+      /EJECT
+**  CPY@ Object copyright
+(c) Finastra International Limited 2001
+**  TABCOD v TABNAR API return codes against narratives
+0000No error
+0001Problem: Merva/2 system not set up  Action: Start Merva/2 on PS/2
+0002Problem: Error in Merva/2 system    Action: See log file
+0003Problem: Attach failed              Action: See log file
+0004Problem: Detach failed              Action: See log file
+0005Problem: Not attached               Action: Call office
+0006Problem: PS/2 out of memory         Action: Stop some PS/2 jobs
+0007Problem: Error writing trace file   Action: Make space on PS/2
+0008Problem: Error in routing           Action: Call office
+0009Problem: No free slot               Action: Call office
+0101Problem: Queue does not exist       Action: Create MID2MER on PS/
+0102Problem: Queue not defined for API  Action: Change purpose group
+0103Problem: Specified key is entry
+0104Problem: Invalid MRN
+0105Problem: Invalid ISN
+0106Problem: Invalid application name   Action: Call office
+0107Problem: Inavlid data passed for data type SWITCH
+0108Problem: Invalid key type
+0109Problem: No password                Action: Set up on Midas ICD
+0110Problem: No authority               Action: Change profile on ICD
+0111Problem: Trace turned off
+0112Problem: Inavlid field type         Action: Call office
+0113Problem: Inavlid field              Action: Call office
+0114Problem: Field protected
+0115Problem: Error in SWIFT header
+0116Problem: Error in Telex header
+0117Problem: Error in network           Action: Call office
+0118Problem: No user i/d                Action: Set up on Midas ICD
+0119Problem: No function i/d            Action: Call office
+0201Problem: No message locked          Action: Call office
+0202Problem: No message created         Action: Call office
+0203Problem: No message                 Action: Call office
+0204Problem: Message in use             Action: Call office
+0301Problem: Message locked             Action: Call office
+0302Problem: Message not found          Action: Call office
+2110Problem: CSI not found              Action: Ensure CSI is in *LIBL
+2120Problem: CSI not found              Action: Ensure CSI is in *LIBL
+2130Problem: Cannot connect to PS/2 API Action: Call office
+2140Problem: Conversation terminated    Action: Re-start link
+2150Problem: Error in network           Action: Re-start link
+2200Problem: Empty data buffer received Action: Call office
+2900Problem: CPI-C error                Action: Call office
+2999Problem: Communication failure      Action: See log file
+7006Problem: PS/2 API memory problem    Action: Stop some PS/2 jobs
+7012Problem: PS/2 API error             Action: Re-start link
+7013Problem: Decryption problem         Action: Call office
+7014Problem: Decryption problem         Action: Call office
+7015Problem: Verification problem       Action: Call office
+7016Problem: Invalid API request        Action: Call office
+7018Problem: ASCII to EBCDIC problem    Action: Call office
+7019Problem: Message integrity problem  Action: Set PDE; re-start
+7030Problem: Space not created          Action: Call office
+8002Problem: Unable to open log file    Action: Call office
+8003Problem: Unable to close log file   Action: Re-start
+8004Problem: Unable to open log file    Action: Call office
+8005Problem: Unable to close log file   Action: Re-start
+8006Problem: PS/2 memory problem        Action: Stop some PS/2 jobs
+8007Problem: Cannot write log file      Action: Call office
+8008Problem: Cannot write log file      Action: Call office
+8010Problem: Invalid name - SetProfile  Action: Call office
+8011Problem: Profile does not exist     Action: Call office
+8013Problem: Decryption problem         Action: Call office
+8014Problem: Encryption problem         Action: Call office
+8015Problem: Verification problem       Action: Call office
+8016Problem: MAC problem                Action: Call office
+8017Problem: Conversation not started   Action: Call office
+8019Problem: Integrity problem          Action: Call office
+**  NOTF Narrative to be used if error code not found
+Unknown API return code - Call office
+Database in error - see Spool File for this job

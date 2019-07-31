@@ -1,0 +1,85 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Host Integration Layer                                        */
+/*                                                                             */
+/*       MIVW_PERMM - Permissions mapping to BankFusion artefacts              */
+/*                                                                             */
+/*       (c) Finastra International Limited 2011                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CBF023             Date 04Jan17                        */
+/*                      MD023309A          Date 19JnoV3                        */
+/*                      MD019405A          Date 02May13                        *
+/*                      AR1087622          Date 18Apr13                        */
+/*                      AR1097374          Date 26Mar13                        */
+/*                      AR1081565          Date 11Feb13                        */
+/*                      CBF022             Date 16Jul12                        */
+/*                      AR924843           Date 08Mar12                        */
+/*                      AR887374           Date 13Feb12                        */
+/*                      AR907056           Date 03Feb12                        */
+/*                      AR877354           Date 08Dec11                        */
+/*                      AR867565A          Date 21Nov11                        */
+/*                      CBF005   *CREATE   Date 04Jul11                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CBF023 - Soft Delete Feature on Security Related Modules (Recompile)  */
+/*       MD023309A - BFP 3.1 Build 2 Patch 10 Issues (Recompile)               */
+/*       MD019405A - Amended user only updates when clearing T_SECDATA         *
+/*                  (Recompile)                                                *
+/*       AR1087622 - Takes a long time to populate WIP list view for CLIP      */
+/*       AR1097374 - BFP 3.1 Absorption Issues (Recompile)                     */
+/*       AR1081565- "AddRecordEntitlementReferral" artefact is appearing twice */
+/*                  in the Artefacts Permission Audit Report. (Recompile)      */
+/*       CBF022   - BF Infrastructure: Auditability (Recompile)                */
+/*       AR924843 - Filters for 'Branch' Entitlement Type from 'BookingBranch' */
+/*       AR887374 - Dependencies between HIL and Midas views upon restoration  */
+/*       AR907056 - Redelivery of BFMI Schema (Recompile)                      */
+/*       AR877354  - RPG Global Upgrade Issue                                  */
+/*                   (renamed from BFVW_ENTLM to MIVW_ENTLM)                   */
+/*       AR867565A - BFTB_ENTVW renamed to BFVW_ENTLM                          */
+/*       CBF005 - BF Infrastructure: Single Security User Maintenance Profile  */
+/*                                                                             */
+/*******************************************************************************/
+                                                                                :
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+  USRP, MGRP, BRCB, ACA, INDX, ZONE                                             :
+  )                                                                             :
+  AS                                                                            :
+*SELECT UPPER(ENTITLEMENTS.BFUSERNAME) AS USRP,                                 :          AR1087622
+*'0' AS MGRP,                                                                   :          AR1087622
+*ENTITLEMENTS.BFENTITLEMENTVALUE AS BRCB,                                       :          AR1087622
+*MENUITEM.PMACTC AS ACA,                                                        :          AR1087622
+*MENUITEM.PMINDX AS INDX,                                                       :          AR1087622
+*BRANCH.A8ZONE AS ZONE                                                          :          AR1087622
+ SELECT T_PERMM.TPUSRP AS USRP,                                                 :          AR1087622
+ T_PERMM.TPMGRP AS MGRP,                                                        :          AR1087622
+ T_PERMM.TPBRCB AS BRCB,                                                        :          AR1087622
+ T_PERMM.TPACTC AS ACA,                                                         :          AR1087622
+ T_PERMM.TPINDX AS INDX,                                                        :          AR1087622
+ T_PERMM.TPZONE AS ZONE                                                         :          AR1087622
+                                                                                :
+********** FROM BFTB_ENTVW ENTITLEMENTS                                         :          AR867565A
+*FROM*BFVW_ENTLM*ENTITLEMENTS***************************************************: AR867565A AR877354
+*FROM*MIVW_ENTLM*ENTITLEMENTS***************************************************: AR877354 AR1087622
+ FROM T_PERMM                                                                   :          AR1087622
+                                                                                :
+*JOIN*GZSDBRCHPD BRANCH                                                         :          AR1087622
+*******ON ENTITLEMENTS.BFENTITLEMENTVALUE = BRANCH.A8BRCD                       :          AR1087622
+                                                                                :
+*JOIN*MITB_PERMM MENUITEM                                                       :          AR1087622
+*******ON ENTITLEMENTS.BFARTEFACTID = MENUITEM.PMARTF                           :          AR1087622
+                                                                                :
+*WHERE*ENTITLEMENTS.BFENTITLEMENTTYPE*=*'BookingBranch';*************************           AR887374
+*where*ENTITLEMENTS.BFENTITLEMENTTYPE*=*'BookingBranch'************************/:  AR887374 AR924843
+*where*ENTITLEMENTS.BFENTITLEMENTTYPE*=*'Branch'********************************:AR924843  AR1087622
+                                                                                :           AR887374
+ rcdfmt MIVW_PERMM;                                                             :           AR887374
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas HI Permissions Mapping                      ';                     :
+                                                                                :

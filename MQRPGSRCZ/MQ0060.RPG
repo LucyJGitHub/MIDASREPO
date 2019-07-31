@@ -1,0 +1,1276 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ Prod. init. interface-postings slctn')        *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Midas/Q Module                                       *
+     F*                                                               *
+     F*    MQ0060 - PRODUCTION INITIATION INTERFACE PROGRAM           *
+     F*             FOR THE MQPOSTINGS (ACCOUNT MOVEMENTS) SUBSET     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 188501             Date 28Dec01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02Mar99               *
+      *                 S01179             Date 03Nov97               *
+     F*                 CMQ001                  DATE 03NOV97          *
+     F*                 CPK008                  DATE 10JUN97          *
+     F*                 071986                  DATE 09JUN94          *
+     F*                 E22311                  DATE 09AUG90          *
+     F*                 S01182                  DATE 03MAY90          *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  188501 - Remove redundant BSPL section.                      *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+     F*  S01179  -  AS400 CONVERSION. KEYWORD RTGAID IS NOT SUPPORTED *
+     F*             ON AS400. DISPLAY FILE AMENDED SO THAT FUNCTION   *
+     F*             KEYS F1-F24 SET ON INDICATORS 51-74 RESPECTIVELY  *
+     F*             WHEN PRESSED. THESE ARE THEN CHECKED AGAINST THE  *
+     F*             KEYS DEFINED IN MIDASQ FOR EXIT, BYPASS & CHANGE. *
+     F*  CMQ001  -  MidasQ rationalisation - remove SC#071986.        *
+     F*  CPK008  -  DBAR2 Packaging                                   *
+     F*             Remove call to MQ0062 and references to SDBSPL*   *
+     F*  071986  -  CONVERT TO NATIVE AS400                           *
+     F*  E22311  -  CONDITIONING OF DISPLAY ATTR. INCORRECT, CHANGED  *
+     F*             TO BE CONDITIONED ON *IN50 INSTEAD OF *IN30.      *
+     F*  S01182  -  NEW PGM INTRODUCED FOR MIS                        *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F* Description    :
+     F* ~~~~~~~~~~~
+     F* This program is a production initiation interface used in
+     F* conjunction with MIDAS subsets.  It is invoked by MIDAS/Q
+     F* just prior to "initiating" the production of any report defined
+     F* on MIDAS subsets .
+     F*
+     F* When invoked, it checks the content of the 200 byte permanent
+     F* report storage area to determine whether the run-time enquiry
+     F* is to be available for this report.  If so, it prompts the
+     F* user to enter the key-value to be used for this production
+     F* run.
+     F*
+     F* This information is mapped into the 500 byte production run
+     F* user interface area (known in this program as P17#UR), and
+     F* control returns to the calling MIDAS/Q program.
+     F*
+     F* Refer to the MIDAS/Q Technical Guide for further information
+     F* on the use and operation of "Production initiation" interface
+     F* programs.
+     F*
+     F* The programme displays and validates the selection criteria
+     F* during a production run, either from file in Standing Data or
+     F* from the compile time array, or if requested by prompting with a
+     F* question mark, calls other programmes which display all the
+     F* values for that field held on file in Standing Data.
+     F*
+     F/EJECT
+     F* Parameter List
+     F* ~~~~~~~~~~~~~~
+     F* This parameter list is the standard type used by a "production
+     F* initiation interface" program.  It is described in more detail
+     F* in the MIDAS/Q Technical Guide.
+     F*
+     F* Symbolic
+     F*  Name    Type   Length   Description
+     F* ~~~~~~   ~~~~   ~~~~~~   ~~~~~~~~~~~
+     F* TIF#RC   Char      1     Return code
+     F* TIF#RN   Packed  7,0     Run number assigned to production run
+     F* TIF#NM   Char     10     Report name
+     F* TIF#RD   Char     40     Report description
+     F* P17#IA   Char    200     Temp copy of 200 byte permanent area
+     F* P17#UR   Char    500     Temp 500 byte storage area
+     F* TIF#NP   Packed  7,0     Number of user parameters passed
+     F* UPRM01   data    n/a     User parameter 1
+     F* UPLN01   Packed 15,5     Length of user parameter 1
+     F* UPRM02   data    n/a     User parameter 2
+     F* UPLN02   Packed 15,5     Length of user parameter 2
+     F* UPRM03   data    n/a     User parameter 3
+     F* UPLN03   Packed 15,5     Length of user parameter 3
+     F* UPRM04   data    n/a     User parameter 4
+     F* UPLN04   Packed 15,5     Length of user parameter 4
+     F* UPRM05   data    n/a     User parameter 5
+     F* UPLN05   Packed 15,5     Length of user parameter 5
+     F/EJECT
+     F* File declarations
+     F* ~~~~~~~~~~~~~~~~~
+     FMQ0060DFCF  E                    WORKSTN                        UC
+     F***********                                   KINFDS DINFDS         S01179
+     FSDBANKL1IF  E                    DISK                           UC
+     FSDCURRL1IF  E           K        DISK                           UC
+     F*SDBSPLL1IF**E**********K        DISK                           UC  CPK008
+     FSDACODL1IF  E           K        DISK                           UC
+     FSNAME   IF  E           K        DISK                           UC
+     FSDBOOKL1IF  E           K        DISK                           UC
+      *
+      ** Profit Centre will be added when full Multibranching takes place.
+     F***SDPROFL1IF  E           K        DISK                           UC
+     F/EJECT
+      *
+      **   FUNCTION OF INDICATORS
+      *
+      *   26          Validate command key from display file.
+      *
+      *   30          Changes have taken place on the confirmation screen.
+      *   31          Message Subfile end indicator.
+      *
+      *   40          File open indicator SDBANKL1
+      *   41          File open indicator SDCURRL1
+      ****42**********File open indicator SDBSPLL1                        CPK008
+      *   43          File open indicator SDACODL1
+      *   44          File open indicator SNAME
+      *   45          File open indicator SDBOOKL1
+      *   46          File open indicator SDprofL1
+      *
+      *   50          General screen error indicator
+      *
+      *   51          Field error indicator FLD001 - Start Date
+      *   52          Field error indicator FLD002 - End Date
+      *   53          Field error indicator FLD003 - Currency Code
+      *   54          Field error indicator FLD004 - Account Section
+      ****55*****     Field error indicator FLD005 - BS/PL Code           188501
+      *   56          Field error indicator FLD006 - Account Type
+      *   57          Field error indicator FLD007 - Account Code
+      *   58          Field error indicator FLD008 - Cust. Short Name
+      *   59          Field error indicator FLD009 - Orig. Counterparty
+      *   60          Field error indicator FLD010 - Book Code
+      *
+      *   63          Field error indicator FLD013 - Profit Centre Code
+      *
+      ****65*****     Field error indicator FLD015 - BS/PL Set Number     188501
+      *
+      *   70          Screen cannot be output (job done in batch)
+      *
+      ****75*****     Field error indicator FLD025 - BS/PL Indicator(B or 188501
+      ****76*****     Field error indicator FLD035 - BS/PL DR/CR Ind(D or 188501
+      *
+      *   80          Array index indicator FLD008 - Cust. Short Name
+      *   81          Array index indicator FLD009 - Orig.Counterparty
+      *
+      *   82          Look up indicator FLD008 - A/C Section
+      *   83          Look up indicator FLD009 - A/C Type
+      *
+      *   90          Record not found on file SDBANKL1
+      *   91          Record not found on file SDCURRL1 - key FLD003
+      ****92**********Record not found on file SDBSPLL1 - key FLD005      CPK008
+      *   93          Record not found on file SDACODL1 - key FLD007
+      *   94          Record not found on file SNAME    - key FLD008
+      *   95          Record not found on file SNAME    - key FLD009
+      *   96          Record not found on file SDBOOKL1 - key FLD010
+      *   97          Record not found on file SDprofL1 - key FLD013
+      *
+     F/EJECT
+     E** Array declarations
+     E** Copyright array
+     E                    CPY@    1   1 80
+     E*
+     E** Array for cumulative days in a four year period.
+     E                    @YR     4   4  4 0
+     E*
+     E** Array for cumulative days in a year, by month.
+     E                    @MT    13  13  3 0
+     E*
+     E** Array of days in a month.
+     E                    @DY    12  12  2 0
+     E*
+      ** Array of valid account sections
+     E                    @ACC    1   8  2
+     E*
+      ** Array of valid account types
+     E                    @ACT    1   5  1
+     E*
+     E** Array of customer short name
+     E                    KEYA       10  1
+     E*
+     E** Array of counterparty short name
+     E                    KEYB       10  1
+     E/EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I* Data structure specifications
+     I* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     I*
+     I* P17#UR - 500 byte temporary report storage area
+     I*
+     IP17#UR      DS                            500
+     I                                        1   50DUMYWK
+     I                                        6  100DUMYWR
+     I                                       11  13 DUMY03
+     I                                       14  15 DUMY04
+     I**********                             16  19 DUMY05                188501
+     I**********                             20  20 DUMY06                188501
+     I**********                             21  24 DUMY07                188501
+     I**********                             25  300DUMY08                188501
+     I**********                             31  360DUMY09                188501
+     I**********                             37  38 DUMY10                188501
+     I**********                             39  40 DUMY11                188501
+     I**********                             41  42 DUMY12                188501
+     I**********                             47  520DUMY01                188501
+     I**********                             53  580DUMY02                188501
+     I                                       16  16 DUMY06                188501
+     I                                       17  20 DUMY07                188501
+     I**********                             21  260DUMY08                             188501 CSD027
+     I**********                             27  320DUMY09                             188501 CSD027
+     I                                       21  26 DUMY08                                    CSD027
+     I                                       27  32 DUMY09                                    CSD027
+     I                                       33  34 DUMY10                188501
+     I                                       35  36 DUMY11                188501
+     I                                       37  38 DUMY12                188501
+     I                                       43  480DUMY01                188501
+     I                                       49  540DUMY02                188501
+     I**********                             59  59 DUMY15                188501
+     I**********                             60  60 DUMY25                188501
+     I**********                             61  61 DUMY35                188501
+     I*
+     I**File*information*data structure - display file                    S01179
+     I*
+     I*DINFDS*****DS                                                      S01179
+     I**************************************287 288 CMDKEY                071986
+     I***********                           369 369 KEY            071986 CMQ001
+     I*
+     I* System definition data area - O#XA01
+     I*
+     IO#XA01      DS                           1000
+      *
+      ** Bring in the system definition block
+      /COPY O#XP04,O#SDBLOCKP
+      *
+      *****Define*returned command key as named constant           071986 CMQ001
+      ***********                                                  071986 CMQ001
+     I***********   X'31'                 C         F01            071986 CMQ001
+     I***********   X'32'                 C         F02            071986 CMQ001
+     I***********   X'33'                 C         F03            071986 CMQ001
+     I***********   X'34'                 C         F04            071986 CMQ001
+     I***********   X'35'                 C         F05            071986 CMQ001
+     I***********   X'36'                 C         F06            071986 CMQ001
+     I***********   X'37'                 C         F07            071986 CMQ001
+     I***********   X'38'                 C         F08            071986 CMQ001
+     I***********   X'39'                 C         F09            071986 CMQ001
+     I***********   X'3A'                 C         F10            071986 CMQ001
+     I***********   X'3B'                 C         F11            071986 CMQ001
+     I***********   X'3C'                 C         F12            071986 CMQ001
+     I***********   X'B1'                 C         F13            071986 CMQ001
+     I***********   X'B2'                 C         F14            071986 CMQ001
+     I***********   X'B3'                 C         F15            071986 CMQ001
+     I***********   X'B4'                 C         F16            071986 CMQ001
+     I***********   X'B5'                 C         F17            071986 CMQ001
+     I***********   X'B6'                 C         F18            071986 CMQ001
+     I***********   X'B7'                 C         F19            071986 CMQ001
+     I***********   X'B8'                 C         F20            071986 CMQ001
+     I***********   X'B9'                 C         F21            071986 CMQ001
+     I***********   X'BA'                 C         F22            071986 CMQ001
+     I***********   X'BB'                 C         F23            071986 CMQ001
+     I***********   X'BC'                 C         F24            071986 CMQ001
+      ***********                                                  071986 CMQ001
+     C/EJECT
+     C* Parameter list declaration
+     C* ~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           TIF#RC  1        Return code
+     C                     PARM           TIF#RN  70       Run number
+     C                     PARM           TIF#NM 10        Report name
+     C                     PARM           TIF#RD 40        Report title
+     C                     PARM           P17#IA200        200 byte area
+     C                     PARM           P17#UR           500 byte area
+     C                     PARM           TIF#NP  70       No.user params
+     C                     PARM           UPRM01  1        User param 1
+     C                     PARM           UPLN01 155       Length param 1
+     C                     PARM           UPRM02  1        User param2
+     C                     PARM           UPLN02 155       Length param 2
+     C                     PARM           UPRM03  1        User param 3
+     C                     PARM           UPLN03 155       Length param 3
+     C                     PARM           UPRM04  1        User param 4
+     C                     PARM           UPLN04 155       Length param 4
+     C                     PARM           UPRM05  1        User param 5
+     C                     PARM           UPLN05 155       Length param 5
+     C/EJECT
+     C* Program mainline
+     C* ~~~~~~~~~~~~~~~~
+      *
+      ** Initialise return code...
+     C                     MOVE 'P'       TIF#RC
+      *
+      ** Open display file (if error, then must be batch job so
+      ** ignore request)...
+      *
+     C                     OPEN MQ0060DF               70
+     C           *IN70     IFNE '1'
+      *
+      ** Retrieve MIDAS/Q system definition block...
+     C           *NAMVAR   DEFN           O#XA01
+     C                     IN   O#XA01
+     C                     MOVELO#XA01    O#SDBK
+      *
+      ** Enable installation defined command keys required in this pgm..
+     C                     Z-ADDCEX       I       30       Exit
+     C                     MOVE '1'       *IN,I
+     C                     Z-ADDCBY       I                Bypass
+     C                     MOVE '1'       *IN,I
+      *
+      ** Set up Subfile Programme Message Queue.
+     C                     MOVEL'*'       MQPGMQ
+      *
+      **  Set on Message Subfile end indicator.
+     C                     MOVE '1'       *IN31
+      *
+      ** Read Installation Control Record to obtain run date.
+     C           *IN40     IFEQ '0'
+     C                     MOVE '1'       *IN40
+     C                     OPEN SDBANKL1
+     C                     READ SDBANKL1                 90
+      *
+      ** DB error if record not found.
+     C           *IN90     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+      ** Put run date in 'END' date
+     C                     ELSE
+     C                     MOVE BJRDNB    SSDAYN
+     C                     MOVE BJRDNB    @WRK02  50
+     C                     MOVE BJDFIN    SSDFMT
+      *
+     C                     CALL 'ZA0140'
+     C                     PARM           SSDAYN  50
+     C                     PARM           SSDFMT  1
+     C                     PARM           SSDATE  60
+     C                     PARM           SSDATA  7
+     C                     PARM           SSRTN   1
+     C                     PARM           SSDAT8  80
+      *
+     C                     MOVE SSDATE    FLD002
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** Prompt for postings selection for this production run....
+      *
+     C                     WRITEMQ0060F1
+     C                     WRITEMQ0060F9
+      *                                                                   E22311
+      ** Switch on indicator *IN50 for first screen display               E22311
+     C                     MOVE '1'       *IN50                           E22311
+      *
+      ** Process screen until no errors or request
+     C           *IN50     DOUEQ'0'
+     C           *IN30     ANDEQ'0'
+     C           *IN26     OREQ '1'
+      *
+     C                     MOVE @WRK01    DUMYWK
+     C                     MOVE @WRK02    DUMYWR
+     C                     MOVE FLD001    DUMY01
+     C                     MOVE FLD002    DUMY02
+     C                     MOVE FLD003    DUMY03
+     C                     MOVE FLD004    DUMY04
+     C**********           MOVE FLD005    DUMY05                          188501
+     C                     MOVE FLD006    DUMY06
+     C                     MOVE FLD007    DUMY07
+     C                     MOVE @WRK08    DUMY08
+     C                     MOVE @WRK09    DUMY09
+     C                     MOVE FLD010    DUMY10
+     C                     MOVE FLD011    DUMY11
+     C                     MOVE FLD012    DUMY12
+     C**********           MOVE FLD015    DUMY15                          188501
+     C**********           MOVE FLD025    DUMY25                          188501
+     C**********           MOVE FLD035    DUMY35                          188501
+     C                     MOVEL*BLANKS   PROMPT
+      *
+      ** Write to message subfile.
+     C                     WRITEMQ0060C0
+      *
+      ** Display screen for selection of values.
+     C                     EXFMTMQ0060F2
+      *
+      ** Clear Programme Message Queue.
+     C           *IN50     IFEQ '1'
+     C                     CALL 'ZA0250'
+     C                     END
+      *
+      ** ...if exit or bypass command keys used, set return code...
+     C           *IN26     IFEQ '1'
+     C***********          EXSR DETKEY                             071986 CMQ001
+      *                                                                   S01179
+      * ...set up CMDKEY to search through indicators 51-74 (these are    S01179
+      * set on when function keys F1-F24 respectively are pressed)...     S01179
+      *                                                                   S01179
+     C                     Z-ADD51        CMDKEY  20                      S01179
+      *                                                                   S01179
+      * ...Find out which function key was pressed...                     S01179
+      *                                                                   S01179
+     C           '1'       LOKUP*IN,CMDKEY               25               S01179
+      *                                                                   S01179
+      * ...Subtract 30 from the number of the indicator to get the        S01179
+      * number of the function key which was pressed...                   S01179
+      *                                                                   S01179
+     C                     SUB  50        CMDKEY  20                      S01179
+      *                                                                   S01179
+     C***********CMDKEY    IFEQ O#SCEX                                    S01179
+     C           CMDKEY    IFEQ CEX                                       S01179
+     C                     MOVE 'E'       TIF#RC
+     C                     ELSE
+     C***********CMDKEY    IFEQ O#SCBY                                    S01179
+     C           CMDKEY    IFEQ CBY                                       S01179
+     C                     MOVE 'B'       TIF#RC
+     C                     END
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** Switch off field error indicators and validate entries.
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C                     MOVE '0'       *IN52
+     C                     MOVE '0'       *IN53
+     C                     MOVE '0'       *IN54
+     C**********           MOVE '0'       *IN55                           188501
+     C                     MOVE '0'       *IN56
+     C                     MOVE '0'       *IN57
+     C                     MOVE '0'       *IN58
+     C                     MOVE '0'       *IN59
+     C                     MOVE '0'       *IN60
+     C**********           MOVE '0'       *IN65                           188501
+     C**********           MOVE '0'       *IN75                           188501
+     C**********           MOVE '0'       *IN76                           188501
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN81
+      *
+      ** 1. Check whether a specific period has been requested.
+      *
+      ** a) Start date
+      *
+     C           FLD001    IFNE *ZEROS
+      *
+      **    Date to day number conversion & validation
+     C                     MOVE FLD001    @@DATE  60
+     C                     MOVE BJDFIN    @@DFMT  1
+      *
+     C                     EXSR ZA0270
+      *
+      * Now have day no. from SR as @@DAYN for Start Date
+     C                     MOVE @@DAYN    @WRK01  50
+      *
+      ** Check the return code for a valid Start Date entry and ensure
+      ** that Start Date is less than or equal to the End Date.
+     C           @@RTN     IFEQ '1'
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN51
+      *
+      **  Set up error output for screen.
+     C                     CALL 'MQC0060'
+     C                     PARM 'PO06001' @MSGID 10
+     C                     PARM *BLANKS   @MSDTA 50
+     C                     END
+      *
+     C                     END
+      *
+      ** b) End date (if not the run date)
+      *
+     C           FLD002    IFNE SSDATE
+      *
+     C                     MOVE FLD002    @@DATE
+     C                     MOVE BJDFIN    @@DFMT
+      *
+     C                     EXSR ZA0270
+      *
+      * Now have day no. from SR as @@DAYN for End Date
+     C                     MOVE @@DAYN    @WRK02
+      *
+      ** Check the return code for a valid date entry and ensure
+      ** that Start Date is less than or equal to the End Date.
+     C           @@RTN     IFEQ '1'
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN52
+      *
+      **  Set up error output for screen.
+     C                     CALL 'MQC0060'
+     C                     PARM 'PO06002' @MSGID
+     C                     PARM *BLANKS   @MSDTA
+     C                     END
+      *
+     C                     END
+      *
+      ** Ensure that Start Date is less than or equal to the End Date.
+     C           @WRK01    IFGT @WRK02
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN51
+      *
+      **  Set up error output for screen.
+     C                     CALL 'MQC0060'
+     C                     PARM 'PO06011' @MSGID 10
+     C                     PARM *BLANKS   @MSDTA
+     C                     END
+      *
+      ** 2. Check Currency field
+      *
+     C           FLD003    IFNE *BLANKS
+      *
+      ** a) Either a prompt has been requested
+     C                     MOVEL*BLANKS   PROMPT  1
+     C                     MOVELFLD003    PROMPT
+     C           PROMPT    IFEQ '?'
+     C                     CALL 'MQ0061'
+     C                     PARM           FLD003
+      ** b) or a specific curreny
+     C                     ELSE
+     C           *IN41     IFEQ '0'
+     C                     MOVE '1'       *IN41
+     C                     OPEN SDCURRL1
+     C                     END
+     C           FLD003    CHAINSDCURRL1             91
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN53
+      *
+      **  Set up error output for screen.
+     C                     MOVEL*BLANKS   @MSDTA
+     C                     MOVELFLD003    @MSDTA
+     C                     CALL 'MQC0060'
+     C                     PARM 'PO06003' @MSGID
+     C                     PARM           @MSDTA
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** 3. Account Section
+     C           FLD004    IFNE *BLANKS
+      *
+      ** a) Either a prompt has been requested
+     C                     MOVEL*BLANKS   PROMPT
+     C                     MOVELFLD004    PROMPT
+     C           PROMPT    IFEQ '?'
+     C                     CALL 'MQ0065'
+     C                     PARM           FLD004
+      *
+      ** b) or a specific Account Section
+     C                     ELSE
+     C           FLD004    LOKUP@ACC                     82
+      *
+     C           *IN82     IFEQ '0'
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN54
+      *
+      **  Set up error output for screen.
+     C                     MOVEL*BLANKS   @MSDTA
+     C                     MOVELFLD004    @MSDTA
+     C                     CALL 'MQC0060'
+     C                     PARM 'PO06004' @MSGID
+     C                     PARM           @MSDTA
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** 4. Check Balance Sheet / Profit & Loss Code, Set No., & Indicator
+     C********** FLD005    IFNE *BLANKS                                   188501
+     C********** FLD015    ORNE *BLANKS                                   188501
+     C********** FLD025    ORNE *BLANKS                                   188501
+      **********                                                          188501
+      **********er a prompt has been requested                            188501
+     C**********           MOVEL*BLANKS   PROMPT                          188501
+     C**********           MOVELFLD005    PROMPT                          188501
+     C********** PROMPT    IFEQ '?'                                       188501
+     C********** FLD015    OREQ '?'                                       188501
+     C********** FLD025    OREQ '?'                                       188501
+      **********                                                          188501
+     C**********           MOVEL*BLANKS   PROMPT                          188501
+     C**********           MOVEL'?'       PROMPT                          188501
+      **********                                                          188501
+     C*********************CALL 'MQ0062'                                  CPK008
+     C*********************PARM           FLD005                          CPK008
+     C*********************PARM           FLD015                          CPK008
+     C*********************PARM           FLD025                          CPK008
+      *
+      ** b) or a specific BS/PL code, Set No., & Indicator
+     C**********           ELSE                                           188501
+     C********** *IN42     IFEQ '0'                                       188501
+     C**********           MOVE '1'       *IN42                           188501
+     C*********************OPEN SDBSPLL1                                  CPK008
+     C**********           END                                            188501
+      **********                                                          188501
+      *********************                                               CPK008
+     C***********BSPLKY****KLIST                                          CPK008
+     C*********************KFLD           FLD005                          CPK008
+     C*********************KFLD           FLD015                          CPK008
+     C*********************KFLD           FLD025                          CPK008
+      **********                                                          188501
+     C***********BSPLKY****CHAINSDBSPLL1             92                   CPK008
+      **********                                                          188501
+     C************IN92*****IFEQ '1'                                       CPK008
+     C*********************MOVE '1'       *IN50                           CPK008
+     C*********************MOVE '1'       *IN55                           CPK008
+      **********                                                          188501
+      **  Set up error output for screen.
+     C*********************MOVEL*BLANKS   @MSDTA                          CPK008
+     C*********************MOVELFLD005    @MSDTA                          CPK008
+     C*********************CALL 'MQC0060'                                 CPK008
+     C*********************PARM 'PO06005' @MSGID                          CPK008
+     C*********************PARM           @MSDTA                          CPK008
+      *********************                                               CPK008
+     C*********************MOVE '1'       *IN65                           CPK008
+      *********************                                               CPK008
+      ****Set*up*error*output for screen.                                 CPK008
+     C*********************MOVEL*BLANKS   @MSDTA                          CPK008
+     C*********************MOVELFLD015    @MSDTA                          CPK008
+     C*********************CALL 'MQC0060'                                 CPK008
+     C*********************PARM 'PO06015' @MSGID                          CPK008
+     C*********************PARM           @MSDTA                          CPK008
+      *********************                                               CPK008
+     C*********************MOVE '1'       *IN75                           CPK008
+      *********************                                               CPK008
+      ****Set*up*error*output for screen.                                 CPK008
+     C*********************MOVEL*BLANKS   @MSDTA                          CPK008
+     C*********************MOVELFLD025    @MSDTA                          CPK008
+     C*********************CALL 'MQC0060'                                 CPK008
+     C*********************PARM 'PO06025' @MSGID                          CPK008
+     C*********************PARM           @MSDTA                          CPK008
+     C*********************END                                            CPK008
+      **********                                                          188501
+     C**********           END                                            188501
+      *
+      **    Check the Credit/Debit indicator for BSPL Code
+     C********** FLD005    IFNE *BLANKS                                   188501
+     C********** FLD015    ORNE *BLANKS                                   188501
+     C********** FLD025    ORNE *BLANKS                                   188501
+      **********                                                          188501
+     C********** FLD035    IFEQ *BLANKS                                   188501
+     C**********           MOVE '1'       *IN76                           188501
+      **********                                                          188501
+      **  Set up error output for screen.
+     C**********           CALL 'MQC0060'                                 188501
+     C**********           PARM 'PO06035' @MSGID                          188501
+     C**********           PARM *BLANKS   @MSDTA                          188501
+      **********                                                          188501
+     C**********           ELSE                                           188501
+      **********                                                          188501
+     C********** FLD035    IFNE 'C'                                       188501
+     C********** FLD035    ANDNE'D'                                       188501
+      **********                                                          188501
+     C********** FLD035    IFEQ '?'                                       188501
+     C**********           MOVEL*BLANKS   PROMPT                          188501
+     C**********           MOVEL'?'       PROMPT                          188501
+     C**********           END                                            188501
+      **********                                                          188501
+     C**********           MOVE '1'       *IN76                           188501
+      **********                                                          188501
+      **  Set up error output for screen.
+     C**********           CALL 'MQC0060'                                 188501
+     C**********           PARM 'PO06036' @MSGID                          188501
+     C**********           PARM *BLANKS   @MSDTA                          188501
+     C**********           END                                            188501
+      *
+     C**********           END                                            188501
+      *
+     C**********           END                                            188501
+      **********                                                          188501
+     C**********           END                                            188501
+      *
+      ** 5. Account Type
+     C           FLD006    IFNE *BLANKS
+      ** a) Either a prompt has been requested
+     C                     MOVEL*BLANKS   PROMPT
+     C                     MOVELFLD006    PROMPT
+     C           PROMPT    IFEQ '?'
+     C                     CALL 'MQ0066'
+     C                     PARM           FLD006
+      ** b) or a specific Account Section
+     C                     ELSE
+     C           FLD006    LOKUP@ACT                     83
+      *
+     C           *IN83     IFEQ '0'
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN56
+      *
+      **  Set up error output for screen.
+     C                     MOVEL*BLANKS   @MSDTA
+     C                     MOVELFLD006    @MSDTA
+     C                     CALL 'MQC0060'
+     C                     PARM 'PO06006' @MSGID
+     C                     PARM           @MSDTA
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** 6. Check Account Code
+     C           FLD007    IFNE *BLANKS
+      ** a) Either a prompt has been requested
+     C                     MOVEL*BLANKS   PROMPT
+     C                     MOVELFLD007    PROMPT
+     C           PROMPT    IFEQ '?'
+     C                     CALL 'MQ0064'
+     C                     PARM           FLD007
+      ** b) or a specific Account Code
+     C                     ELSE
+     C           *IN43     IFEQ '0'
+     C                     MOVE '1'       *IN43
+     C                     OPEN SDACODL1
+     C                     END
+     C           FLD007    CHAINSDACODL1             93
+      *
+     C           *IN93     IFEQ '1'
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN57
+      *
+      **  Set up error output for screen.
+     C                     MOVEL*BLANKS   @MSDTA
+     C                     MOVELFLD007    @MSDTA
+     C                     CALL 'MQC0060'
+     C                     PARM 'PO06007' @MSGID
+     C                     PARM           @MSDTA
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** 7. Check Customer Short Name
+     C           FLD008    IFNE *BLANKS
+      ** a) Either a prompt has been requested
+     C                     MOVEL*BLANKS   PROMPT
+     C                     MOVELFLD008    PROMPT
+      *
+     C                     MOVEAFLD008    KEYA
+     C                     Z-ADD1         X       20
+     C           *IN80     DOUEQ'1'
+      *
+      * Call shortname enquiry
+     C           KEYA,X    IFEQ '?'
+     C                     MOVEA*BLANKS   KEYA,X
+     C                     MOVEAKEYA      FLD008
+     C                     CALL 'MQ0067'
+     C                     PARM           FLD008
+     C**********           PARM           @WRK08  60                                          CSD027
+     C                     PARM           @WRK08  6                                           CSD027
+     C                     PARM 'C'       HEAD    1
+      *
+      * Redisplay screen with selected shortname
+     C                     END
+      *
+     C                     ADD  1         X
+     C           X         IFGT 10
+     C                     MOVE '1'       *IN80
+     C                     END
+     C                     END
+      *
+      ** b) or a specific Short Name
+     C           *IN80     IFEQ '1'
+     C           *IN44     IFEQ '0'
+     C                     MOVE '1'       *IN44
+     C                     OPEN SNAME
+     C                     END
+     C           FLD008    CHAINSNAME                94
+      *
+     C           *IN94     IFEQ '1'
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN58
+      *
+      **  Set up error output for screen.
+     C                     MOVEL*BLANKS   @MSDTA
+     C                     MOVELFLD008    @MSDTA
+     C                     CALL 'MQC0060'
+     C                     PARM 'PO06008' @MSGID
+     C                     PARM           @MSDTA
+      *
+     C                     ELSE
+     C                     MOVE CNUM      @WRK08
+     C                     END
+      *
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   @WRK08
+      *
+     C                     END
+      *
+      ** 8. Check Counterparty Short Name
+     C           FLD009    IFNE *BLANKS
+      ** a) Either a prompt has been requested
+     C                     MOVEL*BLANKS   PROMPT
+     C                     MOVELFLD009    PROMPT
+      *
+     C                     MOVEAFLD009    KEYB
+     C                     Z-ADD1         Y       20
+     C           *IN81     DOUEQ'1'
+      *
+      ** Call shortname enquiry
+     C           KEYB,Y    IFEQ '?'
+     C                     MOVEA*BLANKS   KEYB,Y
+     C                     MOVEAKEYB      FLD009
+     C                     CALL 'MQ0067'
+     C                     PARM           FLD009
+     C**********           PARM           @WRK09  60                                          CSD027
+     C                     PARM           @WRK09  6                                           CSD027
+     C                     PARM 'A'       HEAD
+      *
+      ** Redisplay screen with selected shortname
+     C                     END
+      *
+     C                     ADD  1         Y
+     C           Y         IFGT 10
+     C                     MOVE '1'       *IN81
+     C                     END
+     C                     END
+      ** b) or a specific Counterparty Name
+     C           *IN81     IFEQ '1'
+     C           *IN44     IFEQ '0'
+     C                     MOVE '1'       *IN44
+     C                     OPEN SNAME
+     C                     END
+     C           FLD009    CHAINSNAME                95
+      *
+     C           *IN95     IFEQ '1'
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN59
+      *
+      **  Set up error output for screen.
+     C                     MOVEL*BLANKS   @MSDTA
+     C                     MOVELFLD009    @MSDTA
+     C                     CALL 'MQC0060'
+     C                     PARM 'PO06009' @MSGID
+     C                     PARM           @MSDTA
+      *
+     C                     ELSE
+     C                     MOVE CNUM      @WRK09
+     C                     END
+      *
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   @WRK09
+      *
+     C                     END
+      *
+      ** 9. Check Book Code
+     C           FLD010    IFNE *BLANKS
+      ** a) Either a prompt has been requested
+     C                     MOVEL*BLANKS   PROMPT
+     C                     MOVELFLD010    PROMPT
+     C           PROMPT    IFEQ '?'
+     C                     CALL 'MQ0063'
+     C                     PARM           FLD010
+      ** b) or a specific Book Code
+     C                     ELSE
+     C           *IN45     IFEQ '0'
+     C                     MOVE '1'       *IN45
+     C                     OPEN SDBOOKL1
+     C                     END
+     C           FLD010    CHAINSDBOOKL1             96
+      *
+     C           *IN96     IFEQ '1'
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN60
+      *
+      **  Set up error output for screen.
+     C                     MOVEL*BLANKS   @MSDTA
+     C                     MOVELFLD010    @MSDTA
+     C                     CALL 'MQC0060'
+     C                     PARM 'PO06010' @MSGID
+     C                     PARM           @MSDTA
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** 9. Check transaction types / subtypes
+      ** There is no programme validation for these two fields.
+     C                     MOVEL*BLANKS   PROMPT
+     C                     MOVELFLD011    PROMPT
+     C                     MOVEL*BLANKS   FLDTST  1
+     C                     MOVELFLD012    FLDTST
+      *
+     C           FLDTST    IFEQ '?'
+     C           PROMPT    OREQ '?'
+      *
+     C                     EXFMTMQ0060F3
+      *
+     C           PROMPT    IFEQ '?'
+     C                     MOVE *BLANKS   FLD011
+     C                     END
+      *
+     C           FLDTST    IFEQ '?'
+     C                     MOVE *BLANKS   FLD012
+     C                     MOVEL'?'       PROMPT
+     C                     END
+      *
+      ** ...if exit or bypass command keys used, set return code...
+     C           *IN26     IFEQ '1'
+     C***********          EXSR DETKEY                             071986 CMQ001
+     C***********CMDKEY    IFEQ O#SCEX                                    S01179
+     C           CMDKEY    IFEQ CEX                                       S01179
+     C                     MOVE 'E'       TIF#RC
+     C                     ELSE
+     C***********CMDKEY    IFEQ O#SCBY                                    S01179
+     C           CMDKEY    IFEQ CBY                                       S01179
+     C                     MOVE 'B'       TIF#RC
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      ** 11. Check Profit Centre Code - Code to be added for Profit Centre
+      *
+      ** Test for any changed input field values
+     C           @WRK01    IFNE DUMYWK
+     C           @WRK02    ORNE DUMYWR
+     C           FLD001    ORNE DUMY01
+     C           FLD002    ORNE DUMY02
+     C           FLD003    ORNE DUMY03
+     C           FLD004    ORNE DUMY04
+     C********** FLD005    ORNE DUMY05                                    188501
+     C           FLD006    ORNE DUMY06
+     C           FLD007    ORNE DUMY07
+     C           @WRK08    ORNE DUMY08
+     C           @WRK09    ORNE DUMY09
+     C           FLD010    ORNE DUMY10
+     C           FLD011    ORNE DUMY11
+     C           FLD012    ORNE DUMY12
+     C***********FLD013    ORNE DUMY13
+     C********** FLD015    ORNE DUMY15                                    188501
+     C********** FLD025    ORNE DUMY25                                    188501
+     C********** FLD035    ORNE DUMY35                                    188501
+     C           PROMPT    ORNE *BLANKS
+     C                     MOVE '1'       *IN30
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     SETON                     LR
+     C                     RETRN
+     C/EJECT
+     C****************************************************************
+     C*
+     C           ZA0270    BEGSR                           ZA0270
+     C*
+     C*
+     C**  INITIALISATION PROCESSING
+     C                     EXSR #A
+     C*
+     C**  MAIN PROCESSING
+     C                     EXSR #B
+     C*
+     C           ZA9       ENDSR                           ZA9
+     C/EJECT
+     C****************************************************************
+     C*  INDEX TO SUBROUTINES - LISTED ACCORDING TO USAGE            *
+     C*                                                              *
+     C*                       1) #A       - INITIALISE WORK FIELDS   *
+     C*                       2) #B       - MAIN PROCESS             *
+     C*                       3) #BA      - VALIDATION OF PARAMETERS *
+     C*                       4) #BB      - CALCULATION OF NUMBER OF *
+     C*                                     DAYS                     *
+     C****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*  SUBROUTINE - #A     INITIAL PROCESS                         *
+     C*                                                              *
+     C*                      INITIALISATION OF ALL WORK FIELDS AND   *
+     C*                      RETURN CODE                             *
+     C*  FIELDS USED :-                                              *
+     C*                      @@YY - YEAR PORTION OF DATE             *
+     C*                      @@MM - MONTH PORTION OF DATE            *
+     C*                      @@DD - DAY PORTION OF DATE              *
+     C*                      @@MD - MONTH & DAY PORTION              *
+     C*                      @@4Y - NUMBER OF FOUR YEAR PERIODS      *
+     C*                             SINCE 1/1/71                     *
+     C*                      @@REM - REMAINING YEARS                 *
+     C*                      @@DAYN - NO OF DAYS SINCE 1/1/71        *
+     C*                      @@NO - NO. OF DAYS IN MONTH             *
+     C*                                                              *
+     C*  CALLED BY :-                                                *
+     C*                                                              *
+     C*  CALLS     :-                                                *
+     C****************************************************************
+     C*
+     C           #A        BEGSR                           #A
+     C*
+     C                     Z-ADD0         @@YY    20
+     C                     Z-ADD0         @@MM    20
+     C                     Z-ADD0         @@DD    20
+     C                     Z-ADD0         @@MD    40
+     C                     Z-ADD0         @@4Y    20
+     C                     Z-ADD0         @@REM   10
+     C                     Z-ADD0         @@DAYN  50
+     C                     Z-ADD0         @@NO    20
+     C*
+     C                     MOVE '0'       @@RTN   1
+     C*
+     C           #A9       ENDSR                           #A9
+     C/EJECT
+     C****************************************************************
+     C*  SUBROUTINE - #B     MAIN PROCESS                            *
+     C*                                                              *
+     C*                      VALIDATION OF PARAMETERS AND CALCULATION*
+     C*                      OF DAY NUMBER                           *
+     C*  FIELDS USED :-                                              *
+     C*                                                              *
+     C*  CALLED BY :-                                                *
+     C*                                                              *
+     C*  CALLS     :-        #BA,#BB                                 *
+     C****************************************************************
+     C*
+     C           #B        BEGSR                           #B
+     C*
+     C**  VALIDATE PARAMETERS RECEIVED -
+     C                     EXSR #BA
+     C*
+     C**  CHECK IF INVALID PARAMETER FOUND -
+     C           @@RTN     IFEQ '1'
+     C                     GOTO #B9
+     C                     END
+     C*
+     C**  IF VALIDATION SUCCESSFUL, CALCULATE DAYS -
+     C                     EXSR #BB
+     C*
+     C           #B9       ENDSR                           #B9
+     C/EJECT
+     C****************************************************************
+     C*  SUBROUTINE - #BA    VALIDATION OF RECIEVED PARAMETERS       *
+     C*                                                              *
+     C*  FIELDS USED :-                                              *
+     C*                                                              *
+     C*  CALLED BY :-        #B                                      *
+     C*                                                              *
+     C*  CALLS     :-                                                *
+     C****************************************************************
+     C*
+     C           #BA       BEGSR                           #BA
+     C*
+     C**  CHECK VALUE OF @@DFMT IS VALID  SHOULD BE M OR D
+     C           @@DFMT    IFNE 'D'
+     C           @@DFMT    IFNE 'M'
+     C*
+     C                     MOVE '1'       @@RTN
+     C                     GOTO #BA9
+     C*
+     C                     END
+     C                     END
+     C*
+     C**  CHECK VALUE OF @@DATE IS VALID
+     C**  BREAK DATE INTO YEAR,MONTH,DATE PORTIONS.
+     C                     MOVE @@DATE    @@YY
+     C                     MOVEL@@DATE    @@MD
+     C*
+     C**  CHECK IF DATE FORMAT MMDDYY
+     C           @@DFMT    IFEQ 'M'
+     C                     MOVEL@@MD      @@MM
+     C                     MOVE @@MD      @@DD
+     C*
+     C                     ELSE
+     C*
+     C                     MOVEL@@MD      @@DD
+     C                     MOVE @@MD      @@MM
+     C*
+     C                     END
+     C*
+     C**  VALIDATE MONTH VALUE
+     C           @@MM      IFLT 1
+     C                     MOVE '1'       @@RTN
+     C                     GOTO #BA9
+     C                     END
+     C*
+     C           @@MM      IFGT 12
+     C                     MOVE '1'       @@RTN
+     C                     GOTO #BA9
+     C                     END
+     C*
+     C**  GET DAYS IN THIS MONTH
+     C                     Z-ADD@DY,@@MM  @@NO
+     C*
+     C**  CHECK IF A LEAP YEAR
+     C                     ADD  28        @@YY
+     C           @@YY      DIV  4         @@4Y
+     C                     MVR            @@REM
+     C*
+     C**  VALIDATE DAY VALUE
+     C           @@MM      IFNE 2
+     C           @@DD      IFGT @@NO
+     C*
+     C                     MOVE '1'       @@RTN
+     C                     GOTO #BA9
+     C*
+     C                     END
+     C                     END
+     C*
+     C           @@DD      IFLT 1
+     C                     MOVE '1'       @@RTN
+     C                     GOTO #BA9
+     C                     END
+     C*
+     C**  IF FEBRUARY FURTHER VALIDATE
+     C           @@MM      IFEQ 2
+     C*
+     C           @@REM     IFEQ 0
+     C           @@DD      IFGT 29
+     C*
+     C                     MOVE '1'       @@RTN
+     C                     GOTO #BA9
+     C*
+     C                     END
+     C                     END
+     C*
+     C           @@REM     IFGT 0
+     C           @@DD      IFGT 28
+     C*
+     C                     MOVE '1'       @@RTN
+     C                     GOTO #BA9
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #BA9      ENDSR                           #BA9
+     C/EJECT
+     C****************************************************************
+     C*  SUBROUTINE - #BB    CALCULATE NUMBER OF DAYS FROM 1/1/71    *
+     C*                                                              *
+     C*  FIELDS USED :-                                              *
+     C*                                                              *
+     C*  CALLED BY :-        #B                                      *
+     C*                                                              *
+     C*  CALLS     :-                                                *
+     C****************************************************************
+     C           #BB       BEGSR                           #BB
+     C*
+     C           @@4Y      MULT 1461      @@DAYN
+     C*
+     C           @@REM     IFEQ 0
+     C           @@MM      IFGT 2
+     C*
+     C                     ADD  1         @@DAYN
+     C*
+     C                     END
+     C                     END
+     C*
+     C           @@REM     IFGT 0
+     C                     ADD  @YR,@@REM @@DAYN
+     C                     END
+     C*
+     C                     ADD  @MT,@@MM  @@DAYN
+     C                     ADD  @@DD      @@DAYN
+     C*
+     C           #BB9      ENDSR                           #BB9
+     C*
+     C********************************************************************
+      ***********                                                  071986 CMQ001
+      *****DETKEY SR - To determine command key pressed and set up 071986 CMQ001
+      ***********      for comparison against system definition blo071986 CMQ001
+      ***********                                                  071986 CMQ001
+     C***********DETKEY    BEGSR                                   071986 CMQ001
+      ***********                                                  071986 CMQ001
+     C***********          SELEC                                   071986 CMQ001
+     C***********KEY       WHEQ F01                                071986 CMQ001
+     C***********          MOVE '01'      CMDKEY  2                071986 CMQ001
+     C***********KEY       WHEQ F02                                071986 CMQ001
+     C***********          MOVE '02'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F03                                071986 CMQ001
+     C***********          MOVE '03'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F04                                071986 CMQ001
+     C***********          MOVE '04'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F05                                071986 CMQ001
+     C***********          MOVE '05'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F06                                071986 CMQ001
+     C***********          MOVE '06'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F07                                071986 CMQ001
+     C***********          MOVE '07'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F08                                071986 CMQ001
+     C***********          MOVE '08'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F09                                071986 CMQ001
+     C***********          MOVE '09'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F10                                071986 CMQ001
+     C***********          MOVE '10'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F11                                071986 CMQ001
+     C***********          MOVE '11'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F12                                071986 CMQ001
+     C***********          MOVE '12'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F13                                071986 CMQ001
+     C***********          MOVE '13'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F14                                071986 CMQ001
+     C***********          MOVE '14'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F15                                071986 CMQ001
+     C***********          MOVE '15'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F16                                071986 CMQ001
+     C***********          MOVE '16'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F17                                071986 CMQ001
+     C***********          MOVE '17'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F18                                071986 CMQ001
+     C***********          MOVE '18'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F19                                071986 CMQ001
+     C***********          MOVE '19'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F20                                071986 CMQ001
+     C***********          MOVE '20'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F21                                071986 CMQ001
+     C***********          MOVE '21'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F22                                071986 CMQ001
+     C***********          MOVE '22'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F23                                071986 CMQ001
+     C***********          MOVE '23'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F24                                071986 CMQ001
+     C***********          MOVE '24'      CMDKEY                   071986 CMQ001
+     C***********          ENDSL                                   071986 CMQ001
+      ***********                                                  071986 CMQ001
+     C***********          ENDSR                                   071986 CMQ001
+      ***********                                                  071986 CMQ001
+      ************************************************************ 071986 CMQ001
+**  CPY@
+(c) Finastra International Limited 2001
+**  SSY - CUMULATIVE DAYS IN A FOUR YEAR PERIOD
+0366073110961461
+**  SSM - CUMULATIVE DAYS IN A YEAR, BY MONTH
+000031059090120151181212243273304334365
+**  MDY - DAYS IN A MONTH
+312831303130313130313031
+**  @ACC
+AS
+CN
+CO
+EX
+IN
+LI
+ME
+TR
+**  @ACT
+C
+D
+G
+N
+R

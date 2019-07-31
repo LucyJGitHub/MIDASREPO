@@ -1,0 +1,404 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE ER Confirmations Extract')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE6849 - SE Early Redemptions Confirmations Extract          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027A            Date 17May06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01496             Date 04Nov94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027A - Conversion of cust. no. to alpha (post 103 build)  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  S01496 - Incorporation of JYSKE Enhancements (New Program)   *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*
+     F**  SE Early Redemptions Allocations - VC
+     FSEERALL0IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F**  SE Early Redemptions References - VA
+     FSEERRFL0IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F**  Customer Service Fees Details - E6
+     FSDCFCDL0IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F**  SE ER Confirmations Extract File
+     FSEERCEPDO   E           K        DISK         KINFSR *PSSR
+     F*
+     F**  SE ER Confirmations Extract Audit Report
+     FSE6849AUO   E                    PRINTER      KINFSR *PSSR
+     F*
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*  41 - S01423 installed                                        *
+     F*  88 - End of file reached on SEERALL0                         *
+     F*  89 - Record not found on SEERRFL0 or SDCFCDL0                *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   O F   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*  #A    - Initial Processing                                   *
+     F*  #B    - Main Processing                                      *
+     F*  #C    - Termination Processing                               *
+     F*  #BA   - Retrieve Customer Branch and Hold Mail Indicator     *
+     F*  #BB   - Move Appropriate Values to Output Fields             *
+     F*  *PSSR - Standard Database Error Processing                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E*****************************************************************
+     E*
+     E**  Copyright insertion for compilation
+     E                    CPY@    1   1 80
+     E*
+     E*****************************************************************
+      /EJECT
+     I*****************************************************************
+     I*
+     I**  DS for database error
+     ILDA         DS                            256
+     I                                      132 183 WWLOT
+     I                                      132 141 WWFILE
+     I                                      142 170 WWKEY
+     I                                      171 180 WWPGM
+     I                                      181 1830WWASE
+     I*
+     I@BANK     E DSSDBANKPD
+     I** Dummy record format for access to Bank Details
+     I*
+     I@CUST     E DSSDCUSTPD
+     I** Dummy record format for access to Customer Details
+     I*
+     I@SARD     E DSSCSARDPD
+     I** Dummy record format for access to Alternate Names & Addresses
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for access programs, short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I** Second DS for access programs, long data structure
+     I*
+     I*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  Start of Program                                             *
+     C*****************************************************************
+     C*
+     C**  Initial Processing
+     C*
+     C                     EXSR #A
+     C*
+     C**  Main Processing
+     C*
+     C                     EXSR #B
+     C*
+     C**  Termination Processing
+     C*
+     C                     EXSR #C
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  #A - Initial Processing                                      *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C**  Copyright statement
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C                     MOVE *BLANKS   WWLOT
+     C                     MOVEL'SE6849  'DBPGM  10
+     C*
+     C**  Retrieve run date and base currency.
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           @BANK     PARM @BANK     DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS                    B*1
+     C                     Z-ADD1         DBASE   30       *****************
+     C                     MOVEL*BLANKS   DBFILE 10        ** DBERROR 001 **
+     C                     MOVE 'SDBANKPD'DBFILE           *****************
+     C                     MOVEL*BLANKS   DBKEY  29
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C**  Check if S01423 is installed.
+     C*
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'S01423'  @SARC   6
+     C           @SARD     PARM @SARD     DSFDY
+     C*
+     C**  Set indicator if installed.
+     C*
+     C           @RTCD     IFEQ *BLANKS                    B*1
+     C                     MOVE '1'       *IN41
+     C                     END                             E*1
+     C*
+     C**  Output header.
+     C*
+     C                     WRITEHEADAU
+     C*
+     C           #A9       ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  #B - Main Processing                                         *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C**  Read and process each record from the allocations file.
+     C*
+     C           *LOVAL    SETLLSEERALL0
+     C                     READ SEERALL0                 88
+     C*
+     C**  Initialise counter.
+     C*
+     C                     Z-ADD0         WLNREC  50
+     C*
+     C**  Do while not end of file.
+     C           *IN88     DOWEQ'0'                        B*1
+     C*
+     C**  Check if ER Type is not 'B' (Book Allocation Record).
+     C*
+     C           VCERTP    IFNE 'B'                        B*2
+     C*
+     C**  Check if Record ID is '*' (Allocation deletd/Reversed) and
+     C**  Confirmation Last Nominal is not zero or Record ID is 'D'
+     C**  (Allocation inserted/amended) and Confirmation Last Nominal
+     C**  is different from allocated Nominal.
+     C*
+     C           VCRECI    IFEQ '*'                        B*3
+     C           VCCFNO    ANDNE*ZEROS
+     C           VCRECI    OREQ 'D'
+     C           VCCFNO    ANDNEVCNOMA
+     C*
+     C**  Access reference file.
+     C*
+     C           VCERRF    CHAINSEERRFL0             89
+     C*
+     C**  Reference exists.
+     C*
+     C           *IN89     IFEQ '0'                        B*4
+     C*
+     C**  Check if Confirmation Required indicator is 'Y' and if it is
+     C**  not a correction.
+     C*
+     C           VACFRI    IFEQ 'Y'                        B*5
+     C           VACORF    ANDEQ*BLANKS
+     C*
+     C**  Check if status is 'Authorised' or 'Reversed' & Confirmation
+     C**  Status indicator is 'Y'.
+     C*
+     C           VAERST    IFEQ 'X'                        B*6
+     C           VAERST    OREQ 'R'
+     C           VACFSI    ANDEQ'Y'
+     C*
+     C**  Access Customer Details and Service Fees Files.
+     C*
+     C                     EXSR #BA
+     C*
+     C**  Update output fields and write to output file.
+     C*
+     C                     EXSR #BB
+     C*
+     C                     WRITESEERCED0
+     C                     ADD  1         WLNREC
+     C*
+     C                     END                             E*6
+     C                     END                             E*5
+     C                     END                             E*4
+     C                     END                             E*3
+     C                     END                             E*2
+     C*
+     C**  Process next record.
+     C*
+     C                     READ SEERALL0                 88
+     C*
+     C                     END                             E*1
+     C*
+     C           #B9       ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  #BA - Retrieve Customer Branch and Hold Mail Indicator.      *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C**  Access customer details.
+     C*
+     C                     MOVE VCCNUM    KCNUM   6
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM KCNUM     @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           @CUST     PARM @CUST     DSSDY
+     C*
+     C**  Record not found
+     C*
+     C           @RTCD     IFNE *BLANK                     B*1
+     C                     Z-ADD2         DBASE            *****************
+     C                     MOVE 'SDCUSTPD'DBFILE           ** DBERROR 002 **
+     C                     MOVELKCNUM     DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C**  Access customer service fees if S01423 is installed.
+     C*
+     C                     MOVEL*BLANK    VEHMIN
+     C           *IN41     IFEQ '1'                        B*1
+     C*
+     C**  Customer does not exist.
+     C*
+     C           KCNUM     CHAINSDCFCDL0             89
+     C           *IN89     IFEQ '1'                        B*2
+     C                     MOVEL'N'       VEHMIN
+     C                     ELSE
+     C                     MOVELE6HMIN    VEHMIN
+     C                     END                             E*2
+     C                     END                             E*1
+     C*
+     C           #BA9      ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  #BB - Move Appropriate Values to Output Fields               *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR
+     C*
+     C                     MOVELVCRECI    VERECI
+     C                     MOVELVCERRF    VEERRF
+     C                     MOVELVCBRCD    VEBRCA
+     C**********           Z-ADDVCDDPT    VEDDPT                                             CSD027A
+     C                     MOVE VCDDPT    VEDDPT                                             CSD027A
+     C                     MOVELVCERTP    VEERTP
+     C                     MOVELVCBOOK    VEBOOK
+     C**********           Z-ADDVCCNUM    VECNUM                                             CSD027A
+     C                     MOVE VCCNUM    VECNUM                                             CSD027A
+     C                     MOVELVCPTFR    VEPTFR
+     C                     Z-ADDVCNOMA    VENOMA
+     C                     Z-ADDVCCFNO    VECFNO
+     C                     MOVELVASESN    VESESN
+     C                     Z-ADDVAERRD    VEERRD
+     C                     Z-ADDVAREDP    VEREDP
+     C                     MOVELBBCNA1    VECNA1
+     C                     MOVELBBCNA2    VECNA2
+     C                     MOVELBBCNA3    VECNA3
+     C                     MOVELBBCNA4    VECNA4
+     C                     MOVELBBACOC    VEACOC
+     C                     MOVELBBBRCD    VEBRCD
+     C*
+     C           #BB9      ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  #C - Termination Processing                                  *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C**  Print audit.
+     C*
+     C                     Z-ADDWLNREC    RNREC
+     C                     WRITEDETAILAU
+     C*
+     C**  Return to calling program.
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C           #C9       ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  *PSSR - Standard Database Error Processing                   *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C**  Update LDA with error information.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELDBFILE    WWFILE
+     C                     MOVELDBKEY     WWKEY
+     C                     MOVELDBPGM     WWPGM
+     C                     MOVELDBASE     WWASE
+     C                     OUT  LDA
+     C*
+     C**  Print database error on audit report.
+     C*
+     C                     WRITEERRORAU
+     C*
+     C**  Print dump and cancel program.
+     C*
+     C                     DUMP
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C**  Return to calling program.
+     C*
+     C                     RETRN
+     C*
+     C           #PSSR9    ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001

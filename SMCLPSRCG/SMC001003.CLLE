@@ -1,0 +1,70 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Consolidate SQL - Validation')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC001003 - Midas SM Consolidate SQL - Validation           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1076132 *CREATE  Date 18Feb13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1076132 - Automate SQL delivery deployment                */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&SQLFS &ZONE)
+             DCL        VAR(&SQLFS) TYPE(*CHAR) LEN(252)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&SQLFP) TYPE(*CHAR) LEN(251)
+             DCL        VAR(&SQLF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBRB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NBR) TYPE(*DEC) LEN(3 0)
+ 
+             DCL        VAR(&CNT) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&LIBPOS) TYPE(*DEC) LEN(3 0) VALUE(1)
+ 
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+   /* Get number of files from input */
+ 
+             CHGVAR     VAR(&NBRB) VALUE(%SST(&SQLFS 1 2))
+             CHGVAR     VAR(&NBR) VALUE(%BIN(&NBRB))
+ 
+             CHGVAR     VAR(&SQLFP) VALUE(%SST(&SQLFS 3 250))
+             CHGVAR     VAR(%SST(&SQLFP 251 1)) VALUE(#)
+ 
+ 
+   /* Check for each file from input. Error thrown on first invalid file */
+             DOWHILE    (&CNT *LT &NBR)
+             CHGVAR     VAR(&SQLF) VALUE(%SST(&SQLFP &LIBPOS 10))
+             CHKOBJ     OBJ(*LIBL/&SQLF) OBJTYPE(*FILE) MBR(&SQLF)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ERROR))
+             CHGVAR     VAR(&LIBPOS) VALUE(&LIBPOS + 10)
+             CHGVAR     VAR(&CNT) VALUE(&CNT + 1)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ERROR:
+             CHGVAR     VAR(&MSG) VALUE('0000Merge failed. File ' +
+                          *CAT &SQLF *TCAT ' not found.')
+ 
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA(&MSG) +
+                          TOPGMQ(*PRV (* *NONE *NONE)) MSGTYPE(*DIAG)
+             SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+ 
+ END:
+             ENDPGM

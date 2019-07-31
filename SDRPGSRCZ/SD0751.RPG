@@ -1,0 +1,358 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Deleted cust still in use report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Standing Data Module
+     F*                                                               *
+     F*    SD0751 - REPORT OF DELETED CUSTOMERS STILL BEING USED      *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 E26755  *CREATE    Date 10Jan92               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+     F*  CSD025 - Customer De-Activation                              *
+     F*  E26755 - New program created as part of the client           *
+     F*           deletion changes.                                   *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,SD0751F001
+     FSDCUSTL1IF  E                    DISK
+     F/COPY WNCPYSRC,SD0751F002
+     FCLIENTS IF  E           K        DISK
+     FSD0751P1O   F     132     OF     PRINTER      KINFDS SPOOL
+     F*
+     F********************************************************************
+     F*
+     F*    FUNCTION OF INDICATORS
+     F*
+     F*    15       SDCUSTL1 END OF FILE
+     F*    20       CHAIN FAIL
+     F*    U7U8     DATABASE ERROR
+     F*
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I** LOCAL DATA AREA - FOR DATABASE ERROR
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DATA STRUCTURE FOR ACCESS OBJECT FORMAT
+     I*
+     IDSFDY     E DSDSFDY
+     I** FIRST DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     I*
+     I/EJECT
+     C*****************************************************************
+      ** Parameter list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C*
+     C*    M A I N   P R O C E S S I N G
+     C*
+     C*
+     C** DEFINE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+     C** USE ACCESS OBJECT AOBANKR0 TO
+     C** RETRIEVE HEADER INFORMATION FOR REPORT
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG'    P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVE 'SD0751'  DBPGM
+     C                     MOVE '001'     DBASE
+     C                     EXCPTERROR
+     C                     GOTO END
+     C                     END
+     C/COPY WNCPYSRC,SD0751C001
+      *
+      ** Ensure report spool file recorded by RCF.
+      *
+     C                     OUT  LDA
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           RSEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      *
+      ** If error during ZSFILE processing, return to calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7LR
+     C                     RETRN
+     C                     END
+     C*
+     C*
+     C                     EXCPTHEAD1
+     C                     EXCPTHEAD2
+     C                     EXCPTHEAD3
+     C                     EXCPTHEAD4
+     C                     EXCPTHEAD5
+     C*
+     C**   READ SDCUSTL1 AND, USING THE
+     C**   CUSTOMER NUMBER, CHAIN TO CLIENT
+     C*
+     C/COPY WNCPYSRC,SD0751C002
+     C           1         SETLLSDCUSTL1                 15
+     C/COPY WNCPYSRC,SD0751C003
+     C                     READ SDCUSTL1                 15
+     C           *IN15     DOWNE'1'
+     C/COPY WNCPYSRC,SD0751C004
+     C**********           MOVE BBCUST    BBCUSN  60                                          CSD027
+     C                     MOVE BBCUST    BBCUSN  6                                           CSD027
+     C           BBTYLC    IFEQ 'D'
+     C           BBCUSN    CHAINCLIENTS              20
+     C*
+     C**   IF FOUND, PRINT ON REPORT
+     C*
+     C           *IN20     IFEQ '0'
+     C                     MOVE 'Y'       USED    1
+     C**********           MOVE BBCUST    OCUST   60     10                                   CSD027
+     C                     MOVE BBCUST    OCUST   6      10                                   CSD027
+     C                     MOVE BBCRNM    ONAME  20
+     C                     MOVE BBCRTN    OTOWN  10
+     C           BBPAIN    IFEQ 'P'
+     C                     MOVE 'Y'       OPARI   1
+     C                     MOVE BBPCNB    OPARN   6
+     C                     ELSE
+     C                     MOVE ' '       OPARI
+     C                     MOVE BBPCNB    OPARN
+     C                     END
+     C*
+     C**  CONVERT LAST CHANGE DATE TO MMDDYY FORMAT FOR OUTPUT
+     C*
+     C                     Z-ADDBBLCD     ZDAYNO
+     C                     SETON                     98
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    OLCD    7
+     C*
+     C           *INOF     IFEQ '1'
+     C                     EXCPTHEAD1
+     C                     EXCPTHEAD2
+     C                     EXCPTHEAD3
+     C                     EXCPTHEAD4
+     C                     EXCPTHEAD5
+     C                     SETOF                     OF
+     C                     END
+     C                     EXCPTDETAIL
+     C                     END
+     C                     END
+     C                     READ SDCUSTL1                 15
+     C                     END
+     C*
+     C           *IN15     IFEQ '1'
+     C           USED      IFEQ 'Y'
+     C                     EXCPTRPTEND
+     C                     ELSE
+     C                     EXCPTNODET
+     C                     END
+     C                     END
+     C*
+     C*
+     C*
+     C           END       TAG
+     C/COPY WNCPYSRC,SD0751C005
+     C                     SETON                     LR
+     C*
+     C           *INLR     IFEQ '1'
+     C                     RETRN
+     C                     END
+0374 C********************************************************************
+0375 C**
+0376 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+0377 C**
+0378 C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+0379 C**
+0380 C           ZDATE2    BEGSR                           *** ZDATE2 ***
+0381 C**
+0382 C**   CLEAR DATE FIELDS.
+0383 C                     Z-ADD0         ZDATE   60
+0384 C                     MOVEL'       ' ZADATE  7
+0385 C**
+0386 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+0387 C                     Z-ADDZDAYNO    ZDAYNO  50
+0388 C**
+0389 C**   DETERMINE YEAR NUMBER.
+0390 C**
+0391 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+0392 C           ZDAYNO    SUB  1         ZDAYN1  50   99
+0393 C   99                GOTO ZDEND2
+0394 C**
+0395 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+0396 C           ZDAYN1    DIV  1461      ZLYR    20
+0397 C                     MVR            ZDAYN1           SAVE REMAINING
+0398 C**                                                   DAYS
+0399 C**   CALCULATE NUMBER OF REMAINING YEARS.
+0400 C                     Z-ADD1         ZWRK2   20
+0401 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+0402 C           ZDAYN1    COMP ZYDY,ZWRK2             90
+0403 C  N90      ZWRK2     ADD  1         ZWRK2
+0404 C  N90                GOTO ZDTAG1
+0405 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+0406 C**
+0407 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+0408 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+0409 C**
+0410 C**   CALCULATE ACTUAL YEAR NUMBER.
+0411 C           ZLYR      MULT 4         ZWRK3   30
+0412 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+0413 C                     Z-ADDZWRK3     ZYEAR   20
+0414 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+0415 C**
+0416 C**   DETERMINE MONTH NUMBER.
+0417 C**
+0418 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+0419 C                     SETOF                     9293
+0420 C   91      ZDAYN1    COMP 59                     9293
+0421 C   91N92   ZDAYN1    SUB  1         ZDAYN1
+0422 C**
+0423 C**   CALCULATE MONTH NUMBER.
+0424 C                     Z-ADD2         ZWRK2
+0425 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+0426 C           ZDAYN1    COMP ZMDY,ZWRK2             94
+0427 C  N94      ZWRK2     ADD  1         ZWRK2
+0428 C  N94                GOTO ZDTAG2
+0429 C           ZWRK2     SUB  1         ZWRK2
+0430 C**
+0431 C                     Z-ADDZWRK2     ZMTH    20       MONTH
+0432 C**
+0433 C**   DETERMINE DAY OF MONTH.
+0434 C**
+0435 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+0436 C           ZDAYN1    ADD  1         ZDAYN1
+0437 C**
+0438 C**   CALCULATE DAY OF MONTH.
+0439 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+0440 C**
+0441 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+0442 C   93      ZDAY      ADD  1         ZDAY
+0443 C**
+0444 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+0445 C  N98                MOVELZDAY      ZWRK4   40
+0446 C   98                MOVE ZDAY      ZWRK4
+0447 C  N98                MOVE ZMTH      ZWRK4
+0448 C   98                MOVELZMTH      ZWRK4
+0449 C                     MOVELZWRK4     ZDATE
+0450 C                     MOVE ZYEAR     ZDATE
+0451 C**
+0452 C**   FORMAT ALPHA DATE, DDMMMYY.
+0453 C           ZDAY      COMP 10                     95
+0454 C                     MOVELZDAY      ZWRK5   5
+0455 C   95                MOVEL' '       ZWRK5
+0456 C                     MOVE ZMNM,ZMTH ZWRK5
+0457 C                     MOVELZWRK5     ZADATE
+0458 C                     MOVE ZYEAR     ZADATE
+0459 C**
+0460 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+0461 C**
+0462 C**
+     C*****************************************************************
+     O*
+     OSD0751P1E   0305         HEAD1
+     O                                   14 'REF SD0751'
+     O                         BJURPT    88
+     O                                   93 'DATE'
+     O                         BJMRDT   104
+     O                                  116 'PAGE'
+     O                         PAGE  Z  121
+     O*
+     O        E  1             HEAD2
+     O                                   64 'CANCELLED CUSTOMERS '
+     O                                   83 'STILL IN USE REPORT'
+     O*
+     O        E  2             HEAD3
+     O                                   64 '--------------------'
+     O                                   83 '-------------------'
+     O*
+     O        E  1             HEAD4
+     O                                   91 'PARENT'
+     O                                  108 'PARENT'
+     O                                  126 'LAST CHANGE'
+     O*
+     O        E  2             HEAD5
+     O                                   29 'CUSTOMER NUMBER'
+     O                                   51 'REPORT NAME'
+     O                                   75 'REPORT TOWN'
+     O                                   93 'INDICATOR'
+     O                                  108 'NUMBER'
+     O                                  122 'DATE'
+     O*
+     O        E  2             DETAIL
+     O                         OCUST     24
+     O                         ONAME     56
+     O                         OTOWN     74
+     O                         OPARI     89
+     O                         OPARN    108
+     O                         OLCD     124
+     O*
+     O        E 2              RPTEND
+     O                                   76 '*** END OF REPORT ***'
+     O*
+     O        E 2              NODET
+     O                                   65 '*** NO DETAILS'
+     O                                   79 ' TO REPORT ***'
+     O*
+     O        E   40           ERROR
+     O                                   42 '*** REFERENCE'
+     O                         DBPGM     51
+     O                                   71 '-DATABASE ERROR AT'
+     O                         DBASE     74
+     O                                   85 'FILE NAME'
+     O                         DBFILE    92
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

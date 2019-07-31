@@ -1,0 +1,57 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Validate Message queue')                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC009675 - Retrieve System Name                            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2008                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG21587 *CREATE   Date 11Nov08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG21587 - Validate that the value supplied relates to a    */
+/*                  Websphere Message Queue that actually exists.    */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&SYSNM)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2008')
+             DCL        VAR(&SYSNM) TYPE(*CHAR) LEN(10)
+ 
+/* Monitor for error messages not trapped in the rest of the */
+/* program. If they occur reclaim resources and exit.        */
+             MONMSG     MSGID(CPF0000 CPA0000 MCH0000 RPG0000) +
+                          EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Retrieve System Name Value                                */
+             RTVNETA    SYSNAME(&SYSNM)
+             GOTO       CMDLBL(END)
+ 
+/***  Abnormal termination job  ***/
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDC009675 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000)
+ 
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited 2008')
+             MONMSG     MSGID(CPF0000)
+             ENDPGM
+ 

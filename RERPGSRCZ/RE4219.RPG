@@ -1,0 +1,563 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Cheque Book Reorganisation')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                    *
+     F*                                                               *
+     F*  RE4219 - Cheque Book Reorganisation                          *
+     F*                                                               *
+     F*  Function:  This will drop cheque book records for cheque     *
+     F*             books with an issued date before the cut-off date *
+     F*             supplied as a parameter from the request prompt.  *
+     F*             It will not drop records if there are still       *
+     F*             cheques that have not been presented from the     *
+     F*             cheque book.                                      *
+     F*                                                               *
+     F*  Called By: REC4219 - RTS Cheque Book Reorganisation          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CRE019             Date 12Jan04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT001  *CREATE    Date 28Feb95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE019 - Cheque Processing and Maintenance (Recompile)       *
+     F*  CRT001 - Retail Teller System.                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FCHQBKPD UF  E           K        DISK
+     F**  Cheque Book file - Details
+     F*
+     FCHQBKPT UF  E           K        DISK
+     F**  Cheque Book File - Trailer
+     F*
+     FRE4219AUO   E                    PRINTER
+     F**  Cheque Book Reorganisation - Audit
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    47      Exception output- difference between calculated    *
+     F*            no. of records & no.of records in file control     *
+     F*                                                               *
+     F*    69      Error in closing files                             *
+     F*                                                               *
+     F*    77      General indicator for chain                        *
+     F*    79      End of file for CHQBKPD                            *
+     F*                                                               *
+     F*    81      Cheque is 'presented'                              *
+     F*                                                               *
+     F*  90-99     Used in z-subroutines.                             *
+     F*    98      Date format is MMDDYY.                             *
+     F*    99      z-subroutines error indicator.                     *
+     F*                                                               *
+     F*    U6      Invalid Parameter Passed                           *
+     F*    U7      file out of balance                                *
+     F*    U8      Database error                                     *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*       Control routines                                        *
+     F*                                                               *
+     F*  DBERR  - Database error handling : terminate pgm.            *
+     F*  MAIN   - Main Control Processing                             *
+     F*  FIRST  - Initial Processing                                  *
+     F*  LAST   - Final Processing                                    *
+     F*  PROCES - Main Processing                                     *
+     F*  DLTCHQ - Delete the cheque book record                       *
+     F*                                                               *
+     F*       Validation routine                                      *
+     F*                                                               *
+     F*  VLCODT - Validate cut-off date                               *
+     F*                                                               *
+     F*       Updates routines                                        *
+     F*                                                               *
+     F*  APRUPT - Audit print and Update Trailer                      *
+     F*                                                               *
+     F*       Standard MIDAS Subroutines                              *
+     F*                                                               *
+     F*  ZDATE1 - Validates and converts dates to dayno               *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E**  Array containing Copyright statement
+     E*
+     E                    @CA        20  1
+     E**  Cheque presented array
+     E*
+     E*
+     E/COPY ZSRSRC,ZDATE1Z1
+     E**  Array for SR.ZDATE1
+     E*
+     E*****************************************************************
+     I/EJECT
+     I*****************************************************************
+     I*
+     I            DS
+     I**  Data structure containing calculated rec.no
+     I                                        1   50CNOR
+     I*
+     I*
+     I            DS                             20
+     I**  Data structure to for holding key list of cheque book file
+     I                                        1  180@CQKEY
+     I                                        1  100KACNO
+     I                                       11  180KSCQN
+     I*
+     I*
+     IPSDS       SDS
+     I**  Program Status Data Structure
+     I                                        1  10 @PGM
+     I**  Field containing Program name
+     I                                      244 253 @JOB
+     I**  Field containing Workstation ID
+     I                                      254 263 @USER
+     I**  Field Containing User ID
+     I*
+     I*
+     ILDA         DS                            256
+     I**  Local data area for data base errors.
+     I*
+     I                                      134 183 DBLOT
+     I**  Field combining the following fields
+     I                                      134 141 DBFILE
+     I**  Name of database file in error
+     I                                      142 170 DBKEY
+     I**  Key value causing database error
+     I                                      171 180 DBPGM
+     I**  Name of program causing database error
+     I                                      181 1830DBASE
+     I**  Number of database error
+     I*
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Midas Bank details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  First DS for Access Programs, short data structure
+     I*
+     I*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            MAIN   - Main Control Processing                   *
+     C*                                                               *
+     C* CALLS      PROCES - Main Processing                           *
+     C*            FIRST  - Initial Processing                        *
+     C*            APRUPT - Audit print and Update Trailer            *
+     C*            LAST   - Final Processing                          *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Initial Processing
+     C*
+     C                     EXSR FIRST
+     C*
+     C**  Main Processing
+     C*
+     C                     EXSR PROCES
+     C*
+     C**  Perform audit print and update trailer
+     C*
+     C                     EXSR APRUPT
+     C*
+     C**  Perform last processing
+     C*
+     C                     EXSR LAST
+     C*
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PROCES - Main Processing                           *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PROCES    BEGSR                           ** PROCES **
+      *
+     C           *LOVAL    SETLLCHQBKPD
+      *
+      ** Do while not end-of-file
+     C           *IN79     DOWEQ'0'
+      *
+      ** Loop to read cheque book records
+     C                     READ CHQBKPDF                 79
+      *
+      ** If not end-of-file -
+     C           *IN79     IFEQ '0'
+      *
+      ** If record read is a live record
+     C           RECID     IFEQ 'D'
+      *
+     C                     ADD  1         CNOR
+     C           DISS      IFLT @CODN
+     C                     EXSR DLTCHQ
+     C                     END
+      *
+      ** If record read is a deleted record
+     C                     ELSE
+     C           RECID     IFEQ '*'
+     C                     DELETCHQBKPDF
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            DLTCHQ - Delete the cheque book record             *
+     C*                                                               *
+     C* CALLS                                                         *
+     C*                                                               *
+     C* CALLED BY PROCESS - Main Processing                           *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           DLTCHQ    BEGSR                           ** DLTCHQ **
+     C*
+     C                     Z-ADDSCQN      @CQNF   80
+     C                     Z-ADD0         @L      20
+     C                     MOVEACQPS      @CA
+     C*
+     C           @CQNF     DOWLEECQN
+     C*
+     C**  Calculate cheque presented status array index
+     C*
+     C           @CQNF     SUB  SCQN      @OFSET  80
+     C           @OFSET    DIV  8         @I      20
+     C                     MVR            @BITN   10
+     C                     ADD  1         @I
+     C*
+     C**  Test corresponding bit-position of element for cheque presented
+     C*
+     C           @BITN     IFEQ 0
+     C                     TESTB'0'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 1
+     C                     TESTB'1'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 2
+     C                     TESTB'2'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 3
+     C                     TESTB'3'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 4
+     C                     TESTB'4'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 5
+     C                     TESTB'5'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 6
+     C                     TESTB'6'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 7
+     C                     TESTB'7'       @CA,@I         81
+     C                     END
+     C*
+     C**  If an unpresented cheque is found
+     C*
+     C           *IN81     IFEQ '0'
+     C                     LEAVE
+     C                     END
+     C*
+     C**  Increment for next cheque number
+     C*
+     C                     ADD  1         @CQNF
+     C*
+     C                     ENDDO
+     C*
+     C           *IN81     IFEQ '1'
+     C                     DELETCHQBKPDF
+     C                     ADD  1         NDEL
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VLCODT - Validate Cut off date                     *
+      *                                                               *
+      * CALLS      ZDATE1 - Validate dates submitted and convert to a *
+      *                     number of days                            *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           VLCODT    BEGSR                           ** VLCODT **
+     C*
+     C                     SETOF                     33
+     C*
+     C**  to be validated if entered
+     C*
+     C           PCODT     IFNE *BLANKS
+     C                     MOVE PCODT     ZDATE
+     C*
+     C                     EXSR ZDATE1
+     C*
+     C                     ELSE
+     C*
+     C**  error if date not entered
+     C*
+     C                     SETON                     99
+     C                     END
+     C*
+     C           *IN99     IFNE '1'
+     C                     Z-ADDZDAYNO    @CODN   50
+     C*
+     C                     END
+      *
+      ** if invalid date i.e. 99 is on
+     C           *IN99     IFEQ '1'
+      *
+      ** Write on to LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+      *
+      ** seton Invalid date error U6, LR and exit the program
+     C                     SETON                     U6LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FIRST  - Initial Processing                        *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling                   *
+      *            VLCODT - Validate cut-off date                     *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *
+      ** Input parameter(s) :
+     C           *ENTRY    PLIST                           Entry parameter list
+     C                     PARM           PCODT   6        Cut off date
+     C*
+     C**  Prepare LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     OUT  LDA
+     C*
+     C**  Cheque book file keylist
+     C*
+     C           KCHQBK    KLIST
+     C                     KFLD           KACNO
+     C                     KFLD           KSCQN
+     C*
+     C**  Initialize calculated no. of records
+     C*
+     C                     Z-ADD0         CNOR
+     C*
+     C** Use access program AOBANKR0 to retrieve header details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            ** DB ERR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     EXSR DBERR
+      *
+     C                     END
+      *
+      ** Determine date format - 98 is seton if MMDDYY format
+     C           BJDFIN    COMP 'M'                      98
+      *
+      * Validate the cut-off date parameter
+     C                     EXSR VLCODT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *            LAST   - Final Processing                          *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           LAST      BEGSR                           ** LAST   **
+      *
+     C                     CLOSE*ALL                   69
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            APRUPT - Audit print and Update Trailer            *
+      *                                                               *
+      * CALLS      DBERR  - Database error handling                   *
+      *                                                               *
+      * CALLED BY  Main   - Processing                                *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     C           APRUPT    BEGSR                           ** APRUPT **
+      *
+      ** Access cheque book trailer record
+     C                     MOVEL9999999999KACNO
+     C                     MOVEL99999999  KSCQN
+     C           KCHQBK    CHAINCHQBKPTF             77
+      *
+      ** If no record is present - *IN77 is on
+     C           *IN77     IFEQ '1'
+      *
+      ** Do setup lda and do db error processing
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CHQBKPT' DBFILE           ***************
+     C                     Z-ADD2         DBASE            ** DB ERR 02 **
+     C                     MOVEL@CQKEY    DBKEY            ***************
+     C                     EXSR DBERR
+      *
+     C                     END
+      *
+      ** Control Totals report calculations
+      *
+      ** Calculate no. of records on file after updates
+     C           CNOR      SUB  NDEL      NRAU    50
+      *
+      ** Check if difference between actual and calculated.
+      *
+     C           NORE      SUB  CNOR      DIFF    50
+     C           DIFF      COMP 0                    4747
+     C*
+     C**  Print control totals report.
+     C*
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ** Update control record only if any live record is deleted
+     C           NDEL      IFGT *ZERO
+     C                     Z-ADDNRAU      NORE
+     C                     UPDATCHQBKPTF
+     C                     END
+      *
+      ** If there is a difference i.e. 47 is on
+     C           *IN47     IFEQ '1'
+      *
+      ** Write on to LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+      *
+      ** seton file imbalance error U7, LR and exit the program
+     C                     SETON                     U7LR
+     C                     RETRN
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DBERR    - Database Error Handling : Terminates program       *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                        *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+     C*
+     C**  Setup and output lda
+     C*
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+     C*
+     C**  Write the DB error details
+     C*
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C*
+     C**  End the program
+     C*
+     C                     SETON                     U8LR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      ** SR.ZDATE1 subroutine
+      /COPY ZSRSRC,ZDATE1Z2
+      *
+      **
+** COPYRIGHT OBJECT **
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

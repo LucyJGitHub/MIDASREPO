@@ -1,0 +1,182 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('On-Line Synch. of EQ data for Consumer Banking')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       CLLE/ GOC0104 - On-line synchronisation of Equation data    */
+/*                       For Consumer Banking                        */
+/*                                                                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BUG14101           Date 19Jun07              */
+/*                      BUG13624           Date 23Mar07              */
+/*                      BUG12185           Date 09Oct06              */
+/*                      CRE026  *CREATE    Date 24May06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG14101 - Background job EQ_ONL_SYN is generated errors    */
+/*                  and looping                                      */
+/*       BUG13624 - Background job EQ_ONL_SYN is not running         */
+/*       BUG12185 - Change file in INZPFM operation (Recompile)      */
+/*       CRE026 - Consumer Banking                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/*/COPY WNCPYSRC,GLC000104INT                                        */
+ 
+             DCL        VAR(&TEMPENTYP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JSEQN) TYPE(*DEC) LEN(10)
+             DCL        VAR(&JRCVR) TYPE(*CHAR) LEN(10)                                 /*BUG14101*/
+             DCL        VAR(&JSEQA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNA) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&JRNLIB) TYPE(*CHAR) LEN(10)                                /*BUG13624*/
+             DCL        VAR(&JRNRCVLIB) TYPE(*CHAR) LEN(10)                             /*BUG14101*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2006')
+ 
+             DCLF       FILE(GOEOSJSPD)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*/COPY WNCPYSRC, GLC000104MPS                                       */
+             ALCOBJ     OBJ((GOEOSJSPD *FILE *EXCLRD)) WAIT(30)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
+             SNDPGMMSG  MSG('Attempt to start On Line Synchronization for +
+                          Equation has failed. Probable cause: +
+                          process is active already.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+ 
+/* Start commitment control */
+ 
+            CHGJOB SWS(00000000)
+ 
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
+ 
+             RCVF
+ 
+             CHGVAR     VAR(&JSEQN) VALUE(&I#LASTSEQ)
+             CHGVAR     VAR(&JRCVR) VALUE(&I#LASTRCV)                                   /*BUG14101*/
+ 
+/* Check if journal sequence exists. */
+/* If journal sequence does not exist, set to restart at first entry */
+ 
+/********** RERUN:      RTVDTAARA  DTAARA(KAPJRN (24 6)) RTNVAR(&JRNA)                  /*BUG14101*/
+/**********  RTVJRNE    JRN(&JRNA) FROMENT(&JSEQN) +
+                          TOENT(&JSEQN) RTNENTTYP(&TEMPENTYP)                           /*BUG13624*/
+/**********  RTVDTAARA  DTAARA(KAPJRN (34 10)) RTNVAR(&JRNLIB)                 /*BUG13624 BUG14101*/
+/**********  RTVJRNE    JRN(&JRNLIB/&JRNA) FROMENT(&JSEQN) +
+                          TOENT(&JSEQN) RTNENTTYP(&TEMPENTYP)                  /*BUG13624 BUG14101*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(DO)                                         /*BUG14101*/
+/**********             CHGVAR     VAR(&JSEQN) VALUE(0)                                 /*BUG14101*/
+/**********             RTVJRNE    JRN(ICJRN) FROMENT(*FIRST) +
+                                TOENT(*FIRST) RTNSEQNBR(&JSEQN)                /*BUG13624 BUG14101*/
+/**********             RTVJRNE    JRN(&JRNLIB/&JRNA) FROMENT(*FIRST) +
+                                   TOENT(*FIRST) RTNSEQNBR(&JSEQN)             /*BUG13624 BUG14101*/
+/**********             MONMSG     MSGID(CPF0000)                                       /*BUG14101*/
+/**********  ENDDO                                                                      /*BUG14101*/
+ 
+RERUN:
+             RTVDTAARA  DTAARA(KAPJRN (24 6)) RTNVAR(&JRNA)                             /*BUG14101*/
+             RTVDTAARA  DTAARA(KAPJRN (34 10)) RTNVAR(&JRNLIB)                          /*BUG14101*/
+             IF         COND(&JRCVR *NE '*CURCHAIN') THEN(DO)
+             RTVDTAARA  DTAARA(KAPJRN (105 10)) RTNVAR(&JRNRCVLIB)                      /*BUG14101*/
+             ENDDO
+             IF         COND(&JSEQN = 0) THEN(DO)                                       /*BUG14101*/
+             RTVJRNE    JRN(&JRNLIB/&JRNA) FROMENT(*FIRST) +
+                          TOENT(*FIRST) RTNSEQNBR(&JSEQN)                               /*BUG14101*/
+             ENDDO                                                                      /*BUG14101*/
+             ELSE       CMD(DO)                                                         /*BUG14101*/
+             RTVJRNE    JRN(&JRNLIB/&JRNA) RCVRNG(&JRNRCVLIB/&JRCVR) +
+                          FROMENT(&JSEQN) TOENT(*LAST) +
+                          RTNENTTYP(&TEMPENTYP)                                         /*BUG14101*/
+               MONMSG     MSGID(CPF0000) EXEC(DO)                                       /*BUG14101*/
+                          CHGVAR     VAR(&JSEQN) VALUE(0)                               /*BUG14101*/
+                          CHGVAR     VAR(&JRCVR) VALUE('*CURCHAIN')                     /*BUG14101*/
+             CHGVAR     VAR(&JRNRCVLIB) VALUE(*LIBL)
+                          GOTO       CMDLBL(RERUN)                                      /*BUG14101*/
+               ENDDO                                                                    /*BUG14101*/
+             ENDDO                                                                      /*BUG14101*/
+                        CHGVAR     VAR(&JSEQN) VALUE(&JSEQN + 1)
+ 
+ /* Overrides */
+ 
+/**********  OVRDBF     FILE(GEOSJSPDN) MBR(GOEOSJSPD) SHARE(*NO)                       /*BUG13624*/
+             OVRDBF     FILE(GOEOSJSPD) SHARE(*NO)                                      /*BUG13624*/
+             OVRDBF     FILE(GEOSJSPDN) TOFILE(GOEOSJSPD) SHARE(*NO)                    /*BUG13624*/
+ 
+ /* Receive journal entries*/
+ 
+             CHGVAR     VAR(&JSEQA) VALUE(&JSEQN)
+/**********  CALL       PGM(GOOLSYNGEC) PARM(&JSEQA)                                    /*BUG14101*/
+             CALL       PGM(GOOLSYNGEC) PARM(&JSEQA &JRCVR)                             /*BUG14101*/
+ 
+ 
+             DLTOVR *ALL
+ 
+ 
+             IF COND(%SWITCH(XXXXX100)) THEN(DO)
+/**********     CHGVAR     VAR(&JSEQN) VALUE(0)                                         /*BUG14101*/
+                CHGJOB     SWS(00000000)
+                GOTO       CMDLBL(RERUN)
+             ENDDO
+ 
+ 
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                ROLLBACK
+                SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                             GOC0104 ended abnormally - see job log') +
+                             TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+ 
+/*/COPY WNCPYSRC, GLC000104MPE                                       */
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+/*/COPY WNCPYSRC, GLC000104EER                                       */
+ 
+/* Abnormal termination */
+ 
+             CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GOC0104 ended abnormally - see job log') +
+                         TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(C) Finastra International +
+                          Limited 2006')
+ 
+ 
+             DLCOBJ     OBJ((GOEOSJSPD *FILE *EXCLRD))
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             RCLRSC
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             ENDPGM
+/*/COPY WNCPYSRC, GLC000104END                                       */
+ 
+             ENDPGM

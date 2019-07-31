@@ -1,0 +1,372 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG LE Fee Rate Change Advices - Driver')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG6077 - LE Fee Rate Change Advices - Driver                 *
+      *                                                               *
+      *  Function:  Lending Rate Change driver will read LF/LEFRCAL1  *
+      *             which carries the details of fee rate changes     *
+      *             occuring today.  CG6078 will be called passing    *
+      *             the fee rate change details from LEFRCAPD. The    *
+      *             UDC data extracted will be for group set l14FRC.  *
+      *                                                               *
+      *  Called By: CGC6007 - LE Fee Rate Change Advices              *
+      *                                                               *
+      *  Calls:     CG6078  - LE Fee Rate Change Advices              *
+      *                                                               *
+      *  (c) Finastra International Limited 2018                      *
+      *                                                               *
+      *  Last Amend No. CLE071  *CREATE    Date 18Jul18               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees                *
+      *                                                               *
+      *****************************************************************
+     FLEFRCAL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N  C T I O N    O F    I N D I C A T O R S               *
+      *                                                               *
+      *  50   -    EOF indicator for LEFRCAL1                         *
+      *  90   -    General work indicator                             *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E    I N D E X                             *
+      *                                                               *
+      *  Main routine                                                 *
+      *  SRINIT  -  Initial Processing                                *
+      *  SRINZF  -  Initialise Fields on Program Invocation           *
+      *  SRMAIN  -  Main Processing                                   *
+      *  SRAUDT  -  Audit Report Processing                           *
+      *  *PSSR   -  Error Subroutine                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      **  Copyright array.
+     E                    CPY@    1   1 80
+     E/COPY CGCPYSRC,SRERRE
+      *
+     IDSPARM    E DSLEFRCAPD
+      **  External DS for parameter passed to CG6078
+      *
+     ISDBANK    E DSSDBANKPD
+      **  External DS for Bank details
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, long data structure
+      *
+     IW0FMT     E DSCGUDTAPD
+      **  Record format of PF/CGUDTAPD for use as a parameter
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Process     :  MAINLINE                                      *
+      *  Function    :  Mainline processing.                          *
+      *                                                               *
+      *  Called by   :  None                                          *
+      *  Calls       :  SRINIT - Initial Processing - On First Call   *
+      *                 SRINZF - Initialise Fields on Each Invocation *
+      *                 SRMAIN - Main Processing                      *
+      *                 SRAUDT - Audit Report Processing              *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Parameter list for current program invocation.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      ** Initial processing - Once Only
+      *
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      ** Initialisation processing
+      *
+     C                     EXSR SRINZF
+      *
+      ** Main processing
+      *
+     C                     EXSR SRMAIN
+      *
+      ** Audit Processing
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Process     :  SRMAIN                                        *
+      *  Function    :  Main Processing                               *
+      *                                                               *
+      *  Called by   :  Mainline                                      *
+      *  Calls       :  CG6078 - LE Fee Rate Change Advices.          *
+      *                                                               *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      ** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      ** Read through file
+     C           *LOVAL    SETLLLEFRCAD0
+     C                     READ LEFRCAL1                 50
+      *
+      ** Read until End of File
+     C           *IN50     DOWEQ'0'
+      *
+      ** Increment the count of INTSR records read.
+     C                     ADD  1         ##DREC  50
+      *
+      ** Produce Confirmation
+     C                     CALL 'CG6078'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM *BLANK    ##COPD  1
+     C                     PARM           DSPARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+     C                     MOVEL'CG6078  'W0FILE
+     C                     MOVEL##RTCD    W0KEY
+     C                     Z-ADD02        W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Commit
+     C                     COMIT
+      *
+      ** Read next record from file
+     C                     READ LEFRCAL1                 50
+     C                     ENDDO
+      *
+     C           EXMAIN    TAG
+      *
+      ** Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Process     :  SRINZF                                        *
+      *  Function    :  Initialise Fields on Program Invocation       *
+      *                                                               *
+      *  Called by   :  Mainline                                      *
+      *  Calls       :  CGZAUDIT - Audit Processing                   *
+      *                                                               *
+      *****************************************************************
+     C           SRINZF    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZF'  @STK,Q
+      *
+      ** Open the Audit Print File.
+      *
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6077AU'I#SPLN
+     C                     MOVEL'CG6077  'I#REF
+     C                     MOVE 'CGD2627' I#TITL
+     C                     MOVE 'CGD2628' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+     C           EXINZF    TAG
+      *
+      ** Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Process     :  SRINIT                                        *
+      *  Function    :  Initial Processing - First Call Only          *
+      *                                                               *
+      *  Called by   :  Mainline                                      *
+      *  Calls       :  None                                          *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      ** Call access program for Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY
+     C                     Z-ADD01        W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Initialise work fields
+      *
+     C                     Z-ADD*ZEROS    ##DREC
+      *
+      ** Copyright
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+     C           EXINIT    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Process    :  SRAUDT                                         *
+      *  Function   :  Audit Report Processing                        *
+      *                                                               *
+      *  Called by   :  Mainline                                      *
+      *  Calls       :  CGZAUDIT - Audit Processing                   *
+      *                 CG9020   - Write Data to UDC Data Files-Audit *
+      *                                                               *
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+      *
+      ** Output the Count of records read
+      *
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6077  'I#REF
+     C                     MOVE 'CGD2627' I#TITL
+     C                     MOVE 'CGD2628' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'LEFRCAL1'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##DREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      ** Skip a line
+      *
+     C                     MOVE '*SKIP   'W1ACT
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      ** Produce the Audit Report.
+      *
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD2627' W0TITL  7
+     C                     PARM 'CGD2628' W0ULIN  7
+     C                     PARM           W0CMT
+      *
+      ** Close the Audit Print File
+      *
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6077  'I#REF
+     C                     MOVE 'CGD2627' I#TITL
+     C                     MOVE 'CGD2628' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+     C           EXAUDT    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+** CPY@  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2018

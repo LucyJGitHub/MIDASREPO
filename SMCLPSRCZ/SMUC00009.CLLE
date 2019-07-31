@@ -1,0 +1,87 @@
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Initialise Transaction Seq Number')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00009 - Datapatch to initialise the new transaction     */
+/*                   sequence number field on FACHISA.               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BG26993            Date 26Jan10              */
+/*                      CLE023 *C *CREATE  Date 25Feb02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BG26993 - Delivery of upgrade programs to core.             */
+/*               - Renamed CLE023C01.                                */
+/*       CLE023  - Lending Facility History Improvements.            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                            2009')
+ 
+ /* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR1))
+ 
+/* Get system prefix. */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+             CHGVAR     VAR(&DMLIB) VALUE(&PREF *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PREF *TCAT 'DPLIB')
+ 
+/* Create backup of PF/FACHISA to PF/WFACHISA for update of files. */
+             CPYF       FROMFILE(&DMLIB/FACHISA) +
+                          TOFILE(&DPLIB/WFACHISA) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(WFACHISA))
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error occurred in copying PF/FACHISA to +
+                             PF/WFACHISA. Process terminated.') +
+                             MSGTYPE(*INFO)
+                GOTO       CMDLBL(ABNOR1)
+             ENDDO
+ 
+CONTIN1:
+             CALL       PGM(SMU00016)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ELSE  CMD(GOTO CMDLBL(END))
+ 
+ABNOR:
+ /* Restore backup of files. */
+             CPYF       FROMFILE(&DPLIB/WFACHISA) +
+                          TOFILE(&DMLIB/FACHISA) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                CLRPFM     FILE(FACHISA)
+                GOTO       CMDLBL(DSPERR2)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(GOTO +
+                          CMDLBL(DSPERR2))
+ 
+             GOTO       CMDLBL(END)
+ 
+DSPERR2:
+             SNDUSRMSG  MSG('Error occurred in restoring files.  +
+                          Please restore the files manually:  +
+                          PF/WFACHISA to PF/FACHISA') MSGTYPE(*INFO)
+ABNOR1:
+             CHGJOB     SWS(XXXXXX11)
+END:
+             DLTF       FILE(&DPLIB/WFACHISA)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             ENDPGM

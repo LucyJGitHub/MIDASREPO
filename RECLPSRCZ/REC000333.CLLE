@@ -1,0 +1,145 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas RE Component for enq program RE3363')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - General Ledger Module                            */
+/*                                                                   */
+/*       REC000333 - CL Component for Interest details enquiry       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR316373           Date 03Jun15              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      239964             Date 30Jun06              */
+/*                      239966             Date 08Jun06              */
+/*                      240079  *CREATE    Date 08Jun06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR316373 - Recompile due to change in /COPY MLCOVRDCL and   */
+/*                  MLCOVROVR.                                       */
+/*       239964 - Applied fix 239966.                                */
+/*       239996 - Remove transfer jobs for retail linked enquiry.    */
+/*                Patterned after GEMS 236093.                       */
+/*       240079 - Remove transfer jobs for retail linked enquiry.    */
+/*                Patterned after GEMS 236093.                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MBIN)    TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZMUSER)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MULT)    TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GROUP)   TYPE(*CHAR) LEN(50)
+             DCL        VAR(&USER)    TYPE(*CHAR) LEN(25)
+             DCL        VAR(&SLEVEL)  TYPE(*DEC)  LEN(4)
+             DCL        VAR(&TIMEO)   TYPE(*DEC)  LEN(5)
+             DCL        VAR(&ERRORC)  TYPE(*DEC)  LEN(1) VALUE(0)
+             DCL        VAR(&GLUSRLG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZMUSER)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEM)     TYPE(*CHAR) LEN(50)
+ 
+/*/COPY WNCPYSRC,GLC443INT                                         */
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
+ 
+/*/COPY MLCPYSRC,MLCOVRDCL                                         */
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVDTAARA  DTAARA(RUNDAT (13 1)) RTNVAR(&MBIN)
+ 
+/*  Create and set up user data area */
+ 
+             IF         COND(&MBIN *EQ 'Y') THEN(CALL PGM(SFC0400))
+ 
+             CHKOBJ     OBJ(QTEMP/ZMUSER) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+             CALL       PGM(ZMUSER) PARM(&ERRORC &ZMUSER)
+             IF         COND(&ERRORC *NE 0) THEN(DO)
+             SNDPGMMSG MSG('Default Branch or Department not valid') +
+                       TOPGMQ(*EXT) MSGTYPE(*INFO)
+             SIGNOFF    LOG(*LIST)
+ 
+/*  Monitor here to prevent error during re-routing of job */
+ 
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDDO
+             ENDDO
+             CALL       PGM(SF0410) PARM(&GROUP &USER &SLEVEL &TIMEO  +
+                          &ERRORC &MULT)
+ 
+             IF         COND(&MULT *EQ '  ') THEN(DO)
+             CHGVAR     VAR(&MULT) VALUE('GB')
+             ENDDO
+ 
+             CHGVAR     VAR(&GLUSRLG)  VALUE(&MULT *CAT 'GLUSRMSG  ')
+             OVRMSGF    MSGF(GLUSRMSG) TOMSGF(&GLUSRLG)
+ 
+/*/COPY MLCPYSRC,MLCOVROVR                                         */
+ 
+/* Create the Midas Information Screen data area */
+ 
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ') TEXT('Midas SC Midas +
+                          information screen data')
+             MONMSG     MSGID(CPF1023)
+ 
+/**/
+/* Create the data area ZMITEM in QTEMP                            */
+ 
+             CRTDTAARA  DTAARA(QTEMP/ZMITEM) TYPE(*CHAR) LEN(10) +
+                          VALUE('          ') TEXT('Midas SF +
+                          Unique Menu Item Code')
+             MONMSG     MSGID(CPF1023)
+ 
+/*/COPY WNCPYSRC,GLC443MPS                                    */
+ 
+             CALL       PGM(RE3363)
+ 
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+               SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC0000442 ended abnormally - see job +
+                          log') TOPGMQ(*EXT)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             DMPCLPGM
+             ENDDO
+ 
+END:
+ 
+             ENDPGM

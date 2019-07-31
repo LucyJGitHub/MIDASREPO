@@ -1,0 +1,520 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Statement & ledger balance reconciliation')
+/*E*I**:*CVTOPT(*DATETIME)************************************************             180333 CPK014
+/*OVRF*: OVRDBF FILE(XACCNTAB) TOFILE(ACCNTAB) SHARE(*NO)           : *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - General Ledger Module
+     F*                                                                  *
+     F*  BALCHK  -  RECONCILE LEDGER AND STATEMENT BALANCES REPORT       *
+     F*                                                                  *
+     F*  This program obtains the current Ledger Balance for an account  *
+     F*  and subtracts the sum of all postings since the last statement  *
+     F*  for this account to obtain the calculated Carried Forward       *
+     F*  Statement Balance. It compares this value to the C/F Balance    *
+     F*  on the Accounts Master File. If there is a discrepancy for one  *
+     F*  or more accounts, a report is produced listing the account      *
+     F*  details and the actual and calculated C/F Balance.              *
+     F*                                                                  *
+     F*  This program also updates a copy of the Accounts Master File    *
+     F*  with the corrected C/F statement Balance. If these balances     *
+     F*  are correct, the data from this file can be copied to the       *
+     F*  Accounts Master File ACCNTAB.                                   *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                  CPK014            Date 05Oct01                  *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                  CSD006            Date 15May01                  *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                  180333            Date 03Oct00                  *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                  CPK011            Date 27Jul00                  *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 103133             Date 13May96                  *
+     F*                 101112             DATE 22MAR96                  *
+     F*                 095892             DATE 23NOV95                  *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK015 - Release 4.01 Packaging:                                *
+      *           - A default timestamp string is required for           *
+      *             file XACCNTAB (ACCNTX) write.                        *
+      *  CPK014 - Release 4 packaging.  CVTOPT parameter now part of     *
+      *           RPGBASE.                                               *
+      *  CSD006 -
+     F*  180333 - Need to change creation parms in order to accomodate   *
+     F*           new timestamp field added to ACCNTAB by CAP035         *
+      *  CPK011 - Recompile due to changes in ACCNTAB.                   *
+     F*  103133 - Subtype on account master file corrupted by subtype on *
+     F*           postings file. Fix is to rename field STYP on postings *
+     F*           file to STYPA.                                         *
+     F*  101112 - Do not output DB error if currency details have been   *
+     F*           deleted; instead, default the No of Dec. Places to 0.  *
+     F*  095892 - Incorporation of BALCHK utility into core              *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     FXACCNTABO   E                    DISK
+     F            ACCNTABF                          KRENAMEACCNTX
+     F*
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FAPOST   IF  E           K        DISK
+     F            APOSTRAF                          KIGNORE
+     FBALCHKP1O   F     132     OF     PRINTER
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01            ACCOUNT MASTER DETAIL RECORD
+     F*      05       C/F BALANCE DISCREPANCY
+     F* 07            ACCOUNT POSTING DETAIL RECORD
+     F*      11       END OF FILE ON APOST
+     F*      20       END OF FILE ON ACCNT
+     F*      30       NO OF DECIMAL PLACES 0
+     F*      31       NO OF DECIMAL PLACES 1
+     F*      32       NO OF DECIMAL PLACES 2
+     F*      33       NO OF DECIMAL PLACES 3
+     F*      40       FIRST CYCLE PROCESSING
+     F*      42       AL LEAST 1 DISCREPANCY FOUND
+     F*      90-99    USED IN SYSTEM SUBROUTINES
+     F*
+     E                    ZYDY    4   4  4 0             ZDATE SR. ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE SR. ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     I*
+     I**  A C C O U N T   M A S T E R
+     I*
+     IACCNTABF    01
+     I*
+     I**  A C C O U N T   P O S T I N G
+     I*
+     IAPOSTPDF    07
+     I              RECI                            RECIA
+     I              CNUM                            CNUMA
+     I              CCY                             CCYA
+     I              ACOD                            ACODA
+     I              ACSQ                            ACSQA
+     I              BRCA                            BRCAA
+     I              ATYP                            ATYPA
+     I              ACNO                            ACNOA
+     I              RRNM                            RRNMA
+     I              PRFC                            PRFCA
+     I              STYP                            STYPA                 103133
+     I*
+     I**   DEFINE EXTERNAL DS OVER DUMMY PHYSICAL FILES
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*    BANK DETAILS
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*    CURRENCY CODE
+     I*
+     ILDA       E DSLDA
+     I*    LOCAL DATA AREA
+     I*
+     C           KEY1      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           LSTD
+     C*
+     C           KEY2      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C*
+     C** Define LDA Dtaara
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+      *
+     C** FIRST CYCLE PROCESSING
+     C           *IN40     IFEQ '0'
+     C                     SETON                     40OF
+     C                     EXCPT
+     C*
+     C** Read Bank details via Access program
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C           SDBANK    PARM           SDBANK
+     C*
+     C** If record not found, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'BALCHKR' DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     Z-ADD1         DBASE            * DBERR 001 *
+     C                     MOVEL@OPTN     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON.
+     C**
+     C                     END
+      *
+     C                     CLEARACCNTX
+     C                     READ ACCNT                    20
+     C*
+     C           *IN20     DOWEQ'0'
+     C*
+     C**   Use Access program to read Currency file
+     C*
+     C                     MOVE *BLANKS   DBKEY
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM CCY       @CURR   3
+     C           SDCURR    PARM           SDCURR
+     C*
+     C** If currency record not found, default NDP to 0                   101112
+     C***If*error*in*access*program,*exit*via*DBERR*subroutine*           101112
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD0         A6NBDP                       *  101112
+     C************LOCK     IN   LDA                                    *  101112
+     C***********          MOVEL'BALCHKR' DBPGM            ************   101112
+     C***********          Z-ADD2         DBASE            * DBERR 002 *  101112
+     C***********          MOVEL'SDCURRPD'DBFILE           *************  101112
+     C***********          MOVEL@CURR     DBKEY                           101112
+     C***********          OUT  LDA                                       101112
+     C***********                                                         101112
+     C***********          EXSR *PSSR                                     101112
+     C                     END
+     C*
+     C           A6NBDP    COMP 1                      3031
+     C           A6NBDP    COMP 2                    33  32
+      *
+     C** INITIALISE CALCULATION FIELD
+     C                     Z-ADDLDBL      TCFSB  150
+     C                     Z-ADDCFSB      FCFSB  150
+      *
+     C** SUBTRACT POSTINGS FROM LEDGER BALANCE TO CALCULATE
+     C** C/F AND B/F STATEMENT BALANCE
+     C           *IN01     IFEQ '1'
+      *
+     C** POINT TO FIRST POSTING AFTER LAST STATEMENT DATE
+     C           KEY1      SETLLAPOST
+      *
+     C** READ FIRST POSTING
+     C           KEY2      READEAPOST                    11
+     C           *IN11     DOWEQ'0'
+      *
+     C** SUM POSTINGS
+     C           PSTD      IFGT LSTD
+     C           DACO      OREQ LSTD
+     C           PSTD      ANDEQLSTD
+     C           CFSB      ANDEQ0
+     C           LSTP      ANDEQ0
+      *
+     C           RECIA     IFEQ 'P'
+     C           DRCR      IFEQ 0
+     C                     SUB  PSTA      TCFSB      12
+     C                     ELSE
+     C                     ADD  PSTA      TCFSB      12
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C           KEY2      READEAPOST                    11
+     C                     END
+      *
+      ** IS CALCULATED C/F BALANCE DIFFERENT TO VALUE ON FILE
+     C           TCFSB     IFEQ FCFSB
+     C                     SETOF                     05
+     C                     ELSE
+     C                     SETON                     05
+     C                     SETON                     42
+     C                     END
+      *
+     C                     END
+      *
+     C                     Z-ADDTCFSB     CFSB
+     C*
+     C** Convert Last Statement Date and Date A/C Opened
+     C*
+     C                     Z-ADDLSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    LSTDA   7
+     C*
+     C                     Z-ADDDACO      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DACOA   7
+     C*
+     C                     EXCPT
+     C                     MOVEASTAMP,1   TMST             Default Timestamp                  CPK015
+     C                     WRITEACCNTX
+     C*
+     C                     SETOF                     0102
+     C                     CLEARACCNTX
+     C                     READ ACCNT                    20
+     C           END       TAG
+     C                     END
+     C                     SETON                       LR
+     C********************************************************************
+     C/SPACE 2
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS.
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON.
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972.
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR.
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH.
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY.
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C**
+     C********************************************************************
+     C/SPACE 3
+     C********************************************************************
+     C*
+     C*  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C*  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS
+     C*
+     C*  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C*
+     C********************************************************************
+     O**
+     O**   DETAIL OUTPUT
+     O**
+     OBALCHKP1H  302   OF
+     O       OR        LRN42
+     O                                   21 'REFERENCE BALCHKP1'
+     O                         BJURPT    91
+     O                                  102 'DATE'
+     O                         BJMRDT   110
+     O                                  119 'PAGE'
+     O                         PAGE  Z  124
+     O        H  1     OF
+     O       OR        LRN42
+     O                                   49 'ACCOUNT BALANCE &'
+     O                                   64 'STMT.  BALANCE'
+     O                                   86 'RECONCILIATION REPORT'
+     O        H  2     OF
+     O       OR        LRN42
+     O                                   49 '-----------------'
+     O                                   64 '---------------'
+     O                                   86 '----------------------'
+     O        H  1     OF
+     O       OR        LRN42
+     O**********                         21 'CUSTOMER      A/C A/C'                           CGL029
+     O**********                         43 'OLD CARRIED FWD'                                 CGL029
+     O**********                         66 'NEW CARRIED FWD'                                 CGL029
+     O**********                        105 '     LAST     '                                  CGL029
+     O**********                        120 '     DATE     '                                  CGL029
+     O**********                        130 '  LAST   '                                       CGL029
+     O                                   23 'CUSTOMER      A/C      '                         CGL029
+     O                                   26 'A/C'                                             CGL029
+     O                                   49 'OLD CARRIED FWD'                                 CGL029
+     O                                   72 'NEW CARRIED FWD'                                 CGL029
+     O                                  110 '     LAST     '                                  CGL029
+     O                                  121 '   DATE   '                                      CGL029
+     O                                  130 '  LAST  '                                        CGL029
+     O        H  1     OF
+     O       OR        LRN42
+     O**********                         21 'NUMBER   CCY CODE SEQ'                           CGL029
+     O**********                         49 '    BALANCE    '                                 CGL029
+     O**********                         72 '    BALANCE    '                                 CGL029
+     O**********                         95 'LEDGER BALANCE'                                  CGL029
+     O**********                        110 'STATEMENT DATE'                                  CGL029
+     O**********                        110 'ACCOUNT OPENED'                                  CGL029
+     O**********                        130 'PAGE NO. '                                       CGL029
+     O                                   23 'NUMBER   CCY CODE      '                         CGL029
+     O                                   26 'A/C'                                             CGL029
+     O                                   49 '    BALANCE    '                                 CGL029
+     O                                   72 '    BALANCE    '                                 CGL029
+     O                                   95 'LEDGER BALANCE'                                  CGL029
+     O                                  110 'STATEMENT DATE'                                  CGL029
+     O                                  121 'A/C OPENED'                                      CGL029
+     O                                  130 'PAGE NO.'                                        CGL029
+     O        H  2     OF
+     O       OR        LRN42
+     O**********                         21 '---------------------'                           CGL029
+     O**********                         43 '---------------'                                 CGL029
+     O**********                         66 '---------------'                                 CGL029
+     O**********                         90 '--------------'                                  CGL029
+     O**********                        105 '--------------'                                  CGL029
+     O**********                        120 '--------------'                                  CGL029
+     O**********                        130 '---------'                                       CGL029
+     O                                   23 '-----------------------'                         CGL029
+     O                                   26 '---'                                             CGL029
+     O                                   49 '---------------'                                 CGL029
+     O                                   72 '---------------'                                 CGL029
+     O                                   95 '--------------'                                  CGL029
+     O                                  110 '--------------'                                  CGL029
+     O                                  121 '----------'                                      CGL029
+     O                                  130 '--------'                                        CGL029
+     O        EF 1     05
+     O                         CNUM       8
+     O                         CCY       12
+     O**********               ACOD      17                                                   CGL029
+     O**********               ACSQ      20                                                   CGL029
+     O**********       30      FCFSB     43 '   ,   ,   ,   , 0 CR'                           CGL029
+     O**********       31      FCFSB     43 '  ,   ,   ,   , 0 . CR'                          CGL029
+     O**********       32      FCFSB     43 ' ,   ,   ,   , 0 .  CR'                          CGL029
+     O**********       33      FCFSB     43 '   ,   ,   , 0 .   CR'                           CGL029
+     O**********       30      TCFSB     66 '   ,   ,   ,   , 0 CR'                           CGL029
+     O**********       31      TCFSB     66 '  ,   ,   ,   , 0 . CR'                          CGL029
+     O**********       32      TCFSB     66 ' ,   ,   ,   , 0 .  CR'                          CGL029
+     O**********       33      TCFSB     66 '   ,   ,   , 0 .   CR'                           CGL029
+     O**********       30      LDBL      90 '   ,   ,   ,   , 0 CR'                           CGL029
+     O**********       31      LDBL      90 '  ,   ,   ,   , 0 . CR'                          CGL029
+     O**********       32      LDBL      90 ' ,   ,   ,   , 0 .  CR'                          CGL029
+     O**********       33      LDBL      90 '   ,   ,   , 0 .   CR'                           CGL029
+     O**********               LSTDA    102                                                   CGL029
+     O**********               DACOA    116                                                   CGL029
+     O                         ACOD      23                                                   CGL029
+     O                         ACSQ      26                                                   CGL029
+     O                 30      FCFSB     49 '   ,   ,   ,   , 0 CR'                           CGL029
+     O                 31      FCFSB     49 '  ,   ,   ,   , 0 . CR'                          CGL029
+     O                 32      FCFSB     49 ' ,   ,   ,   , 0 .  CR'                          CGL029
+     O                 33      FCFSB     49 '   ,   ,   , 0 .   CR'                           CGL029
+     O                 30      TCFSB     72 '   ,   ,   ,   , 0 CR'                           CGL029
+     O                 31      TCFSB     72 '  ,   ,   ,   , 0 . CR'                          CGL029
+     O                 32      TCFSB     72 ' ,   ,   ,   , 0 .  CR'                          CGL029
+     O                 33      TCFSB     72 '   ,   ,   , 0 .   CR'                           CGL029
+     O                 30      LDBL      95 '   ,   ,   ,   , 0 CR'                           CGL029
+     O                 31      LDBL      95 '  ,   ,   ,   , 0 . CR'                          CGL029
+     O                 32      LDBL      95 ' ,   ,   ,   , 0 .  CR'                          CGL029
+     O                 33      LDBL      95 '   ,   ,   , 0 .   CR'                           CGL029
+     O                         LSTDA    106                                                   CGL029
+     O                         DACOA    119                                                   CGL029
+     O                         LSTP     127
+     O**
+     O**   NO DETAILS TO REPORT
+     O**
+     O        T 3      LRN42
+     O                                   59 '*** NO DETAILS'
+     O                                   73 'TO REPORT ***'
+     O**
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015

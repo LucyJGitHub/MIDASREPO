@@ -1,0 +1,411 @@
+     H        1   D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Reporting groups maintenance 1')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - History and Audit Facility Module
+     F*                                                               *
+     F*  HF0140 - Reporting Groups Maintenance 1                      *
+     F*                                                               *
+     F*  Function:  This program allows the user to maintain the      *
+     F*  (I/C INT)  reporting groups for HAF.                         *
+     F*                                                               *
+     F*  Called By: HFC0140 - Reporting Groups Maintenance            *
+     F*                                                               *
+     F*  Calls: HFC0113 - Check object in library.                    *
+     F*         HFC0142 - Reporting Group Maintenance                 *
+     F*                   Create HFRGRRPP/JANBAT                      *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 083164             Date 3APr96                *
+      *                 083167             Date 3APr96                *
+     F*                 S01379             DATE 16SEP92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  083164 - The user is able to amend a reporting group for an  *
+     F*           item which has been deleted.                        *
+     F*  083167 - The user is able to amend a reporting group for an  *
+     F*           item the user is not authorised to.                 *
+     F*  S01379 - New program for HAF.                                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F**---------------------------------------------------------------
+     F**  STANDARD SUB-ROUTINES
+     F*----------------------------------------------------------------
+     F**  FUNCTION OF INDICATORS
+     F*
+     F*  03       CMD KEY 3 - EXIT PROGRAM
+     F*  19       SCR 1 PROCESS CONTROL
+     F*  30       HFFILEL0
+     F*  50       ACTION
+     F*  51       INDICATOR
+     F*  52       ITEM NAME
+     F*  80       ERROR MSG
+     F*
+     F*  90 - 99  ACT-SUBROUTINES
+     F*
+     F*  U7,U8    STANDARD-MIDAS ERROR
+     F*----------------------------------------------------------------
+     FHF0140DFCF  E                    WORKSTN
+     F** SCREEN 1
+     F*
+     F*
+     FHFFILEPDIF  E           K        DISK
+     F** HFFILEL0 TO USED BY THE SYSTEM
+     F*
+     F*
+     FHFUSERPDIF  E           K        DISK                               083167
+     F** HFUSERPD TO USED BY THE SYSTEM                                   083167
+     F*                                                                   083167
+     F*                                                                   083167
+     E*-----------------------------------------------------------------
+     E**                  T A B L E S
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*                                                                   083167
+     E                    ITAB      999  1               ITEM-TAB         083167
+     E*
+     E*-----------------------------------------------------------------
+     IHFFILEP0
+     I            DS
+     I                                        1  10 PONAM
+     I                                        1   7 PONA1
+     I                                        8  100PONA2
+     I*
+     I            DS
+     I                                        1  10 ITNAM
+     I                                        1   1 ITPO1
+     I                                        2  10 ITPO2
+      *
+     IPARM1       DS                             30
+     I                                        1  10 DTNAM
+     I                                       11  20 DONAM
+     I                                       21  21 DACT
+     I                                       22  22 DIND
+     I                                       23  250DITEM
+     I*
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                      244 253 JOB
+     I**************************************244 246 WSID                  083167
+     I                                      244 253 WSID                  083167
+     I                                      254 263 USER
+      *
+     I*
+     I*---------------------------------------------------------------
+     C/EJECT
+     C*****************************************************************
+     C** B E G I N N   O F    M A I N   P R O G R A M M
+     C*****************************************************************
+     C*
+      *
+     C           *ENTRY    PLIST
+     C           PARM1     PARM PARM1     PARM   30
+      *
+     C* HFFILEPD KEY
+     C           JRNFK     KLIST
+     C                     KFLD           KFILE
+     C                     KFLD           KHEAD
+     C                     MOVEL*BLANKS   KFILE  10
+     C                     MOVEL'0'       KHEAD   1
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    SRUNA            RUN DATE
+     C                     MOVE USER      SUSER
+     C                     MOVELWSID      SWSID
+     C*
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C                     MOVE *BLANKS   WUMSID  7        Message Identif
+     C                     MOVEL'HFMSGF'  WUMSGF 10        Message File Na
+      *
+     C                     MOVEL'HF0140'  SPGMQ  10
+     C                     MOVEL*BLANKS   SSFKY   4
+     C*
+     C                     EXSR SRINI1                     * INIT SCR1
+     C                     WRITEHF0140F1
+     C                     EXSR SRINP1                     * INPUT SCR1
+     C           *IN03     IFEQ '1'
+     C                     MOVEL*BLANKS   DTNAM
+     C                     MOVEL*BLANKS   DONAM
+     C                     MOVEL*BLANKS   DACT
+     C                     MOVEL*BLANKS   DIND
+     C                     MOVE *ZEROS    DITEM
+     C                     END
+     C*
+     C           ENDPGM    TAG                             * ENDPGM TAG
+     C*
+     C                     CALL 'SCC0250'
+     C*
+     C   U7 U8             DUMP
+     C*
+     C                     SETON                     LR
+     C*****************************************************************
+     C** E N D    O F    M A I N   P R O G R A M M
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SUBROUTINE SRINI1: INIT 1ST SCREEN
+     C*----------------------------------------------------------------
+     C           SRINI1    BEGSR
+     C                     SETOF                     505152
+     C                     SETOF                     80
+     C                     MOVEL*BLANKS   SACT
+     C                     MOVEL*BLANKS   SIND
+     C                     MOVEL*BLANKS   SITNA
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*  SUBROUTINE SRINP1 : FILL AND CHECK 1ST SCREEN
+     C*----------------------------------------------------------------
+     C           SRINP1    BEGSR
+     C*
+     C                     SETOF                     19
+     C           *IN19     DOWEQ'0'                        B1 START DO
+     C                     WRITEHF0140F2
+     C                     WRITEHF0140C0
+     C                     EXFMTHF0140F1
+     C                     CALL 'SCC0250'
+     C                     MOVEL*BLANKS   PONAM
+     C                     SETOF                     80
+     C                     SETOF                     505152
+     C*  END ?
+     C           *IN03     IFEQ '1'
+     C                     SETON                     1907
+     C                     GOTO INP1E
+     C                     END
+     C*
+     C** Add 'J' to start of item name.
+     C*
+     C                     MOVE *BLANKS   SITNA  10
+     C                     MOVEL'J'       SITNA
+     C                     MOVE SITEM     SITNA
+     C* ITEM NAME
+     C                     MOVELSITNA     ITNAM
+     C                     MOVELSITNA     DTNAM
+     C           SITNA     IFEQ *BLANKS
+     C                     SETON                     5280
+      *
+     C                     MOVEL'HAF0007' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C* INDICATOR
+     C                     MOVELSIND      DIND
+     C           SIND      IFNE 'C'
+     C           SIND      ANDNE'I'
+     C                     SETON                     5180
+      *
+     C                     MOVEL'HAF0026' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+     C* ACTION
+     C                     MOVELSACT      DACT    1
+     C           SACT      IFNE 'I'
+     C           SACT      ANDNE'A'
+     C                     SETON                     5080
+      *
+     C                     MOVEL'HAF0037' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+     C* CHECK ITEM NAME
+     C           *IN80     IFEQ '0'
+     C                     EXSR SRITN
+     C           ZAEHL     IFEQ 0
+     C                     SETON                     5280
+      *
+     C                     MOVEL'HAF0002' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+      ** Check if the user is authorise to the item                       083167
+      *                                                                   083167
+     C                     ELSE                                           083167
+     C*                                                                   083164
+     C** Check if the item has been deleted                               083164
+     C*                                                                   083164
+     C           HDATE     IFNE *BLANKS                                   083164
+     C                     SETON                     5280                 083164
+      *                                                                   083164
+     C                     MOVEL'HAF0123' WUMSID           Message Identif083164
+      * Retrieve MSGF message - Standard Functions  *                     083164
+     C                     CALL 'SCC0240'                  Retrieve MSGF m083164
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif083164
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na083164
+     C*                                                                   083164
+     C                     ELSE                                           083164
+      *                                                                   083167
+     C           USER      CHAINHFUSERPD             30                   083167
+     C                     MOVEAUIT       ITAB                            083167
+     C                     Z-ADDDITEM     Y       30                      083167
+      *                                                                   083167
+     C           ITAB,Y    IFNE 'Y'                                       083167
+     C                     SETON                     5280                 083167
+      *                                                                   083167
+     C                     MOVEL'HAF0122' WUMSID           Message Identif083167
+      * Retrieve MSGF message - Standard Functions  *                     083167
+     C                     CALL 'SCC0240'                  Retrieve MSGF m083167
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif083167
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na083167
+     C                     END                                            083167
+      *                                                                   083167
+     C                     END                                            083164
+     C*                                                                   083164
+     C                     END
+     C                     END
+     C* CHECK OBJECT IN LIBRARY
+     C           *IN80     IFEQ '0'
+     C           SIND      IFEQ 'C'
+     C                     MOVEL'HFRGRPP' PONA1
+     C                     ELSE
+     C                     MOVEL'HFRGBAT' PONA1
+     C                     END
+     C                     MOVELPONAM     DONAM
+     C                     MOVELPONAM     FOBJ   10
+     C                     MOVELPONAM     POBJ   10
+     C                     MOVEL'*LIBL'   FLIB   10
+     C                     MOVEL'*FILE'   FTYP   10
+     C                     MOVEL'Y'       FOK     1
+     C                     CALL 'HFC0113'
+     C                     PARM           FOBJ
+     C                     PARM           FLIB
+     C                     PARM           FTYP
+     C                     PARM           FOK
+     C           SACT      IFEQ 'I'
+     C           FOK       IFEQ 'Y'
+      *
+     C                     MOVEL'HAF0028' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     SETON                     5180
+     C                     END
+     C                     ELSE
+     C           FOK       IFEQ 'N'
+      *
+     C                     MOVEL'HAF0027' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     SETON                     5180
+     C                     END
+     C                     END
+     C                     END
+     C* CREATE A NEW FILE   HFRGRPPXX OR HFRGBATXX
+     C           *IN80     IFEQ '0'
+     C           SACT      IFEQ 'I'
+     C                     MOVELPONAM     POBJ   10
+     C                     MOVEL'Y'       POK     1
+     C                     CALL 'HFC0142'
+     C                     PARM           POBJ
+     C                     PARM           POK
+     C           POK       IFEQ 'N'
+      *
+     C                     MOVEL'HAF0025' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     SETON                     5280
+     C                     END
+     C                     END
+     C                     END
+     C** SCR1 END-CHECK
+     C           *IN80     IFEQ '0'
+     C                     SETON                     19
+     C                     END
+     C*
+     C           INP1E     TAG
+     C                     END                             E1 END DO
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SUBROUTINE SRITN  : CHECK ITEM NAME
+     C*----------------------------------------------------------------
+     C           SRITN     BEGSR
+     C** READ FILE WITH ITEM NAME
+     C                     SETOF                     30
+     C                     Z-ADD0         ZAEHL   20
+     C                     MOVELSITNA     KFILE
+     C                     MOVEL'0'       KHEAD
+     C           JRNFK     SETLLHFFILEP0
+     C                     READ HFFILEP0                 30
+     C           *IN30     DOWEQ'0'                        B1 DO
+     C           FFILE     ANDEQSITNA
+     C           HEADER    IFEQ '0'
+     C           ENAB      ANDEQ'E'
+     C                     MOVE ITEM      PONA2
+     C                     MOVE ITEM      DITEM
+     C                     MOVE HFDATE    HDATE   7                       083164
+     C                     ADD  1         ZAEHL
+     C                     END
+     C                     READ HFFILEP0                 30
+     C                     END                             E1 DO
+     C*
+     C                     ENDSR
+     C*****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

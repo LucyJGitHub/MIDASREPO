@@ -1,0 +1,357 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(UTC000001R) TOFILE(UPMBRLTPD)                   */
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT CPP for CMPSRC')                             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000001 - CPP for CMPSRC                                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2007                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27884           Date 08Jul10              */
+/*                      BG22137            Date 13Jan09              */
+/*                      CUT010  *CREATE    Date 10May07              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG27884 - Applied CUT010.                                  */
+/*       BG22137 - Bridge/Utility Changes.                           */
+/*               - UT000001 renamed to UT000011.                     */
+/*       CUT010 - New utility.                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&REF &CMP &MOVE &BLANK &LINES)
+ 
+             DCL        VAR(&REF) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&CMP) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&MOVE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&BLANK) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&LINES) TYPE(*DEC) LEN(4 0)
+ 
+             DCL        VAR(&REFFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REFFILEL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REFMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPFILEL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPMBR) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&CMDCMPMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMDCMPFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OPTION) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&CMPCMD) TYPE(*CHAR) LEN(250)
+             DCL        VAR(&CMPCMDLEN) TYPE(*DEC) LEN(15 5) VALUE(250)
+             DCL        VAR(&DIFFMBR) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&DIFFSRCF) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&FOUND) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ALINES) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&SPECMBR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&PFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             DCLF       FILE(UTC000001R)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2007')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Set up file for SQL statements. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for UTC000001')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/* Make sure work files do not exist already. */
+             DLTF       FILE(QTEMP/UTC000001R)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UTC000001C)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UTC000001T)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UPMBRLTOF)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/CMPSRCOF)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UTSRCF*)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Check where The UTSRCF* files are and create duplicates in QTEMP. */
+             RTVOBJD    OBJ(UTSRCFPD) OBJTYPE(*FILE) RTNLIB(&PFLIB)
+             RTVOBJD    OBJ(UTSRCFL0) OBJTYPE(*FILE) RTNLIB(&LFLIB)
+             IF         COND(&PFLIB *NE &LFLIB) THEN(DO)
+                MOVOBJ     OBJ(&PFLIB/UTSRCFPD) OBJTYPE(*FILE) +
+                             TOLIB(&LFLIB)
+             ENDDO
+             CRTDUPOBJ  OBJ(UTSRCF*) FROMLIB(&LFLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP)
+             IF         COND(&PFLIB *NE &LFLIB) THEN(DO)
+                MOVOBJ     OBJ(&LFLIB/UTSRCFPD) OBJTYPE(*FILE) +
+                             TOLIB(&PFLIB)
+             ENDDO
+ 
+/* Break down the parameters for the libraries. */
+             CHGVAR     VAR(&REFFILE) VALUE(%SST(&REF 3 10))
+             CHGVAR     VAR(&REFFILEL) VALUE(%SST(&REF 13 10))
+             CHGVAR     VAR(&REFMBR) VALUE(%SST(&REF 23 10))
+             CHGVAR     VAR(&CMPFILE) VALUE(%SST(&CMP 3 10))
+             CHGVAR     VAR(&CMPFILEL) VALUE(%SST(&CMP 13 10))
+             CHGVAR     VAR(&CMPMBR) VALUE(%SST(&CMP 23 10))
+             CHGVAR     VAR(&ALINES) VALUE(&LINES)
+ 
+/* Create outfile of Reference source to be compared. */
+             CRTDUPOBJ  OBJ(UPMBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UTC000001R)
+             DSPFD      FILE(&REFFILEL/&REFFILE) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/UPMBRLTOF)
+             CPYF       FROMFILE(QTEMP/UPMBRLTOF) +
+                          TOFILE(QTEMP/UTC000001R) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+/* If requested members is not *ALL, then remove records not to be compared. */
+             IF         COND(&REFMBR *NE '*ALL') THEN(DO)
+                CHGVAR     VAR(&SPECMBR) VALUE('Y')
+                CPYF       FROMFILE(QTEMP/UTC000001R) +
+                             TOFILE(QTEMP/UTC000001T) MBROPT(*REPLACE) +
+                             CRTFILE(*YES) INCCHAR(MLNAME 1 *EQ &REFMBR)
+                CPYF       FROMFILE(QTEMP/UTC000001T) +
+                             TOFILE(QTEMP/UTC000001R) MBROPT(*REPLACE)
+             ENDDO
+ 
+/* If values in comparison parameters = *REF then change values. */
+             IF         COND(&CMPFILE *EQ '*REF') THEN(DO)
+                CHGVAR     VAR(&CMPFILE) VALUE(&REFFILE)
+             ENDDO
+             IF         COND(&CMPMBR *EQ '*REF') THEN(DO)
+                CHGVAR     VAR(&CMPMBR) VALUE(&REFMBR)
+             ENDDO
+ 
+/* If the Comparison library is *LIBL then retrieve correct library name. */
+             IF         COND(&CMPFILEL *EQ '*LIBL') THEN(DO)
+                RTVOBJD    OBJ(&CMPFILE) OBJTYPE(*FILE) RTNLIB(&CMPFILEL)
+             ENDDO
+ 
+/* Create outfile of comparison source. */
+             CRTDUPOBJ  OBJ(UPMBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UTC000001C)
+             DSPFD      FILE(&CMPFILEL/&CMPFILE) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/UPMBRLTOF)
+             CPYF       FROMFILE(QTEMP/UPMBRLTOF) +
+                          TOFILE(QTEMP/UTC000001C) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+/* If requested members is not *ALL, then remove records not to be compared. */
+             IF         COND(&SPECMBR *EQ 'Y') THEN(DO)
+/* Check if member names are the same. */
+                IF         COND(&CMPMBR *NE &REFMBR) THEN(DO)
+                   CHGVAR     VAR(&DIFFMBR) VALUE('Y')
+                   CHGVAR     VAR(&CMDCMPMBR) VALUE(&CMPMBR)
+                ENDDO
+                CPYF       FROMFILE(QTEMP/UTC000001C) +
+                             TOFILE(QTEMP/UTC000001T) MBROPT(*REPLACE) +
+                             CRTFILE(*YES) INCCHAR(MLNAME 1 *EQ &CMPMBR)
+                CPYF       FROMFILE(QTEMP/UTC000001T) +
+                             TOFILE(QTEMP/UTC000001C) MBROPT(*REPLACE)
+             ENDDO
+ 
+/* If source files are different names then update outfile. */
+             IF         COND(&REFFILE *NE &CMPFILE) THEN(DO)
+                CHGVAR     VAR(&DIFFSRCF) VALUE('Y')
+                CHGVAR     VAR(&SQLSTM) VALUE('UPDATE UTC000001R SET +
+                             MLRCEN =' *BCAT &QUOTE *TCAT '*' *TCAT +
+                             &QUOTE *TCAT ';')
+                CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+                CHGVAR     VAR(&SQLSTM) VALUE('UPDATE UTC000001C SET +
+                             MLRCEN =' *BCAT &QUOTE *TCAT '*' *TCAT +
+                             &QUOTE *TCAT ';')
+                CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+                CHGVAR     VAR(&SQLSTM) VALUE('UPDATE UTC000001R SET +
+                             MLSEU2 =' *BCAT &QUOTE *TCAT &CMPFILE +
+                             *TCAT &QUOTE *BCAT 'WHERE MLSEU2 <>' +
+                             *BCAT &QUOTE *BCAT &QUOTE *TCAT ';')
+                CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+                CHGVAR     VAR(&SQLSTM) VALUE('UPDATE UTC000001C SET +
+                             MLFILE =' *BCAT &QUOTE *TCAT &REFFILE +
+                             *TCAT &QUOTE *TCAT ';')
+                CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+                RUNSQLSTM  SRCFILE(RUNSQL) SRCMBR(RUNSQLSTM) COMMIT(*NONE)
+                DLTSPLF    FILE(RUNSQLSTM) SPLNBR(*LAST)
+             ENDDO
+ 
+/* Delete records from outfiles where they are not source. */
+             CHGVAR     VAR(&SQLSTM) VALUE('DELETE FROM UTC000001R +
+                          WHERE MLSEU2 =' *BCAT &QUOTE *BCAT &QUOTE +
+                          *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+             CHGVAR     VAR(&SQLSTM) VALUE('DELETE FROM UTC000001C +
+                          WHERE MLSEU2 =' *BCAT &QUOTE *BCAT &QUOTE +
+                          *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             RUNSQLSTM  SRCFILE(RUNSQL) SRCMBR(RUNSQLSTM) COMMIT(*NONE)
+             DLTSPLF    FILE(RUNSQLSTM) SPLNBR(*LAST)
+/* Check if this has emptied either file; if it has then end the program */
+/*  as there is nothing to compare.                                      */
+             RTVMBRD    FILE(QTEMP/UTC000001R) NBRCURRCD(&NBRCURRCD)
+             IF         COND(&NBRCURRCD *NE 0) THEN(DO)
+                RTVMBRD    FILE(QTEMP/UTC000001C) NBRCURRCD(&NBRCURRCD)
+                IF         COND(&NBRCURRCD *NE 0) THEN(DO)
+                   GOTO       CMDLBL(OPTION)
+                ENDDO
+             ENDDO
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Either +
+                          the Reference or Comparison file(s) does +
+                          not have anything to compare') +
+                          TOPGMQ(*PRV) MSGTYPE(*ESCAPE)
+             GOTO       CMDLBL(ENDPGM)
+ 
+OPTION:
+/* Change parameters depending on command. */
+             CHGVAR     VAR(&OPTION) VALUE('OPTION(')
+             IF         COND(&MOVE *EQ '*YES') THEN(DO)
+                CHGVAR     VAR(&OPTION) VALUE(&OPTION *TCAT '*FLGMOVLIN')
+             ENDDO
+             IF         COND(&BLANK *EQ '*NO') THEN(DO)
+                CHGVAR     VAR(&OPTION) VALUE(&OPTION *BCAT '*OMTBLANK')
+             ENDDO
+             CHGVAR     VAR(&OPTION) VALUE(&OPTION *TCAT ')')
+ 
+/* Read records to start comparing reference source members. */
+NEXTMBR:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(REPORT)
+             ENDDO
+ 
+/* If just one member was chosen then ensure it is the correct member. */
+             IF         COND(&SPECMBR *EQ 'Y') THEN(DO)
+                IF         COND(&MLNAME *NE &REFMBR) THEN(DO)
+                   GOTO       CMDLBL(NEXTMBR)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&MLSEU2 *NE ' ') THEN(DO)
+                IF         COND(&DIFFMBR *EQ 'Y') THEN(DO)
+                   CHGVAR     VAR(&CMDCMPMBR) VALUE(&CMPMBR)
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&CMDCMPMBR) VALUE(&MLNAME)
+                ENDDO
+                IF         COND(&DIFFSRCF *EQ 'Y') THEN(DO)
+                   CHGVAR     VAR(&CMDCMPFILE) VALUE(&CMPFILE)
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&CMDCMPFILE) VALUE(&MLFILE)
+                ENDDO
+/* If not comparing a specific member then check member exists in Comparison file. */
+                IF         COND(&SPECMBR *NE 'Y') THEN(DO)
+/**********        CALL       PGM(UT000001) PARM(&MLFILE &MLNAME &FOUND +             */ /*BG22137*/
+/**********                     &CMPLIB)                                              */ /*BG22137*/
+                   CALL       PGM(UT000011) PARM(&MLFILE &MLNAME &FOUND +
+                                &CMPLIB)                                                 /*BG22137*/
+                   IF         COND(&FOUND *EQ '*NO') THEN(DO)
+                      GOTO       CMDLBL(NEXTMBR)
+                   ENDDO
+                ENDDO
+ 
+/* Use QCMDEXC to run compare as this makes the use of parameters easier. */
+                CHGVAR     VAR(&CMPCMD) VALUE(' ')
+                CHGVAR     VAR(&CMPCMD) VALUE('CMPPFM NEWFILE(' *TCAT +
+                             &MLLIB *TCAT '/' *TCAT &MLFILE *TCAT ') +
+                             NEWMBR(' *TCAT &MLNAME *TCAT ') OLDFILE(' +
+                             *TCAT &CMPFILEL *TCAT '/' *TCAT +
+                             &CMDCMPFILE *TCAT ') OLDMBR(' *TCAT +
+                             &CMDCMPMBR *TCAT ') RPTTYPE(*DETAIL) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/CMPSRCOF) +
+                             OUTMBR(*FIRST *ADD)')
+                IF         COND(&MOVE *EQ '*YES' *OR &BLANK *EQ '*NO') +
+                             THEN(DO)
+                   CHGVAR     VAR(&CMPCMD) VALUE(&CMPCMD *BCAT &OPTION)
+                ENDDO
+                CALL       PGM(QCMDEXC) PARM(&CMPCMD &CMPCMDLEN)
+             ENDDO
+ 
+             GOTO       CMDLBL(NEXTMBR)
+ 
+REPORT:
+/* Call program to update the Reference outfile for the summary report. */
+             IF         COND(&SPECMBR *NE 'Y') THEN(DO)
+                CALL       PGM(UT000004)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* Copy file out and back in to sort file. */
+                CPYF       FROMFILE(QTEMP/UTC000001R) TOFILE(UPMBRLTPD) +
+                             MBROPT(*REPLACE)
+                CPYF       FROMFILE(UPMBRLTPD) TOFILE(QTEMP/UTC000001R) +
+                             MBROPT(*REPLACE)
+             ENDDO
+ 
+/* Call program to remove unwanted lines. */
+             DLTF       FILE(QTEMP/CMPSRCQT)
+             MONMSG     MSGID(CPF0000)
+             CPYF       FROMFILE(QTEMP/CMPSRCOF) +
+                          TOFILE(QTEMP/CMPSRCQT) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+             CALL       PGM(UT000003)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Call program to produce output of compares. */
+             CALL       PGM(UT000002) PARM(&ALINES &SPECMBR)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             ELSE       CMD(DO)
+                IF         COND(&SPECMBR *EQ 'Y') THEN(DO)
+                   CHGSPLFA   FILE(UT000002P1) SPLNBR(*LAST) USRDTA(&REFMBR)
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGSPLFA   FILE(UT000002P1) SPLNBR(*LAST) USRDTA('*MULTI')
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

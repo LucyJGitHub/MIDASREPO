@@ -1,0 +1,173 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of business Module                             *
+      *                                                               *
+      *  SD2002 - End of Year (Calendar) Check                        *
+      *                                                               *
+      *  (c) Finastra International Limited 2014                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR674247 *CREATE   Date 18Dec14               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR674247 - Run condition 81 as calendar year end.            *
+      *           - Applied for MD031576                              *
+      *                                                               *
+      *****************************************************************
+      **---------------------------------------------------------------
+      **  STANDARD SUB-ROUTINES
+      *----------------------------------------------------------------
+      *
+      *
+      *----------------------------------------------------------------
+      **  FUNCTION OF INDICATORS
+      *
+      *
+      *  U7 & U8  Standard database error indicators
+      *  LR       Last Record - End of Program
+      **---------------------------------------------------------------
+      *
+      *
+      /EJECT
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      *
+      ** Local data area for database error details
+      *
+     ILDA       E DSLDA                         256
+      *
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IPSDS       SDS
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+      ** Define layout of SDBANKPD for AOBANKR0 call return string
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Define Access Object call output string
+      *
+     I@FMT      E DSDSFDY
+     INXTWRD      DS
+     I                                        1   2 WWDD
+     I                                        3   4 WWMM
+     I                                        5   60WWYY
+     IRUNDAY      DS
+     I                                        1   2 ZZDD
+     I                                        3   4 ZZMM
+     I                                        5   60ZZYY
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Program Initiation Processing:                                *
+      *                                                               *
+      * Sets up the copyright statement.                              *
+      * Obtains Year End Date.                                        *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Define End of Year Parameter
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           FEOY
+     C                     PARM           ERROR
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Obtain End of Year date from SDBANKPD
+      *
+     C                     MOVEL'*FIRST ' BANKOP  7
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   BANKRC  7        Return code
+     C                     PARM           BANKOP           Option
+     C           SDBANK    PARM SDBANK    @FMT             Format
+      *
+      ** Check for error in SDBANKPD
+      *
+     C           BANKRC    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'Y'       ERROR   1                       S01194
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SD4101'  DBPGM            **************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001*
+     C                     MOVEL'BANK'    DBKEY            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** If it is Calendar end of Year set flag to  'Y'
+      *
+     C                     MOVELBJDNWD    ZDAYNO
+     C                     MOVEL'D'       FORMAT  1
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50
+     C                     PARM           FORMAT
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     MOVE ZDATE     NXTWRD
+     C                     MOVELBJRDNB    ZDAYNO
+     C                     MOVEL'D'       FORMAT  1
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50
+     C                     PARM           FORMAT
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     MOVE ZDATE     RUNDAY
+     C           ZZYY      IFLT WWYY
+     C                     MOVE 'Y'       FEOY    1
+     C                     ENDIF
+      *
+      ** End program
+      *
+     C                     MOVE '1'       *INLR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2014

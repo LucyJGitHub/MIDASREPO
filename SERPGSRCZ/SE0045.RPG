@@ -1,0 +1,787 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Calculate coupon dates for FRNs')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE0045 - Calculate 'Next Coupon Date' for FRN's              *
+      *                                                               *
+      *  Function:  This program takes into account the effect of     *
+      *             holidays in the calculation of Next Coupon Date   *
+      *             and Last Coupon Date for FRN's.                   *
+      *   (I/C)     This will be determined by the Business Day       *
+      *   (COB)     Convention and Nominal Currency used for each FRN.*
+      *             A security is defined as an FRN if the processing *
+      *             type of the investment type for a security is '3'.*
+      *                                                               *
+      *                                                               *
+      *  Called By: standard subroutine ZLCD                          *
+      *             standard subroutine ZNCD                          *
+      *             standard subroutine ZLCR                          *
+      *             standard subroutine ZNCR                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD050139           Date 23Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL184             Date 07Dec16               *
+      *                 CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG11193           Date 02May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 202191             Date 21Jan02               *
+      *                 CSE031             Date 09Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSE005*CREATE      Date 13JAN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD050139- AOSARDR0 called every time causing performance     *
+      *            issue. Recompile due to changes in /COPY           *
+      *            ZFREQ/ZFRQ*.                                       *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL184 - New Frequencies for Account Statements (Recompile)  *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  BUG11193 - Purchased Interest not calculated on BackValued   *
+      *             Trade.                                            *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities                     *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  202191 - Frequency Code is incorrect for 6 months frequency  *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes               *
+      *  CSE005 - Effect of holidays on FRN Coupon Dates              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  INIT   : declare parameters,*IN98 ->'0'(ddmmyy) or'1'(mmddyy)*
+      *  MAIN   : switch on Business Day Convention,call C,F,M or Exit*
+      *  EXIT   : return to caller                                    *
+      *  C      : FRN convention                                      *
+      *  F      : 'Following' convention                              *
+      *  M      : 'Modified Following' convention                     *
+      *                                                               *
+      *  ZDATE2 : ZDAYNO -> ZDATE conversion                          *
+      *  ZDATE1 : ZDATE  -> ZDAYNO conversion                         *
+      *  ZFREQB : CALCULATE DAY NUMBER OF NEXT COUPON DATE            *
+      *  ZCHKH  : ZDAYNO -> ZIND = 'H'(holiday) or 'W'(working day)   *
+      *  ZFWDT  : ZDAYNO -> ZDYNBR (next working day from ZDAYNO)     *
+      *  ZBKDT  : ZDAYNO -> ZDYNBR (working day prior to ZDAYNO)      *
+      *                                                               *
+      *****************************************************************
+      *
+      /EJECT
+      *
+     FINVTP   IF  E           K        DISK
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F  I N D I C A T O R S                   *
+      *                                                               *
+      *  *IN52  error chaining to INVTP to get PROT                   *
+      *  *IN98  *OFF for ddmmyy / *ON for mmddyy                      *
+      *  *IN99  set by SR ZDATE2 to *ON if error occurred             *
+      *                                                               *
+      *****************************************************************
+      *
+      ** CRX will hold Coupon Payment Ind. Array
+      *
+     E                    CRX        12  1
+      *
+      ** ZDATE2Z1 to execute SRs ZDATE2 and ZDATE1
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+      ** ZFREQBZ1 to execute SR ZFREQB
+      *
+     E/COPY ZSRSRC,ZFREQBZ1
+      *
+      ** ZHOLE to execute SRs ZCHKH, ZFWDT and ZBKDT
+      *
+     E*/COPY*ZSRSRC,ZHOLE***                                                                  CSE071
+     E/COPY ZSRSRC,ZHOLE1                                                                     CSE071
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      *
+      ** ZHOLI for SRs ZCHKH, ZFWDT and ZBKDT
+      *
+     I*/COPY*ZSRSRC,ZHOLI***                                                                  CSE071
+     I/COPY ZSRSRC,ZHOLI1                                                                     CSE071
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA
+      ** straight after each database error handling
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** ZAOZ1 and ZAOZ2 in order to call SR ZFREQB
+      *
+     I/COPY ZSRSRC,ZAOZ1
+     I/COPY ZSRSRC,ZAOZ2
+      *
+      ** ZHOLDS for SRs ZCHKH, ZFWDT and ZBKDT
+      *
+     I/COPY ZSRSRC,ZHOLDS
+      *********************************************
+      *
+     C/TITLE Main Processing
+      *
+      ** control module
+      *
+     C                     EXSR INIT
+     C                     EXSR MAIN
+     C                     EXSR EXIT
+      *
+      *****************************************************************
+      *                                                               *
+      * INIT:      initial processing                                 *
+      *                                                               *
+      * Called by: control module                                     *
+      *                                                               *
+      * Calls:     EXIT, *PSSR                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** declare parameters
+      *
+     C           *ENTRY    PLIST
+      *
+      ** NLCD holds NCD if calling SR is ZNCDZ3
+      ** NLCD holds ZZLCD if calling SR is ZLCDZ1
+      ** NCI holds Next/Last coupon ind.'N' or 'L'
+      *
+     C                     PARM           SITP    3
+     C                     PARM           ECD     50
+     C                     PARM           ITLD    50
+     C                     PARM           FCPN    50
+     C                     PARM           CD     48
+     C                     PARM           CR     12
+     C                     PARM           NMCY    3
+     C                     PARM           NLCD    50
+     C                     PARM           NCI     1
+     C                     PARM           BCNV    1
+     C                     PARM           MATY    50
+     C                     PARM           LCPN    50                      CSE031
+     C                     PARM           HCY1    3                       CSE071
+     C                     PARM           HCY2    3                       CSE071
+     C                     PARM           HCY3    3                       CSE071
+     C                     PARM           HCY4    3                       CSE071
+     C                     PARM           HCY5    3                       CSE071
+     C                     PARM           HCY6    3                       CSE071
+     C                     PARM           HCY7    3                       CSE071
+     C                     PARM           HCY8    3                       CSE071
+     C                     PARM           HCY9    3                       CSE071
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *                                                                   CSE031
+      ** Check if CSE031 is switched on.                                  CSE031
+      *                                                                   CSE031
+     C                     CALL 'AOSARDR0'                                CSE031
+     C                     PARM           PRTCD   7                       CSE031
+     C                     PARM '*VERIFY' POPTN   7                       CSE031
+     C                     PARM 'CSE031'  PSARD   6                       CSE031
+      *                                                                   CSE031
+     C           PRTCD     IFEQ *BLANKS                                   CSE031
+     C                     MOVE 'Y'       CSE031  1                       CSE031
+     C                     ELSE                                           CSE031
+     C                     MOVE 'N'       CSE031                          CSE031
+     C                     ENDIF                                          CSE031
+      *                                                                   CSE071
+      ** Check if CSE071 is switched on.                                  CSE071
+      *                                                                   CSE071
+     C                     CALL 'AOSARDR0'                                CSE071
+     C                     PARM           PRTCD                           CSE071
+     C                     PARM '*VERIFY' POPTN                           CSE071
+     C                     PARM 'CSE071'  PSARD                           CSE071
+      *                                                                   CSE071
+     C           PRTCD     IFEQ *BLANKS                                   CSE071
+     C                     MOVE 'Y'       CSE071  1                       CSE071
+     C                     ELSE                                           CSE071
+     C                     MOVE 'N'       CSE071                          CSE071
+     C                     ENDIF                                          CSE071
+     C*                                                                   CSE071
+     C* Define key list for file INVTP
+     C*
+     C           KLINVT    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C*
+      ** read file INVTP to get processing type PROT
+      *
+     C           KLINVT    CHAININVTPDF              52
+     C           *IN52     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'INVTP'   DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*KEY '   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+      ** only continue if processing type is '3'
+      ** OR it is '3' and '8' if CSE031 is on.                            CSE031
+      ** OR it is '1', '3', '5', '6', '8', '9' if CSE071 is on.           CSE071
+     C*
+     C           PROT      IFNE '3'
+     C           CSE031    ANDEQ'N'                                       CSE031
+     C           CSE071    ANDEQ'N'                                       CSE071
+      *                                                                   CSE031
+     C           PROT      ORNE '3'                                       CSE031
+     C           PROT      ANDNE'8'                                       CSE031
+     C           CSE031    ANDEQ'Y'                                       CSE031
+     C           CSE071    ANDEQ'N'                                       CSE071
+      *                                                                   CSE071
+     C           CSE071    OREQ 'Y'                                       CSE071
+     C           PROT      ANDNE'1'                                       CSE071
+     C           PROT      ANDNE'3'                                       CSE071
+     C           PROT      ANDNE'5'                                       CSE071
+     C           PROT      ANDNE'6'                                       CSE071
+     C           PROT      ANDNE'8'                                       CSE071
+     C           PROT      ANDNE'9'                                       CSE071
+      *                                                                   CSE071
+     C                     EXSR EXIT
+     C                     ENDIF
+      *
+      ** if date format is MMDDYY
+      ** then Set Date Format Indicator *IN98 on
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** initialise ZCCY and ZLOC which are required
+      ** for SRs ZFREQB, ZCHKH
+      *
+     C                     MOVE NMCY      ZCCY    3
+     C                     MOVE '   '     ZLOC    3
+      *
+      ** save FCPN as FCPNXX
+      *
+     C                     MOVE FCPN      FCPNXX  50
+      *
+      ** if FCPN is zero then FCPN = ITLD+1.
+      *
+     C           FCPN      IFEQ 0
+     C           ITLD      ADD  1         FCPN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * Main:      main processing                                    *
+      *                                                               *
+      * Called by: control module                                     *
+      *                                                               *
+      * Calls:     C, F, M, EXIT                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MAIN      BEGSR
+      *
+      ** switch upon Business day convention                           e
+      ** and execute the appropriate subroutine                        e
+      ** (no action will be taken if BCNV is ' ').
+      *
+     C*          BCNV      CASEQ' '       EXIT
+     C           BCNV      CASEQ'C'       C
+     C           BCNV      CASEQ'F'       F
+     C           BCNV      CASEQ'M'       M
+     C                     ENDCS
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * Exit:      exit subroutine                                    *
+      *                                                               *
+      * Called by: control module, MAIN                               *
+      *                                                               *
+      * Calls:     none                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EXIT      BEGSR
+      *
+      ** return to caller
+      *
+     C                     SETON                         LR
+     C                     RETRN
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * C:         FRN convention                                     *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls:     *PSSR, ZDATE2, ZFREQB, EXIT                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           C         BEGSR
+      *
+      ** if event control date is before first coupon date
+      ** then NLCD set to i) FCPN (if NLI is 'N')
+      **                 ii) ITLD (if NLI is 'L')
+      ** and return to caller
+      *
+     C           ECD       IFLT FCPN
+     C                     SELEC
+     C           NCI       WHEQ 'N'
+     C                     Z-ADDFCPN      NLCD
+     C           NCI       WHEQ 'L'
+     C                     Z-ADDITLD      NLCD
+     C                     ENDSL
+     C*                    EXSR EXIT
+      *
+      ** else event control date is not before the
+      ** first coupon date
+      *
+     C                     ELSE
+      *
+      ** to determine the no. coupons in a year:
+      ** move CR into CRX array then count the
+      ** number of elements with value 'P' or 'C'.
+      *
+     C                     MOVEACR        CRX
+     C                     Z-ADD0         COUNT   20
+     C           1         DO   12        MONTH   20
+     C           CRX,MONTH IFEQ 'P'
+     C           CRX,MONTH OREQ 'C'
+     C                     ADD  1         COUNT
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** determine the coupon frequency:
+      ** 'Y'(yearly),   'X'(half-yearly),
+      ** 'Q'(quarterly),'M'(monthly),
+      ** 'S'(semi-monthly).
+      *
+     C                     SELEC
+     C           COUNT     WHEQ 1
+     C                     MOVE 'Y'       ZFREQ   1
+     C           COUNT     WHEQ 2
+     C                     MOVE 'X'       ZFREQ
+     C           COUNT     WHEQ 4
+     C                     MOVE 'Q'       ZFREQ
+     C           COUNT     WHEQ 6
+     C***********          MOVE 'S'       ZFREQ                                               202191
+     C                     MOVE 'T'       ZFREQ                                               202191
+     C           COUNT     WHEQ 12
+     C                     MOVE 'M'       ZFREQ
+      *
+      ** must validate ZFREQ as SR ZFREQB does not!
+      *
+     C                     OTHER
+     C                     EXSR *PSSR
+     C                     ENDSL
+      *
+      ** ZDAYNO (base date) -> first coupon date
+      ** ZMDAY (base day) -> day in the month of
+      ** the first coupon date
+      *
+     C           CSE031    IFEQ 'Y'                                       CSE031
+     C           LCPN      ANDNE*ZEROS                                    CSE031
+     C           CSE071    OREQ 'Y'                                       CSE071
+     C           LCPN      ANDNE*ZEROS                                    CSE071
+     C                     MOVE LCPN      ZDAYNO                          CSE031
+     C                     ELSE                                           CSE031
+     C                     MOVE FCPN      ZDAYNO  50P
+     C                     ENDIF                                          CSE031
+      *                                                                   CSE031
+     C                     EXSR ZDATE2
+      *
+      ** check ZDATE2 did not result in an error
+      *
+     C           *IN99     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN98     IFEQ *OFF
+     C                     MOVELZDATE     ZMDAY   20P
+     C                     ELSE
+      *
+      ** remember the case  where date is mmddyy
+      *
+     C                     MOVELZDATE     MMDD    40
+     C                     MOVE MMDD      ZMDAY
+     C                     ENDIF
+      *
+      ** initialise last coupon date with FCPNXX,
+      ** which is the first coupon date as at *ENTRY.
+      ** (This prevents a first coupon date of ITLD+1
+      ** being returned as the last coupon date).
+      *
+     C                     Z-ADDFCPNXX    LDAYNO  50
+      *
+      ** do the following until
+      ** the updated base date output from ZFREQB
+      ** (ZDAYNO) is after the event control date:
+      ** Calculate each Coupon Date from the first
+      ** coupon using SR ZFREQB and update ZMDAY
+      ** to the day number of recalculated ZDAYNO
+      *
+     C           ZDAYNO    DOUGTECD
+     C                     EXSR ZFREQB
+      *
+     C                     EXSR ZDATE2
+      *
+      ** check ZDATE2 did not result in an error
+      *
+     C           *IN99     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN98     IFEQ *OFF
+     C                     MOVELZDATE     ZMDAY     P
+     C                     ELSE
+      *
+      ** remember the case  where date is mmddyy
+      *
+     C                     MOVELZDATE     MMDD
+     C                     MOVE MMDD      ZMDAY
+     C                     ENDIF
+      *
+      ** if updated ZDAYNO is not after ECD
+      ** then save it as LDAYNO
+      *
+     C           ZDAYNO    IFLE ECD
+     C                     MOVE ZDAYNO    LDAYNO    P
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Now, ZDAYNO is the Next Coupon Date
+      ** and  LDAYNO is Last Coupon Date.
+      *
+      ** if NLI is 'N' then set NLCD to be the next
+      ** coupon date, but not after maturity date;
+      ** if NLI is 'L' then set NLCD to be the last
+      ** coupon date
+      *
+     C                     SELEC
+     C           NCI       WHEQ 'N'
+     C           ZDAYNO    IFGT MATY
+     C                     MOVE MATY      NLCD      P
+     C                     ELSE
+     C                     MOVE ZDAYNO    NLCD      P
+     C                     ENDIF
+     C           NCI       WHEQ 'L'
+     C                     MOVE LDAYNO    NLCD      P
+      *
+      ** exit if Next/Last indicator is invalid
+      *
+     C                     OTHER
+     C                     EXSR *PSSR
+     C                     ENDSL
+      *                                                                   CSE031
+      ** If CSE031 is On then set Last Coupon Date from the               CSE031
+      ** Security Details file.                                           CSE031
+      *                                                                   CSE031
+     C           CSE031    IFEQ 'Y'                                       CSE031
+     C           NCI       ANDEQ'L'                                       CSE031
+     C           LCPN      ANDNE*ZEROS                                    CSE031
+     C           LCPN      ANDGENLCD                                                        BUG11193
+     C           CSE071    OREQ 'Y'                                       CSE071
+     C           NCI       ANDEQ'L'                                       CSE071
+     C           LCPN      ANDNE*ZEROS                                    CSE071
+     C           LCPN      ANDGENLCD                                                        BUG11193
+     C                     Z-ADDLCPN      NLCD                            CSE031
+     C                     ENDIF                                          CSE031
+      *
+     C                     ENDIF
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * F:         'Following' convention                             *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls:     ZCHKH, ZFWDT                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           F         BEGSR
+      *
+      ** determine whether the Next/Last coupon date
+      ** is a holiday in nominal currency with ZCHKH
+      *
+     C                     MOVE NLCD      ZDAYNO  50P
+     C                     EXSR ZCHKH
+      *
+      ** if it is a holiday
+      *
+     C           ZIND      IFEQ 'H'
+      *
+      ** determine the next working day for Next/Last
+      ** coupon date in nominal currency by calling
+      ** SR ZFWDT with ZNRDYS = 1
+      *
+     C                     Z-ADD1         ZNRDYS  20
+     C                     EXSR ZFWDT
+      *
+      ** Update the Next/Last coupon date but this
+      ** date cannot be after MATY
+      *
+     C           ZDYNBR    IFGT MATY
+     C                     MOVE MATY      NLCD      P
+     C                     ELSE
+     C                     MOVE ZDYNBR    NLCD      P
+     C                     ENDIF
+      *                                                                   CSE031
+      ** If CSE031 is On then set Last Coupon Date from the               CSE031
+      ** Security Details file.                                           CSE031
+      *                                                                   CSE031
+     C           CSE031    IFEQ 'Y'                                       CSE031
+     C           NCI       ANDEQ'L'                                       CSE031
+     C           LCPN      ANDNE*ZEROS                                    CSE031
+     C           LCPN      ANDGENLCD                                                        BUG11193
+     C           CSE071    OREQ 'Y'                                       CSE071
+     C           NCI       ANDEQ'L'                                       CSE071
+     C           LCPN      ANDNE*ZEROS                                    CSE071
+     C           LCPN      ANDGENLCD                                                        BUG11193
+     C                     Z-ADDLCPN      NLCD                            CSE031
+     C                     ENDIF                                          CSE031
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * M:         'Modified Following' convention                    *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls:     ZCHKH, ZFWDT, ZDATE2, ZBKDT, *PSSR                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           M         BEGSR
+      *
+      ** determine whether the Next/Last coupon date
+      ** is a holiday in nominal currency with ZCHKH
+      *
+     C                     MOVE NLCD      ZDAYNO  50P
+     C                     EXSR ZCHKH
+      *
+      ** if it is a holiday
+      *
+     C           ZIND      IFEQ 'H'
+      *
+      ** determine the next working day for Next/Last
+      ** coupon date in nominal currency by calling
+      ** ZFWDT with ZNRDYS = 1
+      *
+     C                     Z-ADD1         ZNRDYS  20
+     C                     EXSR ZFWDT
+      *
+      ** MMNLCD will be month of Next/Last coupon date
+      *
+     C                     EXSR ZDATE2
+      *
+      ** check ZDATE2 did not result in an error
+      *
+     C           *IN99     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN98     IFEQ *OFF
+     C                     MOVE ZDATE     MMYY    40P
+     C                     MOVELMMYY      MMNLCD  20P
+     C                     ELSE
+     C                     MOVELZDATE     MMNLCD    P
+     C                     ENDIF
+      *
+      ** save ZDAYNO as ZDAYNT because: to find the
+      ** month of the next working day we must call
+      ** ZDATE2, but ZDATE2 requires ZDAYNO to be
+      ** the day number of the next working day.
+      *
+     C                     MOVE ZDAYNO    ZDAYNT  50P
+      *
+      ** set MMNWKD to hold month of next working day
+      *
+     C                     MOVE ZDYNBR    ZDAYNO    P
+     C                     EXSR ZDATE2
+      *
+      ** check ZDATE2 did not result in an error
+      *
+     C           *IN99     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN98     IFEQ *OFF
+     C                     MOVE ZDATE     MMYY      P
+     C                     MOVELMMYY      MMNWKD  20P
+     C                     ELSE
+     C                     MOVELZDATE     MMNWKD    P
+     C                     ENDIF
+      *
+      ** restore ZDAYNO from ZDAYNT
+      *
+     C                     MOVE ZDAYNT    ZDAYNO    P
+      *
+      ** if ZDYNBR falls in a different month
+      ** then calculate one working day in nominal
+      ** currency prior to the Next/Last coupon date
+      ** using SR ZBKDT
+      *
+     C           MMNLCD    IFNE MMNWKD
+     C                     Z-ADD1         ZNRDYS
+     C                     EXSR ZBKDT
+     C                     ENDIF
+      *
+      ** Update the Next/Last coupon date but this
+      ** cannot be after maturity date
+      **        or before initial date
+      *
+     C           ZDYNBR    IFGT MATY
+     C                     MOVE MATY      NLCD      P
+     C                     ELSE
+     C                     MOVE ZDYNBR    NLCD      P
+     C                     ENDIF
+      *
+     C           NLCD      IFLT ITLD
+     C                     Z-ADDITLD      NLCD
+     C                     ENDIF
+      *
+      ** Next coupon date cannot be before event control date
+      *
+     C           NLCD      IFLT ECD
+     C           NCI       ANDEQ'N'
+     C                     Z-ADDECD       NLCD
+     C                     ENDIF
+      *                                                                   CSE031
+      ** If CSE031 is On then set Last Coupon Date from the               CSE031
+      ** Security Details file.                                           CSE031
+      *                                                                   CSE031
+     C           CSE031    IFEQ 'Y'                                       CSE031
+     C           NCI       ANDEQ'L'                                       CSE031
+     C           LCPN      ANDNE*ZEROS                                    CSE031
+     C           LCPN      ANDGENLCD                                                        BUG11193
+     C           CSE071    OREQ 'Y'                                       CSE071
+     C           NCI       ANDEQ'L'                                       CSE071
+     C           LCPN      ANDNE*ZEROS                                    CSE071
+     C           LCPN      ANDGENLCD                                                        BUG11193
+     C                     Z-ADDLCPN      NLCD                            CSE031
+     C                     ENDIF                                          CSE031
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *********************************************
+      *
+      ** ZDATE2Z2 in order to execute SR ZDATE2
+      *
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+      ** ZDATE1Z2 in order to execute SR ZDATE1
+      *
+     C/COPY ZSRSRC,ZDATE1Z2
+      *
+      ** ZFREQBZ2 in order to execute SR ZFREQB
+      *
+     C/COPY ZSRSRC,ZFREQBZ2
+      *
+      ** ZCHKH and ZACCH in order to execute SR ZCHKH
+      ** ZACCH also needed to execute ZFWDT and ZBKDT
+      *
+     C/COPY ZSRSRC,ZCHKH
+     C*/COPY*ZSRSRC,ZACCH***                                                                  CSE071
+     C/COPY ZSRSRC,ZACCH1                                                                     CSE071
+      *
+      ** include ZFWDT in order to execute SR ZFWDT
+      *
+     C/COPY ZSRSRC,ZFWDT
+      *
+      ** include ZBKDT in order to execute SR ZBKDT
+      *
+     C/COPY ZSRSRC,ZBKDT
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: subroutine C                                       *
+      *            subroutine M                                       *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      *
+      ** ZDATE2Z3 in order to execute SR ZDATE2
+      ** ZFREQBZ3 in order to execute SR ZFREQB
+      *
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**  CPY@
+(c) Finastra International Limited 2001

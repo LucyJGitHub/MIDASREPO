@@ -1,0 +1,301 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Ctry dealing exp-prod opt prompt')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module
+     F*                                                               *
+     F*   DL0806B - COUNTRY DEALING EXPOSURE                          *
+     F*               (PRODUCTION OPTION PROMPT)                      *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 BUG3644            Date 12Jul04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 102958             Date 28Jan98               *
+      *                 E46848             Date 02Apr93               *
+     F*               . E34687             DATE 14FEB92               *
+     F*                 LN0774             DATE 21SEP90               *
+     F*                 E245               DATE 02MAR90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+     F*  102958 - Report request had Pring excesses 'Y' even though   *
+     F*           'N' was specified on teh request. Fix is to default *
+     F*           @EXR only if blank.                                 *
+     F*  E46848 - If level blank is system level.                     *
+     F*  E34687 - DL0806A, DL0806B & DL0806C should display the user  *
+     F*           and job names properly.  /Obtain job name and user  *
+     F*           name from PSDS.                                     *
+     F*  LN0774 - Tidying up display file                             *
+     F*  E245   - Add extra parms for RCF standards                   *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FDL806BFMCF  E                    WORKSTN
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       05      HELP KEY
+     F*       10      LIMITS IN EXCESS ONLY INDICATOR INVALID
+     F*       20      PRODUCTION OPTION INVALID
+     F*       30      SELECTED VALUE FOR COUNTRY INVALID
+     F*       40      GENERAL ERROR FIELD INDICATOR
+     F*       46      ACTION CODE DELETE, ALLOW F10                       E245
+     F*       60      SYSTEM LEVEL SELECTED
+     F*       70      SUBFILE DISPLAY CONTROL INDICATOR
+     F*       71      SUBFILE END INDICATOR
+     F*     U7+U8     DATABASE ERROR
+     F*
+     F*     STANDARD PROGRAMS USED
+     F*
+     F*       ZA0240 - SEND MESSAGE TO PROGRAM MESSAGE QUEUE
+     F*       ZA0250 - CLEAR PROGRAM MESSAGE QUEUE
+     F*****************************************************************
+     E                    CPY@    1   1 80
+     F*****************************************************************
+     E/EJECT
+     I*
+     ISDCTRY    E DSSDCTRYPD
+     I** EXTERNAL DS FOR COUNTRY DETAILS
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*
+     IPSDS       SDS
+     I*****HOLDS*WORKSTATION*ID*******************************************E34687
+     I***********                           244 246 WSID                  E34687
+     I                                      244 253 WSJOB                 E34687
+     I                                      254 263 USER                  E34687
+     I*
+     I@PARM       DS                            100
+     I*    RETURN SELECTED PRODUCTION INDICATOR
+     I                                        1   1 @PROD
+     I                                        2   3 @CTRY
+     I                                        4   4 @EXR
+     I*
+     IRUNDT       DS                             13                       LN0774
+     I                                        1   7 SRUNA                 LN0774
+     I/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           LN0774
+     C                     IN   RUNDT                                     LN0774
+     C**   RECEIVE PRODUCTION OPTION, SELECTED VALUE AND BRANCH TYPE
+     C**   PARAMETERS FROM CALLING PROGRAM
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+     C                     PARM           @RENT   3
+     C                     PARM           @PARM
+     C******               PARM           @ACTN   1                       E245
+     C                     PARM           @RACT   1                       E245
+     C                     PARM           @RCMD   1                       E245
+     C**
+     C**   INITIALISE SCREEN FIELDS
+     C**
+     C**  ACTION CODES I,A ALLOW INPUT TO SCREEN FIELDS                   E245
+     C           @RACT     IFEQ 'I'                                       E245
+     C                     MOVE *BLANK    @PROD
+     C                     MOVE *BLANK    @CTRY
+     C                     ELSE                                           E245
+     C*                                                                   E245
+     C**  ACTION CODES E,D DO NOT ALLOW INPUT TO SCREEN FIELDS            E245
+     C**  ACTION CODES D ALLOW F10                                        E245
+     C           @RACT     COMP 'D'                      46               E245
+     C           @RACT     COMP 'D'                      45               E245
+     C  N45      @RACT     COMP 'E'                      45               E245
+     C                     END                                            E245
+     C*
+     C**  INITIALISE SCREEN MESSAGE QUEUE AND SET ON SUBFILE END IND.
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVE '1'       *IN71
+     C*
+     C** IF SYSTEM LEVEL SELECTED PROMPT FOR PROD. OPTION & COUNTRY
+     C*
+     C                     MOVE '0'       *IN60
+     C           @RLEV     IFEQ 'S'
+     C           @RLEV     OREQ ' '                                       E46848
+     C                     MOVE '1'       *IN60
+     C                     END
+     C*
+     C**  DEFAULT LIMITS-IN-EXCESS-ONLY FIELD TO YES
+     C           @EXR      IFEQ *BLANKS                                   102958
+     C                     MOVE 'Y'       @EXR
+     C                     ENDIF                                          102958
+     C**
+     C**   DISPLAY FOOTER
+     C                     WRITEDL806BD0
+     C**
+     C**   (LOOP UNTIL EITHER A COMMAND KEY HIT OR VALID SCREEN FIELDS
+     C**    ENTERED)
+     C**
+     C           *IN12     DOUEQ'1'
+     C           *IN03     OREQ '1'
+     C           *IN10     OREQ '1'                                       E245
+     C           *IN40     OREQ '0'
+     C**
+     C                     EXFMTDL806BS0
+     C**
+     C**   IF CMD/3 IS PRESSED, RETURN TO CALLING PROGRAM
+     C**
+     C           *IN03     IFEQ '1'
+     C*****                MOVE 'E'       @ACTN                           E245
+     C                     MOVE 'E'       @RCMD                           E245
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C**
+     C           *IN12     IFEQ '1'
+     C*****                MOVE 'F'       @ACTN                           E245
+     C                     MOVE 'F'       @RCMD                           E245
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C**
+     C**   IF CMD/10 IS PRESSED, RETURN TO CALLING PROGRAM                E245
+     C**                                                                  E245
+     C           *IN10     IFEQ '1'                                       E245
+     C                     MOVE 'D'       @RCMD                           E245
+     C                     SETON                     LR                   E245
+     C                     RETRN                                          E245
+     C                     END                                            E245
+     C**
+     C**   RESET INDICATORS AND ERROR MESSAGE QUEUE
+     C**
+     C                     MOVE '0'       *IN10
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN40
+     C                     CALL 'ZA0250'
+     C**
+     C                     MOVE '1'       *IN70
+     C                     WRITEDL806BS0
+     C                     MOVE '0'       *IN70
+     C**
+     C**  IF AT SYSTEM LEVEL -
+     C           @RLEV     IFEQ 'S'
+     C           @RLEV     OREQ ' '                                       E46848
+     C**
+     C**   VALIDATE PRODUCTION OPTION
+     C                     EXSR #VPROD
+     C**
+     C** ONLY VALIDATE COUNTRY WHEN VALID PRODUCTION OPTION INPUT
+     C           *IN20     IFEQ '0'
+     C                     EXSR #VCTRY
+     C                     END
+     C**
+     C                     END
+     C**
+     C** VALIDATE LIMITS-IN-EXCESS-ONLY INDICATOR
+     C                     EXSR #VEXR
+     C*
+     C** IF NO ERRORS ON INPUT THEN COME OUT OF PROGRAM ELSE LOOP BACK
+     C           *IN40     IFEQ '0'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     END
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   #VPROD - SUBROUTINE TO VALIDATE PRODUCTION OPTION
+     C**
+     C           #VPROD    BEGSR                           *** #VPROD SR **
+     C**
+     C           @PROD     IFNE '1'
+     C           @PROD     ANDNE'2'
+     C           @PROD     ANDNE'3'
+     C**
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN40
+     C                     MOVEL'DLM0001' @MSGID 10
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   #VCTRY SUBROUTINE TO VALIDATE COUNTRY
+     C**
+     C           #VCTRY    BEGSR                           ** #VCTRY SR **
+     C**
+     C** COUNTRY SHOULD ONLY BE INPUT FOR OPTION 3
+     C           @PROD     IFNE '3'
+     C           @CTRY     ANDNE*BLANKS
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN40
+     C                     MOVEL'DLM0006' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C*
+     C           @PROD     IFEQ '3'
+     C                     CALL 'AOCTRYR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @CTRY     @COMP   3
+     C           SDCTRY    PARM SDCTRY    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C**
+     C**   SELECTED VALUE MUST EXIST ON COUNTRIES FILE
+     C**
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN40
+     C                     MOVEL'DLM0005' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   #VEXR - SUBROUTINE TO VALIDATE LIMITS IN EXCESS ONLY IND.
+     C**
+     C           #VEXR     BEGSR                           *** #VPROD SR **
+     C**
+     C           @EXR      IFNE 'Y'
+     C           @EXR      ANDNE'N'
+     C**
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN40
+     C                     MOVEL'DLM0004' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

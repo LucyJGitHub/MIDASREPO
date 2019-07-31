@@ -1,0 +1,272 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas AP Control database update')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - API Module                                       */
+/*                                                                   */
+/*       APCDBUDCTL - Database update control                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. CSD102             Date 08Jan19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CSD092             Date 01May13              */
+/*                      CSD093             Date 01Apr13              */
+/*                      CLE134             Date 01Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      248442             Date 09Jun07              */
+/*                      248071             Date 25May07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/*                      245280             Date 24Jan07              */
+/*                      243953             Date 19Oct06              */
+/*                      243912             Date 03Aug06              */
+/*                      234916             Date 13Jul05              */
+/*                      CAS009             Date 04May04              */
+/*                      CAP084             Date 08Jul03              */
+/*                      216338             Date 21Jan03              */
+/*                      CPK016             Date 04Jun03              */
+/*                      CDL010             Date 02Aug02              */
+/* Midas Release 4.01.03 --------------------------------------------*/
+/*                      210517             Date 21Nov02              */
+/* Midas Release 4.01.02 --------------------------------------------*/
+/*                      213063             Date 11Dec02              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CAP055             Date 13Mar02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*                      CAP140             Date 17Oct00              */
+/* Midas DBA 3.04 ---------------------------------------------------*/
+/*                      CFT014             Date 25May00              */
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                      CAP137             Date 07Feb00              */
+/*                      CAP136             Date 15Nov99              */
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/*                      CAP033             Date 26Apr99              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CAP006             Date 02Mar99              */
+/*                      CAP002  *CREATE    Date 08Jan98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSD102 - Password Length Extension                          */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSD092 - Account Review                                     */
+/*       CSD093 - Document Management                                */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       248442 - Commitment control not valid for GLACNTL3.         */
+/*       248071 - Commitment control not valid for LEFEEDL1.         */
+/*       245280 - Commitment control not valid for PSOLD.            */
+/*       243953 - Temporary file introduced by 240412 in APCTRANVU   */
+/*                also needs adding here.                            */
+/*       243912 - Add override processing of DPTMV due to change     */
+/*                that was done within module SEDPMVRTV for CAP087.  */
+/*       234916 - Set Override for new EU Tax Files                  */
+/*       CAS009 - Effective Interest Rate/Amortised Cost Accounting  */
+/*       CAP084 - Parameter added to ZMUSER for Java wrappers        */
+/*       216338 - Add override processing of TRADSDY2 for Buy-Sell   */
+/*       CPK016 - Externalise STRCMTCTL code for ease of later       */
+/*                upgrade.                                           */
+/*       CDL010 - Prevent last user that actioned the trade from     */
+/*                authorising it. Recompiled.                        */
+/*       210517 - Missing TRADSDX2 record from the API               */
+/*       213063 - Commitment control problem during call to          */
+/*                AOCURRC0 for forward rates.                        */
+/*       CAP055 - APIs for FRA/IRS Caps/Collars/Floors               */
+/*       CAP140 - Conversion of SE Security Diary Event inputs into  */
+/*                modular structure to use as APIs.                  */
+/*       CFT014 - Straight-through Processing Phase 2 MT103          */
+/*                Messages Generation for FT.                        */
+/*       CAP137 - Conversion of SE Security inputs into modular      */
+/*                structure to use as APIs.                          */
+/*       CAP136 - Conversion of FT Incoming Payment inputs into      */
+/*                modular structure to use as APIs.                  */
+/*       CAP033 - Conversion of PM inputs into modular structure to  */
+/*                use as APIs.                                       */
+/*       CAP006 - Set up ZMUSER Dtaara if not present                */
+/*       CAP002 - Conversion of Midas inputs to modular API structure*/
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FUNCTION)
+ 
+             DCL        VAR(&FUNCTION) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WAITTIME) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&UPDPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERRCOD) TYPE(*DEC) LEN(1)                                    /*CAP006*/
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)                                  /*CPK016*/
+             DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10)                                  /*CAP084*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2001')
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Start commitment control */
+ 
+/* Start commitment control */                                                            /*CPK016*/
+/**********  STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) + */                           /*CPK016*/
+/**********               CMTSCOPE(*JOB)                     */                           /*CPK016*/
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)                                   /*CPK016*/
+ 
+                                                                                          /*CAP006*/
+/*  Check that ZMUSER dataarea has been set up in QTEMP, if not   */                      /*CAP006*/
+/*  create it here.                                               */                      /*CAP006*/
+                                                                                          /*CAP006*/
+             CHKOBJ     OBJ(QTEMP/ZMUSER) OBJTYPE(*DTAARA)                                /*CAP006*/
+                                                                                          /*CAP006*/
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)                                   /*CAP006*/
+/************  CALL       PGM(ZMUSER) PARM(&ERRCOD)                            /*CAP006*/ /*CAP084*/
+               CALL       PGM(ZMUSER) PARM(&ERRCOD &ZMUSER)                               /*CAP084*/
+               IF         COND(&ERRCOD *NE 0) THEN(DO)                                    /*CAP006*/
+                 SNDPGMMSG MSG('Default Branch or Department not valid') +
+                       TOPGMQ(*EXT) MSGTYPE(*INFO)                                        /*CAP006*/
+               ENDDO                                                                      /*CAP006*/
+             ENDDO                                                                        /*CAP006*/
+                                                                                          /*CAP006*/
+/* Call an RPG module to determine:               */
+/* - the name of the file specific update program */
+ 
+             CALLPRC    PRC(APDBINFRTV) PARM(&FUNCTION &FILE +
+                          &WAITTIME &UPDPGM)
+ 
+             IF         COND(&FUNCTION = 'PFDM') THEN(DO)             /*CAP033*/
+                OVRDBF     FILE(PMPORTPD) SHARE(*NO)                  /*CAP033*/
+             ENDDO                                                    /*CAP033*/
+                                                                      /*CAP033*/
+             IF         COND(&FUNCTION = 'IPAY') THEN(DO)             /*CAP136*/
+                OVRDBF     FILE(INPAY) SHARE(*NO)                     /*CAP136*/
+                OVRDBF     FILE(INPAYXL0) SHARE(*NO)                  /*CFT014*/
+                OVRDBF FILE(OTPAYOVR) TOFILE(OTPAY) SHARE(*NO)                            /*CSD102*/
+                OVRDBF FILE(OTXL0) TOFILE(OTPAYXL0) SHARE(*NO)                            /*CSD102*/
+             ENDDO                                                    /*CAP136*/
+                                                                      /*CAP136*/
+             IF         COND(&FUNCTION = 'SECS') THEN(DO)             /*CAP137*/
+                OVRDBF     FILE(SECTYD) SHARE(*NO)                    /*CAP137*/
+                OVRDBF     FILE(SECTY) SHARE(*NO)                     /*CAP137*/
+             ENDDO                                                    /*CAP137*/
+                                                                      /*CAP137*/
+             IF         COND(&FUNCTION = 'SEDE') THEN(DO)                                 /*CAP140*/
+                OVRDBF     FILE(SEDEV) SHARE(*NO)                                         /*CAP140*/
+             ENDDO                                                                        /*CAP140*/
+                                                                                          /*CAP140*/
+             IF         COND(&FUNCTION = 'CACF') THEN(DO)                                 /*CAP055*/
+                OVRDBF     FILE(IRCACFPD) SHARE(*NO)                                      /*CAP055*/
+             ENDDO                                                                        /*CAP055*/
+                                                                                          /*CAP055*/
+             IF         COND(&FUNCTION = 'TRAD') THEN(DO)                                 /*210517*/
+                OVRDBF     FILE(TRADSDY2) SHARE(*NO)                                      /*210517*/
+                OVRDBF     FILE(ETCPOSL0) SHARE(*NO)                                      /*234916*/
+                OVRDBF     FILE(ETCPOSL3) SHARE(*NO)                                      /*234916*/
+             ENDDO                                                                        /*210517*/
+                                                                                          /*234916*/
+             IF         COND(&FUNCTION = 'DPMV') THEN(DO)                                 /*234916*/
+                OVRDBF     FILE(ETCPOSL0) SHARE(*NO)                                      /*234916*/
+                OVRDBF     FILE(ETCPOSL3) SHARE(*NO)                                      /*234916*/
+                OVRDBF     FILE(DPTMV) SHARE(*NO)                                         /*243912*/
+             ENDDO                                                                        /*234916*/
+                                                                                          /*210517*/
+             IF         COND(&FUNCTION = 'BYSL') THEN(DO)                                 /*216338*/
+                OVRDBF     FILE(TRADSDY2) SHARE(*NO)                                      /*216338*/
+             ENDDO                                                                        /*216338*/
+                                                                                          /*216338*/
+             IF         COND(&FUNCTION = 'FWRT') THEN(DO)                                 /*213063*/
+                OVRDBF     FILE(SDCURRL1) SHARE(*NO)                                      /*213063*/
+             ENDDO                                                                        /*213063*/
+             IF         COND(&FUNCTION = 'DCMT') THEN(DO)                                 /*CSD093*/
+                OVRDBF     FILE(SDDCMTPD) SHARE(*NO)                                      /*CSD093*/
+             ENDDO                                                                        /*CSD093*/
+             IF         COND(&FUNCTION = 'ACRV') THEN(DO)                                 /*CSD092*/
+                OVRDBF     FILE(SDACRVPD) SHARE(*NO)                                      /*CSD092*/
+             ENDDO                                                                        /*CSD092*/
+                                                                                          /*CAS009*/
+             IF         COND(&FUNCTION = 'DLFE') THEN(DO)                                 /*CAS009*/
+                OVRDBF     FILE(DLDLFEPD) SHARE(*NO)                                      /*CAS009*/
+             ENDDO                                                                        /*CAS009*/
+                                                                                          /*245280*/
+             IF         COND(&FUNCTION = 'CLIP') THEN(DO)                                 /*245280*/
+                OVRDBF     FILE(PSOLD)               SHARE(*NO)                           /*245280*/
+             ENDDO                                                                        /*245280*/
+                                                                                          /*248071*/
+             IF         COND(&FUNCTION = 'FEEM') THEN(DO)                                 /*248071*/
+                OVRDBF     FILE(LEFEEDL1)            SHARE(*NO)                           /*248071*/
+             ENDDO                                                                        /*248071*/
+                                                                                          /*248442*/
+             IF         COND(&FUNCTION = 'AMAD') THEN(DO)                                 /*248442*/
+                OVRDBF     FILE(GLACNTL3)            SHARE(*NO)                           /*248442*/
+             ENDDO                                                                        /*248442*/
+/**/                                                                                      /*243953*/
+/* Add DLPCSCPD file. */                                                                  /*243953*/
+/**/                                                                                      /*243953*/
+             IF         COND((&FUNCTION = 'CIRS') *OR +
+                             (&FUNCTION = 'SIRS') *OR +
+                             (&FUNCTION = 'FRA')  *OR +
+                             (&FUNCTION = 'CACF')) THEN(DO)                               /*243953*/
+             DLTF       FILE(QTEMP/DLPCSCRX)                                              /*243953*/
+             MONMSG     MSGID(CPF0000 RPG0000)                                            /*243953*/
+             CPYF       FROMFILE(DLPCSCPD) TOFILE(QTEMP/DLPCSCRX) +
+                        MBROPT(*REPLACE) CRTFILE(*YES)                                    /*243953*/
+             ENDDO                                                                        /*243953*/
+ 
+             CALL       PGM(&UPDPGM)
+ 
+             IF         COND(&FUNCTION = 'PFDM') THEN(DO)             /*CAP033*/
+                DLTOVR     FILE(PMPORTPD)                             /*CAP033*/
+             ENDDO                                                    /*CAP033*/
+                                                                      /*CAP033*/
+             IF         COND(&FUNCTION = 'IPAY') THEN(DO)             /*CAP136*/
+                DLTOVR     FILE(INPAY)                                /*CAP136*/
+                DLTOVR     FILE(INPAYXL0)                             /*CFT014*/
+                DLTOVR     FILE(OTPAYOVR)                                                 /*CSD102*/
+                DLTOVR     FILE(OTXL0)                                                    /*CSD102*/
+             ENDDO                                                    /*CAP136*/
+                                                                      /*CAP136*/
+             IF         COND(&FUNCTION = 'SECS') THEN(DO)             /*CAP137*/
+                DLTOVR     FILE(SECTYD)                               /*CAP137*/
+                DLTOVR     FILE(SECTY)                                /*CAP137*/
+             ENDDO                                                    /*CAP137*/
+                                                                      /*CAP137*/
+             IF         COND(&FUNCTION = 'SEDE') THEN(DO)                                 /*CAP140*/
+                DLTOVR     FILE(SEDEV)                                                    /*CAP140*/
+             ENDDO                                                                        /*CAP140*/
+                                                                                          /*CAP140*/
+             IF         COND(&FUNCTION = 'CACF') THEN(DO)                                 /*CAP055*/
+                DLTOVR     FILE(IRCACFPD)                                                 /*CAP055*/
+             ENDDO                                                                        /*CAP055*/
+                                                                                          /*CAP055*/
+             IF         COND(&FUNCTION = 'TRAD') THEN(DO)                                 /*210517*/
+                DLTOVR     FILE(TRADSDY2)                                                 /*210517*/
+             ENDDO                                                                        /*210517*/
+                                                                                          /*210517*/
+             IF         COND(&FUNCTION = 'FWRT') THEN(DO)                                 /*213063*/
+                DLTOVR     FILE(SDCURRL1)                                                 /*213063*/
+             ENDDO                                                                        /*213063*/
+             IF         COND(&FUNCTION = 'DCMT') THEN(DO)                                 /*CSD093*/
+                DLTOVR     FILE(SDDCMTPD)                                                 /*CSD093*/
+             ENDDO                                                                        /*CSD093*/
+                                                                                          /*CSD093*/
+             IF         COND(&FUNCTION = 'ACRV') THEN(DO)                                 /*CSD092*/
+                DLTOVR     FILE(SDACRVPD)                                                 /*CSD092*/
+             ENDDO                                                                        /*CSD092*/
+                                                                                          /*CSD092*/
+                                                                                          /*CAS009*/
+             IF         COND(&FUNCTION = 'DLFE') THEN(DO)                                 /*CAS009*/
+                DLTOVR     FILE(DLDLFEPD)                                                 /*CAS009*/
+             ENDDO                                                                        /*CAS009*/
+                                                                                          /*245280*/
+             IF         COND(&FUNCTION = 'CLIP') THEN(DO)                                 /*245280*/
+                DLTOVR     FILE(PSOLD)                                                    /*245280*/
+             ENDDO                                                                        /*245280*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

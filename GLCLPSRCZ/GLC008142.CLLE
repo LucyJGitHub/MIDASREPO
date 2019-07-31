@@ -1,0 +1,220 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Stamp Tax Account Post Average Balance')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger                                      */
+/*                                                                   */
+/*       GLC008142 - Stamp Tax Account Post                          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD026120           Date 13May14              */
+/*                      AR945641           Date 01Apr12              */
+/*                      AR833331           Date 11Oct11              */
+/*                      AR833727           Date 26Sep11              */
+/*                      CER049  *Create    Date 06Dec10              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD026120 - Additional deps for GLC0720/740                  */
+/*       AR945641 - The match field is out of sequence on GLC008140  */
+/*       AR833331 - COB failed on GLC3320 00002                      */
+/*       AR833727 - GLC008140 DBERR in file CMPL0 key GLC8140 00001  */
+/*                  in CB0160 at 001                                 */
+/*       CER049 - Stamp Tax                                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited 2010')
+             DCL        VAR(&MEM)     TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MMOD)    TYPE(*CHAR) LEN(256)
+             DCL        VAR(&LDA)     TYPE(*CHAR) LEN(256)
+/**********  DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('GLC8140')                 /*AR833727*/
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('GLC008140')               /*AR833727*/
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0) VALUE(00001)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             CHGDTAARA  DTAARA(QTEMP/LDA) VALUE(*BLANK)
+             CHGJOB     SWS(XXXXXX00)
+ 
+             SNDPGMMSG  MSG('GLC008142- Stamp Tax Accounts Post') +
+                          TOMSGQ(MRUNQ) MSGTYPE(*INFO)
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+             RTVDTAARA  DTAARA(MMOD)   RTNVAR(&MMOD)
+ 
+/** Copy records from GLSTDTPD (DPLIB) to GLGESTPD (DMLIB). */
+/** GLGESTPD is copied to REEODPF by REC3065 and it is cleared by REC3650 */
+ 
+             CPYF       FROMFILE(GLSTDTPD) TOFILE(GLGESTPD) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(GLGESTPD))
+ 
+/**********  IF         COND(&STAT *EQ 'N') +                                           /*AR833331*/
+/**********             THEN(DO)                                                        /*AR833331*/
+ 
+/** Is retail module present ? */
+ 
+             IF         COND(%SUBSTRING(&MMOD 16 1) = 'Y' *OR +
+                          (%SUBSTRING(&MMOD 23 1) = 'Y')) THEN(DO)
+ 
+/** Set on U5 */
+ 
+             CHGJOB     SWS(XXXX1XXX)
+             ENDDO
+ 
+/** Clear files */
+ 
+                IF         COND(%SWITCH(1XXXXXXX)) THEN(DO)
+                           CLRPFM FILE(STMTHH)
+                           CLRPFM FILE(STMTAH)
+                           CLRPFM FILE(STMTZX)
+                           ENDDO
+ 
+             CLRPFM     FILE(GLCLERHH)
+             CLRPFM     FILE(GLCLERPD)
+             CLRPFM     FILE(GLCLERZZ)
+             CLRPFM     FILE(ACORDAA)
+             CLRPFM     FILE(ACORDAB)
+             CLRPFM     FILE(ACORDAC)
+             CLRPFM     FILE(GLSYDTPD)
+             CLRPFM     FILE(GLSYHDPD)
+             CLRPFM     FILE(GLSYTRPD)
+ 
+/** Perform overrides */
+ 
+             OVRDBF     FILE(CLEARHH) TOFILE(GLCLERHH)
+             OVRDBF     FILE(CLEARPD) TOFILE(GLCLERPD)
+             OVRDBF     FILE(CLEARZZ) TOFILE(GLCLERZZ)
+             OVRDBF     FILE(SYSOPHH) TOFILE(GLSYHDPD)
+             OVRDBF     FILE(SYSOPAJ) TOFILE(GLSYDTPD)
+             OVRDBF     FILE(SYSOPZX) TOFILE(GLSYTRPD)
+/**********  OVRDBF     FILE(SACPO) TOFILE(GLGESTL2)          */                        /*AR945641*/
+             OVRDBF     FILE(SACPO) TOFILE(GLGESTL3)                                    /*AR945641*/
+             OVRDBF     FILE(SACPOZ) TOFILE(GLSTTRL3)
+ 
+/** SACPO - SD ledger & cleared balance update */
+ 
+             CALL       PGM(GL0349)
+ 
+/** Account posting */
+ 
+             OVRDBF     FILE(ACORDAB) SEQONLY(*YES 100)
+             OVRDBF     FILE(STMTAH) SEQONLY(*YES 100)
+             OVRDBF     FILE(REIAC2) TOFILE(REIAC) SHARE(*NO)
+             CALL       PGM(GL0600)
+ 
+/** Remove all overrides */
+ 
+             DLTOVR     FILE(*ALL)
+ 
+/** Successful completion  U7 and U8 off */
+ 
+/**********        ENDDO                                                                /*AR833331*/
+ 
+                IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+                   CHGVAR     VAR(&STAT) VALUE('Y')
+                   CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+                ENDDO
+ 
+/** Successful completion U8 off */
+ 
+             IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)
+ 
+             IF         COND(&STAT *EQ 'Y') +
+                        THEN(DO)
+ 
+/** Remove file members */
+ 
+             RMVM       FILE(ACCNT) MBR(ACCNT)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(ACNUM) MBR(ACNUM)
+             MONMSG     MSGID(CPF0000)
+/**********  RMVM       FILE(SAIR) MBR(SAIR)                       */                   /*MD026120*/
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(SADETC) MBR(SADETC)
+             MONMSG     MSGID(CPF0000)
+ 
+/** File overrides */
+ 
+             OVRDBF     FILE(ACORDAB) SEQONLY(*YES 100)
+             OVRDBF     FILE(ACCNTAB) SEQONLY(*YES 100)
+ 
+/** Restore original copies for re-start */
+ 
+             CPYF       FROMFILE(ACORDAA) TOFILE(ACCNTAA) +
+                          MBROPT(*REPLACE) FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(ACCNTAA))
+ 
+             CPYF       FROMFILE(ACORDAB) TOFILE(ACCNTAB) +
+                          MBROPT(*REPLACE) FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(ACCNTAB))
+ 
+             CPYF       FROMFILE(ACORDAC) TOFILE(ACCNTAC) +
+                          MBROPT(*REPLACE) FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(ACCNTAC))
+ 
+/** Delete overrides */
+ 
+             DLTOVR     FILE(ACORDAB)
+             DLTOVR     FILE(ACCNTAB)
+ 
+/** Clear files */
+ 
+             CLRPFM     FILE(ACORDAA)
+             CLRPFM     FILE(ACORDAB)
+             CLRPFM     FILE(ACORDAC)
+ 
+                   CHGVAR     VAR(&STAT) VALUE('N')
+                   CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+             ENDDO
+             ENDDO
+ 
+ABNOR:
+ 
+/** Database error */
+ 
+             IF         COND(%SWITCH(XXXXXX01)) THEN(DO)
+ 
+             SNDPGMMSG  MSG('Stamp Tax Daily Journal - FCOOB +
+                          GL0600') TOMSGQ(MRUNQ MOPERQ)
+ 
+             ENDDO
+ 
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA DTAARA(LDA) RTNVAR(&LDA)
+                CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+             ADDLFM     FILE(ACCNT) MBR(ACCNT) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+             ADDLFM     FILE(ACNUM) MBR(ACNUM) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+/**********  ADDLFM     FILE(SAIR) MBR(SAIR) SHARE(*YES)           */                   /*MD026120*/
+             MONMSG     MSGID(CPF0000)
+             ADDLFM     FILE(SADETC) MBR(SADETC) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+ 
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Banking Systems Ltd. 2010')
+             ENDPGM

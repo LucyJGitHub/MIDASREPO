@@ -1,0 +1,777 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE CI Bulk Cheque Deposit Repair Queue List6')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE0436 - CI Bulk Cheque Deposit Repair Queue List            *
+      *                                                               *
+      *  Function:  This program produces a list showing the details  *
+      *             of any cheques that are waiting to be repaired.   *
+      *                                                               *
+      *  Called By: REC0436 - CI Bulk Cheque Deposit Repair Queue List*
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 DDB026   *CREATE   Date 25Dec03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  DDB026 - Bulk Cheque Deposit                                 *
+      *                                                               *
+      *****************************************************************
+     FRECIBML2IF  E           K        DISK         KINFSR *PSSR
+      * Cashier Bulk cheque Deposit Messages
+      *
+     FRECIBDL0IF  E           K        DISK         KINFSR *PSSR
+      * Cashier Bulk cheque Deposit Details
+     FRE0436P1O   E                    PRINTER
+     F                                              KINFDS SPOOL1
+     FRE0436AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  REPORT - Process Report Lines                                *
+      *                                                               *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E                    @N         70 71
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ***  File Information Data Structure for RED435P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for RED435AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ***  Dummy Data Structures used by Access Programs.
+      *
+     INEWTRN      DS
+     I                                        1  73 NTRN1
+     I                                       74 146 NTRN2
+     I                                      147 219 NTRN3
+     I                                      220 292 NTRN4
+     I                                      293 365 NTRN5
+     I                                      366 438 NTRN6
+     I                                      439 511 NTRN7
+     I                                      512 584 NTRN8
+     I                                      585 657 NTRN9
+     I                                      658 730 NTRN10
+     I                                      731 803 NTRN11
+     I                                      804 876 NTRN12
+     I                                      877 949 NTRN13
+     I                                      9501022 NTRN14
+     I                                     10231095 NTRN15
+     I                                     10961168 NTRN16
+     I                                     11691241 NTRN17
+     I                                     12421314 NTRN18
+     I                                     13151387 NTRN19
+     I                                     13881460 NTRN20
+     I                                     14611533 NTRN21
+     I                                     15341606 NTRN22
+     I                                     16071679 NTRN23
+     I                                     16801752 NTRN24
+     I                                     17531825 NTRN25
+     I                                     18261898 NTRN26
+     I                                     18991971 NTRN27
+     I                                     19722044 NTRN28
+     I                                     20452117 NTRN29
+     I                                     21182190 NTRN30
+     I                                     21912263 NTRN31
+     I                                     22642336 NTRN32
+     I                                     23372409 NTRN33
+     I                                     24102482 NTRN34
+     I                                     24832555 NTRN35
+     I                                     25562628 NTRN36
+     I                                     26292701 NTRN37
+     I                                     27022774 NTRN38
+     I                                     27752847 NTRN39
+     I                                     28482920 NTRN40
+     I                                     29212993 NTRN41
+     I                                     29943066 NTRN42
+     I                                     30673139 NTRN43
+     I                                     31403212 NTRN44
+     I                                     32133285 NTRN45
+     I                                     32863358 NTRN46
+     I                                     33593431 NTRN47
+     I                                     34323504 NTRN48
+     I                                     35053577 NTRN49
+     I                                     35783650 NTRN50
+     I                                     36513723 NTRN51
+     I                                     37243796 NTRN52
+     I                                     37973869 NTRN53
+     I                                     38703942 NTRN54
+     I                                     39434015 NTRN55
+     I                                     40164088 NTRN56
+     I                                     40894161 NTRN57
+     I                                     41624234 NTRN58
+     I                                     42354307 NTRN59
+     I                                     43084380 NTRN60
+     I                                     43814453 NTRN61
+     I                                     44544526 NTRN62
+     I                                     45274599 NTRN63
+     I                                     46004672 NTRN64
+     I                                     46734745 NTRN65
+     I                                     47464818 NTRN66
+     I                                     48194891 NTRN67
+     I                                     48924964 NTRN68
+     I                                     49655037 NTRN69
+     I                                     50385110 NTRN70
+     INEWDTL      DS
+     I                                        1   1 NITEM
+     I                                        2  14 NTRET
+     I                                       15  25 NIBNK
+     I                                       26  400NTAMT
+     I                                       41  56 NSNUM
+     I                                       57  710NEQIV
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+      *
+     ISDACCT    E DSACCNTAB
+      ***  External data structures for Account Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for Currency Details
+      *
+     IDSSDY     E DSDSSDY
+     I** Second DS for access programs, Long data structure
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for access programs, Short data structure
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  ZDAT   -
+      *  ZDAT   -
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+      *
+      ***  Initialise LDA field.
+      *
+     C                     MOVEL'RE0436'  DBPGM
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      **   Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'M'
+     C                     SETON                     37
+     C                     END
+      *
+      ***  RCF Processing for File.
+     C                     EXSR RCFP1
+     C                     EXSR RCFAU
+      *
+      ***  Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  REPORT - Process Report Lines                                *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           *** PROCES ***
+      *
+      ***  Read first record from File.
+     C                     READ RECIBML2                 89
+      *
+     C           *IN89     IFEQ *ON
+     C                     WRITEHEAD
+     C                     WRITENODETL
+     C                     ELSE
+      *
+      * Access RECIBDPD to obtain updated cheque details
+     C           RICREF    CHAINRECIBDL0             88
+      ***  Handle Database Error.
+      *
+     C           *IN88     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE 'RECIBDPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DB ERROR 02 *
+     C                     MOVELRICREF    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELIMSGD     NEWTRN
+      *
+     C                     EXSR MOVARR
+      *
+      ***  Do Until End of File.
+      *
+     C           *IN89     DOUEQ*ON
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+      ***  Read next record.
+     C                     READ RECIBML2                 89
+      *
+      * If record read from RECIBMPD, then access RECIBDPD
+     C           *IN89     IFEQ *OFF
+     C           RICREF    CHAINRECIBDL0             88
+      *
+      ***  Handle Database Error.
+     C           *IN88     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE 'RECIBDPD'DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DB ERROR 03 *
+     C                     MOVELRICREF    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELIMSGD     NEWTRN
+     C                     EXSR MOVARR
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      *
+     C                     EXSR WP1END
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REPORT
+      *****************************************************************
+      *                                                               *
+      *  REPORT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REPORT    BEGSR                           *** REPORT ***
+      *
+      * Move Bulk Cheque Header Details to report fields
+     C                     MOVELICREF     PCREF
+     C                     MOVELIBREF     PBREF
+     C                     MOVELIBRCA     PBRCA
+     C                     MOVELITLID     PTLID
+      *
+     C                     MOVE IACCT     PACCT
+      *
+      * Obtain customer shortname
+     C                     MOVE IACCT     @RETL
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           @RETL  10
+     C**********           PARM           @CUSN   60                                          CSD027
+     C                     PARM           @CUSN   6                                           CSD027
+     C                     PARM           @CCY    3
+     C                     PARM           @ACOD   40
+     C                     PARM           @ACSQ   20
+     C                     PARM           @BRCH   3
+     C           SDACCT    PARM SDACCT    DSSDY
+     C                     MOVELANAM      PANAM
+      *
+     C                     MOVE IVLDT     PVLDT
+      *
+     C                     MOVE IACCY     PACCY
+      *
+     C                     MOVE ICCCY     PCCCY
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ICCCY     @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C                     Z-ADDA6NBDP    CQNDP   20
+      *
+      * Format total cheque amount
+     C                     MOVE IAMNT     ZFIELD
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFIELD 150
+     C                     PARM A6NBDP    ZADEC   10
+     C                     PARM 'J'       ZECOD   1
+     C                     PARM           ZOUT21 21
+     C                     MOVELZOUT21    PAMNT
+      *
+     C                     MOVE INCHQ     PNCHQ
+      *
+     C                     MOVE ICHCY     PCHCY
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ICHCY     @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C                     Z-ADDA6NBDP    ACNDP   20
+      *
+      * Format total charge amount
+     C                     MOVE ICHAM     ZFIELD
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFIELD 150
+     C                     PARM A6NBDP    ZADEC   10
+     C                     PARM 'J'       ZECOD   1
+     C                     PARM           ZOUT21 21
+     C                     MOVELZOUT21    PCHAM
+      *
+     C                     MOVE IREF      PREF
+     C                     MOVE INARR     PNARR
+      *
+     C                     WRITEHEAD
+     C                     WRITEHEAD1
+      *
+     C                     WRITEDETAIL
+      *
+      * Compare all individual cheque details and print any that have
+      * been repaired.
+     C                     Z-ADD1         X       20
+     C           X         DOUEQ71
+     C           @N,X      OREQ *BLANKS
+      *
+     C                     SETOF                     5152
+      *
+      * Clear output fields
+     C                     MOVE *BLANKS   PITEM
+     C                     MOVE *BLANKS   PTRET
+     C                     MOVE *BLANKS   PIBNK
+     C                     MOVE *BLANKS   PTAMT
+     C                     MOVE *BLANKS   PSNUM
+     C                     MOVE *BLANKS   PEQIV
+      *
+     C                     MOVEL@N,X      NEWDTL
+      *
+      * Item
+     C                     MOVE NITEM     PITEM
+      *
+      * Account
+     C                     MOVE NTRET     PTRET
+      *
+      * Issuing Bank
+     C                     MOVE NIBNK     PIBNK
+      *
+      * Cheque Amount
+     C                     MOVE NTAMT     ZFIELD
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFIELD 150
+     C                     PARM CQNDP     ZADEC   10
+     C                     PARM 'J'       ZECOD   1
+     C                     PARM           ZOUT21 21
+     C                     MOVELZOUT21    PTAMT
+      *
+      * Serial Number
+     C                     MOVE NSNUM     PSNUM
+      *
+      * Equivalent Amount
+     C                     MOVE NEQIV     ZFIELD
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFIELD 150
+     C                     PARM ACNDP     ZADEC   10
+     C                     PARM 'J'       ZECOD   1
+     C                     PARM           ZOUT21 21
+     C                     MOVELZOUT21    PEQIV
+      *
+     C                     Z-ADD2         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEAD
+      *
+     C           RIMTYP    IFEQ 'R'
+     C                     SETON                     52
+     C                     ENDIF
+      *
+     C                     WRITEHEAD1
+      *
+     C                     WRITEDETAIL
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL1
+      *
+     C                     ADD  1         X
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1END
+      *****************************************************************
+      *                                                               *
+      *  WP1END - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1END    BEGSR                           *** WP1END ***
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEAD
+     C                     ENDIF
+      *
+      ***  Write out Total Format.
+      *
+     C                     WRITETRAILPY
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/MOVARR
+      *****************************************************************
+      *                                                               *
+      *  MOVARR - Write new details to array                          *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MOVARR    BEGSR                           *** MOVARR ***
+      *
+     C                     MOVELNTRN1     @N,1
+     C                     MOVELNTRN2     @N,2
+     C                     MOVELNTRN3     @N,3
+     C                     MOVELNTRN4     @N,4
+     C                     MOVELNTRN5     @N,5
+     C                     MOVELNTRN6     @N,6
+     C                     MOVELNTRN7     @N,7
+     C                     MOVELNTRN8     @N,8
+     C                     MOVELNTRN9     @N,9
+     C                     MOVELNTRN10    @N,10
+     C                     MOVELNTRN11    @N,11
+     C                     MOVELNTRN12    @N,12
+     C                     MOVELNTRN13    @N,13
+     C                     MOVELNTRN14    @N,14
+     C                     MOVELNTRN15    @N,15
+     C                     MOVELNTRN16    @N,16
+     C                     MOVELNTRN17    @N,17
+     C                     MOVELNTRN18    @N,18
+     C                     MOVELNTRN19    @N,19
+     C                     MOVELNTRN20    @N,20
+     C                     MOVELNTRN21    @N,21
+     C                     MOVELNTRN22    @N,22
+     C                     MOVELNTRN23    @N,23
+     C                     MOVELNTRN24    @N,24
+     C                     MOVELNTRN25    @N,25
+     C                     MOVELNTRN26    @N,26
+     C                     MOVELNTRN27    @N,27
+     C                     MOVELNTRN28    @N,28
+     C                     MOVELNTRN29    @N,29
+     C                     MOVELNTRN30    @N,30
+     C                     MOVELNTRN31    @N,31
+     C                     MOVELNTRN32    @N,32
+     C                     MOVELNTRN33    @N,33
+     C                     MOVELNTRN34    @N,34
+     C                     MOVELNTRN35    @N,35
+     C                     MOVELNTRN36    @N,36
+     C                     MOVELNTRN37    @N,37
+     C                     MOVELNTRN38    @N,38
+     C                     MOVELNTRN39    @N,39
+     C                     MOVELNTRN40    @N,40
+     C                     MOVELNTRN41    @N,41
+     C                     MOVELNTRN42    @N,42
+     C                     MOVELNTRN43    @N,43
+     C                     MOVELNTRN44    @N,44
+     C                     MOVELNTRN45    @N,45
+     C                     MOVELNTRN46    @N,46
+     C                     MOVELNTRN47    @N,47
+     C                     MOVELNTRN48    @N,48
+     C                     MOVELNTRN49    @N,49
+     C                     MOVELNTRN50    @N,50
+     C                     MOVELNTRN51    @N,51
+     C                     MOVELNTRN52    @N,52
+     C                     MOVELNTRN53    @N,53
+     C                     MOVELNTRN54    @N,54
+     C                     MOVELNTRN55    @N,55
+     C                     MOVELNTRN56    @N,56
+     C                     MOVELNTRN57    @N,57
+     C                     MOVELNTRN58    @N,58
+     C                     MOVELNTRN59    @N,59
+     C                     MOVELNTRN60    @N,60
+     C                     MOVELNTRN61    @N,61
+     C                     MOVELNTRN62    @N,62
+     C                     MOVELNTRN63    @N,63
+     C                     MOVELNTRN64    @N,64
+     C                     MOVELNTRN65    @N,65
+     C                     MOVELNTRN66    @N,66
+     C                     MOVELNTRN67    @N,67
+     C                     MOVELNTRN68    @N,68
+     C                     MOVELNTRN69    @N,69
+     C                     MOVELNTRN70    @N,70
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, PROCES, *PSSR                    *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C                     WRITEDBERROR
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      *  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      *  If Error occurs during ZSFILE processing, then return to the
+      *  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      *  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      *  If Error occurs during ZSFILE processing, then return to the
+      *  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2003

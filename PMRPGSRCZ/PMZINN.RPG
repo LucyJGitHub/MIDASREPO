@@ -1,0 +1,286 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Securities int. calculation (not sch)')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Portfolio Management Module                          *
+      *                                                               *
+      *  PMZINN - SECURITIES INTEREST CALCULATION  (NOT SCH)          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 226449             Date 24Jun15               *
+      *                 MD034776           Date 08Jul15               *
+      *                 AR1067108          Date 11Dec12               *
+      *                 AR1001183A         Date 20Nov12               *
+      *                 CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSE037             Date 29Apr02               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 06Dec01               *
+      *                 180707             Date 25Jul00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 11Oct00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP137             Date 07Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPL002             Date 08Mar99               *
+      *                 130862             Date 18Oct98               *
+      *                 CSE005             Date 04Feb97               *
+      *                 CPM005             Date 14Nov96               *
+      *                 CPM004             DATE 07FEB96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  MD034776 - Reverse AR1001183A to allow negative interest     *
+      *             rate. (Recompile)                                 *
+      *  AR1067108 - PMC1140 Component failed during Clean COB        *
+      *              Applied fix AR1001183A                           *
+      *  AR1001183A - Coupon rate was still used in computation of    *
+      *              interest instead of using the details in FRN tab *
+      *              (Reopen) (Recompile)                             *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *           (Recompile)                                         *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input     *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+      *           (recompilation due to change to ZNCD/ZLCD/ZACCR).   *
+      *  180707 - No Position Settlements generated. Recompile over   *
+      *           changes in /COPY ZNCDZ3.                            *
+      *  CSD006 - Recompiled over changed SECTYD.                     *
+      *  CSE023 - Treaty Withholding Tax (SECTYD)                     *
+      *  CAP137 - Conversion of SE Security inputs into modular       *
+      *           structure to use as APIs (SECTYD)                   *
+      *  CPL002 - Midas-Plato Interface (Recompiled)                  *
+      *  130862 - Recompiled over ZLCDZ1 & ZDAYSZ2 changes.           *
+      *  CSE005 - Effect of holidays on FRN Coupon Dates              *
+      *           (recompilation due to change to ZNCD/ZLCD/ZACCR).   *
+      *  CPM005 - Private Banking Phase 2  - Recompile only           *
+      *           Focus Group Changes upgraded to DBA                 *
+      *  CPM004 - Bank Portfolios                                     *
+      *                                                               *
+     F*****************************************************************
+      *
+     FSEDEV   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F            SNDEVDF                           KRENAMESNDEVDO
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E                    ZF29   14  32  5 0             29TH FEB ARRAY
+     E**  Copyright array.
+     E                    CPY@    1   1 80
+     ISEDEVDF
+     I              RECI                            RECISD
+     I              NMCY                            NMCYSD
+     ISEDEVDO
+     I              RECI                            RECISD
+     I              NMCY                            NMCYSD
+     ISNDEVDO
+     I              RECI                            RECISD
+     I/COPY ZSRSRC,ZYLDZ1
+     I##SECT    E DSSECTYD
+     I                                      183 230 CDDS
+     I                                      183 230 CD
+     I                                      231 242 CRDS
+     I                                      231 242 CR
+     I##INVT    E DSINVTPD
+     I              RECI                            IRECI
+     I              LCD                             ILCD
+     I              CHTP                            ICHTP
+     I              TNLU                            ITNLU
+     I              NDEC                            INDEC                                     CSE037
+     I/COPY WNCPYSRC,PMZINNI001
+     C**********************************************************************
+     C*
+     C* COPYRIGHT
+     C                     MOVEACPY@      CPY2@  80
+      *
+      * Parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ##SECT
+     C                     PARM           ##INVT
+     C                     PARM           ##IDAT  50
+     C                     PARM           ##NOML 150
+     C                     PARM           ##ACIN  1
+     C                     PARM           ##INT  150
+     C                     PARM           ##DAYS  50
+     C                     PARM           ##LCD   50
+     C                     PARM           ##NCD   50
+     C                     PARM           ##CDP   10
+     C                     PARM           ##FULL  1
+     C                     PARM           ##RETC  6
+     C/COPY WNCPYSRC,PMZINNC001
+      *
+      **  Terminate program
+      *
+     C           ##RETC    IFEQ '*CLOSE'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *
+      ** Initialize fields
+      *
+     C                     Z-ADD*ZERO     ##INT
+     C                     Z-ADD*ZERO     ##DAYS
+     C                     Z-ADD*ZERO     ##LCD
+     C                     Z-ADD*ZERO     ##NCD
+      *
+     C                     MOVE '0'       *IN98
+     C                     Z-ADD##CDP     ZCDP
+      *
+      ** Determine Next and Last Coupon Dates
+      *
+     C                     EXSR DETDAT
+      *
+      ** Interest Calculation
+      *
+     C           ##IDAT    IFNE ##LCD
+     C           ##NOML    ANDNE*ZERO
+     C                     EXSR INTCAL
+     C                     END
+      *
+      ** Return
+      *
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      ** Determine Next and Last Coupon Dates
+      *****************************************************************
+     C           DETDAT    BEGSR
+      *
+      ** Use the maturity date if the calculation date is beyond it
+      *
+     C           ##IDAT    IFGT MATY
+     C                     Z-ADDMATY      ##IDAT
+     C                     END
+      *
+      ** Determine the next coupon date
+      *
+     C                     Z-ADD##IDAT    ECD     50
+     C                     EXSR ZNCD
+      *
+      ** Set the accrual Indicator
+      *
+     C           ##IDAT    IFEQ NCD
+     C                     MOVEL'F'       ##ACIN
+     C                     ELSE
+     C           ##ACIN    IFNE 'X'
+     C                     MOVEL'C'       ##ACIN
+     C                     END
+     C                     END
+      *
+      ** Determine the last coupon date (prior to the next coupon date)
+      *
+     C           ##ACIN    IFEQ 'F'
+     C           ##FULL    ANDNE'Y'
+     C                     Z-ADD##IDAT    ZZLCD
+     C                     ELSE
+     C           NCD       SUB  1         ZECD
+     C                     EXSR ZLCD
+     C                     END
+      *
+      ** Last coupon date
+      *
+     C                     Z-ADDZZLCD     LCPN
+      *
+      ** Last and Next Coupon Dates for Return
+      *
+     C                     Z-ADDZZLCD     ##LCD
+     C                     Z-ADDNCD       ##NCD
+     C                     ENDSR
+     C**********************************************************************
+     C/SPACE 5
+     C**********************************************************************
+      ** Interest Calculation
+     C**********************************************************************
+     C           INTCAL    BEGSR
+      *
+      ** Calculate the interest
+      *
+     C                     Z-ADD##NOML    ZAMT             * nominal
+     C           ##ACIN    IFEQ 'X'
+     C                     Z-ADD##IDAT    ZDCSDT           * start date
+     C                     Z-ADDNCD       ZDCEDT           * end date
+     C                     ELSE
+     C                     Z-ADDZZLCD     ZDCSDT           * start date
+     C                     Z-ADD##IDAT    ZDCEDT           * end date
+     C                     END
+      *
+     C                     EXSR ZACCZ
+     C                     Z-ADDZDCINT    ##INT
+      *
+     C                     Z-ADDZDDAYS    ##DAYS
+      *
+      ** Reverse sign if ex-coupon
+      *
+     C           ##ACIN    IFEQ 'X'
+     C                     Z-SUB##INT     ##INT
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+     C           *PSSR     BEGSR
+     C                     SETON                     LR
+     C                     DUMP
+     C                     MOVEL'*ERROR'  ##RETC
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+     C/COPY ZSRSRC,ZACCZZ1
+     C/SPACE 5
+     C/COPY ZSRSRC,ZACCRZ1
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDAYSZ2
+     C/SPACE 5
+     C/COPY ZSRSRC,ZNCDZ3
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDYYRZ3
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/SPACE 5
+     C/COPY ZSRSRC,ZLCDZ1
+     C/SPACE 5
+     C/COPY ZSRSRC,ZRATEZ1
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**  CPY@
+(c) Finastra International Limited 2001

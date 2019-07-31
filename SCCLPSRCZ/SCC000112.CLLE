@@ -1,0 +1,96 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Submit PEA Restore background job')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000112 - Submit PEA Restore background job               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR993055           Date 22Jun12              */
+/*                      CSC054  *CREATE    Date 23Feb12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR993055 - Status of Period End Adjustments system does not */
+/*                  change to 'Restore Started' during restore       */
+/*       CSC054 - Period End Adjustments                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCD)
+ 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)                            /*AR993055*/
+             DCL        VAR(&MQMGR) TYPE(*CHAR) LEN(48)                                 /*AR993055*/
+             DCL        VAR(&MQUEUE) TYPE(*CHAR) LEN(48)                                /*AR993055*/
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(2000)                                 /*AR993055*/
+             DCL        VAR(&PRFL) TYPE(*CHAR) LEN(2)                                   /*AR993055*/
+                                                                                        /*AR993055*/
+/*/COPY SDCPYSRC,SDSVALDCL  */                                                          /*AR993055*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          Ltd. 2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+                                                                                        /*AR993055*/
+/** Get Live zone system prefix */                                                      /*AR993055*/
+/** also get MQ Queue Manager and Outgoing Queue Name */                                /*AR993055*/
+                                                                                        /*AR993055*/
+             CHGVAR     VAR(&SVALK1) VALUE('PEALiveSystemPrefix')                       /*AR993055*/
+             CHGVAR     VAR(&SVALK2) VALUE('PEAHandShakingQM')                          /*AR993055*/
+             CHGVAR     VAR(&SVALK3) VALUE('PEAHandShakingOQ')                          /*AR993055*/
+                                                                                        /*AR993055*/
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
+                          &SVALK1 &SVAL1 &SVALK2 &SVAL2 +
+                          &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK10 &SVAL10)                              /*AR993055*/
+                                                                                        /*AR993055*/
+             CHGVAR     VAR(&PRFL) VALUE(%SST(&SVAL1 1 2))                              /*AR993055*/
+             CHGVAR     VAR(&MQMGR) VALUE(%SST(&SVAL2 1 48))                            /*AR993055*/
+             CHGVAR     VAR(&MQUEUE) VALUE(%SST(&SVAL3 1 48))                           /*AR993055*/
+ 
+/** Reset restore indicator */
+ 
+             CHGDTAARA  DTAARA(SCPEASTS (1 1)) VALUE(' ')
+ 
+/** Check if re-run of copy database */
+ 
+             IF         COND(&RTCD = '*COPYDB') THEN(DO)
+                CHGDTAARA  DTAARA(SCPEASTS (1 1)) VALUE('C')
+             ENDDO
+ 
+/** Submit restore job */
+ 
+             SBMJOB     CMD(CALL PGM(SCC000107)) JOB(PEARESTORE) +
+                          JOBD(MBATCH) JOBQ(INTERFACE) +
+                          PRTDEV(*CURRENT) OUTQ(*JOBD) USER(*JOBD) +
+                          RTGDTA(*JOBD) INLLIBL(*JOBD)
+ 
+             CHGVAR     VAR(&MSG) VALUE('Restore Started')                              /*AR993055*/
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+/** Abnormal termination */
+ 
+             CHGVAR     VAR(&MSG) VALUE('Restore Not Started')                          /*AR993055*/
+             CHGVAR     VAR(&RTCD) VALUE('*ERROR')
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000112 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             CALL       PGM(ZAMSGTOMQ) PARM(&RETURNCODE &PRFL +
+                          &MQMGR &MQUEUE &MSG)                                          /*AR993055*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*AR993055*/
+             ENDPGM

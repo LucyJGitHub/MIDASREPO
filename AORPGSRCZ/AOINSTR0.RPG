@@ -1,0 +1,252 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Local Institutions          *RDR')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  ACCESS OBJECTS
+     F*                                                                  *
+     F*     AOINSTR0 - READ ACCESS TO LOCAL INSTITUTIONS FILE            *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01230             Date 23/11/89              *
+      *                 S01230             Date 06/11/89              *
+     F*                    E01168             DATE 21/02/89              *S01230
+     F*                                                                  *
+     F********************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+     F*     S01230 - STANDARDISE ACCESS PROGRAMS                         *S01230
+     F********************************************************************S01230
+     F* ID F  C  H  L     FUNCTION OF INDICATORS
+     F*
+     F*       01       OPEN FILE - SDINSTL1
+     F*       90       FILE ERROR
+     F*       91       OPEN ERROR
+     F*       92       CLOSE ERROR
+     F*       93       EMPTY FILE
+     F*       94       END OF FILE
+     F*       95       NO RECORD FOUND
+     F*       96       OPTION ERROR
+     F*       97       NO SELECTION
+     F*       98       CALL ERROR
+     F*       99       SEND MESSAGE ERROR
+     F*
+     F********************************************************************
+      /EJECT
+     F*FSTART
+      ************************************************************
+     FSDINSTL1IF  E           K        DISK                           UC
+      * IN  - @AKREBI Local Instns    (LINC)
+      ************************************************************
+      /EJECT
+     E*ESTART
+      ************************************************************
+     E                    @MG     1   1 50
+      ************************************************************
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+      ************************************************************        S01230
+      /EJECT
+     I*ISTART
+      ************************************************************
+     IP@MGDA      DS
+     I                                        1  50 @MG
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     I*D@FMT     E DSSDINSTD0                                             S01230
+     ID@FMT     E DSSDINSTPD                                              S01230
+      * @AKREBI - Local Instns record format data structure
+      *
+     IP@FMT     E DSDSFDY                                                 S01230
+     I*                                                                   S01230
+     I* EXTERNAL DATA STRUCTURE TO HOLD THE OUTGOING RECORD FORMAT OF     S01230
+     I* THE FILE                                                          S01230
+     I******P@FMT       DS                             36                 S01230
+      * INTERNAL - Local Instns record format data structure
+      *
+     I******                                  1   1 P@DMMY                S01230
+     IP@LINC      DS
+      * Key slicing data structure (for Record Selection)
+     I                                        1   1 W@SL01
+     I                                        2   2 W@SL02
+      *
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+      ************************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM           P@LINC           I:Key field
+     C                     PARM           P@FMT            O:Format
+      *****************************************************
+      *MAIN
+     C           P@OPTN    IFEQ '*SAME  '
+     C           *IN01     COMP '0'                      91
+     C                     GOTO T@SKIP
+     C                     END
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     939495 ¦ error
+     C                     SETOF                     969798 ¦ indicators
+      *
+      * First call - open file :
+      *
+     C           *IN01     IFEQ '0'                        IF 1 FIRST TIME
+     C                     SETON                     01      Set ind.
+     C                     OPEN SDINSTL1               91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     END                             FI 1
+      *
+      * Last call - close file and terminate program :
+      *
+     C           P@OPTN    IFEQ '*FREE  '                  IF 2 FREE PROG
+     C                     CLOSESDINSTL1               92    Close file
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C                     SETON                     LR      Set ind.
+     C                     END                             FI 2
+      *
+      * Caller requests first record :
+      *
+     C           P@OPTN    IFEQ '*FIRST '                  IF 3 FIRST REC
+     C           *LOVAL    SETLL@AKREBI              9390    Set file
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*NEXT  ' P@OPTN             Force *Next
+     C                     END                             FI 3
+      *
+      * Caller requests next record :
+      *
+     C           P@OPTN    IFEQ '*NEXT  '                  IF 4 NEXT REC
+     C                     READ @AKREBI                9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 4
+      *
+      * Caller requests last record :
+      *
+     C           P@OPTN    IFEQ '*LAST  '                  IF 5 LAST REC
+     C           *HIVAL    SETGT@AKREBI                90    Set file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*PREV  ' P@OPTN             Force *Prev
+     C                     END                             FI 5
+      *
+      * Caller requests previous record :
+      *
+     C           P@OPTN    IFEQ '*PREV  '                  IF 6 PREV.REC
+     C                     READP@AKREBI                9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 6
+      *
+      * Caller requests record indicated by key :
+      *
+     C           P@OPTN    IFEQ '*KEY   '                  IF 7 KEY ACC
+     C           P@OPTN    OREQ '*VERIFY'                   OR
+     C           W@SL01    IFEQ '?'                        IF 8 SELECT
+     C           W@SL02    OREQ '?'                         OR
+     C*********************CALL 'SDCESRR'              98    <SELECT>     S01230
+     C                     CALL 'SD0090S'              98    <SELECT>     S01230
+     C                     PARM *BLANK    P@RTC2  7          B:Return code
+     C                     PARM *BLANK    P@LINC             B:Key
+     C           P@RTC2    COMP *BLANK               97      No selection
+     C           *IN97     CABEQ'1'       T@SKIP             No selection
+     C           *IN98     CABEQ'1'       T@SKIP             Program error
+     C                     END                             FI 8
+     C           P@LINC    CHAIN@AKREBI              9590    Get record
+     C           *IN95     CABEQ'1'       T@SKIP             No rec found
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 7
+      *
+     C           P@OPTN    IFNE '*KEY   '                  IF 8 NOT KEYED
+     C           P@OPTN    ANDNE'*NEXT  '                   AND NOT SEQ.
+     C           P@OPTN    ANDNE'*PREV  '                   AND
+     C           P@OPTN    ANDNE'*VERIFY'                   AND
+     C           P@OPTN    ANDNE'*FREE  '                   AND
+     C                     SETON                       96    Parameter err
+     C                     END                             FI 8
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   94                MOVE '*EOF   ' P@RTCD           End of file
+     C   95                MOVE '*NRF   ' P@RTCD           No rec found
+     C   96                MOVE '*OPTION' P@RTCD           Option error
+     C   97                MOVE '*NOSEL ' P@RTCD           No selection
+     C   98                MOVE '*CALL  ' P@RTCD           Called Pgm.err.
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 9 SEND MSG
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   94                MOVE 'ACO1005' P@MGID             End of file
+     C   95                MOVE 'ACO1006' P@MGID             No rec found
+     C   96                MOVE 'ACO1007' P@MGID             Option error
+     C   97                MOVE 'ACO1009' P@MGID             No selection
+     C   98                MOVE 'ACO1010' P@MGID             Call error
+     C                     CALL 'ZASNMG'                     <SEND MSG>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Prog name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Msg ID
+     C                     PARM *BLANK    P@MSGF 10          I:Msg file
+     C                     PARM *BLANK    P@MGKY  4          O:Msg key
+     C                     PARM           P@MGDA 50          I:Msg data
+     C                     PARM '*DIAG'   P@MGTP  7          I:Msg type
+     C                     END                             FI 9
+      *
+      * Caller requests DB error handling :
+      *
+     C           W@RTCD    IFEQ '*DBERR'                   IF
+     C           P@RTCD    ANDNE*BLANK                       AND
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END                             FI
+      *
+     C           P@OPTN    IFNE '*VERIFY'                  IF 13
+     C           P@OPTN    ANDNE'*FREE  '                    AND
+     C           P@RTCD    ANDNE'*OPTION'                    AND
+     C                     MOVELD@FMT     P@FMT
+     C                     END
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+      *ENDMAIN
+**
+SDINSTPD  AOINSTR0  Local Institutions                                    E01168
+** CPY@     : Copyright notice for inclusion in all programs           grams
+(c) Finastra International Limited 2001

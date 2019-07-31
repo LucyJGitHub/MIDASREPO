@@ -1,0 +1,322 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AA Match off balancing postings')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Analytical Accounting Module                         *
+      *                                                               *
+      *  AA0005A - Match Off Balancing Postings                       *
+      *                                                               *
+      *  Function:  This program writes management a/cs to a workfile *
+      *             for which accounts postings net off to zero       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 03Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 22Feb99               *
+      *                 CTI002             Date 11May99               *
+      *                 CAC001 *CREATE     Date 01FEB96               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Write to QSYSPRT if feature on.       *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *  CAC001 - Profit Centre Accounting Development                *
+      *                                                               *
+      *****************************************************************
+      *
+     FAAACPT  IP  E           K        DISK
+     FQSYSPRT O   F     132            PRINTER
+     FAAPSTC  O   E                    DISK
+      /SPACE 3
+     E                    CPY@    1   1 80
+      **  Copyright array
+      *
+     IAAACPTF
+     I                                              BRCA  L9
+     I                                              CCY   L8
+     I                                              CNUM  L7
+     I                                              ACOD  L6
+     I                                              ACSQ  L5
+     I                                              SPOS  L4
+     I                                              OTTP  L3
+     I                                              OTST  L2
+     I                                              OTRF  L1
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     ISDACOD    E DSSDACODPD
+      **  Account code details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      **  Second DS for access programs, Long Data Structure                                  CGL029
+      *                                                                                       CGL029
+     ILDA       E DSLDA
+      ** Local data structure used for error handling
+     I*                                                                   CSD005
+     ISCSARD    E DSSCSARDPD                                              CSD005
+     I** MIDAS Switchable Features Accessed Via Access Program            CSD005
+     I*                                                                   CSD005
+      *
+      /EJECT
+      *****************************************************************
+      *  MAIN PROCESSING
+      *****************************************************************
+      *
+      ** Copyright array
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      * First cycle
+      *
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C/COPY WNCPYSRC,AA0005AC03
+     C                     END
+      *
+      * If change of a/c code, access a/c code details
+      *
+     C           *INL6     IFEQ '1'
+     C                     EXSR SRACOD
+     C/COPY WNCPYSRC,AA0005AC04
+     C                     END
+      *
+      * Reset totals
+      *
+     C   L2                Z-ADD0         TR#TO2 150
+     C   L2                Z-ADD0         TRNTO2 150
+     C   L1                Z-ADD0         TR#TO1 150
+     C   L1                Z-ADD0         TRNTO1 150
+      *
+     C           *IN60     CABEQ'0'       BYPASS
+      *
+     C                     ADD  PSTA      TR#TO1
+     C                     ADD  PSTA      TR#TO2
+      *
+      * Sign posting amount
+      *
+     C           DRCR      IFEQ 1
+     C                     Z-SUBPSTA      PSTA
+     C                     END
+      *
+      * Update totals
+      *
+     C                     ADD  PSTA      TRNTO1
+     C                     ADD  PSTA      TRNTO2
+      *
+     C           BYPASS    TAG
+      *
+      * Write out profit centre totals
+      *
+     CL1         TR#TO1    IFNE 0
+     CL1         TRNTO1    ANDEQ0
+     CL1                   Z-ADD1         ##SLNN
+     CL1                   EXSR SRHEAD
+     CL1                   EXCPTDETAIL
+     CL1                   WRITEAAPSTCF
+     CL1                   END
+      *
+     CL2         TR#TO2    IFNE 0
+     CL2         TRNTO2    ANDEQ0
+     CL2                   Z-ADD1         ##SLNN
+     CL2                   MOVEL*BLANK    OTRF
+     CL2                   MOVEL'*ALLUNDE'OTRF
+     CL2                   EXSR SRHEAD
+     CL2                   EXCPTDETAIL
+     CL2                   WRITEAAPSTCF
+     CL2                   END
+      *****************************************************************
+     C           SRACOD    BEGSR
+      *
+      ** Obtain a/c code details
+      *
+     C                     MOVELACOD      PKEY4
+     C                     CALL 'AOACODR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY'    POPTN
+     C**********           PARM           PKEY4   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM           PKEY4  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+      ** DB error if not found
+      *
+     C           PRTCD     IFNE *BLANK
+     C                     MOVEL'SDACODPD'DBFILE
+     C                     Z-ADD002       DBASE
+     C                     MOVELACOD      DBKEY
+     C                     MOVEL'AA0005A' DBPGM
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C                     END
+      *
+      ** Include only non-retail and non-nostro a/cs
+      *
+     C                     MOVEL'0'       *IN60
+     C           A5ACTY    IFNE 'N'
+     C           A5ACTY    ANDNE'R'
+     C                     MOVEL'1'       *IN60
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C           SRHEAD    BEGSR
+     C/COPY WNCPYSRC,AA0005AC01
+     C                     ADD  ##SLNN    ##LNNO
+     C           ##LNNO    IFGT 60
+     C                     Z-ADD4         ##LNNO
+     C                     ADD  ##SLNN    ##LNNO
+     C                     ADD  1         ##PGNO
+     C                     EXCPTHEADNG
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+     C           SRINIT    BEGSR
+     C/COPY WNCPYSRC,AA0005AC02
+      *                                                                   CSD005
+      *                                                                   CSD005
+     C           *NAMVAR   DEFN           LDA   256                       CSD005
+      *
+      ** Obtain bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD001       DBASE
+     C                     MOVELPOPTN     DBKEY
+     C                     MOVEL'AA0005A' DBPGM
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C                     END
+      *
+     C                     MOVEL'Y'       ##INIT  1
+      *
+     C                     Z-ADD0         ##PGNO  50
+     C                     Z-ADD99        ##LNNO  50
+     C                     Z-ADD0         ##SLNN  50
+      *                                                                   CSD005
+      * Obtain switchable feature CSD005 status.                          CSD005
+      *                                                                   CSD005
+     C                     CALL 'AOSARDR0'                                CSD005
+     C                     PARM *BLANKS   @RTCD   7                       CSD005
+     C                     PARM '*VERIFY' @OPTN   7                       CSD005
+     C                     PARM 'CSD005'  @SARD   6                       CSD005
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD005
+      *                                                                   CSD005
+     C                     SELEC                                          CSD005
+     C           @RTCD     WHEQ *BLANK                                    CSD005
+     C                     MOVE *ON       *IN73                           CSD005
+     C           @RTCD     WHEQ '*NRF'                                    CSD005
+     C                     MOVE *OFF      *IN73                           CSD005
+     C                     OTHER                                          CSD005
+     C           *LOCK     IN   LDA                                       CSD005
+     C                     MOVEL'SCSARDPD'DBFILE            ************* CSD005
+     C                     Z-ADD003       DBASE             *DBERROR 003* CSD005
+     C                     MOVEL@OPTN     DBKEY             ************* CSD005
+     C                     SETON                     U7U8LR               CSD005
+     C                     OUT  LDA                                       CSD005
+     C                     EXSR *PSSR                                     CSD005
+     C                     ENDSL                                          CSD005
+      *                                                                   CSD005
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                                          CSD005
+      *                                                                   CSD005
+     C           @RUN      IFEQ *BLANK                                    CSD005
+     C                     MOVE 'Y'       @RUN    1                       CSD005
+     C                     DUMP                                           CSD005
+     C                     END                                            CSD005
+      *                                                                   CSD005
+     C                     MOVE *ON       *INU7                           CSD005
+     C                     MOVE *ON       *INU8                           CSD005
+     C                     MOVE *ON       *INLR                           CSD005
+     C                     RETRN                                          CSD005
+     C                     ENDSR                                          CSD005
+      *
+      ********************************************************************
+      *****************************************************************
+     OQSYSPRT E   02           HEADNG
+     O                                   12 'REF. AA0005A'
+     O                         BJURPT    90
+     O                                  107 'DATE'
+     O                         BJMRDT   115
+     O                                  126 'PAGE'
+     O                         ##PGNOZ  132
+     O        E 11             HEADNG
+     O                                    3 'BRC'
+     O                                    7 'CCY'
+     O**********                         12 'A/C'                                             CGL029
+     O**********                         18 'CUST'                                            CGL029
+     O**********                         22 'SQ'                                              CGL029
+     O**********                         35 'SOURCE'                                          CGL029
+     O**********                         47 'TRAN TYP'                                        CGL029
+     O**********                         60 'TRAN S/TYP'                                      CGL029
+     O                                   14 'A/C'                                             CGL029
+     O                                   23 'CUST'                                            CGL029
+     O                                   28 'SQ'                                              CGL029
+     O                                   35 'SOURCE'                                          CGL029
+     O                                   46 'TRAN TYP'                                        CGL029
+     O                                   59 'TRAN S/TYP'                                      CGL029
+     O                                   76 'TRAN REF      '
+     O        E 1              DETAIL
+     O                         BRCA       3
+     O                         CCY        7
+     O**********               ACOD      12                                                   CGL029
+     O**********               CNUM      19                                                   CGL029
+     O**********               ACSQ      22                                                   CGL029
+     O**********               SPOS      35                                                   CGL029
+     O**********               OTTP      49                                                   CGL029
+     O**********               OTST      60                                                   CGL029
+     O**********               OTRF      76                                                   CGL029
+     O                         ACOD      18                                                   CGL029
+     O                         CNUM      25                                                   CGL029
+     O                         ACSQ      28                                                   CGL029
+     O                         SPOS      36                                                   CGL029
+     O                         OTTP      48                                                   CGL029
+     O                         OTST      59
+     O                         OTRF      81
+     O*                        A5ACCN   116                               CSD005
+     O                N73      A5ACCN   116                               CSD005
+     O**********       73      A5NARR   128                                            CSD005 CGL029
+     O                 73      A5NARR   132                                                   CGL029
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

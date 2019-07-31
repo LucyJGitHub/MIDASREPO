@@ -1,0 +1,535 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FD Location currency audit list report.')
+     F****************************************************************
+     F*                                                              *
+     F*     Midas- STANDING DATA MODULE                          *
+     F*                                                              *
+     F*     FD0390 - LOCATION CURRENCY AUDIT LIST REPORT             *
+     F*                                                              *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 120890             Date 07Jul97               *
+     F*                 BHF386             Date  09AUG90              *
+     F*                    E17574             DATE  14NOV89          *
+     F*                    E11112             DATE  07/03/88         *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  120890 - Produce a dump if database error occurs             *
+     F*     BHF386 - DOESN'T PRINT OUT DATE ON AUDIT REPORT          *    BHF386
+     F*     E17574 - INCORRECT SPELLING ON REPORT HEADING.           *   *E17574
+     F*     E11112 - PLACE LF/FDTTOTLL UNDER COMMITTMENT CONTROL     *
+     F*                                                              *
+     F****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*       61         END OF PAGE (OVERFLOW). MAIN AUDIT PRINT.
+     F*       62         VALID RECORDS ARE PRESENT.
+     F*       63         FILE HAS BEEN UPDATED BY FORBIDDEN PROGRAM
+     F*       64         DATABASE RECOVERY HAS REVERSED CHANGE.
+     F*       66         FILES OUT OF BALANCE
+     F*       67         END OF PAGE (OVERFLOW). CONTROL TOTALS PRINT.
+     F*       74         RECORD LOCKED.
+     F*       76         CHAIN FAIL / READ FAIL INDICATOR.
+     F*       80         DATABASE ERROR INDICATOR.
+     F*       U7         DATABASE ERROR (JOB SWITCH).
+     F*       U8         DATABASE ERROR (JOB SWITCH).
+     F*       LR         LAST RECORD.
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFDICDRLLIF  E           K        DISK         KINFSR *PSSR
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     FFDAUDFLLIPE E           K        DISK         KINFSR *PSSR
+     FFDLCCLLLIF  E           K        DISK         KINFSR *PSSR
+     F                                              KINFDS DSAUDT
+     FFDTTOTLLUF  E           K        DISK         KINFSR *PSSR
+     F****                                          KCOMIT
+     F                                              KCOMIT                E11112
+     FFDRCVRLLIF  E           K        DISK         KINFSR *PSSR
+     FFD0390RRO   E             61     PRINTER      KINFSR *PSSR
+     F**  OVERFLOW INDICATOR (61) SET ON AT END OF PAGE.
+     FFDAUDIRRO   E             67     PRINTER      KINFSR *PSSR
+     F**  OVERFLOW INDICATOR (67) SET ON AT END OF PAGE.
+     F*
+     IDSAUDT      DS
+     I                                    B 156 1590RRNORE
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I** PROGRAM STATUS DATA STRUCTURE
+     I*
+     I           UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     IDNATN       DS                              5
+     I* DATA STRUCTURE TO UPDATE LAST TRANSACTION NUMBER
+     I                                        1   50FNATN
+     ICMTTXT      DS                             79
+     I* COMIT TEXT
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCDX
+     I                                       26  35 USRIDX
+     I                                       51  62 KEY
+     I                                       63  660NREC
+     I                                       67  700NINS
+     I                                       71  740NDEL
+     I                                       75  780NAMD
+     I** L.D.A. DATA AREA TO HOLD INFORMATION ON DATABASE ERROR.
+     I*
+     C/EJECT
+     C                     MOVE 'FD0390'  DBPGM
+     C                     MOVE 'FD0390'  RRPROG
+     C*
+     C**   PERFORM #A ONLY ON FIRST CYCLE.
+     C           @CYCLE    IFNE 'FIRST'                    B1
+     C                     EXSR #A                         *1
+     C                     END                             E1
+     C                     EXSR #B
+     C*
+     C**  EXECUTE #C AT LR.
+     CLR                   EXSR #C
+     C/EJECT
+     C****************************************************************
+     C*    INDEX TO SUBROUTINES - LISTED ACCORDING TO USAGE          *
+     C*                                                              *
+     C*       1) #B      MAIN PROCESSING.                            *
+     C*       2) #BA     FIND TYPE OF LAST CHANGE.                   *
+     C*       3) #BB     LOAD PRINTER FILE.                          *
+     C*       4) #A      INITIALISATION.                             *
+     C*       5) #C      TERMINATION.                                *
+     C*       6) ZA0150  ACCESSES INSTALLATION CONTROL DATA(FDICDRLL)*
+     C*       7) PSSR    DUMP.                                       *
+     C****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*    #B CARRIES OUT THE MAIN PROCESSING.                       *
+     C*       CALLED BY  : INITIAL PROCESSING.                       *
+     C*       CALLS      : #BA                                       *
+     C*                    #BB                                       *
+     C*                                                              *
+     C****************************************************************
+     C           #B        BEGSR
+     C*
+     C**  EXIT IF THERE IS A DATABASE ERROR.
+     C           *IN80     CABEQ'1'       #B9
+     C**
+     C                     EXSR #BA
+     C                     EXSR #BB
+     C*
+     C**   IF END OF PAGE (*IN61) PRINT HEADERS.
+     C           *IN61     IFEQ '1'                        B1
+     C                     WRITEFD0390R0                   *1
+     C                     MOVE '0'       *IN61            *1
+     C                     END                             E1
+     C*
+     C**   *IN62 SET ON TO INDICATE DETAIL LINE PRODUCED.
+     C                     MOVE '1'       *IN62
+     C*
+     C**   *IN63 Set on if Program performing update is not normal
+     C           AFPGM     IFNE 'FD0150'                   B1
+     C                     MOVE '1'       *IN63            *1
+     C                     ELSE                            *1
+     C                     MOVE '0'       *IN63            *1
+     C                     END                             E1
+     C*
+     C**   *IN64 Set on if Database Recovery has reversed change
+     C*
+     C** CHAIN TO THE RECOVERY SEQUENCE FILE TO SEE IF ENTRY HAS
+     C** NOT BEEN RECOVERED
+     C           AFSEQN    SETGTFDRCVRLL
+     C                     READPFDRCVRLL                 99
+     C           *IN99     IFEQ '0'                        B1
+     C           FRPNT     ANDLEAFSEQN                     *1
+     C           TOPNT     ANDGEAFSEQN                     *1
+     C                     MOVE '1'       *IN64            *1
+     C                     ELSE                            X1
+     C                     MOVE '0'       *IN64            *1
+     C                     END                             E1
+     C*
+     C*
+     C**   PRINT DETAIL LINE IF THE ENTRY TYPE IS INSERT, UPDATE AFTER
+     C**   IMAGE, UPDATE AFTER ROLLBACK, DELETE OR DELETE BY ROLLBACK.
+     C           AFENTT    IFEQ 'UP'
+     C           AFENTT    OREQ 'UR'
+     C           AFENTT    OREQ 'PT'
+     C           AFENTT    OREQ 'DR'
+     C           AFENTT    OREQ 'DL'
+     C           AFCHTP    IFEQ 'I'
+     C           @SCHTP    OREQ 'D'
+     C           AFENTT    ANDEQ'UR'
+     C                     MOVE *BLANKS   RRLCNB
+     C                     MOVE *BLANKS   RRLCCB
+     C                     END
+     C*
+     C** IF THE ENTRY TYPE IS ROLLBACK AFTER IMAGE, AND THE PREVIOUS
+     C** CHANGE TYPE IS DELETE THEN CHANGE RRTYPE TO INSERT
+     C           AFENTT    IFEQ 'UR'
+     C           @SCHTP    ANDEQ'D'
+     C                     MOVE 'INS'     RRTYPE
+     C                     END
+     C*
+     C** IF THE ENTRY TYPE IS ROLLBACK AFTER IMAGE, AND THE PREVIOUS
+     C** CHANGE TYPE IS AMEND THEN CHANGE RRTYPE TO AMEND
+     C           AFENTT    IFEQ 'UR'
+     C           @SCHTP    ANDEQ'A'
+     C                     MOVE 'AMD'     RRTYPE
+     C                     END
+     C*
+     C** IF THE ENTRY TYPE IS ROLLBACK AFTER IMAGE, AND THE PREVIOUS
+     C** CHANGE TYPE IS INSERT THEN CHANGE RRTYPE TO DELETE
+     C           AFENTT    IFEQ 'UR'
+     C           @SCHTP    ANDEQ'I'
+     C                     MOVE 'DEL'     RRTYPE
+     C                     MOVE *BLANKS   RRLCNA
+     C                     MOVE *BLANKS   RRLCCA
+     C                     END
+     C*
+     C** RECORD DELETED FOR ROLLBACK
+     C           AFENTT    IFEQ 'DR'
+     C** RECORD PHYSICALLY DELETED
+     C           AFENTT    OREQ 'DL'
+     C                     MOVE 'DEL'     RRTYPE
+     C                     END
+     C*
+     C                     WRITEFD0390R1
+     C*
+     C                     MOVE *BLANKS   RRLCNB
+     C                     MOVE *BLANKS   RRLCCB
+     C                     MOVE *BLANKS   RRLCNA
+     C                     MOVE *BLANKS   RRLCCA
+     C*
+     C                     END
+     C*
+     C** SAVE CHANGE TYPE INCASE IT IS A ROLLBACK RECORD
+     C                     MOVE AFCHTP    @SCHTP  1
+     C**
+     C           #B9       ENDSR
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*    #BA FINDS THE CHANGE TYPE BY REFERENCE TO TYPE OF LAST    *
+     C*    CHANGE FIELD (AFCHTP).                                    *
+     C*       CALLED BY  : #B                                        *
+     C*       CALLS      : NONE                                      *
+     C*       WORK FIELDS: @TYPE:TYPE OF CHANGE (ADD,AMEND OR DELETE)* *
+     C*                                                              *
+     C****************************************************************
+     C           #BA       BEGSR
+     C           AFCHTP    IFEQ 'A'                        B1
+     C                     MOVE 'AMD'     RRTYPE           *1
+     C                     END                             E1
+     C           AFCHTP    IFEQ 'I'                        B1
+     C                     MOVE 'INS'     RRTYPE           *1
+     C                     END                             E1
+     C           AFCHTP    IFEQ 'D'                        B1
+     C                     MOVE 'DEL'     RRTYPE           *1
+     C                     END                             E1
+     C           #BA9      ENDSR
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*    #BB LOADS THE PRINTER FILE.                               *
+     C*       CALLED BY  : #B                                        *
+     C*       CALLS      : NONE                                      *
+     C*       WORK FIELDS: @TYPE:TYPE OF CHANGE (ADD,AMEND OR DELETE)* *
+     C*                                                              *
+     C****************************************************************
+     C           #BB       BEGSR
+     C**
+     C*** File Fields loaded to before/after fields
+     C***   depending on Change Type
+     C**
+     C           AFCHTP    IFEQ 'D'
+     C           AFENTT    OREQ 'UB'
+     C           AFENTT    OREQ 'BR'
+     C           AFENTT    OREQ 'DL'
+     C           AFENTT    OREQ 'DR'
+     C                     MOVE AFLCNM    RRLCNB
+     C                     MOVE AFLCCY    RRLCCB
+     C                     ELSE
+     C                     MOVE AFLCNM    RRLCNA
+     C                     MOVE AFLCCY    RRLCCA
+     C                     END
+     C**
+     C                     MOVE AFLCOD    RRLCOD
+     C                     MOVE AFPGM     RRUPGM
+     C                     MOVE AFTLUP    RRTLUP
+     C                     MOVE AFLUID    RRLUID
+     C*
+     C** BLANK OUT AFTER FIELDS IF NO CHANGE
+     C           AFCHTP    IFEQ 'A'
+     C           RRLCNB    IFEQ RRLCNA
+     C                     MOVE *BLANKS   RRLCNA
+     C                     END
+     C           RRLCCB    IFEQ RRLCCA
+     C                     MOVE *BLANKS   RRLCCA
+     C                     END
+     C                     END
+     C           #BB9      ENDSR
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*    #CA CHECKS RECORD COUNTS.                                 *
+     C*       CALLED BY  : #C                                        *
+     C*       CALLS      :                                           *
+     C*       WORK FIELDS:                                           *
+     C*                                                              *
+     C****************************************************************
+     C           #CA       BEGSR
+     C*
+     C** GET HEADER RECORD FOR UPDATE
+     C                     MOVE *BLANKS   @XKEY  12
+     C                     MOVEL'LC'      @XKEY
+     C           @XKEY     CHAINFDTTOTLL             7674
+     C*
+     C**  DATA BASE ERROR
+     C           *IN76     IFEQ '1'                        B1
+     C                     MOVEL@XKEY     DBKEY            ***************
+     C                     MOVEL'FDTTOTLL'DBFILE           * DB ERROR 008*
+     C                     MOVE '008'     DBASE            ***************
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *IN80                           120890
+     C                     DUMP                                           120890
+     C                     GOTO #CA9                       *1
+     C                     END                             E1
+     C*
+     C** IF RECORD LOCKED SEND MESSAGE AND RELEASE MAIN UPDATE RECORD
+     C           *IN74     IFEQ '1'                        B1
+     C                     CALL 'ZA0250'                   *1
+     C                     MOVEL'FDM0120' @MSGID 10        *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+     C                     EXCPT@RLSFL                     *1
+     C                     GOTO #CA9                       *1
+     C                     END                             E1
+     C**
+     C***** Calculate Record Totals and Report
+     C**
+     C                     Z-ADDNREC      RRNREC
+     C                     Z-ADDNINS      RRNINS
+     C                     Z-ADDNAMD      RRNAMD
+     C                     Z-ADDNDEL      RRNDEL
+     C           NREC      ADD  NINS      RRNCAL
+     C                     SUB  NDEL      RRNCAL
+     C           RRNORE    IFNE RRNCAL
+     C                     MOVE '1'       *IN66
+     C                     MOVE '1'       *INU8
+     C                     DUMP                                           120890
+     C                     ELSE
+     C                     MOVE '0'       *IN66
+     C                     Z-ADD*ZERO     NAMD
+     C                     Z-ADD*ZERO     NINS
+     C                     Z-ADD*ZERO     NDEL
+     C                     Z-ADDRRNCAL    NREC
+     C                     EXSR ZTNLU1
+     C                     UPDATTABLETXF
+     C****       CMTTXT    COMIT
+     C                     END
+     C**
+     C           #CA9      ENDSR
+     C**
+     C****************************************************************
+     C*                                                              *
+     C*    #A INITIALISES  PROGRAM.                                  *
+     C*       CALLED BY  : INITIAL PROCESSING.                       *
+     C*       CALLS      : ZA150                                     *
+     C*       WORK FIELDS: @CYCLE   FIELD TO INDICATE IF #A EXECUTED *
+     C*                                                              *
+     C****************************************************************
+     C           #A        BEGSR
+     C                     MOVE 'FIRST'   @CYCLE  5
+     C                     EXSR ZA0150
+     C*
+     C**  EXIT IF THERE IS A DATABASE ERROR.
+     C           *IN80     CABEQ'1'       #A9
+     C*
+     C**  LOAD HEADERS.
+     C**********           MOVE UDATE     RRRUNA                          BHF386
+     C                     MOVE RUNA      RRRUNA                          BHF386
+     C                     TIME           RRTIME
+     C                     MOVE TITL      RRTITL
+     C                     MOVEL'LOCATION'RRTIT2
+     C*********************MOVE '/CURRNCY'RRTIT2                          E17574
+     C                     MOVE '/CURRENC'RRTIT2                          E17574
+     C                     MOVEL'Y   '    RRTIT3                          E17574
+     C                     TIME           RRRUNT
+     C*
+     C** SET UP INFDS
+     C                     READ FDLCCLLL                 76
+     C*
+     C** REPORT HEADINGS.
+     C                     WRITEFD0390R0
+     C           #A9       ENDSR
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*    #C TERMINATES PROGRAM.                                    *
+     C*        CALLED BY  : INITIAL PROCESSING.                      *
+     C*        CALLS      : ZA0150                                   *
+     C*                                                              *
+     C****************************************************************
+     C           #C        BEGSR
+     C*
+     C****    Perform Record Total Checks
+     C**
+     C                     MOVE 'FD0390'  RRPROG
+     C***********          MOVE UDATE     RRRUNA                          BHF386
+     C                     MOVE RUNA      RRRUNA                          BHF386
+     C                     EXSR #CA
+     C**
+     C** IF #A HAS NOT BEEN PERFORMED BECAUSE FILE HAD NO RECORDS THEN
+     C** INITIAL PROCESSING IS CARRIED OUT IN #C.
+     C           @CYCLE    IFNE 'FIRST'                    B1
+     C                     EXSR ZA0150                     *1
+     C                     END                             E1
+     C*
+     C**  EXIT IF THERE IS A DATABASE ERROR.
+     C           *IN80     IFEQ '1'                        B1
+     C*
+     C**  LOAD PRINTER FILE WITH ERROR DATA , PRINT ERROR MESSAGE
+     C**  & EXIT PROGRAM.
+     C                     MOVE DBASE     RRBASE           *1
+     C                     MOVE DBPGM     RRPGM            *1
+     C                     MOVE DBFILE    RRFILE           *1
+     C                     MOVE DBKEY     RRKEY            *1
+     C                     WRITEFD0390R3                   *1
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *INLR            *1
+     C                     GOTO #C9                        *1
+     C                     END                             E1
+     C*
+     C**  LOAD HEADERS IF THERE ARE NO RECORDS & NO DATABASE ERROR.
+     C           @CYCLE    IFNE 'FIRST'                    B1
+     C                     MOVE TITL      RRTITL           *1
+     C                     MOVEL'LOCATION'RRTIT2           *1
+     C***********          MOVE '/CURRNCY'RRTIT2           *1             E17574
+     C                     MOVE '/CURRENC'RRTIT2                          E17574
+     C                     MOVEL'Y   '    RRTIT3                          E17574
+     C                     TIME           RRRUNT
+     C                     END                             E1
+     C*
+     C*** Print Control Totals on Second Output Queue.
+     C*** If there are no details to report, *IN62 will be off
+     C**    and a "NO DETAILS" message will be printed there also.
+     C                     WRITEFDAUDIR0
+     C*
+     C*** If Report Totals did not match, report also on main report
+     C**
+     C           *IN66     IFEQ '1'                        B1
+     C                     WRITEFD0390R0                   *1
+     C                     WRITEFD0390R4                   *1
+     C                     END                             E1
+     C**
+     C** REPORT TRAILER. ("End of Report")
+     C           *IN62     IFEQ '1'                        B1
+     C                     WRITEFD0390R2                   *1
+     C                     END                             E1
+     C**
+     C           #C9       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZTNLU - TO LOCK AND UPDATE THE TRANSACTION NUMBER DATA AREA   *
+     C*                                                               *
+     C* CALLED BY :                                                   *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C* USES :                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     MOVE 'FD'      MDID
+     C                     MOVEL'FD0390'  PGMN
+     C                     MOVEL@JOB      WSIDX
+     C                     TIME           MTIME
+     C                     MOVE 'A'       ACTCDX
+     C                     MOVE @USER     USRIDX
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE ZA0150 - THIS SUBROUTINE CHAINS TO FILE LF/       *
+     C*  FDICDRLL TO GET THE INSTALLATION CONTROL DETAILS RECORD 1    *
+     C*  (HELD ON PF/TABTB10)                                         *
+     C*  INDICATOR 80 IS SET ON IF THE CHAIN FAILS OR THE RECORD IS   *
+     C*  FLAGGED FOR DELETION.                                        *
+     C*  IF INDICATOR 80 IS SET ON DETAILS OF THE ATTEMPTED ACCESS    *
+     C*  ARE PLACED IN THE LDA.                                       *
+     C*                                                               *
+     C*  FIELDS USED : SS0150 - KEY USED TO ACCESS FDICDRLL           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZA0150    BEGSR
+     C*
+     C** SET UP KEY TO OBTAIN FORMAT TABTB10F '01        10'
+     C                     MOVEL'01'      SS0150 12
+     C                     MOVE '10'      SS0150
+     C*
+     C** CHAIN TO FILE FDICDRLL
+     C           SS0150    CHAINFDICDRLL             80
+     C           RECI      IFNE 'D'                        B1
+     C                     MOVE '1'       *IN80            *1
+     C                     END                             E1
+     C*
+     C** DEAL WITH DATA BASE ERROR
+     C           *IN80     IFEQ '1'                        ***************
+     C                     MOVEL'FDICDRLL'DBFILE           *             *
+     C                     MOVEL'900'     DBASE            * DBERROR 900 *
+     C                     MOVELSS0150    DBKEY            *             *
+     C                     DUMP                                           120890
+     C                     END                             ***************
+     C*
+     C           ZA0159    ENDSR
+     C/EJECT
+     C*****************************************************
+     C*                                                   *
+     C*   EXCEPTION ERROR SUBROUTINE                      *
+     C*                                                   *
+     C*   SUBROUTINE CALLED: EXECUTES WHENEVER EITHER     *
+     C*   FILE OR PROGRAM ERROR OCCURS                    *
+     C*                                                   *
+     C*   SUBROUTINE CALSS : NO OTHER SUBROUTINES         *
+     C*                                                   *
+     C*****************************************************
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     ENDSR
+     OTABLETXFE                @RLSFL

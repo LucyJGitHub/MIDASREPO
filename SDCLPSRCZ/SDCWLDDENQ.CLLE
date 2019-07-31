@@ -1,0 +1,140 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SD Watch list enquiry control program')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDCWLDDENQ - Watch list enquiry Control Program             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSD083             Date 27May10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      228189             Date 02Jul04              */
+/*                      CSD019             Date 02Jun03              */
+/*                      CSD015  *CREATE    Date 03Mar03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSD083 - Watch List Compliance Upgrade                      */
+/*       228189 - CWLCHECK loops if library not present              */
+/*       CSD019 - Midas Compliance Watch - Entry Level Watch List    */
+/*                Checking                                           */
+/*       CSD015 - Midas Compliance Watch - Watch List Checking       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPWATCHXX) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)                                      /*CSD019*/
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)                                      /*CSD019*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CSD019*/
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                   /*CSD019*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2003')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+                                                                                          /*CSD019*/
+/** Check if Switchable Feature CSD083 is switched on */                                  /*CSD083*/
+                                                                                          /*CSD083*/
+             CHGVAR     VAR(&RTN) VALUE('       ')                                        /*CSD083*/
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                        /*CSD083*/
+             CHGVAR     VAR(&SARD) VALUE('CSD083')                                        /*CSD083*/
+                                                                                          /*CSD083*/
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)                         /*CSD083*/
+                                                                                          /*CSD083*/
+/** If error occured in AOSARDR0, perform abnormal termination */                         /*CSD083*/
+                                                                                          /*CSD083*/
+             IF         COND(&RTN *NE '       ' *AND &RTN *NE +
+                        '*NRF   ') THEN(DO)                                               /*CSD083*/
+                SNDPGMMSG  MSG('Program error in AOSARDR0') +
+                           TOMSGQ(MOPERQ)                                                 /*CSD083*/
+                GOTO       CMDLBL(ABNOR)                                                  /*CSD083*/
+             ENDDO                                                                        /*CSD083*/
+                                                                                          /*CSD083*/
+             IF         COND(&RTN *EQ '       ') THEN(DO)                                 /*CSD083*/
+                SNDPGMMSG  MSG('Watch List Enquiry is not available if +
+                             CSD083 is installed.') TOPGMQ(*EXT) +
+                             TOMSGQ(MOPERQ)                                               /*CSD083*/
+                GOTO       CMDLBL(END)                                                    /*CSD083*/
+             ENDDO                                                                        /*CSD083*/
+                                                                                          /*CSD083*/
+/* Check if Switchable Feature CSD019 is switched on */                                   /*CSD019*/
+                                                                                          /*CSD019*/
+             CHGVAR     VAR(&RTN) VALUE('       ')                                        /*CSD019*/
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                        /*CSD019*/
+             CHGVAR     VAR(&SARD) VALUE('CSD019')                                        /*CSD019*/
+                                                                                          /*CSD019*/
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)                         /*CSD019*/
+                                                                                          /*CSD019*/
+/** If error occured in AOSARDR0, perform abnormal termination */                         /*CSD019*/
+                                                                                          /*CSD019*/
+             IF         COND(&RTN *NE '       ' *AND &RTN *NE +
+                        '*NRF   ') THEN(DO)                                               /*CSD019*/
+                SNDPGMMSG  MSG('Program error in AOSARDR0') +
+                           TOMSGQ(MOPERQ)                                                 /*CSD019*/
+                GOTO       CMDLBL(ABNOR)                                                  /*CSD019*/
+             ENDDO                                                                        /*CSD019*/
+                                                                                          /*CSD019*/
+             IF         COND(&RTN *EQ '       ') THEN(GOTO END)                           /*CSD019*/
+                                                                                          /*CSD019*/
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ')
+             MONMSG     MSGID(CPF0000)
+ 
+/** Begin commitment control */
+ 
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
+ 
+/** Call Compliance Watch List Enquiry */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+ 
+             CHGVAR     VAR(&CMPWATCHXX) VALUE('CMPWATCH' *CAT &PREFIX)
+/************ADDLIBLE   LIB(&CMPWATCHXX) POSITION(*LAST)                                  /*228189*/
+             RMVLIBLE   LIB(&CMPWATCHXX)                                                  /*228189*/
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&CMPWATCHXX) POSITION(*LAST)                                  /*228189*/
+ 
+             CALL       PGM(SDWLDDENQ)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDCWENGN ended abnormally - see previous +
+                          job log for details') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End program */
+ 
+END:
+             RMVLIBLE   LIB(&CMPWATCHXX)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             ENDPGM

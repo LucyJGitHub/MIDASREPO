@@ -1,0 +1,897 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Project user and cust/depot coupon')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE1520 - PROJECT USER/DEPOT AND CUSTOMER/DEPOT COUPON DUE    *
+     F*                                                               *
+     F*  Function: The Forward Non-Diary Events File is used to       *
+     F*   (COB)    project Coupon payments on User/Depot and          *
+     F*            Customer/Depot positions. The extracts are used    *
+     F*            in the production of the Expected Coupon reports.  *
+     F*                                                               *
+     F*  Called By: SEC0704 - Expected Coupons Report.                *
+     F*                                                               *
+     F*  Calls: ZACRBD - Calculate Interest - Book/Depot Positions    *
+     F*         ZACRCD - Calculate Interest - Cust/Depot Positions    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSE035             Date 22Apr02               *
+      *                 206316             Date 19Jul02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 09Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+     F*                 CSD006             Date 16May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 130862             Date 16Oct98               *
+     F*                 129593             Date 11Oct98               *
+     F*                 CSE005             Date 04Feb97               *
+     F*                 100228             Date 30May96               *
+     F*                 089265             DATE 26OCT95               *
+     F*                 088900             DATE 24OCT95               *
+     F*                 091254             DATE 20OCT95               *
+     F*                 087632             DATE 16MAY95               *
+     F*                 081538             DATE 13JAN95               *
+     F*                 S01496             DATE 19JUL94               *
+     F*                 S01509             DATE 10AUG94               *
+     F*                 046303             DATE 16JAN94               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E38323             DATE 31JUL92               *
+     F*                 E34034             DATE 07JAN92               *
+     F*                 E29170             DATE 05NOV91               *
+     F*                 E27092             DATE 04SEP91               *
+     F*                 S01117             DATE 05JUN91               *
+     F*                 S01195             DATE 05JUN91               *
+     F*                 E21616             DATE 03APR90               *
+     F*                 E21001             DATE 06FEB90               *
+     F*                 E20516             DATE 14DEC89               *
+     F*                 E20228             DATE 23NOV89               *
+     F*                 E20229             DATE 20NOV89               *
+     F*                 E20085             DATE 31JUL89               *
+     F*                 E19495             DATE 11MAR89               *
+     F*                 E15938             DATE 11MAR88               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+     F*  206316 - Recompiled over changed ZLCDZ1.                     *
+     F*  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  CSD006 - Market Data Feed                                    *
+     F*  130862 - Recompiled over changed ZLCDZ1.                     *
+     F*  129593 - Incorrect amount reflected in coupon due.  Always   *
+     F*           re-calculate last coupon date.  Applied fix 120080. *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  100228 - RECOMPILED FOR CHANGES TO SR ZLCDZ1.                *
+     F*  089265 - Securities with 0 coupons but are maturing should   *
+     F*           be included in the report                           *
+     F*  088900 - Coupons for schuldshein securities are not being    *
+     F*           extracted.  Removed fix E21001.                     *
+     F*  091254 - RECOMPILE OVER CHANGED ZLCDZ1 & ZNCDZ3              *
+     F*  087632 - Need to call ZACRCD with a portfolio reference      *
+     F*  081538 - #AMT increased to 15,0  (see GEMS ref 065301 - this *
+     F*           program seems to have been missed by that fix)      *
+     F*  S01496 - Incorporation of Jyske Enhancements (S010978)       *
+     F*           Recompile due to file change (CDPCDD)               *
+     F*  S01509 - Value Currency to be Currency of Issuer of Payments *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array   *
+     F*           error if no holiday record found - fixed by S01434. *
+     F*           Program recompiled.                                 *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E38323 - Recompiled over changed copy source ZFWDT subr      *
+     F*  E34034 - Recompiled over changed printer file                *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  E27092 - Recompiled over changed SR/ZLCD                     *
+     F*  S01117 - Multi-branching                                     *
+     F*  S01195 - Holiday processing                                  *
+     F*  E21616 - Recompiled over changed SR/ZLCD.                    *   E21616
+     F*  E21001 - Schuldsheins should not be processed as they are    *   E21001
+     F*           included elsewhere.                                 *   E21001
+     F*  E20516 - Securities with zero Coupon Due should be omitted   *   E20516
+     F*           from Expected Coupons Report.                       *   E20516
+     F*  E20228 - Process only if new Security.                       *   E20228
+     F*  E20229 - Coupon Due Report should produce records only for   *   E20229
+     F*           'CP' Events, not 'MT' Events.                       *   E20229
+     F*  E20085 - Interest and Coupon Calculations Rewrite:           *   E20085
+     F*          - Last coupon date must be calculated if the one on  *   E20085
+     F*            the securities file equals the coupon date.        *   E20085
+     F*  E19495 - Suppress zero events.                               *   E19495
+     F*  E15938 - Program produces DB Error for Matured Securities.   *   E15938
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSNDEF   IPE E           K        DISK
+     F            SNDEVDF                           KRENAMESNDEFDF
+     FPIUDPD  IF  E           K        DISK
+     FPICDPD  IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK                               S01509
+     F***INVTP***IF**E           K        DISK                     E21001 088900
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F**CCY/HOL***TABLETJF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F**ICD*1*****TABTB10F                          KIGNORE
+     F**ICD*2*****TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F****CCY*****TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FSNDEFA  IF  E                    DISK
+     FUDPCDD  O   E                    DISK
+     FUDPCDA  O   E                    DISK
+     FCDPCDD  O   E                    DISK
+     FCDPCDA  O   E                    DISK
+     FSE1520AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   40  - Trade/Depot Movement Event first record               *
+     F*   50  - Work indicator                                        *
+     F*   51  - ICD 2 record not found (DBERR)                        *
+     F*   52  - LF/SECTY record not found (DBERR)                     *
+     F*   53  - DBERROR on return from a called pgm.                  *
+     F*   54  - No record found in SDEVD.                             *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines                          *
+     F*                                                               *
+     F*   U7  - Database Error                                        *
+     F*   U8  - Database / Control Error                              *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*  ZACCH  - Access a holiday for a ccy and (optionally) location*   S01195
+     F***ZDATE3*-*Calculate*Day*no.*+*nn*Work*Days*Forward*************   S01195
+     F***ZDATE5*-*Determine*if*a*day*number*date*is*a*holiday*in*******   S01195
+     F************given*currency*and,*if*day*is*a*holiday*and*if*******   S01195
+     F************required,*determine*next*working*day.****************   S01195
+     F************{NOTE:*/INCLUDE*is*actually*ZDATE6}******************   S01195
+     F*  ZEVCD  - Calculate Event Control Date                        *
+     F*  ZFWDT  - Calculate a number of Working days forward in a ccy *   S01195
+     F*           and (optional) location                             *   S01195
+     F*  ZICD2  - Access ICD 2 record                                 *
+     F*  ZSYSTM - Access ICD 1 record                                 *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  P R O G R A M S   C A L L E D                                *
+     F*                                                               *
+     F*   ZACRBD - Accrue Interest on User/Book/Depot position        *
+     F*   ZACRCD - Accrue Interest on Customer/Depot position         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E*/COPY*ZSRSRC,ZDATE6Z1*******                                       S01195
+     E/COPY ZSRSRC,ZDATE2Z1                                               E20085
+     E/COPY ZSRSRC,ZNCDZ1                                                 E20085
+     E/COPY ZSRSRC,ZDATE7Z1
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E                    POWER   1   7  7 3                              S01509
+      /EJECT                                                              E20085
+     ISNDEFDF
+     I              SNDT                            UCDT
+     I                                              SNSN  L1
+     IPIUDPDF
+     I***********   PIBR                            UBRN                  S01117
+     I              PIBH                            UBRA                  S01117
+     I              PIBK                            UBCD
+     I              PIDP                            UDPO
+     I              PISS                            USSS
+     IPICDPDF
+     I***********   PIBR                            UBRN                  S01117
+     I              PIBH                            UBRA                  S01117
+     I              PICN                            UCCN
+     I              PIDP                            UDPO
+     I              PISS                            USSS
+     ISECTYDF
+     I              NMCY                            UCCY
+     ISNDEFAF
+     I              NORE                            TRIN
+     I*TABLETJF*******                                                    S01117
+     I***********   KEY                             RECT                  S01117
+      *
+     I*LDA*******UDS                            256                       S01117
+     I***********                           134 177 #DBLOT                S01117
+     I*********** DS                                                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     I           SDS
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     I*
+     ISDCURR    E DSSDCURRPD                                              S01509
+     I** Currency Details                                                 S01509
+     I*                                                                   S01509
+     IDSFDY     E DSDSFDY                                                 S01509
+     I*  First DS for access programs, short data structure               S01509
+     I**                                                                  S01509
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/COPY ZSRSRC,ZNCDZ2                                                 E20085
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Initial Processing
+      *                                                                   E21001
+      **DEFINE*KEY*LIST*FOR*FILE*INVTP*****************************E21001 088900
+      ***********                                                  E21001 088900
+     C***********KLINVT    KLIST                                   E21001 088900
+     C***********          KFLD           CCYI                     E21001 088900
+     C***********          KFLD           INVT                     E21001 088900
+      *                                                                   S01509
+      * DEFINE KEY LIST FOR FILE SECEO                                    S01509
+      *                                                                   S01509
+     C           KLDEVD    KLIST                                          S01509
+     C                     KFLD           SNSN                            S01509
+     C                     KFLD           @EVTP                           S01509
+     C                     KFLD           UCDT                            S01509
+      *                                                                   S01509
+      * User/Depot Interest Accrual
+      *
+     C           PLIST1    PLIST
+     C                     PARM           LCPN
+     C                     PARM           UCDT
+     C***********          PARM           UBRN                            S01117
+     C                     PARM           UBRA                            S01117
+     C                     PARM           UDPO
+     C                     PARM           USSS
+     C                     PARM           UBCD
+     C                     PARM           PIMK
+     C                     PARM           CDP
+     C                     PARM           #INTR
+     C                     PARM           #AMT
+     C                     Z-ADD0         #INTR  150
+     C***************      Z-ADD0         #AMT   110                      081538
+     C                     Z-ADD0         #AMT   150                      081538
+      *
+      * Customer/Depot Interest Accrual
+      *
+     C           PLIST2    PLIST
+     C                     PARM           LCPN
+     C                     PARM           UCDT
+     C***********          PARM           UBRN                            S01117
+     C                     PARM           UBRA                            S01117
+     C                     PARM           UCCN
+     C                     PARM           USSS
+     C                     PARM           UDPO
+     C                     PARM           PIMK
+     C                     PARM           CDP
+     C                     PARM           #INTR
+     C                     PARM           #AMT
+     C                     PARM           PTFR                            087632
+      *
+     C           *IN40     IFEQ '0'
+      *
+      * Prepare LDA for the database error output
+      *
+     C***********          IN   LDA                                       S01117
+     C***********          OUT  LDA                                       S01117
+     C***********          MOVEL*BLANK    DBLOT                           S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE1520'  DBPGM
+     C                     OUT  LDA                                       S01117
+      *
+     C** Check if S01509 has been installed                               S01509
+     C*                                                                   S01509
+     C                     CALL 'AOSARDR0'                                S01509
+     C                     PARM *BLANKS   @RTCD   7                       S01509
+     C                     PARM '*VERIFY' @OPTN   7                       S01509
+     C                     PARM 'S01509'  WSARD   6                       S01509
+     C*                                                                   S01509
+     C           @RTCD     IFEQ *BLANK                                    S01509
+     C                     MOVE 'Y'       S01509  1                       S01509
+     C                     ELSE                                           S01509
+     C                     MOVE 'N'       S01509                          S01509
+     C                     END                                            S01509
+      *                                                                                       CSE035
+      ** Access SAR details file to see if CSE035 is installed                                CSE035
+      *                                                                                       CSE035
+     C                     CALL 'AOSARDR0'                                                    CSE035
+     C                     PARM *BLANKS   @RTCD                                               CSE035
+     C                     PARM '*VERIFY' @OPTN                                               CSE035
+     C                     PARM 'CSE035'  @SARD   6                                           CSE035
+      *                                                                                       CSE035
+     C           @RTCD     IFEQ *BLANK                                                        CSE035
+     C                     MOVE 'Y'       CSE035  1                                           CSE035
+     C                     ELSE                                                               CSE035
+     C                     MOVE 'N'       CSE035                                              CSE035
+     C                     ENDIF                                                              CSE035
+      *                                                                                       CSE035
+     C/COPY WNCPYSRC,SE1520C001
+      *                                                                   S01509
+      * Access the I.C.D. record 1  (PF/TABTB10)
+      *
+     C                     EXSR ZSYSTM
+      *
+      * Error in ZSYSTM
+      *
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INLR            ***************
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**
+     C                     Z-ADD1         DBASE            **DB ERROR 01**
+     C                     MOVEL'TABTB10F'DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+      *
+      * Access the I.C.D. record 2  (PF/TABTB11)
+      *
+     C                     EXSR ZICD2
+      *
+      * Error in ZICD2
+      *
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INLR            ***************
+     C***********          MOVEL'02'      DBASE            **DB ERROR 02**S01117
+     C                     Z-ADD2         DBASE            **DB ERROR 02**S01117
+     C                     MOVEL'TABTB11F'DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+      *
+      * IF ICD records 1 & 2 found
+      *   Calculate the Event Control Date  - ZEVCD
+      *   & Event Control Date + 10 Work days in local CCY - ZDATE4
+      *
+     C                     Z-ADDDNWD      ZZDNWD                          S01117
+     C                     Z-ADDAPDA      ZZAPDT                          S01117
+     C                     EXSR ZEVCD
+      *
+     C                     Z-ADDECD       ZDAYNO
+     C                     MOVE LOCY      ZCCY
+     C                     Z-ADD10        ZNRDYS
+     C                     MOVE *BLANKS   ZLOC                            S01195
+     C***********          EXSR ZDATE4                                    S01195
+     C                     EXSR ZFWDT                                     S01195
+     C                     Z-ADDZDYNBR    ECD#10  50
+      *
+     C                     MOVE '1'       *IN40
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+      *================================================================
+      /EJECT
+      *================================================================
+      *  M A I N L I N E   P R O C E S S I N G                        *
+      *================================================================
+      *
+      *  Access LF/SECTY secutities at change of the Security Shortname.
+      *
+     C                     ADD  1         TRCNT   50
+      *
+     C           *INL1     IFEQ '1'
+     C           *IN40     ANDEQ'1'
+      *
+     C           SNSN      CHAINSECTY                52
+      *
+     C           *IN52     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           RECI      ANDNE'M'                                       E15938
+     C                     MOVE '1'       *INLR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *IN52            ***************
+     C***********          MOVEL'03'      DBASE            **DB ERROR 03**S01117
+     C                     Z-ADD3         DBASE            **DB ERROR 03**S01117
+     C                     MOVEL'SECTY'   DBFILE           ***************
+     C                     MOVELSNSN      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+      *                                                                   E21001
+      ***FETCH*PROCESSING*TYPE*************************************E21001 088900
+      ***********                                                  E21001 088900
+     C***********          MOVELUCCY      CCYI                     E21001 088900
+     C***********          MOVELSITP      INVT                     E21001 088900
+     C***********KLINVT    CHAININVTPDF              52            E21001 088900
+     C************IN52     IFEQ '1'                                E21001 088900
+     C***********RECI      ORNE 'D'                                E21001 088900
+     C***********          MOVE '1'       *INLR                    E21001 088900
+     C************LOCK     IN   LDA                                S01117 088900
+     C***********          MOVE '1'       *IN52            ********E21001 088900
+     C***********          MOVEL'07'      DBASE            **DB 7**E21001 S01117
+     C***********          Z-ADD7         DBASE            **DB ERRS01117 088900
+     C***********          MOVEL'INVTP'   DBFILE           ********E21001*088900
+     C***********          MOVELUCCY      DBKEY                    E21001 088900
+     C***********          MOVE SITP      DBKEY                    E21001 088900
+     C***********          OUT  LDA                                S01117 088900
+     C***********          EXSR *PSSR                              S01117 088900
+     C***********          ELSE                                    E21001 088900
+     C***********PROT      IFEQ '6'                                E21001 088900
+     C***********          GOTO ENDTAG                             E21001 088900
+     C***********          END                                     E21001 088900
+      *
+      *     Using the Nom. Ccy (NMCY) find the Nom. Ccy decimal places
+      *      on the currencies table (LF/TABSE- TG10)
+      *
+     C                     MOVE *BLANKS   KEY
+     C                     MOVEL'20'      KEY
+     C                     MOVE '1'       ZWK4
+     C                     MOVELUCCY      ZWK4    4
+     C                     MOVE ZWK4      KEY
+      *
+     C           KEY       CHAINTABTG10F             52
+     C           *IN52     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVE '1'       *INLR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *IN52            ***************
+     C                     MOVEL'04'      DBASE            **DB ERROR 04**
+     C                     MOVEL'TABTG10F'DBFILE           ***************
+     C                     MOVELKEY       DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C***********          END                                     E21001 088900
+      *
+     C                     END
+     C                     END
+      *
+     C           *IN40     IFEQ '1'
+     C           *IN52     ANDEQ'0'
+     C           *INL1     ANDEQ'1'                                       E20228
+      *
+      * Process only,
+      *   if the coupon date is LE the event control date
+      *      plus 10 working days.
+      *
+     C           UCDT      ANDLEECD#10
+      *
+      **Process*only**If*the*Event*Type*equal**'CP'**or*'MA'***********   E20229
+      **Process*only,*if*the*Event*Type*equal**'CP'****************E20229 089265
+      * Process only, if the Event Type equal  'CP' or 'MA'               089265
+      *
+     C           SNET      IFEQ 'CP'
+     C***********SNET      OREQ 'MA'                                      E20229
+     C           SNET      OREQ 'MA'                                      089265
+      *                                                                   E20085
+      * If last coupon date is coupon date find real last coupon date     E20085
+      *                                                                   E20085
+     C***********LCPN      IFEQ UCDT                               E20085 129593
+     C           UCDT      SUB  1         ZECD                            E20085
+     C                     EXSR ZLCD                                      E20085
+     C                     Z-ADDZZLCD     LCPN                            E20085
+     C***********          END                                     E20085 129593
+      *
+     C           S01509    IFEQ 'Y'                                       S01509
+     C                     MOVE UCCY      @UCCY   3                       S01509
+     C           VLCY      IFNE UCCY                                      S01509
+     C*                                                                   S01509
+     C**  Get decimal places for nominal and value currencies             S01509
+     C                     CALL 'AOCURRR0'                                S01509
+     C                     PARM '       ' @RTCD   7                       S01509
+     C                     PARM '*KEY   ' @OPTN   7                       S01509
+     C                     PARM VLCY      @CCY    3                       S01509
+     C***********SDCURR    PARM SDCURR    DSFDY                     S01509CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                           CSD006
+     C           @RTCD     IFNE *BLANKS                                   S01509
+     C           *LOCK     IN   LDA                                       S01509
+     C                     MOVEL'SDCURRPD'DBFILE           ************   S01509
+     C                     MOVELUCCY      DBKEY            DB ERROR 008   S01509
+     C                     Z-ADD8         DBASE            ************   S01509
+     C                     OUT  LDA                                       S01509
+     C                     MOVE '1'       *INU7                           S01509
+     C                     MOVE '1'       *INU8                           S01509
+     C                     MOVE '1'       *INLR                           S01509
+     C                     EXSR *PSSR                                     S01509
+     C                     END                                            S01509
+     C                     Z-ADDA6NBDP    @VDCP   10                      S01509
+     C*                                                                   S01509
+     C                     CALL 'AOCURRR0'                                S01509
+     C                     PARM '       ' @RTCD                           S01509
+     C                     PARM '*KEY   ' @OPTN                           S01509
+     C                     PARM UCCY      @CCY                            S01509
+     C***********SDCURR    PARM SDCURR    DSFDY                     S01509CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                           CSD006
+     C           @RTCD     IFNE *BLANKS                                   S01509
+     C           *LOCK     IN   LDA                                       S01509
+     C                     MOVEL'SDCURRPD'DBFILE           ************   S01509
+     C                     MOVELUCCY      DBKEY            DB ERROR 009   S01509
+     C                     Z-ADD9         DBASE            ************   S01509
+     C                     OUT  LDA                                       S01509
+     C                     MOVE '1'       *INU7                           S01509
+     C                     MOVE '1'       *INU8                           S01509
+     C                     MOVE '1'       *INLR                           S01509
+     C                     EXSR *PSSR                                     S01509
+     C                     END                                            S01509
+     C                     Z-ADDA6NBDP    @NDCP   10                      S01509
+     C*                                                                   S01509
+     C                     MOVE 'XR'      @EVTP   2                       S01509
+     C                     END                                            S01509
+     C                     END                                            S01509
+      *   Access all User/Depot positions for this security
+      *
+     C                     MOVE '0'       *IN50
+     C           SNSN      SETLLPIUDPD
+      *
+     C           *IN50     DOWEQ'0'
+     C           *IN52     ANDEQ'0'
+      *
+     C           SNSN      READEPIUDPDF                  50
+     C                     ADD  1         IN01    50
+      *
+     C           *IN50     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C/COPY WNCPYSRC,SE1520C002
+     C                     CALL 'ZACRBD'  PLIST1
+     C/COPY WNCPYSRC,SE1520C003
+     C***********          ADD  1         OUT01   50                      E19495
+      *
+      *  Check for Data Base Error from Called Pgm.
+      *
+     C           *INU7     IFEQ '1'
+     C           *INU8     OREQ '1'
+     C                     MOVE '1'       *IN52
+     C***********          MOVE '1'       *IN53                           S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE '1'       *INLR
+     C                     ELSE
+      *
+     C** Suppress zero events                                             E19495
+      *
+     C           #INTR     IFNE 0                                         E19495
+     C***********#AMT      ORNE 0                                  E19495 E20516
+     C           #INTR     OREQ 0                                         089265
+     C           #AMT      ANDNE0                                         089265
+     C           SNET      ANDEQ'MA'                                      089265
+     C           S01509    IFEQ 'Y'                                       S01509
+     C           VLCY      ANDNEUCCY                                      S01509
+     C*                                                                   S01509
+     C           KLDEVD    SETLLSEDEVDF                                   S01509
+     C           KLDEVD    CHAINSEDEVDF              54                   S01509
+     C           *IN54     IFEQ '0'                                       S01509
+     C                     Z-ADDSDCE      ZEXCH                           S01509
+     C                     MOVE SDMD      ZMD                             S01509
+     C                     ELSE                                           S01509
+     C                     Z-ADDSEXR      ZEXCH                           S01509
+     C                     MOVE SMDI      ZMD                             S01509
+     C                     END                                            S01509
+     C                     Z-ADD#INTR     ZAMTCI                          S01509
+     C                     MOVE UCCY      ZCCYI                           S01509
+     C                     MOVE VLCY      ZCCYO                           S01509
+     C                     Z-ADD@NDCP     ZCDPI                           S01509
+     C                     Z-ADD@VDCP     ZCDPO                           S01509
+     C                     EXSR ZCONV                                     S01509
+     C                     Z-ADDZAMTCO    #INTR                           S01509
+     C                     MOVE VLCY      UCCY                            S01509
+     C                     END                                            S01509
+     C*
+     C                     Z-ADD#INTR     UCCD
+     C                     Z-ADD#AMT      UCCP
+     C                     WRITEUDPCDDF
+     C                     ADD  1         OUT01   50                      E19495
+     C*
+     C           S01509    IFEQ 'Y'                                       S01509
+     C           VLCY      ANDNE@UCCY                                     S01509
+     C                     MOVE @UCCY     UCCY                            S01509
+     C                     END                                            S01509
+     C*                                                                   S01509
+     C                     END                                            E19495
+     C                     END
+     C                     END
+     C                     END
+      *
+      *   Access all Customer/Depot positions for this security
+      *
+     C                     MOVE '0'       *IN50
+     C           SNSN      SETLLPICDPD
+      *
+     C           *IN50     DOWEQ'0'
+     C           *IN52     ANDEQ'0'
+      *
+     C           SNSN      READEPICDPDF                  50
+     C                     ADD  1         IN02    50
+      *
+     C           *IN50     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C/COPY WNCPYSRC,SE1520C004
+     C                     CALL 'ZACRCD'  PLIST2
+     C/COPY WNCPYSRC,SE1520C005
+     C***********          ADD  1         OUT02   50                      E19495
+      *
+      *  Check for Data Base Error from Called Pgm.
+      *
+     C           *INU7     IFEQ '1'
+     C           *INU8     OREQ '1'
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *IN52
+     C***********          MOVE '1'       *IN53                           S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+      *
+     C** Suppress zero events                                             E19495
+      *
+     C           #INTR     IFNE 0                                         E19495
+     C***********#AMT      ORNE 0                                  E19495 E20516
+     C           #INTR     OREQ 0                                         089265
+     C           #AMT      ANDNE0                                         089265
+     C           SNET      ANDEQ'MA'                                      089265
+     C*                                                                   S01509
+     C           S01509    IFEQ 'Y'                                       S01509
+     C           VLCY      ANDNEUCCY                                      S01509
+     C*                                                                   S01509
+     C           KLDEVD    SETLLSEDEVDF                                   S01509
+     C           KLDEVD    CHAINSEDEVDF              54                   S01509
+     C           *IN54     IFEQ '0'                                       S01509
+     C                     Z-ADDSDCE      ZEXCH                           S01509
+     C                     MOVE SDMD      ZMD                             S01509
+     C                     ELSE                                           S01509
+     C                     Z-ADDSEXR      ZEXCH                           S01509
+     C                     MOVE SMDI      ZMD                             S01509
+     C                     END                                            S01509
+     C                     Z-ADD#INTR     ZAMTCI                          S01509
+     C                     MOVE UCCY      ZCCYI                           S01509
+     C                     MOVE VLCY      ZCCYO                           S01509
+     C                     Z-ADD@NDCP     ZCDPI                           S01509
+     C                     Z-ADD@VDCP     ZCDPO                           S01509
+     C                     EXSR ZCONV                                     S01509
+     C                     Z-ADDZAMTCO    #INTR                           S01509
+     C                     MOVE VLCY      UCCY                            S01509
+     C                     END                                            S01509
+     C*
+     C                     Z-ADD#INTR     UCCD
+     C                     Z-ADD#AMT      UCCP
+     C                     WRITECDPCDDF
+     C                     ADD  1         OUT02   50                      E19495
+     C*
+     C           S01509    IFEQ 'Y'                                       S01509
+     C           VLCY      ANDNE@UCCY                                     S01509
+     C                     MOVE @UCCY     UCCY                            S01509
+     C                     END                                            S01509
+     C*                                                                   S01509
+     C                     END                                            E19495
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     END
+      *                                                                   E21001
+     C           ENDTAG    TAG                                            E21001
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     CLR                   EXSR SRLR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLR   - E.O.J. - C O N T R O L   P R O C E S S I N G        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLR      BEGSR
+      *
+      * If no records read,
+      *  access the I.C.D. record (PF/TABTB10)
+      *
+     C           *IN40     IFEQ '0'
+     C           *IN99     ANDEQ'0'
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'                        ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL'SE1520'  DBPGM            ***************S01117
+     C***********          MOVEL'05'      DBASE            **DB ERROR 05**
+     C                     Z-ADD5         DBASE            **DB ERROR 05**
+     C                     MOVEL'TABTB10' DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C                     END
+      *
+      * Write control report headings
+      *
+     C                     WRITEHEADAU
+      *
+      * Database Errors found
+      *
+     C           *IN99     IFEQ '1'
+     C           *IN52     OREQ '1'
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INU7
+      *
+      **CALLED*PGM*Errors*************************                        S01117
+      ***********                                                         S01117
+     C************IN53     IFEQ '1'                                       S01117
+     C***********          IN   LDA                                       S01117
+     C***********          MOVEL#DBLOT    DBLOT                           S01117
+     C***********          OUT  LDA                                       S01117
+     C***********          END                                            S01117
+      ***********                                                         S01117
+     C***********          WRITEERROR                                     S01117
+      *
+     C                     END
+      *
+      *  Access AUDIT records For Fwd Non-Diary Events
+      *
+     C                     READ SNDEFAF                  50
+     C                     WRITETRTOT
+      *
+     C           TRIN      IFNE TRCNT
+     C                     WRITEDIFF
+     C           *INU8     IFEQ '0'
+     C                     MOVE '1'       *INU8            ***************
+     C***********          MOVEL'06'      DBASE            **DB ERROR 06**S01117
+     C***********          MOVEL'SNDEFA  'DBFILE           ***************S01117
+     C***********          MOVEL'AUDIT** 'DBKEY                           S01117
+     C***********          WRITEERROR                                     S01117
+     C                     END                                            S01117
+     C                     END
+      *
+      * Write AUDIT records
+      *
+     C                     Z-ADDOUT01     NORE
+     C                     WRITEUDPCDAF
+      *
+     C                     Z-ADDOUT02     NORE
+     C                     WRITECDPCDAF
+      *
+      ***IF*NO*OUTPUT/EMPTY*FILES*-*Print*a*message*to*this*effect*****   E29170
+      ***********                                                         E29170
+     C************IN40     IFEQ '0'                                       E29170
+     C***********          WRITENONE                                      E29170
+      ***********                                                         E29170
+      *******ELSE***-*Print*Records*Written*Total**********************   E29170
+      ***********                                                         E29170
+     C***********          ELSE                                           E29170
+      *             - Print Records Written Total                         E29170
+     C                     WRITECONTROL
+      *
+     C***********          END                                            E29170
+      *
+      *  END OF PROGRAM
+      *
+     C***********          WRITETRAILAU                                   E29170
+      ***********                                                         E29170
+      ***If*Database*Erorrs*found,*update*LDA**************************** S01117
+      ***********                                                         S01117
+     C************NAMVAR   DEFN           LDA                             S01117
+      ***********                                                         S01117
+     C************INU8     IFEQ '1'                                       S01117
+     C************IN53     ANDEQ'0'                                       S01117
+     C************LOCK     IN   LDA                                       S01117
+     C***********          MOVELDBLOT     #DBLOT                          S01117
+     C***********          OUT  LDA                                       S01117
+     C***********          END                                            S01117
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT                                                              S01117
+     C*****************************************************************   S01117
+     C*                                                               *   S01117
+     C* *PSSR - SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS        *   S01117
+     C*                                                               *   S01117
+     C* CALLED FROM : AFTER ABNORMAL OPERATION OCCURS                 *   S01117
+     C*                                                               *   S01117
+     C* CALLS : NOTHING                                               *   S01117
+     C*                                                               *   S01117
+     C*****************************************************************   S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+      *****************************************************************
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+      /EJECT                                                              E20085
+     C/COPY ZSRSRC,ZDATE1Z2                                               E20085
+      /EJECT                                                              E20085
+     C/COPY ZSRSRC,ZDATE2Z4                                               E20085
+      */EJECT******************                                           S01195
+     C*/COPY*ZSRSRC,ZDATE7Z2***                                           S01195
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZFWDT                                                  S01195
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT                                                              E20085
+     C/COPY ZSRSRC,ZLCDZ1                                                 E20085
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+     C/COPY ZSRSRC,ZCONVZ1                                                S01509
+      /EJECT                                                              S01509
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                      E20085
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                        E20085
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES                                            E20085
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** POWER
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

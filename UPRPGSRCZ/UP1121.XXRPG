@@ -1,0 +1,791 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade module                                       *
+      *                                                               *
+      *  UP1121 - Report of Incoming message translation              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. BUG24370           Date 16Jun09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CUP032             Date 26Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CUP006 *CREATE     Date 08Dec99               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  BUG24370 - New fields tags & sequences are missing           *
+      *  CUP032 - Use one printer file for Action Files.              *
+      *  CUP006  -  Make upgrade of DTALIB files easier               *
+      *                                                               *
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       20      End of file indicator
+      *       37      Overflow indicator
+      *       69      Read or write errors
+      *       60      Amended records
+      *       61      No amended records to report
+      *       62      Amended records headers
+      *       63      Print field description for Amend
+      *       64      Print 'before' for Amend
+      *       65      Print 'after' for Amend
+      *       70      Deleted records
+      *       71      No deleted records to report
+      *       72      Deleted records headers
+      *       80      Inserted records
+      *       81      No inserted records to report
+      *       82      Inserted records headers
+      *
+     FUPINFML0IF  E           K        DISK
+     F*UP1121P1O**E             37     PRINTER      KINFDS SPOOL      UC                      CUP032
+     FUP0799P1O   E             37     PRINTER      KINFDS SPOOL      UC                      CUP032
+      *
+      /EJECT
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      * File information data structure for P1 file; used for page end
+      *   handling
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN
+     I                                    B 367 3680PRTLN
+      *
+     IKEYHDR      DS                          1 132                                           CUP032
+     I I            'Message Type'           10  21 HDR1                                      CUP032
+     I*I********    'Message Field Tag'      25  41 HDR2                             CUP032 BUG24370
+     I*I********    'FT Field Name'          45  57 HDR3                             CUP032 BUG24370
+     I I            'Message Field Seg'      25  41 HDR2                                    BUG24370
+     I I            'Message Field Tag'      45  61 HDR3                                    BUG24370
+     I I            'FT Field Name'          65  77 HDR4                                    BUG24370
+      *
+     IKEYDTA      DS                          1 132                                           CUP032
+     I                                       10  12 DTA1                                      CUP032
+     I**********                             25  29 DTA2                             CUP032 BUG24370
+     I**********                             45  54 DTA3                             CUP032 BUG24370
+     I                                       25  27 DTA2                                    BUG24370
+     I                                       45  49 DTA3                                    BUG24370
+     I                                       65  74 DTA4                                    BUG24370
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           HDRTXT
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C**********           OPEN UP1121P1                                                      CUP032
+     C                     OPEN UP0799P1                                                      CUP032
+      *
+     C                     WRITEHEADH                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *LOVAL    SETLLUPINFMD0
+      *
+     C                     READ UPINFML0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+      * If there are no records at all write 'no records'
+     C           *IN20     IFEQ *ON
+     C                     WRITENORECS                 69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     WRITETRAILP                 69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     GOTO ENDPGM
+      *
+     C                     ELSE
+     C                     SETON                     60
+     C                     WRITEDTL1
+     C                     SETOF                     60
+     C                     ENDIF
+      *
+     C           FMACTC    IFNE 'A'
+     C                     SETON                     61
+     C                     WRITEDTL1
+     C                     SETOF                     61
+     C                     ELSE
+     C                     SETON                     62
+     C                     WRITEDTL1
+     C                     SETOF                     62
+     C                     ENDIF
+      *
+     C           FMACTC    DOWEQ'A'
+     C           *IN20     ANDNE*ON
+      *
+      * Write headers if overflow on
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADH                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     SETON                     60
+     C                     WRITEDTL1
+     C                     SETOF                     60
+     C                     SETON                     62
+     C                     WRITEDTL1
+     C                     SETOF                     6237
+     C                     ENDIF
+      *
+     C                     EXSR AMEND
+      *
+     C                     READ UPINFML0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     WRITEHEADH                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     SETON                     70
+     C                     WRITEDTL2
+     C                     SETOF                     70
+      *
+     C           FMACTC    IFNE 'D'
+     C                     SETON                     71
+     C                     WRITEDTL2
+     C                     SETOF                     71
+     C                     ELSE
+     C                     SETON                     72
+     C                     WRITEDTL2
+     C                     SETOF                     72
+     C                     ENDIF
+      *
+     C           FMACTC    DOWEQ'D'
+     C           *IN20     ANDNE*ON
+      *
+      * Write headers if overflow on
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADH                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     SETON                     70
+     C                     WRITEDTL2
+     C                     SETOF                     70
+     C                     SETON                     72
+     C                     WRITEDTL2
+     C                     SETOF                     7237
+     C                     ENDIF
+      *
+     C                     EXSR DELETE
+      *
+     C                     READ UPINFML0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     WRITEHEADH                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     SETON                     80
+     C                     WRITEDTL3
+     C                     SETOF                     80
+      *
+     C           FMACTC    IFNE 'I'
+     C                     SETON                     81
+     C                     WRITEDTL3
+     C                     SETOF                     81
+     C                     ELSE
+     C                     SETON                     82
+     C                     WRITEDTL3
+     C                     SETOF                     82
+     C                     ENDIF
+      *
+     C           FMACTC    DOWEQ'I'
+     C           *IN20     ANDNE*ON
+      *
+      * Write headers if overflow on
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADH                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     SETON                     80
+     C                     WRITEDTL3
+     C                     SETOF                     80
+     C                     SETON                     82
+     C                     WRITEDTL3
+     C                     SETOF                     8237
+     C                     ENDIF
+      *
+     C                     EXSR INSERT
+      *
+     C                     READ UPINFML0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     WRITETRAILP                 69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           ENDPGM    TAG
+     C**********           CLOSEUP1121P1                                                      CUP032
+     C                     CLOSEUP0799P1                                                      CUP032
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *
+      * AMEND subroutine - process amended records
+      *
+      *****************************************************************
+     C           AMEND     BEGSR
+     C**********           MOVELFMMTPY    #MTPY                                               CUP032
+     C**********           MOVELFMMTAG    #MTAG                                               CUP032
+     C**********           MOVELFMFTFD    #FTFD                                               CUP032
+     C                     MOVELFMMTPY    DTA1                                                CUP032
+     C**********           MOVELFMMTAG    DTA2                                       CUP032 BUG24370
+     C**********           MOVELFMFTFD    DTA3                                       CUP032 BUG24370
+     C                     MOVELFMMSEQ    DTA2                                              BUG24370
+     C                     MOVELFMMTAG    DTA3                                              BUG24370
+     C                     MOVELFMFTFD    DTA4                                              BUG24370
+      *
+      * Check values for first and second amended records of pair
+     C                     MOVELFMNWRK    NWRK1   6
+     C                     MOVELFMMTPY    MTPY1   3
+     C                     MOVELFMMSEQ    MSEQ1   3                                         BUG24370
+     C                     MOVELFMMTAG    MTAG1   5
+     C                     MOVELFMFTFD    FTFD1  10
+     C                     MOVELFMNARR    NARR1  30
+     C                     MOVELFMFTSP    FTSP1  10
+     C                     MOVELFMRECI    RECI1   1
+      *
+      * Read next record so that values can be compared
+     C                     READ UPINFML0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     MOVELFMNWRK    NWRK2   6
+     C                     MOVELFMMTPY    MTPY2   3
+     C                     MOVELFMMSEQ    MSEQ2   3                                         BUG24370
+     C                     MOVELFMMTAG    MTAG2   5
+     C                     MOVELFMFTFD    FTFD2  10
+     C                     MOVELFMNARR    NARR2  30
+     C                     MOVELFMFTSP    FTSP2  10
+     C                     MOVELFMRECI    RECI2   1
+      *
+      * Compare values and write records to report
+      *
+      * Network
+     C           NWRK1     IFNE NWRK2
+     C                     MOVEL'FMNWRK'  FIELD
+      * Find description of field
+     C                     CALL 'UPC0890'
+     C                     PARM           FIELD  10
+     C                     PARM           #FDESC 50
+      * Write description of field
+     C                     MOVEL*BLANKS   #VALUE
+      * Check overflow before writing next lines
+     C                     EXSR OFLOW
+     C                     MOVEL#FDESC    #VALUE
+     C                     SETON                     63
+     C                     WRITEDTL1                   69
+     C                     SETOF                     63
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'before' value of field
+     C**********           MOVEL*BLANKS   #MTPY                                               CUP032
+     C**********           MOVEL*BLANKS   #MTAG                                               CUP032
+     C**********           MOVEL*BLANKS   #FTFD                                               CUP032
+     C                     MOVEL*BLANKS   KEYDTA                                              CUP032
+     C                     MOVEL*BLANKS   FIELD
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELNWRK1     #VALUE
+     C                     SETON                     64
+     C                     WRITEDTL1                   69
+     C                     SETOF                     64
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'after' value of field
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELNWRK2     #VALUE
+     C                     SETON                     65
+     C                     WRITEDTL1                   69
+     C                     SETOF                     65
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+      * Message Type
+     C           MTPY1     IFNE MTPY2
+     C                     MOVEL'FMMTAG'  FIELD
+      * Find description of field
+     C                     CALL 'UPC0890'
+     C                     PARM           FIELD  10
+     C                     PARM           #FDESC 50
+      * Write description of field
+     C                     MOVEL*BLANKS   #VALUE
+      * Check overflow before writing next lines
+     C                     EXSR OFLOW
+     C                     MOVEL#FDESC    #VALUE
+     C                     SETON                     63
+     C                     WRITEDTL1                   69
+     C                     SETOF                     63
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'before' value of field
+     C**********           MOVEL*BLANKS   #MTPY                                               CUP032
+     C**********           MOVEL*BLANKS   #MTAG                                               CUP032
+     C**********           MOVEL*BLANKS   #FTFD                                               CUP032
+     C                     MOVEL*BLANKS   KEYDTA                                              CUP032
+     C                     MOVEL*BLANKS   FIELD
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELMTPY1     #VALUE
+     C                     SETON                     64
+     C                     WRITEDTL1                   69
+     C                     SETOF                     64
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'after' value of field
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELMTPY2     #VALUE
+     C                     SETON                     65
+     C                     WRITEDTL1                   69
+     C                     SETOF                     65
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                                     BUG24370
+      ** Message Field Sequence                                                             BUG24370
+      *                                                                                     BUG24370
+     C           MSEQ1     IFNE MSEQ2                                                       BUG24370
+     C                     MOVEL'FMMSEQ'  FIELD                                             BUG24370
+      * Find description of field                                                           BUG24370
+     C                     CALL 'UPC0890'                                                   BUG24370
+     C                     PARM           FIELD  10                                         BUG24370
+     C                     PARM           #FDESC 50                                         BUG24370
+      * Write description of field                                                          BUG24370
+     C                     MOVEL*BLANKS   #VALUE                                            BUG24370
+      * Check overflow before writing next lines                                            BUG24370
+     C                     EXSR OFLOW                                                       BUG24370
+     C                     MOVEL#FDESC    #VALUE                                            BUG24370
+     C                     SETON                     63                                     BUG24370
+     C                     WRITEDTL1                   69                                   BUG24370
+     C                     SETOF                     63                                     BUG24370
+     C           *IN69     IFEQ *ON                                                         BUG24370
+     C                     EXSR *PSSR                                                       BUG24370
+     C                     GOTO ENDPGM                                                      BUG24370
+     C                     ENDIF                                                            BUG24370
+      * Write 'before' value of field                                                       BUG24370
+     C                     MOVEL*BLANKS   KEYDTA                                            BUG24370
+     C                     MOVEL*BLANKS   FIELD                                             BUG24370
+     C                     MOVEL*BLANKS   #VALUE                                            BUG24370
+     C                     MOVELMSEQ1     #VALUE                                            BUG24370
+     C                     SETON                     64                                     BUG24370
+     C                     WRITEDTL1                   69                                   BUG24370
+     C                     SETOF                     64                                     BUG24370
+     C           *IN69     IFEQ *ON                                                         BUG24370
+     C                     EXSR *PSSR                                                       BUG24370
+     C                     GOTO ENDPGM                                                      BUG24370
+     C                     ENDIF                                                            BUG24370
+      * Write 'after' value of field                                                        BUG24370
+     C                     MOVEL*BLANKS   #VALUE                                            BUG24370
+     C                     MOVELMSEQ2     #VALUE                                            BUG24370
+     C                     SETON                     65                                     BUG24370
+     C                     WRITEDTL1                   69                                   BUG24370
+     C                     SETOF                     65                                     BUG24370
+     C           *IN69     IFEQ *ON                                                         BUG24370
+     C                     EXSR *PSSR                                                       BUG24370
+     C                     GOTO ENDPGM                                                      BUG24370
+     C                     ENDIF                                                            BUG24370
+     C                     ENDIF                                                            BUG24370
+      *
+      * Message Field Tag
+     C           MTAG1     IFNE MTAG2
+     C                     MOVEL'FMMTAG'  FIELD
+      * Find description of field
+     C                     CALL 'UPC0890'
+     C                     PARM           FIELD  10
+     C                     PARM           #FDESC 50
+      * Write description of field
+     C                     MOVEL*BLANKS   #VALUE
+      * Check overflow before writing next lines
+     C                     EXSR OFLOW
+     C                     MOVEL#FDESC    #VALUE
+     C                     SETON                     63
+     C                     WRITEDTL1                   69
+     C                     SETOF                     63
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'before' value of field
+     C**********           MOVEL*BLANKS   #MTPY                                               CUP032
+     C**********           MOVEL*BLANKS   #MTAG                                               CUP032
+     C**********           MOVEL*BLANKS   #FTFD                                               CUP032
+     C                     MOVEL*BLANKS   KEYDTA                                              CUP032
+     C                     MOVEL*BLANKS   FIELD
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELMTAG1     #VALUE
+     C                     SETON                     64
+     C                     WRITEDTL1                   69
+     C                     SETOF                     64
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'after' value of field
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELMTAG2     #VALUE
+     C                     SETON                     65
+     C                     WRITEDTL1                   69
+     C                     SETOF                     65
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      * FT Field Name
+     C           FTFD1     IFNE FTFD2
+     C                     MOVEL'FMFTFD'  FIELD
+      * Find description of field
+     C                     CALL 'UPC0890'
+     C                     PARM           FIELD  10
+     C                     PARM           #FDESC 50
+      * Write description of field
+     C                     MOVEL*BLANKS   #VALUE
+      * Check overflow before writing next lines
+     C                     EXSR OFLOW
+     C                     MOVEL#FDESC    #VALUE
+     C                     SETON                     63
+     C                     WRITEDTL1                   69
+     C                     SETOF                     63
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'before' value of field
+     C**********           MOVEL*BLANKS   #MTPY                                               CUP032
+     C**********           MOVEL*BLANKS   #MTAG                                               CUP032
+     C**********           MOVEL*BLANKS   #FTFD                                               CUP032
+     C                     MOVEL*BLANKS   KEYDTA                                              CUP032
+     C                     MOVEL*BLANKS   FIELD
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELFTFD1     #VALUE
+     C                     SETON                     64
+     C                     WRITEDTL1                   69
+     C                     SETOF                     64
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'after' value of field
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELFTFD2     #VALUE
+     C                     SETON                     65
+     C                     WRITEDTL1                   69
+     C                     SETOF                     65
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Special Instructions
+     C           FTSP1     IFNE FTSP2
+     C                     MOVEL'FMFTSP'  FIELD
+      * Find description of field
+     C                     CALL 'UPC0890'
+     C                     PARM           FIELD  10
+     C                     PARM           #FDESC 50
+      * Write description of field
+     C                     MOVEL*BLANKS   #VALUE
+      * Check overflow before writing next lines
+     C                     EXSR OFLOW
+     C                     MOVEL#FDESC    #VALUE
+     C                     SETON                     63
+     C                     WRITEDTL1                   69
+     C                     SETOF                     63
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'before' value of field
+     C**********           MOVEL*BLANKS   #MTPY                                               CUP032
+     C**********           MOVEL*BLANKS   #MTAG                                               CUP032
+     C**********           MOVEL*BLANKS   #FTFD                                               CUP032
+     C                     MOVEL*BLANKS   KEYDTA                                              CUP032
+     C                     MOVEL*BLANKS   FIELD
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELFTSP1     #VALUE
+     C                     SETON                     64
+     C                     WRITEDTL1                   69
+     C                     SETOF                     64
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'after' value of field
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELFTSP2     #VALUE
+     C                     SETON                     65
+     C                     WRITEDTL1                   69
+     C                     SETOF                     65
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Special Instructions
+     C           NARR1     IFNE NARR2
+     C                     MOVEL'FMNARR'  FIELD
+      * Find description of field
+     C                     CALL 'UPC0890'
+     C                     PARM           FIELD  10
+     C                     PARM           #FDESC 50
+      * Write description of field
+     C                     MOVEL*BLANKS   #VALUE
+      * Check overflow before writing next lines
+     C                     EXSR OFLOW
+     C                     MOVEL#FDESC    #VALUE
+     C                     SETON                     63
+     C                     WRITEDTL1                   69
+     C                     SETOF                     63
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'before' value of field
+     C**********           MOVEL*BLANKS   #MTPY                                               CUP032
+     C**********           MOVEL*BLANKS   #MTAG                                               CUP032
+     C**********           MOVEL*BLANKS   #FTFD                                               CUP032
+     C                     MOVEL*BLANKS   KEYDTA                                              CUP032
+     C                     MOVEL*BLANKS   FIELD
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELNARR1     #VALUE
+     C                     SETON                     64
+     C                     WRITEDTL1                   69
+     C                     SETOF                     64
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'after' value of field
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELNARR2     #VALUE
+     C                     SETON                     65
+     C                     WRITEDTL1                   69
+     C                     SETOF                     65
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Record Identifier
+     C           RECI1     IFNE RECI2
+     C                     MOVEL'FMRECI'  FIELD
+      * Find description of field
+     C                     CALL 'UPC0890'
+     C                     PARM           FIELD  10
+     C                     PARM           #FDESC 50
+      * Write description of field
+     C                     MOVEL*BLANKS   #VALUE
+      * Check overflow before writing next lines
+     C                     EXSR OFLOW
+     C                     MOVEL#FDESC    #VALUE
+     C                     SETON                     63
+     C                     WRITEDTL1                   69
+     C                     SETOF                     63
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'before' value of field
+     C**********           MOVEL*BLANKS   #MTPY                                               CUP032
+     C**********           MOVEL*BLANKS   #MTAG                                               CUP032
+     C**********           MOVEL*BLANKS   #FTFD                                               CUP032
+     C                     MOVEL*BLANKS   KEYDTA                                              CUP032
+     C                     MOVEL*BLANKS   FIELD
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELRECI1     #VALUE
+     C                     SETON                     64
+     C                     WRITEDTL1                   69
+     C                     SETOF                     64
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      * Write 'after' value of field
+     C                     MOVEL*BLANKS   #VALUE
+     C                     MOVELRECI2     #VALUE
+     C                     SETON                     65
+     C                     WRITEDTL1                   69
+     C                     SETOF                     65
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      * DELETE subroutine - process deleted records
+      *
+      *****************************************************************
+     C           DELETE    BEGSR
+     C**********           MOVELFMMTPY    #MTPY                                               CUP032
+     C**********           MOVELFMMTAG    #MTAG                                               CUP032
+     C**********           MOVELFMFTFD    #FTFD                                               CUP032
+     C                     MOVELFMMTPY    DTA1                                                CUP032
+     C                     MOVELFMMSEQ    DTA2                                              BUG24370
+     C**********           MOVELFMMTAG    DTA2                                                CUP032
+     C**********           MOVELFMFTFD    DTA3                                                CUP032
+     C                     MOVELFMMTAG    DTA3                                              BUG24370
+     C                     MOVELFMFTFD    DTA4                                              BUG24370
+      *
+     C                     WRITEDTL2                   69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      * INSERT subroutine - process inserted records
+      *
+      *****************************************************************
+     C           INSERT    BEGSR
+     C**********           MOVELFMMTPY    #MTPY                                               CUP032
+     C**********           MOVELFMMTAG    #MTAG                                               CUP032
+     C**********           MOVELFMFTFD    #FTFD                                               CUP032
+     C                     MOVELFMMTPY    DTA1                                                CUP032
+     C                     MOVELFMMSEQ    DTA2                                              BUG24370
+     C**********           MOVELFMMTAG    DTA2                                       CUP032 BUG24370
+     C**********           MOVELFMFTFD    DTA3                                       CUP032 BUG24370
+     C                     MOVELFMMTAG    DTA3                                              BUG24370
+     C                     MOVELFMFTFD    DTA4                                              BUG24370
+      *
+     C                     WRITEDTL3                   69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      * OFLOW subroutine - handle overflow for print of field details
+      *
+      *****************************************************************
+     C           OFLOW     BEGSR
+      *
+     C           OFLLN     SUB  PRTLN     RMLN    20
+     C           3         IFGE RMLN
+      *
+     C                     WRITEHEADH                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     SETON                     60
+     C                     WRITEDTL1
+     C                     SETOF                     60
+     C                     SETON                     62
+     C                     WRITEDTL1
+     C                     SETOF                     62
+     C**********           MOVELFMMTPY    #MTPY                                               CUP032
+     C**********           MOVELFMMTAG    #MTAG                                               CUP032
+     C**********           MOVELFMFTFD    #FTFD                                               CUP032
+     C                     MOVELFMMTPY    DTA1                                                CUP032
+     C                     MOVELFMMSEQ    DTA2                                              BUG24370
+     C**********           MOVELFMMTAG    DTA2                                       CUP032 BUG24370
+     C**********           MOVELFMFTFD    DTA3                                       CUP032 BUG24370
+     C                     MOVELFMMTAG    DTA3                                              BUG24370
+     C                     MOVELFMFTFD    DTA4                                              BUG24370
+     C                     MOVEL*BLANKS   #VALUE
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,778 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Update Profitability Extract Files')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Customer Lending Module
+     F*                                                               *
+     F*  LER425 - Update of first level profitability extract files   *
+     F*                                                               *
+     F*  Function: Updates A/C officer and department of first level  *
+     F*   (COB)    profitability extract files (and group ID and name *
+     F*            of loans profitability extract file).              *
+     F*                                                               *
+     F*  Called By: CLP/LERC425                                       *
+     F*                                                               *
+     F*  Calls: None                                                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022067           Date 27Aug13               *
+      *                 CLE075AJ           Date 06Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CSC042             Date 16Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 142402             Date 10Nov98               *
+      *                 BH3509             Date 20Sep92               *
+      *                 E3394              Date 30Jun92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD022067 - LERC21 interfere with LERC30A                     *
+      *  CLE075AJ - COB Restructure - LE COB Optimisation Phase 1     *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+     F*  CSC042 - COB performance fix                                 *
+      *           Pgm calls AOACOFR* for every customer resulting in  *
+      *           627K calls at RZB Sofia retrieving fewer than 100   *
+      *           account officers. Store/retrieve ACOF data in arrays*
+      *           as required.                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  142402 - Initialise LLSTRN field with the value of LASTRN    *
+      *           field in dataarea LERSTS.                           *
+     F*  BH3509 - Account officer of facility customer to be used     *
+     F*           for reporting facilities and loans in all cases.    *
+     F*  E3394  - Changed to use the facility account officer         *
+     F*           on loans for reporting purposes                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F***LEPEL0* UF  E           K        DISK         KINFSR *PSSR                         CLE075AJ
+     FLEPEL1  UF  E           K        DISK         KINFSR *PSSR                            CLE075AJ
+     FCLOAN   IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FFCLTY   IF  E           K        DISK
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+     FPEXREFL0IF  E           K        DISK
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    01  - PF/LEPELND record read                               *
+     F*    02  - PF/LEPEFCD record read                               *
+     F*    03  - PF/LEPERED record read                               *
+     F*    04  - PF/LEPEGLD record read                               *
+     F*    05  - PF/LEPEDFD record read                               *
+     F*    10  - Read of LF/LEPEL0                                    *
+     F*    20  - Chain to LF/CLOAN                                    *
+     F*    30  - Chain to LF/PEXREFL0                                 *
+     F*    40  - Chain to LF/FCLTY                                    *
+     F*                                                               *
+     F*  90-99 - Used by Standard Subroutines                         *
+     F*                                                               *
+     F*  U7+U8 - Database Error                                       *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Program initialisation.                             *
+     F*  PROCES - Detail processing.                                  *
+     F*  ACODPT - Pick up account officer and department for extract  *
+     F*           file customer.                                      *
+     F*  LOAN   - Process PF/LEPELND records.                         *
+     F*  FACIL  - Process PF/LEPEFCD records.                         *
+     F*  *PSSR  - Program exception processing.                       *
+     F*  TERM   - Program termination.                                *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80               COPYRIGHT
+     E                    XXAC      999  2               Account Officer                      CSC042
+     E                    XXAD      999  3               Depy Code                            CSC042
+     E/SPACE 3
+     ILEPELNDF    01
+     I              LDFCUS                          CUSTNO
+     I***LEPEFCDF    02                                                                     CLE075AJ
+     I**********    FDFCUS                          CUSTNO                                  CLE075AJ
+     I***LEPEREDF    03                                                                     CLE075AJ
+     I**********    RDCNUM                          CUSTNO                                  CLE075AJ
+     I***LEPEGLDF    04                                                                     CLE075AJ
+     I**********    GDCNUM                          CUSTNO                                  CLE075AJ
+     I***LEDEDFDF    05                                                                     CLE075AJ
+     I**********    DDCNUM                          CUSTNO                                  CLE075AJ
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID.
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+      *
+     I            DS
+      *
+      ** Loan Type/Sub-type combinations.
+      *
+     I****************************************1   4 LSTP                                      CLE042
+     I                                        1   8 LSTP                                      CLE042
+     I                                        1   2 LDLTYP
+     I                                        3   4 LDSUTP
+     I                                        5   8 LDCLAS                                    CLE042
+      *
+     ILDA       E DSLDA
+      *
+      ** Local Data Area.
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** Customer Code Details.
+      *
+     ISDACOF    E DSSDACOFPD
+      *
+      ** Account Officer Details.
+      *
+     ILERSTS    E DSLERSTS                                                142402
+     I              FACHISD                         WHISST                142402
+     I              LERC2030                        LERC20                142402
+     I              LERC135                         LERC13                142402
+     I              LERC315                         LERC35                142402
+     I              LERC425                         LERC42                142402
+     I              EOYFLAG                         EOYFLG                142402
+     IDSFDY     E DSDSFDY
+      *
+      ** Short data structure for access programs.
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Long data structure for access programs.
+      *
+     C/EJECT
+     C/TITLE Main Processing
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      ** Program Termination.
+      *
+     C                     EXSR TERM
+      *
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Program initialisation subroutine.                  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     Nothing                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Set up copyright statement.
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Key list for LF/CLOAN.
+      *
+     C           LNKEY     KLIST
+     C                     KFLD           LDLNRF
+     C                     KFLD           LNRCDT  1
+      *
+      ** Key list for LF/FCLTY.
+      *
+     C           FCKEY     KLIST
+     C                     KFLD           CUSTNO
+     C                     KFLD           FCFTYP  30
+     C                     KFLD           FCFSEQ  20
+     C                     KFLD           FCRCDT  1
+      *
+      ** Initialise control fields (customer number and loan type/
+      ** sub-type of last record read), loan and facility record IDs.
+      *
+     C**********           Z-ADD*ZEROS    ZCNUM   60                                          CSD027
+     C                     MOVE *BLANKS   ZCNUM   6                                           CSD027
+     C*********************MOVE *BLANKS   ZLSTP   4                                           CLE042
+     C                     MOVE *BLANKS   ZLSTP   8                                           CLE042
+     C                     MOVE 'A'       LNRCDT
+     C                     MOVE 'A'       FCRCDT
+      *****************************************************************              142402 MD022067
+      ***Output*the*LASTRN*value*of*dataarea*LERSTS*to*LLSTRN*for******              142402 MD022067
+      ***next*day*use.*************************************************              142402 MD022067
+      *****************************************************************              142402 MD022067
+     C           *NAMVAR   DEFN           LERSTS                          142402
+     C********** *LOCK     IN   LERSTS                                               142402 MD022067
+     C                     IN   LERSTS                                                      MD022067
+     C**********           Z-ADDLASTRN    LLSTRN  50                                 142402 MD022067
+     C**********           OUT  LERSTS                                               142402 MD022067
+      *
+     C                     Z-ADD0         ##INDX  30                                          CSC042
+      *                                                                                       CSC042
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Detail processing subroutine.                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     Nothing                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ** Read LF/LEPEL0 until EOF.
+      *
+     C**********           READ LEPEL0                   10                                 CLE075AJ
+     C                     READ LEPEL1                   10                                 CLE075AJ
+      *
+     C           *IN10     DOWEQ'0'
+      *
+      ** Set account officer and department on change of extract
+      ** file customer.
+      *
+     C           CUSTNO    IFNE ZCNUM
+     C                     EXSR ACODPT
+     C                     END
+      *
+      ** Process PF/LEPELND record.
+      *
+     C           *IN01     IFEQ '1'
+     C                     EXSR LOAN
+     C                     END
+      *****************************************************************                     CLE075AJ
+      ***Process*PF/LEPEFCD*record.************************************                     CLE075AJ
+      *****************************************************************                     CLE075AJ
+     C********** *IN02     IFEQ '1'                                                         CLE075AJ
+     C***********          EXSR FACIL                                     BH3509
+     C**********           MOVE CUACOF    FDACOF                                     BH3509 CLE075AJ
+     C**********           MOVE CUDEPT    FDDEPT                                     BH3509 CLE075AJ
+     C**********           EXCPTUPDFCD                                               BH3509 CLE075AJ
+     C**********           END                                                              CLE075AJ
+      *****************************************************************                     CLE075AJ
+      ***Process*PF/LEPERED*record.************************************                     CLE075AJ
+      *****************************************************************                     CLE075AJ
+     C********** *IN03     IFEQ '1'                                                         CLE075AJ
+     C**********           MOVE CUACOF    RDACOF                                            CLE075AJ
+     C**********           MOVE CUDEPT    RDDEPT                                            CLE075AJ
+     C**********           EXCPTUPDRED                                                      CLE075AJ
+     C**********           END                                                              CLE075AJ
+      *****************************************************************                     CLE075AJ
+      ***Process*PF/LEPEGLD*record.************************************                     CLE075AJ
+      *****************************************************************                     CLE075AJ
+     C********** *IN04     IFEQ '1'                                                         CLE075AJ
+     C**********           MOVE CUACOF    GDACOF                                            CLE075AJ
+     C**********           MOVE CUDEPT    GDDEPT                                            CLE075AJ
+     C**********           EXCPTUPDGLD                                                      CLE075AJ
+     C**********           END                                                              CLE075AJ
+      *****************************************************************                     CLE075AJ
+      ***Process*PF/LEPEDFD*record.************************************                     CLE075AJ
+      *****************************************************************                     CLE075AJ
+     C********** *IN05     IFEQ '1'                                                         CLE075AJ
+     C**********           MOVE CUACOF    DDACOF                                            CLE075AJ
+     C**********           MOVE CUDEPT    DDDEPT                                            CLE075AJ
+     C**********           EXCPTUPDDFD                                                      CLE075AJ
+     C**********           END                                                              CLE075AJ
+      *
+      ***Read*LF/LEPEL0*until*EOF.*************************************                     CLE075AJ
+      ** Read LF/LEPEL1 until EOF.                                                          CLE075AJ
+      *
+     C                     MOVEA'00000'   *IN,01
+     C**********           READ LEPEL0                   10                                 CLE075AJ
+     C                     READ LEPEL1                   10                                 CLE075AJ
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ACODPT
+      *****************************************************************
+      *                                                               *
+      * ACODPT - This subroutine picks up the account officer for     *
+      *          the extract file customer on change of customer,     *
+      *          and the department code for that account officer.    *
+      *          Defaults are set if the account officer and          *
+      *          department are not found/invalid.                    *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *                                                               *
+      *  Calls:     AOCUSTR0, AOACOFR0                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACODPT    BEGSR
+      *
+     C**********           Z-ADDCUSTNO    ZCNUM                                               CSD027
+     C                     MOVE CUSTNO    ZCNUM                                               CSD027
+      *
+      ** Get account officer for customer.
+      *
+     C                     MOVE *BLANKS   WCNUM  10
+     C                     MOVELCUSTNO    WCNUM
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*BLANKS' WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM           WCNUM
+     C                     PARM           WKYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** If customer not found/invalid or account officer is
+      ** blanks/zeros set defaults for account officer and department.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           BBACOC    OREQ '  '
+     C           BBACOC    OREQ '00'
+     C                     MOVE '**'      CUACOF  2
+     C                     MOVE '***'     CUDEPT  3
+     C                     ELSE
+     C                     MOVE BBACOC    CUACOF
+      *
+      ** Get department code for account officer.
+     C                     MOVELCUACOF    ##KA                                                CSC042
+     C                     EXSR #CHKAO                                                        CSC042
+      *                                                                                       CSC042
+      * Found in array so use the data from there                                             CSC042
+     C           ##FIC     IFEQ 'Y'                        *** B02                            CSC042
+     C                     MOVELXXAD,X    AZDPCD                                              CSC042
+     C                     MOVE *BLANKS   WRTCD                                               CSC042
+     C                     ELSE                            *** X02                            CSC042
+      * Not in array so go to AO pgm                                                          CSC042
+     C                     CALL 'AOACOFR0'
+     C                     PARM '*BLANKS' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM CUACOF    WACOF   2
+     C           SDACOF    PARM SDACOF    DSFDY
+      *
+      * Data was found by AO pgm so store in array if there is room                           CSC042
+     C           WRTCD     IFEQ *BLANKS                    *** B03                            CSC042
+     C           ##INDX    ANDLT999                                                           CSC042
+     C           ##INDX    ADD  1         ##INDX                                              CSC042
+     C                     Z-ADD##INDX    X                                                   CSC042
+     C                     MOVEL##KA      XXAC,X                                              CSC042
+     C                     MOVELAZDPCD    XXAD,X                                              CSC042
+      * Save new value of X so next compare uses the latest value                             CSC042
+     C                     Z-ADDX         ##XSAV                                              CSC042
+     C                     END                             *** E03                            CSC042
+     C                     END                             *** E02                            CSC042
+      *                                                                                       CSC042
+      ** If account officer not found/invalid or department is
+      ** blanks/zeros, set default for department.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           AZDPCD    OREQ '   '
+     C           AZDPCD    OREQ '000'
+     C                     MOVE '***'     CUDEPT
+     C                     ELSE
+     C                     MOVE AZDPCD    CUDEPT
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT                                                                                  CSC042
+      *****************************************************************                       CSC042
+      *                                                                                       CSC042
+      * #CHKAO - Check Account Officer                                                        CSC042
+      *                                                                                       CSC042
+     C           #CHKAO    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+      * Define ##KA                                                                           CSC042
+     C           1         IFEQ 0                                                             CSC042
+     C                     MOVEL##KA      ##KA    2                                           CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+     C                     MOVEL*BLANKS   ##FIC   1                                           CSC042
+      *                                                                                       CSC042
+      * Save *IN87 so it can be reset at end of SR                                            CSC042
+     C           *IN87     IFEQ *ON                                                           CSC042
+     C                     MOVEL'Y'       #IN87   1                                           CSC042
+     C                     ELSE                                                               CSC042
+     C                     MOVEL'N'       #IN87                                               CSC042
+     C                     END                                                                CSC042
+     C                     SETOF                         87                                   CSC042
+      *                                                                                       CSC042
+      * Cbeck array first and if not found then check the AO pgm                              CSC042
+     C                     Z-ADD##XSAV    X       40                                          CSC042
+     C           *LIKE     DEFN X         ##XSAV                                              CSC042
+      *                                                                                       CSC042
+      * Ensure that we don't check for a 0th element in array                                 CSC042
+     C           X         IFEQ 0                                                             CSC042
+     C                     Z-ADD1         X                                                   CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Is the ACOF same as the last one used?                                                CSC042
+      * If so then bypass the LOKUP                                                           CSC042
+     C           ##KA      IFEQ XXAC,X                                                        CSC042
+     C                     SETON                         87                                   CSC042
+      * Save new value of X                                                                   CSC042
+     C                     Z-ADDX         ##XSAV                                              CSC042
+     C                     ELSE                                                               CSC042
+      * LOKUP in array if not same                                                            CSC042
+     C                     Z-ADD1         X                                                   CSC042
+     C           ##KA      LOKUPXXAC,X                   87                                   CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Save new value of X                                                                   CSC042
+     C           *IN87     IFEQ *ON                                                           CSC042
+     C                     Z-ADDX         ##XSAV                                              CSC042
+      * Set on flag to show that data found in cache                                          CSC042
+     C                     MOVEL'Y'       ##FIC                                               CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Reset *IN87                                                                           CSC042
+     C           #IN87     IFEQ 'Y'                                                           CSC042
+     C                     MOVEL*ON       *IN87                                               CSC042
+     C                     ELSE                                                               CSC042
+     C                     MOVEL*OFF      *IN87                                               CSC042
+     C                     END                                                                CSC042
+     C                     ENDSR                                                              CSC042
+      *                                                                                       CSC042
+      /TITLE SR/LOAN
+      *****************************************************************
+      *                                                               *
+      * LOAN   - This subroutine will access the LF/CLOAN for the     *
+      *          loan account officer and department, if not found/   *
+      *          blank default customer values will be used; and      *
+      *          LF/PEXREFL0 for the group ID and name for the loan   *
+      *          type/subtype. PF/LEPELND is updated.                 *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *                                                               *
+      *  Calls:     AOACOFR0                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           LOAN      BEGSR
+      *
+      ** Access LF/CLOAN for loan account officer.
+      *
+     C           LNKEY     CHAINCLOAN                20
+      *
+      ** If loan is not found on LF/CLOAN it will have been dropped
+      ** after maturity, no further action is needed.
+      *
+     C           *IN20     IFEQ '0'
+      *
+      ** If account officer is blank use account officer and department
+      ** obtained from customer.
+      *
+     C***********ACOF      IFEQ '  '                                     E3394
+     C***********          MOVE CUACOF    LDACOF                         E3394
+     C***********          MOVE CUDEPT    LDDEPT                         E3394
+     C***********          ELSE                                          E3394
+      *********************                                              E3394
+      ***Get*department*code*for*loan*account*officer.*****              E3394
+      *********************                                              E3394
+     C           ACOF      ANDNE'  '                                     E3394
+     C                     MOVE ACOF      LDOACO  2                      E3394
+     C                     END                                           E3394
+      *                                                             E3394 BH3509
+      ***Access*LF/FCLTY*for*facility*account*officer.              E3394 BH3509
+      *                                                             E3394 BH3509
+     C***********          Z-ADDLDFTYP    FCFTYP                    E3394 BH3509
+     C***********          Z-ADDLDFSEQ    FCFSEQ                    E3394 BH3509
+     C***********FCKEY     CHAINFCLTY                40             E3394 BH3509
+      *                                                             E3394 BH3509
+      ***If*facility*is*not*found*on*LF/FCLTY*it*will*have*been*dropE3394 BH3509
+      ** after maturity, no further action is needed.               E3394 BH3509
+      *                                                             E3394 BH3509
+     C************IN40     IFEQ '0'                                 E3394 BH3509
+      *                                                             E3394 BH3509
+      ***If*account*officer*is*blank*use*account*officer*and*departmE3394 BH3509
+      ***obtained*from*customer.                                    E3394 BH3509
+      *                                                             E3394 BH3509
+     C***********ACOF      IFEQ '  '                                E3394 BH3509
+     C***********          MOVE CUACOF    LDACOF                    E3394 BH3509
+     C***********          MOVE CUDEPT    LDDEPT                    E3394 BH3509
+     C***********          ELSE                                     E3394 BH3509
+     C***********          MOVE ACOF      LDACOF                    E3394 BH3509
+      *                                                             E3394 BH3509
+      ***Get*department*code*for*facility*account*officer.          E3394 BH3509
+      *                                                             E3394 BH3509
+     C***********          CALL 'AOACOFR0'                                BH3509
+     C***********          PARM '*BLANKS' WRTCD                           BH3509
+     C**********           PARM '*KEY   ' WOPTN                           BH3509
+     C**********           PARM LDACOF    WACOF                           BH3509
+     C********** SDACOF    PARM SDACOF    DSFDY                           BH3509
+      *                                                                   BH3509
+      ***If*account*officer*not*found/invalid*or*department*is            BH3509
+      ***blanks/zeros,*set*default*for*department.                        BH3509
+      *                                                                   BH3509
+     C********** WRTCD     IFNE *BLANKS                                   BH3509
+     C********** AZDPCD    OREQ '   '                                     BH3509
+     C********** AZDPCD    OREQ '000'                                     BH3509
+     C**********           MOVE '***'     LDDEPT                          BH3509
+     C**********           ELSE                                           BH3509
+     C**********           MOVE AZDPCD    LDDEPT                          BH3509
+     C**********           END                                            BH3509
+      *                                                                   BH3509
+     C**********           END                                            BH3509
+      *                                                                   BH3509
+     C                     MOVE CUACOF    LDACOF                          BH3509
+     C                     MOVE CUDEPT    LDDEPT                          BH3509
+      *
+      ** If loan type/subtype of PF/LEPELND has changed, access
+      ** cross-reference file for group ID and name. Update extract
+      ** file group ID and name. If loan type/subtype is not found,
+      ** set defaults for group ID and name.
+      ** N.B. Group ID must not be 999.
+      *
+     C           LDGPID    IFNE 999
+      *
+     C           LSTP      IFNE ZLSTP
+     C                     MOVE LSTP      ZLSTP
+     C           LSTP      CHAINPEXREFL0             30
+     C           *IN30     IFEQ '1'
+     C                     Z-ADD*ZEROS    PXGPID
+     C                     MOVE *BLANKS   PXGPNA
+     C                     END
+     C                     END
+      *
+     C                     Z-ADDPXGPID    LDGPID
+     C                     MOVE PXGPNA    LDGPNA
+      *
+     C                     END
+      *
+      ** Update PF/LEPELND.
+      *
+     C                     EXCPTUPDLND
+      *
+     C***********          END                                            BH3509
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/FACIL
+      *****************************************************************
+      *                                                               *
+      * FACIL  - This subroutine will access the LF/FCLTY for the     *
+      *          facility account officer and department, if not      *
+      *          found/blank default customer values will be used.    *
+      *          PF/LEPEFCD is updated.                               *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *                                                               *
+      *  Calls:     AOACOFR0                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FACIL     BEGSR
+      *
+      ** Access LF/FCLTY for facility account officer.
+      *
+     C**********           Z-ADDFDFTYP    FCFTYP                                            CLE075AJ
+     C**********           Z-ADDFDFSEQ    FCFSEQ                                            CLE075AJ
+     C           FCKEY     CHAINFCLTY                40
+      *
+      ** If facility is not found on LF/FCLTY it will have been dropped
+      ** after maturity, no further action is needed.
+      *
+     C           *IN40     IFEQ '0'
+      *
+      ** If account officer is blank use account officer and department
+      ** obtained from customer.
+      *
+     C           ACOF      IFEQ '  '
+     C**********           MOVE CUACOF    FDACOF                                            CLE075AJ
+     C**********           MOVE CUDEPT    FDDEPT                                            CLE075AJ
+     C                     ELSE
+      *
+      ** Get department code for facility account officer.
+      *
+     C**********           MOVE ACOF      FDACOF                                            CLE075AJ
+     C**********           MOVELFDACOF    ##KA                                       CSC042 CLE075AJ
+     C                     EXSR #CHKAO                                                        CSC042
+      *                                                                                       CSC042
+      * Found in array so use the data from there                                             CSC042
+     C           ##FIC     IFEQ 'Y'                        *** B02                            CSC042
+     C                     MOVELXXAD,X    AZDPCD                                              CSC042
+     C                     MOVE *BLANKS   WRTCD                                               CSC042
+     C                     ELSE                            *** X02                            CSC042
+      * Not in array so go to AO pgm                                                          CSC042
+     C**********           CALL 'AOACOFR0'                                                  CLE075AJ
+     C**********           PARM '*BLANKS' WRTCD                                             CLE075AJ
+     C**********           PARM '*KEY   ' WOPTN                                             CLE075AJ
+     C**********           PARM FDACOF    WACOF                                             CLE075AJ
+     C********** SDACOF    PARM SDACOF    DSFDY                                             CLE075AJ
+      *
+      * Data was found by AO pgm so store in array if there is room                           CSC042
+     C           WRTCD     IFEQ *BLANKS                    *** B03                            CSC042
+     C           ##INDX    ANDLT999                                                           CSC042
+     C           ##INDX    ADD  1         ##INDX                                              CSC042
+     C                     Z-ADD##INDX    X                                                   CSC042
+     C                     MOVEL##KA      XXAC,X                                              CSC042
+     C                     MOVELAZDPCD    XXAD,X                                              CSC042
+      * Save new value of X so next compare uses the latest value                             CSC042
+     C                     Z-ADDX         ##XSAV                                              CSC042
+     C                     END                             *** E03                            CSC042
+     C                     END                             *** E02                            CSC042
+      *
+      ** If account officer not found/invalid or department is
+      ** blanks/zeros, set default for department.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           AZDPCD    OREQ '   '
+     C           AZDPCD    OREQ '000'
+     C**********           MOVE '***'     FDDEPT                                            CLE075AJ
+     C                     ELSE
+     C**********           MOVE AZDPCD    FDDEPT                                            CLE075AJ
+     C                     END
+      *
+     C                     END
+      *
+      ** Update PF/LEPEFCD.
+      *
+     C**********           EXCPTUPDFCD                                                      CLE075AJ
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception processing.                        *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called By: VARIOUS                                           *
+      *                                                               *
+      *  Calls:     AUDIT                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Ensure dump is executed only once.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     EXSR TERM
+     C                     END
+      *
+      ** Exit program.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/TERM
+      *****************************************************************
+      *                                                               *
+      *  TERM   - Program termination subroutine.                     *
+      *                                                               *
+      *  Called By: Main Processing, *PSSR                            *
+      *                                                               *
+      *  Calls:     Nothing                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TERM      BEGSR
+      *                                                                                     MD022067
+      ** Output the LASTRN value of dataarea LERSTS to LLSTRN for next day use              MD022067
+      *                                                                                     MD022067
+     C           *LOCK     IN   LERSTS                                                      MD022067
+     C                     Z-ADDLASTRN    LLSTRN  50                                        MD022067
+     C                     OUT  LERSTS                                                      MD022067
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C********************************************************************
+     C/EJECT
+      *
+      ** Update of PF/LEPELND.
+      *
+     OLEPELNDFE                UPDLND
+     O                         LDGPID
+     O                         LDGPNA
+     O                         LDDEPT
+     O                         LDACOF
+      *****************************************************************                     CLE075AJ
+      ***Update*of*PF/LEPEFCD.*****************************************                     CLE075AJ
+      *****************************************************************                     CLE075AJ
+     O***LEPEFEDFE                UPDFCD                                                    CLE075AJ
+     O**********               FDDEPT                                                       CLE075AJ
+     O**********               FDACOF                                                       CLE075AJ
+      *****************************************************************                     CLE075AJ
+      ***Update*of*PF/LEPERED.*****************************************                     CLE075AJ
+      *****************************************************************                     CLE075AJ
+     O***LEPEREDFE                UPDRED                                                    CLE075AJ
+     O**********               RDDEPT                                                       CLE075AJ
+     O**********               RDACOF                                                       CLE075AJ
+      *****************************************************************                     CLE075AJ
+      ***Update*of*PF/LEPEGLD.*****************************************                     CLE075AJ
+      *****************************************************************                     CLE075AJ
+     O***LEPEGLDFE                UPDGLD                                                    CLE075AJ
+     O**********               GDDEPT                                                       CLE075AJ
+     O**********               GDACOF                                                       CLE075AJ
+      *****************************************************************                     CLE075AJ
+      ***Update*of*PF/LEPEDFD.*****************************************                     CLE075AJ
+      *****************************************************************                     CLE075AJ
+     O***LEPEDFDFE                UPDDFD                                                    CLE075AJ
+     O**********               DDDEPT                                                       CLE075AJ
+     O**********               DDACOF                                                       CLE075AJ
+      *
+**  CPY@
+(c) Finastra International Limited 2001

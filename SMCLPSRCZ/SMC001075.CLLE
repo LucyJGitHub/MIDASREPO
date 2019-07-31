@@ -1,0 +1,88 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Copy Selected Account keys to new acct')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC001075 - Midas SM Copy Selected Account keys to new acct */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD029817 *CREATE   Date 29Aug14              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD029817 - Upgraded the utility provided by MD027475.       */
+/*                - Narrative PDCL_loan event (subtype_change)       */
+/*                  Utility to correct PF/ACKEYAL.                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&MODE)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SQL) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited 2014')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('SMC001075 - Copy selected account keys +
+                          to temporary file') TOMSGQ(MRUNQ)
+ 
+/* Create a temporary source file for RUNSQLSTM. */
+ 
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SKXBRIDGE')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/* Run the SQL statement update ACKEYAL before calling SM001075 */
+/* SQL = UPDATE ACKEYAL SET EACC = 0 */
+             CHGVAR     VAR(&SQL) VALUE('UPDATE ACKEYAL SET EACC = 0')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*CLEAR')
+ 
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE) NAMING(*SYS)
+             MONMSG     MSGID(SQL9010)
+ 
+/* Run in *CREATE mode */
+ 
+               CPYF       FROMFILE(ACKEYAL) TOFILE(QTEMP/XACKEYAL) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+               CLRPFM     FILE(QTEMP/XACKEYAL)
+               MONMSG     MSGID(CPF2817 CPF2863)
+               CALL       PGM(SM001075)
+               IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMC001075 ended abnormally in *CREATE mode') +
+                          TOMSGQ(MOPERQ)
+                 GOTO       CMDLBL(ERROR)
+               ENDDO
+ 
+/* Run in *UPDATE mode */
+ 
+               CPYF       FROMFILE(QTEMP/XACKEYAL) TOFILE(ACKEYAL) +
+                          MBROPT(*ADD) CRTFILE(*NO)
+ 
+             GOTO       CMDLBL(END)
+ERROR:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMC001075 ended abnormally - see joblog +
+                          ') TOMSGQ(MOPERQ)
+             CHGJOB     SWS(XXXXXX11)
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Ltd. 2014')
+             ENDPGM

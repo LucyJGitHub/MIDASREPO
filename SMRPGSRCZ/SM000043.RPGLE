@@ -1,0 +1,1031 @@
+     H DEBUG
+     H COPYRIGHT('(c) Finastra International Limited 2006')
+      *****************************************************************
+/*STD *  RPGBASEBND                                                   *
+/*EXI *  TEXT('Midas SM Handle packed fields for specific files')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Implementation module                                *
+      *                                                               *
+      *  SM000043 - Handle packed fields for specific files           *
+      *                                                               *
+      *  (c) Finastra International Limited 2006                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1056715          Date 15Nov12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 B18595  *MOVED     Date 06May08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CPK025  *CREATE    Date 04Aug06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1056715 - Loan reference field name for this file was      *
+      *              changed from MCLNRF to MCLOAN (Recompile)        *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  B18595 - Moved to global layer.                              *
+      *  CPK025 - MidasPlus 1.3 packaging.  Changes to migration.     *
+      *                                                               *
+      *****************************************************************
+      *
+      * Files containing packed fields that may need migration.
+     FCGCERBPD  UF   E             DISK    USROPN
+     FCGCONBPD  UF   E             DISK    USROPN
+     FDEALSDD   UF   E             DISK    USROPN
+     FDKEYSDP   UF   E             DISK    USROPN
+     FDLACKRPD  UF   E             DISK    USROPN RENAME(DKEYSDPF:DLACKRF)
+     FDLDHISPD  UF   E             DISK    USROPN
+     FDLUPDDD   UF   E             DISK    USROPN RENAME(DEALSDDF:DLUPDDF)
+     FEDDKEYPD  UF   E             DISK    USROPN
+     FFFDEALS   UF   E             DISK    USROPN RENAME(DEALSDDF:FFDEALSF)
+     FLEIFEEPD  UF   E             DISK    USROPN
+     FMMDENBPP  UF   E             DISK    USROPN
+     FMMSTDBPP  UF   E             DISK    USROPN
+     FMMVENASPPDUF   E             DISK    USROPN
+     FMMVNASPPD UF   E             DISK    USROPN RENAME(MMVNASPD0:MMVNASPF)
+     FMMVRPDDPD UF   E             DISK    USROPN
+     FMTRADD    UF   E             DISK    USROPN
+     FMXAKDLPD  UF   E             DISK    USROPN RENAME(DKEYSDPF:MXAKDLF)
+     FMXSDLDDPD UF   E             DISK    USROPN RENAME(DEALSDDF:MXSDLDDF)
+     FPMBDHDPD  UF   E             DISK    USROPN RENAME(DLDHISD0:PMBDHDF)
+     FPMBDLDPD  UF   E             DISK    USROPN RENAME(DEALSDDF:PMBDLDF)
+     FSETRANPD  UF   E             DISK    USROPN
+     FTSMDNBPD  UF   E             DISK    USROPN RENAME(MMDENBP0:TSMDNBF)
+     FDLOPOSPD  UF   E             DISK    USROPN
+     FBYAKDLPP  UF   E             DISK    USROPN RENAME(DKEYSDPF:BYAKDLF)
+     FMMVRPDHPD UF   E             DISK    USROPN
+     FILMATCPD  UF   E             DISK    USROPN
+      *
+     D PFileName       S             10
+     D Recursive       S              1
+      *
+     D L3PSTR          DS           370
+     D  CHNAX                115    118P 0
+     D  CHNA                 365    370
+     D  CHNANum              365    370  0
+      *
+     D                 DS
+     D  CustomerNo             1      6S 0
+     D  CGCUST                 1      6
+     D  IFCUST                 1      6
+     D  CHNACH                 1      6
+     D  MCCNUM                 1      6
+     D  FCNUM                  1      6
+     D  BDID                   1      6
+     D  HLBDID                 1      6
+     D  IHBDID                 1      6
+     D  MDFR                   1      6
+     D  MDTO                   1      6
+     D  TCUSN                  1      6
+     D  TCUST                  1      6
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    PFileName
+      *
+      * Execute subroutine for file that matches parameter.
+     C                   SELECT
+      *
+     C                   WHEN      PfileName = 'CGCERBPD'
+     C                   EXSR      Sr01
+      *
+     C                   WHEN      PfileName = 'CGCONBPD'
+     C                   EXSR      Sr02
+      *
+     C                   WHEN      PfileName = 'DEALSDD'
+     C                   EXSR      Sr03
+      *
+     C                   WHEN      PfileName = 'DKEYSDP'
+     C                   EXSR      Sr04
+      *
+     C                   WHEN      PfileName = 'DLACKRPD'
+     C                   EXSR      Sr05
+      *
+     C                   WHEN      PfileName = 'DLDHISPD'
+     C                   EXSR      Sr06
+      *
+     C                   WHEN      PfileName = 'DLUPDDD'
+     C                   EXSR      Sr07
+      *
+     C                   WHEN      PfileName = 'EDDKEYPD'
+     C                   EXSR      Sr08
+      *
+     C                   WHEN      PfileName = 'FFDEALS'
+     C                   EXSR      Sr09
+      *
+     C                   WHEN      PfileName = 'LEIFEEPD'
+     C                   EXSR      Sr10
+      *
+     C                   WHEN      PfileName = 'MMDENBPP'
+     C                   EXSR      Sr11
+      *
+     C                   WHEN      PfileName = 'MMSTDBPP'
+     C                   EXSR      Sr12
+      *
+     C                   WHEN      PfileName = 'MMVENASPPD'
+     C                   EXSR      Sr13
+      *
+     C                   WHEN      PfileName = 'MMVNASPPD'
+     C                   EXSR      Sr14
+      *
+     C                   WHEN      PfileName = 'MMVRPDDPD'
+     C                   EXSR      Sr15
+      *
+     C                   WHEN      PfileName = 'MTRADD'
+     C                   EXSR      Sr16
+      *
+     C                   WHEN      PfileName = 'MXAKDLPD'
+     C                   EXSR      Sr17
+      *
+     C                   WHEN      PfileName = 'MXSDLDDPD'
+     C                   EXSR      Sr18
+      *
+     C                   WHEN      PfileName = 'PMBDHDPD'
+     C                   EXSR      Sr19
+      *
+     C                   WHEN      PfileName = 'PMBDLDPD'
+     C                   EXSR      Sr20
+      *
+     C                   WHEN      PfileName = 'SETRANPD'
+     C                   EXSR      Sr21
+      *
+     C                   WHEN      PfileName = 'TSMDNBPD'
+     C                   EXSR      Sr22
+      *
+     C                   WHEN      PfileName = 'DLOPOSPD'
+     C                   EXSR      Sr23
+      *
+     C                   WHEN      PfileName = 'BYAKDLPP'
+     C                   EXSR      Sr24
+      *
+     C                   WHEN      PfileName = 'MMVRPDHPD'
+     C                   EXSR      Sr25
+      *
+     C                   WHEN      PfileName = 'ILMATCPD'
+     C                   EXSR      Sr26
+      *
+     C                   OTHER
+     C                   GOTO      EndProgram
+      *
+     C                   ENDSL
+      *
+     C     EndProgram    TAG
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr01 - Update CGCERBPD                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr01          BEGSR
+      *
+     C                   OPEN      CGCERBPD
+     C     1             SETLL     CGCERBPD
+     C                   READ      CGCERBPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      CGCUSTSr
+      *
+     C                   UPDATE    CGCERBD0
+      *
+     C                   READ      CGCERBPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     CGCERBPD
+      *
+     C     Sr01E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr02 - Update CGCONBPD                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr02          BEGSR
+      *
+     C                   OPEN      CGCONBPD
+     C     1             SETLL     CGCONBPD
+     C                   READ      CGCONBPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      CGCUSTSr
+      *
+     C                   UPDATE    CGCONBD0
+      *
+     C                   READ      CGCONBPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     CGCONBPD
+      *
+     C     Sr02E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr03 - Update DEALSDD                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr03          BEGSR
+      *
+     C                   OPEN      DEALSDD
+     C     1             SETLL     DEALSDD
+     C                   READ      DEALSDD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      BDIDSr
+      *
+     C                   UPDATE    DEALSDDF
+      *
+     C                   READ      DEALSDD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     DEALSDD
+      *
+     C     Sr03E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr04 - Update DKEYSDP                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr04          BEGSR
+      *
+     C                   OPEN      DKEYSDP
+     C     1             SETLL     DKEYSDP
+     C                   READ      DKEYSDP
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      CHNACHSr
+      *
+     C                   UPDATE    DKEYSDPF
+      *
+     C                   READ      DKEYSDP
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     DKEYSDP
+      *
+     C     Sr04E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr05 - Update DLACKRPD                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr05          BEGSR
+      *
+     C                   OPEN      DLACKRPD
+     C     1             SETLL     DLACKRPD
+     C                   READ      DLACKRPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      CHNACHSr
+      *
+     C                   UPDATE    DLACKRF
+      *
+     C                   READ      DLACKRPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     DLACKRPD
+      *
+     C     Sr05E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr06 - Update DLDHISPD                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr06          BEGSR
+      *
+     C                   OPEN      DLDHISPD
+     C     1             SETLL     DLDHISPD
+     C                   READ      DLDHISPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      BDIDSr
+      *
+     C                   UPDATE    DLDHISD0
+      *
+     C                   READ      DLDHISPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     DLDHISPD
+      *
+     C     Sr06E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr07 - Update DLUPDDD                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr07          BEGSR
+      *
+     C                   OPEN      DLUPDDD
+     C     1             SETLL     DLUPDDD
+     C                   READ      DLUPDDD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      BDIDSr
+      *
+     C                   UPDATE    DLUPDDF
+      *
+     C                   READ      DLUPDDD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     DLUPDDD
+      *
+     C     Sr07E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr08 - Update EDDKEYPD                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr08          BEGSR
+      *
+     C                   OPEN      EDDKEYPD
+     C     1             SETLL     EDDKEYPD
+     C                   READ      EDDKEYPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      CHNACHSr
+      *
+     C                   UPDATE    EDDKEYD0
+      *
+     C                   READ      EDDKEYPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     EDDKEYPD
+      *
+     C     Sr08E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr09 - Update FFDEALS                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr09          BEGSR
+      *
+     C                   OPEN      FFDEALS
+     C     1             SETLL     FFDEALS
+     C                   READ      FFDEALS
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      BDIDSr
+      *
+     C                   UPDATE    FFDEALSF
+      *
+     C                   READ      FFDEALS
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     FFDEALS
+      *
+     C     Sr09E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr10 - Update LEIFEEPD                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr10          BEGSR
+      *
+     C                   OPEN      LEIFEEPD
+     C     1             SETLL     LEIFEEPD
+     C                   READ      LEIFEEPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   IF        FCNUM = *blanks
+     C                   IF        FCNUMX <> 0
+     C                   EVAL      CustomerNo = FCNUMX
+     C                   ELSE
+     C                   EVAL      FCNUM = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   UPDATE    LEIFEEP0
+      *
+     C                   READ      LEIFEEPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     LEIFEEPD
+      *
+     C     Sr10E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr11 - Update MMDENBPP                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr11          BEGSR
+      *
+     C                   OPEN      MMDENBPP
+     C     1             SETLL     MMDENBPP
+     C                   READ      MMDENBPP
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      HLBDIDSr
+      *
+     C                   UPDATE    MMDENBP0
+      *
+     C                   READ      MMDENBPP
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     MMDENBPP
+      *
+     C     Sr11E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr12 - Update MMDENBPP                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr12          BEGSR
+      *
+     C                   OPEN      MMSTDBPP
+     C     1             SETLL     MMSTDBPP
+     C                   READ      MMSTDBPP
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      IHBDIDSr
+      *
+     C                   UPDATE    MMSTDBP0
+      *
+     C                   READ      MMSTDBPP
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     MMSTDBPP
+      *
+     C     Sr12E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr13 - Update MMVENASPPD                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr13          BEGSR
+      *
+     C                   OPEN      MMVENASPPD
+     C     1             SETLL     MMVENASPPD
+     C                   READ      MMVENASPPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      IHBDIDSr
+      *
+     C                   UPDATE    MMVNASPD0
+      *
+     C                   READ      MMVENASPPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     MMVENASPPD
+      *
+     C     Sr13E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr14 - Update MMVNASPPD                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr14          BEGSR
+      *
+     C                   OPEN      MMVNASPPD
+     C     1             SETLL     MMVNASPPD
+     C                   READ      MMVNASPPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      IHBDIDSr
+      *
+     C                   UPDATE    MMVNASPF
+      *
+     C                   READ      MMVNASPPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     MMVNASPPD
+      *
+     C     Sr14E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr15 - Update MMVRPDDPD                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr15          BEGSR
+      *
+     C                   OPEN      MMVRPDDPD
+     C     1             SETLL     MMVRPDDPD
+     C                   READ      MMVRPDDPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   IF        IFORDP = *blanks
+     C                   IF        IFORDX <> 0
+     C                   EVAL      CustomerNo = IFORDX
+     C                   ELSE
+     C                   EVAL      IFORDP = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   IF        IFCPDP = *blanks
+     C                   IF        IFCPDX <> 0
+     C                   EVAL      CustomerNo = IFCPDX
+     C                   ELSE
+     C                   EVAL      IFCPDP = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   UPDATE    MMVRPDDD0
+      *
+     C                   READ      MMVRPDDPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     MMVRPDDPD
+      *
+     C     Sr15E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr16 - Update MTRADD                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr16          BEGSR
+      *
+     C                   OPEN      MTRADD
+     C     1             SETLL     MTRADD
+     C                   READ      MTRADD
+      *
+     C                   DOU       %EOF
+      *
+     C                   IF        MDFR = *blanks
+     C                   IF        MDFRX <> 0
+     C                   EVAL      CustomerNo = MDFRX
+     C                   ELSE
+     C                   EVAL      MDFR = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   IF        MDTO = *blanks
+     C                   IF        MDTOX <> 0
+     C                   EVAL      CustomerNo = MDTOX
+     C                   ELSE
+     C                   EVAL      MDTO = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   UPDATE    MTRADDF
+      *
+     C                   READ      MTRADD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     MTRADD
+      *
+     C     Sr16E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr17 - Update MXAKDLPD                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr17          BEGSR
+      *
+     C                   OPEN      MXAKDLPD
+     C     1             SETLL     MXAKDLPD
+     C                   READ      MXAKDLPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      CHNACHSr
+      *
+     C                   UPDATE    MXAKDLF
+      *
+     C                   READ      MXAKDLPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     MXAKDLPD
+      *
+     C     Sr17E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr18 - Update MXSDLDDPD                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr18          BEGSR
+      *
+     C                   OPEN      MXSDLDDPD
+     C     1             SETLL     MXSDLDDPD
+     C                   READ      MXSDLDDPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      BDIDSr
+      *
+     C                   UPDATE    MXSDLDDF
+      *
+     C                   READ      MXSDLDDPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     MXSDLDDPD
+      *
+     C     Sr18E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr19 - Update PMBDHDPD                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr19          BEGSR
+      *
+     C                   OPEN      PMBDHDPD
+     C     1             SETLL     PMBDHDPD
+     C                   READ      PMBDHDPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      BDIDSr
+      *
+     C                   UPDATE    PMBDHDF
+      *
+     C                   READ      PMBDHDPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     PMBDHDPD
+      *
+     C     Sr19E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr20 - Update PMBDLDPD                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr20          BEGSR
+      *
+     C                   OPEN      PMBDLDPD
+     C     1             SETLL     PMBDLDPD
+     C                   READ      PMBDLDPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      BDIDSr
+      *
+     C                   UPDATE    PMBDLDF
+      *
+     C                   READ      PMBDLDPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     PMBDLDPD
+      *
+     C     Sr20E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr21 - Update SETRANPD                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr21          BEGSR
+      *
+     C                   OPEN      SETRANPD
+     C     1             SETLL     SETRANPD
+     C                   READ      SETRANPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   IF        TCUSN = *blanks
+     C                   IF        TCUSNX <> 0
+     C                   EVAL      CustomerNo = TCUSNX
+     C                   ELSE
+     C                   EVAL      TCUSN = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   IF        TCUST = *blanks
+     C                   IF        TCUSTX <> 0
+     C                   EVAL      CustomerNo = TCUSTX
+     C                   ELSE
+     C                   EVAL      TCUST = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   UPDATE    SETRAND0
+      *
+     C                   READ      SETRANPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     SETRANPD
+      *
+     C     Sr21E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr22 - Update TSMDNBPD                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr22          BEGSR
+      *
+     C                   OPEN      TSMDNBPD
+     C     1             SETLL     TSMDNBPD
+     C                   READ      TSMDNBPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      HLBDIDSR
+      *
+     C                   UPDATE    TSMDNBF
+      *
+     C                   READ      TSMDNBPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     TSMDNBPD
+      *
+     C     Sr22E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr23 - Update DLOPOSPD                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr23          BEGSR
+      *
+     C                   OPEN      DLOPOSPD
+     C     1             SETLL     DLOPOSPD
+     C                   READ      DLOPOSPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   IF        CHNA = *blanks
+     C                   IF        CHNAX <> 0
+     C                   EVAL      CHNANum = CHNAX
+     C                   ELSE
+     C                   EVAL      CHNA = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   UPDATE    DLOPOSD0
+      *
+     C                   READ      DLOPOSPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     DLOPOSPD
+      *
+     C     Sr23E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr24 - Update BYAKDLPP                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr24          BEGSR
+      *
+     C                   OPEN      BYAKDLPP
+     C     1             SETLL     BYAKDLPP
+     C                   READ      BYAKDLPP
+      *
+     C                   DOU       %EOF
+      *
+     C                   EXSR      CHNACHSr
+      *
+     C                   UPDATE    BYAKDLF
+      *
+     C                   READ      BYAKDLPP
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     BYAKDLPP
+      *
+     C     Sr24E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr25 - Update MMVRPDHPD                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr25          BEGSR
+      *
+     C                   OPEN      MMVRPDHPD
+     C     1             SETLL     MMVRPDHPD
+     C                   READ      MMVRPDHPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   IF        IFCUST = *blanks
+     C                   IF        IFCUSX <> 0
+     C                   EVAL      CustomerNo = IFCUSX
+     C                   ELSE
+     C                   EVAL      IFCUST = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   UPDATE    MMVRPDHD0
+      *
+     C                   READ      MMVRPDHPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     MMVRPDHPD
+      *
+     C     Sr25E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Sr26 - Update MMVRPDHPD                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Sr26          BEGSR
+      *
+     C                   OPEN      ILMATCPD
+     C     1             SETLL     ILMATCPD
+     C                   READ      ILMATCPD
+      *
+     C                   DOU       %EOF
+      *
+     C                   IF        MCCNUM = *blanks
+     C                   IF        MCCNUX <> 0
+     C                   EVAL      CustomerNo = MCCNUX
+     C                   ELSE
+     C                   EVAL      MCCNUM = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   UPDATE    ILMATCD0
+      *
+     C                   READ      ILMATCPD
+      *
+     C                   ENDDO
+      *
+     C                   CLOSE     ILMATCPD
+      *
+     C     Sr26E         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CGCUSTSr - Update CGCUST field                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C     CGCUSTSr      BEGSR
+      *
+     C                   IF        CGCUST = *blanks
+     C                   IF        CGCUSX <> 0
+     C                   EVAL      CustomerNo = CGCUSX
+     C                   ELSE
+     C                   EVAL      CGCUST = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     CGCUSTSrE     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CGCUSTSr - Update BDID field                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C     BDIDSr        BEGSR
+      *
+     C                   IF        BDID = *blanks
+     C                   IF        BDIDX <> 0
+     C                   EVAL      CustomerNo = BDIDX
+     C                   ELSE
+     C                   EVAL      BDID = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     BDIDSrE       ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CHNACHSr - Update CHNACH field                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C     CHNACHSr      BEGSR
+      *
+     C                   IF        CHNACH = *blanks
+     C                   IF        CHNACX <> 0
+     C                   EVAL      CustomerNo = CHNACX
+     C                   ELSE
+     C                   EVAL      CHNACH = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     CHNACHSrE     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  HLBDIDSr - Update HLBDID field                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C     HLBDIDSr      BEGSR
+      *
+     C                   IF        HLBDID = *blanks
+     C                   IF        HLBDIX <> 0
+     C                   EVAL      CustomerNo = HLBDIX
+     C                   ELSE
+     C                   EVAL      HLBDID = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     HLBDIDSrE     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  IHBDIDSr - Update IHBDID field                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C     IHBDIDSr      BEGSR
+      *
+     C                   IF        IHBDID = *blanks
+     C                   IF        IHBDIX <> 0
+     C                   EVAL      CustomerNo = IHBDIX
+     C                   ELSE
+     C                   EVAL      IHBDID = *blanks
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     IHBDIDSrE     ENDSR
+      /EJECT
+      *
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *           Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        Recursive = 'N'
+     C                   EVAL      Recursive = 'Y'
+     C                   SETON                                        U7U8
+     C                   SETON                                        LR
+     C                   RETURN
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *

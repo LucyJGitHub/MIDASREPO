@@ -1,0 +1,1161 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Mandatory flds for complete deals maint.')
+     F****************************************************************
+     F*                                                              *
+     F*  Midas  MM DEALER MODULE
+     F*                                                              *
+     F*     MM0003    - MANDATORY FIELDS FOR COMPLETE DEALS          *
+     F*                  MAINTENANCE                                 *
+     F*                                                              *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 130857             Date 19May98               *
+      *                 S01319             Date 27Sep91               *
+     F*                    E18138             DATE   24/04/89        *
+     F*                    E15947             DATE   23/11/88        *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*     130857 - No msg when action code NOT allowed .           *
+     F*              Applied fix 118506 .                            *
+     F*     S01319 - Remove redundant processing                     *
+     F*             Bring up to R10 standards
+     F*     E18138 - Program recompiled due to error on first        *
+     F*              recompilation.                                  *
+     F*                                                              *
+     F*     E15947 - Program recompiled due to change in MMCDAFLL    *
+     F*     format based on MMCDAFPP which had wrong field length    *
+     F*     for HHBRCA (Branch code amendable indicator).            *
+     F*                                                              *
+     F****************************************************************
+     F*
+     F**  Indicator Function Summary
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     F*
+     F*       KC         Exit program.
+     F*
+     F*       10         Controls SFLEND on Display File.
+     F*
+     F*       20         Error on field DDACTN.
+     F*
+     F********21*********Error*on*field*DDBRSM.***************************S01319
+     F*       22         Error on field DDCNMM.
+     F*       23         Error on field DDBKCM.
+     F*       24         Error on field DDDSTM.
+     F********25*********Error*on*field*DDOITM.***************************S01319
+     F********26*********Error*on*field*DDOIMD.***************************S01319
+     F********27*********Error*on*field*DDCITM.***************************S01319
+     F********28*********Error*on*field*DDCIMD.***************************S01319
+     F*
+     F*       29         Error has occurred in screen validation.
+     F*
+     F*       60         Failure on read of display file.
+     F*       61         File LF/MMMCOULL is locked.
+     F*
+     F*       72         Fail on chain to file. DBERROR.
+     F********80*********Fail*on*chain*to*file*FDICDRLL.******************S01319
+     F*
+     F*          U7    Set on with U8 if a database error occurs.
+     F*          U8    File out of balance if on on its own.
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*FDICDRLLIF**E**********K********DISK*********KINFSR**PSSR**********S01319
+     F************TABTB11F**************************KIGNORE***************S01319
+     F************TABTB20F**************************KIGNORE***************S01319
+     FMMMCOULLUF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FMMCDAFLLIF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     F*MMSSTSLLIF**E*******************DISK*********KINFSR**PSSR**********S01319
+     F**********************************************KCOMIT****************S01319
+     FMMMCOMLLIF  E                    DISK         KINFSR *PSSR
+     F            MMMCOMP0                          KRENAMEMMMCOML1
+     FMM0003DDCF  E                    WORKSTN      KINFSR *PSSR
+     E/EJECT
+     E                    CPY@    1   1 80
+     E/EJECT
+     IPSDS       SDS
+     I*
+     I**  Program status data structure.
+     I**  Field containing workstaion  ID.
+     I                                      244 253 @JOB
+     I**  Field containing user ID.
+     I                                      254 263 @USER
+     I*
+     I           UDS
+     I**  Local data area for data base errors.
+     I**  Field containing name of database file in error.
+     I                                      134 141 DBFILE
+     I**  Field containing key value causing database error.
+     I                                      142 170 DBKEY
+     I**  Field containing name of program causing database error.
+     I                                      171 180 DBPGM
+     I**  Field containing number of database error.
+     I                                      181 183 DBASE
+     I*
+     IDNATN       DS                              5
+     I**  Data structure to update last transaction number.
+     I                                        1   50FNATN
+     I*
+     ICMTTXT      DS                             58
+     I*
+     I**  COMIT TEXT
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCDX
+     I                                       26  35 USRIDX
+     I***************************************51**51*@BRSMX****************S01319
+     I                                       52  52 @CNMMX
+     I                                       53  53 @BKCMX
+     I                                       54  54 @DSTMX
+     I***************************************55**55*@OITMX****************S01319
+     I***************************************56**56*@OIMDX****************S01319
+     I***************************************57**57*@CITMX****************S01319
+     I***************************************58**58*@CIMDX****************S01319
+     I*
+     I@UPDT       DS                              7
+     I*
+     I** Data structure to hold the time of update from MIDAS run date.
+     I                                        1   20ICDLUP
+     I                                        3   5 ICMLUP
+     I                                        6   70ICYLUP
+     ISDBANK    E DSSDBANKPD                                              S01319
+      ** BANK DETAILS ACCESSED VIA ACCESS PROGRAM                         S01319
+      *                                                                   S01319
+     ISDDEAL    E DSSDDEALPD                                              S01319
+      ** DEALING DETAILS ACCESSED VIA ACCESS PROGRAM                      S01319
+     I*                                                                   S01319
+     IDSFDY     E DSDSFDY                                                 S01319
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01319
+     I*                                                                   S01319
+     IDSSDY     E DSDSSDY                                                 S01319
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01319
+      *                                                                   S01319
+     IRUNDAT      DS                                                      S01319
+     I** DATA STRUCTURE FOR MULTIBRANCH INDICATOR USING RUNDAT.           S01319
+     I                                       13  13 @MBIN                 S01319
+     I*                                                                   S01319
+     IZMUSER      DS                             17                       S01319
+     I                                       11  13 DBRN                  S01319
+      /EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Initial processing.
+     C                     EXSR #A
+     C*
+     C**  Main processing
+     C                     EXSR #B
+     C*
+     C**  Termination processing
+     C                     EXSR #C
+     C*
+     C           ENDPGM    TAG                             **ENDPGM**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Index to subroutines - Order of listing due to frequency of  *
+     C*                         usage.                                *
+     C*                                                               *
+     C*   1. #B     - Main processing; handles screen processing.     *
+     C*   2. #ZA    - Resets screen error indicators and screen MSGQ. *
+     C*   3. #ZB    - Retrieves and displays a record.                *
+     C*   4. #ZBA   - Moves file fields into pgm work & screen fields.*
+     C*   5. #BA    - Enter processing for action code A.             *
+     C*   6. #BAA   - Validates input to screen fields for A mode.    *
+     C*   7. #BAB   - Updates maintained file.                        *
+     C*   8. ZTNLU1 - Locks and updates the transaction no. data area.*
+     C*   9. #A     - Initial processing.                             *
+     C*  10. #C     - Termination processing.                         *
+     C***11.*ZA0150*-*Accesses*ICD*file.**********************************S01319
+     C*  12. *PSSR  - Error handling sub- routine.                    *
+     C*                                                               *
+     C*      ZA0240 - External SR; sends error message to screen.     *
+     C*      ZA0250 - External SR; clears screen error messages.      *
+     C*                                                               *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #B     - Main Processing; handles screen pro-    *
+     C*                       cessing.                                *
+     C*                                                               *
+     C*  FIELDS USED:         @MSGID - field holding error message ID *
+     C*                                (10 byte alpha)                *
+     C*                                                               *
+     C*  CALLED BY : MAIN PROGRAM                                     *
+     C*  CALLS     : #ZA #ZB #BA ZA0240                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C**  Continue processing until program exit is required.
+     C           *INKC     DOWEQ'0'                        B1
+     C*
+     C**  Process screen.
+     C*
+     C**  Retrieve time and place in screen field.
+     C                     TIME           DDTIME           *1
+     C*
+     C**  Display screen.
+     C                     WRITEMM0003S0                   *1
+     C                     WRITEMM0003D0                   *1
+     C*
+     C**  Read screen.
+     C                     READ MM0003S0                 60*1
+     C*
+     C**  Reset error indicators and clear screen message queue.
+     C                     EXSR #ZA                        *1
+     C*
+     C**  Process screen input - depending upon input type.
+     C*
+     C**  If F3 is input exit main processing immediately.
+     C           *INKC     CABEQ'1'       #B9              *1
+     C*
+     C**  Process 'ENTER' input.
+     C*
+     C**  If action code is not A, or E it is invalid.
+     C           DDACTN    IFNE 'A'                        B*2
+     C           DDACTN    ANDNE'E'                        X*2
+     C*
+     C**  Set up error output to screen.
+     C                     MOVE '1'       *IN20            **2
+     C                     MOVE '1'       *IN29            **2
+     C                     MOVEL'MMM1001' @MSGID 10        **2
+     C                     CALL 'ZA0240'                   **2
+     C                     PARM           @MSGID           **2
+     C*
+     C                     ELSE                            X*2            S01319
+      *                                                                   S01319
+      ** If multibranching, -                                             S01319
+     C           @MBIN     IFEQ 'Y'                                       S01319
+      **                                                                  S01319
+      ** - check the action and default branch security                   S01319
+      **                                                                  S01319
+     C                     CALL 'ZVACTBU'                                 S01319
+     C                     PARM           DDACTN                          S01319
+     C                     PARM           DBRN                            S01319
+     C                     PARM           @ERR                            S01319
+      **                                                                  S01319
+     C           @ERR      IFNE 0                                         S01319
+      ** Set code and message if ZVACTBU ended in error.                  S01319
+     C                     MOVE '1'       *IN20                           S01319
+     C                     MOVE '1'       *IN29                           S01319
+     C                     MOVEL'FXM0290' @MSGID                          S01319
+     C                     CALL 'ZA0240'                                  S01319
+     C                     PARM           @MSGID                          S01319
+     C***********          GOTO #B9                                 S01319130857
+     C                     END                                            S01319
+      **                                                                  S01319
+     C                     ELSE                                           S01319
+      **                                                                  S01319
+     C                     CALL 'ZVACTU'                                  S01319
+     C                     PARM           DDACTN                          S01319
+     C                     PARM           @ERR    10                      S01319
+      **                                                                  S01319
+     C           @ERR      IFNE 0                                         S01319
+     C                     MOVE '1'       *IN20                           S01319
+     C                     MOVE '1'       *IN29                           S01319
+     C                     MOVEL'FXM0292' @MSGID                          S01319
+     C                     CALL 'ZA0240'                                  S01319
+     C                     PARM           @MSGID                          S01319
+     C***********          GOTO #B9                                 S01319130857
+     C                     END                                            S01319
+     C                     END                                            S01319
+     C                     END                             E*2
+     C*
+     C**  Further processing depends on the action code.
+     C*
+     C**  - If the action code is A, process SR #BA .
+     C           DDACTN    CASEQ'A'       #BA              *1
+     C*
+     C**  - If the action code is E, process SR #ZB .
+     C           DDACTN    CASEQ'E'       #ZB              *1
+     C*
+     C                     END                             *1
+     C*
+     C                     END                             E1
+     C*
+     C           #B9       ENDSR                           **#B9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #ZA    - Resets error indicators and clears      *
+     C*                       screen message queue.                   *
+     C*  FIELDS USED:                                                 *
+     C*                                                               *
+     C*  CALLED BY : #B #BAB #A                                       *
+     C*  CALLS     : ZA0250                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C**  Reset all field error indicators.
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+     C                     MOVE '0'       *IN28
+     C*
+     C**  Reset validation error indicator.
+     C                     MOVE '0'       *IN29
+     C*
+     C**  Clear screen message queue.
+     C                     CALL 'ZA0250'
+     C*
+     C           #ZA9      ENDSR                           **#ZA9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #ZB    - Retrieves and displays record.          *
+     C*                                                               *
+     C*  FIELDS USED:                                                 *
+     C*                                                               *
+     C*  CALLED BY : #B #BAB #A                                       *
+     C*  CALLS     : #ZBA                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ZB       BEGSR
+     C*
+     C**  Chain to the input version of the file.
+     C**  - *IN72 set on if the record is not found.
+     C           1         CHAINMMMCOMLL             72
+     C*
+     C**  If *IN72 is not on, and ICDLTF is not '*', a valid record
+     C**  exists on file - otherwise process a database error.
+     C           *IN72     IFEQ '1'                        B1
+     C           ICDLTF    OREQ '*'                        X1
+     C*
+     C**  Set up error output for screen.
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'MMMCOMLL'DBFILE           * DBERROR 001 *
+     C                     MOVEL'001'     DBASE            ***************
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *INKC            *1
+     C*
+     C**  By-pass further record retrieval processing.
+     C                     GOTO #ZB9                       *1
+     C*
+     C                     END                             E1
+     C*
+     C**  A valid record has been read, move fields into pgm fields.
+     C                     EXSR #ZBA
+     C*
+     C**  Set up action code to be E.
+     C                     MOVE 'E'       DDACTN
+     C*
+     C           #ZB9      ENDSR                           **#ZB9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #ZBA   - Moves file fields into program work     *
+     C*                       fields and screen fields.               *
+     C*                                                               *
+     C***FIELDS*USED:*********@BRSM**-*program*work*field*holding*********S01319
+     C*********************************Branch*Mandatory*indicator*********S01319
+     C*                       @CNMM  - program work field holding     *
+     C*                                Customer Mandatory indicator.  *
+     C*                       @BKCM  - program work field holding     *
+     C*                                Broker Mandatory indicator.    *
+     C*                       @DSTM  - program work field holding     *
+     C*                                Deal Sub-type Mandatory ind.   *
+     C************************@OITM**-*program*work*field*holding*********S01319
+     C*********************************Our*Instructions*Mandatory*for*****S01319
+     C*********************************Deal*indicator.********************S01319
+     C************************@OIMD**-*program*work*field*holding*********S01319
+     C*********************************Our*Instructions*Mandatory*for*****S01319
+     C*********************************Deam*indicator.********************S01319
+     C************************@CITM**-*program*work*field*holding*********S01319
+     C*********************************Customer's*Instructions************S01319
+     C*********************************Mandatory*for*Deal*indicator.******S01319
+     C************************@CIMD**-*program*work*field*holding*********S01319
+     C*********************************Customer's*Instructions************S01319
+     C*********************************Mandatory*for*Deam*indicator.******S01319
+     C*                       @DLUP  - program work field holding     *
+     C*                                day of last update.            *
+     C*                       @MLUP  - program work field holding     *
+     C*                                month of last update.          *
+     C*                       @YLUP  - program work field holding     *
+     C*                                year of last update.           *
+     C*                       @TLUP  - program work field holding     *
+     C*                                time of last update.           *
+     C*                                                               *
+     C*  CALLED BY :  #ZB                                             *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ZBA      BEGSR
+     C*
+     C**  Moves fields from file into program work fields and screen
+     C**  fields.
+     C*********************MOVE*ICBRSM****@BRSM***************************S01319
+     C                     MOVE ICCNMM    @CNMM
+     C                     MOVE ICBKCM    @BKCM
+     C                     MOVE ICDSTM    @DSTM
+     C*********************MOVE*ICOITM****@OITM***************************S01319
+     C*********************MOVE*ICOIMD****@OIMD***************************S01319
+     C*********************MOVE*ICCITM****@CITM***************************S01319
+     C*********************MOVE*ICCIMD****@CIMD***************************S01319
+     C                     Z-ADDICDLUP    @DLUP
+     C                     MOVE ICMLUP    @MLUP
+     C                     Z-ADDICYLUP    @YLUP
+     C                     Z-ADDICTLUP    @TLUP
+     C*
+     C*********************MOVE*ICBRSM****DDBRSM**************************S01319
+     C                     MOVE ICCNMM    DDCNMM
+     C                     MOVE ICBKCM    DDBKCM
+     C                     MOVE ICDSTM    DDDSTM
+     C*********************MOVE*ICOITM****DDOITM**************************S01319
+     C*********************MOVE*ICOIMD****DDOIMD**************************S01319
+     C*********************MOVE*ICCITM****DDCITM**************************S01319
+     C*********************MOVE*ICCIMD****DDCIMD**************************S01319
+     C*
+     C           #ZBA9     ENDSR                           **#ZBA9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BA    - ENTER Processing for action code A.     *
+     C*                                                               *
+     C*  FIELDS USED:                                                 *
+     C*                                                               *
+     C*  CALLED BY : #B                                               *
+     C*  CALLS     : #BAA #BAB                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C**  Validate amendments.
+     C                     EXSR #BAA
+     C*
+     C**  If the input is invalid, or a data base error has occurred in
+     C**  the validation, cease ENTER processing.
+     C           *IN29     CABEQ'1'       #BA9
+     C           *INU7     CABEQ'1'       #BA9
+     C*
+     C**  The input is valid, update file.
+     C                     EXSR #BAB
+     C*
+     C           #BA9      ENDSR                           **#BA9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BAA   - Validates input to screen fields for    *
+     C*                       amend mode.                             *
+     C*                                                               *
+     C*  FIELDS USED:         @MSGID - field holding error message ID *
+     C*                                (10 byte alpha)                *
+     C*                                                               *
+     C*  CALLED BY : #BA                                              *
+     C*  CALLS     : ZA0240                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BAA      BEGSR
+     C*
+     C**  Access the Complete Deal Amendable fields file, MMCDAFLL.
+     C           1         CHAINMMCDAFLL             72
+     C*
+     C**  If *IN72 is not on, and HHDLTF is not '*', a valid record
+     C**  exists on file - otherwise process a database error.
+     C           *IN72     IFEQ '1'                        B1
+     C           HHDLTF    OREQ '*'                        X1
+     C*
+     C**  Set up error output for screen.
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'MMCDAFLL'DBFILE           * DBERROR 002 *
+     C                     MOVEL'002'     DBASE            ***************
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *INKC            *1
+     C*
+     C**  By-pass further update processing.
+     C                     GOTO #BAA9                      *1
+     C*
+     C                     END                             E1
+     C*
+     C****Access*the*System*Status*Indicators*file,*MMSSTSLL.*************S01319
+     C***********1*********CHAINMMSSTSLL*************72*******************S01319
+     C********************************************************************S01319
+     C****If**IN72*is*not*on,*and*H1DLTF*is*not*'*',*a*valid*record*******S01319
+     C****exists*on*file*-*otherwise*process*a*database*error.************S01319
+     C************IN72*****IFEQ*'1'************************B1*************S01319
+     C***********H1DLTF****OREQ*'*'************************X1*************S01319
+     C********************************************************************S01319
+     C****Set*up*error*output*for*screen.*********************************S01319
+     C*********************MOVEL*BLANKS***DBKEY***************************S01319
+     C*********************MOVEL'MMSSTSLL'DBFILE*************DBERROR*003**S01319
+     C*********************MOVEL'003'*****DBASE***************************S01319
+     C*********************MOVE*'1'********INU7*************1*************S01319
+     C*********************MOVE*'1'********INU8*************1*************S01319
+     C*********************MOVE*'1'********INKC*************1*************S01319
+     C********************************************************************S01319
+     C****By-pass*further*update*processing.******************************S01319
+     C*********************GOTO*#BAA9***********************1*************S01319
+     C********************************************************************S01319
+     C*********************END*****************************E1*************S01319
+     C**********           CALL 'AODEALR0'                                             S01319 CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7                       S01319
+     C                     PARM '*FIRST ' @OPTN   7                       S01319
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                        S01319 CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*
+     C****Branch*Mandatory*indicator.*************************************S01319
+     C********************************************************************S01319
+     C****The*field*entered*must*be*'Y'*or*'N'.***************************S01319
+     C***********DDBRSM****IFNE*'Y'************************B1*************S01319
+     C***********DDBRSM****ANDNE'N'************************X1*************S01319
+     C********************************************************************S01319
+     C****Set*up*error*output*to*screen.**********************************S01319
+     C*********************MOVE*'1'********IN29*************1*************S01319
+     C*********************MOVE*'1'********IN21*************1*************S01319
+     C*********************MOVEL'MMM0001'*@MSGID************1*************S01319
+     C*********************CALL*'ZA0240'********************1*************S01319
+     C*********************PARM***********@MSGID************1*************S01319
+     C********************************************************************S01319
+     C****If*the*field*is*'Y'*or*'N'.*************************************S01319
+     C*********************ELSE****************************X1*************S01319
+     C********************************************************************S01319
+     C****If*the*Branch*Code*Amendable*field*on*MMCDAFLL*(HHBRCA)*is*'N',*S01319
+     C****or*The*Back*Office*Authorisation*Required*indicator*on*MMSSTSLL*S01319
+     C****(H1BOAR)*is*'N'*then*the*field*must*be*'Y'.*********************S01319
+     C***********HHBRCA****IFEQ*'N'************************B*2************S01319
+     C***********DDBRSM****ANDNE'Y'************************X*2************S01319
+     C********************************************************************S01319
+     C****Set*up*error*output*to*screen.**********************************S01319
+     C*********************MOVE*'1'********IN29**************2************S01319
+     C*********************MOVE*'1'********IN21**************2************S01319
+     C*********************MOVEL'MMM0006'*@MSGID*************2************S01319
+     C*********************CALL*'ZA0240'*********************2************S01319
+     C*********************PARM***********@MSGID*************2************S01319
+     C********************************************************************S01319
+     C*********************END*****************************E*2************S01319
+     C********************************************************************S01319
+     C***********H1BOAR****IFEQ*'N'************************B*2************S01319
+     C***********DDBRSM****ANDNE'Y'************************X*2************S01319
+     C********************************************************************S01319
+     C****Set*up*error*output*to*screen.**********************************S01319
+     C*********************MOVE*'1'********IN29**************2************S01319
+     C*********************MOVE*'1'********IN21**************2************S01319
+     C*********************MOVEL'MMM0018'*@MSGID*************2************S01319
+     C*********************CALL*'ZA0240'*********************2************S01319
+     C*********************PARM***********@MSGID*************2************S01319
+     C********************************************************************S01319
+     C*********************END*****************************E*2************S01319
+     C********************************************************************S01319
+     C*********************END*****************************E1*************S01319
+     C*
+     C**  Customer Mandatory indicator.
+     C*
+     C**  The field entered must be 'Y' or 'N'.
+     C           DDCNMM    IFNE 'Y'                        B1
+     C           DDCNMM    ANDNE'N'                        X1
+     C*
+     C**  Set up error output to screen.
+     C                     MOVE '1'       *IN29            *1
+     C                     MOVE '1'       *IN22            *1
+     C                     MOVEL'MMM0001' @MSGID           *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+     C*
+     C**  If the field is 'Y' or 'N'.
+     C                     ELSE                            X1
+     C*
+     C**  If the Customer Name Amendable field on MMCDAFLL (HHCNMA) is 'N',
+     C****or*the*Back*Office*Authorisation*Required*indicator*on*MMSSTSLL*S01319
+     C****(H1BOAR)*is*'N'*then*the*field*must*be*'Y'.*********************S01319
+     C**  or the Back Office Authorisation Required indicator on SDDEALPD S01319
+     C**  (BNMMAU) is 'N' then the field must be 'Y'.                     S01319
+     C           HHCNMA    IFEQ 'N'                        B*2
+     C           DDCNMM    ANDNE'Y'                        X*2
+     C*
+     C**  Set up error output to screen.
+     C                     MOVE '1'       *IN29            **2
+     C                     MOVE '1'       *IN22            **2
+     C                     MOVEL'MMM0006' @MSGID           **2
+     C                     CALL 'ZA0240'                   **2
+     C                     PARM           @MSGID           **2
+     C*
+     C                     END                             E*2
+     C*
+     C***********H1BOAR****IFEQ*'N'************************B*2************S01319
+     C           BNMMAU    IFEQ 'N'                        B*2            S01319
+     C           DDCNMM    ANDNE'Y'                        X*2
+     C*
+     C**  Set up error output to screen.
+     C                     MOVE '1'       *IN29            **2
+     C                     MOVE '1'       *IN22            **2
+     C                     MOVEL'MMM0018' @MSGID           **2
+     C                     CALL 'ZA0240'                   **2
+     C                     PARM           @MSGID           **2
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C**  Broker Mandatory indicator.
+     C*
+     C**  The field entered must be 'Y' or 'N'.
+     C           DDBKCM    IFNE 'Y'                        B1
+     C           DDBKCM    ANDNE'N'                        X1
+     C*
+     C**  Set up error output to screen.
+     C                     MOVE '1'       *IN29            *1
+     C                     MOVE '1'       *IN23            *1
+     C                     MOVEL'MMM0001' @MSGID           *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+     C*
+     C**  If the field is 'Y' or 'N'.
+     C                     ELSE                            X1
+     C*
+     C**  If the Broker Code Amendable field on MMCDAFLL (HHBKRA) is 'N',
+     C****or*The*Back*Office*Authorisation*Required*indicator*on*MMSSTSLL*S01319
+     C****(H1BOAR)*is*'N'*then*the*field*must*be*'Y'.*********************S01319
+     C**  or The Back Office Authorisation Required indicator on SDDEALPD S01319
+     C**  (BNMMAU) is 'N' then the field must be 'Y'.                     S01319
+     C           HHBKRA    IFEQ 'N'                        B*2
+     C           DDBKCM    ANDNE'Y'                        X*2
+     C*
+     C**  Set up error output to screen.
+     C                     MOVE '1'       *IN29            **2
+     C                     MOVE '1'       *IN23            **2
+     C                     MOVEL'MMM0006' @MSGID           **2
+     C                     CALL 'ZA0240'                   **2
+     C                     PARM           @MSGID           **2
+     C*
+     C                     END                             E*2
+     C*
+     C***********H1BOAR****IFEQ*'N'************************B*2************S01319
+     C           BNMMAU    IFEQ 'N'                        B*2            S01319
+     C           DDBKCM    ANDNE'Y'                        X*2
+     C*
+     C**  Set up error output to screen.
+     C                     MOVE '1'       *IN29            **2
+     C                     MOVE '1'       *IN23            **2
+     C                     MOVEL'MMM0018' @MSGID           **2
+     C                     CALL 'ZA0240'                   **2
+     C                     PARM           @MSGID           **2
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C**  Deal Sub-type Mandatory indicator.
+     C*
+     C**  The field entered must be 'Y' or 'N'.
+     C           DDDSTM    IFNE 'Y'                        B1
+     C           DDDSTM    ANDNE'N'                        X1
+     C*
+     C**  Set up error output to screen.
+     C                     MOVE '1'       *IN29            *1
+     C                     MOVE '1'       *IN24            *1
+     C                     MOVEL'MMM0001' @MSGID           *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+     C*
+     C**  If the field is 'Y' or 'N'.
+     C                     ELSE                            X1
+     C*
+     C**  If the Branch Code Amendable field on MMCDAFLL (HHDLSA) is 'N',
+     C****or*The*Back*Office*Authorisation*Required*indicator*on*MMSSTSLL*S01319
+     C****(H1BOAR)*is*'N'*then*the*field*must*be*'Y'.*********************S01319
+     C**  or The Back Office Authorisation Required indicator on SDDEALPD S01319
+     C**  (BNMMAU) is 'N' then the field must be 'Y'.                     S01319
+     C           HHDLSA    IFEQ 'N'                        B*2
+     C           DDDSTM    ANDNE'Y'                        X*2
+     C*
+     C**  Set up error output to screen.
+     C                     MOVE '1'       *IN29            **2
+     C                     MOVE '1'       *IN24            **2
+     C                     MOVEL'MMM0006' @MSGID           **2
+     C                     CALL 'ZA0240'                   **2
+     C                     PARM           @MSGID           **2
+     C*
+     C                     END                             E*2
+     C*
+     C***********H1BOAR****IFEQ*'N'************************B*2************S01319
+     C           BNMMAU    IFEQ 'N'                        B*2            S01319
+     C           DDDSTM    ANDNE'Y'                        X*2
+     C*
+     C**  Set up error output to screen.
+     C                     MOVE '1'       *IN29            **2
+     C                     MOVE '1'       *IN24            **2
+     C                     MOVEL'MMM0018' @MSGID           **2
+     C                     CALL 'ZA0240'                   **2
+     C                     PARM           @MSGID           **2
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C****Our*Deal*Instructions*Mandatory*indicator.**********************S01319
+     C********************************************************************S01319
+     C****The*field*entered*must*be*'Y'*or*'N'.***************************S01319
+     C***********DDOITM****IFNE*'Y'************************B1*************S01319
+     C***********DDOITM****ANDNE'N'************************X1*************S01319
+     C********************************************************************S01319
+     C****Set*up*error*output*to*screen.**********************************S01319
+     C*********************MOVE*'1'********IN29*************1*************S01319
+     C*********************MOVE*'1'********IN25*************1*************S01319
+     C*********************MOVEL'MMM0001'*@MSGID************1*************S01319
+     C*********************CALL*'ZA0240'********************1*************S01319
+     C*********************PARM***********@MSGID************1*************S01319
+     C********************************************************************S01319
+     C*********************END*****************************E1*************S01319
+     C********************************************************************S01319
+     C****Our*Deam*Instructions*Mandatory*indicator.**********************S01319
+     C********************************************************************S01319
+     C****The*field*entered*must*be*'Y'*or*'N'.***************************S01319
+     C***********DDOIMD****IFNE*'Y'************************B1*************S01319
+     C***********DDOIMD****ANDNE'N'************************X1*************S01319
+     C********************************************************************S01319
+     C****Set*up*error*output*to*screen.**********************************S01319
+     C*********************MOVE*'1'********IN29*************1*************S01319
+     C*********************MOVE*'1'********IN26*************1*************S01319
+     C*********************MOVEL'MMM0001'*@MSGID************1*************S01319
+     C*********************CALL*'ZA0240'********************1*************S01319
+     C*********************PARM***********@MSGID************1*************S01319
+     C********************************************************************S01319
+     C*********************END*****************************E1*************S01319
+     C********************************************************************S01319
+     C****Customer's*Deal*Instructions*Mandatory*indicator.***************S01319
+     C********************************************************************S01319
+     C****The*field*entered*must*be*'Y'*or*'N'.***************************S01319
+     C***********DDCITM****IFNE*'Y'************************B1*************S01319
+     C***********DDCITM****ANDNE'N'************************X1*************S01319
+     C********************************************************************S01319
+     C****Set*up*error*output*to*screen.**********************************S01319
+     C*********************MOVE*'1'********IN29*************1*************S01319
+     C*********************MOVE*'1'********IN27*************1*************S01319
+     C*********************MOVEL'MMM0001'*@MSGID************1*************S01319
+     C*********************CALL*'ZA0240'********************1*************S01319
+     C*********************PARM***********@MSGID************1*************S01319
+     C********************************************************************S01319
+     C*********************END*****************************E1*************S01319
+     C********************************************************************S01319
+     C****Customer's*Deam*Instructions*Mandatory*indicator.***************S01319
+     C********************************************************************S01319
+     C****The*field*entered*must*be*'Y'*or*'N'.***************************S01319
+     C***********DDCIMD****IFNE*'Y'************************B1*************S01319
+     C***********DDCIMD****ANDNE'N'************************X1*************S01319
+     C********************************************************************S01319
+     C****Set*up*error*output*to*screen.**********************************S01319
+     C*********************MOVE*'1'********IN29*************1*************S01319
+     C*********************MOVE*'1'********IN28*************1*************S01319
+     C*********************MOVEL'MMM0001'*@MSGID************1*************S01319
+     C*********************CALL*'ZA0240'********************1*************S01319
+     C*********************PARM***********@MSGID************1*************S01319
+     C********************************************************************S01319
+     C*********************END*****************************E1*************S01319
+     C*
+     C           #BAA9     ENDSR                           **#BAA9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BAB   - Updates maintained file.                *
+     C*                                                               *
+     C*  FIELDS USED:         @MSGID - field holding error message ID *
+     C*                                (10 byte alpha)                *
+     C*                       @UPDT  - data structure to handle MIDAS *
+     C*                                run date.                      *
+     C*                       @USER  - user ID retrieved from PSDS    *
+     C*                                (3 byte alpha)                 *
+     C*                       @DLUP  - program work field holding     *
+     C*                                day of last update.            *
+     C*                       @MLUP  - program work field holding     *
+     C*                                month of last update.          *
+     C*                       @YLUP  - program work field holding     *
+     C*                                year of last update.           *
+     C*                       @TLUP  - program work field holding     *
+     C*                                time of last update.           *
+     C*                                                               *
+     C*  CALLED BY : #BA                                              *
+     C*  CALLS     : #ZA #ZB ZA0240 ZTNLU1                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BAB      BEGSR
+     C*
+     C**  Chain to record to be updated to check for external update and
+     C**  to lock the record to prevent external update.
+     C**  - *IN72 set on if the record is not found.
+     C**  - *IN61 set on if the record is locked.
+     C           1         CHAINMMMCOULL             7261
+     C*
+     C**  If *IN72 is not on, and ICDLTF is not '*', a valid record
+     C**  exists on file - otherwise process a database error.
+     C           *IN72     IFEQ '1'                        B1
+     C           ICDLTF    OREQ '*'                        X1
+     C*
+     C**  Set up error output for screen.
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'MMMCOULL'DBFILE           * DBERROR 004 *
+     C                     MOVEL'004'     DBASE            ***************
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *INKC            *1
+     C*
+     C**  By-pass further update processing.
+     C                     GOTO #BAB9                      *1
+     C*
+     C                     END                             E1
+     C*
+     C**  If *IN61 is on then the record is locked.
+     C           *IN61     IFEQ '1'                        B1
+     C*
+     C**  Clear the screen error message queue.
+     C                     EXSR #ZA                        *1
+     C*
+     C**  Set up error output to screen.
+     C                     MOVEL'MMM1021' @MSGID           *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+     C*
+     C**  By-pass further update processing.
+     C                     GOTO #BAB8                      *1
+     C*
+     C                     END                             E1
+     C*
+     C**  If any of the date and time fields have changed since
+     C**  the file was initially read, then the record has been
+     C**  updated by another workstation.
+     C           @DLUP     IFNE ICDLUP                     B1
+     C           @MLUP     ORNE ICMLUP                     *1
+     C           @YLUP     ORNE ICYLUP                     *1
+     C           @TLUP     ORNE ICTLUP                     *1
+     C*
+     C**  Set up error output to screen.
+     C                     MOVEL'MMM1023' @MSGID           *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+     C*
+     C**  Release locked record.
+     C                     EXCPT@RLSFL                     *1
+     C*
+     C**  By-pass further update processing.
+     C                     GOTO #BAB8                      *1
+     C*
+     C                     END                             E1
+     C*
+     C**  Update validation is now complete - setup file fields.
+     C*
+     C**  Obtain Last Trans. Number and prepare the Commit Text, CMTTXT
+     C                     EXSR ZTNLU1
+     C*
+     C**  Retrieve the MIDAS date and set up the file fields.
+     C*********************MOVELRUNA******@UPDT***************************S01319
+     C                     MOVELBJMRDT    @UPDT                           S01319
+     C*
+     C**  Move the Midas day number into the file field.
+     C*********************Z-ADDRUND******ICLCD***************************S01319
+     C                     Z-ADDBJRDNB    ICLCD                           S01319
+     C*
+     C**  Set up the last change type field.
+     C                     MOVE DDACTN    ICCHTP
+     C*
+     C**  Set up the last user field.
+     C                     MOVEL@USER     ICLUID
+     C*
+     C**  Set up the last change time field.
+     C                     TIME           ICTLUP
+     C*
+     C**  Fill up the other fields.
+     C                     MOVE 'HQ'      ICRCID
+     C*********************MOVE*DDBRSM****ICBRSM**************************S01319
+     C                     MOVE DDCNMM    ICCNMM
+     C                     MOVE DDBKCM    ICBKCM
+     C                     MOVE DDDSTM    ICDSTM
+     C*********************MOVE*DDOITM****ICOITM**************************S01319
+     C*********************MOVE*DDOIMD****ICOIMD**************************S01319
+     C*********************MOVE*DDCITM****ICCITM**************************S01319
+     C*********************MOVE*DDCIMD****ICCIMD**************************S01319
+     C*
+     C**  Update the file.
+     C                     UPDATMMMCOMP0
+     C*
+     C**  Commit the file updates.
+     C           CMTTXT    COMIT
+     C*
+     C**  Reset error processing.
+     C                     EXSR #ZA
+     C*
+     C**  Send successful file maintenance message.
+     C                     MOVEL'MMM1022' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C*
+     C**  TAG #BAB8
+     C           #BAB8     TAG                             **#BAB8**
+     C*
+     C**  Read file to display amended record.
+     C                     EXSR #ZB
+     C*
+     C           #BAB9     ENDSR                           **#BAB9**
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZTNLU1 - To lock and update the transaction number data area  *
+     C*                                                               *
+     C* CALLED BY : #BAB                                              *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C***FIELDS*USED:*********@BRSMX*-*Comit*text*version*of*ICBRSM*******S01319
+     C*                       @CNMMX - Comit text version of ICCNMM   *
+     C*                       @BKCMX - Comit text version of ICBKCM   *
+     C*                       @DSTMX - Comit text version of ICDSTM   *
+     C************************@OITMX*-*Comit*text*version*of*ICOITM*******S01319
+     C************************@OIMDX*-*Comit*text*version*of*ICOIMD*******S01319
+     C************************@CITMX*-*Comit*text*version*of*ICCITM*******S01319
+     C************************@CIMDX*-*Comit*text*version*of*ICCIMD*******S01319
+     C*                       @USER  - Field holding user ID.         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR
+     C*                                                               *
+     C**  Set up comit text
+     C                     MOVE 'MM'      MDID
+     C                     MOVEL'MM0003'  PGMN
+     C                     MOVE DDWID     WSIDX
+     C                     TIME           MTIME
+     C                     MOVE DDACTN    ACTCDX
+     C                     MOVE @USER     USRIDX
+     C*********************MOVE*DDBRSM****@BRSMX**************************S01319
+     C                     MOVE DDCNMM    @CNMMX
+     C                     MOVE DDBKCM    @BKCMX
+     C                     MOVE DDDSTM    @DSTMX
+     C*********************MOVE*DDOITM****@OITMX**************************S01319
+     C*********************MOVE*DDOIMD****@OIMDX**************************S01319
+     C*********************MOVE*DDCITM****@CITMX**************************S01319
+     C*********************MOVE*DDCIMD****@CIMDX**************************S01319
+     C*
+     C**  Increment transaction number of last update.
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C*
+     C           ZTNLU9    ENDSR                           **ZTNLU9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE:  #A  - Initial processing; initialisation and    *
+     C*                     retrieval of ICD and user data.           *
+     C*                                                               *
+     C*  FIELDS USED:         @ACTN  - program work field holding     *
+     C*                                action code                    *
+     C*                       @DLUP  - program work field holding     *
+     C*                                day of last update.            *
+     C*                       @MLUP  - program work field holding     *
+     C*                                month of last update.          *
+     C*                       @YLUP  - program work field holding     *
+     C*                                year of last update.           *
+     C*                       @TLUP  - program work field holding     *
+     C*                                time of last update.           *
+     C************************@BRSM**-*program*work*field*holding*********S01319
+     C*********************************Branch*Mandatory*indicator*********S01319
+     C*                       @CNMM  - program work field holding     *
+     C*                                Customer Mandatory indicator.  *
+     C*                       @BKCM  - program work field holding     *
+     C*                                Broker Mandatory indicator.    *
+     C*                       @DSTM  - program work field holding     *
+     C*                                Deal Sub-type Mandatory ind.   *
+     C************************@OITM**-*program*work*field*holding*********S01319
+     C*********************************Our*Instructions*Mandatory*for*****S01319
+     C*********************************Deal*indicator.********************S01319
+     C************************@OIMD**-*program*work*field*holding*********S01319
+     C*********************************Our*Instructions*Mandatory*for*****S01319
+     C*********************************Deam*indicator.********************S01319
+     C************************@CITM**-*program*work*field*holding*********S01319
+     C*********************************Customer's*Instructions************S01319
+     C*********************************Mandatory*for*Deal*indicator.******S01319
+     C************************@CIMD**-*program*work*field*holding*********S01319
+     C*********************************Customer's*Instructions************S01319
+     C*********************************Mandatory*for*Deam*indicator.******S01319
+     C*                                                               *
+     C*  CALLED BY :  MAIN PROGRAM                                    *
+     C***CALLS*****:**#ZA*#ZB*ZA0150**************************************S01319
+     C*  CALLS     :  #ZA #ZB                                         *   S01319
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C**  Define program work fields with reference to file fields.
+     C           *LIKE     DEFN DDACTN    @ACTN
+     C************LIKE*****DEFN*ICBRSM****@BRSM***************************S01319
+     C           *LIKE     DEFN ICCNMM    @CNMM
+     C           *LIKE     DEFN ICBKCM    @BKCM
+     C           *LIKE     DEFN ICDSTM    @DSTM
+     C************LIKE*****DEFN*ICOITM****@OITM***************************S01319
+     C************LIKE*****DEFN*ICOIMD****@OIMD***************************S01319
+     C************LIKE*****DEFN*ICCITM****@CITM***************************S01319
+     C************LIKE*****DEFN*ICCIMD****@CIMD***************************S01319
+     C           *LIKE     DEFN ICDLUP    @DLUP
+     C           *LIKE     DEFN ICMLUP    @MLUP
+     C           *LIKE     DEFN ICYLUP    @YLUP
+     C           *LIKE     DEFN ICTLUP    @TLUP
+     C*
+     C**  Initialise screen msg queue.
+     C                     MOVEL'*'       DDPGMQ
+     C*
+     C**  Set on Message Subfile end indicator.
+     C                     MOVE '1'       *IN10
+     C*
+     C**  Move workstation ID to screen field.
+     C                     MOVEL@JOB      DDWID
+     C*
+     C**  Move program name into *LDA field.
+     C                     MOVEL'MM0003'  DBPGM
+     C*
+     C****Call*subroutine*to*access*ICD*file*for*MIDAS*run*date.**********S01319
+     C*********************EXSR*ZA0150************************************S01319
+     C********************************************************************S01319
+     C****Check*for*data*base*error.**************************************S01319
+     C************IN80*****IFEQ*'1'************************B1*************S01319
+     C********************************************************************S01319
+     C*********************MOVE*'1'********INU7*************1*************S01319
+     C*********************MOVE*'1'********INU8*************1*************S01319
+     C*********************MOVE*'1'********INKC*************1*************S01319
+     C********************************************************************S01319
+     C*********************GOTO*#A9*************************1*************S01319
+     C********************************************************************S01319
+     C*********************END*****************************E1*************S01319
+     C*   Call AOBANKR0 to access MIDAS run date.                         S01319
+     C                     CALL 'AOBANKR0'                                S01319
+     C                     PARM '*DBERR ' @RTCD                           S01319
+     C                     PARM '*FIRST ' @OPTN                           S01319
+     C           SDBANK    PARM SDBANK    DSFDY                           S01319
+     C*
+     C**  Set up Action Code text for screen.
+     C                     MOVEL'( '      DDLIST
+     C                     MOVE ',A, ,E)' DDLIST
+     C*
+     C**  Read file for initial display.
+     C                     EXSR #ZB
+     C*
+     C**  Initialise indicators and screen message queue.
+     C                     EXSR #ZA
+     C*
+     C** READ DATA AREA - RUNDAT                                          S01319
+     C           *NAMVAR   DEFN           RUNDAT                          S01319
+     C                     IN   RUNDAT                                    S01319
+     C**  GET ZMUSER to access default branch.                            S01319
+     C**                                                                  S01319
+     C           *NAMVAR   DEFN           ZMUSER                          S01319
+     C                     IN   ZMUSER                                    S01319
+     C                     UNLCKZMUSER                                    S01319
+     C**                                                                  S01319
+     C           #A9       ENDSR                           **#A9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #C     - Terminates program.                     *
+     C*                                                               *
+     C*  FIELDS USED:                                                 *
+     C*                                                               *
+     C*  CALLED BY : Main processing                                  *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C           #C9       ENDSR                           **#C9**
+     C/EJECT
+     C*****************************************************************
+     C********************************************************************S01319
+     C********SUBROUTINE*ZA0150*-*THIS*SUBROUTINE*CHAINS*TO*FILE*LF/******S01319
+     C********FDICDRLL*TO*GET*THE*INSTALLATION*CONTROL*DETAILS*RECORD*****S01319
+     C********1*(HELD*ON*PF/TABTB10)**************************************S01319
+     C********INDICATOR*80*IS*SET*ON*IF*THE*CHAIN*FAILS*OR*THE*RECORD*****S01319
+     C********IS*FLAGGED*FOR*DELETION.************************************S01319
+     C********IF*INDICATOR*80*IS*SET*ON*DETAILS*OF*THE*ATTEMPTED**********S01319
+     C********ACCESS*ARE*PLACED*IN*THE*LDA.*******************************S01319
+     C********************************************************************S01319
+     C********FIELDS*USED*:*SS0150*-*KEY*USED*TO*ACCESS*FDICDRLL**********S01319
+     C********************************************************************S01319
+     C********************************************************************S01319
+     C********************************************************************S01319
+     C***********ZA0150****BEGSR******************************************S01319
+     C********************************************************************S01319
+     C***SET*UP*KEY*TO*OBTAIN*FORMAT*TABTB10F*'01********10'**************S01319
+     C*********************MOVEL'01'******SS0150*12***********************S01319
+     C*********************MOVE*'10'******SS0150**************************S01319
+     C********************************************************************S01319
+     C***CHAIN*TO*FILE*FDICDRLL*******************************************S01319
+     C***********SS0150****CHAINFDICDRLL*************80*******************S01319
+     C***********RECI******IFNE*'D'************************B1*************S01319
+     C*********************MOVE*'1'********IN80*************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C********************************************************************S01319
+     C***DEAL*WITH*DATA*BASE*ERROR****************************************S01319
+     C************IN80*****IFEQ*'1'***************************************S01319
+     C*********************MOVEL'FDICDRLL'DBFILE**************************S01319
+     C*********************MOVEL'900'*****DBASE**************DBERROR*900**S01319
+     C*********************MOVELSS0150****DBKEY***************************S01319
+     C*********************END********************************************S01319
+     C********************************************************************S01319
+     C***********ZA0159****ENDSR******************************************S01319
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: *PSSR - Error handling subroutine.               *
+     C*                                                               *
+     C*  FIELDS USED:                                                 *
+     C*                                                               *
+     C*  CALLED BY : This routine is called if there are any program  *
+     C*              or file errors.                                  *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C           #PSSR9    ENDSR                            ***PSSR9**
+     C*
+      /EJECT
+     OMMMCOMP0E                @RLSFL
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

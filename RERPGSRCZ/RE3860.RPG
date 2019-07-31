@@ -1,0 +1,1775 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Retail account activity extract')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+     F*                                                               *
+     F*  RE3860  - RETAIL ACCOUNT ACTIVITY EXTRACT                    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD052046           Date 05Nov18               *     
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD041443           Date 19Sep16               *
+      *                 CSC054             Date 23Feb12               *
+      *                 AR822361           Date 01Sep11               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CLE064             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 260978A            Date 16Sep09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 241041             Date 13Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 238213             Date 17Feb06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CPK016             Date 03Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 167430             Date 16Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 138964             Date 15Jul98               *
+      *                 103413             Date 18Feb98               *
+     F*                 103710             DATE 22JAN98               *
+     F*                 116489             DATE 24SEP97               *
+     F*                 106429             DATE 24SEP97               *
+     F*                 100154             DATE 09APR97               *
+     F*                 111035             DATE 20FEB97               *
+     F*                 CCB003             DATE 09FEB97               *
+     F*                 101618             DATE 02APR96               *
+     F*                 084266             DATE 14MAR95               *
+     F*                 081266             DATE 13JAN95               *
+     F*                 052724             DATE 07MAR94               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD052046  - Activity from prev month is used instead of      *
+      *              current month. Amended changes of AR822361/CCB016*
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD041443 - CBC022001 failed due to invalid character in file *
+      *             text description (Recompile)                      *
+      *  CSC054 - Period End Adjustments                              *
+      *  AR822361 - REC3860 00001 failed (Child:AR822362)             *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  260978A- RE0861 (in REC8A) fails with FOOB every month.      *
+      *           Upgrade changes for CCB016(ERZ083) COB improvements *
+      *  CCB016 - Allow REC3860 to run during CoB of first day of     *
+      *           the month followed by a non-working day.            *
+      *  241041 - Report activity for accounts closed during the      *
+      *           month if system value RAccActShowClsdAcc ='Y'       *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  238213 - Future dated teller transactions are processed      *
+      *           twice.                                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK016 - Release 5 packaging.  Clash of field names.         *
+      *  167430 - Postings for clearing are still not included in the *
+      *           ledger balance array.                               *
+     F*  138964 - TRY TO DIVIDE BY ZERO DURING COB                    *
+     F*  103413 - 'ENDP1' PRODUCED WITHOUT OTHERS DETAILS             *
+     F*           RECOMPILED BECAUSE OF PRTF CHANGES                  *
+     F*  103710 - Add Retail number and Date account opened for       *
+     F*           reconciliation reference.                           *
+     F*  116489 - Additional checking for fix 106429, postings that   *
+     F*           have Value date greater than rundate should         *
+     F*           be considered in ledger balance array.              *
+     F*  106429 - Postings in clearing should be included in ledger   *
+     F*           balance array.                                      *
+     F*  100154 - No. of days overdrawn & no. of days below minimum   *
+     F*           balance should be calculated on ledger balance.     *
+     F*           Also correct calculation of average credit balance  *
+     F*           and days below minimum balance.                     *
+     F*  111035 - PRIN is only 'Y' and 'N' and is no more using bit   *
+     F*           setting.                                            *
+     F*  CCB003 - COB Performance Enhancements - Task Split           *
+     F*           Set up new indicator on REHPOSPP to condition       *
+     F*           logical view of REHPOSL1                            *
+     F*  101618 - Overflow indicator missing                          *
+     F*  084266 - Check if printer file open before writing to it.    *
+     F*  081266 - Array index error the first time this pgm run       *
+     F*           because ELAC and ECAC are not set up correctly on   *
+     F*           file.  This pgm runs only at EOM so have amended    *
+     F*           it to calculate history from end of previous month  *
+     F*           to end of current month.                            *
+     F*         - LDA should be defined for update                    *
+     F*         - Pgm should read in LDA before update                *
+     F*         - Pgm should dump if error occurs                     *
+     F*  052724 - Wrong loading of dec array                          *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*                                                               *
+     F*****************************************************************
+     FSSRACJL IF  E           K        DISK
+     FSSRACJL1IF  E           K        DISK                               241041
+     F**REPOSL  UF  E           K        DISK                             CCB003
+     FREPOSL1 UF  E           K        DISK                               CCB003
+     F                                              KINFDS POSDS
+     F                                              KINFSR POSSR
+     F*RSACMTL1IF**E***        K        DISK                       106429 167430
+     F**********  RSACMTPO                          KIGNORE        106429 167430
+     FRSACMTL4IF  E           K        DISK                               167430
+     FREACBMPPIF  E           K        DISK                                                   CCB016
+     FGLCORBL0IF  E           K        DISK                                                   CSC054
+     FACCNT   UF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     F                                              KINFDS ACCDS
+     F                                              KINFSR ACCSR
+     FRACTRF  O   E           K        DISK
+     F                                              KINFDS RAFDS
+     F                                              KINFSR RAFSR
+     FRACTRG  O   E           K        DISK
+     F                                              KINFDS RAGDS
+     F                                              KINFSR RAGSR
+     FRTZZ    O   E           K        DISK
+     F                                              KINFDS RAZDS
+     F                                              KINFSR RAZSR
+     FRE3860AUO   E                    PRINTER      KINFDS SPOOLU
+     FRE3860P1O   E                    PRINTER      KINFDS SPOOL      UC
+     F*****************************************************************
+     F**      Function of Indicators                                  *
+     F*                                                               *
+     F*  51 - Work indicator                                          *
+     F*  50 - End-of-file indicator                                   *
+     F*  88 - Show status on DB error report                          *
+     F*  89 - Complete reports for DB error(except SDBANKPD)          *
+     F*  99 - General error and chaining                              *
+     F*                                                               *
+     F*  U7 - Database error                                          *
+     F*  U8 - Database error                                          *
+     F*  LR - End of program                                          *
+     F*****************************************************************
+     F**      Index to Subroutines                                    *
+     F*                                                               *
+     F*   *PSSR  - Database error handling                            *
+     F*   DETPR  - Detail processing                                  *
+     F*   FIRST  - First cycle                                        *
+     F*   MAIN   - Main processing                                    *
+     F*   RACSR  - SRACT  file exception/error handling               *
+     F*   POSSR  - REHPOSL  file exception/error handling             *
+     F*   TOTAL  - End processing                                     *
+     F*****************************************************************
+     F/EJECT
+     E                    BKY        19  1               MR FIELD - STBAL
+     E                    AKY        19  1               MR FIELD - APOST
+     E                    TT         50  5 0             TRANS TYPES
+     E                    NTT        50  5 0             NO. OF TRNS TYPES
+     E                    TT1        25  5 0             TRANS TYPES
+     E                    NTT1       25  5 0             NO. OF TRNS TYPES
+     E                    TT2        25  5 0             TRANS TYPES
+     E                    NTT2       25  5 0             NO. OF TRNS TYPES
+     E                    OTT        25  5 0             TRANS TYPES
+     E                    ONTT       25  5 0             NO. OF TRNS TYPES
+     E                    DG        400 15 0             DLY MVMNTS -GROSS
+     E                    DN        400 15 0             DLY MVMNTS -NET
+     E                    ZHC        50  3               ZFREQS SR.ARRAY
+     E*****************   DEC     1   4  4 0                              52724
+     E                    DEC     4   4  4 0                              52724
+     E                    ERR     1   1 28
+     E                    CPY@    1   1 80
+     E************        ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY081266
+     E************        ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY081266
+     E************        ZMNM   12  12  3               ZDATE2 SR. ARRAY 081266
+     E/COPY ZSRSRC,ZDATE2Z1                                               081266
+     E/COPY ZSRSRC,ZFRQAZ1                                                081266
+     E/COPY ZSRSRC,ZHOLE                                                  081266
+     E/EJECT
+     I*
+     IREHPOSPF
+     I*
+     I***RENAME*REHPOSPF*FORMAT*FIELDS*-*REPOSL**FILE                     CCB003
+     I** RENAME REHPOSPF FORMAT FIELDS - REPOSL1  FILE                    CCB003
+     I*
+     I              VALD                            VALDP
+     I              TRAT                            TRATP
+      *                                                                   106429
+     IAPOSTPDF                                                            106429
+      *                                                                   106429
+      ** Rename APOSTPDF format fields - RSACMTL1 file                    106429
+     I              VALD                            VALDP                 106429
+     I              TRAT                            TRATP                 106429
+     I/COPY WNCPYSRC,REH00492
+     I              ACKEY                           ACKEYP                                    CPK016
+     I*
+     ICPYR@#      DS
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** DATA STRUCTURE FOR RPG ERROR HANDLING
+     I*
+     I** DATA STRUCTURE FOR DATE FORMAT DD/MM/YY
+     I*
+     I            DS
+     I                                        1   60RESULT
+     I                                        1   20ZDAY
+     I                                        3   40ZMTH
+     I                                        5   60ZYEAR
+     I           IDS
+     I                                        1  150PSTA0
+     I                                        1  151PSTA1
+     I                                        1  152PSTA2
+     I                                        1  153PSTA3
+     I*
+     IRAFDS       DS
+     I                                     *STATUS  STSRAF
+     IRAGDS       DS
+     I                                     *STATUS  STSRAG
+     IRAZDS       DS
+     I                                     *STATUS  STSRAZ
+     IACCDS       DS
+     I                                     *STATUS  STSACC
+     IPOSDS       DS
+     I                                     *STATUS  STSPOS
+     I*
+     I**  Key data structure to acces REHPOSL
+     I*
+     I            DS
+     I**********                              1  18 WPKEY                                     CGL029
+     I**********                              4  18 WAKEY                                     CGL029
+     I                                        1  24 WPKEY                                     CGL029
+     I                                        4  24 WAKEY                                     CGL029
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM                                      CSD027
+     I                                        4   9 CNUM                                      CSD027
+     I                                       10  12 CCY
+     I**********                             13  160ACOD                                      CGL029
+     I**********                             17  180ACSQ                                      CGL029
+     I                                       13  220ACOD                                      CGL029
+     I                                       23  240ACSQ                                      CGL029
+     I*
+     I**  data structure to DEFINE PACKED FIELD
+     I*
+     I            DS
+     I                                    P   1 1500TT
+     I                                    P   1  750TT1
+     I                                    P  76 1500TT2
+     I*
+     I**  data structure to DEFINE PACKED FIELD
+     I*
+     I            DS
+     I                                    P   1  750OTT
+     I                                    P   1   30TRAT
+     I                                    P   4   60TRAT1
+     I                                    P   7   90TRAT2
+     I                                    P  10  120TRAT3
+     I                                    P  13  150TRAT4
+     I                                    P  16  180TRAT5
+     I                                    P  19  210TRAT6
+     I                                    P  22  240TRAT7
+     I                                    P  25  270TRAT8
+     I                                    P  28  300TRAT9
+     I                                    P  31  330TRAT10
+     I                                    P  34  360TRAT11
+     I                                    P  37  390TRAT12
+     I                                    P  40  420TRAT13
+     I                                    P  43  450TRAT14
+     I                                    P  46  480TRAT15
+     I                                    P  49  510TRAT16
+     I                                    P  52  540TRAT17
+     I                                    P  55  570TRAT18
+     I                                    P  58  600TRAT19
+     I                                    P  61  630TRAT20
+     I                                    P  64  660TRAT21
+     I                                    P  67  690TRAT22
+     I                                    P  70  720TRAT23
+     I                                    P  73  750TRAT24
+     I*
+     I**  data structure to DEFINE PACKED FIELD
+     I*
+     IWNTT        DS
+     I                                    P   1 1500NTT
+     I                                    P   1  750NTT1
+     I                                    P  76 1500NTT2
+     I*
+     I**  data structure to DEFINE PACKED FIELD
+     I*
+     I            DS
+     I                                    P   1  750ONTT
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I*DA*********DS                            256                       081266
+     ILDA        UDS                            256                       081266
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I** DATA AREA RUNDAT
+     I*
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 AGMBIN
+      *                                                                                       CSC054
+     ISPOS        DS                                                                          CSC054
+     I                                        1   3 BNUMSP                                    CSC054
+     I                                        4   7 ITEMSP                                    CSC054
+      *                                                                                       CCB016
+      ** DATA AREA MXEXPCTL                                                                   CCB016
+      *                                                                                       CCB016
+     IMXEXPT    E DSMXEXPCTL                                                                  CCB016
+     I*
+     ISDBANK    E DSSDBANKPD
+     I              BJURPT                          TITL
+     I              BJBVPD                          BVLP
+     I              BJDNWD                          DNWD
+     I*
+     I** Bank Details
+     ISDGELR    E DSSDGELRPD
+     I************  BKAPDT                          APDA                  081266
+     I************  BKAPFQ                          APFQ                  081266
+     I************  BKELAP                          ELAC                  081266
+     I************  BKECAP                          ECAC                  081266
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I              A8BRNM                          BRNM
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *                                                                                       241041
+     ISVAL1       DS                            200                                           241041
+     I                                        1   1 SVAL11                                    241041
+      ** DS for AOSVALR0                                                                      241041
+      *                                                                                       241041
+     I              'RAccActShowClsdAcc'  C         SVALKK                                    241041
+     I            DS                                                                        AR822361
+     I                                        1   60ZDTEN                                   AR822361
+     I                                        1   20ZDD                                     AR822361
+     I                                        3   40ZMM                                     AR822361
+     I                                        5   60ZYY                                     AR822361
+     I/COPY ZSRSRC,ZHOLI                                                  081266
+      *                                                                                       CSC054
+     ISCPEAS    E DSSCPEASPD                                                                  CSC054
+     I/EJECT
+     C*===================================================================
+     C*
+     C** KEY LISTS
+     C*
+     C*
+     C** KEY FIELD TO ACCESS TO REHPOSL FILE
+     C*
+     C           POSKEY    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C/COPY WNCPYSRC,REH00493
+     C*
+     C** KEY FIELD TO ACCESS TO ACCNT FILE
+     C*
+     C********** ACKEY     KLIST                                                              CGL029
+     C/COPY WNCPYSRC,REH00494
+     C           ACKEY1    KLIST                                                              CGL029
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+      *                                                                                       CSC054
+      ** Key fields for corrective batch register file                                        CSC054
+      *                                                                                       CSC054
+     C           KCORB     KLIST                                                              CSC054
+     C                     KFLD           BNUMSP                                              CSC054
+     C                     KFLD           PSTD                                                CSC054
+     C*
+     C** WORK FIELDS DEFINITION
+     C*
+     C                     MOVE *BLANK    KEY     7
+     C           *LIKE     DEFN KEY       ERRDAT
+     C           *LIKE     DEFN MINB      MINBX
+     C           *LIKE     DEFN BVLP      I
+     C           *LIKE     DEFN BVLP      A
+     C           *LIKE     DEFN BVLP      B
+     C           *LIKE     DEFN BVLP      D
+     C           *LIKE     DEFN PSTA      CALC
+     C           *LIKE     DEFN LDBL      NCORR
+     C           *LIKE     DEFN LDBL      TEMPZ
+     C           *LIKE     DEFN LDBL      GROTOT
+     C           *LIKE     DEFN LDBL      NETTOT
+     C           *LIKE     DEFN DACO      WORD
+     C           *LIKE     DEFN DACO      WOCR
+     C           *LIKE     DEFN DACO      STRT
+     C           *LIKE     DEFN DACO      DBACO
+     C           *LIKE     DEFN DACO      ACOPER
+     C           *LIKE     DEFN DACO      ACCPER
+     C           *LIKE     DEFN DACO      ACODB
+     C           *LIKE     DEFN DACO      ACCCB
+     C           *LIKE     DEFN RUND      ELAC                            081266
+     C           *LIKE     DEFN RUND      ECAC                            081266
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *                                                                                       CCB016
+     C********** *NAMVAR   DEFN MXEXPCTL  MXEXPT                                     CCB016 MD052046
+     C**********           IN   MXEXPT                                               CCB016 MD052046
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*===================================================================
+     C** P R O G R A M     S T A R T
+     C*===================================================================
+     C*
+     C** FIRST CYCLE PROCESSING
+     C*
+     C                     EXSR FIRST
+     C*
+     C** MAIN PROCESSING
+     C*
+     C           SHWCLS    IFNE 'Y'                                                           241041
+     C                     READ SSRACJL                  LR
+     C                     ELSE                                                               241041
+     C                     READ SSRACJL1                 LR                                   241041
+     C                     ENDIF                                                              241041
+      *                                                                                       241041
+     C                     Z-ADD0         DBASE
+     C                     MOVE *BLANKS   BRCA#   3
+     C*
+     C           *INLR     DOWEQ'0'                        - B1
+      *                                                                                       CCB016
+      ** Ignore accounts opened after start of current month                                  CCB016
+      *                                                                                       CCB016
+     C           DACO      IFLT CURSOM                                                        CCB016
+      *                                                                                       CCB016
+      ** Access start month balances file and overwrite values from SSRACJL                   CCB016
+      *                                                                                       CCB016
+     C                     Z-ADD0         LDBL                                                CCB016
+     C                     Z-ADD0         CLBL                                                CCB016
+     C           ACKEY1    CHAINREACBMPP             52                                       CCB016
+     C                     Z-ADDLDBL      GRBL                                                CCB016
+     C                     Z-ADDCLBL      NETBL                                               CCB016
+     C*
+     C** MULTIBRANCHING PROCESSING
+     C*
+     C           BRCA      IFNE BRCA#
+     C           *IN87     IFEQ '1'
+     C                     EXSR OVERP1
+     C                     WRITEENDP1                  80
+     C                     SETOF                     87
+     C                     END
+     C                     MOVE BRCA      BRCA#
+     C                     CLOSERE3860P1
+     C                     OPEN RE3860P1
+     C                     SETON                     87
+     C                     Z-ADD0         PAGE
+     C*
+     C** Retrieve Branch Name
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BRCA      @BRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     MOVEL@BRCA     DBKEY            * DB ERROR 3  *
+     C                     Z-ADD3         DBASE            ***************
+     C***********          OUT  LDA                                       081266
+     C***********          MOVE '1'       *INLR                           081266
+     C***********          MOVE '1'       *INU7                           081266
+     C***********          MOVE '1'       *INU8                           081266
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     WRITEHEADP1                 80
+     C*
+     C** Ensure Report Spool File Recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   @SEQ    5
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C                     END
+     C                     EXSR MAIN
+      *                                                                                       CCB016
+     C                     ENDIF                                                              CCB016
+      *                                                                                       CCB016
+     C           SHWCLS    IFNE 'Y'                                                           241041
+     C                     READ SSRACJL                  LR
+     C                     ELSE                                                               241041
+     C                     READ SSRACJL1                 LR                                   241041
+     C                     ENDIF                                                              241041
+     C                     END                             - E1
+     C*
+     C** TOTAL PROCESSING
+     C*
+     C                     EXSR TOTAL
+     C*
+     C*===================================================================
+     C** P R O G R A M     E N D
+     C*===================================================================
+     C/EJECT
+     C********************************************************************
+     C**
+     C** FIRST subroutine to execute first cycle.
+     C**
+     C**     Called by       S T A R T
+     C**     Calls           *PSSR,RESET
+     C**
+     C           FIRST     BEGSR                           **FIRST BEGSR**
+     C*
+     C*  MOVE DBPGM TO *PSSR
+     C*
+     C                     MOVE *BLANKS   DBKEY
+     C*
+     C** SET UP INDICATOR 98 BASED ON DATE FORMAT
+     C*
+     C           DATF      IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+     C*
+     C                     MOVE *ALL'-'   TIRET
+     C*
+     C** ACCESS ICD 1 (SDBANKPD)
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** ERROR IN SDBANKPD
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           **DB ERROR 01**
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEA'0'       *IN,89
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C** OUTPUT AUDIT HEADER
+     C*
+     C                     WRITEHEADAU
+     C*
+     C** ACCESS ICD 2 (SDGELRPD)
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C** ERROR IN SDGELRPD
+     C*
+     C           @RTCD     IFNE *BLANK
+     C*
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVE 'SDGELRPD'DBFILE           **DB ERROR 02**
+     C                     MOVEL'*BLANK'  DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      **********                                                                   AR822361 MD052046
+     C**********           CALL 'AOSARDR0'                                         AR822361 MD052046
+     C**********           PARM '       ' @RTCD                                    AR822361 MD052046
+     C**********           PARM '*VERIFY' @OPTN                                    AR822361 MD052046
+     C**********           PARM 'CMX001'  @SARD   6                                AR822361 MD052046
+      **********                                                                   AR822361 MD052046
+     C********** @RTCD     IFNE *BLANK                                             AR822361 MD052046
+     C********** @RTCD     ANDNE'*NRF   '                                          AR822361 MD052046
+     C********** *LOCK     IN   LDA                                                AR822361 MD052046
+     C**********           MOVEL'SCSARDPD'DBFILE                                   AR822361 MD052046
+     C**********           MOVEL@RTCD     DBKEY                                    AR822361 MD052046
+     C**********           Z-ADD8         DBASE                                    AR822361 MD052046
+     C**********           EXSR *PSSR                                              AR822361 MD052046
+     C**********           ENDIF                                                   AR822361 MD052046
+      **********                                                                   AR822361 MD052046
+     C**********           MOVEL'N'       CMX001                                   AR822361 MD052046
+     C********** @RTCD     IFEQ *BLANK                                             AR822361 MD052046
+     C**********           MOVEL'Y'       CMX001  1                                AR822361 MD052046
+     C**********           ENDIF                                                   AR822361 MD052046
+      **********                                                                   AR822361 MD052046
+     C**********           MOVE *BLANKS   WCURSM  5                                AR822361 MD052046
+     C**********           MOVE CURSOM    WCURSM                                   AR822361 MD052046
+     C********** WCURSM    IFEQ *BLANKS                                            AR822361 MD052046
+     C********** CMX001    ANDEQ'N'                                                AR822361 MD052046
+     C********** WCURSM    OREQ *ZERO                                              AR822361 MD052046
+     C********** CMX001    ANDEQ'N'                                                AR822361 MD052046
+     C                     Z-ADDBJRDNB    ZDAYNO                                            AR822361
+     C                     EXSR ZDATE2                                                      AR822361
+     C                     MOVELZDATE     ZDTEN                                             AR822361
+     C                     Z-ADD1         ZDD                                               AR822361
+     C                     MOVELZDTEN     ZDATE                                             AR822361
+     C                     EXSR ZDATE1                                                      AR822361
+     C                     Z-ADDZDAYNO    CURSOM                                            AR822361
+     C**********           ENDIF                                                   AR822361 MD052046
+      *                                                                                     AR822361
+     C**********           MOVE *BLANKS   WPRVSM  5                                AR822361 MD052046
+     C**********           MOVE PRVSOM    WPRVSM                                   AR822361 MD052046
+     C********** WPRVSM    IFEQ *BLANKS                                            AR822361 MD052046
+     C********** CMX001    ANDEQ'N'                                                AR822361 MD052046
+     C********** WPRVSM    OREQ *ZERO                                              AR822361 MD052046
+     C********** CMX001    ANDEQ'N'                                                AR822361 MD052046
+     C                     Z-ADDBJRDNB    ZDAYNO                                            AR822361
+     C                     EXSR ZDATE2                                                      AR822361
+     C                     MOVELZDATE     ZDTEN                                             AR822361
+     C                     Z-ADD1         ZDD                                               AR822361
+     C                     SUB  1         ZMM                                               AR822361
+     C           ZMM       IFEQ 0                                                           AR822361
+     C                     Z-ADD12        ZMM                                               AR822361
+     C                     SUB  1         ZYY                                               AR822361
+     C                     ENDIF                                                            AR822361
+     C                     MOVELZDTEN     ZDATE                                             AR822361
+     C                     EXSR ZDATE1                                                      AR822361
+     C                     Z-ADDZDAYNO    PRVSOM                                            AR822361
+     C**********           ENDIF                                                   AR822361 MD052046
+      *                                                                                       241041
+     C                     CALL 'AOSVALR0'                                                    241041
+     C                     PARM           @RTCD                                               241041
+     C                     PARM SVALKK    SVALK1 20                                           241041
+     C                     PARM           SVAL1 200                                           241041
+     C                     PARM *BLANK    SVALK2 20                                           241041
+     C                     PARM           SVAL2 200                                           241041
+     C                     PARM *BLANK    SVALK3 20                                           241041
+     C                     PARM           SVAL3 200                                           241041
+     C                     PARM *BLANK    SVALK4 20                                           241041
+     C                     PARM           SVAL4 200                                           241041
+     C                     PARM *BLANK    SVALK5 20                                           241041
+     C                     PARM           SVAL5 200                                           241041
+     C                     PARM *BLANK    SVALK6 20                                           241041
+     C                     PARM           SVAL6 200                                           241041
+     C                     PARM *BLANK    SVALK7 20                                           241041
+     C                     PARM           SVAL7 200                                           241041
+     C                     PARM *BLANK    SVALK8 20                                           241041
+     C                     PARM           SVAL8 200                                           241041
+     C                     PARM *BLANK    SVALK9 20                                           241041
+     C                     PARM           SVAL9 200                                           241041
+     C                     PARM *BLANK    SVALK0 20                                           241041
+     C                     PARM           SVAL10200                                           241041
+      *                                                                                       241041
+     C           @RTCD     IFNE *BLANK                                                        241041
+     C           *LOCK     IN   LDA                                                           241041
+     C                     MOVEL'*KEY    'DBKEY                                               241041
+     C                     MOVEL'SDSVALPD'DBFILE           ***************                    241041
+     C                     Z-ADD007       DBASE            * DBERROR 007 *                    241041
+     C                     MOVEA'1'       *IN,89                                              241041
+     C                     EXSR *PSSR                                                         241041
+     C                     ENDIF                                                              241041
+     C                     MOVE SVAL11    SHWCLS  1                                           241041
+     C*
+     C*
+     C**AT*FIRST*RUN*ELAC*IS*ZERO*THEN*DEFAULT*TO*MAXIMUM*ARRAY*INDEX     081266
+     C*
+     C***********ELAC      IFEQ *ZERO                      - B1           081266
+     C***********ECAC      SUB  400       ELAC                            081266
+     C***********          END                                            081266
+     C*
+     C** GET START AND END DATES FOR RETAIL ACTIVITY REPORT               081266
+     C*                                                                   081266
+     C                     EXSR DATES                                     081266
+     C*                                                                   081266
+     C** CALCULATE NUMBER OF DAYS BETWEEN ACCRUAL DATES
+     C*
+     C           ECAC      SUB  ELAC      ACCPER
+     C*
+     C** ERROR IF PERIOD NOT GREATER THEN *ZERO
+     C*
+     C           ACCPER    IFLE *ZERO                      - B1
+     C           *LOCK     IN   LDA                                       081266
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVE *BLANK    DBFILE           **DB ERROR 04**
+     C                     MOVELERR,1     DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C                     Z-ADDELAC      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     ELACN
+     C*
+     C                     Z-ADDECAC      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     ECACN
+      *                                                                                       CSC054
+      ** Check if Period End Adjustments (PEA) is enabled                                     CSC054
+      *                                                                                       CSC054
+     C                     MOVE 'N'       CSC054  1                                           CSC054
+     C                     CALL 'AOSARDR0'                                                    CSC054
+     C                     PARM *BLANKS   @RTCD                                               CSC054
+     C                     PARM '*VERIFY' @OPTN                                               CSC054
+     C**********           PARM 'CSC054'  @SARD                                      CSC054 MD052046
+     C                     PARM 'CSC054'  @SARD   6                                         MD052046
+      *                                                                                       CSC054
+     C           @RTCD     IFEQ *BLANKS                                                       CSC054
+     C                     MOVE 'Y'       CSC054                                              CSC054
+     C                     ELSE                                                               CSC054
+     C           @RTCD     IFNE *BLANKS                                                       CSC054
+     C           @RTCD     ANDNE'*NRF   '                                                     CSC054
+     C           *LOCK     IN   LDA                                                           CSC054
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSC054
+     C                     MOVEL@RTCD     DBKEY                                               CSC054
+     C                     Z-ADD9         DBASE                                               CSC054
+     C                     EXSR *PSSR                                                         CSC054
+     C                     ENDIF                                                              CSC054
+     C                     ENDIF                                                              CSC054
+      *                                                                                       CSC054
+      ** Access Object for PEA System Status                                                  CSC054
+      *                                                                                       CSC054
+     C           CSC054    IFEQ 'Y'                                                           CSC054
+     C                     CALL 'AOPEASR0'                                                    CSC054
+     C                     PARM '*BLANK ' @RTCD                                               CSC054
+     C                     PARM '*FIRST ' @OPTN                                               CSC054
+     C           SCPEAS    PARM SCPEAS    DSFDY                                               CSC054
+      *                                                                                       CSC054
+     C           @RTCD     IFNE *BLANK                                                        CSC054
+     C           *LOCK     IN   LDA                                                           CSC054
+     C                     Z-ADD10        DBASE                                               CSC054
+     C                     MOVE 'SCPEASPD'DBFILE                                              CSC054
+     C                     MOVEL'*BLANK'  DBKEY            *                                  CSC054
+     C                     MOVEA'1'       *IN,89                                              CSC054
+     C                     EXSR *PSSR                                                         CSC054
+     C                     END                                                                CSC054
+     C                     END                                                                CSC054
+     C*
+     C** INITIALISE WORK FIELDS TO BLANK/ZERO
+     C*
+     C                     ENDSR                           **FIRST ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** MAIN subroutine to execute main processing.
+     C**
+     C**     Called by       S T A R T
+     C**     Calls
+     C**
+     C           MAIN      BEGSR                           **MAIN BEGSR**
+     C**
+     C**   ZEROISE ACCOUNT ARRAYS AND TOTAL FIELDS
+     C**
+     C                     Z-ADD0         TT               TRANS TYPE
+     C                     Z-ADD0         NTT              NUMBER OF TT
+     C                     Z-ADD0         NOCR1            NUMBER OF CR
+     C                     Z-ADD0         NODR             NUMBER OF DR
+     C                     Z-ADD0         DG               GROSS BAL
+     C                     Z-ADD0         DN               NET BAL
+     C                     Z-ADD0         LADB             AVERAGE DR
+     C                     Z-ADD0         LACB             AVERAGE CR
+     C                     Z-ADD0         DBMB
+     C                     Z-ADD0         DJOD
+     C                     Z-ADD0         NCORR
+     C                     Z-ADD0         CALC
+     C                     Z-ADD0         VALC
+     C                     Z-ADD0         VALD
+     C                     Z-SUBMINB      MINBX
+     C                     MOVE '0'       *IN49
+     C*                                                                   103710
+     C                     Z-ADDDACO      ZDAYNO                          103710
+     C                     EXSR ZDATE2                                    103710
+     C                     MOVE ZDATE     DACON                           103710
+     C                     MOVE '0'       *IN40                                               241041
+     C           SHWCLS    IFEQ 'Y'                                                           241041
+     C           RECI      IFEQ 'C'                                                           241041
+     C                     MOVE '1'       *IN40                                               241041
+     C                     Z-ADDDACC      ZDAYNO                                              241041
+     C                     EXSR ZDATE2                                                        241041
+     C                     MOVE ZDATE     DACCN                                               241041
+     C                     ENDIF                                                              241041
+     C                     ENDIF                                                              241041
+     C*
+     C** IF MINIMUM BALANCE CREDIT SET NUMBER OF DECIMAL FOR USE
+     C*
+     C           MINBX     IFLT *ZERO                      - B1
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM CCY       @KEY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C** ERROR IF CURRENCY NOT FOUND
+     C*
+     C           @RTCD     IFNE *BLANK
+     C*
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVE 'SDCURRPD'DBFILE           **DB ERROR 05**
+     C                     MOVELCCY       DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C** CURRENCY FOUND
+     C*
+     C                     MOVE A6NBDP    C       10
+     C*
+     C                     MOVEA'0000'    *IN,70
+     C*
+     C           C         IFEQ 0
+     C                     MOVE '1'       *IN70
+     C                     ELSE
+     C           C         IFEQ 1
+     C                     MOVE '1'       *IN71
+     C                     ELSE
+     C           C         IFEQ 2
+     C                     MOVE '1'       *IN72
+     C                     ELSE
+     C                     MOVE '1'       *IN73
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ADD  1         C
+     C           MINBX     MULT DEC,C     MINBX
+     C*
+     C                     ELSE                            - X1
+     C*
+     C                     Z-ADD*ZERO     MINBX
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM CCY       @KEY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C** ERROR IF CURRENCY NOT FOUND
+     C*
+     C           @RTCD     IFNE *BLANK
+     C*
+     C           *LOCK     IN   LDA
+     C                     Z-ADD51        DBASE            ***************
+     C                     MOVE 'SDCURRPD'DBFILE           **DB ERROR 51**
+     C                     MOVELCCY       DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C** CURRENCY FOUND
+     C*
+     C                     MOVE A6NBDP    C
+     C*
+     C                     MOVEA'0000'    *IN,70
+     C*
+     C           C         IFEQ 0
+     C                     MOVE '1'       *IN70
+     C                     ELSE
+     C           C         IFEQ 1
+     C                     MOVE '1'       *IN71
+     C                     ELSE
+     C           C         IFEQ 2
+     C                     MOVE '1'       *IN72
+     C                     ELSE
+     C                     MOVE '1'       *IN73
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END                             - E1
+     C*
+     C                     EXSR OVERP1
+     C                     WRITEDETP0                  80
+     C*
+     C           MINBX     IFEQ *ZEROS
+     C                     Z-ADD*HIVAL    MINBX
+     C                     END
+     C*
+     C** DETAIL PROCESSING
+     C*
+     C                     EXSR DETPR
+     C*
+     C** PROCESS CHANGE OF ACCOUNT
+     C*
+     C                     EXSR TOTAC
+     C*
+     C                     ENDSR                           **MAIN ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** DETPR subroutine to execute detail processing.
+     C**
+     C**     Called by       MAIN
+     C**     Calls
+     C**
+     C           DETPR     BEGSR                           **DETPR BEGSR**
+     C*
+     C******     POSKEY    SETLLREPOSL                                    CCB003
+     C           POSKEY    SETLLREPOSL1                                   CCB003
+     C           POSKEY    READEREHPOSPF                 45
+     C*
+     C*  LOOP WHILE POSTINGS EXIST FOR THIS ACCOUNT.
+     C*
+     C           *IN45     DOWEQ'0'                        - B1
+      *                                                                                       CSC054
+      ** If PEA is ON, skip posting when value date is less than                              CSC054
+      ** the previous PEA date                                                                CSC054
+      *                                                                                       CSC054
+     C                     MOVE 'Y'       WPROC   1                                           CSC054
+     C           CSC054    IFEQ 'Y'                                                           CSC054
+     C           BNUMSP    IFNE *BLANKS                                                       CSC054
+     C           ITEMSP    ANDEQ*BLANKS                                                       CSC054
+     C           GETP      ANDEQ*BLANKS                                                       CSC054
+      *                                                                                       CSC054
+     C           KCORB     CHAINGLCORBL0             71                                       CSC054
+     C           *IN71     IFEQ '0'                                                           CSC054
+     C           VALDP     ANDLTPERDNB                                                        CSC054
+     C                     MOVE 'N'       WPROC                                               CSC054
+     C                     ENDIF                                                              CSC054
+      *                                                                                       CSC054
+     C                     ENDIF                                                              CSC054
+     C                     ENDIF                                                              CSC054
+      *                                                                                       CCB016
+      * Ignore postings generated after End of Current Activity Date                          CCB016
+      *                                                                                       CCB016
+     C           PSTD      IFLE ECAC                                                          CCB016
+     C           WPROC     ANDEQ'Y'                                                           CSC054
+     C**
+     C**   NEGATE POSTING AMOUNT IF CREDIT
+     C*
+     C           DRCR      IFEQ 1                          - B2
+     C                     Z-SUBPSTA      CALC
+     C                     ELSE
+     C                     Z-ADDPSTA      CALC
+     C                     END                             - E2
+     C**
+     C**   CLEARED BALANCE ARRAY & PROCESSED INDICATOR
+     C**
+     C           VALDP     IFLE ECAC                       - B2
+     C***********          BITON'5'       PRIN                            111035
+     C                     MOVE 'Y'       PRIN                            111035
+     C                     MOVE 'Y'       REACT                           CCB003
+     C*
+     C           VALDP     IFGT ELAC                       - B3
+     C           VALDP     SUB  ELAC      D
+     C           CALC      ADD  DN,D      DN,D
+     C                     END                             - E3
+     C*
+     C                     ELSE                            - X2
+     C*
+     C           VALDP     IFLT DNWD                       - B3
+     C********** CALC      ADD  NCORR     NCORR                                               CCB016
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C**
+     C**   LEDGER BALANCE ARRAY
+     C**
+     C           PSTD      IFGT ELAC                       - B2
+     C           PSTD      ANDLEECAC
+     C           PSTD      SUB  ELAC      D
+     C           CALC      ADD  DG,D      DG,D
+     C                     MOVE '1'       *IN81
+     C**
+     C**   ADD TO NO. OF DR/CR, MOVEMENT TOTALS
+     C**
+     C           DRCR      IFEQ 1                          - B3
+     C                     ADD  1         NOCR1
+     C                     ADD  PSTA      VALC
+     C                     ELSE                            - X3
+     C                     ADD  1         NODR
+     C                     ADD  PSTA      VALD
+     C                     END                             - E3
+     C*
+     C                     Z-ADD1         D
+     C**
+     C**   IF NEW TRANS TYPE, ADD TO ARRAY. ADD TO COUNT OF TRANS TYPE
+     C**
+     C           TRATP     LOKUPTT,D                     60
+     C**
+     C           *IN60     IFEQ '1'                        - B3
+     C                     ADD  1         NTT,D
+     C                     ELSE                            - X3
+     C                     Z-ADD1         D
+     C           00000     LOKUPTT,D                     60
+     C                     Z-ADDTRATP     TT,D
+     C                     ADD  1         NTT,D
+     C                     END                             - E3
+     C**
+     C                     END                             - E2
+     C*
+     C                     MOVE '1'       *IN49            ONE RECORD PROCES
+     C*
+     C** IF POSTING IS PROCESS UPDATE REHPOSL
+     C*
+     C***********          TESTB'5'       PRIN           51               111035
+     C************IN51     IFEQ '1'                        - B2           111035
+     C           PRIN      IFEQ 'Y'                        - B2           111035
+     C                     UPDATREHPOSPF
+     C                     Z-ADDPSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     PSTDN
+     C                     Z-ADDVALDP     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     VALDN
+     C                     MOVE TRATP     TRATN
+     C                     MOVE PNAR      NARRN
+     C                     Z-ADDPSTA      PSTA0
+     C                     MOVE DRCR      DRCRN
+     C                     EXSR OVERP1
+     C           *IN81     IFEQ '1'
+     C                     WRITEDETP1                  80
+     C                     MOVE '0'       *IN81
+     C                     END                             - E2
+     C                     SETOF                     51
+     C                     END                             - E2
+      *                                                                                       CCB016
+     C                     ENDIF                                                              CCB016
+     C*
+     C*  ACCESS NEXT POSTING
+     C*
+     C           POSKEY    READEREHPOSPF                 45
+     C*
+     C                     END                             - E1
+      *                                                                   106429
+      * Include postings in clearing in ledger balance array              106429
+     C                     EXSR CLRNG                                     106429
+     C*
+     C                     ENDSR                           **DETPR ENDSR**
+     C********************************************************************
+     C/EJECT                                                              106429
+     C********************************************************************106429
+     C**                                                                  106429
+     C** CLRNG SR to add postings in clearing to ledger balance array     106429
+     C**                                                                  106429
+     C**     Called by       DETPR                                        106429
+     C**     Calls                                                        106429
+     C**                                                                  106429
+     C           CLRNG     BEGSR                           **CLRNG BEGSR**106429
+      *                                                                   106429
+     C********** POSKEY    SETLLRSACMTL1                 46        106429 167430
+     C           POSKEY    SETLLRSACMTL4                 46               167430
+     C           *IN46     IFEQ '1'                        - B1           106429
+     C           POSKEY    READEAPOSTPDF                 46               106429
+      *                                                                   106429
+     C           *IN46     DOWEQ'0'                        - B2           106429
+      *                                                                                       CSC054
+      ** If PEA is ON, skip posting when value date is less than                              CSC054
+      ** the previous PEA date                                                                CSC054
+      *                                                                                       CSC054
+     C                     MOVE 'Y'       WPROC                                               CSC054
+     C           CSC054    IFEQ 'Y'                                                           CSC054
+     C           BNUMSP    IFNE *BLANKS                                                       CSC054
+     C           ITEMSP    ANDEQ*BLANKS                                                       CSC054
+     C           GETP      ANDEQ*BLANKS                                                       CSC054
+      *                                                                                       CSC054
+     C           KCORB     CHAINGLCORBL0             71                                       CSC054
+     C           *IN71     IFEQ '0'                                                           CSC054
+     C           VALDP     ANDLTPERDNB                                                        CSC054
+     C                     MOVE 'N'       WPROC                                               CSC054
+     C                     ENDIF                                                              CSC054
+      *                                                                                       CSC054
+     C                     ENDIF                                                              CSC054
+     C                     ENDIF                                                              CSC054
+      *                                                                                       CSC054
+     C           PSTD      IFGT ELAC                       - B3           106429
+     C           VALDP     ANDGTRUND                                      116489
+     C           PSTD      ANDLEECAC                                                          CCB016
+     C           SPOS      ANDNE'  GE-TT'                                                     238213
+     C           WPROC     ANDEQ'Y'                                                           CSC054
+     C           PSTD      SUB  ELAC      D                               106429
+     C           DRCR      IFEQ 0                          - B4           106429
+     C                     ADD  PSTA      DG,D                            106429
+     C                     ADD  1         NODR                            106429
+     C                     ADD  PSTA      VALD                            106429
+     C                     ELSE                            - X4           106429
+     C                     SUB  PSTA      DG,D                            106429
+     C                     ADD  1         NOCR1                           106429
+     C                     ADD  PSTA      VALC                            106429
+     C                     END                             - E4           106429
+      *                                                                   106429
+      * Record transaction type                                           106429
+     C                     Z-ADD1         D                               106429
+     C           TRATP     LOKUPTT,D                     60               106429
+     C           *IN60     IFEQ '1'                        - B4           106429
+     C                     ADD  1         NTT,D                           106429
+     C                     ELSE                            - X4           106429
+     C                     Z-ADD1         D                               106429
+     C           00000     LOKUPTT,D                     60               106429
+     C                     Z-ADDTRATP     TT,D                            106429
+     C                     ADD  1         NTT,D                           106429
+     C                     END                             - E4           106429
+      *                                                                   106429
+     C                     MOVE '1'       *IN49            1 rec processed106429
+     C                     END                             - E3           106429
+      *                                                                   106429
+     C           POSKEY    READEAPOSTPDF                 46               106429
+     C                     ENDDO                           - E2           106429
+      *                                                                   106429
+     C                     END                             - E1           106429
+      *                                                                   106429
+     C                     ENDSR                                          106429
+     C********************************************************************106429
+     C/EJECT
+     C********************************************************************
+     C**
+     C** OVERP1 subroutine for processing overflow on RE3860P1
+     C**
+     C**     Called by       CRSR, DRSR, POSTSR
+     C**
+     C**     Calls           -
+     C**
+     C           OVERP1    BEGSR                           **OVERP1 BEGSR*
+     C*
+     C**  CHECK IF OVERFLOW ON RE3860P1
+     C*
+     C           *IN80     IFEQ '1'                        - B1
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN80
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **OVERP1 ENDSR*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** TOTAC subroutine for Total account processing
+     C**
+     C**     Called by       MAIN
+     C**     Calls
+     C**
+     C           TOTAC     BEGSR                           **TOTAC BEGSR**
+     C*
+     C           *IN80     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN80
+     C                     ELSE
+     C                     WRITEDETP2                  80
+     C                     END
+     C*
+     C**  CALCULATE BALANCES AT START OF CURRENT ACTIVITY PERIOD
+     C**  OLD VERSION OF RE0860 USED BROUGHT FORWARD LDBL AND CLBL FROM
+     C** PREVIOUS ACTIVITY PERIOD.NEW VERSION NOW CALCULATES LDBL AND CLBL
+     C** AS AT START OF CURRENT ACTIVITY PERIOD BY EXTRAPOLATING BACKWARDS
+     C**  FROM CURRENT LDBL AND CLBL-GRBL AND NETBL ON STBAL,WITH CORRECT-
+     C** IONS FOR POSTINGS MADE IN A/C POST AFTER END OF PERIOD(IF DONE)
+     C*
+     C                     XFOOTDN        TEMPZ
+     C                     SUB  NETBL     TEMPZ
+     C                     SUB  TEMPZ     DN,1
+     C                     ADD  NCORR     DN,1
+     C                     XFOOTDG        TEMPZ
+     C                     SUB  GRBL      TEMPZ
+     C                     SUB  TEMPZ     DG,1
+     C**
+     C**   RETAIL A/C BALANCE RECORD MATCH KEY NOT FOUND
+     C**
+     C           *IN49     IFEQ '0'                        - B1
+     C                     Z-ADD*ZERO     WORD
+     C                     Z-ADD*ZERO     WOCR
+     C                     Z-ADD*ZERO     VALD
+     C                     Z-ADD*ZERO     VALC
+     C                     Z-ADD*ZERO     LADB
+     C                     Z-ADD*ZERO     LACB
+     C**
+     C**   MOVE END OF ACCRUAL PERIOD GROSS BAL INTO
+     C**   AV GROSS DR, OR AV GROSS CR, BAL
+     C**
+     C           DG,1      IFLT *ZERO                      - B2
+     C                     Z-ADDDG,1      LACB
+     C                     ELSE                            - X2
+     C                     Z-ADDDG,1      LADB
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C**
+     C**   CALCULATE AVERAGE, HIGH, AND LOW FIGURES FOR
+     C**   NET AND GROSS ARRAYS
+     C**
+     C**   NOTE - CR BALS ARE NEGATIVE, HIGHEST BALANCE IS
+     C**   LOWEST NUMERIC VALUE OF ARRAY
+     C**
+     C**   NET ARRAY
+     C                     Z-ADDDN,1      CLHB
+     C                     Z-ADDDN,1      CLLB
+     C                     Z-ADDDN,1      CLAB
+     C                     Z-ADD1         A
+     C                     Z-ADD2         B
+     C                     Z-ADD0         STRT
+     C**
+     C**   TEST FIRST DAY FOR BELOW MIN BALANCE
+     C***    IF A/C WAS OPENED AT THAT DATE.
+     C**
+     C           DACO      IFGT ELAC                       - B1
+     C           DACO      SUB  ELAC      STRT
+     C           DACO      SUB  1         DBACO
+     C           ECAC      SUB  DBACO     ACOPER
+     C                     END                             - E1
+     C*
+      * Following code moved; days below min. bal. & days overdrawn       100154
+      * calculated on ledger balance.                                     100154
+     C***********DACO      IFLE ELAC                       - B1           100154
+     C***********STRT      OREQ A                                         100154
+     C*
+     C***********DN,A      IFGT MINBX                      - B2           100154
+     C***********          ADD  1         DBMB                            100154
+     C***********          END                             - E2           100154
+     C**
+     C****IF*A/C*OPENED*ON*FIRST*DAY*OF*PERIOD,*CHECK*IF*O/D*ON*THAT*DATE 100154
+     C**
+     C***********DN,A      IFGT *ZERO                      - B2           100154
+     C***********          ADD  1         DJOD                            100154
+     C***********          END                             - E2           100154
+     C*
+     C***********          END                             - E1           100154
+     C*
+     C           B         DOUGTACCPER                     - B1
+     C                     ADD  DN,A      DN,B
+     C*
+     C           DN,B      IFGT CLLB                       - B2
+     C                     Z-ADDDN,B      CLLB
+     C                     END                             - E2
+     C*
+     C           DN,B      IFLT CLHB                       - B2
+     C                     Z-ADDDN,B      CLHB
+     C                     END                             - E2
+     C**
+      * Following code moved; days below min. bal. & days overdrawn       100154
+      * calculated on ledger balance.                                     100154
+     C*****CALCULATE*NUMBER*OF*DAYS*BELOW*MIN.*BALANCE                    100154
+     C**
+     C***********DACO      IFLE ELAC                       - B2           100154
+     C***********STRT      ORLE B                                         100154
+     C*
+     C***********DN,B      IFEQ MINBX                      - B3           100154
+     C***********          ADD  1         DBMB                            100154
+     C***********          END                             - E3           100154
+     C**
+     C****CALCULATE*DAYS*O/D*FROM*CLEARED*BALANCE**(MOVED*FROM*GL0350)    100154
+     C**
+     C***********DN,B      IFGT *ZERO                      - B3           100154
+     C***********          ADD  1         DJOD                            100154
+     C***********          END                             - E3           100154
+     C**
+     C***********          END                             - E2           100154
+     C**
+     C                     ADD  1         A
+     C                     ADD  1         B
+     C                     END                             - E1
+     C**
+     C**   CALCULATE AVERAGE BALANCE
+     C**
+     C                     XFOOTDN        NETTOT
+     C           DACO      IFGT ELAC                       - B1
+     C           ACOPER    IFNE *ZEROS                     - B2           138964
+     C           NETTOT    DIV  ACOPER    CLAB      H
+     C                     ELSE                            - X2           138964
+     C                     Z-ADD*ZEROS    CLAB                            138964
+     C                     END                             - E2           138964
+     C                     ELSE                            - X1
+     C           NETTOT    DIV  ACCPER    CLAB      H
+     C                     END                             - E1
+     C**
+     C**   GROSS ARRAY
+     C**
+     C                     Z-ADDDG,1      LDHB
+     C                     Z-ADDDG,1      LDLB
+     C                     Z-ADDDG,1      LDAB
+     C                     Z-ADD1         A
+     C                     Z-ADD2         B
+     C                     Z-ADD*ZEROS    ACODB
+     C                     Z-ADD*ZEROS    ACCCB
+      *                                                                   100154
+      * Days below min. bal. & days overdrawn now calc'd on ledger bal.   100154
+     C           DACO      IFLE ELAC                       - B1           100154
+     C           STRT      OREQ A                                         100154
+      *                                                                   100154
+     C           DG,A      IFGT MINBX                      - B2           100154
+     C                     ADD  1         DBMB                            100154
+     C                     END                             - E2           100154
+      *                                                                   100154
+      * If a/c opened on 1st day of period, check if O/D on that day      100154
+     C           DG,A      IFGT *ZERO                      - B2           100154
+     C                     ADD  1         DJOD                            100154
+     C                     END                             - E2           100154
+      *                                                                   100154
+     C                     END                             - E1           100154
+     C*
+     C           DG,A      IFGT *ZERO                      - B1
+     C                     Z-ADDDG,A      LADB
+     C                     Z-ADD1         ACODB            - B1
+     C                     ELSE                            - X1
+     C                     Z-ADD*ZERO     LADB
+     C                     Z-ADD*ZERO     ACODB            - B1
+     C                     END                             - E1
+     C           DG,A      IFLT *ZERO                      - B1
+     C                     Z-ADDDG,A      LACB
+     C                     Z-ADD1         ACCCB            - B1
+     C                     ELSE                            - X1
+     C                     Z-ADD*ZERO     LACB
+     C                     Z-ADD*ZERO     ACCCB            - B1
+     C                     END                             - E1
+     C*
+     C           B         DOUGTACCPER                     - B1
+     C                     ADD  DG,A      DG,B
+     C*
+     C           DG,B      IFGT LDLB                       - B2
+     C                     Z-ADDDG,B      LDLB
+     C                     END                             - E2
+     C*
+     C           DG,B      IFLT LDHB                       - B2
+     C                     Z-ADDDG,B      LDHB
+     C                     END                             - E2
+     C*
+     C           DG,B      IFGT *ZERO                      - B2
+     C                     ADD  DG,B      LADB
+     C                     ADD  1         ACODB
+     C                     END
+     C           DG,B      IFLT *ZERO                      - B2
+     C***********DG,B      ADD  DG,B      LACB                            100154
+     C                     ADD  DG,B      LACB                            100154
+     C                     ADD  1         ACCCB
+     C                     END                             - E2
+      *                                                                   100154
+      * Days below min. bal. & days overdrawn now calc'd on ledger bal.   100154
+      *                                                                   100154
+      * Calculate number of days below min. balance                       100154
+     C           DACO      IFLE ELAC                       - B2           100154
+     C           STRT      ORLE B                                         100154
+      *                                                                   100154
+     C           DG,B      IFGT MINBX                      - B3           100154
+     C                     ADD  1         DBMB                            100154
+     C                     END                             - E3           100154
+      *                                                                   100154
+      * Calculate days overdrawn                                          100154
+     C           DG,B      IFGT *ZERO                      - B3           100154
+     C                     ADD  1         DJOD                            100154
+     C                     END                             - E3           100154
+      *                                                                   100154
+     C                     END                             - E2           100154
+     C*
+     C                     ADD  1         A
+     C                     ADD  1         B
+     C*
+     C                     END                             - E1
+     C*
+     C                     XFOOTDG        GROTOT
+     C*
+     C           ACCCB     IFEQ *ZEROS
+     C                     Z-ADD*ZERO     LACB
+     C                     ELSE                            - X1
+     C           LACB      DIV  ACCCB     LACB      H
+     C                     END
+     C           ACODB     IFEQ *ZEROS
+     C                     Z-ADD*ZERO     LADB
+     C                     ELSE                            - X1
+     C           LADB      DIV  ACODB     LADB      H
+     C                     END
+     C*
+     C           DACO      IFGT ELAC                       - B1
+     C           ACOPER    IFNE *ZEROS                     - B2           138964
+     C           GROTOT    DIV  ACOPER    LDAB      H
+     C                     ELSE                            - X2           138964
+     C                     Z-ADD*ZEROS    LDAB                            138964
+     C                     END                             - E2           138964
+     C                     ELSE                            - X1
+     C           GROTOT    DIV  ACCPER    LDAB      H
+     C                     END                             - E1
+     C/COPY WNCPYSRC,REH00495
+     C**
+     C**   CHAIN TO ACCOUNTS FILE AND UPDATE ACCRUAL
+     C**   PERIOD BALANCES
+     C**
+     C********** ACKEY     CHAINACCNT                52                                       CGL029
+     C/COPY WNCPYSRC,REH00496
+     C           ACKEY1    CHAINACCNT                52                                       CGL029
+     C*
+     C** ERROR IN ACCNT
+     C*
+     C           *IN52     IFEQ '1'                        - B1
+     C           RECI      ORNE 'D'
+     C           SHWCLS    ANDEQ'N'                                                           241041
+     C           RECI      ORNE 'D'                                                           241041
+     C           RECI      ANDNE'C'                                                           241041
+     C           SHWCLS    ANDEQ'Y'                                                           241041
+     C           *LOCK     IN   LDA                                       081266
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVE 'ACCNT'   DBFILE           **DB ERROR 06**
+     C                     MOVELWAKEY     DBKEY            ***************
+     C                     MOVEA'0'       *IN,89
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C                     Z-ADDDG,A      EPLB
+     C                     Z-ADDDN,A      EPCB
+     C                     Z-ADD*ZERO     DIOD
+     C                     UPDATACCNTABF
+     C*
+     C** DAYS O/D ARE NOW CALCULATED FROM THE CLEARED BALANCE. THE CURRENT
+     C** CLEARED BALANCE HAS BALANCE CHANGES APPLIED TO IT IN REVERSE
+     C** ORDER, CALCULATING THE CLEARED BAL FOR EACH DAY IN THE PERIOD. NO
+     C** ADJUSTMENT IS NECESSARY AS THIS IS CONTINUED TO THE END OF THE
+     C** LAST PERIOD.
+     C**
+     C**   WRITE DATA REC TO RACT
+     C*
+     C                     MOVE 'D'       RECI
+     C                     WRITERACTRFF
+     C                     ADD  1         NORE
+     C**
+     C**   IF ANY POSTINGS FOR THIS ACCOUNT,
+     C**   WRITE TRANSACTION REC TO RACT
+     C**
+     C           *IN49     IFEQ '1'                        - B1
+     C                     MOVEATT1       OTT
+     C                     MOVEANTT1      ONTT
+     C                     MOVE 'E'       RECI
+     C                     Z-ADDONTT,1    NOTR
+     C                     Z-ADDONTT,2    NOTR1
+     C                     Z-ADDONTT,3    NOTR2
+     C                     Z-ADDONTT,4    NOTR3
+     C                     Z-ADDONTT,5    NOTR4
+     C                     Z-ADDONTT,6    NOTR5
+     C                     Z-ADDONTT,7    NOTR6
+     C                     Z-ADDONTT,8    NOTR7
+     C                     Z-ADDONTT,9    NOTR8
+     C                     Z-ADDONTT,10   NOTR9
+     C                     Z-ADDONTT,11   NOTR10
+     C                     Z-ADDONTT,12   NOTR11
+     C                     Z-ADDONTT,13   NOTR12
+     C                     Z-ADDONTT,14   NOTR13
+     C                     Z-ADDONTT,15   NOTR14
+     C                     Z-ADDONTT,16   NOTR15
+     C                     Z-ADDONTT,17   NOTR16
+     C                     Z-ADDONTT,18   NOTR17
+     C                     Z-ADDONTT,19   NOTR18
+     C                     Z-ADDONTT,20   NOTR19
+     C                     Z-ADDONTT,21   NOTR20
+     C                     Z-ADDONTT,22   NOTR21
+     C                     Z-ADDONTT,23   NOTR22
+     C                     Z-ADDONTT,24   NOTR23
+     C                     Z-ADDONTT,25   NOTR24
+     C                     WRITERACTRGF
+     C                     ADD  1         NORE
+     C**
+     C**   IF TRANS TYPE ARRAY DOES NOT FIT ON ONE RECORD OF
+     C**   RACT, PUT OUT FURTHER RECORDS
+     C**
+     C           TT,26     IFNE *ZERO                      - B2
+     C                     MOVEATT2       OTT
+     C                     MOVEANTT2      ONTT
+     C                     Z-ADDONTT,1    NOTR
+     C                     Z-ADDONTT,2    NOTR1
+     C                     Z-ADDONTT,3    NOTR2
+     C                     Z-ADDONTT,4    NOTR3
+     C                     Z-ADDONTT,5    NOTR4
+     C                     Z-ADDONTT,6    NOTR5
+     C                     Z-ADDONTT,7    NOTR6
+     C                     Z-ADDONTT,8    NOTR7
+     C                     Z-ADDONTT,9    NOTR8
+     C                     Z-ADDONTT,10   NOTR9
+     C                     Z-ADDONTT,11   NOTR10
+     C                     Z-ADDONTT,12   NOTR11
+     C                     Z-ADDONTT,13   NOTR12
+     C                     Z-ADDONTT,14   NOTR13
+     C                     Z-ADDONTT,15   NOTR14
+     C                     Z-ADDONTT,16   NOTR15
+     C                     Z-ADDONTT,17   NOTR16
+     C                     Z-ADDONTT,18   NOTR17
+     C                     Z-ADDONTT,19   NOTR18
+     C                     Z-ADDONTT,20   NOTR19
+     C                     Z-ADDONTT,21   NOTR20
+     C                     Z-ADDONTT,22   NOTR21
+     C                     Z-ADDONTT,23   NOTR22
+     C                     Z-ADDONTT,24   NOTR23
+     C                     Z-ADDONTT,25   NOTR24
+     C                     WRITERACTRGF
+     C                     ADD  1         NORE
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **TOTAC ENDSR**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** TOTAL subroutine to execute end processing.
+     C**
+     C**     Called by       S T A R T
+     C**     Calls
+     C**
+     C           TOTAL     BEGSR                           **TOTAL BEGSR**
+     C*
+     C* CREATE RTZZ
+     C*
+     C                     ADD  2         NORE
+     C                     MOVE 'T'       RECI
+     C                     WRITERTZZF
+     C*
+     C*
+     C** OUTPUT AUDIT DETAIL
+     C*
+     C                     WRITETOTALS
+     C*
+     C** OUTPUT AUDIT END
+     C*
+     C                     EXSR OVERP1
+     C           *IN87     IFEQ '1'                                       084266
+     C***********          WRITEENDP1                                     101618
+     C                     WRITEENDP1                  80                 101618
+     C                     ELSE                                           084266
+     C                     OPEN RE3860P1                                  084266
+     C***********          WRITEENDP1                                     101618
+     C                     WRITEENDP1                  80                 101618
+     C                     END                                            084266
+     C*
+     C                     ENDSR                           **TOTAL ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** ACCSR subroutine for ACCNT  file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           *PSSR
+     C**
+     C           ACCSR     BEGSR                           **ACCSR BEGSR**
+     C*
+     C           *LOCK     IN   LDA                                       081266
+     C                     MOVE 'ACCNT'   DBFILE           ***************
+     C                     MOVELWAKEY     DBKEY            **STATUS ERR **
+     C                     MOVELSTSACC    DBSTAT           ***************
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR                           **ACCSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C***POSSR*subroutine*for*REPOSL*file*exception/error*handling
+     C** POSSR subroutine for REPOSL1 file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           *PSSR
+     C**
+     C           POSSR     BEGSR                           **POSSR BEGSR**
+     C*
+     C           *LOCK     IN   LDA                                       081266
+     C                     MOVE 'REPOS'   DBFILE           ***************
+     C                     MOVELWPKEY     DBKEY            **STATUS ERR **
+     C                     MOVELSTSPOS    DBSTAT           ***************
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR                           **POSSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RAFSR subroutine for RACTRF file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           *PSSR
+     C**
+     C           RAFSR     BEGSR                           **RAFSR BEGSR**
+     C*
+     C           *LOCK     IN   LDA                                       081266
+     C                     MOVE 'RACTRF'  DBFILE           ***************
+     C                     MOVELWAKEY     DBKEY            **STATUS ERR **
+     C                     MOVELSTSRAF    DBSTAT           ***************
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR                           **RAFSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RAGSR subroutine for RACTRG file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           *PSSR
+     C**
+     C           RAGSR     BEGSR                           **RAGSR BEGSR**
+     C*
+     C                     MOVE 'RACTRG'  DBFILE           ***************
+     C                     MOVELWAKEY     DBKEY            **STATUS ERR **
+     C                     MOVELSTSRAG    DBSTAT           ***************
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR                           **RAGSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RAZSR subroutine for RACTZZ file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           *PSSR
+     C**
+     C           RAZSR     BEGSR                           **RAZSR BEGSR**
+     C*
+     C           *LOCK     IN   LDA                                       081266
+     C                     MOVE 'RTZZ  '  DBFILE           ***************
+     C                     MOVEL'TRAILER' DBKEY            **STATUS ERR **
+     C                     MOVELSTSRAZ    DBSTAT           ***************
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR                           **RAZSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************   081266
+     C** DATES subroutine to calculate start/end dates for activity       081266
+     C**                                                                  081266
+     C**     Called by       Input specifications                         081266
+     C**     Calls           *NONE                                        081266
+     C*                                                                   081266
+     C           DATES     BEGSR                                          081266
+     C**********                                                                       081266 CCB016
+     C****CALCULATE*END*OF*LAST*MONTH**********************************                081266 CCB016
+     C**********                                                                       081266 CCB016
+     C**********           Z-ADDRUND      ZDAYNO                                       081266 CCB016
+     C**********           EXSR ZDATE2                                                 081266 CCB016
+     C********** *IN98     IFEQ '0'                                                    081266 CCB016
+     C**********           MOVEL'01'      ZDATE                                        081266 CCB016
+     C**********           END                                                         081266 CCB016
+     C********** *IN98     IFEQ '1'                                                    081266 CCB016
+     C**********           MOVELZDATE     ZWORK   40                                   081266 CCB016
+     C**********           MOVE '01'      ZWORK                                        081266 CCB016
+     C**********           MOVELZWORK     ZDATE                                        081266 CCB016
+     C**********           END                                                         081266 CCB016
+     C**********           EXSR ZDATE1                                                 081266 CCB016
+     C**********           MOVE ZDAYNO    ELAC                                         081266 CCB016
+     C********** ELAC      SUB  1         ELAC                                         081266 CCB016
+     C**********                                                                       081266 CCB016
+     C****CALCULATE*END*OF*CURRENT*MONTH*******************************                081266 CCB016
+     C****ZFRQA*INCREMENTS*A*DATE*BY*THE*SPECIFIED*FREQUENCY,*SO*FOR***                081266 CCB016
+     C****FREQUENCY*'L'*IT*CALCULATES*THE*LAST*DAY*OF*NEXT*MONTH.*TO***                081266 CCB016
+     C****GET*THE*LAST*DAY*OF*CURRENT*MONTH,*DECREMENT*THE*DATE*BY*31**                081266 CCB016
+     C****DAYS*BEFORE*CALLING*ZFRQA,*AND*PROCESS*UNTIL*THE*DATE*IF*EQUAL               081266 CCB016
+     C****TO*OR*GREATER*THAN*TODAY.************************************                081266 CCB016
+     C**********                                                                       081266 CCB016
+     C********** RUND      SUB  31        ZDAYNO                                       081266 CCB016
+     C********** ZDAYNO    DOWLTRUND                                                   081266 CCB016
+     C**********           MOVE 'L'       ZFREQ                                        081266 CCB016
+     C**********           Z-ADD31        ZMDAY                                        081266 CCB016
+     C**********           EXSR ZFRQA                                                  081266 CCB016
+     C**********           END                                                         081266 CCB016
+     C**********                                                                       081266 CCB016
+     C**********           MOVE ZDAYNO    ECAC                                         081266 CCB016
+      *                                                                                       CCB016
+      ** Set End of Last Activity Period to Previous Start of Month minus                     CCB016
+      * one                                                                                   CCB016
+     C********** PRVSOM    SUB  1         ELAC                                       CCB016 MD052046
+      *                                                                                       CCB016
+      ** Set End of Current Activity Period to Current Start of Month minus                   CCB016
+      *  one                                                                                  CCB016
+     C********** CURSOM    SUB  1         ECAC                                       CCB016 MD052046
+      *                                                                                       CCB016
+      ** Set RUND to last working day of previous month                                       CCB016
+      *                                                                                       CCB016
+     C                     CALL 'ZBKDT'                                                       CCB016
+     C                     PARM CURSOM    ZDAYNO                                              CCB016
+     C                     PARM 1         ZDAYS   20                                          CCB016
+     C                     PARM 0         ZDYNBR  50                                          CCB016
+     C                     PARM BJCYCD    ZCCY    3                                           CCB016
+     C                     PARM BJSLCD    ZLOC    3                                           CCB016
+      *                                                                                       CCB016
+     C**********           Z-ADDZDYNBR    RUND                                       CCB016 MD052046
+     C                     Z-ADDZDYNBR    ELAC                                              MD052046
+      *                                                                                       CCB016
+      ** Set DNWD to first working day of current month                                       CCB016
+      *                                                                                       CCB016
+     C                     CALL 'ZFWDT'                                                       CCB016
+     C                     PARM RUND      ZDAYNO                                              CCB016
+     C                     PARM 1         ZDAYS                                               CCB016
+     C                     PARM 0         ZDYNBR                                              CCB016
+     C                     PARM BJCYCD    ZCCY                                                CCB016
+     C                     PARM BJSLCD    ZLOC                                                CCB016
+      *                                                                                       CCB016
+     C**********           Z-ADDZDYNBR    DNWD                                       CCB016 MD052046
+     C                     Z-ADDZDYNBR    ECAC                                              MD052046
+     C*                                                                   081266
+     C                     ENDSR                                          081266
+     C*                                                                   081266
+     C********************************************************************081266
+     C/EJECT                                                              081266
+     C********************************************************************
+     C**
+     C** *PSSR subroutine for database error handling
+     C**
+     C**     Called by       FIRST,MAIN
+     C**     Calls           -
+     C**
+     C           *PSSR     BEGSR                           **DBSR BEGSR**
+     C*
+     C                     MOVEL'RE3860'  DBPGM
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     OUT  LDA
+     C                     WRITEERRP1
+     C                     WRITEERRAU
+     C                     DUMP                                           081266
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           **PSSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZDATE1Z2                                               081266
+     C/COPY ZSRSRC,ZFRQAZ2                                                081266
+     C/COPY ZSRSRC,ZCHKH                                                  081266
+     C/COPY ZSRSRC,ZACCH                                                  081266
+     C/EJECT
+      *000100101001000            DEC ARRAY BEFORE FIX                    52724
+** DEC
+0001001001001000
+** ERR
+ACCRUAL PERIOD IS NOT POSITIVE
+**  CPY@      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH                                 081266
+312831303130313130313031                                                  081266

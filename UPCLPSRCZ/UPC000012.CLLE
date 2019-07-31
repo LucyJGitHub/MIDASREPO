@@ -1,0 +1,55 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Convert account codes based on SMAC10PD')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade module                                      */
+/*                                                                   */
+/*       UPC000012 - Standard build SQL to update account codes      */
+/*                   based on contents of SMAC10PD                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27788 *CREATE   Date 20May10              */
+/*                      XXXXXX             Date 13Apr10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG27788 - New data reconciliation utility.                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE &FLD04 &FLD10)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLD04) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLD10) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 SYS0000 RPG0000) +
+                          EXEC(GOTO CMDLBL(ERROR))
+ 
+/* Build SQL statement in source file from input parameters. */
+             CHGVAR     VAR(&STM_STR) VALUE('update' *BCAT &FILE +
+                          *BCAT 'a set a.' *TCAT &FLD10 *BCAT ' = ')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             CHGVAR     VAR(&STM_STR) VALUE('(SELECT b.ACOD10 from +
+                          SMAC10PD b where b.ACOD4 = a.' *TCAT +
+                          &FLD04 *TCAT ')')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             ENDPGM

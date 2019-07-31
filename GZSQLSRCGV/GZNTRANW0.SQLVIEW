@@ -1,0 +1,39 @@
+/******************************************************************************/
+/*                                                                            */
+/*       Midas - Global Processing Module                                     */
+/*                                                                            */
+/*       GZNTRANW0 - Midas FT Nostro Transfer - Details View                  */
+/*                                                                            */
+/*       (c) Finastra International Limited 2014                              */
+/*                                                                            */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CAP212  *CREATE    Date 15Sep14                        */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CAP212 - FT Nostro Transfer API                                      */
+/*                                                                            */
+/******************************************************************************/
+  create view                                                                   :
+  **********/**********                                                         :
+  as                                                                            :
+  select A.*,                                                                   :
+         case when A.DEST < 10 then A.CCY concat '0' concat A.DEST              :
+         else A.CCY concat A.DEST end as NTDEST,                                :
+         case when A.ACBN < 10 then A.CCY concat '0' concat A.ACBN              :
+         else A.CCY concat A.ACBN end as NTACBN,                                :
+         'NT NOSTRO TRANSFER' as NTNAME,                                        :
+         '0' concat A.STMT as NTSTTP,                                           :
+         case when A.SWPC = 1 then 'Urgent'                                     :
+         else 'Normal' end as NTSCDE,                                           :
+         case when A.RECI = 'M' then 'MATURED'                                  :
+         else case when A.RECI = 'C' then 'DELETED'                             :
+         else case when A.RECI = 'D' and A.AUIN = 'Y' then 'AUTHORISED'         :
+         else 'LIVE' end end end as NTSTAT,                                     :
+         B.A8ZONE as CUSTZONE                                                   :
+  from GZNTRANDD A left join GZSDBRCHPD B on A.BRCA = B.A8BRCD                  :
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas FT Nostro Transfer - Details View           ';                     :
+                                                                                :

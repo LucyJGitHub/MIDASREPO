@@ -1,0 +1,241 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                   /*CSC056*/
+/********************************************************************/
+/*                                                                  */
+/*        Midas     - System Control Module                         */
+/*                                                                  */
+/*     SCCLRSE - CLEAR DAILY SECURITIES TRADING FILES               */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*       Last Amend No. CSC056  *REDUNDANT Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/*       Prev Amend No.  CSE006         DATE  01SEP99               */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                       S01408         DATE  10JUL96               */
+/*                       S01408         DATE  10MAY96               */
+/*                       S01401         DATE  24MAR93               */
+/*                       E35464         DATE  05FEB92               */
+/*                       E29128         DATE  03OCT91               */
+/*                       S01343         DATE  15AUG91               */
+/*                       E27829         DATE  29AUG91               */
+/*                       S01117         DATE  24APR90               */
+/*                       E14679         DATE  10/09/88              */
+/*                       E13528         DATE  17/06/88              */
+/*                       S01155         DATE  22/04/88              */
+/*                                                                  */
+/********************************************************************/
+/*                                                                  */
+/*       CSC056 - COB Restructure - SC COB Optimisation Phase 1     */
+/*     CSE006 - Repurchase Agreements (Repos) enhancement - Clear   */
+/*              new Buy-Sell Backs temporary file at EOD.           */
+/*     S01408 - Core  hook SCCLRSE002 added.                        */
+/*     S01408 - Addition of core hook SCCLRSE001                    */
+/*     S01401 - SWIFT Messages MT5xxs - Generate SWIFT Confirmations*/
+/*              Clear Bulk Trades File and Extensions.              */
+/*     E35464  -  CVALSD AND CVALSA SHOULD ONLY BE CLEARED DURING   */
+/*                INPUT CYCLE INITIATION                            */
+/*     E29128 - FILES SESLTA AND SESLTD REDUNDANT                   */
+/*     S01343 - SC/RR/SD MODULE RENAME PROJECT.                     */
+/*              - SCCLRSE RENAMED FROM SDCLRSE                      */
+/*     E27829  -  CVALSD & CVALSA NOW HAVE ONE MEMBER               */
+/*     S01117 - MULTI BRANCHING (TO ALLOW INPUT CYCLE EVENTS REPORT)*/
+/*     E14679  -  CLEAR DOWN EVENTS FILES AT I/C INITIATION         *  *E14679*/
+/*     E13528  -  INCORRECT CLEAR OF SNDEFD & SNDEFA FILES          *  *E13528*/
+/*     S01155  -  SE INCORPORATION FIX. THE GESE FILES SHOULD NOT   */
+/*                BE INCLUDED IN THIS PROGRAM BUT THE GEST FILES    */
+/*                SHOULD.                                           */
+/*                                                                  */
+/********************************************************************/
+/************PGM                                                     * *E35464*/
+             PGM        PARM(&PHASE)                                  /*E35464*/
+             DCL        VAR(&PHASE) TYPE(*CHAR) LEN(1)                /*E35464*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/*/COPY WNCPYSRC,SCCLRSE003                                          */
+/*                                                                            */
+/* CLEAR SECURITIES TRADING DAILY FILES                                       */
+             SNDPGMMSG  MSG('Clear Securities Trading Daily Files') +
+                          TOMSGQ(MRUNQ)
+/*/COPY WNCPYSRC,SCCLRSE004                                          */
+/*                                                                            */
+   CLRPFM (ASTACA)
+   CLRPFM (ASTACD)
+   CLRPFM (BKPHRA)
+   CLRPFM (BKPHRD)
+   CLRPFM (BKPOFA)
+   CLRPFM (BKPOFD)
+   CLRPFM (BKPORA)
+   CLRPFM (BKPORD)
+   CLRPFM (BKRVLA)
+   CLRPFM (BKRVLD)
+   CLRPFM (BPACBA)
+   CLRPFM (BPACBD)
+   CLRPFM (BPACBZ)
+   CLRPFM (BPACCA)
+   CLRPFM (BPACCD)
+   CLRPFM (BPACCZ)
+/* CLRPFM (BPEVEA)                                                 */ /*S01117*/
+/* CLRPFM (BPEVED)                                                 */ /*S01117*/
+/* CLRPFM (BTVDAD)    */
+   CLRPFM (CDEPFA)
+   CLRPFM (CDEPFD)
+   CLRPFM (CDPCDA)
+   CLRPFM (CDPCDD)
+   CLRPFM (CDPDDA)
+   CLRPFM (CDPDDD)
+   CLRPFM (CDPMVA)
+   CLRPFM (CDPMVD)
+   CLRPFM (CNCTRA)
+   CLRPFM (CNCTRD)
+   CLRPFM (COFEXA)
+   CLRPFM (COFEXD)
+/* CLRPFM (CPEVEA)                                                 */ /*S01117*/
+ /*CLRPFM (CPEVED)                                                 */ /*S01117*/
+   CLRPFM (CPEXPD)
+   CLRPFM (CPLEXQF)
+   CLRPFM (CPLIMD)
+   CLRPFM (CPOSFA)
+   CLRPFM (CPOSFD)
+             IF         COND(&PHASE *EQ 'I') THEN(DO)                 /*E35464*/
+/************CLRPFM     FILE(CVALSA) MBR(EXTRACT)   */                /*E27829*/
+/************CLRPFM     FILE(CVALSA) MBR(PROMPT)      */              /*E27829*/
+             CLRPFM     FILE(CVALSA)                                  /*E27829*/
+/************CLRPFM     FILE(CVALSD) MBR(EXTRACT)       */            /*E27829*/
+/************CLRPFM     FILE(CVALSD) MBR(PROMPT)          */          /*E27829*/
+             CLRPFM     FILE(CVALSD)                                  /*E27829*/
+             ENDDO                                                    /*E35464*/
+   CLRPFM (DCSEXA)
+   CLRPFM (DCSEXD)
+/* CLRPFM (DMEVEA)                                                 */ /*S01117*/
+/* CLRPFM (DMEVED)                                                 */ /*S01117*/
+/* CLRPFM (DPACBA) */
+/* CLRPFM (DPACBD) */
+/* CLRPFM (DPACCA) */
+/* CLRPFM (DPACCD) */
+/* CLRPFM (DPEVEA)                                                 */ /*S01117*/
+/* CLRPFM (DPEVED)                                                 */ /*S01117*/
+   CLRPFM (DPOSFA)
+   CLRPFM (DPOSFD)
+   CLRPFM (DSTEXA)
+   CLRPFM (DSTEXD)
+/**/                                                                  /*S01155*/
+/* CLRPFM (GESEAA)   */                                               /*S01155*/
+/* CLRPFM (GESEMHH)  */                                               /*S01155*/
+/* CLRPFM (GESEMPD)  */                                               /*S01155*/
+/* CLRPFM (GESEMZZ)  */                                               /*S01155*/
+/* CLRPFM (GESEPD)   */                                               /*S01155*/
+/* CLRPFM (GESEZZ)   */                                               /*S01155*/
+   CLRPFM (GESTHH)                                                    /*S01155*/
+   CLRPFM (GESTPD)                                                    /*S01155*/
+   CLRPFM (GESTZZ)                                                    /*S01155*/
+   CLRPFM (GESTMHH)                                                   /*S01155*/
+   CLRPFM (GESTMPD)                                                   /*S01155*/
+   CLRPFM (GESTMZZ)                                                   /*S01155*/
+/**/                                                                  /*S01155*/
+   CLRPFM (IACEXA)
+   CLRPFM (IACEXD)
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,SCCLRSE001                                           /*S01408*/
+/**/                                                                  /*S01408*/
+             CLRPFM     FILE(MATEXA) MBR(BOOK)
+             CLRPFM     FILE(MATEXA) MBR(CUSTOMER)
+             CLRPFM     FILE(MATEXD) MBR(BOOK)
+             CLRPFM     FILE(MATEXD) MBR(CUSTOMER)
+   CLRPFM (MDMEXA)
+   CLRPFM (MDMEXD)
+   CLRPFM (MPREXA)
+   CLRPFM (MPREXD)
+   CLRPFM (NOSEXSE)
+/* CLRPFM (PCTEVA)                              */    /*E14679*/      /*S01117*/
+/* CLRPFM (PCTEVD)                              */    /*E14679*/      /*S01117*/
+   CLRPFM (PIBKPD)
+   CLRPFM (PICDPD)
+   CLRPFM (PICSPD)
+   CLRPFM (PIDPPD)
+   CLRPFM (PIUDPD)
+   CLRPFM (PRFAJA)
+   CLRPFM (PRFAJD)
+/*/COPY WNCPYSRC,SCCLRSE007                                          */
+   CLRPFM (SECACA)
+   CLRPFM (SECACD)
+/*/COPY WNCPYSRC,SCCLRSE008                                          */
+             CLRPFM     FILE(SEKEYA) MBR(ACCRUAL)
+             CLRPFM     FILE(SEKEYA) MBR(BKMATUR)
+             CLRPFM     FILE(SEKEYA) MBR(BKPOSN)
+             CLRPFM     FILE(SEKEYA) MBR(BKPOSNR)
+             CLRPFM     FILE(SEKEYA) MBR(CONTLIAB)
+             CLRPFM     FILE(SEKEYA) MBR(CPOSN1)
+             CLRPFM     FILE(SEKEYA) MBR(CPOSN2)
+             CLRPFM     FILE(SEKEYA) MBR(DEPOTMVT)
+             CLRPFM     FILE(SEKEYA) MBR(DPOSN1)
+             CLRPFM     FILE(SEKEYA) MBR(DPOSN2)
+             CLRPFM     FILE(SEKEYA) MBR(MMREVAL)
+             CLRPFM     FILE(SEKEYA) MBR(PSETTLE)
+             CLRPFM     FILE(SEKEYA) MBR(TRADE)
+/*/COPY WNCPYSRC,SCCLRSE005                                          */
+             CLRPFM     FILE(SEKEYA) MBR(TSETTLE)
+             CLRPFM     FILE(SEKEYD) MBR(ACCRUAL)
+             CLRPFM     FILE(SEKEYD) MBR(BKMATUR)
+             CLRPFM     FILE(SEKEYD) MBR(BKPOSN)
+             CLRPFM     FILE(SEKEYD) MBR(BKPOSNR)
+             CLRPFM     FILE(SEKEYD) MBR(CONTLIAB)
+             CLRPFM     FILE(SEKEYD) MBR(CPOSN1)
+             CLRPFM     FILE(SEKEYD) MBR(CPOSN2)
+             CLRPFM     FILE(SEKEYD) MBR(DEPOTMVT)
+             CLRPFM     FILE(SEKEYD) MBR(DPOSN1)
+             CLRPFM     FILE(SEKEYD) MBR(DPOSN2)
+             CLRPFM     FILE(SEKEYD) MBR(MMREVAL)
+             CLRPFM     FILE(SEKEYD) MBR(PSETTLE)
+             CLRPFM     FILE(SEKEYD) MBR(TRADE)
+/*/COPY WNCPYSRC,SCCLRSE006                                          */
+             CLRPFM     FILE(SEKEYD) MBR(TSETTLE)
+ /*CLRPFM (SESLTA)                                    /*E29128*/
+ /*CLRPFM (SESLTD)                                    /*E29128*/
+   CLRPFM (SETACA)
+   CLRPFM (SETACD)
+   CLRPFM (SETLXA)
+   CLRPFM (SETLXD)
+/* CLRPFM (SNDEFA)                                    /*E13528*/
+/* CLRPFM (SNDEFD)                                    /*E13528*/
+   CLRPFM (TOVRPA)
+   CLRPFM (TOVRPD)
+   CLRPFM (TOVRTA)
+   CLRPFM (TOVRTD)
+   CLRPFM (TRDACA)
+   CLRPFM (TRDACD)
+/* CLRPFM (TREVEA)                                                 */ /*S01117*/
+/* CLRPFM (TREVED)                                                 */ /*S01117*/
+   CLRPFM (UDEPFA)
+   CLRPFM (UDEPFD)
+   CLRPFM (UDPCDA)
+   CLRPFM (UDPCDD)
+   CLRPFM (UDPDDA)
+   CLRPFM (UDPDDD)
+   CLRPFM (UDPMVA)
+   CLRPFM (UDPMVD)
+   CLRPFM (UPLEXA)
+   CLRPFM (UPLEXD)
+/*                                                                     *S01401*/
+   CLRPFM (BULKTD)                                                    /*S01401*/
+   CLRPFM (BULKSDX1)                                                  /*S01401*/
+   CLRPFM (BULKSDX2)                                                  /*S01401*/
+/*                                                                            */
+/*                                                                    /*CSE006*/
+   CLRPFM (SEBYSLPD)                                                  /*CSE006*/
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,SCCLRSE002                                           /*S01408*/
+/**/                                                                  /*S01408*/
+             SNDPGMMSG  MSG('Securities Trading Daily Files Cleared') +
+                          TOMSGQ(MRUNQ)
+ ENDCLPGM:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM     /* END CL PGM */

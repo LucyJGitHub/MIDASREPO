@@ -1,0 +1,1939 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Incoming payments valid. s1/lvl 2')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module
+     F*                                                               *
+     F*  FT0357 - Validate Incoming Payments - Screen 1, Level 2      *
+     F*                                                               *
+     F*  Function:  This program validates the level 2 input for      *
+     F*  Incoming Payments.                                           *
+     F*                                                               *
+     F*  Called By: FT0355  - Incomimg Payments Maintenence Level 2   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020161           Date 24Apr13               *
+      *                 CFT120             Date 28Sep12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG26239           Date 01Oct09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG15201           Date 30Oct07               *
+      *                 BUG15045           Date 19Oct07               *
+      *                 250600             Date 07Oct07               *
+      *                 CSW207             Date 17Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CFT032             Date 11Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CFT017             Date 08Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 09Jan01               *
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU006             Date 07May98               *
+      *                 S01408             Date 01Nov96               *
+     F*                 S01408             DATE 05AUG96               *
+     F*                 069250             DATE 03MAY94               *
+     F*                 S01435             DATE 22AUG93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD020161 - Messages sent thru Multicash not processed by STP *
+      *             Added hooks:                                      *
+      *             OFCPYSRCZ,CFT148_032                              *
+      *             OFCPYSRCZ,CFT148_033                              *
+      *             OFCPYSRCZ,CFT148_034                              *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  BUG26239 - Error message was not shown                       *
+      *  BUG15201 - Encounter Database Errors (Recompile)             *
+      *  BUG15045 - Missing Ordering Customer field in MT103          *
+      *  250600 - Fix CFT032 and CSW207                               *
+      *  CSW207 - SWIFT 2007 Standard Changes                         *
+      *  CFT032 - Account Line in Field 50X in MT103                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CFT017 - Multilateral Inter-bank Exchange Fee. (Recompile)   *
+      *  CFT009 - Funds Transfer Fees and Charges - phase 1           *
+      *           (Recompiled Only)                                   *
+      *  CFT014 - Straight-through Processing Phase 2 MT103           *
+      *           Messages Generation for FT.                         *
+     F*  CEU006 - EMU FT Payments and Settlement (recompile only).    *
+     F*  S01408 - Core Hook FT0357CCP3 Added                          *
+     F*         - Core Hook FT0357CCP2 Added                          *
+     F*  S01408 - Core Hook FT0357CCP1 Added                          *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*  Indicator usage
+     F*  ~~~~~~~~~~~~~~~
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*
+     F*  31    Invalid S.W.I.F.T. Address format
+     F*  32    S.W.I.F.T. Address not on file
+     F*
+     F*  50    Program Initialised
+     F*
+     F*  90    General Error Indicator
+     F*  91    / found
+     F*  92    Embedded spaces found
+     F*  93    Illegal characters found
+     F*  94    Work indicator used in checking illegal characters
+     F*
+     F*  U7/U8 Error Ocurred
+     F*  LR    End program
+     F*
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F***ACCNT***IF  E        K        DISK         KINFSR SRFILE    UC   CFT014
+     F*********** ACCNTAAF                          KIGNORE               CFT014
+     F*********** ACCNTACF                          KIGNORE               CFT014
+      ***********                                                         CFT014
+      **RTV*:*General*Ledger*Accounts*by*GL*Account*Number*************   CFT014
+      ***********                                                         CFT014
+     F***ACNUMA**IF  E        K        DISK         KINFSR SRFILE    UC   CFT014
+     F*********** ACCNTABF                          KRENAMEACNUMABF       CFT014
+      ***********                                                         CFT014
+      **RSQ*:*General*Ledger*Accounts*by*Retail*Account*Number*********   CFT014
+      ***********                                                         CFT014
+     F/COPY FTCPYSRC,SFTSWFTF
+     F/COPY WNCPYSRC,FT0357DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E                    ALPH   26  26  1                                                    CFT032
+      *                                                                                       CFT032
+      ** Alphabetic array                                                                     CFT032
+      *                                                                                       CFT032
+     E                    NUMC   10  10  1                                                    CFT032
+      *                                                                                       CFT032
+      ** Numeric array                                                                        CFT032
+      *                                                                                       CFT032
+     E/COPY WNCPYSRC,FT0357DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY FTCPYSRC,SRERRE
+      *
+      *  End of Copysource for error processing
+      *
+     E                    ERCD       38  4               Codes
+      *
+      *  Error Codes Output
+      *
+     E/COPY FTCPYSRC,SFTSWFTE
+      *
+      *  Warning codes array
+      *
+     E                    WRN@       40  1
+      *
+     E/EJECT
+      ***********                                                         CFT014
+      **Rename*of*ACCNT/ACNUMA*Profit*Centre*to*avoid*overwriting******   CFT014
+      ***********                                                         CFT014
+     I***ACCNTABF                                                         CFT014
+     I***********   PRFC                            ACPRFC                CFT014
+      ***********                                                         CFT014
+     I***ACNUMABF                                                         CFT014
+     I***********   PRFC                            ACPRFC                CFT014
+     I/EJECT
+     I/COPY WNCPYSRC,FT0357DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/COPY FTCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing source
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+      *
+      *  Data Structures used by access programs
+      *
+     IDSFDY     E DSDSFDY
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I***SDNOST**  E DSSDNOSTPD                                           CFT014
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      *  Calling parameter data structure for ME1400
+      *
+     ISDCNST    E DSSDCNSTPD
+      *
+      *  Calling parameter data structure for ME1400
+      *
+     IMEBICD    E DSMEBICDPD
+      *
+      *  Calling parameter data structure for ME1400
+      *
+     ISCSARD    E DSSCSARDPD                                              CFT014
+      *                                                                   CFT014
+      ** External data structure for SAR file details                     CFT014
+      *                                                                   CFT014
+      /EJECT
+      *
+     E/COPY FTCPYSRC,SFT0355S2
+     E/COPY FTCPYSRC,SFTVALDI
+     E/COPY FTCPYSRC,SFT0355F2
+     E/COPY FTCPYSRC,SFT0355I2
+      /EJECT
+      *
+     I***ACKYDS**    DS                          18                       CFT014
+      ***********                                                         CFT014
+      ***Data*Structure*for*DB*errors*on*ACCNT*************************   CFT014
+      ***********                                                         CFT014
+     I***********                             1   60KACNUM                CFT014
+     I***********                             1   6 KACNMA                CFT014
+     I***********                             7   9 KACCCY                CFT014
+     I***********                            10  130KACCD                 CFT014
+     I***********                            10  13 KACCDA                CFT014
+     I***********                            14  150KACSQ                 CFT014
+     I***********                            14  15 KACSQA                CFT014
+     I***********                            16  18 KBRCA                 CFT014
+      *                                                                                       CFT032
+      ** Constants                                                                            CFT032
+      *                                                                                       CFT032
+     I              'Ordering Customer'   C         WORC                                      CFT032
+      *
+     E/COPY FTCPYSRC,SFTADDRI
+     ICLSWTK      DS
+      *
+      *  Redefine SWIFT array as field for SETLL.
+      *
+     I                                        1  12 SW
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                       15  30 #MPREF
+     I                                    P   1   20#MPART
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     E/COPY FTCPYSRC,SFTVALCS
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           S2DATA
+     C                     PARM           V#DATA
+     C                     PARM           F2DATA
+     C                     PARM           E#DATA
+     C                     PARM           C#DATA
+     C                     PARM           I2DATA
+      *
+      *  Set up Primary Reference
+      *
+     C                     MOVELS2DATA    W0PREF
+      *
+      *  Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Determine the mode of processing and execute subroutine :-
+      *
+      *
+      *  Action Code : *VALID
+      *  --------------------
+      *
+      *  Called from FT0050 to validate all input fields on the detail
+      *  screen. Once verified, control returns to the calling program
+      *  where the appropriate error indicators are set on and the
+      *  processing continues.
+      *
+      *
+     C           W0ACT     CASEQ'*VALID  'SRPROC
+     C                     CAS            SRACT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC   : Validate All Detail Fields Entered                *
+      *             Seton appropriate indicators and set up the array *
+      *             of relevant error codes for display.              *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPROC    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPROC'  @STK,Q
+      *
+      *  /COPY Statement
+      *
+     C/COPY WNCPYSRC,FT0357PROC
+      *
+      *  Move warning array passed to WRN@ and error indicators
+      *
+     C                     MOVEAE#WARA    WRN@
+     C                     MOVEA*BLANKS   ERCD
+     C                     CLEARI2DATA
+     C                     Z-ADD0         X       50
+      ***********                                                         CFT014
+      ***Validate*Transfer*Commission*Tariff***************************   CFT014
+      ***********                                                         CFT014
+     C***********          EXSR SRTRCT                                    CFT014
+      ***********                                                         CFT014
+      ***Validate*Charges*To*The*Debit*Of******************************   CFT014
+      ***********                                                         CFT014
+     C***********          EXSR SRCDRO                                    CFT014
+      *
+      *  Validate Ordering Customer
+      *
+     C                     EXSR SRORC
+      *
+      *  Validate Ordering Bank
+      *
+     C                     EXSR SRORBK
+      *
+      *  Validate Senders Correspondent
+      *
+     C                     EXSR SRSNC
+      *
+      *  Validate Bank To Bank Information
+      *
+     C                     EXSR SRBTOB
+      *
+      *  Cross validations
+      *
+     C           E#NOUP    IFEQ *BLANKS
+     C                     EXSR SRXVAL
+     C                     END
+      *
+      *  End Of Validation - set parameters for return
+      *
+      *
+      *  Move waring array back and errors
+      *
+     C                     MOVEAWRN@      E#WARA
+     C                     MOVEAERCD      C#ERCD
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPROC    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************   CFT014
+      *****************************************************************   CFT014
+      ***SRTRCT***:*Validate*Transfer*Commission*Tariff****************   CFT014
+      *****************************************************************   CFT014
+      ***CALLED*BY:*SRPROC*********************************************   CFT014
+      *****************************************************************   CFT014
+      ***CALLS****:****************************************************   CFT014
+      *****************************************************************   CFT014
+      *****************************************************************   CFT014
+     C***SR******SRTRCT    BEGSR                                          CFT014
+      ***********                                                         CFT014
+      ***Set*up*subroutine*stack*name**********************************   CFT014
+      ***********                                                         CFT014
+     C***********          ADD  1         Q                               CFT014
+     C***********          MOVEL'SRTRCT'  @STK,Q                          CFT014
+      ***********                                                         CFT014
+      ***/COPY*Statement***********************************************   CFT014
+      ***********                                                         CFT014
+     C***/COPY*WNCPYSRC,FT0357TRCT                                        CFT014
+      ***********                                                         CFT014
+      ***Tariff*is*optional*but*if*entered*must*be*1/2/3/4/5.**********   CFT014
+      ***********                                                         CFT014
+     C***********S2TRCT    IFNE '1'                                       CFT014
+     C***********S2TRCT    ANDNE'2'                                       CFT014
+     C***********S2TRCT    ANDNE'3'                                       CFT014
+     C***********S2TRCT    ANDNE'4'                                       CFT014
+     C***********S2TRCT    ANDNE'5'                                       CFT014
+     C***********          MOVEL'Y'       E#MSGS                          CFT014
+     C***********          MOVELS2TRCT    FTMSDT                          CFT014
+     C***********          MOVELE#CPGM    FTPGMQ                          CFT014
+     C***********          MOVEL'FTM2055' FTMSID                          CFT014
+     C***********          EXSR FTSNMS                                    CFT014
+     C***********          MOVEL'Y'       I2TRCT                          CFT014
+     C***********          MOVEL'Y'       E#NOUP                          CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      ***Unwind*subroutine*stack*name**********************************   CFT014
+      ***********                                                         CFT014
+     C***********EXTRCT    TAG                                            CFT014
+     C***********          MOVEA*BLANKS   @STK,Q                          CFT014
+     C***********          SUB  1         Q       50                      CFT014
+      ***********                                                         CFT014
+     C***SR******          ENDSR                                          CFT014
+      ***********                                                         CFT014
+     C***/EJECT**                                                         CFT014
+      *****************************************************************   CFT014
+      *****************************************************************   CFT014
+      ***SRCDRO***:*Validate*Charges*To*The*Debit*Of*and*Debit*********   CFT014
+      **************Customer*Reference*********************************   CFT014
+      *****************************************************************   CFT014
+      ***CALLED*BY:*SRPROC*-*Control*Process*of*Validation*************   CFT014
+      *****************************************************************   CFT014
+      ***CALLS****:********-*******************************************   CFT014
+      *****************************************************************   CFT014
+      *****************************************************************   CFT014
+     C***SR******SRCDRO    BEGSR                                          CFT014
+      ***********                                                         CFT014
+      ***Set*up*subroutine*stack*name**********************************   CFT014
+      ***********                                                         CFT014
+     C***********          ADD  1         Q       50                      CFT014
+     C***********          MOVEL'SRCDRO'  @STK,Q                          CFT014
+      ***********                                                         CFT014
+      ***/COPY*Statement***********************************************   CFT014
+      ***********                                                         CFT014
+     C***/COPY*WNCPYSRC,FT0357CDRO                                        CFT014
+      ***********                                                         CFT014
+     C***********          MOVEL*BLANKS   F2CDRT                          CFT014
+      ***********                                                         CFT014
+      ***Charges*To*The*Debit*of*A/C*is*optional.**********************   CFT014
+      ***3*formats*acceptable*-*Nostro,*Retail*A/C,*A/C*No.************   CFT014
+      ***********                                                         CFT014
+      ***If*blank*and*branch*entered*error*****************************   CFT014
+      ***********                                                         CFT014
+     C***********S2CDRO    IFEQ *BLANKS                                   CFT014
+     C***********S2CDBR    ANDNE*BLANKS                                   CFT014
+     C***********          MOVEL'Y'       E#MSGS                          CFT014
+     C***********          MOVELS2CDRO    FTMSDT                          CFT014
+     C***********          MOVELE#CPGM    FTPGMQ                          CFT014
+     C***********          MOVEL'FTM2056' FTMSID                          CFT014
+     C***********          EXSR FTSNMS                                    CFT014
+     C***********          MOVEL'Y'       I2CDRT                          CFT014
+     C***********          MOVEL'Y'       I2CDBR                          CFT014
+     C***********          MOVEL'Y'       E#NOUP                          CFT014
+     C***********          GOTO EXCDRO                                    CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      ***Field*is*optional,*exit*if*blank******************************   CFT014
+      ***********                                                         CFT014
+     C***********S2CDRO    IFEQ *BLANKS                                   CFT014
+     C***********          GOTO EXCDRO                                    CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      ***Determine*the*number*of*digits*in*the*field*******************   CFT014
+      ***********                                                         CFT014
+      ***Check*first*two*characters*are*numeric*and*rest*is*blank******   CFT014
+      ***********                                                         CFT014
+     C***********          MOVEL*BLANKS   I#FLD                           CFT014
+     C***********          MOVELS2CDRO    I#FLD  35                       CFT014
+     C***********DIGITS    CHECKI#FLD     Y#      30     90               CFT014
+     C***/COPY*WNCPYSRC,FT0357C015                                        CFT014
+      ***********                                                         CFT014
+      ***2,*10*and*12*digits*allowed***********************************   CFT014
+      ***********                                                         CFT014
+     C************IN90     IFEQ '1'                                       CFT014
+     C***********Y#        ANDEQ3                                         CFT014
+     C************IN90     OREQ '1'                                       CFT014
+     C***********Y#        ANDEQ11                                        CFT014
+     C************IN90     OREQ '1'                                       CFT014
+     C***********Y#        ANDEQ13                                        CFT014
+     C***********S2CDBR    ANDNE*BLANKS                                   CFT014
+     C***********WUMBIN    ANDEQ'Y'                                       CFT014
+     C************IN90     OREQ '1'                                       CFT014
+     C***********Y#        ANDEQ13                                        CFT014
+     C***********WUMBIN    ANDNE'Y'                                       CFT014
+     C***********          MOVEL'0'       *IN90                           CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      ***Field*is*invalid*format***************************************   CFT014
+      ***********                                                         CFT014
+     C************IN90     IFEQ '1'                                       CFT014
+     C***********          MOVEL'Y'       E#MSGS                          CFT014
+     C***********          MOVELS2CDRO    FTMSDT                          CFT014
+     C***********          MOVELE#CPGM    FTPGMQ                          CFT014
+     C***********          MOVEL'FTM2057' FTMSID                          CFT014
+     C***********          EXSR FTSNMS                                    CFT014
+     C***********          MOVEL'Y'       I2CDRT                          CFT014
+     C***********          MOVEL'Y'       I2CDBR                          CFT014
+     C***********          MOVEL'Y'       E#NOUP                          CFT014
+     C***********          GOTO EXCDRO                                    CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      ***If*10*digits*and*Retail*accounts*not*used*error***************   CFT014
+      ***********                                                         CFT014
+     C***********V#RANR    IFNE 'Y'                                       CFT014
+     C***********Y#        ANDEQ11                                        CFT014
+     C***********S2CDBR    ANDEQ*BLANKS                                   CFT014
+     C***********          MOVEL'Y'       E#MSGS                          CFT014
+     C***********          MOVELS2CDRO    FTMSDT                          CFT014
+     C***********          MOVELE#CPGM    FTPGMQ                          CFT014
+     C***********          MOVEL'FTM2058' FTMSID                          CFT014
+     C***********          EXSR FTSNMS                                    CFT014
+     C***********          MOVEL'Y'       I2CDRT                          CFT014
+     C***********          MOVEL'Y'       I2CDBR                          CFT014
+     C***********          MOVEL'Y'       E#NOUP                          CFT014
+     C***********          GOTO EXCDRO                                    CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      ***Check*if*a*2*digit*Nostro*code*has*been*entered*-*based*on****   CFT014
+      ***no.*of*blanks*found*in*field**********************************   CFT014
+      ***********                                                         CFT014
+     C***********Y#        IFEQ 3                                         CFT014
+     C***********S2CDBR    ANDEQ*BLANKS                                   CFT014
+      ***********                                                         CFT014
+      ***Validate*Nostro*Code******************************************   CFT014
+      ***********                                                         CFT014
+     C***********          MOVELS2CDRO    TNOSN   2                       CFT014
+      ***********                                                         CFT014
+     C***********          CALL 'AONOSTR0'                                CFT014
+     C***********          PARM *BLANKS   @RTCD   7                       CFT014
+     C***********          PARM '*KEY   ' @OPTN   7                       CFT014
+     C***********          PARM *BLANKS   @CUST   6                       CFT014
+     C***********          PARM V#BCCY    @CYCD   3                       CFT014
+     C***********          PARM *BLANKS   @ACCN   4                       CFT014
+     C***********          PARM *BLANKS   @ACSN   2                       CFT014
+     C***********          PARM TNOSN     @NONB   2                       CFT014
+     C***********          PARM *BLANKS   @BRCD   3                       CFT014
+     C***********          PARM *BLANKS   @CSSN  10                       CFT014
+     C***********          PARM *BLANKS   @PNOI   1                       CFT014
+     C***********SDNOST    PARM SDNOST    DSFDY                           CFT014
+      ***********                                                         CFT014
+      ***If*error*on*call**********************************************   CFT014
+      ***********                                                         CFT014
+     C************IN90     IFEQ '1'                                       CFT014
+     C***********          MOVEL'AONOSTR0'W0FILE          *************** CFT014
+     C***********          MOVEL'*CALL'   W0KEY           * DB ERROR 01 * CFT014
+     C***********          Z-ADD1         W0ERNB          *************** CFT014
+     C***********          MOVEL'MEM5003' W0MSGD                          CFT014
+     C***********          MOVEL'MIDAS  ' W0MSGF                          CFT014
+     C***********          EXSR SRERR                                     CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      ***If*not*found*error********************************************   CFT014
+      ***********                                                         CFT014
+     C***********@RTCD     IFNE *BLANKS                                   CFT014
+     C***********          MOVEL'Y'       E#MSGS                          CFT014
+     C***********          MOVELS2CDRO    FTMSDT                          CFT014
+     C***********          MOVELE#CPGM    FTPGMQ                          CFT014
+     C***********          MOVEL'FTM2059' FTMSID                          CFT014
+     C***/COPY*WNCPYSRC,FT0357C010                                        CFT014
+     C***********          EXSR FTSNMS                                    CFT014
+     C***********          MOVEL'Y'       I2CDRT                          CFT014
+     C***********          MOVEL'Y'       I2CDBR                          CFT014
+     C***********          MOVEL'Y'       E#NOUP                          CFT014
+     C***********          GOTO EXCDRO                                    CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      **Set*up*ACCNTAB*fields******************************************   CFT014
+      ***********                                                         CFT014
+     C***********          MOVE A7ACCD    ACOD                            CFT014
+     C***********          MOVE A7ACSN    ACSQ                            CFT014
+     C***********          MOVE A7CUST    CNUM                            CFT014
+     C***********          MOVE A7CYCD    CCY                             CFT014
+     C***********          MOVE A7BRCD    BRCA                            CFT014
+      ***********                                                         CFT014
+      ***Access*Full*Account*Details*for*later*validation**************   CFT014
+      ***********                                                         CFT014
+     C***********          MOVELA7CYCD    KACCCY                          CFT014
+     C***********          Z-ADDCNUM      KACNUM                          CFT014
+     C***********          Z-ADDACOD      KACCD                           CFT014
+     C***********          Z-ADDACSQ      KACSQ                           CFT014
+     C***********          MOVE BRCA      KBRCA                           CFT014
+      ***********                                                         CFT014
+     C***********TACKEY    CHAINACCNTABF             90                   CFT014
+      ***********                                                         CFT014
+     C************IN90     IFEQ '1'                                       CFT014
+     C***********RECI      ORNE 'D'                                       CFT014
+     C***********          MOVE V#BCCY    KACCCY                          CFT014
+     C***********          MOVEL'ACCNT'   W0FILE          *************** CFT014
+     C***********          MOVELACKYDS    W0KEY           * DB ERROR 02 * CFT014
+     C***********          Z-ADD2         W0ERNB          *************** CFT014
+     C***********          MOVEL'MEM5004' W0MSGD                          CFT014
+     C***********          MOVEL'MIDAS  ' W0MSGF                          CFT014
+     C***********          EXSR SRERR                                     CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      ***Check*for*Retail*Account*No.*being*entered********************   CFT014
+      ***only*if*Debit*Customer*reference*is*not*entered*OR************   CFT014
+      ***multibranching*is*not*active.*********************************   CFT014
+      ***********                                                         CFT014
+     C***********Y#        IFEQ 11                                        CFT014
+     C***********S2CDBR    ANDEQ*BLANKS                                   CFT014
+      ***********                                                         CFT014
+     C***********          MOVELS2CDRO    TRENO  100                      CFT014
+     C***********TRENO     CHAINACNUMA               90                   CFT014
+      ***********                                                         CFT014
+     C************IN90     IFEQ '1'                                       CFT014
+     C***********RECI      ORNE 'D'                                       CFT014
+     C***********          MOVEL'Y'       E#MSGS                          CFT014
+     C***********          MOVELS2CDRO    FTMSDT                          CFT014
+     C***********          MOVELE#CPGM    FTPGMQ                          CFT014
+     C***********          MOVEL'FTM2060' FTMSID                          CFT014
+     C***********          EXSR FTSNMS                                    CFT014
+     C***********          MOVEL'Y'       I2CDRT                          CFT014
+     C***********          MOVEL'Y'       I2CDBR                          CFT014
+     C***********          MOVEL'Y'       E#NOUP                          CFT014
+     C***********          GOTO EXCDRO                                    CFT014
+     C***********          END                                            CFT014
+     C***/COPY*WNCPYSRC,FT0357C011                                        CFT014
+      ***********                                                         CFT014
+      ***A/C*Currency*must*be*base*currency****************************   CFT014
+      ***********                                                         CFT014
+     C***********CCY       IFNE V#BCCY                     B005           CFT014
+     C***********          MOVEL'Y'       E#MSGS                          CFT014
+     C***********          MOVELS2CDRO    FTMSDT                          CFT014
+     C***********          MOVELE#CPGM    FTPGMQ                          CFT014
+     C***********          MOVEL'FTM2061' FTMSID                          CFT014
+     C***********          EXSR FTSNMS                                    CFT014
+     C***********          MOVEL'Y'       I2CDRT                          CFT014
+     C***********          MOVEL'Y'       I2CDBR                          CFT014
+     C***********          MOVEL'Y'       E#NOUP                          CFT014
+     C***********          GOTO EXCDRO                                    CFT014
+     C***********          END                                            CFT014
+     C***/COPY*WNCPYSRC,FT0357C012                                        CFT014
+      ***********                                                         CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      ***Validate*for*G/L*Account*No.**********************************   CFT014
+      ***********                                                         CFT014
+      ***If*12*digits*when*combined*with*base*currency*must*exist******   CFT014
+      ***on*PF/ACCNTAB*************************************************   CFT014
+      ***********                                                         CFT014
+     C***********Y#        IFEQ 13                                        CFT014
+     C***********S2CDBR    ORNE *BLANKS                                   CFT014
+      ***********                                                         CFT014
+     C***********          MOVELS2CDRO    KACNUM  60                      CFT014
+     C***********          MOVE S2CDRO    ACCS    6                       CFT014
+     C***********          MOVELACCS      KACCD   40                      CFT014
+     C***********          MOVE ACCS      KACSQ   20                      CFT014
+      ***********                                                         CFT014
+      ***If*multibranched*use*screen*branch*else*use*branch*passed*****   CFT014
+      ***********                                                         CFT014
+     C***********WUMBIN    IFEQ 'Y'                                       CFT014
+     C***********          MOVELS2CDBR    KBRCA   3                       CFT014
+     C***********          ELSE                                           CFT014
+     C***********          MOVELV#SBRC    KBRCA                           CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+     C***********TACKEY    KLIST                                          CFT014
+     C***********          KFLD           KACNUM                          CFT014
+     C***********          KFLD           V#BCCY                          CFT014
+     C***********          KFLD           KACCD                           CFT014
+     C***********          KFLD           KACSQ                           CFT014
+     C***********          KFLD           KBRCA                           CFT014
+      ***********                                                         CFT014
+     C***********TACKEY    CHAINACCNTABF             90                   CFT014
+      ***********                                                         CFT014
+     C************IN90     IFEQ '1'                                       CFT014
+     C***********RECI      ORNE 'D'                                       CFT014
+     C***********          MOVEL'Y'       E#MSGS                          CFT014
+     C***********S2CDRO    CAT  S2CDBR    FTMSDT    P                     CFT014
+     C***********          MOVELE#CPGM    FTPGMQ                          CFT014
+     C***********          MOVEL'FTM2062' FTMSID                          CFT014
+     C***/COPY*WNCPYSRC,FT0357C013                                        CFT014
+     C***********          EXSR FTSNMS                                    CFT014
+     C***********          MOVEL'Y'       I2CDRT                          CFT014
+     C***********          MOVEL'Y'       I2CDBR                          CFT014
+     C***********          MOVEL'Y'       E#NOUP                          CFT014
+      ***********                                                         CFT014
+      **Highlight*branch*if*entered************************************   CFT014
+      ***********                                                         CFT014
+     C***********S2CDBR    IFNE *BLANK                                    CFT014
+     C***********          MOVEL'Y'       I2CDBR                          CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+     C***********          GOTO EXCDRO                                    CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      ***If*'Charges*To*The*Debit*Of*is*entered*then*******************   CFT014
+      ***check*if*date*is*in*the*future*and*if*the*account*is**********   CFT014
+      ***closing*today*************************************************   CFT014
+      ***********                                                         CFT014
+     C***********V#ADDC    IFEQ 'A'                                       CFT014
+     C***********          Z-ADDV#SLDT    @DATE   50                      CFT014
+     C***********          ELSE                                           CFT014
+     C***********          Z-ADDV#PVDT    @DATE                           CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+     C***********@DATE     IFGT WURDNB                                    CFT014
+     C***********ACST      ANDEQ'C'                                       CFT014
+     C***********          MOVEL'Y'       E#MSGS                          CFT014
+     C***********          MOVELS2CDRO    FTMSDT                          CFT014
+     C***********          MOVELE#CPGM    FTPGMQ                          CFT014
+     C***********          MOVEL'FTM2063' FTMSID                          CFT014
+     C***********          EXSR FTSNMS                                    CFT014
+     C***********          MOVEL'Y'       I2CDRT                          CFT014
+     C***********          MOVEL'Y'       I2CDBR                          CFT014
+     C***********          MOVEL'Y'       E#NOUP                          CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      ***Check*not*past*backvalue*period*******************************   CFT014
+      ***********                                                         CFT014
+      ***********                                                  S01408 CFT014
+     C***/COPY*WNCPYSRC,FT0357CCP2                                 S01408 CFT014
+      ***********                                                  S01408 CFT014
+     C***********@DATE     IFLT V#BVLD                                    CFT014
+     C***********          MOVEL'Y'       E#MSGS                          CFT014
+     C***********          MOVELS2CDRO    FTMSDT                          CFT014
+     C***********          MOVELE#CPGM    FTPGMQ                          CFT014
+     C***********          MOVEL'FTM2064' FTMSID                          CFT014
+     C***********          EXSR FTSNMS                                    CFT014
+     C***********          MOVEL'Y'       I2CDRT                          CFT014
+     C***********          MOVEL'Y'       I2CDBR                          CFT014
+     C***********          MOVEL'Y'       E#NOUP                          CFT014
+     C***********          END                                            CFT014
+      ***********                                                  S01408 CFT014
+     C***/COPY*WNCPYSRC,FT0357CCP3                                 S01408 CFT014
+      ***********                                                  S01408 CFT014
+      ***********                                                         CFT014
+      ***For*Retail*accounts*only,*check*that*the**********************   CFT014
+      ***earlier*of*the*two*value*dates*is*not*before*the*Backvalue****   CFT014
+      ***Limit*Date*nor*before*the*account*was*opened******************   CFT014
+      ***********                                                         CFT014
+     C***********ATYP      IFEQ 'R'                                       CFT014
+      ***********                                                         CFT014
+     C***********@DATE     IFLT DACO                                      CFT014
+     C***********          MOVEL'Y'       E#MSGS                          CFT014
+     C***********          MOVELS2CDRO    FTMSDT                          CFT014
+     C***********          MOVELE#CPGM    FTPGMQ                          CFT014
+     C***********          MOVEL'FTM2065' FTMSID                          CFT014
+     C***********          EXSR FTSNMS                                    CFT014
+     C***********          MOVEL'Y'       I2CDRT                          CFT014
+     C***********          MOVEL'Y'       I2CDBR                          CFT014
+     C***********          MOVEL'Y'       E#NOUP                          CFT014
+     C***********          END                                            CFT014
+     C***********                                                  S01408 CFT014
+     C***/COPY*WNCPYSRC,FT0357CCP1                                 S01408 CFT014
+     C***********                                                  S01408 CFT014
+      ***********                                                         CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      ***If*no*errors*then*set*file*fields*****************************   CFT014
+      ***********                                                         CFT014
+     C***********I2CDRT    IFEQ *BLANKS                                   CFT014
+     C***********          SELEC                                          CFT014
+     C***********Y#        WHEQ 3                                         CFT014
+     C***********          MOVEL'N'       F2CDRT                          CFT014
+     C***********Y#        WHEQ 11                                        CFT014
+     C***********          MOVEL'R'       F2CDRT                          CFT014
+     C***********Y#        WHEQ 13                                        CFT014
+     C***********          MOVEL'P'       F2CDRT                          CFT014
+     C***********          ENDSL                                          CFT014
+     C***/COPY*WNCPYSRC,FT0357C014                                        CFT014
+      ***********                                                         CFT014
+     C***********          END                                            CFT014
+      ***********                                                         CFT014
+      ***Unwind*subroutine*stack*name**********************************   CFT014
+      ***********                                                         CFT014
+     C***********EXCDRO    TAG                                            CFT014
+     C***********          MOVEA*BLANKS   @STK,Q                          CFT014
+     C***********          SUB  1         Q                               CFT014
+      ***********                                                         CFT014
+     C***SR******          ENDSR                                          CFT014
+     C***/EJECT**                                                         CFT014
+      *****************************************************************
+      *                                                               *
+      *  SRORC    : Validate Ordering Customer                        *
+      *                                                               *
+      *  CALLED BY: SRPROC - Control Process of Validation            *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRORC     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRORC '  @STK,Q
+      *
+      *  /COPY Statement
+      *
+     C/COPY WNCPYSRC,FT0357RORC
+      *
+      *  Ordering Customer is mandatory except for MT20* messages
+      *
+     C                     MOVEL*BLANKS   F2ORCT
+      *
+     C           S2ORC     IFEQ *BLANKS
+      *
+      * Allow blanks in Ordering Customer fields if Incoming Payment
+      * record is been created from incoming swift message:
+      * MT200, MT201, MT202, MT203 or MT205.
+      *
+     C           V#MTPY    IFNE '200'
+     C           V#MTPY    ANDNE'201'
+     C           V#MTPY    ANDNE'202'
+     C           V#MTPY    ANDNE'203'
+     C           V#MTPY    ANDNE'205'
+     C           V#MTPY    ANDNE'B22'
+     C** Core hook for externalisation.
+     C/COPY WNCPYSRC,FT0357BKMG
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS2ORC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2066' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I2ORCT
+     C                     MOVEL'Y'       E#NOUP
+     C                     END
+      *
+     C                     GOTO EXORC
+      *
+     C                     END
+      *
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELS2ORC     ADDRSS
+      *                                                                                       CFT032
+      ** Check if line one contain an IBAN                                                    CFT032
+      *                                                                                       CFT032
+     C           CFT004    IFEQ 'Y'                                                           CFT032
+      *                                                                                       CFT032
+      ** If the field start with '/aann' or 'aann'                                            CFT032
+      ** validate as an IBAN (INTERNATIONAL BANK ACCOUNT NUMBER)                              CFT032
+      ** having first formatted field removing blanks and IBAN prefix                         CFT032
+      *                                                                                       CFT032
+     C           ADSLSH    IFEQ '/'                                                           CFT032
+     C           34        SUBSTADCHK1:2  PIBAN                                               CFT032
+     C                     ELSE                                                               CFT032
+     C                     MOVELADCHK1    PIBAN                                               CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C                     CALL 'AOIBANR3'                                                    CFT032
+     C                     PARM           @RTCD                                               CFT032
+     C                     PARM           PIBAN  47                                           CFT032
+     C                     PARM           POWITH 47                                           CFT032
+     C           P@IBAN    PARM           PONOBL 34                                           CFT032
+      *                                                                                       CFT032
+     C           1         SUBSTP@IBAN:1  IBCTY1  1                                           CFT032
+     C           1         SUBSTP@IBAN:2  IBCTY2  1                                           CFT032
+     C           1         SUBSTP@IBAN:3  IBCHK1  1                                           CFT032
+     C           1         SUBSTP@IBAN:4  IBCHK2  1                                           CFT032
+      *                                                                                       CFT032
+     C           IBCTY1    LOKUPALPH                     94                                   CFT032
+      *                                                                                       CFT032
+     C           *IN94     IFEQ *ON                                                           CFT032
+     C           IBCTY2    LOKUPALPH                     94                                   CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C           *IN94     IFEQ *ON                                                           CFT032
+     C           IBCHK1    LOKUPNUMC                     94                                   CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C           *IN94     IFEQ *ON                                                           CFT032
+     C           IBCHK2    LOKUPNUMC                     94                                   CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C           *IN94     IFEQ *ON                                                           CFT032
+     C                     CALL 'AOIBANR5'             90                                     CFT032
+     C                     PARM *BLANKS   @RTCD   7                                           CFT032
+     C                     PARM           P@IBAN 34                                           CFT032
+     C           *IN90     IFEQ *OFF                                                          CFT032
+     C           @RTCD     ANDEQ*BLANKS                                                       CFT032
+     C           '/'       CAT  P@IBAN    S2ORC1                                              CFT032
+     C                     MOVEA' '       WRN@,2                                              CFT032
+     C                     ELSE                                                               CFT032
+     C                     MOVE @RTCD     WRTCD   1                                           CFT032
+     C                     MOVELWORC      FTMSDT                                              CFT032
+     C                     SELEC                                                              CFT032
+      *                                                                                       CFT032
+      ** Invalid ISO Country Code                                                             CFT032
+      *                                                                                       CFT032
+     C           WRTCD     WHEQ '1'                                                           CFT032
+     C                     MOVEL'FTM2400' FTMSID                                              CFT032
+      *                                                                                       CFT032
+      ** Invalid BBAN Length                                                                  CFT032
+      *                                                                                       CFT032
+     C           WRTCD     WHEQ '2'                                                           CFT032
+     C                     MOVEL'FTM2401' FTMSID                                              CFT032
+      *                                                                                       CFT032
+      ** Invalid Character                                                                    CFT032
+      *                                                                                       CFT032
+     C           WRTCD     WHEQ '3'                                                           CFT032
+     C                     MOVEL'FTM2402' FTMSID                                              CFT032
+      *                                                                                       CFT032
+      ** Invalid IBAN Length                                                                  CFT032
+      *                                                                                       CFT032
+     C           WRTCD     WHEQ '4'                                                           CFT032
+     C                     MOVEL'FTM2403' FTMSID                                              CFT032
+      *                                                                                       CFT032
+      ** Invalid Check Digit                                                                  CFT032
+      *                                                                                       CFT032
+     C           WRTCD     WHEQ '5'                                                           CFT032
+     C                     MOVEL'FTM2404' FTMSID                                              CFT032
+     C                     OTHER                                                              CFT032
+     C                     MOVEL'FTM2405' FTMSID                                              CFT032
+     C                     ENDSL                                                              CFT032
+      *                                                                                       CFT032
+     C                     MOVE 'Y'       I2ORC1                                              CFT032
+     C                     MOVEL'Y'       E#WARN                                              CFT032
+     C                     MOVEL'Y'       E#MSGS                                              CFT032
+     C                     MOVELE#CPGM    FTPGMQ                                              CFT032
+     C                     EXSR FTSNMS                                                        CFT032
+      *                                                                                       CFT032
+     C           WRN@,2    IFEQ ' '                                                           CFT032
+     C                     MOVEL*BLANKS   E#RSND                                              CFT032
+     C                     MOVEA'Y'       WRN@,2                                              CFT032
+     C                     ENDIF                                                              CFT032
+     C                     ENDIF                                                              CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C           ADSLSH    IFNE '/'                                                           CFT032
+     C           ADCHK5    ANDNE*BLANKS                                                       CFT032
+     C           CSW207    ANDNE'Y'                                                         BUG15045
+     C                     MOVEL'FTM7111' FTMSID                                              CFT032
+     C                     MOVE 'Y'       I2ORC1                                              CFT032
+     C                     MOVE 'Y'       I2ORC5                                              CFT032
+     C                     MOVEL'N'       E#WARN                                              CFT032
+     C                     MOVEL'Y'       E#MSGS                                              CFT032
+     C                     MOVELE#CPGM    FTPGMQ                                              CFT032
+     C                     EXSR FTSNMS                                                        CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C                     ENDIF                                                              CFT032
+      *
+      *  If first ten characters used then try to find via SDCUSTPD
+      *
+     C           ADCH26    IFEQ *BLANKS
+     C           ADEXCS    ANDEQ*BLANKS
+     C           ADSLSH    ANDNE'/'
+     C           ADCH36    OREQ *BLANKS
+     C           ADXCS2    ANDEQ*BLANKS
+     C           ADCHK2    ANDNE*BLANKS
+     C           ADSLSH    ANDEQ'/'
+     C           ADSLS2    ANDNE'/'
+      *
+      *  First 10 characters should be key for SDCUST
+      *
+     C           ADSLSH    IFNE '/'
+     C                     MOVELADCHK1    @CNUM
+     C                     ELSE
+     C                     MOVELADCHK2    @CNUM
+     C                     END
+      *
+      *  Call to access pgm for Customer details
+      *
+     C                     CALL 'AOCUSTR0'             9090
+     C***********          PARM *BLANKS   @RTCD                           CFT014
+     C                     PARM *BLANKS   @RTCD   7                       CFT014
+     C***********          PARM '*KEY   ' @OPTN                           CFT014
+     C                     PARM '*KEY   ' @OPTN   7                       CFT014
+     C                     PARM           @CNUM  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM *BLANKS   DSSDY
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'AOCUSTR0'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 04 *
+     C                     Z-ADD4         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           @RTCD     IFEQ *BLANKS
+      *
+      * Overwrite shortname
+      *
+     C           ADSLSH    IFNE '/'
+     C                     MOVEL*BLANKS   S2ORC1
+     C                     MOVELBBCUST    S2ORC1
+     C                     ELSE
+     C                     MOVEL*BLANKS   S2ORC2
+     C                     MOVELBBCUST    S2ORC2
+     C                     END
+      *
+     C                     MOVEL'C'       F2ORCT
+      *
+      * Valid information exit
+      *
+     C                     GOTO EXORC
+      *
+     C                     END
+      *
+     C                     END
+      *
+      *
+      *  If 1st 11 Chars of 1st line then SWIFT address assumed
+      *
+      *  Old Midas function, really just an address
+      *
+     C           ADCH26    IFEQ *BLANKS
+     C           ADEXSW    ANDEQ*BLANKS
+      *
+      *  First 11 characters should be key for CLSWT.
+      *
+     C                     MOVELS2ORC1    CLSWTK
+      *
+     C                     EXSR SWIFT
+      *
+     C           ##CSID    IFEQ 'Y'
+     C           *IN31     IFEQ '1'
+     C/COPY WNCPYSRC,FT0357C001
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELCLSWTK    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2067' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I2ORCT
+     C                     MOVEL'Y'       E#NOUP
+     C                     MOVEA' '       WRN@,1
+     C                     GOTO EXORC
+     C                     END
+      *
+     C                     MOVEL'S'       F2ORCT
+      *
+      *  No SWIFT address record.
+      *
+     C           *IN32     IFEQ '1'
+     C           *IN31     ANDEQ'0'
+     C/COPY WNCPYSRC,FT0357C002
+      *
+      *  If text changed then warning needs to be changed
+      *
+     C           S2ORC1    IFNE V#ORC1
+     C                     MOVEA' '       WRN@,1
+     C                     MOVELS2ORC1    V#ORC1
+     C                     END
+      *
+     C                     MOVEL'Y'       I2ORCT
+     C                     MOVEL'Y'       E#WARN
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELCLSWTK    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2068' FTMSID
+     C                     EXSR FTSNMS
+      *
+     C           WRN@,1    IFEQ ' '
+     C                     MOVEL*BLANKS   E#RSND
+     C                     MOVEA'Y'       WRN@,1
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVEA' '       WRN@,1
+     C                     END
+      *
+      * Exit as validation complete for S.W.I.F.T.
+      *
+     C                     GOTO EXORC
+      *
+     C                     END
+      *
+     C                     END
+     C/COPY WNCPYSRC,FT0357C007
+      *
+      * Do not check address lines unless address check Yes
+      *
+     C           ##ADCK    IFNE 'Y'
+     C                     MOVEL'A'       F2ORCT
+     C                     GOTO EXORC
+     C                     END
+      *
+      * Validate as an address
+      *
+     C                     MOVEL'Y'       ADLINE
+     C                     MOVEL'FTM2320' ADFLDM
+     C                     MOVEL'FTUSRMSG'ADFLDF
+     C                     EXSR ADCHK
+      *
+      *  Depending on the indicators, highlight the field in error
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS2ORC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2152' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I2ORC1
+     C                     MOVEL'Y'       E#NOUP
+     C                     END
+      *
+     C           *IN92     IFEQ '1'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS2ORC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2153' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I2ORCT
+     C                     MOVEL'Y'       E#NOUP
+     C                     END
+      *
+     C           *IN93     IFEQ '1'
+     C                     MOVEL'Y'       E#NOUP
+     C                     END
+     C*
+     C           AD#1      IFEQ 'Y'
+     C                     MOVEL'Y'       I2ORC1
+     C                     END
+     C           AD#2      IFEQ 'Y'
+     C                     MOVEL'Y'       I2ORC2
+     C                     END
+     C           AD#3      IFEQ 'Y'
+     C                     MOVEL'Y'       I2ORC3
+     C                     END
+     C           AD#4      IFEQ 'Y'
+     C                     MOVEL'Y'       I2ORC4
+     C                     END
+     C           AD#5      IFEQ 'Y'
+     C                     MOVEL'Y'       I2ORC5
+     C                     END
+      *
+      *  If no errors then customer is an address
+      *
+     C           I2ORCT    IFEQ *BLANKS
+     C                     MOVEL'A'       F2ORCT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXORC     TAG
+     C/COPY OFCPYSRCZ,CFT148_032                                                            MD020161
+     C                     EXSR SRSWFT                                                        CSW207
+     C/COPY OFCPYSRCZ,CFT148_033                                                            MD020161
+      *                                                                                       250600
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT                                                                                  CSW207
+      *****************************************************************                       CSW207
+      *                                                               *                       CSW207
+      *  SRSWFT   : Perform :05F validation                           *                       CSW207
+      *                                                               *                       CSW207
+      *  CALLED BY: SRORC  - C                                        *                       CSW207
+      *                                                               *                       CSW207
+      *  CALLS    : FT001000                                          *                       CSW207
+      *                                                               *                       CSW207
+      *****************************************************************                       CSW207
+     CSR         SRSWFT    BEGSR                                                              CSW207
+     C           CSW207    IFEQ 'Y'                                                           CSW207
+      *                                                                                       CSW207
+     C           V#SMCY    IFNE *BLANKS                                                       250600
+     C                     MOVELV#SMCY    PCURR                                               250600
+     C                     ELSE                                                               250600
+     C                     MOVELV#PCCY    PCURR                                               250600
+     C                     ENDIF                                                              250600
+      *                                                                                       250600
+     C                     MOVEL*BLANKS   PMSGID                                              CSW207
+     C                     MOVEL*BLANKS   PFLAG                                               CSW207
+     C**********           MOVEL'C'       PACTYP                                       CSW207 250600
+     C                     MOVELF2ORCT    PACTYP                                              250600
+     C                     MOVEL*BLANKS   PACCNT                                              CSW207
+     C                     MOVELBBCUST    PCUST                                               CSW207
+     C                     MOVEL*BLANKS   PNACTH                                              CSW207
+     C**********           MOVEL'SWIFT'   PNWRK                                        CSW207 250600
+     C                     MOVELV#NWRK    PNWRK                                               250600
+     C                     MOVEL*BLANKS   PCTRY                                               CSW207
+     C**********           MOVELBBBRCD    PBRCH                                        CSW207 250600
+     C                     MOVELBBBRCD    PBRCH                                               250600
+     C                     MOVELV#PCCY    PCURR                                               CSW207
+     C                     MOVEL*BLANKS   PNOST                                               CSW207
+     C**********           MOVEL*BLANKS   PMODI                                        CSW207 250600
+     C                     MOVEL'FT'      PMODI                                               250600
+     C                     MOVEL*BLANKS   POUT1                                               CSW207
+     C                     MOVEL*BLANKS   POUT2                                               CSW207
+     C                     MOVEL*BLANKS   POUT3                                               CSW207
+     C                     MOVEL*BLANKS   POUT4                                               CSW207
+     C                     MOVEL*BLANKS   POUT5                                               CSW207
+      *                                                                                       250600
+     C                     MOVELV#MTPY    PMTYP                                               250600
+      *                                                                                       250600
+     C           PMTYP     IFEQ *BLANKS                                                       250600
+     C                     MOVEL'103'     PMTYP                                               250600
+     C                     ENDIF                                                              250600
+      *                                                                                       CSW207
+     C                     CALL 'FT001000'                                                    CSW207
+     C                     PARM *BLANKS   @RTCD                                               CSW207
+     C                     PARM           PMSGID  7                                           CSW207
+     C                     PARM           PFLAG   1                                           CSW207
+     C                     PARM 'TRAN'    PVTYPE  4                                           CSW207
+     C                     PARM S2ORC1    P50F1  35                                           CSW207
+     C                     PARM S2ORC2    P50F2  35                                           CSW207
+     C                     PARM S2ORC3    P50F3  35                                           CSW207
+     C                     PARM S2ORC4    P50F4  35                                           CSW207
+     C                     PARM S2ORC5    P50F5  35                                           CSW207
+     C                     PARM           PACTYP  1                                           CSW207
+     C                     PARM           PACCNT 34                                           CSW207
+     C                     PARM           PCUST   6                                           CSW207
+     C                     PARM           PNACTH 10                                           CSW207
+     C                     PARM           PNWRK   6                                           CSW207
+     C**********           PARM '103'     PMTYP   3                                    CSW207 250600
+     C                     PARM           PMTYP   3                                           250600
+     C                     PARM ':50F:'   PMTAG   5                                           CSW207
+     C**********           PARM           PCTRY   2                                    CSW207 250600
+     C                     PARM V#SNLC    PCTRY   2                                           250600
+     C**********           PARM           PBRCH   3                                    CSW207 25060
+     C                     PARM V#BRCA    PBRCH   3                                           250600
+     C                     PARM           PCURR   3                                           CSW207
+     C**********           PARM           PNOST   2                                    CSW207 250600
+     C                     PARM V#DBNS    PNOST   2                                           250600
+     C                     PARM           PMODI   2                                           CSW207
+     C                     PARM           POUT1  35                                           CSW207
+     C                     PARM           POUT2  35                                           CSW207
+     C                     PARM           POUT3  35                                           CSW207
+     C                     PARM           POUT4  35                                           CSW207
+     C                     PARM           POUT5  35                                           CSW207
+      *                                                                                       CSW207
+     C           @RTCD     IFNE *BLANKS                                                       CSW207
+      *                                                                                       CSW207
+      * Do not block incoming payment, just warn in case of error                             250600
+     C           PFLAG     IFEQ 'E'                                                           CSW207
+     C           PFLAG     OREQ 'W'                                                           CSW207
+     C                     MOVELPMSGID    FTMSID                                              CSW207
+     C                     MOVELE#CPGM    FTPGMQ                                            BUG26239
+     C                     MOVEL'Y'       E#MSGS                                              CSW207
+     C**********           MOVEL'N'       E#WARN                                       CSW207 250600
+     C           PFLAG     IFEQ 'W'                                                         BUG26239
+     C                     MOVEL'Y'       E#WARN                                              250600
+     C                     ELSE                                                             BUG26239
+     C                     MOVEL'Y'       E#NOUP                                            BUG26239
+     C                     ENDIF                                                            BUG26239
+      *                                                                                       CSW207
+     C                     MOVEL'Y'       I2ORC1                                              CSW207
+     C                     MOVEL'Y'       I2ORC2                                              CSW207
+     C                     MOVEL'Y'       I2ORC3                                              CSW207
+     C                     MOVEL'Y'       I2ORC4                                              CSW207
+     C                     MOVEL'Y'       I2ORC5                                              CSW207
+      *                                                                                       CSW207
+     C********** PFLAG     IFEQ 'W'                                                    CSW207 250600
+     C**********           MOVEL'Y'       E#WARN                                       CSW207 250600
+     C**********           ENDIF                                                       CSW207 250600
+      *                                                                                       CSW207
+     C                     EXSR FTSNMS                                                        CSW207
+      *                                                                                       CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+     CSR                   ENDSR                                                              CSW207
+      *                                                                                       CSW207
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRORBK   : Validate Ordering Bank                            *
+      *                                                               *
+      *  CALLED BY: SRPROC - Control Process of Validation            *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRORBK    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRORBK'  @STK,Q
+      *
+      *  /COPY Statement
+      *
+     C/COPY WNCPYSRC,FT0357ORBK
+      *
+      *  Ordering Bank is Optional
+      *
+     C                     MOVEL*BLANKS   F2ORBT
+      *
+     C           S2ORBK    IFEQ *BLANKS
+     C                     GOTO EXORBK
+     C                     END
+      *
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELS2ORBK    ADDRSS
+      *
+      *  If only 1st line entered then SWIFT address assumed
+      *
+      *  If field does not begin with '/' and is not longer than 11
+      *  characters, validate as a S.W.I.F.T. Address
+      *
+     C           ADCH26    IFEQ *BLANKS
+     C           ADEXSW    ANDEQ*BLANKS
+     C           ADSLSH    ANDNE'/'
+      *
+      *  First 11 characters should be key for CLSWT.
+      *
+     C                     MOVELS2ORB1    CLSWTK
+      *
+     C                     EXSR SWIFT
+      *
+     C           ##CSID    IFEQ 'Y'
+     C           *IN31     IFEQ '1'
+     C/COPY WNCPYSRC,FT0357C003
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELCLSWTK    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2069' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I2ORB1
+     C                     MOVEL'Y'       E#NOUP
+     C                     MOVEA' '       WRN@,2
+     C                     GOTO EXORBK
+     C                     END
+      *
+     C                     MOVEL'S'       F2ORBT
+      *
+      *  No SWIFT address record.
+      *
+     C           *IN32     IFEQ '1'
+     C           *IN31     ANDEQ'0'
+     C/COPY WNCPYSRC,FT0357C004
+      *
+      *  If text changed then warning needs to be changed
+      *
+     C           S2ORB1    IFNE V#ORB1
+     C                     MOVEA' '       WRN@,2
+     C                     MOVELS2ORB1    V#ORB1
+     C                     END
+      *
+     C                     MOVEL'Y'       I2ORB1
+     C                     MOVEL'Y'       E#WARN
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS2ORB1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2070' FTMSID
+     C                     EXSR FTSNMS
+      *
+     C           WRN@,2    IFEQ ' '
+     C                     MOVEL*BLANKS   E#RSND
+     C                     MOVEA'Y'       WRN@,2
+     C                     END
+     C                     ELSE
+     C                     MOVEA' '       WRN@,2
+     C                     END
+      *
+      * Exit as validation complete for S.W.I.F.T.
+      *
+     C                     GOTO EXORBK
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     MOVEA' '       WRN@,2
+     C/COPY WNCPYSRC,FT0357C008
+      *
+      * Do not check address lines unless address check Yes
+      *
+     C           ##ADCK    IFNE 'Y'
+     C                     MOVEL'A'       F2ORBT
+     C                     GOTO EXORBK
+     C                     END
+      *
+      * Validate as an address
+      *
+      * No address line allowed
+      *
+     C                     MOVEL'Y'       ADLINE
+     C                     MOVEL'FTM2321' ADFLDM
+     C                     MOVEL'FTUSRMSG'ADFLDF
+     C                     EXSR ADCHK
+      *
+      *  Depending on the indicators, highlight the field in error
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS2ORB1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2154' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I2ORB1
+     C                     MOVEL'Y'       E#NOUP
+     C                     END
+      *
+     C           *IN92     IFEQ '1'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS2ORB1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2155' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I2ORBT
+     C                     MOVEL'Y'       E#NOUP
+     C                     END
+     C*
+     C           AD#1      IFEQ 'Y'
+     C                     MOVEL'Y'       I2ORB1
+     C                     END
+     C           AD#2      IFEQ 'Y'
+     C                     MOVEL'Y'       I2ORB2
+     C                     END
+     C           AD#3      IFEQ 'Y'
+     C                     MOVEL'Y'       I2ORB3
+     C                     END
+     C           AD#4      IFEQ 'Y'
+     C                     MOVEL'Y'       I2ORB4
+     C                     END
+     C           AD#5      IFEQ 'Y'
+     C                     MOVEL'Y'       I2ORB5
+     C                     END
+      *
+     C           *IN93     IFEQ '1'
+     C                     MOVEL'Y'       E#NOUP
+     C                     END
+      *
+      *  If no errors then bank is an address
+      *
+     C           I2ORBT    IFEQ *BLANKS
+     C                     MOVEL'A'       F2ORBT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXORBK    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSNC    : Validate Senders Correspondent                    *
+      *                                                               *
+      *  CALLED BY: SRPROC - Control Process of Validation            *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSNC     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRSNC '  @STK,Q
+      *
+      *  /COPY Statement
+      *
+     C/COPY WNCPYSRC,FT0357RSNC
+      *
+      *  Senders Correspondent is optional
+      *
+     C                     MOVEL*BLANKS   F2SNCT
+      *
+     C           S2SNC     IFEQ *BLANKS
+      *                                                                   CFT014
+      ** Sender's Correspondent must be entered if Third Reimbursement    CFT014
+      ** Institution is present.                                          CFT014
+      *                                                                   CFT014
+     C           CFT014    IFEQ 'Y'                                       CFT014
+     C           V#TRIT    ANDNE*BLANK                                    CFT014
+     C                     MOVE 'Y'       E#MSGS                          CFT014
+     C                     MOVEL'FTM5008' FTMSID                          CFT014
+     C                     MOVE E#CPGM    FTPGMQ                          CFT014
+     C                     EXSR FTSNMS                                    CFT014
+     C                     MOVE 'Y'       I2SNC1                          CFT014
+     C                     MOVE 'Y'       E#NOUP                          CFT014
+     C                     ENDIF                                          CFT014
+     C                     GOTO EXSNC
+     C                     END
+      *
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELS2SNC     ADDRSS
+      *
+      *  If only 1st line entered then SWIFT address assumed
+      *  Or first is '/' and second is SWIFT Address
+      *
+      *  If field does not begin with '/' and is not longer than 11
+      *  characters, validate as a S.W.I.F.T. Address
+      *
+     C           ADCH26    IFEQ *BLANKS
+     C           ADEXSW    ANDEQ*BLANKS
+     C           ADSLSH    ANDNE'/'
+     C           ADCH36    OREQ *BLANKS
+     C           ADEXS2    ANDEQ*BLANKS
+     C           ADSLSH    ANDEQ'/'
+     C           ADSLS2    ANDNE'/'
+      *
+      *  First 11 characters should be key for CLSWT.
+      *
+     C           ADSLSH    IFNE '/'
+     C                     MOVELADCHK1    CLSWTK
+     C                     ELSE
+     C                     MOVELADCHK2    CLSWTK
+     C                     END
+      *
+     C                     EXSR SWIFT
+      *
+     C           ##CSID    IFEQ 'Y'
+     C           *IN31     IFEQ '1'
+     C/COPY WNCPYSRC,FT0357C005
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELCLSWTK    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2071' FTMSID
+     C                     EXSR FTSNMS
+     C           ADSLSH    IFNE '/'
+     C                     MOVEL'Y'       I2SNC1
+     C                     ELSE
+     C                     MOVEL'Y'       I2SNC2
+     C                     END
+     C                     MOVEL'Y'       E#NOUP
+     C                     MOVEA' '       WRN@,3
+     C                     GOTO EXSNC
+     C                     END
+      *
+     C                     MOVEL'S'       F2SNCT
+      *
+      *  No SWIFT address record.
+      *
+     C           *IN32     IFEQ '1'
+     C           *IN31     ANDEQ'0'
+     C/COPY WNCPYSRC,FT0357C006
+      *
+      *  If text changed then warning needs to be changed
+      *
+     C           CLSWTK    IFNE V#SNC1
+     C                     MOVEA' '       WRN@,3
+     C                     MOVELCLSWTK    V#SNC1
+     C                     END
+      *
+     C           ADSLSH    IFNE '/'
+     C                     MOVEL'Y'       I2SNC1
+     C                     ELSE
+     C                     MOVEL'Y'       I2SNC2
+     C                     END
+     C                     MOVEL'Y'       E#WARN
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELCLSWTK    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2072' FTMSID
+     C                     EXSR FTSNMS
+      *
+     C           WRN@,3    IFEQ ' '
+     C                     MOVEL*BLANKS   E#RSND
+     C                     MOVEA'Y'       WRN@,3
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVEA' '       WRN@,3
+     C                     END
+      *
+      * Exit as validation complete for S.W.I.F.T.
+      *
+     C                     GOTO EXSNC
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     MOVEA' '       WRN@,3
+     C/COPY WNCPYSRC,FT0357C009
+      *
+      * Do not check address lines unless address check Yes
+      *
+     C           ##ADCK    IFNE 'Y'
+     C                     MOVEL'A'       F2SNCT
+     C                     GOTO EXSNC
+     C                     END
+      *
+      * Validate as an address
+      *
+      * Allow only '/' in first line
+      *
+     C                     MOVEL'Y'       ADLINE  1
+     C                     MOVEL'Y'       ADSLON  1
+     C                     MOVEL'FTM2322' ADFLDM
+     C                     MOVEL'FTUSRMSG'ADFLDF
+     C                     EXSR ADCHK
+      *
+      *  Depending on the indicators, highlight the field in error
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS2SNC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2156' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I2SNC1
+     C                     MOVEL'Y'       E#NOUP
+     C                     END
+      *
+     C           *IN92     IFEQ '1'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS2SNC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2157' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I2SNCT
+     C                     MOVEL'Y'       E#NOUP
+     C                     END
+      *
+     C           *IN93     IFEQ '1'
+     C                     MOVEL'Y'       E#NOUP
+     C                     END
+     C*
+     C           AD#1      IFEQ 'Y'
+     C                     MOVEL'Y'       I2SNC1
+     C                     END
+     C           AD#2      IFEQ 'Y'
+     C                     MOVEL'Y'       I2SNC2
+     C                     END
+     C           AD#3      IFEQ 'Y'
+     C                     MOVEL'Y'       I2SNC3
+     C                     END
+     C           AD#4      IFEQ 'Y'
+     C                     MOVEL'Y'       I2SNC4
+     C                     END
+     C           AD#5      IFEQ 'Y'
+     C                     MOVEL'Y'       I2SNC5
+     C                     END
+      *
+      *  If no errors then bank is an address
+      *
+     C           I2SNCT    IFEQ *BLANKS
+     C                     MOVEL'A'       F2SNCT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXSNC     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBTOB   : Validate Bank To Bank Information                 *
+      *                                                               *
+      *  CALLED BY: SRPROC - Control Process of Validation            *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRBTOB    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRBTOB'  @STK,Q
+      *
+      *  /COPY Statement
+      *
+     C/COPY WNCPYSRC,FT0357BTOB
+      *
+      *  Validate Bank to Bank Information
+      *
+     C           S2BTB     IFNE *BLANKS
+      *
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELS2BTB     ADDRSS
+      *
+      * Do not check address lines unless address check Yes
+      *
+     C           ##ADCK    IFNE 'Y'
+     C                     GOTO EXBTOB
+     C                     END
+      *
+     C                     MOVEL'FTM2318' ADFLDM
+     C                     MOVEL'FTUSRMSG'ADFLDF
+     C                     EXSR ADCHK
+      *
+      *  Depending on the indicators, highlight the field in error
+      *
+     C           *IN92     IFEQ '1'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS2BTB1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2158' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I2BTB
+     C                     MOVEL'Y'       E#NOUP
+     C                     END
+      *
+     C           *IN93     IFEQ '1'
+     C                     MOVEL'Y'       E#NOUP
+     C                     END
+     C*
+     C           AD#1      IFEQ 'Y'
+     C                     MOVEL'Y'       I2BTB1
+     C                     END
+     C           AD#2      IFEQ 'Y'
+     C                     MOVEL'Y'       I2BTB2
+     C                     END
+     C           AD#3      IFEQ 'Y'
+     C                     MOVEL'Y'       I2BTB3
+     C                     END
+     C           AD#4      IFEQ 'Y'
+     C                     MOVEL'Y'       I2BTB4
+     C                     END
+     C           AD#5      IFEQ 'Y'
+     C                     MOVEL'Y'       I2BTB5
+     C                     END
+     C           AD#6      IFEQ 'Y'
+     C                     MOVEL'Y'       I2BTB6
+     C                     END
+      *
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXBTOB    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRXVAL   : Cross validations                                 *
+      *                                                               *
+      *  CALLED BY: SRPROC - Control Process of Validation            *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRXVAL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRXVAL'  @STK,Q
+      *
+      *  /COPY Statement
+      *
+     C/COPY WNCPYSRC,FT0357XVAL
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXXVAL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     E/COPY FTCPYSRC,SFTADDRC
+     E/COPY FTCPYSRC,SFTADDRSC
+     E/COPY FTCPYSRC,SFTSWFTC
+     E/COPY FTCPYSRC,SFTSNMSC
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 03 *
+     C                     Z-ADD3         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Open Files
+      *
+     C***********          OPEN ACCNT                                     CFT014
+     C***********          OPEN ACNUMA                                    CFT014
+      *                                                                   CFT014
+      ** Access SAR details file to determine if CFT014 is switched ON.   CFT014
+      *                                                                   CFT014
+     C                     CALL 'AOSARDR0'                                CFT014
+     C                     PARM *BLANKS   @RTCD                           CFT014
+     C                     PARM '*VERIFY '@OPTN                           CFT014
+     C                     PARM 'CFT014'  @SARD   6                       CFT014
+     C           SCSARD    PARM SCSARD    DSFDY                           CFT014
+      *                                                                   CFT014
+      ** If core feature is switched ON, set a variable field to          CFT014
+      ** condition the rest of the processing.                            CFT014
+      *                                                                   CFT014
+     C           @RTCD     IFEQ *BLANKS                                   CFT014
+     C                     MOVE 'Y'       CFT014  1                       CFT014
+     C                     ELSE                                           CFT014
+      *                                                                   CFT014
+     C           @RTCD     IFNE '*NRF   '                                 CFT014
+     C                     Z-ADD001       W0ERNB                          CFT014
+     C                     MOVEL'CFT014'  W0KEY                           CFT014
+     C                     MOVEL'SCSARDPD'W0FILE                          CFT014
+     C                     MOVEL'MEM5003' W0MSGD                          CFT014
+     C                     MOVEL'MIDAS  ' W0MSGF                          CFT014
+     C                     EXSR SRERR                                     CFT014
+     C                     ENDIF                                          CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                                       CFT032
+      ** Access SAR details file to determine if CFT004 is switched ON.                       CFT032
+      *                                                                                       CFT032
+     C                     CALL 'AOSARDR0'                                                    CFT032
+     C                     PARM *BLANKS   @RTCD                                               CFT032
+     C                     PARM '*VERIFY '@OPTN                                               CFT032
+     C                     PARM 'CFT004'  @SARD                                               CFT032
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT032
+      *                                                                                       CFT032
+     C                     MOVE 'N'       CFT004  1                                           CFT032
+      *                                                                                       CFT032
+      ** If core feature is switched ON, set a variable field to                              CFT032
+      ** condition the rest of the processing.                                                CFT032
+      *                                                                                       CFT032
+     C           @RTCD     IFEQ *BLANKS                                                       CFT032
+     C                     MOVE 'Y'       CFT004                                              CFT032
+     C                     ELSE                                                               CFT032
+      *                                                                                       CFT032
+     C           @RTCD     IFNE '*NRF   '                                                     CFT032
+     C                     Z-ADD2         W0ERNB                                              CFT032
+     C                     MOVEL'CFT004'  W0KEY                                               CFT032
+     C                     MOVEL'SCSARDPD'W0FILE                                              CFT032
+     C                     MOVEL'MEM5003' W0MSGD                                              CFT032
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CFT032
+     C                     EXSR SRERR                                                         CFT032
+     C                     ENDIF                                                              CFT032
+     C                     ENDIF                                                              CFT032
+     C/COPY OFCPYSRCZ,CFT148_034                                                            MD020161
+      *
+     C                     CALL 'SWIF2007'                                                    CSW207
+     C                     PARM *BLANKS   @RTCD                                               CSW207
+      *                                                                                       CSW207
+     C           @RTCD     IFEQ *BLANKS                                                       CSW207
+     C                     MOVEL'N'       CSW207  1                                           CSW207
+     C                     ELSE                                                               CSW207
+     C                     MOVEL'Y'       CSW207                                              CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      *  Set up general codes for address checking
+      *
+     C                     MOVEL*BLANKS   ##ADCK  1
+     C/COPY WNCPYSRC,FT0357C016
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C/COPY WNCPYSRC,FT0357C017
+      *
+     CSR                   ENDSR
+     C/COPY WNCPYSRC,FT0357DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C**
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY FTCPYSRC,SRERRC
+     C/EJECT
+     O/COPY WNCPYSRC,FT0357DOPG
+      *
+      *  /Copy point for Outputs
+      *
+     O/EJECT
+**  CPY@ table
+(c) Finastra International Limited 2001
+**   ALPH  - Array of alphabetic                                                              CFT032
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+**   NUMC  - Array of numeric                                                                 CFT032
+1234567890

@@ -1,0 +1,489 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Update teller cash values')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  UT0050 - Update Teller Cash Values                           *
+      *                                                               *
+      *  Function:  This program allows the user to amend cash value  *
+      *             fields held on file TTRNTM3.                      *
+      *                                                               *
+      *  Called By: Command Entry (No Parameter)                      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CRT005  *CREATE    Date 09Aug01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CRT005 - Cashier Enhancement for Cash In/Cash Out            *
+      *                                                               *
+      *****************************************************************
+     FTTRNTM2 IF  E           K        DISK
+      ** Midas RE Teller/Batch Controls
+      *
+     FTTRNTM3 UF  E           K        DISK
+      ** Midas RE Teller/Batch Totals
+      *
+     FSDCURRL0IF  E           K        DISK
+      ** Midas SD Currency Codes
+      *
+     FUT0050DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE UT0050F1
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   51 - SFLDSP                                                 *
+      *   52 - SFLDSPCTL                                              *
+      *   53 - SFLCLR                                                 *
+      *   54 - SFLEND                                                 *
+      *   90 - Chain TTRNTM2 Indicator                                *
+      *   91 - Chain SDCURRL0 Indicator                               *
+      *   92 - Chain Subfile Indicator                                *
+      *   99 - Chain TTRNTM3 Indicator                                *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    CCY        24  3
+      ** Currency codes
+      *
+     E                    CDC        24  2 0
+      ** Currency decimal places
+      *
+     E                    VCA        24 15 3
+      ** Cash values
+      *
+     E                    NVC        24 15 3
+      ** New cash values
+      *
+     E                    HUNS        3  4 0
+      ** 1, 10, 100
+      *
+      /EJECT
+     I            DS
+      ** Data structure to split 192 char VCAA - Value of Cash
+      *
+     I                                        1 192 VCAA1
+     I                                    P   1   80VCA01
+     I                                    P   9  160VCA02
+     I                                    P  17  240VCA03
+     I                                    P  25  320VCA04
+     I                                    P  33  400VCA05
+     I                                    P  41  480VCA06
+     I                                    P  49  560VCA07
+     I                                    P  57  640VCA08
+     I                                    P  65  720VCA09
+     I                                    P  73  800VCA10
+     I                                    P  81  880VCA11
+     I                                    P  89  960VCA12
+     I                                    P  97 1040VCA13
+     I                                    P 105 1120VCA14
+     I                                    P 113 1200VCA15
+     I                                    P 121 1280VCA16
+     I                                    P 129 1360VCA17
+     I                                    P 137 1440VCA18
+     I                                    P 145 1520VCA19
+     I                                    P 153 1600VCA20
+     I                                    P 161 1680VCA21
+     I                                    P 169 1760VCA22
+     I                                    P 177 1840VCA23
+     I                                    P 185 1920VCA24
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Process user requests
+      *
+     C                     EXSR SRPROC
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *****************************************************************
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to process user requests.                *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRPTLR     - Process Teller Details                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      ** Prompt for teller id
+      *
+     C           *INKC     DOWEQ*OFF
+     C                     MOVE *BLANKS   SCTLLR
+     C                     EXFMTUT0050F0
+      *
+      ** Process teller details if CF03 not taken
+      *
+     C           *INKC     IFEQ *OFF
+     C                     EXSR SRPTLR
+     C                     MOVE *OFF      *INKA
+     C                     MOVE *OFF      *INKC
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPTLR
+      *****************************************************************
+      *                                                               *
+      *  SRPTLR - Process Teller Details.                             *
+      *                                                               *
+      *  Called By: SRPROC subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRDTLR     - Display and Process Teller Details.             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPTLR    BEGSR
+      *
+      ** Initialise arrays
+      *
+     C                     Z-ADD*ZEROS    CDC
+     C                     Z-ADD*ZEROS    CDC
+     C                     Z-ADD*ZEROS    VCA
+     C                     Z-ADD*ZEROS    NVC
+      *
+      ** Get currency codes for teller
+      *
+     C           TM2KEY    CHAINTTRNTM2F             90
+     C           *IN90     IFEQ *OFF
+      *
+      ** Move currency codes to array
+      *
+     C                     MOVEACCYR1     CCY
+      *
+      ** Get cash values for teller
+      *
+     C           TM3KEY    CHAINTTRNTM3F             90
+     C           *IN90     IFEQ *OFF
+      *
+      ** Move amounts to arrays for easier processing
+      *
+     C                     Z-ADDVCA01     VCA,1
+     C                     Z-ADDVCA02     VCA,2
+     C                     Z-ADDVCA03     VCA,3
+     C                     Z-ADDVCA04     VCA,4
+     C                     Z-ADDVCA05     VCA,5
+     C                     Z-ADDVCA06     VCA,6
+     C                     Z-ADDVCA07     VCA,7
+     C                     Z-ADDVCA08     VCA,8
+     C                     Z-ADDVCA09     VCA,9
+     C                     Z-ADDVCA10     VCA,10
+     C                     Z-ADDVCA11     VCA,11
+     C                     Z-ADDVCA12     VCA,12
+     C                     Z-ADDVCA13     VCA,13
+     C                     Z-ADDVCA14     VCA,14
+     C                     Z-ADDVCA15     VCA,15
+     C                     Z-ADDVCA16     VCA,16
+     C                     Z-ADDVCA17     VCA,17
+     C                     Z-ADDVCA18     VCA,18
+     C                     Z-ADDVCA19     VCA,19
+     C                     Z-ADDVCA20     VCA,20
+     C                     Z-ADDVCA21     VCA,21
+     C                     Z-ADDVCA22     VCA,22
+     C                     Z-ADDVCA23     VCA,23
+     C                     Z-ADDVCA24     VCA,24
+      *
+      ** Create and display subfile
+      *
+     C                     EXSR SRDTLR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRDTLR
+      *****************************************************************
+      *                                                               *
+      *  SRDTLR - Display and Process Teller Details.                 *
+      *                                                               *
+      *  Called By: SRPTLR subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRVALD     - Validate new cash value.                        *
+      *  SRUPDD     - Update data on file.                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDTLR    BEGSR
+      *
+      ** Clear subfile record fields
+      *
+     C                     MOVE *BLANKS   SFLCCY
+     C                     Z-ADD*ZEROS    SFLVCA
+     C                     Z-ADD*ZEROS    SFLNEW
+     C                     MOVE *BLANKS   SFLMSG
+      *
+      ** First, remove any existing subfile
+      *
+     C                     MOVEA'0010'    *IN,51
+     C                     Z-ADD0         RRN
+     C                     WRITEUT0050F2
+     C                     MOVEA'0100'    *IN,51
+      *
+      ** Write out command keys
+      *
+     C                     WRITEUT0050F3
+      *
+      ** Build subfile, maximum of 24 records
+      *
+     C           1         DO   24        I       20
+      *
+     C           CCY,I     IFNE *BLANKS
+      *
+      ** Get currency decimal places
+      *
+     C           CCY,I     CHAINSDCURRL0             91
+     C           *IN91     IFEQ *OFF
+     C                     Z-ADDA6NBDP    DP      10
+     C                     ELSE
+     C                     Z-ADD0         DP      10
+     C                     ENDIF
+      *
+      ** Shift decimal point based on currency's decimal places
+      *
+     C           DP        IFGE 1
+     C           DP        ANDLE3
+     C                     DIV  HUNS,DP   VCA,I
+     C                     Z-ADDDP        CDC,I
+     C                     ENDIF
+      *
+      ** Write record to subfile
+      *
+     C                     MOVE CCY,I     SFLCCY
+     C                     Z-ADDVCA,I     SFLVCA
+     C                     Z-ADDVCA,I     SFLNEW
+     C                     Z-ADDCDC,I     SFLCDP
+      *
+     C                     ADD  1         RRN
+     C                     WRITEUT0050F1
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Allow subfile to display
+      *
+     C           RRN       IFGT 0
+     C                     MOVEA'1100'    *IN,51
+     C                     ELSE
+     C                     MOVEA'0100'    *IN,51
+     C                     ENDIF
+      *
+      ** Display screen until Cmd 1 or Cmd3 taken
+      *
+     C           *INKA     DOWEQ*OFF
+     C           *INKC     ANDEQ*OFF
+     C                     EXFMTUT0050F2
+      *
+      ** If not Cmd3, validate new cash values
+      *
+     C           *INKC     IFEQ *OFF
+     C                     EXSR SRVALD
+      *
+      ** If Cmd1 and data is valid, update the file
+      *
+     C           *INKA     IFEQ *ON
+     C           VALID     ANDEQ'Y'
+     C                     EXSR SRUPDD
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRVALD
+      *****************************************************************
+      *                                                               *
+      *  SRVALD - Validate Data.                                      *
+      *                                                               *
+      *  Called By: SRDTLR subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVALD    BEGSR
+      *
+      ** Assume data is valid
+      *
+     C                     MOVE 'Y'       VALID   1
+      *
+      ** Check that user has not entered more decimal places than
+      ** the currency allows.
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRUPDD
+      *****************************************************************
+      *                                                               *
+      *  SRUPDD - Update Data.                                        *
+      *                                                               *
+      *  Called By: SRDTLR subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPDD    BEGSR
+      *
+      ** Read subfile and move new amounts to array
+      *
+     C           1         DO   24        Y       20
+      *
+      ** Chain to subfile
+      *
+     C           Y         CHAINUT0050F1             92
+      *
+     C           *IN92     IFEQ *ON
+     C                     Z-ADD24        Y
+     C                     ELSE
+      *
+      ** Shift new amounts by number of decimal places
+      *
+     C           SFLCDP    IFGE 1
+     C           SFLCDP    ANDLE3
+     C                     Z-ADDSFLCDP    DP
+     C           SFLNEW    MULT HUNS,DP   WRKNEW 150
+     C                     ELSE
+     C                     Z-ADDSFLNEW    WRKNEW
+     C                     ENDIF
+      *
+     C                     Z-ADDWRKNEW    NVC,Y
+     C                     ENDIF
+     C*
+     C                     ENDDO
+      *
+      ** Fetch record again for update
+      *
+     C           TM3KEY    CHAINTTRNTM3              99
+     C           *IN99     IFEQ *OFF
+      *
+      ** Move new values to file fields
+      *
+     C                     Z-ADDNVC,1     VCA01
+     C                     Z-ADDNVC,2     VCA02
+     C                     Z-ADDNVC,3     VCA03
+     C                     Z-ADDNVC,4     VCA04
+     C                     Z-ADDNVC,5     VCA05
+     C                     Z-ADDNVC,6     VCA06
+     C                     Z-ADDNVC,7     VCA07
+     C                     Z-ADDNVC,8     VCA08
+     C                     Z-ADDNVC,9     VCA09
+     C                     Z-ADDNVC,10    VCA10
+     C                     Z-ADDNVC,11    VCA11
+     C                     Z-ADDNVC,12    VCA12
+     C                     Z-ADDNVC,13    VCA13
+     C                     Z-ADDNVC,14    VCA14
+     C                     Z-ADDNVC,15    VCA15
+     C                     Z-ADDNVC,16    VCA16
+     C                     Z-ADDNVC,17    VCA17
+     C                     Z-ADDNVC,18    VCA18
+     C                     Z-ADDNVC,19    VCA19
+     C                     Z-ADDNVC,20    VCA20
+     C                     Z-ADDNVC,21    VCA21
+     C                     Z-ADDNVC,22    VCA22
+     C                     Z-ADDNVC,23    VCA23
+     C                     Z-ADDNVC,24    VCA24
+      *
+      ** And update the file
+      *
+     C                     UPDATTTRNTM3F
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRINIT
+      *****************************************************************
+      *                                                               *
+      *  SRUPDD - Initial Processing.                                 *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Key to TTRNTM2 file for teller currencies
+      *
+     C           TM2KEY    KLIST
+     C                     KFLD           M2TBRI  1
+     C                     KFLD           SCTLLR
+     C                     KFLD           M2RCTP  1
+      *
+      ** Key to TTRNTM3 file for teller cash values
+      *
+     C           TM3KEY    KLIST
+     C                     KFLD           M3TBRI  1
+     C                     KFLD           SCTLLR
+     C                     KFLD           M3RCTP  1
+      *
+      ** Set up fixed data for key lists
+      *
+     C                     MOVE 'T'       M2TBRI
+     C                     MOVE 'T'       M3TBRI
+     C                     MOVE '1'       M2RCTP
+     C                     MOVE '2'       M3RCTP
+      *
+      ** Initialise array for shifting amounts
+      *
+     C                     Z-ADD10        HUNS,1
+     C                     Z-ADD100       HUNS,2
+     C                     Z-ADD1000      HUNS,3
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

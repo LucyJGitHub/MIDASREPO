@@ -1,0 +1,914 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Quick Prices Maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE0081 - QUICK MARKET PRICES MAINTENANCE                     *
+      *                                                               *
+      *  Function:  For easy maintenance/amendment of the security's  *
+      *   (I/C)     latest average price.                             *
+      *                                                               *
+      *  Called By: None                                              *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 11May06               *
+      *                 CSE075  *CREATE    Date 17Nov05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027A - Conversion Of Customer Number to Alpha             *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *                                                               *
+      *****************************************************************
+     F* INDICATOR USAGE
+     F* 03             Exit requested
+     F* 05             Reset Requested
+     F* 25             Help requested
+     F* 27             Rollup requested
+     F* 31             Invalid security shortname
+     F* 32             Invalid price input
+     F* 50             READ/CHAIN/UPDATE failure: PRICM
+     F* 51             READ/CHAIN/UPDATE failure: PRICM
+     F* 52             End of changed subfile records
+     F* 53             READ/CHAIN/UPDATE failure: PRICEA
+     F* 54             READ/CHAIN/UPDATE failure: PRICEA
+     F* 55             READ/CHAIN failure: SECTY
+     F* 56             READ/CHAIN failure: ICD
+     F* 57             ROLLBACK catchall
+     F* 78             Blank price input
+     F* 79             Global error indicator
+     F* 80             Conditioning indicator for SFLCLR
+     F* 81             Conditioning indicator for SFLDSP
+     F* 82             Conditioning indicator for SFLEND
+     F* 84             Conditioning indicator for SFLNXTCHG
+     F* 86             Conditioning indicator for PUTOVR
+     F* 87             Field protection
+     F* 88             Field protection
+     F* 90 - 99        WORK INDICATOR - STD SUBROUTINES
+     F* U7             WITH U8 FOR DATABASE ERROR
+     F* U8             WITH U7 FOR DATABASE ERROR
+     F* LR             TERMINATE PROGRAM
+     F*
+     F*================================================================
+     F*
+     F*  I N D E X   T O   S U B R O U T I N E S
+     F*
+     F*  DSPSCR  -  DISPLAY SCREEN AND PROCESS HELP REQUESTS
+     F*  GETICD  -  GET INSTALLATION CONTROL DATA
+     F*  GETPRC  -  GET CURRENT PRICE, IF ENTERED TODAY
+     F*  GETSEC  -  GET SECURITY DETAILS FROM SECTY
+     F*  INZPGM  -  FIRST CYCLE
+     F*  INZSFL  -  INITIALIZE SUBFILE
+     F*  INZSFR  -  INITIALIZE SUBFILE RECORD
+     F*  LDSFPG  -  LOAD SUBFILE PAGE
+     F*  MVFLFS  -  MOVE FILE FIELDS TO SUBFILE
+     F*  PRCHRQ  -  PROCESS PRICE CHANGE REQUEST
+     F*  PRMREC  -  PROCESS MODIFIED SUBFILE RECORD: SECOND PASS (DB UPDATE)
+     F*  PRMRCS  -  PROCESS MODIFIED SUBFILE RECORDS
+     F*  PRSCRI  -  PROCESS SCREEN INPUT
+     F*  PRSFRC  -  PROCESS MODIFIED SUBFILE RECORD: FIRST PASS (VALIDATION)
+     F*  UPDCTL  -  UPDATE FILE CONTROLS ON PRICEA
+     F*  UPDDBF  -  UPDATE DATABASE
+     F*  UPDPRC  -  UPDATE PRICE RECORD ON PRICED
+     F*  VLNWPR  -  VALIDATE NEW PRICE
+     F*  VLSFRC  -  VALIDATE SUBFILE RECORD
+     F*  *** Standard administrative subroutines ***
+     F*  ZASNMS  -  OUTPUT MESSAGE TO PROGRAM MESSAGE QUEUE
+     F*  ZHHPKY  -  DISPLAY HELP TEXT
+     F*  ZYEXPG  -  EXIT PROGRAM
+     F*  *** Standard subroutines to /COPY ***
+     F*  ZALIGN  -  TRANSLATE SCREEN FIELDS INTO NUMERIC FORM
+     F*  ZEDIT   -  EDIT FIELDS FOR OUTPUT
+     F*
+     F*****************************************************************
+     FSE0081DFCF  E                    WORKSTN
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+     FPRICM   UF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KCOMIT
+     FPRICEA  UF  E                    DISK                           UC
+     F                                              KCOMIT
+     FSECTY   IF  E           K        DISK
+     FSDBANKL1IF  E           K        DISK
+      *
+     FPRICE   UF  E           K        DISK                      A    UC
+     F            PRICEDF                           KRENAMEPRICEDX
+     F                                              KCOMIT
+      *
+     E                    @CN     1   1 25               Long constants.
+     E/COPY ZSRSRC,ZALIGNZ1
+      /EJECT
+      * Data structures:-
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure.
+     IJBDTTM      DS
+      * Job date/time.
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file data structure.
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure.
+      *
+     I@1DBRC    E DSPRICM
+      * Current/previous master file format fields for change control.
+      *
+     IRUNDAT      DS
+     I                                        1   7 AANA
+     I                                    P   8  100AKTX
+     I                                       11  11 AUST
+     I                                       12  12 E3ST
+     I                                       13  13 F1ST
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'New Price not within 20%'
+      * New Price
+     I                                    P   1   78ZA0001
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0002
+      /EJECT
+      *****************************************************************
+      * Initialise
+     C                     EXSR INZPGM
+      *
+     C                     DO   *HIVAL
+      * Initialise and load subfile page.
+     C                     EXSR INZSFL
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested:
+     C           W0RSF     DOWEQ'N'
+      * Display screen.
+     C                     EXSR DSPSCR
+      * Process response:
+      * Exit request: Cancel & exit program.
+     C           *IN03     IFEQ '1'
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * HOME: Request subfile reload.
+     C           *IN05     IFEQ '1'
+     C                     MOVEL'Y'       W0RSF
+     C                     ELSE
+      * Display next SFL page.
+     C           *IN27     IFEQ '1'
+     C                     EXSR LDSFPG
+     C                     ELSE
+      * Process screen input.
+     C                     EXSR PRSCRI
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         INZSFL    BEGSR
+      *================================================================
+      * Initialise & Load subfile page.
+      *================================================================
+      * Clear subfile.
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile.
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * Position file:
+     C           *LIKE     DEFN #SESN     WZSESN
+     C                     MOVEL#SESN     WZSESN           Sec.Shortname
+     C           KPOS      KLIST
+     C                     KFLD           SESN             Sec.Shortname
+      * Setup key.
+     C                     MOVEL#SESN     SESN             Sec.Shortname
+     C           KPOS      SETLLSECTYDF              82
+     C  N82                READ SECTYDF                5582
+      * Load subfile page.
+     C                     EXSR LDSFPG
+      *................................................................
+      * If no records found, display error message.
+     C   82      ##RR      IFEQ *ZERO                      IF
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID           Message id.
+     C                     MOVEL@CN,1     ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             FI ##RR = *ZERO
+      *
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         LDSFPG    BEGSR
+      *================================================================
+      * Load subfile page.
+      *================================================================
+     C                     SETOF                     84    No SFLNXTCHG
+      * Re-establish fields in read-ahead record.
+     C   27                DO
+     C  N82                READPSECTYDF                  55
+     C  N82                READ SECTYDF                  55
+     C                     END
+      * Start at previous highest SFL record reached.
+     C                     Z-ADD##RRMX    ##RR    50
+     C                     Z-ADD*ZERO     ##RROK  50
+      *................................................................
+      * Load next page of SFL:
+     C  N82      ##RROK    DOWLT##SFPG
+     C                     MOVE '0'       *IN32
+     C                     SETOF                     87
+      * Clear SFL fields.
+     C                     EXSR INZSFR
+      * Load SFL fields.
+     C                     EXSR MVFLFS
+      * Validate subfile record and calculate derived fields.
+      * Get Previous Price for this security.
+     C                     EXSR GETPRC
+      * Validate New Price
+     C                     EXSR VLNWPR
+      * Output to subfile.
+     C                     ADD  1         ##RR       81
+     C                     ADD  1         ##RROK
+     C                     WRITE#SFLRCD
+     C                     READ SECTYDF                  82
+     C  N82                END                             OD 1 - #SFPG
+      *................................................................
+      * Save highest SFL rec, so load can continue at end point.
+     C           ##RR      IFGT ##RRMX
+     C           ##RRMX    ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         DSPSCR    BEGSR
+      *================================================================
+      * Display screen and process HELP requests.
+      *================================================================
+      * Update screen time.
+     C                     TIME           ##TME            Screen time.
+     C           W0HLP     DOUEQ'N'
+      * PUTOVR unless conditioned fields change.
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+     C                     MOVEL'N'       W0HLP   1        Reset help requ
+      * If help requested, display help text.
+     C   25                EXSR ZHHPKY                     Display help te
+     C                     END
+      * Update job time.
+     C                     TIME           ##JTM            Job time.
+      * Clear messages from program message queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag.
+     C                     MOVEL'Y'       ZAFSMS  1      79
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         PRSCRI    BEGSR
+      *================================================================
+      * Process screen input.
+      *================================================================
+      * Maintain subfile position where possible.
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      *
+      * Change of position specified?
+     C           WZSESN    IFNE #SESN                      Shortname
+     C                     MOVEL'Y'       W0RSF
+     C                     END
+      * Quit if reload requested.
+     C           W0RSF     CABEQ'Y'       PRSEND
+      *
+     C   81                DO
+      * No data entered as yet.
+     C                     MOVEL'N'       WKIPIN  1
+      * Confirm/update is not defered.
+     C                     MOVEL'N'       W0DCF   1
+      * Process subfile records.
+     C                     EXSR PRMRCS
+      * If error, exit:
+     C           *IN79     CABEQ'1'       PRSEND
+      * Defer confirm/update requested:
+     C           W0DCF     CABEQ'Y'       PRSEND
+      * If data entered.
+     C           WKIPIN    IFEQ 'Y'
+      * Update DBF from subfile.
+     C                     EXSR UPDDBF
+      * If error during update, exit:
+     C           *IN79     CABEQ'1'       PRSEND
+     C                     END                             WKIPIN
+     C                     END                             OD 81
+      *================================================================
+     CSR         PRSEND    ENDSR
+      /EJECT
+     CSR         PRMRCS    BEGSR
+      *================================================================
+      * Process modified subfile records - first pass to validate
+      *================================================================
+     C                     READC#SFLRCD                  52
+     C           *IN52     DOWEQ'0'
+     C                     EXSR PRSFRC
+     C                     SETOF                     87
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  52
+     C                     END
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         PRSFRC    BEGSR
+      *================================================================
+      * Process subfile record - first pass to validate amended records
+      *================================================================
+      * Setoff error indicators.
+     C                     MOVE '0'       *IN32
+     C                     SETOF                     78    No errors
+     C                     MOVEL'Y'       WKIPIN           Data entered
+     C                     SETON                     84
+      * Validate subfile record.
+     C                     EXSR VLSFRC
+      * If SFLRCD invalid, note the fact.
+     C   78N79             Z-ADD##RR      ##SFRC     79    Invalid SFLRCD
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         VLSFRC    BEGSR
+      *================================================================
+      * Validate subfile record.
+      *================================================================
+     C* Re-access security details
+     C                     EXSR GETSEC
+      * Validate subfile record relations.
+      * Get Previous Price for this security.
+     C                     EXSR GETPRC
+      * Validate New Price
+     C                     EXSR VLNWPR
+      * Price required.
+     C           #1PPRC    IFEQ *ZERO                      IF             MW0001
+     C                     SETON                     7832
+      * Send message '*Value required'
+     C                     MOVEL'USR0317' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             FI
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         UPDDBF    BEGSR
+      *================================================================
+      * Update DBF from subfile records.
+      *================================================================
+      * Initialise subfile reload flag.
+     C                     MOVEL'N'       W0RSF
+      * Process all modified subfile records.
+     C                     READC#SFLRCD                  52
+     C           *IN52     DOWEQ'0'
+      * Process modified subfile record.
+     C                     EXSR PRMREC
+     C           W0RTN     IFNE *BLANK
+      * Error: ROLLBACK any DBF changes.
+     C                     ROLBK
+     C                     ELSE
+      * Otherwise COMMIT any DBF changes.
+     C                     COMIT
+     C                     END
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  52
+     C                     END
+      * If any errors, cancel reload.
+     C           *IN79     IFEQ '1'
+     C                     MOVEL'N'       W0RSF   1
+     C                     END
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         PRMREC    BEGSR
+      *================================================================
+      * Process modified subfile record - second pass to update database
+      *================================================================
+      * Set off error indicators.
+     C                     MOVE '0'       *IN32            Clear errors
+     C                     SETOF                     78    No errors
+      *
+      * Process change request.
+     C                     EXSR UPDPRC
+     C           W0RTN     IFNE *BLANK
+      * DBF Update error detected.
+     C                     MOVE '0'       *IN32            Screen errors
+     C                     SETON                     78    Format Error
+     C                     SETOF                     87    Enable entry
+     C                     SETON                     84    SFLNXTCHG
+      * Reset subfile record if changed record.
+     C           W0RTN     CASEQ'Y2U0007' MVFLFS           IF
+     C                     END
+     C                     ELSE
+      * DBF Update successful.
+     C                     SETOF                     87    Enable entry
+     C                     SETOF                     84    No SFLNXTCHG
+     C                     END                             FI W0RTCD
+      * If error occurred on update, note the fact.
+     C           *IN78     IFEQ '1'
+     C           *IN79     ANDEQ'0'
+     C                     Z-ADD##RR      ##SFRC     79    Error on update
+     C                     END
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         INZSFR    BEGSR
+      *================================================================
+      * Initialise subfile record.
+      *================================================================
+     C                     MOVEL*BLANK    #1DBRC
+     C                     MOVEL*BLANK    #1RECI
+     C                     MOVEL*BLANK    #1PSSN
+     C                     MOVEL*BLANK    #1PPRT
+     C                     Z-ADD*ZERO     #1PVDT
+     C**********           Z-ADD*ZERO     #1PCNM                                             CSD027A
+     C                     MOVE *BLANK    #1PCNM                                             CSD027A
+     C                     MOVEL*BLANK    #1PMKT
+     C                     MOVE *BLANK    #1PBRA
+     C                     MOVEL*BLANK    #1PBOK
+     C                     Z-ADD*ZERO     #1PPRC
+     C                     MOVEL*BLANK    #1PNTV
+     C                     Z-ADD*ZERO     #1LCD
+     C                     MOVEL*BLANK    #1CHTP
+     C                     Z-ADD*ZERO     #1TNLU
+     C                     MOVEL*BLANK    #1PSRC
+     C                     MOVEL*BLANK    #1PBWN
+     C                     MOVEL*BLANK    #1PPWN
+     C                     MOVEL*BLANK    #1SESN
+     C                     MOVEL*BLANK    #1SRPN
+     C                     MOVEL*BLANKS   #1C9NB
+     C                     MOVEL*BLANK    #1PCT
+     C                     MOVEL*BLANK    #1NMCY
+     C                     MOVEL*BLANK    #1STBS
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         MVFLFS    BEGSR
+      *================================================================
+      * Move PRICM/SECTY fields to subfile.
+      *================================================================
+      * Obtain today's price, if already entered.
+     C                     EXSR GETPRC
+      *
+     C                     MOVELRECI      #1RECI
+     C                     MOVELPSSN      #1PSSN
+     C                     MOVELPPRT      #1PPRT
+     C                     Z-ADDPVDT      #1PVDT
+     C**********           Z-ADDPCNM      #1PCNM                                             CSD027A
+     C                     MOVE PCNM      #1PCNM                                             CSD027A
+     C                     MOVELPMKT      #1PMKT
+     C                     MOVE PBRA      #1PBRA
+     C                     MOVELPBOK      #1PBOK
+     C                     Z-ADDPPRC      #1PPRC
+     C                     MOVELPNTV      #1PNTV
+     C                     Z-ADDLCD       #1LCD
+     C                     MOVELCHTP      #1CHTP
+     C                     Z-ADDTNLU      #1TNLU
+     C                     MOVELPSRC      #1PSRC
+     C                     MOVELPBWN      #1PBWN
+     C                     MOVELPPWN      #1PPWN
+     C                     MOVELSESN      #1SESN
+     C                     MOVELSRPN      #1SRPN
+     C                     MOVE MKPR      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1C9NB
+     C                     MOVELNMCY      #1NMCY
+     C                     MOVELSTBS      #1STBS
+     C           SPBS      IFEQ 'P'
+     C                     MOVE '%'       #1PCT
+     C                     END
+      * Hold current record image for change detection.
+     C                     MOVEL@1DBRC    #1DBRC
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         GETPRC    BEGSR
+      *================================================================
+      * Get existing price from PRICM if one has been entered today.
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define Keylist.
+     C           KRSSA     KLIST
+     C                     KFLD           SESN             Shortname
+     C                     KFLD           BJRDNB           Run Date
+     C           KRSSA     CHAINPRICEDF              50
+      * If record found and live, use today's price in place of MKPR.
+     C           *IN50     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C                     Z-ADDPPRC      MKPR
+     C                     END
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         GETSEC    BEGSR
+      *================================================================
+      * Reset file marker - Securities *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define Keylist.
+     C           KRSSC     KLIST
+     C                     KFLD           SESN             Shortname
+      * Move fields to key list.
+     C                     MOVEL#1SESN    SESN             Shortname
+     C           KRSSC     CHAINSECTYDF              55
+      * DBF Record not found.
+     C   55                MOVEL'USR0071' W0RTN   7
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+      /EJECT
+     CSR         UPDPRC    BEGSR
+      *================================================================
+      * Change Object - Prices *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      *
+      ** Generate a timestamp
+      *
+     C                     EXSR SRTMST
+      *
+     C           KLCHSJ    KLIST
+     C                     KFLD           #1SESN           Shortname
+     C                     KFLD           BJRDNB           Run Date
+     C           KLCHSJ    CHAINPRICEDF              5051
+      *
+     C           *IN51     IFEQ '1'
+      * Record locked.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO UPDEND
+     C                     END
+      *
+     C           *IN50     IFEQ '0'                        Record found
+      * Check for changed record.
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID           Message id.
+     C                     MOVEL@CN,1     ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+      * Use SETLL to release record lock.
+     C           KLCHSJ    SETLLPRICEDF              5151
+     C                     GOTO UPDEND
+     C                     ELSE                            Not locked
+     C                     MOVEL'D'       RECI             Set to live
+     C                     Z-ADD#1PPRC    PPRC
+     C                     Z-ADDBJRDNB    LCD              Last Change Dat
+     C                     MOVE 'A'       CHTP             Type of Last Ch
+     C                     MOVE PTMES     PRTMST
+     C                     UPDATPRICEDF                51
+     C                     END                             FI #1DBRC
+     C                     ELSE                            Not Found
+      *
+      ** Check if no existing records in PRICE
+      *
+     C                     MOVEL#1SESN    KPSSN
+     C**********           Z-ADD#1PCNM    KPCNM                                              CSD027A
+     C                     MOVE #1PCNM    KPCNM                                              CSD027A
+     C                     MOVEL#1PMKT    KPMKT
+     C                     MOVE #1PBRA    KPBRA
+     C                     MOVEL#1PBOK    KPBOK
+     C                     MOVEL#1PPRT    KPPRT
+     C                     MOVE *BLANKS   KPTFR
+     C           KPRICE    CHAINPRICEDX              58
+      *
+      ** Set up fields for new price record
+      *
+     C           *IN58     IFEQ *ON
+     C                     MOVEL'D'       RECI
+     C                     MOVEL#1SESN    PSSN
+     C                     MOVEL'V'       PPRT
+     C                     Z-ADDBJRDNB    PVDT
+     C**********           Z-ADD0         PCNM                                               CSD027A
+     C                     MOVE *BLANK    PCNM                                               CSD027A
+     C                     MOVEL*BLANK    PMKT
+     C                     MOVE *BLANKS   PBRA
+     C                     MOVEL*BLANK    PNTV
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVEL'I'       CHTP
+     C                     Z-ADD#1PPRC    PPRC
+     C                     MOVEL*BLANK    PSRC
+     C                     MOVEL*BLANK    PBWN
+     C                     MOVEL*BLANK    PPWN
+     C                     MOVE PTMES     PRTMST
+      *
+     C                     WRITEPRICEDX                51
+      *
+     C                     ELSE
+      *
+     C                     MOVEL'D'       RECI
+     C                     Z-ADDBJRDNB    PVDT
+     C                     Z-ADD#1PPRC    PPRC
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE 'A'       CHTP
+     C                     MOVE PTMES     PRTMST
+     C                     UPDATPRICEDX                51
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           *IN51     IFEQ '1'
+      * Change error detected.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF Change successful.  Update file controls on PF/PRICEA.
+     C                     EXSR UPDCTL
+      * Update saved record image.
+     C                     MOVEL@1DBRC    #1DBRC
+     C                     END
+      *================================================================
+     CSR         UPDEND    ENDSR
+      /EJECT
+      *================================================================
+      * RTV for Chg, Add or Del - Price record    *
+      *================================================================
+     CSR         UPDCTL    BEGSR
+      *================================================================
+      * Update file controls on PF/PRICEA
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+     C           1         SETLLPRICEAF
+     C                     READ PRICEAF                5453
+      *
+     C           *IN53     IFEQ '1'
+      * Record not found.
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID           Message id.
+     C                     MOVEL@CN,1     ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     GOTO UPCEND
+     C                     END
+      *
+     C           *IN54     IFEQ '1'
+      * Record locked.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO UPCEND
+     C                     END
+      *
+      * USER: Processing after DBF read
+      * Update file controls (if 50 is on, action is insert)
+     C           *IN50     IFEQ '1'
+     C                     ADD  1         NORE             No. of Records
+     C                     ADD  1         SINS             No. of Inserts
+     C                     ELSE
+     C                     ADD  1         SAMD             No. of Amends
+     C                     END
+      *
+     C                     UPDATPRICEAF                53
+     C           *IN53     IFEQ '1'
+      * Change error detected.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     END
+      *================================================================
+     CSR         UPCEND    ENDSR
+      /EJECT
+     CSR         GETICD    BEGSR
+      *================================================================
+      * Get Bank Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+     C                     MOVEL'BANK'    BJBANK
+     C           BJBANK    CHAIN@BJREEF              56
+     C           *IN56     IFEQ '1'
+      * DBF Record not found.
+     C                     MOVEL'USR0197' W0RTN   7
+      * USER: Processing if DBF record not found
+      * Setup message data for message.
+     C                     MOVEL'SDBANKPD'ZA0002           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     79
+      *
+     C                     GOTO GETEND
+     C                     END
+      *
+      *================================================================
+     CSR         GETEND    ENDSR
+      /EJECT
+     CSR         VLNWPR    BEGSR
+      *================================================================
+      * Validate New Price
+      *================================================================
+      * Convert input price to decimal value
+     C                     MOVE #1C9NB    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'
+      * Send message 'Non-numeric data not valid for this field'
+     C                     MOVEL'USR0822' ZAMSID           Message id.    PHFIX
+     C                     EXSR ZASNMS                     Send message
+      *
+     C                     ELSE
+     C                     MOVE ZFIELD    #1PPRC
+      * Right-align valid price for update of subfile record.
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1C9NB
+      * Check Price within +/- 20%
+      *CASE:     Old Price is Not Blank
+     C           MKPR      IFNE *ZERO                      *IF
+     C           #1PPRC    DIV  MKPR      WUKUNB    H      20% Test raw fi
+      *CASE:     WRK.20% Test raw figure is Over 120%
+      *CASE:     WRK.20% Test raw figure is Under 80%
+     C           WUKUNB    IFGT 1.2                        *IF
+     C           WUKUNB    ORLT 0.8                        *IF
+     C                     Z-ADD#1PPRC    ZA0001           Price
+      * Send message 'Price not within 20%'(well, 10% for now)
+     C                     MOVEL'USR0363' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     7832
+     C                     END                             *FI
+     C                     END                             *FI
+      *
+     C                     END                             *FI Valid entry
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue.
+      *================================================================
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+      * If no message file specified use default.
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      * Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text.
+      *================================================================
+     C                     MOVEL'Y'       W0HLP   1        Signal help req
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Member name.
+     C                     PARM *BLANK    YYHPFL 10        *DFT text file.
+     C                     PARM *BLANK    YYHPLB 10        Help text lib.
+     C                     PARM           W0RTN   7        Return Code.
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct.
+      *================================================================
+      * ROLLBACK any uncommitted DBF changes.
+     C                     ROLBK                       57
+      *
+      * Terminate program.
+     C                     SETON                     LR
+      *
+      * Exit program.
+     C                     RETRN
+      *
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+      *****************************************************************
+      * Generate a timestamp
+      *****************************************************************
+      *
+     C           SRTMST    BEGSR
+      *
+     C                     CALL 'ZAGENTS'
+     C                     PARM           PTMES
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         INZPGM    BEGSR
+      *================================================================
+      * Initialisation.
+      *================================================================
+      *
+     C           *LIKE     DEFN PRTMST    PTMES
+     C           *LIKE     DEFN PSSN      KPSSN
+     C           *LIKE     DEFN PCNM      KPCNM
+     C           *LIKE     DEFN PMKT      KPMKT
+     C           *LIKE     DEFN PBRA      KPBRA
+     C           *LIKE     DEFN PBOK      KPBOK
+     C           *LIKE     DEFN PPRT      KPPRT
+     C           *LIKE     DEFN PTFR      KPTFR
+      *
+     C           KPRICE    KLIST
+     C                     KFLD           KPSSN
+     C                     KFLD           KPCNM
+     C                     KFLD           KPMKT
+     C                     KFLD           KPBRA
+     C                     KFLD           KPBOK
+     C                     KFLD           KPPRT
+     C                     KFLD           KPTFR
+      *
+     C                     MOVE *BLANK    W0RTN   7
+      * Setup job date/time.
+     C                     Z-ADDUDATE     ##JDT            Job date.
+     C                     TIME           ##JTM            Job time.
+     C                     TIME           ##TME   60       Screen time.
+      * Obtain default message file.
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field User Validation *RTNCDE
+     C                     MOVEL*BLANK    WUJMST  7
+      * Define work field 20% Test raw figure
+     C                     Z-ADD*ZERO     WUKUNB  75
+      * Define work field run day number
+     C                     Z-ADD*ZERO     WUAKTX  50
+      * Define work field No. of Records
+     C                     Z-ADD*ZERO     WUNORE  50
+      * Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WUSINS  50
+      * Define work field No. of Amends
+     C                     Z-ADD*ZERO     WUSAMD  50
+      * Define work field midas rundate
+     C                     MOVEL*BLANK    WUAANA  7
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUAUST  1
+      * Define work field date format flag
+     C                     MOVEL*BLANK    WUE3ST  1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUF1ST  1
+      * Open files.
+      * Begin commit control.
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           W0RTN   7
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'CPF8351'
+     C                     EXSR ZYEXPG
+     C                     END
+     C                     OPEN PRICM
+     C                     OPEN PRICE
+     C                     OPEN PRICEA
+      *
+     C                     Z-ADD14        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+     C                     Z-ADD*ZERO     ##RRMX           MAX RECNO
+      *................................................................
+      * USER: Initialise program
+      * Standard RPG Creation PAR - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE AANA      ##AANA
+     C                     MOVE AANA      WUAANA
+     C                     MOVE AKTX      WUAKTX
+     C                     MOVE AUST      WUAUST
+     C                     MOVE E3ST      WUE3ST
+     C                     MOVE F1ST      WUF1ST
+      * Get Bank Details  *
+     C                     EXSR GETICD
+      * Initialise subfile control.
+     C                     MOVEL*BLANK    #SESN            Security Shortname
+      * Set up field description parameters for calls to ZALIGN/ZEDIT.
+     C                     Z-ADD8         ZADEC
+     C                     Z-ADD7         ZADIG
+      *================================================================
+     CSR                   ENDSR
+     C********************************************************************
+     C* STANDARD FIELD-EDITING/VALIDATION SUBROUTINES TO BE COPIED.
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/COPY ZSRSRC,ZEDITZ2
+     C********************************************************************
+** @CN Long constants used in program.
+GBY2USRMSG

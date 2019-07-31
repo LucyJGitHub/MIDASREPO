@@ -1,0 +1,3168 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Cust. Serv. Fee Rate Codes Maintenance')
+/*OVRF*: OVRDBF FILE(SDRTCDXX) TOFILE(SDRTCDL0) SHARE(*NO)          : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1901 - Customer Service Fee Rate Codes Maintenance         *
+      *                                                               *
+      *  Function: This program allows the maintenance of             *
+      *            Rate Code                                          *
+      *                                                               *
+      *  Called By: SDC1901  - Input Cycle Processing                 *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 BUG2658            Date 13May04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008   *CREATE   Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG2658- F5 should not be available during enquiry           *
+      *         - Deletion message should not be displayed anymore    *
+      *           in the subfile after the deletion of a record       *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FSDRTCDXXIF  E           K        DISK         KINFSR *PSSR
+      ** Rate code
+      *
+     F            SDRTCDD0                          KRENAMESDRTCDX0
+      *
+     FSDRTCDL0UF  E           K        DISK         KINFSR *PSSR A
+      ** Fees Rate Code Maintenance
+      *
+     F                                              KINFDS FIL1DS
+     F                                              KCOMIT
+      *
+     FSDFCTLL0UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      ** Standing data controls by filename - update
+      *
+     FSD1901DFCF  E                    WORKSTN      KINFSR *PSSR
+      ** Screen Format
+      *
+     F                                        #0SFLRKSFILE SD1901S0
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   03  - F3 Exit                                               *
+      *   06  - Subfile Clear                                         *
+      *   07  - Subfile End                                           *
+      *   08  - Subfile Display                                       *
+      *   09  - Subfile Next Change                                   *
+      *   13  - Display Text 'DELETED'                                *
+      *   14  - Display Text for line 23 if Enquiry                   *
+      *   15  - Command 5 indicator                                   *
+      *   70  - Rollup                                                *
+      *   20  - Error indicator for Charge Amount                     *
+      *   21  - Error indicator for Minimum Fee Amount                *
+      *   22  - Error indicator for Maximum Fee Amount                *
+      *   23  - Error indicator for 1st record input Upper Limit      *
+      *   24  - Error indicator for 2nd record input Upper Limit      *
+      *   25  - Error indicator for 3rd record input Upper Limit      *
+      *   26  - Error indicator for 4th record input Upper Limit      *
+      *   27  - Error indicator for 5th record input Upper Limit      *
+      *   28  - Error indicator for 6th record input Upper Limit      *
+      *   29  - Error indicator for 7th record input Upper Limit      *
+      *   30  - Error indicator for 8th record input Upper Limit      *
+      *   31  - Error indicator for 9th record input Upper Limit      *
+      *   32  - Error indicator for 10th record input Upper Limit     *
+      *   33  - Error indicator for 11th record input Upper Limit     *
+      *   34  - Error indicator for 12th record input Upper Limit     *
+      *   35  - Error indicator for 13th record input Upper Limit     *
+      *   36  - Error indicator for 14th record input Upper Limit     *
+      *   37  - Error indicator for 1st record input Percentage Charge*
+      *   38  - Error indicator for 2nd record input Percentage Charge*
+      *   39  - Error indicator for 3rd record input Percentage Charge*
+      *   40  - Error indicator for 4th record input Percentage Charge*
+      *   41  - Error indicator for 5th record input Percentage Charge*
+      *   42  - Error indicator for 6th record input Percentage Charge*
+      *   43  - Error indicator for 7th record input Percentage Charge*
+      *   44  - Error indicator for 8th record input Percentage Charge*
+      *   45  - Error indicator for 9th record input Percentage Charge*
+      *   46  - Error indicator 10th record input Percentage Charge   *
+      *   47  - Error indicator 11th record input Percentage Charge   *
+      *   48  - Error indicator 12th record input Percentage Charge   *
+      *   49  - Error indicator 13th record input Percentage Charge   *
+      *   50  - Error indicator 14th record input Percentage Charge   *
+      *   51  - Error indicator 15th record input Percentage Charge   *
+      *   52  - Error indicator for 1st record input Flat Charge      *
+      *   53  - Error indicator for 2nd record input Flat Charge      *
+      *   54  - Error indicator for 3rd record input Flat Charge      *
+      *   55  - Error indicator for 4th record input Flat Charge      *
+      *   56  - Error indicator for 5th record input Flat Charge      *
+      *   57  - Error indicator for 6th record input Flat Charge      *
+      *   58  - Error indicator for 7th record input Flat Charge      *
+      *   59  - Error indicator for 8th record input Flat Charge      *
+      *   60  - Error indicator for 9th record input Flat Charge      *
+      *   61  - Error indicator for 10th record input Flat Charge     *
+      *   62  - Error indicator for 11th record input Flat Charge     *
+      *   63  - Error indicator for 12th record input Flat Charge     *
+      *   64  - Error indicator for 13th record input Flat Charge     *
+      *   65  - Error indicator for 14th record input Flat Charge     *
+      *   66  - Error indicator for 15th record input Flat Charge     *
+      *   67  - Error indicator for Calculation Basis                 *
+      *   68  - Error indicator for Charge Narrative                  *
+      *   69  - Rolldown                                              *
+      *   71  - Display A=Amend                                       *
+      *   72  - Display E=Enquiry                                     *
+      *   73  - Display D=Delete                                      *
+      *   74  - Display I=Insert                                      *
+      *   75  - Command 12 indicator                                  *
+      *   76  - Blink for Selection in Subfile                        *
+      *   77  - Modify Subfile Record                                 *
+      *   78  - Command 10 indicator                                  *
+      *   79  - Non-display Title                                     *
+      *   80  - Protect for Enquiry and Deletion                      *
+      *   81  - Error indicator for Action Code                       *
+      *   82  - Write to SDRTCDD0                                     *
+      *   83  - Error indicator for Currency                          *
+      *   84  - Error indicator for Rate Code                         *
+      *   85  - Error indicator for Review From                       *
+      *   86  - Error indicator for Select                            *
+      *   87  - Error indicator for Review From in Subfile            *
+      *   88  - Non-display for line 23 on screen                     *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRMAIN - Main Processing                                     *
+      *  SRVALD - Validation of Initial Screen                        *
+      *  SRPRRS - Process Review Screen                               *
+      *  SRIZSF - Subfile initialisation and Load Routine             *
+      *  SRDSPS - Display Screen Processing                           *
+      *  SRLOAD - Load one page of subfile                            *
+      *  SRCLR  - Clear messages in program queue                     *
+      *  SRSCLR - Clear messages in program queue                     *
+      *  SRCMD5 - Refresh for detail screen                           *
+      *  SRPSC5 - Refresh for Subfile screen                          *
+      *  SRPROC - Screen Input Processing                             *
+      *  SRVALS - Validate Selection field on Subfile                 *
+      *  SRSFPR - Subfile Processing                                  *
+      *  SREXIT - Exit of program processing                          *
+      *  SRCMFS - Refresh subfile screen                              *
+      *  SRUPSC - Process Update Screen                               *
+      *  SRUPPR - Update Processing                                   *
+      *  SRITAB - Set up the screen tables with the edited values of  *
+      *           the upper range limit, percentage and flat charges  *
+      *           using ZSEDIT                                        *
+      *  SRISEC - Set up the file tables with the edited values of    *
+      *           the upper range limit, percentage and flat charges  *
+      *           using ZSEDIT                                        *
+      *  SRVUPD - Validate update screen                              *
+      *  SRFLCK - Validate repeated fields                            *
+      *  SRULCK - Checks to see if upper range limit is numeric       *
+      *  SRNMCK - Checks if number is numeric or number of decimal    *
+      *           places is correct                                   *
+      *  SRFCCK - Checks to see if flat charge is numeric             *
+      *  SRPRCK - Checks to see if percentage is numeric              *
+      *  SRPCMD - Process command 12                                  *
+      *  SRTNLU - Retrieve/update Trans. No. of last update           *
+      *  SRSNMS - Send message to program's message queue             *
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZALIGNZ1
+     E                    UPL        14 16
+      ** Upper range limit array derived from screen
+      *
+     E                    PER        15 10
+      ** Percentage array derived from screen
+      *
+     E                    FLC        15 16
+      ** Flat charge array derived from screen
+      *
+     E                    FUL        14 15 0
+      ** Upper range limit array used to input into file
+      *
+     E                    FPR        15  9 7
+      ** Percentage array used to input into file
+      *
+     E                    FFC        15 15 0
+      ** Flat charge array used to input into file
+      *
+      /EJECT
+     IPSDS       SDS
+      ** Program status data structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IFIL1DS      DS
+      ** File information data strucutre
+      *
+     I                                     *STATUS  STATUS
+      *
+     ILDA       E DSLDA                         256
+      ** Local Data Area for Data Base Errors
+      *
+     IDNATN       DS                              5
+      ** Data Area for Update Processing
+      *
+     I                                        1   50FNATN
+      *
+     IWWDATA      DS                             21
+      ** Data structure
+      *
+     I                                        1   1 #1CHMT
+     I                                        2  21 #1NARR
+      *
+     IW1DATA      DS                             31
+      ** Data structure
+      *
+     I                                        1   1 F3CHMT
+     I                                        2  31 F3NARR
+      *
+     I            DS
+      ** Data structure for numeric fields to numeric array moves
+      *
+     I                                        1 210 FULA
+     I                                        1 210 FUL
+      *
+     I            DS
+      ** Data structure for numeric fields to numeric array moves
+      *
+     I                                        1 135 FPRA
+     I                                        1 135 FPR
+      *
+     I            DS
+      ** Data structure for numeric fields to numeric array moves
+      *
+     I                                        1 225 FFCA
+     I                                        1 225 FFC
+      *
+     IURLTAB      DS                            224
+      ** Input layout charge range upper limit for screen
+      *
+     I                                        1  16 #1RG01
+     I                                       17  32 #1RG02
+     I                                       33  48 #1RG03
+     I                                       49  64 #1RG04
+     I                                       65  80 #1RG05
+     I                                       81  96 #1RG06
+     I                                       97 112 #1RG07
+     I                                      113 128 #1RG08
+     I                                      129 144 #1RG09
+     I                                      145 160 #1RG10
+     I                                      161 176 #1RG11
+     I                                      177 192 #1RG12
+     I                                      193 208 #1RG13
+     I                                      209 224 #1RG14
+      *
+     IPERTAB      DS                            150
+      ** Input layout for percentage levels for screen
+      *
+     I                                        1  10 #1PC01
+     I                                       11  20 #1PC02
+     I                                       21  30 #1PC03
+     I                                       31  40 #1PC04
+     I                                       41  50 #1PC05
+     I                                       51  60 #1PC06
+     I                                       61  70 #1PC07
+     I                                       71  80 #1PC08
+     I                                       81  90 #1PC09
+     I                                       91 100 #1PC10
+     I                                      101 110 #1PC11
+     I                                      111 120 #1PC12
+     I                                      121 130 #1PC13
+     I                                      131 140 #1PC14
+     I                                      141 150 #1PC15
+      *
+     IFCHTAB      DS                            240
+      ** Input layout for flat charges for screen
+      *
+     I                                        1  16 #1FC01
+     I                                       17  32 #1FC02
+     I                                       33  48 #1FC03
+     I                                       49  64 #1FC04
+     I                                       65  80 #1FC05
+     I                                       81  96 #1FC06
+     I                                       97 112 #1FC07
+     I                                      113 128 #1FC08
+     I                                      129 144 #1FC09
+     I                                      145 160 #1FC10
+     I                                      161 176 #1FC11
+     I                                      177 192 #1FC12
+     I                                      193 208 #1FC13
+     I                                      209 224 #1FC14
+     I                                      225 240 #1FC15
+      *
+     ISTUTAB      DS                            210
+      ** Output layout charge range upper limit
+      *
+     I                                        1  150F3RG01
+     I                                       16  300F3RG02
+     I                                       31  450F3RG03
+     I                                       46  600F3RG04
+     I                                       61  750F3RG05
+     I                                       76  900F3RG06
+     I                                       91 1050F3RG07
+     I                                      106 1200F3RG08
+     I                                      121 1350F3RG09
+     I                                      136 1500F3RG10
+     I                                      151 1650F3RG11
+     I                                      166 1800F3RG12
+     I                                      181 1950F3RG13
+     I                                      196 2100F3RG14
+      *
+     IPLCTAB      DS                            135
+      ** Output layout for percentage levels
+      *
+     I                                        1   97F3PC01
+     I                                       10  187F3PC02
+     I                                       19  277F3PC03
+     I                                       28  367F3PC04
+     I                                       37  457F3PC05
+     I                                       46  547F3PC06
+     I                                       55  637F3PC07
+     I                                       64  727F3PC08
+     I                                       73  817F3PC09
+     I                                       82  907F3PC10
+     I                                       91  997F3PC11
+     I                                      100 1087F3PC12
+     I                                      109 1177F3PC13
+     I                                      118 1267F3PC14
+     I                                      127 1357F3PC15
+      *
+     IFCLTAB      DS                            225
+      ** Output layout for flat charges
+      *
+     I                                        1  150F3FL01
+     I                                       16  300F3FL02
+     I                                       31  450F3FL03
+     I                                       46  600F3FL04
+     I                                       61  750F3FL05
+     I                                       76  900F3FL06
+     I                                       91 1050F3FL07
+     I                                      106 1200F3FL08
+     I                                      121 1350F3FL09
+     I                                      136 1500F3FL10
+     I                                      151 1650F3FL11
+     I                                      166 1800F3FL12
+     I                                      181 1950F3FL13
+     I                                      196 2100F3FL14
+     I                                      211 2250F3FL15
+      *
+     IRUNDT       DS
+      ** Data area RUNDAT
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     IZMUSER      DS                             17
+      ** Data area ZMUSER
+      *
+     I                                       11  13 USRBCH
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+     C                     EXSR SRINIT
+      *
+     C                     EXSR SRMAIN
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *               E N D    O F    M A I N L I N E S               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRINIT    - Initialisation                                   *
+      *                                                               *
+      *  Called by - Mainline                                         *
+      *                                                               *
+      *  Calls     - None                                             *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive parameter passed from the menu
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   1
+      *
+      ** LDA definition
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Read in ZMUSER
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      ** Read in RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+     C                     Z-ADD*ZERO     WWDSTN  50
+     C                     Z-ADD*ZERO     LSTRR2  40
+     C                     Z-ADD*ZERO     #0SFLR  40
+     C                     Z-ADD*ZERO     WWSRRN  40
+     C                     Z-ADD*ZERO     WWSFLC  40
+     C                     Z-ADD*ZERO     WWLRRN  40
+     C                     Z-ADD13        WSFPG   50
+      *
+     C                     MOVE *BLANKS   WWMSGD  7
+     C                     MOVE *BLANKS   WWSSEL  1
+     C                     MOVE *ON       *IN16
+     C                     MOVE 'Y'       WWVALD  1
+     C                     MOVE 'N'       WREACT  1
+      *
+     C                     MOVEL'SDUSRMSG'PZMSGF    P
+      *
+      ** Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Handle Database Error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL'CSD008'  DBKEY            *************
+     C                     Z-ADD001       DBASE            * DBERR 001 *
+     C                     MOVEL'SD1901'  DBPGM            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Initialise screen message queue
+      *
+     C                     MOVEL'*'       ##PGMQ
+      *
+      ** Initialise header screen
+      *
+     C                     MOVELUSER      #0USER
+     C                     MOVELRUNA      #0RUNA
+     C                     MOVELWSID      #0WSID
+      *
+     C                     MOVELUSER      #1USER
+     C                     MOVELRUNA      #1RUNA
+     C                     MOVELWSID      #1WSID
+      *
+     C                     MOVELUSER      #0USRN
+     C                     MOVELRUNA      #0RUND
+     C                     MOVELWSID      #0WKID
+      *
+     C           KCRATE    KLIST
+     C                     KFLD           KRRTCD  2
+     C                     KFLD           KRCCY   3
+      *
+      ** Set F5 Key
+      *
+     C                     MOVE *ON       *IN15
+      *
+     C           PMODE     IFEQ 'E'
+     C                     MOVE *OFF      *IN79
+     C                     ELSE
+     C                     MOVE *ON       *IN79
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRMAIN    - Main Processing                                  *
+      *                                                               *
+      *  Called by - Mainline                                         *
+      *                                                               *
+      *  Calls     - SRVALD, SRPRRS, SRUPSC                           *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      ** Do while not CMD-3
+      *
+     C           *INKC     DOWEQ*OFF
+      *
+      ** Display selection screen
+      *
+     C                     WRITESD1901F0
+      *
+      ** If error, write message subfile
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESD1901C1
+     C                     ENDIF
+      *
+      ** Read selection screen
+      *
+     C                     READ SD1901F0                 89
+      *
+      ** Perform validation if not F3 and not F5
+      *
+     C           *INKC     IFEQ *OFF
+     C           *INKE     ANDEQ*OFF
+     C                     EXSR SRVALD
+      *
+      ** If valid details
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ** Enable CMD-12
+      *
+     C                     MOVE *ON       *IN75
+      *
+      ** Display next screen as necessary
+      *
+     C           WWSFL     IFEQ 'Y'
+      *
+      ** Review from subfile
+      *
+     C                     EXSR SRPRRS
+      *
+     C                     ELSE
+      *
+      ** Detail screen
+      *
+     C                     EXSR SRUPSC
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** To refresh the screen
+      *
+     C           *INKE     IFEQ *ON
+     C                     MOVE *BLANKS   #0ACT
+     C                     MOVE *BLANKS   #0RTCD
+     C                     MOVE *BLANKS   #0CCY
+     C                     MOVE *BLANKS   #0REV1
+     C                     MOVE *BLANKS   #0REV2
+     C                     MOVE *OFF      *IN81
+     C                     MOVE *OFF      *IN84
+     C                     MOVE *OFF      *IN83
+     C                     MOVE *OFF      *IN85
+     C                     MOVE *OFF      *IN87
+     C                     EXSR SRCLR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRVALD    - Validation of Initial Screen                     *
+      *                                                               *
+      *  Called by - SRMAIN                                           *
+      *                                                               *
+      *  Calls     - SRSNMS, SRSCLR, ZEDIT, SRITAB                    *
+      *****************************************************************
+     C           SRVALD    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Set OFF error indicators
+      *
+     C                     MOVE *OFF      *IN13
+     C                     MOVE *OFF      *IN81
+     C                     MOVE *OFF      *IN83
+     C                     MOVE *OFF      *IN84
+     C                     MOVE *OFF      *IN85
+     C                     MOVE *OFF      *IN87
+      *
+      ** Set ON valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+      ** If all fields blanks - SUBFILE Required
+      *
+     C           #0ACT     IFEQ *BLANKS
+     C           #0RTCD    ANDEQ*BLANKS
+     C           #0CCY     ANDEQ*BLANKS
+     C           #0REV1    ANDEQ*BLANKS
+     C           #0REV2    ANDEQ*BLANKS
+      *
+     C                     MOVE *BLANKS   #0RVF1
+     C                     MOVE *BLANKS   #0RVF2
+      *
+     C                     MOVE 'Y'       WWSFL   1
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'N'       WWSFL
+      *
+      ** If review from entered
+      *
+     C           #0REV1    IFNE *BLANKS
+     C           #0REV2    ORNE *BLANKS
+      *
+     C                     MOVE #0REV1    #0RVF1
+     C                     MOVE #0REV2    #0RVF2
+      *
+      ** If Charge Group/fee type not blank - ERROR
+      *
+     C           #0ACT     IFNE *BLANKS
+     C           #0RTCD    ORNE *BLANKS
+     C           #0CCY     ORNE *BLANKS
+      *
+     C           #0ACT     IFNE *BLANKS
+     C                     MOVE *ON       *IN81
+     C                     MOVE *ON       *IN85
+     C                     ENDIF
+      *
+     C           #0RTCD    IFNE *BLANKS
+     C                     MOVE *ON       *IN84
+     C                     MOVE *ON       *IN85
+     C                     ENDIF
+      *
+     C           #0CCY     IFNE *BLANKS
+     C                     MOVE *ON       *IN83
+     C                     MOVE *ON       *IN85
+     C                     ENDIF
+      *
+      ** "Review from" cannot be input at the same time with other fields
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9153' PZMSID
+     C                     EXSR SRSNMS
+      *
+      ** Review from subfile screen required
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'Y'       WWSFL
+      *
+     C                     ENDIF
+      *
+      ** "Review from" not entered
+      *
+     C                     ELSE
+      *
+      ** Action must be 'I', 'A', 'E', or 'D'
+      *
+     C           #0ACT     IFNE 'I'
+     C           #0ACT     ANDNE'A'
+     C           #0ACT     ANDNE'E'
+     C           #0ACT     ANDNE'D'
+     C           #0ACT     ANDNE*BLANKS
+      *
+     C                     MOVE *ON       *IN81
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9004' PZMSID
+     C                     EXSR SRSNMS
+      *
+      ** Valid action code
+      *
+     C                     ELSE
+      *
+     C           PMODE     IFEQ 'E'
+     C           #0ACT     ANDNE'E'
+     C           #0ACT     ANDNE*BLANKS
+     C                     MOVE *ON       *IN81
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9854' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      ** If action = 'D' - System set up flag must = 'N'
+      *
+     C           #0ACT     IFEQ 'D'
+     C           BJSUC     ANDEQ'Y'
+     C                     MOVE *ON       *IN81
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9005' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      ** If valid, check spf
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ** For single-Branch environment
+      *
+     C           MBIN      IFNE 'Y'
+     C                     CALL 'ZVACTU'
+     C                     PARM #0ACT     PZACTN  1
+     C                     PARM           PERR    10
+      *
+      ** If action invalid for user
+      *
+     C           PERR      IFNE *ZERO
+     C                     MOVE *ON       *IN81
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9006' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** For multi-branch environment
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM #0ACT     PZACTN
+     C                     PARM USRBCH    PZBR    3
+     C                     PARM           PERR
+      *
+      ** If action invalid for user
+      *
+     C           PERR      IFEQ 1
+     C                     MOVE *ON       *IN81
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9007' PZMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C           PERR      IFEQ 2
+     C                     MOVE *ON       *IN81
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9008' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Action is blank => Rate/Ccy ONLY ENTERED
+      *
+     C           #0ACT     IFEQ *BLANKS
+      *
+     C                     MOVE *ON       *IN81
+     C                     MOVE *ON       *IN83
+     C                     MOVE 'N'       WWVALD
+      *
+      ** When Rate-currency are entered, please Input action to do
+      *
+     C                     MOVEL'CSF9069' PZMSID
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+      *
+      ** Action not blank => Rate code and currency MUST BE ENTERED
+      *
+     C           #0RTCD    IFEQ *BLANKS
+     C                     MOVE *ON       *IN84
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Rate Code / Currency Code missing for Action
+      *
+     C                     MOVEL'CSF9070' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C           #0CCY     IFEQ *BLANKS
+     C                     MOVE *ON       *IN83
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9070' PZMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #0CCY     PCKEY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     SELEC
+     C           PRTCD     WHEQ *BLANKS
+     C                     MOVE A6CYCD    #0CCY
+     C                     Z-ADDA6NBDP    SDEC    10
+      *
+     C           PRTCD     WHEQ '*NOSEL'
+     C                     MOVE *BLANKS   #0CCY
+     C                     Z-ADD*ZEROS    SDEC
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN83
+      *
+      ** Currency Code not valid; '?' for list
+      *
+     C                     MOVEL'CSF9038' PZMSID
+     C                     EXSR SRSNMS
+      *
+     C                     OTHER
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN83
+     C                     MOVEL'CSF9038' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDSL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Action entered & valid so far
+      *
+     C           #0ACT     IFNE *BLANKS
+     C           WWVALD    ANDEQ'Y'
+      *
+      ** If valid so far
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ** Currency code must exist in the system
+      ** Validate Rate Code
+      *
+     C                     MOVEL#0RTCD    KRRTCD    P
+     C                     MOVEL#0CCY     KRCCY     P
+      *
+     C           KCRATE    CHAINSDRTCDXX             18
+      *
+      ** If record FOUND
+      *
+     C           *IN18     IFEQ *OFF
+      *
+      ** Action = 'I'
+      *
+     C           #0ACT     IFEQ 'I'
+      *
+      ** If record not flagged as Deleted
+      *
+     C           F3RECI    IFNE '*'
+      *
+      ** Live record and therefore CANNOT BE RE-INSERTED
+      *
+     C                     MOVE *ON       *IN81
+     C                     MOVE *ON       *IN83
+     C                     MOVE *ON       *IN84
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9072' PZMSID
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+      *
+      ** Deleted record so allow re-insertion
+      *
+     C                     CLEARWWDATA
+     C                     CLEARURLTAB
+     C                     CLEARPERTAB
+     C                     CLEARFCHTAB
+     C                     MOVE *BLANKS   #1MINA
+     C                     MOVE *BLANKS   #1MAXA
+     C                     MOVEL'IA'      WWFMT   2
+     C                     Z-ADDF3TNLU    #1TNLU
+     C                     Z-ADDF3TNLU    #0TNLU
+      *
+     C                     ENDIF
+      *
+      ** Action Code = 'A', 'D' or 'E'
+      *
+     C                     ELSE
+      *
+      ** If record flagged as DELETED
+      *
+     C           F3RECI    IFEQ '*'
+      *
+      ** If action code = 'A' or 'D' - ERROR
+      *
+     C           #0ACT     IFEQ 'A'
+     C           #0ACT     OREQ 'D'
+      *
+     C                     MOVE *ON       *IN81
+     C                     MOVE *ON       *IN83
+     C                     MOVE *ON       *IN84
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Record Rate Code/Currency not found or flagged as Deleted
+      *
+     C                     MOVEL'CSF9071' PZMSID
+     C                     EXSR SRSNMS
+      *
+      ** Enquiry on Deleted record
+      *
+     C                     ELSE
+      *
+     C                     MOVE *ON       *IN13
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Record does NOT EXIST
+      *
+     C                     ELSE
+      *
+     C           #0ACT     IFNE 'I'
+     C                     MOVE *ON       *IN81
+     C                     MOVE *ON       *IN83
+     C                     MOVE *ON       *IN84
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Record Rate Code/Currency not found or flagged as Deleted
+      *
+     C                     MOVEL'CSF9071' PZMSID
+      *
+     C                     EXSR SRSNMS
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Set screen fields
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+     C                     MOVE #0CCY     WWCCY   3
+     C                     EXSR SRSCFL
+      *
+     C                     Z-ADDF3TNLU    #1TNLU
+     C                     Z-ADDF3TNLU    #0TNLU
+     C                     ENDIF
+      *
+      ** Set Format flag depending on type
+      *
+     C                     SELEC
+     C           #0ACT     WHEQ 'I'
+     C                     MOVEL'IA'      WWFMT
+     C                     CLEARWWDATA
+     C                     CLEARURLTAB
+     C                     CLEARPERTAB
+     C                     CLEARFCHTAB
+     C                     MOVE #0ACT     #1ACT
+     C                     MOVE #0RTCD    #1RTCD
+     C                     MOVE #0CCY     #1CCY
+     C                     MOVE *BLANKS   #1CALC
+     C                     MOVE *BLANKS   #1MINA
+     C                     MOVE *BLANKS   #1MAXA
+      *
+     C           #0ACT     WHEQ 'A'
+     C                     MOVEL'IA'      WWFMT
+      *
+     C           #0ACT     WHEQ 'E'
+     C                     MOVEL'EN'      WWFMT
+      *
+     C           #0ACT     WHEQ 'D'
+     C                     MOVEL'DL'      WWFMT
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRPRRS    - Process Review Screen                            *
+      *                                                               *
+      *  Called by - SRMAIN                                           *
+      *                                                               *
+      *  Calls     - SRIZSF, SRDSPS, SRSCLR, SREXIT, SRPSC5, SRPCMD,  *
+      *              SRPROC                                           *
+      *****************************************************************
+     C           SRPRRS    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Do while not CMD-3 and CMD-12
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+      *
+      ** Initialise and load subfile page
+      *
+     C           #0RVF1    IFNE *BLANKS
+     C           #0RVF2    ORNE *BLANKS
+     C                     MOVE #0RVF1    #0REV1
+     C                     MOVE #0RVF2    #0REV2
+     C                     ENDIF
+      *
+     C                     EXSR SRIZSF
+      *
+      ** Initialise reset field
+      *
+     C                     MOVEL'N'       W0RSF   1
+      *
+      ** Display screen
+      *
+     C           W0RSF     DOWEQ'N'
+      *
+      ** Display Screen
+      *
+     C                     EXSR SRDSPS
+      *
+      ** Perform detailed processing
+      *
+     C                     SELEC
+     C           *INKC     WHEQ '1'
+     C                     EXSR SREXIT
+     C           *INKE     WHEQ '1'
+     C                     EXSR SRPSC5
+     C           *INKL     WHEQ '1'
+     C                     EXSR SRPCMD
+     C           *IN70     WHEQ '1'
+     C                     EXSR SRLOAD
+     C                     OTHER
+     C                     EXSR SRPROC
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDDO
+      *
+     C                     MOVEL*BLANKS   #0REV1
+     C                     MOVEL*BLANKS   #0REV2
+     C                     MOVEL*BLANKS   #0RVF1
+     C                     MOVEL*BLANKS   #0RVF2
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRIZSF  -  Subfile Initialisation and Load routine           *
+      *                                                               *
+      *  Called By: Main routine                                      *
+      *                                                               *
+      *  Calls    : SRLOAD, SRCLR                                     *
+      *****************************************************************
+      *
+     C           SRIZSF    BEGSR
+      *
+      ** Clear subfile
+      *
+     C                     MOVE '1'       *IN06
+     C                     WRITESD1901C0
+     C                     MOVE '0'       *IN06
+      *
+      ** Reset number of records in subfile
+      *
+     C                     Z-ADD0         WLRCD   40
+      *
+      ** Set Collateral Type file to appropriate record
+      *
+     C           *LOVAL    SETLLSDRTCDXX
+      *
+     C           #0REV1    IFNE *BLANKS
+     C           #0REV2    ORNE *BLANKS
+     C           W#EROR    IFEQ 'Y'
+     C                     EXSR SRCLR
+     C                     ENDIF
+     C                     MOVE #0REV2    KRCCY
+     C                     MOVE #0REV1    KRRTCD
+     C           KCRATE    SETLLSDRTCDXX
+     C                     ENDIF
+      *
+      ** Save previous selection criteria
+     C                     MOVEL#0REV1    WREV1   2
+     C                     MOVEL#0REV2    WREV2   3
+      *
+      ** Load subfile page
+      *
+     C                     EXSR SRLOAD
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRDSPS  -  Display  Screen Processing                        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : SRCLR                                             *
+      *****************************************************************
+      *
+     C           SRDSPS    BEGSR
+      *
+      ** Determine Mode used in calling program
+      *
+     C           PMODE     IFEQ 'E'
+     C                     MOVEA'10'      *IN,05
+     C                     MOVE '1'       *IN08
+     C                     ENDIF
+      *
+      ** Display subfile page
+      *
+     C                     WRITESD1901F0
+     C                     WRITESD1901C1
+     C                     WRITESD1901F2
+     C                     EXFMTSD1901C0
+      *
+      ** Clear messages from program message queue
+      *
+     C                     EXSR SRCLR
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRLOAD  -  Load one page of subfile                          *
+      *                                                               *
+      *  Called By: SRIZSF Main routine                               *
+      *                                                               *
+      *  Calls    : SRCLR, SRSNMS                                     *
+      *****************************************************************
+      *
+     C           SRLOAD    BEGSR
+      *
+      ** Set subfile record load counter to 1
+      *
+     C                     Z-ADD1         WRCTR   50
+     C                     Z-ADDWLRCD     #0SFLR
+     C                     MOVE *BLANKS   #0SEL
+     C                     MOVE *OFF      *IN07
+      *
+      ** Read Collateral Types retrieval index
+      *
+     C                     READ SDRTCDXX                 80
+      *
+      ** No data to display
+      *
+     C           *IN80     IFEQ '1'
+     C                     EXSR SRCLR
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE *OFF      *IN08
+     C                     MOVEL'Y2U0008' PZMSID
+     C                     MOVEL'Y2USRMSG'PZMSGF    P
+     C                     EXSR SRSNMS
+     C                     MOVEL'SDUSRMSG'PZMSGF    P
+     C                     ELSE
+      *
+      ** Seton SFLDSP
+      *
+     C                     MOVE '1'       *IN08
+     C                     ENDIF
+      *
+      ** Load records until EOF
+      *
+     C           *IN80     DOWEQ'0'
+     C           WRCTR     ANDLEWSFPG
+      *
+      ** Load fields here
+      *
+     C           F3RECI    IFEQ '*'
+     C                     MOVEL'D'       #0TYP
+     C                     MOVE *ON       *IN76
+     C                     ELSE
+     C                     MOVEL*BLANKS   #0TYP
+     C                     MOVE *ON       *IN76
+     C                     ENDIF
+      *
+     C                     MOVELF3RTCD    #0RCDE
+     C                     MOVELF3CCY     #0CCCY
+     C                     MOVELF3CHMT    #0CHMT
+     C                     MOVELF3NARR    #0NARR
+     C                     Z-ADDF3TNLU    #1TNLU
+     C                     Z-ADDF3TNLU    #0TNLU
+      *
+      ** Write records to SFL
+      *
+     C                     ADD  1         #0SFLR
+     C                     ADD  1         WRCTR
+     C                     WRITESD1901S0
+      *
+     C                     READ SDRTCDXX                 80
+     C                     ENDDO
+      *
+      ** Seton SFLEND indicator if EOF
+      *
+     C           *IN80     IFEQ '1'
+     C                     MOVE '1'       *IN07
+     C                     ELSE
+     C                     READPSDRTCDXX                 80
+     C                     ENDIF
+      *
+      ** No records on subfile
+      *
+     C           #0SFLR    IFEQ 0
+     C                     MOVE 'Y'       WNODAT  1
+     C                     MOVE *BLANKS   #0TYP
+     C                     ELSE
+     C                     MOVE 'N'       WNODAT
+     C                     ENDIF
+      *
+      ** Save last relative record number to workfield
+      *
+     C                     Z-ADD#0SFLR    WLRCD
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRCLR   -  Clear messages in program queue                   *
+      *                                                               *
+      *  Called By: SRLOAD, SRDSPS, SRPROC, SRVALS, SRIZSF, SRSFPR    *
+      *                                                               *
+      *  Calls    : Y2CLMSC - Clears messages from program queue      *
+      *****************************************************************
+      *
+     C           SRCLR     BEGSR
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGMQ    PZPGMQ 10
+     C                     PARM '*PRV '   PZPGRL
+     C                     WRITESD1901C1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRSCLR  -  Clear messages in program queue                   *
+      *                                                               *
+      *  Called By: SRVALD, SRPRRS, SRUPPR, SRVUPD, SRPCMD, SRPSC5    *
+      *                                                               *
+      *  Calls    : Y2CLMSC - Clears messages from program queue      *
+      *****************************************************************
+      *
+     C           SRSCLR    BEGSR
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM '*'       PWTPGQ 10
+     C                     PARM '*PRV '   PWPGQR  5
+     C                     WRITESD1901C1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRPROC  -  Screen Input Processing                           *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : SRVALS, SRSFPR                                    *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+     C                     MOVE *OFF      *IN86
+     C                     MOVE *OFF      *IN87
+     C                     MOVE *OFF      *IN09
+      *
+      ** Change in selection criteria, exit subroutine
+      *
+     C           #0RVF1    IFNE WREV1
+     C           #0RVF2    ORNE WREV2
+      *
+     C                     MOVE 'Y'       WWVALD
+     C                     MOVE 'Y'       W0RSF
+     C                     MOVE #0RVF1    #0REV1
+     C                     MOVE #0RVF2    #0REV2
+      *
+     C                     ELSE
+      *
+      ** Validate selection fields
+      *
+     C           WNODAT    IFEQ 'N'
+     C                     EXSR SRVALS
+      *
+      ** Process subfile records if valid
+      *
+     C           WWVALD    IFEQ 'Y'
+     C                     EXSR SRSFPR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRVALS  -  Validate selection field on subfile               *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *                                                               *
+      *  Calls    : SRCLR, SRSNMS                                     *
+      *****************************************************************
+      *
+     C           SRVALS    BEGSR
+      *
+      ** Clear messages from program message queue
+      *
+     C                     MOVE 'Y'       WWVALD
+     C                     EXSR SRCLR
+      *
+      ** Set subfile record pointer to top of subfile
+      *
+     C                     Z-ADD1         #0SFLR
+     C                     Z-ADD0         WSLCTR  30
+      *
+     C                     READCSD1901S0                 89
+      *
+     C           *IN89     DOWEQ'0'
+     C           #0SEL     IFNE *BLANKS
+      *
+      ** Validation of selection field
+      *
+     C                     MOVE *OFF      *IN13
+      *
+      ** Selection must = 'E' only if called from enquiry.
+      *
+     C           PMODE     IFEQ 'E'
+      *
+     C           #0SEL     IFNE 'E'
+     C           #0SEL     ANDNE*BLANKS
+     C                     MOVE *ON       *IN86
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9854' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Selection must = 'A' 'E' OR 'D' if not called from enquiry.
+      *
+     C           #0SEL     IFNE 'A'
+     C           #0SEL     ANDNE'E'
+     C           #0SEL     ANDNE'D'
+      *
+     C                     MOVE *ON       *IN86
+     C                     MOVEL'CSF9853' PZMSID
+     C                     MOVE 'N'       WWVALD
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+      *
+      ** SPF check
+      ** for single-branch environment
+      *
+     C           MBIN      IFNE 'Y'
+     C                     CALL 'ZVACTU'
+     C                     PARM #0SEL     PZACTN
+     C                     PARM           PERR
+      *
+      ** If action invalid for user
+      *
+     C           PERR      IFNE *ZERO
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9006' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** for multi-branch environment
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM #0SEL     PZACTN
+     C                     PARM USRBCH    PZBR
+     C                     PARM           PERR
+      *
+      ** If action invalid for user
+      *
+     C           PERR      IFEQ 1
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9007' PZMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C           PERR      IFEQ 2
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9008' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If action = 'D' - System set up flag must = 'N'
+      *
+     C           #0SEL     IFEQ 'D'
+     C           BJSUC     ANDEQ'Y'
+      *
+     C                     MOVEL'CSF9005' PZMSID
+     C                     MOVE 'N'       WWVALD
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+      *
+      ** If action = 'I' , Record must be flagged as DELETED
+      *
+     C           #0SEL     IFEQ 'I'
+     C           #0TYP     ANDNE'D'
+      *
+     C                     MOVEL'CSF9072' PZMSID
+     C                     MOVE 'N'       WWVALD
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+      *
+      ** If record flagged as DELETED
+      *
+     C           #0TYP     IFEQ 'D'
+      *
+     C           #0SEL     IFEQ 'D'
+     C                     MOVE *ON       *IN13
+     C                     ELSE
+     C                     MOVE *OFF      *IN13
+     C                     ENDIF
+      *
+      ** Action cannot equal 'A' OR 'D'
+      *
+     C           #0SEL     IFEQ 'A'
+     C           #0SEL     OREQ 'D'
+      *
+      ** Record Rate Code/Currency not found or flagged as Deleted
+      *
+     C                     MOVEL'CSF9071' PZMSID
+     C                     MOVE 'N'       WWVALD
+     C                     EXSR SRSNMS
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Check if Review from is entered
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Switch *ON SFLNXTCHG
+      *
+     C                     MOVE *ON       *IN09
+     C                     UPDATSD1901S0
+     C                     MOVE *OFF      *IN09
+     C                     MOVE *OFF      *IN86                        )
+     C                     READCSD1901S0                 89
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRSFPR  -  Subfile Processing                                *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *                                                               *
+      *  Calls    : SRUPSC, SRCLR, ZEDIT, SRITAB                      *
+      *****************************************************************
+      *
+     C           SRSFPR    BEGSR
+      *
+     C                     MOVE 'N'       W#EROR  1
+      *
+      ** Set subfile record pointer to top of subfile
+      *
+     C                     Z-ADD1         #0SFLR
+      *
+     C                     READCSD1901S0                 89
+      *
+     C           *IN89     DOWEQ'0'
+      *
+     C           #0SEL     IFNE *BLANKS
+      *
+     C                     MOVEL#0SEL     #1ACT
+     C                     MOVEL#0RCDE    #1RTCD
+     C                     MOVEL#0CCCY    #1CCY
+      *
+      ** Set format flag depending on type
+      *
+     C                     SELEC
+     C           #0SEL     WHEQ 'I'
+     C                     MOVEL'IA'      WWFMT
+     C                     CLEARWWDATA
+     C                     CLEARURLTAB
+     C                     CLEARPERTAB
+     C                     CLEARFCHTAB
+     C                     MOVE *BLANKS   #1CALC
+     C                     MOVE *BLANKS   #1MINA
+     C                     MOVE *BLANKS   #1MAXA
+      *
+     C           #0SEL     WHEQ 'A'
+     C                     MOVEL'IA'      WWFMT
+      *
+     C           #0SEL     WHEQ 'E'
+     C                     MOVEL'EN'      WWFMT
+      *
+     C           #0SEL     WHEQ 'D'
+     C                     MOVEL'DL'      WWFMT
+     C                     ENDSL
+      *
+     C           #0SEL     IFNE 'I'
+     C                     MOVE #0RCDE    KRRTCD
+     C                     MOVE #0CCCY    KRCCY
+     C           KCRATE    CHAINSDRTCDXX             89
+     C           F3RECI    IFEQ '*'
+     C                     MOVE *ON       *IN13
+     C                     ELSE
+     C                     MOVE *OFF      *IN13
+     C                     ENDIF
+      *
+      ** Set up screen fields
+      *
+     C                     MOVE #1CCY     WWCCY
+     C                     EXSR SRSCFL
+      *
+     C                     ENDIF
+      *
+      *
+      ** Process action entered
+      *
+     C                     EXSR SRUPSC
+      *
+      ** Exit from detail screen if F12 is pressed
+      *
+     C           *INKL     IFEQ '1'
+     C                     EXSR SRCLR
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   #0SEL
+      *
+      ** Update subfile record
+      *
+     C                     MOVE *ON       *IN09
+     C                     UPDATSD1901S0
+     C                     MOVE *OFF      *IN09
+     C                     ENDIF
+      *
+     C                     READCSD1901S0                 89
+      *
+     C                     ENDDO
+     C                     MOVE 'Y'       W0RSF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SREXIT  -  Exit of Program Processing                        *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *                                                               *
+      *  Calls    : None                                              *
+      *****************************************************************
+      *
+     C           SREXIT    BEGSR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRUPSC    - Process Update Screen                            *
+      *                                                               *
+      *  Called by - SRMAIN                                           *
+      *                                                               *
+      *  Calls     - SRUPPR, SRPCMD, SRCMD5, SRVUPD                   *
+      *****************************************************************
+     C           SRUPSC    BEGSR
+      *
+      ** Set of valid flag
+      *
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Clear screen error indicators
+      *
+     C                     MOVEA'00000000'*IN,20
+     C                     MOVEA'00000000'*IN,28
+     C                     MOVEA'00000000'*IN,36
+     C                     MOVEA'00000000'*IN,44
+     C                     MOVEA'00000000'*IN,52
+     C                     MOVEA'00000000'*IN,60
+     C                     MOVE *OFF      *IN68
+     C                     MOVE *OFF      *IN78
+      *
+      ** Dowhile exit not requested
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C           WWVALD    ANDEQ'N'
+     C           *INKE     OREQ *ON
+      *
+     C                     MOVE *OFF      *INKE
+     C                     MOVE '1'       *IN15                                              BUG2658
+      *
+     C                     MOVE #0ACT     #1ACT
+     C           #0ACT     IFEQ *BLANK
+     C                     MOVE #0SEL     #1ACT
+     C                     ENDIF
+      *
+     C                     SELEC
+     C           WWFMT     WHEQ 'IA'
+     C                     MOVE *OFF      *IN80
+     C                     MOVE *OFF      *IN88
+     C                     MOVE *OFF      *IN14
+     C           #1ACT     IFEQ 'A'
+     C                     MOVE F3RTCD    #1RTCD
+     C                     MOVE F3CCY     #1CCY
+     C                     MOVE F3CALC    #1CALC
+     C                     ENDIF
+      *
+     C           WWFMT     WHEQ 'EN'
+     C                     MOVE *ON       *IN80
+     C                     MOVE *OFF      *IN88
+     C                     MOVE *ON       *IN14
+     C                     MOVE '0'       *IN15                                              BUG2658
+     C                     MOVE F3RTCD    #1RTCD
+     C                     MOVE F3CCY     #1CCY
+     C                     MOVE F3CALC    #1CALC
+      *
+     C           WWFMT     WHEQ 'DL'
+     C                     MOVE *ON       *IN78
+     C                     MOVE *ON       *IN80
+     C                     MOVE *ON       *IN88
+     C                     MOVE *OFF      *IN14
+     C                     MOVE F3RTCD    #1RTCD
+     C                     MOVE F3CCY     #1CCY
+     C                     MOVE F3CALC    #1CALC
+     C                     ENDSL
+      *
+     C                     WRITESD1901F1
+      *
+      ** If error and not help, write message subfile
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESD1901C1
+     C                     ENDIF
+      *
+      ** Read screen
+      *
+     C                     READ SD1901F1                 19
+      *
+      ** If not CMD-3
+      *
+     C           *INKC     CASEQ*ON       SREXIT
+     C           *INKJ     CASEQ*ON       SRUPPR
+     C           *INKL     CASEQ*ON       SRPCMD
+     C           *INKE     CASEQ*ON       SRCMD5
+     C                     CAS            SRVUPD
+     C                     ENDCS
+      *
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+     C           *INKE     ANDEQ*OFF
+     C           WWVALD    ANDEQ'Y'
+      *
+     C           #0ACT     IFEQ 'I'
+     C           #0ACT     OREQ 'A'
+     C           #0SEL     OREQ 'A'
+      *
+      ** Update files
+      *
+     C                     EXSR SRUPPR
+      *
+     C                     ENDIF
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+     C                     MOVE *BLANKS   #0ACT
+     C                     MOVE *BLANKS   #0RTCD
+     C                     MOVE *BLANKS   #0CCY
+     C                     MOVE *BLANKS   #0REV1
+     C                     MOVE *BLANKS   #0REV2
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRUPPR    - Update Processing                                *
+      *                                                               *
+      *  Called by - SRUPSC                                           *
+      *                                                               *
+      *  Calls     - SRSNMS, SRTNLU, *PSSR, SRSCLR, ZALIGN, ZEDIT     *
+      *              SRISEC                                           *
+      *****************************************************************
+     C           SRUPPR    BEGSR
+      *
+     C                     EXSR SRTNLU
+     C                     MOVE 'Y'       WWVALD
+     C                     MOVE *OFF      *IN82
+      *
+      ** Action = 'I'
+      *
+     C           #0ACT     IFEQ 'I'
+      *
+      ** Access Rate code
+      *
+     C                     MOVE #1RTCD    KRRTCD
+     C                     MOVE #1CCY     KRCCY
+      *
+     C           KCRATE    CHAINSDRTCDL0             17
+      *
+      ** Set up DAY,MONTH,YEAR of last update
+      *
+      ** If a record already exists
+      *
+     C           *IN17     IFEQ *OFF
+      *
+      ** If trans. no. of last upadte has changed - ERROR
+      *
+     C           F3TNLU    IFNE #1TNLU
+     C           F3TNLU    ANDNE#0TNLU
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9011' PZMSID
+     C                     EXSR SRSNMS
+      *
+      ** Else - UPDATE Record
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'D'       F3RECI
+     C                     MOVEL#1RTCD    F3RTCD
+     C                     MOVEL#1CCY     F3CCY
+     C                     MOVELWWDATA    W1DATA
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #1CCY     PCKEY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     Z-ADDA6NBDP    SDEC    10
+      *
+      ** If minimum charge is not blank
+      *
+     C           #1MINA    IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1MINA    ZFIELD    P
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD*ZEROS    F3MINA
+     C                     ELSE
+     C                     Z-ADDSDEC      ZADEC
+     C                     MOVE ZFIELD    F3MINA
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MINA
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    F3MINA
+     C                     ENDIF
+      *
+      ** If maximum charge is not blank
+      *
+     C           #1MAXA    IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1MAXA    ZFIELD    P
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD*ZEROS    F3MAXA
+     C                     ELSE
+     C                     Z-ADDSDEC      ZADEC
+     C                     MOVE ZFIELD    F3MAXA
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MAXA
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    F3MAXA
+     C                     ENDIF
+      *
+     C                     Z-ADD1         Z
+     C                     MOVEA*BLANKS   UPL
+     C                     MOVEA*BLANKS   PER
+     C                     MOVEA*BLANKS   FLC
+     C                     MOVEAURLTAB    UPL
+     C                     MOVEAPERTAB    PER
+     C                     MOVEAFCHTAB    FLC
+      *
+     C           Z         DOWLT16
+      *
+      ** Set up screen tables
+      *
+     C                     EXSR SRISEC
+     C                     ADD  1         Z
+     C                     ENDDO
+      *
+     C                     MOVELFULA      STUTAB
+     C                     MOVELFPRA      PLCTAB
+     C                     MOVELFFCA      FCLTAB
+      *
+     C                     Z-ADDWWDSTN    F3TNLU
+     C                     Z-ADDBJRDNB    F3LCD
+     C                     TIME           F3LCTM
+     C                     MOVE 'I'       F3CHTP
+      *
+      ** Move 'Y' to reactivation flag
+      *
+     C                     MOVE 'Y'       WREACT
+      *
+     C                     UPDATSDRTCDD0               82
+      *
+     C                     ENDIF
+      *
+      ** Else - Record does not exist
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'D'       F3RECI
+     C                     MOVEL#1RTCD    F3RTCD
+     C                     MOVEL#1CCY     F3CCY
+     C                     MOVELWWDATA    W1DATA
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #1CCY     PCKEY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     Z-ADDA6NBDP    SDEC    10
+      *
+      ** If minimum charge is not blank
+      *
+     C           #1MINA    IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1MINA    ZFIELD    P
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD*ZEROS    F3MINA
+     C                     ELSE
+     C                     Z-ADDSDEC      ZADEC
+     C                     MOVE ZFIELD    F3MINA
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MINA
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    F3MINA
+     C                     ENDIF
+      *
+      ** If maximum charge is not blank
+      *
+     C           #1MAXA    IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1MAXA    ZFIELD    P
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD*ZEROS    F3MAXA
+     C                     ELSE
+     C                     Z-ADDSDEC      ZADEC
+     C                     MOVE ZFIELD    F3MAXA
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MAXA
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    F3MAXA
+     C                     ENDIF
+      *
+     C                     Z-ADD1         Z
+     C                     MOVEA*BLANKS   UPL
+     C                     MOVEA*BLANKS   PER
+     C                     MOVEA*BLANKS   FLC
+     C                     MOVEAURLTAB    UPL
+     C                     MOVEAPERTAB    PER
+     C                     MOVEAFCHTAB    FLC
+      *
+     C           Z         DOWLT16
+      *
+      ** Set up screen tables
+      *
+     C                     EXSR SRISEC
+     C                     ADD  1         Z
+     C                     ENDDO
+      *
+     C                     MOVELFULA      STUTAB
+     C                     MOVELFPRA      PLCTAB
+     C                     MOVELFFCA      FCLTAB
+      *
+     C                     Z-ADDWWDSTN    F3TNLU
+     C                     Z-ADDBJRDNB    F3LCD
+     C                     TIME           F3LCTM
+     C                     MOVE 'I'       F3CHTP
+     C                     MOVE 'N'       WREACT
+      *
+     C                     WRITESDRTCDD0               82
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Action = 'A'
+      *
+     C           #0ACT     IFEQ 'A'
+     C           #0SEL     OREQ 'A'
+      *
+      ** Access Charge group/Fee type
+      *
+     C                     MOVEL#1RTCD    KRRTCD    P
+     C                     MOVEL#1CCY     KRCCY     P
+      *
+     C           KCRATE    CHAINSDRTCDL0             17
+      *
+      ** Set up DAY,MONTH,YEAR OF LAST UPDATE
+      *
+      ** If a record not found or TNLU has CHANGED
+      *
+     C           *IN17     IFEQ *ON
+     C           F3TNLU    ORNE #1TNLU
+     C           F3TNLU    ANDNE#0TNLU
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9011' PZMSID
+     C                     EXSR SRSNMS
+      *
+      ** Else - UPDATE record
+      *
+     C                     ELSE
+      *
+     C                     MOVE #1CALC    F3CALC
+      *
+     C                     MOVEL#1RTCD    F3RTCD
+     C                     MOVEL#1CCY     F3CCY
+     C                     MOVELWWDATA    W1DATA
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #1CCY     PCKEY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     Z-ADDA6NBDP    SDEC    10
+      *
+      ** If minimum charge is not blank
+      *
+     C           #1MINA    IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1MINA    ZFIELD    P
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD*ZEROS    F3MINA
+     C                     ELSE
+     C                     Z-ADDSDEC      ZADEC
+     C                     MOVE ZFIELD    F3MINA
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MINA
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    F3MINA
+     C                     ENDIF
+      *
+      ** If maximum charge is not blank
+      *
+     C           #1MAXA    IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1MAXA    ZFIELD    P
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD*ZEROS    F3MAXA
+     C                     ELSE
+     C                     Z-ADDSDEC      ZADEC
+     C                     MOVE ZFIELD    F3MAXA
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MAXA
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    F3MAXA
+     C                     ENDIF
+      *
+     C                     Z-ADD1         Z
+     C                     MOVEA*BLANKS   UPL
+     C                     MOVEA*BLANKS   PER
+     C                     MOVEA*BLANKS   FLC
+     C                     MOVEAURLTAB    UPL
+     C                     MOVEAPERTAB    PER
+     C                     MOVEAFCHTAB    FLC
+      *
+     C           Z         DOWLT16
+      *
+      ** Set up screen tables
+      *
+     C                     EXSR SRISEC
+     C                     ADD  1         Z
+     C                     ENDDO
+      *
+     C                     MOVELFULA      STUTAB
+     C                     MOVELFPRA      PLCTAB
+     C                     MOVELFFCA      FCLTAB
+      *
+     C                     Z-ADDWWDSTN    F3TNLU
+      *
+     C           F3LCD     IFNE BJRDNB
+     C                     MOVE 'A'       F3CHTP
+     C                     ENDIF
+      *
+     C                     Z-ADDBJRDNB    F3LCD
+     C                     TIME           F3LCTM
+      *
+     C                     UPDATSDRTCDD0               82
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Action = 'D'
+      *
+     C           #0ACT     IFEQ 'D'
+     C           #0SEL     OREQ 'D'
+      *
+      ** Access Rate Code
+      *
+     C                     MOVEL#1RTCD    KRRTCD    P
+     C                     MOVEL#1CCY     KRCCY     P
+      *
+     C           KCRATE    CHAINSDRTCDL0             17
+      *
+      ** Set up DAY,MONTH,YEAR of last update
+      *
+      ** If a record not found or TNLU has CHANGED
+      *
+     C           *IN17     IFEQ *ON
+     C           F3TNLU    ORNE #1TNLU
+     C           F3TNLU    ANDNE#0TNLU
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9011' PZMSID
+     C                     EXSR SRSNMS
+      *
+      ** Else - DELETE record
+      *
+     C                     ELSE
+      *
+     C                     MOVE '*'       F3RECI
+      *
+     C                     Z-ADDWWDSTN    F3TNLU
+     C                     MOVE 'D'       F3CHTP
+     C                     Z-ADDBJRDNB    F3LCD
+     C                     TIME           F3LCTM
+      *
+     C                     UPDATSDRTCDD0               82
+     C                     MOVE *OFF      *IN78
+     C                     EXSR SRCLR                                                        BUG2658
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If duplicate key error
+      *
+     C           *IN82     IFEQ *ON
+      *
+     C           STATUS    IFEQ 01021
+      *
+     C                     ROLBK
+      *
+      ** Clear messages caused by status error
+      *
+     C                     EXSR SRCLR
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9011' PZMSID
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+     C           STATUS    IFEQ 01218
+     C                     EXSR SRCLR
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9011' PZMSID
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ELSE
+      *
+     C                     MOVEL'SDRTCDPD'KFLNM  10
+      *
+     C           KFLNM     CHAIN@AHREAU              17
+      *
+     C           *IN17     IFEQ *OFF
+      *
+     C                     SELEC
+     C           #1ACT     WHEQ 'I'
+     C           WREACT    ANDEQ'N'
+     C                     ADD  1         AHNOIN
+     C                     ADD  1         AHNORC
+      *
+     C           #1ACT     WHEQ 'I'
+     C           WREACT    ANDEQ'Y'
+     C                     ADD  1         AHNOIN
+     C                     SUB  1         AHNODL
+      *
+     C           #1ACT     WHEQ 'A'
+     C                     ADD  1         AHNOAM
+      *
+     C           #1ACT     WHEQ 'D'
+     C                     ADD  1         AHNODL
+      *
+     C                     ENDSL
+      *
+     C                     UPDAT@AHREAU
+     C                     ENDIF
+      *
+     C                     COMIT
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRSCFL    - Set up the Screen Fields                         *
+      *                                                               *
+      *  Called by - SRUPSC                                           *
+      *                                                               *
+      *  Calls     - ZEDIT                                            *
+      *****************************************************************
+      *
+     C           SRSCFL    BEGSR
+      *
+     C                     MOVELW1DATA    WWDATA
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WWCCY     PCKEY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     Z-ADDA6NBDP    SDEC    10
+      *
+      ** If minimum charge is not blank
+      *
+     C           F3MINA    IFNE *ZERO
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE F3MINA    ZFIELD
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MINA    P
+     C                     ELSE
+     C                     MOVE *BLANKS   #1MINA
+     C                     ENDIF
+      *
+      ** If maximum charge is not blank
+      *
+     C           F3MAXA    IFNE *ZERO
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE F3MAXA    ZFIELD
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MAXA    P
+     C                     ELSE
+     C                     MOVE *BLANKS   #1MAXA
+     C                     ENDIF
+      *
+     C                     Z-ADD1         Z
+     C                     MOVE *ZERO     FUL
+     C                     MOVE *ZERO     FPR
+     C                     MOVE *ZERO     FFC
+     C                     MOVELSTUTAB    FULA
+     C                     MOVELPLCTAB    FPRA
+     C                     MOVELFCLTAB    FFCA
+      *
+     C           Z         DOWLT16
+      *
+      ** Set up screen tables
+      *
+     C                     EXSR SRITAB
+     C                     ADD  1         Z
+     C                     ENDDO
+      *
+     C                     MOVEAUPL       URLTAB
+     C                     MOVEAPER       PERTAB
+     C                     MOVEAFLC       FCHTAB
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRITAB    - Set up the Screen Tables with the edited values  *
+      *              of the Upper Range Limit, Percentage and Flat    *
+      *              Charges using the routine ZSEDIT                 *
+      *                                                               *
+      *  Called by - SRUPSC                                           *
+      *                                                               *
+      *  Calls     - ZEDIT                                            *
+      *****************************************************************
+      *
+     C           SRITAB    BEGSR
+      *
+      ** Upper range limit not reached
+      *
+     C           Z         IFNE 15
+     C           FUL,Z     IFNE 0
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FUL,Z     ZFIELD
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE *BLANKS   UPL,Z
+     C                     MOVE ZFIELD    UPL,Z
+     C                     ELSE
+     C                     MOVE *BLANKS   UPL,Z
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Process for percentage charge basis
+      *
+     C           FPR,Z     IFNE 0
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FPR,Z     ZFIELD
+     C                     Z-ADD7         ZADEC
+     C           9         SUB  7         ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE *BLANKS   PER,Z
+     C                     MOVE ZFIELD    PER,Z
+     C                     ELSE
+     C                     MOVE *BLANKS   PER,Z
+     C                     ENDIF
+      *
+      ** Process for flat charge basis
+      *
+     C           FFC,Z     IFNE 0
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FFC,Z     ZFIELD
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE *BLANKS   FLC,Z
+     C                     MOVE ZFIELD    FLC,Z
+     C                     ELSE
+     C                     MOVE *BLANKS   FLC,Z
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRISEC    - Set up the file tables with the edited values    *
+      *              of the Upper Range Limit, Percentage and Flat    *
+      *              Charges using the routine ZSEDIT                 *
+      *                                                               *
+      *  Called by - SRUPSC                                           *
+      *                                                               *
+      *  Calls     - ZALIGN, ZEDIT                                    *
+      *****************************************************************
+      *
+     C           SRISEC    BEGSR
+      *
+      ** Upper range limit not reached
+      *
+     C           Z         IFNE 15
+     C           UPL,Z     IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE UPL,Z     ZFIELD
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD*ZEROS    FUL,Z
+     C                     ELSE
+     C                     Z-ADDSDEC      ZADEC
+     C                     MOVE ZFIELD    FUL,Z
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    UPL,Z
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    FUL,Z
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Process for percentage charge basis
+      *
+     C           PER,Z     IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE PER,Z     ZFIELD
+     C                     Z-ADD7         ZADEC
+     C           9         SUB  7         ZADIG
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD*ZEROS    FPR,Z
+     C                     ELSE
+     C                     Z-ADD7         ZADEC
+     C                     MOVE ZFIELD    FPR,Z
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    PER,Z
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    FPR,Z
+     C                     ENDIF
+      *
+      ** Process for flat charge basis
+      *
+     C           FLC,Z     IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FLC,Z     ZFIELD
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD*ZEROS    FFC,Z
+     C                     ELSE
+     C                     Z-ADDSDEC      ZADEC
+     C                     MOVE ZFIELD    FFC,Z
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    FLC,Z
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    FFC,Z
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRVUPD    - Validate Update Screen                           *
+      *                                                               *
+      *  Called by - SRUPSC                                           *
+      *                                                               *
+      *  Calls     - SRSNMS, SRSCLR, SRFLCK, ZALIGN, ZEDIT            *
+      *****************************************************************
+     C           SRVUPD    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Set of indicators
+      *
+     C                     MOVEA'00000000'*IN,20
+     C                     MOVEA'00000000'*IN,28
+     C                     MOVEA'00000000'*IN,36
+     C                     MOVEA'00000000'*IN,44
+     C                     MOVEA'00000000'*IN,52
+     C                     MOVEA'00000000'*IN,60
+      *
+      ** Set on valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+     C           WWFMT     IFEQ 'DL'
+      *
+      ** F10 to confirm Deletion
+      *
+     C                     MOVEL'CSF9097' PZMSID
+     C                     EXSR SRSNMS
+     C                     MOVE 'N'       WWVALD
+     C                     ENDIF
+      *
+     C           WWFMT     IFEQ 'IA'
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #0CCY     PCKEY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     Z-ADDA6NBDP    SDEC
+      *
+      ** Charge method. Valid values are 'N' or 'Y'.
+      *
+     C           #1CHMT    IFNE 'N'
+     C           #1CHMT    ANDNE'Y'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN20
+      *
+      ** Charge method valid entries are 'Y' or 'N'
+      *
+     C                     MOVEL'CSF9073' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      ** Validate Calculation Basis
+      *
+     C           #1CALC    IFNE *BLANKS
+     C                     MOVE #1CALC    WCALCB  10
+     C           WCALCB    IFLT 1
+     C           WCALCB    ORGT 6
+     C                     MOVE *ON       *IN67
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9851' PZMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     MOVE *OFF      *IN67
+     C                     MOVE #1CALC    F3CALC
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE A6DICB    #1CALC
+     C                     MOVE #1CALC    F3CALC
+     C                     ENDIF
+      *
+      ** Execute field check 15 times validating the range upper limit
+      ** percentage level and flat charge level
+      **        Z - is the sub of fields currently being validated
+      **        U - is the sub of Z + 1
+      **        V - is the sub of Z - 1
+      **       BS - is the sub of the 1st set of field to be blank
+      *
+     C                     Z-ADD2         U       20
+     C                     Z-ADD0         V       20
+     C                     Z-ADD1         Z       20
+     C                     Z-ADD0         BS      20
+      *
+      ** Move input screen details to arrays
+      *
+     C                     MOVEAURLTAB    UPL
+     C                     MOVEAPERTAB    PER
+     C                     MOVEAFCHTAB    FLC
+      *
+     C           Z         DOWLT16
+     C                     EXSR SRFLCK
+     C                     ADD  1         U
+     C                     ADD  1         V
+     C                     ADD  1         Z
+     C                     ENDDO
+      *
+      ** Move arrays to output screen details
+      *
+     C                     MOVEAUPL       URLTAB
+     C                     MOVEAPER       PERTAB
+     C                     MOVEAFLC       FCHTAB
+      *
+      ** Validate charges
+      ** If minimum charge is not blank
+      *
+     C                     Z-ADD*ZERO     WWMINA 150
+     C           #1MINA    IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1MINA    ZFIELD    P
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN21
+      *
+      ** Minimum Charge amount isn't valid. Must be positive amount.
+      *
+     C                     MOVEL'CSF9067' PZMSID
+     C                     MOVEL'Minimum' PZMSDA    P
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     Z-ADDSDEC      ZADEC
+     C                     MOVE ZFIELD    WWMINA
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MINA
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If maximum charge is not blank
+      *
+     C                     Z-ADD*ZERO     WWMAXA 150
+     C           #1MAXA    IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1MAXA    ZFIELD    P
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN22
+      *
+      ** Maximum Charge Amount isn''t Valid. Must be a positive amount.
+      *
+     C                     MOVEL'CSF9067' PZMSID
+     C                     MOVEL'Maximum' PZMSDA    P
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     MOVE ZFIELD    WWMAXA
+     C                     Z-ADDSDEC      ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MAXA
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           WWMAXA    IFLT WWMINA
+     C           WWVALD    ANDEQ'Y'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN22
+      *
+      ** Maximum charge amount must be greater than Minimum charge amount
+      *
+     C                     MOVEL'CSF9068' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRFLCK    - Validate Repeated Fields                         *
+      *                                                               *
+      *  Called by - SRVUPD                                           *
+      *                                                               *
+      *  Calls     - SRULCK, SRSNMS, SRPRCK                           *
+      *****************************************************************
+      *
+     C           SRFLCK    BEGSR
+      *
+      ** Set up BS sub if upper range limit = blanks for 1st time
+      *
+     C           Z         IFLT 15
+     C           BS        IFEQ 0
+     C           UPL,Z     ANDEQ*BLANKS
+     C                     Z-ADDZ         BS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If all 14 limits entered the 15th posn should have % or flat
+      ** value entered. To check this later the field BS is set to 15
+      *
+     C           Z         IFEQ 14
+     C           BS        ANDEQ0
+     C                     Z-ADD15        BS
+     C                     ENDIF
+      *
+      ** Validate entry for numeric, currency and range tests
+      *
+     C           Z         IFLT 15
+     C                     EXSR SRULCK
+     C                     ENDIF
+      *
+      ** Checks that if the current UPL is blank that the next
+      ** one is blank as well
+      *
+     C           Z         IFLT 14
+     C           UPL,Z     ANDEQ*BLANKS
+     C           UPL,U     ANDNE*BLANKS
+     C                     Z-ADD22        Y
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Don''t leave any blank lines between 2 Charge Upper Limit inputs
+      *
+     C                     MOVEL'CSF9057' PZMSID
+     C                     EXSR SRSNMS
+     C                     ADD  Z         Y       20
+     C                     MOVEA'1'       *IN,Y
+     C                     ENDIF
+      *
+     C           Z         IFGT 1
+     C           Z         ANDLT15
+     C           UPL,Z     ANDNE*BLANKS
+     C           *IN99     ANDNE'1'
+     C           UPL,Z     ANDLEUPL,V
+     C                     Z-ADD22        Y
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Charge Upper Limit must be Greater than the preceding entries
+      *
+     C                     MOVEL'CSF9060' PZMSID
+     C                     EXSR SRSNMS
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     ENDIF
+      *
+      ** At least one flat charge or percentage charge must be entered
+      *
+     C           Z         IFLT 15
+     C           UPL,Z     IFNE *BLANKS
+     C           PER,Z     ANDEQ*BLANKS
+     C           FLC,Z     ANDEQ*BLANKS
+     C                     Z-ADD36        Y
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     Z-ADD51        Y
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     MOVE 'N'       WWVALD
+      *
+      ** At least one Flat Charge or one Percentage Charge has to be input
+      *
+     C                     MOVEL'CSF9062' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Percentage Charge and Flat charge may not be entered at the same time
+      *
+     C           PER,Z     IFNE *BLANKS
+     C           FLC,Z     ANDNE*BLANKS
+     C                     Z-ADD36        Y
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     Z-ADD51        Y
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Input either Flat Charge or Percentage charge at a time
+      *
+     C                     MOVEL'CSF9061' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      ** Percentage check for position 15 only
+      *
+     C           Z         IFEQ 15
+     C           UPL,14    IFNE *BLANKS
+     C           PER,Z     ANDEQ*BLANKS
+     C           FLC,Z     ANDEQ*BLANKS
+     C                     Z-ADD36        Y
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     Z-ADD51        Y
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9062' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate entry for numeric, currency and range tests
+      *
+     C                     EXSR SRPRCK
+      *
+     C           Z         IFLT 15
+     C           PER,Z     IFNE *BLANKS
+     C           UPL,Z     ANDEQ*BLANKS
+     C           BS        ANDNEZ
+     C                     Z-ADD36        Y
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Don't enter a rate when Charge Upper limit is left blank
+      *
+     C                     MOVEL'CSF9059' PZMSID
+     C                     EXSR SRSNMS
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check last %
+      *
+     C           Z         IFEQ 15
+     C           PER,15    ANDNE*BLANK
+     C           UPL,14    ANDEQ*BLANK
+     C                     Z-ADD36        Y
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Don't enter a rate when Charge Upper limit is left blank
+      *
+     C                     MOVEL'CSF9059' PZMSID
+     C                     EXSR SRSNMS
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     ENDIF
+      *
+      ** Flat charge
+      ** Validate entry for numeric, currency and range tests
+      *
+     C                     EXSR SRFCCK
+      *
+     C           Z         IFLT 15
+     C           FLC,Z     IFNE *BLANKS
+     C           UPL,Z     ANDEQ*BLANKS
+     C           BS        ANDNEZ
+     C                     Z-ADD51        Y
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Don't enter a Flat Charge when Charge Upper limit is left blank
+      *
+     C                     MOVEL'CSF9063' PZMSID
+     C                     EXSR SRSNMS
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check last flat charge
+      *
+     C           Z         IFEQ 15
+     C           FLC,15    ANDNE*BLANK
+     C           UPL,14    ANDEQ*BLANK
+     C                     Z-ADD51        Y
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Don't enter a Flat Charge when Charge Upper limit is left blank
+      *
+     C                     MOVEL'CSF9063' PZMSID
+     C                     EXSR SRSNMS
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     ENDIF
+      *
+      ** For the first blank upper limit a % or flat value is required
+      *
+     C           BS        IFEQ Z
+     C           BS        OREQ 15
+     C           Z         ANDEQ15
+      *
+      ** First blank upper limit
+      *
+     C           FLC,Z     IFEQ *BLANKS
+     C           PER,Z     ANDEQ*BLANKS
+     C                     Z-ADD36        Y
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     Z-ADD51        Y
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     MOVE 'N'       WWVALD
+      *
+      ** At least one flat Charge or One Percentage Charge has to be input
+      *
+     C                     MOVEL'CSF9062' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Flat Charge and percentage can not be entry in the same time
+      *
+     C           Z         IFLT 15
+     C           FLC,Z     IFNE *BLANKS
+     C           PER,U     ANDNE*BLANKS
+     C                     Z-ADD36        Y
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     Z-ADD51        Y
+     C                     ADD  Z         Y
+     C                     ADD  1         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9061' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C           PER,Z     IFNE *BLANKS
+     C           FLC,U     ANDNE*BLANKS
+     C                     Z-ADD36        Y
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     Z-ADD51        Y
+     C                     ADD  Z         Y
+     C                     ADD  1         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CSF9061' PZMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRULCK    - Check to see if Upper Range Limit(SUB) is numeric*
+      *                                                               *
+      *  Called by - SRPRRS                                           *
+      *                                                               *
+      *  Calls     - SRNMCK, SRSNMS                                   *
+      *****************************************************************
+      *
+     C           SRULCK    BEGSR
+      *
+     C           UPL,Z     IFNE *BLANKS
+     C                     MOVELUPL,Z     ALPH17 17
+      *
+      ** Determine charge basis
+      *
+     C                     Z-ADDA6NBDP    ZSDEC
+      *
+      ** Check values are numeric or have correct no. of decimal plac  es
+      *
+     C                     EXSR SRNMCK
+      *
+      ** Error if entry not found to be numeric or negative
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD22        Y
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Charge Upper Limit isn't valid : must be a positive Amount
+      *
+     C                     MOVEL'CSF9064' PZMSID
+     C                     EXSR SRSNMS
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     ELSE
+     C                     MOVEL*BLANKS   UPL,Z
+     C                     MOVELALPH17    UPL,Z
+     C                     Z-ADDZFLD15    FUL,Z
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    FUL,Z
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRNMCK    - Check number to see if numeric or correct number *
+      *              of decimal places                                *
+      *                                                               *
+      *  Called by - SRFCCK                                           *
+      *                                                               *
+      *  Calls     - ZALIGN, ZEDIT                                    *
+      *****************************************************************
+      *
+     C           SRNMCK    BEGSR
+      *
+     C           ALPH17    IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVELALPH17    ZFIELD
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD*ZEROS    ZFLD15 150
+     C                     ELSE
+     C                     MOVE ZSDEC     ZADEC
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE ZFIELD    ZFLD15
+     C                     EXSR ZEDIT
+     C                     MOVE *BLANKS   ALPH17
+     C                     MOVELZFIELD    ALPH17
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRFCCK    - Check if Flat Charge is numeric                  *
+      *                                                               *
+      *  Called by - SRFLCK                                           *
+      *                                                               *
+      *  Calls     - SRNMCK, SRSNMS                                   *
+      *****************************************************************
+      *
+     C           SRFCCK    BEGSR
+      *
+     C           FLC,Z     IFNE *BLANKS
+     C                     MOVELFLC,Z     ALPH17
+     C                     Z-ADDA6NBDP    ZSDEC   10
+     C                     EXSR SRNMCK
+      *
+      ** Check for numeric error and not negative
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD51        Y
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Flat Charge isn't valid : must be a positive amount.
+      *
+     C                     MOVEL'CSF9066' PZMSID
+     C                     EXSR SRSNMS
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     ELSE
+     C                     MOVE *BLANKS   FLC,Z
+     C                     MOVELALPH17    FLC,Z
+     C                     Z-ADDZFLD15    FFC,Z
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    FFC,Z
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRPRCK    - Check if Percentage(SUB) is numeric              *
+      *                                                               *
+      *  Called by - SRFLCK                                           *
+      *                                                               *
+      *  Calls     - ZALIGN, ZEDIT, SRSNMS                            *
+      *****************************************************************
+      *
+     C           SRPRCK    BEGSR
+      *
+     C           PER,Z     IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE PER,Z     ZFIELD
+     C                     Z-ADD7         ZADEC
+     C           9         SUB  7         ZADIG
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD36        Y
+     C                     MOVE 'N'       WWVALD
+      *
+      ** Percentage must be a positive rate with maximum 7 decimals
+      *
+     C                     MOVEL'CSF9065' PZMSID
+     C                     EXSR SRSNMS
+     C                     ADD  Z         Y
+     C                     MOVEA'1'       *IN,Y
+     C                     ELSE
+     C                     Z-ADD7         ZADEC
+     C                     MOVE ZFIELD    FPR,Z
+     C                     EXSR ZEDIT
+     C                     MOVEL*BLANKS   PER,Z
+     C                     MOVE ZFIELD    PER,Z
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    FPR,Z
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRPCMD    - Process CMD-12                                   *
+      *                                                               *
+      *  Called by - SRPRRS, SRUPSC                                   *
+      *                                                               *
+      *  Calls     - SRSCLR                                           *
+      *****************************************************************
+     C           SRPCMD    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Clear screen error indicators
+      *
+     C                     MOVEA'00000000'*IN,20
+     C                     MOVEA'00000000'*IN,28
+     C                     MOVEA'00000000'*IN,36
+     C                     MOVEA'00000000'*IN,44
+     C                     MOVEA'00000000'*IN,52
+     C                     MOVEA'0000000' *IN,60
+     C                     MOVE *OFF      *IN75
+     C                     MOVE *OFF      *IN78
+     C                     MOVE *OFF      *IN81
+     C                     MOVE *OFF      *IN83
+     C                     MOVE *OFF      *IN84
+     C                     MOVE *OFF      *IN85
+     C                     MOVE *OFF      *IN86
+     C                     MOVE *OFF      *IN87
+     C                     MOVE *OFF      *IN69
+      *
+      ** Initialise fields
+      *
+     C                     MOVEL*BLANKS   #0ACT
+     C                     MOVEL*BLANKS   #0RTCD
+     C                     MOVEL*BLANKS   #0CCY
+     C                     MOVEL*BLANKS   #0REV1
+     C                     MOVEL*BLANKS   #0REV2
+     C                     CLEARWWDATA
+     C                     CLEARURLTAB
+     C                     CLEARPERTAB
+     C                     CLEARFCHTAB
+     C                     MOVE *BLANKS   #1CALC
+     C                     MOVE *BLANKS   #1MINA
+     C                     MOVE *BLANKS   #1MAXA
+     C                     MOVEL*BLANKS   #1RRN
+     C                     MOVEL*BLANKS   #1TNLU
+     C                     MOVEL*BLANKS   #0SEL
+     C                     MOVEL*BLANKS   #0RVF1
+     C                     MOVEL*BLANKS   #0RVF2
+     C                     MOVE 'Y'       W0RSF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRCMD5    - Process CMD-5                                    *
+      *                                                               *
+      *  Called by - SRUPSC                                           *
+      *                                                               *
+      *  Calls     - None                                             *
+      *****************************************************************
+     C           SRCMD5    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Clear screen error indicators
+      *
+     C                     MOVEA'00000000'*IN,20
+     C                     MOVEA'00000000'*IN,28
+     C                     MOVEA'00000000'*IN,36
+     C                     MOVEA'00000000'*IN,44
+     C                     MOVEA'00000000'*IN,52
+     C                     MOVEA'00000000'*IN,60
+     C                     MOVE *OFF      *IN68
+     C                     MOVE *OFF      *IN78
+      *
+      ** Initialise fields for refresh if Action code = 'I'
+      *
+     C           #1ACT     IFEQ 'I'
+     C                     CLEARWWDATA
+     C                     CLEARURLTAB
+     C                     CLEARPERTAB
+     C                     CLEARFCHTAB
+     C                     MOVE *BLANKS   #1CALC
+     C                     MOVE *BLANKS   #1MINA
+     C                     MOVE *BLANKS   #1MAXA
+     C                     MOVEL*BLANKS   #1RRN
+     C                     MOVEL*BLANKS   #1TNLU
+     C                     ENDIF
+      *
+      ** Refresh if Action code = 'A'
+      *
+     C           #1ACT     IFEQ 'A'
+     C                     MOVEL'Y'       WWVALD
+     C                     MOVE #1CCY     WWCCY
+     C                     EXSR SRSCFL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRPSC5    - Process CMD-5 for Subfile                        *
+      *                                                               *
+      *  Called by - SRPRRS                                           *
+      *                                                               *
+      *  Calls     - SRSCLR                                           *
+      *****************************************************************
+     C           SRPSC5    BEGSR
+      *
+      ** Clear screen message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Clear screen error indicators
+      *
+     C                     MOVE *OFF      *IN86
+     C                     MOVE *OFF      *IN87
+      *
+      ** Initialise fields
+      *
+     C                     MOVE 'Y'       W0RSF
+     C                     MOVE *BLANKS   #0RVF1
+     C                     MOVE *BLANKS   #0RVF2
+     C                     MOVE *BLANKS   #0REV1
+     C                     MOVE *BLANKS   #0REV2
+     C                     MOVE *BLANKS   WREV1
+     C                     MOVE *BLANKS   WREV2
+     C                     MOVEL*BLANKS   #0SEL
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRTNLU    - Retrieve/Update Trans No. of Last Update         *
+      *                                                               *
+      *  Called by - SRUPPR                                           *
+      *                                                               *
+      *  Calls     - None                                             *
+      *****************************************************************
+     C           SRTNLU    BEGSR
+      *
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     Z-ADDFNATN     WWDSTN
+     C                     ADD  1         FNATN
+     C                     OUT  DNATN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRSNMS    - Send message to Program's Message Queue          *
+      *                                                               *
+      *  Called by - SRVALD, SRUPPR, SRVUPD, SRVALS, SRLOAD           *
+      *                                                               *
+      *  Calls     - Y2SNMGC                                          *
+      *****************************************************************
+     C           SRSNMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           PZPGM  10
+     C                     PARM           PZPGRL  5
+     C                     PARM           PZMSID  7
+     C                     PARM           PZMSGF 10
+     C                     PARM           PZMSDA132
+     C                     PARM           PZMSTP  7
+      *
+     C                     MOVEL*BLANKS   PZMSDA
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR     - Program Error Handling Routine                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ ' '
+     C                     MOVEL'Y'       WRUN    1
+     C                     DUMP
+     C                     ROLBK
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,1493 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER IML Reporting - IML Code sub-rubrique')
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting                                   *
+      *                                                               *
+      *  ERLUSA - IML REPORTING - CALCULATE IML CODE SUB-RUBRIQUE     *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 231237             Date 04Oct06               *
+      *                 CER001             Date 25Apr05               *
+      *                 ULX047             Date 22Nov04               *
+      *                 186714             Date 15Nov00               *
+      *                 182226             Date 09Aug00               *
+      *                 CAD028             Date 05Jan99               *
+      *                 ULX004             Date 30Apr97               *
+      *                 BISLUX ML          Date 17Nov94               *
+      *                 95431  DDJ         Date 29Jun95               *
+      *                 ERL459 PT          Date 29Jun95               *
+      *                 87379  DDJ         Date 10May95               *
+      *                 ERL432 PT          Date 30Aug94               *
+      *                 ERL429 PT          Date 29Aug94               *
+      *                 ERL423 PT          Date 19Aug94               *
+      *                 ERL371 PT          Date 21Dec93               *
+      *                 58560              Date 22Jul93               *
+      *                 059059 PT          Date 18Aug93               *
+      *                 ERL361 PT          Date 29Jul93               *
+      *                 ERL338 TLI         Date 21Apr93               *
+      *                 ERL337 PT          Date 09Apr93               *
+      *                 ERL333             Date 30Mar93               *
+      *                 ERL327             Date 10Mar93               *
+      *                 ERL315             Date 09Feb93               *
+      *                 ERL311             Date 05Feb93               *
+      *                 ERL306             Date 28Jan93               *
+      *                 ERL304             Date 25Jan93               *
+      *                 ERL302             Date 20Jan93               *
+      *                 ERL009             Date 29Dec92               *
+      *                 ERL006             Date 24Dec92               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *     231237 - WRONG SPLIT OF RUBRIC 1.02-000 (FOR ZONE EURO)   *
+      *     CER001 - LUX Upgrade to MidasPlus                         *
+      *     ULX047 - CSSF - Split of Rubric 1.02-000                  *
+      *     186714 - Code 302400 (facilities) not managed             *
+      *     182226 - Nostro Accounts on Central Banks not managed     *
+      *     CAD028 - Recompiled on SDCTRYX6 new layout                *
+      *     ULX004 - Capital Adeqaucy                                 *
+      *              Euroclear must be considered as a bank           *
+      *            - IML Circular 97/138                              *
+      *              Recompile only                                   *
+      *     BISLUX - IF ECONOMIC SECTOR = 0, SET IT TO 4000           *
+      *     95431  - WRONG IML RUBR GIVEN TO CEDEL (20100000)         *
+      *     ERL459 - CEDEL MUST BE CONSIDERED AS A BANK FROM 01/01/95 *
+      *     87379  - TO AVOID EXZONA EQ TO *BLANK                     *
+      *     ERL432 - TO MANAGE THE DATABASE ERRORS CORRECTLY          *
+      *     ERL429 - TO PASS ZONE A INDICATOR TO ERLU60               *
+      *     ERL423 - TO REMOVE FIX 58560 (EC. SECTOR CODE 2000 MUST   *
+      *              BE MANAGED AS CODE 2001 - CENTRAL ADMINISTRATION)*
+      *     ERL371 - IML 1.4 DEVELOPMENT                              *
+      *     58560  - IML CODE 104000 WRONGLY SETUP IF EXECOS = 2000   *
+      *     059059 - OFF BALANCE "DONT" RUBRICS NOT MANAGED IF POSTING*
+      *              REFERENCE 1                                      *
+      *     ERL361 - ECONOMIC SECTOR CODE 2000 INCORRECTLY MANAGED    *
+      *     ERL338 - 1. IML CODE 201340 WRONGLY SETUP                 *
+      *              2. ADD 405100 IN ARRAY T1 AND 405000 IN ARRAY T2 *
+      *     ERL337 - ALL CHECKS MUST BE DONE WITH COUNTRY OF CITIZEN. *
+      *     ERL333 - ADD CODES FOR 'DONT' GENERATION                  *
+      *     ERL327 - 1. ADD COUNTRY OF CITIZENSCHIP FOR ZONE A        *
+      *            - 2. CHANGE CHECK ON 'ZONE A'                      *
+      *     ERL315 - 'ENTREPRISE INDIVIDUELLE' IS A PHYSICAL PERSON   *
+      *            - OVERWRITE CODES.                                 *
+      *     ERL311 - NO MORE 00 IN POSITION 7-8 FOR IML CODE          *
+      *     ERL306 - ADD COUNTRY CODE IN ZONE 'A'                     *
+      *     ERL304 - SWAP ECONOMIQUE SECTOR CODE FOR                  *
+      *              'PERSONNE MORALE ET PHYSIQUE'                    *
+      *     ERL302 - ADD ECONOMIQUE SECTOR CODE FOR 202220            *
+      *     ERL009 - CREATE A SECOND RECORD FOR SUB-TOTAL RUBRIQUE    *
+      *     ERL006 - NOSTRO PROCESSING                                *
+      *****************************************************************
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * 71   72   73   74   75   76   77   78   79   80 *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     F**
+     F***SDCTRYX6IF**E           K        DISK                                         ERL327 CER001
+     FSDCTX4PDIF  E           K        DISK                                                   CER001
+      * ER EXTENDED FILE FOR COUNTRY CODES                                ERL327
+     E*
+     E** ARRAY FOR COUNTRIES INCLUDED IN 'ZONE A'
+     E********************ZONA   25  25  2                                ERL306
+     E********************ZONA   30  30  2                         ERL306 ERL327
+     E** ARRAY FOR IML CODE WHICH MUST GENERATED A RUBRIQUE
+     E********************RUB    12  12  6 0                              ERL009
+     E** ARRAY FOR IML CODE SUB-TOTAL RUBRIQUE
+     E********************T1     12  19  6 0                              ERL333
+     E********************T1     10  44  8 0                       ERL333 ERL338
+     E********************T1     10  45  8 0                       ERL338 059059
+     E                    T1     10  57  8 0                              059059
+     E** ARRAY FOR IML CODE SUB-TOTAL RUBRIQUE CORRESPONDING
+     E********************T2     10  19  8 0                              ERL333
+     E********************T2     10  44  8 0                       ERL333 ERL338
+     E********************T2     10  45  8 0                       ERL338 059059
+     E                    T2     10  57  8 0                              059059
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      *===============================================================*
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      142 144 DBK1
+     I                                      146 153 DBK2
+     I                                      155 156 DBK3
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      **
+      *  IML Code data structure
+     I            DS
+     I                                        1   80SCHA
+     I                                        1   60SCHA16
+     I                                        7   80SCHA78
+      *  Program status data structure
+     I           SDS
+     I                                     *PROGRAM PGM
+      **=================================================================
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           EXLOTD  3
+     C                     PARM           EXSCHA  80          UPDATE
+     C                     PARM           EXECOS  40
+     C                     PARM           EXRDU1  20
+     C                     PARM           EXCUCL  3
+     C                     PARM           EXCONS  10                      ERL315
+     C                     PARM           EXCNCZ  2                       ERL327
+     C                     PARM           TOTSUB  80                      ERL009
+     C                     PARM           TOTSU2  80                      ERL315
+     C                     PARM           EXZONA  1                       ERL429
+     C                     PARM           EXIDUR  20                      186714
+     C                     PARM           ERROR   1                       ERL432
+      **                                                               *****
+      ** RETRIEVE INDUSTRIALISED COUNTRY INDICATOR TO CHECK ZONE A        ERL327
+     C                     MOVE *BLANK    WFICTR                          ERL429
+     C********** EXCNCZ    CHAINSDCTRYX6             88                                ERL327 CER001
+     C           EXCNCZ    CHAINSDCTX4PD             88                                       CER001
+     C           *IN88     IFEQ '0'                                       ERL327
+     C           WFICTR    ANDEQ'Y'                                       ERL327
+     C                     MOVE '1'       *IN26                           ERL327
+     C                     ELSE                                           ERL327
+     C                     MOVE '0'       *IN26                           ERL327
+     C                     END                                            ERL327
+      *                                                                   ERL429
+     C           WFICTR    IFNE 'Y'                                       87379
+     C                     MOVE 'N'       WFICTR                          87379
+     C                     END                                            87379
+      *                                                                   87379
+     C                     MOVE WFICTR    EXZONA                          ERL429
+      **                                                                  231237
+      ** ALSO CHECK IF PART OF ZONE EURO                                  231237
+     C           *IN88     IFEQ '0'                                       231237
+     C           WFEMUM    ANDEQ'Y'                                       231237
+     C                     MOVE '1'       *IN28                           231237
+     C                     ELSE                                           231237
+     C                     MOVE '0'       *IN28                           231237
+     C                     END                                            231237
+      *                                                                   ERL327
+      **  BISLUX, NO ECO.SECTOR DEFINED                                   BISLUX
+     C           EXECOS    IFEQ 0                                         BISLUX
+     C                     Z-ADD4000      EXECOS                          BISLUX
+     C                     END                                            BISLUX
+      *                                                                   BISLUX
+     C                     MOVE '0'       *INU7
+     C                     Z-ADDEXSCHA    SCHA
+     C*********************MOVELEXCUCL    WWCUCL  2                       ERL337
+     C*********************Z-ADD0         SCHA78                         ERL311
+      *
+      ** OVERWRITE CODES                                                  ERL315
+     C           SCHA16    IFEQ 103000                     - B1           ERL315
+      *                                                                   ERL315
+      ** ECONOMIQUE SECTOR : ** 1100-1200-1300-1430-1440-1450-1460 **     ERL315
+      **                     ** 1470-1480-1490-1500-1600-2100-2200 **     ERL315
+      **                     ** 2300-3000-3100-3200                **     ERL315
+      **                     ** 2000-2001-2002-2003                **     ERL361
+     C           EXECOS    IFEQ 1100                       - B2           ERL315
+     C           EXECOS    OREQ 1200                                      ERL315
+     C           EXECOS    OREQ 1300                                      ERL315
+     C           EXECOS    OREQ 1430                                      ERL315
+     C           EXECOS    OREQ 1440                                      ERL315
+     C           EXECOS    OREQ 1450                                      ERL315
+     C***********EXECOS    OREQ 1451                               ERL371 ERL459
+     C           EXECOS    OREQ 1460                                      ERL315
+     C           EXECOS    OREQ 1470                                      ERL315
+     C           EXECOS    OREQ 1480                                      ERL315
+     C***********EXECOS    OREQ 1481                               ERL371 ULX004
+     C           EXECOS    OREQ 1490                                      ERL315
+     C           EXECOS    OREQ 1500                                      ERL315
+     C           EXECOS    OREQ 1600                                      ERL315
+     C           EXECOS    OREQ 2000                                      ERL361
+     C           EXECOS    OREQ 2001                                      ERL361
+     C           EXECOS    OREQ 2002                                      ERL361
+     C           EXECOS    OREQ 2003                                      ERL361
+     C           EXECOS    OREQ 2005                                      ERL371
+     C           EXECOS    OREQ 2008                                      ERL371
+     C           EXECOS    OREQ 2100                                      ERL315
+     C           EXECOS    OREQ 2200                                      ERL315
+     C           EXECOS    OREQ 2300                                      ERL315
+     C           EXECOS    OREQ 3000                                      ERL315
+     C           EXECOS    OREQ 3100                                      ERL315
+     C           EXECOS    OREQ 3200                                      ERL315
+     C                     Z-ADD104000    SCHA16                          ERL315
+     C                     END                             - E2           ERL315
+      *                                                                   ERL315
+     C                     END                             - E1           ERL315
+      *                                                                   ERL315
+      ** OVERWRITE CODES                                                  ERL315
+     C           SCHA16    IFEQ 104000                     - B1           ERL315
+      *                                                                   ERL315
+      ** ECONOMIQUE SECTOR : ** 1410-1421-1422                     **     ERL315
+     C           EXECOS    IFEQ 1410                       - B2           ERL315
+     C           EXECOS    OREQ 1421                                      ERL315
+     C           EXECOS    OREQ 1422                                      ERL315
+     C           EXECOS    OREQ 1451                                      ERL459
+     C           EXECOS    OREQ 1481                                      ULX004
+     C                     Z-ADD103000    SCHA16                          ERL315
+     C                     END                             - E2           ERL315
+      *                                                                   ERL315
+     C                     END                             - E1           ERL315
+      *                                                                   ERL315
+      ** OVERWRITE CODES                                                  ERL315
+     C           SCHA16    IFEQ 201000                     - B1           ERL315
+      *                                                                   ERL315
+      ** ECONOMIQUE SECTOR : ** 1100-1200-1300-1430-1440-1450-1460 **     ERL315
+      **                     ** 1470-1480-1490-1500-1600-2100-2200 **     ERL315
+      **                     ** 2300-3000-3100-3200                **     ERL315
+      **                     ** 2000-2001-2002-2003                **     ERL361
+     C           EXECOS    IFEQ 1100                       - B2           ERL315
+     C           EXECOS    OREQ 1200                                      ERL315
+     C           EXECOS    OREQ 1300                                      ERL315
+     C           EXECOS    OREQ 1430                                      ERL315
+     C           EXECOS    OREQ 1440                                      ERL315
+     C           EXECOS    OREQ 1450                                      ERL315
+     C***********EXECOS    OREQ 1451                               ERL371 ERL459
+     C           EXECOS    OREQ 1460                                      ERL315
+     C           EXECOS    OREQ 1470                                      ERL315
+     C           EXECOS    OREQ 1480                                      ERL315
+     C***********EXECOS    OREQ 1481                               ERL371 ULX004
+     C           EXECOS    OREQ 1490                                      ERL315
+     C           EXECOS    OREQ 1500                                      ERL315
+     C           EXECOS    OREQ 1600                                      ERL315
+     C           EXECOS    OREQ 2000                                      ERL361
+     C           EXECOS    OREQ 2001                                      ERL361
+     C           EXECOS    OREQ 2002                                      ERL361
+     C           EXECOS    OREQ 2003                                      ERL361
+     C           EXECOS    OREQ 2005                                      ERL371
+     C           EXECOS    OREQ 2008                                      ERL371
+     C           EXECOS    OREQ 2100                                      ERL315
+     C           EXECOS    OREQ 2200                                      ERL315
+     C           EXECOS    OREQ 2300                                      ERL315
+     C           EXECOS    OREQ 3000                                      ERL315
+     C           EXECOS    OREQ 3100                                      ERL315
+     C           EXECOS    OREQ 3200                                      ERL315
+     C                     Z-ADD202000    SCHA16                          ERL315
+     C                     END                             - E2           ERL315
+      *                                                                   ERL315
+     C                     END                             - E1           ERL315
+      *                                                                   ERL315
+      ** OVERWRITE CODES                                                  ERL315
+     C           SCHA16    IFEQ 202000                     - B1           ERL315
+      *                                                                   ERL315
+      ** ECONOMIQUE SECTOR : ** 1410-1421-1422                     **     ERL315
+     C           EXECOS    IFEQ 1410                       - B2           ERL315
+     C           EXECOS    OREQ 1421                                      ERL315
+     C           EXECOS    OREQ 1422                                      ERL315
+     C           EXECOS    OREQ 1451                                      ERL459
+     C           EXECOS    OREQ 1481                                      ULX004
+     C                     Z-ADD201000    SCHA16                          ERL315
+     C                     END                             - E2           ERL315
+      *                                                                   ERL315
+     C                     END                             - E1           ERL315
+      **
+      ** NOSTRO PROCESSING ** DEBIT                                      ERL006
+     C           SCHA16    IFEQ 999998                     - B1          ERL006
+     C           EXECOS    IFEQ 1421                       - B2          ERL006
+     C           EXECOS    OREQ 1451                                     ERL459
+     C           EXECOS    OREQ 1481                                      ULX004
+     C                     Z-ADD103000    SCHA16                         ERL006
+     C                     END                             - E2          ERL006
+      *                                                                   182226
+      ** Nostro on Central Banks processing - Debit                       182226
+     C           SCHA16    IFEQ 999998                     - B1           182226
+     C           EXECOS    IFEQ 1410                       - B2           182226
+     C***********EXCNCZ    IFEQ 'BE'                       - B3    182226 231237
+     C           *IN28     IFEQ '1'                        - B3           231237
+     C           EXRDU1    ANDEQ05                                        182226
+     C***********EXCNCZ    OREQ 'LU'                               182226 231237
+     C***********EXRDU1    ANDEQ05                                 182226 231237
+     C                     Z-ADD101310    SCHA16                          182226
+     C                     ELSE                            - X3           182226
+     C                     Z-ADD103000    SCHA16                          182226
+     C                     END                             - E3           182226
+     C                     END                             - E2           182226
+     C                     END                             - E1           182226
+      *                                                                  ERL006
+     C           EXECOS    IFEQ 1450                       - B2          ERL006
+     C***********EXECOS    OREQ 1451                              ERL371 ERL459
+     C           EXECOS    OREQ 1460                                     ERL006
+     C           EXECOS    OREQ 1480                                     ERL006
+     C***********EXECOS    OREQ 1481                               ERL371 ULX004
+     C           EXECOS    OREQ 1490                                     ERL006
+     C                     Z-ADD104000    SCHA16                         ERL006
+     C                     END                             - E2          ERL006
+     C                     END                             - E1          ERL006
+      **
+      ** NOSTRO PROCESSING ** CREDIT                                     ERL006
+     C           SCHA16    IFEQ 999999                     - B1          ERL006
+     C           EXECOS    IFEQ 1421                       - B2          ERL006
+     C           EXECOS    OREQ 1451                                     ERL459
+     C           EXECOS    OREQ 1481                                     ULX004
+     C           EXECOS    OREQ 1410                                     182226
+     C                     Z-ADD201000    SCHA16                         ERL006
+     C                     END                             - E2          ERL006
+      *                                                                  ERL006
+     C           EXECOS    IFEQ 1450                       - B2          ERL006
+     C***********EXECOS    OREQ 1451                       - B2   ERL371 ERL459
+     C           EXECOS    OREQ 1460                                     ERL006
+     C           EXECOS    OREQ 1480                                     ERL006
+     C***********EXECOS    OREQ 1481                               ERL371 ULX004
+     C           EXECOS    OREQ 1490                                     ERL006
+     C                     Z-ADD202000    SCHA16                         ERL006
+     C                     END                             - E2          ERL006
+     C                     END                             - E1          ERL006
+      **
+      ** IML CODE MUST BE PROCESS
+     C***********SCHA16    LOKUPRUB                      27              ERL009
+     C************IN27     IFEQ '0'                        - B1          ERL009
+     C*********************RETRN                                         ERL009
+     C*********************END                             - E1          ERL009
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+      *
+      *  IML CODE : **  1 0 1 3 0 0  **
+     C           SCHA16    IFEQ 101300                      - B1
+     C***********WWCUCL    IFEQ 'BE'                        - B2          ERL337
+     C***********WWCUCL    OREQ 'LU'                                      ERL337
+     C***********EXCNCZ    IFEQ 'BE'                        - B2   ERL337 231237
+     C***********EXCNCZ    OREQ 'LU'                               ERL337 231237
+     C           *IN28     IFEQ '1'                         - B2          231237
+     C                     Z-ADD101310    SCHA16
+     C                     ELSE                             - X2
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B3
+     C                     Z-ADD101320    SCHA16
+     C                     END                              - E3
+     C                     END                              - E2
+     C                     END                              - E1
+      *                                                                   ULX047
+      ***  ULX047 - Split of Rubric 1.02-000                              ULX047
+      ***  1.02-000 : Effets publics et autres effets admissables au      ULX047
+      ***             refinancement aupres de la Banque Centrale          ULX047
+      ***  1.02-100 : Effects publics et assimilés                        ULX047
+      ***  1.02-200 : Autres effets admissibles au refinancement aupres   ULX047
+      ***             de la Banque Centrale                               ULX047
+      ***                                                                 ULX047
+      *                                                                   ULX047
+     C           SCHA16    IFEQ 102000                                    ULX047
+     C           EXECOS    IFEQ 2001                                      ULX047
+     C           EXECOS    OREQ 2002                                      ULX047
+     C           EXECOS    OREQ 2003                                      ULX047
+     C           EXECOS    OREQ 2004                                      ULX047
+     C           EXECOS    OREQ 2005                                      ULX047
+     C           EXECOS    OREQ 2006                                      ULX047
+     C           EXECOS    OREQ 2007                                      ULX047
+     C           EXECOS    OREQ 2008                                      ULX047
+     C           EXECOS    OREQ 2101                                      ULX047
+     C           EXECOS    OREQ 2102                                      ULX047
+     C           EXECOS    OREQ 2150                                      ULX047
+     C           EXECOS    OREQ 2151                                      ULX047
+     C           EXECOS    OREQ 2201                                      ULX047
+     C           EXECOS    OREQ 2202                                      ULX047
+     C           EXECOS    OREQ 2300                                      ULX047
+     C           EXECOS    OREQ 2400                                      ULX047
+     C                     Z-ADD102100    SCHA16                          ULX047
+     C                     ELSE                                           ULX047
+     C                     Z-ADD102200    SCHA16                          ULX047
+     C                     ENDIF                                          ULX047
+      *                                                                   ULX047
+     C                     ENDIF                           1.02-000 ?     ULX047
+      *
+      *  IML CODE : **  1 0 2 1 0 0  **
+     C           SCHA16    IFEQ 102100                      - B1
+     C***********WWCUCL    IFEQ 'BE'                        - B2          ERL337
+     C***********WWCUCL    OREQ 'LU'                                      ERL337
+     C***********EXCNCZ    IFEQ 'BE'                        - B2   ERL337 231237
+     C***********EXCNCZ    OREQ 'LU'                               ERL337 231237
+     C           *IN28     IFEQ '1'                         - B2          231237
+     C                     Z-ADD102110    SCHA16
+     C                     ELSE                             - X2
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B3
+     C                     Z-ADD102120    SCHA16
+     C                     END                              - E3
+     C                     END                              - E2
+     C                     END                              - E1
+      *
+      *  IML CODE : **  1 0 2 2 0 0  **
+     C           SCHA16    IFEQ 102200                      - B1
+     C***********WWCUCL    IFEQ 'BE'                        - B2          ERL337
+     C***********WWCUCL    OREQ 'LU'                                      ERL337
+     C***********EXCNCZ    IFEQ 'BE'                        - B2   ERL337 231237
+     C***********EXCNCZ    OREQ 'LU'                               ERL337 231237
+     C           *IN28     IFEQ '1'                         - B2          231237
+     C                     Z-ADD102210    SCHA16
+     C                     ELSE                             - X2
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B3
+     C                     Z-ADD102220    SCHA16
+     C                     END                              - E3
+     C                     END                              - E2
+     C                     END                              - E1
+      *
+      ** IML CODE : **  1 0 3 0 0 0  **
+     C           SCHA16    IFEQ 103000                      - B1
+      *
+      ** ECONOMIQUE SECTOR : ** 1410 **
+     C           EXECOS    IFEQ 1410                        - B2
+      *
+      ** 'A VUE'
+     C           EXRDU1    IFEQ 05                          - B3
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B4
+     C***********WWCUCL    ANDNE'BE'                                      ERL337
+     C***********WWCUCL    ANDNE'LU'                                      ERL337
+     C***********EXCNCZ    ANDNE'BE'                               ERL337 231237
+     C***********EXCNCZ    ANDNE'LU'                               ERL337 231237
+     C           *IN28     ANDEQ'0'                                       231237
+     C                     Z-ADD103111    SCHA16
+     C                     END                              - E4
+     C           *IN26     IFEQ '0'                         - B4
+     C                     Z-ADD103112    SCHA16
+     C                     END                              - E4
+     C                     END                              - E3
+      *
+      ** ' > A VUE'
+     C           EXRDU1    IFGT 05                          - B3
+     C***********WWCUCL    IFEQ 'BE'                        - B4          ERL337
+     C***********WWCUCL    OREQ 'LU'                                      ERL337
+     C***********EXCNCZ    IFEQ 'BE'                        - B4   ERL337 231237
+     C***********EXCNCZ    OREQ 'LU'                               ERL337 231237
+     C           *IN28     IFEQ '1'                         - B4          231237
+     C                     Z-ADD103121    SCHA16
+     C                     ELSE                             - X4
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B5
+     C                     Z-ADD103122    SCHA16
+     C                     ELSE                             - X5
+     C                     Z-ADD103123    SCHA16
+     C                     END                              - E5
+     C                     END                              - E4
+     C                     END                              - E3
+      *
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1422 **
+     C           EXECOS    IFEQ 1422                        - B2
+      *
+      ** 'A VUE'
+     C           EXRDU1    IFEQ 05                          - B3
+     C                     Z-ADD103210    SCHA16
+     C                     END                              - E3
+      *
+      ** ' > A VUE'
+     C           EXRDU1    IFGT 05                          - B3
+     C                     Z-ADD103220    SCHA16
+     C                     END                              - E3
+      *
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1421 **
+     C           EXECOS    IFEQ 1421                        - B2
+     C           EXECOS    OREQ 1451                                      ERL459
+     C           EXECOS    OREQ 1481                               ERL459 ULX004
+      *
+      ** 'A VUE'
+     C           EXRDU1    IFEQ 05                          - B3
+     C***********WWCUCL    IFEQ 'LU'                        - B4          ERL337
+     C           EXCNCZ    IFEQ 'LU'                        - B4          ERL337
+     C                     Z-ADD103311    SCHA16
+     C                     ELSE                             - X4
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B5
+     C                     Z-ADD103312    SCHA16
+     C                     ELSE                             - X5
+     C                     Z-ADD103313    SCHA16
+     C                     END                              - E5
+     C                     END                              - E4
+     C                     END                              - E3
+      *
+      ** ' > A VUE AND >= 1 YEAR'
+     C           EXRDU1    IFGT 05                          - B3
+     C           EXRDU1    ANDLE45
+     C***********WWCUCL    IFEQ 'LU'                        - B4          ERL337
+     C           EXCNCZ    IFEQ 'LU'                        - B4          ERL337
+     C                     Z-ADD103321    SCHA16
+     C                     ELSE                             - X4
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B5
+     C                     Z-ADD103322    SCHA16
+     C                     ELSE                             - X5
+     C                     Z-ADD103323    SCHA16
+     C                     END                              - E5
+     C                     END                              - E4
+     C                     END                              - E3
+      *
+      ** ' > 1YEAR '
+     C           EXRDU1    IFGE 55                          - B3
+     C***********WWCUCL    IFEQ 'LU'                        - B4          ERL337
+     C           EXCNCZ    IFEQ 'LU'                        - B4          ERL337
+     C                     Z-ADD103331    SCHA16
+     C                     ELSE                             - X4
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B5
+     C                     Z-ADD103332    SCHA16
+     C                     ELSE                             - X5
+     C                     Z-ADD103333    SCHA16
+     C                     END                              - E5
+     C                     END                              - E4
+     C                     END                              - E3
+      *
+     C                     END                              - E2
+     C                     END                              - E1
+      *
+      *  IML CODE : **  1 0 4 0 0 0  **
+     C           SCHA16    IFEQ 104000                      - B1
+      *
+      ***ECONOMIQUE*SECTOR*:****2100*-*2300***                            ERL361
+      ** ECONOMIQUE SECTOR : ** 2000 - 2001 - 2003 - 2100 - 2300 **       ERL361
+     C           EXECOS    IFEQ 2100                        - B2
+     C           EXECOS    OREQ 2300
+     C           EXECOS    OREQ 2000                                      ERL361
+     C           EXECOS    OREQ 2001                                      ERL361
+     C           EXECOS    OREQ 2003                                      ERL361
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B3
+     C                     Z-ADD104111    SCHA16
+     C                     ELSE                             - X3
+     C                     Z-ADD104112    SCHA16
+     C                     END                              - E3
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 2200 **
+     C           EXECOS    IFEQ 2200                        - B2
+     C***********EXECOS    OREQ 2000                                58560 ERL423
+     C           EXECOS    OREQ 2002                                      ERL361
+     C           EXECOS    OREQ 2005                                      ERL371
+     C           EXECOS    OREQ 2008                                      ERL371
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B3
+     C                     Z-ADD104121    SCHA16
+     C                     ELSE                             - X3
+     C                     Z-ADD104122    SCHA16
+     C                     END                              - E3
+     C                     END                              - E2
+      *
+      ***ECONOMIQUE*SECTOR*:****3200***                                   ERL315
+      ** ECONOMIQUE SECTOR : ** 1100-1200-1300-1470-1500-1600 **          ERL315
+     C***********EXECOS    IFEQ 3200                        - B2          ERL304
+     C           EXECOS    IFEQ 1100                        - B2          ERL304
+     C           EXECOS    OREQ 1200                                      ERL304
+     C           EXECOS    OREQ 1300                                      ERL304
+     C           EXECOS    OREQ 1470                                      ERL304
+     C           EXECOS    OREQ 1500                                      ERL304
+     C           EXECOS    OREQ 1600                                      ERL304
+     C***********EXECOS    OREQ 3000                               ERL304 ERL315
+     C***********EXECOS    OREQ 3100                               ERL304 ERL315
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B3
+     C                     Z-ADD104211    SCHA16
+     C                     ELSE                             - X3
+     C                     Z-ADD104212    SCHA16
+     C                     END                              - E3
+     C                     END                              - E2
+      *
+      ***ECONOMIQUE*SECTOR*:****1100-1200-1300-1470-1500-1600-3000-3100***ERL315
+      ** ECONOMIQUE SECTOR : ** 3000-3100-3200 **                         ERL315
+     C***********EXECOS    IFEQ 1100                        - B2          ERL304
+     C***********EXECOS    OREQ 1200                                      ERL304
+     C***********EXECOS    OREQ 1300                                      ERL304
+     C***********EXECOS    OREQ 1470                                      ERL304
+     C***********EXECOS    OREQ 1500                                      ERL304
+     C***********EXECOS    OREQ 1600                                      ERL304
+     C***********EXECOS    OREQ 3000                                      ERL304
+     C***********EXECOS    OREQ 3100                                      ERL304
+     C***********EXECOS    OREQ 3000                               ERL304 ERL315
+     C           EXECOS    IFEQ 3000                                      ERL315
+     C           EXECOS    OREQ 3100                                      ERL315
+     C           EXECOS    OREQ 3200                                      ERL315
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B3
+     C                     Z-ADD104221    SCHA16
+     C                     ELSE                             - X3
+     C                     Z-ADD104222    SCHA16
+     C                     END                              - E3
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1430-1440-1450-1460-1480-1490 **
+     C           EXECOS    IFEQ 1430                        - B2
+     C           EXECOS    OREQ 1440
+     C           EXECOS    OREQ 1450
+     C***********EXECOS    OREQ 1451                               ERL371 ERL459
+     C           EXECOS    OREQ 1460
+     C           EXECOS    OREQ 1480
+     C***********EXECOS    OREQ 1481                               ERL371 ULX004
+     C           EXECOS    OREQ 1490
+      *
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B3
+     C                     Z-ADD104310    SCHA16
+     C                     ELSE                             - X3
+     C                     Z-ADD104320    SCHA16
+     C                     END                              - E3
+     C                     END                              - E2
+      *
+     C                     END                              - E1
+      *
+      *  IML CODE : **  1 0 5 0 0 0  **
+     C           SCHA16    IFEQ 105000                      - B1
+      *
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B2
+     C                     Z-ADD105100    SCHA16
+     C                     ELSE                             - X2
+     C                     Z-ADD105200    SCHA16
+     C                     END                              - E2
+      *
+     C                     END                              - E1
+      *
+      *  IML CODE : **  1 0 6 0 0 0  **
+     C           SCHA16    IFEQ 106000                      - B1
+      *
+      ***ECONOMIQUE*SECTOR*:****2000-2100-2200-2300 **                    ERL361
+      ** ECONOMIQUE SECTOR : ** 2000-2001-2002-2003-2100-2200-2300 **     ERL361
+     C           EXECOS    IFEQ 2000                        - B2
+     C           EXECOS    OREQ 2100
+     C           EXECOS    OREQ 2200
+     C           EXECOS    OREQ 2300
+     C           EXECOS    OREQ 2001                                      ERL361
+     C           EXECOS    OREQ 2002                                      ERL361
+     C           EXECOS    OREQ 2003                                      ERL361
+     C           EXECOS    OREQ 2005                                      ERL371
+     C           EXECOS    OREQ 2008                                      ERL371
+      *
+     C***********WWCUCL    IFEQ 'LU'                        - B3          ERL337
+     C           EXCNCZ    IFEQ 'LU'                        - B3          ERL337
+     C                     Z-ADD106110    SCHA16
+     C                     ELSE                             - X3
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B4
+     C                     Z-ADD106120    SCHA16
+     C                     ELSE                             - X4
+     C                     Z-ADD106130    SCHA16
+     C                     END                              - E4
+     C                     END                              - E3
+      *
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1410-1421-1422 **
+     C           EXECOS    IFEQ 1410                        - B2
+     C           EXECOS    OREQ 1421
+     C           EXECOS    OREQ 1422
+     C           EXECOS    OREQ 1451                                      ERL459
+     C           EXECOS    OREQ 1481                                      ULX004
+      *
+     C***********WWCUCL    IFEQ 'LU'                        - B3          ERL337
+     C           EXCNCZ    IFEQ 'LU'                        - B3          ERL337
+     C                     Z-ADD106210    SCHA16
+     C                     ELSE                             - X3
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B4
+     C                     Z-ADD106220    SCHA16
+     C                     ELSE                             - X4
+     C                     Z-ADD106230    SCHA16
+     C                     END                              - E4
+     C                     END                              - E3
+      *
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1100-1200-1300-1430-1440-1450-1460-1470-1480 **
+      **                     ** 1490-1500-1600-3000-3100-3200                **
+     C           EXECOS    IFEQ 1100                        - B2
+     C           EXECOS    OREQ 1200
+     C           EXECOS    OREQ 1300
+     C           EXECOS    OREQ 1430
+     C           EXECOS    OREQ 1440
+     C           EXECOS    OREQ 1450
+     C***********EXECOS    OREQ 1451                               ERL371 ERL459
+     C           EXECOS    OREQ 1460
+     C           EXECOS    OREQ 1470
+     C           EXECOS    OREQ 1480
+     C***********EXECOS    OREQ 1481                               ERL371 ULX004
+     C           EXECOS    OREQ 1490
+     C           EXECOS    OREQ 1500
+     C           EXECOS    OREQ 1600
+     C           EXECOS    OREQ 3000
+     C           EXECOS    OREQ 3100
+     C           EXECOS    OREQ 3200
+      *
+     C***********WWCUCL    IFEQ 'LU'                        - B3          ERL337
+     C           EXCNCZ    IFEQ 'LU'                        - B3          ERL337
+     C                     Z-ADD106310    SCHA16
+     C                     ELSE                             - X3
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B4
+     C                     Z-ADD106320    SCHA16
+     C                     ELSE                             - X4
+     C                     Z-ADD106330    SCHA16
+     C                     END                              - E4
+     C                     END                              - E3
+      *
+     C                     END                              - E2
+      *
+     C                     END                              - E1
+      *
+      *  IML CODE : **  1 0 7 0 0 0  **
+     C           SCHA16    IFEQ 107000                      - B1
+      *
+      ** ECONOMIQUE SECTOR : ** 1410-1421-1422 **
+     C           EXECOS    IFEQ 1410                        - B2
+     C           EXECOS    OREQ 1421
+     C           EXECOS    OREQ 1422
+     C           EXECOS    OREQ 1451                                      ERL459
+     C           EXECOS    OREQ 1481                                      ULX004
+     C                     Z-ADD107100    SCHA16
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1430-1440-1450-1460-1480-1490 **
+     C           EXECOS    IFEQ 1430                        - B2
+     C           EXECOS    OREQ 1440
+     C           EXECOS    OREQ 1450
+     C***********EXECOS    OREQ 1451                               ERL371 ERL459
+     C           EXECOS    OREQ 1460
+     C           EXECOS    OREQ 1480
+     C***********EXECOS    OREQ 1481                               ERL371 ULX004
+     C           EXECOS    OREQ 1490
+     C                     Z-ADD107200    SCHA16
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1100-1200-1300-1470-1500-1600-2000-2100-2200 **
+      **                     ** 2300-3000-3100-3200                          **
+      **                     ** 2001-2002-2003                            ERL361
+     C           EXECOS    IFEQ 1100                        - B2
+     C           EXECOS    OREQ 1200
+     C           EXECOS    OREQ 1300
+     C           EXECOS    OREQ 1470
+     C           EXECOS    OREQ 1500
+     C           EXECOS    OREQ 1600
+     C           EXECOS    OREQ 2000
+     C           EXECOS    OREQ 2001                                      ERL361
+     C           EXECOS    OREQ 2002                                      ERL361
+     C           EXECOS    OREQ 2003                                      ERL361
+     C           EXECOS    OREQ 2005                                      ERL371
+     C           EXECOS    OREQ 2008                                      ERL371
+     C           EXECOS    OREQ 2100
+     C           EXECOS    OREQ 2200
+     C           EXECOS    OREQ 2300
+     C           EXECOS    OREQ 3000
+     C           EXECOS    OREQ 3100
+     C           EXECOS    OREQ 3200
+     C                     Z-ADD107300    SCHA16
+     C                     END                              - E2
+      *
+     C                     END                              - E1
+      *
+      *  IML CODE : **  1 0 8 0 0 0  **
+     C           SCHA16    IFEQ 108000                      - B1
+      *
+      ** ECONOMIQUE SECTOR : ** 1410-1421-1422 **
+     C           EXECOS    IFEQ 1410                        - B2
+     C           EXECOS    OREQ 1421
+     C           EXECOS    OREQ 1422
+     C           EXECOS    OREQ 1451                                      ERL459
+     C           EXECOS    OREQ 1481                                      ULX004
+     C                     Z-ADD108100    SCHA16
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1430-1440-1450-1460-1480-1490 **
+     C           EXECOS    IFEQ 1430                        - B2
+     C           EXECOS    OREQ 1440
+     C           EXECOS    OREQ 1450
+     C***********EXECOS    OREQ 1451                               ERL371 ERL459
+     C           EXECOS    OREQ 1460
+     C           EXECOS    OREQ 1480
+     C***********EXECOS    OREQ 1481                               ERL371 ULX004
+     C           EXECOS    OREQ 1490
+     C                     Z-ADD108200    SCHA16
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1100-1200-1300-1470-1500-1600-2000-2100-2200 **
+      **                     ** 2300-3000-3100-3200                          **
+      **                     ** 2001-2002-2003-3200                       ERL361
+     C           EXECOS    IFEQ 1100                        - B2
+     C           EXECOS    OREQ 1200
+     C           EXECOS    OREQ 1300
+     C           EXECOS    OREQ 1470
+     C           EXECOS    OREQ 1500
+     C           EXECOS    OREQ 1600
+     C           EXECOS    OREQ 2000
+     C           EXECOS    OREQ 2001                                      ERL361
+     C           EXECOS    OREQ 2002                                      ERL361
+     C           EXECOS    OREQ 2003                                      ERL361
+     C           EXECOS    OREQ 2005                                      ERL371
+     C           EXECOS    OREQ 2008                                      ERL371
+     C           EXECOS    OREQ 2100
+     C           EXECOS    OREQ 2200
+     C           EXECOS    OREQ 2300
+     C           EXECOS    OREQ 3000
+     C           EXECOS    OREQ 3100
+     C           EXECOS    OREQ 3200
+     C                     Z-ADD108500    SCHA16
+     C                     END                              - E2
+      *
+     C                     END                              - E1
+      *
+      *  IML CODE : **  1 0 9 0 0 0  **
+     C           SCHA16    IFEQ 109000                      - B1
+      *
+      ** ECONOMIQUE SECTOR : ** 1410-1421-1422 **
+     C           EXECOS    IFEQ 1410                        - B2
+     C           EXECOS    OREQ 1421
+     C           EXECOS    OREQ 1422
+     C           EXECOS    OREQ 1451                                      ERL459
+     C           EXECOS    OREQ 1481                                      ULX004
+     C           EXCONS    IFNE 2
+     C                     Z-ADD109100    SCHA16
+C    C                     ENDIF
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1430-1440-1450-1460-1480-1490 **
+     C           EXECOS    IFEQ 1430                        - B2
+     C           EXECOS    OREQ 1440
+     C           EXECOS    OREQ 1450
+     C***********EXECOS    OREQ 1451                               ERL371 ERL459
+     C           EXECOS    OREQ 1460
+     C           EXECOS    OREQ 1480
+     C***********EXECOS    OREQ 1481                               ERL371 ULX004
+     C           EXECOS    OREQ 1490
+     C           EXCONS    IFNE 2
+     C                     Z-ADD109200    SCHA16
+     C                     ENDIF
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1000-1200-1300-1470-1500-1600-2000-2100-2200 **
+      **                     ** 2300-3000-3100-3200                          **
+      **                     ** 2001-2002-2003                            ERL361
+     C           EXECOS    IFEQ 1000                        - B2
+     C           EXECOS    OREQ 1200
+     C           EXECOS    OREQ 1300
+     C           EXECOS    OREQ 1470
+     C           EXECOS    OREQ 1500
+     C           EXECOS    OREQ 1600
+     C           EXECOS    OREQ 2000
+     C           EXECOS    OREQ 2001                                      ERL361
+     C           EXECOS    OREQ 2002                                      ERL361
+     C           EXECOS    OREQ 2003                                      ERL361
+     C           EXECOS    OREQ 2005                                      ERL371
+     C           EXECOS    OREQ 2008                                      ERL371
+     C           EXECOS    OREQ 2100
+     C           EXECOS    OREQ 2200
+     C           EXECOS    OREQ 2300
+     C           EXECOS    OREQ 3000
+     C           EXECOS    OREQ 3100
+     C           EXECOS    OREQ 3200
+     C           EXCONS    IFNE 2
+     C                     Z-ADD109400    SCHA16
+     C                     ENDIF
+     C                     END                              - E2
+      *
+     C           EXCONS    IFEQ 2
+     C                     Z-ADD109300    SCHA16
+     C                     ENDIF
+      *
+     C                     END                              - E1
+      *
+      *  IML CODE : **  2 0 1 0 0 0  **
+     C           SCHA16    IFEQ 201000                      - B1
+      *
+      ** ECONOMIQUE SECTOR : ** 1410 **
+     C           EXECOS    IFEQ 1410                        - B2
+      *
+      ** 'A VUE'
+     C           EXRDU1    IFEQ 05                          - B3
+     C***********WWCUCL    IFEQ 'BE'                        - B4          ERL337
+     C***********WWCUCL    OREQ 'LU'                                      ERL337
+     C***********EXCNCZ    IFEQ 'BE'                        - B4   ERL337 231237
+     C***********EXCNCZ    OREQ 'LU'                               ERL337 231237
+     C           *IN28     IFEQ '1'                         - B4          231237
+     C                     Z-ADD201111    SCHA16
+     C                     ELSE                             - X4
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B5
+     C                     Z-ADD201112    SCHA16
+     C                     ELSE                             - X5
+     C                     Z-ADD201113    SCHA16
+     C                     END                              - E5
+     C                     END                              - E4
+     C                     END                              - E3
+      *
+      ** ' > A VUE'
+     C           EXRDU1    IFGT 05                          - B3
+     C***********WWCUCL    IFEQ 'BE'                        - B4          ERL337
+     C***********WWCUCL    OREQ 'LU'                                      ERL337
+     C***********EXCNCZ    IFEQ 'BE'                        - B4   ERL337 231237
+     C***********EXCNCZ    OREQ 'LU'                               ERL337 231237
+     C           *IN28     IFEQ '1'                         - B4          231237
+     C                     Z-ADD201121    SCHA16
+     C                     ELSE                             - X4
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B5
+     C                     Z-ADD201122    SCHA16
+     C                     ELSE                             - X5
+     C                     Z-ADD201123    SCHA16
+     C                     END                              - E5
+     C                     END                              - E4
+     C                     END                              - E3
+      *
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1422 **
+     C           EXECOS    IFEQ 1422                        - B2
+      *
+      ** 'A VUE'
+     C           EXRDU1    IFEQ 05                          - B3
+     C                     Z-ADD201210    SCHA16
+     C                     END                              - E3
+      *
+      ** ' > A VUE'
+     C           EXRDU1    IFGT 05                          - B3
+     C                     Z-ADD201220    SCHA16
+     C                     END                              - E3
+      *
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1421 **
+     C           EXECOS    IFEQ 1421                        - B2
+     C***********EXECOS    OREQ 1421                               ERL459 95431
+     C           EXECOS    OREQ 1451                                      95431
+     C           EXECOS    OREQ 1481                                      ULX004
+      *
+      ** 'A VUE'
+     C           EXRDU1    IFEQ 05                          - B3
+     C***********WWCUCL    IFEQ 'LU'                        - B4          ERL337
+     C           EXCNCZ    IFEQ 'LU'                        - B4          ERL337
+     C                     Z-ADD201311    SCHA16
+     C                     ELSE                             - X4
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B5
+     C                     Z-ADD201312    SCHA16
+     C                     ELSE                             - X5
+     C                     Z-ADD201313    SCHA16
+     C                     END                              - E5
+     C                     END                              - E4
+     C                     END                              - E3
+      *
+      ** ' > A VUE AND <= 1 YEAR'
+     C           EXRDU1    IFGT 05                          - B3
+     C           EXRDU1    ANDLE45
+     C***********WWCUCL    IFEQ 'LU'                        - B4          ERL337
+     C           EXCNCZ    IFEQ 'LU'                        - B4          ERL337
+     C                     Z-ADD201321    SCHA16
+     C                     ELSE                             - X4
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B5
+     C                     Z-ADD201322    SCHA16
+     C                     ELSE                             - X5
+     C                     Z-ADD201323    SCHA16
+     C                     END                              - E5
+     C                     END                              - E4
+     C                     END                              - E3
+      *
+      ** ' > 1YEAR '
+     C           EXRDU1    IFGE 55                          - B3
+     C***********WWCUCL    IFEQ 'LU'                        - B4          ERL337
+     C           EXCNCZ    IFEQ 'LU'                        - B4          ERL337
+     C                     Z-ADD201331    SCHA16
+     C                     ELSE                             - X4
+     C***********WWCUCL    LOKUPZONA                     26               ERL327
+     C           *IN26     IFEQ '1'                         - B5
+     C                     Z-ADD201332    SCHA16
+     C                     ELSE                             - X5
+     C                     Z-ADD201333    SCHA16
+     C                     END                              - E5
+     C                     END                              - E4
+     C                     END                              - E3
+      *
+     C                     END                              - E2
+     C                     END                              - E1
+      *                                                                   ERL315
+      ** DONT FOR 201311-201312-201313-201321-201322-201323-201331 **     ERL315
+      *          -201332-201333 **                                        ERL315
+     C           SCHA16    IFEQ 201311                     - B1           ERL315
+     C           SCHA16    OREQ 201312                                    ERL315
+     C           SCHA16    OREQ 201313                                    ERL315
+     C           SCHA16    OREQ 201321                                    ERL315
+     C           SCHA16    OREQ 201322                                    ERL315
+     C           SCHA16    OREQ 201323                                    ERL315
+     C           SCHA16    OREQ 201331                                    ERL315
+     C           SCHA16    OREQ 201332                                    ERL315
+     C           SCHA16    OREQ 201333                                    ERL315
+      *                                                                   ERL315
+      ** ECONOMIQUE SECTOR : ** 1421 **                                   ERL315
+     C           EXECOS    IFEQ 1421                       - B2           ERL315
+     C           EXCONS    ANDNE0                                         ERL315
+     C           EXECOS    OREQ 1451                                      ERL459
+     C           EXCONS    ANDNE0                                         ERL459
+     C           EXECOS    OREQ 1481                                      ULX004
+     C           EXCONS    ANDNE0                                         ULX004
+      *                                                                   ERL315
+     C           TOTSUB    IFEQ 0                          - B3           ERL315
+     C*********************Z-ADD20201340  TOTSUB                   ERL315 ERL338
+     C                     Z-ADD20134000  TOTSUB                          ERL338
+     C                     ELSE                            - X3           ERL315
+     C*********************Z-ADD20201340  TOTSU2                   ERL315 ERL338
+     C                     Z-ADD20134000  TOTSU2                          ERL338
+     C                     END                             - E3           ERL315
+      *                                                                   ERL315
+     C                     END                             - E2           ERL315
+      *                                                                   ERL315
+     C                     END                             - E1           ERL315
+      *
+      *  IML CODE : **  2 0 2 0 0 0  **
+     C           SCHA16    IFEQ 202000                      - B1
+      *
+      ***ECONOMIQUE*SECTOR*:****2100-2200-2300 **                         ERL361
+      ** ECONOMIQUE SECTOR : ** 2000-2001-2002-2003-2100-2200-2300 **     ERL361
+     C           EXECOS    IFEQ 2100                        - B2
+     C           EXECOS    OREQ 2200
+     C           EXECOS    OREQ 2300
+     C           EXECOS    OREQ 2000                                      ERL361
+     C           EXECOS    OREQ 2001                                      ERL361
+     C           EXECOS    OREQ 2002                                      ERL361
+     C           EXECOS    OREQ 2003                                      ERL361
+     C           EXECOS    OREQ 2005                                      ERL371
+     C           EXECOS    OREQ 2008                                      ERL371
+      *
+      ** 'A VUE'
+     C           EXRDU1    IFEQ 05                          - B3
+     C                     Z-ADD202120    SCHA16
+     C                     END                              - E3
+      *
+      ** ' > A VUE'
+     C           EXRDU1    IFGT 05                          - B3
+     C                     Z-ADD202130    SCHA16
+     C                     END                              - E3
+      *
+     C                     END                              - E2
+      *
+      ***ECONOMIQUE*SECTOR*:****3200***                                   ERL315
+      ***ECONOMIQUE*SECTOR*:****1100-1200-1300-1470-1500-1600-3000-3100***ERL315
+      ********************** ***1430-1440-1450-1460-1480-1490***   ERL304 ERL315
+      *                                                                   ERL315
+      ** ECONOMIQUE SECTOR : ** 1100-1200-1300-1470-1500-1600- **         ERL315
+      **                     ** 1430-1440-1450-1460-1480-1490 **          ERL315
+     C***********EXECOS    IFEQ 3200                        - B2          ERL304
+     C           EXECOS    IFEQ 1100                        - B2          ERL304
+     C           EXECOS    OREQ 1200                                      ERL304
+     C           EXECOS    OREQ 1300                                      ERL304
+     C           EXECOS    OREQ 1470                                      ERL304
+     C           EXECOS    OREQ 1500                                      ERL304
+     C           EXECOS    OREQ 1600                                      ERL304
+     C***********EXECOS    OREQ 3000                               ERL304 ERL315
+     C***********EXECOS    OREQ 3100                               ERL304 ERL315
+     C           EXECOS    OREQ 1430                                      ERL304
+     C           EXECOS    OREQ 1440                                      ERL304
+     C           EXECOS    OREQ 1450                                      ERL304
+     C***********EXECOS    OREQ 1451                               ERL371 ERL459
+     C           EXECOS    OREQ 1460                                      ERL304
+     C           EXECOS    OREQ 1480                                      ERL304
+     C***********EXECOS    OREQ 1481                               ERL371 ULX004
+     C           EXECOS    OREQ 1490                                      ERL304
+      *
+      ** 'A VUE'
+     C           EXRDU1    IFEQ 05                          - B3
+     C                     Z-ADD202212    SCHA16
+     C                     END                              - E3
+      *
+      ** ' > A VUE'
+     C           EXRDU1    IFGT 05                          - B3
+     C                     Z-ADD202213    SCHA16
+     C                     END                              - E3
+      *
+     C                     END                              - E2
+      *
+      ***ECONOMIQUE*SECTOR*:****1100-1200-1300-1470-1500-1600-3000-3100***ERL315
+      *                                                                   ERL315
+      ** ECONOMIQUE SECTOR : ** 3000-3100-3200 **                         ERL315
+     C***********EXECOS    IFEQ 1100                        - B2          ERL304
+     C***********EXECOS    OREQ 1200                                      ERL304
+     C***********EXECOS    OREQ 1300                                      ERL304
+     C***********EXECOS    OREQ 1470                                      ERL304
+     C***********EXECOS    OREQ 1500                                      ERL304
+     C***********EXECOS    OREQ 1600                                      ERL304
+     C***********EXECOS    OREQ 3000                                      ERL304
+     C***********EXECOS    OREQ 3100                                      ERL304
+     C***********EXECOS    IFEQ 3200                        - B2   ERL304 ERL315
+     C           EXECOS    IFEQ 3000                                      ERL315
+     C           EXECOS    OREQ 3100                                      ERL315
+     C           EXECOS    OREQ 3200                        - B2          ERL315
+      *
+      ** 'A VUE'
+     C           EXRDU1    IFEQ 05                          - B3
+     C                     Z-ADD202223    SCHA16
+     C                     END                              - E3
+      *
+      ** ' > A VUE'
+     C           EXRDU1    IFGT 05                          - B3
+     C                     Z-ADD202224    SCHA16
+     C                     END                              - E3
+      *
+     C                     END                              - E2
+      *
+      ** ECONOMIQUE SECTOR : ** 1430-1440-1450-1460-1480-1490 **
+     C***********EXECOS    IFEQ 1430                        - B2          ERL302
+     C***********EXECOS    OREQ 1440                                      ERL302
+     C***********EXECOS    OREQ 1450                                      ERL302
+     C***********EXECOS    OREQ 1460                                      ERL302
+     C***********EXECOS    OREQ 1480                                      ERL302
+     C***********EXECOS    OREQ 1490                                      ERL302
+     C*********************Z-ADD202240    SCHA16                          ERL302
+     C*********************END                              - E2          ERL302
+      *
+     C                     END                              - E1
+      *
+      ** IS IT A SUB-TOTAL RECORD ?                                       ERL009
+     C                     Z-ADD1         I       20                      ERL009
+     C***********SCHA16    LOKUPT1,I                     27        ERL009 ERL333
+     C           SCHA      LOKUPT1,I                     27               ERL333
+     C           *IN27     IFEQ '1'                        - B1           ERL009
+      *
+     C           TOTSUB    IFEQ 0                          - B2           ERL315
+     C                     Z-ADDT2,I      TOTSUB                          ERL009
+     C                     ELSE                                           ERL315
+     C                     Z-ADDT2,I      TOTSU2                          ERL315
+     C                     END                                            ERL315
+      *
+     C*********************ELSE                            - X1    ERL009 ERL338
+     C*********************Z-ADD0         TOTSUB                   ERL009 ERL338
+     C                     END                             - E1           ERL009
+      *
+      ** EXTRA-TOTSUB                                                     ERL315
+     C           SCHA16    IFEQ 202211                     - B1           ERL315
+     C           SCHA16    OREQ 202212                                    ERL315
+     C           SCHA16    OREQ 202213                                    ERL315
+     C           SCHA16    OREQ 202221                                    ERL315
+     C           SCHA16    OREQ 202222                                    ERL315
+     C           SCHA16    OREQ 202223                                    ERL315
+     C           SCHA16    OREQ 202224                                    ERL315
+      *                                                                   ERL315
+     C           EXCONS    IFNE 0                          - B2           ERL315
+      *
+     C           TOTSUB    IFEQ 0                                         ERL315
+     C                     Z-ADD20223000  TOTSUB                          ERL315
+     C                     ELSE                                           ERL315
+     C                     Z-ADD20223000  TOTSU2                          ERL315
+     C                     END                                            ERL315
+      *
+     C                     END                             - E2           ERL315
+      *                                                                   ERL315
+     C                     END                             - E1           ERL315
+      *
+      ** DONT FOR 202211-202212-202213-202221-202222-202223-202224 **     ERL302
+     C           SCHA16    IFEQ 202211                     - B1           ERL302
+     C           SCHA16    OREQ 202212                                    ERL302
+     C           SCHA16    OREQ 202213                                    ERL302
+     C           SCHA16    OREQ 202221                                    ERL302
+     C           SCHA16    OREQ 202222                                    ERL302
+     C           SCHA16    OREQ 202223                                    ERL302
+     C           SCHA16    OREQ 202224                                    ERL302
+      *                                                                   ERL302
+      ** ECONOMIQUE SECTOR : ** 1430-1440-1450-1460-1480-1490 **          ERL302
+     C           EXECOS    IFEQ 1430                       - B2           ERL302
+     C           EXECOS    OREQ 1440                                      ERL302
+     C           EXECOS    OREQ 1450                                      ERL302
+     C***********EXECOS    OREQ 1451                               ERL371 ERL459
+     C           EXECOS    OREQ 1460                                      ERL302
+     C           EXECOS    OREQ 1480                                      ERL302
+     C***********EXECOS    OREQ 1481                               ERL371 ULX004
+     C           EXECOS    OREQ 1490                                      ERL302
+      *                                                                   ERL302
+     C           TOTSUB    IFEQ 0                          - B3           ERL315
+     C                     Z-ADD20224000  TOTSUB                          ERL302
+     C                     ELSE                            - X3           ERL315
+     C                     Z-ADD20224000  TOTSU2                          ERL315
+     C                     END                             - E3           ERL315
+      *                                                                   ERL302
+     C                     END                             - E2           ERL302
+      *                                                                   ERL302
+     C                     END                             - E1           ERL302
+      *                                                                   186714
+      ** Generate 302420 code for facilities less than 1 initial year     186714
+      ** 302400 **                                                        186714
+     C           SCHA16    IFEQ 302400                     - B1           186714
+     C           EXIDUR    ANDLE50                                        186714
+      *                                                                   186714
+     C           TOTSUB    IFEQ 0                          - B2           186714
+     C                     Z-ADD30242000  TOTSUB                          186714
+     C                     ELSE                            - X2           186714
+     C                     Z-ADD30242000  TOTSU2                          186714
+     C                     END                             - E2           186714
+      *                                                                   186714
+     C                     END                             - E1           186714
+      *
+      ** ADD NEW CODES FOR 'DONT' GENERATION                              ERL333
+      ** 401200 **                                                        ERL333
+     C           SCHA16    IFEQ 401200                     - B1           ERL333
+     C           EXCONS    ANDNE0                                         ERL333
+      *                                                                   ERL333
+     C           TOTSUB    IFEQ 0                          - B2           ERL333
+     C                     Z-ADD40121000  TOTSUB                          ERL333
+     C                     ELSE                            - X2           ERL333
+     C                     Z-ADD40121000  TOTSU2                          ERL333
+     C                     END                             - E2           ERL333
+      *                                                                   ERL333
+     C                     END                             - E1           ERL333
+      *                                                                   ERL333
+      ** 401300 **                                                        ERL333
+     C           SCHA16    IFEQ 401300                     - B1           ERL333
+     C           EXCONS    ANDNE0                                         ERL333
+      *                                                                   ERL333
+     C           TOTSUB    IFEQ 0                          - B2           ERL333
+     C                     Z-ADD40131000  TOTSUB                          ERL333
+     C                     ELSE                            - X2           ERL333
+     C                     Z-ADD40131000  TOTSU2                          ERL333
+     C                     END                             - E2           ERL333
+      *                                                                   ERL333
+     C                     END                             - E1           ERL333
+      *                                                                   ERL333
+      ** 402100 **                                                        ERL333
+     C           SCHA16    IFEQ 402100                     - B1           ERL333
+     C           EXCONS    ANDNE0                                         ERL333
+      *                                                                   ERL333
+     C           TOTSUB    IFEQ 0                          - B2           ERL333
+     C                     Z-ADD40211000  TOTSUB                          ERL333
+     C                     ELSE                            - X2           ERL333
+     C                     Z-ADD40211000  TOTSU2                          ERL333
+     C                     END                             - E2           ERL333
+      *                                                                   ERL333
+     C                     END                             - E1           ERL333
+      *                                                                   ERL333
+      ** 402200 **                                                        ERL333
+     C           SCHA16    IFEQ 402200                     - B1           ERL333
+     C           EXCONS    ANDNE0                                         ERL333
+      *                                                                   ERL333
+     C           TOTSUB    IFEQ 0                          - B2           ERL333
+     C                     Z-ADD40221000  TOTSUB                          ERL333
+     C                     ELSE                            - X2           ERL333
+     C                     Z-ADD40221000  TOTSU2                          ERL333
+     C                     END                             - E2           ERL333
+      *                                                                   ERL333
+     C                     END                             - E1           ERL333
+      *                                                                   ERL333
+      ** 403200 **                                                        ERL333
+     C           SCHA16    IFEQ 403200                     - B1           ERL333
+     C           EXCONS    ANDNE0                                         ERL333
+      *                                                                   ERL333
+     C           TOTSUB    IFEQ 0                          - B2           ERL333
+     C                     Z-ADD40321000  TOTSUB                          ERL333
+     C                     ELSE                            - X2           ERL333
+     C                     Z-ADD40321000  TOTSU2                          ERL333
+     C                     END                             - E2           ERL333
+      *                                                                   ERL333
+     C                     END                             - E1           ERL333
+      *                                                                   ERL333
+      ** 403300                                                           ERL333
+     C           SCHA16    IFEQ 403300                     - B1           ERL333
+     C           EXCONS    ANDNE0                                         ERL333
+      *                                                                   ERL333
+     C           TOTSUB    IFEQ 0                          - B2           ERL333
+     C                     Z-ADD40331000  TOTSUB                          ERL333
+     C                     ELSE                            - X2           ERL333
+     C                     Z-ADD40331000  TOTSU2                          ERL333
+     C                     END                             - E2           ERL333
+      *                                                                   ERL333
+     C                     END                             - E1           ERL333
+      *                                                                   ERL333
+      ** 411100 **                                                        ERL333
+     C           SCHA16    IFEQ 411100                     - B1           ERL333
+     C           EXCONS    ANDNE0                                         ERL333
+      *                                                                   ERL333
+     C           TOTSUB    IFEQ 0                          - B2           ERL333
+     C                     Z-ADD41111000  TOTSUB                          ERL333
+     C                     ELSE                            - X2           ERL333
+     C                     Z-ADD41111000  TOTSU2                          ERL333
+     C                     END                             - E2           ERL333
+      *                                                                   ERL333
+     C                     END                             - E1           ERL333
+      *                                                                   ERL333
+      ** 411200 **                                                        ERL333
+     C           SCHA16    IFEQ 411200                     - B1           ERL333
+     C           EXCONS    ANDNE0                                         ERL333
+      *                                                                   ERL333
+     C           TOTSUB    IFEQ 0                          - B2           ERL333
+     C                     Z-ADD41121000  TOTSUB                          ERL333
+     C                     ELSE                            - X2           ERL333
+     C                     Z-ADD41121000  TOTSU2                          ERL333
+     C                     END                             - E2           ERL333
+      *                                                                   ERL333
+     C                     END                             - E1           ERL333
+      *                                                                   ERL333
+      ** 412100 **                                                        ERL333
+     C           SCHA16    IFEQ 412100                     - B1           ERL333
+     C           EXCONS    ANDNE0                                         ERL333
+      *                                                                   ERL333
+     C           TOTSUB    IFEQ 0                          - B2           ERL333
+     C                     Z-ADD41211000  TOTSUB                          ERL333
+     C                     ELSE                            - X2           ERL333
+     C                     Z-ADD41211000  TOTSU2                          ERL333
+     C                     END                             - E2           ERL333
+      *                                                                   ERL333
+     C                     END                             - E1           ERL333
+      *                                                                   ERL333
+      ** 412200 **                                                        ERL333
+     C           SCHA16    IFEQ 412200                     - B1           ERL333
+     C           EXCONS    ANDNE0                                         ERL333
+      *                                                                   ERL333
+     C           TOTSUB    IFEQ 0                          - B2           ERL333
+     C                     Z-ADD41221000  TOTSUB                          ERL333
+     C                     ELSE                            - X2           ERL333
+     C                     Z-ADD41221000  TOTSU2                          ERL333
+     C                     END                             - E2           ERL333
+      *                                                                   ERL333
+     C                     END                             - E1           ERL333
+      *                                                                   ERL333
+      ** 401800 **                                                        ERL333
+     C           SCHA16    IFEQ 401800                     - B1           ERL333
+      *                                                                   ERL333
+      ** ECONOMIQUE SECTOR : ** 1410-1421-1422                     **     ERL333
+     C           EXECOS    IFEQ 1410                       - B2           ERL333
+     C           EXECOS    OREQ 1421                                      ERL333
+     C           EXECOS    OREQ 1422                                      ERL333
+     C           EXECOS    OREQ 1451                                      ERL459
+     C           EXECOS    OREQ 1481                                      ULX004
+      *                                                                   ERL333
+     C           TOTSUB    IFEQ 0                          - B3           ERL333
+     C                     Z-ADD40181000  TOTSUB                          ERL333
+     C                     ELSE                            - X3           ERL333
+     C                     Z-ADD40181000  TOTSU2                          ERL333
+     C                     END                             - E3           ERL333
+      *                                                                   ERL333
+     C                     END                             - E2           ERL333
+      *                                                                   ERL333
+      *                                                                   ERL333
+      ** ECONOMIQUE SECTOR : ** 1100-1200-1300-1430-1440-1450-1460 **     ERL333
+      **                     ** 1470-1480-1490-1500-1600-2100-2200 **     ERL333
+      **                     ** 2300-3000-3100-3200                **     ERL333
+      **                     ** 2000-2001-2002-2003                **     ERL361
+     C           EXECOS    IFEQ 1100                       - B2           ERL333
+     C           EXECOS    OREQ 1200                                      ERL333
+     C           EXECOS    OREQ 1300                                      ERL333
+     C           EXECOS    OREQ 1430                                      ERL333
+     C           EXECOS    OREQ 1440                                      ERL333
+     C           EXECOS    OREQ 1450                                      ERL333
+     C***********EXECOS    OREQ 1451                               ERL371 ERL459
+     C           EXECOS    OREQ 1460                                      ERL333
+     C           EXECOS    OREQ 1470                                      ERL333
+     C           EXECOS    OREQ 1480                                      ERL333
+     C***********EXECOS    OREQ 1481                               ERL371 ULX004
+     C           EXECOS    OREQ 1490                                      ERL333
+     C           EXECOS    OREQ 1500                                      ERL333
+     C           EXECOS    OREQ 1600                                      ERL333
+     C           EXECOS    OREQ 2000                                      ERL361
+     C           EXECOS    OREQ 2001                                      ERL361
+     C           EXECOS    OREQ 2002                                      ERL361
+     C           EXECOS    OREQ 2003                                      ERL361
+     C           EXECOS    OREQ 2005                                      ERL371
+     C           EXECOS    OREQ 2008                                      ERL371
+     C           EXECOS    OREQ 2100                                      ERL333
+     C           EXECOS    OREQ 2200                                      ERL333
+     C           EXECOS    OREQ 2300                                      ERL333
+     C           EXECOS    OREQ 3000                                      ERL333
+     C           EXECOS    OREQ 3100                                      ERL333
+     C           EXECOS    OREQ 3200                                      ERL333
+      *                                                                   ERL333
+     C           TOTSUB    IFEQ 0                          - B3           ERL333
+     C                     Z-ADD40182000  TOTSUB                          ERL333
+     C                     ELSE                            - X3           ERL333
+     C                     Z-ADD40182000  TOTSU2                          ERL333
+     C                     END                             - E3           ERL333
+      *                                                                   ERL333
+     C                     END                             - E2           ERL333
+      *                                                                   ERL333
+     C                     END                             - E1           ERL333
+      *                                                                   ERL333
+      *----------------------------------------------------------------
+     C           EOJ       TAG
+     C                     Z-ADDSCHA      EXSCHA
+     C                     RETRN
+      **=================================================================
+      **
+      **  *PSSR       Program-detected exception OR monitored error
+      **              sub-routine.
+      **
+     C*================================================================
+     C           *PSSR     BEGSR
+      **
+     C                     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVELPGM       DBPGM
+     C                     MOVEL'*NONE'   DBFILE
+     C                     MOVEL'001'     DBASE
+     C                     MOVELEXLOTD    DBK1
+     C                     MOVELSCHA      DBK2
+     C                     MOVELEXRDU1    DBK3
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR                           ERL432
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+      **************************************************************************
+      ** ERL009 **
+      ** ARRAY NO MORE USED BECAUSE TOO MANY RUBRIQUE MUST BE CONSIDERED NOW.
+      **  RUB
+      **101300102100102200103000104000105000106000107000108000109000201000202000
+      **************************************************************************
+      ** ERL327 **
+      ** ARRAY NO MORE USED BECAUSE TEST ON INDUSTRIALISED COUNTRY INDICATOR NOW
+      **  ZONA
+      **DESAAUATBECADKESUSFIFRGRIEISITJPLUNONZNLPTGBSECHTRMCXEXXXBXD
+      **************************************************************************
+      ** ERL306 **
+      ** ADD 5 COUNTRY CODE IN ZONE 'A'
+      **************************************************************************
+      **  ERL333 **
+      **  CHANGE LENGHT FROM 6 TO 8 IN ARRAY + NEW CODES
+      **  T1
+      **101310101320102110102120102210102220111110114100207110207210209100301410
+      **302110302210302310302410302420302510304110
+      **************************************************************************
+**  T1
+10131000101320001021100010212000102210001022200011111000114100002071100020721000
+20910000301410003021100030221000302310003024100030242000302510003041100040111000
+40222000402230004041100040412000406111004061210040631000406410004065100040661000
+40812100409110004091200040921000411510004125100041310000413200004141000041420000
+41510000415200004161000041620000405100004012100040131000401810004018200040211000
+40221000412110004122100041111000411210004032100040331000
+**  T2
+10130000101300001021000010210000102200001022000011110000114000002071000020720000
+20900000301400003021000030220000302300003024000030240000302500003041000040110000
+40220000402200004041000040410000406110004061200040630000406400004065000040660000
+40812000409100004091000040920000411500004125000041300000413000004140000041400000
+41500000415000004160000041600000405000004012000040130000401800004018000040210000
+40220000412100004122000041110000411200004032000040330000
+**  CPY@
+(c) Finastra International Limited 2005

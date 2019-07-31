@@ -1,0 +1,643 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Customer fees details listing')
+     H/TITLE Midas SD Client report
+     Z* CRTRPGPGM
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - STANDING DATA MODULE                         *
+     F*                                                               *
+     F*  SD0360P - CUSTOMER FEES DETAILS LISTING                      *
+     F*                                                               *
+     F*  FUNCTION:  THIS PROGRAM WILL LIST THE CUSTOMER FEES DETAILS. *
+     F*             IT CAN BE REQUESTED DURING INPUT CYCLE AND CLOSE  *
+     F*             OF BUSINESS AND RUNS AS AN AUDIT REPORT IF ANY OF *
+     F*             THE DETAILS CHANGE.                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008             Date 05Feb01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01464             Date 04Apr94               *
+      *                 S01421             Date 17Aug93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+     F*  S01464 - Safe Custody Fees                                   *
+     F*  S01421 - BLI DEVELOPMENT STEP 1.                             *
+     F*           Created for switchable feature S01423 - Customer    *
+     F*           Service Fees                                        *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F* ID F  C  H  L  FUNCTION OF INDICATORS
+     F*
+     F*       01       RECORDS TO BE PRINTED ERROR
+     F*       16       HEADER CONTROL
+     F*       17       LINE CONTROL
+     F*       21       MULTIBRANCHING INDICATOR 'N'
+     F*       22       PROFIT CENTRES USED 'N'
+     F*       33       EMPTY FILE (SDCFCDPD)
+     F*       44       CHAIN TO SDFCTLL1
+     F*       55       CHAIN TO SDFCTLL0
+     F*       66       USED WHEN COMPARING PGM RECS AND FILE RECS
+     F*       80       CALL TO AOBANKR0 ERROR
+     F*       81       CALL TO AOGELRR0 ERROR
+     F*       90       ZSFILE ERROR
+     F*       98       PRINTER FILE OVERFLOW
+      *       50       Non-display of VAT Service Fees           *        CSD008
+     F*
+      /EJECT
+     F*FSTART
+      ************************************************************
+     F*                                                               *
+     F/COPY WNCPYSRC,SD0360PF01
+     FSDCFCDL1IF  E           K        DISK
+     FSDFCTLL1IF  E           K        DISK
+      *
+      * RTV: Standing Data Controls    Retrieval index
+      *
+     FSDFCTLL0UF  E           K        DISK
+      *
+      * UPD: Standing Data Controls    Update index
+      *
+     FSD0360P1O   E                    PRINTER
+     F                                              KINFDS INFDS$
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+     E                    UAR        38  1
+     E                    ULN        38  1
+     E                    @CUST   1   1 38
+     ISDBANK    E DSSDBANKPD
+     ISDGELR    E DSSDGELRPD
+     I**                                                                  S01464
+     ISCSARD    E DSSCSARDPD                                              S01464
+     I* SAR FILE DETAILS ACCESSED VIA ACCESS PROGRAM  AOSARDR0            S01464
+     I*                                                                   S01464
+     IRUNDAT    E DSRUNDAT
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IINFDS$    E DSY2I$DSP
+      * Printer file information data structure.
+      *
+      *** DS for Narratives
+      *
+     IDSFDY     E DSDSFDY
+      *
+      *
+     IP1PARM      DS
+      *
+      *** Audit/Request Status Ind
+      *
+     I                                        1   1 P1ARSI
+     IP2PARM      DS
+      *
+      ***  RCF sequence number
+      *
+     I                                        1   5 P2RSQN
+     IP3PARM      DS
+      *
+      *** Level
+      *
+     I                                        1   1 P3LEVL
+     IP4PARM      DS
+      *
+      *** Entity
+      *
+     I                                        1   3 P4ENTY
+     I            DS
+     I                                        1 132 ZAMSDA
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+      *
+      *** Message data for 'Database Error (ICD)'
+      * Filename
+      /EJECT
+     C*
+     C****************************************************************
+      *
+      *** Program Structure
+      *
+     C                     EXSR INIT
+      *
+      *** If there are no errors then perform main processing
+      *
+     C           *IN90     IFEQ '0'
+     C                     EXSR PRINT
+      *
+      *** If records to be printed and in audit mode, then perform
+      *** audit controls
+      *
+     C           *IN01     IFEQ '0'
+     C           WPTP01    ANDEQ'A'
+     C                     EXSR TOTAL
+     C                     END
+     C                     END
+      *
+      *** End program
+      *
+     C                     SETON                         LR
+     C                     RETRN
+     C*
+     C****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C****************************************************************
+      *
+      * Define work field No of records Deleted
+     C                     Z-ADD*ZERO     WUNORD  50
+      * Define work field work flag
+     C                     MOVEL*BLANK    WUWFLG  1
+      * Define work field Audit/Request Title
+     C                     MOVEL*BLANK    WUAURT 53
+      * Define work field No. of Deletes
+     C                     Z-ADD*ZERO     WUNODL  50
+      * Define work field No. of Records
+     C                     Z-ADD*ZERO     WUNORC  50
+      * Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WUNOIN  50
+      * Define work field No. of Amends
+     C                     Z-ADD*ZERO     WUNOAM  50
+      * Define work field No of Records on file
+     C                     Z-ADD*ZERO     WUNORC  50
+      * Define work field No of Records Inserted
+     C                     Z-ADD*ZERO     WUNORI  50
+      * Define work field No of Records Amended
+     C                     Z-ADD*ZERO     WUNORA  50
+      * Define work field work number
+     C                     Z-ADD*ZERO     WUWKNB  50
+      * Define work field Underline
+     C                     MOVEL*BLANK    WUBJNA 53
+      *
+     C                     MOVE *BLANK    @RUN    1
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVE 'SD0360P' ##PGM
+     C                     MOVEL'SD0360P' DBPGM
+      *
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P0RTN   7        Return code
+     C           P1ARSI    PARM           WPTP01  1        Audit/Request S
+     C           P2RSQN    PARM           WPTP02  5        RCF sequence nu
+     C           P3LEVL    PARM           WPTP03  1        Level
+     C           P4ENTY    PARM           WPTP04  3        Entity
+      *
+      *** Initialise fields for the call to ZSFILE.
+      *
+     C                     MOVE *BLANK    UURSQN  5
+     C                     MOVE *BLANK    UUENTY  3
+     C                     MOVE *BLANK    UUSFNM 10
+     C                     Z-ADD0         UUSFNB  60
+     C                     MOVE *BLANK    UUZSER  1
+     C                     MOVE *BLANK    WUZSER  1
+     C                     MOVE *BLANK    UUSRSQ  5
+      *
+      ** Use access program AOBANKR0 to retrieve header details
+      *
+     C                     CALL 'AOBANKR0'             80
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C                     MOVE BJMRDT    XXMRDT  7
+     C                     MOVE BJURPT    XXURPT 53
+      *
+      ** If error in access program, exit via *PSSR subroutine
+      *
+     C           @RTCD     IFNE *BLANKS                    B1
+     C           *IN80     OREQ '1'                        B1
+     C           *LOCK     IN   LDA                        *1
+     C                     MOVE *BLANK    DBKEY
+     C                     MOVEL'BANK'    DBKEY            *1
+     C                     MOVEL'SDBANKPD'DBFILE           ****************
+     C                     Z-ADD1         DBASE            * DB ERROR 001 *
+     C                     OUT  LDA                        ****************
+     C                     EXSR *PSSR                      *1
+     C                     END                             E1
+     C*                                                                   S01464
+     C** Access SAR details file to determine if S01421 is installed      S01464
+     C*                                                                   S01464
+     C                     CALL 'AOSARDR0'                                S01464
+     C                     PARM *BLANKS   @RTCD   7                       S01464
+     C                     PARM '*VERIFY' @OPTN   7                       S01464
+     C                     PARM 'S01421'  @SARD   6                       S01464
+     C           SCSARD    PARM SCSARD    DSFDY                           S01464
+     C                     SETOF                     28                   S01464
+     C*                                                                   S01464
+     C** If S01421 is installed, set ON an indicator to print "Hold       S01464
+     C** Indicator", "Numbered Account Indicator", and "Profit Centre"    S01464
+     C*                                                                   S01464
+     C           @RTCD     IFEQ *BLANKS                                   S01464
+     C                     SETON                     28                   S01464
+     C                     ELSE                                           S01464
+     C*                                                                   S01464
+     C** else, database error (return code other than *NRF)               S01464
+     C*                                                                   S01464
+     C           @RTCD     IFNE '*NRF   '                                 S01464
+     C                     MOVE *BLANKS   DBKEY                           S01464
+     C                     MOVEL'*VERIFY' DBKEY            ************   S01464
+     C                     MOVEL'SCSARDPD'DBFILE           * DBERR 07 *   S01464
+     C                     Z-ADD07        DBASE            ************   S01464
+     C                     OUT  LDA                                       S01464
+     C                     EXSR *PSSR                                     S01464
+     C                     END                                            S01464
+     C                     END                                            S01464
+      *
+      *** Access GLICD via SDGELRPD for the Profit Centre's
+      *** Used flag.
+     C**********           CALL 'AOGELRR0'               81                                   CGL029
+     C                     CALL 'AOGELRR1'               81                                   CGL029
+     C                     PARM '*MSG   ' P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C********** SDGELR    PARM SDGELR    DSFDY            O:Format                           CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      *** Report error in AOGELRR0
+      *
+     C           P@RTCD    IFNE *BLANKS                    B1
+     C           *IN81     OREQ '1'                        *1
+     C           *LOCK     IN   LDA                        *1
+     C                     MOVE *BLANK    DBKEY            *1
+     C                     MOVEL'GELR'    DBKEY            *1
+     C                     MOVEL'SDGELRPD'DBFILE           ****************
+     C                     Z-ADD5         DBASE            * DB ERROR 005 *
+     C                     OUT  LDA                        ****************
+     C                     EXSR *PSSR                      *1
+     C                     END                             E1
+      *                                                                   CSD008
+      ** Determine if CSD008 is installed                                 CSD008
+      *                                                                   CSD008
+     C                     CALL 'AOSARDR0'                                CSD008
+     C                     PARM '       ' @RTCD                           CSD008
+     C                     PARM '*VERIFY' @OPTN                           CSD008
+     C                     PARM 'CSD008'  @SARD                           CSD008
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD008
+      *                                                                   CSD008
+      ** Handle Database Error                                            CSD008
+      *                                                                   CSD008
+     C           @RTCD     IFNE *BLANKS                                   CSD008
+     C           @RTCD     ANDNE'*NRF   '                                 CSD008
+     C           *LOCK     IN   LDA                                       CSD008
+     C                     MOVE 'SCSARDPD'DBFILE                          CSD008
+     C                     MOVEL'CSD008'  DBKEY            ************   CSD008
+     C                     Z-ADD008       DBASE            * DBERR 08 *   CSD008
+     C                     MOVEL'SD0361P' DBPGM            ************   CSD008
+     C                     OUT  LDA                                       CSD008
+     C                     EXSR *PSSR                                     CSD008
+     C                     ENDIF                                          CSD008
+      *                                                                   CSD008
+      ** CSD008 is installed                                              CSD008
+      *                                                                   CSD008
+     C           @RTCD     IFEQ *BLANKS                                   CSD008
+     C                     MOVE 'Y'       CSD008  1                       CSD008
+     C                     MOVE *OFF      *IN28                           CSD008
+     C                     MOVE *ON       *IN50                           CSD008
+     C                     ELSE                                           CSD008
+     C                     MOVE 'N'       CSD008                          CSD008
+     C                     MOVE *OFF      *IN50                           CSD008
+     C                     ENDIF                                          CSD008
+      *
+      *** Set on the indicator for non display if the Profit Centre's
+      *** Used flag is 'N'.
+      *
+     C           BKPRCU    IFEQ 'N'
+     C                     SETON                     21
+     C                     END
+      *
+      *
+      *** Read in Installation Data for multibranching indicator.
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      *** Set on indicator for non display if the Multibranching
+      *** Indicator is 'N'
+      *
+     C           AGMBIN    IFEQ 'N'
+     C                     SETON                     22
+     C                     END
+      *
+      *** Check the Date Format Flag to see in which form the dates
+      *** have been input i.e ddmmyy or mmddyy. If ddmmyy, 98 is off
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     END
+      *
+      *** ZSFILE - Write report request.
+      *
+     C                     CALL 'ZSFILE'               90  ZSFILE - write
+     C           UUSRSQ    PARM P2RSQN    UURSQN  5        RCF sequence nu
+     C                     PARM P4ENTY    UUENTY  3        Entity
+     C                     PARM @$FVN     UUSFNM 10        Spool file name
+     C                     PARM @$FNB     UUSFNB  60       spool file numb
+     C           WUZSER    PARM *BLANK    UUZSER  1        ZSFILE error
+      *
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA                        *1
+     C                     MOVE *BLANK    DBKEY
+     C                     MOVEL'ZSFILE'  DBFILE
+     C                     Z-ADD6         DBASE
+     C                     OUT  LDA
+     C                     END
+      *
+      *** If in audit mode,the titles are set up for the audit report.
+      *
+     C           P1ARSI    IFEQ 'A'
+     C                     Z-ADD1         U       20
+      *
+      *** Move the title array into the array used for the header
+      *
+     C                     MOVEA@CUST     UAR,U
+      *
+     C                     MOVEAUAR       USTORE 38
+      *
+      *** Underline the title.
+      *
+     C                     MOVEA*ALL'-'   ULN
+      *
+      *
+     C                     MOVELUSTORE    WUAURT
+     C                     MOVEAULN       WUBJNA
+     C                     END
+     C/COPY WNCPYSRC,SD0360PC01
+     C*****************************************************************
+      *
+     CSR         INEXIT    ENDSR
+      /EJECT
+      *****************************************************************
+      *
+     C           PRINT     BEGSR
+      *
+     C*****************************************************************
+      *
+     C                     Z-ADD4         RQDLN   20
+     C                     Z-ADD8         EQDLN   20
+      *
+      *** Access the Customer Fees Details File
+      *
+     C                     READ SDCFCDL1                 33
+      *
+      *** If a record is not found,write the record for 'no details'
+      *** and ensure that the totals are not done.
+      *
+     C                     WRITECFCDLHDR
+     C           *IN33     IFEQ '1'
+     C                     WRITENODTRPT
+     C                     MOVE *ON       *IN01
+     C                     END
+      *
+     C           *IN01     IFEQ '0'
+      *
+      *** Do while a record is found
+      *
+     C           *IN33     DOWEQ'0'
+     C/COPY WNCPYSRC,SD0360PC02
+      *
+      *** For live records add 1 to no. of recs read by the pgm.
+      *
+     C           E6TYLC    IFEQ 'I'
+     C           E6TYLC    OREQ 'A'
+     C                     ADD  1         WUWKNB
+     C                     END
+      *
+      *** If audit request indicator is A and the last change date
+      *** of record = run date no., or if not in audit mode, write the
+      *** detail, add 1 to the no. of recs printed.
+      *
+     C           WPTP01    IFEQ 'A'
+     C           E6LCD     ANDEQBJRDNB
+     C           WPTP01    ORNE 'A'
+      *
+      *** Fields from the logical files are moved into the printer
+      *** file fields.
+      *
+     C                     MOVE E6CUST    PPCUST  6
+     C                     MOVE E6TYLC    PPTYLC  6
+     C                     MOVE E6HMIN    PPHMIN  1
+     C                     MOVE E6NAIN    PPNAIN  1
+     C**********           MOVE E6SMAC    PPSMAC 12                                           CGL029
+     C                     MOVE E6SMAC    PPSMAC 18                                           CGL029
+     C                     MOVE E6SBCH    PPSBCH  3
+     C                     MOVE E6SCCY    PPSCCY  3
+     C                     MOVE E6PFCD    PPPFCD  4
+     C                     MOVE E6TAIF    PVATF   1                       CSD008
+      *
+     C           E6TYLC    IFEQ 'I'
+     C                     MOVE 'insert'  PPTYLC
+     C                     END
+     C           E6TYLC    IFEQ 'A'
+     C                     MOVEL'amend '  PPTYLC
+     C                     END
+      *
+      *** The date field is changed from midas dayno to ddmmmyy
+      *
+     C                     MOVE E6LCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PPLCD   7
+     C/COPY WNCPYSRC,SD0360PC03
+      *
+     C                     WRITECFCDRCD
+     C                     ADD  1         XXNORC  50
+     C                     END
+      *
+      *** If the page is full then start a new page. Use the overflow
+      *** line no. and the current line no. from printer file
+      *** information data structure.
+      *
+     C           @$OFL     SUB  @$CLN     RMNDR   20
+     C           RMNDR     IFLT RQDLN
+     C           CSD008    ANDEQ'N'                                       CSD008
+     C           RMNDR     OREQ 5                                         CSD008
+     C           CSD008    ANDEQ'Y'                                       CSD008
+     C                     MOVE *ON       *IN16
+     C                     END
+     C           *IN16     IFEQ *ON
+     C                     WRITECFCDLHDR
+     C                     END
+     C                     MOVE *OFF      *IN16
+      *
+      *** Read for a new record.
+      *
+     C                     READ SDCFCDL1                 33
+     C                     END
+      *
+     C           @$OFL     SUB  @$CLN     RMNDE   20
+     C           RMNDE     IFLT EQDLN
+     C           CSD008    ANDEQ'N'                                       CSD008
+     C           RMNDE     OREQ 5                                         CSD008
+     C           CSD008    ANDEQ'Y'                                       CSD008
+     C                     MOVE *ON       *IN17
+     C                     END
+     C           *IN17     IFEQ *ON
+     C                     WRITECFCDLHDR
+     C                     WRITERPTEND
+     C                     ELSE
+     C                     WRITERPTEND
+     C                     END
+     C                     MOVE *OFF      *IN17
+     C                     END
+      *
+      *****************************************************************
+      *
+     CSR         PREXIT    ENDSR
+      /EJECT
+      *****************************************************************
+      *
+     CSR         TOTAL     BEGSR
+      *
+      *****************************************************************
+      *
+      *** This sub routine updates the fields in SDFCTLL0
+      *
+     C                     MOVEL'SDCFCDPD'AHFLNM 10
+     C           AHFLNM    CHAINSDFCTLL1             44
+     C           *IN44     IFEQ '1'
+      *
+      *** If record is not found,then the standard error
+      *** processing is performed.
+      *
+     C           *LOCK     IN   LDA                        *1
+     C                     MOVE *BLANK    DBKEY
+     C                     MOVEL'SDCFCDPD'DBKEY            *1
+     C                     MOVEL'SDFCTLL1'DBFILE           ****************
+     C                     Z-ADD2         DBASE            * DB ERROR 002 *
+     C                     OUT  LDA                        ****************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      *** Comparison between recs from pgm and recs from SDFCTLL1
+      *
+     C           WUWKNB    IFNE AHNORC
+     C                     MOVE *ON       *IN66
+     C                     EXSR *PSSR
+     C                     END
+      *
+      *** Store vals of no of recs, inserts, deletes, amends
+      *
+     C                     Z-ADDAHNORC    WUNORC           No. of Records
+     C                     Z-ADDAHNOIN    WUNORI           No. of Inserts
+     C                     Z-ADDAHNOAM    WUNORA           No. of Amends
+     C                     Z-ADDAHNODL    WUNORD           No. of Deletes
+      *
+      * Audit printfile override - Standing Data Controls  *
+      *
+     C                     CALL 'SDC540P'              90  Audit printfile
+     C                     PARM 'SD0360AU'WTMP03 10        *PROGRAM
+     C                     PARM WUWFLG    WTMP04  1        work flag
+     C                     PARM WUNORI    WTMP05  50       No of Records I
+     C                     PARM WUNORA    WTMP06  50       No of Records A
+     C                     PARM WUNORD    WTMP07  50       No of records D
+     C                     PARM WUWKNB    WTMP08  50       work number
+     C                     PARM WUNORC    WTMP09  50       No of Records o
+     C                     PARM WUAURT    WTMP10 53        Audit/Request T
+     C                     PARM WUBJNA    WTMP11 53        Underline
+      *
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA                        *1
+     C                     MOVE *BLANKS   DBKEY            *1
+     C                     MOVEL'SDC540P' DBFILE           ****************
+     C                     Z-ADD3         DBASE            * DB ERROR 003 *
+     C                     OUT  LDA                        ****************
+     C                     EXSR *PSSR                      *1
+     C                     END                             E1
+     C                     MOVEL'SDCFCDPD'AHFLNM 10
+     C           AHFLNM    CHAINSDFCTLL0             55
+     C           *IN55     IFEQ '1'
+     C           *LOCK     IN   LDA                        *1
+     C                     MOVE *BLANK    DBKEY
+     C                     MOVEL'AHFLNM'  DBKEY            *1
+     C                     MOVEL'SDFCTLL0'DBFILE           ****************
+     C                     Z-ADD4         DBASE            * DB ERROR 004 *
+     C                     OUT  LDA                        ****************
+     C                     EXSR *PSSR                      *1
+     C                     END                             E1
+      *
+      * Update the totals
+      * Move Non-key fields
+      *
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADD*ZERO     AHNOIN           No. of Inserts
+     C                     Z-ADD*ZERO     AHNOAM           No. of Amends
+     C                     Z-ADD*ZERO     AHNODL           No. of Deletes
+      *
+     C                     UPDAT@AHREAU
+      *
+     C*****************************************************************
+      *
+     CSR         TOEXIT    ENDSR
+      /EJECT
+      *
+      *****************************************************************
+      *
+     CSR         *PSSR     BEGSR
+      *
+      *****************************************************************
+      *
+      *** Write the page headings.
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN
+     C                     WRITECFCDLHDR
+      *
+      *** Set on the indicators relating to the Last record,the
+      *** Data Base error message and the file error message.
+      *
+     C                     MOVE '1'       *INU8
+      *
+     C           *IN66     IFEQ *ON
+     C                     MOVE '1'       *INU7
+     C                     WRITESD36FCER
+     C                     ELSE
+     C                     WRITESD0360ER
+      *
+     C                     END
+      *
+      ***  Dump and return to the calling program
+      *
+     C                     DUMP
+     C                     END
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *****************************************************************
+      *
+     CSR         PSEXIT    ENDSR
+      /EJECT
+      *
+      *****************************************************************
+      *
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+      /COPY ZSRSRC,ZDATE2Z3
+**  CPY@
+(c) Finastra International Limited 2001
+**  @CUST
+CUSTOMER FEES MAINTENANCE AUDIT REPORT

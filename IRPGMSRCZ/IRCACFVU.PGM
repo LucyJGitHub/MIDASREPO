@@ -1,0 +1,167 @@
+      *****************************************************************
+/*STD *  PGMBASE                                                      *
+/*EXI *  MODULE(IRCACFVU) ACTGRP(*CALLER)                             *
+/*EXI *  TEXT('Midas IR Caps/Collars/Floors validate and update')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - FRA/IRS Dealing Module                               *
+      *                                                               *
+      *  IRCACFVU - Caps/Collars/Floors - Validate and Update         *
+      *                                                               *
+      *  Function: This program validates IR Caps/Collars/Floors for  *
+      *            input into the Midas database.                     *
+      *            The action code determines which processes are     *
+      *            executed as follows:                               *
+      *            - For I (=Insert) or A (=Amend)                    *
+      *              - Validate the transaction details fields        *
+      *            - For A (=AMEND),                                  *
+      *              - if transaction is a partial amendment, call a  *
+      *                separate function to complete the transaction  *
+      *                details.                                       *
+      *              - if transaction is valid, call a separate       *
+      *                function to check whether it is a valid        *
+      *                amendment.                                     *
+      *            - For D (=DELETE), call a separate function to     *
+      *              process the transaction and bypass the rest of   *
+      *              the validation.                                  *
+      *                                                               *
+      *            For all action codes, the decision to as to        *
+      *            whether to write to the valid or invalid file and  *
+      *            the call to the message handler will take place    *
+      *            in this module                                     *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044506           Date 28Mar17               *
+      *                 CSD095CC1          Date 13Sep16               *
+      *                 CSW216             Date 14Mar16               *
+      *                 MD031861           Date 12Jan15               *
+      *                 CSW214             Date 25Nov14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CSD095             Date 08Apr14               *
+      *                 AR314712           Date 13Apr10               *
+      *                 AR218555           Date 26Mar10               *
+      *                 245692             Date 11Dec13               *
+      *                 MD023734           Date 30Nov13               *
+      *                 CSW213             Date 03Jun13               *
+      *                 MD000091           Date 03May13               *
+      *                 CSF011A            Date 28Nov11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG12542           Date 09Nov06
+      *                 240240             Date 26Jun06               *
+      *                 BUG11457           Date 11May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 BUG11254           Date 19Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG8550            Date 05Oct05               *
+      *                 BUG7952            Date 22Jul05               *
+      *                 BUG7923            Date 21Jul05               *
+      *                 239130             Date 23Jun06               *
+      *                 BUG8560            Date 19Sep05               *
+      *                 BUG7659            Date 23Jun05               *
+      *                 BUG5871            Date 24May05               *
+      *                 BUG7166            Date 12May05               *
+      *                 CDL038             Date 10May05               *
+      *                 BUG7046            Date 06May05               *
+      *                 BUG6719            Date 20Apr05               *
+      *                 BUG6671            Date 26Apr05               *
+      *                 CLE031             Date 26Apr05               *
+      *                 BUG6472            Date 23Apr05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 BUG6377            Date 11Apr05               *
+      *                 BUG6386            Date 23Mar05               *
+      *                 BUG5964            Date 17Feb05               *
+      *                 BUG5610            Date 27Jan05               *
+      *                 BUG5453            Date 12Jan05               *
+      *                 BUG5403            Date 10Jan05               *
+      *                 BUG5181            Date 16Dec04               *
+      *                 BUG4390            Date 29Sep04               *
+      *                 BUG4044            Date 18Aug04               *
+      *                 BUG4023            Date 12Aug04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222373             Date 06Nov03               *
+      *                 CAP084  *CREATE    Date 26Aug03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD044506 - MT300 98D trade execution date can not be before  *
+      *             value date. (Recompile)                           *
+      *  CSD095CC1 - Allow Deal Sub-Type and Branch for IRS, FRA and  *
+      *              CCF SSIs (Recompiled)                            *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
+      *  MD031775 - Cannot insert transaction due to errors. Correct  *
+      *             mapping to include CDL094 fields. (Recompile)     *
+      *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompile)                                         *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *           (Recompile)                                         *
+      *  AR314712 - Missing Account Key for Caps/Floors Deals.        *
+      *             Default Up-front fee pay/rcv based on buy/sell    *
+      *             indicator.                                        *
+      *  AR218555 - Cannot authorise/edit Caps, Collars, Floors in    *
+      *           WIP. It issues error message RS00018. (Recompile)   *
+      *  245692 - Incorrect validation of rates when the decimal se-  *
+      *           parator in the Dealing ICD was defined as "," ins-  *
+      *           tead of ".".  (Recompiled)                          *
+      *  MD023734 - Clearing Threshold Ind not defaulted. (Recompile) *
+      *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
+      *  MD000091 - Event Codes Substitution (Recompile)              *
+      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
+      *            (Recompile)                                        *
+      *  BUG12542 - Failed to insert new Transaction due to Serious   *
+      *             MidasPlus Error.                                  *
+      *  240240 - Ensure locks don't remain on DLPCSCPD.              *
+      *         - Apply 239130 to update DLPCSCPD when authorizing.   *
+      *         - CALLB FFDATE. Call results in 'cannot resolve' bug. *
+      *  BUG11457-Transaction ccy is not passed by callers. Recompile.*
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG11254- Recompiled due to change in IRCACFVU module        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG8550 - Reposition capture of ZMUSER data area (RECOMPILE) *
+      *  BUG7952  Recompile                                           *
+      *  BUG7923- Recompiled due to change in IRCACFVU module         *
+      *  239130 - Recompile over changes in module.                   *
+      *  BUG8560- Recompiled due to change in IRCACFR                 *
+      *  CLE031 - Lending Enhancements - Settlement Currency Recompile*
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  BUG8560- Recompiled due to change in IRCACFR                 *
+      *  BUG7659- Recompiled due to change in IRCACFVU module         *
+      *  BUG5871- Send deal status to MidasPlus (Recompile)           *
+      *  BUG7166- Valid files do not match DEALSDG (Recompile)        *
+      *  BUG7046 - Validate principal change schedule if present      *
+      *            (Recompile)                                        *
+      *  BUG6719 - Recompiled due to change in IRCACFVU module        *
+      *  BUG6671- Recompiled due to change in IRCACFVU                *
+      *  BUG6472- Added a sign field for short term rate (Recompile)  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  BUG6377 - Recompiled due to change in IRCACFVU module        *
+      *  BUG6386 - Principal Change schedules not showing for migrated*
+      *            deals                                              *
+      * BUG5964- Schedule 1st non processed date should be the same as*
+      *          the date in the main details                         *
+      *  BUG5610- Amount formatting                                   *
+      * BUG5453- Error messages relating to edit table need more      *
+      *          detailed information                                 *
+      * BUG5403 - Principle Change Schedule missing in CACF           *
+      *  BUG5181- Recompiled due to part applied fix 219686 in        *
+      *           IRCACFVU                                            *
+      * BUG4390 - Serious Midas error during amend of CACF            *
+      *           Condition update of upfront fees and buy out details*
+      *  BUG4044- Recompiled due to change in IRCACFVU module         *
+      *  BUG4023- Recompiled due to change in IRCACFVU module         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222373 - Recompile - Parameters corrected on program calls   *
+      *  CAP084 - API Wrapper project                                 *
+      *                                                               *
+      *****************************************************************

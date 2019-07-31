@@ -1,0 +1,252 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE CI Active Jobs File Update')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE4436 - CI Active Jobs File Update                          *
+      *                                                               *
+      *  Function:  This program maintains the active jobs file with  *
+      *             submitted job's attributes                        *
+      *                                                               *
+      *  Called By: REC4032 - Passbook Update                         *
+      *             REC4035 - Passbook name and Address Printing      *
+      *             REC4111 - GL Cash In and Cash Out                 *
+      *             REC4112 - Retail Account Transfer                 *
+      *             REC4114 - Cash/Cheque Deposit in Account Ccy      *
+      *             REC4115 - Cash/Cheque Deposit in Non-Account Ccy  *
+      *             REC4116 - Cash Withdrawal in Account Ccy          *
+      *             REC4117 - Cash Withdrawal in Non-Account Ccy      *
+      *             REC4118 - Cheque Withdrawal in Account Ccy        *
+      *             REC4119 - Cheque Withdrawal in Non-Account Ccy    *
+      *             REC4120 - Foreign Exchange Transfers              *
+      *             REC4124 - Transaction Reversals                   *
+      *             REC4135 - Account Enquiry                         *
+      *             REC4144 - Draft Issuance                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT003  *CREATE    Date 22Jul96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CRT003 - Cashier Interface                                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FREACJBL1UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      **  CI Active Jobs
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                  FUNCTION OF INDICATORS                       *
+      *                  ----------------------                       *
+      *                                                               *
+      *  11 - Chain fail                                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INZSR -  Initialisation.                                    *
+      *  *PSSR  -  Program Error.                                     *
+      *  DBERR  -  Database Error Handling.                           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /EJECT
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+      ** Field containing program ID
+     I                                        1  10 @PGM
+      *
+      ** Field containing workstation ID
+     I                                      244 253 @JOB
+      *
+      ** Field containing user ID
+     I                                      254 263 @USER
+      *
+     ICMTTXT      DS                             65
+      ** Commitment Control Commit Text
+     I                                        1   1 W@ACTN
+     I                                        2  11 W@JOBN
+     I                                       12  21 W@USRN
+     I                                       22  27 W@JNUM
+     I                                       28  35 PGMN
+     I                                       36  45 WSIDX
+     I                                       46  510MTIME
+     I                                       52  61 USRIDX
+      *
+     I@CKEY       DS
+      ** Data structure for composite key
+     I                                        1  10 K@JOBN
+     I                                       11  20 K@USRN
+     I                                       21  26 K@JNUM
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Processing.                       *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@ACTN  1        I:Action code
+     C                     PARM           P@JOBN 10        I:Job name
+     C                     PARM           P@USRN 10        I:User name
+     C                     PARM           P@JNUM  6        I:Job number
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+     C           K@L1      KLIST
+     C                     KFLD           K@JOBN
+     C                     KFLD           K@USRN
+     C                     KFLD           K@JNUM
+      *
+     C                     MOVELP@JOBN    K@JOBN 10
+     C                     MOVELP@USRN    K@USRN 10
+     C                     MOVELP@JNUM    K@JNUM  6
+      *
+     C                     SELEC
+      *
+      ** Insert
+      *
+     C           P@ACTN    WHEQ 'I'
+     C                     MOVE 'D'       RQRECI
+     C                     MOVELP@JOBN    RQJBNM
+     C                     MOVELP@USRN    RQJBUS
+     C                     MOVELP@JNUM    RQJBNO
+     C                     WRITEREACJBD0
+      *
+      ** Delete
+      *
+     C           P@ACTN    WHEQ 'D'
+     C           K@L1      CHAINREACJBL1             11
+     C           *IN11     IFEQ '0'
+     C                     MOVE '*'       RQRECI
+     C                     UPDATREACJBD0
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE
+     C                     MOVEL'REACJBPD'DBFILE
+     C                     MOVEL@CKEY     DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     ENDSL
+      *
+      ** Prepare the comit text CMTTXT
+      *
+     C                     MOVELP@ACTN    W@ACTN
+     C                     MOVELP@JOBN    W@JOBN
+     C                     MOVELP@USRN    W@USRN
+     C                     MOVELP@JNUM    W@JNUM
+     C                     MOVEL@PGM      PGMN
+     C                     MOVEL@JOB      WSIDX
+     C                     MOVEL@USER     USRIDX
+     C                     TIME           MTIME
+      *
+     C           CMTTXT    COMIT
+      *
+     C                     MOVEL'1'       *INLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             DBERR - Database Error Handling.                  *
+      *                                                               *
+      * CALLED BY         - MAIN, *PSSR                               *
+      *                   -                                           *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL'RE4436'  DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR             - Program error                             *
+      *                                                               *
+      * CALLS             - DBERR                                     *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      **  Check to see that *PSSR has not been called yet
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *INZSR - Initialisation Subroutine                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR                           ** *INZSR **
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+      *
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

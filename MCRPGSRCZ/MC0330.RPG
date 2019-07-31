@@ -1,0 +1,1701 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Funding GAP accruals')                        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *  MC0330 - Funding Gap Accruals                                *
+      *                                                               *
+      *  Function : This program generates accounting entries for     *
+      *   (COB)     Profit Centre Funding Gap Accounts.  Accrued      *
+      *             interest is calculated, capitalised, transferred  *
+      *             to base currency and transferred to retained P&L. *
+      *                                                               *
+      *  Called by: MCC0320 - Funding Gap Entry Generation            *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD053295           Date 13Apr19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR996895           Date 25Nov12               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246141             Date 26Mar07               *
+      *                 164847             Date 30Nov06               *
+      *                 226963             Date 23Nov06               *
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242286             Date 25Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CIR013             Date 25Apr05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      *                 173160             Date 24Jun98               *
+      *                 178906             Date 09Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 163136             Date 07Jul99               *
+      *                 CSD005             Date 02Mar99               *
+      *                 158557             Date 28Apr99               *
+      *                 135120             Date 28Apr99               *
+      *                 CTI002             Date 23Sep98               *
+      *                 124848  (PCA014)   Date 16Sep97               *
+      *                 121629             Date 31Jul97               *
+      *                 CMC001 *CREATE     Date 18MAR96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD053295 - Lending loan with Interest Calculation Basis      *
+      *             method 3 (30/360) has wrong interest payment      *
+      *             amount for month of March (Recompile)             *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR996895 - Incorrect accrual interest calculation.           *
+      *             (Child:AR996897) (Recompile)                      *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *            to Midas Plus (Recompile)                          *
+      *  246141 - Recompiled due to changes in ZINTDYZ2               *
+      *  164847 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  226963 - 1) Today's adjustment being doubled for daily capit.*
+      *           2) Do the output to MCGAP1PD for any history before *
+      *              the last rework date.  Applied fix 212958.       *
+      *  BUG12990 - Recompiled due to changes in ZINTDYZ2/ZINTDYZ2LE  *
+      *  242286 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over ZINTDY.                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CIR004 - Dealing Calculation Method Change.                  *
+      *         - Recompiled due to ZINTDY changes                    *
+      *  173160 - Remove 135120. Never mind this stuff about WSTFTP.  *
+      *           Stop record lock by updating record before          *
+      *           passing to other pgm, then re-read on return        *
+      *  178906 - Include subroutine stack monitoring                 *
+      *  163136 - Interest Calculation Method '6'  showing incorrect -*
+      *           ZERO - amount . Addition to Core #126017 which dealt*
+      *           with the issue. It introduced an additional  INT6DY *
+      *           field in s-routine ZINTDY in  /COPY ZSRSRC/ZINTDYZ2 *
+      *           which in turn is usually called from GLINTC s-routine
+      *           in /COPY  ZSRSRC/ GLINTCZ1 .  However, there are at *
+      *           least a dozen other pgms that use ZINTDY but do     *
+      *           GLINTC-processing within the pgms calculation specs *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  158557 - PCA015, Provide a Funding Gap Accrual Report        *
+      *  135120 - Record locked in MCACHRL0                           *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *           Also fix recompilation problem with ZINTDYZ2        *
+      *  124848 - Gap Accruals include Daily Funding Requirement on   *
+      *           date of posting even if system in last day accrual  *
+      *  121629 - Wrong Gap Accrual amount generated                  *
+      *  CMC001 - Management Accounts Enhancement for PCA             *
+      *                                                               *
+      *****************************************************************
+      *
+     F/COPY WNCPYSRC,MC0330F001
+     FMCACHRL1UF  E           K        DISK         KINFSR *PSSR
+      **  Funding Gap Accrual Header File
+      *
+     FMCACDTL0UF  E           K        DISK         KINFSR *PSSR A
+      **  Funding Gap Accrual Detail File
+      *
+     FMCDIRYL0IF  E           K        DISK         KINFSR *PSSR
+      **  Diary Events File
+      *
+     FMCPCACPDO   E                    DISK         KINFSR *PSSR A
+      **  Profit Centre Accounting Generated Entries File
+      *                                                                   158557
+     FMCGAP1PDO   E                    DISK         KINFSR *PSSR          158557
+      **  Funding GAP Accrual Details File                                158557
+      *
+     FMC0330AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F                                              KINFSR *PSSR
+      **  Funding Gap Accruals Audit Report
+      *
+     F/SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  81   End of file MCACDTL0                                    *
+      *  82   A detail record exists for the header (81 on)           *
+      *  90   End of file MCACHRL1                                    *
+      *  U7U8 Database error                                          *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #P01   - Initial Subroutine                                  *
+      *  #P02   - Main Processing Subroutine                          *
+      *  #P03   - Get Initial Gap Account Values                      *
+      *  #P04   - Process Gap Accounts                                *
+      *  #P05   - Calculate Accrued Interest                          *
+      *  #P06   - Update Gap Accrual Record                           *
+      *  #P07   - Process an Accrual Event Date                       *
+      *  #P08   - Process a Capitalisation Date                       *
+      *  #P09   - Process Transfer Income/Expense                     *
+      *  #BRCHD - Process a Change of Branch Code                     *
+      *  #BSHSD - Process Historic Base Rates                         *
+      *  #DIRYD - Process Diary Events                                *
+      *  #CYCDD - Process a Change of Currency Code                   *
+      *  #ACCDD - Process a Change of Account Code                    *
+      *  DBERR  - Database Error Subroutine                           *
+      *  *PSSR  - To Handle Abnormal Error Conditions                 *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E**  Copyright Statement
+     E*
+     E** Arrays to hold Currency details
+     E                    CYC       300  3
+     E                    CYD       300  1 0
+     E                    CYN       300 14
+     E** Arrays to Diary event dates
+     E                    DED       999  5 0A
+     E*                                                                   056095
+     E/COPY ZSRSRC,ZDATE9Z1                                               056095
+     E**  Array for SR. ZDATE9                                            056095
+     E*                                                                   056095
+     E                    @STK      100 10   @REC    3 0                                      178906
+      *  Subroutine stack                                                                     178906
+     I*
+     I/COPY WNCPYSRC,MC0330I001
+     I/COPY ZSRSRC,ZINTDYZ1                                               056095
+     I**  Data Structure for SR. ZINTDY                                   056095
+     I*
+     I/COPY ZSRSRC,ZDATE9Z2                                               056095
+     I**  Data Structure for SR. ZDATE9Z2                                 056095
+     I*
+     I/COPY ZSRSRC,ZDAT10Z1                                               CTI002
+     I**  Data Structure for SR. ZDAT10Z1                                 CTI002
+     I*                                                                   CTI002
+     I* Data Structure for Printer file MC0330AU
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 188 1890OFLLNU
+     I                                    B 367 3680PRTLNU
+     I*
+     I*  Local Data Area
+     ILDA       E DSLDA
+      *
+      **  Local data area for database error details
+      **  *LOCK IN LDA immediately before and OUT LDA immediately
+      **  after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IMCDIRY    E DSMCDIRYPD                999
+     I**   Diary Events
+     I*
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**   Bank Details
+     I*
+     ISDTRAD    E DSSDTRADPD
+     I**   Trading ICD Details
+     I*
+     ISDGELR    E DSSDGELRPD
+     I**   General Ledger ICD Details
+     I              QQACCD                          QQACD1                                    CGL029
+     I*
+     ISDPCAC    E DSSDPCACPD
+     I**   Profit Centre Accounting ICD Details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I**   Branch details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I**   Branch details
+     I*
+     ISDACOD    E DSSDACODPD
+     I**   Account code details
+     I              QQACCD                          QQACD2                                    CGL029
+     I              QQFNIC                          FNICQQ                                    CGL029
+     I              QQFNAA                          FNAAQQ                                    CGL029
+     I*
+     IMCMOVE    E DSMCMOVEPD
+     I**   Profit Centre A/cing details
+     I*
+     ISDBSHS    E DSSDBSHSPD
+     I**   Historic Base Rates
+     I*
+     IDSFDY     E DSDSFDY
+     I**   First DS for Access Programs, Short Data Structure
+     I*
+     IDSSDY     E DSDSSDY
+     I**   Second DS for Access Programs, Long Data Structure
+     I*
+     I*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  MAIN PROCESSING                                              *
+     C*****************************************************************
+     C*
+     C**  Copyright statement.
+     C*
+     C                     MOVEACPY@      CPY2@  80
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'MAIN'    @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C**  Perform Initial Processing
+     C*
+     C                     EXSR #P01
+     C*
+     C**  Perform Main Processing
+     C*
+     C                     EXSR #P02
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C**  End program
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #P02   --- Main Processing Subroutine                        *
+     C*                                                               *
+     C*  CALLED FROM: Main Processing                                 *
+     C*                                                               *
+     C*  CALLS: None                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #P02      BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#P02'    @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C**  Read GAP Accrual Headers until EOF
+     C*
+     C***********          READ MCACHRL1                 90               135120
+     C***********          READ MCACHRL1            N    90         135120173160
+     C                     READ MCACHRL1                 90               173160
+     C*
+     C           *IN90     DOWEQ'0'
+     C*
+     C**  Access Branch, Currency, Account Code files on change
+     C*
+     C           GHBRCD    IFNE WSBRCD
+     C                     EXSR #BRCHD
+     C                     MOVE GHBRCD    WSBRCD
+     C                     ENDIF
+     C*
+     C           GHCYCD    IFNE WSCYCD
+     C                     EXSR #CYCDD
+     C                     MOVE GHCYCD    WSCYCD
+     C                     ENDIF
+     C*
+     C           GHACCD    IFNE WSACCD
+     C**********           MOVE GHACCD    WACOD   4                                           CGL029
+     C                     MOVE GHACCD    WACOD  10                                           CGL029
+     C                     EXSR #ACCDD
+     C                     MOVE GHACCD    WSACCD
+     C                     MOVE A5ACSC    WACSC   2
+     C                     MOVE A5ACTY    WACTY   1
+     C                     ENDIF
+     C*
+     C**  Get Initial GAP Account Values
+     C*
+     C                     EXSR #P03
+     C*
+     C**  Process GAP Account
+     C*
+     C                     EXSR #P04
+     C***********WSTFTP    IFEQ *ZERO                               135120173160
+     C***********                                                   135120173160
+     C****Set*up*key list for MCACHRL0                              135120173160
+     C***********                                                   135120173160
+     C***********          Z-ADDGHCURB    SVCURE 150                135120173160
+     C***********KEY1      KLIST                                    135120173160
+     C***********          KFLD           GHACLV                    135120173160
+     C***********          KFLD           GHBRCD                    135120173160
+     C***********          KFLD           GHCYCD                    135120173160
+     C***********          KFLD           GHACCD                    135120173160
+     C***********          KFLD           GHCUST                    135120173160
+     C***********          KFLD           GHACSN                    135120173160
+     C***********          KFLD           GHPCCD                    135120173160
+     C***********                                                   135120173160
+     C***********KEY1      CHAINMCACHRD0             55             135120173160
+     C***********          Z-ADDSVCURE    GHCURB 150                135120173160
+     C**  Update GAP Acruals Header
+     C*
+     C                     UPDATMCACHRD0
+     C***********          ENDIF                                    135120173160
+     C*
+     C**  Read Next GAP Header Record
+     C*
+     C***********          READ MCACHRL1                 90               135120
+     C***********          READ MCACHRL1            N    90         135120173160
+     C                     READ MCACHRL1                 90               173160
+     C*
+     C**  End of DO While Not EOF
+     C*
+     C                     ENDDO
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #P03   --- Subroutine to Get initial Account Values          *
+     C*                                                               *
+     C*  CALLED FROM: #P02                                            *
+     C*                                                               *
+     C*  CALLS: BSHSD, DIRYD                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #P03      BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#P03'    @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C**  Read Accrual Details for Account in Reverse Date Sequence
+     C**  Until the Posting Date is before the Last/Rework Date
+     C*
+     C           ACCHDR    SETGTMCACDTL0
+     C           ACCHDR    REDPEMCACDTL0            N    81
+     C                     MOVE '0'       *IN82
+     C*
+     C           *IN81     DOWEQ*OFF
+     C           GDPSDT    ANDGEGHLRDT
+     C*
+     C** Calculate Start of Business Balance as at Current Posting Date
+     C*
+     C                     SUB  GDSOBM    GHCURB
+     C                     SUB  GDSOBA    GHCURB
+     C                     MOVE '1'       *IN82
+     C*
+     C           ACCHDR    REDPEMCACDTL0            N    81
+     C*
+     C                     ENDDO
+     C*
+     C**  Data base error if No records
+     C*
+     C           *IN81     IFEQ *ON
+     C           *IN82     ANDEQ*OFF
+     C*
+     C           *LOCK     IN   LDA
+     C                     Z-ADD10        DBASE            ************
+     C                     MOVEL'MCACDTPD'DBFILE           * DBERR 10 *
+     C           GHBRCD    CAT  GHCYCD:0  DBKEY            ************
+     C           DBKEY     CAT  GHACCD:0  DBKEY
+     C           DBKEY     CAT  GHCUST:0  DBKEY
+     C           DBKEY     CAT  GHACSN:0  DBKEY
+     C           DBKEY     CAT  GHPCCD:0  DBKEY
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+     C*
+     C**  Set Start Date
+     C                     Z-ADDGDPSDT    ZZBEG
+     C*
+     C**  Find Initial Base Rate for Interest Calculations
+     C*
+     C                     MOVE '*KEY   ' @OPTN
+     C                     EXSR #BSHSD
+     C*
+     C**  Save Initial Base Rate
+     C*
+     C                     Z-ADDG0CBSR    WSCBSR
+     C*
+     C**  Get Next Base Rate, and Rate Change Date
+     C*
+     C                     MOVE '*NEXT  ' @OPTN
+     C                     EXSR #BSHSD
+     C*
+     C**  If no detail record before the last Rework date
+     C**     the last read record is processed
+     C*
+     C           *IN81     IFEQ *ON
+     C           ACCDTL    SETLLMCACDTL0
+     C*
+     C**  Initialise accrual and Interest balances
+     C**      Accrued Interest to-Date; Posted plus not posted
+     C*
+     C                     Z-ADDGDIPST    WSINTP
+     C                     Z-ADDGDAPST    WSACCP
+     C           WSACCP    ADD  GDANOP    WSACIN
+     C* Adjust Accrual for 1st day accruals
+     C           BKALDI    IFEQ 'N'
+     C           ZZBEG     ADD  1         ZZEND
+      *                                                                                       226963
+      ** Do not output the history which is before last rework date to                        226963
+      ** MCGAP1PD.                                                                            226963
+      *                                                                                       226963
+     C                     ADD  GDSOBM    GHCURB
+     C                     Z-SUBGHCURB    GHCURB
+     C                     Z-ADD*ZERO     WSINT
+     C                     SETON                     83                                       226963
+     C                     EXSR #P05
+     C                     SETOF                     83                                       226963
+     C                     Z-SUBGHCURB    GHCURB
+     C                     SUB  GDSOBM    GHCURB
+     C                     Z-ADDGDPSDT    ZZBEG
+     C                     ENDIF
+     C*
+     C** ELSE if a previous record has been read adjust the Start date
+     C** for 'First Day Accruals'
+     C*
+     C                     ELSE
+     C           BKALDI    IFEQ 'N'
+     C                     ADD  1         ZZBEG
+     C                     ENDIF
+     C*
+     C**  Initialise accrual and Interest balances
+     C**      Accrued Interest to-Date; Posted plus not posted
+     C*
+     C           GDIPST    SUB  GDTRFI    WSINTP
+     C           GDAPST    SUB  GDCAPA    WSACCP
+     C           WSACCP    ADD  GDANOP    WSACIN
+     C                     ENDIF
+     C*
+     C**  Move Input to Output Fields
+     C*
+     C                     CLEARMCPCACD0
+     C                     MOVE GHBRCD    BRCA
+     C                     MOVE GHCYCD    CCY
+     C                     MOVE GHACCD    ACOD
+     C                     MOVE GHCUST    CNUM
+     C                     MOVE GHACSN    ACSQ
+     C                     MOVE GHPCCD    PRFC
+     C                     MOVE 'K'       GETP
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #P04   --- Subroutine to Process Accrual Details             *
+     C*                                                               *
+     C*  CALLED FROM: #P02                                            *
+     C*                                                               *
+     C*  CALLS: None                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #P04      BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#P04'    @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C**  Read Accrual Details for Account in Date Sequence
+     C*
+     C           ACCHDR    READEMCACDTL0                 81
+     C*
+     C**  Find Initial Diary Event Date
+     C*
+     C                     MOVE '*KEY   ' @OPTN
+     C                     EXSR #DIRYD
+     C*
+     C**  If EOF on MCACDTL0 setup Detail Fields from Header
+     C*
+     C           *IN81     IFEQ '1'
+     C           GDPSDT    ORGT WSEVDT
+     C                     CLEARMCACDTD0
+     C                     MOVE GHBRCD    GDBRCD
+     C                     MOVE GHCYCD    GDCYCD
+     C                     MOVE GHACCD    GDACCD
+     C                     MOVE GHCUST    GDCUST
+     C                     MOVE GHACSN    GDACSN
+     C                     MOVE GHPCCD    GDPCCD
+     C                     Z-ADD99999     WSPSDT
+     C                     MOVE '1'       *IN81
+     C                     ELSE
+     C                     Z-ADDGDPSDT    WSPSDT
+     C                     Z-ADDGDTDMV    WSTDMV
+     C                     Z-ADDGDTDAJ    WSTDAJ
+     C                     Z-ADDGDAPST    WSAPST
+     C                     Z-ADDGDIPST    WSIPST
+     C                     Z-ADDGDCAPA    WSCAPA
+     C                     Z-ADDGDTRFI    WSTRFI
+     C                     Z-ADDGDTDAC    WSTDAC
+     C                     ENDIF
+     C*
+     C**  DO Until EOF on MCACDTL0 (Process at least once)
+     C           *IN81     DOUEQ'1'
+     C*
+     C**  DO WHILE Posting Date is on or before the Diary Event Date
+     C           WSPSDT    DOWLEGIEVDT
+     C           *IN81     ANDNE'1'
+     C*
+     C**  DO WHILE Posting Date is on or after Base Rate Change Date
+     C           WSPSDT    DOWGEG0HIDT
+     C*
+     C**  Next Base Rate Change <= Posting Date <= Diary Event Date
+     C*
+     C**  Calculate Accrued Interest to Next Base Rate Change Date
+     C*
+     C                     Z-ADDG0HIDT    ZZEND
+     C                     EXSR #P05
+     C*
+     C**  Update Current Base Rate
+     C*
+     C                     Z-ADDG0CBSR    WSCBSR
+     C*
+     C**  Get Next Base Rate, and Rate Change Date
+     C*
+     C                     MOVE '*NEXT  ' @OPTN
+     C                     EXSR #BSHSD
+     C*
+     C                     ENDDO
+     C**  Posting Date < Next Base Rate Change Date and
+     C**  Posting Date <= Diary Event Date
+     C*
+     C**  Interest is now calculated to the Posting Date
+     C*
+     C                     Z-ADDWSPSDT    ZZEND
+     C*
+     C                     EXSR #P05
+     C*
+     C**  Update the GAP Accrual Record for the Posting details
+     C*
+     C                     Z-ADDWSPSDT    GDPSDT
+     C                     Z-ADDWSTDMV    GDTDMV
+     C                     Z-ADDWSTDAJ    GDTDAJ
+     C                     Z-ADDWSAPST    GDAPST
+     C                     Z-ADDWSIPST    GDIPST
+     C                     Z-ADDWSCAPA    GDCAPA
+     C                     Z-ADDWSTRFI    GDTRFI
+     C                     Z-ADDWSTDAC    GDTDAC
+     C                     EXSR #P06
+     C                     Z-ADDGDPSDT    GHLRDT
+     C                     UPDATMCACDTD0
+     C*
+     C**  If Diary Event date Equals Posting Date get next Diary Event
+     C*
+     C           WSPSDT    IFEQ GIEVDT
+     C                     MOVE '*NEXT  ' @OPTN
+     C                     EXSR #DIRYD
+     C                     ENDIF
+     C*
+     C**  Read Next Detail Record
+     C*
+     C           ACCHDR    READEMCACDTL0                 81
+     C*
+     C**  If EOF on MCACDTL0 setup Detail Fields from Header
+     C*
+     C           *IN81     IFEQ '1'
+     C           GDPSDT    ORGT WSEVDT
+     C                     CLEARMCACDTD0
+     C                     MOVE GHBRCD    GDBRCD
+     C                     MOVE GHCYCD    GDCYCD
+     C                     MOVE GHACCD    GDACCD
+     C                     MOVE GHCUST    GDCUST
+     C                     MOVE GHACSN    GDACSN
+     C                     MOVE GHPCCD    GDPCCD
+     C                     Z-ADD99999     WSPSDT
+     C                     MOVE '1'       *IN81
+     C                     ELSE
+     C                     Z-ADDGDPSDT    WSPSDT
+     C                     Z-ADDGDTDMV    WSTDMV
+     C                     Z-ADDGDTDAJ    WSTDAJ
+     C                     Z-ADDGDAPST    WSAPST
+     C                     Z-ADDGDIPST    WSIPST
+     C                     Z-ADDGDCAPA    WSCAPA
+     C                     Z-ADDGDTRFI    WSTRFI
+     C                     Z-ADDGDTDAC    WSTDAC
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C**  Diary Event Date < Posting Date
+     C*
+     C**  DO WHILE Posting Date is After Diary Event Date
+     C*
+     C           WSPSDT    DOWGTGIEVDT
+     C*
+     C**  DO WHILE Diary Event is on or after Next Rate Change Date
+     C*
+     C           GIEVDT    DOWGEG0HIDT
+     C           GHCURB    ANDNE*ZERO
+     C*
+     C**  Base Rate Change Date <= Diary Event Date < Posting Date
+     C*
+     C**  Calculate Accrued Interest to Next Base Rate Change Date
+     C*
+     C                     Z-ADDG0HIDT    ZZEND
+     C                     EXSR #P05
+     C*
+     C**  Update Current Base Rate
+     C*
+     C                     Z-ADDG0CBSR    WSCBSR
+     C*
+     C**  Get Next Base Rate, and Rate Change Date
+     C*
+     C                     MOVE '*NEXT  ' @OPTN
+     C                     EXSR #BSHSD
+     C*
+     C                     ENDDO
+     C*
+     C**  Diary Event Date < Next Base Rate Change Date and
+     C**  Diary Event Date < Posting Date
+     C*
+     C**  Create the GAP Accrual Record for the Diary Event
+     C*
+     C                     Z-ADDGIEVDT    GDPSDT
+     C                     Z-ADD*ZERO     GDTDMV
+     C                     Z-ADD*ZERO     GDTDAJ
+     C                     Z-ADD*ZERO     GDAPST
+     C                     Z-ADD*ZERO     GDIPST
+     C                     Z-ADD*ZERO     GDCAPA
+     C                     Z-ADD*ZERO     GDTRFI
+     C                     Z-ADD*ZERO     GDTDAC
+     C                     EXSR #P06
+     C*
+     C**  Only Write Accrual Detail Record if not all Zeroes
+     C*
+     C           WSACTP    IFNE *ZERO
+     C           GDTDAC    ORNE *ZERO
+     C           GDTRFI    ORNE *ZERO
+     C           GDCAPA    ORNE *ZERO
+     C           GDSOBM    ORNE *ZERO
+     C           GDSOBA    ORNE *ZERO
+     C                     Z-ADDGDPSDT    GHLRDT
+     C                     WRITEMCACDTD0
+     C                     ENDIF
+     C*
+     C**  Get Next Diary Event Date
+     C*
+     C                     MOVE '*NEXT  ' @OPTN
+     C                     EXSR #DIRYD
+     C*
+     C                     ENDDO
+     C**  Posting Date <= Diary Event Date
+     C*
+     C                     ENDDO
+     C**  EOF on MCACDTL0
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #P05   --- Subroutine to Calculate Accrued Interest          *
+     C*                                                               *
+     C*  CALLED FROM: #P04                                            *
+     C*                                                               *
+     C*  CALLS: ZINTDY, ZDINY                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #P05      BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#P05'    @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C***  Only Process if Balance is NOT ZERO, and End Date GT Start
+     C*
+     C           GHCURB    IFNE *ZERO
+     C           ZZEND     ANDGTZZBEG
+     C*
+     C***  Initialise Fields.
+     C*
+     C                     MOVE A6DICB    ZZCALC  1
+     C                     MOVE A6DICB    @@CALC  1
+     C*
+     C***  Find Number of Days in Period
+     C*
+     C                     EXSR ZINTDY
+     C*
+     C***  Find Number of Days in Year
+     C*
+     C                     EXSR ZDINY
+     C*
+     C***              Principal * No. of Days in Period * Rate
+     C***  Interest = ------------------------------------------
+     C***                     No. of Days in Year * 100
+     C*
+     C           ZZCALC    IFEQ '6'                                       163136
+     C           GHCURB    MULT INT6DY    WSTOP                           163136
+     C                     ELSE                                           163136
+      *                                                                   163136
+     C           GHCURB    MULT ZZINDY    WSTOP  309
+      *                                                                   163136
+     C                     END                                            163136
+      *                                                                   163136
+     C                     MULT WSCBSR    WSTOP
+     C*
+     C           @@DAYO    MULT 100       WSBOT   50
+     C           WSTOP     DIV  WSBOT     WSINT     H
+     C*
+     C**  Accumulate Interest and set next Start Date
+     C*
+     C                     ADD  WSINT     WSACIN
+     C*
+     C                     ENDIF
+     C*                                                                   158557
+     C**  Get details for Gap accrual reporting.                          158557
+     C*                                                                   158557
+     C           ZZEND     IFGT ZZBEG                                     158557
+     C                     MOVE GHBRCD    GPBRCA                          158557
+     C                     MOVE GHCUST    GPCUST                          158557
+     C                     MOVE GHCYCD    GPCURR                          158557
+     C                     MOVE GHACCD    GPACOD                          158557
+     C                     MOVE GHACSN    GPACSQ                          158557
+     C                     MOVE GHPCCD    GPPRFC                          158557
+     C                     Z-ADDGHCURB    GPBALN                          158557
+     C                     Z-ADDWSCBSR    GPRTSP                          158557
+     C                     Z-ADDZZBEG     GPFDAT                          158557
+     C                     Z-ADDZZEND     GPTDAT                          158557
+     C                     Z-ADDZZINDY    GPNDAY                          158557
+     C                     Z-ADDBJRDNB    GPRUND                          158557
+     C*                                                                   158557
+     C           GHCURB    IFNE 0                                         158557
+     C                     Z-ADDWSINT     GPACRL    H                     158557
+     C                     ELSE                                           158557
+     C                     Z-ADD0         GPACRL                          158557
+     C                     ENDIF                                          158557
+     C*                                                                   158557
+     C           *IN83     IFEQ '0'                                                           226963
+     C                     WRITEMCGAPAD0                                  158557
+     C                     END                                                                226963
+     C                     MOVE ' '       GPACIN                          158557
+     C                     ENDIF                                          158557
+     C*
+     C**  Set next Start Date for next period
+     C*
+     C                     Z-ADDZZEND     ZZBEG
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #P06   --- Update GAP Accrual Details                        *
+     C*                                                               *
+     C*  CALLED FROM: #P04                                            *
+     C*                                                               *
+     C*  CALLS: None                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #P06      BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#P06'    @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C**  Update output dates
+     C*
+     C                     Z-ADDGDPSDT    EVDT
+     C                     Z-ADDGDPSDT    ZZEND
+     C*
+     C**  Adjust Accrued Interest, if Bank is on 1st Day Accruals
+     C*
+     C           BKALDI    IFEQ 'N'
+     C                     ADD  1         ZZEND
+     C                     ENDIF
+     C*
+     C**  Update Accumulators for Movements & Interest
+     C*
+     C                     Z-ADDGDTDMV    GDSOBM
+     C*                                                                   124848
+     C           BKALDI    IFEQ 'N'                                       124848
+     C                     ADD  GDTDMV    GHCURB
+     C                     ENDIF                                          124848
+     C*                                                                   158557
+     C           GIACRL    IFEQ 'Y'                                       158557
+     C           GIEVDT    ANDEQGDPSDT                                    158557
+     C           GDTDAC    ORNE *ZERO                                     158557
+     C           GDPSDT    OREQ BKAPDT                                    158557
+     C           GDPSDT    OREQ BJEYD                                     158557
+     C                     MOVE 'Y'       GPACIN                          158557
+     C                     ENDIF                                          158557
+     C*
+     C                     EXSR #P05
+     C*                                                                   124848
+     C           BKALDI    IFNE 'N'                                       124848
+     C                     ADD  GDTDMV    GHCURB                          124848
+     C                     ENDIF                                          124848
+     C*
+     C**  Process an Accrual Profit Date
+     C*
+     C           GIACRL    IFEQ 'Y'
+     C           GIEVDT    ANDEQGDPSDT
+     C           GDTDAC    ORNE *ZERO
+     C                     EXSR #P07
+     C                     ENDIF
+     C*
+     C**  Update Interest and Accrued to date, for output
+     C*
+     C                     Z-ADDWSACCP    GDAPST
+     C                     Z-ADDWSINTP    GDIPST
+     C*
+     C**  Process a Capitalisation Date
+     C*
+     C           GICAPD    IFEQ 'Y'
+     C           GIEVDT    ANDEQGDPSDT
+     C           GDCAPA    ORNE *ZERO
+     C                     EXSR #P08
+     C                     ENDIF
+     C*
+     C**  Process a F/Ccy or B/Ccy Transfer Date
+     C*
+     C           GIFTFR    IFEQ 'Y'
+     C           GHCYCD    ANDNEBJCYCD
+     C           GIEVDT    ANDEQGDPSDT
+     C/COPY WNCPYSRC,MC0330C003
+     C           GIBTFR    OREQ 'Y'
+     C           GHCYCD    ANDEQBJCYCD
+     C           GIEVDT    ANDEQGDPSDT
+     C/COPY WNCPYSRC,MC0330C004
+     C                     EXSR #P09
+     C                     ENDIF
+     C*
+     C**  Update Start of Business Bal. & Current Bal. for Adjustments
+     C*
+     C                     Z-ADDGDTDAJ    GDSOBA
+     C                     ADD  GDTDAJ    GHCURB
+     C*
+     C**  Calculate 'Accr. Not Posted' as Accrued Int. less Accr.Posted
+     C*
+     C           WSACIN    SUB  GDAPST    GDANOP
+     C*
+     C**  Adjust Accrued interest for Capitalisation Posted
+     C*
+     C                     SUB  GDCAPA    WSACIN
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #P07   --- Process an Accrual Profit Date                    *
+     C*                                                               *
+     C*  CALLED FROM: #P06                                            *
+     C*                                                               *
+     C*  CALLS: None                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #P07      BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#P07'    @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C**  Calculate Accrued to date as Accrued Int. less Accrued so far
+     C*
+     C           WSACIN    SUB  WSACCP    WSACTP    H
+     C*
+     C**  Add Int. calc'ed to Accrual Posted, and Interest Posted
+     C*
+     C                     ADD  WSACTP    WSACCP
+     C                     ADD  WSACTP    WSINTP
+     C*
+     C**  Calculate Interest to Post and Posted today
+     C*
+     C           GDTDAC    IFEQ *ZERO                                     121629
+     C                     Z-ADDWSACCP    GDTDAC                          121629
+     C                     ELSE                                           121629
+     C           WSACCP    SUB  GDTDAC    WSACTP
+     C                     ADD  WSACTP    GDTDAC
+     C                     ENDIF                                          121629
+     C*
+     C**  Write Accrual Posting Entry
+     C*
+     C           WSACTP    IFNE *ZERO
+     C                     Z-ADDWSACTP    PAMT
+     C                     MOVE WFNAA     ACOD
+     C                     MOVE WAACSC    ACSC
+     C                     MOVE WAACTY    ATYP
+     C*
+     C                     MOVE *BLANK    PNAR
+     C                     MOVEL'GAP ACCR'PNAR
+     C           PNAR      CAT  'UAL OF':0PNAR
+     C           PNAR      CAT  'A/C':1   PNAR
+     C           PNAR      CAT  GHACCD:1  PNAR
+     C*
+     C                     WRITEMCPCACD0
+     C*
+     C**  Write Income Posting Entry
+     C*
+     C                     Z-SUBWSACTP    PAMT
+     C                     MOVE WFNIC     ACOD
+     C                     MOVE WIACSC    ACSC
+     C                     MOVE WIACTY    ATYP
+      *
+     C                     MOVE *BLANK    PNAR
+     C                     MOVEL'GAP INC/'PNAR
+     C           PNAR      CAT  'EXP ON':0PNAR
+     C           PNAR      CAT  'A/C':1   PNAR
+     C           PNAR      CAT  GHACCD:1  PNAR
+     C*
+     C                     WRITEMCPCACD0
+     C                     ENDIF
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #P08   --- Process a Capitalisation Date                     *
+     C*                                                               *
+     C*  CALLED FROM: P06                                             *
+     C*                                                               *
+     C*  CALLS: None                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #P08      BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#P08'    @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C**  Calculate Capitalisation to post as Accrual Posted less
+     C**  Capitalised Accrual
+     C*
+     C           GDAPST    SUB  GDCAPA    WSCPTP
+     C*
+     C**  Add 'Cap. to Post' to Capitalised Accrual, and Daily Adjusts.
+     C**  and subtract from running Accrual Adjustments
+     C*
+     C                     ADD  WSCPTP    GDCAPA
+     C                     ADD  WSCPTP    GDTDAJ
+     C*
+     C**  Zeroise the running accrual posted
+     C*
+     C                     Z-ADD*ZERO     WSACCP
+     C*
+     C**  Write Capitalisation To GAP A/c
+     C*
+     C           WSCPTP    IFNE *ZERO
+     C                     Z-ADDWSCPTP    PAMT
+     C                     MOVE GDACCD    ACOD
+     C                     MOVE WACSC     ACSC
+     C                     MOVE WACTY     ATYP
+     C*
+     C                     MOVE *BLANK    PNAR
+     C           'GAP CAPI'CAT  'TALISED' PNAR
+     C           PNAR      CAT  'FROM':1  PNAR
+     C           PNAR      CAT  WFNAA:1   PNAR
+     C*
+     C                     WRITEMCPCACD0
+     C*
+     C**  Write Capitalisation to Accrual A/c
+     C*
+     C                     Z-SUBWSCPTP    PAMT
+     C                     MOVE WFNAA     ACOD
+     C                     MOVE WAACSC    ACSC
+     C                     MOVE WAACTY    ATYP
+     C*
+     C                     MOVE *BLANK    PNAR
+     C                     MOVE *BLANK    PNAR
+     C           'GAP CAPI'CAT  'TALISED' PNAR
+     C           PNAR      CAT  'TO':1    PNAR
+     C           PNAR      CAT  GDACCD:1  PNAR
+     C*
+     C                     WRITEMCPCACD0
+     C                     ENDIF
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #P09   --- Process Transfer Income/Expense                   *
+     C*                                                               *
+     C*  CALLED FROM: P06                                             *
+     C*                                                               *
+     C*  CALLS: None                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #P09      BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#P09'    @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C**  Calculate transfer adjustment to post
+     C*
+     C           WSINTP    SUB  GDTRFI    WSTFTP
+     C*
+     C**  Update Transferred Interest
+     C*
+     C                     Z-ADDGDIPST    GDTRFI
+     C*
+     C**  Zeroise the running interest
+     C*
+     C                     Z-ADD*ZERO     WSINTP
+     C*
+     C**  If the transfer program requires to update the Current
+     C**  Accrual record, it is prevented and the updating is done here
+     C*
+     C           WSTFTP    IFNE *ZERO
+     C**  Update Todays's Adjustments.
+     C*
+     C           FTFGCF    IFNE 'D'                                                           226963
+     C           GHACLV    IFEQ '2'
+     C           GHACLV    OREQ '5'
+     C                     SUB  WSTFTP    GDTDAJ
+     C                     MOVE 'Y'       WSLOCK
+     C                     ELSE
+     C                     MOVE 'N'       WSLOCK
+     C                     ENDIF
+      *                                                                                       226963
+     C                     ELSE                                                               226963
+     C           *INU6     IFNE *ZERO                                                         226963
+     C                     SUB  WSTFTP    GDTDAJ                                              226963
+     C                     MOVE 'Y'       WSLOCK                                              226963
+     C                     ENDIF                                                              226963
+     C                     ENDIF                                                              226963
+     C*
+     C**  Build Output Data Structure
+     C*
+     C                     MOVE A8BICN    WSBICN
+     C                     MOVE WFNIC     ACOD
+     C                     MOVE WIACSC    ACSC
+     C                     MOVE WIACTY    ATYP
+     C                     Z-SUBWSTFTP    PAMT
+     C*
+     C**  Transfer F/ccy Income to Base Currency
+     C*
+     C***********          Z-ADDGHCURB    SVCURE 150                135120173160
+     C           GHCYCD    IFNE BJCYCD
+     C/COPY WNCPYSRC,MC0330C005
+     C*
+     C                     MOVE *BLANK    PNAR
+     C           'GAP TFR' CAT  'OF':1    PNAR
+     C           PNAR      CAT  GHCYCD:1  PNAR
+     C           PNAR      CAT  'INCOME':1PNAR
+     C           PNAR      CAT  '+EXPEN':0PNAR
+     C           PNAR      CAT  'SE':0    PNAR
+     C**  Update GAP Acruals Header                                       173160
+     C           PFKEY     KLIST                                          173160
+     C                     KFLD           GHACLV                          173160
+     C                     KFLD           GHBRCD                          173160
+     C                     KFLD           GHCYCD                          173160
+     C                     KFLD           GHACCD                          173160
+     C                     KFLD           GHCUST                          173160
+     C                     KFLD           GHACSN                          173160
+     C                     KFLD           GHPCCD                          173160
+     C                     UPDATMCACHRD0                                  173160
+     C*
+     C/COPY WNCPYSRC,MC0330C006
+     C                     CALL 'MC0410'                 90
+     C                     PARM           @RTCD   7
+     C                     PARM BJCYCD    WSCCY   3
+     C**********           PARM           WSBICN  60                                          CSD027
+     C                     PARM           WSBICN  6                                           CSD027
+     C                     PARM           WSLOCK  1
+     C                     PARM MCMOVE    DSFDY
+     C/COPY WNCPYSRC,MC0330C007
+     C           PFKEY     CHAINMCACHRL1             90                   173160
+     C*
+     C**  Else, Transfer Base Currency to P&L
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE *BLANK    PNAR
+     C           'GAP P&L' CAT  'TRANSF':1PNAR
+     C           PNAR      CAT  'ER OF':0 PNAR
+     C           PNAR      CAT  GHACCD:1  PNAR
+     C*
+     C                     CALL 'MC0420'                 91
+     C                     PARM           @RTCD   7
+     C**********           PARM           WSBICN  60                                          CSD027
+     C                     PARM           WSBICN  6                                           CSD027
+     C                     PARM           WSLOCK
+     C                     PARM MCMOVE    DSFDY
+     C*
+     C                     ENDIF
+     C***********          Z-ADDSVCURE    GHCURB                    135120173160
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     EXSR DBERR
+     C                     ENDIF
+     C*
+     C                     ENDIF
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #BRCHD --- Subroutine to process Change of Branch Code       *
+     C*                                                               *
+     C*  CALLED FROM: #P02                                            *
+     C*                                                               *
+     C*  CALLS: AOBRCHR0, DBERR                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BRCHD    BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#BRCHD'  @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C*   Access Branch information for Branch Internal Cust No.
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM GHBRCD    @BRCH   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           ************
+     C                     MOVEL@BRCH     DBKEY            * DBERR 05 *
+     C                     Z-ADD5         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+     C/COPY WNCPYSRC,MC0330C002
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #BSHSD --- Subroutine to process Historic Base Rates         *
+     C*                                                               *
+     C*  CALLED FROM: #P02                                            *
+     C*                                                               *
+     C*  CALLS: AOBSHSR0, DBERR                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BSHSD    BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#BSHSD'  @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C*   Access Historic Base Rate for Period Start Rate & Next Change
+     C*   Date
+     C                     MOVE ZZBEG     @INTD
+     C                     MOVE FTFNBR    @BSRN
+     C*
+     C                     CALL 'AOBSHSR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM           @OPTN   7
+     C                     PARM GHCYCD    @CCY    3
+     C                     PARM           @BSRN   20
+     C                     PARM           @INTD   50
+     C           SDBSHS    PARM SDBSHS    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBSHSPD'DBFILE
+     C                     MOVE @BSRN     WSBSRC  2
+     C                     MOVE ZZBEG     WSINTC  5
+     C           @CCY      CAT  WSBSRC:0  DBKEY            ************
+     C           DBKEY     CAT  WSINTC:1  DBKEY            * DBERR 06 *
+     C                     Z-ADD6         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #DIRYD --- Subroutine to process Diary Event dates           *
+     C*                                                               *
+     C*  CALLED FROM: #P02                                            *
+     C*                                                               *
+     C*  CALLS: NONE                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #DIRYD    BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#DIRYD'  @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C**  Access Diary Events
+     C*
+     C           @OPTN     IFEQ '*KEY   '
+     C* Set lower limits on Diary Event dates
+     C                     Z-ADDC         X       40
+     C           GDPSDT    LOKUPDED,X                20  20
+     C*
+     C           *IN20     IFEQ *ON
+     C           X         OCUR MCDIRY
+     C                     ELSE
+     C                     Z-ADD999       X
+     C           X         OCUR MCDIRY
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C* Get next Diary date
+     C           X         IFLT 999
+     C                     ADD  1         X
+     C           X         OCUR MCDIRY
+     C                     ENDIF
+     C                     ENDIF
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #CYCDD --- Subroutine to Process Change of Currency Code     *
+     C*                                                               *
+     C*  CALLED FROM: #P02                                            *
+     C*                                                               *
+     C*  CALLS: AOCURRR0, DBERR                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #CYCDD    BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#CYCDD'  @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C**   Access SDCURRPD for Default Interest Calculation Method
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM GHCYCD    @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD7         DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERR 07 *
+     C                     MOVEL@CCY      DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #ACCDD --- Subroutine to Process Change of Account Code      *
+     C*                                                               *
+     C*  CALLED FROM: #P02 - Main Processing                          *
+     C*                                                               *
+     C*  CALLS: AOACODR1, DBERR                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ACCDD    BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#ACCDD'  @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C**   Access SDACODPD for GAP Income & Accrual A/c Codes, and
+     C**   GAP Base Rate Code
+     C*
+     C                     CALL 'AOACODR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C**********           PARM WACOD     @ACOD   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM WACOD     @ACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD8         DBASE            ************
+     C                     MOVEL'SDACODPD'DBFILE           * DBERR 08 *
+     C                     MOVEL@ACOD     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #P01   --- Subroutine to Perform Initial Processing          *
+     C*                                                               *
+     C*  CALLED FROM: #P02 - Main Processing                          *
+     C*                                                               *
+     C*  CALLS: AOBANKR0, AOTRADR0, AOGELRR0, DBERR                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #P01      BEGSR
+      **  Set up subroutine stack name                                                        178906
+     C                     ADD  1         Q       50                                          178906
+     C                     MOVEL'#P01  '  @STK,Q                                              178906
+      *................................................................                       178906
+     C*
+     C*
+     C**  Define Key Lists
+     C*
+     C           ACCHDR    KLIST
+     C                     KFLD           GHBRCD
+     C                     KFLD           GHCYCD
+     C                     KFLD           GHACCD
+     C                     KFLD           GHCUST
+     C                     KFLD           GHACSN
+     C                     KFLD           GHPCCD
+     C*
+     C           ACCDTL    KLIST
+     C                     KFLD           GHBRCD
+     C                     KFLD           GHCYCD
+     C                     KFLD           GHACCD
+     C                     KFLD           GHCUST
+     C                     KFLD           GHACSN
+     C                     KFLD           GHPCCD
+     C                     KFLD           GDPSDT
+     C*
+     C**  Define Work fields
+     C*
+     C           *LIKE     DEFN GHBRCD    WSBRCD
+     C           *LIKE     DEFN GHCYCD    WSCYCD
+     C           *LIKE     DEFN GHACCD    WSACCD
+     C           *LIKE     DEFN G0CBSR    WSCBSR
+     C           *LIKE     DEFN GDPSDT    WSPSDT
+     C           *LIKE     DEFN GDTDMV    WSTDMV
+     C           *LIKE     DEFN GDTDAJ    WSTDAJ
+     C           *LIKE     DEFN GDAPST    WSACTP
+     C           *LIKE     DEFN GDAPST    WSAPST
+     C           *LIKE     DEFN GDAPST    WSACCP
+     C           *LIKE     DEFN GDIPST    WSIPST
+     C           *LIKE     DEFN GDIPST    WSINTP
+     C           *LIKE     DEFN GDCAPA    WSCAPA
+     C           *LIKE     DEFN GDCAPA    WSCPTP
+     C           *LIKE     DEFN GDTRFI    WSTRFI
+     C           *LIKE     DEFN GDTRFI    WSTFTP
+     C           *LIKE     DEFN GDANOP    WSACIN
+     C           *LIKE     DEFN GDANOP    WSINT
+     C           *LIKE     DEFN GIEVDT    WSEVDT
+     C           *LIKE     DEFN GDTDAC    WSTDAC
+     C*
+     C**  Define LDA Dtaara
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C**  Set up Fields for DB Error
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'MC0330  'DBPGM
+     C                     OUT  LDA
+     C*
+     C** Read Bank details for Run Date and Base Currency
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If record not found, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL@OPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Check System Date Format, DDMMYY (*IN98 off)
+      **                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+     C*
+     C** Set initial field Values
+     C*
+     C           BJRDNB    MULT 1000000   PDTM
+     C                     ADD  235959    PDTM
+     C*
+     C** Read Trade details for Spot Reval and Spot Trade A/c Codes
+     C*
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDTRAD    PARM SDTRAD    DSFDY
+     C*
+     C** If record not found, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDTRADPD'DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBERR 02 *
+     C                     MOVEL@OPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+     C*
+     C** Read General Ledger ICD for P&L A/c Code & Accrue Last Day Ind
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C** If record not found, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     MOVEL@OPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+     C*
+     C**  Access PCA Details File.
+     C*
+     C                     CALL 'AOPCACR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDPCAC    PARM SDPCAC    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDPCACPD'DBFILE           ************
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+     C*
+     C**********           MOVE FTFNAA    WFNAA   4                                           CGL029
+     C**********           MOVE FTFNIC    WFNIC   4                                           CGL029
+     C                     MOVE FTFNAA    WFNAA  10                                           CGL029
+     C                     MOVE FTFNIC    WFNIC  10                                           CGL029
+     C                     MOVE FTFNBR    WFNBR   2
+     C*
+     C**  Get Gap Accrual Account type and Account section
+     C*
+     C                     MOVE WFNAA     WACOD
+     C                     EXSR #ACCDD
+     C                     MOVE A5ACSC    WAACSC  2
+     C                     MOVE A5ACTY    WAACTY  1
+     C*
+     C**  Get Gap Income Account type and Account section
+     C*
+     C                     MOVE WFNIC     WACOD
+     C                     EXSR #ACCDD
+     C                     MOVE A5ACSC    WIACSC  2
+     C                     MOVE A5ACTY    WIACTY  1
+     C*
+     C** Load Diary Event Dates
+     C** Set End of Events
+     C                     Z-ADD999       C       40
+     C           C         OCUR MCDIRY
+     C                     Z-ADD99999     GIEVDT
+     C                     Z-ADD99999     DED,C
+     C                     SUB  1         C
+     C*
+     C           *HIVAL    SETGTMCDIRYL0
+     C*
+     C           C         OCUR MCDIRY
+     C                     READPMCDIRYL0                 15
+     C*
+     C**  Load Last Diary date unconditionally
+     C*
+     C           *IN15     IFEQ *OFF
+     C                     Z-ADDGIEVDT    DED,C
+     C                     Z-ADDGIEVDT    WSEVDT
+     C                     SUB  1         C
+     C           C         OCUR MCDIRY
+     C                     READPMCDIRYL0                 15
+     C*
+     C** If record not found, exit via DBERR subroutine
+     C*
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MCDIRYL0'DBFILE           ************
+     C                     Z-ADD9         DBASE            * DBERR 09 *
+     C                     MOVEL'Empty'   DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+     C*
+     C**  Load other Diary event dates
+     C*
+     C           C         DOWGT1
+     C           *IN15     ANDEQ*OFF
+     C           GIACRL    IFEQ 'Y'
+     C           GICAPD    OREQ 'Y'
+     C           GIFTFR    OREQ 'Y'
+     C           GIBTFR    OREQ 'Y'
+     C                     Z-ADDGIEVDT    DED,C
+     C                     SUB  1         C
+     C           C         OCUR MCDIRY
+     C                     ENDIF
+     C*
+     C                     READPMCDIRYL0                 15
+     C                     ENDDO
+     C*
+     C**  Set Index to First Existing diary event
+     C*
+     C                     ADD  1         C
+     C/COPY WNCPYSRC,MC0330C001
+      *................................................................                       178906
+      **  Unwind subroutine stack name                                                        178906
+     C                     MOVEA*BLANKS   @STK,Q                                              178906
+     C                     SUB  1         Q                                                   178906
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*  DBERR --- Subroutine to handle Data base errors                 *
+     C*                                                                  *
+     C*  CALLED FROM: After Data base error                              *
+     C*                                                                  *
+     C*  CALLS: *PSSR                                                    *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** Read database error details from LDA
+     C*
+     C                     IN   LDA
+     C*
+     C** Write database error details
+     C*
+     C                     OPEN MC0330AU
+     C                     WRITEMC0330A0
+     C                     WRITEMC0330A1
+     C                     CLOSEMC0330AU
+     C*
+     C** Set on database error indicators DUMP and exit program
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR                           ** DBERR **
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS        *
+     C*                                                                  *
+     C*  CALLED FROM: Abnormal Termination Processing, DBERR             *
+     C*                                                                  *
+     C*  CALLS: None                                                     *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C*
+     C********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZINTDYZ2
+     C/EJECT
+     C/COPY ZSRSRC,ZDINYZ1
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE9Z3
+     C/EJECT
+     C/COPY ZSRSRC,ZDAT10Z2                                               CTI002
+     C/EJECT                                                              CTI002
+**   CPY@
+(c) Finastra International Limited 2001
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

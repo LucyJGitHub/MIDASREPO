@@ -1,0 +1,69 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE CPYF COB Component')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Lending Module                                      */
+/*                                                                   */
+/*       LEC100610 - Midas LE CPYF COB Component                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD022968           Date 21Oct13              */
+/*                      MD022448 *CREATE   Date 18Sep13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD022968 - LEC06A 90015 Trailer difference in CLOAM         */
+/*                - Applied for MD022448                             */
+/*       MD022448 - Lending files becomes empty in some conditions   */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&FMFLE &TOFLE &MBROPT &FROMMBR &TOMBR +
+                          &FMTOPT)
+ 
+             DCL        VAR(&FMFLE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOFLE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBROPT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)
+ 
+             DCL        VAR(&FROMMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FMTOPT) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             RTVDTAARA  DTAARA(LEPDCL *ALL) RTNVAR(&LEPDCL)
+ 
+             IF         COND(%SUBSTRING(&LEPDCL 1 1) *EQ 'N') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CALL       PGM(CBC000610) PARM(&FMFLE &TOFLE &MBROPT &FROMMBR &TOMBR +
+                                         &FMTOPT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program LEC100610 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+             ENDPGM

@@ -1,0 +1,893 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BU Midas modules background update')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  STANDING DATA MODULE
+     F*                                                                  *
+     F*     TABTBMM - BACKGROUND UPDATE OF MMOD FILE                     *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01339             Date 06Jun92               *
+     F*                 S01319             Date 30OCT91               *
+     F*                    E21186             DATE 28JUL90               *E21186
+     F*                    S01216             DATE 18DEC90               *S01216
+     F*                    S01230             DATE 07/11/89              *S01230
+     F*                    S01229             DATE 19/10/89              *S01229
+     F*                    S01216             DATE 08/10/89              *S01216
+     F*                    E19716             DATE 03/10/89              *E19716
+     F*                    E17543             DATE 30/08/89              *E17543
+     F*                    E18275             DATE 25/05/89              *E18275
+     F*                    E17596             DATE 20/03/89              *E17596
+     F*                                                                  *
+     F********************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     S01339  - SYNDICATED LOANS MODULE IS REDUNDANT AT R10.
+     F*     S01319  - Remove redundant processing
+     F*     S01184  - INCORPORATE CONFIRMATION MATCHING                  *S01184
+     F*     E21186  - DEALING MODULE SHOULD NOT BE SWITCHED OFF IF MM
+     F*               IS NOT PRESENT BUT FX IS
+     F*     S01216  - 3 NEW FIELDS ADDED : RMFL, WNFL & MSEI             *S01216
+     F*     S01230  - STANDARDISE PROGRAM                                *S01230
+     F*     S01229  - SYNON FIELD NAME CHANGES                           *S01229
+     F*     S01216  - RECOMPILED FOR SYNON RELEASE 1 ENHANCEMENTS        *S01216
+     F*     E19716  - AMENDMENT MADE NOT TO SWITCH RETAIL OFF IF         *E19716
+     F*               INTEREST ON ACCOUNTS IS SWITCHED OFF.              *E19716
+     F*     E17543  - INCORRECT UPDATE OF FDDRSMPP - MODULES FM & AB     *E17543
+     F*     E18275  - AMENDMENT TO PUT AN 'N' IF MODULE NOT PRESENT      *E18275
+     F*     E17596  - RECOMPILED FOR NEW VERSION OF TABLETXL             *E17596
+     F********************************************************************
+     F*                                                                  *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*                                                                  *
+     F*       30      FILE ERROR                                         *
+     F*       32      CHAIN TABLETX FAILED/ERROR                         *
+     F*                                                                  *
+     F********************************************************************
+     FTABTB10 UF  E                    DISK
+     F                                              KCOMIT
+     FTABTB40 UF  E                    DISK                      A    UC
+     F                                              KCOMIT
+     FMMODF   UF  E                    DISK
+     F                                              KRECNO RCD
+     F                                              KCOMIT
+     F*FDDRSMLLUF  E           K        DISK                      A       S01319
+     F*****                                         KCOMIT                S01319
+     FTABLETA UF  E                    DISK
+     F                                              KCOMIT
+     FTABLETXLUF  E           K        DISK
+     F                                              KCOMIT
+      /EJECT                                                              S01230
+      /EJECT
+     E***ARRAY*FOR*MODULE*NAME                                            S01319
+     E*****               @NM     1   6 30                         E17543 S01319
+     E****                @NM     1   5 30                                E17543
+     E*
+     E***ARRAY*FOR*MODULE*IDENTIFER                                       S01319
+     E*****               @ID     1   6  2                         E17543 S01319
+     E****                @ID     1   5  2                                E17543
+     E*                                                                   S01230
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT
+     I*
+     I* RENAME RECORD ID ON HEADER FILE TO AVOID OVERWRITING
+     I*
+     ITABLETAF
+     I              RECT                            RECTA
+     I*
+     I*   MMOD DATA STRUCTURE CONTAINING MODULES INDICATORS
+     IMMOD       UDS                            256
+     I                                        1 256 MODS
+     I                                        1   1 SDGL
+     I                                        2   2 DLFL
+     I                                        3   3 RTFL
+     I                                        4   4 CLFL
+     I                                        5   5 STFL
+     I                                        6   6 BCFL
+     I                                        7   7 EMFL
+     I                                        8   8 FMFL
+     I                                        9   9 SRFL
+     I                                       10  10 LEFL
+     I                                       11  11 FDFL
+     I                                       12  12 CMFL
+     I                                       13  13 FXFL
+     I                                       14  14 MMFL
+     I                                       15  15 CNFL
+     I                                       16  16 RETF
+     I                                       18  18 MSWF
+     I                                       19  19 ABFL
+     I                                       20  20 CAFL
+     I                                       21  21 SEFL
+     I                                       22  22 RCFL
+     I                                       23  23 IAFL
+     I                                       25  25 SWDE
+     I                                       26  26 SWSM
+     I                                       27  27 SWCO
+     I                                       28  28 SWLN
+     I                                       29  29 SWLC
+     I                                       30  30 SWTR
+     I                                       31  31 SWMO
+     I                                       32  32 SWCN
+     I                                       33  33 TLDE
+     I                                       34  34 TLSM
+     I                                       35  35 TLCO
+     I                                       36  36 TLLN
+     I                                       37  37 TLLC
+     I                                       38  38 TLTR
+     I                                       39  39 TLTX
+     I                                       40  40 TLAR
+     I                                       41  41 CHDE
+     I                                       42  42 CHCO
+     I                                       43  43 CHLN
+     I                                       44  44 CHSM
+     I                                       45  45 CHLC
+     I                                       46  46 CHTR
+     I                                       47  47 CHTX
+     I                                       48  48 CHAT
+     I                                       49  49 GRFL
+     I                                       50  50 FFFL
+     I                                       51  51 MTFL
+     I                                       52  52 MTCO
+     I                                       53  53 MTDE
+     I                                       54  54 MTGE
+     I                                       55  55 MTLN
+     I                                       56  56 NMFL
+     I                                       57  57 FTFL
+     I                                       58  58 TKFL
+     I                                       60  60 CFFL                  S01184
+     I                                       63  63 RMFL                  S01216
+     I                                       66  66 WNFL                  S01216
+     I                                       74  74 MSEI                  S01216
+      *
+     IRUNDAT      DS                             13
+     I                                        1   2 @WDD
+     I                                        3   5 @WMMM
+     I                                        6   7 @WYY
+     IPSDS       SDS
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE
+     I                                      254 263 @USER
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     I*                                                                   S01230
+      /EJECT
+     C*
+     C           *ENTRY    PLIST
+      *
+     C                     PARM           WLCD    50       CHANGE DATE
+     C                     PARM           WTYLC   1        CHANGE TYPE
+     C                     PARM           WMTLX   1        MIDAS/TELEX
+     C                     PARM           WSWFT   1        SWIFT FT
+     C                     PARM           WSWST   1        SWIFT SEC TRD
+     C*********************PARM           WSWLE   1        SWIFT LEND     S01229
+     C                     PARM           WSWCL   1        SWIFT LEND     S01229
+     C*********************PARM           WSWCL   1        SWIFT SYLN     S01229
+     C                     PARM           WSWSL   1        SWIFT SYLN     S01229
+     C*********************PARM           WSWGL   1        SWIFT STMTS    S01229
+     C                     PARM           WSWSM   1        SWIFT STMTS    S01229
+     C                     PARM           WSWDL   1        SWIFT DEAL
+     C                     PARM           WSDGL   1        SD/GL
+     C                     PARM           WDLFX   1        DEALING/FX
+     C*********************PARM           WSYLN   1        SYND LNS       S01339
+     C                     PARM           WSYLN   1        CL (REDUNDANT) S01339
+     C*********************PARM           WEXPM   1        EXP MGMT       S01229
+     C                     PARM           WEXMG   1        EXP MGMT       S01229
+     C*********************PARM           WFMDL   1        FIN MODELLER   S01229
+     C                     PARM           WFNMO   1        FIN MODELLER   S01229
+     C*********************PARM           WSTAT   1        STAT RETURNS   S01229
+     C                     PARM           WSTRT   1        STAT RETURNS   S01229
+     C*********************PARM           WLEND   1        CUST LENDING   S01229
+     C                     PARM           WCLND   1        CUST LENDING   S01229
+     C                     PARM           WRETL   1        RETAIL
+     C                     PARM           WMSDL   1        SWIFT LINK
+     C*********************PARM           WSTRD   1        SEC TRD        S01229
+     C                     PARM           WSCTR   1        SEC TRD        S01229
+     C*********************PARM           WARCS   1        AUTO-RECS      S01229
+     C                     PARM           WAURC   1        AUTO-RECS      S01229
+     C                     PARM           WBOND   1        DRS BOND
+     C*********************PARM           WFD     1        DRS SD         S01229
+     C                     PARM           DRSD    1        DRS SD         S01229
+     C*********************PARM           WCM     1        DRS CONTROL    S01229
+     C                     PARM           DRCM    1        DRS CONTROL    S01229
+     C                     PARM           WFX     1        DRS FX
+     C                     PARM           WMM     1        DRS MM
+     C                     PARM           WAB     1        DRS ARBITRAGE
+     C                     PARM           WFT     1        FUNDS XFER
+     C                     PARM           WCA     1        DRS COMMON APS
+     C                     PARM           WFF     1        FUTURES & OPTS
+     C                     PARM           WMTCL   1        TELEX SYN LN
+     C                     PARM           WMTDL   1        TELEX DEALING
+     C                     PARM           WMTGL   1        TELEX STMTS
+     C                     PARM           WMTLE   1        TELEX LENDING
+     C                     PARM           WNM     1        NETWORK MIDAS
+     C                     PARM           WFAIS   1        FRA/IRS
+     C                     PARM           WDLMM   1        DEALING MM
+     C                     PARM           WIC     1        INTERNAL CONTS
+     C                     PARM           WTM     1        TREASURY MGMT
+     C*******              PARM           WRM     1        RISK MGMT      S01216
+     C                     PARM           WRMFL   1        RISK MGMT      S01216
+     C                     PARM           WTK     1        TESTKEY
+     C                     PARM           WMQ     1        MIDASQ
+     C                     PARM           WMA     1        MICROFICHE
+     C                     PARM           WIACS   1        INT ON A/CS
+     C*******              PARM           WWDPR   1        Window pS01212 S01216
+     C*******              PARM           WSWEI   1        Swift ExS01212 S01216
+     C                     PARM           WWNFL   1        WIN PRO        S01216
+     C                     PARM           WMSEI   1        SW EXT         S01216
+     C                     PARM           WCFFL   1        CONF MATCHING  S01184
+     C                     PARM           P0RTN   7        RETURN CODE
+     C*
+      /EJECT
+     C****************************************************************
+     C*
+     C*   M A I N L I N E   P R O G R A M
+     C*
+     C****************************************************************
+     C*
+     C                     READ TABTB10                  30NO RECORDS
+0080 C***  READ MMODF
+     C           *IN30     IFEQ '0'
+     C                     Z-ADD1         RCD     10
+     C           RCD       SETLLMMODFF
+     C                     READ MMODFF                   30
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C                     EXSR MODFLG
+     C                     Z-ADD10        RCDE
+     C                     UPDATTABTB10F               30
+     C  N30                UPDATMMODFF                 30
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C*
+     C* RETRIEVE OLD TRAILER FILE RECORD
+     C*
+     C           '01'      CHAINTABLETXF             32    CHAIN FAILED
+     C*
+     C* IF CHAIN TO FILE SUCCESSFUL
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* IF FIRST ACCESS TO THE FILE THEN GET HEADER RECORD
+     C*
+     C           NINS      ANDEQ0
+     C           NAMD      ANDEQ0
+     C           NDEL      ANDEQ0
+     C*
+     C                     READ TABLETAF                 32  EOF
+     C*
+     C* IF HEADER RECORD FOUND THEN SET PRINT INDICATOR AND UPDATE
+     C*
+     C           *IN32     IFEQ '0'
+     C                     ADD  1         INSC
+     C                     UPDATTABLETAF               32    ERROR
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* UPDATE AS APPROPRIATE THE NUMBER OF INSERTS,AMENDS OR DELETES
+     C* ON THE TRAILER FILE
+     C*
+     C                     ADD  AMD       NAMD
+     C                     ADD  INS       NINS
+     C*
+     C                     UPDATTABLETXF               32    ERROR
+     C*
+     C                     END
+     C*
+     C* CHECK FOR ANY ERRORS AND SET ERROR PARAMETER FOR RETURN TO
+     C* NEW FILE MAINTENANCE PROGRAM
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C                     END
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C                     COMIT
+     C                     ELSE
+     C                     ROLBK
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+      /EJECT
+     C********************************************************************
+     C*
+     C*  SUBROUTINE TO SET UP MODULE FLAGS ON TABTB10/MMOD FROM
+     C*  INCOMING PARMETERS
+     C*
+     C********************************************************************
+     C*
+     C           MODFLG    BEGSR
+     C*
+     C           WMTLX     IFEQ 'Y'                        MIDAS/TELEX
+     C                     MOVE 'Y'       MTFL
+     C                     BITON'1'       MODI5
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       MTFL                            E18275
+     C                     BITOF'1'       MODI5                           E18275
+     C                     END
+     C*
+     C           WSWFT     IFEQ 'Y'                        SWIFT FT
+     C                     MOVE 'Y'       SWMO
+     C                     BITON'6'       SWIM
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       SWMO                            E18275
+     C                     BITOF'6'       SWIM                            E18275
+     C                     END
+     C*
+     C           WSWST     IFEQ 'Y'                        SWIFT SEC TRD
+     C                     MOVE 'Y'       SWTR
+     C                     BITON'5'       SWIM
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       SWTR                            E18275
+     C                     BITOF'5'       SWIM                            E18275
+     C                     END
+     C*
+     C***********WSWLE     IFEQ 'Y'                        SWIFT LEND     S01229
+     C           WSWCL     IFEQ 'Y'                        SWIFT LEND     S01229
+     C                     MOVE 'Y'       SWLN                            E18275
+     C                     BITON'3'       SWIM                            E18275
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       SWLN                            E18275
+     C                     BITOF'3'       SWIM                            E18275
+     C                     END
+     C*
+     C***********WSWCL     IFEQ 'Y'                        SWIFT SYLN     S01229
+     C***********WSWSL*****IFEQ 'Y'                        SWIFT SYLS01229S01339
+     C*********************MOVE 'Y'       SWCO                            S01339
+     C*********************BITON'2'       SWIM                            S01339
+     C*********************ELSE                                     E18275S01339
+     C*********************MOVE 'N'       SWCO                      E18275S01339
+     C*********************BITOF'2'       SWIM                      E18275S01339
+     C*********************END                                            S01339
+     C*
+     C***********WSWGL     IFEQ 'Y'                        SWIFT STMTS    S01229
+     C           WSWSM     IFEQ 'Y'                        SWIFT STMTS    S01229
+     C                     MOVE 'Y'       SWSM
+     C                     BITON'1'       SWIM
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       SWSM                            E18275
+     C                     BITOF'1'       SWIM                            E18275
+     C                     END
+     C*
+     C**         WSWGL     IFEQ 'Y'                        SWIFT DEAL     E17543
+     C           WSWDL     IFEQ 'Y'                        SWIFT DEAL     E17543
+     C                     MOVE 'Y'       SWDE
+     C                     BITON'0'       SWIM
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       SWDE                            E18275
+     C                     BITOF'0'       SWIM                            E18275
+     C                     END
+     C*
+     C           WSDGL     IFEQ 'Y'                        SD/GL
+     C                     MOVE 'Y'       SDGL
+     C                     BITON'0'       MODI1
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       SDGL                            E18275
+     C                     BITOF'0'       MODI1                           E18275
+     C                     END
+     C*
+     C           WDLFX     IFEQ 'Y'                        DEALING/FX
+     C                     MOVE 'Y'       DLFL
+     C                     BITON'1'       MODI1
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       DLFL                            E18275
+     C                     BITOF'1'       MODI1                           E18275
+     C                     END
+     C*
+     C***********WSYLN*****IFEQ 'Y'                        SYND LNS       S01339
+     C*********************MOVE 'Y'       CLFL                            S01339
+     C*********************BITON'3'       MODI1                           S01339
+     C*********************ELSE                                     E18275S01339
+     C*********************MOVE 'N'       CLFL                      E18275S01339
+     C*********************BITOF'3'       MODI1                     E18275S01339
+     C*********************END                                            S01339
+     C*
+     C***********WEXPM     IFEQ 'Y'                        EXP MGMT       S01229
+     C           WEXMG     IFEQ 'Y'                        EXP MGMT       S01229
+     C                     MOVE 'Y'       EMFL
+     C                     BITON'6'       MODI1
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       EMFL                            E18275
+     C                     BITOF'6'       MODI1                           E18275
+     C                     END
+     C*
+     C**         WFMDL     IFEQ 'Y'                        FIN MODELLER   E17543
+     C**                   MOVE 'Y'       FMFL                            E17543
+     C**                   BITON'7'       MODI1                           E17543
+     C**                   ELSE                                    E18275 E17543
+     C**                   MOVE 'N'       FMFL                     E18275 E17543
+     C**                   BITOF'7'       MODI1                    E18275 E17543
+     C**                   END                                            E17543
+     C*
+     C***********WSTAT     IFEQ 'Y'                        STAT RETURNS   S01229
+     C           WSTRT     IFEQ 'Y'                        STAT RETURNS   S01229
+     C                     MOVE 'Y'       SRFL
+     C                     BITON'0'       MODI2
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       SRFL                            E18275
+     C                     BITOF'0'       MODI2                           E18275
+     C                     END
+     C*
+     C***********WLEND     IFEQ 'Y'                        CUST LENDING   S01229
+     C           WCLND     IFEQ 'Y'                        CUST LENDING   S01229
+     C                     MOVE 'Y'       LEFL
+     C                     BITON'1'       MODI2
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       LEFL                            E18275
+     C                     BITOF'1'       MODI2                           E18275
+     C                     END
+     C*
+     C           WRETL     IFEQ 'Y'                        RETAIL
+     C                     MOVE 'Y'       RETF
+     C                     BITON'7'       MODI2
+     C                     MOVE 'Y'       RTFL             RETAIL 1
+     C                     BITON'2'       MODI1
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       RETF                            E18275
+     C                     BITOF'7'       MODI2                           E18275
+     C                     MOVE 'N'       RTFL                            E18275
+     C                     BITOF'2'       MODI1                           E18275
+     C                     END
+     C*
+     C           WIACS     IFEQ 'Y'                        INTEREST/ACS
+     C*********************MOVE 'Y'       RETF                            E19716
+     C*********************BITON'7'       MODI2                           E19716
+     C*********************MOVE 'Y'       RTFL                            E19716
+     C*********************BITON'2'       MODI1                           E19716
+     C                     MOVE 'Y'       IAFL
+     C                     BITON'2'       MODI5
+     C                     ELSE                                           E18275
+     C*********************MOVE 'N'       RETF                     E18275 E19716
+     C*********************BITOF'7'       MODI2                    E18275 E19716
+     C*********************MOVE 'N'       RTFL                     E18275 E19716
+     C*********************BITOF'2'       MODI1                    E18275 E19716
+     C                     MOVE 'N'       IAFL                            E18275
+     C                     BITOF'2'       MODI5                           E18275
+     C                     END
+     C*
+     C           WMSDL     IFEQ 'Y'                        SWIFT LINK
+     C                     MOVE 'Y'       MSWF
+     C                     BITON'1'       MODI3
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       MSWF                            E18275
+     C                     BITOF'1'       MODI3                           E18275
+     C                     END
+     C*
+     C***********WSTRD     IFEQ 'Y'                        SEC TRD        S01229
+     C           WSCTR     IFEQ 'Y'                        SEC TRD        S01229
+     C                     MOVE 'Y'       SEFL
+     C                     BITON'4'       MODI3
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       SEFL                            E18275
+     C                     BITOF'4'       MODI3                           E18275
+     C                     END
+     C*
+     C***********WARCS     IFEQ 'Y'                        AUTO-RECS      S01229
+     C           WAURC     IFEQ 'Y'                        AUTO-RECS      S01229
+     C                     MOVE 'Y'       RCFL
+     C                     BITON'5'       MODI3
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       RCFL                            E18275
+     C                     BITOF'5'       MODI3                           E18275
+     C                     END
+     C*
+     C           WBOND     IFEQ 'Y'                        DRS BOND
+     C                     BITON'3'       MODI3
+     C                     ELSE                                           E18275
+     C                     BITOF'3'       MODI3                           E18275
+     C                     END
+      *
+     C           WCFFL     IFEQ 'Y'                        CONF MATCH     S01184
+     C                     MOVE 'Y'       CFFL                            S01184
+     C                     ELSE                                           S01184
+     C                     MOVE 'N'       CFFL                            S01184
+     C                     END                                            S01184
+     C*
+     C***********WFD       IFEQ 'Y'                        DRS SD         S01229
+     C***********DRSD      IFEQ 'Y'                        DRS SD   S01229S01319
+     C*
+     C*****      @ID,1     CHAINFDDRSMLL             65                   S01319
+     C*****                                                               S01319
+     C***CHECK IF NO RECORD PRESENT AND MODULE SELECTED                   S01319
+     C*****      *IN65     IFEQ '1'                                       S01319
+     C*****                                                               S01319
+     C***SET UP FILE FIELDS FOR UPDATE                                    S01319
+     C*****                MOVE 'AT'      DMRCID                          S01319
+     C*****                MOVE ' '       DMDLTF                          S01319
+     C*****                                                               S01319
+     C****SET UP DAY,MONTH AND YEAR FIELDS FROM RUN DATE ON FDICDRLL      S01319
+     C*****                MOVE @WDD      DMDLUP                          S01319
+     C*****                MOVE @WMMM     DMMLUP                          S01319
+     C*****                MOVE @WYY      DMYLUP                          S01319
+     C*****                TIME           DMTLUP                          S01319
+     C*****                MOVE 'I'       DMCHTP                          S01319
+     C*****                                                               S01319
+     C****SET UP LAST CHANGE DATE DIRECTLY FROM RUN DATE                  S01319
+     C*****                Z-ADDWLCD      DMLCD                           S01319
+     C*****                MOVEL@USER     DMLUID                          S01319
+     C*****                MOVE @ID,1     DMMOID                          S01319
+     C*****                MOVE @NM,1     DMMDNM                          S01319
+     C*****                                                               S01319
+     C***WRITE NEW RECORD                                                 S01319
+     C*****                WRITEFDDRSMP0                                  S01319
+     C*****                                                               S01319
+     C*****                END                                            S01319
+     C*
+     C*********************MOVE 'Y'       FDFL                            S01319
+     C*********************BITON'0'       MODI4                           S01319
+     C*********************END                                            S01319
+     C*
+     C***********WCM       IFEQ 'Y'                        DRS CONTROL    S01229
+     C***********DRCM      IFEQ 'Y'                        DRS CONTRS01229S01319
+     C*
+     C*****      @ID,2     CHAINFDDRSMLL             65                   S01319
+     C*****                                                               S01319
+     C***CHECK IF NO RECORD PRESENT AND MODULE SELECTED                   S01319
+     C*****      *IN65     IFEQ '1'                                       S01319
+     C*****                                                               S01319
+     C***SET UP FILE FIELDS FOR UPDATE                                    S01319
+     C*****                MOVE 'AT'      DMRCID                          S01319
+     C*****                MOVE ' '       DMDLTF                          S01319
+     C*****                                                               S01319
+     C****SET UP DAY,MONTH AND YEAR FIELDS FROM RUN DATE ON FDICDRLL      S01319
+     C*****                MOVE @WDD      DMDLUP                          S01319
+     C*****                MOVE @WMMM     DMMLUP                          S01319
+     C*****                MOVE @WYY      DMYLUP                          S01319
+     C*****                TIME           DMTLUP                          S01319
+     C*****                MOVE 'I'       DMCHTP                          S01319
+     C*****                                                               S01319
+     C****SET UP LAST CHANGE DATE DIRECTLY FROM RUN DATE                  S01319
+     C*****                Z-ADDWLCD      DMLCD                           S01319
+     C*****                MOVEL@USER     DMLUID                          S01319
+     C*****                MOVE @ID,2     DMMOID                          S01319
+     C*****                MOVE @NM,2     DMMDNM                          S01319
+     C*****                                                               S01319
+     C***WRITE NEW RECORD                                                 S01319
+     C*****                WRITEFDDRSMP0                                  S01319
+     C*****                                                               S01319
+     C*****                END                                            S01319
+     C*
+     C*********************MOVE 'Y'       CMFL                            S01319
+     C*********************BITON'1'       MODI4                           S01319
+     C*********************ELSE                                     E18275S01319
+     C*********************MOVE 'N'       CMFL                      E18275S01319
+     C*********************BITOF'1'       MODI4                     E18275S01319
+     C*********************END                                            S01319
+     C*
+     C***********WFX       IFEQ 'Y'                        DRS FX         S01319
+     C*
+     C*****      @ID,3     CHAINFDDRSMLL             65                   S01319
+     C*****                                                               S01319
+     C***CHECK IF NO RECORD PRESENT AND MODULE SELECTED                   S01319
+     C*****      *IN65     IFEQ '1'                                       S01319
+     C*****                                                               S01319
+     C***SET UP FILE FIELDS FOR UPDATE                                    S01319
+     C*****                MOVE 'AT'      DMRCID                          S01319
+     C*****                MOVE ' '       DMDLTF                          S01319
+     C*****                                                               S01319
+     C****SET UP DAY,MONTH AND YEAR FIELDS FROM RUN DATE ON FDICDRLL      S01319
+     C*****                MOVE @WDD      DMDLUP                          S01319
+     C*****                MOVE @WMMM     DMMLUP                          S01319
+     C*****                MOVE @WYY      DMYLUP                          S01319
+     C*****                TIME           DMTLUP                          S01319
+     C*****                MOVE 'I'       DMCHTP                          S01319
+     C*****                                                               S01319
+     C****SET UP LAST CHANGE DATE DIRECTLY FROM RUN DATE                  S01319
+     C*****                Z-ADDWLCD      DMLCD                           S01319
+     C*****                MOVEL@USER     DMLUID                          S01319
+     C*****                MOVE @ID,3     DMMOID                          S01319
+     C*****                MOVE @NM,3     DMMDNM                          S01319
+     C*****                                                               S01319
+     C***WRITE NEW RECORD                                                 S01319
+     C*****                WRITEFDDRSMP0                                  S01319
+     C*****                                                               S01319
+     C*****                END                                            S01319
+     C*
+     C*********************MOVE 'Y'       FXFL                            S01319
+     C*********************BITON'2'       MODI4                           S01319
+     C*********************ELSE                                     E18275S01319
+     C*********************MOVE 'N'       FXFL                      E18275S01319
+     C*********************BITOF'2'       MODI4                     E18275S01319
+     C*********************END                                            S01319
+     C*
+     C***********WMM       IFEQ 'Y'                        DRS MM         S01319
+     C*
+     C*****      @ID,4     CHAINFDDRSMLL             65                   S01319
+     C*****                                                               S01319
+     C***CHECK IF NO RECORD PRESENT AND MODULE SELECTED                   S01319
+     C*****      *IN65     IFEQ '1'                                       S01319
+     C*****                                                               S01319
+     C***SET UP FILE FIELDS FOR UPDATE                                    S01319
+     C*****                MOVE 'AT'      DMRCID                          S01319
+     C*****                MOVE ' '       DMDLTF                          S01319
+     C*****                                                               S01319
+     C****SET UP DAY,MONTH AND YEAR FIELDS FROM RUN DATE ON FDICDRLL      S01319
+     C*****                MOVE @WDD      DMDLUP                          S01319
+     C*****                MOVE @WMMM     DMMLUP                          S01319
+     C*****                MOVE @WYY      DMYLUP                          S01319
+     C*****                TIME           DMTLUP                          S01319
+     C*****                MOVE 'I'       DMCHTP                          S01319
+     C*****                                                               S01319
+     C****SET UP LAST CHANGE DATE DIRECTLY FROM RUN DATE                  S01319
+     C*****                Z-ADDWLCD      DMLCD                           S01319
+     C*****                MOVEL@USER     DMLUID                          S01319
+     C*****                MOVE @ID,4     DMMOID                          S01319
+     C*****                MOVE @NM,4     DMMDNM                          S01319
+     C*****                                                               S01319
+     C***WRITE NEW RECORD                                                 S01319
+     C*****                WRITEFDDRSMP0                                  S01319
+     C*****                                                               S01319
+     C*****                END                                            S01319
+     C*
+     C*********************MOVE 'Y'       MMFL                            S01319
+     C*********************BITON'3'       MODI4                           S01319
+     C*********************ELSE                                     E18275S01319
+     C*********************MOVE 'N'       MMFL                      E18275S01319
+     C*********************BITOF'3'       MODI4                     E18275S01319
+     C*********************END                                            S01319
+     C*
+     C***********WFMDL     IFEQ 'Y'                        FIN MODELLER   E17543
+     C***********WFNMO     IFEQ 'Y'                        FIN MODELS01229S01319
+     C*                                                             E17543S01319
+     C*****      @ID,5     CHAINFDDRSMLL             65             E17543S01319
+     C*****                                                         E17543S01319
+     C***CHECK IF NO RECORD PRESENT AND MODULE SELECTED             E17543S01319
+     C*****      *IN65     IFEQ '1'                                 E17543S01319
+     C*****                                                         E17543S01319
+     C***SET UP FILE FIELDS FOR UPDATE                              E17543S01319
+     C*****                MOVE 'AT'      DMRCID                    E17543S01319
+     C*****                MOVE ' '       DMDLTF                    E17543S01319
+     C*****                                                         E17543S01319
+     C****SET UP DAY,MONTH AND YEAR FIELDS FROM RUN DATE ON FDICDRLLE17543S01319
+     C*****                MOVE @WDD      DMDLUP                    E17543S01319
+     C*****                MOVE @WMMM     DMMLUP                    E17543S01319
+     C*****                MOVE @WYY      DMYLUP                    E17543S01319
+     C*****                TIME           DMTLUP                    E17543S01319
+     C*****                MOVE 'I'       DMCHTP                    E17543S01319
+     C*****                                                         E17543S01319
+     C****SET UP LAST CHANGE DATE DIRECTLY FROM RUN DATE            E17543S01319
+     C*****                Z-ADDWLCD      DMLCD                     E17543S01319
+     C*****                MOVEL@USER     DMLUID                    E17543S01319
+     C*****                MOVE @ID,5     DMMOID                    E17543S01319
+     C*****                MOVE @NM,5     DMMDNM                    E17543S01319
+     C*****                                                         E17543S01319
+     C***WRITE NEW RECORD                                           E17543S01319
+     C*****                WRITEFDDRSMP0                            E17543S01319
+     C*****                                                         E17543S01319
+     C*****                END                                      E17543S01319
+     C*********************MOVE 'Y'       FMFL                      E17543S01319
+     C*********************BITON'7'       MODI1                     E17543S01319
+     C*********************ELSE                                     E17543S01319
+     C*********************MOVE 'N'       FMFL                      E17543S01319
+     C*********************BITOF'7'       MODI1                     E17543S01319
+     C*********************END                                      E17543S01319
+     C*
+     C***********WAB       IFEQ 'Y'                        DRS ARBITRAGE  S01319
+     C*
+     C*****      @ID,6     CHAINFDDRSMLL             65             E17543S01319
+     C***        @ID,5     CHAINFDDRSMLL             65                   E17543
+     C*****                                                               S01319
+     C***CHECK IF NO RECORD PRESENT AND MODULE SELECTED                   S01319
+     C*****      *IN65     IFEQ '1'                                       S01319
+     C*****                                                               S01319
+     C***SET UP FILE FIELDS FOR UPDATE                                    S01319
+     C*****                MOVE 'AT'      DMRCID                          S01319
+     C*****                MOVE ' '       DMDLTF                          S01319
+     C*****                                                               S01319
+     C****SET UP DAY,MONTH AND YEAR FIELDS FROM RUN DATE ON FDICDRLL      S01319
+     C*****                MOVE @WDD      DMDLUP                          S01319
+     C*****                MOVE @WMMM     DMMLUP                          S01319
+     C*****                MOVE @WYY      DMYLUP                          S01319
+     C*****                TIME           DMTLUP                          S01319
+     C*****                MOVE 'I'       DMCHTP                          S01319
+     C*****                                                               S01319
+     C****SET UP LAST CHANGE DATE DIRECTLY FROM RUN DATE                  S01319
+     C*****                Z-ADDWLCD      DMLCD                           S01319
+     C*****                MOVEL@USER     DMLUID                          S01319
+     C*****                MOVE @ID,6     DMMOID                    E17543S01319
+     C*****                MOVE @NM,6     DMMDNM                    E17543S01319
+     C***                  MOVE @ID,5     DMMOID                          E17543
+     C***                  MOVE @NM,5     DMMDNM                          E17543
+     C*****                                                               S01319
+     C***WRITE NEW RECORD                                                 S01319
+     C*****                WRITEFDDRSMP0                                  S01319
+     C*****                                                               S01319
+     C*****                END                                            S01319
+     C*********************MOVE 'Y'       ABFL                            S01319
+     C*********************BITON'5'       MODI4                           S01319
+     C*********************ELSE                                     E18275S01319
+     C*********************MOVE 'N'       ABFL                      E18275S01319
+     C*********************BITOF'5'       MODI4                     E18275S01319
+     C*********************END                                            S01319
+     C*
+     C           WFT       IFEQ 'Y'                        FUNDS XFER
+     C                     MOVE 'Y'       FTFL
+     C                     BITON'4'       MODI4
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       FTFL                            E18275
+     C                     BITOF'4'       MODI4                           E18275
+     C                     END
+     C*
+     C***********WCA       IFEQ 'Y'                        DRS COMMON APS S01319
+     C*********************BITON'6'       MODI4                           S01319
+     C*********************ELSE                                     E18275S01319
+     C*********************BITOF'6'       MODI4                     E18275S01319
+     C*********************END                                            S01319
+     C*
+     C           WFF       IFEQ 'Y'                        FUTURES & OPTS
+     C                     MOVE 'Y'       FFFL
+     C                     BITON'0'       MODI5
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       FFFL                            E18275
+     C                     BITOF'0'       MODI5                           E18275
+     C                     END
+     C*
+     C           WMTCL     IFEQ 'Y'                        TELEX SYN LN
+     C                     MOVE 'Y'       MTCO
+     C                     BITON'3'       MODI5
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       MTCO                            E18275
+     C                     BITOF'3'       MODI5                           E18275
+     C                     END
+     C*
+     C           WMTDL     IFEQ 'Y'                        TELEX DEALING
+     C                     MOVE 'Y'       MTDE
+     C                     BITON'4'       MODI5
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       MTDE                            E18275
+     C                     BITOF'4'       MODI5                           E18275
+     C                     END
+     C*
+     C           WMTGL     IFEQ 'Y'                        TELEX STMTS
+     C                     MOVE 'Y'       MTGE
+     C                     BITON'5'       MODI5
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       MTGE                            E18275
+     C                     BITOF'5'       MODI5                           E18275
+     C                     END
+     C*
+     C           WMTLE     IFEQ 'Y'                        TELEX LENDING
+     C                     MOVE 'Y'       MTLN
+     C                     BITON'6'       MODI5
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       MTLN                            E18275
+     C                     BITOF'6'       MODI5                           E18275
+     C                     END
+     C*
+     C           WNM       IFEQ 'Y'                        NETWORK MIDAS
+     C                     MOVE 'Y'       NMFL
+     C                     BITON'7'       MODI5
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       NMFL                            E18275
+     C                     BITOF'7'       MODI5                           E18275
+     C                     END
+     C*
+     C***********WFAIS*****IFEQ 'Y'                        FRA/IRS        E18275
+     C                     OPEN TABTB40
+     C                     READ TABTB40F                 99
+     C*                                                                   E18275
+     C           WFAIS     IFEQ 'Y'                        FRA/IRS        E18275
+     C                     MOVE 'Y'       IRFRA
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       IRFRA                           E18275
+     C                     END                                            E18275
+     C*
+     C           *IN99     IFEQ '0'
+     C                     UPDATTABTB40F
+     C                     CLOSETABTB40
+     C                     ADD  1         AMD     20
+     C*
+     C                     ELSE
+     C                     MOVE 'D'       RECI
+     C                     MOVE '01'      RECT
+     C                     Z-ADD40        RCDE
+     C                     MOVE 'I'       CHTP
+     C                     WRITETABTB40F
+     C                     ADD  1         INS     20
+     C                     END
+     C*
+     C*********************END                                            E18275
+     C*
+     C           WDLFX     IFNE 'Y'                                       E21186
+     C           WDLMM     IFEQ 'Y'                        DEALING MM
+     C                     MOVE 'Y'       DLFL
+     C                     BITON'1'       MODI1
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       DLFL                            E18275
+     C                     BITOF'1'       MODI1                           E18275
+     C                     END
+     C                     END                                            E21186
+     C*
+     C           WIC       IFEQ 'Y'                        INTERNAL CONTS
+     C                     END
+     C*
+     C           WTM       IFEQ 'Y'                        TREASURY MGMT
+     C                     END
+     C*
+     C*******    WRM       IFEQ 'Y'                        RISK MGMT      S01216
+     C*******              END                                            S01216
+     C*
+     C           WRMFL     IFEQ 'Y'                        RISK MGMT      S01216
+     C                     MOVE 'Y'       RMFL                            S01216
+     C                     ELSE                                           S01216
+     C                     MOVE 'N'       RMFL                            S01216
+     C                     END                                            S01216
+     C*                                                                   S01216
+     C           WMSEI     IFEQ 'Y'                        SWIFT EXT IND  S01216
+     C                     MOVE 'Y'       MSEI                            S01216
+     C                     ELSE                                           S01216
+     C                     MOVE 'N'       MSEI                            S01216
+     C                     END                                            S01216
+     C*                                                                   S01216
+     C           WWNFL     IFEQ 'Y'                        WINDOW PROC    S01216
+     C                     MOVE 'Y'       WNFL                            S01216
+     C                     ELSE                                           S01216
+     C                     MOVE 'N'       WNFL                            S01216
+     C                     END                                            S01216
+     C*
+     C           WTK       IFEQ 'Y'                        TESTKEY
+     C                     MOVE 'Y'       TKFL
+     C                     ELSE                                           E18275
+     C                     MOVE 'N'       TKFL                            E18275
+     C                     END
+     C*
+     C           WMQ       IFEQ 'Y'                        MIDASQ
+     C                     END
+     C*
+     C           WMA       IFEQ 'Y'                        MICROFICHE
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      ***MODULE*NAMES*@NM                                                 S01319
+      *****DRS STANDING DATA                                              S01319
+      *****DRS CONTROL MODULE                                             S01319
+      *****DRS FOREIGN EXCHANGE                                           S01319
+      *****DRS MONEY MARKET                                               S01319
+      *****DRS FX/MM MODELLER                                      FM1100 S01319
+      *****DRS ARBITRAGE                                           E17543 S01319
+      ***MODULE*IDENTIFERS*@ID                                            S01319
+      *****FD                                                             S01319
+      *****CM                                                             S01319
+      *****FX                                                             S01319
+      *****MM                                                             S01319
+      *****FM                                                      FM1100 S01319
+      *****AB                                                      E17543 S01319
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

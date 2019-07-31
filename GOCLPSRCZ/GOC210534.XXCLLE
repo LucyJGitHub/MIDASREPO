@@ -1,0 +1,62 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                /*AR1089863*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC210534 - Midas GO Check for Unrepaired PDCL-LOAM         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. AR1089863*REDUNDANTDate 19Feb13              */
+/*       Prev Amend No. AR1080806 *CREATE  Date 01Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1089863 - Merging issues of 2.0 and 2.1 releases          */
+/*       AR1080806 - Unauthorised PDCL in Repair Queue               */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRTNCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+ 
+/** Check for unauthorised customer details */
+ 
+             CALL       PGM(GP004034) PARM(&PRTNCD &SYSID)
+ 
+             IF         COND(&PRTNCD = '       ') THEN(GOTO CMDLBL(END))
+ 
+             SNDMSG     MSG('Unrepaired PDCL-LOAM details exist. +
+                          Please re-open the input cycle.') +
+                          TOMSGQ(MOPERQ)
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDMSG     MSG('Program GOC210534 ended abnormally - job +
+                          cancelled') TOMSGQ(MOPERQ)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd. 2013')
+ 
+             ENDPGM

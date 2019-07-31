@@ -1,0 +1,212 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SD Exempt Threshold tape Extract Prompt -Dsp')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  DSPF/SD000792DF - Exemption Threshold Tape Extract Prompt    *
+      *                    - Display                                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2008                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG22798           Date 11Feb09               *
+      *                 CER048  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG22798 - place validation to action code in subfile        *
+      *       to flag appropriate branch                              *
+      *  CER048 - German Features - Taxes                             *
+      *                                                               *
+      *****************************************************************
+      *
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      PRINT(*LIBL/MPRINT)
+     A                                      INDARA
+     A                                      CA03(03 'Exit')
+      *
+      ** Message Subfile
+      *
+     A          R SD000792S0                SFL
+     A                                      SFLMSGRCD(24)
+     A            DDMSGKEY                  SFLMSGKEY
+     A            DDPGM                     SFLPGMQ
+      *
+     A          R SD000792C0                SFLCTL(SD000792S0)
+     A                                      SFLSIZ(0015)
+     A                                      SFLPAG(0001)
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A N85                                  SFLEND
+     A                                      OVERLAY
+     A            DDPGM                     SFLPGMQ
+      *
+      ** Footer Format F1
+      *
+     A          R SD000792T1
+      *
+     A N89N88                          23  2'F3=Exit   F6=Change +
+     A                                       branch   Enter      '
+     A                                      COLOR(BLU)
+      *
+      ** Footer Format F2
+      *
+     A          R SD000792T2
+      *
+     A  89N88                          23  2'F3=Exit   F12=Previous +
+     A                                       Screen   Enter           '
+     A                                      COLOR(BLU)
+      *
+      ** Footer Format F3  : F9 AUTHORISED
+      *
+     A          R SD000792T3
+      *
+      ** Start of change BUG22798
+     A N89 88 87                       23  2'1=Select Branch   +
+     A                                       F3=Exit   +
+     A***N89*88*87                       23  2'F3=Exit   +                                  BUG22798
+      ** End of change BUG22798
+     A                                       F9=All Branches   +
+     A                                       F12=Previous Screen   +
+     A                                       Enter'
+      *
+     A                                      COLOR(BLU)
+      *
+      ** Footer Format F4  : F9 NOT AUTHORIZED
+      *
+     A          R SD000792T4
+      *
+     A N89 88N87                       23  2'F3=Exit   F12=Previous +
+     A                                       Screen    Enter          '
+     A                                      COLOR(BLU)
+      *
+      ** Footer Format F5
+      *
+     A          R SD000792T5
+      *
+     A  89 88                          23  2'F3=Exit   F10=Confirm   +
+     A                                       F12=Previous Screen'
+     A                                      COLOR(BLU)
+      *
+      ** Screen 1 Format F1
+      *
+     A          R SD000792F1
+     A                                      TEXT('(c) Finastra +
+     A                                      International Banking +
+     A                                      Limited 2008')
+      *
+     A                                      CA06(06 'Change')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A            DDUSR         10A  O  1  2
+     A            DDPGM         10A  O  1 13
+     A            DDAGMRDT       7A  O  1 73
+     A            DDJOB         10A  O  2  2
+     A                                  2 25'Exemption Threshold Tape'
+     A                                      DSPATR(HI)
+     A                                  2 72TIME
+     A                                  5  2'Tape will be generated +
+     A                                      for Branch'
+      *
+     A            DDSBRCD        3A  O  5 37TEXT('Customer Branch')
+     A            DDSBRNM       30A  O  5 40TEXT('Branch name')
+     A                                  7 02'Do you wish to continue +
+     A                                      ? (Y/N)'
+      *
+     A            DDSCONT        1A  B  7 37TEXT('Continue ? Y/N')
+     A                                      OVRDTA
+     A  51                                  DSPATR(PC)
+     A  51                                  DSPATR(RI)
+     A N51                                  DSPATR(UL)
+      *
+      ** Screen 2 Format F2
+      *
+     A          R SD000792F2
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CA12(12 'Previous Screen')
+     A            DDUSR         10A  O  1  2
+     A            DDPGM         10A  O  1 13
+     A            DDAGMRDT       7A  O  1 73
+     A            DDJOB         10A  O  2  2
+     A                                  2 25'Exemption Threshold Tape'
+     A                                      DSPATR(HI)
+     A                                  2 72TIME
+     A                                  5  2'                +
+     A                                      Enter Branch Code'
+     A            DDS1BRCD       3A  B  5 37TEXT('Customer Branch')
+     A                                      OVRDTA
+     A  50                                  DSPATR(PC)
+     A  50                                  DSPATR(RI)
+     A N50                                  DSPATR(UL)
+      *
+      ** Screen 3 Format F3  or  F4
+      *
+     A          R SD000792S2                SFL
+      ** Start of change BUG22798
+     A  90                                  SFLNXTCHG
+      ** End of change BUG22798
+     A            DDSACTN        1A  B  8  6
+      ** Start of change BUG22798
+     A  47                                  DSPATR(RI)
+      ** End of change BUG22798
+     A  46                                  DSPATR(ND PR)
+     A N46                                  DSPATR(PC)
+     A            DDSSBRC        3A  O  8 17
+     A            DDSSBRN       30A  O  8 21
+      *
+     A          R SD000792C2                SFLCTL(SD000792S2)
+     A                                      SFLSIZ(0014)
+     A                                      SFLPAG(0013)
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A N89 88 87                            CF09(09 'All branches')
+     A  89 88                               CF10(10 'Confirm')
+     A                                      CA12(12 'Previous Screen')
+     A N42                                  SFLDSPCTL
+     A N42N43                               SFLDSP
+     A  42                                  SFLCLR
+     A N42                                  SFLEND(*MORE)
+     A            DDRRN1         4S 0H      SFLRCDNBR(CURSOR)
+     A            DDUSR         10A  O  1  2
+     A            DDPGM         10A  O  1 13
+     A            DDAGMRDT       7A  O  1 73
+     A            DDJOB         10A  O  2  2
+     A                                  2 25'Exemption Threshold Tape'
+     A                                      DSPATR(HI)
+     A                                  2 72TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  2'Header Branch :'
+     A            DDS2BRC        3A  O  4 18
+     A            DDS2BRN       30A  O  4 23
+     A  88 89                           3 60'CONFIRMATION'
+     A                                      DSPATR(HI RI BL)
+     A  88N89                           6  2'  Action'
+     A                                  6 14'Branch description'
+     A                                  7  2'                                  -
+     A                                                                     '
+     A                                      DSPATR(UL)
+      *
+      ** Screen 5 Format F5
+      *
+     A          R SD000792F5
+     A                                      PUTOVR
+     A            DDUSR         10A  O  1  2
+     A            DDPGM         10A  O  1 13
+     A            DDAGMRDT       7A  O  1 73
+     A            DDJOB         10A  O  2  2
+     A                                  2 25'Exemption Threshold Tape'
+     A                                      DSPATR(HI)
+     A                                  2 72TIME
+     A                                 10 12'PROCESS RUNNING WITH +
+     A                                      HEADING BRANCH'
+     A            DDWHBRCD       3A  O 10 48
+     A                                      DSPATR(HI)
+     A                                 10 52'FOR BRANCH'
+     A            DDWUBRCD       3A  O 10 63
+     A                                      DSPATR(HI)
+     A                                 10 66'.'

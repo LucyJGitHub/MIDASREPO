@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Facilities Bankruptcy Extract Program')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC000497 - Midas LE Facilities Bankruptcy Extract Program  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2018                     */
+/*                                                                   */
+/*       Last Amend No. CLE168 *CREATE     Date 26Feb18              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE168 - Allow Debit of Blocked Account                     */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2018')
+
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERR_DIE))
+
+             CHGJOB     SWS(00000000)
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             CLRPFM     FILE(LEFCBKPP)
+             CALL       PGM(LE000497)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+
+             GOTO       CMDLBL(ENDPGM)
+
+/** Process Errors */
+
+ERR_DIE:
+             SNDPGMMSG  MSG('Job terminated, database in error.') TOMSGQ(MOPERQ +
+                          MRUNQ)
+
+             CHGJOB     SWS(XXXXXX11)
+             GOTO       CMDLBL(ENDPGM)
+
+ERR_PGM:
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+
+             GOTO       CMDLBL(ENDPGM)
+/** Termination Process */
+
+ ENDPGM:
+
+             ENDPGM

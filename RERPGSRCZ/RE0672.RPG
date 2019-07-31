@@ -1,0 +1,1867 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Shadow post update')                          *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE0672 - Generation of Shadow Post file                      *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD048795           Date 30Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD035554           Date 25May16               *
+      *                 CGL165             Date 15Feb17               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CSC056             Date 06Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 BUG27920           Date 21Jul10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG27345           Date 30Mar10
+      *                 CAP205             Date 09Mar10               *
+      *                 BUG27212           Date 16Mar10               *
+      *                 CAP204             Date 15Feb10               *
+      *                 251794             Date 30Nov07               *
+      *                 CCB016             Date 12Sep07               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+     F*                 241166             Date 17Jul06               *
+      *                 CDL049             Date 11May06               *
+      *                 218411             Date 27Apr06               *
+      *                 233024             Date 26Apr06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CRE023             Date 29Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CRE020             Date 20Jan04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CDE005             Date 20Aug03               *
+      *                 CPK016             Date 03Sep03               *
+      *                 CRE009             Date 28Aug02               *
+      *                 189104             Date 08Mar01               *
+      *                 165899             Date 15Aug99               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 190995             Date 28Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+     F*                 184970             Date 02Apr01              *
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 155257             Date 16Feb99               *
+      *                 140697             Date 13Aug98               *
+     F*                    121808           DATE 23May98              *
+     F*                    118199           DATE 20FEB98              *
+     F*                    123275          Date 23SEP97               *
+     F*                    CCB002           DATE 04SEP96              *
+     F*                    S01408           DATE 01APR96                 *
+     F*                    CRT001           DATE 28FEB95                 *
+     F*                    080050           DATE 08MAR95                 *
+     F*                  052254             DATE  10JAN94                *
+     F*                  041693             DATE  05JAN93                *
+     F*                  045014             DATE  28NOV92                *
+     F*                  E29976 (BH3268)    DATE  21OCT91                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD048795  - Check if FX netting by chaining to FXNETML3. If  *
+      *            successful, DTYP, TNMR, NRTC and ORT1 are set to   *
+      *            their correct FX netting projection values.        *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSC056 - COB Restructure - Split of SCC0404 and SCC041       *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  BUG27920 - all account transfers should have movement type   *
+      *             'F' in GL0580 and RE0672                          *
+      *  BUG27345 -  posting date is zero if CRE009 is *ON            *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  BUG27212 - Future valued transaction postings are missing    *
+      *             after COB                                         *
+      *  CAP204 - Teller Related APIs - Account Transfer              *
+      *  251794 - Wrong TRYP when event is F1 or F3.                  *
+      *  CCB016 - CoB performance enhancement                         *
+      *           Do not access CLEAR in case it is empty.            *
+      *  CRE026 - Consumer Banking                                    *
+      *  241166 - Modify certain shadow posting narrative to include  *
+      *         - transaction ref if SdwPstIncTransRef = 'Y'          *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  218411 - TNMR of FT transaction is wrongly updated. Before   *
+      *           updating TNMR field, check if the first 6 positions *
+      *           of PNAR field is numeric and if field TNMR is blank.*
+      *           Applied fix 172413.                                 *
+      *         - TRYP of FT-RFT and FT-CCT transaction is wrongly    *
+      *           updated. For FT generated entry, move OTTP instead  *
+      *           of #PR13 (pos. 12-13 of PREF) into TRYP field.      *
+      *  233024 - Projected Closing Cleared balance not being updated *
+      *           correctly. Applied fix 218793.                      *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CRE023 - 2 O'clock Flag Upgrade to MidasPlus                 *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CRE020 - Midas Plus Online Printing of Advices (GE7)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CDE005 - Data Export - Reservation ID                           *
+      *  CPK016 - Release 5 packaging.  Clash of field names.         *
+      *  CRE009 - Projected Account Movements for RE accounts         *
+      *  189104 - Future FF retail settlement were not projected on   *
+      *           value date.  Fix is to include FF transactions in   *
+      *           the rebuilding of PF/RSACMTPD records.              *
+     F*  165899 - SE transactions do not update the projected account *
+     F*           movements                                           *
+      *  190995 - Correction of fix 123275. ELSE in the wrong place,  *
+      *           which results in the transaction type not being     *
+      *           picked up.                                          *
+     F*  184970 - If CDE001 on call DEWTTRIG after MEMOS update.      *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CGL007 - Account Postings Enquiry                            *
+     F*  155257 - Shadow balances incorrect when retail a/c no. is       *
+     F*           preserved (EMU Retail mapping). Ensure RE a/c no. on   *
+     F*           MEMOS matches that on ACCNT (for data correction and   *
+     F*           also as preventative maintenance).                     *
+     F*  140697 - CEU013 has extended APOSTPD but did not extend the     *
+     F*           datastructure POST3 in this program to match.          *
+     F*  121808 - Renamed CNUM and CCY fields of DEALS and CLOANCL for   *
+     F*           it not to overwrite the held values taken from ACCNTAB.*
+     F*           - Also lengthen POST2 so that program compiles (because*
+     F*             APOSTPD changed by CEU013)                           *
+     F*  118199 - TO AVOID SHADOW POSTING WITHOUT LOAN REF.              *
+     F*           UPDATE TNMR WITH TRNMN                                 *
+     F*  123275 - Customer Lending shadow posting narratives are in-  *
+     F*           consistent.  Bypass checking for existence of fee   *
+     F*           records.  Transaction type (TRYP) of PF/RSACMTPD    *
+     F*           gets its value from transaction type (TRAT) of PF/  *
+     F*           RPOSTPD.                                            *
+     F*           Fix patterned after 101114.                         *
+     F*  CCB002 - COB Performance Enhancements                           *
+     F*           Access now via access object                           *
+     F*           Change MEMOS processing to use access objects.         *
+     F*  S01408 - Addition of core hook RE0672FFP1                       *
+     F*           Addition of core hook RE0672CCP1                       *
+     F*           Addition of core hook RE0672CCP2                       *
+     F*  CRT001 - Retail Teller System.                                  *
+     F*     080050 - Narrative code on RSACMTPD changed to alpha (082742)*
+     F*     052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*              to 10,9                                             *
+     F*     041693 - Delivered as part of fix                            *
+     F*                                                                  *
+     F*     045014 - New program to generate shadow post files           *
+     F*              for todays actions                                  *
+     F*              Include SDMMODL1 processing                         *
+     F*                                                                  *
+     F*     E29976  -  (1) Commitment Fee posting should be checked      *
+     F*                against the Facility file not the Loans file.     *
+     F*                                                                  *
+     F*****************************************************************
+     F*                                                                  *
+     F*  Indicator usage                                                 *
+     F*  ~~~~~~~~~~~~~~~                                                 *
+     F*                                                                  *
+     F*  50    First cycle                                               *
+     F***51****MEMOS*file*full                                           *CCB002
+     F*  71    CLEAR is empty                                            *                    CCB016
+     F*  90    Chain fail                                                *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,RE0672FFP1                                           S01408
+     F*                                                                   S01408
+      *                                                                                       CRE023
+     F***REMEMLL0UF  E           K        DISK                      A    UC            CRE023 CSC056
+     FREMEMLL0IF  E           K        DISK                           UC                      CSC056
+     F                                              KINFSR SRFILE                             CRE023
+      ** Outward Clearing Balance File                                                        CRE023
+      *                                                                                       CRE023
+     F***ACCNTL0 IF  E           K        DISK                           UC                   CSC056
+     FACCNTAB IF  E                    DISK         KINFDS DSACNT                             CSC056
+     F                                              KINFSR SRFILE
+      *
+      *  Accounts file
+      *
+     FRESPODPDIF  E                    DISK                                                   CSC056
+     F                                              KINFSR SRFILE                             CSC056
+      ** Task-split driver file                                                               CSC056
+     FGLACCMPDO   E                    DISK                                                   CSC056
+     F                                              KINFSR SRFILE                             CSC056
+      ** Output file - RSACMTPD                                                               CSC056
+     FREMEMOPDO   E                    DISK                                                   CSC056
+     F            MEMOSMDF                          KRENAMEREMEMOF                            CSC056
+     F                                              KINFSR SRFILE                             CSC056
+      ** Output file - MEMOS                                                                  CSC056
+     FREOUTCPDO   E                    DISK                           UC                      CSC056
+     F            REMEMLD0                          KRENAMEREMEMLF                            CSC056
+     F                                              KINFSR SRFILE                             CSC056
+      ** Output file - REMEMLPD                                                               CSC056
+      *                                                                                       CSC056
+     F***RESPGE**IF**F     309 18AI     2 DISK                        UC  CRT001
+     F*RESPGE**IF**F     316 18AI     2 DISK                          UC  CRT001 121808
+     F***RESPGE**IF  F     329 18AI     2 DISK                  UC 121808 CGL007
+     F/COPY WNCPYSRC,RE0672F001
+     F***RESPGE* IF  F     331 18AI     2 DISK                           UC            CGL007 CGL029
+     F***RESPGE* IF  F     331 24AI     2 DISK                           UC          CGL029 BUG27212
+     FRESPGE  IF  F     620 24AI     2 DISK                           UC                    BUG27212
+     F/COPY WNCPYSRC,RE0672F002
+     F                                              KINFSR SRFILE
+      *
+      *  Retail Shadow Post Generated entries
+      *
+     FCLEAR   IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F            APOSTHHF                          KIGNORE
+     F            APOSTPDF                          KRENAMECLEARPDF
+     F            APOSTZZF                          KIGNORE
+      *
+      *  Items in Clearing
+      *
+     F****MEMOS***UF  F      40            DISK                         UCCCB002
+     F************                                  KINFSR SRFILE         CCB002
+     F/COPY WNCPYSRC,REH00129
+      *
+      *  Memos File
+      *
+     F***MEMOSL1 UF  E           K        DISK                      A    UC            CCB002 CSC056
+     FMEMOSL1 IF  E           K        DISK                           UC                      CSC056
+     F                                              KINFSR SRFILE         CCB002
+     F***RSACMTPDO   E                    DISK                           UC                   CSC056
+     F**********                                    KINFSR SRFILE                             CSC056
+      *****************************************************************                       CSC056
+      **Define*RSACMTPD*file*******************************************                       CSC056
+      *****************************************************************                       CSC056
+     F/COPY WNCPYSRC,REH00130
+     FDEALS   IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+      *
+      *  Deals file
+      *
+     FFXNETML3IF  E           K        DISK                                                 MD048795
+     F                                              KINFSR SRFILE                           MD048795
+      *                                                                                     MD048795
+      *  FX Nets File                                                                       MD048795
+      *                                                                                     MD048795
+     FCLOAN   IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+      *
+      *  Loans file
+      *
+     FTRADS   IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      *
+      *  Securities file
+      *
+     FTRANS   IF  E           K        DISK                           UC                      189104
+     F                                              KINFSR SRFILE                             189104
+      *                                                                                       189104
+      ** Futures and options file                                                             189104
+      *                                                                                       189104
+     F***GLATMIL0IF  E           K        DISK                           UC          CAP205 BUG27920
+      *****************************************************************              CAP205 BUG27920
+      ***Midas*GL*Account*Transfer*Manual*Input*File*******************              CAP205 BUG27920
+      *****************************************************************              CAP205 BUG27920
+     FSDNOSTL2IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F            @NOSTBH                           KRENAME@NOSTL2F
+      *
+      * Define Nostros file (Key customer account number)
+      *
+     FSDBANKL1IF  E           K        DISK         KINFSR SRFILE     UC
+     F            @BJREEF                           KRENAME@BANKL1F
+      *
+      * Define SDBANKL1 for working day & next working day
+      *
+     FSDMMODL1IF  E           K        DISK         KINFSR SRFILE     UC
+     F            @BGREC8                           KRENAME@MMODL1
+      *
+      * Define SDMMODL1 for modules present
+      *
+     FRESPOAPDO   E                    DISK         KINFSR SRFILE     UC                      CSC056
+     FRE0672AUO   E                    PRINTER      KINFSR SRFILE     UC
+      *
+      * Define RE0672AU - Report number of records read
+      *
+     F/EJECT
+      *
+      *  Copyright table
+      *
+     E                    CPY@    1   1 80
+      *
+      *  Error texts
+      *
+     E                    ERR@    1   3 80
+      *
+      *  Subroutine stack
+      *
+     E                    @STK       20 10
+      *                                                                                       CAP205
+      ** Other variables                                                                      CAP205
+      *                                                                                       CAP205
+     E                    WAEVNT 18  47  4                                                    CAP205
+     E/COPY ZSRSRC,ZHOLE                                                                      CAP205
+     E/EJECT
+      *
+      *  Redefine RRNM on ACCNTABF
+      *
+     IACCNTABF
+     I              RRNM                            ACRRNM
+     IMEMOSMDF                                                            CCB002
+     I              RECI                            MERECI                CCB002
+      *
+      *  Redefine BRCA on DEALS, CLOAN
+      *
+     IDEALSDBF
+     I              CNUM                            WCNUM                 121808
+     I              BRCA                            TRBRCA
+     IDEALSDCF
+     I              CNUM                            WCNUM                 121808
+     I              BRCA                            TRBRCA
+     I              CCY                             WCCY                  121808
+     IDEALSDDF
+     I              CNUM                            WCNUM                 121808
+     I              BRCA                            TRBRCA
+     I              CCY                             WCCY                  121808
+     IDEALSDEF
+     I              BRCA                            TRBRCA
+     I              CCY                             WCCY                  121808
+     IDEALSDGF
+     I              CNUM                            WCNUM                 121808
+     I              BRCA                            TRBRCA
+     ICLOANCLF
+     I              CNUM                            WCNUM                 121808
+     I              BRCA                            TRBRCA
+     I              CCY                             WCCY                  121808
+     ITRADSDF                                                                                 CPK016
+     I              CRSK                            TDCRSK                                    CPK016
+      *
+      *  Internal definition of MEMO as header/detail definition
+      *
+     IRESPGE  NS
+     I                                        1 256 POST1
+     I                                      115 116 WZZ09                 251794
+     I**************************************257 309 POST2                 CRT001
+     I************************************* 257 316 POST2                 CRT001 121808
+     I***********                           257 329 POST2          121808 CGL007
+     I/COPY WNCPYSRC,RE0672I002
+     I                                      257 331 POST2                 CGL007
+     I                                      332 351 WACKY                                     CAP205
+     I                                      338 339 WDTYP                                     CAP205
+     I                                      340 340 WDATC                                     CAP205
+     I                                      343 344 WTMP3                                     CAP205
+     I                                      345 345 WTMP1                                     CAP205
+     I                                      346 347 WAMTC                                     CAP205
+     I                                      600 620 OTRF                                    BUG27212
+     I/COPY WNCPYSRC,RE0672I003
+      ***********                                                         CCB002
+      ***Internal definition of MEMO as header/detail definition          CCB002
+      ***not*the*same                                                     CCB002
+      ***********                                                         CCB002
+     I*MEMOS***NS                                                         CCB002
+     I***********                             1   1 MERECI                CCB002
+      *
+     E/EJECT
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *  Definition of Posting record
+      *
+     I***POST3*****E*DSAPOSTPD*********************309                    CRT001
+     I*POST3****E*DSAPOSTPD                     316                CRT001 140697
+     I/COPY WNCPYSRC,RE0672I004
+     IPOST3     E DSAPOSTPD                                               140697
+     I/COPY WNCPYSRC,RE0672I005
+     I                                        1 256 POST1
+     I**************************************257 309 POST2                 CRT001
+     I**************************************257 316 POST2                 CRT001 120818
+     I***********                           257 329 POST2          120818 CGL007
+     I/COPY WNCPYSRC,RE0672I006
+     I                                      257 331 POST2                 CGL007
+      ***********                                                         CCB002
+      ***Definition of Memos layout (defined due to RECI in APOSTPD)      CCB002
+      ***********                                                         CCB002
+     I*MEMDTA****  DS                             40                      CCB002
+     I***********                             1   1 MERECI                CCB002
+     I***********                             2  160MELDBL                CCB002
+     I***********                            17  310MECLBL                CCB002
+     I***********                         P  37  380MEINLU                CCB002
+     I***********                         P  39  400MEBNLU                CCB002
+      *
+     I/COPY WNCPYSRC,RE0672I001
+      *                                                                                       CRE023
+     IDSFDY     E DSDSFDY                                                                     CRE023
+      *                                                                                       CRE023
+      ** Short Data Structure for Access Programs                                             CRE023
+      *                                                                                       CRE023
+     ISCSARD    E DSSCSARDPD                                                                  CRE023
+      *                                                                                       CRE023
+      ** External Data Structure for Switchable Features                                      CRE023
+      *                                                                                       CRE023
+     ILDA         DS                            256                                           CRE023
+     I                                      134 141 DBFIL1                                    CRE023
+     I                                      142 170 DBKEY1                                    CRE023
+     I                                      181 1830DBASE                                     CRE023
+      *                                                                                       CRE023
+      ** Local Data Area                                                                      CRE023
+      *                                                                                       CRE023
+      *  Program data structure
+      *
+     IDSPGM     ESDSY2PGDSP
+      *
+      *  Send message data structure
+      *
+     IDBDTA       DS
+     I                                        1  10 DBPGM
+     I                                       11  20 DBFILE
+     I                                       21  50 DBKEY
+     I                                       51  550DBERNB
+     I                                       56 135 DBNARR
+     I                                      136 145 DBSTK
+     I                                      146 175 DBPREF                045014
+      ***********                                                         CCB002
+      **Read*in*file size from RESTAT                                     CCB002
+      ***********                                                         CCB002
+     I*RESTAT****  DS                            256                      CCB002
+     I***********                             1   60#FLSZ                 CCB002
+      *
+      * Redefinition of PNAR - posting narrative
+      *
+     IPNARRD      DS                         30
+     I                                        1   6 TRNMA
+     I                                        1   60TRNMN
+     I                                       11  30 PNRL20
+     I                                        7  11 FCLTYA                E29976
+     I                                       12  12 FCLTYB                E29976
+     I                                       15  16 ADDNAR                                    241166
+      *
+      * Definition of key to RESPGE
+      *
+     I***K#ACC**     DS                         18                                            CGL029
+     IK#ACC       DS                         24                                               CGL029
+     I                                        1   3 SPBRCA
+     I**********                              4   90SPCNUM                                    CSD027
+     I                                        4   9 SPCNUM                                    CSD027
+     I                                       10  12 SPCCY
+     I**********                             13  160SPACOD                                    CGL029
+     I**********                             17  180SPACSQ                                    CGL029
+     I                                       13  220SPACOD                                    CGL029
+     I                                       23  240SPACSQ                                    CGL029
+      *
+      *  Input parameters data structure from FT0005
+      *
+     IC#CNTL      DS                            256
+     I                                        1   1 C#PDTI
+     I                                        2   3 C#CCYI
+     I                                        4   4 C#GLUI
+     I                                        5   5 C#TPCI
+      *
+     I            DS                                                      184970
+     I**********                              1   60W#CNUM                             184970 CSD027
+     I                                        1   6 W#CNUM                                    CSD027
+     I                                        7   9 W#CCY                 184970
+     I**********                             10  130W#ACOD                             184970 CGL029
+     I**********                             14  150W#ACSQ                             184970 CGL029
+     I**********                             16  18 W#BRCA                             184970 CGL029
+     I**********                              1  18 W#ACID                             184970 CGL029
+     I                                       10  190W#ACOD                                    CGL029
+     I                                       20  210W#ACSQ                                    CGL029
+     I                                       22  24 W#BRCA                                    CGL029
+     I                                        1  24 W#ACID                                    CGL029
+      ** Other variables                                                                      CAP205
+     I/COPY ZSRSRC,ZHOLI                                                                      CAP205
+     I/COPY ZSRSRC,ZHOLDS                                                                     CAP205
+      *
+     ISVAL1       DS                            200                                           241166
+     I                                        1   1 SVAL11                                    241166
+      ** DS for AOSVALR0                                                                      241166
+      *                                                                                       241166
+     I              'SdwPstIncTransRef   'C         SVALKK                                    241166
+     I/COPY WNCPYSRC,REH00131
+     IDSACNT      DS                                                                          CSC056
+     I                                    B 397 4000DSRRN                                     CSC056
+     I/EJECT
+      *
+      *  Entry parameter list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      * Process all retail accounts
+      *
+     C                     EXSR SRRETL
+      *
+      *  Process close down and report
+      *
+     C                     EXSR SRLR
+     C                     MOVEL'1'       *INLR
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRETL   : Process Retail accounts                           *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : SRPOST  - Read thru postings & crt RSACMT recs    *
+      *             SRMEMS  - Update MEMOS record                     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRRETL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRRETL'  @STK,Q
+      *
+      *  Read all records on ACCNT
+      *
+     C/COPY WNCPYSRC,REH00043
+     C********** *LOVAL    SETLLACCNTABF                                             BUG27212 CSC056
+     C           SPSRRN    SETLLACCNTABF                                                      CSC056
+     C/COPY WNCPYSRC,REH00044
+     C                     READ ACCNTABF                 90
+     C/COPY WNCPYSRC,REH00132
+     C           *IN90     DOWEQ'0'
+     C           DSRRN     ANDLESPERRN                                                        CSC056
+     C/COPY WNCPYSRC,REH00045
+      *
+      *  Add 1 to number of accounts read
+      *
+     C**********           ADD  1         F1AREC                                              CSC056
+     C                     ADD  1         SPAREC                                              CSC056
+      *
+      *  If a retail account and open process
+      *  Note deleted accounts have records on MEMOS
+      *
+     C           ATYP      IFEQ 'R'
+      *
+      *  Add 1 to number of retail accounts read
+      *
+     C**********           ADD  1         F1RREC                                              CSC056
+     C                     ADD  1         SPRREC                                              CSC056
+      *
+      *  Check if a nostro account
+      *
+     C/COPY WNCPYSRC,REH00046
+     C**********           MOVEL*BLANKS   ##NOS   1                                           CSC056
+     C********** K#NOS2    KLIST                                                              CSC056
+     C**********           KFLD           A7CUST                                              CSC056
+     C**********           KFLD           A7CYCD                                              CSC056
+     C**********           KFLD           A7ACCD                                              CSC056
+     C**********           KFLD           A7ACSN                                              CSC056
+     C**********           KFLD           A7BRCD                                              CSC056
+      *
+     C**********           MOVELCNUM      A7CUST                                              CSC056
+     C**********           MOVELCCY       A7CYCD                                              CSC056
+     C**********           MOVELACOD      A7ACCD                                              CSC056
+     C**********           Z-ADDACSQ      A7ACSN                                              CSC056
+     C**********           MOVELBRCA      A7BRCD                                              CSC056
+      *
+     C********** K#NOS2    CHAIN@NOSTL2F             90                                       CSC056
+      *****************************************************************                       CSC056
+      **If*nostro*found*then*set*up*flag*******************************                       CSC056
+      *****************************************************************                       CSC056
+     C********** *IN90     IFEQ '0'                                                           CSC056
+     C**********           MOVEL'Y'       ##NOS                                               CSC056
+     C**********           END                                                                CSC056
+     C/COPY WNCPYSRC,REH00047
+      ***********                                                         CCB002
+      ***Set*up*balances from ACCNT information                           CCB002
+      ***********                                                         CCB002
+     C***********          MOVEL*BLANKS   MEMDTA                          CCB002
+     C           *LIKE     DEFN LDBLN     MELDBL                          CCB002
+     C           *LIKE     DEFN CLBLN     MECLBL                          CCB002
+     C                     Z-ADDLDBL      MELDBL
+     C                     Z-ADDCLBL      MECLBL
+     C***********          Z-ADD0         MEINLU                          CCB002
+     C***********          Z-ADD0         MEBNLU                          CCB002
+     C/COPY WNCPYSRC,RE0672C003
+      *
+      *  Process available postings
+      *
+     C                     EXSR SRPOST
+      *
+      *  Update MEMOS record
+      *
+     C                     EXSR SRMEMS
+      *
+     C                     END
+      *
+      *  Read another record from ACCNT
+      *
+     C                     READ ACCNTABF                 90
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXRETL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPOST   : Read through postings and create RSACMT records   *
+      *                                                               *
+      *  CALLED BY: SRRETL   - Process Retail accounts                *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *             SRRSAC  - Write records RSACMTPD                  *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPOST    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPOST'  @STK,Q
+      *
+      *  Read through Shadow post entries
+      *
+     C                     MOVELBRCA      SPBRCA
+     C**********           Z-ADDCNUM      SPCNUM                                              CSD027
+     C                     MOVE CNUM      SPCNUM                                              CSD027
+     C                     MOVELCCY       SPCCY
+     C                     Z-ADDACOD      SPACOD
+     C                     Z-ADDACSQ      SPACSQ
+     C                     Z-ADDACNO      SPACNO 100                      155257
+      *
+     C           K#ACC     SETLLRESPGE                   90
+      *
+      *  If records - read them all and create RSACMT records
+      *
+     C           *IN90     IFEQ '1'
+      *
+     C           K#ACC     READERESPGE                   90
+     C           *IN90     DOWEQ'0'
+      *
+      *  Sign posting amount
+      *
+     C           DRCR      IFEQ 0
+     C                     Z-ADDPSTA      W#AMT  150
+     C                     ELSE
+     C                     Z-SUBPSTA      W#AMT
+     C                     END
+      *
+      *  Set W#FTOV depending on source of posting
+      *
+     C                     MOVEL*BLANKS   W#FTOV  1
+     C           GETP      IFEQ 'G'
+     C                     MOVEL##FTOV    W#FTOV
+     C                     END
+      *
+      *  Update balances depending on value date
+      *
+      *  If value date is today or less then alter both balances
+      *
+     C           VALD      IFLE BJRDNB
+     C                     ADD  W#AMT     MELDBL
+     C                     ADD  W#AMT     MECLBL
+     C                     ELSE
+      *
+      *  If posting date is today or less then alter ledger balance
+      *  or if FT override is in effect
+      *
+     C           PSTD      IFLE BJRDNB
+     C           W#FTOV    OREQ 'Y'
+     C                     ADD  W#AMT     MELDBL
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,REH00048
+     C                     MOVELCNUM      A7CUST                                              CSC056
+     C                     MOVELCCY       A7CYCD                                              CSC056
+     C                     MOVELACOD      A7ACCD                                              CSC056
+     C                     Z-ADDACSQ      A7ACSN                                              CSC056
+     C                     MOVELBRCA      A7BRCD                                              CSC056
+      *                                                                                       CSC056
+     C           K#NOS2    CHAIN@NOSTL2F             90                                       CSC056
+      *
+      * If not a nostro create RSACMT records
+      *
+     C           ##NOS     IFNE 'Y'
+     C           *IN90     ANDEQ*ON                                                           CSC056
+     C/COPY WNCPYSRC,RE0672C004
+     C                     EXSR SRRSAC
+     C                     END
+      *
+     C           K#ACC     READERESPGE                   90
+      *
+     C                     END
+     C                     END
+      *
+      *  Read through Items in Clearing
+      *
+     C           K#ACC1    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+      *
+     C           *IN71     IFEQ '0'                                                           CCB016
+      *                                                                                       CCB016
+     C           K#ACC1    SETLLCLEARPDF                 90
+      *
+      *  If records - read them all do not create RSAC records
+      *  as processes read CLEARPD for information
+      *
+     C           *IN90     IFEQ '1'
+      *
+     C           K#ACC1    READECLEARPDF                 90
+     C           *IN90     DOWEQ'0'
+      *
+      *  Sign posting amount
+      *
+     C           DRCR      IFEQ 0
+     C                     Z-ADDPSTA      W#AMT  150
+     C                     ELSE
+     C                     Z-SUBPSTA      W#AMT
+     C                     END
+      *
+      *  Update Cleared balance depending on value date
+      *
+     C           VALD      IFLE BJRDNB
+     C                     ADD  W#AMT     MECLBL
+     C                     END
+      *
+     C           K#ACC1    READECLEARPDF                 90
+      *
+     C                     END
+     C                     END
+      *
+     C                     END                                                                CCB016
+      *                                                                                       CCB016
+      *  Unwind subroutine stack name
+      *
+     C           EXPOST    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMEMS   : Update MEMOS record                               *
+      *                                                               *
+      *  CALLED BY: SRRETL   - Process Retail accounts                *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRMEMS    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRMEMS'  @STK,Q
+      ***********                                                         CCB002
+      ***Check*that relative record number is within range                CCB002
+      ***********                                                         CCB002
+     C***********#FLSZ     IFLT ACRRNM                                    CCB002
+     C***********          MOVEL'1'       *INU6                           CCB002
+     C***********          MOVEL'1'       *IN51                           CCB002
+     C***********          GOTO EXMEMS                                    CCB002
+     C***********          END                                            CCB002
+      *
+      *  Add 1 to number of memos records updated
+      *
+     C**********           ADD  1         F1MREC                                              CSC056
+     C                     ADD  1         SPMREC                                              CSC056
+      ***********                                                         CCB002
+      ***Update*header record of MEMOS                                    CCB002
+      ***********                                                         CCB002
+     C***********ACRRNM    CHAINMEMOS                90                   CCB002
+     C************IN90     IFEQ '1'                                       CCB002
+     C***********MERECI    ORNE ' '                                       CCB002
+     C***********          MOVELK#ACC     W0PREF                          CCB002
+     C***********          MOVEL'MEMOS   'W0FILE                          CCB002
+     C***********          MOVELRRNM      W0KEY                           CCB002
+     C***********          Z-ADD1         W0ERNB                          CCB002
+     C***********          MOVELERR@,3    W0NARR                          CCB002
+     C***********          EXSR SRERR                                     CCB002
+     C***********          END                                            CCB002
+      ***********                                                         CCB002
+     C***********          MOVEL'D'       MERECI                          CCB002
+      ***********                                                         CCB002
+     C***********          EXCPTUPDDET                                    CCB002
+      *                                                                   CCB002
+     C           K#RETL    KLIST                                          CCB002
+     C                     KFLD           CNUM                            CCB002
+     C                     KFLD           CCY                             CCB002
+     C                     KFLD           ACOD                            CCB002
+     C                     KFLD           ACSQ                            CCB002
+     C                     KFLD           BRCA                            CCB002
+      *                                                                   CCB002
+     C           K#RETL    CHAINMEMOSMDF             90                   CCB002
+      *                                                                   CCB002
+      * Data export for CCRM - Limits                                     184970
+      *                                                                   184970
+     C           CDE001    IFEQ 'Y'                                       184970
+      *                                                                   184970
+     C           *IN90     IFEQ '0'                                       184970
+     C           MELDBL    ANDNELDBLN                                     184970
+     C           *IN90     OREQ '0'                                       184970
+     C           MECLBL    ANDNECLBLN                                     184970
+     C           *IN90     OREQ '1'                                       184970
+     C                     MOVELCNUM      W#CNUM                          184970
+     C                     MOVELCCY       W#CCY                           184970
+     C                     MOVELACOD      W#ACOD                          184970
+     C                     MOVELACSQ      W#ACSQ                          184970
+     C                     MOVELBRCA      W#BRCA                          184970
+     C                     MOVELW#ACID    T#TREF                          184970
+     C                     CALL 'DEWTTRIG'                                184970
+     C**********           PARM           T#TREF 20                                    184970 CGL029
+     C                     PARM           T#TREF 26                                           CGL029
+     C                     PARM 'ACCT'    T#TCAT  4                       184970
+     C                     PARM *BLANKS   T#RSRV 10                       CDE005
+     C                     COMIT                                          184970
+     C                     ENDIF                                          184970
+      *                                                                   184970
+     C                     ENDIF                                          184970
+      *                                                                   184970
+     C                     Z-ADDMELDBL    LDBLN                           CCB002
+     C                     Z-ADDMECLBL    CLBLN                           CCB002
+     C                     MOVE 'D'       MERECI                          CCB002
+     C                     Z-ADDSPACNO    ACNO                            155257
+      *                                                                   CCB002
+     C/COPY WNCPYSRC,REH00133
+     C********** *IN90     IFEQ *OFF                                                   CCB002 CSC056
+     C**********           UPDATMEMOSMDF                                               CCB002 CSC056
+     C**********           ELSE                                                        CCB002 CSC056
+     C**********           WRITEMEMOSMDF                                               CCB002 CSC056
+     C**********           ENDIF                                                       CCB002 CSC056
+     C/COPY WNCPYSRC,RE0672C005
+     C                     MOVE 'D'       RECI                                                CSC056
+     C                     WRITEREMEMOF                                                       CSC056
+      *                                                                                       CRE023
+      ** Update detail record of REMEMLL0                                                     CRE023
+      *                                                                                       CRE023
+     C           CRE023    IFEQ 'Y'                                                           CRE023
+      *                                                                                       CRE023
+     C           ACNO      CHAINREMEMLL0             90                                       CRE023
+     C                     MOVE 'L'       GRECI                                               CRE023
+     C                     MOVELACNO      GACNO                                               CRE023
+     C                     Z-ADD0         GPAMT                                               CRE023
+     C                     Z-ADD0         GTAMT                                               CRE023
+     C/COPY WNCPYSRC,REH00134
+     C********** *IN90     IFEQ *ON                                                    CRE023 CSC056
+     C**********           WRITEREMEMLD0                                               CRE023 CSC056
+     C**********           ELSE                                                        CRE023 CSC056
+     C**********           UPDATREMEMLD0                                               CRE023 CSC056
+     C**********           ENDIF                                                       CRE023 CSC056
+     C/COPY WNCPYSRC,REH00135
+     C                     WRITEREMEMLF                                                       CSC056
+      *                                                                                       CRE023
+     C                     ENDIF                                                              CRE023
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMEMS    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRSAC   : Write record to RSACMTPD                          *
+      *                                                               *
+      *  CALLED BY: SRPOST - Process movement records                 *
+      *                                                               *
+      *  CALLS    : SRTRYP  - Obtain transaction type information     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRRSAC    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRRSAC'  @STK,Q
+      *
+      *  Add 1 to number of RSACMTPD records written
+      *
+     C**********           ADD  1         F1SREC                                              CSC056
+     C                     ADD  1         SPSREC                                              CSC056
+      *
+      *  Set up fields other than TRYP
+      *
+     C                     CLEARRSACMTPO
+     C/COPY WNCPYSRC,RE0672C006
+     C**********           Z-ADDCNUM      CUSN                                                CSD027
+     C                     MOVE CNUM      CUSN                                                CSD027
+     C                     MOVELCCY       CCYD
+     C                     Z-ADDACOD      ACDE
+     C                     Z-ADDACSQ      ASNC
+     C                     MOVELSPBRCA    BRCA
+      *
+      * Posting date never before today
+      *
+     C********** CRE009    IFNE 'Y'                                                  CRE009 BUG27345
+      *
+     C           PSTD      IFLT BJRDNB
+     C                     Z-ADDBJRDNB    PTDT
+     C                     ELSE
+     C                     Z-ADDPSTD      PTDT
+     C                     END
+      *
+     C**********           ELSE                                                      CRE009 BUG27345
+     C           CRE009    IFEQ 'Y'                                                         BUG27345
+     C           VALD      IFGE BJRDNB                                    CRE009
+     C                     Z-ADDVALD      PSTD                            CRE009
+     C                     Z-ADDVALD      PTDT                                              BUG27345
+     C                     ENDIF                                          CRE009
+     C                     ENDIF                                          CRE009
+     C                     Z-ADDVALD      VUDT
+      *
+      * If funds transfer use PREF
+      *
+     C           GETP      IFEQ 'G'
+     C                     MOVELPREF      FUND
+     C                     ELSE
+     C                     MOVE DLREF     #REF    7
+     C                     MOVEL#REF      TNMR
+     C                     MOVEL#REF      #REFA   6
+     C                     MOVEL#REF      #REFN   60
+     C                     END
+      *                                                                                       CAP204
+     C           GETP      IFEQ 'L'                                                           CAP204
+     C           CAP204    ANDEQ'Y'                                                         BUG27212
+     C                     MOVELOTRF      OTR1                                                CAP204
+     C                     ENDIF                                                              CAP204
+      *
+     C******************   Z-ADD0         NRTC                            080050
+     C                     MOVE *BLANK    NRTC                            080050
+     C                     MOVELPNAR      NRTD
+     C                     MOVELPNAR      PNARRD
+      *                                                                                       CRE020
+     C           CRE020    IFEQ 'Y'                                                           CRE020
+     C                     MOVELGETP      GNARR   2                                           CRE020
+     C                     MOVE GNARR     NRTD                                                CRE020
+     C                     ENDIF                                                              CRE020
+      *                                                                                       CRE020
+     C                     TESTN          TRNMA      40                                       218411
+     C           *IN40     IFEQ '1'                                                           218411
+     C           TNMR      ANDEQ*BLANKS                                                       218411
+     C                     MOVELTRNMN     TNMR                            118199
+     C                     ENDIF                                                              218411
+      *
+     C                     Z-ADDCHQN      CQNR
+      *
+     C                     Z-ADDPSTA      MVAM
+     C                     Z-ADDDRCR      DORC
+      *
+      *  Obtain Transaction Type information
+      *
+     C                     EXSR SRTRYP
+      *                                                                                       CAP205
+      *  Obtain Module and Movement Type if CAP205 is switched on                             CAP205
+      *                                                                                       CAP205
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     EXSR SRMTYP                                                        CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Write a new record
+      *
+     C                     WRITERSACMTPO
+     C           TRSNAR    IFEQ 'Y'                                                           241166
+     C                     MOVE *BLANKS   ADDNAR                                              241166
+     C                     ENDIF                                                              241166
+     C/COPY WNCPYSRC,RE0672C007
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXRSAC    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTRYP   : Extract Transaction Reference                     *
+      *                                                               *
+      *  CALLED BY: SRRSAC  - Write RSACMTPD records                  *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRTRYP    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRTRYP'  @STK,Q
+      *
+      *  Process dealing generated entry
+      *
+     C           GETP      IFEQ 'D'
+      *
+      *  Extract information from DEAL
+      *
+     C           #REFN     CHAINDEALS                90
+     C           *IN90     IFEQ '1'
+     C           TRNMN     CHAINDEALS                90
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+     C                     MOVELDTYP      TRYP
+     C                     ELSE
+      * Not a Deal, Might be FX net if OTTP='NT' and chain is correct                       MD048795
+     C           OTTP      IFEQ 'NT'                                                        MD048795
+     C                     MOVE *BLANKS   NETREF 19                                         MD048795
+     C                     MOVEL'DL#'     NETREF                                            MD048795
+     C                     MOVE SWCR      NETREF                                            MD048795
+     C           NETREF    CHAINFXNETML3             90                                     MD048795
+      * If record found in FXNETML3 then it is an FXNET.                                    MD048795
+     C           *IN90     IFEQ '0'                                                         MD048795
+     C                     MOVEL'NT'      TRYP                                              MD048795
+     C                     MOVE '00'      NRTC                                              MD048795
+     C                     MOVE '000000'  TNMR                                              MD048795
+     C                     MOVELNETREF    OTR1                                              MD048795
+     C                     ELSE                                                             MD048795
+     C                     MOVEL'DL'      TRYP                                              MD048795
+     C                     ENDIF                                                            MD048795
+     C* OTTP is Not NT, default to DL                                                       MD048795
+     C                     ELSE                                                             MD048795
+     C                     MOVEL'DL'      TRYP
+     C                     ENDIF                                                            MD048795
+     C                     END
+      *
+     C                     ELSE                                                               CAP204
+      *                                                                                       CAP204
+     C           GETP      IFEQ 'L'                                                           CAP204
+     C           CAP204    ANDEQ'Y'                                                         BUG27212
+     C                     MOVEL'ZT'      TRYP                                                CAP204
+     C                     ENDIF                                                              CAP204
+      *                                                                                       CAP204
+     C                     END
+      *
+      *  Process Customer Lending generated entry
+      *
+     C           GETP      IFEQ 'U'
+      *                                                            E29976 123275
+      ***If*the*posting*reference*contains*a*Facility*number*then  E29976 123275
+      ***write*'FE'*as*the*transaction*will*relate*to*settlement*ofE29976 123275
+      ***a*commitment*fee*otherwise*access*the*loans*file********* E29976 123275
+      *                                                            E29976 123275
+     C*************        TESTN          FCLTYA     90            E29976 123275
+     C************IN90     IFEQ '1'                                E29976 123275
+     C***********FCLTYB    ANDEQ*BLANKS                            E29976 123275
+     C***********          MOVEL'FE'      TRYP                     E29976 123275
+     C**********           ELSE                                           123275              190995
+     C*                                                                   123275
+     C** Check if posting is for fees                                     123275
+     C*                                                                   123275
+     C                     MOVELTRAT      TYPE    2                       123275
+     C           WZZ09     IFEQ 'F1'                                      251794
+     C           WZZ09     OREQ 'F3'                                      251794
+     C                     MOVELWZZ09     TYPE                            251794
+     C                     ENDIF                                          251794
+     C           TYPE      IFEQ 'F1'                                      123275
+     C           TYPE      OREQ 'F3'                                      123275
+     C                     MOVE TYPE      TRYP                            123275
+     C                     ELSE                                                               190995
+      *
+      *  Extract information from CLOAN
+      *
+      *
+     C           K#LOAN    KLIST
+     C                     KFLD           LNRF
+     C                     KFLD           RCDT
+      *
+     C**********           Z-ADD#REFN     LNRF                                                CLE148
+     C                     MOVEL#REFA     LNRF                                                CLE148
+     C                     MOVEL'A'       RCDT
+      *
+     C           K#LOAN    CHAINCLOANCLF             90
+     C           *IN90     IFEQ '1'
+     C**********           Z-ADDTRNMN     LNRF                                                CLE148
+     C                     MOVELTRNMA     LNRF                                                CLE148
+     C           K#LOAN    CHAINCLOANCLF             90
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+     C                     MOVELLTYP      TRYP
+     C                     ELSE
+     C                     MOVEL'LN'      TRYP
+     C                     END
+      *
+     C                     END
+      *                                                                                       241166
+      * Add transaction type for loan movements                                               241166
+     C           TRSNAR    IFEQ 'Y'                                                           241166
+     C                     MOVELTRYP      ADDNAR                                              241166
+     C                     ENDIF                                                              241166
+     C/COPY WNCPYSRC,RE0672C001
+     C                     END                                            E29976
+     C/COPY WNCPYSRC,RE0672C002
+      *                                                                                       189104
+      **  Futures and Options generated entry                                                 189104
+      *                                                                                       189104
+     C           GETP      IFEQ 'F'                                                           189104
+     C                     MOVE DLREF     REFR    60                                          189104
+     C           REFR      CHAINTRANS                90                                       189104
+     C                     MOVE TRTY      TRYP                                                189104
+     C                     MOVE TNBR      TNMR                                                189104
+     C                     ENDIF                                                              189104
+      *
+      *  Process Securities Trading generated entry
+      *
+     C           GETP      IFEQ 'S'
+      *
+     C***********          MOVELTDSS      NRTD                            165899
+      *
+      * If last 20 characters of narrative is blank
+      * posting is for a position settlement (otherwise for a trade)
+      *
+     C           PNRL20    IFEQ *BLANK
+     C                     MOVEL'PS'      TRYP
+     C                     ELSE
+      *
+     C           #REFA     CHAINTRADSDF              90
+     C           *IN90     IFEQ '1'
+     C           TRNMA     CHAINTRADSDF              90
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+     C                     MOVE TDTP      TRYP
+     C                     ELSE
+     C                     MOVEL'TR'      TRYP
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      *  Process Funds Transfer generated entry
+      *
+     C           GETP      IFEQ 'G'
+     C**********           MOVELPREF      #PR13  13                                           218411
+     C**********           MOVE #PR13     TRYP                                                218411
+     C                     MOVELOTTP      TRYP                                                218411
+     C                     END
+      *
+     C/COPY WNCPYSRC,RE0672CCP2                                           S01408
+     C*                                                                   S01408
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXTRYP    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************                       CAP205
+      *                                                               *                       CAP205
+      *  SRMTYP   : Populate movement type and module when CAP205 is  *                       CAP205
+      *             switched on                                       *                       CAP205
+      *                                                               *                       CAP205
+      *  CALLED BY: SRRSAC  - Write RSACMTPD records                  *                       CAP205
+      *                                                               *                       CAP205
+      *  CALLS    : SRERR   - report error and close down program     *                       CAP205
+      *                                                               *                       CAP205
+      *****************************************************************                       CAP205
+     CSR         SRMTYP    BEGSR                                                              CAP205
+      *                                                                                       CAP205
+     C                     SELEC                                                              CAP205
+     C           SPOS      WHEQ '  GE-DL'                                                     CAP205
+      ** Dealing                                                                              CAP205
+     C                     MOVEL'DL'      CMOD                                                CAP205
+      *                                                                                       CAP205
+     C           RCDT      IFEQ 'B'                                                           CAP205
+      ** FX                                                                                   CAP205
+     C                     Z-ADDDDAT      ZDAYNO                                              CAP205
+     C                     MOVELBJLCCY    ZCCY                                                CAP205
+     C                     Z-ADD2         ZNRDYS                                              CAP205
+     C                     EXSR ZFWDT                                                         CAP205
+     C                     Z-ADDZDYNBR    WFVLDT  50                                          CAP205
+      *                                                                                       CAP205
+     C           VALD      IFGT WFVLDT                                                        CAP205
+     C                     MOVEL'F'       MTYP                                                CAP205
+     C                     ELSE                                                               CAP205
+     C                     MOVEL'S'       MTYP                                                CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C                     ELSE                                                               CAP205
+     C           RCDT      IFEQ 'G'                                                           CAP205
+      *** FRA/IRS                                                                             CAP205
+     C           WDTYP     IFEQ 'RR'                                                          CAP205
+     C           WDTYP     OREQ 'RP'                                                          CAP205
+     C           WDTYP     OREQ 'RF'                                                          CAP205
+     C           WDTYP     OREQ 'RS'                                                          CAP205
+      *                                                                                       CAP205
+     C           WDATC     IFEQ 'D'                                                           CAP205
+     C           WAMTC     ANDEQ'IA'                                                          CAP205
+     C           WDATC     OREQ 'D'                                                           CAP205
+     C           WAMTC     ANDEQ'IE'                                                          CAP205
+      *                                                                                       CAP205
+     C           WDATC     OREQ 'M'                                                           CAP205
+     C           WAMTC     ANDEQ'DA'                                                          CAP205
+     C           WDATC     OREQ 'M'                                                           CAP205
+     C           WAMTC     ANDEQ'DE'                                                          CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'S'       MTYP                                                CAP205
+      *                                                                                       CAP205
+     C                     ENDIF                                                              CAP205
+     C                     ELSE                                                               CAP205
+      *                                                                                       CAP205
+     C           WDTYP     IFEQ 'RX'                                                          CAP205
+     C           WDATC     ANDEQ'D'                                                           CAP205
+     C           WTMP1     ANDEQ'I'                                                           CAP205
+      *                                                                                       CAP205
+     C           WDTYP     OREQ 'RX'                                                          CAP205
+     C           WDATC     ANDEQ'M'                                                           CAP205
+     C           WTMP3     ANDEQ'D'                                                           CAP205
+      *                                                                                       CAP205
+     C           WDTYP     OREQ 'RX'                                                          CAP205
+     C           WDATC     ANDEQ'M'                                                           CAP205
+     C           WTMP3     ANDEQ'BD'                                                          CAP205
+      *                                                                                       CAP205
+     C           WDATC     OREQ 'V'                                                           CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'S'       MTYP                                                CAP205
+      *                                                                                       CAP205
+     C                     ELSE                                                               CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'F'       MTYP                                                CAP205
+      *                                                                                       CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C                     ELSE                                                               CAP205
+      *** Other                                                                               CAP205
+     C           WDATC     IFEQ 'M'                                                           CAP205
+     C           WAMTC     ANDEQ'DA'                                                          CAP205
+      *                                                                                       CAP205
+     C           WDATC     OREQ 'M'                                                           CAP205
+     C           WAMTC     ANDEQ'DN'                                                          CAP205
+      *                                                                                       CAP205
+     C           WDATC     OREQ 'M'                                                           CAP205
+     C           WAMTC     ANDEQ'TX'                                                          CAP205
+      *                                                                                       CAP205
+     C           WDATC     OREQ 'M'                                                           CAP205
+     C           WAMTC     ANDEQ'X'                                                           CAP205
+      *                                                                                       CAP205
+     C           WDATC     OREQ 'V'                                                           CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'S'       MTYP                                                CAP205
+      *                                                                                       CAP205
+     C                     ELSE                                                               CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'F'       MTYP                                                CAP205
+      *                                                                                       CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C                     ENDIF                                                              CAP205
+      ***                                                                                     CAP205
+     C                     ENDIF                                                              CAP205
+     C           SPOS      WHEQ '  GE-LE'                                                     CAP205
+      ** Lending                                                                              CAP205
+     C                     MOVEL'LE'      CMOD                                                CAP205
+      ** Extract event type                                                                   CAP205
+     C                     MOVELWACKY     WEVNTP  4                                           CAP205
+     C           1         SUBSTWEVNTP:3  W3RD    1                                           CAP205
+      *                                                                                       CAP205
+     C           WEVNTP    LOKUPWAEVNT                   91                                   CAP205
+     C           *IN91     IFEQ *ON                                                           CAP205
+     C           W3RD      OREQ 'V'                                                           CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'S'       MTYP                                                CAP205
+      *                                                                                       CAP205
+     C                     ELSE                                                               CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'F'       MTYP                                                CAP205
+      *                                                                                       CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C           SPOS      WHEQ '  GE-SE'                                                     CAP205
+      ** Securities                                                                           CAP205
+     C                     MOVEL'SE'      CMOD                                                CAP205
+      *                                                                                       CAP205
+     C           TRYP      IFEQ 'PS'                                                          CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'F'       MTYP                                                CAP205
+      *                                                                                       CAP205
+     C                     ELSE                                                               CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'S'       MTYP                                                CAP205
+      *                                                                                       CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C           SPOS      WHEQ '  GE-FT'                                                     CAP205
+      ** Fund Transfer                                                                        CAP205
+     C                     MOVEL'FT'      CMOD                                                CAP205
+      *                                                                                       CAP205
+     C           TRYP      IFEQ 'NT'                                                          CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'S'       MTYP                                                CAP205
+      *                                                                                       CAP205
+     C                     ELSE                                                               CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'F'       MTYP                                                CAP205
+      *                                                                                       CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C           SPOS      WHEQ ' GE_GPI'                                                     CAP205
+      ** Generic Interface                                                                    CAP205
+     C                     MOVEL'GL'      CMOD                                                CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'S'       MTYP                                                CAP205
+      *                                                                                       CAP205
+     C           SPOS      WHEQ '  GE-TX'                                                     CAP205
+      ** Account Transfer                                                                     CAP205
+     C                     MOVEL'GL'      CMOD                                                CAP205
+     C********** KGLAT     KLIST                                                     CAP205 BUG27920
+     C**********           KFLD           KBRCA   3                                  CAP205 BUG27920
+     C**********           KFLD           KTREF  15                                  CAP205 BUG27920
+      *****************************************************************              CAP205 BUG27920
+     C**********           MOVELBRCA      KBRCA                                      CAP205 BUG27920
+     C**********           MOVELOTR1      KTREF                                      CAP205 BUG27920
+      *****************************************************************              CAP205 BUG27920
+     C********** KGLAT     CHAINGLATMIL0             90                              CAP205 BUG27920
+     C********** *IN90     IFEQ *OFF                                                 CAP205 BUG27920
+     C********** R1EXDT    IFGT BJRDNB                                               CAP205 BUG27920
+     C                     MOVEL'F'       MTYP                                                CAP205
+     C**********           ELSE                                                      CAP205 BUG27920
+     C**********           MOVEL'S'       MTYP                                       CAP205 BUG27920
+     C**********           ENDIF                                                     CAP205 BUG27920
+     C**********           ENDIF                                                     CAP205 BUG27920
+      *                                                                                       CAP205
+     C           SPOS      WHEQ '  GE-FR'                                                     CAP205
+      ** Future and Options                                                                   CAP205
+     C                     MOVEL'FF'      CMOD                                                CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'S'       MTYP                                                CAP205
+      *                                                                                       CAP205
+     C                     ENDSL                                                              CAP205
+      *                                                                                       CAP205
+     CSR                   ENDSR                                                              CAP205
+     C/EJECT                                                                                  CAP205
+      *****************************************************************
+      *                                                               *
+      *  SRLR     : Last record processing                            *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRLR      BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRLR  '  @STK,Q
+      *****************************************************************                       CSC056
+      ***Add*1*to*number*of*memos*records*updated**********************                       CSC056
+      ***and*calculate*next*record*value*for*header********************                       CSC056
+      *****************************************************************                       CSC056
+     C**********           ADD  1         F1MREC                                              CSC056
+     C***********F1MREC    ADD  1         #RRNM                           CCB002
+      ***********                                                         CCB002
+      ***Update*header record of MEMOS                                    CCB002
+      ***********                                                         CCB002
+     C***********1         CHAINMEMOS                90                   CCB002
+     C************IN90     IFEQ '1'                                       CCB002
+     C***********          MOVEL'MEMOS   'W0FILE                          CCB002
+     C***********          MOVEL'1 Header'W0KEY                           CCB002
+     C***********          Z-ADD1         W0ERNB                          CCB002
+     C***********          MOVELERR@,3    W0NARR                          CCB002
+     C***********          EXSR SRERR                                     CCB002
+     C***********          END                                            CCB002
+      ***********                                                         CCB002
+     C***********          EXCPTUPDHDR                                    CCB002
+      *****************************************************************                       CSC056
+      ***Write*details*of*records*read*etc*on*report*******************                       CSC056
+      *****************************************************************                       CSC056
+     C**********           WRITEF1DET1                                                        CSC056
+      *****************************************************************                       CSC056
+      ***Write*end*of*report*******************************************                       CSC056
+      *****************************************************************                       CSC056
+     C**********           WRITEF1TRL1                                                        CSC056
+      *                                                                                       CSC056
+      ** Write number of records read, written, updated to audit file                         CSC056
+      *                                                                                       CSC056
+     C                     WRITERESPOAP0                                                      CSC056
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXLR      TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRERR    : Report error and close down program               *
+      *                                                               *
+      *  CALLED BY: All subroutines                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRERR     BEGSR
+      *
+      *  Dump program
+      *
+     C                     DUMP
+      *
+      *  Send message to MOPERQ
+      *
+     C                     MOVEL*BLANKS   DBDTA
+     C                     MOVEL'RE0672  'DBPGM
+     C                     MOVEL@STK,Q    DBSTK
+     C                     MOVELW0KEY     DBKEY
+     C                     MOVELW0ERNB    DBERNB
+     C                     MOVELW0FILE    DBFILE
+     C                     MOVELW0PREF    DBPREF
+     C           W0NARR    IFEQ *BLANKS
+     C                     MOVELERR@,1    DBNARR
+     C                     ELSE
+     C                     MOVELW0NARR    DBNARR
+     C                     END
+      *
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'MEM5000' #MSGID  7
+     C                     PARM 'MIDAS  ' #MSGF  10
+     C                     PARM *BLANKS   #MSGFL 10
+     C                     PARM DBDTA     #MSGDT256
+     C                     PARM '*PRV'    #MSGR   5
+     C                     PARM '*'       #PRGM  10
+     C                     PARM 'MOPERQ ' #MSGQ  10
+     C                     PARM '*INFO  ' #MSGT   7
+      *
+      *  Write details of database error to report
+      *
+     C                     OPEN RE0672AU                                                      CSC056
+     C                     WRITEF1HDR1                                                        CSC056
+     C                     WRITEF1DBERR
+      *
+      *  Close down program
+      *
+     C                     SETON                     LR
+     C                     MOVEL'*ERROR*' W0RTN
+     C                     RETRN
+      *
+     CSR         EXERR     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFILE   : *PSSR routine for all files                       *
+      *                                                               *
+      *  CALLED BY: IBM controlled - invalid access to file           *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFILE    BEGSR
+      *
+      *  Dump program
+      *
+     C                     DUMP
+      *
+      *  If called again seton LR and return
+      *
+     C           @@FILE    IFNE *BLANKS
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+     C                     END
+     C                     MOVEL'Y'       @@FILE  1
+      *
+      *  Send message to MOPERQ
+      *
+     C                     MOVEL*BLANKS   DBDTA
+     C                     MOVEL'RE0672  'DBPGM
+     C                     MOVEL@STK,Q    DBSTK
+     C                     MOVEL##ERST    DBKEY
+     C                     MOVEL1         DBERNB
+     C                     MOVEL##ERFL    DBFILE
+     C                     MOVELERR@,2    DBNARR
+     C                     MOVELW0PREF    DBPREF
+      *
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'MEM5000' #MSGID
+     C                     PARM 'MIDAS  ' #MSGF
+     C                     PARM *BLANKS   #MSGFL
+     C                     PARM DBDTA     #MSGDT
+     C                     PARM '*PRV'    #MSGR
+     C                     PARM '*'       #PRGM
+     C                     PARM 'MOPERQ ' #MSGQ
+     C                     PARM '*INFO  ' #MSGT
+      *
+      *  Close down program
+      *
+     C                     SETON                     LR
+     C                     MOVEL'*ERROR*' W0RTN
+     C                     RETRN
+      *
+     CSR         EXFILE    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Define W0 database error variables
+      *
+     C           *LIKE     DEFN DBFILE    W0FILE
+     C           *LIKE     DEFN DBKEY     W0KEY
+     C           *LIKE     DEFN DBERNB    W0ERNB
+     C           *LIKE     DEFN DBNARR    W0NARR
+     C           *LIKE     DEFN DBPREF    W0PREF
+      *                                                                                       CSC056
+      ** Key list for chain to nostro file                                                    CSC056
+      *                                                                                       CSC056
+     C           K#NOS2    KLIST                                                              CSC056
+     C                     KFLD           A7CUST                                              CSC056
+     C                     KFLD           A7CYCD                                              CSC056
+     C                     KFLD           A7ACCD                                              CSC056
+     C                     KFLD           A7ACSN                                              CSC056
+     C                     KFLD           A7BRCD                                              CSC056
+     C                     MOVEL*BLANKS   ##NOS   1                                           CSC056
+      *
+      *  Open files
+      *
+     C/COPY WNCPYSRC,REH00136
+     C**********           OPEN ACCNTL0                                                       CSC056
+     C/COPY WNCPYSRC,REH00137
+     C                     OPEN RESPGE
+     C                     OPEN CLEAR
+     C***********          OPEN MEMOS                                     CCB002
+     C                     OPEN MEMOSL1                                   CCB002
+     C/COPY WNCPYSRC,REH00138
+     C**********           OPEN RSACMTPD                                                      CSC056
+     C/COPY WNCPYSRC,REH00139
+     C                     OPEN DEALS
+     C                     OPEN CLOAN
+     C                     OPEN TRADS
+     C                     OPEN TRANS                                     189104
+     C**********           OPEN GLATMIL0                                             CAP205 BUG27920
+     C                     OPEN SDNOSTL2
+     C                     OPEN SDBANKL1
+     C                     OPEN SDMMODL1
+     C**********           OPEN RE0672AU                                                      CSC056
+     C                     OPEN RESPOAPD                                                      CSC056
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE0672CCP1                                           S01408
+     C           1         SETLLRESPODPD                                                      CSC056
+     C                     READ RESPODPD                 40                                   CSC056
+     C                     MOVEL*BLANKS   ##NOS                                               CSC056
+      *                                                                                       CRE023
+      ** Check if switchable feature is on.                                                   CRE023
+      *                                                                                       CRE023
+     C           *NAMVAR   DEFN           LDA                                                 CRE023
+     C                     MOVEL'N'       CRE023  1                                           CRE023
+     C                     CALL 'AOSARDR0'                                                    CRE023
+     C                     PARM *BLANKS   @RTCD                                               CRE023
+     C                     PARM '*VERIFY' @OPTN                                               CRE023
+     C                     PARM 'CRE023'  @SAR                                                CRE023
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRE023
+      *                                                                                       CRE023
+     C           @RTCD     IFNE *BLANKS                                                       CRE023
+     C           @RTCD     ANDNE'*NRF   '                                                     CRE023
+     C           *LOCK     IN   LDA                                                           CRE023
+     C                     MOVE 'SCSARDPD'DBFIL1                                              CRE023
+     C                     Z-ADD6         DBASE                                               CRE023
+     C                     MOVEL'CRE023'  DBKEY1                                              CRE023
+     C                     OUT  LDA                                                           CRE023
+     C                     EXSR SRFILE                                                        CRE023
+     C                     ENDIF                                                              CRE023
+      *                                                                                       CRE023
+     C           @RTCD     IFEQ *BLANKS                                                       CRE023
+     C                     MOVEL'Y'       CRE023                                              CRE023
+     C                     OPEN REMEMLL0                                                      CRE023
+     C/COPY WNCPYSRC,REH00140
+     C                     OPEN REOUTCPD                                                      CSC056
+     C                     ENDIF                                                              CRE023
+      *                                                                                     BUG27212
+      ** Check if CAP204 is on                                                              BUG27212
+      *                                                                                     BUG27212
+     C                     MOVEL'N'       CAP204  1                                         BUG27212
+     C                     CALL 'AOSARDR0'                                                  BUG27212
+     C                     PARM *BLANKS   @RTCD                                             BUG27212
+     C                     PARM '*VERIFY' @OPTN                                             BUG27212
+     C                     PARM 'CAP204'  @SAR                                              BUG27212
+     C           SCSARD    PARM SCSARD    DSFDY                                             BUG27212
+      *                                                                                     BUG27212
+     C           @RTCD     IFNE *BLANKS                                                     BUG27212
+     C           @RTCD     ANDNE'*NRF   '                                                   BUG27212
+     C           *LOCK     IN   LDA                                                         BUG27212
+     C                     MOVE 'SCSARDPD'DBFIL1                                            BUG27212
+     C                     Z-ADD7         DBASE                                             BUG27212
+     C                     MOVEL'CAP204'  DBKEY1                                            BUG27212
+     C                     OUT  LDA                                                         BUG27212
+     C                     EXSR SRFILE                                                      BUG27212
+     C                     ENDIF                                                            BUG27212
+      *                                                                                     BUG27212
+     C           @RTCD     IFEQ *BLANKS                                                     BUG27212
+     C                     MOVEL'Y'       CAP204                                            BUG27212
+     C                     ENDIF                                                            BUG27212
+     C*                                                                   S01408
+      *
+      *  Read SDBANKL1 file for working day & next working day
+      *
+     C                     MOVEL'BANK'    BJBANK
+     C           BJBANK    CHAIN@BANKL1F             90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDBANKL1'W0FILE
+     C                     MOVEL'*ONLY'   W0KEY
+     C                     Z-ADD3         W0ERNB
+     C                     MOVELERR@,3    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C                     CLOSESDBANKL1
+      *
+      *  Read MMOD to see if Funds Transfer switched on
+      *
+     C                     MOVEL'MMOD'    BGMODS
+     C           BGMODS    CHAIN@MMODL1              9090
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDMMODL1'W0FILE
+     C                     MOVEL'*ONLY'   W0KEY
+     C                     Z-ADD4         W0ERNB
+     C                     MOVELERR@,3    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C                     CLOSESDMMODL1
+      *
+      * Access FT Control data
+      *
+     C           BGFDTR    IFEQ 'Y'
+     C                     CALL 'FT0005'               9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C           C#CNTL    PARM           O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'FT0005'  W0KEY
+     C                     Z-ADD5         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C                     END
+      *
+      * Set up posting date indicator
+      *
+     C           C#GLUI    IFEQ 'I'
+     C           BGFDTR    ANDEQ'Y'
+     C                     MOVEL'Y'       ##FTOV  1
+     C                     ELSE
+     C                     MOVEL*BLANKS   ##FTOV
+     C                     END
+      ***********                                                         CCB002
+      ***Obtain*Memos File size from RESTAT                               CCB002
+      ***********                                                         CCB002
+     C************NAMVAR   DEFN           RESTAT                          CCB002
+     C***********          IN   RESTAT                                    CCB002
+      *
+      *  Write header of report
+      *
+     C**********           WRITEF1HDR1                                                        CSC056
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+     C                     MOVEL*BLANKS   R#RTN   7
+     C                     MOVEL*BLANKS   #SPACE 40
+     C***********          Z-ADD0         #RRNM   50                      CCB002
+      *
+      ** Determine if Data Export for CCRM Limits is active               184970
+      *                                                                   184970
+     C                     CALL 'AOSARDR0'                                184970
+     C                     PARM *BLANKS   @RTCD   7                       184970
+     C                     PARM '*VERIFY' @OPTN   7                       184970
+     C                     PARM 'CDE001'  @SAR    6                       184970
+      *                                                                   184970
+     C           @RTCD     IFEQ *BLANK                                    184970
+     C                     MOVE 'Y'       CDE001  1                       184970
+     C                     ENDIF                                          184970
+      *
+      ** Check if CRE009 is ON.                                           CRE009
+      *                                                                   CRE009
+     C                     CALL 'AOSARDR0'                                CRE009
+     C                     PARM *BLANKS   @RTCD   7                       CRE009
+     C                     PARM '*VERIFY' @OPTN   7                       CRE009
+     C                     PARM 'CRE009'  @SAR    6                       CRE009
+      *                                                                   CRE009
+     C           @RTCD     IFEQ *BLANK                                    CRE009
+     C                     MOVE 'Y'       CRE009  1                       CRE009
+     C                     ELSE                                           CRE009
+     C                     MOVE 'N'       CRE009                          CRE009
+     C                     ENDIF                                          CRE009
+      *                                                                   CRE009
+     C                     CALL 'AOSARDR0'                                                    CRE020
+     C                     PARM *BLANKS   @RTCD                                               CRE020
+     C                     PARM '*VERIFY' @OPTN                                               CRE020
+     C                     PARM 'CRE020'  @SAR                                                CRE020
+      *                                                                                       CRE020
+     C                     MOVE 'N'       CRE020  1                                           CRE020
+     C           @RTCD     IFEQ *BLANK                                                        CRE020
+     C                     MOVE 'Y'       CRE020                                              CRE020
+     C                     ENDIF                                                              CRE020
+      *                                                                                       CRE020
+      ** Check if CAP205 is ON.                                                               CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'N'       CAP205  1                                           CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM *BLANKS   @RTCD                                               CAP205
+     C                     PARM '*VERIFY' @OPTN                                               CAP205
+     C                     PARM 'CAP205'  @SAR                                                CAP205
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAP205
+      *                                                                                       CAP205
+     C           @RTCD     IFNE *BLANKS                                                       CAP205
+     C           @RTCD     ANDNE'*NRF   '                                                     CAP205
+     C           *LOCK     IN   LDA                                                           CAP205
+     C                     MOVE 'SCSARDPD'DBFIL1                                              CAP205
+     C                     Z-ADD6         DBASE                                               CAP205
+     C                     MOVEL'CAP205'  DBKEY1                                              CAP205
+     C                     OUT  LDA                                                           CAP205
+     C                     EXSR SRFILE                                                        CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C           @RTCD     IFEQ *BLANKS                                                       CAP205
+     C                     MOVEL'Y'       CAP205                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+      * Check system values                                                                   241166
+     C                     CALL 'AOSVALR0'                                                    241166
+     C                     PARM *BLANKS   @RTCD                                               241166
+     C                     PARM SVALKK    SVALK1 20                                           241166
+     C                     PARM           SVAL1 200                                           241166
+     C                     PARM *BLANK    SVALK2 20                                           241166
+     C                     PARM           SVAL2 200                                           241166
+     C                     PARM *BLANK    SVALK3 20                                           241166
+     C                     PARM           SVAL3 200                                           241166
+     C                     PARM *BLANK    SVALK4 20                                           241166
+     C                     PARM           SVAL4 200                                           241166
+     C                     PARM *BLANK    SVALK5 20                                           241166
+     C                     PARM           SVAL5 200                                           241166
+     C                     PARM *BLANK    SVALK6 20                                           241166
+     C                     PARM           SVAL6 200                                           241166
+     C                     PARM *BLANK    SVALK7 20                                           241166
+     C                     PARM           SVAL7 200                                           241166
+     C                     PARM *BLANK    SVALK8 20                                           241166
+     C                     PARM           SVAL8 200                                           241166
+     C                     PARM *BLANK    SVALK9 20                                           241166
+     C                     PARM           SVAL9 200                                           241166
+     C                     PARM *BLANK    SVALK0 20                                           241166
+     C                     PARM           SVAL10200                                           241166
+      *                                                                                       241166
+     C           @RTCD     IFNE *BLANK                                                        241166
+     C                     MOVEL'SDSVALPD'W0FILE                                              241166
+     C                     MOVEL'*KEY '   W0KEY                                               241166
+     C                     Z-ADD6         W0ERNB                                              241166
+     C                     MOVELERR@,3    W0NARR                                              241166
+     C                     EXSR SRERR                                                         241166
+     C                     ENDIF                                                              241166
+     C                     MOVE SVAL11    TRSNAR  1                                           241166
+      *                                                                                       CCB016
+      * Check if CLEAR is empty                                                               CCB016
+     C           *LOVAL    SETLLCLEARPDF                                                      CCB016
+     C                     READ CLEARPDF                 71                                   CCB016
+      *                                                                                       CCB016
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/COPY WNCPYSRC,REH00157
+     C/EJECT
+     C/COPY ZSRSRC,ZFWDT                                                                      CAP205
+     C/EJECT                                                                                  CAP205
+     C/COPY ZSRSRC,ZACCH                                                                      CAP205
+     C/EJECT                                                                                  CAP205
+      *
+      *  Definition of output to MEMOS
+      *
+      *  Header output definition
+      *
+     O******MEMOS   E                UPDHDR                               CCB002
+     O******                         #SPACE    40                         CCB002
+     O******                                    1 'H'                     CCB002
+     O******                                    3 '  '                    CCB002
+     O******                                    6 '000'                   CCB002
+     O******                         #FLSZ     10P                        CCB002
+     O******                         #RRNM     13P                        CCB002
+      ******                                                              CCB002
+      ***Detail output definition                                         CCB002
+      ******                                                              CCB002
+     O******        E                UPDDET                               CCB002
+     O******                         MEMDTA    40                         CCB002
+**  CPY@ table
+(c) Finastra International Limited 2001
+**  Error text
+Error occurred on call to program - see dumps for further details
+File access error occurred - see dump for full details - see key for opcode
+Record not found or marked as deleted
+**  WAEVNT - List of Same day Events                                                          CAP205
+15M416M441S141R341R442S881A282A283A230P130S121N121N221C122C122S131P131S1                      CAP205
+61R762R763R764R765R766R767R770R762R963R964R968R768R969R769R972R772R961R9                      CAP205
+66R967R971R765R915MZ16MZ70R971R923C323S397P1                                                  CAP205

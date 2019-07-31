@@ -1,0 +1,154 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE PDP Preparation for Main Processing')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC000460 - PDP Preparation for Main Processing             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021351           Date 06May14              */
+/*                      AR1084195          Date 04Feb13              */
+/*                      CLE134 *CREATE     Date 01Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD021351 - Design for Kill object locks                     */
+/*       AR1084195 - LEC06A seq 03001 component failed.              */
+/*                 - Triggers prevent requested operation.           */
+/*       CLE134 - Past Due Call Loan Processing                      */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&CNAM &CSEQ)
+ 
+/** Declare the variables for rerun checking */
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1) VALUE('Y')
+ 
+             DCL        VAR(&ORET) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OBJN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(7) VALUE('  DVLIB')
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited +
+                           2012')
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/** Reset Indicators */
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('Kill object locks by PDP') TOMSGQ(MRUNQ)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DVLIB 1 2)) VALUE(&SYSID)
+ 
+/** Check the current status of this component */
+             CALL PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+/** Restart Process */
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+             ENDDO
+ 
+/** Set Cob Flag */
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/** Check if Normal CoB or PDCL CoB */
+             CALL       PGM(LE000489)
+ 
+/** Check objeck locks for HISTSL0 */
+             CHGVAR     VAR(&OBJN) VALUE('HISTSL0')
+             CHGVAR     VAR(&OBJL) VALUE(&DVLIB)
+             CHGVAR     VAR(&OBJT) VALUE('*FILE')
+             CHGVAR     VAR(&MEMB) VALUE('HISTSL0')
+/**********  CALL       PGM(LE000460) PARM(&ORET  &OBJN &OBJL &OBJT &MEMB) */           /*MD021351*/
+             SCKOBJLCK  OBJ(&OBJN) LIB(&OBJL) OBJTYPE(&OBJT) +
+                          JNAM(*ALL) JUSR(*ALL) LOCKST(*ALL)                            /*MD021351*/
+ 
+/** Check objeck locks for LELOAML0*/
+             CHGVAR     VAR(&OBJN) VALUE('LELOAML0')
+             CHGVAR     VAR(&OBJL) VALUE(&DVLIB)
+             CHGVAR     VAR(&OBJT) VALUE('*FILE')
+             CHGVAR     VAR(&MEMB) VALUE('LELOAML0')
+/**********  CALL       PGM(LE000460) PARM(&ORET  &OBJN &OBJL &OBJT &MEMB) */           /*MD021351*/
+             SCKOBJLCK  OBJ(&OBJN) LIB(&OBJL) OBJTYPE(&OBJT) +
+                          JNAM(*ALL) JUSR(*ALL) LOCKST(*ALL)                            /*MD021351*/
+/** Check objeck locks for CLOANCL*/                                                   /*AR1084195*/
+             CHGVAR     VAR(&OBJN) VALUE('CLOANCL')                                    /*AR1084195*/
+             CHGVAR     VAR(&OBJL) VALUE(&DMLIB)                                       /*AR1084195*/
+             CHGVAR     VAR(&OBJT) VALUE('*FILE')                                      /*AR1084195*/
+             CHGVAR     VAR(&MEMB) VALUE('CLOANCL')                                    /*AR1084195*/
+/**********  CALL       PGM(LE000460) PARM(&ORET  &OBJN &OBJL &OBJT &MEMB) */ /*AR1084195 MD021351*/
+             SCKOBJLCK  OBJ(&OBJN) LIB(&OBJL) OBJTYPE(&OBJT) +
+                          JNAM(*ALL) JUSR(*ALL) LOCKST(*ALL)                            /*MD021351*/
+/** Check objeck locks for CLOANCK*/                                                   /*AR1084195*/
+             CHGVAR     VAR(&OBJN) VALUE('CLOANCK')                                    /*AR1084195*/
+             CHGVAR     VAR(&OBJL) VALUE(&DMLIB)                                       /*AR1084195*/
+             CHGVAR     VAR(&OBJT) VALUE('*FILE')                                      /*AR1084195*/
+             CHGVAR     VAR(&MEMB) VALUE('CLOANCK')                                    /*AR1084195*/
+/**********  CALL       PGM(LE000460) PARM(&ORET  &OBJN &OBJL &OBJT &MEMB) */ /*AR1084195 MD021351*/
+             SCKOBJLCK  OBJ(&OBJN) LIB(&OBJL) OBJTYPE(&OBJT) +
+                          JNAM(*ALL) JUSR(*ALL) LOCKST(*ALL)                            /*MD021351*/
+/** Check objeck locks for FCLTYFM*/                                                   /*AR1084195*/
+             CHGVAR     VAR(&OBJN) VALUE('FCLTYFM')                                    /*AR1084195*/
+             CHGVAR     VAR(&OBJL) VALUE(&DMLIB)                                       /*AR1084195*/
+             CHGVAR     VAR(&OBJT) VALUE('*FILE')                                      /*AR1084195*/
+             CHGVAR     VAR(&MEMB) VALUE('FCLTYFM')                                    /*AR1084195*/
+/**********  CALL       PGM(LE000460) PARM(&ORET  &OBJN &OBJL &OBJT &MEMB) */ /*AR1084195 MD021351*/
+             SCKOBJLCK  OBJ(&OBJN) LIB(&OBJL) OBJTYPE(&OBJT) +
+                          JNAM(*ALL) JUSR(*ALL) LOCKST(*ALL)                            /*MD021351*/
+/** Check objeck locks for SDBRCHPD*/                                                  /*AR1084195*/
+             CHGVAR     VAR(&OBJN) VALUE('SDBRCHPD')                                   /*AR1084195*/
+             CHGVAR     VAR(&OBJL) VALUE(&DMLIB)                                       /*AR1084195*/
+             CHGVAR     VAR(&OBJT) VALUE('*FILE')                                      /*AR1084195*/
+             CHGVAR     VAR(&MEMB) VALUE('SDBRCHPD')                                   /*AR1084195*/
+/**********  CALL       PGM(LE000460) PARM(&ORET  &OBJN &OBJL &OBJT &MEMB) */ /*AR1084195 MD021351*/
+             SCKOBJLCK  OBJ(&OBJN) LIB(&OBJL) OBJTYPE(&OBJT) +
+                          JNAM(*ALL) JUSR(*ALL) LOCKST(*ALL)                            /*MD021351*/
+/** Check objeck locks for CLONCLQD*/                                                  /*AR1084195*/
+             CHGVAR     VAR(&OBJN) VALUE('CLONCLQD')                                   /*AR1084195*/
+             CHGVAR     VAR(&OBJL) VALUE(&DMLIB)                                       /*AR1084195*/
+             CHGVAR     VAR(&OBJT) VALUE('*FILE')                                      /*AR1084195*/
+             CHGVAR     VAR(&MEMB) VALUE('CLONCLQD')                                   /*AR1084195*/
+/**********  CALL       PGM(LE000460) PARM(&ORET  &OBJN &OBJL &OBJT &MEMB) */ /*AR1084195 MD021351*/
+             SCKOBJLCK  OBJ(&OBJN) LIB(&OBJL) OBJTYPE(&OBJT) +
+                          JNAM(*ALL) JUSR(*ALL) LOCKST(*ALL)                            /*MD021351*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               SNDPGMMSG  MSG('Job terminated, database in error.') +
+                             TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(DBERR)
+             ENDDO
+ 
+/** Reset Cob Flag = ' '  */
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/** Skip to End */
+             GOTO       CMDLBL(END)
+ 
+DBERR:       SNDPGMMSG  MSG('Job terminated, database in error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Finastra International Limited')
+ENDPGM

@@ -1,0 +1,2022 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Reset Backvalued Book Positions')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2230 - RESET BOOK POSITIONS FOR BACKVALUATIONS             *
+     F*                                                               *
+     F*  Function: For each Book Position which has a backvalued      *
+     F*   (COB)    action today, the Historic Book Positions Actions  *
+     F*            file records are flagged (RECI changed from H to D)*
+     F*            (These are then used to rework the position in     *
+     F*            SE2220, reversing previous postings).              *
+     F*            The Book Position Header and Book Position files   *
+     F*            are reset to the last position unaffected by the   *
+     F*            backvaluation action.                              *
+     F*            The Book Position Header Reversal file and Book    *
+     F*            Position Reversal file are set up for use in the   *
+     F*            reversal run of SE2220.                            *
+     F*            Records are also written to the Profit Adjustment  *
+     F*            Reconciliation Extract file for the production     *
+     F*            of the report showing those positions that have    *
+     F*            had backvaluation.                                 *
+     F*                                                               *
+     F*  Called by: SEC0605A - Generate A/c Keys & Update Book Posns  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSE111             Date 06Oct17               *
+      *                 MD036871           Date 25May16               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 248817             Date 29Jun07               *
+      *                 246619             Date 29Mar07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE065             Date 08Nov04               *
+      *                 228113             Date 25Jun04               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 102506             Date 18Oct98               *
+     F*                 CEU017             Date 07Apr98               *
+     F*                 CSE007             Date 17Mar98               *
+     F*                 101038             DATE 16APR96               *
+     F*                 S01502             DATE 08JUL94               *
+     F*                 054257             DATE 10JAN94               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01397             DATE 16SEP92               *
+     F*                 E36547             DATE 02MAR92               *
+     F*                 E35624             DATE 10FEB92               *
+     F*                 E29170             DATE 06NOV91               *
+     F*                 E29207             DATE 08OCT91               *
+     F*                 S01117             DATE 06JUN91               *
+     F*                 E23147             DATE 02AUG90               *
+     F*                 E21574             DATE 19APR90               *
+     F*                 E21434             DATE 15MAR90               *
+     F*                 E21232             DATE 26FEB90               *
+     F*                 E21085             DATE 08FEB90               *
+     F*                 E20910             DATE 31JAN90               *
+     F*                 E20845             DATE 15JAN90               *
+     F*                 E20212             DATE 11NOV89               *
+     F*                 E20211             DATE 11NOV89               *
+     F*                 E19445             DATE 11NOV89               *
+     F*                 E20125             DATE 11NOV89               *
+     F*                 E20085             DATE 08NOV89               *
+     F*                 E20087             DATE 07NOV89               *
+     F*                 E19332             DATE 29AUG89               *
+     F*                 E18651             DATE 13JUL89               *
+     F*                 E18652             DATE 04/07/89              *
+     F*                 E18671             DATE 14/06/89              *
+     F*                 E16772             DATE 20/06/89              *
+     F*                 E16833             DATE 20/02/89              *
+     F*                 E16852             DATE 09/02/89              *
+     F*                 E15965             DATE 31/10/88              *
+     F*                 E13949             DATE 07/09/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSE111 - Suppress Account Keys on Back-Value of dividends    *
+      *  MD036871 - Amount accrued are not the same between DBA and   *
+      *             FBM. Fix is to remove 248817 to recover book      *
+      *             position prior to backvaluation event.            *
+     F*  248817 - Historical actions incorrectly reactivated.         *
+      *  246619 - Need to keep track the previous nominal position on *
+      *           each record in PF/BKPOSD. Extract all records that  *
+      *           will be deleted from PF/BKPOSD to PF/BKPOPD.        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE065 - Const. Yield Amort. on Mortgage backed assets       *
+      *  228113 - Previous Net treasury profit/loss should be kept    *
+      *           for reversal purposes.                              *
+      *  CAS006 - Hedge Accounting Phase B                            *
+     F*  102506 - Accrue 30 days interest over February for day basis *
+     F*           '1' & '5'. Removed fix 086491 and replaced with     *
+     F*           067811. Also fix in SR/RBPACH to stop SE2220 loop.  *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*           Same coding than CSE007                             *
+     F*  CSE007 - Corporate Actions                                   *
+     F*  101038 - Previous purchased interest being corrupted if no   *
+     F*           book position need to be deleted when back valued.  *
+     F*  S01502 - BLI Telekurs Processing.  Recompiled due to change  *
+     F*           in length of SESTAT, 133 long.                      *
+     F*  054257 - RECOMPILED as PREV CURRENT FACTOR amended from 9,8  *
+     F*           to 10,9                                             *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*         - Added processing for Discount/Premium since First   *
+     F*           Position Date for Amortisation by Security Report   *
+     F*  E36547 - dummy action created by E29207 must have action     *
+     F*           date of backvalued action to reverse amortisation   *
+     F*           effectively                                         *
+     F*  E35624 - Not all discount is reversed properly.  This is due *
+     F*           to a mysterious piece of R10 incorporation an does  *
+     F*           not occur in R2.3                                   *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  E29207 - Discount amortization                               *
+     F*           - Amortization wrong if back-valuation done prior   *
+     F*             to LATD but after LPCD. (No records are read into *
+     F*             the reversal run of SE2220 as there are no actions*
+     F*             to reaction.Solved by generating dummy actions).  *
+     F*           - Amortization wrong if first day accruals          *
+     F*           - Amortization wrong if trade deleted.              *
+     F*           - Trading again on a flat position causes           *
+     F*             discount amortization to be wrong.                *
+     F*  S01117 - Multibranching                                      *
+     F*  E23147 - Prevent generation of spurious BKPOSD records dated *   E23147
+     F*           one day before first position.                      *   E23147
+     F*         - Removed some fixes done for E21574 because it       *   E23147
+     F*           assumed BKPHHD record exist for each LPCD (last Chg.*   E23147
+     F*           date) Only one exists for each LPSD (Last Posn.Date)*   E23147
+     F*         - BKPHH  is again keyed on LPSD which equals LPCD     *   E23147
+     F*         - Historic Headers were not being Output to BKPHRD if *   E23147
+     F*           Historic Header Found                               *   E23147
+     F*         - The sign of DPAP and BUDU has change for short      *   E23147
+     F*           positions                                           *   E23147
+     F*         - All Book position Actions After LPSD need to be     *   E23147
+     F*           to be re-actioned. Actions between LPSD and the     *   E23147
+     F*           Backvalued action were not being re-actioned.       *   E23147
+     F*  E21574 - Changes to accomodate amendment to LF/BKPHH: key    *   E21574
+     F*           field LPSD has been replaced by LPCD to permit      *   E21574
+     F*           SE2230 to retrieve details from the correct BKPHH   *   E21574
+     F*           record when non-trade actions have been processed   *   E21574
+     F*           since the most recent trade action.                 *   E21574
+     F*  E21434 - UPPT on Header must come from Current Header.       *   E21434
+     F*  E21232 - Reversal of Interest Accruals Incorrect.            *   E21232
+     F*  E21085 - Physically delete records required for deletion.    *   E21085
+     F*  E20910 - Do not alter values in key fields before updating   *   E20910
+     F*           BKPHDD.                                             *   E20910
+     F*  E20845 - Processing no different for different Action Types  *   E20845
+     F*  E20212 - Database Error in SE2220 SR/CLOSE due to failure    *   E20212
+     F*           of SE2230 to delete obsolete BKPHHD records.        *   E20212
+     F*  E20211 - BKPHHD OOB due to updating File Controls when       *   E20211
+     F*           deleting a record that is already deleted.          *   E20211
+     F*  E19445 - Zeroing out UPPT on existing BKPHDD records caused  *   E19445
+     F*           erroneous unrealized P/L postings.                  *   E19445
+     F*  E20125 - LF/BKPHH may have more than one record for the same *   E20125
+     F*           Position Date, so a CHAIN will return the first one *   E20125
+     F*           but we want to reset to the last Position record    *   E20125
+     F*           for that Date, so a SETGT and READP is necessary.   *   E20125
+     F*           (Could cause DB Errors, wrong Average Prices, etc.) *   E20125
+     F*     Also: Only take historic details from live BKPHH records. *   E20125
+     F*  E20085 - Interest and Coupon Calculations Rewrite:           *   E20085
+     F*          - BPACH format now correctly called BPACHDF.         *   E20085
+     F*  E20087 - Discount Amortization Processing:                   *   E20087
+     F*  E19332 - STOP RE-ACTIONING OF DELETED ACTIONS.               *   E19332
+     F*  E18651 - ACCRUAL REVERSALS                                   *   E18651
+     F*  E18652 - CHANGES TO PROCESS TRADES DONE ON COUPON DATE       *   E18652
+     F*  E18671 - BOOK POSITION AUDIT COUNT IS WRONG.REMOVE FIX       *   E18671
+     F*           E13949                                              *   E18671
+     F*  E16772 - Recompiled for the Dividend Payment Amount field    *   E16772
+     F*           changes.                                            *   E16772
+     F*  E16833 - BKPOS OUT OF BALANCE DURING HOUSEKEEPING.           *   E16833
+     F*  E16852 - OUTPUT CORRECT LATEST POSITION CHANGE DATE TO       *   E16852
+     F*           NEW BOOK POSITION HEADER RECORD, WHEN A BOOK        *   E16852
+     F*             POSITION EXISTS.                                  *   E16852
+     F*  E15965 - Mark to market revaluation                          *   E15965
+     F*  E13949 - SUBTRACT DELETED RECORDS FROM 'NORE' ON BKPOSA.     *   E13949
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FBPACB   IF  E           K        DISK
+     FBPACBA  IF  E           K        DISK
+     F*SECTY***IF**E           K        DISK         KINFDS SECDS         E18651
+     F**************                                KINFSR SECSR          E18651
+     F***BKMTH   UF  E           K        DISK                     E20087 E23147
+     F***BKPOS   UF  E           K        DISK         KINFDS POSDS A     E23147
+     FBKPOS   UF  E           K        DISK         KINFDS POSDS          E23147
+     F                                              KINFSR POSSR
+     F*BKPHD***UF**E           K        DISK         KINFDS PHDDS A       E18651
+     FBKPHD   UF  E           K        DISK         KINFDS PHDDS          E18651
+     F                                              KINFSR PHDSR          E18651
+     FBKPHDA  UF  E           K        DISK         KINFDS PHADS
+     F                                              KINFSR PHASR
+     F            BKPHDAF                           KRENAMEBKPHDZF
+     FBPACH   UF  E           K        DISK         KINFDS ACHDS
+     F                                              KINFSR ACHSR
+     FBPACHA  UF  E           K        DISK         KINFDS BHADS
+     F                                              KINFSR BHASR
+     FBKPHH   UF  E           K        DISK         KINFDS PHHDS
+     F                                              KINFSR PHHSR
+     F            BKPHDDF                           KRENAMEBKHSTDF
+     FBKPOSA  UF  E                    DISK         KINFDS BPADS
+     F                                              KINFSR BPASR
+     FBKPHHA  UF  E                    DISK         KINFDS HHADS
+     F                                              KINFSR HHASR
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F**ICD*1*****TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FBKPORD  O   E                    DISK         KINFDS ORDDS
+     F                                              KINFSR ORDSR
+     F            BKPOSDF                           KRENAMEBKPORDF
+     FBKPORA  O   E                    DISK         KINFDS ORADS
+     F                                              KINFSR ORASR
+     F            BKPOSAF                           KRENAMEBKPORAF
+     FBKPOPD  O   E                    DISK                                                   246619
+     F            BKPOSDF                           KRENAMEBKPOPDF                            246619
+     FPRFAJD  O   E                    DISK         KINFDS PRDDS
+     F                                              KINFSR PRDSR
+     FPRFAJA  O   E                    DISK         KINFDS PRADS
+     F                                              KINFSR PRASR
+     FBKPHRD  O   E                    DISK         KINFDS HRDDS
+     F                                              KINFSR HRDSR
+     F            BKPHDDF                           KRENAMEBKHRDDF
+     FBKPHRA  O   E                    DISK         KINFDS HRADS
+     F                                              KINFSR HRASR
+     FBPACR   IF  E           K        DISK                      A        E29207
+     F            BPACHDF                           KIGNORE               E29207
+     FSE2230AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   12  - NO MATCHING BOOK POSITION HEADER FOR CORRECT POS DATE *
+     F*   44  - SECURITY NOT FOUND                                    *
+     F*   50  - DIFFERENCE IN FILE TOTALS AND CALCULATED TOTALS       *
+     F*   80  - Chain fail on BKMTH                                   *   E20087
+     F*   84  - EOF BPACH                                             *
+     F*   85  - EOF BKPHH                                             *
+     F*   86  - NO RECORD FOUND ON BKPHHD                             *
+     F*   87  - ERROR ON CHAIN TO BKPHD                               *
+     F*   88  - EOF BKPOS                                             *
+     F*   89  - EOF BPACB                                             *
+     F*                                                               *
+     F*   97  - DATABASE ERROR ON WRITE OR UPDATE                     *
+     F*                                                               *
+     F* U7-U8 - DATABASE ERROR                                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - ACCESSES INFO FROM ICD                              *
+     F*  RBKPOS - RESETS BOOK POSITIONS FILE                          *
+     F*  RBKPHD - RESETS BOOK POSITIONS HEADER FILE                   *
+     F*  U01    - UPDATES BOOK POSITIONS HEADER FILE                  *
+     F*  RBPACH - RESETS HISTORIC BOOK POSITIONS ACTIONS FILE         *
+     F*  AUDIT  - OUTPUTS CONTROL REPORT AND UPDATES AUDIT FILES      *
+     F*****RBKMTH**-**Updates*amortization*figures*on*BKMTH.****** E20087 E23147
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*  ZSYSTM - OBTAINS ICD INFO FROM TABTB10                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /SPACE 3
+     I*
+     I*SECTYDF******                                                      E18651
+     I**************RECI                            SRECI                 E18651
+     I*
+     I* HISTORIC BOOK POSITION HEADER RECORD
+     I*
+     IHREC      E DSBKPHH
+     I*                                                                   E20125
+     I** Key should be positions 2-18, not 1-17.                          E20125
+     I***********                             1  17 BHKEY                 E20125
+     I                                        2  18 BHKEY                 E20125
+     I*
+     I* FILE KEYS
+     I*
+     I            DS
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I*
+     I            DS
+     I                                        1  20 BBKEY
+     I                                        1  17 BBNEW
+     I                                        1  10 BBSS
+     I***********                            11  130BBBR                  S01117
+     I                                       11  13 BBBA                  S01117
+     I                                       14  15 BBBK
+     I                                       16  16 BBMK
+     I                                       17  17 BBTV
+     I                                    P  18  200BBAD
+     I            DS
+     I                                        1  17 OLDKEY
+     I            DS
+     I                                        1  17 BKNEW
+     I                                        1  10 BPSC
+     I***********                            11  130BPBR                  S01117
+     I                                       11  13 BPBA                  S01117
+     I                                       14  15 BPBK
+     I                                       16  16 BPMK
+     I                                       17  17 BPTV
+     I            DS
+     I                                        1  17 BCNEW
+     I                                        1  10 BCSS
+     I***********                            11  130BCBR                  S01117
+     I                                       11  13 BCBA                  S01117
+     I                                       14  15 BCBO
+     I                                       16  16 BCMK
+     I                                       17  17 BCTV
+     I            DS
+     I                                        1  17 PKEY
+     I                                        1  10 PESS
+     I***********                            11  130PEBR                  S01117
+     I                                       11  13 PEBH                  S01117
+     I                                       14  15 PEBK
+     I                                       16  16 PEMK
+     I                                       17  17 PETV
+     I*
+     I            DS
+     I                                        1 179 HRECST
+     I*
+     I* DATA STRUCTURES FOR ERROR HANDLING
+     I*
+     IPOSDS       DS
+     I                                     *STATUS  STSPOS
+     I*
+     IPHDDS       DS
+     I                                     *STATUS  STSPHD
+     I*
+     IPHADS       DS
+     I                                     *STATUS  STSPHA
+     I*
+     IACHDS       DS
+     I                                     *STATUS  STSACH
+     I*
+     IPHHDS       DS
+     I                                     *STATUS  STSPHH
+     I*
+     IBPADS       DS
+     I                                     *STATUS  STSBPA
+     I*
+     IHHADS       DS
+     I                                     *STATUS  STSHHA
+     I*
+     IORDDS       DS
+     I                                     *STATUS  STSORD
+     I*
+     IORADS       DS
+     I                                     *STATUS  STSORA
+     I*
+     IHRDDS       DS
+     I                                     *STATUS  STSHRD
+     I*
+     IHRADS       DS
+     I                                     *STATUS  STSHRA
+     I*
+     IBHADS       DS
+     I                                     *STATUS  STSBHA
+     I*
+     IPRDDS       DS
+     I                                     *STATUS  STSPRD
+     I*
+     IPRADS       DS
+     I                                     *STATUS  STSPRA
+     I*
+     I*SECDS*******DS                                                     E18651
+     I***************                      *STATUS  STSSEC                E18651
+     I*
+      ***  Local Data Area for Database Error Information.
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I*                                                                   E20087
+     I*    SESTAT DATA STRUCTURE - for EOM day number                     E20087
+     I*                                                                   E20087
+     IDTAARA    E DSSESTAT                                                E20087
+     I*
+     ISCSARD    E DSSCSARDPD                                                                  CSE111
+      ** EXTERNAL DS FOR SAR DETAILS                                                          CSE111
+      *                                                                                       CSE111
+     IDSFDY     E DSDSFDY                                                                     CSE111
+      ** First DS for Access Programs, Short Data Structure                                   CSE111
+      *                                                                                       CSE111
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C* KEYLISTS FOR FILE CHAINS
+     C*
+     C*   - BOOK POSITION HEADER
+     C*
+     C           BKHKEY    KLIST
+     C                     KFLD           BPSC
+     C***********          KFLD           BPBR                            S01117
+     C                     KFLD           BPBA                            S01117
+     C                     KFLD           BPBK
+     C                     KFLD           BPMK
+     C                     KFLD           BPTV
+      *                                                                   E21574
+      ***  Book Position Historic Header.                                 E21574
+      *                                                                   E21574
+     C           BHHKEY    KLIST                                          E21574
+     C                     KFLD           BBSS                            E21574
+     C***********          KFLD           BBBR                     E21574 S01117
+     C                     KFLD           BBBA                            S01117
+     C                     KFLD           BBBK                            E21574
+     C                     KFLD           BBMK                            E21574
+     C                     KFLD           BBTV                            E21574
+     C                     KFLD           BBAD                            E21574
+     C*
+     C*  - BOOK POSITION
+     C           BKPKEY    KLIST
+     C                     KFLD           BBSS
+     C***********          KFLD           BBBR                            S01117
+     C                     KFLD           BBBA                            S01117
+     C                     KFLD           BBBK
+     C                     KFLD           BBMK
+     C                     KFLD           BBTV
+     C                     KFLD           BPSD
+     C*
+     C*  - BOOK POSITION - PART KEY
+     C           BKPKY     KLIST
+     C                     KFLD           BBSS
+     C***********          KFLD           BBBR                            S01117
+     C                     KFLD           BBBA                            S01117
+     C                     KFLD           BBBK
+     C                     KFLD           BBMK
+     C                     KFLD           BBTV
+     C*                                                                   E29207
+     C*  - BOOK POSITION ACTIONS - KEY                                    E29207
+     C           BPCKEY    KLIST                                          E29207
+     C                     KFLD           BCSS                            E29207
+     C                     KFLD           BCBA                            E29207
+     C                     KFLD           BCMK                            E29207
+     C                     KFLD           BCBO                            E29207
+     C                     KFLD           BCTV                            E29207
+     C                     KFLD           BCAD                            E29207
+     C                     KFLD           BCAS                            E29207
+     C                     KFLD           BCTS                            E29207
+     C                     KFLD           BCTR                            E29207
+     C                     KFLD           BCRV                            E29207
+     C***********                                                  E20087 E23147
+     C***Monthly*book*position*statistics*file*(BKMTH)******       E20087 E23147
+     C***********                                                  E20087 E23147
+     C***********BKMKEY    KLIST                                   E20087 E23147
+     C***********          KFLD           BHSC                     E20087 E23147
+     C***********          KFLD           BHBR                     E20087 E23147
+     C***********          KFLD           BHBK                     E20087 E23147
+     C***********          KFLD           BHMK                     E20087 E23147
+     C***********          KFLD           BHTV                     E20087 E23147
+     C***********          KFLD           BKED                     E20087 E23147
+     C*                                                                   E20087
+     C*  - BOOK POSITION ACTION
+     C           BPAKEY    KLIST
+     C                     KFLD           BBSS
+     C***********          KFLD           BBBR                            S01117
+     C                     KFLD           BBBA                            S01117
+     C                     KFLD           BBMK
+     C                     KFLD           BBBK
+     C                     KFLD           BBTV
+     C***********          KFLD           BPSD                                         E23147 248817
+     C***********          KFLD           BBAD                            E23147
+     C***********          KFLD           BBAD                                       248817 MD036871
+     C                     KFLD           BPSD                                              MD036871
+     C*
+     C*  - BOOK POSITION ACTION - PART KEY
+     C           BPAKY     KLIST
+     C                     KFLD           BBSS
+     C***********          KFLD           BBBR                            S01117
+     C                     KFLD           BBBA                            S01117
+     C                     KFLD           BBMK
+     C                     KFLD           BBBK
+     C                     KFLD           BBTV
+     C*
+     C*  - TABLE
+     C           TABKEY    KLIST
+     C                     KFLD           TKEY
+     C*
+      ***  Define Fields
+     C           *LIKE     DEFN NPSN      PNPSN
+     C           *LIKE     DEFN APNC      PAPNC
+     C           *LIKE     DEFN APPB      PAPPB
+      *                                                                                       CAS006
+      ** Access SAR Details to see if CAS006 is installed                                     CAS006
+      *                                                                                       CAS006
+     C                     MOVE 'N'       CAS006  1                                           CAS006
+     C                     CALL 'AOSARDR0'                                                    CAS006
+     C                     PARM *BLANKS   PRTCD   7                                           CAS006
+     C                     PARM '*VERIFY 'POPTN   7                                           CAS006
+     C                     PARM 'CAS006'  PSARD   6                                           CAS006
+      *                                                                                       CAS006
+     C           PRTCD     IFNE *BLANKS                                                       CAS006
+     C           PRTCD     ANDNE'*NRF   '                                                     CAS006
+     C           *LOCK     IN   LDA                                                           CAS006
+     C                     MOVEL'CAS006'  DBKEY                                               CAS006
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS006
+     C                     Z-ADD95        DBASE                                               CAS006
+     C                     OUT  LDA                                                           CAS006
+     C                     EXSR *PSSR                                                         CAS006
+     C                     ELSE                                                               CAS006
+      *                                                                                       CAS006
+     C           PRTCD     IFEQ *BLANKS                                                       CAS006
+     C                     MOVE 'Y'       CAS006                                              CAS006
+     C                     ENDIF                                                              CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CAS006
+     C*
+     C* ACCESS ICD INFORMATION
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE2230  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C                     EXSR FIRST
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C* DEFINE AND CLEAR WORK FIELDS AND INDICATORS
+     C*
+     C                     Z-ADD0         IREC    50
+     C                     Z-ADD0         BPDREC  50
+     C                     Z-ADD0         BPPREC  50
+     C                     Z-ADD0         BHDREC  50
+     C                     Z-ADD0         BKNREC  50
+     C                     Z-ADD0         BHUREC  50
+     C                     Z-ADD0         BPFREC  50
+     C                     Z-ADD0         BPOREC  50
+     C                     Z-ADD0         BHRREC  50
+     C                     Z-ADD0         PRJREC  50
+     C                     MOVE *BLANKS   OLDKEY 17
+     C*
+     C* READ AND PROCESS ALL BOOK POSITION BACKVALUED ACTIONS UNTIL EOF
+     C*
+     C           *IN89     DOUEQ'1'
+     C           *INU7     OREQ '1'
+     C                     READ BPACB                    89
+      *                                                                                       CSE111
+     C           CSE111    IFEQ 'Y'                                                           CSE111
+      *                                                                                       CSE111
+      ** Ignore Dividend Events                                                               CSE111
+      *                                                                                       CSE111
+     C           *IN89     DOWEQ'0'                                                           CSE111
+     C           BBAS      ANDEQ'35'                                                          CSE111
+     C                     ADD  1         IREC                                                CSE111
+     C                     READ BPACB                    89                                   CSE111
+     C                     ENDDO                                                              CSE111
+      *                                                                                       CSE111
+     C                     ENDIF                                                              CSE111
+      *                                                                                       CSE111
+     C           *IN89     IFEQ '1'
+     C                     GOTO ENDLP
+     C                     END
+     C*
+     C                     ADD  1         IREC
+     C*
+     C* CLEAR INDICATORS
+     C*
+     C                     MOVE '0'       *IN12
+     C                     MOVEA'000000'  *IN,84
+     C*
+     C* IF NO CHANGE IN KEY - IGNORE ACTION RECORD
+     C*
+     C           OLDKEY    IFNE BBNEW
+     C                     MOVE BBNEW     OLDKEY
+     C*
+     C* COUNT BACKVALUED POSITIONS
+     C*
+     C                     ADD  1         BVREC   50
+     C*
+     C*  RESET BOOK POSITIONS, BOOK POSITION HEADER AND HISTORIC BOOK
+     C*   POSITION ACTIONS FILES
+     C*
+     C                     EXSR RBKPOS
+     C                     EXSR RBKPHD
+     C*
+     C           *INU7     IFEQ '1'
+     C                     GOTO ENDLP
+     C                     END
+     C*
+     C                     EXSR RBPACH
+     C*
+     C* OUTPUT PROFIT ADJUSTMENT DETAILS
+     C*
+     C                     EXSR W01
+     C*
+     C                     END
+     C*
+     C           ENDLP     TAG                             *** ENDLP  ***
+     C*
+     C                     END
+     C*
+     C* UPDATE AUDIT RECORDS AND OUTPUT CONTROL REPORT
+     C*
+     C           EAUDIT    TAG                             *** EAUDIT ***
+     C*
+     C                     EXSR AUDIT
+     C*
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST  - SUBROUTINE TO ACCESS ICD INFORMATION                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           *** FIRST  ***
+     C*
+     C* ACCESS ICD
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+      *                                                                   E20087
+      ***  Get Data Area SESTAT for EOM day number.                       E20087
+      *                                                                   E20087
+     C           *NAMVAR   DEFN SESTAT    DTAARA                          E20087
+     C                     IN   DTAARA                                    E20087
+     C*
+      ** Access Switchable Features file to determine if CSE111 is on                         CSE111
+      *                                                                                       CSE111
+     C                     CALL 'AOSARDR0'                                                    CSE111
+     C                     PARM *BLANKS   PRTCD   7                                           CSE111
+     C                     PARM '*VERIFY' POPTN   7                                           CSE111
+     C                     PARM 'CSE111'  PSARD   6                                           CSE111
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSE111
+      *                                                                                       CSE111
+      ** An NRF (No Record Found) return code is valid.                                       CSE111
+      ** Issue database error only for error return codes.                                    CSE111
+      *                                                                                       CSE111
+     C                     MOVE 'N'       CSE111  1                                           CSE111
+     C           PRTCD     IFEQ *BLANKS                                                       CSE111
+     C                     MOVE 'Y'       CSE111                                              CSE111
+     C                     ENDIF                                                              CSE111
+      *                                                                                       CSE111
+     C/COPY WNCPYSRC,SE2230C001
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RBKPOS - THIS SUBROUTINE FINDS THE LATEST CORRECT POSITION   *
+      *           PRIOR TO THE BACKVALUATION AND DELETES THE REMAINING*
+      *           POSITIONS.                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RBKPOS    BEGSR                           *** RBKPOS ***
+     C*
+     C* FIND LATEST POSITION UNAFFECTED BY THIS ACTION
+     C*
+     C                     Z-ADDBBAD      BPSD    50
+     C           BKPKEY    SETLLBKPOS
+     C*
+     C                     READPBKPOS                    88
+     C*
+     C           *IN88     IFEQ '0'
+     C           BBNEW     ANDNEBKNEW
+     C                     MOVE '1'       *IN88
+     C                     END
+      *
+      ***  If Previous record not found
+      *
+     C           *IN88     IFEQ '1'
+     C                     Z-ADD0         WLCRD   50
+     C***********          Z-ADD0         PEBD                            E18651
+      *                                                                   E18651
+      ***  Initialise fields on PRFAJD                                    E18651
+      *                                                                   E18651
+     C           BBAD      SUB  1         PEBD                            E18651
+     C                     Z-ADD0         PENP
+     C                     Z-ADD0         PEBP
+     C                     Z-ADD0         PEPI
+     C/COPY WNCPYSRC,SE2230C002
+     C                     Z-ADD0         PEBA
+     C***********          Z-ADD0         PNPSN                           E18651
+     C***********          Z-ADD0         PAPNC                           E18651
+     C***********          Z-ADD0         PAPPB                           E18651
+     C***********          Z-ADD0         LNPSN                    E20087 E23147
+     C***********          Z-ADD0         LBPPD                    E20087 E23147
+      *                                                                   E18651
+      ***  Initialise fields on BKPORD                                    E18651
+      *                                                                   E18651
+     C                     MOVE 'D'       RECI                            E18651
+     C                     MOVE BBSS      BPSC                            E18651
+     C***********          MOVE BBBR      BPBR                     E18651 S01117
+     C                     MOVE BBBA      BPBA                            S01117
+     C                     MOVE BBBK      BPBK                            E18651
+     C                     MOVE BBMK      BPMK                            E18651
+     C                     MOVE BBTV      BPTV                            E18651
+     C           BBAD      SUB  1         BPPD                            E18651
+     C                     Z-ADD*ZERO     NPSN                            E18651
+     C                     Z-ADD*ZERO     ECNP                            E18651
+     C                     Z-ADD*ZERO     APPB                            E18651
+     C                     Z-ADD*ZERO     RPTP                            E18651
+     C                     Z-ADD*ZERO     PILP                            E18651
+     C                     Z-ADD*ZERO     APNC                            E18651
+     C                     Z-ADD*ZERO     SNPI                            E18651
+     C                     Z-ADD*ZERO     SNSI                            E18651
+     C                     Z-ADD*ZERO     SANP                            E18651
+     C                     Z-ADD*ZERO     SANS                            E18651
+     C                     Z-ADD*ZERO     ANMP                            E18651
+     C                     Z-ADD*ZERO     AAPR                            E18651
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADD*ZERO     APPN                                                CAS006
+     C                     Z-ADD*ZERO     APNN                                                CAS006
+     C                     Z-ADD*ZERO     PILN                                                CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CSE065
+     C                     Z-ADD*ZEROS    BKCOST                                              CSE065
+     C/COPY WNCPYSRC,SE2230C003
+      *
+      ***  Else Previous record found
+     C                     ELSE
+     C                     Z-ADD0         PEPI                            101038
+     C                     Z-ADDBPPD      WLCRD
+     C                     Z-ADDBPPD      PEBD
+     C                     Z-ADDNPSN      PENP
+     C                     Z-ADDPILP      PEBP
+     C***********          Z-ADDNPSN      PNPSN                           E18651
+     C***********          Z-ADDAPNC      PAPNC                           E18651
+     C                     Z-ADDAPPB      PEBA
+     C***********          Z-ADDAPPB      PAPPB                           E18651
+     C***********          Z-ADDNPSN      LNPSN                    E20087 E23147
+     C***********          Z-ADDBPPD      LBPPD                    E20087 E23147
+     C***********          END                                     E18651 E23147
+     C***********          END                                            E23147
+     C/COPY WNCPYSRC,SE2230C004
+     C                     END                                            E29207
+     C*
+     C* WRITE RECORD TO BOOK POSITION REVERSAL FILE
+     C*
+     C                     WRITEBKPORDF
+     C                     ADD  1         BPOREC
+     C***********          END                                            E18651
+     C***********          END                                     E23147 E29207
+     C*
+     C* DELETE ALL SUBSEQUENT BOOK POSITIONS FOR THIS KEY
+     C*
+     C                     MOVE '0'       *IN88
+     C                     Z-ADDBBAD      BPSD
+     C           BKPKEY    SETLLBKPOS
+     C*
+     C           *IN88     DOUEQ'1'
+     C           BKPKY     READEBKPOS                    88
+     C           *IN88     IFEQ '0'
+     C***********          MOVE '*'       RECI                            E21085
+     C***********          UPDATBKPOSDF                                   E21085
+     C                     WRITEBKPOPDF                                                       246619
+     C                     DELETBKPOSDF                                   E21085
+     C                     Z-ADDPILP      PEPI
+     C/COPY WNCPYSRC,SE2230C005
+     C                     ADD  1         BPDREC
+      *                                                                   E20087
+     C***********                                                  E200871E23147
+     C***Save*position*for*use*in*SR/RBKMTH(only*latest*position*matters).E23147
+     C***********BPPD      IFNE LBPPD                              E200871E23147
+     C***********          Z-ADDNPSN      LNPSN  150               E200871E23147
+     C***********          Z-ADDBPPD      LBPPD   50               E200871E23147
+     C***********          END                                     E200871E23147
+     C***********                                                  E200871E23147
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RBKPHD - THIS SUBROUTINE FINDS THE BOOK POSITION HEADER FROM *
+      *           THE HISTORIC HEADERS FILE THAT CORRESPONDS TO THE   *
+      *           LATEST CORRECT BOOK POSITION                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RBKPHD    BEGSR                           *** RBKPHD ***
+     C***********                                                         E18651
+     C**FIND*HISTORIC*BOOK*POSITION*HEADER*FOR*LATEST*CORRECT*POSITION    E18651
+     C*****DATE********************************************************   E18651
+     C***********                                                         E18651
+     C***********WLCRD     IFNE 0                                         E18651
+     C***********          Z-ADDWLCRD     BPSD                            E18651
+     C***********BKPKEY    CHAINBKPHH                86                   E18651
+     C************IN86     IFEQ '0'                                       E18651
+     C***********                                                         E18651
+     C*****IF*RECORD*FOUND**WRITE*COPY*TO*BOOK*POSITION*REVERSAL*FILE**   E18651
+     C************                                                        E18651
+     C***********          WRITEBKHRDDF                                   E18651
+     C***********          ADD  1         BHRREC                          E18651
+     C***********                                                         E18651
+     C*****STORE*HISTORIC*RECORD*TO*PREVENT*OVERWRITING****************   E18651
+     C***********                                                         E18651
+     C***********          MOVE HREC      HRECST                          E18651
+     C***********          END                                            E18651
+     C***********                                                         E18651
+     C***********          ELSE                                           E18651
+     C***********          MOVE '1'       *IN86                           E18651
+     C***********          END                                            E18651
+     C************                                                        E18651
+     C*****FIND*EXISTING*CURRENT*BOOK*POSITION*HEADER******************   E18651
+     C***********                                                         E18651
+     C*****DBASE*ERROR*IF*NOT*FOUND                                       E18651
+     C***********                                                         E18651
+     C***********BKPKY     CHAINBKPHD                87                   E18651
+     C***********                                                         E18651
+     C************IN87     IFEQ '1'                                       E18651
+     C***********          MOVE BBSS      BHSC                            E18651
+     C***********          MOVE BBBR      BHBR                            E18651
+     C***********          MOVE BBBK      BHBK                            E18651
+     C***********          MOVE BBMK      BHMK                            E18651
+     C***********          MOVE BBTV      BHTV                            E18651
+     C***********          Z-ADD*ZEROS    PEPL                            E18651
+     C***********          Z-ADD*ZEROS    PEDV                            E18651
+     C***********          Z-ADD*ZEROS    PECP                            E18651
+     C***********          Z-ADD*ZEROS    PEPP                            E18651
+     C***********          END                                            E18651
+     C*                                                                   E18651
+     C*  FIND EXISTING CURRENT BOOK POSITION HEADER                       E18651
+     C*  DBASE ERROR IF NOT FOUND                                         E18651
+     C*                                                                   E18651
+     C           BKPKY     CHAINBKPHD                87                   E18651
+     C*                                                                   E18651
+     C           *IN87     IFEQ '1'                                       E18651
+     C                     MOVE '1'       *INU7                           E18651
+     C                     MOVE '1'       *INU8                           E18651
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'BKPHD'   DBFILE                          E18651
+     C                     MOVELBBNEW     DBKEY                           E18651
+     C                     Z-ADD02        DBASE                           E18651
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EBKPHD                                    E18651
+     C***********                                                  E20087 E23147
+     C***If*BKPHD*'V'*record*found,*update*amortization*figures*on*BKMTH7 E23147
+     C***********          ELSE                                    E20087 E23147
+     C***********BHTV      IFEQ 'V'                                E20087 E23147
+     C***********          EXSR RBKMTH                             E20087 E23147
+     C***********          END                                     E20087 E23147
+     C***********                                                  E20087 E23147
+     C                     END                                            E18651
+     C*
+     C*  - STORE DATA FOR PROFIT ADJUSTMENT RECORD
+     C*
+     C                     Z-ADDUPPT      PEPL
+     C                     Z-ADDBHDP      PEDV
+     C                     Z-ADDBHCP      PECP
+     C                     Z-ADDBHPP      PEPP
+      *                                                                                       228113
+     C           CAS006    IFEQ 'Y'                                                           228113
+     C                     Z-ADD0         PEEFUP 130                                          228113
+     C                     Z-ADD0         PEECUP 130                                          228113
+     C                     Z-ADD0         PEXFUP 130                                          228113
+     C                     Z-ADD0         PEXCUP 130                                          228113
+     C                     Z-ADDFSEFUP    PEEFUP 130                                          228113
+     C                     Z-ADDFSECUP    PEECUP 130                                          228113
+     C                     Z-ADDFSXFUP    PEXFUP 130                                          228113
+     C                     Z-ADDFSXCUP    PEXCUP 130                                          228113
+     C                     ENDIF                                                              228113
+     C*                                                                   E18651
+     C*                                                                   E18651
+     C*                                                                   E23147
+     C** - SAVE CURRENT BKPHDD CONTROL FIELDS                             E23147
+     C*                                                                   E23147
+     C                     Z-ADDICLD      SVICLD  50                      E23147
+     C                     Z-ADDLPCD      SVLPCD  50                      E23147
+     C                     Z-ADDLATD      SVLATD  50                      E23147
+     C                     Z-ADDDNAT      SVDNAT  20                      102506
+     C***********                                                   E18651E23147
+     C***SET*DATE*ACCRUED*TO*EQUAL*TO*LAST*POSITION*CHANGE*DATE*IF*THIS651E23147
+     C***IS*GREATER*THAN*LAST*POSITION*DATE*(FOR*SE2220*REVERSAL*RUN)18651E23147
+     C***********                                                   E18651E23147
+     C***********          Z-ADD*ZERO     ICLDXX  50                E18651E23147
+     C***********LPCD      IFGT LPSD                                E18651E23147
+     C***********          Z-ADDLPCD      ICLDXX                    E18651E23147
+     C***********          END                                      E18651E23147
+     C*  FIND HISTORIC BOOK POSITION HEADER FOR LATEST CORRECT POSITION   E18651
+     C*  DATE (SET FIELDS BEFOREHAND IN CASE NO RECORD IS FOUND)          E18651
+     C*                                                                   E18651
+     C                     Z-ADDPEBD      FPSD                            E21232
+     C                     Z-ADDPEBD      LPSD                            E21232
+     C                     Z-ADD*ZERO     LPCD                            E21232
+     C                     Z-ADD*ZERO     LAVP                            E21232
+     C                     Z-ADD*ZERO     LATD                            E21232
+     C                     Z-ADD*ZERO     DNAT                            102506
+     C                     Z-ADD*ZERO     ARPC                            E21232
+     C                     Z-ADD*ZERO     IACR                            E21232
+     C                     Z-ADD*ZERO     NAVP                                                CSE065
+     C                     Z-ADD*ZERO     BKVAMT                                              CSE065
+     C                     Z-ADD*ZERO     EQTAMT                                              CSE065
+      *                                                                                       CSE065
+     C/COPY WNCPYSRC,SE2230C006
+     C                     Z-ADD*ZERO     IACP                            E21232
+     C                     Z-ADD*ZERO     INDO                            E21232
+     C                     Z-ADD*ZERO     DPAP                            E21232
+     C                     Z-ADD*ZERO     DPFP                            S01397
+     C                     Z-ADD*ZERO     BUDU                            E21232
+     C                     Z-ADD*ZERO     BHTR                            E21232
+     C                     Z-ADD*ZERO     BHRN                            E21232
+     C                     Z-ADD*ZERO     LPRC                            E21232
+     C                     Z-ADD*ZERO     BHDP                            E21232
+     C                     Z-ADD*ZERO     BHCP                            E21232
+     C                     Z-ADD*ZERO     BHPP                            E21232
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADD*ZERO     LAVN                                                CAS006
+     C                     Z-ADD*ZERO     INDN                                                CAS006
+     C                     Z-ADD*ZERO     DPAN                                                CAS006
+     C                     Z-ADD*ZERO     BUDN                                                CAS006
+     C                     ENDIF                                                              CAS006
+     C           WLCRD     IFNE 0                                         E18651
+     C                     Z-ADDWLCRD     BPSD                            E18651
+     C***********BKPKEY    CHAINBKPHH                86                   E20125
+      *                                                             E21574E23147
+     C*****SE2220*writes*a*record*to*BKPHHD*for*each*Date*on*which*any1574E23147
+     C*****Action*is*processed*for*a*given*Position.*In*resetting*BKPHD574E23147
+     C*****we*want*to*access*the*latest*BKPHHD*record*before*the*Date1574 E23147
+     C*****of*the*Backvalued*Action.*We*can't*just*get*the*last*BKPHDD574 E23147
+     C*****record*with*LPSD*=*WLCRD,*as*SE2220*may*have*written*this21574 E23147
+     C*****record*after*processing*a*non-Trade*Action*that*post-dates1574 E23147
+     C*****the*Backvalued*Action.*So*instead,*look*for*LPCD*<*BBAD.E21574 E23147
+      *                                                            E21574 E23147
+     C***********BKPKEY    SETGTBKPHH                              E20125 E21574
+     C***********BHHKEY    SETLLBKPHH                              E21574 E23147
+     C*                                                                   E23147
+     C*** An Historic Header must Exist for each BKPOSD record.           E23147
+     C*** Unless its a dummy created for its Input cycle fields.          E23147
+     C*                                                                   E23147
+     C           BKPKEY    CHAINBKPHH                86                   E23147
+      *                                                            E20125
+     C***Because*BKPHH*has*no*select/omit*criteria,*must*continue*to*read E23147
+     C***file*until*a*live*record*is*encountered.**Otherwise,*might*pick5 E23147
+     C***up*historic*details*from*a*record*which*was*deleted*due*to*a0125 E23147
+     C***previous*backvaluation*(SEC1004*doesn't*drop*these*until*EOM)125 E23147
+     C*                                                                   E23147
+     C*** BKPHH Omits *'ed records so no need to loop                     E23147
+      *                                                            E20125 E23147
+     C***********RECI      DOUNE'*'                                E20125 E23147
+     C************IN86     OREQ '1'                                E20125 E23147
+     C***********          READPBKPHH                    86        E20125 E23147
+     C***********          END                                     E20125 E23147
+     C***********                                                  E20125 E23147
+     C           *IN86     IFEQ '1'                                       E20125
+     C***********BHKEY     ORNE BBNEW                              E20125 E23147
+     C***********LPSD      ORNE BPSD                               E20125 E23147
+     C*                                                                   E20125
+     C                     MOVE 'D'       RECI                            E20910
+     C                     MOVE BBNEW     BHKEY                           E20910
+     C                     Z-ADDPEBD      FPSD                            E18651
+     C                     Z-ADDPEBD      LPSD                            E18651
+     C                     Z-ADD*ZERO     LPCD                            E18651
+     C                     Z-ADD*ZERO     LAVP                            E18651
+     C                     Z-ADD*ZERO     LATD                            E18651
+     C                     Z-ADD*ZERO     DNAT                            102506
+     C                     Z-ADD*ZERO     ARPC                            E18651
+     C                     Z-ADD*ZERO     IACR                            E18651
+     C                     Z-ADD*ZERO     NAVP                                                CSE065
+     C                     Z-ADD*ZERO     BKVAMT                                              CSE065
+     C                     Z-ADD*ZERO     EQTAMT                                              CSE065
+      *                                                                                       CSE065
+     C/COPY WNCPYSRC,SE2230C007
+     C                     Z-ADD*ZERO     IACP                            E18651
+     C                     Z-ADD*ZERO     INDO                            E18651
+     C                     Z-ADD*ZERO     UPPT                            E18651
+     C                     Z-ADD*ZERO     DPAP                            E18651
+     C                     Z-ADD*ZERO     DPFP                            S01397
+     C                     Z-ADD*ZERO     BUDU                            E18651
+     C                     Z-ADD*ZERO     BHTR                            E18651
+     C                     Z-ADD*ZERO     BHRN                            E18651
+     C                     Z-ADD*ZERO     LPRC                            E18651
+     C                     Z-ADD*ZERO     BHDP                            E18651
+     C                     Z-ADD*ZERO     BHCP                            E18651
+     C                     Z-ADD*ZERO     BHPP                            E18651
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADD*ZERO     LAVN                                                CAS006
+     C                     Z-ADD*ZERO     INDN                                                CAS006
+     C                     Z-ADD*ZERO     DPAN                                                CAS006
+     C                     Z-ADD*ZERO     BUDN                                                CAS006
+     C                     ENDIF                                                              CAS006
+     C                     MOVE '1'       *IN86                           E18651
+     C*                                                                   E18651
+     C                     END                                            E18651
+     C***********          ELSE                                           E18651
+     C***********                                                  E18651 E21232
+     C***WRITE*DETAILS*TO*BOOK*POSITION*REVERSAL*FILE************* E18651 E21232
+     C***********                                                  E18651 E21232
+     C***********          Z-ADDICLDXX    ICLD                     E18651 E21232
+     C***********          WRITEBKHRDDF                            E18651 E21232
+     C***********          ADD  1         BHRREC                   E18651 E21232
+      *                                                                   E20125
+     C                     ELSE                                           E20125
+     C                     SETON                     86                   E20125
+     C*                                                                   E23147
+     C*** Book Position reversal Header is required if Historic Header    E23147
+     C*** Exists. ie independant WLCRD                                    E23147
+     C*                                                                   E23147
+     C                     END                                            E23147
+     C*  WRITE DETAILS TO BOOK POSITION REVERSAL FILE                     E21232
+     C*                                                                   E21232
+     C***********          Z-ADDICLDXX    ICLD                     E21232 E23147
+     C***********          WRITEBKHRDDF                            E21232 E35624
+     C*                                                                   E23147
+     C** - RESTORE  CURRENT BKPHDD CONTROL FIELDS                         E23147
+     C*                                                                   E23147
+     C                     Z-ADDSVICLD    ICLD                            E23147
+     C                     Z-ADDSVLPCD    LPCD                            E23147
+     C                     Z-ADDSVLATD    LATD                            E23147
+     C                     Z-ADDSVDNAT    DNAT                            102506
+     C                     WRITEBKHRDDF                                   E35624
+     C                     ADD  1         BHRREC                          E21232
+     C***********          END                                     E18651 E23147
+     C*
+     C*  - IF HISTORIC RECORD FOUND - UPDATE BOOK POSITION HEADER WITH
+     C*     HISTORIC DETAILS
+     C*
+     C           *IN86     IFEQ '0'
+     C                     EXSR U01
+     C                     MOVE '1'       *IN86
+     C                     ELSE                                           E18651
+     C*                                                                   E18651
+     C*  IF HISTORIC RECORD NOT FOUND                                     E18651
+     C*  UPDATE BOOK POSITION HEADER RECORDS WITH ZEROS AND BLANKS        E18651
+     C*                                                                   E18651
+     C                     MOVE '1'       *IN12                           E18651
+     C                     EXSR U01                                       E18651
+      *                                                                   E20212
+      ***  Must mark all existing BKPHH records as deleted. Otherwise     E20212
+      ***  system may use them in processing subsequent backvaluations.   E20212
+      *                                                                   E20212
+     C                     SETOF                     85                   E20212
+     C***********BKPKY     SETLLBKPHH                              E20212 E23147
+     C***********                                                  E20212 E23147
+     C************IN85     DOWEQ'0'                                E20212 E23147
+     C***********BKPKY     READEBKPHH                    85        E20212 E23147
+     C************IN85     IFEQ '0'                                E20212 E23147
+     C***********RECI      ANDNE'*'                                E20212 E23147
+     C***********          MOVE '*'       RECI                     E20212 E21085
+     C***********          UPDATBKHSTDF                            E20212 E21085
+     C***********          DELETBKHSTDF                            E21085 E23147
+     C***********          ADD  1         BHDREC                   E21085 E23147
+     C***********          END                                     E20212 E23147
+     C***********          END                                     E20212 E23147
+     C***********                                                  E20212 E23147
+     C                     END                                            E18651
+     C*
+     C*  - DELETE ALL SUBSEQUENT BOOK POSITION HEADER RECORDS FOR THIS
+     C*      KEY
+     C*
+     C                     Z-ADDPEBD      BPSD                            E18651
+     C           BKPKEY    SETGTBKPHH                                     E18651
+     C           *IN85     DOUEQ'1'
+     C           BKPKY     READEBKPHH                    85
+     C           *IN85     IFEQ '0'
+     C           RECI      ANDNE'*'                                       E20211
+     C***********          MOVE '*'       RECI                            E21085
+     C***********          UPDATBKHSTDF                                   E21085
+     C                     DELETBKHSTDF                                   E21085
+     C                     ADD  1         BHDREC
+     C                     END
+     C                     END
+     C***********                                                         E18651
+     C**RESTORE*HISTORIC*RECORD****************************************   E18651
+     C***********                                                         E18651
+     C***********          MOVE HRECST    HREC                            E18651
+     C***********                                                         E18651
+     C***********          ELSE                                           E18651
+     C***********                                                         E18651
+     C*****IF*HISTORIC*RECORD*NOT*FOUND********************************   E18651
+     C******UPDATE*BOOK*POSITION*HEADER*RECORDS*WITH*ZEROS*AND*BLANKS**   E18651
+     C***********                                                         E18651
+     C***********          MOVE '1'       *IN12                           E18651
+     C***********          EXSR U01                                       E18651
+     C***********          Z-ADD0         PEBA                            E18651
+     C***********                                                         E18651
+     C***********          END                                            E18651
+     C*
+     C           EBKPHD    ENDSR                           *** EBKPHD ***
+      *
+      *****************************************************************
+     C*EJECT*****                                                  E20087 E23147
+     C*************************************************************E20087 E23147
+     C***********                                                  E20087 E23147
+     C**RBKMTH*-*Adjusts*the*amortization*figures*on*BKMTH.******* E20087 E23147
+     C***********                                                  E20087 E23147
+     C*************************************************************E20087 E23147
+     C***********                                                  E20087 E23147
+     C***********RBKMTH    BEGSR                                   E20087 E23147
+     C***********                                                  E20087 E23147
+     C***Fetch*the current BKMTH record for this position.         E20087 E23147
+     C***********          MOVELEOPT      BKED                     E20087 E23147
+     C***********BKMKEY    CHAINBKMTHDF              80            E20087 E23147
+     C************IN80     IFEQ '0'                                E20087 E23147
+     C***********                                                  E20087 E23147
+     C***Save*amortization since LPSD for reversal processing in SEE20087 E23147
+     C***********          Z-ADDDPAP      DPTR                     E20087 E23147
+     C***********                                                  E20087 E23147
+     C***On*long*position,*discount*is*income,*premium*is*expense. E20087 E23147
+     C***On*short*position,*premium*is*income,*discount*is*expense.E20087 E23147
+     C***********                                                  E20087 E23147
+     C***********LNPSN     IFGT 0                                  E20087 E23147
+     C***********          SUB  DPAP      DPTM                     E20087 E23147
+     C***********          MOVE *BLANK    DPSP                     E20087 E23147
+     C***********          ELSE                                    E20087 E23147
+     C***********          ADD  DPAP      DPTM                     E20087 E23147
+     C***********          MOVE 'Y'       DPSP                     E20087 E23147
+     C***********          END                                     E20087 E23147
+     C***********                                                  E20087 E23147
+     C***********          EXCPTUPDBKM                             E20087 E23147
+     C***********          END                                     E20087 E23147
+     C***********                                                  E20087 E23147
+     C***********          ENDSR                                   E20087 E23147
+     C***********                                                  E20087 E23147
+      *****************************************************************   E20087
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RBPACH - THIS SUBROUTINE FLAGS ALL HISTORIC BOOK POSITIONS   *
+      *           SINCE THE BACKVALUED ACTION                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RBPACH    BEGSR                           *** RBPACH ***
+     C*
+     C**FIND*LATEST*ACTION*THAT*PREDATES*THE*BACKVALUED*ACTIONS****       E23147
+     C*                                                                   E23147
+     C***  Find the first action to be applied. All actions since LPSD    E23147
+     C***  need to be re-actioned                                         E23147
+     C*                                                                   E23147
+     C*
+     C***********BPAKEY    SETLLBPACH                                     E23147
+     C********** BPAKEY    SETGTBPACH                                                  E23147 248817
+     C********** BPAKEY    SETLLBPACH                                                248817 MD036871
+     C           BPAKEY    SETGTBPACH                                                       MD036871
+     C* FOR ALL SUBSEQUENT ACTIONS - FLAG RECORDS
+     C*
+     C                     SETOF                     84
+     C                     Z-ADD*ZERO     UPDCNT  50                      E29207
+     C           *IN84     DOUEQ'1'
+     C           BPAKY     READEBPACH                    84
+     C           *IN84     IFEQ '0'
+     C           RECI      ANDEQ'H'                                       E19332
+     C*                                                                   102506
+     C* No need to do reversal for Interest Rate Change                   102506
+     C*                                                                   102506
+     C           BCTP      ANDNE'IR'                                      102506
+     C                     MOVE 'D'       RECI
+     C           BCAS      IFEQ '10'                                      E18652
+     C                     MOVE '40'      BCAS                            E18652
+     C                     END                                            E18652
+     C***********          UPDATBPACCDF                                   E20085
+     C                     UPDATBPACHDF                                   E20085
+     C                     ADD  1         BPFREC
+     C                     ADD  1         UPDCNT                          E29207
+     C                     END
+     C                     END
+     C*                                                                   E29207
+     C* If no records were updated on BPACHD, then write out a DUMMY      E29207
+     C* reversal record to the current book position actions file in      E29207
+     C* order that the position is processed in the rev. run in SE2220    E29207
+     C*                                                                   E29207
+     C           UPDCNT    IFEQ 0                                         E29207
+     C                     EXSR WRTBPC                                    E29207
+     C                     END                                            E29207
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  U01    - SUBROUTINE TO UPDATE BOOK POSITION HEADER           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           U01       BEGSR                           ***  U01   ***
+     C*
+     C* USE DETAILS FROM HISTORIC HEADER IF FOUND
+     C*
+     C           *IN12     IFEQ '1'
+     C***********BBAS      IFEQ '10'                               E15965 E18652
+     C***********BBAS      IFEQ '40'                               E18652 E20845
+     C***********          Z-ADDBBAD      FPSD                            E23147
+     C***********WLCRD     IFEQ *ZEROS                             E16852 E23147
+     C***********          Z-ADDBBAD      LPSD                            E23147
+     C***********          ELSE                                    E16852 E23147
+     C***********          Z-ADDWLCRD     LPSD                     E16852 E23147
+     C***********          END                                     E16852 E23147
+     C**********           ELSE                                    E15965 E20845
+     C**********           Z-ADDBPSD      FPSD                     E15965 E20845
+     C**********           Z-ADDBPSD      LPSD                     E15965 E20845
+     C**********           END                                     E15965 E20845
+     C                     Z-ADDPEBD      FPSD                            E23147
+     C                     Z-ADDPEBD      LPSD                            E23147
+     C                     Z-ADDPEBD      LPCD                            E23147
+     C                     Z-ADDPEBD      LATD                            E23147
+     C                     Z-ADD*ZERO     DNAT                            102506
+     C                     Z-ADDPEBD      ICLD                            E23147
+     C***********          Z-ADD0         LPCD                            E23147
+     C***********          Z-ADD0         LAVP                            E23147
+     C***********          Z-ADD0         LATD                            E23147
+     C                     Z-ADD0         ARPC
+     C***********          Z-ADD0         ICLD                     E18651 E23147
+     C                     Z-ADD0         IACR
+     C/COPY WNCPYSRC,SE2230C008
+     C                     Z-ADD0         IACP
+     C                     Z-ADD0         INDO
+     C***********          Z-ADD0         UPPT                            E19445
+     C                     Z-ADD0         DPAP
+     C                     Z-ADD0         DPFP                            S01397
+     C                     Z-ADD0         BUDU
+     C                     Z-ADD0         BHTR                            E18651
+     C                     Z-ADD0         BHRN                            E18651
+     C                     Z-ADD0         LPRC                            E18651
+     C                     Z-ADD0         BHDP                            E18651
+     C                     Z-ADD0         BHCP                            E18651
+     C                     Z-ADD0         BHPP                            E18651
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADD*ZERO     LAVN                                                CAS006
+     C                     Z-ADD*ZERO     DPAN                                                CAS006
+     C                     Z-ADD*ZERO     BUDN                                                CAS006
+     C                     Z-ADD*ZERO     INDN                                                CAS006
+     C                     ENDIF                                                              CAS006
+     C*
+     C**Access*Security*file*to*fetch*nominal*currency*and*investment*typeE18651
+     C***********                                                         E18651
+     C***********BBSS      CHAINSECTYDF              44                   E18651
+     C**N44******SRECI     COMP '*'                      44               E18651
+     C************IN44     IFEQ '1'                                       E18651
+     C***********          MOVE '1'       *INU7                           E18651
+     C***********          MOVE '1'       *INU8                           E18651
+     C***********          MOVE 'SECTY'   DBFILE           ***************E18651
+     C***********          MOVELBBSS      DBKEY            * DB ERROR 08 *E18651
+     C***********          Z-ADD8         DBASE            ***************E18651
+     C***********          ELSE                                           E18651
+     C***********          MOVE SITP      INVT                            E18651
+     C***********          MOVE NMCY      NCRY                            E18651
+     C***********          END                                            E18651
+     C***********                                                         E18651
+     C***********          ELSE                                           E18651
+     C***********          MOVE HRECST    HREC                            E18651
+     C                     END
+     C*
+     C************IN87     IFEQ '0'                                       E18651
+      *                                                                   E21434
+      ***  Before updating the file, restore the value of UPPT from the   E21434
+      ***  original BKPHD record.                                         E21434
+      *                                                                   E21434
+     C                     Z-ADDPEPL      UPPT                            E21434
+     C                     Z-ADDSVICLD    ICLD                            E23147
+     C                     Z-ADDSVLPCD    LPCD                            E23147
+     C                     Z-ADDSVLATD    LATD                            E23147
+     C                     Z-ADDSVDNAT    DNAT                            102506
+      *                                                                                       228113
+     C           CAS006    IFEQ 'Y'                                                           228113
+     C                     Z-ADD0         PEEFUP 130                                          228113
+     C                     Z-ADD0         PEECUP 130                                          228113
+     C                     Z-ADD0         PEXFUP 130                                          228113
+     C                     Z-ADD0         PEXCUP 130                                          228113
+     C                     Z-ADDPEEFUP    FSEFUP                                              228113
+     C                     Z-ADDPEECUP    FSECUP                                              228113
+     C                     Z-ADDPEXFUP    FSXFUP                                              228113
+     C                     Z-ADDPEXCUP    FSXCUP                                              228113
+     C                     ENDIF                                                              228113
+      *                                                                   E21434
+     C                     UPDATBKPHDDF                                   E18651
+     C                     ADD  1         BHUREC
+     C***********          ELSE                                           E18651
+     C***********          MOVE 'D'       RECI                            E18651
+     C***********          WRITEBKPHDDF                                   E18651
+     C***********          ADD  1         BKNREC                          E18651
+     C***********          END                                            E18651
+     C*
+     C**Write*dummy*position*record************************************   E15965
+     C**Write*position*record*for*start*of*position*if*none*exists*E15965 E23147
+     C*
+     C*** No NEW BKPOSD records are required. If created with PEBD =      E23147
+     C*** BCAD - 1, this dummy Position is never Deleted.                 E23147
+     C*** Can't Generate = action Date as SE2220 will write it again      E23147
+     C*** and this program has deleted BKPOSD records dated GE Action dte E23147
+     C*** SE2220 has been amended to NOT give DB ERROR if missing         E23147
+     C*                                                                   E23147
+     C***********WLCRD     IFEQ 0                                         E23147
+     C************IN87     OREQ '0'                                       E15965
+     C***********          MOVE BHSC      BPSC                            E23147
+     C***********          MOVE BHBR      BPBR                            E23147
+     C***********          MOVE BHBK      BPBK                            E23147
+     C***********          MOVE BHMK      BPMK                            E23147
+     C***********          MOVE BHTV      BPTV                            E23147
+     C***********          MOVE 'D'       RECI                            E23147
+     C***********          Z-ADDBBAD      BPPD                     E15965 E23147
+     C***********          Z-ADDLPSD      BPPD                     E15965 E23147
+     C***********          Z-ADDPNPSN     NPSN                     E15965 E23147
+     C***********          Z-ADDPAPNC     APNC                     E15965 E23147
+     C***********          Z-ADDPAPPB     APPB                     E15965 E23147
+     C***********          Z-ADD*ZERO     NPSN                     E15965 E23147
+     C***********          Z-ADD*ZERO     ECNP                     E15965 E23147
+     C***********          Z-ADD*ZERO     APPB                     E15965 E23147
+     C***********          Z-ADD*ZERO     RPTP                     E15965 E23147
+     C***********          Z-ADD*ZERO     PILP                     E15965 E23147
+     C***********          Z-ADD*ZERO     APNC                     E15965 E23147
+     C***********          Z-ADD*ZERO     SNPI                     E15965 E23147
+     C***********          Z-ADD*ZERO     SNSI                     E15965 E23147
+     C***********          Z-ADD*ZERO     SANP                     E15965 E23147
+     C***********          Z-ADD*ZERO     SANS                     E15965 E23147
+     C***********          Z-ADD*ZERO     ANMP                     E15965 E23147
+     C***********          Z-ADD*ZERO     AAPR                     E15965 E23147
+     C***********          WRITEBKPOSDF                                   E23147
+     C***********          ADD  1         BPPREC                          E23147
+     C***********          END                                            E23147
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - SUBROUTINE TO UPDATE AUDIT RECORDS AND OUTPUT THE   *
+      *           CONTROL REPORT                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+     C*
+     C* CHECK NO DBASE ERROR HAS BEEN ENCOUNTERED SO FAR
+     C*
+     C           *INU7     IFEQ '0'
+     C*
+     C                     READ BPACBAF                  99
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'BPACB'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 03 *
+     C                     Z-ADD03        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C                     Z-ADDNORE      BPAREC  50
+     C           NORE      IFNE IREC
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *INU8
+     C                     END
+     C*
+     C                     READ BKPHDZF                  99
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'BKPHD'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 07 *
+     C                     Z-ADD07        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C                     Z-ADDNORE      BKHREC  50
+     C           NORE      ADD  BKNREC    BKTREC  50
+     C*
+     C                     READ BKPOSAF                  99
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'BKPOS'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 04 *
+     C                     Z-ADD04        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C                     Z-ADDNORE      BKPREC  50
+     C           NORE      ADD  BPPREC    BPTREC  50
+     C                     SUB  BPDREC    BPTREC                          E16833
+     C*
+     C                     READ BKPHHAF                  99
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'BKPHH'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 05 *
+     C                     Z-ADD05        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C                     Z-ADDNORE      BHHREC  50
+     C           NORE      SUB  BHDREC    BHTREC  50
+     C*
+     C                     READ BPACHAF                  99
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'BPACH'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 06 *
+     C                     Z-ADD06        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C                     Z-ADDRFGA      ORFGA   50
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* IF DIFFERENCE FOUND IN PREVIOUS TOTALS, NO FURTHER UPDATING
+     C* TAKES PLACE.
+     C*
+     C           *INU8     IFEQ '0'
+     C*
+     C* UPDATE BKPHDA AUDIT RECORD
+     C*
+     C                     Z-ADDBKTREC    NORE
+     C                     UPDATBKPHDZF
+     C*
+     C* UPDATE BKPOSA AUDIT RECORD
+     C*
+     C**SUBTRACT*NO*OF*DELETED*RECORDS*FROM*NORE*ON*BKPOSA******** E13949 E18671
+     C*                                                                   E13949
+     C                     Z-ADDBPTREC    NORE
+     C************         SUB  BPDREC    NORE                     E13949 E18671
+     C                     UPDATBKPOSAF
+     C*
+     C* UPDATE BKPHHA AUDIT RECORD
+     C*
+     C                     Z-ADDBHTREC    NORE
+     C                     UPDATBKPHHAF
+     C*
+     C* WRITE BKPORA AUDIT RECORD
+     C*
+     C                     Z-ADDBPOREC    NORE
+     C                     WRITEBKPORAF
+     C*
+     C* WRITE BKPHRA AUDIT RECORD
+     C*
+     C                     Z-ADDBHRREC    NORE
+     C                     WRITEBKPHDAF
+     C*
+     C* UPDATE BPACHA AUDIT RECORD
+     C*
+     C                     Z-ADDBPFREC    RFGA
+     C                     EXCPTBPCHRF
+     C*
+     C* WRITE PROFIT ADJUSTMENT AUDIT RECORD
+     C*
+     C                     Z-ADDPRJREC    NORE
+     C                     WRITEPRFAJAF
+     C*
+     C                     END
+     C                     END
+     C*
+     C*    -  OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADAU
+     C*
+     C           *INU7     IFEQ '0'
+     C*
+     C***********IREC      IFEQ 0                                         E29170
+     C***********          WRITENONE                                      E29170
+     C***********          ELSE                                           E29170
+     C                     WRITECONTROL
+     C                     WRITEHEADAU
+     C                     WRITECNTRL2
+     C***********          END                                            E29170
+     C*
+     C                     ELSE
+     C                     WRITEERROR
+     C                     END
+     C*
+     C***********          WRITETRAILAU                                   E29170
+     C***********                                                         E29170
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W01    - SUBROUTINE TO WRITE PROFIT ADJUSTMENT EXTRACT RECORD*
+      *                                                               *
+      *****************************************************************
+      *
+     C           W01       BEGSR                           ***  W01   ***
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE BBSS      PESS
+     C***********          MOVE BBBR      PEBR                            S01117
+     C                     MOVE BBBA      PEBH                            S01117
+     C                     MOVE BBBK      PEBK
+     C                     MOVE BBMK      PEMK
+     C                     MOVE BBTV      PETV
+     C*
+     C                     WRITEPRFAJDF
+     C*
+     C                     ADD  1         PRJREC
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT                                                              E29207
+      *****************************************************************   E29207
+      *                                                                   E29207
+      *   W01  - SUBROUTINE TO WRITE CURRENT BOOK POSITION ACTION RECORD  E29207
+      *                                                                   E29207
+      *****************************************************************   E29207
+      *                                                                   E29207
+     C           WRTBPC    BEGSR                                          E29207
+     C*                                                                   E29207
+     C                     MOVE 'D'       RECI                            E29207
+     C                     MOVELBBSS      BCSS                            E29207
+     C                     MOVE BBBA      BCBA                            E29207
+     C                     MOVE BBMK      BCMK                            E29207
+     C                     MOVE BBBK      BCBO                            E29207
+     C***********          Z-ADDRUND      BCAD                     E29207 E36547
+     C                     Z-ADDBBAD      BCAD                            E36547
+     C                     Z-ADDRUND      BCED                            E29207
+     C                     MOVEL'00'      BCAS                            E29207
+     C                     MOVE *BLANK    BCTP                            E29207
+     C                     MOVEL*BLANK    BCIT                            E29207
+     C                     Z-ADD0         BCUN                            E29207
+     C                     Z-ADD0         BCCP                            E29207
+     C                     Z-ADD0         BCTA                            E29207
+     C                     Z-ADD0         BCCF                            E29207
+     C                     Z-ADD0         BCPC                            E29207
+     C                     Z-ADD0         BCNC                            E29207
+     C                     MOVE *BLANKS   BCNR                            E29207
+     C                     Z-ADD0         BCOT                            E29207
+     C                     MOVELBBTV      BCTV                            E29207
+     C                     MOVEL*BLANK    BCTR                            E29207
+     C                     MOVE *BLANK    BCTS                            E29207
+     C                     MOVE *BLANK    BCPS                            E29207
+     C                     Z-ADD0         BCNL                            E29207
+     C                     Z-ADD0         BCCN                            E29207
+     C                     Z-ADD0         BCRA                            E29207
+     C                     Z-ADD0         BCCC                            E29207
+     C                     Z-ADD0         BCCT                            E29207
+     C                     Z-ADD0         BCTD                            E29207
+     C                     MOVE 'Y'       BCRV                            E29207
+     C                     Z-ADD0         INAJ                            E29207
+     C                     Z-ADD0         PCHI                            E29207
+     C/COPY WNCPYSRC,SE2230C009
+     C                     MOVE *BLANK    RMIP                            E29207
+     C                     Z-ADD0         CNTP                            E29207
+     C                     MOVE *BLANK    ACRI                            E29207
+     C                     MOVE *BLANK    TRCP                            E29207
+     C                     Z-ADD0         BCPR                            E29207
+     C                     Z-ADD0         BCP1                            E29207
+     C                     Z-ADD0         BCP2                            E29207
+     C                     Z-ADD0         BCPL                            E29207
+     C                     Z-ADD0         BCAT                            E29207
+     C                     Z-ADD0         BCDV                            E29207
+     C                     Z-ADD0         LCCP                            E29207
+     C                     MOVE *BLANK    BCCOAF                          CSE007
+      *                                                                                       CAS006
+      **Initialise the INAN before writing to BPACCD                                          CAS006
+      **if CAS006 is intalled.                                                                CAS006
+      *                                                                                       CAS006
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADD*ZERO     BCPN                                                CAS006
+     C                     Z-ADD*ZERO     CNTN                                                CAS006
+     C                     Z-ADD*ZERO     INAN                                                CAS006
+     C                     Z-ADD*ZERO     PCHN                                                CAS006
+     C                     ENDIF                                                              CAS006
+     C*                                                                   E29207
+     C* Chain to actions file to determine if record has already been     E29207
+     C* written in earlier run of this program. ie if pgm was restarted   E29207
+     C*                                                                   E29207
+     C           BPCKEY    CHAINBPACCDF              83                   E29207
+     C   83                WRITEBPACCDF                                   E29207
+     C*                                                                   E29207
+     C                     ADD  1         BPCOUT  50                      E29207
+     C*                                                                   E29207
+     C                     ENDSR                                          E29207
+      *                                                                   E29207
+      *****************************************************************   E29207
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  POSSR  - SUBROUTINE FOR ERROR HANDLING OF BOOK POSITION      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           POSSR     BEGSR                           *** POSSR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BKPOS'   DBFILE           ***************
+     C                     MOVELBBKEY     DBKEY            * DB ERROR 80 *
+     C                     Z-ADD80        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSPOS    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  PHDSR  - SUBROUTINE FOR ERROR HANDLING OF BOOK POSITION      *
+      *           HEADER FILE.                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PHDSR     BEGSR                           *** PHDSR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BKPHD'   DBFILE           ***************
+     C                     MOVELBKNEW     DBKEY            * DB ERROR 81 *
+     C                     Z-ADD81        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSPHD    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  PHASR  - SUBROUTINE FOR ERROR HANDLING OF BOOK POSITION      *
+      *           HEADER AUDIT FILE                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PHASR     BEGSR                           *** PHASR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BKPHD'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 93 *
+     C                     Z-ADD93        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSPHA    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  ACHSR  - SUBROUTINE FOR ERROR HANDLING OF ACTION RECORDS     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACHSR     BEGSR                           *** ACHSR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BPACH'   DBFILE           ***************
+     C                     MOVELBBKEY     DBKEY            * DB ERROR 82 *
+     C                     Z-ADD82        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSACH    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  PHHSR  - SUBROUTINE FOR ERROR HANDLING OF HISTORIC BOOK      *
+      *           POSITION HEADERS FILE.                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PHHSR     BEGSR                           *** PHHSR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BKPHH'   DBFILE           ***************
+     C                     MOVELBKNEW     DBKEY            * DB ERROR 83 *
+     C                     Z-ADD83        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSPHH    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  BPASR  - SUBROUTINE FOR ERROR HANDLING OF BOOK POSITION AUDIT*
+      *           RECORD                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BPASR     BEGSR                           *** BPASR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BKPOS'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 84 *
+     C                     Z-ADD84        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSBPA    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  HHASR  - SUBROUTINE FOR ERROR HANDLING OF HISTORIC BOOK      *
+      *           POSITION HEADER AUDIT RECORD                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           HHASR     BEGSR                           *** HHASR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BKPHH'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 85 *
+     C                     Z-ADD85        DBASE            ***************
+     C                     MOVE STSHHA    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  ORDSR  - SUBROUTINE FOR ERROR HANDLING OF REVERSAL BOOK      *
+      *           POSITIONS FILE.                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ORDSR     BEGSR                           *** ORDSR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BKPORD'  DBFILE           ***************
+     C                     MOVELBKNEW     DBKEY            * DB ERROR 86 *
+     C                     Z-ADD86        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSORD    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  ORASR  - SUBROUTINE FOR ERROR HANDLING OF REVERSAL BOOK      *
+      *           POSITIONS AUDIT RECORD                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ORASR     BEGSR                           *** ORASR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BKPORA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 87 *
+     C                     Z-ADD87        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSORA    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  HRDSR  - SUBROUTINE FOR ERROR HANDLING OF REVERSAL BOOK      *
+      *           POSITION HEADER RECORD                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           HRDSR     BEGSR                           *** HRDSR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BKPHRD'  DBFILE           ***************
+     C                     MOVELBHKEY     DBKEY            * DB ERROR 88 *
+     C                     Z-ADD88        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSHRD    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  HRASR  - SUBROUTINE FOR ERROR HANDLING OF REVERSAL BOOK      *
+      *           POSITION HEADER AUDIT RECORD                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           HRASR     BEGSR                           *** HRASR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BKPHRA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 89 *
+     C                     Z-ADD89        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSHRA    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  BHASR  - SUBROUTINE FOR ERROR HANDLING OF HISTORIC BOOK      *
+      *           POSITION ACTIONS AUDIT RECORD                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BHASR     BEGSR                           *** BHASR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BPACH'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 90 *
+     C                     Z-ADD90        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSBHA    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  PRDSR  - SUBROUTINE FOR ERROR HANDLING OF PROFIT ADJUSTMENT  *
+      *           EXTRACT RECORD                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRDSR     BEGSR                           *** PRDSR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'PRFAJ'   DBFILE           ***************
+     C                     MOVELPKEY      DBKEY            * DB ERROR 91 *
+     C                     Z-ADD91        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSPRD    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  PRASR  - SUBROUTINE FOR ERROR HANDLING OF PROFIT ADJUSTMENT  *
+      *           EXTRACT AUDIT RECORD                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRASR     BEGSR                           *** PRASR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'PRFAJ'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 92 *
+     C                     Z-ADD92        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSPRA    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************   E18651
+      ***********                                                     *   E18651
+      ****SECSR****SUBROUTINE*FOR*ERROR*HANDLING*OF*SECURITY*FILE******   E18651
+      ***********                                                     *   E18651
+      *****************************************************************   E18651
+     C***********                                                         E18651
+     C***********SECSR     BEGSR                                          E18651
+     C***********                                                         E18651
+     C***********          MOVE 'SECTY'   DBFILE           ***************E18651
+     C***********          MOVELBBSS      DBKEY            * DB ERROR 94 *E18651
+     C***********          Z-ADD94        DBASE            ***************E18651
+     C***********          MOVE STSSEC    DBSTAT                          E18651
+     C***********          MOVE '1'       *IN97                           E18651
+     C***********          SETON                     99U7U8               E18651
+     C***********          GOTO EAUDIT                                    E18651
+     C***********                                                         E18651
+     C***********          ENDSR                                          E18651
+      ***********                                                         E18651
+      *****************************************************************   E18651
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************   S01117
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+     O/EJECT
+     OBPACHAF E                BPCHRF
+     O                         RFGA
+     O**********                                                   E20087 E23147
+     O***BKMTHDF E                UPDBKM                           E20087 E23147
+     O**********               DPTM                                E20087 E23147
+     O**********               DPTR                                E20087 E23147
+     O**********               DPSP                                E20087 E23147
+**  CPY@
+(c) Finastra International Limited 2001

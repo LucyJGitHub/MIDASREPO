@@ -1,0 +1,589 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas¦ABS Restricted Retail Account Balances')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  REM3772A - RETAIL ACCOUNT BALANCES REPORT                    *
+      *                                                               *
+      *  Function:  This program reports all restricted accounts      *
+      *             by account code range which appear in the P2      *
+      *             report output in RE3772 but with a new spool      *
+      *             file generated for each branch and account code   *
+      *             range.                                            *
+      *             The program outputs a P3 report as it logically   *
+      *             belongs with the RE3772 P1 and P2 reports.        *
+      *             The file RETACOQ is resequenced using OPNQRYF in  *
+      *             REC3772A.                                         *
+      *                                                               *
+      *  Called By: REC3772A - Retail Account Balances Extract        *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1048918          Date 26Oct12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CRE024  *CREATE    Date 07Oct05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1048918 - RE3772P3 did not generate (Recompile)            *
+      *  CRE024 - COUNTRY LEVEL SWITCHABLE FEATURE :                  *
+      *           SECURITY FEATURES FOR RESTRICTED ACCOUNTS           *
+      *                                                               *
+     F*****************************************************************
+     FSTOPCL  IF  E           K        DISK
+     FRETACOQ IF  E           K        DISK
+     FSFRACRPAIF  E           K        DISK
+     FRE3772P3O   F     132     OF    LPRINTER      KINFDS SPOOL      UC
+     FRE3772AUO   F     132     OV     PRINTER      KINFDS SPOOLU     UC
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       05      RETACOQ FILE - DETAIL.                          *
+     F*       20      ACNO ON RETACOQ DETAIL - BLANK.                 *
+     F*       21      PRINT INDICATOR                                 *
+     F*                                                               *
+     F*       30      THIS CURRENCY HAS 0 DECIMAL POSITIONS.          *
+     F*       31      THIS CURRENCY HAS 1 DECIMAL POSITIONS.          *
+     F*       32      THIS CURRENCY HAS 2 DECIMAL POSITIONS.          *
+     F*       33      THIS CURRENCY HAS 3 DECIMAL POSITIONS.          *
+     F*                                                               *
+     F*       40      CONTROL 1ST CYCLE PROCESSING.                   *
+     F*       45      OVERDRAFT EXPIRED                               *
+     F*       50-55   REFERRAL INDICATORS                             *
+     F*                                                               *
+     F*       58      MULTIBRANCHING OUTPUT INDICATOR                 *
+     F*       76      NO DETAILS TO REPORT                            *
+     F*       88      MBIN = 'Y'                                      *
+     F*       93      RETAIL ACCOUNT INDICATOR                        *
+     F*                                                               *
+     F*       U7      DATABASE ERROR                                  *
+     F*       L1      CHANGE OF CURRENCY.                             *
+     F*       L2      CHANGE OF BRANCH.                               *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  ZRACNI - Checks if retail account numbers are supported      *
+     F*  CCYDEP - Determines number of decimal places of a currency   *
+     F*  *PSSR  - Handles Abnormal Error Conditions                   *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E**  Copyright insertion
+     E*
+     E/SPACE 3
+     L*
+     LRE3772P3 66FL 56OL
+     L*
+     I/EJECT
+     I*
+     ISPOOL       DS
+     I*
+     I**  Data structure for detail spool file information
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I*
+     I**  Data structure for audit spool file information
+     I*
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     IRUNDT       DS
+     I*
+     I** Data area RUNDAT
+     I*
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     ILDA         DS                            256
+     I*
+     I**  Local Data Area
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** External DS for Bank Details
+     I*
+     I              BJURPT                          TITL
+     I              BJDNWD                          DNWD
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I*
+     I** External DS for Branch Details
+     I*
+     I              A8BRNM                          BRNM
+     I*
+     ISDRETL    E DSSDRETLPD
+     I*
+     I** External DS for Retail Details
+     I*
+     I              BMRANR                          RACN
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     I** External DS for Currency Code Details
+     I*
+     I              A6NBDP                          DCP
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** Short Data Structure for Access Programs
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Long Data Structure for Access Programs
+     I*
+     C/EJECT
+     C*
+     C** Copyright Statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Key List
+     C*
+     C           STOPK     KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C*
+     C           *LIKE     DEFN BRCA      XBRCA
+     C*
+     C********************************************************************
+     C*   M A I N   R O U T I N E
+     C********************************************************************
+     C*
+     C**  First Cycle Processing
+     C*
+     C           *IN40     IFEQ '0'
+     C                     SETON                         40
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE 'RE3772A 'DBPGM
+     C*
+     C**  Access data area RUNDAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C** Access Bank Details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL@OPTN     DBKEY            * DBERR 001*
+     C                     Z-ADD001       DBASE            ************
+     C                     OUT  LDA
+     C                     SETON                     U7LR
+     C                     END
+     C*
+     C** Test for Multibraching
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN88
+     C                     END
+     C*
+     C                     EXSR ZRACNI
+     C                     END
+     C*
+     C**  Accumulate total records & records per branch.
+     C*
+     C                     READ RETACOQ                  LR
+     C*
+     C           *INLR     IFEQ '0'
+     C                     SETON                     05
+     C           TOTREC    ADD  1         TOTREC  50       TOTAL NO. RECS
+     C                     ELSE
+     C                     SETOF                     05
+     C                     GOTO END
+     C                     END
+     C*
+     C                     SETON                     21
+     C*
+     C           ACNO      IFEQ 0
+     C                     SETON                     20
+     C                     ELSE
+     C                     SETOF                     20
+     C                     END
+      *
+     C                     MOVE ACOD      #MACOD 10
+     C           #MACOD    SETGTSFRACRP0
+     C                     READPSFRACRP0                 90
+      *
+     C           *IN90     IFEQ '0'
+     C           #MACOD    ANDLEMTOAC
+      *
+     C           BRCA      IFNE XBRCA
+     C           MFRAC     ORNE XFRAC
+     C                     MOVE XBRCA     PBRCA   3
+     C                     MOVE BRCA      XBRCA
+     C                     MOVE MFRAC     XFRAC  10
+     C                     SETON                     L2
+     C                     ELSE
+     C                     SETOF                     L2
+     C                     END
+      *
+     C                     ELSE
+     C                     SETOF                     0521L2
+     C                     GOTO END
+     C                     END
+     C*
+     C           *INL2     IFEQ '1'
+     C                     EXCPT
+     C                     Z-ADD0         BRTOT
+     C                     CLOSERE3772P3
+     C                     SETON                     58
+     C                     OPEN RE3772P3
+     C*
+     C                     Z-ADD0         PAGE
+     C*
+     C** Ensure report spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANK    SEQ
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  Error during ZSFILE processing, return to calling program
+     C*
+     C                     SETON                     U7LR
+     C                     RETRN
+     C                     END
+     C*
+     C           MBIN      IFEQ 'Y'
+     C*
+     C** Get branch name (in BRNM)
+     C*
+     C                     CALL 'AOBRCHR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @DSNB   3
+     C           SDBRCH    PARM SDBRCH    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL@DSNB     DBKEY
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DBERROR 002 *
+     C                     OUT  LDA                        ***************
+     C                     SETON                     U7LR
+     C                     GOTO END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           BRTOT     ADD  1         BRTOT   40       RECS PER BRANCH
+     C*
+     C**  On change of CCY find no. dec. positions for this CCY.
+     C*
+     C           CCY       IFNE XCCY
+     C                     MOVE CCY       XCCY    3
+     C                     SETON                     L1
+     C                     EXSR CCYDEP
+     C           XDECP     COMP 1                      3031
+     C           XDECP     COMP 2                    33  32
+     C                     ELSE
+     C                     SETOF                     L1
+     C                     END
+     C*
+     C**  Test referral indicators.
+     C*
+     C                     TESTB'4'       RETB           50
+     C                     TESTB'2'       RETB           51
+     C                     TESTB'3'       RETB           52
+     C                     TESTB'0'       RETB           53
+     C                     TESTB'1'       RETB           54
+     C           STOPK     SETLLSTOPCL                   55
+     C*
+     C** Only output allowed overdraft it it is current
+     C*
+     C           ODLN      IFNE 0
+     C*
+     C           ODED      COMP DNWD                   45
+     C*
+     C           *IN45     IFEQ '1'
+     C                     Z-ADD0         ODLN
+     C                     SETOF                     45
+     C                     END
+     C*
+     C                     END
+     C*
+     C           END       TAG
+     C*
+     C**  Ensure error spool file recorded by RCF
+     C*
+     C           *INU7     IFEQ '1'
+     C                     OPEN RE3772AU
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANK    SEQ     5
+     C                     PARM *BLANK    SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  Error during ZSFILE processing, return to calling program
+     C*
+     C                     SETON                     U7
+     C                     RETRN
+     C                     END
+     C*
+     C                     EXSR *PSSR
+     C                     END
+     C********************************************************************
+     C*  E N D   O F   M A I N   R O U T I N E
+     C********************************************************************
+     C*
+     C*  ZRACNI   Subroutine to set indicator 93 if Retail Account
+     C*           Numbers are supported.  If RACN is not 'Y' or 'N'
+     C*           indicator 99 will be set on.
+     C*
+     C*  CALLED BY:      MAIN
+     C*  CALLS    :      Nothing
+     C*
+     C********************************************************************
+     C*
+     C           ZRACNI    BEGSR                           ***  ZRACNI  **
+     C*
+     C** Access Retail Details
+     C*
+     C                     CALL 'AORETLR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDRETL    PARM SDRETL    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDRETLPD'DBFILE           ************
+     C                     MOVEL@OPTN     DBKEY            * DBERR 003*
+     C                     Z-ADD003       DBASE            ************
+     C                     OUT  LDA
+     C                     SETON                     U7LR
+     C                     GOTO END
+     C*
+     C                     ELSE
+     C*
+     C           RACN      COMP 'Y'                      93
+     C  N93      RACN      COMP 'N'                  9999
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C*
+     C*  CCYDEP   Subroutine to obtain the number of decimal places
+     C*           for a currency.
+     C*
+     C*  CALLED BY:      MAIN
+     C*  CALLS    :      None
+     C*
+     C********************************************************************
+     C*
+     C           CCYDEP    BEGSR                           *** CCYDEP  ***
+     C*
+     C**  Access Currency Code Details
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM XCCY      @CCY    3
+     C           SDCURR    PARM SDCURR    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL@CCY      DBKEY
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD004       DBASE            * DBERROR 004 *
+     C                     OUT  LDA                        ***************
+     C                     SETON                     U7LR
+     C                     GOTO END
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADDDCP       XDECP   10
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C*
+     C*  *PSSR    Subroutine to handle abnormal error conditions
+     C*
+     C*  CALLED BY:   After abnormal operation occurs
+     C*
+     C*  CALLS    :   Nothing
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                            ** PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                            ** PSSR **
+     C********************************************************************
+     ORE3772P3H    3   L2 58
+     O       OR        OFNL2 58
+     O                                   25 'REFERENCE RE3772P3'
+     O                         TITL      92
+     O                                  122 'DATE              PAGE'
+     O                         RUNA     113
+     O                         PAGE  Z  127
+     O        H 2      L2 58
+     O       OR        OFNL2 58
+     O                                   18 'ACCOUNT RANGE '
+     O                         MFRAC     29
+     O                                   31 '-'
+     O                         MTOAC     42
+     O                                   64 'RESTRICTED '
+     O                                   87 'RETAIL ACCOUNT BALANCES'
+     O                 88                97 'BRANCH'
+     O                 88      BRCA     101
+     O                 88               102 '-'
+     O                 88      BRNM     132
+     O        H 1      L2 58
+     O       OR        OFNL2 58
+     O                                   57 '-----------'
+     O                                   80 '-----------------------'
+     O        H 2      L2 58
+     O       OR        OFNL2 58
+     O                                   25 'CUSTOMER NAME          '
+     O                                   39 '    ACCOUNT NO'
+     O        H 1      L2 58
+     O       OR        OFNL2 58
+     O                                   32 'CCY    TYPE        LEDGE'
+     O                                   56 'R BALANCE         CLEARE'
+     O                                   80 'D BALANCE            HEL'
+     O                                  104 'D AMOUNT    ALLOWED O/DR'
+     O                                  125 'AFT     REFERRAL INDS'
+     O        D 2      05 58
+     O                         CRNM      22
+     O                         ACNO      39
+     O                       20          48 '-   -          -'
+     O                       20CNUM      32
+     O                       20CCY       36
+     O                       20ACOD      47
+     O                       20ACSQ      50
+     O        D 1      05 58
+     O                         CCY       11
+     O                         STYP      17
+     O                       30GRBL      43 '   ,   ,   ,   , 0 CR'
+     O                       31GRBL      43 '  ,   ,   ,   , 0 . CR'
+     O                       32GRBL      43 ' ,   ,   ,   , 0 .  CR'
+     O                       33GRBL      43 '   ,   ,   , 0 .   CR'
+     O                       30NETBL     67 '   ,   ,   ,   , 0 CR'
+     O                       31NETBL     67 '  ,   ,   ,   , 0 . CR'
+     O                       32NETBL     67 ' ,   ,   ,   , 0 .  CR'
+     O                       33NETBL     67 '   ,   ,   , 0 .   CR'
+     O                       30HELD      89 '   ,   ,   ,   , 0 CR'
+     O                       31HELD      89 '  ,   ,   ,   , 0 . CR'
+     O                       32HELD      89 ' ,   ,   ,   , 0 .  CR'
+     O                       33HELD      89 '   ,   ,   , 0 .   CR'
+     O                         ODLN  1  108
+     O                       50         112 'IN'
+     O                       51         115 'BD'
+     O                       52         118 'BC'
+     O                       53         121 'RD'
+     O                       54         124 'RC'
+     O                       55         127 'SC'
+     O        E 3      L2 21 58
+     O       AND       88
+     O                                   61 'BRANCH TOTALS '
+     O        E 2      L2 21 58
+     O       AND       88
+     O                                   61 'NO OF RECORDS '
+     O                         BRTOT 3   66
+     O        E 3      L2 58
+     O                 88                66 '*** END OF REPORT FOR'
+     O                 88                74 ' BRANCH '
+     O                 88      PBRCA     77
+     O                 88                81 ' ***'
+     O        T 3      L2 21 58
+     O       AND       88
+     O                                   61 'BRANCH TOTALS '
+     O        T 2      L2 21 58
+     O       AND       88
+     O                                   61 'NO OF RECORDS '
+     O                         BRTOT 3   66
+     O        T 32     L2 U7 58
+     O                                   74 '*** DATABASE ERROR ***'
+     O        T 3      L2 58
+     O                 88                66 '*** END OF REPORT FOR'
+     O                 88                74 ' BRANCH '
+     O                 88      XBRCA     77
+     O                 88                81 ' ***'
+     O                N88                76 '*** END OF REPORT ***'
+     ORE3772AUT    3   LR U7
+     O                                   25 'REFERENCE RE3772AU'
+     O                         TITL      92
+     O                                  122 'DATE              PAGE'
+     O                         RUNA     113
+     O                         PAGE1 Z  127
+     O        T    5   LR U7
+     O                                   57 'RESTRICTED '
+     O                                   80 'RETAIL ACCOUNT BALANCES'
+     O                                   95 '   RUN CONTROLS'
+     O        T    6   LR U7
+     O                                   57 '-----------'
+     O                                   80 '-----------------------'
+     O*
+     O** Database error output
+     O*
+     O        T 32     LR U7
+     O                                   58 'DATABASE ERROR '
+     O                         DBASE     61
+     O                                   75 'IN PROGRAM '
+     O                         DBPGM     85
+     O        T  2     LR U7
+     O                                   48 'FILE '
+     O                         DBFILE    56
+     O                                   62 ', KEY '
+     O                         DBKEY     91
+      *
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2005

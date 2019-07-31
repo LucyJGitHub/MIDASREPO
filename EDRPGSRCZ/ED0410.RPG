@@ -1,0 +1,634 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Write drip format to EDBULKPD')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0410 - ED Write Drip format to EDBULKPD                    *
+      *                                                               *
+      *  Function: This program is called to send details of          *
+      *            historic balances to GM/DTA. It is called          *
+      *            whenever a record is being updated on PF/GLHIBLPD  *
+      *            or PF/GLAVBLPD, writing details of that change     *
+      *            to PF/EDBULKPD. To avoid repeatedly opening and    *
+      *            closing the program, it remains in memory until    *
+      *            it is called in *CLOSE mode.                       *
+      *                                                               *
+      *  Called By: MC0220 - Re-create Management Account             *
+      *             MC0230 - Update Management Accounts to EOP        *
+      *             MC0235 - Update Management Accounts with          *
+      *                      Movements                                *
+      *             MC0240 - Re-work DR/CR Average Balances           *
+      *             ED0415 - Special Processing program for EDHIBLPD  *
+      *             EDC0415- Special Processing Component for         *
+      *                      EDHIBLPD                                 *
+      *             ED0400 - MA Extract for deleted control group     *
+      *                                                               *
+      *  Calls:     EDC0024  - Open New Batch                         *
+      *             AOMEXPR0 - Access ED ICD Details                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CED002 *C *CREATE  Date 11Jun97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CED002 - Export Data Enhancement for GIB                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FEDFBUTPDUF  E           K        DISK         KINFSR *PSSR
+      **  List of files to transfer to DTA
+      *
+     FEDBULKPDO   F    4096            DISK         KINFSR *PSSR      UC
+      **  Bulk Transfer data
+      *
+     FEDSAVEPDO   E           K        DISK         KINFSR *PSSR A    UC
+      ** Batches to send to DTA
+      *
+     FEDSAVXPDO   E           K        DISK         KINFSR *PSSR A    UC
+      ** Batches to send to DTA
+      *
+     FEDBUAUPDO   E                    DISK         KINFSR *PSSR
+      **  Audit File
+      *
+     FED0410AUO   E                    PRINTER                        UC
+      **  Audit Report
+      *
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  01 - No EDFBUTPD record found to delete                      *
+      *  02 - LOKUP successful                                        *
+      *                                                               *
+      *  U7 - Database error                                          *
+      *  U8 - Database error                                          *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #CALL  - First call processing                               *
+      *  #WRITE - Generate Extract Record                             *
+      *  #OPEN  - Open new Batch processing                           *
+      *  #CLOSE - Close Batch processing                              *
+      *  #END   - Closedown processing                                *
+      *  *PSSR  - Program Error Processing                            *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+      *
+     E                    CPY@    1   1 80
+      **  Array for Object Copyright Statement.
+      *
+     E                    DATA     3971  1
+     E                    DATA2    3971  1
+      *
+      *
+      *
+     I/TITLE I-SPECIFICATIONS
+      *
+     IPSDS       SDS
+      **  Program status data structure.
+      *
+     I                                      244 253 WJOB
+     I                                      254 263 WUSER
+     I                                      264 2690WJOBNO
+      *
+     IDBERR       DS                            256
+      ** Data structure for data-base error processing.
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     I            DS
+      ** Data Structure for EDBULKPD output
+      *
+     I                                        1 125 BLKOUT
+     I                                        1   50JOENTL
+     I                                        6  150JOSEQN
+     I                                       16  16 JOCODE
+     I                                       17  18 JOENTT
+     I                                       19  24 JODATE
+     I                                       25  300JOTIME
+     I                                       31  40 JOJOB
+     I                                       41  50 JOUSER
+     I                                       51  560JONBR
+     I                                       57  66 JOPGM
+     I                                       67  76 JOOBJ
+     I                                       77  86 JOLIB
+     I                                       87  96 JOMBR
+     I                                       97 1060JOCTRR
+     I                                      107 107 JOFLAG
+     I                                      108 117 JOCCID
+     I                                      118 125 JORES
+      *
+     ITFROK       DS
+      ** Setup Data structure for Deletion from Failed Bulk Transfers
+      *
+     I                                        1  10 XFILEN
+     I                                       11  20 XMEMBN
+      *
+     IWOVR        DS                             54
+      **  DS for QCMDEXC
+      *
+     I                                       44  53 WDSBAT
+      *
+      **  Constant for QCMDEXC
+      *
+     I              'OVRDBF FILE(EDBULKPD-C         QOVR
+     I              ') TOFILE(EDBULKPD) M-
+     I              'BR(XXXXXXXXXX)'
+      *                                                                                       CCB020
+      ** Constant for calling program CBC001001                                               CCB020
+      *                                                                                       CCB020
+     I              'CBC001001'           C         PGNME                                     CCB020
+      *
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     ISDMEXP    E DSSDMEXPPD
+      ** ED ICD Details
+      *
+     ISDSTAT    E DSSDSTAT
+      ** SD data Data area data structure
+      *
+     I***PHAS      E DSMPHAS                                                                  CCB020
+      ** Midas Phase Data area Data Structure
+      *
+     IEDJSEQ    E DSEDJSEQDA                    256
+      ** ED Next available Journal Sequence, Commitment ID and Batch
+      ** Name Data Area data structure.
+      *
+     I                                       11  11 #AA
+     I                                       12  200#CMID
+     I                                       21  23 #EHA
+     I                                       24  300#BTCH
+      *
+     I            DS
+     I                                        1   7 ##LIB
+     I                                        1   2 ##B
+     I                                        3   7 ##DM
+      *
+      *-----------------------------------------------------------
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ** Program entry
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           AMODE   7
+     C                     PARM           FILNM  10
+     C                     PARM           MBRNM  10
+     C                     PARM           PROGNM 10
+     C                     PARM           ACTION  2
+     C                     PARM           DATA2
+     C                     PARM           WRTCD   1
+      *
+      ** First call indicator is off, do first call processing
+      *
+     C           CALL1     IFNE 'Y'
+     C                     EXSR #CALL
+     C                     ENDIF
+      *
+      ** Program called in close mode.
+      *
+     C           AMODE     IFEQ '*CLOSE'
+     C                     EXSR #END
+     C                     ENDIF
+      *
+      ** Retrieve Journal Seq. No. and Commitment ID, increment by 1.
+      *
+     C           *NAMVAR   DEFN EDJSEQDA  EDJSEQ
+     C           *LOCK     IN   EDJSEQ
+     C                     MOVELEDJNSQ    JOSEQN
+     C                     MOVELEDCMID    JOCCID
+     C                     MOVELEDJNSQ    #NUM   100
+     C                     ADD  1         #NUM
+     C                     MOVEL#NUM      EDJNSQ
+     C                     ADD  1         #CMID
+     C                     OUT  EDJSEQ
+      *
+      ** Set up journal entry preamble fields.
+      *
+     C                     MOVELFILNM     JOOBJ
+     C                     MOVELMBRNM     JOMBR
+     C                     MOVELPROGNM    JOPGM
+      *
+      ** Find table entry for file.
+     C                     SELEC
+     C           FILNM     WHEQ 'GLHIBLPD'
+     C                     Z-ADD125       JOENTL
+     C                     ADD  178       JOENTL
+     C                     MOVE 'XXDMLIB' ##LIB
+     C                     MOVE *ON       *IN02
+     C           FILNM     WHEQ 'GLAVBLPD'
+     C                     Z-ADD125       JOENTL
+     C                     ADD  234       JOENTL
+     C                     MOVE 'XXDMLIB' ##LIB
+     C                     MOVE *ON       *IN02
+     C                     OTHER
+     C                     MOVE *OFF      *IN02
+     C                     ENDSL
+      *
+     C           *IN02     IFEQ '1'
+     C           LIBR      CAT  ##DM      JOLIB
+     C                     EXSR #WRITE
+      *
+      ** If GLHIBLPD updated, save EOP details for next GLAVBLPD
+      ** record.
+      *
+     C           FILNM     IFEQ 'GLHIBLPD'
+     C                     MOVEADATA2,71  WFLD    3
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Return to calling program. Do not set on LR to keep program
+      ** in memory and avoid continuous open and close of program.
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /TITLE SR/#CALL
+      *****************************************************************
+      *                                                               *
+      *  #CALL  - Subroutine to do the First call processing.         *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: AOMEXPR0 - Access ED ICD details                      *
+      *         QCAEXEC  -                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CALL     BEGSR
+      *
+      ** Set on first call indicator.
+      *
+     C                     MOVE 'Y'       CALL1   1
+      *
+      ** Copyright Statement.
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      **   Name of program
+      *
+     C                     MOVEL'ED0410'  DBPGM
+      *
+      ** Retrieve system prefix from DA/SDSTAT
+      *
+     C           *NAMVAR   DEFN           SDSTAT
+     C                     IN   SDSTAT
+     C           LIBR      CAT  'DPLIB'   EFLIBR
+      *
+      ** Access ED ICD details.
+      *
+     C                     CALL 'AOMEXPR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMEXP    PARM SDMEXP    DSFDY
+      *
+      ** Database error.
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDMEXPPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***Read*DA/MPHAS,*retrieve*Midas*phase.**************************                       CCB020
+      *
+     C********** *NAMVAR   DEFN           MPHAS                                               CCB020
+     C**********           IN   MPHAS                                                         CCB020
+      *                                                                                       CCB020
+      ** Call program CBC001001 to check if system in COB or IC                               CCB020
+      ** If the return value is *YES, system is in COB                                        CCB020
+      *                                                                                       CCB020
+     C                     CALL PGNME                                                         CCB020
+     C                     PARM           WCOB    4                                           CCB020
+      *
+      ** If Midas system in COB, open file EDASVXPD. Otherwise
+      ** open file EDSAVEPD.
+      *
+     C********** MPHAS     IFNE 'A'                                                           CCB020
+     C           WCOB      IFEQ '*YES'                                                        CCB020
+     C                     OPEN EDSAVXPD
+     C                     ELSE
+     C                     OPEN EDSAVEPD
+     C                     ENDIF
+      *
+      ** Initialise count for number of records written to EDBULKPD.
+      *
+     C                     Z-ADD0         COUNT   50
+      *
+      ** Initialise first extract record of batch flag
+      *
+     C                     MOVE 'N'       BATCH   1
+      *
+     C                     MOVE WJOB      JOJOB
+     C                     MOVE WUSER     JOUSER
+     C                     MOVE WJOBNO    JONBR
+     C                     MOVE 'R'       JOCODE
+     C                     CLEARJOCTRR
+     C                     MOVE '1'       JOFLAG
+     C                     CLEARJORES
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/#WRITE
+      *****************************************************************
+      *                                                               *
+      *  #WRITE - Subroutine to generate extract record.              *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: #CLOSE                                                *
+      *         #OPEN                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #WRITE    BEGSR
+      *
+      ** If maximum batch size reached, close the batch
+      *
+     C           COUNT     IFGE E7BUMR
+     C                     EXSR #CLOSE
+     C                     ENDIF
+      *
+      ** If first extract record of batch flag is off, open new batch.
+      *
+     C           BATCH     IFEQ 'N'
+     C                     MOVE 'Y'       BATCH
+     C                     EXSR #OPEN
+     C                     ENDIF
+      *
+      ** Set up fields for write to EDBULKPD.
+      *
+     C                     MOVE ACTION    JOENTT
+     C                     TIME           TIMSTP 120
+     C                     MOVELTIMSTP    JOTIME
+     C                     MOVE TIMSTP    JODATE
+      *
+     C           FILNM     IFEQ 'GLHIBLPD'
+     C                     MOVEL*BLANKS   DATA
+     C                     MOVEADATA2     DATA
+     C                     ENDIF
+      *
+     C           FILNM     IFEQ 'GLAVBLPD'
+     C                     MOVEL*BLANKS   DATA
+     C                     MOVEADATA2     DATA
+     C                     Z-ADD235       X       40
+     C                     MOVEAWFLD      DATA,X
+     C                     ENDIF
+      *
+      ** Write record to PF/EDBULKPD.
+      *
+     C                     EXCPTDTL
+      *
+      ** Increment record count.
+      *
+     C                     ADD  1         COUNT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/#OPEN
+      *****************************************************************
+      *                                                               *
+      *  #OPEN - Subroutine to open new batch.                        *
+      *                                                               *
+      *  Called By: #WRITE                                            *
+      *                                                               *
+      *  Calls: EDC0024                                               *
+      *         QCMDEXC                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #OPEN     BEGSR
+      *
+      ** Retrieve batch no. from DA/EDJSEQDA.
+      *
+     C           *LOCK     IN   EDJSEQ
+     C                     ADD  1         #BTCH
+     C                     MOVE EDBTCH    WBATCH
+     C                     OUT  EDJSEQ
+      *
+      ** Call EDC0024 to add new member to batch file.
+      *
+     C                     CALL 'EDC0024'
+     C                     PARM           WBATCH 10
+     C                     PARM           WRTCD   1
+      *
+      ** Program error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'EDC0024' DBFILE           * DB ERROR 02 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Override to new member of PF/EDBULKPD - Do this in RPG
+      ** rather than in EDC0024 as the override is needed at
+      ** this level.
+      *
+     C                     MOVELQOVR      WOVR
+     C                     MOVELWBATCH    WDSBAT
+     C                     CALL 'QCMDEXC'
+     C                     PARM           WOVR
+     C                     PARM 54        QLEN   155
+      *
+      ** Write header record for EDBULKPD.
+      *
+     C                     OPEN EDBULKPD
+     C                     EXCPTHDR
+     C                     ADD  1         COUNT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/#CLOSE
+      *****************************************************************
+      *                                                               *
+      *  #CLOSE - Subroutine to close batch processing.               *
+      *                                                               *
+      *  Called By: #WRITE                                            *
+      *             #END                                              *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CLOSE    BEGSR
+      *
+      ** Close file EDBULKPD
+      *
+     C                     CLOSEEDBULKPD
+      *
+      ** If program called during Close of Business. Write batch
+      ** location to EDSAVXPD.
+      *
+     C********** MPHAS     IFNE 'A'                                                           CCB020
+     C           WCOB      IFEQ '*YES'                                                        CCB020
+     C                     MOVEL'/'       EFSEP1
+     C                     MOVEL'EDBULKPD'EFFILE
+     C                     MOVEL'.'       EFSEP2
+     C                     MOVELWBATCH    EFMEMB
+     C                     MOVEL*BLANKS   EFBLNK
+     C                     MOVEL'999'     EFSQCD
+     C                     MOVEL*BLANKS   EFEXSC
+     C                     WRITEEDSAVXD0
+      *
+      ** Otherwise write batch location to PF/EDSAVEPD.
+      *
+     C                     ELSE
+     C                     MOVEL'/'       EFSEP1
+     C                     MOVEL'EDBULKPD'EFFILE
+     C                     MOVEL'.'       EFSEP2
+     C                     MOVELWBATCH    EFMEMB
+     C                     MOVEL*BLANKS   EFBLNK
+     C                     WRITEEDSAVED0
+     C                     ENDIF
+      *
+      ** Write Audit record to EDBUAUPD
+      *
+     C                     MOVELWBATCH    EABTCH
+     C                     MOVELFILNM     EAFNME
+     C                     MOVELMBRNM     EAMNME
+     C                     Z-ADDCOUNT     EARECT
+      *
+     C                     WRITEEDBUAUD0
+      *
+      ** Re-set count of records to zero
+      *
+     C                     Z-ADD0         COUNT
+      *
+      ** Set off the first extract record of batch flag
+      *
+     C                     MOVE 'N'       BATCH
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/#END
+      *****************************************************************
+      *                                                               *
+      *  #END - Subroutine for closedown processing.                  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: #CLOSE                                                *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #END      BEGSR
+      *
+      ** If batch has been opened close it.
+      *
+     C           BATCH     IFEQ 'Y'
+     C                     EXSR #CLOSE
+      *
+      ** No batch open, write 'No Batch' Audit report.
+      *
+     C                     ELSE
+     C                     MOVEL'No Batch'EABTCH
+     C                     MOVELPROGNM    EAFNME
+     C                     MOVE MBRNM     EAMNME
+     C                     Z-ADD0         EARECT
+     C                     WRITEEDBUAUD0
+     C                     ENDIF
+      *
+      ** Program called during COB, delete record from EDFBUTPD.
+      *
+     C********** MPHAS     IFNE 'A'                                                           CCB020
+     C           WCOB      IFEQ '*YES'                                                        CCB020
+     C                     MOVELFILNM     XFILEN
+     C                     MOVELMBRNM     XMEMBN
+     C           TFROK     DELETEDFBUTPD             01
+     C                     ENDIF
+      *
+      ** Seton LR.
+      *
+     C           *INLR     IFEQ '0'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     MOVE 'E'       WRTCD
+     C                     SETON                     U7U8LR
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+      **  ERROR REPORT  ED0410AU
+      *
+     C                     OPEN ED0410AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEED0410AU
+      *
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** Exit program
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      ***
+     OEDBULKPDE                HDR
+     O                                   20 'MIDAS_DRIP_FEED     '
+     O                                   24 '4096'
+     OEDBULKPDE                DTL
+     O                         BLKOUT   125
+     O                         DATA    4096
+**  CPY@
+(c) Finastra International Limited 2001

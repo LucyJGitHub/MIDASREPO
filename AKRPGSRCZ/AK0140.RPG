@@ -1,0 +1,793 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AK Lending A/c Keys Generation Report')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Account Key Generator                                *
+      *                                                               *
+      *  AK0140 - Lending Account Keys Generation Report.             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CLE042             Date 06Sep05               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 CDL038             Date 10May05               *
+      *                 213135             Date 12Dec02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 199057             Date 21Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CLE007             Date 22May97               *
+      *                 072797             Date 16Feb95               *
+      *                 047369             Date 10Jan94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,AKH00030                                 *
+      *             WNCPYSRC,AKH00031                                 *
+      *             WNCPYSRC,AKH00032                                 *
+      *             WNCPYSRC,AKH00033                                 *
+      *             WNCPYSRC,AKH00034                                 *
+      *             WNCPYSRC,AKH00035                                 *
+      *             WNCPYSRC,AKH00036                                 *
+      *             WNCPYSRC,AKH00037                                 *
+      *             WNCPYSRC,AKH00038                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  213135 - Spool file AK0140P2 not routed to rcf output queue. *
+      *  199057 - No column headings when generating account keys for *
+      *           facilities (option 2).                              *
+      *  CLE007 - Customer Lending Enhancements - Others              *
+      *  072797 - Customer Lending A/C Key Generation for Fees        *
+      *  047369 - NARRATIVE CODES SHOULD BE ALPHA NOT NUMERIC.        *
+      *                                                               *
+      *****************************************************************
+     F*
+     FZACKEYL1IF  E           K        DISK
+     FZACKEYL2IF  E           K        DISK                               072797
+     FAK0140P1O   E             99     PRINTER      KINFDS SPOOL
+     FSDLOANL1IF  E           K        DISK
+     FAK0140P2O   E             98     PRINTER      KINFDS SPOOL1     UC  CLE007
+     F*
+     F********************************************************************
+     F*
+     F*  Function of Indicators
+     F*
+     F***10*-*End*of*file*ZACKEYL1*************************************   072797
+     F*  10 - End of file ZACKEYL1/ZACKEYL2                               072797
+     F*  20 - Chain to LF/SDLOANL1 has failed
+     F*  30 - Facility keys to be reported indicator                      072797
+     F*  70 - Output '*Continued*'
+     F*  98 - Overflow indicator for AK0140P2                             CLE007
+     F*  99 - Overflow indicator
+     F*
+     F********************************************************************
+     F/EJECT
+     E*
+     E                    CPY@    1   1 80
+     E** Copyright Array
+     E*
+     E********************************************************************
+     E/EJECT
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I** Data Structure for Compilation  - Copyright Insertion
+     I*
+     ISPOOL       DS
+     I*
+     I**  Spool information data structure for main print
+     I*
+     I                                       83  90 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN
+     I                                    B 367 3680PRTLN
+      *                                                                   CLE007
+     ISPOOL1      DS                                                      CLE007
+      *                                                                   CLE007
+      **  Spool information data structure for main print                 CLE007
+      *                                                                   CLE007
+     I                                       83  90 S1FIL                 CLE007
+     I                                    B 123 1240S1FNM                 CLE007
+     I                                    B 188 1890OFFLN                 CLE007
+     I                                    B 367 3680PRTRN                 CLE007
+      *                                                                   CLE007
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+     I*
+     ISDFACT    E DSSDFACTPD                                              072797
+     I** Facility type details                                            072797
+     I*                                                                   072797
+     ISCSARD    E DSSCSARDPD                                              CLE007
+      *                                                                   CLE007
+      ** Switchable features                                              CLE007
+      *                                                                   CLE007
+     IDSFDY     E DSDSFDY
+     I** First DS for Access Programs, Short Data Structure
+     I*
+     ILDA        UDS                            256                       CLE007
+     I                                      134 141 DBFILE                CLE007
+     I                                      142 170 DBKEY                 CLE007
+     I                                      171 180 DBPGM                 CLE007
+     I                                      181 1830DBASE                 CLE007
+      *                                                                   CLE007
+     IAKEY        DS
+     I/COPY WNCPYSRC,AKH00030
+     I                                        1  10 SHAKEY                                    CDL038
+     I/COPY WNCPYSRC,AKH00031
+     I                                        1   2 TYP
+     I                                        4   5 SUBTYP
+     I                                        1   3 WFCTY                 072797
+     I                                       11  14 CLASS                                     CLE042
+      *                                                                   CLE007
+      ** Amend data struc. AKEY so that facility type ind. will           CLE007
+      ** be defined in pos. 4                                             CLE007
+      *                                                                   CLE007
+     I                                        4   4 WFTIND                CLE007
+     I** Account Key Data Structure
+     I*
+     I********************************************************************
+     I/EJECT
+     C*                                                                   072797
+     C**  Entry parameter                                                 072797
+     C*                                                                   072797
+     C           *ENTRY    PLIST                                          072797
+     C                     PARM           POPTN   1                       072797
+      *                                                                   CLE007
+      ** Determine if Customer Lending Enhancements - Others              CLE007
+      ** feature is installed                                             CLE007
+      *                                                                   CLE007
+     C                     CALL 'AOSARDR0'                                CLE007
+     C                     PARM *BLANKS   @RTCD                           CLE007
+     C                     PARM '*KEY    '@OPTN                           CLE007
+     C                     PARM 'CLE007  '@SARD   6                       CLE007
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE007
+     C           @RTCD     IFEQ *BLANKS                                   CLE007
+     C                     OPEN AK0140P2                                  CLE007
+     C                     MOVE 'Y'       CLE007  1                       CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVE 'N'       CLE007                          CLE007
+     C           @RTCD     IFNE '*NRF    '                                CLE007
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE007
+     C                     Z-ADD1         DBASE            * DBERR 01 *   CLE007
+     C                     MOVEL'CLE007'  DBKEY            ************   CLE007
+     C                     SETON                     U7U8LR               CLE007
+     C                     GOTO END                                       CLE007
+     C                     ENDIF                                          CLE007
+     C                     ENDIF                                          CLE007
+     C/COPY WNCPYSRC,AKH00032
+     C*                                                                   072797
+     C**  Determine if account keys generated for facility type           072797
+     C**  are to be reported                                              072797
+     C*                                                                   072797
+     C           POPTN     IFEQ '2'                                       072797
+      *                                                                   CLE007
+      ** Determine if acoount keys generated for facility type are        CLE007
+      ** to be reported                                                   CLE007
+      *                                                                   CLE007
+     C           CLE007    OREQ 'Y'                                       CLE007
+     C           POPTN     ANDEQ'3'                                       CLE007
+     C                     MOVE '1'       *IN30                           072797
+     C                     END                                            072797
+     C*
+     C** Concatenate Type and Subtype fields
+     C*
+     C           TYPSTY    KLIST
+     C                     KFLD           KTYP    2
+     C                     KFLD           KSUBTY  2
+     C                     KFLD           KCLASS  4                                           CLE042
+     C*
+     C** Use access program AOBANKR0 to retrieve header details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C**  Ensure report spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  Error during ZSFILE processing, return to calling program
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *                                                                   CLE007
+     C           CLE007    IFEQ 'Y'                                       CLE007
+     C           POPTN     ANDEQ'3'                                       CLE007
+      *                                                                   CLE007
+      **  Ensure report spool1 file recorded by RCF                       CLE007
+      *                                                                   CLE007
+     C                     MOVE *BLANKS   SFILE                                               213135
+     C                     MOVELS1FIL     SFILE                                               213135
+     C                     Z-ADDS1FNM     ZSNUM   60                      CLE007
+      *                                                                   CLE007
+     C                     CALL 'ZSFILE'                                  CLE007
+     C                     PARM           SEQ     5                       CLE007
+     C                     PARM *BLANKS   SENTY   3                       CLE007
+     C                     PARM           SFILE                           CLE007
+     C                     PARM           ZSNUM                           CLE007
+     C                     PARM           ZSERR   1                       CLE007
+      *                                                                   CLE007
+     C           ZSERR     IFEQ 'Y'                                       CLE007
+      *                                                                   CLE007
+      **  Error during ZSFILE processing, return to calling program       CLE007
+      *                                                                   CLE007
+     C                     SETON                     U7U8LR               CLE007
+     C                     RETRN                                          CLE007
+     C                     END                                            CLE007
+     C                     ENDIF                                          CLE007
+     C*
+     C** Write report headings
+     C*
+     C           CLE007    IFEQ 'Y'                                       CLE007
+     C           POPTN     ANDEQ'3'                                       CLE007
+      *                                                                   CLE007
+      ** Report headings from AK0140P2                                    CLE007
+      *                                                                   CLE007
+     C                     WRITEAK0140D0                                  CLE007
+     C                     ELSE                                           CLE007
+      *                                                                   CLE007
+      ** Report headings from AK0140P1                                    CLE007
+      *                                                                   CLE007
+     C                     WRITEFMTW01
+     C                     ENDIF                                          CLE007
+     C*
+     C** Initialise work fields for Previous Type/Subtype.
+     C*
+     C                     MOVE *BLANKS   PRVTYP  2
+     C                     MOVE *BLANKS   PRVSTY  2
+     C                     MOVE *BLANKS   PRVCLS  4                                           CLE042
+     C*                                                                   072797
+     C** Initialise work field for Previous Facility type.                072797
+     C*                                                                   072797
+     C                     MOVE *BLANKS   WPVFC   3                       072797
+     C*
+     C                     MOVE *BLANKS   DESNM  37
+     C                     MOVE *BLANKS   TYPE@  10                                           CLE042
+     C*********************MOVE *BLANKS   TYPE@   5                                           CLE042
+     C*
+     C** Set record counter to zero
+     C*
+     C                     Z-ADD0         RECCNT
+     C*
+     C** Read first record for ZACKEYL1
+     C** if option requested is '1' (loan keys)                           072797
+     C*
+     C           POPTN     IFEQ '1'                                       072797
+     C                     READ ZACKEYL1                 10
+     C                     ELSE                                           072797
+     C** Else, read first record for ZACKEYL2 (facility keys)             072797
+     C*                                                                   072797
+     C                     READ ZACKEYL2                 10               072797
+     C                     END                                            072797
+     C*                                                                   072797
+     C           *IN10     IFEQ '1'
+      *                                                                   CLE007
+      ** Write no details to report in AK0140P2                           CLE007
+      *                                                                   CLE007
+     C           CLE007    IFEQ 'Y'                                       CLE007
+     C           POPTN     ANDEQ'3'                                       CLE007
+     C                     WRITEAK0140D1                                  CLE007
+     C                     ELSE                                           CLE007
+     C                     WRITEFMTW02
+     C                     ENDIF                                          CLE007
+     C                     ELSE
+     C*
+     C** Add one to record counter
+     C*
+     C                     ADD  1         RECCNT
+     C                     END
+     C*
+     C***Do*while*record*in*ZACKEYL1***********************************   072797
+     C** Do while record in ZACKEYL1/ZACKEYL2                             072797
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C** Type/Subtype same as previous Type/Subtype
+     C*
+     C           TYP       IFEQ PRVTYP
+     C           SUBTYP    ANDEQPRVSTY
+     C           CLASS     ANDEQPRVCLS                                                        CLE042
+     C           POPTN     ANDEQ'1'                                       072797
+     C*                                                                   072797
+     C** Or Facility type same as previous Facility type                  072797
+     C           POPTN     OREQ '2'                                       072797
+     C           WFCTY     ANDEQWPVFC                                                         199057
+     C/COPY WNCPYSRC,AKH00033
+      *                                                                   CLE007
+      ** Include if option is equal to 3                                  CLE007
+      *                                                                   CLE007
+     C           POPTN     OREQ '3'                                       CLE007
+     C           CLE007    ANDEQ'Y'                                       CLE007
+     C           WFCTY     ANDEQWPVFC                                     072797
+     C/COPY WNCPYSRC,AKH00034
+      *                                                                   CLE007
+     C           CLE007    IFEQ 'Y'                                       CLE007
+     C           POPTN     ANDEQ'3'                                       CLE007
+     C                     EXSR SRALPA                                    CLE007
+     C                     WRITEAK0140D4                                  CLE007
+     C                     ELSE                                           CLE007
+     C                     EXSR ALPHA
+     C                     WRITEFMTW05
+     C                     ENDIF                                          CLE007
+     C                     ELSE
+     C*
+     C**  If option '1' is requested, move loan key to report field       072797
+     C           POPTN     IFEQ '1'                                       072797
+     C                     MOVE *BLANKS   TYPE@
+     C                     MOVELTYP       TYPE@
+     C*********************MOVE SUBTYP    TYPE@                                               CLE042
+     C                     MOVELSUBTYP    WKSTCL  7                                           CLE042
+     C                     MOVE CLASS     WKSTCL                                              CLE042
+     C                     MOVE WKSTCL    TYPE@                                               CLE042
+     C                     ELSE                                           072797
+     C*                                                                   072797
+     C**  Else, move facility key to report field                         072797
+     C                     MOVE *BLANKS   RFCTY                           072797
+     C                     MOVELWFCTY     RFCTY                           072797
+     C/COPY WNCPYSRC,AKH00035
+     C                     END                                            072797
+     C*
+     C** Type/Subtype different to previous Type/Subtype
+     C** Or Facility type different to previous Facility type             072797
+     C*
+      *                                                                   CLE007
+     C                     EXSR P03
+     C           CLE007    IFEQ 'Y'                                       CLE007
+     C           POPTN     ANDEQ'3'                                       CLE007
+     C                     EXSR SRALPA                                    CLE007
+     C                     WRITEAK0140D4                                  CLE007
+     C                     ELSE                                           CLE007
+     C                     EXSR ALPHA
+     C                     WRITEFMTW05
+     C                     ENDIF                                          CLE007
+     C                     END
+     C*
+     C***Read*record*for*ZACKEYL1**************************************   072797
+     C** Read record for ZACKEYL1/ZACKEYL2                                072797
+     C*
+     C           POPTN     IFEQ '1'                                       072797
+     C                     READ ZACKEYL1                 10
+     C                     ELSE                                           072797
+     C                     READ ZACKEYL2                 10               072797
+     C                     END                                            072797
+     C*
+     C** Overflow
+     C*
+     C           *IN99     IFEQ '1'
+     C           *IN98     OREQ '1'                                       CLE007
+      *                                                                   CLE007
+      ** Write report headings of AK0140P2                                CLE007
+      *                                                                   CLE007
+     C           CLE007    IFEQ 'Y'                                       CLE007
+     C           POPTN     ANDEQ'3'                                       CLE007
+     C                     WRITEAK0140D0                                  CLE007
+     C                     ELSE                                           CLE007
+      *                                                                   CLE007
+      ** Write report headings of AK0140P1                                CLE007
+      *                                                                   CLE007
+     C                     WRITEFMTW01
+     C                     ENDIF                                          CLE007
+     C*
+     C           *IN10     IFEQ '0'
+     C*
+     C           TYP       IFEQ PRVTYP
+     C           SUBTYP    ANDEQPRVSTY
+     C           CLASS     ANDEQPRVCLS                                                        CLE042
+     C           POPTN     ANDEQ'1'                                       072797
+     C*                                                                   072797
+     C           POPTN     OREQ '2'                                       072797
+     C           WFCTY     ANDEQWPVFC                                                         199057
+     C/COPY WNCPYSRC,AKH00036
+     C           POPTN     OREQ '3'                                       CLE007
+     C           CLE007    ANDEQ'Y'                                       CLE007
+     C           WFCTY     ANDEQWPVFC                                     072797
+     C/COPY WNCPYSRC,AKH00037
+     C                     MOVE '1'       *IN70
+      *                                                                   CLE007
+     C           CLE007    IFEQ 'Y'                                       CLE007
+     C           POPTN     ANDEQ'3'                                       CLE007
+     C                     WRITEAK0140D2                                  CLE007
+     C                     ELSE                                           CLE007
+     C                     WRITEFMTW03
+     C                     ENDIF                                          CLE007
+     C                     MOVE '0'       *IN70
+      *                                                                   CLE007
+     C           CLE007    IFEQ 'Y'                                       CLE007
+     C           POPTN     ANDEQ'3'                                       CLE007
+     C                     WRITEAK0140D3                                  CLE007
+     C                     ELSE                                           CLE007
+     C                     WRITEFMTW04
+     C                     ENDIF                                          CLE007
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     MOVE '0'       *IN98                           CLE007
+     C                     MOVE '0'       *IN99
+     C*
+     C** Output end of report
+     C*
+     C           *IN10     IFEQ '1'
+      *                                                                   CLE007
+      ** Write end of report in AK0140P2                                  CLE007
+      *                                                                   CLE007
+     C           CLE007    IFEQ 'Y'                                       CLE007
+     C           POPTN     ANDEQ'3'                                       CLE007
+     C                     WRITEAK0140D5                                  CLE007
+     C                     ELSE                                           CLE007
+      *                                                                   CLE007
+      ** Write end of report in AK0140P1                                  CLE007
+     C                     WRITEFMTEND
+     C                     ENDIF                                          CLE007
+     C                     ELSE
+     C*
+     C** Add one to record counter
+     C*
+     C                     ADD  1         RECCNT
+     C                     END
+     C*
+     C                     END
+     C           END       TAG                                            CLE007
+     C                     SETON                         LR
+     C/EJECT
+     C********************************************************************
+     C*
+     C* INDEX OF SUBROUTINES
+     C*
+     C* P03    - Discover text for Loan Type/Subtypes.
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C* P03:        Subroutine for Lending headings.                     *
+     C*                                                                  *
+     C* CALLED BY:  Main                                                 *
+     C*                                                                  *
+     C* CALLS:                                                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           P03       BEGSR
+     C*
+     C                     MOVE '0'       *IN20
+     C*
+     C                     MOVE *BLANKS   DESNM
+     C                     MOVE *BLANKS   RDESNM                          CLE007
+     C*
+     C** Chain to LF/SDLOANL1 to retrieve Loan Type description
+     C** if option '1' is requested                                       072797
+     C*
+     C           POPTN     IFEQ '1'                                       072797
+     C*                                                                   072797
+     C                     MOVE TYP       KTYP
+     C                     MOVE SUBTYP    KSUBTY
+     C                     MOVE CLASS     KCLASS                                              CLE042
+     C           TYPSTY    CHAIN@AYRECL              20
+     C*
+     C           *IN20     IFEQ '0'
+     C                     MOVELAYLNTD    DESNM
+     C                     ELSE
+     C                     MOVE *BLANKS   DESNM
+     C                     END
+     C*                                                                   072797
+     C                     ELSE                                           072797
+     C*                                                                   072797
+     C**  Else, get Facility type description using access program        072797
+     C*                                                                   072797
+     C                     CALL 'AOFACTR0'                                072797
+     C                     PARM *BLANKS   @RTCD                           072797
+     C                     PARM '*KEY   ' @OPTN                           072797
+     C                     PARM FACT      @FCTY   3                       072797
+     C           SDFACT    PARM SDFACT    DSFDY                           072797
+     C*                                                                   072797
+     C           @RTCD     IFEQ *BLANKS                                   072797
+     C           CLE007    IFEQ 'Y'                                       CLE007
+     C           POPTN     ANDEQ'3'                                       CLE007
+     C                     MOVELAMFCNM    RDESNM                          CLE007
+     C           WFTIND    IFEQ 'F'                                       CLE007
+     C                     MOVEL'Facility'RFNAME                          CLE007
+     C                     ELSE                                           CLE007
+     C           WFTIND    IFEQ 'G'                                       CLE007
+     C                     MOVEL'Guidance'RFNAME                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVEL'Commit'  RFNAME                          CLE007
+     C                     MOVE 'ment'    RFNAME                          CLE007
+     C                     ENDIF                                          CLE007
+     C                     ENDIF                                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVELAMFCNM    DESNM                           072797
+     C                     ENDIF                                          CLE007
+     C                     ELSE                                           072797
+     C                     MOVE *BLANKS   DESNM                           072797
+     C                     MOVE *BLANKS   RDESNM                          CLE007
+     C                     END                                            072797
+     C*                                                                   072797
+     C                     END                                            072797
+     C*
+     C           CLE007    IFEQ 'Y'                                       CLE007
+     C           POPTN     ANDEQ'3'                                       CLE007
+     C                     WRITEAK0140D2                                  CLE007
+     C                     WRITEAK0140D3                                  CLE007
+     C                     ELSE                                           CLE007
+     C                     WRITEFMTW03
+     C                     WRITEFMTW04
+     C                     ENDIF                                          CLE007
+     C*
+     C** Move Type/Subtype into previous Type/Subtype work fields
+     C*
+     C           POPTN     IFEQ '1'                                       072797
+     C                     MOVE TYP       PRVTYP
+     C                     MOVE SUBTYP    PRVSTY
+     C                     MOVE CLASS     PRVCLS                                              CLE042
+     C                     ELSE                                           072797
+     C*                                                                   072797
+     C** Move Facility type into previous Facility type work field        072797
+     C                     MOVE WFCTY     WPVFC                           072797
+     C/COPY WNCPYSRC,AKH00038
+     C                     END                                            072797
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* ALPHA:      Subroutine to move numeric file fields to alpha      *
+     C*             report fields, and ensure that if file field         *
+     C*             is zero then blanks are printed.                     *
+     C*                                                                  *
+     C* CALLED BY:  Main                                                 *
+     C*                                                                  *
+     C* CALLS:                                                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ALPHA     BEGSR
+     C*
+     C** Set up Account Codes
+     C*
+     C           ACD1      IFEQ *ZERO
+     C                     MOVE *BLANKS   ACDA1
+     C                     ELSE
+     C                     MOVE ACD1      ACDA1
+     C                     END
+     C*
+     C           ACD2      IFEQ *ZERO
+     C                     MOVE *BLANKS   ACDA2
+     C                     ELSE
+     C                     MOVE ACD2      ACDA2
+     C                     END
+     C*
+     C           ACD3      IFEQ *ZERO
+     C                     MOVE *BLANKS   ACDA3
+     C                     ELSE
+     C                     MOVE ACD3      ACDA3
+     C                     END
+     C*
+     C           ACD4      IFEQ *ZERO
+     C                     MOVE *BLANKS   ACDA4
+     C                     ELSE
+     C                     MOVE ACD4      ACDA4
+     C                     END
+     C*
+     C           ACD5      IFEQ *ZERO
+     C                     MOVE *BLANKS   ACDA5
+     C                     ELSE
+     C                     MOVE ACD5      ACDA5
+     C                     END
+     C*
+     C           ACD6      IFEQ *ZERO
+     C                     MOVE *BLANKS   ACDA6
+     C                     ELSE
+     C                     MOVE ACD6      ACDA6
+     C                     END
+     C*
+     C** Set up Narrative Codes
+     C*
+     C                     MOVE NCD1      NCDA1                           047369
+     C                     MOVE NCD2      NCDA2                           047369
+     C                     MOVE NCD3      NCDA3                           047369
+     C                     MOVE NCD4      NCDA4                           047369
+     C                     MOVE NCD5      NCDA5                           047369
+     C                     MOVE NCD6      NCDA6                           047369
+     C***********NCD1      IFEQ *ZERO                                     047369
+     C***********          MOVE *BLANKS   NCDA1                           047369
+     C***********          ELSE                                           047369
+     C***********          MOVE NCD1      NCDA1                           047369
+     C***********          END                                            047369
+     C***********NCD2      IFEQ *ZERO                                     047369
+     C***********          MOVE *BLANKS   NCDA2                           047369
+     C***********          ELSE                                           047369
+     C***********          MOVE NCD2      NCDA2                           047369
+     C***********          END                                            047369
+     C***********NCD3      IFEQ *ZERO                                     047369
+     C***********          MOVE *BLANKS   NCDA3                           047369
+     C***********          ELSE                                           047369
+     C***********          MOVE NCD3      NCDA3                           047369
+     C***********          END                                            047369
+     C***********NCD4      IFEQ *ZERO                                     047369
+     C***********          MOVE *BLANKS   NCDA4                           047369
+     C***********          ELSE                                           047369
+     C***********          MOVE NCD4      NCDA4                           047369
+     C***********          END                                            047369
+     C***********NCD5      IFEQ *ZERO                                     047369
+     C***********          MOVE *BLANKS   NCDA5                           047369
+     C***********          ELSE                                           047369
+     C***********          MOVE NCD5      NCDA5                           047369
+     C***********          END                                            047369
+     C***********NCD6      IFEQ *ZERO                                     047369
+     C***********          MOVE *BLANKS   NCDA6                           047369
+     C***********          ELSE                                           047369
+     C***********          MOVE NCD6      NCDA6                           047369
+     C***********          END                                            047369
+     C*
+     C** Set up Posting References
+     C*
+     C           PRF1      IFEQ *ZERO
+     C                     MOVE *BLANKS   PRFA1
+     C                     ELSE
+     C                     MOVE PRF1      PRFA1
+     C                     END
+     C*
+     C           PRF2      IFEQ *ZERO
+     C                     MOVE *BLANKS   PRFA2
+     C                     ELSE
+     C                     MOVE PRF2      PRFA2
+     C                     END
+     C*
+     C           PRF3      IFEQ *ZERO
+     C                     MOVE *BLANKS   PRFA3
+     C                     ELSE
+     C                     MOVE PRF3      PRFA3
+     C                     END
+     C*
+     C           PRF4      IFEQ *ZERO
+     C                     MOVE *BLANKS   PRFA4
+     C                     ELSE
+     C                     MOVE PRF4      PRFA4
+     C                     END
+     C*
+     C           PRF5      IFEQ *ZERO
+     C                     MOVE *BLANKS   PRFA5
+     C                     ELSE
+     C                     MOVE PRF5      PRFA5
+     C                     END
+     C*
+     C           PRF6      IFEQ *ZERO
+     C                     MOVE *BLANKS   PRFA6
+     C                     ELSE
+     C                     MOVE PRF6      PRFA6
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT                                                              CLE007
+      ******************************************************************* CLE007
+      *                                                                 * CLE007
+      * SRALPA:     Subroutine to move numeric file fields to alpha     * CLE007
+      *             report fields, and ensure that if file field        * CLE007
+      *             is zero then blanks are printed.                    * CLE007
+      *                                                                 * CLE007
+      * CALLED BY:  Main                                                * CLE007
+      *                                                                 * CLE007
+      * CALLS:                                                          * CLE007
+      *                                                                 * CLE007
+      ******************************************************************* CLE007
+      *                                                                   CLE007
+     C           SRALPA    BEGSR                                          CLE007
+      *                                                                   CLE007
+      ** Set up Account Codes                                             CLE007
+      *                                                                   CLE007
+     C           ACD1      IFEQ *ZERO                                     CLE007
+     C                     MOVE *BLANKS   RACDA1                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVE ACD1      RACDA1                          CLE007
+     C                     END                                            CLE007
+      *                                                                   CLE007
+     C           ACD2      IFEQ *ZERO                                     CLE007
+     C                     MOVE *BLANKS   RACDA2                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVE ACD2      RACDA2                          CLE007
+     C                     END                                            CLE007
+      *                                                                   CLE007
+     C           ACD3      IFEQ *ZERO                                     CLE007
+     C                     MOVE *BLANKS   RACDA3                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVE ACD3      RACDA3                          CLE007
+     C                     END                                            CLE007
+      *                                                                   CLE007
+     C           ACD4      IFEQ *ZERO                                     CLE007
+     C                     MOVE *BLANKS   RACDA4                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVE ACD4      RACDA4                          CLE007
+     C                     END                                            CLE007
+      *                                                                   CLE007
+     C           ACD5      IFEQ *ZERO                                     CLE007
+     C                     MOVE *BLANKS   RACDA5                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVE ACD5      RACDA5                          CLE007
+     C                     END                                            CLE007
+      *                                                                   CLE007
+     C           ACD6      IFEQ *ZERO                                     CLE007
+     C                     MOVE *BLANKS   RACDA6                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVE ACD6      RACDA6                          CLE007
+     C                     END                                            CLE007
+      *                                                                   CLE007
+      ** Set up Narrative Codes                                           CLE007
+      *                                                                   CLE007
+     C                     MOVE NCD1      RNCDA1                          CLE007
+     C                     MOVE NCD2      RNCDA2                          CLE007
+     C                     MOVE NCD3      RNCDA3                          CLE007
+     C                     MOVE NCD4      RNCDA4                          CLE007
+     C                     MOVE NCD5      RNCDA5                          CLE007
+     C                     MOVE NCD6      RNCDA6                          CLE007
+      *                                                                   CLE007
+      ** Set up Posting References                                        CLE007
+      *                                                                   CLE007
+     C           PRF1      IFEQ *ZERO                                     CLE007
+     C                     MOVE *BLANKS   RPRFA1                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVE PRF1      RPRFA1                          CLE007
+     C                     END                                            CLE007
+      *                                                                   CLE007
+     C           PRF2      IFEQ *ZERO                                     CLE007
+     C                     MOVE *BLANKS   RPRFA2                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVE PRF2      RPRFA2                          CLE007
+     C                     END                                            CLE007
+      *                                                                   CLE007
+     C           PRF3      IFEQ *ZERO                                     CLE007
+     C                     MOVE *BLANKS   RPRFA3                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVE PRF3      RPRFA3                          CLE007
+     C                     END                                            CLE007
+      *                                                                   CLE007
+     C           PRF4      IFEQ *ZERO                                     CLE007
+     C                     MOVE *BLANKS   RPRFA4                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVE PRF4      RPRFA4                          CLE007
+     C                     END                                            CLE007
+      *                                                                   CLE007
+     C           PRF5      IFEQ *ZERO                                     CLE007
+     C                     MOVE *BLANKS   RPRFA5                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVE PRF5      RPRFA5                          CLE007
+     C                     END                                            CLE007
+      *                                                                   CLE007
+     C           PRF6      IFEQ *ZERO                                     CLE007
+     C                     MOVE *BLANKS   RPRFA6                          CLE007
+     C                     ELSE                                           CLE007
+     C                     MOVE PRF6      RPRFA6                          CLE007
+     C                     END                                            CLE007
+      *                                                                   CLE007
+     C                     ENDSR                                          CLE007
+     C******************************************************************* CLE007
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001

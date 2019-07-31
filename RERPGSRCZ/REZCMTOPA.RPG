@@ -1,0 +1,318 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Cash Management Check Field is a Top A/c')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RECMTOPA - RE Cash Management Check Field is a Top Account   *
+      *                                                               *
+      *  Function:  This user check program will check if the         *
+      *             account is a Top account in the Cash              *
+      *             Management Zero Balancing/Sweeping Heirarchy      *
+      *             This program will check as well if the account    *
+      *             is a master account.                              *
+      *                                                               *
+      *  Called By: ME1501  -  Auto-Gen Criteria Analysis             *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 AR676213           Date 19Nov10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG24998           Date 17Jul09               *
+      *                 CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 16May06               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 211499             Date 24Jan03               *
+      *                 CRE008  *CREATE    Date 15Apr02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
+      *             (Child: AR676229)                                 *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  BUG24998 - Bank operation code is missing (Recompile)        *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  211499 - Check as well if top account is a master account    *
+      *           and only pass a 'T' if this is true.                *
+      *  CRE008 - Cash Management                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FREZSHLJ1IF  E           K        DISK
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E/COPY MECPYSRC,SRERRE
+     I/COPY MECPYSRC,SME1100P
+     IACCT      E DSACCNTAB
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+     ISCSARD    E DSSCSARDPD
+     I              LCD                             WLCD
+     I            DS
+      *
+      *  Split the detail fields into field tag name and contents
+      *
+     I                                        1 256 WUFDDT
+     I                                        1   5 WUMTAG
+     I                                        6   6 WUFDIN
+     I                                        6 256 WUTGCK
+     I                                        7 256 WUTGVL
+     I**********                              7  24 WUACCO                                    CGL029
+     I                                        7  30 WUACCO                                    CGL029
+     I                                        7  120WUCNUM
+     I                                        7  12 WUCNUA
+     I                                       13  15 WUCURR
+     I**********                             16  190WUACCD                                    CGL029
+     I**********                             16  19 WUACCA                                    CGL029
+     I**********                             20  210WUACSQ                                    CGL029
+     I**********                             20  21 WUACSA                                    CGL029
+     I**********                             22  24 WUBRCA                                    CGL029
+     I**********                             25 256 WUORIG                                    CGL029
+     I                                       16  250WUACCD                                    CGL029
+     I                                       16  25 WUACCA                                    CGL029
+     I                                       26  270WUACSQ                                    CGL029
+     I                                       26  27 WUACSA                                    CGL029
+     I                                       28  30 WUBRCA                                    CGL029
+     I                                       31 256 WUORIG                                    CGL029
+      *
+     I**********                             25  59 @ACCLN                                    CGL029
+     I**********                             25  25 @SLASH                                    CGL029
+     I                                       31  65 @ACCLN                                    CGL029
+     I                                       31  31 @SLASH                                    CGL029
+      *
+     I**********                             26  350@RETL                                     CGL029
+     I**********                             36  59 @BL24                                     CGL029
+     I                                       32  410@RETL                                     CGL029
+     I                                       42  65 @BL24                                     CGL029
+      *
+     I**********                             26  43 @GL                                       CGL029
+     I                                       32  55 @GL                                       CGL029
+     I**********                             26  28 @BRCA                                     CGL029
+     I**********                             29  340@CNUM                                     CGL029
+     I**********                             35  37 @CCY                                      CGL029
+     I**********                             38  410@ACOD                                     CGL029
+     I**********                             42  430@ACSQ                                     CGL029
+     I**********                             44  59 @BL16                                     CGL029
+     I                                       32  34 @BRCA                                     CGL029
+     I                                       35  400@CNUM                                     CGL029
+     I                                       41  43 @CCY                                      CGL029
+     I                                       44  530@ACOD                                     CGL029
+     I                                       54  550@ACSQ                                     CGL029
+     I                                       56  65 @BL16                                     CGL029
+      *
+     I**********                             26  59 @IBAN                                     CGL029
+     I                                       32  65 @IBAN                                     CGL029
+      *
+     I            DS
+     I**********                              1  18 @TOPAC                                    CGL029
+     I                                        1  24 @TOPAC                                    CGL029
+     I                                        1   3 KBRCA
+     I**********                              4   90KCNUM                                    CSD027A
+     I                                        4   9 KCNUM                                    CSD027A
+     I                                       10  12 KCCY
+     I**********                             13  160KACCD                                     CGL029
+     I**********                             17  180KACSQ                                     CGL029
+     I                                       13  220KACCD                                     CGL029
+     I                                       23  240KACSQ                                     CGL029
+      *
+      *****************************************************************
+      *
+      ** Define entry parameters
+     C           *ENTRY    PLIST
+      ** Return Code Parameter
+     C                     PARM           RTNCDE  7
+      ** Incoming Message Header
+     C                     PARM           PHEAD
+      ** Incoming Message Data
+     C                     PARM           PDATA
+     C                     PARM           PDAT2                                               CSW209
+      ** Subset of FT message data relating for a specific message tag
+     C                     PARM           SBSMSG251
+      ** Pattern which can be applied to the function
+     C                     PARM           PATTRN 32
+      ** Operator (GE, LE, GT, LT)
+     C                     PARM           POPER   2
+      ** Message tag
+     C                     PARM           PMTAG   5
+      ** Logging require
+     C                     PARM           PREPT   1
+      ** Program for messages
+     C                     PARM           PCPGM  10
+      ** Return Field
+     C                     PARM           RETFLD256
+      *
+      * Define Key List
+     C           KYACCO    KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACCD
+     C                     KFLD           KACSQ
+     C                     KFLD           KBRCA
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      *  Check if IBAN feature is installed
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'CFT004'  P@SARD  6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      ** Allow IBAN processing
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVE 'Y'       CFT004  1
+     C                     ELSE
+     C                     MOVE 'N'       CFT004
+     C                     END
+      *
+      * Begin Processing
+      *
+     C                     MOVE *BLANK    Q       50
+     C                     MOVE PCPGM     ##PGM  10
+     C                     MOVEL'F'       RTNCDE    P
+     C                     MOVE *BLANK    RETFLD
+     C                     MOVELSBSMSG    WUTGCK
+     C                     MOVE 'N'       FOUND   1
+      *
+     C* It must be an account line
+     C           @SLASH    IFEQ '/'
+     C                     SELEC
+     C* Get GL account if retail given
+     C           @BL24     WHEQ *BLANK
+     C                     MOVEL@RETL     P@RETL
+     C                     CALL 'AOACCTR0'             90
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM           P@RETL 10
+     C                     PARM *BLANK    P@CNUM  6
+     C                     PARM *BLANK    P@CUCD  3
+     C**********           PARM *BLANK    P@ACCD  4                                           CGL029
+     C                     PARM *BLANK    P@ACCD 10                                           CGL029
+     C                     PARM *BLANK    P@ACSQ  2
+     C                     PARM *BLANK    P@BRCA  3
+     C           ACCT      PARM           ACCT
+     C*
+     C           P@RTCD    IFEQ *BLANK
+     C           RECI      ANDEQ'D'
+     C                     MOVELBRCA      KBRCA
+     C                     MOVELCNUM      KCNUM
+     C                     MOVELCCY       KCCY
+     C                     MOVELACOD      KACCD
+     C                     MOVELACSQ      KACSQ
+     C                     MOVEL'Y'       FOUND
+     C                     ENDIF
+     C*
+     C* CHECK  IF GL ACCOUNT
+     C           @BL16     WHEQ *BLANK
+     C                     MOVEL@BRCA     P@BRCA
+     C                     MOVEL@CNUM     P@CNUM
+     C                     MOVEL@CCY      P@CUCD
+     C                     MOVEL@ACOD     P@ACCD
+     C                     MOVEL@ACSQ     P@ACSQ
+     C                     CALL 'AOACCTR0'             90
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM *BLANK    P@RETL 10
+     C                     PARM           P@CNUM  6
+     C                     PARM           P@CUCD  3
+     C**********           PARM           P@ACCD  4                                           CGL029
+     C                     PARM           P@ACCD                                              CGL029
+     C                     PARM           P@ACSQ  2
+     C                     PARM           P@BRCA  3
+     C           ACCT      PARM           ACCT
+     C*
+     C           P@RTCD    IFEQ *BLANK
+     C           RECI      ANDEQ'D'
+     C                     MOVELBRCA      KBRCA
+     C                     MOVELCNUM      KCNUM
+     C                     MOVELCCY       KCCY
+     C                     MOVELACOD      KACCD
+     C                     MOVELACSQ      KACSQ
+     C                     MOVEL'Y'       FOUND
+     C                     ENDIF
+     C*
+     C* Get GL account if IBAN given
+     C           CFT004    WHEQ 'Y'
+     C                     CALL 'AOIBANR4'             90
+     C                     PARM           P@RTCD
+     C                     PARM '*VERIFY' P@OPTN
+     C                     PARM           @IBAN
+     C           ACCT      PARM ACCT      DSSDY
+     C*
+     C           P@RTCD    IFEQ *BLANK
+     C           RECI      ANDEQ'D'
+     C                     MOVELBRCA      KBRCA
+     C                     MOVELCNUM      KCNUM
+     C                     MOVELCCY       KCCY
+     C                     MOVELACOD      KACCD
+     C                     MOVELACSQ      KACSQ
+     C                     MOVEL'Y'       FOUND
+     C                     ENDIF
+     C*
+     C                     ENDSL
+     C                     ENDIF
+     C*
+     C* Check if Top Account
+     C           FOUND     IFEQ 'Y'
+     C           KYACCO    CHAINREZSHLJ1             70
+     C           *IN70     IFEQ '0'
+     C           ZDDEST    ANDNE*BLANK
+     C           POPER     ANDEQ'EQ'
+     C*                                                                    211499
+     C* Top Account must be a Master Account as well.                      211499
+     C*                                                                    211499
+     C           ZDMAST    IFNE 'Y'                                        211499
+     C           MEMSDT    CAT  PMTAG:0   MEMSDT    P                      211499
+     C                     MOVELPCPGM     MEPGMQ                           211499
+     C                     MOVEL'RE75961' MEMSID                           211499
+     C                     MOVEL'REUSRMSG'MEMSGF           Msg file        211499
+     C                     EXSR MESNMS                                     211499
+     C                     GOTO RETN                                       211499
+     C                     ELSE                                            211499
+     C                     MOVEL'T'       RTNCDE    P
+     C           RETFLD    CAT  '*TOPA':0 RETFLD
+     C                     CAT  @TOPAC:0  RETFLD
+     C                     CAT  '/':0     RETFLD
+     C                     ENDIF
+     C                     ENDIF                                           211499
+     C                     ENDIF
+      *
+      *  Log, if test failed.
+     C           PREPT     IFEQ 'Y'
+     C           RTNCDE    ANDNE'T      '
+     C           MEMSDT    CAT  PMTAG:0   MEMSDT    P
+     C                     MOVELPCPGM     MEPGMQ
+     C                     MOVEL'RE75409' MEMSID
+     C                     MOVEL'REUSRMSG'MEMSGF           Msg file
+     C                     EXSR MESNMS
+     C                     ENDIF
+      *                                                                    211499
+     C           RETN      TAG                                             211499
+      *
+     C                     RETRN
+     C/COPY MECPYSRC,SMESNMSC
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2002

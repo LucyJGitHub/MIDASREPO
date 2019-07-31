@@ -1,0 +1,101 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas UT Error Msg Ref Stack Generation Launcher')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC01000 - Midas UT Error Msg Ref Stack Generation Launcher */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CBF011  *CREATE    Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CBF011 - BF Infrastructure: Error Message Handling          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIBS &SYSTEM &OBJNAM)
+ 
+             DCL        VAR(&LIBS) TYPE(*CHAR) LEN(2502)
+             DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OBJNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBCNT) TYPE(*DEC) LEN(4 0) VALUE(3)
+             DCL        VAR(&LIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CNT) TYPE(*DEC) LEN(3 0) VALUE(0)
+             DCL        VAR(&NBRB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NBR) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&SGSTAT) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Check if a Stack Generation Job is active */
+ 
+             RTVDTAARA  DTAARA(UTSGSTAT (3 1)) RTNVAR(&SGSTAT)
+             IF         COND(&SGSTAT *EQ ' ') THEN(GOTO CMDLBL(RUNERR))
+ 
+/** Retrieve number of libraries entered to be added */
+ 
+             CHGVAR     VAR(&NBRB) VALUE(%SST(&LIBS 1 2))
+             CHGVAR     VAR(&NBR) VALUE(%BIN(&NBRB))
+ 
+/** Check if libraries to be added are existing */
+ 
+CHECK:
+             CHGVAR     VAR(&LIBL) VALUE(%SST(&LIBS &LIBCNT 10))
+             CHKOBJ     OBJ(&LIBL) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9810 CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+             CHGVAR     VAR(&LIBCNT) VALUE(&LIBCNT + 10)
+             CHGVAR     VAR(&CNT) VALUE(&CNT + 1)
+             IF         COND(&CNT *EQ &NBR) THEN(GOTO CMDLBL(CONT))
+             GOTO       CMDLBL(CHECK)
+ 
+/** Check if object is existing */
+ 
+CONT:
+             IF         COND(&OBJNAM *EQ '*ALL') THEN(GOTO +
+                          CMDLBL(CHKOBJ))
+             CHKOBJ     OBJ(&OBJNAM) OBJTYPE(*PGM)
+             MONMSG     MSGID(CPF9810 CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/** Check if entered system prefix is valid */
+ 
+CHKOBJ:
+             CHGVAR     VAR(&LIBL) VALUE(&SYSTEM *CAT 'XLIB')
+ 
+             CHKOBJ     OBJ(&LIBL/MIDASIC) OBJTYPE(*JOBD)
+             MONMSG     MSGID(CPF9801 CPF9802 CPF9810 CPF9820 +
+                          CPF9830 CPF9899) EXEC(GOTO CMDLBL(SYSERR))
+ 
+/** If user input passed validation, submit job to startup utility  */
+ 
+             SBMJOB     CMD(CALL PGM(UTC01010) PARM(&LIBS &SYSTEM +
+                          &OBJNAM)) JOB(GENEMSTK) JOBD(QDFTJOBD) +
+                          JOBQ(MIDASJOBQ) JOBPTY(1) LOGCLPGM(*YES)
+             GOTO       CMDLBL(ENDPGM)
+ 
+SYSERR:
+             SNDPGMMSG  MSG('Library' *BCAT &LIBL *BCAT 'not +
+                          found.') TOPGMQ(*EXT)
+             GOTO       CMDLBL(ENDPGM)
+ 
+RUNERR:
+             SNDPGMMSG  MSG('Previous Stack Generation Utility job +
+                          still active.') TOPGMQ(*EXT)
+             GOTO       CMDLBL(ENDPGM)
+ABNOR:
+             SNDPGMMSG  MSG('Program GENEMSTK ended abnormally - +
+                          see job log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,904 @@
+     H        1
+      *****************************************************************
+/*OVR *  OVRDBF MCPOSTL0 MCPCACPD                                     *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Value date adjustments generation')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounts Module                           *
+      *                                                               *
+      *  MC0320 - Value Date Adjustment Entry Generation              *
+      *                                                               *
+      *  Function: This program generates value-dated adjustment      *
+      *    (COB)   entries to compensate for entries that should have *
+      *            been generated since the original value date of a  *
+      *            back-valued posting.                               *
+      *                                                               *
+      *  Called By: MCC0320 - Daily Funding Gap Entry Generation      *
+      *                                                               *
+      *  Calls: MC0400 - Spot Revaluation of Foreign Currency         *
+      *         MC0410 - Transfer of Foreign Currency In/Ex           *
+      *         MC0420 - Transfer of Base Currency In/Ex              *
+      *         MC0430 - Update GAP Accrual History File              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 245142             Date 19Mar07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 237302             Date 23Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 186136             Date 18Dec00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02Mar99               *
+      *                 155581             Date 12FEB99               *
+      *                 CTI002             Date 23Sep98               *
+      *                 124860 (PCA030)    Date 01Dec97               *
+      *                 121023             Date 01Dec97               *
+      *                 CMC001 *CREATE     DATE 18MAR96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  245142 - Fwd reval P&L not moved to End of Year Trf a/c.     *
+      *           Applied fix 207338.                                 *
+      *  237302 - Recompile over changed LF/MCPOSTL0.                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  186136 - Complete fix 179278, which moved revaluation of     *
+      *           Base Ccy Spot Trade A/C from MC0320 to MC0400 (i.e. *
+      *           as it was before fix 155581) but didn't remove it   *
+      *           from MC0320, so the amount is counted twice.        *
+      *         - Also, do not revalue Base Ccy Spot Trade A/C Code   *
+      *           balance as this balance is already counted - this   *
+      *           is the problem which 155581 was attempting to fix.  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  155581 - fixes 121023 & 124860 removed & replaced            *
+      *           Base Ccy's Equiv A/c code removed from Ccy Array    *
+      *           Reval of base ccy spot trade a/c is never required  *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *  124860 - Forward revaluation entries being booked to Non-FX  *
+      *           position profit centre.                             *
+      *  121023 - Wrong Revaluation amount generated                  *
+      *  CMC001 - Management Accounts Enhancement for PCA:            *
+      *           Created for Management Accounts.                    *
+      *                                                               *
+      *****************************************************************
+     F/COPY WNCPYSRC,MC0320F001
+     FMCPOSTL0IF  E           K        DISK
+      **  Management Account Movements
+     F                                              KINFDS INFDS
+     F                                              KINFSR INFSR
+      *
+     FSDCURRL1IF  E           K        DISK         KINFSR *PSSR
+      **  Currency file
+      *
+     FMCDIRYL1IF  E           K        DISK         KINFSR *PSSR
+      **  Events Diary (F/Ccy Transfer dates)
+     F            MCDIRYD0                          KRENAMEMCDIRYFC
+      *
+     FMCDIRYL2IF  E           K        DISK         KINFSR *PSSR
+      **  Events Diary (B/Ccy Transfer dates)
+     F            MCDIRYD0                          KRENAMEMCDIRYBC
+      *
+     FMC0320AUO   E                    PRINTER      KINFSR *PSSR      UC
+      **  Value Date Adjustment Entry Generation Audit Report
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   11  - End of file on SDCURRL1                               *
+      *   12  - Read fail on MCDIRYL1                                 *
+      *   13  - Read fail on MCDIRYL2                                 *
+      *   15  - Account code is in Spot Trade Equivalent Array        *
+      *   20  - Currency code found in Currency Array                 *
+      *   89  - EOF in MCPOSTL0                                       *
+      *                                                               *
+      * 90-99 - Standard subroutine indicators.                       *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #A     - Program Initialisation                              *
+      *  #B     - Detail Processing                                   *
+      *  #C     - Termination processing                              *
+      *                                                               *
+      *  #B01   - Process IN/EX postings                              *
+      ***#B02***-*Process*Trade*Equivalent*A/C*postings****************   186136
+      *  #B03   - Process Spot Trade A/C postings                     *
+      *  #B04   - Process Funding Gap A/C postings                    *
+      *                                                               *
+      *  INFSR  - File error handling                                 *
+      *  DBERR  - Database Error Handling                             *
+      *  *PSSR  - Subroutine to Handle Abnormal Error Conditions      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      **  Array containing Copyright statement
+      *
+     E                    CCYC      999  3               Currency Codes
+     E**********          SPAE      999  4               Spot Trd Eqv A/cs                    CGL029
+     E                    SPAE      999 10                                                    CGL029
+      *
+      /SPACE 3
+     IMCPCACD0
+      **  Management Accounts Movements
+      *
+     IMCDIRYFC
+      **  F/Ccy TFR Events
+     I              GIEVDT                          FCEVDT
+     I              GIFTFR                          FCFTFR
+      *
+     IMCDIRYBC
+      **  Base Ccy TFR Events
+     I              GIEVDT                          BCEVDT
+     I              GIBTFR                          BCBTFR
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     ISDTRAD    E DSSDTRADPD
+      **  Trade details
+      *
+     ISDACOD    E DSSDACODPD
+      **  Account code details
+     I              QQACCD                          QQACD1                                    CGL029
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  Branch details
+      *
+     I****SDDEAL****E DSSDDEALPD                                                       186136 245142
+      ****Dealing Date details                                                         186136 245142
+     I***********   QQACCD                          QQACD2                             CGL029 245142
+      ******************************************************************               186136 245142
+     I****SDDEAL****E DSSDDEAL                                     124860 155581
+      ****Dealing*Date*details                                     124860 155581
+      ************                                                 124860 155581
+     IMCMOVE    E DSMCMOVEPD
+      **  Management Account Movements
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      **  First DS for access programs, Long Data Structure
+      *
+     IRUNDT     E DSRUNDAT
+     I**  Run date Data Area
+     I*
+     ILDA       E DSLDA
+      **  Local data area for database error details
+      *
+     IPGMDS     ESDSY2PGDSP
+      **  Program status data structure
+      *
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+      *
+     I/COPY WNCPYSRC,MC0320I001
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      **  Copyright statement.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initial processing.
+      *
+     C                     EXSR #A
+      *
+      ** Main processing.
+      *
+     C                     EXSR #B
+      *
+      ** Termination processing.
+      *
+     C                     EXSR #C
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #A - Initial Processing.                                     *
+      *                                                               *
+      *  Called by: MAIN   - Main processing                          *
+      *                                                               *
+      *  Calls    : DBERR    - Database error handling.               *
+      *             AOBANKR0 - Bank Details                           *
+      *             AOTRADR0 - Trade Details                          *
+      *             AOACODR0 - Account Codes Details                  *
+      **************AODEALR0*-*Dealing*Data*Details*****              *                186136 245142
+      **************AODEALR0*-*Dealing*Data*Details*****           124860 155581
+      *                                                               *
+      *****************************************************************
+      *
+     C           #A        BEGSR
+      *
+      ** Define RUNDT and LDA Dtaaras
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      **  Call AOBANKPD for the Base currency : BJCYCD
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' PRPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** DB error if not found
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVE ##PGM     DBPGM            ************
+     C                     Z-ADD1         DBASE            * DBASE 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Call pgm for the Spot revaluation A/C Code' and 'Spot Trade
+      **  A/C Code' : BLSRAC and BLSPTA
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*FIRST ' PRPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+      **  DB error if not found
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDTRADPD'DBFILE
+     C                     MOVE ##PGM     DBPGM            ************
+     C                     Z-ADD2         DBASE            * DBASE 02 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Call pgm for the 'Spot revaluation A/C Code' and 'Spot Reval
+      **  A/C Type', using the 'Spot Revaluation A/C Code'.
+      **  A5ACSC and A5ACTY with BLSRAC
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' PRPTN
+     C                     PARM           BLSRAC
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDACODPD'DBFILE
+     C                     MOVE ##PGM     DBPGM            ************
+     C                     Z-ADD3         DBASE            * DBASE 03 *
+     C                     MOVELBLSRAC    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     MOVE A5ACTY    SPATYP  1
+     C                     MOVE A5ACSC    SPACSC  2
+      ******************************************************************               186136 245142
+      ****Call*pgm*for*the*Forward*revaluation*P/L*A/C*Code'.***********               186136 245142
+      ****A/C*Code'*:*BNFRPL********************************************               186136 245142
+      ******************************************************************               186136 245142
+     C**********           CALL 'AODEALR0'                                186136              CGL029
+     C**********           CALL 'AODEALR1'                                             CGL029 245142
+     C**********           PARM '*MSG   ' PRTCD                                        186136 245142
+     C**********           PARM '*FIRST ' PRPTN                                        186136 245142
+     C********** SDDEAL    PARM SDDEAL    DSFDY                           186136              CGL029
+     C********** SDDEAL    PARM SDDEAL    DSSDY                                        CGL029 245142
+      ******************************************************************               186136 245142
+      ****DB*error*if*not*found*****************************************               186136 245142
+      ******************************************************************               186136 245142
+     C********** PRTCD     IFNE *BLANK                                                 186136 245142
+     C********** *LOCK     IN   LDA                                                    186136 245142
+     C**********           MOVE 'SDDEALPD'DBFILE                                       186136 245142
+     C**********           MOVE ##PGM     DBPGM            ************                186136 245142
+     C**********           Z-ADD16        DBASE            * DBASE 16 *                186136 245142
+     C**********           MOVEL'*FIRST'  DBKEY            ************                186136 245142
+     C**********           OUT  LDA                                                    186136 245142
+     C**********           EXSR DBERR                                                  186136 245142
+     C**********           ENDIF                                                       186136 245142
+      ******************************************************************               186136 245142
+      ************                                                 124860 155581
+      ****Call*pgm for the Forward revaluation P/L A/C Code'.      124860 155581
+      ****A/C*Code' : BNFRPL                                       124860 155581
+      ************                                                 124860 155581
+     C************         CALL 'AODEALR0'                         124860 155581
+     C************         PARM '*MSG   ' PRTCD                    124860 155581
+     C************         PARM '*FIRST ' PRPTN                    124860 155581
+     C***********SDDEAL    PARM SDDEAL    DSFDY                    124860 155581
+      ************                                                 124860 155581
+      ****DB*error if not found                                    124860 155581
+      ************                                                 124860 155581
+     C***********PRTCD     IFNE *BLANK                             124860 155581
+     C************LOCK     IN   LDA                                124860 155581
+     C************         MOVE 'SDDEALPD'DBFILE                   124860 155581
+     C************         MOVE ##PGM     DBPGM     ************   124860 155581
+     C************         Z-ADD16        DBASE     * DBASE 16 *   124860 155581
+     C************         MOVEL'*FIRST'  DBKEY     ************   124860 155581
+     C************         OUT  LDA                                124860 155581
+     C************         EXSR DBERR                              124860 155581
+     C************         ENDIF                                   124860 155581
+      *
+      **  Build Currency array of Spot Trade Equivalent A/cs
+      *
+     C           *LOVAL    SETLLSDCURRL1
+     C                     Z-ADD999       C       30
+     C                     READ SDCURRL1                 11  Read record
+      *
+     C           *IN11     DOWNE'1'
+     C           C         ANDGE1
+      *
+     C********** A6CYCD    IFNE BJCYCD                             155581 186136
+     C********** A6SPAE    ANDNEBLSRAC                             155581 186136
+     C********** A6SPAE    ANDNEBLSPTA                             155581 186136
+     C********** A6DLCI    ANDEQ'Y'                                155581 186136
+     C                     MOVE A6SPAE    SPAE,C
+     C                     MOVE A6CYCD    CCYC,C
+     C                     SUB  1         C
+     C**********           ENDIF                                   155581 186136
+     C                     READ SDCURRL1                 11  Read record
+      *
+     C                     ENDDO
+     C/COPY WNCPYSRC,MC0320C003
+      *
+     C           E#A       ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #B - Detail processing                                       *
+      *                                                               *
+      *  Called by: MAIN - Top level of program.                      *
+      *                                                               *
+      *  Calls    : #B01 - Process IN/EX postings                     *
+      **************#B02*-*Process*Trade*Equiv*A/C*postings************   186136
+      *             #B03 - Process Spot Trade A/C postings            *
+      *             #B04 - Process Funding Gap A/C postings           *
+      *             DBERR - Database error handling.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #B        BEGSR
+      *
+     C           *IN89     DOUEQ*ON
+      *
+      **  Read Movements file
+      *
+     C                     READ MCPOSTL0                 89
+     C           *IN89     IFEQ *OFF
+      *
+      **  If Single Branch, Set branch to Default Branch
+      *
+     C           AGMBIN    IFNE 'Y'
+     C                     MOVE BJSBRC    BRCA
+     C                     ENDIF
+      *
+      **  If multi-branched and 'Branch' NE 'Prev. Branch'...
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C           BRCA      ANDNEWWBRCA
+      *
+     C                     MOVELBRCA      WWBRCA  3
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*VERIFY' PRTCD
+     C                     PARM '*KEY   ' PRPTN
+     C                     PARM           BRCA
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA                        ************
+     C                     Z-ADD4         DBASE            * DBASE 04 *
+     C                     MOVELBRCA      DBKEY            ************
+     C                     MOVE 'SDBRCHPD'DBFILE
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+     C/COPY WNCPYSRC,MC0320C004
+      *
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,MC0320C001
+     C**********           MOVE ACOD      ACODA   4                                           CGL029
+     C                     MOVE ACOD      ACODA  10                                           CGL029
+     C           BJRDNB    MULT 1000000   PDTM
+     C                     ADD  235959    PDTM
+      *
+      **  Process IN/EX postings for Account Section 'IN' or 'EX'
+      *
+     C           ACSC      IFEQ 'IN'
+     C           ACSC      OREQ 'EX'
+     C***********ACODA     IFNE BNFRPL                             124860 155581
+     C********** ACODA     IFNE BNFRPL                                                 186136 245142
+     C                     EXSR #B01
+     C**********           ENDIF                                                       186136 245142
+     C************         ENDIF                                   124860 155581
+     C                     ENDIF
+      ***********                                                         121023
+      ****Check*for*Base*Ccy*Equivalent*posting                           121023
+      ***********                                                         121023
+     C***********ACODA     IFNE ACODS                                     121023
+     C***********          MOVE ACODA     ACODS   4                       121023
+     C***********          Z-ADDC         X       30                      121023
+     C***********ACODA     LOKUPSPAE,X                   15               121023
+     C***********          ENDIF                                          121023
+      ***********                                                         121023
+      ****Process*Trade*Equiv*A/C*postings*if*Account*Code*is*in*the      121023
+      ****Spot*Trade*Equivalent*array                                     121023
+      ***********                                                         121023
+     C************IN15     IFEQ '1'                                       121023
+     C***********          EXSR #B02                                      121023
+     C***********          ENDIF                                          121023
+      **********                                                   155581 186136
+      ****Check*for*Base*Ccy*Equivalent*posting******************* 155581 186136
+      **********                                                   155581 186136
+     C**********           Z-ADDC         X       30               155581 186136
+     C********** ACODA     LOKUPSPAE,X                   15        155581 186136
+      **********                                                   155581 186136
+      ****Process*Trade*Equiv*A/C*postings*if*Account*Code*is*in*th155581 186136
+      ****Spot*Trade*Equivalent*array******************************155581 186136
+      **********                                                   155581 186136
+     C********** *IN15     IFEQ '1'                                155581 186136
+     C**********           EXSR #B02                               155581 186136
+     C**********           ENDIF                                   155581 186136
+      *
+      **  Process Spot Trade A/C postings if Account Code EQ Spot Trade
+      **  Account Code
+      ****For*Foreign*Currencies***********************************155581 186136
+      *
+     C           ACODA     IFEQ BLSPTA
+     C********** CCY       ANDNEBJCYCD                             155581 186136
+     C                     EXSR #B03
+     C                     ENDIF
+      *
+      **  Process Funding Gap A/C postings if Account Type EQ 'F'
+      *
+     C           ATYP      IFEQ 'F'
+     C                     EXSR #B04
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDDO
+     C           E#B       ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #B01 - Process IN/EX Postings                                *
+      *                                                               *
+      *  Called by: #B - Detail processing                            *
+      *                                                               *
+      *  Calls    : MC0410 - Transfer of Foreign Ccy Income/Expense   *
+      *             MC0420 - Transfer of Base Ccy In/Ex to P&L        *
+      *             DBERR - Database error handling.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #B01      BEGSR
+      *
+      **  If 'Currency' from MCPOSTL0 NE 'Base Currency'...
+      **  and not Spot Revaluation Account Code as this balance is        186136
+      **  already included in original currency.                          186136
+      *
+     C           CCY       IFNE BJCYCD
+     C           ACODA     ANDNEBLSRAC                                    186136
+      *
+     C/COPY WNCPYSRC,MC0320C002
+      **  Read 'Transfer F/CCY' EQ 'Y' from MCDIRYL1
+      *
+     C           EVDT      IFNE XXEVDT
+     C                     Z-ADDEVDT      XXEVDT  50
+     C           EVDT      SETLLMCDIRYFC
+     C                     READ MCDIRYFC                 12
+     C                     ENDIF
+      *
+      **  If 'Transfer F/CCY' EQ 'Y' Event Record Found...
+      *
+     C           *IN12     IFEQ *OFF
+     C           FCFTFR    ANDEQ'Y'
+     C                     MOVELGETP      XXGETP  1
+     C                     Z-ADDFCEVDT    EVDT
+     C                     MOVEL'P'       GETP
+     C**********           MOVE A8BICN    PONUM   60                                          CSD027
+     C                     MOVE A8BICN    PONUM   6                                           CSD027
+     C/COPY WNCPYSRC,MC0320C005
+      *
+     C                     CALL 'MC0410'
+     C                     PARM *BLANKS   PRTCD            Return code
+     C                     PARM BJCYCD    PRCCY   3        Base currency
+     C                     PARM           PONUM            Branch Internal
+     C                     PARM 'N'       POLCK   1        Locked Record
+     C                     PARM MCMOVE    DSFDY
+     C/COPY WNCPYSRC,MC0320C006
+      *
+     C                     Z-ADDXXEVDT    EVDT
+     C                     MOVELXXGETP    GETP
+      *
+      **  DB error if return code not blank
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'See Dump'DBKEY            ************
+     C                     Z-ADD5         DBASE            * DBASE 05 *
+     C                     OUT  LDA                        ************
+     C                     EXSR DBERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If 'Currency' EQ 'Base Currency'...
+     C                     ELSE
+      *
+      **  Read 'Transfer B/CCY' EQ 'Y' from MCDIRYL2
+      *
+     C           EVDT      IFNE YYEVDT
+     C                     Z-ADDEVDT      YYEVDT  50
+     C           EVDT      SETLLMCDIRYBC
+     C                     READ MCDIRYBC                 13
+     C                     ENDIF
+      *
+      **  If 'Transfer B/CCY' EQ 'Y' Event Record Found...
+      *
+     C           *IN13     IFEQ *OFF
+     C           BCBTFR    ANDEQ'Y'                        02
+     C                     MOVELGETP      YYGETP  1
+     C                     Z-ADDBCEVDT    EVDT
+     C                     MOVEL'Y'       GETP
+     C                     MOVE A8BICN    PONUM
+      *
+     C                     CALL 'MC0420'
+     C                     PARM *BLANKS   PRTCD   7        Return code
+     C                     PARM           PONUM            Branch Internal
+     C                     PARM 'N'       POLCK   1        Locked Record
+     C                     PARM MCMOVE    DSFDY
+      *
+     C                     Z-ADDYYEVDT    EVDT
+     C                     MOVELYYGETP    GETP
+      *
+      **  DB error if return code not blank
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'See Dump'DBKEY            ************
+     C                     Z-ADD6         DBASE            * DBASE 06 *
+     C                     OUT  LDA                        ************
+     C                     EXSR DBERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           E#B01     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************   121023
+      *****************************************************************   121023
+      ***#B02*-*Process*Trade*Equiv.*A/C*Postings.*********************   121023
+      *****************************************************************   121023
+      ***Called*by:*#B*-*Detail*processing*****************************   121023
+      *****************************************************************   121023
+      ***Calls****:*MC0400*-*Spot*revaluation*of*foreign*currency******   121023
+      **************DBERR*-*Database*error*handling.*******************   121023
+      *****************************************************************   121023
+      *****************************************************************   121023
+      ***********                                                         121023
+     C***********#B02      BEGSR                                          121023
+      ***********                                                         121023
+      ****Call*MC0400*-*Spot*Revaluation*of*Foreign*Currency              121023
+      ***********                                                         121023
+     C***********          MOVE SPAE,X    POACC                           121023
+     C***********          MOVE A8BICN    PONUM                           121023
+     C***********          Z-ADDPAMT      XXPAMT 190                      121023
+     C***********          Z-SUBPAMT      POAMT                           121023
+     C***********          Z-ADD*ZERO     PAMT                            121023
+      ***********                                                         121023
+     C***********          CALL 'MC0400'                                  121023
+     C***********          PARM *BLANKS   PRTCD            Return code    121023
+     C***********          PARM BJCYCD    PRCCY            Base currency  121023
+     C***********          PARM           PONUM            Branch Internal121023
+     C***********          PARM           POAMT  190       Base Ccy Amount121023
+     C***********          PARM           POACC   4        Base Ccy A/C Code1023
+     C***********          PARM MCMOVE    DSFDY                           121023
+      ***********                                                         121023
+     C***********          Z-ADDXXPAMT    PAMT                            121023
+      ***********                                                         121023
+      ****DB*error*if*return*code*not*blank                               121023
+      ***********                                                         121023
+     C***********PRTCD     IFNE *BLANK                                    121023
+     C************LOCK     IN   LDA                                       121023
+     C***********          MOVEL'See Dump'DBKEY            ************   121023
+     C***********          Z-ADD7         DBASE            * DBASE 07 *   121023
+     C***********          OUT  LDA                        ************   121023
+     C***********          EXSR DBERR                                     121023
+     C***********          ENDIF                                          121023
+      ***********                                                         121023
+     C***********E#B02     ENDSR                                          121023
+      *****************************************************************   121023
+     C/EJECT
+      *************************************************************155581 186136
+      **********                                                   155581 186136
+      ***#B02*-*Process*Trade*Equiv.*A/C*Postings.*****************155581 186136
+      **********                                                   155581 186136
+      ***Called*by:*#B*-*Detail*processing*************************155581 186136
+      **********                                                   155581 186136
+      ***Calls****:*MC0400*-*Spot*revaluation*of*foreign*currency**155581 186136
+      **************DBERR*-*Database*error*handling.***************155581 186136
+      **********                                                   155581 186136
+      **********                                                   155581 186136
+      **********                                                   155581 186136
+     C********** #B02******BEGSR***********************************155581 186136
+      ************                                                 155581 186136
+      ****Call*MC0400*-*Spot*Revaluation*of*Foreign*Currency*******155581 186136
+      **********                                                   155581 186136
+     C**********           MOVE SPAE,X    POACC                    155581 186136
+     C**********           MOVE A8BICN    PONUM                    155581 186136
+     C**********           Z-ADDPAMT      XXPAMT 190               155581 186136
+     C**********           Z-SUBPAMT      POAMT                    155581 186136
+     C**********           Z-ADD*ZERO     PAMT                     155581 186136
+      **********                                                   155581 186136
+     C**********           CALL 'MC0400'                           155581 186136
+     C**********           PARM *BLANKS   PRTCD            Return c155581 186136
+     C**********           PARM BJCYCD    PRCCY            Base cur155581 186136
+     C**********           PARM           PONUM            Branch I155581 186136
+     C**********           PARM           POAMT  190       Base Ccy155581 186136
+     C**********           PARM           POACC   4        Base Ccy155581 186136
+     C**********           PARM MCMOVE    DSFDY                    155581 186136
+      **********                                                   155581 186136
+     C**********           Z-ADDXXPAMT    PAMT                     155581 186136
+      **********                                                   155581 186136
+      ****DB*error*if*return*code*not*blank************************155581 186136
+      **********                                                   155581 186136
+     C***********PRTCD     IFNE *BLANK                             155581 186136
+     C************LOCK     IN   LDA                                155581 186136
+     C**********           MOVEL'See Dump'DBKEY     ************   155581 186136
+     C**********           Z-ADD7         DBASE     * DBASE 07 *   155581 186136
+     C**********           OUT  LDA                 ************   155581 186136
+     C**********           EXSR DBERR                              155581 186136
+     C**********           ENDIF                                   155581 186136
+      **********                                                   155581 186136
+     C***********E#B02     ENDSR                                   155581 186136
+      *****************************************************************   155581
+     C/EJECT                                                              155581
+      *****************************************************************
+      *                                                               *
+      *  #B03 - Process Spot Trade A/C postings.                      *
+      *                                                               *
+      *  Called by: #B - Detail processing                            *
+      *                                                               *
+      *  Calls    : MC0400 - Spot revaluation of foreign currency     *
+      *             DBERR - Database error handling.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #B03      BEGSR
+      *
+      **  Get Base CCY Equivalent A/c
+      *
+     C                     Z-ADDC         Y       30
+     C           CCY       LOKUPCCYC,Y                   20
+      *
+     C           *IN20     IFEQ '0'
+     C           *LOCK     IN   LDA                        ************
+     C                     Z-ADD8         DBASE            * DBASE 8  *
+     C                     MOVELCCY       DBKEY            ************
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Call MC0400 - Spot Revaluation of foreign Currency
+      *
+     C                     MOVE SPAE,Y    POACC
+     C                     MOVE A8BICN    PONUM
+     C                     Z-ADD*ZERO     POAMT
+      *
+     C/COPY WNCPYSRC,MC0320C007
+     C                     CALL 'MC0400'
+     C                     PARM *BLANKS   PRTCD            Return code
+     C                     PARM BJCYCD    PRCCY            Base currency
+     C                     PARM           PONUM            Branch Internal
+     C                     PARM           POAMT  190       Base Ccy Amount
+     C**********           PARM           POACC   4        Base Ccy A/C Code                  CGL029
+     C                     PARM           POACC  10                                           CGL029
+     C                     PARM MCMOVE    DSFDY
+     C/COPY WNCPYSRC,MC0320C008
+      *
+      **  DB error if return code not blank
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'See Dump'DBKEY            ************
+     C                     Z-ADD9         DBASE            * DBASE 09 *
+     C                     OUT  LDA                        ************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C           E#B03     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #B04 - Process Funding Gap A/C Postings.                     *
+      *                                                               *
+      *  Called by: #B - Detail processing                            *
+      *                                                               *
+      *  Calls    : MC0430 - Update Gap Accrual History file.         *
+      *             DBERR - Database error handling.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #B04      BEGSR
+      *
+      **  Call 'MC0430' to Update GAP Accruals History file
+      *
+     C                     CALL 'MC0430'
+     C                     PARM *BLANKS   PRTCD   7        Return code
+     C                     PARM MCMOVE    DSFDY
+      *
+      **  DB error if return code not blank
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'See Dump'DBKEY            ************
+     C                     Z-ADD10        DBASE            * DBASE 10 *
+     C                     OUT  LDA                        ************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C           E#B04     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #C - Termination processing.                                 *
+      *                                                               *
+      *  Called by: MAIN - Top level processing.                      *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #C        BEGSR
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C           E#C       ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INFSR - File Error handling.                                 *
+      *                                                               *
+      *  Called by: #B - Detail processing                            *
+      *                                                               *
+      *  Calls    : DBERR - Database error handling                   *
+      *                                                               *
+     C*****************************************************************
+      *
+     C           INFSR     BEGSR
+      *
+      **  Send message - 'Error Open/Close.'
+      *
+     C           STATUS    IFEQ 01216
+     C           STATUS    OREQ 01217
+      *
+      **  Process Database Error Handling Subroutine
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE ##ERFL    DBFILE
+     C                     MOVE ##PGM     DBPGM
+     C                     MOVEL'OPEN'    DBKEY            ************
+     C                     Z-ADD11        DBASE            * DBASE 11 *
+     C                     OUT  LDA                        ************
+     C                     ELSE
+      *
+      **  Other status - cancel and dump and return
+      **  Process Database Error Handling Subroutine
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE ##ERFL    DBFILE
+     C                     MOVE ##PGM     DBPGM
+     C                     MOVEL'See Dump'DBKEY            ************
+     C                     Z-ADD12        DBASE            * DBASE 12 *
+     C                     OUT  LDA                        ************
+     C                     ENDIF
+     C                     EXSR DBERR
+      *
+     C           EINFSR    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DBERR - Process Database Error Handling Subroutine           *
+      *                                                               *
+      *  Called by: #A - Initial Processing.                          *
+      *             #B - Detail Processing                            *
+      *             #B01 - Process IN/EX postings                     *
+      **************#B02*-*Process*Trade*Equivalent*A/C*postings***   *   186136
+      *             #B03 - Process Spot Trade A/C postings            *
+      *             #B04 - Process Funding Gap A/C postings           *
+      *             INFSR - File error handling                       *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+     C*****************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+     C                     IN   LDA
+     C                     OPEN MC0320AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEMC0320AU
+     C                     EXSR *PSSR
+      *
+     C           EDBERR    ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - To Handle Abnormal Error Conditions                  *
+      *                                                               *
+      *  Called by   : DBERR - Database Error Handling                *
+      *                                                               *
+      *  Calls       : None                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           WRUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+** CPY@
+(c) Finastra International Limited 2001

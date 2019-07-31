@@ -1,0 +1,245 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Access FT Control Data')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FUNDS TRANSFER MODULE                            *
+     F*                                                               *
+     F*  FT0005 - Access FT Control Data                              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01408             Date 26Jan96               *
+      *                 S01499             Date 06Jun94               *
+     F*                 041693             DATE 05JAN93               *
+     F*                 045014             DATE 07DEC92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  S01408 - Core hook FT0005CCP1 added.                         *
+     F*           Core hook FT0005CCP2 added.                         *
+     F*  S01499 - BLI V.A.T. Processing                               *
+     F*  041693 - Delivered as part of fix.                           *
+     F*  045014 - Program added.                                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                                  *
+     F*  Indicator usage                                                 *
+     F*  ~~~~~~~~~~~~~~~                                                 *
+     F*                                                                  *
+     F*  50    First cycle                                               *
+     F*  90    Chain fail                                                *
+     F*                                                                  *
+     F********************************************************************
+     F/EJECT
+      *
+      *  Copyright table
+      *
+     E                    CPY@    1   1 80
+      *
+      *  Error texts
+      *
+     E                    ERR@    1   1 80
+      *
+      *  Subroutine stack
+      *
+     E                    @STK       20 10
+     E/EJECT
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *  Program data structure
+      *
+     IDSPGM     ESDSY2PGDSP
+      *
+      *  Send message data structure
+      *
+     IDBDTA       DS
+     I                                        1  10 DBPGM
+     I                                       11  20 DBFILE
+     I                                       21  50 DBKEY
+     I                                       51  550DBERNB
+     I                                       56 135 DBNARR
+     I                                      136 145 DBSTK
+     I                                      146 175 DBPREF                045014
+      *
+      *  Output parameters data structure
+      *
+     IO#DTA       DS                            256
+      *  Posting date indicator
+      *     E=Event Date  I=Entry date  S=Earlier of Settle/Pay
+      *     For cheques before header date only individual cheque keys
+      *     but on header date all keys produced
+     I                                        1   1 O#PDTI
+      *  Same Currency Transaction Indicator
+      *     FX=all transactions are FX
+      *     MM=same currency transactions are like Deposits Taken
+     I                                        2   3 O#CCYI
+      *  Forward Transaction Indicator - update GL Balance on
+      *     P=Change on posting date (similar to Dealing)
+      *     I=Change immediately irrespective of posting date
+     I                                        4   4 O#GLUI
+      *  Trade Position Change Indicator
+      *     S=Treat FX type transaction on earliest date
+      *     P=Treat FX type transaction on latest date
+      *     B=Treat FX type transaction on both dates
+     I                                        5   5 O#TPCI
+     I*                                                                   S01499
+     I** Apply V.A.T. Flag Indicator                                      S01499
+     I**    Y = Apply V.A.T. calculation                                  S01499
+     I**    N = Do not apply V.A.T. calculation                           S01499
+     I*                                                                   S01499
+     I                                        6   6 O#VATT                S01499
+     I/EJECT
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM O#DTA     P0DTA 256
+      *
+      *  Set fields - hard coded per client at present
+      *
+     C                     CLEARO#DTA
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FT0005CCP1                                           S01408
+     C*                                                                   S01408
+     C                     MOVEL'E'       O#PDTI           Post on event date
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FT0005CCP2                                           S01408
+     C*                                                                   S01408
+     C                     MOVEL'FX'      O#CCYI           FX type trades
+     C                     MOVEL'I'       O#GLUI           GL balance immed
+     C                     MOVEL'B'       O#TPCI           FX trades both dates
+     C                     MOVEL'Y'       O#VATT           Apply VAT flg  S01499
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      * Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRERR    : Report error and close down program               *
+      *                                                               *
+      *  CALLED BY: All subroutines                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRERR     BEGSR
+      *
+      *  Dump program
+      *
+     C                     DUMP
+      *
+      *  Send message to MOPERQ
+      *
+     C                     MOVEL*BLANKS   DBDTA
+     C                     MOVEL'FT0262  'DBPGM
+     C                     MOVEL@STK,Q    DBSTK
+     C                     MOVELW0KEY     DBKEY
+     C                     MOVELW0ERNB    DBERNB
+     C                     MOVELW0FILE    DBFILE
+     C                     MOVELW0PREF    DBPREF                          045014
+     C           W0NARR    IFEQ *BLANKS
+     C                     MOVELERR@,1    DBNARR
+     C                     ELSE
+     C                     MOVELW0NARR    DBNARR
+     C                     END
+      *
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'MEM5000' #MSGID  7
+     C                     PARM 'MIDAS  ' #MSGF  10
+     C                     PARM *BLANKS   #MSGFL 10
+     C                     PARM DBDTA     #MSGDT256
+     C                     PARM '*PRV'    #MSGR   5
+     C                     PARM '*'       #PRGM  10
+     C                     PARM 'MOPERQ ' #MSGQ  10
+     C                     PARM '*INFO  ' #MSGT   7
+      *
+      *  Close down program
+      *
+     C                     SETON                     LR
+     C                     MOVEL'*ERROR*' W0RTN
+     C                     RETRN
+      *
+     CSR         EXERR     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Define W0 database error variables
+      *
+     C           *LIKE     DEFN DBFILE    W0FILE
+     C           *LIKE     DEFN DBKEY     W0KEY
+     C           *LIKE     DEFN DBERNB    W0ERNB
+     C           *LIKE     DEFN DBNARR    W0NARR
+     C           *LIKE     DEFN DBPREF    W0PREF
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+**  CPY@ table
+(c) Finastra International Limited 2001
+**  Error text
+See dump for further information

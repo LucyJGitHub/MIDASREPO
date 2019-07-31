@@ -1,0 +1,1007 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Monthly processing - matured loans drop')     *
+     F********************************************************************
+     F*                                                                  *
+     F*     Midas CUSTOMER LENDING MODULE                            *
+     F*                                                                  *
+     F*     LE0451 - MATURED LOANS DROP PROGRAM                          *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 10Aug12               *
+      *                 CLE141             Date 08Feb16               *
+      *                 CLE164             Date 18Aug14               *
+      *                 AR789025           Date 14Oct12               *
+      *                 AR574425           Date 01Aug12               *
+      *                 AR546409A          Date 01Aug12               *
+      *                 AR546409           Date 01Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CSW208             Date 15Apr08               *
+      *                 CAS016             Date 28Feb06               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 240409             Date 19Jun06               *
+      *                 BUG10875A          Date 12May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10875           Date 16Mar06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE036             Date 22Sep03               *
+      *                 CAS009             Date 04May04               *
+      *                 CAP074             Date 08Aug02               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS002             Date 14Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 144915             Date 28Oct98               *
+      *                 112423             Date 21Jan97               *
+      *                 CFF004             Date 02Oct96               *
+     F*                    090155            DATE  18OCT95               *
+     F*                    S01486            DATE. 21OCT94               *
+     F*                    069246            DATE. 11APR94               *
+     F*                    S01270            DATE. 10SEP91               *
+     F*                                                                  *
+     F********************************************************************
+      *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *  AR789025 - LEC0456 failed due to existing orphaned records in*
+      *             LEACCNPD. Remove indicator on SETLL command to    *
+      *             properly dropped related records.(Child: AR789026)*
+      *  AR574425 - Retention period issues                           *
+      *             (Child: AR574426)                                 *
+      *  AR546409A- LE0451 wrong set up of CLE134 on/off indicator    *
+      *             (Child: AR546410)                                 *
+      *  AR546409 - LE0451 wrong set up of CLE134 on/off indicator    *
+      *             (Child: AR546410)                                 *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  CSW208 - SWIFT 2008 Changes (Recompile)                      *
+      *  CAS016 - IAS18 EIR Recalculation (Fee Amortisation Over      *
+      *           Whole Period)                                       *
+      *  240409 - Fee history records not purged. Apply 193112:-      *
+      *  193112 - Drop lending fee history records if associated loan *
+      *           or facility records no longer exist.                *
+      *  BUG10875A (Reopen) - Receiver value too small to hold result *
+      *                      (Recompile)                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10875 - Receiver value too small to hold result           *
+      *             (Recompile)                                       *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE036 - LE Enh for Nordea Phase 1 Pty 2- Specific Base Rate *
+      *           (Recompile)                                         *
+      *  CAS009 - Effective Interest Rate/Amortised Cost Accounting   *
+      *  CAP074 - Lending API enhancements - Loans input.             *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CAS002 - Hedge Strategy/Linkage                              *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  144915 - Recompiled due to changes in LF/MLOAN.              *
+     F*     112423 - AMEND RETENTION CALC. TO WORK PAST YEAR 2000:-      *
+     F*              USE R10 LOGIC, WHICH WORKS OUT CHDAT = RUND -       *
+     F*              RETENTION PERIOD. RECORDS DROPPED IF MTH OR YR-     *
+     F*              END AND MDAT < OR = CHDAT.                          *
+     F*     CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*     090155 - Recompiled due to changes in MCLONCL.               *
+     F*     S01486 - Portfolio Management Upgrade to Release 10.         *
+     F*     069246 - REMOVE ALL REFERENCES TO HISTSHN                    *
+     F*     S01270 - RENAME PROGRAM & CUSTOMER LENDING CHANGES.          *
+     F*                                                                  *
+     F********************************************************************
+     FMLOAN   UF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FMHISR   UF  E           K        DISK
+     FPMMFHLL1UF  E           K        DISK                           UC  S01486
+     F/COPY WNCPYSRC,LEH00569
+     FLE0451AUO   E                    PRINTER
+     FASHTRNL6IF  E           K        DISK                                                   CAS002
+     FLEFHSTL0UF  E           K        DISK                                                   CAS009
+     FLEEIRDLAUF  E           K        DISK                                                   CAS009
+     FLEEIRAL3UF  E           K        DISK                                                   CAS009
+     FLECFSFL0UF  E           K        DISK                                                   CAS009
+     F            LECFLFD0                          KIGNORE                                   CAS009
+      ** Hedge Transaction File RTV by Mod/Deal Number/Indicator                              CAS002
+      *                                                                                       CAS002
+      ** EIR Amortisation Over Period Detail File                                             CAS016
+     FLEERAPL0UF  E           K        DISK                                                   CAS016
+      *                                                                                       CAS016
+      ** EIR Amortisation Over Period History Detail File                                     CAS016
+     FLEERAHL0UF  E           K        DISK                                                   CAS016
+     F            LEERAPD0                          KRENAMELEERAHD0                           CAS016
+      *                                                                                       CAS016
+     FLEFHSTL5UF  E           K        DISK                                                   193112
+     F            LEFHSTF                           KRENAMELEFHS1F                            193112
+      ** Fee History Details - By Loans                                                       193112
+      *                                                                                       CLE134
+     F***LEACCNLAUF  E           K        DISK         KINFSR *PSSR                  AR574425 CLE164
+     FCLOANZI0UF  E           K        DISK         KINFSR *PSSR                              CLE164
+     FLEPDUFL1IF  E           K        DISK         KINFSR *PSSR                            AR574425
+     FLEPDUEL1IF  E           K        DISK         KINFSR *PSSR                              CLE134
+     F***LEPDUEL2UF  E           K        DISK         KINFSR *PSSR                  CLE134 AR574425
+     FLEPDUELBUF  E           K        DISK         KINFSR *PSSR                            AR574425
+     F            LEPDUED0                          KRENAMELEPDUED2                           CLE134
+      *                                                                                       193112
+     F/COPY WNCPYSRC,LE0451F001
+     F****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 07            NO DETAILS TO REPORT
+     F* 08            FILES OUT OF BALANCE FOR MLOAN
+     F* 09            FILES OUT OF BALANCE FOR MHISR
+     F* 90            NO RECORD FOR MHISR
+     F* 91            NO RECORD FOR MLOAN
+     F* 92            READ FAIL FOR MHISR
+     F* 99            READ FAIL FOR MLOAN
+     E                    ZYDY    4   4  4 0             ZDATE ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE ARRAY
+     E                    ZMNM   12  12  3               ZDATE ARRAY
+     E                    ZFMD   12  12  2 0             ZFREQ SR ARRAY
+     ILEPDUED0                                                                                CLE134
+      *                                                                                       CLE134
+      ** Rename fields                                                                        CLE134
+      *                                                                                       CLE134
+     I              YTKPACL                         YTKPAC                                    CLE134
+     I              YTKPABR                         YTKPAB                                    CLE134
+     I              YTKPAAC                         YTKPAA                                    CLE134
+     I              YTKPASE                         YTKPAS                                    CLE134
+     I              YTKPACY                         YTKPCY                                    CLE134
+      *                                                                                       CLE134
+     I              YTKIACL                         YTKIAC                                    CLE134
+     I              YTKIABR                         YTKIAB                                    CLE134
+     I              YTKIAAC                         YTKIAA                                    CLE134
+     I              YTKIASE                         YTKIAS                                    CLE134
+     I              YTKIACY                         YTKICY                                    CLE134
+      *                                                                                       CLE134
+     ILEPDUED2                                                                                CLE134
+      *                                                                                       CLE134
+      ** Rename fields                                                                        CLE134
+      *                                                                                       CLE134
+     I              YTKPACL                         YTKPAC                                    CLE134
+     I              YTKPABR                         YTKPAB                                    CLE134
+     I              YTKPAAC                         YTKPAA                                    CLE134
+     I              YTKPASE                         YTKPAS                                    CLE134
+     I              YTKPACY                         YTKPCY                                    CLE134
+      *                                                                                       CLE134
+     I              YTKIACL                         YTKIAC                                    CLE134
+     I              YTKIABR                         YTKIAB                                    CLE134
+     I              YTKIAAC                         YTKIAA                                    CLE134
+     I              YTKIASE                         YTKIAS                                    CLE134
+     I              YTKIACY                         YTKICY                                    CLE134
+     ILEPDUFD0                                                                              AR574425
+      *                                                                                     AR574425
+      ** Rename fields                                                                      AR574425
+      *                                                                                     AR574425
+     I              YTKPACL                         YTKPAC                                  AR574425
+     I              YTKPABR                         YTKPAB                                  AR574425
+     I              YTKPAAC                         YTKPAA                                  AR574425
+     I              YTKPASE                         YTKPAS                                  AR574425
+     I              YTKPACY                         YTKPCY                                  AR574425
+      *                                                                                     AR574425
+0142 I*
+0143 I**  MATURED LOANS HISTORY FILE - LOAN HEADER RECORD
+0144 I*
+0145 I*    FIELDS REDEFINED WITH SUFFIX 'H'
+0146 IHISTSHMF    02
+0177 I*
+0178 I*    MATURED LOANS HISTORY FILE - INTEREST AND BACKVALUE HEADER
+0179 I*
+0180 I***HISTSHNF****03                                                   069246
+0210 I*
+0211 I** MATURED LOANS HISTORY FILE - AMOUNT RECORD
+0212 I*
+0213 IHISTSHPF    04
+0239 I*
+0240 I*    MATURED HISTORY FILE - DETAIL RATES
+0241 I*
+0242 IHISTSHQF    05
+     I*
+     I* RENAME OF CLOAN   FIELDS TO PREVENT CONFUSION WITH LOAMS
+     I*
+     ICLOANCLF
+     I              BRCA                            BRCDL
+     I              LNRF                            LNRFL
+     I              CNUM                            CNUML
+     I*
+     I** DATASTRUCTURE FOR HANDLING THE RETENTION PERIOD CALCS
+     I*
+     I            DS
+     I                                        1   60RPDAT
+     I                                        1   20RPDTD
+     I                                        3   40RPDTM
+     I                                        5   60RPDTYR
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE
+     I*
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     I*
+     I**  CUSTOMER LENDING DETAILS
+     I*
+     ISDCLND    E DSSDCLNDPD
+     I*
+     I** BANK DETAILS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     ISDMMOD    E DSSDMMODPD                                              S01486
+     I** External DS for Module Details.                                  S01486
+     I*                                                                   S01486
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     ISCSARD    E DSSCSARDPD                                                                  CAS002
+      ** External DS for Switchable Features details                                          CAS002
+      *                                                                                       CAS002
+     I/COPY WNCPYSRC,LE0451I001
+     I*****************************************************************
+     C/EJECT
+     C*
+     C** MAIN PROCESSING
+     C*
+     C                     EXSR INIT
+     C*
+     C           *INU8     IFEQ '0'
+     C                     EXSR FILES
+     C*
+     C                     EXSR UPDAT
+     C/COPY WNCPYSRC,LE0451C008
+     C                     END
+     C/COPY WNCPYSRC,LEH00846
+     C*
+     C                     SETON                     LR
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* FILES SUBROUTINE TO OUTPUT RECORDS TO MATLNMT AND NMATLMT
+     C* ACCORDING TO THE RETENTION PERIOD
+     C*
+     C* CALLED BY: MAIN PROCESSING
+     C* CALLS    : NOTHING
+     C*
+     C*****************************************************************
+     C*
+     C           FILES     BEGSR                           * FILES *
+     C                     READ MLOAN                    99
+      **********                                                                    CLE134 AR546409A
+      ***Skip process*if*loan*is*a*PDCL*as*the*PDCL*recor**************             CLE134 AR546409A
+     C********** CLE134    IFEQ 'Y'                                                 CLE134 AR546409A
+      **********                                                                    CLE134 AR546409A
+     C********** LNRFL     CHAINLEPDUEL1             88                             CLE134 AA546409A
+     C********** *IN88     DOWEQ*OFF                                                CLE134 AR546409A
+     C**********           READ MLOAN                    99                         CLE134 AR546409A
+     C********** LNRFL     CHAINLEPDUEL1             88                             CLE134 AR546409A
+     C**********           END                                                      CLE134 AR546409A
+     C**********           ENDIF                                                    CLE134 AR546409A
+      *                                                                                       CLE134
+     C*
+     C** INITIALIZE THE COUNTERS FOR NUMBER OF HISTORY RECORDS(CONTHR)
+     C** NUMBER OF DETAIL RECORDS(CONTDR) NUMBER OF HISTORY RECORDS
+     C** DELETED(CONTDH) & NUMBER OF DETAIL RECORDS DELETED(CONTDD)
+     C*
+     C                     Z-ADD0         CONTHR  50
+     C                     Z-ADD0         CONTDR  50
+     C                     Z-ADD0         CONTDH  50
+     C                     Z-ADD0         CONTDD  50
+     C*
+     C** ADD ONE TO THE DETAIL RECORD COUNTER FOR EACH SUCCESSFUL READ
+     C*
+     C           *IN99     DOWEQ'0'
+     C                     ADD  1         CONTDR
+      *                                                                                    AR546409A
+      ** Skip process if PDCL                                                              AR546409A
+      *                                                                                    AR546409A
+     C                     CLEARLOANT                                                      AR546409A
+     C           CLE134    IFEQ 'Y'                                                        AR546409A
+     C                     MOVELLTYP      LOANT   1                                        AR546409A
+     C                     ENDIF                                                           AR546409A
+      *                                                                                     AR574425
+      ** If Principal or Interest PDCL and a 'D' record exists on                           AR574425
+      ** LEPDUEPD, the loan  cannot be deleted from MCLONCL                                 AR574425
+      *                                                                                     AR574425
+     C           LOANT     IFEQ 'X'                                                         AR574425
+     C           LOANT     OREQ 'Y'                                                         AR574425
+     C           LNRFL     CHAINLEPDUEL1             88                                     AR574425
+     C           *IN88     IFEQ *ON                                                         AR574425
+     C                     MOVE *BLANKS   LOANT                                             AR574425
+     C                     ENDIF                                                            AR574425
+     C                     ENDIF                                                            AR574425
+      *                                                                                     AR574425
+      ** If Fee PDCL and a 'D' record exists on LEPDUFPD, the record                        AR574425
+      ** cannot be deleted from MCLONCL.                                                    AR574425
+      *                                                                                     AR574425
+     C           LOANT     IFEQ 'Z'                                                         AR574425
+     C           LNRFL     CHAINLEPDUFL1             88                                     AR574425
+     C           *IN88     IFEQ *ON                                                         AR574425
+     C                     MOVE *BLANKS   LOANT                                             AR574425
+     C                     ENDIF                                                            AR574425
+     C                     ENDIF                                                            AR574425
+      *                                                                                    AR546409A
+     C           LOANT     IFNE 'X'                                                        AR546409A
+     C           LOANT     ANDNE'Y'                                                        AR546409A
+     C           LOANT     ANDNE'Z'                                                        AR546409A
+     C*
+     C** PROCESS COUNTS ACCORDING TO THE RETENTION PERIOD
+     C*
+     C           BPHRPR    IFLT 99
+     C*
+     C** IF THE MATURITY DATE IS LESS THAN OR EQUAL TO THE CHECK DATE
+     C** THIS RECORD IS GOING TO BE DROPPED IN LE0900 AND SHOULD BE
+     C** OUTPUT TO MATLNMT
+     C*
+     C/COPY WNCPYSRC,LE0451C013
+      *                                                                                       CAS002
+     C                     MOVE *IN89     UIN89   1                                           CAS002
+     C                     MOVE *OFF      *IN89                                               CAS002
+     C                     MOVE *BLANKS   SET89   1                                           CAS002
+      *                                                                                       CAS002
+     C           CAS002    IFEQ 'Y'                                                           CAS002
+      *                                                                                       CAS002
+      ** Verify if record exists (*IN89 ON)                                                   CAS002
+      *                                                                                       CAS002
+     C           KLIST6    SETLLASHTRNL6                 89                                   CAS002
+      *                                                                                       CAS002
+      ** If switchable feature CAS002 is installed                                            CAS002
+      ** If the Maturity Date is less than or equal to the check date                         CAS002
+      ** and the loan is not specifed as a Hedged Item on the CAS002                          CAS002
+      ** Hedge Transaction Details file (*IN89 *OFF), then the loan                           CAS002
+      ** record can be dropped.                                                               CAS002
+      *                                                                                       CAS002
+      ** If switchable feature CAS002 is NOT present, *IN89 will be *OFF                      CAS002
+      ** to ignore this extra condition.                                                      CAS002
+      *                                                                                       CAS002
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+      ** Save value of *IN89 from SETLL command and reset *IN89 to                            CAS002
+      ** previous value.                                                                      CAS002
+      *                                                                                       CAS002
+     C           *IN89     IFEQ *ON                                                           CAS002
+     C                     MOVE 'Y'       SET89                                               CAS002
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C                     MOVE UIN89     *IN89                                               CAS002
+      *                                                                                       CAS002
+     C           MDAT      IFLE CHDAT
+     C           SET89     ANDNE'Y'                                                           CAS002
+      *                                                                                       CAS002
+     C/COPY WNCPYSRC,LE0451C010
+     C           KLIST1    CHAINMHISR                90
+     C           *IN90     DOWEQ'0'
+     C                     ADD  1         CONTDH
+     C*
+     C** USE THE RECORD IDENTIFYING INDICATORS TO DELETE THE CORRECT
+     C** LOGICAL FILE FORMAT AND REPEAT THE PROCESS UNTIL THERE ARE
+     C** NO RECORDS LEFT TO READ
+     C*
+     C/COPY WNCPYSRC,LE0451C014
+     C           *IN02     IFEQ '1'
+     C                     DELETHISTSHMF
+     C                     END
+     C************IN03     IFEQ '1'                                       069246
+     C***********          DELETHISTSHNF                                  069246
+     C***********          END                                            069246
+     C           *IN04     IFEQ '1'
+     C                     DELETHISTSHPF
+     C/COPY WNCPYSRC,LE0451C006
+     C                     END
+     C           *IN05     IFEQ '1'
+     C                     DELETHISTSHQF
+     C/COPY WNCPYSRC,LE0451C011
+     C                     END
+     C                     SETOF                     020304
+     C                     SETOF                     05
+     C           KLIST1    CHAINMHISR                90
+     C                     END
+     C/COPY WNCPYSRC,LE0451C007
+     C*                                                                   S01486
+     C*  Perform processing only if PM is On.                             S01486
+     C*                                                                   S01486
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C** IF PORTFOLIO REFERENCE NOT BLANK DELETE ALL HOLDINGS FOR THE     S01486
+     C** DEAL FROM LF/PMMFHLL1                                            S01486
+     C           PTFR      IFNE *BLANKS                                   S01486
+     C                     MOVE CNUM      QFCNUM                          S01486
+     C                     MOVE 'LE'      QFMODI                          S01486
+     C                     MOVE LNRF      QFTRNB                          S01486
+     C                     MOVE *LOVAL    QFTDSS                          S01486
+     C                     MOVE *LOVAL    QFTXT2                          S01486
+     C                     MOVE *LOVAL    QFPTFR                          S01486
+     C*                                                                   S01486
+     C** SET FILE POINTER BEFORE FIRST RECORD FOR DEAL                    S01486
+     C           MFHLKY    SETLLPMMFHLL1                                  S01486
+     C           MFHLK1    READEPMMFHLL1                 60               S01486
+     C*                                                                   S01486
+     C           *IN60     DOWEQ'0'                                       S01486
+     C                     DELETPMHOLDP0                                  S01486
+     C           MFHLK1    READEPMMFHLL1                 60               S01486
+     C                     END                                            S01486
+     C                     END                                            S01486
+     C                     END                                            S01486
+     C*
+      *                                                                                       CAS009
+      ** Before deleting from Matured Loan Details, delete records from                       CAS009
+      ** the new files                                                                        CAS009
+      *                                                                                       CAS009
+     C           CAS009    IFEQ 'Y'                                                           CAS009
+     C                     EXSR DELNEW                                                        CAS009
+     C                     ENDIF                                                              CAS009
+      *                                                                                       CAS009
+      ** Delete PDCLs records linked to the original loan                                     CLE134
+      *                                                                                       CLE134
+     C           CLE134    IFEQ 'Y'                                                           CLE134
+     C                     MOVE *OFF      *IN88                                               CLE134
+     C********** LNRFL     SETLLLEPDUEL2             88                              CLE134 AR574425
+     C********** LNRFL     SETLLLEPDUELB             88                            AR574425 AR789025
+     C           LNRFL     SETLLLEPDUELB                                                    AR789025
+     C           *IN88     DOWEQ*OFF                                                          CLE134
+     C********** LNRFL     READELEPDUEL2                 88                          CLE134 AR574425
+     C           LNRFL     READELEPDUELB                 88                                 AR574425
+     C           *IN88     IFEQ *OFF                                                          CLE134
+     C**********           DELETLEPDUEL2                                             CLE134 AR574425
+     C                     DELETLEPDUED2                                                    AR574425
+     C                     ENDIF                                                              CLE134
+     C********** LNRFL     READELEPDUEL2                 88                         CLE134 AR546409A
+     C                     ENDDO                                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *****************************************************************              AR574425 CLE164
+      ***Delete*records*from*LEACCNPD**********************************              AR574425 CLE164
+      *****************************************************************              AR574425 CLE164
+     C                     MOVE *OFF      *IN88                                             AR574425
+     C********** LNRFL     SETLLLEACCNLA                 88                        AR574425 AR789025
+     C********** LNRFL     SETLLLEACCNLA                                             AR789025 CLE164
+     C           LNRFL     SETLLCLOANZI0                                                      CLE164
+     C           *IN88     DOWEQ*OFF                                                        AR574425
+     C********** LNRFL     READELEACCNLA                 88                          AR574425 CLE164
+     C           LNRFL     READECLOANZI0                 88                                   CLE164
+     C           *IN88     IFEQ *OFF                                                        AR574425
+     C**********           DELETLEACCND0                                                    AR574425
+     C                     DELETCLOANZD0                                                      CLE164
+     C                     ENDIF                                                            AR574425
+     C                     ENDDO                                                            AR574425
+      *                                                                                       CLE134
+      ** Before deleting from Matured Loan Details, delete records from                       CAS016
+      ** the new files                                                                        CAS016
+      *                                                                                       CAS016
+     C           CAS016    IFEQ 'Y'                                                           CAS016
+     C                     EXSR SRDELR                                                        CAS016
+     C                     ENDIF                                                              CAS016
+     C/COPY WNCPYSRC,LEH00570
+      *                                                                                       CAS016
+     C** AND FINALLY DELETE THE RECORDS FROM THE MATURED LOAN DETAILS
+     C** FILE & COUNT BOTH DELETIONS
+     C*
+     C                     MOVE 'A'       RCDTL   1
+     C/COPY WNCPYSRC,LE0451C012
+     C           KLIST2    DELETCLOANCLF             81
+     C           *IN81     IFEQ '0'
+     C                     ADD  1         CONTDD
+     C                     END
+     C/COPY WNCPYSRC,LE0451C001
+     C                     MOVE 'B'       RCDTL
+     C           KLIST2    DELETCLOANCKF             91
+     C           *IN91     IFEQ '0'
+     C                     ADD  1         CONTDR
+     C                     ADD  1         CONTDD
+     C                     END
+      *                                                                                       193112
+      ** Delete fee history records that are attached to a dropped                            193112
+      ** loan.                                                                                193112
+      *                                                                                       193112
+     C                     EXSR SRFEEH                                                        193112
+     C/COPY WNCPYSRC,LE0451C004
+     C                     END
+     C*
+     C** IF THE HISTORIC RETENTION PERIOD IS 99 THEN NO RECORDS WILL BE
+     C** DROPPED BUT ALL THE MLOAN RECORDS SHOULD BE READ
+     C*
+     C                     ELSE
+     C                     SETON                         07
+     C                     END
+     C                     ENDIF                                                           AR546409A
+     C                     READ MLOAN                    99
+     C                     END
+     C*
+     C** READ THROUGH THE HISTORY FILE TO CHECK THE NUMBER OF RECORDS
+     C*
+     C                     MOVE *BLANKS   BRCDL
+     C**********           Z-ADD0         CNUML                                               CSD027
+     C                     MOVE *BLANKS   CNUML                                               CSD027
+     C**********           Z-ADD0         LNRFL                                               CLE148
+     C                     MOVEL*BLANKS   LNRFL                                               CLE148
+     C           KLIST1    SETLLMHISR
+     C           *IN92     DOWEQ'0'
+     C                     READ MHISR                    92
+     C           *IN92     IFEQ '0'
+     C                     ADD  1         CONTHR
+     C                     END
+     C                     END
+     C*
+     C** READ THROUGH THE LOANS FILE TO CHECK THE NUMBER OF RECORDS
+     C*
+     C**********           Z-ADD0         LNRF                                                CLE148
+     C                     MOVEL*BLANKS   LNRF                                                CLE148
+     C           LNRF      SETLLMLOAN
+     C                     MOVE '0'       *IN92
+     C           *IN92     DOWEQ'0'
+     C                     READ MLOAN                    92
+     C           *IN92     IFEQ '0'
+     C                     ADD  1         CONTDA  50
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* UPDAT SUBROUTINE TO PRODUCE AUDIT TRAIL AND OUTPUT TRAILERS
+     C* CALLED BY: MAIN PROCESSING
+     C*
+     C*****************************************************************
+     C*
+     C           UPDAT     BEGSR
+     C*
+     C** WRITE THE HEADER FOR THE REPORT
+     C*
+     C                     WRITEHDFMT
+     C*
+     C** CHECK THE TOTALS FOR MLOAN AND OUTPUT REPORT DETAILS
+     C*
+     C                     WRITECLFMT
+     C           CONTDD    ADD  CONTDA    TOTMD   50
+     C           CONTDR    IFNE TOTMD
+     C                     MOVE '1'       *IN08
+     C                     SETON                     U7
+     C                     END
+     C*
+     C** IF THE CONTROL TOTALS ARE OUT OF BALANCE WRITE THE ERROR
+     C** FORMAT 1 - NO NEED TO RESET INDICATOR 8 (*IN08)
+     C*
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBFMT
+     C                     END
+     C*
+     C** CHECK THE TOTALS FOR MHISR AND OUTPUT REPORT DETAILS
+     C*
+     C                     WRITEHSFMT
+     C*
+     C           *INU8     IFEQ '1'
+     C                     WRITEDBFMT2
+     C                     END
+     C*
+     C                     ENDSR
+      *                                                                                       193112
+      *****************************************************************                       193112
+      /TITLE SR/SRFEEH                                                                        193112
+      *****************************************************************                       193112
+      *                                                               *                       193112
+      *  SRFEEH - Deletes fee history records attached to a dropped   *                       193112
+      *           loan.                                               *                       193112
+      *                                                               *                       193112
+      *  Called By: FILES subroutine                                  *                       193112
+      *                                                               *                       193112
+      *  Calls: None                                                  *                       193112
+      *                                                               *                       193112
+      *****************************************************************                       193112
+      *                                                                                       193112
+     C           SRFEEH    BEGSR                           *** SRFEEH ***                     193112
+      *                                                                                       193112
+     C           KLFHS5    SETLLLEFHS1F                                                       193112
+     C           KLFHS5    READELEFHS1F                  51                                   193112
+      *                                                                                       193112
+     C           *IN51     DOWEQ*OFF                                                          193112
+     C                     DELETLEFHS1F                                                       193112
+     C           KLFHS5    READELEFHS1F                  51                                   193112
+     C                     ENDDO                                                              193112
+      *                                                                                       193112
+     C                     ENDSR                                                              193112
+      *                                                                                       193112
+      *****************************************************************                       CAS009
+     C/EJECT                                                                                  CAS009
+      *****************************************************************                       CAS009
+      *                                                                                       CAS009
+      *  DELNEW - Delete From New files                                                       CAS009
+      *  CALLED BY: Main Processing                                                           CAS009
+      *                                                                                       CAS009
+      *****************************************************************                       CAS009
+     C           DELNEW    BEGSR                                                              CAS009
+      *                                                                                       CAS009
+      ** Delete From LEEIRDPD & LEEIRHPD                                                      CAS009
+      *                                                                                       CAS009
+     C           LNRFL     CHAINLEEIRDLA             80                                       CAS009
+     C           *IN80     DOWEQ*OFF                                                          CAS009
+     C                     DELETLEEIRDLA                                                      CAS009
+     C           LNRFL     READELEEIRDLA                 80                                   CAS009
+     C                     ENDDO                                                              CAS009
+      *                                                                                       CAS009
+      ** Delete From LEEIRAPD                                                                 CAS009
+      *                                                                                       CAS009
+     C           LNRFL     CHAINLEEIRAL3             80                                       CAS009
+     C           *IN80     DOWEQ*OFF                                                          CAS009
+     C                     DELETLEEIRAL3                                                      CAS009
+     C           LNRFL     READELEEIRAL3                 80                                   CAS009
+     C                     ENDDO                                                              CAS009
+      *                                                                                       CAS009
+      ** Delete From LECFLSPD                                                                 CAS009
+      *                                                                                       CAS009
+     C           LNRFL     CHAINLECFSFL0             80                                       CAS009
+     C           *IN80     DOWEQ*OFF                                                          CAS009
+      *                                                                                       CAS009
+     C                     DELETLECFSFL0                                                      CAS009
+      *                                                                                       CAS009
+     C           LNRFL     READELECFSFL0                 80                                   CAS009
+     C                     ENDDO                                                              CAS009
+      *                                                                                       CAS009
+      ** Delete From LEFHSTL0                                                                 CAS009
+      *                                                                                       CAS009
+     C           LNRFL     CHAINLEFHSTL0             80                                       CAS009
+     C           *IN80     DOWEQ*OFF                                                          CAS009
+     C                     DELETLEFHSTL0                                                      CAS009
+     C           LNRFL     READELEFHSTL0                 80                                   CAS009
+     C                     ENDDO                                                              CAS009
+      *                                                                                       CAS009
+     C                     ENDSR                                                              CAS009
+      *****************************************************************                       CAS016
+     C/EJECT                                                                                  CAS016
+      *****************************************************************                       CAS016
+      *                                                                                       CAS016
+      *  SRDELR - Delete Records from New Files for loans to be dropped                       CAS016
+      *  CALLED BY: Main Processing                                                           CAS016
+      *                                                                                       CAS016
+      *****************************************************************                       CAS016
+     C           SRDELR    BEGSR                                                              CAS016
+      *                                                                                       CAS016
+      ** Delete From LEEIRDPD & LEEIRHPD                                                      CAS016
+      *                                                                                       CAS016
+     C           LNRFL     CHAINLEERAPL0             80                                       CAS016
+     C           *IN80     DOWEQ*OFF                                                          CAS016
+     C                     DELETLEERAPD0                                                      CAS016
+     C           LNRFL     READELEERAPD0                 80                                   CAS016
+     C                     ENDDO                                                              CAS016
+      *                                                                                       CAS016
+     C           LNRFL     CHAINLEERAHD0             80                                       CAS016
+     C           *IN80     DOWEQ*OFF                                                          CAS016
+     C                     DELETLEERAHD0                                                      CAS016
+     C           LNRFL     READELEERAHD0                 80                                   CAS016
+     C                     ENDDO                                                              CAS016
+      *                                                                                       CAS016
+     C                     ENDSR                                                              CAS016
+     C*****************************************************************
+     C/EJECT
+     C/COPY WNCPYSRC,LE0451C009
+     C*****************************************************************
+     C*
+     C* INIT SUBROUTINE TO PERFORM INITIAL PROCESSING
+     C* CALLED BY: MAIN PROCESSING
+     C* CALLS    : ZDATE1, ZDATE2
+     C*
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR                           * INIT *
+     C                     MOVEL'LE0901  'DBPGM
+     C*
+     C** READ BANK DETAILS FOR BANK NAME AND RUNDAY NUMBER
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           WRTCD     IFNE *BLANKS
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANK'  DBFILE           ***************
+     C                     Z-ADD1         DBASE            * DBERROR 01
+     C                     MOVE '*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*
+     C** SET OFF THE APPROPRIATE INDICATOR FOR RUNNING ZDATE BY
+     C*
+     C                     SETOF                         98
+     C*
+     C** READ CLIENT DETAILS FOR THE HISTORIC RETENTION PERIOD
+     C*
+     C                     CALL 'AOCLNDR0'
+     C                     PARM '*DBERR ' WRTCD
+     C                     PARM '*FIRST ' WOPTN
+     C********** SDCLND    PARM SDCLND    DSFDY                                               CLE134
+     C           SDCLND    PARM SDCLND    DSSDY                                               CLE134
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVE 'SDCLND'  DBFILE           * DBERROR 02
+     C                     MOVE '*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C           BPHRPR    IFLT 99
+     C           BPHRPR    DIV  12        RETYRS  10
+     C                     MVR            RETMTS  20
+     C*
+     C** CONVERT RUND INTO DDMMYY FORMAT AND SUBTRACT THE RETENTION
+     C** PERIOD IN MONTHS AND YEARS FROM IT
+     C*
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     RPDAT   60
+     C           RPDTM     SUB  RETMTS    RPDTM
+     C           RPDTYR    SUB  RETYRS    RPDTYR
+     C*
+     C** CHECK THAT THE RESULTING DATE IS VALID
+     C*
+     C           RPDTM     IFLE 0
+     C           RPDTM     ADD  12        RPDTM
+     C           RPDTYR    SUB  1         RPDTYR
+     C                     END
+     C*                                                                   112423
+     C** TO CATER FOR DATES PAST THE YEAR 2000, CHECK FOR -VE YEAR.       112423
+     C** IF SO, ADD 100 TO -VE YEAR                                       112423
+     C*                                                                   112423
+     C           RPDTYR    IFLT 0                                         112423
+     C           RPDTYR    ADD  100       RPDTYR                          112423
+     C                     END                                            112423
+     C*
+     C** CHECK THAT THE DAY VALUE IS CORRECT FOR THE CALCULATED MONTH
+     C** BY CHECKING THE ARRAY
+     C*
+     C                     MOVEAZFMD,RPDTMRPDTD
+     C*
+     C** CONVERT THE CALCULATED DATE BACK TO A DAY NUMBER FOR
+     C** COMPARISON WITH MATURITY DATE
+     C*
+     C                     MOVE RPDAT     ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    CHDAT   60
+     C*
+     C                     END
+     C                     END
+     C                     END
+      *                                                                   S01486
+      ** Access Module details                                            S01486
+     C                     CALL 'AOMMODR0'                                S01486
+     C                     PARM '*DBERR ' @RTCD   7          B:Return codeS01486
+     C                     PARM '*FIRST'  @OPTN   7          I:Option     S01486
+     C           SDMMOD    PARM SDMMOD    DSFDY              O:Rec format S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'SDMMODPD'DBFILE           *************  S01486
+     C                     MOVEL'003'     DBASE            * DBERR 003 *  S01486
+     C                     MOVEL@OPTN     DBOPTN  7        *************  S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C** Get non-Portfolio reference if PM is switched on.                S01486
+     C*                                                                   S01486
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C                     OPEN PMMFHLL1                                  S01486
+     C                     END                                            S01486
+      *                                                                   S01486
+     C/COPY WNCPYSRC,LE0451C002
+     C*
+     C** SET UP THE KEYLIST TO ACCESS THE MATURED HISTORY RECORDS
+     C*
+     C           KLIST1    KLIST
+     C                     KFLD           BRCDL
+     C                     KFLD           CNUML
+     C                     KFLD           LNRFL
+     C*
+     C** KEYLIST TO ACCESS THE MATURED LOANS RECORDS
+     C*
+     C           KLIST2    KLIST
+     C                     KFLD           LNRFL
+     C                     KFLD           RCDTL
+     C/COPY WNCPYSRC,LE0451C005
+     C*
+     C           MFHLKY    KLIST                                          S01486
+     C                     KFLD           QFCNUM                          S01486
+     C                     KFLD           QFMODI                          S01486
+     C                     KFLD           QFTRNB                          S01486
+     C                     KFLD           QFTDSS                          S01486
+     C                     KFLD           QFTXT2                          S01486
+     C                     KFLD           QFPTFR                          S01486
+     C*                                                                   S01486
+     C           MFHLK1    KLIST                                          S01486
+     C                     KFLD           QFCNUM                          S01486
+     C                     KFLD           QFMODI                          S01486
+     C                     KFLD           QFTRNB                          S01486
+     C/COPY WNCPYSRC,LEH00571
+     C*                                                                   S01486
+      ** Keylist for CAS002 Hedge Transactions Linkage file                                   CAS002
+      *                                                                                       CAS002
+     C                     MOVE 'LE'      KMOD    2                                           CAS002
+     C                     MOVE 'H'       KDHIN   1                                           CAS002
+     C           KLIST6    KLIST                                                              CAS002
+     C                     KFLD           KMOD                                                CAS002
+     C**********           KFLD           KDLNO   60                                   CAS002 CLE148
+     C                     KFLD           KDLNO   6                                           CLE148
+     C*                    KFLD           KHEDI                                               CAS002
+      *                                                                                       CLE134
+      ** Check if CLE134 - PDCL is on                                                         CLE134
+      *                                                                                       CLE134
+     C                     CALL 'AOSARDR0'                                                    CLE134
+     C                     PARM *BLANKS   WRTCD                                               CLE134
+     C                     PARM '*VERIFY 'WOPTN                                               CLE134
+     C                     PARM 'CLE134'  PSARD   6                                           CLE134
+     C           SCSARD    PARM SCSARD    DSSDY                                               CLE134
+      *                                                                                       CLE134
+     C           WRTCD     IFNE *BLANKS                                                       CLE134
+     C**********           MOVE 'Y'       CLE134  1                                  CLE134 AR546409
+     C                     MOVE 'N'       CLE134  1                                         AR546409
+     C                     ELSE                                                               CLE134
+     C**********           MOVE 'N'       CLE134                                     CLE134 AR546409
+     C                     MOVE 'Y'       CLE134                                            AR546409
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CAS002
+      ** Determine if switchable feature CAS002 is installed                                  CAS002
+      *                                                                                       CAS002
+     C                     CALL 'AOSARDR0'                                                    CAS002
+     C                     PARM *BLANKS   WRTCD                                               CAS002
+     C                     PARM '*VERIFY 'WOPTN                                               CAS002
+     C                     PARM 'CAS002'  PSARD   6                                           CAS002
+     C           SCSARD    PARM SCSARD    DSSDY                                               CAS002
+      *                                                                                       CAS002
+     C           WRTCD     IFNE *BLANKS                                                       CAS002
+     C           WRTCD     ANDNE'*NRF   '                                                     CAS002
+     C           *LOCK     IN   LDA                                                           CAS002
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS002
+     C                     Z-ADD4         DBASE                                               CAS002
+     C                     MOVEL'CAS002'  DBKEY                                               CAS002
+     C                     OUT  LDA                                                           CAS002
+     C                     MOVE *ON       *INU7                                               CAS002
+     C                     MOVE *ON       *INU8                                               CAS002
+     C                     EXSR *PSSR                                                         CAS002
+     C                     ENDIF                                                              CAS002
+      *                                                                                       CAS002
+     C           WRTCD     IFEQ *BLANKS                                                       CAS002
+     C                     MOVE 'Y'       CAS002  1                                           CAS002
+     C                     ELSE                                                               CAS002
+     C                     MOVE 'N'       CAS002                                              CAS002
+     C                     ENDIF                                                              CAS002
+     C/COPY WNCPYSRC,LEH00572
+      *                                                                                       CAS002
+      ** Determine if switchable feature CAS009 is installed                                  CAS009
+      *                                                                                       CAS009
+     C                     CALL 'AOSARDR0'                                                    CAS009
+     C                     PARM *BLANKS   WRTCD                                               CAS009
+     C                     PARM '*VERIFY 'WOPTN                                               CAS009
+     C                     PARM 'CAS009'  PSARD   6                                           CAS009
+     C           SCSARD    PARM SCSARD    DSSDY                                               CAS009
+      *                                                                                       CAS009
+     C           WRTCD     IFNE *BLANKS                                                       CAS009
+     C           WRTCD     ANDNE'*NRF   '                                                     CAS009
+     C           *LOCK     IN   LDA                                                           CAS009
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS009
+     C                     Z-ADD5         DBASE                                               CAS009
+     C                     MOVEL'CAS009'  DBKEY                                               CAS009
+     C                     OUT  LDA                                                           CAS009
+     C                     MOVE *ON       *INU7                                               CAS009
+     C                     MOVE *ON       *INU8                                               CAS009
+     C                     EXSR *PSSR                                                         CAS009
+     C                     ENDIF                                                              CAS009
+      *                                                                                       CAS009
+     C           WRTCD     IFEQ *BLANKS                                                       CAS009
+     C                     MOVE 'Y'       CAS009  1                                           CAS009
+     C                     ELSE                                                               CAS009
+     C                     MOVE 'N'       CAS009                                              CAS009
+     C                     ENDIF                                                              CAS009
+      *                                                                                       CAS009
+      ** Determine if switchable feature CAS016 is installed                                  CAS016
+      *                                                                                       CAS016
+     C                     CALL 'AOSARDR0'                                                    CAS016
+     C                     PARM *BLANKS   WRTCD                                               CAS016
+     C                     PARM '*VERIFY 'WOPTN                                               CAS016
+     C                     PARM 'CAS016'  PSARD   6                                           CAS016
+     C           SCSARD    PARM SCSARD    DSSDY                                               CAS016
+      *                                                                                       CAS016
+     C           WRTCD     IFNE *BLANKS                                                       CAS016
+     C           WRTCD     ANDNE'*NRF   '                                                     CAS016
+     C           *LOCK     IN   LDA                                                           CAS016
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS016
+     C                     Z-ADD6         DBASE                                               CAS016
+     C                     MOVEL'CAS016'  DBKEY                                               CAS016
+     C                     OUT  LDA                                                           CAS016
+     C                     MOVE *ON       *INU7                                               CAS016
+     C                     MOVE *ON       *INU8                                               CAS016
+     C                     EXSR *PSSR                                                         CAS016
+     C                     ENDIF                                                              CAS016
+      *                                                                                       CAS016
+     C           WRTCD     IFEQ *BLANKS                                                       CAS016
+     C                     MOVE 'Y'       CAS016  1                                           CAS016
+     C                     ELSE                                                               CAS016
+     C                     MOVE 'N'       CAS016                                              CAS016
+     C                     ENDIF                                                              CAS016
+      *                                                                                       CAS016
+      ** Key list for LEFHSTL5                                                                193112
+     C           KLFHS5    KLIST                                                              193112
+     C                     KFLD           LNRFL                                               193112
+      *                                                                                       193112
+     C/COPY WNCPYSRC,LE0451C003
+      *                                                                                    AR546409A
+      ** Dummy read of LEPDUEL1                                                            AR546409A
+      *                                                                                    AR546409A
+     C           *LOVAL    SETLLLEPDUEL1                                                   AR546409A
+      *                                                                                    AR546409A
+     C                     ENDSR
+     C/COPY WNCPYSRC,LEH00573
+     C*****************************************************************
+     C/TITLE SR/*PSSR
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  - PROGRAM ERROR PROCESSING SUBROUTINE.                *
+     C*                                                               *
+     C*  CALLED BY: VARIOUS                                           *
+     C*  CALLS:                                                       *
+     C*  UPDAT  - PRODUCE AUDIT REPORT AND END PROGRAM                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+     C*
+     C***  CHECK TO SEE THAT *PSSR HAS NOT ALREADY BEEN CALLED
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     EXSR UPDAT
+     C                     END
+     C*
+     C***  IF *PSSR ALREADY RUN, THEN JUST END THE PROGRAM HERE.
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+     C/EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** ZFMD - NUMBER OF DAYS IN THIS MONTH
+312831303130313130313031

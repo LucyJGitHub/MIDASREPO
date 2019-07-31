@@ -1,0 +1,544 @@
+0001 H        1                                                           S01117
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Recreate Cust Loan/Facty X-Ref File')         *
+0001 H***********                                                         S01117
+0002 F********************************************************************
+     F*  Midas - Customer Lending Module
+0004 F*                                                                  *
+0005 F*    LE0830 - RECREATE CUSTOMER LOAN FACILITY X-REF FILE           *
+0006 F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+0008 F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 186248             Date 27May01               *
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CLE005             Date 22May97               *
+      *                 S01220             Date 15Mar91               *
+     F*                 S01194             DATE 17JAN90               *
+     F*                        S01117       DATE 28/07/89                *
+     F*                        HK0000       DATE 28/07/89
+0009 F*                        E15817       DATE 01/11/88                *
+0010 F*                                                                  *
+0010 F*----------------------------------------------------------------  *
+0010 F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  186248 - Ensure correct loan RECI is reflected in PF/LEREFD1 *
+      *           so as not to cause problem during facility closure. *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*  CLE005 - Customer Lending Enhancements - Others (T3)         *
+     F*   S01220 - AMENDED FOR STRATEGIC RISK MANAGEMENT                 *S01220
+     F*            RELEASE 10 TO ALLOW THE INPUT OF A BOOK               *S01220
+     F*            CODE AGAINST A LOAN.                                  *S01220
+     F*   S01194 - STANDING DATA CHANGES                                 *S01194
+     F*   S01117 - MULTIBRANCHING                                        *
+     F*   HK0000 - REMOVE THE BRANCH CODE FROM OUTPUT FILE FOR NO USAGE
+0010 F*   E15817 - 'END OF REPORT' MISSING IN FILE CONTROL REPORT        *E15817
+0010 F*                                                                  *
+0011 F********************************************************************
+0012 F*                                                                  *
+0013 F*                                                                  *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0014 F*CLOAN***IP**F*****400  7AI     2 DISK                       LE0830 S01220
+0014 F*CLOAN***IP**F     436  7AI     2 DISK                       S01220 CLE011
+0014 F***CLOAN** IP  F    1310  7AI     2 DISK                                         CLE011 CGL029
+     F*CLOAN***IP**F****1461  7AI     2 DISK                                           CGL029 CLE042
+     F***CLOAN** IP  F    1773  7AI     2 DISK                                         CLE042 CER020
+     F***CLOAN** IP  F    1782  7AI     2 DISK                                         CER020 CLE134
+     FCLOAN   IP  F    1874  7AI     2 DISK                                                   CLE134
+0015 F*TABLE***IF**F      96 12AI     2 DISK                              S01194
+0016 F*EREFD1*O*  F      20 17AI     2 DISK                               S01117
+0016 F*EREFD1*O*  F      22 17AI     2 DISK                         S01117HK0000
+0016 FLEREFD1 O   F      20 17AI     2 DISK                               S01117
+0017 F*E0830P1O*  F     132            PRINTER                  S01124    S01117
+0017 FLE0830AUO   F     132            PRINTER                            S01117
+0018 F*                                                                   LE0830
+0019 F* ID F  C  H  L    FUNCTION OF INDICATORS                           LE0830
+0020 F* 01            CLOAN - HEADER                                      LE0830
+0021 F* 02                  - RECI'D',TYPE A                              LE0830
+0022 F* 03                  - RECI'M',TYPE A                              LE0830
+0023 F**04**********  TABLE - ICD1                                        S01194
+0024 F**                                                                  LE0830
+0025 F*      10       FIRST CYCLE                                         LE0830
+0026 F*      49       PARTICIPATION SOLD                                  LE0830
+0027 F*      50       NON-MULTI-CUSTOMER                                  LE0830
+0028 F*      51       MULTI-CUSTOMER                                      LE0830
+0029 F*         U7+U8 DATABASE ERROR                                      LE0830
+     E                    CPY@    1   1 80
+0030 I*                                                                   LE0830
+0031 I* CUSTOMER LENDING - LOANS FILE - HEADER                            LE0830
+0032 I*                                                                   LE0830
+0033 ICLOAN   NS  01   1 CH                                               LE0830
+0034 I                                        1   1 RECI                  LE0830
+0035 I*                                                                   LE0830
+0036 I* LOANS FILE - DETAIL RECORD 1                                      LE0830
+0037 I*                                                                   LE0830
+0038 I        NS  02   1 CD   8 CA                                        LE0830
+0039 I       OR   03   1 CM   8 CA                                        LE0830
+0040 I                                        1   1 RECI                  LE0830
+0041 I**********                              2   70LNRF                               LE0830 CLE148
+     I                                        2   7 LNRF                                      CLE148
+0042 I                                        8   8 RCDT                  LE0830
+0043 I                                        9   90MRIN                  LE0830
+0044 I                                       10  110PTYP                  LE0830
+0045 I**********                             12  170CNUM                  LE0830              CSD027
+0045 I                                       12  17 CNUM                                      CSD027
+0046 I***********                            18  200BRCD                  S01117
+0046 I                                       18  20 BRCA                  S01117
+0047 I                                       21  22 LTYP                  LE0830
+0048 I                                       23  24 SUTP                  LE0830
+0049 I                                    P  25  270DDAT                  LE0830
+0050 I                                    P  28  300VDAT                  LE0830
+0051 I                                    P  31  330MDAT                  LE0830
+0052 I                                       34  350LASQ                  LE0830
+0053 I**********                             36  410FCUS                  LE0830              CSD027
+0053 I                                       36  41 FCUS                                      CSD027
+0054 I                                       42  440FTYP                  LE0830
+0055 I                                       45  460FSEQ                  LE0830
+0056 I                                       47  49 CCY                   LE0830
+0057 I                                    P  50  560CPAM                  LE0830
+0058 I                                       57  57 INTC                  LE0830
+0059 I                                    P  58  637INTR                  LE0830
+0060 I                                       64  650BRTT                  LE0830
+0061 I                                    P  66  717BRTE                  LE0830
+0062 I                                    P  72  777RTSP                  LE0830
+0063 I                                    P  78  815MARG                  LE0830
+0064 I                                       82  82 SPIN                  LE0830
+0065 I                                       83  83 CHIN                  LE0830
+0066 I                                    P  84  897WTRT                  LE0830
+0067 I                                       90  90 WTIN                  LE0830
+0068 I                                       91  910REPT                  LE0830
+0069 I                                    P  92  980RAMT                  LE0830
+0070 I                                    P  99 1010NRPD                  LE0830
+0071 I                                      102 102 RFRQ                  LE0830
+0072 I                                      103 1040RDYN                  LE0830
+0073 I                                      105 107 FCCY                  LE0830
+0074 I                                      108 1100LIND                  LE0830
+0075 I                                      111 112 CRSK                  LE0830
+0076 I                                      113 114 ACOF                  LE0830
+0077 I                                      115 115 NACD                  LE0830
+0078 I                                      116 116 RELI                  LE0830
+0079 I                                      117 117 AUTO                  LE0830
+0080 I                                    P 118 1240PSAM                  LE0830
+0081 I                                    P 125 1318BCXR                  LE0830
+0082 I                                    P 132 1388FCXR                  LE0830
+0083 I                                      139 1400SDST                  LE0830
+0084 I**********                            141 152 OSDA                               LE0830 CGL029
+     I                                      141 152 QQOSDA                                    CGL029
+0085 I                                      153 162 TSTN                  LE0830
+0086 I                                      163 1640MDST                  LE0830
+0087 I**********                            165 176 OMDA                               LE0830 CGL029
+     I                                      165 176 QQOMDA                                    CGL029
+0088 I                                      177 186 TMAN                  LE0830
+0089 I                                      187 196 FACO                  LE0830
+0090 I                                    P 197 1990RLDT                  LE0830
+0091 I                                    P 200 2020NROD                  LE0830
+0092 I                                      203 203 RLFQ                  LE0830
+0093 I                                      204 2050RLDY                  LE0830
+0094 I                                      207 2080NBRA                  LE0830
+0095 I                                    P 209 2147NRTS                  LE0830
+0096 I                                      215 215 NSIN                  LE0830
+0097 I                                      216 2160NCAC                  LE0830
+0098 I                                    P 217 2230AWTP                  LE0830
+0099 I                                    P 224 2300WTRD                  LE0830
+0100 I                                    P 231 2370WTWD                  LE0830
+0101 I                                    P 238 2440IWOD                  LE0830
+0102 I                                    P 245 2510PWOD                  LE0830
+0103 I                                      252 252 BMDI                  LE0830
+0104 I                                      253 253 FMDI                  LE0830
+0105 I                                    P 254 2590PDIN                  LE0830
+0106 I                                      287 287 BTIN                  LE0830
+0107 I                                      288 2890BLDY                  LE0830
+0108 I**********                            290 2950OLNO                               LE0830 CSD027
+0108 I                                      290 295 OLNO                                      CSD027
+0109 I                                      296 296 RCSI                  LE0830
+0110 I                                      297 2970ICBS                  LE0830
+0111 I                                      298 298 IPFR                  LE0830
+0112 I                                    P 299 3050TOTI                  LE0830
+0113 I                                    P 306 3080NIDT                  LE0830
+0114 I                                    P 309 3110IBDT                  LE0830
+0115 I                                    P 312 3140SLID                  LE0830
+0116 I                                    P 315 3210AIPD                  LE0830
+0117 I                                    P 322 3240DLRC                  LE0830
+0118 I                                    P 325 3270IACD                  LE0830
+0119 I                                    P 328 3340AITC                  LE0830
+0120 I                                    P 335 3410TFEP                  LE0830
+0121 I                                    P 342 3480AIAP                  LE0830
+0122 I                                    P 349 3550IPRD                  LE0830
+0123 I                                    P 356 3620IPRM                  LE0830
+0124 I                                    P 363 3690ICTD                  LE0830
+0125 I                                    P 370 3760AIMN                  LE0830
+0126 I                                    P 377 3790RBDT                  LE0830
+0127 I                                      384 3850IFDY                  LE0830
+0128 I                                      386 386 LONI                  LE0830
+0129 I                                      387 387 CNFI                  LE0830
+0130 I                                      388 388 ACEI                  LE0830
+0131 I                                      389 389 TLXI                  LE0830
+0132 I                                      390 390 CBLI                  LE0830
+0133 I                                    P 391 3930ORED                  LE0830
+0134 I                                    P 394 3960LCD                   LE0830
+0135 I                                      397 397 CHTP                  LE0830
+0136 I                                    P 398 4000TNLU                  LE0830
+     I                                      435 436 BOKC                  S01220
+     I*************************************13901407 OSDA                               CGL029 CLE042
+     I*************************************14081425 OMDA                               CGL029 CLE042
+     I                                     15611578 OSDA                                      CLE042
+     I                                     15791596 OMDA                                      CLE042
+     I                                     17621765 CLAS                                      CLE042
+     I                                     17801782 LOIC                                      CER020
+      *                                                                                       CLE134
+     I                                     18301830 FAMU                                      CLE134
+     I                                     18311831 FPNR                                      CLE134
+     I                                    P183218340RIDT                                      CLE134
+     I                                    P183518360RIDC                                      CLE134
+     I                                     183718370RCAT                                      CLE134
+     I                                    P183818390RCAC                                      CLE134
+     I                                    P184018420RCSD                                      CLE134
+     I                                    P184318440RCDY                                      CLE134
+     I                                    P184518460RCCY                                      CLE134
+      *                                                                                       CLE134
+     I                                    P184718490BIDT                                      CLE134
+     I                                    P185018510BIDC                                      CLE134
+     I                                     185218520BCAT                                      CLE134
+     I                                    P185318540BCAC                                      CLE134
+     I                                    P185518570BCSD                                      CLE134
+     I                                    P185818590BCDY                                      CLE134
+     I                                    P186018610BICC                                      CLE134
+      *                                                                                       CLE134
+     I                                     18621864 XRFI                                      CLE134
+     I                                     186518740XRFN                                      CLE134
+      *                                                                                       CLE134
+0137 I*                                                                   LE0830
+0138 I*    LOANS FILE - CATCHALL                                          LE0830
+0139 I*                                                                   LE0830
+0140 I        NS                                                          LE0830
+0141 I                                        1   1 RECI                  LE0830
+0142 I**************                                                      S01194
+0143 I*****TABLE*FILE - INSTALLATION CONTROL DATA RECORD 1.               S01194
+0144 I**************                                                      S01194
+0145 I*TABLE***NS**04   2 C0   3 C1  12 C1                                S01194
+0146 I*******AND****  13 C0                                               S01194
+0147 I**************                          1   1 RECI                  S01194
+0148 I**************                          2   30RECT                  S01194
+0149 I**************                         12  130RCDE                  S01194
+0150 I**************                         14  66 TITL                  S01194
+0151 I**************                         67  67 DATF                  S01194
+0152 I***********                            68  700DFBR                  S01194
+0153 I**************                         74  74 MODI1                 S01194
+0154 I**************                         75  75 MODI2                 S01194
+0155 I**************                         76  76 MODI3                 S01194
+0156 I**************                      P  77  790RUND                  S01194
+0157 I**************                         80  86 RUNA                  S01194
+0158 I**************                         87  870SFLG                  S01194
+0159 I**************                      P  90  920LCD                   S01194
+0160 I**************                         93  93 CHTP                  S01194
+0161 I**************                      P  94  960TNLU                  S01194
+0162 I**************                                                      S01194
+0163 I*****TABLE*FILE - CATCH-ALL                                         S01194
+0164 I**************                                                      S01194
+0165 I********NS****   1NCD                                               S01194
+0166 I**************                          1   1 RECI                  S01194
+0167 I*                                                                   LE0830
+0168 I*    LOCAL DATA AREA FOR DATABASE ERROR REFERENCES                  LE0830
+0169 I*                                                                   LE0830
+0213 ILDA        UDS                            256                       LE0830
+0214 I***********                           134 138 DBFILE                S01117
+0215 I***********                           139 167 DBKEY                 S01117
+0216 I***********                           168 175 DBPGM                 S01117
+0217 I***********                           176 1770DBASE                 S01117
+0214 I                                      134 141 DBFILE                S01117
+0215 I                                      142 170 DBKEY                 S01117
+0216 I                                      171 180 DBPGM                 S01117
+0217 I                                      181 1830DBASE                 S01117
+     I*                                                                   S01194
+     IRUNDT       DS                                                      S01194
+     I** DATA AREA RUNDAT                                                 S01194
+     I                                        1   7 RUNA                  S01194
+     I                                    P   8  100RUND                  S01194
+     I                                       11  11 SSF                   S01194
+     I                                       12  12 DATF                  S01194
+     I                                       13  13 MBIN                  S01194
+     I**                                                                  S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I**  EXTERNAL DS FOR BANK CODES                                      S01194
+     I              BJURPT                          TITL                  S01194
+     I**                                                                  S01194
+      **                                                                  S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     ISCSARD    E DSSCSARDPD                                              CLE005
+      ** SAR details                                                      CLE005
+      *                                                                   CLE005
+     C                     MOVEACPY@      BIS@   80
+0175 C********************************************************************LE0830
+0176 C******     FIRST CYCLE/HEADER PROCESSING       *********************LE0830
+0177 C*                                                                   LE0830
+0178 C   10                GOTO ENDFC                                     LE0830
+0179 C                     SETON                     10                   LE0830
+0540 C**                                                                  S01194
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01194
+     C                     IN   RUNDT                                     S01194
+0180 C*                                                                   LE0830
+0181 C*    SET UP DATABASE ERROR REFERENCE                                LE0830
+0182 C*                                                                   LE0830
+0183 C                     MOVE 'LE0830  'DBPGM                           LE0830
+0184 C                     MOVE ' '       BLANKS 29                       LE0830
+0185 C                     MOVE BLANKS    DBKEY                           LE0830
+     C                     MOVE *BLANKS   DBFILE                          S01117
+0186 C*                                                                   LE0830
+0187 C*    ACCESS ICD-1 FOR DATE FORMAT, DATABASE ERROR IF NOT FOUND      LE0830
+0188 C*                                                                   LE0830
+0189 C                     EXSR ZSYSTM                     98ON-MMDDYY    LE0830
+      *                                                                   CLE005
+      ** Check if SAR CLE005 is switched *ON.                             CLE005
+      *                                                                   CLE005
+     C                     CALL 'AOSARDR0'                                CLE005
+     C                     PARM *BLANKS   @RTCD   7                       CLE005
+     C                     PARM '*KEY   ' @OPTN   7                       CLE005
+     C                     PARM 'CLE005 ' @SARD   6                       CLE005
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE005
+     C           @RTCD     IFEQ *BLANKS                                   CLE005
+     C                     MOVE 'Y'       CLE005  1                       CLE005
+     C                     ELSE                                           CLE005
+     C                     MOVE 'N'       CLE005                          CLE005
+     C           @RTCD     IFNE '*NRF    '                                CLE005
+     C                     SETON                     U7U8LR               CLE005
+     C                     SETON                     99                   CLE005
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE005
+     C                     Z-ADD2         DBASE            * DBERR 02 *   CLE005
+     C                     MOVEL'CLE005  'DBKEY            ************   CLE005
+     C                     ENDIF                                          CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+0190 C***99*********       SETON                     U7U8LR               S01194
+0191 C***99*********       Z-ADD01        DBASE                           S01194
+0192 C***99*********       MOVE 'TABLE'   DBFILE                          S01194
+0193 C***99*********       MOVELZTABKY    DBKEY                           S01194
+0194 C   99                GOTO ENDD                                      LE0830
+0195 C*                                                                   LE0830
+0196 C   01                GOTO ENDD                                      LE0830
+0197 C********************************************************************LE0830
+0198 C******     MAIN PROCESSING                     *********************LE0830
+0199 C*                                                                   LE0830
+0200 C           ENDFC     TAG                             ** ENDFC TAG **LE0830
+0201 C                     SETOF                     495051               LE0830
+0202 C*                                                                   LE0830
+0203 C* IF NOT TYPE 02 OR 03, GO TO END - NO CALCULATIONS REQD.           LE0830
+0204 C  N02N03             GOTO ENDD                                      LE0830
+0205 C*                                                                   LE0830
+0206 C* IF PART.SOLD, GENERATE ONE RECORD ONLY                            LE0830
+0207 C           PTYP      COMP 66                       49               LE0830
+0208 C  N49      PTYP      COMP 67                       49               LE0830
+      *                                                                   CLE005
+      ** If CLE005 is switched *ON and loan processing type is            CLE005
+      ** 69 or 72, set on *IN49.                                          CLE005
+      *                                                                   CLE005
+     C           CLE005    IFEQ 'Y'                                       CLE005
+     C           *IN49     ANDEQ*OFF                                      CLE005
+     C           PTYP      IFEQ 69                                        CLE005
+     C           PTYP      OREQ 72                                        CLE005
+     C                     MOVE *ON       *IN49                           CLE005
+     C                     ENDIF                                          CLE005
+     C                     ENDIF                                          CLE005
+0209 C*                                                                   LE0830
+0210 C* IF NOT PART.SOLD, DETERMINE IF MULTI-CUSTOMER                     LE0830
+0211 C  N49      FCUS      COMP CNUM                 515150 50=NON-MULTI-CLE0830
+0212 C*                                                    51=MULTI-CUST. LE0830
+0213 C* COUNT RECORDS OUTPUT - 2 FOR MULTI-CUST,ELSE 1.                   LE0830
+0214 C   49                                                               LE0830
+0215 COR 50      NORE      ADD  1         NORE    50                      LE0830
+0216 C   51      NORE      ADD  2         NORE                            LE0830
+0217 C*                                                                   LE0830
+0218 C* OUTPUT RECORD(S) TO LEREF                                         LE0830
+0219 C*                                                                   LE0830
+0220 C           ENDD      TAG                             ** ENDD TAG ** LE0830
+0221 C*                                                                   LE0830
+0222 C* IF DATABASE ERROR, EXCPTN OUTPUT                                  LE0830
+     C**                                                                  S01117
+0223 C***U7*U8*LR          EXCPT                                          S01117
+     C**                                                                  S01117
+     C*   PRODUCE A PROGRAM DUMP IF DATABASE ERRORS OCCUR                 S01117
+     C**                                                                  S01117
+     CLR U7 U8             EXSR *PSSR                                     S01117
+0242 C**                                                                  S01117
+0224 C********************************************************************LE0830
+0225 C**                                                                  LE0830
+0226 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   LE0830
+0227 C**                                                                  LE0830
+0228 C           ZSYSTM    BEGSR                           *** ZSYSTM *** LE0830
+0229 C**************                                                      S01194
+0230 C*****SET*UP*KEY FOR INSTALLATION CONTROL RECORD.                    S01194
+0231 C**************       MOVEL'01      'ZTABKY 12                       S01194
+0232 C**************       MOVE '  10'    ZTABKY                          S01194
+0233 C**************                                                      S01194
+0234 C***********ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+0235 C**N99******RECI      COMP 'D'                  9999  ON, IS DELETED S01194
+     C**                                                                  S01194
+     C**   ACCESS BANK DETAILS                                            S01194
+     C**                                                                  S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C*                                                                   S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     SETON                     99                   S01194
+     C                     MOVEL'SDBANKPD'DBFILE           ***************S01194
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 001 *S01194
+     C                     Z-ADD1         DBASE            ***************S01194
+     C                     ELSE                                           S01194
+0236 C**                                                                  LE0830
+0237 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    LE0830
+0238 C           DATF      COMP 'M'                      98MMDDYY, 98 ON  LE0830
+     C                     END                                            S01194
+0239 C**                                                                  LE0830
+0240 C                     ENDSR                                          LE0830
+0241 C**                                                                  LE0830
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C********************************************************************S01117
+0243 C********************************************************************LE0830
+0244 O*                                                                   LE0830
+0245 O* OUTPUT ONE RECORD IF PART.SOLD                                    LE0830
+0246 O*                                                                   LE0830
+0247 OLEREFD1 D        49                                                 LE0830
+0248 O**********                          1 'D'                    LE0830 186248
+     O                         RECI       1                               186248
+0249 O                         CNUM       7                               LE0830
+0250 O                                   12 '00000'                       LE0830
+0251 O                         LNRF      18                               LE0830
+0252 O                                   19 'L'                           LE0830
+     O***********              BRCA      22                         S01117HK0000
+0253 O* OUTPUT ONE RECORD IF NOT MULTI-CUSTOMER                           LE0830
+0254 O        D        50                                                 LE0830
+0255 O**********                          1 'D'                    LE0830 186248
+     O                         RECI       1                               186248
+0256 O                         CNUM       7                               LE0830
+0257 O                         FTYP      10                               LE0830
+0258 O                         FSEQ      12                               LE0830
+0259 O                         LNRF      18                               LE0830
+0260 O                                   19 ' '                           LE0830
+0261 O* OUTPUT TWO RECORDS IF MULTI-CUSTOMER                              LE0830
+0262 O        D        51                                                 LE0830
+0263 O**********                          1 'D'                    LE0830 186248
+     O                         RECI       1                               186248
+0264 O                         CNUM       7                               LE0830
+0265 O                                   12 '00000'                       LE0830
+0266 O                         LNRF      18                               LE0830
+0267 O                                   19 'L'                           LE0830
+0268 O        D        51                                                 LE0830
+0269 O**********                          1 'D'                    LE0830 186248
+     O                         RECI       1                               186248
+0270 O                         FCUS       7                               LE0830
+0271 O                         FTYP      10                               LE0830
+0272 O                         FSEQ      12                               LE0830
+0273 O                         LNRF      18                               LE0830
+0274 O                                   19 'F'                           LE0830
+0275 O*E0830P1E* 203   LR U7 U8                                  S01124   S01117
+0297 OLE0830AUT  203   LR                                                 S01117
+0276 O***********                        22 'REFERENCE  LE0830'           S01117
+0276 O                                   24 'REFERENCE  LE0830AU'         S01117
+0277 O                         TITL      89                               LE0830
+0278 O                                  104 'DATE'                        LE0830
+0279 O                         RUNA     112                               LE0830
+0280 O                                  122 'PAGE'                        LE0830
+0281 O                         PAGE  Z  127                               LE0830
+0282 O********E**1     LR U7 U8                                           S01117
+0282 O        T  1     LR                                                 S01117
+0283 O                                   63 'RECREATE CUSTOMER LOAN'      LE0830
+0284 O                                   83 'FACILITY X-REF FILE'         LE0830
+     O                                   98 'RUN CONTROLS'                S01117
+0285 O********E**   21 LR U7 U8                                           S01117
+0285 O        T     21 LR                                                 S01117
+0286 O                                   64 '-----------------------'     LE0830
+0287 O                                   83 '-------------------'         LE0830
+0312 O        T  1     LR                                                 LE0830
+0313 O                                   28 'S/LEREF - RUN CONTROLS'      LE0830
+0314 O        T  2     LR                                                 LE0830
+0315 O                                   28 '----------------------'      LE0830
+0316 O        T        LR                                                 LE0830
+0317 O                                   29 'TOTAL RECORDS ON FILE'       LE0830
+0318 O                         NORE  3   59                               LE0830
+0288 O********E**3     LR U7 U8                                           S01117
+0288 O        T  3     LR U7 U8                                           S01117
+0289 O                                   51 '*** REFERENCE LE0830'        LE0830
+0290 O                                   71 'DATABASE ERROR AT'           LE0830
+0291 O***********              DBASE     74                               S01117
+0291 O                         DBASE     76                               S01117
+0292 O********E**      LR U7 U8                                           S01117
+0292 O        T        LR U7 U8                                           S01117
+0293 O                                   37 'FILENAME'                    LE0830
+0294 O***********              DBFILE    43                               S01117
+0295 O***********                        48 'KEY'                         S01117
+0296 O***********              DBKEY     78                               S01117
+0294 O                         DBFILE    47                               S01117
+0295 O                                   53 'KEY'                         S01117
+0296 O                         DBKEY     86                               S01117
+0297 O********T**203   LR                                                 S01117
+0298 O***********                        22 'REFERENCE  LE0830'           S01117
+0299 O***********              TITL      89                               S01117
+0300 O***********                       104 'DATE'                        S01117
+0301 O***********              RUNA     112                               S01117
+0302 O***********                       122 'PAGE'                        S01117
+0303 O***********              PAGE  Z  127                               S01117
+0304 O********T**1     LR                                                 S01117
+0305 O***********                        56 'RECREATE CUSTOMER LOAN'      S01117
+0306 O***********                        78 'FACILITY X-REF FILE -'       S01117
+0307 O***********                        92 'FILE CONTROLS'               S01117
+0308 O********T**   10 LR                                                 S01117
+0309 O***********                        57 '-----------------------'     S01117
+0310 O***********                        79 '----------------------'      S01117
+0311 O***********                        92 '-------------'               S01117
+     O********T** 35   LR                                           E15817S01117
+     O***********                        75 '*** END OF REPORT ***' E15817S01117
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

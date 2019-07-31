@@ -1,0 +1,2310 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Bankers Authorisations')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0490 - BANKERS AUTHORISATION                               *
+     F*           (SETTL MTHD 01,02,12)                               *
+     F*                                                               *
+     F*  Function:  This program formats bankers' authorisations for  *
+     F*  (COB & IC) settlement methods 01, 02, 12.                    *
+     F*                                                               *
+     F*  Called By: SEC0603 - COB Pay/Receive Telexes                 *
+     F*             SEC3305 - I/C Pay/Receive Telexes                 *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 058357             Date 28May93               *
+      *                 052254             Date 21Dec93               *
+     F*                 051061             DATE 21DEC93               *
+     F*                 S01429             DATE 14JUL93               *
+     F*                 E49967             DATE 01FEB93               *
+     F*                 E39420             DATE 01FEB93               *
+     F*                 E29170             DATE 07OCT91               *
+     F*                 S01117             DATE 13MAY91               *
+     F*                 S01271             DATE 07JUN90               *
+     F*                 E20134             DATE 10NOV89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  058357 - *IN25 NOT SET TO INDICATE IF PAY OR RECIEVE.        *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  051061 - Print File externalised to fix several errors.      *
+     F*         - Spurious Currency Totals were being printed.        *
+     F*         - CNCTRD File is not used - cancelled Trades are on   *
+     F*           the Trades File.                                    *
+     F*         - Don't necessarily process ALL records so can't do a *
+     F*           check for File Controls Out of Balance.             *
+     F*         - Improved DB Error processing.                       *
+     F*         - Ignore CHIPS and SWIFT Id's as they are not used.   *
+     F*         - Logic wrong in SR/RSTPR3 causing program to loop    *
+     F*         - incorrect parameters on call to AOCURRR0            *
+     F*  S01429 - CHIPS ABA NUMBER MODIFICATION FROM 3A TO 4A          ***
+     F*           FOR CHIPS II                                         ***
+     F*  E49967 - If record not found on TRADSD check SOBTRD.         *
+     F*  E39420 - No details of Nostro shown for receipts.            *
+     F*  E29170 - RCF CHANGES                                         *
+     F*  S01117 - Multibranching                                      *
+     F*  S01271 - Pay/Receive in Input Cycle                          *
+     F*  E20134 - Rename BRCD from CLINTCB in Telex programs to avoid *   E20134
+     F*           accidentally overwriting Settlement Branch Code.    *   E20134
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     F***STPR3***IP**E           K        DISK                            051061
+     FSTPR3   IF  E           K        DISK                               051061
+     FTRADS   IF  E           K        DISK
+     F***CNCTR***IF**E           K        DISK                            051061
+     F*********** TRADSDF                           KRENAMECNCTRF         051061
+     FSOBTR   IF  E           K        DISK                               E49967
+     F            TRADSDF                           KRENAMESOBTRDF        E49967
+     F***CLINT***IF* E           K        DISK                            051061
+     F*********** CLINTCAF                          KIGNORE               051061
+     F*********** CLINTC1F                          KIGNORE               051061
+     F***TABSE***IF* E           K        DISK                            051061
+     F*********** TABLETAF                          KIGNORE               051061
+     F*********** TABLETHF                          KIGNORE               051061
+     F*********** TABLETJF                          KIGNORE               S01117
+     F***NOSTRO***TABLETLF                          KIGNORE
+     F*********** TABLETKF                          KIGNORE               051061
+     F*********** TABLETNF                          KIGNORE               051061
+     F*********** TABLETPF                          KIGNORE               051061
+     F*********** TABLETRF                          KIGNORE               051061
+     F*********** TABLETXF                          KIGNORE               051061
+     F**ICD*1*****TABTB10F                          KIGNORE
+     F*********** TABTB11F                          KIGNORE               051061
+     F*********** TABTB36F                          KIGNORE               051061
+     F*********** TABTB40F                          KIGNORE               051061
+     F*********** TABTE10F                          KIGNORE               051061
+     F*********** TABTE20F                          KIGNORE               051061
+     F***CCY******TABTG10F                          KIGNORE
+     F*********** TABTG20F                          KIGNORE               051061
+     F**C/NOSTRO**TABLET2F                          KIGNORE
+     F*********** TABLET3F                          KIGNORE               051061
+     F*********** TABLET5F                          KIGNORE               051061
+     F***SE0490P1O***F     132     OF     PRINTER                         E29170
+     F***SE0490P1O***F     132     OF     PRINTER             E29170  UC  051061
+     FSE0490P1O   E                    PRINTER                        UC  051061
+     F                                              KINFDS SPOOL          E29170
+     F***SE0490AUO***F     132            PRINTER                  E29170 051061
+     FSE0490AUO   E                    PRINTER                            051061
+     F                                              KINFDS SPOOLU         E29170
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F****10******FIRST*CYCLE*INDICATOR********************************   051061
+     F*****************************************************************   051061
+     F****23******LEVEL*BREAK*INDICATOR**INL2*HAS*BEEN*SETON***********   051061
+     F****24******LEVEL*BREAK*INDICATOR**INL1*HAS*BEEN*SETON***********   051061
+     F****25******PAY*RECEIVE*INDICATOR*IS**P**************************   051061
+     F****26******PAY*RECEIVE*INDICATOR*IS**R**************************   051061
+     F*****************************************************************   051061
+     F****30******SETTLEMENT*TYPE***-**02******************************   051061
+     F****32******SETTLEMENT*TYPE***-**01******************************   051061
+     F****34******SETTLEMENT*TYPE***-**12******************************   051061
+     F****35******ACTION*CODE,*ACTC,*IS*C******************************   051061
+     F****37******MULTIBRANCHING*ON******************************* E29170 051061
+     F****38******SPECIAL*INSTRUCTIONS,*XSPI,*IS*BLANK*****************   051061
+     F*****************************************************************   051061
+     F****51******When*=*0,*Input*Cycle*run;*when*=*1,*COB*run*****S01271 051061
+     F****60******NO.*OF*DECIMAL*PLACES*IS**0**************************   051061
+     F****61******NO.*OF*DECIMAL*PLACES*IS**1**************************   051061
+     F****62******NO.*OF*DECIMAL*PLACES*IS**2**************************   051061
+     F****63******NO.*OF*DECIMAL*PLACES*IS**3**************************   051061
+     F*****************************************************************   051061
+     F****67******WORKING*INDICATORS*FOR*STR025************************   051061
+     F*****************************************************************   051061
+     F****70******FILE*CONTROLS*OUT*OF*BALANCE*************************   051061
+     F****71******FILE*CONTROLS*OUT*OF*BALANCE*************************   051061
+     F*****************************************************************   051061
+     F****75******PAGE*SKIP*CONTROL*INDICATOR**************************   051061
+     F****80******DETAIL*RECORD*TO*BE*PRINTED**************************   051061
+     F****81******DETAIL*RECORDS*ARE*PRESENT***************************   051061
+     F****84******TOTALS*REQUIRED**************************************   051061
+     F*****************************************************************   051061
+     F****87******FILE*CHAIN*FAILED************************************   051061
+     F*****************************************************************   051061
+     F****98******ZSYSTM,*DATE*FORMAT*MMDDYY*IF*ON.********************   051061
+     F****99******ZSYSTM,*INSTALLATION*CONTROL*DATA*RECORD*NOT*FOUND.**   051061
+     F*****************************************************************   051061
+     F****L1******REPORT*HEADINGS*-*BRCD,*PYIN,*VCCY,*OURS,*VDAT,*ACTC*   051061
+     F****L2******CURRENCY*TEST*TOTAL*-*VCCY***************************   051061
+     F*****************************************************************   051061
+     F****U7U8****DATABASE*ERROR***************************************   051061
+     F****U8******FILE*CONTROLS*OUT*OF*BALANCE*************************   051061
+     F*                                                               *   051061
+     F*   25  - ON for Pay, OFF for Receive                           *   051061
+     F*                                                               *   051061
+     F*   31  - Settlement Type = '01'                                *   051061
+     F*   32  - Settlement Type = '02'                                *   051061
+     F*   33  - Settlement Type = '12'                                *   051061
+     F*   35  - Action Code (ACTC) = 'C'                              *   051061
+     F*   37  - Multibranching ON                                     *   051061
+     F*   38  - Special Instructions (TDSI) are present               *   051061
+     F*   51  - When = 0, Input Cycle run; when = 1, COB run          *   051061
+     F*   67  - Work Indicator                                        *   051061
+     F*                                                               *   051061
+     F*   86  - Control of Read of LF/STPR3                           *   051061
+     F*   87  - No records on LF/STPR3                                *   051061
+     F*   88  - General Chain Fail                                    *   051061
+     F*   89  - Read Fail on LF/STPR3                                 *   051061
+     F*                                                               *   051061
+     F*   98  - Date Format: DDMMYY (off); MMDDYY (on)                *   051061
+     F* 90-99 - Used by Standard Subroutines                          *   051061
+     F*                                                               *   051061
+     F* U7+U8 - Database Error                                        *   051061
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3                                                            051061
+     F*****************************************************************   051061
+     F*                                                               *   051061
+     F*  S U B R O U T I N E   I N D E X                              *   051061
+     F*                                                               *   051061
+     F*  FIRSTC - Initial Processing.                                 *   051061
+     F*  PROCES - Detail Processing                                   *   051061
+     F*  CHGKEY - Process Change of Key                               *   051061
+     F*                                                               *   051061
+     F*  RSTPR3 - Read the Next Valid Record                          *   051061
+     F*  WP1REC - Write a Detail record to the Report                 *   051061
+     F*  WP1TOT - Write Currency Total to the Report                  *   051061
+     F*  AUDIT  - Perform Audit Processing and End Program            *   051061
+     F*                                                               *   051061
+     F*  RCFAU  - RCF Processing for Audit Report                     *   051061
+     F*  RCFP1  - RCF Processing for P1 Report                        *   051061
+     F*  AUDIT  - Output Audit Report and End Program                 *   051061
+     F*  *PSSR  - Error handling                                      *   051061
+     F*                                                               *   051061
+     F*  ZCNSD  - Calculates Consideration from Nominal and Price     *   051061
+     F*  ZDATE2 - Convert a Day Number to Date Formats                *   051061
+     F*  ZDAYS  - Calculates Number of days between two Dates         *   051061
+     F*  ZSEDIT - Convert numeric field into alphanumeric with commas,*   051061
+     F*           sign and decimal point                              *   051061
+     F*                                                               *   051061
+     F*****************************************************************   051061
+     E/EJECT
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1                                               051061
+     E                    MESS    1   4 29               STR025 SR.ARRAY
+     E                    CPY@    1   1 80
+     E/SPACE 3
+     I***STPR3TXF***                                                      051061
+      ***********                                                         051061
+      ****PAY*RECEIVE*TELEXES*DETAIL**-*FORMAT*STPR1TXF****************   051061
+      ***********                                                         051061
+     I***********                                   BRCD  L3              S01117
+     I*************************                     BRCA  L3              E29170
+     I***********                                   BRCA  L4       E29170 051061
+     I***********                                   PYIN  L3              051061
+     I***********                                   VCCY  L2              051061
+     I***********                                   OURS  L1              051061
+     I***********                                   VDAT  L1              051061
+     I***********                                   ACTC  L1              051061
+     I***********   RECI                            RECI1                 051061
+      ***********                                                         051061
+     I***STPR3ZZF***                                                      051061
+      ***********                                                         051061
+      ****PAY*RECEIVE*TELEXES*TRAILER*-*FORMAT*STPR1ZZF****************   051061
+      ***********                                                         051061
+     I***********   RECI                            RECI1                 051061
+      ***********                                                         051061
+     I***TRADSDF***                                                       051061
+      ***********                                                         051061
+      ****TRADES*FILE*DETAIL*-*FORMAT*TRADSDF**************************   051061
+      ***********                                                         051061
+     I***********   TDTP                            TRTP                  051061
+     I***********   TSUB                            TRST                  051061
+     I***CNCTRF***                                                        051061
+      ***********                                                         051061
+      ****TRADES*CANCELLED*DETAIL*-*FORMAT*CNCTRF**********************   051061
+      ***********                                                         051061
+     I***********   TDTP                            TRTP                  051061
+     I***********   TSUB                            TRST                  051061
+      ***********                                                  E20134 051061
+     I***CLINTCBF***                                               E20134 051061
+     I***********   BRCD                            BRCDCL         E20134 S01117
+     I***********   BRCB                            BRCDCL         S01117 051061
+      ***********                                                  E20134 051061
+     I***TABLET2F***                                                      051061
+      ***********                                                         051061
+      ****TABLE*COUNTERPARTY NOSTROS RECORD - FORMAT TABLET2F             051061
+      ***********                                                         051061
+     I*LDA********UDS                            256                      S01117
+      *
+      **  DATA STRUCTURES
+      *
+     I***LDA*****    DS                            256             S01117 051061
+     I***********                           134 183 DBLOT          S01117 051061
+      *                                                                   051061
+     IDBERR       DS                            256                       051061
+      *** Local Data Area DS for Database Error Information.              051061
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+      *                                                                   051061
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+      ***  File Information Data Structure for SE0490P1.                  051061
+     I*                                                                   E29170
+     I**  DS FOR LINE NO. TO HANDLE OVERFLOW                              E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I                                    B 188 1890OFLLN1                051061
+     I                                    B 367 3680PRTLN1                051061
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     IRUNDT       DS                                                      E29170
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             E29170
+     I                                        1   7 RUNA                  E29170
+     I                                    P   8  100RUND                  E29170
+     I                                       11  11 SSF                   E29170
+     I                                       12  12 DATF                  E29170
+     I                                       13  13 MBIN                  E29170
+     I*                                                                   E29170
+     ISDBANK    E DSSDBANKPD                                              051061
+      ** External data structures for Bank Details                        051061
+      *                                                                   051061
+     ISDBRCH    E DSSDBRCHPD                                              051061
+      ** External data structures for Branch Details                      051061
+      *                                                                   051061
+     ISDCNST    E DSSDCNSTPD                                              051061
+      ** External data structures for Counterparty Nostro Details         051061
+      *                                                                   051061
+     ISDCURR    E DSSDCURRPD                                              051061
+      ** External data structures for Currency Details                    051061
+      *                                                                   051061
+     ISDCUST    E DSSDCUSTPD                                              051061
+      ** External data structure for SD Customer Details                  051061
+     I              QQDFAC                          DFACQQ                                    CGL029
+      *                                                                   051061
+     IDSFDY     E DSDSFDY                                                 051061
+      ** Short data structure for access objects                          051061
+      *                                                                   051061
+     IDSSDY     E DSDSSDY                                                 051061
+      ** Long date structure for access objects                           051061
+      *                                                                   051061
+     I/COPY ZSRSRC,ZSEDITZ2                                               051061
+      *                                                                   051061
+      ****DATA*STRUCTURE*FOR*BLANK*FIELDS******************************   051061
+      ***********                                                         051061
+     I*********** DS                                                      051061
+     I***********                             1  65 BLNK65                051061
+     I***********                             1  55 BLNK55                051061
+     I***********                             1  45 BLNK45                051061
+     I***********                             1  35 BLNK35                051061
+     I***********                             1  28 BLNK28                051061
+     I**********                              1  24 BLNK24                S01429
+     I***********                             1  25 BLNK25         S01429 051061
+     I***********                             1  20 BLNK20                051061
+     I***********                             1  18 BLNK18                051061
+     I***********                             1  14 BLNK14                051061
+     I***********                             1  12 BLNK12                051061
+     I***********                             1  10 BLNK10                051061
+     I***********                             1   7 BLNK07                051061
+      ***********                                                         051061
+      ****DATA*STRUCTURE*FOR*REPORTING*FIELDS**************************   051061
+      ***********                                                         051061
+     I*********** DS                                                      051061
+     I***********                             1  45 REP21                 051061
+     I***********                             1  35 OURAGN                051061
+     I***********                            36  45 OURAGT                051061
+      ***********                                                         051061
+     I*********** DS                                                      051061
+     I**********                              1  24 REP22                 S01429
+     I**********                              1   3 OCHABA                S01429
+     I**********                              4  12 OCHID                 S01429
+     I**********                             13  24 OSWADR                S01429
+     I***********                             1  25 REP22          S01429 051061
+     I***********                             1   4 OCHABA         S01429 051061
+     I***********                             5  13 OCHID          S01429 051061
+     I***********                            14  25 OSWADR         S01429 051061
+      ***********                                                         051061
+     I*********** DS                                                      051061
+     I***********                             1  55 REP31                 051061
+     I***********                             1  35 THEIRN                051061
+     I***********                            36  55 THEIRT                051061
+      ***********                                                         051061
+     I*********** DS                                                      051061
+     I*********                               1  24 REP32                 S01429
+     I*********                               1   3 TCHABA                S01429
+     I*********                               4  12 TCHID                 S01429
+     I*********                              13  24 TSWADR                S01429
+     I***********                             1  25 REP32          S01429 051061
+     I***********                             1   4 TCHABA         S01429 051061
+     I***********                             5  13 TCHID          S01429 051061
+     I***********                            14  25 TSWADR         S01429 051061
+      ***********                                                         051061
+     I*********** DS                                                      051061
+     I***********                             1  55 REP41                 051061
+     I***********                             1  35 BENAME                051061
+     I***********                            36  55 BETOWN                051061
+      ***********                                                         051061
+     I*********** DS                                                      051061
+     I**********                              1  24 REP42                 S01429
+     I**********                              1   3 BCHABA                S01429
+     I**********                              4  12 BCHID                 S01429
+     I**********                             13  24 BSWADR                S01429
+     I***********                             1  25 REP42          S01429 051061
+     I***********                             1   4 BCHABA         S01429 051061
+     I***********                             5  13 BCHID          S01429 051061
+     I***********                            14  25 BSWADR         S01429 051061
+      ***********                                                         051061
+     I*********** DS                                                      051061
+     I***********                             1  65 REP61                 051061
+     I***********                             1  35 CPNAME                051061
+     I***********                            36  45 CPRTWN                051061
+     I***********                            46  65 CPRNAM                051061
+      ***********                                                         051061
+     I*********** DS                                                      051061
+     I**********                              1  24 REP62                 S01429
+     I**********                              1   3 CCHABA                S01429
+     I**********                              4  12 CCHID                 S01429
+     I**********                             13  24 CSWADR                S01429
+     I***********                             1  25 REP62          S01429 051061
+     I***********                             1   4 CCHABA         S01429 051061
+     I***********                             5  13 CCHID          S01429 051061
+     I***********                            14  25 CSWADR         S01429 051061
+      **TABLES*FILE*KEY************************************************   051061
+     I*********** DS                                                      051061
+     I***********                             1  12 ZTABKY                051061
+     I***********                             1   2 CODE                  051061
+     I***********                             8  10 CURR                  051061
+     I***********                            11  12 NOSTNO                051061
+     I***********                             9  11 CURX                  051061
+     I***********                            12  12 NOX                   051061
+      **TABLES*FILE*KEY*FOR*COUNTERPARTY/NOSTROS***********************   051061
+     I*********** DS                                                      051061
+     I***********                             1  12 CNOSKY                051061
+     I***********                             5  12 COUNTN                051061
+      **CLIENT*FILE*KEY************************************************   051061
+     I*********** DS                                                      051061
+     I***********                             1   7 CLIKEY                051061
+     I***********                             1   60KCNUM                 051061
+     I***********                             7   7 KRCDT                 051061
+      **CLIENT*DETAILS*************************************************   051061
+     I*********** DS                                                      051061
+     I***********                             1  65 NAMTWN                051061
+     I***********                             1  35 CNA1                  051061
+     I***********                            36  45 CTWN                  051061
+     I***********                            46  65 CRNM                  051061
+     I*********** DS                                                      051061
+     I**********                              1  24 SWCH                  S01429
+     I**********                              1   3 CHAB                  S01429
+     I**********                              4  12 CHID                  S01429
+     I**********                             13  24 CSID                  S01429
+     I***********                             1  25 SWCH           S01429 051061
+     I***********                             1   4 CAB2           S01429 051061
+     I***********                             5  13 CHID           S01429 051061
+     I***********                            14  25 CSID           S01429 051061
+      **COUNTERPARTY/NOSTRO*DETAILS************************************   051061
+     I*********** DS                                                      051061
+     I***********                             1  55 COUNOS                051061
+     I***********                             1  35 CPNM                  051061
+     I***********                            36  55 CPTN                  051061
+      **OUR*SETTLEMENT*A/C***AGENT*************************************   051061
+     I*********** DS                                                      051061
+     I***********                             1  12 XOSAC                 051061
+     I***********                             1   2 ONOS                  051061
+     I***********                             1   60OCNUM                 051061
+     I***********                             7  10 OACOD                 051061
+     I***********                            11  12 OACSQ                 051061
+     I***********                             1  100RETNO                 051061
+     I***********                             1   6 ALPHA3                051061
+      **THEIR*AGENT****************************************************   051061
+     I*********** DS                                                      051061
+     I***********                             1  10 XTSEN                 051061
+     I***********                             1   60CUST                  051061
+     I***********                             1   8 TCNOS                 051061
+     I***********                             1   6 ALPHA1                051061
+      **FOR*A/C*OF*****************************************************   051061
+     I*********** DS                                                      051061
+     I***********                             1   8 TDFA                  051061
+     I***********                             1   6 FCNUM                 051061
+     I***********                             1   8 CONOST                051061
+     I***********                             1   60BETA1                 051061
+     I*********** DS                                                      051061
+     I***********                             1   60TRDR                  051061
+     I***********                             1   6 #TRDR                 051061
+     I***********                                                  S01271 051061
+     I****TIME*DATA*STRUCTURE************************************* S01271 051061
+     I***********                                                  S01271 051061
+     I*********** DS                                               S01271 051061
+     I***********                             1   60CTIME          S01271 051061
+     I***********                             1   2 CHOUR          S01271 051061
+     I***********                             3   4 CMINT          S01271 051061
+     I***********                                                  S01271 051061
+     I***DATA*STRUCTURE*FOR*COMPILATION**-*COPYRIGHT*INSERTION*********   051061
+     I***CPYR@#***   DS                                                   051061
+     I***********                             1  80 CPY@                  051061
+     I***********                             1  20 CPY@##                051061
+      *                                                                   051061
+     INEWKEY      DS                                                      051061
+      ***  Data Structure to hold Key of present record.                  051061
+     I                                        1   7 WNPKEY                051061
+     I                                        1   3 BRCA                  051061
+     I                                        4   4 PYIN                  051061
+     I                                        5   7 VCCY                  051061
+     I**********                              8  19 OURS                               051061 CGL029
+     I**********                          P  20  220VDAT                               051061 CGL029
+     I**********                             23  23 ACTC                               051061 CGL029
+     I                                        8  25 OURS                                      CGL029
+     I                                    P  26  280VDAT                                      CGL029
+     I                                       29  29 ACTC                                      CGL029
+      *                                                                   051061
+     IOLDKEY      DS                                                      051061
+      ***  Data Structure to hold Key of last record.                     051061
+     I                                        1   7 WOPKEY                051061
+     I                                        1   3 WOBRCA                051061
+     I                                        4   4 WOPYIN                051061
+     I                                        5   7 WOVCCY                051061
+     I**********                              8  19 WOOURS                             051061 CGL029
+     I**********                          P  20  220WOVDAT                             051061 CGL029
+     I**********                             23  23 WOACTC                             051061 CGL029
+     I                                        8  25 WOOURS                                    CGL029
+     I                                    P  26  280WOVDAT                                    CGL029
+     I                                       29  29 WOACTC                                    CGL029
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C**  M A I N L I N E    P R O C E S S I N G
+     C*
+     C***********CLNTKY    KLIST                                          051061
+     C***********          KFLD           KCNUM   60                      051061
+     C***********          KFLD           KRCDT   1                       051061
+      ***********                                                         051061
+     C***********          MOVEA'00'      *IN,25                          051061
+     C***********          MOVEA'000000'  *IN,30            *IN 30 - 35   051061
+     C***********          MOVE '0'       *IN38                           051061
+     C***********          MOVE '0'       *IN75                           051061
+     C***********          MOVE '0'       *IN80                           051061
+      ***********                                                         051061
+     C************IN10     CASEQ'0'       FIRSTC     10  10               051061
+     C***********          END                                            051061
+      ***********                                                         051061
+      ****SAVE*LEVEL*BREAK*IN*CASE*OF*AN*INVALID*RECORD****************   051061
+      ***********                                                         051061
+     C************INL2     IFEQ '1'                                       051061
+     C***********          MOVE '1'       *IN23                           051061
+     C***********          END                                            051061
+      ***********                                                         051061
+     C************INL1     IFEQ '1'                                       051061
+     C***********          MOVE '1'       *IN24                           051061
+     C***********          END                                            051061
+      ***********                                                         051061
+      ****PROCESS*DETAIL*RECORDS*ONLY**********************************   051061
+      ***********                                                         051061
+     C***********RECI1     IFEQ 'D'                                       051061
+      ***********                                                         051061
+     C***********          MOVE '0'       *IN81                           E29170
+     C***********          MOVE '1'       *IN81                    E29170 051061
+     C***********          EXSR CMPROC                                    051061
+     C***********                                                  E29170 051061
+     C***If*there*are*details*to*report*and*a*new*branch*then*open E29170 051061
+     C***detail*printer*file*for*it*and*do*RCF*processing********* E29170 051061
+     C***********                                                  E29170 051061
+     C************INL4     IFEQ '1'                                E29170 051061
+     C***********          CLOSESE0490P1                           E29170 051061
+     C***********          OPEN SE0490P1                           E29170 051061
+     C***********          Z-ADD0         PAGE                     E29170 051061
+     C***********          EXSR RCFP1                              E29170 051061
+     C***********          END                                     E29170 051061
+      ***********                                                         051061
+     C***********          MOVE '1'       *IN84                           051061
+     C***********          END                                            051061
+      ***********                                                         051061
+     C***********ENDD      TAG                             ** ENDD   TAG *051061
+      *                                                                   051061
+      ***  Initial Processing.                                            051061
+      *                                                                   051661
+     C                     EXSR FIRSTC                                    051661
+      *                                                                   051061
+      ***  Perform Detail Processing.                                     051061
+      *                                                                   051061
+     C                     EXSR PROCES                                    051061
+      *                                                                   051061
+      ***  Output Audit Report and End Program.                           051061
+      *                                                                   051061
+     C                     EXSR AUDIT                                     051061
+      *
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      ***********                                                         051061
+     C***LRNU7***             EXSR LASTC                                  051061
+      ***********                                                         051061
+      ********************************************************************
+      ***/EJECT***                                                        051061
+      /TITLE SR/FIRSTC                                                    051061
+      ********************************************************************
+      *
+      *  FIRSTC  - SR FOR CYCLE CALCULATIONS
+      *
+      ***CALLED*FROM:*DETAIL*PROCESSING********************************   051061
+      ***CALLS:*******SR*ZSYSTM****************************************   051061
+      *  Called By: Main Processing                                   *   051061
+      *  Calls: RCFAU                                                 *   051061
+      *
+      ********************************************************************
+      *
+     C           FIRSTC    BEGSR                           ** FIRSTC SR **
+      *                                                                   051061
+      ***  Copyright Statement.                                           051061
+     C                     MOVEACPY@      BIS@   80                       051061
+      *
+     C***********          MOVE '0'       *IN81                           051061
+      *
+      **  SETUP LDA FIELD DBPGM
+      *
+     C************NAMVAR   DEFN           LDA                      S01117 051061
+     C************LOCK     IN   LDA                                S01117 051061
+     C***********          MOVE *BLANKS   DBLOT                           051061
+     C                     MOVEL'SE0490  'DBPGM
+     C***********          OUT  LDA                                S01117 051061
+     C*                                                                   E29170
+     C** IN THE DATAAREA RUNDAT                                           E29170
+     C*                                                                   E29170
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           E29170
+     C                     IN   RUNDT                                     E29170
+     C*                                                                   E29170
+     C**  TEST FOR MULTIBRANCHING                                         E29170
+     C*                                                                   E29170
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C                     SETON                     37                   E29170
+     C                     END                                            E29170
+      *
+      ****ZEROISE  FIELDS                                                 051061
+      ***********                                                         051061
+     C***********          Z-ADD0         PAGTOT  10                      051061
+     C***********          Z-ADD0         RECTOT  50                      051061
+     C***********          Z-ADD0         NOITMS  30                      051061
+      ***********                                                         051061
+      ****GET*INSTALLATION*CONTROL*DATA*RECORD*AND*RELEASE.************   051061
+      ***********                                                         051061
+     C***********          EXSR ZSYSTM                                    051061
+     C************IN99     IFEQ '1'                                       051061
+     C***********          SETON                     U7U8LR               051061
+     C************LOCK     IN   LDA                                S01117 051061
+     C***********          MOVE 'TABLE'   DBFILE           ***************051061
+     C***********          MOVELZTABKY    DBKEY            ** DB ERR 01 **051061
+     C***********          Z-ADD01        DBASE            ***************051061
+     C***********          OUT  LDA                                S01117 051061
+     C***********          EXSR *PSSR                              S01117 051061
+     C***********          GOTO ENDD                                      051061
+     C***********          END                                            051061
+     C*                                                                   S01271
+     C*    INPUT CYCLE / CLOSE OF BUSINESS PARAMETER                      S01271
+     C*                                                                   S01271
+     C           *ENTRY    PLIST                                          S01271
+     C                     PARM           PRPHAS  1                       S01271
+     C                     PARM           SEQ     5                       S01117
+      *                                                                   051061
+     C           PRPHAS    IFEQ 'I'                                       S01271
+     C                     SETOF                     51                   S01271
+     C***********          TIME           CTIME                    S01271 051061
+     C***********          MOVE ':  '     ATIME   5                S01271 051061
+     C***********          MOVE CMINT     ATIME                    S01271 051061
+     C***********          MOVELCHOUR     ATIME                    S01271 051061
+     C                     ELSE                                           S01271
+     C                     SETON                     51                   S01271
+     C                     END                                            S01271
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+      *                                                                   051061
+      ***  Access Bank details for Report Title.                          051061
+      *                                                                   051061
+     C                     CALL 'AOBANKR0'                                051061
+     C                     PARM '*MSG   ' WRTCD   7                       051061
+     C                     PARM '*FIRST ' WOPTN   7                       051061
+     C           SDBANK    PARM SDBANK    DSFDY                           051061
+      *                                                                   051061
+      ***  Database Error if not found.                                   051061
+      *                                                                   051061
+     C           WRTCD     IFNE *BLANKS                                   051061
+     C                     MOVEL'SDBANKPD'DBFILE           ***************051061
+     C                     MOVEL'*FIRST'  DBKEY            * DB ERROR 01 *051061
+     C                     Z-ADD001       DBASE            ***************051061
+     C                     EXSR *PSSR                                     051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Check System Date Format, DDMMYY (*IN98 off)                   051061
+      ***                            MMDDYY (*IN98 on).                   051061
+      *                                                                   051061
+     C           BJDFIN    IFEQ 'M'                                       051061
+     C                     SETON                     98                   051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Initialise Program fields.                                     051061
+      *                                                                   051061
+      ***  Totals fields.                                                 051061
+     C                     Z-ADD0         WCYTOT 150                      051061
+      ***  Report processing fields.                                      051061
+     C                     Z-ADD0         RQDLN1  30                      051061
+     C                     Z-ADD0         DIFLN1  30                      051061
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************051061
+      ***********                                                         051061
+      ***CMPROC*SR*FOR*COMMON*PROCESSING*******************************   051061
+      ***********                                                         051061
+      ***CALLED*FROM:*DETAIL*PROCESSING********************************   051061
+      ***CALLS:*******SR*TSTPRT****************************************   051061
+      ****************SR*PRTFMT****************************************   051061
+      ****************SR*TSTTOT****************************************   051061
+      ****************SR*STCNCH****************************************   051061
+      ****************SR*TRADCH****************************************   051061
+      ****************SR*STR025****************************************   051061
+      ***********                                                         051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********CMPROC    BEGSR                           ** CMPROC SR **051061
+      ***********                                                         051061
+      ****RESTORE*LEVEL*BREAKS*TO*PROCESSING*(IN*CASE*OF*INVALID*REC.)*   051061
+      ***********                                                         051061
+     C************IN23     IFEQ '1'                                       051061
+     C***********          MOVE '1'       *INL2                           051061
+     C***********          MOVE '1'       *INL1                           051061
+     C***********          END                                            051061
+      ***********                                                         051061
+     C************IN24     IFEQ '1'                                       051061
+     C***********          MOVE '1'       *INL1                           051061
+     C***********          END                                            051061
+      ***********                                                         051061
+     C***********          MOVEA'00'      *IN,23                          051061
+      ***********                                                         051061
+     C************INL2     IFEQ '1'                                       051061
+     C************IN84     CASEQ'1'       TSTPRT                          051061
+     C***********          END                                            051061
+     C***********          END                                            051061
+      ***********                                                         051061
+      ****CLEAR*RECORDS*PER*PAGE*COUNT*********************************   051061
+      ***********                                                         051061
+     C************INL1     IFEQ '1'                                       051061
+     C************IN75     OREQ '1'                                       051061
+     C***********          Z-ADD0         PAGTOT                          051061
+     C***********          END                                            051061
+      ***********                                                         051061
+      ****RECORDS*PER*PAGE*CHECK***************************************   051061
+      ***********                                                         051061
+     C***********          MOVE '0'       *IN75                           051061
+      ***********                                                         051061
+     C************IN25     IFEQ '1'                                       051061
+     C***********PAGTOT    ANDEQ3                                         051061
+     C************IN26     OREQ '1'                                       051061
+     C***********PAGTOT    ANDEQ5                                         051061
+     C***********          MOVE '1'       *IN75                           051061
+     C***********          END                                            051061
+      ***********                                                         051061
+      ****RECORDS*PER*PAGE*COUNT***************************************   051061
+      ***********                                                         051061
+     C***********          ADD  1         PAGTOT                          051061
+      ***********                                                         051061
+     C***********PYIN      IFEQ 'P'                                       NADXXX
+     C***********PYIN      OREQ 'R'                                       NADXXX
+     C***********PYIN      COMP 'P'                      25               051061
+     C***********PYIN      COMP 'R'                      26               051061
+      ***/EJECT*****                                                      051061
+      ***********                                                         051061
+      ****TOTAL*RECORDS*COUNT******************************************   051061
+      ***********                                                         051061
+     C***********          ADD  1         RECTOT                          051061
+      ***********                                                         051061
+      ****NO.*OF*ITEMS*PER*CURRENCY************************************   051061
+      ***********                                                         051061
+     C***********          ADD  1         NOITMS                          051061
+      ***********                                                         051061
+     C***********          EXSR PRTFMT                                    051061
+     C***********          EXSR TSTTOT                                    051061
+     C***********PYIN      IFEQ 'P'                                NADXXX 051061
+     C***********PYIN      OREQ 'R'                                NADXXX 051061
+      ***********                                                         051061
+      ****REPORT*FIELDS,*FOR*BANKERS*AUTHORISATION,*FROM*STPR3*********   051061
+      ***********                                                         051061
+     C***********          MOVE SETL      XSETP   20                      051061
+     C***********          MOVE OURS      XOSAC  12                       051061
+     C***********          MOVE THEIRS    XTSEN                           051061
+      /TITLE SR/PROCES                                                    051061
+      *****************************************************************   051061
+      *                                                               *   051061
+      *  PROCES - Subroutine to do the Detail Processing.             *   051061
+      *                                                               *   051061
+      *  Called By: Main Processing                                   *   051061
+      *  Calls: RSTPR3, AUDIT, CHGKEY, ZZADD, ZSEDIT, WP1REC, WP1TOT  *   051061
+      *                                                               *   051061
+      *****************************************************************   051061
+      *                                                                   051061
+     C           PROCES    BEGSR                           *** PROCES *** 051061
+      *                                                                   051061
+      ***  Read first valid record from file.                             051061
+      *                                                                   051061
+     C                     EXSR RSTPR3                                    051061
+      *                                                                   051061
+      ***  If no records found, Perform: Audit Reporting.                 051061
+      *                                                                   051061
+     C           *IN89     IFEQ '1'                                       051061
+     C                     SETON                     87                   051061
+     C                     EXSR AUDIT                                     051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Do While not End of File.                                      051061
+      *                                                                   051061
+     C           *IN89     DOWEQ'0'                                       051061
+      *                                                                   051061
+      ***  Process change of key, (Print totals, chain for new data).     051061
+      *                                                                   051061
+     C           NEWKEY    IFNE OLDKEY                                    051061
+     C                     EXSR CHGKEY                                    051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Format fields from LF/STPR3.                                   051061
+      *                                                                   051061
+      ***  Set Indicators according to Settlement Method.                 051061
+      *                                                                   051061
+     C                     SETOF                     313233               051061
+      *                                                                   051061
+     C                     SELEC                                          051061
+     C           SETL      WHEQ 01                                        051061
+     C                     SETON                     31                   051061
+     C           SETL      WHEQ 02                                        051061
+     C                     SETON                     32                   051061
+     C           SETL      WHEQ 12                                        051061
+     C                     SETON                     33                   051061
+     C                     ENDSL                                          051061
+      *                                                                   051061
+      ***  Accumulate Totals fields.                                      051061
+      *                                                                   051061
+     C                     ADD  1         RECTOT                          051061
+     C                     ADD  1         RCYITM                          051061
+     C                     ADD  CVIV      WCYTOT 150                      051061
+      *                                                                   051061
+      ***  Calculate Hash Totals.                                         051061
+      *                                                                   051061
+     C           CVIV      DIV  1000      ZZAMT                           051061
+     C                     EXSR ZZADD                                     051061
+      *                                                                   051061
+      ***  Format Countervalue.                                           051061
+      *                                                                   051061
+     C                     Z-ADDCVIV      ZFLD15                          051061
+     C                     MOVE 'J'       ZECODE                          051061
+     C                     Z-ADDA6NBDP    ZDECS                           051061
+     C                     EXSR ZSEDIT                                    051061
+     C                     MOVE ZOUT21    RCVIV                           051061
+      *
+      ***  Cancelled Trades are still held on TRADSD.                     051061
+      ***                                                                 051061
+     C****DETERMINE*WHETHER*TRADE*IS*CANCELLED*OR*NOT******************   051061
+     C***********                                                         051061
+     C***********          MOVE '0'       *IN87                           051061
+     C***********ACTC      CASEQ'C'       STCNCH         35               051061
+     C***********          END                                            051061
+      ***********                                                         051061
+     C************IN87     CASEQ'1'       TRADCH                          051061
+     C************IN35     CASEQ'0'       TRADCH                          051061
+     C***********          END                                            051061
+      *                                                                   051061
+      ***  Obtain Trade Details.                                          051061
+      *                                                                   051061
+     C                     MOVE TRDR      WTRDR   6                       051061
+     C           WTRDR     CHAINTRADS                88                   051061
+      *                                                                   051061
+     C           *IN88     IFEQ '1'                                       051061
+     C           RECI      OREQ '*'                                       051061
+      *                                                                   051061
+      ***  Chain to Start of Business Trades File if not found on TRADS   051061
+      *                                                                   051061
+     C           WTRDR     CHAINSOBTR                88                   051061
+     C           *IN88     IFEQ '1'                                       051061
+     C           RECI      OREQ '*'                                       051061
+     C                     MOVEL'TRADS'   DBFILE           ***************051061
+     C                     MOVELWTRDR     DBKEY            * DB ERROR 03 *051061
+     C                     Z-ADD003       DBASE            ***************051061
+     C                     EXSR *PSSR                                     051061
+     C                     END                                            051061
+      *                                                                   051061
+     C                     END                                            051061
+      *
+      ****MOVE*TRADE-TYPE*AND*-SUBTYPE*TO*REPORT*FIELDS*TRTPDS*&*TRSTDS   051061
+      ***********                                                         051061
+     C***********          MOVE TRTP      TRTPDS  2                       051061
+     C***********          MOVE TRST      TRSTDS  2                       051061
+      ***********                                                         051061
+      ****REPORT*FIELDS,*FOR*BAMKERS*AUTHORISATION,*FROM*TRADS/CNCTR***   051061
+      ***********                                                         051061
+     C***********          MOVELTDFA      XFACO  10                       051061
+     C***********          MOVE TDSI      XSPI   35      38               051061
+     C***********          MOVE TCNR      XCNUM   60                      051061
+      ***********                                                         051061
+     C***********          EXSR STR025                                    051061
+     C***********          MOVE '1'       *IN80                    NADXXX 051061
+      *                                                                   051061
+      ***  Format fields from LF/TRADS.                                   051061
+      *                                                                   051061
+      ***  Set Indicator for Cancellation.                                051061
+      *                                                                   051061
+     C           ACTC      IFEQ 'C'                                       051061
+     C                     SETON                     35                   051061
+     C                     ELSE                                           051061
+     C                     SETOF                     35                   051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Counterparty.                                                  051061
+     C                     CLEARRTCNR                                     051061
+     C                     CLEARRTCNRR                                    051061
+     C                     CLEARRTCNRT                                    051061
+      *                                                                   051061
+      ***  Move Counterparty Number to Report field.                      051061
+      *                                                                   051061
+     C                     MOVE TCNR      RTCNR                           051061
+      *                                                                   051061
+      ***  Obtain Counterparty Report Name and Town.                      051061
+      *                                                                   051061
+     C                     MOVELTCNR      WCUST                           051061
+     C                     CALL 'AOCUSTR0'                                051061
+     C                     PARM '*MSG   ' WRTCD   7                       051061
+     C                     PARM '*KEY   ' WOPTN   7                       051061
+     C                     PARM           WCUST  10                       051061
+     C                     PARM           WKYST   7                       051061
+     C           SDCUST    PARM SDCUST    DSSDY                           051061
+      *                                                                   051061
+     C           WRTCD     IFNE *BLANKS                                   051061
+     C                     MOVELMESS,2    RTCNRR                          051061
+     C                     ELSE                                           051061
+     C                     MOVE BBCRNM    RTCNRR                          051061
+     C                     MOVE BBCRTN    RTCNRT                          051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Check if Settlement Instructions are present.                  051061
+      *                                                                   051061
+     C           TDSI      IFEQ *BLANKS                                   051061
+     C                     SETOF                     38                   051061
+     C                     ELSE                                           051061
+     C                     SETON                     38                   051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Determine Settlement Accounts Fields.                          051061
+      *                                                                   051061
+     C                     CLEARRTHRS1                                    051061
+     C                     CLEARRTHRST                                    051061
+     C                     CLEARRTDFA1                                    051061
+     C                     CLEARRTDFAT                                    051061
+      *                                                                   051061
+      ***  If Settlement Method is '01' (Through a Nostro by Telex).      051061
+      *                                                                   051061
+     C           SETL      IFEQ 01                                        051061
+      *                                                                   051061
+      ***  Check first 6 characters.                                      051061
+      *                                                                   051061
+     C***********THEIRS    IFEQ *BLANKS                                   051061              CSD027
+     C***********          MOVEL'000000'  THEIRS                          051061              CSD027
+     C***********          END                                            051061              CSD027
+     C***********          MOVELTHEIRS    W7A     7                       051061              CSD027
+     C***********          MOVE '0'       W7A                             051061              CSD027
+     C***********          TESTN          W7A        67                   051061              CSD027
+      *                                                                   051061
+      *****If*first*6*are*numeric,*then*this*is*a*Customer*Number.        051061              CSD027
+      *                                                                   051061
+     C************IN67     IFEQ '1'                                       051061              CSD027
+     C                     MOVELTHEIRS    WCUST                           051061
+     C                     CALL 'AOCUSTR0'                                051061
+     C                     PARM '*MSG   ' WRTCD   7                       051061
+     C                     PARM '*KEY   ' WOPTN   7                       051061
+     C                     PARM           WCUST  10                       051061
+     C                     PARM           WKYST   7                       051061
+     C           SDCUST    PARM SDCUST    DSSDY                           051061
+      *                                                                   051061
+     C           WRTCD     IFNE *BLANKS                                   051061
+     C                     MOVELMESS,2    RTHRS1                          051061
+     C                     ELSE                                           051061
+     C                     MOVE BBCNA1    RTHRS1                          051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Else must be a Counterparty Nostro.                            051061
+     C**********           ELSE                                           051061              CSD027
+     C           WRTCD     IFNE *BLANKS                                                       CSD027
+      *                                                                   051061
+     C                     MOVELTHEIRS    WCNST                           051061
+     C                     CALL 'AOCNSTR0'                                051061
+     C                     PARM *BLANKS   WRTCD                           051061
+     C                     PARM '*KEY   ' WOPTN                           051061
+     C                     PARM           WCNST   8                       051061
+     C           SDCNST    PARM SDCNST    DSFDY                           051061
+      *                                                                   051061
+     C           WRTCD     IFNE *BLANKS                                   051061
+     C                     MOVELMESS,4    RTHRS1                          051061
+     C                     ELSE                                           051061
+     C                     MOVE AWCPNM    RTHRS1                          051061
+     C                     MOVE AWCNTN    RTHRST                          051061
+     C                     END                                            051061
+      *                                                                   051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  For Pay Only.                                                  051061
+      *                                                                   051061
+     C           PYIN      IFEQ 'P'                                       051061
+      *                                                                   051061
+      ***  Get Deliver To For Account Of Details, if present.             051061
+      *                                                                   051061
+     C           TDFA      IFNE *BLANKS                                   051061
+      *                                                                   051061
+      ***  Check first 6 characters.                                      051061
+      *                                                                   051061
+     C***********          MOVELTDFA      W7A                             051061              CSD027
+     C***********          MOVE '0'       W7A                             051061              CSD027
+     C***********          TESTN          W7A        67                   051061              CSD027
+      *                                                                   051061
+      *****If*first*6*are*numeric,*then*this*is*a*Customer*Number.********051061              CSD027
+      *                                                                   051061
+     C************IN67     IFEQ '1'                                       051061              CSD027
+     C                     MOVELTDFA      WCUST                           051061
+     C                     CALL 'AOCUSTR0'                                051061
+     C                     PARM '*MSG   ' WRTCD   7                       051061
+     C                     PARM '*KEY   ' WOPTN   7                       051061
+     C                     PARM           WCUST  10                       051061
+     C                     PARM           WKYST   7                       051061
+     C           SDCUST    PARM SDCUST    DSSDY                           051061
+      *                                                                   051061
+     C           WRTCD     IFNE *BLANKS                                   051061
+     C                     MOVELMESS,2    RTDFA1                          051061
+     C                     ELSE                                           051061
+     C                     MOVELBBCRNM    RTDFA1                          051061
+     C                     MOVELBBCRTN    RTDFAT                          051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Else must be a Counterparty Nostro.                            051061
+     C***********          ELSE                                           051061              CSD027
+     C           WRTCD     IFNE *BLANKS                                                       CSD027
+      *                                                                   051061
+     C                     MOVELTDFA      WCNST                           051061
+     C                     CALL 'AOCNSTR0'                                051061
+     C                     PARM *BLANKS   WRTCD                           051061
+     C                     PARM '*KEY   ' WOPTN                           051061
+     C                     PARM           WCNST   8                       051061
+     C           SDCNST    PARM SDCNST    DSFDY                           051061
+      *                                                                   051061
+     C           WRTCD     IFNE *BLANKS                                   051061
+     C                     MOVELMESS,4    RTDFA1                          051061
+     C                     ELSE                                           051061
+     C                     MOVE AWCPNM    RTDFA1                          051061
+     C                     MOVE AWCNTN    RTDFAT                          051061
+     C                     END                                            051061
+      *                                                                   051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  End of IF TDFA Not Blank.                                      051061
+     C                     END                                            051061
+      ***  End of Pay Only.                                               051061
+     C                     END                                            051061
+      ***  End of Settlement Method '01'                                  051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Write record out to report.                                    051061
+      *                                                                   051061
+     C                     EXSR WP1REC                                    051061
+      *                                                                   051061
+      ***  Read next record.                                              051061
+      *                                                                   051061
+     C                     EXSR RSTPR3                                    051061
+      *                                                                   051061
+      ***  END of Do While NOT End of File.                               051061
+     C                     END
+      *                                                                   051061
+      ***  Write Totals for last page.                                    051061
+      *                                                                   051061
+     C                     EXSR WP1TOT                                    051061
+      *                                                                   051061
+      ***  Last record read from LF/STPR3 should be the Trailer.          051061
+      *                                                                   051061
+     C           RECI      IFNE 'T'                                       051061
+     C                     MOVE 'STPR3'   DBFILE           ***************051061
+     C                     MOVEL'TRAILER' DBKEY            * DB ERROR 02 *051061
+     C                     Z-ADD002       DBASE            ***************051061
+     C                     EXSR *PSSR                                     051061
+     C                     END                                            051061
+      *
+     C***                  MOVE '1'       *IN80                           NADXXX
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /TITLE SR/CHGKEY                                                    051061
+      *****************************************************************   051061
+      *                                                               *   051061
+      *  CHGKEY - Subroutine to Process a change of Key.              *   051061
+      *                                                               *   051061
+      *  Called By: PROCES                                            *   051061
+      *  Calls: WP1TOT, RCFP1, ZDATE2                                 *   051061
+      *                                                               *   051061
+      *****************************************************************   051061
+      *                                                                   051061
+     C           CHGKEY    BEGSR                           *** CHGKEY *** 051061
+      *                                                                   051061
+      ***  Print Currency Totals for any change in Branch/PYIN/Currency   051061
+      ***  (but not for first time through).                              051061
+      *                                                                   051061
+     C           WNPKEY    IFNE WOPKEY                                    051061
+     C           OLDKEY    ANDNE*BLANKS                                   051061
+     C                     EXSR WP1TOT                                    051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Check for change of Branch.                                    051061
+      *                                                                   051061
+     C           BRCA      IFNE WOBRCA                                    051061
+      *                                                                   051061
+      ***  Access Branch file for Branch Name.                            051061
+      *                                                                   051061
+     C**********           CALL 'AOBRCHR0'                                051061              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WRTCD                           051061
+     C                     PARM '*KEY   ' WOPTN                           051061
+     C                     PARM BRCA      WBRCA   3                       051061
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           051061              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *                                                                   051061
+      ***  Database Error if not found.                                   051061
+      *                                                                   051061
+     C           WRTCD     IFNE *BLANKS                                   051061
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************051061
+     C                     MOVELWBRCA     DBKEY            * DB ERROR 04 *051061
+     C                     Z-ADD004       DBASE            ***************051061
+     C                     EXSR *PSSR                                     051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Close Old Print File and Open New one.                         051061
+      *                                                                   051061
+     C                     CLOSESE0490P1                                  051061
+     C                     OPEN SE0490P1                                  051061
+     C                     EXSR RCFP1                                     051061
+      *                                                                   051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Check for change of Currency                                   051061
+      *                                                                   051061
+     C           VCCY      IFNE WOVCCY                                    051061
+      *                                                                   051061
+     C           VCCY      IFEQ *BLANKS                                   051061
+     C                     CLEARA6CYNM                                    051061
+     C                     CLEARA6NBDP                                    051061
+     C                     ELSE                                           051061
+      *                                                                   051061
+      ***  Access Currency file for Currency Name.                        051061
+      *                                                                   051061
+     C                     CALL 'AOCURRR0'                                051061
+     C                     PARM *BLANKS   WRTCD                           051061
+     C                     PARM '*KEY   ' WOPTN                           051061
+     C                     PARM VCCY      WCCY    3                       051061
+     C           SDCURR    PARM SDCURR    DSSDY                           051061
+      *                                                                   051061
+      ***  Database Error if not found.                                   051061
+      *                                                                   051061
+     C           WRTCD     IFNE *BLANKS                                   051061
+     C                     MOVEL'SDCURRPD'DBFILE           ***************051061
+     C                     MOVELVCCY      DBKEY            * DB ERROR 05 *051061
+     C                     Z-ADD005       DBASE            ***************051061
+     C                     EXSR *PSSR                                     051061
+     C                     END                                            051061
+      *                                                                   051061
+     C                     END                                            051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Check for change of Our Agent.                                 051061
+      *                                                                   051061
+     C           OURS      IFNE WOOURS                                    051061
+      *                                                                   051061
+     C                     CLEARROURS1                                    051061
+     C                     CLEARROURST                                    051061
+      *                                                                   051061
+      ***  If present, obtain the details from File.                      051061
+      *                                                                   051061
+     C           OURS      IFNE *BLANKS                                   051061
+     C                     MOVELOURS      WCUST                           051061
+     C                     CALL 'AOCUSTR0'                                051061
+     C                     PARM '*MSG   ' WRTCD   7                       051061
+     C                     PARM '*KEY   ' WOPTN   7                       051061
+     C                     PARM           WCUST  10                       051061
+     C                     PARM           WKYST   7                       051061
+     C           SDCUST    PARM SDCUST    DSSDY                           051061
+      *                                                                   051061
+     C           WRTCD     IFNE *BLANKS                                   051061
+     C                     MOVELMESS,2    ROURS1                          051061
+     C                     ELSE                                           051061
+     C                     MOVE BBCNA1    ROURS1                          051061
+     C                     MOVE BBCRTN    ROURST                          051061
+     C                     END                                            051061
+      *                                                                   051061
+     C                     END                                            051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Check for change of Value Date.                                051061
+      *                                                                   051061
+     C           VDAT      IFNE WOVDAT                                    051061
+      *                                                                   051061
+     C                     CLEARRVDAT                                     051061
+      *                                                                   051061
+      ***  If present, format for report.                                 051061
+      *                                                                   051061
+     C           VDAT      IFNE 0                                         051061
+     C                     MOVE VDAT      ZDAYNO                          051061
+     C                     EXSR ZDATE2                                    051061
+     C                     MOVE ZADATE    RVDAT                           051061
+     C                     END                                            051061
+      *                                                                   051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  If any of the Key fields changed, must write out new Header.   051061
+      *                                                                   051061
+     C                     SETOF                         25               058357
+     C           PYIN      COMP 'P'                      25               058357
+     C                     WRITEHEADP1                                    051061
+      *                                                                   051061
+      ***  Save the New Key.                                              051061
+      *                                                                   051061
+     C                     MOVE NEWKEY    OLDKEY                          051061
+      *                                                                   051061
+     C                     ENDSR                                          051061
+      *                                                                   051061
+      *****************************************************************   051061
+      /TITLE SR/RSTPR3                                                    051061
+      *****************************************************************   051061
+      *                                                               *   051061
+      *  RSTPR3 - Subroutine to Read the next valid record.           *   051061
+      *                                                               *   051061
+      *  Called By: PROCES                                            *   051061
+      *  Calls    : None                                              *   051061
+      *                                                               *   051061
+      *****************************************************************   051061
+      *                                                                   051061
+     C           RSTPR3    BEGSR                           *** RSTPR3 *** 051061
+      *                                                                   051061
+      ***  Read until EOF or valid record read. (Not reporting on any     051061
+      ***  records with RECI NOT= 'D' or if the Pay/Receive indicator     051061
+      ***  is not 'P', 'R' or 'C'.                                        051061
+      *                                                                   051061
+     C                     SETOF                         86               051061
+     C                     READ STPR3                    89               051061
+     C           *IN86     DOWEQ'0'                                       051061
+     C           *IN89     ANDEQ'0'                                       051061
+      *                                                                   051061
+     C           RECI      IFEQ 'D'                                       051061
+     C           PYIN      IFEQ 'P'                                       051061
+     C           PYIN      OREQ 'R'                                       051061
+     C           PYIN      OREQ 'C'                                       051061
+     C                     SETON                         86               051061
+     C                     END                                            051061
+     C                     END                                            051061
+      *                                                                   051061
+     C           *IN86     IFEQ '0'                                       051061
+     C                     READ STPR3                    89               051061
+     C                     END                                            051061
+      *                                                                   051061
+     C                     END                                            051061
+      *                                                                   051061
+     C                     ENDSR                                          051061
+      *                                                                   051061
+      *****************************************************************   051061
+      /TITLE SR/WP1REC                                                    051061
+      *****************************************************************   051061
+      *                                                               *   051061
+      *  WP1REC - Subroutine to Write a Detail record to the Report.  *   051061
+      *                                                               *   051061
+      *  Called By: PROCES                                            *   051061
+      *  Calls    : None                                              *   051061
+      *                                                               *   051061
+      *****************************************************************   051061
+      *                                                                   051061
+     C           WP1REC    BEGSR                           *** WP1REC *** 051061
+      *                                                                   051061
+      ***  Initialise Required Lines.                                     051061
+      *                                                                   051061
+     C                     Z-ADD5         RQDLN1                          051061
+      *                                                                   051061
+      ***  If For Account Of Information being printed.                   051061
+      *                                                                   051061
+     C           *IN25     IFEQ *ON                                       051061
+     C                     ADD  3         RQDLN1                          051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  If Special Instructions being printed.                         051061
+      *                                                                   051061
+     C           *IN38     IFEQ *ON                                       051061
+     C                     ADD  2         RQDLN1                          051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Check that sufficient lines remain for the Format. If not,     051061
+      ***  write out the Main Headings on a new page.                     051061
+      *                                                                   051061
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          051061
+     C           DIFLN1    IFLE RQDLN1                                    051061
+     C                     SETOF                         25               058357
+     C           PYIN      COMP 'P'                      25               058357
+     C                     WRITEHEADP1                                    051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Write out Detail Records.                                      051061
+      *                                                                   051061
+     C                     WRITEDETAIL                                    051061
+      *                                                                   051061
+     C                     ENDSR                                          051061
+      *                                                                   051061
+      *****************************************************************   051061
+      /TITLE SR/WP1TOT                                                    051061
+      *****************************************************************   051061
+      *                                                               *   051061
+      *  WP1TOT - Subroutine to Write Currency Total to Report.       *   051061
+      *                                                               *   051061
+      *  Called By: PROCES, CHGKEY                                    *   051061
+      *  Calls: ZSEDIT                                                *   051061
+      *                                                               *   051061
+      *****************************************************************   051061
+      *                                                                   051061
+     C           WP1TOT    BEGSR                           *** WP1TOT *** 051061
+      *                                                                   051061
+      ***  Format Currency Total.                                         051061
+      *                                                                   051061
+     C                     Z-ADDWCYTOT    ZFLD15                          051061
+     C                     MOVE 'J'       ZECODE                          051061
+     C                     Z-ADDA6NBDP    ZDECS                           051061
+     C                     EXSR ZSEDIT                                    051061
+     C                     MOVE ZOUT21    RCYTOT                          051061
+      *                                                                   051061
+     C                     Z-ADD4         RQDLN1                          051061
+      *                                                                   051061
+      ***  Check that sufficient lines remain for the Format. If not,     051061
+      ***  write out the Main Headings on a new page.                     051061
+      *                                                                   051061
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          051061
+     C           DIFLN1    IFLE RQDLN1                                    051061
+     C                     SETOF                         25               058357
+     C           PYIN      COMP 'P'                      25               058357
+     C                     WRITEHEADP1                                    051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  Write Currency Total Format.                                   051061
+      *                                                                   051061
+     C                     WRITETOTALS                                    051061
+      *                                                                   051061
+      ***  Initialise Totals fields.                                      051061
+      *                                                                   051061
+     C                     CLEARRCYITM                                    051061
+     C                     CLEARWCYTOT                                    051061
+      *                                                                   051061
+     C                     ENDSR                                          051061
+      *                                                                   051061
+      *****************************************************************   051061
+      /TITLE SR/AUDIT                                                     051061
+      *****************************************************************   051061
+      *                                                               *   051061
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *   051061
+      *                                                               *   051061
+      *  Called By: Main Processing, PROCES, *PSSR                    *   051061
+      *  Calls: None.                                                 *   051061
+      *                                                               *   051061
+      *****************************************************************   051061
+      *                                                                   051061
+     C           AUDIT     BEGSR                           *** AUDIT  *** 051061
+      *                                                                   051061
+      ***  Output Report Header and File Controls.                        051061
+      *                                                                   051061
+     C                     WRITEHEADAU                                    051061
+     C                     WRITECONTROL                                   051061
+      *                                                                   051061
+      ***  If there is a DB Error, Output the DB Error Information.       051061
+      *                                                                   051061
+     C           *INU7     IFEQ '1'                                       051061
+     C                     WRITEDBERROR                                   051061
+     C                     ELSE                                           051061
+      *                                                                   051061
+      ***  Or, if no valid records read, Output "No Details" message.     051061
+      *                                                                   051061
+     C           *IN87     IFEQ '1'                                       051061
+     C                     WRITENODTLS                                    051061
+     C                     END                                            051061
+     C                     END                                            051061
+      *                                                                   051061
+      ***  End Program and Return.                                        051061
+      *                                                                   051061
+     C                     SETON                     LR                   051061
+     C                     RETRN                                          051061
+      *                                                                   051061
+     C                     ENDSR                                          051061
+      *                                                                   051061
+      *****************************************************************   051061
+      /EJECT
+      ********************************************************************051061
+      *****************************************************************   051061
+      ****PRTFMT**-*SR*TO*FORMAT*FIELDS*FROM*FORMAT*STPR3**************   051061
+      *****************************************************************   051061
+      ****CALLED*FROM:*SUBROUTINE*CMPROC*******************************   051061
+      ****CALLS:*******SR*ZDATE2***************************************   051061
+      *****************SR*CURRCH***************************************   051061
+      *****************************************************************   051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********PRTFMT    BEGSR                           ** PRTFMT SR **051061
+      ***********                                                         051061
+      ****SET*INDICATOR*ACCORDING*TO*SETTLEMENT*METHOD*****************   051061
+      ***********                                                         051061
+     C***********SETL      COMP 2                        30               051061
+     C***********SETL      COMP 1                        32               051061
+     C***********SETL      COMP 12                       34               051061
+      ***********                                                         051061
+      ****FORMAT*FIELDS************************************************   051061
+      ***********                                                         051061
+     C***********          MOVE BRCD      BRCDDS  30                      S01117
+     C***********          MOVE BRCA      BRCADS  3                S01117 051061
+      ***********                                                         051061
+     C***********VDAT      IFEQ 0                                         051061
+     C***********          MOVE BLNK07    VDATDS  7                       051061
+      ***********                                                         051061
+     C***********          ELSE                                           051061
+     C***********          MOVE VDAT      ZDAYNO                          051061
+     C***********          EXSR ZDATE2                                    051061
+     C***********          MOVE ZADATE    VDATDS  7                       051061
+     C***********          END                                            051061
+      ***********                                                         051061
+      ****OBTAIN**CURRENCY*NAME****************************************   051061
+      ***********                                                         051061
+     C***********          EXSR CURRCH                                    051061
+      ***********                                                         051061
+     C***********          MOVE TRDR      TRDRDS  60                      051061
+      ***********                                                         051061
+     C***********          MOVE SECS      SECSDS 10                       051061
+      ***********                                                         051061
+     C***********          ENDSR                                          051061
+      ***********                                                         051061
+      ********************************************************************051061
+      ***/EJECT*****                                                      051061
+      ********************************************************************051061
+      *****************************************************************   051061
+      ***TSTTOT*SR*TO*CALCULATE*TEST*HASH*TOTALS***********************   051061
+      *****************************************************************   051061
+      ***CALLED*FROM:*SUBROUTINE*CMPROC********************************   051061
+      ***CALLS:*******SR*ZZADD*****************************************   051061
+      *****************************************************************   051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********TSTTOT    BEGSR                           ** TSTTOT SR **051061
+      ***********                                                         051061
+     C***********CVIV      DIV  1000      ZZAMT                           051061
+     C***********TESTOT    ADD  ZZAMT     TESTOT 153                      051061
+     C***********          EXSR ZZADD                                     051061
+      ***********                                                         051061
+     C***********          ENDSR                                          051061
+      ********************************************************************051061
+      ***/SPACE*2***                                                      051061
+      ********************************************************************051061
+      *****************************************************************   051061
+      ***TSTPRT**-*SR*TO*PRINT*AND*ZERO*TEST*TOTALS********************   051061
+      *****************************************************************   051061
+      ***CALLED*FROM:*SUBROUTINE*CMPROC********************************   051061
+      *****************************************************************   051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********TSTPRT    BEGSR                           ** TSTPRT SR **051061
+      ***********                                                         051061
+     C********NU7          EXCPT                                          051061
+     C***********          MOVE '0'       *IN84                           051061
+     C***********          Z-ADD0         NOITMS  30                      051061
+     C***********          Z-ADD0         TESTOT 153                      051061
+      ***********                                                         051061
+     C***********          ENDSR                                          051061
+      ********************************************************************051061
+      ***/SPACE*2***                                                      051061
+      ********************************************************************051061
+      *****************************************************************   051061
+      ***STR025*SR.*TO*PRODUCE*CUSTOMER,*OUR*AGENT,*AND*BENEFICIARY.***   051061
+      *****************************************************************   051061
+      ***CALLED*FROM:*SUBROUTINE*CMPROC********************************   051061
+      ***CALLS:*******SR*HEADER****************************************   051061
+      ****************SR*PAY*******************************************   051061
+      ****************SR*RECEIV****************************************   051061
+      *****************************************************************   051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********STR025    BEGSR                           ** STR025 SR **051061
+      ***********                                                         051061
+     C***********          EXSR HEADER                                    051061
+      ***********                                                         051061
+     C***********PYIN      CASEQ'P'       PAY                             051061
+     C***********PYIN      CASEQ'R'       RECEIV                          051061
+     C***********          END                                            051061
+      ***********                                                         051061
+     C***********          ENDSR                                          051061
+      ********************************************************************051061
+      ***/EJECT*****                                                      051061
+      ********************************************************************051061
+      *****************************************************************   051061
+      ***LASTC**-*SR.*FOR*LAST*CYCLE*PROCESSING************************   051061
+      *****************************************************************   051061
+      ***CALLED*FROM:*DETAIL*PROCESSING********************************   051061
+      ***CALLS:*******SR*ZSYSTM****************************************   051061
+      ****************SR*TSTPRT****************************************   051061
+      *****************************************************************   051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********LASTC     BEGSR                           ** LASTC  SR **051061
+      ***********                                                         051061
+      ****PROCESSING FOR COMPLETELY BLANK FILE  OR TRAILER MISSING        051061
+      ******1*-*ACCESS*ICD*1*******************************************   051061
+      ***********                                                         051061
+     C************IN10     IFEQ '0'                                       051061
+     C***********          EXSR ZSYSTM                                    051061
+     C************IN99     IFEQ '1'                                       051061
+     C***********          SETON                     U7U8                 051061
+     C************LOCK     IN   LDA                                S01117 051061
+     C***********          MOVE 'TABLE'   DBFILE           ***************051061
+     C***********          MOVELZTABKY    DBKEY            ** DB ERR 06 **051061
+     C***********          Z-ADD06        DBASE            ***************051061
+     C***********          OUT  LDA                                S01117 051061
+     C***********          EXSR *PSSR                              S01117 051061
+     C***********          GOTO ENDLR                                     051061
+     C***********          END                                            051061
+     C***********          END                                            051061
+      ***********                                                         051061
+      ****2*-*SETUP*LDA*FIELDS*****************************************   051061
+      ***********                                                         051061
+     C***********RECI1     IFNE 'T'                                       051061
+     C***********          SETON                     U7U8                 051061
+     C************LOCK     IN   LDA                                S01117 051061
+     C***********          MOVE 'STPR3'   DBFILE           ***************051061
+     C***********          MOVEL'TRAILER' DBKEY            ** DB ERR 02 **051061
+     C***********          Z-ADD02        DBASE            ***************051061
+     C***********          OUT  LDA                                S01117 051061
+     C***********          EXSR *PSSR                              S01117 051061
+     C***********          GOTO ENDLR                                     051061
+     C***********          END                                            051061
+      ***********                                                         051061
+      ****EXIT*TO*SUBROUTINE*TSTPRT*TO*PRINT*LAST*PAGE*TEST*TOTAL******   051061
+      ***********                                                         051061
+     C************IN84     CASEQ'1'       TSTPRT                          051061
+     C***********          END                                            051061
+      ***********                                                         051061
+      ****HASH*TOTAL*FILE*CONTROL**************************************   051061
+      ***********                                                         051061
+     C***********          Z-ADDZZTOTI    HSTINT 150                      051061
+     C***********          Z-ADDZZTOTD    HSTDEC  30                      051061
+     C***********          ADD  1         RECTOT                          051061
+      ***********                                                         051061
+      ****RECORD*AND*HASH*TOTAL*FILE*CONTROL*CHECKS********************   051061
+      ***********                                                         051061
+     C***********HSTINT    IFNE HRWN                                      051061
+     C***********HSTDEC    ORNE HRDC                                      051061
+     C***********          MOVE '1'       *IN70                           051061
+     C***********          MOVE '1'       *INU8                           051061
+     C***********          END                                            051061
+     C***********RECTOT    IFNE NORE                                      051061
+     C***********          MOVE '1'       *IN71                           051061
+     C***********          MOVE '1'       *INU8                           051061
+     C***********          END                                            051061
+     C***********ENDLR     ENDSR                                          051061
+      ********************************************************************051061
+      ***/EJECT***                                                        051061
+      ********************************************************************051061
+      *****************************************************************   051061
+      ***TRADCH**-*SR.*TO*CHAIN*TO*TRADES*MASTER*FILE******************   051061
+      *****************************************************************   051061
+      ***CALLED*FROM:*SR*CMPROC****************************************   051061
+      *****************************************************************   051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********TRADCH    BEGSR                           ** TRADCH SR **051061
+      ***********                                                         051061
+     C***********#TRDR     CHAINTRADS                87                   051061
+      ***********                                                         051061
+     C************IN87     IFEQ '1'                                       051061
+     C***********RECI      OREQ '*'                                       051061
+      ***********                                                  E49967 051061
+      ***Chain*to*start*of*day*trades*file*if*record*not*found*on* E49967 051061
+      ***TRADS**************************************************** E49967 051061
+      ***********                                                  E49967 051061
+     C***********#TRDR     CHAINSOBTR                87            E49967 051061
+     C************IN87     IFEQ '1'                                E49967 051061
+     C***********RECI      OREQ '*'                                E49967 051061
+     C***********          SETON                     U7U8LR               051061
+     C************LOCK     IN   LDA                                       S01117
+     C***********          MOVE 'TRADS'   DBFILE           ***************E49967
+     C***********          MOVE 'SOBTR'   DBFILE           ******* E49967 051061
+     C***********          MOVEL#TRDR     DBKEY            ** DB ERR 03 **051061
+     C***********          Z-ADD03        DBASE            ***************051061
+     C***********          OUT  LDA                                S01117 051061
+     C***********          EXSR *PSSR                              S01117 051061
+     C***********          GOTO ENDD                                      051061
+     C***********          END                                            051061
+      ***********                                                  E49967 051061
+     C***********          END                                     E49967 051061
+      ***********                                                         051061
+     C***********          ENDSR                                          051061
+      ***********                                                         051061
+      ********************************************************************051061
+      ***/SPACE*5***                                                      051061
+      ********************************************************************051061
+      *****************************************************************   051061
+      ***STCNCH**-*SR.*TO*CHAIN*TO*TRADES*CANCELLED*FILE***************   051061
+      *****************************************************************   051061
+      ***CALLED*FROM:*SUBROUTINE*CMPROC********************************   051061
+      *****************************************************************   051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********STCNCH    BEGSR                           ** STCNCH SR **051061
+      ***********                                                         051061
+     C***********#TRDR     CHAINCNCTR                87                   051061
+      ***********                                                         051061
+     C************IN87     IFEQ '0'                                       051061
+     C***********RECI      ANDEQ'*'                                       051061
+     C***********          MOVE '1'       *IN87                           051061
+     C***********          END                                            051061
+      ***********                                                         051061
+     C***********          ENDSR                                          051061
+      ***********                                                         051061
+      ********************************************************************051061
+      ***/EJECT*****                                                      051061
+      ********************************************************************051061
+      *****************************************************************   051061
+      ***CURRCH**-*SR*TO*OBTAIN*THE*CURRENCY*NAME**********************.  051061
+      *****************************************************************   051061
+      ***CALLED*FROM:*SUBROUTINE*PRTFMT********************************   051061
+      *****************************************************************   051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********CURRCH    BEGSR                           ** CURRCH SR **051061
+      ***********                                                         051061
+      ****SET*UP*KEY*TO*OBTAIN*CURRENCY*NAME*IF*VALUE*CURRENCY*NOT*****   051061
+      ****BLANK********************************************************   051061
+      ***********                                                         051061
+     C***********VCCY      IFNE '   '                                     051061
+      ***********                                                         051061
+     C***********          MOVEL'20      'KEY    12                       051061
+     C***********          MOVELVCCY      FOUR    4                       051061
+     C***********          MOVE '1'       FOUR                            051061
+     C***********          MOVE FOUR      KEY                             051061
+      ***********                                          PF/TABTG10     051061
+     C***********KEY       CHAINTABSE                87                   051061
+      ***********                                                         051061
+      ***IF*RECORD*NOT*FOUND*OR*NOT*LIVE,*PERFORM*ERROR*PROCESSING*****   051061
+      ***AND*END*SUBROUTINE********************************************   051061
+      ***********                                                         051061
+     C************IN87     IFEQ '1'                                       051061
+     C***********RECI      ORNE 'D'                                       051061
+     C***********          SETON                     U7U8LR               051061
+     C************LOCK     IN   LDA                                S01117 051061
+     C***********          MOVE 'TABLE'   DBFILE           ***************051061
+     C***********          MOVELKEY       DBKEY            ** DB ERR 04 **051061
+     C***********          Z-ADD04        DBASE            ***************051061
+     C***********          OUT  LDA                                S01117 051061
+     C***********          EXSR *PSSR                              S01117 051061
+     C***********          GOTO ENDD                                      051061
+     C***********          END                                            051061
+      ***********                                                         051061
+      ****FORMAT*CURRENCY*NAME*****************************************   051061
+      ***********                                                         051061
+     C***********          MOVE CCNM      CURNAM 14                       051061
+     C***********          ELSE                                           051061
+      ***********                                                         051061
+     C***********          MOVE BLNK14    CURNAM 14                       051061
+     C***********          Z-ADD0         CDP                             051061
+     C***********          END                                            051061
+      ***********                                                         051061
+      ****SET*INDICATORS*ACCORDING*TO*CURRENCY*DECIMAL*PLACES**********   051061
+      ***********                                                         051061
+     C***********CDP       COMP 1                      6061               051061
+     C***********CDP       COMP 2                    63  62               051061
+      ***********                                                         051061
+     C***********          ENDSR                                          051061
+      ***********                                                         051061
+      ********************************************************************051061
+      ***/EJECT***                                                        051061
+      ********************************************************************051061
+      ***********                                                         051061
+      ***HEADER**- SR TO DETERMINE  OUR AGENT                             051061
+      ***********                                                         051061
+      ***CALLED*FROM: SUB-ROUTINE STRO25                                  051061
+      ***********                                                         051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********HEADER    BEGSR                           ***  HEADER ***051061
+     C***********          MOVE '1'       *IN67                           051061
+     C***********          Z-ADD0         NOSTRO                          051061
+     C***********          MOVE BLNK45    REP21                           051061
+     C**********           MOVE BLNK24    REP22                           S01429
+     C***********          MOVE BLNK25    REP22                    S01429 051061
+      ***********                                                         051061
+      ****IF*CLIENT NUMBER PRESENT OBTAIN CUSTOMER MASTER DETAILS         051061
+      ***********                                                         051061
+     C***********XOSAC     IFNE *BLANKS                                   051061
+      ***********                                                         051061
+     C***********          MOVELXOSAC     CNUM                            051061
+     C***********          MOVE CNUM      NOSTRO  60                      051061
+     C***********          MOVE CNUM      KCNUM                           051061
+     C***********          MOVE 'B'       KRCDT                           051061
+     C***********CLNTKY    CHAINCLINT                67    PF/CLINTCC     051061
+      ***********                                                         051061
+     C************IN67     IFEQ '0'                                       051061
+     C***********          MOVELNAMTWN    REP21                           051061
+     C***********          MOVE 'A'       KRCDT                           051061
+     C***********CLNTKY    CHAINCLINT                67    PF/CLINTCB     051061
+     C***********          END                                            051061
+     C***********          END                                            051061
+      ***********                                                         051061
+      ***********                                                         051061
+     C************IN67     IFEQ '0'                                       051061
+     C***********          MOVE SWCH      REP22                           051061
+     C***********          ELSE                                           051061
+     C***********          MOVELMESS,2    OURAGN                          051061
+     C***********          END                                            051061
+      ***********                                                         051061
+     C***********          ENDSR                                          051061
+      ********************************************************************051061
+      ***/EJECT***                                                        051061
+      ********************************************************************051061
+      ***********                                                         051061
+      ***PAY**-*SR TO DETERMINE SETTLEMENT ACCOUNTS FIELDS  FOR PAY       051061
+      ***********                                                         051061
+      ***CALLED*FROM: SUB-ROUTINE CMPROC                                  051061
+      ***CALLS:**     SR CLIEN1                                           051061
+      ***********     SR CPNOST                                           051061
+      ***********     SR CLIEN2                                           051061
+      ***********                                                         051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********PAY       BEGSR                           ****  PAY  ****051061
+     C***********          MOVE '1'       *IN67                           051061
+     C***********          MOVE BLNK55    REP31                           051061
+     C**********           MOVE BLNK24    REP32                           S01429
+     C***********          MOVE BLNK25    REP32                    S01429 051061
+     C***********          MOVE BLNK55    REP41                           051061
+     C**********           MOVE BLNK24    REP42                           S01429
+     C***********          MOVE BLNK25    REP42                    S01429 051061
+      ***********                                                         051061
+      ****IF*SETTLEMENT*TYPES*EQ*01************************************   051061
+      ***********                                                         051061
+     C***********XSETP     IFEQ 01                                        051061
+      ***********                                                         051061
+      ***CUST*NO*******************************************************   051061
+      ***********                                                         051061
+     C***********XTSEN     IFEQ *BLANKS                            NADXXX 051061
+     C***********          MOVEL'000000'  XTSEN                    NADXXX 051061
+     C***********          END                                     NADXXX 051061
+     C***********XTSEN     IFNE *BLANKS                                   NADXXX
+     C***********          MOVELALPHA1    #7A     7                NADXXX 051061
+     C***********          MOVE '0'       #7A                      NADXXX 051061
+     C***********          TESTN          #7A        67            NADXXX 051061
+      ***********                                                         051061
+      ****CUST*NO************************************************* NADXXX 051061
+      ***********                                                         051061
+     C************IN67     IFEQ '1'                                NADXXX 051061
+     C***********          MOVE ALPHA1    KCNUM                           051061
+     C***********          EXSR CLIEN2                     *IN67 ON =     051061
+     C***********          MOVE SWCH      REP32              NOT FOUND    051061
+     C***********          MOVELNAMTWN    REP31                           051061
+     C***********          MOVE BLNK10    REP31                           051061
+     C***********          ELSE                                    NADXXX 051061
+      ***********                                                         051061
+      ****NOSTRO************************************************** NADXXX 051061
+      ***********                                                         051061
+     C***********          MOVE TCNOS     COUNTN                   NADXXX 051061
+     C***********          EXSR CPNOST                             NADXXX 051061
+     C***********          MOVELCOUNOS    REP31                    NADXXX 051061
+     C***********          END                                     NADXXX 051061
+     C***********          ELSE                                           NADXXX
+     C***********          MOVELMESS,2    REP31                           NADXXX
+     C***********          END                                            NADXXX
+      ***********                                                         051061
+      ****GET*BENEFICIARY*DETAILS**************************************   051061
+      ***********                                                         051061
+     C***********XFACO     IFNE *BLANKS                                   051061
+     C***********          MOVELXFACO     #7A     7                       051061
+     C***********          MOVE '0'       #7A                             051061
+     C***********          TESTN          #7A          6767               NADXXX
+     C***********          TESTN          #7A        67            NADXXX 051061
+      ***********                                                         051061
+      ***CUST*NO*******************************************************   051061
+      ***********                                                         051061
+     C********** *IN67     IFEQ '0'                                       NADXXX
+     C************IN67     IFEQ '1'                                NADXXX 051061
+     C***********          MOVE FCNUM     KCNUM                           051061
+     C***********          EXSR CLIEN1                                    051061
+     C***********          MOVE SWCH      REP42                           051061
+     C***********          MOVELCRNM      BENAME                          051061
+     C***********          MOVELCTWN      BETOWN                          051061
+     C***********          END                                            NADXXX
+     C***********          ELSE                                    NADXXX 051061
+      ***********                                                         051061
+      ****C/NOSTRO*****************************************************   051061
+      ***********                                                         051061
+     C********** *IN67     IFEQ '1'                                       NADXXX
+     C***********          MOVE CONOST    COUNTN                          051061
+     C***********          EXSR CPNOST                                    051061
+     C***********          MOVE COUNOS    REP41                           051061
+     C***********          END                                            051061
+     C***********          END                             < FACO  >  END 051061
+     C***********          END                             < XSETP >  END 051061
+      ***********                                                         051061
+     C***********          MOVE XCNUM     KCNUM                           051061
+     C***********          EXSR CLIEN1                                    051061
+     C***********          ENDSR                                          051061
+      ********************************************************************051061
+      ***/EJECT*****                                                      051061
+      ********************************************************************051061
+      *****************************************************************   051061
+      ***RECEIV*SR*TO*DETERMINE*SETTLEMENT*ACCOUNTS*FIELDS**FOR*RECEIV*   051061
+      *****************************************************************   051061
+      ***CALLED*FROM:*SR*CMPROC****************************************   051061
+      ***CALLS:*******SR*CLIEN1****************************************   051061
+      ****************SR*CPNOST****************************************   051061
+      ****************SR*CLIEN2****************************************   051061
+      *****************************************************************   051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********RECEIV    BEGSR                           *** RECEIV *** 051061
+      ***********                                                         051061
+     C**********           MOVE BLNK24    REP32                           S01429
+     C***********          MOVE BLNK25    REP32                    S01429 051061
+     C***********          MOVE BLNK55    REP31                           051061
+     C***********          MOVE '0'       *IN67                           051061
+      ***********                                                         051061
+      ****GET*THEIR*AGENT*DETAILS**************************************   051061
+      ***********                                                         051061
+     C***********XSETP     IFEQ 01                                        051061
+      ***********                                                         051061
+      ****CUST*NO.*****************************************************   051061
+      ***********                                                         051061
+     C***********XTSEN     IFEQ *BLANKS                            NADXXX 051061
+     C***********          MOVEL'000000'  XTSEN                    NADXXX 051061
+     C***********          END                                     NADXXX 051061
+     C***********XTSEN     IFNE *BLANKS                                   NADXXX
+      ***********                                                         051061
+     C***********          MOVELALPHA1    #7A     7                NADXXX 051061
+     C***********          MOVE '0'       #7A                      NADXXX 051061
+     C***********          TESTN          #7A        67            NADXXX 051061
+      ***********                                                         051061
+      ****CUST*NO************************************************* NADXXX 051061
+      ***********                                                         051061
+     C************IN67     IFEQ '1'                                NADXXX 051061
+     C***********          MOVE ALPHA1    KCNUM                           051061
+     C***********          EXSR CLIEN2                     NOT FOUND =    051061
+     C***********          MOVELNAMTWN    REP31              *IN67 ON     051061
+     C***********          MOVE BLNK10    REP31                           051061
+     C***********          MOVE SWCH      REP32                           051061
+     C***********          ELSE                                    NADXXX 051061
+      ***********                                                         051061
+      ****NOSTRO************************************************** NADXXX 051061
+      ***********                                                         051061
+     C***********          MOVE TCNOS     COUNTN                          051061
+     C***********          EXSR CPNOST                             NADXXX 051061
+     C***********          MOVELCOUNOS    REP31                    NADXXX 051061
+     C***********          END                                     NADXXX 051061
+      ***********                                                         051061
+     C***********          ELSE                                           NADXXX
+     C***********          MOVELMESS,2    REP31                           NADXXX
+     C***********          END                                            NADXXX
+      ***********                                                         051061
+     C***********          END                             < XSETP >  END 051061
+      ***********                                                         051061
+      ****GET*COUNTERPARTY*DETAILS*************************************   051061
+      ***********                                                         051061
+     C***********          MOVE XCNUM     KCNUM                           051061
+     C***********          EXSR CLIEN1                                    051061
+      ***********                                                         051061
+     C***********          ENDSR                                          051061
+      ********************************************************************051061
+      ***/EJECT***                                                        051061
+      ********************************************************************051061
+      *****************************************************************   051061
+      ***CPNOST**-*SR.*TO*GET*COUNTERPARTY/NOSTRO*INFOMATION***********   051061
+      *****************************************************************   051061
+      ***CALLED*FROM:*SR.*PAY******************************************   051061
+      ****************SR.*RECEIV***************************************   051061
+      *****************************************************************   051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********CPNOST    BEGSR                           *** CPNOST *** 051061
+      ***********                                                         051061
+     C***********          MOVE BLNK55    COUNOS                          051061
+     C***********          MOVEL'71'      CNOSKY           PF/TABLET2     051061
+      ***********                                                         051061
+     C***********CNOSKY    CHAINTABSE                67                   051061
+      ***********                                                         051061
+     C************IN67     IFEQ '1'                                       051061
+     C***********          MOVELMESS,4    CPNM                            051061
+     C***********          END                                            051061
+      ***********                                                         051061
+     C***********          ENDSR                                          051061
+      ********************************************************************051061
+      ***/SPACE*5***                                                      051061
+      ********************************************************************051061
+      *****************************************************************   051061
+      ***CLIEN1**-*SR.*TO*SETUP*CLIENT*INFO.*FROM*THE*1ST*CLIENT*RECORD   051061
+      *****************************************************************   051061
+      ***CALLED*FROM:*SR.*PAY******************************************   051061
+      ****************SR.*RECEIV***************************************   051061
+      *****************************************************************   051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********CLIEN1    BEGSR                           *** CLIEN1 *** 051061
+      ***********                                                         051061
+     C***********          MOVE BLNK65    NAMTWN                          051061
+     C**********           MOVE BLNK24    SWCH                            S01429
+     C***********          MOVE BLNK25    SWCH                     S01429 051061
+     C***********          MOVE 'A'       KRCDT            PF/CLINTCB     051061
+      ***********                                                         051061
+     C***********CLNTKY    CHAINCLINT                67                   051061
+      ***********                                                         051061
+     C************IN67     IFEQ '1'                                       051061
+     C***********          MOVELMESS,2    CRNM                            051061
+     C***********          MOVELBLNK10    CTWN                            051061
+     C***********          END                                            051061
+      ***********                                                         051061
+     C***********          ENDSR                                          051061
+      ***********                                                         051061
+      ********************************************************************051061
+      ***/EJECT***                                                        051061
+      ********************************************************************051061
+      *****************************************************************   051061
+      ***CLIEN2**-*SR.*TO*SETUP*CLIENT*INFOMATION*FROM*BOTH*RECORDS****   051061
+      *****************************************************************   051061
+      ***CALLED*FROM:*SR.*PAY******************************************   051061
+      ****************SR.*RECEIV***************************************   051061
+      *****************************************************************   051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********CLIEN2    BEGSR                           *** CLIEN2 *** 051061
+      ***********                                                         051061
+     C***********          MOVE 'A'       KRCDT                           051061
+     C***********CLNTKY    CHAINCLINT                67    PF/CLINTCB     051061
+      ***********                                                         051061
+     C************IN67     IFEQ '0'                                       051061
+     C***********          MOVE 'B'       KRCDT            PF/CLINTCC     051061
+     C***********CLNTKY    CHAINCLINT                67                   051061
+     C***********          MOVE 'A'       KRCDT                           051061
+     C***********          END                                            051061
+      ***********                                                         051061
+     C************IN67     IFEQ '1'                                       051061
+     C***********          MOVE BLNK65    NAMTWN                          051061
+     C**********           MOVE BLNK24    SWCH                            S01429
+     C***********          MOVE BLNK25    SWCH                     S01429 051061
+     C***********          MOVELMESS,2    CRNM                            051061
+     C***********          MOVELBLNK10    CTWN                            051061
+     C***********          MOVELMESS,2    CNA1                            051061
+     C***********          END                                            051061
+      ***********                                                         051061
+     C***********          ENDSR                                          051061
+      ********************************************************************051061
+      ***/SPACE*2***                                                      051061
+      ********************************************************************051061
+      *****************************************************************   051061
+      ***ZZADD**-*SR.*TO*ADD*AMOUNTS*INTO*HASH*FIELDS******************   051061
+      *****************************************************************   051061
+      ********************************************************************051061
+      ***********                                                         051061
+     C***********ZZADD     BEGSR                           ***  ZZADD  ***051061
+      ***********                                                         051061
+      ****SET*UP*FIELDS*TO*BE*HASHED***********************************   051061
+      ***********                                                         051061
+     C***********          Z-ADDZZAMT     ZZAMT  153   91                 051061
+     C***91******          Z-SUBZZAMT     ZZAMT                           051061
+     C***********          Z-ADDZZAMT     ZZAMTI 150                      051061
+     C***********          MOVE ZZAMT     ZZAMTD  30                      051061
+      ***********                                                         051061
+      ****ADD*DECIMAL*PART*AND*CHECK*FOR*CARRY*************************   051061
+      ***********                                                         051061
+     C***********          ADD  ZZAMTD    ZZTOTD  30                      051061
+     C***********ZZTOTD    COMP ZZAMTD                 91                 051061
+     C***91******          ADD  1         ZZAMTI                          051061
+      ***********                                                         051061
+      ****ADD*INTEGER*PART*********************************************   051061
+      ***********                                                         051061
+     C***********          ADD  ZZAMTI    ZZTOTI 150                      051061
+      ***********                                                         051061
+     C***********          ENDSR                                          051061
+      ***********                                                         051061
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+      ***  Check to see that *PSSR has not already been called.           051061
+      *                                                                   051061
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+      *                                                                   051061
+     C           *NAMVAR   DEFN LDA       WLDA  256                       051061
+     C           *LOCK     IN   WLDA                                      051061
+     C                     MOVELDBERR     WLDA                            051061
+     C                     OUT  WLDA                                      051061
+      *                                                                   051061
+     C                     SETON                     U7U8LR               051061
+     C                     DUMP                                           S01117
+     C                     EXSR AUDIT                                     051061
+     C                     END                                            S01117
+      *                                                                   051061
+      ***  If *PSSR already run, then just end the program here.          051061
+      *                                                                   051061
+     C                     SETON                     U7U8LR               051061
+     C                     RETRN                                          051061
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM BRCA      SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT                                                              051061
+     C/COPY ZSRSRC,ZSEDITZ3                                               051061
+      ***/EJECT******************                                         051061
+     C***/COPY*ZSRSRC,ZSYSTMZ1***                                         051061
+      /EJECT                                                              051061
+     C/COPY ZSRSRC,ZZADDZ1                                                051061
+     O/EJECT
+      *****************************************************************
+      ***********                                                         051061
+      ****PAY*RECEIVE TELEXES REPORTS                                     051061
+      ***********                                                         051061
+      ***********                                                         051061
+     O***SE0490P1D**203***80*L1                                           051061
+     O*******OR**      75NL1NU7                                           051061
+     O***********                        15 'REFERENCE'                   051061
+     O*************************          23 'SE0490A'                     E29170
+     O***********                        24 'SE0490P1'             E29170 051061
+     O***********              TITL      89                               051061
+     O***********                       104 'DATE'                        051061
+     O***********              RUNA     112                               051061
+     O***********                       122 'PAGE'                        051061
+     O***********              PAGE     127                               051061
+     O********D**1     80 L1                                              051061
+     O*******OR**      75NL1NU7                                           051061
+     O**********                         46 'BANKERS'                     S01271
+     O**********                         63 'AUTHORISATIONS -'            S01271
+     O**********          25             72 'PAYMENTS'                    S01271
+     O**********          26             72 'RECEIPTS'                    S01271
+     O**********                         85 'NON-EXCEPTION'               S01271
+     O***********                                                  S01271 051061
+     O***********                        28 'BANKERS'              S01271 051061
+     O***********                        45 'AUTHORISATIONS -'     S01271 051061
+     O***********         25             54 'PAYMENTS'             S01271 051061
+     O***********         26             54 'RECEIPTS'             S01271 051061
+     O***********                        68 'NON-EXCEPTION'        S01271 051061
+     O***********     N51                89 '- INPUT CYCLE - TIME' S01271 051061
+     O***********     N51      ATIME     96                        S01271 051061
+     O***********      51                88 '- CLOSE OF BUSINESS'  S01271 051061
+     O***********                       124 'BRANCH'                      E29170
+     O***********      37               124 'BRANCH'               E29170 051061
+     O***********              BRCDDSZ  128                               S01117
+     O***********              BRCADS   128                         S01117E29170
+     O***********      37      BRCADS   128                        E29170 051061
+     O********D**2     80 L1                                              051061
+     O*******OR**      75NL1NU7                                           051061
+     O**********                         46 '-------'                     S01271
+     O**********                         63 '-----------------'           S01271
+     O**********          25             72 '---------'                   S01271
+     O**********          26             72 '---------'                   S01271
+     O**********                         85 '-------------'               S01271
+     O***********                        28 '-------'              S01271 051061
+     O***********                        45 '-----------------'    S01271 051061
+     O***********                        54 '---------'            S01271 051061
+     O***********                        68 '--------------'       S01271 051061
+     O***********     N51                89 '---------------------'S01271 051061
+     O***********     N51                96 '-------'              S01271 051061
+     O***********      51                88 '--------------------' S01271 051061
+     O********D**1     80 L1                                              051061
+     O*******OR**      75NL1NU7                                           051061
+     O***********         25             12 'OUR AGENT:'                  051061
+     O***********         26             12 'OUR AGENT:'           E39420 051061
+     O***********         25   OURAGN    47                               051061
+     O***********         26   OURAGN    47                        E39420 051061
+     O********D**2     80 L1                                              051061
+     O*******OR**      75NL1NU7                                           051061
+     O***********         25   OURAGT    22                               051061
+     O***********         26   OURAGT    22                        E39420 051061
+     O***********            35          66 '** CANCELLATION **'          051061
+     O********D**2     80 L1                                              051061
+     O*******OR**      75NL1NU7                                           051061
+     O***********                         6 'VALUE'                       051061
+     O***********              VDATDS    14                               051061
+     O***********         25             30 'PAY'                         051061
+     O***********         26             30 'RECEIVE'                     051061
+     O***********              CURNAM    45                               051061
+     O********D**1     80 L1                                              051061
+     O*******OR**      75NL1NU7                                           051061
+     O***********                         6 'CUST.'                       051061
+     O***********                        57 'TRADE/SECURITY'              051061
+     O***********                        63 'TRADE'                       051061
+     O********D**2     80 L1                                              051061
+     O*******OR**      75NL1NU7                                           051061
+     O***********                         6 'NUMBER'                      051061
+     O***********                        22 'NAME & TOWN'                 051061
+     O***********                        51 'REF'                         051061
+     O***********                        63 'TYPE'                        051061
+     O***********                        79 'AMOUNT'                      051061
+     O***********                       102 'SETTLEMENT'                  051061
+     O***********                       115 'INSTRUCTIONS'                051061
+     O********D**1     80                                                 051061
+     O***********              XCNUM      6                               051061
+     O***********              CRNM      28                               051061
+     O***********              TRDRDS    53                               051061
+     O***********              TRTPDS    60                               051061
+     O***********                        61 '-'                           051061
+     O***********              TRSTDS    63                               051061
+     O***********            60CVIV      82 ' ,   ,   ,   , 0 '           051061
+     O***********            61CVIV      82 '   ,   ,   , 0 . '           051061
+     O***********            62CVIV      82 '  ,   ,   , 0 .  '           051061
+     O***********            63CVIV      82 ' ,   ,   , 0 .   '           051061
+     O***********      25 32             87 'PAY'                         051061
+     O***********      26 32             91 'RECEIVE'                     051061
+     O***********         32   THEIRN   127                               051061
+     O********D**2     80                                                 051061
+     O***********              CTWN      18                               051061
+     O***********              SECSDS    55                               051061
+     O***********      25 32             86 'TO'                          051061
+     O***********      26 32             88 'FROM'                        051061
+     O***********         32   THEIRT   113                               051061
+     O********D**1     80 25 32                                           051061
+     O***********                        91 'FOR A/C'                     051061
+     O***********              BENAME   127                               051061
+     O********D**2     80 25 32                                           051061
+     O***********                        86 'OF'                          051061
+     O***********              BETOWN   112                               051061
+     O********D**3     80 25N38                                           051061
+     O***********                        92 'SPEC. INST.'                 051061
+     O***********              XSPI     127                               051061
+     O********D**3     80 25 30                                           051061
+     O***********                       110 'PAYMENT TO BE SENT'          051061
+     O********D**2     80 25 34                                           051061
+     O***********                       107 'PAYMENT WILL BE'             051061
+     O***********                       117 'COLLECTED'                   051061
+     O********D**3     80 26 30                                           051061
+     O***********                       112 'PAYMENT WILL BE SENT'        051061
+     O********D**2     80 26 34                                           051061
+     O***********                       105 'PAYMENT TO BE'               051061
+     O***********                       115 'COLLECTED'                   051061
+     O********E** 50                                                      051061
+     O***********                        53 'CURRENCY TOTAL'              051061
+     O***********                        71 'NO. OF ITEMS'                051061
+     O***********              NOITMS3   75                               051061
+     O***********                        83 'VALUE'                       051061
+     O***********      60      TESTOT B 104 '   ,   ,   ,   , 0 '         051061
+     O***********      61      TESTOT B 104 '  ,   ,   ,   , 0 . '        051061
+     O***********      62      TESTOT B 104 ' ,   ,   ,   , 0 .  '        051061
+     O***********      63      TESTOT B 104 '   ,   ,   , 0 .   '         051061
+     O********T** 60   L4 80                                       E29170 051061
+     O***********     N37                68 '** END OF REPORT **'  E29170 051061
+     O***********      37                69 '** END OF REPORT FOR' E29170 051061
+     O***********      37                79 'BRANCH **'            E29170 051061
+      *************************                                           E29170
+      ****NO*DETAILS*TO*REPORT********************************************E29170
+      *************************                                           E29170
+     O***SE0490P1T**203   81 LRNU7                                        E29170
+     O*************************          15 'REFERENCE'                   E29170
+     O*************************          23 'SE0490A'                     E29170
+     O*************************TITL      89                               E29170
+     O*************************         104 'DATE'                        E29170
+     O*************************RUNA     112                               E29170
+     O*************************         122 'PAGE'                        E29170
+     O*************************PAGE     127                               E29170
+     O********T**1     81 LRNU7                                           E29170
+     O*************************          60 'BANKERS'                     E29170
+     O*************************          74 'AUTHORISATION'               E29170
+     O********T**1     81 LRNU7                                           E29170
+     O*************************          61 '--------'                    E29170
+     O*************************          74 '-------------'               E29170
+     O********T***25   81 LRNU7                                           E29170
+     O*************************          51 '*** NO'                      E29170
+     O*************************          73 'DETAILS TO REPORT ***'       E29170
+     O********T***53   81 LRNU7                                           E29170
+     O*************************          70 '*** END OF REPORT ***'       E29170
+      ***********                                                         051061
+      ****FILE*CONTROL REPORT                                             051061
+      ***********                                                         051061
+     O********T**203   LR                                                 E29170
+     O***SE0490AUT**203***LR                                       E29170
+     O***********                        15 'REFERENCE'                   051061
+     O*************************          23 'SE0490B'                     E29170
+     O***********                        24 'SE0490AU'             E29170 051061
+     O***********              TITL      89                               051061
+     O***********                       104 'DATE'                        051061
+     O***********              RUNA     112                               051061
+     O***********                       122 'PAGE'                        051061
+     O***********              PAGE1    127                               051061
+     O********T**1     LR                                                 051061
+     O*************                      59 'BANKERS AUTHORISATION'       S01271
+     O*************                      79 'FILE CONTROL REPORT'         S01271
+     O***********                        45 'BANKERS AUTHORISATIONS'S01271051061
+     O***********                        65 'FILE CONTROL REPORT'  S01271 051061
+     O***********     N51                86 '- INPUT CYCLE - TIME' S01271 051061
+     O***********     N51      ATIME     93                        S01271 051061
+     O***********      51                85 '- CLOSE OF BUSINESS'  S01271 051061
+     O********T**1     LR                                                 051061
+     O************                       60 '----------------------'      S01271
+     O************                       79 '-------------------'         S01271
+     O***********                        45 '----------------------'S01271051061
+     O***********                        65 '--------------------' S01271 051061
+     O***********     N51                86 '---------------------'S01271 051061
+     O***********     N51                93 '-------'              S01271 051061
+     O***********      51                85 '--------------------' S01271 051061
+     O********T** 13   LRNU7                                              051061
+     O***********                        45 '-------- RECORDS'            051061
+     O***********                        54 '--------'                    051061
+     O***********                        85 '----------- HASH'            051061
+     O***********                       104 'TOTAL ------------'          051061
+     O********T**315   LRNU7                                              051061
+     O***********                        41 'FILE CONTROL'                051061
+     O***********                        54 'CALCULATED'                  051061
+     O***********                        81 'FILE CONTROL'                051061
+     O***********                       104 'CALCULATED'                  051061
+     O********T**2     LRNU7                                              051061
+     O***********                        15 'S/STPR3'                     051061
+     O***********              NORE  3   41                               051061
+     O***********              RECTOT3   54                               051061
+     O***********         71             60 '***'                         051061
+     O***********              HRWN  3   78                               051061
+     O***********              HRDC      81                               051061
+     O***********              HSTINT3  101                               051061
+     O***********              HSTDEC   104                               051061
+     O***********         70            112 '***'                         051061
+     O********T** 30  N81 LRNU7                                    E29170 051061
+     O***********                        51 '*** NO'               E29170 051061
+     O***********                        73 'DETAILS TO REPORT ***'E29170 051061
+     O********T** 43   LR U7                                              051061
+     O***********                        56 'DATABASE ERROR AT'           051061
+     O***********              DBASE     59                               S01117
+     O***********                        64 ', KEY'                       S01117
+     O***********              DBKEY     94                               S01117
+     O***********              DBASE     60                        S01117 051061
+     O***********                        65 ', KEY'                S01117 051061
+     O***********              DBKEY     95                        S01117 051061
+     O********T** 45   LR U7                                              051061
+     O***********                        64 'FILE NAME'                   051061
+     O***********              DBFILE    70                               S01117
+     O***********              DBFILE    73                        S01117 051061
+     O********T** 49   LRNU7 U8                                           051061
+     O***********                        64 '*** FILE CONTROLS OUT OF'    051061
+     O***********                        76 'BALANCE ***'                 051061
+     O********T***53   LR                                                 E29170
+     O*************************          69 '*** END OF REPORT ***'       E29170
+      /EJECT
+      ***
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  MESS
+NOSTRO MISSING
+CLIENT MISSING
+CUR.NOT FOUND
+COUNTERPARTY/NOSTRO MISSING
+**  CPY@
+(c) Finastra International Limited 2001

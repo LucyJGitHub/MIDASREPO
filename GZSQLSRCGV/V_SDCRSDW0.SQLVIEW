@@ -1,0 +1,43 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - SD Standing Data                                              */
+/*                                                                             */
+/*       V_SDCRSDW0 - SD CRS Enquiry Listview                                  */
+/*                                                                             */
+/*       (c) Finastra International Limited 2017                               */
+/*                                                                             */
+/*       Last Amend No. MD051929           Date 20Sep18                        */
+/*       Prev Amend No. MD052296           Date 26Nov18                        */
+/*                      CGL157  *CREATE    Date 17Aug15                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD051929 - Customer Deactivated but not displayed as Inactive,        */
+/*                   intraday or after CoB (Recompile                          */
+/*       MD052296 - Problems caused by use of special characters               */
+/*       CGL157 - CRS Reporting                                                */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS (                                                                          :
+  select A.*,B.*,C.*,                                                           :
+  COALESCE(D1.EWCRSA,D2.EWCRSA) AS EWCRSA                                       :
+  from V_GZCUSTPD A                                                             :
+  LEFT JOIN GZSDCRSHPD B ON                                                     :
+   A.BBCUST = B.CRCUST AND A.ZONE = B.CRZONE                                    :         
+  LEFT JOIN GZSDCRSDPD C ON                                                     :
+   A.BBCUST = C.CDCUST AND A.ZONE = C.CDZONE                                    :        
+  LEFT JOIN V_GZSDCTW0 D1                                                       :
+/**ON*D1.EWCTRR*=*C.CDCTRY*AND*C.CDCTRY*!=*''**********************************/:           MD052296
+   ON D1.EWCTRR = C.CDCTRY AND C.CDCTRY <> ''                                   :           MD052296
+      AND D1.A8ZONE = C.CDZONE                                                  :
+  LEFT JOIN V_GZSDCTW0 D2                                                       :
+/**ON*D2.EWCTRR*=*''*AND*C.CDCTRY*!=*''****************************************/:           MD052296
+   ON D2.EWCTRR = '' AND C.CDCTRY <> ''                                         :           MD052296
+      AND D2.A8ZONE = C.CDZONE  )                                               :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas SD CRS Enquiry Listview - GZSDCRSHPD';                             :
+                                                                                :

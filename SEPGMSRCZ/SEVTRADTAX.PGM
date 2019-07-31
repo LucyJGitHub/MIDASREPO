@@ -1,0 +1,115 @@
+      *****************************************************************
+/*STD *  PGMBASE                                                      *
+/*EXI *: MODULE(SEVTRADTAX) ACTGRP(*CALLER)                         : *                       CGL035
+/*EXI *  TEXT('Midas SE Tax Calculation for Trades Sale')             *
+/*E*I *:*MODULE(SEVTRADTAX)*****************************************:**                       CGL035
+/*E*I *:*BNDSRVPGM(*NONE)*BNDDIR(MIDAS)*ACTGRP(*CALLER)*************:**                       CGL035
+      *****************************************************************
+      *                                                               *
+      *  Midas - Copy Source converted into ILE procedures            *
+      *                                                               *
+      *  SEVTRADTAX - Tax Calculation for Trades Sale                 *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG26839           Date 05Jan10               *
+      *                 CER054             Date 07Apr09               *
+      *                 BUG23123           Date 09Mar09               *
+      *                 BUG22911           Date 17Feb09               *
+      *                 BUG22529           Date 11Feb09               *
+      *                 BUG22580           Date 02Feb09               *
+      *                 CER034A            Date 19May08               *
+      *                 CER048             Date 19May08               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG13865           Date 23Jul07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG11164           Date 06Apr06               *
+      *                 237063             Date 20Nov05               *
+      *                 236137             Date 20Sep05               *
+      *                 236346             Date 04Oct05               *
+      *                 236732             Date 28Oct05               *
+      *                 236453             Date 24Oct05               *
+      *                 236411             Date 07Oct05               *
+      *                 235909             Date 04Jul05               *
+      *                 234675             Date 05Jul05               *
+      *                 235546             Date 09Aug05               *
+      *                 236247             Date 28Sep05               *
+      *                 234635             Date 04Jul05               *
+      *                 234599             Date 01Jul05               *
+      *                 234577             Date 29Jun05               *
+      *                 234797             Date 27Jun05               *
+      *                 234440  *CREATE    Date 28Jun05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26839 - JA1_Threshold limit of the main joint customer was*
+      *             utilized by the member (Recompile)                *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  BUG23123 - Report: Does not show Retail Account Number       *
+      *                     Date is not Midas Standard Date           *
+      *                     Period should be actual int. calc. period *
+      *                     Secondary Tax amount is not printed       *
+      *                     Added field TSSLID                        *
+      *                     (Recompile)                               *
+      *  BUG22911 - Changes for Correct Tax Calculation               *
+      *  BUG22529 - Global Additional Customer Details (Recompile)    *
+      *  BUG22580 - Fields incorrectly labeled and lengths            *
+      *           (Recompile)                                         *
+      *  CER034A - LF046 German Features - New Fields and Enquiries   *
+      *           (Recompile)                                         *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  BUG13865 - delivered for recompilation in conjuction with    *
+      *             changes to module SEVTRADTAX as amended  by BUG   *
+      *             11193                                             *
+      *  BUG11164 - A Serious Midas Error on SETRAD insert/amend      *
+      *             (Recompile)                                       *
+      *  237063 - EU Tax fixes upgrade to MP build 103.               *
+      *  236137 - Change Control for CGL031 Parts 4 & 5.              *
+      *           Several changes in the Taxation of Savings Income   *
+      *           functionality. (Recompile)                          *
+      *           - Choice of calculation method for fiscal price     *
+      *           must take in account Tax Calculation Basis          *
+      *           indicator from Country of Tax Codes file SDCTTXPD.  *
+      *  236346 - Permitting the user to amend the interest may result*
+      *           in a negative EU tax being generated. In case the   *
+      *           EU tax is negative, reset the EU tax to zero.       *
+      *  236732 - Improve update processing for file SDCSINPD.        *
+      *  236453 - Negative interest sold must be zeroised             *
+      *  236411 - For Funds, if purchase prior to transition date,    *
+      *           delta NAV calulation should consider the higher     *
+      *           of the position average price and and the NAV at    *
+      *           transition date                                     *
+      *         - CH and negative delta TIS : Taxable Amount = 0      *
+      *           as in LUX and is no more Delta NAV                  *
+      *  235909 - For Joint Accounts, Calculate EU tax per member.    *
+      *  234675 - Change control for processing type 4 and Dividend   *
+      *           EU tax calculation.                                 *
+      *  235546 - Due to back valuations, need to pass date to        *
+      *           ETCPOSRTT so that the record for this date is       *
+      *           returned if the transaction is back valued instead  *
+      *           of the current position (Recompile)                 *
+      *  236247 - Unlock record to avoid database error when different*
+      *           users are amending trades                           *
+      *  234635 - Ex-coupon processing                                *
+      *  234599 - Unnecessary database errors occurring               *
+      *  234577 - Error in position retieved.0 tax on short sales.    *
+      *  234797 - Interest over transition date wrong                 *
+      *  234440 - Change control                                      *
+      *                                                               *
+      *****************************************************************

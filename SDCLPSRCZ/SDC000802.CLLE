@@ -1,0 +1,64 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas DMLIB SD Files Reorganisation')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000802 - SD DMLIB Files Reorganisation                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2015                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD032067           Date 05Aug15              */
+/*                      MDNNNNNN *CREATE   Date NNXxxNN              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD032067 - New trailer files are never organized.           */
+/*                  Introduced new component to organize SD files.   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(70)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2015')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('SDC000802 - SD DMLIB Files Reorganisation') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Reorganise files */
+ 
+             CALL       PGM(SCC000060) PARM('SDFCTZTD' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+/*==================*/
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Report an error */
+ 
+             CHGVAR     VAR(&MEM) VALUE('SDC000802 - SD DMLIB Files Reor+
+                          ganisation FAILED')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             SNDPGMMSG  MSGID(MEM5052) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ENDPGM:
+             ENDPGM

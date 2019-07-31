@@ -1,0 +1,112 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT End journaling for all objects in a lib.')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC0000009 - End journalling on every object in a library   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CUP036  *CREATE    Date 22Nov06              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP036 - Add automated refreshing for test systems.         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIB)
+ 
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
+ 
+             DCLF       FILE(UPFDATTPD) OPNID(A)
+             DCLF       FILE(UPOBJDTPD) OPNID(B)
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Generate a list of all physical files in the specified library. */
+             DLTF       FILE(QTEMP/UPFDATTPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UTC000009F)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPFDATTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP)
+             DSPFD      FILE(&LIB/*ALL) TYPE(*ATR) OUTPUT(*OUTFILE) +
+                          FILEATR(*PF) OUTFILE(QTEMP/UTC000009F)
+             MONMSG     MSGID(CPF3012 CPF3020) EXEC(DO)
+                GOTO       CMDLBL(OBJD)
+             ENDDO
+             CPYF       FROMFILE(QTEMP/UTC000009F) +
+                          TOFILE(QTEMP/UPFDATTPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+/* Override DSPFD template to temporary version. */
+             OVRDBF     FILE(UPFDATTPD) TOFILE(QTEMP/UPFDATTPD) +
+                          OVRSCOPE(*JOB)
+ 
+/* Read each record in turn and attempt to end journaling on that file. */
+READFD:
+             RCVF       OPNID(A)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(OBJD))
+             IF         COND(&A_PHJRNL *EQ 'Y') THEN(DO)
+                ENDJRNPF   FILE(&A_PHLIB/&A_PHFILE) +
+                             JRN(&A_PHJRLB/&A_PHJRNM)
+             ENDDO
+             GOTO       CMDLBL(READFD)
+ 
+OBJD:
+/* Generate a list of all data areas and data queues in the specified library. */
+             DLTF       FILE(QTEMP/UPOBJDTPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UTC000009D)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPOBJDTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP)
+             DSPOBJD    OBJ(&LIB/*ALL) OBJTYPE(*DTAQ *DTAARA) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/UTC000009D)
+             MONMSG     MSGID(CPF2123) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             CPYF       FROMFILE(QTEMP/UTC000009D) +
+                          TOFILE(QTEMP/UPOBJDTPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+/* End file description override and set up object description override. */
+             DLTOVR     FILE(UPFDATTPD) LVL(*JOB)
+             OVRDBF     FILE(UPOBJDTPD) TOFILE(QTEMP/UPOBJDTPD) +
+                          OVRSCOPE(*JOB)
+ 
+/* Read each record in turn and attempt to end journaling on that data */
+/*  area or data queue.                                                */
+READOD:
+             RCVF       OPNID(B)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDPGM))
+             ENDJRNOBJ  OBJ(&LIB/&B_ODOBNM) OBJTYPE(&B_ODOBTP)
+             MONMSG     MSGID(CPF700B)
+             GOTO       CMDLBL(READOD)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          UTC000009 ended abnormally.  See joblog +
+                          for more details') TOPGMQ(*PRV) +
+                          MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+ /* Delete override for object description. */
+             DLTOVR     FILE(UPOBJDTPD) LVL(*JOB)
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

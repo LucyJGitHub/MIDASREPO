@@ -1,0 +1,432 @@
+     H        1                                                           LE0005
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Master File Set-up')                             *
+     H*                                                                   LE0005
+     F********************************************************************LE0005
+     F*                                                                  *LE0005
+     F*  Midas Customer Lending Module                                LE0010
+     F*                                                                  *LE0005
+     F*        LE0005 - FILE SET UP - CREATE HEADERS AND TRAILERS        *LE0005
+     F*                                                                  *LE0005
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *LE0005
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 080941             Date 21Dec94               *
+      *                 049816             Date 26Feb93               *
+     F*                      049923  DATE 23FEB93                        *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CLE042 - Extended Loan Sub Type (Recompile)                     *
+     F*       080941  -  INITIALISE DATAAREA LERSTS POS 12-16, TAKEON    *
+     F*                  DATE OF FACILITY HISTORY TO PREV EOY - BACK     *
+     F*                  VALUE PERIOD                                  L *
+     F*       049816  -  INCLUDE SETUP/INITIALIZATION OF THE FF.         *
+     F*                  FILES : LEFEEAZ, LEFEEZ, LEPEDFZ, LEPEFCZ,      *
+     F*                  LEPEFFZ, LEPEFLZ, LEPEGLZ, LEPELNZ, LEPEREZ,    *
+     F*                  LEPEMGZ, MTRANZ.                                *
+     F*                                                                  *
+     F*       049923  -  INITIAL FILE SETUP FOR PEFMTC INCLUDED.         *
+     F*                                                                  *LE0005
+     F********************************************************************LE0005
+     F*                                                                   LE0005
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FCLOANHH O   F     400            DISK                               LE0005
+     FCLOANZ1 O   F     400            DISK                               LE0005
+     FLOAMSDH O   F     320            DISK                               LE0005
+     FLOAMSZ1 O   F     320            DISK                               LE0005
+     FFCLTYHH O   F     256            DISK                               LE0005
+     FFCLTYZZ O   F     256            DISK                               LE0005
+     FGTEESHH O   F     128            DISK                               LE0005
+     FGTEESZZ O   F     128            DISK                               LE0005
+     FGTREFHG O   F      32            DISK                               LE0005
+     FHISTSHH O   F     100            DISK                               LE0005
+     FHISTSZX O   F     100            DISK                               LE0005
+     FLEYTDHH O   F      80            DISK                               LE0005
+     FLEYTDZZ O   F      80            DISK                               LE0005
+     FPEFMTC  O   F     133            DISK                               049923
+     FLEFEEAZ O   F      16            DISK                               049816
+     FLEFEEZ  O   F      16            DISK                               049816
+     FLEPEDFZ O   F       3            DISK                               049816
+     FLEPEFCZ O   F       3            DISK                               049816
+     FLEPEFFZ O   F       4            DISK                               049816
+     FLEPEFLZ O   F       4            DISK                               049816
+     FLEPEGLZ O   F       3            DISK                               049816
+     FLEPELNZ O   F       3            DISK                               049816
+     FLEPEREZ O   F       3            DISK                               049816
+     FLEPEMGZ O   F       3            DISK                               049816
+     FMTRANZ  O   F     200            DISK                               049816
+     FSDBANKPDIF  E                    DISK                               080941
+      *                                                                   080941
+     E                    CPY@    1   1 80
+      *                                                                   080941
+     ILERSTS    E DSLERSTS                                                080941
+      ** Fees/Profitability enhancement status data area                  080941
+     I              FACHISD                         WHISST                080941
+     I              LERC2030                        LERC20                080941
+     I              LERC135                         LERC13                080941
+     I              LERC315                         LERC35                080941
+     I              LERC425                         LERC42                080941
+     I              EOYFLAG                         EOYFLG                080941
+      *                                                                   080941
+     ILDA       E DSLDA                                                   080941
+      *                                                                   080941
+     C                     MOVEACPY@      BIS@   80
+      *                                                                   080941
+      ** Define DATAAREAS                                                 080941
+     C           *NAMVAR   DEFN           LDA                             080941
+     C           *NAMVAR   DEFN           LERSTS                          080941
+      *                                                                   080941
+      ** Initialise Takeon Date for Facility History - this date is the   080941
+      ** history control date for facilities where the facility start     080941
+      ** date is prior to date of takeon/setup.  End of Previous Year is  080941
+      ** used in place of Rundate as this has not yet been set up yet.    080941
+      *                                                                   080941
+     C           1         SETLLSDBANKPD                                  080941
+     C                     READ SDBANKPD                 89               080941
+     C           *IN89     IFEQ '1'                                       080941
+     C           *LOCK     IN   LDA                                       080941
+     C                     MOVEL'HISTO   'DBPGM                           080941
+     C                     MOVEL'SDBANKPD'DBFILE           ***************080941
+     C                     Z-ADD001       DBASE            * DBERROR 001 *080941
+     C                     MOVEL'*READ   'DBKEY            ***************080941
+     C                     OUT  LDA                                       080941
+     C                     EXSR *PSSR                                     080941
+     C                     END                                            080941
+      *                                                                   080941
+     C           *LOCK     IN   LERSTS                                    080941
+     C           BJPEYD    SUB  BJBVPD    WHISST                          080941
+     C                     OUT  LERSTS                                    080941
+      *                                                                   080941
+     C**                                                                  LE0005
+     C**    SET UP ZERO FIELDS FOR USE ON HEADER AND TRAILER              LE0005
+     C**                                                                  LE0005
+     C                     SETON                     LR                   LE0005
+     C**                                                                  LE0005
+     C                     Z-ADD0         ZERO1   10                      LE0005
+     C                     Z-ADD0         ZERO3   30                      LE0005
+     C                     Z-ADD0         ZERO4   40                      049923
+     C                     Z-ADD0         ZERO5   50                      LE0005
+     C                     Z-ADD0         ZERO6   60                      LE0005
+     C                     Z-ADD0         ZERO15 150                      LE0005
+     C                     Z-ADD1         ONE     50                      LE0005
+     C                     Z-ADD2         TWO     50                      LE0005
+     C           *PSSR     BEGSR                           ** *PSSR **    080941
+      *                                                                   080941
+     C           @RUN      IFEQ *BLANKS                                   080941
+     C                     MOVE 'Y'       @RUN    1                       080941
+     C                     DUMP                                           080941
+     C                     END                                            080941
+      *                                                                   080941
+     C                     SETON                     U7U8LR               080941
+     C                     RETRN                                          080941
+      *                                                                   080941
+     C                     ENDSR                                          080941
+      *                                                                   080941
+     C**                                                                  LE0005
+     O**                                                                  LE0005
+     O**   LOANS FILE - HEADER RECORD                                     LE0005
+     O**                                                                  LE0005
+     OCLOANHH D        LR                                                 LE0005
+     O                                    1 'H'                           LE0005
+     O**                                                                  LE0005
+     O**              - TRAILER RECORD                                    LE0005
+     O**                                                                  LE0005
+     OCLOANZ1 D        LR                                                 LE0005
+     O                                    1 'T'                           LE0005
+     O                                    7 '999999'                      LE0005
+     O                                    8 'Z'                           LE0005
+     O                         TWO       19P                              LE0005
+     O                         ZERO5     22P                              LE0005
+     O                         ZERO5     25P                              LE0005
+     O                         ZERO5     28P                              LE0005
+     O                         ZERO5     31P                              LE0005
+     O                         ZERO5     34P                              LE0005
+     O                         ZERO15    42P                              LE0005
+     O                         ZERO3     44P                              LE0005
+     O                         ZERO15    52P                              LE0005
+     O                         ZERO3     54P                              LE0005
+     O                         ZERO15    62P                              LE0005
+     O                         ZERO3     64P                              LE0005
+     O                         ZERO15    72P                              LE0005
+     O                         ZERO3     74P                              LE0005
+     O                         ZERO5     77P                              LE0005
+     O                         ZERO5     80P                              LE0005
+     O                         ZERO5    396P                              LE0005
+     O                         ZERO5    400P                              LE0005
+     O**                                                                  LE0005
+     O**   LOAN AMENDMENTS FILE - HEADER RECORD                           LE0005
+     O**                                                                  LE0005
+     OLOAMSDH D        LR                                                 LE0005
+     O                                    1 'H'                           LE0005
+     O                         ZERO5     18P                              LE0005
+     O                         ZERO5    316P                              LE0005
+     O                         ZERO5    320P                              LE0005
+     O**                                                                  LE0005
+     O**                        - TRAILER RECORD                          LE0005
+     O**                                                                  LE0005
+     OLOAMSZ1 D        LR                                                 LE0005
+     O                                    1 'T'                           LE0005
+     O                                   15 '99999999999999'              LE0005
+     O                         TWO       19P                              LE0005
+     O                         ZERO5     25P                              LE0005
+     O                         ZERO5     28P                              LE0005
+     O                         ZERO5     31P                              LE0005
+     O                         ZERO5     34P                              LE0005
+     O                         ZERO15    42P                              LE0005
+     O                         ZERO3     44P                              LE0005
+     O                         ZERO15    52P                              LE0005
+     O                         ZERO3     54P                              LE0005
+     O                         ZERO15    62P                              LE0005
+     O                         ZERO3     64P                              LE0005
+     O                         ZERO15    72P                              LE0005
+     O                         ZERO3     74P                              LE0005
+     O                         ZERO15    82P                              LE0005
+     O                         ZERO3     84P                              LE0005
+     O                         ZERO5    316P                              LE0005
+     O                         ZERO5    320P                              LE0005
+     O**                                                                  LE0005
+     O**   FACILITIES FILE - HEADER RECORD                                LE0005
+     O**                                                                  LE0005
+     OFCLTYHH D        LR                                                 LE0005
+     O                                    1 'H'                           LE0005
+     O**                                                                  LE0005
+     O**                  - TRAILER RECORD                                LE0005
+     O**                                                                  LE0005
+     OFCLTYZZ D        LR                                                 LE0005
+     O                                    1 'T'                           LE0005
+     O                                   12 '99999999999'                 LE0005
+     O                                   13 'Z'                           LE0005
+     O                         TWO       19P                              LE0005
+     O                         ZERO5     22P                              LE0005
+     O                         ZERO5     25P                              LE0005
+     O                         ZERO5     28P                              LE0005
+     O                         ZERO5     31P                              LE0005
+     O                         ZERO5     34P                              LE0005
+     O                         ZERO15    42P                              LE0005
+     O                         ZERO3     44P                              LE0005
+     O                         ZERO15    52P                              LE0005
+     O                         ZERO3     54P                              LE0005
+     O                         ZERO15    62P                              LE0005
+     O                         ZERO3     64P                              LE0005
+     O                         ZERO15    72P                              LE0005
+     O                         ZERO3     74P                              LE0005
+     O                         ZERO15    82P                              LE0005
+     O                         ZERO3     84P                              LE0005
+     O                         ZERO5    252P                              LE0005
+     O                         ZERO5    256P                              LE0005
+     O**                                                                  LE0005
+     O**   GUARANTEES FILE - HEADER RECORD                                LE0005
+     O**                                                                  LE0005
+     OGTEESHH D        LR                                                 LE0005
+     O                                    1 'H'                           LE0005
+     O**                                                                  LE0005
+     O**                  - TRAILER RECORD                                LE0005
+     O**                                                                  LE0005
+     OGTEESZZ D        LR                                                 LE0005
+     O                                    1 'T'                           LE0005
+     O                                   16 '999999999999999'             LE0005
+     O                         TWO       19P                              LE0005
+     O                         ZERO5     22P                              LE0005
+     O                         ZERO5     25P                              LE0005
+     O                         ZERO5     28P                              LE0005
+     O                         ZERO5     31P                              LE0005
+     O                         ZERO5     34P                              LE0005
+     O                         ZERO15    42P                              LE0005
+     O                         ZERO3     44P                              LE0005
+     O                         ZERO15    52P                              LE0005
+     O                         ZERO3     54P                              LE0005
+     O                         ZERO15    62P                              LE0005
+     O                         ZERO3     64P                              LE0005
+     O                         ZERO15    72P                              LE0005
+     O                         ZERO3     74P                              LE0005
+     O                         ZERO15    82P                              LE0005
+     O                         ZERO3     84P                              LE0005
+     O                         ZERO5    124P                              LE0005
+     O                         ZERO5    128P                              LE0005
+     O**                                                                  LE0005
+     O**   GUARANTORS REFERENCE FILE - HEADER RECORD                      LE0005
+     O**                                                                  LE0005
+     OGTREFHG D        LR                                                 LE0005
+     O                                    1 'H'                           LE0005
+     O**                                                                  LE0005
+     O**   LOANS HISTORY FILE - HEADER RECORD                             LE0005
+     O**                                                                  LE0005
+     OHISTSHH D        LR                                                 LE0005
+     O                                    1 'H'                           LE0005
+     O**                                                                  LE0005
+     O**                      - TRAILER RECORD                            LE0005
+     O**                                                                  LE0005
+     OHISTSZX D        LR                                                 LE0005
+     O                                    1 'T'                           LE0005
+     O                         TWO        4P                              LE0005
+     O**                                                                  LE0005
+     O**   YEAR TO DATE FILE - HEADER RECORD                              LE0005
+     O**                                                                  LE0005
+     OLEYTDHH D        LR                                                 LE0005
+     O                                    1 'H'                           LE0005
+     O**                                                                  LE0005
+     O**                    - TRAILER RECORD                              LE0005
+     O**                                                                  LE0005
+     OLEYTDZZ D        LR                                                 LE0005
+     O                                    1 'T'                           LE0005
+     O                         TWO        4P                              LE0005
+     O**                                                                  049923
+     O**   PEFMTC - PROFITABILITY FORMAT PARAMETERS CONTROL FILE          049923
+     O**                                                                  049923
+     OPEFMTC  D        LR                                                 049923
+     O                                    1 ' '                           049923
+     O                         ZERO5      4P                              049923
+     O                         ZERO4      8                               049923
+     O                         ZERO4     12                               049923
+     O                         ZERO4     16                               049923
+     O                         ZERO4     20                               049923
+     O                         ZERO4     24                               049923
+     O                         ZERO4     28                               049923
+     O                         ZERO4     32                               049923
+     O                         ZERO4     36                               049923
+     O                         ZERO4     40                               049923
+     O                         ZERO4     44                               049923
+     O                         ZERO4     48                               049923
+     O                         ZERO4     52                               049923
+     O                         ZERO4     56                               049923
+     O                         ZERO4     60                               049923
+     O                         ZERO4     64                               049923
+     O                         ZERO4     68                               049923
+     O                         ZERO4     72                               049923
+     O                         ZERO4     76                               049923
+     O                         ZERO4     80                               049923
+     O                         ZERO4     84                               049923
+     O                         ZERO4     88                               049923
+     O                         ZERO4     92                               049923
+     O                         ZERO4     96                               049923
+     O                         ZERO4    100                               049923
+     O                         ZERO4    104                               049923
+     O                         ZERO4    108                               049923
+     O                         ZERO4    112                               049923
+     O                         ZERO4    116                               049923
+     O                         ZERO4    120                               049923
+     O                         ZERO4    124                               049923
+     O                         ZERO4    128                               049923
+     O                         ZERO4    132                               049923
+     O                                  133 ' '                           049423
+     O**                                                                  049816
+     O**     LENDING FEES ADJUST/SETTLEMENTS TRAILER                      049816
+     O**                                                                  049816
+     OLEFEEAZ D        LR                                                 049816
+     O                                    1 'Z'                           049816
+     O                         ZERO5      4P                              049816
+     O                         ZERO5      7P                              049816
+     O                         ZERO5     10P                              049816
+     O                         ZERO5     13P                              049816
+     O                         ZERO5     16P                              049816
+     O**                                                                  049816
+     O**     LENDING FEES MASTER TRAILER                                  049816
+     O**                                                                  049816
+     OLEFEEZ  D        LR                                                 049816
+     O                                    1 'Z'                           049816
+     O                         ZERO5      4P                              049816
+     O                         ZERO5      7P                              049816
+     O                         ZERO5     10P                              049816
+     O                         ZERO5     13P                              049816
+     O                         ZERO5     16P                              049816
+     O**                                                                  049816
+     O**     DEALING EXTRACT TRAILER                                      049816
+     O**                                                                  049816
+     OLEPEDFZ D        LR                                                 049816
+     O                         ZERO5      3P                              049816
+     O**                                                                  049816
+     O**     FACILITY EXTRACT TRAILER                                     049816
+     O**                                                                  049816
+     OLEPEFCZ D        LR                                                 049816
+     O                         ZERO3      2P                              049816
+     O**                                                                  049816
+     O**     FEES EXTRACT TRAILER FOR FACILITITES                         049816
+     O**                                                                  049816
+     OLEPEFFZ D        LR                                                 049816
+     O                                    1 'Z'                           049816
+     O                         ZERO5      4P                              049816
+     O**                                                                  049816
+     O**     FEE EXTRACT TRAILER FOR LOANS                                049816
+     O**                                                                  049816
+     OLEPEFLZ D        LR                                                 049816
+     O                                    1 'Z'                           049816
+     O                         ZERO5      4P                              049816
+     O**                                                                  049816
+     O**     GENERAL LEDGER EXTRACT TRAILER                               049816
+     O**                                                                  049816
+     OLEPEGLZ D        LR                                                 049816
+     O                         ZERO5      3P                              049816
+     O**                                                                  049816
+     O**     LOANS EXTRACT TRAILER                                        049816
+     O**                                                                  049816
+     OLEPELNZ D        LR                                                 049816
+     O                         ZERO5      3P                              049816
+     O**                                                                  049816
+     O**     RETAIL EXTRACT TRAILER                                       049816
+     O**                                                                  049816
+     OLEPEREZ D        LR                                                 049816
+     O                         ZERO5      3P                              049816
+     O**                                                                  049816
+     O**     MARGIN EXTRACT TRAILER                                       049816
+     O**                                                                  049816
+     OLEPEMGZ D        LR                                                 049816
+     O                         ZERO5      3P                              049816
+     O**                                                                  049816
+     O**     LENDING ACCRUED MARGIN ADJ. DETAIL                           049816
+     O**                                                                  049816
+     OMTRANZ  D        LR                                                 049816
+     O                                    1 'H'                           049816
+     O                         TWO        6                               049816
+     O                         ZERO5     11                               049816
+     O                         ZERO5     14P                              049816
+     O                         ZERO5     17P                              049816
+     O                         ZERO15    25P                              049816
+     O                         ZERO3     27P                              049816
+     O                         ZERO5     30P                              049816
+     O                         ZERO15    38P                              049816
+     O                         ZERO3     40P                              049816
+     O                         ZERO5     43P                              049816
+     O                         ZERO15    51P                              049816
+     O                         ZERO3     53P                              049816
+     O                         ZERO5     69P                              049816
+     O                         ZERO15    77P                              049816
+     O                         ZERO3     80P                              049816
+     O                         ZERO5     83P                              049816
+     O                         ZERO15    91P                              049816
+     O                         ZERO3     93P                              049816
+     O                         ZERO5     96P                              049816
+     O                         ZERO15   104P                              049816
+     O                         ZERO3    106P                              049816
+     O                         ZERO5    109P                              049816
+     O                         ZERO15   117P                              049816
+     O                         ZERO3    119P                              049816
+     O                         ZERO5    122P                              049816
+     O                         ZERO15   130P                              049816
+     O                         ZERO3    132P                              049816
+     O                         ZERO5    135P                              049816
+     O                         ZERO15   143P                              049816
+     O                         ZERO3    145P                              049816
+     O                         ONE      197P                              049816
+     O                         ZERO5    200P                              049816
+     O**                                                                  LE0005
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

@@ -1,0 +1,214 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Build Query Selection Criteria')
+      *****************************************************************
+      *
+      *  Midas   -  Lending Module
+      *
+      *  LE3530  -  LE Build Query Selection Criteria
+      *
+      *  Function:  This program builds the query selection criteria.
+      *
+      *  (c) Finastra International Limited 2001                      *
+      *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CEU021  *CREATE    Date 30Apr98               *
+      *                                    Date                       *
+      *
+      *-------------------------------------------------------------------
+      *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CEU021 - EMU LE Facility Currency Conversion
+      *
+      *****************************************************************
+      *  Indicator    Description
+      *  ¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯
+      *  01 - 19      Input Control.
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)
+      *   20          Record Not Found
+      *   21          File Error Occurred
+      *   22          Start/End Of File Reached
+      *   25          Lookup/Scan.
+      *  30 - 39      Program Work Indicators
+      *  40 - 49      Output Control.
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)
+      *  90 - 99      Error Control.
+      *
+      *-------------------------------------------------------------------
+      *  Routine      Description
+      *  ¯¯¯¯¯¯¯      ¯¯¯¯¯¯¯¯¯¯¯
+      *  XEQRSL       Evaluate Query Select
+      *  *INZSR       Initial Routine
+      *  *PSSR        Program Error Routine
+      *  @DEFN        Definition Routine (Not Called)
+      *
+      *-------------------------------------------------------------------
+      *  File         Description
+      *  ¯¯¯¯         ¯¯¯¯¯¯¯¯¯¯¯
+      *
+      *===================================================================
+     E/EJECT
+      *===================================================================
+     E                    CPY@    1   1 80               Object Copyright
+      *===================================================================
+     I/EJECT
+      *===================================================================
+     IPSDS       SDS
+     I                                        1  10 D@PGMN
+      * Program Name
+      *-------------------------------------------------------------------
+     ILDA       E DSLDA                         256
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *        Defines:                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *===================================================================
+      /EJECT
+      *===================================================================
+      * Main Processing Control.
+      *
+      *-------------------------------------------------------------------
+      * End Program
+      *
+     C                     MOVE *ON       *INLR            Set EndPgm Ind
+     C                     RETRN                           Exit Program
+      *===================================================================
+      /EJECT
+     C           XEQRSL    BEGSR
+      *===================================================================
+      * PSQRSL: Evaluate Query Select.
+      *
+      *-------------------------------------------------------------------
+      * Add *AND.
+      *
+     C           WKDIVL    IFNE *BLANKS                    If Data Value
+     C           P@QRSL    IFNE *BLANKS                     If Selection
+     C                     CAT  '*AND':1  P@QRSL             Add *AND
+     C                     ENDIF                            End If
+      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      * Add Data Value.
+      *
+     C                     CAT  WKDINM:1  P@QRSL            Add Data Name
+     C                     CAT  '*EQ':1   P@QRSL            Add *EQ
+      *
+     C           WKDITY    IFEQ 'A'                         If Alpha
+     C                     CAT  '"':1     P@QRSL             Add Quote
+     C                     CAT  WKDIVL:0  P@QRSL             Add Dta Value
+     C                     CAT  '"':0     P@QRSL             Add Quote
+      *
+     C                     ELSE                             Else
+     C                     CAT  WKDIVL:1  P@QRSL             Add Dta Value
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+      /EJECT
+     C           *INZSR    BEGSR
+      *===================================================================
+      * *INZSR: Initialization Routine.
+      *
+      *-------------------------------------------------------------------
+      * Clear & Populate Local dataarea with program name.
+      *
+     C           *LOCK     IN   LDA                        Rtv LDA
+     C                     CLEARLDA                        Clr LDA
+     C                     MOVELD@PGMN    DBPGM     P      Set Pgm Name
+     C                     OUT  LDA                        Wrt Record
+      *-------------------------------------------------------------------
+      * Initialise Parameters, Work Fields, Etc.
+      *
+     C                     MOVEACPY@      CPY@@  80        Set Copy
+     C                     CLEARP@QRSL                     Clr string
+      *-------------------------------------------------------------------
+      * Add Branch.
+      *
+     C                     MOVEL'BRCA'    WKDINM 10 P      Set Data Name
+     C                     MOVELP@BRCA    WKDIVL256 P      Set Data Value
+     C                     MOVE 'A'       WKDITY  1 P      Set Data Type
+     C                     EXSR XEQRSL                     Eval Query
+      *-------------------------------------------------------------------
+      * Add Customer.
+      *
+     C                     MOVEL'CNUM'    WKDINM    P      Set Data Name
+     C                     MOVELP@CNUM    WKDIVL    P      Set Data Value
+     C                     MOVE 'N'       WKDITY    P      Set Data Type
+     C                     EXSR XEQRSL                     Eval Query
+      *-------------------------------------------------------------------
+      * Add Currency.
+      *
+     C                     MOVEL'FCCY'    WKDINM    P      Set Data Name
+     C                     MOVELP@FCCY    WKDIVL    P      Set Data Value
+     C                     MOVE 'A'       WKDITY    P      Set Data Type
+     C                     EXSR XEQRSL                     Eval Query
+      *-------------------------------------------------------------------
+      * Add Facility Type.
+      *
+     C                     MOVEL'FACT'    WKDINM    P      Set Data Name
+     C                     MOVELP@FACT    WKDIVL    P      Set Data Value
+     C                     MOVE 'N'       WKDITY    P      Set Data Type
+     C                     EXSR XEQRSL                     Eval Query
+      *-------------------------------------------------------------------
+      * Add Facility Number.
+      *
+     C                     MOVEL'FCNO'    WKDINM    P      Set Data Name
+     C                     MOVELP@FCNO    WKDIVL    P      Set Data Value
+     C                     MOVE 'N'       WKDITY    P      Set Data Type
+     C                     EXSR XEQRSL                     Eval Query
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           *PSSR     BEGSR
+      *===================================================================
+      * *PSSR: Error Handling.
+      *
+      *-------------------------------------------------------------------
+      * Check To See That *PSSR Has Not Been Called Yet.
+      *
+     C           WKRUN     IFEQ *BLANK                     If Not Exec
+     C                     MOVE 'Y'       WKRUN   1         Set Off Ind
+     C                     DUMP                             Dmp Pgm
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * If *PSSR Already Run, Then Just End The Program Here.
+      *
+     C                     MOVE *ON       *INU7            Set U7 Ind
+     C                     MOVE *ON       *INU8            Set U8 Ind
+     C                     MOVE *ON       *INLR            Set EndPgm Ind
+     C                     RETRN                           Exit Program
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           @DEFN     BEGSR
+      *===================================================================
+      * @DEFN: Definition Routine (Not Called).
+      *
+      *-------------------------------------------------------------------
+      * Dataareas...
+      *
+     C           *NAMVAR   DEFN           LDA              Dcl LDA
+      *-------------------------------------------------------------------
+      * Lists...
+      *
+     C           *ENTRY    PLIST                           Prg: Entry
+     C                     PARM           P@BRCA  3        -I:Branch
+     C                     PARM           P@CNUM  6        -I:Customer No
+     C                     PARM           P@FCCY  3        -I:Currency
+     C                     PARM           P@FACT  3        -I:Facility Typ
+     C                     PARM           P@FCNO  2        -I:Facility No
+     C                     PARM           P@QRSL256        -O:Query Select
+      *===================================================================
+     C                     ENDSR
+      /EJECT
+** CPY@: Object Copyright
+(c) Finastra International Limited 2001

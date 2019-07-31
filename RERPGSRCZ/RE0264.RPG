@@ -1,0 +1,518 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Deflt Retl A/c Maint-Delete Valid'n')
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE0264 - DEFAULT RETAIL ACCOUNTS MAINTENANCE - S/REDEF       *
+0007 F*           DELETE SCREEN VALIDATION                            *
+0008 F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*      1990, 1993                                               *
+0010 F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CAP205             Date 04Jan10               *
+      *                 CRE030             Date 07Jul06               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG3900            Date 04Aug04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01413             Date 13Apr93               *
+      *                 S01199                  15Feb90               *
+0011 F*                 S01117                  23NOV89               *
+0012 F*                                                               *
+0012 F*****************************************************************
+0012 F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  CRE030 - Default RE Accounts by Currency                     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG3900 - Recompiled due to changed RE0260FM.                *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01413 -  Retail 3 Incorporation                             *
+     F*  S01199 -  HELP CHANGES                                       *
+     F*  S01117 -  MULTIBRANCHING                                     *
+0012 F*                                                               *
+0013 F*****************************************************************
+0012 F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,RE0264F001
+0016 F***RE0260FMCF  F     210            WORKSTN                                             CGL029
+     F***RE0260FMCF  F     236            WORKSTN                                      CGL029 CRE030
+     F***RE0260FMCF  F     239            WORKSTN                                      CRE030 CAP205
+     FRE0260FMCF  F     240            WORKSTN                                                CAP205
+     F/COPY WNCPYSRC,RE0264F002
+0020 F*
+0021 F*       FUNCTION OF INDICATORS
+0022 F*       KC      END OF JOB REQUEST
+0022 F*       U7      DATABASE ERROR
+0023 F*       89      BLINK ACTION CODE LABEL
+0024 F*       88      NON-DISPLAY ERROR MESSAGE/CODES
+0025 F*       87      NON-DISPLAY CHANGE DETAILS
+0026 F*       86      NON-DISPLAY USEFUL DATA
+0027 F*       85      OUTPUT ENQUIRE - SE - SCREEN
+0028 F*       84      OUTPUT DELETE - SD - SCREEN
+0029 F*       83      OUTPUT AMEND - SA - SCREEN
+0030 F*       82      OUTPUT INSERT - SI - SCREEN
+0031 F*       81      OUTPUT INITIAL - SF - SCREEN
+0032 F*       79      SYSTEM SET-UP FLAG ON
+0033 F*       78      SD SCREEN READ IN
+0034 F*       77      DELETE INCLUDES SETTING RECI TO *, OTHERWISE LEAVE
+0036 F*       75      FIRST CYCLE IND
+     F*       39      ACCOUNT BALANCE CHECK REQUIRED DISABLED                                 CAP205
+     F*       38      RETAIL ACCOUNT NO. NOT USED                         S01117
+     F*       36      NOT MULTIBRANCHING                                  S01117
+0015 F*       02      SET ON IF ERROR DURING READ FROM THE WORK STATION *
+     F***********     /HELP INDICATOR                                     S01199
+0037 F*       NON-STANDARD INPUT PROGRAM INDICATORS
+0038 E*    STANDARD TABLES/ARRAYS
+0039 E                    ERCD       19  4               ERROR CODES
+0040 E                    ERCM    1   1 79               ERROR MESSAGES
+0041 E*    NON-STANDARD TABLES/ARRAYS
+     E                    CPY@    1   1 80
+0042 I*    STANDARD FILES
+0043 I*
+0044 I*    WORKSTATION FILE
+0045 I*
+0046 I*    FORMAT - DELETE SCREEN
+0047 I*
+0048 IRE0260FMNS  78   8 CS   9 CD
+0049 I                                        1   7 SRUNA
+0050 I                                        8   9 SID
+0051 I                                       10  15 SPID
+0052 I                                       16  23 STIME
+0053 I                                       24  26 SWSID
+     I                                       27  29 SACCY                                     CRE030
+0054 I**********                             27  300SACOD                                     CGL029
+     I**********                             27  360SACOD                              CGL029 CRE030
+     I                                       30  390SACOD                                     CRE030
+     I/COPY WNCPYSRC,RE0264I001
+0055 I**********                             31  31 SACTN                                     CGL029
+0056 I**********                             32  370SCNUM                                     CGL029
+0057 I**********                             32  37 SCNUMA                                    CGL029
+0058 I**********                             38  40 SCCY                                      CGL029
+0059 I**********                             41  420SSEQ                                      CGL029
+0060 I**********                             41  42 SSEQA                                     CGL029
+0061 I**********                             43  520SRETN                                     CGL029
+0062 I**********                             43  52 SRETNA                                    CGL029
+     I**********                             53  55 SBRCDA                             S01117 CGL029
+0055 I**********                             37  37 SACTN                              CGL029 CRE030
+     I                                       40  40 SACTN                                     CRE030
+0056 I**********                             38  430SCNUM                              CGL029 CSD027
+0056 I**********                             38  43 SCNUM                              CSD027 CRE030
+     I                                       41  46 SCNUM                                     CRE030
+0057 I**********                             38  43 SCNUMA                             CGL029 CRE030
+     I                                       41  46 SCNUMA                                    CRE030
+0058 I**********                             44  46 SCCY                               CGL029 CRE030
+     I                                       47  49 SCCY                                      CRE030
+0059 I**********                             47  480SSEQ                               CGL029 CRE030
+     I                                       50  510SSEQ                                      CRE030
+0060 I**********                             47  48 SSEQA                              CGL029 CRE030
+     I                                       51  51 SSEQA                                     CRE030
+0061 I**********                             49  580SRETN                              CGL029 CRE030
+     I                                       52  610SRETN                                     CRE030
+0062 I**********                             49  58 SRETNA                             CGL029 CRE030
+     I                                       52  61 SRETNA                                    CRE030
+     I**********                             59  61 SBRCDA                             CGL029 CRE030
+     I                                       62  64 SBRCDA                                    CRE030
+     I                                       65  65 SABCR                                     CAP205
+0063 I*                                STANDARD STRING FIELDS
+0064 I**********                              1  31 SCN31                                     CGL029
+     I**********                              1  37 SCN31                              CGL029 CRE030
+     I                                        1  40 SCN31                                     CRE030
+0065 I*****                                   1  52 SCN52                 S01117
+     I/COPY WNCPYSRC,RE0264I003
+0065 I**********                              1  55 SCN55                              S01117 CGL029
+     I**********                              1  61 SCN55                              CGL029 CRE030
+     I**********                              1  64 SCN55                              CRE030 CAP205
+     I                                        1  65 SCN55                                     CAP205
+0066 I*
+0067 I*    CATCHALL
+0068 I        NS
+0069 I                                        8   9 SID
+0070 I*
+0071 I*    WORKSTATION TRANSACTION D.S. - BEFORE STATUS OF MASTER RECORD
+0072 I*
+0073 IWTRN       UDS                            860
+     I                                        1 200 WST01
+     I                                      201 400 WST02
+     I                                      401 600 WST03
+     I                                      601 800 WST04
+     I                                      801 860 WST05
+0087 I                                        1 200 OLD200
+     I                                        1   1 WR001
+     I**********                              2   5 WACOD                                     CGL029
+     I                                        2   5 QQACOD                                    CGL029
+     I                                        6   6 WR006
+     I/COPY WNCPYSRC,RE0264I002
+     I                                    P  31  330WTNLU
+     I                                    P  34  360WORED
+     I                                    P  37  390WLCD
+     I                                       40  40 WR040
+     I                                    P  41  470WHASH
+     I                                       48  53 WCNUM
+     I                                       54  56 WCCY
+     I                                       57  58 WSEQ
+     I                                       59  68 WRETN
+     I                                       69  71 WBRCD                 S01117
+     I                                      129 138 WACOD                                     CGL029
+     I                                      139 139 WABCR                                     CAP205
+     I                                      401 401 WR401
+     I                                      402 4040WZ5
+     I                                      405 4070WZO5
+     I                                      408 410 WWSID
+     I                                      415 419 WLFILE
+     I                                      425 430 WWLOGP
+     I                                      431 431 WR431
+     I                                      432 432 WR432
+     I                                      450 4550WTIME
+     I                                      462 717 WLOGH
+0088 I*
+0089 I*    NON-STANDARD FILES
+0090 I*
+0091 I*    NON-STANDARD DATA STRUCTURES
+0092 I*
+0093 I*    STANDARD LOCAL DATA AREA FIELDS
+0094 I*
+0095 ILDA        UDS                            256
+0096 I                                        1   8 LPROC
+0097 I***********                           134 138 LFILE                 S01117
+0098 I***********                           139 167 LKEY                  S01117
+0099 I***********                           168 175 LPROG                 S01117
+0100 I***********                           176 1770LDBNO                 S01117
+     I                                      134 141 LFILE                 S01117
+     I                                      142 170 LKEY                  S01117
+     I                                      171 180 LPROG                 S01117
+     I                                      181 1830LDBNO                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+0101 I***********                           181 1850LRUND                 S01117
+0102 I***********                           186 192 LRUNA                 S01117
+0103 I***********                           193 193 LDATF                 S01117
+0104 I***********                           194 1940LSFLG                 S01117
+0105 I***********                           195 1960LKEYL                 S01117
+0106 I***********                           197 202 LISP                  S01117
+0107 I***********                           203 203 LTWOL                 S01117
+0108 I***********                           204 2040LLDLP                 S01117
+0109 I***********                           205 2090LTNLU                 S01117
+0110 I***********                           210 210 LDELM                 S01117
+0111 I***********                           211 211 LDUD                  S01117
+     I***********                           212 212 LMBIN                 S01117
+     I                                      187 1910LRUND                 S01117
+     I                                      192 198 LRUNA                 S01117
+     I                                      199 199 LDATF                 S01117
+     I**********                            200 2000LSFLG           S01117S01194
+     I                                      200 200 LSFLG                 S01194
+     I                                      201 2020LKEYL                 S01117
+     I                                      203 208 LISP                  S01117
+     I                                      209 209 LTWOL                 S01117
+     I                                      210 2100LLDLP                 S01117
+     I                                      211 2150LTNLU                 S01117
+     I                                      216 216 LDELM                 S01117
+     I                                      217 217 LDUD                  S01117
+     I                                      218 218 LMBIN                 S01117
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I**                                                                  S01117
+     ISDRETL    E DSSDRETLPD                                              S01117
+     I**  EXTERNAL DS FOR RETAIL DETAILS                                  S01117
+     I              BMRANR                          RACN                  S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01117
+     I*                                                                   S01117
+     C                     MOVEACPY@      BIS@   80
+0112 C*  FIRST CYCLE PROCESSING
+     C/COPY WNCPYSRC,RE0264C002
+0113 C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           WTRN
+     C           *LOCK     IN   *NAMVAR
+     C*                    MOVE '0'       *IN
+      *                                                                                       CRE030
+      ** Check feature CRE030                                                                 CRE030
+      *                                                                                       CRE030
+     C                     CALL 'AOSARDR0'                                                    CRE030
+     C                     PARM '       ' @RTCD   7                                           CRE030
+     C                     PARM '*VERIFY' @OPTN   7                                           CRE030
+     C                     PARM 'CRE030'  @SARD   6                                           CRE030
+     C*                                                                                       CRE030
+     C           @RTCD     IFEQ *BLANKS                                                       CRE030
+     C                     MOVE 'Y'       CRE030  1                                           CRE030
+     C                     MOVE *ON       *IN28                                               CRE030
+     C                     ELSE                                                               CRE030
+     C                     MOVE 'N'       CRE030                                              CRE030
+     C                     MOVE *OFF      *IN28                                               CRE030
+     C                     ENDIF                                                              CRE030
+      *                                                                                       CAP205
+      ** Check feature CAP205                                                                 CAP205
+      *                                                                                       CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM '       ' @RTCD                                               CAP205
+     C                     PARM '*VERIFY' @OPTN                                               CAP205
+     C                     PARM 'CAP205'  @SARD                                               CAP205
+     C*                                                                                       CAP205
+     C           @RTCD     IFEQ *BLANKS                                                       CAP205
+     C                     MOVE 'Y'       CAP205  1                                           CAP205
+     C                     MOVE *OFF      *IN39                                               CAP205
+     C                     ELSE                                                               CAP205
+     C                     MOVE 'N'       CAP205                                              CAP205
+     C                     MOVE *ON       *IN39                                               CAP205
+     C                     ENDIF                                                              CAP205
+     C**
+     C*    READ WORKSTATION FILE /*HELP*FACILITY*                         S01199
+     C**
+     C           *IN02     DOUEQ'0'
+     C                     READ RE0260FM                 02
+     C************IN02     IFEQ '1'                                       S01199
+     C***********          MOVEAERCD      HERCD 160                       S01199
+     C***********          MOVEL'RE0260'  HBPGM   8                       S01199
+     C***********          CALL 'MHELP'                                   S01199
+     C***********          PARM           HBPGM                           S01199
+     C***********          PARM           HERCD                           S01199
+     C***********          END                                            S01199
+     C                     END
+     C   75                GOTO ENDFC
+     C*
+0118 C  N75                SETON                     75
+0119 C*
+0120 C*  SET-UP STANDARD INPUT PROGRAM FIELDS  -  WPROG IS THIS PROGRAM
+0121 C*
+0122 C                     MOVELLISP      WPROG   8
+0123 C                     MOVE '4  '     WPROG
+0124 C                     MOVELWPROG     SPID    6
+0125 C*  SET-UP STANDARD LDA FIELDS
+0126 C                     MOVE WPROG     LPROG
+0127 C                     Z-ADD4         LLDLP
+0128 C*  SET-UP STANDARD BLANK FIELDS
+0129 C                     MOVE ' '       BLK200200
+0130 C*
+0131 C           LDATF     COMP 'M'                      98* DATE FORMAT
+0132 C********** LSFLG     COMP 1                        79* SSF          S01194
+0132 C           LSFLG     COMP 'Y'                      79* SSF          S01194
+0133 C           LDELM     COMP '*'                      77* DELETE METHOD
+0134 C*
+0135 C                     Z-ADD0         ZERO05  50
+0136 C*
+0137 C*  LOG PROGRAM NAME
+0138 C*
+0139 C                     MOVE LISP      WLOGP   6
+0140 C                     MOVE '9'       WLOGP
+0141 C*
+0142 C*  INITIALISE FIELD TO BLANK OUT KEY/ACTION CODE
+     C/COPY WNCPYSRC,RE0264C001
+0143 C*
+0144 C**********           MOVE ' '       BLK05   5                                           CGL029
+     C**********           MOVE ' '       BLK05  11                                    CGL029 CRE030
+     C                     MOVE ' '       BLK05  14                                           CRE030
+     C/COPY WNCPYSRC,RE0264C003
+     C**                                                                  S01117
+     C**    CHECK MULTIBRACNCHING INDICATOR                               S01117
+     C**                                                                  S01117
+     C           LMBIN     COMP 'Y'                  3636                 S01117
+     C*                                                                   S01117
+     C*  GET RETAIL ACCOUNT NOS IND. (IN RACN) USED IN DISPLAY FILE       S01117
+     C*                                                                   S01117
+     C                     CALL 'AORETLR0'                                S01117
+     C                     PARM '*DBERR  '@RTCD   7                       S01117
+     C                     PARM '*FIRST  '@OPTN   7                       S01117
+     C           SDRETL    PARM SDRETL    DSFDY                           S01117
+     C           RACN      COMP 'N'                      38               S01117
+0145 C*
+0146 C           ENDFC     TAG                             ** ENDFC TAG
+0147 C*
+0148 C*  INITIALISE STANDARD INDICATORS
+0149 C                     SETON                     888786* NON-DISPLAY
+0150 C                     SETOF                     8980  * BLINK LABELS
+0151 C                     SETOF                     858483* OUTPUT
+0152 C                     SETOF                     8281  * SCREENS
+0153 C                     SETOF                     76    * OUTPUT WTRN
+0154 C*
+0155 C*  INITIALISE NON-STANDARD INDS
+0156 C*
+0157 C*
+0158 C*  CHECK FOR CORRECT SCREEN READ IN
+0159 C*
+0160 C   78                GOTO PROCES
+0161 C                     SETON                     U7LR
+0162 C                     MOVE 'SCREN'   LFILE
+0163 C                     MOVE BLK200    LKEY
+0164 C                     MOVEL'SD'      LKEY
+0165 C                     MOVE 'FOUND   'LKEY
+0166 C                     MOVE SID       LKEY
+0167 C                     MOVE '92'      LDBNO            ** DB ERROR 92
+0168 C                     GOTO END
+0169 C*
+0170 C           PROCES    TAG                             ** PROCES TAG
+0171 C*
+0172 C*  CLEAR ERROR CODE ARRAY, RESET INDEX
+0173 C*
+0174 C                     MOVE BLK200    ERMSG  79
+0175 C                     MOVE '    '    ERCD
+0176 C                     Z-ADD0         S       20
+0177 C*
+0178 C*  IF F3, END THE PROGRAM
+0179 C*
+0180 C   KC                MOVEL'**      'LPROC
+0181 C   KC                SETON                     LR
+0182 C   KC                GOTO END
+0183 C*
+0184 C*  IF F12, OUTPUT BLANK INITIAL SCREEN
+0185 C*
+0186 C   KL                EXSR SUBSF
+0187 C   KL                GOTO END
+0188 C*
+0189 C*  IF NOT F10, REOUTPUT DELETE SCREEN WITH MESSAGE
+0190 C*
+0191 C  NKJ                EXSR SUBSD
+0192 C  NKJ                SETOF                     88
+0193 C  NKJ      S         ADD  1         S
+0194 C  NKJ                MOVE '916'     ERCD,S
+0195 C  NKJ                MOVE ERCM,1    ERMSG
+0196 C  NKJ                GOTO END
+0197 C*
+0208 C*  S IS NON-ZERO IF THERE ARE ANY ERRORS
+0209 C*
+0210 C           S         COMP 0                    8484
+0211 C*
+0212 C*  IF THERE ARE ANY ERRORS, REOUTPUT THE
+0213 C*  DELETE SCREEN WITH ERROR CODES
+0214 C*
+0215 C   84                EXSR SUBSD
+0216 C   84                SETOF                     88
+0217 C   84                GOTO END
+0218 C*
+0219 C*  OTHERWISE, UPDATE THE WORKSTATION TRANSACTION FILE
+0220 C*  WITH THE MASTER FILE RECORD
+0221 C*
+0222 C*  UPDATE WTRN AND EXECUTE LOGGING/UPDATE PROGRAM
+0223 C*
+     C                     EXSR WTRN76
+     C   77                EXSR WTRN77
+0225 C                     MOVE '9  '     LPROC
+0226 C*
+0227 C           END       TAG                             ** END TAG
+0228 C*
+0229 C*  SETOF OUTPUT INDS IF DATABASE ERROR
+0230 C*
+0231 C   U7                SETOF                     8184
+0232 C*
+0233 C                     TIME           WTIME
+     C   81
+     COR 84                EXCPT
+     C                     OUT  *NAMVAR
+     C                     RETRN
+0234 C*
+0235 C********************************************************************
+0236 C**
+0237 C**   SUBR. - TO SET UP INITIAL SCREEN OUTPUT
+0238 C**
+0239 C           SUBSF     BEGSR                           ***  SUBSF  ***
+0240 C                     SETON                     81
+0241 C                     MOVE '1  '     LPROC
+0242 C                     MOVE 'SF'      SID
+0243 C                     ENDSR
+0244 C********************************************************************
+0245 C**
+0246 C**   SUBR. - TO SET UP DELETE SCREEN OUTPUT
+0247 C**
+0248 C           SUBSD     BEGSR                           ***  SUBSD  ***
+0249 C                     SETON                     84
+0250 C                     MOVE '4  '     LPROC
+0251 C                     MOVE 'SD'      SID
+0252 C                     ENDSR
+     C*****************************************************************
+     C**
+     C** SUBR. - TO BLANK OUT THE WORKSTATION TRANSACTION LOCAL DATA AREA
+     C**
+     C           WTRN76    BEGSR                           *** WTRN76 ***
+     C                     MOVE BLK200    WST02
+     C                     MOVE BLK200    WST03
+     C                     MOVE BLK200    WST04
+     C                     MOVE BLK200    WST05
+     C                     ENDSR
+0284 C********************************************************************
+     C           WTRN77    BEGSR                            *** WTRN77*
+     C                     MOVE '*'       WR001
+     C                     MOVE ZERO05    WTNLU
+     C                     MOVE LRUND     WLCD
+     C                     MOVE 'D'       WR040
+     C                     MOVE 'D'       WR401
+     C                     MOVE ZERO05    WZ5
+     C                     MOVE ZERO05    WZO5
+     C                     MOVE WSID      WWSID
+     C                     MOVE LFILE     WLFILE
+     C                     MOVE WLOGP     WWLOGP
+     C                     MOVE '1'       WR431
+     C                     MOVE 'D'       WR432
+     C**   256 CHARACTERS OF SCREEN FOR LOG FILE HEADER
+     C*****                MOVELSCN52     WLOGH                           S01117
+     C                     MOVELSCN55     WLOGH                           S01117
+     C                     ENDSR
+     C*****************************************************************
+0285 O*  WORKSTATION - INITIAL SCREEN OUTPUT
+0286 O*
+0287 ORE0260FME        81
+0288 O                                   K8 'RE0260F1'
+     O/COPY WNCPYSRC,RE0264O001
+0289 O**********               SCN31     31                                                   CGL029
+     O**********               SCN31     37                                            CGL029 CRE030
+     O                         SCN31     40                                                   CRE030
+     O/COPY WNCPYSRC,RE0264O002
+0290 O                         SID        9
+0291 O                         SPID      15
+0292 O                         WTIME     23 '  .  .  '
+0293 O*  BLANK OUT KEY/ACTION CODE FOR F12 - REMOVED IN STANDARD PROG
+     O/COPY WNCPYSRC,RE0264O003
+0294 O**********       KL      BLK05     31                                                   CGL029
+     O**********       KL      BLK05     37                                            CGL029 CRE030
+     O                 KL      BLK05     40                                                   CRE030
+0295 O*  ERROR FIELDS
+0296 O**********               ERMSG    110                                                   CGL029
+0297 O**********               ERCD     186                                                   CGL029
+     O**********               ERMSG    116                                            CGL029 CRE030
+     O                         ERMSG    119                                                   CRE030
+     O**********               ERCD     195                                            CGL029 CRE030
+     O                         ERCD     198                                                   CRE030
+     O/COPY WNCPYSRC,RE0264O004
+0298 O*
+0299 O*  WORKSTATION - DELETE SCREEN OUTPUT
+0300 O*
+0301 ORE0260FME        84
+0302 O                                   K8 'RE0260F3'
+     O/COPY WNCPYSRC,RE0264O005
+0303 O*****                    SCN52     52                               S01117
+0303 O**********               SCN55     55                                            S01117 CGL029
+     O**********               SCN55     61                                            CGL029 CRE030
+     O**********               SCN55     64                                            CRE030 CAP205
+     O                         SCN55     65                                                   CAP205
+0304 O                         SID        9
+0305 O                         SPID      15
+0306 O                         WTIME     23 '  .  .  '
+0307 O*  ERROR FIELDS
+0308 O**********               ERMSG    131                                                   CGL029
+0309 O**********               ERCD     207                                                   CGL029
+     O**********               ERMSG    140                                            CGL029 CRE030
+     O**********               ERMSG    143                                            CRE030 CAP205
+     O                         ERMSG    144                                                   CAP205
+     O**********               ERCD     219                                            CGL029 CRE030
+     O**********               ERCD     222                                            CRE030 CAP205
+     O                         ERCD     223                                                   CAP205
+     O/COPY WNCPYSRC,RE0264O006
+**   ERROR MESSAGES
+ENTER F10 KEY FOR DELETE
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

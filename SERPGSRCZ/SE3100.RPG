@@ -1,0 +1,1895 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE EXTEL Copy Database')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3100 - EXTEL DATABASE REFORMAT                             *
+     F*                                                               *
+     F*  Function: This program reformats the new custom database     *
+     F*            received from EXTEL to replace the existing version*
+     F*             - old file out, new file in process               *
+     F*                                                               *
+     F*  Called by: SEC3100 - Extel Interface- Extel Database Reformat*
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 052254             Date 11Jan94               *
+     F*                 E29170             Date 14NOV91               *
+     F*                 S01117             DATE 10JUN91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multi-branching                                     *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FNEXCDB  IP  E                    DISK
+     FEXCDF4A O   E                    DISK                      A
+     F                                              KINFDS EXCADS
+     F                                              KINFSR EXCASR
+     FEXCDF4B O   E                    DISK                      A
+     F                                              KINFDS EXCBDS
+     F                                              KINFSR EXCBSR
+     FEXCDF4C O   E                    DISK                      A
+     F                                              KINFDS EXCCDS
+     F                                              KINFSR EXCCSR
+     FEXCDF4D O   E                    DISK                      A
+     F                                              KINFDS EXCDDS
+     F                                              KINFSR EXCDSR
+     FEXCDF4E O   E                    DISK                      A
+     F                                              KINFDS EXCEDS
+     F                                              KINFSR EXCESR
+     FEXCDF4F O   E                    DISK                      A
+     F                                              KINFDS EXCFDS
+     F                                              KINFSR EXCFSR
+     FEXCDF4G O   E                    DISK                      A
+     F                                              KINFDS EXCGDS
+     F                                              KINFSR EXCGSR
+     FEXCDF4H O   E                    DISK                      A
+     F                                              KINFDS EXCHDS
+     F                                              KINFSR EXCHSR
+     FEXCDF4I O   E                    DISK                      A
+     F                                              KINFDS EXCIDS
+     F                                              KINFSR EXCISR
+     FEXCDF4J O   E                    DISK                      A
+     F                                              KINFDS EXCJDS
+     F                                              KINFSR EXCJSR
+     FEXCDF4K O   E                    DISK                      A
+     F                                              KINFDS EXCKDS
+     F                                              KINFSR EXCKSR
+     FEXCDF4L O   E                    DISK                      A
+     F                                              KINFDS EXCLDS
+     F                                              KINFSR EXCLSR
+     FEXCDBD  O   E                    DISK                      A
+     FTABTB10 IF  E                    DISK
+     FSE3100AUO   E                    PRINTER
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10 - WRITE TO PF/EXCDBD OR PF/EXCDF4A-L FAILED.             *
+     F*   20 - INSTALLATION CONTROLS RECORD NOT FOUND.                *
+     F*   30 - INITIAL PROCESSING HAS BEEN PERFORMED.                 *
+     F*U8&40 - FILE CONTROLS OUT OF BALANCE.                          *
+     F*   LR - LAST RECORD HAS BEEN READ FROM PF/NEXCDB.              *
+     F*U7,U8 & LR - DATABASE ERROR HAS OCCURRED.                      *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   CONTROL   - PROGRAM CONTROLLING SUBROUTINE.                 *
+     F*   INIT      - PERFORM INITIAL PRODESSING.                     *
+     F*   DETAIL    - PRODESS DETAILS FROM NEXCDB.                    *
+     F*   TRAIL     - PRODUCE FILE CONTROLS REPORT.                   *
+     F*   DBERR     - PROCESS DATABASE ERRORS.                        *
+     F*   HEADER    - EXTRACT HEADER HEADER RECORDS.                  *
+     F*   EXC_SR    - EXCEPTION ERROR SR FOR PF/EXCDF4_.              *
+     F*   *PSSR     - PROGRAM EXCEPTION/ERROR SUBROUTINE.             *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array to contain records 2 - 10 PF/NEXCDB
+     E*
+     E                    NCB      1895  1               ** RECORDS
+     E*
+     E** Array to contain extracted header records.
+     E*
+     E                    HED      1300  1               ** HEADERS
+     E*
+     E** Array to contain header identifiers.
+     E*
+     E                    HID    12  12  1               ** IDENT
+     E*
+      /EJECT
+     INEXP      E DSNEXCDBP
+     I** Data structure to output details.
+     I*
+     I** Alphanumeric fields renamed for output to PF/EXCDBD.
+     I              A1RCIP                          A1RCIU
+     I              A1LDIP                          A1LDIU
+     I              A2RCIP                          A2RCIU
+     I              B1RCIP                          B1RCIU
+     I              B2RCIP                          B2RCIU
+     I              C1RCIP                          C1RCIU
+     I              C2RCIP                          C2RCIU
+     I              D1RCIP                          D1RCIU
+     I              D2RCIP                          D2RCIU
+     I              D3RCIP                          D3RCIU
+     I              D4RCIP                          D4RCIU
+     I              D5RCIP                          D5RCIU
+     I              D6RCIP                          D6RCIU
+     I              D7RCIP                          D7RCIU
+     I              D8RCIP                          D8RCIU
+     I              D9RCIP                          D9RCIU
+     I              DARCIP                          DARCIU
+     I              DBRCIP                          DBRCIU
+     I              DCRCIP                          DCRCIU
+     I              E1RCIP                          E1RCIU
+     I              F1RCIP                          F1RCIU
+     I              F2RCIP                          F2RCIU
+     I              G1RCIP                          G1RCIU
+     I              H1RCIP                          H1RCIU
+     I              H2RCIP                          H2RCIU
+     I              J1RCIP                          J1RCIU
+     I              K1RCIP                          K1RCIU
+     I              K2RCIP                          K2RCIU
+     I              L1RCIP                          L1RCIU
+     I              R1RCIP                          R1RCIU
+     I              R2RCIP                          R2RCIU
+     I              R3RCIP                          R3RCIU
+     I              R4RCIP                          R4RCIU
+     I              R5RCIP                          R5RCIU
+     I              R6RCIP                          R6RCIU
+     I              A3P                             A3U
+     I              A4P                             A4U
+     I              A6P                             A6U
+     I              A8P                             A8U
+     I              A11P                            A11U
+     I              B2P                             B2U
+     I              B4P                             B4U
+     I              B7P                             B7U
+     I              B9P                             B9U
+     I              C1P                             C1U
+     I              C2P                             C2U
+     I              C17P                            C17U
+     I              C6P                             C6U
+     I              C7P                             C7U
+     I              C8P                             C8U
+     I              C9P                             C9U
+     I              C10P                            C10U
+     I              C11P                            C11U
+     I              C12P                            C12U
+     I              C13P                            C13U
+     I              C14P                            C14U
+     I              C15P                            C15U
+     I              D2P                             D2U
+     I              D3P                             D3U
+     I              D6P                             D6U
+     I              D7P                             D7U
+     I              D9P                             D9U
+     I              D12P                            D12U
+     I              D13P                            D13U
+     I              D15P                            D15U
+     I              D18P                            D18U
+     I              D19P                            D19U
+     I              D21P                            D21U
+     I              D24P                            D24U
+     I              D25P                            D25U
+     I              D27P                            D27U
+     I              D30P                            D30U
+     I              D31P                            D31U
+     I              D34P                            D34U
+     I              D35P                            D35U
+     I              D38P                            D38U
+     I              D39P                            D39U
+     I              D43P                            D43U
+     I              D46P                            D46U
+     I              D47P                            D47U
+     I              D51P                            D51U
+     I              D54P                            D54U
+     I              D55P                            D55U
+     I              D59P                            D59U
+     I              D62P                            D62U
+     I              D63P                            D63U
+     I              D67P                            D67U
+     I              D70P                            D70U
+     I              D71P                            D71U
+     I              D76P                            D76U
+     I              D77P                            D77U
+     I              D78P                            D78U
+     I              D79P                            D79U
+     I              D81P                            D81U
+     I              D82P                            D82U
+     I              E2P                             E2U
+     I              E3P                             E3U
+     I              F2P                             F2U
+     I              F11P                            F11U
+     I              F3P                             F3U
+     I              F6P                             F6U
+     I              F7P                             F7U
+     I              F8P                             F8U
+     I              F9P                             F9U
+     I              G3P                             G3U
+     I              G4P                             G4U
+     I              G5P                             G5U
+     I              G6P                             G6U
+     I              H1P                             H1U
+     I              H2P                             H2U
+     I              H5P                             H5U
+     I              H7P                             H7U
+     I              J1P                             J1U
+     I              J6P                             J6U
+     I              K1P                             K1U
+     I              K6P                             K6U
+     I              K15P                            K15U
+     I              K24P                            K24U
+     I              K26P                            K26U
+     I              L1P                             L1U
+     I              L3P                             L3U
+     I              L4P                             L4U
+     I              L6P                             L6U
+     I              L8P                             L8U
+     I              L10P                            L10U
+     I              L14P                            L14U
+     I              L16P                            L16U
+     I              R1P                             R1U
+     I              R2P                             R2U
+     I              R3P                             R3U
+     I              R4P                             R4U
+     I              R5P                             R5U
+     I              R6P                             R6U
+     I              R7P                             R7U
+     I              R8P                             R8U
+     I              R9P                             R9U
+     I              R10P                            R10U
+     I              R11P                            R11U
+     I              R12P                            R12U
+     I              R13P                            R13U
+     I              R14P                            R14U
+     I              R15P                            R15U
+     I              R16P                            R16U
+     I              R18P                            R18U
+     I              R20P                            R20U
+     I              R21P                            R21U
+     I              R22P                            R22U
+     I              R23P                            R23U
+     I              R24P                            R24U
+     I              R25P                            R25U
+     I              R26P                            R26U
+     I              R27P                            R27U
+     I              R28P                            R28U
+     I              R29P                            R29U
+     I              R30P                            R30U
+     I              R31P                            R31U
+     I              R32P                            R32U
+     I              R33P                            R33U
+     I              R34P                            R34U
+     I              R35P                            R35U
+     I              R36P                            R36U
+     I              R37P                            R37U
+     I              R38P                            R38U
+     I              R40P                            R40U
+     I              R41P                            R41U
+     I              R42P                            R42U
+     I              R43P                            R43U
+     I              R44P                            R44U
+     I              R45P                            R45U
+     I              R46P                            R46U
+     I              R47P                            R47U
+     I              R48P                            R48U
+     I              R49P                            R49U
+     I              R50P                            R50U
+     I              R51P                            R51U
+     I              R52P                            R52U
+     I              R53P                            R53U
+     I              R54P                            R54U
+     I              R55P                            R55U
+     I              R56P                            R56U
+     I              R57P                            R57U
+     I              R58P                            R58U
+     I              R59P                            R59U
+     I              R60P                            R60U
+     I              R61P                            R61U
+     I              R62P                            R62U
+     I              R63P                            R63U
+     I              R64P                            R64U
+     I              R66P                            R66U
+     I              R71P                            R71U
+     I              R72P                            R72U
+     I              R73P                            R73U
+     I              R74P                            R74U
+     I              AS1P                            AS1U
+     I              AS3P                            AS3U
+     I              AS4P                            AS4U
+     I              AS6P                            AS6U
+     I              AS7P                            AS7U
+     I              AS8P                            AS8U
+     I              AS9P                            AS9U
+     I              AS10P                           AS10U
+     I              AS11P                           AS11U
+     I              AS12P                           AS12U
+     I              AS13P                           AS13U
+     I              AS16P                           AS16U
+     I              AS17P                           AS17U
+     I              BS1P                            BS1U
+     I              BS3P                            BS3U
+     I              BS5P                            BS5U
+     I              BS7P                            BS7U
+     I              BS9P                            BS9U
+     I              CS1P                            CS1U
+     I              CS2P                            CS2U
+     I              CS3P                            CS3U
+     I              CS4P                            CS4U
+     I              CS5P                            CS5U
+     I              CS6P                            CS6U
+     I              CS7P                            CS7U
+     I              CS8P                            CS8U
+     I              CS9P                            CS9U
+     I              CS10P                           CS10U
+     I              DS4P                            DS4U
+     I              DS12P                           DS12U
+     I              DS20P                           DS20U
+     I              DS28P                           DS28U
+     I              DS36P                           DS36U
+     I              DS44P                           DS44U
+     I              DS50P                           DS50U
+     I              DS56P                           DS56U
+     I              DS62P                           DS62U
+     I              DS68P                           DS68U
+     I              DS71P                           DS71U
+     I              DS72P                           DS72U
+     I              DS73P                           DS73U
+     I              DS74P                           DS74U
+     I              DS75P                           DS75U
+     I              ES5P                            ES5U
+     I              ES7P                            ES7U
+     I              ES8P                            ES8U
+     I              ES12P                           ES12U
+     I              FS4P                            FS4U
+     I              FS5P                            FS5U
+     I              FS6P                            FS6U
+     I              FS7P                            FS7U
+     I              FS8P                            FS8U
+     I              FS9P                            FS9U
+     I              FS12P                           FS12U
+     I              FS13P                           FS13U
+     I              FS14P                           FS14U
+     I              FS15P                           FS15U
+     I              FS16P                           FS16U
+     I              FS17P                           FS17U
+     I              FS20P                           FS20U
+     I              FS21P                           FS21U
+     I              FS22P                           FS22U
+     I              FS23P                           FS23U
+     I              FS24P                           FS24U
+     I              FS25P                           FS25U
+     I              FS27P                           FS27U
+     I              FS29P                           FS29U
+     I              FS32P                           FS32U
+     I              HS2P                            HS2U
+     I              HS6P                            HS6U
+     I              JS2P                            JS2U
+     I              KS2P                            KS2U
+     I              KS3P                            KS3U
+     I              KS6P                            KS6U
+     I              KS9P                            KS9U
+     I              KS14P                           KS14U
+     I              KS22P                           KS22U
+     I              RS1P                            RS1U
+     I              RS2P                            RS2U
+     I              RS3P                            RS3U
+     I              RS4P                            RS4U
+     I              RS5P                            RS5U
+     I              RS6P                            RS6U
+     I              RS7P                            RS7U
+     I              RS8P                            RS8U
+     I              RS9P                            RS9U
+     I              RS10P                           RS10U
+     I              RS11P                           RS11U
+     I              RS12P                           RS12U
+     I              RS13P                           RS13U
+     I              RS14P                           RS14U
+     I              RS15P                           RS15U
+     I              RS17P                           RS17U
+     I              RS18P                           RS18U
+     I              RS19P                           RS19U
+     I              RS20P                           RS20U
+     I              RS21P                           RS21U
+     I              RS22P                           RS22U
+     I*
+     INEX       E DSNEXCDB
+     I*
+     I** Data structure to output header records without checking
+     I**   record formats.
+     I*
+     I              A1SCP                           A1SCPA
+     I*
+     IEXCA      E DSEXCDF4A
+     I*
+     I** Data structure over header record 'A'
+     I*
+     I              A1P                             A1PA
+     I              XRTYP                           XRTYPA
+     I              XFDAT                           XFDATA
+     I              XFSN                            XFSNA
+     I              X2YDT                           X2YDTA
+     I*
+     IEXCB      E DSEXCDF4B
+     I*
+     I** Data structure over header record 'B'
+     I*
+     I              A1P                             A1PB
+     I              XRTYP                           XRTYPB
+     I              XFDAT                           XFDATB
+     I              XFSN                            XFSNB
+     I              X2YDT                           X2YDTB
+     I*
+     IEXCC      E DSEXCDF4C
+     I*
+     I** Data structure over header record 'C'
+     I*
+     I              A1P                             A1PC
+     I              XRTYP                           XRTYPC
+     I              XFDAT                           XFDATC
+     I              XFSN                            XFSNC
+     I              X2YDT                           X2YDTC
+     I*
+     IEXCD      E DSEXCDF4D
+     I*
+     I** Data structure over header record 'D'
+     I*
+     I              A1P                             A1PD
+     I              XRTYP                           XRTYPD
+     I              XFDAT                           XFDATD
+     I              XFSN                            XFSND
+     I              X2YDT                           X2YDTD
+     I*
+     IEXCE      E DSEXCDF4E
+     I*
+     I** Data structure over header record 'E'
+     I*
+     I              A1P                             A1PE
+     I              XRTYP                           XRTYPE
+     I              XFDAT                           XFDATE
+     I              XFSN                            XFSNE
+     I              X2YDT                           X2YDTE
+     I*
+     IEXCF      E DSEXCDF4F
+     I*
+     I** Data structure over header record 'F'
+     I*
+     I              A1P                             A1PF
+     I              XRTYP                           XRTYPF
+     I              XFDAT                           XFDATF
+     I              XFSN                            XFSNF
+     I              X2YDT                           X2YDTF
+     I*
+     IEXCG      E DSEXCDF4G
+     I*
+     I** Data structure over header record 'G'
+     I*
+     I              A1P                             A1PG
+     I              XRTYP                           XRTYPG
+     I              XFDAT                           XFDATG
+     I              XFSN                            XFSNG
+     I              X2YDT                           X2YDTG
+     I*
+     IEXCH      E DSEXCDF4H
+     I*
+     I** Data structure over header record 'H'
+     I*
+     I              A1P                             A1PH
+     I              XRTYP                           XRTYPH
+     I              XFDAT                           XFDATH
+     I              XFSN                            XFSNH
+     I              X2YDT                           X2YDTH
+     I*
+     IEXCI      E DSEXCDF4I
+     I*
+     I** Data structure over header record 'I'
+     I*
+     I              A1P                             A1PI
+     I              XRTYP                           XRTYPI
+     I              XFDAT                           XFDATI
+     I              XFSN                            XFSNI
+     I              X2YDT                           X2YDTI
+     I*
+     IEXCJ      E DSEXCDF4J
+     I*
+     I** Data structure over header record 'J'
+     I*
+     I              A1P                             A1PJ
+     I              XRTYP                           XRTYPJ
+     I              XFDAT                           XFDATJ
+     I              XFSN                            XFSNJ
+     I              X2YDT                           X2YDTJ
+     I*
+     IEXCK      E DSEXCDF4K
+     I*
+     I** Data structure over header record 'K'
+     I*
+     I              A1P                             A1PK
+     I              XRTYP                           XRTYPK
+     I              XFDAT                           XFDATK
+     I              XFSN                            XFSNK
+     I              X2YDT                           X2YDTK
+     I*
+     IEXCL      E DSEXCDF4L
+     I*
+     I** Data structure over header record 'L'
+     I*
+     I              A1P                             A1PL
+     I              XRTYP                           XRTYPL
+     I              XFDAT                           XFDATL
+     I              XFSN                            XFSNL
+     I              X2YDT                           X2YDTL
+     I*
+     I*LDA******* UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I** Database error data structure on LDA.
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     IEXCADS      DS                            366
+     I*
+     I** File information data structure for PF/EXCDF4A
+     I*
+     I*
+     IEXCBDS      DS                            366
+     I*
+     I** File information data structure for PF/EXCDF4B
+     I*
+     I*
+     IEXCCDS      DS                            366
+     I*
+     I** File information data structure for PF/EXCDF4C
+     I*
+     IEXCDDS      DS                            366
+     I*
+     I** File information data structure for PF/EXCDF4D
+     I*
+     IEXCEDS      DS                            366
+     I*
+     I** File information data structure for PF/EXCDF4E
+     I*
+     IEXCFDS      DS                            366
+     I*
+     I** File information data structure for PF/EXCDF4F
+     I*
+     IEXCGDS      DS                            366
+     I*
+     I** File information data structure for PF/EXCDF4G
+     I*
+     IEXCHDS      DS                            366
+     I*
+     I** File information data structure for PF/EXCDF4H
+     I*
+     IEXCIDS      DS                            366
+     I*
+     I** File information data structure for PF/EXCDF4I
+     I*
+     IEXCJDS      DS                            366
+     I*
+     I** File information data structure for PF/EXCDF4J
+     I*
+     IEXCKDS      DS                            366
+     I*
+     I** File information data structure for PF/EXCDF4K
+     I*
+     I*
+     IEXCLDS      DS                            366
+     I*
+     I** File information data structure for PF/EXCDF4L
+     I*
+     IEPFDS       DS
+     I*
+     I** File information data structure used by error processing.
+     I*
+     I                                        1 256 EPFDS1
+     I                                      257 366 EPFDS2
+     I*
+     IEPPDS      SDS
+     I*
+     I** Program status data structure used by error processing.
+     I*
+     I                                        1  10 EPPP
+     I                                       81  90 EPPPL
+     I                                        1 253 EPPDS1
+     I                                      254 429 EPPDS2
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** CONTROL - PROGRAM CONTROLLING SUBROUTINE.                    *
+     C*                                                               *
+     C** PROGRAM FUNCTION :                                           *
+     C**           Inputs from packed primary file PF/NEXCDB          *
+     C**             outputs to header files PF/EXCDF4A-L and         *
+     C**             outputs an unpacked file PF/EXCDBD with          *
+     C**             exactly the same data. Run controls and          *
+     C**             database error reports are also produced.        *
+     C*                                                               *
+     C** SUBROUTINE FUNCTION :                                        *
+     C**           Calls subroutines to perform initial processing,   *
+     C**             process details on the packed input file and     *
+     C**             produce file controls report.                    *
+     C*                                                               *
+     C** FIELDS IN   : WNORE - Number of records processed by program.*
+     C*                                                               *
+     C** FIELDS OUT  : WNORE - Number of records processed by program.*
+     C*                                                               *
+     C** CALLED FROM : NONE                                           *
+     C** CALLS       : INIT,DETAIL,TRAIL.                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C**  Add 1 to the total record count.
+     C*
+     C                     ADD  1         TNORE   60
+     C*
+     C**  Perform initial processing for first cycle only.
+     C*
+     C           TNORE     IFEQ 1
+     C                     EXSR INIT
+     C                     END
+     C*
+     C**  For records 2 - 10, extract the header records.
+     C*
+     C           TNORE     IFGE 2
+     C           TNORE     ANDLE10
+     C                     EXSR HEADER
+     C                     END
+     C*
+     C**  Process all detail on packed input file except first, header
+     C**    and last records.
+     C*
+     C           TNORE     IFGE 11
+     C           A1RCIP    ANDNE'OF'
+     C*
+     C                     EXSR DETAIL
+     C*
+     C**  Add 1 to the detail record count.
+     C*
+     C                     ADD  1         WNORE   60
+     C*
+     C                     END
+     C*
+     C**  Produce file controls report in total time.
+     C*
+     CLR                   EXSR TRAIL
+     C*
+     C**  End of program.
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** INIT    - INITIAL PROCESSING SUBROUTINE.                     *
+     C*                                                               *
+     C** SUBROUTINE FUNCTION :                                        *
+     C**           Chains to installation control file TABTB10 for    *
+     C**             run controls.  Calls database error handling     *
+     C**             subroutine if record not found.                  *
+     C*                                                               *
+     C** FIELDS IN   : NONE.                                          *
+     C*                                                               *
+     C** FIELDS OUT  : DBFILE - Database file in error.               *
+     C**             : DBKEY  - Database file key.                    *
+     C**             : DBPGM  - Program with database error.          *
+     C**             : DBASE  - Database error number.                *
+     C*                                                               *
+     C** CALLED FROM : CONTROL                                        *
+     C** CALLS       : DBASE.                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C*
+     C** Initialise indices for header arrays.
+     C*
+     C                     Z-ADD1         Y       40
+     C                     Z-ADD1         Z       20
+     C*
+     C** Set up key field to PF/TABTB10.(KEY = '01        10').
+     C*
+     C                     MOVEL'01'      TABKEY 12
+     C                     MOVE '10'      TABKEY
+     C*
+     C** Obtain installation details.
+     C*
+     C           1         CHAINTABTB10F             20
+     C*
+     C** DATABASE ERROR 01  - NOT FOUND
+     C*
+     C           *IN20     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'TABTB'   DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY            * DB ERROR 01 *
+     C                     MOVE 'SE3100'  DBPGM            ***************
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** DETAIL  - PROCESS DETAILS FROM NEXCDB.                       *
+     C*                                                               *
+     C** SUBROUTINE FUNCTION :                                        *
+     C**          For each detail record read from PF/NEXCDB,all the  *
+     C**            fields are moved to the corresponding positions on*
+     C**            PF/EXCDBD.  The alphanumeric fields will have     *
+     C**            been moved into the new fields in the input       *
+     C**            spec and the packed fields are moved into signed  *
+     C**            numeric fields using the Z-ADD operation code.    *
+     C**          A count of all the records processed is kept.       *
+     C**          A new record is output to PF/EXCDBD.                *
+     C**          The next record is read.                            *
+     C*                                                               *
+     C** FIELDS IN   : Packed numeric fields from PF/NEXCDB.          *
+     C*                                                               *
+     C** FIELDS OUT  : Unpacked signed numeric fields from PF/EXCDBD. *
+     C**             : DBFILE - Database file in error.               *
+     C**             : DBKEY  - Database file key.                    *
+     C**             : DBPGM  - Program with database error.          *
+     C**             : DBASE  - Database error number.                *
+     C*                                                               *
+     C*                                                               *
+     C** CALLED FROM : CONTROL                                        *
+     C** CALLS       : NONE                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DETAIL    BEGSR
+     C*
+     C**  If record is not a header record write record PF/EXCDB
+     C**    also check for first and last records and do not process.
+     C*
+     C           A1SCP     IFNE 0
+     C*
+     C**   Fields from PF/NEXCDB are moved to corresponding fields
+     C**     on PF/EXCDBD.
+     C*
+     C                     Z-ADDA1SCP     A1SCU
+     C                     MOVELNEX       NEXP
+     C*
+     C                     Z-ADDA2SCP     A2SCU
+     C                     Z-ADDB1SCP     B1SCU
+     C                     Z-ADDB2SCP     B2SCU
+     C                     Z-ADDC1SCP     C1SCU
+     C                     Z-ADDC2SCP     C2SCU
+     C                     Z-ADDD1SCP     D1SCU
+     C                     Z-ADDD2SCP     D2SCU
+     C                     Z-ADDD3SCP     D3SCU
+     C                     Z-ADDD4SCP     D4SCU
+     C                     Z-ADDD5SCP     D5SCU
+     C                     Z-ADDD6SCP     D6SCU
+     C                     Z-ADDD7SCP     D7SCU
+     C                     Z-ADDD8SCP     D8SCU
+     C                     Z-ADDD9SCP     D9SCU
+     C                     Z-ADDDASCP     DASCU
+     C                     Z-ADDDBSCP     DBSCU
+     C                     Z-ADDDCSCP     DCSCU
+     C                     Z-ADDE1SCP     E1SCU
+     C                     Z-ADDF1SCP     F1SCU
+     C                     Z-ADDF2SCP     F2SCU
+     C                     Z-ADDG1SCP     G1SCU
+     C                     Z-ADDH1SCP     H1SCU
+     C                     Z-ADDH2SCP     H2SCU
+     C                     Z-ADDJ1SCP     J1SCU
+     C                     Z-ADDK1SCP     K1SCU
+     C                     Z-ADDK2SCP     K2SCU
+     C                     Z-ADDL1SCP     L1SCU
+     C                     Z-ADDR1SCP     R1SCU
+     C                     Z-ADDR2SCP     R2SCU
+     C                     Z-ADDR3SCP     R3SCU
+     C                     Z-ADDR4SCP     R4SCU
+     C                     Z-ADDR5SCP     R5SCU
+     C                     Z-ADDR6SCP     R6SCU
+     C*
+     C                     Z-ADDA5P       A5U
+     C                     Z-ADDA7P       A7U
+     C                     Z-ADDA9P       A9U
+     C                     Z-ADDA10P      A10U
+     C                     Z-ADDA12P      A12U
+     C                     Z-ADDA13P      A13U
+     C*
+     C                     Z-ADDB1P       B1U
+     C                     Z-ADDB3P       B3U
+     C                     Z-ADDB5P       B5U
+     C                     Z-ADDB6P       B6U
+     C                     Z-ADDB8P       B8U
+     C                     Z-ADDB10P      B10U
+     C                     Z-ADDB11P      B11U
+     C*
+     C                     Z-ADDC3P       C3U
+     C                     Z-ADDC4P       C4U
+     C                     Z-ADDC5P       C5U
+     C                     Z-ADDC16P      C16U
+     C*
+     C                     Z-ADDD1P       D1U
+     C                     Z-ADDD4P       D4U
+     C                     Z-ADDD5P       D5U
+     C                     Z-ADDD8P       D8U
+     C                     Z-ADDD10P      D10U
+     C                     Z-ADDD11P      D11U
+     C                     Z-ADDD14P      D14U
+     C                     Z-ADDD16P      D16U
+     C                     Z-ADDD17P      D17U
+     C                     Z-ADDD20P      D20U
+     C                     Z-ADDD22P      D22U
+     C                     Z-ADDD23P      D23U
+     C                     Z-ADDD26P      D26U
+     C                     Z-ADDD28P      D28U
+     C                     Z-ADDD29P      D29U
+     C                     Z-ADDD32P      D32U
+     C                     Z-ADDD33P      D33U
+     C                     Z-ADDD36P      D36U
+     C                     Z-ADDD37P      D37U
+     C                     Z-ADDD40P      D40U
+     C                     Z-ADDD41P      D41U
+     C                     Z-ADDD42P      D42U
+     C                     Z-ADDD44P      D44U
+     C                     Z-ADDD45P      D45U
+     C                     Z-ADDD48P      D48U
+     C                     Z-ADDD49P      D49U
+     C                     Z-ADDD50P      D50U
+     C                     Z-ADDD52P      D52U
+     C                     Z-ADDD53P      D53U
+     C                     Z-ADDD56P      D56U
+     C                     Z-ADDD57P      D57U
+     C                     Z-ADDD58P      D58U
+     C                     Z-ADDD60P      D60U
+     C                     Z-ADDD61P      D61U
+     C                     Z-ADDD64P      D64U
+     C                     Z-ADDD65P      D65U
+     C                     Z-ADDD66P      D66U
+     C                     Z-ADDD68P      D68U
+     C                     Z-ADDD69P      D69U
+     C                     Z-ADDD72P      D72U
+     C                     Z-ADDD73P      D73U
+     C                     Z-ADDD74P      D74U
+     C                     Z-ADDD75P      D75U
+     C                     Z-ADDD80P      D80U
+     C                     Z-ADDD83P      D83U
+     C                     Z-ADDD84P      D84U
+     C*
+     C                     Z-ADDE1P       E1U
+     C                     Z-ADDE4P       E4U
+     C*
+     C                     Z-ADDF1P       F1U
+     C                     Z-ADDF4P       F4U
+     C                     Z-ADDF5P       F5U
+     C                     Z-ADDF10P      F10U
+     C*
+     C                     Z-ADDG1P       G1U
+     C                     Z-ADDG2P       G2U
+     C                     Z-ADDG7P       G7U
+     C*
+     C                     Z-ADDH3P       H3U
+     C                     Z-ADDH4P       H4U
+     C                     Z-ADDH6P       H6U
+     C                     Z-ADDH8P       H8U
+     C                     Z-ADDH10P      H10U
+     C                     Z-ADDH11P      H11U
+     C*
+     C                     Z-ADDJ2P       J2U
+     C                     Z-ADDJ3P       J3U
+     C                     Z-ADDJ4P       J4U
+     C                     Z-ADDJ5P       J5U
+     C                     Z-ADDJ7P       J7U
+     C*
+     C                     Z-ADDK2P       K2U
+     C                     Z-ADDK3P       K3U
+     C                     Z-ADDK4P       K4U
+     C                     Z-ADDK5P       K5U
+     C                     Z-ADDK7P       K7U
+     C                     Z-ADDK8P       K8U
+     C                     Z-ADDK9P       K9U
+     C                     Z-ADDK10P      K10U
+     C                     Z-ADDK11P      K11U
+     C                     Z-ADDK12P      K12U
+     C                     Z-ADDK13P      K13U
+     C                     Z-ADDK14P      K14U
+     C                     Z-ADDK16P      K16U
+     C                     Z-ADDK17P      K17U
+     C                     Z-ADDK18P      K18U
+     C                     Z-ADDK19P      K19U
+     C                     Z-ADDK20P      K20U
+     C                     Z-ADDK21P      K21U
+     C                     Z-ADDK22P      K22U
+     C                     Z-ADDK23P      K23U
+     C                     Z-ADDK25P      K25U
+     C                     Z-ADDK27P      K27U
+     C                     Z-ADDK28P      K28U
+     C*
+     C                     Z-ADDL2P       L2U
+     C                     Z-ADDL5P       L5U
+     C                     Z-ADDL7P       L7U
+     C                     Z-ADDL9P       L9U
+     C                     Z-ADDL11P      L11U
+     C                     Z-ADDL12P      L12U
+     C                     Z-ADDL13P      L13U
+     C                     Z-ADDL15P      L15U
+     C                     Z-ADDL17P      L17U
+     C                     Z-ADDL18P      L18U
+     C                     Z-ADDL19P      L19U
+     C                     Z-ADDL20P      L20U
+     C                     Z-ADDL21P      L21U
+     C*
+     C                     Z-ADDR17P      R17U
+     C                     Z-ADDR19P      R19U
+     C                     Z-ADDR39P      R39U
+     C                     Z-ADDR65P      R65U
+     C                     Z-ADDR67P      R67U
+     C                     Z-ADDR68P      R68U
+     C                     Z-ADDR69P      R69U
+     C                     Z-ADDR70P      R70U
+     C                     Z-ADDR75P      R75U
+     C                     Z-ADDR76P      R76U
+     C                     Z-ADDR77P      R77U
+     C                     Z-ADDR78P      R78U
+     C                     Z-ADDR79P      R79U
+     C                     Z-ADDR80P      R80U
+     C                     Z-ADDR81P      R81U
+     C                     Z-ADDR82P      R82U
+     C                     Z-ADDR83P      R83U
+     C*
+     C                     Z-ADDAS2P      AS2U
+     C                     Z-ADDAS5P      AS5U
+     C                     Z-ADDAS14P     AS14U
+     C*
+     C                     Z-ADDBS2P      BS2U
+     C                     Z-ADDBS4P      BS4U
+     C                     Z-ADDBS6P      BS6U
+     C                     Z-ADDBS8P      BS8U
+     C                     Z-ADDBS10P     BS10U
+     C                     Z-ADDBS11P     BS11U
+     C*
+     C                     Z-ADDCS11P     CS11U
+     C                     Z-ADDCS12P     CS12U
+     C*
+     C                     Z-ADDDS1P      DS1U
+     C                     Z-ADDDS2P      DS2U
+     C                     Z-ADDDS3P      DS3U
+     C                     Z-ADDDS5P      DS5U
+     C                     Z-ADDDS6P      DS6U
+     C                     Z-ADDDS7P      DS7U
+     C                     Z-ADDDS8P      DS8U
+     C                     Z-ADDDS9P      DS9U
+     C                     Z-ADDDS10P     DS10U
+     C                     Z-ADDDS11P     DS11U
+     C                     Z-ADDDS13P     DS13U
+     C                     Z-ADDDS14P     DS14U
+     C                     Z-ADDDS15P     DS15U
+     C                     Z-ADDDS16P     DS16U
+     C                     Z-ADDDS17P     DS17U
+     C                     Z-ADDDS18P     DS18U
+     C                     Z-ADDDS19P     DS19U
+     C                     Z-ADDDS21P     DS21U
+     C                     Z-ADDDS22P     DS22U
+     C                     Z-ADDDS23P     DS23U
+     C                     Z-ADDDS24P     DS24U
+     C                     Z-ADDDS25P     DS25U
+     C                     Z-ADDDS26P     DS26U
+     C                     Z-ADDDS27P     DS27U
+     C                     Z-ADDDS29P     DS29U
+     C                     Z-ADDDS30P     DS30U
+     C                     Z-ADDDS31P     DS31U
+     C                     Z-ADDDS32P     DS32U
+     C                     Z-ADDDS33P     DS33U
+     C                     Z-ADDDS34P     DS34U
+     C                     Z-ADDDS35P     DS35U
+     C                     Z-ADDDS37P     DS37U
+     C                     Z-ADDDS38P     DS38U
+     C                     Z-ADDDS39P     DS39U
+     C                     Z-ADDDS40P     DS40U
+     C                     Z-ADDDS41P     DS41U
+     C                     Z-ADDDS42P     DS42U
+     C                     Z-ADDDS43P     DS43U
+     C                     Z-ADDDS45P     DS45U
+     C                     Z-ADDDS46P     DS46U
+     C                     Z-ADDDS47P     DS47U
+     C                     Z-ADDDS48P     DS48U
+     C                     Z-ADDDS49P     DS49U
+     C                     Z-ADDDS51P     DS51U
+     C                     Z-ADDDS52P     DS52U
+     C                     Z-ADDDS53P     DS53U
+     C                     Z-ADDDS54P     DS54U
+     C                     Z-ADDDS55P     DS55U
+     C                     Z-ADDDS57P     DS57U
+     C                     Z-ADDDS58P     DS58U
+     C                     Z-ADDDS59P     DS59U
+     C                     Z-ADDDS60P     DS60U
+     C                     Z-ADDDS61P     DS61U
+     C                     Z-ADDDS63P     DS63U
+     C                     Z-ADDDS64P     DS64U
+     C                     Z-ADDDS65P     DS65U
+     C                     Z-ADDDS66P     DS66U
+     C                     Z-ADDDS67P     DS67U
+     C                     Z-ADDDS69P     DS69U
+     C                     Z-ADDDS70P     DS70U
+     C                     Z-ADDDS76P     DS76U
+     C                     Z-ADDDS77P     DS77U
+     C*
+     C                     Z-ADDES1P      ES1U
+     C                     Z-ADDES2P      ES2U
+     C                     Z-ADDES3P      ES3U
+     C                     Z-ADDES4P      ES4U
+     C                     Z-ADDES6P      ES6U
+     C                     Z-ADDES9P      ES9U
+     C                     Z-ADDES10P     ES10U
+     C                     Z-ADDES11P     ES11U
+     C                     Z-ADDES13P     ES13U
+     C*
+     C                     Z-ADDFS1P      FS1U
+     C                     Z-ADDFS2P      FS2U
+     C                     Z-ADDFS3P      FS3U
+     C                     Z-ADDFS10P     FS10U
+     C                     Z-ADDFS11P     FS11U
+     C                     Z-ADDFS18P     FS18U
+     C                     Z-ADDFS19P     FS19U
+     C                     Z-ADDFS26P     FS26U
+     C                     Z-ADDFS28P     FS28U
+     C                     Z-ADDFS30P     FS30U
+     C                     Z-ADDFS31P     FS31U
+     C*
+     C                     Z-ADDHS1P      HS1U
+     C                     Z-ADDHS3P      HS3U
+     C                     Z-ADDHS4P      HS4U
+     C                     Z-ADDHS5P      HS5U
+     C                     Z-ADDHS7P      HS7U
+     C                     Z-ADDHS8P      HS8U
+     C                     Z-ADDHS9P      HS9U
+     C*
+     C                     Z-ADDJS1P      JS1U
+     C*
+     C                     Z-ADDKS1P      KS1U
+     C                     Z-ADDKS4P      KS4U
+     C                     Z-ADDKS5P      KS5U
+     C                     Z-ADDKS7P      KS7U
+     C                     Z-ADDKS8P      KS8U
+     C                     Z-ADDKS10P     KS10U
+     C                     Z-ADDKS11P     KS11U
+     C                     Z-ADDKS12P     KS12U
+     C                     Z-ADDKS13P     KS13U
+     C                     Z-ADDKS15P     KS15U
+     C                     Z-ADDKS16P     KS16U
+     C                     Z-ADDKS17P     KS17U
+     C                     Z-ADDKS18P     KS18U
+     C                     Z-ADDKS19P     KS19U
+     C                     Z-ADDKS20P     KS20U
+     C                     Z-ADDKS21P     KS21U
+     C                     Z-ADDKS23P     KS23U
+     C*
+     C                     Z-ADDLS1P      LS1U
+     C                     Z-ADDLS2P      LS2U
+     C                     Z-ADDLS3P      LS3U
+     C*
+     C                     Z-ADDRS16P     RS16U
+     C                     Z-ADDRS23P     RS23U
+     C*
+     C**  Write the new record to PF/EXCDBD.
+     C*
+     C                     WRITEEXCDBDF
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** TRAIL   - TRAILER SUBROUTINE.                                *
+     C*                                                               *
+     C**           Writes run controls report.                        *
+     C**             program.                                         *
+     C*                                                               *
+     C** FIELDS IN   : WNORE - Number of records processed by program.*
+     C*                                                               *
+     C** FIELDS OUT  : *IN40 - Files Out of Balance.                  *
+     C**             : WNORE - Number of records processed by program.*
+     C**             : WNORE1- Number of records on trailer.          *
+     C*                                                               *
+     C** CALLED FROM : CONTROL.                                       *
+     C** CALLS       : NONE.                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           TRAIL     BEGSR
+     C*
+     C** Extract number of records on file from the last record
+     C**   on PF/NEXCDB.
+     C*
+     C                     MOVELLOT1      WLOT1  11
+     C                     MOVE WLOT1     WLOT2   6
+     C                     MOVE WLOT2     WNORE1  60
+     C*
+     C** Adjust the number of records on the trailer to allow for the
+     C**   nine header records on PF/NEXCDB.
+     C*
+     C           WNORE1    SUB  9         WNORE1
+     C*
+     C** Check file controls and seton *IN40 if there is a difference.
+     C*
+     C           WNORE     IFNE WNORE1
+     C                     MOVEL'SE3100'  DBPGM
+     C                     SETON                     40U8
+     C                     END
+     C*
+     C** Write run controls report.
+     C*
+     C                     WRITESE3100A1
+     C***********          WRITESE3100A3                                  E29170
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** DBERR   - DATABASE ERROR HANDLING SUBROUTINE.                *
+     C*                                                               *
+     C**           Moves database error fields into the locked in     *
+     C**             LDA, sets on database error switches and last    *
+     C**             record indicator,dumps and returns to the calling*
+     C**             program.                                         *
+     C*                                                               *
+     C** FIELDS IN   : NONE                                           *
+     C*                                                               *
+     C** FIELDS OUT  : *INU7,*INU8 & *INLR                            *
+     C*                                                               *
+     C** CALLED FROM : INIT,DETAIL                                    *
+     C** CALLS       : NONE.                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C**  Write to run controls and database error report.
+     C*
+     C                     WRITESE3100A1
+     C                     WRITESE3100A2
+     C***********          WRITESE3100A3                                  E29170
+     C*
+     C                     SETON                     U7U8LR
+     C***********          DUMP                                           S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** HEADER  - EXTRACT HEADER FORM RECORDS ON NEXCDB.             *
+     C*                                                               *
+     C**           Extracts header records from PF/NEXCDB.Each header *
+     C**             is contained in 1300 byte blocks within the      *
+     C**             1895 byte record length of records 2 - 10.       *
+     C*                                                               *
+     C** FIELDS IN   : RECORDS FROM PF/NEXCDB.                        *
+     C*                                                               *
+     C** FIELDS OUT  : DATA AREAS CONTAINING EACH HEADER.             *
+     C*                                                               *
+     C** CALLED FROM : CONTROL.                                       *
+     C** CALLS       : NONE.                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           HEADER    BEGSR
+     C*
+     C** Move record data area into record array.
+     C*
+     C                     MOVEANEX       NCB
+     C*
+     C** Reset record byte index to array NCB.
+     C*
+     C                     Z-ADD1         X       40
+     C*
+     C**  Process while still on the same 1895 byte record.
+     C*
+     C           X         DOWLE1895
+     C           Z         ANDLE12
+     C*
+     C**  Process while still on the same 1300 byte header record.
+     C*
+     C           Y         DOWLE1300
+     C           X         ANDLE1895
+     C           Z         ANDLE12
+     C*
+     C**  Move each byte of the record into the header record array.
+     C*
+     C                     MOVE NCB,X     HED,Y
+     C*
+     C                     ADD  1         X
+     C                     ADD  1         Y
+     C*
+     C                     END
+     C*
+     C** When header array has been filled, write out to header files.
+     C*
+     C           Y         IFEQ 1301
+     C           Z         ANDLE12
+     C*
+     C**  If header record identifier is 'A'.
+     C**  Write the new record to PF/EXCDF4A
+     C*
+     C           HID,Z     IFEQ 'A'
+     C                     MOVEAHED       EXCA
+     C                     MOVE XRTYPA    XRTYP
+     C                     Z-ADDXFDATA    XFDAT
+     C                     Z-ADDXFSNA     XFSN
+     C                     Z-ADDX2YDTA    X2YDT
+     C                     WRITEEXCDF4AF
+     C                     END
+     C*
+     C**  If header record identifier is 'B'.
+     C**  Write the new record to PF/EXCDF4B
+     C*
+     C           HID,Z     IFEQ 'B'
+     C                     MOVEAHED       EXCB
+     C                     MOVE XRTYPB    XRTYP
+     C                     Z-ADDXFDATB    XFDAT
+     C                     Z-ADDXFSNB     XFSN
+     C                     Z-ADDX2YDTB    X2YDT
+     C                     WRITEEXCDF4BF
+     C                     END
+     C*
+     C**  If header record identifier is 'C'.
+     C**  Write the new record to PF/EXCDF4C
+     C*
+     C           HID,Z     IFEQ 'C'
+     C                     MOVEAHED       EXCC
+     C                     MOVE XRTYPC    XRTYP
+     C                     Z-ADDXFDATC    XFDAT
+     C                     Z-ADDXFSNC     XFSN
+     C                     Z-ADDX2YDTC    X2YDT
+     C                     WRITEEXCDF4CF
+     C                     END
+     C*
+     C**  If header record identifier is 'D'.
+     C**  Write the new record to PF/EXCDF4D
+     C*
+     C           HID,Z     IFEQ 'D'
+     C                     MOVEAHED       EXCD
+     C                     MOVE XRTYPD    XRTYP
+     C                     Z-ADDXFDATD    XFDAT
+     C                     Z-ADDXFSND     XFSN
+     C                     Z-ADDX2YDTD    X2YDT
+     C                     WRITEEXCDF4DF
+     C                     END
+     C*
+     C**  If header record identifier is 'E'.
+     C**  Write the new record to PF/EXCDF4E
+     C*
+     C           HID,Z     IFEQ 'E'
+     C                     MOVEAHED       EXCE
+     C                     MOVE XRTYPE    XRTYP
+     C                     Z-ADDXFDATE    XFDAT
+     C                     Z-ADDXFSNE     XFSN
+     C                     Z-ADDX2YDTE    X2YDT
+     C                     WRITEEXCDF4EF
+     C                     END
+     C*
+     C**  If header record identifier is 'F'.
+     C**  Write the new record to PF/EXCDF4F
+     C*
+     C           HID,Z     IFEQ 'F'
+     C                     MOVEAHED       EXCF
+     C                     MOVE XRTYPF    XRTYP
+     C                     Z-ADDXFDATF    XFDAT
+     C                     Z-ADDXFSNF     XFSN
+     C                     Z-ADDX2YDTF    X2YDT
+     C                     WRITEEXCDF4FF
+     C                     END
+     C*
+     C**  If header record identifier is 'G'.
+     C**  Write the new record to PF/EXCDF4G
+     C*
+     C           HID,Z     IFEQ 'G'
+     C                     MOVEAHED       EXCG
+     C                     MOVE XRTYPG    XRTYP
+     C                     Z-ADDXFDATG    XFDAT
+     C                     Z-ADDXFSNG     XFSN
+     C                     Z-ADDX2YDTG    X2YDT
+     C                     WRITEEXCDF4GF
+     C                     END
+     C*
+     C**  If header record identifier is 'H'.
+     C**  Write the new record to PF/EXCDF4H
+     C*
+     C           HID,Z     IFEQ 'H'
+     C                     MOVEAHED       EXCH
+     C                     MOVE XRTYPH    XRTYP
+     C                     Z-ADDXFDATH    XFDAT
+     C                     Z-ADDXFSNH     XFSN
+     C                     Z-ADDX2YDTH    X2YDT
+     C                     WRITEEXCDF4HF
+     C                     END
+     C*
+     C**  If header record identifier is 'I'.
+     C**  Write the new record to PF/EXCDF4I
+     C*
+     C           HID,Z     IFEQ 'I'
+     C                     MOVEAHED       EXCI
+     C                     MOVE XRTYPI    XRTYP
+     C                     Z-ADDXFDATI    XFDAT
+     C                     Z-ADDXFSNI     XFSN
+     C                     Z-ADDX2YDTI    X2YDT
+     C                     WRITEEXCDF4IF
+     C                     END
+     C*
+     C**  If header record identifier is 'J'.
+     C**  Write the new record to PF/EXCDF4J
+     C*
+     C           HID,Z     IFEQ 'J'
+     C                     MOVEAHED       EXCJ
+     C                     MOVE XRTYPJ    XRTYP
+     C                     Z-ADDXFDATJ    XFDAT
+     C                     Z-ADDXFSNJ     XFSN
+     C                     Z-ADDX2YDTJ    X2YDT
+     C                     WRITEEXCDF4JF
+     C                     END
+     C*
+     C**  If header record identifier is 'K'.
+     C**  Write the new record to PF/EXCDF4K
+     C*
+     C           HID,Z     IFEQ 'K'
+     C                     MOVEAHED       EXCK
+     C                     MOVE XRTYPK    XRTYP
+     C                     Z-ADDXFDATK    XFDAT
+     C                     Z-ADDXFSNK     XFSN
+     C                     Z-ADDX2YDTK    X2YDT
+     C                     WRITEEXCDF4KF
+     C                     END
+     C*
+     C**  If header record identifier is 'L'.
+     C**  Write the new record to PF/EXCDF4L
+     C*
+     C           HID,Z     IFEQ 'L'
+     C                     MOVEAHED       EXCL
+     C                     MOVE XRTYPL    XRTYP
+     C                     Z-ADDXFDATL    XFDAT
+     C                     Z-ADDXFSNL     XFSN
+     C                     Z-ADDX2YDTL    X2YDT
+     C                     WRITEEXCDF4LF
+     C                     END
+     C*
+     C**  Reset index for new header record.
+     C*
+     C                     Z-ADD1         Y
+     C                     ADD  1         Z
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** EXCASR  - PF/EXCDF4A EXCEPTION ERROR SUBROUTINE.             *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : EXCADS - File information DS for PF/EXCDF4A.   *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : EXCEPTION                                      *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           EXCASR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE EXCADS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** EXCBSR  - PF/EXCDF4B EXCEPTION ERROR SUBROUTINE.             *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : EXCBDS - File information DS for PF/EXCDF4B.   *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : EXCEPTION                                      *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           EXCBSR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE EXCBDS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** EXCCSR  - PF/EXCDF4C EXCEPTION ERROR SUBROUTINE.             *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : EXCCDS - File information DS for PF/EXCDF4C.   *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : EXCEPTION                                      *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           EXCCSR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE EXCCDS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** EXCDSR  - PF/EXCDF4D EXCEPTION ERROR SUBROUTINE.             *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : EXCDDS - File information DS for PF/EXCDF4D.   *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : EXCEPTION                                      *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           EXCDSR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE EXCDDS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** EXCESR  - PF/EXCDF4E EXCEPTION ERROR SUBROUTINE.             *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : EXCEDS - File information DS for PF/EXCDF4E.   *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : EXCEPTION                                      *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           EXCESR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE EXCEDS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** EXCFSR  - PF/EXCDF4F EXCEPTION ERROR SUBROUTINE.             *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : EXCFDS - File information DS for PF/EXCDF4F.   *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : EXCEPTION                                      *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           EXCFSR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE EXCFDS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** EXCGSR  - PF/EXCDF4G EXCEPTION ERROR SUBROUTINE.             *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : EXCGDS - File information DS for PF/EXCDF4G.   *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : EXCEPTION                                      *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           EXCGSR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE EXCGDS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** EXCHSR  - PF/EXCDF4H EXCEPTION ERROR SUBROUTINE.             *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : EXCHDS - File information DS for PF/EXCDF4H.   *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : EXCEPTION                                      *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           EXCHSR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE EXCHDS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** EXCISR  - PF/EXCDF4I EXCEPTION ERROR SUBROUTINE.             *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : EXCIDS - File information DS for PF/EXCDF4I.   *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : EXCEPTION                                      *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           EXCISR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE EXCIDS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** EXCJSR  - PF/EXCDF4J EXCEPTION ERROR SUBROUTINE.             *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : EXCJDS - File information DS for PF/EXCDF4J.   *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : EXCEPTION                                      *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           EXCJSR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE EXCJDS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** EXCKSR  - PF/EXCDF4K EXCEPTION ERROR SUBROUTINE.             *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : EXCKDS - File information DS for PF/EXCDF4K.   *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : EXCEPTION                                      *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           EXCKSR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE EXCKDS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** EXCLSR  - PF/EXCDF4L EXCEPTION ERROR SUBROUTINE.             *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : EXCLDS - File information DS for PF/EXCDF4L.   *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : EXCEPTION                                      *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           EXCLSR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE EXCLDS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** *PSSR   - PROGRAM EXCEPTION ERROR SUBROUTINE.                *
+     C*                                                               *
+     C**           Calls programs to handle exception errors.         *
+     C*                                                               *
+     C** FIELDS IN   : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Exception error type flag.            *
+     C*                                                               *
+     C** FIELDS OUT  : NONE.                                          *
+     C*                                                               *
+     C** CALLED FROM : EXC_SR.                                        *
+     C** CALLS       : Programs - SDC2505, SDC2500.                   *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C***********EPSW      IFNE '1'
+     C***********          MOVE '1'       EPSW    1
+     C***********
+     C***If*exception*error*is*on*a*file*call*SDC2505.*********************
+     C***********
+     C***********EPFLAG    IFNE 'F'
+     C***********          CALL 'SDC2505'
+     C***********          PARM           EPPDS1
+     C***********          PARM           EPPDS2
+     C***********
+     C***If*exception*error*is*not*on*a*file*call*SDC2500.******************
+     C***********
+     C***********          ELSE
+     C***********
+     C***********          CALL 'SDC2500'
+     C***********          PARM           EPFDS1
+     C***********          PARM           EPFDS2
+     C***********          PARM           EPPP
+     C***********          PARM           EPPPL
+     C***********
+     C***********          END
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C*
+     C                     DUMP
+     C*
+     C***********          END                                            S01117
+     C*
+     C** Rollback entry if in commitment control.
+     C*
+     C                     ROLBK
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                                            S01117
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+**  CPY@
+(c) Finastra International Limited 2001
+** Header ID array
+ABCDEFGHIJKL

@@ -1,0 +1,1992 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Display ST clients')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0341E - Display Securities Clients                         *
+      *                                                               *
+      *  Function:  This program displays Securities Clients          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 240601             Date 02Oct06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CSE042             Date 28APR03               *
+      *                 CSE041             Date 28APR03               *
+      *                 CSE039             Date 28APR03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 209926             Date 13Nov02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD003             Date 02JAN98               *
+      *                 S01496             Date 12AUG94               *
+      *                 S01464             DATE 11APR94               *
+      *                 066562             DATE 09FEB94               *
+      *                 S01459             DATE 09FEB94               *
+      *                 E28322             DATE 09SEP91               *
+      *                 LN1104             DATE 19FEB91               *
+      *                 E23124             DATE 27NOV90               *
+      *                 S01117             DATE 13NOV90               *
+      *                 S01212             DATE 13NOV90               *
+      *                 S01269             DATE 05NOV90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  240601 - Apply fix 240346. Add another Message ID USR4014    *
+      *           instead of USR3346.                                 *
+      *  240346 - Add option F11 - Display Securities Trading Cust.   *
+      *           Depot Reference. Add new message ID USR3999 instead *
+      *           USR3340.                                            *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSE042 - Auto-Feed of Movements                              *
+      *  CSE041 - DVP/RVP Processing                                  *
+      *  CSE039 - Automatic Settlement of Trades                      *
+      *  209926 - Depot Account Numbers do not appear on Client       *
+      *           Details                                             *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01496 - Jyske Enhancements:                                 *
+      *           - Addition of 'Trade Charges Group' and             *
+      *             'Positino Settlement Charge Group'.               *
+      *           - Display 'Statement Frequency '.                   *
+      *  S01464 - Safe Custody Fees:                                  *
+      *           - Addition of 'Safe Custody Fees' flag.             *
+      *           - Addition of 'Custody Fees Group Code' field.      *
+      *  066562 - Field BVAPS renamed to BVAPST on SDSTRDPD.          *
+      *           Regenerate and recompile program.                   *
+      *  S01459 - Addition of headerbox and PSSR processing.          *
+      *  E28322 - PASS PAREMETER FOR DEPOT 1 (EUROCLEAR) FROM         *
+      *          'RETRIEVE DEPOTS', AND THEN RETRIEVE ITS SHORTNAME   *
+      *  LN1104 - RECOMPILED DUE TO CHANGE TO SDCUSTPD                *
+      *  E23124 - DISPLAY ALL DEPOTS IN HIGH INTENSITY (LN1017)       *
+      *  S01117 - RELEASE 10 UPGRADE (LN0968)                         *
+      *  S01212 - /COPY AND WINDOWS (DELIVERED AS LN0968)             *
+      *  S01269 - PROGRAM RECOMPILED DUE TO CHANGE IN SDSTRDPD(LN0952)*
+      *                                                               *
+      *****************************************************************
+     F/COPY WNCPYSRC,SD0341EFPG
+     FSD0341E#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Securities clients enquiry
+      *
+     FSDSECSL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Securities clients retrieval
+      *
+     FSDCUSTL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Customer details retrieval
+      *
+     FSDSTRDL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Securities trading ICD retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E                    FLDNAM     75 10
+     E                    MSGIDA     75  7
+     E                    MSGDTA     75 45
+     E/COPY WNCPYSRC,SD0341EEPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I/COPY QWINDSRC,SD0340GDTA
+     I*00/Copy Member SD0341E   Initialise Program
+     I/COPY WNCPYSRC,SD0341EIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+     ISECDET    E DSSDSECDPD                                              CSE039
+      * Current Securities Clients Detail in Screen Format                CSE039
+     ISECFIL    E DSSDSECSPD                                              CSE039
+     I              QQACCD                          ACCDQQ                                    CGL029
+      * SE Customer file format                                           CSE039
+      *
+      * Outward parameters
+     IPARC        DS                              6
+      * KEY : Midas SD Futures and Options client retrieval
+      * I : MAP Customer Number
+     I                                        1   6 PACUST
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                              6
+      * KEY: Midas SD Securities clients retrieval
+      * I : MAP Customer Number
+     I                                        1   6 P1CUST
+     IP2PARM      DS
+      * I :  call futures & options
+     I                                        1   1 P2CFAO
+     IP3PARM      DS
+      * I :  mode
+     I                                        1   1 P3MODE
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0001
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0002
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0003
+      * Outward parameters                                                                    240346
+     IPRTCD1      DS                             10                                           240346
+      *                                                                                       240346
+     IPMODE1      DS                              3                                           240346
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Securities
+     C           P2CFAO    PARM           WP0001  1        call futures &
+     C           P3MODE    PARM           WP0002  1        mode
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Check passed parameters
+     C                     EXSR FACKPM
+      * Perform once if all passed, else repeat
+     C           W0RPT     DOUEQ'N'
+      * Display and process key screen
+     C                     EXSR BADSKY
+     C                     END
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+      *
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1CUST    IFEQ *BLANK                     Customer Number
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           BFCUST           Customer Number
+      * Setup key
+     C                     MOVEL#1CUST    BFCUST           Customer Number
+     C           KRTV      CHAIN@BFREDQ              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     9931  *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, then signal error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     9931  *
+      * Send message 'Securities Clients     NF'
+     C                     MOVEL'USR0094' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * Start of SAR S01212
+      * 00/Copy Member SD0341ESFF - Securities Clients  *
+     C*00/Copy Member SD0341E   Calculate Detail Func Fld
+     C/COPY WNCPYSRC,SD0341ESFF
+      * End of SAR S01212
+      * USER: Load detail screen from DBF record
+      * Clients DSP screen footer - Standard Functions  *
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C           P3MODE    IFEQ 'M'                                       S01229
+     C* Setup footer text:
+     C**F3=Main Menu   F12=Previous                                                           240601
+     C* F3=Main Menu   F12=Previous   F11=Other Depot                                         240601
+     C**********           MOVEL'USR3346' WUMSID  7        Message Identifier                 240601
+     C                     MOVEL'USR4014' WUMSID  7        Message Identifier                 240601
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ELSE
+     C* Setup footer text:
+     C**F3=Client Details   F12=Previous                                                      240346
+     C* F3=Client Details   F12=Previous   F11=Other Depot                                    240346
+     C***                  MOVEL'USR3340' WUMSID           Message Identifier                 240346
+     C                     MOVEL'USR4008' WUMSID           Message Identifier                 240346
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+      * Start of SAR S01117
+      * CASE: DB1.Next statement date is not zero
+     C           BFNSDT    IFNE *ZERO                      *IF
+      * Check File Date - Rundate  *
+     C                     CALL 'ZDATE2'               90  Check File Date
+     C                     PARM BFNSDT    WQ0001  50       Work Midas Date
+     C                     PARM WUDFF     WQ0002  1        Date format fla
+     C           WUWCDT    PARM *ZERO     WQ0003  60       Work Converted
+     C           WUWADT    PARM *BLANK    WQ0004  7        Work Alpha Date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZDATE2'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     MOVEL*BLANK    #DSNSD           ST next stateme
+     C                     MOVELWUWCDT    #DSNSD           ST next stateme
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    #DSNSD           ST next stateme
+     C                     END                             *FI
+      * End of SAR S01117
+      * Retrieve for other screen - Client Details  *
+     C                     EXSR SARVGN
+      * start E28322
+      * retrieve Depot 1 (EUROCLEAR), as well as the rest
+      * Retrieve depots - Securities Trading Data  *
+     C                     EXSR SBRVGN
+      * retrieve shortname for Depot 1 (EUROCLEAR)
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SCRVGN
+      * end E28322
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SDRVGN
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SERVGN
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SFRVGN
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SGRVGN
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SHRVGN
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SIRVGN
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SJRVGN
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SKRVGN
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SLRVGN
+      * Start of SAR S01212
+      * 00/Copy Member SD0341ELDS - Securities Clients  *
+     C*00/Copy Member SD0341E   Load Detail Screen
+     C/COPY WNCPYSRC,SD0341ELDS
+      * End of SAR S01212
+     C                     END
+      *
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * Select existing record
+     C                     EXSR VACKRL
+      * Check relations
+      * Check reference to Client Details
+     C                     EXSR VBCKRL
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C           W0RTN     IFNE *BLANK
+     C                     MOVEL*BLANK    W0RTN
+     C                     SETON                     9931  *
+     C                     END
+      * USER: Validate key screen
+      * Start of SAR S01212
+      * 00/Copy Member SD0341EVKS - Securities Clients  *
+     C*00/Copy Member SD0341E   Validate Key Screen
+     C/COPY WNCPYSRC,SD0341EVKS
+      * End of SAR S01212
+      * Customer Number required
+     C           #1CUST    IFEQ *BLANK                     IF
+     C                     SETON                     9931  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+      * Process detail screen input
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * F11 Other depot                                                                       240346
+     C   11                CAS            CCODEP                                              240346
+      * Process key screen input
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * Start of SAR S01212
+      * 00/Copy Member SD0341EPKR - Securities Clients  *
+     C*00/Copy Member SD0341E   Process Key Screen Rqst
+     C/COPY WNCPYSRC,SD0341EPKR
+      * End of SAR S01212
+      * Start of SAR S01117
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+      * End of SAR S01117
+     C   05                MOVEL'Y'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+     C                     MOVEL'Y'       W0TRN
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * Process record:
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         CCODEP    BEGSR                                                              240346
+      *================================================================                       240346
+      * Display                                                                               240346
+      *================================================================                       240346
+      * Validate details                                                                      240346
+      *                                                                                       240346
+      * Call SDSECDCVT to fillup SECDET by SECFIL                                             240346
+      *                                                                                       240346
+     C                     CALL PGM2                                                          240346
+      *                                                                                       240346
+      * Output Parameters                                                                     240346
+      *                                                                                       240346
+      * Return Code                                                                           240346
+     C                     PARM *BLANKS   RETCDE                                              240346
+      *                                                                                       240346
+      * Securities Clients Details File Format                                                240346
+     C                     PARM           SECFIL                                              240346
+      *                                                                                       240346
+      * Output Parameters                                                                     240346
+      * Securities Clients Details Screen Format                                              240346
+     C                     PARM           SECDET                                              240346
+      *                                                                                       240346
+     C                     MOVE 'E'       DDACTN                                              240346
+     C                     MOVEL'SIN'     PMODE1                                              240346
+     C*                                                                                       240346
+     C                     MOVEL'SDC10000'PGM3    9                                           240346
+     C                     MOVE '1'       PGM3                                                240346
+     C                     CALL PGM3                                                          240346
+     C                     PARM           DDACTN                                              240346
+     C                     PARM           SECDET                                              240346
+     C                     PARM *BLANKS   PRTCD1                                              240346
+     C                     PARM           PMODE1                                              240346
+      *                                                                                       240346
+      * F3 - End Program                                                                      240346
+     C           PRTCD1    IFEQ 'SDA0002'                                                     240346
+     C                     EXSR ZYEXPG                                                        240346
+     C                     ENDIF                                                              240346
+      *================================================================                       240346
+     CSR         COEXIT    ENDSR                                                              240346
+      /EJECT                                                                                  240346
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * CALC: Detail screen function fields
+      * Start of SAR S01212
+      * 00/Copy Member SD0341ESFF - Securities Clients  *
+     C*00/Copy Member SD0341E   Calculate Detail Func Fld
+     C/COPY WNCPYSRC,SD0341ESFF
+      * End of SAR S01212
+      * USER: Validate detail screen
+      * Start of SAR S01212
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0341EVSW - Securities Clients  *
+     C*00/Copy Member SD0341E   Validate Detail Scrn Wdw
+     C/COPY WNCPYSRC,SD0341EVSW
+     C                     END                             *FI
+      * 00/Copy Member SD0341EVDS - Securities Clients  *
+     C*00/Copy Member SD0341E   Validate Detail Screen
+     C/COPY WNCPYSRC,SD0341EVDS
+      * End of SAR S01212
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * USER: Perform confirmed action
+      * Start of SAR S01212
+      * 00/Copy Member SD0341EPCA - Securities Clients  *
+     C*00/Copy Member SD0341E   Perform Confrimed Action
+     C/COPY WNCPYSRC,SD0341EPCA
+      * End of SAR S01212
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * USER: Process command keys
+      * CASE: PAR.call futures & options is Yes
+     C           P2CFAO    IFEQ 'Y'                        *IF
+      * CASE: DTL.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' W0RTN            *Return code
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: DTL.*CMD key is *Key screen
+     C           *IN12     IFEQ '1'                        *IF
+      * CASE: PAR.mode is From special clients
+     C           P3MODE    IFEQ 'S'                        *IF
+     C                     MOVEL'USR0790' W0RTN            *Return code
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Send message 'Function key not allowed'
+     C                     MOVEL'USR0533' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO EBEXIT                     *QUIT
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Display FO Clients - Futures & Options Clients  *
+     C                     CLEARPARC
+     C                     MOVEL#1CUST    PACUST           Customer Number
+      *
+     C                     CALL 'SD0331E'              90  Display FO Clie
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Futures &
+     C                     PARM P3MODE    WQ0007  1        mode
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0331E' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: DTL.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' W0RTN            *Return code
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: DTL.*CMD key is *Key screen
+     C           *IN12     IFEQ '1'                        *IF
+      * CASE: PAR.mode is From special clients
+     C           P3MODE    IFEQ 'S'                        *IF
+     C                     MOVEL'USR0790' W0RTN            *Return code
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Send message 'Function key not allowed'
+     C                     MOVEL'USR0533' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO EBEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * Start of SAR S01212
+      * 00/Copy Member SD0341EPCK - Securities Clients  *
+     C*00/Copy Member SD0341E   Process Command Keys
+     C/COPY WNCPYSRC,SD0341EPCK
+      * End of SAR S01212
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * Restart program for next record
+     C           CSE039    IFEQ 'Y'                                                           CSE039
+     C           CSE041    OREQ 'Y'                                                           CSE041
+     C           CSE042    OREQ 'Y'                                                           CSE042
+      *                                                                                       CSE039
+     C                     CALL PGM2                                                          CSE039
+      *                                                                                       CSE039
+      * Output Parameters                                                                     CSE039
+      *                                                                                       CSE039
+      * Return Code                                                                           CSE039
+     C                     PARM *BLANKS   RETCDE                                              CSE039
+      *                                                                                       CSE039
+      * Securities Clients Details File Format                                                CSE039
+     C                     PARM           SECFIL                                              CSE039
+      *                                                                                       CSE039
+      * Output Parameters                                                                     CSE039
+      * Securities Clients Details Screen Format                                              CSE039
+     C                     PARM           SECDET                                              CSE039
+      *                                                                                       CSE039
+     C                     MOVE 'E'       DDACTN                                              CSE039
+     C*                                                                                       CSE039
+      ** WRITE/READ DISPLAY SCREEN 2 - Secondary Details                                      CSE039
+     C                     CALL PGM                                                           CSE039
+      *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯                                                CSE039
+      * INPUT PARAMETERS :                                                                    CSE039
+      * Return code                                                                           CSE039
+     C                     PARM *BLANKS   RETCDE 10                                           CSE039
+      ** Security Details in screen format                                                    CSE039
+     C                     PARM           SECDET                                              CSE039
+      ** Security Details screen 2 OK indicators                                              CSE039
+     C                     PARM           OK      7                                           CSE039
+      ** Customer Shortname                                                                   CSE039
+     C                     PARM           #DCSST                                              CSE039
+      ** Customer Report Name                                                                 CSE039
+     C                     PARM           #DRNFF                                              CSE039
+      ** Customer Report Town                                                                 CSE039
+     C                     PARM           #DRTFF                                              CSE039
+      ** Called from Customer Details Module                                                  CSE039
+     C                     PARM *BLANKS   CUSCAL  1                                           CSE039
+      ** Automatic Settlement of Trades                                                       CSE039
+     C                     PARM           CSE039                                              CSE039
+      ** DVP/RVP Processing                                                                   CSE041
+     C                     PARM           CSE041                                              CSE041
+      ** Auto Feed of Trades and Movements                                                    CSE042
+     C                     PARM           CSE042                                              CSE042
+      * ERRORS                                                                                CSE039
+     C                     PARM           FLDNAM                                              CSE039
+     C                     PARM           MSGIDA                                              CSE039
+     C                     PARM           MSGDTA                                              CSE039
+      *                                                                                       CSE039
+      * ENABLED KEY & DETAIL FIELDS                                                           CSE039
+      *                                                                                       CSE039
+     C                     PARM           @EKYFD  1                                           CSE039
+     C                     PARM           @EDTFD  1                                           CSE039
+      * OUTPUT PARAMETERS :                                                                   CSE039
+      * Function Keys                                                                         CSE039
+     C                     PARM '0'       @INKC   1                                           CSE039
+     C                     PARM '0'       @INKL   1                                           CSE039
+      *                                                                                       CSE039
+      * F3 - End Program                                                                      CSE039
+     C           @INKC     CASEQ'1'       ZYEXPG                                              CSE039
+      *                                                                                       CSE039
+     C                     ENDCS                                                              CSE039
+     C                     ENDIF                                                              CSE039
+      *                                                                                       CSE039
+      * F12 - Cancel on Details Screen 2                                                      CSE039
+     C           @INKL     IFEQ '0'                                                           CSE039
+      *                                                                                       CSE039
+     C                     MOVEL'N'       W0TRN
+     C                     ENDIF                                                              CSE039
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         FACKPM    BEGSR
+      *================================================================
+      * Check passed parameters
+      *================================================================
+      * Is full key present?
+     C           P1CUST    IFEQ *BLANK                     Customer Number
+      * Not every key field passed - loop program
+     C                     MOVEL'Y'       W0RPT   1
+     C                     ELSE
+      * Full key passed, so single shot program
+     C                     MOVEL'N'       W0RPT
+     C                     END
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+     C                     MOVEL'0'       *IN79
+     C           WUACOP    IFEQ *BLANK                     *IF
+     C           WUACOP    OREQ 'N'
+     C                     MOVEL'1'       *IN79
+     C                     END                             *FI
+     C                     MOVEL'0'       *IN78
+     C           WUCUIN    IFEQ *BLANK                     *IF
+     C           WUCUIN    OREQ 'N'
+     C                     MOVEL'1'       *IN78
+     C                     END                             *FI
+     C                     MOVEL'0'       *IN77
+     C           WUJYSK    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN77
+     C                     END                             *FI
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     Z-ADD*ZERO     #DCNSD           CD next stateme
+     C                     Z-ADD*ZERO     #1NSDT           Next statement
+     C                     Z-ADD*ZERO     #1NTFC           No. of Trades f
+     C                     MOVEL*BLANK    #DCSST           Customer shortn
+     C                     MOVEL*BLANK    #DRNFF           Report Name FF
+     C                     MOVEL*BLANK    #DRTFF           Report Town FF
+     C                     MOVEL*BLANK    #1CLAS           Classification
+     C                     MOVEL*BLANK    #1PCYC           Portfolio curre
+     C                     MOVEL*BLANK    #1CYCD           Currency Code
+     C                     MOVEL*BLANK    #1ACCD           Account Code
+     C                     Z-ADD*ZERO     #1ACSN           Account sequenc
+     C                     MOVEL*BLANK    #1STFQ           Statement frequ
+     C                     MOVEL*BLANK    #DSNSD           ST next stateme
+     C                     Z-ADD*ZERO     #1SBDM           Stat.Base Date
+     C                     MOVEL*BLANK    #1ADCD           Address Code
+     C                     MOVEL*BLANK    #1SRCD           Statutory retur
+     C                     MOVEL*BLANK    #1CFIN           Cedel Fungibili
+     C                     MOVEL*BLANK    #1PLAG           Pledge Agreemen
+     C                     MOVEL*BLANK    #1TCD            Tax Code
+     C                     MOVEL*BLANK    #1ASIN           Auto-Settle Ind
+     C                     MOVEL*BLANK    #1SBJF           Subject to Cust
+     C                     MOVEL*BLANK    #1TDCG           Trade Charges G
+     C                     MOVEL*BLANK    #1CFGC           Custody Fees Gr
+     C                     MOVEL*BLANK    #1PSCG           Position Settl.
+     C                     MOVEL*BLANK    #1NARR           Narrative
+     C                     MOVEL*BLANK    #DDP01           Depot 1
+     C                     MOVEL*BLANK    #1DRF1           Depot Reference
+     C                     MOVEL*BLANK    #1PNP1           Part./Non-part.
+     C                     MOVEL*BLANK    #DDP02           Depot 2
+     C                     MOVEL*BLANK    #1DRF2           Depot Reference
+     C                     MOVEL*BLANK    #1PNP2           Part./Non-part.
+     C                     MOVEL*BLANK    #DDP03           Depot 3
+     C                     MOVEL*BLANK    #1DRF3           Depot Reference
+     C                     MOVEL*BLANK    #1PNP3           Part./Non-part.
+     C                     MOVEL*BLANK    #DDP04           Depot 4
+     C                     MOVEL*BLANK    #1DRF4           Depot Reference
+     C                     MOVEL*BLANK    #1PNP4           Part./Non-part.
+     C                     MOVEL*BLANK    #DDP05           Depot 5
+     C                     MOVEL*BLANK    #1DRF5           Depot Reference
+     C                     MOVEL*BLANK    #1PNP5           Part./Non-part.
+     C                     MOVEL*BLANK    #DDP06           Depot 6
+     C                     MOVEL*BLANK    #1DRF6           Depot Reference
+     C                     MOVEL*BLANK    #1PNP6           Part./Non-part.
+     C                     MOVEL*BLANK    #DDP07           Depot 7
+     C                     MOVEL*BLANK    #1DRF7           Depot Reference
+     C                     MOVEL*BLANK    #1PNP7           Part./Non-part.
+     C                     MOVEL*BLANK    #DDP08           Depot 8
+     C                     MOVEL*BLANK    #1DRF8           Depot Reference
+     C                     MOVEL*BLANK    #1PNP8           Part./Non-part.
+     C                     MOVEL*BLANK    #DDP09           Depot 9
+     C                     MOVEL*BLANK    #1DRF9           Depot Reference
+     C                     MOVEL*BLANK    #1PNP9           Part./Non-part.
+     C                     MOVEL*BLANK    #DDP10           Depot 10
+     C                     MOVEL*BLANK    #1DRF0           Depot Reference
+     C                     MOVEL*BLANK    #1PNP0           Part./Non-part.
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @BFREDQ fields to screen
+      *================================================================
+     C                     Z-ADDBFLCD     #1LCD            Last Change Dat
+     C                     MOVELBFTYLC    #1TYLC           Type of Last Ch
+     C                     Z-ADDBFNSDT    #1NSDT           Next statement
+     C                     Z-ADDBFNTFC    #1NTFC           No. of Trades f
+     C                     MOVELBFCUST    #1CUST           Customer Number
+     C                     MOVELBFCLAS    #1CLAS           Classification
+     C                     MOVELBFPCYC    #1PCYC           Portfolio curre
+     C                     MOVELBFCYCD    #1CYCD           Currency Code
+     C                     MOVELBFACCD    #1ACCD           Account Code
+     C                     Z-ADDBFACSN    #1ACSN           Account sequenc
+     C                     MOVELBFSTFQ    #1STFQ           Statement frequ
+     C                     Z-ADDBFSBDM    #1SBDM           Stat.Base Date
+     C                     MOVELBFADCD    #1ADCD           Address Code
+     C                     MOVELBFSRCD    #1SRCD           Statutory retur
+     C                     MOVELBFCFIN    #1CFIN           Cedel Fungibili
+     C                     MOVELBFPLAG    #1PLAG           Pledge Agreemen
+     C                     MOVELBFTCD     #1TCD            Tax Code
+     C                     MOVELBFASIN    #1ASIN           Auto-Settle Ind
+     C                     MOVELBFSBJF    #1SBJF           Subject to Cust
+     C                     MOVELBFTDCG    #1TDCG           Trade Charges G
+     C                     MOVELBFCFGC    #1CFGC           Custody Fees Gr
+     C                     MOVELBFPSCG    #1PSCG           Position Settl.
+     C                     MOVELBFNARR    #1NARR           Narrative
+     C**********           MOVELBFDRF1    #1DRF1           Depot Reference                    209926
+     C                     MOVELBFNDR1    #1DRF1           Depot Reference                    209926
+     C                     MOVELBFPNP1    #1PNP1           Part./Non-part.
+     C**********           MOVELBFDRF2    #1DRF2           Depot Reference                    209926
+     C                     MOVELBFNDR2    #1DRF2           Depot Reference                    209926
+     C                     MOVELBFPNP2    #1PNP2           Part./Non-part.
+     C**********           MOVELBFDRF3    #1DRF3           Depot Reference                    209926
+     C                     MOVELBFNDR3    #1DRF3           Depot Reference                    209926
+     C                     MOVELBFPNP3    #1PNP3           Part./Non-part.
+     C**********           MOVELBFDRF4    #1DRF4           Depot Reference                    209926
+     C                     MOVELBFNDR4    #1DRF4           Depot Reference                    209926
+     C                     MOVELBFPNP4    #1PNP4           Part./Non-part.
+     C**********           MOVELBFDRF5    #1DRF5           Depot Reference                    209926
+     C                     MOVELBFNDR5    #1DRF5           Depot Reference                    209926
+     C                     MOVELBFPNP5    #1PNP5           Part./Non-part.
+     C**********           MOVELBFDRF6    #1DRF6           Depot Reference                    209926
+     C                     MOVELBFNDR6    #1DRF6           Depot Reference                    209926
+     C                     MOVELBFPNP6    #1PNP6           Part./Non-part.
+     C**********           MOVELBFDRF7    #1DRF7           Depot Reference                    209926
+     C                     MOVELBFNDR7    #1DRF7           Depot Reference                    209926
+     C                     MOVELBFPNP7    #1PNP7           Part./Non-part.
+     C**********           MOVELBFDRF8    #1DRF8           Depot Reference                    209926
+     C                     MOVELBFNDR8    #1DRF8           Depot Reference                    209926
+     C                     MOVELBFPNP8    #1PNP8           Part./Non-part.
+     C**********           MOVELBFDRF9    #1DRF9           Depot Reference                    209926
+     C                     MOVELBFNDR9    #1DRF9           Depot Reference                    209926
+     C                     MOVELBFPNP9    #1PNP9           Part./Non-part.
+     C**********           MOVELBFDRF0    #1DRF0           Depot Reference                    209926
+     C                     MOVELBFNDR0    #1DRF0           Depot Reference                    209926
+     C                     MOVELBFPNP0    #1PNP0           Part./Non-part.
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVELP1CUST    #1CUST           Customer Number
+      * USER: Load key screen
+      * Start of SAR S01212
+      * 00/Copy Member SD0341ELKS - Securities Clients  *
+     C*00/Copy Member SD0341E   Load Key Screen
+     C/COPY WNCPYSRC,SD0341ELKS
+      * End of SAR S01212
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Retrieve for other screen - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELBFCUST    BBCUST           Customer Number
+     C           KRSSA     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    #DCSST           Customer Shortn
+     C                     MOVELBBCRTN    #DRTFF           Customer Report
+     C                     MOVELBBCRNM    #DRNFF           Customer Report
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Retrieve depots - Securities Trading Data  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           BVSCTR           Securities Trad
+      * Move fields to key list
+     C                     MOVE *BLANK    BVSCTR           Securities Trad
+     C                     MOVEL'STRD'    BVSCTR           Securities Trad
+     C           KRSSB     CHAIN@BVREFF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0239' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+      * Setup message data for message
+     C                     MOVEL'SDSTRDPD'ZA0001           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO SBEXIT                     *QUIT
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBVDR1     WUDR1            Depot 1 (EUROCL
+     C                     MOVELBVDR3     WUDR3            Depot Ref 3, Ka
+     C                     MOVELBVDR10    WUDR10           Depot Reference
+     C                     MOVELBVDR2     WUDR2            Depot Reference
+     C                     MOVELBVDR4     WUDR4            Depot Reference
+     C                     MOVELBVDR5     WUDR5            Depot Reference
+     C                     MOVELBVDR6     WUDR6            Depot Reference
+     C                     MOVELBVDR7     WUDR7            Depot Reference
+     C                     MOVELBVDR8     WUDR8            Depot Reference
+     C                     MOVELBVDR9     WUDR9            Depot Reference
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELWUDR1     BBCUST           Customer Number
+     C           KRSSC     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    #DDP01           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         SDRVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSD     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELWUDR2     BBCUST           Customer Number
+     C           KRSSD     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SDEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    #DDP02           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SDEXIT    ENDSR
+      /EJECT
+     CSR         SERVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSE     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELWUDR3     BBCUST           Customer Number
+     C           KRSSE     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SEEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    #DDP03           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SEEXIT    ENDSR
+      /EJECT
+     CSR         SFRVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSF     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELWUDR4     BBCUST           Customer Number
+     C           KRSSF     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SFEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    #DDP04           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SFEXIT    ENDSR
+      /EJECT
+     CSR         SGRVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSG     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELWUDR5     BBCUST           Customer Number
+     C           KRSSG     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SGEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    #DDP05           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SGEXIT    ENDSR
+      /EJECT
+     CSR         SHRVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSH     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELWUDR6     BBCUST           Customer Number
+     C           KRSSH     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SHEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    #DDP06           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SHEXIT    ENDSR
+      /EJECT
+     CSR         SIRVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSI     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELWUDR7     BBCUST           Customer Number
+     C           KRSSI     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SIEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    #DDP07           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SIEXIT    ENDSR
+      /EJECT
+     CSR         SJRVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSJ     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELWUDR8     BBCUST           Customer Number
+     C           KRSSJ     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SJEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    #DDP08           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SJEXIT    ENDSR
+      /EJECT
+     CSR         SKRVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSK     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELWUDR9     BBCUST           Customer Number
+     C           KRSSK     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SKEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    #DDP09           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SKEXIT    ENDSR
+      /EJECT
+     CSR         SLRVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSL     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELWUDR10    BBCUST           Customer Number
+     C           KRSSL     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SLEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    #DDP10           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SLEXIT    ENDSR
+      /EJECT
+     CSR         SMRVGN    BEGSR
+      *================================================================
+      * Retrieve Autocharges - Securities Trading Data  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSM     KLIST
+     C                     KFLD           BVSCTR           Securities Trad
+      * Move fields to key list
+     C                     MOVE *BLANK    BVSCTR           Securities Trad
+     C                     MOVEL'STRD'    BVSCTR           Securities Trad
+     C           KRSSM     CHAIN@BVREFF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0239' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+      * Setup message data for message
+     C                     MOVEL'SDSTRDPD'ZA0002           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO SMEXIT                     *QUIT
+     C                     GOTO SMEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBVACOP    WUACOP           Autocharge Opti
+     C                     END
+      *================================================================
+     CSR         SMEXIT    ENDSR
+      /EJECT
+     CSR         SNRVGN    BEGSR
+      *================================================================
+      * Retrieve Safe Custody Ind - Securities Trading Data  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSN     KLIST
+     C                     KFLD           BVSCTR           Securities Trad
+      * Move fields to key list
+     C                     MOVE *BLANK    BVSCTR           Securities Trad
+     C                     MOVEL'STRD'    BVSCTR           Securities Trad
+     C           KRSSN     CHAIN@BVREFF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0239' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+      * Setup message data for message
+     C                     MOVEL'SDSTRDPD'ZA0003           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO SNEXIT                     *QUIT
+     C                     GOTO SNEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBVCUIN    WUCUIN           Safe Custody Fe
+     C                     END
+      *================================================================
+     CSR         SNEXIT    ENDSR
+      /EJECT
+     CSR         SORVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSO     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSO     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SOEXIT    ENDSR
+      /EJECT
+     CSR         VACKRL    BEGSR
+      *================================================================
+      * Select existing record
+      *================================================================
+      * Name search required?
+     C                     MOVEL#1CUST    WK1X01  1
+     C           WK1X01    IFEQ '?'                        Customer Number
+     C                     CALL 'SD0340S'              90  Select Securiti
+     C                     PARM *BLANK    W0RTN   7
+     C           #1CUST    PARM #1CUST    WQ0005  6        Customer Number
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0340S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     99    *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *================================================================
+     CSR         VAEXIT    ENDSR
+      /EJECT
+     CSR         VBCKRL    BEGSR
+      *================================================================
+      * Check reference to Client Details
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Name search required?
+     C                     MOVEL#1CUST    WK1X01  1
+     C           WK1X01    IFEQ '?'                        Customer Number
+     C                     CALL 'SD0010S'              90  Select Client D
+     C                     PARM *BLANK    W0RTN   7
+     C           #1CUST    PARM #1CUST    WQ0006  6        Customer Number
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0010S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     9931  *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+      * No value selected, exit
+     C           W0RTN     IFNE *BLANK
+     C                     GOTO VBEXIT
+     C                     END
+     C                     END
+      *................................................................
+      * If all low order keys not entered, exit
+     C           #1CUST    IFEQ *BLANK                     Customer Number
+     C                     GOTO VBEXIT
+     C                     END
+      *
+     C           KLVBBB    KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Setup key
+     C                     MOVEL#1CUST    BBCUST           Customer Number
+     C           KLVBBB    CHAIN@BBREBF              9091  *
+     C           *IN90     IFEQ '0'
+      * Record found - move back any virtuals
+     C                     GOTO VBEXIT
+     C                     END
+      * Send message 'Client Details         NF'
+     C                     MOVEL'USR0081' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'USR0081' W0RTN
+      *================================================================
+     CSR         VBEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * Start of SAR S01212
+      * 00/Copy Member SD0341EEPP - Securities Clients  *
+     C*00/Copy Member SD0341E   Exit Program Processing
+     C/COPY WNCPYSRC,SD0341EEPP
+      * End of SAR S01212
+      * Start of SAR S01117
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+      * End of SAR S01117
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Work Converted Date
+     C                     Z-ADD*ZERO     WUWCDT  60
+      * Define work field Work Alpha Date
+     C                     MOVEL*BLANK    WUWADT  7
+      * Define work field Depot 1 (EUROCLEAR)
+     C                     MOVEL*BLANK    WUDR1   6
+      * Define work field Depot Ref 3, Kassenverein
+     C                     MOVEL*BLANK    WUDR3   6
+      * Define work field Depot Reference 10 Custom
+     C                     MOVEL*BLANK    WUDR10  6
+      * Define work field Depot Reference 2 - Cedel
+     C                     MOVEL*BLANK    WUDR2   6
+      * Define work field Depot Reference 4 Custome
+     C                     MOVEL*BLANK    WUDR4   6
+      * Define work field Depot Reference 5 Custome
+     C                     MOVEL*BLANK    WUDR5   6
+      * Define work field Depot Reference 6 Custome
+     C                     MOVEL*BLANK    WUDR6   6
+      * Define work field Depot Reference 7 Custome
+     C                     MOVEL*BLANK    WUDR7   6
+      * Define work field Depot Reference 8 Custome
+     C                     MOVEL*BLANK    WUDR8   6
+      * Define work field Depot Reference 9 Custome
+     C                     MOVEL*BLANK    WUDR9   6
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field Autocharge Option
+     C                     MOVEL*BLANK    WUACOP  1
+      * Define work field Safe Custody Fees Flag
+     C                     MOVEL*BLANK    WUCUIN  1
+      * Define work field SAR S01496
+     C                     MOVEL*BLANK    WUJYSK  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field SAR number field
+     C                     MOVEL*BLANK    WUSARN  6
+      * Define work field Access Pgm Return Code
+     C                     MOVEL*BLANK    WUAPRC  7
+      * Define work field Access obj dummy DS (76)
+     C                     MOVEL*BLANK    WUFDY  76
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD0341E#
+     C                     OPEN SDSECSL1
+     C                     OPEN SDCUSTL1
+     C                     OPEN SDSTRDL1
+     C                     OPEN SDMMODL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * Start of S01459
+      * SD0341E Precompiler - Securities Clients  *
+      * Remove Last Amend Box and Creation Parameter Functions
+      * End of S01459
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Copyright Statement 1988 - Standard Functions  * copyright
+      * Retrieve Autocharges - Securities Trading Data  *
+     C                     EXSR SMRVGN
+      * Start of change S01464.
+      * Check if Safe Custody Fees flag is on.
+      * Retrieve Safe Custody Ind - Securities Trading Data  *
+     C                     EXSR SNRVGN
+      * End of change S01464.
+      * Start of SAR S01212
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SORVGN
+      * DATA definition for SECS - Securities Clients  *
+      * 00/Copy Member SD0341EIPG - Securities Clients  *
+     C/COPY WNCPYSRC,SD0341ECPG
+      * End of SAR S01212
+      * Start of S01496
+      * Check if the Jyske Enhancements feature is present.
+     C                     MOVEL'S01496'  WUSARN           SAR number fiel
+      * SAR switched on check - Standard Functions  *
+     C                     CALL 'AOSARDR0'             90  SAR switched on
+     C           WUAPRC    PARM WUAPRC    WQ0008  7        Access Pgm Retu
+     C                     PARM '*VERIFY' WQ0009  7        Option for ACCO
+     C           WUSARN    PARM WUSARN    WQ0010  6        SAR number fiel
+     C                     PARM WUFDY     WQ0011 76        Access obj dumm
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOSARDR0'W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Check return code.
+      * CASE: WRK.Access Pgm Return Code is *Normal
+     C           WUAPRC    IFEQ *BLANK                     *IF
+     C                     MOVEL'Y'       WUJYSK           SAR S01496
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUJYSK           SAR S01496
+     C                     END                             *FI
+      *                                                                   CSE039
+      ** Check if CSE039 is installed                                     CSE039
+      *                                                                   CSE039
+     C                     CALL 'AOSARDR0'                                CSE039
+     C                     PARM *BLANKS   PRTCD   7                       CSE039
+     C                     PARM '*VERIFY' POPTN   7                       CSE039
+     C                     PARM 'CSE039'  PSARD   6                       CSE039
+      *                                                                   CSE039
+     C           PRTCD     IFEQ *BLANKS                                   CSE039
+     C                     MOVE 'Y'       CSE039  1                       CSE039
+     C                     ELSE                                           CSE039
+     C                     MOVE 'N'       CSE039                          CSE039
+     C                     ENDIF                                          CSE039
+      *                                                                   CSE041
+      ** Check if CSE041 is installed                                     CSE041
+      *                                                                   CSE041
+     C                     CALL 'AOSARDR0'                                CSE041
+     C                     PARM *BLANKS   PRTCD                           CSE041
+     C                     PARM '*VERIFY' POPTN                           CSE041
+     C                     PARM 'CSE041'  PSARD                           CSE041
+      *                                                                   CSE041
+     C           PRTCD     IFEQ *BLANKS                                   CSE041
+     C                     MOVE 'Y'       CSE041                          CSE041
+     C                     ELSE                                           CSE041
+     C                     MOVE 'N'       CSE041  1                       CSE041
+     C                     ENDIF                                          CSE041
+      *                                                                   CSE042
+      ** Check if CSE042 is installed                                     CSE042
+      *                                                                   CSE042
+     C                     CALL 'AOSARDR0'                                CSE042
+     C                     PARM *BLANKS   PRTCD                           CSE042
+     C                     PARM '*VERIFY' POPTN                           CSE042
+     C                     PARM 'CSE042'  PSARD                           CSE042
+      *                                                                   CSE042
+     C           PRTCD     IFEQ *BLANKS                                   CSE042
+     C                     MOVE 'Y'       CSE042  1                       CSE042
+     C                     ELSE                                           CSE042
+     C                     MOVE 'N'       CSE042                          CSE042
+     C                     ENDIF                                          CSE042
+      *                                                                   CSE039
+     C                     MOVEL'SDSECD2D'PGM     9                       CSE039
+     C                     MOVE 'P'       PGM                             CSE039
+     C                     MOVEL'SDSECDCV'PGM2    9                       CSE039
+     C                     MOVE 'T'       PGM2                            CSE039
+     C/COPY WNCPYSRC,SD0341EC01
+      * End of S01496
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0341EPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0341EPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0341EPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O/COPY WNCPYSRC,SD0341EOPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

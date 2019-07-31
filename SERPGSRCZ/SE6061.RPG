@@ -1,0 +1,464 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Outstanding Settlements Rpt Prompt')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Custody Fees                                 *
+     F*                                                               *
+     F*  SE6061 - Outstanding Settlements Report Prompt               *
+     F*                                                               *
+     F*  Function: This program provides a prompt screen for          *
+     F*    (I/C)   on-request I/C report 'Outstanding Settlements     *
+     F*            Report'.                                           *
+     F*                                                               *
+     F*  Called by: Standard RCF Processing                           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01464   *CREATE   Date 04Apr94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  S01464 - Safe Custody Fees.                                  *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSDBANKL1IF  E           K        DISK                           UC
+     F                                              KINFSR *PSSR
+     F*** Bank Details  (Prefix:BJ)
+     F*
+     F***SDACOFL1IF**E***********K********DISK                            S01464
+     F**********************************************KINFSR**PSSR          S01464
+     F*** Account Officer Codes  (Prefix:AZ)
+     F*
+     FSECUSTL2IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*** Safe Custody Customer Details  (Prefix:BF)
+     F*
+     F***SDCUSTL2IF**E***********K********DISK                            S01464
+     F**********************************************KINFSR**PSSR          S01464
+     F*** Live Customers by Customer Shortname  (Prefix:BB)
+     F*
+     F***SDCUSTL5IF**E***********K********DISK                            S01464
+     F************@CUSTFT***************************KRENAME@CUSTL5        S01464
+     F**********************************************KINFSR**PSSR          S01464
+     F*** Live Customers by Customer Number  (Prefix:BB)
+     F*
+     FSE6061DFCF  E                    WORKSTN
+     F*** Report Selection and Prompts display file
+     F*
+      /EJECT
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*   F U N C T I O N   O F   I N D I C A T O R S                 *
+     F*                                                               *
+     F*  01  - Not first time pgm is called                           *
+     F*                                                               *
+     F*  70  - Error indicator                                        *
+     F*  71  - Error on account officer code                          *
+     F*  72  - Error on customer number/shortname                     *
+     F*  73  - Error on settlements authorised ind                    *
+     F*                                                               *
+     F*  80  - Error when accessing files                             *
+     F*                                                               *
+     F*  98  - Date format                                            *
+     F*  90-99 Standard subroutines                                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      /TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+     E*** Array for copyright insertion
+     E*
+      /EJECT
+     I*
+     ILDA        UDS                            256
+     I*** Local data area for database error details
+     I*
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IPSDS       SDS
+     I*** Program status data structure for WS/user ID's
+     I*
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     ICPYR@#      DS
+     I*** Data structure for compilation - Copyright insertion
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I@RPARM      DS
+     I*** Parameters for @RPARM - 100 long string passed to RCF
+     I*
+     I                                        1 100 @@RPRM
+     I                                        1   4 WPACOF
+     I                                        5  10 WPCNUM
+     I                                       11  11 WPSETA
+     I*                                                                   S01464
+     I** CUSTOMER DETAILS                                                 S01464
+     ISDCUST    E DSSDCUSTPD                                              S01464
+     I*                                                                   S01464
+     I** ACCOUNT OFFICER                                                  S01464
+     ISDACOF    E DSSDACOFPD                                              S01464
+     I*                                                                   S01194
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I*                                                                   S01464
+     I** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE               S01464
+     IDSSDY     E DSDSSDY                                                 S01464
+      /EJECT
+      /TITLE MAIN PROCESSING
+     C*
+     C*** Initial processing (first time only)
+     C*
+     C           *IN01     IFEQ '0'
+     C                     EXSR #INIT
+     C                     END
+      *
+     C                     MOVE '*ALL'    WPACOF
+     C                     MOVE *BLANKS   WPCNU1 10
+     C                     MOVEL'*ALL'    WPCNU1
+     C*
+     C*** Write input screen with default values
+     C*
+     C                     EXSR #W01
+     C*
+     C*** Do ubtil F3 taken
+     C*
+     C           *INKC     DOUEQ'1'
+     C*
+     C** Read input screen
+     C*
+     C                     READ SE6061F0                 80
+     C*
+     C** ENTER taken
+     C*
+     C           *IN85     IFEQ '0'
+     C*
+     C*** Validate screen
+     C*
+     C                     EXSR #V01
+     C*
+     C*** All details valid
+     C*
+     C           *IN70     IFEQ '0'
+     C*
+     C           DDACOF    IFEQ *BLANK
+     C*
+     C*** Set up default details
+     C*
+     C                     EXSR #P01
+     C*
+     C                     ELSE
+     C*
+     C*** Return to calling CLP
+     C*
+     C                     MOVE DDACOF    WPACOF
+     C*
+     C           DDCNUM    IFEQ '*ALL'
+     C                     MOVE '*ALL  '  WPCNUM
+     C                     ELSE
+     C                     MOVE BBCUST    WPCNUM
+     C                     END
+     C*
+     C                     MOVE DDSETA    WPSETA
+     C*
+     C                     RETRN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Write screen with error messages and default values from SR/#P01
+     C*
+     C                     WRITESE6061F0
+     C                     WRITESE6061S0
+     C*
+     C*** Clear program message queue
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ
+     C                     PARM           TOPRQ
+     C*
+     C*** Reset error indicators
+     C*
+     C                     MOVE '0'       *IN70
+     C                     MOVE '0'       *IN71
+     C                     MOVE '0'       *IN72
+     C                     MOVE '0'       *IN73
+     C                     MOVE '0'       *IN74
+     C*
+     C                     END
+     C*
+     C                     MOVE 'E'       RCMD
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*
+     C           #W01      BEGSR                           ** #W01  BSR **
+     C*
+     C                     MOVELBJMRDT    DDRUNA
+     C                     MOVELWPACOF    DDACOF
+     C                     MOVELWPCNU1    DDCNUM
+     C                     MOVELWPSETA    DDSETA
+     C*
+     C                     WRITESE6061F0
+     C                     WRITESE6061S0
+     C*
+     C                     ENDSR                           ** #W01  ESR **
+     C*
+     C********************************************************************
+      /EJECT
+     C*
+     C           #V01      BEGSR                           ** #V01  BSR **
+     C*
+     C*** Validate account officer code
+     C*
+     C           DDACOF    IFNE '*ALL'
+     C           DDACOF    ANDNE*BLANK
+     C                     MOVELDDACOF    WWACOF  2
+     C***********WWACOF    CHAINSDACOFL1             80                   S01464
+     C                     CALL 'AOACOFR0'                                S01464
+     C                     PARM *BLANKS   @RTCD   7                       S01464
+     C                     PARM '*KEY   ' @OPTN   7                       S01464
+     C                     PARM WWACOF    @KEY1   2                       S01464
+     C           SDACOF    PARM SDACOF    DSFDY                           S01464
+     C************IN80     IFEQ '1'                                       S01464
+     C           @RTCD     IFNE *BLANKS                                   S01464
+     C           @RTCD     ANDNE'*NOSEL '                                 S01464
+     C                     MOVEL'SC60601' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN71
+     C                     MOVE '1'       *IN70
+     C                     END
+     C                     MOVELAZACOC    DDACOF                          S01464
+     C           @RTCD     IFEQ '*NOSEL '                                 S01464
+     C                     MOVEL'*ALL'    DDACOF                          S01464
+     C                     END                                            S01464
+     C                     END
+     C*
+     C*** Validate customer number/shortname
+     C*
+     C           DDCNUM    IFNE '*ALL'
+     C*
+     C           DDACOF    IFEQ '*ALL'
+     C                     MOVEL'SC60602' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN72
+     C                     MOVE '1'       *IN70
+     C                     END
+     C*
+     C           *IN72     IFEQ '0'
+     C***********          MOVE DDCNUM    WWCNU4  4                       S01464
+     C***********WWCNU4    IFEQ *BLANK                                    S01464
+     C***********          MOVELDDCNUM    WWCNU6  6                       S01464
+     C***********WWCNU6    CHAINSDCUSTL5             80                   S01464
+     C***********          ELSE                                           S01464
+     C***********DDCNUM    CHAINSDCUSTL2             80                   S01464
+     C***********          END                                            S01464
+     C                     CALL 'AOCUSTR0'                                S01464
+     C                     PARM *BLANKS   @RTCD   7                       S01464
+     C                     PARM '*KEY   ' @OPTN   7                       S01464
+     C                     PARM DDCNUM    @KEY2  10                       S01464
+     C                     PARM *BLANKS   @KYST   7                       S01464
+     C           SDCUST    PARM SDCUST    DSSDY                           S01464
+     C*                                                                   S01464
+     C************IN80     IFEQ '1'                                       S01464
+     C           @RTCD     IFNE *BLANKS                                   S01464
+     C           @RTCD     ANDNE'*NOSEL '                                 S01464
+     C           @KYST     OREQ 'ERROR  '                                 S01464
+     C                     MOVEL'SC60603' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN72
+     C                     MOVE '1'       *IN70
+     C                     END
+     C                     MOVELBBCUST    DDCNUM                          S01464
+     C           @RTCD     IFEQ '*NOSEL '                                 S01464
+     C                     MOVEL'*ALL'    DDCNUM                          S01464
+     C                     END                                            S01464
+     C                     END
+     C*                                                                   S01464
+     C           DDCNUM    IFNE '*ALL'                                    S01464
+     C           DDACOF    ANDEQ'*ALL'                                    S01464
+     C                     MOVEL'SC60602' ZAMSID                          S01464
+     C                     EXSR ZASNMS                                    S01464
+     C                     MOVE '1'       *IN72                           S01464
+     C                     MOVE '1'       *IN70                           S01464
+     C                     END                                            S01464
+     C*
+     C           *IN72     IFEQ '0'
+     C           BBCUST    CHAINSECUSTL2             80
+     C           *IN80     IFEQ '1'
+     C                     MOVEL'SC60604' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN72
+     C                     MOVE '1'       *IN70
+     C                     END
+     C                     END
+     C*
+     C           *IN70     IFEQ '0'
+     C           DDACOF    ANDNE'*ALL'
+     C           DDACOF    ANDNE*BLANK
+     C           WWACOF    ANDNEBBACOC
+     C                     MOVEL'SC60605' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN72
+     C                     MOVE '1'       *IN70
+     C                     END
+     C*
+     C                     END
+     C*
+     C*** Validate settlements authorised
+     C*
+     C           DDSETA    IFNE 'Y'
+     C           DDSETA    ANDNE'N'
+     C           DDSETA    ANDNE'X'
+     C                     MOVEL'SC60606' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN73
+     C                     MOVE '1'       *IN70
+     C                     END
+     C*
+     C                     ENDSR                           ** #V01  ESR **
+     C********************************************************************
+      /EJECT
+     C*
+     C           #P01      BEGSR                           ** #P01  BSR **
+     C*
+     C           DDACOF    IFEQ *BLANK
+     C*
+     C           DDCNUM    IFEQ '*ALL'
+     C                     MOVE '*ALL'    DDACOF
+     C                     ELSE
+     C                     MOVELBBACOC    DDACOF
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR                           ** #P01  ESR **
+     C*
+     C********************************************************************
+      /EJECT
+     C*
+     C           ZASNMS    BEGSR                           ** ZASNMS BSR**
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file
+     C                     PARM           ZAMSDA           Message data
+     C                     PARM           ZAMSTP           Message type
+     C*
+     C*** Clear all fields for default mechanism next time.
+     C*
+     C                     MOVEL*BLANK    ZAPGM            Message queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data
+     C                     MOVEL*BLANK    ZAMSTP           Message type
+     C*
+     C                     ENDSR                           ** ZASNMS ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C*
+     C           #INIT     BEGSR                           ** #INIT BSR **
+     C*
+     C*** Select program MSGQ for error msg
+     C*
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C*
+     C*** Fill in fields for subroutine ZASNMS
+     C*
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue
+     C                     MOVEL'SEUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SE6061  'DBPGM
+     C                     OUT  LDA
+     C*
+     C*** Access LF/SDBANKL1 to get bank details
+     C*
+     C                     OPEN SDBANKL1
+     C                     READ SDBANKL1                 80
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE   30       ***************
+     C                     MOVEL'SDBANKL1'DBFILE 10        **DB ERROR 01**
+     C                     MOVEL*BLANK    DBKEY  29        ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     CLOSESDBANKL1
+     C*
+     C*** Receive parameters from the calling CLP
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ    5
+     C                     PARM           @LVL    1
+     C                     PARM           @ENT    3
+     C                     PARM           @RPARM100
+     C                     PARM           RACT    1
+     C                     PARM           RCMD    1
+     C*
+     C                     MOVE '1'       *IN01
+     C*
+     C                     ENDSR                           ** #INIT ESR **
+     C*
+     C********************************************************************
+      /EJECT
+     C*
+     C           *PSSR     BEGSR                           ** *PSRR BSR**
+     C*
+     C*** Dump and return to the calling program
+     C*
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR                            ** *PSRR ESR**
+     C*
+     C********************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001

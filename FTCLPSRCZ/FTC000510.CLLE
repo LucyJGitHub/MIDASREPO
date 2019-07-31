@@ -1,0 +1,82 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas FT Outgoing Payments SSI Report')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Funds Transfer Module                           */
+/*                                                                   */
+/*       FTC000510 Midas FT Outgoing Payment SSI Report              */
+/*                 and File Reorganisation                           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. 228542             Date 05Aug04              */
+/*                      CGL029             Date 01Sep03              */
+/*                      CFT018 *CREATE     Date 29Nov02              */
+/*                                                                   */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*      228542 - RGZPFM has changed at R5V3                          */
+/*      CGL029 - Increase Account Code to 10 digits                  */
+/*      CFT018 - Standard Settlement Instructions for                */
+/*               Outgoing Payments                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RMODE &RSEQ &RLEV &RENT)
+ 
+ 
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&RMODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+ 
+/*  Copyright statement  */
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2002')
+ 
+ 
+/*  Send message to MRUNQ   */
+             SNDPGMMSG  MSG('Outgoing Payments Standard Settlement +
+                          Instructions Report') TOMSGQ(MRUNQ)
+ 
+/*  Set job switches   */
+             CHGJOB     SWS(XXXXXX00)
+ 
+ 
+/*  Call report program */
+             CALLPRC    PRC(FT000510) PARM(&RMODE &RSEQ &RLEV &RENT)
+ 
+ 
+/*  Database  Error Handling    */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              RTVDTAARA  DTAARA(LDA (134 50))   RTNVAR(&MEM)
+              SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                         TOMSGQ(MRUNQ MOPERQ)
+             ENDDO
+ 
+/*  Clear the daily work file if called during Close of Business */
+             IF         COND(&RMODE *EQ 'AUDIT') THEN(DO)
+                CLRPFM     FILE(FTOPSAPD)
+/**********     RGZPFM     FILE(FTOSSIPD)                                                 /*228542*/
+/**********     MONMSG     MSGID(CPF2995)                                      /*CGL029*/ /*228542*/
+/**********     MONMSG     MSGID(CPF2981)                                      /*CGL029*/ /*228542*/
+/**********     MONMSG     MSGID(CPF0000)                                                 /*228542*/
+                CALL       PGM(SCC000060) PARM('FTOSSIPD' '*FIRST')                       /*228542*/
+/**********     RGZPFM     FILE(FTOSIXPD)                                                 /*228542*/
+/**********     MONMSG     MSGID(CPF2995)                                      /*CGL029*/ /*228542*/
+/**********     MONMSG     MSGID(CPF2981)                                      /*CGL029*/ /*228542*/
+/**********     MONMSG     MSGID(CPF0000)                                                 /*228542*/
+                CALL       PGM(SCC000060) PARM('FTOSIXPD' '*FIRST')                       /*228542*/
+             ENDDO
+ 
+ 
+ ENDPGM:     ENDPGM

@@ -1,0 +1,134 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Print message queue')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Utilities Module                                     *
+      *                                                               *
+      *  UT0022 - Print Message Queue                                 *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01526  *CREATE    Date 13Nov95               *
+      *                                    Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  S01526 - Created for the Midas Upgrade Utility               *
+      *                                                               *
+      *****************************************************************
+     FUT0022P1O   E             99     PRINTER
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     IINPUT       DS
+      *
+      *    Data structure for input parameters
+      *
+     I I            432                   B   1   40RCVLEN
+     I I            'RCVM0200'                5  12 APIFMT
+     I                                       13  32 MSGQLB
+     I                                       13  22 MSGQ
+     I                                       23  32 QLIB
+     I I            '*FIRST'                 33  42 MSGTYP
+     I                                       43  46 MSGKEY
+     I I            0                     B  47  500WAIT
+     I I            '*REMOVE'                51  60 MSGACT
+      *
+     IRCVVAR      DS
+      *
+      *    Data structure for message information
+      *
+     I                                    B   1   40BYTRTN
+     I                                    B   5   80BYTAVL
+     I                                    B   9  120MSGSEV
+     I                                       13  19 MSGID
+     I                                       20  21 RCVTYP
+     I                                       22  25 RCVKEY
+     I                                       26  45 QMSGF
+     I                                       26  35 MSGF
+     I                                       36  45 MSGLIB
+     I                                       46  55 SNDLIB
+     I                                       56 135 SNDINF
+     I                                      136 144 ALTOPT
+     I                                      145 152 RESERV
+     I                                    B 153 1560DTARTN
+     I                                    B 157 1600DTAAVL
+     I                                    B 161 1640TX1RTN
+     I                                    B 165 1680TX1AVL
+     I                                    B 169 1720TX2RTN
+     I                                    B 173 1760TX2AVL
+     I                                      177 432 MSGDTA
+     IRCVERR      DS
+      *
+      *    Data structure to return error information
+      *
+     I I            0                     B   1   40ERRCDE
+      *
+      **   Message queue to print
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMSGQ  10
+      *
+      **   Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **   Set up input parameters and print header
+      *
+     C                     MOVE PMSGQ     MSGQ
+     C                     MOVEL'*LIBL'   QLIB
+     C                     WRITEHEADP1
+      *
+      **   Receive messages from queue and print each one
+      *
+     C           BYTRTN    DOUEQ8
+     C           BYTAVL    ANDEQ0
+     C                     MOVE *BLANKS   MSGDTA
+     C                     MOVE *BLANKS   MSG
+     C                     CALL 'QMHRCVM'
+     C                     PARM           RCVVAR
+     C                     PARM           RCVLEN
+     C                     PARM           APIFMT
+     C                     PARM           MSGQLB
+     C                     PARM           MSGTYP
+     C                     PARM           MSGKEY
+     C                     PARM           WAIT
+     C                     PARM           MSGACT
+     C                     PARM           ERRCDE
+      *
+      **   Extract message part of returned data to print
+      *
+     C                     SETOF                     99
+     C           DTARTN    IFGT 0
+     C           DTARTN    ADD  1         S#      30
+     C           TX1RTN    IFGT 0
+     C           TX1RTN    SUBSTMSGDTA:S# MSG
+     C                     ELSE
+     C                     MOVELMSGDTA    MSG
+     C                     ENDIF
+     C                     WRITEDETAIL
+     C                     ENDIF
+      *
+     C           *IN99     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     ENDIF
+     C                     ENDDO
+      *
+      **   Print end of report line and end program
+      *
+     C                     WRITETRAILP1
+     C                     SETON                     LR
+     C                     RETRN
+**  CPY@
+(c) Finastra International Limited 2001

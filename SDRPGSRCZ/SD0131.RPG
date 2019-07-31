@@ -1,0 +1,303 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Additional Customer Details Report')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0131 - Midas Additional Customer Details Report            *
+      *                                                               *
+      *  Function:  This program prints the Additional Customer       *
+      *             Details Report.                                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2008                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG23640           Date 15May09               *
+      *                 BUG23946           Date 14May09               *
+      *                 CER047  *CREATE    Date 19May08               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23640 - Labels were amended for clarity (Recompile)       *
+      *  BUG23946 - New field should be use correct char §            *
+      *             (Recompile)                                       *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Customer Extract
+      *
+     FSDCEXTL1IF  E           K        DISK
+      *
+      ** Id Document Types
+      *
+     FSDIDTPL1IF  E           K        DISK
+      *
+      ** Printer file
+      *
+     FSD0131P1O   E                    PRINTER      KINFDS SPOOL
+     F/EJECT
+      *
+     E                    CPY@    1   1 80
+      *
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** Access bank details.
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** First DS for access programs, short data structure.
+      *
+     IDSFDY     E DSDSFDY
+     ISDCTRY    E DSSDCTRYPD
+      *
+      ** Parameter list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+      *
+      ** Setup copyright statement.
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Ensure report spool file recorded by RCF.
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           RSEQ
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If error during ZSFILE processing, return to calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7LR
+     C                     RETRN
+     C                     END
+      *
+      ** Define LDA.
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Get bank title and rundate.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C                     END
+      *
+      ** Initialise counters.
+      *
+     C                     Z-ADD0         COUNT   20
+      *
+      ** Write header record.
+      *
+     C                     WRITEHEADP1
+      *
+      ** Read first record from Input file
+      *
+     C                     READ SDCEXTD0                 20
+      *
+      ** If no records print end of report and return
+      *
+     C           *IN20     IFEQ *ON
+     C                     WRITETRAILP1
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** Do while not end of file
+      *
+     C           *IN20     DOWEQ*OFF
+      *
+      ** Can only fit 3 records per page
+      *
+     C           OFLLN1    SUB  PRTLN1    DIFLN1  40
+      *
+     C           DIFLN1    IFLE 1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     EXSR PROC
+     C                     READ SDCEXTD0                 20
+     C                     ENDDO
+      *
+      ** Logical end of Program
+      *
+     C                     WRITETRAILP1
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * PROC - Process Record read in from Extract file               *
+      *                                                               *
+      * Called by: Main                                               *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROC      BEGSR
+      *
+      ** Set up output fields
+      *
+     C                     MOVELEXCUST    PRCUST
+     C                     MOVELEXSNMC    PRSNMC
+     C                     MOVELEXTTLC    PRTTLC
+     C                     MOVELEXADRS    PRADRS
+     C                     MOVELEXTOWN    PRTOWN
+     C                     MOVELEXPCDE    PRPCDE
+     C                     MOVELEXCOLC    PRCOLC
+     C           EXDBRC    IFNE 0
+     C                     MOVELEXDBRC    PRDBRC
+     C                     ELSE
+     C                     MOVE *BLANKS   PRDBRC
+     C                     ENDIF
+     C                     MOVELEXPLBR    PRPLBR
+     C                     MOVELEXCNBR    PRCNBR
+     C                     MOVELEXIDCA    PRIDCA
+     C                     MOVELEXIDNR    PRIDNR
+     C                     MOVELEXISAU    PRISAU
+     C                     MOVELEXISPL    PRISPL
+     C           EXISDT    IFNE 0
+     C                     MOVELEXISDT    PRISDT
+     C                     ELSE
+     C                     MOVE *BLANKS   PRISDT
+     C                     ENDIF
+     C           EXEXDT    IFNE 0
+     C                     MOVELEXEXDT    PREXDT
+     C                     ELSE
+     C                     MOVE *BLANKS   PREXDT
+     C                     ENDIF
+     C                     MOVELEXS24C    PRS24C
+      *
+      ** Get narrative for country of location
+      *
+     C           EXCOLC    IFNE *BLANKS
+      *
+     C                     CALL 'AOCTRYR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM EXCOLC    PCTRY   2
+     C           SDCTRY    PARM SDCTRY    DSFDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELA4CNNM    PRCTXT
+     C                     ENDIF
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           PRTCD     ANDNE'*NRF'
+     C                     MOVELEXCOLC    DBKEY
+     C                     MOVEL'SDCTRYPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   PRCTXT
+      *
+     C                     ENDIF
+      *
+      ** Get narrative for country of birth
+      *
+     C           EXCNBR    IFNE *BLANKS
+      *
+     C                     CALL 'AOCTRYR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM EXCNBR    PCTRY
+     C           SDCTRY    PARM SDCTRY    DSFDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELA4CNNM    PRCNAR
+     C                     ENDIF
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           PRTCD     ANDNE'*NRF'
+     C                     MOVELEXCNBR    DBKEY
+     C                     MOVEL'SDCTRYPD'DBFILE
+     C                     Z-ADD2         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   PRCNAR
+      *
+     C                     ENDIF
+      *
+      ** Get narrative for type of document id.
+      *
+     C                     MOVE *BLANKS   PRITXT
+     C           EXIDCA    CHAINSDIDTPL1             15
+     C           *IN15     IFEQ *OFF
+     C                     MOVELIDNARR    PRITXT
+     C                     ENDIF
+      *
+      ** Write Detail record
+      *
+     C                     WRITEDETAIL1
+      *
+      ** Write separator line
+      *
+     C                     WRITESEPAR
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR - TO PROCESS DATA BASE ERRORS                           *
+      *                                                               *
+      * Called by: Proc                                               *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+** CPY@
+(c) Finastra International Limited 2008

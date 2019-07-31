@@ -1,0 +1,272 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Fixed Account Next Charge Date Update')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE5338 - RE Fixed Account Next Charge Date Update            *
+      *                                                               *
+      *  Function:  This program will update the Next Charge Date     *
+      *             on PF/TABTREXC. The new date is based on the      *
+      *             previous date and frequency which are held on the *
+      *             same file. This was previously part of the final  *
+      *             processing done by RE5330. This program will run  *
+      *             from the End Split component for this task split  *
+      *             job.                                              *
+      *                                                               *
+      *  Called by : REC5332 - End Split for Fixed Account Charge     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCB003  *CREATE    Date 10Oct96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CCB003 - COB Performance Enhancements - Task Split           *
+      *           Update the next charge date.                        *
+      *                                                               *
+      *****************************************************************
+      *
+     FTABTREXCUF  E                    DISK         KINFSR *PSSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZFRQAZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZHOLE
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Data Structure for Bank ICD Information
+      *
+     I/COPY ZSRSRC,ZAOZ1
+     I/COPY ZSRSRC,ZAOZ2
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * MAIN PROCESSING                                               *
+      *                                                               *
+      * Calls: INIT, UPDATE, END                                      *
+      *****************************************************************
+      ** Initial processing
+     C                     EXSR INIT
+      *
+      ** Update TABTREXC
+     C                     EXSR UPDATE
+      *
+      ** End processing
+     C                     EXSR END
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * UPDATE - Update TABTREXC                                      *
+      *                                                               *
+      * Called by: - MAIN PROCESSING                                  *
+      *****************************************************************
+     C           UPDATE    BEGSR
+      *
+      **   Perform detail processing if account charge date is less
+      **   then the event control date.
+      *
+     C           REACCD    IFLE WWECD
+      *
+      ** Calculate the new next charge date using Standard SR/ZFRQA
+      *
+     C                     MOVE REACCF    ZFREQ
+     C                     MOVE REACCD    ZDAYNO
+     C                     MOVE REACBD    ZMDAY
+     C                     MOVE BJCYCD    ZCCY
+      *
+     C                     EXSR ZFRQA
+      *
+      ** If error occured in Standard SR/ZFRQA then Database error
+      *
+     C           ZZERR@    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ZFRQA'   DBFILE           ************
+     C                     MOVEL'*ERROR'  DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Update the new Next Change Date back to TABTREXC
+      *
+     C                     MOVE ZDAYNO    REACCD
+      *
+     C                     UPDATTABTREF0
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * END - Exit program                                            *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      *****************************************************************
+     C           END       BEGSR
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INIT - Initial processing                                     *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** Access Bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      ** Data base error in SDBANKPD
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL@OPTN     DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access General Ledger Details
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      ** Data base error in SDGELRPD
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ************
+     C                     MOVEL@OPTN     DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access PF/TABTREXC
+     C           1         CHAINTABTREXC             89
+     C           *IN89     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TABTREXC'DBFILE           ************
+     C                     MOVEL'1'       DBKEY            * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Calculate the event control date using Standard SR/ZEVCD
+      *
+     C                     Z-ADDBKAPDT    ZZAPDT
+     C                     Z-ADDBJDNWD    ZZDNWD
+     C                     EXSR ZEVCD
+     C                     Z-ADDECD       WWECD   50
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE5338'  DBPGM     P
+     C                     OUT  LDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C/COPY ZSRSRC,ZEVCDZ1
+     C/COPY ZSRSRC,ZFRQAZ2
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZACCH
+     C/COPY ZSRSRC,ZCHKH
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+** CPY@ - Object copyright
+(c) Finastra International Limited 2001
+** ZFMD - NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+** ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+** ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+** ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

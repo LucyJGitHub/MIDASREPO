@@ -1,0 +1,701 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Restore global libraries')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas Plus - Bridge                                         */
+/*                                                                   */
+/*       UPC003004 - Restore global libraries to dummy libraries     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2007                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
+/*                      BUG27135           Date 10Mar10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CSC033    *CREATE  Date 01May07              */
+/*                      XXXxxxx            Date                      */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       BUG27135- Rename ENDJRNLIB to LIBENDJRN.                    */
+/*       CSC033 - Include global libraries in backups.               */
+/*                                                                   */
+/*********************************************************************/
+/**/
+             PGM        PARM(&ZONEID &GLOBID &RSTTYPE &DEVICE &VOLID +
+                          &GMSAVF &GTASAVF)
+/**/
+/*/COPY WNCPYSRC,UPC3004INT                                                                       */
+/**/
+/*   Declare variables                                                                            */
+/**/
+             DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GLOBID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TIME8) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&RSTGMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RSTGTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RSTTYPE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&GMSAVF) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&GMSF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GMSFL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GTASAVF) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&GTASF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GTASFL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DEVICE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&VOLID) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&LIBTEXT) TYPE(*CHAR) LEN(50)
+/*/COPY WNCPYSRC,UPC3004019                                                                       */
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&KEYVAR) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&CNL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&ACPTH) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&OPTION) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&TAPOPT) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SAVACT) TYPE(*CHAR) LEN(8) VALUE('*NO')
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FULLCHECK) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ZOZONE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZOSHTC) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ZORDNB) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&ZODNWD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&ZOBCCY) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ZONJOB) TYPE(*DEC) LEN(1 0)
+/**/
+/* Parameters passed to UP008010                                                                  */
+/**/
+             DCL        VAR(&GENPGM)   TYPE(*CHAR) LEN(10) VALUE(UPC003004)
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2007')
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                    /*CSC043*/
+/*/COPY GPCPYSRCG,GPSVALDCL  */                                                           /*CSC043*/
+/**/
+/*/COPY WNCPYSRC,UPC3004001                                                                       */
+/**/
+/*           Global Monitor Message  */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO ABNOR)
+/**/
+/*/COPY WNCPYSRC,UPC3004002                                                                       */
+/**/
+             SNDPGMMSG  MSG('UPC003004 Restore global libraries to temporary +
+                          libraries') TOMSGQ(MRUNQ)
+/*                                                                                        /*CSC043*/
+/** Get the global IASP system values */                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 +
+                          'IASPgroup' &SVAL2 &SVALK3 +
+                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK10 &SVAL10)                         /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Check whether system is in IASP environment. */                                       /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                            /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Get name of IASP. */                                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 10))                              /*CSC043*/
+                                                                                          /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+/*                                                                                        /*CSC043*/
+/**/
+/* Create temporary file to hold error messages.                                                  */
+/**/
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                          TEXT('Temporary file for holding error +
+                          messages')
+/**/
+/*  Send a message line.                                                                          */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('UPC003004 Restore global +
+                          libraries to temporary libraries')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES) SWS(XXXXXX00)
+/**/
+/*  Calculate library names.                                                                      */
+/**/
+             CHGVAR     VAR(&XLIB) VALUE(&ZONEID *CAT 'XLIB')
+             CHGVAR     VAR(&DMLIB) VALUE(&ZONEID *CAT 'DMLIB')
+             CHGVAR     VAR(&DTALIB) VALUE(&ZONEID *CAT 'DTALIB')
+             CHGVAR     VAR(&GMLIB) VALUE(&GLOBID *CAT 'GMLIB')
+             CHGVAR     VAR(&GTALIB) VALUE(&GLOBID *CAT 'GTALIB')
+/**/
+/*  Send a message line.                                                                          */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Restore global +
+                          libraries' *BCAT &GMLIB *BCAT 'and' *BCAT +
+                          &GTALIB *TCAT '.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+/*  Determine mode of job, interactive or batch.                                                  */
+/**/
+             RTVJOBA    TYPE(&MODE)
+/**/
+/*  Call program GOGETZONE to retrieve zone details.                                              */
+/**/
+             CALL       PGM(GOGETZONE) PARM(&RTCD &ERMS &FULLCHECK +
+                          &ZOZONE &ZOSHTC &ZORDNB &ZODNWD &ZOBCCY +
+                          &ZONJOB)
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+/*  Validate restore type.  It must be 'TAPE' or 'SAVF'.                                          */
+/**/
+             IF         COND((&RSTTYPE *NE 'TAPE') *AND (&RSTTYPE +
+                          *NE 'SAVF')) THEN(DO)
+             SNDPGMMSG  MSG('Restore type must be TAPE or SAVF') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*           If restore type is 'TAPE',                                                           */
+/**/
+             IF         COND(&RSTTYPE *EQ 'TAPE') THEN(DO)
+/**/
+/*  Check that device has been loaded properly and that correct                                   */
+/*  volume is placed on drive                                                                     */
+/**/
+CHECK:       RMVMSG     PGMQ(*SAME) CLEAR(*ALL)
+             CHGVAR     VAR(&ERROR) VALUE('N')
+             CHKTAP     DEV(&DEVICE) VOL(&VOLID)
+             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&ERROR) +
+                          VALUE('Y'))
+/**/
+/*  If no error generated by request, then send a message line and continue.                      */
+/**/
+             IF         COND(&ERROR *EQ 'N') THEN(DO)
+             CHGVAR     VAR(&ERRORMSG) VALUE('Restore global +
+                          libraries from device' *BCAT &DEVICE +
+                          *BCAT 'volume' *BCAT &VOLID *TCAT '.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+             GOTO       CMDLBL(MCCONTINUE)
+             ENDDO
+/**/
+/*  If error reported, receive messages.                                                          */
+/**/
+ RCVMSG1:    RCVMSG     PGMQ(*SAME) MSGTYPE(*ANY) RMV(*NO) +
+                          MSGDTA(&MSGDTA) MSGID(&MSGID) MSGF(&MSGF) +
+                          MSGFLIB(&MSGFLIB)
+             IF         COND(&MSGID *EQ ' ') THEN(GOTO +
+                          CMDLBL(ASK_USER))
+             SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                          MSGDTA(&MSGDTA) TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(RCVMSG1)
+/**/
+/*  If error ask, whether to retry.                                                               */
+/**/
+ ASK_USER:   IF         COND(&MODE *EQ '1') THEN(DO)
+/**/
+             SNDPGMMSG  MSG('Media error detected - operation is: +
+                          restore ' *CAT &GMLIB *BCAT ' from volume +
+                          ' *CAT &VOLID) TOPGMQ(*EXT) MSGTYPE(*INFO)
+             SNDPGMMSG  MSG('Error detected - do you wish to retry (Y +
+                          or N)') TOPGMQ(*EXT) MSGTYPE(*INQ) +
+                          KEYVAR(&KEYVAR)
+/**/
+             ENDDO
+/**/
+             ELSE       CMD(DO)
+/**/
+             SNDPGMMSG  MSG('Media error detected - operation is: +
+                          restore ' *CAT &GMLIB *BCAT ' from volume +
+                          ' *CAT &VOLID) TOMSGQ(MOPERQ) MSGTYPE(*INFO)
+             SNDPGMMSG  MSG('Error detected - do you wish to retry (Y +
+                          or N)') TOMSGQ(MOPERQ) MSGTYPE(*INQ) +
+                          KEYVAR(&KEYVAR)
+/**/
+             ENDDO
+/**/
+             RCVMSG     MSGKEY(&KEYVAR) WAIT(*MAX) KEYVAR(&KEYVAR) +
+                          MSG(&CNL)
+/**/
+/*  If user requests a retry, go back and check volume again.                                     */
+/**/
+             IF         COND((&CNL *EQ 'Y') *OR (&CNL *EQ 'y')) +
+                          THEN(DO)
+/**/
+             GOTO       CMDLBL(CHECK)
+/**/
+             ENDDO
+/**/
+/*  If user did not request a retry,                                                              */
+/**/
+             ELSE       CMD(DO)
+/**/
+/*  If user did not reply with 'N' or 'n',                                                        */
+/**/
+             IF         COND((&CNL *NE 'N') *AND (&CNL *NE 'n')) +
+                          THEN(DO)
+/**/
+/*  then ask the user again and hope for a sensible response this time.                           */
+/**/
+             GOTO       CMDLBL(ASK_USER)
+/**/
+             ENDDO
+/**/
+             ELSE       CMD(DO)
+/**/
+/*  If the user did respond with 'N' or 'n',                                                      */
+/**/
+             IF         COND((&CNL *EQ 'N') *OR (&CNL *EQ 'n')) +
+                          THEN(DO)
+/**/
+/*  cancel the restore and exit program.                                                          */
+/**/
+             CHGVAR     VAR(&MESSAGE) VALUE('Restore of library ' +
+                          *CAT &GMLIB *BCAT 'cancelled by the user')
+             SNDPGMMSG  MSG(&MESSAGE) TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(END)
+/**/
+             ENDDO
+/**/
+             GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+             ENDDO
+/**/
+             ENDDO
+/**/
+/*           If restore type is 'SAVF',                                                           */
+/**/
+             IF         COND(&RSTTYPE *EQ 'SAVF') THEN(DO)
+/**/
+/*  Check that the save files exist.                                                              */
+/**/
+             CHGVAR     VAR(&GMSF) VALUE(%SST(&GMSAVF 1 10))
+             CHGVAR     VAR(&GMSFL) VALUE(%SST(&GMSAVF 11 10))
+             CHGVAR     VAR(&GTASF) VALUE(%SST(&GTASAVF 1 10))
+             CHGVAR     VAR(&GTASFL) VALUE(%SST(&GTASAVF 11 10))
+/**/
+/*  If the save file names or libraries are blank, end program.                                   */
+/**/
+             IF         COND((&GMSF *EQ '          ') *OR (&GMSFL +
+                          *EQ '          ') *OR (&GTASF *EQ +
+                          '          ') *OR (&GTASFL *EQ '          +
+                          ')) THEN(DO)
+             SNDPGMMSG  MSG('Restore save file name is invalid') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  Check that global database library save file exists.                                          */
+/**/
+             CHKOBJ     OBJ(&GMSFL/&GMSF) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             SNDPGMMSG  MSG('Save file' *BCAT &GMSF *BCAT 'in +
+                          library' *BCAT &GMSFL *BCAT 'not found') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  Check that global GTALIB library save file exists.                                            */
+/**/
+             CHKOBJ     OBJ(&GTASFL/&GTASF) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             SNDPGMMSG  MSG('Save file' *BCAT &GTASF *BCAT 'in +
+                          library' *BCAT &GTASFL *BCAT 'not found') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+             ENDDO
+/**/
+/*  Send a message line.                                                                          */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Restore global +
+                          libraries from save file' *BCAT &GMSFL +
+                          *TCAT '/' *CAT &GMSF *BCAT 'and' *BCAT +
+                          &GTASFL *TCAT '/' *CAT &GTASF *TCAT '.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+ McCONTINUE:
+/**/
+/*  Set up library list for the zone.                                                             */
+/**/
+             ADDLIBLE   LIB(&XLIB)
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(UPC0014) PARM(&ZONEID)
+/**/
+/*  Check identity of global database library.                                                    */
+/**/
+             CHKOBJ     OBJ(&GMLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             SNDPGMMSG  MSG('Global library' *BCAT &GMLIB *BCAT 'not +
+                          found') TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Global library' *BCAT +
+                          &GMLIB *BCAT 'not found.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+McRETRY:
+/**/
+/*  Determine a unique name for the global GMLIB restore                                          */
+/**/
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&TIME8)
+             CHGVAR     VAR(&RSTGMLIB) VALUE(&GLOBID *CAT 'GM' *CAT %SST(&TIME8 3 6))
+             CHGVAR     VAR(&RSTGTALIB) VALUE(&GLOBID *CAT 'GT' *CAT %SST(&TIME8 3 6))
+/**/
+/*  Check whether library already exists.                                                         */
+/**/
+             CHKOBJ     OBJ(QSYS/&RSTGMLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             GOTO       CMDLBL(McNEXT)
+/**/
+             ENDDO
+/**/
+             GOTO       CMDLBL(McRETRY)
+McNEXT:
+             CHKOBJ     OBJ(QSYS/&RSTGTALIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             GOTO       CMDLBL(McRESTORE)
+/**/
+             ENDDO
+/**/
+             GOTO       CMDLBL(McRETRY)
+McRESTORE:
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Global library' *BCAT +
+                          &GMLIB *BCAT 'will be restored as' *BCAT +
+                          &RSTGMLIB *TCAT '.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+             CHGVAR     VAR(&ERRORMSG) VALUE('Global library' *BCAT +
+                          &GTALIB *BCAT 'will be restored as' *BCAT +
+                          &RSTGTALIB *TCAT '.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+/*  If restore type is 'TAPE',                                                                    */
+/**/
+             IF         COND(&RSTTYPE *EQ 'TAPE') THEN(DO)
+/**/
+/*  restore global GMLIB to new library                                                           */
+/**/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             RSTLIB     SAVLIB(&GMLIB) DEV(&DEVICE) VOL(&VOLID) +
+                          RSTLIB(&RSTGMLIB) RSTASPDEV(&IASP) +
+                          OUTPUT(*PRINT) OMITOBJ((GZ* *FILE))                             /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+             RSTLIB     SAVLIB(&GMLIB) DEV(&DEVICE) VOL(&VOLID) +
+                          RSTLIB(&RSTGMLIB) OUTPUT(*PRINT) +
+                          OMITOBJ((GZ* *FILE))
+             ENDDO                                                                        /*CSC043*/
+/**/
+/*  Call prgram UPC003007 to remove any file triggers.                                            */
+/**/
+             CALL       PGM(UPC003007) PARM(&RSTGMLIB)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('UPC003007 remove +
+                          triggers from' *BCAT &RSTGMLIB *BCAT +
+                          'ENDED ABNORMALLY.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  End journaling of files in the restored library.                                              */
+/**/
+/*           ENDJRNLIB  LIBRARY(&RSTGMLIB)                                */            /*BUG27135*/
+             LIBENDJRN  LIBRARY(&RSTGMLIB)                                              /*BUG27135*/
+/**/
+/*  Change the description of the newly restored library.                                         */
+/**/
+             CHGVAR     VAR(&LIBTEXT) VALUE('Snapshot of' *BCAT &GMLIB)
+             CHGLIB     LIB(&RSTGMLIB) TEXT(&LIBTEXT)
+/**/
+/*  restore global GTALB to new library                                                          */
+/**/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             RSTLIB     SAVLIB(&GTALIB) DEV(&DEVICE) VOL(&VOLID) +
+                          RSTLIB(&RSTGTALIB) RSTASPDEV(&IASP) +
+                          OUTPUT(*PRINT)                                                  /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+             RSTLIB     SAVLIB(&GTALIB) DEV(&DEVICE) VOL(&VOLID) +
+                          RSTLIB(&RSTGTALIB) OUTPUT(*PRINT)
+             ENDDO                                                                        /*CSC043*/
+/**/
+/*  Call prgram UPC003007 to remove any file triggers.                                            */
+/**/
+             CALL       PGM(UPC003007) PARM(&RSTGTALIB)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('UPC003007 remove +
+                          triggers from' *BCAT &RSTGTALIB *BCAT +
+                          'ENDED ABNORMALLY.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  End journaling of files in the restored library.                                              */
+/**/
+/*           ENDJRNLIB  LIBRARY(&RSTGTALIB)                               */            /*BUG27135*/
+             LIBENDJRN  LIBRARY(&RSTGTALIB)                                             /*BUG27135*/
+/**/
+/*  Change the description of the newly restored library.                                         */
+/**/
+             CHGVAR     VAR(&LIBTEXT) VALUE('Snapshot of' *BCAT &GTALIB)
+             CHGLIB     LIB(&RSTGTALIB) TEXT(&LIBTEXT)
+/**/
+             ENDDO
+/**/
+/*  If restore type is 'SAVF',                                                                    */
+/**/
+             IF         COND(&RSTTYPE *EQ 'SAVF') THEN(DO)
+/**/
+/*  restore global GMLIB to new library                                                           */
+/**/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             RSTLIB     SAVLIB(&GMLIB) DEV(*SAVF) SAVF(&GMSFL/&GMSF) +
+                          RSTLIB(&RSTGMLIB) RSTASPDEV(&IASP) +
+                          OUTPUT(*PRINT) OMITOBJ((GZ* *FILE))                             /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+             RSTLIB     SAVLIB(&GMLIB) DEV(*SAVF) SAVF(&GMSFL/&GMSF) +
+                          RSTLIB(&RSTGMLIB) OUTPUT(*PRINT) +
+                          OMITOBJ((GZ* *FILE))
+             ENDDO                                                                        /*CSC043*/
+/**/
+/*  Call prgram UPC003007 to remove any file triggers.                                            */
+/**/
+             CALL       PGM(UPC003007) PARM(&RSTGMLIB)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('UPC003007 remove +
+                          triggers from' *BCAT &RSTGMLIB *BCAT +
+                          'ENDED ABNORMALLY.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  End journaling of files in the restored library.                                              */
+/**/
+/*           ENDJRNLIB  LIBRARY(&RSTGMLIB)                                */            /*BUG27135*/
+             LIBENDJRN  LIBRARY(&RSTGMLIB)                                              /*BUG27135*/
+/**/
+/*  Change the description of the newly restored library.                                         */
+/**/
+             CHGVAR     VAR(&LIBTEXT) VALUE('Snapshot of' *BCAT &GMLIB)
+             CHGLIB     LIB(&RSTGMLIB) TEXT(&LIBTEXT)
+/**/
+/*  restore global GTALIB to new library                                                          */
+/**/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             RSTLIB     SAVLIB(&GTALIB) DEV(*SAVF) +
+                          SAVF(&GTASFL/&GTASF) RSTLIB(&RSTGTALIB) +
+                          RSTASPDEV(&IASP) OUTPUT(*PRINT)                                 /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+             RSTLIB     SAVLIB(&GTALIB) DEV(*SAVF) +
+                          SAVF(&GTASFL/&GTASF) RSTLIB(&RSTGTALIB) +
+                          OUTPUT(*PRINT)
+             ENDDO                                                                        /*CSC043*/
+/**/
+/*  Call prgram UPC003007 to remove any file triggers.                                            */
+/**/
+             CALL       PGM(UPC003007) PARM(&RSTGTALIB)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('UPC003007 remove +
+                          triggers from' *BCAT &RSTGTALIB *BCAT +
+                          'ENDED ABNORMALLY.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  End journaling of files in the restored library.                                              */
+/**/
+/*           ENDJRNLIB  LIBRARY(&RSTGTALIB)                               */            /*BUG27135*/
+             LIBENDJRN  LIBRARY(&RSTGTALIB)                                             /*BUG27135*/
+/**/
+/*  Change the description of the newly restored library.                                         */
+/**/
+             CHGVAR     VAR(&LIBTEXT) VALUE('Snapshot of' *BCAT &GTALIB)
+             CHGLIB     LIB(&RSTGTALIB) TEXT(&LIBTEXT)
+/**/
+             ENDDO
+/**/
+/*  Delete GZ* files.                                                                             */
+/**/
+             DLTF       FILE(&RSTGMLIB/GZ*)
+             MONMSG     MSGID(CPF0000)
+/**/
+/*  Delete Universal transaction files                                                            */
+/**/
+             DLTF       FILE(&RSTGMLIB/GPCASHPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(&RSTGMLIB/GPPOSTPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(&RSTGMLIB/GPPOSNPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(&RSTGMLIB/GPTRAPPD)
+             MONMSG     MSGID(CPF0000)
+/**/
+/*  Call program to catalog restored libraries.                                                   */
+/**/
+             CALL       PGM(UPC003008) PARM(&RSTGMLIB &RSTGTALIB)
+/**/
+/*/COPY WNCPYSRC,UPC3004MPE                                                                       */
+/**/
+/*  Send a message line.                                                                          */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('UPC003004 Restore +
+                          global data to temporary libraries +
+                          completed successfully.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             CHGVAR     VAR(&ERRORMSG) VALUE('Delete libraries' +
+                          *BCAT &RSTGMLIB *BCAT 'and' *BCAT +
+                          &RSTGTALIB *BCAT 'when no longer needed.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+/*  Store the name of the temporary library for GMLIB in data area UPSTAT.                        */
+/**/
+             CHGDTAARA  DTAARA(UPSTAT (176 10)) VALUE(&RSTGMLIB)
+/**/
+             GOTO       CMDLBL(END)
+/**/
+/*  Error processing                                                                              */
+/**/
+ ABNOR:
+             SNDPGMMSG  MSG('UPC003004 Restore global data to +
+                          temporary libraries ENDED ABNORMALLY.') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+/*  Send a message line.                                                                          */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('UPC003004 Restore +
+                          global data to temporary libraries ENDED +
+                          ABNORMALLY.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+/*/COPY WNCPYSRC,UPC3004ERR                                                                       */
+/**/
+             CHGJOB     SWS(XXXXXX1X)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+END:
+/**/
+/*/COPY WNCPYSRC,UPC3004END                                                                       */
+/**/
+/*  Call program to produce report.                                                               */
+/**/
+             CALL       PGM(UP008010) PARM(*REPORT &GENPGM ' ')
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             CHGSPLFA   FILE(UP008010P1) SPLNBR(*LAST) USRDTA(&GENPGM)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+             RETURN
+             ENDPGM
+/**/

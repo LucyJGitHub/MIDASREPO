@@ -1,0 +1,569 @@
+     H DEBUG
+     H COPYRIGHT('(c) Finastra International Limited 2002')
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+/*EXI *  TEXT('Midas FT Validate SWIFT priority code & MT202 ind.')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standard subprograms                                 *
+      *                                                               *
+      *  FTVSFIN  - Validate Swift Priority Code & MT202 Indicator    *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *                 CSF011A            Date 28Nov11               *
+      *                 CRE067             Date 05Oct10               *
+      *                 BUG26652           Date 03Nov09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 256934             Date 20Oct08               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 256564             Date 17Sep08               *
+      *                 255711             Date 31Jul08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 06Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3918            Date 13Aug04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 13Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 175479             Date 23May00               *
+      *                 CFT007             Date 23Dec99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CFT004             Date 01Dec99               *
+      *                 CAP031  *CREATE    Date 09Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
+      *            (Recompile)                                        *
+      *  CRE067 - Midas Plus/Teller Interface via Bankfusion          *
+      *           (Recompile)                                         *
+      *  BUG26652 - Reverse fix 256934.                               *
+      *  256934 - Removed checking of addresses when MT202 is 'N'.    *
+      *           Applied fix 232099.                                 *
+      *  256564 - Recompile due to PF changes done by fix 256330      *
+      *  255711 - Field Ref rate does not record rate. (Recompile)    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3918- Validation of MT202 required for type 01, 08 only   *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CFT009 - Funds Transfer Fees and Charges - recompile         *
+      *  CFT014 - Straight-through Processing Phase 2 MT103           *
+      *           Messages Generation for FT. (Recompiled)            *
+      *  175479 - Recompile over changes in outgoing payment file     *
+      *  CFT007 - Recompiled for BIC Database Plus Integration        *
+      *  CFT004 - Recompiled for IBAN (International Bank A/C No.)    *
+      *  CAP031 - Conversion of FT inputs into modular structure to   *
+      *           use as APIs.                                        *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *****************************************************************
+ 
+     FACNUMA    IF   E           K DISK    INFSR(*PSSR)
+ 
+ 
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      ** Standard D-specs
+      ** ================
+      **
+      ** The following /COPY line includes the LDA layout,
+      ** the copyright array definition,
+      ** and the following named constants:
+      **    True       logical = *on (for indcator processing)
+      **    False      logical = *off (for indcator processing)
+      **    DBErrCtl   10A     = 'DBERRCTL' (the name of the database error
+      **                                    handler)
+      ** and the following variables:
+      **    RunBefore  1A (for the PSSR)
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+      ** Program Status Data Structure
+      ** =============================
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+ 
+     D/COPY ZACPYSRC,PSDS
+ 
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+ 
+      **********************************************************************
+      /EJECT                                                               *
+      **********************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** The maximum size of the appended error arrays
+     D XArrayMax       C                   CONST(20)
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+      ** Array of Fields in error.
+     D FldNamXAr       S             10A   DIM(XArrayMax)
+ 
+      ** Array of error message IDs
+     D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
+ 
+      ** Array of error message data.
+     D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
+ 
+      * Incoming Transaction
+     D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
+ 
+      ** Flags to indicate whether transaction fields are valid
+     D OKFlagsDS     E DS                  EXTNAME(FTEOPY1PD)
+ 
+      * Validation Work Fields
+     D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
+ 
+      * External DS for Bank details
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+ 
+      ** External data structure for Nostro customer number
+     D SDNOST        E DS                  EXTNAME(SDNOSTPD)
+ 
+      ** External data structure for Nostro customer number
+     D SDCUST        E DS                  EXTNAME(SDCUSTPD)
+ 
+      ** External data structure for access programs
+     D DSSDY         E DS                  EXTNAME(DSSDY)
+ 
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+ 
+     D                 DS
+     D*WCNUM****               1      6  0                                                    CSD027
+     D WCNUM                   1      6                                                       CSD027
+     D WCNUMA                  1      6
+     D WCURR                   7     11
+     D WCURRN                 10     11
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+      ** Index for arrays of error message ids etc
+     D Idx             S              3P 0
+ 
+     D WCSID           S             12
+     D WCSNM           S             10
+     D WDSADD          S              4
+ 
+ 
+     D K#ACNO          S                   LIKE(ACNO)
+ 
+     D*C#ACCD***       S              4                                                       CGL029
+     D C#ACCD          S             10                                                       CGL029
+     D C#ACSN          S              2
+     D C#BRCD          S              3
+     D C#CSSN          S             10
+     D C#CUST          S              6
+     D C#CYCD          S              3
+     D C#KEY1          S             10
+     D C#KYST          S              7
+     D C#NONB          S              2
+     D C#OPTN          S              7
+     D C#PNOI          S              1
+     D C#RTCD          S              7
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *********************************************************************
+      /EJECT                                                              *
+      *********************************************************************
+     C
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+ 
+      ** Initialization
+      *
+     C                   Eval      RetCodeIn = *BlankS
+     C                   Eval      FldNamXAr = *BlankS
+     C                   Eval      MsgIDXAr  = *BlankS
+     C                   Eval      MsgDtaXAr = *BlankS
+     C                   Eval      Idx = 0
+ 
+      * Swift Priority Code
+      *
+     C                   Exsr      VSWIFTC
+ 
+      * Swift MT2020 Indicator
+      *
+     C                   Exsr      VSM202
+ 
+      ** If an error was found, set the return code appropriately
+      *
+     C                   If        OKSwpc = 'N' or
+     C                             OKSnmt = 'N'
+     C                   Eval      RetCodeIn = 'Error'
+     C                   End
+ 
+      * RETURN
+      *
+     C                   RETURN
+      ******************************************************************
+      /EJECT
+     C******************************************************************
+     C* VSWIFTC - VALIDATION OF SWIFT PRIORITY CODE                    *
+     C******************************************************************
+     C*
+     C     VSWIFTC       BEGSR
+ 
+      * Default to 'N'
+     C                   If        SSWPC = *Blank
+     C                   Eval      SSWPC = 'N'
+     C                   End
+ 
+     C                   If        SSWPC <> 'U' and
+     C                             SSWPC <> 'N'
+      * Send error to screen
+     C                   Move      'N'           OKSwpc
+     C                   Add       1             Idx
+     C                   Movel     'SSWPC'       FldNamXAr(Idx)
+     C                   Movel     'MMA0929'     MsgIdXAr(Idx)
+     C                   End
+     C*
+     C                   If        OKSwpc = 'Y'
+     C                   If        SSWPC = 'U'
+     C                   Eval      @SWPC = 1
+     C                   End
+ 
+     C                   If        SSWPC = 'N'
+     C                   Eval      @SWPC = 2
+     C                   End
+     C                   End
+ 
+     C                   ENDSR
+     C*
+     C************************************************************
+     C* END OF VALIDATION OF SWIFT PRIORITY CODE
+     C************************************************************
+     C/EJECT
+     C****************************************************************
+     C* VSM202 - VALIDATION OF SWIFT MT202 INDICATOR                 *
+     C****************************************************************
+     C*
+     C     VSM202        BEGSR
+ 
+     C                   If        SSNMT = *Blanks
+ 
+     C* Default dependent on sender's correspondent
+     C                   If        SSNCO = *Blanks
+     C                   Eval      SSNMT = 'N'
+     C                   Else
+     C                   Eval      SSNMT = 'Y'
+     C                   End
+ 
+     C                   End
+ 
+      * Must be either Y or N
+     C                   If        SSNMT <> 'Y' and
+     C                             SSNMT <> 'N'
+      * Send error to screen
+     C                   Move      'N'           OKSnmt
+     C                   Add       1             Idx
+     C                   Movel     'SSNMT'       FldNamXAr(Idx)
+     C                   Movel     'MMA0930'     MsgIdXAr(Idx)
+     C                   End
+ 
+      * Sender's correspondent cannot be blank if indicator is 'Y'
+     C                   If        SSNMT = 'Y' and
+     C                             SSNCO = *blanks
+      * Send error to screen
+     C                   Move      'N'           OKSnmt
+     C                   Add       1             Idx
+     C                   Movel     'SSNMT'       FldNamXAr(Idx)
+     C                   Movel     'MMA0931'     MsgIdXAr(Idx)
+     C                   End
+ 
+      * No further checking if Sender's Correspondent or Destination
+      * is invalid
+     C                   If        SSNCO <> *Blanks and
+     C                             OKSnco = 'Y' and
+     C                             OKDst1 = 'Y' and
+     C                             OKPccy = 'Y'
+ 
+      * Set address
+     C                   If        @DSTT = 'A' or
+     C                             @DSTT = ' '
+     C                   Move      *Blank        WDSADD
+     C                   End
+ 
+     C                   If        @DSTT = 'S'
+     C                   Movel     SDST1         WDSADD
+     C                   End
+ 
+      * If full address Swift address or blank ignore
+     C                   If        @DSTT <> 'A' and
+     C                             @DSTT <> 'S' and
+     C                             @DSTT <> ' '
+      * IF FULL NOSTRO(F)
+     C                   If        @DSTT = 'F'
+     C                   Movel     SDST1         WCURR
+ 
+     C** Read SDNOSTPD for customer number
+     C                   CALLB     'AONOSTR0'
+     C                   Parm      '*DBERR'      C#RTCD
+     C                   Parm      '*KEY   '     C#OPTN
+     C                   Parm      *Blanks       C#CUST
+     C                   Parm      WCURR         C#CYCD
+     C                   Parm      *Blanks       C#ACCD
+     C                   Parm      *Blanks       C#ACSN
+     C                   Parm      WCURRN        C#NONB
+     C                   Parm      *Blanks       C#BRCD
+     C                   Parm      *Blanks       C#CSSN
+     C                   Parm      *Blanks       C#PNOI
+     C     SDNOST        Parm      SDNOST        DSFDY
+ 
+      * Move new SYNON field names to old field names
+     C                   Move      A7CUST        WCNUM
+ 
+     C                   Else
+     C* If retail Number(R) read ACNUMA for customer number
+     C                   If        @DSTT = 'R'
+     C                   Movel     SDST1         K#ACNO
+     C     K#ACNO        Chain     ACCNTABF                           90
+ 
+      * Error if not found or RECI <> D
+     C                   If        *in90 = *ON or
+     C                             RECI <> 'D'
+     C                   Exsr      *PSSR
+     C                   Else
+ 
+     C                   Eval      @CCY = CCY
+     C                   Eval      WCNUM = CNUM
+     C                   End
+ 
+     C                   Else
+     C* Else Customer Number is at start of INAD
+     C                   Movel     SDST1         WCNUM
+     C                   End
+     C                   End
+ 
+      * Read SDCUSTPD for swift address
+     C                   CALLB     'AOCUSTR0'
+     C                   Parm      '*DBERR '     C#RTCD
+     C                   Parm      '*KEY   '     C#OPTN
+     C                   Parm      WCNUMA        C#KEY1
+     C                   Parm      *BLANKS       C#KYST
+     C     SDCUST        Parm      SDCUST        DSSDY
+ 
+      * Move new SYNON field names to old field names
+     C                   Move      BBCUST        WCNUM
+     C                   Eval      WCSID = BBCSID
+     C                   Eval      WCSNM = BBCSSN
+ 
+     C                   Movel     WCSID         WDSADD
+ 
+     C                   End
+ 
+     C                   If        @SNCT <> 'N' and
+     C                             @SNCT <> 'R'
+     C                   Eval      SSADD = *Blanks
+     C                   End
+ 
+     C                   If        @SNCT = 'N' or
+     C                             @SNCT = 'R'
+     C* IF NOSTRO(N)
+     C                   If        @SNCT = 'N'
+     C                   Movel     SSNCO         WCURRN
+     C                   Movel     SPCCY         WCURR
+ 
+     C** Read SDNOSTPD for customer number
+     C                   CALLB     'AONOSTR0'
+     C                   Parm      '*DBERR '     C#RTCD
+     C                   Parm      '*KEY   '     C#OPTN
+     C                   Parm      *Blanks       C#CUST
+     C                   Parm      WCURR         C#CYCD
+     C                   Parm      *Blanks       C#ACCD
+     C                   Parm      *Blanks       C#ACSN
+     C                   PARM      WCURRN        C#NONB
+     C                   PARM      *Blanks       C#BRCD
+     C                   PARM      *Blanks       C#CSSN
+     C                   PARM      *Blanks       C#PNOI
+     C     SDNOST        Parm      SDNOST        DSFDY
+ 
+      * Move new SYNON field names to old field names
+     C                   Move      A7CUST        WCNUM
+ 
+     C                   Else
+     C* If retail number(R) read ACNUMA for customer number
+     C                   If        @SNCT = 'R'
+     C                   Movel     SSNCO         K#ACNO
+     C     K#ACNO        CHAIN     ACCNTABF                           90
+ 
+      * Error if not found or RECI <> D
+     C                   If        *in90 = *ON or
+     C                             RECI <> 'D'
+     C                   Exsr      *PSSR
+     C                   Else
+     C                   Eval      @CCY = CCY
+     C                   Eval      WCNUM = CNUM
+     C                   End
+     C                   End
+     C                   End
+ 
+     C** Read SDCUSTPD for swift address
+     C*
+     C                   CALLB     'AOCUSTR0'
+     C                   Parm      '*DBERR '     C#RTCD
+     C                   Parm      '*KEY   '     C#OPTN
+     C                   Parm      WCNUMA        C#KEY1
+     C                   Parm      *BLANKS       C#KYST
+     C     SDCUST        Parm      SDCUST        DSSDY
+ 
+      * Move new SYNON field names to old field names
+     C                   Move      BBCUST        WCNUM
+     C                   Eval      WCSID = BBCSID
+     C                   Eval      WCSNM = BBCSSN
+     C                   Movel     WCSID         SSADD             4
+     C                   End
+ 
+     C* FOR ENTRY TO 'Y'
+     C* SWIFT ADDRESSES FIRST 4 CHARACTERS MUST BE NON-BLANK
+     C* AND EQUAL
+     C                   If        SSTTP = '01' or                                           BUG3918
+     C                             SSTTP = '08'                                              BUG3918
+                                                                                             BUG3918
+     C                   If        SSNMT = 'N'
+ 
+     C                   If        WDSADD = *Blanks or
+     C**********                   SSADD = *Blanks                                   256934 BUG26652
+     C**********                   SSADD = *Blanks or                                         256934
+     C**********                   WDSADD <> SSADD                                            256934
+     C                             SSADD = *Blanks or                                       BUG26652
+     C                             WDSADD <> SSADD                                          BUG26652
+ 
+     C                   If        SPCCY <> BJCYCD
+      * Send error to screen
+     C                   Move      'N'           OKSnmt
+     C                   Add       1             Idx
+     C                   Movel     'SSNMT'       FldNamXAr(Idx)
+     C                   Movel     'MMA0932'     MsgIdXAr(Idx)
+     C                   End
+ 
+     C                   End
+     C                   End
+     C                   End                                                                 BUG3918
+ 
+     C                   End
+ 
+     C                   ENDSR
+     C*
+     C************************************************************
+     C* END OF MT202 VALIDATION
+     C************************************************************
+     C/EJECT
+      *****************************************************************
+      * *INZSR - Program Initialisation routine                       *
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+     C     *ENTRY        PLIST
+      *
+      * INPUTS
+      *  Return Code
+     C                   Parm                    RetCodeIn
+ 
+      *  Screen fields
+     C                   Parm                    TranInPrim
+ 
+      * OUTPUTS
+      *  Error fields/message IDs/message data (arrays) from/to caller
+     C                   Parm                    FldNamXAr
+     C                   Parm                    MsgIDXAr
+     C                   Parm                    MsgDtaXAr
+ 
+      * OK Flags
+     C                   Parm                    OKFlagsDS
+ 
+      *  Validation Work Fields
+     C                   Parm                    Val@Fields
+ 
+      ** ACCESS BANK DETAILS
+      *
+     C                   CALL      'AOBANKR0'
+     C                   PARM      *BLANKS       @RTCD             7
+     C                   PARM      '*FIRST '     @OPTN             7
+     C     SDBANK        PARM      SDBANK        DSFDY
+      *
+      * DATABASE ERROR
+      *
+     C     @RTCD         IFNE      *BLANKS
+     C                   MOVEL     'SDBANKPD'    DBFILE
+     C                   MOVEL     '901'         DBASE
+     C                   MOVEL     @OPTN         DBKEY
+     C                   EXSR      *PSSR
+     C                   END
+      *
+      ** =================================================================
+      ** Program, module and procedure names for database error processing.
+      ** =================================================================
+      ** The following /COPY sets these values, and also defines LDA as
+      ** an external data area
+ 
+     C/COPY ZACPYSRC,DBFIELDS
+ 
+     C                   ENDSR                                                  *** InzEnd ***
+      *****************************************************************
+      /EJECT
+      ********************************************************************
+     C/COPY ZACPYSRC,PSSR_ILE
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

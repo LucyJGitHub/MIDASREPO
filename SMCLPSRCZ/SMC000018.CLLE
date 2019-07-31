@@ -1,0 +1,228 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Change reporting code fields')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMC000018 - Migrate Reporting Code Fields                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP039             Date 25Mar11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CGL034  *CREATE    Date 15Sep04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP039 - Call SMC000018 directly from UTMENU.               */
+/*       CGL034 - Perform reporting code conversion separately       */
+/*                from account code conversion.                      */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&PTFUPG)                                                  */ /*CUP039*/
+             PGM        PARM(&PFXSVAL &BRGSVAL)                                           /*CUP039*/
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP039*/
+             DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP039*/
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)                                      /*CUP039*/
+             DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1)                                /*CUP039*/
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                                 /*CUP039*/
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+ 
+             DCLF       FILE(UPSVALJ0)                                                    /*CUP039*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+/* Global Monitor message */
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create data area MIDASMSG in QTEMP. */                                                 /*CUP039*/
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)                                            /*CUP039*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP039*/
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')                                                      /*CUP039*/
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             MONMSG     MSGID(CPF1015) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' '))
+ 
+/* Check that System Values have an entry. */                                             /*CUP039*/
+VALIDATE:                                                                                 /*CUP039*/
+             RCVF                                                                         /*CUP039*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP039*/
+                GOTO       CMDLBL(CHECK)                                                  /*CUP039*/
+             ENDDO                                                                        /*CUP039*/
+ 
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)                               /*CUP039*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP039*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP039*/
+                ENDDO                                                                     /*CUP039*/
+                ELSE       CMD(DO)                                                        /*CUP039*/
+                   CHGVAR     VAR(&PFX) VALUE(&GIVAL)                                     /*CUP039*/
+                ENDDO                                                                     /*CUP039*/
+             ENDDO                                                                        /*CUP039*/
+ 
+             IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)                               /*CUP039*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP039*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP039*/
+                ENDDO                                                                     /*CUP039*/
+                ELSE       CMD(DO)                                                        /*CUP039*/
+                   CHGVAR     VAR(&PTFUPG) VALUE(&GIVAL)                                  /*CUP039*/
+                ENDDO                                                                     /*CUP039*/
+             ENDDO                                                                        /*CUP039*/
+ 
+             GOTO       CMDLBL(VALIDATE)                                                  /*CUP039*/
+ 
+ CHECK:                                                                                   /*CUP039*/
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP039*/
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)                      /*CUP039*/
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                      /*CUP039*/
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)                      /*CUP039*/
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)                      /*CUP039*/
+                CALL       PGM(SCC0010) PARM('SMC000018' 'ENTER' ' ')                     /*CUP039*/
+                GOTO       CMDLBL(END)                                                    /*CUP039*/
+             ENDDO                                                                        /*CUP039*/
+ 
+/* Set up library list. */                                                                /*CUP039*/
+             CALL       PGM(UPC0014) PARM(&PFX)                                           /*CUP039*/
+ 
+/* Back-up processing */
+ 
+/* Back-up file SDACRCPD */
+             CPYF       FROMFILE(SDACRCPD) TOFILE(&PTFUPG/XSDACRCPD) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error in copying file. Process is +
+                             terminated.') MSGTYPE(*INFO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Back-up file SDREPCPD */
+             CPYF       FROMFILE(SDREPCPD) TOFILE(&PTFUPG/XSDREPCPD) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error in copying file. Process is +
+                             terminated.') MSGTYPE(*INFO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Back-up file GLBSRPPD */
+             CPYF       FROMFILE(GLBSRPPD) TOFILE(&PTFUPG/XGLBSRPPD) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error in copying file. Process is +
+                             terminated.') MSGTYPE(*INFO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Back-up file MCBLRPPD */
+             CPYF       FROMFILE(MCBLRPPD) TOFILE(&PTFUPG/XMCBLRPPD) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error in copying file. Process is +
+                             terminated.') MSGTYPE(*INFO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Start calling update programs */
+ 
+/* Call program SM001801 to update file SDACRCPD */
+             CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(SM001801) PARM(&PRTCD)
+             IF         COND(&PRTCD *EQ '*ERROR ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Call program SM001802 to update file SDREPCPD */
+             CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(SM001802) PARM(&PRTCD)
+             IF         COND(&PRTCD *EQ '*ERROR ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Call program SM001803 to update file GLBSRPPD */
+             CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(SM001803) PARM(&PRTCD)
+             IF         COND(&PRTCD *EQ '*ERROR ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Call program SM001804 to update file MCBLRPPD */
+             CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(SM001804) PARM(&PRTCD)
+             IF         COND(&PRTCD *EQ '*ERROR ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(NORMAL)
+ 
+ABNOR:
+/*  Restore back-up files when an error is encountered during update */
+             CPYF       FROMFILE(&PTFUPG/XSDACRCPD) TOFILE(SDACRCPD) +
+                          MBROPT(*REPLACE) FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error in restoring file.  Process is +
+                             terminated.') MSGTYPE(*INFO)
+/**********     GOTO       CMDLBL(END)                                                 */ /*CUP039*/
+             ENDDO
+ 
+             CPYF       FROMFILE(&PTFUPG/XSDREPCPD) TOFILE(SDREPCPD) +
+                          MBROPT(*REPLACE) FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error in restoring file.  Process is +
+                             terminated.') MSGTYPE(*INFO)
+/**********     GOTO       CMDLBL(END)                                                 */ /*CUP039*/
+             ENDDO
+ 
+             CPYF       FROMFILE(&PTFUPG/XGLBSRPPD) TOFILE(GLBSRPPD) +
+                          MBROPT(*REPLACE) FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error in restoring file.  Process is +
+                             terminated.') MSGTYPE(*INFO)
+/**********     GOTO       CMDLBL(END)                                                 */ /*CUP039*/
+             ENDDO
+ 
+             CPYF       FROMFILE(&PTFUPG/XMCBLRPPD) TOFILE(MCBLRPPD) +
+                          MBROPT(*REPLACE) FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error in restoring file.  Process is +
+                             terminated.') MSGTYPE(*INFO)
+/**********     GOTO       CMDLBL(END)                                                 */ /*CUP039*/
+             ENDDO
+ 
+/* Set up messages for Midas Information Screen. */                                       /*CUP039*/
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMC000018') MSG(&MESSAGE)                               /*CUP039*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP039*/
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                         /*CUP039*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP039*/
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')                                            /*CUP039*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP039*/
+             CALL       PGM(SCC0010) PARM('SMC000018' 'ENTER' ' ')                        /*CUP039*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP039*/
+ 
+ NORMAL:
+/*  Delete back-up files. */
+             DLTF       FILE(&PTFUPG/XSDACRCPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(&PTFUPG/XSDREPCPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(&PTFUPG/XGLBSRPPD)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(&PTFUPG/XMCBLRPPD)
+             MONMSG     MSGID(CPF0000)
+ 
+END:
+             ENDPGM

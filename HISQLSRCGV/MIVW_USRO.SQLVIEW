@@ -1,0 +1,115 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Host Integration Layer                                        */
+/*                                                                             */
+/*       MIVW_USRO - User by Role View                                         */
+/*                                                                             */
+/*       (c) Finastra International Limited 2011                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. MD044434           Date 01Mar17                        */
+/*                      MD023309A          Date 19JnoV3                        */
+/*                      AR1097374          Date 26Mar13                        */
+/*                      AR1078951          Date 12Feb13                        */
+/*                      AR1078938          Date 21Jan13                        */
+/*                      CBF022             Date 16Jul12                        */
+/*                      AR922992           Date 29Feb12                        */
+/*                      AR913668           Date 24Feb12                        */
+/*                      AR887374           Date 13Feb11                        */
+/*                      AR910603A          Date 09Feb12                        */
+/*                      AR907056           Date 03Feb12                        */
+/*                      AR901711           Date 27Jan12                        */
+/*                      AR895952           Date 20Jan12                        */
+/*                      AR883623A          Date 22Dec11                        */
+/*                      AR883623           Date 21Dec11                        */
+/*                      CBF005  *CREATE    Date 04Jul11                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       MD044434 - Soft deleted records are still displayed in Security Model */
+/*                  enquiries                                                  */
+/*       MD023309A - BFP 3.1 Build 2 Patch 10 Issues (Recompile)               */
+/*       AR1097374 - BFP 3.1 Absorption Issues (Recompile)                     */
+/*       AR1078951 - Branches entitled to a user is not diplayed in Roles by   */
+/*                   User and Users by Role enquiries.                         */
+/*       AR1078938 - Values for User ID and UserName in Users by Role and      */
+/*                  Roles by User Enquiry are interchanged                     */
+/*       CBF022   - BF Infrastructure: Auditability (Recompile)                */
+/*       AR922992 - In Roles by User and Users By Role Enquiry, not all        */
+/*                  userprofiles can be seen                                   */
+/*       AR913668 - No branch entitlement displayed on Roles by User Enquiry   */
+/*                  Screen (Recompile)                                         */
+/*       AR887374 - Dependencies between HIL and Midas views upon restoration  */
+/*                  (Recompile)                                                */
+/*       AR910603A - Incorrect column sequence reflected on Users by Role and  */
+/*                   Roles by User enquiry                                     */
+/*                 - Changes in order done in BFTB_ORGGROUPUSERVIEW and        */
+/*                   BFTB_PERMISSIONUSERVIEW scripts                           */
+/*       AR907056 - Redelivery of BFMI Schema (Recompile)                      */
+/*       AR901711 - List of changes on User by Role Enquiry                    */
+/*       AR895952  - Column headers of Users by Role Enquiry shows incorrect   */
+/*                   values                                                    */
+/*       AR883623A - Security Model Enquiries Screen does not show data        */
+/*                 - Recompile with correct script (refer to fix deldoc)       */
+/*       AR883623 - Security Model Enquiries Screen does not show data         */
+/*       CBF005 - BF Infrastructure: Single Security User Maintenance Profile  */
+/*                                                                             */
+/*******************************************************************************/
+   CREATE VIEW                                                                  :
+   **********/**********                                                        :
+   ( BFUSERNAME,                                                                :
+     BFUSERID,                                                                  :
+     BFGROUPID,                                                                 :
+     BFGROUPDISPLAYNAME,                                                        :
+*****BFENTITLEMENTTYPE,*********************************************************:           AR901711
+     BFENTITLEMENTVALUE)                                                        :
+                                                                                :
+**AS*SELECT*********************************************************************:           AR901711
+  AS SELECT DISTINCT                                                            :           AR901711
+*****A.BFUSERNAME,**************************************************************:          AR1078938
+*****A.BFUSERID,****************************************************************:          AR1078938
+     A.BFUSERID,                                                                :          AR1078938
+     A.BFUSERNAME,                                                              :          AR1078938
+/****A.BFGROUPID,***************************************************************:           AR895952
+     A.BFGROUPNAME,                                                             :           AR895952
+     A.BFGROUPDISPLAYNAME,                                                      :
+*****B.BFENTITLEMENTTYPE,*******************************************************:           AR901711
+     B.BFENTITLEMENTVALUE                                                       :
+                                                                                :
+**FROM*BFTB_ORGGROUPUSERVIEW*A**************************************************:          AR1078951
+  FROM BFTB_ORGGROUPUSERVIEW A,                                                 :          AR1078951
+                                                                                :
+**LEFT*JOIN*BFTB_PERMISSIONUSERVIEW*B*******************************************:          AR910603A
+**LEFT*JOIN*BFTB_ENTITLEMENTSVIEW*B*********************************************:AR910603A AR1078951
+**ON*B.BFUSERNAME*=*A.BFUSERNAME************************************************:           AR922992
+**ON*B.BFUSERNAME*=*A.BFUSERID**************************************************: AR922992 AR1078951
+**AND*B.BFGROUPNAME*=*A.BFGROUPNAME*********************************************:AR910603A AR1078951
+                                                                                :          AR1078951
+  BFVENT B                                                                      :          AR1078951
+  WHERE                                                                         :          AR1078951
+    A.BFUSERNAME = B.BFUSERNAME                                                 :          AR1078951
+    AND A.BFGROUPNAME = B.BFGROUPNAME                                           :          AR1078951
+    AND A.BFRECDELETETDATE = '0'                                                :           MD044434
+    AND B.BFRECDELETETDATE = '0'                                                :           MD044434
+                                                                                :          AR1078951
+  UNION ALL                                                                     :          AR1078951
+  SELECT                                                                        :          AR1078951
+   C.BFUSERID,                                                                  :          AR1078951
+   C.BFUSERNAME USERNAME,                                                       :          AR1078951
+   C.BFGROUPNAME,                                                               :          AR1078951
+   C.BFGROUPDISPLAYNAME,                                                        :          AR1078951
+   ' '                                                                          :          AR1078951
+  FROM BFTB_ORGGROUPUSERVIEW C                                                  :          AR1078951
+  WHERE C.BFUSERNAME NOT IN                                                     :          AR1078951
+***(SELECT D.BFUSERNAME FROM BFVENT D)******************************************: AR1078951 MD044434
+   (SELECT D.BFUSERNAME FROM BFVENT D                                           :			MD044434
+      WHERE D.BFRECDELETETDATE = '0')                                           :           MD044434
+    AND C.BFRECDELETETDATE = '0'                                                :           MD044434
+                                                                                :
+  RCDFMT MIVW_USRO                                                              :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas HI Permission User by Role View             ';                     :
+                                                                                :

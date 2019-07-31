@@ -1,0 +1,59 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Utility for MD-25112')                                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00403 - Utility for MD-23799/MD-23799A                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD027435 *CREATE   Date 09Jun14              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD027435 - Conversion of utilities to upgrade program       */
+/*                  standards related to MD027279.                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+/* Global monitor message.  */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* The actual program function would appear here.  If additional */
+/*  programs need to be called then use switches (U7 and U8) to  */
+/*  denote error.  The shell program which controls the call of  */
+/*  Bridge Upgrade Programs (UPC9900) will check the switches.   */
+ 
+/* List all PDCL Loan Fees to be updated. */
+             CALL       PGM(SMUC00258) PARM('L')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Process update of field in file CLOANCL */
+             CALL       PGM(SMUC00258) PARM('U')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             SNDPGMMSG  MSG('Program SMUC00404 ended abnormally - +
+                          job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,527 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas RE Cash Withdrawal - A/C CCY')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Retail Module                                        *
+     A*                                                               *
+     A*  DSPF/RE4116DF - Cash Withdrawal in A/c Currency              *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG18661           Date 08May08               *
+      *                 249218             Date 16Aug07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CRT026             Date 22May06               *
+      *                 BUG7819            Date 17Aug05               *
+      *                 CAAA03             Date 29Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 25Jan96               *
+      *                 S01408             Date 15Jan96               *
+     A*                 093546             DATE 11SEP95               *
+     A*                 092429             DATE 24AUG95               *
+     A*                 090199             DATE 07JUL95               *
+     A*                 CRT001  *CREATE    DATE 28FEB95               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  CSD101 - Password Encryption                                 *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG18661 - Screen looks as if text is overwritten            *
+      *  249218 - Applied fix 239004.                                 *
+      *  239004 - 'Transaction Terminated' not shown when account's   *
+      *           branch is not matched with teller ID branch.        *
+      *  CRT026 - Retail Teller Password Change                       *
+      *  BUG7819 - If a retail account has insufficient funds,        *
+      *            the system simply drop a Cash Withdrawal           *
+      *            (non-account currency) transaction                 *
+      *  CAAA03 - Webfacing changes.                                  *
+     A*  S01408 - Core hook RE4116DF07 added.                         *
+     A*           Core hook RE4116DF08 added.                         *
+     A*           Core hook RE4116DF09 added.                         *
+     A*           Core hook RE4116DF10 added.                         *
+     A*  S01408 - Core hook RE4116DF01 added.                         *
+     A*           Core hook RE4116DF02 added.                         *
+     A*           Core hook RE4116DF03 added.                         *
+     A*           Core hook RE4116DF04 added.                         *
+     A*           Core hook RE4116DF05 added.                         *
+     A*           Core hook RE4116DF06 added.                         *
+     A*  093546 - Change 'Ledger Balance' text to 'Today's Projected  *
+     A*           Ledger Balance'.  Align other fields.               *
+     A*  092429 - Include RTS transaction narrative.                  *
+     A*  090199 - RE-COMPILATION TO CORRECT MULTI-LANGUAGE            *
+     A*           REFERENCES.                                         *
+     A*                                                               *
+     A*  CRT001 - Retail Teller System.                               *
+     A*                                                               *
+     A*****************************************************************
+     A*  C R E A T I O N     P A R A M E T E R S                      *
+     A*                                                               *
+     A*****************************************************************
+     A                                      PRINT(MPRINT)
+     A                                      INDARA
+     A                                      REF(MFRFL)
+      **Start of change CAAA03
+     A                                      DSPSIZ(*DS4)
+     A**********                            MSGLOC(24)                                        CAAA03
+     A                                      MSGLOC(25)
+      **End of change CAAA03
+      *
+      *---------------------------------------------------------------------
+     A          R RE4116F0                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+      ** Start of change BUG18661
+     A**********                            CLRL(*NO)
+      ** End of change BUG18661
+     A                                      PUTOVR
+     A                                      CF03
+     A                                      CF05
+     A                                      CF10
+      *
+      *
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4116'
+     A                                  1 26'CASH WITHDRAWAL - ACCOUNT +
+     A                                      CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+      ** Transaction completion details
+     A  45                             10 06'TRANS NO. COMPLETED -'
+     A                                      DSPATR(HI)
+     A  45        STTLU          5  0O 10 28TEXT('TELLER TRANSACTION NUMBER')
+     A                                      DSPATR(HI)
+     A  20                             11 06'TRANSACTION TERMINATED'                          239004
+     A  21                             11 06'OVERRIDE REQUIRED'                               239004
+     A  41                             11 06'ACCOUNT CLOSED'
+     A                                      DSPATR(HI)
+     A  42                             11 06'ACCOUNT NOT CLOSED'
+     A                                      DSPATR(HI)
+      **Start of change CAAA03
+     A                                 13 06'Enter next'
+      **End of change CAAA03
+      *
+      ** A/C number prompt
+     A                                 14  6'Retail a/c number '
+     A            SACNO1        10   B 14 30TEXT('RETAIL A/C NO.')
+     A                                      DSPATR(HI)
+     A N30                                  DSPATR(UL)
+     A  30                                  DSPATR(PC)
+     A  30                                  DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A                                 15  6'Currency code'
+     A            SCCY1          3   B 15 30TEXT('CURRENCY')
+     A                                      DSPATR(HI)
+     A N31                                  DSPATR(UL)
+     A  31                                  DSPATR(PC)
+     A  31                                  DSPATR(RI)
+     A                                      OVRDTA
+      *
+      ** Start of change BUG7819                                                             BUG7819
+     A  22        SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')                          BUG7819
+      *                                                                                      BUG7819
+     A  22        SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')                          BUG7819
+      ** End of change BUG7819                                                               BUG7819
+      *                                                                                      BUG7819
+     A                                 23  2'F3=Exit   F5=Refresh'
+     A                                 23 25'F10=A/C closure enquiry'
+      *
+      *---------------------------------------------------------------------
+     A**********R RE4116F1                  TEXT('WARNING/TERMINAL')                          239004
+      ** Start of change CAAA03
+     A**********                            OVERLAY                                           239004
+      ** End of change CAAA03
+     A**********                            CLRL(14)                                          239004
+      ** Start of change CAAA03
+     A**********                            PUTOVR                                            239004
+      ** End of change CAAA03
+     A*/COPY WNCPYSRC,RE4116DF14
+      *
+      ** Start of change CAAA03
+     A**********  SACNO2        10   O 04 06TEXT('RETAIL A/C NO.')                            CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+     A**********  SANAM         20   O 04 18TEXT('ACCOUNT NAME')                              CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+     A**********  SCCY2          3   O 04 40TEXT('ACCOUNT CURRENCY')                          CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+     A**71******                       04 50'Password'                                        CAAA03
+     A**71******  SPSWD         15   O 04 60TEXT('ACCOUNT PASSWORD')                          CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+      **********                                                                              CAAA03
+      ** End of change CAAA03
+     A*/COPY WNCPYSRC,RE4116DF11
+      ** Start of change CAAA03
+     A**29******                       05 06'Interest'                                        CAAA03
+     A**********                                     Begin /093546/                           CAAA03
+      ** End of change CAAA03
+     A**29******  SINTR         22   O 05 28TEXT('NET INTEREST')
+      ** Start of change CAAA03
+     A**29******  SINTR         22   O 05 46TEXT('NET INTEREST')                              CAAA03
+     A**********                                     End   /093546/                           CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+      **********                                                                              CAAA03
+     A**********                                                                              CAAA03
+     A**29*76***                       06 06'Withholding Tax'                                 CAAA03
+     A**********                                     Begin /093546/                           CAAA03
+      ** End of change CAAA03
+     A**29*76***  SWTAX         22   O 06 28TEXT('WITHHOLDING TAX')
+      ** Start of change CAAA03
+     A**29*76***  SWTAX         22   O 06 46TEXT('WITHHOLDING TAX')                           CAAA03
+     A**********                                     End   /093546/                           CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+      **********                                                                              CAAA03
+     A**29******                       07 06'Service Charge'                                  CAAA03
+     A**********                                     Begin /093546/                           CAAA03
+      ** End of change CAAA03
+     A**29******  SCHRG         22   O 07 28TEXT('SERVICE CHARGE')
+      ** Start of change CAAA03
+     A**29******  SCHRG         22   O 07 46TEXT('SERVICE CHARGE')                            CAAA03
+     A**********                                     End   /093546/                           CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+      **********                                                                              CAAA03
+     A**29******                       08 06'Close balance'                                   CAAA03
+     A**********                                     Begin /093546/                           CAAA03
+      ** End of change CAAA03
+     A**29******  SCLOB         22   O 08 28TEXT('CLOSING BALANCE')
+      ** Start of change CAAA03
+     A**29******  SCLOB         22   O 08 46TEXT('CLOSING BALANCE')                           CAAA03
+     A**********                                     End   /093546/                           CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+      **********                                                                              CAAA03
+      ** End of change CAAA03
+     A*/COPY WNCPYSRC,RE4116DF12
+      ** Start of change CAAA03
+     A**22******  SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')                           CAAA03
+     A**********                            DSPATR(HI RI)                                     CAAA03
+      **********                                                                              CAAA03
+     A**22******  SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')                           CAAA03
+     A**********                            DSPATR(HI RI)                                     CAAA03
+      **********                                                                              CAAA03
+      ** End of change CAAA03
+      ** Start of change CAAA03                                                              BUG7819
+     A**22******  SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')                          BUG7819
+      **********                                                                             BUG7819
+     A**22******  SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')                          BUG7819
+      **********                                                                             BUG7819
+      ** End of change CAAA03                                                                BUG7819
+     A**20******                       11 06'TRANSACTION TERMINATED'                          239004
+     A**********                            DSPATR(HI)                                       BUG7819
+     A**21******                       11 06'OVERRIDE REQUIRED'                               239004
+     A**********                            DSPATR(HI)                                       BUG7819
+     A*
+     A*/COPY WNCPYSRC,RE4116DF13
+     A**********                       13 06'Enter next'                                      239004
+      *
+      *---------------------------------------------------------------------
+     A          R RE4116F2                  TEXT('DETAIL SCREEN')
+     A                                      OVERLAY
+      ** Start of change BUG18661
+     A**********                            CLRL(*NO)
+      ** End of change BUG18661
+     A                                      PUTOVR
+     A*                                              Start /S01408/
+     A*/COPY WNCPYSRC,RE4116DF01
+     A*                                              End   /S01408/
+     A                                      CF03
+     A                                      CF05
+     A                                      CF12
+     A*                                              Begin /092429/
+     A*                                              End   /092429/
+      *
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4116'
+     A                                  1 26'CASH WITHDRAWAL - ACCOUNT +
+     A                                      CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      ** Start of change CAAA03
+     A            SACNO2        10   O 04 06TEXT('Retail A/C No.')
+     A                                      DSPATR(HI)
+     A            SANAM         20   O 04 18TEXT('Account Name')
+     A                                      DSPATR(HI)
+     A            SCCY2          3   O 04 40TEXT('Account Currency')
+     A                                      DSPATR(HI)
+      ** Start of change CSD101
+     A**71******                       04 50'Password'                                        CSD101
+     A**71******  SPSWD         15   O 04 60TEXT('Account Password')                          CSD101
+     A**********                            DSPATR(HI)                                        CSD101
+      ** End of change CSD101
+     A  29                             05 06'Interest'
+     A  29        SINTR         22   O 05 46TEXT('Net Interest')
+     A                                      DSPATR(HI)
+     A  29 76                          06 06'Withholding Tax'
+     A  29 76     SWTAX         22   O 06 46TEXT('Withholding Tax')
+     A                                      DSPATR(HI)
+     A  29                             07 06'Service Charge'
+     A  29        SCHRG         22   O 07 46TEXT('Service Charge')
+     A                                      DSPATR(HI)
+     A  29                             08 06'Close balance'
+     A  29        SCLOB         22   O 08 46TEXT('Closing Balance')
+     A                                      DSPATR(HI)
+     A  22        SMSG1         72   O 09 06TEXT('Message Array 1')
+     A                                      DSPATR(HI RI)
+     A  22        SMSG2         72   O 10 06TEXT('Message Array 2')
+     A                                      DSPATR(HI RI)
+     A  20                             11 06'TRANSACTION TERMINATED'
+     A                                      DSPATR(HI)
+     A  21                             11 06'OVERRIDE REQUIRED'
+     A                                      DSPATR(HI)
+      ** End of change CAAA03
+     A*                                              Start /S01408/
+     A*/COPY WNCPYSRC,RE4116DF02
+     A*                                              End   /S01408/
+      *
+     A                                 13  6'Cash amount'
+     A            SCSAM         14   B 13 23TEXT('CASH AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N32                            DSPATR(UL)
+     A        32                            DSPATR(PC)
+     A        32                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A                                 14  6'Cheque/Reference'
+     A            SCQNF          8   B 14 23TEXT('CHEQUE NUMBER REFERENCE')
+     A                                      DSPATR(HI)
+     A     27N35                            DSPATR(UL)
+     A        35                            DSPATR(PC)
+     A        35                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A                                 15  6'Dept code'
+     A            SDEPC          3   B 15 23TEXT('DEPARTMENT CODE')
+     A                                      DSPATR(HI)
+     A     27N37                            DSPATR(UL)
+     A        37                            DSPATR(PC)
+     A        37                            DSPATR(RI)
+     A                                      OVRDTA
+     A N47                             16  6'Profit centre'
+     A            SPRFC          4   B 16 23TEXT('PROFIT CENTRE')
+     A                                      DSPATR(HI)
+     A  27N46                               DSPATR(UL)
+     A  46                                  DSPATR(PC)
+     A  46                                  DSPATR(RI)
+     A  47                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5   B 13 64TEXT('CHARGE TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N18 27                               DSPATR(UL)
+     A  18                                  DSPATR(PC RI)
+     A                                      OVRDTA
+      *
+     A                                 14 41'Charge Percentage'
+     A            SCPER          5   B 14 64TEXT('CHARGE %')
+     A                                      DSPATR(HI)
+     A N19 27                               DSPATR(UL)
+     A  19                                  DSPATR(PC RI)
+     A                                      OVRDTA
+      *
+     A                                 15 41'Charge Amount'
+     A            SCAMT         14   B 15 64TEXT('CHARGE AMOUNT')
+     A                                      DSPATR(HI)
+     A N17 27                               DSPATR(UL)
+     A  17                                  DSPATR(PC RI)
+     A                                      OVRDTA
+     A*                                              Begin /092429/
+     A                                 17 41'Narrative'
+     A            NARRI         20   B 17 60TEXT('NARRATIVE')
+     A                                      DSPATR(HI)
+     A     27                               DSPATR(UL)
+     A                                      OVRDTA
+     A*                                              End   /092429/
+     A*                                              Start /S01408/
+     A*/COPY WNCPYSRC,RE4116DF07
+     A*                                              End   /S01408/
+      *
+     A                                 23  2'F3=Exit   F5=Refresh'
+     A                                 23 25'F12=Previous'
+      *
+     A*                                              Start /S01408/
+     A*/COPY WNCPYSRC,RE4116DF03
+     A*                                              End   /S01408/
+      *---------------------------------------------------------------------
+     A          R RE4116F3                  TEXT('OVERRIDE SCREEN')
+     A                                      PROTECT
+     A                                      OVERLAY
+      ** Start of change BUG18661
+     A**********                            CLRL(*NO)
+      ** End of change BUG18661
+     A                                      PUTOVR
+     A                                      CF01
+     A*                                              Start /S01408/
+     A*/COPY WNCPYSRC,RE4116DF08
+     A*                                              End   /S01408/
+     A                                      CF02
+     A*                                              Start /S01408/
+     A*/COPY WNCPYSRC,RE4116DF04
+     A*                                              End   /S01408/
+     A                                      CF03
+     A                                      CF12
+      *
+     A*                                              Start /S01408/
+     A*/COPY WNCPYSRC,RE4116DF09
+     A*                                              End   /S01408/
+     A*                                              Begin /093546/
+      ** Start of change BUG18661
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4116'
+     A                                  1 26'CASH WITHDRAWAL - ACCOUNT +
+     A                                      CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+     A            SACNO2        10   O 04 06TEXT('Retail A/C No.')
+     A                                      DSPATR(HI)
+     A            SANAM         20   O 04 18TEXT('Account Name')
+     A                                      DSPATR(HI)
+     A            SCCY2          3   O 04 40TEXT('Account Currency')
+     A                                      DSPATR(HI)
+      ** Start of change CSD101
+     A**71******                       04 50'Password'                                        CSD101
+     A**71******  SPSWD         15   O 04 60TEXT('Account Password')                          CSD101
+     A**********                            DSPATR(HI)                                        CSD101
+      ** End of change CSD101
+      ** End of change BUG18661
+     A**28******                       05  6'Ledger balance'
+     A**28******  SLDBL         22   O 05 28TEXT('LEDGER BALANCE')
+     A  28                             05  6'Today''s Projected +
+     A                                      Ledger Balance'
+     A  28        SLDBL         22   O 05 46TEXT('LEDGER BALANCE')
+     A*                                              End   /093546/
+     A                                      DSPATR(HI)
+      *
+     A  28                             06  6'Available balance'
+     A*                                              Begin /093546/
+     A**28******  SAVBL         22   O 06 28TEXT('LEDGER BALANCE')
+     A  28        SAVBL         22   O 06 46TEXT('LEDGER BALANCE')
+     A*                                              End   /093546/
+     A                                      DSPATR(HI)
+      *
+     A  28                             07 06'             '
+     A  28                             07 24'                         '
+      *
+     A*                                              Start /S01408/
+     A*/COPY WNCPYSRC,RE4116DF05
+      ** Start of change CAAA03
+     A  22        SMSG1         72   O 09 06TEXT('Message Array 1')
+     A                                      DSPATR(HI RI)
+     A  22        SMSG2         72   O 10 06TEXT('Message Array 2')
+     A                                      DSPATR(HI RI)
+     A  20                             11 06'TRANSACTION TERMINATED'
+     A                                      DSPATR(HI)
+     A  21                             11 06'OVERRIDE REQUIRED'
+     A                                      DSPATR(HI)
+     A                                 13  6'Cash amount'
+     A            SCSAM         14   O 13 23TEXT('Cash Amount')
+     A                                      DSPATR(HI)
+     A                                 14  6'Cheque/Reference'
+     A            SCQNF          8   O 14 23TEXT('Cheque Number Reference')
+     A                                      DSPATR(HI)
+     A                                 15  6'Dept code'
+     A            SDEPC          3   O 15 23TEXT('Department Code')
+     A                                      DSPATR(HI)
+     A N47                             16  6'Profit centre'
+     A            SPRFC          4   O 16 23TEXT('Profit Centre')
+     A                                      DSPATR(HI)
+     A  47                                  DSPATR(ND)
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5   O 13 64TEXT('Charge Trans. Type')
+     A                                      DSPATR(HI)
+     A                                 14 41'Charge Percentage'
+     A            SCPER          5   O 14 64TEXT('Charge %')
+     A                                      DSPATR(HI)
+     A                                 15 41'Charge Amount'
+     A            SCAMT         14   O 15 64TEXT('Charge Amount')
+     A                                      DSPATR(HI)
+     A                                 17 41'Narrative'
+     A            NARRI         20   O 17 60TEXT('Narrative')
+     A                                      DSPATR(HI)
+      ** End of change CAAA03
+     A*                                              End   /S01408/
+     A  26                             21  6'Override teller id'
+     A  26        SOVTI          3   B 21 26TEXT('OVERRIDE TELLER ID')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N38                                  DSPATR(UL)
+     A  38                                  DSPATR(RI)
+      *
+     A  26                             21 31'passcode'
+     A  26        SOVPC          6   B 21 40TEXT('OVERRIDE PASSCODE')
+     A                                      OVRDTA
+     A                                      DSPATR(ND)
+     A  39                                  DSPATR(RI)
+      ** Start of change CRT026
+      *
+     A  23                             21  6'Override user id?'
+     A  23        SOVUR         10   B 21 24TEXT('OVERRIDE USER ID')
+     A                                      DSPATR(HI)
+     A N38                                  DSPATR(UL)
+     A  38                                  DSPATR(RI)
+     A  38                                  DSPATR(PC)
+     A                                      OVRDTA
+      *
+     A  23                             21 36'Password?'
+     A  23        SOVPW         10   B 21 46TEXT('OVERRIDE PASSWORD')
+     A                                      DSPATR(ND)
+     A  39                                  DSPATR(RI)
+     A                                      OVRDTA
+      *
+      ** End of change CRT026
+     A*                                              Start /S01408/
+     A*/COPY WNCPYSRC,RE4116DF10
+     A*                                              End   /S01408/
+      *
+     A                                 23  2'F1=Override   F2=Display balance-
+     A                                         F3=Exit   F12=Previous'
+      *
+     A*                                              Start /S01408/
+     A*/COPY WNCPYSRC,RE4116DF06
+     A*                                              End   /S01408/
+      *---------------------------------------------------------------------
+     A          R RE4116S0                  TEXT('MESSAGE SUBFILE')
+      *
+     A                                      SFL
+      ** Start of change CAAA03
+     A**********                            SFLMSGRCD(24)                                     CAAA03
+     A                                      SFLMSGRCD(25)
+      ** End of change CAAA03
+     A            SMGKY                     SFLMSGKEY
+     A            SPGMQ                     SFLPGMQ
+      *
+      *---------------------------------------------------------------------
+     A          R RE4116C0                  TEXT('CONTROL RECORD')
+      *
+     A                                      SFLCTL(RE4116S0)
+     A                                      SFLSIZ(10)
+     A                                      SFLPAG(1)
+     A                                      SFLDSP
+     A                                      SFLINZ
+     A  10                                  SFLEND
+     A            SPGMQ                     SFLPGMQ
+      *
+     A*/COPY WNCPYSRC,RE4116DF15
+      ****************************************************************

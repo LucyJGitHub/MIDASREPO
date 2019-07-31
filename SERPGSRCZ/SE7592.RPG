@@ -1,0 +1,744 @@
+     H        1
+      *****************************************************************
+/*OVRF*: OVRDBF FILE(SECTYZ1) TOFILE(SECTY) SHARE(*NO)              : *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Corporate actions depot select option')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7592 - SE Corporate Actions - Options Maintenance          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 190204             Date 31May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 161732             Date 21Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSE007             Date 29Oct97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  190204 - Recompiled due to changes in PF/SECODVPD.           *
+      *  161732 - Corporate Actions Exercise and Conversion -         *
+      *           Part Stock/Keep Rest Calculation                    *
+      *           (Recompiled due to changes in PF/SECOEXPD)          *
+      *  CSE007 - Corporate Actions.                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      **   Midas Corporate Actions - Depots Retrieve index
+     FSECODPL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      **   Midas SE Securities - Details
+     FSECTYZ1 IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      **   MD - SE Corporate Actions - Dividends Events
+     FSECODVL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      **   ME - SE Corporate Actions - Free Allocations
+     FSECOFRL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      **   MG - SE Corporate Actions - Capital Events
+     FSECOCEL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      **   MH - SE Corporate Actions - Merger
+     FSECOCRL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      **   MI - SE Corporate Actions - Exchange Offers
+     FSECOOFL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      **   MF - SE Corporate Actions - Rights Issues
+     FSECORGL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      **   MJ - SE Corporate Actions - Exercises and Conversions
+     FSECOEXL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      **   Display file
+     FSE7592DFCF  E                    WORKSTN
+     F                                              KINFSR *PSSR
+     F                                        #1RRN KSFILE SE7592S1
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     E** EXTERNALS
+     *********************************************************************
+      *
+      ** Text Messages for Command Keys
+     E                    TXT     1   1 78
+      *
+     E                    NARR    1   1 24               NARRATIVE
+      *
+      ** For Compilation - Copyright insertion
+     E                    CPY@    1   1 80
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     I** INPUT
+     *********************************************************************
+      *
+      **   Program Status Data Structure for WS/User ID'S
+     IPGMDS     ESDSY2PGDSP
+     I                                      244 253 WSID
+     I                                      254 263 USIDXX
+      *
+      **   File Information data structure
+     IINFDS1    E DSY2I1DSP
+      *
+     ISCRDS       DS
+     I                                      197 205 DSPNUM
+      *
+      **   Data Structure for compilation - Copyright insertion
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      **   Data Structure for database error
+     ILDA         DS                            256
+     I                                      132 183 WWLOT
+     I                                      132 141 WWFILE
+     I                                      142 170 WWKEY
+     I                                      171 180 WWPGM
+     I                                      181 1830WWASE
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+      **  Standard Data Area Layout for System flags and Run Date
+     IRUNDAT    E DS
+      *
+      **  Data structure for bank details
+     ISDBANK    E DSSDBANKPD
+      *
+      **  Customer Details
+     ISDCUST    E DSSDCUSTPD
+      *
+      **  Long data structure for access objects
+     IDSSDY     E DSDSSDY
+     ******************************************************************
+      /EJECT
+     *********************************************************************
+     C** MAIN PROCESSING
+     *********************************************************************
+      *
+      **  Entry Parameters
+     C           *ENTRY    PLIST
+     C                     PARM           WWREFN  6        ER Reference
+     C                     PARM           WWSECN 10        Security Shortname
+     C                     PARM           WWCOAT  2        Corporate Action Type
+     C                     PARM           WWPTYP  2        Processing Type
+     C                     PARM           WWEXDT  5        Ex-Date
+     C                     PARM           WWNBOP  2        Number of Options
+     C                     PARM           WWACTN  1        Action 'A' or 'E'
+     C                     PARM           WWBRCD  3        Branch
+     C                     PARM           WWDDPT  6        Depot
+     C                     PARM           WWEXPO 17        Ex-date position
+     C                     PARM           WWCOAD  6        Last Allocation Date
+     C                     PARM           WWSTAT  1        Corporate Action Stat
+     C                     PARM           WWFINA  1        Final Allocation Indi
+     C                     PARM           WWNCCY  3        Nominal Currency
+     C                     PARM           WWUPDT  1        Update done ?
+     C                     PARM           WWRTCD  1        Return Code
+      *
+     C                     MOVE WWNBOP    W2NBOP  20
+     C                     MOVE WWDDPT    WWDPOT           Depot Number
+      *
+      ** Copyright Statement
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Perform initial processing
+     C                     EXSR P001
+      *
+      ** Set first time flag to 'Y'
+     C                     MOVE 'Y'       FIRST   1
+      *
+      ** Do until F3 or F12
+     C           *INKC     DOUEQ'1'                         B*1
+     C           *INKL     OREQ '1'
+      *
+      ** If 'First Time' = 'Y'
+     C           FIRST     IFEQ 'Y'                         B*2
+      *
+     C                     MOVELTXT,1     ##CTX1
+     C                     MOVE W2NBOP    #1NBOP
+     C                     MOVE '0'       *IN50
+      *
+      ** Build the subfile
+     C                     EXSR P002
+      *
+      ** Set first time flag to 'N'
+     C                     MOVE 'N'       FIRST
+      *
+      ** Write SE7592DF on screen
+     C           SFLLEN    IFNE *ZEROS
+     C                     Z-ADD1         #1RRN
+     C                     ELSE
+     C                     Z-ADD0         #1RRN
+     C                     ENDIF
+      *
+     C                     WRITESE7592C2
+     C                     WRITESE7592C1
+     C                     WRITESE7592F1
+     C                     ENDIF                           E*2
+      *
+      ** Read screen
+     C           *INKC     IFEQ '0'                        B*2
+     C                     READ SE7592F1                 89
+     C                     ENDIF                           E*2
+      *
+      ** Clear messages from message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** If F3
+     C                     MOVE ' '       WWRTCD
+     C           *INKC     IFEQ *ON                        B*2
+      *
+      ** Return to calling pgm with parameter 'Return Code' set to '3'
+     C                     MOVE '3'       WWRTCD
+     C                     ENDIF                           E*2
+      *
+      ** If F12
+     C           *INKL     IFEQ '1'                        B*2
+     C                     MOVE '2'       WWRTCD
+     C                     ENDIF                           E*2
+      *
+      ** If ENTER taken
+     C           *INKC     IFEQ '0'                        B*2
+     C           *INKL     ANDEQ'0'
+     C           *INKI     ANDEQ'0'
+      *
+      ** Validate subfile records
+     C                     EXSR P003
+     C                     ENDIF                           E*2
+      *
+     C                     ENDDO                           E*1
+      *
+     C                     MOVE W2NBOP    WWNBOP
+      *
+     C           ENDPGM    TAG
+     C                     RETRN
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P001   : INITIAL PROCESSING                                   *
+     ******************************************************************
+      *
+     C           P001      BEGSR
+      *
+      ** Initialise key and working fields
+      *
+      ** Setup keylist to LF/SECODPL1
+     C           KEY1      KLIST
+     C                     KFLD           WWREFN
+     C                     KFLD           WWOPTN  20
+     C                     KFLD           WWBRCD
+     C**********           KFLD           WWDPOT  60                                          CSD027
+     C                     KFLD           WWDPOT  6                                           CSD027
+      *
+     C                     MOVE *BLANKS   WWLOT
+     C                     MOVEL'SE7592 ' DBPGM  10
+      *
+     C                     MOVE WWREFN    #1REFN           ER Reference
+     C                     MOVE WWSECN    #1SECN           Security Shortname
+     C                     MOVE WWCOAT    #1COAT           Corporate Action Type
+     C                     MOVE WWNBOP    #1NBOP           Number of Options
+      *
+     C                     MOVE *BLANKS   WLKEYC
+     C                     MOVELWWDDPT    WLKEYC
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR'  WLRTCD
+     C                     PARM '*KEY   ' WLOPTN
+     C                     PARM           WLKEYC 10
+     C                     PARM *BLANKS   WLKYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** If record not found
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'001'     DBASE   30       ***************
+     C                     MOVE 'SDCUSTPD'DBFILE 10        * DB ERROR 01 *
+     C                     MOVELWWDDPT    DBKEY  29        ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBBCSSN    #1DDPT           Depot
+     C                     MOVE WWNCCY    #1NCCY           Nominal Currency
+     C                     MOVE WWBRCD    #1BRCD           Branch
+      *
+     C           WWEXDT    IFEQ *BLANKS
+     C           WWEXDT    OREQ *ZEROS
+     C                     MOVE *BLANKS   #1EXDT
+     C                     ELSE
+     C                     MOVE WWEXDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     #1EXDT           Ex-Date
+     C                     ENDIF
+      *
+      ** Setup screen time
+     C                     TIME           ##TME   60       Screen time.
+      *
+     C           WWACTN    IFEQ 'E'                        B*1
+     C                     MOVE '1'       *IN40            Enquiry Mode
+     C                     ELSE                            X*1
+     C                     MOVE '0'       *IN40            Amend Mode
+     C                     ENDIF                           E*1
+      *
+      ** Read in DTAARA/RUNDAT to get multibranching indicator
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'Y'                        B*1
+     C                     MOVE '1'       *IN45
+     C                     ENDIF                           E*1
+      *
+      ** If first time program called
+     C           FIRST     IFNE 'N'                        B*1
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WLRTCD  7
+     C                     PARM '*FIRST'  WLOPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** If record not found
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'002'     DBASE   30       ***************
+     C                     MOVE 'SDBANKPD'DBFILE 10        * DB ERROR 02 *
+     C                     MOVEL*BLANKS   DBKEY  29        ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E*2
+      *
+     C                     MOVE BJMRDT    ##MRDT           MIDAS RUN DATE
+      *
+     C           BJDFIN    IFEQ 'M'                        B*2
+     C                     MOVE *ON       *IN98
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Select the program MSGQ for error msg
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C                     MOVEL'SEUSRMSG'PMSGF  10
+      *
+      ** Fill in fields for subroutine ZASNMS
+     C                     MOVEL'SE7592 ' ZAPGM  10        Message queue
+     C                     MOVEL'SEUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+      ** Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     WRITESE7592C2
+      *
+      ** Retrieve Nominal Currency dec. places.
+     C           WWSECN    CHAINSECTYZ1              89
+      *
+      ** No record found
+     C           *IN89     IFEQ '1'                        B*1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'003'     DBASE            ***************
+     C                     MOVE 'SECTYZ1 'DBFILE           * DB ERROR 03 *
+     C                     MOVELWWSECN    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E*1
+      *
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P002   : BUILD THE SUBFILE                                    *
+     ******************************************************************
+      *
+     C           P002      BEGSR
+      *
+      ** Clear subfile
+     C                     MOVE *ON       *IN80
+     C                     WRITESE7592C1
+     C                     MOVE *OFF      *IN80
+     C                     MOVE *OFF      *IN81
+      *
+     C                     Z-ADD0         SFLLEN  40
+     C                     Z-ADD1         #1RRN
+     C                     Z-ADD#1RRN     SFLRRN
+      *
+     C                     Z-ADD0         WWCPT   20
+      *
+     C           WWPTYP    IFEQ 'DV'                       B*1
+     C           WWREFN    SETLLSECODVL1
+     C           WWREFN    READESECODVL1                 89
+      *
+     C                     ELSE                            X*1
+     C           WWPTYP    IFEQ 'FR'                       B*2
+     C           WWREFN    SETLLSECOFRL1
+     C           WWREFN    READESECOFRL1                 89
+      *
+     C                     ELSE                            X*2
+     C           WWPTYP    IFEQ 'CE'                       B*3
+     C           WWREFN    SETLLSECOCEL1
+     C           WWREFN    READESECOCEL1                 89
+      *
+     C                     ELSE                            X*3
+     C           WWPTYP    IFEQ 'CR'                       B*4
+     C           WWREFN    SETLLSECOCRL1
+     C           WWREFN    READESECOCRL1                 89
+      *
+     C                     ELSE                            X*4
+     C           WWPTYP    IFEQ 'OF'                       B*5
+     C           WWREFN    SETLLSECOOFL1
+     C           WWREFN    READESECOOFL1                 89
+      *
+     C                     ELSE                            X*5
+     C           WWPTYP    IFEQ 'RG'                       B*6
+     C           WWREFN    SETLLSECORGL1
+     C           WWREFN    READESECORGL1                 89
+      *
+     C                     ELSE                            X*6
+     C           WWPTYP    IFEQ 'EX'                       B*7
+     C           WWREFN    SETLLSECOEXL1
+     C           WWREFN    READESECOEXL1                 89
+      *
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+     C                     ENDIF                           E*5
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+     C                     ENDIF                           E*2
+     C                     ENDIF                           E*1
+      *
+      ** Do while counter lower or equal than number of options
+     C           *IN89     DOWEQ'0'                        B*1
+     C           WWCPT     ANDLT16
+      *
+     C                     MOVEL*BLANKS   #1SEL            Action Code
+      *
+     C                     MOVE WWPTYP    #1PTYP           Processing Type
+      *
+     C           WWPTYP    IFEQ 'DV'                       B*2
+     C                     MOVE MDOPTN    #1OPTN           Option Number
+     C                     MOVE MDOPSH    #1OPSH           Option Shortname
+     C                     ELSE                            X*2
+     C           WWPTYP    IFEQ 'FR'                       B*3
+     C                     MOVE MEOPTN    #1OPTN           Option Number
+     C                     MOVE MEOPSH    #1OPSH           Option Shortname
+     C                     ELSE                            X*3
+     C           WWPTYP    IFEQ 'CE'                       B*4
+     C                     MOVE MGOPTN    #1OPTN           Option Number
+     C                     MOVE MGOPSH    #1OPSH           Option Shortname
+     C                     ELSE                            X*4
+     C           WWPTYP    IFEQ 'CR'                       B*5
+     C                     MOVE MHOPTN    #1OPTN           Option Number
+     C                     MOVE MHOPSH    #1OPSH           Option Shortname
+     C                     ELSE                            X*5
+     C           WWPTYP    IFEQ 'OF'                       B*6
+     C                     MOVE MIOPTN    #1OPTN           Option Number
+     C                     MOVE MIOPSH    #1OPSH           Option Shortname
+     C                     ELSE                            X*6
+     C           WWPTYP    IFEQ 'RG'                       B*7
+     C                     MOVE MFOPTN    #1OPTN           Option Number
+     C                     MOVE MFOPSH    #1OPSH           Option Shortname
+     C                     ELSE                            X*7
+     C           WWPTYP    IFEQ 'EX'                       B*8
+     C                     MOVE MJOPTN    #1OPTN           Option Number
+     C                     MOVE MJOPSH    #1OPSH           Option Shortname
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+     C                     ENDIF                           E*5
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+     C                     ENDIF                           E*2
+      *
+     C                     MOVE #1OPTN    WWOPTN           Option Number
+      *
+     C           KEY1      CHAINSECODPL1             89
+     C                     MOVE *BLANKS   #1HOST           Holding Taken as stoc
+      *
+     C           *IN89     IFEQ '0'                        B*2
+     C           MBHOST    ANDNE*ZEROS
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVELMBHOST    ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #1HOST
+      *
+     C                     ENDIF                           E*2
+      *
+      ** Write subfile record
+     C                     WRITESE7592S1
+     C                     ADD  1         SFLLEN
+     C                     ADD  1         SFLRRN     81
+     C                     Z-ADDSFLRRN    #1RRN
+      *
+     C                     ADD  1         WWCPT
+      *
+     C           WWPTYP    IFEQ 'DV'                       B*2
+     C           WWREFN    READESECODVL1                 89
+      *
+     C                     ELSE                            X*2
+     C           WWPTYP    IFEQ 'FR'                       B*3
+     C           WWREFN    READESECOFRL1                 89
+      *
+     C                     ELSE                            X*3
+     C           WWPTYP    IFEQ 'CE'                       B*4
+     C           WWREFN    READESECOCEL1                 89
+      *
+     C                     ELSE                            X*4
+     C           WWPTYP    IFEQ 'CR'                       B*5
+     C           WWREFN    READESECOCRL1                 89
+      *
+     C                     ELSE                            X*5
+     C           WWPTYP    IFEQ 'OF'                       B*6
+     C           WWREFN    READESECOOFL1                 89
+      *
+     C                     ELSE                            X*6
+     C           WWPTYP    IFEQ 'RG'                       B*7
+     C           WWREFN    READESECORGL1                 89
+      *
+     C                     ELSE                            X*7
+     C           WWPTYP    IFEQ 'EX'                       B*8
+     C           WWREFN    READESECOEXL1                 89
+      *
+     C                     ENDIF                           E*8
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+     C                     ENDIF                           E*5
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+     C                     ENDIF                           E*2
+      *
+     C                     ENDDO                           E*1
+      *
+     C           WWCPT     IFEQ *ZEROS                     B*1
+     C                     MOVEL'CO00001' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ENDIF                           E*1
+      *
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P003   : VALIDATE SUBFILE RECORDS                             *
+     ******************************************************************
+      *
+     C           P003      BEGSR
+      *
+      ** Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** Read first subfile record
+     C                     Z-ADD1         SFLRRN  40
+     C                     Z-ADD0         #3RRN   40
+      *
+     C           SFLRRN    IFLE SFLLEN                     B*1
+     C                     READCSE7592S1                 89
+      *
+      ** Do while records exist in subfile
+     C           *IN89     DOWEQ*OFF                       B*2
+      *
+      ** Reset indicator 50 (Reverse image)
+     C                     MOVE '0'       *IN50
+      *
+      ** If action code entered, must be 'A', 'E'
+     C           #1SEL     IFNE ' '                        B*3
+     C           #1SEL     ANDNE'A'
+     C           #1SEL     ANDNE'E'
+     C           WWACTN    ANDEQ'A'
+      *
+     C           #1SEL     ORNE ' '
+     C           #1SEL     ANDNE'E'
+     C           WWACTN    ANDEQ'E'
+      *
+     C           WWACTN    IFEQ 'A'                        B*4
+     C                     MOVEL'CO00065' ZAMSID
+     C                     ELSE                            X*4
+     C                     MOVEL'CO00068' ZAMSID
+     C                     ENDIF                           E*4
+      *
+     C                     MOVE '1'       *IN50
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN84
+     C                     UPDATSE7592S1
+     C                     ELSE                            X*3
+      *
+      ** If action code 'A' or 'E' entered
+     C           #1SEL     IFEQ 'A'                        B*4
+     C           #1SEL     OREQ 'E'
+     C                     MOVE #1OPTN    WWOPNB  2        Option Number
+      *
+     C                     CALL 'SE7593'               99
+     C                     PARM           WWREFN  6        ER Reference
+     C                     PARM           WWSECN 10        Security Shortname
+     C                     PARM           WWCOAT  2        Corporate Action Type
+     C                     PARM           WWPTYP  2        Processing Type
+     C                     PARM           WWEXDT  5        Ex-Date
+     C                     PARM #1OPTN    WWNBOP  2        Option Number
+     C                     PARM #1SEL     WWACTN  1        Action 'A' or 'E'
+     C                     PARM           WWBRCD  3        Branch
+     C                     PARM           WWDDPT  6        Depot
+     C                     PARM           WWEXPO 17        Ex-date position
+     C                     PARM           WWCOAD  6        Last Allocation Date
+     C                     PARM           WWSTAT  1        Corporate Action Stat
+     C                     PARM           WWFINA  1        Final Allocation Indi
+     C                     PARM           WWNCCY  3        Nominal Currency
+     C                     PARM           WWUPDT  1        Update done ?
+     C                     PARM           WWRTCD  1        Return Code
+      *
+      **  If error indicator of the program called is on, databse error
+     C           *IN99     IFEQ '1'                        B*5
+     C           WWRTCD    OREQ 'E'
+     C                     MOVE WWPGM     NARR,1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'004'     DBASE            *****************
+     C                     MOVEL*BLANKS   DBFILE           ** DB ERROR 04 **
+     C                     MOVELNARR,1    DBKEY            *****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E*5
+      *
+     C           WWRTCD    IFEQ '3'                        B*5
+     C                     MOVE '1'       *INKC
+     C                     ENDIF                           E*5
+      *
+     C                     MOVE *BLANKS   #1SEL
+     C                     MOVE '0'       *IN50
+     C                     MOVE '1'       *IN81
+     C                     MOVE '0'       *IN84
+     C                     UPDATSE7592S1
+      *
+     C                     MOVE 'Y'       FIRST
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+      *
+      ** Read next subfile record
+     C                     READCSE7592S1                 89
+     C                     ENDDO                           E*2
+      *
+      ** Redisplay current screen
+     C                     WRITESE7592C2
+     C                     WRITESE7592C1
+     C                     WRITESE7592F1
+     C                     ENDIF                           E*1
+      *
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* *PSSR : ERROR PROCESSING                                      *
+     ******************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Update LDA with error information
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELDBFILE    WWFILE
+     C                     MOVELDBKEY     WWKEY
+     C                     MOVELDBPGM     WWPGM
+     C                     MOVELDBASE     WWASE
+     C                     OUT  LDA
+      *
+      ** Rollback changes, print DUMP and cancel program
+     C                     ROLBK
+     C                     MOVE 'E'       WWRTCD
+     C                     DUMP
+      *
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     RETRN
+      *
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+      *****************************************************************
+     C*                                                               *
+     C* ZASNMS   - Send message to program message queue              *
+     C*                                                               *
+     C* CALLS    Y2SNMSGC                                             *
+     C*                                                               *
+     C* CALLED BY                                                     *
+     C*                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file.
+     C                     PARM           ZAMSDA           Message data.
+     C                     PARM           ZAMSTP           Message type.
+     C*
+     C** Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Message queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C           ZASNM9    ENDSR                           ZASNM9 TAG
+     C*
+      ********************************************************************
+      /EJECT
+     C**
+     C/COPY ZSRSRC,ZDATE2Z4
+     C**
+     C/COPY ZSRSRC,ZSEDITZ3
+**
+F3=Exit  F12=Previous Screen  Rollup/Down
+**  NARR
+ERROR CALLING PGM
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,301 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FX Removes Net Reference from cancelled nets')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module - Foreign Exchange.                   *
+      *                                                               *
+      *  FX0931 - Remove references to incomplete nets.               *
+      *                                                               *
+      *  Function:  This program removes reference to incomplete      *
+      *             nets.                                             *
+      *  (phase(s)) IC termination.                                   *
+      *                                                               *
+      *  Called By: FXC0930 - Unconfirmed nets control.               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 MD037598           Date 18Jul17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CSW212             Date 03May12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER048             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CAS008             Date 16Jun04               *
+      *                 CDL025             Date 25Jan05               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CDL010             Date 02Aug02               *
+      *                 CAS004             Date 26Jun02               *
+      *                 217684             Date 12May03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP056             Date 13Mar02               *
+      *                 CIR008             Date 13Mar02               *
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR005             Date 21Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CDL002             Date 06Mar97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  MD037598 - Deal absent in FX nets summary.  Commit all       *
+      *             files for update.                                 *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CAS008 - IAS 39 Enhancements (Recompile)                     *
+      *  CDL025 - FX Netting Payment Generation                       *
+      *  CGL014 - Collaterals Processing (Recompile)                  *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in FXDEALPP.*
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  217684 - Authorisation User Malfunction (Recompile)          *
+      *  CAP056 - Automatic Authorisation of Interface deals          *
+      *           (Recompile)                                         *
+      *  CIR008 - FRA/IRS Deals Authorisation (Recompile)             *
+      *  CAS001 - Net Present Value (NPV) Accounting (Recompile)      *
+      *  CDL008 - Continuous Linked Settlement (Recompiled)           *
+      *  CIR005 - FRA/IRS Business Day Conventions to DEALSDG         *
+      *           (recompile)                                         *
+      *  CDL002 - Remove reference to Unconfirmed Nets                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *                  FUNCTION OF INDICATORS                       *
+      *                                                               *
+      *     88     DATABASE ERROR DURING FXNETMPD UPDATE              *
+      *     89     EOF ON FILE ACCESSES DURING UPDATE                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FFXNETMPDUF  E           K        DISK
+      ** Confirmed Nets by Net Ref.
+     FFXNETSPDUF  E           K        DISK                                              CDL025
+      *  Split Net details File                                                          CDL025
+     F***FXNTIPL0UF  E        K        DISK                                                 MD037598
+     FFXNTIPL0UF  E           K        DISK         KCOMIT                                  MD037598
+      ** Nets in progress by Net Ref.
+     FFXDEALLLUF  E           K        DISK
+      ** FX Deals (FXDEALPP) by Deal No.
+     FDEALS   UF  E           K        DISK
+      ** FX Deals (DEALSDB) by Deal No.
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDCF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+      *
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     ISCSARD    E DSSCSARDPD                                                             CDL025
+      * SAR File Details Accessed Via Access Program                                     CDL025
+      *                                                                                  CDL025
+     IDSFDY     E DSDSFDY                                                                CDL025
+      * First DS For Access Programs, Short Data Structure                               CDL025
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                        1  10 ##PGM
+     I                                     *PARMS   NOPARM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Check if CDL025 is switched *ON.                                                CDL025
+     C                     CALL 'AOSARDR0'                                               CDL025
+     C                     PARM *BLANKS   @RTCD   7                                      CDL025
+     C                     PARM '*VERIFY' @OPTN   7                                      CDL025
+     C                     PARM 'CDL025'  @SARD   6                                      CDL025
+     C           SCSARD    PARM SCSARD    DSFDY                                          CDL025
+      *                                                                                  CDL025
+     C           @RTCD     IFNE *BLANKS                                                  CDL025
+     C                     MOVE 'N'       CDL025  1                                      CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE 'Y'       CDL025                                         CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+      *  Entry Parameter List
+     C           *ENTRY    PLIST
+     C                     PARM           PLRTRN  8
+      *
+     C                     READ FXNETMPD            N    89
+      *
+     C           *IN89     DOWEQ'0'
+      ** AMRECI if 'E' (cancelled), 'F' (incomplete) or 'I' (in progress).
+     C           AMRECI    IFEQ 'E'
+     C           AMRECI    OREQ 'F'
+     C           AMRECI    OREQ 'I'
+      *
+      ** Delete all records for Nets in progress, but first update
+      ** FXDEALPP and DEALSDB
+     C           AMNETR    CHAINFXNTIPL0             89
+     C           *IN89     DOWEQ'0'
+     C                     MOVE 'N'       UPDATE  1
+      *
+     C           ANDNUM    CHAINFXDEALLL             89
+     C           *IN89     IFEQ *OFF
+     C           FHNBRF    IFEQ AMNETR
+     C                     MOVE *BLANKS   FHNBRF
+     C                     MOVE 'Y'       UPDATE
+     C                     ENDIF
+     C           FHNSRF    IFEQ AMNETR
+     C                     MOVE *BLANKS   FHNSRF
+     C                     MOVE 'Y'       UPDATE
+     C                     ENDIF
+     C           UPDATE    IFEQ 'Y'
+     C                     TIME           FHTLUP
+     C                     MOVELUSER      FHLUID
+     C                     MOVE 'A'       FHCHTP
+     C                     UPDATFXDEALP0
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE 'N'       UPDATE
+      *
+     C           ANDNUM    CHAINDEALS                89
+     C           *IN89     IFEQ *OFF
+     C           NETBR     IFEQ AMNETR
+     C                     MOVE *BLANKS   NETBR
+     C                     MOVE 'Y'       UPDATE
+     C                     ENDIF
+     C           NETSR     IFEQ AMNETR
+     C                     MOVE *BLANKS   NETSR
+     C                     MOVE 'Y'       UPDATE
+     C                     ENDIF
+     C           UPDATE    IFEQ 'Y'
+     C                     UPDATDEALSDBF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     DELETFXNTIPD0
+     C           AMNETR    READEFXNTIPL0                 89
+     C                     ENDDO
+      *
+      ** Update splits if exist                                                          CDL025
+     C           CDL025    IFEQ 'Y'                                                      CDL025
+     C           AMNETR    SETLLFXNETSPD                                                 CDL025
+     C           AMNETR    READEFXNETSPD                 90                              CDL025
+     C           *IN90     DOWEQ'0'                                                      CDL025
+     C                     MOVE 'X'       ASRECI                                         CDL025
+     C                     UPDATFXNETSD0                                                 CDL025
+     C           AMNETR    READEFXNETSPD                 90                              CDL025
+     C                     ENDDO                                                         CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C           AMNETR    CHAINFXNETMPD             88
+      *
+      ** Record is expired.
+     C                     MOVE 'X'       AMRECI
+     C                     UPDATFXNETMD0               88
+      *
+     C           *IN88     IFEQ '1'
+      ** Data base error in file FXNETMPD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL##PGM     DBPGM
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'FXNETMPD'DBFILE           *DB ERROR 001 *
+     C                     MOVELAMNETR    DBKEY            ***************
+     C                     MOVE 'Y2U0004' PLRTRN
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ FXNETMPD            N    89
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

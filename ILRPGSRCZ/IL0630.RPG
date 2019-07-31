@@ -1,0 +1,1290 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 FF Initial margin processing')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  IL0630  - IBLC 2002 - FO initial Margin Processing           *
+      *                                                               *
+      *  Function:  This program is running during Close of business  *
+      *             To evaluate Initial Margins for FO.               *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 12May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG042             Date 04Oct04               *
+      *                 ULX043             Date 04Aug01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027A - Conversion Of Customer Number to Alpha.            *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDNOSTL0IF  E           K        DISK         KINFSR *PSSR
+      ***  Standing data - Nostro details
+      *
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+      ***  Account Master File
+      *
+     FACNUM   IF  E           K        DISK         KINFSR *PSSR
+      ***  Retail Account
+     F            ACCNTABF                          KRENAMEACCNTABR
+     FMKCTL   IF  E           K        DISK         KINFSR *PSSR
+      ***  FO Market control details
+      *
+     FMARKT   IF  E           K        DISK         KINFSR *PSSR
+      ***  FO Market Centre details
+      *
+     FINTYP   IF  E           K        DISK         KINFSR *PSSR
+      ***  FO Instrument type details
+      *
+     FREINT   IF  E           K        DISK         KINFSR *PSSR
+      ***  RE Retail Innterest Subtype Details
+     F            REINTAF                           KIGNORE
+     F            REINTZF                           KIGNORE
+      *
+     FREIAC   IF  E           K        DISK         KINFSR *PSSR
+      ***  RE Retail interest and Charges
+     F            REIACAF                           KIGNORE
+     F            REIACZF                           KIGNORE
+      *
+     FTRSET   IF  E           K        DISK         KINFSR *PSSR
+      ***  FO Transaction settlements details
+      *
+     FTRANS   IF  E           K        DISK         KINFSR *PSSR
+      ***  FO Transactions Details
+      *
+     F***TRANSDXLUF  E           K        DISK         KINFSR *PSSR A                         CER001
+     FFFTRX1PDUF  E           K        DISK         KINFSR *PSSR A                            CER001
+      ***  FO Transactions ext file Details
+      *
+     FILCOLTPDUF  E           K        DISK         KINFSR *PSSR
+      ***  IBLC collaterals details
+      *
+     F***FOKEYDXLO   E           K        DISK         KINFSR *PSSR                           CER001
+     FFFAKX1PDO   E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Initial Margin Account Keys
+      *
+      /EJECT
+      *****************************************************************
+      *
+     E                    MSG     1   1 20                 Arr for Messages
+      *
+      ***  Standard Subroutine Arrays
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,FFFMTZ1
+      *
+      ***  Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      ***  Working Arrays for underlying
+      *
+     E                    FULA       34  1
+     E                    BAL        11 15 0
+      /EJECT
+      *****************************************************************
+      *
+      ***  Renaming Fields
+      *
+     ITRANSDF
+     I              TNBR                            TNBR9
+     I              BRCA                            BRCD9
+     I              BOKC                            BOKC9
+     I              ISTT                            ISTT9
+     I              YRNO                            YRNO9
+     I              MTHN                            MTHN9
+     I              PCAL                            PCAL9
+     I              STRP                            STRP9
+      *
+     IINTYPDF
+     I              ISTN                            ISTNY
+      *
+     IILCOLTDF
+     I              BRCA                            BRCDX
+      *
+     IACCNTABF
+     I              BRCA                            BRCDX
+      *
+      ***  Data Structure to received details through Access Object programs
+      *
+     ISDDEAL    E DSSDDEALPD
+      ***  Dealing I.C.D.
+     ISDGELR    E DSSDGELRPD
+      ***  General Ledger I.C.D.
+     I              QQACCD                          QQACDG                                    CER001
+     ISDTRAD    E DSSDTRADPD
+      ***  Trading I.C.D.
+     I              QQACCD                          QQACDT                                    CER001
+     ISDFODA    E DSSDFODAPD
+      ***  FUTURES AND OPTIONS I.C.D.
+     I              QQACCD                          QQACDF                                    CER001
+     ISDBANK    E DSSDBANKPD
+      *** Standing Data - Bank Details
+     ISDACOD    E DSSDACODPD
+     I              QQACCD                          QQACDA                                    CER001
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ***  Standing Data - Branch details
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short DS
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, long DS
+      *
+      ***  Standard subroutine Data Structure
+      *
+      /COPY ZSRSRC,FFFMTZ2
+      *
+      ***  Working Data Structure
+      *
+     IPSDS       SDS
+      ***  Program status data structure for WS/user ID'S
+     I                                     *PROGRAM PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA
+      *
+      ***  Data structure for FFKY division
+     IFFKY        DS                             14
+     I                                        1   1 FFKY1
+     I                                        2   2 FFKY2
+     I                                        3   3 FFKY3
+     I                                        4   4 FFKY4
+     I                                        5   5 FFKY5
+     I                                        6   6 FFKY6
+     I                                        7   7 FFKY7
+     I                                        8   8 FFKY8
+     I                                        9   9 FFKY9
+     I                                       10  10 FFKY10
+     I                                       11  11 FFKY11
+     I                                       12  12 FFKY12
+     I                                       13  13 FFKY13
+     I                                       14  14 FFKY14
+      *
+     I**********  DS                             12                                           CER001
+     I            DS                             18                                           CER001
+      *** Redefine Settelement Account FFSETA
+      ***  CUSTOMER/ACCOUNT CODE/ACCOUNT SEQ,  + RETAIL A/C NO.
+     I**********                              1  12 FFSETA                                    CER001
+     I                                        1  18 FFSETA                                    CER001
+     I**********                              1   60FFSCNM                                   CSD027A
+     I                                        1   6 FFSCNM                                   CSD027A
+     I**********                              7  100FFSACD                                    CER001
+     I                                        7  160FFSACD                                    CER001
+     I**********                             11  120FFSASQ                                    CER001
+     I                                       17  180FFSASQ                                    CER001
+     I                                        1  100FFACMK
+      *
+     IREINTK      DS                             12
+      *** To access REINT details
+     I                                        2   30CICT
+     I                                        4   80CCST
+     I                                        9  11 CCY
+     I                                       12  12 CEND
+      *
+     IBAL2        DS
+      ***  BALANCE RETAIL
+     I                                    P   1  880BAL
+      *
+     I*ATID*****   DS                             15                                          CER001
+     IATID        DS                             21                                           CER001
+      *** Redefined Settlement A/C ID
+     I**********                              1   60ATIDCN                                   CSD027A
+     I                                        1   6 ATIDCN                                   CSD027A
+     I                                        7   9 ATIDCY
+     I**********                             10  130ATIDAC                                    CER001
+     I                                       10  190ATIDAC                                    CER001
+     I**********                             14  150ATIDAQ                                    CER001
+     I                                       20  210ATIDAQ                                    CER001
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+      ***  Read F&O Transactions
+      *
+     C                     READ TRANS                    70
+      *
+     C           *IN70     DOWEQ*OFF                       not EOF
+      *
+      ***  Reset indicators
+      *
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+      *
+      ***  only processif Transcation is Live
+      *
+     C           RECI      IFEQ 'D'                        Live
+      *
+      ***  Access Initial Margind Extended details
+      *
+     C           TNBR9     CHAINTRANSDFL             22
+     C           *IN22     IFEQ *ON                        Already exist, Reset
+     C                     Z-ADDTNBR9     FFTNBR
+     C                     Z-ADD0         FFMABK
+     C                     Z-ADD0         FFMACU
+     C                     ENDIF
+      *
+      ***  Read f&O Transactions Settlements file for Initial Margin
+      *
+     C           TNBR9     CHAINTRSET                99
+      *
+      ***  Handle database error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVELTNBR9     DBKEY            ****************
+     C                     Z-ADD1         DBASE            * DB ERROR 001 *
+     C                     MOVEL'TRSET'   DBFILE           ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  KEEP Customer Margin and Broker Margin
+     C                     Z-ADDCMAR      WWCMAR 130
+     C                     Z-ADDBMAR      WWBMAR 130
+      *
+      ***  Check that MArgin aren't equal to ZEROS
+      *
+     C           CMAR      IFNE *ZEROS                     Customer
+     C           FFMACU    ORNE *ZEROS                        Margin
+     C           BMAR      ORNE *ZEROS                     Broker
+     C           FFMABK    ORNE *ZEROS                        Margin
+      *
+     C                     Z-ADD*ZEROS    WWAMNT 130
+     C                     Z-ADD*ZEROS    WMACU  130
+     C                     Z-ADD*ZEROS    WMABK  130
+      *
+     C                     EXSR SRCUST
+      *
+     C                     EXSR SRBROK
+      *
+     C           *IN20     IFEQ *ON                        Margin are
+     C           *IN21     OREQ *ON                          calculated
+      *
+     C           *IN20     IFEQ *ON                        for customer
+     C                     Z-ADDWMACU     FFMACU
+     C                     ENDIF
+      *
+     C           *IN21     IFEQ *ON                        for Broker
+     C                     Z-ADDWMABK     FFMABK
+     C                     ENDIF
+      *
+     C           *IN22     IFEQ *ON                        doesn't Exist
+     C                     WRITETRANSDFL                     Write
+     C                     ELSE                            else
+     C                     UPDATTRANSDFL                     Update
+     C                     ENDIF
+      *
+     C                     ENDIF                           *IN20, *IN21
+      *
+     C                     ENDIF                           Margins not 0
+      *
+     C                     ENDIF                           Live record
+      *
+      ***  Read next record
+      *
+     C                     READ TRANS                    70
+     C                     ENDDO                           End of file
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      * SRCUST - Evaluate Margin for Customer contracts               *
+      * ------                                                        *
+      * Called by: Mainlines                                          *
+      * Calls    : SRMACU, SRACKY                                     *
+      *****************************************************************
+      *
+     C           SRCUST    BEGSR
+      *
+     C                     Z-ADDFFMACU    WWMABC 130       Margin customer
+     C                     Z-ADDCSLT      WWSETP  20       Settlm type
+     C**********           Z-ADDCUSC      WWCBNB  60       Customer                          CSD027A
+     C                     MOVE CUSC      WWCBNB  6        Customer                          CSD027A
+     C                     MOVELBRSC      WWSEBR  3        Settlm Branch
+     C                     MOVEL'N'       WWBRKI  1        Broker indicator
+     C**********           MOVELCSLA      WWSETA 12        Cust. settl. A/C                   CER001
+     C                     MOVELCSLA      WWSETA 18        Cust. settl. A/C                   CER001
+      *
+      ***  if initial margin is different of margin already posted for Customer
+      *
+     C           FFMACU    IFNE WWCMAR
+     C           NOCO      OREQ *ZEROS
+      *
+      ***  if Number of Open contract is Zeor, amount is 0, else Evaluate
+      *
+     C           NOCO      IFEQ *ZEROS
+     C                     Z-ADD*ZEROS    WWAMNT
+     C                     ELSE
+     C                     EXSR SRMACU
+     C                     ENDIF
+      *
+      ***  Compare Margin Requirement with Margin Already Posted
+      *
+     C                     Z-ADDWWAMNT    WMACU  130
+      *
+     C           WWAMNT    IFNE FFMACU
+     C                     MOVE *ON       *IN20
+     C                     EXSR SRACKY
+     C                     ENDIF                           WWAMNT >< FFMACU
+      *
+     C                     ENDIF                           FFMACU >< WWCMAR
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * SRMACU - Adjust Margin for customer                           *
+      * ------                                                        *
+      * Called by: SRCUST                                             *
+      * Calls    :                                                    *
+      *****************************************************************
+      *
+     C           SRMACU    BEGSR
+      *
+     C                     Z-ADD*ZEROS    WWWAMT 130
+      *
+      ***  Access Collaterals file
+      *
+     C**********           Z-ADDCUSC      CBCD                                               CSD027A
+     C                     MOVE CUSC      CBCD                                               CSD027A
+     C           CLCKEY    CHAINILCOLTPD             99
+      *
+     C           *IN99     IFEQ '0'                        Found and
+     C           COLA      ANDNE*ZEROS                     Coll. Amount not 0
+      *
+      ***  Compare Collateral Amount with Margin Requirement
+      *
+     C           COLA      IFLE WWCMAR                     LESS or EQUAL
+     C                     SUB  COLA      WWCMAR
+     C                     Z-ADD*ZERO     COLA
+     C                     ELSE
+     C                     SUB  WWCMAR    COLA
+     C                     Z-ADD*ZEROS    WWCMAR
+     C                     ENDIF
+      *
+      ***  Update Collateral details
+      *
+     C                     UPDATILCOLTDF
+     C                     ENDIF                           Found
+      *
+     C                     Z-ADDWWCMAR    WWAMNT
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRBROK - Evaluate Margin for Broker contracts                 *
+      * ------                                                        *
+      * Called By:                                                    *
+      * Calls    :                                                    *
+      *****************************************************************
+      *
+     C           SRBROK    BEGSR
+      *
+     C                     Z-ADDFFMABK    WWMABC           Margin
+     C                     Z-ADDBSLT      WWSETP           Settl. type
+     C**********           Z-ADDBOCO      WWCBNB           Broker code                       CSD027A
+     C                     MOVELBOCO      WWCBNB           Broker code                       CSD027A
+     C                     MOVELBSBR      WWSEBR  3        Settlm Branch
+     C                     MOVEL'Y'       WWBRKI           Broker Flag
+     C                     MOVELBSLA      WWSETA           Broker Settlm. A/C
+      *
+      ***  if initial margin is different of margin already posted for Broker
+      *
+     C           FFMABK    IFNE WWBMAR                     *B1
+     C           NOBO      OREQ *ZEROS
+      *
+      ***  if Number of Open contract is Zeor, amount is 0, else Evaluate
+      *
+     C           NOBO      IFEQ *ZEROS                     Open contract
+     C                     Z-ADD*ZEROS    WWAMNT
+     C                     ELSE
+     C                     EXSR SRMABK
+     C                     ENDIF
+      *
+      ***  Compare Margin Requirement with Margin Already Posted
+      *
+     C                     Z-ADDWWAMNT    WMABK  130
+      *
+     C           WWAMNT    IFNE FFMABK
+     C                     MOVE *ON       *IN21
+     C                     EXSR SRACKY
+     C                     ENDIF                           WWAMNT >< FFMABK
+      *
+     C                     ENDIF                           WWBNAR >< FFMABK
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * SRMABK - Adjust Margin for broker                             *
+      * ------                                                        *
+      * Called by: SRBROK                                             *
+      * Calls    :                                                    *
+      *****************************************************************
+      *
+     C           SRMABK    BEGSR
+      *
+     C                     Z-ADD*ZEROS    WWWAMT
+      *
+      ***  Access Collaterals file (Which holds details of T bill Collateral)
+      *
+     C           TBCKEY    CHAINILCOLTDF             99
+      *
+     C           *IN99     IFEQ *OFF                       Found and
+     C           COLA      ANDNE*ZEROS                     Collateral Amount not 0
+      *
+      ***  Compare Collateral Amount with Margin Requirement
+      *
+     C           COLA      IFGT WWBMAR
+     C                     SUB  WWBMAR    COLA
+     C                     Z-ADD*ZERO     WWBMAR
+     C                     ELSE
+     C                     SUB  COLA      WWBMAR
+     C                     Z-ADD*ZERO     COLA
+     C                     ENDIF
+      *
+      ***  Update Collateral Details
+      *
+     C                     UPDATILCOLTDF
+     C                     ENDIF                           Not Zero
+      *
+      ***  Access Collaterals fiel with Broker
+      *
+     C**********           Z-ADDBOCO      CBCD                                               CSD027A
+     C                     MOVE BOCO      CBCD                                               CSD027A
+     C           CLCKEY    CHAINILCOLTDF             99
+      *
+     C           *IN99     IFEQ *OFF                       Found and
+     C           COLA      ANDNE*ZEROS                      Coll. Amount not 0
+      *
+      ***  Compare Collateral Amount with Margin Requirement
+      *
+     C           COLA      IFGT WWBMAR
+     C                     SUB  WWBMAR    COLA
+     C                     Z-ADD*ZERO     WWBMAR
+     C                     ELSE
+     C                     SUB  COLA      WWBMAR
+     C                     Z-ADD*ZERO     COLA
+     C                     ENDIF
+      *
+      ***  Update collateral details
+      *
+     C                     UPDATILCOLTDF
+     C                     ENDIF                           COLA
+      *
+     C                     Z-ADDWWBMAR    WWAMNT
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRACKY - Generate Account Key                                 *
+      * ------                                                        *
+      * Called by: SRCUST, SRBROK                                     *
+      * Calls    : SRSDET, SRMARG, SRWACK, ZZADD                      *
+      *****************************************************************
+      *
+     C           SRACKY    BEGSR
+      *
+      ***  Determine settlement ID.
+      *
+     C                     EXSR SRSDET
+      *
+     C                     SETOF                     07
+     C                     MOVE 'F'       FFKY1
+     C                     MOVE 'J'       FFKY3
+      *
+      *** Setup key depending of Broker FLag
+      *
+     C           WWBRKI    IFEQ 'Y'
+     C                     MOVE 'B'       FFKY12           Broker
+     C                     ELSE
+     C                     MOVE 'C'       FFKY12           Customer
+      *
+      *** Setup Margin if Reatil Account  (if not done)
+      *
+     C           SATYP     IFEQ 'R'
+     C                     EXSR SRMARG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ***  output Account keys if MArgin isn't required
+      *
+     C           *IN07     IFEQ *OFF
+      *
+      ***  Compare MArgin with MArgin Requirement
+      *
+     C           WWAMNT    IFGT WWMABC
+      *
+     C           WWAMNT    SUB  WWMABC    WWWAMT
+     C                     Z-ADDWWWAMT    WWAMNT
+      *
+     C           WWBRKI    IFEQ 'Y'
+     C                     MOVE 'B'       FFKY14           Broker
+     C                     ELSE
+     C                     MOVE 'C'       FFKY14           Customer
+     C                     ENDIF                           Broker Ind.
+      *
+      ***  Write A/C KEY
+      *
+     C                     EXSR SRWACK
+      *
+     C                     ADD  1         NORECS  50
+     C           WWAMNT    DIV  1000      ZZAMT
+      *
+      ***  HASH TOTAL
+      *
+     C                     EXSR ZZADD
+      *
+     C                     ELSE                            WWAMNT *LE WWMABC
+      *
+     C           WWAMNT    IFLT WWMABC
+      *
+     C           WWMABC    SUB  WWAMNT    WWWAMT
+     C                     Z-ADDWWWAMT    WWAMNT
+      *
+     C           WWBRKI    IFEQ 'Y'                        Reverse ==>
+     C                     MOVE 'C'       FFKY14           Customer
+     C                     ELSE
+     C                     MOVE 'B'       FFKY14           Broker
+     C                     ENDIF
+      *
+      ***  Write A/C keys
+      *
+     C                     EXSR SRWACK
+      *
+     C                     ADD  1         NORECS  50
+     C           WWAMNT    DIV  1000      ZZAMT
+      *
+      ***  HASH TOTAL
+      *
+     C                     EXSR ZZADD
+      *
+     C                     ENDIF                           WWAMNT < WWMABC
+      *
+     C                     ENDIF                           WWAMNT > WWMABC
+      *
+     C                     ENDIF                             *IN07 = *OFF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSDET - Determine Settlement ID                              *
+      * ------                                                        *
+      * Called by: SRACKY                                             *
+      * Calls    : FFSETL                                             *
+      *****************************************************************
+      *
+     C           SRSDET    BEGSR
+      *
+     C                     MOVELBRCD9     WWBRCD  3
+     C                     CALL 'AOBRCHR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           WWBRCD
+     C           SDBRCH    PARM SDBRCH    DSFDY
+      *
+      ***  Handle Database error
+      *
+     C           *IN99     IFEQ *ON                        PGM error
+     C           PRTCD     ORNE *BLANKS                    wwbrcd not found
+     C           *LOCK     IN   LDA
+     C                     MOVELWWBRCD    DBKEY            ****************
+     C                     Z-ADD2         DBASE            * DB ERROR 002 *
+     C                     MOVEL'SDBRCHL0'DBFILE           ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBRCA      FFBRCD                          Branch
+      *
+      ***  Customer code OR Broker code
+      *
+     C**********           Z-ADDWWCBNB    FFCBCD                                             CSD027A
+     C                     MOVE WWCBNB    FFCBCD                                             CSD027A
+      *
+     C                     MOVE WWBRKI    FFBRKI           Broker ind.
+      *
+     C                     Z-ADDWWSETP    FFSETP           Settl type
+      *
+     C                     MOVE WWSETA    FFSETA           Settl. Account
+      *
+     C                     MOVE ISCY      FFCCY            currency
+      *
+     C                     Z-ADD01        FFDASQ           Account seq
+      *
+     C                     EXSR FFSETL
+      *
+      ***  Set Settlement A/C Id if it is Valid ( *IN89 IS OFF )
+      *
+     C           *IN89     IFEQ '0'                        *B1
+     C                     MOVELFFCNUM    ATIDCN
+     C                     MOVELFFCCY     ATIDCY
+     C                     MOVELFFACOD    ATIDAC
+     C                     MOVELFFACSQ    ATIDAQ
+     C                     MOVE A5ACTY    SATYP                           091486
+     C                     ELSE                            *X1
+     C                     MOVEL*BLANKS   ATID
+     C           *LIKE     DEFN ATYP      SATYP
+     C                     MOVE *BLANKS   SATYP
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * SRWACK - Write A/C key                                        *
+      * ------                                                        *
+      * Called by: SRACKY                                             *
+      * Calls    :                                                    *
+      *****************************************************************
+      *
+     C           SRWACK    BEGSR
+      *
+     C                     MOVEL'D'       RECI
+     C                     Z-ADDTNBR9     TNBR
+     C                     Z-ADDCLSR      CLON
+     C**********           Z-ADDWWCBNB    CBCD                                               CSD027A
+     C                     MOVE WWCBNB    CBCD                                               CSD027A
+     C                     MOVELBOKC9     BOKC
+     C                     MOVELBRCD9     BRCA
+     C                     MOVEL*BLANKS   OBKC
+     C                     Z-ADD*ZEROS    ASEQ
+     C                     Z-ADDBJRDNB    EDAT
+     C                     Z-ADDWWAMNT    EAMT
+     C                     MOVELISCY      CCY
+     C                     Z-ADDBJRDNB    VDAT
+     C                     Z-ADDWWSETP    SETP
+     C                     MOVELWWSETA    SETA
+     C                     MOVE WWSEBR    SEBR
+     C                     MOVELISTT9     ISTT
+     C                     Z-ADDYRNO9     YRNO
+     C                     Z-ADDMTHN9     MTHN
+     C                     MOVELPCAL9     PCAL
+     C                     Z-ADDSTRP9     STRP
+      *
+     C           ISTT9     CHAININTYP                99
+      *
+     C           *IN99     IFEQ *ON                        not found
+     C           *LOCK     IN   LDA
+     C                     MOVELISTT9     DBKEY            ****************
+     C                     Z-ADD3         DBASE            * DB ERROR 003 *
+     C                     MOVEL'INTYP'   DBFILE           ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+     C                     MOVELISTNY     ISTN
+     C                     Z-ADD*ZEROS    REVI
+      *
+     C                     WRITEFOKEYDFL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *INZSR   - Initial Processing started automatically           *
+      * ------                                                        *
+      * Called by : automatically                                     *
+      * Calls     :                                                   *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C                     MOVEACPY@      CPY@2  80        Copyrights
+      *
+      ***  Entry is Market End of Centre Code
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMRKT   2
+      *
+      ***  Define Key list
+      *
+     C           FFNKY     KLIST                           Nostro
+     C                     KFLD           FFNCCY
+     C                     KFLD           WWNOSN
+      *
+     C           REIACK    KLIST                           A/C from Retails
+     C                     KFLD           ATIDCN
+     C                     KFLD           ATIDCY
+     C                     KFLD           ATIDAC
+     C                     KFLD           ATIDAQ
+      *
+     C           FFACTK    KLIST                           A/C for Futures&Options
+     C                     KFLD           FFCNUM
+     C                     KFLD           FFCCY
+     C                     KFLD           FFACOD
+     C                     KFLD           FFACSQ
+     C                     KFLD           FFBRCD
+      *
+     C           TBCKEY    KLIST                           ILCOLTPD Key 1
+     C                     KFLD           BRCD9
+     C                     KFLD           CBCD
+     C                     KFLD           ISCY
+      *
+     C           CLCKEY    KLIST                           ILCOLTPD Key 2
+     C                     KFLD           BLNK3
+     C                     KFLD           CBCD
+     C                     KFLD           ISCY
+      *
+     C                     MOVEL*BLANKS   BLNK3   3
+      *
+      ***  initialise dataarea LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'IL0630 ' DBPGM  10
+     C                     OUT  LDA
+      *
+      ***  Reset indicators
+      *
+     C                     MOVE *OFF      *IN
+      *
+      ***  Retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS                    not found
+     C           *IN99     OREQ *ON                        PGM error
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 004 *
+     C                     MOVEL'*FIRST'  DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check system data format (DDMMYY or MMDDYY):
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98            ON => MMDDYY
+     C                     ENDIF
+      *
+      ***  Read Dealing I.C.D.
+      *
+     C                     CALL 'AODEALR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDDEAL    PARM SDDEAL    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS                    Not found
+     C           *IN99     OREQ *ON                        PGM error
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ****************
+     C                     MOVEL'SDDEALPD'DBFILE           * DB ERROR 005 *
+     C                     MOVEL'*FIRST'  DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Read General Ledger I.C.D.
+      *
+     C                     CALL 'AOGELRR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDGELR    PARM SDGELR    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS                    Not Found
+     C           *IN99     OREQ *ON                        PGM error
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ****************
+     C                     MOVEL'SDGELRPD'DBFILE    P      * DB ERROR 006 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *
+      ***  Read Trading I.C.D.
+      *
+     C                     CALL 'AOTRADR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS                    Not Found
+     C           *IN99     OREQ *ON                        PGM error
+     C           *LOCK     IN   LDA
+     C                     Z-ADD7         DBASE            ****************
+     C                     MOVEL'SDTRADPD'DBFILE    P      * DB ERROR 007 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Read Futures & options I.C.D.
+      *
+     C                     CALL 'AOFODAR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDFODA    PARM SDFODA    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS                    Not Found
+     C           *IN99     OREQ *ON                        PGM error
+     C           *LOCK     IN   LDA
+     C                     Z-ADD8         DBASE            ****************
+     C                     MOVEL'SDFODAPD'DBFILE    P      * DB ERROR 000 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  if market is not received , this is OTC, else check Market .
+      *
+     C           PMRKT     IFNE *BLANK
+      *
+      ***  Access F&O Market Control file
+      *
+     C           PMRKT     CHAINMKCTL                99
+      *
+      ***  Handle database error.
+      *
+     C           *IN99     IFEQ *ON                        not found
+     C           *LOCK     IN   LDA
+     C                     MOVELPMRKT     DBKEY            ****************
+     C                     Z-ADD9         DBASE            * DB ERROR 009 *
+     C                     MOVEL'MKCTL   'DBFILE           ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Access Market details
+      *
+     C           PMRKT     CHAINMARKT                99    not found
+      *
+      ***  Handle database error.
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVELPMRKT     DBKEY            ****************
+     C                     Z-ADD10        DBASE            * DB ERROR 010 *
+     C                     MOVEL'MARKT   'DBFILE           ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF                           PMRKT not blank
+      *
+      ***  Format Run/business date
+      *
+     C           PMRKT     IFNE *BLANK
+     C                     Z-ADDBUSD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    FFDAT
+     C                     MOVE MKTN      FFNAM
+     C                     ELSE
+     C                     MOVE BJMRDT    FFDAT
+     C                     MOVE MSG,1     FFNAM
+     C                     END
+      *
+      ***  Futures and Options - Set up Report Header
+      *
+     C                     EXSR FFFMT
+     C                     Z-ADD0         X       20
+     C           X         DOUEQFFULIN
+     C                     ADD  1         X
+     C                     MOVEA'-'       FULA,X
+     C                     ENDDO
+      *
+     C                     MOVE 'D'       CEND
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR    - SR ERROR IN FILE - DATABASE ERROR                  *
+      * -----                                                         *
+      * Called by: in case of error                                   *
+      * Calls :                                                       *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           DBASE     IFEQ 0
+     C                     Z-ADD999       DBASE
+     C                     ENDIF
+      *
+     C                     DUMP
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      ***************************************************************
+      **  FFSETL SR.  - Determines from input Settlement Details     *
+      **  ~~~~~~~~~~    whether MEMOS or PRONO processing is required*
+      **                In addition,whilst doing this,the associated *
+      **                settlement account ID is constructed.        *
+      **   REWRITE Standard subroutine to work within this PGM       *
+      **                                                             *
+      **  NB. FOR THIS SUBROUTINE TO WORK THE FOLLOWING FILES NEED   *
+      **  TO HAVE BEEN ACCESSED PREVIOUSLY : PF/SDDEALPD             *
+      **                                     PF/SDTRADPD             *
+      **                                     PF/SDTRADPD             *
+      **                                     PF/SDFODAPD             *
+      **                                     PF/SDBRCHPD(for Branch) *
+      **                                                             *
+      **                                                             *
+      **    INPUTS    - FFBRCD    (3A) BRANCH CODE                   *    BL_R10
+      ******************FFCBCD**(6,0S)*CUSTOMER/BROKER CODE***********                       CSD027A
+      **                FFCBCD    (6A) CUSTOMER/BROKER CODE          *                       CSD027A
+      **                FFBRKI    (1A) BROKER INDICATOR              *
+      **                FFSETP  (2,0S) SETTLEMENT TYPE               *
+      **                FFSETA   (12A) SETTLEMENT ACCOUNT            *
+      **                FFCCY     (3A) CURRENCY                      *
+      **                FFDASQ  (2,0S) DEFAULT A/C SEQUENCE          *
+      **                   (= Start A/c Seq no. for the Branch if    *
+      **                    Multi-branching, else '01')              *
+      **                *INU2     (1A) RETAIL IS PRESENT             *
+      **                *INU6     (1A) INPUT CYCLE MODE              *
+      ******OUTPUTS***-*FFCNUM**(6,0S)*CUSTOMER*NUMBER****************                       CSD027A
+      **    OUTPUTS   - FFCNUM    (6A) CUSTOMER NUMBER               *                       CSD027A
+      ******************FFACOD**(4,0S)*ACCOUNT*CODE********************                       CER001
+      **                FFACOD (10,0S) ACCOUNT CODE                   *                       CER001
+      **                FFACSQ  (2,0S) ACCOUNT SEQUENCE              *
+      **                FFNOSN  (2,0S) NOSTRO NUMBER to access PRONO *
+      **                FFMIND    (1A) MEMOS UPDATE INDICATOR        *
+      **                                (= Y or N or E)              *
+      **                FFPIND    (1A) PRONO UPDATE INDICATOR        *
+      **                                (= Y or N)                   *
+      **                *IN89     (1A) CHAIN FAIL INDICATOR          *
+      **                                                             *
+      ****************************************************************
+      *
+     C           FFSETL    BEGSR                           ** FFSETL SR **
+      *
+      ** INPUT PARAMATERS
+     C                     MOVE FFBRCD    FFBRCD  3
+     C**********           Z-ADDFFCBCD    FFCBCD  60                                         CSD027A
+     C                     MOVE FFCBCD    FFCBCD  6                                          CSD027A
+     C                     MOVE FFBRKI    FFBRKI  1
+     C                     Z-ADDFFSETP    FFSETP  20
+     C**********           MOVE FFSETA    FFSETA 12                                           CER001
+     C                     MOVE FFSETA    FFSETA 18                                           CER001
+     C                     MOVE FFCCY     FFCCY   3
+     C                     MOVE FFCCY     FFNCCY  3
+     C                     Z-ADDFFDASQ    FFDASQ  20
+      *
+      ** OUTPUT PARAMETERS
+     C**********           Z-ADD*ZERO     FFCNUM  60                                         CSD027A
+     C                     MOVE *BLANKS   FFCNUM  6                                          CSD027A
+     C**********           Z-ADD*ZERO     FFACOD  40                                          CER001
+     C                     Z-ADD*ZERO     FFACOD 100                                          CER001
+     C                     Z-ADD*ZERO     FFACSQ  20
+     C                     Z-ADD*ZERO     FFNOSN  20
+     C                     MOVE 'N'       FFMIND  1
+     C                     MOVE 'N'       FFPIND  1
+     C                     SETOF                     89
+      *
+      ***  1. DETERMINE THE OUTPUT CUSTOMER NUMBER, ACCOUNT CODE AND
+      ***  ACCOUNT SEQUENCE DEPENDING ON SETTLEMENT TYPE
+      *
+      ***  SETTLEMENT TYPES 01,02,07,08,12 : DETAILS FROM NOSTRO RECORD
+      *
+     C           FFSETP    IFEQ 01                         Nostro
+     C           FFSETP    OREQ 02
+     C           FFSETP    OREQ 07
+     C           FFSETP    OREQ 08
+     C           FFSETP    OREQ 12
+      *
+      ***  SET PRONO UPDATE IND. TO 'Y'
+      *
+     C                     MOVE 'Y'       FFPIND
+      *
+     C           FFSETA    IFEQ *BLANK
+     C                     Z-ADD0         FFNOSN
+     C                     SETON                     89
+     C                     GOTO FFEEND
+     C                     ELSE
+      *
+     C                     MOVELFFSETA    FFNOSN
+     C                     MOVELFFSETA    WWNOSN  2
+     C           FFNKY     CHAINSDNOSTL0             89
+      *
+      ***  RECORD MISSING
+      *
+     C           *IN89     IFEQ '1'                        not found
+     C                     Z-ADD0         FFNOSN
+     C                     GOTO FFEEND
+     C                     ELSE                            else nostro
+      *
+     C                     MOVE A7CUST    FFCNUM
+     C                     MOVE A7ACCD    FFACOD
+     C                     Z-ADDA7ACSN    FFACSQ
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ***  SETTLEMENT TYPE 03
+      *
+     C           FFSETP    IFEQ 03
+      *
+     C                     MOVE A8BICN    FFCNUM           BICN
+     C                     MOVE BLACCD    FFACOD
+     C                     Z-ADDFFDASQ    FFACSQ
+      *
+     C                     ENDIF
+      *
+      ***  SETTLEMENT TYPE 04
+      *
+     C           FFSETP    IFEQ 04                         Partial A/C
+      *
+     C**********           Z-ADDFFCBCD    FFCNUM                                             CSD027A
+     C                     MOVE FFCBCD    FFCNUM                                             CSD027A
+     C                     MOVE BNACCD    FFACOD
+     C                     Z-ADDFFDASQ    FFACSQ
+      *
+     C                     ENDIF
+      *
+      ***  SETTLEMENT TYPE 05
+      *
+     C           FFSETP    IFEQ 05                         Full account
+      *
+     C**********           Z-ADDFFSCNM    FFCNUM                                             CSD027A
+     C                     MOVE FFSCNM    FFCNUM                                             CSD027A
+     C                     Z-ADDFFSACD    FFACOD
+     C                     Z-ADDFFSASQ    FFACSQ
+      *
+      ***  A/C SEQUENCE MAY BE ZERO (IN A MULTIBRANCHING ENVIRONMENT)
+      *
+     C           FFACSQ    IFEQ *ZERO
+     C                     Z-ADDFFDASQ    FFACSQ
+     C                     ENDIF
+      *
+     C                     ENDIF                           *E1
+      *
+      ***  SETTLEMENT TYPE 06
+      *
+     C           FFSETP    IFEQ 06                         suspense A/C
+      *
+     C                     MOVE A8BICN    FFCNUM
+     C                     MOVE BKACCD    FFACOD
+     C                     Z-ADDFFDASQ    FFACSQ
+      *
+     C                     ENDIF
+      *
+      ***  SETTLEMENT TYPE 14 : DETAILS FROM LF/ACNUM
+      *
+     C           FFSETP    IFEQ 14                         Retail A/C
+      *
+     C           FFACMK    CHAINACNUM                89
+     C  N89      RECI      COMP 'D'                  8989
+      *
+      ***  RECORD MISSING
+      *
+     C           *IN89     CABEQ'1'       FFEEND
+      *
+     C**********           Z-ADDCNUM      FFCNUM                                             CSD027A
+     C                     MOVE CNUM      FFCNUM                                             CSD027A
+     C                     Z-ADDACOD      FFACOD
+     C                     Z-ADDACSQ      FFACSQ
+      *
+     C                     ENDIF
+      *
+      ***  SETTLEMENT TYPE 15
+      *
+     C           FFSETP    IFEQ 15                         customer
+      *
+     C**********           Z-ADDFFCBCD    FFCNUM                                             CSD027A
+     C                     MOVE FFCBCD    FFCNUM                                             CSD027A
+      *
+     C           FFBRKI    IFEQ 'Y'                        Broker ?
+      *
+      ***  DEFAULT BROKER ACCOUNT CODE
+      *
+     C                     MOVE BXACCD    FFACOD
+      *
+     C                     ELSE
+      *
+      ***  DEFAULT CUSTOMER ACCOUNT CODE
+      *
+     C                     MOVE BXDCAC    FFACOD
+     C                     ENDIF
+      *
+     C                     Z-ADDFFDASQ    FFACSQ
+      *
+     C                     ENDIF
+      *
+      ***  IF THE RETAIL MODULE IS NOT SUPPORTED
+      ***  BY THE SYSTEM, THEN FINISH
+      *
+      ***  2. ACCESS ACCOUNT CODES TABLE FILE
+      *
+     C**********           MOVE FFACOD    WWACOD  4                                           CER001
+     C                     MOVE FFACOD    WWACOD 10                                           CER001
+     C                     CALL 'AOACODR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           WWACOD
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+     C                     MOVE *ON       *IN89
+     C                     ENDIF
+      *
+      ***  RECORD MISSING
+      *
+     C           *IN89     CABEQ'1'       FFEEND
+      *
+      ***  IF A RETAIL ACCOUNT ACCESS LF/ACCNT
+      *
+     C           A5ACTY    IFEQ 'R'
+      *
+     C           FFACTK    CHAINACCNT                89     A/C exist ?
+      *
+      ***  IF RECORD EXISTS AND IS NEITHER FLAGGED FOR DELETION
+      ***  NOR CLOSED THEN SET MEMOS UPDATE IND. TO 'Y'.
+      *
+     C           *IN89     IFEQ '0'
+     C           RECI      ANDNE'*'
+     C           ACST      ANDNE'C'
+     C                     MOVE 'Y'       FFMIND
+      *
+      ***  IF NO LIVE OPEN RETAIL A/C,
+      ***  SET MEMOS UPDATE IND. TO 'E'.
+      *
+     C                     ELSE
+     C                     MOVE 'E'       FFMIND
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           FFEEND    ENDSR                           ** FFSETL **
+      *
+      /EJECT
+      *****************************************************************
+      **                                                             *
+      **  SR:ZZADD    - TO ADD AMOUNTS INTO HASH FIELDS              *
+      **                                                             *
+      **  INPUTS      - ZZAMT  (15,3) AMOUNT                         *
+      **              - ZZTOTI (15,0) INITIAL INTEGER PART OF THE    *
+      **                HASH FEILD                                   *
+      **                ZZTOTD (3,0)  INITIAL DECIMAL PART OF THE    *
+      **                HASH FEILD                                   *
+      **  OUTPUTS     - ZZTOTI (15,0) INTEGER PART OF THE HASH FIELD *
+      **                ZZTOTD (3,0)  DECIMAL PART OF THE HASH FIELD *
+      **                                                             *
+      *****************************************************************
+      *
+     C           ZZADD     BEGSR                           ** ZZADD  SR **
+      *
+      ***  SET UP FIELDS TO BE HASHED
+      *
+     C                     Z-ADDZZAMT     ZZAMT  153   91
+     C   91                Z-SUBZZAMT     ZZAMT
+     C                     Z-ADDZZAMT     ZZAMTI 150
+     C                     MOVE ZZAMT     ZZAMTD  30
+      *
+      ***  ADD DECIMAL PART AND CHECK FOR CARRY
+      *
+     C                     ADD  ZZAMTD    ZZTOTD  30
+     C           ZZTOTD    COMP ZZAMTD                 91
+     C   91                ADD  1         ZZAMTI
+      *
+      ***  ADD INTEGER PART
+      *
+     C                     ADD  ZZAMTI    ZZTOTI 150
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * SRMARG - Check if MArgin is PResetn for Customer              *
+      * ------                                                        *
+      * Called by: SRACKY                                             *
+      * Calls    :                                                    *
+      *****************************************************************
+      *
+     C           SRMARG    BEGSR
+      *
+      ***  Access REIAC Retail Interests and Charges file
+      *
+     C           REIACK    CHAINREIAC                99
+      *
+      ***  Handle database error
+      *
+     C           *IN99     IFEQ *ON                        not found
+     C           RECI      ORNE 'D'                        Not live
+     C           *LOCK     IN   LDA
+     C                     MOVELATID      DBKEY            ****************
+     C                     Z-ADD11        DBASE            * DB ERROR 011 *
+     C                     MOVEL'REIAC'   DBFILE           ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           *E1
+      *
+      ***  Access REIT - IF credit interest tyep is present
+      *
+     C           CICT      IFGT 0
+     C           REINTK    CHAINREINT                99
+      *
+      ***  Handle Database error
+      *
+     C           *IN99     IFEQ *ON                        not found
+     C           RECI      ORNE 'D'                        not live
+     C           *LOCK     IN   LDA
+     C                     MOVELREINTK    DBKEY            ****************
+     C                     Z-ADD12        DBASE            * DB ERROR 012 *
+     C                     MOVEL'REINT'   DBFILE           ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  If Balance is Less than 0, Margin is required ==>  NO A/C key
+      *
+     C           BAL,2     IFLT 0
+     C                     SETON                     07
+     C                     ENDIF
+      *
+     C                     ENDIF                           CICT > 0
+      *
+     C                     ENDSR
+      *
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,FFFMTZ3
+      *****************************************************************
+**   MSG
+OVER THE COUNTER
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2005

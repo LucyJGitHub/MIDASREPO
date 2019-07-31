@@ -1,0 +1,632 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Validate portfolio reference')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Portfolio Management Module                          *
+      *                                                               *
+      *  PMZ0010 - Validate Portfolio Reference                       *
+      *                                                               *
+      *  Function:  This program validates the portfolio reference    *
+      *             passed. The portfolio is either related to a book *
+      *             or a customer. In the case of book the reference  *
+      *             is unique by book.                                *
+      *                                                               *
+      *  Called By: Input Cycle                                       *
+      *             Portfolio Management Customer Details Mantenance  *
+      *             Book Details                                      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 07Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM004             Date 07FEB96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CPB001 -  'Private Banking' Module                           *
+      *  CPM004 - Bank Portfolios (NEW PROGRAM)                       *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FPMPORTPDIF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F            PMPORTP0                          KRENAME@PORTPD
+      *
+      * RTV : Portfolios by Customer/Portfolio
+      *
+     FSDBOOKL2IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      *
+      * RSQ : Book codes by portfolio
+      *
+      *-------------------------------------------------------------------
+      * Copied-in file definitions:
+      *
+     F/COPY WNCPYSRC,PMZ0010FPG
+      *-------------------------------------------------------------------
+     E/EJECT
+      *-------------------------------------------------------------------
+     E                    CPY@    1   1 80               Copyright
+      * Error processing array:
+      *
+     E/COPY PMCPYSRC,SRERRE
+      *
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+      *                                                                                       CSC022
+      *-------------------------------------------------------------------
+     I/EJECT
+      *-------------------------------------------------------------------
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+      *                                                                                       CSC022
+     IRUNDTA    E DSRUNDAT
+      * Define run-data data area:
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      **  External DS for bank details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short data structure
+      *
+     ISDPORT    E DSSDPORTPD
+      * SDPORTD0 - Installation Control Details
+      *                                                                   CPB001
+     ISDMMOD    E DSSDMMODPD                                              CPB001
+      * SDMMODD0 - Module Details                                         CPB001
+      *
+      *...................................................................
+      * Error processing data structures:
+      *
+     I/COPY PMCPYSRC,SRERRI
+      *-------------------------------------------------------------------
+      * Copied-in file definitions:
+      *
+     I/COPY WNCPYSRC,PMZ0010IPG
+      *...................................................................
+      * Data structure for compilation - Copyright insertion:
+      *
+      ********************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   SRINIT - Initial processing - On First Call                 *
+      *   SRCUST - Validate Default Portfolio for customer            *
+      *   SRBOOK - Validate Portfolio for book                        *
+      *   SRACT  - Undefined action - error                           *
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRCUST - Validate Default Portfolio for cust.  *
+      *                SRBOOK - Validate Portfolio for book           *
+      *                SRACT  - Undefined action - error              *
+      *****************************************************************
+      *
+      **  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8        Action
+     C                     PARM           W0CUST  6        Customer
+     C                     PARM           W0BOKC  2        Book Code
+     C                     PARM           W0PTFR           Portfolio ref.
+     C                     PARM           W0PTFS           Portfolio Scr.
+     C                     PARM           W0PTFF           Portfolio File
+     C                     PARM           W0CPGM 10        Calling Pgm tr.
+      *
+      **  Initial processing - Once Only
+      *
+     C           #FIRST    IFEQ *BLANKS                    B1
+     C                     EXSR SRINIT                      1
+     C                     MOVEL'Y'       #FIRST  1         1
+     C                     ENDIF                           E1
+      *
+      **  Set up Primary Reference to be Correspondent Key
+      *
+     C                     MOVELW0CUST    W0PREF    P
+     C           W0BOKC    CAT  W0PREF:1  W0PREF
+     C           W0PTFR    CAT  W0PREF:1  W0PREF
+      *
+      **  Validate Portfolio Reference depending on action
+      *
+     C           W0ACT     CASEQ'*PMCUSTV'SRCUST
+     C           W0ACT     CASEQ'*PMBOOKV'SRBOOK
+     C                     CAS            SRACT
+     C                     END
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      * Return to calling program
+      *
+     C                     RETRN
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCUST   : Validate Default Portfolio for customer           *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCUST    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCUST'  @STK,Q
+      *
+      * Reset return values
+      *
+     C                     MOVEL*BLANKS   W0PTFS
+     C                     MOVEL*BLANKS   W0PTFF
+      *
+      *  Select on passed portfolio value
+      *
+     C                     SELEC
+      *
+      *  If no portfolio
+      *
+     C           W0PTFR    WHEQ *BLANKS
+      *
+      *  Send diagonistic
+      *
+     C                     MOVEL'PMA0004' PMMSID
+     C                     EXSR PMSNMS
+      *
+      * Cpysrc Templates No portfolio specified
+     C/COPY WNCPYSRC,PMZ0010BLK
+      *
+      *  Check if default portfolio, if so give 9997
+      *
+     C           W0PTFR    WHEQ FCR997
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVELFCR997    W0PTFS
+     C                     MOVEL'9997'    W0PTFF
+      *
+      *  Send diagonistic
+      *
+     C           W0PTFS    CAT  W0PTFF    PMMSDT    P
+     C                     MOVEL'PMA0003' PMMSID
+     C                     EXSR PMSNMS
+      *
+      * Cpysrc Templates Default portfolio specified
+     C/COPY WNCPYSRC,PMZ0010DPT
+      *
+      *  Check if reserved PM Portfolio references
+      *
+     C           W0PTFR    WHEQ '9997'
+     C           W0PTFR    ANDNEFCR997
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C           W0PTFR    OREQ '9998'
+     C           W0PTFR    OREQ '9999'
+     C           W0PTFR    OREQ '9997'                                    CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C           W0PTFR    OREQ FCR997                                    CPB001
+     C           W0PTFR    ANDNE*BLANKS                                   CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C           W0PTFR    OREQ FCR998                                    CPB001
+     C           W0PTFR    ANDNE*BLANKS                                   CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C           W0PTFR    OREQ FCR999                                    CPB001
+     C           W0PTFR    ANDNE*BLANKS                                   CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C                     MOVEL'PMA0014' PMMSID
+     C                     MOVELW0CPGM    PMPGMQ
+     C                     EXSR PMSNMS
+      *
+      * Cpysrc Templates portfolio reference reserved
+     C/COPY WNCPYSRC,PMZ0010RS1
+      *
+      *  Set return code to message id.
+      *
+     C                     MOVEL'PMA0014' W0RTN
+      *
+      *  Check if  portfolio
+      *
+     C                     OTHER
+      *
+      *  Define key list to PMPORTPD
+      *
+     C           KPORT     KLIST
+     C                     KFLD           PNCNUM
+     C                     KFLD           PNPTFR
+      *
+      *  Check Customer portfolio reference exists
+      *
+     C                     MOVELW0CUST    PNCNUM
+     C                     MOVELW0PTFR    PNPTFR
+      *
+     C           KPORT     CHAIN@PORTPD              90
+      *
+      *  If found send diagonistic
+      *
+     C           *IN90     IFEQ *OFF
+     C           PNRECI    ANDEQ'D'
+     C           W0PTFR    CAT  W0CUST    PMMSDT    P
+     C                     MOVEL'PMA0002' PMMSID
+     C                     EXSR PMSNMS
+      *
+      * Set return values
+      *
+     C                     MOVELW0PTFR    W0PTFS
+     C                     MOVELPNPTFR    W0PTFF
+      *
+      * Cpysrc Templates portfolio specified
+     C/COPY WNCPYSRC,PMZ0010PTF
+     C                     ELSE
+      *
+      *  If not found send message to program queue
+      *
+     C           W0PTFR    CAT  W0CUST    PMMSDT    P
+     C                     MOVEL'PMA0001' PMMSID
+     C                     MOVELW0CPGM    PMPGMQ
+     C                     EXSR PMSNMS
+      *
+      * Cpysrc Templates portfolio does not exist
+     C/COPY WNCPYSRC,PMZ0010NPT
+      *
+      *  Set return code to message id.
+      *
+     C                     MOVEL'PMA0001' W0RTN
+      *
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCUST    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBOOK   : Validate Portfolio for book                       *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRBOOK    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRBOOK'  @STK,Q
+      *
+      * Reset return values
+      *
+     C                     MOVEL*BLANKS   W0PTFS
+     C                     MOVEL*BLANKS   W0PTFF
+      *
+      *  If no portfolio
+      *
+     C           W0PTFR    IFEQ *BLANKS
+      *
+      *  Send diagonistic
+      *
+     C                     MOVEL'PMA0004' PMMSID
+     C                     EXSR PMSNMS
+      *
+      * Cpysrc Templates No portfolio specified
+     C/COPY WNCPYSRC,PMZ0010NBK
+     C                     GOTO EXBOOK
+     C                     ENDIF
+      *
+      *  Check if reserved PM Portfolio references
+      *
+     C           W0PTFR    IFEQ '9997'
+     C           W0PTFR    ANDNEFCR997
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C           W0PTFR    OREQ '9998'
+     C           W0PTFR    OREQ '9999'
+     C           W0PTFR    OREQ '9997'                                    CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C           W0PTFR    OREQ FCR997                                    CPB001
+     C           W0PTFR    ANDNE*BLANKS                                   CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C           W0PTFR    OREQ FCR998                                    CPB001
+     C           W0PTFR    ANDNE*BLANKS                                   CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C           W0PTFR    OREQ FCR999                                    CPB001
+     C           W0PTFR    ANDNE*BLANKS                                   CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C                     MOVEL'PMA0014' PMMSID
+     C                     MOVELW0CPGM    PMPGMQ
+     C                     EXSR PMSNMS
+      *
+      * Cpysrc Templates portfolio reference reserved
+     C/COPY WNCPYSRC,PMZ0010RS2
+      *
+      *  Set return code to message id.
+      *
+     C                     MOVEL'PMA0014' W0RTN
+     C                     GOTO EXBOOK
+     C                     ENDIF
+      *
+      *  Define key list to SDBOOKL2
+      *
+     C           KBOOK     KLIST
+     C                     KFLD           BDASPR
+      *
+      *  Check if portfolio already associated with another book
+      *
+     C                     MOVELW0PTFR    BDASPR
+      *
+      *  Check if default portfolio, if so look for 9997
+      *
+     C           W0PTFR    IFEQ FCR997
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVEL'9997'    BDASPR
+     C                     ENDIF
+      *
+     C           KBOOK     SETLL@BOOKL2
+     C           KBOOK     READE@BOOKL2                  90
+     C           *IN90     DOWEQ*OFF
+      *
+      *  If book if different send error and leave loop
+      *
+     C           BDBKCD    IFNE W0BOKC
+     C           W0BOKC    CAT  BDBKCD    PMMSDT    P
+     C                     MOVEL'PMA0005' PMMSID
+     C                     MOVELW0CPGM    PMPGMQ
+     C                     EXSR PMSNMS
+      *
+      * Cpysrc Templates different book
+     C/COPY WNCPYSRC,PMZ0010BOK
+      *
+      *  Set return code to message id.
+      *
+     C                     MOVEL'PMA0005' W0RTN
+     C                     LEAVE
+      *
+     C                     ENDIF
+      *
+      * Read next record
+      *
+     C           KBOOK     READE@BOOKL2                  90
+     C                     ENDDO
+      *
+      *  If O.K. send diagonistic
+      *
+     C           W0RTN     IFEQ *BLANKS
+     C           W0PTFR    CAT  W0BOKC    PMMSDT    P
+     C                     MOVEL'PMA0006' PMMSID
+     C                     EXSR PMSNMS
+      *
+      * Set return values
+      *
+     C                     MOVELW0PTFR    W0PTFS
+     C                     MOVELW0PTFR    W0PTFF
+      *
+      *  Check if default portfolio, if so set file to 9997
+      *
+     C           W0PTFR    IFEQ FCR997
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVEL'9997'    W0PTFF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Cpysrc Templates book code general
+     C/COPY WNCPYSRC,PMZ0010BKC
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXBOOK    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 03 *
+     C                     Z-ADD3         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  AOBANKR0 - Obtain Bank details                 *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      **  Define Fields
+      *
+     C           *LIKE     DEFN FCR997    W0PTFR           Portfolio ref.
+     C           *LIKE     DEFN FCR997    W0PTFS           Portfolio Scr.
+     C           *LIKE     DEFN FCR997    W0PTFF           Portfolio File
+      *
+      **  Copyright
+     C                     MOVEACPY@      ##MKI  80
+      *
+      *................................................................
+      *
+      **  Call access program for Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Database error
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD01        W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Call access program for PM I.C.D. details
+      *
+     C                     CALL 'AOPORTR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDPORT    PARM           DSFDY
+      *
+      **  Database error
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     MOVEL'AOPORTR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD02        W0ERNB           * DB ERROR 02 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *                                                                   CPB001
+      **  Call access program for Modules details                         CPB001
+      *                                                                   CPB001
+     C                     CALL 'AOMMODR0'                                CPB001
+     C                     PARM *BLANKS   ##RTCD                          CPB001
+     C                     PARM '*FIRST  '##OPTN                          CPB001
+     C           SDMMOD    PARM           DSFDY                           CPB001
+      *                                                                   CPB001
+      **  Database error                                                  CPB001
+     C           ##RTCD    IFNE *BLANK                                    CPB001
+      *                                                                   CPB001
+     C                     MOVEL'AOMMODR0'W0FILE                          CPB001
+     C                     MOVEL'*CALL'   W0KEY            ***************CPB001
+     C                     Z-ADD04        W0ERNB           * DB ERROR 04 *CPB001
+     C                     MOVEL'MEM5003' W0MSGD           ***************CPB001
+     C                     MOVEL'MIDAS  ' W0MSGF                          CPB001
+     C                     EXSR SRERR                                     CPB001
+     C                     ENDIF                                          CPB001
+      *
+      * Get Rundate - Rundate  *
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Open files
+      *
+     C                     OPEN PMPORTPD
+     C                     OPEN SDBOOKL2
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL'N'       WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      * File and Program Error Processing
+      *
+     C/COPY PMCPYSRC,SRERRC
+     C/COPY PMCPYSRC,SRERRPSSR
+     C/COPY PMCPYSRC,SPMSNMSC
+      *
+      * Cpysrc Templates Initialise Program O-spec
+     O/COPY WNCPYSRC,PMZ0010OPG
+**  CPY@
+(c) Finastra International Limited 2001

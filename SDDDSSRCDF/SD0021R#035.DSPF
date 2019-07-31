@@ -1,0 +1,748 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SD Currency codes maintenance')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  DSPF/SD0021R# - Currency codes maintenance.                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG26677           Date 16Nov09               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 BUG2811            Date 01Jun04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CIR007             Date 11May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSW097             Date 20May99               *
+      *                 CSD003             Date 27Oct97               *
+      *                 CRT003             DATE 24FEB97               *
+      *                 CSW005             DATE 05DEC96               *
+      *                 CAC001             Date 23JAN96               *
+      *                 090199             DATE 07JUL95               *
+      *                 CRT001             Date 09MAR95               *
+      *                 072537             DATE 16AUG94               *
+      *                 S01502             DATE 28JUL94               *
+      *                 S01505             DATE 22JUL94               *
+      *                 S01486             DATE 01JUL94               *
+      *                 S01459             DATE 01JUL94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26677 - Exchange Rate Tolerance textbox should be         *
+      *             protected when CER043 is switched off             *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *  CSD031 - Enhanced Centralised Static Data                    *
+      *  BUG2811- Spot rate and its corresponding multiply/divide     *
+      *           indicator should be protected when amend mode.      *
+      *  CGL014 - Collateral Processing                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CIR007 - Overnight Index Swaps                               *
+      *  CDL008 - Continuous Linked Settlement                        *
+      *  CSW097 - SWIFT97 Changes for MT34* and MT36*                 *
+      *           New field - Default Location Code.                  *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - File removed from SD model.                       *
+      *  CRT003 - Cashier Interface:                                  *
+      *           Change validation on Numeric ISO Currency to make   *
+      *           field non-mandatory & to appear only when CRT003    *
+      *           is 'on'.                                            *
+      *  CSW005 - FRA/IRS MT34*, MT36* Message Generation:            *
+      *           Regenerated/Recompiled over changed SDCURRPD.       *
+      *  CAC001 - Profit Centre Accounting                            *
+      *           S01505 changes removed.                             *
+      *  090199 - Re-compilation to correct Multi-Language            *
+      *           References.                                         *
+      *  CRT001 - Retail Teller System development:                   *
+      *           Addition of 'Numeric ISO Currency' to the screen.   *
+      *  072537 - Make F5 an invalid function key.                    *
+      *  S01502 - Telekurs Interface Development:                     *
+      *           Regenerated/compiled over changed SDCURRPD.         *
+      *  S01505 - Profit Centre Accounting Development: Addition of   *
+      *           - Default Direct Funding Profit Centre.             *
+      *           - Default FX Position Profit Centre.                *
+      *  S01486 - Private Banking:                                    *
+      *           Addition of 'Currency Ranking Sequence'.            *
+      *  S01459 - Addition of Midas headerbox.                        *
+      *                                                               *
+      *****************************************************************
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0021R#99
+     A          R #RCDKEY                   TEXT('(c) Finastra +
+     A                                      International Limited +
+     A                                      2001')
+     A*/COPY WNCPYSRC,SD0021R#98
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '89')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF09(09 'Change mode.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #1CYCD')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0021R1'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 33'New Currency Code'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                  4  2'Currency code:'
+     A            #1CYCD         3   B  4 17TEXT('Currency Code')
+     A                                      CHECK(FE)
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI PC)
+     A N31                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0021R#97
+     A          R #CMDTXT1                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD0021R#96
+     A                                      OVERLAY PUTOVR
+     A            ##CTX1        78     23  2TEXT('Command Text 1 - ACT')
+     A N25                                  OVRDTA
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0021R#95
+     A          R #RCDDTL1                  TEXT('Details')
+     A*/COPY WNCPYSRC,SD0021R#94
+     A                                      SETOF(98 'Force input format')
+      **Start of change CER043
+     A                                      SETOF(65 'Invalid:  #DRETP')
+      **End of change CER043
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '''ADD'' mode')
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A  87                                  CA12(12 'Key screen.')
+     A N89                                  CF10(10 'Delete.')
+     A                                      CF08(08 'Further Records.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #1CYNM')
+     A                                      SETOF(32 'Invalid: #DNDPA')
+     A                                      SETOF(33 'Invalid: #1SWCY')
+     A                                      SETOF(34 'Invalid: #DTNDA')
+     A                                      SETOF(35 'Invalid: #1DLCI')
+     A                                      SETOF(36 'Invalid: #DSSQA')
+     A                                      SETOF(37 'Invalid: #DSPRA')
+     A                                      SETOF(38 'Invalid: #1MDIN')
+     A                                      SETOF(39 'Invalid: #DNICS')
+     A                                      SETOF(40 'Invalid: #DPRTA')
+     A                                      SETOF(41 'Invalid: #1MDPR')
+     A                                      SETOF(42 'Invalid: #DRMCF')
+     A                                      SETOF(43 'Invalid: #DFTRA')
+     A                                      SETOF(44 'Invalid: #1MDHB')
+     A                                      SETOF(45 'Invalid: #1SPAE')
+     A                                      SETOF(46 'Invalid: #1FTAE')
+     A                                      SETOF(47 'Invalid: #1TAC4')
+     A                                      SETOF(48 'Invalid: #1SWAE')
+     A                                      SETOF(49 'Invalid: #1TAC5')
+     A                                      SETOF(50 'Invalid: #1FRIH')
+     A                                      SETOF(51 'Invalid: #1SATH')
+     A                                      SETOF(52 'Invalid: #1SUNH')
+     A                                      SETOF(53 'Invalid: #DSC1S')
+     A                                      SETOF(54 'Invalid: #DSC2S')
+     A                                      SETOF(55 'Invalid: #1RDFC')
+     A                                      SETOF(56 'Invalid: #1PMRT')
+     A                                      SETOF(57 'Invalid: #DCRSQ')
+      *                                              Begin /CDL008/
+     A                                      SETOF(58 'Invalid: #1CLSC')
+     A                                      SETOF(59 'Invalid: #DEFDT')
+      *                                              End   /CDL008/
+     A**Start of change CIR007
+     A                                      SETOF(60 'Invalid: #1SETD')
+     A                                      SETOF(61 'Invalid: #1IRDP')
+     A**End of change CIR007
+     A**Start of change CGL014
+     A                                      SETOF(82 'Invalid: #1EXWC')
+     A                                      SETOF(83 'Invalid: #1POWC')
+     A**End of change CGL014
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0021R2'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 29'Currency Code Maintenance'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A            #1NBDP         1  0H      TEXT('Number of Decimal Places')
+     A            #1TXND         1  0H      TEXT('Telex Notice Days')
+     A            #1SSNB         2  0H      TEXT('Sort Sequence Number')
+     A            #1SPRT        13  8H      TEXT('Spot Rate')
+     A            #1PRRT        13  8H      TEXT('Par Rate')
+     A            #1RMCM         1  0H      TEXT('RM Cashflow Magnitude')
+     A            #1MDEX         1   H      TEXT('Multiply/Divide, Exchange')
+     A            #1HBRT        13  8H      TEXT('Historic Brokerage Rate')
+     A            #1CDFN         2   H      TEXT('Cedel Default Nostro')
+     A            #1ECDN         2   H      TEXT('Euroclear Default Nostro')
+     A            #1LCD          5  0H      TEXT('Last Change Date')
+     A            #1TYLC         1   H      TEXT('Type of Last Change')
+     A            #1NOSN        10   H      TEXT('Nostro Shortname')
+     A            #1SPDY         3  0H      TEXT('Spot Days')
+     A            #1SCEX         1  0H      TEXT('Scaling Exponent')
+     A            #1HSRT        13  8H      TEXT('High Spot Rate')
+     A            #1LSPR        13  8H      TEXT('Low Spot Rate')
+     A            #1FXSD         8  0H      TEXT('DRS FX Spot Date')
+     A            #1MMSD         8  0H      TEXT('DRS MM Spot Date')
+     A            #1DICB         1   H      TEXT('Default Int. Calc. Basis')
+     A            #1NQDP         1  0H      TEXT('Normally Quoted Decimals')
+     A            #1EBDA        29   H      TEXT('Eurobond Data')
+     A            #1ENC1         2  0H      TEXT('Euroclear Numeric Code 1')
+     A            #1ENC2         2  0H      TEXT('Euroclear Numeric Code 2')
+     A            #1CACD         3   H      TEXT('Cedel Alpha Code')
+     A            #1CNMC         2  0H      TEXT('Cedel Numeric Code')
+     A            #1MONH         1   H      TEXT('MON. Holiday')
+     A            #1TUEH         1   H      TEXT('TUES. Holiday')
+     A            #1WEDH         1   H      TEXT('WED. Holiday')
+     A            #1THUH         1   H      TEXT('THURS. Holiday')
+     A            #1SRC1         4  0H      TEXT('Statutory Returns Code 1')
+     A            #1SRC2         4  0H      TEXT('Statutory Returns Code 2')
+     A            #1DPBF         1  0H      TEXT('Dec.Places in Big Figure')
+     A            #1BYSR        13  8H      TEXT('Buy Spread Rate')
+     A            #1BYSS         1   H      TEXT('Buy Spread Sign')
+     A            #1SLSR        13  8H      TEXT('Sell Spread Rate')
+     A            #1SLSS         1   H      TEXT('Sell Spread Sign')
+     A            #1RECI         1   H      TEXT('Record Id')
+     A            #1DPRU         1   H      TEXT('Default Priority Urgent')
+     A            #1DNOR         1   H      TEXT('Delivery Notification Req')
+     A            #1NDWR         1   H      TEXT('Non-Delivery Warning Req')
+     A            #1GMPY         1   H      TEXT('Generate Multiple Payment')
+     A            #1DLCD         1   H      TEXT('Delivery Code')
+     A            #1RKSQ         3  0H      TEXT('Currency Ranking Sequence')
+     A            #1DDPC         4   H      TEXT('Dft Dir Fund Profit Cntre')
+     A            #1DFPC         4   H      TEXT('Dft Fx Poss Profit Centre')
+     A            #1TKCC         3  0H      TEXT('Telekurs Currency Code')
+     A            #1CQCD         2  0H      TEXT('Cheque Clearing Days')
+     A            #1SMLD         5  0H      TEXT('Smallest Denomination')
+     A**Start of change CGL029
+     A**********  #1CSCD         4   H      TEXT('Cash Account Code')                         CGL029
+     A            #1CSCD        10   H      TEXT('Cash Account Code')
+     A**End of change CGL029
+     A            #1ISON         3  0H      TEXT('Numeric ISO Currency')
+     A            #1ISFC        35   H      TEXT('ISDA Financial Centre')
+     A            #1MACD        35   H      TEXT('Major Currency Descriptn')
+     A            #1FRAC         1   H      TEXT('Fractions Flag')
+     A            #1NUWD         1   H      TEXT('Numbers and Words Flag')
+     A            #1MICD        35   H      TEXT('Minor Currency Descriptn')
+     A*                                              Begin /CSW097/     )
+     A            #1DLOC         3   H      TEXT('Default Location Code')
+     A*                                              End   /CSW097/     )
+      *                                              Begin /CDL008/
+     A            #1EFDT         5  0H      TEXT('Effective Date')
+      *                                              End   /CDL008/
+      **Start of change CER043
+     A            #1RETP         5S 2H      TEXT('Exchange Rate Tol %')
+      **End of change CER043
+     A                                  4  2'Currency code.:'
+     A            #1CYCD         3      4 18TEXT('Currency Code')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  4 24'Name:'
+     A            #1CYNM        14   B  4 30TEXT('Currency Name')
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI PC)
+     A N31                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A                                  4 48'No. of Decimal Places.:'
+     A            #DNDPA         1   B  4 72TEXT('No. of Dec. Places alpha')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**79******                            DSPATR(PR)                                        CSD031
+     A  79
+     AO 67 63                               DSPATR(PR)
+      **End of change CSD031
+     A  32                                  DSPATR(RI PC)
+     A N79N32                               DSPATR(UL)
+     A N32                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                  5  2'Swift Currency Code.......:'
+     A            #1SWCY         3   B  5 30TEXT('Swift Currency Code')
+     A N25                                  OVRDTA
+     A  33                                  DSPATR(RI PC)
+     A N33                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A                                  5 48'Telex Notice Days.....:'
+     A            #DTNDA         1   B  5 72TEXT('Telex Notice Days alpha')
+     A N25                                  OVRDTA
+     A  34                                  DSPATR(RI PC)
+     A N34                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A                                  6  2'Dealing Currency Ind......:'
+     A            #1DLCI         1   B  6 30TEXT('Dealing Currency Ind.')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**79******                            DSPATR(PR)                                        CSD031
+     A  79
+     AO 67 63                               DSPATR(PR)
+      **End of change CSD031
+     A  35                                  DSPATR(RI PC)
+     A N79N35                               DSPATR(UL)
+     A N35                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                  6 48'Sort Sequence Number..:'
+     A            #DSSQA         2   B  6 72TEXT('Sort Sequence alpha')
+     A N25                                  OVRDTA
+     A  36                                  DSPATR(RI PC)
+     A N36                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A                                  7  2'Spot Rate/Mult/Div Ind....:'
+     A            #DSPRA        14   B  7 30TEXT('Spot Rate alpha')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**Start*of*change*BUG2811                                                               CSD031
+     A**62******                            DSPATR(PR)                                        CSD031
+     A**End*of*change*BUG2811                                                                 CSD031
+     A  62
+     AO 67 63                               DSPATR(PR)
+      **End of change CSD031
+     A  37                                  DSPATR(RI PC)
+     A N37                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+     A            #1MDIN         1   B  7 45TEXT('Multiply/Divide Indicator')
+     A N25                                  OVRDTA
+     A**Start of change BUG2811
+     A**79*********                         DSPATR(PR)                                       BUG2811
+     A  79
+      **Start of change CSD031
+     AO 67 63
+      **End of change CSD031
+     AO 62                                  DSPATR(PR)
+     A**End of change BUG2811
+     A  38                                  DSPATR(RI PC)
+     A N79N38                               DSPATR(UL)
+     A N38                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                  7 48'Numeric ISO Currency..:'
+     A  78                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DNICS         3   B  7 72TEXT('Numeric ISO Currency scr')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**78******                            DSPATR(PR)                                        CSD031
+     A  78
+     AO 67 63                               DSPATR(PR)
+      **End of change CSD031
+     A  39                                  DSPATR(RI PC)
+     A  78N39                               DSPATR(ND)
+     A N78N39                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                  8  2'Par Rate/Mult/Div Ind.....:'
+     A            #DPRTA        14   B  8 30TEXT('Par Rate alpha')
+     A N25                                  OVRDTA
+     A  40                                  DSPATR(RI PC)
+     A N40                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A            #1MDPR         1   B  8 45TEXT('Multiply/Divide, Par')
+     A N25                                  OVRDTA
+     A  41                                  DSPATR(RI PC)
+     A N41                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A                                  9  2'Limit Rate/Mult/Div Ind...:'
+     A            #1ERLC        13  8   9 30TEXT('Exchange Rate - Limit ccy')
+     A                                      EDTCDE(3)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #DLRMI         1      9 45TEXT('Limit Rate Mult/Div Ind')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CGL014
+     A**********                        9 48'RM cashflow magnitude.:'                         CGL014
+     A                                  8 48'RM Cashflow Magnitude.:'
+      **End of change CGL014
+     A  77                                  DSPATR(ND)
+     A N25                                  OVRATR
+      **Start of change CGL014
+     A**********  #DRMCF         1   B  9 72TEXT('RM cashflow magnitude'fun')                 CGL014
+     A            #DRMCF         1   B  8 72TEXT('RM Cashflow Magnitude')
+      **End of change CGL014
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**77******                            DSPATR(PR)                                        CSD031
+     A  77
+     AO 67 63                               DSPATR(PR)
+      **End of change CSD031
+     A  42                                  DSPATR(RI PC)
+     A  77N42                               DSPATR(ND)
+     A N77N42                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      **Start of change CGL014
+     A                                  9 48'Exposure Weighting Code:'
+     A N71                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1EXWC         2   B  9 73TEXT('Exposure Weighting Code')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A*N71******                            DSPATR(PR)                                        CSD031
+     A N71
+     AO 67 63                               DSPATR(PR)
+      **End of change CSD031
+     A  82                                  DSPATR(RI PC)
+     A N71N82                               DSPATR(ND)
+     A  71N82                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 10 48'Position Weighting Code:'
+     A N71                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1POWC         2   B 10 73TEXT('Position Weighting Code')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A*N71******                            DSPATR(PR)                                        CSD031
+     A N71
+     AO 67 63                               DSPATR(PR)
+      **End of change CSD031
+     A  83                                  DSPATR(RI PC)
+     A N71N83                               DSPATR(ND)
+     A  71N83                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      **End of change CGL014
+     A                                 10  2'F.T. Rate/Mult/Div Ind....:'
+     A            #DFTRA        14   B 10 30TEXT('FT Rate alpha')
+     A N25                                  OVRDTA
+     A  43                                  DSPATR(RI PC)
+     A N43                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A            #1MDHB         1   B 10 45TEXT('Multiply/Divide, Hist Bkg')
+     A N44                                  ENTFLDATR((*COLOR GRN) +
+     A                                      )
+     A N25                                  OVRDTA
+     A  44                                  DSPATR(RI PC)
+     A N44                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+      **Start of change CSD031
+     A                                 11  2'Central Data .............:'
+     A N63
+     AO 66                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1CENT         1     11 30TEXT('Central Data')
+     A N25                                  OVRDTA
+     A  64                                  DSPATR(RI PC)
+     A N64                                  DSPATR(HI)
+     A N63
+     AO 66                                  DSPATR(ND)
+     A N25                                  OVRATR
+      *
+     A                                 11 41'Effective Date to Zone...:'
+     A N63                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1EFDZ         7     11 68TEXT('Central Data')
+     A N25                                  OVRDTA
+     A  65                                  DSPATR(RI PC)
+     A N65                                  DSPATR(HI)
+     A N63                                  DSPATR(ND)
+     A N25                                  OVRATR
+      **End of change CSD031
+     A                                 12  2'Spot Trade Account Equiv..:'
+     A**Start of change CGL029
+     A**********  #1SPAE         4   B 12 30TEXT('Spot Trade Account Equiv.')                 CGL029
+     A            #1SPAE        10   B 12 30TEXT('Spot Trade Account Equiv.')
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  45                                  DSPATR(RI PC)
+     A N45                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A                                 13  2'Fwd Trade Account Equiv...:'
+     A**Start of change CGL029
+     A**********  #1FTAE         4   B 13 30TEXT('Fwd Trade Account Equiv.')                  CGL029
+     A            #1FTAE        10   B 13 30TEXT('Fwd Trade Account Equiv.')
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  46                                  DSPATR(RI PC)
+     A N46                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A**Start of change CGL029
+     A**********                       13 39'Trade Account Code No.4..:'                      CGL029
+     A**********  #1TAC4         4   B 13 66TEXT('Trade Account Code No.4')                   CGL029
+     A                                 13 41'Trade Account Code No.4..:'
+     A            #1TAC4        10   B 13 68TEXT('Trade Account Code No.4')
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  47                                  DSPATR(RI PC)
+     A N47                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A                                 14  2'Swap Trade Account Equiv..:'
+     A**Start of change CGL029
+     A**********  #1SWAE         4   B 14 30TEXT('Swap Trade Account Equiv.')                 CGL029
+     A            #1SWAE        10   B 14 30TEXT('Swap Trade Account Equiv.')
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  48                                  DSPATR(RI PC)
+     A N48                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A**Start of change CGL029
+     A**********                       14 39'Trade Account Code No.5..:'                      CGL029
+     A**********  #1TAC5         4   B 14 66TEXT('Trade Account Code No.5')                   CGL029
+     A                                 14 41'Trade Account Code No.5..:'
+     A            #1TAC5        10   B 14 68TEXT('Trade Account Code No.5')
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  49                                  DSPATR(RI PC)
+     A N49                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A                                 16 19'Fri'
+     A                                 16 25'Sat'
+     A                                 16 31'Sun'
+     A                                 17  2'Weekend Days..:'
+     A            #1FRIH         1   B 17 20TEXT('FRI. Holiday')
+     A N25                                  OVRDTA
+     A  50                                  DSPATR(RI PC)
+     A N50                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A            #1SATH         1   B 17 26TEXT('SAT. Holiday')
+     A N25                                  OVRDTA
+     A  51                                  DSPATR(RI PC)
+     A N51                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67                                  DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A            #1SUNH         1   B 17 32TEXT('SUN. Holiday')
+     A N25                                  OVRDTA
+     A  52                                  DSPATR(RI PC)
+     A N52                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A                                 17 39'Statutory Returns Code 1.:'
+     A            #DSC1S         4   B 17 66TEXT('Statutory Returns Code 1a')
+     A N25                                  OVRDTA
+     A  53                                  DSPATR(RI PC)
+     A N53                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A                                 18 39'Statutory Returns Code 2.:'
+     A            #DSC2S         4   B 18 66TEXT('Statutory Returns Code 2a')
+     A N25                                  OVRDTA
+     A  54                                  DSPATR(RI PC)
+     A N54                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A                                 19  2'Round Down Interest.......:'
+     A            #1RDFC         1   B 19 30TEXT('Round Down Interest Ind')
+     A N25                                  OVRDTA
+     A  55                                  DSPATR(RI PC)
+     A N55                                  DSPATR(UL HI)
+      **Start of change CSD031
+     A  67 63                               DSPATR(PR)
+      **End of change CSD031
+     A N25                                  OVRATR
+     A                                 20  2'Precious Metal Indicator..:'
+     A  76                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1PMRT         1   B 20 30TEXT('Precious Metal  Ind.')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**76******                            DSPATR(PR)                                        CSD031
+     A  76
+     AO 67 63                               DSPATR(PR)
+      **End of change CSD031
+     A  56                                  DSPATR(RI PC)
+     A  76N56                               DSPATR(ND)
+     A N76N56                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 20 39'Currency Ranking Sequence:'
+     A  75                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DCRSQ         3   B 20 66TEXT('Currency Ranking Seq. scr')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**75******                            DSPATR(PR)                                        CSD031
+     A  75
+     AO 67 63                               DSPATR(PR)
+      **End of change CSD031
+     A  57                                  DSPATR(RI PC)
+     A  75N57                               DSPATR(ND)
+     A N75N57                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A                                 21  2'CLS +
+     A                                      Currency..............:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1CLSC         1   B 21 30TEXT('CLS Currency Alpha')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**80******                            DSPATR(PR)                                        CSD031
+     A  80
+     AO 67 63                               DSPATR(PR)
+      **End of change CSD031
+     A  58                                  DSPATR(RI PC)
+     A  80N58                               DSPATR(ND)
+     A N80N58                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 22  2'Effective +
+     A                                      Date............:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DEFDT         6   B 22 30TEXT('CLS effective date')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**80******                            DSPATR(PR)                                        CSD031
+     A  80
+     AO 67 63                               DSPATR(PR)
+      **End of change CSD031
+     A  59                                  DSPATR(RI PC)
+     A  80N59                               DSPATR(ND)
+     A N80N59                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              End   /CDL008/
+     A**Start of change CIR007
+     A                                 21 39'OIS Settlement Days...........:'
+     A  81                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1SETD         3A  B 21 71TEXT('OIS Settlement Days')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**81******                            DSPATR(PR)                                        CSD031
+     A  81
+     AO 67 63                               DSPATR(PR)
+      **End of change CSD031
+     A  60                                  DSPATR(RI PC)
+     A  81N60                               DSPATR(ND)
+     A N81N60                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 22 39'OIS Int. Rate Dec. Places +
+     A                                      for Rounding:'
+     A  81                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1IRDP         1A  B 22 79TEXT('OIS Int. Rate Decimal Places')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**81******                            DSPATR(PR)                                        CSD031
+     A  81
+     AO 67 63                               DSPATR(PR)
+      **End of change CSD031
+     A  61                                  DSPATR(RI PC)
+     A  81N61                               DSPATR(ND)
+     A N81N61                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A**End of change CIR007
+      **Start of change CER043
+     A                                 18  2'Exchange Rate Tolera+
+     A                                       nce % :'
+     A  64                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DRETP         6A  B 18 30TEXT('Exchange Rate Tol %')
+     A N25                                  OVRDTA
+     A  65                                  DSPATR(RI PC)
+     A  64                                  DSPATR(ND)
+      **Start of change BUG26677
+     A  64                                  DSPATR(PR)
+      **End of change BUG26677
+     A N64N65                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      **End of change CER043
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0021R#93
+     A          R #CMDTXT2                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD0021R#92
+     A                                      OVERLAY PUTOVR
+     A            ##CTX1        78     23  2TEXT('Command Text 1 - ACT')
+     A N25                                  OVRDTA
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0021R#91
+     A          R #MSGRCD                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD0021R#90
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0021R#89
+     A          R #MSGCTL                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD0021R#88
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0021R#87

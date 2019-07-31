@@ -1,0 +1,75 @@
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - /COPY Member (CLP)                                  */
+/*                                                                   */
+/*       C_UPERRA - Error Routine for Option Screen                  */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Last Amend No. CUP001  *CREATE    Date 11Mar99              */
+/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP001 - Introduction of Bridge into Core.                  */
+/*                                                                   */
+/*********************************************************************/
+ 
+/* Monitor for message and escape if problem */
+ 
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             RTVMSG     MSGID(UPM0007) MSGF(UTMSGF) MSG(&MESSAGE)
+ 
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)
+             RTVMSG     MSGID(UPM0008) MSGF(UTMSGF) MSG(&MESSAGE)
+ 
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)
+             RTVMSG     MSGID(UPM0009) MSGF(UTMSGF) MSG(&MESSAGE)
+ 
+             CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)
+             RTVMSG     MSGID(UPM0010) MSGF(UTMSGF) MSG(&MESSAGE)
+ 
+             CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE(&MESSAGE)
+             RTVMSG     MSGID(UPM0011) MSGF(UTMSGF) MSG(&MESSAGE)
+ 
+             CHGDTAARA  DTAARA(MIDASMSG (401 50)) VALUE(&MESSAGE)
+             CALL       PGM(SCC0010) PARM('UTC0045' 'OPTION2' &REPLY1)
+ 
+             IF         COND(&REPLY1 *EQ 'J') THEN(DO)
+                DSPJOBLOG
+                MONMSG     MSGID(CPF0000)
+                CHGVAR     VAR(&RECURSIVE) VALUE('N')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             IF         COND(&REPLY1 *EQ 'I') THEN(DO)
+                CHGDTAARA  DTAARA(MIDASMSG *ALL) VALUE(' ')
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+             IF         COND(&REPLY1 *EQ 'R') THEN(DO)
+                CHGDTAARA  DTAARA(MIDASMSG *ALL) VALUE(' ')
+                GOTO       CMDLBL(RETRY)
+             ENDDO
+ 
+             IF         COND(&REPLY1 *EQ 'C') THEN(DO)
+                CHGVAR     VAR(&RETURN) VALUE('C')
+             ENDDO
+ 
+/* If not one of the options then redisplay screen with message */
+ 
+             IF         COND(&REPLY1 *NE 'C' *AND &REPLY1 *NE 'I' +
+                          *AND &REPLY1 *NE 'R' *AND &REPLY1 *NE +
+                          'J') THEN(DO)
+                RTVMSG     MSGID(UPM0012) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (551 50)) VALUE(&MESSAGE)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/*********************************************************************/
+/* End of /COPY C_UPERRA                                             */
+/*********************************************************************/

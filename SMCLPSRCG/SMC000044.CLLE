@@ -1,0 +1,145 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Copy Customer Number changes if SQL fails')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMC000044 - Copy Customer Number changes if SQL fails       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP003             Date 10Aug10              */
+/*                      BUG27944           Date 29Jul10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      BUG15709           Date 15Feb08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK025  *CREATE    Date 27Jul06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP003 - Handle unique key problems better.                 */
+/*       BUG27944 - SQL migration problem                            */
+/*       BUG15709 - File creation must be SIZE(*NOMAX)               */
+/*       CPK025 - MidasPlus 1.3 packaging.  New migration tool.      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE &FROMLIB &TOLIB &MEMBER &RETURNCODE)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)                                    /*CUP003*/
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)                                  /*CUP003*/
+ 
+             DCL        VAR(&SMC48RTN) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+/* Check if data queue (for holding field names) exists.  If it does clear */
+/*  it and if it doesn't create it.                                        */
+             CHKOBJ     OBJ(QTEMP/SM000044) OBJTYPE(*DTAQ)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CRTDTAQ    DTAQ(QTEMP/SM000044) MAXLEN(12) +
+                             TEXT('Temporary data queue for data +
+                             migration')
+             ENDDO
+             CALL       PGM(QCLRDTAQ) PARM('SM000044' 'QTEMP')
+ 
+/* Set up member name if not a particular member. */
+             IF         COND(&MEMBER *EQ '*SINGLE') THEN(DO)
+                CHGVAR     VAR(&MEMBER) VALUE('*FIRST')
+             ENDDO
+ 
+/* Delete intermediate version of file if it already exists. */
+             DLTF       FILE(QTEMP/&FILE)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Call program to create DDS for intermediate file. */
+             OVRDBF     FILE(UPFFDSTPD) TOFILE(*LIBL/SM000040F)                         /*BUG27944*/
+             CALL       PGM(SM000044) PARM(&FILE &RETURNCODE)
+             DLTOVR     FILE(UPFFDSTPD)                                                 /*BUG27944*/
+             IF         COND(&RETURNCODE *EQ '*ERROR') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Create intermediate version of file from newly created DDS. */
+/**********  CRTPF      FILE(QTEMP/&FILE) SRCFILE(QTEMP/RUNSQL) +                    */ /*BUG15709*/
+/**********               SRCMBR(RUNSQLSTM) MAXMBRS(*NOMAX)                          */ /*BUG15709*/
+             DLTF       FILE(QTEMP/&FILE)                                               /*BUG15709*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG15709*/
+             CRTPF      FILE(QTEMP/&FILE) SRCFILE(QTEMP/RUNSQL) +
+                          SRCMBR(RUNSQLSTM) MAXMBRS(*NOMAX) +
+                          SIZE(*NOMAX)                                                  /*BUG15709*/
+/* Copy from "from" library *NOCHK to allow for Cutomer Number change. */
+             CPYF       FROMFILE(&FROMLIB/&FILE) TOFILE(QTEMP/&FILE) +
+                          FROMMBR(&MEMBER) TOMBR(&MEMBER) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/* Copy from intermediate library to "to" version *MAP *DROP.  This will handle */
+/*  4 and 10 long account codes.                                                */
+             CPYF       FROMFILE(QTEMP/&FILE) TOFILE(&TOLIB/&FILE) +
+                          FROMMBR(&MEMBER) TOMBR(&MEMBER) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+/* If CPF2963 is encountered at this point then it is probably because the file */
+/*  is converting a packed field to alpha.  Call program to check this.         */
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(DO)
+                IF         COND(%SST(&TOLIB 3 1) *EQ 'D') THEN(DO)
+                   CALL       PGM(SMC000048) PARM(&FILE &TOLIB &MEMBER +
+                                &SMC48RTN)
+                ENDDO
+                IF         COND(&SMC48RTN *NE 'Y') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+             MONMSG     MSGID(CPF2972) EXEC(DO)                                           /*CUP003*/
+/* Check for last diagnostic and see if it is related to unique keys. */                  /*CUP003*/
+                RCVMSG     MSGTYPE(*DIAG) MSGID(&MSGID)                                   /*CUP003*/
+                IF         COND(&MSGID *EQ 'CPF5104') THEN(DO)                            /*CUP003*/
+/* Call program to remove member for logical causing problem and try copy */              /*CUP003*/
+/*  again.                                                                */              /*CUP003*/
+                   CALL       PGM(SMC000078) PARM(&FILE 'QTEMP' &TOLIB +
+                                '*MAP  ' &RTNCODE)                                        /*CUP003*/
+                   IF         COND(&RTNCODE *NE ' ') THEN(DO)                             /*CUP003*/
+                      CHGVAR     VAR(&RETURNCODE) VALUE('*UNIQUE')                        /*CUP003*/
+                      GOTO       CMDLBL(ENDPGM)                                           /*CUP003*/
+                   ENDDO                                                                  /*CUP003*/
+                ENDDO                                                                     /*CUP003*/
+                GOTO       CMDLBL(ERROR)                                                  /*CUP003*/
+             ENDDO                                                                        /*CUP003*/
+ 
+/* Check for Customer fields and set them to blank if they are equal to 000000. */
+             IF         COND(&MEMBER *NE '*FIRST') THEN(DO)
+                OVRDBF     FILE(&FILE) MBR(&MEMBER) OVRSCOPE(*JOB)
+             ENDDO
+             CALL       PGM(SM000041) PARM(&TOLIB &FILE &RETURNCODE)
+             DLTOVR     FILE(&FILE) LVL(*JOB)
+             MONMSG     MSGID(CPF0000)
+             IF         COND(&RETURNCODE *EQ '*ERROR') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGVAR     VAR(&RETURNCODE) VALUE('*ERROR')
+ENDPGM:
+             ENDPGM

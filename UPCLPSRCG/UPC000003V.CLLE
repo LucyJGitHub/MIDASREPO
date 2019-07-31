@@ -1,0 +1,175 @@
+/*********************************************************************/
+/*X*I****OVRDBF*FILE(RESETMAXOF)*TOFILE(QADSPFFD)*********************/ /*             */ /*CPK025*/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP RESETMAXID validity checker')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000003V - Validity checker for RESETMAXID                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. CUP035A            Date 04Oct06              */
+/*       Prev Amend No. CUP037             Date 05Dec06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK025             Date 11Jul06              */
+/*                      BUG8856            Date 07Oct05              */
+/*                      CUP030  *CREATE    Date 21dec04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP035A- Automate handling of ID colums (auto-generated     */
+/*                fields).                                           */
+/*       CUP037  - Action File for T_WIPCF.  Error handling.         */
+/*       CPK025  - File UPCDFDPD is redundant. Use file UPFFDSTPD.   */
+/*       BUG8856 - DSPFFD changed at V5R3.  Use core outfile instead */
+/*       CUP030 - New utility.                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILELIB &RSTOPT)
+ 
+             DCL        VAR(&FILELIB) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&RSTOPT) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBRARY) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+ 
+/**********  DCLF       FILE(RESETMAXOF)                             */                  /*BUG8856*/
+/**********  DCLF       FILE(UPCDFDPD)                               */           /*BUG8856 CPK025*/
+             DCLF       FILE(UPFFDSTPD)                                                   /*CPK025*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Create data area RESETMAXID in QTEMP. */
+             DLTDTAARA  DTAARA(QTEMP/RESETMAXID)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/RESETMAXID) TYPE(*CHAR) LEN(13)
+ 
+/* Create work source file for RUNSQL statements. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary file for +
+                          RESETMAXID command')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/* Check that combination of file and library exists. */
+             CHGVAR     VAR(&FILE) VALUE(%SST(&FILELIB 1 10))
+             CHGVAR     VAR(&LIBRARY) VALUE(%SST(&FILELIB 11 10))
+             CHKOBJ     OBJ(&LIBRARY/&FILE) OBJTYPE(*FILE) AUT(*ALL)
+             MONMSG     MSGID(CPF9801 CPF9802 CPF9810) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000' +
+                             *TCAT &LIBRARY *TCAT '/' *TCAT &FILE +
+                             *BCAT 'does not exist or you have +
+                             insufficient authority.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Check that file can be processed. */
+/**********  DLTF       FILE(QTEMP/RESETMAXOF)                       */                  /*BUG8856*/
+/**********  MONMSG     MSGID(CPF0000)                               */                  /*BUG8856*/
+/**********  DSPFFD     FILE(&LIBRARY/&FILE) OUTPUT(*OUTFILE) +      */                  /*BUG8856*/
+/**********               OUTFILE(QTEMP/RESETMAXOF)                  */                  /*BUG8856*/
+/**********  OVRDBF     FILE(RESETMAXOF) SHARE(*YES)                 */                  /*BUG8856*/
+/**********  OPNQRYF    FILE((QTEMP/RESETMAXOF)) QRYSLT('WHIDC *EQ + */                  /*BUG8856*/
+/**********               "Y" *AND WHSQLT *EQ "T"')                  */                  /*BUG8856*/
+                                                                                         /*BUG8856*/
+/* Copy core DSPFFD outfile to QTEMP and override */                                     /*BUG8856*/
+/**********  DLTF       FILE(QTEMP/UPCDFDPD)                         */           /*BUG8856 CPK025*/
+             DLTF       FILE(QTEMP/UPFFDSTPD)                                             /*CPK025*/
+             MONMSG     MSGID(CPF0000)                                                   /*BUG8856*/
+/**********  CPYF       FROMFILE(UPCDFDPD) TOFILE(QTEMP/UPCDFDPD) +                    */ /*CPK025*/
+/**********               CRTFILE(*YES)                             */            /*BUG8856 CPK025*/
+/**********  OVRDBF     FILE(UPCDFDPD) TOFILE(QTEMP/UPCDFDPD) +                        */ /*CPK025*/
+/**********               LVLCHK(*NO) OVRSCOPE(*JOB) SHARE(*YES)   */             /*BUG8856 CPK025*/
+             CPYF       FROMFILE(UPFFDSTPD) TOFILE(QTEMP/UPFFDSTPD) +
+                          CRTFILE(*YES)                                                   /*CPK025*/
+             OVRDBF     FILE(UPFFDSTPD) TOFILE(QTEMP/UPFFDSTPD) +
+                          LVLCHK(*NO) OVRSCOPE(*JOB) SHARE(*YES)                          /*CPK025*/
+ 
+/* Get field descriptions & select auto ID field only */                                 /*BUG8856*/
+/**********  DSPFFD     FILE(&LIBRARY/&FILE) OUTPUT(*OUTFILE) +                        */ /*CPK025*/
+/**********               OUTFILE(QTEMP/UPCDFDPD)                  */             /*BUG8856 CPK025*/
+/**********  OPNQRYF    FILE((QTEMP/UPCDFDPD)) QRYSLT('WHIDC *EQ +                     */ /*CPK025*/
+/**********               "Y" *AND WHSQLT *EQ "T"')                */             /*BUG8856 CPK025*/
+             DSPFFD     FILE(&LIBRARY/&FILE) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/UPFFDSTPD)                                        /*CPK025*/
+             OPNQRYF    FILE((QTEMP/UPFFDSTPD)) QRYSLT('WHIDC *EQ +
+                          "Y" *AND WHSQLT *EQ "T"')                                       /*CPK025*/
+READFILE:
+             RCVF
+/* If there are no records to read then there is no field to process. */
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000' +
+                             *TCAT &FILE *BCAT 'does not have an +
+                             automatically generated field.') +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* Store field name in data area. */
+             CHGDTAARA  DTAARA(QTEMP/RESETMAXID (1 10)) VALUE(&WHFLDI)
+ 
+/* If a specific number already exists then check if it already exists. */
+             IF         COND(&RSTOPT *NE '*RSTMAX' *AND &RSTOPT *NE +
+                          '*RSTALL') THEN(DO)
+                DLTF       FILE(QTEMP/UPC00003VQ)
+                MONMSG     MSGID(CPF0000)                                                 /*CUP037*/
+                CPYF       FROMFILE(&LIBRARY/&FILE) +
+                             TOFILE(QTEMP/UPC00003VQ) MBROPT(*REPLACE) +
+                             CRTFILE(*YES) INCREL((*IF &WHFLDI *EQ +
+                             &RSTOPT))
+                RTVMBRD    FILE(QTEMP/UPC00003VQ) NBRCURRCD(&NBRCURRCD)
+                IF         COND(&NBRCURRCD *NE 0) THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000A +
+                                record already exists with generated +
+                                number' *BCAT &RSTOPT *TCAT '.') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+/**********  IF         COND(&ERROR *EQ 'Y') THEN(DO)                */                  /*BUG8856*/
+/**********     DLTOVR     FILE(RESETMAXOF)                          */                  /*BUG8856*/
+/**********     MONMSG     MSGID(CPF0000)                            */                  /*BUG8856*/
+/**********     CLOF       OPNID(RESETMAXOF)                         */                  /*BUG8856*/
+/**********     MONMSG     MSGID(CPF0000)                            */                  /*BUG8856*/
+/**********  DLTOVR     FILE(UPCDFDPD)                               */           /*BUG8856 CPK025*/
+/**********     DLTOVR     FILE(UPFFDSTPD)                                 */ /*CPK025*/ /*CUP035A*/
+                DLTOVR     FILE(UPFFDSTPD) LVL(*JOB)                                     /*CUP035A*/
+                MONMSG     MSGID(CPF0000)                                                /*BUG8856*/
+/**********  CLOF       OPNID(UPCDFDPD)                              */           /*BUG8856 CPK025*/
+                CLOF       OPNID(UPFFDSTPD)                                               /*CPK025*/
+                MONMSG     MSGID(CPF0000)                                                /*BUG8856*/
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+/**********  ENDDO                                                   */                  /*BUG8856*/
+ENDPGM:
+/**********  DLTOVR     FILE(RESETMAXOF)                             */                  /*BUG8856*/
+/**********  MONMSG     MSGID(CPF0000)                               */                  /*BUG8856*/
+/**********  CLOF       OPNID(RESETMAXOF)                            */                  /*BUG8856*/
+/**********  MONMSG     MSGID(CPF0000)                               */                  /*BUG8856*/
+/*********   DLTOVR     FILE(UPCDFDPD) LVL(*JOB)                     */           /*BUG8856 CPK025*/
+             DLTOVR     FILE(UPFFDSTPD) LVL(*JOB)                                         /*CPK025*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                   /*BUG8856*/
+/**********  CLOF       OPNID(UPCDFDPD)                              */           /*BUG8856 CPK025*/
+             CLOF       OPNID(UPFFDSTPD)                                                  /*CPK025*/
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

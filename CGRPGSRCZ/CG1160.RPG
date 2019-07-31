@@ -1,0 +1,1300 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Report Group Set Structure')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG1160 - Report Group Set Structure                          *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 126690             Date 26Nov97               *
+      *                 086148             Date 21Feb95               *
+     F*                 S01522             DATE 30NOV94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  126690 - Expand Report Data Element Detail Line              *
+     F*  086148 - Pad extracted path with blanks                      *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  03   -    Overflow on printer file                           *
+     F*  50   -    First Cycle processing                             *
+     F*  70   -    Multi-branched indicator - Off = multibranched     *
+     F*  90   -    General work indicator                             *
+     F*  91   -    General work indicator                             *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,CG1160DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     FCG1160P1O   E             03     PRINTER      KINFSR SRFILE     UC
+     F                                              KINFDS PRTINF
+      *
+      * Transaction Report
+      *
+     FCGGSETL1IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      *
+      * RTV : Group Set Definition      Retrieval index
+      *
+     FCGRDTAL1IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      *
+      * RTV : Report Data Elements      Retrieval index
+      *
+     FCGRASCL2IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      *
+      * RSQ : RDE Association Table     By Group/RDE/Order
+      *
+     FCGPATHL2IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      *
+      * RSQ : Path                      By Group sets
+      *
+     F/EJECT
+     E/COPY CGCPYSRC,SRERRE
+      *
+      *  End of Copysource for error processing
+      *
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E                    CMD@    1   2 80
+      *
+      *  Array of QCMDEXC commands
+      *
+     E                    EDT        80  1
+      *
+      *  Array of QCMDEXC command to edit
+      *
+     E/COPY WNCPYSRC,CG1160DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/EJECT
+     I/COPY WNCPYSRC,CG1160DIPG
+      *
+      *  /Copy point for Input Specs
+      *
+     I/EJECT
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY CGCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * Bank details Structure *
+      *
+     IPRTINF      DS
+      *
+      * Printer file information data structure.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      * Data Structures used by Access Programs
+      *
+     II#DTA       DS                            256
+      *
+      *  Input parameters data structure
+      *
+      *           Spool file name (if blank, name unchanged).
+      *                 N.B. To change name I#SPLR must be Y
+      *                 Unless first call of program
+      *
+     I                                        1  10 I#SPLN
+      *
+      *           Repeat open and close of spool file
+      *                 If Y create new spool file
+      *
+     I                                       11  11 I#SPLR
+      *
+      *           Report Reference if Access checking is off
+      *
+     I                                       12  21 I#REFN
+      *
+      *           Report Override Flag / Page No.
+      *
+     I                                       22  22 I#ROVR
+     I                                       23  250I#PAGE
+      *
+      *           Report Title/Underline (uses msg ID on CGUSRMSG)
+      *
+     I                                       26  32 I#TITL
+     I                                       33  39 I#TUL
+      *
+      *  Define fields for group set printing
+      *
+     I                                       40  45 I#TGRP
+     I                                       46  51 I#GRPS
+     II#PATH      DS                            256
+      *
+      *  Input parameters data structure
+      *
+     I                                        1 120 I#PTH1
+     I                                      121 240 I#PTH2
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           I#DTA            Input Data Str.
+     C                     PARM           I#PATH           Input Path
+     C                     PARM           I#RSQN  5
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELI#DTA     W0PREF
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  If action is *CLOSE then call SROPT and close down program
+      *
+     C           W0ACT     IFEQ '*CLOSE'
+     C                     EXSR SROPRT
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+      *  Check action code and get set data
+      *
+     C                     EXSR SRCHCK
+      *
+      *  Call subroutine depending on action code
+      *
+     C           W0ACT     CASEQ'*TOPSET' SRTGRP
+     C           W0ACT     CASEQ'*GROUP ' SRGRPS
+     C           W0ACT     CASEQ'*CLOSESP'SROPRT
+     C                     CAS            SRACT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      * Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCHCK   : Check true action code                            *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCHCK    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHCK'  @STK,Q
+      *
+      *  Set Detail headings print off
+      *
+     C                     MOVEL*BLANKS   WKDH    1
+      *
+      *  Check that it is a valid action code
+      *
+     C           W0ACT     IFEQ '*CLOSESP'                 Close spool fil
+     C                     GOTO EXCHCK
+     C                     END
+      *
+      *  If valid action code, check that message reference exists.
+      *
+      *
+     C           W0ACT     IFEQ '*TOPSET'
+      *
+     C                     MOVELI#TGRP    KFGRPS
+     C           KYGRPS    CHAIN@GSETL1              90
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGGSETL1'W0FILE           ***************
+     C                     MOVELI#TGRP    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'CGD1115' W0MSGD
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Set up fields for header
+      *
+     C                     MOVELGSGRPS    H3GRPS
+     C                     MOVELGSDESC    H3DESC
+     C                     MOVELGSCSET    H3CSET
+     C                     MOVELGSMREC    H3MREC
+     C                     MOVELGSRSET    H3RSET
+     C                     MOVELGSMMGR    H3MMGR
+      *
+      *  Retrieve title for report dependant on type of report
+      *
+     C                     CALL 'CGC1000'              9090
+     C                     PARM I#TITL    #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    H2TITL 60
+      *
+      *  Retrieve title underline
+      *
+     C                     CALL 'CGC1000'              9090
+     C                     PARM I#TUL     #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    H2TUL  60
+      *
+      *  Set up report reference
+      *
+     C                     MOVELI#REFN    H1REFN
+      *
+     C                     END
+      *
+      *  Set up fields for simple set
+      *
+     C           W0ACT     IFEQ '*GROUP '
+      *
+     C                     MOVELI#GRPS    KFGRPS
+     C           KYGRPS    CHAIN@GSETL1              90
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGGSETL1'W0FILE           ***************
+     C                     MOVELI#GRPS    W0KEY            * DB ERROR 02 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'CGD1115' W0MSGD
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Set up fields for header
+      *
+     C                     MOVELGSGRPS    D1GRPS
+     C                     MOVELGSDESC    D1DESC
+     C                     MOVELGSCSET    D1CSET
+     C                     MOVELGSMREC    D1MREC
+     C                     MOVELGSRSET    D1RSET
+     C                     MOVELGSMMGR    D1MMGR
+      *
+      * If printing top group set structure get path information
+      *
+     C           H3CSET    IFEQ 'T'
+     C                     MOVELI#PTH1    D2PTH1
+     C                     MOVELI#PTH2    D2PTH2
+     C                     EXSR SRPATH
+     C                     END
+      *
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCHCK    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTGRP   : Process printing requirements                     *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SROPRT - Open Printer File                        *
+      *             SRHDR1 - Print Header of Report                   *
+      *             SRHDR2 - Print Title of Report                    *
+      *             SRHDR3 - Print Top Group Set                      *
+      *                                                               *
+      *****************************************************************
+     CSR         SRTGRP    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRTGRP'  @STK,Q
+      *
+      *  Open printer file etc
+      *
+     C                     EXSR SROPRT
+      *
+      *  Print header of report
+      *
+     C                     EXSR SRHDR1
+      *
+      *  Retrieve Title of report and print
+      *
+     C                     EXSR SRHDR2
+      *
+      *  Report Top Group Set Information
+      *
+     C                     EXSR SRHDR3
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXTGRP    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRGRPS   : Print Group Set Information                       *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SROPRT - Open Printer File                        *
+      *                                                               *
+      *****************************************************************
+     CSR         SRGRPS    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRGRPS'  @STK,Q
+      *
+      *  Print Group Set Information
+      *
+     C                     EXSR SRDTL1
+      *
+      *  Print Path information if Top Set structure
+      *
+     C           H3CSET    IFEQ 'T'
+     C                     EXSR SRDTL2
+     C                     END
+      *
+      *  Report Report Data Element Information if simple
+      *
+     C           D1CSET    IFEQ 'N'
+     C                     EXSR SRDTL3
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXGRPS    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHDR1   : Print Page Header                                 *
+      *                                                               *
+      *  CALLED BY: SRNONE - Print no information for combination     *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRHDR1    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRHDR1'  @STK,Q
+      *
+      *  /Copy point for Header print 1
+      *
+     C/COPY WNCPYSRC,CG1160DPH1
+      *
+      *
+      *  Write page header and switch off overflow indicator
+      *
+     C                     WRITEF0HDR1
+     C                     MOVEL'0'       *IN03
+      *
+      *  /Copy point for Header print
+      *
+     C/COPY WNCPYSRC,CG1160HDR1
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXHDR1    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHDR2   : Print Report Title                                *
+      *                                                               *
+      *  CALLED BY: SRSUMM - Print Summary Transaction Report         *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRHDR2    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRHDR2'  @STK,Q
+      *
+      *  /Copy point for Header print 2
+      *
+     C/COPY WNCPYSRC,CG1160DPH2
+      *
+      *
+      *  Write title
+      *
+     C                     WRITEF0HDR2
+      *
+      *  /Copy point for Header print
+      *
+     C/COPY WNCPYSRC,CG1160HDR2
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXHDR2    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHDR3   : Print Top Group Set                               *
+      *                                                               *
+      *  CALLED BY: SRNONE - Print no information for combination     *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRHDR3    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRHDR3'  @STK,Q
+      *
+      *  /Copy point for Header print 3
+      *
+     C/COPY WNCPYSRC,CG1160DPH3
+      *
+      *
+      *  Write Top Group Set Information
+      *
+     C                     WRITEF1HDR1
+      *
+      *  /Copy point for Header print
+      *
+     C/COPY WNCPYSRC,CG1160HDR3
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXHDR3    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDTL1   : Print Group Set                                   *
+      *                                                               *
+      *  CALLED BY: SRNONE - Print no information for combination     *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDTL1    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDTL1'  @STK,Q
+      *
+      *  /Copy point for detail print 1
+      *
+     C/COPY WNCPYSRC,CG1160DPD1
+      *
+      * Print Top Group Set
+      *
+     C                     EXSR SRTGRP
+      *
+      *  Write Group Set Information
+      *
+     C                     WRITEF1DTL1
+      *
+      *  If overflow write out headnt
+      *
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRTGRP
+     C                     WRITEF1DTL1
+     C                     END
+      *
+      *  /Copy point for Detail print
+      *
+     C/COPY WNCPYSRC,CG1160DTL1
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXDTL1    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDTL2   : Print Path Information                            *
+      *                                                               *
+      *  CALLED BY: SRNONE - Print no information for combination     *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDTL2    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDTL2'  @STK,Q
+      *
+      *  /Copy point for detail print 2
+      *
+     C/COPY WNCPYSRC,CG1160DPD2
+      *
+      *
+      *  Write Path Information
+      *
+     C                     WRITEF1DTL2
+      *
+      *  If overflow write out headnt
+      *
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRTGRP
+     C                     WRITEF1DTL2
+     C                     END
+      *
+      *  /Copy point for detail print
+      *
+     C/COPY WNCPYSRC,CG1160DTL2
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXDTL2    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDTL3   : Print Report Data Element Information             *
+      *                                                               *
+      *  CALLED BY: SRNONE - Print no information for combination     *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDTL3    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDTL3'  @STK,Q
+      *
+      *  /Copy point for Detail print 3
+      *
+     C/COPY WNCPYSRC,CG1160DPD3
+      *
+      *
+      *  Write Report Data Element Header
+      *
+     C                     WRITEF3DTL1
+      *
+      *  If overflow write out headnt
+      *
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRTGRP
+     C                     WRITEF3DTL1
+     C                     END
+      *
+      *  /Copy point for Detail print
+      *
+     C/COPY WNCPYSRC,CG1160DTL3
+      *
+      *  Set lower limits and read RDEs for group set
+      *
+     C           KRST      KLIST
+     C                     KFLD           RAGRPS           Group Set Name
+      * Setup key
+     C                     MOVELD1GRPS    RAGRPS           Group Set Name
+      *
+     C           KRST      SETLL@RASCL2
+      *
+     C           KRST      READE@RASCL2                  90*90=EOF
+     C           *IN90     IFEQ '1'
+      *
+      *  Write No details to report
+      *
+     C                     WRITEF5DTL1
+      *
+      *  If overflow write out headnt
+      *
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRTGRP
+     C                     END
+      *
+     C                     ELSE
+      *
+      *  Process all RDE records
+      *
+     C           *IN90     DOUEQ'1'
+      *
+      *  Get RDE data
+      *
+     C           KLRDTA    KLIST
+     C                     KFLD           D4RDE            Report Data Ele
+      * Setup key
+     C                     MOVELRARDE     D4RDE            Report Data El
+      *
+     C           KLRDTA    CHAIN@RDTAL1              91    *
+      *
+      *  If not found error
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'CGRDTAL1'W0FILE
+     C                     MOVELD4RDE     W0KEY            ***************
+     C                     Z-ADD3         W0ERNB           * DB ERROR 03 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Write RDE record
+      *
+     C                     MOVELRDDESC    D4DESC           Report Data El
+     C                     MOVELRDELYP    D4ELYP           Report Data El 126690
+     C                     MOVELRDMAXL    D4MAXL           Report Data El 126690
+     C                     MOVELRDETXT    D4ETXT           Report Data El 126690
+      *
+     C                     WRITEF4DTL1
+      *
+      *  Read next record
+      *
+     C           KRST      READE@RASCL2                  90*90=EOF
+      *
+      *  If overflow write out headnt
+      *
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRTGRP
+     C           *IN90     IFEQ '0'
+     C                     WRITEF3DTL1
+     C                     END
+     C                     END
+     C                     ENDDO
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXDTL3    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPATH   : Look for Path and if not found create             *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPATH    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPATH'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1160PATH
+      *
+      *  Define key list for path
+      *
+     C           KPGRPS    KLIST
+     C                     KFLD           EPLEV1
+     C                     KFLD           EPLEV2
+     C                     KFLD           EPLEV3
+     C                     KFLD           EPLEV4
+     C                     KFLD           EPLEV5
+     C                     KFLD           EPLEV6
+     C                     KFLD           EPLEV7
+     C                     KFLD           EPLEV8
+     C                     KFLD           EPLEV9
+     C                     KFLD           EPLEV0
+      *
+      *  Reset Path group set fields
+      *
+     C                     MOVEL*BLANKS   EPLEV1
+     C                     MOVEL*BLANKS   EPLEV2
+     C                     MOVEL*BLANKS   EPLEV3
+     C                     MOVEL*BLANKS   EPLEV4
+     C                     MOVEL*BLANKS   EPLEV5
+     C                     MOVEL*BLANKS   EPLEV6
+     C                     MOVEL*BLANKS   EPLEV7
+     C                     MOVEL*BLANKS   EPLEV8
+     C                     MOVEL*BLANKS   EPLEV9
+     C                     MOVEL*BLANKS   EPLEV0
+      *
+      *  Find Repeating Path/Top Group Set
+      *
+     C                     Z-ADD2         Y#      70
+     C                     Z-ADD0         X#      70
+     C                     Z-ADD1         C#      50
+     C                     MOVEL'N'       ##NONR  1
+      *
+     C           W0RTN     DOUEQ'CGD1087'
+     C                     EXSR SRNGRP
+      *
+      *  Check if group set is top or repeating
+      *
+     C           ##GSET    CHAIN@GSETL1              90
+      *
+      *  If not found error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGGSETL1'W0FILE
+     C                     MOVEL##GSET    W0KEY            ***************
+     C                     Z-ADD4         W0ERNB           * DB ERROR 04 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Record is a repeating group
+      *
+     C           GSMREC    IFNE 'N'
+     C           ##NONR    ANDEQ'Y'
+     C                     MOVEL'CGGSETL1'W0FILE
+     C                     MOVEL##GSET    W0KEY            ***************
+     C                     Z-ADD5         W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'CGD1088' W0MSGD           ***************
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           GSMREC    IFEQ 'N'
+     C           GSCSET    ANDNE'T'
+     C           ##NONR    ANDNE'Y'
+      *
+      *  Read path
+      *
+     C           KPGRPS    CHAIN@PATHL2              90
+      *
+      *  If path not found move 'No Path Text'
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL##NOPT    D2RPTH
+     C                     ELSE
+     C                     MOVELEPPATH    D2RPTH
+     C                     END
+      *
+      *  Reset Path group set fields
+      *
+     C                     MOVEL*BLANKS   EPLEV1
+     C                     MOVEL*BLANKS   EPLEV2
+     C                     MOVEL*BLANKS   EPLEV3
+     C                     MOVEL*BLANKS   EPLEV4
+     C                     MOVEL*BLANKS   EPLEV5
+     C                     MOVEL*BLANKS   EPLEV6
+     C                     MOVEL*BLANKS   EPLEV7
+     C                     MOVEL*BLANKS   EPLEV8
+     C                     MOVEL*BLANKS   EPLEV9
+     C                     MOVEL*BLANKS   EPLEV0
+      *
+      *  Now find non-repeating path
+      *
+     C                     Z-ADD1         C#
+     C                     MOVEL'Y'       ##NONR  1
+     C                     END
+      *
+      * Set up key to path file by group set
+      *
+     C                     SELEC
+     C           C#        WHEQ 1
+     C                     MOVEL##GSET    EPLEV1
+     C           C#        WHEQ 2
+     C                     MOVEL##GSET    EPLEV2
+     C           C#        WHEQ 3
+     C                     MOVEL##GSET    EPLEV3
+     C           C#        WHEQ 4
+     C                     MOVEL##GSET    EPLEV4
+     C           C#        WHEQ 5
+     C                     MOVEL##GSET    EPLEV5
+     C           C#        WHEQ 6
+     C                     MOVEL##GSET    EPLEV6
+     C           C#        WHEQ 7
+     C                     MOVEL##GSET    EPLEV7
+     C           C#        WHEQ 8
+     C                     MOVEL##GSET    EPLEV8
+     C           C#        WHEQ 9
+     C                     MOVEL##GSET    EPLEV9
+     C           C#        WHEQ 10
+     C                     MOVEL##GSET    EPLEV0
+     C                     ENDSL
+      *
+      *  Step on level
+      *
+     C                     ADD  1         C#
+     C                     ENDDO
+      *
+      *  Read path for Non-Repeating Group
+      *
+     C           KPGRPS    CHAIN@PATHL2              90
+      *
+      *  If path not found add to database
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL##NOPT    D2NPTH
+     C                     ELSE
+     C                     MOVELEPPATH    D2NPTH
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPATH    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNGRP   : Find Next Group                                   *
+      *                                                               *
+      *  CALLED BY: SRPATH - Process Path                             *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRNGRP    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRNGRP'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1160NGRP
+      *
+      *  Initialise control code
+      *
+     C                     MOVEL*BLANKS   W0RTN
+     C           *LIKE     DEFN EPLEV1    ##GSET
+      *
+      *  Find First delimter
+      *
+     C           '\'       SCAN I#PATH:Y# X#             90
+      *
+      *  If found find length
+      *
+     C           *IN90     IFEQ '1'
+      *
+     C           X#        SUB  Y#        Z#      50
+     C***********Z#        SUBSTI#PATH:Y# ##GSET                          086148
+     C           Z#        SUBSTI#PATH:Y# ##GSET    P                     086148
+      *
+      *  Set Y# to next free space
+      *
+     C           X#        ADD  1         Y#
+     C                     ELSE
+      *
+      *  Substring fixed length of six
+      *
+     C***********6         SUBSTI#PATH:Y# ##GSET                          086148
+     C           6         SUBSTI#PATH:Y# ##GSET    P                     086148
+     C                     MOVEL'CGD1087' W0RTN   7
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXNGRP    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROPRT   : Control open and close of spool file CG1160P1     *
+      *                                                               *
+      *  CALLED BY: SRSUMM - Process Summary Transaction Report       *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SROPRT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SROPRT'  @STK,Q
+      *
+      *  If first open or I#SPLR is 'Y', open and close file
+      *  or close action specified
+      *
+     C           ##OPRT    IFEQ *BLANKS
+     C           I#SPLR    OREQ 'Y'
+     C           W0ACT     OREQ '*CLOSE'
+     C           W0ACT     OREQ '*CLOSESP'
+      *
+      *  If open and spool repeat is yes close the file
+      *  or if close specified and file open
+      *
+     C           ##OPRT    IFNE *BLANKS
+     C           I#SPLR    ANDEQ'Y'
+     C           ##OPRT    ORNE *BLANKS
+     C           W0ACT     ANDEQ'*CLOSE'
+     C           ##OPRT    ORNE *BLANKS
+     C           W0ACT     ANDEQ'*CLOSESP'
+      *
+      *  /Copy point for End of Report
+      *
+     C/COPY WNCPYSRC,CG1160DPER
+      *
+      *
+      *  Print end of report before processing close of file
+      *
+     C                     WRITEF0TRL1
+      *
+      *  Close file
+      *
+     C                     CLOSECG1160P1
+     C                     MOVEL*BLANKS   ##OPRT
+     C                     Z-ADD0         PAGE1
+      *
+      *  If *CLOSE exit section as no more processing
+      *
+     C           W0ACT     IFEQ '*CLOSE'
+     C           W0ACT     OREQ '*CLOSESP'
+     C                     GOTO EXOPRT
+     C                     END
+     C                     END
+      *
+      *  If spool file name is requested change override
+      *
+     C           ##OPRT    IFEQ *BLANKS
+     C           I#SPLN    ANDNE*BLANKS
+      *
+      *  Override file CG1160P1 share(*NO) and spool file name
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEAI#SPLN    EDT,49
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'QCMDEXC' W0KEY
+     C                     Z-ADD6         W0ERNB
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     END
+      *
+      *  Open CG1160P1 for output
+      *
+     C                     OPEN CG1160P1               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CG1160P1'W0FILE           ***************
+     C                     MOVEL'*OPEN'   W0KEY            * DB ERROR 07 *
+     C                     Z-ADD7         W0ERNB           ***************
+     C                     MOVEL'MEM5005' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * If I#SPLN is not blank then this is the name for RCF
+      *
+     C           I#SPLN    IFNE *BLANKS
+     C                     MOVELI#SPLN    UUSFNM
+     C                     ELSE
+     C                     MOVELSFILEU    UUSFNM
+     C                     END
+      *
+      * ZSFILE - Log Spool File
+      *
+      * Set up spool file number
+      *
+     C                     Z-ADDSFNUMU    WUSFNB  60
+     C                     MOVE *BLANKS   UUSRSQ  5
+     C           *LIKE     DEFN UUZSER    WUZSER
+      *
+      * ZSFILE - write report rqs
+      *
+     C                     CALL 'ZSFILE'               90
+     C           UUSRSQ    PARM I#RSQN    UURSQN  5
+     C                     PARM *BLANKS   UUENTY  3
+     C                     PARM           UUSFNM 10
+     C                     PARM WUSFNB    UUSFNB  60
+     C           WUZSER    PARM *BLANK    UUZSER  1
+      *
+      * Report error on call to ZSFILE
+      *
+     C           *IN90     IFEQ '1'
+     C           WUZSER    OREQ 'Y'
+     C                     MOVEL'*CALL   'W0FILE           ***************
+     C                     MOVEL'ZSFILE'  W0KEY            * DB ERROR 08 *
+     C                     Z-ADD8         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     MOVEL'Y'       ##OPRT  1
+      *
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXOPRT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 09 *
+     C                     Z-ADD9         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      *  Define fields
+      *
+     C           *LIKE     DEFN GSGRPS    KFGRPS
+      *
+      *  Key List for CGGSETL1
+      *
+     C           KYGRPS    KLIST
+     C                     KFLD           KFGRPS           Group Set Name
+      *
+      *  Open Files
+      *
+     C                     OPEN CGGSETL1
+     C                     OPEN CGRDTAL1
+     C                     OPEN CGRASCL2
+     C                     OPEN CGPATHL2
+      *
+      *  Get Rundate - Rundate
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Set multi-branch indicator
+      *
+     C           WUMBIN    IFNE 'Y'                        Multi Branched ?
+     C                     MOVEL'1'       *IN70
+     C                     END
+      *
+      *  Extract bank details
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           SDBANK    PARM *BLANKS   DSFDY
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD10        W0ERNB           * DB ERROR 10 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * Get 'No Path' text
+      *
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1121' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C           *LIKE     DEFN EPPATH    ##NOPT
+     C                     MOVEL#MSTX1    ##NOPT
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,CG1160DCPG
+      *
+      *  /Copy point for Calculation Specs
+      *
+     C/EJECT
+     C*
+     C* PSSR Processing
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+     C/COPY WNCPYSRC,CG1160DOPG
+      *
+      *  /Copy point for Output Specs
+      *
+**  CPY@ table
+(c) Finastra International Limited 2001
+** Command Array
+OVRPRTF    FILE(CG1160P1  ) SHARE(*NO) SPLFNAME(XXXXXXXXXX) SECURE(*YES)
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

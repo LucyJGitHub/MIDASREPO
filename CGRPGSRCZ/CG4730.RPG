@@ -1,0 +1,403 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Futures and options extract driver.')
+/*OVRF*: OVRDBF (TSCCYD) (TSCCY1)                                    :  **
+     H********************************************************************
+     H**                                                                **
+     H**  Midas - User Defined Correspondence                           **
+     H**                                                                **
+     H**  CG4730 -  - Futures and options extract driver                **
+     H**                                                                **
+     H**  Function:   This program identifies  the correspondence       **
+     H**               items to be produced and calls the extract       **
+     H**               program (CG4740) for each one. It prepares       **
+     H**               the environment for the extract  and takes       **
+     H**               care of audit processing.                        **
+     H**                                                                **
+     H**  Called By:  FFC0323 - Input cycle customer trading statement  **
+     H**              FFC0697 - Close of business                       **
+     H**                         customer trading statement             **
+     H**                                                                **
+      *  (c) Finastra International Limited 2001                      *
+     H**                                                                **
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01522             Date 20Mar95               *
+     H**                                                                **
+     H**----------------------------------------------------------------**
+     H**                                                                **
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     H**  S01522 - User Defined Correspondence                          **
+     H**                                                                **
+     H********************************************************************
+     H/EJECT
+     H********************************************************************
+     H**                                                                **
+     H**  Indicator usage                                               **
+     H**  ~~~~~~~~~~~~~~~                                               **
+     H**                                                                **
+     H**  90 -- Work indicator -- typically I/O error.                  **
+     H**  91 -- EOF on file TSCCY1.                                     **
+     H**                                                                **
+     H********************************************************************
+     H**                                                                **
+     H**  Subroutines list                                              **
+     H**  ~~~~~~~~~~~~~~~~                                              **
+     H**  SRALL  -- Process all records in file TSCCY1.                 **
+     H**  SRONE  -- Process selected records in file TSCCY1.            **
+     H**  SRPROC -- Execute the extract program (CG4740).               **
+     H**  SRAUDT -- Produce the audit report.                           **
+     H**  SRINIT -- Prepare and initialise.                             **
+     H**                                                                **
+     H**  *PSSR  -- Program error handling.                             **
+     H**  SRFILE -- File error handling.                                **
+     H**  SRERR  -- Database error handling.                            **
+     H**                                                                **
+     H********************************************************************
+     F/SPACE
+     F*===================================================================
+     FTSCCY1  UF  E           K        DISK         KINFSR SRFILE
+     F                                              KCOMIT
+     F* Settlement accounts for customer trading statements
+     F*===================================================================
+     E/SPACE
+     E*-------------------------------------------------------------------
+     E/COPY CGCPYSRC,SRERRE
+     E                    ##CPY   1   1 80               Copyright text.
+     E*-------------------------------------------------------------------
+     I/SPACE
+     I*-------------------------------------------------------------------
+     I/COPY CGCPYSRC,CGAUDTI
+     I*
+     I* Record format of PF/CGUDTAPD for use as a parameter to CGZAUDIT
+     I*-------------------------------------------------------------------
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I* Error-processing fields
+     I*-------------------------------------------------------------------
+     IP1CCYD    E DSTSCCYD
+     I*
+     I* Settlement account details
+     I*-------------------------------------------------------------------
+     IP3FMT     E DSCGUDTAPD
+     I*
+     I* UDC extracted data
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P0TBRN  3
+     C                     PARM           P0CMT   3
+     C                     PARM           P0UPDT  1
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     Z-ADD1         Q
+     C                     MOVEL'@Main@'  @STK,Q
+     C*
+     C* Initialise:
+     C                     EXSR SRINIT
+     C*
+     C* Select branch processing:
+     C*
+     C           P0TBRN    CASEQ'ALL'     SRALL
+     C           P0TBRN    CASEQ*BLANKS   SRALL
+     C                     CAS            SRONE
+     C                     ENDCS
+     C*
+     C* Produce the audit report:
+     C*
+     C                     EXSR SRAUDT
+     C*
+     C           EXMAIN    TAG                             * <<<=== EXMAIN
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRALL produces extracts for all branches.          **
+     C********************************************************************
+     C           SRALL     BEGSR                           * S R A L L   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRALL '  @STK,Q
+     C*
+     C           *LOVAL    SETLLTSCCY1
+     C*
+     C           *IN91     DOUEQ*ON
+     C                     READ TSCCY1                   91
+     C           *IN91     IFEQ *OFF
+     C                     EXSR SRPROC
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXALL     TAG                             * <<<=== EXALL
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRONE produces extracts for a given branch.        **
+     C********************************************************************
+     C           SRONE     BEGSR                           * S R O N E   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRONE '  @STK,Q
+     C*
+     C           P0TBRN    SETLLTSCCY1
+     C*
+     C           *IN91     DOUEQ*ON
+     C           P0TBRN    READETSCCY1                   91
+     C           *IN91     IFEQ *OFF
+     C                     EXSR SRPROC
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXONE     TAG                             * <<<=== EXONE
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRPROC handles a movement extract file record.     **
+     C********************************************************************
+     C           SRPROC    BEGSR                           * S R P R O C *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRPROC'  @STK,Q
+     C*
+     C* Call the extract program to process the current
+     C*  branch, customer and currency:
+     C*
+     C                     CALL 'CG4740'               90
+     C                     PARM           P1RTN   7
+     C                     PARM           P1CCYD
+     C                     PARM           P1PTYP 10
+     C                     PARM           P1STYP 10
+     C                     PARM           P0CMT
+     C                     PARM           P0UPDT  1
+     C                     PARM           P1SUPP  1
+     C*
+     C* Handle an error in CG4740:
+     C*
+     C           *IN90     IFEQ *ON
+     C           P1RTN     ORNE *BLANKS
+     C                     MOVEL'CG4740  'W0FILE           ***************
+     C                     Z-ADD1         W0ERNB           **  Error 1. **
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C* Count all items requested.
+     C* If the item was not suppressed, count it:
+     C*
+     C                     ADD  1         W0CNT1
+     C           P1SUPP    IFNE 'Y'
+     C                     ADD  1         W0CNT2
+     C                     ENDIF
+     C*
+     C           EXPROC    TAG                             * <<<=== EXPROC
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRAUDT prints the audit report.                    **
+     C********************************************************************
+     C           SRAUDT    BEGSR                           * S R A U D T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+     C*
+     C* Output the count of records read:
+     C*
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4730  'I#REF
+     C                     MOVE 'CGD1698' I#TITL
+     C                     MOVE 'CGD1699' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'P2ACT
+     C                     MOVEL'TSCCY1  'I#SUB     P
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADDW0CNT1    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           P2RTN   7
+     C                     PARM           P2ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           P2RSQN  5
+     C*
+     C* Skip a line:
+     C*
+     C                     MOVE '*SKIP   'P2ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           P2RTN
+     C                     PARM           P2ACT
+     C                     PARM           I#DTA
+     C                     PARM           P2RSQN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Output the count of records processed:
+     C*
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4730  'I#REF
+     C                     MOVE 'CGD1698' I#TITL
+     C                     MOVE 'CGD1699' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'P2ACT
+     C                     MOVEL'TSCCY1  'I#SUB     P
+     C                     MOVEL'CGD1816' I#TEXT
+     C                     Z-ADDW0CNT2    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           P2RTN
+     C                     PARM           P2ACT
+     C                     PARM           I#DTA
+     C                     PARM           P2RSQN
+     C*
+     C* Skip a line:
+     C*
+     C                     MOVE '*SKIP   'P2ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           P2RTN
+     C                     PARM           P2ACT
+     C                     PARM           I#DTA
+     C                     PARM           P2RSQN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Produce the audit report:
+     C*
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    P3RTN   7
+     C                     PARM '*AUDIT  'P3ACT   8
+     C                     PARM *BLANKS   P3PATH256
+     C                     PARM           P3FMT
+     C                     PARM 'CGD1698' P3TITL  7
+     C                     PARM 'CGD1699' P3ULIN  7
+     C                     PARM           P0CMT
+     C*
+     C* Close the audit print file:
+     C*
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4730  'I#REF
+     C                     MOVE 'CGD1698' I#TITL
+     C                     MOVE 'CGD1699' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   P2RTN
+     C                     PARM '*CLOSE  'P2ACT
+     C                     PARM           I#DTA
+     C                     PARM           P2RSQN
+     C*
+     C           EXAUDT    TAG                             * <<<=== EXAUDT
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRINIT handles initialisation requirements.        **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C* Clear the return code:
+     C*
+     C                     MOVE *BLANKS   P0RTN
+     C*
+     C* Initialise the count fields:
+     C*
+     C                     Z-ADD*ZERO     W0CNT1  50
+     C                     Z-ADD*ZERO     W0CNT2  50
+     C*
+     C* Move the copyright statement to *NULL:
+     C*
+     C                     MOVE ##CPY,1   W0NULL 80
+     C*
+     C* Set the print item type and subtype:
+     C*
+     C                     MOVEL'FF_STMT' P1PTYP
+     C                     MOVE 'S  '     P1PTYP
+     C                     MOVEL'TRADING' P1STYP    P
+     C*
+     C* File TSCCY1 is shared, and is opened for update by CG4740.
+     C* To avoid conflicts, this program must also open it for update,
+     C*  and this statement is required by the compiler:
+     C*
+     C  N90 90             UPDATTSCCYDF
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C/COPY CGCPYSRC,SRERRPSSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C/COPY CGCPYSRC,SRERRC
+     C********************************************************************
+** ##CPY -- Copyright statement
+(c) Finastra International Limited 2001

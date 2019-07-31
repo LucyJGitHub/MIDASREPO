@@ -1,0 +1,93 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Compare two users access rights')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000123 - Compare two users' access rights, summary       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CBF005  *CREATE    Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CBF005 - BF Infrastructure: Single Security User Maintenance*/
+/*                Profile                                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&USER01 &USER02 &MBROPT &DTL)
+ 
+             DCL        VAR(&USER01) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER02) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBROPT) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DTL) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2011')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/** Clear file if member option *REPLACE specified. */
+             IF         COND(&MBROPT *EQ '*REPLACE') THEN(DO)
+                IF         COND(&DTL *EQ '*SUM') THEN(DO)
+                   CLRPFM     FILE(SMBFPCPD)
+                ENDDO
+                IF         COND(&DTL *EQ '*DTL') THEN(DO)
+                   CLRPFM     FILE(SMBFDTPD)
+                ENDDO
+             ENDDO
+ 
+/** Copy the records for the 2 users to temporary copies ... */
+             DLTF       FILE(SMBFAC01)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(SMBFAC02)
+             MONMSG     MSGID(CPF0000)
+             CPYF       FROMFILE(SMBFACPD) TOFILE(QTEMP/SMBFAC01) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCCHAR(ACUSER 1 *EQ &USER01)
+             CPYF       FROMFILE(SMBFACPD) TOFILE(QTEMP/SMBFAC02) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCCHAR(ACUSER 1 *EQ &USER02)
+ 
+/** Check for matches and non-matches. */
+             IF         COND(&DTL *EQ '*SUM') THEN(DO)
+                CALL       PGM(SM000034) PARM(&USER01 &USER02)
+             ENDDO
+             IF         COND(&DTL *EQ '*DTL') THEN(DO)
+                CALL       PGM(SM000039) PARM(&USER01 &USER02)
+             ENDDO
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+             RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                          MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+             RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                          MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

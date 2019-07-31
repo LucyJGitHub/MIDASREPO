@@ -1,0 +1,211 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas GL Account Risk Weighted Asset Code CL')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - General Ledger ILE CL Module                     */
+/*                                                                   */
+/*       GLC001240 - Account Risk Weighted Asset Code CL             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG5456            Date 03Feb05              */
+/*                      CSC022             Date 24Feb04              */
+/*                      CGL029             Date 01Sep03              */
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*                      CGL018  *CREATE    Date 25Sep02              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       BUG5456 - Fixes for Commitment Control Changes (CSC022)     */
+/*       CSC022 - Commitment Control Changes for MidasPlus           */
+/*       CGL029 - Increase Account Code to 10 digits                 */
+/*       CGL018 - Risk Weighted Assets                               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCD &ACCD &OPTN)
+ 
+              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+/*  Program Input Parameters                                         */
+ 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+/**********  DCL        VAR(&ACCD) TYPE(*CHAR) LEN(18) */                                 /*CGL029*/
+             DCL        VAR(&ACCD) TYPE(*CHAR) LEN(24)                                    /*CGL029*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(1)
+ 
+ 
+/*  Parameters of Account Details Access object AOACCTR0             */
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PRETL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PCNUM) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&PCUCD) TYPE(*CHAR) LEN(3)
+/**********  DCL        VAR(&PACCD) TYPE(*CHAR) LEN(4) */                                 /*CGL029*/
+             DCL        VAR(&PACCD) TYPE(*CHAR) LEN(10)                                   /*CGL029*/
+             DCL        VAR(&PACSQ) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PBRCA) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&PAOFMT) TYPE(*CHAR) LEN(800)
+             DCL        VAR(&CSC022) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSC022*/
+             DCL        VAR(&WCMTSK) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSC022*/
+             DCL        VAR(&WSCCMTJOB) TYPE(*CHAR) LEN(256)                              /*CSC022*/
+             DCL        VAR(&WCMTNUM) TYPE(*DEC) LEN(3 0)                                 /*CSC022*/
+             DCL        VAR(&WCMTJOB) TYPE(*CHAR) LEN(100)                                /*CSC022*/
+             DCL        VAR(&PRTN) TYPE(*CHAR) LEN(7)                                     /*CSC022*/
+             DCL        VAR(&POPT) TYPE(*CHAR) LEN(7) VALUE('*VERIFY')                    /*CSC022*/
+             DCL        VAR(&PSAR) TYPE(*CHAR) LEN(6) VALUE('CSC022')                     /*CSC022*/
+             DCL        VAR(&PFMT) TYPE(*CHAR) LEN(200)                                   /*CSC022*/
+             DCL        VAR(&WJOB) TYPE(*CHAR) LEN(10)                                    /*CSC022*/
+/************DCL        VAR(&WSTR) TYPE(*DEC) LEN(2 0) VALUE(1) */                /*CSC022 BUG5456*/
+             DCL        VAR(&WSTR) TYPE(*DEC) LEN(3 0) VALUE(1)                          /*BUG5456*/
+             DCL        VAR(&WJOBCTR) TYPE(*DEC) LEN(3 0) VALUE(1)                       /*BUG5456*/
+ 
+/* Declare variable CGL018 - flag for switchable feature             */
+ 
+             DCL        VAR(&CGL018) TYPE(*LGL) VALUE('0')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2002')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+/* */                                                                                     /*CSC022*/
+/* Retrieve Commitment Control Jobs data area */                                          /*CSC022*/
+/* */                                                                                     /*CSC022*/
+             CALL       PGM(AOSARDR0) PARM(&PRTN &POPT &PSAR &PFMT)                       /*CSC022*/
+                                                                                          /*CSC022*/
+/************IF         COND(&PRTN *EQ *BLANKS) THEN(DO) */                       /*CSC022 BUG5456*/
+             IF         COND(&PRTN *EQ '       ') THEN(DO)                               /*BUG5456*/
+             CHGVAR     VAR(&CSC022) VALUE('Y')                                           /*CSC022*/
+             CHGVAR     VAR(&WCMTSK) VALUE('N')                                           /*CSC022*/
+                                                                                          /*CSC022*/
+             RTVDTAARA  DTAARA(SCCMTJOB) RTNVAR(&WSCCMTJOB)                               /*CSC022*/
+             CHGVAR     VAR(&WCMTNUM) VALUE(%SST(&WSCCMTJOB 1 3))                         /*CSC022*/
+             CHGVAR     VAR(&WCMTJOB) VALUE(%SST(&WSCCMTJOB 4 103))                       /*CSC022*/
+                                                                                          /*CSC022*/
+             IF         COND(&WCMTNUM *GT 0) THEN(DO)                                     /*CSC022*/
+             RTVJOBA    JOB(&WJOB)                                                        /*CSC022*/
+                                                                                          /*CSC022*/
+ SCAN:       IF         COND(&WJOB *EQ %SST(&WCMTJOB &WSTR 10)) +
+                          THEN(CHGVAR VAR(&WCMTSK) VALUE('Y'))                            /*CSC022*/
+                                                                                          /*CSC022*/
+             ELSE       CMD(DO)                                                           /*CSC022*/
+             IF         COND(&WJOBCTR *LT &WCMTNUM) THEN(DO)                             /*BUG5456*/
+             CHGVAR     VAR(&WJOBCTR) VALUE(&WJOBCTR + 1)                                /*BUG5456*/
+             CHGVAR     VAR(&WSTR) VALUE(&WSTR + 10)                                      /*CSC022*/
+             GOTO       CMDLBL(SCAN)                                                     /*BUG5456*/
+/************IF         COND(&WSTR *LT 100) THEN(GOTO CMDLBL(SCAN)) */            /*CSC022 BUG5456*/
+             ENDDO                                                                       /*BUG5456*/
+             ENDDO                                                                        /*CSC022*/
+                                                                                          /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             ELSE       CMD(IF COND(&PRTN *NE '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR)))                                                 /*CSC022*/
+                                                                                          /*CSC022*/
+ 
+/* Check for switchable featore CGL018                               */
+ 
+             CALL       PGM(AOSARDR0) +
+                        PARM(&RTCD +
+                             '*VERIFY' +
+                             'CGL018' +
+                             &PAOFMT)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                IF         COND((&CSC022 *EQ 'N') *OR ((&CSC022 *EQ +
+                          'Y') *AND (&WCMTSK *EQ 'N'))) THEN(DO)                          /*CSC022*/
+                ROLLBACK
+                ENDDO                                                                     /*CSC022*/
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Return Code Check */
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CGL018) VALUE('1'))
+             IF COND(&RTCD *NE '       ' *AND *RTCD +
+                          *NE '*NRF   ') THEN(DO)
+             SNDPGMMSG  MSG('AOAARDR0 - Program error') TOMSGQ(MOPERQ)
+             CHGJOB     SWS(XXXXXX11)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             IF         COND(&CGL018 *EQ '0') THEN( +
+                GOTO CMDLBL(ENDPGM))
+ 
+/* Prepare parameters for Account Details Access object AOACCTR0    */
+             CHGVAR     VAR(&PBRCA) VALUE(%SUBSTRING(&ACCD 1 3))
+             CHGVAR     VAR(&PCNUM) VALUE(%SUBSTRING(&ACCD 4 6))
+             CHGVAR     VAR(&PCUCD) VALUE(%SUBSTRING(&ACCD 10 3))
+/**********  CHGVAR     VAR(&PACCD) VALUE(%SUBSTRING(&ACCD 13 4))                         /*CGL029*/
+/**********  CHGVAR     VAR(&PACSQ) VALUE(%SUBSTRING(&ACCD 17 2))                         /*CGL029*/
+             CHGVAR     VAR(&PACCD) VALUE(%SUBSTRING(&ACCD 13 10))                        /*CGL029*/
+             CHGVAR     VAR(&PACSQ) VALUE(%SUBSTRING(&ACCD 23 2))                         /*CGL029*/
+             CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(AOACCTR0) PARM(&PRTCD '*KEY' &PRETL +
+                          &PCNUM &PCUCD &PACCD &PACSQ &PBRCA &PAOFMT)
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&PRETL) VALUE(%SUBSTRING(&PAOFMT 190 +
+                          10)))
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                IF         COND((&CSC022 *EQ 'N') *OR ((&CSC022 *EQ +
+                          'Y') *AND (&WCMTSK *EQ 'N'))) THEN(DO)                          /*CSC022*/
+                ROLLBACK
+                ENDDO                                                                     /*CSC022*/
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CALLPRC    PRC(GL001240) PARM(&PRTCD &OPTN &PBRCA +
+                          &PCNUM &PCUCD &PACCD &PACSQ &PRETL)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC001240 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+ 
+/* (Set up messages for Midas information screen and call */
+/* appropriate module program to display screen)          */
+ 
+             ENDDO
+ 
+ ENDPGM:     ENDPGM

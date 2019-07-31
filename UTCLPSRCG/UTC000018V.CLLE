@@ -1,0 +1,118 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Validity checker for SNDSPLF')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities module                                    */
+/*                                                                   */
+/*       UPC000018V - Validity checker for SNDSPLF                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP039  *CREATE    Date 02Dec10              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP039 - New utility.                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE &TOINTNET &JOB &SPLNBR)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOINTNET) TYPE(*CHAR) LEN(642)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&SPLNBR) TYPE(*CHAR) LEN(6)
+ 
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNUMBER) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&RJOBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RJOBUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RJOBNUMBER) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CURUSR) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Retrieve current job attributes. */
+             RTVJOBA    JOB(&RJOBNAME) USER(&RJOBUSER) +
+                          NBR(&RJOBNUMBER) CURUSER(&CURUSR)
+ 
+/* Check that the user can send e-mails. */
+             DSPDIRE    USER(&CURUSR) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/UTC000018F)
+             MONMSG     MSGID(CPF9006) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000User is not enrolled in +
+                             system directory and therefore can not +
+                             send e-mails') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Check that requested spool file exists; first get job details. */
+             CHGVAR     VAR(&JOBNAME) VALUE(%SST(&JOB 1 10))
+             CHGVAR     VAR(&JOBUSER) VALUE(%SST(&JOB 11 10))
+             CHGVAR     VAR(&JOBNUMBER) VALUE(%SST(&JOB 21 6))
+ 
+             IF         COND(&JOBNAME *EQ '*') THEN(DO)
+                CHGVAR     VAR(&JOBNAME) VALUE(&RJOBNAME)
+                CHGVAR     VAR(&JOBUSER) VALUE(&RJOBUSER)
+                CHGVAR     VAR(&JOBNUMBER) VALUE(&RJOBNUMBER)
+             ENDDO
+ 
+/* Use CPYSPLF to validate that requested spool file exists.  This copy, if */
+/*  successful, will be used by the CPP.                                    */
+             CRTPF      FILE(QTEMP/UTC000018D) RCDLEN(198)
+             MONMSG     MSGID(CPF0000)
+             CPYSPLF    FILE(&FILE) TOFILE(QTEMP/UTC000018D) +
+                          JOB(&JOBNUMBER/&JOBUSER/&JOBNAME) +
+                          SPLNBR(&SPLNBR)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Unable to copy spooled file.  +
+                             Check job log for details.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+/* If validity error then send message back to command . . . */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+/* . . .  else send generic message. */
+             ELSE       CMD(DO)
+                IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                   RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   IF         COND(&MSGID *NE ' ') THEN(DO)
+                      SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                   MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                      GOTO       CMDLBL(RCVMSG)
+                   ENDDO
+                   RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+                ENDDO
+             ENDDO
+ENDPGM:
+             ENDPGM

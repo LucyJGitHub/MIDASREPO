@@ -1,0 +1,94 @@
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZAPNUM - CALCULATE AP NUMERATOR                                       *
+     C*                                                                        *
+     C*  PURPOSE : TO MULTIPLY A NOMINAL POSITION BY THE PRICE OF THE          *
+     C*  POSITION TO GIVE A VALUE OF THE POSITION WITH THE CORRECT NUMBER      *
+     C*  OF DECIMAL PLACES FOR THE NOMINAL CURRENCY                            *
+     C*                                                                        *
+     C*  INPUT  FIELDS                                                         *
+     C********ZNOML**11*0*****NOMINAL**********************************   S01486
+     C*       ZNOML  15 0     NOMINAL                                     S01486
+     C*       ZAVPR  15 8     AVERAGE PRICE                                    *
+     C*       ZNMDP   1 0     NOMINAL DECIMAL PLACES (0-4)                     *
+     C*       ZNMCD   1 0     NOMINAL CURRENCY DECIMAL PLACES (0-3)            *
+     C*       ZPRCB   1 A     PRICE BASIS (P/U)                                *
+     C*                                                                        *
+     C*  OUTPUT  FIELDS                                                        *
+     C*       ZVALU  15 0     VALUE                                            *
+     C*                                                                        *
+     C*  ALSO REQUIRED                                                         *
+     C*       POWER8 ARRAY OF MULTIPLYING FACTORS FOR NOMINAL DECIMAL PLACES   *
+     C*                                                                        *
+     C*  WORK FIELDS:                                                          *
+     C*       ZVAL0  15 0 - AVERAGE PRICE WITH 0 DECIMAL PLACES                *
+     C*       ZVAL1  15 1 - --------------- '' ----------------                *
+     C*       ZVAL2  15 2 - --------------- '' ----------------                *
+     C*       ZVAL3  15 3 - --------------- '' ----------------                *
+     C*       ZI      1 0 - POWER ARRAY                                        *
+     C*                                                                        *
+     C*  CALLED FROM:                                                          *
+     C*                                                                        *
+     C*************************************************************************
+     C*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  LAST AMEND NO. S01486             DATE 13JUL94                  *
+     C*                                                                  *
+     C*------------------------------------------------------------------*
+     C*                                                                  *
+     C*  S01486 - Created for Private Banking (Portfolio Management)     *
+     C*                                                                  *
+     C********************************************************************
+     C           ZAPNUM    BEGSR                           *** ZAPNUM ***
+     C*
+     C** DEFINE ALL FIELDS
+     C***********          Z-ADDZNOML     ZNOML  110                      S01486
+     C                     Z-ADDZNOML     ZNOML  150                      S01486
+     C                     Z-ADDZAVPR     ZAVPR  158
+     C                     Z-ADDZNMDP     ZNMDP   10
+     C                     Z-ADDZNMCD     ZNMCD   10
+     C                     MOVE ZPRCB     ZPRCB   1
+     C                     Z-ADDZVALU     ZVALU  150
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 0
+     C           ZNMCD     IFEQ 0
+     C           ZNOML     MULT ZAVPR     ZVAL0  150H
+     C                     MOVE ZVAL0     ZVALU
+     C                     END
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 1
+     C           ZNMCD     IFEQ 1
+     C           ZNOML     MULT ZAVPR     ZVAL1  151H
+     C                     MOVE ZVAL1     ZVALU
+     C                     END
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 2
+     C           ZNMCD     IFEQ 2
+     C           ZNOML     MULT ZAVPR     ZVAL2  152H
+     C                     MOVE ZVAL2     ZVALU
+     C                     END
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 3
+     C           ZNMCD     IFEQ 3
+     C           ZNOML     MULT ZAVPR     ZVAL3  153H
+     C                     MOVE ZVAL3     ZVALU
+     C                     END
+     C*
+     C** SET INDEX ZI EQUAL TO 5 -. NOMINAL DECIMAL PLACES )
+     C           5         SUB  ZNMDP     ZI      10
+     C*
+     C** MULTIPLY ZVALU BY  POWER8,ZI TO GET AMOUNT WITH NOMINAL DECIMAL PLACES
+     C           ZVALU     MULT POWER8,ZI ZVALU
+     C*
+     C** PRICE BASIS IF = PERCENTAGE
+     C           ZPRCB     IFEQ 'P'
+     C           ZVALU     DIV  100       ZVALU     H
+     C                     END
+     C*
+     C                     ENDSR
+     C*************************************************************************

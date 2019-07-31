@@ -1,0 +1,102 @@
+/******************************************************************************/
+/*STD    CLPBASEBND                                                           */
+/*EXI    TEXT('Midas SC End Background Jobs')                        */
+/******************************************************************************/
+/*                                                                            */
+/*       Midas - General Ledger Module                                        */
+/*                                                                            */
+/*       SCC007012 - Background Job Monitor                                   */
+/*                                                                            */
+/*       (c) Finastra International Limited 2001                              */
+/*                                                                            */
+/*       Last Amend No. MD038360           Date 09Mar18                       */
+/*       Prev Amend No. MD022132 *CREATE   Date 09Mar18                       */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/*       MD038360 - Component failed: SCC007012                               */
+/*                - Applied for MD-35969.                                     */
+/*       MD022132 - Triggers don't pick up Rollback deletes of ABC files.     */
+/*                - Applied for MD-35969.                                     */
+/*                                                                            */
+/******************************************************************************/
+             PGM
+
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(10)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2014')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Shutdown ABC updater */
+
+             ALCOBJ     OBJ((GLABJSTD *FILE *EXCLRD)) WAIT(0)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
+             SNDJRNE    JRN(ICJRN) TYPE('AB') ENTDTA('END') +
+                          FILE(HELDIHB) FORCE(*YES)
+             GOTO       CMDLBL(ENDBKJOB)
+             ENDDO
+
+             DLCOBJ     OBJ((GLABJSTD *FILE *SHRRD))
+             MONMSG     MSGID(CPF0000)
+ ENDBKJOB:
+
+ /* Shutdown Background job monitor */
+
+             DLCOBJ     OBJ((SCBKJOBMON *DTAQ   *EXCLRD))
+             ALCOBJ     OBJ((SCBKJOBMON *DTAQ *EXCLRD)) WAIT(0)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
+
+             CHGVAR     VAR(&SNDDTAQ) VALUE('SCBKJOBMON')
+
+             CHGVAR     VAR(&DTAQLIBL) VALUE('*LIBL     ')
+             CHGVAR     VAR(&MSGDATA) VALUE('END')
+
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+             GOTO       CMDLBL(ENDMON)
+             ENDDO
+
+             DLCOBJ     OBJ((SCBKJOBMON *DTAQ *SHRRD))
+             MONMSG     MSGID(CPF0000)
+ ENDMON:
+
+ /* Check all jobs have ended */
+                                                                                        /*MD038360*/
+                                                                                        /*MD038360*/
+             ALCOBJ     OBJ((GLABJSTD *FILE *EXCLRD)) WAIT(0)                           /*MD038360*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)                         /*MD038360*/
+             SCKOBJLCK  OBJ(GLABJSTD) JNAM(GO_ONL_ABC) JUSR(*ALL) +
+                          LOCKST(*ALL) FIRSTC(Y)                                        /*MD038360*/
+             ENDDO                                                                      /*MD038360*/
+                                                                                        /*MD038360*/
+
+             ALCOBJ     OBJ((GLABJSTD *FILE *EXCLRD)) WAIT(300)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             ALCOBJ     OBJ((SCBKJOBMON *DTAQ *EXCLRD)) WAIT(300)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+/* Abnormal termination */
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                        SCC007012 ended abnormally - see job log') +
+                        TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ END:
+             ENDPGM

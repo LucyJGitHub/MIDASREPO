@@ -1,0 +1,1420 @@
+0001 H        1                                                           S01194
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Extract yr to date and projected data')       *
+0001 H***********                                                         S01194
+0002 F********************************************************************LE0920
+0004 F*                                                                  *LE0920
+     F*  Midas - Customer Lending Module                              LE0920
+0004 F*                                                                  *LE0920
+0005 F*       LE0920 - EXTRACT YEAR TO DATE AND PROJECTED DATA           *LE0920
+0006 F*                                                                  *LE0920
+      *  (c) Finastra International Limited 2001                      *
+0008 F*                                                                  *LE0920
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE154             Date 06Aug12               *
+      *                 CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG22936           Date 09Mar09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 218992             Date 10Jul03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163486             Date 14Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 105140             Date 18Nov96               *
+     F*                      S01220             DATE  15MAR91            *
+     F*                      S01270             DATE 22AUG90             *LE0920
+     F*                      S01194             DATE 17JAN90             *LE0920
+0009 F*                      S01117             DATE 08/11/89            *LE0920
+0009 F*                      E86097             DATE 22/03/88            *LE0920
+0009 F*                      E47241             DATE 22/03/88            *LE0920
+0010 F*                                                                  *LE0920
+0010 F*------------------------------------------------------------------*LE0920
+0010 F*                                                                  *LE0920
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  BUG22936-Interest Income YTD is incorrect. Exclude loans     *
+      *           with repayment type 3                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  218992 - Output extended settlements onto LVENTEL to ensure  *
+      *           details from settlement allocation are used on      *
+      *           LEHOSTPD                                            *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*       163486  -  Recompile due to changes in LVENTEL.            *
+     F*       105140  -  Recompile over changed LVENTZZ.                 *
+     F*                  Field NORE attribute changed!                   *
+     F*       S01220  -  AMENDED FOR STRATEGIC RISK MANAGEMENT           *S01220
+     F*                  RELEASE 10 TO ALLOW THE INPUT OF A BOOK         *S01220
+     F*                  CODE AGAINST A LOAN.                            *S01220
+0010 F*       S01270  -  CUSTOMER LENDING CHANGES                        *S01194
+0010 F*       S01194  -  STANDING DATA CHANGES                           *S01194
+0010 F*       S01117  -  MULTIBRANCHING                                  *LE0920
+0010 F*       E86097  -  AMENDED TO USE YEAR END DATE/LAST YEAR END      *E86097
+0010 F*                  DATE AND NOT '31 DEC'                           *E86097
+0010 F*       E47241  -  FILE OUT OF BALANCE RISES DUE TO CHANGES MADE   *E47241
+0010 F*                  IN LE0450 BY PREVIOUS FIX E47212 WHENEVER LOAN  *E47241
+0010 F*                  HAS MATURED WITH OUTSTANDING PARTS SOLD.        *E47241
+0010 F*                                                                  *LE0920
+0011 F********************************************************************LE0920
+0012 F*                                                                  *LE0920
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0012 F*                                                                  *LE0920
+0013 F*CLOAN***IP*AF***  400  7AI     2 DISK                       LE0920 S01270
+0013 F*CLOAN***IP*AF*****434  7AI     2 DISK                       S01270 S01220
+0013 F*CLOAN***IP*AF     436  7AI     2 DISK                       S01220 CLE011
+0013 F***CLOAN** IP AF    1310  7AI     2 DISK                                         CLE011 CGL029
+     F*CLOAN***IP*AF****1632  7AI     2 DISK                                           CGL029 CLE042
+     F***CLOAN** IP AF    1773  7AI     2 DISK                                         CLE042 CER020
+     F***CLOAN** IP AF    1782  7AI     2 DISK                                         CER020 CLE134
+     FCLOAN   IP AF    1874  7AI     2 DISK                                                   CLE134
+0014 F***SVNTS***IS*AF     400  9AI     2 DISK                            218992
+     F***SVNTS** IS AF    1070  9AI     2 DISK                                         218992 CGL029
+     F*SVNTS***IS*AF****1124  9AI     2 DISK                                           CGL029 CLE042
+     FSVNTS   IS AF    1128  9AI     2 DISK                                                   CLE042
+0015 F***LEYTD** IS AF      80  6AI     8 DISK                                         LE0920 CER020
+     FLEYTD   IS AF      90  6AI     8 DISK                                                   CER020
+0016 F*TABLE***IF**F      96 12AI     2 DISK                              S01194
+0017 F*TABLED**IF**F      96 12AI     2 DISK                              S01194
+0018 FTAXEXHH O   F      64            DISK                               LE0920
+0018 FTAXEXWT O   F      64            DISK                               LE0920
+0018 FTAXEXZX O   F      64            DISK                               LE0920
+     FSDCURRPDIF  E                    DISK                               S01194
+0019 F*E0920P1O** F     132            PRINTER                            S01117
+0019 FLE0920AUO   F     132            PRINTER                            S01117
+0020 F*                                                                  *LE0920
+0021 F* ID F  C  H  L    FUNCTION OF INDICATORS                           LE0920
+0022 F* 01            CUSTOMER LENDING LOANS FILE - HEADER                LE0920
+0023 F* 02            LOANS FILE - DETAILS                                LE0920
+0024 F* 03            LOANS FILE - TRAILER                                LE0920
+0025 F* 04            SORTED EVENTS FILE - HEADER                         LE0920
+0026 F* 05            SORTED EVENTS - DETAIL                              LE0920
+0027 F* 06            SORTED EVENTS - TRAILER                             LE0920
+0028 F* 07            UPDATED CUSTOMER LOANS - HEADER                     LE0920
+0029 F* 08            UPDATED LOANS - DETAILS                             LE0920
+0030 F* 09            UPDATED LOANS - TRAILER                             LE0920
+0031 F* 10            LOANS FILE - DETAIL 1                               LE0920
+0032 F**11**********  TABLE FILE - ICD.1 RECORD                           S01194
+0033 F**12**********  TABLE FILE - ICD.2 RECORD                           S01194
+0034 F**13**********  TABLE FILE - CURRENCIES RECORD                      S01194
+0035 F*     19        WITHOLDING TAX TYPE = G                             LE0920
+0036 F*    31         WITHOLDING TAX TYPE = N                             LE0920
+0037 F*    40         FIRST CYCLE                                         LE0920
+0038 F*    41         WITHOLDING TAX TYPE IS BLANK                        LE0920
+0039 F*    42         INTEREST PAYMENT EVENT                              LE0920
+0040 F*    43         EVENT DATE IS GREATER THAN LAST DAY IN YEAR         LE0920
+0041 F*    44         WITHOLDING TAX = 0                                  LE0920
+0042 F*    45         MATURITY DATE = 0                                   LE0920
+0043 F*    46         CURRENT PRINCIPAL = 0                               LE0920
+0044 F*    47         WORK INDICATOR                                      LE0920
+0045 F*    48         EVENT AMOUNT = 0                                    LE0920
+0046 F*    50         OUTPUT TO TAXEX                                     LE0920
+0047 F*    61         S/CLOAN FILE OUT OF BALANCE                         LE0920
+0048 F*    62         S/EVENT FILE OUT OF BALLANCE                        LE0920
+0049 F*    63         S/LEYTD FILE OUT OF BALANCE                         LE0920
+0050 F*    67         DATABASE ERROR ON CHAINING                          LE0920
+0051 F*    70         CURRENCY = LOCAL CURRENCY                           LE0920
+0052 F*    78         DIVIDE BY SPOT RATE                                 LE0920
+0053 F*    79         MULTIPLY BY SPOT RATE                               LE0920
+0054 F*        U7+U8  DATABASE ERROR                                      LE0920
+0055 F*        U8     FILE CONTROLS OUT OF BALANCE                        LE0920
+0056 F*                                                                   LE0920
+0057 F********************************************************************LE0920
+0058 E                    POWR    1   7  7 3             POWERS OF TEN    LE0920
+0059 E***********         ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAYE86097
+0060 E***********         ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAYE86097
+0062 E                    CURR      150  3               CURRENCIES       LE0920
+0063 E                    CDEP      150  1 0             CURRENCY DEC.PL  LE0920
+0064 E                    CSOT      150 13 8             CURRENCY SPOT RT.LE0920
+     E                    CPY@    1   1 80
+0065 E**********          MTDV      150  1 0             CURRENCY M/D IND S01194
+0065 E                    MTDV      150  1               CURRENCY M/D IND S01194
+0066 I*                                                                   LE0920
+0067 I*                                                                   LE0920
+0068 I**    CUST.LENDING LOANS FILE - HEADER                              LE0920
+0069 I*                                                                   LE0920
+0070 ICLOAN   NS  01   1 CH                                               LE0920
+0071 I                                        1   1 RECI                  LE0920
+0072 I**********                              2   70LNRF                               LE0920 CLE148
+     I                                        2   7 LNRF                                      CLE148
+0073 I                                        8   8 RCDT                  LE0920
+0074 I*                                                                   LE0920
+0075 I**     DETAIL RECORDS                                               LE0920
+0076 I*                                                                   LE0920
+0077 I        NS  02   1 CD   8 CA                                        LE0920
+     I       OR        1 CM   8 CA                                        E47241
+0078 I                                        1   1 RECI                  LE0920
+0079 I**********                              2   70LNRF    M2                         LE0920 CLE148
+     I                                        2   7 LNRF    M2                                CLE148
+0080 I                                        8   8 RCDT                  LE0920
+0081 I                                        9   90MRIN    M1            LE0920
+0082 I                                       10  110PTYP                  LE0920
+0083 I**********                             12  170CNUM                               LE0920 CSD027
+0083 I                                       12  17 CNUM                                      CSD027
+0084 I**                                     18  200BRCD                  S01117
+0084 I                                       18  20 BRCA                  S01117
+0085 I                                       21  22 LTYP                  LE0920
+0086 I                                       23  24 SUTP                  LE0920
+0087 I                                    P  25  270DDAT                  LE0920
+0088 I                                    P  28  300VDAT                  LE0920
+0089 I                                    P  31  330MDAT                  LE0920
+0090 I                                       34  350LASQ                  LE0920
+0091 I**********                             36  410FCUS                               LE0920 CSD027
+0091 I                                       36  41 FCUS                                      CSD027
+0092 I                                       42  440FTYP                  LE0920
+0093 I                                       45  460FSEQ                  LE0920
+0094 I                                       47  49 CCY                   LE0920
+0095 I                                    P  50  560CPAM                  LE0920
+0096 I                                       57  57 INTC                  LE0920
+0097 I                                    P  58  637INTR                  LE0920
+0098 I                                       64  650BRTT                  LE0920
+0099 I                                    P  66  717BRTE                  LE0920
+0100 I                                    P  72  777RTSP                  LE0920
+0101 I                                    P  78  815MARG                  LE0920
+0102 I                                       82  82 SPIN                  LE0920
+0103 I                                       83  83 CHIN                  LE0920
+0104 I                                    P  84  897WTRT                  LE0920
+0105 I                                       90  90 WTIN                  LE0920
+0106 I                                       91  910REPT                  LE0920
+0107 I                                    P  92  980RAMT                  LE0920
+0108 I                                    P  99 1010NRPD                  LE0920
+0109 I                                      102 102 RFRQ                  LE0920
+0110 I                                      103 1040RDYN                  LE0920
+0111 I                                      105 107 FCCY                  LE0920
+0112 I                                      108 1100LIND                  LE0920
+0113 I                                      111 112 CRSK                  LE0920
+0114 I                                      113 114 ACOF                  LE0920
+0115 I                                      115 115 NACD                  LE0920
+0116 I                                      116 116 RELI                  LE0920
+0117 I                                      117 117 AUTO                  LE0920
+0118 I                                    P 118 1240PSAM                  LE0920
+0119 I                                    P 125 1318BCXR                  LE0920
+0120 I                                    P 132 1388FCXR                  LE0920
+0121 I                                      139 1400SDST                  LE0920
+0122 I**********                            141 152 OSDA                               LE0920 CGL029
+     I                                      141 152 OSDAQQ                                    CGL029
+0123 I                                      153 162 TSTN                  LE0920
+0124 I                                      163 1640MDST                  LE0920
+0125 I**********                            165 176 OMDA                               LE0920 CGL029
+     I                                      165 176 OMDAQQ                                    CGL029
+0126 I                                      177 186 TMAN                  LE0920
+0127 I                                      187 196 FACO                  LE0920
+0128 I                                    P 197 1990RLDT                  LE0920
+0129 I                                    P 200 2020NROD                  LE0920
+0130 I                                      203 203 RLFQ                  LE0920
+0131 I                                      204 2050RLDY                  LE0920
+0132 I                                      207 2080NBRA                  LE0920
+0133 I                                    P 209 2147NRTS                  LE0920
+0134 I                                      215 215 NSIN                  LE0920
+0135 I                                      216 2160NCAC                  LE0920
+0136 I                                    P 217 2230AWTP                  LE0920
+0137 I                                    P 224 2300WTRD                  LE0920
+0138 I                                    P 231 2370WTWD                  LE0920
+0139 I                                    P 238 2440IWOD                  LE0920
+0140 I                                    P 245 2510PWOD                  LE0920
+0141 I                                      252 252 BMDI                  LE0920
+0142 I                                      253 253 FMDI                  LE0920
+0143 I                                    P 254 2600PDIN                  LE0920
+0144 I                                      287 287 BTIN                  LE0920
+0145 I                                      288 2890BLDY                  LE0920
+0146 I***********                           290 2950OLNO            LE0920CSD027
+     I                                      290 295 OLNO                  CSD027
+0147 I                                      296 296 RCSI                  LE0920
+0148 I                                      297 2970ICBS                  LE0920
+0149 I                                      298 298 IPFR                  LE0920
+0150 I                                    P 299 3050TOTI                  LE0920
+0151 I                                    P 306 3080NIDT                  LE0920
+0152 I                                    P 309 3110IBDT                  LE0920
+0153 I                                    P 312 3140SLID                  LE0920
+0154 I                                    P 315 3210AIPD                  LE0920
+0155 I                                    P 322 3240DLRC                  LE0920
+0156 I                                    P 325 3270IACD                  LE0920
+0157 I                                    P 328 3340AITC                  LE0920
+0158 I                                    P 335 3410TFEP                  LE0920
+0159 I                                    P 342 3480AIAP                  LE0920
+0160 I                                    P 349 3550IPRD                  LE0920
+0161 I                                    P 356 3620IPRM                  LE0920
+0162 I                                    P 363 3690ICTD                  LE0920
+0163 I                                    P 370 3760AIMN                  LE0920
+0164 I                                    P 377 3790RBDT                  LE0920
+0165 I                                    P 380 3810NOPS                  LE0920
+0166 I                                      384 3850IFDY                  LE0920
+0167 I                                      386 386 LONI                  LE0920
+0168 I                                      387 387 CNFI                  LE0920
+0169 I                                      388 388 ACEI                  LE0920
+0170 I                                      389 389 TLXI                  LE0920
+0171 I                                      390 390 CBLI                  LE0920
+0172 I                                    P 391 3930ORED                  LE0920
+0173 I                                    P 394 3960LCD                   LE0920
+0174 I                                      397 397 CHTP                  LE0920
+0175 I                                    P 398 4000TNLU                  LE0920
+     I                                      435 436 BOKC                  S01220
+     I                                     15611578 OSDA                                      CGL029
+     I                                     15791596 OMDA                                      CGL029
+     I                                     17621765 CLAS                                      CLE042
+     I                                     17661769 DFCL                                      CER020
+     I                                     17701773 SLCL                                      CER020
+     I                                    P177417760ISDT                                      CER020
+     I                                    P177717790FMDT                                      CER020
+     I                                     17801782 LOIC                                      CER020
+      *                                                                                       CLE134
+     I                                     18301830 FAMU                                      CLE134
+     I                                     18311831 FPNR                                      CLE134
+     I                                    P183218340RIDT                                      CLE134
+     I                                    P183518360RIDC                                      CLE134
+     I                                     183718370RCAT                                      CLE134
+     I                                    P183818390RCAC                                      CLE134
+     I                                    P184018420RCSD                                      CLE134
+     I                                    P184318440RCDY                                      CLE134
+     I                                    P184518460RCCY                                      CLE134
+      *                                                                                       CLE134
+     I                                    P184718490BIDT                                      CLE134
+     I                                    P185018510BIDC                                      CLE134
+     I                                     185218520BCAT                                      CLE134
+     I                                    P185318540BCAC                                      CLE134
+     I                                    P185518570BCSD                                      CLE134
+     I                                    P185818590BCDY                                      CLE134
+     I                                    P186018610BICC                                      CLE134
+      *                                                                                       CLE134
+     I                                     18621864 XRFI                                      CLE134
+     I                                     186518740XRFN                                      CLE134
+      *                                                                                       CLE134
+0176 I*                                                                   LE0920
+0177 I*    LOANS FILE - DETAIL 2                                          LE0920
+0178 I*                                                                   LE0920
+0179 I        NS  10   1 CD   8 CB                                        LE0920
+     I       OR        1 CM   8 CB                                        E47241
+0180 I                                        1   1 RECI                  LE0920
+0181 I**********                              2   70LNRF    M2                         LE0920 CLE148
+     I                                        2   7 LNRF    M2                                CLE148
+0182 I                                        8   8 RCDT                  LE0920
+0183 I                                        9   90MRIN    M1            LE0920
+0184 I                                       10  44 NAR1                  LE0920
+0185 I                                       45  79 NAR2                  LE0920
+0186 I                                       80 114 NAR3                  LE0920
+0187 I                                      115 149 NAR4                  LE0920
+0188 I                                    P 150 1560OPAM                  LE0920
+0189 I                                      157 1610FRBC                  LE0920
+0190 I                                    P 162 1680YPLN                  LE0920
+0191 I                                    P 169 1750YFLN                  LE0920
+0192 I                                    P 176 1820YWLN                  LE0920
+0193 I                                    P 183 1890ABLN                  LE0920
+0194 I                                    P 190 1960YPLCCL                LE0920
+0195 I                                    P 197 2030YFLCCL                LE0920
+0196 I                                    P 204 2100YWLCCL                LE0920
+0197 I                                    P 211 2170ABLCCL                LE0920
+0198 I                                    P 218 2240WWLN                  LE0920
+0199 I                                    P 225 2310IWLN                  LE0920
+0200 I                                    P 232 2380PWLN                  LE0920
+0201 I                                      245 274 SPI1                  LE0920
+0202 I                                      275 304 SPI2                  LE0920
+0203 I                                      305 334 SPI3                  LE0920
+0204 I                                    P 335 3410YILN                  LE0920
+0205 I                                    P 391 3930ORED                  LE0920
+0206 I                                    P 394 3960LCD                   LE0920
+0207 I                                      397 397 CHTP                  LE0920
+0208 I                                    P 398 4000TNLU                  LE0920
+0209 I*                                                                   LE0920
+0210 I**     TRAILER                                                      LE0920
+0211 I*                                                                   LE0920
+0212 I        NS  03   1 CT                                               LE0920
+0213 I                                        1   1 RECI                  LE0920
+0214 I**********                              2   70LNRF                               LE0920 CLE148
+     I                                        2   7 LNRF                                      CLE148
+0215 I                                        8   8 RCDT                  LE0920
+0216 I                                    P  17  190NORE                  LE0920
+0217 I                                    P  23  250NLRB                  LE0920
+0218 I                                    P  26  280NINS                  LE0920
+0219 I                                    P  29  310NDEL                  LE0920
+0220 I                                    P  32  340NLRA                  LE0920
+0221 I                                    P  35  420VLBF                  LE0920
+0222 I                                    P  43  440VLBL                  LE0920
+0223 I                                    P  45  520VRIF                  LE0920
+0224 I                                    P  53  540VRIL                  LE0920
+0225 I                                    P  55  620VRDF                  LE0920
+0226 I                                    P  63  640VRDL                  LE0920
+0227 I                                    P  65  720VLAF                  LE0920
+0228 I                                    P  73  740VLAL                  LE0920
+0229 I                                    P  75  770DTMR                  LE0920
+0230 I                                    P  78  800ITMR                  LE0920
+0231 I                                    P 394 3960LCD                   LE0920
+0232 I                                      397 397 CHTP                  LE0920
+0233 I                                    P 398 4000TNLU                  LE0920
+0234 I*                                                                   LE0920
+0235 I*      CATCHALL                                                     LE0920
+0236 I*                                                                   LE0920
+0237 I        NS                                                          LE0920
+0238 I                                        1   1 RECI                  LE0920
+0239 I*                                                                   LE0920
+0240 I**   SORTED EVENTS FILE - HEADER                                    LE0920
+0241 I*                                                                   LE0920
+0242 ISVNTS   NS  04   1 CH                                               LE0920
+0243 I                                        1   1 RECI                  LE0920
+0244 I*                                                                   LE0920
+0245 I**   DETAIL                                                         LE0920
+0246 I*                                                                   LE0920
+0247 I        NS  05   1 CL                                               LE0920
+0248 I                                        1   1 RECI                  LE0920
+0249 I**********                              2   70LNRF    M2                         LE0920 CLE148
+     I                                        2   7 LNRF    M2                                CLE148
+0250 I**********                              8  130CNUM                               LE0920 CSD027
+0250 I                                        8  13 CNUM                                      CSD027
+0251 I                                       14  17 ETYP                  LE0920
+0252 I                                    P  18  200EDAT                  LE0920
+0253 I                                    P  21  270EAMT                  LE0920
+0254 I                                       28  30 ECCY                  LE0920
+0255 I                                       31  320ECSS                  LE0920
+0256 I                                       33  34 LTYP                  LE0920
+0257 I                                       35  36 SUTP                  LE0920
+0258 I**                                     37  390BRCD                  S01117
+0258 I                                       37  39 BRCA                  S01117
+0259 I                                    P  40  457INTR                  LE0920
+0260 I                                       46  46 NGII                  LE0920
+0261 I                                    P  47  490OTHD                  LE0920
+0262 I                                    P  50  560OTHA                  LE0920
+0263 I                                       57  59 FCCY                  LE0920
+0264 I                                       60  610FCSS                  LE0920
+0265 I                                       62  620ECDP                  LE0920
+0266 I                                       63  630FCDP                  LE0920
+0267 I                                    P  64  700DBCE                  LE0920
+0268 I                                    P  71  770BCEQ                  LE0920
+0269 I                                    P  78  848DBCR                  LE0920
+0270 I                                    P  85  910DFCE                  LE0920
+0271 I                                    P  92  980FCEQ                  LE0920
+0272 I                                    P  99 1058DFCR                  LE0920
+0273 I                                      106 106 FIPI                  LE0920
+0274 I                                      107 1080SETP                  LE0920
+0275 I**********                            109 120 OSAC                               LE0920 CGL029
+     I                                      109 120 OSACQQ                                    CGL029
+0276 I                                      121 130 TSEN                  LE0920
+0277 I                                      131 140 FACO                  LE0920
+0278 I                                      141 170 SPI1                  LE0920
+0279 I                                      171 200 SPI2                  LE0920
+0280 I                                      201 230 SPI3                  LE0920
+0281 I                                      231 231 INOI                  LE0920
+0282 I                                      232 2370CPAR                  LE0920
+0283 I                                      238 2380PARI                  LE0920
+0284 I                                      239 258 CRNM                  LE0920
+0285 I                                      259 268 CTWN                  LE0920
+0286 I                                      269 276 CASK                  LE0920
+0287 I                                      277 296 PRNM                  LE0920
+0288 I                                      297 306 PTWN                  LE0920
+0289 I                                      307 314 PASK                  LE0920
+0290 I**********                            315 3200FCUS                               LE0920 CSD027
+0290 I                                      315 320 FCUS                                      CSD027
+0291 I                                      321 3230FACT                  LE0920
+0292 I                                      324 3250FCNO                  LE0920
+0293 I                                      326 327 CTYR                  LE0920
+0294 I                                      338 338 WITT                  LE0920
+0295 I                                    P 339 3447WITR                  LE0920
+0296 I                                      353 3530MRIN    M1            LE0920
+     I                                     10711088 OSAC                                      CGL029
+     I                                     11251128 CLAS                                      CLE042
+0297 I*                                                                   LE0920
+0298 I**   TRAILER                                                        LE0920
+0299 I*                                                                   LE0920
+0300 I        NS  06   1 CT                                               LE0920
+0301 I                                        1   1 RECI                  LE0920
+0302 I**********                              2   60NORE            LE0920105140
+     I                                    P   2   60NORE0                 105140
+0303 I                                    P   7  140HRWN                  LE0920
+0304 I                                    P  15  160HRDC                  LE0920
+0305 I*                                                                   LE0920
+0306 I**      CATCHALL                                                    LE0920
+0307 I*                                                                   LE0920
+0308 I        NS                                                          LE0920
+0309 I*                                                                   LE0920
+0310 I**     UPDATED CUSTOMER LOANS - HEADER                              LE0920
+0311 I*                                                                   LE0920
+0312 ILEYTD   NS  07   1 CH                                               LE0920
+0313 I                                        1   1 RECI                  LE0920
+0314 I*                                                                   LE0920
+0315 I**     DETAIL                                                       LE0920
+0316 I*                                                                   LE0920
+0317 I        NS  08   1 CD                                               LE0920
+0318 I                                        1   1 RECI                  LE0920
+0319 I**********                              2   70CNUM                               LE0920 CSD027
+0319 I                                        2   7 CNUM                                      CSD027
+0320 I**********                              8  130LNRF    M2                         LE0920 CLE148
+     I                                        8  13 LNRF    M2                                CLE148
+0321 I**                                     14  160BRCD                  S01117
+0321 I                                       14  16 BRCA                  S01117
+0322 I                                       17  18 CRSK                  LE0920
+0323 I                                       19  210LIND                  LE0920
+0324 I                                    P  22  290YPLC                  LE0920
+0325 I                                    P  30  370YWLC                  LE0920
+0326 I                                    P  38  450YFLC                  LE0920
+0327 I                                    P  46  530ABLC                  LE0920
+0328 I                                    P  54  560MDAT                  LE0920
+0329 I                                       57  570MRIN    M1            LE0920
+0330 I                                       58  590PTYP                  LE0920
+     I                                       88  90 LOICM                                     CER020
+0331 I*                                                                   LE0920
+0332 I**     TRAILER                                                      LE0920
+0333 I*                                                                   LE0920
+0334 I        NS  09   1 CT                                               LE0920
+0335 I                                        1   1 RECI                  LE0920
+0336 I                                    P   2   40NORE                  LE0920
+0337 I*                                                                   LE0920
+0338 I**     CATCHALL                                                     LE0920
+0339 I*                                                                   LE0920
+0340 I        NS                                                          LE0920
+0341 I**************                                                      S01194
+0342 I*******TABLE*FILE - ICR 1                                           S01194
+0343 I**************                                                      S01194
+0344 I**************                                                      S01194
+0345 I*****TABLE*FILE - INSTALLATION CONTROL DATA RECORD 1.               S01194
+0346 I**************                                                      S01194
+0347 I*TABLE***NS**11   2 C0   3 C1  12 C1                                S01194
+0348 I*******AND****  13 C0                                               S01194
+0349 I**************                          1   1 RECI                  S01194
+0350 I**************                          2   30RECT                  S01194
+0351 I**************                         12  130RCDE                  S01194
+0352 I**************                         14  66 TITL                  S01194
+0353 I***********                            67  67 DATF                  S01194
+0354 I***********                            68  700DFBR                  S01194
+0355 I**************                         74  74 MODI1                 S01194
+0356 I**************                         75  75 MODI2                 S01194
+0357 I**************                         76  76 MODI3                 S01194
+0358 I***********                         P  77  790RUND                  S01194
+0359 I***********                            80  86 RUNA                  S01194
+0360 I**************                         87  870SFLG                  S01194
+0361 I**************                      P  90  920LCD                   S01194
+0362 I**************                         93  93 CHTP                  S01194
+0363 I**************                      P  94  960TNLU                  S01194
+0364 I**************                                                      S01194
+0365 I*****TABLE*FILE - INSTALLATION CONTROL DATA RECORD 2.               S01194
+0366 I**************                                                      S01194
+0367 I********NS**12   1 CD   2 C0   3 C1                                 S01194
+0368 I*******AND****  12 C1  13 C1                                        S01194
+0369 I**************                          1   1 RECI                  S01194
+0370 I**************                          2   30RECT                  S01194
+0371 I**************                         12  130RCDE                  S01194
+0372 I**************                         14  16 BCCY                  S01194
+0373 I**************                         17  19 BCYL                  S01194
+0374 I**************                         20  22 HOCY                  S01194
+0375 I**************                         23  280HEAD                  S01194
+0376 I**************                      P  29  310APDA                  S01194
+0377 I**************                         35  35 APFQ                  S01194
+0378 I**************                      P  36  380LOGS                  S01194
+0379 I**************                         39  40 CUZR                  S01194
+0380 I**************                      P  41  430DNWD                  S01194
+0381 I**************                         44  460BVLP                  S01194
+0382 I**************                         47  49 LOCY                  S01194
+0383 I**************                         50  510FDAY                  S01194
+0384 I**************                         52  52 ACLD                  S01194
+0385 I***********                            53  53 MBIN                  S01194
+0385 I**************                      P  54  560EOYD            E86097S01194
+0386 I**************                         86  86 ISAV                  S01194
+0387 I**************                      P  87  890LLOG                  S01194
+0388 I**************                      P  90  920LCD                   S01194
+0389 I**************                         93  93 CHTP                  S01194
+0390 I**************                      P  94  960TNLU                  S01194
+0391 I**************                                                      S01194
+0392 I*****TABLE*FILE - CURRENCIES RECORD 1.                              S01194
+0393 I**************                                                      S01194
+0394 I*TABLE***NS**13   1 CD   2 C2   3 C0                                S01194
+0395 I*******AND****  13 C1                                               S01194
+0396 I**************                          1   1 RECI                  S01194
+0397 I**************                          2   30RECT                  S01194
+0398 I**************                         10  12 CCY                   S01194
+0399 I**************                         13  130SREC                  S01194
+0400 I**************                         14  27 CCNM                  S01194
+0401 I**************                      P  28  348SPOT                  S01194
+0402 I**************                         35  37 CCYS                  S01194
+0403 I**************                         38  380CDP                   S01194
+0404 I**************                         39  390TNOT                  S01194
+0405 I**************                         40  40 DCCY                  S01194
+0406 I**************                         41  44 SRC1                  S01194
+0407 I**************                         45  48 SRC2                  S01194
+0408 I**************                         49  520TACC                  S01194
+0409 I**************                         53  560TEQV                  S01194
+0410 I**************                         57  600SWQV                  S01194
+0411 I**************                         61  640TAC4                  S01194
+0412 I**************                         65  680TAC5                  S01194
+0413 I**************                         69  69 HIND                  S01194
+0414 I**************                      P  70  768PART                  S01194
+0415 I**************                         77  780SSNO                  S01194
+0416 I**************                      P  79  858ERLC                  S01194
+0417 I**************                         86  860MDIN                  S01194
+0418 I**************                      P  90  920LCD                   S01194
+0419 I**************                         93  93 CHTP                  S01194
+0420 I**************                      P  94  960TNLU                  S01194
+0421 I**************                                                      S01194
+0422 I*******CATCHALL                                                     S01194
+0423 I**************                                                      S01194
+0424 I********NS****                                                      S01194
+0425 I**************                          1   1 RECI                  S01194
+0426 I**************                          2   30RECT                  S01194
+0427 I**************                         13  130SREC                  S01194
+0428 I**************                                                      S01194
+0429 I*****TABLE*FILE - CURRENCIES RECORD 1.                              S01194
+0430 I**************                                                      S01194
+0431 I*TABLED**NS***    1 CD   2 C2   3 C0                                S01194
+0432 I*******AND****  13 C1                                               S01194
+0433 I**************                          1   1 RECI                  S01194
+0434 I**************                          2   30RECT                  S01194
+0435 I**************                         10  12 CCY                   S01194
+0436 I**************                         13  130SREC                  S01194
+0437 I**************                         14  27 CCNM                  S01194
+0438 I**************                      P  28  348SPOT                  S01194
+0439 I**************                         35  37 CCYS                  S01194
+0440 I**************                         38  380CDP                   S01194
+0441 I**************                         39  390TNOT                  S01194
+0442 I**************                         40  40 DCCY                  S01194
+0443 I**************                         41  44 SRC1                  S01194
+0444 I**************                         45  48 SRC2                  S01194
+0445 I**************                         49  520TACC                  S01194
+0446 I**************                         53  560TEQV                  S01194
+0447 I**************                         57  600SWQV                  S01194
+0448 I**************                         61  640TAC4                  S01194
+0449 I**************                         65  680TAC5                  S01194
+0450 I**************                         69  69 HIND                  S01194
+0451 I**************                      P  70  768PART                  S01194
+0452 I**************                         77  780SSNO                  S01194
+0453 I**************                      P  79  858ERLC                  S01194
+0454 I**************                         86  860MDIN                  S01194
+0455 I**************                      P  90  920LCD                   S01194
+0456 I**************                         93  93 CHTP                  S01194
+0457 I**************                      P  94  960TNLU                  S01194
+0458 I**************                                                      S01194
+0459 I*****CATCHALL*                                                      S01194
+0460 I**************                                                      S01194
+0461 I********NS****                                                      S01194
+0462 I**************                          1   1 RECI                  S01194
+0463 I**************                          2   30RECT                  S01194
+0464 I**************                         13  130SREC                  S01194
+0465 I*                                                                   LE0920
+0466 I**      LOCAL DATA AREA FOR DATABASE ERROR REFERENCE                LE0920
+0467 I*                                                                   LE0920
+0468 ILDA        UDS                            256                       LE0920
+0469 I***********                           134 138 DBFILE                S01117
+0470 I***********                           139 167 DBKEY                 S01117
+0471 I***********                           168 175 DBPGM                 S01117
+0472 I***********                           176 177 DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01194
+     I              BJLCCY                          LOCY                  S01194
+     I              BJEYD                           EOYD                  S01194
+     I              BJURPT                          TITL                  S01194
+     I**                                                                  S01194
+     ISDCURR    E DSSDCURRPD                                              S01194
+      **  EXTERNAL DS FOR CURRENCY DETAILS                                S01194
+     I              A6CYCD                          CCY                   S01194
+     I              A6NBDP                          CDP                   S01194
+     I              A6SPRT                          SPOT                  S01194
+     I              A6MDIN                          MDIN                  S01194
+     I**                                                                  S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+      **                                                                  S01117
+     IRUNDT       DS                                                      S01117
+      **  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+0473 I*                                                                   LE0920
+0474 I********************************************************************LE0920
+0475 I*                                                                   LE0920
+     I/EJECT                                                              S01117
+     C                     MOVEACPY@      BIS@   80
+0476 C*                                                                   LE0920
+     C           *NAMVAR   DEFN           LDA                             S01194
+     C           *LOCK     IN   LDA                                       S01194
+0477 C**       FIRST CYCLE PROCESSING                                     LE0920
+0478 C*                                                                   LE0920
+0479 C   40                GOTO ENDCYL                                    LE0920
+0480 C                     SETON                     40                   LE0920
+0481 C**         FOR DATA BASE ERROR REFERENCE                            LE0920
+0482 C*                                                                   LE0920
+0483 C                     MOVE 'LE0920  'DBPGM                           LE0920
+0484 C                     MOVE ' '       BLANKS 29                       LE0920
+0485 C                     MOVE BLANKS    DBKEY                           LE0920
+0486 C                     EXSR ZSYSTM                                    LE0920
+0487 C***99*********       SETON                     U7U8LR               S01194
+0488 C***99*********       MOVE '01'      DBASE                           S01194
+0489 C***99*********       MOVE 'TABLE'   DBFILE                          S01194
+0490 C***99*********       MOVELZTABKY    DBKEY                           S01194
+0491 C   99                GOTO ENDDET                                    LE0920
+0492 C**************       MOVE '11'      ZTABKY                          S01194
+0493 C***********ZTABKY    CHAINTABLE                67                   S01194
+0494 C**N12*********       SETON                     LRU7U8               S01194
+0495 C**N12*********       MOVE '02'      DBASE                           S01194
+0496 C**N12*********       MOVE 'TABLE'   DBFILE                          S01194
+0497 C**N12*********       MOVE ZTABKY    DBKEY                           S01194
+0498 C**N12*********       GOTO ENDDET                                    S01194
+0499 C**************       MOVEL'20      'ZTABKY                          S01194
+0500 C**************       MOVELLOCY      CTBKEY  4                       S01194
+0501 C**************       MOVE '1'       CTBKEY                          S01194
+0502 C**************       MOVE CTBKEY    ZTABKY                          S01194
+0503 C***********ZTABKY    CHAINTABLE                67                   S01194
+     C                     MOVELLOCY      CTBKEY 10                       S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM           CTBKEY                       A  S01194
+     C           SDCURR    PARM SDCURR    DSSDY                        B  S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     SETON                     LRU7U8               S01194
+     C                     MOVE 'SDCURRPD'DBFILE           ***************S01194
+     C                     Z-ADD3         DBASE            * DBERROR 03  *S01194
+     C                     MOVE CTBKEY    DBKEY            ***************S01194
+     C                     MOVE @OPTN     DBOPTN  7                       S01194
+     C                     GOTO ENDDET                                    S01194
+     C                     END                                            S01194
+0504 C**N13*********       SETON                     LRU7U8               S01194
+0505 C**N13*********       MOVE '03'      DBASE                           S01194
+0506 C**N13*********       MOVE 'TABLE'   DBFILE                          S01194
+0507 C**N13*********       MOVE ZTABKY    DBKEY                           S01194
+0508 C**N13*********       GOTO ENDDET                                    S01194
+     C**                                                                  S01117
+     C**   IN THE DATAAREA RUNDAT                                         S01117
+     C**                                                                  S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**                                                                  S01117
+0509 C                     Z-ADDCDP       LCDP    10                      LE0920
+0510 C                     Z-ADDSPOT      LSPT   138                      LE0920
+0511 C**************       Z-ADDMDIN      LMDI    10     7878 ON - DIVIDE S01194
+0511 C           MDIN      COMP 'D'                      78               S01194
+0512 C*                                                                   S01194
+0513 C**      ADD HEADER OUTPUT TO S/TAXEX TO RECORD COUNT                S01194
+0514 C*                                                                   LE0920
+0515 C                     Z-ADD1         NUMREC  50                      LE0920
+0516 C*                                                                   LE0920
+0517 C***********CALCULATE*DAYNO*OF*LAST*DAY*OF*THE*YEAR******************E86097
+0518 C*                                                                   LE0920
+0519 C***********          MOVE RUNA      YEAR    2                       E86097
+0520 C***98******          MOVEL'1231'    LSTDAY  6                       E86097
+0521 C**N98******          MOVEL'3112'    LSTDAY                          E86097
+0522 C***********          MOVE YEAR      LSTDAY                          E86097
+0523 C***********          MOVE LSTDAY    ZDATE                           E86097
+0524 C***********          EXSR ZDATE1                                    E86097
+0525 C*                                                                   LE0920
+0526 C**         SET UP ARRAYS FOR CURRENCY                               LE0920
+0527 C*                                                                   LE0920
+0528 C**************       MOVEL'20      'CCYKEY 12                       S01194
+0529 C**************       MOVE '1'       CCYKEY                          S01194
+0530 C***********CCYKEY    SETLLTABLED                                    S01194
+0531 C                     Z-ADD0         X       30                      LE0920
+0532 C           LOOP      TAG                             ** LOOP TAG ** LE0920
+0533 C                     SETOF                     47
+0534 C**************       READ TABLED                   47               S01194
+0534 C                     READ SDCURRPD                 47               S01194
+0535 C   47                GOTO ENDCYL
+0536 C***********RECI      COMP 'D'                      47               S01194
+0537 C**N47*********       GOTO LOOP                                      S01194
+0538 C***********RECT      COMP 20                       47               S01194
+0539 C**N47*********       GOTO ENDCYL                                    S01194
+0540 C***********SREC      COMP 1                        47               S01194
+0541 C**N47*********       GOTO LOOP                                      S01194
+0542 C           X         ADD  1         X                               LE0920
+0543 C***********          MOVE CCY       CURR,X                          S01194
+0544 C***********          Z-ADDCDP       CDEP,X                          S01194
+0545 C***********          Z-ADDSPOT      CSOT,X                          S01194
+0546 C**************       Z-ADDMDIN      MTDV,X                          S01194
+0543 C                     MOVE A6CYCD    CURR,X                          S01194
+0544 C                     Z-ADDA6NBDP    CDEP,X                          S01194
+0545 C                     Z-ADDA6SPRT    CSOT,X                          S01194
+0546 C                     MOVE A6MDIN    MTDV,X                          S01194
+0547 C           X         COMP 150                      47               LE0920
+0548 C  N47                GOTO LOOP                                      LE0920
+0549 C           ENDCYL    TAG                             ** ENDCYL TAG**LE0920
+0550 C*                                                                   LE0920
+0551 C********************************************************************LE0920
+0552 C*                                                                   LE0920
+0553 C**      DETAIL PROCESSING                                           LE0920
+0554 C                     SETOF                     50                   LE0920
+0555 C*                                                                   LE0920
+0556 C**      COUNT NO.OF RECORDS READ AND KEEP HASH TOTAL FOR            LE0920
+0557 C*               S/SVENT AND S/CLOAN                                 LE0920
+0558 C*                                                                   LE0920
+0559 C   01                Z-ADD1         NOREC1  50                      LE0920
+0560 C***04*****           Z-ADD1         NOREC2  50                LE0920105140
+     C   04                Z-ADD1         NOREC2  90                      105140
+0561 C   07                Z-ADD1         NOREC3  50                      LE0920
+0562 C*                                                                   LE0920
+0563 C**      IF A TRAILER GOTO TRAILER PROCESSING                        LE0920
+0564 C*                                                                   LE0920
+0565 C   03                                                               LE0920
+0566 COR 06                                                               LE0920
+0567 COR 09                GOTO TRAPRO                                    LE0920
+0568 C*                                                                   LE0920
+0569 C**      IF NOT A DETAIL RECORD GOTO END                             LE0920
+0570 C*                                                                   LE0920
+0571 C  N02N05N08                                                         LE0920
+0572 CANN10                GOTO ENDDET                                    LE0920
+0573 C*                                                                   LE0920
+0574 C   02                                                               LE0920
+0575 COR 10      NOREC1    ADD  1         NOREC1                          LE0920
+0576 C   05      NOREC2    ADD  1         NOREC2                          LE0920
+0577 C   08      NOREC3    ADD  1         NOREC3                          LE0920
+0578 C*                                                                   LE0920
+0579 C   02      CPAM      COMP 0                      46                 LE0920
+0580 C   02 46             Z-SUBCPAM      CPAM                            LE0920
+0581 C   02                MOVE CPAM      ZZAMT                           LE0920
+0582 C   02                Z-ADDCPAMI     ZZTOTI                          LE0920
+0583 C   02                Z-ADDCPAMD     ZZTOTD                          LE0920
+0584 C   02                EXSR GLZADD                                    LE0920
+0585 C   02                Z-ADDZZTOTI    CPAMI  150                      LE0920
+0586 C   02                Z-ADDZZTOTD    CPAMD   30                      LE0920
+0587 C   02 46             Z-SUBCPAM      CPAM                            LE0920
+0588 C*                                                                   LE0920
+0589 C   05      EAMT      COMP 0                      48                 LE0920
+0590 C   05 48             Z-SUBEAMT      EAMT                            LE0920
+0591 C   05                MOVE EAMT      ZZAMT                           LE0920
+0592 C   05                Z-ADDEAMTI     ZZTOTI                          LE0920
+0593 C   05                Z-ADDEAMTD     ZZTOTD                          LE0920
+0594 C   05                EXSR GLZADD                                    LE0920
+0595 C   05                Z-ADDZZTOTI    EAMTI  150                      LE0920
+0596 C   05                Z-ADDZZTOTD    EAMTD   30                      LE0920
+0597 C   05 48             Z-SUBEAMT      EAMT                            LE0920
+0598 C*                                                                   LE0920
+0599 C**   IF PREVIOUS CLOAN'A'RECORD HAD BLANK WITHOLDING TAX TYPE THEN  LE0920
+0600 C**   THE'B'RECORD AND S/SVENT RECORDS DO NOT REQUIRE PROCESSING     LE0920
+0601 C*                                                                   LE0920
+0602 C   05 41                                                            LE0920
+0603 COR 10 41             GOTO ENDDET                                    LE0920
+0604 C*                                                                   LE0920
+0605 C**      SPLIT INTO DIFFERENT TYPES OF DETAIL RECORDS                LE0920
+0606 C*                                                                   LE0920
+0607 C   05                GOTO EVTPRO                                    LE0920
+0608 C   08                GOTO MATURE                                    LE0920
+0609 C   10                GOTO BPRO                                      LE0920
+0610 C*                                                                   LE0920
+0611 C********************************************************************LE0920
+0612 C*                                                                   LE0920
+0613 C**       CLOANS'A'RECORD PROCESSING                                 LE0920
+0614 C*                                                                   LE0920
+0615 C**      IF WITHOLDING TAX TYPE BLANK NO MORE PROCESSING             LE0920
+0616 C**                 FOR THIS LOAN                                    LE0920
+0617 C           WTIN      COMP ' '                      41               LE0920
+0618 C                     GOTO ENDDET                                    LE0920
+0619 C*                                                                   LE0920
+0620 C********************************************************************LE0920
+0621 C*                                                                   LE0920
+0622 C**      EVENTS PROCESSING                                           LE0920
+0623 C*                                                                   LE0920
+0624 C           EVTPRO    TAG                             ** EVTPRO TAG**LE0920
+0625 C*                                                                   LE0920
+0626 C**      ONLY PROCESS EVENTS CONTAINING INTEREST PAYMENTS            LE0920
+0627 C*                                                                   LE0920
+0628 C                     MOVE ETYP      LAST2   2                       LE0920
+0629 C           LAST2     COMP 'I2'                     42               LE0920
+0630 C  N42      LAST2     COMP 'R2'                     42               LE0920
+0631 C  N42      LAST2     COMP 'M2'                     42               LE0920
+0632 C  N42                GOTO ENDDET                                    LE0920
+0633 C*                                                                   LE0920
+0634 C**  ONLY PROCESS IF EVENT DATE NOT GREATER THAN LAST DAY IN YEAR    LE0920
+0635 C*                                                                   LE0920
+0636 C***********EDAT      COMP ZDAYNO               43                   E86097
+0636 C           EDAT      COMP EOYD                 43                   E86097
+0637 C   43                GOTO ENDDET                                    LE0920
+      *                                                                                     BUG22936
+      **  ONLY PROCESS IF REPAYMENT TYPE IS NOT '3'                                         BUG22936
+     C           REPT      COMP 3                        43                                 BUG22936
+     C   43                GOTO ENDDET                                                      BUG22936
+0638 C*                                                                   LE0920
+0639 C**   USE SUBROUTINE TO CALCULATE WITHOLDING TAX                     LE0920
+0640 C*                                                                   LE0920
+0641 C                     EXSR WHTAX                                     LE0920
+0642 C*                                                                   LE0920
+0643 C**   ADD AMOUNT OBTAINED TO TOTAL FOR YEAR END                      LE0920
+0644 C*                                                                   LE0920
+0645 C           WTYTOT    ADD  OPWTXA    WTYTOT 150                      LE0920
+0646 C*                                                                   LE0920
+0647 C                     GOTO ENDDET                                    LE0920
+0648 C*                                                                   LE0920
+0649 C********************************************************************LE0920
+0650 C*                                                                   LE0920
+0651 C*                                                                   LE0920
+0652 C**   CLOANS'B'RECORD PROCESSING                                     LE0920
+0653 C*                                                                   LE0920
+0654 C           BPRO      TAG                             ** BPRO TAG ** LE0920
+0655 C*                                                                   LE0920
+0656 C**   CONVERT YEAR TO DATE INTEREST PAID TO LOCAL CURRENCY           LE0920
+0657 C*                                                                   LE0920
+0658 C*                                                                   LE0920
+0659 C**          MOVE INTO FIELDS OF REQUIRED SIZE                       LE0920
+0660 C*                                                                   LE0920
+0661 C                     Z-ADDYPLCCL    YPLC                            LE0920
+0662 C                     Z-ADDYWLCCL    YWLC                            LE0920
+0663 C*********  AITC      SUB  YILN      CVTAMT 150                                 LE0920 BUG22936
+0664 C*********  CVTAMT    SUB  YPLN      CVTAMT                                     LE0920 BUG22936
+     C                     Z-ADDYPLC      CVTAMT 150                                        BUG22936
+0665 C                     EXSR CONVT                                     LE0920
+0666 C   U7 U8 LR          GOTO ENDDET                                    LE0920
+0667 C*********  CVTAMT    ADD  YPLC      IIYTD  150                                 LE0920 BUG22936
+     C                     Z-ADDCVTAMT    IIYTD  150                                        BUG22936
+0668 C*                                                                   LE0920
+0669 C**  IF W/HOLD TAX TO YEAR END NOT ZERO CONVERT TO LOCAL CURRENCY    LE0920
+0670 C*                                                                   LE0920
+0671 C           WTYTOT    COMP 0                        44               LE0920
+0672 C  N44                Z-ADDWTYTOT    CVTAMT                          LE0920
+0673 C  N44                EXSR CONVT                                     LE0920
+0674 C   U7 U8 LR          GOTO ENDDET                                    LE0920
+0675 C  N44                Z-ADDCVTAMT    WTYTOT                          LE0920
+0676 C*                                                                   LE0920
+0677 C**      IF MATURITY DATE=0 OUTPUT MDAT AS 99999                     LE0920
+0678 C*                                                                   LE0920
+0679 C           MDAT      COMP 0                        45               LE0920
+0680 C   45                Z-ADD99999     MDAT                            LE0920
+0681 C*                                                                ***LE0920
+0682 C**      SET ON INDICATOR TO OUTPUT RECORD TO S/TAXEX                LE0920
+0683 C*                                                                   LE0920
+0684 C                     SETON                     50                   LE0920
+0685 C           NUMREC    ADD  1         NUMREC                          LE0920
+0686 C                     GOTO ENDDET                                    LE0920
+0687 C*                                                                   LE0920
+0688 C********************************************************************LE0920
+0689 C*                                                                   LE0920
+0690 C**      MATURE RECORDS PROCESSING                                   LE0920
+0691 C*                                                                   LE0920
+0692 C           MATURE    TAG                             ** MATURE TAG**LE0920
+0693 C*                                                                   LE0920
+0694 C                     Z-ADDYPLC      IIYTD                           LE0920
+0695 C                     Z-ADD0         WTYTOT                          LE0920
+0696 C**      SET INDICATOR TO OUTPUT A RECORD TO S/TAXEX                 LE0920
+0697 C*                                                                   LE0920
+0698 C           YWLC      COMP 0                    5050                 LE0920
+0699 C*                                                                   LE0920
+0700 C**      KEEP RECORD COUNT FOR S/TAXEX                               LE0920
+0701 C*                                                                   LE0920
+0702 C   50      NUMREC    ADD  1         NUMREC                          LE0920
+0703 C           ENDDET    TAG                             ** ENDDET TAG**LE0920
+0704 C*                                                                   LE0920
+0705 C********************************************************************LE0920
+0706 C*                                                                   LE0920
+0707 C**      TRAILER PROCESSING                                          LE0920
+0708 C*                                                                   LE0920
+0709 C           TRAPRO    TAG                             ** TRAPRO TAG**LE0920
+0710 C*                                                                   LE0920
+0711 C**      ADD TRAILERS TO RECORD COUNT                                LE0920
+0712 C*                                                                   LE0920
+0713 C   03      NOREC1    ADD  1         NOREC1                          LE0920
+0714 C   06      NOREC2    ADD  1         NOREC2                          LE0920
+0715 C   09      NOREC3    ADD  1         NOREC3                          LE0920
+0716 C**      FILE CONTROLS                                               LE0920
+0717 C*                                                    * S/CLOAN    * LE0920
+0718 C   03                Z-ADDNORE      NORCLN  50                      LE0920
+0719 C   03      NORE      COMP NOREC1                   61               LE0920
+0720 C   03 61   CPAMI     COMP VLAF                     61               LE0920
+0721 C   03 61   CPAMD     COMP VLAL                     61               LE0920
+0722 C   03N61             SETON                     U8                   LE0920
+0723 C*                                                    * S/SVENT *    LE0920
+0724 C***06***** NORE      COMP NOREC2                   62         LE0920105140
+     C   06      NORE0     COMP NOREC2                   62               105140
+0725 C   06 62   EAMTI     COMP HRWN                     62               LE0920
+0726 C   06 62   EAMTD     COMP HRDC                     62               LE0920
+0727 C   06N62             SETON                     U8                   LE0920
+0728 C***06******          Z-ADDNORE      NOREVT  50                LE0920105140
+     C   06                Z-ADDNORE0     NOREVT  90                      105140
+0729 C*                                                    * S/LEYTD      LE0920
+0730 C   09      NORE      COMP NOREC3                   63               LE0920
+0731 C   09N63             SETON                     U8                   LE0920
+0732 C   09                Z-ADDNORE      NORUPY  50                      LE0920
+0733 C**      ADD TRAILER RECORD OUTPUT TO RECORD COUNT                   LE0920
+0734 C*                                                                   LE0920
+0735 CLR         NUMREC    ADD  1         NUMREC                          LE0920
+     CLR U7 U8             EXSR *PSSR                                     S01117
+0736 C*                                                                   LE0920
+0737 C********************************************************************LE0920
+0738 C*                                                                   LE0920
+0739 C********************************************************************LE0920
+0740 C*                                                                   LE0920
+0741 C** WHTAX SUBROUTINE - TO CALCULATE WITHHOLDING TAX                  LE0920
+0742 C*                                                                   LE0920
+0743 C           WHTAX     BEGSR                           ** WHTAX **    LE0920
+0744 C*                                                                   LE0920
+0745 C** CALCULATE INTEREST RECEIVED AND TAX AMOUNT ACCORDING TO WHT TYPE LE0920
+0746 C*                                                                   LE0920
+0747 C           WTIN      COMP 'N'                      31NET            LE0920
+0748 C  N31                GOTO WTNOTN                                    LE0920
+0749 C*                                                                   LE0920
+0750 C                     Z-ADDEAMT      OPINTA 130       INT REC'D      LE0920
+0751 C*                                                                   LE0920
+0752 C           100       SUB  WTRT      WTWRK  117                      LE0920
+0753 C           WTRT      DIV  WTWRK     WTWRK                           LE0920
+0754 C           EAMT      MULT WTWRK     OPWTXA 130H      TAX AMOUNT     LE0920
+0755 C*                                                                   LE0920
+0756 C                     GOTO WHTAXL                                    LE0920
+0757 C*                                                                   LE0920
+0758 C           WTNOTN    TAG                             ** WTNOTN TAG *LE0920
+0759 C*                                                    GROSS & REC'BLELE0920
+0760 C           WTRT      DIV  100       WTWRK                           LE0920
+0761 C           EAMT      MULT WTWRK     OPWTXA    H      TAX AMOUNT     LE0920
+0762 C*                                                                   LE0920
+0763 C           EAMT      SUB  OPWTXA    OPINTA           INT.REC'D      LE0920
+0764 C*                                                                   LE0920
+0765 C           WHTAXL    ENDSR                           ** WHTEN **    LE0920
+0766 C*                                                                   LE0920
+0767 C********************************************************************LE0920
+0768 C*                                                                   LE0920
+0769 C**    SUBROUTINE TO CONVERT CURRENCY TO LOCAL CURRENCY              LE0920
+0770 C*                                                                   LE0920
+0771 C           CONVT     BEGSR                           ** CONVRT **   LE0920
+0772 C*                                                                   LE0920
+0773 C           LOCY      COMP CCY                      70               LE0920
+0774 C   70                GOTO CONVTL                                    LE0920
+0775 C*                                                                   LE0920
+0776 C**          CHECK IF CURRENCY CODE BLANK                            LE0920
+0777 C*                                                                   LE0920
+0778 C           CCY       COMP '   '                    70               LE0920
+0779 C   70                MOVE CCY       CCYERR                          LE0920
+0780 C   70                GOTO ERROR                                     LE0920
+0781 C*                                                                   LE0920
+0782 C                     Z-ADD1         X              70SETOF 70       LE0920
+0783 C           CCY       LOKUPCURR,X                   70               LE0920
+0784 C  N70                MOVE CCY       CCYERR  3        DATABASE ERROR LE0920
+0785 C  N70                GOTO ERROR                                     LE0920
+0786 C*                                                                   LE0920
+0787 C                     Z-ADDCDEP,X    CCDP    10                      LE0920
+0788 C                     Z-ADDCSOT,X    CSPT   138                      LE0920
+0789 C***********          Z-ADDMTDV,X    CMDI    10     7979 ON - DIVIDE S01194
+0789 C                     MOVE MTDV,X    CMDI    1      79               S01194
+0790 C*                                                                   LE0920
+0791 C                     GOTO CONVRT                                    LE0920
+0792 C*                                                                   LE0920
+0793 C           ERROR     TAG                             ** ERROR TAG **LE0920
+0794 C*                                                                   LE0920
+0795 C                     SETON                     U7U8LR               LE0920
+0796 C**************       MOVELBLANKS    ZTABKY                          S01194
+0797 C**************       MOVEL'20'      ZTABKY                          S01194
+0798 C**************       MOVELCCYERR    WRK4    4                       S01194
+0799 C**************       MOVE '1'       WRK4                            S01194
+0800 C**************       MOVE WRK4      ZTABKY                          S01194
+0801 C**************       MOVELZTABKY    DBKEY                           S01194
+     C                     MOVELCCYERR    DBKEY                           S01194
+0802 C                     MOVE '05'      DBASE                           LE0920
+0803 C                     MOVE 'SDCURRPD'DBFILE                          S01194
+0803 C**************       MOVE 'TABLE'   DBFILE                          S01194
+0804 C                     GOTO CONVTL                                    LE0920
+0805 C*                                                                   LE0920
+0806 C           CONVRT    TAG                             ** CONVRT TAG *LE0920
+0807 C*                                                                   LE0920
+0808 C** CALCULATE CROSS RATE TO LOCAL CURRENCY                           LE0920
+0809 C*                                                                   LE0920
+0810 C   78N79                                                            LE0920
+0811 CORN78 79   LSPT      MULT CSPT      CSPT      H                     LE0920
+0812 C   78 79                                                            LE0920
+0813 CORN78N79   LSPT      DIV  CSPT      CSPT      H                     LE0920
+0814 C*                                                                   LE0920
+0815 C** ADJUST EXCHANGE RATE FOR DECIMAL PLACES                          LE0920
+0816 C*                                                                   LE0920
+0817 C           LCDP      SUB  CCDP      CX      10                      LE0920
+0818 C           CX        ADD  4         CX                              LE0920
+0819 C*                                                                   LE0920
+0820 C  N78      CSPT      DIV  POWR,CX   EXRATE 159H                     LE0920
+0821 C  N78      1         DIV  EXRATE    EXRATE    H                     LE0920
+0822 C   78      CSPT      MULT POWR,CX   EXRATE    H                     LE0920
+0823 C*                                                                   LE0920
+0824 C** CONVERT PRINCIPAL AMOUNT TO LOCAL CCY                            LE0920
+0825 C*                                                                   LE0920
+0826 C           CVTAMT    MULT EXRATE    CVTAMT    H                     LE0920
+0827 C*                                                                   LE0920
+0828 C           CONVTL    ENDSR                                          LE0920
+0829 C*                                                                   LE0920
+0830 C********************************************************************LE0920
+0831 C**                                                                  LE0920
+0832 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   LE0920
+0833 C**                                                                  LE0920
+0834 C           ZSYSTM    BEGSR                           *** ZSYSTM *** LE0920
+0835 C**************                                                      S01194
+0836 C*****SET*UP*KEY FOR INSTALLATION CONTROL RECORD.                    S01194
+0837 C**************       MOVEL'01      'ZTABKY 12                       S01194
+0838 C**************       MOVE '  10'    ZTABKY                          S01194
+0839 C**************                                                      S01194
+0840 C***********ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+0841 C**N99******RECI      COMP 'D'                  9999  ON, IS DELETED S01194
+     C**                                                                  S01194
+     C**   ACCESS BANK DETAILS                                            S01194
+     C**                                                                  S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C*                                                                   S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     SETON                     99                   S01194
+     C                     MOVEL'SDBANKPD'DBFILE                          S01194
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 001 *S01194
+     C                     Z-ADD1         DBASE            ***************S01194
+     C                     ELSE                                           S01194
+0842 C**                                                                  LE0920
+0843 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    LE0920
+0844 C           DATF      COMP 'M'                      98MMDDYY, 98 ON  LE0920
+     C                     END                                            S01194
+0845 C**                                                                  LE0920
+0846 C                     ENDSR                                          LE0920
+0847 C**                                                                  LE0920
+0848 C**                                                                  LE0920
+0849 C********************************************************************LE0920
+0850 C********************************************************************LE0920
+0851 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)  LE0920
+0852 C*   IND '99' IS SET BY AN OVERFLOW ERROR                            LE0920
+0853 C*                                                                   LE0920
+0854 CSR         GLZADD    BEGSR                           *** GLZADD ****LE0920
+0855 C*                                                                   LE0920
+0856 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT  LE0920
+0857 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS LE0920
+0858 C*                                                                   LE0920
+0859 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS                       LE0920
+0860 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD  LE0920
+0861 CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD  LE0920
+0862 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW                  LE0920
+0863 C*                                                                   LE0920
+0864 CSR                   EXSR GLZSUM                                    LE0920
+0865 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *LE0920
+0866 C*                                                                   LE0920
+0867 C********************************************************************LE0920
+0868 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -            LE0920
+0869 C*                        GLZADD, GLZSUB, GLZCMP.                    LE0920
+0870 C*          PARAMETERS PASSED -                                      LE0920
+0871 C*                     I/P ZZAMTI ZZAMTD                             LE0920
+0872 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.       LE0920
+0873 C*                                                                   LE0920
+0874 CSR         GLZSUM    BEGSR                           *** GLZSUM ****LE0920
+0875 C*                                                                   LE0920
+0876 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI  LE0920
+0877 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD  LE0920
+0878 CSR                   SETOF                     919293               LE0920
+0879 CSR                   SETOF                     949599               LE0920
+0880 C*                                                                   LE0920
+0881 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG                      LE0920
+0882 CSR         ZZAMTI    COMP 0                      9293               LE0920
+0883 CSR 93      ZZAMTD    COMP 0                      9293               LE0920
+0884 CSR 93                GOTO ZZSEND                     ZERO BYPASS    LE0920
+0885 C*                                                                   LE0920
+0886 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.                       LE0920
+0887 CSR         ZZTOTI    COMP 0                      9193               LE0920
+0888 CSR 93      ZZTOTD    COMP 0                      9193               LE0920
+0889 C*                                                                   LE0920
+0890 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.                           LE0920
+0891 CSR 93                Z-ADDZZAMTI    ZZTOTI                          LE0920
+0892 CSR 93                Z-ADDZZAMTD    ZZTOTD                          LE0920
+0893 CSR 93                GOTO ZZSEND                     ZERO BYPASS    LE0920
+0894 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.                        LE0920
+0895 CSR 91N92                                                            LE0920
+0896 CORN91 92             GOTO ZZOFPS                                    LE0920
+0897 C*                                                                   LE0920
+0898 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40                      LE0920
+0899 CSR         ZZWK2     COMP 999                  93    '93' = CARRY   LE0920
+0900 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.LE0920
+0901 C*                                                                   LE0920
+0902 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VELE0920
+0903 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VELE0920
+0904 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3                           LE0920
+0905 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3                           LE0920
+0906 C*                                                                   LE0920
+0907 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED    LE0920
+0908 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS. LE0920
+0909 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE      LE0920
+0910 CSRN99                Z-ADDZZWK2     ZZTOTD                          LE0920
+0911 CSRN99                Z-ADDZZWK3     ZZTOTI                          LE0920
+0912 C*                                                                   LE0920
+0913 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT. LE0920
+0914 CSR 99                Z-ADD0         ZZAMT  153                      LE0920
+0915 CSR                   GOTO ZZSEND                                    LE0920
+0916 C*                                                                   LE0920
+0917 C* THE 'SIGNS' ARE DIFFERENT                                         LE0920
+0918 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**LE0920
+0919 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT            LE0920
+0920 C*                                                                   LE0920
+0921 CSR 92                Z-SUBZZAMTI    ZZAMTI 150                      LE0920
+0922 CSR 92                Z-SUBZZAMTD    ZZAMTD  30                      LE0920
+0923 C*                                                                   LE0920
+0924 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.           LE0920
+0925 C*                                                                   LE0920
+0926 CSR 91                Z-SUBZZTOTI    ZZTOTI                          LE0920
+0927 CSR 91                Z-SUBZZTOTD    ZZTOTD                          LE0920
+0928 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.                            LE0920
+0929 C*                                                                   LE0920
+0930 CSR         ZZTOTI    COMP ZZAMTI               93  95               LE0920
+0931 CSR 95      ZZTOTD    COMP ZZAMTD               93  95               LE0920
+0932 C*                                                                   LE0920
+0933 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.                                   LE0920
+0934 CSR 95                Z-ADD0         ZZTOTI                          LE0920
+0935 CSR 95                Z-ADD0         ZZTOTD                          LE0920
+0936 CSR 95                GOTO ZZSEND                                    LE0920
+0937 C*                                                                   LE0920
+0938 C* IF ZZTOT GT. ZZAMT.                                               LE0920
+0939 CSR 93      ZZAMTD    COMP ZZTOTD               94                   LE0920
+0940 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI                          LE0920
+0941 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2                           LE0920
+0942 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI                          LE0920
+0943 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD                          LE0920
+0944 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD                          LE0920
+0945 C*                                                                   LE0920
+0946 C*                                                                   LE0920
+0947 C* IF ZZAMT GT. ZZTOT.                                               LE0920
+0948 CSRN93      ZZTOTD    COMP ZZAMTD               94                   LE0920
+0949 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150                      LE0920
+0950 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2                           LE0920
+0951 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI                          LE0920
+0952 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI                          LE0920
+0953 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD                          LE0920
+0954 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD                          LE0920
+0955 C*                                                                   LE0920
+0956 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE          LE0920
+0957 CSR                   SETOF                     94                   LE0920
+0958 CSR 93 91                                                            LE0920
+0959 CORN93 92             SETON                     94                   LE0920
+0960 CSR 94                Z-SUBZZTOTI    ZZTOTI                          LE0920
+0961 CSR 94                Z-SUBZZTOTD    ZZTOTD                          LE0920
+0962 C**                                                                  LE0920
+0963 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.            LE0920
+0964 CSR 92                Z-SUBZZAMTI    ZZAMTI                          LE0920
+0965 CSR 92                Z-SUBZZAMTD    ZZAMTD                          LE0920
+0966 CSR         ZZSEND    TAG                             ** ZZSEND TAG *LE0920
+0967 C**                                                                  LE0920
+0968 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.           LE0920
+0969 CSR                   SETOF                     96                   LE0920
+0970 CSR         ZZTOTD    COMP 0                        91               LE0920
+0971 CSR 91      ZZTOTI    COMP 0                      96                 LE0920
+0972 CSR 96                MOVE '.000-'   ZZNEGD  5                       LE0920
+0973 CSR                   ENDSR                             ** ENDSR **  LE0920
+0974 C********************************************************************LE0920
+0975 C*********** THIS SUBROUTINE HAS BEEN REMOVED BY ERROR FIX E86097    E86097
+0975 C*********** AS IT IS NOT REQUIRED.                                  E86097
+0978 C***********                                                         E86097
+0976 C*****ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND                     E86097
+0977 C***********     CONVERT TO A NUMBER OF DAYS.                        E86097
+0978 C***********                                                         E86097
+0979 C*****THE*YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.         E86097
+0980 C***********                                                         E86097
+0981 C***********ZDATE1    BEGSR                           *** ZDATE1 *** E86097
+0982 C***********                                                         E86097
+0983 C*****CLEAR*DAY NUMBER.                                              E86097
+0984 C***********          Z-ADD0         ZDAYNO  50                      E86097
+0985 C***********                                                         E86097
+0986 C*****CALCULATION TO DEFINE INPUT DATE FIELD.                        E86097
+0987 C***********          Z-ADDZDATE     ZDATE   60                      E86097
+0988 C***********                                                         E86097
+0989 C*****GET*INDIVIDUAL DAY, MONTH AND YEAR FIELDS.                     E86097
+0990 C***********          MOVE ZDATE     ZYEAR   20                      E86097
+0991 C**N98******          MOVELZDATE     ZDAY    20                      E86097
+0992 C***98******          MOVELZDATE     ZMTH    20                      E86097
+0993 C***********          MOVE ZDATE     ZWRK4   40                      E86097
+0994 C**N98******          MOVELZWRK4     ZMTH                            E86097
+0995 C***98******          MOVELZWRK4     ZDAY                            E86097
+0996 C***********                                                         E86097
+0997 C*****ENSURE MONTH IS VALID.                                         E86097
+0998 C***********ZMTH      COMP 0                      9999               E86097
+0999 C**N99******ZMTH      COMP 12                   99                   E86097
+1000 C***99******          GOTO ZDEND1                     BYPASS IF ERRORE86097
+1001 C***********                                                         E86097
+1002 C*****CHECK*FOR 30 DAY MONTHS.                                       E86097
+1003 C***********ZMTH      COMP 4                        90IF 90 ON, 30   E86097
+1004 C**N90******ZMTH      COMP 6                        90DAY MONTH.     E86097
+1005 C**N90******ZMTH      COMP 9                        90               E86097
+1006 C**N90******ZMTH      COMP 11                       90               E86097
+1007 C***********                                                         E86097
+1008 C*****ENSURE DAY IS VALID.                                           E86097
+1009 C***********ZDAY      COMP 0                      9999               E86097
+1010 C***90N99***ZDAY      COMP 30                   99                   E86097
+1011 C**N90N99***ZDAY      COMP 31                   99                   E86097
+1012 C***99******          GOTO ZDEND1                     BYPASS IF ERRORE86097
+1013 C***********                                                         E86097
+1014 C*****CHECK*FOR LEAP YEAR AND FEBRUARY.                              E86097
+1015 C***********ZYEAR     ADD  28        ZYEAR                           E86097
+1016 C***********ZYEAR     DIV  4         ZLYR    20                      E86097
+1017 C***********          MVR            ZLY     10     91LEAP YR, 91 ON E86097
+1018 C***********ZMTH      COMP 2                    93  92FEB., 92 ON    E86097
+1019 C***********                                          PAST FEB, 93 ONE86097
+1020 C*****IF*FEBUARY FURTHER VALIDATE DAY.                               E86097
+1021 C**N91*92***ZDAY      COMP 28                   99                   E86097
+1022 C***91*92***ZDAY      COMP 29                   99                   E86097
+1023 C***99******          GOTO ZDEND1                     BYPASS IF ERRORE86097
+1024 C***********                                                         E86097
+1025 C*****DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANSE86097
+1026 C***********ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.E86097
+1027 C**N91******ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YRE86097
+1028 C***91*93***ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.E86097
+1029 C***********ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR E86097
+1030 C***********ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTHE86097
+1031 C***********                                                         E86097
+1032 C***********ZDEND1    ENDSR                           * ZDEND1 ENDSR*E86097
+1033 C***********                                                         E86097
+1034 C***********                                                         E86097
+1035 C********************************************************************LE0920
+     C/SPACE 3                                                            S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C*  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C*  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+     C*                                                                   S01117
+     C*  CALLS: NOTHING                                                   S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+1036 OTAXEXHH D        01                                                 LE0920
+1037 O                                    1 'H'                           LE0920
+1038 OTAXEXWT D        50                                                 LE0920
+1039 O                                    1 'D'                           LE0920
+1040 O**                       BRCD       4                               S01117
+1040 O                         BRCA       4                               S01117
+1041 O                         CNUM      10                               LE0920
+1042 O                         LNRF      16                               LE0920
+1043 O                         MDAT      19P                              LE0920
+1044 O                         YWLC      27P                              LE0920
+1045 O                         IIYTD     35P                              LE0920
+1046 O                         WTYTOT B  43P                              LE0920
+1047 O                         CRSK      45                               LE0920
+1048 O                         PTYP      47                               LE0920
+     O** ADDITION OF EXTRA FIELDS FOR LE0930 REPORT                       S01270
+     O                         RCSI      48                               S01270
+     O                         OLNO      54                               S01270
+1049 OTAXEXZX T        LR                                                 LE0920
+1050 O                                    1 'T'                           LE0920
+1051 O                         NUMREC     4P                              LE0920
+1052 O*E0920P1T**203   LR                                                 S01117
+1052 OLE0920AUT  203   LR                                                 S01117
+1053 O***********                        22 'REFERENCE LE0920'            S01117
+1053 O                                   24 'REFERENCE LE0920AU'          S01117
+1054 O                         TITL      89                               LE0920
+1055 O                                  104 'DATE'                        LE0920
+1056 O                         RUNA     112                               LE0920
+1057 O                                  122 'PAGE'                        LE0920
+1058 O                         PAGE  Z  127                               LE0920
+1059 O        T  1     LR                                                 LE0920
+1060 O                                   45 'EXTRACT LOANS AND IN'        LE0920
+1061 O                                   68 'TEREST RATE INFORMATI0N'     LE0920
+1062 O                                   90 '- FILE CONTROL REPORT'       LE0920
+1063 O        T        LR                                                 LE0920
+1064 O                                   46 '---------------------'       LE0920
+1065 O                                   69 '------------------------'    LE0920
+1066 O                                   90 '---------------------'       LE0920
+1067 O        T 32     U7 U8 LR                                           LE0920
+1068 O                                   42 '*** REFERENCE'               LE0920
+1069 O                         DBPGM     51                               LE0920
+1070 O                                   71 '-DATABASE ERROR AT'          LE0920
+1071 O                         DBASE     74                               LE0920
+1072 O        T        U7 U8 LR                                           LE0920
+1073 O                                   37 'FILE NAME'                   LE0920
+1074 O                         DBFILE    43                               LE0920
+1075 O                                   48 'KEY'                         LE0920
+1076 O                         DBKEY     78                               LE0920
+1077 O        T  120   LR                                                 LE0920
+1078 O                                   28 'S/CLOAN - RUN CONTROLS'      LE0920
+1079 O                                   59 'NUMBER'                      LE0920
+1080 O                                   84 'VALUE'                       LE0920
+1081 O        T  2     LR                                                 LE0920
+1082 O                                   28 '----------------------'      LE0920
+1083 O                                   59 'OF RECORDS'                  LE0920
+1084 O                                   84 'OF RECORDS'                  LE0920
+1085 O        T  2     LR                                                 LE0920
+1086 O                                   29 'TOTAL RECORDS ON FILE'       LE0920
+1087 O                      NU7NORCLN3   59                               LE0920
+1088 O                      NU7VLAF  Z   81                               LE0920
+1089 O                      NU7VLAL      84                               LE0920
+1090 O        T  3     LR                                                 LE0920
+1091 O                                   29 'TOTAL RECORDS ON FILE'       LE0920
+1092 O                                   42 '- CALCULATED'                LE0920
+1093 O                         NOREC13   59                               LE0920
+1094 O                         CPAMI Z   81                               LE0920
+1095 O                         CPAMD     84                               LE0920
+1096 O                 U8NU7N61         111 '*** DIFFERENCE ***'          LE0920
+1097 O        T        LR                                                 LE0920
+1098 O                                   28 'S/SVNTS - RUN CONTROLS'      LE0920
+1099 O        T  2     LR                                                 LE0920
+1100 O                                   28 '----------------------'      LE0920
+1101 O        T  2     LR                                                 LE0920
+1102 O                                   29 'TOTAL RECORDS ON FILE'       LE0920
+1103 O                      NU7NOREVT3   59                               LE0920
+1104 O                      NU7HRWN  Z   81                               LE0920
+1105 O                      NU7HRDC      84                               LE0920
+1106 O        T  3     LR                                                 LE0920
+1107 O                                   29 'TOTAL RECORDS ON FILE'       LE0920
+1108 O                                   42 '- CALCULATED'                LE0920
+1109 O                         NOREC23   59                               LE0920
+1110 O                         EAMTI Z   81                               LE0920
+1111 O                         EAMTD     84                               LE0920
+1112 O                 U8NU7N62         111 '*** DIFFERENCE ***'          LE0920
+1113 O        T        LR                                                 LE0920
+1114 O                                   28 'S/LEYTD - RUN CONTROLS'      LE0920
+1115 O        T  2     LR                                                 LE0920
+1116 O                                   28 '----------------------'      LE0920
+1117 O        T  2     LR                                                 LE0920
+1118 O                                   29 'TOTAL RECORDS ON FILE'       LE0920
+1119 O                      NU7NORUPY3   59                               LE0920
+1120 O        T  3     LR                                                 LE0920
+1121 O                                   29 'TOTAL RECORDS ON FILE'       LE0920
+1122 O                                   42 '- CALCULATED'                LE0920
+1123 O                         NOREC33   59                               LE0920
+1124 O                 U8NU7N63         111 '*** DIFFERENCE ***'          LE0920
+1125 O        T  1     LR                                                 LE0920
+1126 O                                   28 'S/TAXEX - RUN CONTROLS'      LE0920
+1127 O        T  2     LR                                                 LE0920
+1128 O                                   28 '----------------------'      LE0920
+1129 O        T        LR                                                 LE0920
+1130 O                                   29 'TOTAL RECORDS ON FILE'       LE0920
+1131 O                         NUMREC3   59                               LE0920
+1132 O********T*3      LR                                                 S01117
+1133 O***********                        76 '*** END OF REPORT ***'       S01117
+     O**   ARRAY ZYDY & ZMDY HAVE BEEN DELETED DUE TO ERROR FIX E86097    E86097
+     O**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                E86097
+     O**0366073110961461                                                  E86097
+     O**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                  E86097
+     O**000031059090120151181212243273304334365                           E86097
+**  POWR - POWERS OF TEN
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

@@ -1,0 +1,106 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Move files to the GP library')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC01002 - Midas SM Move files to the GP library           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGP016  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGP016 - Global database - Re-use deleted records           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL1)  TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+             DCLF       FILE(SM01002PD)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Get Global System Prefix and Bridge Delivered Source */
+/* Library from GPSVALPD */
+ 
+             CHGVAR     VAR(&SVALK1) VALUE('GlobalSystemPrefix')
+             CHGVAR     VAR(&SVALK2) VALUE('BrgDeliveredSrcLib')
+ 
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCDE &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK0 &SVAL10)
+ 
+             IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             IF         COND(%SST(&SVAL1 1 4) *EQ ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             IF         COND(&RTNCDE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&PRE) VALUE(%SUBSTRING(&SVAL1 1 2))
+             CHGVAR     VAR(&GPLIB) VALUE(&PRE *TCAT 'GPLIB')
+ 
+             IF         COND(%SST(&SVAL2 1 10) *EQ ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&SRCLIB) VALUE(%SUBSTRING(&SVAL2 1 10))
+ 
+READPF:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             MOVOBJ     OBJ(&AFILE) OBJTYPE(*FILE) TOLIB(&GPLIB)
+             MONMSG     MSGID(CPF0602 CPF2135)
+ 
+             CHGPF      FILE(&AFILE) SRCFILE(&SRCLIB/&ATOFILE)
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(READPF)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program SMUC01002 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

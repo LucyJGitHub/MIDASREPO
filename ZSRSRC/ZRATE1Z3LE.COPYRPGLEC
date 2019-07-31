@@ -1,0 +1,90 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standard Subroutines                                 *
+      *                                                               *
+      *  ZRATE1Z3LE - Edt rate dsp w/o sign/right just                *
+      *                                                               *
+      *  Last Amend No. 245692  *CREATE    Date 21Sep13               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  245692 - Incorrect validation of rates when the decimal se-  *
+      *           parator in the Dealing ICD was defined as "," ins-  *
+      *           tead of ".".                                        *
+      *         - Applied for MD23981.                                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * ZRATE1 - Subroutine to convert a rate to display, no sign     *
+      *          and no right justify                                 *
+      *                                                               *
+      * INPUT  : @@INPR Rate to be edited.                            *
+      *                                                               *
+      * OUTPUT : @@OUTR Edited output rate.                           *
+      *                                                               *
+      * OTHERS   @@DECS Field to hold decimal digits for input rate.  *
+      * USED   : @@INTS Field to hold integers for input rate.        *
+      *          @@N    Counter field.                                *
+      *          @W     Work array.                                   *
+      *                                                               *
+      *****************************************************************
+     C     ZRATE1        BEGSR
+      *
+      **  Initialise fields used.
+      *
+     C                   MOVE      *BLANKS       @@OUTR           13
+     C                   MOVE      *BLANKS       @@DECS            7
+     C                   MOVE      *BLANKS       @@INTS            4
+     C                   Z-ADD     0             @@N               2 0
+      *
+      **  Initialise work array.
+      *
+     C                   MOVEA     *BLANKS       @W
+      *
+      **  If the rate is negative reverse the sign.
+      *
+     C     @@INPR        IFLT      0
+     C                   Z-SUB     @@INPR        @@INPR           11 7
+     C                   END
+      *
+      **  Separate integers and decimal digits into two fields.
+      *
+     C                   MOVE      @@INPR        @@DECS
+     C                   MOVEL     @@INPR        @@INTS
+      *
+      **  Move integers, decimal separator and decimal digits into
+      **  work array.
+      *
+     C                   MOVEA     @@INTS        @W
+     C                   MOVE      BNDCSP        @W(5)
+     C                   MOVEA     @@DECS        @W(6)
+      *
+      **  Remove leading zeros from the rate and replace with blanks.
+      *
+     C                   Z-ADD     1             @@N
+     C     @@N           DOWLE     3
+     C     @W(@@N)       ANDEQ     '0'
+     C                   MOVE      *BLANK        @W(@@N)
+     C                   ADD       1             @@N
+     C                   END
+      *
+      **  Truncate trailing zeros and replace with blanks. If rate is
+      **  an integer a single zero after the decimal place should be
+      **  displayed.
+      *
+     C                   Z-ADD     12            @@N
+     C     @@N           DOWGE     7
+     C     @W(@@N)       ANDEQ     '0'
+     C                   MOVE      *BLANK        @W(@@N)
+     C                   SUB       1             @@N
+     C                   END
+      *
+      **  Move the final array into the output field.
+      *
+     C                   MOVEA     @W            @@OUTR
+      *
+     C     ZRAT19        ENDSR
+      *****************************************************************
+      * End of /COPY ZRATE1Z3LE                                       *
+      *****************************************************************

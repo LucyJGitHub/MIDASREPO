@@ -1,0 +1,84 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Check shared formats')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC000038 - Check shared formats                            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. CUP041   *CREATE   Date 24Jun14              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &PFX &BRGBRGLIB &RTNFLAG)
+ 
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&MLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TLIB) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             DLTF       FILE(QTEMP/UPC000038F)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UPC000038O)
+             MONMSG     MSGID(CPF0000)
+ 
+             CLRPFM     FILE(UPSFMTQF)
+ 
+             CRTDUPOBJ  OBJ(UPFDRFTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UPC000038F)
+ 
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CHGVAR     VAR(&MLIB) VALUE(&PFX *CAT 'GMLIB')
+                CHGVAR     VAR(&PLIB) VALUE(&PFX *CAT 'GPLIB')
+                CHGVAR     VAR(&TLIB) VALUE(&PFX *CAT 'GTALIB')
+             ENDDO
+ 
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CHGVAR     VAR(&MLIB) VALUE(&PFX *CAT 'DMLIB')
+                CHGVAR     VAR(&PLIB) VALUE(&PFX *CAT 'DPLIB')
+                CHGVAR     VAR(&TLIB) VALUE(&PFX *CAT 'DTALIB')
+             ENDDO
+ 
+             DSPFD      FILE(&MLIB/*ALL) TYPE(*RCDFMT) +
+                          OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/UPC000038O) OUTMBR(*FIRST *ADD)
+             DSPFD      FILE(&PLIB/*ALL) TYPE(*RCDFMT) +
+                          OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/UPC000038O) OUTMBR(*FIRST *ADD)
+             DSPFD      FILE(&TLIB/*ALL) TYPE(*RCDFMT) +
+                          OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/UPC000038O) OUTMBR(*FIRST *ADD)
+ 
+             CPYF       FROMFILE(QTEMP/UPC000038O) +
+                          TOFILE(QTEMP/UPC000038F) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+             CALL       PGM(UP0025) PARM(&RTNFLAG)
+             IF         COND(&RTNFLAG *EQ 'E') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGVAR     VAR(&RTNFLAG) VALUE('E')
+ 
+ENDPGM:
+             ENDPGM

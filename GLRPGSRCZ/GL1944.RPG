@@ -1,0 +1,463 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Cust. Serv. Fees - RE Holdings Extract')
+/*OVRF*: OVRDBF GLACP1L1 APOST                                        *
+/*OVRF*: OVRDBF GLACP5L1 GLSTMTP                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1944 - Customer Service Fees - Retail Holdings Extract     *
+      *                                                               *
+      *  Function:  This program Evaluate Retail Holdings to be       *
+      *  (COB)      able to calculate Safe Custody fees and/or        *
+      *             Management Fees to Accrue.                        *
+      *             Called during COB after REC3118 00001/00002       *
+      *                                                               *
+      *  Called By: GLC1944 - Cust. Serv. Fees - RE Holdings Extract  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 192174             Date 07Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                         *CREATE    Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  192174 - Retail account balance extracted incorrectly.       *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+     FGLCUFEL7IF  E           K        DISK         KINFSR *PSSR
+      ** Customers With SC or MG fees to accrued.
+      *
+     FACCNTL0 IF  E           K        DISK         KINFSR *PSSR
+      ** Accounts of Customer
+      *
+     FREACR   IF  E           K        DISK         KINFSR *PSSR
+     F            REACRAF                           KIGNORE
+     F            REACRZF                           KIGNORE
+      ** Retail Accrued Interest to Date Details
+      *
+     FGLACP1L1IF  E           K        DISK         KINFSR *PSSR      UC
+     F            APOSTPDF                          KRENAMEACPO1F
+      ** Today's  Posting File Detail - Sequence = 00001  Working Day
+      *
+     FGLACP5L1IF  E           K        DISK         KINFSR *PSSR      UC
+     F            APOSTPDF                          KRENAMEACPO5F
+      ** Today's  Posting File Detail - Sequence = 00002  Non-Working Day
+      *
+     FGLHOLDPDO   E                    DISK         KINFSR *PSSR
+      ** Extract Holding Details                         Prefix - F8
+      *
+     FGL1944AUO   E                    PRINTER
+      ** RE Holdings extract - audit
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   86  - Chain indicator for GLACP1L1/GLACP5L1                 *
+      *   87  - Chain indicator for LF/REACR                          *
+      *   88  - Chain indicator for LF/ACCNTL0                        *
+      *   89  - End of File Indicator for LF/GLCUFEL7                 *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INSZR - Initialisation routine                              *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     IREACRDF
+      ** Rename Fields in format REACRDF
+     I              RECI                            CRECI
+     I              ACOD                            CACOD
+     I              BRCA                            CBRCA
+     I              GADI                            CGADI
+     I              MADI                            CMADI
+     I              GACI                            CGACI
+     I              MACI                            CMACI
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM @@PGM
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Access Object DS for Bank details file
+      *
+     ISDGELR    E DSSDGELRPD
+      ** Access Object DS For General Ledger Module I.C.D. Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Access Object DS for Currency Details
+      *
+     ISDACOD    E DSSDACODPD
+      ** Access Object DS for Account Code Details
+     I              QQACCD                          QQACCX                                    CGL029
+      *
+     IDSSDY     E DSDSSDY
+      ** Access Object DS Retrieve file details - Long DS
+      *
+     IDSFDY     E DSDSFDY
+      ** Access Object DS Retrieve file details - Short DS
+      *
+     I***DSACCT*     DS                             18                                        CGL029
+     IDSACCT      DS                             24                                           CGL029
+      ** Account from ACCNTAB
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM                                      CSD027
+     I                                        4   9 CNUM                                      CSD027
+     I                                       10  12 CCY
+     I**********                             13  160ACOD                                      CGL029
+     I**********                             17  180ACSQ                                      CGL029
+     I                                       13  220ACOD                                      CGL029
+     I                                       23  240ACSQ                                      CGL029
+      *
+      /EJECT
+      ***************************************************************
+      *                M a i n     P r o c e s s i n g              *
+      ***************************************************************
+      *
+      ** Read GLCUFEL7 until EOF
+      *
+     C           *LOVAL    SETLLGLCUFEL7
+     C                     READ GLCUFED0                 89
+     C           *IN89     DOWEQ*OFF
+      *
+      ** Read ACCNTL0 for Customer, but process Retail accounts only
+      *
+     C**********           MOVE F0CNUM    KCNUM   60                                          CSD027
+     C                     MOVE F0CNUM    KCNUM   6                                           CSD027
+      *
+     C           KCNUM     CHAINACCNTL0              88
+     C           *IN88     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C           ATYP      ANDEQ'R'
+      *
+      ** Fill up GLHOLDD0 with Retails Account/Movements Details
+      *
+     C                     CLEARGLHOLDD0
+      *
+     C                     MOVE CNUM      F8CNUM
+     C                     MOVE PTFR      F8PTFR
+      *
+      ** Access SDCURRPD to retrieve Precious Metal indicator
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM CCY       PCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     MOVELCCY       DBKEY            ************
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVEL'RE'      F8SRHO
+      *
+     C           A6PMRT    IFEQ 'Y'
+     C                     MOVEL'RP'      F8SRHO
+     C                     ENDIF
+      *
+     C                     MOVE CCY       F8CCY
+     C                     MOVELDSACCT    F8TREF
+      *
+      ** Retrieve Instrument with Account code  (AOACODR0)
+      *
+     C**********           MOVE ACOD      PACOD   4                                           CGL029
+     C                     MOVE ACOD      PACOD  10                                           CGL029
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PACOD
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDACODPD'DBFILE           ************
+     C                     Z-ADD4         DBASE            * DBERR 04 *
+     C                     MOVELACOD      DBKEY            ************
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           A5INNR    IFNE *BLANKS
+     C                     MOVELA5INNR    F8INST
+     C                     ENDIF
+      *
+      ** Access REACR for Accrued on Assets/Liabilities Amounts
+      *
+     C                     MOVE CNUM      KCNUM
+     C                     MOVE CCY       KCCY
+     C                     Z-ADDACOD      KACOD
+     C                     Z-ADDACSQ      KACSQ
+     C                     MOVE BRCA      KBRCA
+      *
+     C           KREACR    CHAINREACR                87
+     C           *IN87     IFEQ *OFF
+     C           CRECI     IFNE '*'
+     C           CRECI     ANDNE'C'
+      *
+      ** Accrued on Assets are Credit interest
+      *
+     C           CAIC1     ADD  CMACI     F8ASAC
+     C                     ADD  CGACI     F8ASAC
+      *
+      ** Liabilities Accrues on are Debit interest
+      *
+     C           DAIC1     ADD  CMADI     F8LIAC
+     C                     ADD  CGADI     F8LIAC
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           CLBL      IFLT 0
+      *
+      ** Assets market value is Cleared balance when CLBL < 0
+      ** + REEODPF Credit movements
+      *
+     C                     Z-SUBCLBL      WWASMV 150
+     C                     Z-ADD0         WWLIMV                                              192174
+     C                     ELSE
+      *
+      ** Liabilities  market value is Cleared balance when CLBL >= 0
+      ** + REEODPF Debit movements
+      *
+     C                     Z-ADDCLBL      WWLIMV 150
+     C                     Z-ADD0         WWASMV                                              192174
+     C                     ENDIF
+      *
+      ***  Read Retail movements EOD file for Account involved
+      ** Sequence "00001 = ACPO1"; "00002 = ACPO5".
+      *
+     C                     SELEC
+     C           PSEQ      WHEQ 00001
+     C           KREEOD    CHAINGLACP1L1             86
+     C           PSEQ      WHEQ 00002
+     C           KREEOD    CHAINGLACP5L1             86
+     C                     ENDSL
+      *
+     C           *IN86     DOWEQ*OFF
+      *
+      ** Process only movements done before event control date
+      *
+     C           VALD      IFLE WWCTRL
+      *
+     C           DRCR      IFEQ 0
+     C                     ADD  PSTA      WWLIMV
+     C                     ELSE
+     C                     ADD  PSTA      WWASMV
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Sequence "00001 = ACPO1"; "00002 = ACPO5".
+      *
+     C                     SELEC
+     C           PSEQ      WHEQ 00001
+     C           KREEOD    READEGLACP1L1                 86
+     C           PSEQ      WHEQ 00002
+     C           KREEOD    READEGLACP5L1                 86
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+      ** Filled asset or liability amount depending on all movements
+      *
+     C                     Z-ADD*ZERO     F8LIMV
+     C                     Z-ADD*ZERO     F8ASMV
+      *
+     C           WWLIMV    IFGE WWASMV
+     C           WWLIMV    SUB  WWASMV    F8LIMV
+     C                     ELSE
+     C           WWASMV    SUB  WWLIMV    F8ASMV
+     C                     ENDIF
+      *
+      ** All other fields stay blanks or Zero
+      *
+     C                     WRITEGLHOLDD0
+     C                     ENDIF
+      *
+      ** Next record Account
+      *
+     C           KCNUM     READEACCNTL0                  88
+     C                     ENDDO
+      *
+      ** Read next customer
+      *
+     C           F0CNUM    SETGTGLCUFEL7
+     C                     READ GLCUFEL7                 89
+     C                     ENDDO
+      *
+      ** Exit program
+      *
+     C                     MOVE *ON       *INLR
+      *
+     C                     SELEC
+     C           PSEQ      WHEQ 00001
+     C                     CLOSEGLACP1L1
+     C           PSEQ      WHEQ 00002
+     C                     CLOSEGLACP5L1
+     C                     ENDSL
+      *
+     C                     RETRN
+      *
+      ***************************************************************
+      *               E N D    O F    M A I N L I N E S             *
+      ***************************************************************
+      /EJECT
+      ***************************************************************
+      *  *INZSR - Standard initial subroutine                       *
+      *  ------                                                     *
+      *  Called by : automatically                                  *
+      *  Calls     :                                                *
+      ***************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Entry parameter
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    50
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Read SDBANKPD to retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'*FIRST ' DBKEY     P      ************
+     C                     MOVEL'GL1944'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Read SDGELRPD to retrieve  Accrual Control date BKAPDT
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ************
+     C                     Z-ADD002       DBASE            * DBERR 02 *
+     C                     MOVEL'*FIRST ' DBKEY     P      ************
+     C                     MOVEL'GL1944'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Event control date
+      *
+     C           BJDNWD    SUB  1         WWCTRL  50
+     C           BKANWD    IFEQ '2'
+     C           BKAPDT    IFLE WWCTRL
+     C                     Z-ADDBKAPDT    WWCTRL
+     C                     ELSE
+     C                     Z-ADDBJRDNB    WWCTRL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Key lists definition
+      *
+     C           KREACR    KLIST
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KCCY    3
+     C**********           KFLD           KACOD   40                                          CGL029
+     C                     KFLD           KACOD  100                                          CGL029
+     C                     KFLD           KACSQ   20
+     C                     KFLD           KBRCA   3
+      *
+     C           KREEOD    KLIST
+     C                     KFLD           KBRCA
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+      *
+      ** Sequence "00001 = ACPO1"; "00002 = ACPO5".
+      *
+     C                     SELEC
+     C           PSEQ      WHEQ 00001
+     C                     OPEN GLACP1L1
+     C           PSEQ      WHEQ 00002
+     C                     OPEN GLACP5L1
+     C                     ENDSL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Program exception error routine                     *
+      *  ------                                                       *
+      * Called by : Automatically or EXSR                             *
+      * Calls     :                                                   *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+**  CPY@
+(c) Finastra International Limited 2001

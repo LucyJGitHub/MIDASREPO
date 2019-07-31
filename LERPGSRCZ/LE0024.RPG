@@ -1,0 +1,1166 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Calculation for AIPN, IPRN & AITN in CLOANCL')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Lending Module                                       *
+      *                                                               *
+      *  LE0024 - Calculation for AIPN, IPRN and AITN in CLOANCL      *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. MD053295           Date 13Apr19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
+      *                 CLE154             Date 07Aug12               *
+      *                 AR996895           Date 25Nov12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246141             Date 26Mar07               *
+      *                 164847             Date 30Nov06               *
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242286             Date 25Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CIR013             Date 25Apr05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS005  *CREATE    Date 26Aug03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD053295 - Lending loan with Interest Calculation Basis      *
+      *             method 3 (30/360) has wrong interest payment      *
+      *             amount for month of March (Recompile)             *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *    
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
+      *  AR996895 - Incorrect acrrual interest calculation            *
+      *             (Child: AR996897) (Recompile)                     *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *            to Midas Plus (Recompile)                          *
+      *  246141 - Recompiled due to changes in ZINTDYZ2               *
+      *  164847 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  BUG12990 - Recompiled due to changes in ZINTDYZ2/ZINTDYZ2LE  *
+      *  242286 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over GLINTC and ZINTDY.                   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *                                                               *
+      *****************************************************************
+     FHISTS   IF  E           K        DISK         KINFDS INIDS
+     F            HISTSHHF                          KIGNORE
+     F            HISTSZXF                          KIGNORE
+     FCLOAN   IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FLE0024P1O   E             30     PRINTER
+     FLE0024P2O   E             36     PRINTER
+     FLE0024AUO   E                    PRINTER
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /COPY ZSRSRC,ZDATE9Z1
+      /SPACE 3
+     ICLOANCLF
+     I              RECI                            CLRECI
+     I              LNRF                            CLLNRF
+     I              RCDT                            CLRCDT
+     I              MRIN                            CLMRIN
+     I              PTYP                            CLPTYP
+     I              CNUM                            CLCNUM
+     I              BRCA                            CLBRCA
+     I              LTYP                            CLLTYP
+     I              SUTP                            CLSUTP
+     I              DDAT                            CLDDAT
+     I              VDAT                            CLVDAT
+     I              MDAT                            CLMDAT
+     I              LASQ                            CLLASQ
+     I              FCUS                            CLFCUS
+     I              FTYP                            CLFTYP
+     I              FSEQ                            CLFSEQ
+     I              CCY                             CLCCY
+     I              CPAM                            CLCPAM
+     I              INTC                            CLINTC
+     I              INTR                            CLINTR
+     I              BRTT                            CLBRTT
+     I              BRTE                            CLBRTE
+     I              RTSP                            CLRTSP
+     I              MARG                            CLMARG
+     I              SPIN                            CLSPIN
+     I              CHIN                            CLCHIN
+     I              WTRT                            CLWTRT
+     I              WTIN                            CLWTIN
+     I              REPT                            CLREPT
+     I              RAMT                            CLRAMT
+     I              NRPD                            CLNRPD
+     I              RFRQ                            CLRFRQ
+     I              RDYN                            CLRDYN
+     I              FCCY                            CLFCCY
+     I              LIND                            CLLIND
+     I              CRSK                            CLCRSK
+     I              ACOF                            CLACOF
+     I              NACD                            CLNACD
+     I              RELI                            CLRELI
+     I              AUTO                            CLAUTO
+     I              PSAM                            CLPSAM
+     I              BCXR                            CLBCXR
+     I              FCXR                            CLFCXR
+     I              SDST                            CLSDST
+     I              OSDA                            CLOSDA
+     I              TSTN                            CLTSTN
+     I              MDST                            CLMDST
+     I              OMDA                            CLOMDA
+     I              TMAN                            CLTMAN
+     I              FACO                            CLFACO
+     I              RLDT                            CLRLDT
+     I              NROD                            CLNROD
+     I              RLFQ                            CLRLFQ
+     I              RLDY                            CLRLDY
+     I              RDFC                            CLRDFC
+     I              NBRA                            CLNBRA
+     I              NRTS                            CLNRTS
+     I              NSIN                            CLNSIN
+     I              NCAS                            CLNCAS
+     I              AWTP                            CLAWTP
+     I              WTRD                            CLWTRD
+     I              WTWD                            CLWTWD
+     I              IWOD                            CLIWOD
+     I              PWOD                            CLPWOD
+     I              BMDI                            CLBMDI
+     I              FMDI                            CLFMDI
+     I              PDIN                            CLPDIN
+     I              LSWC                            CLLSWC
+     I              LSWS                            CLLSWS
+     I              OSDB                            CLOSDB
+     I              OMDB                            CLOMDB
+     I              ORBR                            CLORBR
+     I              PRFC                            CLPRFC
+     I              FCLB                            CLFCLB
+     I              MLNR                            CLMLNR
+     I              BTIN                            CLBTIN
+     I              BLDY                            CLBLDY
+     I              OLNO                            CLOLNO
+     I              RCSI                            CLRCSI
+     I              ICBS                            CLICBS
+     I              IPFR                            CLIPFR
+     I              TOTI                            CLTOTI
+     I              NIDT                            CLNIDT
+     I              IBDT                            CLIBDT
+     I              SLID                            CLSLID
+     I              AIPD                            CLAIPD
+     I              DLRC                            CLDLRC
+     I              IACD                            CLIACD
+     I              AITC                            CLAITC
+     I              TFEP                            CLTFEP
+     I              AIAP                            CLAIAP
+     I              IPRD                            CLIPRD
+     I              IPRM                            CLIPRM
+     I              ICTD                            CLICTD
+     I              AIMN                            CLAIMN
+     I              RBDT                            CLRBDT
+     I              NOPS                            CLNOPS
+     I              NCHI                            CLNCHI
+     I              ZZ001A                          CL001A
+     I              IFDY                            CLIFDY
+     I              LONI                            CLLONI
+     I              CNFI                            CLCNFI
+     I              ACEI                            CLACEI
+     I              TLXI                            CLTLXI
+     I              CBLI                            CLCBLI
+     I              ORED                            CLORED
+     I              LCD                             CLLCD
+     I              CHTP                            CLCHTP
+     I              TNLU                            CLTNLU
+     I              ADDI                            CLADDI
+     I              ORMD                            CLORMD
+     I              ORTI                            CLORTI
+     I              ZZ023A                          CL023A
+     I              BOKC                            CLBOKC
+     I              COCU                            CLCOCU
+     I              RECE                            CLRECE
+     I              OMDT                            CLOMDT
+     I              NIPD                            CLNIPD
+     I              NMDT                            CLNMDT
+     I              APMI                            CLAPMI
+     I              RSTM                            CLRSTM
+     I              RONS                            CLRONS
+     I              RIBN                            CLRIBN
+     I              RIBA                            CLRIBA
+     I              ROBN                            CLROBN
+     I              ROCN                            CLROCN
+     I              PSTM                            CLPSTM
+     I              PONS                            CLPONS
+     I              PIBN                            CLPIBN
+     I              PIBA                            CLPIBA
+     I              POBN                            CLPOBN
+     I              POCN                            CLPOCN
+     I              RCRN                            CLRCRN
+     I              RCRA                            CLRCRA
+     I              RVNO                            CLRVNO
+     I              AWBN                            CLAWBN
+     I              AWBA                            CLAWBA
+     I              BENN                            CLBENN
+     I              BENA                            CLBENA
+     I              DTP1                            CLDTP1
+     I              DTP2                            CLDTP2
+     I              DTP3                            CLDTP3
+     I              DTP4                            CLDTP4
+     I              DCHG                            CLDCHG
+     I              BTB1                            CLBTB1
+     I              BTB2                            CLBTB2
+     I              BTB3                            CLBTB3
+     I              BTB4                            CLBTB4
+     I              BTB5                            CLBTB5
+     I              BTB6                            CLBTB6
+     I              CVMR                            CLCVMR
+     I              PTFR                            CLPTFR
+     I              HLEX                            CLHLEX
+     I              FSRP                            CLFSRP
+     I              FSGN                            CLFSGN
+     I              FPRC                            CLFPRC
+     I              TCOF                            CLTCOF
+     I              ACPD                            CLACPD
+     I              ACDA                            CLACDA
+     I              ACAJ                            CLACAJ
+     I              ACAP                            CLACAP
+     I              COFD                            CLCOFD
+     I              COFM                            CLCOFM
+     I              CFCD                            CLCFCD
+     I              NFRS                            CLNFRS
+     I              NFSN                            CLNFSN
+     I              NFPC                            CLNFPC
+     I              PDCF                            CLPDCF
+     I              FCTD                            CLFCTD
+     I              FWOD                            CLFWOD
+     I              DFTP                            CLDFTP
+     I              DFST                            CLDFST
+     I              MCRA                            CLMCRA
+     I              FCRA                            CLFCRA
+     I              PDDI                            CLPDDI
+     I              PTDI                            CLPTDI
+     I              GDPR                            CLGDPR
+     I              GDIN                            CLGDIN
+     I              LNKS                            CLLNKS
+     I              MNSG                            CLMNSG
+     I              GASS                            CLGASS
+     I              GPRT                            CLGPRT
+     I              TOLN                            CLTOLN
+     I              LSTS                            CLLSTS
+     I              IUSR                            CLIUSR
+     I              AUSR                            CLAUSR
+     I              XUSR                            CLXUSR
+     I              RATF                            CLRATF
+     I              CNCF                            CLCNCF
+     I              PCRF                            CLPCRF
+     I              LPFI                            CLLPFI
+     I              PTFC                            CLPTFC
+     I              PTFT                            CLPTFT
+     I              PTFN                            CLPTFN
+     I              PCOB                            CLPCOB
+     I              LRLD                            CLLRLD
+     I              LMCD                            CLLMCD
+     I              SCCY                            CLSCCY
+     I              ICCY                            CLICCY
+     I              OINR                            CLOINR
+     I              OIDT                            CLOIDT
+     I              REPI                            CLREPI
+     I              RFDY                            CLRFDY
+     I              RFRI                            CLRFRI
+     I              RFRT                            CLRFRT
+     I              RFAR                            CLRFAR
+     I              FSYLDC                          CLYLDC
+     I              FSFYLD                          CLFYLD
+     I              FSURPL                          CLURPL
+     I              FSPLAM                          CLPLAM
+     I              FSPLDT                          CLPLDT
+     I              FSYUPL                          CLYUPL
+     I              FSEFUP                          CLEFUP
+     I              FSECUP                          CLECUP
+     I              AIPN                            CLAIPN
+     I              AITN                            CLAITN
+     I              AIAN                            CLAIAN
+     I              IPRN                            CLIPRN
+     I              AINN                            CLAINN
+     I              TOTN                            CLTOTN
+     I              ICTN                            CLICTN
+     I              IWON                            CLIWON
+     I              IPNM                            CLIPNM
+     I              PDNN                            CLPDNN
+     I              FSCPAM                          CLFSCP
+     I              CLAS                            CLCLAS                                    CLE042
+     I              DFCL                            CLDFCL                                    CLE042
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IINIDS       DS
+     I                                     *RECORD  RECFMT
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** External data structures for General Ledger Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External data structures for Currency Details
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+      /COPY ZSRSRC,ZINTDYZ1
+      /COPY ZSRSRC,ZDATE9Z2
+      /COPY ZSRSRC,ZDAT10Z1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C                     EXSR SRINIT
+      *
+      ** Read through the History File
+      *
+     C           *LOVAL    SETLLHISTSHMF
+     C                     READ HISTS                    31
+     C                     MOVE *ON       *IN30
+     C                     MOVE *ON       *IN36
+      *
+     C           *IN31     DOWEQ*OFF
+      *
+     C           CLLNRF    IFNE LNRF
+     C********** CLLNRF    IFNE *ZEROS                                                        CLE148
+     C           CLLNRF    IFNE *BLANKS                                                       CLE148
+     C                     EXSR SRUDLN
+     C                     ENDIF
+     C           LNRF      CHAINCLOAN                32
+     C                     MOVE 'Y'       WDETL2  1
+     C                     MOVE 'Y'       WDETL3  1
+     C           *IN32     IFEQ *ON
+     C                     MOVE *ON       *IN35
+     C                     ELSE
+     C                     MOVE *OFF      *IN35
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Choose historic records which is not equal to the interest
+      ** header
+      *
+     C           AMTP      IFNE 'IH'
+      *
+     C           AMTP      IFEQ 'ST'
+     C                     EXSR SRAMST
+     C                     ELSE
+     C                     Z-ADDVDAT      WKEND
+     C                     ENDIF
+      *
+      ** Calculate for the interest
+      *
+     C                     EXSR SRCALC
+      *
+      ** Write to report
+      *
+     C                     EXSR SRREPT
+      *
+      ** Consider the other amendment types
+      *
+     C                     EXSR SRAMTP
+      *
+      ** Set up Interest Rates
+      *
+     C                     EXSR SRINTR
+      *
+     C                     ENDIF
+      *
+     C                     READ HISTS                    31
+     C                     ENDDO
+      *
+     C           *IN31     IFEQ *ON
+     C********** LNRF      ANDNE0                                                             CLE148
+     C           LNRF      ANDNE*BLANKS                                                       CLE148
+     C                     EXSR SRUDLN
+     C                     ENDIF
+     C                     WRITETRAILP1
+     C                     WRITETRAILP2
+      *
+     C                     MOVE *ON       *INLR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAMST - Subroutine for Amendment Type Start                 *
+      *                                                               *
+      *****************************************************************
+     C           SRAMST    BEGSR
+      *
+     C                     MOVE ' '       STAIN   1
+     C                     Z-ADDVDAT      WKBEG   50
+     C                     Z-ADD0         WKEND   50
+     C                     Z-ADDFSPRAM    WPRIN  150
+     C                     Z-ADD0         WAIWM  150
+     C                     Z-ADDCALC      ZICALC
+     C                     Z-ADDBRTE      WBRTE  117
+     C                     Z-ADDRTSP      WRTSP  117
+     C                     MOVE SPIN      WSPIN   1
+     C                     Z-ADDINTR      WINTR  117
+     C                     Z-ADDCLMARG    WMARG   75
+     C           CLMARG    IFLT *ZERO
+     C                     Z-SUBCLMARG    WMARG
+     C                     ENDIF
+     C           WINTR     IFGT WMARG
+     C                     SUB  CLMARG    WINTR
+     C                     ELSE
+     C                     Z-ADD0         WINTR
+     C                     ENDIF
+     C                     Z-ADD0         WTAIPD
+     C                     Z-ADD0         WTIPRD
+     C                     Z-ADD0         WTAITC
+     C                     MOVE *OFF      *IN32
+     C                     MOVE *OFF      *IN33
+     C                     MOVE *OFF      *IN34
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAMTP - Other Amendment Types                               *
+      *                                                               *
+      *****************************************************************
+     C           SRAMTP    BEGSR
+      *
+     C           AMTP      IFEQ 'RO'
+     C                     Z-ADDBRTE      WBRTE
+     C                     Z-ADDRTSP      WRTSP
+     C                     Z-ADDCALC      ZICALC
+     C                     MOVE SPIN      WSPIN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'BC'
+     C           AMTP      OREQ 'BR'
+     C                     Z-ADDBRTE      WBRTE
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'SA'
+     C           STAIN     ANDEQ'Y'
+     C                     MOVE ' '       STAIN
+     C                     ENDIF
+     C           AMTP      IFEQ 'SA'
+     C           STAIN     ANDEQ' '
+     C                     MOVE 'Y'       STAIN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'SC'
+     C                     Z-ADDRTSP      WRTSP
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'PI'
+     C           AMTP      OREQ 'PT'
+     C                     ADD  FSPRAM    WPRIN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'RE'
+     C           AMTP      OREQ 'MR'
+     C           EXVD      ANDEQ*ZEROS
+     C           AMTP      OREQ 'MR'
+     C           EXVD      ANDGEVDAT
+     C                     SUB  FSPRAM    WPRIN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'MC'
+     C                     Z-ADDFSCPAM    WPRIN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'PF'
+     C                     SUB  FSPRAM    WPRIN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'MA'
+     C                     SUB  FSPRAM    WPRIN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'IN'
+     C           INTN      ANDNE0
+     C           CLINTC    ANDEQ'Y'
+     C                     ADD  INTN      WPRIN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINTR - Subroutine to calculate for the Interest Rate       *
+      *                                                               *
+      *****************************************************************
+     C           SRINTR    BEGSR
+      *
+     C                     SELEC
+     C           WSPIN     WHEQ 'A'
+     C           WBRTE     ADD  WRTSP     WINTR
+      *
+     C           WSPIN     WHEQ 'S'
+     C           WBRTE     IFNE 0
+     C           WBRTE     SUB  WRTSP     WINTR
+     C                     ELSE
+     C           WRTSP     SUB  WBRTE     WINTR
+     C                     ENDIF
+      *
+     C           WSPIN     WHEQ 'P'
+     C           WRTSP     DIV  100       WORK   139
+     C           WORK      MULT WBRTE     WINTR     H
+      *
+     C           WSPIN     WHEQ ' '
+     C                     Z-ADDWRTSP     WINTR
+     C                     ENDSL
+      *
+      ** Original rate with margin
+      *
+     C                     Z-ADDWINTR     WOINTR 117
+      *
+      ** NET TREASURY RATE
+      *
+     C           WINTR     IFGT WMARG
+     C                     SUB  CLMARG    WINTR  117
+     C                     ELSE
+     C                     Z-ADD0         WINTR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUDLN - Subroutine to Update PF/CLOANCL                     *
+      *                                                               *
+      *****************************************************************
+     C           SRUDLN    BEGSR
+      *
+      ** Calculate Accrued Interest Posted to Date upto Run Date before
+      ** update to CLOANCL
+      *
+     C           WPAMTP    IFNE 'MA'
+     C           WPAMTP    ANDNE'SA'
+      *
+     C                     Z-ADDWRUNDT    ZIEND
+      *
+     C           CLMDAT    IFLE BJRDNB
+     C           CLMDAT    ANDNE*ZEROS
+     C                     Z-ADDCLMDAT    ZIEND
+     C                     ENDIF
+      *
+     C                     Z-ADDWKBEG     ZIBEG
+     C                     Z-ADDWINTR     ZIRATE
+     C                     Z-ADDWPRIN     ZIAMT
+     C                     EXSR GLINTC
+     C                     Z-ADDZINTR     WAIPD  150H
+     C           WAIPD     ADD  WTAIPD    WTAIPD
+     C           WTIPRD    IFGT WTAIPD
+     C                     Z-ADDWTIPRD    WTAIPD
+     C                     ENDIF
+      *
+      ** No. of Days
+      *
+     C           ZIEND     SUB  WKBEG     WDAYS
+     C                     Z-ADDWDAYS     ZFLD15
+     C                     Z-ADD*ZEROS    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM           ZDECS   10
+     C                     PARM 'J'       ZECODE  1
+     C                     PARM *BLANKS   ZOUT21 21
+     C                     MOVE ZOUT21    RNDAY
+     C                     MOVE ZICALC    WCALC   1
+     C           '/'       CAT  WCALC     RCALC
+      *
+      ** Calculated interest
+      *
+     C                     Z-ADDWAIPD     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM           ZDECS   10
+     C                     PARM 'J'       ZECODE  1
+     C                     PARM *BLANKS   ZOUT21 21
+     C                     MOVE ZOUT21    RCALI
+     C                     ENDIF
+      *
+     C           WTAITC    IFNE CLAITN
+     C                     MOVE *ON       *IN32
+     C                     ENDIF
+      *
+     C           WTAIPD    IFNE CLAIPN
+     C                     MOVE *ON       *IN33
+     C                     ENDIF
+      *
+     C           WTIPRD    IFNE CLIPRN
+     C                     MOVE *ON       *IN34
+     C                     ENDIF
+      *
+     C                     EXSR SRREP2
+      *
+     C           *IN32     IFEQ *ON
+     C           *IN33     OREQ *ON
+     C           *IN34     OREQ *ON
+      *
+     C                     ADD  1         WCOUNT
+      *
+      ** Accrued Interest to Control Date
+      *
+     C                     Z-ADDCLAITN    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RAITC
+      *
+      ** Accrued Interest Posted to Date
+      *
+     C                     Z-ADDCLAIPN    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RAIPD
+      *
+      ** Interest Paid/Received to Date
+      *
+     C                     Z-ADDCLIPRN    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RIPRD
+      *
+     C           *IN30     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN30
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL2
+      *
+      ** Report error details
+      *
+     C           *IN32     IFEQ *ON
+     C           *IN33     OREQ *ON
+     C           *IN34     OREQ *ON
+     C           *IN35     OREQ *ON
+      *
+     C           *IN36     IFEQ *ON
+     C                     WRITEHEADP3
+     C                     MOVE *OFF      *IN36
+     C                     ENDIF
+      *
+     C           WDETL3    IFEQ 'Y'
+     C                     WRITEBLANK2
+     C                     WRITEHEADP4
+     C                     MOVE ' '       WDETL3
+     C           *IN35     IFEQ *ON
+     C                     MOVE *OFF      *IN35
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL3
+     C                     WRITEDETAIL4
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRREPT - Write to report file                                *
+      *                                                               *
+      *****************************************************************
+     C           SRREPT    BEGSR
+      *
+     C                     MOVE LNRF      RLNRF
+     C                     MOVE CNUM      RCUST
+     C                     MOVE CCY       RCCY
+     C                     MOVE CLMARG    RMARG
+     C                     MOVE CALC      RCALC
+     C                     MOVE *BLANKS   RAIPDM
+     C                     MOVE *BLANKS   RAITCM
+     C                     MOVE *BLANKS   RIPRDM
+     C                     MOVE *BLANKS   RNDAY
+      *
+      ** Amendment Type
+      *
+     C                     MOVE *BLANKS   REVNT
+     C                     MOVELAMTP      REVNT
+     C           AMTP      IFEQ 'MR'
+     C           FSPRAM    IFNE 0
+     C                     MOVE 'MR-PR'   REVNT
+     C                     ELSE
+     C                     MOVE 'MR-IN'   REVNT
+     C                     ENDIF
+     C                     ENDIF
+     C           AMTP      IFEQ 'ST'
+     C                     MOVE 'START'   REVNT
+     C                     ENDIF
+     C           AMTP      IFEQ 'MA'
+     C                     MOVE 'MATUR'   REVNT
+     C                     ENDIF
+      *
+      ** Previous Amendment Type
+      *
+     C                     MOVE AMTP      WPAMTP  2
+      *
+      ** Event date
+      *
+     C                     Z-ADDWKEND     PDATIN
+     C           AMTP      IFEQ 'ST'
+     C                     Z-ADDWKBEG     PDATIN
+     C                     ENDIF
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM           PDATIN  50
+     C                     PARM           PDATFM  1
+     C                     PARM *ZEROS    PDATE6  60
+     C                     PARM *BLANKS   PDATE7  7
+      *
+     C                     MOVE PDATE7    RVDAT
+      *
+      ** No. of days
+      *
+     C           AMTP      IFNE 'ST'
+     C           ZIEND     SUB  ZIBEG     WDAYS   50
+     C                     Z-ADDWDAYS     ZFLD15
+     C                     Z-ADD*ZEROS    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM           ZDECS   10
+     C                     PARM 'J'       ZECODE  1
+     C                     PARM *BLANKS   ZOUT21 21
+     C                     MOVE ZOUT21    RNDAY
+     C                     MOVE ZICALC    WCALC   1
+     C           '/'       CAT  WCALC     RCALC
+     C                     ENDIF
+      *
+      ** Retrieve the number of decimal places
+      *
+     C                     EXSR SRDEC
+      *
+      ** Principal Amount
+      *
+     C                     Z-ADDWPRIN     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM           ZDECS   10
+     C                     PARM 'J'       ZECODE  1
+     C                     PARM *BLANKS   ZOUT21 21
+     C                     MOVE ZOUT21    RPRIN
+      *
+      ** Interest Rate
+      *
+     C                     MOVE WINTR     RINTR
+      *
+      ** Calculated Interest
+      *
+     C                     Z-ADDWAIWM     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RCALI
+     C                     Z-ADDWAIWM     WPIAWM 150
+      *
+      ** Accrued Interest to Control Date
+      *
+     C                     Z-ADDWTAITC    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RAITCM
+      *
+      ** Accrued Interest Posted to Date
+      *
+     C                     Z-ADDWTAIPD    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RAIPDM
+      *
+      ** Interest Paid/Received to Date
+      *
+     C           AMTP      IFEQ 'IN'
+     C           AMTP      OREQ 'MR'
+     C           INTN      ANDNE*ZEROS
+     C           AMTP      OREQ 'RE'
+     C           INTN      ANDNE*ZEROS
+     C           AMTP      OREQ 'PD'
+     C           INTN      ANDNE*ZEROS
+     C           AMTP      OREQ 'MA'
+     C                     Z-ADDWTIPRD    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RIPRDM
+     C                     ENDIF
+      *
+     C           *IN30     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN30
+     C                     ENDIF
+      *
+     C           WDETL2    IFEQ 'Y'
+     C                     WRITEBLANK
+     C                     WRITEHEADP2
+     C                     MOVE ' '       WDETL2
+     C           *IN35     IFEQ *ON
+     C                     MOVE *OFF      *IN35
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+     C           SRREP2    BEGSR
+      *
+     C                     MOVE *BLANKS   REVNT
+     C                     MOVE *BLANKS   RVDAT
+      *
+      ** Principal Amount
+      *
+     C                     Z-ADDWPRIN     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RPRIN
+      *
+      ** Accrued Interest to Control Date
+      *
+     C                     Z-ADDWTAITC    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RAITCM
+      *
+      ** Accrued Interest Posted to Date
+      *
+     C                     Z-ADDWTAIPD    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RAIPDM
+      *
+      ** Interest Paid/Received to Date
+      *
+     C                     Z-ADDWTIPRD    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RIPRDM
+      *
+     C           *IN30     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN30
+     C                     ENDIF
+      *
+     C           WDETL2    IFEQ 'Y'
+     C                     WRITEBLANK
+     C                     WRITEHEADP2
+     C                     MOVE ' '       WDETL2
+     C           *IN35     IFEQ *ON
+     C                     MOVE *OFF      *IN35
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDEC  - Determine the number of decimal places              *
+      *                                                               *
+      *****************************************************************
+     C           SRDEC     BEGSR
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM CLCCY     PCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCALC - Calculate for the interest amount                   *
+      *                                                               *
+      *****************************************************************
+     C           SRCALC    BEGSR
+      *
+      ** Calculate Interest for a period
+      *
+     C           WKEND     IFGT 0
+     C           WKEND     ANDGEWKBEG
+     C                     Z-ADDWKBEG     ZIBEG
+     C                     Z-ADDWKEND     ZIEND
+     C                     Z-ADDWINTR     ZIRATE
+     C                     Z-ADDWPRIN     ZIAMT
+     C                     EXSR GLINTC
+     C                     Z-ADDZINTR     WAIWM     H
+     C                     Z-ADDZIAMT     WPRIN
+     C           STAIN     IFEQ 'Y'
+     C                     Z-ADD0         WAIWM
+     C                     ENDIF
+      *
+      ** Accrued Interest Posted to Date
+      *
+     C           AMTP      IFNE 'MI'
+     C                     ADD  WAIWM     WTAIPD 150
+      *
+      ** Accrued Interest to Control Date
+      *
+     C                     ADD  WAIWM     WTAITC 150
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'MI'
+     C                     ADD  INTN      WTAIPD
+     C                     ENDIF
+      *
+      ** Interest paid/received to date without margin
+      *
+     C           AMTP      IFEQ 'MR'
+     C           AMTP      OREQ 'RE'
+     C           AMTP      OREQ 'MA'
+     C           AMTP      OREQ 'IN'
+     C                     ADD  INTN      WTIPRD 150
+     C                     ENDIF
+      *
+      ** Set the beginning date
+      *
+     C           AMTP      IFNE 'MI'
+     C                     Z-ADDWKEND     WKBEG
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     Z-ADD0         WAIWM
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINIT - Program Initialisation                               *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+     C                     MOVE *BLANK    DBFILE
+     C                     MOVE *BLANK    DBKEY
+     C                     Z-ADD*ZERO     DBASE
+     C                     MOVEL'LE0024'  DBPGM
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access General Ledger Details
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDGELR    PARM SDGELR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE 'SDGELRPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD2         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BKALDI    IFEQ 'Y'
+     C           BJRDNB    SUB  1         WRUNDT  50
+     C                     ELSE
+     C                     Z-ADDBJRDNB    WRUNDT
+     C                     ENDIF
+      *                                                                                     MD035545
+      ** Retrieve system value setting.                                                     MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   PRTCD                                             MD035545
+     C                     PARM           P@OP01 20                                         MD035545
+     C                     PARM           P@VL01200                                         MD035545
+     C                     PARM           P@OP02 20                                         MD035545
+     C                     PARM           P@VL02200                                         MD035545
+     C                     PARM           P@OP03 20                                         MD035545
+     C                     PARM           P@VL03200                                         MD035545
+     C                     PARM           P@OP04 20                                         MD035545
+     C                     PARM           P@VL04200                                         MD035545
+     C                     PARM           P@OP05 20                                         MD035545
+     C                     PARM           P@VL05200                                         MD035545
+     C                     PARM           P@OP06 20                                         MD035545
+     C                     PARM           P@VL06200                                         MD035545
+     C                     PARM           P@OP07 20                                         MD035545
+     C                     PARM           P@VL07200                                         MD035545
+     C                     PARM           P@OP08 20                                         MD035545
+     C                     PARM           P@VL08200                                         MD035545
+     C                     PARM           P@OP09 20                                         MD035545
+     C                     PARM           P@VL09200                                         MD035545
+     C                     PARM           P@OP10 20                                         MD035545
+     C                     PARM           P@VL10200                                         MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'.                            MD035545
+      *                                                                                     MD035545
+     C           PRTCD     IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
+      *
+     C                     Z-ADD*ZEROS    WCOUNT  50
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /COPY ZSRSRC,GLINTCZ1
+      /COPY ZSRSRC,ZINTDYZ2
+      /COPY ZSRSRC,ZDATE9Z3
+      /COPY ZSRSRC,ZDAT10Z2
+**  CPY@
+(c) Finastra International Limited 2002
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

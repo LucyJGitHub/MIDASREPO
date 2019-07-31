@@ -1,0 +1,57 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                 /*AR690511*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       SMC000090 - Create Backup of TABLETN for upgrade            */
+/*                                                                   */
+/*       (C) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. AR690511*REDUNDANT Date 02Feb11              */
+/*       Prev Amend No. AR655783           Date 14Oct10              */
+/*                      CER059  *CREATE    Date 19Jul10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR690511 - Rename from SMC000090 to SMUC00229               */
+/*                  (Child: AR690512)                                */
+/*       AR655783 - Delhi Drop 1 Database Issues                     */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*              - back up and clear TABLETN before DBU               */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&LIB1) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&LIB2) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global Monitor Message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PFX)
+             CHGVAR     VAR(&LIB1) VALUE(&PFX *TCAT 'DMLIB')
+             CHGVAR     VAR(&LIB2) VALUE(&PFX *TCAT 'DPLIB')
+ 
+             CHKOBJ     OBJ(&LIB2/XTABLETN) OBJTYPE(*FILE)                              /*AR655783*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*AR655783*/
+/**********  CPYF       FROMFILE(&LIB1/TABLETN) +                    */                 /*AR655783*/
+/**********               TOFILE(&LIB2/TABLETN) CRTFILE(*YES)        */                 /*AR655783*/
+             CPYF       FROMFILE(&LIB1/TABLETN) +
+                          TOFILE(&LIB2/XTABLETN) CRTFILE(*YES)                          /*AR655783*/
+             CLRPFM     FILE(&LIB1/TABLETN)
+             ENDDO                                                                      /*AR655783*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd.')
+             ENDPGM

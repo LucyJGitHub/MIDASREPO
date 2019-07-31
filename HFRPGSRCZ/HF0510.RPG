@@ -1,0 +1,183 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Select time for daily entries')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - History and Audit Facility Module
+     F*                                                               *
+     F*  HF0510 - Select time for daily entries                       *
+     F*                                                               *
+     F*  Function:  This program allows the user to select the time   *
+     F*  (I/C INT)  for daliy entries.                                *
+     F*                                                               *
+     F*  Called By: HFC0510 - Select entries from run date            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01379             Date 02Oct92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01379 - New program for HAF.                                *
+     F*                                                               *
+     F*****************************************************************
+     F**---------------------------------------------------------------
+     F**  STANDARD SUB-ROUTINES
+     F*----------------------------------------------------------------
+     F**  FUNCTION OF INDICATORS
+     F*
+     F*       01       CMD/1 IS PRESSED
+     F*       03       CMD/13 IS PRESSED
+     F*       03       CMD/5 IS PRESSED
+     F*
+     F*       U1       END PROGRAM
+     F*       U3       START RESTORE
+     F*       U5       restart main enquiry
+     F*
+     F*  90 - 99  ACT-SUBROUTINES
+     F*
+     F*  U7,U8    STANDARD-MIDAS ERROR
+     F*----------------------------------------------------------------
+     F*
+     FHF0510DFCF  E                    WORKSTN
+     F*
+     E*-----------------------------------------------------------------
+     E**                  T A B L E S
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E*-----------------------------------------------------------------
+     IJRN2       UDS                            256
+     I                                        1   60TIM1
+     I                                        1   20HH
+     I                                        3   40MM
+     I                                        5   60SS
+     I                                        7  120TIM2
+     I                                        7   80HH2
+     I                                        9  100MM2
+     I                                       11  120SS2
+     I*
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     I*
+     I*---------------------------------------------------------------
+     C/EJECT
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    SRUNA            RUN DATE
+     C                     MOVE USER      SUSER
+     C                     MOVELWSID      SWSID
+     C*
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C                     MOVE *BLANKS   WUMSID  7        Message Identif
+     C                     MOVEL'HFMSGF'  WUMSGF 10        Message File Na
+      *
+     C                     MOVEL'HF0510'  SPGMQ  10
+     C                     MOVEL*BLANKS   SSFKY   4
+     C*
+     C           *NAMVAR   DEFN           JRN2
+     C           *LOCK     IN   JRN2
+     C*
+     C           START     TAG
+     C                     WRITEHF0510C0
+     C                     EXFMTHF0510F1
+     C                     CALL 'SCC0250'
+     C   01                SETON                     LR
+     C   01                SETON                     U1
+     C   01                GOTO ENDPGM
+     C   05                SETON                     LR
+     C   05                SETON                     U5
+     C   05                GOTO ENDPGM
+     C           TIME1     IFGT TIME2
+      *
+     C                     MOVEL'HAF0067' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     GOTO START
+     C                     END
+     C           TIME1     IFEQ 0
+     C           TIME2     OREQ 0
+      *
+     C                     MOVEL'HAF0068' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     GOTO START
+     C                     END
+     C                     Z-ADDTIME1     TIM1
+     C                     Z-ADDTIME2     TIM2
+     C           HH        IFGT 23
+     C           MM        ORGT 59
+     C           SS        ORGT 59
+      *
+     C                     MOVEL'HAF0069' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     GOTO START
+     C                     END
+     C           HH2       IFGT 23
+     C           MM2       ORGT 59
+     C           SS2       ORGT 59
+      *
+     C                     MOVEL'HAF0069' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     GOTO START
+     C                     END
+     C   03                SETON                     U3LR
+     C   03                OUT  JRN2
+     C  N03                GOTO START
+     C           ENDPGM    TAG
+     C*****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

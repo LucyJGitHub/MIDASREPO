@@ -1,0 +1,284 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Retail/General Ledger UDC Interface')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                      *
+     F*                                                               *
+     F*  CG0025 - Retail/General ledger UDC interface                 *
+     F*                                                               *
+     F*  Function:  This program is called via GL3271 Account         *
+     F*  Maintenance/Enquiry and determines whether the user wishes   *
+     F*  to enter User Defined Correspondence.                        *
+     F*                                                               *
+     F*  Called By: CGC0025 - Retail/General ledger Interface control.*
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01522             Date 21Nov94               *
+      *                                    Date ddmmmyy               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*EDTRCD: Cpysrc Templates Initialise Program F-spec
+     F/COPY WNCPYSRC,CG0025DFPG
+     FCG0025DFCF  E                    WORKSTN
+     F                                              KINFDS INFDS#
+     F                                              KINFSR SRFILE
+     E                    CPY@    1   1 80
+     E*
+     E*  Array containing Copyright statement
+      **                                                                                      CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      **                                                                                      CSC022
+     E                    WCMT       10 10                                                    CSC022
+      **                                                                                      CSC022
+     E***************** FIRST COMPILE TIME ARRAY *********************
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E*  Copysource for error processing
+     E*
+     E/COPY WNCPYSRC,CG0025DEPG
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I*  End of Program Error Processing copysource
+     I*
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     I*
+     I*EDTRCD: Cpysrc Templates Initialise Program I-spec
+     I/COPY WNCPYSRC,CG0025DIPG
+      /EJECT
+      *
+     IRUNDTA    E DSRUNDAT
+     I*
+     I* Get Rundate - Rundate  *
+     I*
+      **                                                                                      CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      **                                                                                      CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      ** DS for Switchable Features details                                                   CSC022
+      **                                                                                      CSC022
+     IDSFDY     E DSDSFDY                                                                     CSC022
+      **                                                                                      CSC022
+      ** Data Structures used by Access Programs                                              CSC022
+      **                                                                                      CSC022
+     I/COPY QWINDSRC,CG0025WDTA
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN            Return Code
+     C                     PARM           I#RTN            Option Y/N
+     C*
+     C*  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C* Get Rundate - Rundate  *
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Option Name
+      *
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1267' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONKY
+      *
+      * Function keys
+      *
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1266' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    #KCMD2
+      *
+     C                     MOVEL'Y'       I#RTN   1
+      *
+     C                     TIME           ##TME
+      * Obtain default message file
+     C                     MOVEL'CGUSRMSG'ZADFMF 10
+      *
+     C                     MOVEL'N'       ##OPTN
+      *
+      **                                                                                      CSC022
+      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+      **                                                                                      CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+      **                                                                                      CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      **                                                                                      CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   P@RTCD  7                                           CSC022
+     C                     PARM '*VERIFY 'P@OPTN  7                                           CSC022
+     C                     PARM 'CSC022'  P@SARD  6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      **                                                                                      CSC022
+     C           P@RTCD    IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+      **                                                                                      CSC022
+      ** Get Jobs currently running i batch mode using SCCMRJOB dataarea                      CSC022
+      **                                                                                      CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      **                                                                                      CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+      ** Move committed jobs to arrary for checking                                           CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+      ** Verify if job running exists in array                                                CSC022
+     C           ##JOB     LOKUPWCMT                     50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ELSE                                                               CSC022
+      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+     C           P@RTCD    IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+     C                     Z-ADD1         W0ERNB                                              CSC022
+     C                     EXSR SRERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C           ##OPTN    DOUEQ'Y'
+     C           ##OPTN    OREQ 'N'
+     C           *IN03     OREQ *ON
+     C           *IN12     OREQ *ON
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDFM1
+      *
+     C           *IN03     IFEQ *ON
+     C                     MOVEL'Y2U9999' W0RTN
+     C                     RETRN
+     C                     END
+      *
+     C           *IN12     IFEQ *ON
+     C                     MOVEL'USR0790' W0RTN
+     C                     RETRN
+     C                     END
+      *
+     C                     SETOF                     31
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+      *
+     C           ##OPTN    IFNE 'Y'
+     C           ##OPTN    ANDNE'N'
+     C           ##OPTN    IFNE ' '
+     C                     SETON                     31
+     C                     TIME           ##TME
+     C                     MOVEL'CGD1252' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     SETON                     31
+     C                     TIME           ##TME
+     C                     MOVEL'CGD1269' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      *
+     C           ##OPTN    IFEQ 'N'
+     C                     MOVEL'N'       I#RTN
+     C                     END
+      *
+     C                     END
+      *
+     C                     RETRN
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+     C                     ENDSR
+      *================================================================
+      *================================================================
+     C/EJECT
+     C*
+     C* PSSR Processing
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C*
+     C* File and Program Error Processing
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     O*EDTRCD: Cpysrc Templates Initialise Program O-spec
+     O/COPY WNCPYSRC,CG0025DOPG
+**  CPY@
+(c) Finastra International Limited 2001

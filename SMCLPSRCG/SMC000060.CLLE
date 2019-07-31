@@ -1,0 +1,79 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(SMC100057F) TOFILE(UPDBRLTPD)                   */
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Add logical files for CHGCCSIDS')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation                                      */
+/*                                                                   */
+/*       SMC000060 - Add logical files for CHGCCSIDS                 */
+/*                                                                   */
+/*       (c) Finastra International Limited 2008                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. 256038  *CREATE    Date 14Jul08              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       256038 - Handle logical file problems.                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FLAG &COUNT &SAVLIB)
+ 
+             DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(1 0)
+             DCL        VAR(&SAVLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&ERRMSG) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+ 
+             DCLF       FILE(SMC100057F)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2008')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGVAR     VAR(&FLAG) VALUE('N')
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             CHKOBJ     OBJ(&WHRELI/&WHREFI) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                RSTOBJ     OBJ(&WHREFI) SAVLIB(&WHRELI) DEV(*SAVF) +
+                             SAVF(&SAVLIB/&WHREFI) OUTPUT(*NONE)
+                MONMSG     MSGID(CPF3770) EXEC(DO)
+                   IF         COND(&COUNT *EQ 9) THEN(DO)
+                      CHGVAR     VAR(&ERRMSG) VALUE('File' *BCAT &WHREFI +
+                                   *BCAT 'failed to restore.')
+                      CALL       PGM(UP008010) PARM('*WRITE ' 'SMC000060 ' +
+                                   &ERRMSG)
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGVAR     VAR(&FLAG) VALUE('Y')
+                   ENDDO
+                ENDDO
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGVAR     VAR(&FLAG) VALUE('E')
+ 
+ENDPGM:
+             ENDPGM

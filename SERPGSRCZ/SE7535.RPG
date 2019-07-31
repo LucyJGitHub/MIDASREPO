@@ -1,0 +1,814 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Corporate Action Default Charges Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Tranding Module                           *
+      *                                                               *
+      *  SE7535 - SE Corporate Action Default Charges Report          *
+      *                                                               *
+      *  Function:  Report Program for Corporate Action Default       *
+      *             Charges Report                                    *
+      *                                                               *
+      *  Phases: Input Cycle On Request Audit List                    *
+      *          Input Cycle On Request Full List                     *
+      *          COB Daily Audit List                                 *
+      *          COB On Request Full List                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSE007   *CREATE   Date 01Dec97               *
+      *                                    Date                       *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSE007- Corporate Actions                                    *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *
+      ***  SE Corporate Action Default Charges File.                     - Prefixe MR
+      *
+     FSECOCHPDIF  E           K        DISK
+      *
+      ***  SE Corporate Action Default Charges Trailer File.             - Prefixe MR
+      *
+     FSECOCHPAIF  E                    DISK         KINFSR *PSSR
+      *
+      ***  SE Corporate Action Default Charges - Audit List.
+      *
+     FSE7535AUO   E             21     PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+      *
+      ***  SE Corporate Action Default Charges Report.
+      *
+     FSE7535P1O   E             22     PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  10    - *** Difference ****                                  *
+      *  21    - Overflow Indicator on SE7535AU                       *
+      *  22    - Overflow Indicator on SE7535P1                       *
+      *  70    - Record not Found                                     *
+      *  LR    - Last record                                          *
+      *  U7/U8 - Database error                                       *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ***  Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      /SPACE 3
+      *
+      ***  Program Status Data Structure.
+      *
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+      ***  File Information Data Structure for SE7535AU.
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 367 3680LINEU
+      *
+      ***  File Information Data Structure for SE7535P1.
+      *
+     ISPOOL1      DS
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 367 3680LINE1
+      *
+      ***  Local data area for database error details.
+      *
+     ILDA       E DSLDA                         256
+      *
+      ***  *LOCK IN LDA immediately before and OUT LDA immediately
+      ***  after each database error handling.
+      *
+      ***                                   134 141 DBFILE
+      ***                                   142 170 DBKEY
+      ***                                   171 180 DBPGM
+      ***                                   181 1830DBASE
+      *
+      ***  Date formatting data structure.
+      *
+     IUPDATE      DS
+     I                                        1   2 SBDAY
+     I                                        3   5 SBMON
+     I                                        6   7 SBYER
+      *
+      ***  Data structure for Bank Details.                              - Prefixe BJ
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ***  Data structure for Customer Details.                          - Prefixe BB
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ***  Data Structure for Access Programs, Long Data Structure.
+      *
+     IDSSDY     E DSDSSDY
+      *
+      /EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      ***  Perform Termination Program.
+      *
+     C                     EXSR ENDPGM
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINIT - Subroutine to do Program Initialisation.             *
+      *                                                               *
+      * Called By:                                                    *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           ** SRINIT SR **
+      *
+      ***  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C                     PARM           @RSEQ   5
+      *
+      ***  Set up copyright parameter.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+     C                     MOVE 'Y'       WRAU    1
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ***  If record not found, handle Database Error.
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     MOVEL'SE7535'  DBPGM            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Initialise report Work fields.
+      *
+     C                     MOVE '0'       *IN10
+     C                     Z-ADD0         LINEU
+     C                     Z-ADD0         LINE1
+      *
+      ***  Initialise LDA Data area.
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Initialise work fields.
+      *
+     C                     MOVE 'Y'       FIRST   1        First passage
+      *
+      ***  Initialise run controls work fields.
+      *
+     C                     Z-ADD*ZEROS    PPPROG
+     C                     Z-ADD*ZEROS    PPFILE
+     C                     MOVE *BLANK    PPCHTP
+      *
+      ***  Call Access Program for Switchable Feature Details to see if Feature S01496 is switched
+      ***  ON or OFF:
+      *
+     C                     MOVE '0'       *IN34
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'S01496'  @SARD   6
+      *
+      ***  If Feature S01496 is switched ON, set indicator IN34 to ON to print Customer Group
+      ***  (if IN34 is OFF, Classification is printed).
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE '1'       *IN34
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * PROCES - Detail Processing                                    *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           ** PROCES SR **
+      *
+     C                     ADD  1         PPFILE
+      *
+      ***  If Full List.
+      *
+     C           MODE      IFEQ '2'
+      *
+      ***  Process Full Default Charges List.
+      *
+     C                     EXSR SRFDCL
+      *
+      ***  Process Full List Run Controls.
+      *
+     C                     EXSR SRFLRC
+      *
+     C                     ELSE
+      *
+      ***  If Audit list.
+      *
+     C           MODE      IFEQ '1'
+      *
+      ***  Process Audit Default Charges List.
+      *
+     C                     EXSR SRAUDL
+      *
+      ***  Process Audit List Run Controls.
+      *
+     C                     EXSR SRAURC
+      *
+     C                     ELSE
+      *
+      ***  If Mode received as parameter invalid, handle Database Error.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'MODE'    DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DB ERROR 02 *
+     C                     MOVEL'SE7535'  DBPGM            ***************
+     C                     MOVELMODE      DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRFDCL - Process Full Default Charges List.                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFDCL    BEGSR                           ** SRFDCL SR **
+      *
+      ***  Read SE Corporate Action Default Charges Trailer File.
+      *
+     C                     READ SECOCHPA                 71
+      *
+     C                     MOVE MRRECI    FRRECI  1        Save Record Id.
+      *
+     C           MRRECI    IFEQ 'Z'
+      *
+      ***  Read first record on SE Corporate Action Default Charges File.
+      *
+     C                     READ SECOCHPD                 70
+      *
+     C           *IN70     IFEQ '1'
+      *
+      ***  If no record on file,  setup flag to indicate that run control must not be produced
+      ***  and output "No Details" message.
+      *
+     C                     MOVE 'Y'       WWNPRC  1        No run control
+     C                     WRITEHEAD1                      Header
+     C                     WRITEHEAD2                      Header for Full List
+     C                     WRITENODTLS                     No Details message
+     C                     ELSE
+      *
+      ***  Else, do while not End of File.
+      *
+     C           *IN70     DOWEQ'0'
+      *
+      ***  If record Live.
+      *
+     C           MRRECI    IFEQ 'D'
+      *
+      ***  Add 1 to number of records read.
+      *
+     C                     ADD  1         PPPROG
+      *
+      ***  Output details to report.
+      *
+     C                     EXSR SROFTL
+     C                     ENDIF
+      *
+      ***  Read next record on SE Corporate Action Default Charges File.
+      *
+     C                     READ SECOCHPD                 70
+     C                     ENDDO
+      *
+      ***  If no live records found on file PF/SECOCHPD,  setup flag to indicate that run control
+      ***  must not be produced and output "No Details" message.
+      *
+     C           PPPROG    IFEQ 0
+     C                     MOVE 'Y'       WWNPRC  1        No run control
+     C                     WRITEHEAD1                      Header
+     C                     WRITEHEAD2                      Header for Full List
+     C                     WRITENODTLS                     No detail message
+     C                     ELSE
+      *
+      ***  If more than 55 lines writted or first passage, write Header.
+      *
+     C           LINE1     IFGT 55
+     C                     WRITESE7535H1                   Header
+     C                     WRITESE7535H2                   Header for Full List
+     C                     WRITESE7535H4                   Sub-Heading
+     C                     ENDIF
+     C                     WRITESE7535E1                   End of report
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SROFTL - Setup Output Fields for Table List.                  *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SROFTL    BEGSR                           ** SROFTL SR **
+      *
+      ***  If PRTF/SE7535P1 not yet opened, process RFC for printer and open it.
+      *
+     C           OPENP1    IFNE 'Y'
+     C                     OPEN SE7535P1
+     C                     MOVE 'Y'       OPENP1  1
+     C                     EXSR RCFP1
+     C                     ENDIF
+      *
+     C           MRCHTP    IFEQ 'I'
+     C                     MOVEL'INSERT'  PPCHTP           Last Action
+     C                     ELSE
+     C           MRCHTP    IFEQ 'A'
+     C                     MOVEL'AMEND '  PPCHTP           Last Action
+     C                     ELSE
+     C           MRCHTP    IFEQ 'D'
+     C                     MOVEL'DELETE'  PPCHTP           Last Action
+     C                     ELSE
+     C                     MOVEL'??????'  PPCHTP           Last Action
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE MRCUGR    PPCUGR           Customer Group
+     C                     MOVE MRCLAS    PPCLAS           Classification
+      *
+      ***  If Customer Number not blank, retrieve Customer Shortname.
+      *
+     C********** MRCNUM    IFNE *ZEROS                                                        CSD027
+     C           MRCNUM    IFNE *BLANKS                                                       CSD027
+     C                     MOVE MRCNUM    PPCNUM
+     C                     MOVE *BLANKS   @KEYC
+     C                     MOVELMRCNUM    @KEYC
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR'  @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEYC  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ***  If record not found, handle Database Error.
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DB ERROR 03 *
+     C                     MOVEL'SE7535'  DBPGM            ***************
+     C                     MOVELMRCNUM    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVELBBCSSN    PPCNUM           Customer Shortname
+     C                     ELSE
+     C                     MOVE *BLANKS   PPCNUM           Customer Shortname
+     C                     ENDIF
+      *
+     C                     MOVE MRINVT    PPINVT           Investment type
+     C                     MOVE MRTYPE    PPTYPE           CO Type
+     C                     MOVE MRCOCO    PPCOCO           Commission Code
+     C                     MOVE MRCOCH    PPCOCH           Charge Code
+      *
+     C                     MOVE MRDLUP    SBDAY
+     C                     MOVE MRMLUP    SBMON
+     C                     MOVE MRYLUP    SBYER
+     C                     MOVE UPDATE    PPLCD            Activity Date
+      *
+      ***  If more than 55 lines writted or first passage, write Header.
+      *
+     C           LINE1     IFGT 55
+     C           FIRST     OREQ 'Y'
+     C                     WRITESE7535H1                   Header
+     C           MODE      IFEQ '2'
+     C                     WRITESE7535H2                   Header for Full List
+     C                     ELSE
+     C           MODE      IFEQ '1'
+     C                     WRITESE7535H3                   Header for Audit List
+     C                     ENDIF
+     C                     ENDIF
+     C                     WRITESE7535H4                   Sub-Heading
+     C                     MOVE 'N'       FIRST
+     C                     ENDIF
+      *
+      ***  write detail line.
+      *
+     C                     WRITESE7535D1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRAUDL - Process Audit Default Charges Audit List.            *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDL    BEGSR                           ** SRAUDL SR **
+      *
+      ***  Read SE Corporate Action Default Charges Trailer File.
+      *
+     C                     READ SECOCHPA                 71
+      *
+     C                     MOVE MRRECI    XRRECI  1        Save record Id.
+      *
+     C           MRRECI    IFEQ 'Z'
+      *
+      ***  Read first record on SE Corporate Action Default Charges File.
+      *
+     C                     READ SECOCHPD                 70
+      *
+     C           *IN70     IFEQ '1'
+      *
+      ***  If no record on file,  setup flag to indicate that run control must not be produced
+      ***  and output "No Details" message.
+      *
+     C                     MOVE 'Y'       WWNPRC  1        No run control
+     C                     WRITEHEAD1                      Header
+     C                     WRITEHEAD3                      Header for Audit List
+     C                     WRITENODTLS                     No Detail message
+     C                     ELSE
+      *
+      ***  Else, do while not End of File.
+      *
+     C           *IN70     DOWEQ'0'
+      *
+      ***  If Last Change Date = Run Day Number.
+      *
+     C           MRLCD     IFEQ BJRDNB
+      *
+      ***  Add 1 to number of records read.
+      *
+     C                     ADD  1         PPPROG
+      *
+      ***  Add 1 to number of inserts.
+      *
+     C           MRCHTP    IFEQ 'I'
+     C                     ADD  1         PPINSR
+     C                     ENDIF
+      *
+      *** Add 1 to number of amends.
+      *
+     C           MRCHTP    IFEQ 'A'
+     C                     ADD  1         PPAMND
+     C                     ENDIF
+      *
+      ***  Add 1 to number of deletes.
+      *
+     C           MRCHTP    IFEQ 'D'
+     C                     ADD  1         PPDLET
+     C                     ENDIF
+      *
+      ***  Output details to report.
+      *
+     C                     EXSR SROFTL
+     C                     ENDIF
+      *
+      ***  Read next record on SE Corporate Action Default Charges File.
+      *
+     C                     READ SECOCHPD                 70
+     C                     ENDDO
+      *
+      ***  If no live records found on file PF/SECOCHPD,  setup flag to indicate that run control
+      ***  must not be produced and output "No Details" message.
+      *
+     C           PPPROG    IFEQ 0
+     C                     MOVE 'Y'       WWNPRC  1        No run control
+     C                     WRITEHEAD1                      Header
+     C                     WRITEHEAD3                      Header for Audit List
+     C                     WRITENODTLS                     No Detail message
+     C                     ELSE
+      *
+      ***  If more than 55 lines writted or first passage, write Header.
+      *
+     C           LINE1     IFGT 55
+     C                     WRITESE7535H1                   Header
+     C                     WRITESE7535H2                   Header for Audit List
+     C                     WRITESE7535H4                   Sub-Heading
+     C                     ENDIF
+     C                     WRITESE7535E1                   End of report
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRFLRC - Process Full List Run Controls.                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFLRC    BEGSR                           ** SRFLRC SR **
+      *
+      ***  If Trailer record not found, handle Database Error.
+      *
+     C           *IN71     IFEQ '1'                        B*1
+     C           FRRECI    ORNE 'Z'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECOCHPA'DBFILE           ***************
+     C                     Z-ADD004       DBASE            * DB ERROR 04 *
+     C                     MOVEL'SE7535'  DBPGM            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      ***  If number of records read <> number of records on trailer, setup indicators to
+      ***  output Difference message and to indicate Program Error.
+      *
+     C           PPPROG    IFNE MRNORE
+     C                     MOVE '1'       *IN10            Difference message
+     C                     MOVE '1'       *INU8            Program Error
+     C                     ENDIF
+      *
+     C                     MOVE MRNORE    PPFILE           Number of records in trailer
+      *
+      ***  If run control must be produced, output run control record.
+      *
+     C           WWNPRC    IFNE 'Y'
+     C                     WRITEHEAD1                      Header
+     C                     WRITEHEAD2                      Header for Full List
+     C                     WRITEDETAIL1                    Run control for Full List
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRAURC - Process Audit List Run Controls.                     *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAURC    BEGSR                           ** SRAURC SR **
+      *
+      ***  If Trailer record not found, handle Database Error.
+      *
+     C           *IN71     IFEQ '1'
+     C           XRRECI    ORNE 'Z'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECOCHPA'DBFILE           ***************
+     C                     Z-ADD005       DBASE            * DB ERROR 05 *
+     C                     MOVEL'SE7535'  DBPGM            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      ***  If run control must be produced, output run control record.
+      *
+     C           WWNPRC    IFNE 'Y'
+     C                     WRITEHEAD1                      Header
+     C                     WRITEHEAD3                      Header for Audit List
+     C                     WRITEDETAIL2                    Run control for Audit List
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ENDPGM - Termination Program.                                 *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ENDPGM    BEGSR                           ** ENDPGM SR **
+      *
+      ***  If PRTF/SE7535P1 has been opened, close it.
+      *
+     C           OPENP1    IFEQ 'Y'
+     C                     CLOSESE7535P1
+     C                     ENDIF
+      *
+      ***  End Program.
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C           WRAU      IFEQ 'Y'
+      *
+      ***  Output the DB Error Information.
+      *
+     C                     WRITEHEAD1                      Header
+     C           MODE      IFEQ '1'
+     C                     WRITEHEAD3                      Header for Audit List
+     C                     ELSE
+     C                     WRITEHEAD2                      Header for Full List
+     C                     ENDIF
+     C                     WRITEDBERROR                    Database error
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * RCFP1  - Subroutine to register the P1 Printer File via RCF.  *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            ** RCFP1 SR **
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'               99
+     C                     PARM @RSEQ     SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *IN99     OREQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ZSFILE  'DBFILE           ***************
+     C                     Z-ADD006       DBASE            * DB ERROR 06 *
+     C                     MOVEL'SE7535'  DBPGM            ***************
+     C                     MOVE ZSNUM     ZSNUMW  6
+     C           SEQ       CAT  SFILE1:1  DBKEY1 16
+     C           DBKEY1    CAT  ZSNUMW:1  DBKEY2 23
+     C                     MOVELDBKEY2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * RCFAU  - Subroutine to register the AU Printer File via RCF.  *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            ** RCFAU SR **
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'               99
+     C                     PARM @RSEQ     SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *IN99     OREQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SZFILE  'DBFILE           ***************
+     C                     Z-ADD007       DBASE            * DB ERROR 07 *
+     C                     MOVEL'SE7535'  DBPGM            ***************
+     C                     MOVE ZSNUMU    WSNUMU  6
+     C           SEQ       CAT  SFILEU:1  DBKEY1 16
+     C           DBKEY1    CAT  WSNUMU:1  DBKEY2 23
+     C                     MOVELDBKEY2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+**  CPY@
+(c) Finastra International Limited 2001

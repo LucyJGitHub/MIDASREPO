@@ -1,0 +1,996 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Multi-ccy rollover processing')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE0389 - Midas LE Multi-ccy Rollover processing              *
+      *                                                               *
+      *  Function:  This program validates if Multi-ccy rollover for  *
+      *  (COB)      loan or Parts sold will be allowed if all of its  *
+      *             related loan is also valid for multi-ccy rollover *
+      *                                                               *
+      *  Called By: LEC0603- Midas LE Daily File Maintenance - 1      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
+      *                 CLE141             Date 08Feb16               *
+      *                 AR996895           Date 25Nov12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246141             Date 26Mar07               *
+      *                 245082             Date 30Jan07               *
+      *                 164847             Date 30Nov06               *
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242286             Date 25Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE036             Date 22Sep03               *
+      *                 CIR013             Date 25Apr05               *
+      *                 CAS009             Date 16May05               *
+      *                 CAP074             Date 08Aug02               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 185526             Date 17Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 134725  *CREATE    Date 14Jun99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD053295 - Lending loan with Interest Calculation Basis      *
+      *             method 3 (30/360) has wrong interest payment      *
+      *             amount for month of March (Recompile)             *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  AR996895 - Incorrect acrrual interest calculation            *
+      *             (Child: AR996897) (Recompile)                     *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *            to Midas Plus (Recompile)                          *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  246141 - Recompiled due to changes in ZINTDYZ2               *
+      *  245082 - Loans with first and last day accrual should be     *
+      *           treated as first day accruals until maturity        *
+      *           date.  Then add one day on the maturity date.       *
+      *           Applied fix 235784 from Release 4.                  *
+      *  164847 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  BUG12990 - Recompiled due to changes in ZINTDYZ2/ZINTDYZ2LE  *
+      *  242286 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE036 - LE Enh for Nordea Phase 1 Pty 2- Specific Base Rate *
+      *           (Recompile)                                         *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over GLINTC and ZINTDY.                   *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CAP074 - Lending API enhancements - Loans input.             *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  185526 - Part Sold amount converted incorrectly. Ccy decimal *
+      *           places should be the other way round.               *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CIR004 - Dealing Calculation Method Change.                  *
+      *         - Recompiled due to GLINTC and ZINTDY changes         *
+      *  134725 - Related loan of parts sold or original loan should  *
+      *           have the same multi-ccy rollover details.           *
+      *                                                               *
+      *****************************************************************
+     FPSOLD   IF  E           K        DISK         KINFSR *PSSR
+     F            CLOANCLF                          KRENAMEPSOLDFF
+     FLELOANL9IF  E           K        DISK         KINFSR *PSSR
+     F            CLOANCLF                          KRENAMELOANL9F
+     FCLOAN   UF  E           K        DISK         KINFSR *PSSR
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FIACT1   IF  E           K        DISK         KINFSR *PSSR
+     F            ACTN1DNF                          KIGNORE
+     FLENEWLL1IF  E           K        DISK                                                   CLE134
+     F            CLOANCLF                          KRENAMELENEWLF                            CLE134
+     FLE0389AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   87  - Work indicator                                        *
+      *   88  - Record not Found                                      *
+      *       - Record not Found                                      *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPSMC - Subroutine to Process Records for Parts Sold.       *
+      *  SRRVRS - Subroutine to Reverse out multi-ccy details if at   *
+      *           least one detail is different with its related loan *
+      *  SRRPAY - Subroutine to check if all outstanding principal    *
+      *           and interest has been paid.                         *
+      *  SRINTR - Subroutine to compute for outstanding interest.     *
+      *  SRPSAM - Subroutine to convert parts sold amount to new ccy. *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZDATE9Z1
+     E/COPY ZSRSRC,ZPOWERZ1
+      /SPACE 3
+     ILOAMSDKF
+     I              RECI                            RECIA
+     I              LNRF                            LNRFA
+     I              VDAT                            VDATA
+     I              AMTP                            AMTPA
+     I              PRAM                            PRAMA
+     I              INTA                            INTAA
+     I              AUTO                            AUTOA
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for LE0391AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+     ISDCURR    E DSSDCURRPD
+      *
+      ** External data structures for Currency Details
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ** External data structures for Branch Details
+     ISDGELR    E DSSDGELRPD
+      *
+      ** External data structures for General Ledger Details
+     ISCSARD    E DSSCSARDPD
+      *
+      ** External data structures for SAR File Details
+     IDSFDY     E DSDSFDY
+      *
+      ** First data structure for Access Programs, short DS
+     IDSSDY     E DSDSSDY
+      *
+      ** Second data structure for Access Programs, long DS
+      *
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+     I/COPY ZSRSRC,ZDATE9Z2
+     I/COPY ZSRSRC,ZDAT10Z1
+     I/COPY ZSRSRC,ZINTDYZ1
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+     C                     READ LELOANL9                 89
+     C           *IN89     DOWEQ*OFF
+      *
+      ** If NEWCOB = 'Y', function runs under the new PDCL COB                                CLE134
+      ** components                                                                           CLE134
+      *                                                                                       CLE134
+     C                     MOVE 'N'       WPDCL   1                                           CLE134
+     C           NEWCOB    IFEQ 'Y'                                                           CLE134
+     C           KCLNEW    CHAINLENEWLL1             30                                       CLE134
+     C           *IN30     IFEQ *OFF                                                          CLE134
+     C                     MOVE 'Y'       WPDCL   1                                           CLE134
+     C                     ENDIF                                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+      ** If function runs under the new PDCL process, then select only                        CLE134
+      ** PDCL created by the COB and skip others                                              CLE134
+      *                                                                                       CLE134
+     C           NEWCOB    IFEQ 'N'                                                           CLE134
+     C           NEWCOB    OREQ 'Y'                                                           CLE134
+     C           WPDCL     ANDEQ'Y'                                                           CLE134
+     C                     EXSR SRPSMC
+     C           WMCDT     IFEQ 'Y'
+     C           WMCCY     IFEQ 'N'
+     C                     EXSR SRRVRS
+     C                     ELSE
+     C                     EXSR SRPSAM
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF                                                              CLE134
+      *
+     C                     READ LELOANL9                 89
+     C                     ENDDO
+      *
+     C                     EXSR SRAUDT
+      *
+     C                     SETON                     LR
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+     C           *ENTRY    PLIST                                                              CLE134
+     C                     PARM           WPNAM  10                                           CLE134
+      *                                                                                       CLE134
+     C           KCLNEW    KLIST                                                              CLE134
+     C                     KFLD           BRCA                                                CLE134
+     C                     KFLD           LNRF                                                CLE134
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA field.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE0389'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Call Access Program for Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST  'WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,LE0389C001
+     C                     MOVE 'N'       WOPEN   1
+     C                     MOVE 'Y'       WMCCY   1
+     C                     MOVE 'N'       WMCDT   1
+     C                     Z-ADD*ZEROS    WRLDT   50
+     C                     MOVE *BLANKS   WNCCY   3
+     C                     Z-ADD*ZEROS    WNFCE  138
+     C                     MOVE *BLANK    WNFMD   1
+     C                     Z-ADD*ZEROS    WNBCE  138
+     C                     MOVE *BLANK    WNBMD   1
+     C**********           Z-ADD*ZEROS    WWLNRF  60                                          CLE148
+     C                     MOVEL*BLANKS   WWLNRF  6                                           CLE148
+     C**********           Z-ADD*ZEROS    WOLNO   60                                          CSD027
+     C                     MOVE *BLANKS   WOLNO   6                                           CSD027
+     C**********           Z-ADD*ZEROS    WLNRFA  60                                          CLE148
+     C                     MOVEL*BLANKS   WLNRFA  6                                           CLE148
+     C                     Z-ADD*ZEROS    WOTINT 130
+     C                     Z-ADD*ZEROS    WMCDU   50
+     C                     Z-ADD*ZEROS    WMCAC   50
+      *
+     C           WLOAN     KLIST
+     C**********           KFLD           WLNRF   60                                          CLE148
+     C                     KFLD           WLNRF   6                                           CLE148
+     C                     KFLD           WRCDT   1
+      *
+     C           WACTN     KLIST
+     C**********           KFLD           WLNRFA  60                                          CLE148
+     C                     KFLD           WLNRFA  6                                           CLE148
+     C                     KFLD           WAMTP   2
+      *
+      ** Define parameter list for AOCURRR0
+      *
+     C           PPAR1     PLIST
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *                                                                                       CLE134
+      ** Access Switchable SAR details                                                        CLE134
+      *                                                                                       CLE134
+     C                     CALL 'AOSARDR0'                                                    CLE134
+     C                     PARM *BLANK    WRTCD                                               CLE134
+     C                     PARM '*VERIFY' WOPTN                                               CLE134
+     C                     PARM 'CLE134'  WSARD   6                                           CLE134
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE134
+      *                                                                                       CLE134
+      ** Feature found if return code is blank                                                CLE134
+      *                                                                                       CLE134
+     C           WRTCD     IFEQ *BLANK                                                        CLE134
+     C                     MOVE 'Y'       CLE134  1                                           CLE134
+     C                     ELSE                                                               CLE134
+     C                     MOVE 'N'       CLE134                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C                     MOVE 'N'       NEWCOB  1                                           CLE134
+     C           CLE134    IFEQ 'Y'                                                           CLE134
+     C           WPNAM     ANDEQ'NEWCOB'                                                      CLE134
+     C                     MOVE 'Y'       NEWCOB  1                                           CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+      ***Access*general*ledger*details.********************************            MD035545 MD047993
+      *****************************************************************            MD035545 MD047993
+     C**********           CALL 'AOGELRR1'                                         MD035545 MD047993
+     C**********           PARM '*MSG   ' @RTCD   7                                MD035545 MD047993
+     C**********           PARM '*FIRST ' @OPTN   7                                MD035545 MD047993
+     C********** SDGELR    PARM SDGELR    DSSDY                                    MD035545 MD047993
+      *                                                                                     MD035545
+      ** Retrieve system value setting.                                                     MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   WRTCD                                             MD035545
+     C                     PARM           P@OP01 20                                         MD035545
+     C                     PARM           P@VL01200                                         MD035545
+     C                     PARM           P@OP02 20                                         MD035545
+     C                     PARM           P@VL02200                                         MD035545
+     C                     PARM           P@OP03 20                                         MD035545
+     C                     PARM           P@VL03200                                         MD035545
+     C                     PARM           P@OP04 20                                         MD035545
+     C                     PARM           P@VL04200                                         MD035545
+     C                     PARM           P@OP05 20                                         MD035545
+     C                     PARM           P@VL05200                                         MD035545
+     C                     PARM           P@OP06 20                                         MD035545
+     C                     PARM           P@VL06200                                         MD035545
+     C                     PARM           P@OP07 20                                         MD035545
+     C                     PARM           P@VL07200                                         MD035545
+     C                     PARM           P@OP08 20                                         MD035545
+     C                     PARM           P@VL08200                                         MD035545
+     C                     PARM           P@OP09 20                                         MD035545
+     C                     PARM           P@VL09200                                         MD035545
+     C                     PARM           P@OP10 20                                         MD035545
+     C                     PARM           P@VL10200                                         MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'.                            MD035545
+      *                                                                                     MD035545
+     C           WRTCD     IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPSMC - Subroutine to Process Records for Parts Sold        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPSMC    BEGSR
+      *
+     C                     MOVE 'Y'       WMCCY
+     C                     MOVE 'N'       WMCDT
+     C**********           Z-ADD*ZEROS    WOLNO                                               CSD027
+     C                     MOVE *BLANKS   WOLNO                                               CSD027
+     C                     MOVE 'B'       WRCDT
+     C                     MOVE LNRF      WLNRF
+     C           WLOAN     CHAINCLOAN                88
+     C           *IN88     IFEQ '1'
+     C                     MOVELWLNRF     WKFLD   7
+     C                     MOVE 'B'       WKFLD
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     MOVELWKFLD     DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           NCCY      IFNE *BLANKS
+     C           CCY       ANDNENCCY
+     C           RLDT      ANDLEBJRDNB
+     C                     ADD  1         WMCDU
+     C                     ADD  1         WMCAC
+     C                     MOVE 'Y'       WMCDT
+      *
+     C                     EXSR SRRPAY
+     C                     ELSE
+     C                     MOVE 'N'       WMCCY
+     C                     ENDIF
+      *
+      ** Save rollover details of original loan
+      *
+     C                     Z-ADDRLDT      WRLDT
+     C                     MOVE NCCY      WNCCY
+     C                     Z-ADDNFCE      WNFCE
+     C                     MOVE NFMD      WNFMD
+     C                     Z-ADDNBCE      WNBCE
+     C                     MOVE NBMD      WNBMD
+     C**********           Z-ADDLNRF      WWLNRF                                              CLE148
+     C                     MOVELLNRF      WWLNRF                                              CLE148
+     C**********           Z-ADDLNRF      WOLNO                                               CSD027
+     C                     MOVE LNRF      WOLNO                                               CSD027
+     C           WOLNO     SETLLPSOLDFF
+     C                     READ PSOLDFF                  88
+      *
+     C           *IN88     DOWEQ'0'
+     C           OLNO      ANDEQWOLNO
+     C                     MOVE 'B'       WRCDT
+     C                     MOVE LNRF      WLNRF
+     C           WLOAN     CHAINCLOAN                88
+      *
+     C           *IN88     IFEQ '1'
+     C                     MOVELWLNRF     WKFLD
+     C                     MOVE 'B'       WKFLD
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     MOVELWKFLD     DBKEY            * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           NCCY      IFNE *BLANKS
+     C           CCY       ANDNENCCY
+     C           RLDT      ANDLEBJRDNB
+     C                     ADD  1         WMCDU
+     C                     ADD  1         WMCAC
+     C                     MOVE 'Y'       WMCDT
+      *
+     C           WMCCY     IFEQ 'Y'
+     C                     EXSR SRRPAY
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE 'N'       WMCCY
+     C                     ENDIF
+      *
+     C           WMCCY     IFEQ 'Y'
+     C           RLDT      IFNE WRLDT
+     C           NCCY      ORNE WNCCY
+     C           NFCE      ORNE WNFCE
+     C           NBCE      ORNE WNBCE
+     C           NFMD      ORNE WNFMD
+     C           NBMD      ORNE WNBMD
+     C                     MOVE 'N'       WMCCY
+     C                     ENDIF
+     C                     ENDIF
+     C                     READ PSOLDFF                  88
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRVRS - Subroutine to Reverse out multi-ccy details if at   *
+      *           least one detail is different with its related loan.*
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRVRS    BEGSR
+      *
+     C                     MOVE 'A'       WRCDT
+     C**********           Z-ADDWWLNRF    WLNRF                                               CLE148
+     C                     MOVELWWLNRF    WLNRF                                               CLE148
+     C           WLOAN     CHAINCLOAN                88
+      *
+     C           *IN88     IFEQ '1'
+     C                     MOVELWLNRF     WKFLD
+     C                     MOVE 'A'       WKFLD
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     MOVELWKFLD     DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           WNCCY     IFNE *BLANKS
+     C           NBRA      ANDNE0
+     C                     Z-ADD*ZEROS    NBRA
+     C                     Z-ADD*ZERO     NCAS
+     C                     MOVE *BLANK    NCHI
+     C                     UPDATCLOANCLF
+     C                     ENDIF
+      *
+     C                     MOVE 'B'       WRCDT
+     C           WLOAN     CHAINCLOAN                88
+      *
+     C           *IN88     IFEQ '1'
+     C                     MOVELWLNRF     WKFLD
+     C                     MOVE 'B'       WKFLD
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     MOVELWKFLD     DBKEY            * DBERR 05 *
+     C                     Z-ADD5         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           NCCY      IFNE *BLANKS
+     C                     MOVE *BLANKS   NCCY
+     C                     Z-ADD*ZEROS    NCPA
+     C                     Z-ADD*ZEROS    NFCE
+     C                     MOVE *BLANK    NFMD
+     C                     Z-ADD*ZEROS    NBCE
+     C                     MOVE *BLANK    NBMD
+     C                     Z-ADD0         NLRA
+     C                     UPDATCLOANCKF
+      *
+     C           RLDT      IFLE BJRDNB
+     C                     SUB  1         WMCAC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Reverse multi-ccy details of all parts sold related to original loan
+      *
+     C**********           Z-ADDLNRF      WOLNO                                               CSD027
+     C                     MOVE LNRF      WOLNO                                               CSD027
+     C           WOLNO     SETLLPSOLDFF
+     C                     READ PSOLDFF                  88
+      *
+     C           *IN88     DOWEQ'0'
+     C           OLNO      ANDEQWOLNO
+     C                     MOVE 'B'       WRCDT
+     C                     MOVE LNRF      WLNRF
+     C           WLOAN     CHAINCLOAN                88
+      *
+     C           *IN88     IFEQ '1'
+     C                     MOVELWLNRF     WKFLD
+     C                     MOVE 'B'       WKFLD
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     MOVELWKFLD     DBKEY            * DBERR 06 *
+     C                     Z-ADD6         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           NCCY      IFNE *BLANKS
+     C                     MOVE *BLANKS   NCCY
+     C                     Z-ADD*ZEROS    NCPA
+     C                     Z-ADD*ZEROS    NFCE
+     C                     MOVE *BLANK    NFMD
+     C                     Z-ADD*ZEROS    NBCE
+     C                     MOVE *BLANK    NBMD
+     C                     Z-ADD0         NLRA
+     C                     UPDATCLOANCKF
+      *
+     C                     MOVE 'A'       WRCDT
+     C                     MOVE LNRF      WLNRF
+     C           WLOAN     CHAINCLOAN                88
+      *
+     C           *IN88     IFEQ '1'
+     C                     MOVELWLNRF     WKFLD
+     C                     MOVE 'B'       WKFLD
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     MOVELWKFLD     DBKEY            * DBERR 07 *
+     C                     Z-ADD7         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADD*ZEROS    NBRA
+     C                     Z-ADD*ZERO     NCAS
+     C                     MOVE *BLANK    NCHI
+     C                     UPDATCLOANCLF
+      *
+     C           RLDT      IFLE BJRDNB
+     C                     SUB  1         WMCAC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ PSOLDFF                  88
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRPAY - Subroutine to check if outstanding principal and    *
+      *           interest of the loan and its parts sold has been    *
+      *           paid before a multi-ccy rollover.                   *
+      *                                                               *
+      *  Called By: SRPSMC                                            *
+      *                                                               *
+      *  Calls    : SRINTR                                            *
+      *                                                               *
+      *****************************************************************
+     C           SRRPAY    BEGSR
+      *
+     C                     MOVE 'PD'      WAMTP
+     C                     MOVE LNRF      WLNRFA
+     C           WACTN     SETLLIACT1
+     C           WACTN     READEIACT1                    88
+     C                     Z-ADD*ZEROS    WINTPD 130
+     C                     Z-ADD*ZEROS    WOTPRN 130
+      *
+     C           *IN88     IFEQ '1'
+     C                     Z-ADDCPAM      WOTPRN
+     C                     EXSR SRINTR
+      *
+     C                     MOVE 'MR'      WAMTP
+     C           WACTN     SETLLIACT1
+     C           WACTN     READEIACT1                    88
+     C           *IN88     DOWEQ*OFF
+     C                     ADD  INTAA     WINTPD
+     C           VDATA     IFLE RLDT
+     C           WOTPRN    SUB  PRAMA     WOTPRN
+     C                     ENDIF
+     C           WACTN     READEIACT1                    88
+     C                     ENDDO
+      *
+      ** Calculate outstanding principal until mccy rollover date
+      ** Subtract repayment amounts (manual/scheduled-autosett)
+      *
+     C                     MOVE AUTOA     WAUTOA  1                                           CLE134
+     C           WAUTOA    IFEQ 'C'                                                           CLE134
+     C           CLE134    ANDEQ'Y'                                                           CLE134
+     C                     MOVE 'Y'       WAUTOA                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C                     MOVE 'RE'      WAMTP
+     C           WACTN     SETLLIACT1
+     C           WACTN     READEIACT1                    88
+     C           *IN88     DOWEQ*OFF
+     C           VDATA     IFLE RLDT
+     C********** AUTOA     ANDEQ'Y'                                                           CLE134
+     C           WAUTOA    ANDEQ'Y'                                                           CLE134
+     C                     SUB  PRAMA     WOTPRN
+     C                     ENDIF
+     C           WACTN     READEIACT1                    88
+     C                     ENDDO
+      *
+     C                     MOVE 'PI'      WAMTP
+     C           WACTN     SETLLIACT1
+     C           WACTN     READEIACT1                    88
+     C           *IN88     DOWEQ*OFF
+     C           VDATA     IFLE RLDT
+     C                     ADD  PRAMA     WOTPRN
+     C                     ENDIF
+     C           WACTN     READEIACT1                    88
+     C                     ENDDO
+      *
+     C           WINTPD    IFEQ WOTINT
+     C           WOTPRN    ANDLE*ZERO
+     C           AUTO      ANDEQ'N'
+     C           AUTO      OREQ 'Y'
+     C           AUTO      OREQ 'C'                                                           CLE134
+     C           CLE134    ANDEQ'Y'                                                           CLE134
+     C                     MOVE 'Y'       WMCCY
+     C                     ELSE
+     C                     MOVE 'N'       WMCCY
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE 'N'       WMCCY
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINTR - Subroutine to compute for outstanding interest      *
+      *                                                               *
+      *  Called By: SRRPAY                                            *
+      *                                                               *
+      *  Calls    : GLINTC                                            *
+      *                                                               *
+      *****************************************************************
+     C           SRINTR    BEGSR
+      *
+     C                     Z-ADDRLDT      ZIEND
+     C                     Z-ADDIACD      ZIBEG
+      *
+      ** Add extra days if first and last day accruals
+      *
+     C**********           Z-ADDVDAT      ZVDAT                                               245082
+     C                     Z-ADDMDAT      ZMDAT                                               245082
+     C                     EXSR ZFLAC
+      *
+      ***Add*an*extra*day*if*first*&*last*day*accrual*and*original*********                   245082
+      ***entry*date*is*greater*than*or*equal*to*the*maturity date.*********                   245082
+      *
+     C********** ORED      IFGE MDAT                                                          245082
+     C********** ADDI      ANDEQ'B'                                                           245082
+     C**********           ADD  1         ZIEND                                               245082
+     C**********           ENDIF                                                              245082
+      *
+      ** Add extra days if first day accruals
+      *
+     C                     Z-ADDMDAT      ZMDAT
+     C                     EXSR ZFLDC
+      *
+     C                     Z-ADDICBS      ZICALC
+     C                     Z-ADDINTR      ZIRATE
+     C                     Z-ADDWOTPRN    ZIAMT
+     C/COPY WNCPYSRC,LE0389C002
+      *
+     C                     EXSR GLINTC
+      *
+      ** Round down interest if required
+      *
+     C           RDFC      IFEQ 'Y'
+     C                     Z-ADDZINTR     RDWORK 130
+     C                     Z-ADDRDWORK    ZINTR
+     C                     ENDIF
+      *
+      ** If loan has gone past due, add PDIN, AIAP, AIMN to get
+      ** interest accrued.
+      *
+     C           MDAT      IFLT IACD
+     C           MDAT      ANDNE0
+     C           RECI      ANDEQ'D'
+     C           AIAP      ADD  AIMN      WOTINT
+     C           WOTINT    ADD  PDIN      WOTINT
+     C                     ELSE
+      *
+     C           AITC      ADD  AIAP      WOTINT
+     C           WOTINT    ADD  AIMN      WOTINT
+      *
+      ** If stop accruals ind. is off, do not include intrst calculated
+      *
+     C                     TESTB'3'       LONI           87
+      *
+     C           *IN87     IFEQ *OFF
+     C                     ADD  ZINTR     WOTINT    H
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           WOTINT    SUB  IPRD      WOTINT
+     C           WOTINT    SUB  ICTD      WOTINT
+     C           WOTINT    SUB  IWOD      WOTINT
+      *
+     C           INTR      IFLT 0
+     C           WOTINT    ANDGT0
+     C           INTR      ORGT 0
+     C           WOTINT    ANDLT0
+     C                     Z-ADD0         WOTINT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPSAM - Subroutine to convert parts sold amount to new ccy  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     C           SRPSAM    BEGSR
+      *
+     C                     MOVE WWLNRF    WLNRF
+     C                     MOVE 'A'       WRCDT
+     C           WLOAN     CHAINCLOAN                88
+      *
+     C           *IN88     IFEQ '1'
+     C                     MOVELWLNRF     WKFLD
+     C                     MOVE 'A'       WKFLD
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     MOVELWKFLD     DBKEY            * DBERR 08 *
+     C                     Z-ADD8         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           PSAM      IFGT *ZERO
+     C           WNCCY     ANDNE*BLANKS
+     C                     MOVE CCY       WCURR
+     C                     CALL 'AOCURRR0'PPAR1
+     C                     Z-ADDA6NBDP    WNBDP   10
+     C                     MOVE WNCCY     WCURR
+     C                     CALL 'AOCURRR0'PPAR1
+      *
+     C                     MOVE FMDI      ZMDI1   1
+     C                     Z-ADDFCXR      ZRATE1 138
+     C                     MOVE WNFMD     ZMDI2   1
+     C                     Z-ADDWNFCE     ZRATE2 138
+     C                     EXSR ZXRATE
+      *
+      ** Convert Parts sold amount to new currency using the cross
+      ** exchange rate of the old and new facility exchange rate
+      *
+     C**********           Z-ADDA6NBDP    ZCDPI                                               185526
+     C**********           Z-ADDWNBDP     ZCDPO                                               185526
+     C                     Z-ADDWNBDP     ZCDPI                                               185526
+     C                     Z-ADDA6NBDP    ZCDPO                                               185526
+     C                     Z-ADDPSAM      ZAMTCI
+     C                     Z-ADD*ZEROS    ZAMTCO
+     C                     Z-ADDZRATEX    ZEXCH
+     C                     MOVE ZMDIX     ZMD
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    PSAM
+      *
+     C                     UPDATCLOANCLF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to output Audit Report                   *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+     C                     WRITEHEADAU
+      *
+      ** Print Audit File if database error.
+      *
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** Print Audit File if no details to report.
+      *
+     C           WMCDU     IFEQ 0
+     C           WMCAC     ANDEQ0
+     C                     WRITENODTLS
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDWMCDU     RDUNO
+     C                     Z-ADDWMCAC     RATNO
+     C                     WRITECONTROL
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   -  Program exception error routine                   *
+      *             Called automatically if a program error occurs,   *
+      *             or directly by the program code using EXSR.       *
+      *             This subroutine DUMPs the program just once.      *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,GLINTCZ1
+      /EJECT
+     C/COPY ZSRSRC,ZFLACZ2
+      /EJECT
+     C/COPY ZSRSRC,ZINTDYZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE9Z3
+      /EJECT
+     C/COPY ZSRSRC,ZDAT10Z2
+      /EJECT
+     C/COPY ZSRSRC,ZXRATEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZCONVZ1
+      /EJECT
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

@@ -1,0 +1,207 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Customer details - LU Setup SDCUSTX6')
+      *****************************************************************
+      *                                                               *
+      *     MIDAS EUROPEAN REPORTING                                  *
+      *                                                               *
+      *     SD0011X6 - CUSTOMER DETAILS - SETUP PF/SDCUSTX6           *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 11May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 ULX048             Date 04Sep03               *
+      *                 UPG402             Date 04Oct04               *
+      *                 187689             Date 18Dec00               *
+      *                 ULX008             Date 25Feb00               *
+      *                 ULX012             Date 21Aug98               *
+      *                 ULX004             Date 07May98               *
+      *                 ERL446 TLI         Date 14NOV94               *
+      *                 ER_R10            DATE  18OCT94               *
+      *                 ERL371 TLI        DATE  16DEC93               *
+      *                 ERL326 TLI        DATE  16MAR93               *
+      *                 ERL013 ADs        DATE  07DEC93               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027A - Conversion Of Customer Number to Alpha             *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX048 - Circular CSSF 2003/100 Management                   *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  187689 - "GRD" currency in EMU                               *
+      *  ULX008 - "Commissariat aux Bourses"                          *
+      *  ULX012 - Guarantees and Collateral Management enhancements   *
+      *  ULX004 - IML Circular 97/138                                 *
+      *  ERL446 - NEW IML 2.3 DEVELOPMENT                             *
+      *  ER_R10 - EUROPEAN REPORTING - LUXEMBOURG UPGRADE IN R10      *
+      *  ERL371 - IML 1.4 DEVELOPMENT                                 *
+      *  ERL326 - GUARANTEES MANAGEMENT                               *
+      *  ERL013 - Defautl Customer Sector Economic is 4000            *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+     FSDCUSTPDIF  E                    DISK
+      ***********                                                         ER_R10
+     F*DCUSTX0IF* E           K        DISK                               ER_R10
+     F*********** SDCUSTD0                          KRENAMESDCUSTXX       ER_R10
+     F***SDCUSTY6UF  E           K        DISK                      A                         CER001
+     FSDCUX2L0UF  E           K        DISK                      A                            CER001
+      /EJECT
+      *                                                                   ULX012
+     C           *ENTRY    PLIST                                          ULX012
+     C                     PARM           WWRTCD  7                       ULX012
+     C                     PARM           WWMODE  1                       ULX012
+      *                                                                   ULX012
+      ** ULX048 - Circular CSSF 2003/100 Management                                           CER001
+      *                                                                                       CER001
+     C                     MOVEL'N'       ULX048  1                                           CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM *BLANKS   @RTCD   7                                           CER001
+     C                     PARM '*VERIFY' @OPTN   7                                           CER001
+     C                     PARM 'ULX048'  @SARD   6                                           CER001
+      *                                                                                       CER001
+     C           @RTCD     IFEQ *BLANKS                                                       CER001
+     C                     MOVEL'Y'       ULX048                                              CER001
+     C                     ENDIF                                                              CER001
+      *
+     C                     READ SDCUSTPD                 31
+     C           *IN31     DOWEQ'0'
+      *
+     C********** BBCUST    CHAINSDCUSTY6             32                                       CER001
+     C           BBCUST    CHAINSDCUX2L0             32                                       CER001
+      *
+     C           *IN32     IFEQ '1'
+      *
+     C                     MOVE BBCUST    VFCUST
+     C                     Z-ADD0         VFCONS
+     C******               Z-ADD0         VFECOS                          ERL013
+     C                     Z-ADD4000      VFECOS                          ERL013
+     C                     Z-ADD9000      VFNCOS                          ULX004
+     C                     Z-ADD0         VFINRF
+     C***********VFCUST    CHAINSDCUSTX0             88             ERL326ER_R10
+     C************IN88     IFEQ '0'                                 ERL326ER_R10
+     C***********          MOVE LRCGRP    VFCGRP                    ERL326ER_R10
+     C***********          ELSE                                     ERL326ER_R10
+     C**********           MOVE *BLANKS   VFCGRP                                       ERL326 CER001
+     C**********           Z-ADD*ZEROS    VFCGRP                                      CER001 CSD027A
+     C                     MOVE *BLANKS   VFCGRP                                             CSD027A
+     C           BBPAIN    IFNE 'P'                                                           CER001
+     C           BBPCNB    ANDNE*BLANKS                                                       CER001
+     C                     MOVELBBPCNB    VFCGRP                                              CER001
+     C                     ELSE                                                               CER001
+     C                     MOVELBBCUST    VFCGRP                                              CER001
+     C                     ENDIF                                                              CER001
+     C***********          END                                      ERL326ER_R10
+     C                     MOVE *BLANKS   VFCRNM                          ERL326
+     C           BBBNBI    IFEQ 'Y'                                       ERL446
+     C                     MOVE BBCNCZ    VFCOLC                          ERL446
+     C**********           MOVE 'Y'       VFSMRS                                       187689 CER001
+     C                     ELSE                                           ERL446
+     C                     MOVE BBCOLC    VFCOLC                          ERL326
+     C**********           MOVE ' '       VFSMRS                                       187689 CER001
+     C                     END                                            ERL446
+     C                     Z-ADD0         VFPAPS                          ERL371
+     C                     MOVE 'Y'       VFPERF                          ERL446
+     C                     MOVE 'N'       VFAUTG                          ULX012
+     C                     MOVE 'N'       VFPROG                          ULX012
+     C                     MOVE 'N'       VFASSP                          ULX012
+     C                     MOVE *BLANK    VFICCD                                              CER001
+     C           ULX048    IFEQ 'Y'                                                           CER001
+     C                     MOVE 'Y'       VFMCID                                              CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE 'N'       VFMCID                                              CER001
+     C                     ENDIF                                                              CER001
+     C                     MOVE *BLANK    VFSMRS                                              CER001
+     C                     WRITESDCUSTF6
+      *
+     C                     ELSE                                           ULX012
+      *                                                                   ULX012
+      ***  Guarantees and Collateral automatic generation                 ULX012
+      *                                                                   ULX012
+     C           VFAUTG    IFEQ ' '                                       ULX012
+     C                     MOVE 'N'       VFAUTG                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+      ***  Processing for Economic Group and subsidiaries                 ULX012
+      *                                                                   ULX012
+     C           VFPROG    IFEQ ' '                                       ULX012
+     C                     MOVE 'N'       VFPROG                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+      ***  Assets Pledged                                                 ULX012
+      *                                                                   ULX012
+     C           VFASSP    IFEQ ' '                                       ULX012
+     C                     MOVE 'N'       VFASSP                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX008
+      ***  Investment Company Identification                              ULX008
+      *                                                                   ULX008
+     C           VFICCD    IFEQ ' '                                                           CER001
+     C                     MOVE *BLANKS   VFICCD                          ULX008
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C********** VFCGRP    IFEQ 0                                                     CER001 CSD027A
+     C           VFCGRP    IFEQ *BLANKS                                                      CSD027A
+     C           BBPAIN    IFNE 'P'                                                           CER001
+     C           BBPCNB    ANDNE*BLANKS                                                       CER001
+     C                     MOVELBBPCNB    VFCGRP                                              CER001
+     C                     ELSE                                                               CER001
+     C                     MOVELBBCUST    VFCGRP                                              CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                   ULX008
+      ***  Market Centre                                                  ULX008
+      ******************************************************************               ULX048 CER001
+      ***ULX048*-*Circular*CSSF*2003/100*Management*********************               ULX048 CER001
+      ******************************************************************               ULX048 CER001
+     C**********           MOVEL'N'       ULX048  1                                    ULX048 CER001
+     C**********           CALL 'AOSARDR0'                                             ULX048 CER001
+     C**********           PARM *BLANKS   @RTCD   7                                    ULX048 CER001
+     C**********           PARM '*VERIFY' @OPTN   7                                    ULX048 CER001
+     C**********           PARM 'ULX048'  @SARD   6                                    ULX048 CER001
+      **********                                                                       ULX048 CER001
+     C********** @RTCD     IFEQ *BLANKS                                                ULX048 CER001
+     C**********           MOVEL'Y'       ULX048                                       ULX048 CER001
+     C**********           ENDIF                                                       ULX048 CER001
+      *                                                                   ULX008
+     C           VFMCID    IFEQ ' '                                       ULX008
+     C           ULX048    IFEQ 'Y'                                                           ULX048
+     C**********           MOVE '4'       VFMCID                                       ULX048 CER001
+     C                     MOVE 'Y'       VFMCID                                              CER001
+     C                     ELSE                                                               ULX048
+     C                     MOVE 'N'       VFMCID                          ULX008
+     C                     ENDIF                                                              ULX048
+     C                     ENDIF                                          ULX008
+      *                                                                   187689
+      ***  Subject to Minimum Reserve                                     187689
+      *                                                                   187689
+     C           VFSMRS    IFEQ ' '                                       187689
+      *                                                                   187689
+     C           VFNCOS    IFEQ 5100                                      187689
+     C           VFNCOS    OREQ 5201                                      187689
+     C                     MOVE 'Y'       VFSMRS                          187689
+      *                                                                   187689
+     C                     ELSE                                           187689
+      *                                                                   187689
+     C                     MOVE *BLANK    VFSMRS                          187689
+      *                                                                   187689
+     C                     ENDIF                                          187689
+      *                                                                   187689
+     C                     ENDIF                                          187689
+      *                                                                   ULX012
+     C                     UPDATSDCUSTF6                                  ULX012
+      *                                                                   ULX012
+     C                     END
+      *
+     C                     READ SDCUSTPD                 31
+     C                     ENDDO
+      *
+     C                     SETON                     LR

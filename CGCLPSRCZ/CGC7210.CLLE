@@ -1,0 +1,64 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Interest Scale get the deal interest fr-date')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       CGC7210 - Interest Scale get dealing from date              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER042  *CREATE    Date 11May11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER042 - Interest Scale Report Correspondence               */
+/*                (Upgrade of FGE178/179)                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&DLNO &INTD &VDAT &INFD &FRLS &RTCD)
+ 
+/*  Declarations                                                */
+             DCL        VAR(&DLNO) TYPE(*DEC) LEN(6 0)
+             DCL        VAR(&INTD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&VDAT) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&INFD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&FRLS) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Set-off Database Error Switches */
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*  If first pass override the file */
+             IF         COND(&FRLS *EQ 'FIRST') THEN(DO)
+                   OVRDBF     FILE(HIST6) OVRSCOPE(*JOB) SHARE(*NO)
+             ENDDO
+ 
+/*  Call the  program */
+ 
+             CALL       PGM(CG7210) PARM(&DLNO &INTD &VDAT &INFD +
+                          &FRLS &RTCD)
+ 
+/*  If last pass delete the override */
+             IF         COND(&FRLS *EQ 'LAST') THEN(DO)
+                   DLTOVR     FILE(*ALL)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('Program CGC7210 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/*  Logical end of the program */
+ END:        ENDPGM
+ 

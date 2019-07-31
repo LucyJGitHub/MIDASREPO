@@ -1,0 +1,101 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Set on system set up flag')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9998 - Set on System Set Up flag                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Prev Amend No. 166091  *CREATE    Date 17Aug99               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  166091 - New pgm to set on SSF.                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *       U6      FILES AND DTAARA UPDATED SUCCESSFULLY           *
+      *     U7/U8     SET ON IF RECORD OR DTAARA NOT FOUND            *
+      *       30      RECORD OR DTAARA NOT FOUND                      *
+      *                                                               *
+      *****************************************************************
+     FTABTB10 UF  E                    DISK
+     FSDBANKPDUF  E                    DISK
+      *
+     E                    CPY@    1   1 80
+      *
+     I            DS
+     I                                        1  13 RUNDAT
+     I                                       11  11 SUC
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     MOVE '0'       *INU6
+     C                     MOVE '0'       *INU7
+     C                     MOVE '0'       *INU8
+     C                     SETOF                     30
+      *
+      ** Update TABTB10
+     C           1         CHAINTABTB10              30
+     C           *IN30     IFEQ '0'
+      *
+     C           SFLG      IFNE 1
+     C                     MOVE 1         SFLG
+     C                     UPDATTABTB10F
+     C                     END
+      *
+     C                     ELSE
+     C                     SETON                     U7U8
+     C                     GOTO ENDPGM
+     C                     END
+      *
+      ** Update SDBANKPD
+     C           1         CHAINSDBANKPD             30
+     C           *IN30     IFEQ '0'
+      *
+     C           BJSUC     IFNE 'Y'
+     C                     MOVE 'Y'       BJSUC
+     C                     UPDATSDBANKD0
+     C                     END
+      *
+     C                     ELSE
+     C                     SETON                     U7U8
+     C                     GOTO ENDPGM
+     C                     END
+      *
+      ** Update RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *LOCK     IN   *NAMVAR                30
+      *
+     C           *IN30     IFEQ '0'
+      *
+     C           SUC       IFNE 'Y'
+     C                     MOVE 'Y'       SUC
+     C                     OUT  *NAMVAR
+     C                     END
+      *
+     C                     ELSE
+     C                     SETON                     U7U8
+     C                     GOTO ENDPGM
+     C                     END
+      *
+      ** Files and dtaara updated successfully - set on U6
+     C                     SETON                     U6
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+     C                     RETRN
+      *
+** CPY@   OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

@@ -1,0 +1,112 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Modulus 10 check on 6-digit field')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas  STANDING DATA MODULE
+     F*                                                               *
+     F*     SD0011U - MODULUS 10 CHECK ON SIX DIGIT FIELD             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01408             Date 29May96               *
+      *                 S01230             Date 07/11/89              *
+     F*                                                               *   S01230
+     F*****************************************************************   S01230
+      *  MD046248 - Finastra Rebranding                               *
+     F*    S01408 - Core hook SD0011UCP1 added.
+     F*             Core hook SD0011UCP2 added.
+     F*             Core hook SD0011UEP1 added.
+     F*             Core hook SD0011UEP2 added.
+     F*    S01230 - STANDARDISE PROGRAMS                                  S01230
+     F*****************************************************************   S01230
+     F*
+     F* ID F  C  H  L     FUNCTION OF INDICATORS
+     F*
+     F*       99       ERROR ON CHECK DIGIT
+     F*
+     F********************************************************************
+     F*  P R O G R A M     C R E A T I O N     P A R A M E T E R S    *   S01230
+     F*                                                               *   S01230
+     F*                                                               *   S01230
+     F*****************************************************************   S01230
+0029 E                    ZCA1        6  1               ZCHDIG SR. ARRAY SD0630
+0030 E                    ZCA2        6  1 0             ZCHDIG SR. ARRAY SD0630
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,SD0011UEP1                                           S01408
+     E*                                                                   S01408
+0031 E                    ZCA3        8  1 0             ZCHDIG SR. ARRAY SD0630
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,SD0011UEP2                                           S01408
+     E*                                                                   S01408
+      /EJECT                                                              S01230
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT                                                              S01230
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     I*                                                                   S01230
+      /EJECT
+     I/COPY WNCPYSRC,SD0011UI01
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTCD  7        B:Return code
+     C           ZCNUM     PARM           P@CUST  6        B:CUST NO.
+     C                     MOVE '*ERROR*' P@RTCD
+0131 C**                                                                  SD0630
+0132 C**   CALCULATION TO DEFINE NUMBER FIELD.                            SD0630
+0133 C                     MOVE ZCNUM     ZCNUM   6                       SD0630
+0134 C**                                                                  SD0630
+0135 C**   MOVE CUSTOMER NUMBER TO ALPHA FIELD AND ARRAY.                 SD0630
+0136 C                     MOVE ZCNUM     ZWRK6   6                       SD0630
+0137 C                     MOVEAZWRK6     ZCA1                            SD0630
+0138 C                     MOVE ZCA1      ZCA2                            SD0630
+0139 C**                                                                  SD0630
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0011UCP1                                           S01408
+     C*                                                                   S01408
+0140 C**   MULTIPLY FIRST, THIRD AND FIFTH DIGITS BY 2.                   SD0630
+0141 C           ZCA2,1    MULT 2         ZDIG1   20                      SD0630
+0142 C           ZCA2,3    MULT 2         ZDIG3   20                      SD0630
+0143 C           ZCA2,5    MULT 2         ZDIG5   20                      SD0630
+0144 C**                                                                  SD0630
+0145 C**   MOVE RELEVANT DIGITS INTO ARRAY FOR XFOOT TO ADD ELEMENTS.     SD0630
+0146 C                     MOVELZDIG1     ZCA3,1                          SD0630
+0147 C                     MOVE ZDIG1     ZCA3,2                          SD0630
+0148 C                     MOVE ZCA2,2    ZCA3,3                          SD0630
+0149 C                     MOVELZDIG3     ZCA3,4                          SD0630
+0150 C                     MOVE ZDIG3     ZCA3,5                          SD0630
+0151 C                     MOVE ZCA2,4    ZCA3,6                          SD0630
+0152 C                     MOVELZDIG5     ZCA3,7                          SD0630
+0153 C                     MOVE ZDIG5     ZCA3,8                          SD0630
+0154 C**                                                                  SD0630
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0011UCP2                                           S01408
+     C*                                                                   S01408
+0155 C**   ADD ELEMENTS AND OBTAIN CHECK DIGIT.                           SD0630
+0156 C                     XFOOTZCA3      ZCHK    10                      SD0630
+0157 C           10        SUB  ZCHK      ZCHK                            SD0630
+0158 C**                                                                  SD0630
+0159 C**   COMPARE CALCULATED CHECK DIGIT WITH INPUT.                     SD0630
+0160 C           ZCHK      COMP ZCA2,6               9999  ERROR - 99 ON  SD0630
+     C  N99                MOVE *BLANKS   P@RTCD
+0161 C**                                                                  SD0630
+     C/COPY WNCPYSRC,SD0011UC01
+     C                     RETRN
+      *
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

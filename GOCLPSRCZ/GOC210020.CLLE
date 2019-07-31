@@ -1,0 +1,90 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO GPUTCIPD Housekeeping')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing                                   */
+/*                                                                   */
+/*       GOC210020 - Midas GO GPUTCIPD Housekeeping                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD023876 *CREATE   Date 30Apr14              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD023876 - GOC210000 Performance Issues                     */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM
+ 
+             DCL        VAR(&RTCD)  TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FULLCHECK) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ZOZONE)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZOSHTC)  TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ZORDNB)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZODNWD)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZOBCCY)  TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ZONJOB)  TYPE(*DEC)  LEN(1 0)
+             DCL        VAR(&PROC)  TYPE(*CHAR) LEN(1)
+ 
+             DCLF       FILE(SDSBNKTD)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GOC210020 - GPUTCIPD Housekeeping') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Get zone */
+             CALL       PGM(GOGETZONE) PARM(&RTCD &ERMS &FULLCHECK +
+                          &ZOZONE &ZOSHTC &ZORDNB &ZODNWD &ZOBCCY +
+                          &ZONJOB)
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Determine if it is this zone to do the housekeeping */
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(GP210000) PARM(&RTCD &ERMS &ZOZONE +
+                          &BJMRDT &PROC)
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             IF         COND(&PROC *NE 'Y') THEN(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             CALL       PGM(GP210020) PARM(&RTCD &ERMS)
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             SNDPGMMSG  MSG('Program GOC210020 ended abnormally.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

@@ -1,0 +1,2486 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Presented cheque maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4217 - Cheque Presented Maintenance                        *
+     F*                                                               *
+     F*  Function:  This program allows the input of the range        *
+     F*   (I/C)     of cheques which need to be reinstated as         *
+     F*             unpresented cheques.                              *
+     F*                                                               *
+     F*  Called By: REC4217 - Presented Cheques Maintenance           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 BUG5470            Date 17Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3229            Date 23Aug04               *
+      *                 BUG3028            Date 21Jun04               *
+      *                 BUG3030            Date 15Jun04               *
+      *                 BUG3033            Date 03Jun04               *
+      *                 BUG3025            Date 02Jun04               *
+      *                 BUG3024            Date 02Jun04               *
+      *                 CRE019             Date 12Jan04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 093857             Date 28Sep95               *
+      *                 CRT001  *CREATE    Date 28Feb95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  BUG5470 - Database error when cheque number is not within    *
+      *            the range of the retail's account cheque book.     *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3229 - Process Cheque Books only, not GIRO.               *
+      *  BUG3028 - Error if attempting to reverse an already reversed *
+      *            record.                                            *
+      *  BUG3030 - Retail Number, GIRO, and Start/End Cheque No. are  *
+      *            not shown after pressing F15-F12-F15 consecutively.*
+      *            Same error occurs when pressing F5 in the selection*
+      *            screen.                                            *
+      *  BUG3033 - Webfacing adjustments.                             *
+      *  BUG3025 - Use a different LF for building subfiles.          *
+      *  BUG3024 - Correct array index error caused by cheques with   *
+      *            ECQN = 99999999 (maximum).                         *
+      *  CRE019 - Cheque Processing and Maintenance.                  *
+     F*  093857 - Program encounters error message "Update or Delete  *
+     F*           without prior read or chain" upon chain fail in     *
+     F*           PF/CHQBKPD because indicator is not checked.        *
+     F*  CRT001 - Retail Teller System.                               *
+     F*                                                               *
+     F*****************************************************************
+     FACNUM   IF  E           K        DISK
+     F**  Retail Account Number
+     F*
+     FCHQBKL1 UF  E           K        DISK         KINFSR *PSSR
+     F**  Cheque Book File             Logical file
+     F            CHQBKPHF                          KIGNORE                                   CRE019
+     F            CHQBKPTF                          KIGNORE                                   CRE019
+     F*                                             KCOMIT
+      *                                                                                      BUG3025
+     FCHQBKL3 IF  E           K        DISK         KINFSR *PSSR                             BUG3025
+     F            CHQBKPHF                          KIGNORE                                  BUG3025
+     F            CHQBKPTF                          KIGNORE                                  BUG3025
+     F            CHQBKPDF                          KRENAMECHQBKPD3                          BUG3025
+     F*
+     FRE4217P1O   E             11     PRINTER      KINFSR *PSSR      UC
+     F**  Presented Cheques Maintenance Report
+     F*
+     FRE4217AUO   E                    PRINTER      KINFSR *PSSR      UC
+     F**  Presented Cheques Maintenance - Audit report
+     F*
+     FRE4217DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        #1FRECKSFILE RE4217S1                           CRE019
+     F**  Display file - Cheque book maintenance
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       09         To Condition Display Of 'F10=DELETE'         *
+     F*       10         Message Subfile End Indicator (SFLEND)       *
+     F*       11         Print Overflow indicator                     *
+     F*       12         Protect Indicator for SACTN,SRACNO,SGCIN     *
+     F*                                        SSCQN                  *
+     F*       15         Print Indicator for 'PRESENTED' or           *
+     F*                                      'REINSTATED'             *
+     F*       16         Print Indicator for FIRST LINE PRINTING      *
+     F*                                                               *
+      *       20         CRE019 is installed                          *                       CRE019
+      *       21         Error in field #1SEL                         *                       CRE019
+      *       22         Non-display indicator                        *                       CRE019
+      *       23         Error in field #1KBRC                        *                       CRE019
+      *       24         Error in field #1KCUS                        *                       CRE019
+      *       25         Footer indicator                             *                       CRE019
+      *       26         Protect action code                          *                       CRE019
+      *       27         non-display for #1KPRC                       *                       CRE019
+      *       28         Protect ACNO and GIRO                        *                       CRE019
+      *                                                               *                       CRE019
+     F*       31         Error in field SACTN                         *
+     F*       32         Error in field SRACNO                        *
+     F*       33         Error in field SGCIN                         *
+     F*       34         Error in field SSCQN                         *
+     F*       35         Error in field SECQN                         *
+     F*                                                               *
+     F*       51         Validate key Fields if it is OFF             *
+     F*       52         Validate non-key Fields if it is ON          *
+     F*                                                               *
+     F*       61         Any error in screen fields validation        *
+     F*       69         General error indicator                      *
+     F*                                                               *
+     F*       70         General Indicator Used For CHAIN             *
+     F*       73         Error during updation                        *
+     F*                                                               *
+     F*       80         General Indicator                            *
+     F*       81         General Indicator                            *
+     F*                                                               *
+      *       82         Subfile next change                          *                       CRE019
+      *       86         End of File                                  *                       CRE019
+      *       87         Subfile clear                                *                       CRE019
+      *       88         Roll-up                                      *                       CRE019
+      *                                                               *                       CRE019
+     F*       KC         Exit Program                                 *
+     F*       KE         Refresh Screen                               *
+      *       KI         Add Mode                                     *                       CRE019
+      *       KL         Cancel                                       *                       CRE019
+      *       KP         browse screen                                *                       CRE019
+     F*                                                               *
+     F*     90-99        Indicators used by Standard subroutines      *
+     F*     U7-U8        If database error occurs                     *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  Control routines                                             *
+     F*                                                               *
+     F*  MAIN   - Main Processing                                     *
+     F*  RTCHQR - Cheque out of range check                           *
+     F*  PRCHPR - Presented cheques processing                        *
+     F*  SETBIT - Set Bit on/off                                      *
+     F*  PCMTXT - Prepare comit text CMTTXT                           *
+     F*  FINAL  - Final Processing                                    *
+     F*  FIRST  - Initial Processing                                  *
+     F*  SNDMSG - Send program message parameters                     *
+     F*  DBERR  - Database error handling                             *
+     F*  ZA0150 - Get Midas Rundate & Setup Indicator                 *
+     F*  *PSSR  - Program error                                       *
+     F*                                                               *
+     F*  Screen Handling                                              *
+     F*                                                               *
+     F*  DSPF0  - Display screen format                               *
+     F*                                                               *
+     F*  Screen Initialisation / Resets                               *
+     F*                                                               *
+     F*  INT01  - Initialize Indicators for key Fields                *
+     F*  IFLDS  - Initialize Work/Screen Fields                       *
+     F*  RFRESH - Refresh screen                                      *
+     F*                                                               *
+     F*  Validation routines                                          *
+     F*                                                               *
+     F*  VALF0  - Validate screen input                               *
+     F*                                                               *
+     F*  Updates routines                                             *
+     F*                                                               *
+     F*  UPDAD  - Update procedure                                    *
+     F*                                                               *
+      *  Subfile routines                                             *                       CRE019
+      *  SRSELS - Selection Screen                                    *                       CRE019
+      *  SRRFSH - Initialise fields and indicators                    *                       CRE019
+      *  SRINIT - Initialise input fields                             *                       CRE019
+      *  SRBLD1 - Build Subfile                                       *                       CRE019
+      *  SRREVS - Do reversals based on selected SFL records          *                       CRE019
+      *  SRPROC - Process reversal                                    *                       CRE019
+      *  SRSDSP - Select data to be displayed                         *                       CRE019
+      *  SRFMTF - Format file fields to screen fields                 *                       CRE019
+      *  SRTSBT - Test for corresponding bit                          *                       CRE019
+      *  SRRDSF - Read subfile and validate input fields              *                       CRE019
+      *  SRKEYF - Validate and intialise key fields                   *                       CRE019
+      *  SRVALS - Validate subfile records                            *                       CRE019
+      *  SRRDSP - Re-display subfile                                  *                       CRE019
+      *  SRUPDS - Update subfile                                      *                       CRE019
+      *                                                               *                       CRE019
+     F*  Printing routines                                            *
+     F*                                                               *
+     F*  MTARPR - Move to array and print                             *
+     F*  PRTONE - Print one line                                      *
+     F*  PRHED  - Print Header                                        *
+     F*                                                               *
+     F*  Standard RTS Subroutines                                     *
+     F*                                                               *
+     F*                                                               *
+     F*  Standard MIDAS Subroutines                                   *
+     F*                                                               *
+     F*  ZTNLU1 - Access dataarea for next transaction no.            *
+     F*  ZALIGN - Validate amount fields                              *
+     F*                                                               *
+     F*  External Routines                                            *
+     F*                                                               *
+     F*  SCC0250 - Clear Message Queue                                *
+     F*  SCC0240 - Send Message                                       *
+     F*                                                               *
+     F*  DBERRCTL Program error                                       *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E**  Copyright statement
+     E*
+     E                    @CA        20  1
+     E**  Cheque presented array
+     E*
+     E                    @CN        20  5
+     E**  Cheque presented array (last four digits of cheque no)
+     E*
+     E/COPY ZSRSRC,ZALIGNZ1
+     E** Array for both SR.ZALIGN, SR.ZEDIT
+     E*
+     E*****************************************************************
+     I/EJECT
+     I*****************************************************************
+     I*
+     ICHQBKPDF
+     I**  Renamed fields in PF/CHQBKPD
+     I              ACNO                            CQACNO
+     ICHQBKPD3                                                                               BUG3025
+     I**  Renamed fields in PF/CHQBKPD                                                       BUG3025
+     I              ACNO                            CQACNO                                   BUG3025
+     I*
+     IACCNTABF
+     I**  Renamed fields in LF/ACNUM
+     I              BRCA                            ABRCA
+     I*
+     I*
+     I/COPY ZSRSRC,RTCHQPI1
+     I**  Data structures definitions for SR.RTCHQP
+     I*
+     I*
+     I@CQPS       DS                            100
+     I**  Data structure to redefine cheque presented array
+     I                                        1 100 @CN
+     I                                        1 100 @CQPA
+     I*
+     I*
+     I            DS                             19
+     I**  Data structure to for holding key list of cheque book file
+     I                                        1  19 @CHQBK
+     I                                        1  100KACNO
+     I                                       11  110KGCIN
+     I                                       12  190KSCQN
+     I*
+     I*
+     ICMTTXT      DS                             92
+     I**  Comit text
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 SACTN
+     I                                       26  35 USRIDX
+     I*
+     I                                       51  60 SRACNO
+     I                                       61  61 SGCIN
+     I                                       62  69 SSCQN
+     I                                       70  77 SECQN
+     I                                       78  80 SNOCQ
+     I                                       81  86 SISSDT
+     I                                       87  92 SCLTDT
+     I*
+     I*
+     I/COPY ZSRSRC,ZTNLU1Z1
+     I**  Data structure to update last transaction number
+     I*
+     I*
+     IPSDS       SDS
+     I*
+     I**  Program Status Data Structure
+     I                                        1  10 @PGM
+     I**  Field containing Program name
+     I                                      244 253 @JOB
+     I**  Field containing Workstation ID
+     I                                      254 263 @USER
+     I**  Field Containing User ID
+     I*
+     I*
+     ILDA        UDS                            256
+     I**  Local data area for data base errors.
+     I*
+     I**  Field combining the following fields
+     I                                      134 183 DBLOT
+     I**  Name of database file in error
+     I                                      134 141 DBFILE
+     I**  Key value causing database error
+     I                                      142 170 DBKEY
+     I**  Name of program causing database error
+     I                                      171 180 DBPGM
+     I**  Number of database error
+     I                                      181 1830DBASE
+     I*
+     IWSLFLD      DS                                                                          CRE019
+     I                                        1   3 WSLBRC                                    CRE019
+     I                                        4  13 WSLCUS                                    CRE019
+     I                                       14  23 WSLACN                                    CRE019
+     I                                       24  31 WSLPRC                                    CRE019
+      ** DS to hold slection fields                                                           CRE019
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Bank Details
+     I*
+     ISCSARD    E DSSCSARDPD                                                                  CRE019
+      ** External Data Structure for Switchable Features                                      CRE019
+      *                                                                                       CRE019
+     ISDBRCH    E DSSDBRCHPD                                                                  CRE019
+      ** External Data Structure for branch details                                           CRE019
+      *                                                                                       CRE019
+     ISDCUST    E DSSDCUSTPD                                                                  CRE019
+      ** External Data Structure for customer details                                         CRE019
+     I              QQDFAC                          CQDFAC                                    CRE019
+      *                                                                                       CRE019
+     IDSFDY     E DSDSFDY
+     I**  Short data structure for access programs (200 long)
+     I*
+     IDSSDY     E DSDSSDY                                                                     CRE019
+      **  Long data structure for access programs (800 long)                                  CRE019
+     I*
+     I*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            MAIN   - Main Processing                           *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*            DSPF0  - Display screen format                     *
+     C*            FINAL  - Final Processing                          *
+     C*            FIRST  - Initial Processing                        *
+     C*            PRCHPR - Presented cheques processing              *
+     C*            RFRESH - Refresh screen                            *
+     C*            VALF0  - Validate screen input                     *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Initial processing
+     C*
+     C                     EXSR FIRST
+     C*
+     C**  Display initial screen
+     C*
+     C                     EXSR DSPF0
+     C*
+     C**  Do while cmd/3 is not pressed
+     C*
+     C           *INKC     DOWEQ'0'
+     C*
+     C**  Process screen input - depending upon input type.
+     C*
+     C**  If Cmd/5 is pressed, perform initialisation
+     C*
+     C           *INKE     CASEQ'1'       RFRESH
+     C*
+      **  If Cmd/15 is pressed, shown selection screen                                        CRE019
+      *                                                                                       CRE019
+     C           *INKP     CASEQ*ON       SRSELS                                              CRE019
+      *                                                                                       CRE019
+     C**  If Enter key is pressed, validate screen input
+     C*
+     C                     CAS            VALF0
+     C*
+     C                     ENDCS
+     C*
+     C**  If no validation errors then furthur processing
+     C*
+     C           *IN61     IFEQ '0'
+     C           *INKE     ANDEQ'0'
+     C           CRE019    ANDNE'Y'                                                           CRE019
+     C           *IN61     OREQ '0'                                                           CRE019
+     C           *INKE     ANDEQ*OFF                                                          CRE019
+     C           *INKC     ANDEQ*OFF                                                          CRE019
+     C           *INKL     ANDEQ*OFF                                                          CRE019
+     C           WINKI     ANDNE'Y'                                                           CRE019
+     C           CRE019    ANDEQ'Y'                                                           CRE019
+     C*
+     C                     EXSR PRCHPR
+     C*
+     C**  Refresh screen before redisplay
+     C*
+     C                     EXSR RFRESH
+     C*
+     C                     END
+     C*
+     C**  Redisplay appropriate screen
+     C*
+     C                     EXSR DSPF0
+     C                     MOVE 'N'       WINKI                                               CRE019
+     C*
+     C                     ENDDO
+     C*
+     C**  Final Processing
+     C*
+     C                     EXSR FINAL
+     C*
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRSELS - Selection Screen                                    *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRSELS    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+     C                     EXSR SRRFSH                                                        CRE019
+      *                                                                                       CRE019
+     C           *INKC     DOWNE*ON                                                           CRE019
+     C           *INKL     ANDNE*ON                                                           CRE019
+     C           WINKI     ANDNE'Y'                                                           CRE019
+      *                                                                                      BUG3030
+      ** Check if user press F5                                                              BUG3030
+      *                                                                                      BUG3030
+     C           *INKE     IFEQ *ON                                                          BUG3030
+     C                     EXSR RFRESH                                                       BUG3030
+     C                     ENDIF                                                             BUG3030
+      *                                                                                       CRE019
+      ** Initialisation for subfile                                                           CRE019
+      *                                                                                       CRE019
+     C           WINKLR    IFNE 'Y'                                                           CRE019
+     C                     EXSR SRINIT                                                        CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Build subfile screen                                                                 CRE019
+      *                                                                                       CRE019
+     C                     EXSR SRBLD1                                                        CRE019
+      *                                                                                       CRE019
+      ** Process valid selection/s                                                            CRE019
+      *                                                                                       CRE019
+     C           WOKREV    IFEQ 'Y'                                                           CRE019
+     C                     EXSR SRREVS                                                        CRE019
+     C                     MOVEL'N'       WOKREV  1                                           CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDDO                                                              CRE019
+      *                                                                                       CRE019
+      ** Clear program message queue                                                          CRE019
+      *                                                                                       CRE019
+     C                     CALL 'SCC0250'                                                     CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRRFSH - Initialise fields and indicators                    *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRRFSH    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+      ** Clear selection fields                                                               CRE019
+      *                                                                                       CRE019
+     C                     MOVEL*BLANKS   #1KBRC                                              CRE019
+     C                     MOVEL*BLANKS   #1KCUS                                              CRE019
+     C                     MOVEL*BLANKS   #1KACN                                              CRE019
+     C                     MOVEL*BLANKS   #1KPRC                                              CRE019
+      *                                                                                       CRE019
+      ** Initialise indicators                                                                CRE019
+      *                                                                                       CRE019
+     C                     MOVE *OFF      *IN23                                               CRE019
+     C                     MOVE *OFF      *IN24                                               CRE019
+     C                     MOVE *OFF      *IN26                                               CRE019
+      *                                                                                       CRE019
+      ** Initialise work fields                                                               CRE019
+      *                                                                                       CRE019
+     C                     MOVEL*BLANKS   WFLD31 31                                           CRE019
+     C                     MOVEL*BLANKS   WSLFLD                                              CRE019
+     C                     MOVEL'N'       WINKI   1                                           CRE019
+      *                                                                                       CRE019
+      ** Clear program message queue                                                          CRE019
+      *                                                                                       CRE019
+     C                     CALL 'SCC0250'                                                     CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRINIT - Initialise input fields                             *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRINIT    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+      ** Initialise subfile relative record number.                                           CRE019
+      *                                                                                       CRE019
+     C                     Z-ADD*ZERO     #1FREC                                              CRE019
+      *                                                                                       CRE019
+      ** Clear subfile before refilling by writing control record                             CRE019
+      ** with SFLCLR active.                                                                  CRE019
+      *                                                                                       CRE019
+     C                     MOVEL*ON       *IN87                                               CRE019
+     C                     WRITERE4217C1                                                      CRE019
+     C                     MOVEL*OFF      *IN87                                               CRE019
+      *                                                                                       CRE019
+      ** Set file pointer on key displayed on screen                                          CRE019
+      *                                                                                       CRE019
+     C********** *LOVAL    SETLLCHQBKL1                                               CRE019 BUG3025
+     C**********           READ CHQBKL1                  86                           CRE019 BUG3025
+     C           *LOVAL    SETLLCHQBKL3                                                      BUG3025
+     C                     READ CHQBKL3                  86                                  BUG3025
+     C                     MOVEL'Y'       WRK1ST  1                                           CRE019
+     C                     MOVELCQPS      WCQPS  20                                           CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRBLD1 - Build Subfile                                       *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRBLD1    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+      ** Set on ROLLUP indicator to drive initial loop.                                       CRE019
+      *                                                                                       CRE019
+     C                     MOVE *ON       *IN88                                               CRE019
+      *                                                                                       CRE019
+      ** Read records from the file into the subfile until a page has                         CRE019
+      ** been filled or there are no more records.                                            CRE019
+      ** Repeat the process until either the end of file, ROLLUP                              CRE019
+      ** has not been entered or F3 or F5  is input.                                          CRE019
+      *                                                                                       CRE019
+     C           *INKC     DOWEQ*OFF                                                          CRE019
+     C           *IN88     ANDEQ*ON                                                           CRE019
+      *                                                                                       CRE019
+      ** Bypass build subfile if from reversal screen                                         CRE019
+      *                                                                                       CRE019
+     C           WINKLR    IFNE 'Y'                                                           CRE019
+      *                                                                                       CRE019
+      ** Initialise count of records written to subfile page                                  CRE019
+      *                                                                                       CRE019
+     C                     Z-ADD*ZERO     WCNT    30                                          CRE019
+      *                                                                                       CRE019
+      ** For each record read, write it to the subfile.                                       CRE019
+      ** Do this until end of file or the subfile page is full.                               CRE019
+      *                                                                                       CRE019
+     C           *IN86     DOWNE*ON                                                           CRE019
+     C           WCNT      ANDLT13                                                            CRE019
+      *                                                                                       CRE019
+      ** Select data to be displayed                                                          CRE019
+      *                                                                                       CRE019
+     C                     EXSR SRSDSP                                                        CRE019
+      *                                                                                       CRE019
+      ** Format fields for output                                                             CRE019
+      *                                                                                       CRE019
+     C           WDSP      IFEQ 'Y'                                                           CRE019
+     C                     EXSR SRFMTF                                                        CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C           WDSP      IFEQ 'Y'                                                           CRE019
+      *                                                                                       CRE019
+      ** Increment the subfile record no. and records written fields.                         CRE019
+      *                                                                                       CRE019
+     C           WCNT      IFLT 13                                                            CRE019
+     C           WRDNXT    OREQ 'Y'                                                           CRE019
+     C                     ADD  1         #1FREC  50                                          CRE019
+     C                     ADD  1         WCNT                                                CRE019
+     C                     Z-ADD#1FREC    #1SFRN                                              CRE019
+     C                     Z-ADD#1FREC    WFREC   50                                          CRE019
+     C                     WRITERE4217S1                                                      CRE019
+     C                     MOVE *OFF      *IN22                                               CRE019
+     C                     ENDIF                                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Read a valid record                                                                  CRE019
+      *                                                                                       CRE019
+     C           WCNT      IFLT 13                                                            CRE019
+     C           WRDNXT    OREQ 'Y'                                                           CRE019
+     C**********           READ CHQBKL1                  86                           CRE019 BUG3025
+     C                     READ CHQBKL3                  86                                  BUG3025
+     C                     MOVEL'Y'       WRK1ST                                              CRE019
+     C                     MOVELCQPS      WCQPS                                               CRE019
+     C                     ENDIF                                                              CRE019
+     C                     ENDDO                                                              CRE019
+      *                                                                                       CRE019
+      ** Set up footer                                                                        CRE019
+      *                                                                                       CRE019
+     C**********           WRITERE4217F1                                              CRE019 BUG3033
+      *                                                                                       CRE019
+      ** If there is no data to display, set on SFLCLR condition and                          CRE019
+      ** write the subfile control record                                                     CRE019
+      *                                                                                       CRE019
+     C           WCNT      IFEQ *ZERO                                                         CRE019
+     C                     MOVE *ON       *IN87                                               CRE019
+     C                     WRITERE4217C1                                                      CRE019
+     C                     MOVE *OFF      *IN87                                               CRE019
+     C                     Z-ADD1         #1FREC                                              CRE019
+     C                     Z-ADD1         #1SFRN                                              CRE019
+      *                                                                                       CRE019
+     C           WERRSL    IFNE 'Y'                                                           CRE019
+     C                     MOVE 'USR0178' @MSGID                                              CRE019
+     C                     EXSR SNDMSG                                                        CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Write the message subfile                                                            CRE019
+      *                                                                                       CRE019
+     C                     WRITERE4217C0                                                      CRE019
+      *                                                                                       CRE019
+      ** Write to the subfile with non-display set on                                         CRE019
+      *                                                                                       CRE019
+     C                     MOVE *ON       *IN22                                               CRE019
+     C                     MOVE *ON       *IN27                                               CRE019
+     C                     WRITERE4217S1                                                      CRE019
+     C                     MOVE *OFF      *IN22                                               CRE019
+     C                     MOVE *OFF      *IN27                                               CRE019
+     C                     WRITERE4217F1                                                     BUG3033
+     C                     WRITERE4217C1                                                      CRE019
+      *                                                                                       CRE019
+     C                     ELSE                                                               CRE019
+      *                                                                                       CRE019
+      ** Write the subfile control record to the screen to display                            CRE019
+      ** the subfile.                                                                         CRE019
+      *                                                                                       CRE019
+     C                     WRITERE4217C0                                                      CRE019
+     C                     WRITERE4217F1                                                     BUG3033
+     C                     WRITERE4217C1                                                      CRE019
+     C                     ENDIF                                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Read the subfile control record to determine whether records                         CRE019
+      ** have been selected or whether ROLLUP is required.                                    CRE019
+      *                                                                                       CRE019
+     C                     EXSR SRRDSF                                                        CRE019
+     C                     ENDDO                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRREVS - Do reversals based on selected SFL records          *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRREVS    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+     C                     MOVE 'N'       WINKLR  1                                           CRE019
+      *                                                                                       CRE019
+     C                     READCRE4217S1                 89                                   CRE019
+     C           *IN89     DOWEQ*OFF                                                          CRE019
+     C           *INKC     ANDEQ*OFF                                                          CRE019
+     C           *INKL     ANDEQ*OFF                                                          CRE019
+      *                                                                                       CRE019
+     C           #1SEL     IFEQ 'R'                                                           CRE019
+     C                     MOVEL*BLANKS   #1SEL                                               CRE019
+     C                     EXSR SRUPDS                                                        CRE019
+     C                     EXSR SRPROC                                                        CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     READCRE4217S1                 89                                   CRE019
+      *                                                                                       CRE019
+      ** Display previous screen if necessary                                                 CRE019
+      *                                                                                       CRE019
+     C           *INKL     IFEQ *ON                                                           CRE019
+     C           *IN89     ANDEQ*OFF                                                          CRE019
+      *                                                                                       CRE019
+     C           #1SEL     DOWEQ*BLANKS                                                       CRE019
+     C           *IN89     ANDEQ*OFF                                                          CRE019
+     C                     READCRE4217S1                 89                                   CRE019
+     C                     ENDDO                                                              CRE019
+      *                                                                                       CRE019
+     C           #1SEL     IFEQ 'R'                                                           CRE019
+     C                     Z-ADD#1FREC    #1SFRN                                              CRE019
+     C                     EXSR SRUPDS                                                        CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C           *IN89     IFEQ *ON                                                           CRE019
+     C                     MOVEL*OFF      *INKL                                               CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDDO                                                              CRE019
+      *                                                                                       CRE019
+     C           *INKL     IFEQ *ON                                                           CRE019
+     C                     MOVE 'Y'       WINKLR                                              CRE019
+     C                     MOVE *OFF      *INKL                                               CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRPROC - Process reversal                                    *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRPROC    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+      ** Clear program message queue and initialise fields/indicators                         CRE019
+      *                                                                                       CRE019
+     C                     CALL 'SCC0250'                                                     CRE019
+     C                     EXSR RFRESH                                                        CRE019
+      *                                                                                       CRE019
+      ** Initialise indicators                                                                CRE019
+      *                                                                                       CRE019
+     C                     MOVE *ON       *IN25                                               CRE019
+     C                     MOVE *ON       *IN26                                               CRE019
+     C                     MOVE *ON       *IN28                                               CRE019
+      *                                                                                       CRE019
+      ** Initialise fields                                                                    CRE019
+      *                                                                                       CRE019
+     C                     MOVEL'R'       SACTN                                               CRE019
+     C                     MOVEL#1ACNO    SRACNO                                              CRE019
+     C**********           MOVEL#1GCQI    SGCIN                                       CRE019 BUG3229
+     C           #1GCQI    IFEQ 'CHQ '                                                       BUG3229
+     C                     MOVEL'0'       SGCIN                                              BUG3229
+     C                     ELSE                                                              BUG3229
+     C                     MOVEL'1'       SGCIN                                              BUG3229
+     C                     ENDIF                                                             BUG3229
+     C           WSLPRC    IFEQ *BLANKS                                                       CRE019
+     C                     MOVEL#1SECQ    SSCQN                                               CRE019
+     C                     MOVE #1SECQ    SECQN                                               CRE019
+     C                     ELSE                                                               CRE019
+     C                     MOVELWSLPRC    SSCQN                                               CRE019
+     C                     MOVE *BLANKS   SECQN                                               CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      **  Do while F3 and F12 is not pressed                                                  CRE019
+      *                                                                                       CRE019
+     C           *INKC     DOWEQ*OFF                                                          CRE019
+     C           *INKL     ANDEQ*OFF                                                          CRE019
+      *                                                                                       CRE019
+      ** Display screen                                                                       CRE019
+      *                                                                                       CRE019
+     C                     EXSR DSPF0                                                         CRE019
+      *                                                                                       CRE019
+      ** Process screen input - depending upon input type.                                    CRE019
+      *                                                                                       CRE019
+     C                     SELEC                                                              CRE019
+      *                                                                                       CRE019
+      ** If Cmd/5 is pressed, perform initialisation                                          CRE019
+      *                                                                                       CRE019
+     C           *INKE     WHEQ *ON                                                           CRE019
+     C                     EXSR RFRESH                                                        CRE019
+      *                                                                                       CRE019
+      ** If F12, display previous screen                                                      CRE019
+      *                                                                                       CRE019
+     C           *INKL     WHEQ *ON                                                           CRE019
+      *                                                                                       CRE019
+      ** If Enter key is pressed, validate screen input                                       CRE019
+      *                                                                                       CRE019
+     C                     OTHER                                                              CRE019
+     C                     EXSR VALF0                                                         CRE019
+      *                                                                                       CRE019
+     C                     ENDSL                                                              CRE019
+      *                                                                                       CRE019
+      ** If no validation errors then further processing                                      CRE019
+      *                                                                                       CRE019
+     C           *IN61     IFEQ *OFF                                                          CRE019
+     C           *INKE     ANDEQ*OFF                                                          CRE019
+     C           *INKL     ANDEQ*OFF                                                          CRE019
+      *                                                                                       CRE019
+     C                     EXSR PRCHPR                                                        CRE019
+      *                                                                                       CRE019
+      ** Exit loop and process next selected record                                           CRE019
+      *                                                                                       CRE019
+     C                     LEAVE                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDIF                                                              CRE019
+     C                     ENDDO                                                              CRE019
+      *                                                                                       CRE019
+     C                     MOVE *OFF      *IN25                                               CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRSDSP - Select data to be displayed                         *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRSDSP    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+     C                     MOVEL'Y'       WDSP    1                                           CRE019
+      *                                                                                       CRE019
+      ** Ensure that records to be displayed are live                                         CRE019
+      *                                                                                       CRE019
+     C           RECID     IFNE 'D'                                                           CRE019
+     C                     MOVEL'N'       WDSP                                                CRE019
+     C                     ELSE                                                               CRE019
+      *                                                                                       CRE019
+      ** Branch                                                                               CRE019
+      *                                                                                       CRE019
+     C           WSLBRC    IFNE *BLANKS                                                       CRE019
+     C           WSLBRC    ANDNEBRCA                                                          CRE019
+     C                     MOVEL'N'       WDSP                                                CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Retrieve account details of cheque book being read                                   CRE019
+      *                                                                                       CRE019
+     C           CQACNO    CHAINACNUM                70                                       CRE019
+     C                     MOVELCQACNO    WKACNO 10                                           CRE019
+     C           *IN70     IFEQ *OFF                                                          CRE019
+     C                     MOVE CNUM      WCCNUM  6                                           CRE019
+     C                     ELSE                                                               CRE019
+     C                     MOVE *BLANK    WCCNUM                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Customer number/shortname                                                            CRE019
+      *                                                                                       CRE019
+     C           WSLCUS    IFNE *BLANK                                                        CRE019
+     C           WKCNUM    ANDNEWCCNUM                                                        CRE019
+     C                     MOVE 'N'       WDSP                                                CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Retail account                                                                       CRE019
+      *                                                                                       CRE019
+     C           WSLACN    IFNE *BLANK                                                        CRE019
+     C           WSLACN    ANDNEWKACNO                                                        CRE019
+     C                     MOVE 'N'       WDSP                                                CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Cheque presented                                                                     CRE019
+      *                                                                                       CRE019
+     C           WSLPRC    IFNE *BLANK                                                        CRE019
+     C                     MOVE WSLPRC    WKKPRC  80                                          CRE019
+      *                                                                                       CRE019
+     C           WKKPRC    IFLT SCQN                                                          CRE019
+     C           WKKPRC    ORGT ECQN                                                          CRE019
+     C                     MOVE 'N'       WDSP                                                CRE019
+     C                     ELSE                                                               CRE019
+      *                                                                                       CRE019
+      ** Test bit                                                                             CRE019
+      *                                                                                       CRE019
+     C                     Z-ADDWKKPRC    @CQNF                                               CRE019
+     C                     EXSR SRTSBT                                                        CRE019
+     C           *IN81     IFEQ *OFF                                                          CRE019
+     C                     MOVE 'N'       WDSP                                                CRE019
+     C                     ENDIF                                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDIF                                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRFMTF - Format file fields to screen fields                 *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRFMTF    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+      ** Select field, Retail Account, GIRO                                                   CRE019
+      *                                                                                       CRE019
+     C                     MOVE *BLANKS   #1SEL                                               CRE019
+     C                     MOVELCQACNO    #1ACNO                                              CRE019
+     C**********           MOVELGCQI      #1GCQI                                      CRE019 BUG3229
+     C           GCQI      IFEQ *ZERO                                                        BUG3229
+     C                     MOVEL'CHQ '    #1GCQI                                             BUG3229
+     C                     ELSE                                                              BUG3229
+     C                     MOVEL'GIRO'    #1GCQI                                             BUG3229
+     C                     ENDIF                                                             BUG3229
+      *                                                                                       CRE019
+      ** Start/End number of cheque book                                                      CRE019
+      *                                                                                       CRE019
+     C                     MOVELSCQN      WSCQN   8                                           CRE019
+     C                     MOVELECQN      WECQN   8                                           CRE019
+     C           WSCQN     CAT  '/'       WFLD9   9                                           CRE019
+     C           WFLD9     CAT  WECQN     #1SECQ                                              CRE019
+      *                                                                                       CRE019
+      ** Presented Cheques                                                                    CRE019
+      *                                                                                       CRE019
+     C                     MOVEA*BLANKS   @CN                                                 CRE019
+      *                                                                                       CRE019
+      ** If selection field for cheque presented is entered                                   CRE019
+      *                                                                                       CRE019
+     C           #1KPRC    IFNE *BLANKS                                                       CRE019
+     C                     MOVEA#1KPRC    @CN,2                                               CRE019
+     C                     ELSE                                                               CRE019
+      *                                                                                       CRE019
+      ** Else, show last four digit of presented cheques                                      CRE019
+      *                                                                                       CRE019
+     C           WRK1ST    IFEQ 'Y'                                                           CRE019
+     C                     Z-ADDSCQN      @CQNF                                               CRE019
+     C                     ENDIF                                                              CRE019
+     C                     Z-ADD0         @L                                                  CRE019
+     C                     MOVEL'N'       WRDNXT                                              CRE019
+     C                     MOVEAWCQPS     @CA                                                 CRE019
+      *                                                                                       CRE019
+     C           @CQNF     DOWLEECQN                                                          CRE019
+      *                                                                                       CRE019
+      ** Test the corresponding bit                                                           CRE019
+      *                                                                                       CRE019
+     C                     EXSR SRTSBT                                                        CRE019
+      *                                                                                       CRE019
+      ** If test is successful                                                                CRE019
+      *                                                                                       CRE019
+     C           *IN81     IFEQ *ON                                                           CRE019
+      *                                                                                       CRE019
+      ** Move to array and write to screen fields                                             CRE019
+      *                                                                                       CRE019
+     C           @L        IFEQ 0                                                             CRE019
+     C                     MOVEA*BLANKS   @CN                                                 CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** to get the last four digits of the cheque no                                         CRE019
+      *                                                                                       CRE019
+     C                     MOVE @CQNF     CQNA                                                CRE019
+     C           CQNA      IFNE *BLANKS                                                       CRE019
+     C                     ADD  1         @L                                                  CRE019
+     C                     MOVELCQNA      @CN,@L                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C           @L        IFEQ 7                                                             CRE019
+     C                     MOVEL@CQPA     #1PRCQ                                              CRE019
+     C                     MOVEL*BLANKS   @CQPA                                               CRE019
+     C                     MOVELCQNA      @CN,1                                               CRE019
+     C                     Z-ADD1         @L                                                  CRE019
+      *                                                                                       CRE019
+     C           WCNT      IFLT 13                                                            CRE019
+      *                                                                                       CRE019
+      ** Increment the subfile record no. and records written fields.                         CRE019
+      *                                                                                       CRE019
+     C                     ADD  1         #1FREC                                              CRE019
+     C                     ADD  1         WCNT                                                CRE019
+     C                     Z-ADD#1FREC    #1SFRN                                              CRE019
+     C                     Z-ADD#1FREC    WFREC                                               CRE019
+     C                     WRITERE4217S1                                                      CRE019
+     C                     MOVE *ON       *IN22                                               CRE019
+     C                     MOVEL'N'       WRK1ST                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Check for overflow in subfile                                                        CRE019
+      *                                                                                       CRE019
+     C           WCNT      IFEQ 13                                                            CRE019
+     C                     LEAVE                                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                      BUG3024
+      ** If 'maximum' cheque no has been reached, exit test for                              BUG3024
+      ** bits on (presented cheques), else increment for next                                BUG3024
+      ** cheque number                                                                       BUG3024
+      *                                                                                      BUG3024
+     C           @CQNF     IFEQ 99999999                                                     BUG3024
+     C           ECQN      ANDEQ99999999                                                     BUG3024
+     C                     LEAVE                                                             BUG3024
+     C                     ENDIF                                                             BUG3024
+      *                                                                                       CRE019
+      ** Increment for next cheque no                                                         CRE019
+      *                                                                                       CRE019
+     C                     ADD  1         @CQNF                                               CRE019
+     C                     ENDDO                                                              CRE019
+      *                                                                                       CRE019
+     C           @CQNF     IFGT ECQN                                                          CRE019
+     C                     MOVEL'Y'       WRDNXT  1                                           CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C           WCNT      IFLT 13                                                            CRE019
+     C           WRDNXT    ANDEQ'Y'                                                           CRE019
+     C                     MOVEL@CQPA     #1PRCQ                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C           #1PRCQ    IFEQ *BLANKS                                                       CRE019
+     C                     MOVEL'N'       WDSP                                                CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRTSBT - Test for corresponding bit                          *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRTSBT    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+      ** Calculate cheque presented status array index                                        CRE019
+      *                                                                                       CRE019
+     C           @CQNF     SUB  SCQN      @OFSET                                              CRE019
+     C           @OFSET    DIV  8         @I                                                  CRE019
+     C                     MVR            @BITN                                               CRE019
+     C                     ADD  1         @I                                                  CRE019
+      *                                                                                       CRE019
+      ** Test corresponding bit-position of element for cheque presented                      CRE019
+      *                                                                                       CRE019
+     C           @BITN     IFEQ 0                                                             CRE019
+     C                     TESTB'0'       @CA,@I         81                                   CRE019
+     C                     ENDIF                                                              CRE019
+     C           @BITN     IFEQ 1                                                             CRE019
+     C                     TESTB'1'       @CA,@I         81                                   CRE019
+     C                     ENDIF                                                              CRE019
+     C           @BITN     IFEQ 2                                                             CRE019
+     C                     TESTB'2'       @CA,@I         81                                   CRE019
+     C                     ENDIF                                                              CRE019
+     C           @BITN     IFEQ 3                                                             CRE019
+     C                     TESTB'3'       @CA,@I         81                                   CRE019
+     C                     ENDIF                                                              CRE019
+     C           @BITN     IFEQ 4                                                             CRE019
+     C                     TESTB'4'       @CA,@I         81                                   CRE019
+     C                     ENDIF                                                              CRE019
+     C           @BITN     IFEQ 5                                                             CRE019
+     C                     TESTB'5'       @CA,@I         81                                   CRE019
+     C                     ENDIF                                                              CRE019
+     C           @BITN     IFEQ 6                                                             CRE019
+     C                     TESTB'6'       @CA,@I         81                                   CRE019
+     C                     ENDIF                                                              CRE019
+     C           @BITN     IFEQ 7                                                             CRE019
+     C                     TESTB'7'       @CA,@I         81                                   CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRRDSF - Read subfile and validate input fields              *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRRDSF    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+     C           WINKLR    IFNE 'Y'                                                           CRE019
+     C                     READ RE4217C1                 89                                   CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Clear program message queue                                                          CRE019
+      *                                                                                       CRE019
+     C                     CALL 'SCC0250'                                                     CRE019
+      *                                                                                       CRE019
+      ** Validate subfile screen                                                              CRE019
+      *                                                                                       CRE019
+     C                     SELEC                                                              CRE019
+     C           *INKC     WHEQ *ON                                                           CRE019
+     C           *INKL     OREQ *ON                                                           CRE019
+     C           WINKLR    ORNE 'Y'                                                           CRE019
+     C           *IN88     ANDEQ*ON                                                           CRE019
+      *                                                                                       CRE019
+      ** F3/F12, bypass validation and leave the subfile loop                                 CRE019
+      *                                                                                       CRE019
+     C                     EXSR RFRESH                                                        CRE019
+      *                                                                                       CRE019
+     C           *INKE     WHEQ *ON                                                           CRE019
+      *                                                                                       CRE019
+      ** F5, refresh screen fields, work fields and indicators                                CRE019
+      *                                                                                       CRE019
+     C                     EXSR SRRFSH                                                        CRE019
+      *                                                                                       CRE019
+     C           *INKI     WHEQ *ON                                                           CRE019
+      *                                                                                       CRE019
+      ** F9, Display initial insert screen with insert mode                                   CRE019
+      *                                                                                       CRE019
+     C                     CALL 'SCC0250'                                                     CRE019
+     C                     EXSR RFRESH                                                        CRE019
+     C                     MOVE 'Y'       WINKI                                               CRE019
+     C                     MOVE *ON       *IN26                                               CRE019
+     C                     MOVEL'I'       SACTN                                               CRE019
+      *                                                                                       CRE019
+     C                     OTHER                                                              CRE019
+      *                                                                                       CRE019
+      ** Initialise/setup key fields                                                          CRE019
+      *                                                                                       CRE019
+     C                     MOVE *OFF      *IN22                                               CRE019
+     C                     EXSR SRKEYF                                                        CRE019
+      *                                                                                       CRE019
+      ** Validate subfile records                                                             CRE019
+      *                                                                                       CRE019
+     C           WERRSL    IFNE 'Y'                                                           CRE019
+     C           WSLFLD    IFNE WFLD31                                                        CRE019
+     C                     MOVELWSLFLD    WFLD31                                              CRE019
+      *                                                                                       CRE019
+     C                     ELSE                                                               CRE019
+      *                                                                                       CRE019
+     C           WINKLR    IFNE 'Y'                                                           CRE019
+     C                     EXSR SRVALS                                                        CRE019
+     C                     ENDIF                                                              CRE019
+     C                     EXSR SRRDSP                                                        CRE019
+      *                                                                                       CRE019
+     C                     ENDIF                                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDSL                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRKEYF - Validate and intialise key fields                   *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRKEYF    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+      ** Initialise error selection flag                                                      CRE019
+      *                                                                                       CRE019
+     C                     MOVEL'N'       WERRSL  1                                           CRE019
+      *                                                                                       CRE019
+      ** Initialise indicators                                                                CRE019
+      *                                                                                       CRE019
+     C                     MOVE *OFF      *IN23                                               CRE019
+     C                     MOVE *OFF      *IN24                                               CRE019
+      *                                                                                       CRE019
+      ** Validate branch code                                                                 CRE019
+      *                                                                                       CRE019
+     C           #1KBRC    IFNE *BLANK                                                        CRE019
+      *                                                                                       CRE019
+     C                     CALL 'AOBRCHR0'                                                    CRE019
+     C                     PARM *BLANKS   @RTCD                                               CRE019
+     C                     PARM '*KEY    '@OPTN                                               CRE019
+     C                     PARM           #1KBRC                                              CRE019
+     C           SDBRCH    PARM SDBRCH    DSFDY                                               CRE019
+      *                                                                                       CRE019
+     C           @RTCD     IFNE *BLANK                                                        CRE019
+     C           @RTCD     ANDNE'*NOSEL '                                                     CRE019
+     C                     MOVE 'Y'       WERRSL                                              CRE019
+     C                     MOVE *ON       *IN23                                               CRE019
+     C                     MOVEL'USR0095' @MSGID                                              CRE019
+     C                     EXSR SNDMSG                                                        CRE019
+     C                     ELSE                                                               CRE019
+     C           @RTCD     IFNE '*NOSEL '                                                     CRE019
+     C                     MOVE A8BRCD    #1KBRC                                              CRE019
+     C                     ELSE                                                               CRE019
+     C                     MOVE *BLANK    #1KBRC                                              CRE019
+     C                     ENDIF                                                              CRE019
+     C                     ENDIF                                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Validate customer number                                                             CRE019
+      *                                                                                       CRE019
+     C           #1KCUS    IFNE *BLANK                                                        CRE019
+     C                     CALL 'AOCUSTR0'                                                    CRE019
+     C                     PARM *BLANKS   @RTCD                                               CRE019
+     C                     PARM '*KEY'    @OPTN                                               CRE019
+     C                     PARM           #1KCUS                                              CRE019
+     C                     PARM *BLANKS   @KSTAT  7                                           CRE019
+     C           SDCUST    PARM SDCUST    DSSDY                                               CRE019
+      *                                                                                       CRE019
+     C           @RTCD     IFNE *BLANKS                                                       CRE019
+     C           @RTCD     ANDNE'*NOSEL '                                                     CRE019
+     C                     MOVE 'Y'       WERRSL                                              CRE019
+     C                     MOVE *ON       *IN24                                               CRE019
+     C                     MOVEL'USR1025' @MSGID                                              CRE019
+     C                     EXSR SNDMSG                                                        CRE019
+     C                     ELSE                                                               CRE019
+     C                     MOVE *BLANK    #1KCUS                                              CRE019
+     C           @RTCD     IFNE '*NOSEL '                                                     CRE019
+     C                     MOVE BBCUST    #1KCUS                                              CRE019
+     C                     MOVE BBCUST    WKCNUM  6                                           CRE019
+     C                     ENDIF                                                              CRE019
+     C                     ENDIF                                                              CRE019
+     C                     ELSE                                                               CRE019
+     C                     MOVE *BLANK    WKCNUM                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Store valid selections                                                               CRE019
+      *                                                                                       CRE019
+     C           WERRSL    IFNE 'Y'                                                           CRE019
+     C                     MOVEL#1KBRC    WSLBRC                                              CRE019
+     C                     MOVEL#1KCUS    WSLCUS                                              CRE019
+     C                     MOVEL#1KACN    WSLACN                                              CRE019
+     C                     MOVEL#1KPRC    WSLPRC                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRVALS - Validate subfile records                            *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRVALS    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+      ** Clear program message queue                                                          CRE019
+      *                                                                                       CRE019
+     C                     CALL 'SCC0250'                                                     CRE019
+      *                                                                                       CRE019
+     C                     MOVEL'N'       WERRSF  1                                           CRE019
+      *                                                                                       CRE019
+     C                     READCRE4217S1                 89                                   CRE019
+     C           *IN89     DOWEQ*OFF                                                          CRE019
+     C           #1SEL     IFNE 'R'                                                           CRE019
+     C           #1SEL     ANDNE*BLANK                                                        CRE019
+     C                     MOVEL*ON       *IN21                                               CRE019
+     C           WERRSF    IFEQ 'N'                                                           CRE019
+     C                     Z-ADD#1FREC    #1SFRN                                              CRE019
+     C                     MOVEL'USR1239' @MSGID                                              CRE019
+     C                     EXSR SNDMSG                                                        CRE019
+     C                     WRITERE4217C0                                                      CRE019
+     C                     MOVEL'Y'       WERRSF                                              CRE019
+     C                     ENDIF                                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Update record in subfile                                                             CRE019
+      *                                                                                       CRE019
+     C                     EXSR SRUPDS                                                        CRE019
+     C                     MOVEL*OFF      *IN21                                               CRE019
+      *                                                                                       CRE019
+      ** Read subfile                                                                         CRE019
+      *                                                                                       CRE019
+     C                     READCRE4217S1                 89                                   CRE019
+     C                     ENDDO                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRRDSP - Re-display subfile                                  *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRRDSP    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+     C           WERRSF    DOWEQ'Y'                                                           CRE019
+     C           *INKC     ANDEQ*OFF                                                          CRE019
+     C           *INKE     ANDEQ*OFF                                                          CRE019
+     C           *INKI     ANDEQ*OFF                                                          CRE019
+     C           *INKL     ANDEQ*OFF                                                          CRE019
+     C           *IN88     ANDEQ*OFF                                                          CRE019
+     C           WINKLR    OREQ 'Y'                                                           CRE019
+     C                     EXFMTRE4217C1                                                      CRE019
+      *                                                                                       CRE019
+     C                     MOVEL'N'       WINKLR                                              CRE019
+     C                     SELEC                                                              CRE019
+     C           *INKC     WHEQ *ON                                                           CRE019
+     C           *INKL     OREQ *ON                                                           CRE019
+      *                                                                                       CRE019
+      ** F3/F12, bypass processing, refresh screen                                            CRE019
+      *                                                                                       CRE019
+     C                     EXSR RFRESH                                                        CRE019
+      *                                                                                       CRE019
+     C           *INKE     WHEQ *ON                                                           CRE019
+      *                                                                                       CRE019
+      ** F5, Clear selection fields                                                           CRE019
+      *                                                                                       CRE019
+     C                     EXSR SRRFSH                                                        CRE019
+      *                                                                                       CRE019
+     C           *INKI     WHEQ *ON                                                           CRE019
+      *                                                                                       CRE019
+      ** F9, Display initial insert screen with insert mode                                   CRE019
+      *                                                                                       CRE019
+     C                     CALL 'SCC0250'                                                     CRE019
+     C                     EXSR RFRESH                                                        CRE019
+     C                     MOVE 'Y'       WINKI                                               CRE019
+     C                     MOVE *ON       *IN26                                               CRE019
+     C                     MOVEL'I'       SACTN                                               CRE019
+      *                                                                                       CRE019
+     C           *IN88     WHEQ *ON                                                           CRE019
+     C                     Z-ADDWFREC     #1FREC                                              CRE019
+      *                                                                                       CRE019
+     C                     OTHER                                                              CRE019
+     C                     EXSR SRVALS                                                        CRE019
+     C                     ENDSL                                                              CRE019
+     C                     ENDDO                                                              CRE019
+      *                                                                                       CRE019
+     C           WERRSL    IFNE 'Y'                                                           CRE019
+     C           *INKC     ANDEQ*OFF                                                          CRE019
+     C           *INKE     ANDEQ*OFF                                                          CRE019
+     C           *INKI     ANDEQ*OFF                                                          CRE019
+     C           *INKL     ANDEQ*OFF                                                          CRE019
+     C           *IN88     ANDEQ*OFF                                                          CRE019
+     C                     MOVEL'Y'       WOKREV                                              CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+      *****************************************************************                       CRE019
+      /EJECT                                                                                  CRE019
+      *****************************************************************                       CRE019
+      *                                                               *                       CRE019
+      *  SRUPDS - Update subfile                                      *                       CRE019
+      *                                                               *                       CRE019
+      *****************************************************************                       CRE019
+     C           SRUPDS    BEGSR                                                              CRE019
+      *                                                                                       CRE019
+     C                     MOVE *ON       *IN82                                               CRE019
+     C                     UPDATRE4217S1                                                      CRE019
+     C                     MOVE *OFF      *IN82                                               CRE019
+      *                                                                                       CRE019
+     C                     ENDSR                                                              CRE019
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DSPF0  - Display screen format                     *
+      *                                                               *
+      * CALLS      SCC0250- clear message queue                       *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Process                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DSPF0     BEGSR                           ** DSPF0  **
+      *
+      ** If Cmd/3 is not pressed
+     C           *INKC     IFEQ '0'
+      *
+      ** Display message subfile control record
+     C                     WRITERE4217C0
+      *
+      ** Display & accept screen format
+     C                     EXFMTRE4217F0
+      *
+      ** Clear program message queue
+     C                     CALL 'SCC0250'
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            RFRESH - Refresh screen                            *
+      *                                                               *
+      * CALLS      IFLDS  - Initialize Work/Screen Fields             *
+      *            INT01  - Initialize Indicators for key Fields      *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      *****************************************************************
+     C           RFRESH    BEGSR                           ** RFRESH **
+      *
+      ** Set off screen disp. & validation control indicators
+     C                     SETOF                     095152
+     C                     MOVE *OFF      *IN26                                               CRE019
+     C                     MOVE *OFF      *IN28                                               CRE019
+     C                     MOVE *OFF      *IN22                                              BUG3030
+      *
+      ** Initialize screen/work fields
+     C                     EXSR IFLDS
+      *
+      ** Initialize validation indicators for key fields
+     C                     EXSR INT01
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            INT01  - Initialize Indicators for key Fields      *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  RFRESH - Refresh screen                            *
+      *            VALF0  - Validate screen input                     *
+      *                                                               *
+      *****************************************************************
+     C           INT01     BEGSR                           ** INT01  **
+      *
+     C                     SETOF                     123132
+     C                     SETOF                     333435
+     C                     SETOF                     61
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VALF0  - Validate screen input                     *
+      *                                                               *
+      * CALLS      INT01  - Initialize Indicators for key Fields      *
+      *            RTCHQR - Cheque out of range check                 *
+      *            SNDMSG - Send program message parameters           *
+      *            ZALIGN - Validate amount fields                    *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      *****************************************************************
+     C           VALF0     BEGSR                           ** VALF0  **
+      *
+      ** Initialize validation indicators for key fields
+     C                     EXSR INT01
+     C*
+     C**  Action code if not I or R -
+     C**  message - Action code is invalid. valid values are I or R.
+     C*
+     C           SACTN     IFNE 'I'
+     C           SACTN     ANDNE'R'
+     C                     SETON                     3161
+     C                     MOVEL'USR0139' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ** Set off Chain indicator
+     C                     SETOF                     70
+      *
+     C                     MOVE *BLANKS   SACN20 10
+      *
+      ** Check if retail a/c no exists in LF/ACNUM
+      * Move fields to key list.
+     C                     MOVELSRACNO    KACNO
+     C                     MOVELKACNO     SACN20
+      *
+     C           SRACNO    IFNE SACN20
+     C           KACNO     ORLT 0
+     C                     SETON                     70
+     C                     END
+      *
+      ** Get Account Details
+     C           *IN70     IFEQ '0'
+     C           KLACNO    CHAINACNUM                70
+     C                     END
+      *
+      ** Account number must refer to a live record
+     C           *IN70     IFEQ '1'
+     C                     SETON                     3261
+     C                     MOVE 'USR0123' @MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+      *
+      ** If account is a not a live record
+     C           RECI      IFNE 'D'
+     C                     SETON                     3261
+     C                     MOVE 'USR0124' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+      ** if giro/cheque indicator not 0 or 1
+     C           SGCIN     IFNE *BLANKS
+     C           SGCIN     IFNE '0'
+     C           SGCIN     ANDNE'1'
+     C                     SETON                     3361
+     C                     MOVE 'USR0125' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** if not entered move default '0'
+     C                     MOVEL'0'       SGCIN
+     C                     END
+      *
+      ** validation of starting cheque number
+      ** must not be blanks or zeroes and must be numeric
+      *
+      ** Set up decimal values
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD8         ZADIG
+      *
+      ** Align start cheque no
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SSCQN     ZFIELD
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    @SCQN   80
+      *
+      ** If error found?  Set up error message
+     C           *IN99     IFEQ '1'
+     C           ZFIELD    OREQ *ZERO
+     C                     SETON                     3461
+     C                     MOVE 'USR0135' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ** validation of ending cheque number if entred
+      ** must not be blanks or zeroes and must be numeric
+      *
+      ** Set up decimal values
+     C           SECQN     IFNE *BLANKS
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD8         ZADIG
+      *
+      ** Align ending cheque no
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SECQN     ZFIELD
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    @ECQN   80
+      *
+      ** If error found?  Set up error message
+     C           *IN99     IFEQ '1'
+     C           ZFIELD    OREQ *ZERO
+     C                     SETON                     3561
+     C                     MOVE 'USR0140' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C                     ELSE
+      *
+      ** if ending cheque no not entered move start cheque no
+     C                     MOVE SSCQN     SECQN
+     C                     MOVE @SCQN     @ECQN
+      *
+     C                     END
+     C*
+     C**  Display error if ending cheque number is lower
+     C**  than starting cheque number
+     C*
+     C           @SCQN     IFGT @ECQN
+     C                     SETON                     3561
+     C                     MOVE 'USR0142' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      **  check if start & end cheque no is within range
+     C                     EXSR RTCHQR
+      *
+      ** Display error if start or end cheques is out of range
+     C           *IN81     IFEQ '1'
+     C                     SETON                     61
+     C                     MOVE 'USR0141' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *                                                                                      BUG3028
+     C           *IN61     IFEQ '0'                                                          BUG5470
+     C                     EXSR SRSCBT                                                       BUG3028
+     C                     ENDIF                                                             BUG5470
+      *                                                                                      BUG3028
+      ** Display error if cheques are already reversed.                                      BUG3028
+      *                                                                                      BUG3028
+     C           SACTN     IFEQ 'R'                                                          BUG3028
+     C           WBSTAT    ANDEQ'ERR'                                                        BUG3028
+     C                     MOVE '1'       *IN34                                              BUG3028
+     C                     MOVE '1'       *IN35                                              BUG3028
+     C                     MOVE '1'       *IN61                                              BUG3028
+     C                     MOVE 'USR0127' @MSGID                                             BUG3028
+     C                     EXSR SNDMSG                                                       BUG3028
+     C                     ENDIF                                                             BUG3028
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************                      BUG3028
+      *                                                               *                      BUG3028
+      *  SRSCBT - Scan Bits                                           *                      BUG3028
+      *                                                               *                      BUG3028
+      *  CALLS    :                                                   *                      BUG3028
+      *                                                               *                      BUG3028
+      *  CALLED BY:  VALF0  - Validate screen input                   *                      BUG3028
+      *                                                               *                      BUG3028
+      *****************************************************************                      BUG3028
+     C           SRSCBT    BEGSR                           ** SRSCBT **                      BUG3028
+      *                                                                                      BUG3028
+     C                     Z-ADD@SCQN     @CQNF   80                                         BUG3028
+     C                     MOVE 'NER'     WBSTAT  3                                          BUG3028
+     C                     MOVE *BLANKS   WSTAT   3                                          BUG3028
+     C           @CQNF     DOWLE@ECQN                                                        BUG3028
+      *                                                                                      BUG3028
+      ** Calculate cheque presented status array index                                       BUG3028
+      *                                                                                      BUG3028
+     C           @CQNF     SUB  SCQN      @OFSET  80                                         BUG3028
+     C           @OFSET    DIV  8         @I      20                                         BUG3028
+     C                     MVR            @BITN   10                                         BUG3028
+     C                     ADD  1         @I                                                 BUG3028
+      *                                                                                      BUG3028
+     C           @BITN     IFEQ 0                                                            BUG3028
+     C                     TESTB'0'       @CA,@I     36                                      BUG3028
+     C           *IN36     IFEQ '1'                                                          BUG3028
+     C           WBSTAT    IFEQ 'NER'                                                        BUG3028
+     C                     MOVE 'ERR'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C           WSTAT     IFEQ 'PRO'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     ELSE                                                              BUG3028
+     C           WBSTAT    IFEQ 'ERR'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     BITOF'0'       @CA,@I                                             BUG3028
+     C                     MOVE 'PRO'     WSTAT                                              BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     END                                                               BUG3028
+      *                                                                                      BUG3028
+     C           @BITN     IFEQ 1                                                            BUG3028
+     C                     TESTB'1'       @CA,@I     36                                      BUG3028
+     C           *IN36     IFEQ '1'                                                          BUG3028
+     C           WBSTAT    IFEQ 'NER'                                                        BUG3028
+     C                     MOVE 'ERR'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C           WSTAT     IFEQ 'PRO'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     ELSE                                                              BUG3028
+     C           WBSTAT    IFEQ 'ERR'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     BITOF'1'       @CA,@I                                             BUG3028
+     C                     MOVE 'PRO'     WSTAT                                              BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     END                                                               BUG3028
+      *                                                                                      BUG3028
+     C           @BITN     IFEQ 2                                                            BUG3028
+     C                     TESTB'2'       @CA,@I     36                                      BUG3028
+     C           *IN36     IFEQ '1'                                                          BUG3028
+     C           WBSTAT    IFEQ 'NER'                                                        BUG3028
+     C                     MOVE 'ERR'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C           WSTAT     IFEQ 'PRO'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     ELSE                                                              BUG3028
+     C           WBSTAT    IFEQ 'ERR'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     BITOF'2'       @CA,@I                                             BUG3028
+     C                     MOVE 'PRO'     WSTAT                                              BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     END                                                               BUG3028
+      *                                                                                      BUG3028
+     C           @BITN     IFEQ 3                                                            BUG3028
+     C                     TESTB'3'       @CA,@I     36                                      BUG3028
+     C           *IN36     IFEQ '1'                                                          BUG3028
+     C           WBSTAT    IFEQ 'NER'                                                        BUG3028
+     C                     MOVE 'ERR'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C           WSTAT     IFEQ 'PRO'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     ELSE                                                              BUG3028
+     C           WBSTAT    IFEQ 'ERR'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     BITOF'3'       @CA,@I                                             BUG3028
+     C                     MOVE 'PRO'     WSTAT                                              BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     END                                                               BUG3028
+      *                                                                                      BUG3028
+     C           @BITN     IFEQ 4                                                            BUG3028
+     C                     TESTB'4'       @CA,@I     36                                      BUG3028
+     C           *IN36     IFEQ '1'                                                          BUG3028
+     C           WBSTAT    IFEQ 'NER'                                                        BUG3028
+     C                     MOVE 'ERR'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C           WSTAT     IFEQ 'PRO'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     ELSE                                                              BUG3028
+     C           WBSTAT    IFEQ 'ERR'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     BITOF'4'       @CA,@I                                             BUG3028
+     C                     MOVE 'PRO'     WSTAT                                              BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     END                                                               BUG3028
+      *                                                                                      BUG3028
+     C           @BITN     IFEQ 5                                                            BUG3028
+     C                     TESTB'5'       @CA,@I     36                                      BUG3028
+     C           *IN36     IFEQ '1'                                                          BUG3028
+     C           WBSTAT    IFEQ 'NER'                                                        BUG3028
+     C                     MOVE 'ERR'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C           WSTAT     IFEQ 'PRO'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     ELSE                                                              BUG3028
+     C           WBSTAT    IFEQ 'ERR'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     BITOF'5'       @CA,@I                                             BUG3028
+     C                     MOVE 'PRO'     WSTAT                                              BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     END                                                               BUG3028
+      *                                                                                      BUG3028
+     C           @BITN     IFEQ 6                                                            BUG3028
+     C                     TESTB'6'       @CA,@I     36                                      BUG3028
+     C           *IN36     IFEQ '1'                                                          BUG3028
+     C           WBSTAT    IFEQ 'NER'                                                        BUG3028
+     C                     MOVE 'ERR'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C           WSTAT     IFEQ 'PRO'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     ELSE                                                              BUG3028
+     C           WBSTAT    IFEQ 'ERR'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     BITOF'6'       @CA,@I                                             BUG3028
+     C                     MOVE 'PRO'     WSTAT                                              BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     END                                                               BUG3028
+      *                                                                                      BUG3028
+     C           @BITN     IFEQ 7                                                            BUG3028
+     C                     TESTB'7'       @CA,@I     36                                      BUG3028
+     C           *IN36     IFEQ '1'                                                          BUG3028
+     C           WBSTAT    IFEQ 'NER'                                                        BUG3028
+     C                     MOVE 'ERR'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C           WSTAT     IFEQ 'PRO'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     ELSE                                                              BUG3028
+     C           WBSTAT    IFEQ 'ERR'                                                        BUG3028
+     C                     MOVE 'NER'     WBSTAT                                             BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     BITOF'7'       @CA,@I                                             BUG3028
+     C                     MOVE 'PRO'     WSTAT                                              BUG3028
+     C                     ENDIF                                                             BUG3028
+     C                     END                                                               BUG3028
+      *                                                                                      BUG3028
+      ** Increment for next cheque no                                                        BUG3028
+      *                                                                                      BUG3028
+     C                     ADD  1         @CQNF                                              BUG3028
+      *                                                                                      BUG3028
+     C                     END                                                               BUG3028
+     C                     ENDSR                                                             BUG3028
+      *****************************************************************                      BUG3028
+      /EJECT                                                                                 BUG3028
+      *****************************************************************
+      *                                                               *
+      *            RTCHQR - Cheque out of range check                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  VALF0  - Validate screen input                     *
+      *                                                               *
+      *****************************************************************
+     C           RTCHQR    BEGSR                           ** RTCHQR **
+      *
+      ** Define parameters
+     C                     SETOF                     8081
+      *
+      ** Set up key
+     C                     Z-ADDACNO      KACNO
+     C                     MOVELSGCIN     KGCIN
+     C                     Z-ADD@SCQN     KSCQN
+      *
+      ** Set limit greater than account no. & cheque no.
+     C           KCHQBK    SETGTCHQBKPDF
+     C                     READPCHQBKPDF                 80
+     C*
+     C**  If record found?  release record
+     C*
+     C           *IN80     IFEQ '0'
+     C*
+     C                     EXCPT@RLCQB
+     C*
+     C**  Error if record is not live
+     C*
+     C           RECID     IFNE 'D'
+     C                     SETON                     323334
+     C                     SETON                     61
+     C                     MOVE 'USR0127' @MSGID
+     C                     EXSR SNDMSG
+     C*
+     C**  If retail account number equal to account number?
+     C**  Add (no. of cheques -1) to start cheque no. to give the
+     C**  end cheque number
+     C*
+     C                     ELSE
+     C*
+     C           CQACNO    IFEQ ACNO
+     C           NOCQ      SUB  1         ECQN    80
+     C                     ADD  SCQN      ECQN
+     C                     Z-ADDSCQN      FSCQN   80
+      *
+      ** If input start cheque number less than  start cheque number
+      ** or greater than end cheque number
+     C           @SCQN     IFLT SCQN
+     C           @SCQN     ORGT ECQN
+     C                     SETON                     8134
+      *
+     C                     ELSE
+      *
+      ** If input ending cheque number less than  start cheque number
+      ** or greater than end cheque number
+     C           @ECQN     IFLT SCQN
+     C           @ECQN     ORGT ECQN
+     C                     SETON                     8135
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** Store the transaction no of last update
+     C                     MOVELTNLU      @TNLU
+      *
+      ** if record not for the same retail account
+     C                     ELSE
+     C                     SETON                     323334
+     C                     SETON                     61
+     C                     MOVE 'USR0127' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  if record not found
+     C*
+     C                     ELSE
+     C                     SETON                     323334
+     C                     SETON                     61
+     C                     MOVE 'USR0127' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRCHPR - Presented cheques processing              *
+      *                                                               *
+      * CALLS      MTARPR - Move to array and print                   *
+      *            PRTONE - Print one line                            *
+      *            UPDAD  - Update procedure                          *
+      *                                                               *
+      * CALLED BY  MAIN   -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRCHPR    BEGSR                           ** PRCHPR **
+      *
+     C                     SETOF                     15
+     C                     EXSR PRTONE
+      *
+     C                     Z-ADD@SCQN     @CQNF   80
+     C                     Z-ADD0         @L      20
+     C           @CQNF     DOWLE@ECQN
+      *
+      ** Calculate cheque presented status array index
+     C           @CQNF     SUB  SCQN      @OFSET  80
+     C           @OFSET    DIV  8         @I      20
+     C                     MVR            @BITN   10
+     C                     ADD  1         @I
+      *
+      ** Test corresponding bit-position of element for cheque presented
+     C           @BITN     IFEQ 0
+     C                     TESTB'0'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 1
+     C                     TESTB'1'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 2
+     C                     TESTB'2'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 3
+     C                     TESTB'3'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 4
+     C                     TESTB'4'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 5
+     C                     TESTB'5'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 6
+     C                     TESTB'6'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 7
+     C                     TESTB'7'       @CA,@I         81
+     C                     END
+      *
+      ** If option is 'I' and already presented move to print
+     C           SACTN     IFEQ 'I'
+     C           *IN81     ANDEQ'1'
+      *
+      ** Move to array and print
+     C                     EXSR MTARPR
+     C                     END
+      *
+      ** If option is 'R' and unpresented move to print
+     C           SACTN     IFEQ 'R'
+     C           *IN81     ANDEQ'0'
+      *
+      ** Move to array and print
+     C                     EXSR MTARPR
+     C                     END
+      *
+      ** Increment for next cheque no
+     C                     ADD  1         @CQNF
+      *
+     C                     END
+      *
+     C           @CQPA     IFNE *BLANKS
+     C                     MOVEL@CQPA     PUPCQ
+      *
+     C           *IN16     IFEQ '0'
+     C                     WRITEDETAIL
+     C                     SETON                     16
+     C                     ELSE
+     C                     WRITEREST
+     C                     END
+      *
+     C                     MOVEL*BLANKS   @CQPA
+     C                     MOVEL*BLANKS   PUPCQ
+     C                     END
+      *
+      ** If no cheques to be investigated then just print detail
+     C           *IN16     IFEQ '0'
+     C                     WRITEDETAIL
+     C                     END
+     C                     SETOF                     16
+      *
+      ** Update the cheque book detail file
+     C                     EXSR UPDAD
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MTARPR - Move to array and print                   *
+      *                                                               *
+      * CALLS      PRHED  - Print Header                              *
+      *                                                               *
+      * CALLED BY  PRCHPR - Presented cheques processing              *
+      *                                                               *
+      *****************************************************************
+     C           MTARPR    BEGSR                           ** MTARPR **
+      *
+     C                     ADD  1         @L
+      *
+      ** to get the last four digits of the cheque no
+     C                     MOVE @CQNF     CQNA    4
+     C                     MOVELCQNA      @CN,@L
+      *
+     C           @L        IFEQ 14
+      *
+     C                     Z-ADD0         @L
+     C                     MOVEL@CQPA     PUPCQ
+     C                     MOVEL*BLANKS   @CQPA
+      *
+      ** check for heading print
+     C           *IN11     IFEQ '1'
+     C                     EXSR PRHED
+     C                     END
+      *
+      ** print the line
+     C           *IN16     IFEQ '0'
+     C                     WRITEDETAIL
+     C                     SETON                     16
+     C                     ELSE
+     C                     WRITEREST
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRTONE - Print one line                            *
+      *                                                               *
+      * CALLS      PRHED  - Print Header                              *
+      *                                                               *
+      * CALLED BY  PRCHPR - Presented cheques processing              *
+      *                                                               *
+      *****************************************************************
+     C           PRTONE    BEGSR                           ** PRTONE **
+      *
+     C                     MOVELBRCA      PBRCA
+     C                     MOVELACNO      PACNO
+     C                     MOVELSGCIN     PGCIN
+     C                     MOVEL@SCQN     PSCQN
+     C                     MOVEL@ECQN     PECQN
+      *
+     C           SACTN     IFEQ 'I'
+     C                     SETON                     15
+     C                     ELSE
+     C                     SETOF                     15
+     C                     END
+      *
+      ** check for heading print
+     C           *IN11     IFEQ '1'
+     C                     EXSR PRHED
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRHED  - Print Header                              *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MTARPR - Move to array and print                   *
+      *            PRTONE - Print one line                            *
+      *                                                               *
+      *****************************************************************
+     C           PRHED     BEGSR                           ** PRHED  **
+     C*
+     C**  Open printer file
+     C*
+     C           WOPEN     IFNE 'Y'
+     C                     OPEN RE4217P1
+     C                     MOVE 'Y'       WOPEN   1
+     C                     END
+     C*
+     C                     WRITEHEADP1
+     C                     SETOF                     11
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            UPDAD  - Update procedure                          *
+      *                                                               *
+      * CALLS      PCMTXT - Prepare comit text CMTTXT                 *
+      *            SETBIT - Set Bit on/off                            *
+      *            SNDMSG -                                           *
+      *            ZTNLU1 - Access dataarea for next transaction no.  *
+      *                                                               *
+      * CALLED BY  PRCHPR - Presented cheques processing              *
+      *                                                               *
+      *****************************************************************
+     C           UPDAD     BEGSR                           ** UPDAD  **
+      *
+      ** Check whether tran.no.of last update has changed
+      *
+     C                     MOVELSRACNO    KACNO
+     C                     MOVELSGCIN     KGCIN
+     C                     MOVELFSCQN     KSCQN
+     C           KCHQBK    CHAINCHQBKPDF             70
+     C*                                                                   093857
+     C           *IN70     IFEQ '0'                                       093857
+     C           TNLU      IFNE @TNLU
+     C                     MOVE '1'       *IN73
+      *
+      ** Rollback all updates
+     C*                    ROLBK
+     C*
+     C**  Send message - 'Record updated by another workstation'
+     C*
+     C                     MOVEL'USR0005' @MSGID
+     C                     EXSR SNDMSG
+      *
+     C                     END
+      *
+      ** If no errors -
+     C           *IN73     IFEQ '0'
+      *
+      ** Update next available tran.no.
+     C                     EXSR ZTNLU1
+      *
+      ** Prepare commitment text
+     C                     EXSR PCMTXT
+      *
+     C                     EXSR SETBIT
+      *
+     C                     MOVE BJRDNB    LCD
+     C                     MOVEL'A'       CHTP
+     C                     Z-ADDNATN      TNLU
+     C                     UPDATCHQBKPDF
+      *
+     C                     END
+      *                                                                   093857
+     C                     ELSE                                           093857
+      *                                                                   093857
+     C           *LOCK     IN   LDA                                       093857
+     C                     MOVEL'CHQBKPD' DBFILE                          093857
+     C                     MOVELKACNO     DBKEY                           093857
+     C                     Z-ADD05        DBASE                           093857
+     C                     EXSR DBERR                                     093857
+     C                     END                                            093857
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SETBIT - Set Bit on/off                            *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  UPDAD  - Update procedure                          *
+      *                                                               *
+      *****************************************************************
+     C           SETBIT    BEGSR                           ** SETBIT **
+      *
+     C                     Z-ADD@SCQN     @CQNF   80
+     C           @CQNF     DOWLE@ECQN
+      *
+      ** Calculate cheque presented status array index
+     C           @CQNF     SUB  SCQN      @OFSET  80
+     C           @OFSET    DIV  8         @I      20
+     C                     MVR            @BITN   10
+     C                     ADD  1         @I
+      *
+     C           SACTN     IFEQ 'I'
+     C           @BITN     IFEQ 0
+     C                     BITON'0'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 1
+     C                     BITON'1'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 2
+     C                     BITON'2'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 3
+     C                     BITON'3'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 4
+     C                     BITON'4'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 5
+     C                     BITON'5'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 6
+     C                     BITON'6'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 7
+     C                     BITON'7'       @CA,@I
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           @BITN     IFEQ 0
+     C                     BITOF'0'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 1
+     C                     BITOF'1'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 2
+     C                     BITOF'2'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 3
+     C                     BITOF'3'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 4
+     C                     BITOF'4'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 5
+     C                     BITOF'5'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 6
+     C                     BITOF'6'       @CA,@I
+     C                     END
+     C           @BITN     IFEQ 7
+     C                     BITOF'7'       @CA,@I
+     C                     END
+      *
+     C                     END
+      ** Increment for next cheque no
+     C                     ADD  1         @CQNF
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PCMTXT - Prepare comit text CMTTXT                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  UPDAD  - Update procedure                          *
+      *                                                               *
+      *****************************************************************
+     C           PCMTXT    BEGSR                           ** PCMTXT **
+      *
+      ** Prepare the comit text CMTTXT
+     C                     MOVE 'RE'      MDID
+     C                     MOVEL@PGM      PGMN
+     C                     MOVE SWID      WSIDX
+     C                     TIME           MTIME
+     C                     MOVE @USER     USRIDX
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FINAL  - Final Processing                          *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FINAL     BEGSR                           ** FINAL  **
+     C*
+     C**  Write report trailer message
+     C*
+     C           WOPEN     IFEQ 'Y'
+     C                     WRITETRAILPY
+     C                     CLOSERE4217P1
+     C*
+     C                     ELSE
+     C                     OPEN RE4217AU
+     C                     WRITEHEADAU
+     C                     WRITENODTLS
+     C                     CLOSERE4217AU
+     C                     END
+     C*
+     C**  End the program
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program error                             *
+      *                                                               *
+      * CALLS      DBERRCTL                                           *
+      *                                                               *
+      * CALLED BY  DBERR  - Database Error Handling                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C*
+     C** Check to see that *PSSR has not been called yet
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*
+     C** Call standard database error program
+     C*
+     C                     CALL 'DBERRCTL'
+     C*
+     C                     END
+     C*
+     C** If *PSSR already run, then just end the program here
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FIRST  - Initial Processing                        *
+      *                                                               *
+      * CALLS      IFLDS  - Initialize Work/Screen Fields             *
+      *            ZA0150 - Get Midas Rundate & Setup Indicator       *
+      *                                                               *
+      * CALLED BY  MAIN   -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+     C*
+     C           *LIKE     DEFN TNLU      @TNLU
+     C*
+     C**  Prepare LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     OUT  LDA
+     C*
+     C**  Account Numbers Cross Reference
+     C*
+     C           KLACNO    KLIST
+     C                     KFLD           KACNO  100
+     C*
+     C**  Cheque book file keylist
+     C*
+     C           KCHQBK    KLIST
+     C                     KFLD           KACNO
+     C                     KFLD           KGCIN
+     C                     KFLD           KSCQN
+     C*
+     C**  Define program work fields
+     C*
+     C                     MOVE *BLANKS   @MSGID  7
+     C                     MOVEL'RTSMSGF' @MSGF  10
+     C*
+     C**  Initialize screen message queue
+     C*
+     C                     MOVEL'*'       SPGMQ
+     C*
+     C**  Seton  message subfile end indicator
+     C*
+     C                     MOVE '1'       *IN10
+     C*
+     C**  Initialise screen/work fields
+     C*
+     C                     MOVEL@JOB      SWID   10
+     C                     MOVEL@USER     SUSER
+     C                     MOVE *BLANKS   SMRDT   7
+     C*
+     C                     EXSR IFLDS
+     C*
+     C**  Call subroutine to get Midas Run Date.
+     C*
+     C                     EXSR ZA0150
+     C                     MOVELBJMRDT    SMRDT
+     C*
+     C**  Seton overflow indicator and no-details flag
+     C*
+     C                     SETON                     11
+      *                                                                                       CRE019
+      ** Check if CRE019 is switched on                                                       CRE019
+      *                                                                                       CRE019
+     C                     CALL 'AOSARDR0'                                                    CRE019
+     C                     PARM           @RTCD                                               CRE019
+     C                     PARM '*VERIFY' @OPTN                                               CRE019
+     C                     PARM 'CRE019'  PSARD   6                                           CRE019
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRE019
+      *                                                                                       CRE019
+     C           @RTCD     IFNE *BLANKS                                                       CRE019
+     C           @RTCD     ANDNE'*NRF   '                                                     CRE019
+     C           *LOCK     IN   LDA                                                           CRE019
+     C                     MOVEL'SCSARDPD'DBFILE                                              CRE019
+     C                     Z-ADD1         DBASE                                               CRE019
+     C                     MOVEL'CRE019'  DBKEY                                               CRE019
+     C                     EXSR DBERR                                                         CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+     C                     MOVE 'N'       CRE019                                              CRE019
+     C                     MOVE *OFF      *IN20                                               CRE019
+     C           @RTCD     IFEQ *BLANKS                                                       CRE019
+     C                     MOVE 'Y'       CRE019  1                                           CRE019
+     C                     MOVE *ON       *IN20                                               CRE019
+     C                     ENDIF                                                              CRE019
+      *                                                                                       CRE019
+      ** Initialise subfile fields                                                            CRE019
+      *                                                                                       CRE019
+     C           CRE019    IFEQ 'Y'                                                           CRE019
+     C                     MOVELSUSER     #1USER                                              CRE019
+     C                     MOVELSMRDT     #1RUNA                                              CRE019
+     C                     MOVELSWID      #1WSID                                              CRE019
+     C                     ENDIF                                                              CRE019
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            IFLDS  - Initialize Work/Screen Fields             *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                        *
+      *            RFRESH - Refresh screen                            *
+      *                                                               *
+      *****************************************************************
+     C           IFLDS     BEGSR                           ** IFLDS  **
+      *
+     C                     MOVE *BLANKS   SACTN
+     C                     MOVE *BLANKS   SRACNO
+     C                     MOVE *BLANKS   SGCIN
+     C                     MOVE *BLANKS   SSCQN
+     C                     MOVE *BLANKS   SECQN
+     C                     MOVE *BLANKS   @CA
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ZA0150 - This subroutine chains to file LF/SDBANKL1           *
+      *            to get Midas Rundate & setup-complete-flag         *
+      *                                                               *
+      *            Indicator 70 is set on if the chain fails          *
+      *                                                               *
+      *            if indicator 70 is on, details of the              *
+      *            attempted access is placed in the LDA              *
+      *                                                               *
+      * CALLS      DBERR  - Database error handling                   *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                        *
+      *                                                               *
+      *****************************************************************
+     C           ZA0150    BEGSR                           ** ZA0150 **
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD04        DBASE
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     MOVELBJSUC     @SCI    1
+      *
+      ** Set up date format indicator
+     C           BJDFIN    IFEQ 'D'
+     C                     SETOF                     98
+     C                     ELSE
+     C                     SETON                     98
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SNDMSG -                                           *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  UPDAD  - Update procedure                          *
+      *            VALF0  - Validate screen input                     *
+      *                                                               *
+      * FLDS USED  @MSGID - Message id                                *
+      *            @MSGF  - Message file                              *
+      *            @MSDTA - Message data                              *
+      *            @MSPRL - Program relationship                      *
+      *            @MSPGM - Program name                              *
+      *            @MSTYP - Message type                              *
+      *                                                               *
+      *****************************************************************
+     C           SNDMSG    BEGSR                           ** SNDMSG **
+     C*
+     C                     SETON                     69
+     C*
+     C                     CALL 'SCC0240'
+     C                     PARM           @MSGID
+     C                     PARM           @MSGF
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DBERR  - Database error handling                   *
+      *                                                               *
+      * CALLS      *PSSR  - Program  error                            *
+      *                                                               *
+      * CALLED BY  ZA0150 - Get Midas Rundate & Setup Indicator       *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+     C*
+     C**  Update LDA
+     C*
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+     C*
+     C**  Report the DB error
+     C*
+     C           WOPEN     IFEQ 'Y'
+     C                     WRITEDBERROR
+     C                     CLOSERE4217P1
+     C                     END
+     C*
+     C                     OPEN RE4217AU
+     C                     WRITEHEADAU
+     C                     WRITEERRORAU
+     C                     CLOSERE4217AU
+     C*
+      *
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+      *****************************************************************
+      *
+      /EJECT
+      ** SR.ZTNLU1 subroutine
+      /COPY ZSRSRC,ZTNLU1Z2
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      /EJECT
+      ** SR.ZALIGN subroutine
+      /COPY ZSRSRC,ZALIGNZ2
+      *
+      ** Cheque book details
+     OCHQBKPDFE                @RLCQB
+      *
+      ****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

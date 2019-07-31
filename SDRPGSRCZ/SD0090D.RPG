@@ -1,0 +1,1093 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Display Local Institution')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0090D - Local Institution Codes Subfile Enquiry            *
+      *                                                               *
+      *  Function:  This program allows the user to display the       *
+      *             Local Institution Codes file.                     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD030956           Date 09Oct14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD003             Date 27OCT97               *
+      *                 CTI001             Date 31JUL97               *
+      *                 S01459             Date 31JUL97               *
+      *                 LN0168             Date 26JUN90               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD030956 - Additional changes to BFM-TI enhancement          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  CTI001 - Midas-Trade Innovation Interface:                   *
+      *           - Addition of field 'Local Institution Type'.       *
+      *  S01459 - Addition of Midas Headerbox.                        *
+      *  LN0168 - Set scan limit to 99999.                            *
+      *                                                               *
+      *****************************************************************
+     FSD0090D#CF  E                    WORKSTN                        UC
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Local institutions enquiry subfile
+      *
+     FSDINSTL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Local Institutions        Retrieval index
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+     IID0001      DS                            528
+      * File information data structure
+      *
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0001
+     IDSFDY     E DSDSFDY                                                                   MD030956
+      ** First DS for Access Programs, Short Data Structure                                 MD030956
+      *                                                                                     MD030956
+     ISCSARD    E DSSCSARDPD                                                                MD030956
+      ** Switchable Feature Details                                                         MD030956
+      *                                                                                     MD030956
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise & load subfile page
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested
+     C           W0RSF     DOWEQ'N'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload
+     C   05                CAS            FBRQRL
+      * Display next SFL page
+     C   27                CAS            BBLDSF
+      * Process screen input
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise and load subfile page
+      *================================================================
+      * Clear subfile
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * Position DBF file
+     C           KPOS      KLIST
+     C                     KFLD           AKLINC           Local Instituti
+      * Setup key
+     C                     MOVEL#2LINC    AKLINC           Local Instituti
+     C           KPOS      SETLL@AKREBI
+     C                     READ @AKREBI                8782*82=EOF
+      * Save previous selector values
+     C           *LIKE     DEFN #2LCD     WZLCD
+     C                     MOVEL#2LCD     WZLCD            Last Change Dat
+     C           *LIKE     DEFN #2TYLC    WZTYLC
+     C                     MOVEL#2TYLC    WZTYLC           Type of Last Ch
+     C           *LIKE     DEFN #2LINC    WZLINC
+     C                     MOVEL#2LINC    WZLINC           Local Instituti
+     C           *LIKE     DEFN #2LINM    WZLINM
+     C                     MOVEL#2LINM    WZLINM           Local Instituti
+     C           *LIKE     DEFN #2LITP    WZLITP
+     C                     MOVEL#2LITP    WZLITP           Local Instituti
+      * Translate search mask for text field
+     C                     MOVEL'QSYST'   WQB10X 10
+     C                     MOVE 'RNTBL'   WQB10X
+     C           *LIKE     DEFN #2LINM    WQLINM           Local Instituti
+     C                     CALL 'QDCXLATE'
+      * Length
+     C                     PARM 30        WQA5N   50
+     C                     PARM #2LINM    WQLINM           Local Instituti
+     C                     PARM           WQB10X           QSYSTRNTBL
+     C                     PARM 'QSYS'    WQC10X 10
+      * Load subfile page
+     C                     Z-ADD0         ##RROK  50
+     C                     EXSR BBLDSF
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page
+      *================================================================
+      * Re-establish fields in read-ahead record
+     C   27                DO
+     C  N82                READP@AKREBI                  90*
+     C  N82                READ @AKREBI                  90*
+     C                     END
+      *
+      * Setof record error indicators
+     C                     MOVEL*ALL'0'   WKIND0  1
+     C                     MOVEAWKIND0    *IN,34
+      * Start at previous highest record in SFL
+     C                     Z-ADD##RRMX    ##RR    50
+      * Reset count of DBF records read
+     C                     Z-ADD0         ##RRRD  50
+      * Set required pages based on *Set Cursor or *Subfile Pages
+     C           W0RR0     IFGT 0
+     C           W0RR0     DIV  ##SFPG    ##SPG   30
+     C                     MVR            ##SLIN  30
+     C           ##SLIN    IFGT 0
+     C                     ADD  1         ##SPG
+     C                     END
+     C           W0SPG     IFGT ##SPG
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+     C                     ELSE
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+      * Compute lines required based on pages
+     C           ##SPG     MULT ##SFPG    ##SFLN  90
+     C           ##SFLN    IFGT 999
+     C                     Z-ADD999       ##SFLN
+     C                     END
+      *................................................................
+      * Load next SFL page until SFL page full, or
+      * Scan limit reached
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFLN
+     C           ##RRRD    ANDLTW0SLM
+      * Check selection fields - if fail, read next record
+     C           #2LCD     IFNE *ZERO                      Last Change Dat
+     C           AKLCD     CABNE#2LCD     BB020            Last Change Dat
+     C                     END
+     C           #2TYLC    IFNE *BLANK                     Type of Last Ch
+     C           AKTYLC    CABNE#2TYLC    BB020            Type of Last Ch
+     C                     END
+     C           #2LINM    IFNE *BLANK                     Local Instituti
+      * Scan for search string
+     C                     CALL 'QCLSCAN'
+     C                     PARM           AKLINM           Local Instituti
+      * Length
+     C                     PARM 30        WQA3N   30
+      * Start
+     C                     PARM 1         WQB3N   30
+      * Mask
+     C                     PARM           WQLINM
+      * Length
+     C                     PARM 30        WQC3N   30
+      * Translate
+     C                     PARM '1'       WQD1    1
+      * Trim
+     C                     PARM '1'       WQE1    1
+      * Wild
+     C                     PARM '?'       WQF1    1
+      * Result
+     C                     PARM           WQG3N   30
+     C           WQG3N     CABLT1         BB020
+     C                     END
+     C           #2LITP    IFNE *BLANK                     Local Instituti
+     C           AKLITP    CABNE#2LITP    BB020            Local Instituti
+     C                     END
+      * Load SFL fields
+     C                     EXSR MBFL#1
+      * Output to subfile
+     C                     ADD  1         ##RR
+     C                     ADD  1         ##RROK     81    *
+      * If SFLRCD invalid, note that errors present
+     C   98N99             SETON                     99    *
+      * Set screen conditioning indicators
+     C                     EXSR GADSA1
+     C                     WRITE#SFLRCD
+     C           BB020     TAG
+      * Increment scan check count
+     C                     ADD  1         ##RRRD
+     C                     READ @AKREBI                  82*82=EOF
+     C                     END                             OD 1 - ##SFPG
+      *................................................................
+     C           BB900     TAG
+      *................................................................
+      * If no DBF records found, display error message
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI ##RR = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point
+     C           ##RR      IFGT ##RRMX
+      * Calculate top line
+     C           ##RROK    DIV  ##SFPG    ##SPG
+     C                     MVR            ##SLIN
+     C           ##SLIN    IFGT 0
+     C           ##RR      SUB  ##SLIN    ##SFRC
+     C                     ELSE
+     C           ##RR      SUB  ##SFPG    ##SFRC
+     C                     END
+     C                     ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      * If scan limit reached, display error message
+     C           ##RRRD    IFGE W0SLM
+      * Send message '*Scan limit reached'
+     C                     MOVEL'Y2U0017' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     Z-ADD0         ##RROK
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSA2
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Update screen time
+     C                     TIME           ##TME
+      * PUTOVR unless conditioned fields change
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+      * Maintain subfile position where possible
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8392*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      *
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * Validate Local Institution Type
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#2LITP    W0NSRQ  1        Local Instituti
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1212905   Y2LSNO  70
+     C           #2LITP    PARM #2LITP    W0EXVL 20        Local Instituti
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * If error, exit
+     C           *IN99     CABEQ'1'       DAEXIT
+      *................................................................
+      * Change of position specified
+     C           WZLINC    CASNE#2LINC    FBRQRL
+     C           WZLINM    CASNE#2LINM    FBRQRL
+     C           WZLITP    CASNE#2LITP    FBRQRL
+     C                     END
+      * Reload subfile requested
+     C           W0RSF     CABEQ'Y'       DAEXIT
+      * If error, quit processing
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         GADSA1    BEGSR
+      *================================================================
+      * Set display attributes for Subfile record
+      *================================================================
+     C                     MOVEL'0'       *IN78
+     C           WUN3ST    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN78
+     C                     END                             *FI
+     C           CTI006    IFEQ 'Y'                                                         MD030956
+     C                     MOVEL'0'       *IN78                                             MD030956
+     C                     END                                                              MD030956
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSA2    BEGSR
+      *================================================================
+      * Set display attributes for Subfile control
+      *================================================================
+     C                     MOVEL'0'       *IN79
+     C           WUN3ST    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN79
+     C                     END                             *FI
+     C           CTI006    IFEQ 'Y'                                                         MD030956
+     C                     MOVEL'0'       *IN79                                             MD030956
+     C                     END                                                              MD030956
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @AKREBI fields to subfile
+      *================================================================
+     C                     MOVEL*BLANK    #1SEL
+     C                     Z-ADDAKLCD     #1LCD            Last Change Dat
+     C                     MOVELAKTYLC    #1TYLC           Type of Last Ch
+     C                     MOVELAKLINC    #1LINC           Local Instituti
+     C                     MOVELAKLINM    #1LINM           Local Instituti
+     C                     MOVELAKLITP    #1LITP           Local Instituti
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control
+      *================================================================
+     C                     Z-ADD*ZERO     #2LCD            Last Change Dat
+     C                     MOVEL*BLANK    #2TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #2LINC           Local Instituti
+     C                     MOVEL*BLANK    #2LINM           Local Instituti
+     C                     MOVEL*BLANK    #2LITP           Local Instituti
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Get all Midas Modules - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSA     CHAIN@BGREC8              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0096' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+      * Setup message data for message
+     C                     MOVEL'SDMMODPD'ZA0001           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO SAEXIT                     *QUIT
+     C                     GOTO SAEXIT
+     C                     END
+      *
+      * USER: Exit processing
+      * PAR = DB1 By name
+     C                     MOVELBGMTMI    WUMTMI           Midas/Telex Mod
+     C                     MOVELBGSWFT    WUSWFT           SWIFT Funds Tra
+     C                     MOVELBGSWST    WUSWST           SWIFT Securitie
+     C                     MOVELBGSWCL    WUSWCL           SWIFT Customer
+     C                     MOVELBGSWSL    WUSWSL           SWIFT Synd Loan
+     C                     MOVELBGSWSM    WUSWSM           SWIFT Statement
+     C                     MOVELBGSWDL    WUSWDL           SWIFT Dealing
+     C                     MOVELBGSDGL    WUSDGL           Standing data/G
+     C                     MOVELBGDLFX    WUDLFX           Dealing: FX
+     C                     MOVELBGSYLN    WUSYLN           Syndicated Loan
+     C                     MOVELBGEXMG    WUEXMG           Exposure Manage
+     C                     MOVELBGFNMO    WUFNMO           Financial Model
+     C                     MOVELBGSTRT    WUSTRT           Statutory Retur
+     C                     MOVELBGCSLN    WUCSLN           Customer Lendin
+     C                     MOVELBGRTBN    WURTBN           Retail Banking
+     C                     MOVELBGMSDL    WUMSDL           Midas/Swift dir
+     C                     MOVELBGSECS    WUSECS           Securities
+     C                     MOVELBGAURC    WUAURC           Auto-reconcilia
+     C                     MOVELBGBDLI    WUBDLI           Bond Dealers In
+     C                     MOVELBGDRSD    WUDRSD           DRS Standing Da
+     C                     MOVELBGDRCM    WUDRCM           DRS Control mod
+     C                     MOVELBGDRFE    WUDRFE           DRS Foreign Exc
+     C                     MOVELBGDRMM    WUDRMM           DRS Money Marke
+     C                     MOVELBGDRAR    WUDRAR           DRS Arbitrage
+     C                     MOVELBGFDTR    WUFDTR           Funds Transfer
+     C                     MOVELBGDRCA    WUDRCA           DRS Common Appl
+     C                     MOVELBGFUOP    WUFUOP           Futures & Optio
+     C                     MOVELBGMTSL    WUMTSL           Midas/Telex Syn
+     C                     MOVELBGMTDL    WUMTDL           Midas/Telex Dea
+     C                     MOVELBGMTGL    WUMTGL           Midas/Telex Gen
+     C                     MOVELBGMTCL    WUMTCL           Midas/Telex Cus
+     C                     MOVELBGNWMI    WUNWMI           Message Managem
+     C                     MOVELBGFIIN    WUFIIN           FRA/IRS Indicat
+     C                     MOVELBGDLMM    WUDLMM           Dealing: MM
+     C                     MOVELBGINCN    WUINCN           Internal Contra
+     C                     MOVELBGTRMG    WUTRMG           Treasury Manage
+     C                     MOVELBGRKMG    WURKMG           Interest Risk M
+     C                     MOVELBGTSKY    WUTSKY           Testkey
+     C                     MOVELBGMIDQ    WUMIDQ           Midas/Q
+     C                     MOVELBGMFIC    WUMFIC           Microfiche
+     C                     MOVELBGIOAC    WUIOAC           Interest on acc
+     C                     MOVELBGWDPR    WUWDPR           Window processi
+     C                     MOVELBGSARP    WUSARP           SAR's processin
+     C                     MOVELBGFRIN    WUFRIN           French return i
+     C                     MOVELBGLRIN    WULRIN           Lux return indi
+     C                     MOVELBGDRIN    WUDRIN           Dutch return in
+     C                     MOVELBGGRIN    WUGRIN           German return i
+     C                     MOVELBGBRIN    WUBRIN           Belgian return
+     C                     MOVELBGIRIN    WUIRIN           Italian return
+     C                     MOVELBGSWEI    WUSWEI           Swift External
+     C                     MOVELBGPFMG    WUPFMG           Portfolio Manag
+     C                     MOVELBGCRMG    WUCRMG           Credit Manageme
+     C                     MOVELBGHORP    WUHORP           Head Office Rep
+     C                     MOVELBGAVBL    WUAVBL           Average Balance
+     C                     MOVELBGMARG    WUMARG           Margins
+     C                     MOVELBGCFMT    WUCFMT           Confirmation Ma
+     C                     MOVELBGMIMX    WUMIMX           Mimix
+     C                     MOVELBGRCFI    WURCFI           Report Control
+     C                     MOVELBGAMIN    WUAMIN           Amps Int
+     C                     MOVELBGSWRT    WUSWRT           Swiss Returns
+     C                     MOVELBGFLND    WUFLND           Fiduciary Loans
+     C                     MOVELBGLMCR    WULMCR           Portfolio Lendi
+     C                     MOVELBGCNTX    WUCNTX           Cantonal Tax
+     C                     MOVELBGSTDU    WUSTDU           Stamp Duty
+     C                     MOVELBGUDRS    WUUDRS           Use DRS Shortna
+     C                     MOVELBGCHDL    WUCHDL           Chips Dealing
+     C                     MOVELBGCHLN    WUCHLN           Chips Lending
+     C                     MOVELBGCHOB    WUCHOB           Chips Opening B
+     C                     MOVELBGCHIP    WUCHIP           CHIPS
+     C                     MOVELBGCHDI    WUCHDI           Chips Direct Li
+     C                     MOVELBGOPDK    WUOPDK           Optical Disk
+     C                     MOVELBGMBIN    WUMBIN           Multi-branching
+     C                     MOVELBGNNST    WUNNST           Leo Data Nucleu
+     C                     MOVELBGNOST    WUNOST           Leo Letters of
+     C                     MOVELBGNPST    WUNPST           Leo Collections
+     C                     MOVELBGNQST    WUNQST           Leo Bills/Finan
+     C                     MOVELBGNRST    WUNRST           Leo Bankers Acc
+     C                     MOVELBGNSST    WUNSST           Leo Reimburseme
+     C                     MOVELBGNTST    WUNTST           Taxes
+     C                     MOVELBGNUST    WUNUST           History & Audit
+     C                     MOVELBGNVST    WUNVST           Management Acco
+     C                     MOVELBGNWST    WUNWST           IBLC Returns
+     C                     MOVELBGNXST    WUNXST           Retail 3
+     C                     MOVELBGNYST    WUNYST           Interest on Acc
+     C                     MOVELBGNZST    WUNZST           Midas Export Da
+     C                     MOVELBGN0ST    WUN0ST           Analytical Acco
+     C                     MOVELBGN1ST    WUN1ST           User Defined Co
+     C                     MOVELBGN2ST    WUN2ST           Midas-Plato Int
+     C                     MOVELBGN3ST    WUN3ST           Midas-Trade Inn
+     C                     MOVELBGN4ST    WUN4ST           Reserved for La
+     C                     MOVELBGN5ST    WUN5ST           Reserved for La
+     C                     MOVELBGN6ST    WUN6ST           Reserved for La
+     C                     MOVELBGN7ST    WUN7ST           Reserved for La
+     C                     MOVELBGN8ST    WUN8ST           Reserved for La
+     C                     MOVELBGN9ST    WUN9ST           Reserved for La
+     C                     MOVELBGOAST    WUOAST           Reserved for La
+     C                     MOVELBGOBST    WUOBST           Reserved for La
+     C                     MOVELBGOCST    WUOCST           Reserved for La
+     C                     MOVELBGODST    WUODST           Reserved for La
+     C                     MOVELBGOEST    WUOEST           Reserved for La
+     C                     MOVELBGOFST    WUOFST           Reserved for La
+     C                     MOVELBGOGST    WUOGST           Reserved for La
+     C                     MOVELBGOHST    WUOHST           Reserved for La
+     C                     MOVELBGOIST    WUOIST           Reserved for La
+     C                     MOVELBGOJST    WUOJST           Reserved for La
+     C                     MOVELBGOKST    WUOKST           Reserved for La
+     C                     MOVELBGOLST    WUOLST           Reserved for La
+     C                     MOVELBGOMST    WUOMST           Reserved for La
+     C                     MOVELBGONST    WUONST           Reserved for La
+     C                     MOVELBGOOST    WUOOST           Reserved for La
+     C                     MOVELBGOPST    WUOPST           Reserved for La
+     C                     MOVELBGOQST    WUOQST           Reserved for La
+     C                     MOVELBGORST    WUORST           Reserved for La
+     C                     MOVELBGOSST    WUOSST           Reserved for La
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM *ZERO     YYLGCT  50       # of grps
+     C                     PARM *BLANK    YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field Midas-Trade Innovation If
+     C                     MOVEL*BLANK    WUN3ST  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Midas/Telex Module Ind.
+     C                     MOVEL*BLANK    WUMTMI  1
+      * Define work field SWIFT Funds Transfer
+     C                     MOVEL*BLANK    WUSWFT  1
+      * Define work field SWIFT Securities Trading
+     C                     MOVEL*BLANK    WUSWST  1
+      * Define work field SWIFT Customer Lending
+     C                     MOVEL*BLANK    WUSWCL  1
+      * Define work field SWIFT Synd Loans (REDUN)
+     C                     MOVEL*BLANK    WUSWSL  1
+      * Define work field SWIFT Statements
+     C                     MOVEL*BLANK    WUSWSM  1
+      * Define work field SWIFT Dealing
+     C                     MOVEL*BLANK    WUSWDL  1
+      * Define work field Standing data/Gen.Ledger
+     C                     MOVEL*BLANK    WUSDGL  1
+      * Define work field Dealing: FX
+     C                     MOVEL*BLANK    WUDLFX  1
+      * Define work field Syndicated Loans (REDUN)
+     C                     MOVEL*BLANK    WUSYLN  1
+      * Define work field Exposure Management
+     C                     MOVEL*BLANK    WUEXMG  1
+      * Define work field Financial Modeller
+     C                     MOVEL*BLANK    WUFNMO  1
+      * Define work field Statutory Returns
+     C                     MOVEL*BLANK    WUSTRT  1
+      * Define work field Customer Lending
+     C                     MOVEL*BLANK    WUCSLN  1
+      * Define work field Retail Banking
+     C                     MOVEL*BLANK    WURTBN  1
+      * Define work field Midas/Swift direct link
+     C                     MOVEL*BLANK    WUMSDL  1
+      * Define work field Securities
+     C                     MOVEL*BLANK    WUSECS  1
+      * Define work field Auto-reconciliations
+     C                     MOVEL*BLANK    WUAURC  1
+      * Define work field Bond Dealers Interface
+     C                     MOVEL*BLANK    WUBDLI  1
+      * Define work field DRS Standing Data
+     C                     MOVEL*BLANK    WUDRSD  1
+      * Define work field DRS Control module
+     C                     MOVEL*BLANK    WUDRCM  1
+      * Define work field DRS Foreign Exchange
+     C                     MOVEL*BLANK    WUDRFE  1
+      * Define work field DRS Money Market
+     C                     MOVEL*BLANK    WUDRMM  1
+      * Define work field DRS Arbitrage
+     C                     MOVEL*BLANK    WUDRAR  1
+      * Define work field Funds Transfer
+     C                     MOVEL*BLANK    WUFDTR  1
+      * Define work field DRS Common Applications
+     C                     MOVEL*BLANK    WUDRCA  1
+      * Define work field Futures & Options
+     C                     MOVEL*BLANK    WUFUOP  1
+      * Define work field Midas/Telex Synd. Loans
+     C                     MOVEL*BLANK    WUMTSL  1
+      * Define work field Midas/Telex Dealing
+     C                     MOVEL*BLANK    WUMTDL  1
+      * Define work field Midas/Telex Gen. Ledger
+     C                     MOVEL*BLANK    WUMTGL  1
+      * Define work field Midas/Telex Cust. Lending
+     C                     MOVEL*BLANK    WUMTCL  1
+      * Define work field Message Management
+     C                     MOVEL*BLANK    WUNWMI  1
+      * Define work field FRA/IRS Indicator
+     C                     MOVEL*BLANK    WUFIIN  1
+      * Define work field Dealing: MM
+     C                     MOVEL*BLANK    WUDLMM  1
+      * Define work field Internal Contracts
+     C                     MOVEL*BLANK    WUINCN  1
+      * Define work field Treasury Management
+     C                     MOVEL*BLANK    WUTRMG  1
+      * Define work field Interest Risk Management
+     C                     MOVEL*BLANK    WURKMG  1
+      * Define work field Testkey
+     C                     MOVEL*BLANK    WUTSKY  1
+      * Define work field Midas/Q
+     C                     MOVEL*BLANK    WUMIDQ  1
+      * Define work field Microfiche
+     C                     MOVEL*BLANK    WUMFIC  1
+      * Define work field Interest on accounts
+     C                     MOVEL*BLANK    WUIOAC  1
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field SAR's processing required
+     C                     MOVEL*BLANK    WUSARP  1
+      * Define work field French return indicator
+     C                     MOVEL*BLANK    WUFRIN  1
+      * Define work field Lux return indicator
+     C                     MOVEL*BLANK    WULRIN  1
+      * Define work field Dutch return indicator
+     C                     MOVEL*BLANK    WUDRIN  1
+      * Define work field German return indicator
+     C                     MOVEL*BLANK    WUGRIN  1
+      * Define work field Belgian return indicator
+     C                     MOVEL*BLANK    WUBRIN  1
+      * Define work field Italian return indicator
+     C                     MOVEL*BLANK    WUIRIN  1
+      * Define work field Swift External Interface
+     C                     MOVEL*BLANK    WUSWEI  1
+      * Define work field Portfolio Management
+     C                     MOVEL*BLANK    WUPFMG  1
+      * Define work field Credit Management.
+     C                     MOVEL*BLANK    WUCRMG  1
+      * Define work field Head Office Reporting
+     C                     MOVEL*BLANK    WUHORP  1
+      * Define work field Average Balances
+     C                     MOVEL*BLANK    WUAVBL  1
+      * Define work field Margins
+     C                     MOVEL*BLANK    WUMARG  1
+      * Define work field Confirmation Matching
+     C                     MOVEL*BLANK    WUCFMT  1
+      * Define work field Mimix
+     C                     MOVEL*BLANK    WUMIMX  1
+      * Define work field Report Control Facility
+     C                     MOVEL*BLANK    WURCFI  1
+      * Define work field Amps Int
+     C                     MOVEL*BLANK    WUAMIN  1
+      * Define work field Swiss Returns
+     C                     MOVEL*BLANK    WUSWRT  1
+      * Define work field Fiduciary Loans & Deposit
+     C                     MOVEL*BLANK    WUFLND  1
+      * Define work field Portfolio Lending
+     C                     MOVEL*BLANK    WULMCR  1
+      * Define work field Cantonal Tax
+     C                     MOVEL*BLANK    WUCNTX  1
+      * Define work field Stamp Duty
+     C                     MOVEL*BLANK    WUSTDU  1
+      * Define work field Use DRS Shortnames
+     C                     MOVEL*BLANK    WUUDRS  1
+      * Define work field Chips Dealing
+     C                     MOVEL*BLANK    WUCHDL  1
+      * Define work field Chips Lending
+     C                     MOVEL*BLANK    WUCHLN  1
+      * Define work field Chips Opening Balance
+     C                     MOVEL*BLANK    WUCHOB  1
+      * Define work field CHIPS
+     C                     MOVEL*BLANK    WUCHIP  1
+      * Define work field Chips Direct Link
+     C                     MOVEL*BLANK    WUCHDI  1
+      * Define work field Optical Disk
+     C                     MOVEL*BLANK    WUOPDK  1
+      * Define work field Leo Data Nucleus
+     C                     MOVEL*BLANK    WUNNST  1
+      * Define work field Leo Letters of Credit
+     C                     MOVEL*BLANK    WUNOST  1
+      * Define work field Leo Collections
+     C                     MOVEL*BLANK    WUNPST  1
+      * Define work field Leo Bills/Financing
+     C                     MOVEL*BLANK    WUNQST  1
+      * Define work field Leo Bankers Acceptances
+     C                     MOVEL*BLANK    WUNRST  1
+      * Define work field Leo Reimbursements
+     C                     MOVEL*BLANK    WUNSST  1
+      * Define work field Taxes
+     C                     MOVEL*BLANK    WUNTST  1
+      * Define work field History & Audit Facility
+     C                     MOVEL*BLANK    WUNUST  1
+      * Define work field Management Accounts
+     C                     MOVEL*BLANK    WUNVST  1
+      * Define work field IBLC Returns
+     C                     MOVEL*BLANK    WUNWST  1
+      * Define work field Retail 3
+     C                     MOVEL*BLANK    WUNXST  1
+      * Define work field Interest on Accounts 3
+     C                     MOVEL*BLANK    WUNYST  1
+      * Define work field Midas Export Data Module
+     C                     MOVEL*BLANK    WUNZST  1
+      * Define work field Analytical Accounting
+     C                     MOVEL*BLANK    WUN0ST  1
+      * Define work field User Defined Correspondnc
+     C                     MOVEL*BLANK    WUN1ST  1
+      * Define work field Midas-Plato Interface
+     C                     MOVEL*BLANK    WUN2ST  1
+      * Define work field Reserved for Later Use 41
+     C                     MOVEL*BLANK    WUN4ST  1
+      * Define work field Reserved for Later Use 42
+     C                     MOVEL*BLANK    WUN5ST  1
+      * Define work field Reserved for Later Use 43
+     C                     MOVEL*BLANK    WUN6ST  1
+      * Define work field Reserved for Later Use 44
+     C                     MOVEL*BLANK    WUN7ST  1
+      * Define work field Reserved for Later Use 45
+     C                     MOVEL*BLANK    WUN8ST  1
+      * Define work field Reserved for Later Use 46
+     C                     MOVEL*BLANK    WUN9ST  1
+      * Define work field Reserved for Later Use 47
+     C                     MOVEL*BLANK    WUOAST  1
+      * Define work field Reserved for Later Use 48
+     C                     MOVEL*BLANK    WUOBST  1
+      * Define work field Reserved for Later Use 49
+     C                     MOVEL*BLANK    WUOCST  1
+      * Define work field Reserved for Later Use 50
+     C                     MOVEL*BLANK    WUODST  1
+      * Define work field Reserved for Later Use 51
+     C                     MOVEL*BLANK    WUOEST  1
+      * Define work field Reserved for Later Use 52
+     C                     MOVEL*BLANK    WUOFST  1
+      * Define work field Reserved for Later Use 53
+     C                     MOVEL*BLANK    WUOGST  1
+      * Define work field Reserved for Later Use 54
+     C                     MOVEL*BLANK    WUOHST  1
+      * Define work field Reserved for Later Use 55
+     C                     MOVEL*BLANK    WUOIST  1
+      * Define work field Reserved for Later Use 56
+     C                     MOVEL*BLANK    WUOJST  1
+      * Define work field Reserved for Later Use 57
+     C                     MOVEL*BLANK    WUOKST  1
+      * Define work field Reserved for Later Use 58
+     C                     MOVEL*BLANK    WUOLST  1
+      * Define work field Reserved for Later Use 59
+     C                     MOVEL*BLANK    WUOMST  1
+      * Define work field Reserved for Later Use 60
+     C                     MOVEL*BLANK    WUONST  1
+      * Define work field Reserved for Later Use 61
+     C                     MOVEL*BLANK    WUOOST  1
+      * Define work field Reserved for Later Use 62
+     C                     MOVEL*BLANK    WUOPST  1
+      * Define work field Reserved for Later Use 63
+     C                     MOVEL*BLANK    WUOQST  1
+      * Define work field Reserved for Later Use 64
+     C                     MOVEL*BLANK    WUORST  1
+      * Define work field Reserved for Later Use 65
+     C                     MOVEL*BLANK    WUOSST  1
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD0090D#
+     C                     OPEN SDINSTL1
+     C                     OPEN SDMMODL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     Z-ADD13        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+      * Maximum record number
+     C                     Z-ADD*ZERO     ##RRMX
+      * Scan limit
+     C                     Z-ADD500       W0SLM   50
+      * Subfile pages
+     C                     Z-ADD1         W0SPG   30
+      * Processed Subfile record
+     C                     Z-ADD0         W0RR0   40
+      *................................................................
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD0090D Precompiler - Local Institutions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Copyright Statement 1988 - Standard Functions  * Copyright
+      * Start of change CTI001
+      * Get all Midas Modules - MIDAS Modules  *
+     C                     EXSR SARVGN
+      * End of change CTI001
+      * Start of Fix LN0168
+     C                     Z-ADD99999     W0SLM            *Scan limit
+      * End of Fix LN0168
+      * Initialise subfile control
+     C                     EXSR MEIZ#2
+      *                                                                                     MD030956
+      ** Check whether CTI006 is switched on                                                MD030956
+      *                                                                                     MD030956
+     C                     CALL 'AOSARDR0'                                                  MD030956
+     C                     PARM *BLANKS   PRTCD   7                                         MD030956
+     C                     PARM '*VERIFY' POPTN   7                                         MD030956
+     C                     PARM 'CTI006'  PSARD   6                                         MD030956
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD030956
+      *                                                                                     MD030956
+     C           PRTCD     IFEQ *BLANKS                                                     MD030956
+     C                     MOVE 'Y'       CTI006  1                                         MD030956
+     C                     ELSE                                                             MD030956
+     C                     MOVE 'N'       CTI006                                            MD030956
+     C                     ENDIF                                                            MD030956
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0090DPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0090DPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0090DPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

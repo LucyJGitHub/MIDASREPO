@@ -1,0 +1,1032 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PB Retail Accruals Take-on')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Private Banking Module                               *
+      *                                                               *
+      *  PB9502 - PB Retail Accruals Take-on                          *
+      *                                                               *
+      *  Function: This program will select retail accounts and       *
+      *            send to interface file.                            *
+      *                                                               *
+      *  Called By: Replication Tak-on - menu                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CPB002  *CREATE    Date 30Aug00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPB002 - Meridian DBA Middleware Replication Customization.  *
+      *                                                               *
+      *****************************************************************
+     FREACRDL1IF  E           K        DISK         KINFSR *PSSR
+      **  Retail Accrual File
+     F                                              KINFDS FIL1DS
+      *
+     FREACR   UF  E           K        DISK         KINFSR *PSSR
+     F            REACRAF                           KIGNORE
+     F            REACRZF                           KIGNORE
+     F            REACRDF                           KRENAMEREACRF
+      **  Retail Accrual File - Update REPI flag
+      *
+     FPB9502DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        SFLRR2KSFILE PB9502S1
+      **  Display File
+      *
+      ********************************************************************
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  FUNCTION OF INDICATORS                                       *
+      *  ------------------------                                     *
+      *                                                               *
+      *  26 - SFLEND    }- MESSAGE SUBFILE                            *
+      *                                                               *
+      *  28 - SFLDSP    }                                             *
+      *  29 - SFLDSPCTL }                                             *
+      *  30 - SFLCLR    }- REVIEW FROM SUBFILE                        *
+      *  31 - SFLEND    }                                             *
+      *  33 - SFLNXTCHG }                                             *
+      *                                                               *
+      *  37 - FILE INDICATOR ON REACRDL1                              *
+      *  38 - FILE INDICATOR ON REACR                                 *
+      *  39 - FILE INDICATOR ON PB9502DF                              *
+      *  42 - WRITE INDICATOR ON REACRDL1                             *
+      *                                                               *
+      *  56 - DISPLAY STATUS ON REVIEW FROM SCREEN                    *
+      *  58 - ENABLE CMD-10                                           *
+      *                                                               *
+      *  61 - ERROR ON BRANCH CODE                                    *
+      *  62 - ERROR ON CUSTOMER                                       *
+      *  63 - ERROR ON CURRENCY                                       *
+      *  64 - ERROR ON ACCOUNT CODE                                   *
+      *  65 - ERROR ON ACCOUNT SEQUENCE                               *
+      *  66 - ERROR ON REVIEW FROM ACCOUNT NUMBER                     *
+      *  67 - ERROR ON SUBFILE SELECT                                 *
+      *                                                               *
+      *  99 - FILE ERROR INDICATOR                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  INDEX TO SUBROUTINES                                         *
+      *  ----------------------                                       *
+      *                                                               *
+      *         - MAIN PROCESSING                                     *
+      *  #VLINI - VALIDATION OF INITIAL SCREEN                        *
+      *  #RVSRC - PROCESS REVIEW SCREEN                               *
+      *  #RVENT - PROCESS AN ENTRY ON REVIEW SCREEN                   *
+      *  #RVRFS - VALIDATE SELECTION ON REVIEW FROM SUBFILE           *
+      *  #UPSRC - PROCESS UPDATE SCREEN                               *
+      *  #LDSBF - LOADS A PAGE OF SUBFILE RECORDS                     *
+      *  #PCPRV - PROCESS CMD12                                       *
+      *  ZASNMS - SEND MESSAGE TO PROGRAMS MESSAGE QUEUE              *
+      *  *INZSR - INITIALISATION                                      *
+      *  *PSSR  - PROGRAM ERROR HANDLING ROUTINE                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      **  Copyright Array
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     IDSMSG       DS                             14
+     I                                        1  10 WORKER
+     I                                       11  11 ACTN
+      *
+     IPSDS       SDS
+      **  Program Status DS
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IFIL1DS      DS
+      **  File Information DS
+      *
+     I                                    B 397 4000WWHRRN
+      *
+     I            DS
+     I**********                              1   60KCUST                                     CSD027
+     I                                        1   6 KCUST                                     CSD027
+     I                                        7   9 KACCY
+     I**********                             10  130KACOD                                     CGL029
+     I**********                             14  150KASEQ                                     CGL029
+     I**********                             16  18 KBRCA                                     CGL029
+     I**********                              1  18 WACCNT                                    CGL029
+     I                                       10  190KACOD                                     CGL029
+     I                                       20  210KASEQ                                     CGL029
+     I                                       22  24 KBRCA                                     CGL029
+     I                                        1  24 WACCNT                                    CGL029
+      *
+     I            DS
+     I                                        1   6 SCUST
+     I                                        7   9 S1ACCY
+     I**********                             10  13 S1ACOD                                    CGL029
+     I**********                             14  15 S1ASEQ                                    CGL029
+     I**********                             16  18 S1BRCA                                    CGL029
+     I**********                              1  18 S1ACCN                                    CGL029
+     I                                       10  19 S1ACOD                                    CGL029
+     I                                       20  21 S1ASEQ                                    CGL029
+     I                                       22  24 S1BRCA                                    CGL029
+     I                                        1  24 S1ACCN                                    CGL029
+      *
+     I            DS
+     I                                        1   6 S2CUST
+     I                                        7   9 S2ACCY
+     I**********                             10  13 S2ACOD                                    CGL029
+     I**********                             14  15 S2ASEQ                                    CGL029
+     I**********                             16  18 S2BRCA                                    CGL029
+     I**********                              1  18 S2ACCN                                    CGL029
+     I                                       10  19 S2ACOD                                    CGL029
+     I                                       20  21 S2ASEQ                                    CGL029
+     I                                       22  24 S2BRCA                                    CGL029
+     I                                        1  24 S2ACCN                                    CGL029
+      *
+     ILDA       E DSLDA                         256
+      **  Local Data Area for DB Errors
+      *
+      **                                    134 141 DBFILE
+      **                                    142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDT       DS
+      **  Data area RUNDAT
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     IZMUSER      DS                             17
+      **  Data area ZMUSER
+      *
+     I                                       11  13 USRBCH
+      *
+      **  Data structure to ensure that input to screen fields is valid
+      *
+     I            DS
+     I                                        1   4 SCREEN
+     I                                        4   4 FOURTH
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  Bank details
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  Customer details
+     I              QQDFAC                          DFACQQ                                    CGL029
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Currency details
+      *
+     ISDACOD    E DSSDACODPD
+      **  Account details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short DS
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, Long DS
+      *
+     IDSLDY     E DSDSLDY
+      **  Long DS for access programs, Very Long DS
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      **  MAIN PROCESSING
+      *
+      **  Do while not CMD-3
+      *
+     C           *INKC     DOWEQ*OFF
+      *
+     C                     MOVE *OFF      *IN50
+     C                     WRITEPB9502F1
+      *
+      **  If error, write message subfile
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITEPB9502C2
+     C                     ENDIF
+      *
+      **  Read selection screen
+      *
+     C                     READ PB9502F1                 59
+      *
+      **  If not CMD-3
+      **  perform validation
+      *
+     C           *INKC     IFEQ *OFF
+     C                     EXSR #VLINI
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *IN50
+      *
+      **  Display next screen as necessary
+      *
+     C           WWSFL     IFEQ 'Y'
+      *
+      **  Review from subfile
+      *
+     C                     EXSR #RVSRC
+     C                     ENDIF
+     C                     ENDDO
+      *
+      **  End program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #VLINI - VALIDATION OF INITIAL SCREEN              *
+      *                                                               *
+      * CALLS      ZASNMS - Send Message to Program Message Queue.    *
+      *                                                               *
+      * CALLED BY  #B     - Main Processing.                          *
+      *                                                               *
+      *****************************************************************
+     C           #VLINI    BEGSR
+      *
+      **  Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+      *
+      **  Set of error indicators
+      *
+     C                     MOVE *OFF      *IN61
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN63
+     C                     MOVE *OFF      *IN64
+     C                     MOVE *OFF      *IN65
+     C                     MOVE *BLANKS   WWFMT   4
+      *
+      **  Set on valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+     C                     MOVE 'N'       WWSFL
+     C                     MOVELS1CUST    SCUST
+      *
+     C           S1CUST    IFNE *BLANKS
+     C           S1BRCA    ANDEQ*BLANKS
+     C           S1ACCY    ANDEQ*BLANKS
+     C           S1ACOD    ANDEQ*BLANKS
+     C           S1ASEQ    ANDEQ*BLANKS
+     C                     MOVE 'CUST'    WWFMT
+     C                     ENDIF
+      *
+     C           S1ACCN    IFNE *BLANKS
+      *
+      **  The Branch must be a valid branch code
+      *
+     C           WWFMT     IFEQ *BLANKS
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @@RTCD  7
+     C                     PARM '*KEY   ' @@OPTN  7
+     C                     PARM S1BRCA    @BRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      **  If branch code - ERROR
+      *
+     C           @@RTCD    IFNE *BLANKS
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB95201' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE A8BRCD    S1BRCA
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  The Customer must be a valid customer
+      *
+     C                     MOVE S1CUST    @KEY10    P
+     C                     CALL 'AOCUSTR1'
+     C                     PARM *BLANKS   @@RTCD  7
+     C                     PARM '*KEY   ' @@OPTN  7
+     C                     PARM           @KEY10 10
+     C                     PARM           @KEY7   7
+     C           SDCUST    PARM SDCUST    DSLDY
+      **  If customer - ERROR
+      *
+     C           @@RTCD    IFEQ *BLANKS
+     C           BBPRBA    ANDNE'Y'
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB95208' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           @@RTCD    IFNE *BLANKS
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB95202' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  The Currency must be a valid currency code
+      *
+     C           WWFMT     IFEQ *BLANKS
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @@RTCD  7
+     C                     PARM '*KEY   ' @@OPTN  7
+     C                     PARM S1ACCY    @KEY3   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      **  If customer - ERROR
+      *
+     C           @@RTCD    IFNE *BLANKS
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB95203' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVELA6CYCD    S1ACCY
+     C                     ENDIF
+      *
+      **  The Account code must be a valid Retail Account Code
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @@RTCD  7
+     C                     PARM '*KEY   ' @@OPTN  7
+     C**********           PARM S1ACOD    @KEY4   4                                           CGL029
+     C                     PARM S1ACOD    @KEY4  10                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      **  If customer - ERROR
+      *
+     C           @@RTCD    IFNE *BLANKS
+     C           A5ACTY    ORNE 'R'
+     C           @@RTCD    IFEQ *BLANKS
+     C                     MOVELA5ACCD    S1ACOD
+     C                     ENDIF
+     C                     MOVE *ON       *IN64
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB95204' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVELA5ACCD    S1ACOD
+     C                     ENDIF
+      *
+      **  Account Sequence must be numeric
+      *
+     C                     TESTN          S1ASEQ     8989
+      *
+     C           S1ASEQ    IFEQ *BLANKS
+     C           *IN89     OREQ *OFF
+     C                     MOVE *ON       *IN65
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB95205' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If valid so far
+      *
+     C           WWVALD    IFEQ 'Y'
+     C                     MOVELSCUST     KCUST
+     C                     MOVE S1ACCY    KACCY
+     C                     MOVE S1ACOD    KACOD
+     C                     MOVE S1ASEQ    KASEQ
+     C                     MOVE S1BRCA    KBRCA
+     C                     MOVE 'N'       WWFND   1
+      *
+      **  Validate Accrual Account
+      *
+     C           WWFMT     IFEQ *BLANKS
+     C           KACCNT    SETLLREACRDL1
+     C           KACCNT    READEREACRDL1                 38
+     C                     ELSE
+     C           KCUST     SETLLREACRDL1
+     C           KCUST     READEREACRDL1                 38
+     C                     ENDIF
+      *
+      **  If record found
+      *
+     C           *IN38     DOWEQ*OFF
+     C           WWFND     ANDEQ'N'
+     C           RECI      IFEQ 'D'
+     C                     MOVE 'Y'       WWFND   1
+     C                     ENDIF
+     C           WWFMT     IFEQ *BLANKS
+     C           KACCNT    READEREACRDL1                 38
+     C                     ELSE
+     C           KCUST     READEREACRDL1                 38
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           WWFND     IFEQ 'N'
+     C                     MOVEA'11111'   *IN,61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB95206' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           WWVALD    IFEQ 'Y'
+     C                     MOVE 'Y'       WWSFL
+     C                     ENDIF
+      *
+     C           S1ACCN    IFEQ *BLANKS
+     C           WWFMT     OREQ 'CUST'
+     C                     MOVE *ON       *IN70
+     C                     ELSE
+     C                     MOVE *OFF      *IN70
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #RVSRC - PROCESS REVIEW SCREEN                     *
+      *                                                               *
+      * CALLS      #RVENT - Process an Entry on Review Screen.        *
+      *            #LDSBF - Loads a Page of Subfile records.          *
+      *            #PCPRV - Process F12.                              *
+      *                                                               *
+      * CALLED BY  #B     - Main Processing.                          *
+      *                                                               *
+      * FLDS USED         _                                           *
+      *                                                               *
+      *****************************************************************
+     C           #RVSRC    BEGSR
+      *
+      ** Clear Screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+      *
+      ** Load first page to subfile
+      *
+     C                     MOVE *BLANKS   S2RCRG
+     C                     MOVE *OFF      S1ROLL  1
+     C                     EXSR #LDSBF
+      *
+      ** Do while not CMD-3 and CMD-12
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+      *
+     C                     WRITEPB9502C1
+     C                     WRITEPB9502F3
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITEPB9502C2
+     C                     ENDIF
+      *
+     C                     READ PB9502C1                 59
+      *
+      **   If not CMD-3
+      *
+     C           *INKC     IFEQ *OFF
+     C           *INKV     CASEQ*ON       #SELAL           Select all record
+     C           *IN27     CASEQ*ON       #LDSBF           Rollup
+     C           *INKL     CASEQ*ON       #PCPRV           CMD-12
+     C                     CAS            #RVENT           ENTER
+     C                     ENDCS
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #RVENT - PROCESS ENTRY ON REVIEW SCREEN            *
+      *                                                               *
+      * CALLS      #RVRFS - Validate Selection on Review From subfile.*
+      *            #UPSRC - Process Update Screen.                    *
+      *            #LDSBF - Loads a Page of Subfile records.          *
+      *            ZASNMS - Send Message to Program Message Queue.    *
+      *                                                               *
+      * CALLED BY  #RVSRC - Process Review Screen.                    *
+      *                                                               *
+      *****************************************************************
+     C           #RVENT    BEGSR
+      *
+      **   Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+      *
+      **   Set on valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+     C                     MOVE 'N'       WWPROC  1
+     C                     MOVE *OFF      S1ROLL
+      *
+     C                     READCPB9502S1                 59
+      *
+     C           *IN59     DOWEQ*OFF
+      *
+      **   Validate selection
+      *
+     C           S2SEL     IFNE ' '
+     C           S2SEL     ANDNE'X'
+     C                     MOVEL'PB95207' WWMSGD
+     C                     MOVE 'N'       WWVALD
+     C                     ENDIF
+      **   If valid
+      *
+     C           S2SEL     IFEQ 'X'
+     C                     MOVE *BLANKS   WACCNT
+     C                     MOVELS2CUST    KCUST
+     C                     MOVE S2ACCY    KACCY
+     C                     MOVE S2ACOD    KACOD
+     C                     MOVE S2ASEQ    KASEQ
+     C                     MOVE S2BRCA    KBRCA
+     C                     MOVE 'Y'       WWPROC
+      *
+      **   Process to upate REPI flag from REACRD
+      *
+     C           KACCN     CHAINREACR                89
+      *
+     C                     TESTN          REPI       88
+      **   If Replication Indicator is numeric
+     C           *IN88     IFEQ *ON
+     C                     MOVE REPI      WREPI   20
+     C                     ADD  1         WREPI
+     C                     ELSE
+     C                     Z-ADD1         WREPI
+     C                     ENDIF
+     C                     MOVE WREPI     REPI
+      *
+     C                     UPDATREACRF
+      *
+     C                     ENDIF
+     C                     READCPB9502S1                 59
+     C                     ENDDO
+      *
+     C           WWVALD    IFEQ 'Y'
+     C           WWPROC    ANDEQ'Y'
+     C           WWVALD    OREQ 'Y'
+     C           S1ROLL    ANDEQ*ON
+      *
+      ***  Quit the program
+      *
+     C           WWPROC    IFEQ 'Y'
+     C                     MOVE *ON       *INKC
+     C                     ELSE
+     C                     MOVE *OFF      S1ROLL  1
+     C                     GOTO ENDENT
+     C                     ENDIF
+     C                     ELSE
+      *
+      **   Save RRN of changed subfile record
+      *
+     C                     Z-ADDSFLRR2    WWSRRN
+     C                     MOVE S2SEL     WWSSEL
+      *
+      **   Remove reverse image from subfile
+      *
+     C                     Z-ADD0         WWSFLC
+      *
+     C           WWSFLC    DOWLTWWLRRN
+     C                     ADD  1         WWSFLC
+     C           WWSFLC    CHAINPB9502S1             39
+     C                     MOVE *BLANKS   S2SEL
+     C                     MOVE *OFF      *IN67
+     C                     UPDATPB9502S1
+     C                     ENDDO
+      *
+      ** Check if one selection
+      *
+     C           WWPROC    IFEQ 'N'
+     C           WWVALD    ANDEQ'Y'
+     C                     MOVEL'PB95209' WWMSGD
+     C                     MOVE 'N'       WWVALD
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *IN67
+     C                     MOVE 'N'       WWVALD
+     C                     MOVELWWMSGD    ZAMSID
+     C                     EXSR ZASNMS
+     C           WWSRRN    CHAINPB9502S1             39
+     C                     MOVE WWSSEL    S2SEL
+     C                     UPDATPB9502S1
+     C                     ENDIF
+      *
+     C           ENDENT    ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #LDSBF - LOAD A PAGE OF SUBFILE RECORDS            *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #RVSRC - Process Review Screen.                    *
+      *            #RVENT - Process an Entry on Review Screen.        *
+      *                                                               *
+      *****************************************************************
+     C           #LDSBF    BEGSR
+      *
+      ***  Roll-up requested
+      *
+     C           *IN27     IFEQ *ON
+     C                     MOVE *IN27     S1ROLL  1
+     C                     Z-ADDWWLRRN    SFLRR2
+     C                     ELSE
+     C                     Z-ADD*ZERO     WWLRRN
+     C                     Z-ADD*ZERO     SFLRR2
+     C                     MOVE *OFF      *IN28
+     C                     MOVE *OFF      *IN29
+     C                     MOVE *OFF      *IN31
+      *
+      **   CLEAR SCREEN 1 SUBFILE
+      *
+     C                     MOVEA'001'     *IN,28           OFF 28-29 ON 30
+     C                     WRITEPB9502C1
+     C                     MOVEA'000'     *IN,28           OFF 28-30
+     C                     ENDIF
+     C                     Z-ADD*ZERO     WWSFLC
+      *
+     C           *IN27     IFEQ *ON
+     C           *IN37     ANDEQ*ON
+     C                     ELSE
+      *
+      ** Retrieve all account
+     C           S1ACCN    IFEQ *BLANKS
+     C                     MOVELS2RCRG    WACCNT
+     C           S2RCRG    IFEQ *BLANKS
+     C**********           Z-ADD*ZEROS    KCUST                                               CSD027
+     C                     MOVE *BLANKS   KCUST                                               CSD027
+     C                     Z-ADD*ZEROS    KACOD
+     C                     Z-ADD*ZEROS    KASEQ
+     C                     ENDIF
+     C           KACCNT    SETLLREACRDL1
+     C                     READ REACRDL1                 37
+     C                     ENDIF
+      *
+      ** Retrieve specif account (selection first screen)
+     C           S1ACCN    IFNE *BLANKS
+     C                     MOVELS1ACCN    WACCNT
+     C           WWFMT     IFEQ *BLANKS
+     C           KACCNT    SETLLREACRDL1
+     C           KACCNT    READEREACRDL1                 37
+     C                     ELSE
+     C           *IN27     IFEQ *OFF
+     C           KCUST     SETLLREACRDL1
+     C                     ENDIF
+     C           KCUST     READEREACRDL1                 37
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN37     IFEQ *ON
+     C                     MOVE *ON       *IN29            SFLDSPCTL
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+     C                     MOVE *ON       *IN28            SFLDSP
+     C                     MOVE *ON       *IN29            SFLDSPCTL
+      *
+     C           *IN37     DOWEQ*OFF
+     C           WWSFLC    ANDLT13
+      *
+     C                     MOVEL*BLANKS   S2SEL
+     C                     MOVE *OFF      *IN67
+      *
+      **  Customer must be Private customer
+     C                     MOVE CUST      @KEY10    P
+     C                     CALL 'AOCUSTR1'
+     C                     PARM *BLANKS   @@RTCD  7
+     C                     PARM '*KEY   ' @@OPTN  7
+     C                     PARM           @KEY10 10
+     C                     PARM           @KEY7   7
+     C           SDCUST    PARM SDCUST    DSLDY
+      *
+     C           @@RTCD    IFEQ *BLANKS
+     C           BBPRBA    ANDEQ'Y'
+     C           RECI      ANDEQ'D'
+     C                     MOVE BRCA      S2BRCA
+     C                     MOVE CUST      S2CUST
+     C                     MOVE ACCY      S2ACCY
+     C                     MOVE ACOD      S2ACOD
+     C                     MOVE ASEQ      S2ASEQ
+     C                     Z-ADDWWHRRN    S2RRN
+     C                     ADD  1         WWSFLC
+     C                     ADD  1         SFLRR2
+     C                     WRITEPB9502S1
+     C                     ENDIF
+      *
+      ** Read next account
+     C           S1ACCN    IFEQ *BLANKS
+     C                     READ REACRDL1                 37
+     C                     ENDIF
+      *
+     C           S1ACCN    IFNE *BLANKS
+     C           WWFMT     IFEQ *BLANKS
+     C           KACCNT    READEREACRDL1                 37
+     C                     ELSE
+     C           KCUST     READEREACRDL1                 37
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C           *IN37     IFEQ *OFF
+     C                     MOVE *ON       *IN47
+     C                     MOVE BRCA      KBRCA
+     C                     MOVE CUST      KCUST
+     C                     MOVE ACCY      KACCY
+     C                     MOVE ACOD      KACOD
+     C                     MOVE ASEQ      KASEQ
+     C                     MOVELWACCNT    S2RCRG
+     C                     ELSE
+     C                     MOVE *OFF      *IN47
+     C                     MOVE *ON       *IN31
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      *IN27
+     C                     MOVE *OFF      *INKV
+     C                     Z-ADDSFLRR2    WWLRRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #SELAL - SELECT ALL RECORDS                        *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #RVSRC - Process Review Screen.                    *
+      *                                                               *
+      *****************************************************************
+     C           #SELAL    BEGSR
+      *
+      **   Process to upate REPI flag from REACRD
+      *
+     C           WWFMT     IFEQ *BLANKS
+     C           *LOVAL    SETLLREACR
+     C                     READ REACR                    89
+     C                     ELSE
+     C                     MOVE SCUST     KCUST
+     C           KCUST     SETLLREACR
+     C           KCUST     READEREACR                    89
+     C                     ENDIF
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     MOVE CUST      @KEY10    P
+     C                     CALL 'AOCUSTR1'
+     C                     PARM *BLANKS   @@RTCD  7
+     C                     PARM '*KEY   ' @@OPTN  7
+     C                     PARM           @KEY10 10
+     C                     PARM           @KEY7   7
+     C           SDCUST    PARM SDCUST    DSLDY
+      *
+     C           BBPRBA    IFEQ 'Y'
+     C                     TESTN          REPI       88
+      **   If Replication Indicator is numeric
+     C           *IN88     IFEQ *ON
+     C                     MOVE REPI      WREPI   20
+     C                     ADD  1         WREPI
+     C                     ELSE
+     C                     Z-ADD1         WREPI
+     C                     ENDIF
+     C                     MOVE WREPI     REPI
+      *
+     C                     UPDATREACRF
+     C                     ENDIF
+      *
+     C           WWFMT     IFEQ *BLANKS
+     C                     READ REACR                    89
+     C                     ELSE
+     C           KCUST     READEREACR                    89
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INKC
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #PCPRV - PROCESS F12                               *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #RVSRC  - Process Review Screen.                   *
+      *            #UPSRC  - Process Update Screen.                   *
+      *                                                               *
+      *****************************************************************
+     C           #PCPRV    BEGSR
+      *
+      **   Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+      *
+      **   Clear screen error indicators
+      *
+     C                     MOVE *OFF      *IN58
+     C                     MOVE *OFF      *IN61
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN63
+     C                     MOVE *OFF      *IN64
+     C                     MOVE *OFF      *IN65
+     C                     MOVE *OFF      *IN66
+     C                     MOVE *OFF      *IN67
+     C                     MOVE *OFF      *IN68
+     C                     MOVE *OFF      *IN70
+      *
+      **   INITIALISE FIELDS
+      *
+     C                     MOVEL*BLANKS   S2RRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ZASNMS - SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE   *
+      *                                                               *
+      * CALLS      Y2SNMGC                                            *
+      *                                                               *
+      * CALLED BY  #VLINI - Validation of Initial Screen.             *
+      *            #RVENT - Process an Entry on Review Screen.        *
+      *                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR                           ** ZASNMS **
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *INZSR - INITIALISATION                            *
+      *                                                               *
+      * CALLS      *PSSR  - Program Error Handling Routine.           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C                     MOVEACPY@      @MKI   80
+      *
+      **  LDA DEFINITION.
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  Read in ZMUSER
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      **  Read in RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      **  Key to access to retail accruals account - REACRDL1
+     C           KACCNT    KLIST
+     C                     KFLD           KCUST
+     C                     KFLD           KACOD
+     C                     KFLD           KASEQ
+     C                     KFLD           KACCY
+     C                     KFLD           KBRCA
+      *
+      **  Key to access to retail accruals account - REACR (REACRDF)
+     C           KACCN     KLIST
+     C                     KFLD           KCUST
+     C                     KFLD           KACCY
+     C                     KFLD           KACOD
+     C                     KFLD           KASEQ
+     C                     KFLD           KBRCA
+      *
+      **  INITIALISE DB ERROR FIELDS ETC, AND STORE PROGRAM NAME FOR
+      **  DB ERROR FIELD.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVEL'PB9502'  DBPGM
+     C                     OUT  LDA
+      *
+     C                     Z-ADD*ZERO     WWDSTN  50
+     C                     Z-ADD*ZERO     LSTRR2  40
+     C                     Z-ADD*ZERO     SFLRR2  40
+     C                     Z-ADD*ZERO     WWSRRN  40
+     C                     Z-ADD*ZERO     WWSFLC  40
+     C                     Z-ADD*ZERO     WWLRRN  40
+      *
+     C                     MOVE *BLANKS   WWSFL   1
+     C                     MOVE *BLANKS   WWMSGD  7
+     C                     MOVE *BLANKS   WWSSEL  1
+     C                     MOVE *ON       *IN26
+     C                     MOVE 'Y'       WWVALD  1
+      *
+     C                     MOVE *BLANKS   ZAMSGF
+     C                     MOVEL'PBUSRMSG'ZAMSGF
+      *
+      **  Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @@RTCD  7
+     C                     PARM '*FIRST ' @@OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+      *
+      **   INITIALISE SCREEN MESSAGE QUEUE
+      *
+     C                     MOVEL'*'       ##PGMQ
+      *
+      **   INITIALISE HEADER SCREEN
+      *
+     C                     MOVELUSER      SUSER
+     C                     MOVELRUNA      SRUNA
+     C                     MOVELWSID      SWSID
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - PROGRAM ERROR HANDLING ROUTINE            *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  *INZSR - Initial Processing.                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+     C                     ROLBK
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *
+** CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,274 @@
+     C*****************************************************************
+     C*                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 153001             Date 26Apr99               *
+      *                 106661             Date 17Sep97               *
+     C*                 CRT001  *CREATE    DATE 28FEB95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     C*  153001 - A/c failed to close because minimum charge posted   *
+     C*           so balance was not zero. RECRG no longer used.      *
+     C*  106661 - Incorporate 085928 (use A/C level charge where      *
+     C*           applicable).                                        *
+     C*  CRT001 - Retail Teller System                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*            RTCLSC - Calculate close details                   *
+     C*                                                               *
+     C* CALLS      DBERR  - Database error handling                   *
+     C*            RTCHRG - Calculate charges                         *
+     C*            RTINTR - Calculate interest                        *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED Input                                               *
+     C*           @ACNO   - Retail account number                     *
+     C*           @CLBL   - Cleared balance                           *
+     C*           @CHRG   - Cleared balance                           *
+     C*                                                               *
+     C* FLDS USED Output                                              *
+     C*           @CHRG   - Service charge                            *
+     C*           @INTR   - Interest rate                             *
+     C*           @CLOB   - Close balance                             *
+     C*                                                               *
+     C*****************************************************************
+     C           RTCLSC    BEGSR                           ** RTCLSC **
+     C*
+     C** Define parameters
+     C*
+     C                     Z-ADD@ACNO     @ACNO  100
+     C                     Z-ADD@CLBL     @CLBL  150
+     C                     Z-ADD@CHRG     @CHRG  150
+     C                     Z-ADD@INTR     @INTR  150
+     C                     Z-ADD@CLOB     @CLOB  150
+      *
+     C                     Z-ADD@INTT     @INTT  150
+     C                     Z-ADD@WTAX     @WTAX  150
+     C                     Z-ADD@BTAX     @BTAX  150
+     C                     Z-ADD@MINT     @MINT  150
+     C**********           Z-ADD@ACOD     @ACOD   40                                          CGL029
+     C                     Z-ADD@ACOD     @ACOD  100                                          CGL029
+     C                     Z-ADDRHISD     RHISD   50
+     C                     Z-ADDRHISB     RHISB  150
+     C*
+     C* Retrieve retail interest and charges
+     C*
+     C           KLACNT    CHAINREIAC                80
+     C*
+     C** If record not found?
+     C*
+     C           *IN80     IFEQ '1'
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL@ACCN     DBKEY
+     C                     MOVEL'REIAC'   DBFILE
+     C*
+     C                     ELSE
+     C*
+     C* Retrieve retail interest accrual ITD
+     C*
+     C           KLACNT    CHAINREACR                80
+     C*
+     C** If record not found?
+     C*
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL@ACNO     DBKEY
+     C                     MOVEL'REACR'   DBFILE
+     C                     END
+     C                     END
+     C*
+     C** If no database errors
+     C*
+     C           *IN80     IFEQ '0'
+     C*
+     C** Calculate charges
+     C*
+     C                     Z-ADDCHGT      @CHGT
+     C                     Z-ADDCHST      @CHST
+     C                     MOVEL@CCY      @CHCY
+     C                     MOVELCHAC      @CHAC
+     C                     Z-ADDRCA       @RCA
+     C                     Z-ADDNRCA      @NRCA
+     C                     Z-ADDLCD       RHISD
+     C                     Z-ADDHISB      RHISB
+     C*
+     C** Fixed A/C commission
+     C*
+     C           KFXA      KLIST
+     C                     KFLD           @BRCDX
+     C                     KFLD           @CNUM
+     C                     KFLD           @CCY
+     C                     KFLD           @ACOD
+     C                     KFLD           @ACSQ
+     C*
+     C** Get fixed account charge
+     C*
+     C                     MOVE @BRCA     @BRCDX  3
+     C           KFXA      CHAINREFXAJL0             88
+      *                                                                   106661
+      ** If a record is found, Account Level charge overrides Currency    106661
+      ** default.                                                         106661
+     C           *IN88     IFEQ '0'                                       106661
+     C           ATCHAM    IFEQ 0                                         106661
+     C                     Z-ADDRYACCH    @FXACM
+     C                     ELSE                                           106661
+     C                     Z-ADDATCHAM    @FXACM                          106661
+     C                     END                                            106661
+     C                     END                                            106661
+     C*
+     C**********           EXSR RTCHRG                                    106661
+     C*
+     C*  Calculate commissions - added to @CHRG
+     C*
+     C                     EXSR RTCOMM
+      *                                                                   106661
+      ** Fixed Account Charge processing is dependent on Access to        106661
+      ** TABTREXC which occurs in SR RTCOMM.                              106661
+     C                     EXSR RTCHRG                                    106661
+     C*
+     C***If*record*not*found?                                             153001
+     C*
+     C********** *IN80     IFEQ '0'                                       153001
+     C*
+     C** Calculate interest
+     C*
+     C**********           MOVELDACP      @DACP  15                                           CGL029
+     C**********           MOVELCACP      @CACP  15                                           CGL029
+     C                     MOVELDACP      @DACP  21                                           CGL029
+     C                     MOVELCACP      @CACP  21                                           CGL029
+     C                     Z-ADDMADI      @MADI  130
+     C                     Z-ADDMACI      @MACI  130
+     C                     Z-ADDGADI      @GADI  130
+     C                     Z-ADDGACI      @GACI  130
+     C                     Z-ADDDAIC1     @DAIC1 130
+     C                     Z-ADDCAIC1     @CAIC1 130
+     C*
+     C                     EXSR RTINTR
+     C*
+     C** Add net-interest & service charge to close balance
+     C*
+     C           @INTR     ADD  @CHRG     @CLOB
+     C*
+     C** If the customer is liable calculate tax
+     C*
+     C           BBTAIN    IFEQ 'Y'
+     C*
+     C** Include withholding tax in closing balance
+     C*
+     C** If SDSTAXPD/TXWNDI is 'Y', compute tax from net interest (sum
+     C** of DR and CR interests).  Else, compute tax from gross
+     C** interest (CR interest only).
+     C*
+     C           TXWNDI    IFEQ 'Y'
+     C                     Z-ADD@INTR     @INTT
+     C                     ELSE
+     C                     Z-SUB@CRINT    @INTT
+     C                     END
+     C*
+     C** If the resulting interest is zero or debit, no need to compute
+     C** for the w/holding tax.  It is automatically equal to zero.
+     C*
+     C           @INTT     IFGE *ZERO
+     C                     Z-ADD*ZERO     @WTAX
+     C                     ELSE
+     C*
+     C** Calculate tax in a/c currency
+     C*
+     C           @INTT     MULT TXWTRR    @WTAX
+     C           @WTAX     DIV  100       @WTAX     H
+     C*
+     C** Calculate tax in base currency (@BTAX)
+     C*
+     C           @CCY      IFNE BJCYCD
+     C                     EXSR RTCCYS
+     C                     MOVE @CCY      ZCCYF
+     C                     Z-ADDTRT,@I    ZRATEF
+     C                     MOVE TDP,@I    ZCDPF
+     C                     MOVE TMD,@I    ZMDINF
+     C*
+     C                     MOVE BJCYCD    @CCY
+     C                     EXSR RTCCYS
+     C                     MOVE @CCY      ZCCYT
+     C                     Z-ADDTRT,@I    ZRATET
+     C                     MOVE TDP,@I    ZCDPT
+     C                     MOVE TMD,@I    ZMDINT
+     C*
+     C                     Z-ADD@WTAX     ZAMTF
+     C*
+     C                     MOVE ZCCYF     @CCY
+     C*
+     C                     EXSR RTCCYX
+     C                     Z-ADDZAMTT     @BTAX
+     C*
+     C                     ELSE
+     C                     Z-ADD@WTAX     @BTAX
+     C                     END
+     C*
+     C** Access account code details
+     C*
+     C**********           MOVE @ACOD     @ACODA  4
+     C                     MOVE @ACOD     @ACODA 10
+     C*
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @ACODA
+     C           SDACOD    PARM SDACOD    DSFDY
+     C*
+     C** Error in SDACODX0
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDACODPD'DBFILE           ***************
+     C                     MOVEL@ACODA    DBKEY            ** DBERR 021 **
+     C                     Z-ADD21        DBASE            ***************
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           A5MISU    MULT TXWTRR    @MINT
+     C           @MINT     DIV  100       @MINT     H
+     C*
+     C** Check if the computed w/holding tax in base ccy is
+     C** below minimum.
+     C                     Z-SUB@BTAX     @BTAX
+     C           @BTAX     IFLT @MINT
+     C                     Z-ADD*ZERO     @WTAX
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Subtract Withholding Tax from Close Balance
+     C*
+     C                     Z-SUB@WTAX     @WTAX
+     C                     ADD  @WTAX     @CLOB
+     C*
+     C                     ENDIF
+     C*
+     C** Add cleared balance to close balance
+     C*
+     C                     ADD  @CLBL     @CLOB
+     C*
+     C**********           ELSE                                           153001
+     C*
+     C********** *LOCK     IN   LDA                                       153001
+     C**********           MOVE 'RECRG'   DBFILE                       ***153001
+     C**********           MOVEL@KEY      DBKEY                           153001
+     C*
+     C**********           END                                            153001
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************

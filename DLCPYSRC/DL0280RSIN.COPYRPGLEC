@@ -1,0 +1,423 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member of DL0280RSIN                           *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CIR014             Date 11May06               *
+      *  Prev Amend No. CPK021  *CREATE    Date 04Jul05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CIR014 - Mark to Market Cross-Currency Interest Rate Swaps.  *
+      *  CPK021 - Move coding for SR/WRIINT and SR/SRRSIN             *
+      *           into copy member for DL0280 to make room            *
+      *           for other changes.                                  *
+      *                                                               *
+      *****************************************************************                       CAS005
+      *                                                               *                       CAS005
+      *  SRRSIN - To calculate interest amounts for IRS using         *                       CAS005
+      *           Net-Treasury-Rate                                   *                       CAS005
+      *                                                               *                       CAS005
+      *****************************************************************                       CAS005
+     C     SRRSIN        BEGSR
+      *                                                                                       CAS005
+      ** If deal type = RS, RX or (RR/RP/RF + ave. rate method = N) calc                      CAS005
+      ** interest from and including interest accrual control date                            CAS005
+      ** to but excluding end date                                                            CAS005
+      *                                                                                       CAS005
+     C                   Z-ADD     0             TZTAXC
+     C                   Z-ADD     0             TZINOT
+     C                   Z-ADD     0             TZINTD
+     C                   Z-ADD     0             TZAITD
+     C                   Z-ADD     0             TZAITP
+     C                   MOVEL     *BLANKS       WCYP1
+      *                                                                                       CAS005
+      ** If CIR005 is on, use Next Interest Payment Base Date as                              CAS005
+      ** the End Date.                                                                        CAS005
+      *                                                                                       CAS005
+     C     CIR005        IFEQ      'Y'
+     C     TZIPFC        IFNE      'Z'
+      *                                                                                       CAS005
+      ** If 'Their' details                                                                   CAS005
+      *                                                                                       CAS005
+     C     DTYP          IFNE      'RP'
+     C     DTYP          ANDNE     'RR'
+     C     DTYP          ANDNE     'RF'
+     C     DTYP          OREQ      'RP'
+     C     USRST         ANDEQ     'T'
+     C     DTYP          OREQ      'RR'
+     C     USRST         ANDEQ     'T'
+     C     DTYP          OREQ      'RF'
+     C     USRST         ANDEQ     'T'
+      *                                                                                       CAS005
+     C     AKY(9)        IFEQ      'R'
+     C     TNIPD         ANDNE     *ZEROS
+      *                                                                                       CAS005
+     C     DTYP          IFEQ      'RX'
+     C     L2AMCN        ANDEQ     'A'
+     C     DTYP          ORNE      'RX'
+     C     L1AMCN        ANDEQ     'A'
+     C                   Z-ADD     TIPBD         TZEDAT
+     C                   ENDIF
+      *                                                                                       CAS005
+     C                   ENDIF
+     C                   ELSE
+      *                                                                                       CAS005
+     C     AKY(9)        IFEQ      'R'
+     C     UNIPD         ANDNE     *ZEROS
+     C     L1AMCN        ANDEQ     'A'
+     C                   Z-ADD     UIPBD         TZEDAT
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CAS005
+      ** If 'Our' details                                                                     CAS005
+      *                                                                                       CAS005
+     C     DTYP          IFNE      'RP'
+     C     DTYP          ANDNE     'RR'
+     C     DTYP          ANDNE     'RF'
+     C     DTYP          OREQ      'RP'
+     C     USRST         ANDEQ     'P'
+     C     DTYP          OREQ      'RR'
+     C     USRST         ANDEQ     'P'
+     C     DTYP          OREQ      'RF'
+     C     USRST         ANDEQ     'P'
+      *                                                                                       CAS005
+     C     AKY(9)        IFEQ      'P'
+     C     UNIPD         ANDNE     *ZEROS
+      *                                                                                       CAS005
+     C     L1AMCN        IFEQ      'A'
+     C                   Z-ADD     UIPBD         TZEDAT
+     C                   ENDIF
+      *                                                                                       CAS005
+     C                   ENDIF
+     C                   ELSE
+      *                                                                                       CAS005
+     C     AKY(9)        IFEQ      'P'
+     C     TNIPD         ANDNE     *ZEROS
+     C     L1AMCN        ANDEQ     'A'
+     C                   Z-ADD     TIPBD         TZEDAT
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CAS005
+     C     AKY(9)        IFEQ      'R'
+     C     DTYP          ANDEQ     'RX'
+     C                   MOVEL     L2PDCN        WPDCN
+     C                   MOVEL     CCYPY2        WCCYPY
+     C                   ELSE
+     C                   MOVEL     L1PDCN        WPDCN
+     C                   MOVEL     CCYPY1        WCCYPY
+     C                   ENDIF
+      *                                                                                       CAS005
+     C                   ENDIF
+      *                                                                                       CAS005
+     C                   Z-ADD     TZEDAT        ZIEND
+     C                   Z-ADD     TZPPL         ZIAMT
+     C                   Z-ADD     TZCBS         ZICALC
+      *                                                                                       CAS005
+     C     DTYP          IFNE      'RR'
+     C     DTYP          ANDNE     'RP'
+     C     DTYP          ANDNE     'RF'
+     C     TZAVRM        ORNE      'Y'
+      *                                                                                       CAS005
+     C                   Z-ADD     TZIACD        ZIBEG
+     C                   Z-ADD     TZIACD        SLIDD
+      *                                                                                       CAS005
+      ** If interest payment frequency is not 'C', calculate accrual                          CAS005
+      ** as at present.                                                                       CAS005
+      *                                                                                       CAS005
+     C     CIR001        IFEQ      'Y'
+     C     TZIPFC        ANDNE     'C'
+     C     CIR001        ORNE      'Y'
+      *                                                                                       CAS005
+     C                   EXSR      GLINTC
+      *                                                                                       CAS005
+      ** To replace a line removed from the internally described GLINTC                       CAS005
+      *                                                                                       CAS005
+     C     *IN02         IFEQ      *ON
+     C     ZIRDFC        ANDEQ     'Y'
+     C     *IN03         OREQ      *ON
+     C     JRDFC         ANDEQ     'Y'
+     C     *IN04         OREQ      *ON
+     C     JRDFC         ANDEQ     'Y'
+     C                   Z-ADD     ZINTR         WINTST
+     C                   ELSE
+     C                   Z-ADD(H)  ZINTR         WINTST
+     C                   ENDIF
+     C                   ELSE
+      *                                                                                       CAS005
+      ** If freq. is 'C' determine payment due on next date from cash flow                    CAS005
+      ** schedule                                                                             CAS005
+      *                                                                                       CAS005
+     C     SZDIR         IFEQ      'P'
+     C                   MOVEL     'U'           OTIN
+     C                   ELSE
+     C                   MOVEL     'T'           OTIN
+     C                   ENDIF
+     C                   EXSR      #LDNCF
+     C                   Z-ADD     CFLA          WINTST
+     C                   ENDIF
+      *                                                                                       CAS005
+     C                   ENDIF
+      *                                                                                       CAS005
+      ** If DTYP = RR/RP/RF and average rate method = Y, calc interest                        CAS005
+      ** from and including start date current averaging period to                            CAS005
+      ** but excluding end date                                                               CAS005
+      *                                                                                       CAS005
+     C     DTYP          IFEQ      'RR'
+     C     TZAVRM        ANDEQ     'Y'
+     C     DTYP          OREQ      'RP'
+     C     TZAVRM        ANDEQ     'Y'
+     C     DTYP          OREQ      'RF'
+     C     TZAVRM        ANDEQ     'Y'
+     C                   Z-ADD     SZSDCR        ZIBEG
+     C                   Z-ADD     SZSDCR        SLIDD
+      *                                                                                       CAS005
+     C                   EXSR      GLINTC
+      *                                                                                       CAS005
+      ** To replace a line removed from the internally described GLINTC                       CAS005
+      *                                                                                       CAS005
+     C     *IN02         IFEQ      *ON
+     C     ZIRDFC        ANDEQ     'Y'
+     C     *IN03         OREQ      *ON
+     C     JRDFC         ANDEQ     'Y'
+     C     *IN04         OREQ      *ON
+     C     JRDFC         ANDEQ     'Y'
+     C                   Z-ADD     ZINTR         WINTST
+     C                   ELSE
+     C                   Z-ADD(H)  ZINTR         WINTST
+     C                   ENDIF
+      *                                                                                       CAS005
+     C                   ENDIF
+      *                                                                                       CAS005
+      ** Add interest accrued to control date, accrued interest adj.                          CAS005
+      ** not posted and accrued interest adj. posted to interest calc                         CAS005
+      ** to give accrued interest to date                                                     CAS005
+      *                                                                                       CAS005
+     C     TZAICD        ADD       TZIANP        TZAITD
+     C     TZAITD        ADD       TZAIAP        TZAITD
+     C     TZAITD        ADD       WINTST        TZAITD
+     C                   IF        CIR014 = 'Y' AND DTYP = 'RX'                               CIR014
+     C                   ADD       F1PCHA        TZAITD                                       CIR014
+     C                   ENDIF                                                                CIR014
+      *                                                                                       CAS005
+      ** Subtract the accrued interest posted to date from accrued                            CAS005
+      ** interest to date to give accrued interest to post                                    CAS005
+      *                                                                                       CAS005
+     C     TZAITD        SUB       TZIPTD        TZAITP
+      *                                                                                       CAS005
+      ** Subtract interest paid/received to date from accrued interest                        CAS005
+      ** to date to give interest due                                                         CAS005
+      *                                                                                       CAS005
+     C     TZAITD        SUB       TZIPRD        TZINTD           13 0
+     C                   IF        CIR014 = 'Y' AND DTYP = 'RX'                               CIR014
+     C     TZAITD        SUB       F1PCHA        TZINTE           13 0                        CIR014
+     C                   ENDIF                                                                CIR014
+      *                                                                                       CAS005
+      ** If deal is tax payable calculate the tax on the interest due                         CAS005
+      ** using the tax rate                                                                   CAS005
+      *                                                                                       CAS005
+     C     TAXI          IFEQ      'Y'
+     C     SZDIR         ANDEQ     'P'
+     C                   IF        CIR014 = 'Y' AND DTYP = 'RX'                               CIR014
+     C     TZINTE        DIV       100           WK152                                        CIR014
+     C                   ELSE                                                                 CIR014
+     C     TZINTD        DIV       100           WK152
+     C                   ENDIF                                                                CIR014
+     C     WK152         MULT(H)   TZITR         TZTAXC           13 0
+     C                   END
+      *                                                                                       CAS005
+      ** Subtract tax calc from interest due to give int net of tax                           CAS005
+      *                                                                                       CAS005
+     C                   IF        CIR014 = 'Y' AND DTYP = 'RX'                               CIR014
+     C     TZINTE        SUB       TZTAXC        TZINOT                                       CIR014
+     C                   ELSE                                                                 CIR014
+     C     TZINTD        SUB       TZTAXC        TZINOT           13 0
+     C                   ENDIF                                                                CIR014
+      *                                                                                       CAS005
+      ** If either side of this deal is an OIS, we set a field to show                        CAS005
+      ** whether advance-dating is required or not. This field is tested                      CAS005
+      ** at various points as the interest and tax keys are created.                          CAS005
+      *                                                                                       CAS005
+     C     CIR007        IFEQ      'Y'
+      *                                                                                       CAS005
+     C                   MOVE      'N'           WADATE
+     C     UICFR         IFEQ      'O'
+     C     TICFR         OREQ      'O'
+      *                                                                                       CAS005
+      ** If CEU003 is installed and payment currency is                                       CAS005
+      ** not blank, use this currency to access the Currencies file                           CAS005
+      ** instead of UCUCY                                                                     CAS005
+      *                                                                                       CAS005
+     C     CEU003        IFEQ      'Y'
+     C     PSCY          ANDNE     *BLANKS
+     C                   MOVE      PSCY          PCURCY
+     C                   ELSE
+     C                   MOVE      UCUCY         PCURCY
+     C                   ENDIF
+      *                                                                                       CAS005
+     C                   CALL      'AOCURRR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*KEY   '     POPTN
+     C                   PARM                    PCURCY
+     C     SDCURR        PARM      SDCURR        DSSDY
+      *                                                                                       CAS005
+     C     PRTCD         IFNE      *BLANK
+     C                   MOVEL     'SDCURRPD'    DBFILE
+     C                   MOVE      '044'         DBASE
+     C                   MOVEL     PCURCY        DBKEY
+     C                   MOVE      *ON           *INU7
+     C                   MOVE      *ON           *INU8
+     C                   MOVE      *ON           *INLR
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *                                                                                       CAS005
+     C                   Z-ADD     A6SETD        WSETD
+     C     WFXDY         IFNE      0
+     C                   Z-ADD     TZEDAT        ZDAYNO
+     C                   Z-ADD     WFXDY         ZNRDYS
+     C                   MOVE      PCURCY        ZCCY
+     C                   EXSR      ZFWDT
+     C                   MOVE      ZDYNBR        KYDAT
+     C     A6SETD        SUB       WFXDY         WSETD
+     C                   ENDIF
+      *                                                                                       CAS005
+     C     WSETD         IFGT      0
+     C                   MOVE      'Y'           WADATE
+      *                                                                                       CAS005
+      ** We also need to establish the advance to date at this point.                         CAS005
+      *                                                                                       CAS005
+     C                   Z-ADD     TZEDAT        ZDAYNO
+     C                   Z-ADD     A6SETD        ZNRDYS
+     C                   MOVE      PCURCY        ZCCY
+     C                   EXSR      ZFWDT
+     C                   MOVE      ZDYNBR        WODAT
+      *                                                                                       CAS005
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CAS005
+      ** If our side of the deal and our side of the deal is an OIS or                        CAS005
+      ** their side of the deal and their side of the deal is an OIS                          CAS005
+      ** call DL1651.                                                                         CAS005
+      *                                                                                       CAS005
+     C     SZDIR         IFEQ      'P'
+     C     UICFR         ANDEQ     'O'
+     C     SZDIR         ORNE      'P'
+     C     TICFR         ANDEQ     'O'
+      *                                                                                       CAS005
+     C     SZDIR         IFEQ      'P'
+     C                   MOVE      'O'           PSIDE
+     C                   MOVE      USLIP         PFRDT
+     C                   ELSE
+     C                   MOVE      'T'           PSIDE
+     C                   MOVE      TSLIP         PFRDT
+     C                   ENDIF
+      *                                                                                       CAS005
+      ** If Shadow posting run, we will not know the final base rate                          CAS005
+      ** and so cannot call DL1665 to calculate the exact amount of                           CAS005
+      ** interest due. Instead we call DL1651 to get the approximate                          CAS005
+      ** amount.                                                                              CAS005
+      *                                                                                       CAS005
+     C     *INU1         IFEQ      *OFF
+      *                                                                                       CAS005
+     C     TZEDAT        SUB       1             PTODT
+      *                                                                                       CAS005
+     C                   CALL      'DL1651'
+     C                   PARM      DLNO          PDLNO
+     C                   PARM                    PSIDE
+     C                   PARM                    PFRDT
+     C                   PARM                    PTODT
+     C     PAMNT         PARM      *ZERO         PAMNT
+     C                   PARM      *BLANK        PRTRN
+     C                   PARM      *BLANK        PTOAC
+      *                                                                                       CAS005
+      ** We can find the exact amount of interest due. Call DL1665.                           CAS005
+      *                                                                                       CAS005
+     C                   ELSE
+      *                                                                                       CAS005
+     C                   CALL      'DL1665'
+     C                   PARM      DLNO          PDLNO
+     C                   PARM                    PSIDE
+     C                   PARM                    PFRDT
+     C                   PARM      TZEDAT        PTODT
+     C     PAMNT         PARM      *ZERO         PAMNT
+     C                   PARM      *BLANK        PRTRN
+      *                                                                                       CAS005
+     C                   ENDIF
+      *                                                                                       CAS005
+      ** Add Accrued Interest Adjusted not Posted, and Accrued Interest                       CAS005
+      ** Adjusted and Posted to the Amount returned from DL1651.                              CAS005
+      ** TZINTD is the correct amount for the Interest Key.                                   CAS005
+      *                                                                                       CAS005
+     C     PAMNT         ADD       TZIANP        TZAITD
+     C     TZAITD        ADD       TZAIAP        TZAITD
+     C                   Z-ADD     TZAITD        TZINTD
+      *                                                                                       CAS005
+      ** To the interest due for this period, we add the interest paid                        CAS005
+      ** received to date, to arrive at the total interest so far.                            CAS005
+      ** We then subtract the interest posted to date to arrive at a                          CAS005
+      ** correcting accrual amount. (TZAITP).                                                 CAS005
+      *                                                                                       CAS005
+     C     TZINTD        ADD       TZIPRD        TZAITP
+     C     TZAITP        SUB       TZIPTD        TZAITP
+      *                                                                                       CAS005
+      ** If the taxable Indicator is 'Y' and we are processing our                            CAS005
+      ** side of the deal divide Interest due by 100.                                         CAS005
+      *                                                                                       CAS005
+     C     TAXI          IFEQ      'Y'
+     C     SZDIR         ANDEQ     'P'
+     C     TZINTD        DIV       100           WK152
+      *                                                                                       CAS005
+      ** Multiply WK152 by TZITR, making program variable TZTAXC the                          CAS005
+      ** result.                                                                              CAS005
+      *                                                                                       CAS005
+     C     WK152         MULT(H)   TZITR         TZTAXC
+     C                   ENDIF
+      *                                                                                       CAS005
+      ** Subtract the Tax Amount from the Interest Due making program                         CAS005
+      ** variable TZINOT the result.                                                          CAS005
+      *                                                                                       CAS005
+     C     TZINTD        SUB       TZTAXC        TZINOT
+      *                                                                                       CAS005
+     C                   ENDIF
+      *                                                                                       CAS005
+     C                   ENDIF
+      *                                                                                       CAS005
+      ** Add tax deducted to the tax paid to date and tax paid this                           CAS005
+      ** month                                                                                CAS005
+      *                                                                                       CAS005
+     C     TZTAXC        ADD       TZTPTD        TZTPTD
+     C     TZTAXC        ADD       TZTPTM        TZTPTM
+      *                                                                                       CAS005
+      ** Add accrued interest adjustments not posted to accrued                               CAS005
+      ** interest adjustments posted                                                          CAS005
+      *                                                                                       CAS005
+     C     TZIANP        ADD       TZAIAP        TZAIAP
+      *                                                                                       CAS005
+      ** Add interest due to interest paid/received to date and                               CAS005
+      ** interest paid/received this month                                                    CAS005
+      *                                                                                       CAS005
+     C     TZINTD        ADD       TZIPRD        TZIPRD
+     C     TZINTD        ADD       TZIPRM        TZIPRM
+      *                                                                                       CAS005
+      ** Add interest calculated to interest accrued to control date                          CAS005
+      *                                                                                       CAS005
+     C     WINTST        ADD       TZAICD        TZAICD
+      *                                                                                       CAS005
+      ** Add accrued interest to post to accrued interest posted                              CAS005
+      ** to date                                                                              CAS005
+      *                                                                                       CAS005
+     C     TZAITP        ADD       TZIPTD        TZIPTD
+      *                                                                                       CAS005
+      ** Zeroise accrued interest adjustments not passed                                      CAS005
+      *                                                                                       CAS005
+     C                   Z-ADD     0             TZIANP
+     C                   Z-ADD     0             TZLICD
+      *                                                                                       CAS005
+     C                   ENDSR
+      *****************************************************************
+      * End of /COPY DL0280RSIN                                       *
+      *****************************************************************

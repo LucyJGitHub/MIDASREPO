@@ -1,0 +1,1184 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Daily Schedule of Transactn Rpt')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE0615  - DAILY SCHEDULE OF TRANSACTIONS REPORT              *
+     F*                                                               *
+     F*  Function: To report Trades and Book Transfers maintained     *
+     F*   (COB)    today.                                             *
+     F*                                                               *
+     F*  Called by: SEC0612B - Daily Schedule of Transactions         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. 260909             Date 04Apr19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 154670             Date 26May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG7985            Date 07Jul05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 208241             Date 17Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 127566             Date 09May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 23Nov98               *
+      *                 S01408             Date 17Jan95               *
+      *                 074555             Date 10Aug94               *
+     F*                 S01408             DATE 18MAY94               *
+     F*                 055420             DATE 25NOV93               *
+     F*                 052254             DATE 25NOV93               *
+     F*                 051109             DATE 25NOV93               *
+     F*                 S01408             DATE 27MAY93               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E35515             DATE 11FEB92               *
+     F*                 E33518             DATE 23DEC90               *
+     F*                 E33520             DATE 20DEC90               *
+     F*                 E33521             DATE 19DEC90               *
+     F*                 S01220             DATE 12NOV90               *
+     F*                 S01117             DATE 01NOV90               *
+     F*                 E20881             DATE 23JAN90               *
+     F*                 E20086             DATE 07NOV89               *
+     F*                 E18206             DATE 28JUL89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  260909 - Security Trade calculates wrong consideration on MBS*
+      *         - Applied for MD-51447                                *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  154670 - Report not being distributed by RCF.                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG7985- Several components failed due to accessing TABLETR  *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  127566 - Recompiled over changed ZSDESCZ3                    *
+      *  CAC005 - Profit Centre Accounting - SE Enhancement           *
+     F*  S01408 - Core hook SE0615CCP1 added                          *
+     F*  074555 - Security shortname is printed with the report       *
+     F*           name, rate and maturity.                            *
+     F*  S01408 - Core hook SE0615CLH0 added                          *
+     F*           Core hook SE0615CLH1 added                          *
+     F*           Core hook SE0615CLH2 added                          *
+     F*           Core hook SE0615CLH3 added                          *
+     F*           Core hook SE0615CLH4 added                          *
+     F*           Core hook SE0615CCPG added                          *
+     F*  055420 - CONSIDERATION MUST BE HALF-ADJUSTED.                *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  051109 - Report changed to remove *AMD*, etc. from left hand *
+     F*           side and put fuller details on the literal on the   *
+     F*           third line, (eg. if Trade Input and Changed today). *
+     F*  S01408 - Core hook SE0615CPDR added                         *
+     F*         - Core hook SE0615FPG  added                         *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E35515 - Recompiled over changed Printer File.               *
+     F*  E33518 - Recompiled over changed Printer File.               *
+     F*  E33520 - Recompiled over changed Printer File.               *
+     F*  E33521 - Recompiled over changed Printer File.               *
+     F*  S01220 - STRATEGIC RISK MANAGEMENT                           *   S01220
+     F*           Recompiled over changed PF/SECTYD                   *   S01220
+     F*  S01117 - Multibranching                                      *   S01117
+     F*  E20881 - Recompiled over changed Printer File.               *   E20881
+     F*  E20086 - Mortgage-Backs and Current Factor Processing Rewrite*   E20086
+     F*          - Report shows amended Trades as new Trades and shows*   E20086
+     F*            Changed Trades as *AMD*. Altered to show Amended   *   E20086
+     F*            Trades (entered before today) as *AMD* and Changed *   E20086
+     F*            Trades as *CHG*. (Print File changed accordingly). *   E20086
+     F*            (Also PF/DSTREXD has TOED fld added to it).        *   E20086
+     F*          - Consideration is now held on PF/TRADSD (and thus   *   E20086
+     F*            also on the Extract File, PF/DSTEXD), exclusive of *   E20086
+     F*            the Current Factor, so it needs to be included.    *   E20086
+     F*  E18206 - Deleted Trades should not be included in the Total. *   E18206
+     F*                                                               *
+     F*****************************************************************
+      *
+     F/COPY WNCPYSRC,SE0615F001
+     FDSTEX   IF  E           K        DISK
+     F/COPY WNCPYSRC,SE0615F002
+     FSECTY   IF  E           K        DISK
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F*********** TABTB10F                          KIGNORE
+     F            TABTB10F                          KIGNORE               S01117
+     F            TABTB11F                          KIGNORE
+     F*********** TABTB36F                          KIGNORE               074555
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F*********** TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F*********** TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FBOOKD   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FDSTEXA  IF  E                    DISK
+     FSE0615AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         S01117
+     FSE0615P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL          S01117
+     F*                                                                   S01408
+     F** Core hook for externalisation.                                   S01408
+     F/COPY WNCPYSRC,SE0615FPG                                            S01408
+     F*                                                                   S01408
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    10  -  ERROR ON CHAIN                                      *
+     F*    25  -  NOMINAL CURRENCY DEC. PLACES 0                      *
+     F*    26  -  NOMINAL CURRENCY DEC. PLACES 1                      *
+     F*    27  -  NOMINAL CURRENCY DEC. PLACES 2                      *
+     F*    28  -  NOMINAL CURRENCY DEC. PLACES 3                      *
+     F*    35  -  MULTI-BRANCHING INDICATOR                               S01117
+      *  36 - Print Profit Centre                                     *   CAC005
+     F*****39**-**CHANGE*TYPE*IS*A*********************************E20086 051109
+     F*****40**-**CHANGE*TYPE*IS*C*************************************   051109
+     F*****41**-**CHANGE*TYPE*IS*D*************************************   051109
+     F*    39  -  Trade Amended Today, Input before Today             *   051109
+     F*    40  -  Trade Changed Today, Input before Today             *   051109
+     F*    41  -  Trade Cancelled Today                               *   051109
+     F*    42  -  INCOMPLETE INDICATOR IS NOT C                       *
+     F*    43  -  Trade Input and Amended Today                       *   051109
+     F*    44  -  Trade Input and Changed Today                       *   051109
+     F*    50  -  CLEARANCE TYPE IS 0                                 *
+     F*    51  -  CLEARANCE TYPE IS 1                                 *
+     F*    52  -  CLEARANCE TYPE IS 2                                 *
+     F*    53  -  CLEARANCE TYPE IS 3                                 *
+     F*    54  -  CLEARANCE TYPE IS 4                                 *
+     F*    55  -  CLEARANCE TYPE IS 5                                 *
+     F*    57  -  SHOW FILE CONTROL DIFFERENCE ON REPORT              *
+     F*    80  -  END OF FILE ON DSTEX                                *
+     F*    81  -  ON AFTER OUTPUT TO P1 FILE                          *
+     F*    82  -  ON IF DIFFERENT KEY FOR TOTAL PRINT                 *
+     F*    83  -  ON IF DIFFERENT KEY FOR PAGE THROW                  *
+     F*                                                               *
+     F*    90-98 - USED IN Z SUBROUTINES                              *
+     F*                                                               *
+     F*    U7  -  DATABASE ERROR                                      *
+     F*    U8  -  DATABASE ERROR                                      *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - FIRST TIME PROCESSING                               *
+     F*  AUDIT  - AUDIT TIME PROCESSING                               *
+     F*  DBERR  - HANDLE DATABASE ERRORS                                  S01117
+     F*  RCFAU  - RCF PROCESSING ROR AUDIT PRINT FILE                     S01117
+     F*  RCFP1  - RCF PROCESSING FOR DETAIL  PRINT FILE                   S01117
+     F*  *PSSR  - ERROR HANDLING                                          S01117
+     F*                                                               *
+     F*  ZDATE2 - DATE CONVERSION                                     *
+     F*  ZSEDIT - AMOUNT EDIT                                         *
+     F***ZSYSTM*-*ACCESS*ICD*RECORD*********************************** ***S01117
+     F*  ZSDESC - SECURITY DESCRIPTION SUBROUTINE                         074555
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZSDESCZ1                                               074555
+      /EJECT
+     ICPYR@#      DS
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/COPY ZSRSRC,ZSEDITZ2
+     I/COPY ZSRSRC,ZSDESCZ2                                               074555
+     I*LDA********UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     IRUNDT       DS                                                      S01117
+     I*                                                                   S01117
+     I**      DATA AREA RUNDAT                                            S01117
+     I*                                                                   S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I*                                                                   S01117
+     I**    EXTERNAL DATA STRUCTURE FOR BANK DETAILS                      S01117
+     I*                                                                   S01117
+     I              BJURPT                          TITL                  S01117
+     ISDPRFC    E DSSDPRFCPD                                              CAC005
+      *                                                                   CAC005
+      ** External data structure for Profit Centre Details                CAC005
+     IDSFDY     E DSDSFDY                                                 S01117
+     I*                                                                   S01117
+     I**    FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE            S01117
+     ISDBRCH    E DSSDBRCHPD                                                                 BUG7985
+     I              A8BRNM                          BRNM                                     BUG7985
+      ** Midas SD Branch Codes                                                               BUG7985
+      *                                                                                      BUG7985
+     IDSSDY     E DSDSSDY                                                                    BUG7985
+      ** Second Data structure for access programs                                           BUG7985
+      *                                                                                      BUG7985
+     I*                                                                   S01117
+     I*  DS FOR LINE NO. TO HANDLE OVERFLOW                               S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I**                                                                  S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     ITABKEY      DS
+     I                                        1  12 KEY
+     I                                        1   2 TYPE
+     I                                        9  11 KCCY
+     IIKEYDS      DS
+     I                                        1   3 TNMC
+     I                                        4   6 SITP
+     I/COPY WNCPYSRC,SE0615I001
+     I*
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*                                                                   S01117
+     C* Parameter list                                                    S01117
+     C*                                                                   S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM           ENT     3                       S01117
+     C*
+     C**  FIELD DEFINITIONS
+     C*
+     C************LIKE     DEFN TDBR      LTDBR                           S01117
+     C           *LIKE     DEFN TNMC      LTNMC
+     C           *LIKE     DEFN TDSS      LTDSS
+     C           *LIKE     DEFN CDP       SETDP
+     C           *LIKE     DEFN CDP       LSETDP
+     C           *LIKE     DEFN CDP       NOMDP
+     C           *LIKE     DEFN CHTP      SCHTP
+     C*
+     C**  KEY LISTS
+     C*
+     C           IKEY      KLIST
+     C                     KFLD           TNMC
+     C                     KFLD           SITP
+     C/COPY WNCPYSRC,SE0615C001
+     C*
+     C**ACCESS*ICD*INFORMATION********************************************S01117
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C***********          MOVE 'SE0615  'DBPGM                           S01117
+     C                     MOVEL'SE0615'  DBPGM                           S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR FIRST
+     C*
+     C**  CHECK FOR DATABASE ERRORS
+     C*
+     C           *IN99     CABEQ'1'       EAUDIT
+     C*                                                                   S01117
+     C***REGISTER*AU*ENTRY**                                        S01117154670
+     C***********                                                   S01117154670
+     C***********          EXSR RCFAU                               S01117154670
+     C*
+     C**  READ EACH EXTRACT RECORD
+     C*
+     C                     READ DSTEXDF                  80
+     C/COPY WNCPYSRC,SE0615C002
+     C           *IN80     DOWNE'1'
+     C*
+     C**  Save type of last change
+     C*
+     C                     MOVE CHTP      SCHTP
+      *                                                                   CAC005
+      ** If CAC005 is installed, retrieve the corresponding user book     CAC005
+      ** and profit centre                                                CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD                           CAC005
+     C                     PARM '*USER  ' POPTN                           CAC005
+     C                     PARM           PBKCD   2                       CAC005
+     C                     PARM           PPRFC   4                       CAC005
+     C                     PARM TDBK      PPSBK   2                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVE PBKCD     TDBK                            CAC005
+     C                     MOVE PPRFC     PRFC                            CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVE *BLANKS   PRFC                            CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C**  Maintain count of records input
+     C*
+     C                     ADD  1         ZRIN
+     C                     SETOF                     8283
+     C*
+     C**  If new branch access branch table record
+     C*
+     C***********TDBR      IFNE LTDBR                                     S01117
+     C           TDBA      IFNE LTDBA                                     S01117
+     C                     SETON                     8283
+     C**********           MOVE *BLANKS   KEY                                                BUG7985
+     C**********           MOVEL'10      'KEY                                                BUG7985
+     C***********          MOVE TDBR      KEY                             S01117
+     C**********           MOVE TDBA      KEY                                         S01117 BUG7985
+     C********** TABKEY    CHAINTABLETRF             10                                      BUG7985
+     C********** *IN10     IFEQ '0'                                                          BUG7985
+     C********** RECI      IFEQ '*'                                                          BUG7985
+     C                     CALL 'AOBRCHR1'                                                   BUG7985
+     C                     PARM *BLANKS   PRTCD   7                                          BUG7985
+     C                     PARM '*KEY   ' POPTN   7                                          BUG7985
+     C                     PARM TDBA      PBRCH   3                                          BUG7985
+     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG7985
+      *                                                                                      BUG7985
+     C           PRTCD     IFEQ *BLANKS                                                      BUG7985
+     C           A8RECI    IFNE 'D'                                                          BUG7985
+     C                     SETON                     10
+     C                     END
+     C                     END
+     C********** *IN10     IFEQ '1'                                                          BUG7985
+     C           PRTCD     IFNE *BLANKS                                                      BUG7985
+     C           *LOCK     IN   LDA                                       S01117
+     C**********           MOVE 'TABLE'   DBFILE           *****************                 BUG7985
+     C**********           MOVELTABKEY    DBKEY            ** DB ERROR 02 **                 BUG7985
+     C                     MOVE 'SDBRCHPD'DBFILE                                             BUG7985
+     C                     MOVELTDBA      DBKEY                                              BUG7985
+     C                     Z-ADD2         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     99U7U8
+     C                     EXSR DBERR                                     S01117
+     C                     GOTO EAUDIT
+     C                     END
+     C                     END
+     C*
+     C**  If new book access book record
+     C*
+     C           TDBK      IFNE LTDBK
+     C                     SETON                     8283
+     C           TDBK      CHAINBOOKD                10
+     C           *IN10     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     10
+     C                     END
+     C                     END
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BOOKD'   DBFILE           *****************
+     C                     MOVELTDBK      DBKEY            ** DB ERROR 03 **
+     C                     Z-ADD3         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     99U7U8
+     C                     EXSR DBERR                                     S01117
+     C                     GOTO EAUDIT
+     C                     END
+     C                     END
+      *                                                                   CAC005
+      ** If new profit centre                                             CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C           PRFC      ANDNELPRFC                                     CAC005
+     C                     MOVEA'11'      *IN,82                          CAC005
+     C                     CALL 'AOPRFCR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD                           CAC005
+     C                     PARM '*KEY   ' POPTN                           CAC005
+     C                     PARM PRFC      PPCCD   4                       CAC005
+     C           SDPRFC    PARM SDPRFC    DSFDY                           CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFNE *BLANKS                                   CAC005
+     C           *LOCK     IN   LDA                                       CAC005
+     C                     MOVE 'SDPRFCPD'DBFILE           ************   CAC005
+     C                     MOVELPRFC      DBKEY            * DBERR  10*   CAC005
+     C                     Z-ADD10        DBASE            ************   CAC005
+     C                     OUT  LDA                                       CAC005
+     C                     MOVE *ON       *IN99                           CAC005
+     C                     MOVE *ON       *INU7                           CAC005
+     C                     MOVE *ON       *INU8                           CAC005
+     C                     EXSR DBERR                                     CAC005
+     C                     GOTO EAUDIT                                    CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVELDSPCDS    PRFN                            CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C**  If new investment type access investment type record
+     C*
+     C           SITP      IFNE LSITP
+     C                     SETON                     8283
+     C           IKEY      CHAININVTP                10
+     C           *IN10     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     10
+     C                     END
+     C                     END
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INVTP'   DBFILE           *****************
+     C                     MOVELIKEYDS    DBKEY            ** DB ERROR 04 **
+     C                     Z-ADD4         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     99U7U8
+     C                     EXSR DBERR                                     S01117
+     C                     GOTO EAUDIT
+     C                     END
+     C                     END
+     C*
+     C**  If new settlement currency access currency table record
+     C*
+     C           SETC      IFNE LSETC
+     C                     SETON                     82
+     C                     MOVE *BLANKS   KEY
+     C                     MOVEL'20      'KEY
+     C                     MOVE SETC      KCCY
+     C                     MOVE '1'       KEY
+     C           TABKEY    CHAINTABTG10F             10
+     C           *IN10     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     10
+     C                     END
+     C                     END
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELTABKEY    DBKEY            ** DB ERROR 05 **
+     C                     Z-ADD5         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     99U7U8
+     C                     EXSR DBERR                                     S01117
+     C                     GOTO EAUDIT
+     C                     ELSE
+     C                     MOVE CDP       SETDP
+     C                     END
+     C                     END
+     C*
+     C**  If new security access security record
+     C*
+     C           TDSS      IFNE LTDSS
+     C           TDSS      CHAINSECTY                10
+     C           *IN10     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     10
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0615CCPG                                           S01408
+     C*                                                                   S01408
+     C                     END
+     C                     END
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE           *****************
+     C                     MOVELTDSS      DBKEY            ** DB ERROR 06 **
+     C                     Z-ADD6         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     99U7U8
+     C                     EXSR DBERR                                     S01117
+     C                     GOTO EAUDIT
+     C                     END
+     C/COPY WNCPYSRC,SE0615C006
+     C                     END
+     C*                                                                   074555
+     C** Move appropriate fields to work fields for SR/ZSDESC, then       074555
+     C** execute ZICDSE to get record from TABTB36, field RSFD required   074555
+     C** by ZSDESC.                                                       074555
+     C*                                                                   074555
+     C                     MOVE *BLANKS   ZSRPN                           074555
+     C                     MOVE *BLANKS   ZSFN1                           074555
+     C                     MOVE *BLANKS   ZSFN2                           074555
+     C                     MOVE SRPN      ZSRPN                           074555
+     C                     MOVE SFN1      ZSFN1                           074555
+     C                     MOVE SFN2      ZSFN2                           074555
+     C*                                                                   074555
+     C** Perform SR/ZSDESC to get security descriptions                   074555
+     C*                                                                   074555
+     C                     EXSR ZSDESC                                    074555
+     C*                                                                   074555
+     C*
+     C**  If new nominal currency access currency table record
+     C*
+     C           TNMC      IFNE LTNMC
+     C                     MOVE *BLANKS   KEY
+     C                     MOVEL'20      'KEY
+     C                     MOVE TNMC      KCCY
+     C                     MOVE '1'       KEY
+     C           TABKEY    CHAINTABTG10F             10
+     C           *IN10     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     10
+     C                     END
+     C                     END
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELTABKEY    DBKEY            ** DB ERROR 07 **
+     C                     Z-ADD7         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     99U7U8
+     C                     EXSR DBERR                                     S01117
+     C                     GOTO EAUDIT
+     C                     ELSE
+     C                     MOVE CDP       NOMDP
+     C                     END
+     C                     END
+     C*
+     C**  If previous output & new branch/book/inv type/settle curr -
+     C**  output total line
+     C*
+     C           *IN81     IFEQ '1'
+     C           *IN82     ANDEQ'1'
+     C                     Z-ADDZZTOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDLSETDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ZTOT
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0615CLH0                                           S01408
+     C*                                                                   S01408
+     C           LINCNT    IFGT 55
+     C                     WRITEHEADP1
+     C                     Z-ADD15        LINCNT
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     ADD  1         LINCNT                          CAC005
+     C                     ENDIF                                          CAC005
+     C                     END
+     C                     WRITETOTAL
+     C                     Z-ADD0         ZZTOT
+     C                     ADD  4         LINCNT
+     C                     END
+     C           *IN81     IFEQ '1'
+     C*
+     C**  If previous output & new branch end that report
+     C*
+     C***********TDBR      IFNE LTDBR                                     S01117
+     C           TDBA      IFNE LTDBA                                     S01117
+     C*
+     C**  Output headings if required
+     C*
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0615CLH1                                           S01408
+     C*                                                                   S01408
+     C           LINCNT    IFGT 55
+     C                     WRITEHEADP1
+     C                     Z-ADD15        LINCNT
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     ADD  1         LINCNT                          CAC005
+     C                     ENDIF                                          CAC005
+     C                     END
+     C                     WRITETRAILP1
+     C                     CLOSESE0615P1
+     C                     OPEN SE0615P1
+     C                     EXSR RCFP1                                     S01117
+     C                     Z-ADD70        LINCNT  20
+     C                     Z-ADD0         PAGE
+     C*
+     C**  If previous output & new page required
+     C*
+     C                     ELSE
+     C           *IN83     IFEQ '1'
+     C                     Z-ADD70        LINCNT  20
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  Open printer file if first time or new branch
+     C*
+     C           *IN81     IFEQ '0'
+     C                     OPEN SE0615P1
+     C                     EXSR RCFP1                                     S01117
+     C                     Z-ADD70        LINCNT  20
+     C                     SETON                     81
+     C                     END
+     C*
+     C**  Store new values of fields
+     C*
+     C***********          MOVE TDBR      LTDBR                           S01117
+     C                     MOVE TDBA      LTDBA                           S01117
+     C                     MOVE BRNM      LBRNM                           E35515
+     C                     MOVE TDBK      LTDBK
+     C                     MOVE SITP      LSITP
+     C                     MOVE SETC      LSETC
+     C                     MOVE TDSS      LTDSS
+     C                     MOVE TNMC      LTNMC
+     C                     MOVE SETDP     LSETDP
+     C                     MOVE PRFC      LPRFC                           CAC005
+     C*
+     C**  Output headings if required
+     C*
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0615CLH2                                           S01408
+     C*                                                                   S01408
+     C           LINCNT    IFGT 55
+     C                     WRITEHEADP1
+     C                     Z-ADD15        LINCNT
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     ADD  1         LINCNT                          CAC005
+     C                     ENDIF                                          CAC005
+     C                     END
+     C*
+     C**  Set up & output detail line
+     C*
+     C**  Set indicators for type of last change
+     C*
+     C***********          SETOF                     4041                 E20086
+     C                     SETOF                     394041               E20086
+     C                     SETOF                     4344                 051109
+      *                                                                   051109
+     C           SCHTP     IFEQ 'A'                                       E20086
+     C***********TOED      ANDLTRUND                               E20086 051109
+     C           TOED      IFEQ RUND                                      051109
+     C                     SETON                     43                   051109
+     C                     ELSE                                           051109
+     C                     SETON                     39                   E20086
+     C                     END                                            051109
+     C                     END                                            E20086
+      *                                                                   051109
+     C***********SCHTP     COMP 'C'                      40               051109
+     C           SCHTP     IFEQ 'C'                                       051109
+     C           TOED      IFEQ RUND                                      051109
+     C                     SETON                     44                   051109
+     C                     ELSE                                           051109
+     C                     SETON                     40                   051109
+     C                     END                                            051109
+     C                     END                                            051109
+      *                                                                   051109
+     C           SCHTP     COMP 'D'                      41
+     C*
+     C**  Set indicators for clearance type
+     C*
+     C                     SETOF                     505152
+     C                     SETOF                     535455
+     C           CLTY      COMP '0'                      50
+     C           CLTY      COMP '1'                      51
+     C           CLTY      COMP '2'                      52
+     C           CLTY      COMP '3'                      53
+     C           CLTY      COMP '4'                      54
+     C           CLTY      COMP '5'                      55
+     C*
+     C**  Set indicators for incomplete indicator
+     C*
+     C                     SETOF                     42
+     C           TINC      COMP 'I'                      42
+     C*
+     C**  Format value date
+     C*
+     C                     Z-ADDTDVD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    STDVD
+     C*
+     C**  Format nominal
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE NOML      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SNOML
+     C*
+     C**  Format consideration
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C*                                                                   E20086
+     C**  If Asset-Backed Security, adjust for Current Factor.            E20086
+     C*                                                                   E20086
+     C           *LIKE     DEFN TCSR      FTCSR                           E20086
+     C********** PROT      IFEQ '8'                                                    E20086 260909
+     C/COPY WNCPYSRC,SE0615C007
+     C***********TCSR      MULT TCFC      FTCSR                    E20086 055420
+     C********** TCSR      MULT TCFC      FTCSR     H                                  055420 260909
+     C**********           ELSE                                                        E20086 260909
+     C                     Z-ADDTCSR      FTCSR                           E20086
+     C**********           END                                                         E20086 260909
+     C/COPY WNCPYSRC,SE0615C005
+     C*                                                                   E20086
+     C***********          MOVE TCSR      ZFLD15                          E20086
+     C                     MOVE FTCSR     ZFLD15                          E20086
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STCSR
+     C*
+     C**  Format reallowance amount
+     C*
+     C                     Z-ADD*ZEROS    ZRALL  150
+     C                     Z-ADD*ZEROS    ZRALL0 150
+     C                     Z-ADD*ZEROS    ZRALL1 151
+     C                     Z-ADD*ZEROS    ZRALL2 152
+     C                     Z-ADD*ZEROS    ZRALL3 153
+     C                     MOVEA'0000'    *IN,25
+     C           25        ADD  NOMDP     J       20
+     C                     MOVEA'1'       *IN,J
+     C*
+     C**  Calculate consideration/reallowance/charges/commission
+     C*
+     C   25      NOML      MULT RALL      ZRALL0    H
+     C   26      NOML      MULT RALL      ZRALL1    H
+     C   27      NOML      MULT RALL      ZRALL2    H
+     C   28      NOML      MULT RALL      ZRALL3    H
+     C*
+     C**  Price basis - divide by 100
+     C*
+     C           SPBS      IFEQ 'P'
+     C   25                DIV  100       ZRALL0
+     C   26                DIV  100       ZRALL1
+     C   27                DIV  100       ZRALL2
+     C   28                DIV  100       ZRALL3
+     C                     END
+     C*
+     C/COPY WNCPYSRC,SE0615C008
+     C   25                MOVE ZRALL0    ZRALL
+     C   26                MOVE ZRALL1    ZRALL
+     C   27                MOVE ZRALL2    ZRALL
+     C   28                MOVE ZRALL3    ZRALL
+     C*
+     C**  Allow for nominal decimal places
+     C*
+     C           5         SUB  NMDP      DC      10
+     C           ZRALL     MULT POWER8,DC ZRALL
+     C                     MOVE ZRALL     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SRALL
+     C*
+     C**  Format interest
+     C*
+     C                     Z-ADDITRA      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SITRA
+     C*
+     C**  Format countervalue
+     C*
+     C*********            ADD  TCTR      ZZTOT  150                      E18206
+     C  N41                ADD  TCTR      ZZTOT  150                      E18206
+     C                     Z-ADDTCTR      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDSETDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STCTR
+     C*
+     C**  Format price/discount/yield
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE TPDY      ZFLD15
+     C                     MOVE 'L'       ZECODE
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STPDY
+     C*
+     C**  Format exchange rate
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE TDER      ZFLD15
+     C                     MOVE 'L'       ZECODE
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STDER
+     C*
+     C**  Format commission
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE TCOM      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STCOM
+     C/COPY WNCPYSRC,SE0615C003
+     C*
+     C**  Format charges
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE TCHR      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STCHR
+     C*
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0615CPDR                                           S01408
+     C**  Output record
+     C*
+     C                     WRITEDETAIL
+     C                     ADD  4         LINCNT
+     C*
+     C**  Read next input record
+     C*
+     C                     READ DSTEXDF                  80
+     C/COPY WNCPYSRC,SE0615C004
+     C                     END
+     C*
+     C**  END OF INPUT FILE -
+     C**  If previous output - output total line
+     C*
+     C           *IN81     IFEQ '1'
+     C                     Z-ADDZZTOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDSETDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ZTOT
+     C*
+     C**  Output headings if required
+     C*
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0615CLH3                                           S01408
+     C*                                                                   S01408
+     C           LINCNT    IFGT 50
+     C                     WRITEHEADP1
+     C                     Z-ADD15        LINCNT
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     ADD  1         LINCNT                          CAC005
+     C                     ENDIF                                          CAC005
+     C                     END
+     C                     WRITETOTAL
+     C                     ADD  4         LINCNT
+     C                     WRITETRAILP1
+     C                     END
+     C*
+     C           EAUDIT    TAG                             ** EAUDIT **
+     C*
+     C**  OUTPUT RUN CONTROL REPORT
+     C*
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+      *                                                               *
+      *================================================================
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**FIRST*-*SUBROUTINE*TO*ACCESS*ICD*INFORMATION**********************S01117
+     C* FIRST - ACCESS DTAARA/RUNDAT AND PF/SDBANKPD DETAILS              S01117
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C**ACCESS*ICD********************************************************S01117
+     C***********                                                         S01117
+     C***********          EXSR ZSYSTM                                    S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE '1'       *INU8                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVEL'ICDR1'   DBKEY            ** DB ERROR 01 S01117
+     C***********          Z-ADD1         DBASE            ***************S01117
+     C***********          END                                            S01117
+     C**                                                                  S01117
+     C**  ACCESS DATA AREA RUNDAT                                         S01117
+     C**                                                                  S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**                                                                  S01117
+     C**   CHECK MULTI-BRANCHING INDICATOR                                S01117
+     C**                                                                  S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETON                     35                   S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    S01117
+     C**                                                                  S01117
+     C           DATF      IFEQ 'M'                                       S01117
+     C                     SETON                     98                   S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**  ACCESS BANK DETAILS                                             S01117
+     C**                                                                  S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL@OPTN     DBKEY                           S01117
+     C                     MOVE 'SDBANKPD'DBFILE                          S01117
+     C                     Z-ADD1         DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     99U7U8               S01117
+     C                     EXSR DBERR                                     S01117
+     C*                                                                   074555
+     C                     ELSE                                           074555
+     C*                                                                   074555
+     C                     EXSR ZICDSE                                    074555
+     C*                                                                   074555
+     C** If error from accessing TABTB36, perform standard                074555
+     C** DB ERRROR routine                                                074555
+     C*                                                                   074555
+     C           *INU7     IFEQ '1'                                       074555
+     C           *LOCK     IN   LDA                                       074555
+     C                     MOVE 'TABLE'   DBFILE           ************** 074555
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 9 * 074555
+     C                     Z-ADD9         DBASE            ************** 074555
+     C                     OUT  LDA                                       074555
+     C                     SETON                     99U7U8               074555
+     C                     EXSR DBERR                                     074555
+     C                     END                                            074555
+     C*                                                                   074555
+     C                     END                                            S01117
+      *                                                                   CAC005
+      ** Check if CAC005 is installed                                     CAC005
+      *                                                                   CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD   7                       CAC005
+     C                     PARM '*VERIFY' POPTN   7                       CAC005
+     C                     PARM 'CAC005'  PSARD   6                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVE 'Y'       CAC005  1                       CAC005
+     C                     MOVE *ON       *IN36                           CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVE 'N'       CAC005                          CAC005
+     C                     MOVE *OFF      *IN36                           CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0615CCP1                                           S01408
+     C*                                                                   S01408
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C* AUDIT  - SUBROUTINE TO OUTPUT CONTROL REPORT
+     C*
+     C*****************************************************************
+     C*
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*                                                                   154670
+     C** RCF Processing for Audit File                                    154670
+     C*                                                                   154670
+     C                     EXSR RCFAU                                     154670
+     C*
+     C**  ACCESS DSTEXA RECORD
+     C*
+     C                     READ DSTEXA                   10
+     C           *IN10     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'DSTEX'   DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 08 **
+     C                     Z-ADD8         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END
+     C*
+     C*
+     C**  Check for file control imbalance
+     C*
+     C           *INU8     IFEQ '0'
+     C           NORE      IFNE ZRIN
+     C                     SETON                     U857
+     C                     END
+     C                     END
+     C*
+     C**  OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADAU
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     WRITEERROR
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     END
+     C*                                                                   S01117
+     C* OUTPUT '** NO DETAILS TO REPORT **' LINE                          S01117
+     C*                                                                   S01117
+     C           *IN81     IFEQ '0'                                       S01117
+     C           *INU7     ANDEQ'0'                                       S01117
+     C           *INU8     ANDEQ'0'                                       S01117
+     C                     WRITENONE                                      S01117
+     C                     END                                            S01117
+     C*
+     C***********          WRITETRAILAU                                   S01117
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C*  DBERR SR.- DATABASE ERROR SUBROUTINE                             S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           DBERR     BEGSR                           ** DBERR SR ** S01117
+     C*                                                                   S01117
+     C**   DATABASE ERROR HANDLING                                        S01117
+     C*                                                                   S01117
+     C           *IN81     IFEQ '1'                        * P1 OPENED *  S01117
+     C*                                                                   S01117
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0615CLH4                                           S01408
+     C*                                                                   S01408
+     C           LINCNT    IFGT 55                                        S01117
+     C                     WRITEHEADP1                                    S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     WRITEERRORP1                                   S01117
+     C                     WRITETRAILP1                                   S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     EXSR *PSSR                                     S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFP1     BEGSR                            ** RCFP1 **   S01117
+     C*                                                                   S01117
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF                        S01117
+     C*                                                                   S01117
+     C           *IN35     IFEQ '1'                                       S01117
+     C           *IN81     ANDEQ'1'                                       S01117
+     C                     MOVE TDBA      PTDBA   3                       S01117
+     C                     ELSE                                           S01117
+     C                     MOVE *BLANKS   PTDBA                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM PTDBA     SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C*                                                                   S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C*                                                                   S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFAU     BEGSR                            ** RCFAU **   S01117
+     C*                                                                   S01117
+     C**   ENSURE AUDIT SPOOL FILE RECORDED BY RCF                        S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    SENTY   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C*                                                                   S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C*                                                                   S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C********************************************************************S01117
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/EJECT                                                              074555
+     C/COPY ZSRSRC,ZSDESCZ3                                               074555
+     C/EJECT                                                              074555
+     C/COPY ZSRSRC,ZICDSEZ1                                               074555
+      /EJECT
+     C*COPY*ZSRSRC,ZSYSTMZ1**                                             S01117
+      /EJECT
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

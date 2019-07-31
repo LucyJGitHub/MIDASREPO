@@ -1,0 +1,229 @@
+  FF SUBROUTINE - FFDATE
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Purpose:
+  ~~~~~~~~
+ 
+   This process is a standard subroutine set up for Financial
+   Instruments.
+   The subroutine is called in order to determine the correct
+   working day for a formula specified for each market/instrument/
+   type/month/year.
+ 
+   ----------------------------------------------------------------------*
+   A m e n d e m e n t    D e t a i l s
+   ----------------------------------------------------------------------*
+                                                                         *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+   * Midas Release 4 --------------- Base -------------------------*
+          Last Amend No. E27656             DATE 22AUG91                 *
+                                                                         *
+          E27656  -  Change document to reflect R10 changes to the       *
+                     standard subroutine.                                *
+ 
+   ----------------------------------------------------------------------*
+  Notes for when inclusing in RPG pgm for compiling:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC FFDATEZ1 should be included in the 'E' specifications
+   /COPY ZSRSRC FFDATEZ2 should be included in the 'I' specifications
+   /COPY ZSRSRC FFDATEZ3 should be included in the subroutine section
+   /COPY ZSRSRC FFDATEZ4 should be included in the array section
+ 
+ 
+   Requirements:
+   ~~~~~~~~~~~~
+ 
+  *Standard*subroutines*ZDATE1,*ZDATE3*and*ZDATE5*are*required******      E27656
+   Standard subroutines ZDATE1, ZCHKH, ZFWDT and ZBKDT are required       E27656
+ 
+   Input:
+   ~~~~~
+ 
+     FFDATC     A seven character field containing the date formula
+     FFMTH      A two-digit number for month of the required date
+     FFYR       A two-digit number for the required year
+     FFCCY1     A three character field containing the Market currency
+     FFLOC      A two character code containing the Market location       E27656
+     FFCCY2            "                  "            Instrument "
+     FFCCY3            "                  "            Other      "
+ 
+ 
+   Procedure:
+   ~~~~~~~~~
+ 
+  1. Determine the base date.
+ 
+       1.1 If the end of month was specified,
+ 
+            1.1.1 Determine the last day (as a Midas day number) in the
+            month passed as a parameter, using ZDATE1.
+ 
+  ***************1.1.1.1*If*this*day*is*not*a*working*day*in*the*market   E27656
+  ***************centre*currency,*find*the*previous*working*day*in*this   E27656
+  ***************currency*using*FFDAT5.*****************************      E27656
+                                                                          E27656
+                 1.1.1.1 If this day is not a working day in the market   E27656
+                 centre currency, and market location find the previous   E27656
+                 working day in this currency using ZBKDT.                E27656
+ 
+       1.2 Otherwise,
+ 
+            1.2.1 Determine the first day (as a Midas day number) in
+            the month passed as a parameter, using ZDATE1.
+ 
+            1.2.2 Add the required number of days to this day number.
+ 
+            The number of days requiring to be added will either be
+ 
+                 1.2.2.1 The specified number of days minus 1, or
+ 
+                 1.2.2.2 If a week number/day code combinatino is
+                 specified, determine the number of working days after
+                 the first of the month.
+ 
+                      1.2.2.2.1 Determine the week day of the first
+                      date in the month
+ 
+                      1.2.2.2.2 Add the number of days between the
+                      first day in the month and the first occurrence
+                      of the required day code in the month to the
+                      Midas day number for the required number of
+                      weeks.
+ 
+                      1.2.2.2.3 Increment the Midas day number for for
+                      the required number of weeks.
+ 
+  2. Determine any adjustments required to the base date.
+ 
+  Adjustment to the base date is required if either,
+ 
+  Month end was specified (which will be a working day) and an
+  adjustment has been specified in positions 4-7, or
+ 
+  If a day number of week number/day code combination was specified
+  (which may or may not be a working day) whether an adjustment was
+  specified or not.
+ 
+       2.1 If no adjustment has been specified,
+ 
+            2.1.1 Check that the base date calculated is a working day
+            in the market centre currency.
+ 
+  ***************2.1.1.1*If*it*is*not,*calculate*the*next/previous**      E27656
+  ***************working*day*using*ZDATE3/FFDAT3,*depending*on*whether    E27656
+  ***************a*'+'*or*'-'*respectively*has*been*specivied*in****      E27656
+  ***************position*3*of*the*date*formula.********************      E27656
+                                                                          E27656
+                 2.1.1.1 If it is not, calculate the next/previous        E27656
+                 working day using ZFWDT/ZBKDT, depending on whether      E27656
+                 a '+' or '-' respectively has been specivied in          E27656
+                 position 3 of the date formula.                          E27656
+ 
+       2.2 If an adjustment of actual days has been specified,
+ 
+            2.2.1 Add the specified number of days to the base date if
+            a '+' was specified in position 3 of the date formula,
+            otherwise subtract.
+ 
+            2.2.2 Check that this date is a working day in the market
+            centre currency.
+ 
+  ***************2.2.2.1*If*it*is*not,*calculate*the*next/previous**      E27656
+  ***************working*day*using*ZDATE3/FFDAT3,*depending*on*whether    E27656
+  ***************a*'+'*or*'-'*respectively*has*been*specivied*in****      E27656
+  ***************position*7*of*the*date*formula.********************      E27656
+                                                                          E27656
+                 2.2.2.1 If it is not, calculate the next/previous        E27656
+                 working day using ZFWDT/ZBKDT, depending on whether      E27656
+                 a '+' or '-' respectively has been specivied in          E27656
+                 position 7 of the date formula.                          E27656
+ 
+       2.3 If an adjustment of business days in the currency of the
+       market centre has been specified,
+ 
+  **********2.3.1*Determine*the*adjustment*to*be*made*using*********      E27656
+  **********ZDATE3/FFDAT3*depending*on*whether*a*'+'*or*'-'*********      E27656
+  **********respectively*has*been*specified*in*position*3*of*the*date     E27656
+  **********formula.************************************************      E27656
+                                                                          E27656
+            2.3.1 Determine the adjustment to be made using               E27656
+            ZFWDT/ZBKDT depending on whether a '+' or '-'                 E27656
+            respectively has been specified in position 3 of the date     E27656
+            formula.                                                      E27656
+ 
+       2.4 If an adjustment of business days in the ucrrency of the
+       market center and the currency of the instrument and the other
+       currency has been specified,
+ 
+  **********2.4.1*Determine*the*adjustment*to*be*made*for*each*of*these   E27656
+  **********currencies*using*ZDATE3/FFDAT3*depending*on*whether*a*'+'     E27656
+  **********or*'-'*respectively*has*been*specified*in*position*3*of*the   E27656
+  **********date*formula.*******************************************      E27656
+  ******************************************************************      E27656
+  **********2.4.2*Using*the*latest/earliest*of*these*dates*as*a*****      E27656
+  **********starting*point,*find*the*next/previous*date*which*is*a**      E27656
+  **********working*day*in*all*three*currencies*using*ZDATE5/FFDAT5*(if   E27656
+  **********the*starting*date*is*not*a*working*day*in*all*three*****      E27656
+  **********currencies).*NB.*The*Other*currency*may*be*blank.*******      E27656
+                                                                          E27656
+            2.4.1 Determine the adjustment to be made for each of these   E27656
+            currencies using ZFWDT/ZBKDT depending on whether a '+'       E27656
+            or '-' respectively has been specified in position 3 of the   E27656
+            date formula.                                                 E27656
+                                                                          E27656
+            2.4.2 Using the latest/earliest of these dates as a           E27656
+            starting point, find the next/previous date which is a        E27656
+            working day in all three currencies using ZFWDT/ZBKDT (if     E27656
+            the starting date is not a working day in all three           E27656
+            currencies). NB. The Other currency may be blank.             E27656
+ 
+ 
+   Output:
+   ~~~~~~
+ 
+     FFDAY     A five digit midas day number of the required working
+               day
+ 
+ 
+   Formula explanation:
+   --------------------
+ 
+     The date formula is 7 characters long and is made up as follows
+ 
+Positions 1 and 2
+  These represent the base date from which the actual date is
+calculated and can be either
+  A day number of any month (range 1-28) or '31', representing the last
+working day in the month, or a week number (range 1-4) and a day code
+(values 'M' - Monday, 'U' - Tuesday, 'W' - Wednesday, 'T' - Thursday,
+'F' - Friday, 'S' - Saturday, 'X' - Sunday). This represents a
+particular day in a particular week of the specified month.
+ 
+Positions 3
+  If the base date is not a working day in the market currency, and no
+adjustment to the base date has been specified in positions 4-7, a '+'
+or '-' in this position indicates whether the next or previous working
+day in the market currency respectively is required.
+  If any adjustment to the base date is required this will be specified
+in positions 4-7. In this case, a '+' or '-' in position 3 will
+indicate the sign of the adjustment contained in positions 4-7.
+ 
+Positions 4 and 5
+  This represents the number of days to be added to or subtracted from
+the base date depending as to whether the position 3 is '+' or '-'.
+ 
+Position 6
+  This shows whether the adjustment to the base date is to be either
+Actual days (code A); Business days in the market centre currency (code
+B); or business days in the market centre currency, instrument currency
+and, if entered, the other currency (code C).
+ 
+Position 7
+  If the adjustment is to be made using an actual number of days, if
+the day calculated is a holiday in the market centre currency, then a
+'+' or '-' in this position indicates whether the next or precious
+working day respecitvely is required.
+ 

@@ -1,0 +1,3954 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU Maint data in the mapping details files')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Retail Utilities                                 *
+      *                                                               *
+      *  EU0120 - 'In' Currency to Euro Mapping Maintenance           *
+      *                                                               *
+      *  Function:  This program will allow the user to maintain the  *
+      *             information on the mapping details files (EUMDHDPD*
+      *             and EUACMLPD).  The user specifies a Map Number & *
+      *             can chose to either view, amend or delete the     *
+      *             mapping details.  A subfile allows the user to see*
+      *             a list of all the accounts mapped under one Map   *
+      *             Number and if necessary, amend the account details*
+      *                                                               *
+      *                                                               *
+      *  Called By: EUC0130                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CRE401             Date 26Nov09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CRE008             Date 19Feb02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 164562             Date 15Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 193104             Date 08Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 179834             Date 12Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 155245             Date 04Mar99               *
+      *                 153298             Date 15Feb99               *
+      *                 150337             Date 21Dec98               *
+      *                 146855             Date 11Nov98               *
+      *                 144878             Date 11Nov98               *
+      *                 139372             Date 16Oct98               *
+      *                 143985             Date 06Oct98               *
+      *                 140515             Date 11Aug98               *
+      *                 137772             Date 09JUL98               *
+      *                 137718             Date 08Jul98               *
+      *                 136669             Date 12Jun98               *
+      *                 134820             Date 08May98               *
+      *                 133671             Date 17Apr98               *
+      *                 CEU022  *CREATE    Date 26Nov97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  CRE401 - 4-Eyes Checking Gaps - Sweeps (Recompile)           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CRE008 - Cash Management                                     *
+      *  164562 - Update RESWEPPD with new dafaulted Final Sweep Date.*
+      *  193104 - Athough sweep date is entered it is set to blanks   *
+      *           if final sweep date and date to close accounts have *
+      *           not been given a value. Applied fix 189608.         *
+      *  CSD006 - Use long DS with SDBSRTPD.                          *
+      *  179834 - Next capitalisation date should not be allowed to   *
+      *           blank if capitalisation frequency is not 'Z'.       *
+      *  155245 - Date to close In ccy acc is locked to that of final *
+      *           date because they have got to be the same .         *
+      *  153298 - If 'Create one Euro a/c for each cust., a/c code    *
+      *           & a/c seq.' flag is 'Y' (many-to-one map) 1 a/c for *
+      *           each 'in' ccy is created, and if flag is 'N' (one-  *
+      *           to-one map) only 1 a/c is created. It should be the *
+      *           other way round. Also if many-to-one map, Euro a/c  *
+      *           can already exist, as long as retail no. matches.   *
+      *  150337 - Correct the validation for Action code and Branch.  *
+      *  146855 - Allow set up of Next Capitalisation date / Frequency*
+      *           / Day if all references to interest are blank. For  *
+      *           both debit and credit.                              *
+      *  144878 - Default Final Date (when equals *BLANKS) with new   *
+      *           date to close 'in' ccy a/c's                        *
+      *  139372 - Allow deletion of mapping if opened accounts no     *
+      *         - longer active.                                      *
+      *  143985 - If Sweep Accounting (CRE004) not on, do not compare *
+      *           date to close 'in' ccy a/c's with sweep final date. *
+      *  140515 - Last position of Statement Frequency and Day arrays *
+      *           were lost because 1st position were *blank          *
+      *  137772 - Corrected Subroutine VD3DAT for various fld. checks *
+      *  137718 - corrected capitalisation array CAP to check the full*
+      *           number of elements needed to increase number of     *
+      *           to 14 from 12 to take care of W(eekly) and X every  *
+      *           six months which were missed in original program    *
+      *           Full list now shows. DWFSMTRBLAQXYZ                 *
+      *  136669 - Allow multiple users to enquire on same map number, *
+      *           provide monitoring for database error if a user     *
+      *           tries to access a map no. already being amended.    *
+      *  134820 - Allow entry of dates prior to 01Jan1999             *
+      *  133671 - Blanks out retail account no. of 'in' currency acc  *
+      *           when retail account nos have been preserved         *
+      *  CEU022 - EMU Retail Utilities                                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    01      ...................................................*
+      *    02      ...................................................*
+      *    03      Exit program                                       *
+      *    04      ...................................................*
+      *    05      ...................................................*
+      *    06      ...................................................*
+      *    07      ...................................................*
+      *    08      ...................................................*
+      *    09      ...................................................*
+      *    10      ...................................................*
+      *    11      ...................................................*
+      *    12      Previous page                                      *
+      *    13      ...................................................*
+      *    14      ...................................................*
+      *    15      ...................................................*
+      *    16      ...................................................*
+      *    17      ...................................................*
+      *    18      ...................................................*
+      *    19      ...................................................*
+      *    20      Used for LOKUP in arrays STD and STM               *
+      *    21      Used for LOKUP in array CAP                        *
+      *    22      Used for LOKUP in array RAN                        *
+      *    23      Hides 'Review From' field                          *
+      *    24      Indicates first subfile record in single Euro acnts*
+      *    25      Subfile display (SFLDSP)                           *
+      *    26      Subfile end (SFLEND)                               *
+      *    27      Subfile clear (SFLCLR)                             *
+      *    28      Subfile ROLLUP                                     *
+      *    29      SFLNXTCHG                                          *
+      *    30      Date account opened in error                       *
+      *    31      Next statement date in error                       *
+      *    32      Statement frequency in error                       *
+      *    33      Statement day in error                             *
+      *    34      Base rate Type in error (debit interest)           *
+      *    35      Base rate Type in error (credit interest)          *
+      *    36      Rate/Spread in Error (debit interest)              *
+      *    37      Rate/Spread sign in error (debit interest)         *
+      *    38      Rate/Spread in Error (credit interest)             *
+      *    39      Rate/Spread sign in error (credit interest)        *
+      *    40      Interest type in error (debit interest)            *
+      *    41      Interest sub type in error (debit interest)        *
+      *    42      Interest type in error (credit interest)           *
+      *    43      Interest sub type in error (credit interest)       *
+      *    44      Calculation basis in error (debit interest)        *
+      *    45      Calculation basis in error (credit interest)       *
+      *    46      Next capitalisation date in error (debit interest) *
+      *    47      Capitalisation frequency in error (debit interest) *
+      *    48      Capitalisation day in error (debit interest)       *
+      *    49      Next capitalisation date in error (credit interest)*
+      *    50      Capitalisation frequency in error (credit interest)*
+      *    51      Capitalisation day in error (credit interest)      *
+      *    52      Credit charges calculation type in error           *
+      *    53      Credit charges calculation sub-type in error       *
+      *    54      Profit centre in error                             *
+      *    55      Transaction type in error                          *
+      *    56      Narrative in error                                 *
+      *    57      Sweep date in error                                *
+      *    58      Sweep frequency in error                           *
+      *    59      Sweep day number in error                          *
+      *    60      Final sweep date in error                          *
+      *    61      Date to create Euro accounts in error              *
+      *    62      Date to create sweeps in error                     *
+      *    63      Date to close 'In' currency accounts in error      *
+      *    64      'Review from' field in error                       *
+      *    65      Euro account code in error                         *
+      *    66      Euro sequence number in error                      *
+      *    67      Euro Retail Account number in error                *
+      *    68      Subfile selection in error                         *
+      *    69      Euro accounts already created indicator            *
+      *    70      Map number in error                                *
+      *    71      Action code in error                               *
+      *    72      Profit Centres not used indicator                  *
+      *    73      Sweep feature flag (linked to CRE004)              *
+      *    74                                                         *
+      *    75      Message subfile                                    *
+      *    76      Detail screen 2 already amended                    *
+      *    77      Detail screen 3 already amended                    *
+      *****78******                                                   *   CRE008
+      *    78      EMU Mapping                                        *   CRE008
+      *    79                                                         *
+      *    80      Amend mode indicator                               *
+      *    81      Retail account used                                *
+      *    82      Sweep already performed indicator                  *
+      *    83                                                         *
+      *    84                                                         *
+      *    85                                                         *
+      *    86                                                         *
+      *    87      Used for READC                                     *
+      *    88      Error during CHAIN indicator                       *   136669
+      *    89                                                         *
+      *    90      Used for CHAIN, READ, TEST etc...                  *
+      *    99      Used by standard subroutines                       *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *                   ~~~~~~~~~~~~~~~~~~~~                        *
+      *  INIT    -  Initial processing                                *
+      *  SC1     -  Process initial screen                            *
+      *  VLDAUT  -  Validate user authorisation                       *
+      *  FILSC2  -  Populate fields on first detail screen            *
+      *  SC2     -  Process first detail screen                       *
+      *  FILSC3  -  Populate fields on second detail screen           *
+      *  SC3     -  Process second detail screen                      *
+      *  FILSC4  -  Populate fields on third detail screen            *
+      *  SC4     -  Process third detail screen                       *
+      *  SFLPR   -  Process subfile                                   *
+      *  LOADSF  -  Load one subfile page                             *
+      *  SFLREV  -  Process entries in the 'Review from' field        *
+      *  SVD1    -  Subfile validation                                *
+      *  SFPROC  -  Subfile processing for valid entries              *
+      *  VD1     -  Validate initial screen input                     *
+      *  VD2     -  Validate first detail screen input                *
+      *  VD2ACC  -  Validate basic account details                    *
+      *  VD2DBT  -  Validate debit interest details                   *
+      *  VD2CRT  -  Validate credit interest details                  *
+      *  VD3     -  Validate second detail screen input               *
+      *  VD3SWP  -  Validate sweep details                            *
+      *  VD3DAT  -  Validate scheduled action dates                   *
+      *  DEL     -  Delete records                                    *
+      *  UPDATE  -  Updates Mapping Details Header file (EUMDHDPD)    *
+      *  UPDATS  -  Updates subfile (EUACMLL3)                        *
+      *  ZASNMS  -  Sends messages to programs's message queue        *
+      *  CLEARM  -  Clears the message queue                          *
+      *  END     -  Terminates the program                            *
+      *  *PSSR   -  Error handling subroutine                         *
+      *****************************************************************
+      /EJECT
+      *
+      ** Account Master Details
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Retail Account Numbers File
+     FACNUM   IF  E           K        DISK         KINFSR *PSSR
+     F            ACCNTABF                          KRENAMEACNUMBF
+      *
+      ** Interest Sub-Types File
+     FREINT   IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Retail Charges File
+     FRECRG   IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** EMU Mapping Details Header
+     FEUMDHDL0UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      *
+      ** EMU Mapping List
+     FEUACMLL3UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      *
+      ** EMU Mapping List
+     FEUACMLL1IF  E           K        DISK         KINFSR *PSSR
+     F            EUACMLPF                          KRENAMEACMLL1
+      *
+      ** EMU Mapping List
+     FEUACMLL6IF  E           K        DISK         KINFSR *PSSR
+     F            EUACMLPF                          KRENAMEACMLL6
+      *
+      ** EMU SWEEPS DETAILS by retail number                              164562
+     FRESWEPL2UF  E           K        DISK         KINFSR *PSSR          164562
+     F                                              KCOMIT                164562
+      *                                                                   164562
+      ** EMU SWEEPS DETAILS by general ledger account                     164562
+     FRESWEPL3UF  E           K        DISK         KINFSR *PSSR          164562
+     F                                              KCOMIT                164562
+     F            RESWEPD0                          KRENAMERESWEPD3       164562
+      *                                                                   164562
+      ** Workstation file
+     FEU0120DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        RRN1  KSFILE EU0120S1
+     F/COPY WNCPYSRC,EU0120F001
+      *
+      *****************************************************************
+      *
+      *
+      ** Compile-time Arrays
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      * Array for valid entries for statement frequency
+     E                    STF    15  15  1
+      * Array for valid entries for statement day
+     E                    STD     5   5  1
+      *
+      ** Array for ZALIGN, ZDATE1 and ZDATE2
+     E                    ZA1        16  1               ZALIGN/ZEDIT ARRAY
+     E                    ZA2        16  1               ZALIGN/ZEDIT ARRAY
+     E                    ZMDY   13  13  3 0
+     E                    ZYDY    4   4  4 0
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+      *
+      ** Array containing valid Capitalisation Frequencies
+     E*********           CAP    12  12  1                                137718
+     E                    CAP    14  14  1                                137718
+      *
+      ** Array containing valid Sweep Frequencies
+     E                    PAY    13  13  1
+     E/COPY WNCPYSRC,EU0120E002
+      *
+      ** Array that holds Euro Retail Account Number from subfile
+     E                    RAN      9999 10
+      *
+      *  Array that holds Euro Account Sequence Number
+     E**********          AC1      9999 12                                                    CGL029
+     E                    AC1      9999 18                                                    CGL029
+     E/COPY WNCPYSRC,EU0120E001
+      *
+      /SPACE 3
+      *
+     IACMLL1
+     I              EUMAPN                          L1MAPN
+     I              EUIBRC                          L1IBRC                153298
+     I              EUICNM                          L1ICNM                153298
+     I              EUICCY                          L1ICCY                153298
+     I              EUIACD                          L1IACD                153298
+     I              EUISQN                          L1ISQN                153298
+     I              EUIACN                          L1IACN                153298
+     I              EUEBRC                          L1EBRC                153298
+     I              EUECNM                          L1ECNM                153298
+     I              EUECCY                          L1ECCY                153298
+     I              EUEACD                          L1EACD                153298
+     I              EUESQN                          L1ESQN                153298
+     I              EUEACN                          L1EACN                153298
+     I              EUOPFA                          L1OPFA                153298
+     I              EUSWFA                          L1SWFA                153298
+     I              EUACLO                          L1ACLO                153298
+      *                                                                   153298
+     IACMLL6                                                              153298
+     I              EUMAPN                          L6MAPN                153298
+     I              EUIBRC                          L6IBRC                153298
+     I              EUICNM                          L6ICNM                153298
+     I              EUICCY                          L6ICCY                153298
+     I              EUIACD                          L6IACD                153298
+     I              EUISQN                          L6ISQN                153298
+     I              EUIACN                          L6IACN                153298
+     I              EUEBRC                          L6EBRC                153298
+     I              EUECNM                          L6ECNM                153298
+     I              EUECCY                          L6ECCY                153298
+     I              EUEACD                          L6EACD                153298
+     I              EUESQN                          L6ESQN                153298
+     I              EUEACN                          L6EACN                153298
+     I              EUOPFA                          L6OPFA                153298
+     I              EUSWFA                          L6SWFA                153298
+     I              EUACLO                          L6ACLO                153298
+      *                                                                   153298
+     I/COPY WNCPYSRC,EU0120I003
+      *
+     ILDA       E DSLDA                         256
+     I/COPY WNCPYSRC,EU0120I002
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      *
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+      * Data structures:
+      *
+      *  Midas Program Data Structure
+     IPGMDS     ESDSY2PGDSP
+      *
+      *  First DS for access program, short Data Structure
+     IDSFDY     E DSDSFDY
+      *
+      * Second DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      ** External DS for bank details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** General Ledger details
+     ISDGELR    E DSSDGELRPD
+      *
+      ** Currency details
+     ISDBSRT    E DSSDBSRTPD
+      *
+      ** External DS Profit Centre Details
+     ISDRETR    E DSSDRETRPD
+      *
+      ** Retail Details
+     ISDRETL    E DSSDRETLPD
+     I              QQACCD                          #ACCD1                                    CGL029
+      *
+      ** External DS Profit Centre Details
+     ISDPRFC    E DSSDPRFCPD
+      *
+      ** External DS Account Code Details
+     ISDACOD    E DSSDACODPD
+     I              QQACCD                          #ACCD2                                    CGL029
+      *
+      ** SD Narrative Code Types Details
+     ISDNARR    E DSSDNARRPD
+      *
+      ** Format of Retail Account Interest Type in file RECRG (Debit)
+     IK#KY01      DS
+     I I            ' '                       1   1 K1SPC
+     I                                        2   3 S3DINT
+     I                                        4   8 S3DIST
+     I                                        9  11 K1EURO
+     I I            'D'                      12  12 K1D
+      *
+      ** Format of Retail Account Interest Type in file RECRG (Credit)
+     IK#KY03      DS
+     I I            ' '                       1   1 K3SPC
+     I                                        2   3 S3CINT
+     I                                        4   8 S3CIST
+     I                                        9  11 K3EURO
+     I I            'D'                      12  12 K3D
+      *
+      ** Format of Retail Charges Type in file RECRG
+     IK#KY02      DS
+     I I            ' '                       1   1 K2SPC
+     I                                        2   3 S3CCCT
+     I                                        4   8 S3CCST
+     I                                        9  11 K2EURO
+     I I            'D'                      12  12 K2D
+      *
+      ** 'In' Currency GL Account
+     IS5INAC      DS
+     I                                        1   3 EUIBRC
+     I I            '-'                       4   4 K4SPC1
+     I**********                              5  100EUICNM                                    CSD027
+     I                                        5  10 EUICNM                                    CSD027
+     I I            '-'                      11  11 K4SPC2
+     I                                       12  14 EUICCY
+     I I            '-'                      15  15 K4SPC3
+     I**********                             16  190EUIACD                                    CGL029
+     I*I********    '-'                      20  20 K4SPC4                                    CGL029
+     I**********                             21  220EUISQN                                    CGL029
+     I                                       16  250EUIACD                                    CGL029
+     I I            '-'                      26  26 K4SPC4                                    CGL029
+     I                                       27  280EUISQN                                    CGL029
+      *
+      ** Euro Currency GL Account
+     IS5EUAC      DS
+     I                                        1   3 EUEBRC
+     I I            '-'                       4   4 K5SPC1
+     I**********                              5  100EUECNM                                    CSD027
+     I                                        5  10 EUECNM                                    CSD027
+     I I            '-'                      11  11 K5SPC2
+     I                                       12  14 EUECCY
+     I I            '-'                      15  15 K5SPC3
+      *
+      ** DD, MM & YY fields of Capitalisation Day (Debit)
+     IS3DNIC      DS
+     I                                        1   2 CAPDD
+     I                                        3   4 CAPMM
+     I                                        5   6 CAPYY
+      *
+      ** DD, MM & YY fields of Capitalisation Day (Credit)
+     IS3CNIC      DS
+     I                                        1   2 CAPDD2
+     I                                        3   4 CAPMM2
+     I                                        5   6 CAPYY2
+      *
+      ** Sweep narrative data structure
+     IS3PNAR      DS                             30
+     I                                        1   2 WPNCD
+     I                                        3  30 WNARR
+     IW#SNUM      DS                             10
+     I                                        5  10 W#SSNM
+     IW#SRCH      DS
+     I                                        1   6 S5ECNM
+     I**********                              7  10 S5EACD                                    CGL029
+     I**********                             11  12 S5ESQN                                    CGL029
+     I                                        7  16 S5EACD                                    CGL029
+     I                                       17  18 S5ESQN                                    CGL029
+     I/COPY WNCPYSRC,EU0120I001
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      * ===============================================================
+      **                  D E F I N I T I O N S
+      * ===============================================================
+      **Parmeters passed to program by EUC0130                            CRE008
+     C           *ENTRY    PLIST                                          CRE008
+     C                     PARM           P#EMUM  1        EMU MAPPING Y/NCRE008
+      **
+      ** Define Fields
+      ** ~~~~~~~~~~~~~
+     C           *LIKE     DEFN ZDAYNO    W#DAYN
+     C           *LIKE     DEFN ZDAYNO    W#ADAT
+     C           *LIKE     DEFN ZDAYNO    W#NSTD
+     C           *LIKE     DEFN ZDAYNO    W#DNIC
+      *
+     C           *LIKE     DEFN ZDAYNO    W#CNIC
+      *
+     C           *LIKE     DEFN ZDAYNO    W#NXTP
+     C           *LIKE     DEFN ZDAYNO    W#CLAC
+     C           *LIKE     DEFN ZDAYNO    W#CRSW
+     C           *LIKE     DEFN ZDAYNO    W#CRAC
+      *
+     C           *LIKE     DEFN ZDAYNO    W#RUND
+      *
+     C           *LIKE     DEFN EUMAPN    K#MAPN
+     C           *LIKE     DEFN EUEBRC    K#EBRC
+     C           *LIKE     DEFN EUECNM    K#ECNM
+     C           *LIKE     DEFN EUECCY    K#ECCY
+     C           *LIKE     DEFN EUEACD    K#EACD
+     C           *LIKE     DEFN EUESQN    K#ESQN
+     C           *LIKE     DEFN EUIBRC    K#IBRC
+     C           *LIKE     DEFN EUICNM    K#ICNM
+     C           *LIKE     DEFN EUICCY    K#ICCY
+     C           *LIKE     DEFN EUIACD    K#IACD
+     C           *LIKE     DEFN EUISQN    K#ISQN
+      *
+     C           *LIKE     DEFN S5REVF    W#REVF
+     C           *LIKE     DEFN S5REVF    NUMCHK
+      *
+     C           *LIKE     DEFN EUDACO    W@DACO
+     C           *LIKE     DEFN EUNSTD    W@NSTD
+     C           *LIKE     DEFN EUDNIC    W@DNIC
+     C           *LIKE     DEFN EUCNIC    W@CNIC
+     C           *LIKE     DEFN EUDRTS    W#DRTS
+     C           *LIKE     DEFN EUCRTS    W#CRTS
+     C           *LIKE     DEFN EUNXTP    W@NXTP
+     C           *LIKE     DEFN EUDLPY    W@DLPY
+     C           *LIKE     DEFN EUCRAC    W@CRAC
+     C           *LIKE     DEFN EUCRSW    W@CRSW
+     C           *LIKE     DEFN EUCLAC    W@CLAC
+      *
+     C           K#KY04    KLIST
+     C                     KFLD           K#EBRC
+     C                     KFLD           K#ECNM
+     C                     KFLD           K#ECCY
+     C                     KFLD           K#EACD
+     C                     KFLD           K#ESQN
+      *
+     C           K#KY06    KLIST
+     C                     KFLD           K#MAPN
+     C                     KFLD           K#EBRC
+     C                     KFLD           K#ECNM
+     C                     KFLD           K#ECCY
+     C                     KFLD           K#EACD
+     C                     KFLD           K#ESQN
+     C                     KFLD           K#IBRC
+     C                     KFLD           K#ICNM
+     C                     KFLD           K#ICCY
+     C                     KFLD           K#IACD
+     C                     KFLD           K#ISQN
+      *
+     C           *LIKE     DEFN EUECNM    K#CNUM
+     C           *LIKE     DEFN EUECCY    K#CCY
+     C           *LIKE     DEFN EUEACD    K#ACOD
+     C           *LIKE     DEFN EUESQN    K#ACSQ
+     C           *LIKE     DEFN EUEBRC    K#BRCA
+      *
+     C           K#KY07    KLIST
+     C                     KFLD           K#CNUM
+     C                     KFLD           K#CCY
+     C                     KFLD           K#ACOD
+     C                     KFLD           K#ACSQ
+     C                     KFLD           K#BRCA
+      *
+     C           K#KY08    KLIST
+     C                     KFLD           K#MAPN
+     C                     KFLD           K#EBRC
+     C                     KFLD           K#ECNM
+     C                     KFLD           K#ECCY
+     C                     KFLD           K#EACD
+     C                     KFLD           K#ESQN
+      *
+      /EJECT
+      *
+      * ===============================================================
+      *
+      *                M A I N        P R O C E S S I N G
+      *
+      * ===============================================================
+      *
+     C                     EXSR INIT
+      *
+     C           W#FMT     DOWNE*BLANK
+     C           W#FMT     CASEQ'S1'      SC1
+     C           W#FMT     CASEQ'S2'      SC2
+     C           W#FMT     CASEQ'S3'      SC3
+     C           W#FMT     CASEQ'S4'      SC4
+     C           W#FMT     CASEQ'SF'      SFLPR
+     C                     ENDCS
+     C                     ENDDO
+      *
+     C                     EXSR END
+      *
+      *
+      *****************************************************************
+      * INIT   : Initial Processing                                   *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      **  Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Check system date format, DDMMYY(98 off) or MMDDYY(98 on)
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Move Midas Run Date into work field
+     C                     MOVE BJRDNB    W#RUND
+      *
+      ** Access General Ledger details
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Access Retail Access Program
+     C                     CALL 'AORETLR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDRETR    PARM SDRETR    DSFDY
+      *
+      ** Get Retail Details
+     C                     CALL 'AORETLR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDRETL    PARM SDRETL    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANK
+      *
+     C           BMRANR    IFEQ 'Y'
+     C                     MOVE *ON       *IN81
+     C                     ENDIF
+      *
+      ** Otherwise database error
+      *
+     C                     ELSE
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDRETLPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+      ** Access Switchable Features Access Program
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CRE004'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CRE004  1
+     C                     MOVE *OFF      *IN73
+     C                     ELSE
+     C                     MOVE 'N'       CRE004
+     C                     MOVE *ON       *IN73
+     C                     ENDIF
+     C/COPY WNCPYSRC,EU0120C008
+      *                                                                   CRE008
+      * EMU Mapping?                                                      CRE008
+      *                                                                   CRE008
+     C           P#EMUM    COMP 'Y'                      78*              CRE008
+      *
+      *
+     C                     MOVE 'S1'      W#FMT   2
+     C                     MOVE *OFF      *IN25
+     C                     MOVE *ON       *IN75
+      *
+      **  Set up Message File name
+     C                     MOVEL'EUMSGF'  ZAMSGF
+      *
+     C                     MOVE BJMRDT    S#RUNA
+     C                     MOVE ##USR     S#USER
+     C                     MOVE ##JOB     S#WSID
+     C/COPY WNCPYSRC,EU0120C001
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * SC1   : Process Initial Screen                                *
+      *****************************************************************
+     C           SC1       BEGSR
+      *
+     C           W#FMT     DOWEQ'S1'
+      *
+     C                     WRITEEU0120F0
+     C                     WRITE#MSGCTL                    Messages
+     C                     EXFMTEU0120F1
+      *
+      ** Clear Message Subfile
+     C                     EXSR CLEARM
+      *
+      ** Checks which action has been requested and validates entry
+     C                     SELEC
+      *
+     C           *IN03     WHEQ *ON
+     C                     MOVE *BLANK    W#FMT
+      *
+     C                     OTHER
+      *
+     C                     EXSR VD1
+      *
+     C                     EXSR VLDAUT
+      *
+     C           W#ERR1    IFNE 'Y'
+      *
+      ** Allows screen fields for new Map No. to be filled
+     C*********************MOVEA'000'     *IN,76                          CRE008
+     C                     MOVEA'00'      *IN,76                          CRE008
+      *
+     C           S1ACTN    IFEQ 'D'
+     C                     EXSR DEL
+     C                     ELSE
+     C                     MOVE 'S2'      W#FMT
+      *
+      ** Turn on/off display indicators
+     C           EUOPIN    IFNE 'N'
+     C                     MOVE *ON       *IN69
+     C                     ELSE
+     C                     MOVE *OFF      *IN69
+     C                     ENDIF
+      *
+     C           EUSWPI    IFNE 'N'
+     C                     MOVE *ON       *IN82
+     C                     ELSE
+     C                     MOVE *OFF      *IN82
+     C                     ENDIF
+      *
+     C           EURNPR    IFEQ 'Y'
+     C                     MOVE *ON       *IN83
+     C                     ELSE
+     C                     MOVE *OFF      *IN83
+     C                     ENDIF
+      *
+     C           S1ACTN    IFEQ 'A'
+     C                     MOVE *ON       *IN80
+     C                     ELSE
+     C                     MOVE *OFF      *IN80
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      *  VLDAUT :   Validate Authority                                *
+      *****************************************************************
+     C           VLDAUT    BEGSR
+      *
+     C                     Z-ADD*ZERO     @ERR
+      *
+     C           AGMBIN    IFEQ 'N'
+      *
+     C                     CALL 'ZVACTU'
+     C***********          PARM 'A'       @ZACTN  1                       150337
+     C                     PARM S1ACTN    @ZACTN  1                       150337
+     C                     PARM           @ERR    10
+      *
+     C           @ERR      IFNE *ZERO
+     C                     MOVEL'EMR0171' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN71
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     CALL 'ZVACTBU'
+     C***********          PARM 'A'       @ZACTN  1                       150337
+     C                     PARM S1ACTN    @ZACTN  1                       150337
+     C                     PARM EUBRCA    @ZBR    3
+     C                     PARM           @ERR
+      *
+     C           @ERR      IFNE *ZERO
+      *
+     C           @ERR      IFEQ 1
+     C                     MOVEL'EMR0172' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           @ERR      IFEQ 2
+     C                     MOVEL'EMR0173' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *IN71
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * FILSC2 : Populates fields on First Detail Screen
+      *****************************************************************
+     C           FILSC2    BEGSR
+      *
+     C                     MOVE EUBRCA    S2BRCA
+     C                     MOVE EUACOD    S2ACOD
+     C                     MOVE EUCCY1    S2CCY1
+     C                     MOVE EUCCY2    S2CCY2
+     C                     MOVE EUCCY3    S2CCY3
+     C                     MOVE EUCCY4    S2CCY4
+     C                     MOVE EUCCY5    S2CCY5
+     C                     MOVE EUCCY6    S2CCY6
+     C                     MOVE EUCCY7    S2CCY7
+     C                     MOVE EUCCY8    S2CCY8
+     C                     MOVE EUCCY9    S2CCY9
+     C                     MOVE EUCY10    S2CY10
+      *
+     C********** EUCNUM    IFEQ *ZERO                                                         CSD027
+     C           EUCNUM    IFEQ *BLANKS                                                       CSD027
+     C                     MOVE *BLANK    S2CNUM
+     C                     ELSE
+     C                     MOVE EUCNUM    S2CNUM
+     C                     ENDIF
+      *
+     C                     MOVE EUMULT    S2MULT
+     C                     MOVE EURNPR    S2RNPR
+      *
+     C           EURNPO    IFEQ *ZERO
+     C                     MOVE *BLANK    S2RNPO
+     C                     ELSE
+     C                     MOVE EURNPO    S2RNPO
+     C                     ENDIF
+      *
+     C           EURNND    IFEQ *ZERO
+     C                     MOVE *BLANK    S2RNND
+     C                     ELSE
+     C                     MOVE EURNND    S2RNND
+     C                     ENDIF
+      *
+     C                     MOVE EURNCD    S2RNCD
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * SC2   : Process First Detail Screen                           *
+      *****************************************************************
+     C           SC2       BEGSR
+      *
+     C                     EXSR FILSC2
+      *
+      ** Write messages and Details
+     C                     WRITE#MSGCTL                    Messages
+     C                     EXFMTEU0120F2
+      *
+      ** Clear Message Subfile
+     C                     EXSR CLEARM
+      *
+      ** Checks which action has been requested and validates entry
+     C                     SELEC
+      *
+     C           *IN03     WHEQ *ON
+     C                     MOVE *BLANK    W#FMT
+      *
+     C           *IN12     WHEQ *ON
+     C                     MOVE 'S1'      W#FMT
+      *
+     C                     OTHER
+      *
+     C                     MOVE 'S3'      W#FMT
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * FILSC3 : Populates fields on Second Detail Screen
+      *****************************************************************
+     C           FILSC3    BEGSR
+      *
+      ** Reset all previous error markers from Screen 2
+     C                     MOVEA'00000000'*IN,30
+     C                     MOVEA'00000000'*IN,38
+     C                     MOVEA'00000000'*IN,46
+     C                     MOVE *OFF      *IN99
+     C                     MOVE 'N'       W#ERR1
+      *
+      ** Fill screen fields, changing dates from Midas format
+      ** For numeric field containing zeros, blank out the screen field
+     C                     MOVE EUDACO    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     S3DACO
+      *
+     C           EUNSTD    IFEQ *ZERO
+     C                     MOVE *BLANK    S3NSTD
+     C                     ELSE
+     C                     MOVE EUNSTD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     S3NSTD
+     C                     ENDIF
+      *
+     C                     MOVE EUSTFQ    S3STFQ
+      *
+     C           EUSTDY    IFEQ *ZERO
+     C                     MOVE *BLANK    S3STDY
+     C                     ELSE
+     C                     MOVE EUSTDY    S3STDY
+     C                     ENDIF
+      *
+     C                     MOVE EUDBRT    S3DBRT
+      *
+     C           EUDRTS    IFEQ *ZERO
+     C                     MOVE *BLANK    S3DRTS
+     C                     ELSE
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE EUDRTS    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S3DRTS
+     C                     ENDIF
+      *
+     C                     MOVE EUDRSS    S3DRSS
+     C                     MOVE EUDINT    S3DINT
+     C                     MOVE EUDIST    S3DIST
+      *
+     C           EUDCLB    IFEQ *ZERO
+     C                     MOVE *BLANK    S3DCLB
+     C                     ELSE
+     C                     MOVE EUDCLB    S3DCLB
+     C                     ENDIF
+      *
+     C           EUDNIC    IFEQ *ZERO
+     C                     MOVE *BLANK    S3DNIC
+     C                     ELSE
+     C                     MOVE EUDNIC    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     S3DNIC
+     C                     ENDIF
+      *
+     C                     MOVE EUDCFQ    S3DCFQ
+      *
+     C           EUDCDY    IFEQ *ZERO
+     C                     MOVE *BLANK    S3DCDY
+     C                     ELSE
+     C                     MOVE EUDCDY    S3DCDY
+     C                     ENDIF
+      *
+     C                     MOVE EUCBRT    S3CBRT
+      *
+     C           EUCRTS    IFEQ *ZERO
+     C                     MOVE *BLANK    S3CRTS
+     C                     ELSE
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE EUCRTS    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S3CRTS
+     C                     ENDIF
+      *
+     C                     MOVE EUCRSS    S3CRSS
+     C                     MOVE EUCINT    S3CINT
+     C                     MOVE EUCIST    S3CIST
+      *
+     C           EUCCLB    IFEQ *ZERO
+     C                     MOVE *BLANK    S3CCLB
+     C                     ELSE
+     C                     MOVE EUCCLB    S3CCLB
+     C                     ENDIF
+      *
+     C           EUCNIC    IFEQ *ZERO
+     C                     MOVE *BLANK    S3CNIC
+     C                     ELSE
+     C                     MOVE EUCNIC    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     S3CNIC
+     C                     ENDIF
+      *
+     C                     MOVE EUCCFQ    S3CCFQ
+      *
+     C           EUCCDY    IFEQ *ZERO
+     C                     MOVE *BLANK    S3CCDY
+     C                     ELSE
+     C                     MOVE EUCCDY    S3CCDY
+     C                     ENDIF
+      *
+     C                     MOVE EUCCCT    S3CCCT
+     C                     MOVE EUCCST    S3CCST
+     C                     MOVE EUCRSS    S3CRSS
+     C                     MOVE EUCINT    S3CINT
+     C                     MOVE EUCIST    S3CIST
+      *
+      **  Indicator showing that this subroutine has been executed
+     C                     MOVE *ON       *IN76
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * SC3   :  Process Second Detail Screen
+      *****************************************************************
+     C           SC3       BEGSR
+      *
+      **  Fill Screen 3 from master file if records have not already
+      **  been amended. Else show amended field values.
+     C           *IN76     IFEQ *OFF
+     C                     EXSR FILSC3
+     C                     ENDIF
+      *
+      * Begin loop
+     C           W#FMT     DOWEQ'S3'
+      *
+     C                     WRITE#MSGCTL
+     C                     EXFMTEU0120F3
+      *
+      ** Clear Message Subfile
+     C                     EXSR CLEARM
+      *
+      ** Checks which action has been requested and validates entry
+     C                     SELEC
+      *
+     C           *IN03     WHEQ *ON
+     C                     MOVE *BLANK    W#FMT
+      *
+     C           *IN12     WHEQ *ON
+     C                     MOVE 'S2'      W#FMT
+      *
+     C                     OTHER
+      *
+     C           S1ACTN    IFEQ 'A'
+      *
+     C           *IN69     IFEQ *OFF
+     C                     EXSR VD2
+     C                     ENDIF
+      * If no error
+     C           W#ERR1    IFNE 'Y'
+     C                     MOVE 'S4'      W#FMT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           S1ACTN    IFEQ 'E'
+     C                     MOVE 'S4'      W#FMT
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * FILSC4:  Populate Third Detail Screeen Fields
+      *****************************************************************
+     C           FILSC4    BEGSR
+      *
+      ** Reset all previous error markers from Screen 4
+     C                     MOVEA'00000000'*IN,54
+     C                     MOVEA'00'      *IN,62
+     C                     MOVE *OFF      *IN99
+     C                     MOVE 'N'       W#ERR1
+      *
+      ** Clear all work fields
+     C                     MOVE *BLANK    W@PNCD  2
+     C                     MOVE *BLANK    W@PNAR 30
+      *
+      ** Fill screen fields, changing dates from Midas format
+      ** For numeric field containing zeros, blank out the screen field
+     C           BKPRCU    IFEQ 'N'
+     C                     MOVE *ON       *IN72
+     C                     ELSE
+     C                     MOVE EUPRFC    S4PRFC
+     C                     ENDIF
+      *
+     C           EUTRAT    IFEQ *ZERO
+     C                     MOVE *BLANK    S4TRAT
+     C                     ELSE
+     C                     MOVE EUTRAT    S4TRAT
+     C                     ENDIF
+      *
+     C                     MOVE EUPNAR    S4PNAR
+      *
+     C           EUNXTP    IFEQ *ZERO
+     C                     MOVE *BLANK    S4NXTP
+     C                     ELSE
+     C                     MOVE EUNXTP    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     S4NXTP
+     C                     ENDIF
+      *
+     C                     MOVE EUPAYF    S4PAYF
+      *
+     C           EUDYTP    IFEQ *ZERO
+     C                     MOVE *BLANK    S4DYTP
+     C                     ELSE
+     C                     MOVE EUDYTP    S4DYTP
+     C                     ENDIF
+      *
+     C           EUDLPY    IFEQ *ZERO
+     C                     MOVE *BLANK    S4DLPY
+     C                     ELSE
+     C                     MOVE EUDLPY    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     S4DLPY
+     C                     ENDIF
+      *
+     C           EUCLAC    IFEQ *ZERO
+     C                     MOVE *BLANK    S4CLAC
+     C                     ELSE
+     C                     MOVE EUCLAC    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     S4CLAC
+     C                     ENDIF
+      *
+     C           EUCRSW    IFEQ *ZERO
+     C                     MOVE *BLANK    S4CRSW
+     C                     ELSE
+     C                     MOVE EUCRSW    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     S4CRSW
+     C                     ENDIF
+      *
+     C           EUCRAC    IFEQ *ZERO
+     C                     MOVE *BLANK    S4CRAC
+     C                     ELSE
+     C                     MOVE EUCRAC    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     S4CRAC
+     C                     ENDIF
+      *
+      **  Indicator showing that this subroutine has been executed
+     C                     MOVE *ON       *IN77
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * SC4   :  Process Third Detail Screeen
+      *****************************************************************
+     C           SC4       BEGSR
+      *
+      **  Fill Screen 4 from master file if records have not already
+      **  been amended. Else show amended field values.
+     C           *IN77     IFEQ *OFF
+     C                     EXSR FILSC4
+     C                     ENDIF
+      *
+      * Begin loop
+     C           W#FMT     DOWEQ'S4'
+      *
+     C                     WRITE#MSGCTL
+     C                     EXFMTEU0120F4
+     C/COPY WNCPYSRC,EU0120C002
+      *
+      ** Clear Message Subfile
+     C                     EXSR CLEARM
+      *
+      ** Clear work fields
+     C                     MOVE *ZEROS    W@DLPY
+     C                     MOVE *ZEROS    W#CRAC
+     C                     MOVE *ZEROS    W#CRSW
+     C                     MOVE *ZEROS    W#CLAC
+     C                     MOVE *BLANK    W@PNCD  2
+     C                     MOVE *BLANK    W@PNAR 30
+      *
+      ** Checks which action has been requested and validates entry
+     C                     SELEC
+      *
+     C           *IN03     WHEQ *ON
+     C                     MOVE *BLANK    W#FMT
+      *
+     C           *IN12     WHEQ *ON
+     C                     MOVE 'S3'      W#FMT
+      *
+     C                     OTHER
+      *
+     C           S1ACTN    IFEQ 'A'
+      *
+     C                     EXSR VD3
+      *
+      * If no error
+     C           W#ERR1    IFNE 'Y'
+     C                     MOVE 'SF'      W#FMT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           S1ACTN    IFEQ 'E'
+     C                     MOVE 'SF'      W#FMT
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * LOADSF:  Fill Subfile fields
+      *****************************************************************
+     C           LOADSF    BEGSR
+      *
+     C                     Z-ADD0         W#RECS  20
+      *
+      ** Reset all previous error markers
+     C                     MOVEA'00000'   *IN,64
+     C                     MOVE *OFF      *IN99
+     C                     MOVE *OFF      *IN29            SFLNXTCHG
+     C                     MOVE *OFF      *IN24
+     C                     MOVE 'N'       W#ERR1
+      *
+      **  Position file
+     C           K#KY06    SETLLEUACMLL3
+     C           EUMAPN    READEEUACMLL3            N    90
+      *
+      **  Search argument is greater than the highest key on file
+     C           *IN90     IFEQ *ON
+      *
+     C                     Z-ADD0         ##SFRC
+      **  Clear subfile
+     C                     MOVEA'001'     *IN,25
+     C                     WRITEEU0120S2
+      *
+     C                     ELSE
+      *
+     C           1         ADD  CURRRN    ##SFRC
+     C                     MOVE *OFF      *IN27
+     C                     MOVE *ON       *IN25
+     C                     Z-ADDCURRRN    RRN1
+      *
+      ** Loop **
+     C           *IN90     DOWEQ*OFF
+     C           W#RECS    ANDLT11
+      *
+     C                     MOVE *BLANKS   S5SEL
+     C                     MOVE *OFF      *IN26
+     C                     ADD  1         RRN1    40
+      *
+      ** Fill Subfile fields
+      *                                                                   133671
+      ** If retail account nos are preserved, blank out 'in' currency one 133671
+     C           EUIACN    IFEQ *ZEROS                                    133671
+     C                     MOVE *BLANKS   S5IACN                          133671
+     C                     ELSE                                           133671
+     C                     MOVE EUIACN    S5IACN
+     C                     ENDIF                                          133671
+      *                                                                   133671
+     C                     MOVE EUEACD    S5EACD
+     C                     MOVE EUESQN    S5ESQN
+     C                     MOVE EUEACN    S5EACN
+     C                     MOVE EUEACD    H#EACD
+     C                     MOVE EUESQN    H#ESQN
+     C                     MOVE EUEACN    H#EACN
+     C/COPY WNCPYSRC,EU0120C005
+      *
+      * If many-to-one map only display the Euro a/c by the first a/c     153298
+     C********** EUMULT    IFEQ 'N'                                       153298
+     C           EUMULT    IFEQ 'Y'                                       153298
+      *
+     C           W#FRST    IFEQ 'Y'
+      *
+     C                     MOVE 'N'       W#FRST  1
+     C                     MOVE *OFF      *IN24
+      *
+     C                     Z-ADDRRN1      Y       40
+     C                     MOVELS5EUAC    W#SNUM
+     C                     MOVE W#SSNM    S5ECNM
+     C                     MOVE W#SRCH    AC1,Y
+     C           EURNPR    IFEQ 'N'
+     C                     MOVE S5EACN    RAN,Y
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           W#FRST    IFEQ 'N'
+     C                     MOVE *ON       *IN24
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *
+     C                     ELSE
+      *
+     C                     MOVE *OFF      *IN24
+      *
+     C                     Z-ADDRRN1      Y       40
+     C                     MOVELS5EUAC    W#SNUM
+     C                     MOVE W#SSNM    S5ECNM
+     C                     MOVE W#SRCH    AC1,Y
+     C           EURNPR    IFEQ 'N'
+     C                     MOVE S5EACN    RAN,Y
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ADD  1         W#RECS
+      *
+     C                     WRITEEU0120S1
+      *
+     C********** EUMULT    IFEQ 'N'                                       153298
+     C           EUMULT    IFEQ 'Y'                                       153298
+      *
+     C                     MOVE EUMAPN    K#MAPN
+     C                     MOVE EUEBRC    K#EBRC
+     C                     MOVE EUECNM    K#ECNM
+     C                     MOVE EUECCY    K#ECCY
+     C                     MOVE EUEACD    K#EACD
+     C                     MOVE EUESQN    K#ESQN
+      *
+     C           K#KY08    READEEUACMLL3            N    90
+      *
+     C           *IN90     IFEQ *ON
+     C           K#KY08    SETGTEUACMLL3
+     C           EUMAPN    READEEUACMLL3            N    90
+     C                     MOVE 'Y'       W#FRST
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           EUMAPN    READEEUACMLL3            N    90
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     Z-ADDRRN1      CURRRN  40
+      *
+     C                     ENDIF
+      *
+      **  No more records to display next time user pressed rollup key
+     C           *IN90     IFEQ *ON
+     C                     MOVE *ON       *IN26            SFLEND(*MORE)
+     C                     ELSE
+      *
+      **  Reposition file, i.e set up K#KY06
+      *
+     C                     MOVE EUMAPN    K#MAPN
+     C                     MOVE EUEBRC    K#EBRC
+     C                     MOVE EUECNM    K#ECNM
+     C                     MOVE EUECCY    K#ECCY
+     C                     MOVE EUEACD    K#EACD
+     C                     MOVE EUESQN    K#ESQN
+     C                     MOVE EUIBRC    K#IBRC
+     C                     MOVE EUICNM    K#ICNM
+     C                     MOVE EUICCY    K#ICCY
+     C                     MOVE EUIACD    K#IACD
+     C                     MOVE EUISQN    K#ISQN
+      *
+     C                     MOVE *OFF      *IN26
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * SFLPR :  Process Subfile
+      *****************************************************************
+     C           SFLPR     BEGSR
+      *
+      **  Clear 'Review from' screen field, display Map Number
+     C                     MOVE *BLANK    S5REVF
+     C                     MOVE *BLANK    W#REVF
+     C                     MOVE S1MAPN    S5MAPN
+     C                     MOVE 'Y'       W#FRST
+     C                     CLEARAC1
+     C                     CLEARRAN
+      *
+      **  Initialise subfile
+     C                     Z-ADD0         RRN1    40
+     C                     Z-ADD0         CURRRN  40
+      *
+      **  Clear subfile
+     C                     MOVE *ON       *IN27            SFLCLR
+     C                     MOVE *OFF      *IN25
+     C                     WRITEEU0120S2
+      *
+      * Set up K#KY06
+      *
+     C                     MOVE EUMAPN    K#MAPN
+     C                     MOVE *BLANK    K#EBRC
+     C**********           Z-ADD*ZERO     K#ECNM                                              CSD027
+     C                     MOVE *BLANKS   K#ECNM                                              CSD027
+     C                     MOVE *BLANK    K#ECCY
+     C                     Z-ADD*ZERO     K#EACD
+     C                     Z-ADD*ZERO     K#ESQN
+     C                     MOVE *BLANK    K#IBRC
+     C**********           Z-ADD*ZERO     K#ICNM                                              CSD027
+     C                     MOVE *BLANKS   K#ICNM                                              CSD027
+     C                     MOVE *BLANK    K#ICCY
+     C                     Z-ADD*ZERO     K#IACD
+     C                     Z-ADD*ZERO     K#ISQN
+      **  Load Subfile
+     C                     EXSR LOADSF
+      *
+      **  Loop
+     C           W#FMT     DOWEQ'SF'
+      *
+     C                     WRITE#MSGCTL                    Messages
+      *
+      **  If no records to display, show message
+     C           *IN27     IFEQ *ON
+     C                     WRITEEU0120F5                   No records
+     C                     MOVE 'Y'       W#NR    1
+     C                     ELSE
+     C                     MOVE 'N'       W#NR
+     C                     ENDIF
+      *
+     C                     WRITEEU0120S3                   Footer
+     C                     EXFMTEU0120S2                   Subfile Control
+      *
+     C                     EXSR CLEARM
+      *
+      ** Checks which action is requested
+     C                     SELEC
+      *
+     C           *IN03     WHEQ *ON
+     C                     MOVE *BLANK    W#FMT
+      *
+     C           *IN12     WHEQ *ON
+     C                     MOVE 'S4'      W#FMT
+     C                     MOVE *BLANK    S5REVF
+      *
+     C           *IN28     WHEQ *ON                        Rollup
+     C                     EXSR LOADSF
+      *
+     C                     OTHER
+      *
+     C                     EXSR SFLREV
+      *
+     C           W#CHNG    IFEQ 'N'
+      *
+     C           *IN27     IFEQ *OFF
+      *
+      **  Validate subfile entries if in Amend mode and Euro accounts
+      **  not yet open
+      *
+     C           S1ACTN    IFEQ 'A'
+     C           EUOPIN    ANDEQ'N'
+     C                     EXSR SVD1
+     C                     ENDIF
+      *
+      ** If no errors in subfile validation, do subfile processing
+     C           W#ERR1    IFNE 'Y'
+     C           S1ACTN    ANDEQ'A'
+     C                     EXSR SFPROC
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** If no records, return to initial screen
+     C           W#NR      IFEQ 'Y'
+     C                     MOVE 'S1'      W#FMT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           W#ERR1    IFNE 'Y'
+     C           S1ACTN    ANDEQ'A'
+      ** Update Mapping Details Header
+     C                     EXSR UPDATE
+      *
+      **  Commit changes
+     C                     COMIT
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * SFLREV:  Processes entries in the 'Review from' field
+      *****************************************************************
+     C           SFLREV    BEGSR
+      *
+     C                     MOVE 'N'       W#CHNG
+      **  Check if 'Review from' field has changed
+     C           S5REVF    IFNE W#REVF
+     C                     MOVE 'Y'       W#CHNG  1
+     C                     MOVE 'SF'      W#FMT
+      *
+     C           S5REVF    IFEQ *BLANK
+     C**********           MOVE '000000'  NUMCHK                                              CSD027
+     C                     MOVE *BLANKS   NUMCHK                                              CSD027
+     C                     MOVE S5REVF    W#REVF
+     C                     ELSE
+      *
+      **  Save review fields
+     C                     MOVE S5REVF    W#REVF
+     C                     MOVE S5REVF    NUMCHK
+     C                     ENDIF
+      *
+     C**********           MOVELNUMCHK    WNUM7   70                                          CSD027
+     C**********           MOVELWNUM7     WALF6   6                                           CSD027
+     C                     MOVE NUMCHK    WALF6   6                                           CSD027
+     C           NUMCHK    IFNE WALF6
+      *
+      *  Error message
+     C                     MOVEL'EMR0207' ZAMSID
+     C                     MOVE *ON       *IN64
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      **  Set up key fields to position subfile
+     C                     MOVE EUMAPN    K#MAPN
+     C                     MOVE EUEBRC    K#EBRC
+     C                     MOVE S5REVF    K#ECNM
+     C                     MOVE *BLANK    K#ECCY
+     C                     Z-ADD*ZERO     K#EACD
+     C                     Z-ADD*ZERO     K#ESQN
+     C                     MOVE *BLANK    K#IBRC
+     C**********           Z-ADD*ZERO     K#ICNM                                              CSD027
+     C                     MOVE *BLANKS   K#ICNM                                              CSD027
+     C                     MOVE *BLANK    K#ICCY
+     C                     Z-ADD*ZERO     K#IACD
+     C                     Z-ADD*ZERO     K#ISQN
+      *
+      **  Clear subfile
+     C                     MOVE *ON       *IN27            SFLCLR
+     C                     MOVE *OFF      *IN25
+     C                     WRITEEU0120S2
+      *
+     C                     Z-ADD0         RRN1
+     C                     Z-ADD0         CURRRN
+     C                     MOVE *BLANKS   S5SEL
+     C                     MOVE *OFF      *IN68
+     C                     MOVE 'Y'       W#FRST
+     C                     CLEARAC1
+     C                     CLEARRAN
+     C                     EXSR LOADSF
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           S5REVF    IFEQ *BLANK
+     C           S1ACTN    ANDEQ'E'
+      *
+      **  Return to initial screen & clear screen fields
+     C                     MOVE 'S1'      W#FMT
+     C                     MOVE *BLANK    S1MAPN
+     C                     MOVE *BLANK    S1ACTN
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * SFPROC:  Subfile Entry Processing
+      *****************************************************************
+      *
+     C           SFPROC    BEGSR
+      *
+      **  Read all changed records
+     C                     READCEU0120S1                 87
+      *
+     C           *IN87     DOWEQ*OFF
+      *
+      **  set up K#KY08
+     C                     MOVE EUMAPN    K#MAPN
+     C                     MOVE EUEBRC    K#EBRC
+     C                     MOVE EUECNM    K#ECNM
+     C                     MOVE EUECCY    K#ECCY
+     C                     MOVE H#EACD    K#EACD
+     C                     MOVE H#ESQN    K#ESQN
+      *
+     C           K#KY08    CHAINEUACMLL3             90
+      *
+      ** If Delete was selected, adjust Account Mapping List file
+     C           S5SEL     IFEQ 'D'
+      *
+     C           *IN90     DOWEQ*OFF
+     C                     DELETEUACMLPF
+     C           K#KY08    CHAINEUACMLL3             90
+     C                     ENDDO
+      *
+     C                     MOVEL'EMR0204' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      **  Return to initial screen & clear screen fields
+     C                     MOVE 'S1'      W#FMT
+     C                     MOVE *BLANK    S1MAPN
+     C                     MOVE *BLANK    S1ACTN
+      *
+     C                     ELSE
+      *
+      **  Update file if Delete was not selected
+     C                     EXSR UPDATS
+     C                     ENDIF
+      *
+     C                     READCEU0120S1                 87
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * VD1   :  Validates Initial Screen Input
+      *****************************************************************
+      *
+     C           VD1       BEGSR
+      *
+     C                     MOVE *BLANK    W#ERR1  1
+      *
+      **  Validate Map Number
+     C                     MOVE *OFF      *IN70
+      *
+     C           S1MAPN    IFEQ *BLANKS
+     C                     MOVEL'EMR0206' ZAMSID
+     C                     MOVE *ON       *IN70
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      **  Input to S1MAPN must be numeric
+     C                     MOVELS1MAPN    W#NUM   70
+     C                     MOVELW#NUM     W#ALF   6
+     C           S1MAPN    IFNE W#ALF
+      *
+     C                     MOVEL'EMR0205' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN70
+      *
+     C                     ELSE
+      *
+     C                     MOVE S1MAPN    K#MAPN
+     C***********K#MAPN    CHAINEUMDHDL0             90                   136669
+      *                                                                   136669
+      ** Prevent locking of record if in 'enquire' mode, monitor for      136669
+      ** database error if accessing record already being amended         136669
+     C           S1ACTN    IFEQ 'E'                                       136669
+     C           K#MAPN    CHAINEUMDHDL0            N90                   136669
+     C                     ELSE                                           136669
+     C           K#MAPN    CHAINEUMDHDL0             9088                 136669
+     C                     ENDIF                                          136669
+      *                                                                   136669
+     C           *IN88     IFEQ *ON                                       136669
+     C                     MOVEL'EMR0222' ZAMSID                          136669
+     C                     MOVE *ON       *IN70                           136669
+     C                     MOVE 'Y'       W#ERR1                          136669
+     C                     EXSR ZASNMS                                    136669
+     C                     ENDIF                                          136669
+      *
+     C           *IN90     IFEQ *ON
+     C           EUEMUM    ORNE P#EMUM                                    CRE008
+     C                     MOVEL'EMR0200' ZAMSID
+     C                     MOVE *ON       *IN70
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Validate Action Code
+     C                     MOVE *OFF      *IN71
+      *
+     C           S1ACTN    IFNE 'A'
+     C           S1ACTN    ANDNE'D'
+     C           S1ACTN    ANDNE'E'
+     C                     MOVEL'EMR0201' ZAMSID
+     C                     MOVE *ON       *IN71
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      * If valid map number
+     C           *IN70     IFEQ *OFF
+      *
+     C           S1ACTN    IFEQ 'D'
+      *
+      ** Can now delete records if Euro accounts has been opened          139372
+      ** but Euro account has been deleted.                               139372
+      *                                                                   139372
+     C           EUOPIN    IFNE 'N'                                       139372
+     C                     MOVE '0'       *IN85                           139372
+     C                     EXSR EUODEL                                    139372
+     C                     ENDIF                                          139372
+      *                                                                   139372
+      *
+      ** Can only delete records if Euro accounts have not been opened
+     C           EUOPIN    IFNE 'N'
+     C                     MOVEL'EMR0202' ZAMSID
+     C                     MOVE *ON       *IN71
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           S1ACTN    IFEQ 'A'
+      *
+     C           EUOPIN    IFNE 'N'
+     C           EUSWPI    ANDNE'N'
+     C           EUCLSE    ANDNE'N'
+     C                     MOVEL'EMR0203' ZAMSID
+     C                     MOVE *ON       *IN71
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * VD2   :  Validate Second Detail Screen Input
+      *****************************************************************
+      *
+     C           VD2       BEGSR
+      *
+      ** Reset all previous error markers from Screen 2
+     C                     MOVEA'00000000'*IN,30
+     C                     MOVEA'00000000'*IN,38
+     C                     MOVEA'00000000'*IN,46
+     C                     MOVE *OFF      *IN99
+     C                     MOVE 'N'       W#ERR1
+      *
+     C                     EXSR VD2ACC
+     C                     EXSR VD2DBT
+     C                     EXSR VD2CRT
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * VD2ACC:  Validate Basic Account Details
+      *****************************************************************
+      *
+     C           VD2ACC    BEGSR
+      *
+      ****Convert 1st January 1999 to Day No.                             134820
+     C***********          MOVE 010199    ZDATE                           134820
+     C/COPY EUCPYSRC,EUEMUSTART                                           134820
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    W#DAYN
+      *
+      ** Date account opened must be entered
+     C           S3DACO    IFEQ *BLANKS
+     C                     MOVEL'EMR0116' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN30
+      *
+     C                     ELSE
+      *
+      **  Must be valid date format
+     C                     MOVE S3DACO    ZDATE
+     C                     MOVELS3DACO    WNUM7   70
+     C                     MOVELWNUM7     ALPH6   6
+      *
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ *ON
+     C           S3DACO    ORNE ALPH6
+     C                     MOVEL'EMR0117' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN30
+      *
+     C                     ELSE
+      *
+      **  Earlier than 1st January 1999
+     C           ZDAYNO    IFLT W#DAYN
+     C                     MOVEL'EMR0118' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN30
+      *
+     C                     ELSE
+      *
+     C                     MOVE ZDAYNO    W#ADAT
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Statement date must be valid format
+     C           S3NSTD    IFNE *BLANK
+      *
+     C                     Z-ADD*ZERO     ZDATE
+     C                     MOVE S3NSTD    ZDATE
+     C                     MOVELS3NSTD    WNUM7   70
+     C                     MOVELWNUM7     ALPH6   6
+      *
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ *ON
+     C           S3NSTD    ORNE ALPH6
+     C                     MOVEL'EMR0119' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN31
+     C                     ENDIF
+      *
+      **  Earlier than run date
+     C/COPY WNCPYSRC,EU0120C009
+     C           ZDAYNO    IFLT W#RUND
+     C                     MOVEL'EMR0120' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN31
+     C                     ENDIF
+     C/COPY WNCPYSRC,EU0120C010
+      *
+      **  Cannot be earlier than account opening date (if entered)
+     C           ZDAYNO    IFLT W#ADAT
+     C                     MOVEL'EMR0156' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN31
+      *
+     C                     ELSE
+      *
+     C                     MOVE ZDAYNO    W#NSTD
+      *
+     C                     ENDIF
+      *
+     C                     MOVE ZDAYNO    W#NSTD
+      *
+     C                     ELSE
+     C/COPY WNCPYSRC,EU0120C011
+      *
+     C           S3STFQ    IFNE 'Z'
+     C                     MOVEL'EMR0119' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN31
+     C                     ENDIF
+     C/COPY WNCPYSRC,EU0120C012
+      *
+     C                     ENDIF
+      *
+      **  Check whether Statement frequency is valid
+     C/COPY WNCPYSRC,EU0120C013
+     C           S3STFQ    IFNE *BLANK
+      *
+     C           S3STFQ    LOKUPSTF,1                    20
+      *
+     C           *IN20     IFEQ *OFF
+     C                     MOVEL'EMR0121' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN32
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C/COPY WNCPYSRC,EU0120C017
+     C                     MOVE 'D'       S3STFQ
+     C/COPY WNCPYSRC,EU0120C018
+      *
+     C                     ENDIF
+     C/COPY WNCPYSRC,EU0120C014
+      *
+      **  Statement day month 01 to 31 if Statement frequency is
+      **  M, T, Q, X or Y
+     C           S3STFQ    LOKUPSTD,1                    20
+      *
+     C           *IN20     IFEQ *ON
+      *
+     C           S3STDY    IFNE *BLANK
+      *
+     C                     TESTN          S3STDY     90
+      *
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL'EMR0122' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN33
+      *
+     C                     ELSE
+      *
+     C                     MOVE S3STDY    W#STDY  20
+      *
+     C           W#STDY    IFGT 31
+     C           W#STDY    ORLT 1
+     C                     MOVEL'EMR0122' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN33
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           S3STDY    IFEQ *BLANKS
+     C                     MOVELS3NSTD    S3STDY
+     C                     ENDIF
+      *
+     C                     ELSE
+     C/COPY WNCPYSRC,EU0120C015
+      *
+     C           S3STDY    IFNE *BLANKS
+     C                     MOVEL'EMR0167' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN33
+     C                     ENDIF
+     C/COPY WNCPYSRC,EU0120C016
+      *
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * VD2DBT:  Validate Debit Interest Details
+      *****************************************************************
+      *
+     C           VD2DBT    BEGSR
+      *
+      *Validate base rate code
+     C           S3DBRT    IFNE *BLANK
+     C   78                MOVELBKEURO    @CYCD                           CRE008
+     C  N78                MOVELS2CCY1    @CYCD                           CRE008
+      *
+     C                     CALL 'AOBSRTR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C*********************PARM BKEURO    @CYCD   3                       CRE008
+     C                     PARM           @CYCD   3                       CRE008
+     C                     PARM S3DBRT    @BSRC   2
+     C********** SDBSRT    PARM SDBSRT    DSFDY                                 CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                                 CSD006
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'EMR0123' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN34            RI & PC
+      *
+     C                     ELSE
+      *
+     C                     MOVE BABSRC    S3DBRT           RI & PC
+      *
+      *If base rate entered is not a EURO base rate
+     C           BACYCD    IFNE BKEURO
+     C           *IN78     ANDEQ'1'                                       CRE008
+     C           BACYCD    ORNE S2CCY1                                    CRE008
+     C           *IN78     ANDEQ'0'                                       CRE008
+     C                     MOVEL'EMR0123' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN34            RI & PC
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Rate/Spread
+     C           S3DRTS    IFNE *BLANK
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE S3DRTS    ZFIELD
+     C                     Z-ADD4         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVEL'EMR0124' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN36
+      *
+     C                     ELSE
+      *
+     C                     MOVE ZFIELD    W#DRTS
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE W#DRTS    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S3DRTS
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE '0'       ZFIELD
+     C                     Z-ADD4         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    W#DRTS
+      *
+     C                     ENDIF
+      *
+      ** Validate Rate/Spread Sign - default is '+'
+     C           S3DRTS    IFNE *BLANK
+      *
+     C           S3DRSS    IFEQ *BLANK
+     C                     MOVE '+'       S3DRSS
+     C                     ELSE
+      *
+     C           S3DRSS    IFNE '+'
+     C           S3DRSS    ANDNE'-'
+     C                     MOVEL'EMR0125' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN37
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           S3DRTS    IFEQ *BLANKS
+     C           S3DRSS    ANDNE*BLANKS
+     C                     MOVEL'EMR0164' ZAMSID
+     C                     MOVE 'Y'       W#ERR1           Error
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN37            RI & PC
+     C                     ENDIF
+      *
+      ** Validate Interest Type and Interest Sub-Type
+     C           S3DRTS    IFEQ *BLANK
+      *
+     C                     ELSE
+      *
+     C           S3DINT    IFNE *BLANK
+     C           S3DIST    ORNE *BLANK
+     C                     MOVEL'EMR0126' ZAMSID
+     C                     MOVE 'Y'       W#ERR1           Error
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN40            RI & PC
+     C                     MOVE *ON       *IN41            RI & PC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *Interest type should be blank if Base Rate Type or Rate/spread
+      *is not blank
+     C           S3DBRT    IFEQ *BLANK
+     C           S3DINT    ANDNE*BLANK
+      *
+     C           S3DINT    IFLT '01'
+     C           S3DINT    ORGT '04'
+     C                     MOVEL'EMR0127' ZAMSID
+     C                     MOVE 'Y'       W#ERR1           Error
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN40            RI & PC
+      *
+     C                     ELSE
+      *
+      ** Interest Type and sub-type must be valid on file
+     C*********************MOVE BKEURO    K1EURO                          CRE008
+     C   78                MOVELBKEURO    K1EURO                          CRE008
+     C  N78                MOVELS2CCY1    K1EURO                          CRE008
+     C           K#KY01    CHAINREINT                90
+      *
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'EMR0127' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN40
+     C                     MOVE *ON       *IN41
+     C                     MOVE 'Y'       W#ERR1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           S3DINT    IFNE *BLANK
+     C           S3DIST    ORNE *BLANK
+     C                     MOVEL'EMR0126' ZAMSID
+     C                     MOVE 'Y'       W#ERR1           Error
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN40            RI & PC
+     C                     MOVE *ON       *IN41            RI & PC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Calculation Basis
+     C           S3DCLB    IFEQ *BLANK
+     C/COPY WNCPYSRC,EU0120C019
+     C                     MOVE '2'       S3DCLB
+     C/COPY WNCPYSRC,EU0120C020
+      *
+     C                     ELSE
+      *
+     C           S3DCLB    IFGT '7'
+     C           S3DCLB    ORLT '1'
+     C                     MOVEL'EMR0128' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN44
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Next Capitalisation date
+     C*                                                                   146855
+     C** If all references to interest fields are blank, bring in         146855
+     C*  line with GL3271  allow capitalisation entry.                    146855
+     C*                                                                   146855
+     C********** S3DBRT    IFEQ *BLANKS                            146855 179834
+     C********** S3DRTS    ANDEQ*BLANKS                            146855 179834
+     C********** S3DINT    ANDEQ*BLANKS                            146855 179834
+     C**********           MOVE 'Y'       W#AORD  1                146855 179834
+     C**********           ELSE                                    146855 179834
+     C**********           MOVE 'N'       W#AORD                   146855 179834
+     C**********           END                                     146855 179834
+     C*                                                                   146855
+     C********** S3DBRT    IFNE *BLANKS                                   146855
+     C********** S3DRTS    ORNE *BLANKS                                   146855
+     C********** S3DINT    ORNE *BLANKS                                   146855
+      *
+     C           S3DNIC    IFEQ *BLANKS
+     C           S3DCFQ    ANDNE'Z'
+     C           S3DCFQ    ANDNE*BLANKS                                   179834
+     C********** W#AORD    ANDNE'Y'                                146855 179834
+     C/COPY WNCPYSRC,EU0120C021
+     C                     MOVEL'EMR0129' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN46
+     C/COPY WNCPYSRC,EU0120C022
+      *
+     C                     ELSE
+      *
+      **  Must be valid date format
+     C           S3DNIC    IFNE *BLANKS
+      *
+     C                     Z-ADD*ZERO     ZDATE
+     C                     MOVE S3DNIC    ZDATE
+     C                     MOVELS3DNIC    WNUM7   70
+     C                     MOVELWNUM7     ALPH6   6
+      *
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ *ON
+     C           S3DNIC    ORNE ALPH6
+     C                     MOVEL'EMR0130' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN46
+      *
+     C                     ELSE
+      *
+      **  Earlier than run date (AGRDNB)
+     C           ZDAYNO    IFLT W#RUND
+     C                     MOVEL'EMR0131' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN46
+      *
+     C                     ELSE
+      *
+      **  Greater than account opening date
+     C           ZDAYNO    IFLT W#ADAT
+     C                     MOVEL'EMR0157' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN46
+      *
+     C                     ELSE
+      *
+     C                     MOVE ZDAYNO    W#DNIC
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C***********          ELSE                                           146855
+      *
+     C***********S3DNIC    IFNE *BLANKS                                   146855
+     C***********          MOVEL'EMR0132' ZAMSID                          146855
+     C***********          MOVEL'Y'       W#ERR1                          146855
+     C***********          EXSR ZASNMS                                    146855
+     C***********          MOVE *ON       *IN46                           146855
+     C***********          ENDIF                                          146855
+      *
+     C***********          ENDIF                                          146855
+      *
+      *Validate Capitalisation frequency
+     C*********  S3DBRT    IFNE *BLANKS                                   146855
+     C********** S3DRTS    ORNE *BLANKS                                   146855
+     C********** S3DINT    ORNE *BLANKS                                   146855
+      *                                                               *   146855
+     C           S3DCFQ    IFEQ *BLANKS                                   146855
+     C/COPY WNCPYSRC,EU0120C023
+     C                     MOVE '1'       *IN20                           146855
+     C                     MOVE 'Z'       S3DCFQ                          146855
+     C/COPY WNCPYSRC,EU0120C024
+     C                     ELSE                                           146855
+     C           S3DCFQ    LOKUPCAP                      21
+     C                     ENDIF                                          146855
+      *                                                               *   146855
+      *
+     C           *IN21     IFEQ *OFF
+     C           S3DCFQ    ANDNE'Z'                                       146855
+     C/COPY WNCPYSRC,EU0120C025
+     C                     MOVEL'EMR0133' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN47
+     C/COPY WNCPYSRC,EU0120C026
+     C                     ENDIF
+      *
+     C***********          ELSE                                           146855
+      *
+     C***********S3DCFQ    IFEQ *BLANKS                                   146855
+     C***********          MOVE 'Z'       S3DCFQ                          146855
+      *
+     C***********          ELSE                                           146855
+      *
+     C***********S3DCFQ    IFNE 'Z'                                       146855
+     C***********          MOVEL'EMR0134' ZAMSID                          146855
+     C***********          MOVEL'Y'       W#ERR1                          146855
+     C***********          EXSR ZASNMS                                    146855
+     C***********          MOVE *ON       *IN47                           146855
+     C***********          ENDIF                                          146855
+      *
+     C***********          ENDIF                                          146855
+      *
+     C***********          ENDIF                                          146855
+      *
+      *Validate Capitalisation Day
+     C***********S3DBRT    IFNE *BLANKS                                   146855
+     C***********S3DRTS    ORNE *BLANKS                                   146855
+     C***********S3DINT    ORNE *BLANKS                                   146855
+     C           S3DCDY    IFEQ *BLANKS
+      *
+     C           S3DCFQ    LOKUPSTD,1                    20
+      *
+     C           *IN20     IFEQ *ON
+     C                     MOVELS3DNIC    S3DCDY
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           S3DCFQ    LOKUPSTD,1                    20
+      *
+     C           *IN20     IFEQ *OFF
+     C                     MOVEL'EMR0137' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN48
+      *
+     C                     ELSE
+      *
+     C                     TESTN          S3DCDY     90
+      *
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL'EMR0136' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN48
+      *
+     C                     ELSE
+      *
+     C                     MOVE S3DCDY    W#DCDY  20
+      *
+     C           W#DCDY    IFGT 31
+     C           W#DCDY    ORLT 1
+     C                     MOVEL'EMR0136' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN48
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C***********          ELSE                                           146855
+      *
+     C***********S3DCDY    IFNE *BLANK                                    146855
+     C***********          MOVEL'EMR0137' ZAMSID                          146855
+     C***********          MOVEL'Y'       W#ERR1                          146855
+     C***********          EXSR ZASNMS                                    146855
+     C***********          MOVE *ON       *IN48                           146855
+     C***********          ENDIF                                          146855
+      *
+     C***********          ENDIF                                          146855
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      * VD2CRT:  Validate Credit Interest Details
+      *****************************************************************
+      *
+     C           VD2CRT    BEGSR
+      *
+      *Validate base rate code
+     C           S3CBRT    IFNE *BLANK
+     C   78                MOVELBKEURO    @CYCD                           CRE008
+     C  N78                MOVELS2CCY1    @CYCD                           CRE008
+      *
+     C                     CALL 'AOBSRTR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C*********************PARM BKEURO    @CYCD   3                       CRE008
+     C                     PARM           @CYCD   3                       CRE008
+     C                     PARM S3CBRT    @BSRC   2
+     C********** SDBSRT    PARM SDBSRT    DSFDY                                 CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                                 CSD006
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'EMR0123' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN35            RI & PC
+      *
+     C                     ELSE
+      *
+     C                     MOVE BABSRC    S3CBRT           RI & PC
+      *
+      *If base rate entered is not a EURO base rate
+     C           BACYCD    IFNE BKEURO
+     C           *IN78     ANDEQ'1'                                       CRE008
+     C           BACYCD    ORNE S2CCY1                                    CRE008
+     C           *IN78     ANDEQ'0'                                       CRE008
+     C                     MOVEL'EMR0123' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN35            RI & PC
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Rate/Spread
+     C           S3CRTS    IFNE *BLANK
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE S3CRTS    ZFIELD
+     C                     Z-ADD4         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVEL'EMR0124' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN38
+      *
+     C                     ELSE
+      *
+     C                     MOVE ZFIELD    W#CRTS
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE W#CRTS    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S3CRTS
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE '0'       ZFIELD
+     C                     Z-ADD4         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    W#CRTS
+      *
+     C                     ENDIF
+      *
+      ** Validate Rate/Spread Sign - default is '+'
+     C           S3CRTS    IFNE *BLANK
+      *
+     C           S3CRSS    IFEQ *BLANK
+     C                     MOVE '+'       S3CRSS
+     C                     ELSE
+      *
+     C           S3CRSS    IFNE '+'
+     C           S3CRSS    ANDNE'-'
+     C                     MOVEL'EMR0125' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN39
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           S3CRTS    IFEQ *BLANKS
+     C           S3CRSS    ANDNE*BLANKS
+     C                     MOVEL'EMR0164' ZAMSID
+     C                     MOVE 'Y'       W#ERR1           Error
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN39            RI & PC
+     C                     ENDIF
+      *
+      ** Validate Interest Type and Interest Sub-Type
+     C           S3CRTS    IFEQ *BLANK
+      *
+     C                     ELSE
+      *
+     C           S3CINT    IFNE *BLANK
+     C           S3CIST    ORNE *BLANK
+     C                     MOVEL'EMR0126' ZAMSID
+     C                     MOVE 'Y'       W#ERR1           Error
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN42            RI & PC
+     C                     MOVE *ON       *IN43            RI & PC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           S3CRTS    IFEQ *BLANKS
+     C           S3CRSS    ANDNE*BLANKS
+     C                     MOVEL'EMR0164' ZAMSID
+     C                     MOVE 'Y'       W#ERR1           Error
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN39            RI & PC
+     C                     ENDIF
+      *Interest type should be blank if Base Rate Type or Rate/spread
+      *is not blank
+     C           S3CBRT    IFEQ *BLANK
+     C           S3CINT    ANDNE*BLANK
+      *
+     C           S3CINT    IFLT '01'
+     C           S3CINT    ORGT '04'
+     C                     MOVEL'EMR0127' ZAMSID
+     C                     MOVE 'Y'       W#ERR1           Error
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN42            RI & PC
+      *
+     C                     ELSE
+      *
+      ** Interest Type and sub-type must be valid on file
+     C*********************MOVE BKEURO    K3EURO                          CRE008
+     C   78                MOVELBKEURO    K3EURO                          CRE008
+     C  N78                MOVELS2CCY1    K3EURO                          CRE008
+     C           K#KY03    CHAINREINT                90
+      *
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'EMR0127' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN42
+     C                     MOVE *ON       *IN43
+     C                     MOVE 'Y'       W#ERR1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           S3CINT    IFNE *BLANK
+     C           S3CIST    ORNE *BLANK
+     C                     MOVEL'EMR0126' ZAMSID
+     C                     MOVE 'Y'       W#ERR1           Error
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN42            RI & PC
+     C                     MOVE *ON       *IN43            RI & PC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Calculation Basis
+     C           S3CCLB    IFEQ *BLANK
+     C/COPY WNCPYSRC,EU0120C027
+     C                     MOVE '2'       S3CCLB
+     C/COPY WNCPYSRC,EU0120C028
+      *
+     C                     ELSE
+      *
+     C           S3CCLB    IFGT '7'
+     C           S3CCLB    ORLT '1'
+     C                     MOVEL'EMR0128' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN45
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Next Capitalisation date
+     C*                                                                   146855
+     C** If all references to interest fields are blank, bring in         146855
+     C*  line with GL3271                                                 146855
+     C*                                                                   146855
+     C********** S3CBRT    IFEQ *BLANKS                            146855 179834
+     C********** S3CRTS    ANDEQ*BLANKS                            146855 179834
+     C********** S3CINT    ANDEQ*BLANKS                            146855 179834
+     C**********           MOVE 'Y'       W#AORC  1                146855 179834
+     C**********           ELSE                                    146855 179834
+     C**********           MOVE 'N'       W#AORC                   146855 179834
+     C**********           END                                     146855 179834
+     C***********S3CBRT    IFNE *BLANKS                                   146855
+     C***********S3CRTS    ORNE *BLANKS                                   146855
+     C***********S3CINT    ORNE *BLANKS                                   146855
+      *
+     C           S3CNIC    IFEQ *BLANKS
+     C           S3CCFQ    ANDNE'Z'
+     C           S3CCFQ    ANDNE*BLANKS                                   179834
+     C********** W#AORC    ANDNE'Y'                                146855 179834
+     C/COPY WNCPYSRC,EU0120C029
+     C                     MOVEL'EMR0129' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN49
+     C/COPY WNCPYSRC,EU0120C030
+      *
+     C                     ELSE
+      *
+      **  Must be valid date format
+     C           S3CNIC    IFNE *BLANKS
+      *
+     C                     Z-ADD*ZERO     ZDATE
+     C                     MOVE S3CNIC    ZDATE
+     C                     MOVELS3CNIC    WNUM7   70
+     C                     MOVELWNUM7     ALPH6   6
+      *
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ *ON
+     C           S3CNIC    ORNE ALPH6
+     C                     MOVEL'EMR0130' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN49
+      *
+     C                     ELSE
+      *
+      **  Earlier than run date
+     C           ZDAYNO    IFLT W#RUND
+     C                     MOVEL'EMR0131' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN49
+      *
+     C                     ELSE
+      *
+      **  Greater than account opening date
+     C           ZDAYNO    IFLT W#ADAT
+     C                     MOVEL'EMR0157' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN49
+      *
+     C                     ELSE
+      *
+     C                     MOVE ZDAYNO    W#CNIC
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C**********           ELSE                                           146855
+      *
+     C***********S3CNIC    IFNE *BLANKS                                   146855
+     C***********          MOVEL'EMR0132' ZAMSID                          146855
+     C***********          MOVEL'Y'       W#ERR1                          146855
+     C***********          EXSR ZASNMS                                    146855
+     C***********          MOVE *ON       *IN49                           146855
+     C***********          ENDIF                                          146855
+      *
+     C***********          ENDIF                                          146855
+      *
+      *Validate Capitalisation frequency
+     C***********S3CBRT    IFNE *BLANKS                                   146855
+     C***********S3CRTS    ORNE *BLANKS                                   146855
+     C***********S3CINT    ORNE *BLANKS                                   146855
+      *                                                                   146855
+     C           S3CCFQ    IFEQ *BLANKS                                   146855
+     C/COPY WNCPYSRC,EU0120C031
+     C                     MOVE '1'       *IN20                           146855
+     C                     MOVE 'Z'       S3CCFQ                          146855
+     C/COPY WNCPYSRC,EU0120C032
+     C                     ELSE                                           146855
+     C           S3CCFQ    LOKUPCAP                      21
+     C                     END                                            146855
+      *
+     C           *IN21     IFEQ *OFF
+     C           S3CCFQ    ANDNE'Z'                                       146855
+     C/COPY WNCPYSRC,EU0120C033
+     C                     MOVEL'EMR0133' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN50
+     C/COPY WNCPYSRC,EU0120C034
+     C                     ENDIF
+      *
+     C***********          ELSE                                           146855
+      *
+     C***********S3CCFQ    IFEQ *BLANKS                                   146855
+     C***********          MOVE 'Z'       S3CCFQ                          146855
+      *
+     C***********          ELSE                                           146855
+      *
+     C***********S3CCFQ    IFNE 'Z'                                       146855
+     C***********          MOVEL'EMR0134' ZAMSID                          146855
+     C***********          MOVEL'Y'       W#ERR1                          146855
+     C***********          EXSR ZASNMS                                    146855
+     C***********          MOVE *ON       *IN50                           146855
+     C***********          ENDIF                                          146855
+      *
+     C***********          ENDIF                                          146855
+      *
+     C***********          ENDIF                                          146855
+      *
+      *Validate Capitalisation Day
+     C***********S3CBRT    IFNE *BLANKS                                   146855
+     C***********S3CRTS    ORNE *BLANKS                                   146855
+     C***********S3CINT    ORNE *BLANKS                                   146855
+     C           S3CCDY    IFEQ *BLANKS
+      *
+     C           S3CCFQ    LOKUPSTD,1                    20
+      *
+     C           *IN20     IFEQ *ON
+     C                     MOVELS3CNIC    S3CCDY
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           S3CCFQ    LOKUPSTD,1                    20
+      *
+     C           *IN20     IFEQ *OFF
+     C                     MOVEL'EMR0137' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN51
+      *
+     C                     ELSE
+      *
+     C                     TESTN          S3CCDY     90
+      *
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL'EMR0136' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN51
+      *
+     C                     ELSE
+      *
+     C                     MOVE S3CCDY    W#CCDY  20
+      *
+     C           W#CCDY    IFGT 31
+     C           W#CCDY    ORLT 1
+     C                     MOVEL'EMR0136' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN51
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C***********          ELSE                                           146855
+      *
+     C***********S3CCDY    IFNE *BLANK                                    146855
+     C***********          MOVEL'EMR0137' ZAMSID                          146855
+     C***********          MOVEL'Y'       W#ERR1                          146855
+     C***********          EXSR ZASNMS                                    146855
+     C***********          MOVE *ON       *IN51                           146855
+     C***********          ENDIF                                          146855
+      *
+     C***********          ENDIF                                          146855
+      *
+      ** Credit Charges Type is optional but if entered must be either
+      ** blank or 01
+     C*********************MOVE BKEURO    K2EURO                          CRE008
+     C   78                MOVELBKEURO    K2EURO                          CRE008
+     C  N78                MOVELS2CCY1    K2EURO                          CRE008
+      *
+     C           S3CCCT    IFNE *BLANK
+     C           S3CCST    ORNE *BLANKS
+      *
+     C           K#KY02    CHAINRECRGDF              90
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'EMR0138' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN52
+     C                     MOVE *ON       *IN53
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      *  VD3  :   Validate Third Detail Screen Input
+      *****************************************************************
+     C           VD3       BEGSR
+      *
+      ** Reset all previous error markers from Screen 3
+     C                     MOVEA'00000000'*IN,54
+     C                     MOVEA'00'      *IN,62
+     C                     MOVE *OFF      *IN99
+     C                     MOVE 'N'       W#ERR1
+      *
+     C           EUSWPI    IFEQ 'N'
+     C           CRE004    ANDEQ'Y'
+     C                     EXSR VD3SWP
+     C                     ENDIF
+      *
+     C                     EXSR VD3DAT
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      *  VD3SWP : Validate Sweep Details
+      *****************************************************************
+     C           VD3SWP    BEGSR
+      *
+      *Check Whether Profit centres are used. And whether entered
+      *profit centres are valid
+     C           BKPRCU    IFEQ 'Y'
+      *
+     C                     CALL 'AOPRFCR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM S4PRFC    AKEY    4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+      *
+     C                     MOVEL'EMR0139' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN54
+     C                     ELSE
+     C                     MOVE DSPCCD    S4PRFC
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *Validate transaction Type
+     C           S4TRAT    IFEQ *BLANKS
+     C                     MOVE '91005'   S4TRAT
+      *
+     C                     ELSE
+      *
+     C                     CALL 'AORETRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM S4TRAT    @KEY    5
+     C           SDRETR    PARM SDRETR    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+      *
+     C                     MOVEL'EMR0140' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN55
+      *
+     C                     ELSE
+      *
+     C                     MOVE A1RTTY    S4TRAT
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Narrative Code
+     C           WPNCD     IFNE *BLANK
+     C           WNARR     ANDEQ*BLANK
+      *
+     C                     CALL 'AONARRR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY    'WOPTN   7
+     C                     PARM           WPNCD
+     C           SDNARR    PARM SDNARR    DSFDY
+      *
+      **  Error occurred
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN56
+     C                     MOVE 'Y'       W#ERR1
+     C                     MOVEL'EMR0175 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE ALNVCD    W@PNCD
+     C                     MOVE ALDON     W@PNAR
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVE *BLANK    W@PNCD
+     C                     MOVE S4PNAR    W@PNAR
+      *
+     C                     ENDIF
+      *
+      ****Convert 1st January 1999 to Day No.                             134820
+     C***********          MOVE 010199    ZDATE                           134820
+     C/COPY EUCPYSRC,EUEMUSTART                                           134820
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    W#DAYN
+      *
+      *Validate Sweep Date
+     C           S4NXTP    IFEQ *BLANKS
+      *
+     C           W#RUND    IFLT W#DAYN
+     C                     MOVE '010199'  S4NXTP
+     C                     MOVE W#DAYN    W#NXTP
+     C                     ELSE
+     C                     MOVE W#RUND    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     S4NXTP
+     C                     MOVE W#RUND    W#NXTP
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     Z-ADD*ZERO     ZDATE
+     C                     MOVE S4NXTP    ZDATE
+     C                     MOVELS4NXTP    WNUM7   70
+     C                     MOVELWNUM7     ALPH6   6
+      *
+     C                     EXSR ZDATE1
+      *
+     C                     MOVE ZDAYNO    W#NXTP
+      *
+     C           *IN99     IFEQ *ON
+     C           S4NXTP    ORNE ALPH6
+     C                     MOVEL'EMR0141' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN57
+     C                     ENDIF
+      *
+     C           ZDAYNO    IFLT W#DAYN
+     C                     MOVEL'EMR0141' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN57
+      *
+     C                     ELSE
+      *
+     C                     MOVE ZDAYNO    W#NXTP
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *Validate Sweep frequency
+     C           S4PAYF    IFEQ *BLANKS
+     C                     MOVE 'D'       S4PAYF
+      *
+     C                     ELSE
+      *
+     C           S4PAYF    LOKUPPAY,1                    20
+     C           *IN20     IFEQ *OFF
+     C                     MOVEL'EMR0142' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN58
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *Validate Sweep day No.
+     C           S4PAYF    LOKUPSTD,1                    20
+      *
+     C           *IN20     IFEQ *ON
+     C           S4DYTP    IFNE *BLANKS
+     C           S4DYTP    IFLT '01'
+     C           S4DYTP    ORGT '31'
+     C                     MOVEL'EMR0143' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN59
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVELS4NXTP    S4DYTP
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           S4DYTP    IFNE *BLANKS
+     C                     MOVEL'EMR0144' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN59
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *Validate Final Date
+     C           S4DLPY    IFNE *BLANKS
+     C                     Z-ADD*ZERO     ZDATE
+     C                     MOVE S4DLPY    ZDATE
+     C                     MOVELS4DLPY    WNUM7   70
+     C                     MOVELWNUM7     ALPH6   6
+      *
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ *ON
+     C           S4DLPY    ORNE ALPH6
+     C                     MOVEL'EMR0145' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN60
+      *
+     C                     ELSE
+      *
+      **  Earlier than sweep date
+     C           ZDAYNO    IFLT W#NXTP
+     C                     MOVEL'EMR0146' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN60
+      *
+     C                     ELSE
+      *
+     C                     MOVE ZDAYNO    W@DLPY
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      *  VD3DAT : Validate Scheduled Action Dates
+      *****************************************************************
+     C           VD3DAT    BEGSR
+      *
+      *Validate date of Acccount Closure
+     C           EUCLSE    IFNE 'Y'
+      *
+     C           S4CLAC    IFNE *BLANKS
+      *
+     C           S4CRAC    IFEQ *BLANKS
+     C                     MOVEL'EMR0174' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN61
+      *
+     C                     ELSE
+      *
+     C                     Z-ADD*ZERO     ZDATE
+     C                     MOVE S4CLAC    ZDATE
+     C                     MOVELS4CLAC    WNUM7   70
+     C                     MOVELWNUM7     ALPH6   6
+      *
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ *ON
+     C           S4CLAC    ORNE ALPH6
+     C                     MOVEL'EMR0153' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN63
+      *
+     C                     ELSE
+      *
+     C           ZDAYNO    IFLT W#RUND
+     C                     MOVEL'EMR0154' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN63
+      *
+     C                     ELSE
+      *
+     C           ZDAYNO    IFLT W#DAYN
+     C                     MOVEL'EMR0155' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN63
+      *
+     C                     ELSE
+      *
+      **                                                           137772*155245
+      ****Final*date*must*be*=*to*date*to*Close*'IN'*Curr.         137772*155245
+      ****Accounts.                                                137772*155245
+      ***                                                          137772*155245
+     C********** ZDAYNO    IFNE W@DLPY                              137772144878
+     C***********ZDAYNO    IFLT EUDLPY                             144878*155245
+     C***********CRE004    ANDEQ'Y'                                143985*155245
+     C***********          MOVEL'EMR0334' ZAMSID                   137772*155245
+     C***********          MOVEL'Y'       W#ERR1                   137772*155245
+     C***********          EXSR ZASNMS                             137772*155245
+     C***********          MOVE 1         *IN63                    137772*155245
+     C**                                                           137772*155245
+     C***********          ELSE                                    137772*155245
+      ****IF*Final*date*is*not*filled*:*Default*to*DATE*TOCLOSE'IN'144878*155245
+      ****CURRENCY*ACCOUNT.                                        144878*155245
+      ****IF*Final*date*LOWER*THAN*Date*to*Close*'IN'*Curr.        144878*155245
+      ****Accounts*Default*it*with*'DATE*TO*CLOSE*'IN'*CURR.*A/C   144878*155245
+     C**                                                           144878*155245
+     C***********ZDAYNO    IFGT EUDLPY                             144878*155245
+     C***********CRE004    ANDEQ'Y'                                144878*155245
+     C*                                                                   155245
+     C** Move date to close In ccy acc to final sweep date                155245
+     C           CRE004    IFEQ 'Y'                                       155245
+     C                     MOVE ZDAYNO    W@DLPY                          144878
+     C                     ENDIF                                          144878
+     C                     MOVE ZDAYNO    W#CLAC
+     C*                                                                   137772
+     C***********          ENDIF                                   137772*155245
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *Date to Create Sweeps
+     C           EUSWPI    IFNE 'Y'
+      *
+     C           S4CRSW    IFNE *BLANKS
+      *
+     C           S4CRAC    IFEQ *BLANKS
+     C                     MOVEL'EMR0174' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN61
+      *
+     C                     ELSE
+      *
+     C                     Z-ADD*ZERO     ZDATE
+     C                     MOVE S4CRSW    ZDATE
+     C                     MOVELS4CRSW    WNUM7   70
+     C                     MOVELWNUM7     ALPH6   6
+      *
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ *ON
+     C           S4CRSW    ORNE ALPH6
+     C                     MOVEL'EMR0150' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN62
+      *
+     C                     ELSE
+      *
+     C           ZDAYNO    IFLT W#RUND
+     C                     MOVEL'EMR0151' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN62
+      *
+     C                     ELSE
+      *
+     C           ZDAYNO    IFLT W#DAYN
+     C                     MOVEL'EMR0159' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN62
+      *
+     C                     ELSE
+      *
+     C           ZDAYNO    IFGT W#CLAC
+     C           W#CLAC    ANDNE*ZERO
+     C                     MOVEL'EMR0152' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN62
+      *
+     C                     ELSE
+      *
+      *                                                                   137772
+      *** Sweep Date cannot be less than Date to Create                   137772
+      *** Sweeps.                                                         137772
+      *                                                                   137772
+     C           ZDAYNO    IFGT W#NXTP                                    137772
+     C                     MOVEL'EMR0333' ZAMSID                          137772
+     C                     MOVEL'Y'       W#ERR1                          137772
+     C                     EXSR ZASNMS                                    137772
+     C                     MOVE *ON       *IN62                           137772
+      *                                                                   137772
+     C                     ELSE                                           137772
+      *                                                                   137772
+     C                     MOVE ZDAYNO    W#CRSW
+      *                                                                   137772
+     C                     ENDIF                                          137772
+      *                                                                   137772
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *Date to create Euro Accounts
+     C           EUOPIN    IFNE 'Y'
+      *
+     C           S4CRAC    IFNE *BLANKS
+      *
+     C                     Z-ADD*ZERO     ZDATE
+     C                     MOVE S4CRAC    ZDATE
+     C                     MOVELS4CRAC    WNUM7   70
+     C                     MOVELWNUM7     ALPH6   6
+      *
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ *ON
+     C           S4CRAC    ORNE ALPH6
+     C                     MOVEL'EMR0147' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN61
+      *
+     C                     ELSE
+      *
+     C           ZDAYNO    IFLT W#RUND
+     C                     MOVEL'EMR0148' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN61
+      *
+     C                     ELSE
+      *
+     C           ZDAYNO    IFLT W#DAYN
+     C                     MOVEL'EMR0158' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN61
+      *
+     C                     ELSE
+      *
+     C           ZDAYNO    IFGT W#CRSW
+     C           W#CRSW    ANDNE*ZERO
+     C           ZDAYNO    ORGT W#CLAC
+     C           W#CLAC    ANDNE*ZERO
+     C                     MOVEL'EMR0149' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN61
+      *
+     C                     ELSE
+      *
+     C                     MOVE ZDAYNO    W#CRAC
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      *  SVD1   : Validate Subfile
+      *****************************************************************
+     C           SVD1      BEGSR
+      *
+      **  Clear all existing error markers
+     C                     MOVEA'0000'    *IN,65
+     C                     MOVE *OFF      *IN29            SFLNXTCHG
+     C                     MOVE 'N'       W#ERR1
+     C                     MOVE 'Y'       W#POS   1
+     C                     Z-ADD1         X       40
+      *
+     C                     READCEU0120S1                 87
+      *
+     C           *IN87     DOWEQ*OFF
+      *
+     C                     MOVE *ON       *IN29
+      *
+     C                     MOVELS5EUAC    W#SNUM
+     C                     MOVE W#SSNM    S5ECNM
+     C                     Z-ADDRRN1      X
+      *
+     C                     MOVE W#SRCH    AC1,X
+      *
+     C                     MOVE S5EACN    RAN,X
+      *
+     C                     UPDATEU0120S1
+      *
+     C                     READCEU0120S1                 87
+      *
+     C                     ENDDO
+      *
+      **  Read all changed records
+     C                     READCEU0120S1                 87
+      *
+     C           *IN87     DOWEQ*OFF
+      *
+     C                     MOVE *ON       *IN29
+      *
+     C                     MOVE *OFF      *IN24
+     C                     MOVEA'0000'    *IN,65
+      *
+      ** Subfile selection must be 'D' or blank
+     C           S5SEL     IFNE ' '
+      *
+     C           S5SEL     IFNE 'D'
+     C                     MOVEL'EMR0208' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN68
+     C                     ELSE
+     C                     MOVE *OFF      *IN68
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C**********           MOVE H#EACD    W#EACD  4                                           CGL029
+     C                     MOVE H#EACD    W#EACD 10                                           CGL029
+     C                     MOVE H#ESQN    W#ESQN  2
+     C                     MOVE H#EACN    W#EACN 10
+      *
+      ** If subfile selection is valid, Account Code must be valid
+      *
+     C           W#EACD    IFNE S5EACD
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C**********           PARM S5EACD    AKEY    4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM S5EACD    AKEYX  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'EMR0209' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN65
+     C                     ELSE
+      *
+      ** Account entered must be a Retail Account
+      ** and not a title                                                  CRE008
+     C           A5ACTY    IFNE 'R'
+     C           A5TOIN    OREQ 'Y'                                       CRE008
+     C                     MOVEL'EMR0210' ZAMSID
+     C                     MOVEL'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN65
+     C                     ELSE
+      *
+     C                     MOVE A5ACCD    S5EACD
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Account Sequence must be in range 1-99
+     C           W#ESQN    IFNE S5ESQN
+      *
+     C           S5ESQN    IFLT '01'
+     C           S5ESQN    ORGT '99'
+     C                     MOVEL'EMR0212' ZAMSID
+     C                     MOVE *ON       *IN66
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *
+     C           *IN65     IFEQ *OFF
+     C           *IN66     ANDEQ*OFF
+      *
+     C           W#EACD    IFNE S5EACD
+     C           W#ESQN    ORNE S5ESQN
+     C           W#EACN    ORNE S5EACN                                    153298
+      *
+      ** Resulting Euro GL account must not already be present on ACCNT
+      *  Unless many-to-one map and retail a/c no. matches.               153298
+     C                     MOVE EUEBRC    K#BRCA
+     C                     MOVE EUECNM    K#CNUM
+     C                     MOVE EUECCY    K#CCY
+     C                     MOVE S5EACD    K#ACOD
+     C                     MOVE S5ESQN    K#ACSQ
+      *
+     C           K#KY07    CHAINACCNT                90
+      *
+     C           *IN90     IFEQ *OFF                                      153298
+     C                     MOVE S5EACN    @WK10  100                      153298
+     C           @WK10     IFEQ ACNO                                      153298
+     C           EUMULT    ANDEQ'Y'                                       153298
+     C                     MOVE *ON       *IN90                           153298
+     C                     ENDIF                                          153298
+     C                     ENDIF                                          153298
+      *                                                                   153298
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL'EMR0211' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     MOVE *ON       *IN65
+     C                     MOVE *ON       *IN66
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      **  Chain to euacmll6 with the account code & sequence from screen
+     C                     MOVE EUMAPN    K#MAPN
+     C                     MOVE EUEBRC    K#EBRC
+     C                     MOVE EUECNM    K#ECNM
+     C                     MOVE EUECCY    K#ECCY
+     C                     MOVE S5EACD    K#EACD
+     C                     MOVE S5ESQN    K#ESQN
+      *
+      *
+     C                     Z-ADD1         X
+     C                     MOVELS5EUAC    W#SNUM
+     C                     MOVE W#SSNM    S5ECNM
+     C           W#SRCH    LOKUPAC1,X                    90
+      *
+     C           *IN90     IFEQ *ON
+     C                     ADD  1         X
+     C           W#SRCH    LOKUPAC1,X                    90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'EMR0219' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     MOVE *ON       *IN65
+     C                     MOVE *ON       *IN66
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      * A/c must not exist on another map unless this is a many-to-one    153298
+      * map and the retail a/c no. matches.                               153298
+     C********** K#KY04    CHAINEUACMLL6             90                   153298
+     C           K#KY04    SETLLEUACMLL6                                  153298
+     C           K#KY04    READEEUACMLL6                 90               153298
+      *                                                                   153298
+     C           *IN90     DOWEQ*OFF                                      153298
+     C           EUMAPN    ANDEQL6MAPN                                    153298
+     C           K#KY04    READEEUACMLL6                 90               153298
+     C                     ENDDO                                          153298
+      *                                                                   153298
+     C           *IN90     IFEQ *OFF
+     C                     MOVE S5EACN    @WK10                           153298
+     C           EUMULT    IFEQ 'N'                                       153298
+     C           EUMULT    OREQ 'Y'                                       153298
+     C           @WK10     ANDNEL6EACN                                    153298
+      *
+      * Error message account exist on euacmll6
+     C                     MOVEL'EMR0220' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     MOVE *ON       *IN65
+     C                     MOVE *ON       *IN66
+     C                     EXSR ZASNMS
+     C                     ENDIF                                          153298
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C**********           ENDIF                                          153298
+      *
+      *
+      ** Retail Account Number must be numeric and must not be zero
+     C           W#EACN    IFNE S5EACN
+     C           W#EACD    ORNE S5EACD                                    153298
+     C           W#ESQN    ORNE S5ESQN                                    153298
+      *
+     C                     MOVELS5EACN    WNUM11 110
+     C                     MOVELWNUM11    WALF10 10
+      *
+     C                     SELEC
+      *
+     C           S5EACN    WHNE WALF10
+     C                     MOVEL'EMR0215' ZAMSID
+     C                     MOVE *ON       *IN67
+     C                     MOVE 'Y'       W#ERR1
+     C                     EXSR ZASNMS
+      *
+     C           S5EACN    WHEQ *ZERO
+     C                     MOVEL'EMR0213' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     MOVE *ON       *IN67
+     C                     EXSR ZASNMS
+      *
+     C********** EURNPR    WHEQ 'N'                                       153298
+     C                     OTHER                                          153298
+     C                     MOVE S5EACN    W#EAC2 100
+      *
+     C           W#EAC2    IFNE H#EACN
+     C           W#EACD    ORNE S5EACD                                    153298
+     C           W#ESQN    ORNE S5ESQN                                    153298
+      *
+      ** Retail Account Number cannot already exist on Account Master
+      ** file (ACNUM)
+     C                     MOVE *ON       *IN90                           153298
+     C           EURNPR    IFEQ 'N'                                       153298
+     C           EUMULT    OREQ 'Y'                                       153298
+     C           W#EAC2    CHAINACNUMBF              90
+     C                     ENDIF                                          153298
+      *
+     C           *IN90     IFEQ *OFF                                      153298
+      *                                                                   153298
+      * Ignore if RE a/c no. preserved and this is the 'in' ccy a/c       153298
+     C           EURNPR    IFEQ 'Y'                                       153298
+     C           BRCA      ANDEQEUIBRC                                    153298
+     C           CNUM      ANDEQEUICNM                                    153298
+     C           CCY       ANDEQEUICCY                                    153298
+     C           ACOD      ANDEQEUIACD                                    153298
+     C           ACSQ      ANDEQEUISQN                                    153298
+     C                     MOVE *ON       *IN90                           153298
+     C                     ELSE                                           153298
+      *                                                                   153298
+      * A/c can exist if many-to-one map and Euro GL a/c key matches      153298
+     C**********           MOVE S5EACD    @WK4    40                                   153298 CGL029
+     C                     MOVE S5EACD    @WK4   100                                          CGL029
+     C                     MOVE S5ESQN    @WK2    20                      153298
+     C           EUMULT    IFEQ 'Y'                                       153298
+     C           BRCA      ANDEQEUEBRC                                    153298
+     C           CNUM      ANDEQEUECNM                                    153298
+     C           CCY       ANDEQEUECCY                                    153298
+     C           ACOD      ANDEQ@WK4                                      153298
+     C           ACSQ      ANDEQ@WK2                                      153298
+     C                     MOVE *ON       *IN90                           153298
+     C                     ENDIF                                          153298
+     C                     ENDIF                                          153298
+     C                     ENDIF                                          153298
+      *                                                                   153298
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL'EMR0214' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     MOVE *ON       *IN67
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      ** Retail Account Number must be unique within Euro accounts
+     C                     Z-ADD1         X
+     C           S5EACN    LOKUPRAN,X                    90
+      *
+     C           *IN90     IFEQ *ON
+     C                     ADD  1         X
+     C           S5EACN    LOKUPRAN,X                    90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'EMR0221' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     MOVE *ON       *IN67
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      ** Retail Account Number cannot already exist on EUACMLL1
+      ** unless this is a many-to-one map and the GL a/c key matches.     153298
+     C********** W#EAC2    CHAINEUACMLL1             90                   153298
+     C           W#EAC2    SETLLEUACMLL1                                  153298
+     C           W#EAC2    READEEUACMLL1                 90               153298
+      *                                                                   153298
+     C           *IN90     DOWEQ*OFF                                      153298
+     C           EUMAPN    ANDEQL1MAPN                                    153298
+     C           W#EAC2    READEEUACMLL1                 90               153298
+     C                     ENDDO                                          153298
+      *
+     C           *IN90     IFEQ *OFF                                      153298
+     C                     MOVE S5EACD    @WK4                            153298
+     C                     MOVE S5ESQN    @WK2                            153298
+     C           EUMULT    IFEQ 'Y'                                       153298
+     C           L1EBRC    ANDEQEUEBRC                                    153298
+     C           L1ECNM    ANDEQEUECNM                                    153298
+     C           L1ECCY    ANDEQEUECCY                                    153298
+     C           L1EACD    ANDEQ@WK4                                      153298
+     C           L1ESQN    ANDEQ@WK2                                      153298
+     C                     MOVE *ON       *IN90                           153298
+     C                     ENDIF                                          153298
+     C                     ENDIF                                          153298
+      *                                                                   153298
+     C           *IN90     IFEQ *OFF
+     C           EUMAPN    ANDNEL1MAPN
+     C                     MOVEL'EMR0218' ZAMSID
+     C                     MOVE 'Y'       W#ERR1
+     C                     MOVE *ON       *IN67
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *                                                                   153298
+     C                     ENDIF                                          153298
+      *
+     C                     ENDIF
+     C/COPY WNCPYSRC,EU0120C006
+      *
+     C           W#POS     IFEQ 'Y'
+     C           *IN65     IFEQ *ON
+     C           *IN66     OREQ *ON
+     C           *IN67     OREQ *ON
+     C           *IN68     OREQ *ON
+     C                     Z-ADDRRN1      ##SFRC
+     C                     MOVE 'N'       W#POS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     UPDATEU0120S1
+      *
+     C                     READCEU0120S1                 87
+      *
+     C                     ENDDO
+      *
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      *  DEL  :   Delete Records
+      *****************************************************************
+     C           DEL       BEGSR
+      *
+     C                     MOVE S1MAPN    EUMAPN  60
+      *
+      ** Delete records from Mapping Details Header file
+     C           EUMAPN    DELETEUMDHDPF             90
+      *
+      ** Delete records from Account Mapping List file
+     C           EUMAPN    SETLLEUACMLPF
+     C           EUMAPN    READEEUACMLPF                 90
+      *
+     C           *IN90     DOWEQ*OFF
+     C                     DELETEUACMLPF
+     C           EUMAPN    READEEUACMLPF                 90
+     C                     ENDDO
+     C/COPY WNCPYSRC,EU0120C003
+      *
+      ** Commit datbase changes
+     C                     COMIT
+      *
+     C                     MOVEL'EMR0204' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   139372
+      *  EUODEL :   Check to allow for deletion of records                139372
+      *****************************************************************   139372
+     C           EUODEL    BEGSR                                          139372
+      *                                                                   139372
+      * Check number of records in mapping against records in ACCNTAB     139372
+     C* if any record is active then do not allow deletion.               139372
+      *                                                                   139372
+     C           EUMAPN    SETLLEUACMLPF                                  139372
+     C           EUMAPN    READEEUACMLPF                 90               139372
+      *                                                                   139372
+     C           *IN90     DOWEQ*OFF                                      139372
+     C*                                                                   139372
+     C*                                                                   139372
+     C* Load key to check out ACCNTAB record.                             139372
+     C*                                                                   139372
+     C                     MOVE EUEBRC    K#BRCA                          139372
+     C                     MOVE EUECNM    K#CNUM                          139372
+     C                     MOVE EUECCY    K#CCY                           139372
+     C                     MOVE EUEACD    K#ACOD                          139372
+     C                     MOVE EUESQN    K#ACSQ                          139372
+      *                                                                   139372
+     C           K#KY07    CHAINACCNT                86                   139372
+     C*                                                                   139372
+     C**N86******CCY*******IFEQ 'EUR'                              139372 CRE008
+     C***********RECI      ANDEQ'D'                                139372 CRE008
+     C  N86      RECI      IFEQ 'D'                                       139372
+     C                     MOVE '1'       *IN85                           139372
+     C                     MOVE '1'       *IN90                           139372
+     C*********************ELSE                                    139372 CRE008
+     C*********************MOVE '0'       *IN85                    139372 CRE008
+     C                     END                                            139372
+      *                                                                   139372
+     C  N90      EUMAPN    READEEUACMLPF                 90               139372
+      *                                                                   139372
+     C                     ENDDO                                          139372
+      *                                                                   139372
+     C* If any accounts set up but no longer active allow deletion of     139372
+     C* the mapping, Move N to EUOPIN.                                    139372
+     C*                                                                   139372
+     C**N85N86*************MOVE 'N'       EUOPIN                   139372 CRE008
+     C  N85                MOVE 'N'       EUOPIN                          CRE008
+     C*                                                                   139372
+     C                     ENDSR                                          139372
+      *                                                                   139372
+      *****************************************************************
+      *  UPDATS :   Update EUACMLL3 (Subfile)
+      *****************************************************************
+     C           UPDATS    BEGSR
+      *
+      *
+     C           S5EACD    IFNE W#EACD
+     C           S5ESQN    ORNE W#ESQN
+     C           S5EACN    ORNE W#EACN
+      *
+     C           K#KY08    SETLLEUACMLL3
+     C           K#KY08    READEEUACMLL3                 90
+      *
+     C           *IN90     DOWEQ*OFF
+      *
+     C                     MOVE S5EACN    EUEACN
+     C                     MOVE S5EACD    EUEACD
+     C                     MOVE S5ESQN    EUESQN
+      *
+      ** The file EUACMLL3 is updated if subfile amended
+     C                     UPDATEUACMLPF
+      *
+     C           K#KY08    READEEUACMLL3                 90
+      *
+     C                     ENDDO
+      *
+     C                     MOVEL'EMR0217' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ENDIF
+     C/COPY WNCPYSRC,EU0120C007
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *  UPDATE :   Update Mapping Details Header (EUMDHDPD)          *
+      *****************************************************************
+     C           UPDATE    BEGSR
+      *
+      ** Don't update if not in 'Amend' mode
+     C           S1ACTN    IFEQ 'A'
+      *
+      ** Locate record to be updated
+     C                     MOVE S1MAPN    EUMAPN
+     C           EUMAPN    CHAINEUMDHDL0             90
+      *
+      ** Move screen fields into EUMDHDPD fields **
+      *
+      ** Basic Account Details
+     C           EUOPIN    IFEQ 'N'
+      *
+     C                     MOVE W#ADAT    EUDACO
+     C                     MOVE W#NSTD    EUNSTD
+     C                     MOVE S3STFQ    EUSTFQ
+     C                     MOVE S3STDY    EUSTDY
+      *
+      ** Interest Details
+     C                     MOVE S3DBRT    EUDBRT
+     C                     MOVE W#DRTS    EUDRTS
+     C                     MOVE S3DRSS    EUDRSS
+     C                     MOVE S3DINT    EUDINT
+     C                     MOVE S3DIST    EUDIST
+     C                     MOVE S3DCLB    EUDCLB
+     C                     MOVE W#DNIC    EUDNIC
+     C                     MOVE S3DCFQ    EUDCFQ
+     C                     MOVE S3DCDY    EUDCDY
+     C                     MOVE S3CBRT    EUCBRT
+     C                     MOVE W#CRTS    EUCRTS
+     C                     MOVE S3CRSS    EUCRSS
+     C                     MOVE S3CINT    EUCINT
+     C                     MOVE S3CIST    EUCIST
+     C                     MOVE S3CCLB    EUCCLB
+     C                     MOVE W#CNIC    EUCNIC
+     C                     MOVE S3CCFQ    EUCCFQ
+     C                     MOVE S3CCDY    EUCCDY
+     C                     MOVE S3CCCT    EUCCCT
+     C                     MOVE S3CCST    EUCCST
+      *
+     C                     ENDIF
+      *
+      ** Sweep Details and Scheduled Action dates
+     C           CRE004    IFEQ 'Y'
+     C           EUSWPI    ANDEQ'N'
+     C                     MOVE S4PRFC    EUPRFC
+     C                     MOVE S4TRAT    EUTRAT
+     C                     MOVE S4PNAR    EUPNAR
+     C                     MOVE W#NXTP    EUNXTP
+     C                     MOVE S4PAYF    EUPAYF
+     C                     MOVE S4DYTP    EUDYTP
+     C                     MOVE W@DLPY    EUDLPY
+     C                     MOVE W@PNCD    EUPNCD
+     C                     MOVE W@PNAR    EUPNAR
+     C                     MOVE W#CRSW    EUCRSW
+     C                     ENDIF
+      *
+     C           EUOPIN    IFEQ 'N'
+     C                     MOVE W#CRAC    EUCRAC
+     C                     ENDIF
+      *
+     C           EUCLSE    IFEQ 'N'
+      ****IF*Final*date*is*not*filled*or*DATE*TO*CLOSE'IN'CURR.A/C 144878*155245
+      ****is*greater*:*default*to*DATE*TO*CLOSE*'IN'*CURR.*A/C     144878*155245
+     C***********EUDLPY    IFLT W@DLPY                             144878*155245
+     C**                                                                  155245
+     C** Default date to Close In ccy acc to final Sweep date             155245
+     C                     MOVE W@DLPY    EUDLPY                          144878
+      *                                                                   164562
+      ** If 'Final Sweep Date' has changed and sweep processing already   164562
+      ** exists update new defaulted Final Sweep Date in existing records 164562
+      ** of RESWEPPD.                                                     164562
+      *                                                                   164562
+     C           EUMAPN    SETLLEUACMLPF                                  164562
+     C           EUMAPN    READEEUACMLPF                 90               164562
+      *                                                                   164562
+     C           *IN90     DOWEQ*OFF                                      164562
+      *                                                                   164562
+     C                     MOVE 'N'       RETKEY  1                       164562
+      *                                                                   164562
+     C           KEY3      KLIST                                          164562
+     C                     KFLD           EUIBRC                          164562
+     C                     KFLD           EUICNM                          164562
+     C                     KFLD           EUICCY                          164562
+     C                     KFLD           EUIACD                          164562
+     C                     KFLD           EUISQN                          164562
+      *                                                                   164562
+     C           KEY3      SETLLRESWEPD3                                  164562
+     C           KEY3      READERESWEPD3                 90               164562
+      *                                                                   164562
+     C   90      EUIACN    IFNE *ZERO                                     164562
+     C           EUIACN    SETLLRESWEPD0                                  164562
+     C           EUIACN    READERESWEPD0                 90               164562
+     C                     MOVE 'Y'       RETKEY                          164562
+     C                     ENDIF                                          164562
+      *                                                                   164562
+     C           *IN90     IFEQ *OFF                                      164562
+      *                                                                   164562
+     C                     MOVE W@DLPY    DLPY                            164562
+     C                     MOVE W#RUND    LCD                             164562
+     C                     MOVE 'A'       CHTP                            164562
+      *                                                                   164562
+      ** The file RESWEPPD is updated if 'Final Sweep Date' amended.      164562
+      *                                                                   164562
+     C           RETKEY    IFEQ 'Y'                                       164562
+     C                     UPDATRESWEPD0                                  164562
+     C                     ELSE                                           164562
+     C                     UPDATRESWEPD3                                  164562
+     C                     ENDIF                                          164562
+      *                                                                   164562
+     C                     ENDIF                                          164562
+      *                                                                   164562
+     C           EUMAPN    READEEUACMLPF                 90               164562
+      *                                                                   164562
+     C                     ENDDO                                          164562
+      *                                                                   164562
+     C***********          ENDIF                                   144878*155245
+     C**                                                                  155245
+     C** Default date to close In ccy acc to next Sweep date if           155245
+     C** the sweep is scheduled to happen after closure of In ccy .       155245
+      ** Only if final sweep date is not equal to zero                                        193104
+      *                                                                                       193104
+     C           EUDLPY    IFLT EUNXTP                                    155245
+     C           EUDLPY    ANDNE0                                                             193104
+     C                     MOVELEUDLPY    EUNXTP                          155245
+     C                     ENDIF                                          155245
+     C                     MOVE W#CLAC    EUCLAC
+     C                     ENDIF
+      *
+      ** Update Mapping Details Header
+     C                     UPDATEUMDHDPF
+      *
+      **  Show 'Records updated' message
+     C                     MOVEL'EMR0217' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ENDIF
+      *
+      **  Return to initial screen & clear screen fields
+     C                     MOVE 'S1'      W#FMT
+     C                     MOVE *BLANK    S1MAPN
+     C                     MOVE *BLANK    S1ACTN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * END   : Closes program                                        *
+      *****************************************************************
+     C           END       BEGSR
+     C/COPY WNCPYSRC,EU0120C004
+     C                     MOVE *ON       *INLR
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      *  ZASNMS  -   Sends messages to the program's message queue
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+      ** Displays message subfile
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CLEARM  -  Clears the message queue                           *
+      *****************************************************************
+     C           CLEARM    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+      *
+     C                     MOVE 'Y'       @RUN    1
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     DUMP
+      *
+     C                     ROLBK
+      *
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      ********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+      ********************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      ********************************************************************
+      /COPY ZSRSRC,ZEDITZ2
+      /EJECT
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+** STF
+DWFSMTRBLAEQXYZ
+** STD
+MTQXY
+** ZMDY - Cumulative no of days in year by month
+000031059090120151181212243273304334365
+** ZYDY
+0366073110961461
+**   ZMNM - Month short names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CAP - Capitalisation frequencies
+DWFSMTRBLAEQXYZ
+** PAY - Sweep frequencies
+DWFSMTRBLAQXY

@@ -1,0 +1,195 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  SRFILE   : *PSSR routine for all files                       *
+      *                                                               *
+      *  CALLED BY: IBM controlled - invalid access to file           *
+      *                                                               *
+      *  CALLS    : AOCREPT                                           *
+      *                                                               *
+      * In the INIT sub-routine, the fields W0MSGD and W0MSGF should  *
+      * be set to the default message I.D and message file that are   *
+      * used for the module. If not, the defaults of MEM5002 and MIDAS*
+      * will be used.                                                 *
+      *                                                               *
+      *****************************************************************
+     CSR   SRFILE        BEGSR
+      *
+      *  Dump program
+     C                   DUMP
+     C                   ROLBK                                          90
+      *
+      *  If called again seton LR and return
+     C     @@FILE        IFNE      *BLANKS
+     C                   MOVEL     '1'           *INLR
+     C                   RETURN
+     C                   END
+      *
+     C                   MOVEL     'Y'           @@FILE            1
+      *
+      *  Send message to MOPERQ
+     C                   MOVEL     *BLANKS       ERDTA
+     C                   MOVEL     ##PGM         ERPGM
+      *
+     C     Q             IFGT      1
+     C     Q             ANDLT     101
+     C                   MOVEL     @STK(Q)       ERSTK
+     C                   ELSE
+     C                   MOVEL     '*Nostkin'    ERSTK
+     C                   END
+      *
+     C                   MOVEL     ##ERST        ERKEY
+     C                   Z-ADD     999           ERERNB
+     C                   MOVEL     ##ERFL        ERFILE
+     C                   MOVEL     w0pref        ERPREF
+      *
+      * Get message for sending and place in msg field
+     C                   CALL      'SDRTVTXT'                           9090
+     C                   PARM      'MEM5002'     #MSGID
+     C                   PARM      'MIDAS   '    #MSGF
+     C                   PARM      *BLANKS       #MSGTX
+      *
+     C                   MOVEL     #MSGTX        ERNARR
+      *
+      * Send message
+     C                   CALL      'AOCREPT'                            9090
+     C                   PARM      'MEM5000'     #MSGID            7
+     C                   PARM      'MIDAS  '     #MSGF            10
+     C                   PARM      *BLANKS       #MSGFL           10
+     C                   PARM      ERDTA         #MSGDT          256
+     C                   PARM      '*PRV'        #MSGR             5
+     C                   PARM      '*'           #PRGM            10
+     C                   PARM      'MOPERQ '     #MSGQ            10
+     C                   PARM      '*INFO  '     #MSGT             7
+      *
+      *  Fill LDA with error data
+     C     *LOCK         IN        LDA
+     C                   MOVEL     w0key         DBKEY
+     C                   Z-ADD     w0ernb        DBASE
+     C                   MOVEL     w0file        DBFILE
+     C                   MOVEL     ##PGM         DBPGM
+     C                   OUT       LDA
+      *
+      *  Close down program
+     C                   SETON                                        U7U8LR
+     C                   MOVEL     '*ERROR*'     w0rtn             7
+      *
+     C                   RETURN
+      *
+     CSR   EXFILE        ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRERR    : Report error and close down program               *
+      *                                                               *
+      *  CALLED BY: All subroutines                                   *
+      *                                                               *
+      *  CALLS    : AOCREPT                                           *
+      *                                                               *
+      * In the INIT sub-routine, the fields w0msgd and w0msgf should  *
+      * be set to the default message I.D and message file that are   *
+      * used for the module. If not, the defaults of MEM5001 and MIDAS*
+      * will be used.                                                 *
+      *                                                               *
+      *****************************************************************
+     CSR   SRERR         BEGSR
+      *
+      *  Define work variables
+     C     *LIKE         DEFINE    ERKEY         w0key
+     C     *LIKE         DEFINE    ERERNB        w0ernb
+     C     *LIKE         DEFINE    ERFILE        w0file
+     C     *LIKE         DEFINE    ERPREF        w0pref
+      *
+     C     *LIKE         DEFINE    #MSGID        w0msgd
+     C     *LIKE         DEFINE    #MSGF         w0msgf
+      *
+     C                   Z-ADD     Q             Q                 5 0
+      *
+      *  Dump program
+     C                   DUMP
+     C                   ROLBK                                          90
+      *
+      *  Set up the details of the message to be sent to MOPERQ
+     C                   MOVEL     *BLANKS       ERDTA
+     C                   MOVEL     ##PGM         ERPGM
+      *
+     C     Q             IFGT      1
+     C     Q             ANDLT     101
+     C                   MOVEL     @STK(Q)       ERSTK
+     C                   ELSE
+     C                   MOVEL     '*Nostkin'    ERSTK
+     C                   END
+      *
+     C                   MOVEL     W0KEY         ERKEY
+     C                   Z-ADD     W0ERNB        ERERNB
+     C                   MOVEL     W0FILE        ERFILE
+     C                   MOVEL     W0PREF        ERPREF
+      *
+      * Get message for message code. If the msg code or the msg file
+      * have not been set up then use the defaults.
+     C     W0MSGD        IFEQ      *BLANKS
+     C                   MOVEL     'MEM5001'     C#FMSG            7
+     C                   ELSE
+     C                   MOVEL     W0MSGD        C#FMSG
+     C                   END
+      *
+     C     W0MSGF        IFEQ      *BLANKS
+     C                   MOVEL     'MIDAS   '    C#FMSF           10
+     C                   ELSE
+     C                   MOVEL     W0MSGF        C#FMSF
+     C                   END
+      *
+     C                   CALL      'SDRTVTXT'                           9090
+     C                   PARM      C#FMSG        #MSGID
+     C                   PARM      C#FMSF        #MSGF
+     C                   PARM      *BLANKS       #MSGTX
+      *
+     C                   MOVEL     #MSGTX        ERNARR
+      *
+      * Send message
+     C                   CALL      'AOCREPT'                            9090
+     C                   PARM      'MEM5000'     #MSGID            7
+     C                   PARM      'MIDAS  '     #MSGF            10
+     C                   PARM      *BLANKS       #MSGFL           10
+     C                   PARM      ERDTA         #MSGDT          256
+     C                   PARM      '*PRV '       #MSGR             5
+     C                   PARM      '*'           #PRGM            10
+     C                   PARM      'MOPERQ '     #MSGQ            10
+     C                   PARM      '*INFO  '     #MSGT             7
+      *
+      *  Fill LDA with error data
+     C     *DTAARA       DEFINE                  LDA
+     C     *LOCK         IN        LDA
+     C                   MOVEL     w0key         DBKEY
+     C                   Z-ADD     w0ernb        DBASE
+     C                   MOVEL     w0file        DBFILE
+     C                   MOVEL     ##PGM         DBPGM
+     C                   OUT       LDA
+      *
+      *  Close down program
+     C                   SETON                                        U7U8LR
+     C                   MOVEL     '*ERROR*'     W0RTN             7
+      * End the program:
+     C                   RETURN
+      *
+     CSR   EXERR         ENDSR
+      *****************************************************************
+      * End of /COPY XXXXXXX                                          *
+      *****************************************************************

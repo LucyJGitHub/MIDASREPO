@@ -1,0 +1,198 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                    : *
+/*EXI *  TEXT('Midas SD Calculate date using code')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas     - Standing Data                                    *
+      *                                                               *
+      *  RPG/ZFRQB5  - Calculate date using code                      *
+      *                                                               *
+      *  (c) Finastra International Limited 2009                      *
+      *                                                               *
+      *  Last Amend No. MD050139           Date 23Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL184             Date 07Dec16               *
+      *                 AR782488           Date 31May11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 118466             Date 18Dec09               *
+      *                 BUG27460           Date 18Dec09               *
+      *                 CRE015 *CREATE     Date 18Dec09               *
+      *---------------------------------------------------------------*
+      *  MD050139- AOSARDR0 called every time causing performance     *
+      *            issue. Recompile due to changes in /COPY           *
+      *            ZFREQ/ZFRQ*.                                       *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL184 - New Frequencies for Account Statements (Recompile)  *
+      *  AR782488 - REC4016 component failed due to database error    *
+      *  118466 - Various changes to solve problems with accrued int. *
+      *  BUG27460 - Applied client fix AS0001                         *
+      *  AS0001 - Restrict candidate dates for backward mode to those *
+      *           that satisfy criteria for both the day number and   *
+      *           the on-or-after requirement                         *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *****************************************************************
+      *
+      /COPY ZSRSRC,ZFRQB2Z1
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZHOLE
+      *
+      *****************************************************************
+      *
+      /COPY ZSRSRC,ZHOLI
+      *
+     IDSSDY     E DSDSSDY
+     IDSFDY     E DSDSFDY
+     ISDBANK    E DSSDBANKPD
+     ISDGELR    E DSSDGELRPD
+      *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PFREQ   1
+     C                     PARM           PDAYNO  50
+     C                     PARM           PMDAY   20
+     C                     PARM           PCCY    3
+     C                     PARM           PLOC    3
+     C                     PARM           PDIREC  1
+     C                     PARM           PRTRN   7
+      *                                                                                       118466
+     C           PFREQ     IFEQ *BLANKS                                                       118466
+     C                     SETON                     LR                                       118466
+     C                     GOTO ENDHRE                                                        118466
+     C                     END                                                                118466
+      *
+     C                     MOVELPFREQ     ZFREQ
+     C                     Z-ADDPDAYNO    ZDAYNO
+     C                     Z-ADDPMDAY     ZMDAY
+     C                     MOVELPCCY      ZCCY
+     C**********           MOVELPLOC      ZZLOC                                             AR782488
+     C                     MOVELPLOC      ZLOC                                              AR782488
+      *
+     C           SDBANK    IFEQ *BLANKS                                                       118466
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDBANK    PARM *BLANKS   DSSDY
+     C                     END                                                                118466
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C           SDGELR    IFEQ *BLANKS                                                       118466
+     C                     CALL 'AOGELRR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDGELR    PARM *BLANKS   DSSDY
+     C                     END                                                                118466
+      *
+      ** Forward
+      *
+     C           PDIREC    IFEQ *BLANKS
+     C           PDIREC    OREQ 'F'
+     C                     EXSR ZFRQB2
+     C                     Z-ADDZDAYNO    PDAYNO
+     C                     MOVELZZERR@    PRTRN
+     C                     END
+      *
+      ** Backward
+      *
+     C           PDIREC    IFEQ 'B'
+      *
+      ** Go backwards to find earliest date that returns given date (or greater)
+      *
+     C                     MOVEL*ZEROS    PREVYM  4
+     C                     Z-ADD0         XDAYNO  50
+     C                     Z-ADDZDAYNO    SDAYNO  50
+     C                     MOVEL*BLANKS   IDWHEN  6
+     C           IDWHEN    DOUEQ'BEFORE'
+     C           ZDAYNO    ORLE 1
+     C                     Z-ADD0         WDAYNO  50                                          AS0001
+     C                     SUB  1         SDAYNO
+      *
+      ** Make note of date(s) that match given day number
+      **   get this date (DMY format)
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM SDAYNO    WQ0001  50
+     C                     PARM 'D'       ZDATFM  1
+     C                     PARM           ZDATE   60
+     C                     PARM           WQ0004  7
+      *
+      **   identify if month has changed since previous check
+      *
+     C                     MOVE ZDATE     W6A     6
+     C           2         SUBSTW6A:3     W2AM    2
+     C           2         SUBSTW6A:5     W2AY    2
+     C           W2AY      CAT  W2AM      CURRYM  4
+     C           CURRYM    IFEQ PREVYM
+     C                     MOVEL' '       NEWMON  1
+     C                     ELSE
+     C                     MOVEL'Y'       NEWMON  1
+     C                     END
+     C                     MOVELCURRYM    PREVYM  4
+      *
+      **   if day numbers match then note this date
+      *
+     C                     MOVELZDATE     ZDAY
+     C           ZDAY      IFEQ PMDAY
+     C                     Z-ADDSDAYNO    WDAYNO                                              AS0001
+     C                     END
+      *
+      ** If this date is last day of month and given day number is not possible
+      **  for this month (ie it is greater) then override the mismatch
+      *
+     C           ZDAY      IFLT PMDAY
+     C           NEWMON    ANDEQ'Y'
+     C           PMDAY     IFEQ 29
+     C           PMDAY     OREQ 30
+     C           PMDAY     OREQ 31
+     C                     Z-ADDSDAYNO    WDAYNO                                              AS0001
+     C                     END
+     C                     END
+     C                     Z-ADDSDAYNO    ZDAYNO
+      *
+     C                     EXSR ZFRQB2
+     C           ZDAYNO    IFLT PDAYNO
+     C                     MOVEL'BEFORE'  IDWHEN
+     C                     ELSE
+     C                     MOVEL'AFTER '  IDWHEN
+     C                     END
+     C           WDAYNO    IFGT 0                                                             AS0001
+     C           IDWHEN    ANDEQ'AFTER'                                                       AS0001
+     C                     Z-ADDWDAYNO    XDAYNO                                              AS0001
+     C                     END                                                                AS0001
+     C                     END
+     C           XDAYNO    IFEQ 0
+      *
+      ** (unexpected)
+      *
+     C                     Z-ADD1         PDAYNO
+     C                     ELSE
+      *
+      ** (date with given.day.number has been returned)
+      *
+     C                     Z-ADDXDAYNO    PDAYNO
+     C                     END
+     C                     MOVELZZERR@    PRTRN
+     C                     END
+      *
+     C           ENDHRE    TAG                                                                118466
+     C                     RETRN                                                              118466
+      *****************************************************************
+      /COPY ZSRSRC,ZFRQB2Z2
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZCHKH
+      /COPY ZSRSRC,ZACCH
+      *
+      *****************************************************************
+      *
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

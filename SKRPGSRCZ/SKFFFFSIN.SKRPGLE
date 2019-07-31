@@ -1,0 +1,1395 @@
+     H DEBUG
+     H COPYRIGHT('(c) Finastra International Limited 2007')
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Module name   Module                                 *
+      *                                                               *
+      *  SKFFFFSIN - xxxxxxxxxxxxxxxxxxxxxxxxx SCREEN INPUT           *
+      *                                                               *
+      *  Function:  This is the main screen input function            *
+      *             for xxxxxxxxxxxxxxxxxxxxxxxxxx.                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2007                      *
+      *                                                               *
+      *  Last Amend No. CAP0nn  *CREATE    Date ddMmmyy               *
+      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAP0nn - Conversion of Mn inputs into modular structure to   *
+      *           use as APIs.                                        *
+      *                                                               *
+      *****************************************************************
+ 
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      **------------------------------------------------------------------
+      ** The following /COPY line includes (among others) the LDA layout
+      ** and the copyright array definition:
+     D/COPY ZACPYSRC,STD_D_SPEC
+      **------------------------------------------------------------------
+ 
+      **------------------------------------------------------------------
+      ** The following /COPY includes the MM standard declares:
+     D/COPY ZACPYSRC,STDDECLARE
+      **------------------------------------------------------------------
+ 
+      **------------------------------------------------------------------
+      ** The following /COPY line includes all the defined fields in the
+      ** Program Status Data Structures.  They have meaningful
+      ** names, prefixed by 'PS'.
+     D/COPY ZACPYSRC,PSDS
+      **------------------------------------------------------------------
+ 
+      **------------------------------------------------------------------
+      ** The following /COPY line includes the definitions for error and
+      ** warning message arrays.
+     D/COPY ZACPYSRC,ERR_ARRAYS
+      **------------------------------------------------------------------
+ 
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+     D CrMnFilFmt    E DS                  EXTNAME(SKTranFlPD)
+     D                                     PREFIX(C_)
+      * Current Transaction Detail in File Format
+ 
+     D CurTrnDets    E DS                  EXTNAME(SKFFFFPD)
+     D                                     PREFIX(@)
+      * Current Transaction  Detail in Screen Format
+ 
+     D NwMnFilFmt    E DS                  EXTNAME(SKVFFFFPD)
+      * New Transaction Detail in File Format
+ 
+     D PrvTrnDets    E DS                  EXTNAME(SKFFFFPD)
+     D                                     PREFIX(@P)
+      * Previous Transaction Detail in Scrn Format
+ 
+     D OKTrnDets     E DS                  EXTNAME(SKEFFFFPD)
+      * Error indicators
+ 
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+      ** EXTERNAL DS FOR BANK DETAILS
+ 
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)
+      ** EXTERNAL DS FOR SAR DETAILS
+ 
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+      ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+ 
+     D DSSDY         E DS                  EXTNAME(DSSDY)
+      ** Second DS for access progrmas, long data structure
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+      ** Transaction number Work Field
+     D WKTRNN          S                   LIKE(DDTRNN)
+ 
+      ** Response Mode, passed as a constant parameter to the VAL module
+      ** This is always 'S' for Synchronous
+     D RespMode        S              1A   INZ('S')
+ 
+      ** Transaction Number
+     D DDTRNN          S              6A
+ 
+      ** Action Code
+     D DDACTN          S              1A
+ 
+      ** Build subfile
+     D @BDSFL          S              1A
+ 
+      ** Customer selected
+     D @CUSEL          S              6A
+ 
+      ** Whether position/select fields have been changed during key browse
+     D KPosSelChg      S              1A
+ 
+      ** condition availability of F10 (delete)
+     D @EINKJ          S              1A
+ 
+      ** error message reference
+     D @ERRMS          S              7A
+ 
+      ** F3 Exit
+     D @INKC           S              1A
+ 
+      ** F7 Roll backwards
+     D @INKG           S              1A
+ 
+      ** F8 Roll forwards
+     D @INKH           S              1A
+ 
+      ** F9 Insert
+     D @INKI           S              1A
+ 
+      ** F10 Delete
+     D @INKJ           S              1A
+ 
+      ** F12 Cancel
+     D @INKL           S              1A
+ 
+      ** Option selected
+     D @OPSEL          S              1A
+ 
+      ** Read backwards in roll
+     D @RDBCK          S              1A
+ 
+      ** Read forwards in roll
+     D @RDFWD          S              1A
+ 
+      ** Read next browse
+     D @RDNB           S              1A
+ 
+      ** Read subfile
+     D @RDSFL          S              1A
+ 
+      **
+     D @SCRED          S              6A
+ 
+      ** Screen / function
+     D @SCRN           S              1A
+ 
+      ** Control return to key screen after F7/F8 rolls
+     D INSERTENQ       S              1A
+ 
+      ** Read next browse in key screen query browse subfile
+     D K@RDNB          S              1A
+ 
+      ** Query check in key screen customer number field
+     D KEYQUERY        S              1A
+ 
+      ** Mode of operation
+     D MODEOFOP        S              6A
+ 
+      ** Called from Customer Details or Midas menu
+     D BrwQuery        S              1A
+ 
+      ** Index of errors
+     D Idx             S              3P 0
+ 
+      ** Timestamp for the transaction
+     D TimeStamp       S               Z
+ 
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+ 
+      ** +----------------------------------------+
+      ** ¦ Hook for non-core D-specs (all types)  ¦
+      ** ¦ also any I-specs (if necessary)        ¦
+      ** ¦ =====================================  ¦
+      ** +----------------------------------------+
+      /COPY WNCPYSRC,SKFFFFS001
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+      /COPY WNCPYSRC,SKFFFFS002
+      *
+      * Issue rollback to clear any possible updates in window functions
+      *
+     C                   IF        @INKL = '1'
+     C                   ROLBK
+     C                   ENDIF
+      *
+      /COPY WNCPYSRC,SKFFFFS003
+      *
+      ** Build browse subfile record
+     C                   IF        @SCRN = 'B'
+     C                   EXSR      BLDBRW
+     C                   ENDIF
+      *
+      ** Read next browse subfile record
+     C                   IF        @SCRN = 'R'
+     C                   EXSR      RDNBRW
+     C                   ENDIF
+      *
+      /COPY WNCPYSRC,SKFFFFS004
+      *
+      ** Do while screen: Key Details Screen
+     C                   DOW       @SCRN = 'K'
+     C                   EXSR      Scrn@K
+     C                   ENDDO
+      *
+      /COPY WNCPYSRC,SKFFFFS005
+      *
+      ** Build key screen '?' browse subfile record
+     C                   IF        @SCRN = 'C'
+     C                   EXSR      KBLDBRW
+     C                   ENDIF
+      *
+      ** Read next key screen '?' browse subfile record
+     C                   IF        @SCRN = 'S'
+     C                   EXSR      KRDNBRW
+     C                   ENDIF
+      *
+     C                   IF        @SCRN = ' '
+     C                   EXSR      RTVTRN
+     C                   IF        DDACTNOK = 'N' OR
+     C                             DDTRNNOK = 'N'
+     C                   EVAL      @SCRN = 'T'
+     C                   ENDIF
+      *
+      * If action code is not insert
+      *  .. Convert the Transaction details to screen format
+      *  .. Go to Details screen
+     C                   IF        DDACTN <> 'I'
+     C                   EXSR      CVTTRN
+     C                   EVAL      NwMnFilFmt = CrMnFilFmt
+     C                   EXSR      SFDS@P
+     C                   ENDIF
+      *
+      * Clear DS parameter arrays and go to detail screen
+     C                   MOVE      *ALL'Y'       OKTrnDets
+     C                   EVAL      @SCRN = 'P'
+     C                   EXSR      SFDS@P
+     C                   ENDIF
+      *
+      /COPY WNCPYSRC,SKFFFFS006
+      ** Do while screen: Transaction Detail Screen
+     C                   Z-ADD     *ZERO         WIdx              3 0
+     C                   DOW       @SCRN = 'P'
+     C                   EXSR      Scrn@P
+     C                   EXSR      SFDS@P
+     C                   ENDDO
+      *
+      /COPY WNCPYSRC,SKFFFFS007
+      *
+      *
+     C                   IF        @SCRN = 'U'
+     C                   EXSR      UPDATS
+     C                   ENDIF
+      *
+      /COPY WNCPYSRC,SKFFFFS008
+      *
+      ** Terminate program
+     C                   IF        @SCRN = 'T'
+     C                   EVAL      *INLR = *ON
+     C                   ENDIF
+      *
+      * Hook to enable non-core subroutines to be included
+      /COPY WNCPYSRC,SKFFFFS009
+ 
+      /EJECT
+      *****************************************************************
+      * SCRN@K - PROCESS SCREEN: KEY DETAILS
+      *****************************************************************
+     C     SCRN@K        BEGSR
+ 
+      * Set Transaction number if there are no errors
+     C                   IF        Idx = 0
+ 
+      * Set key transaction field with query processing work field value
+      * (blank in normal processing, customer ref after query processing)
+     C                   EVAL      DDTRNN = *BLANKS
+     C                   EVAL      DDTRNN = WKTRNN
+ 
+     C                   ENDIF
+ 
+      * Set F7/F8 called from Insert mode flag
+     C                   EVAL      INSERTENQ = 'Y'
+ 
+ 
+      ** Write/Read Display Screen - Key Details
+ 
+     C                   CALLB     'SKFFFFKDP'
+      *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+      * Input Parameters :
+      * Return code
+     C                   PARM      *BLANK        RetCodeIn
+ 
+      ** Transaction Number
+     C                   PARM                    DDTRNN
+ 
+      ** Transaction Details in screen format
+     C                   PARM                    CurTrnDets
+ 
+      ** Transaction Details OK indicators
+     C                   PARM                    OKTrnDets
+ 
+      * Errors
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIdArr
+     C                   PARM                    MsgDtaArr
+ 
+      * Warning
+     C                   PARM                    WFldNamArr
+     C                   PARM                    WMsgIDArr
+     C                   PARM                    WMsgDtaArr
+ 
+      * Output Parameters :
+ 
+      * Function Keys
+     C                   PARM      '0'           @INKC
+     C                   PARM      '0'           @INKG
+     C                   PARM      '0'           @INKH
+     C                   PARM      '0'           @INKL
+ 
+ 
+      * Reset transaction number work field for query processing
+     C                   Eval      WKTRNN = *BLANKS
+ 
+      * Reset Errors
+     C                   Exsr      ResetErrs
+ 
+      * F3 - End Program
+     C     @INKC         CASEQ     '1'           ENDP
+      *
+      * F7 - Roll Backwards
+     C     @INKG         CASEQ     '1'           ROLL
+      *
+      * F8 - Roll Forwards
+     C     @INKH         CASEQ     '1'           ROLL
+      *
+      * F12 - Cancel on Key Screen
+     C     @INKL         CASEQ     '1'           CANC@K
+      *
+      * Validate input to Key screen
+     C                   CAS                     VAL@K
+      *
+     C                   ENDCS
+      *
+     C     EndKey        ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * VAL@K  - VALIDATE INPUT TO KEY SCREEN
+      *****************************************************************
+     C     VAL@K         BEGSR
+ 
+      * If query on key screen, provide Transaction subfile for selection
+     C                   EVAL      KEYQuery =DDTRNN
+     C                   IF        KEYQuery = '?'
+     C                   EVAL      @SCRN = 'C'
+     C                   EVAL      DDTRNN=*BLANKS
+     C                   GOTO      EndVal@K
+     C                   ENDIF
+ 
+      * Retrieve Transaction Detail
+      * Screen field may be Transaction number
+     C                   EXSR      RTVTRN
+ 
+      * If primary fields are NOT OK
+      * Re-output screen with error messages on it
+     C                   IF        DDACTNOK = 'N' OR
+     C                             DDTRNNOK = 'N'
+     C                   GOTO      EndVAL@K
+     C                   ENDIF
+      *
+      * If action code is not insert
+      *  .. Convert the Transaction details to screen format
+      *  .. Update the transaction in file format
+      *  .. Go to Details screen
+     C                   IF        DDACTN <> 'I'
+     C                   EXSR      CVTTRN
+     C                   EVAL      NwMnFilFmt = CrMnFilFmt
+     C                   EVAL      @SCRN = 'P'
+     C                   EXSR      SFDS@P
+     C                   GOTO      EndVAL@K
+     C                   ENDIF
+      *
+      * Clear DS parameter arrays and go to detail screen
+     C                   CLEAR                   NwMnFilFmt
+     C                   CLEAR                   CrMnFilFmt
+     C                   CLEAR                   CurTrnDets
+     C                   MOVE      *ALL'Y'       OKTrnDets
+     C                   EVAL      @SCRN = 'P'
+     C                   EXSR      SFDS@P
+      *
+     C     EndVAL@K      ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SFDS@P - SET FIELD STATUS ON DETAIL SCREEN
+      *****************************************************************
+     C     SFDS@P        BEGSR
+      *
+      * Enable/disable fields on detail screen
+     C                   IF        DDACTN = 'I' OR
+     C                             DDACTN = 'A'
+      * Enable key fields on detail screen
+     C                   EVAL      @EKYFD = 'Y'
+     C                   EVAL      @EDTFD = 'Y'
+     C                   ELSE
+     C                   EVAL      @EKYFD = 'N'
+     C                   EVAL      @EDTFD = 'N'
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SCRN@P - PROCESS DETAIL SCREEN
+      *****************************************************************
+     C     SCRN@P        BEGSR
+ 
+      * Set function key status on screen
+     C                   EXSR      SFKEYS
+     C                   EVAL      @DDACTN = DDACTN
+     C                   EVAL      @DDTRNN = DDTRNN
+ 
+ 
+      ** Write/Read Display Screen - Primary Details
+     C                   CALLB     'SKFFFFDSP'
+      *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+      * Input Parameters :
+ 
+      * Return code
+     C                   PARM      *BLANKS       RetCodeIn
+ 
+      ** Transaction Details in screen format
+     C                   PARM                    CurTrnDets
+ 
+      ** Transaction Details OK indicators
+     C                   PARM                    OKTrnDets
+ 
+      ** Transaction number
+     C                   PARM                    DDTRNN
+ 
+      * Errors
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIdArr
+     C                   PARM                    MsgDtaArr
+ 
+      * Warning
+     C                   PARM                    WFldNamArr
+     C                   PARM                    WMsgIDArr
+     C                   PARM                    WMsgDtaArr
+ 
+      *
+      * Enabled Key & Detail Fields
+      *
+     C                   PARM                    @EKYFD            1
+     C                   PARM                    @EDTFD            1
+      *
+      * Enabled Function Keys
+      * F10 - Delete
+     C                   PARM                    @EINKJ
+ 
+      * Output Parameters :
+ 
+      * Function Keys
+     C                   PARM      '0'           @INKC
+     C                   PARM      '0'           @INKG
+     C                   PARM      '0'           @INKH
+     C                   PARM      '0'           @INKJ
+     C                   PARM      '0'           @INKL
+ 
+      * Reset Errors
+     C                   Exsr      ResetErrs
+      *
+      * F3 - End Program
+     C     @INKC         CASEQ     '1'           ENDP
+      *
+      * F7 - Roll Backwards
+     C     @INKG         CASEQ     '1'           ROLL
+      *
+      * F8 - Roll Forwards
+     C     @INKH         CASEQ     '1'           ROLL
+      *
+      * F12 - Cancel on Details Screen
+     C     @INKL         CASEQ     '1'           CANC@P
+      *
+      * Validate Input to Details Screen
+     C                   CAS                     VAL@P
+ 
+     C                   ENDCS
+ 
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * VAL@P  - VALIDATE INPUT TO DETAILS SCREEN
+      *****************************************************************
+     C     VAL@P         BEGSR
+      *
+      * If customer number is NOT OK
+      * Re-output screen with error message on it
+      *
+     C                   IF        DDTRNNOK = 'N'
+     C                   GOTO      EndVAL@P
+     C                   ENDIF
+      *
+      *----------------------------------------------------------------
+      * If Delete
+     C                   IF        DDACTN = 'D'
+      *
+      * If F10 taken, got to updates
+     C                   IF        @INKJ = '1'
+     C                   MOVEL     'U'           @SCRN
+     C                   ENDIF
+ 
+      * Reset Errors
+     C                   Exsr      ResetErrs
+     C                   GOTO      EndVAL@P
+     C                   ENDIF
+      *
+      *----------------------------------------------------------------
+      * If Enquire
+     C                   IF        DDACTN = 'E'
+ 
+     C                   IF        @RDNB = 'Y'
+     C                   EVAL      @SCRN = 'R'
+     C                   ELSE
+     C                   EXSR      INITIAL
+     C                   ENDIF
+ 
+      * Reset Errors
+     C                   Exsr      ResetErrs
+ 
+     C                   GOTO      EndVAL@P
+     C                   ENDIF
+      *
+      *----------------------------------------------------------------
+      * If Insert or Amend / Change
+      *
+     C                   IF        DDACTN = 'I' OR
+     C                             DDACTN = 'A'
+ 
+      * Validate Transaction Detail
+ 
+      * Store image of input screen and current number of warnings
+     C                   EVAL      PrvTrnDets = CurTrnDets
+     C                   Z-ADD     WIdx          PrvN_Warn         3 0
+      *
+      * Reset Errors
+     C                   Exsr      ResetErrs
+ 
+     C                   CALLB     'SKFFFFVAL'
+      *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+      * Inputs
+ 
+      * Response mode
+     C                   PARM      *BLANK        RespMode
+ 
+      ** Transaction Details
+     C                   PARM                    CurTrnDets
+ 
+      * Outputs
+ 
+      ** Transaction Details OK inds
+     C                   PARM                    OKTrnDets
+ 
+      * Error fields/message IDs/message data (arrays) from/to caller
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIDArr
+     C                   PARM                    MsgDtaArr
+ 
+      * Array index (3P0) from/to caller
+     C                   PARM                    Idx
+ 
+      * Warning fields/message IDs/message data (arrays) from/to caller
+     C                   PARM                    WFldNamArr
+     C                   PARM                    WMsgIDArr
+     C                   PARM                    WMsgDtaArr
+ 
+      * Array index (3P0) from/to caller
+     C                   PARM                    WIdx
+ 
+      * Valid Transaction details layout (DS) from/to caller
+     C                   PARM                    NwMnFilFmt
+ 
+      *
+      * If errors returned
+     C                   IF        Idx <> 0
+     C                   GOTO      EndVAL@P
+     C                   ENDIF
+      *
+      * If any screen defaulting or reformatting has occurred in validation
+      * or if the number of warnings has changed, re-display the screen
+     C                   IF        CurTrnDets <> PrvTrnDets OR
+     C                             WIdx       <> PrvN_Warn
+     C                   GOTO      EndVAL@P
+     C                   ENDIF
+      *
+      * Clear any warning messages
+     C                   MOVE      *ALL'Y'       OKTrnDets
+     C                   ENDIF
+ 
+     C                   EVAL      @SCRN = 'U'
+ 
+     C     EndVAL@P      ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * ROLL - ROLL BACKWARDS & FORWARDS THROUGH CUSTOMER FILE
+      *****************************************************************
+     C     ROLL          BEGSR
+      *
+      * If action is insert, control return to key screen
+     C                   IF        DDACTN = 'I'
+     C                   EVAL      INSERTENQ = 'Y'
+     C                   ENDIF
+      *
+      * Default action code to enquiry if action insert or not valid
+     C                   IF        DDACTN <> 'A' AND
+     C                             DDACTN <> 'D'
+     C                   EVAL      DDACTN = 'E'
+     C                   ENDIF
+      *
+      * Read next or previous record on customer file
+      * according to command key taken (F7/@INKG or F8/@INKH)
+     C                   IF        @INKG = '1'
+     C                   EVAL      @RDFWD = *BLANK
+     C                   EVAL      @RDBCK = 'Y'
+     C                   ELSE
+     C                   EVAL      @RDFWD = 'Y'
+     C                   EVAL      @RDBCK = *BLANK
+     C                   ENDIF
+      *
+     C                   CALLB     'SKFFFFRED'
+      *
+      * Input Parameters :
+ 
+      * Return Code
+     C                   PARM      *BLANKS       RetCodeIn
+      * Action Code
+     C                   PARM                    DDACTN
+      * Transaction number pointer
+     C                   PARM                    DDTRNN
+      * Read Forwards
+     C                   PARM                    @RDFWD
+      * Read Backwards
+     C                   PARM                    @RDBCK
+ 
+      * Output Parameters :
+ 
+      * Error message
+     C                   PARM      *BLANK        @ERRMS
+      * Transaction read
+     C                   PARM      *BLANK        @SCRED
+      *
+      * If error message returned from read, send it to detail screen
+     C                   IF        @ERRMS <> *BLANK
+     C                   EXSR      SNDM@P
+     C                   GOTO      EROLL
+     C                   ENDIF
+ 
+      * If transaction read
+     C                   IF        @SCRED <> *BLANK
+ 
+      * Retrieve transaction details
+     C                   MOVEL     @SCRED        DDTRNN
+ 
+     C                   EXSR      RTVTRN
+ 
+      * Return to previous screen if there is an error on transaction/action
+     C                   IF        DDTRNNOK = 'N' OR
+     C                             DDACTNOK = 'N'
+ 
+     C                   IF        INSERTENQ = 'Y'
+     C                   EVAL      @SCRN = 'K'
+     C                   ELSE
+     C                   EVAL      @SCRN = 'B'
+     C                   ENDIF
+ 
+     C                   GOTO      EROLL
+     C                   ENDIF
+      *
+      * Convert Transaction Detail
+     C                   EXSR      CVTTRN
+     C                   EVAL      NwMnFilFmt = CrMnFilFmt
+      *
+      * Put the Transaction Detail on screen
+     C                   EVAL      @SCRN = 'P'
+      *
+     C                   ENDIF
+      *
+     C     EROLL         ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * BLDBRW - BUILD BROWSE SUBFILE
+      *****************************************************************
+     C     BLDBRW        BEGSR
+      *
+      * Set/reset return to key screen from primary details
+     C                   EVAL      INSERTENQ = 'N'
+      *
+      * Reset Read next browse subfile record
+     C                   EVAL      @RDNB = *BLANK
+      *
+      * Build Browse subfile
+     C                   CALLB     'SKFFFFBRW'
+ 
+      * Input Parameters :
+ 
+      * Return Code
+     C                   PARM      *BLANKS       RetCodeIn
+      * Action Code
+     C                   PARM                    DDACTN
+      * Transaction Detail Reference Pointer
+     C                   PARM                    DDTRNN
+      * Build Sub-File
+     C                   PARM      'Y'           @BDSFL
+      * Read Subfile Record
+     C                   PARM      *BLANKS       @RDSFL
+      * Errors
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIdArr
+     C                   PARM                    MsgDtaArr
+      *
+      * Output Parameters :
+      * Error Message
+     C                   PARM      *BLANKS       @ERRMS
+      * Option Selected
+     C                   PARM      *BLANKS       @OPSEL
+      * Transaction Reference selected
+     C                   PARM      *BLANKS       @TrSEL
+      * Command Keys
+     C                   PARM      '0'           @INKC
+     C                   PARM      '0'           @INKI
+      *
+      * If F3 taken in browse, End Program
+     C                   IF        @INKC = '1'
+     C                   EXSR      ENDP
+     C                   GOTO      EndBLDBRW
+     C                   ENDIF
+      *
+      * If Insert (F9) selected from browse, go to key screen
+     C                   IF        @OPSEL = 'I'
+     C                   EVAL      @SCRN = 'K'
+     C                   EVAL      DDACTN = 'I'
+     C                   GOTO      EndBLDBRW
+     C                   ENDIF
+      *
+      * If error message returned from browse, send it to detail screen
+     C                   IF        @ERRMS <> *BLANK
+     C                   EXSR      SNDM@P
+     C                   GOTO      EndBLDBRW
+     C                   ENDIF
+      *
+      * Read next browse subfile record
+      *
+     C                   EVAL      @RDNB = 'Y'
+     C                   EVAL      @SCRN = 'R'
+      *
+     C     EndBLDBRW     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * RDNBRW - READ NEXT BROWSE SUBFILE RECORD
+      *****************************************************************
+     C     RDNBRW        BEGSR
+      *
+      * Read Next Subfile Record
+     C                   CALLB     'SKFFFFBRW'
+ 
+      * Input Parameters :
+ 
+      * Return Code
+     C                   PARM      *BLANKS       RetCodeIn
+      * Action Code
+     C                   PARM                    DDACTN
+      * Transaction Detail Reference Pointer
+     C                   PARM                    DDTRNN
+      * Build Sub-File
+     C                   PARM      *BLANKS       @BDSFL
+      * Read Subfile Record
+     C                   PARM      'Y'           @RDSFL
+      * Errors
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIdArr
+     C                   PARM                    MsgDtaArr
+      *
+      * Output Parameters :
+      * Error Message
+     C                   PARM      *BLANKS       @ERRMS
+      * Option Selected
+     C                   PARM      *BLANKS       @OPSEL
+      * Transaction Reference selected
+     C                   PARM      *BLANKS       @TrSEL
+      * Command Keys
+     C                   PARM      '0'           @INKC
+     C                   PARM      '0'           @INKI
+      *
+      *
+      * If Transaction read from subfile
+     C                   IF        @TrSEL <> *BLANK
+      *
+      * Retrieve Transaction Detail
+     C                   EVAL      DDACTN = @OPSEL
+     C                   EVAL      DDTRNN = @TrSEL
+ 
+     C                   EXSR      RTVTRN
+ 
+      * Stay on browse screen if there is an error on Transaction number
+     C                   IF        DDTRNNOK = 'N' OR
+     C                             DDACTNOK = 'N'
+     C                   EVAL      @SCRN = 'B'
+     C                   GOTO      EndRDNBRW
+     C                   ENDIF
+      *
+      * Convert Transaction Detail
+     C                   EXSR      CVTTRN
+     C                   EVAL      NwMnFilFmt = CrMnFilFmt
+      *
+      * Put Transaction Detail detail screen
+     C                   EVAL      @SCRN = 'P'
+     C                   EXSR      SFDS@P
+      *
+      * Else, rebuild subfile browse
+     C                   ELSE
+     C                   EXSR      INITIAL
+     C                   ENDIF
+      *
+     C     EndRDNBRW     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * KBLDBRW - BUILD BROWSE SUBFILE
+      *****************************************************************
+     C     KBLDBRW       BEGSR
+ 
+      * Reset Read next browse subfile record
+     C                   EVAL      K@RDNB = *BLANK
+ 
+      * Build Browse subfile
+     C                   CALLB     'SKFFFFKBR'
+ 
+      * INPUT PARAMETERS :
+ 
+      * Return Code
+     C                   PARM      *BLANKS       RetCodeIn
+      * Action Code
+     C                   PARM                    DDACTN
+      * Transaction Detail Reference Pointer
+     C                   PARM                    DDTRNN
+      * Build Sub-File
+     C                   PARM      'Y'           @BDSFL
+      * Read Subfile Record
+     C                   PARM      *BLANKS       @RDSFL
+      * Errors
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIdArr
+     C                   PARM                    MsgDtaArr
+      *
+      * Output Parameters :
+      * Error Message
+     C                   PARM      *BLANKS       @ERRMS
+      * Option Selected
+     C                   PARM      *BLANKS       @OPSEL
+      * transaction Reference selected
+     C                   PARM      *BLANKS       @TrSEL
+      * New User Entry in Position/Select Fields
+     C                   PARM      *BLANKS       KPosSelChg
+      * Command Keys
+     C                   PARM      '0'           @INKC
+ 
+      * If F3 taken in browse, return to key screen
+     C                   IF        @INKC = '1'
+     C                   EVAL      @SCRN = 'K'
+     C                   GOTO      EndKBLDBRW
+     C                   ENDIF
+      *
+      * If error message returned from browse, send it to key screen
+     C                   IF        @ERRMS <> *BLANK
+     C                   EXSR      SNDM@K
+     C                   GOTO      EndKBLDBRW
+     C                   ENDIF
+      *
+      * Read next browse subfile record
+     C                   EVAL      K@RDNB = 'Y'
+     C                   EVAL      @SCRN  = 'S'
+      *
+     C     EndKBLDBRW    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * KRDNBRW - READ NEXT BROWSE SUBFILE RECORD
+      *****************************************************************
+     C     KRDNBRW       BEGSR
+      *
+      * Read Next Subfile Record
+     C                   CALLB     'SKFFFFKBR'
+ 
+      * Input Parameters :
+ 
+      * Return Code
+     C                   PARM      *BLANKS       RetCodeIn
+      * Action Code
+     C                   PARM                    DDACTN
+      * Transaction Detail Reference Pointer
+     C                   PARM                    DDTRNN
+      * Build Sub-File
+     C                   PARM      *BLANKS       @BDSFL
+      * Read Subfile Record
+     C                   PARM      'Y'           @RDSFL
+      * Errors
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIdArr
+     C                   PARM                    MsgDtaArr
+      *
+      * OUTPUT PARAMETERS :
+      * Error Message
+     C                   PARM      *BLANKS       @ERRMS
+      * Option Selected
+     C                   PARM      *BLANKS       @OPSEL
+      * Transaction Reference selected
+     C                   PARM      *BLANKS       @TrSEL
+      * New User Entry in Position/Select Fields
+     C                   PARM      *BLANKS       KPosSelChg
+      * Command Keys
+     C                   PARM      '0'           @INKC
+      *
+      * Transaction not read from subfile?
+     C                   IF        @INKC = '1'
+      *
+      * Err: 'No selection' message
+     C                   EVAL      @ERRMS = 'USR5000'
+     C                   EXSR      SNDM@K
+     C                   EVAL      DDTRNN=*BLANKS
+     C                   EVAL      @SCRN = 'K'
+     C                   GOTO      EndKRDNBRW
+ 
+     C                   ELSE
+ 
+      * Rebuild browse subfile after Enter or position/select entry
+     C                   IF        @OPSEL = *BLANKS
+     C                   EVAL      @SCRN = 'C'
+     C                   GOTO      EndKRDNBRW
+     C                   ENDIF
+ 
+     C                   IF        @OPSEL <> '1'
+ 
+      * Err: 'Value entered for field is not valid, enter a '1' to select'
+     C                   EVAL      @ERRMS = 'USR5001'
+     C                   EXSR      SNDM@K
+     C                   EVAL      @SCRN = 'C'
+     C                   GOTO      EndKRDNBRW
+      *
+     C                   ELSE
+      *
+      * Retrieve Transaction
+     C                   EVAL      DDACTN = 'I'
+     C                   EVAL      DDTRNN = @TrSEL
+     C                   EVAL      WKTRNN = @TrSEL
+ 
+     C                   EXSR      RTVTRN
+ 
+      * Return to key screen if there is an error on transaction number
+     C                   IF        DDTRNNOK = 'N' OR
+     C                             DDACTNOK = 'N'
+     C                   EVAL      @SCRN = 'K'
+     C                   GOTO      EndKRDNBRW
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   EVAL      @SCRN = 'K'
+ 
+     C     EndKRDNBRW    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * RTVTRN - Retrieve Transaction Detail
+      *****************************************************************
+     C     RTVTRN        BEGSR
+      *
+      * Retrieve Transaction Detail
+      *
+     C                   CALLB     'SKFFFFRTV'
+      *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+      * INPUTS
+      *
+      * Return code
+     C                   PARM      *BLANKS       RetCodeIn
+      *
+      * Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
+      * Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
+      *
+     C                   PARM      '      '      ModeofOp
+      *
+      * Response mode
+     C                   PARM      'S'           RespMode
+      *
+      * Action Code
+     C                   PARM                    DDACTN
+      *
+      * Front Office Transaction ID
+     C                   PARM                    C_FlFRNT
+      *
+      * (Midas) Transaction number
+     C                   PARM                    DDTRNN
+      *
+      * Outputs
+      *
+      * Transaction  Details in File Format
+     C                   PARM                    CrMnFilFmt
+      *
+      * OK - Action code
+     C                   PARM      *BLANK        DDACTNOK
+      *
+      * OK - Transaction Number
+     C                   PARM      *BLANK        DDTRNNOK
+ 
+      * Error fields/message IDs/message data (arrays) from/to caller
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIdArr
+     C                   PARM                    MsgDtaArr
+      *
+      * Array index (3P0) from/to caller
+     C                   PARM      0             Idx
+      *
+ 
+ 
+     C     EndRTVTRN     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * CVTTRN - Put a Transaction Detail on Screen
+      *****************************************************************
+     C     CVTTRN        BEGSR
+      *
+      * Call program to fill screen fields with data from SKTranFlPD
+      *
+     C                   CALLB     'SKFFFFCVT'
+      *
+      * Output Parameters
+      *
+      * Return Code
+     C                   PARM      *BLANKS       RetCodeIn
+      *
+      * xxxxxx Transaction Details File Format
+     C                   PARM                    CrMnFilFmt
+      *
+ 
+      * Output Parameters
+ 
+      * xxxxxx Transaction Details Screen Format
+     C                   PARM                    CurTrnDets
+ 
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SFKEYS - SET FUNCTION KEY STATUS ON SCREEN
+      *****************************************************************
+     C     SFKEYS        BEGSR
+ 
+      * Enable/disable function keys
+ 
+      * KJ = Command Key F10 = CONFIRM DELETE
+ 
+     C                   IF        DDACTN = 'D'
+     C                   EVAL      @EINKJ = 'Y'
+     C                   ELSE
+     C                   EVAL      @EINKJ = 'N'
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SNDM@P - SEND A MESSAGE TO DETAIL SCREEN
+      *****************************************************************
+     C     SNDM@P        BEGSR
+      *
+      ** Add error message to array passed to detail screen
+     C                   Z-ADD     1             E                 3 0
+     C     *BLANK        LOOKUP    FldNameArr(E)                          99
+     C                   MOVEL     '*ANY'        FldNameArr(E)
+     C                   MOVEL     @ERRMS        MsgIdArr(E)
+      *
+     C     EndSNDM@P     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SNDM@K - SEND A MESSAGE TO KEY SCREEN
+      *****************************************************************
+     C     SNDM@K        BEGSR
+      *
+      ** Add error message to array passed to detail screen
+     C                   EVAL      E = 1
+     C     *BLANK        LOOKUP    FldNameArr(E)                          99
+     C                   MOVEL     '*ANY'        FldNameArr(E)
+     C                   MOVEL     @ERRMS        MsgIdArr(E)
+      *
+     C     EndSNDM@K     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * CANC@K - CANCEL ON KEY SCREEN
+      *****************************************************************
+     C     CANC@K        BEGSR
+      *
+      * Reset Read Next Browse Subfile Record (if active)
+     C                   EVAL      @RDNB  = *BLANK
+     C                   EVAL      @SCRN  = 'B'
+     C                   EVAL      DDTRNN = *BLANK
+      *
+      * If input fields are enabled
+      * Blank the screens
+     C                   EVAL      CurTrnDets = *BLANK
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * CANC@P - CANCEL ON PRIMARY SCREEN
+      *****************************************************************
+     C     CANC@P        BEGSR
+      *
+      * Return to previous screen
+     C                   EVAL      DDTRNN = *BLANK
+      *
+     C                   IF        INSERTENQ = 'Y'
+     C                   EVAL      DDACTN = 'I'
+     C                   EVAL      @SCRN  = 'K'
+     C                   ELSE
+     C                   EVAL      @SCRN  = 'B'
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * UPDATS - UPDATES
+      *****************************************************************
+     C     UPDATS        BEGSR
+ 
+      * Update valid transaction: transaction reference
+     C                   EVAL      VfTRNN = DDTRNN
+     C                   EVAL      VfTYLC = DDACTN
+ 
+      ** Carry forward non-validated screen field values to valid file
+     C                   EVAL      SESRCD = @DDSRCD
+     C                   EVAL      SENARR = @DDNARR
+ 
+     C                   IF        DDACTN = 'A'
+ 
+      ** Carry forward number of trades value to valid file field
+     C                   EVAL      SENTFC = C_BFNTFC
+     C                   EVAL      SETMES = C_BFTMST
+ 
+     C                   ELSE
+ 
+     C                   IF        DDACTN = 'I'
+ 
+      ** Initialise number of trades field for Insert
+     C                   EVAL      SENTFC = 0
+     C                   ENDIF
+ 
+     C                   ENDIF
+ 
+     C                   EVAL      @RTCD = *BLANK
+ 
+      * xxxxxx Transaction Details Updates
+     C                   CALLB     'SKFFFFUPD'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM                    NwMnFilFmt
+      *
+      * If there were any errors in the update functions, rollback any
+      * updates and end this program. Otherwise, commit the updates
+     C                   IF        @RTCD <> *BLANK
+     C                   ROLBK
+     C                   IF        @RTCD <> '*RECUPD'
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ELSE
+     C                   COMMIT
+     C                   ENDIF
+      *
+      ** If update not done due to record being updated by another
+      ** workstation send message to screen.
+     C
+     C                   IF        @RTCD = '*RECUPD'
+     C
+     C                   MOVEL     '*ANY'        FldNameArr(1)
+     C                   MOVEL     'MMM1067'     MsgIdArr(1)
+     C
+     C                   ENDIF
+      *
+      * If records are still to be read from the subfile, read them
+     C                   IF        @RDNB = 'Y'
+     C                   MOVEL     'R'           @SCRN
+     C                   ELSE
+      *
+      * Else, Return to Insert Key Screen or Browse Subfile
+     C                   IF        DDACTN = 'I'
+     C                   EVAL      @ERRMS = 'USR5002'
+     C                   EXSR      SNDM@K
+     C                   EVAL      @SCRN = 'K'
+     C                   ELSE
+     C                   EVAL      @SCRN = WSCRN
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   IF        @CALLP = 'FFFF'
+     C                   EVAL      @SCRN = 'T'
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * ENDP - End Program
+      *****************************************************************
+     C     ENDP          BEGSR
+      *
+     C                   EVAL      @SCRN = 'T'
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * ResetErrs - Reset error indicators
+      *****************************************************************
+     C     ResetErrs     BEGSR
+      *
+      * Reset Errors
+     C                   MOVE      *ALL'Y'       OKTrnDets
+     C                   EVAL      FldNameArr = *BLANK
+     C                   EVAL      MsgIdArr   = *BLANK
+     C                   EVAL      MsgDtaArr  = *BLANK
+     C                   EVAL      WFldNamArr = *BLANK
+     C                   EVAL      WMsgIDArr  = *BLANK
+     C                   EVAL      WMsgDtaArr = *BLANK
+     C                   EVAL      Idx = *Zero
+     C                   EVAL      WIdx = *Zero
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INITIAL Go To Initial Screen
+      *****************************************************************
+     C     INITIAL       BEGSR
+      *
+      * Reset Read Next Browse Subfile Record (if active)
+     C                   EVAL      @RDNB  = *BLANK
+     C                   EVAL      DDTRNN = *BLANK
+      *
+      * Blank the screens
+     C                   EVAL      CurTrnDets = *BLANK
+      *
+      * If you wish to go straight to the input screen and not the subfile,
+      * replace the 'B' with a 'K' to specify the key detail screen.
+      * Browse Screen
+     C                   MOVEL     'B'           @SCRN
+     C                   MOVEL     'B'           WSCRN             1
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * *INZSR - INITIAL PROCESSING
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+      * Parameters
+     C     *ENTRY        PLIST
+      * Inputs
+      *
+      * xxxxxx Transaction NUMBER
+      *
+     C                   PARM                    DDTRNN            6
+      *
+      * Action Code
+     C                   PARM                    DDACTN            1
+      *
+      ** Initialise program name
+     C                   MOVEL     'SKFFFFSIN'   DBPGM
+      *
+      ** Access Bank Details
+     C                   CALL      'AOBANKR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*FIRST '     @OPTN
+     C     SDBANK        PARM      SDBANK        DSFDY
+      *
+      * Database error
+     C                   IF        @RTCD <> *BLANKS
+     C                   EVAL      DBFILE = 'SDBANKPD'
+     C                   EVAL      DBASE  = '901'
+     C                   EVAL      DBKEY  = @OPTN
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      ** Program, module and procedure names for dbase error processing
+      ** ==============================================================
+      ** The following /COPY sets these values.
+      /COPY ZACPYSRC,DBFIELDS
+      *
+     C                   IF        DDTRNN <> *BLANK AND
+     C                             DDACTN <> ' '
+     C                   MOVEL     ' '           WSCRN             1
+     C                   MOVEL     ' '           @SCRN             1
+     C                   MOVEL     'FFFF'        @CALLP            4
+      *
+      * Clear DS parameter arrays and go to detail screen
+     C                   CLEAR                   NwMnFilFmt
+     C                   CLEAR                   CrMnFilFmt
+     C                   CLEAR                   CurTrnDets
+     C                   MOVE      *ALL'Y'       OKTrnDets
+      *
+     C                   ELSE
+      *
+      * Go To Initial Screen
+      *
+     C                   EXSR      INITIAL
+     C                   MOVEL     'FFFF'        @CALLP            4
+     C                   ENDIF
+      *
+      *  Hook to enable non-core initial processing to be included
+      /COPY WNCPYSRC,SKFFFFS010
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program, and performs      *
+      *          a ROLLBACK.                                          *
+      *                                                               *
+      *****************************************************************
+      ** The following /COPY contains the standard program status
+      ** subroutine, including a bound call to the DBERRCTL module.
+     C/COPY ZACPYSRC,PSSR_ILE
+ 
+         Note: if non-standard processing required, use the PSSR_ILENE
+         subroutine
+      ****************************************************************

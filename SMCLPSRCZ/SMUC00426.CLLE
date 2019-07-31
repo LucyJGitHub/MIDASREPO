@@ -1,0 +1,92 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Utility for CSD101 Take on Program')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00426 - Utility for CSD101 Take On Program              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. MD053090           Date 26Mar19              */
+/*       Prev Amend No. CSD101  *CREATE    Date 07Dec18              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*        MD053090 - Create a back up file for REAPWDPD              */
+/*        CSD101 - Password Encryption                               */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')                 /*MD053090*/
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(8) VALUE('  DTALIB')
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2018')
+
+/** Global monitor message.  */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             SNDPGMMSG  MSG('SMUC00426 - Utility for CSD101 +
+                            Take-on Program') TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Setup system prefix variable from SDSTAT data area. */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                             /*MD053090*/
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)                       /*MD053090*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DTALIB 1 2)) VALUE(&SYSID)
+
+             CHKOBJ     OBJ(&DPLIB/ZSDSVALPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK1))
+             DLTF       FILE(ZSDSVALPD)
+
+CHECK1:
+             CHKOBJ     OBJ(&DPLIB/ZREAPWDPD) OBJTYPE(*FILE)                            /*MD053090*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK2))                        /*MD053090*/
+             DLTF       FILE(ZREAPWDPD)                                                 /*MD053090*/
+                                                                                        /*MD053090*/
+CHECK2:                                                                                 /*MD053090*/
+             CPYF       FROMFILE(&DTALIB/SDSVALPD) +
+                        TOFILE(&DPLIB/ZSDSVALPD) MBROPT(*REPLACE) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('SMUC00426 - Error occured in copying +
+                          PF/SDSVALPD to PF/ZSDSVALPD. Process +
+                          terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             CPYF       FROMFILE(&DMLIB/REAPWDPD) +
+                        TOFILE(&DPLIB/ZREAPWDPD) MBROPT(*REPLACE) +
+                        CRTFILE(*YES)                                                   /*MD053090*/
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)                         /*MD053090*/
+             SNDUSRMSG  MSG('SMUC00426 - Error occured in copying +
+                          PF/REAPWDPD to PF/ZREAPWDPD. Process +
+                          terminated.') MSGTYPE(*INFO)                                  /*MD053090*/
+             GOTO       CMDLBL(ERROR)                                                   /*MD053090*/
+             ENDDO                                                                      /*MD053090*/
+
+             GOTO       CMDLBL(END)
+
+ERROR:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMUC00426 ended abnormally - see joblog +
+                          ') TOMSGQ(MOPERQ)
+             CHGJOB     SWS(XXXXXX11)
+
+END:
+
+             ENDPGM
+
+

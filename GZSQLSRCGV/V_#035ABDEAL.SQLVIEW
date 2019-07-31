@@ -1,0 +1,206 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_#ABDEAL - Global AB Deals                                           */
+/*                                                                             */
+/*       (c) Finastra International Limited 2003                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CSF011             Date 12Sep11                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER043             Date 02Jun08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG11508           Date 19Jun06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CDL038             Date 10May05                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      BUG6069            Date 23Feb05                        */
+/*                      BUG5404            Date 18Jan05                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG2707            Date 12May04                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      CGP001  *CREATE    Date 20Aug03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11508 - Midas error when trying to select Internal Contracts menu  */
+/*                  item                                                       */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CDL038 - Extended Deal Sub Type                                       */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       BUG6069- Performance Enhancement                                      */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG2707- Unable to set on listview security without customer          */
+/*       BUG1912- SQL performance analysis required                            */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+   JPRCID, JPDLTF, JPDLUP, JPMLUP, JPYLUP, JPTLUP, JPCHTP, JPLCD,               :
+   JPLUID, JPPCDN, JPDTYY, JPDTMM, JPDTDD, JPPCTN, JPDSTS, JPDUSC, JPDDLT,      :
+   JPLACT, JPLAYY, JPLAMM, JPLADD, JPDDTM, JPDFCY, JPCDPF, JPDMD1, JPNDXR,      :
+   JPDSCY, JPCDPS, JPDBRC, JPMBCA, JPDDYY, JPDDMM, JPDDDD, JPICM1, JPIRT1,      :
+   JPICM2, JPIRT2, JPFWPP, JPFDXR, JPMDTY, JPSTYP, JPDCNO, JPORBR,              :
+   JPFXBC, JPMMBC, JPPRFC, JPLRDF, JPDRDF, JPMMPC, JPMACT, JPFRNT, JPAFRT,      :
+***JPREPA,*JPTMST,*JPOYLC,******************************************************:           BUG11508
+   JPREPA, JPTMST, JPOYLC, JPCLAS,                                              :           BUG11508
+   DIGITS(JPFD38) AS PADFD38,                                                   :
+   DIGITS(JPSD38) AS PADSD38,                                                   :
+***DIGITS(JPDCNO)*AS*PADDCNO,***************************************************:     BUG2707 CSD027
+          JPDCNO  AS PADDCNO,                                                   :             CSD027
+   CASE WHEN JPLNKN = 0 THEN ' ' ELSE DIGITS(JPLNKN) END AS PADLNKN,            :
+   DATE((CAST (DIGITS(JPNDDD) AS CHAR(2)) CONCAT '.' CONCAT CAST (DIGITS(JPNDMM):
+   AS CHAR (2)) CONCAT '.' CONCAT CAST (DIGITS(JPNDYY) AS CHAR(4)))) AS         :
+   JPNDDT,                                                                      :
+   DATE((CAST (DIGITS(JPFDDD) AS CHAR(2)) CONCAT '.' CONCAT CAST (DIGITS(JPFDMM):
+   AS CHAR (2)) CONCAT '.' CONCAT CAST (DIGITS(JPFDYY) AS CHAR(4)))) AS         :
+   JPFDDT,                                                                      :
+   DATE((CAST (DIGITS(JPDTDD) AS CHAR(2)) CONCAT '.' CONCAT CAST (DIGITS(JPDTMM):
+   AS CHAR (2)) CONCAT '.' CONCAT CAST (DIGITS(JPDTYY) AS CHAR(4)))) AS         :
+   JPDTDT,                                                                      :
+   DATE((CAST (DIGITS(JPLADD) AS CHAR(2)) CONCAT '.' CONCAT CAST (DIGITS(JPLAMM):
+   AS CHAR (2)) CONCAT '.' CONCAT CAST (DIGITS(JPLAYY) AS CHAR(4)))) AS         :
+   JPLADT,                                                                      :
+   DATE((CAST (DIGITS(JPDDDD) AS CHAR(2)) CONCAT '.' CONCAT CAST (DIGITS(JPDDMM):
+   AS CHAR (2)) CONCAT '.' CONCAT CAST (DIGITS(JPDDYY) AS CHAR(4)))) AS         :
+   JPDDDT,                                                                      :
+   CASE WHEN JPPCTN = 0 THEN ' ' ELSE DIGITS(JPPCTN) END AS PADPCTN,            :
+   CASE WHEN JPDDAT=0 THEN NULL ELSE DATE(JPDDAT+719892) END AS FJPDDAT,        :
+   CASE WHEN JPNDAT=0 THEN NULL ELSE DATE(JPNDAT+719892) END AS FJPNDAT,        :
+   CASE WHEN JPFDAT=0 THEN NULL ELSE DATE(JPFDAT+719892) END AS FJPFDAT,        :
+   CASE WHEN JPDLAD=0 THEN NULL ELSE DATE(JPDLAD+719892) END AS FJPDLAD,        :
+   CASE WHEN JPLCD=0 THEN NULL ELSE DATE(JPLCD+719892) END AS FJPLCD,           :
+***DEC(JPNDA1*C1.SCALING,31,4) AS "SJPNDA1",************************************:BUG6069
+***DEC(JPNDA1*C1.SCALING*C1.RATE,31,4) AS "BSJPNDA1",***************************:BUG6069
+***DEC(JPNDA2*C2.SCALING,31,4) AS "SJPNDA2",************************************:BUG6069
+***DEC(JPNDA2*C2.SCALING*C2.RATE,31,4) AS "BSJPNDA2",***************************:BUG6069
+***DEC(JPINA1*C1.SCALING,31,4) AS "SJPINA1",************************************:BUG6069
+***DEC(JPINA1*C1.SCALING*C1.RATE,31,4) AS "BSJPINA1",***************************:BUG6069
+***DEC(JPINA2*C2.SCALING,31,4) AS "SJPINA2",************************************:BUG6069
+***DEC(JPINA2*C2.SCALING*C2.RATE,31,4) AS "BSJPINA2",***************************:BUG6069
+***DEC(JPNBCA*C3.SCALING,31,4) AS "SJPNBCA",************************************:BUG6069
+***DEC(JPFBCA*C3.SCALING,31,4) AS "SJPFBCA",************************************:BUG6069
+***DEC(JPFDA1*C1.SCALING,31,4) AS "SJPFDA1",************************************:BUG6069
+***DEC(JPFDA1*C1.SCALING*C1.RATE,31,4) AS "BSJPFDA1",***************************:BUG6069
+***DEC(JPFDA2*C2.SCALING,31,4) AS "SJPFDA2",************************************:BUG6069
+***DEC(JPFDA2*C2.SCALING*C2.RATE,31,4) AS "BSJPFDA2",***************************:BUG6069
+***DEC(JPNBCD*C3.SCALING,31,4) AS "SJPNBCD",************************************:BUG6069
+***DEC(JPFBCD*C3.SCALING,31,4) AS "SJPFBCD",************************************:BUG6069
+***DEC(JPNSBC*C3.SCALING,31,4) AS "SJPNSBC",************************************:BUG6069
+***DEC(JPFSBC*C3.SCALING,31,4) AS "SJPFSBC",************************************:BUG6069
+***DEC(JPNDBA*C1.SCALING,31,4) AS "SJPNDBA",************************************:BUG6069
+***DEC(JPNDBA*C1.SCALING*C1.RATE,31,4) AS "BSJPNDBA",***************************:BUG6069
+***DEC(JPNDSA*C2.SCALING,31,4) AS "SJPNDSA",************************************:BUG6069
+***DEC(JPNDSA*C2.SCALING*C2.RATE,31,4) AS "BSJPNDSA",***************************:BUG6069
+***DEC(JPFDBA*C2.SCALING,31,4) AS "SJPFDBA",************************************:BUG6069
+***DEC(JPFDBA*C2.SCALING*C2.RATE,31,4) AS "BSJPFDBA",***************************:BUG6069
+***DEC(JPFDSA*C1.SCALING,31,4) AS "SJPFDSA",************************************:BUG6069
+***DEC(JPFDSA*C1.SCALING*C1.RATE,31,4) AS "BSJPFDSA",***************************:BUG6069
+   JPNDA1 AS SJPNDA1,                                                           :BUG6069
+   JPNDA2 AS SJPNDA2,                                                           :BUG6069
+   JPINA1 AS SJPINA1,                                                           :BUG6069
+   JPINA2 AS SJPINA2,                                                           :BUG6069
+   JPNBCA AS SJPNBCA,                                                           :BUG6069
+   JPFBCA AS SJPFBCA,                                                           :BUG6069
+   JPFDA1 AS SJPFDA1,                                                           :BUG6069
+   JPFDA2 AS SJPFDA2,                                                           :BUG6069
+   JPNBCD AS SJPNBCD,                                                           :BUG6069
+   JPFBCD AS SJPFBCD,                                                           :BUG6069
+   JPNSBC AS SJPNSBC,                                                           :BUG6069
+   JPFSBC AS SJPFSBC,                                                           :BUG6069
+   JPNDBA AS SJPNDBA,                                                           :BUG6069
+   JPNDSA AS SJPNDSA,                                                           :BUG6069
+   JPFDBA AS SJPFDBA,                                                           :BUG6069
+   JPFDSA AS SJPFDSA,                                                           :BUG6069
+***A8ZONE AS CUSTZONE, V_GPGLCUSL.* ********************************************:BUG6069
+   A8ZONE AS CUSTZONE,                                                          :BUG6069
+   CGGLOB , CGCSSN , CGRNM  , CGRTN , CGICD , CGACO ,                           :BUG6069
+   CGCNCZ , CGCOLC , CGBRCD , CGCUST , CGZONE                                   :BUG6069
+  FROM GZABDEALPP                                                               :
+  LEFT JOIN GZSDBRCHPD ON JPMBCA = A8BRCD                                       :
+  LEFT JOIN GZSDBANKPD ON BJZONE = A8ZONE                                       :
+**LEFT*JOIN*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCUST*=*DIGITS(JPDCNO)***********:BUG1912
+**LEFT*JOIN*GPGLCUSL*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCNUM*=*JPDCNO**********:BUG1912/BUG6069
+  LEFT JOIN GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = JPDCNO ;                   :BUG6069
+**LEFT*JOIN*V_GLOBRATE*C1*ON*C1.CCY=JPDFCY**************************************:BUG6069
+**LEFT*JOIN*V_GLOBRATE*C2*ON*C2.CCY=JPDSCY**************************************:BUG6069
+**LEFT*JOIN*V_GLOBRATE*C3*ON*C3.CCY=BJCYCD;*************************************:BUG6069
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+    (JPNDDT IS 'Deal                near                date',                  :
+     JPFDDT IS 'Deal                far                 date',                  :
+     JPDTDT IS 'Deal                tran                date',                  :
+     JPLADT IS 'Last                action              date',                  :
+     JPDDDT IS 'Deal                done                date');                 :
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+    (JPNDDT TEXT IS 'Deal Near Date',                                           :
+     JPFDDT TEXT IS 'Deal Far Date',                                            :
+     JPDTDT TEXT IS 'Deal transaction date',                                    :
+     JPLADT TEXT IS 'Deal Last Action Date',                                    :
+     JPDDDT TEXT IS 'Deal done date');                                          :
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADFD38    AS JPFD38     USING GZABDEALPP                      :
+ * DESCRIBEFIELD PADSD38    AS JPSD38     USING GZABDEALPP                      :
+ * DESCRIBEFIELD PADPCTN    AS JPPCTN     USING GZABDEALPP                      :
+ * DESCRIBEFIELD PADLNKN    AS JPLNKN     USING GZABDEALPP                      :
+ * DESCRIBEFIELD FJPDDAT    AS JPDDAT     USING GZABDEALPP                      :
+ * DESCRIBEFIELD FJPNDAT    AS JPNDAT     USING GZABDEALPP                      :
+ * DESCRIBEFIELD FJPFDAT    AS JPFDAT     USING GZABDEALPP                      :
+ * DESCRIBEFIELD FJPDLAD    AS JPDLAD     USING GZABDEALPP                      :
+ * DESCRIBEFIELD FJPLCD     AS JPLCD      USING GZABDEALPP                      :
+ * DESCRIBEFIELD SJPNDA1    AS JPNDA1     USING GZABDEALPP                      :
+***DESCRIBEFIELD*BSJPNDA1***AS*JPNDA1*****USING*GZABDEALPP*(BASECCY)************:BUG6069
+ * DESCRIBEFIELD SJPNDA2    AS JPNDA2     USING GZABDEALPP                      :
+***DESCRIBEFIELD BSJPNDA2***AS*JPNDA2*****USING*GZABDEALPP*(BASECCY)************:BUG6069
+ * DESCRIBEFIELD SJPINA1    AS JPINA1     USING GZABDEALPP                      :
+***DESCRIBEFIELD BSJPINA1***AS*JPINA1*****USING*GZABDEALPP*(BASECCY)************:BUG6069
+ * DESCRIBEFIELD SJPINA2    AS JPINA2     USING GZABDEALPP                      :
+***DESCRIBEFIELD BSJPINA2***AS*JPINA2*****USING*GZABDEALPP*(BASECCY)************:BUG6069
+ * DESCRIBEFIELD SJPNBCA    AS JPNBCA     USING GZABDEALPP                      :
+ * DESCRIBEFIELD SJPFBCA    AS JPFBCA     USING GZABDEALPP                      :
+ * DESCRIBEFIELD SJPFDA1    AS JPFDA1     USING GZABDEALPP                      :
+***DESCRIBEFIELD BSJPFDA1***AS*JPFDA1*****USING*GZABDEALPP*(BASECCY)************:BUG6069
+ * DESCRIBEFIELD SJPFDA2    AS JPFDA2     USING GZABDEALPP                      :
+***DESCRIBEFIELD BSJPFDA2***AS*JPFDA2*****USING*GZABDEALPP*(BASECCY)************:BUG6069
+ * DESCRIBEFIELD SJPNBCD    AS JPNBCD     USING GZABDEALPP                      :
+ * DESCRIBEFIELD SJPFBCD    AS JPFBCD     USING GZABDEALPP                      :
+ * DESCRIBEFIELD SJPNSBC    AS JPNSBC     USING GZABDEALPP                      :
+ * DESCRIBEFIELD SJPFSBC    AS JPFSBC     USING GZABDEALPP                      :
+ * DESCRIBEFIELD SJPNDBA    AS JPNDBA     USING GZABDEALPP                      :
+***DESCRIBEFIELD BSJPNDBA***AS*JPNDBA*****USING*GZABDEALPP*(BASECCY)************:BUG6069
+ * DESCRIBEFIELD SJPNDSA    AS JPNDSA     USING GZABDEALPP                      :
+***DESCRIBEFIELD BSJPNDSA***AS*JPNDSA*****USING*GZABDEALPP*(BASECCY)************:BUG6069
+ * DESCRIBEFIELD SJPFDBA    AS JPFDBA     USING GZABDEALPP                      :
+***DESCRIBEFIELD BSJPFDBA***AS*JPFDBA*****USING*GZABDEALPP*(BASECCY)************:BUG6069
+ * DESCRIBEFIELD SJPFDSA    AS JPFDSA     USING GZABDEALPP                      :
+***DESCRIBEFIELD BSJPFDSA***AS*JPFDSA*****USING*GZABDEALPP*(BASECCY)************:BUG6069
+ * DESCRIBEFIELD PADDCNO    AS JPDCNO     USING GZABDEALPP                      :          BUG2707
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :
+ * DESCRIBEEND                                                                  :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ AB deals - GZABDEALPP                    ';                     :
+                                                                                :

@@ -1,0 +1,325 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Fontis TPP nostro default listing')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME2007 - Midas Fontis TPP Nostro Default Maintenance         *
+      *                                                               *
+      *  Function:  This program produces a report over exposure      *
+      *             management errors.                                *
+      *                                                               *
+      *  Called By: MEC2007                                           *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 174569             Date 19Jan00               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL009  *CREATE    Date 07Sep99               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  174569 - Euro nostro equivalent                              *
+      *  CGL009 - FONTIS IAT/TPP interface                            *
+      *                                                               *
+      * Indicator Usage                                               *
+      * 01 - Printer Overflow                                         *
+      * 80 - EOF MEFNODL0                                             *
+      * 89 - GENERAL ERROR INDICATOR                                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *INZSR - Initial processing                                  *
+      *  *PSSR  - Error processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+      * MG Fontis Nostro Default Details
+     FMEFNODL0IF  E           K        DISK                           UC
+     F                                              KINFSR *PSSR
+      *
+      * Printer File
+     FME2007P1O   E             01     PRINTER      KINFDS SPOOL
+      /EJECT
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      /SPACE 3
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Program Status Data Structure
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** File information data structure
+      *
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+      * Bank details Structure *
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+      *
+      * MAIN PROCESSING
+      *
+      * Read all records in MEFNODL0
+      * If change in program name (PGMN) write summary
+     C                     READ MEFNODL0                 80
+     C           *IN80     DOWEQ*OFF
+      *
+     C                     MOVEL'Y'       WDATA
+      *
+      * Write Header ??
+     C           *IN01     IFEQ *ON
+      *
+     C                     WRITEHEADP1                 89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ME2007'  DBPGM
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'HEADP1'  DBFILE    P      *DB ERROR 001 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE *OFF      *IN01
+      *
+     C                     ENDIF
+      *
+      * Move report data
+     C                     MOVELFHCYCD    #CYCD
+     C                     MOVELFHNOSN    #NOSN
+     C                     MOVELFHEURO    #EURO
+     C                     MOVELFHEUNO    #EUNO                           174569
+      *
+     C                     WRITEDETAIL                 89
+      *
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ME2007'  DBPGM
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'DETAIL'  DBFILE    P      *DB ERROR 002 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     READ MEFNODL0                 80
+     C                     ENDDO
+      *
+     C           WDATA     IFNE 'Y'
+      *
+      * No data report
+     C                     WRITEHEADP1                 89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ME2007'  DBPGM
+     C                     Z-ADD7         DBASE            ***************
+     C                     MOVEL'HEADP1'  DBFILE    P      *DB ERROR 007 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     WRITENODATA                 89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ME2007'  DBPGM
+     C                     Z-ADD8         DBASE            ***************
+     C                     MOVEL'NODATA'  DBFILE    P      *DB ERROR 008 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     WRITETRAILP1                89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ME2007'  DBPGM
+     C                     Z-ADD9         DBASE            ***************
+     C                     MOVEL'TRAILP1' DBFILE    P      *DB ERROR 009 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C** Ensure Report Spool File Recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @SEQ    5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C                     SETON                         LR
+      * ---------------------------------------------------------------
+      * Subroutine *INZSR
+      *            Initialisation routine
+      * ---------------------------------------------------------------
+     C           *INZSR    BEGSR
+     C*
+     C** Receive entry parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+     C                     MOVEL'N'       WDATA   1
+     C                     SETON                         01Write Header
+      *
+      ** Access SAR details file to determine if CGL009 is switched ON
+      *
+     C                     CALL 'AOSARDR0'             90
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CGL009'  PSARD   6
+     C                     MOVE 'N'       CGL009  1
+      *
+      ** If core feature is switched ON, set on indicator that will
+      ** condition the rest of the processing
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C           *IN90     ANDEQ'0'
+     C                     MOVE 'Y'       CGL009
+     C                     ELSE
+      *
+      ** else, database error (return code other than *NRF)
+      *
+     C           PRTCD     IFNE '*NRF   '
+     C           *IN90     OREQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ME2007'  DBPGM
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'SCSARDPD'DBFILE    P      *DB ERROR 005 *
+     C                     MOVEL'CGL009'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *  Extract bank details
+      *
+     C                     CALL 'AOBANKR0'             90
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           PRTCD     ORNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ME2007'  DBPGM
+     C                     Z-ADD10        DBASE            ***************
+     C                     MOVEL'AOBANKR0'DBFILE    P      *DB ERROR 010 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Check to see if FONTIS IAT/TPP CGL009 is installed
+     C           CGL009    IFNE 'Y'
+     C                     SETON                         LR
+     C                     ELSE
+     C                     OPEN MEFNODL0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

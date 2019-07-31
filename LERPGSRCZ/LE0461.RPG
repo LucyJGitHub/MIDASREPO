@@ -1,0 +1,2048 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Facilities processing')                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module
+      *                                                               *
+      *  LE0461 - FACILITY PROCESSING                                 *
+      *                                                               *
+      *  Function: To drop reversed, closed and specific expired      *
+      *   (COB)    facilities from file; to set facilities that have  *
+      *            reached expiry date to 'Expired'; to update dates  *
+      *            for avaiability array and zero amounts for         *
+      *            availability array on facilities file              *
+      *                                                               *
+      *  Called By: LEC0606 - Facilities Update                       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD050829           Date 10May18               *
+      *                 CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD031146           Date 07Apr16               *
+      *                 MD033997           Date 11May15               *
+      *                 MD024682           Date 09May14               *
+      *                 MD024690           Date 09May14               *
+      *                 AR1008182          Date 05Dec12               *
+      *                 AR812812           Date 16Nov12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 AR1002397          Date 13Jul12               *
+      *                 AR888952           Date 06Jan12               *
+      *                 CLE147             Date 30Sep11               *
+      *                 AR787849           Date 17Jun11               *
+      *                 CLE064             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG22954A          Date 04Mar09               *
+      *                 BUG28069           Date 26Aug10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG8707            Date 21Oct05               *
+      *                 BUG8831            Date 04Oct05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 14Feb05               *
+      *                 CLE041             Date 15Oct04               *
+      *                 CLE040             Date 05Jul04               *
+      *                 BUG3872            Date 30Jul04               *
+      *                 CLE039             Date 20Oct03               *
+      *                 CLE029             Date 04Sep02               *
+      *                 CAP073             Date 08Aug02               *
+      *                 CLE034             Date 21May03               *
+      *                 CLE031             Date 05Feb03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 211579             Date 09Jan03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 204452             Date 02May02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP068             Date 25JUN02               *
+      *                 CAP071             Date 19Mar02               *
+      *                 CAP070             Date 08Mar02               *
+      *                 CLE023             Date 19Nov01               *
+      *                 200862             Date 12Dec01               *
+      *                 193603             Date 31Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 189839             Date 23Jul01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 158541             Date 29Mar00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CLE009             Date 10May99               *
+      * Midas DBA 3.00 Patch D ---------------------------------------*
+      *                 168225             Date 06Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CLE008             Date 24Nov98               *
+      *                 154799             Date 03Mar99               *
+      *                 120277             Date 03Mar99               *
+      *                 147261             Date 03Mar99               *
+      *                 144712             Date 03Mar99               *
+      *                 141453             Date 17Feb99               *
+      *                 134806             Date 10Feb99               *
+      *                 125715             Date 02Feb99               *
+      *                 127762             DATE 28MAY98               *
+      *                 128067             DATE 23Dec97               *
+      *                 128066             DATE 23Dec97               *
+      *                 127740             Date 16Dec97               *
+      *                 CLE005             Date 22May97               *
+      *                 122839             Date 29Sep97               *
+      *                 100515             DATE 22MAY96               *
+      *                 062690             DATE 07MAY96               *
+      *                 057388 (FB0160)    DATE 30JUN93               *
+      *                 052154 (BH3587)    DATE 27APR93               *
+      *                 BH3436             DATE 22JUL92               *
+      *                 BH0130             DATE 21JUL92               *
+      *                 BH3428             DATE 20JUL92               *
+      *                 E30572             DATE 31MAR92               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
+      *  MD050829 -  Facility status is not yet Expired even if its *
+      *              expiry date has already passed.                  *
+      *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD031146 - Ensure that FCUPDFM/N files has the correct FRNT  *
+      *             and AFRT values.                                  *
+      *  MD033997 - Move facility expiry processing to 2nd COB run.   *
+      *  MD024682 - Field PRFC overwriten on Facility                 *
+      *  MD024690 - Avoid FRNT ARFT REPA to be overwriten on FCLTY    *
+      *  AR1008182 - Branch code corrupted for facilities, over-      *
+      *              written by branch from FCLTYL15/ACCNTAB format.  *
+      *              Rename relevant fields. (Child: AR1008183)       *
+      *  AR812812 - Facility history not dropped causing errors on    *
+      *             reinput. Prevent closed facility from dropping    *
+      *             on the same day it has been closed. Applied fix   *
+      *             260212. (Child: AR812813)                         *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  AR1002397 - Availability dates are incorrect.                *
+      *              Use the system location code defined in Bank ICD *
+      *              when retrieving currency holiday for the         *
+      *              calculation of date of availability.             *
+      *  AR888952 - LEC06A 10015 FOOB on LE0491AU and duplicate       *
+      *             record key                                        *
+      *  CLE147 - Aggregate Facility (Recompile)                      *
+      *  AR787849 - LEC000100 failed due to missing LEFCTLPD record.  *
+      *             Rename LEPARTL3 fields to avoid conflict with     *
+      *             FCLTYFx field names. Also use READE instead of    *
+      *             READ for LEPARTL3 access.                         *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG22954A - Incorrect update of facilities file after COB    *
+      *              (Recompile)                                      *
+      *  BUG28069 - LEC000030 00002 - DBerr 02 File PECLFM            *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG8707 - Blank out review details on actual expiry date     *
+      *  BUG8831- Drop of records from LEFCLTQD should not be         *
+      *           conditioned on whether CLE039 is on or off          *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CLE106 - Syndication Manager (Recompile)                     *
+      *  CLE041 - Collateralised Lending Phase 2B (Recompile)         *
+      *  CLE040 - Collateralised Lending Phase 2 (Recompile)          *
+      *  BUG3872 - Reversed facilities do'nt drop LEFCLTQD extn record*
+      *  CLE039 - General LE Enhancement                              *
+      *  CLE029 - Addition of Severity code and Limit ID to FCLTYFM   *
+      *  CAP073 - Conversion of MN inputs into modular structure to   *
+      *           use as APIs. Facility input Transaction Details     *
+      *  CLE034 - Lending Enhancements Phase 1 Priority 1A            *
+      *           Recompile                                           *
+      *  CLE031 - Lending Enhancements.                               *
+      *           Recompile                                           *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enahancements to CAS001, CAS002 and CAS004          *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  211579 - Rename LCD, CHTP of FCLTYFMF to prevent unnecessary *
+      *           update in FCLTYFM.                                  *
+      *  204452 - Recompiled due to changed PF/LEFEED.                *
+      *  CAP068 - Recompiled for changes to FCLTYFM and FCLTYFN.      *
+      *  CAP071 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs. (Recompile)                            *
+      *  CAP070 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs. Recompile over changed LEPARTPD        *
+      *  CLE023 - Lending Facility History Improvements. (Recompiled) *
+      *  200862 - Matured loans file needs to be checked before       *
+      *           expired facilities are dropped.                     *
+      *  193603 - Hash total must take account of negative FAMT       *
+      *  189839 - Expired Facilities were dropped from the system     *
+      *           even though there were live guarantees, securities  *
+      *           or collateral attached to the facility.             *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  158541 - Inconsistency in updating current available fields  *
+      *           in enqys. Change the processing of updating array   *
+      *           RUN, instead of using Facility CCY, use Local CCY.  *
+      *  CLE009 - LE I/C Swift Message Generation for Fees            *
+      *           Recompiled due to changes in LEFEED                 *
+      *  168225 - Expired facility dropped before retention period    *
+      *           in year 2000.                                       *
+      *  CLE008 - Recompiled For Loan Administrator Id                *
+      *  154799 - Recompiled due to changes in /COPY,ZACCH            *
+      *  120277 - Risk Participant/Assignment need to be dropped when *
+      *           the related facility is dropped                     *
+      *  147261 - Add Assignment/Participation indicator (Recompiled) *
+      *  144712 - Change revolving to non-revolving, changes history  *
+      *           Reverse fix 134806.                                 *
+      *  141453 - Recompiled due to changes in PF/LEFEED              *
+      *  134806 - Change RVCR when there's 'RC' fclty amendment so    *
+      *           that amount on the availability will agree with     *
+      *           what is on the facility history.                    *
+      *  125715 - Facilities acquire/lose certain values on some of   *
+      *           its fields during monthend due to similar field     *
+      * 127762 - Closed facilities were not being dropped. To drop,   *
+      *          turn on FLAG1 when RECI is 'C' and it is monthend.   *
+      *        - Some facilities were not dropped even though they    *
+      *          have gone beyond  the retention period.              *
+      *          Do not drop expired facilities when loan still exist.*
+      *          Also,expired facilities are dropped from the facility*
+      *          file but are not dropped from the facility history   *
+      *          file. ( APPLIED FIX 109200)                          *
+      *  128067 - Closed facilities more than 1 year old are not      *
+      *           dropped from the files.                             *
+      *  128066 - FSTS field corrupted by LEFEED field w/same name    *
+      *  127740 - OOB in LE0491 with NORE equal to 2.                 *
+      *  CLE005 - Customer Lending Enhancements - Others (T3)         *
+      *  122839 - Recompile program due to changes to fcltyfm         *
+      *  100515 - Recompile program due to changes in LEFEED.         *
+      *  062690 - DO NOT DROP AN EXPIRED FACILITY WITH A LOAN         *
+      *           OUTSTANDING.                                        *
+      *  057388 - FOOB on LE0300 (facilities maintainance) because    *
+      *           pgm didn't update facilities trailer file after     *
+      *           dropping facilities.  Amend pgm to update No and    *
+      *           Value of Live Records before I/C (NLRB, VLBL and    *
+      *           VLBF) (BHF NY fix BN4625)                           *
+      *         - FOOB on LE0870 because No of Live Records after     *
+      *           I/C on trailer was not updated after drop of        *
+      *           Closed and Reversed facilities - add processing to  *
+      *           do this (BHF NY fix BN4580)                         *
+      *  E52154 - (BH3587) Check for fees could find fees for a       *
+      *           different facility. Won't now.                      *
+      *  BH3436 - ZFWDT not passed correct parameters for RUN array   *
+      *  BH0130 - Closed facilities should not be included in hash    *
+      *           totalling                                           *
+      *  BH3428 - Closed facilities dropped incorrectly               *
+      *  E30572 - CANCELLED FACILITIES NOT DROPPED AT ALL BECAUSE     *
+      *           PROGRAM ATTEMPTS TO USE INFO. FROM THE LDA          *
+      *           OF LE0450.                                          *
+      *                                                               *
+      *  REWRITE OF LE0460 - 13JAN92 - FOR CPF TO REMOVE COMMITMENT   *
+      *  FEE PROCESSING (BASICALLY A REMOVAL OF CMTMT FEE SR'S,       *
+      *  SOME REDUNDANT CODE, AND COMMENTED-OUT CODE)                 *
+      *                                                               *
+      *  THE FOLLOWING SUBROUTINES WERE REMOVED:                      *
+      *  FCLCDT, FPYDTR, ACCRUE, FEEPAY, FEECLC, ACCDAY, SETLOC,      *
+      *  GLINTC, ZSAVE, ZRSTOR, ZBKDT, FREQB, ACTN                    *
+      *                                                               *
+      *  THE FOLLOWING FIXES HAD BEEN APPLIED TO LE0460 BY 13JAN92:   *
+      *                                                               *
+      *  BHF255 17AUG90 - DON'T SET UP WRKA IF DETAIL REC 'B'         *
+      *  S01270 09AUG90 - CUSTOMER LENDING AMENDMENTS PHASE 1         *
+      *  BHF279 18JUL90 - CORRECTION OF I SPEC DEFINITN FOR ACTN7L1   *
+      *  LN0169 15MAY90 - LKEY1DP FIELDS FOR R2 AND R10 OVERLAP -     *
+      *                   129->, SO PROFIT CENTRE AND SETTLE.BRANCH   *
+      *                   NEED TO CHANGE                              *
+      *  S01194 05JAN90 - STANDING DATA CHANGES                       *
+      *  E18905 27SEP89 - FIELD ADNP DEFINED DIFFERENTLY ON FILE.     *
+      *                   A WORK FIELD IS INTRODUCED.                 *
+      *  S01195 05SEP89 -                                             *
+      *  HK0000 16AUG89 - THE PRIMARY/SECONDARY FILE NOT BY BRANCH    *
+      *  S01117 16AUG89 - MULTIBRANCHING                              *
+      *  S01147 02MAR88 - RELEASE 22 (AMENDMENT TO GLINTC)            *
+      *  E47264 01MAR88 - OUTPUT NEW FLD TO LKEY2 FOR USE IN LE0660.  *
+      *  E80945 25JUN86 - INDICATOR 98 SETTING IS SAVED AND RESTORED  *
+      *                   WHEN S.R.GLINTC IS PERFORMED.               *
+      *                                                               *
+      *****************************************************************
+     F*
+     FFCLTYL1 IF  E           K        DISK
+     FFCLTYL2 IF  E           K        DISK
+     FFCLTYZZ IF  E                    DISK
+     FACTN5DH IF  E                    DISK
+     F**  ADDITION OF FEES MASTER FILE                                    0119
+     FLEFEEDL1IF  E           K        DISK                               0119
+     F*                                                                   0119
+     FLEFCAML0IF  E           K        DISK                               CLE005
+      *                                                                   CLE005
+     FLEPARTL3IF  E           K        DISK                               120277
+     F            LEPARTD0                          KRENAMELEPART3                          AR787849
+      *                                                                   120277
+     F/COPY WNCPYSRC,LE0461F001
+     FFCUPDHH O   E                    DISK
+     F            FCLTYHHF                          KRENAMEFCUPDHHF
+     FFCUPDFM O   E                    DISK
+     F            FCLTYFMF                          KRENAMEFCUPDFMF
+     FFCUPDFN O   E                    DISK
+     F            FCLTYFNF                          KRENAMEFCUPDFNF
+     FFCUPDZZ O   E                    DISK
+     F            FCLTYZZF                          KRENAMEFCUPDZZF
+     FLEEPRTPDO   E                    DISK                               120277
+     F            LEPARTD0                          KRENAMELEEPRTD0       120277
+     FCLOANF  IF  E           K        DISK                               062690
+     FMLOANL1 IF  E           K        DISK                               200862
+     F            CLOANCLF                          KRENAMEMCLONCLF       200862
+     FLEGTEELAIF  E           K        DISK                               189839
+     FLEFCLTLGUF  E           K        DISK                                                   CLE039
+     FLENOTEL0UF  E           K        DISK                                                   CLE039
+     FFCLTYL15IF  E           K        DISK                                                 BUG28069
+     F            ACCNTABF                          KRENAMEACCNTADF                        AR1008182
+     F/COPY WNCPYSRC,LE0461F002
+     FLE0461AUO   E                    PRINTER      KINFDS SPOOLU
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   17  - Read Of FCLTY File                                    *
+     F*   18  - End Of Month Processing                               *
+     F*   24  - For CHAIN To ACTN5DH                                  *
+     F*   25  - For CHAIN To FCLTYL15                                 *                     BUG28069
+     F*   27  - Month end                                             *   E30572
+     F*   28  - Year end                                              *   E30572
+      *   49  - LEFCAML0 end-of-file                                  *   CLE005
+     F*   50  - First Cycle Indicator                                 *
+     F*   60  - READ of LEFEEDL1                                      *
+     F*   65  - Single Branch System                                  *
+     F*   70  - Work Indicator                                        *
+     F*   81  - FCLTY File Out Of Balance                             *
+     F*                                                               *
+     F* 90-99 - Used by Standard Subroutines                          *
+     F*                                                               *
+     F* U7-U8 - Data Base Error                                       *
+     F*    U8 - File Controls out of Balance                          *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  PREVF  - To Process Facility                                 *
+     F*  HASH   - To do hash totalling                                *
+     F*  EXPDRP - To Check Expired Loans and to Drop from Files as    *
+     F*           Appropriate                                         *
+     F*  EXPARR - To Update Dates for Availability Array              *
+     F*  TERM   - To put out audit report                             *
+     F*  INIT   - First Cycle Calcs                                   *
+     F*  GLZADD - To Add an Amount (ZZAMT) to the Total (ZZTOTI,ZZTOTD)
+     F*  GLZSUM - To Carry Out the Addition for GLZADD                *
+     F*  ZDATE1 - To Validate Dates Submitted and Convert to a Number *
+     F*           of Days                                             *
+     F*  ZDATE2 - To Convert a Day Number to Date Formats             *
+     F*  ZACCH  - To access a holiday record for a particular currency*
+     F*  ZFWDT  - To calculate Nth working day forward from given date*
+     F*  *PSSR  - To Handle Abnormal Error Conditions                 *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     E                    RUN        10  5 0             FCLTY DRAW DATE
+     E                    OAM        10 13 0             FCLTY DRAWN AMTS
+     E                    NRUN       10  5 0             FCUPD DRAW DATES
+     E                    NOAM       10 13 0             FCUPD DRAWN AMTS
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZHOLE
+     E/EJECT
+     I*
+      * Rename CLOANCL fields to prevent overwrite on FCUPD files         062690
+     ICLOANCLF                                                            062690
+     I              RECI                            @RECI                 062690
+     I              CNUM                            @CNUM                 062690
+     I              BRCA                            @BRCA                 062690
+     I              CRSK                            @CRSK                 062690
+     I              ACOF                            @ACOF                 062690
+     I              NACD                            @NACD                 062690
+     I              ORBR                            @ORBR                 062690
+     I              BTIN                            @BTIN                 062690
+     I              ORED                            @ORED                 062690
+     I              LCD                             @LCD                  062690
+     I              CHTP                            @CHTP                 062690
+     I              TNLU                            @TNLU                 062690
+     I              FCCY                            @FCCY                 125715
+     I              OSDB                            @OSDB                 125715
+     I              OMDB                            @OMDB                 125715
+     I              RCSI                            @RCSI                 125715
+     I              RSTM                            @RSTM                 125715
+     I              RONS                            @RONS                 125715
+     I              RIBN                            @RIBN                 125715
+     I              RIBA                            @RIBA                 125715
+     I              ROBN                            @ROBN                 125715
+     I              ROCN                            @ROCN                 125715
+     I              PSTM                            @PSTM                 125715
+     I              PONS                            @PONS                 125715
+     I              PIBN                            @PIBN                 125715
+     I              PIBA                            @PIBA                 125715
+     I              POBN                            @POBN                 125715
+     I              POCN                            @POCN                 125715
+     I              RCRN                            @RCRN                 125715
+     I              RCRA                            @RCRA                 125715
+     I              RVNO                            @RVNO                 125715
+     I              AWBN                            @AWBN                 125715
+     I              AWBA                            @AWBA                 125715
+     I              BENN                            @BENN                 125715
+     I              BENA                            @BENA                 125715
+     I              DTP1                            @DTP1                 125715
+     I              DTP2                            @DTP2                 125715
+     I              DTP3                            @DTP3                 125715
+     I              DTP4                            @DTP4                 125715
+     I              DCHG                            @DCHG                 125715
+     I              BTB1                            @BTB1                 125715
+     I              BTB2                            @BTB2                 125715
+     I              BTB3                            @BTB3                 125715
+     I              BTB4                            @BTB4                 125715
+     I              BTB5                            @BTB5                 125715
+     I              BTB6                            @BTB6                 125715
+     I              CVMR                            @CVMR                 125715
+     I              DFTP                            @DFTP                 125715
+     I              DFST                            @DFST                 125715
+     I              IUSR                            @IUSR                 125715
+     I              AUSR                            @AUSR                 125715
+     I              XUSR                            @XUSR                 125715
+     I              PCRF                            @PCRF                 125715
+     I              PCOB                            @PCOB                 125715
+     I              DFCL                            @DFCL                                     CLE042
+     I              PRFC                            @PRFC                                   MD024682
+      *                                                                   128066
+      * Rename LEFEED field to prevent overwrite on FCUPD files           128066
+      *                                                                   128066
+     ILEFEEDF                                                             128066
+     I              FSTS                            @FSTS                 128066
+     I              IUSR                            @IUSR                 125715
+     I              AUSR                            @AUSR                 125715
+     I              XUSR                            @XUSR                 125715
+     I              PCRF                            @PCRF                 125715
+     I              OSDB                            @OSDB                 125715
+     I              OMDB                            @OMDB                 125715
+     I              RSTM                            @RSTM                 125715
+     I              RONS                            @RONS                 125715
+     I              RIBN                            @RIBN                 125715
+     I              RIBA                            @RIBA                 125715
+     I              ROBN                            @ROBN                 125715
+     I              ROCN                            @ROCN                 125715
+     I              PSTM                            @PSTM                 125715
+     I              PONS                            @PONS                 125715
+     I              PIBN                            @PIBN                 125715
+     I              PIBA                            @PIBA                 125715
+     I              POBN                            @POBN                 125715
+     I              POCN                            @POCN                 125715
+     I              RCRN                            @RCRN                 125715
+     I              RCRA                            @RCRA                 125715
+     I              RVNO                            @RVNO                 125715
+     I              AWBN                            @AWBN                 125715
+     I              AWBA                            @AWBA                 125715
+     I              BENN                            @BENN                 125715
+     I              BENA                            @BENA                 125715
+     I              DTP1                            @DTP1                 125715
+     I              DTP2                            @DTP2                 125715
+     I              DTP3                            @DTP3                 125715
+     I              DTP4                            @DTP4                 125715
+     I              DCHG                            @DCHG                 125715
+     I              BTB1                            @BTB1                 125715
+     I              BTB2                            @BTB2                 125715
+     I              BTB3                            @BTB3                 125715
+     I              BTB4                            @BTB4                 125715
+     I              BTB5                            @BTB5                 125715
+     I              BTB6                            @BTB6                 125715
+     I              CVMR                            @CVMR                 125715
+     I              PCOB                            @PCOB                 125715
+      *                                                                   128066
+      * Rename MCLONCL fields to prevent overwrite on FCUPD files         200862
+     IMCLONCLF                                                            200862
+     I              RECI                            MRECI                 200862
+     I              CNUM                            MCNUM                 200862
+     I              BRCA                            MBRCA                 200862
+     I              CRSK                            MCRSK                 200862
+     I              ACOF                            MACOF                 200862
+     I              NACD                            MNACD                 200862
+     I              ORBR                            MORBR                 200862
+     I              BTIN                            MBTIN                 200862
+     I              ORED                            MORED                 200862
+     I              LCD                             MLCD                  200862
+     I              CHTP                            MCHTP                 200862
+     I              TNLU                            MTNLU                 200862
+     I              FCCY                            MFCCY                 200862
+     I              OSDB                            MOSDB                 200862
+     I              OMDB                            MOMDB                 200862
+     I              RCSI                            MRCSI                 200862
+     I              RSTM                            MRSTM                 200862
+     I              RONS                            MRONS                 200862
+     I              RIBN                            MRIBN                 200862
+     I              RIBA                            MRIBA                 200862
+     I              ROBN                            MROBN                 200862
+     I              ROCN                            MROCN                 200862
+     I              PSTM                            MPSTM                 200862
+     I              PONS                            MPONS                 200862
+     I              PIBN                            MPIBN                 200862
+     I              PIBA                            MPIBA                 200862
+     I              POBN                            MPOBN                 200862
+     I              POCN                            MPOCN                 200862
+     I              RCRN                            MRCRN                 200862
+     I              RCRA                            MRCRA                 200862
+     I              RVNO                            MRVNO                 200862
+     I              AWBN                            MAWBN                 200862
+     I              AWBA                            MAWBA                 200862
+     I              BENN                            MBENN                 200862
+     I              BENA                            MBENA                 200862
+     I              DTP1                            MDTP1                 200862
+     I              DTP2                            MDTP2                 200862
+     I              DTP3                            MDTP3                 200862
+     I              DTP4                            MDTP4                 200862
+     I              DCHG                            MDCHG                 200862
+     I              BTB1                            MBTB1                 200862
+     I              BTB2                            MBTB2                 200862
+     I              BTB3                            MBTB3                 200862
+     I              BTB4                            MBTB4                 200862
+     I              BTB5                            MBTB5                 200862
+     I              BTB6                            MBTB6                 200862
+     I              CVMR                            MCVMR                 200862
+     I              DFTP                            MDFTP                 200862
+     I              DFST                            MDFST                 200862
+     I              IUSR                            MIUSR                 200862
+     I              AUSR                            MAUSR                 200862
+     I              XUSR                            MXUSR                 200862
+     I              PCRF                            MPCRF                 200862
+     I              PCOB                            MPCOB                 200862
+     I              DFCL                            MDFCL                                     CLE042
+     I              PRFC                            MPRFC                                   MD024682
+      *                                                                   CLE005
+      *                                                                                       211579
+      ** Rename fields LCD, CHTP of FCLTYFMF                                                  211579
+      *                                                                                       211579
+     IFCLTYFMF                                                                                211579
+     I              LCD                             FLCD                                      211579
+     I              CHTP                            FCHTP                                     211579
+     I              FRNT                            FFRNT                                   MD024690
+     I              AFRT                            FATFR                                   MD024690
+     I              REPA                            FREPA                                   MD024690
+     ILEFCAMPF                                                            CLE005
+     I              RECI                            ARECI                 CLE005
+     I              BRCA                            ABRCA                 CLE005
+     I              CNUM                            ACNUM                 CLE005
+     I              FACT                            AFACT                 CLE005
+     I              FCNO                            AFCNO                 CLE005
+     I              RVCR                            ARVCR                 CLE005
+     I              IUSR                            AIUSR                 CLE005
+     I              AUSR                            AAUSR                 CLE005
+     I              XUSR                            AXUSR                 CLE005
+     I              ORED                            AORED                 CLE005
+     I              CHTP                            ACHTP                 CLE005
+     I              PCRF                            APCRF                 125715
+     I              PCOB                            APCOB                 125715
+      *                                                                   CLE005
+     IGTEESGTF                                                                                189839
+     I              RECI                            GTRECI                                    189839
+     I              CNUM                            GTCNUM                                    189839
+     I              FCLN                            GTFCLN                                    189839
+      *                                                                                       189839
+     ILEPART3                                                                               AR787849
+     I              BRCA                            LPBRCA                                  AR787849
+     I              CNUM                            LPCNUM                                  AR787849
+     I              FACT                            LPFACT                                  AR787849
+     I              FCNO                            LPFCNO                                  AR787849
+      *                                                                                     AR787849
+     I*ACCNTABF****                                                               AR888952 AR1008182
+     IACCNTADF                                                                             AR1008182
+      ** Rename ACCNTAB fields to prevent any overwriting                                  AR1008182
+      *                                                                                    AR1008182
+     I              RECI                            ACRECI                                  AR888952
+     I              CNUM                            ADCNUM                                 AR1008182
+     I              CCY                             ADCCY                                  AR1008182
+     I              ACOD                            ADACOD                                 AR1008182
+     I              ACSQ                            ADACSQ                                 AR1008182
+     I              ZZ006                           ADZZ06                                 AR1008182
+     I              BRCA                            ADBRCA                                 AR1008182
+     I              ATYP                            ADATYP                                 AR1008182
+     I              STYP                            ADSTYP                                 AR1008182
+     I              MFFQ                            ADMFFQ                                 AR1008182
+     I              ACST                            ADACST                                 AR1008182
+     I              DACO                            ADDACO                                 AR1008182
+     I              DACC                            ADDACC                                 AR1008182
+     I              ANAM                            ADANAM                                 AR1008182
+     I              LDBL                            ADLDBL                                 AR1008182
+     I              CLBL                            ADCLBL                                 AR1008182
+     I              STFQ                            ADSTFQ                                 AR1008182
+     I              STDY                            ADSTDY                                 AR1008182
+     I              LSTD                            ADLSTD                                 AR1008182
+     I              NSTD                            ADNSTD                                 AR1008182
+     I              LSTP                            ADLSTP                                 AR1008182
+     I              CFSB                            ADCFSB                                 AR1008182
+     I              LMVD                            ADLMVD                                 AR1008182
+     I              EPLB                            ADEPLB                                 AR1008182
+     I              EPCB                            ADEPCB                                 AR1008182
+     I              YTDB                            ADYTDB                                 AR1008182
+     I              GLBT                            ADGLBT                                 AR1008182
+     I              ADREF1                          ADADR1                                 AR1008182
+     I              PRFC                            ADPRFC                                 AR1008182
+     I              ZZ004                           ADZZ04                                 AR1008182
+     I              ORED                            ADORED                                 AR1008182
+     I              DLIM                            ADDLIM                                 AR1008182
+     I              LRCR                            ADLRCR                                 AR1008182
+     I              RTCB                            ADRTCB                                 AR1008182
+     I              RTLB                            ADRTLB                                 AR1008182
+     I              DITM                            ADDITM                                 AR1008182
+     I              CITM                            ADCITM                                 AR1008182
+     I              ADREF2                          ADADR2                                 AR1008182
+     I              ZZ002                           ADZZ02                                 AR1008182
+     I              CDIR                            ADCDIR                                 AR1008182
+     I              CCIR                            ADCCIR                                 AR1008182
+     I              ACNO                            ADACNO                                 AR1008182
+     I              RETB                            ADRETB                                 AR1008182
+     I              ODSC                            ADODSC                                 AR1008182
+     I              ODLN                            ADODLN                                 AR1008182
+     I              ODED                            ADODED                                 AR1008182
+     I              DIOD                            ADDIOD                                 AR1008182
+     I              FACT                            ADFACT                                 AR1008182
+     I              FCNO                            ADFCNO                                 AR1008182
+     I              EFAC                            ADEFAC                                 AR1008182
+     I              HELD                            ADHELD                                 AR1008182
+     I              MINB                            ADMINB                                 AR1008182
+     I              LACD                            ADLACD                                 AR1008182
+     I              LISP                            ADLISP                                 AR1008182
+     I              RRNM                            ADRRNM                                 AR1008182
+     I              DRIB                            ADDRIB                                 AR1008182
+     I              DRIS                            ADDRIS                                 AR1008182
+     I              DRCD                            ADDRCD                                 AR1008182
+     I              DRIC                            ADDRIC                                 AR1008182
+     I              DRIF                            ADDRIF                                 AR1008182
+     I              DRDY                            ADDRDY                                 AR1008182
+     I              NDID                            ADNDID                                 AR1008182
+     I              LDID                            ADLDID                                 AR1008182
+     I              LDIA                            ADLDIA                                 AR1008182
+     I              SDAP                            ADSDAP                                 AR1008182
+     I              LPAR                            ADLPAR                                 AR1008182
+     I              DIIE                            ADDIIE                                 AR1008182
+     I              DAIC                            ADDAIC                                 AR1008182
+     I              MADI                            ADMADI                                 AR1008182
+     I              GADI                            ADGADI                                 AR1008182
+     I              DDIS                            ADDDIS                                 AR1008182
+     I              DDIA                            ADDDIA                                 AR1008182
+     I              OLDR                            ADOLDR                                 AR1008182
+     I              OLDB                            ADOLDB                                 AR1008182
+     I              OLDS                            ADOLDS                                 AR1008182
+     I              CRIB                            ADCRIB                                 AR1008182
+     I              CRIS                            ADCRIS                                 AR1008182
+     I              CRCD                            ADCRCD                                 AR1008182
+     I              CRIC                            ADCRIC                                 AR1008182
+     I              CRIF                            ADCRIF                                 AR1008182
+     I              CRDY                            ADCRDY                                 AR1008182
+     I              NCID                            ADNCID                                 AR1008182
+     I              LCID                            ADLCID                                 AR1008182
+     I              LCIA                            ADLCIA                                 AR1008182
+     I              SCAP                            ADSCAP                                 AR1008182
+     I              LPAP                            ADLPAP                                 AR1008182
+     I              CIIE                            ADCIIE                                 AR1008182
+     I              CAIC                            ADCAIC                                 AR1008182
+     I              MACI                            ADMACI                                 AR1008182
+     I              GACI                            ADGACI                                 AR1008182
+     I              CDIS                            ADCDIS                                 AR1008182
+     I              DCIA                            ADDCIA                                 AR1008182
+     I              OLCR                            ADOLCR                                 AR1008182
+     I              OLCB                            ADOLCB                                 AR1008182
+     I              OLCS                            ADOLCS                                 AR1008182
+     I              LCD                             ADLCD                                  AR1008182
+     I              CHTP                            ADCHTP                                 AR1008182
+     I              TNLU                            ADTNLU                                 AR1008182
+     I              BRTCA                           ADBRTC                                 AR1008182
+     I              NACSG                           ADNACS                                 AR1008182
+     I              R4ACNT                          ADR4AC                                 AR1008182
+     I              ENOC                            ADENOC                                 AR1008182
+     I              EPNO                            ADEPNO                                 AR1008182
+     I              ECFB                            ADECFB                                 AR1008182
+     I              LTAB                            ADLTAB                                 AR1008182
+     I              LTAC                            ADLTAC                                 AR1008182
+     I              LTAS                            ADLTAS                                 AR1008182
+     I              HCFB                            ADHCFB                                 AR1008182
+     I              PTFR                            ADPTFR                                 AR1008182
+     I              HLEX                            ADHLEX                                 AR1008182
+     I              EUSB                            ADEUSB                                 AR1008182
+     I              IBAN                            ADIBAN                                 AR1008182
+     I              IBSEQN                          ADIBSQ                                 AR1008182
+     I              FRNT                            ADFRNT                                 AR1008182
+     I              AFRT                            ADAFRT                                 AR1008182
+     I              REPA                            ADREPA                                 AR1008182
+     I              TMST                            ADTMST                                 AR1008182
+     I              REPI                            ADREPI                                 AR1008182
+     I              FCCU                            ADFCCU                                 AR1008182
+     I              COLF                            ADCOLF                                 AR1008182
+     I              BCOA                            ADBCOA                                 AR1008182
+     I              COLA                            ADCOLA                                 AR1008182
+     I              PFCU                            ADPFCU                                 AR1008182
+     I              PFTP                            ADPFTP                                 AR1008182
+     I              PFSQ                            ADPFSQ                                 AR1008182
+     I              A5ACKY                          ADA5AC                                 AR1008182
+     I              A5INTL                          ADA5IN                                 AR1008182
+     I              A5TIAB                          ADA5TI                                 AR1008182
+     I              AUTH                            ADAUTH                                 AR1008182
+     I              K24C                            ADK24C                                 AR1008182
+     I              ACEFDT                          ADACEF                                 AR1008182
+     I              DCSP                            ADDCSP                                 AR1008182
+     I              DCSG                            ADDCSG                                 AR1008182
+     I              DRMT                            ADDRMT                                 AR1008182
+     I              DRFD                            ADDRFD                                 AR1008182
+     I              CCSP                            ADCCSP                                 AR1008182
+     I              CCSG                            ADCCSG                                 AR1008182
+     I              CRMT                            ADCRMT                                 AR1008182
+     I              CRFD                            ADCRFD                                 AR1008182
+     I            DS
+     I***  (Most) Facility Key Fields
+     I                                        1   1 RECI
+     I**********                              2   70CNUM                                      CSD027
+     I                                        2   7 CNUM                                      CSD027
+     I                                        8  100FACT
+     I                                       11  120FCNO
+     I                                        1  12 KEYF
+     IDFCLTC      DS                                                      CLE005
+      ** Current facility                                                 CLE005
+     I                                        1   3 WBRCA                 CLE005
+     I**********                              4   90WCNUM                              CLE005 CSD027
+     I                                        4   9 WCNUM                                     CSD027
+     I                                       10  120WFACT                 CLE005
+     I                                       13  140WFCNO                 CLE005
+     IDFCLTR      DS                                                      CLE005
+      ** Read facility                                                    CLE005
+     I                                        1   3 ABRCA                 CLE005
+     I**********                              4   90ACNUM                              CLE005 CSD027
+     I                                        4   9 ACNUM                                     CSD027
+     I                                       10  120AFACT                 CLE005
+     I                                       13  140AFCNO                 CLE005
+     I            DS
+      *** Availability Date data structure
+     I                                    P   1  300RUN
+     I                                    P   1   30RUN0
+     I                                    P   4   60RUN1
+     I                                    P   7   90RUN2
+     I                                    P  10  120RUN3
+     I                                    P  13  150RUN4
+     I                                    P  16  180RUN5
+     I                                    P  19  210RUN6
+     I                                    P  22  240RUN7
+     I                                    P  25  270RUN8
+     I                                    P  28  300RUN9
+      *
+     I            DS
+      *** Outstanding Amount data structure
+     I                                    P   1  700OAM
+     I                                    P   1   70OAM1
+     I                                    P   8  140OAM2
+     I                                    P  15  210OAM3
+     I                                    P  22  280OAM4
+     I                                    P  29  350OAM5
+     I                                    P  36  420OAM6
+     I                                    P  43  490OAM7
+     I                                    P  50  560OAM8
+     I                                    P  57  630OAM9
+     I                                    P  64  700OA10
+     I*
+     I            DS                                                      127762
+     I                                        1   30FTYP                  127762
+     I                                        4   50FSEQ                  127762
+     I                                        1   50FACCL                 127762
+     I*                                                                   127762
+     I**
+     I/COPY ZSRSRC,ZHOLI
+     I**
+     ISPOOLU      DS
+     I**   FILE INFORMATION DATA STRUCTURE - AU
+     I**
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      **
+     IPSDS       SDS
+     I** PROGRAM STATUS DATA STRUCTURE - REQUIRED FOR DUMP
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     ILDA       E DSLDA
+     I** LOCAL DATA AREA TO IDENTIFY DATABASE ERRORS AND TO DETERMINE
+     I** TYPE OF RUN
+     I*
+     I                                      184 191 RUNTYP
+      **
+     IRUNDAT    E DSRUNDAT
+      **  DATA AREA RUNDAT
+     I              AGMRDT                          RUNA
+     I              AGRDNB                          RUND
+     I              AGSUC                           SSF
+     I              AGDFF                           DATF
+     I              AGMBIN                          MBIN
+     I**
+     ISDBANK    E DSSDBANKPD
+      **  EXTERNAL DS FOR BANK DETAILS
+     I              BJURPT                          TITL
+      **
+     ISDCLND    E DSSDCLNDPD
+      **  EXTERNAL DS FOR CUSTOMER LENDING DETAILS
+     I              BPEFRP                          EFRP
+      **
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      **
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     ISCSARD    E DSSCSARDPD                                              CLE005
+      ** SAR File Details Accessed via Access Program AOSARDR0            CLE005
+      *                                                                   CLE005
+     I/COPY WNCPYSRC,LE0461I001
+     C*                                                                                     MD033997
+     C           *ENTRY    PLIST                                                            MD033997
+     C                     PARM           WNCOB  10                                         MD033997
+     C*                                                                                     MD033997
+     C                     MOVEACPY@      BIS@   80
+     C** KLIST for LF/CLOANF                                              062690
+     C*                                                                   062690
+     C           CLFKY     KLIST                                          062690
+     C                     KFLD           CNUM                            062690
+     C                     KFLD           FACT                            062690
+     C                     KFLD           FCNO                            062690
+     C*                                                                   062690
+     C** KLIST for LF/MLOANL1                                             200862
+     C*                                                                   200862
+     C           MLNKY     KLIST                                          200862
+     C                     KFLD           CNUM                            200862
+     C                     KFLD           FACT                            200862
+     C                     KFLD           FCNO                            200862
+     C*                                                                   200862
+      ** KLIST for LF/LEGTEELA                                                                189839
+      *                                                                                       189839
+     C           K01KEY    KLIST                                                              189839
+     C                     KFLD           K1CNUM                                              189839
+     C                     KFLD           K1FCLN                                              189839
+     C*
+     C***  MAIN PROCESSING
+     C*
+     C***  CALLS:     INIT,TERM,GLZADD,PREVF,*PSSR
+     C*
+     C***  FIRST CYCLE CALCS
+     C*
+     C           *IN50     IFEQ '0'
+     C                     EXSR INIT
+     C                     END
+     C*
+     C***  READ EACH FACILITY
+     C*
+     C           *INLR     DOWEQ'0'
+     C*
+     C                     READ FCLTYL1                  LR
+     C*
+     C           *INLR     IFEQ '0'
+     C*
+     C***  SAVE KEYS FOR COMPARING 'A' AND 'B' FACILITY RECORDS
+     C***  TO CHECK THEY MATCH
+     C*
+     C                     MOVE KEYF      KEYFA  12
+     C                     READ FCLTYL2                  17
+     C                     MOVE KEYF      KEYFB  12
+     C*
+     C***  IF ERROR, OR FN NOT SAME FACILITY AS FM - BIG ERROR
+     C*
+     C           *IN17     IFEQ '1'
+     C           KEYFA     ORNE KEYFB
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*READ'   DBKEY            ***************
+     C                     Z-ADD20        DBASE            * DBERROR 20  *
+     C                     MOVEL'FCLTYL2' DBFILE           ***************
+     C                     MOVEL'LE0461'  DBPGM
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     EXSR TERM
+     C                     END
+     C*
+     C***  DELETED RECORD FOUND - IGNORE
+     C*
+     C           RECI      IFEQ 'D'
+     C           RECI      OREQ 'R'
+     C           RECI      OREQ 'C'
+     C           RECI      OREQ 'E'
+     C*
+     C***  COUNT RECORDS READ AND PERFORM HASH TOTALLING
+     C*
+     C           NFCLTY    ADD  2         NFCLTY  50       FACILITY RECS
+     C*
+     C***  HASH TOTALLING FOR OLD FILES
+     C*
+     C           RECI      IFNE 'R'
+     C           RECI      ANDNE'C'
+     C*
+     C                     MOVE FAMT      ZZAMT
+     C           FAMT      IFLT 0                                                             193603
+     C                     Z-SUBZZAMT     ZZAMT                                               193603
+     C                     END                                                                193603
+     C                     Z-ADDFFTOTI    ZZTOTI
+     C                     Z-ADDFFTOTD    ZZTOTD
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    FFTOTI 150
+     C                     Z-ADDZZTOTD    FFTOTD  30
+     C                     END
+     C*
+     C/COPY WNCPYSRC,LE0461C005
+     C                     END
+     C*
+     C***  END PROCESSING FOR FACILITY
+     C*
+     C                     EXSR PREVF
+     C*
+     C                     END
+     C*
+     C***  END OF DOW LR EQ '0'
+     C*
+     C                     END
+     C*
+     C***  LAST RECORD CALCS - CHECK RECORD COUNTS AND HASH TOTALS
+     C*
+     C           *INLR     IFEQ '1'
+     C*
+     C***  READ IN THE FACILITY TRAILER RECORD
+     C*
+     C                     READ FCLTYZZ                  70
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*READ'   DBKEY            ***************
+     C                     Z-ADD2         DBASE            * DBERROR 02  *
+     C                     MOVEL'FCLTYZZ' DBFILE           ***************
+     C                     MOVEL'LE0461'  DBPGM
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     EXSR TERM
+     C                     END
+     C*
+     C***  LAST RECORD CALCS - CHECK RECORD COUNTS AND HASH TOTALS
+     C*
+     C           NFCLTY    ADD  2         NFCLTY
+     C*
+     C           NFCLTY    IFNE NORE
+     C           FFTOTI    ORNE VLAF
+     C           FFTOTD    ORNE VLAL
+     C                     SETON                     81U8
+     C                     END
+     C*
+     C***  OUTPUT TRAILER REC. TO FCUPD
+     C*
+     C           *IN50     IFEQ '0'
+     C                     Z-ADD2         NFCUPD           FCLTY UPD.FILE
+     C                     END
+     C*
+     C                     END
+     C*
+     C*** OUTPUT AUDIT REPORT
+     C*
+     C                     EXSR TERM
+     C********************************************************************
+     C*
+     C***  PREVF SUBROUTINE - TO PROCESS FACILITY
+     C*
+     C***  CALLED BY: MAIN PROCESSING
+     C*
+     C***  CALLS:     EXPARR,EXPDRP,HASH
+     C*
+     C           PREVF     BEGSR                           ** PREVF **
+     C*
+     C***  CHECK RECORD TYPE OF FACILITY
+     C*
+     C***  IF REVERSED, DO NOTHING
+      ***  EXCEPT DELETE RELATED RECORDS ON LEFCTLQD & LENOTEPD                              BUG3872
+      *                                                                                      BUG3872
+     C           RECI      IFEQ 'R'                        REVERSED                          BUG3872
+     C                     MOVE CNUM      K2CNUM                                             BUG3872
+     C                     MOVE FACT      K2FACT                                             BUG3872
+     C                     MOVE FCNO      K2FCNO                                             BUG3872
+     C           KFCCU     CHAINLEFCLTD0             80                                      BUG3872
+     C           *IN80     IFEQ *OFF                                                         BUG3872
+     C                     DELETLEFCLTD0                                                     BUG3872
+     C                     ENDIF                                                             BUG3872
+     C           KFCCU     SETLLLENOTED0                                                     BUG3872
+     C           KFCCU     READELENOTED0                 80                                  BUG3872
+     C           *IN80     DOWEQ*OFF                                                         BUG3872
+     C                     DELETLENOTED0                                                     BUG3872
+     C           KFCCU     READELENOTED0                 80                                  BUG3872
+     C                     ENDDO                                                             BUG3872
+     C                     ENDIF                                                             BUG3872
+     C*
+     C/COPY WNCPYSRC,LE0461C003
+     C           RECI      IFEQ 'E'                        EXPIRED
+     C*                                                                    0119
+     C** If facility closed, treat the same way as an expired facility     0119
+     C*                                                                    0119
+     C           RECI      OREQ 'C'                                        0119
+     C*                                                                    0119
+     C*****CHECK*WHETHER*EXPIRED*FACILITY*SHOULD*BE*DROPPED*FROM*FILES     0119
+     C** Check whether the closed/expired facility should be dropped       0119
+     C*
+     C*
+     C***  CHECK THE EXPIRED FACILITY RETENTION PERIOD (EFRP) ON
+     C***  SDCLNPD AND THE RUN TYPE FROM LDA.
+     C***  IF EFRP IS BETWEEN 0 AND 99 IE. A SET RETENTION PERIOD AND
+     C***  THE RUNTYPE IS MONTHEND OR YEAREND CONTINUE THE CHECKING
+     C***  OF THE EXPIRY DATE
+     C*
+     C           EFRP      IFGE 0
+     C           EFRP      ANDLT99
+     C***********RUNTYP    ANDEQ'MONTHEND'                                  0121
+     C***********RUNTYP    IFEQ 'MONTHEND'                            0121BH3428
+     C***********RUNTYP    OREQ 'YEAREND'                             0121BH3428
+     C           DAYRUN    IFEQ 'MONTHEND'                                BH3428
+     C/COPY WNCPYSRC,LE0461C008
+     C           DAYRUN    OREQ 'YEAREND'                                 BH3428
+     C/COPY WNCPYSRC,LE0461C009
+     C*
+     C***  CHECK THAT THE CURRENT EXPOSURE AMOUNT DRAWN IS ZERO
+     C***  OTHERWISE FACILITY WON'T HAVE EXPIRED ANYWAY AND RETENTION
+     C***  PERIOD CHECK IS UNNECESSARY
+     C*
+     C           CAMD      IFEQ 0
+     C*                                                                   062690
+     C** CHECK THAT THERE ARE NO LOANS OUTSTANDING WITH A ZERO PRINCIPAL  062690
+     C** WHICH WOULD PASS THE CAMD TEST, BUT SHOULD NOT ALLOW THE         062690
+     C** FACILITY TO BE DROPPED.                                          062690
+     C*                                                                   062690
+     C***********CLFKY     CHAINCLOANF               50            062690 127740
+     C************IN50     IFEQ '1'                                062690 127740
+     C           CLFKY     CHAINCLOANF               48                   127740
+      *                                                                                       189839
+      ** Check that there are no live guarantee records against the                           189839
+      ** facility before dropping                                                             189839
+      *                                                                                       189839
+     C           *IN48     IFEQ '1'                                                           189839
+     C**********           MOVE CNUM      K1CNUM  60                                   189839 CSD027
+     C                     MOVE CNUM      K1CNUM  6                                           CSD027
+     C**********           MOVEL'F'       K1TEMP  4                                    189839 CLE148
+     C                     MOVEL' '       K1TEMP  4                                           CLE148
+     C                     MOVE FACT      K1TEMP                                              189839
+     C                     MOVELK1TEMP    K1FCLN  6                                           189839
+     C                     MOVE FCNO      K1FCLN                                              189839
+     C           K01KEY    CHAINGTEESGTF             48                                       189839
+     C                     ENDIF                                                              189839
+      *                                                                                       189839
+     C           *IN48     IFEQ '1'                                       127740
+     C** Check that there are no matured loans outstanding                200862
+     C*                                                                   200862
+     C           MLNKY     CHAINMLOANL1              48                   200862
+     C           *IN48     IFEQ '1'                                       200862
+     C*                                                                   200862
+     C** IF A RECORD WAS NOT FOUND THEN CONTINUE WITH DROP CHECK          062690
+     C*                                                                   0119
+     C** Check that there are no fees outstanding against the facility    0119
+     C** as if there are they need to be left on file                     0119
+     C*                                                                   0119
+     C                     MOVELFACT      FACILR  50                      0119
+     C                     MOVE FCNO      FACILR                          0119
+     C                     MOVE '0'       *IN60                           052154
+     C/COPY WNCPYSRC,LE0461C010
+     C           LEFKEY    SETLLLEFEEDL1                                   0119
+     C                     READ LEFEEDL1                 60                0119
+     C/COPY WNCPYSRC,LE0461C011
+     C*                                                                   052154
+     C***  If no record found, or if one found but it's a different       052154
+     C***  customer or facility, then it's okay to drop this one          052154
+     C*                                                                   052154
+     C           *IN60     IFEQ '1'                                        0119
+     C           CNUM      ORNE FECNUM                                    052154
+     C           *IN60     ANDEQ'0'                                       052154
+     C           FACILR    ORNE FEFACL                                    052154
+     C           *IN60     ANDEQ'0'                                       052154
+      *                                                                   CLE005
+      ** If CLE005 is installed, check if facility is to be               CLE005
+      ** reactivated (i.e., 'FR' amendment type exists).                  CLE005
+      *                                                                   CLE005
+     C           CLE005    IFEQ 'Y'                                       CLE005
+     C                     MOVE 'N'       WRVRS   1                       CLE005
+     C                     MOVE BRCA      WBRCA                           CLE005
+     C**********           Z-ADDCNUM      WCNUM                                        CLE005 CSD027
+     C                     MOVE CNUM      WCNUM                                               CSD027
+     C                     Z-ADDFACT      WFACT                           CLE005
+     C                     Z-ADDFCNO      WFCNO                           CLE005
+     C           FCMKEY    SETLLLEFCAML0                                  CLE005
+     C                     READ LEFCAML0                 49               CLE005
+     C           *IN49     DOWEQ*OFF                                      CLE005
+     C           DFCLTC    ANDEQDFCLTR                                    CLE005
+     C           FATP      IFEQ 'FR'                                      CLE005
+     C           ARECI     ANDNE'R'                                       CLE005
+     C                     MOVE 'Y'       WRVRS                           CLE005
+     C                     LEAVE                                          CLE005
+     C                     ENDIF                                          CLE005
+     C                     READ LEFCAML0                 49               CLE005
+     C                     ENDDO                                          CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+      ** Drop if facility will not be reactivated.                        CLE005
+      *                                                                   CLE005
+     C           WRVRS     IFEQ 'N'                                       CLE005
+     C           CLE005    ANDEQ'Y'                                       CLE005
+     C           CLE005    OREQ 'N'                                       CLE005
+     C           CLFKEY    SETLLCLOANF                                    127762
+     C           *IN60     IFEQ '1'                                       127762
+     C           CNUM      ORNE FCUS                                      127762
+     C           *IN60     ANDEQ'0'                                       127762
+     C           FACILR    ORNE FACCL                                     127762
+     C           *IN60     ANDEQ'0'                                       127762
+      *                                                                                     BUG28069
+      ** Check if the facility is not attached to other files used in                       BUG28069
+      ** Dealing, Account Maintenance and Manual Transactions.                              BUG28069
+      *                                                                                     BUG28069
+     C           FCLKEY    CHAINFCLTYL15             25                                     BUG28069
+     C           *IN25     IFEQ *ON                                                         BUG28069
+      *                                                                                     BUG28069
+     C                     EXSR EXPDRP
+      *                                                                                     BUG28069
+     C                     ENDIF                                                            BUG28069
+      *                                                                                     BUG28069
+     C                     ENDIF                                          127762
+     C                     ENDIF                                          CLE005
+     C*
+     C                     END
+     C                     ENDIF                                          200862
+     C                     END                                            062690
+     C                     END                                             0121
+     C                     END                                             0119
+     C                     END
+     C*
+     C***  IF THE FACILITY SHOULD BE DROPPED FLAG1 WILL BE SET TO 1
+     C***  AND FILE OUTPUT PROCESSING WILL BE BYPASSED
+     C*
+     C***********FLAG1     IFNE '1'                                        0119
+     C***********FLAG1     IFEQ '0'                                   0119 0121
+     C           FLAG1     IFEQ ' '                                        0121
+     C           FLAG1     OREQ '0'                                        0121
+     C*
+     C***  FACILITY IS EXPIRED - SET AVAILABILITY DATES AND OUTPUT TO
+     C***                        NEW FACILITY FILE
+     C*
+     C                     EXSR EXPARR
+     C*
+     C***  OUTPUT UPDATED FACILITY RECORDS TO NEW FACILITY FILE
+     C*
+     C                     MOVE 'A'       RCTP
+     C                     MOVE LCD       WLCD    50                                          211579
+     C                     MOVE CHTP      WCHTP   1                                           211579
+     C                     MOVE FLCD      LCD                                                 211579
+     C                     MOVE FCHTP     CHTP                                                211579
+     C                     MOVE FFRNT     FRNT                                              MD031146
+     C                     MOVE FATFR     AFRT                                              MD031146
+     C                     WRITEFCUPDFMF
+     C                     MOVE WLCD      LCD                                                 211579
+     C                     MOVE WCHTP     CHTP                                                211579
+     C                     Z-ADDNRUN      RUN
+     C                     Z-ADDNOAM      OAM
+     C                     MOVE 'B'       RCTP
+     C                     MOVE FFRNT     FRNT                                              MD031146
+     C                     MOVE FATFR     AFRT                                              MD031146
+     C                     WRITEFCUPDFNF
+     C*
+     C***  UPDATE HASH TOTAL FOR NEW FILES
+     C***  (ONLY INLUDE EXPIRED RECORDS (NOT CLOSED ONES) IN HASH TOTAL   BH0130
+     C*
+     C           RECI      IFEQ 'E'                                       BH0130
+     C                     EXSR HASH
+     C           @NLRA     ADD  2         @NLRA   50       FACILITY RECS  057388
+     C                     END                                            BH0130
+     C*                                                                   BH0130
+     C           NFCUPD    ADD  2         NFCUPD
+     C*
+     C                     END
+      *                                                                                       CLE039
+      ** If the facility is being dropped, delete also the related                            CLE039
+      ** facility records in LEFCLTQD                                                         CLE039
+      *                                                                                       CLE039
+     C********** CLE039    IFEQ 'Y'                                                   CLE039 BUG8831
+     C********** FLAG1     ANDEQ'1'                                                   CLE039 BUG8831
+     C           FLAG1     IFEQ '1'                                                          BUG8831
+      *                                                                                       CLE039
+     C                     MOVE CNUM      K2CNUM                                              CLE039
+     C                     MOVE FACT      K2FACT                                              CLE039
+     C                     MOVE FCNO      K2FCNO                                              CLE039
+      *                                                                                       CLE039
+     C           KFCCU     CHAINLEFCLTD0             80                                       CLE039
+     C           *IN80     IFEQ *OFF                                                          CLE039
+     C                     DELETLEFCLTD0                                                      CLE039
+     C                     ENDIF                                                              CLE039
+      *                                                                                       CLE039
+      ** Delete also related facility records in LENOTEPD                                     CLE039
+     C           KFCCU     SETLLLENOTED0                                                      CLE039
+     C           KFCCU     READELENOTED0                 80                                   CLE039
+     C           *IN80     DOWEQ*OFF                                                          CLE039
+     C                     DELETLENOTED0                                                      CLE039
+     C           KFCCU     READELENOTED0                 80                                   CLE039
+     C                     ENDDO                                                              CLE039
+      *                                                                                       CLE039
+     C/COPY WNCPYSRC,LEH00881
+     C                     ENDIF                                                              CLE039
+     C*
+     C** Should reset the flag before processing the next facility       BH3428
+     C*                                                                  BH3428
+     C                     MOVE '0'       FLAG1                          BH3428
+     C*                                                                  BH3428
+     C                     END                             EXPIRED
+     C*
+     C/COPY WNCPYSRC,LEH01133
+     C           RECI      IFEQ 'D'                        LIVE        **
+     C*                                                                    0119
+     C** Closed facilities have already been dealt with                    0119
+     C*                                                                    0119
+     C***********RECI      OREQ 'C'                        CLOSED      **  0119
+     C*
+     C**  FACILITY IS LIVE OR CLOSED
+     C*
+     C**  IF FACILITY IS LIVE, OR IS CLOSED BUT IS NOT MONTH-END OR
+     C**  YEAR-END :
+     C*
+     C           RECI      IFEQ 'D'                                    **
+      *************************************************************134806 144712
+      ***Update*facility*revolving*credit*indicator*when*there's***134806 144712
+      ***facility*amendment*of*revolving*credit*change*************134806 144712
+      *************************************************************134806 144712
+     C***********CLE005    IFEQ 'Y'                                134806 144712
+     C***********          MOVE BRCA      WBRCA                    134806 144712
+     C***********          Z-ADDCNUM      WCNUM                    134806 144712
+     C***********          Z-ADDFACT      WFACT                    134806 144712
+     C***********          Z-ADDFCNO      WFCNO                    134806 144712
+     C***********FCMKEY    SETLLLEFCAML0                           134806 144712
+     C***********          READ LEFCAML0                 49        134806 144712
+     C************IN49     DOWEQ*OFF                               134806 144712
+     C***********WCNUM     ANDEQCNUM                               134806 144712
+     C***********WFACT     ANDEQFACT                               134806 144712
+     C***********WFCNO     ANDEQFCNO                               134806 144712
+     C***********FATP      IFEQ 'RC'                               134806 144712
+     C***********VLDT      ANDLEBJRDNB                             134806 144712
+     C***********          MOVE ARVCR     RVCR                     134806 144712
+     C***********          ENDIF                                   134806 144712
+     C***********          READ LEFCAML0                 49        134806 144712
+     C***********          ENDDO                                   134806 144712
+     C***********          ENDIF                                   134806 144712
+     C************IN18     OREQ '0'                                    **   0119
+     C*
+     C***  SET AVAILABILITY DATES AND OUTPUT TO NEW FACILITY FILE
+     C*
+     C                     EXSR EXPARR
+     C*
+     C***  IF DETAIL RECORD AND EXPIRY DATE REACHED, CHANGE RECORD TO
+     C***  EXPIRED
+     C*
+     C           DTEX      IFLE EVCD
+     C           RECI      ANDEQ'D'
+     C           CLE134    IFEQ 'N'                                                         MD050829
+     C           CLE134    OREQ 'Y'                                                         MD050829
+     C           WNCOB     ANDEQ'NEWCOB'                                                    MD033997
+     C                     MOVE 'E'       RECI
+     C/COPY WNCPYSRC,LE0461C012
+      *                                                                                      BUG8707
+      ** Blank out review details                                                            BUG8707
+      *                                                                                      BUG8707
+     C                     Z-ADD*ZEROS    RVDT                                               BUG8707
+     C                     MOVE *BLANKS   RVFR                                               BUG8707
+     C                     Z-ADD*ZEROS    RVDY                                               BUG8707
+     C                     ENDIF                                                            MD050829
+     C                     END
+     C*
+     C***  WRITE NEW FACILITIES FILES
+     C*
+     C                     MOVE 'A'       RCTP
+     C                     MOVE LCD       WLCD                                                211579
+     C                     MOVE CHTP      WCHTP                                               211579
+     C                     MOVE FLCD      LCD                                                 211579
+     C                     MOVE FCHTP     CHTP                                                211579
+     C                     MOVE FFRNT     FRNT                                              MD031146
+     C                     MOVE FATFR     AFRT                                              MD031146
+     C                     WRITEFCUPDFMF
+     C                     MOVE WLCD      LCD                                                 211579
+     C                     MOVE WCHTP     CHTP                                                211579
+     C                     Z-ADDNRUN      RUN
+     C                     Z-ADDNOAM      OAM
+     C                     MOVE 'B'       RCTP
+     C                     MOVE FFRNT     FRNT                                              MD031146
+     C                     MOVE FATFR     AFRT                                              MD031146
+     C                     WRITEFCUPDFNF
+     C*
+     C***  UPDATE HASH TOTAL FOR NEW FILES, AND RECORD COUNT
+     C*
+     C           RECI      IFEQ 'D'
+     C           RECI      OREQ 'E'                                         0019
+     C                     EXSR HASH
+     C           @NLRA     ADD  2         @NLRA            FACILITY RECS  057388
+     C                     END
+     C*
+     C           NFCUPD    ADD  2         NFCUPD
+     C*
+     C                     END                             LIVE/CLOSED
+     C*
+     C                     END
+     C*
+     C           PREVEN    ENDSR                           ** PREVEN **
+     C********************************************************************
+     C*** SR/HASH TO DO HASH TOTALLING FOR NEW FILES
+     C*
+     C***  CALLED BY: PREVF
+     C*
+     C           HASH      BEGSR
+     C                     MOVE FAMT      ZZAMT
+     C           FAMT      IFLT 0                                                             193603
+     C                     Z-SUBZZAMT     ZZAMT                                               193603
+     C                     END                                                                193603
+     C                     Z-ADDVLAFB     ZZTOTI
+     C                     Z-ADDVLALB     ZZTOTD
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    VLAFB  150
+     C                     Z-ADDZZTOTD    VLALB   30
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C***  EXPDRP TO CHECK EXPIRED LOANS AND TO DROP FROM FILES AS
+     C***  APPROPRIATE
+     C*
+     C***  CALLED BY: PREVF
+     C***  CALLS: ZDATE1, ZDATE2
+     C***  FACILITIES TO BE DROPPED INDICATED BY FLAG1 HAVING BEEN SET
+     C***  ON
+     C*
+     C           EXPDRP    BEGSR
+     C*
+     C***  CHECK THE VALUE OF THE CHECK DATE AGAINST EXPIRY DATE
+     C***  AND SET FLAG VALUE TO ZERO IF THE EXPIRY DATE IS LATER THAN
+     C***  THE RETENTION PERIOD - IE ALLOW EXPIRED FACILITY TO BE
+     C***  OUTPUT TO FILE
+     C*
+     C           CHKDT     IFNE 0
+     C           DTEX      ANDLTCHKDT
+     C           CHKDT     OREQ 0
+     C           DTEX      ANDLTRUND
+     C                     MOVE '1'       FLAG1   1
+      *                                                                   120277
+      ** Find all related risk participants / assignments for this        120277
+      ** facility if facility is syndicated and CLE004 is on              120277
+      *                                                                   120277
+     C           CLE004    IFEQ 'Y'                                       120277
+     C           SYIN      ANDEQ'Y'                                       120277
+     C                     MOVELBRCA      WBRCA                           120277
+     C**********           Z-ADDCNUM      WCNUM                                        120277 CSD027
+     C                     MOVE CNUM      WCNUM                                               CSD027
+     C                     Z-ADDFACT      WFACT                           120277
+     C                     Z-ADDFCNO      WFCNO                           120277
+      *                                                                   120277
+     C           PRTKEY    SETLLLEPARTL3                                  120277
+     C**********           READ LEPARTL3                 68                          120277 AR787849
+     C           PRTKEY    READELEPARTL3                 68                                 AR787849
+      *                                                                   120277
+     C           *IN68     DOWEQ'0'                                       120277
+     C********** BRCA      ANDEQWBRCA                                                120277 AR787849
+     C********** CNUM      ANDEQWCNUM                                                120277 AR787849
+     C********** FACT      ANDEQWFACT                                                120277 AR787849
+     C********** FCNO      ANDEQWFCNO                                                120277 AR787849
+     C                     WRITELEEPRTD0                                  120277
+     C**********           READ LEPARTL3                 68                          120277 AR787849
+     C           PRTKEY    READELEPARTL3                 68                                 AR787849
+     C                     ENDDO                                          120277
+      *                                                                   120277
+     C                     END                                            120277
+     C/COPY WNCPYSRC,LE0461C001
+     C                     ELSE
+     C                     MOVE '0'       FLAG1
+     C                     END
+     C*
+     C           RECI      IFEQ 'C'                                       127762
+     C********** DAYRUN    ANDEQ'MONTHEND'                                           127762 AR812812
+     C           CHKDT     IFNE 0                                                           AR812812
+     C           LCD       ANDLTCHKDT                                                       AR812812
+     C           CHKDT     OREQ 0                                                           AR812812
+     C           LCD       ANDLTRUND                                                        AR812812
+     C                     MOVE '1'       FLAG1                           127762
+     C                     ENDIF                                                            AR812812
+     C                     END                                            127762
+     C*
+     C/COPY WNCPYSRC,LE0461C006
+     C                     ENDSR
+     C********************************************************************
+     C*
+     C***  EXPARR SUBROUTINE - TO UPDATE DATES FOR AVAILABILITY ARRAY
+     C*
+     C***  CALLED BY: PREVF
+     C*
+     C***  CALLS:     ZFWDT
+     C*
+     C           EXPARR    BEGSR                           ** EXPARR **
+     C*
+     C***  IF CCY IS SAME AS PREVIOUS FACILITY CCY, NO NEED TO CALC.
+     C***  AGAIN
+     C*
+     C           FCCY      COMP PCCY                     70
+     C*
+     C           *IN70     IFEQ '0'
+     C*
+     C***  CALCULATE DATES FOR ARRAY,STARTING WITH RUN DATE,THEN NEXT 9
+     C***  WDAY
+     C*
+     C                     Z-ADDRUND      NRUN,1
+     C                     Z-ADDRUND      ZDAYNO
+     C**********           MOVE *BLANKS   ZLOC                                             AR1002397
+     C                     MOVELBJSLCD    ZLOC                                             AR1002397
+     C***********          MOVE FCCY      ZCCY                     BH3436 158541
+      *                                                                   158541
+      ** Use Local CCY instead of Facility CCY to determine the           158541
+      ** next 9 working days.                                             158541
+      *                                                                   158541
+     C                     MOVE BJLCCY    ZCCY                            158541
+     C                     Z-ADD1         X       30
+     C*
+     C           *IN70     DOWEQ'0'
+     C*
+     C           X         ADD  1         X
+     C                     Z-ADD1         ZNRDYS
+     C                     EXSR ZFWDT
+     C                     Z-ADDZDYNBR    NRUN,X
+     C                     Z-ADDZDYNBR    ZDAYNO
+     C*
+     C           X         COMP 10                       70
+     C*
+     C                     END
+     C*
+     C***  SAVE FACILITY CURRENCY FOR NEXT TIME
+     C*
+     C                     MOVE FCCY      PCCY    3
+     C*
+     C                     END
+     C*
+     C           EXPAEN    ENDSR                           ** EXPAEN **
+     C********************************************************************
+     C*
+     C***  SR/TERM TO OUTPUT AUDIT REPORT AND PUT OUT NEW FACILITIES
+     C***          FILE TRAILER
+     C*
+     C***  CALLED BY: MAIN PROCESSING, INIT
+     C*
+     C***  CALLS:     NOTHING
+     C*
+     C           TERM      BEGSR
+     C*
+     C***  TOTAL TIME PROCESSING - PUT OUT AUDIT REPORT
+     C*
+     C                     Z-ADDVLAF      VLAFA  150
+     C                     Z-ADDVLAL      VLALA   30
+     C*
+     C*** PUT OUT AUDIT REPORT
+     C*
+     C                     WRITELE0461A1
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     WRITEDBERROR
+     C                     END
+     C*
+     C***  OUTPUT NEW FACILITIES FILE TRAILER
+     C*
+     C           *INU7     IFEQ '0'
+     C           *INU8     ANDEQ'0'                                         0019
+     C                     Z-ADDNFCUPD    NORE
+     C                     Z-ADDZ50       LCD
+     C                     MOVE ' '       CHTP
+     C                     Z-ADDZ50       TNLU
+     C                     Z-ADD@NLRA     NLRB             NO BEFORE I/C  057388
+     C                     Z-ADDVLAFB     VLBF             VAL BEFORE I/C 057388
+     C                     Z-ADDVLALB     VLBL             VAL BEFORE I/C 057388
+     C                     Z-ADD@NLRA     NLRA             NO AFTER I/C   057388
+     C                     Z-ADDVLAFB     VLAF
+     C                     Z-ADDVLALB     VLAL
+     C*
+     C                     WRITEFCUPDZZF
+     C*
+     C                     END
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C*
+     C***  INIT SUBROUTINE - FIRST CYCLE CALCS
+     C*
+     C***  CALLED BY: MAIN PROCESSING
+     C*
+     C***  CALLS:     *PSSR,TERM
+     C*
+     C           INIT      BEGSR                           ** INIT **
+     C*
+     C/COPY WNCPYSRC,LE0461C004
+     C                     MOVE ' '       BLANKS 29        SET UP FIELDS
+     C                     Z-ADD0         PACK11 110
+     C*
+     C***  IN THE DATAAREA RUNDAT
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C***  DEFINE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+     C*
+     C***  OUTPUT NEW FACILITY FILE HEADER
+     C*
+     C                     MOVE 'H'       RECI
+     C                     WRITEFCUPDHHF
+     C*
+     C***  READ ACTIONS HEADER TO PICK UP VALUE OF EVCD
+     C*
+     C                     READ ACTN5DH                  24
+     C*
+     C***  SETON INDICATOR FOR MULTIBRANCHING = NO
+     C*
+     C           MBIN      IFNE 'Y'
+     C                     SETON                     65
+     C*
+     C                     END
+     C*
+     C***  ACCESS BANK DETAILS
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7U8LR
+     C                     SETON                     99
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 07  *
+     C                     Z-ADD7         DBASE            ***************
+     C                     MOVEL'LE0461'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR TERM
+     C                     ELSE
+     C*
+     C***  CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C*
+     C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C                     END
+     C*
+     C***  ACCESS CUSTOMER LENDING DATA
+     C*
+     C                     CALL 'AOCLNDR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDCLND    PARM SDCLND    DSFDY                                               CLE134
+     C           SDCLND    PARM SDCLND    DSSDY                                               CLE134
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     99
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     Z-ADD6         DBASE            *** DBASE 6 ***
+     C                     MOVEL'SDCLNDPD'DBFILE           ***************
+     C                     MOVEL'LE0461'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR TERM
+     C                     END
+     C/COPY WNCPYSRC,LE0461C002
+      *                                                                   CLE005
+      ** Check if SAR CLE005 is switched *ON.                             CLE005
+      *                                                                   CLE005
+     C                     CALL 'AOSARDR0'                                CLE005
+     C                     PARM *BLANKS   @RTCD                           CLE005
+     C                     PARM '*KEY   ' @OPTN                           CLE005
+     C                     PARM 'CLE005 ' @SARD   6                       CLE005
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE005
+     C           @RTCD     IFEQ *BLANK                                    CLE005
+     C                     MOVE 'Y'       CLE005  1                       CLE005
+     C                     ELSE                                           CLE005
+     C                     MOVE 'N'       CLE005                          CLE005
+     C           @RTCD     IFNE '*NRF    '                                CLE005
+     C                     SETON                     U7U8LR               CLE005
+     C                     SETON                     99                   CLE005
+     C           *LOCK     IN   LDA                                       CLE005
+     C                     MOVEL'SCSARDPD'DBFILE           ***************CLE005
+     C                     Z-ADD11        DBASE            * DB ERROR 11 *CLE005
+     C                     MOVEL'CLE005'  DBKEY            ***************CLE005
+     C                     MOVEL'LE0461'  DBPGM                           CLE005
+     C                     OUT  LDA                                       CLE005
+     C                     EXSR *PSSR                                     CLE005
+     C                     EXSR TERM                                      CLE005
+     C                     ENDIF                                          CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+      ** Check if SAR CLE004 is switched *ON.                             120277
+      *                                                                   120277
+     C                     CALL 'AOSARDR0'                                120277
+     C                     PARM *BLANKS   @RTCD                           120277
+     C                     PARM '*KEY   ' @OPTN                           120277
+     C                     PARM 'CLE004 ' @SARD                           120277
+     C           SCSARD    PARM SCSARD    DSFDY                           120277
+      *                                                                   120277
+     C           @RTCD     IFEQ *BLANK                                    120277
+     C                     MOVE 'Y'       CLE004  1                       120277
+     C                     ELSE                                           120277
+      *                                                                   120277
+     C                     MOVE 'N'       CLE004                          120277
+     C           @RTCD     IFNE '*NRF    '                                120277
+     C                     SETON                     U7U8LR               120277
+     C                     SETON                     99                   120277
+     C           *LOCK     IN   LDA                                       120277
+     C                     MOVEL'SCSARDPD'DBFILE           ***************120277
+     C                     Z-ADD12        DBASE            * DB ERROR 12 *120277
+     C                     MOVEL'CLE004'  DBKEY            ***************120277
+     C                     MOVEL'LE0461'  DBPGM                           120277
+     C                     OUT  LDA                                       120277
+     C                     EXSR *PSSR                                     120277
+     C                     EXSR TERM                                      120277
+     C                     ENDIF                                          120277
+     C                     ENDIF                                          120277
+      *                                                                                       CLE039
+      ** Check if CLE039 (General LE Enhancement) is switched on                              CLE039
+      *                                                                                       CLE039
+     C                     CALL 'AOSARDR0'                                                    CLE039
+     C                     PARM *BLANKS   PRTCD   7                                           CLE039
+     C                     PARM '*VERIFY' POPTN   7                                           CLE039
+     C                     PARM 'CLE039'  PSARD   6                                           CLE039
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE039
+      *                                                                                       CLE039
+     C           PRTCD     IFNE *BLANKS                                                       CLE039
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE039
+     C           *LOCK     IN   LDA                                                           CLE039
+     C                     MOVEL'LE0461'  DBPGM                                               CLE039
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE039
+     C                     MOVEL'CLE039'  DBKEY                                               CLE039
+     C                     Z-ADD13        DBASE                                               CLE039
+     C                     OUT  LDA                                                           CLE039
+     C                     SETON                     U7U8LR                                   CLE039
+     C                     SETON                     99                                       CLE039
+     C                     EXSR *PSSR                                                         CLE039
+     C                     EXSR TERM                                                          CLE039
+     C                     ENDIF                                                              CLE039
+      *                                                                                       CLE039
+     C           PRTCD     IFEQ *BLANKS                                                       CLE039
+     C                     MOVE 'Y'       CLE039  1                                           CLE039
+     C                     ELSE                                                               CLE039
+     C                     MOVE 'N'       CLE039                                              CLE039
+     C                     ENDIF                                                              CLE039
+      *                                                                                     MD050829
+      ** Check if CLE134 (Past Due Processing) is switched on                               MD050829
+      *                                                                                     MD050829
+     C                     CALL 'AOSARDR0'                                                  MD050829
+     C                     PARM *BLANKS   PRTCD   7                                         MD050829
+     C                     PARM '*VERIFY' POPTN   7                                         MD050829
+     C                     PARM 'CLE134'  PSARD   6                                         MD050829
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD050829
+      *                                                                                     MD050829
+     C           PRTCD     IFEQ *BLANKS                                                     MD050829
+     C                     MOVE 'Y'       CLE134  1                                         MD050829
+     C                     ELSE                                                             MD050829
+     C                     MOVE 'N'       CLE134                                            MD050829
+     C                     ENDIF                                                            MD050829
+      *                                                                                       CLE039
+      ** Key list for LF/LEFCLTLG                                                             CLE039
+      *                                                                                       CLE039
+     C           KFCCU     KLIST                                                              CLE039
+     C                     KFLD           BRCA                                                CLE039
+     C                     KFLD           K2CNUM  6                                           CLE039
+     C                     KFLD           K2FACT  3                                           CLE039
+     C                     KFLD           K2FCNO  2                                           CLE039
+     C*                                                                   0119
+     C** KLIST for LF/LEFEEDL1                                            0119
+     C*                                                                   0119
+     C           LEFKEY    KLIST                                          0119
+     C                     KFLD           CNUM                            0119
+     C                     KFLD           FACILR                          0119
+      *                                                                   CLE005
+     C           CLFKEY    KLIST                                          127762
+     C                     KFLD           CNUM                            127762
+     C                     KFLD           FACT                            127762
+     C                     KFLD           FCNO                            127762
+     C*                                                                   127762
+     C           FCMKEY    KLIST                                          CLE005
+     C                     KFLD           WBRCA                           CLE005
+     C                     KFLD           WCNUM                           CLE005
+     C                     KFLD           WFACT                           CLE005
+     C                     KFLD           WFCNO                           CLE005
+      *                                                                   CLE005
+      ** Key List for LEPARTL3                                            120277
+      *                                                                   120277
+     C           PRTKEY    KLIST                                          120277
+     C                     KFLD           WBRCA                           120277
+     C                     KFLD           WCNUM                           120277
+     C                     KFLD           WFACT                           120277
+     C                     KFLD           WFCNO                           120277
+      *                                                                                     BUG28069
+      ** Key List for FCLTYL15                                                              BUG28069
+      *                                                                                     BUG28069
+     C           FCLKEY    KLIST                                                            BUG28069
+     C                     KFLD           WCNUM                                             BUG28069
+     C                     KFLD           WFACT                                             BUG28069
+     C                     KFLD           WFCNO                                             BUG28069
+      *                                                                   120277
+     C*
+     C*** INCLUDE HEADER AND TRAILER IN RECORD COUNT
+     C*
+     C           NFCUPD    ADD  2         NFCUPD  50
+     C*
+     C***  CHECK IF TODAY IS LAST WORKING DAY OF MONTH
+     C*
+     C********** RUNTYP    IFEQ 'MONTHEND'                                E30572
+     C********** RUNTYP    OREQ 'YEAREND '                                E30572
+     C**********           SETON                     18                   E30572
+     C**********           END                                            E30572
+     C*                                                                   E30572
+     C                     MOVE BJDNWD    ZDAYNO                          E30572
+     C                     EXSR ZDATE2                                    E30572
+     C                     MOVE RUNA      WRK5    5                       E30572
+     C                     MOVELWRK5      MONTHA  3                       E30572
+     C*                                                                   E30572
+     C***  IF MONTH OF NEXT WORKING DAY IS NOT MONTH OF TODAY, TODAY IS   E30572
+     C***  MONTHEND                                                       E30572
+     C*                                                                   E30572
+     C                     SETOF                     27                   E30572
+     C           ZMNM,ZMTH IFNE MONTHA                                    E30572
+     C                     SETON                     27                   E30572
+     C                     END                                            E30572
+     C*                                                                   E30572
+     C***  IF DNWD > EOYD, THEN IT IS THE LAST WORKING DAY OF THE YEAR    E30572
+     C*                                                                   E30572
+     C                     SETOF                     28                   E30572
+     C           BJDNWD    IFGT BJEYD                                     E30572
+     C                     SETON                     28                   E30572
+     C                     END                                            E30572
+     C*                                                                   E30572
+     C           *IN27     IFEQ '1'                                       E30572
+     C                     MOVE 'MONTHEND'DAYRUN  8                       E30572
+     C                     SETON                     18                   E30572
+     C                     END                                            E30572
+     C           *IN28     IFEQ '1'                                       E30572
+     C                     MOVE 'YEAREND 'DAYRUN                          E30572
+     C                     SETON                     18                   E30572
+     C                     END                                            E30572
+     C*
+     C***  SET UP ZERO FIELDS
+     C*
+     C                     Z-ADD0         Z130   130
+     C                     Z-ADD0         Z50     50
+     C*
+     C***  IF EXPIRED FACILITY RETENTION PERIOD WAS 00 THEN BYPASS DATE
+     C***  CHECKING
+     C*
+     C           EFRP      IFGT 0
+     C*
+     C***  CHECK THE RETENTION PERIOD FOR THE NO. OF YEARS AND MONTHS
+     C***  AND MOVE THE YEAR AND MONTH VALUES INTO APPROPRIATE FIELDS
+     C*
+     C           EFRP      IFGT 12
+     C           EFRP      DIV  12        FACRTN  10
+     C                     MVR            FACREM  20
+     C                     ELSE
+     C                     Z-ADD0         FACRTN
+     C                     Z-ADDEFRP      FACREM
+     C                     END
+     C*
+     C***  CONVERT RUNDATE INTO DDMMYY FORMAT
+     C*
+     C                     Z-ADDRUND      ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C***  CREATE TWO SEPARATE FIELDS FOR THE MONTH AND THE YEAR
+     C***  FROM THE RESULTING DATE
+     C*
+     C                     MOVE ZDATE     TEST1   4
+     C                     MOVE ZDATE     YEAR    20
+     C*********************MOVELTEST1     MONTH   20                       0121
+     C  N98                MOVELTEST1     MONTH   20                       0121
+     C   98                MOVELZDATE     MONTH                            0121
+     C*
+     C***  AND USE THE RETENTION PERIOD TO CALCULATE THE DATE FOR
+     C***  DROPPING EXPIRED FACILITIES
+     C*
+     C           YEAR      SUB  FACRTN    RTNYR   20
+     C           MONTH     SUB  FACREM    RTNMTH  20
+     C*
+     C***  WHEN CONVERTING TO MIDAS DAY NUMBER A DAY NUMBER WILL BE
+     C***  FOR THE CONV. ALL FACILITIES WILL BE DROPPED AT MONTHEND
+     C***  THEREFORE ADD ONE TO MONTH NOW FOR CALCULATION OF DAY NUMBER
+     C***  AT FIRST DAY OF FOLLOWING MONTH WHEN MIDAS DAY NUMBER HAS
+     C***  BEEN CALCULATED THE ONE ADDED NOW WILL BE SUBTRACTED TO GIVE
+     C***  THE LAST DAY OF THE CORRECT MONTH FOR PROCESSING!
+     C*
+     C           RTNMTH    ADD  1         RTNMTH
+     C           RTNMTH    IFGT 12
+     C           RTNMTH    SUB  12        RTNMTH
+     C           RTNYR     ADD  1         RTNYR
+     C                     END
+     C*
+     C***  CHECK WHETHER THE RESULTING MONTH IS NEGATIVE AND IF SO
+     C***  ADJUST ACCORDINGLY
+     C*
+     C           RTNMTH    IFLE 0
+     C           RTNYR     SUB  1         RTNYR
+     C           RTNMTH    ADD  12        RTNMTH
+     C                     END
+     C*                                                                   168225
+     C** TO CATER FOR DATES PAST THE YEAR 2000, CHECK FOR -VE YEAR.       168225
+     C** IF SO, ADD 100 TO -VE YEAR                                       168225
+     C*                                                                   168225
+     C           RTNYR     IFLT 0                                         168225
+     C           RTNYR     ADD  100       RTNYR                           168225
+     C                     ENDIF                                          168225
+     C*
+     C***  CONSTRUCT CHECK DATE WITH DAY NUMBER 01
+     C*
+     C           DATF      IFEQ 'D'                                       128067
+     C                     MOVEL'01'      TEST2   40
+     C                     MOVE RTNMTH    TEST2
+     C                     ELSE                                           128067
+     C                     MOVE '01'      TEST2                           128067
+     C                     MOVELRTNMTH    TEST2                           128067
+     C                     ENDIF                                          128067
+     C                     MOVE RTNYR     ZDATE   60
+     C                     MOVELTEST2     ZDATE
+     C*
+     C***  CONVERT RESULTING DATE INTO A MIDAS DAY NUMBER
+     C*
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    CHKDT   50
+     C*
+     C***  IF EXPIRED FACILITY RETENTION PERIOD WAS 00 MAKE CHKDT ZERO
+     C*
+     C                     ELSE
+     C                     Z-ADD0         CHKDT
+     C                     END
+     C*
+     C                     SETON                     50    1ST.CYCLE IND.
+     C*
+     C/COPY WNCPYSRC,LE0461C007
+     C           INITEN    ENDSR                           ** INITEN **
+     C*
+     C********************************************************************
+     C*
+     C***  SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL
+     C***  (ZZTOTI, ZZTOTD).  IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     C***  CALLED BY: MAIN PROCESSING
+     C*
+     C***  CALLS:     GLZSUM
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     CSR         ZZAMT     IFNE 0                          AMT=0-BYPASS
+     C*
+     C***  SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+     C*
+     C***  BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     C*
+     CSR                   END
+     C*
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C********************************************************************
+     C***   SUBROUTINE TO CARRY OUT THE ADDITION FOR GLZADD
+     C***            PARAMETERS PASSED -
+     C***                       I/P ZZAMTI ZZAMTD
+     C***                       O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     C***  CALLED BY: GLZADD
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C***  DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     C*
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C***  DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     C*
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C***  IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     C*
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C***  IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     C*
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C***  IF MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     C*
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C***  IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT
+     C***  INTACT
+     C*
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C***  THE 'SIGNS' ARE DIFFERENT
+     C*
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C*
+     C***  IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C***  IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C*
+     C***  BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C***  IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     C*
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C***  IF ZZTOT GT. ZZAMT.
+     C*
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C***  IF ZZAMT GT. ZZTOT.
+     C*
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C***  REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     C*
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C*
+     C***  RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C*
+     C***  IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     C*
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+     C/EJECT
+     C********************************************************************
+     C*
+     C***  ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND
+     C***             CONVERT TO A NUMBER OF DAYS.
+     C*
+     C***  CALLED BY: EXPDRP
+     C*
+     C***  THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C*
+     C********************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/EJECT
+     C********************************************************************
+     C*
+     C***  ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C*
+     C***  CALLED BY: EXPDRP
+     C*
+     C***  THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C*
+     C********************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C********************************************************************
+     C*
+     C***  ZACCH  --- SUBROUTINE TO ACCESS A HOLIDAY RECORD FOR A
+     C***             PARTICULAR CURRENCY AND (OPTIONAL) LOCATION.
+     C*
+     C***  CALLED FROM: ZFWDT
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C/COPY ZSRSRC,ZACCH
+     C/EJECT
+     C********************************************************************
+     C*
+     C***  ZFWDT  --- SUBROUTINE TO CALCULATE THE NTH WORKING DAY
+     C***             FORWARD FROM A GIVEN START DATE FOR ANY
+     C***             PARTICULAR CURRENCY AND (OPTIONAL) LOCATION.
+     C*
+     C***  CALLED FROM: EXPARR
+     C*
+     C***  CALLS: ZACCH
+     C*
+     C********************************************************************
+     C/COPY ZSRSRC,ZFWDT
+     C/EJECT
+     C********************************************************************
+     C*
+     C***  *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C***  CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+     C/EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

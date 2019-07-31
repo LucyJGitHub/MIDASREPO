@@ -1,0 +1,100 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO End PEA Status updater (MQ Handshaking)')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC000114 - End PEA Status updater (MQ Handshaking)         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC054  *CREATE    Date 23Feb12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSC054 - Period End Adjustments                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+ 
+             DCL        VAR(&MQMGR) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&MQUEUE) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(2000)
+ 
+/*/COPY SDCPYSRC,SDSVALDCL  */
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Check if Listener is running */
+ 
+             ALCOBJ     OBJ((SCPEASTS *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(STOP))
+             SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) MSGDTA('MQ +
+                          Listener is not running.') TOPGMQ(*EXT) +
+                          MSGTYPE(*STATUS)
+             DLCOBJ     OBJ((SCPEASTS *DTAARA *EXCL))
+             GOTO       CMDLBL(ABNOR)
+STOP:
+ 
+/** Retrieve system prefix */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+ 
+/** Get MQ Details from the system values */
+ 
+             CHGVAR     VAR(&SVALK1) VALUE('PEAHandShakingQM')
+             CHGVAR     VAR(&SVALK2) VALUE('PEAHandShakingIQ')
+ 
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                        &SVALK1 &SVAL1 &SVALK2 +
+                        &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                        &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                        &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                        &SVALK10 &SVAL10)
+ 
+/** If system values are missing then end abnormally */
+ 
+             IF COND(%SST(&SVAL1 1 4) *EQ '*NRF') THEN(GOTO +
+               CMDLBL(ABNOR))
+             ELSE (DO)
+               CHGVAR VAR(&MQMGR) VALUE(&SVAL1)
+               CHGVAR VAR(&MQUEUE) VALUE(&SVAL2)
+             ENDDO
+ 
+/** Call SCC000119 to SHUTDOWN the server */
+ 
+             CHGVAR     VAR(&MSG) VALUE('SHUTDOWN')
+             CALL       PGM(SCC000119) PARM(&RETURNCODE &PREFIX +
+                          &MQMGR &MQUEUE &MSG)
+             IF         COND(&RETURNCODE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+/** Abnormal termination */
+ 
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GOC000114 ended abnormally - see job +
+                          log') MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

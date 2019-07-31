@@ -1,0 +1,381 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/********************************************************************/
+/*                                                                  */
+/*       Midas Standing Data Module                                 */
+/*                                                                  */
+/*       SDC08 - FILE SET UP - STANDING DATA                        */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*       Last Amend No. CUP004  *REDUNDANT Date 13Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BG18886            Date 22May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK016             Date 07Nov03              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*                      CSC012             Date 19Oct01              */
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                      CCB009             DATE 01Jun00              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CPK009             DATE 03SEP99             */
+/*                      CSC009             DATE 12JUN98             */
+/*                      CPK008             DATE 30JUN96              */
+/*                      093707             DATE 26SEP95              */
+/*                      S01408             DATE 10MAY95             */
+/*                      078810             DATE 15NOV94             */
+/*                      074503             DATE  6SEP93             */
+/*                      044835             DATE 29APR93             */
+/*                      E40273             DATE 24JUN92             */
+/*                      RT0037             DATE 14MAY91             */
+/*                  RT0038             DATE 14MAY91                 */
+/*                  S01337             DATE 17APR91                 */
+/*                  S01314             DATE 15APR91                 */
+/*                  E22254             DATE 02JUN90                 */
+/*                  S01251             DATE 03FEB90                 */
+/*                  BHF525             DATE 31AUG90                 */
+/*                  LN0567             DATE 21AUG90                 */
+/*                  S01117             DATE 23FEB90                 */
+/*                  S01189             DATE 30/03/89                */
+/*                  E17384             DATE 14/03/89                */
+/*                  E14569             DATE 07/10/88                */
+/*                  S01179             DATE 12/09/88                */
+/*                  S01168             DATE 24/07/88                */
+/*                  S01147             DATE 17/12/87                */
+/*                  S01125             DATE 03/10/86                */
+/*                                                                  */
+/*------------------------------------------------------------------*/
+/*                                                                  */
+/*       CUP004 - Replacement for SCBEGIN.                          */
+/*       BG18886 - Amend non-standard codes.                        */
+/*       CPK016 - Release 5 packaging.  Initialise BOOKDA.           */
+/*       CSC012 - Release 4 packaging.  Initialise files that used   */
+/*                to be delivered as DC files.                       */
+/*              - MIDASDBA renamed back to MIDAS.                    */
+/*       CCB009 - Journal files throughout close of business         */
+/*   CPK009 - DBA R3 Packaging                                      */
+/*          - Data area MIDAS replaced by MIDASDBA.                 */
+/*   CSC009 - Move xxDMLIB population from SCBEGIN to SETUPMIDAS    */
+/*   CPK008 - DBA R2 Packaging                                      */
+/*          - Data area CBSTAT needs to pick up correct text for    */
+/*            DBA2.                                                 */
+/*   093707 - SDMMODPD not being accessed correctly in some cases;  */
+/*            if AOMMODR0 has previously been called, the file is   */
+/*            held in the buffer. Fix is to force program AOMMODR0  */
+/*            to access the disk for SDMMODPD rather than reading   */
+/*            the information from the buffer, using *FREE option.  */
+/*   S01408 - Addition of core hook SDC08MP1                        */
+/*            Addition of core hook SDC08MP2                        */
+/*   078810 - Obtain release level from data area instead of        */
+/*            hard-coding it.                                       */
+/*   074503 - Amend pgm to set up files by copying data supplied    */
+/*            in core system, instead of initialising files using   */
+/*            a program.  This allows the system to be amended if   */
+/*            required by amending data instead of changing code.   */
+/*   044835 - DLTJRN command incorrect and in wrong place           */
+/*   E40273 - REPSEQ SHOULD BE INITIALISED TO '00001'               */
+/*   RT0037 - TEXT CHANGED FOR MESSAGES - THIS IS IN CONJUNCTION    */
+/*            WITH MOVING PHASA FROM THE 'DP' LIB TO THE 'DM'       */
+/*   RT0038 - MONITOR FOR THE JOURNAL OR JOURNAL RECEIVER ALREADY   */
+/*            EXISTING                                              */
+/*   S01337 - SPLIT 'D' LIBRARY INTO 'DP' AND 'DV' LIBRARIES        */
+/*            NOTE - THIS PROGRAM NOW CHECKS FOR THAT THE           */
+/*            'DM' LIBRARY EXISTS ON THE MACHINE                    */
+/*   S01314 - CHANGES MADE DURING PTF INCORPORATION - SD7535 ( SET  */
+/*            UP STANDARD SETTLEMENTS FILE HEADER ) HAS BEEN MADE   */
+/*            REDUNDANT THEREFORE CALL SHOULD BE REMOVED.           */
+/*   E22254 - CHANGE MESSAGE TO GIVE ADVICE ON HOW TO RE-RUN        */
+/*            COMPONENT                                             */
+/*   S01251 - SYNON FIELD/PROGRAM NAME CHANGES                      */
+/*   BHF525 - SET UP DATA AREA REPSEQ CORRECTLY                     */
+/*   LN0567 - SET UP DATA AREA REPSEQ                               */
+/*   S01117 - RELEASE 10 CHANGES (NEW PROGRAM NAMES)                */
+/*   S01189 - COB IMPROVEMENTS PHASE 2                              */
+/*   E17384 - ERROR MESSAGE THAT RECEIVER NEVER FULLY SAVED         */
+/*            ANSWERED BY PROGRAM.                                  */
+/*   E14569 - IF ACTIVE, COMMITMENT CONTROL MUST BE ENDED           */
+/*            BEFORE THE JOURNAL AND RECEIVER CAN BE DELETED        */
+/*   S01179 - AS400 CONVERSION                                      */
+/*   S01168 - SD SYNON CALL NEW PROGRAMS                            */
+/*   S01147 - Release 22 : UPDATES JNSTAT                           */
+/*   S01125 - Release 21 : Include SD7535 (Set-up Standard          */
+/*            Settlement Instructions header)                       */
+/*   E80899 - MPHAS SHOULD BE SET TO PHASE 'D' NOT 'E'              */
+/*                                                                  */
+/********************************************************************/
+             PGM
+/*  */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+             DCL        VAR(&JOB)     TYPE(*CHAR)  LEN(10)
+/**********  DCL        VAR(&DLIB)    TYPE(*CHAR)  LEN(10)             *S01337*/
+             DCL        VAR(&DMLIB)   TYPE(*CHAR)  LEN(10)            /*S01337*/
+             DCL        VAR(&JLIB)    TYPE(*CHAR)  LEN(6)
+             DCLF       FILE(SDC08DF)
+/**********  DCLDTAARA  DTAARA(MPHAS)                               *  *S01179*/
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                /*S01179*/
+/**********  DCLDTAARA  DTAARA(SDSTAT)                              *  *S01179*/
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)             /*S01179*/
+/**********  DCLDTAARA  DTAARA(JNSTAT)                              *  *S01179*/
+             DCL        VAR(&JNSTAT) TYPE(*CHAR) LEN(200)             /*S01179*/
+             DCL        VAR(&CBSTAT) TYPE(*CHAR) LEN(50)              /*S01189*/
+/************DCL        VAR(&MIDAS) TYPE(*CHAR) LEN(500)                    */ /*078810*/ /*CSC012*/
+             DCL        VAR(&AOMMOD) TYPE(*CHAR) LEN(200)             /*093707*/
+             DCL        VAR(&RTNC) TYPE(*CHAR) LEN(7)                 /*093707*/
+/*                                                                      CCB009*/
+/* Declare variable CCB009 - flag for switchable feature                CCB009*/
+/*                                                                      CCB009*/
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)               /*CCB009*/
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CCB009*/
+/*/COPY WNCPYSRC,SDC08001                                            */
+/*  */
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+/*                                                                      CCB009*/
+/** Check for Switchable feature CCB009.                                CCB009*/
+/*                                                                      CCB009*/
+             CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
+                          'CCB009' &AOFMT)                            /*CCB009*/
+/**/                                                                  /*LN0567*/
+/* CREATE DTAARA REPSEQ IF NOT YET CREATED + SET INITIAL VALUE TO ZERO *LN0567*/
+/**/                                                                  /*LN0567*/
+             CHKOBJ     OBJ(REPSEQ) OBJTYPE(*DTAARA)                  /*LN0567*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                       /*LN0567*/
+             CRTDTAARA  DTAARA(QTEMP/REPSEQ) TYPE(*CHAR) LEN(5)       /*LN0567*/
+             ENDDO                                                    /*LN0567*/
+/**/                                                                  /*LN0567*/
+/*********   CHGDTAARA  DTAARA(REPSEQ (1 5)) VALUE(0)          /*LN0567 BHF525*/
+/* REPSEQ should be initialised to '00001' to allow the component name *E40273*/
+/* and component sequence to be found when ZSFILE called               *E40273*/
+/**********  CHGDTAARA  DTAARA(REPSEQ (1 5)) VALUE('00000')   /*BHF525* E40273*/
+             CHGDTAARA  DTAARA(REPSEQ (1 5)) VALUE('00001')           /*E40273*/
+/**/                                                                  /*LN0567*/
+             RTVJOBA    JOB(&JOB)
+/**********  RCVDTAARA  DTAARA(MPHAS)                               *  *S01179*/
+             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                  /*S01179*/
+/*  */
+             IF         COND(&MPHAS *NE ' ') THEN(SNDPGMMSG +
+                          MSG('This component has already been +
+                          run.  If you wish to re-run the +
+                          component, clear the Master Database +
+                          library using the command CLRDTALIB') +
+                          TOMSGQ(&JOB))                               /*RT0037*/
+/*************************MSG('COMPONENT HAS ALREADY BEEN RUN. IF +
+/*************************YOU WISH TO RE=RUN COMPONENT, CLEAR THE +
+/*************************DATA LIBRARY WITH THE CLRDTALIB COMMAND') +
+/*************************TOMSGQ(&JOB))                               /*RT0037*/
+/*************************MSG('COMPONENT HAS ALREADY BEEN RUN') +      *E22254*/
+/*************************TOMSGQ(&JOB))                                *E22254*/
+             ELSE       CMD(DO)
+                INZPFM     FILE(PHASA)  TOTRCDS(1)
+/*        PHASE FILE ALREADY CONTAINS RECORDS                       */
+                MONMSG     MSGID(CPF3132) EXEC(DO)
+             SNDPGMMSG  MSG('This component has already been run.  +
+                          If you wish to re-run the component, +
+                          clear the Master Database library using +
+                          the command CLRDTALIB') TOMSGQ(&JOB)        /*RT0037*/
+/******************SNDPGMMSG MSG('COMPONENT HAS ALREADY BEEN RUN. IF +
+/******************       YOU WISH TO RE=RUN COMPONENT, CLEAR THE +
+/******************       DATA LIBRARY WITH THE CLRDTALIB COMMAND') +
+/******************          TOMSGQ(&JOB)                             /*RTO037*/
+/******************SNDPGMMSG MSG('COMPONENT HAS ALREADY BEEN RUN') +   *E22254*/
+/******************          TOMSGQ(&JOB)                              *E22254*/
+                   RETURN  /* EXIT FROM PROGRAM */
+                ENDDO
+/*************  RCVDTAARA  DTAARA(SDSTAT)                           *  *S01179*/
+                RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)             /*S01179*/
+/*       SET UP WORK FIELDS                                         */
+                CHGVAR     VAR(&PGMNAM) VALUE('SDC08')
+                CHGVAR     VAR(&IN99) VALUE('1')
+                CHGVAR     VAR(&LIBR) VALUE(%SST(&SDSTAT 6 2))
+                CHGVAR     VAR(&WRKSTN) VALUE(%SST(&SDSTAT 23 10))
+ 
+/* Initialise header files. */                                                            /*CSC012*/
+             INZPFM     FILE(ACKEYAK) TOTRCDS(1)                                          /*CSC012*/
+             MONMSG     MSGID(CPF3132)                                                    /*CSC012*/
+                                                                                          /*CSC012*/
+             INZPFM     FILE(CLINTCA) TOTRCDS(1)                                          /*CSC012*/
+             MONMSG     MSGID(CPF3132)                                                    /*CSC012*/
+                                                                                          /*CSC012*/
+             INZPFM     FILE(SDBSHSPA) TOTRCDS(1)                                         /*CSC012*/
+             MONMSG     MSGID(CPF3132)                                                    /*CSC012*/
+                                                                                          /*CSC012*/
+             INZPFM     FILE(SDCUHSPA) TOTRCDS(1)                                         /*CSC012*/
+             MONMSG     MSGID(CPF3132)                                                    /*CSC012*/
+                                                                                          /*CSC012*/
+             INZPFM     FILE(TABLETA) TOTRCDS(1)                                          /*CSC012*/
+             MONMSG     MSGID(CPF3132)                                                    /*CSC012*/
+ 
+             INZPFM     FILE(BOOKDA) TOTRCDS(1)                                           /*CPK016*/
+             MONMSG     MSGID(CPF3132)                                                    /*CPK016*/
+                                                                      /*093707*/
+/*  Free PF/SDMMODPD   */                                             /*093707*/
+                                                                      /*093707*/
+             CALL       PGM(AOMMODR0) PARM(&RTNC '*FREE' &AOMMOD)     /*093707*/
+/*/COPY WNCPYSRC,SDC08002                                            */
+                                                                      /*093707*/
+DISPLAY:
+                SNDRCVF    RCDFMT(SDC08DF1)
+                SNDF       RCDFMT(SD08CLEAR)
+                RMVMSG     CLEAR(*ALL)
+                CHGVAR     VAR(&IN02) VALUE('0')  /* LIBRARY GROUP  */
+                CHGVAR     VAR(&IN06) VALUE('0')  /* OPERATOR WRKSTN*/
+/**/
+/* VALIDATION OF LIBRARY GROUP */
+             IF         COND(((%SST(&LIBR 1 1)) *EQ ' ') *OR  +
+                             ((%SST(&LIBR 2 1)) *EQ ' ')) THEN(DO)
+                SNDPGMMSG  MSG('Library Group Option not valid') +
+                                                        TOPGMQ(*SAME)
+                RCVMSG     RMV(*NO)
+                CHGVAR     VAR(&IN02) VALUE('1')
+             ENDDO
+             ELSE CMD(DO)
+/**********     CHGVAR     VAR(&DLIB) VALUE(&LIBR ***'DLIB')           *S01337*/
+/**********     CHKOBJ     OBJ(QSYS/&DLIB) OBJTYPE(*LIB)               *S01337*/
+/**********     CHGVAR     VAR(&DMLIB) VALUE(&LIBR ***'DMLIB')        /*S01337 BG18886*/
+                CHGVAR     VAR(&DMLIB) VALUE(&LIBR *CAT 'DMLIB')      /*S01337 BG18886*/
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,SDC08MP1                                            */
+                                                                      /*S01408*/
+                CHKOBJ     OBJ(QSYS/&DMLIB) OBJTYPE(*LIB)             /*S01337*/
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   RCVMSG
+/**********        SNDPGMMSG  MSG('Library Group '***&LIBR****'not valid') +  */ /*BG18886*/
+/**********                                             TOPGMQ(*SAME)         */ /*BG18886*/
+             SNDPGMMSG  MSG('Library Group ' *CAT &LIBR *BCAT 'not +
+                          valid') TOPGMQ(*SAME)                                  /*BG18886*/
+                   RCVMSG     RMV(*NO)
+                   CHGVAR     VAR(&IN02) VALUE('1')
+                ENDDO
+             ENDDO
+/* VALIDATION OF MIDAS OPERATOR DEVICE */
+             IF         COND(&WRKSTN *EQ ' ') THEN(DO)
+                SNDPGMMSG  MSG('A valid workstation name for the MIDAS +
+                       Operator Option is required') TOPGMQ(*SAME)
+                RCVMSG     RMV(*NO)
+                CHGVAR     VAR(&IN06) VALUE('1')
+             ENDDO
+             ELSE CMD(DO)
+                CHKOBJ     OBJ(&WRKSTN) OBJTYPE(*DEVD)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   RCVMSG
+/**********        SNDPGMMSG  MSG('Workstation ' ***&WRKSTN****'for the MIDAS +   */ /*BG18886*/
+             SNDPGMMSG  MSG('Workstation ' *CAT &WRKSTN *BCAT 'for +
+                          the MIDAS Operator Option does not +
+                          exist') TOPGMQ(*SAME)                                      /*BG18886*/
+                   RCVMSG     RMV(*NO)
+                   CHGVAR     VAR(&IN06) VALUE('1')
+                ENDDO
+             ENDDO
+/**/
+/*          IF THERE IS AN ERROR THEN REDISPLAY SCREEN              */
+/**/
+/**********  IF         COND(&IN02***&IN06) THEN(DO)                */ /*BG18886*/
+             IF         COND(&IN02 *OR &IN06) THEN(DO)                 /*BG18886*/
+                SNDF       RCDFMT(SD08MSGCTL)
+                GOTO       CMDLBL(DISPLAY)
+             ENDDO
+/**/
+/*          VALIDATION COMPLETE - CONTINUE PROCESSING               */
+/*************  RCVDTAARA  DTAARA(JNSTAT)                           *  *S01179*/
+                RTVDTAARA  DTAARA(JNSTAT) RTNVAR(&JNSTAT)             /*S01179*/
+                CHGVAR     VAR(%SST(&SDSTAT 6 2)) VALUE(&LIBR)
+                CHGVAR     VAR(%SST(&JNSTAT 147 2)) VALUE(&LIBR)      /*S01147*/
+                CHGVAR     VAR(%SST(&SDSTAT 8 3)) VALUE('OLD')
+                CHGVAR     VAR(%SST(&SDSTAT 23 10)) VALUE(&WRKSTN)
+                CHGVAR     VAR(%SST(&SDSTAT 110 5)) VALUE('BEGIN')    /*S01189*/
+/*************  SNDDTAARA  DTAARA(SDSTAT)                           *  *S01179*/
+                CHGDTAARA  DTAARA(SDSTAT) VALUE(&SDSTAT)              /*S01179*/
+/*************  SNDDTAARA  DTAARA(JNSTAT)                           *  *S01179*/
+                CHGDTAARA  DTAARA(JNSTAT) VALUE(&JNSTAT)              /*S01179*/
+                CHGDTAARA  DTAARA(RUNDAT (8 3)) VALUE(X'00000F')      /*S01168*/
+/**/                                                                  /*S01189*/
+/*       SET UP DATA AREA CBSTAT                                  */  /*S01189*/
+/**/                                                                  /*S01189*/
+/***************CHGVAR VAR(%SST(&CBSTAT 1 4)) VALUE('10.0')    /*S01189 078810*/
+/************RTVDTAARA  DTAARA(&DMLIB/MIDAS) RTNVAR(&MIDAS)    /*078810 CPK009*/
+/************RTVDTAARA  DTAARA(&DMLIB/MIDASDBA) RTNVAR(&MIDAS)              */ /*CPK009*/ /*CSC012*/
+/************CHGVAR     VAR(%SST(&CBSTAT 1 4)) VALUE(%SST(&MIDAS 20 +
+/************             4))                              /*078810*/ /*CPK008*/
+/************CHGVAR     VAR(%SST(&CBSTAT 1 3)) VALUE(%SST(&MIDAS 19 +
+/************             3))                                  /*CPK008 CPK009*/
+/************CHGVAR     VAR(%SST(&CBSTAT 4 1)) VALUE(%SST(&MIDAS 23 +
+/************             1))                                  /*CPK008 CPK009*/
+/************CHGVAR     VAR(%SST(&CBSTAT 1 3)) VALUE(%SST(&MIDAS +                        /*CSC012*/
+/************             7 3))                                             */ /*CPK009*/ /*CSC012*/
+/************CHGVAR     VAR(%SST(&CBSTAT 4 1)) VALUE(%SST(&MIDAS +                        /*CSC012*/
+/************             19 1))                                            */ /*CPK009*/ /*CSC012*/
+                CHGVAR VAR(%SST(&CBSTAT 14 3)) VALUE('000')           /*S01189*/
+                CHGVAR VAR(%SST(&CBSTAT 17 1)) VALUE('N')             /*S01189*/
+                CHGVAR VAR(%SST(&CBSTAT 18 2)) VALUE('00')            /*S01189*/
+                CHGVAR VAR(%SST(&CBSTAT 20 1)) VALUE('N')             /*S01189*/
+                CHGVAR VAR(%SST(&CBSTAT 32 1)) VALUE('N')             /*S01189*/
+                CHGVAR VAR(%SST(&CBSTAT 45 1)) VALUE('N')             /*S01189*/
+                CHGDTAARA DTAARA(CBSTAT) VALUE(&CBSTAT)               /*S01189*/
+/**/
+/********OUTPUT*HEADER*AND*TRAILERS********************************** /*074503*/
+/***************CALL       SD0800                                     /*074503*/
+/***************CALL       SD7535                 ****/   /*S01125*/  /*S01314*/
+/**/
+/* SD SYNON FILE INITIALISATION - NEW SDMMODPD (MMODF)              *  *S01168*/
+/***************CALL       SDD6XFR ''                           S01168  S01117*/
+                CALL       SD9006X ''                                 /*S01117*/
+/*                              - NEW SDFCTLPD (TABLETX)            *  *S01168*/
+/***************CALL       SDD7XFR ''                           S01168  S01117*/
+/***************CALL       SD0540X ''                      /*S01117*/ /*074503*/
+/*                                                                     *074503*/
+/** Call program to initialise headers & trailers                      *074503*/
+/*                                                                     *074503*/
+/***************CALL       PGM(SCC0050)                       /*074503 CSC009*/
+/**/                                                                  /*S01168*/
+/***************CHGDTAARA  DTAARA(MPHAS)  VALUE('E')*****************  *E80899*/
+                CHGDTAARA  DTAARA(MPHAS)  VALUE('D')                  /*E80899*/
+/**/
+/*       SET UP JOURNALLING FOR ICD MAINTENANCE                     */
+/**/
+                CHGVAR     VAR(&JLIB)  VALUE(&LIBR *TCAT 'JLIB')
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,SDC08MP2                                            */
+                                                                      /*S01408*/
+/**/
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+/** Delete journal before deleting receiver                           /*044835*/
+                DLTJRN     JRN(&JLIB/ICJRN)                           /*044835*/
+                MONMSG     MSGID(CPF2105)                             /*044835*/
+                DLTJRNRCV  JRNRCV(&JLIB/ICRCV001)                     /*RT0038*/
+                MONMSG     MSGID(CPF2105)                             /*RT0038*/
+/************   DLTJRN     JRN(&JLIB/ICRCV001)                 /*RT0038 044835*/
+/************   MONMSG     MSGID(CPF2105)                      /*RT0038 044835*/
+                CRTJRNRCV  JRNRCV(&JLIB/ICRCV001)
+                CRTJRN     JRN(&JLIB/ICJRN) JRNRCV(&JLIB/ICRCV001)
+             ENDDO                                                    /*CCB009*/
+/*/COPY WNCPYSRC,SDC08003                                            */
+/**/
+                CALL       SDC26
+/**/
+/* IF ACTIVE, COMMITMENT CONTROL MUST BE ENDED */
+/**/
+                ENDCMTCTL                                             /*E14569*/
+                MONMSG     MSGID(CPF8350)                             /*E14569*/
+/*/COPY WNCPYSRC,SDC08004                                            */
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+                DLTJRN     JRN(ICJRN)
+                CHGJOB     INQMSGRPY(*DFT)                            /*E17384*/
+                DLTJRNRCV  JRNRCV(ICRCV001)
+                CHGJOB     INQMSGRPY(*RQD)                            /*E17384*/
+             ENDDO                                                    /*CCB009*/
+/*/COPY WNCPYSRC,SDC08005                                            */
+/**/
+/*************  RCVDTAARA  DTAARA(SDSTAT)                           *  *S01179*/
+                RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)             /*S01179*/
+                ENDDO
+             ENDPGM

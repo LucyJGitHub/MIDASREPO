@@ -1,0 +1,403 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Extr margin takeon for profitability YTD')    *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Customer Lending Module                              *
+     F*                                                               *
+     F*  YTDMARG - Takeon for Year to date margin                     *
+     F*                                                               *
+     F*  Function: To set up the year to date margin figures which    *
+     F*            cannot be calculated from account keys             *
+     F*                                                               *
+     F*  (COB)                                                        *
+     F*                                                               *
+     F*  Called By:  LERC31  - Margin accruals & profitability Ext    *
+     F*                        - only at take-on                      *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPK009             Date 13Aug99               *
+      *                 BH3468             Date 22Sep92               *
+     F*                 BH3442             DATE 27AUG92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CPK009 - Recompile problem found at DBA R3.00 packaging.     *
+     F*  BH3468 - Margin should be negative for Parts. Sold.          *
+     F*  BH3442 - Conversion of ABLC to base currency is not          *
+     F*           necessary for foreign currency loans.               *
+     F*           Correct calculation of days live for loans if on    *
+     F*           last day accruals.                                  *
+     F*                                                               *
+     F*****************************************************************
+     FCLOANCL IF  E                    DISK
+     F            CLOANCLF                          KRENAMEFIRSTF
+     FCLOAN   IF  E           K        DISK
+     FLEPEMGD UF  E           K        DISK
+     FSDCURRPDIF  E                    DISK
+     F/EJECT
+     E                    CPY@    1   1 80
+     E                    COD       150  3   CYD    15
+     E                    PWR     1   4  4 0
+     E                    AGM        12 15 0             MARGINS
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/EJECT
+      ** Rename NLRA field in CLOANCK to distinguish it from same                             CPK009
+      ** named field defined in CLOANZ1                                                       CPK009
+      *                                                                                       CPK009
+     ICLOANCKF                                                                                CPK009
+     I              NLRA                            NLRACK                                    CPK009
+      *                                                                                       CPK009
+     I*
+     I            DS                              6
+     I                                        1   60ZDATE
+     I                                        1   20MNUS
+     I                                        3   40MN
+     I            DS
+     I* MARGIN DATA STRUCTURE
+     I*
+     I                                    P   1  960AGM
+     I                                    P   1   80MDJANA
+     I                                    P   9  160MDFEBA
+     I                                    P  17  240MDMARA
+     I                                    P  25  320MDAPRA
+     I                                    P  33  400MDMAYA
+     I                                    P  41  480MDJUNA
+     I                                    P  49  560MDJULA
+     I                                    P  57  640MDAUGA
+     I                                    P  65  720MDSEPA
+     I                                    P  73  800MDOCTA
+     I                                    P  81  880MDNOVA
+     I                                    P  89  960MDDECA
+     I            DS
+     I* DEFINE CURRENCY INFORMATION
+     I*
+     I                                        1  15 CYDDS
+     I                                        1  138SPT
+     I                                       14  140CDP
+     I                                       15  15 MDI
+     I*
+     ILDA       E DSLDA
+     I* DATABASE ERROR DS
+     IRUNDAT    E DSRUNDAT
+     I* RUNDAT DATA AREA
+     I*
+     ILERSTS    E DSLERSTS                                                  0078
+     I** Fees/Profitability enhancement status data area                    0078
+     I              FACHISD                         WHISST                  0078
+     I              LERC2030                        LERC20                  0078
+     I              LERC135                         LERC13                  0078
+     I              LERC315                         LERC35                  0078
+     I              LERC425                         LERC42                  0078
+     I              EOYFLAG                         EOYFLG                  0078
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  EXTERNAL DS FOR BANK DETAILS
+     I*
+     ISDGELR    E DSSDGELRPD                                              BH3442
+      *                                                                   BH3442
+      ** General Ledger Details.                                          BH3442
+      *                                                                   BH3442
+     ISDCURR    E DSSDCURRPD
+     I**  EXTERNAL DS FOR BANK DETAILS
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     I/EJECT
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVEL'LER220'  DBPGM
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C           *NAMVAR   DEFN           LERSTS                            0078
+     C                     IN   LERSTS                                      0078
+     C*
+     C*
+     C           KEYMAR    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           LNRF
+     C*
+     C           LNKEY     KLIST
+     C                     KFLD           LNRF
+     C                     KFLD           CREC
+     C*
+     C***  ACCESS BANK DETAILS FOR TITLE
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL@OPTN     DBKEY            ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'YTDMARG 'DBPGM
+     C                     OUT  LDA
+     C                     SETON                     79
+     C                     ELSE
+     C*
+     C***  CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C*
+     C           AGDFF     COMP 'M'                      98MMDDYY=98 ON
+     C*
+     C                     END
+      *                                                                   BH3442
+      ** Access General Ledger Details.                                   BH3442
+      *                                                                   BH3442
+     C**********           CALL 'AOGELRR0'                                BH3442              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD                           BH3442
+     C                     PARM '*FIRST ' @OPTN                           BH3442
+     C********** SDGELR    PARM SDGELR    DSFDY                           BH3442              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   BH3442
+     C           *LOCK     IN   LDA                                       BH3442
+     C                     MOVEL@OPTN     DBKEY            ************   BH3442
+     C                     Z-ADD2         DBASE            * DBERR 02 *   BH3442
+     C                     MOVEL'SDGELRPD'DBFILE           ************   BH3442
+     C                     MOVEL'YTDMARG 'DBPGM                           BH3442
+     C                     OUT  LDA                                       BH3442
+     C                     END                                            BH3442
+      *                                                                   BH3442
+     C* READ IN INFORMATION FOR CURRENCIES.
+     C* STORE IN ARRAY/DATASTRUCTURE.
+     C*
+     C                     MOVE *BLANK    MDI
+     C                     Z-ADD0         SPT
+     C                     Z-ADD0         CDP
+     C                     Z-ADD0         Z       30
+     C           *IN70     DOWEQ'0'
+     C                     READ SDCURRPD                 70
+     C           *IN70     IFEQ '0'
+     C                     ADD  1         Z
+     C                     MOVE A6CYCD    COD,Z
+     C                     MOVELA6SPRT    SPT              SPOT RATE
+     C                     MOVE A6NBDP    CDP              DEC.PLACES
+     C                     MOVE A6MDIN    MDI              MULT/DIV
+     C                     MOVE CYDDS     CYD,Z
+     C                     END
+     C                     END
+     C*
+     C* CHECK THE BASE CURRENCY DEFAULT CALCULATION BASIS ON SDCURRPD
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           BJCYCD
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C           A6DICB    OREQ *BLANKS
+     C                     SETON                     89
+     C           *LOCK     IN   LDA
+     C                     MOVELBJCYCD    DBKEY            ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVEL'YTDMARG' DBPGM
+     C                     OUT  LDA
+     C                     END
+     C*
+     C* CALCULATE THE NUMBER OF DAYS RELATED TO THE CALCULATION BASIS
+     C*
+     C           A6DICB    IFEQ '1'
+     C           A6DICB    OREQ '4'
+     C                     Z-ADD365       CALCB   30
+     C                     ELSE
+     C           A6DICB    IFEQ '6'
+     C                     Z-ADD366       CALCB
+     C                     ELSE
+     C                     Z-ADD360       CALCB
+     C                     END
+     C                     END
+     C                     Z-ADDA6NBDP    BASED   10
+     C*
+     C** Calculate the start of year date for margin calculation
+     C*
+     C           BJPEYD    ADD  1         SOYDT   50
+     C*
+     C** Convert STARMO-1 to date format in order to set up the month
+     C** number of last month
+     C*
+     C*
+     C           STARMO    SUB  32        ZDAYNO  50
+     C                     EXSR ZDATE2
+     C*
+     C** If the month end was in December, then there is no margin
+     C** adjustment to be made
+     C*
+     C           AGDFF     IFEQ 'D'
+     C           MN        ANDLT12
+     C           AGDFF     OREQ 'M'
+     C           MNUS      ANDLT12
+     C*
+     C** For each Cloan record adjust the margin amounts
+     C*
+     C                     READ FIRSTF                   20
+     C           *IN20     DOWEQ'0'
+     C           MARG      IFGT 0
+     C           KEYMAR    CHAINLEPEMGD              21
+     C*
+     C** Only do the margin calculation if there is a margin record on
+     C** the file already
+     C*
+     C           *IN21     IFEQ '0'
+     C                     MOVE 'B'       CREC    1
+     C           LNKEY     CHAINCLOAN                22
+     C           *IN22     IFEQ '0'
+     C           VDAT      ANDLTWHISST
+     C           MDAT      IFGT WHISST
+     C           MDAT      OREQ 0
+     C           MARG      DIV  CALCB     MARGIN  97H
+     C           ABLC      MULT MARGIN    MGAMNT 150
+     C*
+     C           MDAT      IFLT AGRDNB
+     C           MDAT      ANDGT0
+     C                     Z-ADDMDAT      ENDAY   50
+     C                     ELSE
+     C                     Z-ADDAGRDNB    ENDAY
+     C           ENDAY     ADD  1         ENDAY
+     C                     END
+     C*
+     C           VDAT      IFGE SOYDT
+     C           ENDAY     SUB  VDAT      DAYS    50
+     C                     ELSE
+     C           ENDAY     SUB  SOYDT     DAYS
+     C                     END
+     C*
+     C           MGAMNT    DIV  DAYS      MGAMNT
+      *                                                                   BH3468
+     C           PTYP      IFEQ 66                                        BH3468
+     C           PTYP      OREQ 67                                        BH3468
+     C                     MULT -1        MGAMNT                          BH3468
+     C                     END                                            BH3468
+     C*
+     C***Convert*the*value*into*base*currency*if*necessary
+     C*
+      *                                                                   BH3442
+      ** Conversion of MGAMNT not necessary - ABLC is in base currency.   BH3442
+      *                                                                   BH3442
+     C***********BJCYCD    IFNE CCY                                       BH3442
+     C***********          EXSR CCYCVT                                    BH3442
+     C***********          ELSE                                           BH3442
+     C           BASED     ADD  1         BP      10
+     C           MGAMNT    DIV  PWR,BP    MGAMNT
+     C***********          END                                            BH3442
+     C*
+     C           WHISST    ADD  1         ENDDAY  50
+      *                                                                   BH3442
+      ** For last day accruals do not include value date when             BH3442
+      ** calculating the number of days active for loans commencing       BH3442
+      ** this year.                                                       BH3442
+      *                                                                   BH3442
+     C***********VDAT      IFGT SOYDT                                     BH3442
+     C***********ENDDAY    SUB  VDAT      DAYACT  50                      BH3442
+     C***********          ELSE                                           BH3442
+     C***********ENDDAY    SUB  SOYDT     DAYACT                          BH3442
+     C***********          END                                            BH3442
+      *                                                                   BH3442
+     C           VDAT      IFGE SOYDT                                     BH3442
+     C           ENDDAY    SUB  VDAT      DAYACT  50                      BH3442
+     C           BKALDI    IFEQ 'Y'                                       BH3442
+     C                     SUB  1         DAYACT                          BH3442
+     C                     END                                            BH3442
+     C                     ELSE                                           BH3442
+     C           ENDDAY    SUB  SOYDT     DAYACT                          BH3442
+     C                     END                                            BH3442
+     C*
+     C           AGDFF     IFEQ 'D'
+     C                     Z-ADDMN        M       20
+     C           MGAMNT    MULT DAYACT    AGM,M
+     C                     ELSE
+     C                     Z-ADDMNUS      M
+     C           MGAMNT    MULT DAYACT    AGM,M
+     C                     END
+     C                     UPDATLEPEMGDF
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     READ FIRSTF                   20
+     C                     END
+     C                     END
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*****************************************************************
+     C*
+     C***  CCYCVT SUBROUTINE TO CONVERT AGGREGATE BALANCE TO BASE CCY
+     C*
+     C***  CALLED FROM: MAIN
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           CCYCVT    BEGSR
+     C*
+     C                     Z-ADD1         Z
+     C           CCY       LOKUPCOD,Z                    20
+     C                     MOVE CYD,Z     CYDDS
+     C           MDI       IFEQ 'M'
+     C                     MULT SPT       MGAMNT
+     C                     ELSE
+     C                     DIV  SPT       MGAMNT    H
+     C                     END
+     C           CDP       ADD  1         DP      10
+     C                     DIV  PWR,DP    MGAMNT    H
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   PWR  - POWER ARRAY FOR CONVERSION OF AGGREGATE AMOUNTS
+0001
+0010
+0100
+1000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

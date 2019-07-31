@@ -1,0 +1,329 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Cash Mgt Check Field is an Ext A/c& Name')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RECMEXAN - RE Cash Management Check Field is   External      *
+      *             Account and Name                                  *
+      *                                                               *
+      *  Function:  This user check program will check if the         *
+      *             account is an external account & name attached to *
+      *             a specific top account in a Zero Balancing/       *
+      *             Sweeping  Hierarchy.                              *
+      *             This program can also check for external a/c's    *
+      *             name only.                                        *
+      *                                                               *
+      *  Called By: ME1501  -  Auto-Gen Criteria Analysis             *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 AR676213           Date 19Nov10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG24998           Date 17Jul09               *
+      *                 CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 16May06               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 211499  *CREATE    Date 24Jan03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
+      *             (Child: AR676229)                                 *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  BUG24998 - Bank operation code is missing (Recompile)        *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  211499 - This program is very much the same as RECMEXTA      *
+      *           with only the addition of checking whether the name *
+      *           is the same as the external account's name          *
+      *                                                               *
+      *****************************************************************
+      *
+     FREZSHLJ1IF  E           K        DISK
+     FREZSHDL0IF  E           K        DISK
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+     I/COPY MECPYSRC,SME1100P
+     IACCT      E DSACCNTAB
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+     ISCSARD    E DSSCSARDPD
+     I              LCD                             WLCD
+     I            DS
+      *
+      *  Split the detail fields into field tag name and contents
+      *
+     I                                        1 256 WUFDDT
+     I                                        1   5 WUMTAG
+     I                                        6   6 WUFDIN
+     I                                        6 256 WUTGCK
+     I                                        7 256 WUTGVL
+     I**********                              7  24 WUACCO                                    CGL029
+     I                                        7  30 WUACCO                                    CGL029
+     I                                        7  120WUCNUM
+     I                                        7  12 WUCNUA
+     I                                       13  15 WUCURR
+     I**********                             16  190WUACCD                                    CGL029
+     I**********                             16  19 WUACCA                                    CGL029
+     I**********                             20  210WUACSQ                                    CGL029
+     I**********                             20  21 WUACSA                                    CGL029
+     I**********                             22  24 WUBRCA                                    CGL029
+     I**********                             25 256 WUORIG                                    CGL029
+     I                                       16  250WUACCD                                    CGL029
+     I                                       16  25 WUACCA                                    CGL029
+     I                                       26  270WUACSQ                                    CGL029
+     I                                       26  27 WUACSA                                    CGL029
+     I                                       28  30 WUBRCA                                    CGL029
+     I                                       31 256 WUORIG                                    CGL029
+      *
+     I**********                             25  59 @ACCLN                                    CGL029
+     I**********                             25  25 @SLASH                                    CGL029
+     I**********                             26  59 @EXTAC                                    CGL029
+     I                                       31  65 @ACCLN                                    CGL029
+     I                                       31  31 @SLASH                                    CGL029
+     I                                       32  65 @EXTAC                                    CGL029
+      *
+     I**********                             60  94 @XNAME                                    CGL029
+     I                                       66 100 @XNAME                                    CGL029
+      *
+     I**********                             25  59 @YNAME                                    CGL029
+     I                                       31  65 @YNAME                                    CGL029
+      *
+     I            DS
+     I                                        1  35 @TOP
+     I                                        1   1 @SLSHE
+     I                                        2  110@RETL
+     I                                       12  35 @BL24
+      *
+     I**********                              2  19 @GL                                       CGL029
+     I                                        2  25 @GL                                       CGL029
+     I                                        2   4 @BRCA
+     I                                        5  100@CNUM
+     I                                       11  13 @CCY
+     I**********                             14  170@ACOD                                     CGL029
+     I**********                             18  190@ACSQ                                     CGL029
+     I**********                             20  35 @BL16                                     CGL029
+     I                                       14  230@ACOD                                     CGL029
+     I                                       24  250@ACSQ                                     CGL029
+     I                                       26  35 @BL16                                     CGL029
+      *
+     I                                        2  35 @IBAN
+      *****************************************************************
+      *
+      ** Define entry parameters
+     C           *ENTRY    PLIST
+      ** Return Code Parameter
+     C                     PARM           RTNCDE  7
+      ** Incoming Message Header
+     C                     PARM           PHEAD
+      ** Incoming Message Data
+     C                     PARM           PDATA
+     C                     PARM           PDAT2                                               CSW209
+      ** Subset of FT message data relating for a specific message tag
+     C                     PARM           SBSMSG251
+      ** Pattern which can be applied to the function
+     C                     PARM           PATTRN 32
+      ** Operator (GE, LE, GT, LT)
+     C                     PARM           POPER   2
+      ** Message tag
+     C                     PARM           PMTAG   5
+      ** Logging require
+     C                     PARM           PREPT   1
+      ** Program for messages
+     C                     PARM           PCPGM  10
+      ** Return Field
+     C                     PARM           RETFLD256
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      * Define Key List
+     C           KYACCO    KLIST
+     C**********           KFLD           KCNUM   60                                         CSD027A
+     C                     KFLD           KCNUM   6                                          CSD027A
+     C                     KFLD           KCCY    3
+     C**********           KFLD           KACCD   40                                          CGL029
+     C                     KFLD           KACCD  100                                          CGL029
+     C                     KFLD           KACSQ   20
+     C                     KFLD           KBRCA   3
+      *
+      *  Check if IBAN feature is installed
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'CFT004'  P@SARD  6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      ** Allow IBAN processing
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVE 'Y'       CFT004  1
+     C                     ELSE
+     C                     MOVE 'N'       CFT004
+     C                     END
+      *
+      * Begin Processing
+      *
+     C                     MOVE *BLANK    Q       50
+     C                     MOVE PCPGM     ##PGM  10
+     C                     MOVEL'F'       RTNCDE    P
+     C                     MOVE *BLANK    RETFLD
+     C                     MOVELSBSMSG    WUTGCK
+     C                     MOVE 'N'       FOUND   1
+     C           PMTPY     IFEQ '101'
+     C                     MOVELPH50      DSTRAN
+     C                     ELSE
+     C                     MOVELP59       DSTRAN
+     C                     ENDIF
+     C                     MOVELTMLIN     @TOP
+      *
+     C* Get Top account
+     C           @SLSHE    IFEQ '/'
+     C                     SELEC
+     C* Get GL account if retail given
+     C           @BL24     WHEQ *BLANK
+     C                     MOVEL@RETL     P@RETL
+     C                     CALL 'AOACCTR0'             90
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM           P@RETL 10
+     C                     PARM *BLANK    P@CNUM  6
+     C                     PARM *BLANK    P@CUCD  3
+     C**********           PARM *BLANK    P@ACCD  4                                           CGL029
+     C                     PARM *BLANK    P@ACCD 10                                           CGL029
+     C                     PARM *BLANK    P@ACSQ  2
+     C                     PARM *BLANK    P@BRCA  3
+     C           ACCT      PARM           ACCT
+     C*
+     C           P@RTCD    IFEQ *BLANK
+     C           RECI      ANDEQ'D'
+     C                     MOVELBRCA      KBRCA
+     C**********           Z-ADDCNUM      KCNUM                                              CSD027A
+     C                     MOVE CNUM      KCNUM                                              CSD027A
+     C                     MOVELCCY       KCCY
+     C                     Z-ADDACOD      KACCD
+     C                     Z-ADDACSQ      KACSQ
+     C                     MOVEL'Y'       FOUND
+     C                     ENDIF
+     C*
+     C* CHECK  IF GL ACCOUNT
+     C           @BL16     WHEQ *BLANK
+     C                     MOVEL@BRCA     P@BRCA
+     C                     MOVE @CNUM     P@CNUM
+     C                     MOVEL@CCY      P@CUCD
+     C                     MOVE @ACOD     P@ACCD
+     C                     MOVE @ACSQ     P@ACSQ
+     C                     CALL 'AOACCTR0'             90
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM *BLANK    P@RETL 10
+     C                     PARM           P@CNUM  6
+     C                     PARM           P@CUCD  3
+     C**********           PARM           P@ACCD  4                                           CGL029
+     C                     PARM           P@ACCD                                              CGL029
+     C                     PARM           P@ACSQ  2
+     C                     PARM           P@BRCA  3
+     C           ACCT      PARM           ACCT
+     C*
+     C           P@RTCD    IFEQ *BLANK
+     C           RECI      ANDEQ'D'
+     C                     MOVELBRCA      KBRCA
+     C**********           Z-ADDCNUM      KCNUM                                              CSD027A
+     C                     MOVE CNUM      KCNUM                                              CSD027A
+     C                     MOVELCCY       KCCY
+     C                     Z-ADDACOD      KACCD
+     C                     Z-ADDACSQ      KACSQ
+     C                     MOVEL'Y'       FOUND
+     C                     ENDIF
+     C*
+     C* Get GL account if IBAN given
+     C           CFT004    WHEQ 'Y'
+     C                     CALL 'AOIBANR4'             90
+     C                     PARM           P@RTCD
+     C                     PARM '*VERIFY' P@OPTN
+     C                     PARM           @IBAN
+     C           ACCT      PARM ACCT      DSSDY
+     C*
+     C           P@RTCD    IFEQ *BLANK
+     C           RECI      ANDEQ'D'
+     C                     MOVELBRCA      KBRCA
+     C**********           Z-ADDCNUM      KCNUM                                              CSD027A
+     C                     MOVE CNUM      KCNUM                                              CSD027A
+     C                     MOVELCCY       KCCY
+     C                     Z-ADDACOD      KACCD
+     C                     Z-ADDACSQ      KACSQ
+     C                     MOVEL'Y'       FOUND
+     C                     ENDIF
+     C*
+     C                     ENDSL
+     C                     ENDIF
+     C*
+     C* Check if Top Account
+     C           FOUND     IFEQ 'Y'
+     C           KYACCO    CHAINREZSHLJ1             70
+     C* Now, access details file for the external account.
+     C           *IN70     IFEQ '0'
+     C           CLHIER    CHAINREZSHDL0             70
+     C           *IN70     IFEQ '0'
+     C           POPER     ANDEQ'EQ'
+     C* Now, compare names must be equal
+     C*    use @XNAME if external account present, else @YNAME
+     C           @SLASH    IFEQ '/'
+     C           ZDEXA2    ANDEQ@XNAME
+     C           @SLASH    ORNE '/'
+     C           ZDEXA2    ANDEQ@YNAME
+     C                     MOVEL'T'       RTNCDE    P
+     C           RETFLD    CAT  '*EXTA':0 RETFLD
+     C                     CAT  @EXTAC:0  RETFLD
+     C                     CAT  '/':0     RETFLD
+     C                     ELSE
+     C           MEMSDT    CAT  PMTAG:0   MEMSDT
+     C                     MOVELPCPGM     MEPGMQ
+     C                     MOVEL'RE75960' MEMSID
+     C                     MOVEL'REUSRMSG'MEMSGF           Msg file
+     C                     EXSR MESNMS
+     C                     GOTO RETN
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *  Log, if test failed.
+     C           PREPT     IFEQ 'Y'
+     C           RTNCDE    ANDNE'T      '
+     C           MEMSDT    CAT  PMTAG:0   MEMSDT
+     C                     MOVELPCPGM     MEPGMQ
+     C                     MOVEL'RE75407' MEMSID
+     C                     MOVEL'REUSRMSG'MEMSGF           Msg file
+     C                     EXSR MESNMS
+     C                     ENDIF
+      *
+     C           RETN      TAG
+      *
+     C                     RETRN
+     C/COPY MECPYSRC,SMESNMSC
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2002

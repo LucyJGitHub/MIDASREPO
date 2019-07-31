@@ -1,0 +1,134 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Stamp Tax Update Hist Principal Movements')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger                                      */
+/*                                                                   */
+/*       GLC008150 - Stamp Tax Historic Principal Movements          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR851833           Date 10Nov11              */
+/*                      AR853257           Date 04Nov11              */
+/*                      CER049  *CREATE    Date 06Dec10              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR851833 - Stamp tax amount is excluded in the computation  */
+/*                  of settlement amount                             */
+/*       AR853257 - Account Keys for FT were not generated           */
+/*       CER049 - Stamp Tax                                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&WID) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited 2010')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Main Processing */
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Retrieve the system prefix xx */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')
+ 
+/* Allocate object and check for restart */
+ 
+             ALCOBJ     OBJ((GLHPMPPD *FILE *EXCL)) WAIT(120)
+             CALL       CB0160 PARM(&CNAM &CSEQ &BUSY)
+ 
+/* No restart - save object */
+ 
+/**********  IF         COND(&BUSY *EQ 'N') THEN(DO) */                                 /*AR851833*/
+             IF         COND((&BUSY *EQ 'N') *OR (&BUSY *EQ +
+                          ' ')) THEN(DO)                                                /*AR851833*/
+ 
+/* If no save file create */
+ 
+             CHKOBJ     OBJ(&DILIB/SAVFGLHPMP) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CRTSAVF    FILE(&DILIB/SAVFGLHPMP) TEXT('Save of GLHPMPPD +
+                          before update')
+             ENDDO
+             CLRSAVF    FILE(&DILIB/SAVFGLHPMP)
+ 
+/* Save data */
+ 
+             SAVOBJ     OBJ(GLHPMPPD) LIB(&DMLIB) DEV(*SAVF) +
+                          SAVF(&DILIB/SAVFGLHPMP)
+ 
+/* Set active flag */
+ 
+             CHGVAR     VAR(&BUSY) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+ 
+             ENDDO
+             ELSE       CMD(DO)
+ 
+/* Restore copy of GLHPMPPD */
+ 
+             RSTOBJ     OBJ(GLHPMPPD) +
+                        SAVLIB(&DMLIB) +
+                          DEV(*SAVF) SAVF(&DILIB/SAVFGLHPMP)
+             ENDDO
+ 
+/* Start commitment control */
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+             CHGLF      FILE(GLVCLSL0) MAXMBRS(*NOMAX)
+             ADDLFM     FILE(GLVCLSL0) MBR(LEDLAKY)
+             MONMSG     MSGID(CPF7306)
+ 
+             OVRDBF     FILE(GLVCLSL0) MBR(LEDLAKY)
+             CALL       PGM(GL008150)
+ 
+             DLTOVR     FILE(GLVCLSL0)
+             RMVM       FILE(GLVCLSL0) MBR(LEDLAKY)
+             CHGLF      FILE(GLVCLSL0) MAXMBRS(1)
+ 
+             RTVJOBA    JOB(&WID) SWS(&SWS)
+ 
+             IF COND(%SWITCH(XXXXXX00)) +
+             THEN(DO)
+/* Set OK flag */
+             CHGVAR     VAR(&BUSY) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+ 
+             COMMIT
+             GOTO CMDLBL(END)
+             ENDDO
+ 
+ ABNOR:      SNDPGMMSG  MSG('Call to Program GLC008150 ended +
+                             abnormally') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             CHGJOB     SWS(XXXXXX11)                                                   /*AR853257*/
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ END:        ENDCMTCTL
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Banking Systems Ltd. 2010')
+ 
+             ENDPGM

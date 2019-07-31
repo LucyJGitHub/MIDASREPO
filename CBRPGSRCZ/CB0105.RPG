@@ -1,0 +1,290 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Update on request components')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close Of Business Processing                         *
+      *                                                               *
+      *  CB0105 - UPDATE ALL ON-REQUEST REPORTS                       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1096560          Date 18Mar13               *
+      *                 AR888771           Date 24Jan12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 204813               Date 03Nov03             *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 074287               Date 02APR96             *
+      *                 E38954               Date 29APR92             *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1096560 - Report SE0915 was not generated (Child:AR1096561)*
+      *  AR888771 - Several LE components failed during COB. On-      *
+      *             request components should not be executed when    *
+      *             corresponding switchable feature is disabled.     *
+      *  204813 - Include processing for non-report related on-req    *
+      *           components.                                         *
+      *  074287 - When the component name and component sequence no.  *
+      *           is blank then do not process the record; this can   *
+      *           happened if a report is run interactively when MPHAS*
+      *           is in phase 'C', 'D' or 'E'.                        *
+      *  E38954 - Field DBPGM is not blanked out before pgm name is   *
+      *           moved in.                                           *
+      *                                                               *
+      *****************************************************************
+     FFCRREQL4IP  E           K        DISK
+     FCBCOBRL0IF  E           K        DISK                                                   204813
+     FCBCOMSL0UF  E           K        DISK
+     FSCSARCL2IF  E           K        DISK                                                 AR888771
+     F********************************************************************
+     F*
+     F*         FUNCTION OF INDICATORS
+     F*
+     F*   01    RECORDS ON FCRRREQL4
+      *   78    CHAIN FOR SCSARCL2 for REPORT subroutine                                    AR888771
+      *   79    CHAIN FOR SCSARCL2 for ORCOMP subroutine                                    AR888771
+     F*   81    CHAIN FAIL FOR CBCOMSL0
+     F*   82    CHAIN FAIL FOR CBCOMSL0 for CBCOBR processing                                 204813
+     F*
+     F********************************************************************
+     E                    CPY@    1   1 80
+     I@RREQAG
+     I                                              D5RNAML3
+     I                                              D5COTTL2
+     I                                              D5CSEQL1
+     ICMPNDS      DS
+     I*
+     I** DATASTRUCTURE FOR DATABASE ERROR FIELDS IN  CBCOMSL0
+     I** (for RCF)                                                                            204813
+     I*
+     I                                        1  10 D5COTT
+     I                                       11  15 D5CSEQ
+     ICOBRDS      DS                                                                          204813
+      *                                                                                       204813
+      ** DATASTRUCTURE FOR DATABASE ERROR FIELDS IN CBCOMSL0                                  204813
+      ** (for CBCOBRL0)                                                                       204813
+      *                                                                                       204813
+     I                                        1  10 CRCOTT                                    204813
+     I                                       11  15 CRCSEQ                                    204813
+      *                                                                                       204813
+     ILDA        UDS                            256
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR STORE
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+      /EJECT
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C** INITIAL PROCESSING
+     C*
+     C** COMPONENTS KEY LIST
+     C*
+     C           CMPN      KLIST
+     C                     KFLD           D5COTT
+     C                     KFLD           D5CSEQ
+      *                                                                                      204813
+      ** CBCOBRL0 Key List                                                                   204813
+      *                                                                                      204813
+     C           COBR      KLIST                                                             204813
+     C                     KFLD           CRCOTT                                             204813
+     C                     KFLD           CRCSEQ                                             204813
+     C*                                                                                      204813
+     C** IF DETAIL RECORDS EXIST, SET ON INDICATOR
+     C*
+     C                     SETON                     01
+     C*
+     C** SET UP DATABASE PROGRAM NAME
+     C*
+     CL1                   MOVEL*BLANK    DBPGM                           E38954
+     CL1                   MOVEL'CB0105'  DBPGM
+     C*
+     C** NO DETAIL TIME PROCESSING: PERFORM ALL PROCESSING ON CHANGE OF
+     C** REPORT NAME, IF RECORDS HAVE BEEN FOUND
+     C*
+     CL1 01                EXSR REPORT
+     CLR                   EXSR ORCOMP                                                        204813
+     C*
+      /EJECT
+     C********************************************************************
+     C*
+     C*               INDEX OF SUBROUTINES
+     C*
+     C* REPORT - PROCESSING ON CHANGE OF REPORT NAME
+     C* ORCOMP - Processing for on-request components                                         204813
+     C* DBERR  - PROCESSING FOR DATABASE ERRORS
+     C* *PSSR  - STANDARD ERROR ROUTINE
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  S/R REPORT - TO PROCESS EACH REPORT NAME
+     C*  CALLED FROM MAIN PROCESSING ON CHANGE OF REPORT NAME
+     C*  CALLS ERROR
+     C*
+     C********************************************************************
+     C           REPORT    BEGSR
+     C*
+     C** If component name and sequence number are blank then do not      074287
+     C** process the record.                                              074287
+     C*                                                                   074287
+     C           D5COTT    IFNE *BLANK                                    074287
+     C           D5CSEQ    ANDNE*BLANK                                    074287
+      *                                                                                     AR888771
+      ** Check if the report component is from a switchable feature                         AR888771
+      *  and check if it is enabled                                                         AR888771
+      *                                                                                     AR888771
+     C                     MOVEL'N'       WSARD   1                                         AR888771
+     C           CMPN      CHAINSCSARCL2             79                                     AR888771
+     C           *IN79     IFEQ '0'                                                         AR888771
+     C                     CALL 'AOSARDR0'                                                  AR888771
+     C                     PARM *BLANKS   @RTCD   7                                         AR888771
+     C                     PARM '*VERIFY' @OPTN   7                                         AR888771
+     C                     PARM ACSARN    @SARD   6                                         AR888771
+     C           @RTCD     IFEQ *BLANKS                                                     AR888771
+     C           ACAVAL    OREQ 'N'                                                        AR1096560
+     C                     MOVEL'Y'       WSARD                                             AR888771
+     C                     ENDIF                                                            AR888771
+     C                     ENDIF                                                            AR888771
+     C*                                                                   074287
+     C** ACCESS COMPONENT RECORD FOR THE REPORT
+     C*
+     C           *IN79     IFEQ '1'                                                         AR888771
+     C           WSARD     OREQ 'Y'                                                         AR888771
+     C           CMPN      CHAINCBCOMSL0             81
+     C*
+     C** DATABASE ERROR IF NO RECORD FOUND
+     C*
+     C           *IN81     IFEQ '1'
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'CBCOMSL0'DBFILE
+     C                     MOVELCMPNDS    DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** UPDATE 'SELECT FOR TODAY'S COB' FIELD
+     C*
+     C                     MOVE 'Y'       DHCRQD
+     C                     UPDAT@DHREGG
+     C*                                                                   074287
+     C                     END                                            074287
+     C                     ENDIF                                                            AR888771
+     C*                                                                   074287
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+      ********************************************************************                    204813
+      *                                                                                       204813
+      *  S/R ORCOMP - To process each componant from the on-request                           204813
+      *               components file                                                         204813
+      *                                                                                       204813
+      *  Called from Main Processing after the report processing is                           204813
+      *  complete                                                                             204813
+      *                                                                                       204813
+      *  Calls ERROR                                                                          204813
+      *                                                                                       204813
+      ********************************************************************                    204813
+     C           ORCOMP    BEGSR                                                              204813
+      *                                                                                       204813
+     C                     READ CBCOBRL0                 99                                   204813
+      *                                                                                       204813
+     C           *IN99     DOWEQ*OFF                                                          204813
+      *                                                                                       204813
+      ** If component name and sequence number are blank then do not                          204813
+      ** process the record.                                                                  204813
+      *                                                                                       204813
+     C           CRCOTT    IFNE *BLANK                                                        204813
+     C           CRCSEQ    ANDNE*BLANK                                                        204813
+      *                                                                                     AR888771
+      ** Check if the component is from a switchable feature and                            AR888771
+      *  check if it is enabled                                                             AR888771
+      *                                                                                     AR888771
+     C                     MOVEL'N'       WSARD                                             AR888771
+     C           COBR      CHAINSCSARCL2             78                                     AR888771
+     C           *IN78     IFEQ '0'                                                         AR888771
+     C                     CALL 'AOSARDR0'                                                  AR888771
+     C                     PARM *BLANKS   @RTCD                                             AR888771
+     C                     PARM '*VERIFY' @OPTN                                             AR888771
+     C                     PARM ACSARN    @SARD                                             AR888771
+     C           @RTCD     IFEQ *BLANKS                                                     AR888771
+     C                     MOVEL'Y'       WSARD                                             AR888771
+     C                     ENDIF                                                            AR888771
+     C                     ENDIF                                                            AR888771
+      *                                                                                       204813
+      ** Access component record on the runtime components file                               204813
+      *                                                                                       204813
+     C           *IN78     IFEQ '1'                                                         AR888771
+     C           WSARD     OREQ 'Y'                                                         AR888771
+     C           COBR      CHAINCBCOMSL0             82                                       204813
+      *                                                                                       204813
+      ** Database error if no record found                                                    204813
+      *                                                                                       204813
+     C           *IN82     IFEQ '1'                                                           204813
+     C                     Z-ADD3         DBASE                                               204813
+     C                     MOVEL'CBCOMSL0'DBFILE                                              204813
+     C                     MOVELCOBRDS    DBKEY                                               204813
+     C                     EXSR DBERR                                                         204813
+     C                     END                                                                204813
+      *                                                                                       204813
+      ** Update 'Select for Today's COB' field                                                204813
+      *                                                                                       204813
+     C                     MOVE 'Y'       DHCRQD                                              204813
+     C                     UPDAT@DHREGG                                                       204813
+     C                     ENDIF                                                            AR888771
+      *                                                                                       204813
+     C                     END                                                                204813
+      *                                                                                       204813
+      ** Read the next record                                                                 204813
+      *                                                                                       204813
+     C                     READ CBCOBRL0                 99                                   204813
+      *                                                                                       204813
+     C                     END                                                                204813
+      *                                                                                       204813
+     C                     SETON                     LR                                       204813
+     C                     RETRN                                                              204813
+      *                                                                                       204813
+     C                     ENDSR                                                              204813
+     C********************************************************************                    204813
+      /EJECT                                                                                  204813
+     C********************************************************************
+     C*
+     C*  S/R DBERR - TO PROCESS DATABASE ERRORS AND TERMINATE PROGRAM
+     C*  CALLED FROM REPORT
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  S/R *PSSR - ERROR ROUTINE
+     C*  CALLED FROM DBERR
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+** CPY@
+(c) Finastra International Limited 2001

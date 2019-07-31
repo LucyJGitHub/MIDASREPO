@@ -1,0 +1,324 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Master file set up')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE2001 - Master File set up                                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CRE023  *CREATE    Date 29Jul05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD101 - Password Encryption                                 *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CRE023 - 2 O'clock Flag Upgrade to MidasPlus                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     F*****************************************************************
+     FRE2001DFCF  E                    WORKSTN
+     FREOSECPAUF  E                    DISK         KCOMIT       A
+     FREOSECPTUF  E                    DISK         KCOMIT       A
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **
+      **   INDICATORS FUNCTION
+      **
+      **      77    Master ID already set
+      **      88    Error indicator
+      **      89    Master ID installed successfully
+      *****************************************************
+     E                    NCHR   37  37  1
+     E                    ECOD   41  82  1
+     E                    AMSG    1   4 30
+     E                    CHEK        8  1
+     E                    PSWD        8  1
+     E                    DUMY        8  1                                                    CSD101
+      *
+     IPSDS       SDS
+     I                                      244 246 PWSID
+     I                                      247 248 WSID
+     I                                      254 263 USRID
+      *
+      ** Local data area
+      *          UDS
+      *                                     252 2560SIZE
+      *
+      ** Data structure to provide text on COMIT entry in journal
+     ICMTTXT      DS                            306
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  20 WSIDX
+     I                                       21  260MTIME
+     I                                       27  27 ACTCD
+     I                                       28  37 USRIDX
+     I                                       51 306 SCNX
+      *                                                                                       CSD101
+      ** Declare CSD101 constant fields                                                       CSD101
+      *                                                                                       CSD101
+     I              '2O''CLOCK_'          C         WINTER                                    CSD101
+      *
+      *****************************************************************
+      *
+     C                     EXSR SRINIT
+     C                     EXSR SRP100
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialization routine.                             *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+     C                     READ REOSECPA                 99
+     C           *IN99     IFEQ '0'
+     C                     MOVE '1'       *IN77
+     C                     ENDIF
+      *                                                                                       CSD101
+     C                     MOVEAECOD,1    DUMY,1                                              CSD101
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRP100 - Input screen 1                                      *
+      *                                                               *
+      *****************************************************************
+     C           SRP100    BEGSR
+      *
+     C           *INKC     DOWEQ'0'
+     C           *IN89     ANDEQ'0'
+      *
+     C           *IN77     IFEQ '1'
+     C                     MOVELAMSG,1    ERRMSG
+     C                     ENDIF
+      *
+     C**********           MOVEL*BLANKS   PASSWD                                              CSD101
+     C**********           MOVEL*BLANKS   REPSWD                                              CSD101
+     C                     EXFMTRE2001S1
+     C                     MOVE '0'       *IN88
+     C                     MOVE *BLANKS   ERRMSG
+      *
+     C                     SELEC
+     C           *INKC     WHEQ '1'
+     C           *IN77     WHEQ '1'
+     C                     OTHER
+     C                     EXSR SRVAL1
+     C  N88                EXSR SRP200
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRP200 - Input Screen 2                                      *
+      *                                                               *
+      *****************************************************************
+     C           SRP200    BEGSR
+      *
+     C**********           EXFMTRE2001S2                                                      CSD101
+     C           WINTER    CAT  USERID    PUNIQ  75                                           CSD101
+     C                     MOVELUSERID    PUSER  50                                           CSD101
+     C                     CALL 'SD000403'                                                    CSD101
+     C                     PARM *BLANKS   PRTNCD  7                                           CSD101
+     C                     PARM           PUNIQ                                               CSD101
+     C                     PARM *BLANKS   PIDDSC 50                                           CSD101
+     C                     PARM *BLANKS   PINTER 20                                           CSD101
+     C                     PARM           PUSER                                               CSD101
+     C                     PARM *BLANKS   PUSERD 50                                           CSD101
+     C                     PARM 'I'       PSTAT   1                                           CSD101
+     C                     PARM 'M'       PREC    1                                           CSD101
+     C                     PARM *BLANKS   PRTVAL  7                                           CSD101
+     C                     PARM *BLANKS   PAUSER 50                                           CSD101
+     C                     PARM *BLANKS   PAUNIQ 75                                           CSD101
+      *
+     C                     SELEC
+     C********** *INKC     WHEQ '1'                                                           CSD101
+     C********** *IN77     WHEQ '1'                                                           CSD101
+     C           PRTNCD    WHEQ 'F12'                                                         CSD101
+     C                     OTHER
+     C**********           EXSR SRVAL2                                                        CSD101
+     C                     EXSR SRP300
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRP300 - Save userid and password                            *
+      *                                                               *
+      *****************************************************************
+     C           SRP300    BEGSR
+      *
+     C                     MOVE '1'       *IN87
+     C**********           MOVEAPASSWD    CHEK                                                CSD101
+     C**********           EXSR SRENCR                                                        CSD101
+     C**********           MOVEAPSWD      GMPAS                                               CSD101
+     C                     MOVELUSERID    GMUID
+     C                     MOVEL'H'       GRECI
+     C                     WRITEREOSECA0               87
+     C                     READ REOSECT0                 99
+     C                     MOVEL'T'       GRECI
+     C                     MOVEL'99999999'GTKEY
+     C                     Z-ADD2         GNORE
+      *
+     C           *IN99     IFEQ '0'
+     C  N87                UPDATREOSECT0               87
+     C                     ELSE
+     C  N87                WRITEREOSECT0               87
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *IN89
+     C  N87      CMTTXT    COMIT
+     C   87                ROLBK
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRVAL1 - Validation for ID, password                         *
+      *                                                               *
+      *****************************************************************
+     C           SRVAL1    BEGSR
+      *
+     C                     MOVEAUSERID    CHEK
+     C                     EXSR SRVUSR
+     C**********           MOVEAPASSWD    CHEK                                                CSD101
+     C**N88*****           EXSR SRVPWD                                                        CSD101
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRVUSR - Check user id                                       *
+      *                                                               *
+      *****************************************************************
+     C           SRVUSR    BEGSR
+      *
+     C           CHEK,1    IFEQ ' '
+     C           CHEK,1    OREQ '0'
+     C                     MOVE '1'       *IN88
+     C                     ENDIF
+      *
+     C                     Z-ADD0         II      20
+     C                     Z-ADD0         JJ      20
+      *
+     C           II        DOWLT8
+     C                     ADD  1         II
+     C           CHEK,II   LOKUPNCHR                     99
+     C           *IN99     IFEQ '0'
+     C                     MOVE '1'       *IN88
+     C                     ENDIF
+     C           CHEK,II   IFEQ '9'
+     C                     ADD  1         JJ
+     C                     ENDIF
+     C   88                LEAVE
+     C                     ENDDO
+      *
+     C           JJ        IFGE 8
+     C                     MOVE '1'       *IN88
+     C                     ENDIF
+      *
+     C           *IN88     IFEQ '1'
+     C                     MOVELAMSG,2    ERRMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      ***SRVPWD*-*Check*user*password**********************************                       CSD101
+      *                                                               *
+      *****************************************************************
+     C********** SRVPWD    BEGSR                                                              CSD101
+      *
+     C********** CHEK,1    IFEQ ' '                                                           CSD101
+     C********** CHEK,1    OREQ '0'                                                           CSD101
+     C**********           MOVE '1'       *IN88                                               CSD101
+     C**********           ENDIF                                                              CSD101
+      *
+     C**********           Z-ADD0         II      20                                          CSD101
+     C********** II        DOWLT8                                                             CSD101
+     C**********           ADD  1         II                                                  CSD101
+     C********** CHEK,II   LOKUPNCHR                     99                                   CSD101
+     C********** *IN99     IFEQ '0'                                                           CSD101
+     C**********           MOVE '1'       *IN88                                               CSD101
+     C**********           ENDIF                                                              CSD101
+     C***88*****           LEAVE                                                              CSD101
+     C**********           ENDDO                                                              CSD101
+      *
+     C********** *IN88     IFEQ '1'                                                           CSD101
+     C**********           MOVELAMSG,3    ERRMSG                                              CSD101
+     C**********           ENDIF                                                              CSD101
+      *
+     C**********           ENDSR                                                              CSD101
+      *****************************************************************
+      *                                                               *
+      ***SRVAL2*-*Validation*for*ID,*password**************************                       CSD101
+      *                                                               *
+      *****************************************************************
+     C********** SRVAL2    BEGSR                                                              CSD101
+      *
+     C********** PASSWD    IFNE REPSWD                                                        CSD101
+     C**********           MOVE '1'       *IN88                                               CSD101
+     C**********           ENDIF                                                              CSD101
+      *
+     C********** *IN88     IFEQ '1'                                                           CSD101
+     C**********           MOVELAMSG,4    ERRMSG                                              CSD101
+     C**********           ENDIF                                                              CSD101
+      *
+     C**********           ENDSR                                                              CSD101
+      *****************************************************************
+      *                                                               *
+      ***SRENCR*-*Password*encryption**********************************                       CSD101
+      *                                                               *
+      *****************************************************************
+     C********** SRENCR    BEGSR                                                              CSD101
+      *
+     C**********           SETOF                     30                                       CSD101
+      *
+     C**********           Z-ADD1         P       20                                          CSD101
+     C********** CHEK,8    LOKUPNCHR,P                   30                                   CSD101
+     C**********           Z-ADD1         N       20                                          CSD101
+      *
+     C********** ENCD      TAG                                                                CSD101
+      *
+     C**********           Z-ADD1         S       20                                          CSD101
+     C********** CHEK,N    LOKUPNCHR,S                   30                                   CSD101
+     C********** P         ADD  N         P                                                   CSD101
+     C********** P         ADD  S         P                                                   CSD101
+     C**********           MOVEAECOD,P    PSWD,N                                              CSD101
+     C**********           Z-ADDS         P                                                   CSD101
+     C********** N         ADD  1         N                                                   CSD101
+     C********** N         COMP 8                      3030                                   CSD101
+      *
+     C********** *IN30     IFEQ '1'                                                           CSD101
+     C**********           GOTO ENCD                                                          CSD101
+     C**********           ENDIF                                                              CSD101
+      *
+     C**********           ENDSR                                                              CSD101
+      *****************************************************
+**  Alphanumer characters.
+ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789
+**  Encryption code.
+SDKJFIENVQPWOCMUXZ293847501LRBAGYHT6ZSDKJ
+FIENVQPWOCMUXZ293847501LRBAGYHT6ZSDKJFIEN
+**  Error messages.
+COMPONENT ALREADY SET UP
+INVALID USER ID
+INVALID PASSWORD
+PASSWORD DOES NOT MATCH

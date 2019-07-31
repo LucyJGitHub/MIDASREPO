@@ -1,0 +1,532 @@
+      *****************************************************************
+/*STD *  PFBASE                                                       *
+/*EXS *  PF_STD                                                       *
+/*EXI *  REUSEDLT(*YES)                                               *                       CGP016
+/*EXI *  TEXT('Midas GZ Fees master detail')                          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  PF/GZLEFEED - Fees Master Detail                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGP016             Date 06Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CLE139             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CAS019             Date 20Apr07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 05Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 01Aug04               *
+      *                 CAP086             Date 08Jun05               *
+      *                 233601             Date 20May05               *
+      *                 CAS011             Date 16May05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGP001  *CREATE    Date 23May03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGP016 - Global database - Re-use deleted records            *
+      *         - Moved from GZDDSSRCGM                               *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CLE139 - Lending Fee Capitalisation                          *
+      *  CAS019 - Upgrade of CAS016 to Midas Plus                     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *           THE FOLLOWING FILES SHOULD HAVE THE SAME LAYOUT:    *
+      *           GZLEFEED = LEVFEEMPD                                *
+      *  CLE106 - Syndications Manager                                *
+      *  CAP086 - Introduce Auto Authorisation to the API's           *
+      *           without it.                                         *
+      *  233601 - Post Fee amount to be amortised non-linearly.       *
+      *  CAS011 - EIR/AC Accounting Upgrade to MP1                    *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGP001 - Global Processing                                   *
+      *           - New file - Global version of LEFEED.              *
+      *                                                               *
+      *****************************************************************
+     A                                      REF(MFRFL)
+      *
+     A          R LEFEEDF                   TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2003')
+      *
+     A            FERECI    R               REFFLD(RECI)
+     A            FEBRCA    R               REFFLD(BRCA)
+      * Begin /CSD027/
+     A**********  FECNUM    R               REFFLD(CNUM)                                      CSD027
+     A            FECNUM         6A
+     A                                      TEXT('Customer number')
+     A                                      COLHDG('Customer            ' +
+     A                                      'Number')
+      * End /CSD027/
+     A            FEFACL    R               REFFLD(FCLY)
+      **Start of change CLE148
+     A**********  FELOAN    R               REFFLD(LNRF)                                      CLE148
+     A            FELOAN         6A         TEXT('Loan number')
+     A                                      COLHDG('Loan' 'Number')
+      **End of change CLE148
+     A            FEFSEQ    R
+     A            FEFCOD    R
+     A            FEACOF    R               REFFLD(ACOF)
+     A            FEFCCY    R               REFFLD(CCY)
+     A            FEFAMT    R
+     A            FEPSTD    R
+     A            FEPEND    R
+     A            FEPYON    R
+     A            FEAUTO    R               REFFLD(AUTO)
+     A            FESTTL    R               REFFLD(SETT)
+     A**Start of change CGL029
+     A**********  FEOURS    R               REFFLD(OURS)                                      CGL029
+     A            QQOURS        12A
+     A**End of change CGL029
+     A            FETHER    R               REFFLD(THEIRS)
+     A            FECALT    R
+     A            FEFRT1    R
+     A            FEFRT2    R
+     A            FEFRT3    R
+     A            FEFRT4    R
+     A            FEFRT5    R
+     A            FEAMT1    R
+     A            FEAMT2    R
+     A            FEAMT3    R
+     A            FEAMT4    R
+     A            FEAMT5    R
+     A            FECALC    R               REFFLD(CALC)
+     A            FEERAT    R               REFFLD(EXRT)
+     A            FEMDIN    R
+     A            FENPYD    R               REFFLD(NPYD)
+     A            FEFREQ    R               REFFLD(FREQ)
+     A            FEDYIM    R               REFFLD(DYIM)
+     A            FEPIND    R
+     A            FEDIND    R
+     A            FEAMTP    R
+     A            FEAMTA    R
+     A            FEAMTS    R
+     A            FESDAT    R
+     A            FELPDT    R
+     A            FELADT    R
+     A            FEADAT    R               REFFLD(ADNP)
+     A            FEDDAT    R
+     A            FEAMTO    R
+     A            FELTYP    R               REFFLD(LTYP)
+     A            FESUTP    R
+     A            FEORED    R               REFFLD(ORED)
+     A            FEPLPD         5P 0
+     A            FESPTI         1A
+     A            FEPPTI         1A
+     A            FEEPTI         1A
+     A            FESBTI         1A
+     A            FEPBTI         1A
+     A            FEEBTI         1A
+     A            FELCHT    R               REFFLD(CHTP)
+     A            FELCHD    R               REFFLD(LCD)
+     A            FETNLU    R               REFFLD(TNLU)
+     A            FEOSBR    R               REFFLD(OSBR)
+     A            FELPAM    R               REFFLD(FEFAMT)
+     A            FEPAMS    R               REFFLD(FEAMTS)
+     A            FEPAMP    R               REFFLD(FEAMTP)
+     A            FEADBP    R               REFFLD(ADNP)
+     A            FSTS      R               REFFLD(SPIN)
+     A                                      TEXT('Fee Status Indicator')
+     A                                      COLHDG('Fee' +
+     A                                             'Sts')
+      *
+     A            IUSR      R               REFFLD(FACO)
+     A                                      TEXT('Insert User Profile')
+     A                                      COLHDG('Ins User' +
+     A                                             'Profile')
+      *
+     A            AUSR      R               REFFLD(FACO)
+     A                                      TEXT('Amend User Profile')
+     A                                      COLHDG('Amd User' +
+     A                                             'Profile')
+      *
+     A            XUSR      R               REFFLD(FACO)
+     A                                      TEXT('Authorise User +
+     A                                            Profile')
+     A                                      COLHDG('Auth User' +
+     A                                             'Profile')
+      *
+     A            PCRF      R               REFFLD(ZZ015)
+     A                                      TEXT('PC Transaction +
+     A                                            Reference')
+     A                                      COLHDG('PC Trans' +
+     A                                             'Reference')
+      *
+     A            PTFI      R               REFFLD(SPIN)
+     A                                      TEXT('Participant Fee +
+     A                                            Indicator')
+     A                                      COLHDG('Part Fee' +
+     A                                             'Ind')
+      *
+     A            SHFI      R               REFFLD(SPIN)
+     A                                      TEXT('Shared Fee Indicator')
+     A                                      COLHDG('Shr Fee' +
+     A                                             'Ind')
+      *
+     A            OSDB      R               TEXT('Receipt - Settle +
+     A                                            Branch')
+     A                                      COLHDG('Rec Set' +
+     A                                             'Branch')
+      *
+     A            OMDB      R               TEXT('Pay - Settle +
+     A                                            Branch')
+     A                                      COLHDG('Pay Set' +
+     A                                             'Branch')
+      *
+     A            RSTM      R
+     A**Start of change CGL029
+     A**********  RONS      R                                                                 CGL029
+     A            RONSQQ        12A
+     A**End of change CGL029
+     A            RIBN      R
+     A            RIBA      R
+      * Begin /CSD027/
+     A**********  ROBN      R                                                                 CSD027
+     A**********  ROCN      R                                                                 CSD027
+     A            ROBN           6A
+     A                                      TEXT('receipt - ordering bank no')
+     A                                      COLHDG('rcpt                ' +
+     A                                      'ord                 ' +
+     A                                      'bank')
+     A            ROCN           6A
+     A                                      TEXT('receipt - ordering customer +
+     A                                      no')
+     A                                      COLHDG('rcpt                ' +
+     A                                      'ord                 ' +
+     A                                      'cust')
+      * End /CSD027/
+     A            PSTM      R
+     A**Start of change CGL029
+     A**********  PONS      R                                                                 CGL029
+     A            PONSQQ        12A
+     A**End of change CGL029
+     A            PIBN      R
+     A            PIBA      R
+      * Begin /CSD027/
+     A**********  POBN      R                                                                 CSD027
+     A**********  POCN      R                                                                 CSD027
+     A            POBN           6A
+     A                                      TEXT('pay - ordering bank no')
+     A                                      COLHDG('pay                 ' +
+     A                                      'ord                 ' +
+     A                                      'bank')
+     A            POCN           6A
+     A                                      TEXT('pay - ordering customer no')
+     A                                      COLHDG('pay                 ' +
+     A                                      'ord                 ' +
+     A                                      'cust')
+      * End /CSD027/
+     A            RCRN      R
+     A            RCRA      R
+     A            RVNO      R
+     A            AWBN      R
+     A            AWBA      R
+     A            BENN      R
+     A            BENA      R
+     A            DTP1      R
+     A            DTP2      R
+     A            DTP3      R
+     A            DTP4      R
+     A            DCHG      R
+     A            BTB1      R
+     A            BTB2      R
+     A            BTB3      R
+     A            BTB4      R
+     A            BTB5      R
+     A            BTB6      R
+     A            CVMR      R
+     A            GFPT      R               REFFLD(SPIN)
+     A                                      TEXT('Generated by Fund +
+     A                                            Participant')
+     A                                      COLHDG('Gen by' +
+     A                                             'Fund Part')
+      *
+     A            PTAI      R               REFFLD(SPIN)
+     A                                      TEXT('Participant/Assign+
+     A                                            ment Ind')
+     A                                      COLHDG('Part/' +
+     A                                             'Assg?')
+      *
+      * Begin /CSD027/
+     A**********  SMAC      R               REFFLD(CNUM)                                      CSD027
+     A            SMAC           6A
+     A                                      COLHDG('Customer            ' +
+     A                                      'Number')
+      * End /CSD027/
+     A                                      TEXT('Syndicate Member/+
+     A                                            Assignee')
+      *
+     A            PCOB      R               REFFLD(BRCA)
+     A                                      TEXT('PC Originating +
+     A                                           Branch')
+     A                                      COLHDG('PC Orig' +
+     A                                             'Branch')
+     A            FEPRFC    R               REFFLD(PRFC)
+     A            LSWC      R
+     A            LSWS      R
+     A            FETADJ    R               REFFLD(D1AT)
+     A                                      TEXT('Total Fee +
+     A                                          Adjustment Amount')
+     A                                      COLHDG('Total Fee' +
+     A                                             'Adj. Amt.')
+     A            FESCCY    R               REFFLD(CCY)
+     A                                      TEXT('Settlement Currency')
+     A                                      COLHDG('Sett. ccy')
+     A            FEICCY    R               REFFLD(CCY)
+     A                                      TEXT('IN Currency in +
+     A                                            Fld 72')
+     A                                      COLHDG('IN Ccy')
+     A            FEWOFF    R               REFFLD(D1AT)
+     A                                      TEXT('Total Fee +
+     A                                          Write-off Amount')
+     A                                      COLHDG('Total Fee' +
+     A                                             'W/Off Amt.')
+     A            FEINDC    R               REFFLD(##KEY)
+     A                                      TEXT('Fee Indicator+
+     A                                            Y=OLD ')
+     A                                      COLHDG('Fee Indicator')
+     A            FESWRI    R               REFFLD(CCIO)
+     A                                      TEXT('Swift Msg Regenerati+
+     A                                            on Indicator')
+     A                                      COLHDG('Msg' 'Regen' 'Id')
+     A            FEAMTW    R               REFFLD(D1AT)
+     A                                      TEXT('Fee amount written off')
+     A                                      COLHDG('Write off amount')
+     A            FEREXR        13P 8
+     A                                      TEXT('Receive Settlement +
+     A                                           Currency Exchange Rate')
+     A                                      COLHDG('Receive' 'Settlement'+
+     A                                           'Currency' 'Exchange'+
+     A                                           'Rate')
+     A            FEREXI         1A
+     A                                      TEXT('Receive Settlement +
+     A                                           Currency Exchange Rate Ind')
+     A                                      COLHDG('Receive' 'Settlement'+
+     A                                           'Currency' 'Exchange Rate'+
+     A                                           'Ind')
+     A            FEPSCY         3A
+     A                                      TEXT('Pay Settlement Currency')
+     A                                      COLHDG('Pay' 'Settlement' +
+     A                                           'Currency')
+     A            FEPEXR        13P 8
+     A                                      TEXT('Pay Settlement +
+     A                                           Currency Exchange Rate')
+     A                                      COLHDG('Pay' 'Settlement'+
+     A                                           'Currency' 'Exchange'+
+     A                                           'Rate')
+     A            FEPEXI         1A
+     A                                      TEXT('Pay Settlement +
+     A                                           Currency Exchange Rate Ind')
+     A                                      COLHDG('Pay' 'Settlement'+
+     A                                          'Currency' 'Exchange Rate'+
+     A                                           'Ind')
+      ** Front office transaction ID.
+     A            FRNT      R               REFFLD(FOTRNID)
+     A                                      TEXT('Front Office +
+     A                                            Transaction Id       ')
+     A                                      COLHDG('Front Office' +
+     A                                             'Transaction Id')
+      ** Associated Front office transaction ID.
+     A            AFRT      R               REFFLD(FOTRNID)
+     A                                      TEXT('Associated Front +
+     A                                            Office Transaction Id')
+     A                                      COLHDG('Associated' +
+     A                                             'Front Office' +
+     A                                             'Transaction Id')
+      ** Repair location
+     A            REPA      R               REFFLD(RPRLOC)
+     A                                      TEXT('Repair Location')
+     A                                      COLHDG('Repair' +
+     A                                             'Location')
+ 
+      ** Timestamp
+     A            STMP      R               REFFLD(TIMESTMP)
+     A                                      TEXT('Timestamp')
+     A                                      COLHDG('Timestamp')
+     A            FESTAL         1A
+     A                                      TEXT('Settlement Allocation +
+     A                                           Indicator')
+     A                                      COLHDG('Settlement' +
+     A                                           'Allocation Indicator')
+     A**Start of change CGL029
+     A            FEOURS        18A
+     A            RONS          18A
+     A            PONS          18A
+     A**End of change CGL029
+     A**Start of change CAP086
+     A            FEAUTH         1A         TEXT('Automatic +
+     A                                      Authorisation')
+     A                                      COLHDG('Automatic' +
+     A                                      'Authorisation')
+     A**End of change CAP086
+      **Start of change CAS011
+     A            FEADJY         1          TEXT('Adjustment to Yield')
+     A                                      COLHDG('Adjustment to Yield')
+     A            FEAMTD        15P 0       TEXT('Non-Linear Amortised +
+     A                                            Fee to Date')
+     A                                      COLHDG('Non-Linear Amortised' +
+     A                                             'Fee to Date')
+     A            FEFEAM        15P 0       TEXT('Fee Amount to be amortised +
+     A                                            for the EIR period')
+     A                                      COLHDG('Fee Amount to be' +
+     A                                             'amortised for the' +
+     A                                             'EIR period')
+     A            FEFEAC        15P 0       TEXT('Fee Amount to be accrued +
+     A                                            for the EIR period')
+     A                                      COLHDG('Fee Amount to be' +
+     A                                             'accrued for the' +
+     A                                             'EIR period')
+     A            FEAFES        15P 0       TEXT('Amortised Fee from EIR +
+     A                                            start date')
+     A                                      COLHDG('Amortised Fee from' +
+     A                                             'EIR start date')
+     A            FEAFEE        15P 0       TEXT('Accrued Fee from EIR +
+     A                                            start date')
+     A                                      COLHDG('Accrued Fee from' +
+     A                                             'EIR start date')
+     A            FEAFOF        15P 0       TEXT('One off Fee from EIR +
+     A                                            start date')
+     A                                      COLHDG('One off Fee from' +
+     A                                             'EIR start date')
+     A            FETFTD        15P 0       TEXT('Total Fee to Date')
+     A                                      COLHDG('Total Fee to Date')
+     A            FEAFLS        15P 0       TEXT('Accrued/Amortised Fee +
+     A                                            from Last Fee Start Date')
+     A                                      COLHDG('Accrued/Amortised' +
+     A                                             'Fee from Last Fee' +
+     A                                             'Start Date')
+     A            FEUAFA        15P 0       TEXT('Unamortised Back-Valued +
+     A                                            Fee Amount')
+     A                                      COLHDG('Unamortised Back-' +
+     A                                             'Valued Fee Amount')
+     A            FEAFLD        15P 0       TEXT('Accrued fee from Last +
+     A                                            Start Date')
+     A                                      COLHDG('Accrued fee from' +
+     A                                             'Last Start Date')
+      **End of change CAS011
+      **Start of change 233601
+     A            FENLAI         1A         TEXT('Non-linear Amortisation Ind')
+     A                                      COLHDG('Non-lin Amort Ind')
+      **End of change 233601
+      **Start of change CLE106
+     A            FEMASF         1A         TEXT('Manual Allocation')
+     A                                      COLHDG('Manual Allocation')
+     A            FESYIN         1A         TEXT('Syndication Indicator')
+     A                                      COLHDG('Syndication' +
+     A                                             'Indicator')
+      **End of change CLE106
+      **Start of change CLE042
+     A            FECLAS         4A         TEXT('Loan Class')
+     A                                      COLHDG('Loan' 'Class')
+      **End of change CLE042
+      *
+      **Start of change CAS019
+     A            FESAMT        15P 0       TEXT('Non linear +
+     A                                            Settlement Amount')
+     A                                      COLHDG('Non linear' +
+     A                                             'Settlement Amount')
+     A            FEAMRI         1A         TEXT('Amortise Separately +
+     A                                            Indicator')
+     A                                      COLHDG('Amortise' +
+     A                                             'Separately' +
+     A                                             'Indicator')
+     A            FESTPD         5P 0       TEXT('Amortisation Start +
+     A                                            Period')
+     A                                      COLHDG('Amortisation' +
+     A                                             'Start' +
+     A                                             'Period')
+     A            FEENPD         5P 0       TEXT('Amortisation End +
+     A                                            Period')
+     A                                      COLHDG('Amortisation' +
+     A                                             'End' +
+     A                                             'Period')
+      **End of change CAS019
+      **Start of change CLE139
+     A            FECAPI         1A         TEXT('Fee Capitalisation +
+     A                                            Indicator')
+     A                                      COLHDG('Fee Capitalisation' +
+     A                                             'Indicator')
+      **End of change CLE139
+      **Start of change CLE134
+     A            FEAUT2         1A         COLHDG('Auto-settlement' 'Method')
+     A            FEPLNR         6A         COLHDG('Past Due' 'Call Loan')
+      *
+      ** Reporting Past Due Details...
+      *
+     A            FERIDT         5P 0       COLHDG('Reporting' 'Past Due' +
+     A                                             'Initial Date')
+     A            FERIDC         3P 0       COLHDG('Reporting Past Due'  +
+     A                                             'Initial Date' +
+     A                                             'Changes Today')
+     A            FERCAT         1S 0       COLHDG('Reporting' 'Past Due' +
+     A                                              'Classification')
+     A            FERCAC         3P 0       COLHDG('Reporting' 'Past Due' +
+     A                                             'Classification Chgs')
+     A            FERCSD         5P 0       COLHDG('Reporting Past Due' +
+     A                                             'Classification' +
+     A                                             'Start Date')
+     A            FERCDY         3P 0       COLHDG('Reporting Past Due' +
+     A                                             'Classification' +
+     A                                             'Days')
+     A            FERICC         3P 0       COLHDG('Reporting Past Due' +
+     A                                             'Initial Dt/Class' +
+     A                                             'Changes')
+      *
+      ** Basel II Past Due Details...
+      *
+     A            FEBIDT         5P 0       COLHDG('Basel II' 'Past Due'  +
+     A                                             'Initial Date')
+     A            FEBIDC         3P 0       COLHDG('Basel II' 'Past Due'  +
+     A                                             'Initial Date Changes')
+     A            FEBCAT         1S 0       COLHDG('Basel II' 'Past Due'  +
+     A                                              'Classification')
+     A            FEBCAC         3P 0       COLHDG('Basel II' 'Past Due' +
+     A                                             'Classification Chgs')
+     A            FEBCSD         5P 0       COLHDG('Basel II Past Due' +
+     A                                             'Classification' +
+     A                                             'Start Date')
+     A            FEBCDY         3P 0       COLHDG('Basel II Past Due' +
+     A                                             'Classification' +
+     A                                             'Days')
+     A            FEBICC         3P 0       COLHDG('Basel II Past Due' +
+     A                                             'Initial Dt/Class' +
+     A                                             'Changes')
+      *
+      ** Suspended Fee Details...
+      *
+     A            FEFSFA         1A         COLHDG('Suspend Fee' 'Allowed')
+     A            FESFA         13P 0       COLHDG('Suspended' 'Fee Amount')
+     A            FESFAM        13P 0       COLHDG('Suspended' 'Fee Amount' +
+     A                                             'Maximum')
+     A            FESFP          3P 0       COLHDG('Suspended' 'Fee Payments')
+     A            FESFPM         3P 0       COLHDG('Suspended' 'Fee Payments' +
+     A                                             'Maximum')
+     A            FEFPPA         1A         COLHDG('Partial' 'Payment' +
+     A                                             'Allowed')
+     A            FEPSIN         1A         COLHDG('Partial' 'Indicator')
+     A            FEPSLM        13P 0       COLHDG('Partial' 'Limit')
+     A            FEFEMC         1A         COLHDG('Early' 'Maturity' +
+     A                                             'Condition')
+      *
+      ** Shadow Postings Unique Reference...
+      *
+     A            FEXRFI         3A         COLHDG('Extension' 'File' +
+     A                                             'Reference Id')
+     A            FEXRFN        10S 0       COLHDG('Extension' 'File' +
+     A                                             'Reference Number')
+      **End of change CLE134
+     A          K FEBRCA
+     A          K FECNUM
+     A          K FEFACL
+     A          K FELOAN
+     A          K FEFSEQ

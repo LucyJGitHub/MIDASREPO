@@ -1,0 +1,90 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_#JEHEAD - Journal Entry Header                                      */
+/*                                                                             */
+/*       (c) Finastra International Limited 2003                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CGL182             Date 11May17                        */
+/*                      CSC054             Date 23Feb12                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      245681             Date 06Mar07                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD031             Date 10Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      BUG9989            Date 19Jan06                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      CSC024             Date 21Jul05                        */
+/*                      BUG5518            Date 18Jan05                        */
+/*                      BUG3086            Date 05Jul04                        */
+/*                      CGL029             Date 01Sep03                        */
+/*                      CGP001  *CREATE    Date 20Aug03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CGL182 - Journal Entry via the Interface File - Java Version          */
+/*       CSC054 - Period End Adjustments                                       */
+/*       245681 - Create two new columns to show the whole figure of the       */
+/*                amounts - integer + decimal. Upgrade fix 241312              */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       BUG9989- Add BRMEAB to prevent SQL0205 error.                         */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       CSC024 - Open Month End (Recompile)                                   */
+/*       BUG5518- Performance Enhancements                                     */
+/*       BUG3086- Change BRBIUF so that it can be filtered on in the listview  */
+/*       CGL029 - Increase Account Code to 10 digits (Recompile)               */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+   BRBTNB, BRBCDA, BRDPCD, BRWSID, BRHICC, BRHDCC, BRHINC, BRHIIN,              :
+***BRHDIN, BRHINI, BRBTSF, BRBIUF, BRSHPI, BRRAPI, BRMBRB, BRRVVD,***************:       /*BUG3086*/
+   BRHDIN, BRHINI, BRBTSF, BRSHPI, BRRAPI, BRMBRB, BRRVVD,                      :        /*BUG3086*/
+   BRBDES, BRSPTT, BRNIST, BRSPRF, BRDCIN, BRIBCF, BRCUSF, BRCYCF,              :
+   BRACCF, BRACSF, BRNNBF, BRRACF, BRPRCF, BRIBCT, BRCYCT, BRCNAT,              :
+   BRACCT, BRASNT, BRNNBT, BRRACT, BRTOJE, BRUSRI, BRUSRA, BRFRNT,              :
+***BRAFRT,*BRTMST,*BRBHAI,*BRVALI,**********************************************:        /*BUG9989*/
+***BRAFRT,*BRTMST,*BRBHAI,*BRVALI, BRMEAB,**************************************: /*BUG9989*/ CSC054
+   BRAFRT, BRTMST, BRBHAI, BRVALI, BRMEAB, C.HQBDTE, C.HQPTRS, C.HQJETP,        :             CSC054
+   HQBIRF,                                                                      :             CGL182
+   CASE WHEN BRBIUF='' THEN 'N' ELSE BRBIUF END AS BRBIUF,                      :        /*BUG3086*/
+***DEC(BRAMTF*C1.SCALING,31,4)*AS*"SBRAMTF",************************************:            BUG5518
+***DEC(BRAMTF*C1.SCALING*C1.RATE,31,4)*AS*"BSBRAMTF",***************************:            BUG5518
+   BRAMTF AS SBRAMTF,                                                           :            BUG5518
+   DIGITS(BRHDCC) AS BRDCAL,                                                    :             245681
+   DIGITS(BRHDIN) AS BRDINP,                                                    :             245681
+   BRHIIN CONCAT '.' CONCAT DIGITS(BRHDIN) AS JINPUT,                           :             245681
+   BRHICC CONCAT '.' CONCAT DIGITS(BRHDCC) AS JCALCU,                           :             245681
+   A8ZONE AS ZONE                                                               :
+  FROM GZGLJENHPD                                                               :
+**LEFT*JOIN*GZSDBRCHPD*ON*BRBCDA*=*A8BRCD;**************************************:     BUG5518 CSC054
+  LEFT JOIN GZSDBRCHPD ON BRBCDA = A8BRCD                                       :             CSC054
+  LEFT JOIN GZGLJENHQD C                                                        :             CSC054
+                       ON C.HQBTCH = BRBTNB                                     :             CSC054
+                       AND C.HQBRCD = BRBCDA;                                   :             CSC054
+**LEFT*JOIN*GZSDBRCHPD*ON*BRBCDA*=*A8BRCD***************************************:            BUG5518
+**LEFT*JOIN*GZSDBANKPD*ON*BJZONE*=*A8ZONE;**************************************:            BUG5518
+**LEFT*JOIN*V_GLOBRATE*C1*ON*C1.CCY=BRCYCF;*************************************:            BUG5518
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD SBRAMTF    AS BRAMTF     USING GZGLJENHPD                      :
+ * DESCRIBEFIELD BRDCAL     AS BRHDCC     USING GZGLJENHPD                      :             245681
+ * DESCRIBEFIELD BRDINP     AS BRHDIN     USING GZGLJENHPD                      :             245681
+***DESCRIBEFIELD*BSBRAMTF***AS*BRAMTF*****USING*GZGLJENHPD*(BASECCY)************:            BUG5518
+ * DESCRIBEFIELD ZONE       AS A8ZONE     USING GZSDBSRTPD                      :
+ * DESCRIBEEND                                                                  :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Journal entry header - GZGLJENHPD        ';                     :
+                                                                                :

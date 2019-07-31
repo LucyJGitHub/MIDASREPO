@@ -1,0 +1,1477 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Archive processing')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG2000        - Archive processing                           *
+     F*                                                               *
+     F*  Function:  This program archives data in six files.          *
+     F*                                                               *
+     F*  Called By: To be defined.                                    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CCG015             Date 09Aug01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 083796             Date 23Feb95               *
+      *                 082402             Date 30Jan95               *
+     F*                 079872             DATE 07DEC94               *
+     F*                 079844             DATE 07DEC94               *
+     F*                 S01522             DATE 22NOV94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CCG015 - Correspondence Manager Phase 1                      *
+     F*  083796 - Archive on due day rather than the day after       *
+     F*  082402 - Archive listing                                     *
+     F*  079872 - Reset format indicators for data file               *
+     F*  079844 - Correct processing to look at item status           *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*  80 -- Format @UDTAL0 in file CGUDTAL0.                       *
+     F*  81 -- Format @UDT1L0 in file CGUDTAL0.                       *
+     F*  82 -- Format @UDT2L0 in file CGUDTAL0.                       *
+     F*  83 -- Format @UDT3L0 in file CGUDTAL0.                       *
+     F*                                                               *
+     F*  90 -- Error detected.                                        *
+     F*  91 -- EOF detected.                                          *
+     F*  92 -- Item found in archive data reference file.             *
+     F*  93 -- EOF detected.                                          *
+     F*  94 -- EOF detected.                                          *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Subroutine usage                                             *
+     F*  ~~~~~~~~~~~~~~~~                                             *
+     F*  SRUDCR -- Read data from the UDC data reference file.        *
+     F*  SRFPRT -- Handle a reference of "Final print".               *
+     F*  SRDEL  -- Handle a reference of "Deleted".                   *
+     F*  SRUDCL -- Read data from the UDC data reference log file.    *
+     F*  SRITEM -- Handle a change in item identifier.                *
+     F*  SRMDTA -- Move extracted data records to the archives.       *
+     F*  SRDDTA -- Delete extracted data records.                     *
+     F*  SRAUD  -- Produce an audit report.                           *
+     F*  SRINIT -- Provide initialisation and definitions.            *
+     F*                                                               *
+     F*  Copied in routines:                                          *
+     F*                                                               *
+     F*  *PSSR  -- Program error routine.                             *
+     F*  SRFILE -- File error routine.                                *
+     F*  SRERR  -- Error reporting routine.                           *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE
+     F*-------------------------------------------------------------------
+     F* Copied-in file definitions:
+     F*
+     F/COPY WNCPYSRC,CG2000FPG
+     F*===================================================================
+     F* Archive files being written:
+     F*-------------------------------------------------------------------
+     FCGXDT1PDO   E                    DISK         KINFSR SRFILEA
+     F            @UDT1PD                           KRENAME@UDT1PDA
+     F                                              KCOMIT
+     F* UDC extracted data (64 bytes) archived
+     F*-------------------------------------------------------------------
+     FCGXDT2PDO   E                    DISK         KINFSR SRFILEA
+     F            @UDT2PD                           KRENAME@UDT2PDA
+     F                                              KCOMIT
+     F* UDC extracted data (320 bytes) archived
+     F*-------------------------------------------------------------------
+     FCGXDT3PDO   E                    DISK         KINFSR SRFILEA
+     F            @UDT3PD                           KRENAME@UDT3PDA
+     F                                              KCOMIT
+     F* UDC extracted data (576 bytes) archived
+     F*-------------------------------------------------------------------
+     FCGXDTAPDO   E                    DISK         KINFSR SRFILEA
+     F            @UDTAPD                           KRENAME@UDTAPDA
+     F                                              KCOMIT
+     F* UDC extracted data (832 bytes) archived
+     F*-------------------------------------------------------------------
+     FCGXDCLPDO   E                    DISK         KINFSR SRFILEA
+     F            @UDCLPD                           KRENAME@UDCLPDA
+     F                                              KCOMIT
+     F* UDC data reference log archived
+     F*-------------------------------------------------------------------
+     FCGXDCRPDO   E                    DISK         KINFSR SRFILEA
+     F            @UDCRPD                           KRENAME@UDCRPDA
+     F                                              KCOMIT
+     F* UDC data reference archived
+     F*===================================================================
+     F*CGXDCRL0IF  E           K        DISK         KINFSR SRFILE        079844
+     FCGXDTAL0IF  E           K        DISK         KINFSR SRFILE         079844
+     F* UDC data reference archived (keyed)
+     F*===================================================================
+     F* Data files being read:
+     F*-------------------------------------------------------------------
+     FCGUDTAL0UF  E           K        DISK         KINFSR SRFILE
+     F                                              KCOMIT
+     F* UDC extracted data
+     F*-------------------------------------------------------------------
+     FCGUDCLL0UF  E           K        DISK         KINFSR SRFILE
+     F                                              KCOMIT
+     F* UDC data reference log
+     F*-------------------------------------------------------------------
+     FCGUDCRL0UF  E           K        DISK         KINFSR SRFILE
+     F                                              KCOMIT
+     F* UDC data reference
+     F*
+     F*-------------------------------------------------------------------
+     FCGUXMLL0UF  E           K        DISK         KINFSR SRFILE                             CCG015
+     F                                              KCOMIT                                    CCG015
+      ** XML Merged Data by Item Number                                                       CCG015
+      *                                                                ---                    CCG015
+     FCGXXMLPDO   E                    DISK         KINFSR SRFILE                             CCG015
+     F            CGXXMLD0                          KRENAME@XXMLPDA                           CCG015
+     F                                              KCOMIT                                    CCG015
+      ** Archived XML Merged Data                                                             CCG015
+      *                                                                                       CCG015
+     FCGXXMLL0IF  E           K        DISK         KINFSR SRFILE                             CCG015
+      ** Archived XML Merged Data by Item Number                                              CCG015
+      *                                                                                       CCG015
+     FCG2000P1O   E             65     PRINTER      KINFDS SPOOLP     UC  082402
+     F*
+     F*
+     E/EJECT
+     E*-------------------------------------------------------------------
+     E* Error processing array:
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E                    CPY@    1   1 80               Copyright
+     E                    CNT        16  9 0             Count values.
+     E                    TXT        16  7               Count texts.
+     E                    FIL        16 10               Count files.
+     E*
+     E* Copied-in array definitions:
+     E*
+     E/COPY WNCPYSRC,CG2000EPG
+     E*
+     E*-------------------------------------------------------------------
+     I/EJECT
+     I*-------------------------------------------------------------------
+     I@UDTAL0     80
+     I*
+     I@UDT1L0     81
+     I*
+     I@UDT2L0     82
+     I*
+     I@UDT3L0     83
+     I*
+     I* Record format identifying indicators used in subroutine SRMDTA.
+     I*
+     I*...................................................................
+     I/COPY WNCPYSRC,CG2000IPG
+     I*
+     I* Copied-in data structures
+     I*
+     I*...................................................................
+     IW0FMT     E DSCGUDTAPD
+     I*
+     I* Record format of CGUDTAPD as an input parameter
+     I*
+     I*...................................................................
+     I* Error processing data structures:
+     I*
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I*...................................................................
+     I* RUNDAT data area:
+     I*
+     IRUNDAT    E DSRUNDAT
+     I*
+     I*                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              082402
+     I**  External DS for bank details                                    082402
+     I*                                                                   082402
+     IDSFDY     E DSDSFDY                                                 082402
+     I*** First data structure for access program, Short data structure   082402
+     I*
+     ISCSARD    E DSSCSARDPD                                                                  CCG015
+      ** Switchable Feature details                                                           CCG015
+      *                                                                                       CCG015
+     I*...................................................................
+     IW1DTA       DS                            256
+     I* ______________________________________________
+     I* Data structure for data being sent to CGZAUDIT
+     I* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     I* Spool file name (if blank, name unchanged)
+     I* N.B. To change name, I#SPLR must be Y
+     I*       unless first call of program:
+     I                                        1  10 I#SPLN
+     I* Repeat open and close of spool file:
+     I                                       11  11 I#SPLR
+     I* Report reference:
+     I                                       12  21 I#REF
+     I* Report title (uses MSGID on CGUSRMSG):
+     I                                       26  32 I#TITL
+     I* Title underline (uses MSGID on CGUSRMSG):
+     I                                       33  39 I#TUL
+     I* Flag to control Report Control Facility:
+     I                                       40  40 I#RCF
+     I* Define fields for line printing:
+     I                                       41  47 I#TEXT
+     I                                       48  57 I#FILE
+     I                                       58  720I#QTY
+     I                                       73  730I#DECS
+     I                                       74  74 I#EDIT
+     I                                       75  770I#EXT
+     I                                       78  78 I#MORE
+     I                                       81 130 I#SUB
+     I*...................................................................
+     I* Data structure for compilation - Copyright insertion:
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I*...................................................................
+     I* Message translation fields:
+     I*
+     IDSMTR       DS
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     I*...................................................................
+     I* Count fields counts:
+     I*              ~~~~~~
+     I***#COUNT      DS                                                   082402
+     I#COWNT      DS                                                      082402
+     I                                        1 144 CNT
+     I* CGUDCRPD inputs, archives and deletes:
+     I                                        1   90#CRIN
+     I                                       10  180#CRARC
+     I                                       19  270#CRDEL
+     I* CGUDCLPD writes, archives and deletes:
+     I                                       28  360#CLADD
+     I                                       37  450#CLARC
+     I                                       46  540#CLDEL
+     I* Archives of CGUDTxPD records:
+     I                                       55  630#C1ARC
+     I                                       64  720#C2ARC
+     I                                       73  810#C3ARC
+     I                                       82  900#CAARC
+     I* Deletions of CGUDTxPD records:
+     I                                       91  990#C1DEL
+     I                                      100 1080#C2DEL
+     I                                      109 1170#C3DEL
+     I                                      118 1260#CADEL
+      *                                                                                       CCG015
+      ** Archive and Deletion of CGUXMLPD                                                     CCG015
+      *                                                                                       CCG015
+     I                                      127 1350#CXARC                                    CCG015
+     I                                      136 1440#CXDEL                                    CCG015
+      *                                                                                       CCG015
+     I**Spares:*                                                                              CCG015
+     I**********                            127 1350#CXXX1                                    CCG015
+     I**********                            136 1440#CXXX2                                    CCG015
+      *                                                                                       CCG015
+     I* Count fields texts:
+     I*              ~~~~~
+     I#TEXTS      DS
+     I                                        1 112 TXT
+     I* CGUDCRPD inputs, archives and deletes:
+     I I            'CAD1021'                 1   7 #TRIN
+     I I            'CAD1022'                 8  14 #TRARC
+     I I            'CAD1023'                15  21 #TRDEL
+     I* CGUDCLPD writes, archives and deletes:
+     I I            'CAD1024'                22  28 #TLADD
+     I I            'CAD1022'                29  35 #TLARC
+     I I            'CAD1023'                36  42 #TLDEL
+     I* Archives of CGUDTxPD records:
+     I I            'CAD1022'                43  49 #T1ARC
+     I I            'CAD1022'                50  56 #T2ARC
+     I I            'CAD1022'                57  63 #T3ARC
+     I I            'CAD1022'                64  70 #TAARC
+     I* Deletions of CGUDTxPD records:
+     I I            'CAD1023'                71  77 #T1DEL
+     I I            'CAD1023'                78  84 #T2DEL
+     I I            'CAD1023'                85  91 #T3DEL
+     I I            'CAD1023'                92  98 #TADEL
+      *                                                                                       CCG015
+      ** Archive and Deletion of CGUXMLPD                                                     CCG015
+      *                                                                                       CCG015
+     I I            'CAD1022'                99 105 #TXARC                                    CCG015
+     I I            'CAD1023'               106 112 #TXDEL                                    CCG015
+      *                                                                                       CCG015
+     I**Spares:*                                                                              CCG015
+     I*I********    '       '                99 105 #TEXT1                                    CCG015
+     I*I********    '       '               106 112 #TEXT2                                    CCG015
+      *                                                                                       CCG015
+     I*
+     I* Count fields files:
+     I*              ~~~~~
+     I#FILES      DS
+     I                                        1 160 FIL
+     I* CGUDCRPD inputs, archives and deletes:
+     I I            'CGUDCRPD  '              1  10 #FRIN
+     I I            'CGUDCRPD  '             11  20 #FRARC
+     I I            'CGUDCRPD  '             21  30 #FRDEL
+     I* CGUDCLPD writes, archives and deletes:
+     I I            'CGUDCLPD  '             31  40 #FLADD
+     I I            'CGUDCLPD  '             41  50 #FLARC
+     I I            'CGUDCLPD  '             51  60 #FLDEL
+     I* Archives of CGUDTxPD records:
+     I I            'CGUDT1PD  '             61  70 #F1ARC
+     I I            'CGUDT2PD  '             71  80 #F2ARC
+     I I            'CGUDT3PD  '             81  90 #F3ARC
+     I I            'CGUDTAPD  '             91 100 #FAARC
+     I* Deletions of CGUDTxPD records:
+     I I            'CGUDT1PD  '            101 110 #F1DEL
+     I I            'CGUDT2PD  '            111 120 #F2DEL
+     I I            'CGUDT3PD  '            121 130 #F3DEL
+     I I            'CGUDTAPD  '            131 140 #FADEL
+      *                                                                                       CCG015
+      ** Archive and Deletion of CGUXMLPD                                                     CCG015
+      *                                                                                       CCG015
+     I I            'CGUXMLPD  '            141 150 #FXARC                                    CCG015
+     I I            'CGUXMLPD  '            151 160 #FXDEL                                    CCG015
+      *                                                                                       CCG015
+     I**Spares:*                                                                              CCG015
+     I*I********    '          '            141 150 #FILE1                                    CCG015
+     I*I********    '          '            151 160 #FILE2                                    CCG015
+      *                                                                                       CCG015
+     I*
+     I*** Spool File Data Structure                                       082402
+     ISPOOLP      DS                                                      082402
+     I                                       83  92 PFILE                 082402
+     I                                    B 123 1240PFNUM                 082402
+     I                                    B 367 3680LINEM                 082402
+     I*                                                                   082402
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                 M A I N L I N E                                  *
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C* Initialise program:
+     C*
+     C           W0INIT    IFNE 'Y'
+     C                     EXSR SRINIT
+     C                     ENDIF
+     C*
+     C* Read from the UDC data reference file:
+     C*
+     C                     EXSR SRUDCR
+     C*
+     C* Copy in optional additional processing:
+     C*
+     C/COPY WNCPYSRC,CG2000PRC
+     C*
+     C* Produce an audit report:
+     C*
+     C                     EXSR SRAUD
+     C*                                                                   082402
+     C                     EXSR SREND                                     082402
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C* Return to calling program:
+     C*
+     C                     RETRN
+     C********************************************************************
+      *
+     C/EJECT                                                              082402
+     C*****************************************************************   082402
+     C* Subroutine  :  SREND                                          *   082402
+     C* Function    :  Sets on last record and prints no details      *   082402
+     C*                to report or new header as necessary           *   082402
+     C* Called by   :  Mainline Processing                            *   082402
+     C* Calls       :  None                                           *   082402
+     C*****************************************************************   082402
+     C           SREND     BEGSR                                          082402
+     C*                                                                   082402
+     C* If new page print header                                          082402
+     C*                                                                   082402
+     C           *IN65     IFEQ *ON                                       082402
+     C           #FIRST    ORNE 'Y'                        No records     082402
+     C                     WRITEHEADER                                    082402
+     C                     SETOF                         65               082402
+     C                     ENDIF                                          082402
+     C*                                                                   082402
+     C*  Write 'No details to report'                                     082402
+     C*                                                                   082402
+     C           #FIRST    IFNE 'Y'                                       082402
+     C                     WRITEF5DTL1                                    082402
+     C                     ENDIF                                          082402
+     C*                                                                   082402
+     C* To terminate program                                              082402
+     C*                                                                   082402
+     C                     WRITEF0TRL1                                    082402
+     C                     CLOSECG2000P1                                  082402
+     C*                                                                   082402
+     C                     ENDSR                                          082402
+     C*                                                                   082402
+     C*****************************************************************   082402
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRUDCR reads data from file CGUDCRPD.              **
+     C********************************************************************
+     C           SRUDCR    BEGSR                           * S R U D C R *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRUDCR'  @STK,Q
+     C* Clear hold value:
+     C                     Z-ADD*ZERO     W#ITEM
+     C*
+     C           *IN91     DOUEQ*ON
+     C                     READ CGUDCRL0                 91
+     C           *IN91     IFEQ *OFF
+     C*
+     C* Count the record:
+     C                     ADD  1         #CRIN
+     C*
+     C* Change of item identifier:
+     C*
+     C           DRITEM    IFNE W#ITEM
+     C*
+     C* If not first break, test flags for data item processing:
+     C*
+     C           W#ITEM    IFNE *ZERO
+     C                     EXSR SRITEM
+     C*
+     C* Re-establish record lock after the COMIT:
+     C*
+     C           DRITEM    CHAINCGUDCRL0             91
+     C                     ENDIF
+     C*
+     C* Reset the Purge and Archive flags and save the identifier:
+     C*
+     C                     MOVE #TRUE     #PURGE  1
+     C                     MOVE #FALSE    #ARC    1
+     C                     Z-ADDDRITEM    W#ITEM
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Test the reference value for "final print" or "deleted":
+     C*
+     C                     SELEC
+     C* "Final print":
+     C***********DRFREF    WHEQ W#FIN                                     079844
+     C           DRISTS    WHEQ 'PRTD'                                    079844
+     C***********#CTRL     ANDGTDRRDNB                                    083796
+     C           #CTRL     ANDGEDRRDNB                                    083796
+     C                     EXSR SRFPRT
+     C                     EXSR SRPCUS                                    082402
+     C*
+     C* "Deleted":
+     C***********DRFREF    WHEQ W#DEL                                     079844
+     C           DRISTS    WHEQ 'DLTD'                                    079844
+     C                     EXSR SRDEL
+     C                     EXSR SRPCUS                                    082402
+     C*
+     C* Other:
+     C                     OTHER
+     C                     MOVE #FALSE    #PURGE
+     C                     ENDSL
+     C*
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C* For final item, test flags for data item processing:
+     C*
+     C           W#ITEM    IFNE *ZERO
+     C                     EXSR SRITEM
+     C                     ENDIF
+     C*
+     C           EXUDCR    TAG                             <<<=== EXUDCR
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRFPRT handles a reference of "final print".       **
+     C********************************************************************
+     C           SRFPRT    BEGSR                           * S R F P R T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRFPRT'  @STK,Q
+     C*
+     C                     MOVE #TRUE     #ARC
+     C*
+     C* Archive data reference log records:
+     C*
+     C                     EXSR SRUDCL
+     C*
+     C* Calculate the archive date (DRDDAT contained days before archive):
+     C*
+     C                     ADD  AGRDNB    DRDDAT
+     C*
+     C* Write a record to the archive file:
+     C*
+     C                     WRITE@UDCRPDA               90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGXDCRPD'W0FILE           ***************
+     C                     MOVEL'*WRITE  'W0KEY            ** Database  **
+     C                     Z-ADD1         W0ERNB           ** error 1.  **
+     C                     MOVE 'MEM5002' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C* Count the archive:
+     C                     ADD  1         #CRARC
+     C*
+     C* Delete the source record:
+     C*
+     C                     DELET@UDCRL0                90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGUDCRPD'W0FILE           ***************
+     C                     MOVELDRITEM    W0KEY            ** Database  **
+     C                     Z-ADD2         W0ERNB           ** error 2.  **
+     C                     MOVE 'MEM5002' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C* Count the deletion:
+     C                     ADD  1         #CRDEL
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Write a log record with purge date information:
+     C*
+     C                     Z-ADDDRITEM    DLITEM
+     C                     MOVE DRDCOR    DLDCOR
+     C                     Z-ADDAGRDNB    DLDTAC
+     C                     MOVE 'D'       DLRECI
+     C                     MOVE 'CGD1268' DLMSID
+     C                     MOVE *BLANKS   DLMSDT
+     C                     MOVE *BLANKS   DLCPGM
+     C                     MOVE *BLANKS   DLRPGM
+     C                     MOVE *BLANKS   DLSPLF
+     C                     Z-ADD*ZERO     DLSPLN
+     C                     MOVE *BLANKS   DLSJOB
+     C                     MOVE *BLANKS   DLSUSR
+     C                     Z-ADD*ZERO     DLSJNO
+     C                     Z-ADD*ZERO     DLSPGE
+     C                     Z-ADD*ZERO     DLEPGE
+     C                     MOVE ##JOB     DLAJOB
+     C                     MOVE ##USR     DLAUSR
+     C                     TIME           DLATIM
+     C                     MOVE AGMRDT    DLARDT
+     C                     MOVE 'I'       DLAACT
+     C                     Z-ADDAGRDNB    DLRDNB
+     C                     WRITE@UDCLPDA               90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGXDCLPD'W0FILE           ***************
+     C                     MOVEL'*WRITE  'W0KEY            ** Database  **
+     C                     Z-ADD3         W0ERNB           ** error 3.  **
+     C                     MOVE 'MEM5002' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C* Count the write:
+     C                     ADD  1         #CLADD
+     C*
+     C           EXFPRT    TAG                             <<<=== EXFPRT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRDEL handles a reference of "deleted".            **
+     C********************************************************************
+     C           SRDEL     BEGSR                           * S R D E L   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRDEL '  @STK,Q
+     C*
+     C* Delete the reference record:
+     C*
+     C                     DELET@UDCRL0                90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGUDCRPD'W0FILE           ***************
+     C                     MOVELDRITEM    W0KEY            ** Database  **
+     C                     Z-ADD4         W0ERNB           ** error 4.  **
+     C                     MOVE 'MEM5002' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C* Count the deletion:
+     C                     ADD  1         #CRDEL
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Delete reference log records:
+     C*
+     C           DRITEM    SETLLCGUDCLL0
+     C           *IN93     DOUEQ*ON
+     C           DRITEM    READECGUDCLL0                 93
+     C           *IN93     IFEQ *OFF
+     C                     DELET@UDCLL0                90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGUDCLPD'W0FILE           ***************
+     C                     MOVELDRITEM    W0KEY            ** Database  **
+     C                     Z-ADD5         W0ERNB           ** error 5.  **
+     C                     MOVE 'MEM5002' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C* Count the deletion:
+     C                     ADD  1         #CLDEL
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXDEL     TAG                             <<<=== EXDEL
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRUDCL archives data reference log records.        **
+     C********************************************************************
+     C           SRUDCL    BEGSR                           * S R U D C L *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRUDCL'  @STK,Q
+     C*
+     C           DRITEM    SETLLCGUDCLL0
+     C           *IN93     DOUEQ*ON
+     C           DRITEM    READECGUDCLL0                 93
+     C           *IN93     IFEQ *OFF
+     C                     WRITE@UDCLPDA               90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGXDCLPD'W0FILE           ***************
+     C                     MOVEL'*WRITE  'W0KEY            ** Database  **
+     C                     Z-ADD6         W0ERNB           ** error 6.  **
+     C                     MOVE 'MEM5002' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C* Count the archive:
+     C                     ADD  1         #CLARC
+     C*
+     C                     DELET@UDCLL0                90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGUDCLPD'W0FILE           ***************
+     C                     MOVELW#ITEM    W0KEY            ** Database  **
+     C                     Z-ADD7         W0ERNB           ** error 7.  **
+     C                     MOVE 'MEM5002' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C* Count the deletion:
+     C                     ADD  1         #CLDEL
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXUDCL    TAG                             <<<=== EXUDCL
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRITEM handles a change of item identifier.        **
+     C********************************************************************
+     C           SRITEM    BEGSR                           * S R I T E M *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRITEM'  @STK,Q
+     C*
+     C* If the Archive flag is True for the last item set,
+     C*   and the item is not already in the archive file,
+     C*  copy item data records to the archive file:
+     C*
+     C           #ARC      IFEQ #TRUE
+     C***********W#ITEM    SETLLCGXDCRL0                 92               079844
+      *                                                                                       CCG015
+     C           CCG015    IFEQ 'Y'                                                           CCG015
+     C           W#ITEM    SETLLCGXXMLL0                 92                                   CCG015
+     C                     ELSE                                                               CCG015
+     C           W#ITEM    SETLLCGXDTAL0                 92               079844
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C           *IN92     IFEQ *OFF
+     C           CCG015    IFEQ 'Y'                                                           CCG015
+     C                     EXSR SRMXML                                                        CCG015
+     C                     ELSE                                                               CCG015
+     C                     EXSR SRMDTA
+     C                     ENDIF                                                              CCG015
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C* If the Purge flag is True for the last item set,
+     C*  delete item data records:
+     C*
+     C           #PURGE    IFEQ #TRUE
+     C           CCG015    IFEQ 'Y'                                                           CCG015
+     C                     EXSR SRDXML                                                        CCG015
+     C                     ELSE                                                               CCG015
+     C                     EXSR SRDDTA
+     C                     ENDIF                                                              CCG015
+     C                     ENDIF
+     C* Commit changes:
+     C                     COMIT
+     C*
+     C           EXITEM    TAG                             <<<=== EXITEM
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRMDTA copies data item records to the archive.    **
+     C********************************************************************
+     C           SRMDTA    BEGSR                           * S R M D T A *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRMDTA'  @STK,Q
+     C*
+     C* UDC extracted data:
+     C*
+     C           W#ITEM    SETLLCGUDTAL0
+     C           *IN93     DOUEQ*ON
+     C                     MOVEA'0000'    *IN,80                          079872
+     C           W#ITEM    READECGUDTAL0                 93
+     C           *IN93     IFEQ *OFF
+     C*
+     C* Select archive and counter according to the format read:
+     C*
+     C                     SELEC
+     C           *IN80     WHEQ *ON
+     C                     WRITE@UDTAPDA               90
+     C           *IN90     IFEQ *OFF
+     C                     ADD  1         #CAARC
+     C                     ELSE
+     C                     MOVEL'CGXDTAPD'W0FILE
+     C                     ENDIF
+     C*
+     C           *IN81     WHEQ *ON
+     C                     WRITE@UDT1PDA               90
+     C           *IN90     IFEQ *OFF
+     C                     ADD  1         #C1ARC
+     C                     ELSE
+     C                     MOVEL'CGXDT1PD'W0FILE
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C           *IN82     WHEQ *ON
+     C                     WRITE@UDT2PDA               90
+     C           *IN90     IFEQ *OFF
+     C                     ADD  1         #C2ARC
+     C                     ELSE
+     C                     MOVEL'CGXDT2PD'W0FILE
+     C                     ENDIF
+     C*
+     C           *IN83     WHEQ *ON
+     C                     WRITE@UDT3PDA               90
+     C           *IN90     IFEQ *OFF
+     C                     ADD  1         #C3ARC
+     C                     ELSE
+     C                     MOVEL'CGXDT3PD'W0FILE
+     C                     ENDIF
+     C*
+     C                     ENDSL
+     C*
+     C           *IN90     IFEQ *ON                        ***************
+     C                     MOVEL'*WRITE  'W0KEY            ** Database  **
+     C                     Z-ADD8         W0ERNB           ** error 8.  **
+     C                     MOVE 'MEM5002' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXMDTA    TAG                             <<<=== EXMDTA
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRDDTA deletes item data records (Purge is True).  **
+     C********************************************************************
+     C           SRDDTA    BEGSR                           * S R D D T A *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRDDTA'  @STK,Q
+     C*
+     C* UDC extracted data (64-byte data section):
+     C*
+     C           W#ITEM    SETLLCGUDTAL0
+     C           *IN93     DOUEQ*ON
+     C                     MOVEA'0000'    *IN,80                          079872
+     C           W#ITEM    READECGUDTAL0                 93
+     C           *IN93     IFEQ *OFF
+     C*
+     C* Select deletion and counter according to the format read:
+     C*
+     C                     SELEC
+     C           *IN80     WHEQ *ON
+     C                     DELET@UDTAL0                90
+     C           *IN90     IFEQ *OFF
+     C                     ADD  1         #CADEL
+     C                     ELSE
+     C                     MOVEL'CGUDTAPD'W0FILE
+     C                     ENDIF
+     C*
+     C           *IN81     WHEQ *ON
+     C                     DELET@UDT1L0                90
+     C           *IN90     IFEQ *OFF
+     C                     ADD  1         #C1DEL
+     C                     ELSE
+     C                     MOVEL'CGUDT1PD'W0FILE
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C           *IN82     WHEQ *ON
+     C                     DELET@UDT2L0                90
+     C           *IN90     IFEQ *OFF
+     C                     ADD  1         #C2DEL
+     C                     ELSE
+     C                     MOVEL'CGUDT2PD'W0FILE
+     C                     ENDIF
+     C*
+     C           *IN83     WHEQ *ON
+     C                     DELET@UDT3L0                90
+     C           *IN90     IFEQ *OFF
+     C                     ADD  1         #C3DEL
+     C                     ELSE
+     C                     MOVEL'CGUDT3PD'W0FILE
+     C                     ENDIF
+     C*
+     C                     ENDSL
+     C*
+     C           *IN90     IFEQ *ON                        ***************
+     C                     MOVELW#ITEM    W0KEY            ** Database  **
+     C                     Z-ADD9         W0ERNB           ** error 9.  **
+     C                     MOVE 'MEM5002' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXDDTA    TAG                             <<<=== EXDDTA
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+      ********************************************************************                    CCG015
+      * SRMXML - Archives records from PF/CGUXMLPD to PF/CGXXMLPD        *                    CCG015
+      *                                                                  *                    CCG015
+      * Called by: SRITEM                                                *                    CCG015
+      ********************************************************************                    CCG015
+     C           SRMXML    BEGSR                                                              CCG015
+      *                                                                                       CCG015
+      ** Add subroutine name to stack:                                                        CCG015
+      *                                                                                       CCG015
+     C                     ADD  1         Q                                                   CCG015
+     C                     MOVEL'SRMXML'  @STK,Q                                              CCG015
+      *                                                                                       CCG015
+     C           W#ITEM    SETLLCGUXMLL0                                                      CCG015
+      *                                                                                       CCG015
+     C           *IN93     DOUEQ*ON                                                           CCG015
+     C           W#ITEM    READECGUXMLL0                 93                                   CCG015
+      *                                                                                       CCG015
+     C           *IN93     IFEQ *OFF                                                          CCG015
+     C                     WRITE@XXMLPDA               90                                     CCG015
+      *                                                                                       CCG015
+     C           *IN90     IFEQ *OFF                                                          CCG015
+     C                     ADD  1         #CXARC                                              CCG015
+     C                     ELSE                                                               CCG015
+     C                     MOVEL'CGXXMLPD'W0FILE                                              CCG015
+     C                     MOVEL'*WRITE  'W0KEY                                               CCG015
+     C                     Z-ADD12        W0ERNB                                              CCG015
+     C                     MOVE 'MEM5002' W0MSGD                                              CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG015
+     C                     EXSR SRERR                                                         CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C                     ENDDO                                                              CCG015
+      *                                                                                       CCG015
+     C           EXMXML    TAG                                                                CCG015
+      *                                                                                       CCG015
+      ** Unwind subroutine stack:                                                             CCG015
+      *                                                                                       CCG015
+     C                     MOVE *BLANKS   @STK,Q                                              CCG015
+     C                     SUB  1         Q                                                   CCG015
+      *                                                                                       CCG015
+     C                     ENDSR                                                              CCG015
+      ********************************************************************                    CCG015
+     C/EJECT                                                                                  CCG015
+      ********************************************************************                    CCG015
+      * SRDXML - Deletes records from PF/CGUXMLPD                        *                    CCG015
+      *                                                                  *                    CCG015
+      * Called by: SRITEM                                                *                    CCG015
+      ********************************************************************                    CCG015
+     C           SRDXML    BEGSR                                                              CCG015
+      *                                                                                       CCG015
+      ** Add subroutine name to stack:                                                        CCG015
+      *                                                                                       CCG015
+     C                     ADD  1         Q                                                   CCG015
+     C                     MOVEL'SRDXML'  @STK,Q                                              CCG015
+      *                                                                                       CCG015
+     C           W#ITEM    SETLLCGUXMLL0                                                      CCG015
+      *                                                                                       CCG015
+     C           *IN93     DOUEQ*ON                                                           CCG015
+     C           W#ITEM    READECGUXMLL0                 93                                   CCG015
+      *                                                                                       CCG015
+     C           *IN93     IFEQ *OFF                                                          CCG015
+     C                     DELETCGUXMLL0               90                                     CCG015
+      *                                                                                       CCG015
+     C           *IN90     IFEQ *OFF                                                          CCG015
+     C                     ADD  1         #CXDEL                                              CCG015
+     C                     ELSE                                                               CCG015
+     C                     MOVEL'CGUXMLPD'W0FILE                                              CCG015
+     C                     MOVELW#ITEM    W0KEY                                               CCG015
+     C                     Z-ADD13        W0ERNB                                              CCG015
+     C                     MOVE 'MEM5002' W0MSGD                                              CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG015
+     C                     EXSR SRERR                                                         CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C                     ENDDO                                                              CCG015
+      *                                                                                       CCG015
+     C           EXDXML    TAG                                                                CCG015
+      *                                                                                       CCG015
+      ** Unwind subroutine stack:                                                             CCG015
+      *                                                                                       CCG015
+     C                     MOVE *BLANKS   @STK,Q                                              CCG015
+     C                     SUB  1         Q                                                   CCG015
+      *                                                                                       CCG015
+     C                     ENDSR                                                              CCG015
+      ********************************************************************                    CCG015
+     C/EJECT                                                                                  CCG015
+     C********************************************************************
+     C**  Subroutine SRAUD produces an audit report.                    **
+     C********************************************************************
+     C           SRAUD     BEGSR                           * S R A U D   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUD '  @STK,Q
+     C*
+     C* Prepare parameters for the report:
+     C*
+     C                     MOVEL'CG2000AU'I#SPLN
+     C                     MOVEL'CG2000AU'I#REF
+     C                     MOVE 'CAD1017' I#TITL
+     C                     MOVE 'CAD1018' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C* CGUDCRPD:
+     C           1         DO   3         @C      30
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE TXT,@C    I#TEXT
+     C                     MOVELFIL,@C    I#SUB
+     C                     Z-ADDCNT,@C    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN  5
+     C*
+     C                     ENDDO
+     C* Skip a line:
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN
+     C                     PARM           W1ACT
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* CGUDCLPD:
+     C           4         DO   6         @C
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE TXT,@C    I#TEXT
+     C                     MOVELFIL,@C    I#SUB
+     C                     Z-ADDCNT,@C    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN
+     C                     PARM           W1ACT
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN
+     C*
+     C                     ENDDO
+     C* Skip a line:
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN
+     C                     PARM           W1ACT
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN
+      *                                                                                       CCG015
+     C           CCG015    IFEQ 'N'                                                           CCG015
+      *                                                                                       CCG015
+     C* Archived extracts:
+     C           7         DO   10        @C
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE TXT,@C    I#TEXT
+     C                     MOVELFIL,@C    I#SUB
+     C                     Z-ADDCNT,@C    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN
+     C                     PARM           W1ACT
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN
+     C*
+     C                     ENDDO
+     C* Skip a line:
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN
+     C                     PARM           W1ACT
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Deleted extracts:
+     C           11        DO   14        @C
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE TXT,@C    I#TEXT
+     C                     MOVELFIL,@C    I#SUB
+     C                     Z-ADDCNT,@C    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN
+     C                     PARM           W1ACT
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN
+     C*
+     C                     ENDDO
+      *                                                                                       CCG015
+     C                     ELSE                                                               CCG015
+      *                                                                                       CCG015
+     C           15        DO   16        @C                                                  CCG015
+     C                     MOVE '*LINE   'W1ACT                                               CCG015
+     C                     MOVE TXT,@C    I#TEXT                                              CCG015
+     C                     MOVELFIL,@C    I#SUB                                               CCG015
+     C                     Z-ADDCNT,@C    I#QTY                                               CCG015
+     C                     Z-ADD*ZERO     I#DECS                                              CCG015
+     C                     MOVE '1'       I#EDIT                                              CCG015
+      *                                                                                       CCG015
+     C                     CALL 'CGZAUDIT'                                                    CCG015
+     C                     PARM           W1RTN                                               CCG015
+     C                     PARM           W1ACT                                               CCG015
+     C                     PARM           W1DTA                                               CCG015
+     C                     PARM           W1RSQN                                              CCG015
+      *                                                                                       CCG015
+     C                     ENDDO                                                              CCG015
+      *                                                                                       CCG015
+     C                     ENDIF                                                              CCG015
+      *
+      **  Skip a line.                                                    082402
+     C                     MOVE '*SKIP   'W1ACT                           082402
+     C*                                                                   082402
+     C                     CALL 'CGZAUDIT'                                082402
+     C                     PARM           W1RTN                           082402
+     C                     PARM           W1ACT                           082402
+     C                     PARM           W1DTA                           082402
+     C                     PARM           W1RSQN                          082402
+      *                                                                   082402
+      **  Close the Audit Print File.                                     082402
+     C                     CLEARW1DTA                                     082402
+     C                     MOVEL'CG2000  'I#REF                           082402
+     C                     MOVE 'CAD1017' I#TITL                          082402
+     C                     MOVE 'CAD1018' I#TUL                           082402
+     C                     MOVEL'CAD1008' I#TEXT                          082402
+     C                     MOVEL'CGUSRMSG'I#FILE                          082402
+      *                                                                   082402
+     C                     CALL 'CGZAUDIT'                                082402
+     C                     PARM *BLANKS   W1RTN                           082402
+     C                     PARM '*CLOSE  'W0ACT   8                       082402
+     C                     PARM           W1DTA                           082402
+     C                     PARM           W0RSQN  5                       082402
+     C*
+     C*
+     C*
+     C           EXAUD     TAG                             <<<=== EXAUD
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+      *
+      *****************************************************************   082402
+      * Subroutine  :  SRPCUS                                         *   082402
+      * Function    :  To write new header as necessary               *   082402
+      *                                                               *   082402
+      * Called by   :  SRUDCR                                         *   082402
+      * Calls       :  None                                           *   082402
+      *****************************************************************   082402
+     C           SRPCUS    BEGSR                                          082402
+      *                                                                   082402
+      ** If count equals 4 write new page                                 082402
+      *                                                                   082402
+     C           #COUNT    IFEQ 7                                         082402
+     C           #FIRST    ORNE 'Y'                                       082402
+     C                     MOVEL'Y'       #FIRST  1                       082402
+     C                     WRITEHEADER                                    082402
+     C                     Z-ADD1         #COUNT                          082402
+     C                     ENDIF                                          082402
+      *                                                                   082402
+     C                     MOVE DRITEM    D1ITEM                          082402
+     C                     MOVE DRDCOR    D1DCOR                          082402
+     C                     MOVE DRPCOR    D1PCOR                          082402
+     C                     MOVE DRBRCA    D1BRCA                          082402
+     C                     MOVE DRORBR    D1ORBR                          082402
+     C                     MOVE DROVBR    D1OVBR                          082402
+     C                     MOVE DRMODI    D1MODI                          082402
+     C                     MOVE DRMTRN    D1MTRN                          082402
+     C                     MOVE DRMACT    D1MACT                          082402
+     C                     MOVE DRISTS    D1ISTS                          082402
+     C                     MOVE DRPTYP    D1PTYP                          082402
+     C                     MOVE DRPSTP    D1PSTP                          082402
+     C                     MOVE DRATRM    D1ATRM                          082402
+     C           DRPRTD    IFGT 0                                         082402
+     C                     CALL 'ZDATE2'               90                 082402
+     C                     PARM           DRPRTD  50       Day No.        082402
+     C                     PARM AGDFF     W2DTFM  1        Date Format    082402
+     C                     PARM *ZEROS    W2DATE  60       Date           082402
+     C                     PARM *BLANKS   D1PRTD  7        DDMMMYY        082402
+     C                     ELSE                                           082402
+     C                     MOVE 'NO DATE' D1PRTD                          082402
+     C                     ENDIF                                          082402
+     C                     MOVE DRLGID    D1LGID                          082402
+      *                                                                   082402
+      ** Write details and record one to counter                          082402
+      *                                                                   082402
+     C                     WRITEDETAIL                                    082402
+     C                     ADD  1         #COUNT  10                      082402
+      *                                                                   082402
+     C                     ENDSR                                          082402
+      *****************************************************************   082402
+      /EJECT                                                              082402
+     C********************************************************************
+     C**  Subroutine SRINIT provides initialisation and definitions.    **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C* Move copyright statement:
+     C*
+     C                     MOVE CPYR@#    ACT@   80
+     C*
+     C* Tag subroutine as executed:
+     C*
+     C                     MOVE 'Y'       W0INIT  1
+     C*
+     C* Get the date (from the RUNDAT data area);
+     C*  calculate the number of the previous day:
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C* Get the control date (day number is one less than today):
+     C*
+     C           AGRDNB    SUB  1         #CTRL   50
+     C*
+     C* Define "True", "False" and the item number comparison field:
+     C*
+     C                     MOVE 'T'       #TRUE   1
+     C                     MOVE 'F'       #FALSE  1
+     C           *LIKE     DEFN DRITEM    W#ITEM
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Get text for "Deleted" (message identifier CAD1264):
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1264' #MSGID  7
+     C                     PARM 'CGUSRMSG'#MSGF  10
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    W#DEL  25
+     C*
+     C* Get text for "Final print" (message identifier CAD1265):
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1265' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    W#FIN  25
+     C*
+     C* Initialise the counters:
+     C*
+     C                     Z-ADD*ZERO     #CRIN            CGUDCRPD in
+     C                     Z-ADD*ZERO     #CRARC           CGUDCRPD out
+     C                     Z-ADD*ZERO     #CRDEL           CGUDCRPD del
+     C                     Z-ADD*ZERO     #CLADD           CGUDCLPD add
+     C                     Z-ADD*ZERO     #CLARC           CGUDCLPD out
+     C                     Z-ADD*ZERO     #CLDEL           CGUDCLPD del
+     C                     Z-ADD*ZERO     #C1ARC           CGUDT1PD out
+     C                     Z-ADD*ZERO     #C2ARC           CGUDT2PD out
+     C                     Z-ADD*ZERO     #C3ARC           CGUDT3PD out
+     C                     Z-ADD*ZERO     #CAARC           CGUDTAPD out
+     C                     Z-ADD*ZERO     #C1DEL           CGUDT1PD del
+     C                     Z-ADD*ZERO     #C2DEL           CGUDT2PD del
+     C                     Z-ADD*ZERO     #C3DEL           CGUDT3PD del
+     C                     Z-ADD*ZERO     #CADEL           CGUDTAPD del
+     C                     Z-ADD*ZERO     #CXARC                                              CCG015
+     C                     Z-ADD*ZERO     #CXDEL                                              CCG015
+      *
+      *  Extract bank details                                             082402
+      *                                                                   082402
+     C                     CALL 'AOBANKR0'             9090               082402
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code  082402
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option       082402
+     C           SDBANK    PARM *BLANKS   DSFDY                           082402
+      *  If return with an error (LR seton in called program) then        082402
+      *  process for database error.                                      082402
+     C           *IN90     IFEQ '1'                                       082402
+     C           P@RTCD    OREQ '*ERROR*'                                 082402
+     C                     MOVEL'AOBANKR0'W0FILE                          082402
+     C                     MOVEL'*CALL'   W0KEY            ************** 082402
+     C                     Z-ADD11        W0ERNB           *DB ERROR 11 * 082402
+     C                     MOVEL'MEM5003' W0MSGD           ************** 082402
+     C                     MOVEL'MIDAS  ' W0MSGF                          082402
+     C                     EXSR SRERR                                     082402
+     C                     END                                            082402
+      *                                                                                       CCG015
+      ** Determine if Correspondence Manager Phase 1 Development                              CCG015
+      ** on iSeries is installed                                                              CCG015
+      *                                                                                       CCG015
+     C                     CALL 'AOSARDR0'                                                    CCG015
+     C                     PARM *BLANKS   PRTCD   7                                           CCG015
+     C                     PARM '*VERIFY' POPTN   7                                           CCG015
+     C                     PARM 'CCG015'  PSARD   6                                           CCG015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CCG015
+      *                                                                                       CCG015
+     C           PRTCD     IFEQ *BLANKS                                                       CCG015
+     C                     MOVE 'Y'       CCG015  1                                           CCG015
+     C                     ELSE                                                               CCG015
+     C                     MOVE 'N'       CCG015                                              CCG015
+      *                                                                                       CCG015
+     C           PRTCD     IFNE '*NRF    '                                                    CCG015
+     C                     MOVEL'SCSARDPD'W0FILE                                              CCG015
+     C                     MOVEL'*CALL'   W0KEY     P                                         CCG015
+     C                     Z-ADD14        W0ERNB                                              CCG015
+     C                     MOVEL'MEM5003' W0MSGD                                              CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG015
+     C                     EXSR SRERR                                                         CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                   082402
+      ** Report ref.                                                      082402
+     C                     MOVEL##PGM     H1REFN                          082402
+      *                                                                   082402
+      *  Retrieve title for report.                                       082402
+      *                                                                   082402
+     C                     CALL 'CGC1000'              9090               082402
+     C                     PARM 'CGD1783' #MSGID                          082402
+     C                     PARM 'CGUSRMSG'#MSGF                           082402
+     C                     PARM           #MSDTA                          082402
+     C                     PARM *BLANKS   #MSTX1                          082402
+     C                     PARM *BLANKS   #MSTX2                          082402
+      *                                                                   082402
+     C                     MOVEL#MSTX1    H2TITL 60                       082402
+      *                                                                   082402
+      *  Retrieve title underline                                         082402
+     C                     CALL 'CGC1000'              9090               082402
+     C                     PARM 'CGD1784' #MSGID                          082402
+     C                     PARM 'CGUSRMSG'#MSGF                           082402
+     C                     PARM           #MSDTA                          082402
+     C                     PARM *BLANKS   #MSTX1                          082402
+     C                     PARM *BLANKS   #MSTX2                          082402
+      *                                                                   082402
+     C                     MOVEL#MSTX1    H2TUL  60                       082402
+      *                                                                   082402
+     C*                                                                   082402
+     C*** Open report and log to RCF                                      082402
+     C                     OPEN CG2000P1                                  082402
+     C*                                                                   082402
+     C                     MOVE PFILE     SFILE                           082402
+     C                     Z-ADDPFNUM     ZSNUM                           082402
+     C                     MOVE *BLANKS   ZSENTY                          082402
+     C                     EXSR SPLF                                      082402
+     C*
+     C           EXINIT    TAG                             <<<=== EXINIT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************   082402
+     C*                                                               *   082402
+     C* SPLF   -  Log Spool File to RCF via ZSFILE                    *   082402
+     C*                                                               *   082402
+     C* Called by: SRINIT                                             *   082402
+     C*                                                               *   082402
+     C* Calls: ZSFILE(pgm), SRERR                                     *   082402
+     C*                                                               *   082402
+     C*****************************************************************   082402
+     C*                                                                   082402
+     C           SPLF      BEGSR                                          082402
+     C*                                                                   082402
+     C*** Set up subroutine stack name                                    082402
+     C                     ADD  1         Q       50                      082402
+     C                     MOVEL'SPLF'    @STK,Q                          082402
+     C*                                                                   082402
+     C*................................................................   082402
+     C*                                                                   082402
+     C*                                                                   082402
+     C                     CALL 'ZSFILE'                                  082402
+     C                     PARM *BLANKS   ZSSEQ   5                       082402
+     C                     PARM           ZSENTY  3                       082402
+     C                     PARM           SFILE  10                       082402
+     C                     PARM           ZSNUM   60                      082402
+     C                     PARM           ZSERR   1                       082402
+     C*                                                                   082402
+     C           ZSERR     IFEQ 'Y'                                       082402
+     C                     MOVEL'ZSFILE  'W0FILE           ************** 082402
+     C                     MOVEL'ONLY    'W0KEY            *DB ERROR 10 * 082402
+     C                     Z-ADD10        W0ERNB           ************** 082402
+     C                     MOVEL'MEM5003' W0MSGD                          082402
+     C                     MOVEL'MIDAS  ' W0MSGF                          082402
+     C                     EXSR SRERR                                     082402
+     C                     END                                            082402
+     C*                                                                   082402
+     C*                                                                   082402
+     C*                                                                   082402
+     C*................................................................   082402
+     C*                                                                   082402
+     C**  Unwind subroutine stack name                                    082402
+     C                     MOVEA*BLANKS   @STK,Q                          082402
+     C                     SUB  1         Q                               082402
+     C*                                                                   082402
+     C                     ENDSR                                          082402
+      *****************************************************************   082402
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for calculations:
+     C*
+     C/COPY WNCPYSRC,CG2000CPG
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** Subroutine *PSSR handles program errors.                       **
+     C********************************************************************
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for error-handling subroutine:
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     C*
+     C********************************************************************
+     O/EJECT
+     O********************************************************************
+     O* /Copy point for output specifications:
+     O*
+     O/COPY WNCPYSRC,CG2000OPG
+     O*
+     O********************************************************************
+** CPY@ -- Copyright statement
+(c) Finastra International Limited 2001

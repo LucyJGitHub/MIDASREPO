@@ -1,0 +1,2821 @@
+0001 H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Limits Maintenance')                          *
+0002 F********************************************************************
+0003 F*                                                                  *
+     F*  Midas  EXPOSURE MANAGEMENT MODULE
+0005 F*                                                                  *
+0006 F*     EM0020 - EXPOSURE MANAGEMENT LIMITS MAINTENANCE              *
+0007 F*                                                                  *
+     F*  Function: This program allows the user to define to the system
+     F*  (I/C)     the maximum allowable exposure for specified parents
+     F*            customers, countries, regions and industries.         *
+0007 F*                                                                  *
+0007 F*            These overall limits may be further sub-divided       *
+0007 F*            across the nine main business areas of FX, MM, FRA,   *
+0007 F*            IRS, LE, RE, SE, Futures and Options.                 *
+0007 F*                                                                  *
+0007 F*            The sub-division may be by specified amounts or by    *
+0007 F*            allocating percentages of the overall limit.          *
+0007 F*                                                                  *
+0007 F*            For customers, a daily delivery amount limit may be   *
+0007 F*            set up. This must be greater than zero, but less      *
+0007 F*            than the overall limit for the customer and is a      *
+0007 F*            limit on the delivery a customer can have             *
+0007 F*            outstanding  on any particular day.                   *
+0007 F*                                                                  *
+0007 F*            Each overall limit has an expiry date which is used   *
+0007 F*            to produce reminder reports for limit review          *
+0007 F*            purposes. Any report or enquiry which references an   *
+0007 F*            expired limit will highlight this fact.               *
+0007 F*                                                                  *
+0007 F*            New limit details may be added, or existing limit     *
+0007 F*            details may be amended or deleted during any stage    *
+0007 F*            of the input cycle, and these changes will be         *
+0007 F*            reflected immediately in subsequent reports and       *
+0007 F*            enquiries.                                            *
+0007 F*                                                                  *
+     F*  Called By: Main Menu
+     F*
+     F*  Calls: None
+0007 F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+0009 F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD030956           Date 09Oct14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 BUG11441           Date 05Jun06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3644            Date 12Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002             Date 01Oct98               *
+      *                 E29103             Date 01Oct91               *
+     F*                   S01332       DATE 25FEB91                      *
+     F*                   E23310       DATE 31AUG90                      *
+     F*                   E20059       DATE 09FEB90                      *
+     F*                   S01196       DATE 17/11/89                     *
+     F*                   S01199       DATE 06/11/89                     *
+     F*                   S01117       DATE 24/10/89                     *
+     F*                   S01129       DATE 12/01/88                     *S01129
+ 010 F*                   E80609       DATE 10/06/86                     *
+     F*------------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD030956 - Additional changes to BFM-TI enhancement          *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG11441 - Incorrect validation of customer number/shortname *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*     CTI002 - TRADE INNOVATION PHASE 2                            *
+     F*              NEW AMOUNT AND PERCENTAGE                           *
+     F*     E29103 - ONLY VALIDATE MODULE LIMIT IF MODULE IS IN SYSTEM   *
+     F*     S01332 - EXPOSURE MANAGEMENT RELEASE 10 ENHANCEMENTS.        *
+     F*     E23310 - LIMITS INPUT REFERENCES FUTURES & OPTIONS BUT       *
+     F*              THERE IS NO LINK BETWEEN FUTURES & OPTIONS AND      *
+     F*              EXPOSURE MANAGEMENT.                                *
+     F*     E20059 - "LETTERS OF CREDIT" SHOULD NOT BE SHOWN             *
+     F*     S01196 - LETTERS OF CREDIT MODULE DROPPED                    *
+     F*     S01199 - HELP CHANGES                                        *
+     F*     S01117 - RELEASE TEN MULTIBRANCHING                          *
+     F*     S01129 - SECURITES TRADING II INCORPORATION                  *
+     F*     E11460 - RUN DATE NOT OUTPUT FOR A DELETED RECORD CAUSED     *E11460
+     F*              FILE CONTROLS TO GO OUT OF BALANCE                  *E11460
+0011 F*                                                                  *
+0012 F********************************************************************
+0015 F*M0020FMCF  F     274            WORKSTN                            S01129
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0015 F**EM0020FMCF  F   285            WORKSTN                      S01129S01332
+0015 F**EM0020FMCF  F   318            WORKSTN                      S01332CTI002
+0015 FEM0020FMCF  F     329            WORKSTN                            CTI002
+0017 F*MLIM   UF  F     128  7AI     2 DISK                               S01129
+0017 F**EMLIM   UF  F   143  7AI     2 DISK                         S01129S01332
+0017 F**EMLIM   UF  F     165  7AI     2 DISK                       S01332CTI002
+0017 FEMLIM   UF  F     175  7AI     2 DISK                               CTI002
+     F                                              KCOMIT
+     F*MLIML2 O   F     128            DISK                      A        S01129
+     F**EMLIML2 O   F   143            DISK                      A  S01129S01332
+     F**EMLIML2 O   F   165            DISK                      A  S01332CTI002
+     FEMLIML2 O   F     175            DISK                      A        CTI002
+     F                                              KCOMIT
+     F                                              KINFDS INFDS
+     F                                              KINFSR INFSR
+0018 F**CLINT   IF  F   256  7AI     2 DISK                               S01332
+0019 F**SNAME   IF  F   256 10AI    39 DISK                               S01332
+0020 F*TABLE****   IF  F      96 12AI     2 DISK                                              CER020
+     FTABLE   IF  F      99 12AI     2 DISK                                                   CER020
+     FEMTFCBL0IF  E           K        DISK                               CTI002
+     F            EMTFCB                            KRENAMEEMTFCBF0       CTI002
+0023 F********************************************************************
+0024 F*   INDICATORS USED                                                *
+0025 F* ID F  C  H  L    FUNCTION OF INDICATORS
+0026 F* 01               WORKSTATION - FORM INITIAL SCREEN               *
+0027 F* 02                           - FROM DETAIL SCREEN, ACTION I      *
+0028 F* 03                           - FROM DETAIL SCREEN, ACTION A      *
+0029 F* 04                           - FROM DETAIL SCREEN, ACTION D      *
+0030 F* 05                           - FROM DETAIL SCREEN, ACTION E      *
+0031 F* 07               LIMITS FILE - TRAILER RECORD                    *
+0013 F* 08   USED TO CONDITION FIRST TIME PASS THROUGH RPG CALC CYCLE   *
+0034 F* 10   FUTURES/OPTIONS  MODULE SWITCHED ON                         *S01332
+0034 F* 11   FRA/IRS          MODULE SWITCHED ON                         *S01332
+0034 F* 12   FOREIGN EXCHANGE MODULE SWITCHED ON                         *S01332
+0034 F* 13   MONEY MARKET     MODULE SWITCHED ON                         *S01332
+0034 F* 14   LENDING          MODULE SWITCHED ON                         *S01332
+0034 F* 15   RETAIL           MODULE SWITCHED ON                         *S01332
+0034 F* 16   SECURITIES TRADING  MODULE SWITCHED ON                      *S01332
+0034 F* 17   TRADE FINANCE MODULE SWITCHED ON                            *CTI002
+     F* 19   SET ON IF ERROR DURING READ FROM WORKSTATION                *
+0034 F*                                                                  *
+0035 F*       INITIAL SCREEN INVALID FIELDS                              *
+0036 F*       20         CUSTOMER FIELD INVALID                          *
+0037 F*       21         COUNTRY FIELD INVALID                           *
+0038 F*       22         REGION FIELD INVALID                            *
+0039 F*       23         INDUSTRY FIELD INVALID                          *
+0040 F*       24         ACTION FIELD INVALID                            *
+0041 F*                                                                  *
+0042 F*       25         ACTION I ENTERED                                *
+0043 F*       26         ACTION A ENTERED                                *
+0044 F*       27         ACTION D ENTERED                                *
+0045 F*       28         ACTION E ENTERED                                *
+0046 F*                                                                  *
+0047 F*       29         SHORTNAME ENTERED                               *
+0048 F*                                                                  *
+0049 F*       30         FIRST CYCLE INDICATOR                           *
+0050 F*                                                                  *
+0051 F*       DETAIL SCREEN INVALID FIELDS                               *
+0052 F*       31           - OVERALL LIMIT                               *
+0053 F*       32           - PERCENTAGE INDICATOR                        *
+0054 F*       33           - FX LIMIT                                    *
+0055 F*       34           - MONEY MARKET LIMIT                          *
+0056 F*       35           - LENDING LIMIT                               *
+0057 F*       36           - RETAIL LIMIT                                *
+0058 F********37           - LETTERS OF CREDIT LIMIT                     *S01196
+0059 F********38           - SECURITIES TRADING LIMIT                    *S01129
+0059 F*       38           - SECURITIES TRADING LIMIT ISSUER             *S01129
+0059 F*       65           - SECURITIES TRADING LIMIT COUNTERPARTY       *S01129
+0060 F*       39           - FINANACIAL FUTURES LIMIT                    *
+0061 F*       40           - EXPIRY DATE                                 *
+0061 F*       52           - OPTIONS LIMIT                               *S01332
+0061 F*       53           - FUTURE RATE AGREEMENT LIMIT                 *S01332
+0061 F*       54           - INTEREST RATE SWAP LIMIT                    *S01332
+0061 F*       55           - DDR LIMIT                                   *S01332
+0061 F*       62           - TRADE FINANCE LIMIT                         *CTI002
+0062 F*                                                                  *
+0063 F*       41         ERROR 008 FOUND FOR LIMITS                      *
+0064 F*       42         ERROR 010 FOUND FOR LIMITS                      *
+0065 F*       43         ERROR 013 FOUND FOR LIMITS                      *
+0066 F*       50         ERROR 004 FOUND FOR OVERALL LIMIT/PERCENTAGE    *
+0067 F*                   INDICATOR/EXPIRY DATE                          *
+0068 F*                                                                  *
+0069 F*       44         PERCENTAGE INDICATOR Y                          *
+0070 F*                                                                  *
+0071 F*       45         COUNTRY CODE ENTERED                            *
+0072 F*       46         REGION CODE ENTERED                             *
+0073 F*       47         INDUSTRY CODE ENTERED                           *
+0074 F*       48         CUSTOMER NUMBER/SHORTNAME ENTERED               *
+0075 F*                                                                  *
+0076 F*       49         FREE LIMITS RECORD                              *
+0077 F*                                                                  *
+0078 F*       51         DISPLAY INITIAL SCREEN                          *
+0079 F*                                                                  *
+ 085 F*       56         UPDATE LIMITS RECORD                            *
+ 087 F*       57              UPDATE LIMITS FILE TRAILER                 *
+0061 F*       59         DISPLAY DDR LIMIT                               *S01332
+0088 F*                                                                  *
+0089 F*       60         PROTECT DETAIL SCREEN DETAILS                   *
+0090 F*       61         LOOP ROUND DETAIL SCREEN                        *
+0091 F*       63         DISPLAY DETAILS FROM FILE                       *
+0092 F*                                                                  *
+0093 F*       68         CHECK BETWEEN AMOUNTS OF CUSTOMER               *CTI002
+0093 F*                  BALANCE AND TRADE FINANCE LIMIT                 *CTI002
+0093 F*                  WE CANNOT LEAVE THIS TRANSACTION UNTIL IT IS    *CTI002
+0093 F*                  SET ON                                          *CTI002
+0093 F*                  IT AVOID ALSO TO EXIT AFTER PRESSING F9         *CTI002
+0093 F*                                                                  *CTI002
+0093 F*       69         INDEX N LESS THAN 7 - NUMBER OF LIMIT TYPES     *
+0094 F*                                                                  *
+0095 F*       70         GENERAL ERROR INDICATOR USED FOR DETAIL SCREEN  *
+0096 F*       71         GENERAL ERROR INDICATOR USED FOR INITIAL SCREEN *
+0097 F*       73         NO CUSTOMER/COUNTRY/REGION/INDUSTRY ENTERED     *
+0098 F*                                                                  *
+0100 F*       74         RECORD NOT UNCHANGED/ RECORD NOT FOUND          *
+0102 F*       76         LIMIT NOT ENTERED                               *
+0103 F*                                                                  *
+0104 F*       77         ERRORS FOUND                                    *
+0105 F*                                                                  *
+0100 F*       75         CUSTOMER BALANCE FILE - RECORD NOT FOUND        *CTI002
+0106 F*       78         TABLE FILE - RECORD LIVE                        *
+0107 F*       79                    - RECORD DEAD                        *
+0108 F*       80                    - RECORD NOT FOUND                   *
+0109 F*       81         CUSTOMER FILE - RECORD LIVE                     *
+0110 F*       82                       - RECORD DEAD                     *
+0111 F*       83                       - RECORD NOT FOUND                *
+0112 F*       84         SHORTNAME FILE - RECORD LIVE                    *
+0113 F*       85                        - RECORD DEAD                    *
+0114 F*       86                        - RECORD NOT FOUND               *
+0115 F*       87         LIMITS FILE - RECORD LIVE                       *
+0116 F*       88                     - RECORD DEAD                       *
+0117 F*       89                     - RECORD NOT FOUND                  *
+0118 F*                                                                  *
+0119 F*       98         DATE FORMAT                                     *
+0120 F*       99         STANDARD SUBROUTINE ERROR                       *
+0121 F*                                                                  *
+0126 F*          U8   DATABASE ERROR, REQUIRED RECORDS NOT FOUND.
+ 127 F*               N.B. U8 END THE PROGRAM AND CONDITION
+0128 F*                    FOLLOWING OCL EXECUTION.
+0129 F**
+0130 F********************************************************************
+0131 F/EJECT
+     E                    CPY@    1   1 80
+0132 E***********         MSG     1   7 53               ERROR MESSAGES   CTI002
+0132 E                    MSG     1   8 53               ERROR MESSAGES   CTI002
+0133 E                    ERR        19  4               ERROR CODES
+0134 E***********         LIMV        7 11 0             LIMITS VALUES    S01129
+0135 E***********         LIMP        7  7 4             LIMIT % VALUES   S01129
+0134 E***********         LIMV        8 11 0          LIMITS VALUES S01129E20059
+0135 E***********         LIMP        8  7 4         LIMIT % VALUES S01129E20059
+0134 E********************LIMV        7 11 0        LIMITS VALUES  E20059 E23310
+0135 E********************LIMP        7  7 4        LIMIT % VALUES E20059 E23310
+0134 E***********         LIMV        6 11 0             LIMITS VALUE23310S01332
+0135 E***********         LIMP        6  7 4             LIMIT % VALE23310S01332
+0134 E***********         LIMV       10 11 0             LIMITS VALUS01332CTI002
+0135 E***********         LIMP       10  7 4             LIMIT % VALS01332CTI002
+0134 E                    LIMV       11 11 0             LIMITS VALUES    CTI002
+0135 E                    LIMP       11  7 4             LIMIT % VALUES   CTI002
+0136 E                    ZA1        16  1               USED IN ZALIGN
+0137 E                    ZA2        16  1               USED IN ZALIGN
+0138 E                    ZYDY    4   4  4 0             USED IN ZDATE1
+0139 E                    ZMDY   13  13  3 0             USED IN ZDATE1
+0140 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    SC        152  1               TO WRT IN SLTSCN CTI002
+     E/COPY ZSRSRC,ZSEDITZ1                                               CTI002
+0141 E/EJECT
+0142 I**********
+0143 I** WORKSTATION FILE
+0144 IEM0020FMNS  01   1 CS   2 CF
+0145 I**
+0146 I** INITIAL SCREEN
+0147 I                                        1   2 STID
+0148 I                                        3  20 SIBUFF
+0149 I                                        3  12 SCSNUM
+0150 I                                        3   8 SCSNMA
+0151 I                                        9  12 SCSNMB
+0152 I                                       13  14 SCCODE
+0153 I                                       15  16 SRCODE
+0154 I                                       17  19 SICODE
+0155 I                                       20  20 SACTCD
+0156 I**
+0157 I** DETAIL SCREEN
+0158 I        NS  02   1 CS   2 CI
+0159 I       OR   03   1 CS   2 CA
+0160 I       OR   04   1 CS   2 CD
+0161 I       OR   05   1 CS   2 CE
+0162 I                                        1   2 STID
+0163 I*************                           3  97 SLTSCN                S01129
+0163 I*************                           3 108 SLTSCN         S01129 S01196
+0163 I****************************************3  97 SLTSCN          S01196E23310
+0163 I***********                             3  86 SLTSCN          E23310S01332
+0163 I***********                             3 141 SLTSCN          S01332CTI002
+0163 I                                        3 152 SLTSCN                CTI002
+0164 I                                        3  13 SOVRLM
+0165 I                                       14  14 SPERIN
+0166 I                                       15  25 SFXLMT
+0167 I                                       26  36 SMMLMT
+0168 I**************                         37  47 SLELMT                S01332
+0169 I**************                         48  58 SRELMT                S01332
+0170 I***********                            59  69 SLCLMT                S01196
+0171 I***********                            70  80 SSTLMT                S01196
+0171 I**************                         59  69 SSTLMT        S01196  S01332
+0172 I*************                          81  91 SFFLMT                S01129
+0173 I*************                          92  97 SXDATE                S01129
+     I*************                           1  97 SLOT                  S01129
+0172 I***********                            81  91 SSCLMT        S01129  S01196
+0172 I**************                         70  80 SSCLMT        S01196  S01332
+0173 I***********                            92 102 SFFLMT        S01129  S01196
+0173 I***************************************81  91 SFFLMT          S01196E23310
+0173 I***********                           103 108 SXDATE        S01129  S01196
+0173 I***************************************92  97 SXDATE          S01196E23310
+     I***********                             1 108 SLOT          S01129  S01196
+     I****************************************1  97 SLOT            S01196E23310
+0173 I***********                            81  86 SXDATE          E23310S01332
+     I***********                             1  86 SLOT            E23310S01332
+     I                                       37  47 SSTLMT                S01332
+     I                                       48  58 SLELMT                S01332
+     I                                       59  69 SSCLMT                S01332
+     I                                       70  80 SRELMT                S01332
+     I                                       81  91 SFRLMT                S01332
+     I                                       92 102 SFFLMT                S01332
+     I***********                           103 113 SIRLMT         S01332 CTI002
+     I***********                           114 124 SOPLMT         S01332 CTI002
+     I***********                           125 135 SMDLMT         S01332 CTI002
+     I***********                           136 141 SXDATE         S01332 CTI002
+     I***********                             1 141 SLOT           S01332 CTI002
+     I                                      103 113 STFLMT                CTI002
+     I                                      114 124 SIRLMT                CTI002
+     I                                      125 135 SOPLMT                CTI002
+     I                                      136 146 SMDLMT                CTI002
+     I                                      147 152 SXDATE                CTI002
+     I                                        1 152 SLOT                  CTI002
+0174 I**
+0175 I** CATCHALL
+0176 I        NS
+0177 I**********
+0178 I** LIMITS FILE
+0179 I**
+0180 I** TRAILER RECORD
+0181 IEMLIM   NS  07   1 CT
+0182 I                                        1   1 RECI
+0183 I                                        2   8 KEY
+0184 I                                    P  12  140MNRI
+0185 I                                    P  15  170MNRD
+0186 I*************                           1 128 LOT                   S01129
+0186 I**************                          1 143 LOT            S01129 S01332
+0186 I**************                          1 165 LOT            S01332 CTI002
+0186 I                                        1 175 LOT                   CTI002
+0187 I**
+0188 I** DETAIL RECORD
+0189 I        NS
+0190 I                                        1   1 RECI
+0191 I                                        2   2 RETP
+0192 I                                        3   8 MLC
+0193 I                                    P   9  110MXPD
+0194 I                                       12  12 MPI
+0195 I                                    P  13  180MOAL
+0196 I                                    P  19  240MFXL
+0197 I                                    P  25  300MMML
+0198 I                                    P  31  360MLEL
+0199 I                                    P  37  420MREL
+0200 I***********                         P  43  480MBCL                  S01196
+0201 I*************                       P  49  540MSTL                  S01129
+0202 I**************                      P  55  600MFFL                  S01332
+     I                                    P  49  540MSTL                  CTI002
+0203 I                                    P  61  644MFXP
+0204 I                                    P  65  684MMMP
+0205 I                                    P  69  724MLEP
+0206 I                                    P  73  764MREP
+0207 I***********                         P  77  804MLOP                  S01196
+0208 I*************                       P  81  844MSEP                  S01129
+0209 I*************                       P  85  884MFFP                  S01129
+0210 I*************                       P 119 1210ORED                  S01129
+0211 I*************                       P 122 1240LCD                   S01129
+0212 I*************                         125 125 CHTP                  S01129
+0213 I*************                       P 126 1280TNLU                  S01129
+0214 I*************                           1 128 LOT                   S01129
+0215 I***LAST UPDATE                                                      S01129
+0216 I*************                         122 128 LSTC                  S01129
+0208 I                                    P  81  860MSLI                  S01129
+0209 I                                    P  87  904MSPI                  S01129
+0209 I                                    P  91  960MSCL                  S01129
+0209 I                                    P  97 1004MSPC                  S01129
+0209 I**************                      P 101 1044MFFP           S01129 S01332
+0209 I                                    P 105 1100MFRL                  S01332
+0209 I                                    P 111 1160MIRL                  S01332
+0209 I                                    P 117 1220MFUL                  S01332
+0209 I                                    P 123 1280MOPL                  S01332
+0210 I                                    P 134 1360ORED                  S01129
+0211 I                                    P 137 1390LCD                   S01129
+0212 I                                      140 140 CHTP                  S01129
+0213 I                                    P 141 1430TNLU                  S01129
+0209 I                                    P 144 1474MFRP                  S01332
+0209 I                                    P 148 1514MIRP                  S01332
+0209 I                                    P 152 1554MFUP                  S01332
+0209 I                                    P 156 1594MOPP                  S01332
+0209 I                                    P 160 1650EMDR                  S01332
+0209 I                                    P 166 1710TFLI                  CTI002
+0209 I                                    P 172 1754TFPC                  CTI002
+0214 I**************                          1 143 LOT            S01129 S01332
+0214 I**************                          1 165 LOT            S01332 CTI002
+0214 I                                        1 175 LOT                   CTI002
+0215 I** LAST UPDATE                                                      S01129
+0216 I                                      137 143 LSTC                  S01129
+0217 I**********
+0218 I** CUSTOMER FILE
+0219 I**CLINT***NS                                                        S01332
+0220 I**********                                                          S01332
+0221 I***MASTER*DETAILS RECORD                                            S01332
+0222 I**********                              1   1 RECI                  S01332
+0223 I**********                              2   7 CNUM                  S01332
+0224 I**********                              9  28 CRNM                  S01332
+0225 I**********                             29  38 CTWN                  S01332
+0226 I**********
+0227 I***CUSTOMER SHORTNAMES FILE                                         S01332
+0228 I*SNAME**NS                                                          S01332
+0229 I**********                                                          S01332
+0230 I***CUSTOMER SHORTNAMES RECORD                                       S01332
+0231 I**********                              1   1 RECI                  S01332
+0232 I**********                              2   7 CNUM                  S01332
+0233 I**********                             39  48 CSNM                  S01332
+0234 I**********
+0235 I** TABLE FILE
+0236 ITABLE   NS       2 C0   3 C1  12 C1
+0237 I       AND      13 C0
+0238 I**
+0239 I** ICDR1 RECORD
+0240 I                                        1   1 RECI
+0241 I                                       67  67 DATF
+0242 I                                    P  77  790RUND
+0243 I**
+0244 I** ICDR2 RECORD
+0245 I**      NS       2 C0   3 C1  12 C1                                 S01129
+0246 I**     AND      13 C1                                               S01129
+0247 I**                                      1   1 RECI                  S01129
+0248 I**                                     69  71 LCCY                  S01129
+0249 I**                                                                  S01129
+0138 I        NS  06   1 CD   2 C0   3 C1                                 S01129
+0139 I       AND      12 C9  13 C5                                        S01129
+0140 I                                        1   1 RECI                  S01129
+0141 I                                       14  16 LCCY                  S01129
+0250 I** CURRENCIES DETAIL RECORD
+0251 I        NS       2 C2   3 C0  13 C1
+0252 I                                        1   1 RECI
+0253 I                                       12  13 CCY
+0254 I                                       14  27 CCNM
+0255 I**
+0256 I** COUNTRIES RECORD
+0257 I        NS       2 C5   3 C0
+0258 I                                        1   1 RECI
+0259 I                                       12  13 CCOD
+0260 I                                       14  43 CNM
+0261 I**
+0262 I** LOCAL INDUSTRY CODES RECORD
+0263 I        NS       2 C6   3 C1
+0264 I                                        1   1 RECI
+0265 I                                       11  130LIND
+0266 I                                       14  43 LIDN
+     I                                       97  99 LOIC                                      CER020
+0267 I**
+0268 I** REGIONS RECORD
+0269 I        NS       2 C5   3 C1
+0270 I                                        1   1 RECI
+0271 I                                       12  13 REGC
+0272 I                                       14  43 REGN
+0273 I**
+0274 I** CATCHALL
+0275 I        NS
+0322 I**
+0323 I** DATA STRUCTURE TO HOLD NUMERIC VALUES OF ALPHAMERIC FIELDS
+0324 I** ENTERED ON DETAIL SCREEN
+0325 I            DS
+0326 I                                        1  110OVRLMV
+0327 I************                           12  60 LIMP                  S01129
+0327 I***********                            12  67 LIMP            S01129E20059
+0327 I***************************************12  60 LIMP           E20059 E23310
+0327 I***********                            12  53 LIMP            E23310S01332
+0327 I***********                            12  81 LIMP            S01332CTI002
+0327 I                                       12  88 LIMP                  CTI002
+0328 I                                       12  184FXLIMP
+0329 I                                       19  254MMLIMP
+0330 I                                       26  324LELIMP
+0331 I                                       33  394RELIMP
+0332 I***********                            40  464LCLIMP                S01196
+0333 I***********                            47  534STLIMP                E20059
+0333 I                                       40  464STLIMP                E20059
+0334 I************                           54  604FFLIMP                S01129
+0335 I************                           61 137 LIMV                  S01129
+0336 I************                           61  710FXLIMV                S01129
+0337 I************                           72  820MMLIMV                S01129
+0338 I************                           83  930LELIMV                S01129
+0339 I************                           94 1040RELIMV                S01129
+0340 I************                          105 1150LCLIMV                S01129
+0341 I************                          116 1260STLIMV                S01129
+0342 I************                          127 1370FFLIMV                S01129
+0343 I************                          138 1420EXDATV                S01129
+0334 I***********                            54  604SCLIMP          S01129E20059
+0334 I***********                            61  674FFLIMP          S01129E20059
+0335 I***********                            68 155 LIMV            S01129E20059
+0336 I***********                            68  780FXLIMV          S01129E20059
+0337 I***********                            79  890MMLIMV          S01129E20059
+0338 I***********                            90 1000LELIMV          S01129E20059
+0339 I***********                           101 1110RELIMV          S01129E20059
+0334 I                                       47  534SCLIMP                E20059
+0334 I***************************************54  604FFLIMP         E20059 E23310
+0335 I***************************************61 137 LIMV           E20059 E23310
+0334 I                                       54  604FFLIMP                S01332
+0334 I                                       61  674OPLIMP                S01332
+0334 I                                       68  744FRLIMP                S01332
+0334 I                                       75  814IRLIMP                S01332
+0343 I                                       82  884TFLIMP                CTI002
+0335 I***********                            61 126 LIMV            E23310S01332
+0336 I***********                            61  710FXLIMV          E20059S01332
+0337 I***********                            72  820MMLIMV          E20059S01332
+0338 I***********                            83  930LELIMV          E20059S01332
+0339 I***********                            94 1040RELIMV          E20059S01332
+0335 I***********                            82 191 LIMV            S01332CTI002
+0336 I***********                            82  920FXLIMV          S01332CTI002
+0337 I***********                            93 1030MMLIMV          S01332CTI002
+0338 I***********                           104 1140LELIMV          S01332CTI002
+0339 I***********                           115 1250RELIMV          S01332CTI002
+0340 I***********                           112 1220LCLIMV        S01129  S01196
+0341 I***********                           123 1330STLIMV          S01129E20059
+0341 I***********                           134 1440SCLIMV          S01129E20059
+0342 I***********                           145 1550FFLIMV          S01129E20059
+0343 I***********                           156 1600EXDATV          S01129E20059
+0341 I***********                           105 1150STLIMV          E20059S01332
+0341 I***********                           116 1260SCLIMV          E20059S01332
+0342 I**************************************127 1370FFLIMV         E20059 E23310
+0343 I**************************************138 1420EXDATV         E20059 E23310
+0343 I***********                           127 1310EXDATV          E23310S01332
+0341 I***********                           126 1360STLIMV          S01332CTI002
+0341 I***********                           137 1470SCLIMV          S01332CTI002
+0342 I***********                           148 1580FFLIMV          S01332CTI002
+0343 I***********                           159 1690OPLIMV          S01332CTI002
+0343 I***********                           170 1800FRLIMV          S01332CTI002
+0343 I***********                           181 1910IRLIMV          S01332CTI002
+0343 I***********                           192 1960EXDATV          S01332CTI002
+0335 I                                       89 209 LIMV                  CTI002
+0336 I                                       89  990FXLIMV                CTI002
+0337 I                                      100 1100MMLIMV                CTI002
+0338 I                                      111 1210LELIMV                CTI002
+0339 I                                      122 1320RELIMV                CTI002
+0341 I                                      133 1430STLIMV                CTI002
+0341 I                                      144 1540SCLIMV                CTI002
+0342 I                                      155 1650FFLIMV                CTI002
+0343 I                                      166 1760OPLIMV                CTI002
+0343 I                                      177 1870FRLIMV                CTI002
+0343 I                                      188 1980IRLIMV                CTI002
+0343 I                                      199 2090TFLIMV                CTI002
+0343 I                                      210 2140EXDATV                CTI002
+0344 I**
+0345 I** DATA STRUCTURE TO REDEFINE ERROR ARRAY
+0346 I            DS
+0347 I                                        1  76 ERR
+0348 I                                        1  76 ERRA
+0349 I**
+0350 I** DATA STRUCTURE TO REDEFINE KEY TO CHAIN TO LIMITS FILE
+0351 I            DS
+0352 I                                        1   7 LIMTKY
+0353 I                                        2   7 LIMKYR
+0354 I**
+0355 I** DATA STRUCTURE FOR DATABASE ERRORS
+0356 ILDA        UDS                            256
+0357 I**********                            134 138 DBFILE                S01117
+     I                                      134 141 DBFILE                S01117
+0358 I**********                            139 167 DBKY                  S01117
+     I                                      142 170 DBKY                  S01117
+0359 I**********                            168 175 DBPGM                 S01117
+     I                                      171 180 DBPGM                 S01117
+0360 I**********                            176 1770DBASE                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**
+     IIPSDS      SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      254 263 USRID
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I**   INFDS DATA STRUCTURE
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I**
+     I**   DATA STRUCTURE TO PROVIDE TEXT ON COMIT ENTRY I398 URNAL
+     I**
+     I**TTXT      DS                            154                       S01129
+     I*MTTXT******DS                            165               S01129  S01196
+     ICMTTXT      DS                            154                       S01196
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 IADX
+     I                                       26  35 USRIDX
+     I                                       51  57 SLKEY
+     I**************                         58 154 SLOTX                 S01129
+     I**************                         58 165 SLOTX          S01129 S01196
+     I                                       58 154 SLOTX                 S01196
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*  DATA STRUCTURE FOR SCREEN1 INPUT FIELDS.                         S01332
+     IS1BUFF      DS                             18                       S01332
+     I                                        1  10 S1CUST                S01332
+     I                                       11  12 S1CNTY                S01332
+     I                                       13  14 S1REGN                S01332
+     I                                       15  17 S1IND                 S01332
+     I                                       18  18 S1ACT                 S01332
+     I*                                                                   S01332
+     ISDMMOD    E DSSDMMODPD                                              S01332
+     I* MODULE DETAILS ACCESSED VIA ACCESS PROGRAM                        S01332
+     I*                                                                   S01332
+     IDSFDY     E DSDSFDY                                                 S01332
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01332
+     I*                                                                   S01332
+     I*                                                                   S01332
+     IDSSDY     E DSDSSDY                                                 S01332
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01332
+     I*                                                                   S01332
+     I@CUST     E DSSDCUSTPD                                              S01332
+     I** DUMMY RECORD FORMATS FOR ACCESS TO CUSTOMER DETAILS              S01332
+     I*                                                                   S01332
+     ISDCTRY    E DSSDCTRYPD                                              S01332
+     I* DUMMY RECORD FORMAT FOR ACCESS TO COUNTRY CODE                    S01332
+     I*                                                                   S01332
+     ISDREGN    E DSSDREGNPD                                              S01332
+     I* DUMMY RECORD FORMAT FOR ACCESS TO REGION CODE                     S01332
+     I*                                                                   S01332
+     ISDINDS    E DSSDINDSPD                                              S01332
+     I* DUMMY RECORD FORMAT FOR ACCESS TO INDUSTRY CODE                   S01332
+0361 I/EJECT
+     I/COPY WNCPYSRC,EM0020I001
+     I/COPY ZSRSRC,ZSEDITZ2                                               CTI002
+     C*                                                                   CTI002
+     C*IF TRADE FINANCE NOT ACTIVE, ENSURE THAT FIELDS TRADE FINANCE      CTI002
+     C* FIELDS CONTAIN *ZERO VALUES AND NOT DECIMAL DATA ERRORS           CTI002
+     C           BGN3ST    IFEQ 'N'                        NO TRADE F     CTI002
+     C           CTI007    ANDEQ'N'                                                         MD030956
+     C                     Z-ADD*ZERO     TFLI                            CTI002
+     C                     Z-ADD*ZERO     TFPC                            CTI002
+     C                     Z-ADD*ZERO     TFLIMV                          CTI002
+     C                     Z-ADD*ZERO     TFLIMP                          CTI002
+     C                     ENDIF                                          CTI002
+     C*                                                                   CTI002
+     C** KEYS DEFINITION                                                  CTI002
+     C           KTFCB0    KLIST                                          CTI002
+     C                     KFLD           LIMKYR                          CTI002
+     C*                                                                   CTI002
+     C                     MOVEACPY@      BIS@   80                       S01117
+     C*                                                                   S01117
+     C**   RPG ERROR HANDLING
+     C           STATUS    IFEQ 01021
+     C                     EXSR UDLOG
+     C                     GOTO ERRDSP
+     C                     END
+     C**
+     C*****READ*WORKSTATION*FILE*/*HELP*FACILITY                          S01199
+     C**   READ WORKSTATION FILE                                          S01199
+     C**
+     C           *IN30     IFEQ '1'
+     C           *IN19     DOUEQ'0'
+     C                     READ EM0020FM                 19
+     C************IN19*****IFEQ*'1'                                       S01199
+     C**********           MOVEAERR       HERCD 160                       S01199
+     C**********           MOVEL'EM0020'  HBPGM   8                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C**********           END                                            S01199
+     C                     END
+     C                     END
+     C**
+0363 C** FIRST CYCLE CALCULATIONS
+0365 C  N08                SETON                     08
+0366 C                     SETOF                     19
+0367 C  N30                EXSR CYCLE1
+0368 C   99N30             SETON                     U8LR
+0369 C   LR                GOTO ENDPGM
+0370 C**
+0371 C** RESET INDICATORS
+0372 C                     SETOF                     202122
+0373 C                     SETOF                     232425
+0374 C                     SETOF                     262728
+0375 C                     SETOF                     2931
+0376 C                     SETOF                     323334
+0377 C                     SETOF                     353637
+0378 C                     SETOF                     383940
+0378 C                     SETOF                     525354               S01332
+0378 C                     SETOF                     65                   S01129
+0379 C                     SETOF                     414243
+0380 C                     SETOF                     707173
+0381 C                     SETOF                     74
+0382 C                     SETOF                     507778
+0383 C                     SETOF                     798081
+0384 C                     SETOF                     828384
+0385 C                     SETOF                     858687
+0386 C                     SETOF                     8889
+0386 C                     SETOF                     5558                 S01332
+0386 C                     SETOF                     62                   CTI002
+     C/COPY WNCPYSRC,EM0020C001
+0387 C**
+0388 C** IF FROM FIRST SCREEN, RESET SECOND SCREEN INDICATORS
+0389 C   01                SETOF                     6063
+0390 C**
+0391 C** RESET LAST UPDATE FIELDS FOR NEW TRANSACTION
+0392 C   01                MOVE *BLANK    LSTC
+0393 C**
+0394 C** CHECK FUNCTION KEYS
+0398 C** IF CMD/09 PRESSED IN ENQUIRE MODE                                CTI002
+     C           *IN05     IFEQ '1'                                       CTI002
+     C           *IN28     OREQ '1'                                       CTI002
+0386 C                     SETOF                     68                   CTI002
+0400 C  N51 17 KI          EXSR SLCBM                                     CTI002
+     C                     ENDIF                                          CTI002
+0395 C** IF CMD/3 PRESSED, EXIT
+0396 C***KC****************SETON                     LR                   CTI002
+0396 C   KCN68             SETON                     LR                   CTI002
+0397 C**
+0398 C** IF CMD/12 PRESSED,RETURN TO INITIAL SCREEN
+0399 C***KL****************SETON                     51                   CTI002
+0400 C***KL****************SETOF                     61                   CTI002
+0399 C   KLN68             SETON                     51                   CTI002
+0400 C   KLN68             SETOF                     61                   CTI002
+0401 C**
+0402 C** CLEAR ERROR ARRAY, SET INDEX
+0403 C  N61                MOVE *BLANK    ERRA   76
+0404 C  N61                Z-ADD1         E       20
+0405 C**
+0406 C** IF CMD/10 PRESSED AND NOT ACTION D,ERROR
+0407 C   KJN04N61          MOVELMSG,6     ERRA
+0408 C**
+0409 C** IF CMD/3,CMD/12 OR INVALID CMD/10,OR CMD/10 NOT PRESSED ON ACTION D
+0410 C** OR LOOP ROUND DETAIL SCREEN, EXIT
+     C/COPY WNCPYSRC,EM0020C002
+0411 C***KC                                                               CTI002
+0412 C***OR KL                                                            CTI002
+0411 C   KCN68                                                            CTI002
+0412 COR KLN68                                                            CTI002
+0413 COR KJN04
+0414 CORNKJ 04
+0415 COR 61                GOTO ENDPGM
+     C/COPY WNCPYSRC,EM0020C003
+0416 C**
+0417 C** INITIAL SCREEN VALIDATION
+0418 C   01                EXSR VALID1
+0419 C**
+0420 C** IF A DATABASE ERROR, EXIT
+0421 C   LR                GOTO ENDPGM
+0422 C**
+0423 C** DETAIL SCREEN VALIDATION
+0424 C   02
+0425 COR 03                EXSR VALID2
+0426 C**
+0427 C** SET DISPLAY ERROR INDICATORS
+     C           ERRDSP    TAG
+0428 C           ERRA      COMP *BLANK               7777  ON IF NOT BLANK
+0429 C   77                GOTO ENDPGM
+     C/COPY WNCPYSRC,EM0020C004
+0430 C**
+0431 C** IF FROM FIRST SCREEN SAVE LAST UPDATE DATA
+0432 C   01                MOVE LSTC      LSTC1   7
+0433 C**
+0434 C** IF ACTION I OR A, AND PERCENTAGES ENTERED
+0435 C** CALCULATE VALUES TO GO ON FILE
+0436 C   02 44
+0437 COR 03 44             EXSR LIMCON
+0433 C** HERE BECAUSE WE NEED THE T/F AMOUNT WHEN PERCENTAGE IS           CTI002
+0433 C** ENTERED DURING THE INSERT/AMENDMENT MODE                         CTI002
+0398 C** IF CMD/09 PRESSED,DISPLAY SUB LIMIT CUSTOMER MAINTENANCE         CTI002
+0386 C                     SETOF                     68                   CTI002
+0400 C  N51 17 KI          EXSR SLCBM                                     CTI002
+0398 C** CHECK IF SUM OF CUSTOMER BALANCE AMOUNTS ARE CORRECT             CTI002
+0398 C** ONLY FOR INSERT AND AMEND CASE                                   CTI002
+0400 C  N51 17                                                            CTI002
+     CANN04N05             EXSR VLTFA                                     CTI002
+0429 C   68                GOTO ENDPGM                                    CTI002
+0438 C**
+0439 C** IF NO ERRORS, PROCESS UPDATE
+0440 C   02
+0441 COR 03
+0442 COR 04                EXSR UDLOG
+0443 C**
+0444 C** IF FIRST CYCLE, RESET INDICATOR
+0445 C  N30                SETON                     30
+0446 C**
+0447 C**  CLEAR DISPLAY FIRST SCREEN INDICATOR
+0448 C   01                SETOF                     51
+0449 C**
+0450 C** END OF CALCULATIONS
+0451 C           ENDPGM    TAG                             ** ENDPGM TAG
+0452 C**
+0453 C** CHECK FOR FURTHER ERRORS
+     C/COPY WNCPYSRC,EM0020C005
+0454 C           ERRA      COMP *BLANK               7777  ON IF NOT BLANK
+     C/COPY WNCPYSRC,EM0020C006
+0455 C**
+0456 C** GET TIME
+0457 C                     EXSR QTIME
+0458 C**
+0459 C/EJECT
+0460 C********************************************************************
+0461 C**
+0462 C**   CYCLE1 S.R.  TO PERFORM FIRST CYCLE CALCULATIONS
+0463 C**
+0464 C           CYCLE1    BEGSR                           ** CYCLE1 **
+0465 C**
+0466 C** SET PROGRAM NAME ETC
+0467 C                     MOVE 'EM0020  'DBPGM
+0468 C                     MOVE 'TABLE'   DBFILE
+     C**                                                            E20059S01332
+     C***SET*FILLER*FIELDS*TO*ZERO                                  E20059S01332
+     C***********          Z-ADD*ZERO     Z007    70                E20059S01332
+     C***********          Z-ADD*ZERO     Z011   110                E20059S01332
+     C                     Z-ADD*ZERO     Z011   110                      CTI002
+     C**                                                                  S01332
+     C** SET FILLER FIELDS TO BLANKS                                      S01332
+     C                     MOVE *BLANKS   Z006    6                       S01332
+     C                     MOVE *BLANKS   Z004    4                       S01332
+     C                     MOVE *BLANKS   Z005    5                       S01332
+0469 C**
+0470 C** GET FIRST ICD RECORD (ICDR1)
+0471 C                     Z-ADD1         DBASE            ** DBASE1 **
+0472 C                     EXSR ZSYSTM
+0473 C   99                MOVE ZTABKY    DBKY
+0474 C   99                GOTO ENDCY1
+0475 C**
+0476 C** GET SECOND ICD RECORD (ICDR2)
+0259 C****                     MOVE '  11'    ZTABKY                      S01129
+     C                     MOVE '  95'    ZTABKY                          S01129
+0478 C                     Z-ADD2         DBASE            ** DBASE2 **
+0479 C                     MOVE ZTABKY    DBKY
+0480 C           ZTABKY    CHAINTABLE                99    ON=NOT THERE
+0481 C  N99      RECI      COMP 'D'                  9999  ON=NOT LIVE REC
+0482 C   99                GOTO ENDCY1
+0483 C**
+0484 C** READ LIMITS BASE CURRENCY RECORD
+0485 C                     MOVEL'20'      ZTABKY
+0486 C                     MOVELLCCY      WORK1   4
+0487 C                     MOVE '1'       WORK1
+0488 C                     MOVE WORK1     ZTABKY
+0489 C                     Z-ADD3         DBASE            ** DBASE3 **
+0490 C                     MOVE ZTABKY    DBKY
+0491 C           ZTABKY    CHAINTABLE                99    ON=NOT THERE
+0492 C  N99      RECI      COMP 'D'                  9999  ON=NOT LIVE REC
+0493 C   99                GOTO ENDCY1
+      *                                                                                     MD030956
+      ** Check if CTI007 BFM-TI Exposure Management is enabled                              MD030956
+      *                                                                                     MD030956
+     C                     CALL 'AOSARDR0'                                                  MD030956
+     C                     PARM *BLANKS   @RTCD                                             MD030956
+     C                     PARM '*VERIFY' @OPTN                                             MD030956
+     C                     PARM 'CTI007'  PSARD   6                                         MD030956
+      *                                                                                     MD030956
+     C           @RTCD     IFEQ *BLANKS                                                     MD030956
+     C                     MOVE 'Y'       CTI007  1                                         MD030956
+     C                     ELSE                                                             MD030956
+     C                     MOVE 'N'       CTI007                                            MD030956
+     C                     ENDIF                                                            MD030956
+      ** On error                                                                           MD030956
+     C           @RTCD     IFNE *BLANKS                                                     MD030956
+     C           @RTCD     ANDNE'*NRF'                                                      MD030956
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD030956
+     C                     MOVEL'CTI007'  DBKEY                                             MD030956
+     C                     MOVE '013'     DBASE                                             MD030956
+     C                     SETON                     99                                     MD030956
+     C                     ENDIF                                                            MD030956
+      *                                                                                     MD030956
+     C** Access MIDAS Modules details via access program                  S01332
+      *  (database error handling done in access program)                 S01332
+     C                     CALL 'AOMMODR0'                                S01332
+     C                     PARM '*BLANKS' @RTCD   7                       S01332
+     C                     PARM '*FIRST ' @OPTN   7                       S01332
+     C           SDMMOD    PARM SDMMOD    DSFDY                           S01332
+      *                                                                   S01332
+     C**  Check for data base error.                                      S01332
+     C           @RTCD     IFNE *BLANK                                    S01332
+     C                     MOVEL'SDRETLPD'DBFILE           * DBERROR 014 *S01332
+     C                     MOVEL'*FIRST ' DBKEY  29                       S01332
+     C                     MOVE '014'     DBASE                           S01332
+     C                     SETON                     99                   S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+      **  Check to see if FUTURES/OPTIONS installed.                      S01332
+     C           BGFUOP    IFEQ 'Y'                                       S01332
+     C                     MOVE '1'       *IN10                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+      **  Check to see if FRA's/IRS's installed.                          S01332
+     C           BGFIIN    IFEQ 'Y'                                       S01332
+     C                     MOVE '1'       *IN11                           S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+      **  Check to see if FOREIGN EXCHANGE installed.                     S01332
+     C           BGDLFX    IFEQ 'Y'                                       S01332
+     C                     MOVE '1'       *IN12                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+      **  Check to see if MONEY MARKET installed.                         S01332
+     C           BGDLMM    IFEQ 'Y'                                       S01332
+     C                     MOVE '1'       *IN13                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+      **  Check to see if CUSTOMER LENDING installed.                     S01332
+     C           BGCSLN    IFEQ 'Y'                                       S01332
+     C                     MOVE '1'       *IN14                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+      **  Check to see if RETAIL installed.                               S01332
+     C           BGRTBN    IFEQ 'Y'                                       S01332
+     C                     MOVE '1'       *IN15                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+      **  Check to see if SECURITIES TRADING installed.                   S01332
+     C           BGSECS    IFEQ 'Y'                                       S01332
+     C                     MOVE '1'       *IN16                           S01332
+     C                     END                                            S01332
+      *                                                                   CTI002
+      **  Check to see if TRADE FINANCE installed.                        CTI002
+     C           BGN3ST    IFEQ 'Y'                                       CTI002
+     C           CTI007    OREQ 'Y'                                                         MD030956
+     C                     MOVE '1'       *IN17                           CTI002
+     C                     END                                            CTI002
+      *                                                                   CTI002
+0494 C**
+0495 C** SET DISPLAY FIRST SCREEN INDICATOR
+0496 C                     SETON                     51
+0497 C**
+0498 C** INITIALISE FIELDS
+0499 C                     MOVE *BLANK    BLANK2200
+0500 C                     MOVE *BLANK    BLANKS150
+0501 C                     MOVE *ZERO     ZERO5   50
+     C           *LIKE     DEFN CBLIM     WCTFLI                          CTI002
+0502 C**
+0503 C           ENDCY1    ENDSR                           ** ENDCY1 TAG *
+0504 C**
+0505 C/EJECT
+0506 C********************************************************************
+0507 C**                                                                **
+0508 C**   VALID1 S.R.   TO VALIDATE FIRST SCREEN                        *
+0509 C           VALID1    BEGSR                           ** VALID1 **
+      *                                                                   S01332
+     C                     MOVE 'N'       @RSTFD  1                       S01332
+0510 C**
+0511 C** CHECK HOW MANY FIELDS ENTERED
+0512 C                     Z-ADD0         F       10
+0513 C           SCCODE    COMP *BLANK               4545
+0514 C   45                ADD  1         F
+0515 C           SRCODE    COMP *BLANK               4646
+0516 C   46                ADD  1         F
+0517 C           SICODE    COMP *BLANK               4747
+0518 C   47                ADD  1         F
+0519 C           SCSNUM    COMP *BLANK               4848
+0520 C   48                ADD  1         F
+0521 C           F         COMP 1                    7173
+0522 C**
+0523 C** CHECK TO SEE IF NO FIELDS ENTERED
+0524 C   73                SETON                     202122
+0525 C   73                SETON                     2324
+0526 C   73                MOVEL' 005'    ERR,E
+0527 C   73                GOTO ENDV1
+0528 C**
+0529 C** IF MORE THAN ONE FIELD ENTERED, ERROR
+0530 C   71                SETON                     202122
+0531 C   71                SETON                     23
+0532 C   71                MOVELMSG,5     ERRA
+0533 C   71                GOTO ENDV1
+0534 C**
+0535 C** VALIDATE ACTION CODE (I,A,D,E)
+0536 C           SACTCD    COMP 'I'                      25ON IF EQUAL
+0537 C  N25      SACTCD    COMP 'A'                      26ON IF EQUAL
+0538 C  N25N26   SACTCD    COMP 'D'                      27ON IF EQUAL
+0539 C  N25N26N27SACTCD    COMP 'E'                  242428
+0540 C**
+0541 C** IF INVALID ACTION CODE, ERROR
+0542 C   24                MOVEL' 003'    ERR,E
+0543 C   24                GOTO ENDV1
+      *                                                                   S01332
+      ** Isolate 1st element of input screen to find if it is a '?' for   S01332
+      ** later processing.                                                S01332
+     C                     MOVELSCSNUM    @SELCP  1                       S01332
+0544 C**
+0545 C** IF CUSTOMER/SHORTNAME ENTERED, FIND WHICH
+0546 C***48******          EXSR CUSTVL                                    S01332
+     C*                                                                   S01332
+     C** CALL ACCESS PROGRAM FOR CUSTOMER DETAILS  IF SCREEN FIELD        S01332
+     C** ENTERED.                                                         S01332
+     C           *IN48     IFEQ '1'                              B1       S01332
+      *                                                                   S01332
+     C                     CALL 'AOCUSTR0'                                S01332
+     C                     PARM '*BLANKS' @RTCD                           S01332
+     C                     PARM '*KEY   ' @OPTN                           S01332
+     C                     PARM SCSNUM    @AENB  10                       S01332
+     C                     PARM *BLANKS   @KYST   7                       S01332
+     C           @CUST     PARM @CUST     DSSDY                           S01332
+      *                                                                   S01332
+     C                     MOVE @AENB     SCSNUM                          S01332
+      *                                                                   S01332
+      ** If F/3 pressed from access program blank out scrn1 inpt fields   S01332
+     C           @RTCD     IFEQ '*NOSEL '                        B*2      S01332
+     C                     MOVE *BLANKS   SIBUFF                          S01332
+     C                     SETOF                     01                   S01332
+     C                     GOTO ENDV1                                     S01332
+     C                     END                                   E*2      S01332
+     C*                                                                   S01332
+     C           @RTCD     IFNE *BLANK                           B*2      S01332
+     C           @KYST     IFEQ '*CNUM'                          B**3     S01332
+     C           @KYST     OREQ '       '                                                   BUG11441
+      *                                                                   S01332
+      * Seton record not found indicator + screen error indicators.       S01332
+     C                     MOVE '1'       *IN83                           S01332
+     C                     MOVEL' 001'    ERR,E                           S01332
+     C                     MOVE '1'       *IN20                  ***3     S01332
+     C                     MOVE '1'       *IN24                  ***3     S01332
+     C                     ELSE                                  X**3     S01332
+     C           @KYST     IFEQ '*CSHT'                          B***4    S01332
+      *                                                                   S01332
+      * Seton record not found indicator + screen error indicators.       S01332
+     C                     MOVE '1'       *IN83                           S01332
+     C                     MOVEL' 001'    ERR,E                           S01332
+     C                     MOVE '1'       *IN20                  ****4    S01332
+     C                     MOVE '1'       *IN24                  ****4    S01332
+     C                     ELSE                                  X***4    S01332
+     C           @KYST     IFEQ '*ERROR'                         B****5   S01332
+      *                                                                   S01332
+      * Seton record not found indicator + screen error indicators.       S01332
+     C                     MOVE '1'       *IN83                           S01332
+     C                     MOVEL' 001'    ERR,E                           S01332
+     C                     MOVE '1'       *IN20                  *****5   S01332
+     C                     MOVE '1'       *IN24                  *****5   S01332
+     C                     END                                   E****5   S01332
+     C                     END                                   E***4    S01332
+     C                     END                                   E**3     S01332
+      *                                                                   S01332
+      ** Else if customer details O.K.                                    S01332
+     C                     ELSE                                  X*2      S01332
+      *                                                                   S01332
+      ** If select processing, and record found check that it is not a    S01332
+      ** deleted record.                                                  S01332
+     C           @SELCP    IFEQ '?'                              B**3     S01332
+     C           BBDTDL    ANDNE*ZEROS                                    S01332
+     C                     MOVE '1'       *IN20                           S01332
+     C                     MOVE '1'       *IN24                           S01332
+     C                     MOVEL' 001'    ERR,E                           S01332
+     C                     ELSE                                  X**3     S01332
+      *                                                                   S01332
+      ** Seton live customer found indicator.                             S01332
+     C                     MOVE '1'       *IN81                           S01332
+      *                                                                   S01332
+      ** Check to see if customer number or shortname entered.(29 on      S01332
+      ** if shortname)                                                    S01332
+     C           @KYST     IFEQ '*CSHT'                          B***4    S01332
+     C                     MOVE '1'       *IN29                           S01332
+     C                     END                                   E***4    S01332
+     C/COPY WNCPYSRC,EM0020C007
+      *                                                                   S01332
+      ** If not parent set DDR limit to be displayed on scrn2             S01332
+     C           BBPAIN    IFEQ *BLANK                           B***4    S01332
+     C                     MOVE '1'       *IN59                           S01332
+     C                     ELSE                                           S01332
+     C                     MOVE '0'       *IN59                           S01332
+     C                     END                                   E***4    S01332
+     C/COPY WNCPYSRC,EM0020C008
+     C*                                                                   S01332
+     C** MOVE CUSTOMER SHORT NAME INTO INPUT FIELD                        S01332
+     C                     MOVE BBCSSN    SCSNUM                          S01332
+      *                                                                   S01332
+      ** Else if live customer                                            S01332
+     C                     END                                   E**3     S01332
+     C                     END                                   E*2      S01332
+      *                                                                   S01332
+     C                     END                                   E1       S01332
+      *                                                                   S01332
+      ** Only process if no errors.                                       S01332
+     C           ERRA      IFEQ *BLANKS                          B1       S01332
+0547 C**
+0548 C** ACTION I, CUST./SHORTNAME ENTERED
+0549 C   48 25N29          EXSR CUSINS
+0550 C   48 25 29          EXSR SNMINS
+0551 C**
+0552 C** ACTION A,D,E , CUST./SHORTNAME ENTERED
+0553 C   48N25N29          EXSR CUSADE
+0554 C   48N25 29          EXSR SNMADE
+0555 C**
+     C                     END                                   E1       S01332
+      *                                                                   S01332
+      ** Bypass if errors already occured or if country code blank.       S01332
+     C           ERRA      IFEQ *BLANKS                          B1       S01332
+     C           *IN45     ANDEQ'1'                              B1       S01332
+     C*                                                                   S01332
+     C** CALL ACCESS PROGRAM FOR COUNTRY CODE.                            S01332
+     C                     CALL 'AOCTRYR0'                                S01332
+     C                     PARM '*BLANKS' @RTCD                           S01332
+     C                     PARM '*KEY   ' @OPTN                           S01332
+     C                     PARM SCCODE    @AENA   2                       S01332
+     C           SDCTRY    PARM SDCTRY    DSSDY                           S01332
+      *                                                                   S01332
+      ** If F/3 pressed from access program blank out scrn1 inpt fields   S01332
+     C           @RTCD     IFEQ '*NOSEL '                        B*2      S01332
+     C                     MOVE *BLANKS   SIBUFF                          S01332
+     C                     SETOF                     01                   S01332
+     C                     GOTO ENDV1                                     S01332
+     C                     END                                   E*2      S01332
+      *                                                                   S01332
+     C           @RTCD     IFNE *BLANK                           B*2      S01332
+     C                     MOVE '1'       *IN80                           S01332
+     C                     MOVEL'002'     ERR,E                           S01332
+     C                     EXSR CODERR                                    S01332
+     C                     ELSE                                  X*2      S01332
+      ** Seton live country code found indicator.                         S01332
+     C                     MOVE '1'       *IN78                           S01332
+      *                                                                   S01332
+     C                     END                                   E*2      S01332
+      *                                                                   S01332
+     C                     END                                   E1       S01332
+      *                                                                   S01332
+      ** Bypass if errors already occured or if region code blank.        S01332
+     C           ERRA      IFEQ *BLANKS                          B1       S01332
+     C           *IN46     ANDEQ'1'                              B1       S01332
+     C*                                                                   S01332
+     C** CALL ACCESS PROGRAM FOR REGION.                                  S01332
+     C                     CALL 'AOREGNR0'                                S01332
+     C                     PARM '*BLANKS' @RTCD                           S01332
+     C                     PARM '*KEY   ' @OPTN                           S01332
+     C                     PARM SRCODE    @AENC   2                       S01332
+     C           SDREGN    PARM SDREGN    DSSDY                           S01332
+      *                                                                   S01332
+      ** If F/3 pressed from access program blank out scrn1 inpt fields   S01332
+     C           @RTCD     IFEQ '*NOSEL '                        B*2      S01332
+     C                     MOVE *BLANKS   SIBUFF                          S01332
+     C                     SETOF                     01                   S01332
+     C                     GOTO ENDV1                                     S01332
+     C                     END                                   E*2      S01332
+      *                                                                   S01332
+     C           @RTCD     IFNE *BLANK                           B*2      S01332
+     C                     MOVE '1'       *IN80                           S01332
+     C                     MOVEL'002'     ERR,E                           S01332
+     C                     EXSR CODERR                                    S01332
+     C                     ELSE                                           S01332
+      ** Seton live region code found indicator.                          S01332
+     C                     MOVE '1'       *IN78                           S01332
+      *                                                                   S01332
+     C                     END                                   E*2      S01332
+      *                                                                   S01332
+     C                     END                                   E1       S01332
+      *                                                                   S01332
+      ** Bypass if errors already occured or if industry code blank.      S01332
+     C           ERRA      IFEQ *BLANKS                          B1       S01332
+     C           *IN47     ANDEQ'1'                              B1       S01332
+     C*                                                                   S01332
+     C** CALL ACCESS PROGRAM FOR INDUSTRY CODE.                           S01332
+     C                     CALL 'AOINDSR0'                                S01332
+     C                     PARM '*BLANKS' @RTCD                           S01332
+     C                     PARM '*KEY   ' @OPTN                           S01332
+     C                     PARM SICODE    @AEND   3                       S01332
+     C           SDINDS    PARM SDINDS    DSSDY                           S01332
+      *                                                                   S01332
+      ** If F/3 pressed from access program blank out scrn1 inpt fields   S01332
+     C           @RTCD     IFEQ '*NOSEL '                        B*2      S01332
+     C                     MOVE *BLANKS   SIBUFF                          S01332
+     C                     SETOF                     01                   S01332
+     C                     GOTO ENDV1                                     S01332
+     C                     END                                   E*2      S01332
+      *                                                                   S01332
+     C           @RTCD     IFNE *BLANK                           B*2      S01332
+     C                     MOVE '1'       *IN80                           S01332
+     C                     MOVEL'002'     ERR,E                           S01332
+     C                     EXSR CODERR                                    S01332
+     C                     ELSE                                           S01332
+      ** Seton live industry code found indicator.                        S01332
+     C                     MOVE '1'       *IN78                           S01332
+      *                                                                   S01332
+     C                     END                                   E*2      S01332
+      *                                                                   S01332
+     C                     END                                   E1       S01332
+      *                                                                   S01332
+      ** Only process if no errors.                                       S01332
+     C           ERRA      IFEQ *BLANKS                          B1       S01332
+      *                                                                   S01332
+0556 C** IF CODE ENTERED, AND ACTION A,D,E
+0557 C  N48N25             EXSR CODEA
+0558 C**
+0559 C** IF CODE ENTERED, AND ACTION I
+0560 C  N48 25             EXSR CODEI
+0561 C**
+0562 C** IF A DATABASE ERROR OCCURRED, EXIT
+0563 C   LR                GOTO ENDV1
+      *                                                                   S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+      ** If @RSTFD = Y,error ? processing.Set up field selected from ?    S01332
+      ** processing for screen1.(Rather than return to screen1 with error S01332
+      ** msg + ? in relevant field).                                      S01332
+     C           @RSTFD    IFEQ 'Y'                        B1             S01332
+      *                                                                   S01332
+     C                     MOVE *BLANKS   S1BUFF                          S01332
+      *                                                                   S01332
+      *  Store action code.                                               S01332
+     C                     MOVE SACTCD    S1ACT                           S01332
+      *  If customer.                                                     S01332
+     C           *IN48     IFEQ '1'                        B*2            S01332
+     C                     MOVE BBCSSN    S1CUST                          S01332
+     C                     END                             E*2            S01332
+      *  If country.                                                      S01332
+     C           *IN45     IFEQ '1'                        B*2            S01332
+     C                     MOVE A4CNCD    S1CNTY                          S01332
+     C                     END                             E*2            S01332
+      *  If region.                                                       S01332
+     C           *IN46     IFEQ '1'                        B*2            S01332
+     C                     MOVE A3RGCD    S1REGN                          S01332
+     C                     END                             E*2            S01332
+      *  If industry.                                                     S01332
+     C           *IN47     IFEQ '1'                        B*2            S01332
+     C                     MOVE AOLICD    S1IND                           S01332
+     C                     END                             E*2            S01332
+      *                                                                   S01332
+     C                     MOVE S1BUFF    SIBUFF                          S01332
+      *                                                                   S01332
+     C                     END                             E1             S01332
+      *                                                                   S01332
+      ** If not customer requested set off 'DDR Limit'                    S01332
+      *                                                                   S01332
+     C           *IN48     IFEQ '0'                        B1             S01332
+     C                     SETOF                     59                   S01332
+     C                     END                             E1             S01332
+0564 C**
+0565 C** CHECK IF ERRORS
+0566 C           ERRA      COMP *BLANK               7777  ON IF NOT BLANK
+0567 C**
+0568 C** RESET DETAIL SCREEN INDICATORS
+0569 C  N25N77             SETON                     63
+0570 C   28N77             SETON                     61
+0571 C   27N77
+0572 COR 28N77             SETON                     60
+0573 C**
+0574 C** IF DETAILS FROM FILE, ASSIGN PERCENTAGE INDICATOR
+0575 C   63      MPI       COMP 'Y'                      44
+0576 C**
+0577 C** CONVERT DATE FOR DISPLAY
+0578 C                     MOVE MXPD      ZDAYNO
+0579 C                     EXSR ZDATE2
+0580 C                     MOVE ZDATE     XDATE   6
+0581 C**
+0582 C           ENDV1     TAG                             ** ENDV1 TAG **
+0583 C**
+0584 C** FREE LIMITS RECORD IF FOUND
+0585 C   87
+0586 COR 88                SETON                     49
+0587 C   49                EXSR EXCPTN
+0588 C**
+0589 C                     ENDSR
+0590 C**
+0591 C/EJECT
+0592 C********************************************************************
+0593 C*********************                                             **S01332
+0594 C*****CUSTVL*S.R.***TO EVALUATE WHETHER NUMBER/SHORTNAME ENTERED   **S01332
+0595 C*******************29 ON IF SHORTNAME                             **S01332
+0596 C*********************                                             **S01332
+0597 C***********CUSTVL****BEGSR                           ** CUSTVL **   S01332
+0598 C*********************                                               S01332
+0599 C***CHECK*TO*SEE*IF*MORE THAN 6 CHARS ENTERED                        S01332
+0600 C***********SCSNMB****COMP *BLANK               2929  ON IF NOT BLANKS01332
+0601 C*********************                                               S01332
+0602 C***IF*BLANK,*CHECK*FIRST 6 CHARS NUMERIC                            S01332
+0603 C**N29****************MOVE SCSNMA    WORK3   60                      S01332
+0604 C**N29****************MOVE WORK3     WORK4   6                       S01332
+0605 C**N29******WORK4*****COMP SCSNMA               2929                 S01332
+0606 C*********************                                               S01332
+0607 C*********************ENDSR                                          S01332
+0608 C**
+0609 C********************************************************************
+0610 C**                                                                **
+0611 C**   SNMINS S.R.   SHORTNAME LIMITS INSERTION
+0612 C**                                                                **
+0613 C           SNMINS    BEGSR                           ** SNMINS **
+0614 C**
+0615 C***READ*SHORTNAMES FILE                                             S01332
+0616 C***********          EXSR SNMCH                                     S01332
+0617 C***********                                                         S01332
+0618 C***IF*DEAD/NOT ON SNAME ,EXIT                                       S01332
+0619 C**N84******          MOVEL' 001'    ERR,E                           S01332
+0620 C**N84******          EXSR CUSERR                                    S01332
+0621 C**N84******          GOTO ENSNI                                     S01332
+0622 C***********                                                         S01332
+0623 C***READ*CUSTOMER FILE                                               S01332
+0624 C***********          MOVE 'A'       CUSTKY  7                       S01332
+0625 C***********          MOVELCNUM      CUSTKY                          S01332
+0626 C***********          EXSR CLNTCH                                    S01332
+0627 C***********                                                         S01332
+0628 C***IF*CUSTOMER DEAD/NOT ON CUSTOMER FILE, DATABASE ERROR            S01332
+0629 C**N81******          SETON                     U8LR                 S01332
+0629 C**N81******          MOVE 'CLINT'   DBFILE           * DBASE 11 *   S01332
+0629 C**N81******          Z-ADD11        DBASE                           S01332
+0629 C**N81******          MOVE CUSTKY    DBKY                            S01332
+0630 C**N81******          GOTO ENSNI                                     S01332
+0631 C**
+0632 C** SAVE CUSTOMER NUMBER
+0633 C***********          MOVE CNUM      SCSNMA                          S01332
+0633 C                     MOVE BBCUST    SCSNMA                          S01332
+0634 C**
+0635 C** READ LIMITS FILE
+0636 C                     EXSR SLIMKY
+0637 C                     EXSR LIMTCH
+0638 C**
+0639 C** IF LIMITS ALREADY EXIST SET ERROR CODE
+0640 C   87                MOVEL' 006'    ERR,E
+0640 C   87                MOVE 'Y'       @RSTFD                          S01332
+0641 C   87                EXSR CUSERR
+0642 C**
+0643 C           ENSNI     ENDSR                           ** ENSNI TAG **
+0644 C**
+0645 C********************************************************************
+0646 C**                                                                **
+0647 C**   CUSINS S.R.   CUSTOMER LIMITS INSERTION
+0648 C**                                                                **
+0649 C           CUSINS    BEGSR                           ** CUSINS **
+0650 C**
+0651 C***READ*CUSTOMER FILE                                               S01332
+0652 C**********           MOVE 'A'       CUSTKY                          S01332
+0653 C**********           MOVELSCSNMA    CUSTKY                          S01332
+0654 C**********           EXSR CLNTCH                                    S01332
+0655 C**
+0656 C***IF*DEAD/NOT ON CUSTOMER FILE, ERROR                              S01332
+0657 C**N81*****           MOVEL' 001'    ERR,E                           S01332
+0658 C**N81*****           EXSR CUSERR                                    S01332
+0659 C**N81*****           GOTO ENCSI                                     S01332
+0660 C**
+0661 C** READ LIMITS FILE
+0662 C                     EXSR SLIMKY
+0663 C                     EXSR LIMTCH
+0664 C**
+0665 C** IF LIMITS ALREADY EXIST, ERROR
+0666 C   87                MOVEL' 006'    ERR,E
+0640 C   87                MOVE 'Y'       @RSTFD                          S01332
+0667 C   87                EXSR CUSERR
+0668 C**
+0669 C           ENCSI     ENDSR                           ** ENCSI TAG **
+0670 C**                                                                **
+0671 C********************************************************************
+0672 C**                                                                **
+0673 C**   SNMADE S.R. SHORTNAME LIMITS AMEND, DELETE, ENQUIRE          **
+0674 C**                                                                **
+0675 C           SNMADE    BEGSR                           ** SNMADE **
+0676 C**
+0677 C***READ*SHORTNAMES FILE                                             S01332
+0678 C***********          EXSR SNMCH                                     S01332
+0679 C***********                                                         S01332
+0680 C***IF*NOT*ON SHORTNAMES FILE, ERROR                                 S01332
+0681 C***86******          MOVEL' 001'    ERR,E                           S01332
+0682 C***86******          EXSR CUSERR                                    S01332
+0683 C***86******          GOTO ENSNAD                                    S01332
+0684 C***********                                                         S01332
+0685 C***READ*CUSTOMER FILE                                               S01332
+0686 C***********          MOVE 'A'       CUSTKY  7                       S01332
+0687 C***********          MOVELCNUM      CUSTKY                          S01332
+0688 C***********          EXSR CLNTCH                                    S01332
+0689 C***********                                                         S01332
+0690 C***IF*LIVE*ON SHORTNAME FILE AND NOT LIVE ON CUSTOMER FILE, OR      S01332
+0691 C******LIVE*ON CUSTOMER FILE AND NOT LIVE ON SHORTNAME FILE, DB ERRORS01332
+0692 C***84N81***                                                         S01332
+0693 C*ORN84*81***         SETON                     U8LR                 S01332
+0694 C***LR******          MOVE 'CLINT'   DBFILE           * DBASE 12 *   S01332
+0694 C***LR******          Z-ADD12        DBASE                           S01332
+0629 C***LR******          MOVE CUSTKY    DBKY                            S01332
+0694 C***LR******          GOTO ENSNAD                                    S01332
+0695 C**
+0696 C** SAVE CUSTOMER NUMBER
+0697 C***********          MOVE CNUM      SCSNMA                          S01332
+0697 C                     MOVE BBCUST    SCSNMA                          S01332
+0698 C**
+0699 C** READ LIMITS FILE
+0700 C                     EXSR SLIMKY
+0701 C                     EXSR LIMTCH
+0702 C**
+0703 C** IF NO LIMITS FOUND, ERROR
+0704 C   81N87             MOVEL' 007'    ERR,E
+0704 C   81N87             MOVE 'Y'       @RSTFD                          S01332
+0705 C   82N87             MOVEL' 001'    ERR,E
+0706 C  N87                EXSR CUSERR
+0707 C**
+0708 C** IF LIVE LIMITS EXIST BUT THE CUSTOMER IS DEAD, ASSIGN MESSAGE  **
+0709 C** DISPLAY DETAILS PROTECTED
+0710 C   82 87             MOVELMSG,1     ERRA
+0711 C   82 87             SETOF                     51
+0712 C   82 87             SETON                     606163
+0713 C**
+0714 C           ENSNAD    ENDSR                           ** ENSNAD TAG *
+0715 C**
+0716 C********************************************************************
+0717 C**                                                                **
+0718 C**   CUSADE S.R.   CUSTOMER LIMITS AMEND/DELETE/ENQUIRE           **
+0719 C**                                                                **
+0720 C           CUSADE    BEGSR                           ** CUSADE **
+0721 C**
+0722 C** READ*CUSTOMER FILE                                               S01332
+0723 C***********          MOVE 'A'       CUSTKY  7                       S01332
+0724 C***********          MOVELSCSNMA    CUSTKY                          S01332
+0725 C***********          EXSR CLNTCH                                    S01332
+0726 C***********                                                         S01332
+0727 C***IF*NOT*ON CUSTOMER FILE, ERROR                                   S01332
+0728 C***83******          MOVEL' 001'    ERR,E                           S01332
+0729 C***83******          EXSR CUSERR                                    S01332
+0730 C***83******          GOTO ENCSAD                                    S01332
+0731 C**
+0732 C** READ LIMITS FILE
+0733 C                     EXSR SLIMKY
+0734 C                     EXSR LIMTCH
+0735 C**
+0736 C** IF NO LIVE LIMITS AND CUSTOMER LIVE, OR
+0737 C** NO LIVE LIMITS AND CUSTOMER DEAD, ERROR
+0738 C   81N87             MOVEL' 007'    ERR,E
+0704 C   81N87             MOVE 'Y'       @RSTFD                          S01332
+0739 C   82N87             MOVEL' 001'    ERR,E
+0740 C  N87                EXSR CUSERR
+0741 C**
+0742 C** IF LIVE LIMITS EXIST, BUT CUSTOMER DEAD SET MESSAGE
+0743 C** DISPLAY DETAILS PROTECTED
+0744 C   82 87             MOVELMSG,1     ERRA
+0745 C   82 87             SETOF                     51
+0746 C   82 87             SETON                     606163
+0747 C**
+0748 C           ENCSAD    ENDSR                           ** ENCSAD TAG *
+0749 C**
+0750 C********************************************************************
+0751 C**                                                                **
+0752 C**   CUSERR S.R.   TO SET ERROR INDICATORS FOR CUSTOMER AND ACTION
+0753 C**
+0754 C           CUSERR    BEGSR                           ** CUSERR **
+0755 C**
+0756 C                     SETON                     2024
+0757 C                     ENDSR
+0758 C**
+0759 C********************************************************************
+0760 C**                                                                **
+0761 C**   CODEI S.R.   INSERT COUNTRY/REGION/INDUSTRY LIMITS FOR       **
+0762 C**                 ACTION I                                       **
+0763 C**                                                                **
+0764 C           CODEI     BEGSR                           ** CODEI **
+0765 C**
+0766 C***READ*TABLE FILE                                                  S01332
+0767 C***********          EXSR STABKY                                    S01332
+0768 C***********          EXSR TABCH                                     S01332
+0769 C***********                                                         S01332
+0770 C***IF*RECORD NOT LIVE ON TABLE, ERROR                               S01332
+0771 C**N78******          MOVEL' 002'    ERR,E                           S01332
+0772 C**N78******          EXSR CODERR                                    S01332
+0773 C**N78******          GOTO ENCDI                                     S01332
+0774 C**
+0775 C** READ LIMITS FILE
+0776 C                     EXSR SLIMKY
+0777 C                     EXSR LIMTCH
+0778 C**
+0779 C** IF LIMITS ALREADY EXIST,ERROR
+0780 C   87                MOVEL' 006'    ERR,E
+0640 C   87                MOVE 'Y'       @RSTFD                          S01332
+0781 C   87                EXSR CODERR
+0782 C**
+0783 C           ENCDI     ENDSR                           ** ENCDI TAG **
+0784 C**
+0785 C********************************************************************
+0786 C**                                                                **
+0787 C**   CODEA S.R.   AMEND/DELETE/ENQUIRE INTO COUNTRY/REGION/       **
+0788 C**             INDUSTRY LIMITS                                    **
+0789 C           CODEA     BEGSR                           ** CODEA **
+0790 C**
+0791 C***READ*TABLE FILE                                                  S01332
+0792 C***********          EXSR STABKY                                    S01332
+0793 C***********          EXSR TABCH                                     S01332
+0794 C***********                                                         S01332
+0795 C***IF*RECORD NOT ON TABLE FILE, ERROR                               S01332
+0796 C***80******          MOVEL' 002'    ERR,E                           S01332
+0797 C***80******          EXSR CODERR                                    S01332
+0798 C***80******          GOTO ENCDA                                     S01332
+0799 C**
+0800 C** READ LIMITS FILE
+0801 C                     EXSR SLIMKY
+0802 C                     EXSR LIMTCH
+0803 C**
+0804 C** IF NO LIMITS EXIST, ERROR
+0805 C   78N87             MOVEL' 007'    ERR,E
+0704 C   78N87             MOVE 'Y'       @RSTFD                          S01332
+0806 C   79N87             MOVEL' 002'    ERR,E
+0807 C  N87                EXSR CODERR
+0808 C**
+0809 C** IF LIVE LIMITS FOR DEAD TABLE RECORD, SET MESSAGE
+0810 C** DISPLAY DETAILS PROTECTED
+0811 C   79 87 45          MOVELMSG,2     ERRA
+0812 C   79 87 46          MOVELMSG,3     ERRA
+0813 C   79 87 47          MOVELMSG,4     ERRA
+0814 C   79 87             SETOF                     51
+0815 C   79 87             SETON                     606163
+0816 C**
+0817 C           ENCDA     ENDSR                           ** ENCDA TAG **
+0818 C**                                                                **
+0819 C/EJECT
+0820 C********************************************************************
+0821 C**                                                                **
+0822 C**   VALID2 S.R.   TO VALIDATE MAIN FIELDS FROM THE DETAIL SCREEN **
+0823 C**                                                                **
+0824 C           VALID2    BEGSR                           ** VALID2 **
+0825 C**
+0826 C** CHECK OVERALL LIMIT NOT BLANK
+0827 C           SOVRLM    COMP *BLANK                   31ON IF BLANK
+0828 C   31                SETON                     50
+0829 C**
+0830 C** CHECK OVERALL LIMIT IS VALID IF ENTERED
+0831 C                     MOVE *BLANK    ZFIELD
+0832 C  N31                MOVELSOVRLM    ZFIELD
+0833 C  N31                Z-ADD11        ZADIG
+0834 C  N31                Z-ADD0         ZADEC
+0835 C  N31                EXSR ZALIGN
+0836 C  N99                MOVE ZFIELD    OVRLMV
+0837 C   99                SETON                     3141
+0838 C   99                MOVEL' 008'    ERR,E
+0839 C   99                ADD  1         E
+      *                                                                   S01332
+      ** Validate DDR limit.If from customer details and non-parent.      S01332
+     C           SMDLMT    IFEQ *BLANKS                                   S01332
+     C           *IN48     ANDEQ'1'                                       S01332
+     C/COPY WNCPYSRC,EM0020C009
+     C           BBPAIN    ANDEQ*BLANK                                    S01332
+     C/COPY WNCPYSRC,EM0020C010
+     C                     SETON                     5055                 S01332
+     C                     END                                            S01332
+0840 C**
+0841 C** VALIDATE PERCENTAGE INDICATOR
+0842 C                     SETOF                     70
+0843 C           SPERIN    COMP *BLANK                   32ON IF BLANK
+0844 C   32                SETON                     50
+0845 C  N32      SPERIN    COMP 'Y'                  707044
+0846 C   70N32   SPERIN    COMP 'N'                  7070  ON IF NOT EQUAL
+0847 C   70                MOVEL' 009'    ERR,E
+0848 C   70                ADD  1         E
+0849 C   70                SETON                     32
+0850 C**
+0851 C** VALIDATE EXPIRY DATE
+0852 C                     SETOF                     7099
+0853 C           SXDATE    COMP *BLANK                   40ON IF BLANK
+0854 C   40                SETON                     50
+0855 C**
+0856 C** CHECK A VALID DATE ENTERED
+     C                     MOVELSXDATE    NUM7    70                      E80609
+     C                     MOVELNUM7      ALF6    6                       E80609
+     C           SXDATE    COMP ALF6                 9999                 E80609
+0857 C**N40****************MOVE SXDATE    ZDATE                           E80609
+     C  N40N99             MOVE SXDATE    ZDATE                           E80609
+0858 C**N40****************EXSR ZDATE1                                    E80609
+     C  N40N99             EXSR ZDATE1                                    E80609
+0859 C   99                MOVEL' 011'    ERR,E
+0860 C   99                ADD  1         E
+0861 C   99                SETON                     40
+0862 C**
+0863 C** CHECK EXPIRY DATE IS GREATER OR EQUAL TO RUN DATE
+0864 C  N40      ZDAYNO    COMP RUND                   70  ON IF LESS THAN
+0865 C   70                MOVEL' 012'    ERR,E
+0866 C   70                ADD  1         E
+0867 C   70                SETON                     40
+0868 C  N70                MOVE ZDAYNO    EXDATV
+0869 C**
+0870 C** VALIDATE LIMITS FIELDS IF PERCENTAGE INDICATOR VALID
+0871 C**  AND OVERALL LIMIT VALID
+0872 C  N31N32             EXSR LIMITS
+0873 C**
+0874 C** ERROR HANDLING FOR BLANK FIELDS
+0875 C   50                MOVEL' 004'    ERR,E
+0876 C   50                ADD  1         E
+0877 C**
+0878 C                     ENDSR
+0879 C**
+0880 C********************************************************************
+0881 C**                                                                **
+0882 C**   LIMITS S.R.   TO VALIDATE LIMITS FIELDS
+0883 C**                                                                **
+0884 C           LIMITS    BEGSR                           ** LIMITS **
+0885 C**
+0886 C** SET NUMBER OF DIGITS AND DECIMAL PLACES
+0887 C  N44                Z-ADD0         ZADEC            * IF PERCENTAGE
+0888 C  N44                Z-ADD11        ZADIG             INDICATOR Y
+0889 C   44                Z-ADD4         ZADEC            * IF PERCENTAGE
+0890 C   44                Z-ADD3         ZADIG              INDICATOR N
+0891 C**
+0892 C** BLANK OUT PERCENTAGE VALUES
+0893 C                     MOVE *ZERO     LIMP
+0894 C**
+0895 C** CHECK FX LIMIT
+     C           BGDLFX    IFEQ 'Y'                                       E29103
+0896 C                     MOVE *BLANK    ZFIELD
+0897 C                     MOVE SFXLMT    ZFIELD
+0898 C                     EXSR LIMVAL
+0899 C   70                SETON                     33
+0900 C  N70 44             MOVE ZFIELD    FXLIMP
+0901 C  N70N44             MOVE ZFIELD    FXLIMV
+     C                     END                                            E29103
+0902 C**
+0903 C** CHECK MONEY MARKET LIMIT
+     C           BGDLMM    IFEQ 'Y'                                       E29103
+0904 C                     MOVE *BLANK    ZFIELD
+0905 C                     MOVE SMMLMT    ZFIELD
+0906 C                     EXSR LIMVAL
+0907 C   70                SETON                     34
+0908 C  N70 44             MOVE ZFIELD    MMLIMP
+0909 C  N70N44             MOVE ZFIELD    MMLIMV
+     C                     END                                            E29103
+0910 C**
+0911 C** CHECK LENDING LIMIT
+     C           BGCSLN    IFEQ 'Y'                                       E29103
+0912 C                     MOVE *BLANK    ZFIELD
+0913 C                     MOVE SLELMT    ZFIELD
+0914 C                     EXSR LIMVAL
+0915 C   70                SETON                     35
+0916 C  N70 44             MOVE ZFIELD    LELIMP
+0917 C  N70N44             MOVE ZFIELD    LELIMV
+     C                     END                                            E29103
+0918 C**
+0919 C** CHECK RETAIL A/C LIMIT
+     C           BGRTBN    IFEQ 'Y'                                       E29103
+0920 C                     MOVE *BLANK    ZFIELD
+0921 C                     MOVE SRELMT    ZFIELD
+0922 C                     EXSR LIMVAL
+0923 C   70                SETON                     36
+0924 C  N70 44             MOVE ZFIELD    RELIMP
+0925 C  N70N44             MOVE ZFIELD    RELIMV
+     C                     END                                            E29103
+0926 C**
+0927 C***CHECK*LETTERS OF CREDIT LIMIT                                    S01196
+0928 C***********          MOVE *BLANK    ZFIELD                          S01196
+0929 C***********          MOVE SLCLMT    ZFIELD                          S01196
+0930 C***********          EXSR LIMVAL                                    S01196
+0931 C***70******          SETON                     37                   S01196
+0932 C**N70*44***          MOVE ZFIELD    LCLIMP                          S01196
+0933 C**N70N44***          MOVE ZFIELD    LCLIMV                          S01196
+0934 C**
+0935 C******CK SECURITIES TRADING LIMIT                                   S01129
+0935 C** CHECK SECURITIES TRADING LIMIT FOR ISSUER                        S01129
+     C           BGSECS    IFEQ 'Y'                                       E29103
+0936 C                     MOVE *BLANK    ZFIELD
+0937 C                     MOVE SSTLMT    ZFIELD
+0938 C                     EXSR LIMVAL
+0939 C   70                SETON                     38
+0940 C  N70 44             MOVE ZFIELD    STLIMP
+0941 C  N70N44             MOVE ZFIELD    STLIMV
+0934 C**                                                                  S01129
+0935 C** CHECK SECURITIES TRADING LIMIT FOR COUNTERPARTY                  S01129
+0936 C                     MOVE *BLANK    ZFIELD                          S01129
+0937 C                     MOVE SSCLMT    ZFIELD                          S01129
+0938 C                     EXSR LIMVAL                                    S01129
+0939 C   70                SETON                     65                   S01129
+0940 C  N70 44             MOVE ZFIELD    SCLIMP                          S01129
+0941 C  N70N44             MOVE ZFIELD    SCLIMV                          S01129
+     C                     END                                            E29103
+0942 C**
+0943 C***CHECK*FINANCIAL*FUTURES*LIMIT********************                E23310
+0943 C** THERE IS NO LINK BETWEEN FINANCIAL FUTURES AND                   E23310
+0943 C** EXPOSURE MANAGEMENT.                                             E23310
+0944 C*********************MOVE *BLANK    ZFIELD                          E23310
+0945 C*********************MOVE SFFLMT    ZFIELD                          E23310
+0946 C*********************EXSR LIMVAL                                    E23310
+0947 C***70****************SETON                     39                   E23310
+0948 C**N70*44*************MOVE ZFIELD    FFLIMP                          E23310
+0949 C**N70N44*************MOVE ZFIELD    FFLIMV                          E23310
+0942 C**                                                                  S01332
+0943 C** CHECK FINANCIAL FUTURES LIMIT                                    S01332
+     C           BGFUOP    IFEQ 'Y'                                       E29103
+0944 C                     MOVE *BLANK    ZFIELD                          S01332
+0945 C                     MOVE SFFLMT    ZFIELD                          S01332
+0946 C                     EXSR LIMVAL                                    S01332
+0947 C   70                SETON                     39                   S01332
+0948 C  N70 44             MOVE ZFIELD    FFLIMP                          S01332
+0949 C  N70N44             MOVE ZFIELD    FFLIMV                          S01332
+0942 C**                                                                  S01332
+0943 C** CHECK OPTIONS LIMIT                                              S01332
+0944 C                     MOVE *BLANK    ZFIELD                          S01332
+0945 C                     MOVE SOPLMT    ZFIELD                          S01332
+0946 C                     EXSR LIMVAL                                    S01332
+0947 C   70                SETON                     52                   S01332
+0948 C  N70 44             MOVE ZFIELD    OPLIMP                          S01332
+0949 C  N70N44             MOVE ZFIELD    OPLIMV                          S01332
+     C                     END                                            E29103
+0942 C**                                                                  S01332
+0943 C** CHECK FUTURE RATE AGREEMENT LIMIT                                S01332
+     C           BGFIIN    IFEQ 'Y'                                       E29103
+0944 C                     MOVE *BLANK    ZFIELD                          S01332
+0945 C                     MOVE SFRLMT    ZFIELD                          S01332
+0946 C                     EXSR LIMVAL                                    S01332
+0947 C   70                SETON                     53                   S01332
+0948 C  N70 44             MOVE ZFIELD    FRLIMP                          S01332
+0949 C  N70N44             MOVE ZFIELD    FRLIMV                          S01332
+0942 C**                                                                  S01332
+0943 C** CHECK INTEREST RATE SWAP LIMIT                                   S01332
+0944 C                     MOVE *BLANK    ZFIELD                          S01332
+0945 C                     MOVE SIRLMT    ZFIELD                          S01332
+0946 C                     EXSR LIMVAL                                    S01332
+0947 C   70                SETON                     54                   S01332
+0948 C  N70 44             MOVE ZFIELD    IRLIMP                          S01332
+0949 C  N70N44             MOVE ZFIELD    IRLIMV                          S01332
+     C                     END                                            E29103
+0942 C**                                                                  CTI002
+0943 C** CHECK TRADE FINANCE LIMIT                                        CTI002
+     C           BGN3ST    IFEQ 'Y'                                       CTI002
+     C           CTI007    OREQ 'Y'                                                         MD030956
+0944 C                     MOVE *BLANK    ZFIELD                          CTI002
+0945 C                     MOVE STFLMT    ZFIELD                          CTI002
+0946 C                     EXSR LIMVAL                                    CTI002
+0947 C   70                SETON                     62                   CTI002
+0948 C  N70 44             MOVE ZFIELD    TFLIMP                          CTI002
+0949 C  N70N44             MOVE ZFIELD    TFLIMV                          CTI002
+     C                     END                                            CTI002
+0942 C**                                                                  S01332
+     C**  CHECK DDR LIMIT                                                 S01332
+0943 C** (Processing for DDR limit is different from the above            S01332
+0943 C** as it cannot be entered as a percentage.)                        S01332
+      *                                                                   S01332
+      **  DDR limit only valid if from customer details and customer      S01332
+      **  not a parent.                                                   S01332
+      *                                                                   S01332
+     C                     Z-ADD0         MDLIMP                          S01332
+      *                                                                   S01332
+     C           *IN48     IFEQ '1'                                       S01332
+     C/COPY WNCPYSRC,EM0020C011
+     C           BBPAIN    ANDEQ*BLANKS                                   S01332
+     C/COPY WNCPYSRC,EM0020C012
+      *                                                                   S01332
+     C                     SETON                     59                   S01332
+      *                                                                   S01332
+     C                     MOVE 'Y'       @NOPER  1                       S01332
+0887 C                     Z-ADD0         ZADEC                           S01332
+0888 C                     Z-ADD11        ZADIG                           S01332
+0942  **                                                                  S01332
+     C                     MOVE *BLANK    ZFIELD                          S01332
+     C                     MOVE SMDLMT    ZFIELD                          S01332
+     C                     EXSR LIMVAL                                    S01332
+     C                     MOVE 'N'       @NOPER                          S01332
+      *                                                                   S01332
+      ** If amount invalid or greater than overall limit.                 S01332
+     C           *IN70     IFEQ '1'                                       S01332
+     C                     SETON                     55                   S01332
+     C                     ELSE                                           S01332
+     C                     MOVE ZFIELD    MDLIMP 110                      S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C                     END                                            S01332
+0950 C**
+0951 C** GENERAL ERROR HANDLING FOR LIMITS FIELDS
+0952 C   41                MOVEL' 008'    ERR,E
+0953 C   41                ADD  1         E
+0954 C   42                MOVEL' 010'    ERR,E
+0955 C   42                ADD  1         E
+0956 C   43                MOVEL' 013'    ERR,E
+0957 C   43                ADD  1         E
+0958 C**
+0959 C                     ENDSR
+0960 C**
+0961 C/EJECT
+0962 C********************************************************************
+0963 C**                                                                **
+0964 C**   LIMVAL S.R.   TO CHECK A LIMIT IS VALID
+0965 C**                                                                **
+0966 C           LIMVAL    BEGSR                           ** LIMVAL **
+0967 C**
+0968 C** CLEAR GENERAL ERROR INDICATOR
+0969 C                     SETOF                     70
+0970 C**
+0971 C** IF LIMIT NOT ENTERED, END VALIDATION
+0972 C           ZFIELD    COMP *BLANK                   76
+0973 C   76                GOTO ENLMVL
+0974 C**
+0975 C** CHECK LIMIT IS NUMERIC AND HAS CORRECT NUMBER OF
+0976 C**  DIGITS AND DECIMAL PLACES
+0977 C                     EXSR ZALIGN
+0978 C   99                SETON                     4170
+0979 C   99                GOTO ENLMVL
+0980 C**
+0981 C** CHECK LIMIT DOES NOT EXCEED OVERALL LIMIT (SPERIN=N) OR
+0982 C**  LIMIT DOES NOT EXCEED 100.0000 (SPERIN=Y)
+      *                                                                   S01332
+      ** The DDR limit cannot be entered as a percentage therefore        S01332
+      ** validate it as an absolute amount.                               S01332
+     C           @NOPER    IFNE 'Y'                                       S01332
+0983 C   44                MOVE ZFIELD    WORK6   74
+0984 C   44      WORK6     COMP 100                  70    ON IF GREATER
+     C                     ELSE                                           S01332
+     C                     MOVE ZFIELD    WORK7                           S01332
+0986 C           WORK7     COMP OVRLMV               70    ON IF GREATER  S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+0985 C  N44                MOVE ZFIELD    WORK7  110
+0986 C  N44      WORK7     COMP OVRLMV               70    ON IF GREATER
+0987 C**
+0988 C   70 44             SETON                     43
+0989 C   70N44             SETON                     42
+0990 C**
+      *                                                                   S01332
+      ** If (*in70 + *in44) = '1' + @NOPER = 'Y' then the DDR limit is    S01332
+      ** greater than the overall limit.Setof 43 & seton 42 to get error  S01332
+      ** 010 instead of 013.                                              S01332
+     C           @NOPER    IFEQ 'Y'                                       S01332
+     C           *IN44     ANDEQ'1'                                       S01332
+     C           *IN70     ANDEQ'1'                                       S01332
+     C                     MOVE '1'       *IN42                           S01332
+     C                     MOVE '0'       *IN43                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+0991 C           ENLMVL    ENDSR
+0992 C**
+0993 C********************************************************************
+0994 C**                                                                **
+0995 C**   LIMCON S.R. TO COMPUTE VALUES CORRESPONDING TO ENTERED       **
+0996 C**         PERCENTAGES                                            **
+0997 C**
+0998 C           LIMCON    BEGSR                           ** LIMCON **
+0999 C**
+1000 C***********          Z-ADD0         N       10                      S01332
+1000 C                     Z-ADD0         N       20                      S01332
+1001 C           LOOP      TAG
+1002 C                     ADD  1         N
+1003 C           OVRLMV    MULT LIMP,N    WORK5  150
+1004 C           WORK5     DIV  100       LIMV,N
+1005 C***********N         COMP 7                      69  ON IF LESS THANS01129
+1005 C***********N         COMP 8               69  ON IF LESS THAN S01129E20059
+1005 C***********N*********COMP 7               69  ON IF LESS THANE20059 E23310
+1005 C***********N         COMP 6                      69  ON IF LESE23310S01332
+1005 C***********N         COMP 10              69  ON IF LESS THANS01332 CTI002
+1005 C           N         COMP 11                     69  ON IF LESS THANCTI002
+1006 C   69                GOTO LOOP
+1007 C**
+1008 C                     ENDSR
+1009 C**                                                                  CTI002
+     C********************************************************************CTI002
+     C**                                                                **CTI002
+     C**   SLCBM S.R. TO DISPLAY SUB-LIMIT CUSTOMER MAINTENANCE         **CTI002
+     C**                                                                  CTI002
+     C           SLCBM     BEGSR                           ** SLCBM **    CTI002
+      *                                                                   CTI002
+     C           *IN05     IFEQ '1'                                       CTI002
+     C           *IN28     OREQ '1'                                       CTI002
+     C                     MOVE 'Y'       P#ENQY                          CTI002
+     C                     Z-ADDTFLI      WLIMV                           CTI002
+     C                     ELSE                                           CTI002
+     C                     MOVE 'N'       P#ENQY                          CTI002
+     C                     Z-ADDTFLIMV    WLIMV                           CTI002
+     C                     ENDIF                                          CTI002
+      *                                                                   CTI002
+     C           *IN44     IFEQ '0'                                       CTI002
+     C                     MOVE 'N'       P#PCTG                          CTI002
+     C                     ELSE                                           CTI002
+     C                     MOVE 'Y'       P#PCTG                          CTI002
+     C                     ENDIF                                          CTI002
+      *                                                                   CTI002
+     C                     CALL 'EM0040'                                  CTI002
+     C                     PARM           LIMKYR                          CTI002
+     C                     PARM           WLIMV  100                      CTI002
+     C                     PARM           P#ENQY  1                       CTI002
+     C                     PARM           P#PCTG  1                       CTI002
+      ** We dont want to leave the application                            CTI002
+     C                     SETON                     68                   CTI002
+     C                     ENDSR                                          CTI002
+1009 C**                                                                  CTI002
+0993 C********************************************************************CTI002
+0994 C**                                                                **CTI002
+0995 C**   VLTFA S.R. VALIDATE TRADE FINANCE LIMIT AMOUNT               **CTI002
+0997 C**                                                                  CTI002
+     C           VLTFA     BEGSR                           ** VLTFA **    CTI002
+      **                                                                  CTI002
+      ** The sum of customers balance amount must be equal to             CTI002
+      ** T/F limit amount                                                 CTI002
+      ** Except if this sum is 0, or if T/F limit is 0 and is not a       CTI002
+      ** percentage  we fill this amount with the sum of                  CTI002
+      ** customers balance                                                CTI002
+     C                     Z-ADD0         WCTFLI                          CTI002
+     C           KTFCB0    SETLLEMTFCBF0                 75               CTI002
+     C           *IN75     IFEQ '1'                                       CTI002
+     C           KTFCB0    READEEMTFCBF0                 75               CTI002
+     C           *IN75     DOWEQ'0'                                       CTI002
+     C                     ADD  CBLIM     WCTFLI                          CTI002
+     C           KTFCB0    READEEMTFCBF0                 75               CTI002
+     C                     ENDDO                                          CTI002
+     C           TFLIMV    IFNE WCTFLI                                    CTI002
+     C           WCTFLI    ANDNE0                                         CTI002
+      *                                                                   CTI002
+     C           TFLIMV    IFNE 0                                         CTI002
+     C           *IN44     OREQ '1'                                       CTI002
+     C                     SETON                     68                   CTI002
+     C                     SETON                     62                   CTI002
+     C                     MOVE WCTFLI    ZFLD15                          CTI002
+     C                     MOVE 0         ZDECS                           CTI002
+     C                     MOVE 'J'       ZECODE                          CTI002
+     C                     EXSR ZSEDIT                                    CTI002
+     C           ' '       CHECKZOUT21    WP      20                      CTI002
+     C                     SUBSTZOUT21:WP WOUT21 21 P                     CTI002
+     C           MSG,8     CAT  WOUT21:1  ERRA                            CTI002
+     C                     ELSE                                           CTI002
+      ** We cannot fill the field STFLMT (of SLTSCN) because SLTSCN       CTI002
+      ** doesn't recognize he field STFLMT as its sub field               CTI002
+      ** So we need to insert this new amount in SLTSCN position 103      CTI002
+     C                     MOVEASLOT      SC                              CTI002
+     C                     MOVE WCTFLI    ZFLD15                          CTI002
+     C                     MOVE 0         ZDECS                           CTI002
+     C                     MOVE *BLANK    ZECODE                          CTI002
+     C                     EXSR ZSEDIT                                    CTI002
+     C                     MOVELZOUT21    WOUT20 20 P                     CTI002
+     C                     MOVE WOUT20    WOUT11 11 P                     CTI002
+     C                     MOVEAWOUT11    SC,103                          CTI002
+     C                     MOVEASC,3      SLTSCN                          CTI002
+     C                     SETON                     68                   CTI002
+     C                     ENDIF                                          CTI002
+      *                                                                   CTI002
+     C                     ENDIF                                          CTI002
+     C                     ENDIF                                          CTI002
+     C                     ENDSR                                          CTI002
+1009 C**                                                                  CTI002
+1010 C********************************************************************
+1011 C**                                                                **
+1012 C**   CODERR S.R.   TO SET ON ERROR INDICATORS FOR THE CODE AND ACTIO
+1013 C**
+1014 C           CODERR    BEGSR                           ** CODERR **
+1015 C**
+1016 C   45                SETON                     2421
+1017 C   46                SETON                     2422
+1018 C   47                SETON                     2423
+1019 C                     ENDSR
+1020 C**
+1021 C/EJECT
+1022 C********************************************************************
+1023 C***********                                                       **S01332
+1024 C*****STABKY S.R.   TO SET UP KEY TO READ TABLE FILE USING         **S01332
+1025 C***********         COUNTRY/REGION/INDUSTRY CODE                  **S01332
+1026 C***********                                                       **S01332
+1027 C***********STABKY    BEGSR                           ** STABKY **   S01332
+1028 C***********                                                         S01332
+1029 C***********          MOVE *BLANK    ZTABKY                          S01332
+1030 C***45******          MOVE SCCODE    ZTABKY                          S01332
+1031 C***45******          MOVEL'50'      ZTABKY                          S01332
+1032 C***46******          MOVE SRCODE    ZTABKY                          S01332
+1033 C***46******          MOVEL'51'      ZTABKY                          S01332
+1034 C***47******          MOVE SICODE    ZTABKY                          S01332
+1035 C***47******          MOVEL'61'      ZTABKY                          S01332
+1036 C***********                                                         S01332
+1037 C***********          ENDSR                                          S01332
+1038 C***********                                                         S01332
+1039 C********************************************************************
+1040 C**                                                                **
+1041 C**   SLIMKY S.R.   TO SET UP KEY TO READ LIMITS FILE USING        **
+1042 C**                  COUNTRY/REGION/INDUSTRY CODES OR CUSTOMER     **
+1043 C**                                                                **
+1044 C           SLIMKY    BEGSR                           ** SLIMKY **
+1045 C**
+1046 C                     MOVE *BLANK    LIMTKY
+1047 C   45                MOVEL'2'       LIMTKY
+1048 C***45******          MOVELSCCODE    LIMKYR                          S01332
+1048 C   45                MOVELA4CNCD    LIMKYR                          S01332
+1049 C   46                MOVEL'3'       LIMTKY
+1050 C***46******          MOVELSRCODE    LIMKYR                          S01332
+1050 C   46                MOVELA3RGCD    LIMKYR                          S01332
+1051 C   47                MOVEL'4'       LIMTKY
+1052 C***47******          MOVELSICODE    LIMKYR                          S01332
+1052 C   47                MOVELAOLICD    LIMKYR                          S01332
+1053 C   48                MOVEL'1'       LIMTKY
+1054 C***48******          MOVE SCSNMA    LIMKYR                          S01332
+1054 C   48                MOVE BBCUST    LIMKYR                          S01332
+1055 C**
+1056 C                     ENDSR
+1057 C**
+1058 C********************************************************************
+1073 C***********                                                       **S01332
+1074 C*****SNMCH*S.R.   TO CHAIN TO SHORTNAMES FILE                     **S01332
+1075 C***********                                                       **S01332
+1076 C***********SNMCH     BEGSR                           ** SNMCH **    S01332
+1077 C***********                                                         S01332
+1078 C***********          MOVE 'SNAME'   DBFILE                          S01332
+1079 C***********          MOVE *BLANK    DBKY                            S01332
+1080 C***********          MOVE SCSNUM    DBKY                            S01332
+1081 C***********          SETOF                     848586               S01332
+1082 C***********SCSNUM    CHAINSNAME                86    ON IF NOT THERES01332
+1083 C**N86******RECI      COMP 'D'                  858584 84 ON IF LIVE S01332
+1084 C***********                                                         S01332
+1085 C***********          ENDSR                                          S01332
+1086 C***********                                                         S01332
+1087 C********************************************************************
+1088 C***********                                                       **S01332
+1089 C*****CLNTCH S.R.   TO CHAIN TO CUSTOMER FILE                      **S01332
+1090 C***********                                                       **S01332
+1091 C***********CLNTCH    BEGSR                           ** CLNTCH **   S01332
+1092 C***********                                                         S01332
+1093 C***********          MOVE 'CLINT'   DBFILE                          S01332
+1094 C***********          MOVE *BLANK    DBKY                            S01332
+1095 C***********          MOVE CUSTKY    DBKY                            S01332
+1096 C***********          SETOF                     818283               S01332
+1097 C***********CUSTKY    CHAINCLINT                83    ON IF NOT THERES01332
+1098 C**N83******RECI      COMP 'D'                  828281 81 ON IF LIVE S01332
+1099 C***********                                                         S01332
+1100 C***********          ENDSR                                          S01332
+1101 C***********                                                         S01332
+1102 C********************************************************************
+1103 C**                                                                **
+1104 C**   LIMTCH S.R.   TO CHAIN TO LIMITS FILE                        **
+1105 C**                                                                **
+1106 C           LIMTCH    BEGSR                           ** LIMTCH **
+1107 C**
+1108 C                     SETOF                     0607
+1109 C                     MOVE 'EMLIM'   DBFILE
+1110 C                     MOVE *BLANK    DBKY
+1111 C                     MOVE LIMTKY    DBKY
+1112 C                     SETOF                     878889
+1113 C           LIMTKY    CHAINEMLIM                89    ON IF NOT THERE
+1114 C  N89      RECI      COMP 'D'                  888887 87 ON IF LIVE
+1115 C**
+1116 C                     ENDSR
+1117 C**
+1118 C********************************************************************
+1119 C***********                                                       **S01332
+1120 C*****TABCH*S.R.   TO CHAIN TO TABLE FILE                          **S01332
+1121 C***********                                                       **S01332
+1122 C***********TABCH     BEGSR                           ** TABCH **    S01332
+1123 C***********                                                         S01332
+1124 C***********          MOVE 'TABLE'   DBFILE                          S01332
+1125 C***********          MOVE *BLANK    DBKY                            S01332
+1126 C***********          MOVE ZTABKY    DBKY                            S01332
+1127 C***********          SETOF                     787980               S01332
+1128 C***********ZTABKY    CHAINTABLE                80    ON IF NOT THERES01332
+1129 C**N80******RECI      COMP 'D'                  797978 78 ON IF LIVE S01332
+1130 C***********                                                         S01332
+1131 C***********          ENDSR                                          S01332
+1132 C***********                                                         S01332
+1133 C/EJECT
+1134 C********************************************************************
+1135 C**                                                                **
+1136 C**   UDLOG S.R.   TO UPDATE FILES                                 **
+1137 C**
+1138 C           UDLOG     BEGSR                           ** UDLOG **
+     C**   RPG ERROR HANDLING
+     C           STATUS    IFEQ 01021
+     C                     Z-ADD0         STATUS  50
+     C                     GOTO INFTAG
+     C                     END
+1143 C**   CHECK STATUS OF RECORD UNCHANGED.
+1144 C                     EXSR SLIMKY
+1145 C                     EXSR LIMTCH
+1146 C**
+1147 C   89                MOVE *BLANK    LSTC
+1148 C**
+1149 C           LSTC      COMP LSTC1                7474
+     C           INFTAG    TAG
+1150 C**
+1151 C**   IF RECORD CHANGED, RELEASE FILES, SET ERROR MESSAGE,
+1152 C**   SET SCREEN CONTROL INDICATORS AND BYPASS.
+1153 C   74 87             SETON                     63
+1154 C   74                SETON                     4960
+1155 C   74                EXSR EXCPTN
+1156 C   74                MOVELMSG,7     ERRA
+1157 C   74                GOTO ENUDLG
+     C**
+     C**   OBTAIN LAST TRANSACTION NUMBER AND PREPARE STANDARD
+     C**   INFORMATION FOR CMTTXT DATA STRUCTURE
+     C                     EXSR ZTNLU1
+     C                     MOVE 'EM'      MDID
+     C                     MOVEL'EM0020'  PGMN
+     C                     MOVE WSID      WSIDX
+     C                     TIME           MTIME
+     C                     MOVE SACTCD    IADX
+     C                     MOVE USRID     USRIDX
+     C                     MOVE LIMTKY    SLKEY
+     C                     MOVE SLOT      SLOTX
+1209 C*    UPDATE/ADD LIMITS FILE RECORD
+1210 C                     SETON                     56
+1212 C                     EXSR EXCPTN
+1213 C**
+1214 C**   GET LIMITS TRAILER RECORD READY FOR UPDATE
+1215 C                     MOVE '9999999' LIMTKY
+1216 C                     EXSR LIMTCH
+1217 C**
+1218 C**   IF TRAILER NOT FOUND, DATABASE ERROR.
+1219 C  N07                SETON                     U8LR
+1220 C   U8                SETON                     49
+1221 C   U8                Z-ADD8         DBASE            ** DBASE8 **
+1222 C   U8                GOTO ENUDLG
+1235 C**
+1236 C** UPDATE TRAILER RECORD NUMBER OF INSERTIONS/DELETIONS
+1237 C   02      MNRI      ADD  1         MNRIA   50
+1238 C   04      MNRD      ADD  1         MNRDA   50
+1239 C**
+ 240 C*    UPDATE TRAILER RECORD
+1241 C                     SETON                     57
+1243 C                     EXSR EXCPTN
+0822 C**
+     C**   END OF COMMITMENT CYCLE
+     C           CMTTXT    COMIT
+1269 C**
+1270 C** IF UPDATE SUCCESSFUL, SET DISPLAY INITIAL SCREEN INDICATOR
+1271 C                     SETON                     51
+1272 C**
+1273 C           ENUDLG    ENDSR                           ** ENUDLG TAG *
+1274 C**
+1275 C/EJECT
+1276 C********************************************************************
+1277 C**                                                                **
+1278 C**   EXCPTN S.R.   TO RELEASE RECORDS AFTER USE
+1279 C**
+1280 C           EXCPTN    BEGSR                           ** EXCPTN **
+1281 C**
+1282 C                     EXSR QTIME
+1283 C                     EXCPT
+1284 C**
+1285 C                     SETOF                     49
+1286 C                     SETOF                     56
+1287 C                     SETOF                     57
+1288 C**
+1289 C                     ENDSR
+1290 C**
+1291 C********************************************************************
+1292 C**                                                                **
+1293 C**   TIME S.R.   TO GET THE SYSTEM TIME                           **
+1294 C**                                                                **
+1295 C           QTIME     BEGSR                           ** TIME **
+1296 C**
+1297 C                     TIME           MTIME   60
+1298 C**
+1299 C                     ENDSR
+1300 C**
+1301 C/EJECT
+1302 C********************************************************************
+1303 C**
+1304 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+1305 C**
+1306 C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+1307 C**
+1308 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+1309 C                     MOVEL'01      'ZTABKY 12
+1310 C                     MOVE '  10'    ZTABKY
+1311 C**
+1312 C           ZTABKY    CHAINTABLE                99    ON NOT THERE
+1313 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+1314 C**
+1315 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+1316 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+1317 C**
+1318 C                     ENDSR
+1320 C**
+     C********************************************************************
+     C**
+     C**   ZALIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.
+     C**
+     C           ZALIGN    BEGSR                           *** ZALIGN ***
+     C**
+     C                     SETOF                     929399
+     C**
+     C**   SAVE INPUT FIELD IN ARRAY, ZA1.
+     C                     MOVEAZFIELD    ZA1
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ' '       ZA2
+     C                     MOVEAZA2       ZFIELD 16
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+     C**
+     C**   ENSURE REQUIRED STRUCTURE OF FIELD IS VALID.
+     C           ZADIG     ADD  ZADEC     ZZ      20
+     C           ZZ        COMP 15                   99
+     C   99                GOTO ZAEND
+     C**
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.
+     C           ZATAG1    TAG                             ** ZATAG1 TAG *
+     C           ZX        ADD  1         ZX
+     C**
+     C**   CHECK FOR DECIMAL POINT. ERROR IF SECOND DECIMAL POINT.
+     C           ZA1,ZX    COMP '.'                      90
+     C   90 93             SETON                     99
+     C   99                GOTO ZAEND
+     C**
+     C**
+     C**   CHECK FOR 'M' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'M'                      96
+     C   96                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 9                    99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CHECK FOR 'T' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'T'                      97
+     C   97                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 12                   99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZA1
+     C   96
+     COR 97                MOVE ' '       ZA1,ZX
+     C**
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER A DIGIT.
+     C           ZA1,ZX    COMP ' '                      91
+     C   91 92             GOTO ZATAG2
+     C**
+     C**   CHECK FOR NUMERIC, IF NOT '.' OR ' '.
+     C  N90N91   ZA1,ZX    COMP '0'                    99
+     C  N90N91N99ZA1,ZX    COMP '9'                  99
+     C   99                GOTO ZAEND                      NOT NUMERIC
+     C**
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.
+     C**   ZZ, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.
+     C  N90N91   ZY        ADD  1         ZY         92
+     C  N90N91             MOVE ZA1,ZX    ZA2,ZY
+     C   90                Z-ADDZY        ZZ         93  93
+     C**
+     C           ZX        COMP 16                     94  CHECK IF ALL
+     C   94                GOTO ZATAG1
+     C**
+     C           ZATAG2    TAG                             ** ZATAG2 TAG *
+     C**
+     C**   IF 'M' SPECIFIED, MULTIPLY ZA1 BY 1 MILLION
+     C   96      ZZ        ADD  6         ZZ
+     C**
+     C**   IF 'T' SPECIFIED, MULTIPLY ZA1 BY 1 THOUSAND
+     C   97      ZZ        ADD  3         ZZ
+     C**
+     C**   FILL IN ZEROS IN ANY BLANKS LEFT OF DECIMAL POINT
+     C   96 93
+     COR 97 93   ZZ        DOWGTZY
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF CONSTANT SPECIFIED WITH NO DECIMAL POINT ZEROISE BLANKS
+     C   96N93             DO   6
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C   97N93             DO   3
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZZ.
+     C  N93                Z-ADDZY        ZZ
+     C**
+     C**   CHECK FOR EMBEDDED BLANKS.
+     C   91 92             MOVEAZA1,ZX    ZFIELD
+     C   91 92   ZFIELD    COMP ' '                  9999
+     C   99                GOTO ZAEND                      EMBEDDED BLANK
+     C**
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE
+     C**   OF DECIMAL POINT ARE NOT MORE THAN ALLOWED.
+     C           ZZ        COMP ZADIG                99
+     C           ZY        SUB  ZZ        ZX
+     C  N99      ZADEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZAEND
+     C   95                GOTO ZATAG4                     NO TRAILING
+     C**                                                   BLANKS.
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.
+     C           ZY        ADD  ZX        ZZ
+     C           ZATAG3    TAG                             ** ZATAG3 TAG *
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C           ZY        COMP ZZ                     94
+     C   94                GOTO ZATAG3
+     C**
+     C**   RIGHT-ALIGN THE VALUE BY MOVING BACK TO ARRAY, ZA1.
+     C           ZATAG4    TAG                             ** ZATAG4 TAG *
+     C                     MOVE '0'       ZA1
+     C                     Z-ADD16        ZX
+     C           ZATAG5    TAG                             ** ZATAG5 TAG *
+     C           ZY        COMP 0                        94
+     C   94                GOTO ZATAG6
+     C                     MOVE ZA2,ZY    ZA1,ZX
+     C           ZY        SUB  1         ZY
+     C           ZX        SUB  1         ZX
+     C                     GOTO ZATAG5
+     C           ZATAG6    TAG                             ** ZATAG6 TAG *
+     C**
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFIELD.
+     C                     MOVEAZA1       ZFIELD
+     C**
+     C                     SETOF                     9697
+     C**
+     C           ZAEND     ENDSR                           * ZAEND ENDSR *
+     C**
+     C**
+     C********************************************************************
+1425 C**
+1426 C**   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND
+1427 C**              CONVERT TO A NUMBER OF DAYS.
+1428 C**
+1429 C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+1430 C**
+1431 C           ZDATE1    BEGSR                           *** ZDATE1 ***
+1432 C**
+1433 C**   CLEAR DAY NUMBER.
+1434 C                     Z-ADD0         ZDAYNO  50
+1435 C**
+1436 C**   CALCULATION TO DEFINE INPUT DATE FIELD.
+1437 C                     Z-ADDZDATE     ZDATE   60
+1438 C**
+1439 C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+1440 C                     MOVE ZDATE     ZYEAR   20
+1441 C  N98                MOVELZDATE     ZDAY    20
+1442 C   98                MOVELZDATE     ZMTH    20
+1443 C                     MOVE ZDATE     ZWRK4   40
+1444 C  N98                MOVELZWRK4     ZMTH
+1445 C   98                MOVELZWRK4     ZDAY
+1446 C**
+1447 C**   ENSURE MONTH IS VALID.
+1448 C           ZMTH      COMP 0                      9999
+1449 C  N99      ZMTH      COMP 12                   99
+1450 C   99                GOTO ZDEND1                     BYPASS IF ERROR
+1451 C**
+1452 C**   CHECK FOR 30 DAY MONTHS.
+1453 C           ZMTH      COMP 4                        90IF 90 ON, 30
+1454 C  N90      ZMTH      COMP 6                        90DAY MONTH.
+1455 C  N90      ZMTH      COMP 9                        90
+1456 C  N90      ZMTH      COMP 11                       90
+1457 C**
+1458 C**   ENSURE DAY IS VALID.
+1459 C           ZDAY      COMP 0                      9999
+1460 C   90N99   ZDAY      COMP 30                   99
+1461 C  N90N99   ZDAY      COMP 31                   99
+1462 C   99                GOTO ZDEND1                     BYPASS IF ERROR
+1463 C**
+1464 C**   CHECK FOR LEAP YEAR AND FEBRUARY.
+1465 C           ZYEAR     ADD  28        ZYEAR
+1466 C           ZYEAR     DIV  4         ZLYR    20
+1467 C                     MVR            ZLY     10     91LEAP YR, 91 ON
+1468 C           ZMTH      COMP 2                    93  92FEB., 92 ON
+1469 C**                                                   PAST FEB, 93 ON
+1470 C**   IF FEBUARY FURTHER VALIDATE DAY.
+1471 C  N91 92   ZDAY      COMP 28                   99
+1472 C   91 92   ZDAY      COMP 29                   99
+1473 C   99                GOTO ZDEND1                     BYPASS IF ERROR
+1474 C**
+1475 C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANS
+1476 C           ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.
+1477 C  N91      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YR
+1478 C   91 93   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.
+1479 C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR
+1480 C           ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTH
+1481 C**
+1482 C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*
+1484 C**
+1485 C********************************************************************
+1486 C**
+1487 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+1488 C**
+1489 C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+1490 C**
+1491 C           ZDATE2    BEGSR                           *** ZDATE2 ***
+1492 C**
+1493 C**   CLEAR DATE FIELDS.
+1494 C                     Z-ADD0         ZDATE   60
+1495 C                     MOVEL'       ' ZADATE  7
+1496 C**
+1497 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+1498 C                     Z-ADDZDAYNO    ZDAYNO  50
+1499 C**
+1500 C**   DETERMINE YEAR NUMBER.
+1501 C**
+1502 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+1503 C           ZDAYNO    SUB  1         ZDAYN1  50   99
+1504 C   99                GOTO ZDEND2
+1505 C**
+1506 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+1507 C           ZDAYN1    DIV  1461      ZLYR    20
+1508 C                     MVR            ZDAYN1           SAVE REMAINING
+1509 C**                                                   DAYS
+1510 C**   CALCULATE NUMBER OF REMAINING YEARS.
+1511 C                     Z-ADD1         ZWRK2   20
+1512 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+1513 C           ZDAYN1    COMP ZYDY,ZWRK2             90
+1514 C  N90      ZWRK2     ADD  1         ZWRK2
+1515 C  N90                GOTO ZDTAG1
+1516 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+1517 C**
+1518 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+1519 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+1520 C**
+1521 C**   CALCULATE ACTUAL YEAR NUMBER.
+1522 C           ZLYR      MULT 4         ZWRK3   30
+1523 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+1524 C                     Z-ADDZWRK3     ZYEAR   20
+1525 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+1526 C**
+1527 C**   DETERMINE MONTH NUMBER.
+1528 C**
+1529 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+1530 C                     SETOF                     9293
+1531 C   91      ZDAYN1    COMP 59                     9293
+1532 C   91N92   ZDAYN1    SUB  1         ZDAYN1
+1533 C**
+1534 C**   CALCULATE MONTH NUMBER.
+1535 C                     Z-ADD2         ZWRK2
+1536 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+1537 C           ZDAYN1    COMP ZMDY,ZWRK2             94
+1538 C  N94      ZWRK2     ADD  1         ZWRK2
+1539 C  N94                GOTO ZDTAG2
+1540 C           ZWRK2     SUB  1         ZWRK2
+1541 C**
+1542 C                     Z-ADDZWRK2     ZMTH    20       MONTH
+1543 C**
+1544 C**   DETERMINE DAY OF MONTH.
+1545 C**
+1546 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+1547 C           ZDAYN1    ADD  1         ZDAYN1
+1548 C**
+1549 C**   CALCULATE DAY OF MONTH.
+1550 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+1551 C**
+1552 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+1553 C   93      ZDAY      ADD  1         ZDAY
+1554 C**
+1555 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+1556 C  N98                MOVELZDAY      ZWRK4   40
+1557 C   98                MOVE ZDAY      ZWRK4
+1558 C  N98                MOVE ZMTH      ZWRK4
+1559 C   98                MOVELZMTH      ZWRK4
+1560 C                     MOVELZWRK4     ZDATE
+1561 C                     MOVE ZYEAR     ZDATE
+1562 C**
+1563 C**   FORMAT ALPHA DATE, DDMMMYY.
+1564 C           ZDAY      COMP 10                     95
+1565 C                     MOVELZDAY      ZWRK5   5
+1566 C   95                MOVEL' '       ZWRK5
+1567 C                     MOVE ZMNM,ZMTH ZWRK5
+1568 C                     MOVELZWRK5     ZADATE
+1569 C                     MOVE ZYEAR     ZADATE
+1570 C**
+1571 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C**   ZTNLU1 SR. - TO LOCK THE TRANSACTION NUMBER DATA AREA AND
+     C**                THEN UPDATE AND RELEASE THE DATA AREA.
+     C**
+     C           ZTNLU1    BEGSR
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     ENDSR
+     C**
+1574 C********************************************************************
+     C**   FILE EXCEPTION/ERROR HANDLING SUBROUTINE
+     C           INFSR     BEGSR
+     C**   CHECK ERROR TYPE
+     C           STATUS    IFEQ 01021
+     C**   CHAIN TO FILE TO GET CURRENT DETAILS
+     C           LIMTKY    CHAINEMLIM                89
+     C**
+     C           *IN89     IFEQ '0'
+     C**   ROLLBACK UPDATES ALREADY DONE
+     C                     ROLBK
+     C**   SET ON 'RECORD UPDATED....' INDICATOR
+     C                     SETON                     74
+     C**   RESET OTHER INDICATORS
+     C                     SETOF                     565749
+     C**
+     C                     MOVE '*DETC '  EXTTAG  6
+     C**
+     C                     ELSE
+     C**
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C**
+     C                     ELSE
+     C**
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C*
+     C                     ENDSREXTTAG
+     C/COPY ZSRSRC,ZSEDITZ3                                               CTI002
+     C*****************************************************************
+1575 C/EJECT
+1576 O** WORKSTATION INITIAL SCREEN
+1577 OEM0020FMD        51NLR
+1578 O                                   K8 'EM0020F1'
+1579 O                                    2 'SF'
+1580 O                         MTIME     10 '0 .  .  '
+1581 O                         WSID      13
+1582 O                    77   ERRA      89
+1583 O                       77SIBUFF   110
+1584 O**
+1585 O** DETAIL SCREEN
+1586 O        D        01N51NLR
+1587 O       OR        02N51NLR
+1588 O       OR        03N51NLR
+1589 O       OR        04N51NLR
+1590 O       OR        05N51NLR
+1591 O                                   K8 'EM0020F2'
+1592 O                         STID       2
+1593 O                    01 25           2 'SI'
+1594 O                    01 26           2 'SA'
+1595 O                    01 27           2 'SD'
+1596 O                    01 28           2 'SE'
+1597 O                         MTIME     10 '0 .  .  '
+1598 O                         WSID      13
+1599 O                       48          21 'Customer'
+1600 O                       45          21 'Country'
+1601 O                       46          21 'Region'
+1602 O                       47          21 'Industry'
+1603 O***********************48CRNM      41                               S01332
+1603 O                       48BBCUST    41                               S01332
+1604 O***********************48CTWN      52                               S01332
+1604 O                       48BBCRTN    52                               S01332
+1605 O***********************45CNM       51                               S01332
+1605 O                       45A4CNNM    51                               S01332
+1606 O***********************46REGN      51                               S01332
+1606 O                       46A3RGNM    51                               S01332
+1607 O***********************47LIDN      51                               S01332
+1607 O                       47AOLINA    51                               S01332
+1608 O                         CCNM      66
+1609 O**
+1610 O                   N44 63MOAL  Z   77
+1611 O                    44 63MOAL  3   77
+1612 O                       63MPI       78
+1613 O                   N44 63MFXL  Z   89
+1614 O                    44 63MFXP  3   89
+1615 O                   N44 63MMML  Z  100
+1616 O                    44 63MMMP  3  100
+1617 O*******************N44 63MLEL  Z  111                               S01332
+1618 O******************* 44 63MLEP  3  111                               S01332
+1619 O*******************N44 63MREL  Z  122                               S01332
+1620 O******************* 44 63MREP  3  122                               S01332
+1621 O***********        N44 63MBCL  Z  133                               S01196
+1622 O***********         44 63MLOP  3  133                               S01196
+1623 O*************      N44 63MSTL  Z  144                               S01129
+1624 O*************       44 63MSEP  3  144                               S01129
+1625 O*************      N44 63MFFL  Z  155                               S01129
+1626 O*************       44 63MFFP  3  155                               S01129
+1627 O*************          63XDATE    161                               S01129
+1628 O************                                                        S01129
+1629 O*********S FROM SCREEN, IF ERROR                                    S01129
+1630 O*************       77 02SLTSCN   161                               S01129
+1631 O*************       77 03SLTSCN   161                               S01129
+1632 O*************       77 04SLTSCN   161                               S01129
+1633 O*************                                                       S01129
+1634 O*************          77ERRA     237                               S01129
+1635 O*************            SCSNUM   250                               S01129
+1636 O*************            SCCODE   252                               S01129
+1637 O*************            SRCODE   254                               S01129
+1638 O*************            SICODE   257                               S01129
+1639 O*************            SACTCD   258                               S01129
+1640 O*************    27               274 ',CMD/4 TO DELETE'            S01129
+1624 O***********        N44 63MSLI  Z  144                       S01129  S01196
+1624 O*******************N44 63MSLI  Z  133                       S01196  S01332
+1624 O***********         44 63MSPI  3  144                       S01129  S01196
+1624 O******************* 44 63MSPI  3  133                       S01196  S01332
+1624 O***********        N44 63MSCL  Z  155                       S01129  S01196
+1624 O*******************N44 63MSCL  Z  144                       S01196  S01332
+1624 O***********         44 63MSPC  3  155                       S01129  S01196
+1624 O******************* 44 63MSPC  3  144                       S01196  S01332
+1625 O***********        N44 63MFFL  Z  166                       S01129  S01196
+1625 O*******************N44 63MFFL  Z  155                         S01196E23310
+1626 O***********         44 63MFFP  3  166                       S01129  S01196
+1626 O********************44 63MFFP  3  155                         S01196E23310
+1627 O***********            63XDATE    172                       S01129  S01196
+1627 O***********************63XDATE    161                         S01196E23310
+1627 O***********************63XDATE    150                         E23310S01332
+1628 O**                                                                  S01129
+1629 O** DETAILS FROM SCREEN, IF ERROR                                    S01129
+1630 O***********         77 02SLTSCN   172                       S01129  S01196
+1630 O********************77 02SLTSCN   161                         S01196E23310
+1631 O***********         77 03SLTSCN   172                       S01129  S01196
+1631 O********************77 03SLTSCN   161                         S01196E23310
+1632 O***********         77 04SLTSCN   172                       S01129  S01196
+1632 O********************77 04SLTSCN   161                         S01196E23310
+1630 O***********         77 02SLTSCN   150                         E23310S01332
+1631 O***********         77 03SLTSCN   150                         E23310S01332
+1632 O***********         77 04SLTSCN   150                         E23310S01332
+1633 O**                                                                  S01129
+1634 O***********            77ERRA     248                       S01129  S01196
+1634 O***********************77ERRA     237                         S01196E23310
+1635 O***********              SCSNUM   261                       S01129  S01196
+1635 O*************************SCSNUM   250                         S01196E23310
+1636 O***********              SCCODE   263                       S01129  S01196
+1636 O*************************SCCODE   252                         S01196E23310
+1637 O***********              SRCODE   265                       S01129  S01196
+1637 O*************************SRCODE   254                         S01196E23310
+1638 O***********              SICODE   268                       S01129  S01196
+1638 O*************************SICODE   257                         S01196E23310
+1639 O***********              SACTCD   269                       S01196  S01196
+1639 O*************************SACTCD   258                         S01196E23310
+1640 O***********      27               285 ',CMD/10 TO DELETE'   S01196  S01196
+1640 O*****************27***************274 ',CMD/10 TO DELETE'     S01196E23310
+1634 O***********            77ERRA     226                         E23310S01332
+1635 O***********              SCSNUM   239                         E23310S01332
+1636 O***********              SCCODE   241                         E23310S01332
+1637 O***********              SRCODE   243                         E23310S01332
+1638 O***********              SICODE   246                         E23310S01332
+1639 O***********              SACTCD   247                         E23310S01332
+1640 O***********      27               263 ',CMD/10 TO DELETE'     E23310S01332
+1624 O                   N44 63MSLI  Z  111                               S01332
+1624 O                    44 63MSPI  3  111                               S01332
+1617 O                   N44 63MLEL  Z  122                               S01332
+1618 O                    44 63MLEP  3  122                               S01332
+1624 O                   N44 63MSCL  Z  133                               S01332
+1624 O                    44 63MSPC  3  133                               S01332
+1619 O                   N44 63MREL  Z  144                               S01332
+1620 O                    44 63MREP  3  144                               S01332
+1624 O                   N44 63MFRL  Z  155                               S01332
+1624 O                    44 63MFRP  3  155                               S01332
+1625 O                   N44 63MFUL  Z  166                               S01332
+1626 O                    44 63MFUP  3  166                               S01332
+1624 O*******************N44 63MIRL  Z  177                        S01332 CTI002
+1624 O********************44 63MIRP  3  177                        S01332 CTI002
+1624 O********************44 63MOPL  Z  188                        S01332 CTI002
+1624 O********************44 63MOPP  3  188                        S01332 CTI002
+1639 O***********************63EMDR  Z  199                        S01332 CTI002
+1627 O***********************63XDATE    205                        S01332 CTI002
+1628 O**                                                                  S01332
+1629 O** DETAILS FROM SCREEN, IF ERROR                             S01332 CTI002
+1630 O********************77 02SLTSCN   205                        S01332 CTI002
+1631 O********************77 03SLTSCN   205                        S01332 CTI002
+1632 O********************77 04SLTSCN   205                        S01332 CTI002
+1633 O**                                                           S01332 CTI002
+     O/COPY WNCPYSRC,EM0020O001
+1634 O***********************77ERRA     281                        S01332 CTI002
+     O/COPY WNCPYSRC,EM0020O002
+1635 O*************************SCSNUM   294                        S01332 CTI002
+1636 O*************************SCCODE   285                               S01332
+1636 O***********************45A4CNCD   296                        S01332 CTI002
+1637 O*************************SRCODE   287                               S01332
+1637 O***********************46A3RGCD   298                        S01332 CTI002
+1638 O*************************SICODE   290                               S01332
+1638 O***********************47AOLICD   301                        S01332 CTI002
+1639 O*************************SACTCD   302                        S01332 CTI002
+1640 O*****************27               318 'CMD/10 TO DELETE'     S01332 CTI002
+     O**                                                                  CTI002
+     O**Deb CTI002                                                        CTI002
+     O                   N44 63TFLI  Z  177                               CTI002
+     O                    44 63TFPC  3  177                               CTI002
+     O                   N44 63MIRL  Z  188                               CTI002
+     O                    44 63MIRP  3  188                               CTI002
+     O                   N44 63MOPL  Z  199                               CTI002
+     O                    44 63MOPP  3  199                               CTI002
+     O                       63EMDR  Z  210                               CTI002
+     O                       63XDATE    216                               CTI002
+     O**                                                                  CTI002
+     O** DETAILS FROM SCREEN, IF ERROR                                    CTI002
+     O                    77 02SLTSCN   216                               CTI002
+     O                    77 03SLTSCN   216                               CTI002
+     O                    77 04SLTSCN   216                               CTI002
+     O                    68   SLTSCN   216                               CTI002
+     O                       77ERRA     292                               CTI002
+     O**                                                                  CTI002
+     O                         SCSNUM   305                               CTI002
+     O                       45A4CNCD   307                               CTI002
+     O                       46A3RGCD   309                               CTI002
+     O                       47AOLICD   312                               CTI002
+     O                         SACTCD   313                               CTI002
+     O                 27               329 'CMD/10 TO DELETE'            CTI002
+     O                 04               329 'CMD/10 TO DELETE'            CTI002
+     O                 17N27N04         329 'F9 T/F SubLimits'            CTI002
+     O                N48N04N27         329 '                '            CTI002
+     O**End CTI002                                                        CTI002
+1641 O**
+1644 O/EJECT
+1645 O*******
+1646 O** LIMITS FILE - RELEASE RECORD
+1647 OEMLIM   E        49
+1648 O**
+1649 O** UPDATE/INSERT OVER DELETION
+1650 OEMLIM   E        56 02 88
+1651 O       OR        56 03
+1652 O       OR        56 04
+1653 O                                    1 'D'
+1654 O                       04           1 '*'
+1655 O                      N04EXDATV    11P
+1656 O                      N04SPERIN    12
+1657 O                      N04OVRLMV    18P
+1658 O                      N04FXLIMV    24P
+1659 O                      N04MMLIMV    30P
+1660 O                      N04LELIMV    36P
+1661 O                      N04RELIMV    42P
+1662 O***********           N04LCLIMV    48P                              S01196
+1662 O*************         N04Z011      48P                        E20059S01332
+1662 O                      N04Z006      48                               S01332
+1663 O*************         N04STLIMV    54P                              S01129
+     O                      N04MSTL      54P                              CTI002
+1664 O**********************N04FFLIMV    60P                              E23310
+1662 O***********           N04Z011      60P                        E23310S01332
+     O                      N04Z006      60                               S01332
+1665 O                      N04FXLIMP    64P
+1666 O                      N04MMLIMP    68P
+1667 O                      N04LELIMP    72P
+1668 O                      N04RELIMP    76P
+1669 O***********           N04LCLIMP    80P                              S01196
+1669 O***********           N04Z007      80P                        E20059S01332
+1669 O                      N04Z004      80                               S01332
+1670 O**************        N04STLIMP    84P                              S01129
+1671 O**************        N04FFLIMP    88P                              S01129
+1672 O**************        N04RUND     124P                              S01129
+1673 O**************         03         125 'A'                           S01129
+1674 O**************         04         125 'D'                           S01129
+1675 O**************         02         125 'I'                           S01129
+1676 O**************           NATN     128P                              S01129
+1670 O                      N04STLIMV    86P                              S01129
+1670 O                      N04STLIMP    90P                              S01129
+1670 O                      N04SCLIMV    96P                              S01129
+1670 O                      N04SCLIMP   100P                              S01129
+1671 O**********************N04FFLIMP   104P                       S01129 E23310
+1671 O                      N04Z004     104                               S01332
+     O                      N04FRLIMV   110P                              S01332
+     O                      N04IRLIMV   116P                              S01332
+1664 O                      N04FFLIMV   122P                              S01332
+     O                      N04OPLIMV   128P                              S01332
+     O                      N04Z005     133                               S01332
+1672 O**********************N04RUND     124P                              E11460
+1672 O**********************   RUND     124P                       E11460 S01129
+1672 O                         RUND     139P                              S01129
+1673 O                       03         140 'A'                           S01129
+1674 O                       04         140 'D'                           S01129
+1675 O                       02         140 'I'                           S01129
+1676 O                         NATN     143P                              S01129
+     O                      N04FRLIMP   147P                              S01332
+     O                      N04IRLIMP   151P                              S01332
+1664 O                      N04FFLIMP   155P                              S01332
+     O                      N04OPLIMP   159P                              S01332
+     O                      N04MDLIMP   165P                              S01332
+     O                      N04TFLIMV   171P                              CTI002
+     O                      N04TFLIMP   175P                              CTI002
+1677 O**
+1678 O** INSERT NEW RECORD
+1679 OEMLIML2 EADD     56 02 89
+1680 O                                    1 'D'
+1681 O                         LIMTKY     8
+1682 O                         EXDATV    11P
+1683 O                         SPERIN    12
+1684 O                         OVRLMV    18P
+1685 O                         FXLIMV    24P
+1686 O                         MMLIMV    30P
+1687 O                         LELIMV    36P
+1688 O                         RELIMV    42P
+1689 O***********              LCLIMV    48P                              S01196
+1689 O*************            Z011      48P                        E20059S01332
+1689 O                         Z006      48                               S01332
+1690 O*************            STLIMV    54P                              S01129
+1696 O***********              Z011      54P                        E23310S01332
+     O                         Z011      54P                              CTI002
+1691 O*************************FFLIMV    60P                              E23310
+1696 O***********              Z011      60P                        E23310S01332
+     O                         Z006      60                               S01332
+1692 O                         FXLIMP    64P
+1693 O                         MMLIMP    68P
+1694 O                         LELIMP    72P
+1695 O                         RELIMP    76P
+1696 O***********              LCLIMP    80P                              S01196
+1696 O***********              Z007      80P                        E20059S01332
+1696 O                         Z004      80                               S01332
+1697 O*************            STLIMP    84P                              S01129
+1698 O*************            FFLIMP    88P                              S01129
+1699 O*************            RUND     121P                              S01129
+1700 O*************            RUND     124P                              S01129
+1701 O*************                     125 'I'                           S01129
+1702 O*************            NATN     128P                              S01129
+1690 O                         STLIMV    86P                              S01129
+1697 O                         STLIMP    90P                              S01129
+1690 O                         SCLIMV    96P                              S01129
+1697 O                         SCLIMP   100P                              S01129
+1698 O*************************FFLIMP   104P                        S01129E23310
+     O***********              Z007     104P                        E23310S01332
+1671 O                         Z004     104                               S01332
+     O                         FRLIMV   110P                              S01332
+     O                         IRLIMV   116P                              S01332
+1664 O                         FFLIMV   122P                              S01332
+     O                         OPLIMV   128P                              S01332
+     O                         Z005     133                               S01332
+1699 O                         RUND     136P                              S01129
+1700 O                         RUND     139P                              S01129
+1701 O                                  140 'I'                           S01129
+1702 O                         NATN     143P                              S01129
+     O                         FRLIMP   147P                              S01332
+     O                         IRLIMP   151P                              S01332
+1664 O                         FFLIMP   155P                              S01332
+     O                         OPLIMP   159P                              S01332
+     O                         MDLIMP   165P                              S01332
+     O                         TFLIMV   171P                              CTI002
+     O                         TFLIMP   175P                              CTI002
+1703 O**
+1704 O** UPDATE TRAILER
+1705 OEMLIM   E        57
+1706 O                       02MNRIA     14P
+1707 O                       04MNRDA     17P
+**  CPY@
+(c) Finastra International Limited 2001
+** MSG - ERROR MESSAGES
+THIS CUSTOMER NO LONGER EXISTS WITHIN THE SYSTEM
+THIS COUNTRY CODE NO LONGER EXISTS WITHIN THE SYSTEM
+THIS REGION NO LONGER EXISTS WITHIN THE SYSTEM
+THIS INDUSTRY CODE NO LONGER EXISTS WITHIN THE SYSTEM
+SELECT ONLY ONE OPTION
+INVALID FUNCTION KEY
+DETAILS HAVE BEEN UPDATED BY ANOTHER WORKSTATION
+THE SUM OF T/F SUB-LIMIT IS                                               CTI002
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

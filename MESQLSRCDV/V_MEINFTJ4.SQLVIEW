@@ -1,0 +1,125 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Messages Generation Module                                    */
+/*                                                                             */
+/*       V_MEINFTJ4 - Incoming Message part dtl join parts to FT part          */
+/*                                                                             */
+/*       (c) Finastra International Limited 2003                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*       Prev Amend No. BG18886            Date 28May08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      238894             Date 17Mar06                        */
+/*                      BG2821             Date 23Apr04                        */
+/*                      BUG516             Date 23Apr04                        */
+/*                      CAP084  *CREATE    Date 20Aug03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*      BG18886 - Amend non-standard codes.                                    */
+/*       238894 - Display only unused incoming messages.                       */
+/*              - Revised source to remove double negation and compared fields */
+/*                to blanks using the TRIM function.                           */
+/*       BG2821 - Format value date correctly                                  */
+/*       BUG516 - Format value date correctly                                  */
+/*       CAP084 - API wrapper project                                          */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+   Q1.FTMSGR, Q3.CRSYTM, Q3.CRNWRK, Q3.CRSNDR, Q3.CRMIR,                        :
+   Q3.CRMOR,  Q3.CRMTPY, Q3.CRMPRY, Q3.CRMDEC, Q3.CRMODE,                       :
+   Q3.CRMOTM, Q3.CRSTDC, Q3.CRSNTD, Q3.CRSNTT, Q3.CRCYCD,                       :
+   Q3.CRSVDC, Q3.CRSVDT, Q3.CRAMTS, Q3.CRBRCA, Q3.CRDUPF,                       :
+   Q3.CRNPRT, Q1.FTKPRT, Q4.MRJOB,  Q4.MRUSR,  Q4.MRJNO,                        :
+   Q1.FTINFG, Q1.FTIPRF, Q1.FTOTFG, Q1.FTOPRF, Q1.FTFRGL,                       :
+   Q1.FTTOGL, Q2.MPTRNO, Q2.MPCYCD, Q2.MPSVDC, Q2.MPSVDT,                       :
+   Q2.MPAMTS, Q2.MPINBK, Q2.MPACIN, Q2.MPBENF, Q2.MPPMFG,                       :
+   Q2.MPPYAM, BJDFIN,                                                           :
+***CASE*WHEN Q2.MPCYCD = ' ' THEN Q3.CRCYCD ELSE Q2.MPCYCD END AS PACYCD,       :             238894
+***CASE*WHEN Q2.MPSVDT = ' ' THEN                                               :             238894
+   CASE WHEN TRIM(Q2.MPCYCD) = '' THEN Q3.CRCYCD ELSE                           :             238894
+      Q2.MPCYCD END AS PACYCD,                                                  :             238894
+   CASE WHEN TRIM(Q2.MPSVDT) = '' THEN                                          :             238894
+**********     CASE WHEN BJDFIN = 'D' THEN (SUBSTR(Q3.CRSVDT,5,2) **            :/*BUG516*/
+**********        SUBSTR(Q3.CRSVDT,3,2) ** SUBSTR(Q3.CRSVDT,1,2)) ELSE          :/*BUG516*/
+**********       (SUBSTR(Q3.CRSVDT,3,2) ** SUBSTR(Q3.CRSVDT,5,2) **             :/*BUG516*/
+**********        SUBSTR(Q3.CRSVDT,1,2)) END                                    :/*BUG516*/
+**********     CASE WHEN BJDFIN = 'D' THEN                                      :/*BUG516*/   BG2821
+**********     DATE(Q3.CRSVDC**SUBSTR(Q3.CRSVDT,1,2)**'-'**                     :/*BUG516*/  BG18886
+**********     SUBSTR(Q3.CRSVDT,3,2) **'-'**                                    :/*BUG516*/  BG18886
+               DATE(Q3.CRSVDC CONCAT SUBSTR(Q3.CRSVDT,1,2) CONCAT '-' CONCAT    :/*BUG516*/  BG18886
+               SUBSTR(Q3.CRSVDT,3,2) CONCAT '-' CONCAT                          :/*BUG516*/  BG18886
+               SUBSTR(Q3.CRSVDT,5,2))                                           :/*BUG516*/
+**********                        ELSE                                          :/*BUG516*/   BG2821
+**********     DATE(Q3.CRSVDC**SUBSTR(Q3.CRSVDT,1,2)**'-'**                     :/*BUG516*/   BG2821
+**********     SUBSTR(Q3.CRSVDT,5,2)**'-'**                                     :/*BUG516*/   BG2821
+**********     SUBSTR(Q3.CRSVDT,3,2))                                           :/*BUG516*/   BG2821
+**********                        END                                           :/*BUG516*/   BG2821
+   ELSE                                                                         :
+**********CASE WHEN BJDFIN = 'D' THEN (SUBSTR(Q2.MPSVDT,5,2) **                 :/*BUG516*/
+**********        SUBSTR(Q2.MPSVDT,3,2) ** SUBSTR(Q2.MPSVDT,1,2)) ELSE          :/*BUG516*/
+**********       (SUBSTR(Q2.MPSVDT,3,2) ** SUBSTR(Q2.MPSVDT,5,2) **             :/*BUG516*/
+**********        SUBSTR(Q2.MPSVDT,1,2)) END                                    :/*BUG516*/
+**********CASE WHEN BJDFIN = 'D' THEN                                           :/*BUG516*/   BG2821
+**********     DATE(Q3.CRSVDC**SUBSTR(Q2.MPSVDT,1,2)**'-'**                     :/*BUG516*/  BG18886
+**********     SUBSTR(Q2.MPSVDT,3,2) **'-'**                                    :/*BUG516*/  BG18886
+               DATE(Q3.CRSVDC CONCAT SUBSTR(Q2.MPSVDT,1,2) CONCAT '-' CONCAT    :/*BUG516*/  BG18886
+               SUBSTR(Q2.MPSVDT,3,2) CONCAT '-' CONCAT                          :/*BUG516*/  BG18886
+               SUBSTR(Q2.MPSVDT,5,2))                                           :/*BUG516*/
+**********                       ELSE                                           :/*BUG516*/   BG2821
+**********     DATE(Q3.CRSVDC**SUBSTR(Q2.MPSVDT,1,2)**'-'**                     :/*BUG516*/   BG2821
+**********     SUBSTR(Q2.MPSVDT,5,2)**'-'**                                     :/*BUG516*/   BG2821
+**********     SUBSTR(Q2.MPSVDT,3,2))                                           :/*BUG516*/   BG2821
+**********                      END                                             :/*BUG516*/   BG2821
+   END AS PASVDT,                                                               :
+***CASE*WHEN Q2.MPSVDC = ' ' THEN Q3.CRSVDC ELSE Q2.MPSVDC END AS PASVDC,       :             238894
+***CASE*WHEN Q2.MPAMTS = ' ' THEN Q3.CRAMTS ELSE Q2.MPAMTS END AS PAAMTS,       :             238894
+   CASE WHEN TRIM(Q2.MPSVDC) = '' THEN Q3.CRSVDC ELSE                           :             238894
+      Q2.MPSVDC END AS PASVDC,                                                  :             238894
+   CASE WHEN TRIM(Q2.MPAMTS) = '' THEN Q3.CRAMTS ELSE                           :             238894
+      Q2.MPAMTS END AS PAAMTS,                                                  :             238894
+   DIGITS(FTMSGR) AS PADMSGR,                                                   :
+   DIGITS(FTKPRT) AS PADKPRT                                                    :
+   FROM MEINFTPD AS Q1, SDBANKPD                                                :
+   LEFT OUTER JOIN MEINMPPD AS Q2 ON Q1.FTMSGR = Q2.MPMSGR AND                  :
+                                     Q1.FTKPRT = Q2.MPKPRT                      :
+   LEFT OUTER JOIN MEINCRPD AS Q3 ON Q1.FTMSGR = Q3.CRMSGR                      :
+   LEFT OUTER JOIN MEINMRPD AS Q4 ON Q1.FTMSGR = Q4.MRMSGR AND                  :
+                                     Q1.FTKPRT = Q4.MRKPRT                      :
+   WHERE                                                                        :
+****((NOT(Q1.FTIPRF <> ' ') OR Q1.FTIPRF IS NULL) AND                           :             238894
+*****(NOT(Q1.FTOPRF <> ' ') OR Q1.FTOPRF IS NULL) AND                           :             238894
+*****(NOT(Q1.FTINFG <> ' ') OR Q1.FTOPRF IS NULL OR                             :             238894
+******NOT(Q1.FTINFG <> 'MIN0083')) AND                                          :             238894
+******NOT(Q2.MPPMFG <> 'P' ));                                                  :             238894
+    ((TRIM(Q1.FTIPRF) = '' OR Q1.FTIPRF IS NULL) AND                            :             238894
+     (TRIM(Q1.FTOPRF) = '' OR Q1.FTOPRF IS NULL) AND                            :             238894
+     (TRIM(Q1.FTINFG) = '' OR Q1.FTINFG IS NULL OR                              :             238894
+      Q1.FTINFG = 'MIN0083') AND                                                :             238894
+      Q2.MPPMFG = 'P' AND                                                       :             238894
+     (TRIM(Q4.MRJOB) = '' OR Q4.MRJOB IS NULL) AND                              :             238894
+     (TRIM(Q4.MRUSR) = '' OR Q4.MRUSR IS NULL) AND                              :             238894
+     (Q4.MRJNO = '0' OR Q4.MRJNO IS NULL));                                     :             238894
+                                                                                :
+/* Use fields listed below to get field and column text                         :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PACYCD     AS MPCYCD     USING MEINMPPD                        :
+ * DESCRIBEFIELD PASVDT     AS MPSVDT     USING MEINMPPD                        :
+ * DESCRIBEFIELD PASVDC     AS MMSVDC     USING MEINMPPD                        :
+ * DESCRIBEFIELD PAAMTS     AS MPAMTS     USING MEINMPPD                        :
+ * DESCRIBEFIELD PADMSGR    AS FTMSGR     USING MEINFTPD                        :
+ * DESCRIBEFIELD PADKPRT    AS FTKPRT     USING MEINFTPD                        :
+ * DESCRIBEEND                                                                  :
+                                                                                :
+/********************************************************************************
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas ME Incoming Message part dtl join FT parts  ';                     :
+                                                                                :

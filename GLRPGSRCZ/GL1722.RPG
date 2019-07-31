@@ -1,0 +1,451 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Posting Interface Account Keys Creation')     *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - General Ledger Module                                *
+     F*                                                               *
+     F*  GL1722 - Posting Interface Keys Creation                     *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2006                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL160             Date 11Nov14               *
+      *                 CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CGL047 *Create     Date 30Jun06               *
+      *                 xxxxxx             Date ddmmmyy               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL160 - Cheque Details Upload via Generic Posting Interface *
+      *             (Recompile)                                       *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+     F*  CGL047 - Generic Postings Interface                          *
+     F*                                                               *
+     F*****************************************************************
+     FGLGPIPPDIF  E                    DISK
+      * Midas Posting Interface File
+      *
+     FGLGPIFPDUF  E                    DISK                      A
+      * Midas Forward Postings
+      *
+     FGLGPICL0IF  E           K        DISK
+      * Generic Posting Interface Control File
+      *
+     FGLGPIKPDO   E                    DISK
+      * Extra Account Keys For Posting Inteface
+      *
+      ********************************************************************
+      *
+      * ID C  F  H  L    Function of indicators
+      *
+      *    90            General Error
+      *    91            End of Dealing Account Keys
+      * U7U8LR           DB error
+      *
+      ********************************************************************
+      *
+     E                    CPY@    1   1 80               copyright
+      *
+     IGLGPIK    E DSGLGPIKPD
+      **  Data structure for account key
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Data structure for bank file
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  Data structure for customer file
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  Data structure for branch file
+     I              QQDFAC                          QXDFAC
+      *
+     ISDMMOD    E DSSDMMODPD
+      **  Data structure for module ICD file
+      *
+     ISDACOD    E DSSDACODPD
+      **  Data structure for module ICD file
+      *
+     ISDACCT    E DSACCNTAB
+      **  Data structure for Account details
+     I              RECI                            ACRECI
+     I              BRCA                            ACBRCA
+     I              CNUM                            ACCNUM
+     I              CCY                             ACCCY
+     I              ACOD                            ACACOD
+     I              ACSQ                            ACACSQ
+     I              PRFC                            ACPRFC
+     I              PTFR                            ACPTFR
+     I              ORED                            ACORED
+     IDSFDY     E DSDSFDY
+      **  Short data structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      **  Long data structure for access programs
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      **  Local data area
+     I              'INTCREDIT'           C         ##CR
+     I              'INTDEBIT'            C         ##DR
+      /EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   SRINIT  - Initial process                                   *
+      *   SRDTYP  - Check Deal Type sub-type combination              *
+      *   SRNKEY  - Create New keys                                   *
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+      *
+      ** Read forward valued Posting Interface records
+     C           1         SETLLGLGPIFPD
+     C                     READ GLGPIFPD                 90
+      *
+      ** If records read until end of file
+     C           *IN90     IFEQ *OFF
+     C           *IN90     DOUEQ*ON
+      *
+      ** Process record
+     C                     EXSR SRFWDP
+      *
+      ** Read next record
+     C                     READ GLGPIFPD                 90
+     C                     ENDDO
+     C                     ENDIF
+      *
+      *
+      ** Read GLGPIPPD to End of File
+     C           1         SETLLGLGPIPPD
+     C                     READ GLGPIPPD                 90
+      *
+      ** If records read until end of file and not shadow post
+     C           *IN90     IFEQ *OFF
+     C           *INU1     ANDEQ*OFF
+     C           *IN90     DOUEQ*ON
+      *
+      ** Process record
+     C                     EXSR SRINPP
+      *
+      ** Read next record
+     C                     READ GLGPIPPD                 90
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** End main process
+     C                     SETON                     LR
+      *
+     C/EJECT
+      *****************************************************************
+      *   SRFWD  - Process Forward Records                            *
+      *****************************************************************
+     C           SRFWDP    BEGSR
+      *
+      * Get Generic Posting Interface control record
+     C           BTSARN    IFNE ##SARN
+     C           BTSARN    CHAINGLGPICL0             90
+     C                     MOVE BTSARN    ##SARN  6
+     C                     ENDIF
+      *
+      * Action depending on value/posting date or shadow post indicator
+     C           BTVLDT    IFLT BJDNWD
+     C           GPPVDT    ANDEQ'Y'
+     C           BTPTDT    ORLT BJDNWD
+     C           GPPVDT    ANDNE'Y'
+     C           *INU1     OREQ *ON
+      *
+      *  Output Key and delete
+     C                     EXSR SRNKEY
+      *
+      * Delete GLGPIFPD record if not shadow posting
+     C           *INU1     IFEQ *OFF
+     C                     DELETGLGPIFD0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRINPP - Process New Interface Records                      *
+      *****************************************************************
+     C           SRINPP    BEGSR
+      *
+      * Get Generic Posting Interface control record
+     C           BTSARN    IFNE ##SARN
+     C           BTSARN    CHAINGLGPICL0             90
+     C                     MOVE BTSARN    ##SARN  6
+     C                     ENDIF
+      *
+      * Action depending on value date/posting date
+     C           BTVLDT    IFGE BJDNWD
+     C           GPPVDT    ANDEQ'Y'
+     C           BTPTDT    ORGE BJDNWD
+     C           GPPVDT    ANDNE'Y'
+      *
+      * Write  GLGPIFPD record
+     C                     WRITEGLGPIFD0
+      *
+      *  Output Key only
+     C                     ELSE
+      *
+     C                     EXSR SRNKEY
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRNKEY - Create new key                                     *
+      *****************************************************************
+     C           SRNKEY    BEGSR
+      *
+     C           *LIKE     DEFN BTSWCR    ##SWCR
+     C                     MOVELBTSWCR    ##SWCR
+      *
+     C           BTRACN    IFNE 0
+     C                     MOVELBTRACN    ##ACID
+     C                     MOVEL*BLANKS   ##CUST
+     C                     MOVEL*BLANKS   ##CYCD
+     C                     MOVEL*BLANKS   ##ACCD
+     C                     MOVEL*BLANKS   ##ACSN
+     C                     MOVEL*BLANKS   ##BRCD
+     C                     ELSE
+     C                     MOVEL*BLANKS   ##ACID
+     C                     MOVELBTCUST    ##CUST
+     C                     MOVELBTCYCD    ##CYCD
+     C                     MOVELBTACCD    ##ACCD
+     C                     MOVELBTACSN    ##ACSN
+     C                     MOVELBTIBCA    ##BRCD
+     C                     ENDIF
+      *
+      *  Call to Access Program - AOACCTR0 Check Account Number
+     C                     CALL 'AOACCTR0'
+     C                     PARM           @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN            B:Option
+     C                     PARM           ##ACID 10        I:Account Identifier
+     C                     PARM           ##CUST  6        I:Customer Number
+     C                     PARM           ##CYCD  3        I:Currency Code
+     C                     PARM           ##ACCD 10        I:Account Code Num
+     C                     PARM           ##ACSN  2        I:Account Sequence
+     C                     PARM           ##BRCD  3        I:Branch code
+     C           SDACCT    PARM *BLANK    DSSDY            O:Format
+      *
+      ** If no record is found or closed error
+     C                     SELEC
+     C           @RTCD     WHEQ '*NRF'
+     C           BTRACN    ANDEQ0
+     C           @RTCD     OREQ *BLANKS
+     C           ACRECI    ANDNE'D'
+     C           BTRACN    IFEQ 0
+     C                     MOVELACACOD    ##ACCD
+     C                     ENDIF
+      *
+      ** Call access object to get data
+     C                     CALL 'AOACODR0'
+     C                     PARM           @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        I:Option
+     C                     PARM           ##ACCD           I:Account Code
+     C                     PARM *BLANK    DSFDY            O:Format
+      *
+     C** If no record is found on sdacodpd or os retail
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     OREQ *BLANKS
+     C           A5ACTY    ANDEQ'R'
+     C           *LOCK     IN   LDA
+     C                     MOVE '505'     DBASE              * * * * * * *
+     C                     MOVELBTCUST    ##KEY     P
+     C                     CAT  BTCYCD:0  ##KEY
+     C                     CAT  BTACCD:0  ##KEY
+     C                     CAT  BTACSN:0  ##KEY
+     C                     CAT  BTIBCA:0  ##KEY
+     C                     MOVEL##KEY     DBKEY              * DBERR 505 *
+     C                     MOVEL'ACCNT   'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      * Fill Account information
+     C           BTRACN    IFEQ 0
+     C                     MOVELBTCUST    ACCNUM
+     C                     MOVELBTCYCD    ACCCY
+     C                     MOVELBTACCD    ACACOD
+     C                     MOVELBTACSN    ACACSQ
+     C                     MOVELBTIBCA    ACBRCA
+     C                     ENDIF
+      *
+      ** If no record is found or closed error
+     C           @RTCD     WHNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '005'     DBASE              * * * * * * *
+     C           *LIKE     DEFN DBKEY     ##KEY
+     C                     MOVELBTCUST    ##KEY     P
+     C                     CAT  BTCYCD:0  ##KEY
+     C                     CAT  BTACCD:0  ##KEY
+     C                     CAT  BTACSN:0  ##KEY
+     C                     CAT  BTIBCA:0  ##KEY
+     C                     MOVEL##KEY     DBKEY              * DBERR 005 *
+     C                     MOVEL'ACCNT   'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDSL
+      *
+      * Set Up record
+     C                     MOVEL'D'       RECI
+     C           BTDCIN    IFEQ 'D'
+     C                     MOVEL##DR      AKEY      P
+     C                     ELSE
+     C                     MOVEL##CR      AKEY      P
+     C                     ENDIF
+      * Reference
+     C                     MOVELBTSWCR    PREF
+      * Customer
+     C           BTACNB    IFNE *BLANKS
+     C                     MOVELBTACNB    CNUM
+     C                     ELSE
+     C                     MOVELACCNUM    CNUM
+     C                     ENDIF
+      * Branch
+     C                     MOVELBTBCBH    BRCA
+     C                     Z-ADDBTVLDT    EDAT
+     C                     MOVELACCCY     ECCY
+     C                     Z-ADDBTPTAM    EAMT
+     C                     Z-ADDBTVLDT    VDAT
+      * Set Up Settlement Account
+     C           ATYP      IFNE 'R'
+     C           ATYP      OREQ 'R'
+     C           BTRACN    ANDEQ0
+     C                     Z-ADD05        SETP
+     C                     MOVELACBRCA    OSBR
+     C                     MOVELACCNUM    OSAC      P
+     C                     MOVELACCCY     BTCYCD
+     C                     CAT  BTACCD:0  OSAC
+     C                     MOVELACACSQ    BTACSN
+     C                     CAT  BTACSN:0  OSAC
+     C                     ELSE
+     C                     Z-ADD14        SETP
+     C                     MOVELBTRACN    OSAC
+     C                     ENDIF
+     C           BTPRCN    IFNE *BLANKS
+     C                     MOVELBTPRCN    PRFC
+     C                     ELSE
+     C                     MOVELACPRFC    PRFC
+     C                     ENDIF
+     C                     MOVELBTBKCD    BOKC
+     C                     MOVEL'BT'      MODC
+     C                     MOVEL##SWCR    BTSWCR
+     C                     MOVELBTNRDC    BTPNAR
+     C                     MOVELBTTRTY    BTTRAT
+      *
+     C                     WRITEGLGPIKD0
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRBCCY - Calculate Base Equivalent Amount                   *
+      *****************************************************************
+     C           SRBCCY    BEGSR                           Base ccy equiv
+      *
+      * If currency is base then event is base equivalent
+     C           ECCY      IFEQ BJCYCD
+     C                     Z-ADDEAMT      BCEQ
+     C                     ELSE
+      *
+      * Call GL0765 to convert amount for date
+     C                     CALL 'GL0765'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM ECCY      FRMCCY  3
+     C                     PARM BJCYCD    TOCCY   3
+     C                     PARM EDAT      VALDAT  50
+     C                     PARM EAMT      WPSTA  190
+      *
+      * Database error if return invalid
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL0765'  DBFILE           ************
+     C                     Z-ADD4         DBASE            * Error 04 *
+     C                     MOVEL*BLANKS   DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Set Base Equivalent
+     C                     Z-ADDWPSTA     BCEQ
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *INZSR - Initialisation Routine                             *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'GL1722'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access SDBANKPD for report title
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If no record is found on sdbankpd.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 001 *
+     C                     MOVEL'SDBANKPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access SDMMODPD for modules available
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+      ** If no record is found on sdmmodpd.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 002 *
+     C                     MOVEL'SDMMODPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      * Set initialisation complete
+     C                     MOVEL'Y'       #FIRST  1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2006

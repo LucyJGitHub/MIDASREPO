@@ -1,0 +1,274 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Manual repair of reformatted branch')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module.                               *
+     F*                                                               *
+     F*  FT0920 - Manual repair of reformatted branch                 *
+     F*                                                               *
+     F*  Function:  This routine will display the details from the    *
+     F*  BIC Database Plus (institution, branch, city and location)   *
+     F*  as well as the constructed branch. The user is then allowed  *
+     F*  to manually change the details on the constructed branch     *
+     F*                                                               *
+     F*  Called By:                                                   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CFT007 *C *CREATE  Date 21Oct99               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CFT007 - BIC Database Plus Integration                       *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FFT0920DFCF  E                    WORKSTN
+     F                                              KINFDS INFDS#
+      * DSP: Constructed Branch Adjustment  Edit record(1 screen)
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     I* Get Rundate - Rundate  *
+     IRUNDTA    E DSRUNDAT
+      *
+     IPIINS       DS                            105
+      * Data Structure for Input Institution
+     I                                        1  35 #1INS1
+     I                                       36  70 #1INS2
+     I                                       71 105 #1INS3
+     IPIBCH       DS                             70
+      * Data Structure for Input Branch
+     I                                        1  35 #1BCH1
+     I                                       36  70 #1BCH2
+     IPILOC       DS                             90
+      * Data Structure for Input Location(Town/State)
+     I                                        1  20 #1TWN1
+     I                                       21  55 #1TWN2
+     I                                       56  90 #1TWN3
+      /EJECT
+      *****************************************************************
+     C*  P R O G R A M   S T A R T                                    *
+      *****************************************************************
+      * Initialise
+     C                     EXSR INIT
+      *
+     C                     MOVE 'Y'       WAGAIN  1
+     C           WAGAIN    DOWEQ'Y'
+     C                     MOVE 'N'       WAGAIN
+      * Display and process key screen
+     C                     EXSR DSPSCR
+     C                     END
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRCKEY   : Display screen and process HELP request           *
+      *                                                               *
+      *  CALLED BY: main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         DSPSCR    BEGSR
+      *
+      * Update screen time
+     C                     TIME           ##TME
+      *
+     C           W0HLP     DOUEQ'N'
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDDTL1
+     C                     MOVEL'N'       W0HLP   1
+     C                     END
+      * Process response to key screen
+     C                     EXSR PRCKEY
+      * Update job time
+     C                     TIME           ##JTM
+      * Reset global error indicator
+     C                     SETOF                         99*
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  PRCKEY   : Process response to key screen                    *
+      *                                                               *
+      *  CALLED BY: DSPSCR                                            *
+      *                                                               *
+      *  CALLS    : PRCF03                                            *
+      *           : PRCF12                                            *
+      *           : PRCHOM                                            *
+      *           : PRCENT                                            *
+      *                                                               *
+      *****************************************************************
+     CSR         PRCKEY    BEGSR
+      *
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            PRCF03
+      * Cancel & go back to previous program
+     C   12                CAS            PRCF12
+      * HOME: Reset screen fields
+     C   30                CAS            PRCHOM
+      * Process key screen input
+     C                     CAS            PRCENT
+     C                     END
+      *
+     CSR                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRCHOM   : Process HOME key                                  *
+      *                                                               *
+      *  CALLED BY: PRCKEY                                            *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         PRCHOM    BEGSR
+     C                     MOVELPIBCH     #1BRCH
+     C                     MOVE 'Y'       WAGAIN
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  PRCF03   : Process F03 keys                                  *
+      *                                                               *
+      *  CALLED BY: PRCKEY                                            *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         PRCF03    BEGSR
+     C                     MOVEL'F03'     PRTCD
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  PRCF12   : Process F12 key                                   *
+      *                                                               *
+      *  CALLED BY: PRCKEY                                            *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         PRCF12    BEGSR
+     C                     MOVEL'F12'     PRTCD
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  PRCENT   : Process key 'Enter'                               *
+      *                                                               *
+      *  CALLED BY: DSPSCR                                            *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         PRCENT    BEGSR
+     C                     MOVEL#1BRCH    POBCH
+     C                     MOVE *BLANKS   PRTCD
+     CSR                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZXEXPG   : Exit program                                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         ZXEXPG    BEGSR
+     C*
+      * Reclaim resources of called programs
+     C                     CALL 'Y2RCRSC'
+      *
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+     CSR                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT     : Initialisation                                    *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         INIT      BEGSR
+      *
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           PICBH  35
+     C                     PARM           PIINS
+     C                     PARM           PIBCH
+     C                     PARM           PICIT  35
+     C                     PARM           PILOC  90
+     C                     PARM           POBCH  35
+     C                     PARM           PRTCD   7
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+     C*
+     C* Initialise Display file
+     C                     MOVE PICBH     #1BRCH
+     C                     MOVELPICIT     #1CITY
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           LDA
+      * Retrieve Midas Date - R10 Standard Functions  *
+     C* Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+      *
+     C*
+     CSR                   ENDSR
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001

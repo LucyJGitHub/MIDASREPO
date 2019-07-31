@@ -1,0 +1,62 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Delete FETCH objects from the zone    ')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC90000 - Delete FETCH objects from the zone              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2015                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CPK030             Date 19Mar15              */
+/*                      XXXXXXXX           Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CPK030 - Clean up of deliverable data library.              */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                            2015')
+ 
+ /* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Retrieve library prefix. */
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                          'BrgMidasSystemPrefix' &SVAL1 ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ')
+             IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                          *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&LIB) VALUE(&PFX *TCAT 'DPLIB')
+ 
+/* Delete file and data area. */
+             DLTF       FILE(&LIB/FETCH)
+             MONMSG     MSGID(CPF0000)
+             DLTDTAARA  DTAARA(&LIB/FETCH)
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

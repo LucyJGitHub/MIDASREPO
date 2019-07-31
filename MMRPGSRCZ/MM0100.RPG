@@ -1,0 +1,966 @@
+     H        1
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Interest adjustment projection')              *
+/*OVRF*: OVRDBF DEALS SHARE(*NO)                                    : *
+/*OVRF*: OVRDBF RSACMTL1 SHARE(*NO)                                 : *
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Money Market Deal Module                           *
+      *                                                               *
+      *  MM0100 -  Interest Adjustment Projection                     *
+      *                                                               *
+      *  Function: Process account movement for interest adjustments  *
+      *            and online postings.                               *
+      *  (phase(s))                                                   *
+      *                                                               *
+      *  Called By: DL0100 / AOOUMMUO                                 *
+      *                                                               *
+      *  (c) Finastra International Limited 2008                      *
+      *                                                               *
+      *  Last Amend No. MD050139           Date 23Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
+      *                 CGL184             Date 07Dec16               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP205             Date 23Feb10               *
+      *                 CAP204             Date 09Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 256960C            Date 11Dec08               *
+      *                 256960B            Date 19Nov08               *
+      *                 256960A            Date 04Nov08               *
+      *                 256960  *CREATE    Date 08Oct08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD050139- AOSARDR0 called every time causing performance     *
+      *            issue. Recompile due to changes in /COPY           *
+      *            ZFREQ/ZFRQ*.                                       *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL184 - New Frequencies for Account Statements (Recompile)  *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  CAP204 - Teller Related APIs - Account Transfer              *
+      *  256960C - Corrected an invalid field                         *
+      *  256960B - Increase Account Code fields to 10 in length       *
+      *  256960A - Conversion of Fields Compatibility for Midas Plus  *
+      *  256960 - Show Interest Adjustment on Projected Acct Movement *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *   41    - RSACMTL1 file
+      *   81    - Local work flag
+      *   U7-U8 - Error control
+      *   LR    - Securities file
+      *   90-99 - Reserved for common routines
+      *
+      *****************************************************************
+      *
+      *  S U B R O U T I N E   I N D E X
+      *
+      *   MAIN         - Process Given Movement type
+      *     SETTLI     - Settled Interest Rountine
+      *     PROJST     - Projection status routine
+      *     PRACMV     - Process Account Movement
+      *   INIT         - Initial routine
+      *     AOBANK     - Bank Details (Next Working Date)
+      *     #AEOD      - Calc. End of Month
+      *     #DBCK5     - Calc. 5 Workings Days Backward
+      *   TERM         - Termination Routine
+      *   *PSSR        - Program and User Error Routine
+      *
+      /EJECT
+      *****************************************************************
+     FRSACMTL1IF  E           K        DISK                           UC
+      ** projected account movements
+     F            APOSTPDF                          KIGNORE
+     F                                              KCOMIT
+     FDEALS   IF  E           K        DISK                           UC
+      ** deals
+     F                                              KCOMIT
+      *
+      /EJECT
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFREQBZ1
+     E/COPY ZSRSRC,ZHOLE
+      *
+     I/COPY ZSRSRC,ZAOZ1
+     I/COPY ZSRSRC,ZAOZ2
+     I/COPY ZSRSRC,ZHOLI
+      *
+     ILDA       E DSLDA                         256
+      ** DB error details
+      *
+     IDSACNT    E DSACCNTAB
+      ** Account details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     IDSSDY     E DSDSSDY
+      ** Long structure
+      *
+      *  Input parameters data structure for AOSPOS
+      *
+     II#DTA       DS                            256
+      *  Account type N=nostro nbr F=Full nostro G=General Ledger
+      *               P=Partial Ledger R= Retail Number
+     I                                        1   1 I#ATYP
+      *               Full General Ledger - CNUM/CCY/ACOD/ACSQ
+     I                                        2  19 I#ACCT
+     I**********                              2   70I#CNU1                                   256960A
+     I                                        2   7 I#CNU1                                   256960A
+     I                                        8  10 I#CCY1
+     I**********                             11  140I#ACO1                                   256960A
+     I                                       15  160I#ACS1
+     I                                       17  19 I#BRC1
+      *               Nostro number
+     I                                        2   30I#NOSN
+      *               Full Nostro - CCY/NOSN
+     I                                        2   6 I#NOS
+      *               Retail Number
+     I                                        2  110I#ACNO
+      *               Partial Account - CNUM/ACOD/ACSQ
+     I**********                              2   70I#CNUM                                   256960A
+     I                                        2   7 I#CNUM                                   256960A
+     I**********                              8  110I#ACOD                                   256960A
+     I                                       12  130I#ACSQ
+      *               Branch of account if Partial
+     I                                       14  16 I#BRCA
+      *               OLPOS Incoming/Outgoing Indicator 'I' or 'O' or
+      *                     ' ' no OLPOS update
+     I                                       24  24 I#IO
+      *               Currency of transaction
+     I                                       25  27 I#CCY
+      *               Transaction Type
+     I                                       28  29 I#TRYP
+      *               Transaction Narrative
+     I                                       30  59 I#NARR
+      *               Cheque Number
+     I                                       60  670I#CHQN
+      *               FT transaction reference
+     I                                       68  82 I#PREF
+      *               DL/LE/GL/RE transaction reference
+     I                                       83  88 I#TRN
+      *               Movement amount
+     I                                    P  89  960I#AMT
+      *               Processing indicators Not blank = no update
+      *                                     ' ' = Update
+      *               Prono update indicator
+     I                                       97  97 I#PRON
+      *               Olpos update indicator
+     I                                       98  98 I#OLPS
+      *               Memos update indicator
+     I                                       99  99 I#MEMS
+      *               Rsacmtpd write indicator
+     I                                      100 100 I#RSAC
+      *               Module
+     I                                      101 102 I#MOD
+      *               Olpos record number to update
+      *                     '01' for FX
+      *                     '02' for Interest movements
+      *                     '03' for MM loans and deposits
+     I                                      103 104 I#OLRC
+      *               FT Memos ledger balance override
+      *                        'Y' update ledger balance irrespective
+      *                        of posting date
+     I                                      105 105 I#FTOV
+      *               Value date and posting date
+     I                                    P 106 1080I#VDAT
+     I                                    P 109 1110I#PSTD
+      *               Override posting date correction
+      *                        for forward valued items
+      *                        'Y' prevents date being changed
+     I                                      112 112 I#PSTO
+      *
+      *  Add data about removal of duplicates
+      *
+      *               Indicator to show if removal allowed Y, N or " "
+     I                                      113 113 I#RPST
+      *               Removal set number
+     I                                      114 1160I#RPNB
+      *               Removal type "C" = Credit entries
+      *                            "D" = Debit entries
+     I                                      117 117 I#RTYP
+      *
+      *               Booking branch
+     I                                      118 120 I#BBRN
+     I                                      121 1300I#ACO1                                   256960A
+     I                                      131 1400I#ACOD                                   256960A
+      *               Other Transaction Reference                                             CAP204
+     I                                      141 160 I#OTR1                                    CAP204
+     I                                      161 161 I#MTYP                                    CAP205
+      *                                                                                       CLE134
+      ** Exception Reference Id/Number                                                        CLE134
+      *                                                                                       CLE134
+     I                                      162 164 I#XRFI                                    CLE134
+     I                                      165 1740I#XRFN                                    CLE134
+      /EJECT
+      *****************************************************************
+      *
+      ** Movement types
+     I              '*FREE'               C         CON00
+      **            Interest settled on a nostro etc.
+     I              'SETTLI'              C         CON01
+      ** External commands
+     I              'OVRDBF DEALS SHARE(*-C         CON91
+     I              'NO)'
+     I              'DLTOVR DEALS'        C         CON92
+     I              'OVRDBF RSACMTL1 SHAR-C         CON93
+     I              'E(*NO)'
+     I              'DLTOVR RSACMTL1'     C         CON94
+      *
+      /EJECT
+      ****************************************************************
+      * MAIN ROUTINE
+      ****************************************************************
+      *
+      **  Initialise
+      *
+     C                     EXSR INIT
+      *
+      ** Process given movement type
+      *
+     C           P1OPTN    IFEQ CON01
+     C                     EXSR SETTLI
+     C           W1IDEN    IFEQ *BLANKS
+     C                     EXSR PROJST
+     C           BJRDNB    IFLE P1MDAT
+     C           BJRDNB    ANDGTW#BCKD
+     C           WACTP     ANDEQ'N'
+     C                     EXSR PRACMV
+     C                     ENDIF
+     C           BJRDNB    IFEQ P1MDAT
+     C           WACTP     ANDEQ'R'
+     C                     EXSR PRACMV
+     C                     ENDIF
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADDW#BCKD    P1MDAT
+     C                     ENDIF
+      *
+      **  Terminate
+      *
+     C                     EXSR TERM
+      *
+      ****************************************************************
+     C/EJECT
+      *****************************************************************
+      * SETTLI - Settled Interest Routine                             *
+      * Called by: MAIN                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           SETTLI    BEGSR
+      *
+      ** Abort if deal type not available in this procedure
+      *
+     C           W1DLTP    IFNE 'IP'
+     C           W1DLTP    ANDNE'TI'
+     C           W1DLTP    ANDNE'CL'
+     C           W1DLTP    ANDNE'IT'
+     C           W1DLTP    ANDNE'TD'
+     C           W1DLTP    ANDNE'CD'
+     C                     GOTO ESETTL
+     C                     ENDIF
+      *
+      ** Access deal
+      *
+     C                     MOVELCON91     CMD    99 P
+     C                     Z-ADD99        CMDLEN 155
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD
+     C                     PARM           CMDLEN
+     C                     OPEN DEALS
+     C           W1DLRN    CHAINDEALS                81
+     C                     CLOSEDEALS
+     C                     MOVELCON92     CMD    99 P
+     C                     Z-ADD99        CMDLEN 155
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD
+     C                     PARM           CMDLEN
+     C           *IN81     CABEQ*ON       ESETTL
+     C           DTYP      IFNE W1DLTP
+     C                     GOTO ESETTL
+     C                     ENDIF
+      *
+     C                     MOVELBRCA      W9BRCA  3
+     C**********           MOVELOMDA      W9OMDA 12                                          256960B
+     C                     MOVELOMDA      W9OMDA 19                                          256960B
+     C                     Z-ADDMDST      W9MDST  20
+     C                     MOVELCCY       W9CCY   3
+     C                     Z-ADD0         W9CNUM  60
+     C                     MOVELCNUM      W9CNUM
+     C**********           Z-ADD0         W9ACOD  40                                         256960B
+     C                     Z-ADD0         W9ACOD 100                                         256960B
+     C                     Z-ADD0         W9ACSQ  20
+     C**********           MOVELINSA      W9INSA 15                                          256960B
+     C                     MOVELINSA      W9INSA 21                                          256960B
+     C                     MOVELDTYP      W9DTYP  2
+     C                     MOVELROBR      W9ROBR  3
+     C                     MOVELPOBR      W9POBR  3
+     C                     MOVELIPFR      W9IPFR  1
+      *
+      ** Interest is debited to settlement account for placings
+      *
+     C           W9DTYP    IFEQ 'IP'
+     C           W9DTYP    OREQ 'TI'
+     C           W9DTYP    OREQ 'CL'
+     C                     MOVEL'D'       P1DRCR    P
+     C                     ENDIF
+      *
+      ** Interest is credited to settlement account for takings
+      *
+     C           W9DTYP    IFEQ 'IT'
+     C           W9DTYP    OREQ 'TD'
+     C           W9DTYP    OREQ 'CD'
+     C                     MOVEL'C'       P1DRCR    P
+     C                     ENDIF
+      *
+      ** Get interest account if specified directly on deal
+      *
+     C           W9INSA    IFNE *BLANKS
+     C           6         SUBSTW9INSA:1  W6A     6
+     C                     MOVE W6A       CNUM
+     C********** 4         SUBSTW9INSA:7  W4A     4                                          256960B
+     C**********           MOVE W4A       ACOD                                               256960B
+     C           10        SUBSTW9INSA:7  W10A   10                                          256960B
+     C                     MOVE W10A      ACOD                                               256960B
+     C********** 2         SUBSTW9INSA:11 W2A     2                                          256960B
+     C           2         SUBSTW9INSA:17 W2A     2                                          256960B
+     C                     MOVE W2A       ACSQ
+     C********** 3         SUBSTW9INSA:13 BRCA                                               256960B
+     C           3         SUBSTW9INSA:19 BRCA                                               256960B
+     C                     MOVELW9CCY     CCY
+      *
+     C                     MOVELCNUM      P@ACID
+     C                     CALL 'AOACCTV0'
+     C                     PARM           P@RTCD
+     C                     PARM           P@ACID 10
+     C                     PARM           CCY
+     C                     PARM           ACOD
+     C                     PARM           ACSQ
+     C                     PARM           BRCA
+     C                     PARM           P@TYPE  7
+     C                     PARM           P@NOSN  2
+     C                     PARM           DSSDY
+      *
+     C                     MOVEL'R'       WACTP
+      *
+     C           P@NOSN    IFNE *BLANKS
+     C                     MOVEL'N'       WACTP
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Get interest account if derived from settlement instructions
+      *
+     C           W9INSA    IFEQ *BLANKS
+      *
+      ** Abort if sett inst not available in this procedure
+      *
+     C           W9MDST    IFNE 01
+     C           W9MDST    ANDNE07
+     C           W9MDST    ANDNE08
+     C           W9MDST    ANDNE14
+     C           W9MDST    ANDNE05
+     C           W9MDST    ANDNE12
+     C           W9MDST    ANDNE02
+     C                     GOTO ESETTL
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   DSACNT
+      *
+      ** Nostro
+      *
+     C           W9MDST    IFEQ 01
+     C           W9MDST    OREQ 07
+     C           W9MDST    OREQ 08
+     C           W9MDST    OREQ 12
+     C           W9MDST    OREQ 02
+     C                     MOVELW9CCY     P@ACID    P
+     C           P@ACID    CAT  W9OMDA:0  P@ACID
+     C                     CALL 'AOACCTV0'
+     C                     PARM           P@RTCD  7
+     C                     PARM           P@ACID 10
+     C                     PARM           P@CYCD  3
+     C**********           PARM           P@ACCD  4                                          256960B
+     C                     PARM           P@ACCD 10                                          256960B
+     C                     PARM           P@ACSN  2
+     C                     PARM           P@BRCA  3
+     C                     PARM           P@TYPE  7
+     C                     PARM           P@NOSN  2
+     C                     PARM           DSSDY
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVELDSSDY     DSACNT
+     C                     MOVEL'N'       WACTP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Retail account in 10 char form
+      *
+     C                     Z-ADD1         I       30
+     C           ' '       SCAN W9OMDA    I              81
+     C           W9MDST    IFEQ 14
+     C           I         ANDEQ11
+     C                     MOVELW9OMDA    P@ACID    P
+     C                     CALL 'AOACCTV0'
+     C                     PARM           P@RTCD  7
+     C                     PARM           P@ACID 10
+     C                     PARM           P@CYCD  3
+     C**********           PARM           P@ACCD  4                                          256960B
+     C                     PARM           P@ACCD 10                                          256960B
+     C                     PARM           P@ACSN  2
+     C                     PARM           P@BRCA  3
+     C                     PARM           P@TYPE  7
+     C                     PARM           P@NOSN  2
+     C                     PARM           DSSDY
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVELDSSDY     DSACNT
+     C                     MOVEL'R'       WACTP
+     C                     ENDIF
+      *
+     C           P@NOSN    IFNE *BLANKS
+     C                     MOVEL'N'       WACTP   1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Full account
+      *
+     C           W9MDST    IFEQ 05
+     C           W9DTYP    IFEQ 'IP'
+     C           W9DTYP    OREQ 'TI'
+     C           W9DTYP    OREQ 'CL'
+     C                     MOVELW9ROBR    P@BRCA    P
+     C                     ENDIF
+     C           W9DTYP    IFEQ 'IT'
+     C           W9DTYP    OREQ 'TD'
+     C           W9DTYP    OREQ 'CD'
+     C                     MOVELW9POBR    P@BRCA    P
+     C                     ENDIF
+     C           6         SUBSTW9OMDA:1  P@ACID    P
+     C                     MOVELW9CCY     P@CYCD    P
+     C********** 4         SUBSTW9OMDA:7  P@ACCD    P                                        256960B
+     C           10        SUBSTW9OMDA:7  P@ACCD    P                                        256960B
+     C           2         SUBSTW9OMDA:11 P@ACSN    P
+     C                     CALL 'AOACCTV0'
+     C                     PARM           P@RTCD  7
+     C                     PARM           P@ACID 10
+     C                     PARM           P@CYCD  3
+     C**********           PARM           P@ACCD  4                                          256960B
+     C                     PARM           P@ACCD 10                                          256960B
+     C                     PARM           P@ACSN  2
+     C                     PARM           P@BRCA  3
+     C                     PARM           P@TYPE  7
+     C                     PARM           P@NOSN  2
+     C                     PARM           DSSDY
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVELDSSDY     DSACNT
+     C                     MOVEL'R'       WACTP
+     C                     ENDIF
+      *
+     C           P@NOSN    IFNE *BLANKS
+     C                     MOVEL'N'       WACTP   1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Abort if account not found or invalid
+      *
+     C           DSACNT    IFEQ *BLANKS
+     C                     GOTO ESETTL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVELBRCA      P1BRCA    P
+     C**********           Z-ADD0         P1CNUM                                             256960A
+     C                     MOVEL*BLANKS   P1CNUM                                             256960A
+     C                     MOVELCNUM      P1CNUM
+     C                     MOVELCCY       P1CCY     P
+     C**********           Z-ADDACOD      P1ACOD                                             256960B
+     C                     MOVELACOD      P1ACOD                                             256960B
+     C                     Z-ADDACSQ      P1ACSQ
+      *
+      ** Calculate 5 workdays forward of Rundate
+      ** (placed here b/c CCY is required)
+      *
+     C                     EXSR #ANWD5
+      *
+     C                     MOVEL*BLANKS   W1IDEN  7 P
+      *
+     C           ESETTL    ENDSR
+     C/EJECT
+      *****************************************************************
+      * PROJST - Process Projection Status                            *
+      * Called by: MAIN                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           PROJST    BEGSR
+      *
+     C                     MOVEL*BLANKS   W9SOMC  1
+     C                     MOVEL*BLANKS   W9SOMD  1
+      *
+      ** Find posting in projected account movement file
+      *
+     C                     MOVELCON93     CMD    99 P
+     C                     Z-ADD99        CMDLEN 155
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD
+     C                     PARM           CMDLEN
+     C                     OPEN RSACMTL1
+      *
+     C                     MOVELP1BRCA    BRCA
+     C                     MOVELP1CNUM    CUSN
+     C                     MOVELP1CCY     CCYD
+     C**********           Z-ADDP1ACOD    ACDE                                               256960B
+     C                     MOVELP1ACOD    ACDE                                               256960B
+     C                     Z-ADDP1ACSQ    ASNC
+     C                     Z-ADDW1ECD     VUDT
+     C           KACMX1    SETLLRSACMTL1
+     C           KACMX2    READERSACMTL1                 41
+     C           *IN41     DOWEQ*OFF
+     C           TRYP      IFEQ W1DLTP
+     C           TNMR      ANDEQW1DLRA
+     C           DORC      IFEQ 0
+     C                     MOVEL'Y'       W9SOMD
+     C                     ENDIF
+     C           DORC      IFEQ 1
+     C                     MOVEL'Y'       W9SOMC
+     C                     ENDIF
+      *
+      **Store the first value date found
+      *
+     C           P1VDAT    IFEQ 0
+     C                     Z-ADDVUDT      P1VDAT
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C           KACMX2    READERSACMTL1                 41
+     C                     ENDDO
+      *
+     C           P1VDAT    IFEQ 0
+     C                     Z-ADDP1MDAT    P1VDAT
+     C                     ENDIF
+      *
+     C                     CLOSERSACMTL1
+     C                     MOVELCON93     CMD    99 P
+     C                     Z-ADD99        CMDLEN 155
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD
+     C                     PARM           CMDLEN
+      *
+      ** Projection status indicates existence of debits and/or credts
+      *
+     C           W9SOMD    IFEQ *BLANKS
+     C           W9SOMC    ANDEQ'Y'
+     C                     MOVEL'C'       P1PROJ
+     C                     ENDIF
+      *
+     C           W9SOMD    IFEQ 'Y'
+     C           W9SOMC    ANDEQ*BLANKS
+     C                     MOVEL'D'       P1PROJ
+     C                     ENDIF
+      *
+     C           W9SOMD    IFEQ 'Y'
+     C           W9SOMC    ANDEQ'Y'
+     C                     MOVEL'B'       P1PROJ
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      * PRACMV - Process Account Movementent, Update posting on       *
+      *          AOSPOSU0                                             *
+      * Called by: MAIN                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           PRACMV    BEGSR
+      *
+      ** If projections are not of expected dr/cr, ignore
+      *
+     C           P1RTCD    IFEQ *BLANKS
+     C           P1DRCR    IFEQ 'D'
+     C           P1PROJ    ANDEQ'C'
+     C           P1DRCR    OREQ 'C'
+     C           P1PROJ    ANDEQ'D'
+     C                     MOVEL*BLANKS   P1PROJ
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           P1RTCD    IFEQ *BLANKS
+      *
+     C                     RESETI#DTA
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       I#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     CALL 'AOSPOSU0'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*CLEAR  'W0ACT   8
+     C                     PARM           I#DTA
+      *
+      ** Process +[adj]
+      *
+     C                     RESETI#DTA
+     C                     MOVEL'G'       I#ATYP
+     C**********           Z-ADDP1CNUM    I#CNU1                                             256960A
+     C**********           MOVELP1CNUM    I#CCY1                                             256960A
+     C                     MOVELP1CNUM    I#CNU1                                             256960C
+     C                     MOVELP1CCY     I#CCY1
+     C**********           Z-ADDP1ACOD    I#ACO1                                             256960B
+     C                     MOVELP1ACOD    I#ACO1                                             256960B
+     C                     Z-ADDP1ACSQ    I#ACS1
+     C                     MOVELP1BRCA    I#BRC1
+     C                     MOVELDTYP      I#TRYP
+     C                     MOVEL'INT.ADJ.'I#NARR
+     C                     MOVELDLNO      I#TRN
+     C                     MOVEL'DL'      I#MOD
+     C                     MOVE '02'      I#OLRC
+     C                     Z-ADDP1VDAT    I#VDAT
+     C                     Z-ADDBJRDNB    I#PSTD
+      *
+      ** Flip dr/cr of interest payment if adjustment is negative
+      *
+     C                     MOVELP1DRCR    W1DRCR  1
+      *
+      **'+' ADJ INCREASES THE INT OF BOTH LOAN/DEPO OR THEIRS/OURS
+      *
+     C           W1DRCR    IFEQ 'D'
+     C           P1SIGN    ANDEQ'-'
+     C           W1DRCR    OREQ 'C'
+     C           P1SIGN    ANDEQ'+'
+     C                     Z-SUBP1AMNT    I#AMT
+     C                     ELSE
+     C                     Z-ADDP1AMNT    I#AMT
+     C                     ENDIF
+      *
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       I#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     CALL 'AOSPOSU0'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM           I#DTA
+      *
+     C                     RESETI#DTA
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       I#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     CALL 'AOSPOSU0'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*UPDATE 'W0ACT   8
+     C                     PARM           I#DTA
+      *
+     C                     ENDIF
+D     *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * INIT   - Initialixation subroutine                            *
+      * Called by: MAIN                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Entry parms
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P1OPTN  6
+     C                     PARM           P1KEY1 20
+     C                     PARM           P1SIGN  1
+     C                     PARM           P1AMNT 130
+     C                     PARM           P1CCY   3
+     C                     PARM           P1MDAT  50
+      *
+      ** Key lists
+      *
+     C           KACMX1    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CUSN
+     C                     KFLD           CCYD
+     C                     KFLD           ACDE
+     C                     KFLD           ASNC
+     C                     KFLD           VUDT
+      *
+     C           KACMX2    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CUSN
+     C                     KFLD           CCYD
+     C                     KFLD           ACDE
+     C                     KFLD           ASNC
+      *
+      ** Initialize Global Var.
+      *
+     C**********           Z-ADD0         P1CNUM  60                                         256960A
+     C                     MOVEL*BLANKS   P1CNUM  6                                          256960A
+     C**********           Z-ADD0         P1ACOD  40                                         256960C
+     C                     Z-ADD0         P1ACOD 100                                         256960C
+     C                     Z-ADD0         P1ACSQ  20
+     C                     Z-ADD0         P1VDAT  60
+     C                     MOVEL*BLANKS   P1RTCD  6
+     C                     MOVEL*BLANKS   P1BRCA  3
+     C                     MOVEL*BLANKS   P1DRCR  1
+     C                     MOVEL*BLANKS   P1PROJ  1
+      *
+     C                     Z-ADD0         W1DLRN  60
+     C                     Z-ADD0         W1ECD   50
+     C                     MOVEL*BLANKS   W1DLTP  2
+     C                     MOVEL*BLANKS   W1DLRA  6
+     C                     MOVEL'*NOTID'  W1IDEN  7 P
+      *
+      ** Settled Interest format
+      *
+     C           P1OPTN    IFEQ CON01
+     C           2         SUBSTP1KEY1:1  W1DLTP
+      *
+      ** Dealing module
+      *
+     C           W1DLTP    IFEQ 'IP'
+     C           W1DLTP    OREQ 'TI'
+     C           W1DLTP    OREQ 'CL'
+     C           W1DLTP    OREQ 'IT'
+     C           W1DLTP    OREQ 'TD'
+     C           W1DLTP    OREQ 'CD'
+     C           6         SUBSTP1KEY1:3  W1DLRA
+     C           5         SUBSTP1KEY1:9  W5A     5
+     C                     MOVE W5A       W1ECD
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** General
+      *
+     C           W1DLRA    IFEQ *BLANKS
+     C                     MOVE W1DLRN    W1DLRA
+     C                     ENDIF
+     C           W1DLRN    IFEQ 0
+     C                     MOVE W1DLRA    W1DLRN
+     C                     ENDIF
+      *
+      ** Access Bank Details
+      *
+     C                     EXSR AOBANK
+      *
+      ** Check date format
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      ** Calculate End of Month
+      *
+     C                     EXSR #AEOM
+      *
+      ** Calculate Rundate + 5 days
+      *
+     C                     EXSR #ANWD5
+      *
+      ** Calculate Rundate 5 days before Maturity
+      *
+     C                     EXSR #DBCK5
+      *
+     C                     MOVE *BLANKS   WACTP   1
+      *
+      ** Access SAR details file to determine if CAP205 is switched ON                        CAP205
+      *                                                                                       CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM *BLANKS   @RTCD                                               CAP205
+     C                     PARM '*VERIFY' @OPTN                                               CAP205
+     C                     PARM 'CAP205'  PSARD   6                                           CAP205
+     C                     MOVE 'N'       CAP205  1                                           CAP205
+      *                                                                                       CAP205
+     C           @RTCD     IFEQ *BLANKS                                                       CAP205
+     C                     MOVE 'Y'       CAP205                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * TERM - Termination Subroutine                                 *
+      * Called by : INIT                                              *
+      * Calls     : None                                              *
+      *****************************************************************
+     C           TERM      BEGSR
+      *
+      ** Update return flag
+      *
+     C           W1IDEN    IFNE *BLANKS
+     C                     MOVELW1IDEN    P1RTCD    P
+     C                     MOVEL*BLANKS   P1DRCR
+     C                     ENDIF
+      *
+      ** Close files and access paths if required
+      *
+     C           P1OPTN    IFEQ CON00
+     C           P1OPTN    OREQ CON01
+     C                     SETON                     LR
+     C                     ENDIF
+      *
+      ** Exit
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * AOBANK - Subroutine to call access object : Bank details      *
+      * Called by : INIT                                              *
+      * Calls     : None                                              *
+      *****************************************************************
+     C           AOBANK    BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           AOBAN9    ENDSR
+     C/EJECT
+      *****************************************************************
+      * #AEOM  - Subroutine to Calculate End of Calandar Month Date   *
+      * Called by : INIT                                              *
+      * Calls     : None                                              *
+      *****************************************************************
+     C           #AEOM     BEGSR
+      *
+      **Call Freq. Calc. with Run Date as seed, Freq Code = M
+      **Day Number 01 to get first day of next Month.
+      *
+     C                     Z-ADD01        ZMDAY
+     C                     MOVE 'M'       ZFREQ
+     C                     Z-ADDBJRDNB    ZDAYNO
+      *
+     C                     EXSR ZFREQB
+      *
+      **Begining of next month
+      *
+     C                     Z-ADDZDAYNO    W#BONM  50
+      *
+      **Subtract 1 from first day of month to get End of Calandar Month
+      *
+     C           W#BONM    SUB  1         W#EOM   50
+      *
+     C           #AEOM9    ENDSR
+      /EJECT
+      *****************************************************************
+      * #ANWD5 - Subroutine to get 5 working days from Rundate        *
+      * Called by : INIT                                              *
+      * Calls     : None                                              *
+      *****************************************************************
+     C           #ANWD5    BEGSR
+      *
+      **Take RUN get 5 working days forward
+      *
+     C                     Z-ADD05        ZNRDYS
+     C                     MOVELP1CCY     ZCCY
+     C                     MOVEL*BLANKS   ZLOC
+     C                     Z-ADDBJRDNB    ZDAYNO
+      *
+     C                     EXSR ZFWDT
+      *
+      **Setup 5 Working days after rundate
+      *
+     C                     Z-ADDZDYNBR    W#NWD5  50
+      *
+      **Get Next Working day from Begining of Next Month
+      *
+     C                     Z-ADD00        ZNRDYS
+     C                     MOVELP1CCY     ZCCY
+     C                     MOVEL*BLANKS   ZLOC
+     C                     Z-ADDW#BONM    ZDAYNO
+      *
+     C                     EXSR ZFWDT
+      *
+      **Setup Next Working Day after Begining of Month
+      *
+     C                     Z-ADDZDYNBR    W#BOMW  50
+      *
+     C           #ANWD8    ENDSR
+      /EJECT
+      *****************************************************************
+      * #DBCK5-Subroutine to get 5 working days BACKWARD frm Maturity *
+      * Called by : INIT                                              *
+      * Calls     : None                                              *
+      *****************************************************************
+     C           #DBCK5    BEGSR
+      *
+      **Take RUN get 5 working days backward
+      *
+     C                     Z-ADD05        ZNRDYS
+     C                     MOVELP1CCY     ZCCY
+     C                     MOVEL*BLANKS   ZLOC
+     C                     Z-ADDP1MDAT    ZDAYNO
+      *
+     C                     EXSR ZBKDT
+      *
+      **Setup 5 Working days before Maturity
+      *
+     C                     Z-ADDZDYNBR    W#BCKD  50
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      * Called by :                                                   *
+      * Calls     : None                                              *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      ** COPY BOOKS : Subroutines                                     *
+      *****************************************************************
+      *
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZFREQBZ2
+     C/COPY ZSRSRC,ZACCH
+     C/COPY ZSRSRC,ZCHKH
+     C/COPY ZSRSRC,ZFWDT
+     C/COPY ZSRSRC,ZBKDT
+      *
+      *****************************************************************
+      ** COPY BOOKS  - Arrays                                         *
+      *****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2008
+     X/COPY ZSRSRC,ZDATE2Z3
+     X/COPY ZSRSRC,ZFREQBZ3

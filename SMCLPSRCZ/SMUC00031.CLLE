@@ -1,0 +1,76 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Update LEFHST (HIFRTn & HIAMTn): 240668')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00031 - Update LEFHST (HIFRTn & HIAMTn)                 */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD033801           Date 02Jun15              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      BG26993            Date 26Jan10              */
+/*                      240668 *Create     Date 19Jul06              */
+/*                      Xnnnnn             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD033801 - Migration using BRIDGE software fails due to     */
+/*                  wrong program name. Corrected the program name   */
+/*       BG26993 - Delivery of upgrade programs to core.             */
+/*               - Renamed S240668C01.                               */
+/*       240668  - Initialised HIFRTn and HIAMTn on PF/LEFHST to     */
+/*                 complete fix for BUG8762 which applied 209513.    */
+/*                 HIFRTn and HIAMTn contains amounts and rates for  */
+/*                 each fee period from fee start date.              */
+/*                 HIFRTn and HIAMTn were inserted to be used in     */
+/*                 calculating fee accruals of previous periods.     */
+/*                 Patterned after utility UTCLE149 for 209513.      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2005')
+ 
+/** Global monitor message **/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&MODE) VALUE('U')
+ 
+/* Copy LEFHST to temporary input file. */
+             CPYF       FROMFILE(LEFHST) TOFILE(SMU005PD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF2909) EXEC(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/*********** CALL       PGM(SMU000103) PARM(&MODE)      */                              /*MD033801*/
+             CALL       PGM(SMU00103) PARM(&MODE)                                       /*MD033801*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If successful, copy new updated file back.*/
+             CPYF       FROMFILE(SMU005PD) TOFILE(LEFHST) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817 CPF2909) EXEC(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ END:
+             ENDPGM

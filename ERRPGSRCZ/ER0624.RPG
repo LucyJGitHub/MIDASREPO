@@ -1,0 +1,1504 @@
+     H        1   Y
+      *****************************************************************   ULX004
+/*STD *  RPGBASE                                                      *   ULX004
+/*EXI *  TEXT('Midas ER Extract program - NAP deals')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module                            *
+      *                                                               *
+      *  ER0624 - ER Extract program - NAP Deals                      *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 225555             Date 01Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 12May06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ULX046             Date 31Oct02               *
+      *                 194921             Date 28Jun01               *
+      *                 CEU007 PTF08       Date 01Dec98               *
+      *                 CAD007 PT          Date 24Jul98               *
+      *                 ULX004             Date 14MAR97               *
+      *                 ART021    PT       Date 16SEP96               *
+      *                 ER_R10             Date 25SEP95               *
+      *                 ER0401 PT          DATE 12JUL94               *
+      *                 ER0350 TLI         Date 10JUN93               *
+      *                 054792 TLI         Date 13MAY93               *
+      *                 ERL328 AF          Date 26MAR93               *
+      *                 ER0324 TLI         Date 02MAR93               *
+      *                 050951 AF          Date 18FEB93               *
+      *                 ER0321 TLI         Date 15FEB93               *
+      *                 ER0317 TLI         Date 02FEB93               *
+      *                 ER1018             Date 25JAN93      ThL      *
+      *                 ER0310 PT          Date 26JAN93               *
+      *                 ER0306 TLI         Date 25JAN93               *
+      *                 ER0205 ADs         Date 14DEC92               *
+      *                 ER0136 VT          Date 23DEC92               *
+      *                 ER0101 ADs         Date 24NOV92               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  225555 - Add discount/premium amount, amount to amortize     *
+      *           and 'Prix d'Acquisition'. Recompile over changed    *
+      *           EREXTRPD.                                           *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  ULX046 - Circulars 2002/170-174-175 Integration              *
+      *           Recompiled due to changes in file layout            *
+      *  194921 - To populate several empty fields                    *
+      *  CEU007 - Holidays Changes For Reporting Interface.           *
+      *  CAD007 - CAD adaptation to data dictionary version 1.6       *
+      *           (recompiled only)                                   *
+      *  ULX004 - Capital Adequacy                                    *
+      *           (UNL002 Reference is replaced with ULX004 for DBA4) *
+      *           (UCH001 Reference is replaced with ULX004 for DBA4) *
+      *  ART021 - SNB Article 21 development                          *
+      *  ER_R10 - EUROPEAN REPORTING - LUXEMBOURG UPGRADE IN R10      *
+      *         - (R10 MULTIBRANCHING)                                *
+      *  ER0401 - Use field 'PINT1' (prior interest) to calculate     *
+      *           net purchase price                                  *
+      *  ER0350 - Setup Security Denomination for 'NAP'               *
+      *  054792 - Setup Revision Date                                 *
+      *  ERL328 - IML 2.4 DEVELOPMENT                                 *
+      *  ER0324 - Extract records if Deal Date reached                *
+      *  050951 - REMOVE FIX ER0306 (WRONG CALCULATION OF PRINCIPAL   *
+      *           AMOUNT)                                             *
+      *  ER0321 - Add 'Country of Citizenship'                        *
+      *  ER0317 - Change test with run date by end of month date      *
+      *  ER1018 - Issuer to consider instead of Bought From Cus-      *
+      *           mer (ER risk consideration).                        *
+      *  ER0310 - Interest rate type indicator incorrectly set up     *
+      *  ER0306 - Wrong extracted amount for Principal Amount         *
+      *  ER0205 - Add B/n-B ind. and second Ccy on extract file       *
+      *  ER0136 - CALCULATE THE NUMBER OF EXTRACTED RECORDS           *
+      *  ER0101 - Decision Key lenght from 6 to 8 (RECOMPILATION)     *
+      *                                                               *
+      *****************************************************************
+     FDEALSDD IF  E           K        DISK
+     F* Negotiable Assets Bought
+     F**MMDENBY4IF**E***********K********DISK**********************050951 ER0401
+     F**Negotiable*Assets*Bought*EXTENTION*FILE********************050951 ER0401
+     F*
+     FSDSECSL1IF  E           K        DISK                               ULX004
+     F* SE Client Details file                                            ULX004
+     F*                                                                   ULX004
+     FSDCUSTL1IF  E           K        DISK
+     F* Client Details file
+     F*
+     FSDCURRL1IF  E           K        DISK
+     F* Currency Details file
+     F*
+     FSDBRCHL1IF  E           K        DISK
+     F* Branch Code master file
+     F*
+     FSDBANKL1IF  E           K        DISK
+     F* Bank Details file
+     F*
+     F***ACCEXAL3IF  E           K        DISK                            ULX004              CER001
+     FDLACOXL1IF  E           K        DISK                                                   CER001
+     F* DL Accruals Extract by deal number                                ULX004
+     F*                                                                   ULX004
+     FEREXTRPDO   E                    DISK
+     F* ER Production Extract
+     F*
+     FER0624AUO   E                    PRINTER
+     F* ER Audit report for NAP deals extract
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   .. *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   .. *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     E*
+     E**  ARRAY FOR SR. ZDATE9 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PERIOD
+     E                    @YD     4   4  5 0A
+     E*
+     E**  ARRAY FOR SR. ZDATE9 - CUMULATIVE DAYS IN YEAR PER MONTH
+     E                    @MD    13  13  5 0A
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*                                                                   ER0317
+     E** ARRAY FOR ZDATE1                                                 ER0317
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAYER0317
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAYER0317
+     E                    ZMNM   12  12  3               ZDATE2 SR.ARRAY  ER0317
+     E                    TNDM   12  12  2 0             NUMBER/DAY/MONTH ER0317
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA       E DSLDA                         256                       ULX004
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I***
+     I**  DATA STRUCTURE FOR SR. ZDATE9 - FIELD IS @@Z71Y
+     I            DS
+     I                                        1   40@@Z71Y
+     I                                        1   10@@SSY1
+     I                                        2   20@@SSY2
+     I                                        3   30@@SSY3
+     I                                        4   40@@SSY4
+     I**  DATA STRUCTURE FOR SR. ZDATE9 - FIELD IS @@VDT
+     I            DS
+     I                                        1   80@@VDT
+     I                                        1   40@@YR
+     I                                        5   60@@Z71M
+     I                                        7   80@@Z71D
+     I**  MIDAS RUN DATE                                                  ER0317
+     I            DS                                                      ER0317
+     I                                        1   7 BJMRDT                ER0317
+     I                                        1   20WWBJD                 ER0317
+     I                                        3   5 WWBJM                 ER0317
+     I                                        6   70WWBJY                 ER0317
+     I**  DEFINE A DATE                                                   ER0317
+     I            DS                                                      ER0317
+     I                                        1   60WWDATE                ER0317
+     I                                        1   20WWD                   ER0317
+     I                                        3   40WWM                   ER0317
+     I                                        5   60WWY                   ER0317
+     I*
+     IUUFDY     E DSDSFDY                                                 CEU007
+      ***  200 Byte Data Structure for Incoming Data from Access Program  CEU007
+      *                                                                   CEU007
+     ID@NOST    E DSSDNOSTPD                                              CEU007
+      ***  Nostro Details DS for assigning data from Access               CEU007
+      ***  Programs to work fields                                        CEU007
+      *                                                                   CEU007
+     ISCSARD    E DSSCSARDPD                                                                  CER001
+      ** External DS for SAR Details                                                          CER001
+      *                                                                                       CER001
+     IEXDECK      DS                             14                                           CER001
+     I                                        5   5 OFLD                                      CLE042
+     I                                        6   9 WWCLAS                                    CER001
+      ** Data structure for decision table                                                    CER001
+      *                                                                                       CER001
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*                    M A I N
+     C*****************************************************************
+     C*
+     C                     EXSR #INIT
+     C*
+     C                     READ DEALSDD                  30
+     C*
+     C** MAIN PROCESSING
+     C           *IN30     DOWEQ'0'                        - B1
+     C*
+     C                     EXSR P003
+     C*
+     C                     READ DEALSDD                  30
+     C*
+     C                     END                             - E1
+     C*
+     C** TERMINATION PROCESSING
+     C                     WRITEDETAIL                                    ER0136
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C**************************************************************************
+     C* P003 - DETAIL PROCESSING SUB-ROUTINE
+     C**************************************************************************
+     C*
+     C           P003      BEGSR
+      *                                                                   CEU007
+      ***  If the feature CEU007 is installed, filling the new fields     CEU007
+      *                                                                   CEU007
+     C           CEU007    IFEQ 'Y'                        B1             CEU007
+      *                                                                   CEU007
+      ***  Set up the default fields with :                               CEU007
+      ***  CCY from PF/DEALSDD                                            CEU007
+      ***  BJSLCD from PF/SDBANKPD                                        CEU007
+      *                                                                   CEU007
+     C                     MOVELCCY       EXEDCU           En.Dat.Sett.CcyCEU007
+     C                     MOVELBJSLCD    EXEDLO           En.Dat.Sett.LocCEU007
+     C                     MOVELCCY       EXRDCU           Re.Dat.Sett.CcyCEU007
+     C                     MOVELBJSLCD    EXRDLO           Re.Dat.Sett.LocCEU007
+     C                     MOVELCCY       EXSDCU           St.Dat.Sett.CcyCEU007
+     C                     MOVELBJSLCD    EXSDLO           St.Dat.Sett.LocCEU007
+      *                                                                   CEU007
+     C                     ENDIF                                          CEU007
+     C*
+     C** SET UP DEAL VALUE DATE IN ABACUS FORMAT
+     C                     Z-ADDVDAT      @@DAYN
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     WWVDAT  80
+     C*                                                                   ER0324
+     C** SET UP DEAL DATE IN ABACUS FORMAT                                ER0324
+     C                     Z-ADDDDAT      @@DAYN                          ER0324
+     C                     EXSR ZDATE9                                    ER0324
+     C                     Z-ADD@@VDT     WWDDAT  80                      ER0324
+     C*
+     C** SET UP MATURITY DATE IN ABACUS FORMAT
+     C                     Z-ADDMDAT      @@DAYN
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     WWMDAT  80
+     C*
+     C***********WWREPD    IFGE WWVDAT                                    ER0324
+     C           WWREPD    IFGE WWDDAT                                    ER0324
+     C           WWREPD    ANDLTWWMDAT
+     C           RECI      ANDEQ'D'
+     C           ASDN      ANDEQ*ZEROS
+     C*
+     C***********BRCD      IFNE WWBRCD                     - B2           ER_R10
+     C           BRCA      IFNE WWBRCD                     - B2           ULX004
+     C*
+     C** STORE NEW BRANCH IN OLD BRANCH
+     C***********          Z-ADDBRCD      WWBRCD  30                      ER_R10
+     C                     MOVE BRCA      WWBRCD  3                       ULX004
+     C*
+     C***********          MOVE BRCD      AABRCD  3                       ER_R10
+     C                     MOVE BRCA      AABRCD  3                       ULX004
+     C*
+     C           AABRCD    CHAINSDBRCHL1             88
+     C           *IN88     IFEQ '1'                        - B3
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'002'     DBASE            *****************
+     C                     MOVEL'SDBRCHL1'DBFILE           ** DB ERROR 02 **
+     C                     MOVELAABRCD    DBKEY            *****************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             - E3
+      *                                                                   ULX004
+      ***  ULX004 : Save Internal branch customer A8BICN                  ULX004
+      *                                                                   ULX004
+     C                     MOVE A8BICN    SVBICN  6                       ULX004
+     C*
+     C** ACCESS CUSTOMER DETAILS FILE
+     C           A8BICN    CHAINSDCUSTL1             88
+     C           *IN88     IFEQ '1'                        - B3
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'003'     DBASE            *****************
+     C                     MOVEL'SDCUSTL1'DBFILE           ** DB ERROR 03 **
+     C                     MOVELA8BICN    DBKEY            *****************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             - E3
+     C*
+     C** STORE COUNTRY OF LOCATION
+     C                     MOVE BBCOLC    WWORCC  2
+     C                     END                             - E2
+     C*
+     C** ACCESS CUSTOMER DETAILS FILE
+     C*********************MOVE CNUM      AACNUM  6                       ER1018
+     C                     MOVE ISCN      AACNUM  6                       ER1018
+      *                                                                   ULX004
+      ***  ACCESS SECURITIES CUSTOMER DETAILS FILE                        ULX004
+      *                                                                   ULX004
+     C           AACNUM    CHAINSDSECSL1             88                   ULX004
+     C*                                                                   ULX004
+     C** Store Customer classification                                    ULX004
+     C           *IN88     IFEQ '0'                                       ULX004
+     C                     MOVE BFCLAS    EXCLAS                          ULX004
+      *                                                                   ULX004
+      ***  ULX004 : Store Pledge agreement                                ULX004
+      *                                                                   ULX004
+     C                     MOVE BFPLAG    EXPLAG                          ULX004
+     C                     END                                            ULX004
+      *                                                                   ULX004
+     C           AACNUM    CHAINSDCUSTL1             88
+     C           *IN88     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'004'     DBASE            *****************
+     C                     MOVEL'SDCUSTL1'DBFILE           ** DB ERROR 04 **
+     C                     MOVELAACNUM    DBKEY            *****************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*                                                                   ER0205
+     C** STORE Bank/non-Bank Indicator                                    ER0205
+     C                     MOVE BBBNBI    EXBNBI                          ER0205
+      *                                                                   ULX004
+      ***  ULX004 : Store counterparty type                               ULX004
+      *                                                                   ULX004
+     C** NOW MAINTAINED ON A WINDOW                                       ART021
+     C*********************MOVE BBBFIC    EXCTPY                   ULX004 ART021
+     C*
+     C** STORE COUNTRY OF LOCATION
+     C                     MOVE BBCOLC    EXCUCC
+     C*
+     C** STORE CUSTOMER SHORT NAME
+     C                     MOVE BBCSSN    EXCSSN
+     C*
+     C** STORE CUSTOMER REPORT NAME
+     C                     MOVE BBCRNM    EXCRNM
+     C*                                                                   ER0321
+     C** STORE COUNTRY OF CITIEZNSHIP                                     ER0321
+     C                     MOVE BBCNCZ    EXCNCZ                          ER0321
+      *                                                                   ULX004
+      ***  Branch/subsidiary indicator                                    ULX004
+      *                                                                   ULX004
+     C                     MOVE BBBSIN    EXBSIN                          ULX004
+      *                                                                   ULX004
+      ***  Book Code                                                      ULX004
+      *                                                                   ULX004
+     C                     MOVE BOKC      EXBKCD                          ULX004
+      *
+     C*
+     C** PARENT CUSTOMER NUMBER IF NOT EQUAL BLANK
+     C           BBPCNB    IFNE *BLANKS                    - B2
+     C*
+     C           BBPCNB    CHAINSDCUSTL1             88
+     C           *IN88     IFEQ '1'                        - B3
+     C*******************  MOVEL'006'     DBASE                           ER1018
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'005'     DBASE            ************** ER1018
+     C                     MOVEL'SDCUSTL1'DBFILE           ** DB ERROR 05 **
+     C                     MOVELBBPCNB    DBKEY            *****************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             - E3
+     C*
+     C** STORE PARENT CUSTOMER NUMBER AND PARENT COUNTRY CODE
+     C                     MOVE BBCUST    EXPCNB
+     C                     MOVE BBCOLC    EXPRCC
+     C                     ELSE                            - X2
+     C*
+     C** RESET FIELDS
+     C                     MOVE *BLANKS   EXPCNB
+     C                     MOVE *BLANKS   EXPRCC
+     C                     END                             - E2
+     C*
+     C** STORE FACILITY IF NOT EQUAL TO 0
+     C           FACT      IFNE *ZEROS                     - B2
+     C                     MOVE CNUM      EXFCUS
+     C                     MOVE FACT      EXFACT
+     C                     MOVE FCNO      EXFCNO
+     C*
+     C** ELSE RESET FIELDS
+     C                     ELSE                            - X2
+     C                     MOVE *BLANKS   EXFCUS
+     C                     Z-ADD0         EXFACT
+     C                     Z-ADD0         EXFCNO
+     C                     END                             - E2
+     C*
+     C** ACCESS CURRENCY FILE TO RETRIEVE NUMBER OF DECIMAL
+     C           CCY       CHAINSDCURRL1             88
+     C           *IN88     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'006'     DBASE            *****************
+     C                     MOVEL'SDCURRL1'DBFILE           ** DB ERROR 06 **
+     C                     MOVELCCY       DBKEY            *****************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+      **Setup*principal*amount*with*interest*according*to*Deal*TypeER0306 050951
+     C***********DTYP      IFEQ 'C1'                       - B2    ER0306 050951
+     C***********DTYP      OREQ 'C2'                               ER0306 050951
+     C***********DTYP      OREQ 'BP'                               ER0306 050951
+     C***********DTYP      OREQ 'BD'                               ER0306 050951
+     C***********          Z-ADDFVAL      EXAMNT                   ER0306 050951
+     C***********          ADD  AITC      EXAMNT                   ER0306 050951
+     C***********          ADD  AIAN      EXAMNT                   ER0306 050951
+     C***********          SUB  AIPD      EXAMNT                   ER0306 050951
+     C***********          SUB  AIAP      EXAMNT                   ER0306 050951
+     C***********          ELSE                            - X2    ER0306 050951
+     C***********          Z-ADDFVAL      EXAMNT                   ER0306 050951
+     C***********          ADD  DPTD      EXAMNT                   ER0306 050951
+     C***********          SUB  DISA      EXAMNT                   ER0306 050951
+     C***********          END                             - E2    ER0306 050951
+      *
+      ***                                                          050951 ER0401
+      **Setup*principal*amount*with*interest*according*to*Deal*Type050951 ER0401
+      ***********                                                  050951 ER0401
+     C***********DTYP      IFEQ 'C1'                       - B2    050951 ER0401
+     C***********DTYP      OREQ 'C2'                               050951 ER0401
+     C***********DTYP      OREQ 'BP'                               050951 ER0401
+     C***********DTYP      OREQ 'BD'                               050951 ER0401
+      ***********                                                  050951 ER0401
+     C*********************Z-ADD*ZEROS    VASLID                   050951 ER0401
+     C***********DLNO      CHAINMMDENBY4             50            050951 ER0401
+      ***********                                                  050951 ER0401
+     C****IF*RECORD*NOT*FOUND:*****                                050951 ER0401
+     C***********VASLID    IFLT VDAT                       - B3    050951 ER0401
+     C***********VASLID    ANDNE*ZEROS                             050951 ER0401
+     C*********************Z-ADDVASLID    ZIBEG                    050951 ER0401
+     C*********************Z-ADDVDAT      ZIEND                    050951 ER0401
+     C*********************Z-ADDICBS      ZICALC                   050951 ER0401
+     C*********************Z-ADDFVAL      ZIAMT                    050951 ER0401
+     C*********************Z-ADDINTR      ZIRATE                   050951 ER0401
+     C*********************EXSR GLINTC                             050951 ER0401
+     C***********PUPR      SUB  ZINTR     EXAMNT                   050951 ER0401
+     C*********************ELSE                            -X3     050951 ER0401
+     C*********************Z-ADDPUPR      EXAMNT                   050951 ER0401
+     C*********************END                             - E3    050951 ER0401
+      *********************                                        050951 ER0401
+     C*********************ELSE                            - X2    050951 ER0401
+     C*********************Z-ADDPUPR      EXAMNT                   050951 ER0401
+     C*********************END                             - E2    050951 ER0401
+      *
+     C***********A6NBDP    IFEQ 0                          - B2           050951
+     C***********PUPR      MULT 1000      EXAMNT                          ER0306
+     C***********PUPR      MULT 1000      EXAMNT                          050951
+     C***********          MULT 1000      EXAMNT                   ER0306 050951
+     C***********          END                             - E2           050951
+     C***********A6NBDP    IFEQ 1                          - B2           050951
+     C***********PUPR      MULT 100       EXAMNT                          ER0306
+     C***********PUPR      MULT 100       EXAMNT                          050951
+     C***********          MULT 100       EXAMNT                   ER0306 050951
+     C***********          END                             - E2           050951
+     C***********A6NBDP    IFEQ 2                          - B2           050951
+     C***********PUPR      MULT 10        EXAMNT                          ER0306
+     C***********PUPR      MULT 10        EXAMNT                          050951
+     C***********          MULT 10        EXAMNT                   ER0306 050951
+     C***********          END                             - E2           050951
+     C***********A6NBDP    IFEQ 3                          - B2           ER0306
+     C*********************Z-ADDPUPR      EXAMNT                          ER0306
+     C*********************END                             - E2           ER0306
+     C***********A6NBDP    IFEQ 3                          - B2           050951
+     C***********          Z-ADDPUPR      EXAMNT                          050951
+     C***********          END                             - E2           050951
+      ***********                                                         050951
+     C***********          ELSE                            - E2           050951
+      *
+      * Setup principal amount with prior interest according to Deal Type ER0401
+      *                                                                   ER0401
+     C                     Z-ADDPUPR      EXAMNT                          ER0401
+      *                                                                   ER0401
+     C           DTYP      IFEQ 'C2'                       - B2           ER0401
+     C           DTYP      OREQ 'BP'                                      ER0401
+     C           DTYP      OREQ 'BD'                                      ER0401
+      *                                                                   ER0401
+     C                     SUB  PINT1     EXAMNT                          ER0401
+      *                                                                   ER0401
+     C                     END                             - E2           ER0401
+      *                                                                   050951
+     C           A6NBDP    IFEQ 0                          - B2           050951
+     C                     MULT 1000      EXAMNT                          050951
+     C                     END                             - E2           050951
+     C           A6NBDP    IFEQ 1                          - B2           050951
+     C                     MULT 100       EXAMNT                          050951
+     C                     END                             - E2           050951
+     C           A6NBDP    IFEQ 2                          - B2           050951
+     C                     MULT 10        EXAMNT                          050951
+     C                     END                             - E2           050951
+     C***********A6NBDP    IFEQ 3                          - B2    050951 ER0401
+     C*********************Z-ADDPUPR      EXAMNT                   050951 ER0401
+     C*********************END                             - E2    050951 ER0401
+     C***********          END                             - E2           050951
+     C*
+     C           A6NBDP    IFEQ 0                          - B2
+     C           FVAL      MULT 1000      EXNOMA
+     C                     END                             - E2
+     C           A6NBDP    IFEQ 1                          - B2
+     C           FVAL      MULT 100       EXNOMA
+     C                     END                             - E2
+     C           A6NBDP    IFEQ 2                          - B2
+     C           FVAL      MULT 10        EXNOMA
+     C                     END                             - E2
+     C           A6NBDP    IFEQ 3                          - B2
+     C                     Z-ADDFVAL      EXNOMA
+     C                     END                             - E2
+      *                                                                   ULX004
+      ***  Store Internal branch customer                                 ULX004
+      *                                                                   ULX004
+     C                     MOVE SVBICN    EXBICN                          ULX004
+     C*
+     C** WRITE RECORD IN OUTPUT FILE
+     C                     EXSR W001
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C* W001 - SUBROUTINE TO WRITE A RECORD IN EREXTRPD OUTPUT FILE
+     C**************************************************************************
+     C*
+     C           W001      BEGSR
+     C*
+     C                     Z-ADD003       EXRECT
+     C                     MOVE 'NAP'     EXLOTD
+     C                     MOVE 'MMNA'    EXRIND
+     C                     Z-ADDWWREPD    EXREPD
+     C***********          MOVE BRCD      EXBRCD                          ER_R10
+     C                     MOVE BRCA      EXBRCD                          ULX004
+     C                     MOVELDLNO      EXTREF
+     C*
+     C** DEAL TYPE SUB-TYPE
+     C                     MOVELDTYP      WWDECK  4
+     C                     MOVE DLST      WWDECK
+     C                     MOVEL*BLANK    OFLD                                                CLE042
+     C                     MOVELWWDECK    EXDECK
+      *                                                                                       CER001
+     C           CDL038    IFEQ 'Y'                                                           CER001
+     C                     MOVELCLAS      WWCLAS                                              CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE *BLANKS   WWCLAS                                              CER001
+     C                     ENDIF                                                              CER001
+      *
+     C*
+     C                     MOVE CCY       EXCCYC
+     C                     MOVE WWORCC    EXORCC
+     C*********************MOVE CNUM      EXCUST                          ER1018
+     C                     MOVE ISCN      EXCUST                          ER1018
+     C           INTR      IFEQ *ZEROS                                    ER0310
+     C                     Z-ADD*ZEROS    EXIRTT                          ER0310
+     C                     ELSE                                           ER0310
+     C                     Z-ADD1         EXIRTT
+     C                     END                                            ER0310
+     C           WWREPD    IFLT WWVDAT                     - B1           ER0324
+     C                     Z-ADDWWDDAT    EXSTRD                          ER0324
+     C                     Z-ADDWWVDAT    EXENDD                          ER0324
+      *                                                                   CEU007
+      ***  If the feature CEU007 is installed, filling the new fields     CEU007
+      *                                                                   CEU007
+     C           CEU007    IFEQ 'Y'                        B1             CEU007
+      *                                                                   CEU007
+     C           PSTM      IFEQ 1                          B2             CEU007
+     C           PSTM      OREQ 2                                         CEU007
+     C           PSTM      OREQ 7                                         CEU007
+     C           PSTM      OREQ 8                                         CEU007
+     C           PSTM      OREQ 12                                        CEU007
+      *                                                                   CEU007
+      ***  If settlement currency is blank use the transaction            CEU007
+      ***  currency                                                       CEU007
+      *                                                                   CEU007
+     C           STCY      IFEQ *BLANKS                    B3             CEU007
+     C                     MOVELCCY       UUCYCD                          CEU007
+     C                     ELSE                            X3             CEU007
+     C                     MOVELSTCY      UUCYCD                          CEU007
+     C                     ENDIF                           E3             CEU007
+      *                                                                   CEU007
+      ***  Access SDNOSTPD (Payment)                                      CEU007
+      *                                                                   CEU007
+     C                     MOVELPONS      UUNONB                          CEU007
+      *                                                                   CEU007
+     C                     EXSR NOSTRO                                    CEU007
+      *                                                                   CEU007
+      ***  Set up the fields with :                                       CEU007
+      ***  A7CYCD from PF/NOSTROPD for the ccy                            CEU007
+      ***  3Last digist of the nostro shortname A7NOSN from PF/SDNOSTPD   CEU007
+      *                                                                   CEU007
+     C                     MOVELWWNOSC    EXEDCU           En.Dat.Sett.CcyCEU007
+     C                     MOVELWWNOSC    EXEDLO           En.Dat.Sett.LocCEU007
+      *                                                                   CEU007
+     C                     ENDIF                           E2             CEU007
+     C                     ENDIF                           E1             CEU007
+      *                                                                   CEU007
+      ***Initialise*the*class*field to prevent overlapping of data                     CER001 CLE042
+      *                                                                                       CER001
+     C*********************MOVE *BLANKS   WWCLAS                                       CER001 CLE042
+     C                     MOVELWWDECK    OODECK  5                       ER0324
+     C                     MOVE 'O'       OODECK                          ER0324
+     C                     MOVELOODECK    EXDECK                          ER0324
+     C                     ELSE                            - X1           ER0324
+     C                     Z-ADDWWVDAT    EXSTRD
+     C                     Z-ADDWWMDAT    EXENDD
+      *                                                                   CEU007
+      ***  If the feature CEU007 is installed, filling the new fields     CEU007
+      *                                                                   CEU007
+     C           CEU007    IFEQ 'Y'                        B1             CEU007
+      *                                                                   CEU007
+     C           RSTM      IFEQ 1                          B2             CEU007
+     C           RSTM      OREQ 2                                         CEU007
+     C           RSTM      OREQ 7                                         CEU007
+     C           RSTM      OREQ 8                                         CEU007
+     C           RSTM      OREQ 12                                        CEU007
+      *                                                                   CEU007
+      ***  If settlement currency is blank use the transaction            CEU007
+      ***  currency                                                       CEU007
+      *                                                                   CEU007
+     C           STCY      IFEQ *BLANKS                    B3             CEU007
+     C                     MOVELCCY       UUCYCD                          CEU007
+     C                     ELSE                            X3             CEU007
+     C                     MOVELSTCY      UUCYCD                          CEU007
+     C                     ENDIF                           E3             CEU007
+      *                                                                   CEU007
+      ***  Access SDNOSTPD (Receipt)                                      CEU007
+      *                                                                   CEU007
+     C                     MOVELRONS      UUNONB                          CEU007
+      *                                                                   CEU007
+     C                     EXSR NOSTRO                                    CEU007
+      *                                                                   CEU007
+      ***  Set up the fields with :                                       CEU007
+      ***  A7CYCD from PF/NOSTROPD for the ccy                            CEU007
+      ***  3Last digist of the nostro shortname A7NOSN from PF/SDNOSTPD   CEU007
+      *                                                                   CEU007
+     C                     MOVELWWNOSC    EXSDCU           St.Dat.Sett.CcyCEU007
+     C                     MOVELWWNOSL    EXSDLO           St.Dat.Sett.LocCEU007
+     C                     MOVELWWNOSC    EXEDCU           En.Dat.Sett.CcyCEU007
+     C                     MOVELWWNOSL    EXEDLO           En.Dat.Sett.LocCEU007
+      *                                                                   CEU007
+     C                     ENDIF                           E2             CEU007
+     C                     ENDIF                           E1             CEU007
+      *                                                                   CEU007
+     C                     END                             - E1           ER0324
+     C                     Z-ADD0         EXDRCR
+     C*
+     C** SETUP REVISION DATE                                              054792
+     C                     Z-ADDWWMDAT    EXREVD                          054792
+      *                                                                   CEU007
+      ***  If the feature CEU007 is installed, filling the new fields     CEU007
+      *                                                                   CEU007
+     C           CEU007    IFEQ 'Y'                        B1             CEU007
+      *                                                                   CEU007
+     C           RSTM      IFEQ 1                          B2             CEU007
+     C           RSTM      OREQ 2                                         CEU007
+     C           RSTM      OREQ 7                                         CEU007
+     C           RSTM      OREQ 8                                         CEU007
+     C           RSTM      OREQ 12                                        CEU007
+      *                                                                   CEU007
+      ***  If settlement currency is blank use the transaction            CEU007
+      ***  currency                                                       CEU007
+      *                                                                   CEU007
+     C           STCY      IFEQ *BLANKS                    B3             CEU007
+     C                     MOVELCCY       UUCYCD                          CEU007
+     C                     ELSE                            X3             CEU007
+     C                     MOVELSTCY      UUCYCD                          CEU007
+     C                     ENDIF                           E3             CEU007
+      *                                                                   CEU007
+      ***  Access SDNOSTPD (Receipt)                                      CEU007
+      *                                                                   CEU007
+     C                     MOVELRONS      UUNONB                          CEU007
+      *                                                                   CEU007
+     C                     EXSR NOSTRO                                    CEU007
+      *                                                                   CEU007
+     C                     MOVELWWNOSC    EXRDCU           Re.Dat.Sett.CcyCEU007
+     C                     MOVELWWNOSL    EXRDLO           Re.Dat.Sett.LocCEU007
+      *                                                                   CEU007
+     C                     ENDIF                           E2             CEU007
+     C                     ENDIF                           E1             CEU007
+     C*                                                                   ERL328
+     C** SETUP NET AMOUNT WITH PRINCIPAL AMOUNT                           ERL328
+     C                     Z-ADDEXAMNT    EXNETA                          ERL328
+     C*
+     C** SETUP SECURITY DENOMINATION                                      ER0350
+     C                     MOVELRNNA      EXSECD                          ER0350
+     C*                                                                   ULX004
+     C** Accrued Interest and Interest to accrue                          ULX004
+     C********** DLNO      CHAINACCEXAL3             88                   ULX004              CER001
+     C           DLNO      CHAINDLACOXL1             88                                       CER001
+     C           *IN88     IFEQ '1'                        - B1           ULX004
+     C                     Z-ADD*ZEROS    EXACCR                          ULX004
+     C                     Z-ADD*ZEROS    EXITAC                          ULX004
+     C                     ELSE                            - X1           ULX004
+     C*                                                                   ULX004
+     C           A6NBDP    IFEQ 0                          - B2           ULX004
+     C           AMAD      MULT 1000      EXACCR                          ULX004
+     C           AMTA      MULT 1000      EXITAC                          ULX004
+     C                     END                             - E2           ULX004
+     C           A6NBDP    IFEQ 1                          - B2           ULX004
+     C           AMAD      MULT 100       EXACCR                          ULX004
+     C           AMTA      MULT 100       EXITAC                          ULX004
+     C                     END                             - E2           ULX004
+     C           A6NBDP    IFEQ 2                          - B2           ULX004
+     C           AMAD      MULT 10        EXACCR                          ULX004
+     C           AMTA      MULT 10        EXITAC                          ULX004
+     C                     END                             - E2           ULX004
+     C           A6NBDP    IFEQ 3                          - B2           ULX004
+     C                     Z-ADDAMAD      EXACCR                          ULX004
+     C                     Z-ADDAMTA      EXITAC                          ULX004
+     C                     END                             - E2           ULX004
+     C                     END                             - E1           ULX004
+     C*                                                                   ULX004
+     C** Start/Last Interest Date                                         ULX004
+     C                     Z-ADDSLID      @@DAYN                          ULX004
+     C                     EXSR ZDATE9                                    ULX004
+     C                     Z-ADD@@VDT     EXSLID                          ULX004
+     C*                                                                   ULX004
+     C** Next Interest Due Date                                           ULX004
+     C                     Z-ADDNIDT      @@DAYN                          ULX004
+     C                     EXSR ZDATE9                                    ULX004
+     C                     Z-ADD@@VDT     EXNIDT                          ULX004
+     C*                                                                   ULX004
+     C** Retail Indicators                                                ULX004
+     C                     MOVE *BLANKS   EXRETB                          ULX004
+     C*                                                                   194921
+     C** Market Values                                                    194921
+     C                     Z-ADDEXAMNT    EXNPVA                          194921
+     C                     Z-ADDEXAMNT    EXMKT1                          194921
+     C*                                                                   ER0136
+     C** ADD 1 TO NUMBER OF EXTRACTED RECORDS                             ER0136
+     C                     ADD  1         NREC    30                      ER0136
+     C*
+     C* WRITE A RECORD
+     C                     WRITEEREXTRF0
+     C*
+     C** RESET FILE RECORD FORMAT
+     C                     RESETEREXTRF0
+     C*
+     C                     ENDSR
+     C**=================================================================
+      **
+      **  #INIT       SUBROUTINE TO INITIALIZE STATIC FIELDS AND ACCESS STANDING
+      **              DATA CALLED ONCE AT START OF PROGRAM FROM MAIN LINE.
+     C**
+      **     CALLED BY PROGRAM
+      **     CALLS     *PSSR
+      **
+     C**=================================================================
+     C**                                                   *****************
+     C           #INIT     BEGSR                           ** #INIT BEGSR **
+     C**                                                   *****************
+     C**  PREPARE LDA:
+     C**
+     C           *NAMVAR   DEFN           LDA                             ULX004
+     C******               MOVEL*BLANK    DBLOT                           ULX004
+     C                     MOVEL'ER0624'  DBPGM
+     C*
+     C** INITIALIZE WORK FIELD FOR BRANCH
+     C***********          Z-ADD0         WWBRCD                          ER_R10
+     C                     MOVEL*BLANKS   WWBRCD                          ULX004
+     C*                                                                   ER0136
+     C** INITIALIZE WORK FIELD FOR NUMBER OF EXTRACTED RECORDS            ER0136
+     C                     Z-ADD0         NREC                            ER0136
+     C*
+     C**  INITIALIZE INDICATORS:
+     C                     MOVE '0'       *IN
+     C**
+     C**  GET INSTALLATION CONTROL DATA RECORD 1:
+     C                     READ SDBANKL1                 81
+     C**
+     C**  IF RECORD NOT FOUND:
+     C           *IN81     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'001'     DBASE            *****************
+     C                     MOVEL'SDBANKL1'DBFILE           ** DB ERROR 01 **
+     C                     MOVEL' NONE '  DBKEY            *****************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *                                                                   CEU007
+      ***  Check if the feature CEU007 is installed.                      CEU007
+      *                                                                   CEU007
+     C                     MOVEL'N'       CEU007  1                       CEU007
+     C                     CALL 'AOSARDR0'                                CEU007
+     C                     PARM '       ' @RTCD   7                       CEU007
+     C                     PARM '*VERIFY' @OPTN   7                       CEU007
+     C                     PARM 'CEU007'  @SARD   6                       CEU007
+      *                                                                   CEU007
+     C           @RTCD     IFEQ *BLANKS                                   CEU007
+      *                                                                   CEU007
+      ***  It's existing.                                                 CEU007
+      *                                                                   CEU007
+     C                     MOVEL'Y'       CEU007                          CEU007
+      *                                                                   CEU007
+     C                     ENDIF                                          CEU007
+      *                                                                                       CER001
+      ** Check for switchable feature                                                         CER001
+      *                                                                                       CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM *BLANKS   PRTCD   7                                           CER001
+     C                     PARM '*VERIFY' POPTN   7                                           CER001
+     C                     PARM 'CDL038'  PSARD   6                                           CER001
+     C           SCSARD    PARM SCSARD    UUFDY                                               CER001
+      *                                                                                       CER001
+     C           PRTCD     IFEQ *BLANKS                                                       CER001
+     C                     MOVE 'Y'       CDL038  1                                           CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE 'N'       CDL038                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C*
+     C** CHECK FOR END OF MONTH                                           ART021
+     C                     CALL 'SD2000'                                  ART021
+     C                     PARM 'N'       EOM     1                       ART021
+     C                     PARM 'N'       EOY     1                       ART021
+     C*                                                                   ART021
+     C           EOM       IFEQ 'Y'                                       ART021
+     C                     EXSR #DATE                      RUN DATE       ER0317
+     C                     EXSR #EOMD                      END OF MONTH   ER0317
+     C                     ELSE                                           ART021
+     C                     Z-ADDBJRDNB    EREOMD                          ART021
+     C                     END                                            ART021
+     C*
+     C** GET REPORTING DATE IN FORMAT YYYYMMDD
+     C*********************Z-ADDBJRDNB    @@DAYN  50                      ER0317
+     C                     Z-ADDEREOMD    @@DAYN  50                      ER0317
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     WWREPD  80
+     C*                                                                   ER0136
+     C                     WRITEHEADAU                                    ER0136
+     C*
+     C                     ENDSR
+2896 C********************************************************************050951
+2897 C**                                                                  050951
+2898 C**   GLINTC SR. TO CALCULATE INTEREST BETWEEN ANY TWO DAY NUMBERS.  050951
+2899 C**                                                                  050951
+2900 C**   THIS VERSION REPLACES THE ORIGINAL GLINTC SR. NOW NAMED        050951
+2901 C**   GLINTO.                                                        050951
+2902 C**                                                                  050951
+2903 C**   CALCULATION METHODS ARE -                                      050951
+2904 C**   1  ACTUAL/365                                                  050951
+2905 C**   2  ACTUAL/360                                                  050951
+2906 C**   3  360/360 (SOMETIMES CALLED 30/360)                           050951
+2907 C**   4  365/365 (EXCLUDING 29/02)                                   050951
+2908 C**   5  365/360 (EXCLUDING 29/02)                                   050951
+2909 C**   6  ACTUAL/366                                                  050951
+2910 C**                                                                  050951
+2911 C**   REQUIRES SUBRS. - ZDATE2                                       050951
+2912 C**                                                                  050951
+2913 C**                                                                  050951
+2914 C           GLINTC    BEGSR                           ** GLINTC  **  050951
+2915 C**                                                                  050951
+2916 C**   CALCULATIONS TO DEFINE INPUT FIELDS.                           050951
+2917 C                     Z-ADDZIBEG     ZIBEG   50       STARTING DATE  050951
+2918 C                     Z-ADDZIEND     ZIEND   50       FINISHING DATE 050951
+2919 C                     Z-ADDZICALC    ZICALC  10       CALC. BASIS    050951
+2920 C                     Z-ADDZIAMT     ZIAMT  150       PRINCIPAL      050951
+2921 C                     Z-ADDZIRATE    ZIRATE 117       RATE OF INTRST 050951
+2922 C**                                                                  050951
+2923 C**  TO DETERMINE NUMBER OF DAYS INTEREST TO BE CALCULATED           050951
+2924 C           ZIEND     SUB  ZIBEG     ZDAYN1  50                      050951
+2925 C**                                                                  050951
+2926 C**  CHECK FOR INTEREST CALCULATION BASIS                            050951
+2927 C**   USE OF INDICATRS                                               050951
+2928 C**   1,92  2,90  3,91  4,97  5,96  6,95                             050951
+2929 C                     SETOF                     959697               050951
+2930 C           ZICALC    COMP 2                    919290               050951
+2931 C  N91                GOTO ZICAL                                     050951
+2932 C           ZICALC    COMP 5                    959796               050951
+2933 C   97      ZICALC    COMP 3                    97  91               050951
+2934 C   95                                                               050951
+2935 COR 96                SETOF                     91                   050951
+2936 C  N91                GOTO ZILPCK                                    050951
+2937 C**                                                                  050951
+2938 C**   THIS CODING WILL CALCULATE THE NUMBER OF DAYS TO USE WHEN      050951
+2939 C**   USING THE 30/360 BASIS - METHOD 3.                             050951
+2940 C                     EXSR ZSAVE                                     050951
+2941 C                     Z-ADDZIBEG     ZDAYNO                          050951
+2942 C                     EXSR ZDATE2                                    050951
+2943 C                     MOVE ZDAY      ZISD    20                      050951
+2944 C                     MOVE ZMTH      ZISM    20                      050951
+2945 C                     MOVE ZYEAR     ZISY    20                      050951
+2946 C                     Z-ADDZIEND     ZDAYNO                          050951
+2947 C                     EXSR ZDATE2                                    050951
+2948 C                     MOVE ZDAY      ZIFD    20                      050951
+2949 C                     MOVE ZMTH      ZIFM    20                      050951
+2950 C                     MOVE ZYEAR     ZIFY    20                      050951
+2951 C                     EXSR ZRSTOR                                    050951
+2952 C                     SETOF                     93                   050951
+     C**  IN ORDER FOR THE FINISH YEAR TO BE LESS THAN THE START YEAR IF  050951
+     C**  ZIEND IS GREATER THAN ZIBEG,THEN THE DATE ZIEND MUST BE IN A    050951
+     C**  DIFFERENT CENTURY TO ZIBEG.IF SO ADD 100 YEARS TO IT.           050951
+     C           ZIEND     COMP ZIBEG                93                   050951
+     C   93      ZIFY      COMP ZISY                   93                 050951
+     C                     Z-ADDZISY      ZISY2   30                      050951
+     C  N93                Z-ADDZIFY      ZIFY2   30                      050951
+     C   93      ZIFY      ADD  100       ZIFY2                           050951
+     C*                                                                   050951
+     C**   DETERMINE WHETHER START YEAR IS A LEAP YEAR AND IF START       050951
+     C**   MONTH IS FEBRUARY.                                             050951
+     C*                                                                   050951
+     C  N98                BITOF'0'       ZGLBIT  1                E80945 050951
+     C   98                BITON'0'       ZGLBIT                   E80945 050951
+     C           ZISY2     ADD  1900      ZLYCHK  40                      050951
+     C           ZLYCHK    DIV  4         ZLYCHK                          050951
+     C                     MVR            ZLYREM  20                      050951
+     C           ZLYREM    COMP *ZERO                    98*LEAP YEAR     050951
+     C           ZISM      COMP 2                        99*FEBRUARY      050951
+2209 C  N99      30        SUB  ZISD      ZID1    50   93                 050951
+2210 C  N99 93             Z-ADD0         ZID1                            050951
+     C   99N98   28        SUB  ZISD      ZID1                            050951
+     C   99 98   29        SUB  ZISD      ZID1                            050951
+2211 C           ZISM      COMP 12                       93               050951
+2212 C   93                Z-ADD0         ZISM                            050951
+2213 C   93      ZISY      ADD  1         ZISY                            050951
+     C   93      ZISY2     ADD  1         ZISY2                           050951
+     C*                                                                   050951
+     C**   DETERMINE WHETHER END YEAR IS A LEAP YEAR AND IF END MONTH     050951
+     C**   IS FEBRUARY.                                                   050951
+     C*                                                                   050951
+     C           ZIFY2     ADD  1900      ZLYCHK  40                      050951
+     C           ZLYCHK    DIV  4         ZLYCHK                          050951
+     C                     MVR            ZLYREM  20                      050951
+     C           ZLYREM    COMP *ZERO                    98*LEAP YEAR     050951
+     C           ZIFM      COMP 2                        99*FEBRUARY      050951
+2214 C  N99      ZIFD      COMP 31                       93               050951
+2214 C   99N98   ZIFD      COMP 28                       93               050951
+2214 C   99 98   ZIFD      COMP 29                       93               050951
+     C                     SETOF                     98            E80945 050951
+     C                     TESTB'0'       ZGLBIT         98        E80945 050951
+2959 C   93      ZID1      ADD  30        ZID1                            050951
+2960 C  N93      ZID1      ADD  ZIFD      ZID1                            050951
+2961 C           ZIFM      SUB  1         ZIFM                            050951
+     C           ZISY      COMP ZIFY                     93               050951
+2963 C   93      ZIFM      SUB  ZISM      ZINOM   30                      050951
+2964 C   93                GOTO ZIOUT                                     050951
+2965 C           12        SUB  ZISM      ZIM1    20                      050951
+2966 C                     Z-ADD1         ZISM                            050951
+     C**   USE ENLARGED FIELDS THAT CAN HANDLE 1999 ONWARDS               050951
+     C           ZISY2     ADD  1         ZISY2                           050951
+     C           ZIFY2     SUB  ZISY2     ZIY1    20                      050951
+2969 C           ZIY1      MULT 12        ZIM2    30                      050951
+2970 C           ZIM2      ADD  ZIFM      ZIM2                            050951
+2971 C           ZIM1      ADD  ZIM2      ZINOM                           050951
+2972 C           ZIOUT     TAG                             * ZIOUT TAG *  050951
+2973 C           ZINOM     MULT 30        ZID2    50                      050951
+2974 C           ZID2      ADD  ZID1      ZDAYN1                          050951
+2975 C                     SETOF                     93                   050951
+2976 C           ZILPCK    TAG                             * ZILPCK TAG * 050951
+2977 C  N96N97             GOTO ZICAL                                     050951
+2978 C**   THE FOLLOWING CODING APPLIES FOR METHODS 4 AND 5 ONLY.         050951
+2979 C**   1 DAY IS SUBTRACTED FROM ZDAYN1 FOR EACH OCCURANCE OF 29 FEB   050951
+2980 C**   IN THE INTEREST CALCULATION PERIOD INCLUSIVE OF ZIBEG, & ZIEND.050951
+2981 C**                                                                  050951
+2982 C**   FIND NO OF 4 YEAR PERIODS BETWEEN DATES                        050951
+2983 C           ZDAYN1    DIV  1461      ZIMAN   20                      050951
+2984 C                     MVR            ZIREM   50                      050951
+2985 C**   FIND NEXT 29 FEB DAY NO. ON OR AFTER ZIBEG.                    050951
+2986 C           ZIBEG     SUB  60        ZIBW1   50                      050951
+2987 C           ZIBW1     DIV  1461      ZIDW1   20                      050951
+2988 C                     MVR            ZIDREM  50                      050951
+2989 C           ZIDREM    COMP 0                        94               050951
+2990 C   94                Z-ADDZIBEG     ZIDW2   50                      050951
+2991 C   94                GOTO ZILP1                                     050951
+2992 C**   ROUND UP RESULT                                                050951
+2993 C           ZIDW1     ADD  1         ZIDW2                           050951
+2994 C**   CALCULATE NEXT 29 FEB.                                         050951
+2995 C           ZIDW2     MULT 1461      ZIDW2                           050951
+2996 C           ZIDW2     ADD  60        ZIDW2                           050951
+2997 C           ZILP1     TAG                             * ZILP1 TAG *  050951
+2998 C**   IF THIS NEXT 29 FEB. DAYNO - ZIBEG IS GR. TH. OR EQ. TO        050951
+2999 C**   ZIREM THEN ADD 1 TO ZIMAN.                                     050951
+3000 C           ZIDW2     SUB  ZIBEG     ZILPCP  50                      050951
+3001 C           ZIREM     COMP ZILPCP               94  94               050951
+3002 C   94      ZIMAN     ADD  1         ZIMAN                           050951
+3003 C**   SUBTRACT ZIMAN FROM ZDAYN1 TO GIVE VALUE OF ZDAYN1             050951
+3004 C**   REQUIRED FOR THIS INTEREST CALCULATION.                        050951
+3005 C           ZDAYN1    SUB  ZIMAN     ZDAYN1                          050951
+3006 C                     SETOF                     94                   050951
+3007 C           ZICAL     TAG                             * ZICAL TAG *  050951
+3008 C**                                                                  050951
+3009 C**  CALCULATE INTEREST                                              050951
+3010 C   90                                                               050951
+3011 COR 91                                                               050951
+3012 COR 96      ZIAMT     DIV  36000     ZIWRK1 155H                     050951
+3013 C   92                                                               050951
+3014 COR 97      ZIAMT     DIV  36500     ZIWRK1    H                     050951
+3015 C   95      ZIAMT     DIV  36600     ZIWRK1    H                     050951
+3016 C           ZIWRK1    MULT ZIRATE    ZIWRK2 155H                     050951
+3017 C           ZIWRK2    MULT ZDAYN1    ZINTR  152H      AMT. OF INTRST 050951
+3018 C**                                                                  050951
+3019 C                     SETOF                     909192               050951
+3020 C                     SETOF                     959697               050951
+3021 C**                                                                  050951
+3029 C                     ENDSR                                          050951
+3030 C**                                                                  050951
+     C*****************************************************************   050951
+     C**                                                              *   050951
+     C**  ZSAVE  - To memorize the settings and set off Indicators    *   050951
+     C**           90-97 before Execution of a Z-Subroutine.          *   050951
+     C**                                                              *   050951
+     C**  INPUT  - *IN90 - *IN97                                      *   050951
+     C**                                                              *   050951
+     C**  OUTPUT - ZBITS                                              *   050951
+     C**                                                              *   050951
+     C**  CALLS  - NONE                                               *   050951
+     C**                                                              *   050951
+     C*****************************************************************   050951
+     C**                                                              *   050951
+     C**   LAST AMEND NO. E20125        DATE  11NOV89                 *   050951
+     C**                                                              *   050951
+     C**--------------------------------------------------------------*   050951
+     C**                                                              *   050951
+     C**   E20125 - NEW SUBROUTINE INCORPORATED WITH CARGILL FIXES.   *   050951
+     C**                                                              *   050951
+     C** NOTE: This Subroutine is required only if Indicators 90-97   *   050951
+     C**       are used elsewhere in a program.                       *   050951
+     C**                                                              *   050951
+     C*****************************************************************   050951
+     C*                                                                   050951
+     C           ZSAVE     BEGSR                           *** ZSAVE  *** 050951
+      *                                                                   050951
+     C                     BITOF'01234567'ZBITS   1                       050951
+     C   90                BITON'0'       ZBITS                           050951
+     C   91                BITON'1'       ZBITS                           050951
+     C   92                BITON'2'       ZBITS                           050951
+     C   93                BITON'3'       ZBITS                           050951
+     C   94                BITON'4'       ZBITS                           050951
+     C   95                BITON'5'       ZBITS                           050951
+     C   96                BITON'6'       ZBITS                           050951
+     C   97                BITON'7'       ZBITS                           050951
+      *                                                                   050951
+     C                     MOVEA'00000000'*IN,90                          050951
+      *                                                                   050951
+     C                     ENDSR                                          050951
+      *                                                                   050951
+      *****************************************************************   050951
+     C********************************************************************050951
+     C*    SUBROUTINE- ZRSTOR                                            *050951
+     C*                                                                  *050951
+     C**   ZRSTOR - Subroutine to restore Indicators 90-97 to the        *050951
+     C**            values they had before the execution of SR/ZSAVE.    *050951
+     C**                                                                 *050951
+     C**   INPUT  - TESTB ARRAY                                          *050951
+     C**                                                                 *050951
+     C**   OUTPUT - *IN90 - *IN97                                        *050951
+     C**                                                                 *050951
+     C**   CALLS  - NONE                                                 *050951
+     C**                                                                 *050951
+     C********************************************************************050951
+     C**                                                                 *050951
+     C**   LAST AMEND NO. E20125            DATE  11NOV89                *050951
+     C**                                                                 *050951
+     C**-----------------------------------------------------------------*050951
+     C**                                                                 *050951
+     C**   E20125 - NEW SUBROUTINE INCORPORATED WITH CARGILL FIXES.      *050951
+     C**                                                                 *050951
+     C********************************************************************050951
+      *                                                                   050951
+     C           ZRSTOR    BEGSR                           *** ZRSTOR *** 050951
+      *                                                                   050951
+     C                     TESTB'0'       ZBITS          90               050951
+     C                     TESTB'1'       ZBITS          91               050951
+     C                     TESTB'2'       ZBITS          92               050951
+     C                     TESTB'3'       ZBITS          93               050951
+     C                     TESTB'4'       ZBITS          94               050951
+     C                     TESTB'5'       ZBITS          95               050951
+     C                     TESTB'6'       ZBITS          96               050951
+     C                     TESTB'7'       ZBITS          97               050951
+      *                                                                   050951
+     C                     ENDSR                                          050951
+      *                                                                   050951
+      *****************************************************************   050951
+     C********************************************************************050951
+     C**                                                                  050951
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.            050951
+     C**                                                                  050951
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.         050951
+     C**                                                                  050951
+     C           ZDATE2    BEGSR                           *** ZDATE2 *** 050951
+     C**                                                                  050951
+     C**   CLEAR LEAP YEAR WORK FIELD.                                    050951
+     C                     MOVE 'N'       ZLEAP   1                       050951
+     C**                                                                  050951
+     C**   CLEAR DATE FIELDS.                                             050951
+     C                     Z-ADD0         ZDATE   60                      050951
+     C                     MOVEL'       ' ZADATE  7                       050951
+     C**                                                                  050951
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.                        050951
+     C                     Z-ADDZDAYNO    ZDAYNO  50                      050951
+     C**                                                                  050951
+     C**   DETERMINE YEAR NUMBER.                                         050951
+     C**                                                                  050951
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.                    050951
+     C           ZDAYNO    SUB  1         ZDAYN1  50                      050951
+     C           ZDAYN1    IFLT 0                                         050951
+     C                     GOTO ZDEND2                                    050951
+     C                     END                                            050951
+     C**                                                                  050951
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.             050951
+     C           ZDAYN1    DIV  1461      ZLYR    20                      050951
+     C                     MVR            ZDAYN1           SAVE REMAINING 050951
+     C**                                                   DAYS           050951
+     C**   CALCULATE NUMBER OF REMAINING YEARS.                           050951
+     C                     Z-ADD1         ZWRK2   20                      050951
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *050951
+     C           ZDAYN1    IFGE ZYDY,ZWRK2                                050951
+     C           ZWRK2     ADD  1         ZWRK2                           050951
+     C                     GOTO ZDTAG1                                    050951
+     C                     END                                            050951
+     C*                                                                   050951
+     C           ZWRK2     SUB  1         ZWRK2                           050951
+     C**                                                                  050951
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.                  050951
+     C           ZWRK2     IFNE 0                                         050951
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1                          050951
+     C                     END                                            050951
+     C**                                                                  050951
+     C**   CALCULATE ACTUAL YEAR NUMBER.                                  050951
+     C           ZLYR      MULT 4         ZWRK3   30                      050951
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972   050951
+     C                     Z-ADDZWRK3     ZYEAR   20                      050951
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR           050951
+     C**                                                                  050951
+     C**   DETERMINE MONTH NUMBER.                                        050951
+     C**                                                                  050951
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.         050951
+     C           ZWRK2     IFEQ 0                                         050951
+     C           ZDAYN1    IFEQ 59                                        050951
+     C                     MOVE 'Y'       ZLEAP                           050951
+     C                     END                                            050951
+     C           ZDAYN1    IFGE 59                                        050951
+     C           ZDAYN1    SUB  1         ZDAYN1                          050951
+     C                     END                                            050951
+     C                     END                                            050951
+     C**                                                                  050951
+     C**   CALCULATE MONTH NUMBER.                                        050951
+     C                     Z-ADD2         ZWRK2                           050951
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *050951
+     C           ZDAYN1    IFGE ZMDY,ZWRK2                                050951
+     C           ZWRK2     ADD  1         ZWRK2                           050951
+     C                     GOTO ZDTAG2                                    050951
+     C                     END                                            050951
+     C*                                                                   050951
+     C           ZWRK2     SUB  1         ZWRK2                           050951
+     C**                                                                  050951
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH          050951
+     C**                                                                  050951
+     C**   DETERMINE DAY OF MONTH.                                        050951
+     C**                                                                  050951
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.                          050951
+     C           ZDAYN1    ADD  1         ZDAYN1                          050951
+     C**                                                                  050951
+     C**   CALCULATE DAY OF MONTH.                                        050951
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY            050951
+     C**                                                                  050951
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.       050951
+     C           ZLEAP     IFEQ 'Y'                                       050951
+     C           ZDAY      ADD  1         ZDAY                            050951
+     C                     END                                            050951
+     C**                                                                  050951
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.                                 050951
+     C  N98                MOVELZDAY      ZWRK4   40                      050951
+     C   98                MOVE ZDAY      ZWRK4                           050951
+     C  N98                MOVE ZMTH      ZWRK4                           050951
+     C   98                MOVELZMTH      ZWRK4                           050951
+     C                     MOVELZWRK4     ZDATE                           050951
+     C                     MOVE ZYEAR     ZDATE                           050951
+     C**                                                                  050951
+     C**   FORMAT ALPHA DATE, DDMMMYY.                                    050951
+     C                     MOVELZDAY      ZWRK5   5                       050951
+     C           ZDAY      IFLT 10                                        050951
+     C                     MOVEL' '       ZWRK5                           050951
+     C                     END                                            050951
+     C                     MOVE ZMNM,ZMTH ZWRK5                           050951
+     C                     MOVELZWRK5     ZADATE                          050951
+     C                     MOVE ZYEAR     ZADATE                          050951
+     C**                                                                  050951
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*050951
+     C**                                                                  050951
+     C**                                                                  050951
+     C********************************************************************050951
+      ********************************************************************ER0317
+      **                                                                  ER0317
+      **  #DATE      - SUBROUTINE TO RUN DATE                             ER0317
+      **                                                                  ER0317
+      **  CALLS      -                                                    ER0317
+      **                                                                  ER0317
+      **  CALLED BY  - MAINLINE                                           ER0317
+      **                                                                  ER0317
+      ********************************************************************ER0317
+     C**                                                                  ER0317
+     C           #DATE     BEGSR                                          ER0317
+     C**                                                                  ER0317
+     C**   DAY                                                            ER0317
+     C                     Z-ADDWWBJD     ERDADD  20       DAY            ER0317
+     C**   MONTH                                                          ER0317
+     C                     Z-ADD1         X       20       X : INDEX      ER0317
+     C           WWBJM     LOKUPZMNM,X                   2626 : EQUAL     ER0317
+     C           *IN26     IFEQ '1'                                       ER0317
+     C                     Z-ADDX         ERDAMM  20       MONTH          ER0317
+     C                     END                                            ER0317
+     C**   YEAR                                                           ER0317
+     C                     Z-ADDWWBJY     ERDAYY  20       YEAR           ER0317
+     C**                                                                  ER0317
+     C                     ENDSR                                          ER0317
+      ********************************************************************ER0317
+      **                                                                  ER0317
+      **  #EOMD      - SUBROUTINE TO COMPUTE END OF MONTH                 ER0317
+      **                                                                  ER0317
+      **  CALLS      - ZDATE1                                             ER0317
+      **                                                                  ER0317
+      **  CALLED BY  - MAINLINE                                           ER0317
+      **                                                                  ER0317
+      ********************************************************************ER0317
+     C**                                                                  ER0317
+     C           #EOMD     BEGSR                                          ER0317
+     C**                                                                  ER0317
+     C                     Z-ADDERDAYY    WWY              YEAR           ER0317
+     C                     Z-ADDERDAMM    WWM              MONTH          ER0317
+     C                     Z-ADDTNDM,WWM  WWD              DAY            ER0317
+     C**                                                                  ER0317
+     C           *IN99     DOUEQ'0'                        - B1           ER0317
+     C                     Z-ADDWWDATE    ZDATE                           ER0317
+     C                     EXSR ZDATE1                                    ER0317
+     C                     SUB  1         WWD                             ER0317
+     C                     END                             - E1           ER0317
+     C**                                                                  ER0317
+     C                     Z-ADDZDAYNO    EREOMD  50       END OF MONTH   ER0317
+     C**                                                                  ER0317
+     C                     ENDSR                                          ER0317
+     C********************************************************************
+     C** *PSSR  S/R
+     C*================================================================
+     C           *PSSR     BEGSR
+     C*
+     C*********************WRITEHEADAU                                    ER0136
+     C                     WRITEERROR                                     ER0136
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C********************************************************************ER0317
+     C**                                                                  ER0317
+     C**   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND                     ER0317
+     C**              CONVERT TO A NUMBER OF DAYS.                        ER0317
+     C**                                                                  ER0317
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.         ER0317
+     C**                                                                  ER0317
+     C           ZDATE1    BEGSR                           *** ZDATE1 *** ER0317
+     C**                                                                  ER0317
+     C**   CLEAR DAY NUMBER.                                              ER0317
+     C                     Z-ADD0         ZDAYNO  50                      ER0317
+     C**                                                                  ER0317
+     C**   CALCULATION TO DEFINE INPUT DATE FIELD.                        ER0317
+     C                     Z-ADDZDATE     ZDATE   60                      ER0317
+     C**                                                                  ER0317
+     C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.                     ER0317
+     C                     MOVE ZDATE     ZYEAR   20                      ER0317
+     C  N98                MOVELZDATE     ZDAY    20                      ER0317
+     C   98                MOVELZDATE     ZMTH    20                      ER0317
+     C                     MOVE ZDATE     ZWRK4   40                      ER0317
+     C  N98                MOVELZWRK4     ZMTH                            ER0317
+     C   98                MOVELZWRK4     ZDAY                            ER0317
+     C**                                                                  ER0317
+     C**   ENSURE MONTH IS VALID.                                         ER0317
+     C           ZMTH      COMP 0                      9999               ER0317
+     C  N99      ZMTH      COMP 12                   99                   ER0317
+     C   99                GOTO ZDEND1                     BYPASS IF ERRORER0317
+     C**                                                                  ER0317
+     C**   CHECK FOR 30 DAY MONTHS.                                       ER0317
+     C           ZMTH      COMP 4                        90IF 90 ON, 30   ER0317
+     C  N90      ZMTH      COMP 6                        90DAY MONTH.     ER0317
+     C  N90      ZMTH      COMP 9                        90               ER0317
+     C  N90      ZMTH      COMP 11                       90               ER0317
+     C**                                                                  ER0317
+     C**   ENSURE DAY IS VALID.                                           ER0317
+     C           ZDAY      COMP 0                      9999               ER0317
+     C   90N99   ZDAY      COMP 30                   99                   ER0317
+     C  N90N99   ZDAY      COMP 31                   99                   ER0317
+     C   99                GOTO ZDEND1                     BYPASS IF ERRORER0317
+     C**                                                                  ER0317
+     C**   CHECK FOR LEAP YEAR AND FEBRUARY.                              ER0317
+     C           ZYEAR     ADD  28        ZYEAR                           ER0317
+     C           ZYEAR     DIV  4         ZLYR    20                      ER0317
+     C                     MVR            ZLY     10     91LEAP YR, 91 ON ER0317
+     C           ZMTH      COMP 2                    93  92FEB., 92 ON    ER0317
+     C**                                                   PAST FEB, 93 ONER0317
+     C**   IF FEBUARY FURTHER VALIDATE DAY.                               ER0317
+     C  N91 92   ZDAY      COMP 28                   99                   ER0317
+     C   91 92   ZDAY      COMP 29                   99                   ER0317
+     C   99                GOTO ZDEND1                     BYPASS IF ERRORER0317
+     C**                                                                  ER0317
+     C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANSER0317
+     C           ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.ER0317
+     C  N91      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YRER0317
+     C   91 93   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.ER0317
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR ER0317
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTHER0317
+     C**                                                                  ER0317
+     C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*ER0317
+     C**                                                                  ER0317
+     C**                                                                  ER0317
+     C*****************************************************************
+     C*
+     C           ZDATE9    BEGSR
+     C*
+     C                     SETOF                     8081
+     C                     MOVE '0'       @@RTN   1
+     C                     Z-ADD0         @@VDT
+     C                     Z-ADD1         @@I     20
+     C                     Z-ADD1         @@J     20
+     C                     Z-ADD1         @@LEAP  10
+     C*
+     C           @@DAYN    IFLT 1
+     C                     MOVE '1'       @@RTN
+     C                     GOTO ZDAT79
+     C                     END
+     C*
+     C* DIVISION TO DETERMINE WETHER LEAP YEAR.
+     C*
+     C           @@DAYN    DIV  1461      @@Z71Y
+     C                     MVR            @@RDAY  50
+     C*
+     C* CALCULATING YEAR.
+     C*
+     C           @@Z71Y    MULT 4         @@Z71Y
+     C                     ADD  1972      @@Z71Y
+     C*
+     C* CHECKING IF YEAR IS GREATER THAN OR EQUAL TO 2100
+     C*
+     C           @@Z71Y    IFGE 2100
+     C                     ADD  @@SSY2    @@RDAY
+     C                     END
+     C*
+     C* LOKUP ARRAY @YD TO SEE HOW MANY YEARS OF A FOUR YEAR CYCLE
+     C* HAVE PASSED.
+     C*
+     C           @@RDAY    LOKUP@YD,@@I                8080
+     C*
+     C* IF YEAR IS A LEAP YEAR SSLEAP IS SET TO ZERO.
+     C*
+     C           *IN80     IFEQ '0'
+     C                     Z-ADD0         @@LEAP
+     C                     END
+     C*
+     C* ADD INDEX TO YEAR TO GIVE CORRECT YEAR AND ADJUST '@@RDAY'.
+     C*
+     C           @@LEAP    IFEQ 1
+     C           @@RDAY    SUB  @YD,@@I   @@RDAY
+     C                     ADD  @@I       @@Z71Y
+     C                     END
+     C*
+     C* PROCESSING FOR A LEAP YEAR.
+     C*
+     C           @@LEAP    IFEQ 0
+     C*
+     C* IF '@@RDAY' = 60 DATE MUST BE 29TH OF FEBRUARY.
+     C*
+     C           @@RDAY    IFEQ 60
+     C                     Z-ADD29        @@Z71D
+     C                     Z-ADD2         @@Z71M
+     C                     GOTO ZA0711
+     C                     END
+     C*
+     C* IF '@@RDAY' > 60 DATE IS AFTER 29TH OF FEBRUARY,CONVERSION CAN
+     C* PROCEED AS USUAL AFTER SUBTRACTING THE EXTRA DAY FOR THE LEAP
+     C* YEAR. NOTE : '@@RDAY' < 60 CONVERSION PROCEEDS AS USUAL.
+     C*
+     C           @@RDAY    IFGT 60
+     C           @@RDAY    SUB  1         @@RDAY
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF DAY '@@DAYN' IS EXACTLY DIVISIBLE BY 1461 (NUMBER OF DAYS
+     C* IN 4 YEARS) THEN DATE MUST BE LAST DAY OF PREVIOUS FOUR YEAR
+     C* GROUP.
+     C*
+     C           @@RDAY    IFEQ 0
+     C                     Z-ADD31        @@Z71D
+     C                     Z-ADD12        @@Z71M
+     C                     SUB  1         @@Z71Y
+     C                     GOTO ZA0711
+     C                     END
+     C*
+     C* LOOK UP ARRAY ARRAY @MD TO DETERMINE WHICH MONTH '@@RDAY'
+     C* OCCURS IN
+     C*
+     C           @@RDAY    LOKUP@MD,@@J                81
+     C                     Z-ADD@@J       @@Z71M
+     C           @@RDAY    SUB  @MD,@@J   @@Z71D
+     C*
+     C* DS @@VDT  IS RETURNED IN YYYYMMDD FORMAT
+     C*
+     C           ZA0711    TAG
+     C*
+     C                     MOVE @@Z71Y    @@YR
+     C*
+     C           ZDAT79    ENDSR
+      *                                                                   CEU007
+      ********************************************************************CEU007
+      * NOSTRO - Subroutine for access PF/SDNOSTPD via access object      CEU007
+      ********************************************************************CEU007
+      *                                                                   CEU007
+     C           NOSTRO    BEGSR                                          CEU007
+      *                                                                   CEU007
+     C                     CALL 'AONOSTR0'                                CEU007
+     C                     PARM *BLANKS   UUAPRC  7        B:Return Cd    CEU007
+     C                     PARM '*KEY'    UUAPOP  7        I:Option       CEU007
+     C                     PARM *BLANKS   UUCUST  6        I:Customer No. CEU007
+     C                     PARM           UUCYCD  3        I:Currency CodeCEU007
+     C**********           PARM *BLANKS   UUACCD  4        I:Account Code              CEU007 CER001
+     C                     PARM *BLANKS   UUACCD 10        I:Account Code                     CER001
+     C                     PARM *BLANKS   UUACSN  2        I:Account SequeCEU007
+     C                     PARM           UUNONB  2        I:Nostro NumberCEU007
+     C                     PARM *BLANKS   UUBRCD  3        I:Branch Code  CEU007
+     C                     PARM *BLANKS   UUCSSN 10        I:Cust ShortN  CEU007
+     C                     PARM *BLANKS   UUPNOI  1        I:Prime Nost InCEU007
+     C           D@NOST    PARM *BLANKS   UUFDY            O:Format       CEU007
+      *                                                                   CEU007
+     C           UUAPRC    IFNE *BLANKS                    B1             CEU007
+      *                                                                   CEU007
+      *** If not found perform the database error                         CEU007
+      *                                                                   CEU007
+     C           *LOCK     IN   LDA                                       CEU007
+     C                     MOVEL'011'     DBASE            ***************CEU007
+     C                     MOVEL'SDNOSTPD'DBFILE           ** DB ERROR 11 CEU007
+     C           UUCYCD    CAT  UUNONB    DBKEY            ***************CEU007
+     C                     OUT  LDA                                       CEU007
+     C                     EXSR *PSSR                                     CEU007
+      *                                                                   CEU007
+     C                     ELSE                            X1             CEU007
+      *                                                                   CEU007
+      ***  Check if the 3 last digits from Nostro Shortname is valid.     CEU007
+      ***  via the access object.                                         CEU007
+      *                                                                   CEU007
+     C                     MOVE A7NOSN    P@LCCD    P                     CEU007
+     C                     CALL 'AOLOCNR0'                                CEU007
+     C                     PARM *BLANKS   P@RTCD  7        B:Return Cd    CEU007
+     C                     PARM '*VERIFY' P@OPTN  7        I:Option       CEU007
+     C                     PARM           P@LCCD  3        I:Key field    CEU007
+      *                                                                   CEU007
+     C           P@RTCD    IFEQ *BLANKS                    B2             CEU007
+      *                                                                   CEU007
+      ***  Set up the fields with :                                       CEU007
+      ***  A7CYCD from PF/NOSTROPD for the ccy                            CEU007
+      ***  3Last digist of the nostro shortname A7NOSN from PF/SDNOSTPD   CEU007
+      *                                                                   CEU007
+     C                     MOVELA7CYCD    WWNOSC  3                       CEU007
+     C                     MOVE A7NOSN    WWNOSL  3                       CEU007
+      *                                                                   CEU007
+     C                     ELSE                            X2             CEU007
+      *                                                                   CEU007
+     C                     MOVELCCY       WWNOSC                          CEU007
+     C                     MOVELBJSLCD    WWNOSL                          CEU007
+      *                                                                   CEU007
+     C                     ENDIF                           E2             CEU007
+      *                                                                   CEU007
+     C                     ENDIF                           E1             CEU007
+      *                                                                   CEU007
+     C                     ENDSR                                          CEU007
+      *                                                                   CEU007
+     C********************************************************************
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**  CPY@                                                                  ULX004
+(c) Finastra International Limited 2005
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   TNDM - NUMBER OF DAYS PER MONTH
+312931303130313130313031

@@ -1,0 +1,1158 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU IN currency to Euro GL a/c mapping maint')
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Module                                           *
+      *                                                               *
+      *  EU0740 - 'In' Currency to Euro GL Account Mapping Maintenance*
+      *                                                               *
+      *  Function:  This program will allow the user to display the   *
+      *  (I/C)      existing mapped accounts, or he has the           *
+      *             possibility to select the branch, the customer or *
+      *             the account code to display.  Depending on the    *
+      *             selection, the system displays a subfile with the *
+      *             reference of 'In' account, the Euro account and   *
+      *             their corresponding balances.  Each mapped account*
+      *             can be deleted by using the option 'D'.  By press-*
+      *             ing the command key F8, a listing is produced with*
+      *             all the displayed mapped accounts.                *
+      *                                                               *
+      *  Called By: EUC0740 - 'In' Currency to Euro GL Account Mapping*
+      *                       Maintenance                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 240657             Date 26Jun06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 153384             Date 24Feb99               *
+      *                 CEU028  *CREATE    Date 24Aug98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  240657 - Pass correct account sequence.                      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  153384 - Recompile due to changes to EUGLMLPD .              *
+      *  CEU028 - EMU GL Utilities                                    *
+      *                                                               *
+      *****************************************************************
+     FEUGLMLL1UF  E           K        DISK         KCOMIT
+     F                                              KINFSR *PSSR
+     FEU0740DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                              KINFDS DSP1DS
+     F                                        RRN   KSFILE EU0740S0
+     FEU0740P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FEU0740AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F                                              KINFSR *PSSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  21 - Error in validation                                     *
+      *  30 - Error in branch                                         *
+      *  31 - Error in Customer Number                                *
+      *  32 - Error in 'Account Code From'                            *
+      *  33 - Error in 'Account Code To'                              *
+      *  41 - End of changed records for EU0740S0                     *
+      *  42 - End of file for EUGLMLL1                                *
+      *  43 - End of file for EUGLMLL1 (Printing of Subfile)          *
+      *  70 - Subfile Display                                         *
+      *  71 - Subfile Display Control                                 *
+      *  72 - Subfile End                                             *
+      *  73 - No display for Action                                   *
+      *  74 - Error in Action                                         *
+      *  75 - Subfile next Change                                     *
+      *  76 - All actions are valid                                   *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRP002 - Program Initialisation                              *
+      *  SRP003 - Process Screen Details                              *
+      *  SRP004 - Validate Screen Details                             *
+      *  SRP005 - Build Subfile                                       *
+      *  SRP006 - Print Subfile                                       *
+      *  SRP007 - Validate Action Criteria                            *
+      *  SRP008 - Audit Report                                        *
+      *  SRACNT - Subfile Contents                                    *
+      *  SRCFP1 - Subroutine to register EU0740P1 via RCF             *
+      *  SRCFAU - Subroutine to register EU0740AU via RCF             *
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *  CLEAR  - Clears message files                                *
+      *  ZASNMS - Display error messages                              *
+      *  ZSEDIT - Subroutine to inser decimal point & sign            *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    AQ         30  2                                                    240657
+      /COPY ZSRSRC,ZSEDITZ1
+      /SPACE 3
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM SPGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+     IDSP1DS      DS
+      ** File Information Data Structure for EU0740DF
+      *
+     I                                    B 378 3790RRN1
+     ISPOOL1      DS
+      ** File Information Data Structure for EU0740P1
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 367 3680PRTLN
+     ISPOOLU      DS
+      ** File Information Data Structure for EU0740AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISDACOD    E DSSDACODPD
+      ** Account Codes
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  Branch Codes
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Code
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+      ** Customer Details
+      *
+     ISDGELR    E DSSDGELRPD
+     I              QQACCD                          QQACC1                                    CGL029
+      ** General Ledger Details
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** Module Details
+      *
+     IDSSDY     E DSDSSDY
+      ** DS for access programs, Long data structure
+      *
+     IDSFDY     E DSDSFDY
+      ** DS for access programs, Short data structure
+      *
+      /COPY ZSRSRC,ZSEDITZ2
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P001 - Main Processing                                       *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *  Calls:     SRP002 - Program Initialisation                   *
+      *             SRP003 - Process Screen Details                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     EXSR SRP002
+     C                     EXSR SRP003
+      *
+     C                     MOVE *ON       *INLR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP002 - Program Initialisation                              *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Bank ICD Access Object                 *
+      *             AOMMODR0 - Module Details Access Object           *
+      *             AOGELRR0 - General Ledger Access Object           *
+      *             AOCURRR0 - Currency Details Access Object         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP002    BEGSR
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C           *LOCK     IN   LDA
+     C                     MOVEL'EU0740'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Get Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Access Module Details
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+      ** Access General Ledger ICD
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' PRTCD
+     C                     PARM '*FIRST  'POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Access Currency details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM BKEURO    PCYCD
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     Z-ADDA6NBDP    WDEC    10
+      *
+      ** Initialise Selection Criteria
+      *
+     C                     MOVE *BLANKS   SBRCH
+     C                     MOVE *BLANKS   SCUST
+     C                     MOVE *BLANKS   SFMAC
+     C                     MOVE *BLANKS   STOAC
+      *
+      ** Initialise Selection Criteria work fields
+      *
+     C                     MOVE *BLANKS   WBRCH   3
+     C                     MOVE *BLANKS   WCUST  10
+     C**********           MOVE *BLANKS   WFMAC   4                                           CGL029
+     C**********           MOVE *BLANKS   WTOAC   4                                           CGL029
+     C                     MOVE *BLANKS   WFMAC  10                                           CGL029
+     C                     MOVE *BLANKS   WTOAC  10                                           CGL029
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP003 - Process Screen Details                              *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     SRP004 - Validate Selection Criteria              *
+      *             SRP005 - Build Subfile                            *
+      *             SRP006 - Print Subfile                            *
+      *             SRP007 - Validate Action Criteria                 *
+      *             CLEAR  - Clears message subfile                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP003    BEGSR
+      *
+     C                     MOVE BJMRDT    SRUNA
+      *
+     C           *INKC     DOUEQ*ON
+     C           *IN21     OREQ *OFF
+      *
+      ** Prompt Screen
+      *
+     C                     WRITEEU0740C1
+     C                     WRITEEU0740F0
+     C                     EXFMTEU0740F1
+     C                     EXSR CLEAR
+      *
+     C           *INKC     IFEQ *OFF
+     C                     EXSR SRP004
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           *INKC     IFEQ *OFF
+     C                     EXSR SRP005
+     C                     Z-ADD1         SRRN
+      *
+     C           *INKC     DOWEQ*OFF
+      *
+      ** Display Subfile
+      *
+     C                     WRITEEU0740C1
+     C                     WRITEEU0740F3
+     C                     WRITEEU0740F0
+     C           *IN70     IFEQ *OFF
+     C                     EXFMTEU0740F2
+     C                     ELSE
+     C                     EXFMTEU0740C0
+     C                     ENDIF
+     C                     EXSR CLEAR
+      *
+      ** If F8 is pressed
+      *
+     C           *INKH     IFEQ *ON
+     C                     EXSR SRP006
+     C                     ELSE
+     C           *INKC     IFEQ *OFF
+     C           RRN1      IFEQ 0
+     C                     Z-ADD1         SRRN
+     C                     ELSE
+     C                     Z-ADDRRN1      SRRN
+     C                     ENDIF
+     C                     EXSR SRP007
+      *
+      ** If all actions are valid
+      *
+     C           *IN74     IFEQ *OFF
+     C                     EXSR SRP004
+     C                     ENDIF
+      *
+      ** If all action and selection criteria are valid
+      ** at least one action or selection was requested
+      *
+     C           *IN21     IFEQ *OFF
+     C           *IN76     ANDEQ*OFF
+     C           WUPDAT    IFEQ 'Y'
+     C           SBRCH     ORNE WBRCH
+     C           SCUST     ORNE WCUST
+     C           SFMAC     ORNE WFMAC
+     C           STOAC     ORNE WTOAC
+     C           *IN70     OREQ *OFF
+     C           WUPDAT    ANDNE'Y'
+     C                     EXSR SRP005
+     C                     Z-ADD1         SRRN
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP004 - Validate Selection Criteria                         *
+      *                                                               *
+      *  Called by: SRP003 - Process Screen Details                   *
+      *                                                               *
+      *  Calls:     AOBRCHR0 - Branch Code Access Object              *
+      *             AOCUSTR0 - Customer Details Access Object         *
+      *             AOACODR0 - Account Code Access Object             *
+      *             ZVBBU    - Validate Booking Branch/User           *
+      *             ZASNMS   - Display Error Messages                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP004    BEGSR
+      *
+     C                     MOVE *OFF      *IN21
+     C                     MOVEA'0000'    *IN,30
+      *
+     C           SBRCH     IFEQ *BLANKS
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN30
+     C                     MOVEL'EUM0515' ZAMSID
+     C                     MOVEL'EUMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      ** Validate branch code via access object
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM SBRCH     PBRCD   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+      ** If branch code entered is invalid, display msg
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN30
+     C                     MOVEL'EUM0516' ZAMSID
+     C                     MOVEL'EUMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVELA8BRCD    SBRCH
+     C                     MOVELA8BRNM    RBRNM
+      *
+      ** Check user authority to branch entered using ZVBBU
+      *
+     C                     CALL 'ZVBBU'
+     C                     PARM SBRCH     PZBRCA  3
+     C                     PARM           PZERR   10
+     C           PZERR     IFNE 0
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN30
+     C                     MOVEL'EUM0517' ZAMSID
+     C                     MOVEL'EUMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Customer
+      *
+     C           SCUST     IFNE *BLANKS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM SCUST     PKEY1  10
+     C                     PARM           PKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** If customer record not found
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN31
+     C                     MOVEL'EUM0518' ZAMSID
+     C                     MOVEL'EUMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE *BLANKS   SCUST
+     C                     MOVELBBCUST    WCNUM   6
+     C                     MOVELBBCUST    SCUST
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Account Code From
+      *
+     C           SFMAC     IFNE *BLANKS
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C**********           PARM SFMAC     PACCD   4                                           CGL029
+     C                     PARM SFMAC     PACCD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+      ** If record is not found
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN32
+     C                     MOVEL'EUM0523' ZAMSID
+     C                     MOVEL'EUMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVELA5ACCD    SFMAC
+      *
+      ** If account type is not 'G'
+      *
+     C           A5ACTY    IFNE 'G'
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN32
+     C                     MOVEL'EUM0524' ZAMSID
+     C                     MOVEL'EUMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      ** If account title indicator is 'Y'
+      *
+     C           A5TOIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN32
+     C                     MOVEL'EUM0529' ZAMSID
+     C                     MOVEL'EUMSGF  'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Account Code To
+      *
+     C           STOAC     IFNE *BLANKS
+      *
+      ** 'Account Code from' is blank
+      *
+     C           SFMAC     IFEQ *BLANKS
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'EUM0525' ZAMSID
+     C                     MOVEL'EUMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM STOAC     PACCD
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+      ** If record is not found
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'EUM0523' ZAMSID
+     C                     MOVEL'EUMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVELA5ACCD    STOAC
+      *
+      ** If account type is not 'G'
+      *
+     C           A5ACTY    IFNE 'G'
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'EUM0524' ZAMSID
+     C                     MOVEL'EUMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      ** If account title indicator is 'Y'
+      *
+     C           A5TOIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'EUM0529' ZAMSID
+     C                     MOVEL'EUMSGF  'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      ** If 'Account Code To' is less than or equal to 'Account Code
+      ** From'
+      *
+     C           STOAC     IFLE SFMAC
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'EUM0526' ZAMSID
+     C                     MOVEL'EUMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP005 - Build Subfile                                       *
+      *                                                               *
+      *  Called by: SRP003 - Process Screen Details                   *
+      *                                                               *
+      *  Calls:     SRACNT - Subfile Contents                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP005    BEGSR
+      *
+     C           KEY1      KLIST
+     C                     KFLD           KBRCH   3
+     C**********           KFLD           KCUST   60                                          CSD027
+     C                     KFLD           KCUST   6                                           CSD027
+      *
+     C                     MOVEA'000000'  *IN,70
+     C                     WRITEEU0740C0
+     C                     MOVE *BLANKS   W1CNUM
+     C                     MOVE *BLANKS   WCCY
+     C                     Z-ADD1         RRN     40
+     C                     Z-ADD0         WCNT    40
+     C                     MOVEA*BLANKS   AQ                                                  240657
+      *
+      ** Move selection criteria screen fields to work fields
+      *
+     C                     MOVE SBRCH     WBRCH
+     C                     MOVE SCUST     WCUST
+     C                     MOVE SFMAC     WFMAC
+     C                     MOVE STOAC     WTOAC
+      *
+     C                     MOVELSBRCH     W1BRCH  3
+      *
+      ** If Customer is blank
+      *
+     C           SCUST     IFEQ *BLANKS
+     C**********           MOVEL'000000'  W1CUST  60                                          CSD027
+     C                     MOVEL*BLANKS   W1CUST  6                                           CSD027
+     C                     ELSE
+     C                     MOVELWCNUM     W1CUST
+     C                     ENDIF
+      *
+      ** If 'Account Code From' is non-blank and 'Account Code To'
+      ** is non-blank
+      *
+     C           SFMAC     IFNE *BLANKS
+     C           STOAC     ANDNE*BLANKS
+     C**********           MOVE SFMAC     W1FMAC  40                                          CGL029
+     C**********           MOVE STOAC     W1TOAC  40                                          CGL029
+     C                     MOVE SFMAC     W1FMAC 100                                          CGL029
+     C                     MOVE STOAC     W1TOAC 100                                          CGL029
+     C                     ENDIF
+      *
+      ** If 'Account Code From' is non-blank and 'Account Code To'
+      ** is blank
+      *
+     C           SFMAC     IFNE *BLANKS
+     C           STOAC     ANDEQ*BLANKS
+     C                     MOVE SFMAC     W1FMAC
+     C                     MOVE SFMAC     W1TOAC
+     C                     ENDIF
+      *
+      ** If 'Account Code From' is blank and 'Account Code To'
+      ** is blank
+      *
+     C           SFMAC     IFEQ *BLANKS
+     C           STOAC     ANDEQ*BLANKS
+     C                     MOVE '000000'  W1FMAC                                              CGL029
+     C                     MOVEL'0000'    W1FMAC
+     C                     MOVEL'999999'  W1TOAC                                              CGL029
+     C                     MOVEL'9999'    W1TOAC
+     C                     ENDIF
+      *
+     C                     MOVELW1CUST    KCUST
+     C                     MOVELW1BRCH    KBRCH
+      *
+      ** Set lower limit to file
+      *
+     C           KEY1      SETLLEUGLMLL1
+     C           KBRCH     READEEUGLMLD0                 72
+      *
+     C           *IN72     DOWEQ*OFF
+      *
+      ** Account code GE 'Account Code From' work field and
+      ** Account code LE 'Account Code To' work field
+      *
+     C           EUIACD    IFGE W1FMAC
+     C           EUIACD    ANDLEW1TOAC
+      *
+      ** If Customer work field is '000000' or customer
+      *
+     C********** W1CUST    IFEQ *ZEROS                                                        CSD027
+     C           W1CUST    IFEQ *BLANKS                                                       CSD027
+     C           W1CUST    OREQ EUICNM
+      *
+      ** If record is found
+      *
+     C                     ADD  1         WCNT
+     C                     MOVEA'11'      *IN,70
+      *
+      ** Write record to subfile
+      *
+     C                     EXSR SRACNT
+     C                     WRITEEU0740S0
+     C                     ADD  1         RRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           KBRCH     READEEUGLMLD0                 72
+     C                     ENDDO
+      *
+     C           RRN       IFEQ 1
+     C                     MOVE *OFF      *IN70
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN73
+     C                     ENDIF
+      *
+     C                     Z-ADDRRN       WRRN    40
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP006 - Print Subfile                                       *
+      *                                                               *
+      *  Called by: SRP003 - Process Screen Details                   *
+      *                                                               *
+      *  Calls:     SRP008 - Audit Report                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP006    BEGSR
+      *
+     C           WCNT      IFEQ 0
+     C                     EXSR SRP008
+     C                     ELSE
+      *
+     C                     OPEN EU0740P1
+     C                     EXSR SRCFP1
+      *
+     C           WRRN      SUB  1         WRRN2   40
+      *
+     C                     MOVELWBRCH     RBRCA
+     C                     MOVELWCUST     RCNUM
+     C                     MOVELWFMAC     RFRAC
+     C                     MOVELWTOAC     RTOAC
+     C                     WRITEEU0740D1
+      *
+     C           1         DO   WRRN2     I       40
+     C           I         CHAINEU0740S0             50
+     C                     MOVELSIAC      RIAC
+     C                     MOVELSIAB      RIAB
+     C                     MOVELSEAC      REAC
+     C                     MOVELSEAB      REAB
+      *
+     C           PRTLN     IFGT 55
+     C                     WRITEEU0740D1
+     C                     ENDIF
+     C                     WRITEEU0740D2
+     C                     ENDDO
+      *
+     C                     WRITEEU0740D3
+     C                     CLOSEEU0740P1
+      *
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACNT - Subfile Contents                                    *
+      *                                                               *
+      *  Called by: SRP005 - Build Subfile                            *
+      *                                                               *
+      *  Calls:     AOCURRR0 - Currency details access object         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACNT    BEGSR
+      *
+     C                     CLEAREU0740S0
+     C                     MOVE *OFF      *IN73
+      *
+      ** Format for 'In' account amount
+      *
+     C           WCCY      IFNE EUICCY
+     C                     MOVE EUICCY    WCCY    3
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM WCCY      PCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVELWCCY      DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    WDEC1   10
+     C                     ENDIF
+      *
+     C                     MOVE EUIBAL    ZFLD15
+     C                     Z-ADDWDEC1     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SIAB
+      *
+      ** Format for Euro account amount
+      *
+     C                     Z-ADDWDEC      ZDECS
+     C                     MOVE EUEBAL    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SEAB
+      *
+      ** If Analytical Accounting is installed
+      *
+     C           BGN0ST    IFEQ 'Y'
+      *
+      ** If financial account has changed
+      *
+     C           EUICNM    IFNE W1CNUM
+     C           EUICCY    ORNE W1CCY
+     C           EUIACD    ORNE W1ACOD
+     C           EUISQN    ORNE W1ACSQ
+      *
+     C**********           MOVELEUICNM    W1CNUM  60                                          CSD027
+     C                     MOVELEUICNM    W1CNUM  6                                           CSD027
+     C                     MOVELEUICCY    W1CCY   3
+     C**********           MOVELEUIACD    W1ACOD  40                                          CGL029
+     C                     MOVELEUIACD    W1ACOD 100                                          CGL029
+     C                     MOVELEUISQN    W1ACSQ  20
+     C                     MOVELEUICNM    W2CNUM  6
+     C**********           MOVELEUIACD    W2ACOD  4                                           CGL029
+     C                     MOVELEUIACD    W2ACOD 10                                           CGL029
+     C                     MOVELEUISQN    W2ACSQ  2
+     C                     MOVE W2ACSQ    AQ,RRN                                              240657
+     C           W2CNUM    CAT  W1CCY:0   SIAC
+     C           SIAC      CAT  W2ACOD:0  SIAC
+     C********** SIAC      CAT  W2ACSQ:0  SIAC                                                240657
+     C********** SIAC      CAT  EUIPRF:0  SIAC                                                240657
+      *
+     C                     MOVELEUECNM    W3CNUM  6
+     C**********           MOVELEUEACD    W3ACOD  4                                           CGL029
+     C                     MOVELEUEACD    W3ACOD 10                                           CGL029
+     C**********           MOVELEUESQN    W3ACSQ  2                                           240657
+     C           W3CNUM    CAT  EUECCY:0  SEAC
+     C           SEAC      CAT  W3ACOD:0  SEAC
+     C********** SEAC      CAT  W3ACSQ:0  SEAC                                                240657
+     C********** SEAC      CAT  EUEPRF:0  SEAC                                                240657
+     C                     ELSE
+     C                     MOVE EUIPRF    SIAC
+     C                     MOVE EUEPRF    SEAC
+     C                     MOVE *ON       *IN73
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If Analytical Accounting is not installed
+      *
+     C           BGN0ST    IFEQ 'N'
+      *
+     C                     MOVELEUICNM    W2CNUM
+     C                     MOVELEUIACD    W2ACOD
+     C                     MOVELEUISQN    W2ACSQ
+     C                     MOVE W2ACSQ    AQ,RRN                                              240657
+     C           W2CNUM    CAT  EUICCY:0  SIAC
+     C           SIAC      CAT  W2ACOD:0  SIAC
+     C********** SIAC      CAT  W2ACSQ:0  SIAC                                                240657
+      *
+     C                     MOVELEUECNM    W3CNUM
+     C                     MOVELEUEACD    W3ACOD
+     C**********           MOVELEUESQN    W3ACSQ                                              240657
+     C           W3CNUM    CAT  EUECCY:0  SEAC
+     C           SEAC      CAT  W3ACOD:0  SEAC
+     C********** SEAC      CAT  W3ACSQ:0  SEAC                                                240657
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP007 - Validate Action Criteria                            *
+      *                                                               *
+      *  Called by: SRP003 - Process Screen Details                   *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP007    BEGSR
+      *
+     C           KEY2      KLIST
+     C                     KFLD           K2BRCH  3
+     C**********           KFLD           K2CUST  60                                          CSD027
+     C                     KFLD           K2CUST  6                                           CSD027
+     C                     KFLD           K2CCY   3
+     C**********           KFLD           K2ACOD  40                                          CGL029
+     C                     KFLD           K2ACOD 100                                          CGL029
+     C                     KFLD           K2SQN   20
+      *
+     C                     MOVE *OFF      *IN76
+      *
+     C           *IN70     IFEQ *ON
+     C                     READCEU0740S0                 41
+      *
+      ** Validate action criteria
+      *
+     C           *IN41     DOWEQ*OFF
+      *
+     C           SACT      IFNE 'D'
+     C           SACT      ANDNE*BLANKS
+     C                     MOVE *ON       *IN74
+     C                     MOVE *ON       *IN76
+     C                     MOVEL'EUM0528' ZAMSID
+     C                     MOVEL'EUMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE *OFF      *IN74
+     C                     ENDIF
+      *
+     C           SACT      IFEQ *BLANK
+     C                     MOVE *OFF      *IN75
+     C                     ELSE
+     C                     MOVE *ON       *IN75
+     C                     ENDIF
+      *
+     C                     UPDATEU0740S0
+     C                     READCEU0740S0                 41
+      *
+     C                     ENDDO
+      *
+      ** If all action fields are valid
+      *
+     C           *IN76     IFEQ *OFF
+      *
+     C                     READCEU0740S0                 44
+      *
+     C           *IN44     DOWEQ*OFF
+      *
+     C                     MOVELW1BRCH    K2BRCH
+     C           6         SUBSTSIAC:1    W2CUST  6
+     C           3         SUBSTSIAC:7    K2CCY
+     C********** 4         SUBSTSIAC:10   W2ACOD                                              240657
+     C********** 2         SUBSTSIAC:14   W2SQN   2                                           240657
+     C           10        SUBSTSIAC:10   W2ACOD                                              240657
+     C                     MOVE AQ,RRN    W2SQN   2                                           240657
+     C                     MOVELW2CUST    K2CUST
+     C                     MOVELW2ACOD    K2ACOD
+     C                     MOVELW2SQN     K2SQN
+      *
+      ** Delete from file
+      *
+     C           KEY2      CHAINEUGLMLL1             42
+     C                     DELETEUGLMLL1
+     C                     MOVE 'Y'       WUPDAT  1
+      *
+      ** If Analytical Accounting is installed
+      *
+     C           BGN0ST    IFEQ 'Y'
+     C           *IN42     DOWEQ*OFF
+     C           KEY2      CHAINEUGLMLL1             42
+     C           *IN42     IFEQ *OFF
+     C                     DELETEUGLMLL1
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     READCEU0740S0                 44
+     C                     ENDDO
+      *
+     C                     COMIT
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP008 - Audit Report                                        *
+      *                                                               *
+      *  Called by: SRP006 - Print Subfile                            *
+      *             *PSSR - Program exception error routine           *
+      *                                                               *
+      *  Calls:     SRCFAU - Subroutine to register EU0740AU via RCF  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP008    BEGSR
+      *
+      ** Output Report Header
+      *
+     C                     OPEN EU0740AU
+     C                     EXSR SRCFAU
+      *
+     C                     MOVELBJURPT    RURPT
+     C                     MOVELBJMRDT    RMRDT
+      *
+     C                     WRITEEU0740A1
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEEU0740A3
+     C                     ELSE
+     C                     WRITEEU0740A2
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCFP1 - Subroutine to register EU0740P1 via RCF.            *
+      *                                                               *
+      *  Called by:  SRP006 - Print Subfile                           *
+      *                                                               *
+      *  Calls:      ZSFILE - Set-up spool file                       *
+      *                                                               *
+      *****************************************************************
+     C           SRCFP1    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           SFNUM1
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCFAU  - Subroutine to register EU0740AU via RCF.           *
+      *                                                               *
+      *  Called by:  SRP008 - Audit Report                            *
+      *                                                               *
+      *  Calls:      ZSFILE - Set-up spool file                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFAU    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM           SENTY
+     C                     PARM           SFILEU
+     C                     PARM           SFNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   CLEAR - Subroutine which clears the message file            *
+      *                                                               *
+      *   Called by: SRP003  - Process Screen Details                 *
+      *                                                               *
+      *   Calls    : Y2CLMSC - Clear message file                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLEAR     BEGSR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGM      ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: SRP002 - Program Initialisation                    *
+      *                                                               *
+      * Calls    : None                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ROLBK
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     EXSR SRP008
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                               *
+      *   ZASNMS - Subroutine which handles the display of error      *
+      *            messages                                           *
+      *                                                               *
+      *   Called by: SRP004 - Validate Screen Details                 *
+      *              SRVALC - Validate Currency                       *
+      *                                                               *
+      *   Calls    : Y2SNMGC - Send a message                         *
+      *                                                               *
+      ********************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVELSPGM      ZAPGMQ
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA 30        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C           ZAEXIT    ENDSR
+      ********************************************************************
+      /COPY ZSRSRC,ZSEDITZ3
+**  CPY@
+(c) Finastra International Limited 2001

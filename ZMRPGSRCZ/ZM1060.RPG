@@ -1,0 +1,367 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Format Certificate Nos Fields 26K')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - MESSAGE MANAGEMENT UTILITIES.
+     F*                                                               *
+     F*  ZM1060 - FORMAT CERTIFICATE NUMBERS, FIELD 26K               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01401             Date 10Feb93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  S01401 - The generation of MT500 SWIFT Messages if the       *
+     F*           option is available.  NEW PROGRAM.                  *
+     F*                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*
+     F**   TRADE CERTIFICATE NUMBERS FILE           - PrefiX CN
+     FSECRTNL1IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**                                                              *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    70  - READ ON SECRTNL1                                     *
+     F*                                                               *
+     E*****************************************************************
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  #A      - INITIAL PROCESSING                                 *
+     F*  #B      - MAIN PROCESSING                                    *
+     F*  #BA     - FORMAT CERTIFICATE NUMBERS                         *
+     F*  #BAA    - REMOVE LEADING ZEROS FROM NUMERIC FIELDS           *
+     F*  *PSSR   - PROGRAM ERROR HANDLING SUBROUINE                   *
+     F*  #ZA     - ERROR PROCESSING                                   *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E**   ARRAY FOR COPYRIGHT
+     E*
+     E                    CRT       210  1
+     E**   CERTIFICATE ARRAY
+     E*
+     E                    TMP        16  1
+     E**   WORK ARRAY
+     E*
+     E                    NUM         8  1
+     E**   ARRAY FOR NUMERIC VALUES
+     E*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     I*
+     IPSDS       SDS
+     I**   PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     ICERTDS      DS
+     I**   CERTIFICATE LINES DATA STRUCTURE
+     I                                        1 210 CRT
+     I                                        1  35 WWCLN1
+     I                                       36  70 WWCLN2
+     I                                       71 105 WWCLN3
+     I                                      106 140 WWCLN4
+     I                                      141 175 WWCLN5
+     I                                      176 210 WWCLN6
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**   INPUT PARAMETER LIST
+     C**   --------------------
+     C*
+     C**  WWTDRF - TRADE REFERENCE
+     C**  WWSEQN - SEQUENCE NUMBER
+     C**  WWCRT1 - CERTIFICATE LINE 1
+     C**  WWCRT2 - CERTIFICATE LINE 2
+     C**  WWCRT3 - CERTIFICATE LINE 3
+     C**  WWCRT4 - CERTIFICATE LINE 4
+     C**  WWCRT5 - CERTIFICATE LINE 5
+     C**  WWCRT6 - CERTIFICATE LINE 6
+     C**  WWFIN  - FINISHED FLAG
+     C**  WWERR  - ERROR FLAG
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           WWTDRF  6
+     C                     PARM           WWSEQN  40
+     C                     PARM           WWCRT1 35
+     C                     PARM           WWCRT2 35
+     C                     PARM           WWCRT3 35
+     C                     PARM           WWCRT4 35
+     C                     PARM           WWCRT5 35
+     C                     PARM           WWCRT6 35
+     C                     PARM           WWFIN   1
+     C                     PARM           WWERR   1
+     C*
+     C**   KEYS USED BY PROGRAM
+     C**   --------------------
+     C*
+     C**   KEY FOR CHAIN TO SECRTNL1
+     C*
+     C           WWKEY1    KLIST
+     C                     KFLD           WWTDRF
+     C                     KFLD           WWSEQN
+     C*
+     C*****************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C*
+     C**   INITIAL PROCESSING
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C                     EXSR #B
+     C*
+     C**   END PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #A        - THIS SUBROUTINE PERFORMS INITIAL PROCESSING    *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** INITIALISE OVERFLOW FLAG
+     C                     MOVE 'N'       WWOVRF  1
+     C*
+     C** CLEAR WORK, CERTIFICATE AND NUMERIC ARRAYS
+     C*
+     C                     MOVEA*BLANKS   TMP
+     C                     MOVEA*BLANKS   CRT
+     C                     MOVEA'00000000'NUM
+     C                     MOVE '00000000'WWNUM   8
+     C*
+     C** INITIALISE WORK ARRAY INDEX & CERTIFICATE ARRAY INDEX
+     C                     Z-ADD0         T       20
+     C                     Z-ADD0         C       30
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #B        - THIS SUBROUTINE PERFORMS MAIN PROCESSING       *
+     C**                                                              *
+     C**   CALLS     - #BA                                            *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C** SET LOWER LIMITS ON LF/SECRTNL1
+     C           WWKEY1    SETLLSECRTNL1
+     C*
+     C** READ FIRST RECORD ON LF/SECRTNL1
+     C                     READ SECRTNL1                 70
+     C*
+     C** IF NO RECORD EXISTS - SET ERROR FLAG & EXIT PROGRAM
+     C           *IN70     IFEQ '1'
+     C           WWTDRF    ORNE CNTDRF
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C** DO WHILE RECORDS EXIST FOR TRADE REFERENCE & OVERFLOW HAS
+     C** NOT OCCURRED
+     C           *IN70     DOWEQ'0'
+     C           WWTDRF    ANDEQCNTDRF
+     C           WWOVRF    ANDEQ'N'
+     C*
+     C** FORMAT CERTIFICATE NUMBERS
+     C                     EXSR #BA
+     C                     END
+     C*
+     C** CHECK IF ALL RECORDS ON LF/SECRTNL1 HAVE BEEN PROCESSED
+     C           WWOVRF    IFEQ 'N'
+     C                     MOVE 'Y'       WWFIN
+     C                     ELSE
+     C                     MOVE 'N'       WWFIN
+     C                     MOVE WWSNUM    WWSEQN
+     C                     END
+     C*
+     C** RETURN FORMATTED CERTIFICATE NUMBERS
+     C                     MOVE WWCLN1    WWCRT1
+     C                     MOVE WWCLN2    WWCRT2
+     C                     MOVE WWCLN3    WWCRT3
+     C                     MOVE WWCLN4    WWCRT4
+     C                     MOVE WWCLN5    WWCRT5
+     C                     MOVE WWCLN6    WWCRT6
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BA       - FORMAT CERTIFICATE NUMBERS                     *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C** CHECK FIRST IN RANGE DOES NOT EQUAL 0
+     C           CNRNG1    IFEQ 0
+     C                     EXSR #ZA
+     C                     ELSE
+     C*
+     C** STORE FIRST CERTIFICATES IN RANGE IN WORK ARRAY
+     C                     MOVE CNRNG1    WWNUM
+     C                     MOVEAWWNUM     NUM
+     C                     EXSR #BAA
+     C                     END
+     C*
+     C                     ADD  1         T
+     C                     MOVE '+'       TMP,T
+     C*
+     C** CHECK UNIT SIZE DOES NOT EQUAL 0
+     C           CNUNIT    IFEQ 0
+     C                     EXSR #ZA
+     C                     ELSE
+     C*
+     C** STORE UNIT SIZE IN WORK ARRAY
+     C                     MOVE CNUNIT    WWNUM
+     C                     MOVEAWWNUM     NUM
+     C                     EXSR #BAA
+     C                     END
+     C*
+     C** SAVE SEQUENCE NUMBER OF CURRENT RECORD
+     C                     MOVE CNSEQN    WWSNUM  40
+     C*
+     C** READ NEXT RECORD ON LF/SECRTNL1
+     C                     READ SECRTNL1                 70
+     C*
+     C** IF NOT END OF FILE - MOVE SEPERATOR ':' TO WORK ARRAY
+     C           *IN70     IFEQ '0'
+     C                     ADD  1         T
+     C                     MOVE ':'       TMP,T
+     C                     END
+     C*
+     C** DETERMINE IF SPACE AVAILABLE IN CERTIFICATE LINES
+     C           T         ADD  C         WWCNT   30
+     C           WWCNT     IFGT 210
+     C                     MOVE 'Y'       WWOVRF
+     C                     ELSE
+     C*
+     C** SPACE AVAILABLE - STORE DETAILS
+     C                     Z-ADD1         X       20
+     C           X         DOWLET
+     C                     ADD  1         C
+     C                     MOVE TMP,X     CRT,C
+     C                     ADD  1         X
+     C                     END
+     C*
+     C** INITIALISE WORK FIELDS
+     C                     MOVEA*BLANKS   TMP
+     C                     Z-ADD0         T
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BAA      - REMOVE LEADING ZEROS FROM NUMERIC VALUES       *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BAA      BEGSR
+     C*
+     C                     Z-ADD1         N       10
+     C           NUM,N     DOWEQ'0'
+     C                     ADD  1         N
+     C                     END
+     C*
+     C           N         DOWLE8
+     C                     ADD  1         T
+     C                     MOVE NUM,N     TMP,T
+     C                     ADD  1         N
+     C                     END
+     C*
+     C                     MOVEA'00000000'NUM
+     C                     MOVE '00000000'WWNUM
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZA       - PROCESS ERRORS                                 *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #B #BA                                         *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C                     MOVE '1'       WWERR
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - Program error handling routine                 *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'ZM1060'  DBPGM  10
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

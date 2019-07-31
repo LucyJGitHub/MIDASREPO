@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Upload to BF')                               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMC000153 - Upload to BankFusion                            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD018386B          Date 22Apr13              */
+/*                      AR1088235          Date 13Feb13              */
+/*                      AR1081696          Date 30Jan13              */
+/*                      AR883210           Date 21Dec11              */
+/*                      CBF005   *CREATE   Date 04Jul11              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD018386B - Include BFTC and BFWS Permissions Initialisation*/
+/*       AR1088235 - Include ggBFMADM initialisation BF Upload       */
+/*       AR1081696 - Include AUTOAUTH initialisation BF Upload       */
+/*                   Applied for AR1083560.                          */
+/*       AR883210 - Additional Deliverables for BF                   */
+/*       CBF005 - BF Infrastructure: Single Security User Maintenance*/
+/*                Profile                                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&GENPGM) TYPE(*CHAR) LEN(10) +
+                          VALUE('SMC000120')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2011')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/** Call program to upload to BFTB_ZONE  */
+             CALL       PGM(SM000053)
+ 
+ 
+/** Create single file of all User details  */
+             CPYF       FROMFILE(GZMUSERDD) TOFILE(QTEMP/QTUSER) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             CPYF       FROMFILE(GPMUSERDD) TOFILE(QTEMP/QTUSER) +
+                          MBROPT(*ADD)
+ 
+/** Call program to upload to BFTB_USER/ZONEUSER/USERLOGINNODE */
+             CALL       PGM(SM000054)
+ 
+/** Call program to upload to BFTB_ORGANISATIONGRP  */
+             CALL       PGM(SM000055)
+ 
+/** Call program to upload to BFTB_GROUPPERMAP  */
+             CALL       PGM(SM000056)
+ 
+/** Call program to upload to BFTB_ORGGROUPUSER  */
+             CALL       PGM(SM000057)
+ 
+/** Call program to upload to BFTB_ENTITLEMENTS  */
+             CALL       PGM(SM000060)
+ 
+/** Call program to upload to BFTB_ENTITLEMENTTYPES  */
+             CALL       PGM(SM000059)
+ 
+/** Call program to initialise BF Midas Security Data for AUTOAUTH */                  /*AR1081696*/
+             CALL       PGM(SM000061)                                                  /*AR1081696*/
+                                                                                       /*AR1081696*/
+/** Call program to initialise BF Midas Security Data for ggBFMADM */                  /*AR1088235*/
+             CALL       PGM(SM000063)                                                  /*AR1088235*/
+                                                                                       /*AR1088235*/
+/** Call program to initialise BFTC and BFWS permissions for zones */                  /*MD018386B*/
+             CALL       PGM(SM000064)                                                  /*MD018386B*/
+                                                                                       /*MD018386B*/
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) MSGDTA(&GENPGM) +
+                          MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog / dump for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM(&GENPGM 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+             ENDPGM

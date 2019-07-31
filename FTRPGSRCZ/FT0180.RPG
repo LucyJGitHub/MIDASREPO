@@ -1,0 +1,1354 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Incoming payments waiting completion')        *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module
+     F*                                                               *
+     F*  FT0180  - Incoming Payments Awaiting Completion Selection    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAAA02             Date 16Jul03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 195352             Date 31Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 01Jun00               *
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CFT004             Date 27Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 129366             DATE  16SEP98              *
+     F*                 S01435             DATE  22JUL93              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CAAA02 - Remove use of LOCK keyword to enable WebFacing to   *
+      *           process screens.                                    *
+      *           Change order of WRITEs to stop non-display / errors *
+      *  195352 - Incoming payments enquiry array index error.        *
+     F*  CFT009 - FT Fees and Charge Development-Recompiled           *
+      *  CFT014 - Straight-through Processing Phase 2 MT103           *
+      *           Messages Generation for FT.                         *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+     F*  176443 - Avoid MCH3601 to be sent.                           *
+     F*           Pass correct parameter to AOCUSTR0.                 *
+     F*  CFT004 - International Bank Account Number                   *
+     F*           New Account Type 'I' (IBAN)                         *
+     F*  129366 - Add OEDT (original entry date) to the key list to   *
+     F*           prevent incorrect sequences for the year 2000.      *
+     F*  S01435 - Incoming Message Management.                        *
+     F*****************************************************************
+     FFT0180DFCF  E                    WORKSTN
+     F                                        @SFK  KSFILE FT0180F0
+     FINCINBB IF  E           K        DISK
+     F            INPAYDDF                          KRENAMEINCIBBDF
+     FINCINOB IF  E           K        DISK
+     F            INPAYDDF                          KRENAMEINCIOBDF
+     FACNUMA  IF  E           K        DISK
+     FINPAYXL2IF  E           K        DISK                           UC  CFT014
+     F/COPY WNCPYSRC,FT0180F001
+      /EJECT
+      *
+      *   INDICATOR USAGE
+      *   ---------------
+      *
+      *   01      CHAIN fail - payments awaiting completion
+      *   02      End of file on subfile
+      *   03      LOKUP operation successful
+      *   05      CHAIN fail - currencies, clients, retail a/c nos
+      *   06      Subfile record has been read on this cycle
+      *   10      Multibranching indicator
+      *   11      Originating/Booking Branch indicator- ON if Orig. Branch
+      *   12      ON if no payments with authority to Originating Branch
+      *   14      ON if no payments with auth to Insert for Booking Branch
+      *   15      Branch='ALL' indicator
+      *   16      ON if user not authorised to the action code when
+      *           non MB Environment
+      *   23      SFLCLR
+      *   24      SFLDSP
+      *   25      SFLEND
+      *   26      SFLNXTCHG
+      *   28      DSPATR(PR) on subfile field Select payment
+      *   29      ROLLUP requested
+      *   30      SFLDSPCTL on subfile
+      *   44      Subfile validation error - Select payment
+      *   45      Non display of selection field for blank line
+      *   46      No payments awaiting completion
+      *   50      A validation error has occurred
+      *   65      Chain to INPAYXL2 failed                                CFT014
+      *
+      *   90 - 99 Used in validation/conversion routines (Z s/r's)
+      *
+      *   U7      Data base error
+      *   U8      Data base error
+      *
+      /EJECT
+      *
+      *   SUB-ROUTINE DEFINITIONS
+      *   -----------------------
+      *
+      *   INIT    Initialization
+      *   SETUP   Initialize subfile for enquiry/delete
+      *   CONTRL  Control display of subfile
+      *   DSPLY   Display initial screen or subfile
+      *   VALID   Validate initial screen
+      *   NEXTP   Create page of subfile records
+      *   CONVRT  Convert destination or ordering bank/customer code
+      *           and entry to a client name
+      *   DBERR   Error handling
+      *   ZSEDIT  Insert a decimal point and sign into a numeric field
+      *           and to blank out leading zeros (optionally inserting
+      *                                                       commas)
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+     E                    @TX     1   4 80
+     E                    @TX2    1   1 40
+     E                    @TX3        1 30
+     E                    @EA        40  4               Error codes
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+      /COPY ZSRSRC,ZSEDITZ1
+      *
+      /EJECT
+     I* Rename the branch field BRCA in Acnuma to avoid corruption of
+     I* BRCA field in Incinbb and Incinob
+     I*
+     I* Rename of Profit Centre to avoid overwriting
+     I*
+     IACCNTABF
+     I              BRCA                            BRCH
+     I              PRFC                            ACPRFC
+     I*
+      * Data structure for compilation - Copyright insertion
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *  Error reporting data structure
+     ILDA         DS                            256
+     I                                      134 141 @DBFIL
+     I                                      142 170 @DBKEY
+     I                                      171 180 @DBPGM
+     I                                      181 1830@DBASE
+     I                                      134 183 @DBALL
+      *  Program status data structure
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USR
+     I*                                      96 101 @CMBR
+      *  Data structure to insert variables into error message
+     I@ERR        DS                             76
+     I                                        6  14 @SJOB
+      *  Data structure used as key to nostros - TABLETL
+     I@KEYNO      DS                             12
+     I                                        8  10 @NCCY
+     I                                       11  12 @NOSN
+      *  Data structure used to redefine CNUM as alpha
+     I            DS
+     I**********                              1   60CNUM                                      CSD027
+     I                                        1   6 CNUM                                      CSD027
+     I                                        1   6 CNUMA
+     I*  Data structure to redefine fields in the subfile
+     I***@SFLIN*     DS                             73                                        CGL029
+     I**********                              1  15 @PREF                                     CGL029
+     I**********                             17  30 @SEND                                     CGL029
+     I**********                             32  38 @VLDAT                                    CGL029
+     I**********                             40  42 @CCY                                      CGL029
+     I**********                             44  60 @AMNT                                     CGL029
+     I**********                             62  73 @ACWB                                     CGL029
+     I**********                             11  13 @SBRCH                                    CGL029
+     I**********                             15  44 @SBRNM                                    CGL029
+      *                                                                                       CGL029
+     I@SFLN1      DS                                                                          CGL029
+     I                                        2  16 @PREF                                     CGL029
+     I                                       18  38 @SEND                                     CGL029
+     I                                       40  46 @VLDAT                                    CGL029
+     I                                       48  50 @CCY                                      CGL029
+     I                                       11  13 @SBRCH                                    CGL029
+     I                                       15  51 @SBRNM                                    CGL029
+     I                                       52  68 @AMNT                                     CGL029
+      *                                                                                       CGL029
+     I@SFLN2      DS                                                                          CGL029
+     I                                        2  22 @ACWB                                     CGL029
+      /COPY ZSRSRC,ZSEDITZ2
+      *  Data structure to strip last character from ZSEDIT output
+     I            DS
+     I                                        1  21 ZOUT21
+     I                                        1  20 ZOUT20
+      *
+     I            DS
+     I                                        1   60@DATE
+     I                                        1   20DD
+     I                                        3   40MM
+     I                                        1   20MM1                   195352
+     I                                        3   40DD1                   195352
+     I                                        5   60YY
+     I                                        7  13 @VALD
+     I                                        7   80@DD
+     I                                        9  11 @MMM
+     I                                       12  130@YY
+      *  Data Structure for AOIBANR4                                      CFT004
+      *                                                                   CFT004
+     IP@ACCN    E DSACCNTAB                                               CFT004
+     I              CNUM                            IBCNUM                CFT004
+     I              BRCA                            IBRCA                 CFT004
+     I              PRFC                            IPRFC                 CFT004
+      *                                                                   CFT004
+      *
+      **  Data structure to retrieve Rundate
+     IRUNDAT      DS                             13
+     I                                        1   7 SRUNA
+     I                                       12  12 DATF                  195352
+      *
+      ** Dummy data structures to return the record accessed
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     ISDGELR    E DSSDGELRPD
+     ISDCURR    E DSSDCURRPD
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+     ISDNOST    E DSSDNOSTPD
+     I              QQACCD                          QQACC1                                    CGL029
+      *                                                                   CAP136
+      ** Externally described DS for SAR details                          CAP136
+     ISCSARD    E DSSCSARDPD                                              CAP136
+     I              LCD                             SLCD                  CAP136
+      *                                                                   CAP136
+     I/COPY WNCPYSRC,FT0180I001
+     I*
+      /EJECT
+      *
+      *
+      * Initialize program
+     C                     MOVEACPY@      BIS@   80
+     C                     EXSR INIT
+      *
+      * Repeat main processing until F3 pressed
+     C           *INKC     DOUEQ'1'                        B001
+      *
+      * Initial fill of subfile
+     C                     EXSR SETUP
+      *
+      * Display/validate subfile
+     C                     EXSR CONTRL
+      *
+     C                     END                             E001
+      *
+      * Terminate program
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *  PLIST's, KLIST's, DEFN's etc....                             *
+      *****************************************************************
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LIKE     DEFN @DBALL    @DBSAV
+      *
+      /EJECT
+      *******************************************************************
+      *  INIT  Program initialization                                   *
+      *******************************************************************
+     C           INIT      BEGSR
+     C*
+     C** Entry Parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @BRCH   3
+     C                     PARM           @BORO   1
+     C                     PARM           @PCMD   1
+      *
+      * Extract General Ledger details
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      * Check if Multibranching ON
+      *
+     C           @BORO     IFNE 'N'
+     C                     SETON                     10
+      *
+      * Seton Originating Branch/Booking Branch Indicator
+     C           @BORO     IFEQ 'O'
+     C                     SETON                     11
+     C                     END
+      *
+      * Seton Branch='ALL' Indicator
+     C           @BRCH     IFEQ 'ALL'
+     C                     SETON                     15
+     C                     END
+      *
+     C           @BORO     IFEQ *BLANKS
+     C                     MOVE 'B'       @BORO
+     C                     END
+      *
+      * If Multibranch  ON  check branch name valid by calling 'AOBRCHR0'
+     C           @BRCH     IFNE 'ALL'
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @BRCH     @BRCD   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C                     MOVE A8BRNM    @BRNM
+     C                     END
+     C*
+     C* Else if Multibranching OFF, check user authority to the action
+     C* code
+     C                     ELSE
+     C                     CALL 'ZVACTU'
+     C                     PARM 'A'       ZACTN
+     C                     PARM           ERR
+     C*
+     C           ERR       IFEQ 1
+     C                     SETON                     16
+     C                     END
+     C*
+     C                     END
+      *                                                                   CFT004
+      *** Check if CFT004 is switched on                                  CFT004
+      *                                                                   CFT004
+     C                     CALL 'AOSARDR0'                                CFT004
+     C                     PARM '       ' @RTCD   7                       CFT004
+     C                     PARM '*VERIFY' @OPTN                           CFT004
+     C                     PARM 'CFT004'  @SARD   6                       CFT004
+      *                                                                   CFT004
+     C           @RTCD     IFEQ *BLANK                                    CFT004
+     C                     MOVE 'Y'       CFT004  1                       CFT004
+     C                     ELSE                                           CFT004
+     C                     MOVE 'N'       CFT004                          CFT004
+     C                     ENDIF                                          CFT004
+      *                                                                   CAP136
+      ** Access SAR file to determine if CAP136 (New Maint.               CAP136
+      ** Funct - Incoming Payments) is installed.                         CAP136
+      *                                                                   CAP136
+     C                     CALL 'AOSARDR0'                                CAP136
+     C                     PARM *BLANKS   @RTCD                           CAP136
+     C                     PARM '*VERIFY' @OPTN                           CAP136
+     C                     PARM 'CAP136'  @SARD                           CAP136
+     C           SCSARD    PARM SCSARD    DSFDY                           CAP136
+      *                                                                   CAP136
+      ** An NRF (No Record Found) return code is valid.                   CAP136
+      ** Issue database error only for error return codes.                CAP136
+      *                                                                   CAP136
+     C           @RTCD     IFNE *BLANKS                                   CAP136
+     C           @RTCD     ANDNE'*NRF   '                                 CAP136
+     C                     MOVEL'CAP136'  @DBKEY                          CAP136
+     C                     MOVEL'SCSARDPD'@DBFIL                          CAP136
+     C                     Z-ADD14        @DBASE                          CAP136
+     C                     EXSR DBERR                                     CAP136
+     C                     ENDIF                                          CAP136
+      *                                                                   CAP136
+     C           @RTCD     IFEQ *BLANK                                    CAP136
+     C                     MOVEL'Y'       CAP136  1                       CAP136
+     C                     MOVEL'FTIPAY'  PPGM   10                       CAP136
+     C                     MOVE 'SIN '    PPGM                            CAP136
+     C                     ELSE                                           CAP136
+     C                     MOVEL'N'       CAP136                          CAP136
+     C                     MOVE *BLANKS   PPGM                            CAP136
+     C                     ENDIF                                          CAP136
+      *
+      *  Access data area RUNDAT for Run Date
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      * Setup key list for accessing Incinbb/Incinob
+      *
+     C           INKEY     KLIST
+     C                     KFLD           KBRCH   3
+     C                     KFLD           OEDT    50                      129366
+     C                     KFLD           PREF
+      *
+      * edit code for ZSEDIT subroutine
+     C                     MOVE 'J'       ZECODE
+      *
+     C                     SETOF                     05
+      *
+     C/COPY WNCPYSRC,FT0180C001
+      *                                                                   CFT014
+      ** Access SAR file to determine if CFT014 is installed.             CFT014
+      *                                                                   CFT014
+     C                     CALL 'AOSARDR0'                                CFT014
+     C                     PARM *BLANKS   @RTCD                           CFT014
+     C                     PARM '*VERIFY' @OPTN                           CFT014
+     C                     PARM 'CFT014'  @SARD                           CFT014
+     C           SCSARD    PARM SCSARD    DSFDY                           CFT014
+      *                                                                   CFT014
+     C           @RTCD     IFEQ *BLANKS                                   CFT014
+     C                     MOVE 'Y'       CFT014  1                       CFT014
+     C                     OPEN INPAYXL2                                  CFT014
+     C                     ELSE                                           CFT014
+      *                                                                   CFT014
+      ** An NRF (No Record Found) return code is valid.                   CFT014
+      ** Issue database error only for error return codes.                CFT014
+      *                                                                   CFT014
+     C           @RTCD     IFNE '*NRF   '                                 CFT014
+     C                     Z-ADD001       @DBASE                          CFT014
+     C                     MOVEL'CFT014'  @DBKEY                          CFT014
+     C                     MOVEL'SCSARDPD'@DBFIL                          CFT014
+     C                     EXSR DBERR                                     CFT014
+     C                     ENDIF                                          CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT014
+     C                     ENDSR                           INIT  ends
+      /EJECT
+      *******************************************************************
+      *  SETUP  - Set up subfile                                        *
+      *******************************************************************
+     C           SETUP     BEGSR
+      *
+      * Protect initial screen fields, clear s/file
+     C                     SETOF                       2430
+     C                     SETOF                     2629
+     C                     SETOF                     44  28
+     C                     SETON                     2325
+      *
+     C                     MOVE *BLANKS   WBRCA
+     C                     MOVE *BLANKS   WORBR
+     C                     MOVE *BLANKS   WBRCH
+      *
+     C                     Z-ADD1         @SFREC
+     C                     Z-ADD1         @SFK    50
+     C                     TIME           TIME
+     C                     WRITEFT0180F1
+      *
+      * Fill the s/file from the payments awaiting completion file
+     C                     MOVE *LOVAL    PREF
+     C                     MOVE *LOVAL    OEDT                            129366
+      *
+     C           @BRCH     IFNE 'ALL'
+     C                     MOVEL@BRCH     KBRCH
+     C                     ELSE
+     C                     MOVEL*LOVAL    KBRCH
+     C                     END
+      *
+      * Read first record of Incinbb/Incinob depending on parameters
+     C           @BORO     IFEQ 'O'
+     C           INKEY     SETLLINCIOBDF             01
+     C                     ELSE
+     C           INKEY     SETLLINCIBBDF             01
+     C                     END
+     C                     EXSR NEXREC
+      *
+      * If no payments awaiting completion, output message, else
+      * fill the subfile with payments
+     C           *IN01     IFEQ '1'
+      *
+     C           *IN12     IFEQ '1'
+     C                     MOVEA@TX,2     @EA,1
+     C                     ELSE
+     C           *IN14     IFEQ '1'
+     C                     MOVEA@TX,3     @EA,1
+     C                     ELSE
+     C                     MOVEA@TX,1     @EA,1
+     C                     END
+     C                     END
+      *
+     C                     MOVEA@EA,1     @ERR
+     C                     SETON                     5046
+     C                     ELSE
+     C           *IN16     IFEQ '1'
+     C                     MOVEA@TX,4     @EA,1
+     C                     MOVEA@EA,1     @ERR
+     C                     SETON                     50
+     C                     END
+     C                     EXSR SFFILL
+     C                     Z-ADD@SFK      @SFR    40
+     C                     END
+      *
+      * Subfile now full
+     C                     SETOF                     23
+     C                     SETON                     30
+      *
+      *
+     C                     ENDSR                           SETUP  ends
+      /EJECT
+      *******************************************************************
+      *  CONTRL - Control display/validation of s/file 1                *
+      *******************************************************************
+     C           CONTRL    BEGSR
+      *
+      * Display current screen if transaction processing elsewhere
+      *
+     C                     MOVE '1'       WKRLCK  1
+     C           WKRLCK    DOWEQ'1'
+     C                     MOVE '0'       WKRLCK
+      *
+      * Display s/file 1
+      *
+     C                     EXSR DSPLY
+      *
+      * Subfile now valid
+      * Read all changed records in the subfile
+      *
+     C           *IN02     DOUEQ'1'                        B001
+     C                     READCFT0180F0                 02
+      *
+      * For each record read with selection field = '1' call
+      * authorisation program
+      *
+     C           *IN02     IFEQ '0'                        B002
+     C           @DET      ANDEQ'1'
+      *
+      * Call CL program to check for other users
+      *
+     C                     MOVE 'FT'      @MODLE  2
+     C                     MOVE @PREF     @TREF  15
+     C                     MOVE *BLANKS   @RTINF 80
+     C                     MOVE *BLANKS   @RTCDE  7
+     C                     CALL 'AOC8000'
+     C                     PARM           @RTCDE
+     C                     PARM           @MODLE
+     C                     PARM           @TREF
+     C                     PARM           @RTINF
+      *
+      *  If 'IN USE' then redisplay subfile with error message
+      *
+     C           @RTCDE    IFEQ '*IN USE'
+      *
+      * If this record is in error, and the SFLRCDNBR field has not yet
+      * been set, set it to the record number of this record
+      *
+     C           @SFREC    IFEQ -1
+     C                     Z-ADD@SFK      @SFREC
+     C                     END
+      *
+     C                     MOVE '1'       WKRLCK
+     C                     MOVEA@RTINF    @TX3
+     C                     MOVEA@TX2,1    @EA,1
+     C                     MOVEA@TX3,1    @EA,11
+     C                     MOVEA@EA,1     @ERR
+     C                     SETON                     445026
+      *
+      * Update s/file record and leave the READC DO loop
+      *
+     C                     UPDATFT0180F0
+     C                     LEAVE
+     C                     ELSE
+      *
+      * If transaction NOT already in use, CALL maintenance program
+      *
+     C                     MOVE *BLANK    @RETC
+      *                                                                   CAP136
+     C           CAP136    IFNE 'Y'                                       CAP136
+     C                     CALL 'FTC0050'              05
+     C                     PARM 'A'       @SORT   1
+     C                     PARM           @PREF
+     C                     PARM           @RETC   1
+     C                     PARM 'Y'       @LINK   1
+     C                     ELSE                                           CAP136
+     C                     CALL 'FTC0051'              05                 CAP136
+     C                     PARM           PPGM                            CAP136
+     C                     PARM 'A'       @SORT                           CAP136
+     C                     PARM           @PREF                           CAP136
+     C                     PARM           @RETC                           CAP136
+     C                     PARM 'Y'       @LINK                           CAP136
+     C                     PARM '1'       PLEVEL  1                       CAP136
+     C                     ENDIF                                          CAP136
+      *
+     C           *IN05     IFEQ '1'                        B006
+     C                     Z-ADD12        @DBASE           ***************
+     C                     MOVEL*BLANKS   @DBFIL           * DB ERROR 12 *
+     C                     MOVEL'FT0050'  @DBKEY           ***************
+     C                     EXSR DBERR
+     C                     END                             E006
+      *
+      * Call CL program to clear used transaction reference
+      *
+     C                     EXSR DALLOC
+      *
+      * Clear selection fields of subfile record
+      *
+     C                     MOVE *BLANK    @DET
+     C                     UPDATFT0180F0
+     C                     SETOF                     26
+      *
+      * If CMD 7 NOT pressed check for CMD1,5 or Dbase error
+      *
+     C           @RETC     IFNE '7'
+      *
+      * Return code of 1 (F3 pressed) or database error in FT0050 -
+      * exit program
+      *
+     C           @RETC     IFEQ '1'
+     C           @RETC     OREQ '*'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *
+      * Return code of 5 (F12 pressed) - stop processing selections
+      * and redisplay subfile
+      *
+     C           @RETC     IFEQ '5'
+     C                     SETON                     02
+     C                     END
+     C*
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR                           CONTRL ends
+      /EJECT
+      *******************************************************************
+      *  DSPLY  - Display initial screen and s/file 1                   *
+      *******************************************************************
+     C           DSPLY     BEGSR
+      *
+      * Process screen until no errors
+     C           *IN50     DOUEQ'0'
+      *
+      * Process while ROLLUP pressed
+     C           *IN29     DOUEQ'0'                        B001
+      *
+      * Display screen
+     C                     TIME           TIME
+     C                     WRITEFT0180F2                                  CAAA02
+     C                     WRITEFT0180F1
+     C************         WRITEFT0180F2                                  CAAA02
+      *
+     C                     READ FT0180F1                 01
+      *
+      * Add new page to subfile if ROLLLUP pressed
+     C   29                EXSR NEXTP
+     C                     END                             E001
+      *
+      * Exit if F3 pressed
+      * or if F12 pressed
+     C           *INKC     IFEQ '1'                        B001
+     C           *INKL     OREQ '1'
+     C           *INKC     IFEQ '1'
+     C                     MOVE '*'       @PCMD
+     C                     END
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E001
+      *
+      * Validate subfile if there were payments awaiting completion
+      * i.e. file not empty
+     C  N46                EXSR VALID
+     C   50                MOVEA@EA,1     @ERR
+     C                     END
+      *
+     C                     ENDSR                           DSPLY  ends
+      /EJECT
+      *******************************************************************
+      *  VALID  - Validate s/file                                       *
+      *******************************************************************
+     C           VALID     BEGSR
+      *
+      * Reset fields
+     C                     Z-ADD-1        @SFREC
+     C                     Z-ADD1         I       20
+     C                     MOVEA*BLANKS   @EA
+     C                     SETOF                     0650
+      *
+      * Read all changed records in the subfile
+     C           *IN02     DOUEQ'1'                        B001
+     C                     READCFT0180F0                 02
+     C           *IN02     IFEQ '0'                        B002
+      *
+      * Reset indicators
+     C                     SETON                     06
+     C                     SETOF                       4426
+      * Select payment flag must be 1 if entered
+     C           @DET      IFNE *BLANKS                    B004
+     C           @DET      IFNE '1'
+     C                     SETON                     50  44
+      *
+      * Check that error code is not already in error array
+     C           ' 001'    LOKUP@EA                      03
+     C           *IN03     IFEQ '0'                        B005
+     C                     MOVEL' 001'    @EA,I
+     C                     ADD  1         I
+     C                     END                             E005
+      * Else, @DET eq '1'
+     C                     ELSE
+      *
+      * Check users authority to Branch if Multibranch ON, @BRCH ='ALL'
+     C           *IN10     IFEQ '1'
+     C           @BRCH     ANDEQ'ALL'
+     C           @HBRCA    IFNE WBRCA
+     C                     MOVE @HBRCA    WBRCA   3
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'A'       ZACTN   1
+     C                     PARM @HBRCA    ZBR     3
+     C                     PARM           ERR     10
+     C                     Z-ADDERR       WERR1   10
+     C                     ELSE
+     C                     Z-ADDWERR1     ERR
+     C                     END
+      *
+      * User not authorised to any action codes for this item and branch
+     C           ERR       IFEQ 1
+     C                     SETON                     4450
+     C           ' 303'    LOKUP@EA                      03
+     C           *IN03     IFEQ '0'
+     C                     MOVE '303'     @EA,I
+     C                     ADD  1         I
+     C                     END
+     C                     ELSE
+      *
+      * User not authorised to action code for this particular item
+      * and branch
+     C           ERR       IFEQ 2
+     C                     SETON                     4450
+     C           ' 304'    LOKUP@EA                      03
+     C           *IN03     IFEQ '0'
+     C                     MOVE '304'     @EA,I
+     C                     ADD  1         I
+     C                     END
+     C                     END
+     C                     END
+      *
+      * Check if Originating Branch User Validation is required
+     C           BKOBUV    IFEQ 'Y'
+     C           @HORBR    IFNE WORBR
+     C                     MOVE @HORBR    WORBR   3
+     C                     CALL 'ZVOBU'
+     C                     PARM @HORBR    ZOBRX   3
+     C                     PARM           ERR     10
+     C                     Z-ADDERR       WERR2   10
+     C                     ELSE
+     C                     Z-ADDWERR2     ERR
+     C                     END
+      *
+      ** User is not authorised to any Originating Branches
+     C           ERR       IFEQ 1
+     C                     SETON                     4450
+     C           ' 305'    LOKUP@EA                      03
+     C           *IN03     IFEQ '0'
+     C                     MOVE '305'     @EA,I
+     C                     ADD  1         I
+     C                     END
+     C                     ELSE
+      *
+      ** User is not authorised to this particular Originating Branch
+     C           ERR       IFEQ 2
+     C                     SETON                     4450
+     C           ' 306'    LOKUP@EA                      03
+     C           *IN03     IFEQ '0'
+     C                     MOVE '306'     @EA,I
+     C                     ADD  1         I
+     C                     END
+     C                     END
+     C                     END
+      * End, BROBUV ifeq 'Y'
+     C                     END
+      * End, *IN10 ifeq'1' (ie multibranching) , @BRCH='ALL'
+     C                     END
+      * End, @DET ifne '1'
+     C                     END
+      *
+     C                     END                             E004
+     C           *IN44     IFEQ '1'                        B003
+     C                     SETON                     26
+     C                     END                             E003
+      *
+      * If this record is in error, and the SFLRCDNBR field has not yet
+      * been set, set it to the record number of this record
+     C           @SFREC    IFEQ -1                         B003
+     C           *IN50     ANDEQ'1'
+     C                     Z-ADD@SFK      @SFREC
+     C                     END                             E003
+     C                     SETON                     26  08
+      *
+      * Update s/file record
+     C                     UPDATFT0180F0
+      *
+     C                     END                             E002
+     C                     END                             E001
+      *
+     C                     ENDSR                           VALID  ends
+      /EJECT
+      *******************************************************************
+      *  NEXTP  - Add a page of records to subfile                      *
+      *******************************************************************
+     C           NEXTP     BEGSR
+      *
+      *
+     C                     SETOF                     26  28
+     C                     SETOF                         44
+     C                     SETON                         25
+      *
+     C                     Z-ADD@SFR      @SFK
+     C                     Z-ADD@SFK      @SFREC
+     C                     EXSR SFFILL
+     C                     Z-ADD@SFK      @SFR
+      *
+     C                     ENDSR                           NEXTP  ends
+      /EJECT
+      *******************************************************************
+      *  SFFILL - Write a page of records to the subfile                *
+      *******************************************************************
+     C           SFFILL    BEGSR
+      *
+      * Write a page of records
+     C           *IN01     IFEQ '0'
+     C/COPY WNCPYSRC,FT0180C002
+     C                     SETON                     24
+     C                     Z-ADD1         Z
+      *
+      * Do while Z is less than 17 and not end of file
+     C           Z         DOWLT17                         B001
+     C           *IN01     ANDEQ'0'
+      *
+      * Detect if there has been a change in branch for next record read
+     C           @BRCH     IFEQ 'ALL'                      B01
+     C           @BORO     IFEQ 'O'                        B02
+     C           ORBR      ANDNEWBRCH
+     C           @BORO     OREQ 'B'
+     C           BRCA      ANDNEWBRCH
+      *
+      *  Output a subheading if branch has changed
+     C           Z         IFLT 16
+     C                     EXSR TITLE
+     C                     ELSE
+     C**********           MOVE *BLANKS   @SFLIN                                              CGL029
+     C                     MOVE *BLANKS   @SFLN1                                              CGL029
+     C                     MOVE *BLANKS   @SFLN2                                              CGL029
+     C                     ADD  1         Z
+     C                     SETON                     4528
+     C                     WRITEFT0180F0
+     C                     ADD  1         @SFK
+     C                     SETOF                     4528
+     C                     END
+     C*
+     C                     END                             E02
+     C                     END                             E01
+      *
+      * Continue if Z is less than 17
+     C           Z         IFLT 17
+      * Selection field
+     C                     MOVE *BLANK    @DET
+      * Blank out subfile line
+     C**********           MOVE *BLANKS   @SFLIN                                              CGL029
+     C                     MOVE *BLANKS   @SFLN1                                              CGL029
+     C                     MOVE *BLANKS   @SFLN2                                              CGL029
+      * Payment reference
+     C                     MOVE PREF      @PREF
+      * Sender
+     C           INTRIT    IFEQ 'F'                                       CFT014
+     C           INTRIT    OREQ 'G'                                       CFT014
+     C           INTRIT    OREQ 'I'                                       CFT014
+     C           CFT004    ANDEQ'Y'                                       CFT014
+     C           INTRIT    OREQ 'R'                                       CFT014
+     C                     MOVE INTRIT    @TYPE                           CFT014
+     C           INTRIT    IFEQ 'I'                                       CFT014
+     C                     MOVE *BLANKS   WFLD35 35                       CFT014
+     C                     MOVE INTRIB    WFLD35                          CFT014
+     C                     ELSE                                           CFT014
+     C                     MOVE *BLANKS   @FLD15                          CFT014
+     C                     MOVELINTRIB    @FLD15                          CFT014
+     C                     ENDIF                                          CFT014
+     C                     ELSE                                           CFT014
+     C***********RCRT      IFEQ 'N'                                       CFT014
+     C           INRCRT    IFEQ 'N'                                       CFT014
+     C***********          MOVELRCCO      @FLD2   2                       CFT014
+     C                     MOVELINRCO1    @FLD2   2                       CFT014
+     C                     MOVELSMCY      @FLD5
+     C                     MOVE @FLD2     @FLD5
+     C                     END
+     C***********RCRT      IFEQ 'C'
+     C***********RCRT      OREQ 'G'
+     C***********RCRT      OREQ 'P'
+     C***********RCRT      OREQ 'R'
+     C***********RCRT      OREQ 'N'
+     C           INRCRT    IFEQ 'C'                                       CFT014
+     C           INRCRT    OREQ 'G'                                       CFT014
+     C           INRCRT    OREQ 'P'                                       CFT014
+     C           INRCRT    OREQ 'R'                                       CFT014
+     C           INRCRT    OREQ 'N'                                       CFT014
+     C           INRCRT    OREQ 'F'                                       CFT014
+     C           INRCRT    OREQ 'S'                                       CFT014
+     C           INRCRT    OREQ 'A'                                       CFT014
+     C           INRCRT    OREQ 'I'                                       CFT014
+     C           CFT004    ANDEQ'Y'                                       CFT014
+     C***********          MOVE RCRT      @TYPE   1                       CFT014
+     C                     MOVE INRCRT    @TYPE   1                       CFT014
+     C           INRCRT    IFEQ 'I'                                       CFT014
+     C                     MOVE *BLANKS   WFLD35                          CFT014
+     C                     MOVELINRCO1    WFLD35                          CFT014
+     C                     ELSE                                           CFT014
+     C                     MOVE *BLANKS   @FLD15
+     C***********RCRT      IFEQ 'N'                                       CFT014
+     C           INRCRT    IFEQ 'N'                                       CFT014
+     C                     MOVEL@FLD5     @FLD15
+     C                     ELSE
+     C***********          MOVELRCCO      @FLD15 15                       CFT014
+     C**********           MOVELINRCO1    @FLD15 15                                    CFT014 CGL029
+     C                     MOVELINRCO1    @FLD15                                              CGL029
+     C                     END
+     C                     ENDIF                                          CFT014
+     C                     ELSE
+     C                     MOVE SNTP      @TYPE
+     C                     MOVE *BLANKS   @FLD15
+     C                     MOVELSND1      @FLD15
+     C                     END
+     C                     ENDIF                                          CFT014
+     C                     EXSR CONVRT
+     C                     MOVEL@OUT      @SEND
+     C/COPY WNCPYSRC,FT0180C003
+      * Value date
+     C                     Z-ADDSLDTD1    @DATE
+      *                                                                   195352
+      ** Check for the date format indicator                              195352
+      *                                                                   195352
+     C           DATF      IFEQ 'D'                                       195352
+     C                     Z-ADDDD        @DD
+     C                     Z-ADDYY        @YY
+     C                     MOVE ZMNM,MM   @MMM
+     C                     ELSE                                           195352
+     C                     Z-ADDDD1       @DD                             195352
+     C                     Z-ADDYY        @YY                             195352
+     C                     MOVE ZMNM,MM1  @MMM                            195352
+     C                     ENDIF                                          195352
+     C                     MOVEL@VALD     @VLDAT
+      * Currency
+     C                     MOVE SMCY      @CCY
+      * Amount
+      * Call access program to retrieve currency details
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SMCY      @ACCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     Z-ADDA6NBDP    @DEC    10
+     C                     MOVEL*BLANKS   ZFLD15
+     C                     MOVE SMAM      ZFLD15
+     C                     Z-ADD@DEC      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT20    @AMNT
+      * A/c with/beneficiary
+     C           ACBT      IFEQ 'N'
+     C                     MOVELACBK      @FLD2
+     C                     MOVELPCCY      @FLD5
+     C                     MOVE @FLD2     @FLD5
+     C                     END
+     C           ACBT      IFEQ 'C'
+     C           ACBT      OREQ 'G'
+     C           ACBT      OREQ 'P'
+     C           ACBT      OREQ 'R'
+     C           ACBT      OREQ 'N'
+     C           ACBT      OREQ 'F'
+     C           ACBT      OREQ 'S'
+     C                     MOVE ACBT      @TYPE   1
+     C                     MOVE *BLANKS   @FLD15
+     C           ACBT      IFEQ 'N'
+     C**********           MOVEL@FLD5     @FLD15 15                                           CGL029
+     C                     MOVEL@FLD5     @FLD15 21                                           CGL029
+     C                     ELSE
+     C**********           MOVELACBK      @FLD15 15                                           CGL029
+     C                     MOVELACBK      @FLD15                                              CGL029
+     C                     END
+     C                     ELSE
+     C                     MOVE BNCT      @TYPE
+     C           BNCT      IFEQ 'I'                                       CFT014
+     C           CFT004    ANDEQ'Y'                                       CFT014
+     C                     MOVE *BLANKS   WFLD35                          CFT014
+     C                     MOVELBNC1      WFLD35                          CFT014
+     C                     ELSE                                           CFT014
+     C                     MOVE *BLANKS   @FLD15
+     C                     MOVELBNC1      @FLD15
+     C                     MOVELBNC1      ##001   1                       S01435
+      *                                                                   S01435
+      *  If / then use second line if Customer or SWIFT                   S01435
+      *                                                                   S01435
+     C           ##001     IFEQ '/'                                       S01435
+     C           BNCT      ANDEQ'C'                                       S01435
+     C           ##001     OREQ '/'                                       S01435
+     C           BNCT      ANDEQ'S'                                       S01435
+     C                     MOVE *BLANKS   @FLD15                          S01117
+     C                     MOVELBNC2      @FLD15                          S01435
+     C                     END                                            S01435
+     C                     ENDIF                                          CFT014
+      *                                                                   S01435
+     C                     END
+     C                     EXSR CONVRT
+     C                     MOVEL@OUT      @ACWB
+     C/COPY WNCPYSRC,FT0180C004
+      * Hidden Branch code and Branch name
+     C                     MOVELBRCA      @HBRCA
+     C                     MOVELORBR      @HORBR
+      * If MBIN = N and User not authorised to the action code,
+      *  no selection entry allowed
+     C           *IN16     IFEQ '1'
+     C                     SETON                     2845
+     C                     END
+      *
+      * Write record to subfile and read next record
+     C                     WRITEFT0180F0
+     C                     ADD  1         @SFK
+     C                     EXSR NEXREC
+     C                     ADD  1         Z       30
+      * End, Z iflt 17
+     C                     END
+      * End, Z dowlt 17
+     C                     END
+      *
+     C           *IN01     IFEQ '0'
+      * Selection field - non display
+     C                     SETON                     4528
+      * Blank all other fields
+     C                     MOVE *BLANKS   @PREF
+     C                     MOVE *BLANKS   @SEND
+     C                     MOVE *BLANKS   @VALD
+     C                     MOVE *BLANKS   @VLDAT
+     C                     MOVE *BLANKS   @CCY
+     C                     MOVE *BLANKS   @AMNT
+     C                     MOVE *BLANKS   @ACWB
+      *
+     C                     WRITEFT0180F0
+     C                     ADD  1         @SFK
+     C                     SETOF                     254528
+     C                     END
+     C                     END                             E001
+      *
+     C                     ENDSR                           SFFILL ends
+      *
+      /EJECT
+      *******************************************************************
+      *  NEXREC - To retrieve next record from file INPAYDD             *
+      *           and INPAYXPD                                          * CFT014
+      *******************************************************************
+     C           NEXREC    BEGSR
+      *
+      * Consider Single Branch Mode or @BRCH='ALL'
+     C           @BRCH     IFEQ 'ALL'                      B001
+     C           @BORO     OREQ 'N'
+      *
+      * Consider @BORO='B' and single branch mode
+     C           @BORO     IFEQ 'B'                        B002
+     C           @BORO     OREQ 'N'
+     C                     READ INCIBBDF                 01
+     C                     ELSE                            X002
+      * @BORO not equal 'N'or'B' then it must equal 'O' ie: Orig Branch
+     C                     READ INCIOBDF                 01
+     C                     END                             E002
+      *
+      * Else Branch is not equal 'ALL'- we must perform a READE
+     C                     ELSE                            X001
+      *
+      * First consider @BORO='B'
+     C           @BORO     IFEQ 'B'                        B002
+      *
+      * Do until authorised record found or end of file reached
+     C           BKOBUV    DOUEQ'N'                        B003
+     C           BKOBUV    OREQ 'Y'
+     C           *IN12     ANDEQ'0'
+     C           BKOBUV    OREQ 'Y'
+     C           *IN01     ANDEQ'1'
+      *
+     C           @BRCH     READEINCIBBDF                 01
+      *
+      * Check user has authority to Originating Branch by calling ZVOBU
+     C           BKOBUV    IFEQ 'Y'
+     C           *IN01     ANDEQ'0'
+      *
+     C           ORBR      IFNE WORBR
+     C                     MOVE ORBR      WORBR   3
+     C                     SETON                     12
+     C                     CALL 'ZVOBU'
+     C                     PARM ORBR      ZOBRX   3
+     C                     PARM           ERR     10
+     C                     Z-ADDERR       WERR2   10
+     C                     ELSE
+     C                     Z-ADDWERR2     ERR
+     C                     END
+     C           ERR       IFEQ 0
+     C                     SETOF                     12
+     C                     END
+     C                     END
+      *
+     C                     END                             E003
+      *
+      * Else Originating Branch passed -  @BORO='O'
+     C                     ELSE                            X002
+      *
+      * Do until end of file or record with authority to insert is found
+     C           *IN01     DOUEQ'1'                        B003
+     C           *IN14     OREQ '0'
+     C           @BRCH     READEINCIOBDF                 01
+      *
+      * Check user has authority to insert by calling ZVACTBU
+     C           *IN01     IFEQ '0'
+     C           BRCA      IFNE WBRCA
+     C                     MOVE BRCA      WBRCA   3
+     C                     SETON                     14
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'A'       ZACTN   1
+     C                     PARM BRCA      ZBR     3
+     C                     PARM           ERR     10
+     C                     Z-ADDERR       WERR1   10
+     C                     ELSE
+     C                     Z-ADDWERR1     ERR
+     C                     END
+     C           ERR       IFEQ 0
+     C                     SETOF                     14
+     C                     END
+     C                     END
+     C                     END                             E003
+      *
+     C                     END                             E002
+      *
+     C                     END                             E001
+      *
+      ** Access extension record of Incoming Payment.                     CFT014
+      *                                                                   CFT014
+     C           CFT014    IFEQ 'Y'                                       CFT014
+     C           *IN01     ANDEQ'0'                                       CFT014
+      *                                                                   CFT014
+     C           PREF      CHAININPAYXL2             65                   CFT014
+      *                                                                   CFT014
+     C           *IN65     IFEQ '1'                                       CFT014
+     C           *IN65     OREQ '0'                                       CFT014
+     C           INRECI    ANDNE'D'                                       CFT014
+     C                     Z-ADD002       @DBASE                          CFT014
+     C                     MOVELPREF      @DBKEY                          CFT014
+     C                     MOVEL'INPAYXL2'@DBFIL                          CFT014
+     C                     EXSR DBERR                                     CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT014
+     C                     ENDIF                                          CFT014
+      *
+     C                     ENDSR                           NEXREC ends
+      /EJECT
+      *******************************************************************
+      *  TITLE  - To write out a subheading to the subfile              *
+      *******************************************************************
+     C           TITLE     BEGSR
+      *
+      * Write out a sub-heading for the next branch
+      * using Booking Branch/Originating Branch as appropriate
+     C**********           MOVE *BLANKS   @SFLIN                                              CGL029
+     C                     MOVE *BLANKS   @SFLN1                                              CGL029
+     C                     MOVE *BLANKS   @SFLN2                                              CGL029
+     C                     ADD  1         Z
+     C                     SETON                     4528
+      *
+      * Store new Branch into WBRCH
+     C           @BORO     IFEQ 'O'                        B02
+     C                     MOVE ORBR      WBRCH   3
+     C                     ELSE                            X02
+     C                     MOVE BRCA      WBRCH
+     C                     END                             E02
+     C                     MOVE WBRCH     @SBRCH
+      *
+      * Call 'AOBRCHR0' to retrieve branch name and put into sub-heading
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WBRCH     @BRCD   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C**********           MOVE A8BRNM    @SBRNM                                              CGL029
+     C                     MOVELA8BRNM    @SBRNM                                              CGL029
+      *
+      * Write sub-heading to screen and reset @SFLIN
+     C                     WRITEFT0180F0
+     C                     ADD  1         @SFK
+     C                     SETOF                     4528
+     C**********           MOVE *BLANKS   @SFLIN                                              CGL029
+     C                     MOVE *BLANKS   @SFLN1                                              CGL029
+     C                     MOVE *BLANKS   @SFLN2                                              CGL029
+      *
+     C                     ENDSR                           TITLE  ends
+      /EJECT
+      *******************************************************************
+      *  CONVRT - To translate type into destination or ord bnk/cus     *
+      *******************************************************************
+     C           CONVRT    BEGSR
+      *
+     C           @TYPE     IFEQ 'C'
+     C           @TYPE     OREQ 'G'
+     C           @TYPE     OREQ 'P'
+     C*
+     C** In multibranching , rightmost character of FLD15 can
+     C** contain negative value if moved to numeric field.Therefore
+     C** move to CNUMA instead of CNUM.
+     C*
+     C                     MOVEL@FLD15    CNUMA
+     C                     END
+      *
+     C           @TYPE     IFEQ 'R'
+     C                     MOVEL@FLD15    @ACNUM 100
+     C           @ACNUM    CHAINACNUMA               05
+     C           *IN05     IFEQ '1'                        B002
+     C           RECI      OREQ 'C'
+     C                     Z-ADD6         @DBASE           ***************
+     C                     MOVEL'ACNUMA'  @DBFIL           * DB ERROR 06 *
+     C                     MOVEL@ACNUM    @DBKEY           ***************
+     C                     EXSR DBERR
+     C                     END                             E002
+     C                     END
+      *
+     C           @TYPE     IFEQ 'N'
+     C           @TYPE     OREQ 'F'
+     C                     MOVEL@FLD15    @NCCY
+     C                     MOVEL@FLD15    @FLD5   5
+     C                     MOVE @FLD5     @NOSN
+      * Call access program to retrieve nostro details
+     C/COPY WNCPYSRC,FT0180C005
+     C                     CALL 'AONOSTR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM *BLANKS   @CUST   6
+     C                     PARM @NCCY     @NOSTC  3
+     C**********           PARM *BLANKS   @ACCD   4                                           CGL029
+     C                     PARM *BLANKS   @ACCD  10                                           CGL029
+     C                     PARM *BLANKS   @ACSN   2
+     C                     PARM @NOSN     @NOSTN  2
+     C                     PARM *BLANKS   @BRCD   3
+     C                     PARM *BLANKS   @CUSN  10
+     C                     PARM *BLANKS   @PNOI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+     C                     MOVE A7CUST    CNUM
+     C                     END
+      *
+      *  Check if Account type is IBAN                                    CFT004
+     C           CFT004    IFEQ 'Y'                                       CFT004
+     C           @TYPE     IFEQ 'I'                                       CFT004
+     C***********34        SUBSTBNC1:2    P@IBN  34                CFT004 CFT014
+     C           34        SUBSTWFLD35:2  P@IBN  34                       CFT014
+     C                     MOVE *BLANKS   DSSDY                           CFT004
+     C                     CALL 'AOIBANR4'                                CFT004
+     C                     PARM           @RTCD                           CFT004
+     C                     PARM '*KEY   ' @OPTN   7                       CFT004
+     C                     PARM           P@IBN                           CFT004
+     C           P@ACCN    PARM           DSSDY                           CFT004
+     C           @RTCD     IFNE *BLANKS                                   CFT004
+     C                     MOVE *BLANKS   @DBKEY                          CFT004
+     C                     Z-ADD13        @DBASE           ***************CFT004
+     C                     MOVEL'ACCNTL6' @DBFIL           * DB ERROR 13 *CFT004
+     C                     MOVELP@IBN     @DBKEY           ***************CFT004
+     C                     EXSR DBERR                                     CFT004
+     C                     ENDIF                                          CFT004
+     C**********           Z-ADDIBCNUM    CNUM                                         CFT004 CSD027
+     C                     MOVE IBCNUM    CNUM                                                CSD027
+     C                     ENDIF                                          CFT004
+     C                     ENDIF                                          CFT004
+      *                                                                   CFT004
+     C           @TYPE     IFEQ 'A'
+     C           @TYPE     OREQ 'S'
+     C**********           MOVEL@FLD15    @OUT   15                                           CGL029
+     C                     MOVEL@FLD15    @OUT   21                                           CGL029
+     C                     ELSE
+      * Call access program to retrieve customer details
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CNUMA     @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C***********SDCUST    PARM SDCUST    DSFDY                           176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+     C                     MOVELBBCRNM    @OUT
+     C                     END
+      *
+     C                     ENDSR                           CONVRT ends
+      /EJECT
+      *******************************************************************
+      *  DBERR  - Error handling                                        *
+      *******************************************************************
+     C           DBERR     BEGSR
+      *
+     C                     DUMP
+     C                     MOVEL@DBALL    @DBSAV
+     C           *LOCK     IN   LDA
+     C                     MOVEL@DBSAV    @DBALL
+     C                     MOVEL'FT0180'  @DBPGM
+     C                     OUT  LDA
+      *
+      *  Allocate dataarea to blanks
+      *
+     C                     EXSR DALLOC
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR                           DBERR  ends
+      *
+      *******************************************************************
+      * SUBROUTINE TO DEALLOCATE DATAAREA
+      *******************************************************************
+      *
+     C           DALLOC    BEGSR                           *** DALLOC ****
+      *
+      * Call CL program to de-allocate
+      *
+     C                     MOVE *BLANKS   @RTCDE
+     C                     MOVE 'FT'      @MODLE
+     C                     MOVE *BLANKS   @TREF
+     C                     MOVE *BLANKS   @RTINF
+     C                     CALL 'AOC8000'
+     C                     PARM           @RTCDE
+     C                     PARM           @MODLE
+     C                     PARM           @TREF
+     C                     PARM           @RTINF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**  @TX - Large text strings
+ No payments awaiting completion
+ No payments for which user has authority to Originating Branch
+ No payments for which user has authority to Amend for Booking Branch
+ User not authorised to the action code for this menu item
+**  @TX2 - Large text strings
+Transaction processing already started
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

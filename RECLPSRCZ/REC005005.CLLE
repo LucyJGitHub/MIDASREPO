@@ -1,0 +1,127 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Accounts Posting')                           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC005005 - Midas RE Accounts Posting                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL165             Date 17Feb15              */
+/*                      CRE083BM           Date 06Aug12              */
+/*                      CER055  *CREATE    Date 06Dec10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL165 - Dual Withholding Tax (Recompile)                   */
+/*       CRE083BM - COB Restructure - RE COB Optimisation Phase 1    */
+/*       CER055 - Penalty Interest on Exceeding Overdraft Limit      */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                     */                 /*CRE083BM*/
+             PGM        PARM(&CNAM &CSEQ)                                               /*CRE083BM*/
+ 
+/* Journalling variables */                                                             /*CRE083BM*/
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                  /*CRE083BM*/
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)                                  /*CRE083BM*/
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                                  /*CRE083BM*/
+             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(25)                                 /*CRE083BM*/
+             DCL        VAR(&SEVENT) TYPE(*CHAR) LEN(15)                                /*CRE083BM*/
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)                                   /*CRE083BM*/
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)                                   /*CRE083BM*/
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)                                    /*CRE083BM*/
+             DCL        VAR(&START) TYPE(*DEC) LEN(10 0)                                /*CRE083BM*/
+             DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)                               /*CRE083BM*/
+             DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CRE083BM*/
+             DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CRE083BM*/
+/**/                                                                                    /*CRE083BM*/
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('REC005005 - Midas RE Accounts Posting') +
+                          TOMSGQ(MRUNQ)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             CHGDTAARA  DTAARA(QTEMP/LDA) VALUE(*BLANK)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/**********  STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                  */                 /*CRE083BM*/
+/**********  MONMSG     MSGID(CPF8351)                               */                 /*CRE083BM*/
+/* Start Journalling */                                                                 /*CRE083BM*/
+             CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)                                        /*CRE083BM*/
+             CHGVAR     VAR(&STEXT) VALUE('Start of ' *CAT &CNAM +
+                          *CAT &CSEQA)                                                  /*CRE083BM*/
+             CHGVAR     VAR(&SEVENT) VALUE(&CNAM *TCAT &CSEQA)                          /*CRE083BM*/
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) FLAG('S') +
+                           TEXT(&STEXT)                                                 /*CRE083BM*/
+ 
+             CALL       PGM(RE005005)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/**********  COMMIT                                                  */                 /*CRE083BM*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+/**********  ROLLBACK                                                */                 /*CRE083BM*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000)                       */                 /*CRE083BM*/
+/* Begin recovery from error */                                                         /*CRE083BM*/
+/* Retrieve attributes of current job */                                                /*CRE083BM*/
+                                                                                        /*CRE083BM*/
+             RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)                                  /*CRE083BM*/
+                                                                                        /*CRE083BM*/
+/* Retrieve the most recent journal entry sequence number for the */                    /*CRE083BM*/
+/* specific job. */                                                                     /*CRE083BM*/
+                                                                                        /*CRE083BM*/
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) +
+                           TOENT(*FIRST) SEARCH(*DESCEND) +
+                           JOB(&NBR/&USR/&JOB) RTNSEQNBR(&START) +
+                           RTNRCV(&SJRNRCVR)                                            /*CRE083BM*/
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)                                 /*CRE083BM*/
+                  CHGVAR     VAR(&START) VALUE(0)                                       /*CRE083BM*/
+             ENDDO                                                                      /*CRE083BM*/
+                                                                                        /*CRE083BM*/
+/* Determine starting journal sequence number of current job. */                        /*CRE083BM*/
+/**/                                                                                    /*CRE083BM*/
+             SCRTVJEVT  EVENT(&SEVENT) FLAG('S') RECEIVER(&FJRNRCVR) +
+                           SEQ(&FINISH)                                                 /*CRE083BM*/
+                                                                                        /*CRE083BM*/
+/* Remove journal changes. */                                                           /*CRE083BM*/
+                                                                                        /*CRE083BM*/
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                           THEN(DO)                                                     /*CRE083BM*/
+                  RMVJRNCHG  JRN(ICJRN) FILE((ACCNTBY0) (REAOHSPD)) +
+                                FROMENT(&START) TOENT(&FINISH) +
+                                RCVRNG(&SJRNRCVR &FJRNRCVR)                             /*CRE083BM*/
+                  MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)                     /*CRE083BM*/
+             ENDDO                                                                      /*CRE083BM*/
+                                                                                        /*CRE083BM*/
+ 
+ /** Send error message */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          REC005005 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+/**********  ENDCMTCTL                                               */                 /*CRE083BM*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)               */                 /*CRE083BM*/
+ 
+             ENDPGM

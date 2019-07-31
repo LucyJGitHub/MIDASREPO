@@ -1,0 +1,623 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Complete Deal Amendable Fields - AU Rpt')
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - FX Dealer Module
+     F*                                                              *
+     F*     FX0230 - COMPLETE DEAL AMENDABLE FIELDS AUDIT REPORT     *
+     F*                                                              *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01319             Date 26Sep91               *
+     F*                 E23462             Date  1OCT90               *
+     F*                    E17661              DATE 17FEB90          *
+     F*                                                              *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01319 - Remove redundant processing                      *
+     F*  E23462 - REMOVE ALL REFERENCES TO DRS                       *
+     F*  E17661 - THE REPORT NAME IS NOT INITIALISED.                *
+     F*           THEREFORE IF *LDA IS NOT CLEAR THE PGM NAME IS     *
+     F*
+     F*                                                              *
+     F****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       61         OVERFLOW INDICATOR
+     F*       62         CHAIN FAIL ON LF/FXCDAFLL
+     F*       64         NOT REFLECTED IN DATABASE DUE TO CRASH
+     F*       65         ERROR INDICATOR - FILES OUT OF BALANCE.
+     F*       66         EXCEPTION ITEM APPEARS ON DETAIL REPORT.
+     F*       67         DETAILS IN AUDIT.
+     F*       68         FILE UPDATED BY PROGRAM OTHER THAN FX0030.
+     F*       69         END OF RECOVERY FILE REACHED.
+     F*       80         DATABASE ERROR INDICATOR.
+     F*       U7         DATABASE ERROR (JOB SWITCH).
+     F*       U8         DATABASE ERROR (JOB SWITCH).
+     F*       LR         LAST RECORD.
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFDICDRLLIF  E           K        DISK         KINFSR *PSSR
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     FFXCDAFLLIF  E                    DISK         KINFSR *PSSR
+     FFDRCVRLLIF  E           K        DISK         KINFSR *PSSR
+     F*FXAUDBRRO***E********************PRINTER******KINFSR**PSSR*********S01319
+     FFX0230AUO   E                    PRINTER      KINFSR *PSSR          S01319
+     F                                              KINFDS SPOOLU         S01319
+     FFXAUDCLLIP  E           K        DISK         KINFSR *PSSR
+     F*FX0230RRO***E*************61*****PRINTER******KINFSR**PSSR*********S01319
+     FFX0230P1O   E             61     PRINTER      KINFSR *PSSR      UC  S01319
+     F                                              KINFDS SPOOL          S01319
+     E                    CPY@    1   1 80
+     E**  ARRAY TO HOLD COPYRIGHT STATEMENT
+     E********************@T******1***2*80********************************S01319
+     E********************************************************************S01319
+     E****Array*to*hold*report*title.*************************************S01319
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I** Program status data structure
+     I*
+     I           UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I** L.D.A. Data Area to hold information on Database error.
+     I*
+     ISPOOL       DS                                                      S01319
+     I**   FILE INFORMATION DATA STRUCTURE                                S01319
+     I                                       83  92 SFILE                 S01319
+     I                                    B 123 1240SFNUM                 S01319
+     I**                                                                  S01319
+     ISPOOLU      DS                                                      S01319
+     I**   FILE INFORMATION DATA STRUCTURE                                S01319
+     I                                       83  92 SFILEU                S01319
+     I                                    B 123 1240SFNUMU                S01319
+     C/EJECT
+     C*
+     C**   PERFORM #A ONLY ON FIRST CYCLE.
+     C           *IN67     IFNE '1'                        B1
+     C                     EXSR #A                         *1
+     C                     END                             E1
+     C*
+     C                     EXSR #B
+     C*
+     C**  EXECUTE #C AT LR.
+     CLR                   EXSR #C
+     C*
+     C           ENDPGM    TAG                             **ENDPGM**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Index to subroutines - Order of listing due to frequency of  *
+     C*                         usage.                                *
+     C*                                                               *
+     C*   1. #B     - MAIN PROCESSING.                                *
+     C*   2. #BE    - CHECK FOR RECOVERY POCESSING                    *
+     C*   3. #BB    - MOVE FDAUDCLL TO PRINT FILE FIELDS - BEFORE     *
+     C*   4. #BD    - MOVE FDAUDCLL TO PRINT FILE FIELDS - AFTER      *
+     C*   5. #A     - INITIAL PROCESSING                              *
+     C*   6. #C     - TERMINATION PROCESSING.                         *
+     C*   7  #CA    - TERMINATION PROCESSING FOR NO DETAILS           *
+     C*   8. ZA0150 - ACCESSES ICD FILE.                              *
+     C*   9. *PSSR  - ERROR HANDLING SUB - ROUTINE.                   *
+     C*  10. #BA    - MOVE BLANKS TO PRINT FILE FIELDS - BEFORE       *
+     C*  11. #BC    - MOVE BLANKS TO PRINT FILE FIELDS - AFTER        *
+     C****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #B CARRIES OUT THE MAIN PROCESSING.                      *
+     C*        CALLED BY  : MAIN PROGRAM.                            *
+     C*        CALLS      : #BA #BB #BC #BD #BE                      *
+     C*                                                              *
+     C*        WORK FIELDS: @BRCA    FOR BRANCH CODE TEST.           *
+     C*                   : @CNMA    FOR CUSTOMER NAME TEST.         *
+     C*                   : @BKRA    FOR BROKER CODE TEST.           *
+     C*                   : @BKGA    FOR BROKERAGE CODE TEST.        *
+     C*                   : @DLSA    FOR DEALER SUB-TYPE CODE TEST.  *
+     C*                                                              *
+     C****************************************************************
+     C           #B        BEGSR
+     C*
+     C**  SET UP BEFORE AND ATER STATUS FIELDS FOR AUDIT DETAIL REPORT
+     C*
+     C**  IF JOURNAL ENTRY IS 'UB' OR 'BR' + LOGICALLY DELETED
+     C           FDENTT    IFEQ 'UB'                       B1
+     C           FDENTT    OREQ 'BR'                       X1
+     C           FDDLTF    IFEQ '*'                        B*2
+     C*
+     C                     EXSR #BA                        **2
+     C                     MOVE 'INS'     RRTYPE           **2
+     C                     ELSE                            X*2
+     C                     EXSR #BB                        **2
+     C                     MOVE FDBRCA    @BRCA            **2
+     C                     MOVE FDCNMA    @CNMA            **2
+     C                     MOVE FDBKRA    @BKRA            **2
+     C                     MOVE FDBKGA    @BKGA            **2
+     C                     MOVE FDDLSA    @DLSA            **2
+     C*
+     C                     MOVE 'AMD'     RRTYPE           **2
+     C*
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C**  IF JOURNAL ENTRY IS 'UP' OR 'UR' + LOGICALLY DELETED
+     C           FDENTT    IFEQ 'UP'                       B1
+     C           FDENTT    OREQ 'UR'                       X1
+     C           FDDLTF    IFEQ '*'                        B*2
+     C*
+     C                     EXSR #BC                        **2
+     C                     MOVE 'DEL'     RRTYPE           **2
+     C                     ELSE                            X*2
+     C                     EXSR #BC                        **2
+     C*
+     C**  ONLY IF FIELS HAVE CHANGED ARE THEY TO BE DISPLAYED
+     C           FDBRCA    IFNE @BRCA                      B**3
+     C                     MOVE FDBRCA    RRBRCA           ***3
+     C                     END                             E**3
+     C*
+     C           FDCNMA    IFNE @CNMA                      B**3
+     C                     MOVE FDCNMA    RRCNMA           ***3
+     C                     END                             E**3
+     C*
+     C           FDBKRA    IFNE @BKRA                      B**3
+     C                     MOVE FDBKRA    RRBKRA           ***3
+     C                     END                             E**3
+     C*
+     C           FDBKGA    IFNE @BKGA                      B**3
+     C                     MOVE FDBKGA    RRBKGA           ***3
+     C                     END                             E**3
+     C*
+     C           FDDLSA    IFNE @DLSA                      B**3
+     C                     MOVE FDDLSA    RRDLSA           ***3
+     C                     END                             E**3
+     C*
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C**  IF JOURNAL ENTRY IS 'PT'
+     C           FDENTT    IFEQ 'PT'                       B1
+     C                     EXSR #BA                        *1
+     C                     EXSR #BD                        *1
+     C                     MOVE 'INS'     RRTYPE           *1
+     C                     END                             E1
+     C*
+     C**  IF JOURNAL ENTRY IS 'DR' OR 'DL'
+     C           FDENTT    IFEQ 'DR'                       B1
+     C           FDENTT    OREQ 'DL'                       X1
+     C                     EXSR #BB                        *1
+     C                     EXSR #BC                        *1
+     C                     MOVE 'DEL'     RRTYPE           *1
+     C                     END                             E1
+     C*
+     C**  CHECK THAT JOURNAL SEQUENCE NUMBER IS NOT ON LF/FDRCVRLL
+     C                     EXSR #BE
+     C*
+     C**  CHECK THAT PROGRAM FX0030 UPDATED PROGRAM
+     C                     MOVEL'FX0030'  @PGM
+     C                     MOVE '0'       *IN68
+     C           FDPGM     IFNE @PGM                       B1
+     C                     MOVE '1'       *IN66            *1
+     C                     MOVE '1'       *IN68            *1
+     C                     END                             E1
+     C*
+     C**  OVERFLOW INDICATOR ON PRINT HEADINGS AND COLUMN HEADINGS
+     C           *IN61     IFEQ '1'                        B1
+     C                     WRITEFX0230R0                   *1
+     C                     WRITEFX0230R1                   *1
+     C                     MOVE '0'       *IN61            *1
+     C                     END                             E1
+     C*
+     C**  SET UP REMAINING PRINT LINE FIELDS.
+     C                     MOVE FDUSER    RRUSER
+     C                     MOVE FDTIME    RRTIME
+     C                     MOVE FDPGM     RRPGMA
+     C                     MOVE FDJOB     RRJOB
+     C*
+     C**  PRINT DETAIL LINE IF JOURNAL ENTRY IS NOT A BEFORE CODE
+     C           FDENTT    IFNE 'UB'                       B1
+     C           FDENTT    ANDNE'BR'                       X1
+     C                     WRITEFX0230R2                   *1
+     C                     END                             E1
+     C*
+     C           #B9       ENDSR                           **#B9**
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*   #BE CHECKS THAT NO RECOVERY PROCESSING HAS TAKEN PLACE AND *
+     C*                    DATABASE HAS BEEN UPDATED                 *
+     C*       CALLED BY  : MAIN PROCESSING.                          *
+     C*       CALLS      :                                           *
+     C*       WORK FIELDS:                                           *
+     C*                                                              *
+     C****************************************************************
+     C           #BE       BEGSR
+     C*
+     C**  RESET ERROR MESSAGE INDAICATOR AND READ FIRST RECORD
+     C                     MOVE '0'       *IN64
+     C           *LOVAL    SETLLRCVRYF
+     C                     READ RCVRYF                   69
+     C*
+     C**  DO WHILE RECORDS ARE READ
+     C           *IN69     DOWEQ'0'                        B1
+     C*
+     C           FDSEQN    IFLE TOPNT                      B*2
+     C           FDSEQN    ANDGEFRPNT                      X*2
+     C                     MOVE '1'       *IN64            **2
+     C                     GOTO #BE9                       **2
+     C                     END                             E*2
+     C*
+     C**  READ NEXT RECORD
+     C                     READ RCVRYF                   69*1
+     C                     END                             E1
+     C*
+     C           #BE9      ENDSR                           **BE9**
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*   #BB MOVE FDAUDCLL FIELDS TO BEFORE OUTPUT FIELDS           *
+     C*       CALLED BY  : MAIN PROCESSING.                          *
+     C*       CALLS      :                                           *
+     C*       WORK FIELDS:                                           *
+     C*                                                              *
+     C****************************************************************
+     C           #BB       BEGSR
+     C*
+     C**  MOVE FILE FIELDS TO BEFORE OUTPUT FIELDS
+     C                     MOVE FDBRCA    RRBRCB
+     C                     MOVE FDCNMA    RRCNMB
+     C                     MOVE FDBKRA    RRBKRB
+     C                     MOVE FDBKGA    RRBKGB
+     C                     MOVE FDDLSA    RRDLSB
+     C*
+     C           #BB9      ENDSR                           **BB9**
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*   #BD MOVE FDAUDCLL FIELDS TO AFTER OUTPUT FIELDS            *
+     C*       CALLED BY  : MAIN PROCESSING.                          *
+     C*       CALLS      :                                           *
+     C*       WORK FIELDS:                                           *
+     C*                                                              *
+     C****************************************************************
+     C           #BD       BEGSR
+     C*
+     C**  MOVE FILE FIELDS TO BEFORE OUTPUT FIELDS
+     C                     MOVE FDBRCA    RRBRCA
+     C                     MOVE FDCNMA    RRCNMA
+     C                     MOVE FDBKRA    RRBKRA
+     C                     MOVE FDBKGA    RRBKGA
+     C                     MOVE FDDLSA    RRDLSA
+     C*
+     C           #BD9      ENDSR                           **BD9**
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*    #A INITIALISES  PROGRAM.                                  *
+     C*       CALLED BY  : INITIAL PROCESSING.                       *
+     C*       CALLS      : ZA150                                     *
+     C*       WORK FIELDS: @PGM     FOR CORRECT PROGRAM TEST.        *
+     C*******************:*@T*******ARRAY*TO*HOLD*REPORT*TITLE.***********S01319
+     C*                  : @BRCA    FOR BRANCH CODE TEST.            *
+     C*                  : @CNMA    FOR CUSTOMER NAME TEST.          *
+     C*                  : @BKRA    FOR BROKER CODE TEST.            *
+     C*                  : @BKGA    FOR BROKERAGE CODE TEST.         *
+     C*                  : @DLSA    FOR DEALER SUB-TYPE CODE TEST.   *
+     C*                                                              *
+     C****************************************************************
+     C           #A        BEGSR
+     C           *LIKE     DEFN FDPGM     @PGM
+     C           *LIKE     DEFN FDBRCA    @BRCA
+     C           *LIKE     DEFN FDCNMA    @CNMA
+     C           *LIKE     DEFN FDBKRA    @BKRA
+     C           *LIKE     DEFN FDBKGA    @BKGA
+     C           *LIKE     DEFN FDDLSA    @DLSA
+     C           *LIKE     DEFN RRNREC    @NREC
+      *
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  DETAILS IN AUDIT
+     C                     MOVE '1'       *IN67
+     C*
+     C**  MOVE PROGRAM NAME INTO STATUS DATA STRUCTURE FIELD.
+     C                     MOVEL*BLANKS   DBPGM                           E17661
+     C                     MOVEL'FX0230'  DBPGM
+     C*
+     C**  LOAD HEADERS.
+     C                     MOVELDBPGM     RRPGM
+     C*********************MOVE*@T,1******RRPRNM**************************S01319
+     C*********************MOVE*@T,2******RRPRUL**************************S01319
+     C*
+     C**  CALL SUBROUTINE TO ACCESS ICD FILE FOR MIDAS RUN DATE.
+     C                     EXSR ZA0150
+     C*
+     C**  LOAD HEADERS.
+     C                     MOVE RUNA      RRRUNA
+     C                     MOVE TITL      RRTITL
+     C*
+     C**  CHECK FOR DATA BASE ERROR.
+     C           *IN80     IFEQ '1'                        B1
+     C*
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C*
+     C**  LOAD PRINTER FILE WITH ERROR DATA , PRINT ERROR MESSAGES
+     C**  & EXIT PROGRAM.
+     C                     MOVE DBASE     RRDBSE           *1
+     C                     MOVE DBFILE    RRDBFL           *1
+     C                     MOVE DBKEY     RRDKEY           *1
+     C                     MOVELDBPGM     RRDPGM           *1
+     C                     END                             E1
+     C**                                                                  S01319
+     C                     OPEN FX0230P1                                  S01319
+     C**                                                                  S01319
+     C* REPORT SPOOL FILE GENERATION                                      S01319
+     C* transfer binary data into numeric field                           S01319
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01319
+     C                     CALL 'ZSFILE'                                  S01319
+     C                     PARM           SEQ     5                       S01319
+     C                     PARM *BLANKS   @PARM   3                       S01319
+     C                     PARM           SFILE                           S01319
+     C                     PARM           ZSNUM                           S01319
+     C                     PARM *BLANK    ZSERR   1                       S01319
+     C*                                                                   S01319
+     C** Error during ZSFILE processing, return to calling program        S01319
+     C           ZSERR     IFEQ 'Y'                                       S01319
+     C                     SETON                     U7U8LR               S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     RETRN                                          S01319
+     C                     END                                            S01319
+     C*
+     C** REPORT HEADINGS.
+     C                     WRITEFX0230R0
+     C                     WRITEFX0230R1
+     C*
+     C           #A9       ENDSR                           **#A9**
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*    #C TERMINATES PROGRAM.                                    *
+     C*       CALLED BY  : MAIN PROGRAM.                             *
+     C*       CALLS      : #CA                                       *
+     C*                                                              *
+     C****************************************************************
+     C           #C        BEGSR
+     C*
+     C**  TEST FOR FILE FXCDAFLL OUT OF BALANCE.
+     C                     READ FXCDAFLL                 62
+     C           *IN62     DOWEQ'0'                        B1
+     C                     ADD  1         @NREC            *1
+     C                     READ FXCDAFLL                 62*1
+     C                     END                             E1
+     C*
+     C**  SET CONTROL TOTALS OUTPUT
+     C                     MOVE @NREC     RRNREC
+     C                     MOVE 'FXCDAFLL'RRFILE
+     C*
+     C           @NREC     IFNE 1                          B1
+     C                     MOVE '1'       *IN65            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     END                             E1
+     C*
+     C**  IF THERE ARE NO DETAILS IN AUDIT PERFORM #CA.
+     C           *IN67     IFEQ '0'                        B1
+     C                     EXSR #CA                        *1
+     C                     GOTO #C9                        *1
+     C                     END                             E1
+     C*
+     C* REPORT SPOOL FILE GENERATION                                      S01319
+     C* transfer binary data into numeric field                           S01319
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01319
+     C                     CALL 'ZSFILE'                                  S01319
+     C                     PARM           SEQ     5                       S01319
+     C                     PARM *BLANKS   @PARM   3                       S01319
+     C                     PARM           SFILEU                          S01319
+     C                     PARM           ZSNUMU                          S01319
+     C                     PARM *BLANK    ZSERR   1                       S01319
+     C*                                                                   S01319
+     C** Error during ZSFILE processing, return to calling program        S01319
+     C           ZSERR     IFEQ 'Y'                                       S01319
+     C                     SETON                     U7U8LR               S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     RETRN                                          S01319
+     C                     END                                            S01319
+     C*                                                                   S01319
+     C**  IF THERE HAS BEEN A DATA BASE ERROR
+     C           *IN80     IFEQ '1'                        B1
+     C                     WRITEFX0230R0                   *1
+     C                     WRITEFX0230R9                   *1
+     C                     WRITEFXAUDBR0                   *1
+     C                     WRITEFXAUDBR2                   *1
+     C                     GOTO #C9                        *1
+     C                     END                             E1
+     C*
+     C****IF*FILES*ARE*IN*BALANCE*****************************************S01319
+     C************IN65*****IFEQ*'0'************************B1*************S01319
+     C* WRITE 'END OF REPORT'                                             S01319
+     C                     WRITEFX0230R3                   *1
+     C*
+     C****IF*THE*FILES*ARE*OUT*OF*BALANCE.********************************S01319
+     C*********************ELSE****************************X1*************S01319
+     C********************************************************************S01319
+     C*********************WRITEFX0230R0********************1*************S01319
+     C*********************WRITEFX0230R8********************1*************S01319
+     C********************************************************************S01319
+     C*********************END*****************************E1*************S01319
+     C*
+     C**  WRITE CONTOL TOTALS REPORT
+     C                     WRITEFXAUDBR0
+     C                     WRITEFXAUDBR1
+     C           #C9       ENDSR                           **#C9**
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*   #CA NO DETAILS IN AUDIT                                    *
+     C*       CALLED BY  : #C                                        *
+     C*       CALLS      :                                           *
+     C*                                                              *
+     C****************************************************************
+     C           #CA       BEGSR
+     C*
+     C**  MOVE PROGRAM NAME INTO STATUS DATA STRUCTURE FIELD.        55
+     C                     MOVEL*BLANKS   DBPGM                           E17661
+     C                     MOVEL'FX0230'  DBPGM
+     C*
+     C**  LOAD HEADERS.
+     C*********************MOVELDBPGM*****RRPGM***************************S01319
+     C*********************MOVE*@T,1******RRPRNM**************************S01319
+     C*********************MOVE*@T,2******RRPRUL**************************S01319
+     C*
+     C**  CALL SUBROUTINE TO ACCESS ICD FILE FOR MIDAS RUN DATE.
+     C                     EXSR ZA0150
+     C*
+     C**  LOAD HEADERS.
+     C                     MOVE RUNA      RRRUNA
+     C                     MOVE TITL      RRTITL
+     C*********************WRITEFX0230R0**********************************S01319
+     C*********************WRITEFX0230R1**********************************S01319
+     C                     WRITEFXAUDBR0
+     C*
+     C**  CHECK FOR DATA BASE ERROR.
+     C           *IN80     IFEQ '1'                        B1
+     C*
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C*
+     C**  LOAD PRINTER FILE WITH ERROR DATA , PRINT ERROR MESSAGES
+     C**  & EXIT PROGRAM.
+     C                     MOVE DBASE     RRDBSE           *1
+     C                     MOVE DBFILE    RRDBFL           *1
+     C                     MOVE DBKEY     RRDKEY           *1
+     C                     MOVELDBPGM     RRDPGM           *1
+     C*
+     C*********************WRITEFX0230R9********************1*************S01319
+     C                     WRITEFXAUDBR2                   *1
+     C*
+     C                     GOTO #CA9                       *1
+     C                     END                             E1
+     C*
+     C**  WRITE END OF REPORTS - IF FILES OUT OF BALANCE ALSO WRITE
+     C**  CONTROLS TOTALS REPORT.
+     C*********************WRITEFX0230R3**********************************S01319
+     C                     WRITEFXAUDBR1
+     C                     WRITEFXAUDBR3                                  S01319
+     C*
+     C************IN65*****IFEQ*'1'************************B1*************S01319
+     C*********************WRITEFX0230R0********************1*************S01319
+     C*********************WRITEFX0230R8********************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C*
+     C           #CA9      ENDSR                           **#CA9**
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE ZA0150 - THIS SUBROUTINE CHAINS TO FILE LF/       *
+     C*  FDICDRLL TO GET THE INSTALLATION CONTROL DETAILS RECORD 1    *
+     C*  (HELD ON PF/TABTB10)                                         *
+     C*  INDICATOR 80 IS SET ON IF THE CHAIN FAILS OR THE RECORD IS   *
+     C*  FLAGGED FOR DELETION.                                        *
+     C*  IF INDICATOR 80 IS SET ON DETAILS OF THE ATTEMPTED ACCESS    *
+     C*  ARE PLACED IN THE LDA.                                       *
+     C*                                                               *
+     C*  FIELDS USED : SS0150 - KEY USED TO ACCESS FDICDRLL           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZA0150    BEGSR
+     C*
+     C** Set up key to obtain format TABTB10F '01        10'
+     C                     MOVEL'01'      SS0150 12
+     C                     MOVE '10'      SS0150
+     C*
+     C** CHAIN TO FILE FDICDRLL
+     C           SS0150    CHAINFDICDRLL             80
+     C           RECI      IFNE 'D'                        B1
+     C                     MOVE '1'       *IN80            *1
+     C                     END                             E1
+     C*
+     C** DEAL WITH DATA BASE ERROR
+     C           *IN80     IFEQ '1'                        ***************
+     C                     MOVEL'FDICDRLL'DBFILE           *             *
+     C                     MOVEL'900'     DBASE            * DBERROR 900 *
+     C                     MOVELSS0150    DBKEY            *             *
+     C                     END                             ***************
+     C*
+     C           ZA0159    ENDSR
+     C/EJECT
+     C*****************************************************
+     C*                                                   *
+     C*   EXCEPTION ERROR SUBROUTINE                      *
+     C*                                                   *
+     C*   SUBROUTINE CALLED: EXECUTES WHENEVER EITHER     *
+     C*   FILE OR PROGRAM ERROR OCCURS                    *
+     C*                                                   *
+     C*   SUBROUTINE CALLS : NO OTHER SUBROUTINES         *
+     C*                                                   *
+     C*****************************************************
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     ENDSR
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*   #BA MOVE BLANKS TO BEFORE OUTPUT FIELDS                    *
+     C*       CALLED BY  : MAIN PROCESSING.                          *
+     C*       CALLS      :                                           *
+     C*       WORK FIELDS:                                           *
+     C*                                                              *
+     C****************************************************************
+     C           #BA       BEGSR
+     C*
+     C**  MOVE FILE FIELDS TO BEFORE OUTPUT FIELDS
+     C                     MOVE *BLANKS   RRBRCB
+     C                     MOVE *BLANKS   RRCNMB
+     C                     MOVE *BLANKS   RRBKRB
+     C                     MOVE *BLANKS   RRBKGB
+     C                     MOVE *BLANKS   RRDLSB
+     C*
+     C           #BA9      ENDSR                           **BA9**
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*   #BC MOVE BLANKS TO AFTER OUTPUT FIELDS                     *
+     C*       CALLED BY  : MAIN PROCESSING.                          *
+     C*       CALLS      :                                           *
+     C*       WORK FIELDS:                                           *
+     C*                                                              *
+     C****************************************************************
+     C           #BC       BEGSR
+     C*
+     C**  MOVE FILE FIELDS TO BEFORE OUTPUT FIELDS
+     C                     MOVE *BLANKS   RRBRCA
+     C                     MOVE *BLANKS   RRCNMA
+     C                     MOVE *BLANKS   RRBKRA
+     C                     MOVE *BLANKS   RRBKGA
+     C                     MOVE *BLANKS   RRDLSA
+     C*
+     C           #BC9      ENDSR                           **BC9**
+     C*** REPORT TITLE    @T                                              E23462
+     C*EALING ROOM SYSTEM - FX DEALER - DEAL AMENDABILITY AUDIT REPORT    E23462
+     C/EJECT
+   REP*RT*TITLE****@T*****************************************************S01319
+MIDASE*EALING*-*FX*DEALER*-*DEAL*AMENDABILITY*AUDIT*REPORT****************S01319
+------*---------------------------------------------------****************S01319
+**
+(c) Finastra International Limited 2001

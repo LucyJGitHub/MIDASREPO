@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                   /*CUP021*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC001575 - Build Action file for GPDFFLDPD Control program */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. CUP021  *REDUNDANT Date 10Feb11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CUP022 *CREATE     Date 24May04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP021 - Rewrite of Action File processing.                 */
+/*       CUP022 - Standardise Action File processing.                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&ACTIONFDTA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&IN01) TYPE(*LGL)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Retrieve &OLDLIB and &NEWLIB from data area ACTIONFDTA in QTEMP */
+             RTVDTAARA  DTAARA(QTEMP/ACTIONFDTA) RTNVAR(&ACTIONFDTA)
+             CHGVAR     VAR(&OLDLIB) VALUE(%SST(&ACTIONFDTA 11 10))
+             CHGVAR     VAR(&NEWLIB) VALUE(%SST(&ACTIONFDTA 21 10))
+ 
+/* For insert (&MODE = 'I') only: */
+             IF         COND(&MODE *EQ 'I') THEN(DO)
+ 
+/* Copy member GPIFMMODPD from old and new libraries to the versions in QTEMP. */
+                CPYF       FROMFILE(&OLDLIB/GPDFFLDPD) +
+                             TOFILE(QTEMP/GPDFFLDP_O) FROMMBR(GPIFMODPD) +
+                             TOMBR(*FIRST) MBROPT(*REPLACE) +
+                             FMTOPT(*MAP *DROP)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2870)
+                CPYF       FROMFILE(&NEWLIB/GPDFFLDPD) +
+                             TOFILE(QTEMP/GPDFFLDP_N) FROMMBR(GPIFMODPD) +
+                             TOMBR(*FIRST) MBROPT(*REPLACE) +
+                             FMTOPT(*MAP *DROP)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2870)
+ 
+             ENDDO         /*  FI COND(&MODE *EQ 'I') */
+ 
+             CALL       PGM(UP1575) PARM(&MODE)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ /* Recursive error */
+             IF         COND(&IN01) THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(*LIBL/QCPFMSG) +
+                             MSGDTA('Recursive error in pgm UPC001575') +
+                             MSGTYPE(*ESCAPE)
+             ENDDO
+             CHGVAR     VAR(&IN01) VALUE('1')
+ 
+ABNOR2:
+/* Abnormal termination */
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+                CHGJOB     SWS(XXXXXX11)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                             MSGDTA('UPC001575 ended abnormally - +
+                             check the joblog.') MSGTYPE(*ESCAPE)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+             ELSE (DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('UPC001575 +
+                          ended abnormally - see dump; check +
+                          FILNAM, FLDNAM  or FLMODE value +
+                          for record in error') MSGTYPE(*ESCAPE)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+END:
+             ENDPGM

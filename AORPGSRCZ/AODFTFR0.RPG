@@ -1,0 +1,154 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO ED drip-feed transfer access object')
+      *****************************************************************
+      *                                                               *
+      *  Midas  Access Objects                                        *
+      *                                                               *
+      *  AODFTFR0 - Read Access to files available for                *
+      *                drip feed                                      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  PREV AMEND NO. CED002 *CREATE     DATE 20MAY97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CED002 - Export Dta Enhancement for GIB                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      ************************************************************
+      *
+     FEDDFTFL1IF  E           K        DISK                           UC
+      ** IN - Files available for drip feed
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  01 - No specific transfer request found on LF/EDDFTFL1       *
+      *  02 - No general request found on LF/EDDFTFL1                 *
+      *  03 - No general request found on LF/EDDFTFL1                 *
+      *  04 - No general request found on LF/EDDFTFL1                 *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      ** Copyright array
+      *
+      /EJECT
+      ************************************************************
+      *
+     IED@FMT    E DSEDDFTFPD
+      ** Drip feed files record format data structure
+      *
+     IP@FMT     E DSDSFDY
+     I** External Data structure to hold the outgoing record format
+     I** of the file.
+      *
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     IA@CPY       DS
+     I** Copyright data structure
+     I                                        1  80 CPY@
+      *
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@FILE 10
+     C                     PARM           P@MBR  10
+     C                     PARM           P@PGM  10
+     C                     PARM           P@RTCD  7
+     C                     PARM           P@FMT
+      *
+      ** Copyright Statement.
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Key list to access LF/EDDFTFL1
+      *
+     C           KEY1      KLIST
+     C                     KFLD           KFILE  20
+     C                     KFLD           KPGM   10
+      *
+      ** Open file, setup key list values
+      *
+     C                     OPEN EDDFTFL1
+     C           P@FILE    CAT  P@MBR     KFILE
+     C                     MOVELP@PGM     KPGM
+      *
+      ** Check for specific transfer request.
+      *
+     C           KEY1      CHAINEDDFTFL1             01
+      *
+      ** Transfer request not found, check for general request of
+      ** all members for requested file/program.
+      *
+     C           *IN01     IFEQ '1'
+     C                     MOVEL*BLANKS   KFILE
+     C                     MOVELP@FILE    KFILE
+     C           KEY1      CHAINEDDFTFL1             02
+     C                     ENDIF
+      *
+      ** Transfer request not found, check for general request of
+      ** requested file/member for any program.
+      *
+     C           *IN02     IFEQ '1'
+     C                     MOVEL*BLANKS   KPGM
+     C           P@FILE    CAT  P@MBR     KFILE
+     C           KEY1      CHAINEDDFTFL1             03
+     C                     ENDIF
+      *
+      ** Transfer request not found, check for general request for
+      ** requested file for any member/program.
+      *
+     C           *IN03     IFEQ '1'
+     C                     MOVEL*BLANKS   KFILE
+     C                     MOVELP@FILE    KFILE
+     C           KEY1      CHAINEDDFTFL1             04
+     C                     ENDIF
+      *
+      ** No record found, terminate program.
+      *
+     C           *IN04     IFEQ '1'
+     C                     MOVEL'*FAILED' P@RTCD
+     C                     MOVEL*BLANKS   P@FMT
+     C                     CLOSEEDDFTFL1
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** Record found, set return format to contents of record found
+      *
+     C                     MOVELED@FMT    P@FMT
+      *
+      ** Close file, terminate program.
+      *
+     C                     CLOSEEDDFTFL1
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      **************************************************************************
+** CPY@     : Copyright notice
+(c) Finastra International Limited 2001

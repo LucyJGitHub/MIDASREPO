@@ -1,0 +1,1309 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Display message routing table')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module
+     F*                                                               *
+     F*  ME1090 - Display Valid Msg Types   Display file              *
+     F*                                                               *
+     F*  Function:  This program displays the selected message        *
+     F*                                                               *
+     F*  Called By: SF0420 - SPF Menu                                 *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 069250             Date 03May94               *
+      *                 S01435             Date 29Jul93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/******:*OVRDBF*(File*in*program)*(file*on*system)******************:**   069250
+     F*****************************************************************
+     F*DSPRCD: Cpysrc Templates Initialise Program F-Spec
+     F/COPY WNCPYSRC,ME1090DFPG
+     FME1090DFCF  E                    WORKSTN
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+     F                                              KINFSR SRFILE
+      * DSP: Display Valid Msg Types   Display file
+      *
+     FMEINMVL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR SRFILE
+      * RTV : Incoming Valid Messages   Retrieval index
+      *
+     FMEINMVL0IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      * UPD : Incoming Valid Messages   Update index
+      *
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E*  Array containing Copyright statement
+     E***************** FIRST COMPILE TIME ARRAY *********************
+     E                    CMD@    1   1 80
+      *
+      *  Array of QCMDEXC commands
+      *
+     E                    EDT        80  1
+      *
+      *  Array of QCMDEXC command to edit
+      *
+     E*
+     E/COPY MECPYSRC,SRERRE
+     I*
+     I*  Copysource for error processing
+     I*
+     E*DSPRCD: Cpysrc Templates Initialise Program E-Spec
+     E/COPY WNCPYSRC,ME1090DEPG
+      /EJECT
+     I*DSPRCD: Cpysrc Templates Initialise Program I-Spec
+     I/COPY WNCPYSRC,ME1090DIPG
+      * Data structures:
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     I/COPY MECPYSRC,SRERRI
+     I*
+     I*  End of Program Error Processing copysource
+     I*
+     I*
+     IRUNDTA    E DSRUNDAT
+     I*
+     I* Get Rundate - Rundate  *
+     I*
+     IMMODDS    E DSSDMMODPD
+     I*
+     I* Modules Data Structure *
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I* Data Structures used by Access Programs
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I* Data Structures used by Access Programs
+     I*
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I : MAP Action Code
+     I                                        1   1 P1ACTC
+     IP2PARM      DS                            107
+      * RCD: Incoming Valid Messages   Retrieval index
+      * O : MAP Network
+     I                                        1   6 P2NWRK
+      * O : MAP Message type
+     I                                        7   9 P2MTPY
+      * O : MAP Sender (key)
+     I                                       10  29 P2SNDK
+      * O : MAP Record Identifier
+     I                                       30  30 P2RECI
+      * O : MAP Access Point
+     I                                       31  37 P2ACPT
+      * O : MAP Include/Exclude
+     I                                       38  38 P2INEX
+      * O : MAP Branch Code
+     I                                       39  41 P2BRCA
+      * O : MAP Payment Message Flag
+     I                                       42  42 P2PMFG
+      * O : MAP Narrative
+     I                                       43  72 P2NARR
+      * O : MAP Job name
+     I                                       73  82 P2AJOB
+      * O : MAP User name
+     I                                       83  92 P2AUSR
+      * O : MAP Action Time
+     I                                    P  93  960P2ATIM
+      * O : MAP Action Date
+     I                                       97 103 P2ARDT
+      * O : MAP Action Type
+     I                                      104 104 P2AACT
+      * O : MAP Run day number
+     I                                    P 105 1070P2RDNB
+     IO2PARM      DS                             29
+      * KEY: Incoming Valid Messages   Retrieval index
+      * I : MAP Network
+     I                                        1   6 O2NWRK
+      * I : MAP Message type
+     I                                        7   9 O2MTPY
+      * I : MAP Sender
+     I                                       10  29 O2SNDR
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Invalid Action code'
+      * *SFLSEL
+     I                                        1   1 ZA0001
+      *
+     IW0DATA      DS                            256
+      *
+      *  Define data structure used to pass parameters
+      *
+     I                                        1   3 B#BRCA
+     I                                        4   4 O#ACTD
+     I                                        5  14 O#CPGM
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                    P   1   20#MPART
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C           P1ACTC    PARM           WP0001  1        Action Code
+     C                     PARM           P2PARM           RCD: Incoming V
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELP2PARM    W0PREF
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise & load subfile page
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested
+     C           W0RSF     DOWEQ'N'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+     C   12                CAS            ZXEXPG
+      * HOME: Request subfile reload
+     C   05                CAS            FBRQRL
+      * Display next SFL page
+     C   27                CAS            BBLDSF
+      * Process screen input
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise and load subfile page
+      *================================================================
+      * Clear subfile
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * USER: Initialise subfile control
+      * DSPFIL: Init. Subfile Ctl - R10 Copy source templates  *
+     C*DSPFIL: Cpysrc Templates Initialise subfile control
+     C/COPY WNCPYSRC,ME1090DISC
+      * Position DBF file
+     C           KPOS      KLIST
+     C                     KFLD           MVNWRK           Network
+     C                     KFLD           MVMTPY           Message type
+     C                     KFLD           MVSNDK           Sender (key)
+      * Setup key
+     C                     MOVEL#2NWRK    MVNWRK           Network
+     C                     MOVEL#2MTPY    MVMTPY           Message type
+     C                     MOVEL#2SNDK    MVSNDK           Sender (key)
+     C           KPOS      SETLL@INMVL1
+     C                     READ @INMVL1                8782*82=EOF
+      * Save previous selector values
+     C           *LIKE     DEFN #2NWRK    WZNWRK
+     C                     MOVEL#2NWRK    WZNWRK           Network
+     C           *LIKE     DEFN #2MTPY    WZMTPY
+     C                     MOVEL#2MTPY    WZMTPY           Message type
+     C           *LIKE     DEFN #2SNDK    WZSNDK
+     C                     MOVEL#2SNDK    WZSNDK           Sender (key)
+     C           *LIKE     DEFN #2ACPT    WZACPT
+     C                     MOVEL#2ACPT    WZACPT           Access Point
+     C           *LIKE     DEFN #2INEX    WZINEX
+     C                     MOVEL#2INEX    WZINEX           Include/Exclude
+     C           *LIKE     DEFN #2BRCA    WZBRCA
+     C                     MOVEL#2BRCA    WZBRCA           Branch Code
+     C           *LIKE     DEFN #2PMFG    WZPMFG
+     C                     MOVEL#2PMFG    WZPMFG           Payment Message
+      * Translate search mask for text field
+     C                     MOVEL'QSYST'   WQB10X 10
+     C                     MOVE 'RNTBL'   WQB10X
+     C           *LIKE     DEFN #2SNDK    WQSNDK           Sender (key)
+     C                     CALL 'QDCXLATE'
+      * Length
+     C                     PARM 20        WQA5N   50
+     C                     PARM #2SNDK    WQSNDK           Sender (key)
+     C                     PARM           WQB10X           QSYSTRNTBL
+     C                     PARM 'QSYS'    WQC10X 10
+      * Load subfile page
+     C                     Z-ADD0         ##RROK  50
+     C                     EXSR BBLDSF
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page
+      *================================================================
+      * Re-establish fields in read-ahead record
+     C   27                DO
+     C  N82                READP@INMVL1                  90*
+     C  N82                READ @INMVL1                  90*
+     C                     END
+      *
+      * Setof record error indicators
+     C                     MOVEL*ALL'0'   WKIND0  1
+     C                     MOVEAWKIND0    *IN,38
+      * Start at previous highest record in SFL
+     C                     Z-ADD##RRMX    ##RR    50
+      * Reset count of DBF records read
+     C                     Z-ADD0         ##RRRD  50
+      *................................................................
+      * Load next SFL page until SFL page full, or
+      * Scan limit reached
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFPG
+     C           ##RRRD    ANDLTW0SLM
+      * Check selection fields - if fail, read next record
+     C           #2NWRK    IFEQ *BLANK                     Network
+     C           #2MTPY    IFNE *BLANK                     Message type
+     C           MVMTPY    CABNE#2MTPY    BB020            Message type
+     C                     END
+     C                     END
+     C           #2NWRK    IFEQ *BLANK                     Network
+     C           #2MTPY    OREQ *BLANK                     Message type
+     C           #2SNDK    IFNE *BLANK                     Sender (key)
+      * Scan for search string
+     C                     CALL 'QCLSCAN'
+     C                     PARM           MVSNDK           Sender (key)
+      * Length
+     C                     PARM 20        WQA3N   30
+      * Start
+     C                     PARM 1         WQB3N   30
+      * Mask
+     C                     PARM           WQSNDK
+      * Length
+     C                     PARM 20        WQC3N   30
+      * Translate
+     C                     PARM '1'       WQD1    1
+      * Trim
+     C                     PARM '1'       WQE1    1
+      * Wild
+     C                     PARM '?'       WQF1    1
+      * Result
+     C                     PARM           WQG3N   30
+     C           WQG3N     CABLT1         BB020
+     C                     END
+     C                     END
+     C           #2ACPT    IFNE *BLANK                     Access Point
+     C           MVACPT    CABNE#2ACPT    BB020            Access Point
+     C                     END
+     C           #2INEX    IFNE *BLANK                     Include/Exclude
+     C           MVINEX    CABNE#2INEX    BB020            Include/Exclude
+     C                     END
+     C           #2BRCA    IFNE *BLANK                     Branch Code
+     C           MVBRCA    CABNE#2BRCA    BB020            Branch Code
+     C                     END
+     C           #2PMFG    IFNE *BLANK                     Payment Message
+     C           MVPMFG    CABNE#2PMFG    BB020            Payment Message
+     C                     END
+      * Load SFL fields
+     C                     EXSR MBFL#1
+     C                     EXSR MC#1FN
+     C                     MOVEL'Y'       W0RSL   1
+      * USER: Initialise subfile record from DBF record
+      * DSPFIL: Init. SF record - R10 Copy source templates  *
+     C*DSPFIL: Cpysrc Templates Initialise subfile record
+     C/COPY WNCPYSRC,ME1090DISR
+      * DBF record not selected
+     C           W0RSL     CABNE'Y'       BB020
+      * Output to subfile
+     C                     ADD  1         ##RR       81    *
+     C                     ADD  1         ##RROK
+     C                     WRITE#SFLRCD
+     C           BB020     TAG
+      * Increment scan check count
+     C                     ADD  1         ##RRRD
+     C                     READ @INMVL1                  82*82=EOF
+     C                     END                             OD 1 - ##SFPG
+      *................................................................
+      * If no DBF records found, display error message
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI ##RR = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point
+     C           ##RR      IFGT ##RRMX
+     C           ##RRMX    ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      * If scan limit reached, display error message
+     C           ##RRRD    IFGE W0SLM
+      * Send message '*Scan limit reached'
+     C                     MOVEL'Y2U0017' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     Z-ADD0         ##RROK
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen
+      *================================================================
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+      * Update screen time
+     C                     TIME           ##TME
+      * PUTOVR unless conditioned fields change
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+      * Maintain subfile position where possible
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8392*
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      *
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * CALC: Subfile control function fields
+      * DSPFIL: Cal. Control flds - R10 Copy source templates  *
+     C*DSPFIL: Cpysrc Templates Calculate Control fields
+     C/COPY WNCPYSRC,ME1090DSCF
+      * Change of position specified
+     C           WZNWRK    CASNE#2NWRK    FBRQRL
+     C           WZMTPY    CASNE#2MTPY    FBRQRL
+     C           WZSNDK    CASNE#2SNDK    FBRQRL
+     C           WZACPT    CASNE#2ACPT    FBRQRL
+     C           WZINEX    CASNE#2INEX    FBRQRL
+     C           WZBRCA    CASNE#2BRCA    FBRQRL
+     C           WZPMFG    CASNE#2PMFG    FBRQRL
+     C                     END
+      * USER: Process subfile control (Pre-confirm)
+      * DSPFIL: Process SF Ctl - R10 Copy source templates  *
+     C*DSPFIL: Cpysrc Templates Process subfile control
+     C/COPY WNCPYSRC,ME1090DPSC
+      * Reload subfile requested
+     C           W0RSF     CABEQ'Y'       DAEXIT
+     C           *IN81     IFEQ '1'
+      * Process subfile records
+     C                     EXSR DBPRSF
+     C                     END
+      * USER: Final processing (Pre-confirm)
+      * DSPFIL: Final Processing - R10 Copy source templates  *
+     C*DSPFIL: Cpysrc Templates Final Processing
+     C/COPY WNCPYSRC,ME1090DFPR
+      * If error, quit processing
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      *
+      * CASE: CTL.*CMD key is CF09
+      *
+      * Call add processing
+      *
+     C           *IN09     IFEQ '1'                        *IF
+      *
+      * Check user has access to add
+      *
+     C                     MOVEL'I'       #1SEL
+     C                     EXSR SRMBIN
+      *
+      * User does not have access
+      *
+     C           *IN99     IFEQ '1'                        *IF
+     C                     GOTO DAEXIT
+     C                     END                             *FI
+      *
+      * Set up parameters
+      *
+     C                     MOVEL*BLANKS   O2NWRK
+     C                     MOVEL*BLANKS   O2MTPY
+     C                     MOVEL*BLANKS   O2SNDR
+      *
+     C                     CALL 'ME1210'               9090
+     C                     PARM           P0RTN   7
+     C                     PARM 'I'       WP0001  1        Action Code
+     C                     PARM           O2PARM           KEY: Incoming M
+      *
+      * Option ended in error
+      *
+     C           *IN90     IFEQ '1'                        *IF
+     C                     MOVEL'MIN0019' P0RTN
+     C                     END                             *FI
+      *
+      *  Depending on return code - exit or re-display screen
+      *
+     C                     SELEC                           *SL
+      *
+      *  F12 pressed - redisplay subfile
+      *
+     C           P0RTN     WHEQ 'USR0790'                  *IF
+     C                     MOVEL*BLANKS   P0RTN            *Return code
+      *
+      * Send message 'F12 taken from previous screen'
+      *
+     C                     MOVEL'MIN0001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO DAEXIT
+      *
+      *  F3 pressed - exit program
+      *
+     C           P0RTN     WHEQ 'Y2U9999'                  *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+      *
+      *  If error redisplay
+      *
+     C           P0RTN     WHNE *BLANKS                    *IF
+      *
+      * Re-display screen
+      *
+     C                     MOVEL'MIN0019' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9838  *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DAEXIT
+      *
+      *  New selection - redisplay subfile
+      *
+     C           P0RTN     WHEQ *BLANKS                    *IF
+     C                     MOVEL'Y'       W0DCF
+     C                     GOTO DAEXIT
+     C                     ENDSL                           *LS
+     C                     ENDIF                           *FI
+      * USER: Process command keys
+      * DSPFIL: Process Cmd keys - R10 Copy source templates  *
+     C*DSPFIL: Cpysrc Templates Process Command Keys
+     C/COPY WNCPYSRC,ME1090DPCK
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile record
+      *================================================================
+      * Read first changed slf record
+     C                     READC#SFLRCD                  92*
+     C           *IN92     DOWEQ'0'
+      * Process subfile record
+     C                     EXSR DCPRSR
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  92*
+     C                     END
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+      *================================================================
+     C*                                                               *
+     C* SRACTD - Check Action code                                    *
+     C*                                                               *
+     C*                                                               *
+     C* Called by: DCPRSR                                             *
+     C*                                                               *
+      *================================================================
+     CSR         SRACTD    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACTD'  @STK,Q
+      *
+      * Check all valid actions
+      *
+      *
+      * CASE: RCD.*SFLSEL is not valid
+      *
+     C           #1SEL     IFEQ ' '                        *IF
+     C                     GOTO EXACTD
+     C                     END                             *FI
+      *
+     C           #1SEL     IFNE 'E'                        *IF
+     C           #1SEL     ANDNE'A'                        *IF
+     C           #1SEL     ANDNE'D'                        *IF
+     C           #1SEL     ANDNE'1'                        *IF
+     C           #1SEL     ORNE '1'                        *IF
+     C           #1SEL     ANDNE'E'                        *IF
+     C           P1ACTC    ANDEQ'S'                        *IF
+     C           #1SEL     ORNE 'E'                        *IF
+     C           P1ACTC    ANDEQ'E'                        *IF
+     C           #1SEL     ORNE 'E'                        *IF
+     C           #1SEL     ANDNE'A'                        *IF
+     C           #1SEL     ANDNE'D'                        *IF
+     C           P1ACTC    ANDEQ'A'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1SEL     ZA0001           *SFLSEL
+      * Send message 'Invalid Action code'
+     C                     MOVEL'MIN0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9838  *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO EXACTD
+     C                     END                             *FI
+      *
+      * Check multi-branch actions
+      *
+     C                     EXSR SRMBIN
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACTD    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+      *================================================================
+     C*                                                               *
+     C* SRMBIN - Check Multi-branch actions                           *
+     C*                                                               *
+     C*                                                               *
+     C* Called by: SRACTD                                             *
+     C*                                                               *
+      *================================================================
+     CSR         SRMBIN    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRMBIN'  @STK,Q
+      *
+      * Set up parameters
+      *
+     C                     CLEARW0DATA
+     C                     MOVEL*BLANKS   B#BRCA
+     C                     MOVEL#1SEL     O#ACTD
+     C                     MOVEL##PGM     O#CPGM
+      *
+      * Check all valid actions
+      *
+     C                     CALL 'ME1190'               9090
+     C                     PARM *BLANKS   P0RTN   7
+     C                     PARM '*ACTCODE'W0ACT   8
+     C                     PARM           W0DATA
+      *
+      * Option ended in error
+      *
+     C           *IN90     IFEQ '1'                        *IF
+     C                     MOVEL'MIN0019' P0RTN
+     C                     SETON                     9838  *
+     C                     END                             *FI
+      *
+      * Invalid action
+      *
+     C           P0RTN     IFNE *BLANKS                    *IF
+     C           #1SEL     IFNE 'I'
+     C                     SETON                     9838  *
+     C                     ELSE                            *FI
+     C                     SETON                     99    *
+     C                     END                             *FI
+     C                     END                             *FI
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMBIN    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+      *================================================================
+     C*                                                               *
+     C* SRRCHG - Record Changed                                       *
+     C*                                                               *
+     C*                                                               *
+     C* Called by: DCPRSR                                             *
+     C*                                                               *
+      *================================================================
+     CSR         SRRCHG    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRRCHG'  @STK,Q
+      *
+      * Set up key from subfile record and chain to record
+      *
+     C           KYMVL0    KLIST
+     C                     KFLD           #1NWRK           Network
+     C                     KFLD           #1MTPY           Message type
+     C                     KFLD           #1SNDK           Sender (key)
+      *
+     C           KYMVL0    CHAIN@INMVL0              90    *
+      *
+      * Record not found - database error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'MEINMVL0'W0FILE
+     C                     MOVEL#1NWRK    ##0009  9        Network
+     C                     MOVE #1MTPY    ##0009           Message type
+     C           ##0009    CAT  #1SNDK    W0KEY     P      Sender (key)
+     C                     Z-ADD1         W0ERNB
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  If action code is not blank then send messge record has been
+      *  deleted if RECI not equal to 'D'
+      *
+     C           #1SEL     IFNE *BLANKS
+     C           MVRECI    IFNE 'D'
+      * Send message 'Invalid Action code - record deleted'
+     C                     MOVEL'MIN0216' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9838  *
+     C                     END
+     C                     GOTO EXRCHG
+     C                     END
+      *
+      *  Reload subfile record
+      *
+     C                     EXSR MBFL#1
+     C                     EXSR MC#1FN
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXRCHG    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         DCPRSR    BEGSR
+      *================================================================
+      * Process subfile record
+      *================================================================
+      * Setof error indicators and SFLNXTCHG
+     C                     MOVEAWKIND0    *IN,38
+     C                     MOVEL*BLANKS   P0RTN
+     C                     SETOF                     98    *
+     C                     EXSR MC#1FN
+      * USER: Process subfile record (Pre-confirm)
+      * DSPFIL: Process SF rec - R10 Copy source templates  *
+     C*DSPFIL: Cpysrc Templates Process Subfile Record
+     C/COPY WNCPYSRC,ME1090DPSR
+      *
+      * Check action code is valid, if invalid exit.
+      *
+     C                     EXSR SRACTD
+      *
+      * Check record is active
+      *
+     C                     EXSR SRRCHG
+      *
+     C           *IN98     IFEQ '1'
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCENDT                     *QUIT
+     C                     END                             *FI
+      *
+      * Call option
+      *
+     C                     SELEC
+      *
+      * Amend, Delete and Enquire
+      *
+     C           #1SEL     WHEQ 'A'
+     C           #1SEL     OREQ 'D'
+     C           #1SEL     OREQ 'E'
+      *
+      * Set up parameters
+      *
+     C                     MOVEL#1NWRK    O2NWRK
+     C                     MOVEL#1MTPY    O2MTPY
+     C                     MOVEL#1SNDK    O2SNDR
+      *
+     C                     CALL 'ME1210'               9090
+     C                     PARM           P0RTN   7
+     C                     PARM #1SEL     WP0001  1        Action Code
+     C                     PARM           O2PARM           KEY: Incoming M
+      *
+      * If in error set up return code
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'MIN0019' P0RTN
+     C                     END
+      *
+      * Select
+      *
+     C           #1SEL     WHEQ '1'
+     C                     MOVELMVNWRK    P2NWRK
+     C                     MOVELMVMTPY    P2MTPY
+     C                     MOVELMVSNDK    P2SNDK
+     C                     MOVELMVRECI    P2RECI
+     C                     MOVELMVACPT    P2ACPT
+     C                     MOVELMVINEX    P2INEX
+     C                     MOVELMVBRCA    P2BRCA
+     C                     MOVELMVPMFG    P2PMFG
+     C                     MOVELMVNARR    P2NARR
+     C                     MOVELMVAJOB    P2AJOB
+     C                     MOVELMVAUSR    P2AUSR
+     C                     Z-ADDMVATIM    P2ATIM
+     C                     MOVELMVARDT    P2ARDT
+     C                     MOVELMVAACT    P2AACT
+     C                     MOVELMVRDNB    P2RDNB
+     C                     MOVEL*BLANKS   P0RTN            *Return code
+     C                     EXSR ZXEXPG
+      *
+     C                     ENDSL
+      *
+      *  Depending on return code - exit or re-display screen
+      *
+     C                     SELEC                           *SL
+      *
+      *  F12 pressed - redisplay subfile
+      *
+     C           P0RTN     WHEQ 'USR0790'                  *IF
+      *
+      * Send message 'F12 taken from previous screen'
+      *
+     C                     MOVEL'MIN0015' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9838  *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCENDT                     *QUIT
+      *
+      *  F3 pressed - exit program
+      *
+     C           P0RTN     WHEQ 'Y2U9999'                  *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+      *
+      *  If error redisplay
+      *
+     C           P0RTN     WHNE *BLANKS                    *IF
+      *
+      * Re-display screen
+      *
+     C                     MOVEL'MIN0019' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9838  *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCENDT                     *QUIT
+      *
+      *  Function completed normally
+      *
+     C           P0RTN     WHEQ *BLANKS                    *IF
+     C                     ENDSL                           *LS
+      *
+     C           DCENDT    TAG
+     C           *IN98     IFEQ '1'
+      * SFLRCD invalid
+     C  N99                Z-ADD##RR      ##SFRC     99    *
+      * SFLNXTCHG
+     C                     SETON                     84
+     C                     ELSE
+      * SFLRCD valid
+      * SFLNXTCHG
+     C                     SETOF                     84
+     C                     MOVEL*BLANK    #1SEL
+     C                     END                             FI *IN98
+      *
+      *  If option did not end in error, F12 or F3 then update record
+      *  with changes
+      *
+     C           P0RTN     IFEQ *BLANKS
+     C           *IN98     ANDEQ'0'
+     C                     EXSR SRRCHG
+     C                     END
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @INMVL1 fields to subfile
+      *================================================================
+     C                     MOVEL*BLANK    #1SEL
+     C                     MOVELMVRECI    #1RECI           Record Identifi
+     C                     MOVELMVNARR    #1NARR           Narrative
+     C                     MOVELMVAJOB    #1AJOB           Job name
+     C                     MOVELMVAUSR    #1AUSR           User name
+     C                     Z-ADDMVATIM    #1ATIM           Action Time
+     C                     MOVELMVARDT    #1ARDT           Action Date
+     C                     MOVELMVAACT    #1AACT           Action Type
+     C                     Z-ADDMVRDNB    #1RDNB           Run day number
+     C                     MOVELMVNWRK    #1NWRK           Network
+     C                     MOVELMVMTPY    #1MTPY           Message type
+     C                     MOVELMVSNDK    #1SNDK           Sender (key)
+     C                     MOVELMVACPT    #1ACPT           Access Point
+      *
+      * If deleted stop subfile selection and place deleted in
+      * access point
+      *
+     C           #1RECI    IFEQ '*'                        Record Identifi
+     C                     MOVEL*BLANKS   #1ACPT
+     C                     MOVELU#DELT    #1ACPT
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+     C                     GOTO MBEXIT
+     C                     END
+      *
+     C                     MOVELMVINEX    #1INEX           Include/Exclude
+     C                     MOVELMVBRCA    #1BRCA           Branch Code
+     C                     MOVELMVPMFG    #1PMFG           Payment Message
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MC#1FN    BEGSR
+      *================================================================
+      * CALC: Subfile record function fields
+      *================================================================
+      * CALC: Subfile record function fields
+      * DSPFIL: SF rec func flds - R10 Copy source templates  *
+     C*DSPFIL: Cpysrc Templates Subfile Record function fields
+     C/COPY WNCPYSRC,ME1090DRFF
+      *================================================================
+     CSR         MCEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control
+      *================================================================
+      *
+      * Initialise header and footer fields
+      *
+     C                     MOVEL*BLANK    ##ONAM           Option Name
+     C                     MOVEL*BLANK    ##CMD1           CMD Line 1
+     C                     MOVEL*BLANK    ##CMD2           CMD Line 2
+      *
+     C                     MOVELP1ACTC    #PACTC           Action Code
+     C                     MOVEL*BLANK    #2NWRK           Network
+     C                     MOVEL*BLANK    #2MTPY           Message type
+     C                     MOVEL*BLANK    #2SNDK           Sender (key)
+     C                     MOVEL*BLANK    #2ACPT           Access Point
+     C                     MOVEL*BLANK    #2INEX           Include/Exclude
+     C                     MOVEL*BLANK    #2BRCA           Branch Code
+     C                     MOVEL*BLANK    #2PMFG           Payment Message
+      *
+      * Fill Command lines and narrative text from messages
+      *
+     C                     SELEC
+      *
+      * Enquiry screen
+      *
+     C           P1ACTC    WHEQ 'E'
+      *
+      * Option Name
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0035' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONAM
+      *
+      * Action codes
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0036' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD1
+      *
+      * Function keys
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0037' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD2
+      *
+      * Update screen
+      *
+     C           P1ACTC    WHEQ 'A'
+      *
+      * Option Name
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0038' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONAM
+      *
+      * Action codes
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0039' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD1
+      *
+      * Function keys
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0040' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD2
+      *
+      * Allow function key 9
+      *
+     C                     MOVEL'1'       *IN77
+      *
+      * Selection screen
+      *
+     C           P1ACTC    WHEQ 'S'
+      *
+      * Option Name
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0041' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONAM
+      *
+      * Action codes
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0042' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD1
+      *
+      * Function keys
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0043' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD2
+      *
+      * Allow function key 12
+      *
+     C                     MOVEL'1'       *IN78
+      *
+     C                     ENDSL
+      *
+      * Get deleted text
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0214' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C           *LIKE     DEFN #1ACPT    U#DELT
+     C                     MOVEL#MSTX1    U#DELT
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+      * USER: Exit program processing
+      *
+      * CASE: CTL.*CMD key is CF03
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     END                             *FI
+      * CASE: CTL.*CMD key is CF12
+     C           *IN12     IFEQ '1'                        *IF
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     END                             *FI
+      *
+      * DSPFIL: Exit Program Proc - R10 Copy source templates  *
+     C*DSPFIL: Cpysrc Templates Exit Program Processing
+     C/COPY WNCPYSRC,ME1090DEPP
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Copy any undisplayed messages back to caller
+     C                     CALL 'Y2CPMSC'
+     C                     PARM           ##PGM
+      *
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C                     MOVEL'MEMSG'   ZADFMF 10
+     C                     Z-ADD11        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+      * Maximum record number
+     C                     Z-ADD*ZERO     ##RRMX
+      * Scan limit
+     C                     Z-ADD500       W0SLM   50
+      *................................................................
+     C                     MOVEL*BLANK    W0GRP   1
+     C                     Z-ADD0         Q       50
+     C                     MOVEA'00'      *IN,77
+      * USER: Initialise program
+      * Retrieve Midas Date - R10 Standard Functions  *
+     C*
+     C*  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* Get Rundate - Rundate  *
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Set multi-branch indicator
+      *
+     C           WUMBIN    IFNE 'Y'                        Multi Branched ?
+     C                     MOVEL'1'       *IN70
+     C                     END
+     C*
+     C* Get modules information
+     C*
+     C                     CALL 'AOMMODR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           MMODDS    PARM *BLANKS   DSFDY            O:Module Flg
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD2         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * Open file MEINMVL1
+      *
+     C           FIL001    IFEQ *BLANKS
+      *
+      *  Override file MEINMVL1 to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'MEINMVL1'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'QCMDEXC' W0KEY
+     C                     Z-ADD3         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     OPEN MEINMVL1
+     C                     MOVEL'Y'       FIL001  1
+     C                     END
+      *
+      * Open file MEINMVL0
+      *
+     C           FIL002    IFEQ *BLANKS
+      *
+      *  Override file MEINMVL0 to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'MEINMVL0'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'QCMDEXC' W0KEY
+     C                     Z-ADD4         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     OPEN MEINMVL0
+     C                     MOVEL'Y'       FIL002  1
+     C                     END
+      * DSPFIL: Initialise Prog. - R10 Copy source templates  *
+     C*DSPRCD: Cpysrc Templates Initialise Program C-Spec
+     C/COPY WNCPYSRC,ME1090DCPG
+      * Initialise subfile control
+     C                     EXSR MEIZ#2
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+     C*
+     C* File and Program Error Processing
+     C*
+     C/COPY MECPYSRC,SRERRC
+     O*DSPRCD: Cpysrc Templates Initialise Program O-Spec
+     O/COPY WNCPYSRC,ME1090DOPG
+**  CPY@
+(c) Finastra International Limited 2001
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

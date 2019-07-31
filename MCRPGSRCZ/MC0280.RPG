@@ -1,0 +1,821 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Back/forward valued posting audit')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Management Accounting Module
+     F*                                                               *
+     F*  MC0280    Back/Forward Valued Postings Audit                 *
+     F*                                                               *
+     F*  Function: This program lists all postings on the system      *
+     F*  (CoB)     with posting date within the current period and    *
+     F*            posting date not equal to value date. The          *
+     F*            selected postings are listed in value date order   *
+     F*            with subheadings giving the relative period the    *
+     F*            value date falls into (relative to the current     *
+     F*            period).
+     F*            A P1 report is produced as long as no error occurs *
+     F*            in sr/#A. An AU is produced if an error occurs.    *
+     F*                                                               *
+     F*  Called by: MCC0280 - Back/Forward Valued Postings Audit      *
+     F*                       Control                                 *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CMC001             Date 18Mar96               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+     F*  CMC001 - Management Accounts Enhancement for PCA:            *
+     F*           Recompile due to change of PF/GLPERDPD              *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FMC0280P1O   E                    PRINTER      KINFSR INFSR      UC
+     F                                              KINFDS MCRPT
+      *
+      ** P1 Report
+     FMC0280AUO   E                    PRINTER      KINFSR INFSR      UC
+     F                                              KINFDS MCAUD
+      *
+      ** AU Report
+     FAPOSTL3 IF  E           K        DISK         KINFSR INFSR
+      *
+      ** Current and Historic Postings by Valued Date file
+     FGLPERDL3IF  E           K        DISK         KINFSR INFSR
+      *
+      ** Period Details by Set Code, Start of Period Date, @PERDDX
+     FGLPERDL5IF  E           K        DISK         KINFSR INFSR
+      *
+      ** Period Details by Set Code, Relative Period Number, @PERDEH
+      /EJECT
+      *****************************************************************
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      * 10 - EoF for Group Codes file in main processing loop
+      * 11 - EoF for APOSTL3, posting records by value date
+      * 12 - Record exists on GLPERDL3 with requested key
+      * 13 - Fail on read of GLPERDL3
+      * 14 - System is multibranched
+      * 15 - Profit Centres are used in the system
+      * 98 - Seton if date format is MMDDYY (rather than DDMMYY)
+      * U1 - Details have been reported
+      * U6 - Program error
+      * U7 - Database error
+      * U8 - Database error
+      *
+      **************************************************************
+      *
+      *  S U B R O U T I N E   I N D E X
+      *
+      *  (Note that sr name indicates calling routine, eg sr/#BC is
+      *   called from sr/#B, #Z routines are called from anywhere)
+      *  (Note that sr's are ordered in the program to minimise
+      *   paging by bunching sr as close to exsr line as possible)
+      *
+      * MAIN   - Main control routine
+      * #B     - Process APOSTPD records
+      * #BA    - Process posting record read
+      * #BB    - Format fields and write to report
+      * ZFRPED - Format posting amount
+      * ZDATE2 - Format dates from Midas run date to DDMMMYY
+      * #ZA    - Write audit trail and end of report line
+      * #A     - Initial processing
+      * *PSSR  - Program error subroutine
+      * INFSR  - File error subroutine
+      *
+      **************************************************************
+      *
+      *  P R O G R A M   C A L L E D   I N D E X
+      *
+      * ZSFILE    - Log spool file to RCF
+      * AOBANKR0  - Obtain bank details
+      * AOCURRR0  - Obtain currency details
+      * AOGELRR0  - Obtain general ledger details
+      *
+      **************************************************************
+      /EJECT
+      *
+      ** CPYP  Copyright array
+     E                    CPYP    1   1 80
+      *
+      ** Copy in formatting arrays
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZFRPEDZ1
+      **************************************************************
+      /EJECT
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, Long Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     ISDGELR    E DSSDGELRPD
+      **  General Ledger details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Currency details
+     I/COPY WNCPYSRC,MC0280I001
+      *
+     IMCRPT       DS
+      ** File information DS for MC0280P1 report
+     I                                       83  92 PFILE1
+     I                                    B 123 1240PFNUM1
+     I                                    B 188 1890OFLLN1                                    CGL029
+     I                                    B 367 3680PRTLN1                                    CGL029
+      *
+     IMCAUD       DS
+      ** File information DS for MC0280AU report
+     I                                       83  92 PFILEA
+     I                                    B 123 1240PFNUMA
+      *
+     ILDA       E DSLDA
+      ** Local data structure used for error handling
+      *
+     IPSDS       SDS
+      **  Program Status DS
+     I                                      244 253 JOB
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+      ** Posting amount formatting
+      /COPY ZSRSRC,ZFRPEDZ2
+      *
+      /EJECT
+      **************************************************************
+      * MAIN routine - Controlling routine
+      *
+      * NOTE: Generally fields beginning with 'P' are program defined.
+      *       Generally fields beginning with 'R' are used by
+      *       the printer file.
+      *
+      **************************************************************
+      *
+      ** Run initial processing
+     C                     EXSR #A
+     C           *INU7     CABEQ'1'       MAIN1            CAB GOTO
+      *
+      ** Obtain Period Details for Current Period (i.e. Relative Period
+      ** Number of zero) and Period Processing Set (from SDGELRPD)
+      ** by chaining to lf/GLPERDL5
+     C                     Z-ADD*ZEROS    PWRK3   30
+     C           KPERD5    CHAIN@PERDEH              10
+     C           KPERD5    KLIST
+     C                     KFLD           BKPSET
+     C                     KFLD           PWRK3
+      *
+      ** If no record found write to P1 report and end processing
+     C           *IN10     IFEQ '1'                        B1
+     C                     WRITEMC0280H1                   *1
+     C                     WRITEMC0280D2                   *1
+     C                     ELSE                            X1
+      *
+      ** Otherwise run processing subroutine to read thru APOSTL3
+      *
+      ** Save some fields for later use
+     C                     Z-ADDDTSPDD    PSPDD5  50       *1
+     C                     Z-ADDDTEPDD    PEPDD5  50       *1
+     C           DTPDCT    CAT  DTPDYR    RPYR             *1
+     C                     MOVE DTPDNY    RPDNY            *1
+     C                     MOVE DTPDNM    RPDNM            *1
+      *
+      ** Format Period Start Date
+     C                     Z-ADDDTSPDD    ZDAYNO           *1
+     C                     EXSR ZDATE2                     *1
+     C                     MOVE ZADATE    RSPDD            *1
+      *
+      ** Format Period End Date
+     C                     Z-ADDDTEPDD    ZDAYNO           *1
+     C                     EXSR ZDATE2                     *1
+     C                     MOVE ZADATE    REPDD            *1
+      *
+      ** Write period details to report in page headings
+     C                     Z-ADD1         RPAGE            *1
+     C**********           Z-ADD10        PLINE            *1                                 CGL029
+     C                     WRITEMC0280H1                   *1
+     C                     WRITEMC0280H2                   *1
+     C                     EXSR #B                         *1
+     C                     END                             E1
+      *
+     C           MAIN1     TAG                             TAG MAIN1
+      *
+      ** Write end of report and audit trail as required
+     C           *INU7     IFEQ '0'                        B1
+     C                     EXSR #ZA                        *1
+     C                     END                             E1
+      *
+      ** Program termination
+     C                     SETON                     LR
+      *
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#B - Main Processing of APOST records
+      *
+      * Called from:     MAIN Processing
+      *
+      **************************************************************
+     C           #B        BEGSR
+      *
+      ** Read all current and historic postings, in Value Date order
+     C           *LOVAL    SETLLAPOSTL3
+      *
+      ** This loop obtains the first posting with Value Date <> Posting
+      ** Date and with Posting Date within the Current Period
+      *
+      ** Loop until end of file or sr/#BA is run
+     C           *IN11     DOUEQ'1'                        B1
+     C           PRUN      OREQ '#BA'                      B1
+     C                     READ APOSTL3                  11*1
+      *
+      ** Check for Posting Date <> Value Date (from APOSTPD) and
+      ** Posting Date (from APOSTPD) between Start and End of Period
+      ** Dates (from GLPERDL5)
+     C           PSTD      IFNE VALD                       B*2
+     C           PSTD      ANDGEPSPDD5                     B*2
+     C           PSTD      ANDLEPEPDD5                     B*2
+     C           *IN11     ANDEQ'0'                        B*2
+     C                     MOVE '1ST'     PCALL   3        **2
+     C                     EXSR #BA                        **2
+      *
+      ** Force exit of the loop
+     C                     MOVE '#BA'     PRUN    3        **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** This has positioned the file pointer ready for reading the
+      ** next set of records from APOSTPD
+      *
+      ** If end of file was reached
+     C           *IN11     CABEQ'1'       #B9                GOTO
+      *
+      ** This loop prints all posting with Value Date <> Posting Date
+      ** and Posting Date within the Current Period. Each time the
+      ** Value Date is in a different Period a subroutine is run to
+      ** determine which Period it is in.
+      *
+      ** Loop until end of file
+     C           *IN11     DOUEQ'1'                        B1
+      *
+      ** Check for Posting Date <> Value Date (from APOSTPD) and
+      ** Posting Date (from APOSTPD) between Start and End of Period
+      ** Dates (from GLPERDL5)
+     C           PSTD      IFNE VALD                       B*2
+     C           PSTD      ANDGEPSPDD5                     B*2
+     C           PSTD      ANDLEPEPDD5                     B*2
+     C           *IN11     ANDEQ'0'                        B*2
+      *
+      ** Compare Value Date (APOSTPD) with Saved Start and End
+      ** of Period Dates
+     C           VALD      IFLT PSPDD                      B**3
+     C           VALD      ORGT PEPDD                      B**3
+     C                     Z-ADDVALD      SAVD    50       ***3
+     C                     MOVE 'SUB'     PCALL            ***3
+     C                     EXSR #BA                        ***3
+     C                     END                             E**3
+      *
+      ** Format and write APOSTPD details to report
+     C                     EXSR #BB                        **2
+     C                     END                             E*2
+      *
+      ** Read next record from postings file
+     C                     READ APOSTL3                  11*1
+     C                     END                             E1
+      *
+     C           #B9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BA - Find period for posting record just read
+      *
+      * Called from:     #B - Loop through APOSTL3 processing
+      *
+      * Subroutine is run for the first posting record read (field
+      * PCALL set to 1ST) and also for SUBsequent posting records
+      * read (PCAL set to SUB).
+      *
+      **************************************************************
+     C           #BA       BEGSR
+      *
+      ** Obtain the Period Details for the APOSTPD record just read
+      ** using Period Set (GLPERDL5) and Value Date (APOSTL3) from
+      ** GLPERDL3
+     C           KPERD3    SETLL@PERDDX                  12
+     C           KPERD3    KLIST
+     C                     KFLD           DTPSTC
+     C                     KFLD           SAVD
+      *
+      ** If a record on GLPERDL3 exists for this key read it
+     C           *IN12     IFEQ '1'                        B1
+     C                     READ @PERDDX                  13*1
+      *
+      ** Now write a period heading line to report
+      ** Must format Relative Period Number
+     C           DTRPDN    IFLT *ZERO                      B*2
+     C                     Z-SUBDTRPDN    DTRPDN           **2
+     C                     MOVEL'-'       PRPDN            **2
+     C                     ELSE                            X*2
+     C                     MOVEL'+'       PRPDN            **2
+     C                     END                             E*2
+      *
+     C                     MOVE DTRPDN    PRPDN            *1
+      *
+     C**********           ADD  3         PLINE            *1                                 CGL029
+     C                     Z-ADD3         RQDLN1                                              CGL029
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              CGL029
+     C           DIFLN1    IFLE RQDLN1                                                        CGL029
+     C                     WRITEMC0280H3                   *1
+     C                     ENDIF                                                              CGL029
+      *
+      ** If this was a record for the current period (i.e. Relative
+      ** Period Number is zero) must write an extra line to report
+     C           DTRPDN    IFEQ *ZERO                      B*2
+     C**********           ADD  2         PLINE            **2                                CGL029
+     C                     WRITEMC0280D3                   **2
+     C                     END                             E*2
+      *
+      ** Save the Start and End of Period Dates
+     C                     Z-ADDDTSPDD    PSPDD   50       *1
+     C                     Z-ADDDTEPDD    PEPDD   50       *1
+      *
+     C                     ELSE                            X1
+      *
+      ** Otherwise no record on GLPERDL3 for the key
+      ** so read the previous record
+      *
+      ** Save Period Set Code
+     C                     MOVE DTPSTC    PPSTC   1        *1
+      *
+      ** Read GLPERDL3
+     C                     READP@PERDDX                  13*1
+      *
+      ** Ensure this record is for the same Period Set as that read
+      ** from GLPERDL5 and that the value date is within the period.
+     C           PPSTC     IFEQ DTPSTC                     B*2
+     C           VALD      ANDLEDTEPDD                     B*2
+     C           *IN13     ANDEQ'0'                        B*2
+      *
+      ** Now write a period heading line to report
+      ** Must format Relative Period Number
+     C           DTRPDN    IFLT *ZERO                      B**3
+     C                     Z-SUBDTRPDN    DTRPDN           ***3
+     C                     MOVEL'-'       PRPDN            ***3
+     C                     ELSE                            X**3
+     C                     MOVEL'+'       PRPDN            ***3
+     C                     END                             E**3
+      *
+     C                     MOVE DTRPDN    PRPDN            **2
+      *
+     C**********           ADD  3         PLINE            **2                                CGL029
+     C                     Z-ADD3         RQDLN1                                              CGL029
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              CGL029
+     C           DIFLN1    IFLE RQDLN1                                                        CGL029
+     C                     WRITEMC0280H3                   **2
+     C                     ENDIF                                                              CGL029
+      *
+      ** If this was a record for the current period (i.e. Relative
+      ** Period Number is zero) must write an extra line to report
+     C           DTRPDN    IFEQ *ZERO                      B**3
+     C**********           ADD  3         PLINE            ***3                               CGL029
+     C                     WRITEMC0280D3                   ***3
+     C                     END                             E**3
+      *
+      ** Save the Start and End of Period Dates
+     C                     Z-ADDDTSPDD    PSPDD            **2
+     C                     Z-ADDDTEPDD    PEPDD            **2
+      *
+      ** Else the record read from GLPERDL3 was for a different
+      ** Period Set
+     C                     ELSE                            X*2
+      *
+      ** When this routine is called for the first record read
+      ** from APOSTL3 the processing is as below
+     C           PCALL     IFEQ '1ST'                      B**3
+      ** Write a line to the report to indicate the postings have
+      ** Value Date prior to first period for the set
+     C**********           ADD  3         PLINE            ***3                               CGL029
+     C                     WRITEMC0280D5                   ***3
+      *
+      ** Obtain the Start of Period for the next record and derive
+      ** a notional End of Period Date to save. Read GLPERDL3
+     C                     MOVE PPSTC     DTPSTC           ***3
+     C                     Z-ADD0         SAVD             ***3
+     C           KPERD3    SETLL@PERDDX                    ***3
+     C                     READ @PERDDX                  13***3
+      *
+      ** Save the Start and End of Period Dates
+     C                     Z-ADD*ZERO     PSPDD            ***3
+     C           DTSPDD    SUB  1         PEPDD            ***3
+      *
+     C                     ELSE                            X**3
+      ** For subsequent reads of APOSTL3 this routine processes as
+      ** below:
+      *
+      ** Write a line to the report to indicate the postings have
+      ** Value Date after the last period for the set
+      ** starting on new page if necessary
+     C********** PLINE     IFGE 51                         B***4                              CGL029
+     C**********           ADD  1         RPAGE            ****4                              CGL029
+     C**********           Z-ADD11        PLINE            ****4                              CGL029
+     C                     Z-ADD11        RQDLN1                                              CGL029
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              CGL029
+     C           DIFLN1    IFLE RQDLN1                                                        CGL029
+     C                     ADD  1         RPAGE                                               CGL029
+     C                     WRITEMC0280H1                   ****4
+     C                     WRITEMC0280H2                   ****4
+     C                     END                             E***4
+      *
+     C                     MOVE *BLANKS   PRPDN            ***3
+     C**********           ADD  3         PLINE            ***3                               CGL029
+     C                     WRITEMC0280D4                   ***3
+      *
+      ** Save the Start and End of Period Dates
+     C                     Z-ADD*ZERO     PSPDD            ***3
+     C                     Z-ADD99999     PEPDD            ***3
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           #BA9      ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BB - Report of details from APOSTPD file
+      *
+      * Called from:     #B - Loop through APOSTL3 processing
+      *
+      **************************************************************
+     C           #BB       BEGSR
+      *
+      ** Obtain currency decimal places for the posting details (only
+      ** if the currency has changed, else will be same d.p.'s)
+     C           CCY       IFNE PCCY                       B1
+     C                     MOVELCCY       PCCY    3        *1
+     C                     CALL 'AOCURRR0'                 *1
+     C                     PARM '*MSG   ' PRTCD            *1
+     C                     PARM '*KEY'    POPTN            *1
+     C                     PARM CCY       PKEY3   3        *1
+     C           SDCURR    PARM SDCURR    DSSDY            *1
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK                     B*2
+     C                     MOVEL'SDCURRPD'DBFILE           **2
+     C                     Z-ADD005       DBASE            **2
+     C                     MOVELCCY       DBKEY            **2
+     C                     MOVEL'MC0280'  DBPGM            **2
+     C                     SETON                     U7U8LR**2
+     C                     DUMP                            **2
+     C                     EXSR #ZA                        **2
+     C                     GOTO #BB9                       **2GOTO
+      *
+     C                     ELSE                            X*2
+     C                     Z-ADDA6NBDP    ZDECS            **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Format Value Date
+     C                     Z-ADDVALD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RVDAT
+      *
+      ** Format Posting Date
+     C                     Z-ADDPSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RPDAT
+      *
+      ** Format Posting Amount
+     C           DRCR      IFEQ 1                          B1
+     C                     Z-ADDPSTA      ZFLD15           *1
+     C                     ELSE                            X1
+     C                     Z-SUBPSTA      ZFLD15           *1
+     C                     END                             E1
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RPAMT
+     C/COPY WNCPYSRC,MC0280C001
+      *
+      ** Ensure Associated Customer Number does not print as '000000'
+     C********** ASOC      IFEQ *ZERO                      B1                                 CSD027
+     C           ASOC      IFEQ *BLANKS                    B1                                 CSD027
+     C                     MOVE *BLANKS   RASOC            *1
+     C                     ELSE                            X1
+     C                     MOVE ASOC      RASOC            *1
+     C                     END                             E1
+     C/COPY WNCPYSRC,MC0280C002
+      *
+      ** Set up Void flag
+     C           VOIN      IFEQ 1                          B1
+     C                     MOVE 'Y'       RVOIN            *1
+     C                     ELSE                            X1
+     C                     MOVE *BLANK    RVOIN            *1
+     C                     END                             E1
+      *
+      ** Write detail lines for APOSTPD record,
+      ** starting on new page if necessary
+     C********** PLINE     IFGE 55                         B1                                 CGL029
+     C**********           ADD  1         RPAGE            *1                                 CGL029
+     C**********           Z-ADD13        PLINE            *1                                 CGL029
+     C                     Z-ADD13        RQDLN1                                              CGL029
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              CGL029
+     C           DIFLN1    IFLE RQDLN1                                                        CGL029
+     C                     ADD  1         RPAGE                                               CGL029
+     C                     WRITEMC0280H1                   *1
+     C                     WRITEMC0280H2                   *1
+      *
+     C           PRPDN     IFNE *BLANKS                    B*2
+     C                     WRITEMC0280H3                   **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C**********           ADD  1         PLINE   20                                          CGL029
+     C                     SETON                     U1
+     C                     WRITEMC0280D1
+      *
+     C           #BB9      ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      * Format Posting amount subroutine
+      /COPY ZSRSRC,ZFRPEDZ3
+      /EJECT
+      **************************************************************
+      * Format dates subroutine
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      **************************************************************
+      *
+      * SR/#ZA- Audit trail production. An audit trail is produced if
+      *         there are no records to report, or if a database or
+      *         program error occurs. Also writes end of report line
+      *         to P1 report.
+      *
+      * Called from:     MAIN routine
+      *                  #A    Initial processing
+      *                  INFSR File error processing
+      *                  *PSSR File error processing
+      *
+      **************************************************************
+     C           #ZA       BEGSR
+      *
+      ** Produce audit trail if required
+     C           *INU7     IFEQ '1'                        B1
+     C           *INU6     OREQ '1'                        B1
+     C           *INU1     OREQ '0'                        B1
+      *
+     C                     OPEN MC0280AU                   *1
+      *
+      ** Convert binary number to packed numeric and run RCF processing
+      ** to log audit trail to RCF
+     C                     Z-ADDPFNUMA    PSNUM   60       *1
+     C                     CALL 'ZSFILE'                   *1
+     C                     PARM           PSEQ             *1
+     C                     PARM *BLANKS   PPARM            *1
+     C                     PARM           PFILEA           *1
+     C                     PARM           PSNUM            *1
+     C                     PARM           PSERR            *1
+      *
+     C           PSERR     IFEQ 'Y'                        B*2
+     C                     Z-ADD003       DBASE            **2
+     C                     MOVELPFILEA    DBFILE           **2
+     C                     MOVEL'See Dump'DBKEY            **2
+     C                     MOVEL'ZSFILE'  DBPGM            **2
+     C                     SETON                     U7U8LR**2
+     C                     DUMP                            **2
+     C                     END                             E*2
+      *
+      ** Write headings
+     C                     WRITEMC0280A1                   *1
+      *
+      ** Write error format
+     C           *INU7     IFEQ '1'                        B*2
+     C           *INU6     OREQ '1'                        B*2
+     C                     WRITEMC0280A3                   **2
+     C                     END                             E*2
+      *
+      ** Write no details format to AU report
+     C           *INU7     IFEQ '0'                        B*2
+     C           *INU6     ANDEQ'0'                        B*2
+     C                     WRITEMC0280A2                   **2
+     C                     END                             E*2
+      *
+     C                     CLOSEMC0280AU                   *1
+      *
+     C                     END                             E1
+      *
+      ** Write end of report line to the P1 report if required
+     C           *INU7     IFEQ '0'                        B1
+     C           *INU6     ANDEQ'0'                        B1
+      *
+      ** If required start new page and write headings
+     C********** PLINE     IFGE 55                         B*2                                CGL029
+     C                     Z-ADD13        RQDLN1                                              CGL029
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              CGL029
+     C           DIFLN1    IFLE RQDLN1                                                        CGL029
+     C                     WRITEMC0280H1                   **2
+     C                     WRITEMC0280H2                   **2
+     C                     WRITEMC0280H3                   **2
+     C                     END                             E*2
+      *
+     C                     WRITEMC0280T1                   *1
+     C                     CLOSEMC0280P1                   *1
+     C                     END                             E1
+      *
+     C           #ZA9      ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      * SR/#A - Initial processing
+      *
+      * Called from:     MAIN routine
+      *
+      **************************************************************
+     C           #A        BEGSR
+      *
+      ** Receive entry parameter, RCF sequence number
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ
+      *
+      ** Use copyright array to ensure copyright gets into object
+     C                     MOVEACPYP      PBIS   80
+      *
+      ** Obtain bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK                     B1
+     C                     MOVEL'SDBANKPD'DBFILE           *1
+     C                     Z-ADD001       DBASE            *1
+     C                     MOVEL'*FIRST  'DBKEY            *1
+     C                     MOVEL'MC0280'  DBPGM            *1
+     C                     SETON                     U7U8LR*1
+     C                     DUMP                            *1
+     C                     EXSR #ZA                        *1
+     C                     GOTO #A9                        *1 GOTO
+     C                     END                             E1
+      *
+      ** Only show branch if system is multibranched
+     C           BJSBRC    IFEQ *BLANKS                    B1
+     C                     SETON                     14    *1
+     C                     END                             E1
+      *
+      ** Setup the date format indicator used by sr/ZDATE2
+     C           BJDFIN    IFEQ 'M'                        B1
+     C                     SETON                     98    *1
+     C                     END                             E1
+      *
+      ** Obtain GL details
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK                     B1
+     C                     MOVEL'SDGELRPD'DBFILE           *1
+     C                     Z-ADD002       DBASE            *1
+     C                     MOVEL'*FIRST  'DBKEY            *1
+     C                     MOVEL'MC0280'  DBPGM            *1
+     C                     SETON                     U7U8LR*1
+     C                     DUMP                            *1
+     C                     EXSR #ZA                        *1
+     C                     GOTO #A9                        *1 GOTO
+     C                     END                             E1
+      *
+      ** Setup the Profit Centres Used indicator
+     C           BKPRCU    IFEQ 'Y'                        B1
+     C                     SETON                     15    *1
+     C                     END                             E1
+      *
+      ** Register P1 report with RCF
+     C                     OPEN MC0280P1
+      *
+      ** Convert binary number to packed numeric and run RCF processing
+     C                     Z-ADDPFNUM1    PSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM *BLANKS   PPARM   3
+     C                     PARM           PFILE1
+     C                     PARM           PSNUM
+     C                     PARM           PSERR   1
+      *
+     C           PSERR     IFEQ 'Y'                        B1
+     C                     SETON                     U7U8LR*1
+     C                     Z-ADD003       DBASE            *1
+     C                     MOVELPFILE1    DBFILE           *1
+     C                     MOVEL'See Dump'DBKEY            *1
+     C                     MOVEL'ZSFILE'  DBPGM            *1
+     C                     DUMP                            *1
+     C                     EXSR #ZA                        *1
+     C                     END                             E1
+      *                                                                                       CGL029
+     C                     Z-ADD*ZERO     RQDLN1  30                                          CGL029
+     C                     Z-ADD*ZERO     DIFLN1  30                                          CGL029
+      *
+     C           #A9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/*PSSR - Program error subroutine
+      *
+      * Called by:   Executes whenever program error occurs
+      *
+      ***************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Set PERR1 to 'Y' to prevent looping if further errors
+     C           PERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       PERR1   1        *1
+     C                     SETON                     U6    *1
+      *                                                    *1
+      ** Set up fields in LDA
+     C                     MOVEL'*PSSR   'DBKEY            *1
+     C                     Z-ADD991       DBASE            *1
+     C                     MOVEL'MC0280'  DBPGM            *1
+      *
+      ** Dump the program
+     C                     DUMP                            *1
+      *
+      ** Produce error report on audit trail
+     C                     EXSR #ZA                        *1
+     C                     END                             E1
+      *
+      ** Terminate the program
+     C                     SETON                       LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/INFSR - File error subroutine
+      *
+      * Called by:   Executes whenever file exception/error occurs
+      *
+      ***************************************************************
+      *
+     C           INFSR     BEGSR
+      *
+      ** Set PERR2 to 'Y' to prevent looping if further errors
+     C           PERR2     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       PERR2   1        *1
+     C                     SETON                     U7U8  *1
+      *                                                    *1
+      ** Set up fields in LDA
+     C                     MOVEL'INFSR   'DBKEY            *1
+     C                     Z-ADD992       DBASE            *1
+     C                     MOVEL'MC0280'  DBPGM            *1
+      *
+      ** Dump the program
+     C                     DUMP                            *1
+      *
+      ** Produce error report on audit trail
+     C                     EXSR #ZA                        *1
+     C                     END                             E1
+      *
+      ** Terminate the program
+     C                     SETON                       LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      **************************************************************
+      *
+** CPYP         OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN used by sr/ZDATE2
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR used by sr/ZDATE2
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES used by sr/ZDATE2
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,561 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Control FT auto generation')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module
+     F*                                                               *
+     F*  ME1310 - Control FT Auto Generation                          *
+     F*                                                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 145199             Date 16Oct98               *
+      *                 069250             Date 03May94               *
+     F*                 068097             DATE 21JAN94               *
+     F*                 S01435             DATE 24SEP93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  145199 - Recompile for changes to MEINCRPD and MEINMPPD made *
+     F*           in Year 2000 fix 124673.                            *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  068097 - Enquiry into outstanding items too slow             *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/******:*OVRDBF*(File*in*program)*(file*on*system)******************:**   069250
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  64    Shut down of job requested                             *
+     F*  90    General work indicator                                 *
+     F*  91    General work indicator                                 *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     FMEINMPJ3IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      *
+      * RSQ : Incoming Message Parts
+      *
+     FMEINFTL3IF  E           K        DISK                           UC  068097
+     F                                              KINFSR SRFILE         068097
+      *                                                                   068097
+      * RSQ : Incoming Message FT Detl (To be processed)                  068097
+      *                                                                   068097
+     F/COPY WNCPYSRC,ME1310DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY WNCPYSRC,ME1310DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E/EJECT
+     I@INFTL3     01                                                      068097
+      *                                                                   068097
+      * RSQ : Incoming Message FT Detl (To be processed)                  068097
+      *                                                                   068097
+     I              FTMSGR                          ##MSGR                068097
+     I              FTKPRT                          ##KPRT                068097
+      *                                                                   068097
+     I/COPY WNCPYSRC,ME1310DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     IMMODDS    E DSSDMMODPD
+      *
+      * Modules Data Structure *
+      *
+     IINMC      E DSMEINMCPD
+      *
+      *  Define parameters to be passed for message checking
+      *
+     IDSFDY     E DSDSFDY                                                 S01194
+      *                                                                   S01194
+      * Data Structures used by Access Programs                           S01194
+      *                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+      *                                                                   S01194
+      * Data Structures used by Access Programs                           S01194
+      *                                                                   S01194
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           I#MSGR  8
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELI#MSGR    W0PREF
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  If FT not installed return with MIN0217
+      *
+     C           BGFDTR    IFNE 'Y'
+     C                     RETRN
+     C                     END
+      *
+      *  If I#MSGR is blank process all else process message
+      *
+     C           I#MSGR    CASNE*BLANKS   SRMSGR
+     C                     CAS            SRALL
+     C                     ENDCS
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRALL    : Process all available messages                    *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRALL     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRALL '  @STK,Q
+      *
+      *  Define key
+      *
+     C           KYMPJ3    KLIST
+     C                     KFLD           KYMSGR
+      *
+     C           *LIKE     DEFN MPMSGR    KYMSGR
+      *
+      *  Set lower limits on MEINMPJ3 and read until EOF
+      *
+     C                     Z-ADD*LOVAL    KYMSGR
+      *
+     C***********KYMPJ3    SETLLMEINMPJ3                                  068097
+     C***********          READ @INMPJ3                  90               068097
+     C           *LOVAL    SETLL@INFTL3                                   068097
+     C                     READ @INFTL3                  90               068097
+      *                                                                   068097
+      * If record found get details                                       068097
+      *                                                                   068097
+     C           *IN90     IFEQ '0'                                       068097
+      *                                                                   068097
+      *  Define key                                                       068097
+      *                                                                   068097
+     C           KPOSFT    KLIST                                          068097
+     C                     KFLD           ##MSGR                          068097
+     C                     KFLD           ##KPRT                          068097
+      *                                                                   068097
+     C           KPOSFT    CHAIN@INMPJ3              90                   068097
+     C                     END                                            068097
+      *                                                                   068097
+     C           *IN90     DOWEQ'0'
+      *
+      *  Call Auto Generation check and reserve processing
+      *
+     C                     EXSR SRAUTO
+      *
+      * Check for shut down / cancellation
+      *
+     C                     SHTDN                     64
+      *
+     C           *IN64     IFEQ '1'
+     C                     MOVEL'1'       *INLR
+     C                     LEAVE
+     C                     END
+      *
+      *  Read next record
+      *
+     C***********          READ @INMPJ3                  90               068097
+     C                     READ @INFTL3                  90               068097
+      *                                                                   068097
+      * If record found get details                                       068097
+      *                                                                   068097
+     C           *IN90     IFEQ '0'                                       068097
+      *                                                                   068097
+     C           KPOSFT    CHAIN@INMPJ3              90                   068097
+     C                     END                                            068097
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXALL     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMSGR   : Process unique message reference                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRMSGR    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMSGR'  @STK,Q
+      *
+      *  Set limits on MEINMPJ3 and read equal until EOF
+      *
+     C                     MOVELI#MSGR    KYMSGR
+      *
+     C           KYMPJ3    SETLLMEINMPJ3
+     C           KYMPJ3    READE@INMPJ3                  90
+     C           *IN90     DOWEQ'0'
+      *
+      *  Call Auto Generation check and reserve processing
+      *
+     C                     EXSR SRAUTO
+      *
+      * Check for shut down / cancellation
+      *
+     C                     SHTDN                     64
+      *
+     C           *IN64     IFEQ '1'
+     C                     MOVEL'1'       *INLR
+     C                     LEAVE
+     C                     END
+      *
+      *  Read next record
+      *
+     C           KYMPJ3    READE@INMPJ3                  90
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMSGR    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUTO   : Check if available for FT Auto Generation         *
+      *                                                               *
+      *  CALLED BY: SRALL - Process all messages                      *
+      *             SRMSGR- Process Unique message reference          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRAUTO    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRAUTO'  @STK,Q
+      *
+      *  /Copy point for Auto Generation
+      *
+     C/COPY WNCPYSRC,ME1310DAUT
+      *
+      *  If Duplication flag set then ignore for auto gen
+      *
+     C           MPDUPF    IFNE *BLANKS
+     C                     GOTO EXAUTO
+     C                     END
+      *
+      *  Set up parameters
+      *
+     C                     CLEARINMC                       Input Data Str.
+      *
+     C                     MOVELMPNWRK    MCNWRK
+     C                     MOVELMPMTPY    MCMTPY
+     C                     MOVELMPSNDR    MCSNDR
+     C                     MOVEL'*AUTO  ' MCACPT
+     C                     MOVEL##PGM     MCCPGM
+      *
+      * Move passed parameter data to relevant data structure
+      * and on to called program's data structure
+      *
+     C                     MOVELINMC      W1DATA
+     C           *LIKE     DEFN INMC      W1DATA
+      *
+      * Verify message
+      *
+     C                     CALL 'ME1030'               90
+     C                     PARM '*FT_AUTO'W1ACT   8
+     C                     PARM           W1DATA
+     C                     PARM *BLANKS   W1RTN   7
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W1RTN     OREQ '*ERROR*'
+     C                     MOVEL'ME1030  'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 02 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Process for invalid message if return code is 'MIN0091'
+      *
+     C           W1RTN     IFEQ 'MIN0091'
+     C                     GOTO EXAUTO
+     C                     END
+      *
+      *  The swift reference must be written to the reserved messages
+      *  file to prevent other workstations accessing it for update
+      *
+     C                     CALL 'ME1070'               9090
+     C                     PARM '*RESERV' @ACT    7
+     C                     PARM MPMSGR    @MSGR   80
+     C                     PARM MPKPRT    @PART   30
+     C                     PARM MPMOR     @MOR   28
+     C                     PARM MPMIR     @MIR   28
+     C                     PARM *BLANKS   @RTN    7
+      *
+      *  If call to program resulted in an error then end program.
+      *
+     C           @RTN      IFEQ '*ERROR*'
+     C           *IN90     OREQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'ME1070 ' W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * If MIN0107 - Message previously reserved for this job
+      * Not an error in this function.
+      *
+     C           @RTN      IFEQ 'MIN0107'
+     C                     END
+      *
+      * If MIM0108 - Message Already reserved for another job
+      *
+     C           @RTN      IFEQ 'MIN0108'
+     C                     GOTO EXAUTO
+     C                     END
+      *
+      * If the swift reference is valid and available for use then
+      * a reservation on the Reserved Messages file was made.
+      *
+      * If MIN0109 - Message is now reserved for this job
+      *
+     C           @RTN      IFEQ 'MIN0109'
+      *
+      * Comit changes
+      *
+     C                     COMIT
+      *
+     C                     END
+      *
+      *  Call FT Auto Generation
+      *
+     C                     MOVELMPMSGR    FTMSGR
+     C                     MOVELMPKPRT    FTKPRT
+      *
+     C                     CALL 'FT0300'               9090
+     C                     PARM *BLANKS   @RTN    7
+     C                     PARM           FTMSGR  8
+     C                     PARM           FTKPRT  3
+      *
+      *  If call to program resulted in an error then end program.
+      *
+     C           @RTN      IFEQ '*ERROR*'
+     C           *IN90     OREQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'FT0300 ' W0KEY
+     C                     Z-ADD3         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Remove reservation
+      *
+     C                     CALL 'ME1070'               9090
+     C                     PARM '*DEL   ' @ACT    7
+     C                     PARM MPMSGR    @MSGR   80
+     C                     PARM MPKPRT    @PART   30
+     C                     PARM MPMOR     @MOR   28
+     C                     PARM MPMIR     @MIR   28
+     C                     PARM *BLANKS   @RTN    7
+      *
+      *  If call to program resulted in an error then end program.
+      *
+     C           @RTN      IFEQ '*ERROR*'
+     C           *IN90     OREQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'ME1070 ' W0KEY
+     C                     Z-ADD4         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * If MIN0110 - Message removed from reservation
+      *
+     C           @RTN      IFEQ 'MIN0110'
+      *
+      * Comit changes
+      *
+     C                     COMIT
+      *
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXAUTO    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Get modules information
+      *
+     C                     CALL 'AOMMODR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           MMODDS    PARM *BLANKS   DSFDY            O:Module Flg
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD5         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Open file MEINMPJ3 if not already open
+      *
+     C           FIL001    IFEQ *BLANKS
+     C                     OPEN MEINMPJ3
+     C                     OPEN MEINFTL3                                  DBF260
+     C                     MOVEL'Y'       FIL001  1
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,ME1310DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+     C/COPY WNCPYSRC,ME1310DOPG
+      *
+      *  /Copy point for Outputs
+      *
+**  CPY@ table
+(c) Finastra International Limited 2001

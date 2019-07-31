@@ -1,0 +1,91 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas GL Account Transfer Report')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC004610 - Midas GL Account Transfer Report                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. CAP204  *CREATE    Date 18Jan10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CAP204 - Retail Account Transfer                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PMODE &PSEQ &PLEV &PENT)
+ 
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&PLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             SNDPGMMSG  MSG('GLC004610 - Midas GL Account Transfer +
+                          Report') TOMSGQ(MRUNQ)
+ 
+/* Initialise job switches and create data area */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+ 
+/* If mode is historic, use GLHATML0 in place of GLATMIL2 */
+ 
+             IF         COND(&PMODE = 'H') THEN(DO)
+ 
+                OVRDBF     FILE(GLATMIL2) TOFILE(GLHATML0)
+ 
+             ENDDO
+ 
+/* Call Midas GL Account Transfer Report */
+ 
+             CALL       PGM(GL004610) PARM(&PMODE &PSEQ &PENT)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal terminations */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC004610 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+             IF         COND(&PMODE = 'H') THEN(DO)
+                DLTOVR     FILE(GLATMIPD)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+             ENDPGM

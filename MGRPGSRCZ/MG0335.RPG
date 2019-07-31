@@ -1,0 +1,1443 @@
+     H        1                           F
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MG Format rate change advices')                  *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - MESSAGE GENERATION
+     F*                                                               *
+     F*  MG0335 - FORMAT RATE CHANGE ADVICES                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222373             Date 27Oct03               *
+      *                 219242             Date 01Jul03               *
+      *                 219241             Date 01Jul03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSW025             Date 26Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 179792             Date 01Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 113352             Date 13Feb97               *
+     F*                 CSW096             DATE 03JUN96               *
+     F*                 082874             DATE 09OCT95               *
+     F*                 084320             DATE 07MAR95               *
+     F*                 080096             DATE 12JAN95               *
+     F*                 061807             DATE 28JAN94               *
+     F*                 S01421             DATE 18AUG93               *
+     F*                 E40242             DATE 25JUN92               *
+     F*                 E29588             DATE 07OCT91               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  222373 - Parameter Mismatch                                  *
+      *  219242 - Not possible to create MT103+ payment msg from      *
+      *           non-FT transaction (Recompile)                      *
+      *  219241 - Defaulting of "Details of Charges" assign a         *
+      *           system value (Recompile)                            *
+      *  CSW025 - Midas Message Manager                               *
+      *           - Pass original change type                         *
+      *  CDL008 - Continuous Linked Settlement (Recompiled)           *
+      *  179792 - Clarify hook names and add unique ones next to them.*
+      *           Addition of core hook MG0335MKI1                    *
+     F*  113352 - Set-up CIND (Century flag)  to correct year2000     *
+     F*           display problem.                                    *
+     F*  CSW096 - SWIFT Changes 1996                                  *
+     F*  082874 - S.W.I.F.T. message was NAK'ed because of            *
+     F*           truncation warning for field 38A (Period of         *
+     F*           Notice).  It should be 999 instead of 99R.          *
+     F*           Negated field MGNOTD if it is -999 to make it       *
+     F*           positive.                                           *
+     F*  084320 - Do not set on U7 for a non-fatal error, as this     *
+     F*           will cause the controlling component to end         *
+     F*           abnormally.                                         *
+     F*  080096 - RECOMPILE BECAUSE COPY MEMBER MGCPYSRC,SWIFTTRANS   *
+     F*           CHANGED                                             *
+     F*  061807 - Initialised CFPF before writing to MGOREFPD         *
+     F*  S01421 - REPLACE THE SWIFT TRANSLATION TABLE WITH A          *
+     F*           /COPY STATEMENT (SWIFTTRANS).                       *
+     F*  E40242 - RE-COMPILED FOR CHANGE TO ASEQ                      *
+     F*  E29588 - POST COLLECTION SWIFT RATIONALISATION FIXES         *
+     F*  RE-WRITTEN FOR S01344 - SWIFT RATIONALISATION PHASE 2        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*****************************************************************
+     F/COPY WNCPYSRC,MG0335F002
+     FMGF335PDUF  E                    DISK
+     F                                              KCOMIT
+     FMGOREFL0IF  E           K        DISK
+     F            MGOREFD0                          KRENAMEMGREFL0
+     FMGOREFPDO   E                    DISK
+     F                                              KCOMIT
+     FMGOMSGPDO   E                    DISK
+     F                                              KCOMIT
+     FMG0335P1O   E                    PRINTER                        UC
+     FMG0335AUO   E                    PRINTER                        UC
+     F/COPY WNCPYSRC,MG0335F001
+      ********************************************************************
+      *
+      * ID C  F  H  L    FUNCTION OF INDICATORS
+      *
+      *    05            Error on write to MGOREFPD.
+      *    06            Error on write to MGOMSGPD
+      *    10            EOF MGF335PD
+      *    11            Chain to MGREFL0.
+      *    15            Error in call to standard program (ZMxxxx)
+      *    16            Error on delete of GDF record.
+      *    20            LOKUP operation searching array (GNR, @WRK)
+      *    21            LOKUP operation searching array (GNR)
+      *    22            LOKUP operation for determining the codeword
+      *    24            Error on call to MG5000
+      *    30            Feedback record not generated
+      *    50            MG0335P1 open
+      *    U7U8          Database error
+      *
+     F********************************************************************
+     E                    CPY@    1   1 80               copyright
+     E/COPY WNCPYSRC,MG0335E001
+     E                    MSGA    1   4 60               message text
+     E                    GNR        15  3               msg gen. released
+     E                    @WRK       50  1               work field
+      *
+     E********************************************************************
+      *
+     E/COPY WNCPYSRC,MG0335E002
+     I/COPY WNCPYSRC,MG0335I001
+     I            DS
+     I                                        1  12 CSID
+     I                                        9  11 @BIC
+      **  Data structure to test for BIC code
+      *
+     IMULT        DS                         95
+     I                                        1   5 MTAG
+     I                                        6  55 MFLD
+     I                                       56 105 MERR
+      **  Multiple occurrence data structure for message
+      *
+     IFLD3N       DS                         24
+     I                                        1   6 ZSDATE
+     I                                        7   9 ZSCCY
+     I                                       10  24 ZSAMNT
+      **  Data structure containing codeword for fields 32.
+      *
+     IERR3N       DS                         24
+     I                                        1   3 ZCCY
+     I                                        5  170ZAMT
+      ** Erroneous currency and amount for Field32.
+      *
+     I@MTAG       DS                          5
+     I                                        1   1 COLON1
+     I                                        2   3 FLDNO
+     I                                        4   4 TAG
+     I                                        5   5 COLON2
+      **  Data structure constructing message field tag
+      *
+     IP@IN        DS                            256                       CSW096
+     I                                        1   3 I@SNBR                CSW096
+     I                                        4   9 I@DSCN                CSW096
+     I                                       10  12 I@MTPY                CSW096
+     I                                       13  140I@SETT                CSW096
+     I                                       15  15 I@CONC                CSW096
+     I                                       16  16 I@FTCS                CSW096
+     I                                       17  18 I@MMOD                CSW096
+      ** Data structure for input parameter                               CSW096
+      *                                                                   CSW096
+     IP@OUT       DS                            256                       CSW096
+     I**********                              1   60O@CNSN                             CSW096 CSD027
+     I                                        1   6 O@CNSN                                    CSD027
+     I                                        7  18 O@SWSN                CSW096
+     I                                       19  38 O@NWSN                CSW096
+     I                                       39  49 O@SWDS                CSW096
+     I                                       46  46 W@96CN                CSW096
+     I                                       47  49 W@BIC                 CSW096
+     I                                       50  69 O@NWDS                CSW096
+     I                                       70  75 O@NWRK                CSW096
+     I                                       76  76 O@MGSG                CSW096
+     I                                       77  80 O@MGST                CSW096
+     I                                       81  81 O@PAIN                CSW096
+     I                                       82  87 O@PCNB                CSW096
+     I                                       88  90 O@SPRS                CSW096
+      ** Data structure for ouput parameter                               CSW096
+      *                                                                   CSW096
+     ISDBANK    E DSSDBANKPD
+      **  External Data structure for bank details.
+      *
+     ISDTRAD    E DSSDTRADPD
+      **  External Data structure for trading file.
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  External Data structure for customer details.
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  External Data structure for branch details.
+     I              QQDFAC                          DFACQQ                                    CGL029
+      *
+     ISDMMOD    E DSSDMMODPD
+      **  External Data structure for module ICD file.
+      *
+     ISDMGME    E DSSDMGMEPD
+      **  Data structure for message management data.
+      *
+     IDSFDY     E DSDSFDY
+      **  Short data structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      **  Long data structure for access programs
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area
+      *
+     C/EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INTF - Initialise non-constant fields.                      *
+      ****ROUT*-*Determine*Message*Routing.****************************   CSW096
+      * SRROUT - Determine Message Routing.                           *   CSW096
+      *   FMTA - Format Message Detail.                               *
+      ****NWAD*-*Determine*Default*Network*Address.********************   CSW096
+      ****PRAD*-*Determine*Priority*Network*Address.*******************   CSW096
+      **TXROUT*-*Attempt*priority*route*to*STTX/Telex******************   CSW096
+      **SWROU**-*Attempt*priority*route*to*SWIFT***********************   CSW096
+      ****FILL*-*Fill*arrays*for*generation*state**********************   CSW096
+      *   REPT - Print Incorrectly Generated Messages.                *
+      *   OMSG - Output Correctly Generated Messages.                 *
+      *   WREF - Write o/p reference to MGREF.                        *
+      *   INIT - Initial Process.                                     *
+      *   *PSSR- Error Handling.                                      *
+      *                                                               *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   NOTE:   A multiple occurrence data structure is used to     *
+      *           store up the records that make up the SWIFT message *
+      *           before writing the whole message to file.           *
+      *           To store the records of the message, you must       *
+      *           first access an OCUR record, obtain the Message Tag *
+      *           & Message field data values for this OCUR record,   *
+      *           then go on to the next OCUR record and continue     *
+      *           this process until the SWIFT message is complete.   *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN - main process                                         *
+      *   Called by - none                                            *
+      *   Calls - INIT Initial Process.                               *
+      *           INTF Initialise non-constant fields.                *
+      ************ROUT*Determine*Message*Routing.**********************   CSW096
+      *           SRROUT Determine Message Routing.                   *   CSW096
+      *           FMTA Format Message Detail.                         *
+      *           REPT Print Incorrectly Generated Messages.          *
+      *           OMSG Output Correctly Generated Messages.           *
+      *****************************************************************
+      *
+      ** Initial process
+      *
+     C                     EXSR INIT
+      *
+      ** Read the first record from the MT335 extract file
+      *
+     C                     READ MGF335PD                 10
+      *
+      ** Format Message Control.
+      *
+      ** Do While records found on the MT335 extract file
+      *
+     C           *IN10     DOWEQ'0'
+      *
+      ** Initialise non-constant fields
+      *
+     C                     EXSR INTF
+      *
+      ** Determine Message Routing.
+      *
+     C***********          EXSR ROUT                                      CSW096
+     C                     EXSR SRROUT                                    CSW096
+      *
+      ** Format Message Detail.
+      *
+     C                     EXSR FMTA
+      *
+      ** Print incorrectly generated message.
+      *
+     C           @ERR      IFEQ 'Y'
+     C                     EXSR REPT
+     C                     ELSE
+      *
+      ** Output correctly generated message.
+      *
+     C                     EXSR OMSG
+      *
+      ** If confirmation matching switched on, generate feedback record
+      **  (at present only produced for dealing)
+      *
+     C           BGCFMT    IFEQ 'Y'
+     C           MGMODI    ANDEQ'DL'
+     C                     EXSR CFMAT
+     C                     END
+      *
+     C                     END
+      *
+      ** Delete the processed GDF record.
+      *
+     C                     DELETMGF335PD               16
+      *
+      **  Error on delete of record.
+      *
+     C           *IN16     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '012'     DBASE              * * * * * * *
+     C                     MOVELMGTNUM    DBKEY              * DBERR 012 *
+     C                     MOVEL'MGF335PD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Update sequence numbers on transaction record
+      **  if no errors have occurred
+      *
+     C           @ERR      IFNE 'Y'
+     C                     CALL 'MG5000'               24
+     C                     PARM MGMODI    @MODI   2
+     C                     PARM MGTNUM    @TRAN  15
+     C                     PARM 'CE'      @PROG   2
+     C                     PARM 'U'       @MODE   1
+     C                     PARM *ZEROS    MGLSWC  30
+     C                     PARM *ZEROS    MGLSWS  30
+     C                     PARM *BLANKS   @ERCD   1
+      *
+      **  Error on access for sequence number
+     C           @ERCD     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Program missing on call
+     C           *IN24     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '025'     DBASE            * * * * * * * *
+     C                     MOVE 'MG5000'  DBKEY            *  DBERR 025  *
+     C                     OUT  LDA                        * * * * * * * *
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MG0335  'DBPGM
+     C                     OUT  LDA
+      *
+      **  COMIT all changes since no error on writing the message
+      *
+     C                     COMIT
+      *
+      **  Read the next record.
+      *
+     C                     READ MGF335PD                 10
+     C                     END
+      *
+      **  Write end of report, only if the printer file is open
+      *
+     C           *IN50     IFEQ '1'
+     C                     WRITEEOREPT
+     C                     END
+     C/COPY WNCPYSRC,MG0335C003
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INTF - Initalise non-constant fields                        *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           INTF      BEGSR
+      *
+     C                     MOVE *BLANKS   TRNO
+     C                     MOVE *BLANKS   @TRNA
+     C                     MOVE *BLANKS   @TRNB
+     C                     MOVE '      '  NWRK
+     C**********           Z-ADD0         SECN                                                CSD027
+     C                     MOVE *BLANKS   SECN                                                CSD027
+     C                     MOVE *BLANKS   NWSN
+     C**********           Z-ADD0         DECN                                                CSD027
+     C                     MOVE *BLANKS   DECN                                                CSD027
+     C                     MOVE *BLANKS   NWDS
+     C                     MOVE *BLANKS   MGSG
+     C                     MOVE *BLANKS   MGST
+     C                     MOVE *BLANKS   LSCC
+     C                     MOVE *BLANKS   F57U
+     C                     Z-ADD0         MGTM
+     C                     Z-ADD0         LATM
+     C                     MOVE *BLANKS   RELD
+     C                     Z-ADD0         RELT
+     C                     MOVE *BLANKS   AMTS
+     C                     MOVE *BLANKS   SVDT
+     C                     Z-ADD0         AVDT                            E29588
+     C                     Z-ADD0         ASEQ                            E29588
+      *
+     C                     MOVE *BLANKS   @ERR    1
+     C                     MOVE *BLANKS   SCSID  12
+     C                     MOVE *BLANKS   STELX  10
+     C                     MOVE *BLANKS   SSTTX  12
+     C                     MOVE *BLANKS   SCRNM  20
+     C                     MOVE *BLANKS   SPCNB   6
+     C                     MOVE *BLANKS   SPAIN   1
+     C/COPY WNCPYSRC,MG0335C009
+      *
+      **  Currently positioned at line 1 of Field :72:
+      *
+     C                     MOVE 'N'       LINE2   1
+      *
+      **  Clear multiple occurrence data structure
+      *
+     C                     Z-ADD1         X       20
+     C           X         OCUR MULT
+      *
+     C           X         DOWLE40
+     C           MULT      ANDNE*BLANKS
+     C                     MOVE *BLANKS   MULT
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C                     END
+      *
+      **  Obtain sequence numbers from transaction record
+     C                     CALL 'MG5000'               24
+     C                     PARM MGMODI    @MODI   2
+     C                     PARM MGTNUM    @TRAN  15
+     C                     PARM 'CE'      @PROG   2
+     C                     PARM *BLANKS   @MODE   1
+     C                     PARM *ZEROS    MGLSWC  30
+     C                     PARM *ZEROS    MGLSWS  30
+     C                     PARM *BLANKS   @ERCD   1
+      *
+      **  Error on access for sequence number
+     C           @ERCD     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Program missing on call
+     C           *IN24     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '023'     DBASE            * * * * * * * *
+     C                     MOVE 'MG5000'  DBKEY            *  DBERR 023  *
+     C                     OUT  LDA                        * * * * * * * *
+     C                     EXSR *PSSR
+     C                     END
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MG0335  'DBPGM
+     C                     OUT  LDA
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      ****ROUT*-*determine*message*routing*****************************   CSW096
+      ****Called*by*-*main*process*************************************   CSW096
+      ****Calls*-*NWAD*determine*default*network*addresses*************   CSW096
+      ************PRAD*determine*priority*network*addresses************   CSW096
+      ************FILL*determine*priority*network*addresses************   CSW096
+      *****************************************************************   CSW096
+      ***********                                                         CSW096
+     C***********ROUT      BEGSR                                          CSW096
+      ***********                                                         CSW096
+      ***Access*branch*details*with*Branch*code*of*sender.****************CSW096
+      ***********                                                         CSW096
+     C***********          CALL 'AOBRCHR0'                                CSW096
+     C***********          PARM '*MSG   ' @RTCD                           CSW096
+     C***********          PARM '*KEY   ' @OPTN                           CSW096
+     C***********          PARM MGBRCA    @BRCD   3                       CSW096
+     C***********SDBRCH    PARM SDBRCH    DSSDY                           CSW096
+      ***********                                                         CSW096
+      ***Branch*record*not*found*-*Error**********************************CSW096
+      ***********                                                         CSW096
+     C***********@RTCD     IFNE *BLANKS                                   CSW096
+     C************LOCK     IN   LDA                                       CSW096
+     C***********          MOVE '007'     DBASE              * * * * * * *CSW096
+     C***********          MOVELMGBRCA    DBKEY              * DBERR 007 *CSW096
+     C***********          MOVEL'SDBRCHPD'DBFILE             * * * * * * *CSW096
+     C***********          OUT  LDA                                       CSW096
+     C***********          EXSR *PSSR                                     CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+      *****save*branch*internal*customer*number*&*SWIFT*TID*address*******CSW096
+      ***********                                                         CSW096
+     C***********          MOVELA8BICN    SECN                            CSW096
+     C***********          MOVE A8BTID    SCSID                           CSW096
+      ***********                                                         CSW096
+      ****Access*SDCUSTPD*using*branch*internal*customer*number***********CSW096
+      ***********                                                         CSW096
+     C***********          MOVE *BLANKS   @KEY1                           CSW096
+     C***********          MOVELSECN      @KEY1                           CSW096
+     C***********          CALL 'AOCUSTR0'                                CSW096
+     C***********          PARM '*MSG   ' @RTCD                           CSW096
+     C***********          PARM '*KEY   ' @OPTN                           CSW096
+     C***********          PARM           @KEY1  10                       CSW096
+     C***********          PARM *BLANKS   @KYST   7                       CSW096
+     C***********SDCUST    PARM SDCUST    DSSDY                           CSW096
+      ***********                                                         CSW096
+      ***Customer*record*not*found*-*Error********************************CSW096
+      ***********                                                         CSW096
+     C***********@RTCD     IFNE *BLANKS                                   CSW096
+     C************LOCK     IN   LDA                                       CSW096
+     C***********          MOVE '008'     DBASE              * * * * * * *CSW096
+     C***********          MOVEL@KEY1     DBKEY              * DBERR 008 *CSW096
+     C***********          MOVEL'SDCUSTPD'DBFILE             * * * * * * *CSW096
+     C***********          OUT  LDA                                       CSW096
+     C***********          EXSR *PSSR                                     CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+      ****Save*sender's*addresses*&*parent*customer*number****************CSW096
+      ***********                                                         CSW096
+     C***********          MOVE BBTXA1    STELX                           CSW096
+     C***********          MOVE BBSTAD    SSTTX                           CSW096
+     C***********          MOVE BBCRNM    SCRNM                           CSW096
+     C***********          MOVE BBPCNB    SPCNB                           CSW096
+     C***********          MOVE BBPAIN    SPAIN                           CSW096
+      ***********                                                         CSW096
+      ****Access*SDCUSTPD*using*destination*customer*number***************CSW096
+      ***********                                                         CSW096
+     C***********          MOVE *BLANKS   @KEY1                           CSW096
+     C***********          MOVELMGCNUM    @KEY1                           CSW096
+     C***********          CALL 'AOCUSTR0'                                CSW096
+     C***********          PARM '*MSG   ' @RTCD                           CSW096
+     C***********          PARM '*KEY   ' @OPTN                           CSW096
+     C***********          PARM           @KEY1  10                       CSW096
+     C***********          PARM *BLANKS   @KYST   7                       CSW096
+     C***********SDCUST    PARM SDCUST    DSSDY                           CSW096
+      ***********                                                         CSW096
+     C***********          MOVE *BLANKS   DSERR                           CSW096
+     C***********          MOVE MGCNUM    DECN                            CSW096
+      ***********                                                         CSW096
+      ***If*no*record*is*found*on*sdcustpd.*******************************CSW096
+      ***********                                                         CSW096
+     C***********@RTCD     IFNE *BLANKS                                   CSW096
+     C***********          MOVE 'Y'       @ERR    1                       CSW096
+     C***********          MOVELMSGA,2    DSERR  50                       CSW096
+      ***********                                                         CSW096
+      ***Destination*Customer*found.**************************************CSW096
+      ***********                                                         CSW096
+     C***********          ELSE                                           CSW096
+     C***********          MOVE BBCSID    CSID                            CSW096
+      ***********                                                         CSW096
+      ***If*the*default*network*for*the*destination*customer*is***********CSW096
+      ***not*blank*execute*subroutine*NWAD*(Default*Network*Address.)*****CSW096
+      ***If*the*default*is*blank*execute*subroutine*PRAD*(Priority********CSW096
+      ***Network*Address).************************************************CSW096
+      ***********                                                         CSW096
+     C***********BBDNW3    IFNE *BLANKS                                   CSW096
+     C***********          EXSR NWAD                                      CSW096
+     C***********          ELSE                                           CSW096
+     C***********          EXSR PRAD                                      CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+      ****Fill*up*the*message*status*released*info.*from*PF/SDCUSTPD******CSW096
+      ****if*the*message*status*is*blank.*********************************CSW096
+      ***********                                                         CSW096
+     C***********MGST      IFEQ *BLANKS                                   CSW096
+     C***********          EXSR FILL                                      CSW096
+      ***********                                                         CSW096
+      ***The*following*message*types*can*be*entered*on*sdcustpd*as*to*****CSW096
+      ***be*generated*as*released.****************************************CSW096
+      ***(NB.**3** -*any*of*the*300*series*messages.**********************CSW096
+      *********33* -*any*of*the*330*series*messages.)*********************CSW096
+      ***********                                                         CSW096
+     C***********'335'     LOKUPGNR                      20               CSW096
+     C***********'33*'     LOKUPGNR                      21               CSW096
+     C***********'3**'     LOKUPGNR                      22               CSW096
+      ***********                                                         CSW096
+     C************IN20     IFEQ '1'                                       CSW096
+     C************IN21     OREQ '1'                                       CSW096
+     C************IN22     OREQ '1'                                       CSW096
+     C***********          MOVE 'RSND'    MGST                            CSW096
+     C***********          ELSE                                           CSW096
+     C***********          MOVE 'CRTD'    MGST                            CSW096
+     C***********          END                                            CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+     C***********          ENDSR                                          CSW096
+     C/EJECT                                                              CSW096
+      *****************************************************************   CSW096
+      *   SRROUT - determine message routing                          *   CSW096
+      *   Called by - main process                                    *   CSW096
+      *   Calls -                                                     *   CSW096
+      *****************************************************************   CSW096
+      *                                                                   CSW096
+     C           SRROUT    BEGSR                                          CSW096
+      *                                                                   CSW096
+     C                     MOVE MGBRCA    I@SNBR                          CSW096
+     C                     MOVE *BLANKS   I@DSCN                          CSW096
+     C                     MOVE MGCNUM    I@DSCN                          CSW096
+     C                     MOVE '335'     I@MTPY                          CSW096
+     C                     MOVE 'N'       I@CONC                          CSW096
+     C                     Z-ADD0         I@SETT                          CSW096
+     C                     MOVE *BLANK    I@FTCS                          CSW096
+     C                     MOVE MGMODI    I@MMOD                          CSW096
+      *                                                                   CSW096
+      *###################################################################CSW096
+      *                                                                  #CSW096
+      * Below are two copy sources intended for setting up the custom    #CSW096
+      * parameter (P@ZZ) in the call to MG9900.                          #CSW096
+      * One (MG9900CALL) is in ALL MG generation programs and is for use #CSW096
+      * when a change is required to all of them.                        #CSW096
+      * The*other*is*only*in*this*program**********                #CSW096179792
+     C/COPY WNCPYSRC,MG9900CALL                                          #CSW096
+      *                                                                   179792
+      * The other (FT0640ROUT) is also to be found in other MG programs.  179792
+     C/COPY WNCPYSRC,FT0640ROUT                                          #CSW096
+      *                                                                   179792
+      * But this one (MG0335MKI1) is only in this program.                179792
+     C/COPY WNCPYSRC,MG0335MKI1                                           179792
+      *                                                                  #CSW096
+      *###################################################################CSW096
+      *                                                                   CSW096
+     C*********************CALL 'MG9900'                            CSW096CSW036
+     C                     CALL 'MG9901'                                  CSW036
+     C                     PARM *BLANKS   @RTCD                           CSW096
+     C                     PARM           P@IN                            CSW096
+     C                     PARM *BLANKS   P@OUT                           CSW096
+     C                     PARM           P@ZZ  256                       CSW096
+      *                                                                   CSW096
+     C           @RTCD     IFNE *BLANKS                                   CSW096
+     C           *LOCK     IN   LDA                                       CSW096
+     C                     MOVE '092'     DBASE              * * * * * * *CSW096
+     C                     MOVEL'*CALL  ' DBKEY              * DBERR 092 *CSW096
+     C*********************MOVEL'MG9900'  DBFILE             * * * * * * *CSW096CSW036
+     C                     MOVEL'MG9901'  DBFILE             * * * * * * *CSW036
+     C                     OUT  LDA                                       CSW096
+     C                     EXSR *PSSR                                     CSW096
+     C                     ELSE                                           CSW096
+     C                     MOVE O@NWRK    NWRK                            CSW096
+     C**********           Z-ADDO@CNSN    SECN                                         CSW096 CSD027
+     C                     MOVE O@CNSN    SECN                                                CSD027
+     C                     MOVE O@NWSN    NWSN                            CSW096
+     C**********           Z-ADDMGCNUM    DECN                                         CSW096 CSD027
+     C                     MOVE MGCNUM    DECN                                                CSD027
+     C/COPY WNCPYSRC,MG0335C007
+     C                     MOVE O@NWDS    NWDS                            CSW096
+     C                     MOVE O@MGSG    MGSG                            CSW096
+     C                     MOVE O@MGST    MGST                            CSW096
+     C                     MOVE O@PCNB    SPCNB                           CSW096
+     C                     MOVE O@PAIN    SPAIN                           CSW096
+     C                     END                                            CSW096
+      *                                                                   CSW096
+     C/COPY WNCPYSRC,MG0335C010
+     C                     ENDSR                                          CSW096
+     C/EJECT                                                              CSW096
+      *****************************************************************
+      *   FMTA - Format Message Detail.                               *
+      *   Called by - main process                                    *
+      *   Calls     - DATES  formats date fields.                     *
+      *             - FLD72  format field 72.                         *
+      *****************************************************************
+      *
+     C           FMTA      BEGSR
+      *
+      ** Field :20: -  Transaction Reference Number.
+      *
+     C                     Z-ADD1         X       20
+     C           X         OCUR MULT
+      *
+      ** Build up the trn with the module id, the transaction number
+      ** and the last swift sequence add 1.
+      *
+     C                     Z-ADD1         Z       20
+     C                     MOVEA*BLANKS   @WRK
+     C                     MOVEAMGMODI    @WRK
+     C                     MOVEAMGTNUM    @WRK,3
+     C           MGLSWS    ADD  1         HLSWS   30
+     C                     MOVE HLSWS     HSWS    3
+      *
+     C           ' '       LOKUP@WRK,Z                   31
+     C                     MOVEAHSWS      @WRK,Z
+      *
+      **  Check on MGREFPD for a unique TRN,else output as an error.
+      **  and store the TRN of the new confirmation message.
+      *
+     C                     MOVEA@WRK      @TRNA  16
+      *
+     C           @TRNA     CHAINMGREFL0              11
+      *
+      ** If no record is found flag field as in error.
+      *
+     C           *IN11     IFEQ '0'
+     C                     MOVE 'Y'       @ERR
+     C                     MOVEAMSGA,4    MERR
+     C                     END
+      *
+     C                     MOVEL':20:'    MTAG
+     C                     MOVEA@WRK      MFLD
+      *
+      ** Field :21: - Related Reference.
+      *
+     C                     ADD  1         X
+     C           X         OCUR MULT
+      *
+      ** Build up the related ref.with the module id, the transaction
+      ** number and the last swift confiemation sequence.
+      *
+     C                     MOVEA*BLANKS   @WRK
+     C                     MOVEAMGMODI    @WRK
+     C                     MOVEAMGTNUM    @WRK,3
+     C                     MOVE MGLSWC    MLSWC   3
+      *
+     C           ' '       LOKUP@WRK,Z                   31
+     C                     MOVEAMLSWC     @WRK,Z
+     C                     MOVEA@WRK      MFLD
+      *
+     C                     MOVEL':21:'    MTAG
+     C                     MOVEA@WRK      @TRNB  16
+     C/COPY WNCPYSRC,MG0335C011
+      *
+      **  Field :25:  Account Identification.
+      *
+     C                     ADD  1         X
+     C           X         OCUR MULT
+      *
+      ** Build up the account identification with the transaction number
+      ** and the currency code.
+      *
+     C                     Z-ADD1         Z
+     C                     MOVEA*BLANKS   @WRK
+     C                     MOVEAMGTNUM    @WRK
+      *
+     C           ' '       LOKUP@WRK,Z                   31
+     C                     MOVEA'/'       @WRK,Z
+     C                     ADD  1         Z
+     C                     MOVEAMGCCY     @WRK,Z
+      *
+     C                     MOVEA@WRK      MFLD
+     C                     MOVEL':25:'    MTAG
+      *
+      **  Field :38A: Period of Notice.
+      *
+     C                     ADD  1         X
+     C           X         OCUR MULT
+      *
+      **  If notice days = -999, negate it to make it positive.           082874
+      *                                                                   082874
+     C           MGNOTD    IFEQ -999                                      082874
+     C                     Z-SUB-999      MGNOTD                          082874
+     C                     END                                            082874
+      *                                                                   082874
+     C                     MOVELMGNOTD    MFLD
+     C                     MOVEL':38A:'   MTAG
+      *
+      **  Field :32:  Value Date of Deposit, Currency, Contract Amount.
+      *
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C                     MOVE BJRDNB    ZMDAY
+      *
+      **  Convert Midas date to SWIFT date format
+      *
+     C                     CALL 'ZM0060'               15
+     C                     PARM           ZMDAY   50
+     C                     PARM           ZSDATE  6
+      *
+      **  Format currency code and contract amount.
+      *
+     C                     MOVE MGCCY     ZCCY
+     C                     MOVE MGPCPL    ZAMNT
+     C                     CALL 'ZM0040'
+     C                     PARM           ZAMNT  130
+     C                     PARM           ZCCY    3
+     C                     PARM           ZSAMNT 15
+     C                     PARM           ZSCCY   3
+     C                     PARM           ZERR    1
+     C                     PARM           ZSWDPC  1                       222373
+      *
+      ** Error - indicate erroneous fields;
+      *
+     C           ZERR      IFEQ '1'
+     C                     MOVE 'Y'       @ERR
+     C                     MOVELERR3N     MFLD
+     C                     MOVE ':32A:'   MTAG
+     C                     MOVELMSGA,3    MERR
+      *
+     C                     ELSE
+     C                     MOVELFLD3N     MFLD
+     C                     MOVE ':32A:'   MTAG
+     C                     END
+      *
+      ** Field 30 - Effective Date of New Rate.
+      *
+     C                     ADD  1         X
+     C           X         OCUR MULT
+      *
+     C                     CALL 'ZM0060'               15
+     C                     PARM MGVDAT    ZMDAY   50
+     C                     PARM           ZSDATE  6
+      *
+      ** If the program ends in error.
+      *
+     C           *IN15     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '009'     DBASE              * * * * * * *
+     C                     MOVEL'       ' DBKEY              * DBERR 009 *
+     C                     MOVEL'ZM0060'  DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVEL':30:'    MTAG
+     C                     MOVELZSDATE    MFLD
+      *
+      ** Field 37 - Interest field.
+      *
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C                     MOVE MGNIDT    ZMDAY
+     C                     MOVE MGMDAT    ZMDAT
+      *
+     C                     MOVE MGINTR    ZINRT
+     C                     MOVE MGNIDT    ZINPD
+     C                     MOVE MGIPFR    ZINFC
+     C                     MOVE MGICBS    ZCALC
+     C                     CALL 'ZM0070'               15
+     C                     PARM           ZINRT  117
+     C                     PARM           ZINPD   50
+     C                     PARM           ZMDAT   50
+     C                     PARM           ZINFC   1
+     C                     PARM           ZCALC   10
+     C                     PARM           ZSTAG   1
+     C                     PARM           @VAR   35
+     C                     PARM           ZSF72  35
+      *
+      ** If the program ends in error.
+      *
+     C           *IN15     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '010'     DBASE              * * * * * * *
+     C                     MOVEL'       ' DBKEY              * DBERR 010 *
+     C                     MOVEL'ZM0070'  DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C/COPY WNCPYSRC,MG0335C001
+     C                     MOVE '37'      FLDNO
+     C                     MOVE ZSTAG     TAG
+     C                     MOVEL@MTAG     MTAG
+     C                     MOVEL@VAR      MFLD
+      *
+      ** Format field 72.
+      *
+      ** If there is a field 72 output from standard program ZM0070.
+      *
+     C           ZSF72     IFNE *BLANKS
+     C                     ADD  1         X
+     C           X         OCUR MULT
+      *
+     C                     MOVE ':72: '   MTAG
+     C                     MOVELZSF72     MFLD
+      *
+     C                     END
+     C/COPY WNCPYSRC,MG0335C002
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      ****NWAD*-*determine*default*network*addresses*******************   CSW096
+      ****Called*by*-*ROUT*determine*message*routing*******************   CSW096
+      *****************************************************************   CSW096
+      ***********                                                         CSW096
+     C***********NWAD      BEGSR                                          CSW096
+      ***********                                                         CSW096
+      ****Default*is*SWIFT************************************************CSW096
+      ***********                                                         CSW096
+     C***********BBDNW3    IFEQ 'SWIFT'                                   CSW096
+     C***********BBCSID    ANDNE*BLANKS                                   CSW096
+     C***********@BIC      ANDNE'BIC'                                     CSW096
+     C***********BGMSDL    ANDEQ'Y'                                       CSW096
+     C***********          MOVELSCSID     NWSN                            CSW096
+     C***********          MOVELBBCSID    NWDS                            CSW096
+     C***********          MOVE BBDNW3    NWRK                            CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+      ****Default*is*TELEX************************************************CSW096
+      ***********                                                         CSW096
+     C***********BBDNW3    IFEQ 'TELEX'                                   CSW096
+     C***********BBTXA1    ANDNE*BLANKS                                   CSW096
+     C***********BGMTMI    ANDEQ'Y'                                       CSW096
+     C***********          MOVELSTELX     NWSN                            CSW096
+     C***********          MOVELBBTXA1    NWDS                            CSW096
+     C***********          MOVE BBDNW3    NWRK                            CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+      ****Default*is*STTX*************************************************CSW096
+      ***********                                                         CSW096
+     C***********BBDNW3    IFEQ 'STTX'                                    CSW096
+     C***********BBSTAD    ANDNE*BLANKS                                   CSW096
+     C***********BGMSDL    ANDEQ'Y'                                       CSW096
+     C***********          MOVELSSTTX     NWSN                            CSW096
+     C***********          MOVELBBSTAD    NWDS                            CSW096
+     C***********          MOVE BBDNW3    NWRK                            CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+      ****Default*is*PAPER************************************************CSW096
+      ***********                                                         CSW096
+     C***********BBDNW3    IFEQ 'PAPER'                                   CSW096
+     C***********          MOVELSCRNM     NWSN                            CSW096
+     C***********          MOVELBBCRNM    NWDS                            CSW096
+     C***********          MOVE BBDNW3    NWRK                            CSW096
+      ***********                                                         CSW096
+      ****If*the*ICD*option*for*free*format*confirmations*is*'Y',*********CSW096
+      ****the*message*has*already*been*printed*,*hence*no*further*********CSW096
+      ****print*out*is*needed.********************************************CSW096
+     C***********ENFFCR    IFEQ 'Y'                                       CSW096
+     C***********          MOVEL'PRTD'    MGST                            CSW096
+     C***********          MOVE '3'       MGSG                            CSW096
+     C***********          ELSE                                           CSW096
+     C***********          MOVEL'RSND'    MGST                            CSW096
+     C***********          MOVE '2'       MGSG                            CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+      ****Found*to*be*unroutable******************************************CSW096
+      ***********                                                         CSW096
+     C***********NWRK      IFEQ *BLANKS                                   CSW096
+     C***********NWDS      OREQ *BLANKS                                   CSW096
+     C***********NWSN      OREQ *BLANKS                                   CSW096
+     C***********          MOVELSCRNM     NWSN                            CSW096
+     C***********          MOVELBBCRNM    NWDS                            CSW096
+     C***********          MOVEL'UNROUT'  NWRK                            CSW096
+     C***********          MOVE 'CRTD'    MGST                            CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+     C***********          ENDSR                                          CSW096
+     C*/EJECT****                                                         CSW096
+      *****************************************************************   CSW096
+      ****PRAD*-*determine*priority*network*addresses******************   CSW096
+      ****Called*by**ROUT****determine*message*routing*****************   CSW096
+      ****Calls******TXROUT**priority*routing*to*STTX/Telex************   CSW096
+      ***************SWROUT**priority*routing*to*SWIFT*****************   CSW096
+      *****************************************************************   CSW096
+      ***********                                                         CSW096
+     C***********PRAD      BEGSR                                          CSW096
+      ***********                                                         CSW096
+      ****If*STTX/Telex*has*higher*priority*than*SWIFT*attempt************CSW096
+      ****STTX/Telex*routing*first,*followed*by*SWIFT.*(nb.*'Higher'******CSW096
+      ****priority*is*numerically*lower*ie.*'1'*is*higher*than*'2')*******CSW096
+     C***********BLTXPY    IFLT BLSWPY                                    CSW096
+     C***********          EXSR TXROUT                                    CSW096
+     C***********          EXSR SWROUT                                    CSW096
+      ***********                                                         CSW096
+      ****otherwise*attempt*SWIFT*routing*first***************************CSW096
+     C***********          ELSE                                           CSW096
+     C***********          EXSR SWROUT                                    CSW096
+     C***********          EXSR TXROUT                                    CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+      ****If*failed*to*route*to*electronic*network,*produce*paper*********CSW096
+     C***********NWRK      IFEQ *BLANKS                                   CSW096
+     C***********          MOVEL'PAPER'   NWRK                            CSW096
+     C***********          MOVELSCRNM     NWSN                            CSW096
+     C***********          MOVELBBCRNM    NWDS                            CSW096
+      ***********                                                         CSW096
+      ****If*the*ICD*option*for*free*format*advices*is*'Y'*the************CSW096
+      ****message*has*already*been*printed*,*hence*no*further*************CSW096
+      ****print*out*is*needed.********************************************CSW096
+     C***********ENFFCR    IFEQ 'Y'                                       CSW096
+     C***********          MOVEL'PRTD'    MGST                            CSW096
+     C***********          MOVE '3'       MGSG                            CSW096
+     C***********          ELSE                                           CSW096
+     C***********          MOVEL'RSND'    MGST                            CSW096
+     C***********          MOVE '2'       MGSG                            CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+     C***********          ENDSR                                          CSW096
+     C*/EJECT****                                                         CSW096
+      *****************************************************************   CSW096
+      ****TXROUT*-*Attempt*priority*routing*to*STTX/Telex,*if*not******   CSW096
+      *************already*routed**************************************   CSW096
+      ****Called*by***PRAD*********************************************   CSW096
+      ****Calls*******-************************************************   CSW096
+      *****************************************************************   CSW096
+      ***********                                                         CSW096
+     C***********TXROUT    BEGSR                                          CSW096
+      ***********                                                         CSW096
+      ****If*not*already*routed,*attempt*STTX/Telex*routing***************CSW096
+     C***********NWRK      IFEQ *BLANKS                                   CSW096
+      ***********                                                         CSW096
+      ****Note*that*STTX*and*Telex*are*mutually*exclusive*-*try*both******CSW096
+     C***********BGMSDL    IFEQ 'Y'                                       CSW096
+     C***********BBSTAD    ANDNE*BLANKS                                   CSW096
+     C***********SSTTX     ANDNE*BLANKS                                   CSW096
+     C***********          MOVELSSTTX     NWSN                            CSW096
+     C***********          MOVELBBSTAD    NWDS                            CSW096
+     C***********          MOVEL'STTX'    NWRK                            CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+     C***********BGMTMI    IFEQ 'Y'                                       CSW096
+     C***********BBTXA1    ANDNE*BLANKS                                   CSW096
+     C***********STELX     ANDNE*BLANKS                                   CSW096
+     C***********          MOVELSTELX     NWSN                            CSW096
+     C***********          MOVELBBTXA1    NWDS                            CSW096
+     C***********          MOVEL'TELEX'   NWRK                            CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+     C***********          ENDSR                           TXROUT         CSW096
+      ***********                                                         CSW096
+     C*/EJECT****                                                         CSW096
+      *****************************************************************   CSW096
+      ****SWROUT*-*Attempt*priority*routing*to*SWIFT*if*not*already****   CSW096
+      *************routed**********************************************   CSW096
+      ****Called*by***PRAD*********************************************   CSW096
+      ****Calls*******-************************************************   CSW096
+      *****************************************************************   CSW096
+      ***********                                                         CSW096
+     C***********SWROUT    BEGSR                                          CSW096
+      ***********                                                         CSW096
+      ****If*not*already*routed,*attempt*SWIFT*routing********************CSW096
+     C***********NWRK      IFEQ *BLANKS                                   CSW096
+     C***********BGMSDL    ANDEQ'Y'                                       CSW096
+     C***********BBCSID    ANDNE*BLANKS                                   CSW096
+     C***********SCSID     ANDNE*BLANKS                                   CSW096
+     C***********@BIC      ANDNE'BIC'                                     CSW096
+     C***********          MOVELSCSID     NWSN                            CSW096
+     C***********          MOVELBBCSID    NWDS                            CSW096
+     C***********          MOVEL'SWIFT'   NWRK                            CSW096
+     C***********          END                                            CSW096
+      ***********                                                         CSW096
+     C***********          ENDSR                           SWROUT         CSW096
+      ***********                                                         CSW096
+     C*/EJECT****                                                         CSW096
+      *****************************************************************   CSW096
+      ****FILL*-*Fill*up*array*and*GNR*********************************   CSW096
+      ****Called*by*-*ROUT**determine*message*routing******************   CSW096
+      *****************************************************************   CSW096
+      ***********                                                         CSW096
+     C***********FILL      BEGSR                                          CSW096
+      ***********                                                         CSW096
+      ****Is*message*to*be*generated*as*released*?************************CSW096
+      ***********                                                         CSW096
+     C***********          MOVE BBDS01    GNR,1                           CSW096
+     C***********          MOVE BBDS02    GNR,2                           CSW096
+     C***********          MOVE BBDS03    GNR,3                           CSW096
+     C***********          MOVE BBDS04    GNR,4                           CSW096
+     C***********          MOVE BBDS05    GNR,5                           CSW096
+     C***********          MOVE BBDS06    GNR,6                           CSW096
+     C***********          MOVE BBDS07    GNR,7                           CSW096
+     C***********          MOVE BBDS08    GNR,8                           CSW096
+     C***********          MOVE BBDS09    GNR,9                           CSW096
+     C***********          MOVE BBDS10    GNR,10                          CSW096
+     C***********          MOVE BBDS11    GNR,11                          CSW096
+     C***********          MOVE BBDS12    GNR,12                          CSW096
+     C***********          MOVE BBDS13    GNR,13                          CSW096
+     C***********          MOVE BBDS14    GNR,14                          CSW096
+     C***********          MOVE BBDS15    GNR,15                          CSW096
+      ***********                                                         CSW096
+     C***********          ENDSR                                          CSW096
+     C/EJECT
+      *****************************************************************
+      *   REPT - print incorrectly generated messages                 *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           REPT      BEGSR
+      *
+      ** If MG0335P1 has not previously opened.
+      *
+     C           *IN50     IFEQ '0'
+     C                     OPEN MG0335P1
+     C                     SETON                     50                   084320
+     C************         SETON                     50U7                 084320
+     C                     END
+      *
+     C                     WRITEHEADER
+     C                     WRITETEXT
+      *
+      **  Process multiple occurrence data structure
+      *
+     C                     Z-ADD0         I       20
+     C           I         DOWLEX
+     C                     ADD  1         I
+     C           I         OCUR MULT
+     C                     WRITELINE
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   OMSG - output correctly generated messages                  *
+      *   Called by - main process                                    *
+      *   Calls - WREF.                                               *
+      *****************************************************************
+      *
+     C           OMSG      BEGSR
+      *
+      ** Write reference record to PF/MGOREFPD.
+      *
+     C                     EXSR WREF
+      *
+      **  Write multiple occurrence data structure to MGOMSGPD
+      *
+     C                     Z-ADD1         X       20
+     C           X         OCUR MULT
+      *
+     C           X         DOWLE40
+     C           MFLD      ANDNE*BLANKS
+     C                     WRITEMGOMSGD0               06
+      *
+      **  Error on write to PF/MGOMSGPD (message data file)
+      *
+     C           *IN06     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '011'     DBASE              * * * * * * *
+     C                     MOVEL'       ' DBKEY              * DBERR 011 *
+     C                     MOVEL'MGOMSGPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   CFMAT - produce confirmation matching feedback record       *
+      *   Called by   Main process                                    *
+      *   Calls       -                                               *
+      *****************************************************************
+      *
+     C           CFMAT     BEGSR
+      *
+     C                     CALL 'MG5001'
+     C                     PARM TRNO      @TRNM  16
+     C                     PARM MGBRCA    @BRCA   3
+     C                     PARM *BLANK    @FEED   1
+      *
+     C           @FEED     IFEQ 'Y'
+      *
+     C           *IN50     IFEQ '0'
+     C                     OPEN MG0335P1
+     C                     SETON                     50U7
+     C                     END
+      *
+      **   Set up headings and sender/customer information
+      **       for the error report
+     C                     MOVE '1'       *IN30
+     C                     MOVELMGTNUM    TNUM    60
+     C                     WRITEHEADER
+     C                     WRITETEXT
+     C                     WRITEFEED
+     C                     MOVE '0'       *IN30
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   WREF - Write reference record to PF/MGOREFPD                *
+      *   Called by - OMSG  output message PF/MGOMSGPD                *
+      *****************************************************************
+      *
+     C           WREF      BEGSR
+      *
+     C                     MOVE *BLANKS   SYTM
+     C                     MOVE MGMODI    MODI
+     C                     MOVE @TRNA     TRNO
+     C                     MOVE *BLANKS   TRNF
+     C                     MOVE *BLANKS   TRNM
+     C                     MOVELMGTNUM    MTRN
+     C                     MOVE MGTTYP    TNTP
+     C                     MOVE MGTSTP    SBTP
+     C                     MOVE MGAMTP    EVTP                            E29588
+     C                     Z-ADDMGAVDT    AVDT                            E29588
+     C                     Z-ADDMGASEQ    ASEQ                            E29588
+     C                     MOVEL*BLANKS   NWBN
+     C                     MOVE '335'     MTPY
+     C                     MOVE 'N'       MPRY
+     C                     MOVEL*BLANKS   PTST
+     C                     MOVEL*BLANKS   CARQ
+     C                     MOVEL*BLANKS   MPDE
+     C                     MOVEL@HRDT     HRDT
+     C                     TIME           MGTM
+     C                     MOVE BJMRDT    LADT
+     C                     MOVE MGTM      LATM
+     C                     MOVE *BLANKS   CFPF                            061807
+      *
+     C           MGST      IFEQ 'CRTD'
+     C                     MOVE '1'       MGSG
+     C                     END
+     C           MGST      IFEQ 'RSND'
+     C                     MOVE BJMRDT    RELD
+     C                     MOVE MGTM      RELT
+     C                     MOVE '2'       MGSG
+     C                     END
+     C           MGST      IFEQ 'PRTD'
+     C                     MOVE '3'       MGSG
+     C                     END
+      *
+     C                     MOVEL*BLANKS   RUSR
+     C                     MOVEL*BLANKS   RWSN
+     C                     MOVEL*BLANKS   AMTS
+     C                     MOVEL*BLANKS   AMTX
+     C                     MOVEL*BLANKS   SVDT
+     C                     MOVEL*BLANKS   CCY
+     C                     MOVEL*BLANKS   NSNO
+     C                     MOVEL*BLANKS   SACN
+     C                     MOVEL*BLANKS   AORR
+     C                     MOVEL*BLANKS   DESI
+      *
+      **  Branch details
+      *
+     C                     MOVE MGBRCA    BRCA
+     C                     MOVE MGPOBR    OTHB
+     C           OTHB      IFNE *BLANKS
+     C                     MOVELMSGA,1    OTHT
+     C                     END
+     C                     MOVE MGROBR    RCBR
+      *
+     C                     MOVE *BLANKS   NETI
+     C                     MOVE *BLANKS   DELC
+     C                     MOVE *BLANKS   DYST
+     C                     MOVE *BLANKS   RSID
+     C                     MOVE *BLANKS   MSE1
+     C                     MOVE *BLANKS   ELIN
+     C                     MOVE *BLANKS   SSAC
+     C                     MOVE *BLANKS   MIR
+     C                     MOVE *BLANKS   TSKS
+     C                     MOVE *BLANKS   TSKY
+     C                     MOVE MGCHTP    AORR                                                CSW025
+     C/COPY WNCPYSRC,MG0335C004
+      *
+     C                     WRITEMGOREFD0               05
+      *
+      **  Error on write to PF/MGOREFPD (message reference file)
+      *
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '013'     DBASE              * * * * * * *
+     C                     MOVEL'       ' DBKEY              * DBERR 013 *
+     C                     MOVEL'MGOREFPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,MG0335C005
+     C/EJECT
+      *****************************************************************
+      *   INIT - inital process                                       *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'MG0335'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access SDBANKPD for report title
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If no record is found.
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 001 *
+     C                     MOVEL'SDBANKPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access SDTRADPD for trading information
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+      ** If no record is found on sdtradpd.
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 002 *
+     C                     MOVEL'SDTRADPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access SDMMODPD for modules available
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+      ** If no record is found on sdmmodpd.
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 003 *
+     C                     MOVEL'SDMMODPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access SDMGMEPD for message management data.
+      *
+     C                     CALL 'AOMGMER0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMGME    PARM SDMGME    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '026'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 026  *
+     C                     MOVEL'SDMGMEPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY WNCPYSRC,MG0335C006
+      *
+      **  Initialise constant fields
+      *
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+     C                     MOVE ':'       COLON1
+     C                     MOVE ':'       COLON2
+      *
+      **  CRLF Control Character for message data records
+      *
+     C                     MOVE CRLF      CTRC
+      *
+      **  Convert run date to YYMMDD, for Message Generation Date
+      *
+     C                     CALL 'ZM0060'               15
+     C                     PARM BJRDNB    ZMDAY   50
+     C                     PARM           ZSDATE  6
+      *
+      ** If the program ends in error.
+      *
+     C           *IN15     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '004'     DBASE              * * * * * * *
+     C                     MOVEL'       ' DBKEY              * DBERR 004 *
+     C                     MOVEL'ZM0060'  DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     MOVE ZSDATE    MGDE
+      *                                                                   113352
+      ** Set-up Message Generation  Century flag                          113352
+      *                                                                   113352
+     C                     MOVELMGDE      YY      20                      113352
+     C           YY        IFLT 72                                        113352
+     C                     MOVE '2'       CIND                            113352
+     C                     ELSE                                           113352
+     C                     MOVE '1'       CIND                            113352
+     C                     ENDIF                                          113352
+      *
+      **  Convert history retention date to YYMMDD
+      *
+     C           BJRDNB    ADD  ENDSMN    ZMDAY
+     C                     CALL 'ZM0060'               15
+     C                     PARM           ZMDAY
+     C                     PARM           ZSDATE
+      *
+      ** If the program ends in error.
+      *
+     C           *IN15     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '006'     DBASE              * * * * * * *
+     C                     MOVEL'       ' DBKEY              * DBERR 006 *
+     C                     MOVEL'ZM0060'  DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     MOVE ZSDATE    @HRDT   6
+      *
+     C/COPY WNCPYSRC,MG0335C012
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Write database error to report
+      *
+     C                     OPEN MG0335AU
+     C                     WRITEHEAD
+     C                     WRITEDBERROR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,MG0335C008
+      *
+     C/COPY MGCPYSRC,SWIFTTRANS                                           BLI605
+** CPY@   Object Copyright
+(c) Finastra International Limited 2001
+     X/COPY WNCPYSRC,MG0335X001
+** MSGA   Messages
+Settlement - pay
+Customer details not found on SDCUSTPD
+ZM0040 (format ccy and amount) call ended in error
+Duplicate TRN key built for this message

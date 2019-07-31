@@ -1,0 +1,743 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Facility Currency Conv. - Facility X-Rate')   *
+      *****************************************************************
+      *
+      *  Midas   -  Lending Module
+      *
+      *  LE3600  -  Facility Currency Conversion - Facility X-Rate
+      *
+      *  Function:  This Close of Business program will update
+      *             selected facilities. It will convert the exchange
+      *             rates, the multiply/divide indicator and set the
+      *             facility currency to the Euro.
+      *             All changes are detailed on an audit report.
+      *
+      *  (c) Finastra International Limited 2001                      *
+      *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE036             Date 22Sep03               *
+      *                 CAS009             Date 16May05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAP074             Date 08Aug02               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 156381             Date 08Mar99               *
+      *                 148813             Date 13Dec98               *
+      *                 144915             Date 28Oct98               *
+      *                 143514             Date 05Oct98               *
+      *                 CEU021  *CREATE    Date 20Apr98               *
+      *                                                               *
+      *
+      *-------------------------------------------------------------------
+      *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE073 - Interest Rate Rounding (Recompile)
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE036 - LE Enh for Nordea Phase 1 Pty 2- Specific Base Rate *
+      *           (Recompile)                                         *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CAP074 - Lending API enhancements - Loans input. (Recompile) *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  156381 - Rounding discrepancies shown on Converted Facility  *
+      *           Exchange Rate. Avoid taking the inverse of a rate   *
+      *           twice as this leads to rounding errors.             *
+      *  148813 - Use the Facility equivalent exchange rate instead of*
+      *           the spot rate.
+      *           Only output to the New Facility columns if a Multi- *
+      *           Currency Rollover has been done.                    *
+      *           Add 2 new columns: Facility Ccy and Loan Ccy.       *
+      *  144915 - Recompiled due to changes in LF/CLOAN.              *
+      *  143514 - Conversion exchange rates are wrong for some loans  *
+      *           Indicator 'M' instead of 'D'                        *
+      *  CEU021 - EMU LE Facility Currency Conversion
+      *
+      *****************************************************************
+      *  Indicator    Description
+      *  ¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯
+      *  01 - 19      Input Control.
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)
+      *   20          Record Not Found
+      *   21          File Error Occurred
+      *   22          Start/End Of File Reached
+      *   25          Lookup/Scan.
+      *  30 - 39      Program Work Indicators
+      *  40 - 49      Output Control.
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)
+      *  90 - 99      Error Control.
+      *
+      *-------------------------------------------------------------------
+      *  Routine      Description
+      *  ¯¯¯¯¯¯¯      ¯¯¯¯¯¯¯¯¯¯¯
+      *  PIFCUP       Read Facilities Selected for Conversion
+      *  PTTLR        Last Record Total Time
+      *  XUCLOF       Update Customer Loans File - CLOAF
+      *  XUCLON       Update Customer Loans File - CLOAN
+      *  XCAM01       Convert Amounts To Euro
+      *  XSP1D1       Set Details Record For Report
+      *  XWP1W1       Write Details Report Record
+      *  *INZSR       Initial Routine
+      *  *PSSR        Program Error Routine
+      *  @DEFN        Definition Routine (Not Called)
+      *
+      *-------------------------------------------------------------------
+      *  File         Description
+      *  ¯¯¯¯         ¯¯¯¯¯¯¯¯¯¯¯
+      *  LEFCUPL2     Midas LE Fac. Selected for Cy Conv. Branch/Facility
+      *  CLOAF        Midas LE Customers Loans - Cust/FacTyp/Seq/Brnch.
+      *  CLOAN        Midas LE Customers Loans - Loan/RecTyp.
+      *  LE3600P1     Midas LE Facility Cy Conv. Exchange Rates.
+      *
+      *===================================================================
+     F/EJECT
+      *===================================================================
+     FLEFCUPL2IP  E           K        DISK         KINFSR *PSSR
+      *
+     FCLOAF   UF  E           K        DISK         KINFSR *PSSR
+     F            CLOANCLF                          KRENAMECLONCLF
+      *
+     FCLOAN   UF  E           K        DISK         KINFSR *PSSR
+      *
+     FLE3600P1O   E             81     PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOL1
+      *===================================================================
+     E/EJECT
+      *===================================================================
+     E                    CPY@    1   1 80               Object Copyright
+      /COPY ZSRSRC,ZSEFMT1
+      *===================================================================
+     I/EJECT
+     ICLOANZ1F
+     I              NLRA                            NLRAZ1
+      *-------------------------------------------------------------------
+      *===================================================================
+     IPSDS       SDS
+     I                                        1  10 D@PGMN
+      * Program Name
+      *-------------------------------------------------------------------
+     ILDA       E DSLDA                         256
+      * Dataarea: Local Data Area.
+      *-------------------------------------------------------------------
+     IDSFDY     E DSDSFDY
+      *First DS for Access Programs, short data structure.
+      *-------------------------------------------------------------------
+     IDSSDY     E DSDSSDY
+      *Second DS for Access Programs, long data structure.
+      *-------------------------------------------------------------------
+     IDSBANK    E DSSDBANKPD
+      * Definition: Bank Details Accessed Via Access Program.
+      *-------------------------------------------------------------------
+     IDSGELR    E DSSDGELRPD
+      * Definition: General Ledger Details Accessed Via Access Program.
+      *-------------------------------------------------------------------
+     IDSCURR    E DSSDCURRPD
+      * Definition: Currencies Accessed Via Access Program.
+      *-------------------------------------------------------------------
+     IDSKITE      DS                             90
+      * Datastructure: Key - CLOAF
+     I**********                              1   60KCNUM                                     CSD027
+     I                                        1   6 KCNUM                                     CSD027
+     I                                        7   90KFTYP
+     I                                       10  110KFSEQ
+     I                                       12  14 KBRCA
+      *-------------------------------------------------------------------
+     IDSKIT2      DS                             90
+      * Datastructure: Key - CLOAN
+     I**********                              1   60KLNRF                                     CLE148
+     I                                        1   6 KLNRF                                     CLE148
+     I                                        7   7 KRCDT
+      *-------------------------------------------------------------------
+     ISPOOL1      DS
+      * File information data structure.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *-------------------------------------------------------------------
+      /COPY ZSRSRC,ZSEFMT2
+      *===================================================================
+     C/EJECT
+      *===================================================================
+      * Main Processing Control.
+      *
+      *-------------------------------------------------------------------
+      * Process Selected Facilities.
+      *
+     C                     EXSR PIFCUP                     Proc Record
+      *
+     CLR                   EXSR PTTLR                      Proc Last Rec
+      *===================================================================
+     C/EJECT
+     C           PIFCUP    BEGSR
+      *===================================================================
+      * PIFCUP: Process Facilities selected for conversion.
+      *
+      *-------------------------------------------------------------------
+      * Set up key for CLOAF.
+      *
+     C                     MOVE FSCNUM    KCNUM            Set Cust No
+     C                     MOVE FSFACT    KFTYP            Set Fac typ e
+     C                     MOVE FSFCNO    KFSEQ            Set Fac Seq
+     C                     MOVE FSBRCA    KBRCA            Set Branch
+      *-------------------------------------------------------------------
+      * Position File.
+      *
+     C           KCLOF     SETLLCLOAF                      Postn File
+     C           KCLOF     READECLOAF                  2122Rtv Record
+      *
+     C           *IN21     IFEQ *ON                        If Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'CLOAF'   DBFILE    P       Set File
+     C                     MOVELDSKITE    DBKEY     P       Set Key
+     C                     Z-ADD010       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * Set Exchange Rates.                                            .
+      *
+     C           *IN22     DOWEQ*OFF                       DoWhile Rec
+      *
+     C**********           Z-ADDFCXR      WKFCXR 138        Set Orig Ex   148813
+     C**********           MOVE FMDI      WKFMDI  1         Set Orig Ind  148813
+     C**********           MOVE CCY       WKCCY   3         Set Ccy       148813
+     C*                                                                   148813
+      * Conversion between Loan Ccy and Facility Ccy are done in the      148813
+      * opposite direction to a Ccy and EUR.                              148813
+     C           FMDI      IFEQ 'M'                                       148813
+     C                     MOVE 'D'       WKFMDI  1                       148813
+     C                     ELSE                                           148813
+     C                     MOVE 'M'       WKFMDI                          148813
+     C                     ENDIF                                          148813
+      *
+     C                     MOVE CCY       WKCCY   3         Set Ccy
+     C                     MOVE WKFMDI    ZMDI1   1          Set MD Ind   148813
+     C                     MOVE FMDI      P1OEXI           Set Orig Ind   148813
+     C                     EXSR XRCY20                      Obtain Ccy Det
+     C                     Z-ADDFCXR      ZRATE1 138          Set Rate    148813
+     C***********          MOVE A6INCY    WKINCY  1         Set IN Ccy    148813
+      *
+     C                     MOVE FCCY      WKCCY              Set Ccy      148813
+     C                     EXSR XRCY20                       Obtain Ccy   148813
+     C                     Z-ADDA6EUER    ZRATE2 138         Set Rate     148813
+     C                     MOVE A6EUMD    ZMDI2   1          Set MD Ind   148813
+     C                     Z-ADDFCXR      WKFCXR 138        Set Orig Ex
+     C***********          MOVE FMDI      WKFMDI  1         Set Orig Ind  148813
+      *                                                                   148813
+     C           CCY       IFEQ BKEURO                       If Euro Ccy  148813
+     C                     Z-ADD1         FCXR                Set Rate    148813
+     C                     MOVE 'D'       FMDI                            148813
+      *
+     C                     ELSE                              Else         148813
+      *
+     C***********WKINCY    IFEQ 'Y'                         If IN Ccy     143514
+     C***********CCY       IFEQ BKEURO                       If Euro Ccy  143514
+     C***********          SELEC                                    143514148813
+     C***********CCY       WHEQ BKEURO                       If Euro143514148813
+     C***********          Z-ADD1         FCXR                Set Rate    148813
+     C***********          MOVE 'M'       FMDI                Set Ex Ind  143514
+     C***********          MOVE 'D'       FMDI                Set Ex143514148813
+     C***********          ELSE                              Else         143514
+     C***********WKINCY    WHEQ 'Y'                         If IN Cc143514148813
+     C***********          Z-ADD0         WKAMT               Reset Amt   148813
+     C***********          EXSR XCAM01                        Cvt Amount  148813
+     C***********P@MDIN    IFEQ 'M'                                 143514148813
+     C***********          MOVE 'D'       P@MDIN                    143514148813
+     C***********1         DIV  P@EXRT    P@EXRT    H               143514148813
+     C***********          ENDIF                                    143514148813
+     C***********          Z-ADDP@EXRT    FCXR                Set Rate    148813
+     C***********          MOVE P@MDIN    FMDI                Set MD Ind  148813
+     C***********          ENDIF                             End If       143514
+     C***********          ELSE                             Else          143514
+     C***********          OTHER                                    143514148813
+     C***********          Z-ADDA6SPRT    ZRATE1 138         Set Rate     148813
+     C***********          MOVE A6MDIN    ZMDI1   1          Set MD Ind   148813
+     C***********          MOVE BKEURO    WKCCY              Set Ccy      148813
+     C***********          EXSR XRCY20                       Obtain Ccy   148813
+     C***********          Z-ADDA6SPRT    ZRATE2 138         Set Rate     148813
+     C***********          MOVE A6MDIN    ZMDI2   1          Set MD Ind   148813
+      *
+     C                     Z-ADD0         ZRATEX 138         Reset Rate
+     C                     MOVE *BLANK    ZMDIX   1          Clr MD Ind
+     C                     EXSR ZXRATE                       Obtain Rate
+     C                     Z-ADDZRATEX    FCXR               Set Rate
+     C                     MOVE ZMDIX     FMDI               Set MD Ind
+      *
+      * Set the exchange rate to a decent looking figure                  148813
+     C           FCXR      IFLT 0.8                                       148813
+     C***********1         DIV  FCXR      FCXR      H              148813 156381
+      *                                                                   156381
+     C           CCY       IFEQ FCCY                       If CCY EQ FCCY 156381
+     C                     Z-ADDZRATE2    FCXR             UseFCCY A6EUER 156381
+     C                     ELSE                            Else,          156381
+      *                                                                   156381
+     C           ZMDI1     IFEQ ZMDI2                      If M/Dinds same156381
+     C           ZRATE2    DIV  ZRATE1    FCXR      H      Recalculate it 156381
+     C                     ELSE                            Else,          156381
+     C           1         DIV  FCXR      FCXR      H      M/D inds diff. 156381
+     C                     ENDIF                           End if.        156381
+     C                     ENDIF                           End if.        156381
+      *                                                    Else, over 0.8 156381
+     C                     ELSE                                           148813
+     C           FMDI      IFEQ 'M'                                       148813
+     C                     MOVE 'D'       FMDI                            148813
+     C                     ELSE                                           148813
+     C                     MOVE 'M'       FMDI                            148813
+     C                     ENDIF                                          148813
+     C                     ENDIF                                          148813
+      *
+     C                     ENDIF                                          148813
+     C***********          ENDIF                            End If        143514
+     C***********          ENDSL                            End Sele143514148813
+      *
+     C                     MOVE FCCY      P1FCCY            Orig Fac Ccy  148813
+     C                     MOVE BKEURO    FCCY              Set Fac Ccy
+      *
+     C                     EXSR XUCLOF                      Upd Record
+      *-------------------------------------------------------------------
+      * Set up key for CLOAN.
+      *
+     C**********           Z-ADDLNRF      KLNRF             Set Loan Ref                      CLE148
+     C                     MOVELLNRF      KLNRF                                               CLE148
+     C                     MOVE 'B'       KRCDT             Set Rcd Typee
+      *
+     C           KCLON     CHAINCLOAN                2021   Rtv Record
+      *
+     C           *IN21     IFEQ *ON                         If Error
+     C           *LOCK     IN   LDA                          Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P        Set Pgm
+     C                     MOVEL'CLOAN'   DBFILE    P        Set File
+     C                     MOVELDSKIT2    DBKEY     P        Set Key
+     C                     Z-ADD020       DBASE              Set Ref Point
+     C                     OUT  LDA                          Wrt Record
+     C                     EXSR *PSSR                        Proc Error
+     C                     ENDIF                            End If
+      *
+      *
+     C                     MOVE *BLANKS   WKNFCE                          148813
+     C                     MOVE *BLANKS   WKNFMD  1                       148813
+     C           *IN20     IFEQ *OFF                        If Rcd Found
+     C           NCCY      ANDNE*BLANKS                                   148813
+     C                     Z-ADDNFCE      WKNFCE 138         Set Orig New
+     C                     MOVE NFMD      WKNFMD                          148813
+     C                     MOVE 'D'       NFMD                            148813
+     C                     Z-ADD1         NFCE                            148813
+      *
+     C***********          MOVE NFMD      WKNFMD  1          Set Orig New 148813
+     C***********          SELEC                                    143514148813
+     C***********CCY       WHEQ BKEURO                       If Euro143514148813
+     C***********          Z-ADD1         NFCE                Set Ra143514148813
+     C***********          MOVE 'D'       NFMD                Set MD143514148813
+     C***********WKINCY    IFEQ 'Y'                          If IN Ccy    143514
+     C***********WKINCY    WHEQ 'Y'                          If IN C143514148813
+     C***********          Z-ADDP@EXRT    NFCE                Set Rate    148813
+     C***********          MOVE P@MDIN    NFMD                Set MD Ind  148813
+     C***********          ELSE                              Else         143514
+     C***********          OTHER                             Else   143514148813
+     C***********          Z-ADDZRATEX    NFCE                Set Rate    148813
+     C***********          MOVE ZMDIX     NFMD                Set MD Ind  148813
+     C***********          ENDIF                             End If       143514
+     C***********          ENDSL                             End Select   143514
+      *
+     C                     EXSR XUCLON                       Upd Record
+      *
+     C                     ENDIF                            End If
+      *
+     C                     EXSR XSP1D1                      Set Prt Record
+      *
+     C           KCLOF     READECLOAF                  2122 Rtv Record
+      *
+     C           *IN21     IFEQ *ON                         If Error
+     C           *LOCK     IN   LDA                          Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P        Set Pgm
+     C                     MOVEL'CLOAF'   DBFILE    P        Set File
+     C                     MOVELDSKITE    DBKEY     P        Set Key
+     C                     Z-ADD030       DBASE              Set Ref Point
+     C                     OUT  LDA                          Wrt Record
+     C                     EXSR *PSSR                        Proc Error
+     C                     ENDIF                            End If
+      *
+     C                     ENDDO                           End Do
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           PTTLR     BEGSR
+      *===================================================================
+      * PTTLR : Last Record Total Time.
+      *
+      *-------------------------------------------------------------------
+      * Write End of Report.
+      *
+     C           *IN81     IFEQ *ON                        If Overflow
+     C                     MOVE *OFF      *IN81             Reset Overflow
+     C                     WRITEP1H010                 21   Wrt Hdr
+      *
+     C           *IN21     IFEQ *ON                         If File Error
+     C           *LOCK     IN   LDA                          Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P        Set Pgm
+     C                     MOVEL'LE3600P1'DBFILE    P        Set File
+     C                     MOVEL'P1H010'  DBKEY     P        Set Key
+     C                     Z-ADD040       DBASE              Set Ref Point
+     C                     OUT  LDA                          Wrt Record
+     C                     EXSR *PSSR                        Proc Error
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *
+     C           WKDET     IFEQ 'Y'                        If Details Rptd
+     C                     WRITEP1EOR                       Wrt End Of Rpt
+     C                     ELSE                            Else
+     C                     WRITEP1NDR                       Wrt No DetRptd
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XCAM01    BEGSR
+      *===================================================================
+      * XCAM01: Convert Amounts Into Euro Equivalent.
+      *
+      *-------------------------------------------------------------------
+      * Use program EU0200 to convert amounts into Euro.
+      *
+     C                     Z-ADDWKAMT     P@FRAM 183       Set Parm Amt
+      *
+     C                     CALL 'EU0200'               2121Cvt Amount
+     C                     PARM *BLANKS   P@RTCD  7        -O:Return code
+     C                     PARM           P@FRAM           -I:Fr Amount
+     C                     PARM CCY       P@FRCY  3        -I:Fr Ccy
+     C                     PARM BKEURO    P@TOCY  3        -O:To Ccy
+     C                     PARM           P@OUTA 150       -O:Outright Amt
+     C                     PARM           P@INTA 183       -O:Interim Amt
+     C                     PARM           P@EXRT 159       -O:Exchange Rate
+     C                     PARM           P@MDIN  1        -O:Mult/Div
+      *
+     C           P@RTCD    IFNE *BLANKS                    If Rtn Error
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'EU0200'  DBFILE    P       Set File
+     C                     MOVEL'*FIRST'  DBKEY     P       Set Key
+     C                     Z-ADD050       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *
+     C                     Z-ADDP@OUTA    WKAMT  150       Set Rtn Amount
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XRCY20    BEGSR
+      *===================================================================
+      * XRCY20: Retrieve Currency Details.
+      *
+      *-------------------------------------------------------------------
+      *
+     C                     CALL 'AOCURRR0'             2121Rtv Currencies
+     C                     PARM *BLANKS   P@RTCD  7        -O:Return code
+     C                     PARM '*KEY   ' P@OPTN  7        -I:Option
+     C                     PARM WKCCY     P@CYCD  3        -I:Currency
+     C           DSCURR    PARM *BLANKS   DSSDY            -O:Format
+      *
+     C           *IN21     IFEQ *ON                        If Call Error
+     C           P@RTCD    OREQ '*ERROR*'                  Or Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'AOCURRR0'DBFILE    P       Set File
+     C                     MOVEL'*KEY  '  DBKEY     P       Set Key
+     C                     Z-ADD060       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+      /COPY ZSRSRC,ZXRATEZ1
+     C/EJECT
+     C           XUCLOF    BEGSR
+      *===================================================================
+      * XUCLOF: Update Midas LE Customer Loans File (CLOAF).
+      *
+      *-------------------------------------------------------------------
+      * Update Customer Loans File.
+      *
+     C                     UPDATCLONCLF                21  Upd Record
+      *
+     C           *IN21     IFEQ *ON                        If Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'CLONCLF' DBFILE    P       Set File
+     C                     MOVELDSKITE    DBKEY     P       Set Key
+     C                     Z-ADD070       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XUCLON    BEGSR
+      *===================================================================
+      * XUCLON: Update Midas LE Customer Loans File (CLOAN).
+      *
+      *-------------------------------------------------------------------
+      * Update Customer Loans File.
+      *
+     C                     UPDATCLOANCKF               21  Upd Record
+      *
+     C           *IN21     IFEQ *ON                        If Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'CLOANCKF'DBFILE    P       Set File
+     C                     MOVELDSKITE    DBKEY     P       Set Key
+     C                     Z-ADD080       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XSP1D1    BEGSR
+      *===================================================================
+      * XSP1D1 Set Printer(P1) Details.
+      *
+      *-------------------------------------------------------------------
+      * Set Facilities Data.
+      *
+     C                     MOVE FSCNUM    P1CNUM           Set Customer
+     C                     MOVE FSFACT    WKFACT  3        Set Fac type
+     C                     MOVE WKFACT    P1FACT           Set Facility
+     C                     MOVE FSFCNO    P1FCNO           Set Sequence
+     C                     MOVE LNRF      P1LNRF           Set Loan Ref
+     C                     MOVE CCY       P1LCCY           Set Loan Ccy   148813
+      *
+     C                     MOVE WKFCXR    ZRT13            Set Amount
+     C                     MOVE *BLANKS   ZPBAS            Clr Per Cde
+     C                     MOVE *BLANKS   ZRT13A           Clr Edt Cde
+     C                     EXSR ZSEFMT                     Edit Amount
+     C                     MOVE ZRT13A    P1OEXR           Set OrigVal
+      *
+     C***********          MOVE WKFMDI    P1OEXI           Set Orig Ind   148813
+      *
+     C                     MOVE WKNFCE    ZRT13            Set Amount
+     C                     MOVE *BLANKS   ZPBAS            Clr Per Cde
+     C                     MOVE *BLANKS   ZRT13A           Clr Edt Cde
+     C                     EXSR ZSEFMT                     Edit Amount
+     C                     MOVE ZRT13A    P1ONEX           Set ConvVal
+      *
+     C                     MOVE WKNFMD    P1ONEI           Set Orig Ind
+      *
+     C                     MOVE FCXR      ZRT13            Set Amount
+     C                     MOVE *BLANKS   ZPBAS            Clr Per Cde
+     C                     MOVE *BLANKS   ZRT13A           Clr Edt Cde
+     C                     EXSR ZSEFMT                     Edit Amount
+     C                     MOVE ZRT13A    P1CEXR           Set OrigVal
+      *
+     C                     MOVE FMDI      P1CEXI           Set Conv Ind
+      *
+     C                     MOVE NFCE      ZRT13            Set Amount
+     C                     MOVE *BLANKS   ZPBAS            Clr Per Cde
+     C                     MOVE *BLANKS   ZRT13A           Clr Edt Cde
+     C                     EXSR ZSEFMT                     Edit Amount
+     C                     MOVE ZRT13A    P1CNEX           Set ConvVal
+      *
+     C                     MOVE NFMD      P1CNXI           Set Conv Ind
+      *
+     C                     EXSR XWP1W1                     Prt Detail
+      *===================================================================
+     C                     ENDSR
+      *****************************************************************
+      *
+     C/EJECT
+     C           XWP1W1    BEGSR
+      *===================================================================
+      * XWP1W1: Write Printer(P1) Details.
+      *
+      *-------------------------------------------------------------------
+      * Write Printer(P1) Detail Line.
+      *
+     C           *IN81     IFEQ *ON                        If Overflow
+     C                     MOVE *OFF      *IN81             Reset Overflow
+     C                     WRITEP1H010                 21   Wrt Hdr
+      *
+     C           *IN21     IFEQ *ON                         If File Error
+     C           *LOCK     IN   LDA                          Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P        Set Pgm
+     C                     MOVEL'LE3600P1'DBFILE    P        Set File
+     C                     MOVEL'P1H010'  DBKEY     P        Set Key
+     C                     Z-ADD090       DBASE              Set Ref Point
+     C                     OUT  LDA                          Wrt Record
+     C                     EXSR *PSSR                        Proc Error
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *
+     C                     WRITEP1D010                 21  Wrt Details
+      *
+     C           *IN21     IFEQ *ON                        If File Error
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'LE3600P1'DBFILE    P       Set File
+     C                     MOVEL'P1D010'  DBKEY     P       Set Key
+     C                     Z-ADD100       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *
+     C                     MOVE 'Y'       WKDET            Set Details Flg
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+      /COPY ZSRSRC,ZSEFMT3
+     C/EJECT
+     C           *INZSR    BEGSR
+      *===================================================================
+      * *INZSR: Initialization Routine.
+      *
+      *-------------------------------------------------------------------
+      * Initialise Parameters, Work Fields, Etc.
+      *
+     C                     MOVEACPY@      MKI@@  80        Set Copyright
+     C                     MOVE 'N'       WKDET   1        Set Details Flg
+     C                     MOVE *ON       *IN81            Set Prt Hd Ind
+      *-------------------------------------------------------------------
+      * Retrieve Bank Details.
+      *
+     C                     CALL 'AOBANKR0'             2121Access Bank
+     C                     PARM *BLANKS   P@RTCD  7        -O:Return Code
+     C                     PARM '*KEY   ' P@OPTN  7        -I:Option
+     C           DSBANK    PARM *BLANKS   DSFDY            -O:Format
+      *
+     C           *IN21     IFEQ *ON                        If Call Error
+     C           P@RTCD    OREQ '*ERROR*'                  Or Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'AOBANKR0'DBFILE    P       Set File
+     C                     MOVEL'*KEY   ' DBKEY     P       Set Key
+     C                     Z-ADD110       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * Retrieve General Ledger Details (suspense account code).
+      *
+     C**********           CALL 'AOGELRR0'             2121Rtv GL ICD Dtl                     CGL029
+     C                     CALL 'AOGELRR1'             2121                                   CGL029
+     C                     PARM *BLANKS   P@RTCD  7        -O:Return Code
+     C                     PARM '*KEY   ' P@OPTN  7        -I:Option
+     C********** DSGELR    PARM *BLANK    DSFDY            -O:Format                          CGL029
+     C           DSGELR    PARM *BLANK    DSSDY                                               CGL029
+      *
+     C           *IN21     IFEQ *ON                        If Call Error
+     C           P@RTCD    ORNE *BLANKS                    Or Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'SDGELRPD'DBFILE    P       Set File
+     C                     MOVE P@OPTN    DBKEY     P       Set Key
+     C                     Z-ADD120       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * Set Spool File Number And CALL ZSFILE.
+      *
+     C                     Z-ADDSFNUM1    SPLNO            Set Spool No
+      *
+     C                     CALL 'ZSFILE'               2121Call RCF
+     C                     PARM           P@RSEQ           -O:Rpt Seq
+     C                     PARM *BLANKS   RENT    3        -I:Entity
+     C                     PARM           SFILE1           -I:Spool Name
+     C                     PARM           SPLNO   60       -I:Spool Number
+     C                     PARM *BLANKS   ZERR    1        -O:Return Code
+      *
+     C           ZERR      IFEQ 'Y'                        If Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'ZSFILE  'DBFILE    P       Set File
+     C                     MOVELSFILE1    DBKEY     P       Set Key
+     C                     Z-ADD130       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           *PSSR     BEGSR
+      *===================================================================
+      * *PSSR: Error Handling.
+      *
+      *-------------------------------------------------------------------
+      * Check To See That *PSSR Has Not Been Called Yet.
+      *
+     C           WKRUN     IFEQ *BLANK                     If Not Exec
+     C                     MOVE 'Y'       WKRUN   1         Set Off Ind
+     C                     DUMP                             Dmp Pgm
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * If *PSSR Already Run, Then Just End The Program Here.
+      *
+     C                     MOVE *ON       *INU7            Set U7 Ind
+     C                     MOVE *ON       *INU8            Set U8 Ind
+     C                     MOVE *ON       *INLR            Set EndPgm Ind
+     C                     RETRN                           Exit Program
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           @DEFN     BEGSR
+      *===================================================================
+      * @DEFN: Definition Routine (Not Called).
+      *
+      *-------------------------------------------------------------------
+      * Dataareas...
+      *
+     C           *NAMVAR   DEFN           LDA              Dcl LDA
+      *-------------------------------------------------------------------
+      * Lists...
+      *
+     C           KCLOF     KLIST                           Key: CLOAF
+     C                     KFLD           KCNUM            -Customer No
+     C                     KFLD           KFTYP            -Fac type
+     C                     KFLD           KFSEQ            -Fac seq
+     C                     KFLD           KBRCA            -Branch
+      *
+     C           KCLON     KLIST                           Key: CLOAN
+     C                     KFLD           KLNRF            -Loan Ref
+     C                     KFLD           KRCDT            -Rcd Type
+      *
+     C           *ENTRY    PLIST                           Prg: Entry
+     C                     PARM           P@RSEQ  5        -Report Seq
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+** CPY@: Object Copyright
+(c) Finastra International Limited 2001

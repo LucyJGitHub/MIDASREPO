@@ -1,0 +1,90 @@
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZAVPRC  CALCULATE AVERAGE PRICE                                       *
+     C*                                                                        *
+     C*  PURPOSE : TO CALCULATE AN AVERAGE PRICE (BY DIVIDING THE              *
+     C*            VALUE OF A HOLDING BY THE NOMINAL)                          *
+     C*                                                                        *
+     C*  INPUT  FIELDS                                                         *
+     C*       ZNOML  11 0     NOMINAL                                          *
+     C*       ZVALU  15 0     VALUE                                            *
+     C*       ZNMDP   1 0     NOMINAL DECIMAL PLACES (0-4)                     *
+     C*       ZNMCD   1 0     NOMINAL CURRENCY DECIMAL PLACES (0-3 )           *
+     C*       ZPRCB   1 A     PRICE BASIS (P/U)                                *
+     C*                                                                        *
+     C*  OUTPUT  FIELDS                                                        *
+     C*       ZAVPR  15 8     AVERAGE PRICE                                    *
+     C*                                                                        *
+     C*  ALSO REQUIRED                                                         *
+     C*       POWER8 ARRAY                                                     *
+     C*                                                                        *
+     C*  WORK FIELDS:                                                          *
+     C*       ZI      1 0 - INDEX TO POWER ARRAY                               *
+     C*                                                                        *
+     C*  CALLED FROM:                                                          *
+     C*                                                                        *
+     C**************************************************************************
+     C*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  LAST AMEND NO. S01486             DATE 13JUL94                  *
+     C*  PREV AMEND NO. 50593      DW      DATE 05FEB93                  *
+     C*                                                                  *
+     C*------------------------------------------------------------------*
+     C*                                                                  *
+     C*  S01486 - Created for Private Banking (Portfolio Management)     *
+     C*  50593  - AVERAGE PRICE CALCULATED INCORRECTLY                   *
+     C*                                                                  *
+     C********************************************************************
+     C           ZAVPRC    BEGSR                           *** ZAVPRC ***
+     C*
+     C** DEFINE ALL FIELDS
+     C*
+     C**********           Z-ADDZNOML     ZNOML  110                      S01486
+     C                     Z-ADDZNOML     ZNOML  150                      S01486
+     C                     Z-ADDZVALU     ZVALU  150
+     C                     Z-ADDZNMDP     ZNMDP   10
+     C                     Z-ADDZNMCD     ZNMCD   10
+     C                     MOVE ZPRCB     ZPRCB   1
+     C                     Z-ADDZAVPR     ZAVPR  158
+     C*
+     C** IF NOMINAL = 0   END PROCESS
+     C           ZNOML     IFEQ 0
+     C                     Z-ADD0         ZAVPR
+     C*
+     C** IF NOMINAL NOT = ZEROS
+     C                     ELSE
+     C*
+     C** DIVIDE VALUE BY NOMINAL   IN ZAVPR
+     C********** ZVALU     DIV  ZNOML     ZAVPR                           50593
+     C           ZVALU     DIV  ZNOML     WXAVPR 208                      50593
+     C*
+     C** IF PRICE BASIS IS PERCENTAGE
+     C           ZPRCB     IFEQ 'P'
+     C********** 100       MULT ZAVPR     ZAVPR                           50593
+     C           100       MULT WXAVPR    WXAVPR                          50593
+     C                     END
+     C*
+     C** SET POWER8 INDEX TO 5 - NBR NOMINAL DEC. PLACES + NBR CURRENCY DEC. PL.
+     C           5         SUB  ZNMDP     ZI      10
+     C                     ADD  ZNMCD     ZI
+     C*
+     C** DIVIDE AVERAGE PRICE BY POWER
+     C********** ZAVPR     DIV  POWER8,ZI ZAVPR     H                     50593
+     C           WXAVPR    DIV  POWER8,ZI ZAVPR     H                     50593
+     C*
+     C** SET AVERAGE PRICE POSITIVE
+     C           ZAVPR     IFLE 0
+     C                     Z-SUBZAVPR     ZAVPR
+     C                     END
+     C*
+     C** END CONDITION NOMINAL = ZERO
+     C                     END
+     C*
+     C**
+     C                     ENDSR
+     C**************************************************************************

@@ -1,0 +1,811 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Valuation Groups list')
+     H***********                                                         S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  PM0220 - VALUATION GROUPS LIST                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01486             Date 26Aug94               *
+     F*                 R05594             Date 05MAR91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*    S01486 - Portfolio Management Upgrade to R10               *
+     F*    R05594 - OVERPRINTING OF DETAILS WHEN NO NARRATIVE FOR     *
+     F*             VALUATION GROUP                                   *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***PMVLGHPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     FPMVLGHPDIF  E           K        DISK         KINFSR *PSSR          S01486
+     F            PMVLGHP0                          KRENAMEPMVLGHPX
+     FPMVLGHLCIF  E           K        DISK         KINFSR *PSSR
+     F***PMVLGHZZIF**E                    DISK         KINFSR *PSSR       S01486
+     FPMVLGHPAIF  E                    DISK         KINFSR *PSSR          S01486
+     F***PMVLGDPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     FPMVLGDPDIF  E           K        DISK         KINFSR *PSSR          S01486
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       S01486
+     F***PM0220P1O   E             70     PRINTER                         S01486
+     F***PM0220AUO   E                    PRINTER                         S01486
+     FPM0220P1O   E             70     PRINTER      KINFDS SPOOL      UC  S01486
+     FPM0220AUO   E                    PRINTER      KINFDS SPOOLU         S01486
+     F**
+     F*==================================================================
+     F**                FUNCTION OF INDICATORS
+     F**
+     F**  41      - INPUT PARAMETER 'MODE' IS '1'
+     F**  42      - INPUT PARAMETER 'MODE' IS '2'
+     F**  43      - WHEN U4 'ON', PRINT LANGUAGE DETAILS
+     F**  44      - ONLY TO PRINT HEADER DETAILS
+     F**  45      - 'ON'   =  WHEN U4 'ON', PRINT SPACEA(1) FROM 'R LANG'
+     F**          - 'OFF'  =  WHEN U4 'OFF', PRINT SPACEA(1) FROM 'R LIST'
+     F**  54      - PRINT '*** DIFFERENCE ***' LEGEND
+     F**  70      - PAGE OVERFLOW
+     F**
+     F****80      - ACCESS SDBANKPD                                       S01486
+     F**  81      - ACCESS PMVLGHLC
+     F****82      - ACCESS PMVLGHPP                                       S01486
+     F****83      - ACCESS PMVLGHZZ                                       S01486
+     F****84      - ACCESS PMVLGDPP                                       S01486
+     F**  82      - ACCESS PMVLGHPD                                       S01486
+     F**  83      - ACCESS PMVLGHPA                                       S01486
+     F**  84      - ACCESS PMVLGDPD                                       S01486
+     F**  88      - PRINT NO DETAILS TO REPORT                            S01486
+     F**
+     F**  98      - SYSTEM DATE FORMAT
+     F**
+     F**  U4      - MULTILANGUAGE: 'ON' = USED; 'OFF' = NOT USED
+     F**  U8      - FILE OUT OF BALANCE
+     F**  U7 U8   - DATABASE ERROR / DATABASE CONTROL ERROR
+     F**
+     F**  LR      - END OF FILE
+     F**
+     F**                 *************************
+     F**                 ** INDICATORS NOT USED **
+     F**                 *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * __   __   __   __   __   46   47   48   49   50 *
+     F**      * 51   52   53   __   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   __ *
+     F**      * 71   72   73   74   75   76   77   78   79   __ *
+     F**      * __   __   __   __   85   86   87   ..   89   90 *         S01486
+     F**      * 91   92   93   94   95   96   97   __   99      *
+     F**      ***************************************************
+     F**
+     F*==================================================================
+     F/EJECT
+     E**
+     E                    CPY@    1   1 80
+     E/EJECT
+     I**
+     I**  LOCAL DATA AREA FOR DATA BASE ERRORS:
+     I**
+     I**LDA        UDS                            256                     S01486
+     I***********                           132 183 DBLOT                 S01486
+     I***********                           132 141 DBFILE                S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     ISPOOL       DS                                                      S01486
+     I                                       83  92 SFILE                 S01486
+     I                                    B 123 1240SFNUM                 S01486
+     ISPOOLU      DS                                                      S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     I**
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/EJECT
+     C**
+     C**================================================================
+     C**           PROGRAM  START
+     C**================================================================
+     C**
+     C**  DEFINE INPUT PARAMETERS:
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C                     PARM           RSEQ    5                       S01486
+     C**
+     C**  INITIALIZATION:
+     C**
+     C                     EXSR #INIT
+     C**
+     C**  PROCESS AUDIT REPORT:
+     C**
+     C           MODE      IFEQ '1'                        - B1
+     C                     EXSR #PR01
+     C                     ELSE                            - X1
+     C**
+     C**  PROCESS FULL VALUATION GROUPS LIST:
+     C**
+     C           MODE      IFEQ '2'                        - B2
+     C                     EXSR #PR02
+     C                     ELSE                            - X2
+     C**
+     C**  PROCESS DATABASE ERROR:
+     C**
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'02'      DBASE            *****************
+     C                     MOVEL'PM0220'  DBPGM            ** DB ERROR 02 **
+     C                     MOVEL'MODE  '  DBFILE           *****************
+     C                     MOVELMODE      DBKEY
+     C                     OUT  LDA                                       S01486
+     C**
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C**
+     C                     END                             - E1
+     C**
+     C**  PROCESS AUDIT:
+     C**
+     C                     EXSR #AU01
+     C**================================================================
+     C**           PROGRAM  END
+     C**================================================================
+     C**
+     C                     MOVE '1'       *INLR
+     C**
+     C**================================================================
+     C/EJECT
+     C**================================================================
+      **                INDEX TO SUBROUTINES
+      **
+      ** #INIT    -        PROCESS TO INITIALIZE STANDARD FIELDS AND ACCESS
+      **                           OF STANDING DATA
+      ** #PR01    -        PROCESS AUDIT REPORT (MODE = '1')
+      ** #PR02    -        PROCESS VALUATION GROUPS FULL LIST (MODE = '2')
+      ** *PSSR    -        PROCESS DATABASE ERROR
+      ** #AU01    -        PROCESS AUDIT
+      **
+      ** #TYPE    -        PROCESS TO DETERMINE CHANGE TYPE AND COMPUTE RECORDS
+      ** #FIELD   -        PROCESS TO TRANSFER FILE & WORK FIELDS TO PRINTER
+      **                           FIELDS
+      ** #LANG    -        PROCESS TO SET UP LANGUAGE DETAILS
+      **
+      ** #REPOR   -        PROCESS TO PRINT AUDIT REPORT
+      **
+     C**=================================================================
+      **
+      **  #INIT       SUBROUTINE TO INITIALIZE STATIC FIELDS AND ACCESS STANDING
+      **              DATA CALLED ONCE AT START OF PROGRAM FROM MAIN LINE.
+     C**
+      **     CALLED BY PROGRAM
+      **     CALLS     *PSSR
+      **
+     C**=================================================================
+     C**                                                   *****************
+     C           #INIT     BEGSR                           ** #INIT BEGSR **
+     C**                                                   *****************
+     C**  PREPARE LDA:
+     C**
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM0220'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C**
+     C**  INITIALIZE INDICATORS:
+     C**
+     C                     MOVE '0'       *IN
+     C**
+     C**  GET INSTALLATION CONTROL DATA RECORD 1:
+     C**
+     C***********          READ SDBANKPD                 80               S01486
+     C**                                                                  S01486
+     C**  IF RECORD FOUND:
+     C**
+     C************IN80     IFEQ '0'                        - B1           S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*MSG   ' WWRTCD  7                       S01486
+     C                     PARM '*FIRST ' WWOPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C           WWRTCD    IFEQ *BLANKS                                   S01486
+     C**
+     C**  CHECK SYSTEM DATE FORMAT (DDMMYY OR MMDDYY):
+     C**
+     C           BJDFIN    IFEQ 'M'                        - B2
+     C                     MOVE '1'       *IN98            ON => MMDDYY
+     C                     END                             - E2
+     C                     ELSE                            - X1
+     C**
+     C**  OTHERWISE DB ERROR:
+     C**
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'01'      DBASE            *****************
+     C***********          MOVEL'SDBANKPD'DBFILE           ** DB ERROR 01 S01486
+     C                     MOVE 'SDBANKPD'DBFILE           ** DB ERROR 01 S01486
+     C                     MOVEL' NONE '  DBKEY            *****************
+     C                     OUT  LDA                                       S01486
+     C**
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C**
+     C**  WHEN MULTILANGUAGE USED:
+     C**
+     C           *INU4     IFEQ '1'                        - B1
+     C**
+     C**  PRINT 'LANGUAGE' & 'NARRATIVE':
+     C**
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN45
+     C                     END                             - E1
+     C*                                                                   S01486
+     C**  ENSURE AUDIT SPOOL FILE RECORDED BY RCF                         S01486
+     C*                                                                   S01486
+     C                     MOVE RSEQ      SEQ                             S01486
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ                             S01486
+     C                     PARM *BLANKS   SENTY                           S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUMU                          S01486
+     C                     PARM *BLANK    ZSERR                           S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C**                                                   *****************
+     C                     ENDSR                           ** #INIT ENDSR **
+     C**                                                   *****************
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+     **
+     **  #PR01       SUBROUTINE TO PRINT VALUATION GROUPS INSERTED, AMENDED
+     **              OR DELETED DURING DAY.
+     **
+     C**     CALLED BY PROGRAM
+     C**     CALLS     #TYPE, #FIELD, #LANG
+     **
+     C**=================================================================
+     C**                                                   *****************
+     C           #PR01     BEGSR                           ** #PR01 BEGSR **
+     C**                                                   *****************
+     C**  PRINT LIST HEADER:
+     C**
+     C                     MOVE '1'       *IN41
+     C***********          WRITEHEADLI                                    S01486
+     C**
+     C**  ACCESS PMVLGHLC:
+     C**
+     C           BJRDNB    SETLLPMVLGHLC
+     C           BJRDNB    READEPMVLGHLC                 81
+     C           *IN81     IFEQ '0'                                       S01486
+     C                     OPEN PM0220P1                                  S01486
+     C*                                                                   S01486
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF                        S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ     5                       S01486
+     C                     PARM *BLANKS   SENTY   3                       S01486
+     C                     PARM           SFILE                           S01486
+     C                     PARM           ZSNUM                           S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C                     WRITEHEADLI                                    S01486
+     C                     ELSE                                           S01486
+     C                     MOVE '1'       *IN88                           S01486
+     C                     GOTO END01                                     S01486
+     C                     END                                            S01486
+     C**
+     C**  SO LONG AS LAST CHANGE DATE = RUN DATE:
+     C**
+     C           *IN81     DOWEQ'0'                        - B1
+     C**
+     C**  EXECUTE PAGE OVERFLOW:
+     C**
+     C           *IN70     IFEQ '1'                        - B2
+     C                     WRITEHEADLI
+     C                     MOVE '0'       *IN70
+     C                     END                             - E2
+     C**
+     C**  TO PRINT HEADER DETAILS:
+     C**
+     C                     MOVE '1'       *IN44
+     C**
+     C**  DETERMINE CHANGE TYPE AND COMPUTE RECORDS:
+     C**
+     C                     EXSR #TYPE
+     C**
+     C**  TRANSFER FILE AND WORK FIELDS TO PRINTER FIELDS:
+     C**
+     C                     EXSR #FIELD
+     C**
+     C**  PRINT HEADER DETAILS:
+     C**
+     C                     WRITELIST
+     C**
+     C****ACCESS*PMVLGDPP:*********************************************   S01486
+     C***********                                                         S01486
+     C***********PBVALG    SETLLPMVLGDPP                                  S01486
+     C***********PBVALG    READEPMVLGDPP                 84               S01486
+     C*                                                                   S01486
+     C**  Access PMVLGDPD:                                                S01486
+     C*                                                                   S01486
+     C           PBVALG    SETLLPMVLGDPD                                  S01486
+     C           PBVALG    READEPMVLGDPD                 84               S01486
+     C**
+     C**  SO LONG AS VALUATIONS ARE SAME:
+     C**
+     C                     MOVE 'N'       WWLNGD  1                       R05594
+     C           *IN84     DOWEQ'0'                        - B2
+     C                     MOVE 'Y'       WWLNGD                          R05594
+     C**
+     C**  EXECUTE PAGE OVERFLOW:
+     C**
+     C           *IN70     IFEQ '1'                        - B3
+     C                     WRITEHEADLI
+     C                     MOVE '0'       *IN70
+     C                     END                             - E3
+     C**
+     C**  FOR EACH LIVE RECORD READ:
+     C**
+     C           PCRECI    IFEQ 'D'                        - B3
+     C**
+     C**  SET UP LANGUAGE DETAILS:
+     C**
+     C                     EXSR #LANG
+     C**
+     C**  PRINT LANGUAGE DETAILS:
+     C**
+     C                     WRITELANG
+     C                     END                             - E3
+     C**
+     C**  PRINT NO MORE HEADER DETAILS :
+     C**
+     C                     MOVE '0'       *IN44
+     C**
+     C****ACCESS*PMVLGDPP AGAIN:                                          S01486
+     C**  ACCESS PMVLGDPD AGAIN:                                          S01486
+     C**
+     C***********PBVALG    READEPMVLGDPP                 84               S01486
+     C           PBVALG    READEPMVLGDPD                 84               S01486
+     C                     END                             - E2
+     C*                                                                   R05594
+     C** IF NO NARRATIVE DETAILS OUTPUT SET TEXT FIELDS TO BLANK AND      R05594
+     C** WRITE EMPTY LINE                                                 R05594
+     C           WWLNGD    IFEQ 'N'                                       R05594
+     C                     MOVE *BLANKS   RRVLGI                          R05594
+     C                     MOVE *BLANKS   RRVLGN                          R05594
+     C                     WRITELANG                                      R05594
+     C                     END                                            R05594
+     C**
+     C**  ACCESS PMVLGHLC AGAIN:
+     C**
+     C                     READ PMVLGHLC                 81
+     C                     END                             - E1
+     C**
+     C**  PRINT LIST END:
+     C**
+     C                     WRITEENDLI
+     C**                                                   *****************
+     C**********           ENDSR                           ** #PR01 ENDSR S01486
+     C           END01     ENDSR                           ** #PR01 ENDSR S01486
+     C**                                                   *****************
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+     **
+     **  #PR02       SUBROUTINE TO PRINT ALL VALUATION GROUPS.
+     **
+     **     CALLED BY PROGRAM
+     **     CALLS     #TYPE, #FIELD, #LANG
+     **
+     C**=================================================================
+     C**                                                   *****************
+     C           #PR02     BEGSR                           ** #PR02 BEGSR **
+     C**                                                   *****************
+     **  PRINT LIST HEADER:
+     **
+     C                     MOVE '1'       *IN42
+     C***********          WRITEHEADLI                                    S01486
+     C**
+     ****ACCESS*PMVLGHPP:**********************************************   S01486
+     ***********                                                          S01486
+     C                     MOVE *LOVAL    WWVALG  3
+     C***********WWVALG    SETLLPMVLGHPP                                  S01486
+     C*                                                                   S01486
+     C**  Access PMVLGHPD:                                                S01486
+     C*                                                                   S01486
+     C           WWVALG    SETLLPMVLGHPD                                  S01486
+     C**
+     C***********          READ PMVLGHPP                 82               S01486
+     C                     READ PMVLGHPD                 82               S01486
+     C           *IN82     IFEQ '0'                                       S01486
+     C                     OPEN PM0220P1                                  S01486
+     C*                                                                   S01486
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF                        S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ     5                       S01486
+     C                     PARM *BLANKS   SENTY   3                       S01486
+     C                     PARM           SFILE                           S01486
+     C                     PARM           ZSNUM                           S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C                     WRITEHEADLI                                    S01486
+     C                     ELSE                                           S01486
+     C                     MOVE '1'       *IN88                           S01486
+     C                     GOTO END02                                     S01486
+     C                     END                                            S01486
+     C**
+     **  SO LONG AS END OF FILE NOT REACHED:
+     **
+     C           *IN82     DOWEQ'0'                        - B1
+     C**
+     **  EXECUTE PAGE OVERFLOW:
+     **
+     C           *IN70     IFEQ '1'                        - B2
+     C                     WRITEHEADLI
+     C                     MOVE '0'       *IN70
+     C                     END                             - E2
+     C**
+     **  TO PRINT HEADER DETAILS:
+     **
+     C                     MOVE '1'       *IN44
+     C**
+     **  FOR EACH LIVE RECORD READ:
+     **
+     C           PBRECI    IFEQ 'D'                        - B2
+     C**
+     **  ADD 1 TO NUMBER OF RECORDS READ:
+     **
+     C                     ADD  1         WWNORE  50
+     C**
+     **  DETERMINE CHANGE TYPE AND COMPUTE RECORDS:
+     **
+     C                     EXSR #TYPE
+     C**
+     **  TRANSFER FILE AND WORK FIELDS TO PRINTER FIELDS:
+     **
+     C                     EXSR #FIELD
+     C**
+     **  PRINT HEADER DETAILS:
+     **
+     C                     WRITELIST
+     C**
+     C****ACCESS PMVLGDPP:                                                S01486
+     C**  ACCESS PMVLGDPD:                                                S01486
+     C**
+     C***********PBVALG    SETLLPMVLGDPP                                  S01486
+     C***********PBVALG    READEPMVLGDPP                 84               S01486
+     C           PBVALG    SETLLPMVLGDPD                                  S01486
+     C           PBVALG    READEPMVLGDPD                 84               S01486
+     C**
+     C**  SO LONG AS VALUATIONS ARE SAME:
+     C**
+     C           *IN84     DOWEQ'0'                        - B3
+     C**
+     **  EXECUTE PAGE OVERFLOW:
+     **
+     C           *IN70     IFEQ '1'                        - B4
+     C                     WRITEHEADLI
+     C                     MOVE '0'       *IN70
+     C                     END                             - E4
+     C**
+     C**  FOR EACH LIVE RECORD READ:
+     C**
+     C           PCRECI    IFEQ 'D'                        - B4
+     C**
+     C**  SET UP LANGUAGE DETAILS:
+     C**
+     C                     EXSR #LANG
+     C**
+     C**  PRINT LANGUAGE DETAILS:
+     C**
+     C                     WRITELANG
+     C                     END                             - E4
+     C**
+     C**  PRINT NO MORE HEADER DETAILS:
+     C**
+     C                     MOVE '0'       *IN44
+     C**
+     C****ACCESS*PMVLGDPP AGAIN:                                          S01486
+     C**  ACCESS PMVLGDPD AGAIN:                                          S01486
+     C**
+     C********** PBVALG    READEPMVLGDPP                 84               S01486
+     C           PBVALG    READEPMVLGDPD                 84               S01486
+     C                     END                             - E3
+     C**
+     C                     END                             - E2
+     C**
+     **  ACCESS PMVLGHPP AGAIN:
+     **
+     C***********          READ PMVLGHPP                 82               S01486
+     C                     READ PMVLGHPD                 82               S01486
+     C                     END                             - E1
+     C**
+     C**
+     **  PRINT LIST END:
+     **
+     C                     WRITEENDLI
+     C**                                                   *****************
+     C***********          ENDSR                           ** #PR02 ENDSR S01486
+     C           END02     ENDSR                           ** #PR02 ENDSR S01486
+     C**                                                   *****************
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+     C**
+     C**  *PSSR       SUBROUTINE TO OUTPUT DATABASE ERROR.
+     C**
+     C**     CALLED BY PROGRAM, #INIT, #AU01
+     C**     CALLS     -
+     C**
+     C**=================================================================
+     C**                                                   *****************
+     C           *PSSR     BEGSR                           ** *PSSR BEGSR **
+     C**                                                   *****************
+     C           WWERRO    IFEQ ' '                        - B1
+     C                     MOVE 'Y'       WWERRO  1
+     C**
+     C           DBASE     IFNE '000'                      - B2
+     C**
+     C**  PRINT ERROR MESSAGE:
+     C**
+     C                     MOVE '1'       *IN41
+     C                     WRITEHEADAU
+     C                     WRITEERRORAU
+     C***********          WRITEENDAU                                     S01486
+     C                     ELSE                            - X2
+     C**
+     C                     MOVE '999'     DBASE
+     C                     END                             - E2
+     C**
+     C                     DUMP
+     C                     END                             - E1
+     C**
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C**
+     C                     RETRN
+     C**                                                   *****************
+     C                     ENDSR                           ** *PSSR ENDSR **
+     C**                                                   *****************
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+     **
+     **  #AU01       SUBROUTINE TO CHAIN ON TRAILER FILE.
+     **
+     **     CALLED BY PROGRAM
+     **     CALLS     #REPOR, *PSSR
+     **
+     C**=================================================================
+     **                                                    *****************
+     C           #AU01     BEGSR                           ** #AU01 BEGSR **
+     C**                                                   *****************
+     C****ACCESS PMVLGHZZ:                                                S01486
+     C**  ACCESS PMVLGHPA:                                                S01486
+     C**
+     C************         READ PMVLGHZZ                 83               S01486
+     C                     READ PMVLGHPA                 83               S01486
+     C**
+     C           *IN83     IFEQ '0'                        - B1
+     C**
+     C**  PRINT AUDIT REPORT:
+     C**
+     C                     EXSR #REPOR
+     C                     ELSE                            - X1
+     C**
+     C**  AUDIT RECORD NOT FOUND THEN DATABASE ERROR:
+     C**
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'03'      DBASE            *****************
+     C************         MOVEL'PMVLGHZZ'DBFILE           ** DB ERROR 03 S01486
+     C                     MOVE 'PMVLGHPA'DBFILE           ** DB ERROR 03 S01486
+     C                     MOVEL'AUDIT'   DBKEY            *****************
+     C                     OUT  LDA                                       S01486
+     C**
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C**                                                   *****************
+     C                     ENDSR                           ** #AU01 ENDSR **
+     C**                                                   *****************
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+     **
+     **  #TYPE       SUBROUTINE TO DETERMINE CHANGE TYPE AND COMPUTE
+     **              RECORDS.
+     **
+     **     CALLED BY #PR01, #PR02
+     **     CALLS     -
+     **
+     C**=================================================================
+     C**                                                   *****************
+     C           #TYPE     BEGSR                           ** #TYPE BEGSR **
+     C**                                                   *****************
+     C**  IF THE LAST CHANGE TYPE IS 'I', ADD 1 TO NUMBER OF INSERTS:
+     C**
+     C           PBCHTP    IFEQ 'I'                        - B1
+     C                     ADD  1         WWNOIN  50
+     C                     MOVEL'INSERT'  WWCHTP  6
+     C                     END                             - E1
+     C**
+     C**  IF THE LAST CHANGE TYPE IS 'A', ADD 1 TO NUMBER OF AMENDS:
+     C**
+     C           PBCHTP    IFEQ 'A'                        - B1
+     C                     ADD  1         WWNOAM  50
+     C                     MOVEL'AMEND '  WWCHTP
+     C                     END                             - E1
+     C**
+     C**  IF THE LAST CHANGE TYPE IS 'D', ADD 1 TO NUMBER OF DELETES:
+     C**
+     C           PBCHTP    IFEQ 'D'                        - B1
+     C                     ADD  1         WWNODE  50
+     C                     MOVEL'DELETE'  WWCHTP
+     C                     END                             - E1
+     C**                                                   *****************
+     C                     ENDSR                           ** #TYPE ENDSR **
+     C**                                                   *****************
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+     **
+     **  #FIELD      SUBROUTINE TO TRANSFER FILE AND WORK FIELDS TO
+     **              PRINTER FIELDS.
+     **
+     **     CALLED BY #PRO1, #PR02
+     **     CALLS     -
+     **
+     C**=================================================================
+     C**                                                   ******************
+     C           #FIELD    BEGSR                           ** #FIELD BEGSR **
+     C**                                                   ******************
+     C                     MOVE PBVALG    RRVALG
+     C                     MOVE PBVLGT    RRVLGT
+     C                     MOVE PBVLGS    RRVLGS
+     C                     MOVE WWCHTP    RRCHTP
+     C                     Z-ADDPBDLUP    RRDLUP
+     C                     MOVE PBMLUP    RRMLUP
+     C                     Z-ADDPBYLUP    RRYLUP
+     C                     Z-ADDPBTLUP    RRTLUP
+     C**                                                   ******************
+     C                     ENDSR                           ** #FIELD ENDSR **
+     C**                                                   ******************
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+     **
+     **  #LANG       SUBROUTINE TO SET UP LANGUAGE DETAILS (WHEN U4 IS 'ON')
+     **
+     **     CALLED BY #PR01, #PR02
+     **     CALLS     -
+     **
+     C**=================================================================
+     C**                                                   *****************
+     C           #LANG     BEGSR                           ** #LANG BEGSR **
+     C**                                                   *****************
+     C                     MOVE PCVLGI    RRVLGI
+     C                     MOVE PCVLGN    RRVLGN
+     C**                                                   *****************
+     C                     ENDSR                           ** #LANG ENDSR **
+     C**                                                   *****************
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+     **
+     **  #REPOR      SUBROUTINE TO PRINT AUDIT REPORT.
+     **
+     **     CALLED BY #AU01
+     **     CALLS     -
+     **
+     C**=================================================================
+     C**                                                   ******************
+     C           #REPOR    BEGSR                           ** #REPOR BEGSR **
+     C**                                                   ******************
+     C**  WHEN MODE IS '1':
+     C**
+     C           MODE      IFEQ '1'                        - B1
+     C                     Z-ADDWWNOIN    RRNOIN
+     C                     Z-ADDWWNOAM    RRNOAM
+     C                     Z-ADDWWNODE    RRNODE
+     C                     Z-ADDPBNORE    R1NORE
+     C**
+     C**  PRINT AUDIT REPORT:
+     C**
+     C                     MOVE '1'       *IN41
+     C                     WRITEHEADAU
+     C                     WRITECONTROL1
+     C***********          WRITEENDAU                                     S01486
+     C   88                WRITENODETAIL                                  S01486
+     C                     ELSE                            - X1
+     C**
+     C**  WHEN MODE IS '2':
+     C**
+     C           MODE      IFEQ '2'                        - B2
+     C**
+     C**  IF COUNT OF LIVE RECORDS READ NOT EQUAL TO NUMBER TOTAL OF RECORDS:
+     C**
+     C           WWNORE    IFNE PBNORE                     - B3
+     C**
+     C**  PRINT '*** DIFFERENCE ***' LEGEND:
+     C**
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *IN54
+     C                     END                             - E3
+     C**
+     C                     Z-ADDPBNORE    R1NORE
+     C                     Z-ADDWWNORE    R2NORE
+     C**
+     C**  PRINT AUDIT REPORT:
+     C**
+     C                     MOVE '1'       *IN42
+     C                     WRITEHEADAU
+     C                     WRITECONTROL2
+     C***********          WRITEENDAU                                     S01486
+     C   88                WRITENODETAIL                                  S01486
+     C                     END                             - E2
+     C**
+     C                     END                             - E1
+     C**                                                   ******************
+     C                     ENDSR                           ** #REPOR ENDSR **
+     C**                                                   ******************
+     C**=================================================================
+     C/EJECT
+     C**=================================================================
+**  CPY@
+(c) Finastra International Limited 2001

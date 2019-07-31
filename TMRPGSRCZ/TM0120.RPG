@@ -1,0 +1,2736 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas TM Control update TM DB by FX deals')            *
+     F*****************************************************************
+     F*                                                               *
+     F*                                                               *
+     F*  Midas - Treasury Management Module
+     F*                                                               *
+     F*  TM0120 - CONTROL UPDATE OF TM DATA BASE BY FX DEALS.         *
+     F*           (BASED ON FD0740)                                   *
+     F*                                                               *
+     F*  Function: This program controls the update of the TM         *
+     F*            data base by FX deals for takeon only.             *
+     F*            It is run during installation of TM in a           *
+     F*            MIDAS system in phase 'D'. All deals must be       *
+     F*            authorised before it is run.                       *
+     F*                                                               *
+     F*  Called by: TMC0110 - TM Control takeon of FX deals.          *
+     F*                                                               *
+     F*  Calls    : TM0130  - Process update of TM database by        *
+     F*                       FX deals.                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 11May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01453             DATE 14DEC93               *
+     F*                 E49799             DATE 26JAN93               *
+     F*                                                               *
+     F*****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in FXDEALPP.*
+      *  CDL008 - Continuous Linked Settlement (Recompiled)           *
+      *  S01453 - MARGIN AND FX POSITIONS/POINTS AND BASE CURRENCY    *
+      *           POSITIONS/POINTS ADDED TO FX INPUT (RECOMPILED)     *
+      *  E49799 - SALE AMOUNT for option should be -ve not +ve.       *
+      *                                                               *
+     F*****************************************************************
+     F*       16         FEDERAL FUNDS INDICATOR                      *
+     F*       61         CHAIN AND DB ERROR INDICATOR                 *
+     F*       62         DETAILS TO REPORT                            *
+     F*       63         OVERFLOW INDICATOR                           *
+     F*       64         NEW PAGE INDICATOR                           *
+     F*       U6         PROGRAM ERROR - *PSSR EXECUTED               *
+     F*       U7         DATA BASE ERROR                              *
+     F*       U8         DATA BASE ERROR                              *
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFDCCYPLLIF  E           K        DISK         KINFSR INFSR      UC
+     FFXCCYPLLIF  E           K        DISK         KINFSR INFSR      UC
+     F            FDCCYPP0                          KRENAMEFXCCYPP0
+     FFXDEALLLIF  E           K        DISK         KINFSR INFSR      UC
+     FFXTKDNLLIF  E           K        DISK         KINFSR INFSR      UC
+     F            DEALSDBF                          KRENAMEDEALSDBA
+     FFXOPTNLLIF  E           K        DISK         KINFSR INFSR      UC
+     F            DEALSDBF                          KRENAMEDEALSDBB
+     FFXOTSWLLIF  E           K        DISK         KINFSR INFSR      UC
+     FTM0120RRO   E             63     PRINTER
+      *
+     E                    CPY@    1   1 80
+      **  COPYRIGHT STATEMENT COMPILE TIME ARRAY
+      *
+      **  ARRAY FOR SR. ZA0710 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PERIOD
+     E                    @YD     4   4  5 0A
+      *
+      **  ARRAY FOR SR. ZA0710 - CUMULATIVE DAYS IN YEAR PER MONTH
+     E                    @MD    13  13  5 0A
+      *
+      *
+      **  DECIMAL PLACES CORRECTION ARRAY   1, 10, 100, 1000
+     E                    @DC     4   4  4 0
+      *
+      **  LOKUP TABLES FOR OUR RECEIVE & OUR PAY METHOD
+     E                    TAB1    1  11  2 0 TAB2    5
+      *
+      **  ARRAY FOR SR.ZA0630 - POWERS OF TEN.
+     E                    @@AY    1  10 10 0
+      *
+     E** WORK ARRAY ZA0750
+     E                    @C         21  1
+     E** ARRAY FOR RATE INPUT ZA0750
+     E                    @D         15  1
+     E** ARRAY FOR DISPLAY RATE ZA0750
+     E                    @E         21  1
+      *
+      **  RENAME CHANGE TYPE FIELD ON DEALSDB
+     IDEALSDBF
+     I              RECI                            @RECI
+     I              CHTP                            @CHTP
+     I              CNUM                            @CNUM
+     IDEALSDBA
+     I              RECI                            @RECI
+     I              CHTP                            @CHTP
+     I              CNUM                            @CNUM
+     IDEALSDBB
+     I              RECI                            @RECI
+     I              CHTP                            @CHTP
+     I              CNUM                            @CNUM
+      **  DATA STRUCTURE FOR SR. ZA0680 - DATE INPUT TO SUBROUTINE
+     I            DS
+     I                                        1   80@@DTIN
+     I                                        1   40@@YYYY
+     I                                        3   40@@YY
+     I                                        1   20@@CC
+     I                                        5   60@@MTH
+     I                                        7   80@@DAY
+      *
+      ** STANDARD DEAL EXTERNALLY DEFINED DATA STRUCTURE
+     I@STDDL    E DSFXSTDDPP
+     I                                       30  370@3VDYY
+     I                                       38  450@3DTYY
+     I                                       46  530@3DOEY
+     I@DEALS    E DSDEALSDB                   2
+      *
+      **  DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@Z71Y
+     I            DS
+     I                                        1   40@@Z71Y
+     I                                        1   10@@SSY1
+     I                                        2   20@@SSY2
+     I                                        3   30@@SSY3
+     I                                        4   40@@SSY4
+      *
+      **  DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@VDT
+     I            DS
+     I                                        1   80@@VDT
+     I                                        1   40@@YR
+     I                                        5   60@@Z71M
+     I                                        7   80@@Z71D
+      *
+     I** DATASTUCTURE TO CONVERT @@IAMT DECIMAL FIELD TO ALPHA FIELD
+     I@@AMDS      DS                             15
+     I                                        1  150@@IAMT
+     I*
+      **  DATA STRUCTURE TO HOLD INFORMATION ON DATABASE ERROR.
+     I           UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      *
+      ** PROGRAM STATUS D/S TO HOLD FILE NAME FOR FILE ERROR.
+     IPSDS       SDS
+     I                                      201 208 @FILE
+     I*
+     ISDCURR    E DSSDCURRPD
+     I* External DS for Currency Details
+     I*
+     ISDBROK    E DSSDBROKPD
+     I* External DS for Broker Details
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I* External DS for Customer Details
+     I*
+     ISDCNST    E DSSDCNSTPD
+     I* External DS for Counterparty Nostro Details
+     I*
+     ISDNOST    E DSSDNOSTPD
+     I* External DS for NOSTRO Details
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* External DS for Bank Details
+     I*
+     ISDDEAL    E DSSDDEALPD
+     I              QQACCD                          DLACCD                                    CGL029
+     I* External DS for Installation Details
+     I*
+     IDSSDY     E DSDSSDY
+     I* DS used by Access Objects (long records)
+     I*
+     IDSFDY     E DSDSFDY
+     I* DS used by Access Objects (short records)
+     I*
+      /EJECT
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  MAIN     -                                                   *
+      *                                                               *
+      *  CALLS    #A       - INITIALISATION                           *
+      *           #B       - MAIN PROCESSING                          *
+      *           #C       - TERMINATION                              *
+      *                                                               *
+      *  CALLED BY         -                                          *
+      *                                                               *
+      *  FIELDS USED       -                                          *
+      *                                                               *
+      *****************************************************************
+      *
+      ** INITIAL PROCESSING
+     C                     EXSR #A
+      *
+      ** MAIN PROCESSING
+     C                     EXSR #B
+      *
+      ** FINAL PROCESSING
+     C                     EXSR #C
+      *
+      **
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SUBROUTINES USED                                              *
+      *                                                               *
+      *  01  #B       - MAIN PROCESSING                               *
+      *  02  #BA      - OUTRIGHT & SWAP PROCESSING                    *
+      *  03  #BB      - OPTION PROCESSING                             *
+      *  04  #BC      - OPTION TAKEDOWNS                              *
+      *  05  #BD      - INITIALISE STANDARD DEAL FIELDS               *
+      *  06  #ZA      - STANDARD DEAL FIELDS FOR TM0130               *
+      *  07  ZA0750   - CONVERT AMOUNT TO DISPLAY                     *
+      *  08  ZA0810   - CALC DEALT SPOT BASE CURRENCY EQUIVALENT      *
+      *  09  #ZAA     - DEALT BASE CURRENCY EQUIVALENT                *
+      *  10  ZA0710   - CONVERT DATE                                  *
+      *  11  #A       - INITIALISATION                                *
+      *  12  #C       - TERMINATION                                   *
+      *                                                               *
+      * EXTERNAL ROUTINE                                              *
+      *  13  TM0130   - FX DATA BASE UPDATE                           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #B       - MAIN PROCESSING                                   *
+      *                                                               *
+      *  CALLS      #BA    - OUTRIGHT & SWAP PROCESSING               *
+      *             #BB    - OPTION PROCESSING                        *
+      *             #BC    - OPTION TAKEDOWNS                         *
+      *             #BD    - INITIALISE STANDARD DEAL FIELDS          *
+      *                                                               *
+      *  CALLED BY  MAIN   -                                          *
+      *                                                               *
+      *  FLDS USED  @TERM  - TERMINATION PARAMETER                    *
+      *             @T     - TERMINATION PARAMETER                    *
+      *                                                               *
+      *****************************************************************
+     C           #B        BEGSR
+      *
+      **  INITIALISE FIELDS
+     C           @TERM     CASNE'E'       #BD
+     C                     END
+      *
+      **  PERFORM OUTRIGHTS & SWAPS PROCESSING
+     C           @TERM     CASNE'E'       #BA
+     C                     END
+      *
+      **  PERFORM OPTION PROCESSING
+     C           @TERM     CASNE'E'       #BB
+     C                     END
+      *
+      **  PERFORM OPTION TAKEDOWNS
+     C           @TERM     CASNE'E'       #BC
+     C                     END
+      *
+      **  IF NO ERROR FOUND IN PROGRAM SET ERROR FLAG TO 'N' ELSE 'Y'
+     C           @TERM     IFEQ 'E'                        B1
+     C                     MOVEL'Y'       @T               *1
+     C                     ELSE                            X1
+     C                     MOVEL'N'       @T               *1
+     C                     END                             E1
+      *
+     C           #B9       ENDSR                           ***#B9***
+      *
+      /EJECT
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BA      - OUTRIGHT & SWAP PROCESSING                        *
+      *                                                               *
+      *  CALLS    #ZA      - STANDARD DEAL FIELDS FOR ZA0320          *
+      *           #BD      - INITIALISE STANDARD DEAL FIELDS          *
+      *           TM0130   - FX DATA BASE UPDATE                      *
+      *                                                               *
+      *  CALLED BY         -                                          *
+      *                                                               *
+      *  FLDS USED  @TERM  - TERMINATION PARAMETER                    *
+      *             @STDDL - STANDARD DEAL DATA STRUCTURE             *
+      *                                                               *
+      *****************************************************************
+     C           #BA       BEGSR
+      *
+      **  READ AN OUTRIGHT/SWAP DEAL
+     C                     READ FXOTSWLL                 61
+      *
+      **  DO WHILE RECORD FOUND
+     C           *IN61     DOWEQ'0'                        B1
+     C*
+     C**  GET DEAL DETAILS
+     C           DLNO      CHAINFXDEALLL             61    *1
+     C*
+     C**  IF RECORD DOES NOT EXIST ON FX DEALS FILE - DATABASE ERROR
+     C**  FILES SHOULD BE IN SYNC AT THIS STAGE.
+     C           *IN61     IFEQ '1'                        B*2
+     C                     MOVEL'002'     DBASE             ***********
+     C                     MOVELDLNO      DBKEY             ** DB 002 *
+     C                     MOVEL'FXDEALLL'DBFILE            ***********
+     C                     MOVE '1'       *INU7             *2
+     C                     MOVE '1'       *INU8             *2
+     C                     MOVEL'E'       @TERM             *2
+     C                     GOTO #BA9                        *2
+     C                     END                             E*2
+     C*
+      **  IF DEAL IS A SWAP - CHECK IF ASSOCIATED DEAL EXISTS ON FX
+      **  DEALS FILE
+     C           DTYP      IFEQ 'SW'                       B*2
+     C           SODN      CHAINFXDEALLL             61    **2
+      *
+      **  IF ASSOCIATED DEAL IS ON DEALS FILE TREAT AS A SWAP
+     C           *IN61     IFEQ '0'                        B**3
+     C                     EXSR #ZA                        ***3
+     C                     MOVEL'S'       F3DTYP           ***3
+     C                     MOVEL'S'       RRTYPE           ***3
+     C                     MOVELSODN      F3DADN           ***3
+      *
+      **  ERROR IN #ZA BRANCH TO END OF SR
+     C           @TERM     CABEQ'E'       #BA9             ***3
+      *
+     C                     ELSE                            X**3
+      **  IF ASSOC DEAL IS NOT ON DEALS FILE TREAT AS OUTRIGHT
+     C                     EXSR #ZA                        ***3
+      *
+      **  ERROR IN #ZA BRANCH TO END OF SR
+     C           @TERM     CABEQ'E'       #BA9             ***3
+      *
+     C                     END                             E**3
+      *
+     C                     ELSE                            X*2
+      *
+      ** IF DEAL IS NOT A SWAP PERFORM OUTRIGHT DEALS PROCESSING
+     C                     EXSR #ZA                        **2
+      *
+      **  ERROR IN #ZA BRANCH TO END OF SR
+     C           @TERM     CABEQ'E'       #BA9             **2
+      *
+     C                     END                             E*2
+      *
+      **  CALL DATA BASE UPDATE PROGRAM
+     C                     CALL 'TM0130'                   *1
+     C                     PARM           @TERM   1        *1
+     C                     PARM           @STDDL           *1
+      *
+      ** MONITOR FOR ERROR IN TM0130 - IF SO WRITE AN ERROR MESSAGE
+     C** TO AUDIT FILE AFTER DETAILS.
+     C           @TERM     IFEQ 'E'                        B*2
+     C** Format fields for audit report.
+     C                     EXSR #ZB                        **2
+     C                     WRITETM0120R1                   **2
+     C                     MOVEL'TM0130'  DBPGM            **2
+     C                     WRITETM0120R4                   **2
+     C                     MOVE '1'       *IN62            **2
+     C                     GOTO #BA9                       **2
+      *
+     C                     ELSE                            X*2
+     C*
+     C** Format fields for audit report.
+     C                     EXSR #ZB                        **2
+      **  WRITE A RECORD TO AUDIT FILE
+     C                     WRITETM0120R1                   **2
+     C                     MOVE '1'       *IN62            **2
+      *
+     C                     END                             E*2
+     C*
+      **  CLEAR STANDARD DEAL FIELDS
+     C                     EXSR #BD                        *1
+     C*
+     C** If new page has been written set off overflow indicator.
+     C           *IN64     IFEQ '1'                        B*2
+     C                     MOVE '0'       *IN63
+     C                     END                             E*2
+     C*
+     C** If overflow indicator on report is on set on indicator to
+     C** write new page headings next time through.
+     C           *IN63     IFEQ '1'                        B*2
+     C                     MOVE '1'       *IN64
+     C                     ELSE                            X*2
+     C                     MOVE '0'       *IN64
+     C                     END                             E*2
+     C*
+      ** READ NEXT RECORD FROM OUTRIGHT/SWAP DEALS FILE
+     C                     READ FXOTSWLL                 61*1
+      *
+     C                     END                             E1
+      *
+     C           #BA9      ENDSR                           ***#BA9***
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BB      - OPTION PROCESSING                                 *
+      *                                                               *
+      *  CALLS    #ZA      - STANDARD DEAL FIELDS FOR ZA0320          *
+      *           #BD      - INITIALISE STANDARD DEAL FIELDS          *
+      *           TM0130   - FX DATA BASE UPDATE                      *
+      *                                                               *
+      *  CALLED BY #B      - MAIN PROCESSING                          *
+      *                                                               *
+      *  FLDS USED  @SODN  - SWAP DEAL NUMBER                         *
+      *             @OCUR  - OCUR                                     *
+      *             @DEALS - DATA STRUCTURE FOR DEALSDB FILE          *
+      *             @TERM  - TERMINATION PARAMETER                    *
+      *             @STDDL - STANDARD DEAL DATA STRUCTURE             *
+      *                                                               *
+      *****************************************************************
+     C           #BB       BEGSR
+      *
+      **  READ OPTION TAKEDOWN FILE
+     C                     READ FXOPTNLL                 61
+      *
+      **  DO WHILE NOT END OF FILE
+     C           *IN61     DOWEQ'0'                        B1
+     C*
+      **  RESET TOTAL AND WORK FIELDS
+     C                     Z-ADD*ZERO     @TOBCE           *1
+     C                     Z-ADD*ZERO     @TORPA           *1
+     C                     Z-ADD*ZERO     @TORSA           *1
+      *
+     C                     Z-ADD*ZERO     @WOBCE           *1
+     C                     Z-ADD*ZERO     @WORPA           *1
+     C                     Z-ADD*ZERO     @WORSA           *1
+      *
+      **  SET DEAL NUMBER AS KEY TO TAKE DOWN FILE
+     C                     Z-ADDDLNO      @SODN            *1
+      *
+      **  SET OCUR OF FILE TO 2 SO THAT OPTION TAKE DOWN RECORD IS NOT
+      **  OVERWRITTEN BY TAKEN DOWN RECORDS
+     C                     Z-ADD2         @OCUR   10       *1
+     C           @OCUR     OCUR @DEALS
+      *
+      **  USE DEAL NUMBER FROM OPTION TAKEDOWN FILE SETLL ON TAKE DOWNS
+     C           @SODN     SETLLFXTKDNLL                   *1
+     C           @SODN     READEFXTKDNLL                 61*1
+     C*
+      *
+      **  DO WHILE RECORD EXISTS FOR OPTION ON TAKEDOWN FILE - FIND
+      **  TOTALS FOR BASE CURRENCY EQUIV. PURCHASE AMOUNT & SALE AMOUNT
+     C           *IN61     DOWEQ'0'                        B*2
+     C                     ADD  BCEQ      @TOBCE           **2
+     C                     ADD  PUAM      @TORPA           **2
+     C                     ADD  SLAM      @TORSA           **2
+     C           @SODN     READEFXTKDNLL                 61**2
+     C                     END                             E*2
+      *
+      **  RESET OCUR TO 1 TO ACCESS OPTION TAKEDOWN RECORD
+     C                     Z-ADD1         @OCUR            *1
+     C           @OCUR     OCUR @DEALS                     *1
+      *
+     C**  GET DEAL DETAILS
+     C           DLNO      CHAINFXDEALLL             61    *1
+     C*
+     C**  IF RECORD DOES NOT EXIST ON FX DEALS FILE - DATABASE ERROR
+     C**  FILES SHOULD BE IN SYNC AT THIS STAGE.
+     C           *IN61     IFEQ '1'                        B*2
+     C                     MOVEL'001'     DBASE             ***********
+     C                     MOVELDLNO      DBKEY             ** DB 001 *
+     C                     MOVEL'FXDEALLL'DBFILE            ***********
+     C                     MOVE '1'       *INU7             *2
+     C                     MOVE '1'       *INU8             *2
+     C                     MOVEL'E'       @TERM             *2
+     C                     GOTO #BB9                        *2
+     C                     END                             E*2
+     C*
+      **  BECAUSE THE TAKEDOWN PROCESSING IN #BC WILL ADD IN THE OT'S
+      **  TO THE OPTION THESE AMOUNTS MUST BE INCLUDED IN THE OP FIELDS
+      **  READY TO BE REMOVED BY THE OPTION TAKEDOWN PROCESSING
+      *
+      **  SET UP STANDARD DEAL
+     C                     EXSR #ZA                        *1
+      *
+     C                     MOVEL'O'       F3DTYP           *1
+     C           @TORPA    ADD  PUAM      F3DAM1           *1
+     C***********SLAM      SUB  @TORSA    F3DAM2           *1             E49799
+     C           SLAM      ADD  @TORSA    F3DAM2           *1             E49799
+     C           @TORPA    ADD  PUAM      @RDAM1           *1
+     C***********SLAM      SUB  @TORSA    @RDAM2           *1             E49799
+     C           SLAM      ADD  @TORSA    @RDAM2           *1             E49799
+     C                     Z-SUBORSA      F3OOSA           *1
+     C                     Z-ADDORPA      F3OOFA           *1
+     C           @TOBCE    ADD  BCEQ      F3BCAE           *1
+     C*                                                                   E49799
+     C**  Since the Midas deals file hold +ve amt change sign for SELL.   E49799
+     C*                                                                   E49799
+     C                     Z-SUBF3DAM2    F3DAM2                          E49799
+     C                     Z-SUB@RDAM2    @RDAM2                          E49799
+      *
+      ** END OF SS1092 FIX
+      *
+     C                     Z-ADDOTDT      @@DAYN           *1
+     C                     EXSR ZA0710                     *1
+     C                     Z-ADD@@VDT     @3DOEY           *12
+      *
+      **  ERROR IN #ZA BRANCH TO END OF SR
+     C           @TERM     CABEQ'E'       #BB9             *1
+      *
+      **  CALL DATA BASE UPDATE PROGRAM
+     C                     CALL 'TM0130'                   *1
+     C                     PARM           @TERM   1        *1
+     C                     PARM           @STDDL           *1
+      *
+      ** MONITOR FOR ERROR IN TM0130 - IF SO WRITE AN ERROR MESSAGE
+     C** TO AUDIT FILE AFTER DETAILS.
+     C           @TERM     IFEQ 'E'                        B*2
+     C** Format fields for audit report.
+     C                     EXSR #ZB                        **2
+     C                     WRITETM0120R1                   **2
+     C                     MOVEL'TM0130'  DBPGM            **2
+     C                     WRITETM0120R4                   **2
+     C                     MOVE '1'       *IN62            **2
+     C                     GOTO #BB9                       **2
+     C*
+     C                     ELSE                            X*2
+      *
+     C** Format fields for audit report.
+     C                     EXSR #ZB                        **2
+      **  WRITE A RECORD TO AUDIT FILE
+     C                     WRITETM0120R1                   **2
+     C                     MOVE '1'       *IN62            **2
+     C*
+     C                     END                             E*2
+      *
+     C** If new page has been written set off overflow indicator.
+     C           *IN64     IFEQ '1'                        B*2
+     C                     MOVE '0'       *IN63
+     C                     END                             E*2
+     C*
+     C** If overflow indicator on report is on set on indicator to
+     C** write new page headings next time through.
+     C           *IN63     IFEQ '1'                        B*2
+     C                     MOVE '1'       *IN64
+     C                     ELSE                            X*2
+     C                     MOVE '0'       *IN64
+     C                     END                             E*2
+     C*
+     C*
+      **  CLEAR STANDING DEAL FIELDS
+     C                     EXSR #BD                        *1
+      *
+     C                     READ FXOPTNLL                 61*1
+      *
+     C                     END                             E1
+      *
+     C           #BB9      ENDSR                           ***#BB9***
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BC      - OPTION TAKEDOWNS                                  *
+      *                                                               *
+      *  CALLS    #ZA      - STANDARD DEAL FIELDS FOR ZA0320          *
+      *           #BD      - INITIALISE STANDARD DEAL FIELDS          *
+      *           TM0130   - FX DATA BASE UPDATE                      *
+      *                                                               *
+      *  CALLED BY         -                                          *
+      *                                                               *
+      *  FLDS USED  @TERM  - TERMINATION PARAMETER                    *
+      *             @STDDL - STANDARD DEAL DATA STRUCTURE             *
+      *                                                               *
+      *****************************************************************
+     C           #BC       BEGSR
+      *
+      **  save takedown in 1st occurance of data structure
+     C                     Z-ADD1         @OCUR
+     C           @OCUR     OCUR @DEALS
+      **  RESET FILE POINTER FOR TAKEDOWN FILE BEFORE FIRST RECORD
+     C           *ZERO     SETLLFXTKDNLL
+     C                     READ FXTKDNLL                 61
+      *
+      **  DO WHILE NOT END OF FILE
+     C           *IN61     DOWEQ'0'                        B1
+     C           DLNO      CHAINFXDEALLL             61    *1
+     C*
+      ** If record does not exist - DB error.
+     C           *IN61     IFEQ '1'                        B*2
+     C                     MOVEL'014'     DBASE             *1*********
+     C                     MOVELDLNO      DBKEY             *1 DB 014 *
+     C                     MOVEL'FXDEALLL'DBFILE            *1*********
+     C                     MOVE '1'       *INU7             *1
+     C                     MOVE '1'       *INU8             *1
+     C                     MOVEL'E'       @TERM             *1
+     C                     GOTO #BC9                        *1
+     C                     END                             E*2
+     C*
+     C**  IF takeon matured check whether it relates to a live option.
+     C           RECI      IFEQ 'M'                        B*2
+     C                     Z-ADDSODN      @SODN            **2
+      *
+      **  put option in 2nd occurence of data structure
+     C                     Z-ADD2         @OCUR            **2
+     C           @OCUR     OCUR @DEALS                     **2
+     C           @SODN     CHAINFXOPTNLL             60    **2
+      *
+      ** FXOPTNLL ONLY SELECTS LIVE RECORDS
+      **  go back to 1st occurance ie takedown
+     C                     Z-ADD1         @OCUR            **2
+     C           @OCUR     OCUR @DEALS                     **2
+     C                     END                             E*2
+      *
+      * IF TAKEDOWN IS NOT MATURED OR TAKEDOWN IS MATURED AND OPTION
+      * IS STILL LIVE (IE RECORD ON LF/FXOPTNLL)
+     C           RECI      IFNE 'M'                        B*2
+     C           RECI      OREQ 'M'                        B*2
+     C           *IN60     ANDEQ'0'                        B*2
+      *
+      **  SET UP FIELDS ON STANDARD DEAL
+     C                     EXSR #ZA                        **2
+     C                     MOVEL'T'       F3DTYP           **2
+     C                     MOVELSODN      F3DADN           **2
+      *
+      **  ERROR IN #ZA BRANCH TO END OF SR
+     C           @TERM     CABEQ'E'       #BC9             **2
+      *
+      **  CALL DATA BASE UPDATE PROGRAM
+     C                     CALL 'TM0130'                   **2
+     C                     PARM           @TERM   1        **2
+     C                     PARM           @STDDL           **2
+      *
+      ** MONITOR FOR ERROR IN TM0130 - IF SO WRITE AN ERROR MESSAGE
+     C** TO AUDIT FILE AFTER DETAILS.
+     C           @TERM     IFEQ 'E'                        B**3
+     C** Format fields for audit report.
+     C                     EXSR #ZB                        ***3
+     C                     WRITETM0120R1                   ***3
+     C                     MOVEL'TM0130'  DBPGM            ***3
+     C                     WRITETM0120R4                   ***3
+     C                     MOVE '1'       *IN62            ***3
+     C                     GOTO #BC9                       ***3
+      *
+     C                     ELSE                            X**3
+     C*
+     C** Format fields for audit report.
+     C                     EXSR #ZB                        ***3
+      **  WRITE A RECORD TO AUDIT FILE
+     C                     WRITETM0120R1                   ***3
+     C                     MOVE '1'       *IN62            ***3
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      *
+     C** If new page has been written set off overflow indicator.
+     C           *IN64     IFEQ '1'                        B*2
+     C                     MOVE '0'       *IN63
+     C                     END                             E*2
+     C*
+     C** If overflow indicator on report is on set on indicator to
+     C** write new page headings next time through.
+     C           *IN63     IFEQ '1'                        B*2
+     C                     MOVE '1'       *IN64
+     C                     ELSE                            X*2
+     C                     MOVE '0'       *IN64
+     C                     END                             E*2
+     C*
+      **  CLEAR STANDARD DEAL FIELDS
+     C                     EXSR #BD                        *1
+      *
+     C                     READ FXTKDNLL                 61*1
+      *
+     C                     END                             E1
+      *
+     C           #BC9      ENDSR                           ***#BC9***
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #ZA      - STANDARD DEAL FIELDS FOR TM0130                   *
+      *                                                               *
+      *  CALLS    ZA0710   - CONVERT DATE                             *
+      *           #ZAA     - DEALT BASE CURRENCY EQUIVALENT           *
+      *           ZA0810   - CALC DEALT SPOT BASE CURRENCY EQUIVALENT *
+      *                                                               *
+      *  CALLED BY  #BA    - OUTRIGHT & SWAP PROCESSING               *
+      *             #BB    - OPTION PROCESSING                        *
+      *             #BC    - OPTION TAKEDOWNS                         *
+      *                                                               *
+      *  FLDS USED  @DAYN  - DATE WORK FIELD (5,0)                    *
+      *             @VDT   - DATE WORK FIELD (8,0)L                   *
+      *             @3VDYY - VALUE DATE                               *
+      *             @3DTYY - DEAL TRANSACTION DATE                    *
+      *             @TERM  - TERMINATION PARAMETER                    *
+      *             @@CCY  - CURRENCY                                 *
+      *             @@CDP1 - CURRENCY DECIMAL PLACES 1ST CURRENCY     *
+      *             @@MDI1 - MULTIPLY DIVIDE INDICATOR 1ST CURRENCY   *
+      *             @@CDP2 - CURRENCY DECIMAL PLACES 2ND CURRENCY     *
+      *             @@MDI2 - MULTIPLY DIVIDE INDICATOR 2ND CURRENCY   *
+      *             @@CCY1 - DEAL 1ST CURRENCY                        *
+      *             @@DAM1 - DEAL 1ST AMOUNT                          *
+      *             @@CCY2 - DEAL 2ND CURRENCY                        *
+      *             @@DAM2 - DEAL 2ND AMOUNT                          *
+      *             @@DBCE - DEALT BASE CURRENCY EQUIVALENT           *
+      *             @@DSBE - DEALT SPOT BASE CURRENCY EQUIVALENT      *
+      *             @DC    - ARRAY INDEX CURRENCY DECIMAL PLACES      *
+      *             @3DAM1 - STANDARD DEAL 1ST AMOUNT                 *
+      *             @3DAM2 - STANDARD DEAL 2ND AMOUNT                 *
+      *             @3DAM  - AMOUNT WORK FIELD                        *
+      *             @CST   - CURRENCY SETTLEMENT TYPE                 *
+      *             @3CCY2 - 2ND CURRENCY                             *
+      *             @NSTLK - NOSTRO FILE KEY                          *
+      *             @TPCN  - CURRENCY NOSTRO ACCOUNT                  *
+      *                                                               *
+      *****************************************************************
+     C           #ZA       BEGSR
+     C*
+     C                     Z-ADDDLNO      F3DN38
+     C                     MOVE DLNO      RRDN38
+      *
+     C                     Z-ADDFHFWPP    RRFWPP
+      *
+     C                     Z-ADDVDAT      @@DAYN
+     C                     EXSR ZA0710
+     C                     Z-ADD@@VDT     @3VDYY
+      *
+     C                     Z-ADDORED      @@DAYN  50
+     C                     EXSR ZA0710
+     C                     Z-ADD@@VDT     @3DTYY
+      *
+     C                     Z-ADDFHDOEY    F3DOEY
+     C                     Z-ADDFHDOEM    F3DOEM
+     C                     Z-ADDFHDOED    F3DOED
+     C*
+     C                     Z-ADDFHVDDD    F3VDDD
+     C                     Z-ADDFHVDMM    F3VDMM
+     C                     Z-ADDFHVDYY    F3VDYY
+     C*
+     C                     MOVE FHVDDD    RRVDDD
+     C                     MOVE FHVDMM    RRVDMM
+     C                     MOVE FHVDYY    RRVDYY
+     C*
+     C**  Set up Customer Shortname from FXDEALPP.
+     C*
+     C                     MOVE @CNUM     F3CNUM
+     C                     MOVELFHDCSN    F3DCSN           *1
+     C                     MOVELFHDCSN    RRDCSN           *1
+     C*
+     C**  For option : original sell & buy amounts are used.
+     C           DTYP      IFNE 'OP'                       B1
+     C                     Z-ADDPUAM      F3DAM1           *1
+     C                     Z-SUBSLAM      F3DAM2           *1
+     C                     Z-ADDPUAM      @RDAM1           *1
+     C                     Z-SUBSLAM      @RDAM2           *1
+     C                     ELSE                            X1
+     C                     Z-ADDORPA      F3DAM1           *1
+     C                     Z-SUBORSA      F3DAM2           *1
+     C                     Z-ADDORPA      @RDAM1           *1
+     C                     Z-SUBORSA      @RDAM2           *1
+     C                     END                             E1
+     C                     MOVELPUCY      F3CCY1
+     C                     MOVELSLCY      F3CCY2
+     C                     Z-ADDEXRT      RRDXRT
+     C                     MOVELPUCY      RRCCY1
+     C                     MOVELSLCY      RRCCY2
+     C                     Z-ADDBCEQ      F3BCAE
+      *
+      **  Access SDCURRPD for DEAL FIRST CCY.
+     C*
+     C                     MOVE PUCY      @@CCY
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @@CCY     @@CUR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     SETON                     U7U8  *1
+     C                     MOVE '010'     DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERR 10*
+     C                     MOVEL@@CCY     DBKEY            ************
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVEL'E'       @TERM            *1
+     C                     GOTO #ZA9                       *1
+     C                     END                             E1
+      *
+     C                     Z-ADDA6NBDP    @@CDP1  10
+     C                     MOVE A6MDEX    @@MDI1  1
+     C                     MOVE A6MDEX    @@MDF1  1
+     C                     Z-ADDA6HSRT    @@HSP1
+     C                     Z-ADDA6LSPR    @@LSP1
+     C                     MOVE A6FXSD    @@SPD1  80
+      *
+      **  Repeat for the DEAL SECOND CCY :
+     C                     MOVE SLCY      @@CCY
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @@CCY     @@CUR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     SETON                     U7U8  *1
+     C                     MOVE '011'     DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERR 11*
+     C                     MOVEL@@CCY     DBKEY            ************
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVEL'E'       @TERM            *1
+     C                     GOTO #ZA9                       *1
+     C                     END                             E1
+      *
+     C                     Z-ADDA6NBDP    @@CDP2  10
+     C                     MOVE A6MDEX    @@MDI2  1
+     C                     MOVE A6MDEX    @@MDF2  1
+     C                     Z-ADDA6HSRT    @@HSP2
+     C                     Z-ADDA6LSPR    @@LSP2
+     C                     MOVE A6FXSD    @@SPD2  80
+      *
+      **  CALCULATE DEALT BASE CURRENCY EQUIVALENT
+     C                     Z-ADD@3VDYY    @@VDT
+     C                     Z-ADDF3DAM1    @@DAM1
+     C                     MOVELF3CCY1    @@CCY1
+     C                     Z-ADDF3DAM2    @@DAM2
+     C                     MOVELF3CCY2    @@CCY2
+     C                     EXSR #ZAA
+     C                     Z-ADD@@DBCE    F3BCDE
+      *
+      **  CALCULATE DEALT SPOT BASE CURRENCY EQUIVALENT
+     C*
+     C**  For option original sell & buy amounts are used.
+     C           DTYP      IFNE 'OP'                       B1
+     C                     Z-ADDPUAM      @@DFA
+     C                     Z-SUBSLAM      @@DSA
+     C                     ELSE                            X1
+     C                     Z-ADDORPA      @@DFA            *1
+     C                     Z-SUBORSA      @@DSA            *1
+     C                     END                             E1
+     C*
+     C                     MOVELPUCY      @@DFC
+     C                     Z-ADD*ZERO     @@DFP
+     C                     MOVELSLCY      @@DSC
+     C                     Z-ADDEXRT      @@DXR
+     C                     EXSR ZA0810
+     C                     Z-ADD@@DSBC    F3DSBE
+     C*
+      **  DRS BRANCH CODE IS SAME AS BRANCH CODE.
+      *
+     C                     MOVELBRCA      F3DBRC
+     C                     MOVELBRCA      RRDBRC
+      *
+      **  FIND DEAL OUR RECEIVE METHOD
+     C                     Z-ADDSCST      @CST
+     C           @CST      LOKUPTAB1      TAB2           61
+     C                     MOVELTAB2      F3DOPM
+      *
+      **  FIND OUR PAY METHOD
+     C                     Z-ADDPCST      @CST
+     C           @CST      LOKUPTAB1      TAB2           61
+     C                     MOVELTAB2      F3DORM
+      *
+      **  FIND DEAL OUR RECEIVE INSTRUCTIONS
+      **  IGNORE BLANK FIELDS
+     C           OSCA      CABEQ*BLANKS   #ZA1
+     C           SCST      IFEQ 00
+     C           SCST      OREQ 03
+     C           SCST      OREQ 04
+     C           SCST      OREQ 05
+     C           SCST      OREQ 06
+     C           SCST      OREQ 14
+     C                     MOVELOSCA      F3DOPI
+      *
+     C                     ELSE
+      *
+     C** Access nostros file with nostro number and currency to obtain
+     C** customer number.
+     C*
+     C                     MOVELOSCA      @NSTL1  2
+     C*
+     C                     CALL 'AONOSTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM *BLANKS   @CSTN   6
+     C                     PARM F3CCY2    @CYCD   3
+     C**********           PARM *BLANKS   @ACCD   4                                           CGL029
+     C                     PARM *BLANKS   @ACCD  10                                           CGL029
+     C                     PARM *BLANKS   @ACSN   2
+     C                     PARM @NSTL1    @NONB   2
+     C                     PARM *BLANKS   @BRCD   3
+     C                     PARM *BLANKS   @CSSN  10
+     C                     PARM *BLANKS   @PNOI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+      **  If record not found - database error.
+      *
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVEL'003'     DBASE             ***********
+     C                     MOVEL@NSTL1    DBKEY             *  DB 003 *
+     C                     MOVE F3CCY2    DBKEY             ***********
+     C                     MOVEL'SDNOSTPD'DBFILE            *1
+     C                     MOVE '1'       *INU7             *1
+     C                     MOVE '1'       *INU8             *1
+     C                     MOVEL'E'       @TERM             *1
+     C                     GOTO #ZA9                        *1
+     C                     END                              E1
+     C*
+     C** Access Customer file for customer short name.
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM A7CUST    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVEL'015'     DBASE             *1*********
+     C                     MOVELA7CUST    DBKEY             *1 DB 015 *
+     C                     MOVEL'SDCUSTPD'DBFILE            *1*********
+     C                     MOVE '1'       *INU7             *1
+     C                     MOVE '1'       *INU8             *1
+     C                     MOVEL'E'       @TERM             *1
+     C                     GOTO #ZA9                        *1
+     C                     END                              E1
+     C                     MOVELBBCSSN    F3DOPI
+      *
+     C                     END
+     C           #ZA1      TAG
+      *
+      **  FIND DEAL OUR PAY INSTRUCTIONS
+     C           OPCA      CABEQ*BLANKS   #ZA2
+     C           PCST      IFEQ 00
+     C           PCST      OREQ 03
+     C           PCST      OREQ 04
+     C           PCST      OREQ 05
+     C           PCST      OREQ 06
+     C           PCST      OREQ 14
+     C                     MOVELOPCA      F3DORI
+      *
+     C                     ELSE
+      *
+     C** Access nostros file with nostro number and currency to obtain
+     C** customer number.
+     C*
+     C                     MOVELOPCA      @NSTL1
+      *
+     C                     CALL 'AONOSTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM *BLANKS   @CSTN   6
+     C                     PARM F3CCY1    @CYCD   3
+     C**********           PARM *BLANKS   @ACCD   4                                           CGL029
+     C                     PARM *BLANKS   @ACCD  10                                           CGL029
+     C                     PARM *BLANKS   @ACSN   2
+     C                     PARM @NSTL1    @NONB   2
+     C                     PARM *BLANKS   @BRCD   3
+     C                     PARM *BLANKS   @CSSN  10
+     C                     PARM *BLANKS   @PNOI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+      **  If record not found - database error.
+      *
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVEL'004'     DBASE             *1*********
+     C                     MOVEL@NSTL1    DBKEY             *1 DB 004 *
+     C                     MOVE F3CCY1    DBKEY             ***********
+     C                     MOVEL'SDNOSTPD'DBFILE            *1
+     C                     MOVE '1'       *INU7             *1
+     C                     MOVE '1'       *INU8             *1
+     C                     MOVEL'E'       @TERM             *1
+     C                     GOTO #ZA9                        *1
+     C                     END                              E1
+      *
+     C** Access Customer file for customer short name.
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM A7CUST    @KEY1
+     C                     PARM *BLANKS   @KYST
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVEL'016'     DBASE             *1*********
+     C                     MOVELA7CUST    DBKEY             *1 DB 016 *
+     C                     MOVEL'SDCUSTPD'DBFILE            *1*********
+     C                     MOVE '1'       *INU7             *1
+     C                     MOVE '1'       *INU8             *1
+     C                     MOVEL'E'       @TERM             *1
+     C                     GOTO #ZA9                        *1
+     C                     END                              E1
+     C                     MOVELBBCSSN    F3DORI
+      *
+     C                     END
+     C           #ZA2      TAG
+      *
+     C                     MOVELDTYP      F3TYPE
+     C                     MOVELDTYP      RRTYPE
+     C                     MOVELDLST      F3STYP
+     C                     MOVELBRKC      F3BROK
+     C                     Z-ADDBAGE      F3BRKG
+      *
+      **  FIND CUSTOMER PAY INSTRUCTIONS
+     C           TPCN      CABEQ*BLANKS   #ZA3
+     C*
+     C** Access counterparty nostro file
+     C*
+     C                     MOVELTPCN      @KEY8   8
+     C*
+     C                     CALL 'AOCNSTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @KEY8     @ARCD   8
+     C           SDCNST    PARM SDCNST    DSFDY
+     C*
+     C** If record not found TPCN must be a customer number so access
+     C** customer file to get shortname.
+     C*
+     C           @RTCD     IFNE *BLANKS                    B1
+      *
+     C                     MOVELTPCN      @XNUM   6        *1
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM @XNUM     @KEY1
+     C                     PARM *BLANKS   @KYST
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B2
+     C                     MOVEL'006'     DBASE            ***********
+     C                     MOVEL@XNUM     DBKEY            *  DB 006 *
+     C                     MOVEL'SDCUSTPD'DBFILE           ***********
+     C                     MOVE '1'       *INU7            **2
+     C                     MOVE '1'       *INU8            **2
+     C                     MOVEL'E'       @TERM            **2
+     C                     GOTO #ZA9                       **2
+     C                     END                             E*2
+     C                     MOVELBBCSSN    F3DCRI           *1
+     C                     ELSE                            X1
+     C*
+     C** TPCN is a counterparty nostro so update field with Nostro
+     C** shortname.
+     C*
+     C                     MOVELA7NOSN    F3DCRI           *1
+     C                     END                             E1
+     C           #ZA3      TAG
+      *
+      **  FIND CUSTOMER RECEIVE INSTRUCTIONS
+     C           TSCN      CABEQ*BLANKS   #ZA4
+     C*
+     C** Access counterparty nostro file
+     C*
+     C                     MOVELTSCN      @KEY8   8
+     C*
+     C                     CALL 'AOCNSTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @KEY8     @ARCD   8
+     C           SDCNST    PARM SDCNST    DSFDY
+     C*
+     C** If record not found TSCN must be a customer number so access
+     C** customer file to get shortname.
+     C*
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVELTSCN      @XNUM   6        *1
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM @XNUM     @KEY1
+     C                     PARM *BLANKS   @KYST
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B*2
+     C                     MOVEL'007'     DBASE            ***********
+     C                     MOVEL@XNUM     DBKEY            *  DB 007 *
+     C                     MOVEL'SDCUSTPD'DBFILE           ***********
+     C                     MOVE '1'       *INU7            **2
+     C                     MOVE '1'       *INU8            **2
+     C                     MOVEL'E'       @TERM            **2
+     C                     GOTO #ZA9                       **2
+     C                     END                             E*2
+     C                     MOVELBBCSSN    F3DCPI           *1
+     C                     ELSE                            X1
+      *
+     C** TSCN is a counterparty nostro so update field with Nostro
+     C** shortname.
+     C*
+     C                     MOVELA7NOSN    F3DCPI           *1
+     C                     END                             E1
+     C           #ZA4      TAG
+      *
+      **  SET UP 'FOR ACCOUNT OF' INSTRUCTIONS
+      *
+      ** if it is a customer number then convert it to a shortname
+      *
+     C           FACO      IFNE *BLANKS                    B1
+     C*
+     C** Check FACO for customer number / shortname
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM FACO      @KEY1
+     C                     PARM *BLANKS   @KYST
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C** If record found FACO is either a customer number or shortname
+     C** so update field with shortname
+     C*
+     C           @RTCD     IFEQ *BLANKS                    B*2
+     C                     MOVE BBCSSN    F3DFAC           **2
+     C*
+     C                     ELSE                            X2
+     C*
+     C** Test FACO for Counterparty Nostro.
+     C                     MOVELFACO      @KEY8   8
+     C*
+     C                     CALL 'AOCNSTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @KEY8     @ARCD   8
+     C           SDCNST    PARM SDCNST    DSFDY
+     C*
+     C** If record still not found FACO must be in error.
+     C*
+     C           @RTCD     IFNE *BLANKS                    B*3
+     C                     MOVEL'050'     DBASE            ***********
+     C                     MOVELFACO      DBKEY            *DBER 050 *
+     C                     MOVEL'SDCUSTPD'DBFILE           ***********
+     C                     MOVE '1'       *INU7            **3
+     C                     MOVE '1'       *INU8            **3
+     C                     MOVEL'E'       @TERM            **3
+     C                     GOTO #ZA9                       **3
+     C                     END                             E*3
+     C*
+     C                     MOVELA7NOSN    F3DFAC           **2
+     C*
+     C                     END                             E*2
+     C*
+     C** FACO is blank.
+     C                     ELSE                            X1
+     C                     MOVE *BLANKS   F3DFAC           *1
+     C                     END                             E1
+      *
+     C                     MOVEL'I'       F3LACT
+      *
+     C**********           Z-ADD@CNUM     F3CNUM                                              CSD027
+     C                     MOVE @CNUM     F3CNUM                                              CSD027
+     C*
+     C** IF DEAL HAS A BROKER THAT IS NOT TELX, PHON, MAIL OR SWAP
+      **  FIND BROKER CURRENCY
+     C           BRKC      IFNE 'TELX'                      B1
+     C           BRKC      ANDNE'PHON'                      *1
+     C           BRKC      ANDNE'MAIL'                      *1
+     C           BRKC      ANDNE'SWAP'                      *1
+     C                     MOVE BRKC      @BRKC   4         *1
+     C                     CALL 'AOBROKR0'                  *1
+     C                     PARM *BLANKS   @RTCD   7         *1
+     C                     PARM '*KEY   ' @OPTN   7         *1
+     C                     PARM @BRKC     @BQTX   4         *1
+     C           SDBROK    PARM SDBROK    DSFDY             *1
+      *
+      **  If record not found it is a Database error.
+     C           @RTCD     IFNE *BLANKS                    B*2
+     C                     MOVEL'005'     DBASE             ***********
+     C                     MOVELBRKC      DBKEY             ** DB 005 *
+     C                     MOVEL'SDBROKPD'DBFILE            ***********
+     C                     MOVE '1'       *INU7             *2
+     C                     MOVE '1'       *INU8             *2
+     C                     MOVEL'E'       @TERM             *2
+     C                     GOTO #ZA9                        *2
+     C                     END                              E*2
+      *
+     C                     MOVELA9BRCY    F3BKCY            *1
+     C                     ELSE                             X1
+     C                     MOVE *BLANKS   F3BKCY            *1
+     C                     END                              E1
+      *
+     C                     Z-ADD*ZERO     F3OOSA
+     C                     Z-ADD*ZERO     F3OOFA
+      *
+     C                     MOVELBRCA      F3MBCA
+     C                     Z-ADDSCST      F3DMPM
+     C                     MOVELOSCA      F3MOPI
+     C                     Z-ADDPCST      F3ORCM
+     C                     MOVELOPCA      F3MORI
+      *
+     C                     MOVELTPCN      F3MCRI
+     C                     MOVELTSCN      F3MCPI
+     C                     MOVELFACO      F3MFAC
+      *
+     C                     Z-ADDDDAT      F3DDDN
+     C                     Z-ADDVDAT      F3VDDN
+     C                     Z-ADDOTDT      F3OTDN
+      *
+     C                     Z-ADD*ZERO     F3ODSB
+     C                     Z-ADD*ZERO     F3ODBE
+     C*
+     C           #ZA9      ENDSR                           ***#ZA9***
+      *
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #ZB      - FORMAT FIELDS FOR AUDIT REPORT                    *
+     C*                                                               *
+     C*  CALLS    ZA0750   - CONVERT AMOUNT TO DISPLAY FORMAT         *
+     C*                                                               *
+     C*  CALLED BY  #BA    - OUTRIGHT & SWAP PROCESSING               *
+     C*             #BB    - OPTION PROCESSING                        *
+     C*             #BC    - OPTION TAKEDOWNS                         *
+     C*                                                               *
+     C*  FLDS USED  @RDAM1 - INPUT DEAL 1st CURRENCY AMOUNT (15,0)    *
+     C*             @RDAM2 - INPUT DEAL 2nd CURRENCY AMOUNT (15,0)    *
+     C*             @@CDP1 - 1ST CURRENCY DECIMAL PLACES    (1,0)     *
+     C*             @@CDP2 - 2ND CURRENCY DECIMAL PLACES    (1,0)     *
+     C*             @@CRET - NUMBER OF CHARACTERS TO RETURN (2,0)     *
+     C*****************************************************************
+     C           #ZB       BEGSR
+     C*
+     C** Format First Currency Amount.
+     C*
+     C                     Z-ADD@RDAM1    @@IAMT
+     C                     MOVE F3CCY1    @@CCY   3
+     C                     Z-ADD18        @@CRET  30
+     C                     MOVE @@CDP1    @@CDP   10
+     C                     EXSR ZA0750
+     C                     MOVE @@ADSP    RRDAM1
+     C*
+     C** Format Second Currency Amount.
+     C*
+     C                     Z-ADD@RDAM2    @@IAMT
+     C                     MOVE F3CCY2    @@CCY   3
+     C                     Z-ADD18        @@CRET  30
+     C                     MOVE @@CDP2    @@CDP   10
+     C                     EXSR ZA0750
+     C                     MOVE @@ADSP    RRDAM2
+     C*
+     C*
+     C           #ZB9      ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BD      - INITIALISE FIELDS                                 *
+      *                                                               *
+      *  CALLS             -                                          *
+      *                                                               *
+      *  CALLED BY         -    #B #BA #BB #BC                        *
+      *                                                               *
+      *  FLDS USED                                                    *
+      *                                                               *
+      *****************************************************************
+     C           #BD       BEGSR
+      *
+     C                     MOVE *BLANK    @STDDL
+      *
+     C                     Z-ADD*ZERO     F3BCAE
+     C                     Z-ADD*ZERO     F3BCDE
+     C**********           Z-ADD*ZERO     F3BCNM                                              CSD027
+     C                     MOVE *BLANKS   F3BCNM                                              CSD027
+     C                     Z-ADD*ZERO     F3BOPM
+     C                     Z-ADD*ZERO     F3BORM
+     C                     Z-ADD*ZERO     F3BOTD
+     C                     Z-ADD*ZERO     F3BRKG
+     C                     Z-ADD*ZERO     F3BVDT
+     C**********           Z-ADD*ZERO     F3CNUM                                              CSD027
+     C                     MOVE *BLANKS   F3CNUM                                              CSD027
+     C                     Z-ADD*ZERO     F3DAM1
+     C                     Z-ADD*ZERO     F3DAM2
+     C                     Z-ADD*ZERO     F3DBUY
+     C                     Z-ADD*ZERO     F3DDDN
+     C                     Z-ADD*ZERO     F3DDDT
+     C                     Z-ADD*ZERO     F3DLUP
+     C                     Z-ADD*ZERO     F3DMPM
+     C                     Z-ADD*ZERO     F3DN38
+     C                     Z-ADD*ZERO     F3DOED
+     C                     Z-ADD*ZERO     F3DOEM
+     C                     Z-ADD*ZERO     F3DOEY
+     C                     Z-ADD*ZERO     F3DSBE
+     C                     Z-ADD*ZERO     F3DSEL
+     C                     Z-ADD*ZERO     F3DTDD
+     C                     Z-ADD*ZERO     F3DTMM
+     C                     Z-ADD*ZERO     F3DTYY
+     C                     Z-ADD*ZERO     F3DXRT
+     C                     Z-ADD*ZERO     F3ETIM
+     C                     Z-ADD*ZERO     F3FWPZ
+     C                     Z-ADD*ZERO     F3LCD
+     C                     MOVE *BLANKS   F3MBCA
+     C                     Z-ADD*ZERO     F3ODBE
+     C                     Z-ADD*ZERO     F3ODSB
+     C                     Z-ADD*ZERO     F3OOFA
+     C                     Z-ADD*ZERO     F3OOSA
+     C                     Z-ADD*ZERO     F3ORCM
+     C                     Z-ADD*ZERO     F3OTDN
+     C                     Z-ADD*ZERO     F3PCTN
+     C                     Z-ADD*ZERO     F3RBAT
+     C**********           Z-ADD*ZERO     F3RCNM                                              CSD027
+     C                     MOVE *BLANKS   F3RCNM                                              CSD027
+     C                     Z-ADD*ZERO     F3ROPM
+     C                     Z-ADD*ZERO     F3RORM
+     C                     Z-ADD*ZERO     F3ROTD
+     C                     Z-ADD*ZERO     F3RSAT
+     C                     Z-ADD*ZERO     F3RVDT
+     C                     Z-ADD*ZERO     F3TLUP
+     C                     Z-ADD*ZERO     F3VDDD
+     C                     Z-ADD*ZERO     F3VDMM
+     C                     Z-ADD*ZERO     F3VDYY
+     C                     Z-ADD*ZERO     F3YLUP
+      *
+      ** Initialise audit report fields.
+      *
+     C                     MOVE *BLANKS   RRDN38
+     C                     MOVE *BLANKS   RRTYPE
+     C                     MOVE *BLANKS   RRVDDD
+     C                     MOVE *BLANKS   RRVDMM
+     C                     MOVE *BLANKS   RRVDYY
+     C                     MOVE *BLANKS   RRDBRC
+     C                     MOVE *BLANKS   RRCCY1
+     C                     MOVE *BLANKS   RRDAM1
+     C                     Z-ADD*ZERO     @RDAM1 150
+     C                     MOVE *BLANKS   RRCCY2
+     C                     MOVE *BLANKS   RRDAM2
+     C                     Z-ADD*ZERO     @RDAM2 150
+     C                     Z-ADD*ZERO     RRDXRT
+     C                     Z-ADD*ZERO     RRFWPP
+     C                     MOVE *BLANKS   RRDCSN
+      *
+     C           #BD9      ENDSR                           ****#BD9****
+      /EJECT
+     C****************************************************************
+     C*                                                              *
+     C*                                                              *
+     C*     ZA0750 -  CONVERT AMOUNT TO DISPLAY                      *
+     C*                                                              *
+     C*       CALLS:                                                 *
+     C*                                                              *
+     C*       INPUT: @@IAMT 15,0 (INPUT AMOUNT)                      *
+     C*              @@CCY  3A   (INPUT CURRENCY)                    *
+     C*              @@CRET 2,0  (NUMBER OF CHARACTERS TO RETURN)    *
+     C*              @@CDP  1,0  (CURRENCY DECIMAL PLACES)           *
+     C*                                                              *
+     C*      OUTPUT: @@ADSP 21A    (AMOUNT TO DISPLAY)               *
+     C*                                                              *
+     C*        USES:                                                 *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           ZA0750    BEGSR
+     C*
+     C*          INITIALISE ARRAYS
+     C*
+     C                     MOVEA*BLANKS   @E
+     C                     MOVEA*BLANKS   @C
+     C*
+     C*          MOVE SIGN TO DISPLAY AMOUNT
+     C*
+     C           @@IAMT    IFGT 0                          B1
+     C                     MOVE '+'       @E,21            *1
+     C                     END                             E1
+     C*
+     C*          AFTER '-' SIGN PLACED IN  @E CHANGE @@IAMT TO +VE
+     C*
+     C           @@IAMT    IFLT 0                          B1
+     C                     MOVE '-'       @E,21            *1
+     C                     Z-SUB@@IAMT    @@IAMT           *1
+     C                     END                             E1
+     C*
+     C           @@IAMT    IFEQ 0                          B1
+     C                     MOVE ' '       @E,21            *1
+     C                     END                             E1
+     C*
+     C*          MOVE INPUT AMOUNT TO @D
+     C*
+     C                     MOVEA@@AMDS    @D
+     C*
+     C*          MOVE DECIMAL PORTION OF AMOUNT TO @E
+     C*
+     C                     Z-ADD15        @@C     20
+     C                     Z-ADD20        @@D     20
+     C*
+     C           20        SUB  @@CDP     @@MAX   20
+     C           @@D       DOWGT@@MAX                      B1
+     C                     MOVE @D,@@C    @E,@@D           *1
+     C                     SUB  1         @@C              *1
+     C                     SUB  1         @@D              *1
+     C                     END                             E1
+     C*
+     C*          MOVE DECIMAL SEPARATOR TO @E
+     C*
+     C           @@CDP     IFNE 0                          B1
+     C                     MOVE BNDCSP    @E,@@D           *1
+     C                     SUB  1         @@D              *1
+     C                     END                             E1
+      * IF AMOUNT IS ZERO THEN MOVE A ZERO AND EXIT
+     C           @@IAMT    IFEQ 0                          B1
+     C                     MOVE '0'       @E,@@D           *1
+     C                     GOTO ZA0755                     *1
+     C                     END                             E1
+     C*
+     C*          FIND POSITION OF LAST CHARACTER TO BE MOVED
+     C*
+     C                     Z-ADD1         @@E     20
+     C*
+     C           @@E       DOWLT@@MAX                      B1
+     C           @D,@@E    ANDEQ'0'                        *1
+     C                     ADD  1         @@E              *1
+     C                     END                             E1
+     C*
+     C*          MOVE INTEGER PORTION OF AMOUNT TO @E
+     C*
+     C                     Z-ADD0         @@CNT1  20
+     C                     Z-ADD0         @@CNT2  20
+     C*
+     C           @@C       DOWGT@@E                        B1
+     C                     MOVE @D,@@C    @E,@@D           *1
+     C                     ADD  1         @@CNT1           *1
+     C                     SUB  1         @@C              *1
+     C                     SUB  1         @@D              *1
+     C*
+     C*          INSERT THOUSAND SEPARATORS
+     C*
+     C           @@CNT1    DIV  3         @@RES   20       *1
+     C                     MVR            @@REMD  10       *1
+     C           @@REMD    IFEQ 0                          B*2
+     C           @@CNT2    ANDLT5                          **2
+     C                     MOVE BNTHSP    @E,@@D           **2
+     C                     ADD  1         @@CNT2           **2
+     C                     Z-ADD@@D       @@F     20       **2
+     C                     SUB  1         @@D              **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C*          MOVE LAST CHARACTER
+     C*
+     C                     MOVE @D,@@C    @E,@@D
+     C*
+     C*          IF NUMBER OF CHARACTERS MOVED IS GREATER THAN NUMBER
+     C*        TO BE RETURNED DROP THOUSAND SEPARATORS TILL SATISFIED
+     C*
+     C           22        SUB  @@D       @@CMOV  20
+     C           @@CMOV    SUB  @@CRET    @@DIFF  20
+     C           @@DIFF    IFGT 0                          B1
+     C                     DO   @@DIFF                     B*2
+     C                     Z-ADD1         @@G     20       **2
+     C                     Z-ADD2         @@H     20       **2
+     C           @@G       DOWLE21                         B**3
+     C                     MOVE @E,@@G    @C,@@H           ***3
+     C                     ADD  1         @@G              ***3
+     C                     ADD  1         @@H              ***3
+     C           @@G       IFEQ @@F                        B***4
+     C                     ADD  1         @@G              ****4
+     C                     END                             E***4
+     C                     END                             E**3
+     C                     MOVEA@C        @E               **2
+     C                     ADD  4         @@F              **2
+     C                     END                             E*2
+     C                     END                             E1
+     C           ZA0755    TAG
+     C*
+     C*          MOVE @E TO DISPLAY FIELD
+     C*
+     C                     MOVEA@E        @@ADSP 21
+     C           ZA0759    ENDSR
+     C****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      * ZA0810 - THIS SUBROUTINE CALCULATES THE DEALT SPOT BASE
+      *          CURRENCY EQUIVALENT
+      *
+      * CALLED BY :
+      *
+      * CALLS     :  ZA0780 - CALCULATE OUTRIGHT RATE
+      *
+      * INPUT :  @@CDP1  CURRENCY 1 DECIMAL PLACES           (1,0)
+      *          @@CDP2  CURRENCY 2 DECIMAL PLACES           (1,0)
+      *          @@DFA   DEAL FIRST AMOUNT                   (15,0)
+      *          @@DFC   DEAL FIRST CURRENCY                 (3A)
+      *          @@DFP   DEAL FORWARD POINTS                 (7,2)
+      *          @@DSA   DEAL SECOND AMOUNT                  (15,0)
+      *          @@DSC   DEAL SECOND CURRENCY                (3A)
+      *          @@DXR   DEAL EXCHANGE RATE                  (12,8)
+      *          @@HSP1  HIGH SPOT RATE CURRENCY 1           (13,8)
+      *          @@HSP2  HIGH SPOT RATE CURRENCY 2           (13,8)
+      *          @@LSP1  LOW SPOT RATE CURRENCY 1            (13,8)
+      *          @@LSP2  LOW SPOT RATE CURRENCY 2            (13,8)
+      *          @@MDF1  MULTIPLY/DIVIDE FIRST CURRENCY *IN  (1A)
+      *          @@MDF2  MULTIPLY/DIVIDE SECOND CURRENCY *IN (1A)
+      *          @@VDT  VALUE DATE OF DEAL                   (8N)
+      *          @@SPD1  SPOT DATE CCY 1                     (8N)
+      *          @@SPD2  SPOT DATE CCY 2                     (8N)
+      *
+      * OUTPUT : @@DSBC  DEALT SPOT BASE CCY EQUIVALENT      (15,0)
+      *
+      *  USES :  @@WA1   WORK AMOUNT 1  (15,0)
+      *          @@WA2   WORK AMOUNT 2  (15,0)
+      *          @@WRT1  RATE FOR CCY1   (13,8)
+      *          @@WRT2  RATE FOR CCY2   (13,8)
+      *          @@WDP   WORK DECIMAL PLACES
+      *          @@WMD   WORK MULTIPLY/DIVIDE *IN
+      *          @@WOR   WORKING RATE   (12,8)
+      *          @@NEWR  OUTRIGHT RATE, FROM ZA0780
+      *          DBFILE  FILE ERROR FILE NAME
+      *          DBASE   FILE ERROR NUMBER
+      *          DBKEY   FILE ERROR KEY
+      *          BNCYCD  BASE CURRENCY FOR DEALING  (SDDEALPD)
+      *
+      *
+      *****************************************************************
+      *
+     C           ZA0810    BEGSR
+      *
+      *
+      **  CHECK WETHER TO USE HIGH OR LOW SPOT RATE FOR BOTH CCY'S
+     C           @@MDF1    IFEQ 'D'                        B1
+     C           @@DFA     ANDGT0                          B1
+      *
+     C           @@MDF1    OREQ 'M'                        B1
+     C           @@DFA     ANDLT0                          B1
+     C                     Z-ADD@@LSP1    @@WRT1 138       *1
+     C                     ELSE                            X1
+     C                     Z-ADD@@HSP1    @@WRT1           *1
+     C                     END                             E1
+      *
+      **  CCY 2
+     C           @@MDF2    IFEQ 'D'                        B1
+     C           @@DSA     ANDGT0                          B1
+      *
+     C           @@MDF2    OREQ 'M'                        B1
+     C           @@DSA     ANDLT0                          B1
+     C                     Z-ADD@@LSP2    @@WRT2 138       *1
+     C                     ELSE                            X1
+     C                     Z-ADD@@HSP2    @@WRT2           *1
+     C                     END                             E1
+      *
+      **  IF BOTH CURRENCIES ARE NOT EQUAL TO THE BASE CCY
+     C           @@DFC     IFNE BNCYCD                     B1
+     C           @@DSC     ANDNEBNCYCD                     B1
+      *
+     C           @@MDF1    IFEQ 'D'                        B*2
+     C           @@DFA     DIV  @@WRT1    @@WA1  150H      **2
+     C                     ELSE                            X*2
+     C           @@DFA     MULT @@WRT1    @@WA1     H      **2
+     C                     END                             E*2
+      *
+      **  MUST ENSURE FIELD IS POSITIVE
+     C           @@WA1     IFLT 0                          B*2
+     C                     Z-SUB@@WA1     @@WA1            **2
+     C                     END                             E*2
+      *
+      ** MUST ENSURE VALUE HAS DECIMAL PLACES AS BASE CURRENCY DP'S
+     C           @@BCDP    SUB  @@CDP1    @@WDP   10       *1
+     C           @@WDP     IFLT *ZERO                      B*2
+     C                     Z-SUB@@WDP     @@WDP            **2
+     C                     ADD  1         @@WDP            **2
+     C           @@WA1     DIV  @DC,@@WDP @@WA1     H      **2
+     C                     ELSE                            X*2
+     C                     ADD  1         @@WDP            **2
+     C           @@WA1     MULT @DC,@@WDP @@WA1            **2
+     C                     END                             E*2
+      *
+      **  REPEAT FOR SECOND CCY
+      **  CHECK WETHER TO RETRIEVE HIGH OR LOW SPOT RATE
+      *
+     C           @@MDF2    IFEQ 'D'                        B*2
+     C           @@DSA     DIV  @@WRT2    @@WA2  150H      **2
+     C                     ELSE                            X*2
+     C           @@DSA     MULT @@WRT2    @@WA2     H      **2
+     C                     END                             E*2
+      *
+      **  MUST ENSURE WORK AMOUNT FIELD IS POSITIVE
+     C           @@WA2     IFLT 0                          B*2
+     C                     Z-SUB@@WA2     @@WA2            **2
+     C                     END                             E*2
+      *
+      ** MUST ENSURE VALUE HAS DECIMAL PLACES AS BASE CURRENCY DP'S
+     C           @@BCDP    SUB  @@CDP2    @@WDP   10       *1
+     C           @@WDP     IFLT *ZERO                      B*2
+     C                     Z-SUB@@WDP     @@WDP            **2
+     C                     ADD  1         @@WDP            **2
+     C           @@WA2     DIV  @DC,@@WDP @@WA2     H      **2
+     C                     ELSE                            X*2
+     C                     ADD  1         @@WDP            **2
+     C           @@WA2     MULT @DC,@@WDP @@WA2            **2
+     C                     END                             E*2
+      *
+      **  CALCULATE AVERAGE
+     C           @@WA1     ADD  @@WA2     @@DSBC 150       *1
+     C           @@DSBC    DIV  2         @@DSBC    H      *1
+      *
+      **  SKIP FURTHER PROCESSING
+     C                     GOTO ZA0819                     *1
+     C                     END                             E1
+      *
+      *  PROCESSING FOR ONE CCY EQUAL TO BASE CCY FOR DEALING
+      *
+      *  IF VALUE DATE  = SPOT DATE
+      * (THE BASE CCY WILL HAVE @@SPD = 0 OR ??)
+     C           @@VDT     IFEQ @@SPD1                     B1
+     C           @@VDT     OREQ @@SPD2                     B1
+      *
+      **  FIND BASE CCY AMOUNT OF DEAL
+     C           @@DFC     IFEQ BNCYCD                     B*2
+     C                     Z-ADD@@DFA     @@DSBC           **2
+     C                     ELSE                            X*2
+     C                     Z-ADD@@DSA     @@DSBC           **2
+     C                     END                             E*2
+      *
+      **  SKIP FURTHER PROCESSING
+     C                     GOTO ZA0818                     *1
+     C                     END                             E1
+      *
+      **  OTHERWISE CALCULATE AS FOLLOWS
+      *
+      **  USE NON BASE CCY AMOUNT
+     C           @@DFC     IFNE BNCYCD                     B1
+     C                     Z-ADD@@DFA     @@WA1            *1
+     C                     MOVE @@MDF1    @@WMD   1        *1
+     C                     Z-ADD@@CDP1    @@WDP            *1
+      *
+      *  IF FWD POINTS ARE BLANK USE SPOT FROM FILE
+     C           @@DFP     IFEQ *ZERO                      B*2
+     C                     Z-ADD@@WRT1    @@WRT            **2
+     C                     ELSE                            X*2
+     C                     Z-ADD@@DXR     @@WRT            **2
+     C                     END                             E*2
+      *
+     C                     ELSE                            X1
+     C                     Z-ADD@@DSA     @@WA1            *1
+     C                     MOVE @@MDF2    @@WMD            *1
+     C                     Z-ADD@@CDP2    @@WDP            *1
+      *
+      *  IF FWD POINTS ARE BLANK USE SPOT FROM FILE
+     C           @@DFP     IFEQ *ZERO                      B*2
+     C                     Z-ADD@@WRT2    @@WRT            **2
+     C                     ELSE                            X*2
+     C                     Z-ADD@@DXR     @@WRT            **2
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+      **  MULTIPLY/DIVIDE NON BASE CCY AMOUNT BY RATE CALCULATED
+     C           @@WMD     IFEQ 'M'                        B1
+     C           @@WA1     MULT @@WRT     @@DSBC    H      *1
+     C                     ELSE                            X1
+     C           @@WA1     DIV  @@WRT     @@DSBC    H      *1
+     C                     END                             E1
+      *
+      ** MUST ENSURE VALUE HAS DECIMAL PLACES AS BASE CURRENCY DP'S
+     C           @@BCDP    SUB  @@WDP     @@WDP
+     C           @@WDP     IFLT *ZERO                      B1
+     C                     Z-SUB@@WDP     @@WDP            *1
+     C                     ADD  1         @@WDP            *1
+     C           @@DSBC    DIV  @DC,@@WDP @@DSBC    H      *1
+     C                     ELSE                            X1
+     C                     ADD  1         @@WDP            *1
+     C           @@DSBC    MULT @DC,@@WDP @@DSBC           *1
+     C                     END                             E1
+      *
+      ** ENSURE AMOUNT IS +VE
+     C           ZA0818    TAG                             ** TAG ZA0818 *
+     C           @@DSBC    IFLT *ZERO                      B*2
+     C                     Z-SUB@@DSBC    @@DSBC           **2
+     C                     END                             E*2
+      *
+      **  SKIP THE NEXT BIT - JUST DEFINITIONS
+     C                     GOTO ZA0819
+      **  DEFINE SOME FIELDS (WITHOUT USING DEFN)
+     C                     Z-ADD@@DFA     @@DFA  150
+     C                     MOVE @@DFC     @@DFC   3
+     C                     Z-ADD@@DFP     @@DFP   72
+     C                     MOVE @@MDF2    @@MDF2  1
+     C                     Z-ADD@@LSP1    @@LSP1 138
+     C                     Z-ADD@@HSP1    @@HSP1 138
+      *
+     C                     Z-ADD@@DSA     @@DSA  150
+     C                     MOVE @@DSC     @@DSC   3
+     C                     Z-ADD@@DXR     @@DXR  128
+     C                     Z-ADD@@LSP2    @@LSP2 138
+     C                     Z-ADD@@HSP2    @@HSP2 138
+     C           *LIKE     DEFN @@WRT1    @@WRT
+     C           ZA0819    ENDSR                           ** TAG ZA0819 *
+     C/EJECT
+      ****************************************************************
+      *                                                              *
+      * #ZAA   - SUBROUTINE CALCULATES DEALT BASE CURRENCY EQUIVALENT*
+      *                                                              *
+      * CALLED BY -                                                  *
+      *                                                              *
+      * CALLS :                                                      *
+      *                                                              *
+      * INPUT  :  @@VDT  VALUE DATE                            (8N)  *
+      *           @@DAM1 DEAL FIRST AMOUNT                     (15N) *
+      *           @@CCY1 DEAL FIRST CURRENCY                   (3A)  *
+      *           @@DAM2 DEAL SECOND AMOUNT                    (15N) *
+      *           @@CCY2 DEAL SECOND CURRENCY                  (3A)  *
+      *                                                              *
+      *                                                              *
+      * OUTPUT :  @@DBCE DEALT BASE CURRENCY EQUIVALENT        (15N) *
+      *                                                              *
+      * WORKFIELDS : @@CHR4 - USED IN ACCESSING SDCURRPD             *
+      *              @@BYSL - CURRENCY BUY/SELL INDICATOR            *
+      *              @@DBC1 - DBCE FOR DEAL FIRST AMOUNT             *
+      *              @@DBC2 - DBCE FOR DEAL SECOND AMOUNT            *
+      *                                                              *
+      * USES :    ZA0630 - OBTAIN FORWARD OUTRIGHT RATE              *
+      *                                                              *
+      *****************************************************************
+     C           #ZAA      BEGSR
+      *
+      ** IF EITHER CURRENCY IS BASE CURRENCY FOR DEALING SET BCFD
+      ** EQUAL TO CORRESPONDING AMOUNT. DCFD MUST BE A POSITIVE AMOUNT
+     C           @@CCY1    IFEQ BNCYCD                     B1
+     C           @@CCY2    OREQ BNCYCD                     *1
+      *
+     C           @@CCY1    IFEQ BNCYCD                     B*2
+     C           @@DAM1    IFGT 0                          B**3
+     C                     Z-ADD@@DAM1    @@DBCE 150       ***3
+     C                     ELSE                            X**3
+     C                     Z-SUB@@DAM1    @@DBCE           ***3
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+     C           @@CCY2    IFEQ BNCYCD                     B*2
+     C           @@DAM2    IFGT 0                          B**3
+     C                     Z-ADD@@DAM2    @@DBCE           ***3
+     C                     ELSE                            X**3
+     C                     Z-SUB@@DAM2    @@DBCE           ***3
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+      ** IF NEITHER CURRENCY BCFD CALCULATE  BCE
+     C                     ELSE                            X1
+      *
+      ** ACCESS DETAILS FOR DEAL FIRST CURRENCY
+     C                     MOVEL@@CCY1    @@CHR4  3        *1
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @@CHR4    @@CUR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B*2
+     C                     SETON                     U7U8  **2
+     C                     MOVE '012'     DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERR 12*
+     C                     MOVEL@@CCY1    DBKEY            ************
+     C                     MOVE '1'       *INU7            **2
+     C                     MOVE '1'       *INU8            **2
+     C                     MOVEL'E'       @TERM            **2
+     C                     GOTO #ZAA9                      **2
+     C                     END                             E*2
+      *
+      ** GET FORWARD OUTRIGHT RATE AND M/D INDICATOR USING ZA0630
+     C                     MOVE @@CCY1    @@CCY   3        *1
+     C           @@DAM1    IFGT 0                          B*2
+     C                     MOVE 'B'       @@BYSL  1        **2
+     C                     ELSE                            X*2
+     C                     MOVE 'S'       @@BYSL           **2
+     C                     END                             E*2
+      *
+     C                     EXSR ZA0630                     *1
+     C           *INU7     CABEQ'1'       #ZAA9            *1
+      *
+      ** ENSURE THAT DEAL FIRST AMOUNT IS SIGNED POSITIVE
+     C           @@DAM1    IFLT 0                          B*2
+     C                     Z-SUB@@DAM1    @@DAM1 150       **2
+     C                     END                             E*2
+      *
+      ** CALCULATE DBCE FOR DEAL FIRST CURRENCY AMOUNT
+     C           @@MDI1    IFEQ 'M'                        B*2
+     C           @@DAM1    MULT @@MOR     @@DBC1 150       **2
+     C                     ELSE                            X*2
+     C           @@DAM1    DIV  @@MOR     @@DBC1    H      **2
+     C                     END                             E*2
+      *
+      ** ENSURE THAT DBCE FOR DEAL FIRST CURRENCY AMOUNT POSITIVE
+     C           @@DBC1    IFLT 0
+     C                     Z-SUB@@DBC1    @@DBC1
+     C                     END
+      *
+      ** MUST ENSURE VALUE HAS DECIMAL PLACES AS BASE CURRENCY DP'S
+     C           @@BCDP    SUB  @@CDP1    @@WDP
+     C           @@WDP     IFLT *ZERO                      B1
+     C                     Z-SUB@@WDP     @@WDP            *1
+     C                     ADD  1         @@WDP            *1
+     C           @@DBC1    DIV  @DC,@@WDP @@DBC1    H      *1
+     C                     ELSE                            X1
+     C                     ADD  1         @@WDP            *1
+     C           @@DBC1    MULT @DC,@@WDP @@DBC1           *1
+     C                     END                             E1
+      *
+      ** ACCESS DETAILS FOR DEAL SECOND CURRENCY
+     C                     MOVEL@@CCY2    @@CHR4           *1
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @@CHR4    @@CUR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B*2
+     C                     SETON                     U7U8  **2
+     C                     MOVE '013'     DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERR 13*
+     C                     MOVEL@@CCY2    DBKEY            ************
+     C                     MOVE '1'       *INU7            **2
+     C                     MOVE '1'       *INU8            **2
+     C                     MOVEL'E'       @TERM            **2
+     C                     GOTO #ZAA9                      **2
+     C                     END                             E*2
+      *
+      ** GET FORWARD OUTRIGHT RATE AND M/D INDICATOR USING ZA0630
+     C                     MOVE @@CCY2    @@CCY   3        *1
+     C           @@DAM2    IFGT 0                          B*2
+     C                     MOVE 'B'       @@BYSL           **2
+     C                     ELSE                            X*2
+     C                     MOVE 'S'       @@BYSL           **2
+     C                     END                             E*2
+      *
+     C                     EXSR ZA0630                     *1
+     C           *INU7     CABEQ'1'       #ZAA9            *1
+      *
+      ** ENSURE THAT DEAL SECOND AMOUNT IS SIGNED POSITIVE
+     C           @@DAM2    IFLT 0                          B*2
+     C                     Z-SUB@@DAM2    @@DAM2 150       **2
+     C                     END                             E*2
+      *
+      ** CALCULATE DBCE FOR DEAL FIRST CURRENCY AMOUNT
+     C           @@MDI1    IFEQ 'M'                        B*2
+     C           @@DAM2    MULT @@MOR     @@DBC2 150       **2
+     C                     ELSE                            X*2
+     C           @@DAM2    DIV  @@MOR     @@DBC2    H      **2
+     C                     END                             E*2
+      *
+      ** ENSURE THAT DBCE FOR DEAL SECOND CURRENCY AMOUNT POSITIVE
+     C           @@DBC2    IFLT 0                          B*2
+     C                     Z-SUB@@DBC2    @@DBC2           **2
+     C                     END                             E*2
+      *
+      ** MUST ENSURE VALUE HAS DECIMAL PLACES AS BASE CURRENCY DP'S
+     C           @@BCDP    SUB  @@CDP2    @@WDP
+     C           @@WDP     IFLT *ZERO                      B*2
+     C                     Z-SUB@@WDP     @@WDP            **2
+     C                     ADD  1         @@WDP            **2
+     C           @@DBC2    DIV  @DC,@@WDP @@DBC2    H      **2
+     C                     ELSE                            X*2
+     C                     ADD  1         @@WDP            **2
+     C           @@DBC2    MULT @DC,@@WDP @@DBC2           **2
+     C                     END                             E*2
+      *
+      ** ADD TWO AMOUNTS TOGETHER AND DIVIDE BY TWO TO OBTAIN DBCE
+     C           @@DBC1    ADD  @@DBC2    @@DBC1           *1
+     C           @@DBC1    DIV  2         @@DBCE    H      *1
+      *
+     C                     END                             E1
+      *
+     C                     GOTO #ZAA9
+     C                     MOVE *BLANKS   @@CCY1  3
+     C                     MOVE *BLANKS   @@CCY2  3
+     C                     MOVE *BLANKS   @@MDI1  1
+     C                     Z-ADD0         @@MOR  138
+      *
+     C           #ZAA9     ENDSR
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      * ZA0630 - THIS SUBROUTINE CALCULATES THE FORWARD OUTRIGHT RATE*
+      *                                                              *
+      * CALLED BY:ZA0740                                             *
+      *                                                              *
+      * CALLS :   ZA0700                                             *
+      *                                                              *
+      * INPUT  :  @@BYSL BUY/SELL RATE                         (1A)  *
+      *                                                              *
+      *                                                              *
+      * OUTPUT :  @@MOR  FORWARD OUTRIGHT RATE                 (13N) *
+      *           @@MDI1 MULTIPLY/DIVIDE INDICATOR             (1A)  *
+      *                                                              *
+      * USES :    @@SPRT SPOT RATE                                   *
+      *           @@FPT  FORWARD POINTS                              *
+      *           @@C    ARRAY INDEX                                 *
+      *           @@AY   ARRAY OF POWERS OF 10                       *
+      *           @@WF1  WORKFIELD                                   *
+      *****************************************************************
+      *
+     C           ZA0630    BEGSR
+     C           @@BYSL    IFEQ 'B'                        B1
+      *
+      ** If multiply/divide indicator is 'M' move high spot rate to
+      ** spot rate work field otherwise fill with low spot rate.
+     C           A6MDEX    IFEQ 'M'                        B*2
+     C                     MOVE A6HSRT    @@SPRT 138       **2
+      *
+      ** Otherwise multiply/divide is 'D'.
+     C                     ELSE                            X*2
+     C                     MOVE A6LSPR    @@SPRT           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           @@BYSL    IFEQ 'S'                        B1
+      *
+      ** If multiply/divide indicator is 'M' move low spot rate to
+      ** spot rate work field otherwise fill with high spot rate.
+     C           A6MDEX    IFEQ 'M'                        B*2
+     C                     MOVE A6LSPR    @@SPRT           **2
+      *
+      ** Otherwise multiply/divide is 'D'.
+     C                     ELSE                            X*2
+     C                     MOVE A6HSRT    @@SPRT           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Store multiply/divide indicator for output from routine.
+     C                     MOVE A6MDEX    @@MDI1  1
+      *
+      ** ZA0700  is an internal subroutine which is used
+      ** to obtain forward points(@@FPT).
+     C                     EXSR ZA0700
+      *
+      ** Calculate forward outright rate by adding high/low spot rate
+      ** to forward points & then dividing the result by 10 to the
+      ** power of NQDP (normally quoted decimal places).
+     C                     Z-ADDA6NQDP    @@C     20
+     C                     ADD  1         @@C
+     C           @@FPT     DIV  @@AY,@@C  @@WF1  158
+     C           @@WF1     ADD  @@SPRT    @@MOR  138
+      *
+     C                     GOTO ZA0639
+      *
+      ** Unexecuted processing to define fields used in routine.
+     C                     MOVE @@BYSL    @@BYSL  1
+     C                     MOVE @@FPT     @@FPT   72
+      *
+     C           ZA0639    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      * ZA0700 - THIS SUBROUTINE CALCULATES FORWARD POINTS           *
+      *                                                              *
+      * CALLED BY:ZA0630                                             *
+      *                                                              *
+      * CALLS :   ZA0680                                             *
+      *                                                              *
+      * INPUT  :  @@VDT  VALUE DATE                            (8N)  *
+      *           @@CCY  CURRENCY CODE                         (3A)  *
+      *           @@BYSL BUY/SELL RATE                         (1A)  *
+      *                                                              *
+      *                                                              *
+      * OUTPUT :  @@FPT  FORWARD POINTS                        (7N)  *
+      *                                                              *
+      *                                                              *
+      * ADDITIONAL WORK FIELDS USED WITHIN THIS ROUTINE :
+      *                                                              *
+      *           @@SPDT SPOT DATE             (MIDAS DAY NO.)       *
+      *           @@VDAT VALUE DATE            (MIDAS DAY NO.)       *
+      *           @@TPRD TYPE OF PERIOD        ('W' IS WEEKS)        *
+      *           @@PRD  NUMBER OF PERIODS                           *
+      *           @@FP1  FORWARD POINTS FROM 1ST REC. USED IN CALC.  *
+      *           @@FP2  FORWARD POINTS FROM 2ND REC. USED IN CALC.  *
+      *           @@D1   MIDAS DAY NO. CORRESPONDING WITH @@FP1      *
+      *           @@D2   MIDAS DAY NO. CORRESPONDING WITH @@FP2      *
+      *           @@WF1  WORK FIELD HOLDING INTERMEDIATE RESULT FROM *
+      *                                                  CALCULATION.*
+      *           @@WF2  WORK FIELD HOLDING INTERMEDIATE RESULT FROM *
+      *                                                  CALCULATION.*
+      *           @@MDNO MIDAS DAY NUMBER RETURNED FROM SR @@MDNO    *
+      *           @@DTWF DATE WORKFIELD                              *
+      *                                                              *
+      *                                                              *
+      *     AMEND NO. XXXXX                    DATE XX/XX/XX         *
+      *                                                              *
+      *****************************************************************
+      *
+     C           ZA0700    BEGSR
+      *
+      **  Find first record on file for currency.
+     C                     MOVE *LOVAL    @@DTWF  80
+      *
+      **  Load key used to access LF/FXCCYPLL.
+     C           CCYLOW    KLIST
+     C                     KFLD           @@CCY
+     C                     KFLD           @@DTWF
+     C           CCYLOW    SETLLFXCCYPLL
+     C                     READ FXCCYPLL                 81
+      *
+      ** If currency for record has not been found
+      ** then there is a database error.
+     C           @@CCY     IFNE XPCCY                      ***************
+     C                     MOVEL'FXCCYPLL'DBFILE           *             *
+     C                     MOVEL'924'     DBASE            * DBERROR 924 *
+     C                     MOVEL@@CCY     DBKEY            *             *
+     C                     GOTO ZA0709                     ***************
+     C                     END                             E1
+      *
+      ** If the value date is spot date , or before the first record
+      ** on file for the currency then the points are zero.
+      *
+     C           @@VDT     IFEQ A6FXSD                     B1
+     C           @@VDT     ORLT XPPRDD                     *1
+     C                     Z-ADD0         @@FPT   72       *1
+     C                     GOTO ZA0709                     *1
+     C                     END                             E1
+      *
+      **  Load key used to access LF/FXCCYPLL.
+     C           CCYVDT    KLIST
+     C                     KFLD           @@CCY
+     C                     KFLD           @@VDT
+     C           CCYVDT    SETLLFXCCYPLL
+     C                     READ FXCCYPLL                 81
+      *
+      ** If currency has not been found check previous record.
+     C           @@CCY     IFNE XPCCY                       B1
+     C           *IN81     OREQ '1'                         *1
+     C                     GOTO ZA0708                      *1
+     C                     END                              E1
+      *
+      ** Find midas day number of value date.
+     C                     Z-ADD@@VDT     @@DTIN
+     C           @@DTIN    IFNE 0                          B1
+     C                     EXSR ZA0680                     *1
+     C                     ELSE                            X1
+     C                     Z-ADD0         @@MDNO           *1
+     C                     END                             E1
+     C                     Z-ADD@@MDNO    @@VDAT  50
+      *
+      ** IF    record with = date found
+     C           @@VDT     IFEQ XPPRDD                     B1
+      *
+      ** IF Type of period is not 'D'
+     C           XPTPRD    IFNE 'D'                        B*2
+      *
+      ** If the buy/sell rate indicator is 'B' & the currency multiply
+      ** /divide exchange rate indicator is 'D' ,
+      ** or 'S' & 'M' respectively,use low points otherwise use high
+      ** points.
+     C           @@BYSL    IFEQ 'B'                        B**3
+     C           A6MDEX    ANDEQ'D'                        ***3
+     C                     MOVE XPLOPT    @@FPT            ***3
+     C                     GOTO ZA0709                     ***3
+     C                     END                             E**3
+      *
+     C           @@BYSL    IFEQ 'S'                        B**3
+     C           A6MDEX    ANDEQ'M'                        ***3
+     C                     MOVE XPLOPT    @@FPT            ***3
+     C                     GOTO ZA0709                     ***3
+     C                     END                             E**3
+      *
+     C                     MOVE XPHIPT    @@FPT            **2
+     C                     GOTO ZA0709                     **2
+     C                     END                             E*2
+      *
+      ** The type of period is 'D'.
+      ** Date is spot + 1 , spot - 1 or spot - 2 days.
+      ** Linear interpolation or extrapolation used between one week
+      ** rate & 0 on the spot date.
+      *
+      *
+      ** Find the one week rate.
+      ** Define search argument for chain to LF/FDCCYPLL.
+     C                     MOVE 'W'       @@TPRD  1        *1
+     C                     Z-ADD1         @@PRD   20       *1
+     C           WEEKRT    KLIST                           *1
+     C                     KFLD           @@CCY            *1
+     C                     KFLD           @@TPRD           *1
+     C                     KFLD           @@PRD            *1
+      *
+      ** CHAIN TO FILE FDCCYPLL
+     C           WEEKRT    CHAINFDCCYPLL             80    *1
+     C           XPDLTF    IFEQ '*'                        B*2
+     C                     MOVE '1'       *IN80            **2
+     C                     END                             E*2
+      *
+      ** DEAL WITH DATA BASE ERROR
+     C           *IN80     IFEQ '1'                        ***************
+     C                     MOVEL'FDCCYPLL'DBFILE           *             *
+     C                     MOVEL'923'     DBASE            * DBERROR 923 *
+     C                     MOVEL@@CCY     DBKEY            *             *
+     C                     GOTO ZA0709                     ***************
+     C                     END
+      *
+      *
+      ** If the buy/sell rate indicator is 'B' & the currency multiply
+      ** /divide exchange rate indicator is 'D' ,
+      ** or 'S' & 'M' respectively,use low points otherwise use high
+      ** points.
+     C           @@BYSL    IFEQ 'B'                        B*2
+     C           A6MDEX    ANDEQ'D'                        **2
+     C                     MOVE XPLOPT    @@FP2   72       **2
+      *
+     C                     ELSE                            X*2
+     C           @@BYSL    IFEQ 'S'                        B**3
+     C           A6MDEX    ANDEQ'M'                        ***3
+     C                     MOVE XPLOPT    @@FP2            ***3
+      *
+     C                     ELSE                            X**3
+     C                     MOVE XPHIPT    @@FP2            ***3
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+      ** Find 1 week date & spot date as a day number.
+     C                     Z-ADDXPPRDD    @@DTIN           *1
+     C                     EXSR ZA0680                     *1
+     C                     Z-ADD@@MDNO    @@D2    50       *1
+      *
+     C                     Z-ADDA6FXSD    @@DTIN           *1
+     C                     EXSR ZA0680                     *1
+     C                     Z-ADD@@MDNO    @@SPDT  50       *1
+      *
+      *
+      ** Forward points can now be calculated.
+     C           @@VDAT    SUB  @@SPDT    @@WF1  158       *1
+     C           @@FP2     MULT @@WF1     @@WF1            *1
+     C           @@D2      SUB  @@SPDT    @@WF2   80       *1
+     C           @@WF1     DIV  @@WF2     @@FPT            *1
+     C                     GOTO ZA0709                     *1
+      *
+     C                     END                             E1
+      *
+      *
+      ** IF    record with > date found
+     C           XPPRDD    IFGT @@VDT                      B1
+      *
+      ** If the buy/sell rate indicator is 'B' & the currency multiply
+      ** /divide exchange rate indicator is 'D' ,
+      ** or 'S' & 'M' respectively,use low points otherwise use high
+      ** points.
+     C           @@BYSL    IFEQ 'B'                        B*2
+     C           A6MDEX    ANDEQ'D'                        **2
+     C                     MOVE XPLOPT    @@FP2   72       **2
+      *
+     C                     ELSE                            X*2
+     C           @@BYSL    IFEQ 'S'                        B**3
+     C           A6MDEX    ANDEQ'M'                        ***3
+     C                     MOVE XPLOPT    @@FP2            ***3
+      *
+     C                     ELSE                            X**3
+     C                     MOVE XPHIPT    @@FP2            ***3
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+      ** Find day number of date.
+     C                     Z-ADDXPPRDD    @@DTIN           *1
+     C                     EXSR ZA0680                     *1
+     C                     Z-ADD@@MDNO    @@D2    50       *1
+      *
+      ** READ PREVIOUS record on LF/FXCCYPLL
+     C                     READPFXCCYPLL               8180*1
+      *
+      ** IF read prior was unsuccessful then there is a database error.
+     C           *IN80     IFEQ '1'
+     C           *IN81     OREQ '1'                        ***************
+     C                     MOVEL'FXCCYPLL'DBFILE           *             *
+     C                     MOVEL'924'     DBASE            * DBERROR 924 *
+     C                     GOTO ZA0709                     *             *
+     C                     END                             ***************
+      *
+     C           @@BYSL    IFEQ 'B'                        B*2
+     C           A6MDEX    ANDEQ'D'                        **2
+     C                     MOVE XPLOPT    @@FP1   72       **2
+      *
+     C                     ELSE                            X*2
+     C           @@BYSL    IFEQ 'S'                        B**3
+     C           A6MDEX    ANDEQ'M'                        ***3
+     C                     MOVE XPLOPT    @@FP1            ***3
+      *
+     C                     ELSE                            X**3
+     C                     MOVE XPHIPT    @@FP1            ***3
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+      ** Find day number of date.
+     C                     Z-ADDXPPRDD    @@DTIN           *1
+     C                     EXSR ZA0680                     *1
+     C                     Z-ADD@@MDNO    @@D1    50       *1
+      *
+      ** Forward points can now be calculated.
+     C           @@FP2     SUB  @@FP1     @@WF1            *1
+     C           @@VDAT    SUB  @@D1      @@WF2            *1
+     C           @@WF1     MULT @@WF2     @@WF1            *1
+     C           @@D2      SUB  @@D1      @@WF2            *1
+     C           @@WF1     DIV  @@WF2     @@WF1            *1
+     C           @@WF1     ADD  @@FP1     @@FPT     H      *1
+     C                     GOTO ZA0709                     *1
+      *
+     C                     END                             E1
+      *
+      ** No record with > or = date has been found at this stage
+      ** of processing so the points on the furthest forward
+      ** record are used.
+      ** Find the furthest forward record
+      *
+      ** READ PREVIOUS record on LF/FXCCYPLL
+     C           ZA0708    TAG
+     C                     READPFXCCYPLL               8081
+     C           @@CCY     IFNE XPCCY                      B1
+     C                     MOVE '1'       *IN80            *1
+     C                     END                             E1
+      *
+      ** IF read prior was unsuccessful then there is a database error.
+     C           *IN80     IFEQ '1'
+     C           *IN81     OREQ '1'                        ***************
+     C                     MOVEL'FXCCYPLL'DBFILE           *             *
+     C                     MOVEL'924'     DBASE            * DBERROR 924 *
+     C                     GOTO ZA0709                     *             *
+     C                     END                             ***************
+      *
+      ** If the buy/sell rate indicator is 'B' & the currency multiply
+      ** /divide exchange rate indicator is 'D' ,
+      ** or 'S' & 'M' respectively,use low points otherwise use high
+      ** points.
+     C           @@BYSL    IFEQ 'B'                        B1
+     C           A6MDEX    ANDEQ'D'                        *1
+     C                     MOVE XPLOPT    @@FPT            *1
+     C                     GOTO ZA0709                     *1
+     C                     END                             E1
+      *
+     C           @@BYSL    IFEQ 'S'                        B1
+     C           A6MDEX    ANDEQ'M'                        *1
+     C                     MOVE XPLOPT    @@FPT            *1
+     C                     GOTO ZA0709                     *1
+     C                     END                             E1
+      *
+     C                     MOVE XPHIPT    @@FPT
+      *
+     C                     GOTO ZA0709
+      *
+      ** Unexecuted processing to define fields used by this subroutine.
+     C                     MOVE @@MDNO    @@MDNO  50
+      *
+     C           ZA0709    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *******************************************************************
+      *
+      * ZA0680 - THIS SUBROUTINE CONVERTS YYYYMMDD FORMAT DATE TO
+      *          MIDAS DAY NUMBER FORMAT (NO. DAYS FROM 31/12/71)
+      *
+      * CALLED BY :
+      *
+      * CALLS :
+      *
+      * INPUT  : @@DTIN DATE (YYYYMMDD) - IN DATA STRUCTURE (SIZE : 8N)
+      *
+      * OUTPUT : @@MDNO MIDAS DAY NUMBER  (SIZE : 5N)
+      *
+      * USES :   @@CC   NUMBER OF CENTURIES IN DATE
+      *          @@DAY  DAY NUMBER
+      *          @@REM  REMAINDER FROM DIVIDE
+      *          @@MTH  MONTH NUMBER
+      *          @MD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN
+      *                 MONTH
+      *          @@WK2  WORK FIELD (2,0)
+      *          @@WK5  WORK FIELD (5,0)
+      *          @@YYYY YEAR (4 CHARACTER)
+      *          @@YY   YEAR (2 CHARACTER)
+      *          @YD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN
+      *                 A FOUR YEAR PERIOD
+      *
+      *******************************************************************
+      *
+     C           ZA0680    BEGSR
+      *
+      **  CLEAR OUT ANY 'OLD' DATA IN FIELD
+     C                     Z-ADD0         @@MDNO  50
+      *
+      **   IF DATE GREATER THAN 31/12/2071 NEED EXTRA PROCESSING
+     C           @@YYYY    IFGE 2072                       B1
+      *
+      **    MULTIPLY BY NUMBER OF DAYS IN CENTURY (SINCE 1971)
+     C           @@CC      SUB  19        @@WK2   20       *1
+     C           @@WK2     MULT 36524     @@MDNO           *1
+      *
+      **  YEAR 2000 IS A LEAP YEAR MUST ALLOW EXTRA DAY
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+      *
+     C           @@YYYY    ADD  28        @@WK2
+      *
+     C           @@WK2     DIV  4         @@WK2
+     C                     MVR            @@REM   10
+      *
+      **    MULTIPLY BY NUMBER OF DAYS IN FOUR YEAR PERIOD
+     C           @@WK2     MULT 1461      @@WK5   50
+     C                     ADD  @@WK5     @@MDNO
+      *
+      **  CHECK REMAINDER AND MONTH NUMBER
+     C           @@REM     IFEQ 0                          B1
+     C           @@MTH     ANDGT2                          B1
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+      *
+      **  YEAR NOT LEAP YEAR,  ADD CUMULATIVE DAYS FOR YEAR
+     C           @@REM     IFNE 0                          B1
+     C                     ADD  @YD,@@REM @@MDNO           *1
+     C                     END                             E1
+      *
+      **  ADD MONTHS THIS YEAR
+     C                     ADD  @MD,@@MTH @@MDNO
+      *
+      **  ADD DAYS THIS MONTH
+     C                     ADD  @@DAY     @@MDNO
+      *
+     C           ZA0689    ENDSR                           **ZA0689 TAG**
+      *****************************************************************
+      *****************************************************************
+      *                                                               *
+      *       TITLE:CALCULATE MIDAS DAY NO. TO DRS (YYYYMMDD) FORMAT. *
+      *                                                               *
+      *       SUBROUTINE ZA0710 EXPECTS FIELD '@@DAYN' TO BE          *
+      *       PASSED TO IT IN 5,0 FORMAT.IF THE ABOVE FIELD IS LESS   *
+      *       THAN 1 IT RETURNS 1 IN FIELD '@@RTN'.THE MAIN PROGRAM   *
+      *       SHOULD CHECK FOR THIS CONDITION AND DO THE NECESSARY.   *
+      *       IF '@@RTN' IS NOT EQUAL TO 1 IT RETURNS THE FIELD       *
+      *       '@@VDT'  IN 'YYYYMMDD' FORMAT.                          *
+      *                                                               *
+      * NOTE: FIELD TO BE DEFINED BY EXTERNAL ROUTINE IS
+      *                                                               *
+      *       1) @@DAYN   LENGTH 5,0.                                 *
+      *                                                               *
+      *       FIELDS USED AND ALREADY DEFINED IN THE ROUTINE ARE:     *
+      *                                                               *
+      *       1) @@VDT    LENGTH 8,0 DEFINED BY A DS.                 *
+      *       2) @@RTN    LENGTH 1,0.                                 *
+      *       3) @@I      LENGTH 2,0 USED TO ACCESS ARRAY @YD         *
+      *       4) @@J      LENGTH 2,0 USED TO ACCESS ARRAY @MD         *
+      *       5) @@Z71Y   LENGTH 4,0 DEFINED BY A DS.                 *
+      *       6) @@RDAY   LENGTH 5,0.                                 *
+      *       7) @@LEAP   LENGTH 1,0.
+      *                                                               *
+      *       INDICATORS USED ARE:                                    *
+      *                                                               *
+      *       1) 80       CHECK FOR LOW AND EQUAL ON ARRAY @YD        *
+      *       2) 81       CHECK FOR LOW ON ARRAY @MD.                 *
+      *                                                               *
+      * INPUT FIELD:       @@DAYN                                     *
+      *                                                               *
+      * OUTPUT FIELD:      @@VDT                                      *
+      *                                                               *
+      * WORK FIELDS:       @@RTN                                      *
+      *                    @@Z71Y                                     *
+      *                    @@RDAY                                     *
+      *                    @@LEAP                                     *
+      *                    @@I                                        *
+      *                    @@J                                        *
+      *                                                               *
+      * ARRAYS USED:       @YD COMPILE TIME ARRAY.
+      *                    @MD COMPILE TIME ARRAY.
+      *
+      *****************************************************************
+      *****************************************************************
+      *
+     C           ZA0710    BEGSR
+      *
+     C                     SETOF                     8081
+     C                     Z-ADD0         @@RTN   10
+     C                     Z-ADD0         @@VDT
+     C                     Z-ADD1         @@I     20
+     C                     Z-ADD1         @@J     20
+     C                     Z-ADD1         @@LEAP  10
+      *
+     C           @@DAYN    IFLT 1
+     C                     Z-ADD1         @@RTN
+     C                     GOTO ZA0719
+     C                     END
+      *
+      * DIVISION TO DETERMINE WETHER LEAP YEAR.
+      *
+     C           @@DAYN    DIV  1461      @@Z71Y
+     C                     MVR            @@RDAY  50
+      *
+      * CALCULATING YEAR.
+      *
+     C           @@Z71Y    MULT 4         @@Z71Y
+     C                     ADD  1972      @@Z71Y
+      *
+      * CHECKING IF YEAR IS GREATER THAN OR EQUAL TO 2100
+      *
+     C           @@Z71Y    IFGE 2100
+     C                     ADD  @@SSY2    @@RDAY
+     C                     END
+      *
+      * LOKUP ARRAY @YD TO SEE HOW MANY YEARS OF A FOUR YEAR CYCLE
+      * HAVE PASSED.
+      *
+     C           @@RDAY    LOKUP@YD,@@I                8080
+      *
+      * IF YEAR IS A LEAP YEAR SSLEAP IS SET TO ZERO.
+      *
+     C           *IN80     IFEQ '0'
+     C                     Z-ADD0         @@LEAP
+     C                     END
+      *
+      * ADD INDEX TO YEAR TO GIVE CORRECT YEAR AND ADJUST '@@RDAY'.
+      *
+     C           @@LEAP    IFEQ 1
+     C           @@RDAY    SUB  @YD,@@I   @@RDAY
+     C                     ADD  @@I       @@Z71Y
+     C                     END
+      *
+      * PROCESSING FOR A LEAP YEAR.
+      *
+     C           @@LEAP    IFEQ 0
+      *
+      * IF '@@RDAY' = 60 DATE MUST BE 29TH OF FEBRUARY.
+      *
+     C           @@RDAY    IFEQ 60
+     C                     Z-ADD29        @@Z71D
+     C                     Z-ADD2         @@Z71M
+     C                     GOTO ZA0711
+     C                     END
+      *
+      * IF '@@RDAY' > 60 DATE IS AFTER 29TH OF FEBRUARY,CONVERSION CAN
+      * PROCEED AS USUAL AFTER SUBTRACTING THE EXTRA DAY FOR THE LEAP
+      * YEAR. NOTE : '@@RDAY' < 60 CONVERSION PROCEEDS AS USUAL.
+      *
+     C           @@RDAY    IFGT 60
+     C           @@RDAY    SUB  1         @@RDAY
+     C                     END
+      *
+     C                     END
+      *
+      * IF DAY '@@DAYN' IS EXACTLY DIVISIBLE BY 1461 (NUMBER OF DAYS
+      * IN 4 YEARS) THEN DATE MUST BE LAST DAY OF PREVIOUS FOUR YEAR
+      * GROUP.
+      *
+     C           @@RDAY    IFEQ 0
+     C                     Z-ADD31        @@Z71D
+     C                     Z-ADD12        @@Z71M
+     C                     SUB  1         @@Z71Y
+     C                     GOTO ZA0711
+     C                     END
+      *
+      * LOOK UP ARRAY ARRAY @MD TO DETERMINE WHICH MONTH '@@RDAY'
+      * OCCURS IN
+      *
+     C           @@RDAY    LOKUP@MD,@@J                81
+     C                     Z-ADD@@J       @@Z71M
+     C           @@RDAY    SUB  @MD,@@J   @@Z71D
+      *
+      * DS @@VDT  IS RETURNED IN YYYYMMDD FORMAT
+      *
+     C           ZA0711    TAG
+      *
+     C                     MOVE @@Z71Y    @@YR
+      *
+     C           ZA0719    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #A       - INITIALISATION                                   . *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   -                                           *
+      *                                                               *
+      * FLDS USED  @T     - TERMINATION PARAMETER                     *
+      *                                                               *
+      *****************************************************************
+     C           #A        BEGSR
+      *
+      **  Must use copyright array in order to include in object
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  EXCEPT INPUT PARAMETER
+     C           *ENTRY    PLIST
+     C                     PARM           @T      1
+     C*
+     C                     MOVEL'TM0120'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBASE
+      *
+      **  OPEN FILES
+     C                     OPEN FXCCYPLL
+     C                     OPEN FDCCYPLL
+     C                     OPEN FXDEALLL
+     C                     OPEN FXTKDNLL
+     C                     OPEN FXOPTNLL
+     C                     OPEN FXOTSWLL
+      *
+      ** DEFINE WORK FIELDS
+     C           *LIKE     DEFN SCST      @CST
+     C           *LIKE     DEFN SODN      @SODN
+     C           *LIKE     DEFN TPCN      @TPCN
+     C           *LIKE     DEFN F3DAM1    @3DAM
+     C           *LIKE     DEFN F3DAM1    @3DAM1
+     C           *LIKE     DEFN F3DAM2    @3DAM2
+     C           *LIKE     DEFN OBCE      @TOBCE
+     C           *LIKE     DEFN ORPA      @TORPA
+     C           *LIKE     DEFN ORSA      @TORSA
+     C           *LIKE     DEFN OBCE      @WOBCE
+     C           *LIKE     DEFN ORPA      @WORPA
+     C           *LIKE     DEFN ORSA      @WORSA
+     C*
+     C**  ACCESS INSTALLATION CONTROL DATA
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           **************
+     C                     MOVEL'017'     DBASE            * DBERROR 017*
+     C                     MOVEL@OPTN     DBKEY            **************
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVEL'E'       @TERM            *1
+     C                     END
+     C*
+     C                     MOVE BJMRDT    RRRUNA
+     C                     MOVE BJURPT    RRTITL
+     C*
+      **  Access Installation data file.
+     C*
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDDEAL    PARM SDDEAL    DSSDY
+     C*
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVE '008'     DBASE            ************
+     C                     MOVEL'SDDEALPD'DBFILE           * DB ERR 08*
+     C                     MOVE *BLANK    DBKEY            ************
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVEL'E'       @TERM            *1
+     C                     GOTO #A9
+     C                     END                             E1
+      *
+      ** Get the number of decimal places for the base currency for
+      ** dealing
+     C                     MOVE BNCYCD    @@CCY   3
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @@CCY     @@CUR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVE '009'     DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERR 09*
+     C                     MOVEL@@CCY     DBKEY            ************
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVEL'E'       @TERM            *1
+     C                     GOTO #A9
+     C                     END                             E1
+      *
+     C                     Z-ADDA6NBDP    @@BCDP
+     C           *LIKE     DEFN A6NBDP    @@BCDP
+      *
+     C** Write audit report headings.
+     C*
+     C                     WRITETM0120R0
+     C*
+     C           #A9       ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #C       - TERMINATION                                      . *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #C        BEGSR
+     C*
+     C** If data base error has occurred write details to report.
+     C*
+     C           @TERM     IFEQ 'E'                        B1
+     C                     MOVE DBASE     RRBASE
+     C                     MOVELDBPGM     RRPGM
+     C                     MOVE DBFILE    RRFILE
+     C                     MOVE DBKEY     RRKEY
+     C                     WRITETM0120R3
+     C                     DUMP
+     C                     END                             B2
+     C*
+     C** Write last line of report: will write 'No Details' if *IN63
+     C** has not been set on.
+     C*
+     C                     WRITETM0120R2
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C           #C9       ENDSR                           ***#C9***
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   EXCEPTION ERROR SUBROUTINE                                . *
+      *                                                               *
+      *   SUBROUTINE CALLED: EXECTES WHENEVER                         *
+      *   A PROGRAM ERROR OCCURS                                      *
+      *                                                               *
+      *   SUBROUTINE CALLS : NO OTHER SUBROUTINES                     *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      **  SET @ERR1 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR1   1        *1
+     C                     MOVE '1'       *INU6            *1
+     C                     MOVE 'E'       @TERM            *1
+      *
+      **  SET UP FIELDS IN LOCAL DATA AREA
+     C                     MOVE '991'     DBASE            *1
+      *
+     C                     MOVE '1'       *INLR            *1
+     C                     DUMP                            *1
+     C                     END                             E1
+      *
+      **  TERMINATE THE PROGRAM
+     C                     RETRN
+      *
+     C                     ENDSR                           ****PSSR****
+      ***********************************************************************
+      *                                                                     *
+      * INFSR  : SUBROUTINE TO DEAL WITH FILE ERROR                         *
+      *
+      * CALLED BY : FILE ERROR                                              *
+      *                                                                     *
+      * WORK FIELDS: @ERR2   : ROUTINE PERFORMED                            *
+      *              @FILE   : FILENAME OF FILE IN WHICH ERROR              *
+      *                        OCCURRED (SDS UPDATED AT ERROR TIME)         *
+      *                                                                     *
+      ***********************************************************************
+     C           INFSR     BEGSR
+      *
+      ** SET @ERR2 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR2     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR2   1        *1
+      *
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE 'E'       @T               *1
+      *
+      ** SET UP FIELDS IN LOCAL DATA AREA
+     C                     MOVE @FILE     DBFILE           ***************
+     C*                                                    * DBERROR 992 *
+     C                     MOVE '992'     DBASE            ***************
+     C                     DUMP                            *1
+     C                     END                             E1
+      *
+      ** TERMINATE THE PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDSR
+      /EJECT
+** CPY@ - Copyright statement
+(c) Finastra International Limited 2001
+** @YD  USED BY SR. ZA0710 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZA0710 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**  DECIMAL PLACES CORRECTION ARRAY   @DC
+0001001001001000
+**  OUR RECEIVE/OUR PAY METHOD TRANSLATION TABLE
+00NA
+01TELX
+02CSENT
+03COMP
+04PCURR
+05MACC
+06SUSP
+07CHIPS
+08SWIFT
+12CCOLL
+14CURR
+** POWERS OF TEN
+0000000001
+0000000010
+0000000100
+0000001000
+0000010000
+0000100000
+0001000000
+0010000000
+0100000000
+1000000000

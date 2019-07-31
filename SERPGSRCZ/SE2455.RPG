@@ -1,0 +1,646 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Present Account Keys Report')                 *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2455  - REPORT OF PRESENT ACCOUNT KEYS                     *
+     F*                                                               *
+     F*  Function: The Generated A/c Keys file is read, and details   *
+     F*            of each key is printed to give a record of         *
+     F*            existing a/c keys.                                 *
+     F*                                                               *
+     F*  Called by: SEC0610 - Generate A/C Entries - Accruals         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 215959             Date 21Mar16               *
+      *                 CER049             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CSE037             Date 29Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 111337             Date 23Feb98               *
+      *                 064709             DATE 23JUL96               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E37035             DATE 12MAR92               *
+     F*                 E33244             DATE 16DEC91               *
+     F*                 E29170             DATE 14OCT91               *
+     F*                 S01117             DATE 07JUN91               *
+     F*                 E23677             DATE 14SEP90               *
+     F*                 E21136             DATE 15FEB90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  215959 - Truncation error on event amount in SE2450P3.       *
+      *           Recompiled due to changes in PF/SEKEYD.             *
+      *         - Applied for MD-37439.                               *
+      *  CER049 - Stamp Tax                                           *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input     *
+     F*  111337 - INVESTMENT TYPE MAY BE BLANK IF NOT ON ACCOUNT      *
+     F*           KEY                                                 *
+     F*  064709 - Blanking out Investment type and Book for 'Include  *
+     F*           in A/C Key = N' is done in SE2445 and causes DBASE  *
+     F*           error here if this is not taken into account.       *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E37035 - If no details to report pgm tries to write to       *
+     F*           closed SE2455P1 file.                               *
+     F*  E33244 - This report should not be split by branch.          *
+     F*  E29170 - Report Control Facility changes.                    *
+     F*  S01117 - Multibranching.                                     *
+     F*  E23677 - PROGRAM AMENDED TO PRINT HEADER IF NO DETAILS TO    *
+     F*           REPORT. PROGRAM ALSO AMENDED TO USE OVERFLOW IND.   *
+     F*           INSTEAD OF LINE COUNT FOR REPORT SE2455P1.          *
+     F*  E21136 - NEW PROGRAM CREATED TO HELP WITH INSTALLATIONS.     *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSEKEY   IF  E           K        DISK
+     FBOOKD   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     F***TABTG30 IT  F      40           EDISK                                                CGL029
+     FTABTG30 IT  F      50           EDISK                                                   CGL029
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F* CCY       TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     FSEACKD  IF  E           K        DISK
+     F**SE2455P1O***E********************PRINTER                          E23677
+     F***SE2455P1O***E             70     PRINTER                   E23677E29170
+     FSE2455P1O   E             70     PRINTER                        UC  E29170
+     F                                              KINFDS SPOOL          E29170
+     FSE2455AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         E29170
+     F/COPY WNCPYSRC,SE2455F001
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F****37*-*MULTIBRANCHING*ON************************************E29170E33244
+     F*   62 - CURRENCY NOT ON CURRENCY TABLE                         *
+     F*   70 - OVERFLOW INDICATOR FOR SE2455P1                        *   E23677
+     F*   79 - CHAIN FAIL                                             *
+     F*   89 - END OF FILE FOR SEKEY                                  *
+     F*90-99 - STANDARD SUBROUTINES                                   *
+     F*U7&U8 - DATABASE ERROR                                         *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   FIRST   -  ACCESSES INFO FROM ICD                           *
+     F*   AUDIT   -  PRODUCE AUDIT REPORT                             *
+     F*   *PSSR   -  Error handling                                   *   S01117
+     F*   RCFP1   -  SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF   *   E29170
+     F*   RCFAU   -  SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF   *   E29170
+     F*   ZDATE2  -  STANDARD CONVERSION TO DD/MMM/YY FORMAT          *
+     F*   ZSEDIT  -  STANDARD EDITING ROUTINE                         *
+     F*   ZSYSTM  -  ACCESSES ICD1                                    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E****TABTG30         CCYA    1 250  3   CCYDT  37                                        CGL029
+     E    TABTG30         CCYA    1 250  3   CCYDT  47                                        CGL029
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+      /EJECT
+     IBOOKDDF
+     I*
+     I*    BOOK DETAILS
+     I*
+     I              INAK                            INAKB
+     IINVTPDF
+     I*
+     I*    INVESTMENT TYPES DETAILS
+     I*
+     I              INAK                            INAKI
+     I              SFLG                            SFLGI                                     CSE037
+     I*
+     IWACKEY      DS
+     I*
+     I* D/S TO BREAK DOWN ACCOUNT KEY ON SEKEY TO COMPONENT PARTS
+     I*
+     I                                        1   3 WACITY
+     I                                        4   4 WACEVC
+     I                                        5   5 WACTRT
+     I                                        6   6 WACPFI
+     I                                        7   8 WACBKC
+     I                                        9  10 WACTST
+     I                                        9  10 WACPSB
+     I                                       11  12 WACCCC
+     I                                       13  13 WACMKT
+     I                                       14  14 WACCON
+     I                                       15  15 WACNEG
+     I                                       19  20 WACAMC
+     I                                        1  20 WACKY
+     I*
+     I            DS
+     I*
+     I*    Currency details from array CCYDT
+     I*
+     I**********                              1  37 CCYDET                                    CGL029
+     I                                        1  47 CCYDET                                    CGL029
+     I                                        1   10XDECP
+     I**********                             32  350XTACC                                     CGL029
+     I                                       38  470XTACC                                     CGL029
+     I*
+     ISEKKY       DS
+     I*
+     I*   A/C KEY USED TO ACCESS SEACKD - SEKKY is defined as 20 char
+     I*   later on
+     I*
+     I                                        1   3 SEKINV
+     I                                        7   8 SEKBK
+     I                                        9  20 SEKREM
+     I*
+     I            DS
+     I*
+     I*    INVESTMENT TYPES KEY
+     I*
+     I                                        1   6 KINVT
+     I                                        1   3 CCYI
+     I                                        4   6 INVT
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     I***RUNDT***    DS                                             E29170E33244
+     I***********                             1   7 RUNA            E29170E33244
+     I***********                         P   8  100RUND            E29170E33244
+     I***********                            11  11 SSF             E29170E33244
+     I***********                            12  12 DATF            E29170E33244
+     I***********                            13  13 MBIN            E29170E33244
+     I***********                                                   E29170E33244
+     I****DATA*STRUCTURE*FOR*RUN*DATE*DETAILS***********************E29170E33244
+     I***********                                                   E29170E33244
+     I***SDBRCH**  E DSSDBRCHPD                                     E29170E33244
+     I***********                                                   E29170E33244
+     I****DATA*STRUCTURE*FOR*BRANCH*DETAILS*************************E29170E33244
+     I***********                                                   E29170E33244
+     I***DSFDY***  E DSDSFDY                                        E29170E33244
+     I***********                                                   E29170E33244
+     I****FIRST*DATA*STRUCTURE*FOR*ACCESS*PROGRAMS*-*SHORT**********E29170E33244
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+      /EJECT
+     C           INVTPK    KLIST
+     C                     KFLD           CCYI    3
+     C                     KFLD           INVT    3
+     C*
+     C*  FIRST CYCLE
+     C*
+     C                     EXSR FIRST
+     C*
+     C*       M A I N   P R O C E S S I N G
+     C*
+     C                     READ SEKEY                    89
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C*    COUNT RECORD
+     C*
+     C                     ADD  1         AKCNT   50
+     C*
+     C* On change of NOMINAL CURRENCY and INVESTMENT TYPE, chain to
+     C* Investment Types file.***If*'include*in*A/c*key'*is*'N'*replace   064709
+     C**investment*type*from*SEKEY*with*blanks*before*chain*to*SEACK*     064709
+     C*       KEY = CURRENCY + INVESTMENT TYPE (from SEKEY)
+     C*
+     C                     MOVE ACKY      SEKKY
+     C                     MOVE ACKY      WACKY
+      *                                                                                       CER049
+      ** If Account Key is for Stamp Tax do not try to access                                 CER049
+      ** Investment Type and Book Code.                                                       CER049
+      *                                                                                       CER049
+     C                     MOVELACKY      ACKY18  8                                           CER049
+     C           ACKY18    IFNE 'STAMPTAX'                                                    CER049
+     C*
+     C           KCCY      IFNE LSKCCY
+     C           WACITY    ANDNE*BLANKS                                   111337
+     C           WACITY    ORNE LSINVT
+     C           WACITY    ANDNE*BLANKS                                   111337
+     C                     MOVE KCCY      CCYI    3
+     C                     MOVE WACITY    INVT
+     C           WACITY    IFNE *BLANKS                                   064709
+     C           INVTPK    CHAININVTPDF              79
+     C           *IN79     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INVTP'   DBFILE           *****************
+     C                     MOVELKINVT     DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD2         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU
+     C                     RETRN
+     C                     END
+     C                     END                                            064709
+     C*
+     C                     END
+     C*
+     C***        INAKI     IFEQ 'N'                                       064709
+     C***                  MOVE *BLANKS   SEKINV                          064709
+     C***                  END                                            064709
+     C*
+     C* On change of Book Code, chain to Book Code Details file. If
+     C* 'include in A/c key' is 'N' replace book code from SEKEY
+     C* with blanks before chaining to SEACK.
+     C*       KEY = BOOK CODE (from SEKEY)
+     C*
+     C           WACBKC    IFNE *BLANK
+     C*
+     C           WACBKC    IFNE LSBKCD
+     C           WACBKC    CHAINBOOKDDF              79
+     C           *IN79     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BOOKD'   DBFILE           *****************
+     C                     MOVELWACBKC    DBKEY            ** DB ERROR 03 **
+     C                     Z-ADD3         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU
+     C                     RETRN
+     C                     END
+     C*
+     C                     END
+     C*
+     C           INAKB     IFEQ 'N'
+     C                     MOVE *BLANKS   SEKBK
+     C                     END
+     C                     END
+      *                                                                                       CER049
+     C                     ENDIF                                                              CER049
+     C*
+     C*  PRINT A/C KEY IF PRESENT ON A/C KEYS FILE
+     C*
+     C           SEKKY     CHAINSEACKD               79
+     C           *IN79     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C*
+     C*  COUNT PRESENT A/C KEY
+     C*
+     C                     ADD  1         AKPRS   50
+     C*
+     C**  CHECK FOR CHANGE IN BRANCH - OBTAIN NEW BRANCH NAME
+     C**  CLOSE AND RE-OPEN PRINT FILE
+     C*
+     C***********WBRHA     IFNE BRHA                                S01117E33244
+     C           FILOPN    IFNE 'Y'                                       E33244
+     C*
+     C***********WBRHA     IFNE *BLANKS                             S01117E33244
+     C***********          WRITETRAILP1                                   E33244
+     C***********          CLOSESE2455P1                                  E33244
+     C***********          END                                            E33244
+     C***********                                                         E33244
+     C                     OPEN SE2455P1
+     C                     Z-ADD0         PAGE
+     C***********          MOVELBRHA      WBRHA   3                       E33244
+     C                     MOVEL'Y'       FILOPN  1                       E33244
+     C                     SETOF                     70
+     C*                                                                   E29170
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C***********                                                   E29170E33244
+     C****Access*Branch*details*if*multibranching*is*on*************E29170E33244
+     C***********                                                   E29170E33244
+     C************IN37     IFEQ '1'                                 E29170E33244
+     C***********          CALL 'AOBRCHR0'                          E29170E33244
+     C***********          PARM *BLANKS   @RTCD   7                 E29170E33244
+     C***********          PARM '*KEY   ' @OPTN   7                 E29170E33244
+     C***********          PARM BRHA      @BRKEY  3                 E29170E33244
+     C***********SDBRCH    PARM SDBRCH    DSFDY                     E29170E33244
+     C***********                                                   E29170E33244
+     C***********@RTCD     IFNE *BLANKS                             E29170E33244
+     C************LOCK     IN   LDA                                 E29170E33244
+     C***********          Z-ADD4         DBASE      ***************E29170E33244
+     C***********          MOVEL'SDBRCHPD'DBFILE     * DB ERROR 04 *E29170E33244
+     C***********          MOVELBRHA      DBKEY      ***************E29170E33244
+     C***********          OUT  LDA                                 E29170E33244
+     C***********          SETON                     U7U889         E29170E33244
+     C***********          EXSR *PSSR                               E29170E33244
+     C***********          GOTO DBERR                               E29170E33244
+     C***********          END                                      E29170E33244
+     C***********          END                                      E29170E33244
+     C                     WRITEHEADP1
+     C                     END                                            E29170
+     C*
+     C*  PRINT DETAIL - CHECK FOR OVERFLOW FIRST
+     C*
+     C***********LCNT1*****IFGT 50                                    E23677
+     C           *IN70     IFEQ '1'                                   E23677
+     C                     WRITEHEADP1
+     C                     SETOF                     70               E23677
+     C*********************Z-ADD8         LCNT1   30                  E23677
+     C                     END
+     C                     Z-ADDEVDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WEVDT
+     C*
+     C*   TRADE TYPE FROM 5TH BYTE OF SETTLEMENT ACCOUNT XSTLA LF/SEKEY
+     C*
+     C                     MOVE '  '      WTRTYP
+     C           WACEVC    IFEQ 'T'
+     C           WACEVC    OREQ 'V'
+     C           WACEVC    OREQ 'S'
+     C           WACTRT    IFEQ 'P'
+     C                     MOVE 'TP'      WTRTYP
+     C                     ELSE
+     C           WACTRT    IFEQ 'S'
+     C                     MOVE 'TS'      WTRTYP
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C*   EDIT NOMINAL USING ZSEDIT
+     C*
+     C                     Z-ADDEVAM      ZFLD15
+     C*
+     C                     Z-ADD1         A       30
+     C           EVCY      LOKUPCCYA,A                   62
+     C           *IN62     IFEQ '1'
+     C                     MOVE CCYDT,A   CCYDET
+     C                     Z-ADDXDECP     ZDECS
+     C                     ELSE
+     C                     Z-ADD0         ZDECS
+     C                     END
+     C*
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    EDEVAM
+     C*
+     C                     Z-ADDTRFR      WTRREF
+     C*
+     C                     WRITEDETLP1
+     C/COPY WNCPYSRC,SE2455C001
+     C***********          ADD  1         LCNT1                           E23677
+     C                     MOVE WACBKC    LSBKCD  2
+     C                     MOVE WACITY    LSINVT  3
+     C                     MOVE KCCY      LSKCCY  3
+     C                     END
+     C*
+     C*  READ NEXT RECORD
+     C*
+     C                     READ SEKEY                    89
+     C*                                                                   E29170
+     C           DBERR     TAG                                            E29170
+     C*
+     C                     END
+     C*
+     C*  WRITE AUDIT REPORT
+     C*
+     C                     EXSR AUDIT
+     C*
+     C                     SETON                     LR
+     C*
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * FIRST - SUBROUTINE TO ACCESS ICD INFORMATION ON FIRST CYCLE   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           ** FIRST **
+     C*                                                                   S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5                       S01117
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'SE2455'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C***********                                                   E29170E33244
+     C***IN*THE*DATAAREA*RUNDAT*************************************E29170E33244
+     C***********                                                   E29170E33244
+     C************NAMVAR   DEFN RUNDAT    RUNDT                     E29170E33244
+     C***********          IN   RUNDT                               E29170E33244
+     C***********                                                   E29170E33244
+     C****TEST*FOR*MULTIBRANCHING***********************************E29170E33244
+     C***********                                                   E29170E33244
+     C***********MBIN      IFEQ 'Y'                                 E29170E33244
+     C***********          SETON                     37             E29170E33244
+     C***********          END                                      E29170E33244
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD1         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU
+     C                     RETRN
+     C                     END
+     C*
+     C***********          Z-ADD51        LCNT1                           E23677
+     C***********          SETON                     70             E23677E33244
+     C*
+     C/COPY WNCPYSRC,SE2455C002
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * AUDIT - SUBROUTINE TO PRODUCE AUDIT REPORT                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C***********AKCNT     IFEQ 0                                         E23677
+     C***********AKPRS     IFEQ 0                                   E23677E29170
+     C***********          WRITEHEADP1                                    E29170
+     C***********          WRITENONE                                      E29170
+     C***********          END                                            E29170
+     C           FILOPN    IFEQ 'Y'                                       E37035
+     C                     WRITETRAILP1
+     C                     END                                            E37035
+     C                     WRITEHEADAU
+     C                     WRITEDTLAU
+     C***********          WRITETRAILAU                                   E29170
+     C           AKPRS     IFEQ 0                                         E29170
+     C                     WRITENONE                                      E29170
+     C                     END                                            E29170
+     C           *INU7     IFEQ '1'                                       E29170
+     C                     WRITEERROR                                     E29170
+     C                     END                                            E29170
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C***********          PARM BRHA      SENTY   3                 E29170E33244
+     C                     PARM *BLANKS   SENTY   3                       E33244
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2001

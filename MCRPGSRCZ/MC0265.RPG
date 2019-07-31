@@ -1,0 +1,197 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Update All Control Groups')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Management Accounting Module
+     F*                                                               *
+     F*  MC0265 - Update All Control Groups                           *
+     F*                                                               *
+     F*  Function: This program reads a record from the Control       *
+     F*  (I/C Bat) Groups file and passes out the relevant            *
+     F*            information for updating the Management Accounts   *
+     F*            for all groups.                                    *
+     F*                                                               *
+     F*  Called by: MCC0265 - Update All Control Groups Control       *
+     F*                                                               *
+     F*  Calls: None                                                  *
+     F*                                                               *
+     F*  Parameters: 2A Group code                                    *
+     F*              1A Period Set                                    *
+     F*              1A Posting Basis                                 *
+     F*              5N Start Date                                    *
+     F*              8A Sections                                      *
+     F*              10A Analysis                                     *
+     F*              6N Start Time                                    *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  PREV AMEND NO.                    DATE                       *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  MD046248 - Finastra Rebranding                               *
+     F*****************************************************************
+      *
+     FGLHBCGL1IF  E           K        DISK
+      * Historic Balance Control Groups
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  50  -  End of file or no records LF/GLHBCGL1                 *
+      *  56  -  DB Error SETGT LF/GLHBCGL1                            *
+      *  U7  -  Database error                                        *
+      *  U8  -  Database error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  U01  -  Update parameters from LF/GLHBCGL1                   *
+      *  I01  -  Initialise parameters                                *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+      /SPACE 3
+     ILDA       E DSLDA
+      * Local data structure used for error handling
+     I            DS
+      * DS for 8 sections fields
+     I                                        1   8 DSSECT
+     I                                        1   1 HCIAAC
+     I                                        2   2 HCILAC
+     I                                        3   3 HCIIAC
+     I                                        4   4 HCIEAC
+     I                                        5   5 HCICAC
+     I                                        6   6 HCIMAC
+     I                                        7   7 HCITAC
+     I                                        8   8 HCICTA
+     I            DS
+      * DS for 10 analysis fields
+     I                                        1  10 DSANAL
+     I                                        1   1 HCABAC
+     I                                        2   2 HCABCY
+     I                                        3   3 HCABBR
+     I                                        4   4 HCABCU
+     I                                        5   5 HCABAS
+     I                                        6   6 HCABPC
+     I                                        7   7 HCABBK
+     I                                        8   8 HCABTT
+     I                                        9   9 HCABTS
+     I                                       10  10 HCASCU
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      * Receive parameters
+     C           *ENTRY    PLIST
+     C                     PARM           XGRPC   2        Group code
+     C                     PARM           XPERS   1        Period set
+     C                     PARM           XPOSB   1        Post. basis
+     C                     PARM           XSTRD   5        Start date
+     C                     PARM           XSECT   8        Sections
+     C                     PARM           XANAL  10        Analysis
+     C                     PARM           XSTRT   6        Start time
+      *
+      * Set pointer after last Control Group record read
+      * DB Error if pointer cannot be set
+     C           XGRPC     SETGTGLHBCGL1               56
+     C           *IN56     IFEQ '1'                        --- B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLHBCGL1'DBFILE           ************
+     C                     Z-ADD1         DBASE            * Error 01 *
+     C                     MOVELXGRPC     DBKEY            ************
+     C                     MOVEL'MC0265'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             --- E001
+      *
+      * Define the error DS
+     C           *NAMVAR   DEFN           LDA
+      *
+      * Set up copyright
+     C                     MOVEACPY@      BIS@   80
+      *
+      * Read the next record from the Control Groups file
+     C           RDNXT     TAG
+      *
+     C                     READ GLHBCGL1                 50
+      *
+      * If a record is found initialise then update parameters
+     C           *IN50     IFEQ '0'
+     C           *IN56     ANDEQ'0'
+      *
+      * If last change type is 'D' (deleted) then ignore record
+     C           HCTYLC    CABEQ'D'       RDNXT
+      *
+     C                     EXSR I01
+     C                     EXSR U01
+      *
+      * Else no record found, zeroise & blank all parameters
+     C                     ELSE
+     C                     MOVE *BLANKS   XGRPC
+     C                     EXSR I01
+     C                     END
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                         LR           *
+     C                     RETRN                                      *
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  U01 - SR to update parameters from LF/GLHBCGL1               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           U01       BEGSR
+     C                     MOVE HCCGCD    XGRPC            Group Code
+     C                     MOVE HCPSTC    XPERS            Period set
+     C                     MOVE HCPSTB    XPOSB            Post. basis
+     C           HCLPDT    DIV  1000000   WSTRD  110
+     C                     MOVE WSTRD     XSTRD            Start date
+     C                     MOVE DSSECT    XSECT            Sections
+     C                     MOVE DSANAL    XANAL            Analysis
+     C                     MULT 1000000   WSTRD
+     C           HCLPDT    SUB  WSTRD     WSTRD            Start time
+     C                     MOVE WSTRD     XSTRT            Start time
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  I01 - Initialise parameter fields                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           I01       BEGSR
+     C                     MOVE *BLANKS   XPERS            Period set
+     C                     MOVE *BLANKS   XPOSB            Post. basis
+     C                     MOVE '00000'   XSTRD            Start date
+     C                     MOVE *BLANKS   XSECT            Sections
+     C                     MOVE *BLANKS   XANAL            Analysis
+     C                     MOVE '000000'  XSTRT            Start time
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001

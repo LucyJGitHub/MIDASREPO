@@ -1,0 +1,368 @@
+     C********************************************************************
+     C**
+     C**   ZFRQA-SR. TO INCREMENT A DAY NUMBER DATE BY A
+     C**             PERIOD VALUE DETERMINED BY A CODE.
+     C**                                                                  S01194
+      *  Last Amend No. CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01117             Date 08Mar90               *                       S01194
+      *                 S01194             Date 18Jan90               *                       S01194
+     C**                                                                  S01194
+      *  CLE064 - Enhancement of Lending Frequencies                  *
+     C**   S01194 - NEW HOLIDAYS FILE WRITTEN IN SYNON TO BE USED         S01194
+     C**            REQUIRING CALL TO S/R ZCHKH INSTEAD OF MANIPULATION   S01194
+     C**            OF TABLETJ                                            S01194
+     C**
+     C**   S01117 - MULTIBRANCHING                                        S01194
+     C**
+     C           ZFRQA     BEGSR                           *** ZFRQA ****
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ZFREQ     ZFREQ   1
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C                     Z-ADDZMDAY     ZMDAY   20
+     C                     MOVE ZCCY      ZCCY    3
+     C                     MOVE ZLOC      ZLOC    3                       S01194
+     C                     MOVE *BLANK    ZZERR@  7
+     C**
+     C**********           MOVE '   '     ZHC                             S01194
+     C**
+     C**   CONVERT DAY NUMBER TO DATE.
+     C                     EXSR ZDATE2
+      *                                                                   S01117
+      ** If the day number input (zmday ) is zero set it equal to the     S01117
+      ** day number of the start date.                                    S01117
+      *                                                                   S01117
+     C           ZMDAY     IFEQ 0                                         S01117
+     C*                                                                   S01117
+     C                     MOVELZADATE    ZZWRK2  2                       S01117
+     C                     MOVE ZZWRK2    ZMDAY                           S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE D-DAILY-WORKING DAY.
+     C           ZFREQ     IFEQ 'D'
+     C           ZDAYNO    ADD  1         ZDAYNO
+     C                     GOTO ZFHCHK
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE W-WEEKLY.
+     C           ZFREQ     IFEQ 'W'
+     C           ZDAYNO    ADD  7         ZDAYNO
+     C                     GOTO ZFEND
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE F-FORTNIGHTLY.
+     C           ZFREQ     IFEQ 'F'
+     C           ZDAYNO    ADD  14        ZDAYNO
+     C                     GOTO ZFEND
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE S-SEMI-MONTHLY.
+     C           ZFREQ     IFEQ 'S'
+     C           ZDAY      IFLE 15
+     C                     Z-ADD31        ZDAY
+     C                     ELSE
+     C                     Z-ADD15        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE M-MONTHLY.
+     C           ZFREQ     IFEQ 'M'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE R-SIX DAYS BEFORE END OF MONTH
+     C           ZFREQ     IFEQ 'R'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE T-BIMONTHLY.
+     C           ZFREQ     IFEQ 'T'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  2         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE Q-QUARTERLY.
+     C           ZFREQ     IFEQ 'Q'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  3         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE X-SIX MONTHLY.
+     C           ZFREQ     IFEQ 'X'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  6         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE Y-YEARLY.
+     C           ZFREQ     IFEQ 'Y'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZYEAR     ADD  1         ZYEAR
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE L-LAST CALENDAR DAY OF MONTH.
+     C           ZFREQ     IFEQ 'L'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE B-LAST WORKING DAY OF MONTH.
+     C           ZFREQ     IFEQ 'B'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE P-PENULT. WORK/DAY OF MONTH
+     C           ZFREQ     IFEQ 'P'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE K-PENULT. WORK/DAY OF QUARTER
+     C           ZFREQ     IFEQ 'K'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  3         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE H-PENULT. WORK/DAY OF HLF YR.
+     C           ZFREQ     IFEQ 'H'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  6         ZMTH
+     C                     END
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE G-PENULT. WORK/DAY OF YEAR
+     C           ZFREQ     IFEQ 'G'
+     C                     Z-ADD31        ZDAY
+     C           ZYEAR     ADD  1         ZYEAR
+     C                     END
+      *                                                                                       CLE064
+      ** If frequency = '4' for 4-monthly.                                                    CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     IFEQ '4'                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  4         ZMTH                                                CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** If frequency = '5' for 5-monthly.                                                    CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     IFEQ '5'                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  5         ZMTH                                                CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** If frequency = '7' for 7-monthly.                                                    CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     IFEQ '7'                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  7         ZMTH                                                CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** If frequency = '8' for 8-monthly.                                                    CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     IFEQ '8'                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  8         ZMTH                                                CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** If frequency = '9' for 9-monthly.                                                    CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     IFEQ '9'                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  9         ZMTH                                                CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** If frequency = 'V' for 10-monthly.                                                   CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     IFEQ 'V'                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  10        ZMTH                                                CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** If frequency = 'E' for 11-monthly.                                                   CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     IFEQ 'E'                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  11        ZMTH                                                CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** If frequency = 'C' for two-yearly.                                                   CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     IFEQ 'C'                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZYEAR     ADD  2         ZYEAR                                               CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** If frequency = 'I' for three-yearly.                                                 CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     IFEQ 'I'                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZYEAR     ADD  3         ZYEAR                                               CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** If frequency = 'J' for four-yearly.                                                  CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     IFEQ 'J'                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZYEAR     ADD  4         ZYEAR                                               CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** If frequency = 'N' for five-yearly.                                                  CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     IFEQ 'N'                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZYEAR     ADD  5         ZYEAR                                               CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** If frequency = 'U' for ten-yearly.                                                   CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     IFEQ 'U'                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZYEAR     ADD  10        ZYEAR                                               CLE064
+     C                     ENDIF                                                              CLE064
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE A-MONTHLY ACCRUAL/PROFIT DATE.
+     C           ZFREQ     IFEQ 'A'
+     C*********            Z-ADDAPDA      ZDAYNO                          S01194
+     C                     CALL 'AOGELRR0'                   <G/LDG.ICD>  S01194
+     C                     PARM *BLANK    P@AORC  7          B:Return codeS01194
+     C                     PARM '*FIRST'  P@OPTN  7          I:Option     S01194
+     C           SDGELR    PARM *BLANK    DSFDY              O:Rec.format S01194
+     C           P@AORC    IFEQ *BLANK                                    S01194
+     C                     Z-ADDBKAPDT    ZDAYNO                          S01194
+     C                     ELSE
+     C                     MOVEL'*ERROR'  ZZERR@
+     C                     END                                            S01194
+     C                     GOTO ZFEND
+     C                     END
+     C**
+     C**   REFORMAT DATE AND ENSURE VALID.
+     C**
+     C**   VALIDATE MONTH.
+     C           ZMTH      IFGT 12
+     C           ZMTH      SUB  12        ZMTH
+     C           ZYEAR     ADD  1         ZYEAR
+     C                     END
+     C**
+     C**   CHECK FOR LEAP YEAR.
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10
+     C**
+     C**   VALIDATE DAY NUMBER.
+     C                     MOVE ZFMD,ZMTH ZWRK2   20
+     C           ZMTH      IFEQ 2
+     C           ZLY       ANDEQ0
+     C                     Z-ADD29        ZWRK2
+     C                     END
+     C**
+     C           ZDAY      IFGT ZWRK2
+     C                     Z-ADDZWRK2     ZDAY
+     C                     END
+     C**
+     C**   CHECK IF CODE R, TO SUBTRACT 6 DAYS.
+     C           ZFREQ     IFEQ 'R'
+     C           ZDAY      SUB  6         ZDAY
+     C                     END
+     C**
+     C**   REFORMAT DATE, DDMMYY OR MMDDYY, AND CONVERT TO DAY NUMBER.
+     C                     MOVELZDAY      ZWRK4   40
+     C                     MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C   98                MOVE ZDAY      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C                     EXSR ZDATE1
+     C**   RESET IND. 90 - USED TO ENSURE SUBTRACTION FOR CODES P,K,H,G,
+     C**   IS ONLY DONE ONCE.
+     C                     SETOF                     90
+     C**
+     C**   CHECK IF CODE B,TO BE CHECKED FOR HOLIDAY.
+     C           ZFREQ     COMP 'B'                      91
+     C**   CODES P,K,H,G, ALSO TO BE CHECKED FOR HOLIDAY
+     C  N91      ZFREQ     COMP 'P'                      91
+     C  N91      ZFREQ     COMP 'K'                      91
+     C  N91      ZFREQ     COMP 'H'                      91
+     C  N91      ZFREQ     COMP 'G'                      91
+     C   91N99             GOTO ZFHCHK
+     C**
+     C                     GOTO ZFEND
+     C**
+     C**   CHECK IF DAY NUMBER IS A HOLIDAY.
+     C           ZFHCHK    TAG                             ** ZFHCHK TAG *
+     C                     SETOF                     94
+     C**
+     C**   DETERMINE CODE.
+     C           ZFREQ     COMP 'D'                      91
+     C           ZFREQ     COMP 'B'                      92
+     C  N92      ZFREQ     COMP 'P'                      92
+     C  N92      ZFREQ     COMP 'K'                      92
+     C  N92      ZFREQ     COMP 'H'                      92
+     C  N92      ZFREQ     COMP 'G'                      92
+     C**********           MOVE '   '     ZHC                             S01194
+     C********** ZDAYNO    CHAINTABLETJF             93                   S01194
+     C********** *IN93     IFEQ '0'                                       S01194
+     C********** RECI      ANDEQ'D'                                       S01194
+     C**
+     C*****STORE CURRENCIES IF RECORD FOUND.******************************S01194
+     C**********           MOVEAHCCY      ZHC,1                           S01194
+     C**
+     C*****DETERMINE HOLIDAY RECORD TYPE.*********************************S01194
+     C********** INEX      COMP 'E'                      95               S01194
+     C********** INEX      COMP 'I'                      96               S01194
+     C**
+     C*****EXIT IF NO RECORD FOUND****************************************S01194
+     C**********           ELSE                                           S01194
+     C**********           GOTO ZPNCHK                                    S01194
+     C**********           END                                            S01194
+     C**
+     C*****GET SECOND RECORD, IF NOT ALREADY DONE.************************S01194
+     C**********           READ TABLETJF                 93               S01194
+     C********** *IN93     IFEQ '0'                                       S01194
+     C********** RECI      ANDEQ'D'                                       S01194
+     C********** HOL       ANDEQZDAYNO                                    S01194
+     C**********           MOVEAHCCY      ZHC,26                          S01194
+     C**********           END                                            S01194
+     C**
+     C**   CHECK IF CURRENCY ON HOLIDAY.
+     C********** ZCCY      LOKUPZHC                      97               S01194
+     C                     EXSR ZCHKH                                     S01194
+     C**
+     C**   BYPASS IF NOT HOLIDAY FOR CURRENCY.
+     C***95*97                                             EXCLUDE FOUND  S01194
+     C*R*96N97             GOTO ZPNCHK                     INCL. NOT FOUNDS01194
+     C           ZIND      CABEQ'W'       ZPNCHK                          S01194
+     C**
+     C**   INCREMENT OR DECREMENT DAY NUMBER AS REQUIRED.
+     C***91*95N97                                          EXCL. NOT FOUNDS01194
+     C*R*91*96*97ZDAYNO    ADD  1         ZDAYNO           INCLUDE FOUND  S01194
+     C   91      ZDAYNO    ADD  1         ZDAYNO           INCREMENT      S01194
+     C**
+     C***92*95N97                                          EXCL. NOT FOUNDS01194
+     C*R*92*96*97ZDAYNO    SUB  1         ZDAYNO           INCLUDE FOUND  S01194
+     C   92      ZDAYNO    SUB  1         ZDAYNO           DECREMENT      S01194
+     C                     GOTO ZFHCHK
+     C**
+     C           ZPNCHK    TAG                             ** ZPNCHK TAG*
+     C**   FOR CODES REQUIRING PENULTIMATE WORKING DAY (P,K,H,G) SUBTRACT
+     C**   ONE AND CHECK THIS FOR HOLIDAY.
+     C   90                GOTO ZFEND                      ALREADY DONE
+     C**
+     C           ZFREQ     COMP 'P'                      92
+     C  N92      ZFREQ     COMP 'K'                      92
+     C  N92      ZFREQ     COMP 'H'                      92
+     C  N92      ZFREQ     COMP 'G'                      92
+     C  N92                GOTO ZFEND
+     C           ZDAYNO    SUB  1         ZDAYNO
+     C                     SETON                     90
+     C                     GOTO ZFHCHK
+     C           ZFEND     ENDSR
+     C**
+     C********************************************************************

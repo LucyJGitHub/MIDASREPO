@@ -1,0 +1,263 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member of DL0280IINT                           *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. BUG6293 *CREATE    Date 15Mar05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG6293- Move subroutine to a /COPY to free up space in      *
+      *           DL0280 for other changes.                           *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  WRIINT - Write a record to interest history file INTPSDD     *
+      *                                                               *
+      *****************************************************************
+     C*                                                                                       S01383
+     C     WRIINT        BEGSR                                                                S01383
+     C*                                                                                       S01383
+     C* ACCESS CLIENT BRT DETAILS FILE FOR A/C HOLDER TYPE & TAXABLE IND                      S01383
+     C*                                                                                       S01383
+     C     CNUM          CHAIN     SDCBRTL1                           18                      S01383
+     C   18              SETON                                        88LRU8                  S01383
+     C***18*****         Z-ADD     CNUM          XKEY                                  S01383 CSD027
+     C   18              MOVEL     CNUM          XKEY                                         CSD027
+     C   18              GOTO      WRIIN9                                                     S01383
+     C*                                                                                       S01383
+     C     ACHLRT        IFEQ      'I'                                          B1            S01383
+     C     TAXIND        ANDNE     'X'                                                        S01383
+     C*                                                                                       S01383
+     C     ACHLRT        OREQ      'J'                                                        S01383
+     C     TAXIND        ANDNE     'X'                                                        S01383
+     C*                                                                                       S01383
+     C     ACHLRT        OREQ      'B'                                                        S01383
+     C     TAXIND        ANDNE     'X'                                                        S01383
+     C*                                                                                       S01383
+     C     ACHLRT        OREQ      'C'                                                        S01383
+     C     TAXIND        ANDNE     'X'                                                        S01383
+     C*                                                                                       S01383
+     C     ACHLRT        OREQ      'R'                                                        CRE007
+     C     TAXIND        ANDNE     'X'                                                        CRE007
+     C*                                                                                       CRE007
+     C     CNUM          CHAIN     CLINTCBF                           18                      S01383
+     C***18*****         SETON                                        89LRU8         S01383 AR547995
+     C   18              SETON                                        U6LRU7                AR547995
+     C***18*****         Z-ADD     CNUM          XKEY                                  S01383 CSD027
+     C   18              MOVEL     CNUM          XKEY                                         CSD027
+     C   18              GOTO      WRIIN9                                                     S01383
+     C*                                                                                       S01383
+     C     CNUM          CHAIN     CLINTCCF                           18                      S01383
+     C***18*****         SETON                                        89LRU8         S01383 AR547995
+     C   18              SETON                                        U6LRU7                AR547995
+     C***18*****         Z-ADD     CNUM          XKEY                                  S01383 CSD027
+     C   18              MOVEL     CNUM          XKEY                                         CSD027
+     C   18              GOTO      WRIIN9                                                     S01383
+     C*                                                                                       S01383
+     C                   MOVE      'D'           RECII                          * RENAMED     S01383
+     C                   MOVE      PCCY          CCYI                           * RENAMED     S01383
+     C                   MOVEL     CNUM          CNUMI                          * RENAMED      08303
+     C                   Z-ADD     *ZEROS        ACOD                                         S01383
+     C                   Z-ADD     *ZEROS        ACSQ                                         S01383
+     C                   Z-ADD     KYDAT         IPDT                                         S01383
+     C                   MOVE      TAXIND        BRTCAT                                       S01383
+     C                   MOVE      'N'           S352RI                                       S01383
+     C                   Z-ADD     *ZEROS        CRBRTS                                       S01383
+     C                   Z-ADD     *ZEROS        CRBRTC                                       S01383
+     C                   Z-ADD     *ZEROS        CRBRTE                                       S01383
+     C                   Z-ADD     *ZEROS        LIAPTY                                       S01383
+     C*                                                                                       S01383
+     C     TAXIND        IFEQ      'P'                                                        S01383
+     C     H1BRTL        ANDEQ     'Y'                                                        S01383
+     C                   Z-ADD     H1SEQN        LIAPTY                                       S01383
+     C                   END                                                                  S01383
+     C*                                                                                       S01383
+     C     TAXIND        IFEQ      'P'                                                        S01383
+     C     H2BRTL        ANDEQ     'Y'                                                        S01383
+     C                   Z-ADD     H2SEQN        LIAPTY                                       S01383
+     C                   END                                                                  S01383
+     C*                                                                                       S01383
+     C** IF STG CCY                                                                           S01383
+     C*                                                                                       S01383
+     C     PCCY          IFEQ      BLCYCD                                       B*2           S01383
+     C     PCCY          ANDEQ     BJCYCD                                                     S01383
+     C                   Z-ADD     WORKD         STGGRI                                       S01383
+     C                   Z-ADD     TAXA          STGBRT                                       S01383
+     C     STGGRI        SUB       STGBRT        STGNTI                                       S01383
+     C*                                                                                       S01383
+     C                   Z-ADD     WORKD         CCYGRI                                       S01383
+     C                   Z-ADD     TAXA          CCYBRT                                       S01383
+     C     CCYGRI        SUB       CCYBRT        CCYNTI                                       S01383
+     C*                                                                                       S01383
+     C                   Z-ADD     WORKD         BCEGRI                                       S01383
+     C                   Z-ADD     TAXA          BCEBRT                                       S01383
+     C     BCEGRI        SUB       BCEBRT        BCENTI                                       S01383
+     C*                                                                                       S01383
+     C                   Z-ADD     1             EXRATE                                       S01383
+     C                   END                                                    E*2           S01383
+     C*                                                                                       S01383
+     C** ELSE                                                                                 S01383
+     C*                                                                                       S01383
+     C     PCCY          IFNE      BLCYCD                                       B*2           S01383
+     C     PCCY          ORNE      BJCYCD                                       B*2           S01383
+1162 C*                                                                                       S01383
+     C** CONVERT GROSS INTEREST AMOUNT TO STERLING AND BASE CURRENCY                          S01383
+     C** EQUIVALENT                                                                           S01383
+1162 C*                                                                                       S01383
+     C** TO STERLING                                                                          S01383
+     C*                                                                                       S01383
+     C** FROM VALUES                                                                          S01383
+     C*                                                                                       S01383
+     C                   Z-ADD     1             I                 3 0                        S01383
+     C     PCCY          LOOKUP    CY(I)                                  14                  S01383
+     C*                                                                                       S01383
+     C     *IN14         IFEQ      '0'                                          B*2           S01383
+     C                   SETON                                        80LRU8                  S01383
+     C                   MOVE      PCCY          XCCY                                         S01383
+     C                   GOTO      WRIIN9                                                     S01383
+     C*                                                                                       S01383
+     C                   ELSE                                                                 S01383
+     C*                                                                                       S01383
+     C                   MOVE      CYD(I)        CYDDS                                        S01383
+     C                   Z-ADD     WORKD         XAMNT1                                       S01383
+     C                   Z-ADD     SPOT          XSPOT1                                       S01383
+     C                   Z-ADD     MDIN          XMDIN1                                       S01383
+     C                   Z-ADD     CDP           XCDP1                                        S01383
+     C*                                                                                       S01383
+     C** TO VALUES                                                                            S01383
+     C*                                                                                       S01383
+     C                   Z-ADD     0             XAMNT2                                       S01383
+     C                   Z-ADD     SSPOT         XSPOT2                                       S01383
+     C                   Z-ADD     SMDIN         XMDIN2                                       S01383
+     C                   Z-ADD     SCDP          XCDP2                                        S01383
+     C*                                                                                       S01383
+     C                   EXSR      CNVERT                                                     S01383
+     C*                                                                                       S01383
+     C                   Z-ADD     XAMNT2        SWORKD           13 0                        S01383
+     C*                                                                                       S01383
+     C** TO BASE CCY EQUIVALENT                                                               S01383
+     C*                                                                                       S01383
+     C** TO VALUES                                                                            S01383
+     C*                                                                                       S01383
+     C                   Z-ADD     0             XAMNT2                                       S01383
+     C                   Z-ADD     BSPOT         XSPOT2                                       S01383
+     C                   Z-ADD     BMDIN         XMDIN2                                       S01383
+     C                   Z-ADD     BCDP          XCDP2                                        S01383
+     C*                                                                                       S01383
+     C                   EXSR      CNVERT                                                     S01383
+     C*                                                                                       S01383
+     C                   Z-ADD     XAMNT2        BWORKD           13 0                        S01383
+     C*                                                                                       S01383
+     C                   END                                                    E*2           S01383
+     C*                                                                                       S01383
+     C                   Z-ADD     SWORKD        STGGRI                                       S01383
+     C                   Z-ADD     0             STGBRT                                       S01383
+     C   23              Z-ADD     WKBRSG        STGBRT                                       S01383
+     C     STGGRI        SUB       STGBRT        STGNTI                                       S01383
+     C*                                                                                       S01383
+     C                   Z-ADD     WORKD         CCYGRI                                       S01383
+     C                   Z-ADD     TAXA          CCYBRT                                       S01383
+     C     CCYGRI        SUB       CCYBRT        CCYNTI                                       S01383
+     C*                                                                                       S01383
+     C                   Z-ADD     BWORKD        BCEGRI                                       S01383
+     C                   Z-ADD     0             BCEBRT                                       S01383
+     C   23              Z-ADD     WKBRBC        BCEBRT                                       S01383
+     C     BCEGRI        SUB       BCEBRT        BCENTI                                       S01383
+     C*                                                                                       S01383
+     C     PCCY          IFEQ      BLCYCD                                                     S01383
+     C                   Z-ADD     1             EXRATE                                       S01383
+     C                   END                                                                  S01383
+     C*                                                                                       S01383
+     C     BJCYCD        IFEQ      BLCYCD                                                     S01383
+     C                   Z-ADD     SPOT          EXRATE                                       S01383
+     C                   END                                                                  S01383
+     C*                                                                                       S01383
+     C     PCCY          IFNE      BLCYCD                                                     S01383
+     C     BJCYCD        ANDNE     BLCYCD                                                     S01383
+     C* CALCULATE CROSS RATE                                                                  S01383
+     C                   MOVE      SMDIN         @@MDI1            1                          S01383
+     C                   MOVE      MDIN          @@MDI2            1                          S01383
+     C                   Z-ADD     SSPOT         @@RAT1           13 8                        S01383
+     C                   Z-ADD     SPOT          @@RAT2           13 8                        S01383
+     C                   EXSR      ZA0900                                                     S01383
+     C                   Z-ADD     @@CSRT        EXRATE                                       S01383
+     C                   END                                                                  S01383
+     C*                                                                                       S01383
+     C                   END                                                    E*2           S01383
+     C*                                                                                       S01383
+     C                   MOVEL     BRCA          BRCAI                          * RENAMED     S01383
+     C*                                                                                       S01383
+     C** WRITE RECORD TO FILE INTPSDD IF ACCOUNT HOLDER IS 'I' OR 'J'                         S01383
+     C*                                                                                       S01383
+     C     ACHLRT        IFEQ      'I'                                          B2            S01383
+     C     ACHLRT        OREQ      'J'                                                        S01383
+     C                   MOVE      'A'           RTYP                                         S01383
+     C                   MOVE      PSTR          PSTR1                                        CRE007
+     C                   WRITE     INTPSDDX                                                    06807
+     C                   END                                                    E2            S01383
+     C*                                                                                       CRE007
+     C** WRITE RECORD TO FILE INTPSDD IF ACCOUNT HOLDER IS 'R'                                CRE007
+     C*                                                                                       CRE007
+     C     ACHLRT        IFEQ      'R'                                          B2            CRE007
+     C                   MOVE      'R'           RTYP                                         CRE007
+     C                   MOVE      PSTR          PSTR1                                        CRE007
+      *                                                                                       CRE007
+      **  Access Customer Details to retrieve Country of Domicile                             CRE007
+     C                   MOVE      *BLANKS       @CUST                                        CRE007
+     C                   MOVEL     CNUM          @CUST                                        CRE007
+     C                   CALL      'AOCUSTR1'                                                 CRE007
+     C                   PARM      '*MSG   '     @RTCD                                        CRE007
+     C                   PARM      '*KEY   '     @OPTN                                        CRE007
+     C                   PARM                    @CUST                                        CRE007
+     C                   PARM                    @KYST                                        CRE007
+     C     SDCUST        PARM      SDCUST        DSLDY                                        CRE007
+      *                                                                                       CRE007
+      **  Access Country Details to retrieve ISO Country code                                 CRE007
+     C                   MOVE      BBCOLC        @LCTR                                        CRE007
+     C                   CALL      'AOCTRYR0'                                                 CRE007
+     C                   PARM      *BLANKS       @RTCD                                        CRE007
+     C                   PARM      '*KEY    '    @OPTN                                        CRE007
+     C                   PARM                    @LCTR             2                          CRE007
+     C     SDCTRY        PARM      SDCTRY        DSFDY                                        CRE007
+      *                                                                                       CRE007
+     C     A4ISOC        CHAIN     SDFRCTL0                           18                      CRE007
+     C     *IN18         IFEQ      *OFF                                         B3            CRE007
+      *                                                                                       CRE007
+     C     F0FRDT        IFLE      BJRDNB                                       B4            CRE007
+     C                   WRITE     INTPSDDX                                                   CRE007
+     C                   ENDIF                                                  E4            CRE007
+      *                                                                                       CRE007
+     C                   ELSE                                                                 CRE007
+     C                   WRITE     INTPSDDX                                                   CRE007
+     C                   ENDIF                                                  E3            CRE007
+     C                   ENDIF                                                  E2            CRE007
+     C*                                                                                       S01383
+     C** WRITE RECORD TO FILE COINTDD IF ACCOUNT HOLDER IS A BANK                             S01383
+     C*                                                                                       S01383
+     C     ACHLRT        IFEQ      'B'                                          B2            S01383
+     C     BTHY          ANDEQ     'Y'                                                        S01383
+     C                   MOVE      'B'           RTYP                                         S01383
+     C                   WRITE     COINTDDX                                                    06807
+     C                   END                                                    E2            S01383
+     C*                                                                                       S01383
+     C** WRITE RECORD TO FILE COINTDD IF ACCOUNT HOLDER IS A CORPORATE                        S01383
+     C*  CUSTOMER                                                                             S01383
+     C*                                                                                       S01383
+     C     ACHLRT        IFEQ      'C'                                          B2            S01383
+     C                   MOVE      'C'           RTYP                                         S01383
+     C                   WRITE     COINTDDX                                                    06807
+     C                   END                                                    E2            S01383
+     C*                                                                                       S01383
+     C                   END                                                    E1            S01383
+     C*                                                                                       S01383
+     C     WRIIN9        ENDSR                                                                S01383
+     C*                                                                                       S01383
+      *****************************************************************
+      * End of /COPY DL0280WRII                                       *
+      *****************************************************************

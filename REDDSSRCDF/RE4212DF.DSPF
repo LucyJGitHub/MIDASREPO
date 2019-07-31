@@ -1,0 +1,575 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas RE Cheque book maintenance')                     *
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Retail Module                                        *
+     A*                                                               *
+     A*  DSPF/RE4212DF - Cheque Book Maintenance                      *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1035423          Date 19Nov12               *
+      *                 CSF011             Date 12Sep11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CSC041             Date 26Nov09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG3026            Date 08Jun04               *
+      *                 BUG2964            Date 30May04               *
+      *                 CRE019             Date 12Jan04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 090199             Date 07Jul95               *
+      *                 CRT001  *CREATE    Date 28FEB95               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1035423 - When browsing cheque book maintenance via F15    *
+      *              the charge account number of the last record is  *
+      *              trimmed if not blank. Fix is to remove SFLEND to *
+      *              prevent the '+' sign from overlapping the charge *
+      *              account number (Child: AR1035425)                *
+      *  CSF011 - Customer Name on Inputs                             *
+      *  CSC041 - 4-Eyes Checking Gaps (Applied BUG23918)             *
+      *  BUG23918 - Database error occurs in Cheque Book Maintenance  *
+      *             upon pressing F15. Applied GEMS fix 239709A.      *
+      *  239709A - Session Device occur when subfile record exceed    *
+      *            9999.                                              *
+      *  BUG3026 - Added condition to protect field SCBIT so incorrect*
+      *            data will not be displayed on webfaced menu.       *
+      *  BUG2964 - Add column to cheque book browser to distinguish   *
+      *            GIRO and cheques.                                  *
+      *  CRE019 - Cheque Processing and Maintenance                   *
+     A*  090199 - RE-COMPILATION TO CORRECT MULTI-LANGUAGE            *
+     A*           REFERENCES.                                         *
+     A*                                                               *
+     A*  CRT001 - Retail Teller System.                               *
+     A*                                                               *
+     A*****************************************************************
+     A*                                                               *
+     A*  C R E A T I O N     P A R A M E T E R S                      *
+     A*                                                               *
+     A*                                                               *
+     A*****************************************************************
+     A                                      PRINT(MPRINT)
+     A                                      INDARA
+     A                                      REF(MFRFL)
+     A                                      CA03
+      **Start of change CRE019
+     A**********                            CF05                                              CRE019
+     A N25                                  CF05
+      **End of change CRE019
+     A  09                                  CF10
+      **Start of change CRE019
+     A  18                                  CF09
+     A  19                                  CF12
+     A  20                                  CF15
+      **End of change CRE019
+     A                                      MSGLOC(24)
+     A*
+     A*---------------------------------------------------------------------
+      **Start of change CRE019
+     A*****************************************************************                       CRE019
+     A****Cheque*Book*Details******************************************                       CRE019
+     A*****************************************************************                       CRE019
+      *--------------------------------------------------------------------*
+      ** Screen Header                                                     *
+      *--------------------------------------------------------------------*
+ 
+      **End of change CRE019
+     A          R RE4212F0                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+     A*
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4212'
+     A                                  1 31'CHEQUE BOOK MAINTENANCE'
+     A                                      DSPATR(UL HI)
+     A                                  1 67'DATE '
+     A            SMRDT     R        O  1 73REFFLD(RUNA)
+     A*
+     A            SWID      R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A                                  2 73TIME EDTWRD('  :  :  ')
+     A*
+      **Start of change CRE019
+      *--------------------------------------------------------------------*
+      ** Cheque Book Details Screen                                        *
+      *--------------------------------------------------------------------*
+      *
+     A          R RE4212F1                  TEXT('Details Screen')
+     A                                      OVERLAY
+      *
+      **End of change CRE019
+     A                                  4  2'Action :'
+     A            SACTN          1A  B  4 12TEXT('ACTION CODE')
+     A                                      DSPATR(HI)
+      **Start of change CRE019
+     A*N11N31***                            DSPATR(UL)                                        CRE019
+     A**31******                            DSPATR(RI PC)                                     CRE019
+     A**11N31***                            DSPATR(PR)                                        CRE019
+     A  21 22N31
+     AAN24
+     AON11N31N24                            DSPATR(UL)
+     A  31                                  DSPATR(RI PC)
+     A  21N22N31
+     AO 11N31
+     AO 24                                  DSPATR(PR)
+     A*
+     A                                  6  2'Cheque Books Issued Together:'
+     A N21
+     AO 21N28                               DSPATR(ND)
+     A            SCBIT          3A  B  6 32
+     A N21
+     AO 21N28                               DSPATR(ND)
+     A  21                                  DSPATR(HI)
+     A  21 22N48                            DSPATR(UL)
+     A  48 22                               DSPATR(RI PC)
+     A N21
+      **Start of change BUG3026
+     AO 21N28
+      **End of change BUG3026
+     AO 21N22N48                            DSPATR(PR)
+      *
+     A                                  6 36'of'
+     A N21
+     AO 21N23                               DSPATR(ND)
+     A            SCBIT2         3A  O  6 39
+     A N21
+     AO 21N23                               DSPATR(ND)
+     A  21                                  DSPATR(HI)
+      *
+     A                                  8  2'Retail a/c number . . :'
+     A  21 22                               DSPATR(ND)
+     A            SRACNO        10A  B  8 26TEXT('RETAIL A/C NO')
+     A                                      DSPATR(HI)
+     A N11N32                               DSPATR(UL)
+     A  32                                  DSPATR(RI PC)
+     A  21 22
+     AO 11N32                               DSPATR(PR)
+     A  21 22                               DSPATR(ND)
+      *
+     A                                  9  2'Giro indicator  . . . :'
+     A  21 22                               DSPATR(ND)
+     A            SGCIN          1A  B  9 26
+     A                                      DSPATR(HI)
+     A N11N33                               DSPATR(UL)
+     A  33                                  DSPATR(RI PC)
+     A  21 22
+     AO 11N33                               DSPATR(PR)
+     A  21 22                               DSPATR(ND)
+      *
+     A                                 10  2'Starting cheque number:'
+     A  21 22                               DSPATR(ND)
+     A            SSCQN          8A  B 10 26
+     A                                      DSPATR(HI)
+     A N11N34                               DSPATR(UL)
+     A  34                                  DSPATR(RI PC)
+     A  21 22
+     AO 11N34                               DSPATR(PR)
+     A  21 22                               DSPATR(ND)
+      *
+     A                                 12  2'Ending Cheque number. :'
+     A  21 22                               DSPATR(ND)
+     A            SECQN          8A  B 12 26
+     A                                      DSPATR(HI)
+     A N11N41 21
+     AON12N41N21                            DSPATR(UL)
+     A  41                                  DSPATR(RI PC)
+     A  21 22
+     AO 11N41 21
+     AO 12N41                               DSPATR(PR)
+     A  21 22                               DSPATR(ND)
+      *
+     A                                 13  2'Number of cheques . . :'
+     A  21 22                               DSPATR(ND)
+     A            SNOCQ          3A  B 13 26
+     A                                      DSPATR(HI)
+     A N11N42 21
+     AON12N42N21                            DSPATR(UL)
+     A  42                                  DSPATR(RI PC)
+     A  21 22
+     AO 11N42 21
+     AO 12N42                               DSPATR(PR)
+     A  21 22                               DSPATR(ND)
+      *
+     A                                 14  2'Date issued . . . . . :'
+     A  21 22                               DSPATR(ND)
+     A            SISSDT         6A  B 14 26
+     A                                      DSPATR(HI)
+     A N12N43                               DSPATR(UL)
+     A  43                                  DSPATR(RI PC)
+     A  21 22
+     AO 12N43                               DSPATR(PR)
+     A  21 22                               DSPATR(ND)
+      *
+     A                                 15  2'Date collected  . . . :'
+     A  21 22                               DSPATR(ND)
+     A            SCLTDT         6A  B 15 26
+     A                                      DSPATR(HI)
+     A N12N44
+     AO 13N44                               DSPATR(UL)
+     A  44                                  DSPATR(RI PC)
+     A  21 22
+     AO 12N44N13                            DSPATR(PR)
+     A  21 22                               DSPATR(ND)
+      *
+     A                                 17  2'Charge amount . . . . :'
+     A N21
+     AO 21 22                               DSPATR(ND)
+     A            SCHAM         14A  B 17 26
+     A N21
+     AO 21 22                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A N12N45
+     AO 27N45                               DSPATR(UL)
+     A  45                                  DSPATR(RI PC)
+     A N21
+     AO 21 22
+     AO 12N45N27                            DSPATR(PR)
+      *
+     A                                 18  2'Charge account  . . . :'
+     A N21
+     AO 21 22                               DSPATR(ND)
+     A            SCHAC         10A  B 18 26
+     A N21
+     AO 21 22                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A N12N46
+     AO 27N46                               DSPATR(UL)
+     A  46                                  DSPATR(RI PC)
+     A N21
+     AO 21 22
+     AO 12N46N27                            DSPATR(PR)
+      *
+     A                                 19  2'Charge trans. type  . :'
+     A N21
+     AO 21 22                               DSPATR(ND)
+     A            SCHTT          5A  B 19 26
+     A N21
+     AO 21 22                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A N12N47
+     AO 27N47                               DSPATR(UL)
+     A  47                                  DSPATR(RI PC)
+     A N21
+     AO 21 22
+     AO 12N47N27                            DSPATR(PR)
+      **Start of change CSF011
+     A                                  8 38'Short Name  :'
+     A N21
+     AO 21 22                               DSPATR(ND)
+     A            SCCSSN        10   O  8 52
+     A                                  9 38'Report Name :'
+     A N21
+     AO 21 22                               DSPATR(ND)
+     A            SCREPN        20   O  9 52
+     A                                 10 38'Report Town :'
+     A N21
+     AO 21 22                               DSPATR(ND)
+     A            SCREPT        10   O 10 52
+     A                                 11 38'Account Name:'
+     A N21
+     AO 21 22                               DSPATR(ND)
+     A            SCACCN        20   O 11 52
+      **End of change CSF011
+      *
+     A**********                        6  2'Retail a/c number . . :'                         CRE019
+     A**********  SRACNO        10A  B  6 26TEXT('RETAIL A/C NO')                             CRE019
+     A**********                            DSPATR(HI)                                        CRE019
+     A*N11N32***                            DSPATR(UL)                                        CRE019
+     A**32******                            DSPATR(RI PC)                                     CRE019
+     A**11N32***                            DSPATR(PR)                                        CRE019
+     A**********                                                                              CRE019
+     A**********                        7  2'Giro indicator  . . . :'                         CRE019
+     A**********  SGCIN          1A  B  7 26                                                  CRE019
+     A**********                            DSPATR(HI)                                        CRE019
+     A*N11N33***                            DSPATR(UL)                                        CRE019
+     A**33******                            DSPATR(RI PC)                                     CRE019
+     A**11N33***                            DSPATR(PR)                                        CRE019
+     A**********                                                                              CRE019
+     A**********                        8  2'Starting cheque number:'                         CRE019
+     A**********  SSCQN          8A  B  8 26                                                  CRE019
+     A**********                            DSPATR(HI)                                        CRE019
+     A*N11N34***                            DSPATR(UL)                                        CRE019
+     A**34******                            DSPATR(RI PC)                                     CRE019
+     A**11N34***                            DSPATR(PR)                                        CRE019
+     A**********                                                                              CRE019
+     A**********                       10  2'Ending Cheque number. :'                         CRE019
+     A**********  SECQN          8A  B 10 26                                                  CRE019
+     A**********                            DSPATR(HI)                                        CRE019
+     A*N12N41***                            DSPATR(UL)                                        CRE019
+     A**41******                            DSPATR(RI PC)                                     CRE019
+     A**12N41***                            DSPATR(PR)                                        CRE019
+     A**********                                                                              CRE019
+     A**********                       11  2'Number of cheques . . :'                         CRE019
+     A**********  SNOCQ          3A  B 11 26                                                  CRE019
+     A**********                            DSPATR(HI)                                        CRE019
+     A*N12N42***                            DSPATR(UL)                                        CRE019
+     A**42******                            DSPATR(RI PC)                                     CRE019
+     A**12N42***                            DSPATR(PR)                                        CRE019
+     A**********                                                                              CRE019
+     A**********                       12  2'Date issued . . . . . :'                         CRE019
+     A**********  SISSDT         6A  B 12 26                                                  CRE019
+     A**********                            DSPATR(HI)                                        CRE019
+     A*N12N43***                            DSPATR(UL)                                        CRE019
+     A**43******                            DSPATR(RI PC)                                     CRE019
+     A**12N43***                            DSPATR(PR)                                        CRE019
+     A**********                                                                              CRE019
+     A**********                       13  2'Date collected  . . . :'                         CRE019
+     A**********  SCLTDT         6A  B 13 26                                                  CRE019
+     A**********                            DSPATR(HI)                                        CRE019
+     A*N12N44***                                                                              CRE019
+     A*O*13N44**                            DSPATR(UL)                                        CRE019
+     A**44******                            DSPATR(RI PC)                                     CRE019
+     A**12N44N13                            DSPATR(PR)                                        CRE019
+      *
+      *--------------------------------------------------------------------*
+      ** Screen Footer                                                     *
+      *--------------------------------------------------------------------*
+      *
+     A          R RE4212F2                  TEXT('Command Keys')
+     A                                      OVERLAY
+      **End of change CRE019
+     A*
+      **Start of change CRE019
+     A**********                       23  2'F3=Exit   F5=Refresh'                            CRE019
+     A**09******                       23 25'F10=Delete'                                      CRE019
+     A*N09******                       23 25'          '                                      CRE019
+     A N25                             23  2'F3=Exit   F5=Refresh'
+     A N09 25                          23  2'F3=Exit   F12=Cancel'
+     A  09 25                          23  2'F3=Exit   F10=Delete   +
+     A                                       F12=Cancel'
+     A  09N25                          23 25'F10=Delete   F12=Cancel'
+     A N09N21                          23 25'          '
+     A N09 21 18                       23 25'F9=Insert   F12=Cancel'
+     A N09 21N18
+     AA 19N25                          23 25'F12=Cancel'
+     A N09 21 20
+     AAN25                             23 25'F15=Browse'
+     A*****************************************************************                       CRE019
+     A*----------------------------------------------------------------                       CRE019
+      **Start of change 239709A
+      *
+      *--------------------------------------------------------------------*
+      ** No Detail on Selection Record  Format                             *
+      *--------------------------------------------------------------------*
+      *
+     A          R RE4212ND                  TEXT('No Display Format')
+      *
+      **End of change 239709A
+      *--------------------------------------------------------------------*
+      ** Cheque Books Selection Subfile Format                             *
+      *--------------------------------------------------------------------*
+      *
+     A          R RE4212S1                  TEXT('Cheque Books Slct Subfile')
+     A                                      SFL
+     A  84                                  SFLNXTCHG
+      *
+      ** Hidden fields
+      *
+     A            SFBRCA         3   H      TEXT('Branch')
+     A            SFCNUM         6   H      TEXT('Customer No')
+     A            SFGCIN         1   H      TEXT('Giro indicator')
+     A            SFNOCQ         3   H      TEXT('Number of cheques')
+     A            SFCHTT         5   H      TEXT('Charge trans. type')
+     A            SFISDT         6   H      TEXT('Date issued')
+     A            SFCLDT         6   H      TEXT('Date collected')
+     A            SFTNLU         5S 0H      TEXT('Trans. # of last update')
+     A            SFOEDT         6S 0H      TEXT('Orig. Entry Date')
+      **Start of change CSF011
+     A            SFCSSN        10   H      TEXT('Short Name')
+     A            SFREPN        20   H      TEXT('Report Name')
+     A            SFREPT        10   H      TEXT('Report Town')
+     A            SFACCN        20   H      TEXT('Account Name')
+      **End of change CSF011
+      *
+      ** Select field
+      *
+     A            SFSEL          1   B 13  2TEXT('Select')
+     A N26 54                               DSPATR(RI PC)
+     A N26N54                               DSPATR(HI UL)
+     A  26                                  DSPATR(ND)
+      *
+      ** Cheque book selection details
+      *
+     A**Start of change BUG2964
+     A**********  SFACNO        10   O 13  5TEXT('Retail No.')                               BUG2964
+     A**********                            DSPATR(HI)                                       BUG2964
+      **********                                                                             BUG2964
+     A**********  SFSECN        17   O 13 17TEXT('Start/End Cheque')                         BUG2964
+     A**********                            DSPATR(HI)                                       BUG2964
+      **********                                                                             BUG2964
+     A**********  SFDATE        15   O 13 36TEXT('Date Issued/Collected')                    BUG2964
+     A**********                            DSPATR(HI)                                       BUG2964
+      **********                                                                             BUG2964
+     A**********  SFCHAM        14   O 13 53TEXT('Charge Amount')                            BUG2964
+     A**********                            DSPATR(HI)                                       BUG2964
+      **********                                                                             BUG2964
+     A**********  SFCHAC        10   O 13 68TEXT('Charge Account')                           BUG2964
+     A**********                            DSPATR(HI)                                       BUG2964
+      *
+     A            SFACNO        10   O 13  4TEXT('Retail No.')
+     A                                      DSPATR(HI)
+      *
+     A            SFSECN        17   O 13 15TEXT('Start/End Cheque')
+     A                                      DSPATR(HI)
+      *
+     A            SFGORC         4   O 13 33TEXT('Start/End Cheque')
+     A                                      DSPATR(HI)
+      *
+     A            SFDATE        15   O 13 38TEXT('Date Issued/Collected')
+     A                                      DSPATR(HI)
+      *
+     A            SFCHAM        14   O 13 55TEXT('Charge Amount')
+     A                                      DSPATR(HI)
+      *
+     A            SFCHAC        10   O 13 70TEXT('Charge Account')
+     A                                      DSPATR(HI)
+     A**End of change BUG2964
+      *
+      *--------------------------------------------------------------------*
+      ** Cheque Books Selection Subfile Control                            *
+      *--------------------------------------------------------------------*
+      *
+     A          R RE4212C1                  TEXT('(Subfile Control')
+     A                                      SFLCTL(RE4212S1)
+     A  79                                  SFLDSP
+     A  80                                  SFLDSPCTL
+     **Start of change AR1035423
+     A**81******                            SFLEND                                         AR1035423
+     **End of change AR1035423
+     A N79N80                               SFLCLR
+     A**Start of change 239709A
+     A**********                            SFLSIZ(9999)                                     239709A
+     A                                      SFLSIZ(9)
+     A**End of change 239709A
+     A                                      SFLPAG(9)
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A**Start of change 239709A
+     A                                      ROLLUP(38)
+     A                                      ROLLDOWN(39)
+     A**End of change 239709A
+     A            #0SFRN         4S 0H      SFLRCDNBR(*TOP)
+      *
+      ** Subfile selection fields
+      *
+     A                                  4 17'Branch'
+     A            SLBRCA         3   B  4 31TEXT('Select Branch')
+     A  55                                  DSPATR(RI PC)
+     A N55                                  DSPATR(HI UL)
+     A                                      OVRDTA
+     A                                      OVRATR
+      *
+     A                                  4 54'Not yet issued'
+     A            SLNYIS         1   B  4 73TEXT('Select not yet issued')
+     A  59                                  DSPATR(RI PC)
+     A N59                                  DSPATR(HI UL)
+     A                                      OVRDTA
+     A                                      OVRATR
+      *
+     A                                  5 17'Customer'
+     A            SLCNUM        10   B  5 31TEXT('Select Customer')
+     A  56                                  DSPATR(RI PC)
+     A N56                                  DSPATR(HI UL)
+     A                                      OVRDTA
+     A                                      OVRATR
+      *
+     A                                  5 54'Not yet collected'
+     A            SLNYCL         1   B  5 73TEXT('Select not yet collected')
+     A                                      DSPATR(HI UL)
+     A                                      OVRDTA
+     A                                      OVRATR
+      *
+     A                                  6 17'Issued from'
+     A            SLISFR         6   B  6 31TEXT('Select issued from')
+     A  57                                  DSPATR(RI PC)
+     A N57                                  DSPATR(HI UL)
+     A                                      OVRDTA
+     A                                      OVRATR
+      *
+     A                                  7 17'Issued until'
+     A            SLISUN         6   B  7 31TEXT('Select issued until')
+     A  58                                  DSPATR(RI PC)
+     A N58                                  DSPATR(HI UL)
+     A                                      OVRDTA
+     A                                      OVRATR
+      *
+     A**Start of change BUG2964
+     A**********                        9  5'Retail No.'                                     BUG2964
+     A**********  SLACNO        10   B 11  5TEXT('Select Retail No.')                        BUG2964
+     A**********                            DSPATR(HI UL)                                    BUG2964
+     A**********                            OVRDTA                                           BUG2964
+     A**********                            OVRATR                                           BUG2964
+      **********                                                                             BUG2964
+     A**********                        9 17'Start/End Cheque'                               BUG2964
+     A**********  SLCQNO         8   B 11 22TEXT('Select Start/End Cheque')                  BUG2964
+     A**********                            DSPATR(HI UL)                                    BUG2964
+     A**********                            OVRDTA                                           BUG2964
+     A**********                            OVRATR                                           BUG2964
+      **********                                                                             BUG2964
+     A**********                        9 36'Date Issued/'                                   BUG2964
+     A**********                        9 53'Charge Amount'                                  BUG2964
+     A**********                        9 68'Charge Acct'                                    BUG2964
+     A**********                       10 36'Collected'                                      BUG2964
+      *
+     A                                  9  4'Retail No.'
+     A            SLACNO        10   B 11  4TEXT('Select Retail No.')
+     A                                      DSPATR(HI UL)
+     A                                      OVRDTA
+     A                                      OVRATR
+      *
+     A                                  9 15'Start/End Cheque'
+     A            SLCQNO         8   B 11 20TEXT('Select Start/End Cheque')
+     A                                      DSPATR(HI UL)
+     A                                      OVRDTA
+     A                                      OVRATR
+      *
+     A                                  9 33'GIR/'
+     A                                  9 38'Date Issued/'
+     A                                  9 55'Charge Amount'
+     A                                  9 70'Charge A/C'
+     A                                 10 33'CHQ'
+     A                                 10 38'Collected'
+     A**End of change BUG2964
+      *
+      *--------------------------------------------------------------------*
+      ** Message Subfile Format                                            *
+      *--------------------------------------------------------------------*
+      **End of change CRE019
+     A*
+     A*----------------------------------------------------------------
+     A
+     A*
+     A          R RE4212S0                  TEXT('MESSAGE SUBFILE')
+     A                                      SFL
+     A                                      SFLMSGRCD(24)
+     A            SMGKY                     SFLMSGKEY
+     A            SPGMQ                     SFLPGMQ
+     A*
+     A*----------------------------------------------------------------
+      **Start of change CRE019
+      *
+      *--------------------------------------------------------------------*
+      ** Message Subfile Control                                           *
+      *--------------------------------------------------------------------*
+      *
+      **End of change CRE019
+     A          R RE4212C0                  TEXT('CONTROL RECORD')
+     A                                      SFLCTL(RE4212S0)
+     A                                      SFLSIZ(20)
+     A                                      SFLPAG(1)
+     A                                      SFLDSPCTL
+     A                                      SFLDSP
+     A                                      SFLINZ
+     A  10                                  SFLEND
+     A                                      PUTOVR
+     A                                      BLINK
+     A            SPGMQ                     SFLPGMQ
+     A*****************************************************************

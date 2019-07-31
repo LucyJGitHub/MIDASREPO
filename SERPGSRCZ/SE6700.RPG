@@ -1,0 +1,1225 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE ER automatic allocation process')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE6700 - SE Early Redemption Automatic Allocation Process    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 234054             Date 14Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 202466             Date 22May02               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 01Sep99               *
+      *                 CGL011             Date 20Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01496             DATE 25OCT94               *
+     F*                 S10978             DATE 07APR93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+     F*  234054 - Portfolio Ref. not correctly setup for Dummy Cust   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  202466 - Portfolio Ref. not correctly setup for Dummy Cust   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CPB001 - 'Private Banking' Module                            *
+      *  CGL011 - Collateral Processing for Midas                     *
+     F*  S01496 - Incorporation of Jyske Enhancements (S10978)        *
+     F*  S10978 - JYSZRH: EARLY REDEMPTIONS                           *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*
+     F*****BJ*-*Bank*Details*-*Rtv*Idx*********************************   S01496
+     F***SDBANKL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F*****BV*-*Securities*Trading*Data*-*Rtv*Idx**********************   S01496
+     F***SDSTRDL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F*****QB*-*Portfolio*Clients**************************************   S01496
+     F***SDPLCSLLIF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F*****BG*-*Modules*Details*-*Rtv*Idx******************************   S01496
+     F***SDMMODL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F**   Securities Details
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   Current & Historic Depot Positions
+     FDPOSH   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   User Depot Positions by BRCD/SESN/DDPT/MRKT/BOOK/DATE
+     F***UDEPX***IF  E           K        DISK                            S01496
+     FSEUDEPL0IF  E           K        DISK                               S01496
+     F                                              KINFSR *PSSR
+     F*
+     F**   Client Depot Positions by BRCD/SESN/DDPT/MRKT/CNUM/DATE
+     F***CDEPY***IF  E           K        DISK                            S01496
+     FSECDEPL4IF  E           K        DISK                               S01496
+     F                                              KINFSR *PSSR
+     FPMPORTLLIF  E           K        DISK                               CPB001
+     F                                              KINFSR *PSSR          CPB001
+     F*
+     F**   VA - SE ER Reference - Upd Idx
+     FSEERRFL0UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     F*
+     F**   VB - SE ER Depots - Upd Idx
+     FSEERDPL0UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     F*
+     F**   VC - SE ER Allocations - Upd Idx
+     FSEERALL0UF  E           K        DISK                      A
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     F*
+     F**   VE - SE ER Temporary Allocations - Upd Idx
+     FSETPALPDUF  E           K        DISK                      A
+     F                                              KINFSR *PSSR
+     F*
+     F**   Printer file - SE ER Allocations Process - Audit
+     FSE6700AUO   E             70     PRINTER
+     F                                              KINFSR *PSSR
+     F/COPY WNCPYSRC,SE6700F001
+     ******************************************************************
+      /EJECT
+     *********************************************************************
+      *
+      * ID F  C  H  L    Function of indicators
+      * ---------------------------------------
+      *   60 - Record not in file SDCUSTPD                                CPB001
+      *
+      *   70 - Page Overflow
+      *
+      *   89 - Record not Found
+      *
+      *   LR :    Last record
+      *   U7/U8 : Database error
+      *
+      *   90-99 : Used by Standard Subroutines
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+      *
+      * Name of the Subroutines
+      * -----------------------
+      *
+      *       P001  - Initial processing
+      *       P002  - Main processing
+      *       P003  - Termination processing
+      *       P004  - Standard Database error processing
+      *       P005  - Process Depot Redemption
+      *
+      *       S001  - Create Book Temporary records
+      *       S002  - Create Customer Temporary records
+      *
+      *       P006  - Calculate initial nominal to be redeemed
+      *       P007  - Update Allocation file LF/SEERAL0
+      *       P008  - Calculate Available nominal
+      *
+      *       U001  - Update Early redemptions References file
+      *       U002  - Write ER Temporary Allocation file
+      *       U003  - Write ER Allocation file
+      *       U004  - Update Early redemptions Depots file
+      *       U005  - Release Early Redemptions References file
+      *
+      *       R001  - Heading on Audit Report
+      *       R002  - Write Detail line - error on nominal
+      *       R003  - Write Detail line
+      *       R004  - End of report
+      *       R009  - Database error on audit report
+      *
+      *       *PSSR - "Standard" Database error processing
+      *
+      * Name of the Standard Subroutines
+      * --------------------------------
+      *
+      * List of variables
+      * -----------------
+      *
+      *       WWTALN - Total allocated nominal (13,0)
+      *       WWUNNO - Unallocated nominal     (13,0)
+      *       WWAVNO - Available nominal
+      *       WWININ - Work initial nominal
+      *       WWNCHD - Nominal to check difference
+      *       WWERTP - ER Type ('B' = Book or 'P' = Customer)
+      *
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     E*
+     E**   FOR COMPILATION - COPYRIGHT INSERTION
+     E                    CPY@    1   1 80
+     E*
+     E**   FOR MESSAGES IN PRINTER FILE
+     E                    MSG     1   3 40
+     E*
+      /COPY ZSRSRC,ZEDITZ1
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     E/COPY WNCPYSRC,SE6700E001
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**   DATA STRUCTURE FOR DATABASE ERROR
+     I*
+     ILDA         DS                            256
+     I                                      132 183 WWLOT
+     I                                      132 141 WWFILE
+     I                                      142 170 WWKEY
+     I                                      171 180 WWPGM
+     I                                      181 1830WWASE
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     I*                                                                   S01496
+     ISDBANK    E DSSDBANKPD                                              S01496
+     I**  Data structure for bank details                                 S01496
+     I*                                                                   S01496
+     ISDMMOD    E DSSDMMODPD                                              S01496
+     I**  Data structure for module details                               S01496
+     I*                                                                   S01496
+     ISDSTRD    E DSSDSTRDPD                                              S01496
+     I**  Data structure for securities trading details                   S01496
+     I*                                                                   S01496
+     ISDPLCS    E DSSDPLCSPD                                              S01496
+     I**  Data structure for portfolio customer details                   S01496
+     I*                                                                   S01496
+     ISDCUST    E DSSDCUSTPD                                              CPB001
+     I**  Client Details                                                  CPB001
+     I*                                                                   CPB001
+     IDSSDY     E DSDSSDY                                                 S01496
+     I**  Long data structure for access objects                          S01496
+     I*
+     IDSLDY     E DSDSLDY                                                 CPB001
+     I**  Very Long data structure for access objects                     CPB001
+     I*                                                                   CPB001
+     I/COPY WNCPYSRC,SE6700I001
+     *********************************************************************
+      /EJECT
+     C********************************************************************
+     C**    P R O G R A M   S T A R T
+     C********************************************************************
+     C*
+     C**   INITIAL PROCESSING
+     C*
+     C                     EXSR P001
+     C*
+     C**   MAIN PROCESSING
+     C*
+     C                     EXSR P002
+     C*
+     C**   TERMINATION PROCESSING
+     C*
+     C                     EXSR P003
+     C*
+     C********************************************************************
+     C**    P R O G R A M     E N D
+     C********************************************************************
+      /EJECT
+     ******************************************************************
+     C* P001   : INITIAL PROCESSING                                   *
+     ******************************************************************
+     C*
+     C           P001      BEGSR
+     C*                                                                   S01496
+     C**  Copyright statement                                             S01496
+     C*                                                                   S01496
+     C                     MOVEACPY@      ACT@   80                       S01496
+     C*
+     C**   INITIALISE KEY AND WORKING FIELDS
+     C                     MOVEL*BLANKS   WWLOT
+     C                     MOVEL'SE6700'  DBPGM  10
+     C*
+     C           KEYDPO    KLIST
+     C                     KFLD           VBBRCD
+     C                     KFLD           VASESN
+     C                     KFLD           VBDDPT
+     C                     KFLD           VAEREX
+     C*
+     C**    SHORT KEY FOR USER AND CLIENT DEPOT POSITION
+     C           KEYUCD    KLIST
+     C                     KFLD           VBBRCD
+     C                     KFLD           VASESN
+     C                     KFLD           VBDDPT
+     C                     KFLD           MKTI
+     C*
+     C**    LONGER KEY FOR USER DEPOT POSITION
+     C           KEYUD     KLIST
+     C                     KFLD           VBBRCD
+     C                     KFLD           VASESN
+     C                     KFLD           VBDDPT
+     C                     KFLD           MKTI
+     C                     KFLD           WWUDBK  2
+     C                     KFLD           WWEREX  50
+     C*
+     C**    LONGER KEY FOR USER DEPOT POSITION
+     C           KEYCD     KLIST
+     C                     KFLD           VBBRCD
+     C                     KFLD           VASESN
+     C                     KFLD           VBDDPT
+     C                     KFLD           MKTI
+     C**********           KFLD           WWCDCN  60                                          CSD027
+     C                     KFLD           WWCDCN  6                                           CSD027
+     C                     KFLD           WWPTFR  4
+     C                     KFLD           WWEREX
+     C*
+     C**    KEY FOR ALLOCATION FILE
+     C           KEYAL     KLIST
+     C                     KFLD           #REFN
+     C***********          KFLD           VEBRCD                          S01496
+     C                     KFLD           VEBRCA                          S01496
+     C                     KFLD           VEDDPT
+     C                     KFLD           VEERTP
+     C                     KFLD           VEBOOK
+     C                     KFLD           VECNUM
+     C                     KFLD           VEPTFR
+     C*
+     C**   ACCESS TO BANK DETAILS TO RETRIEVE THE MIDAS RUN DATE
+     C************LOVAL    SETLLSDBANKL1                                  S01496
+     C***********          READ SDBANKL1                 89               S01496
+     C*                                                                   S01496
+     C                     CALL 'AOBANKR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD  7                       S01496
+     C                     PARM '*FIRST'  WLOPTN  7                       S01496
+     C           SDBANK    PARM SDBANK    DSSDY                           S01496
+     C*
+     C**   IF RECORD NOT FOUND
+     C************IN89     IFEQ '1'                        B*1            S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'001'     DBASE   30       *****************
+     C***********          MOVEL'SDBANKL1'DBFILE 10        ** DB ERROR 01 S01496
+     C                     MOVE 'SDBANKPD'DBFILE 10        * DB ERROR 01 *S01496
+     C                     MOVEL*BLANKS   DBKEY  29        *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C**   DETERMINE DATE FORMAT
+     C           BJDFIN    IFEQ 'M'                        B*1
+     C                     MOVE '1'       *IN98
+     C                     END                             E*1
+     C*
+     C**   ENTRY PARAMETERS
+     C           *ENTRY    PLIST
+     C                     PARM           #REFN   6        ER Reference
+     C*                                                                   202466
+     C**   ACCESS TO MODULES DETAILS TO RETRIEVE PM INDICATOR             202466
+     C*                                                                   202466
+     C                     CALL 'AOMMODR0'                                202466
+     C                     PARM *BLANKS   WLRTCD                          202466
+     C                     PARM '*FIRST'  WLOPTN                          202466
+     C           SDMMOD    PARM SDMMOD    DSSDY                           202466
+     C*                                                                   202466
+     C**   IF RECORD NOT FOUND                                            202466
+     C           WLRTCD    IFNE *BLANKS                                   202466
+     C                     MOVEL'003'     DBASE   30       ***************202466
+     C                     MOVE 'SDMMODPD'DBFILE 10        * DB ERROR 03 *202466
+     C                     MOVEL*BLANKS   DBKEY  29        ***************202466
+     C                     EXSR *PSSR                                     202466
+     C                     END                             E*1            202466
+     C*
+     C**   ACCESS TO SECURITIES TRADING DATA TO RETRIEVE DUMMY CNUM
+     C************LOVAL    SETLLSDSTRDL1                                  S01496
+     C***********          READ SDSTRDL1                 89               S01496
+     C*                                                                   S01496
+     C                     CALL 'AOSTRDR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*FIRST'  WLOPTN                          S01496
+     C           SDSTRD    PARM SDSTRD    DSSDY                           S01496
+     C*
+     C**   IF RECORD NOT FOUND
+     C************IN89     IFEQ '1'                        B*1            S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'002'     DBASE   30       *****************
+     C***********          MOVEL'SDSTRDL1'DBFILE 10        ** DB ERROR 02 S01496
+     C                     MOVE 'SDSTRDPD'DBFILE 10        * DB ERROR 02 *S01496
+     C                     MOVEL*BLANKS   DBKEY  29        *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C**********           MOVE BVERCU    WWERCU  60                                          CSD027
+     C                     MOVE BVERCU    WWERCU  6                                           CSD027
+     C*
+     C**   CHECK IF ER DUMMY CUSTOMER IS A PORTFOLIO CUSTOMER
+     C***********BVERCU    CHAINSDPLCSLL             89                   S01496
+     C************IN89     IFEQ '1'                        B*1            S01496
+     C*                                                                   S01496
+     C                     MOVE *BLANKS   WWERPT  4                       CPB001
+     C**   PM IS PRESENT                                                  CPB001
+     C           BGPFMG    IFEQ 'Y'                                       CPB001
+     C                     CALL 'AOPLCSR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY  '  WLOPTN                          S01496
+     C                     PARM BVERCU    WLCUST 10                       S01496
+     C           SDPLCS    PARM SDPLCS    DSSDY                           S01496
+     C*                                                                   S01496
+     C********   WLRTCD    IFNE *BLANK                              S01496CPB001
+     C********             MOVE *BLANKS   WWERPT  4                       CPB001
+     C********             ELSE                                           CPB001
+     C********             MOVE '9997'    WWERPT                          CPB001
+     C********             ENDIF                           E*1            CPB001
+     C*                                                                   CPB001
+     C**   IF RECORD IS FOUND (CUSTOMER IS A PORTFOLIO CUSTOMER)          CPB001
+     C*                                                                   CPB001
+     C           WLRTCD    IFEQ *BLANK                                    CPB001
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE '9997'    WWERPT                          CPB001
+     C                     ENDIF                                          CPB001
+     C           WLRTCD    IFEQ *BLANK                                    CPB001
+     C                     MOVE 'Y'       WWPMC   1                       CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVE 'N'       WWPMC                           CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                                          CPB001
+     C*                                                                   CPB001
+     C**   PB IS PRESENT                                                  CPB001
+     C*                                                                   CPB001
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C                     CALL 'AOCUSTR1'                                CPB001
+     C                     PARM *BLANKS   @RTCD   7                       CPB001
+     C                     PARM '*KEY   ' @OPTN   7                       CPB001
+     C                     PARM BVERCU    @KEY1  10                       CPB001
+     C                     PARM *BLANKS   @KYST   7                       CPB001
+     C           SDCUST    PARM SDCUST    DSLDY                           CPB001
+     C           @RTCD     IFEQ *BLANKS                                   CPB001
+     C           BBPRBA    ANDEQ'Y'                                       CPB001
+     C                     MOVE 'Y'       WWPBC   1                       CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVE 'N'       WWPBC                           CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                           Fi BGN4ST = Y  234054
+     C*                                                                   CPB001
+     C**   VALUE DEFAULTED IF THE CUSTOMER IS A PM CUSTOMER               CPB001
+     C**   OR A PB CUSTOMER                                               CPB001
+     C*                                                                   CPB001
+     C           WWPMC     IFEQ 'Y'                                       CPB001
+     C           WWPBC     OREQ 'Y'                                       CPB001
+     C**********           OPEN PMPORTLL                           CPB001 202466
+     C           WWERCU    SETLLPMPORTLL                                  CPB001
+     C                     READ PMPORTLL                 60               CPB001
+      *                                                                   CPB001
+     C           *IN60     IFEQ '0'                                       CPB001
+     C           PNCNUM    ANDEQWWERCU                                    CPB001
+     C                     MOVE PNPTFR    WWERPT                          CPB001
+     C                     ENDIF                                          CPB001
+     C**********           CLOSEPMPORTLL                           CPB001 202466
+     C                     ENDIF                                          CPB001
+     C***                  ENDIF                                   CPB001 234054
+     C*****************************************************************   202466
+     C*****ACCESS*TO*MODULES*DETAILS*TO*RETRIEVE*PM*INDICATOR**********   202466
+     C************LOVAL    SETLLSDMMODL1                                  S01496
+     C***********          READ SDMMODL1                 89               S01496
+     C*************************************************************S01496 202466
+     C**********           CALL 'AOMMODR0'                         S01496 202466
+     C**********           PARM *BLANKS   WLRTCD                   S01496 202466
+     C**********           PARM '*FIRST'  WLOPTN                   S01496 202466
+     C********** SDMMOD    PARM SDMMOD    DSSDY                    S01496 202466
+     C*****************************************************************   202466
+     C*****IF*RECORD*NOT*FOUND*****************************************   202466
+     C************IN89     IFEQ '1'                        B*1            S01496
+     C********** WLRTCD    IFNE *BLANKS                            S01496 202466
+     C**********           MOVEL'003'     DBASE   30       ***************202466
+     C***********          MOVEL'SDMMODL1'DBFILE 10        ** DB ERROR 03 S01496
+     C**********           MOVE 'SDMMODPD'DBFILE 10        * DB ERRS01496 202466
+     C**********           MOVEL*BLANKS   DBKEY  29        ***************202466
+     C**********           EXSR *PSSR                                     202466
+     C**********           END                             E*1            202466
+     C/COPY WNCPYSRC,SE6700C001
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     ******************************************************************
+     C* P002   : MAIN PROCESSING                                      *
+     ******************************************************************
+     C*
+     C           P002      BEGSR
+     C*
+     C**   RETRIEVE EARLY REDEMPTION DETAILS
+     C           #REFN     CHAINSEERRFL0            N89
+     C*
+     C**   IF RECORD NOT FOUND
+     C           *IN89     IFEQ '1'                        B*1
+     C                     MOVEL'004'     DBASE            *****************
+     C***********          MOVEL'SEERRFL0'DBFILE           ** DB ERROR 04 S01496
+     C                     MOVE 'SEERRFL0'DBFILE           * DB ERROR 04 *S01496
+     C                     MOVEL#REFN     DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C**   DELETE EXISTING RECORDS OF PREVIOUS ALLOCATION
+     C           #REFN     SETLLSEERALL0
+     C           #REFN     READESEERALL0                 89
+     C*
+     C           *IN89     DOWEQ'0'
+     C           VCRECI    IFNE '*'
+     C                     MOVE '*'       VCRECI
+     C                     UPDATSEERALD0
+     C                     COMIT
+     C                     ENDIF
+     C           #REFN     READESEERALL0                 89
+     C                     ENDDO
+     C*
+     C**   REPOSITION THE FILE
+     C           *LOVAL    SETLLSEERALL0
+     C/COPY WNCPYSRC,SE6700C002
+     C*
+     C**   RETRIEVE SECURITY DETAILS FOR TRADE DENOMINATION AND NUMBER
+     C**   OF DECIMAL PLACES
+     C           VASESN    CHAINSECTY                89
+     C*
+     C**   IF RECORD NOT FOUND
+     C           *IN89     IFEQ '1'                        B*1
+     C                     MOVEL'005'     DBASE            *****************
+     C***********          MOVEL'SECTY   'DBFILE           ** DB ERROR 05 S01496
+     C                     MOVE 'SECTY   'DBFILE           * DB ERROR 05 *S01496
+     C                     MOVELVASESN    DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C**   IF TRADE DENOMINATION ZERO, SET TO 1
+     C           SDNM      IFEQ *ZEROS
+     C                     Z-ADD1         SDNM
+     C                     ENDIF
+     C*
+     C**   ALL FIELDS ARE CONSIDERED AS WHOLE NUMBERS WITHOUT DECIMAL
+     C**   PLACES, AS IN ALL DATABASE FILES. (10,5 REMAINS 105).
+     C**   TRADE DENOMINATION MUST BE INCREASED (10 TIMES FOR EACH
+     C**   DECIMAL PLACE)
+     C           NMDP      DOWGT*ZEROS
+     C                     MULT 10        SDNM
+     C                     SUB  1         NMDP
+     C                     ENDDO
+     C*
+     C**   PROCESS EACH DEPOT
+     C*
+     C**   WRITE HEADINGS
+     C                     EXSR R001
+     C*
+     C           #REFN     SETLLSEERDPL0
+     C           #REFN     READESEERDPL0                 89
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C           VBNRDM    IFNE *ZEROS
+     C*
+     C**   PROCESS DEPOT REDEMPTION
+     C                     EXSR P005
+     C*
+     C**   UPDATE ALLOCATION FILE, IF NO ERROR ON NOMINAL TO BE REDEEMED
+     C           WWERR     IFEQ 'N'
+     C                     EXSR P007
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C*
+     C**   WRITE A DETAIL LINE 'NOTHING TO REDEEM'
+     C                     EXSR R003
+     C*
+     C**   UPDATE ER DEPOTS FILE WITH 0 IN NOMINAL ALLOCATED
+     C                     Z-ADD0         WWTALN
+     C                     EXSR U004
+     C*
+     C                     ENDIF
+     C*
+     C           #REFN     READESEERDPL0                 89
+     C                     ENDDO
+     C*
+     C**    REPOSITION THE FILE
+     C           *LOVAL    SETLLSEERDPL0
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     ******************************************************************
+     C* P003   : TERMINATION PROCESSING                               *
+     ******************************************************************
+     C*
+     C           P003      BEGSR
+     C*
+     C**   ACCESS TO SE ER REFERENCE TO RETRIEVE ER DETAILS
+     C           #REFN     CHAINSEERRFL0             89
+     C*
+     C**   IF RECORD NOT FOUND
+     C           *IN89     IFEQ '1'                        B*1
+     C                     MOVEL'006'     DBASE            *****************
+     C***********          MOVEL'SEERRFL0'DBFILE           ** DB ERROR 06 S01496
+     C                     MOVE 'SEERRFL0'DBFILE           * DB ERROR 06 *S01496
+     C                     MOVEL#REFN     DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C**   UPDATE THE RECORD
+     C                     EXSR U001
+     C                     COMIT
+     C*
+     C**   WRITE END OF REPORT
+     C                     EXSR R004
+     C/COPY WNCPYSRC,SE6700C003
+     C*
+     C**   END OF PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P005   : PROCESS DEPOT REDEMPTION                             *
+     ******************************************************************
+     C*
+     C           P005      BEGSR
+     C*
+     C**   DETERMINE THE PROPORTION OF THE DEPOT NOMINAL POSITION TO
+     C**   BE REDEEMED
+     C                     MOVE 'N'       WWERR   1
+     C*
+     C           KEYDPO    SETGTDPOSH
+     C                     READPDPOSH                    89
+     C*
+     C           *IN89     IFEQ '1'
+     C***********DSBR      ORNE VBBRCD                                    S01496
+     C           DSBA      ORNE VBBRCD                                    S01496
+     C           DSSC      ORNE VASESN
+     C           DDPT      ORNE VBDDPT
+     C           DSNV      ORLT VBNRDM
+     C           DSNV      ORLE *ZEROS
+     C*
+     C                     EXSR R002
+     C*
+     C**   TERMINATE CURRENT PROCESSING
+     C                     MOVE 'Y'       WWERR
+     C                     Z-ADD0         WWTALN
+     C                     GOTO E005
+     C*
+     C                     ENDIF
+     C/COPY WNCPYSRC,SE6700C004
+     C*
+     C           VBNRDM    DIV  DSNV      WWFAC1 289
+     C/COPY WNCPYSRC,SE6700C005
+     C*
+     C**   CREATE A RECORD FOR EACH EXISTING BOOK/CUSTOMER POSITION
+     C**   WITH AN 'INITIAL NOMINAL TO BE REDEEMED'
+     C*
+     C                     Z-ADD0         WWTALN 130
+     C*
+     C           WWFAC1    IFNE *ZEROS
+     C/COPY WNCPYSRC,SE6700C006
+     C                     EXSR S001
+     C                     EXSR S002
+     C                     ENDIF
+     C*
+     C**   CALCULATE UNALLOCATED NOMINAL
+     C           VBNRDM    SUB  WWTALN    WWUNNO 130
+     C/COPY WNCPYSRC,SE6700C007
+     C*
+     C**   IF REDEMPTION NOT COMPLETLY ALLOCATED, DECREASE TOTAL
+     C**   UNALLOCATED STARTING BY GREATEST 'DIFFERENCE NOMINAL'
+     C*
+     C           WWUNNO    IFGT *ZEROS
+     C*
+     C           DDPT      SETLLSETPALPD
+     C                     READ SETPALPD                 89
+     C*
+     C           *IN89     DOWEQ'0'
+     C           VEDDPT    ANDEQDDPT
+     C           WWUNNO    ANDGT*ZEROS
+     C           VEDIFN    ANDNE*ZEROS
+     C*
+     C           VEININ    ADD  SDNM      WWININ
+     C                     Z-ADDWWININ    WWNCHD
+     C           VEERTP    IFEQ 'P'
+     C                     MOVE VECNUM    CDCN##  6
+     C                     MOVE VEPTFR    PTFR##  4
+     C                     MOVE VECNUM    CDCN
+     C                     MOVE VEPTFR    PTFR
+     C                     EXSR P008
+     C                     MOVE CDCN##    CDCN
+     C                     MOVE PTFR##    PTFR
+     C                     ENDIF
+     C*
+     C           WWININ    IFEQ WWNCHD
+     C                     SUB  SDNM      WWUNNO
+     C                     Z-ADDWWININ    VEININ
+     C                     UPDATSETPALD0
+     C                     ADD  SDNM      WWTALN
+     C                     ENDIF
+     C*
+     C                     READ SETPALPD                 89
+     C                     ENDDO
+     C*
+     C                     ENDIF
+     C/COPY WNCPYSRC,SE6700C008
+     C*
+     C**   PRINT DETAIL (ALLOCATED % CALCULATED WITHOUT DUMMY CUSTOMER)
+     C                     EXSR R003
+     C*
+     C**   IF UNALLOCATED NOMINAL NOT *ZERO, GENERATE AN ALLOCATION
+     C**   RECORD FOR DUMMY CUSTOMER
+     C*
+     C           WWUNNO    IFNE *ZEROS
+     C*
+     C                     MOVE 'P'       WWERTP
+     C                     MOVE 'Y'       WWDUMY  1
+     C/COPY WNCPYSRC,SE6700C009
+     C                     Z-ADDWWUNNO    VEININ
+     C                     ADD  WWUNNO    WWTALN
+     C                     EXSR U002
+     C/COPY WNCPYSRC,SE6700C010
+     C                     MOVE 'N'       WWDUMY
+     C*
+     C                     ENDIF
+     C*
+     C**   UPDATE ER DEPOT RECORD, NOMINAL ALLOCATED
+     C**   (ALLOCATION FOR DUMMY CUSTOMER INVOLVED)
+     C*
+     C           E005      TAG
+     C*
+     C                     EXSR U004
+     C*
+     C           EP005     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P006   : CALCULATE FIRST NOMINAL TO BE REDEEMED               *
+     ******************************************************************
+     C*
+     C           P006      BEGSR
+     C*
+     C           WWERTP    IFEQ 'B'
+     C*
+     C           UDNV      MULT WWFAC1    WWININ 150
+     C                     Z-ADDWWININ    WWNCHD 150
+     C*
+     C                     ELSE
+     C*
+     C           CDNV      MULT WWFAC1    WWININ
+     C                     Z-ADDWWININ    WWNCHD
+     C*
+     C**     CHECK WORK INITIAL NOMINAL (FOR CUSTOMER ONLY)
+     C                     EXSR P008
+     C*
+     C                     ENDIF
+     C*
+     C                     Z-ADD0         WWREST
+     C           WWININ    IFNE *ZEROS
+     C           SDNM      ANDNE*ZEROS
+     C           WWININ    DIV  SDNM      WWRESU 150
+     C                     MVR            WWREST 150
+     C                     ENDIF
+     C*
+     C           WWREST    IFNE *ZEROS
+     C           WWRESU    MULT SDNM      VEININ
+     C                     ELSE
+     C                     Z-ADDWWININ    VEININ
+     C                     ENDIF
+     C*
+     C           WWNCHD    SUB  VEININ    VEDIFN
+     C*
+     C           WWNCHD    IFNE WWININ
+     C                     Z-ADD0         VEDIFN
+     C                     ENDIF
+     C*
+     C                     ADD  VEININ    WWTALN
+     C*
+     C           EP006     ENDSR
+      /EJECT
+     ******************************************************************
+     C* P007   : UPDATE ALLOCATION FILE
+     ******************************************************************
+     C*
+     C           P007      BEGSR
+     C/COPY WNCPYSRC,SE6700C011
+     C*
+     C           VBDDPT    SETLLSETPALPD
+     C                     READ SETPALPD                 89
+     C*
+     C           *IN89     DOWEQ'0'
+     C           VEDDPT    ANDEQVBDDPT
+     C*
+     C           VEININ    IFNE *ZEROS
+     C                     EXSR U003
+     C                     COMIT
+     C                     ENDIF
+     C*
+     C                     READ SETPALPD                 89
+     C                     ENDDO
+     C/COPY WNCPYSRC,SE6700C012
+     C*
+     C           EP007     ENDSR
+      /EJECT
+     ******************************************************************
+     C* P008   : CALCULATE AVAILABLE NOMINAL
+     ******************************************************************
+     C*
+     C           P008      BEGSR
+     C*
+     C                     MOVE BJRDNB    PPRUND
+     C                     MOVE 'Y'       PPOBPO
+     C                     MOVE VBBRCD    PPBRCD
+     C                     MOVE CDCN      PPCNUM
+     C                     MOVE PTFR      PPPTFR
+     C                     MOVE 'P'       PPBLTY
+     C                     MOVE *BLANKS   PPNOPO
+     C                     MOVE *BLANKS   PPNOBL
+     C                     MOVE 'N'       PPCG11  1                       CGL011
+     C                     MOVE *BLANKS   PPCOLA 15                       CGL011
+     C*
+     C                     CALL 'SE6710'
+     C                     PARM           PPRUND  5
+     C                     PARM           PPOBPO  1
+     C                     PARM           PPBRCD  3
+     C                     PARM           VASESN
+     C                     PARM           PPCNUM  6
+     C                     PARM           PPPTFR  4
+     C                     PARM           PPBLTY  1
+     C                     PARM           PPNOBL 13
+     C                     PARM           PPNOPO 13
+     C                     PARM           PPCG11                          CGL011
+     C                     PARM           PPCOLA                          CGL011
+     C*
+     C                     MOVE PPNOBL    WWNOBL 130
+     C                     MOVE PPNOPO    WWNOPO 130
+     C                     MOVE PPCOLA    WWCOLA 150                      CGL011
+     C*
+     C**   CALCULATE AVAILABLE NOMINAL (POSITION MINUS BLOCKED)
+     C           WWNOPO    SUB  WWNOBL    WWAVNO 150
+     C           WWAVNO    IFLT 0
+     C                     Z-ADD0         WWAVNO
+     C                     ENDIF
+     C*
+     C           WWININ    IFGT WWAVNO
+     C                     Z-ADDWWAVNO    WWININ
+     C                     ENDIF
+     C*
+     C           EP008     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* R001   : OUTPUT TITLE TO PRINTER FILE                         *
+     ******************************************************************
+     C*
+     C           R001      BEGSR
+     C*
+     C**     WRITE TITLE
+     C                     WRITETITLE
+     C*
+     C           ER001     ENDSR
+     ******************************************************************
+     */EJECT
+     ******************************************************************
+     C* R002   : OUTPUT ER REFERENCE DETAILS                          *
+     ******************************************************************
+     C*
+     C           R002      BEGSR
+     C*
+     C                     MOVE MSG,1     MESGP1
+     C*
+     C**    WRITE DETAIL
+     C                     WRITEDETER
+     C*
+     C           ER002     ENDSR
+     ******************************************************************
+     */EJECT
+     ******************************************************************
+     C* R003   : OUTPUT ER DEPOT DETAILS                              *
+     ******************************************************************
+     C*
+     C           R003      BEGSR
+     C*
+     C           VBNRDM    IFEQ 0
+     C*
+     C                     MOVE *BLANKS   ALPRP1
+     C                     MOVE MSG,2     MESGP1
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADDWWTALN    WWALPR 170
+     C                     MULT 10000     WWALPR
+     C           WWALPR    DIV  VBNRDM    WWALPR
+     C           WWALPR    IFLT 100000
+     C                     MOVE WWALPR    ZFIELD
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    ALPRP1
+     C                     ELSE
+     C                     MOVE '+++.++'  ALPRP1
+     C                     ENDIF
+     C                     MOVE MSG,3     MESGP1
+     C*
+     C                     ENDIF
+     C*
+     C*    OUTPUT DETAIL
+     C                     WRITEDET1
+     C*
+     C           ER003     ENDSR
+     ******************************************************************
+     */EJECT
+     ******************************************************************
+     C* R004   : OUTPUT ENDOF REPORT                                  *
+     ******************************************************************
+     C*
+     C           R004      BEGSR
+     C*
+     C*    OUTPUT END OF REPORT
+     C*
+     C***********          WRITEENDRP                                     S01496
+     C*
+     C           ER004     ENDSR
+     */EJECT
+     ******************************************************************
+     C* R009   : DATABASE ERROR                                       *
+     ******************************************************************
+     C*
+     C           R009      BEGSR
+     C*
+     C*    OUTPUT DATABASE ERROR INFORMATION
+     C*
+     C                     WRITEERROR
+     C*
+     C           ER009     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* S001   : CREATE BOOK TEMPORARY RECORDS                        *
+     ******************************************************************
+     C*
+     C           S001      BEGSR
+     C*
+     C***********KEYUCD    SETLLUDEPX                                     S01496
+     C***********          READ UDEPX                    89               S01496
+     C           KEYUCD    SETLLSEUDEPL0                                  S01496
+     C                     READ SEUDEPL0                 89               S01496
+     C*
+     C           *IN89     DOWEQ'0'
+     C***********UDBR      ANDEQVBBRCD                                    S01496
+     C           UDBA      ANDEQVBBRCD                                    S01496
+     C           UDSN      ANDEQVASESN
+     C           UDPT      ANDEQVBDDPT
+     C           UDMK      ANDEQMKTI
+     C*
+     C                     MOVE UDBK      WWUDBK
+     C                     MOVE VAEREX    WWEREX
+     C***********KEYUD     SETGTUDEPX                                     S01496
+     C***********          READPUDEPX                    89               S01496
+     C           KEYUD     SETGTSEUDEPL0                                  S01496
+     C                     READPSEUDEPL0                 89               S01496
+     C*
+     C***********UDBR      IFEQ VBBRCD                                    S01496
+     C           UDBA      IFEQ VBBRCD                                    S01496
+     C           UDSN      ANDEQVASESN
+     C           UDPT      ANDEQVBDDPT
+     C           UDMK      ANDEQMKTI
+     C           UDBK      ANDEQWWUDBK
+     C           UDNV      ANDGT*ZEROS
+     C*
+     C                     MOVE 'B'       WWERTP  1
+     C/COPY WNCPYSRC,SE6700C013
+     C                     EXSR P006
+     C*
+     C                     EXSR U002
+     C/COPY WNCPYSRC,SE6700C014
+     C*
+     C                     ENDIF
+     C*
+     C                     MOVE *HIVAL    WWEREX
+     C***********KEYUD     SETGTUDEPX                                     S01496
+     C***********          READ UDEPX                    89               S01496
+     C           KEYUD     SETGTSEUDEPL0                                  S01496
+     C                     READ SEUDEPL0                 89               S01496
+     C*
+     C                     ENDDO
+     C*
+     C           ES001     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* S002   : CREATE CUSTOMER TEMPORARY RECORDS
+     ******************************************************************
+     C*
+     C           S002      BEGSR
+     C*
+     C***********KEYUCD    SETLLCDEPY                                     S01496
+     C***********          READ CDEPY                    89               S01496
+     C           KEYUCD    SETLLSECDEPL4                                  S01496
+     C                     READ SECDEPL4                 89               S01496
+     C*
+     C           *IN89     DOWEQ'0'
+     C***********CDBR      ANDEQVBBRCD                                    S01496
+     C           CDPA      ANDEQVBBRCD                                    S01496
+     C           CDSN      ANDEQVASESN
+     C           CDPT      ANDEQVBDDPT
+     C           CDMK      ANDEQMKTI
+     C*
+     C                     MOVE CDCN      WWCDCN
+     C                     MOVE PTFR      WWPTFR
+     C                     MOVE VAEREX    WWEREX
+     C***********KEYCD     SETGTCDEPY                                     S01496
+     C***********          READPCDEPY                    89               S01496
+     C           KEYCD     SETGTSECDEPL4                                  S01496
+     C                     READPSECDEPL4                 89               S01496
+     C*
+     C***********CDBR      IFEQ VBBRCD                                    S01496
+     C           CDPA      IFEQ VBBRCD                                    S01496
+     C           CDSN      ANDEQVASESN
+     C           CDPT      ANDEQVBDDPT
+     C           CDMK      ANDEQMKTI
+     C           CDCN      ANDEQWWCDCN
+     C           PTFR      ANDEQWWPTFR
+     C           CDCN      ANDNEWWERCU
+     C           CDNV      ANDGT*ZEROS
+     C*
+     C                     MOVE 'P'       WWERTP  1
+     C/COPY WNCPYSRC,SE6700C015
+     C                     EXSR P006
+     C*
+     C                     EXSR U002
+     C/COPY WNCPYSRC,SE6700C016
+     C*
+     C                     ENDIF
+     C*
+     C                     MOVE *HIVAL    WWEREX
+     C***********KEYCD     SETGTCDEPY                                     S01496
+     C***********          READ CDEPY                    89               S01496
+     C           KEYCD     SETGTSECDEPL4                                  S01496
+     C                     READ SECDEPL4                 89               S01496
+     C*
+     C                     ENDDO
+     C*
+     C           ES002     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* U001   : UPDATE EARLY REDEMPTIONS REFERENCES FILE
+     ******************************************************************
+     C*
+     C           U001      BEGSR
+     C*
+     C                     Z-ADDBJRDNB    VALCD
+     C                     MOVE 'A'       VACHTP
+     C                     MOVE USID      VALUID
+     C                     MOVE *BLANKS   VAJOBN
+     C                     MOVE *BLANKS   VAUSER
+     C                     MOVE *ZEROS    VAJNBR
+     C                     Z-ADDBJRDNB    VAERAD
+     C                     MOVE 'L'       VAERST
+     C*
+     C                     UPDATSEERRFD0
+     C*
+     C           EU001     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* U002   : WRITE A TEMPORARY RECORD IN PF/SETPALPD
+     ******************************************************************
+     C*
+     C           U002      BEGSR
+     C*
+     C***********          MOVE VBBRCD    VEBRCD                          S01496
+     C                     MOVE VBBRCD    VEBRCA                          S01496
+     C                     MOVE VBDDPT    VEDDPT
+     C           WWERTP    IFEQ 'B'
+     C                     MOVE 'B'       VEERTP
+     C                     MOVE UDBK      VEBOOK
+     C**********           MOVE *ZEROS    VECNUM                                              CSD027
+     C                     MOVE *BLANKS   VECNUM                                              CSD027
+     C                     MOVE *BLANKS   VEPTFR
+     C                     Z-ADDUDNV      VEEXPO
+     C                     ELSE
+     C                     MOVE 'P'       VEERTP
+     C                     MOVE *BLANKS   VEBOOK
+     C           WWDUMY    IFEQ 'Y'
+     C                     MOVE WWERCU    VECNUM
+     C                     MOVE WWERPT    VEPTFR
+     C                     Z-ADD0         VEEXPO
+     C                     ELSE
+     C                     MOVE CDCN      VECNUM
+     C                     MOVE PTFR      VEPTFR
+     C                     Z-ADDCDNV      VEEXPO
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C                     WRITESETPALD0
+     C*
+     C           EU002     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* U003   : WRITE ER ALLOCATION FILE
+     ******************************************************************
+     C*
+     C           U003      BEGSR
+     C*
+     C           KEYAL     CHAINSEERALL0             89
+     C           *IN89     IFEQ '1'
+     C*
+     C**     INSERT (RECORD NOT FOUND)
+     C                     MOVE 'D'       VCRECI
+     C                     Z-ADDBJRDNB    VCLCD
+     C                     MOVE 'I'       VCCHTP
+     C                     MOVE USID      VCLUID
+     C                     MOVE #REFN     VCERRF
+     C***********          Z-ADDVEBRCD    VCBRCD                          S01496
+     C                     MOVE VEBRCA    VCBRCD                          S01496
+     C**********           Z-ADDVEDDPT    VCDDPT                                              CSD027
+     C                     MOVE VEDDPT    VCDDPT                                              CSD027
+     C                     MOVE VEERTP    VCERTP
+     C                     MOVE VEBOOK    VCBOOK
+     C**********           Z-ADDVECNUM    VCCNUM                                              CSD027
+     C                     MOVE VECNUM    VCCNUM                                              CSD027
+     C                     MOVE VEPTFR    VCPTFR
+     C                     Z-ADDVEEXPO    VCEXPO
+     C                     Z-ADDVEININ    VCNOMA
+     C                     MOVE VASESN    VCSESN
+     C                     Z-ADD99999     VCBEDT
+     C                     MOVE *BLANKS   VCTRRF
+     C                     MOVE *BLANKS   VCRVRF
+     C*
+     C                     WRITESEERALD0
+     C*
+     C                     ELSE
+     C*
+     C**     UPDATE (LIVE RECORD FOUND)
+     C                     MOVE 'D'       VCRECI
+     C                     Z-ADDBJRDNB    VCLCD
+     C                     MOVE 'A'       VCCHTP
+     C                     MOVE USID      VCLUID
+     C                     Z-ADDVEEXPO    VCEXPO
+     C                     Z-ADDVEININ    VCNOMA
+     C                     Z-ADD99999     VCBEDT
+     C                     MOVE *BLANKS   VCTRRF
+     C                     MOVE *BLANKS   VCRVRF
+     C*
+     C                     UPDATSEERALD0
+     C*
+     C                     ENDIF
+     C*
+     C           EU003     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* U004   : UPDATE EARLY REDEMPTIONS DEPOTS FILE
+     ******************************************************************
+     C*
+     C           U004      BEGSR
+     C*
+     C                     Z-ADDWWTALN    VBNALL
+     C*
+     C                     UPDATSEERDPD0
+     C*
+     C           EU004     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* U005   : RELEASE EARLY REDEMPTIONS REFERENCES FILE
+     ******************************************************************
+     C*
+     C           U005      BEGSR
+     C*
+     C                     MOVE *BLANKS   VAJOBN
+     C                     MOVE *BLANKS   VAUSER
+     C                     MOVE *ZEROS    VAJNBR
+     C*
+     C                     UPDATSEERRFD0
+     C*
+     C           EU005     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* *PSSR - TO PROCESS ABNORMAL END OF PROGRAM                    *
+     ******************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C**   UPDATE LDA WITH ERROR INFORMATION
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELDBFILE    WWFILE
+     C                     MOVELDBKEY     WWKEY
+     C                     MOVELDBPGM     WWPGM
+     C                     MOVELDBASE     WWASE
+     C                     OUT  LDA
+     C*
+     C**   OUTPUT ERROR ON PRINTER FILE
+     C                     EXSR R001
+     C                     EXSR R009
+     C*
+     C**   ROLLBACK AND PRINT DUMP
+     C                     ROLBK
+     C                     DUMP
+     C*
+     C**   TRY TO RELEASE EARLY REDEMPTION BY ACCESS TO ER REF. FILE
+     C           #REFN     CHAINSEERRFL0             89
+     C           *IN89     IFEQ '0'
+     C                     EXSR U005
+     C                     COMIT
+     C                     ENDIF
+     C*
+     C**   WRITE END OF REPORT
+     C*
+     C                     EXSR R004
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C/COPY WNCPYSRC,SE6700C017
+      /COPY ZSRSRC,ZEDITZ2
+     C*****************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**  MSG - Messages to report
+Error on nominal to be redeemed
+Nothing to redeem
+Allocated

@@ -1,0 +1,504 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Securities Trading Clients Repor')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1100 - SECURITIES TRADING CLIENT REPORT - SHORT FORM       *
+     F*                                                               *
+     F*  Function: To print details of each Security Trading Client,  *
+     F*   (COB)    in number or shortname sequence.  If in shortname  *
+     F*            sequence, clients with no shortnames will be       *
+     F*            printed first.                                     *
+     F*                                                               *
+     F*  Called by: SEC0807A - Client Report by Customer Number       *
+     F*             SEC0807B - Client Report by Short Name            *
+     F*                                                               *
+     F*            Frequency:                                         *
+     F*            - on request during COB                            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE022             Date 29Mar01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                SS01455             Date 05Nov93               *
+      *                052254              Date 10Jan94               *
+     F*                E31209              DATE 01NOV91               *
+     F*                E29170              DATE 01NOV91               *
+     F*                S01117              DATE 03JUN91               *
+     F*                S01158              DATE 05/05/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE022 - Depository Definition Enhancement                   *
+     F*  S01455 - 'FF' ACCOUNT KEY ENHANCEMENTS.                      *
+     F*           Recompiled due to changes in PF/TABTB80.            *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E31209 - TRAIL Record Format on P1 not printed               *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching                                      *
+     F*  S01158 - POST INCORPORATION DEVELOPMENT FIXES                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSE1100AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         E29170
+     FSE1100P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL          E29170
+     FCLINTCA IF  E                    DISK
+     FCLINTJS IF  E           K        DISK
+     F            CLINTJSF                          KRENAMECLINTJF
+     FSNAMEJS IF  E           K        DISK
+     FTABICD  IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTB30F                          KIGNORE
+     F            TABTB35F                          KIGNORE
+     F            TABTB50F                          KIGNORE
+     F            TABTB55F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   31  - END OF FILE INDICATOR                                 *
+     F*   50  - USED AS INDICATOR IN AUDIT PRINT FILE                 *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F* U7-U8 - DATABASE ERROR                                        *
+     F*   U8  - DIFFERENCE BETWEEN CALC AND FILE TOTALS OF RECORDS    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - OBTAINS ICD INFO                                    *
+     F*  PRO1   - CONTROLS PRINTING OF REPORT                         *
+     F*  AUDIT  - OUTPUTS CONTROL REPORT AND UPDATES AUDIT RECORD     *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+     F*                                                               *
+     F*  ZSYSTM - OBTAINS ICD INFO                                    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /SPACE 3
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     ISCSARD    E DSSCSARDPD                                              CSE022
+      ** External DS for SAR Details                                      CSE022
+      *                                                                   CSE022
+     IDSFDY     E DSDSFDY                                                 CSE022
+      ** First DS for Access Programs, short data structure               CSE022
+      *                                                                   CSE022
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*                                                                   S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5                       S01117
+     C*
+     C**  CLEAR LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE1100  'DBPGM
+     C                     OUT  LDA                                       S01117
+      *                                                                   CSE022
+      ** Check if Depository Definition Enhancement is installed.         CSE022
+      *                                                                   CSE022
+     C                     CALL 'AOSARDR0'                                CSE022
+     C                     PARM '*MSG   ' PRTCD   7                       CSE022
+     C                     PARM '*KEY   ' POPTN   7                       CSE022
+     C                     PARM 'CSE022'  PSARD   6                       CSE022
+     C           SCSARD    PARM SCSARD    DSFDY                           CSE022
+      *                                                                   CSE022
+     C           PRTCD     IFEQ *BLANKS                                   CSE022
+      *                                                                   CSE022
+     C                     MOVE *ON       *IN67                           CSE022
+      *                                                                   CSE022
+     C                     ELSE                                           CSE022
+      *                                                                   CSE022
+     C                     MOVE *OFF      *IN67                           CSE022
+      *                                                                   CSE022
+     C                     ENDIF                                          CSE022
+     C*
+     C**  OBTAIN ICD INFO
+     C*
+     C                     EXSR FIRST
+     C*
+     C**  CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C**  CLEAR WORK FIELDS
+     C*
+     C                     Z-ADD0         IREC    50
+     C                     Z-ADD0         LCNT    20
+     C                     MOVE *BLANKS   FILNM   8
+     C*
+     C**  SET POINTER TO FIRST RECORD IN SEQUENCE
+     C**  MOVE NAME OF FILE TO WORK FIELD FOR OUTPUT IN AUDIT REPORT.
+     C*
+     C           *INU1     IFEQ '1'
+     C           *LOVAL    SETLLCLINTJS
+     C                     MOVE 'CLINTJS 'FILNM   8
+     C                     END
+     C           *INU2     IFEQ '1'
+     C           *LOVAL    SETLLSNAMEJS
+     C                     MOVE 'SNAMEJS 'FILNM   8
+     C                     END
+     C*
+     C**  LOOP UNTIL EOF
+     C*
+     C           *IN31     DOWNE'1'
+     C   U1                READ CLINTJS                  31
+     C   U2                READ SNAMEJS                  31
+     C**N31******          ADD  1         IREC                            S01158
+     C           *IN31     IFEQ '0'                                       S01158
+     C           RECI      ANDEQ'D'                                       S01158
+      *                                                                   CSE022
+      ** If the switchable feature CSE022 is not present, then only the   CSE022
+      ** first 6 characters from the depot reference fields will be       CSE022
+      ** printed.                                                         CSE022
+      *                                                                   CSE022
+     C           *IN67     IFEQ *ON                                       CSE022
+      *                                                                   CSE022
+     C                     MOVELC201      X201                            CSE022
+     C                     MOVELC202      X202                            CSE022
+     C                     MOVELC203      X203                            CSE022
+     C                     MOVELC204      X204                            CSE022
+     C                     MOVELC205      X205                            CSE022
+     C                     MOVELC206      X206                            CSE022
+     C                     MOVELC207      X207                            CSE022
+     C                     MOVELC208      X208                            CSE022
+     C                     MOVELC209      X209                            CSE022
+     C                     MOVELC210      X210                            CSE022
+      *                                                                   CSE022
+     C                     ELSE                                           CSE022
+      *                                                                   CSE022
+     C                     MOVELC201      X101                            CSE022
+     C                     MOVELC202      X102                            CSE022
+     C                     MOVELC203      X103                            CSE022
+     C                     MOVELC204      X104                            CSE022
+     C                     MOVELC205      X105                            CSE022
+     C                     MOVELC206      X106                            CSE022
+     C                     MOVELC207      X107                            CSE022
+     C                     MOVELC208      X108                            CSE022
+     C                     MOVELC209      X109                            CSE022
+     C                     MOVELC210      X110                            CSE022
+      *                                                                   CSE022
+     C                     ENDIF                                          CSE022
+      *                                                                   CSE022
+     C                     EXSR PRO1
+     C                     ADD  1         IREC                            S01158
+     C                     END
+     C                     END                                            S01158
+     C*                                                                   E31209
+     C**  - IF THE EOF HAS BEEN REACHED PUT OUT THE TRAILER ON REPORT     E31209
+     C*                                                                   E31209
+     C           *IN31     IFEQ '1'                                       E31209
+     C           *IN41     ANDEQ'1'                                       E31209
+     C********** LCNT      IFGT 57                                 E31209 CSE022
+     C           LCNT      IFEQ 59                                        CSE022
+     C                     WRITEHEAD1                                     E31209
+     C                     WRITEHEAD2                                     E31209
+     C                     END                                            E31209
+     C                     WRITETRAIL                                     E31209
+     C                     END                                            E31209
+     C*
+     C*
+     C           EAUDIT    TAG
+     C*
+     C                     EXSR AUDIT
+     C*
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     C*
+     C                     SETON                     LR
+     C*
+     C**********************************************************************
+     C*
+     C*  FIRST  - SUBROUTINE TO ACCESS ICD INFORMATION
+     C*
+     C**********************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C**  ACCESS ICD
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD1         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*
+     C                     ENDSR
+      /EJECT
+     C**********************************************************************
+     C*
+     C*  PRO1    - SUBROUTINE TO PRINT DETAIL LINE/S
+     C*
+     C**********************************************************************
+     C*
+     C           PRO1      BEGSR
+     C*
+     C*
+     C**  OPEN REPORT OUTPUT FILE IF NO DB ERRORS FROM EXSR ZSYSTM
+     C*
+     C  N31N41             OPEN SE1100P1
+     C*                                                                   E29170
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C  N31N41             EXSR RCFP1                                     E29170
+     C  N31N41             SETON                     41
+     C*
+     C**  - EOF INDICATOR
+     C*
+     C           *IN31     IFEQ '0'
+     C*
+     C**  - WRITE HEADINGS IF START OF PRINT OR OVERFLOW
+     C*
+     C********** LCNT      IFGT 57                                        CSE022
+     C           LCNT      IFEQ 59                                        CSE022
+     C           LCNT      OREQ 0
+     C                     WRITEHEAD1
+     C                     WRITEHEAD2
+     C                     WRITEHEAD3
+     C                     Z-ADD11        LCNT
+     C                     END
+     C*
+     C**  - WRITE OUT THE DETAIL FOR CURRENT RECORD, ADD 1 TO LINE CNT
+     C*
+     C                     WRITEDETAIL1
+     C**********           ADD  1         LCNT                            CSE022
+     C                     ADD  12        LCNT                            CSE022
+     C***********          ELSE                                           E31209
+     C***********                                                         E31209
+     C****-*IF*THE*EOF*HAS*BEEN*REACHED*PUT*OUT*THE*TRAILER*ON*REPORT*****E31209
+     C***********                                                         E31209
+     C***********LCNT      IFGT 57                                        E31209
+     C***********          WRITEHEAD1                                     E31209
+     C***********          WRITEHEAD2                                     E31209
+     C***********          END                                            E31209
+     C***31*41***          WRITETRAIL                                     E31209
+     C                     END
+     C                     ENDSR
+     C*
+      /EJECT
+     C**********************************************************************
+     C*
+     C*  AUDIT  - SUBROUTINE TO OUTPUT AUDIT REPORT USING INFORMATION
+     C*            FROM CLINTCA AND PROCESSING
+     C*
+     C**********************************************************************
+     C*
+     C           AUDIT     BEGSR
+     C*
+     C**  IF NO DATABASE ERRORS FOUND
+     C**   READ CLINTCA AUDIT RECORD
+     C*
+     C           *INU7     IFEQ '0'
+     C                     READ CLINTCAF                 99
+     C*
+     C**  IF NOT FOUND - ERROR
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CLINT'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 02 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                       U7U8
+     C                     ELSE
+     C*
+     C**  CHECK FOR DIFFERENCE IN FILE AND CALCULATED TOTALS
+     C*
+     C           TSTR      IFNE IREC
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *INU8
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     WRITEHEADAU
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C                     ELSE
+     C*
+     C**  CHECK FOR ANY RECORDS READ
+     C*
+     C           IREC      IFEQ 0
+     C                     WRITENONE
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     END
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM *BLANKS   SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**  CPY@
+(c) Finastra International Limited 2001

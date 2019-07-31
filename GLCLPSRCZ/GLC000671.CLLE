@@ -1,0 +1,100 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Build XML Data')                             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000671 - Midas GL Build XML Data                         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2015                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL154  *CREATE    Date 13Oct14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL154 - FATCA Reporting                                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MSID)
+ 
+             DCL        VAR(&MSID)   TYPE(*CHAR) LEN(21)
+             DCL        VAR(&NAME)   TYPE(*CHAR) LEN(9)
+             DCL        VAR(&NAME2)   TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&SQLSTRING) TYPE(*CHAR) LEN(500)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+ 
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2015')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CRTDUPOBJ  OBJ(GLMXMLPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP)
+ 
+             CRTDUPOBJ  OBJ(GLUXMLPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP)
+ 
+             OVRDBF     FILE(GLMXMLPD) TOFILE(QTEMP/GLMXMLPD) +
+                          OVRSCOPE(*JOB)
+ 
+             OVRDBF     FILE(GLUXMLPD) TOFILE(QTEMP/GLUXMLPD) OVRSCOPE(*JOB)
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+             CHGVAR     VAR(&NAME) VALUE(%SUBSTRING(&MSID 12 9))
+             CHGVAR     VAR(%SUBSTRING(&NAME 4 1)) VALUE('0')
+             CHGVAR     VAR(&NAME2) VALUE('F' *CAT &NAME)
+ 
+             CHGVAR     VAR(&SQLSTRING) VALUE('INSERT INTO GLMXMLPD SELECT XMORDR, +
+                          XMELMT, XMTPMT, XMLEVL, XMTLIN, XMREPR, XMNMSP, XMFLDA, +
+                          MGDATA, MGDAT2, MGSEQU, MGSEQ2, MGACNO, MGACHO FROM ' +
+                          *CAT &NAME2 *CAT ' JOIN GLFXMLPD on xmlevl=mglevl and +
+                          mgelmt = xmelmt WHERE mgmsid =')
+             CHGVAR     VAR(&SQLSTRING) VALUE(&SQLSTRING *TCAT '''' *CAT &MSID +
+                          *CAT '''' *CAT ' ORDER BY mgacno, mgacho, mgsequ, +
+                          xmordr')
+             RUNSQL     SQL(&SQLSTRING) COMMIT(*NONE)
+ 
+             CALL       PGM(GL000671) PARM(&RTCDE)
+ 
+             IF         COND(&RTCDE *NE ' ') THEN(GOTO CMDLBL(ABNOR))
+ 
+             CALL       PGM(GL000669) PARM(&RTCDE)
+ 
+             IF         COND(&RTCDE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             DLTOVR     FILE(GLUXMLPD GLMXMLPD) LVL(*JOB)
+             DLTF       FILE(&DPLIB/GLRMDTPP)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(&DPLIB/&NAME2)
+             MONMSG     MSGID(CPF0000)
+ 
+ 
+ 
+/* Normal ending: */
+/*================*/
+ 
+NORMAL:
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+/*==================*/
+ 
+ABNOR:
+             SNDMSG     MSG('Midas GL Build XML Data has terminated +
+                          abnormally.') TOMSGQ(MOPERQ MRUNQ)
+             DMPCLPGM
+ 
+ENDPGM:
+             ENDPGM

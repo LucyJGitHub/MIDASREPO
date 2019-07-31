@@ -1,0 +1,166 @@
+      *****************************************************************
+/*STD *  PGMBASE                                                      *
+/*EXI *  MODULE(SEDPMVVU) ACTGRP(*CALLER)                             *
+/*EXI *  TEXT('Midas SE Depot Movements WI Validate and Update')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SEDPMVVU - SE Depot Walk-In/Walk-Out Validate and Update     *
+      *                                                               *
+      *  Function: This program binds the modules that perform the    *
+      *            validation of depot movements WI for input into    *
+      *            the Midas database.                                *
+      *                                                               *
+      *  Called By: APTRANVU                                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 15Feb17               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 AR971184A          Date 13Jun12               *
+      *                 AR971184           Date 28May12               *
+      *                 AR596674           Date 12Aug10               *
+      *                 AR589197           Date 11Aug10               *
+      *                 AR589037           Date 06Aug10               *
+      *                 AR586519           Date 02Aug10               *
+      *                 AR586112           Date 02Aug10               *
+      *                 CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG22147           Date 14Jan09               *
+      *                 BUG21269           Date 06Oct08               *
+      *                 BUG21230           Date 29Sep08               *
+      *                 BUG21221           Date 27Sep08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 244007             Date 01Dec06               *
+      *                 244537             Date 17Aug05               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSW206E            Date 24Aug06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 BUG11193           Date 02May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10915           Date 30Mar06               *
+      *                 BUG10476           Date 15Feb06               *
+      *                 BUG10120           Date 26Jan06               *
+      *                 BUG10824           Date 15Mar06               *
+      *                 BUG10561           Date 15Feb06               *
+      *                 BUG10142           Date 26Jan06               *
+      *                 BUG10026           Date 24Jan06               *
+      *                 CAP087             Date 04Aug05               *
+      *                 BUG9089            Date 25Apr05               *
+      *                 CER001             Date 25Apr05               *
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 BUG8849            Date 06Oct05               *
+      *                 BUG7029            Date 09Jun05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CGL031             Date 05Jul04               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG4728            Date 05Nov04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 BUG3714            Date 20Jul04               *
+      *                 BUG2392            Date 15Jun04               *
+      *                 CGP003             Date 01Jun04               *
+      *                 BUG2398            Date 24May04               *
+      *                 TCA046             Date 26Mar04               *
+      *                 CSC022             Date 24Feb03               *
+      *                 BUG1569            Date 17Mar04                *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAP084  *CREATE    Date 02Jul03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  AR971184A - Additional Coding. Front Ofc Id should not be    *
+      *              equal to blanks when calling RTV (Recompile)     *
+      *           - Applied fix for AR989192 (Child:AR989193)         *
+      *           - During Amend Front Ofc Id must be updated with the*
+      *             new one                                           *
+      *  AR971184 - For some JMS APIs (CUSD, AMAD, DPMV, OPAY), Front *
+      *             Office Id is no more updated in master database   *
+      *             files which provokes some big problems in third   *
+      *             party product such as TOF.(Child:AR971185)        *
+      *             (Recompile)                                       *
+      *  AR596674 - Field :97::CASH//IBAN not reflected in MT543      *
+      *             (Recompile)                                       *
+      *  AR589197 - The input validation of //xx has been removed if  *
+      *             ISO15022 is switched on, it should be reapplied   *
+      *             as the code is still used (Recompile)             *
+      *  AR589037 - Destination of Settlement Field is blank in DPWI  *
+      *             (Recompile)                                       *
+      *  AR586519 - Account for Payment and Account for Payment       *
+      *             (detail) not populated from SEST (Recompile)      *
+      *  AR586112 - Destination of Settlement field is blank          *
+      *             (Recompile)                                       *
+      *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+      *  BUG22147 - Missing authorization field in repository.        *
+      *  BUG21269 - Applied Fix BUG20643 (Recompile)                  *
+      *  BUG20643 - Serious Midas Error when authorise a reversal     *
+      *  BUG21230 - Applied fix BUG20870                              *
+      *  BUG20870 - Missing MT518 at maturity date in MGOREFPD.       *
+      *             (Recompile).                                     *
+      *  BUG21221 - SEW7010 Confirmation Request error (Recompile)    *
+      *  244007 - Recompile over changes in SEDPMVVU.                 *
+      *  244537 - To avoid overriding front office identifier.        *
+      *  CSW206E - Change Control for SWIFT 2006 Standard Changes     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG11193 - Purchased Interest not calculated on BackValued   *
+      *             Trade. (Recompile)                                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10915- validation should not be done for deletion of      *
+      *            depot movements. Patterned after other APIs        *
+      *            (recompile).                                       *
+      *  BUG10476- Market Centre defaulting.                          *
+      *          - Place of settlement defaulting.                    *
+      *  BUG10120- No Defaulting from SSI                             *
+      *  BUG10824 - Recompiled due to changes in module SEDPMVVU.     *
+      *  BUG10561 - No Lux Extension for Depot Movements              *
+      *  BUG10142 - 3 Extension fields are invalid after pressing     *
+      *             complete button                                   *
+      *  BUG10026 - (DPWI Input) Narrative field in transction        *
+      *             confirmation is incorrect. (Recompile)            *
+      *  CAP087 - Depot Movement - Java Wrapper in Midasplus (recomp) *
+      *  BUG9089- Mapping error with Java for DPMV                    *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *           (Recompile)                                         *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  BUG8849 - Do not issue database error if Beneficiary         *
+      *            Customer is not defined as Security Customer.      *
+      *            Only issue an error message for this.              *
+      *  BUG7029 - Ensure ZMUSER is re-checked on every call,         *
+      *            move out of *INZSR.                                *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CGL031 - Taxation of Savings Income                          *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG4728 - Serious Midas error with blank timestamp when      *
+      *            authorising insert of transaction.                 *
+      *  BUG3122 - Recompiled due to changes in SEDPMVVU module.      *
+      *  BUG3714- Generate reference not display on confirmation      *
+      *  BUG2392- Correct defaulting errors                           *
+      *  CGP003 - Add calculation of consideration for authorisation  *
+      *           limit checking.                                     *
+      *  BUG2398 - SSI Defaulting not working for WI/WO transactions. *
+      *  TCA046 - Recompiled only.                                    *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  BUG1569 - Stopping user updating the same record at the same *
+      *           time.                                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAP084 - API Wrapper project                                 *
+      *                                                               *
+      *****************************************************************

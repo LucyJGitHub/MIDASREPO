@@ -1,0 +1,165 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Account Posting merge - Start Task Split')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC41T1 - Midas GL Account Posting merge - Start Task Split */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL120  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLC41')
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLACPSPD')
+             DCL        VAR(&INDEXFL) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLACPNPD')
+             DCL        VAR(&NAME1) TYPE(*CHAR) LEN(5) VALUE('ACPST')
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('ACPSTSERVE')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NAME2_C) TYPE(*CHAR) LEN(5) VALUE('00001')
+             DCL        VAR(&NAME2_N) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&LOOP) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CEU024) TYPE(*CHAR) LEN(1)
+ 
+             DCLF       FILE(CBCMPNLC)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Check if Retail Teller Support Enhancement is installed */
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SAR) VALUE('CEU024')
+             CHGVAR     VAR(&CEU024) VALUE('N')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CEU024) VALUE('Y'))
+ 
+/* Send message to MRUNQ. */
+ 
+             SNDPGMMSG  MSG('GLC41T1 - Account Posting merge - Start +
+                          Task Split') TOMSGQ(MRUNQ)
+ 
+/* Determine full DTAQLIB library name. */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/* Clear index file. */
+ 
+             CLRPFM     FILE(&INDEXFL)
+ 
+/* Remove all members from driving file. */
+ 
+             RMVM       FILE(&DRIVER) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+/* Clear main data queue. */
+ 
+             CALL       PGM(QCLRDTAQ) PARM(&RCVDTAQ  '*LIBL')
+ 
+/* Retrieve number of sub-tasks. */
+ 
+ CHAIN:
+             RCVF
+             CHGVAR     VAR(&NAME2_N) VALUE(&DHCSEQ)
+             IF         COND((&DHCOTT *NE &CNAME) *OR (&NAME2_N *NE +
+                          &CSEQ)) THEN(DO)
+                GOTO       CMDLBL(CHAIN)
+             ENDDO
+ 
+/* Add all members and create data queues. */
+ 
+             CHGVAR     VAR(&NAME2_C) VALUE(&DHCSEQ)
+ LOOP:
+             IF         COND(&LOOP *GT &DHTSNO) THEN(DO)
+                GOTO       CMDLBL(START)
+             ENDDO
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&NAME1 *CAT &NAME2_C)
+             ADDPFM     FILE(&DRIVER) MBR(&MEMBER)
+ 
+/* Create data queue if it doesn't already exist and set authorities. */
+ 
+             CHKOBJ     OBJ(&DTAQLIB/&MEMBER) OBJTYPE(*DTAQ)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CRTDTAQ    DTAQ(&DTAQLIB/&MEMBER) MAXLEN(50)
+             ENDDO
+             CALL       PGM(QCLRDTAQ) PARM(&MEMBER &DTAQLIB)
+ 
+             IF         COND(&LOOP *EQ 1) THEN(DO)
+                   CHGVAR     VAR(&NAME2_N) VALUE(01000)
+                   CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N * &CSEQ)
+             ENDDO
+ 
+             CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
+             CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N + 1)
+             CHGVAR     VAR(&NAME2_C) VALUE(&NAME2_N)
+             GOTO       CMDLBL(LOOP)
+ 
+ START:
+ 
+/* Clear files ready for pocessing */
+ 
+             CLRPFM     FILE(EODPOHH)
+             CLRPFM     FILE(EODPOPD)
+             CLRPFM     FILE(EODPORA)
+             CLRPFM     FILE(EODPOZZ)
+             CLRPFM     FILE(EODPOPPD)
+ 
+             IF         COND(&CEU024 *EQ 'Y') THEN(CPYF +
+                          FROMFILE(GETT1APD) TOFILE(EODPOPPD) +
+                          MBROPT(*ADD) FMTOPT(*MAP))
+ 
+             DSPFD      FILE(ACPO1) TYPE(*MBR) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/GLC41001F)
+             CPYF       FROMFILE(GLC41001F) TOFILE(GLACPDPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+ 
+             DSPFD      FILE(GLACPOL0) TYPE(*MBR) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/GLC41001F2)
+             CPYF       FROMFILE(GLC41001F2) TOFILE(GLACPDPD) +
+                          MBROPT(*ADD) FMTOPT(*MAP *DROP)
+ 
+/* Create Header and Trailer record */
+ 
+             CALL       PGM(GL41T1)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program GLC41T1 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+             ENDPGM

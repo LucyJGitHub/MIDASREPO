@@ -1,0 +1,475 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Password Encryption Take-on program')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SD000405 - Midas SD Password Encryption Take-on Program     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2018                     */
+/*                                                                   */
+/*       Last Amend No. MD053594A          Date 10Jun19              */
+/*       Prev Amend No. MD053109           Date 03Apr19              */
+/*                      MD053146           Date 03Apr19              */
+/*                      MD053090           Date 26Mar19              */
+/*                      CSD101  *CREATE    Date 07Dec18              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*        MD053594A - Migration program did not run automatically    */
+/*        MD053109 - Data Take-On Reconciliation Issues              */
+/*        MD053146 - Incorrect account key format was migrated on    */
+/*                   validation list after data take on              */
+/*        MD053090 - Create a back up file for REAPWDPD              */
+/*        CSD101 - Password Encryption                               */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(8) VALUE('  DTALIB')
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                /*MD053594A*/
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)                               /*MD053594A*/
+             DCL        VAR(&BRGDTA) TYPE(*CHAR) LEN(10)                               /*MD053594A*/
+
+             DCLF       FILE(SDINTFTD)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2019')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('SDC000405 - Password Encryption +
+                            Take-on Program') TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(XXXXXX00)
+
+/* Setup system prefix variable from SDSTAT data area. */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DTALIB 1 2)) VALUE(&SYSID)
+                                                                                       /*MD053594A*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                          'BrgDeliveredDtaLib' &SVAL1 ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ')                                             /*MD053594A*/
+             CHGVAR     VAR(&BRGDTA) VALUE(&SVAL1)                                     /*MD053594A*/
+/** Copy file from deliverable data library. */                                        /*MD053594A*/
+             CPYF       FROMFILE(&BRGDTA/SDINTFTD) +
+                          TOFILE(SDINTFTD) TOMBR(*FROMMBR) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                          /*MD053594A*/
+             MONMSG     MSGID(CPF0000)                                                 /*MD053594A*/
+
+             CHKOBJ     OBJ(&DPLIB/XSDCORMPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK1))
+             DLTF       FILE(XSDCORMPD)
+
+CHECK1:      CHKOBJ     OBJ(&DPLIB/XSDCWCDPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK2))
+             DLTF       FILE(XSDCWCDPD)
+
+CHECK2:      CHKOBJ     OBJ(&DPLIB/XSDFONTPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK3))
+             DLTF       FILE(XSDFONTPD)
+
+CHECK3:      CHKOBJ     OBJ(&DPLIB/XSDMGMEPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK4))
+             DLTF       FILE(XSDMGMEPD)
+
+CHECK4:      CHKOBJ     OBJ(&DPLIB/YSDNWRKPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK5))
+             DLTF       FILE(YSDNWRKPD)
+
+/***CHECK5:      CHKOBJ     OBJ(&DPLIB/XREAPWDPD) OBJTYPE(*FILE)     */                 /*MD053090*/
+/*********   MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK6))     */                 /*MD053090*/
+/*********   DLTF       FILE(XREAPWDPD)                              */                 /*MD053090*/
+CHECK5:      CHKOBJ     OBJ(&DPLIB/REAPWDPD) OBJTYPE(*FILE)                             /*MD053090*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK6))                        /*MD053090*/
+             DLTF       FILE(&DPLIB/REAPWDPD)                                           /*MD053090*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD053090*/
+
+
+CHECK6:      CHKOBJ     OBJ(&DPLIB/XREOSECPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK7))
+             DLTF       FILE(XREOSECPD)
+
+CHECK7:      CHKOBJ     OBJ(&DPLIB/XREOSECPA) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK8))
+             DLTF       FILE(XREOSECPA)
+
+CHECK8:      CHKOBJ     OBJ(&DPLIB/XREOSECPT) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK9))
+             DLTF       FILE(XREOSECPT)
+
+CHECK9:
+
+             CPYF       FROMFILE(&DMLIB/SDCORMPD) +
+                        TOFILE(&DPLIB/XSDCORMPD) MBROPT(*REPLACE) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT1)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('SDC000405 - Error occured in copying +
+                          PF/SDCORMPD to PF/XSDCORMPD. Process +
+                          terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+NEXT1:       CPYF       FROMFILE(&DMLIB/SDCWCDPD) +
+                        TOFILE(&DPLIB/XSDCWCDPD) MBROPT(*REPLACE) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT2)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('SDC000405 - Error occured in copying +
+                          PF/SDCWCDPD to PF/XSDCWCDPD. Process +
+                          terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+NEXT2:       CPYF       FROMFILE(&DMLIB/SDFONTPD) +
+                        TOFILE(&DPLIB/XSDFONTPD) MBROPT(*REPLACE) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT3)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('SDC000405 - Error occured in copying +
+                          PF/SDFONTPD to PF/XSDFONTPD. Process +
+                          terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+NEXT3:       CPYF       FROMFILE(&DMLIB/SDMGMEPD) +
+                        TOFILE(&DPLIB/XSDMGMEPD) MBROPT(*REPLACE) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT4)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('SDC000405 - Error occured in copying +
+                          PF/SDMGMEPD to PF/XSDMGMEPD. Process +
+                          terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+NEXT4:       CPYF       FROMFILE(&DTALIB/SDNWRKPD) +
+                        TOFILE(&DPLIB/YSDNWRKPD) MBROPT(*REPLACE) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT5)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('SDC000405 - Error occured in copying +
+                          PF/SDNWRKPD to PF/YSDNWRKPD. Process +
+                          terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/***NEXT5:       CPYF       FROMFILE(&DMLIB/REAPWDPD) +              */                 /*MD053090*/
+/*********              TOFILE(&DPLIB/XREAPWDPD) MBROPT(*REPLACE) +  */                 /*MD053090*/
+/*********              CRTFILE(*YES)                                */                 /*MD053090*/
+NEXT5:       CPYF       FROMFILE(&DPLIB/ZREAPWDPD) +
+                        TOFILE(&DPLIB/REAPWDPD) MBROPT(*REPLACE) +
+                        CRTFILE(*YES)                                                   /*MD053090*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT6)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+/*********   SNDUSRMSG  MSG('SDC000405 - Error occured in copying +  */                 /*MD053090*/
+/*********                PF/REAPWDPD to PF/XREAPWDPD. Process +     */                 /*MD053090*/
+/*********                terminated.') MSGTYPE(*INFO)               */                 /*MD053090*/
+/*********   GOTO       CMDLBL(END)                                  */                 /*MD053090*/
+             GOTO       CMDLBL(NEXT6)
+             ENDDO
+
+NEXT6:       CPYF       FROMFILE(&DMLIB/REOSECPD) +
+                        TOFILE(&DPLIB/XREOSECPD) MBROPT(*REPLACE) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT7)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('SDC000405 - Error occured in copying +
+                          PF/REOSECPD to PF/XREOSECPD. Process +
+                          terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+NEXT7:       CPYF       FROMFILE(&DMLIB/REOSECPA) +
+                        TOFILE(&DPLIB/XREOSECPA) MBROPT(*REPLACE) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT8)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('SDC000405 - Error occured in copying +
+                          PF/REOSECPA to PF/XREOSECPA. Process +
+                          terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+NEXT8:       CPYF       FROMFILE(&DMLIB/REOSECPT) +
+                        TOFILE(&DPLIB/XREOSECPT) MBROPT(*REPLACE) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+/*********   GOTO       CMDLBL(NEXT9) */                                                /*MD053146*/
+             GOTO       CMDLBL(LOOP1)                                                   /*MD053146*/
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('SDC000405 - Error occured in copying +
+                          PF/REOSECPT to PF/XREOSECPT. Process +
+                          terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/***NEXT9:       CLRPFM     FILE(REOSECPA) */                                           /*MD053146*/
+/*********   CLRPFM     FILE(REOSECPD) */                                               /*MD053146*/
+/*********   CLRPFM     FILE(REOSECPT) */                                               /*MD053146*/
+
+ LOOP1:      RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO DELF)
+
+             IF         COND(&IFFILE *NE '          ') THEN(DO)
+
+                      IF         COND(&IFPRCF = ' ') THEN(DO)
+/*********            CALL       PGM(SD000405) PARM(&PRTCD &IFFILE &IFENTI + */         /*MD053109*/
+/*********                         &IFUSR1 &IFUSR2 &IFUSR3 &IFUSR4 &IFUSR5 + */         /*MD053109*/
+/*********                         &IFPASS &IFSVL1 &IFSVL2 &IFKNUM &DMLIB)   */         /*MD053109*/
+                      CALL       PGM(SD000405) PARM(&PRTCD &IFFILE &IFENTI +
+                                   &IFUSR1 &IFUSR2 &IFUSR3 &IFUSR4 &IFUSR5 +
+                                   &IFPASS &IFSVL1 &IFSVL2 &IFKNUM &DMLIB  +
+                                   &IFENTD)                                             /*MD053109*/
+
+                      IF         COND(&PRTCD *NE '       ') THEN(DO)
+                        GOTO       CMDLBL(ABNOR)
+                      ENDDO
+                      ENDDO
+
+                      GOTO       CMDLBL(LOOP1)
+
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             CHGVAR     VAR(&IFKNUM) VALUE(' ')                                         /*MD053109*/
+             CALL       PGM(SD000405) PARM(&PRTCD &IFFILE &IFENTI +
+                                   &IFUSR1 &IFUSR2 &IFUSR3 &IFUSR4 &IFUSR5 +
+                                   &IFPASS &IFSVL1 &IFSVL2 &IFKNUM &DMLIB  +
+                                   &IFENTD)                                             /*MD053109*/
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('SDC000405 Password Encryption +
+                          Take-on Program Ended +
+                          Abnormally - see joblog') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+
+             CPYF       FROMFILE(&DPLIB/XSDCORMPD) +
+                        TOFILE(&DMLIB/SDCORMPD) MBROPT(*REPLACE) +
+                        FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT11)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in restoring PF/SDCORMPD +
+                          from PF/XSDCORMPD. Process terminated.  +
+                          Please restore manually PF/SDCORMPD from +
+                          PF/XSDCORMPD.') +
+                          MSGTYPE(*INFO)
+             ENDDO
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(END))
+
+NEXT11:      CPYF       FROMFILE(&DPLIB/XSDCWCDPD) +
+                        TOFILE(&DMLIB/SDCWCDPD) MBROPT(*REPLACE) +
+                        FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT12)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in restoring PF/SDCWCDPD +
+                          from PF/XSDCWCDPD. Process terminated.  +
+                          Please restore manually PF/SDCWCDPD from +
+                          PF/XSDCWCDPD.') +
+                          MSGTYPE(*INFO)
+             ENDDO
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(END))
+
+NEXT12:      CPYF       FROMFILE(&DPLIB/XSDFONTPD) +
+                        TOFILE(&DMLIB/SDFONTPD) MBROPT(*REPLACE) +
+                        FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT13)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in restoring PF/SDFONTPD +
+                          from PF/XSDFONTPD. Process terminated.  +
+                          Please restore manually PF/SDFONTPD from +
+                          PF/XSDFONTPD.') +
+                          MSGTYPE(*INFO)
+             ENDDO
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(END))
+
+NEXT13:      CPYF       FROMFILE(&DPLIB/XSDMGMEPD) +
+                        TOFILE(&DMLIB/SDMGMEPD) MBROPT(*REPLACE) +
+                        FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT14)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in restoring PF/SDMGMEPD +
+                          from PF/XSDMGMEPD. Process terminated.  +
+                          Please restore manually PF/SDMGMEPD from +
+                          PF/XSDMGMEPD.') +
+                          MSGTYPE(*INFO)
+             ENDDO
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(END))
+
+NEXT14:      CPYF       FROMFILE(&DPLIB/YSDNWRKPD) +
+                        TOFILE(&DTALIB/SDNWRKPD) MBROPT(*REPLACE) +
+                        FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+/*********   GOTO       CMDLBL(NEXT15)                               */                 /*MD053090*/
+             GOTO       CMDLBL(NEXT16)                                                  /*MD053090*/
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in restoring PF/SDNWRKPD +
+                          from PF/YSDNWRKPD. Process terminated.  +
+                          Please restore manually PF/SDNWRKPD from +
+                          PF/YSDNWRKPD.') +
+                          MSGTYPE(*INFO)
+             ENDDO
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(END))
+
+/*********NEXT15:      CPYF       FROMFILE(&DPLIB/XREAPWDPD) +       */                 /*MD053090*/
+/*********              TOFILE(&DMLIB/REAPWDPD) MBROPT(*REPLACE) +   */                 /*MD053090*/
+/*********              FMTOPT(*NONE)                                */                 /*MD053090*/
+/*********   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)      */                 /*MD053090*/
+/*********   GOTO       CMDLBL(NEXT16)                               */                 /*MD053090*/
+/*********   ENDDO                                                   */                 /*MD053090*/
+/*********   MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)      */                 /*MD053090*/
+/*********   SNDUSRMSG  MSG('Error occurred in restoring PF/REAPWDPD +*/                /*MD053090*/
+/*********                from PF/XREAPWDPD. Process terminated.  +  */                 /*MD053090*/
+/*********                Please restore manually PF/REAPWDPD from + */                 /*MD053090*/
+/*********                PF/XREAPWDPD.') +                          */                 /*MD053090*/
+/*********                MSGTYPE(*INFO)                             */                 /*MD053090*/
+/*********   ENDDO                                                   */                 /*MD053090*/
+/*********   MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +   */                 /*MD053090*/
+/*********                CMDLBL(END))                               */                 /*MD053090*/
+
+NEXT16:      CPYF       FROMFILE(&DPLIB/XREOSECPD) +
+                        TOFILE(&DMLIB/REOSECPD) MBROPT(*REPLACE) +
+                        FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT17)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in restoring PF/REOSECPD +
+                          from PF/XREOSECPD. Process terminated.  +
+                          Please restore manually PF/REOSECPD from +
+                          PF/XREOSECPD.') +
+                          MSGTYPE(*INFO)
+             ENDDO
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(END))
+
+NEXT17:      CPYF       FROMFILE(&DPLIB/XREOSECPA) +
+                        TOFILE(&DMLIB/REOSECPA) MBROPT(*REPLACE) +
+                        FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT18)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in restoring PF/REOSECPA +
+                          from PF/XREOSECPA. Process terminated.  +
+                          Please restore manually PF/REOSECPA from +
+                          PF/XREOSECPA.') +
+                          MSGTYPE(*INFO)
+             ENDDO
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(END))
+
+NEXT18:      CPYF       FROMFILE(&DPLIB/XREOSECPT) +
+                        TOFILE(&DMLIB/REOSECPT) MBROPT(*REPLACE) +
+                        FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             GOTO       CMDLBL(NEXT19)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in restoring PF/REOSECPT +
+                          from PF/XREOSECPT. Process terminated.  +
+                          Please restore manually PF/REOSECPT from +
+                          PF/XREOSECPT.') +
+                          MSGTYPE(*INFO)
+             ENDDO
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(END))
+
+NEXT19:
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             GOTO       CMDLBL(END)
+
+DELF:        DLTF       FILE(&DPLIB/ZSDSVALPD)
+             MONMSG     MSGID(CPF2105)
+             CHGVAR     VAR(&IFKNUM) VALUE(' ')                                         /*MD053109*/
+             CALL       PGM(SD000405) PARM(&PRTCD &IFFILE &IFENTI +
+                                   &IFUSR1 &IFUSR2 &IFUSR3 &IFUSR4 &IFUSR5 +
+                                   &IFPASS &IFSVL1 &IFSVL2 &IFKNUM &DMLIB  +
+                                   &IFENTD)                                             /*MD053109*/
+
+             SNDPGMMSG  MSG('SDC000405 Password Encryption +
+                          Take-on Program Successfully +
+                          Run') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+
+END:
+             DLTF       FILE(&DPLIB/XSDCORMPD)
+/*********   MONMSG     MSGID(CPF2105)*/                                                /*MD053109*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD053109*/
+             DLTF       FILE(&DPLIB/XSDCWCDPD)
+/*********   MONMSG     MSGID(CPF2105)*/                                                /*MD053109*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD053109*/
+             DLTF       FILE(&DPLIB/XSDFONTPD)
+/*********   MONMSG     MSGID(CPF2105)*/                                                /*MD053109*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD053109*/
+             DLTF       FILE(&DPLIB/XSDMGMEPD)
+/*********   MONMSG     MSGID(CPF2105)*/                                                /*MD053109*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD053109*/
+             DLTF       FILE(&DPLIB/YSDNWRKPD)
+/*********   MONMSG     MSGID(CPF2105)*/                                                /*MD053109*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD053109*/
+/*********   DLTF       FILE(&DPLIB/XREAPWDPD)                       */                 /*MD053090*/
+             DLTF       FILE(&DPLIB/REAPWDPD)                                           /*MD053090*/
+/*********   MONMSG     MSGID(CPF2105)*/                                                /*MD053109*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD053109*/
+             DLTF       FILE(&DPLIB/XREOSECPD)
+/*********   MONMSG     MSGID(CPF2105)*/                                                /*MD053109*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD053109*/
+             DLTF       FILE(&DPLIB/XREOSECPA)
+/*********   MONMSG     MSGID(CPF2105)*/                                                /*MD053109*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD053109*/
+             DLTF       FILE(&DPLIB/XREOSECPT)
+/*********   MONMSG     MSGID(CPF2105)*/                                                /*MD053109*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD053109*/
+
+             ENDPGM

@@ -1,0 +1,511 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Cust. Serv. Fees - Postings Gener. Today')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1983 - Customer Service Fees - Postings Generated Today    *
+      *           Report                                              *
+      *                                                               *
+      *  Function:  This program prints details of all customer       *
+      *             service fee postings generated today.             *
+      *                                                               *
+      *  Called By: GLC1983 - Customer Service Fee Postings Generated *
+      *                       Today Control.                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008   *CREATE   Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+     FGEFEL0  IF  E           K        DISK         KINFSR *PSSR
+      **  Posting generated today
+      *
+     FGEFEZZ  IF  E           K        DISK         KINFSR *PSSR
+      ** Posting generated today - Trailer
+      *
+     FGL1983AUO   E                    PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOLU
+      ** Postings Generated Today - Audit
+      *
+     FGL1983P1O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL1
+      ** Postings Generated Today - Report
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   82  - ***DIFFERENCE*** Indicator                            *
+      *   87  - End of File Indicator for READ command                *
+      *   89  - End of File Indicator for READ command                *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRRPRT - Process Report Lines                                *
+      *  SRAUDT - Subroutine to Output Audit report                   *
+      *  SRRGPF - Subroutine to register the P1 Printer File via RCF  *
+      *  SRRGAU - Subroutine to register the AU Printer File via RCF  *
+      *                                                               *
+      *  *INZSR - Initialisation routine
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      **  Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+      /SPACE 3
+     E/COPY ZSRSRC,ZSEDITZ2
+      *
+     ISPOOL1      DS
+      **  File Information Data Structure for GL1983P1.
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure for GL1983AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ILDA       E DSLDA                         256
+      **  Local data area for database error details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Currency extension file
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank Details
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS For Access Programs, Long Data Structure
+      *
+      /EJECT
+      *****************************************************************
+      *                M A I N   P R O C E S S I N G                  *
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Read file for record
+      *
+     C                     READ GEFEL0                   89
+      *
+      **  Do While End of File not reached.
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      **  If branch code is not equal to old branch code
+      **  Reset old branch code
+      *
+     C           BRCA      IFNE WWBRCA
+     C           WWBRCA    ANDNE*BLANKS
+      *
+      **  If RCOUNT >< 0, Then Print Trailer
+      *
+     C           RCOUNT    IFGT 2
+      *
+      **  Check that sufficient lines remain for the Format. If not,
+      **  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+     C                     WRITETRAILP1
+     C                     ENDIF
+     C                     CLOSEGL1983P1
+      *
+     C                     MOVE 'N'       WWOPEN  1
+     C                     MOVE *BLANKS   WWBRCA
+     C                     ENDIF
+      *
+     C                     EXSR SRRPRT
+      *
+      **  Read next record.
+      *
+     C                     READ GEFEL0                   89
+      *
+     C                     ENDDO
+      *
+      **  If RCOUNT >< 0, Then Print Trailer
+      *
+     C           RCOUNT    IFGT 2
+     C           WWOPEN    ANDEQ'Y'
+      *
+      **  Check that sufficient lines remain for the Format. If not,
+      **  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDIF
+      *
+      **  Close Output file
+      *
+     C                     CLOSEGL1983P1
+      *
+      **  Access to the Trailer GEFEZZ
+      *
+     C                     READ GEFEZZ                   87
+      *
+     C           *IN87     IFEQ *ON
+     C           RCOUNT    ANDGT2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'GEFEZZ'  DBFILE    P
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'GL1983'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Perform audit report
+      *
+     C                     EXSR SRAUDT
+      *
+      **  Normal End of Program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *          E N D   O F   M A I N   P R O C E S S I N G          *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRRPRT - Process Report Lines.                               *
+      *  ------                                                       *
+      *  Called By : Main processing                                  *
+      *  Calls     : AOCURRR0                                         *
+      *****************************************************************
+      *
+     C           SRRPRT    BEGSR
+      *
+      **  If old Branch code is not blank
+      **  Open the printer file and setup old Branch code
+      *
+     C           WWBRCA    IFEQ *BLANKS
+     C                     EXSR SRRGPF
+     C                     MOVE BRCA      WWBRCA
+     C                     MOVE BRCA      RBRCA
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      **  Report Details
+      *
+     C                     MOVE CNUM      RRCNUM
+     C                     MOVE CCY       RRCCY
+     C                     MOVE ACOD      RRACOD
+     C                     MOVE ACSQ      RRACSQ
+     C                     MOVE ACNO      RRACNO
+     C                     MOVE PSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRPSTD
+     C                     MOVE VALD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRVALD
+     C                     MOVE PNAR      RRPNAR    P
+      *
+     C           CCY       IFEQ WWCCY
+     C                     Z-ADDWWDEC     ZDECS
+     C                     ELSE
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM CCY       PCKEY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDA6NBDP    WWDEC
+     C                     MOVE CCY       WWCCY
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'SDCURRPD'DBFILE    P
+     C                     MOVEL'*KEY '   DBKEY     P
+     C                     MOVEL'GL1983'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     Z-ADDPSTA      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRPSTA
+     C           DRCR      IFEQ *ZEROS
+     C                     MOVE 'DR'      RRDRCR
+     C                     ELSE
+     C                     MOVE 'CR'      RRDRCR
+     C                     ENDIF
+      *
+      **  Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         RCOUNT
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRAUDT - Subroutine to Output Audit report                   *
+      *  ------                                                       *
+      *  Called By : Main Processing, *PSSR                           *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      **  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      **  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      **  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFLE 2
+     C                     WRITENODTLS
+     C                     ELSE
+      *
+      **  Check if difference between record on file and record
+      **  in file
+      *
+     C           RCOUNT    IFNE NORE1
+     C                     MOVE *ON       *IN82
+     C                     MOVE *ON       *INU8
+     C                     ENDIF
+      *
+      **  Write run control
+      *
+     C                     Z-ADDNORE1     RRNORE
+      *
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRRGPF - Subroutine to register the P1 Printer File via RCF. *
+      *  ------                                                       *
+      *  Called By : SRRPRT                                           *
+      *  Calls     : ZSFILE                                           *
+      *****************************************************************
+      *
+     C           SRRGPF    BEGSR
+      *
+      **  Open Report file
+      *
+     C                     OPEN GL1983P1
+     C                     MOVE 'Y'       WWOPEN
+      *
+      **  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    PSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM           PSENTY  3
+     C                     PARM           SFILE1
+     C                     PARM           PSNUM
+     C                     PARM           PSERR   1
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           PSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRRGAU - Subroutine to register the AU Printer File via RCF. *
+      *  ------                                                       *
+      *  Called By : SRRPRT                                           *
+      *  Calls     : ZSFILE                                           *
+      *****************************************************************
+      *
+     C           SRRGAU    BEGSR
+      *
+     C                     MOVE 'N'       WWRCF   1
+      *
+      **  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    PSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   PSENTY
+     C                     PARM           SFILEU
+     C                     PARM           PSNUMU
+     C                     PARM *BLANK    PSERR
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           PSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WWRCF   1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      /TITLE  INITIAL PROCESSING
+      *****************************************************************
+      *   *INZSR - Initial Processing                                 *
+      *                                                               *
+      *   Called by : Main processing                                 *
+      *   Calls     : AOBANKR0                                        *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+      **  Entry parameter
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PENT    3
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     EXSR SRRGAU
+      *
+      **  Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE    P
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     MOVEL'GL1983'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Set indicator 98 for date format used in ZDATE2
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      **  Report Work fields.
+      *
+     C                     MOVE *OFF      *IN82
+     C                     Z-ADD2         RCOUNT
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     MOVE *BLANKS   WWCCY   3
+     C                     MOVE *BLANKS   WWBRCA  3
+     C                     Z-ADD*ZERO     WWDEC   20
+     C                     MOVE *BLANKS   WWCCY   3
+     C                     MOVE 'L'       ZECODE
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Error control subroutine                            *
+      *  ------                                                       *
+      *  Called By : *INZSR                                           *
+      *  Calls     : SRAUDT                                           *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C           WWRCF     IFEQ 'Y'
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      **  If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZSEDITZ3
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

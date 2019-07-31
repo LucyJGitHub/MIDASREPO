@@ -1,0 +1,103 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Extract Program for CRS Enquiry')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000559 - Midas SD Extract Program for CRS Enquiry        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2016                     */
+/*                                                                   */
+/*       Last Amend No. CGL177    *CREATE  Date 11Jan16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL177 - CRS Reporting Phase 2                              */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7) VALUE('       ')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBID) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(7) VALUE('  DVLIB')
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2016')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             RTVJOBA    JOB(&JOBID)
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DVLIB 1 2)) VALUE(&SYSID)
+
+             CHKOBJ     OBJ(QTEMP/SDCREFPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NODATA))
+
+             CLRPFM     FILE(QTEMP/SDCREFPD)
+             GOTO       CMDLBL(CALLPGM)
+
+ NODATA:
+             DLTOVR     FILE(*ALL) LVL(*JOB)
+             MONMSG     MSGID(CPF0000)
+
+             DLTF       FILE(QTEMP/SDCREFL0)
+             MONMSG     MSGID(CPF0000)
+
+             DLTF       FILE(QTEMP/SDCREFPD)
+             MONMSG     MSGID(CPF0000)
+
+             CLRPFM     FILE(&DPLIB/SDCREFPD)
+
+             CPYF       FROMFILE(&DPLIB/SDCREFPD) TOFILE(QTEMP/SDCREFPD) +
+                          TOMBR(SDCREFPD) CRTFILE(*YES) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+             CRTDUPOBJ  OBJ(SDCREFL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DPLIB)
+             MONMSG     MSGID(CPF2135)
+
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DPLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDCREFL0)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             DLTF       FILE(&DPLIB/&JOBID)
+
+             OVRDBF     FILE(SDCREFPD) TOFILE(QTEMP/SDCREFPD) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+             OVRDBF     FILE(SDCREFL0) TOFILE(QTEMP/SDCREFL0) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+
+ CALLPGM:
+             CALL       PGM(SD000559) PARM(&RTCDE)
+
+             IF         COND(&RTCDE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Normal ending: */
+/**================*/
+
+NORMAL:
+             GOTO       CMDLBL(ENDPGM)
+
+/** Abnormal ending: */
+/**==================*/
+
+ABNOR:
+             SNDMSG     MSG('Midas SD Extract Program for CRS Enquiry has +
+                          terminated abnormally.') TOMSGQ(MOPERQ MRUNQ)
+             DMPCLPGM
+
+
+ENDPGM:
+
+             ENDPGM

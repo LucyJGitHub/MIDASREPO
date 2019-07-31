@@ -1,0 +1,99 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Input cycle initiation - G SE')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC041114 - Input Cycle Initiation SE                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC056  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSC056 - COB Restructure - SC COB Optimisation Phase 1      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Get Modules Installed */
+ 
+             RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
+ 
+/* Shadow post RE */
+ 
+             IF         COND(%SST(&MMOD 16 1) = 'Y') THEN(DO)
+ 
+                 CALL       PGM(SEC0102)
+                 IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +
+                              CMDLBL(DBETAG))
+             ENDDO
+ 
+             CPYF       FROMFILE(TRADSD) TOFILE(SOBTRD) +
+                          MBROPT(*REPLACE)
+             MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                        EXEC(CLRPFM SOBTRD)
+ 
+             CPYF       FROMFILE(DPTMVD) TOFILE(SOBDMVD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+             MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                        EXEC(CLRPFM SOBDMVD)
+ 
+             CPYF       FROMFILE(SEDEVD) TOFILE(SOBSDD) +
+                          MBROPT(*REPLACE)
+             MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                        EXEC(CLRPFM SOBSDD)
+ 
+             CPYF       FROMFILE(SNDEVD) TOFILE(SOBSND) +
+                          MBROPT(*REPLACE)
+             MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                        EXEC(CLRPFM SOBSND)
+ 
+             CPYF       FROMFILE(SDCSINPD) TOFILE(SOBCSINPD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                        EXEC(CLRPFM FILE(SOBCSINPD))
+ 
+/* Successful completion */
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Database error processing */
+ 
+DBETAG:
+ 
+/* Retrieve database error information from LDA */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ)
+             ENDDO
+ 
+/* Abnormal error processing */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             SNDPGMMSG  MSG('Program SCC041114 ended abnormally.') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

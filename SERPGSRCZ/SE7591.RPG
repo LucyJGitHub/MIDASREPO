@@ -1,0 +1,2740 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE CO Generate forward events cust/depot')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  RPG/SE7591 - SE CO Generate Forward Events Cust/Book         *
+      *                                                               *
+      *  Function:  This Program Generate the forward events          *
+      *  (COB)      Customer/Book                                     *
+      *                                                               *
+      *  Called by: SEC7591 - Generate Forward Events Cust/Book       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR853119           Date 24Nov11               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 241795             Date 27Sep06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 200789             Date 11Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 190204             Date 31May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CSE020             Date 21Mar00               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 161746             Date 12Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 137885             Date 13Jul98               *
+      *                 144394             Date 07Oct98               *
+      *                 141303             Date 26Aug98               *
+      *                 CEU017             Date 23Mar98               *
+      *                 CSE007   *CREATE   Date 23Mar98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR853119 - Position settlements generated from corporate     *
+      *             action did not calculate stamp tax.               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  241795 - Populate ECSS whether CEU011 is switched on or off. *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  200789 - The commission code on CA position settlement is    *
+      *           generated but no commission amount calculated.      *
+      *           Amended the program to calculate the charge and     *
+      *           commission amounts independently.                   *
+      *  190204 - Recompiled due to changes in PF/SECODVPD.           *
+      *  CSE020 - Corporate Actions Domino Effect Processing          *
+      *           (Recompiled due to changes in PF/SECORFPD)          *
+      *  161746 - Average Price Option 'I' has been added in SE7505.  *
+      *           (SECORGPD/MFAVOP)                                   *
+      *           Manage it as option 'C' in this program and in      *
+      *           SE7560 SE7561 SE7590 SE7591                         *
+      *           ( SEINS-BBN20520 & GBSEUSRMSG/CO00175 changed too ) *
+      *  137885 - Corporate Actions: Various Errors                   *
+      *  144394 - EMU: Db Error at 19, File SDRETLPD                  *
+      *           Access object must be called only if Retail *ON     *
+      *  141303 - EMU: Adaptation for CEU011 'Position/Risk Reporting'*
+      *  CEU017 - Securities Redenomination Euro Changes              *
+      *  CSE007 - Corporate Actions                                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FSECORFL2IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Reference                                      Prefix - 'MA'
+      *
+     FSECODRL0IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Depots Upd Idx                                 Prefix - 'MS'
+      *
+     FSECODPL2IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Depots                                         Prefix - 'MB'
+      *
+     FSECOALL4IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Allocations                                    Prefix - 'MC'
+      *
+     FSECODVL0IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Dividends                                      Prefix - 'MD'
+      *
+     FSECORGL0IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Rights                                         Prefix - 'MF'
+      *
+     FSECOOFL0IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Exchange Offers                                Prefix - 'MI'
+      *
+     FSECOSIL1IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Instructions                                   Prefix - 'MO'
+      *
+     FSESWHTL0IF  E           K        DISK         KINFSR *PSSR
+      ***  Securities WHT details file
+      *
+     FSECGT   IF  E           K        DISK         KINFSR *PSSR
+      ***  Charge Type - Ccy,Ccom
+      *
+     FCLINT   IF  E           K        DISK         KINFSR *PSSR
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+      *
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+      ***  Investment type details
+      *
+     FCPEVED  O   E                    DISK         KINFSR *PSSR
+      ***  SE Customer Position Events
+      *
+     FCPEVEA  UF  E                    DISK         KINFSR *PSSR A
+      ***  SE Customer Position Events - Audit
+      *
+     FDPEVED  O   E                    DISK         KINFSR *PSSR
+      ***  SE Depot Position Events
+      *
+     FDPEVEA  UF  E                    DISK         KINFSR *PSSR A
+      ***  SE Depot Position Events - Audit
+      *
+     FSECOCHL0IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Default Charges                                Prefix - 'MR'
+      *
+     FSECOCHL1IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Default Charges                                Prefix - 'MR'
+     F            SECOCHD0                          KRENAMESECOCHD1
+      *
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      ***  Securities
+      *
+     FSDCURRL1IF  E           K        DISK         KINFSR *PSSR          141303
+      ***  SD Currency Details                                            141303
+      *                                                                   141303
+     FSE7591AUO   E                    PRINTER      KINFSR *PSSR
+      ***  SE CO Generate Forward Events Cust/Book References - Audit
+     F                                              KINFDS SPOOLU
+      *
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+     E/COPY ZSRSRC,ZCCAL1Z1
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZPOWERZ1
+      *
+     E                    CPY@    1   1 80
+      ***  Copyrigth Array
+      *
+     E                    CUR       200  3                                141303
+      *                                                                   141303
+      ** Currency array                                                   141303
+      *                                                                   141303
+     E                    SRT       200  2 0                              141303
+      *                                                                   141303
+      ** Currency Sort Sequence array                                     141303
+      *                                                                   141303
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+     I            DS
+     I                                        1   60ZWCNUM
+     I                                        7   9 ZWCCY
+     I**********                             10  130ZWACOD                                    CGL029
+     I**********                             14  150ZWACSQ                                    CGL029
+     I**********                             10  150ZFLD6                                     CGL029
+     I**********                             16  18 ZWBRCA                                    CGL029
+     I**********                              1  18 ZKACCN                                    CGL029
+     I                                       10  190ZWACOD                                    CGL029
+     I                                       20  210ZWACSQ                                    CGL029
+     I                                       10  210ZFLD6                                     CGL029
+     I                                       22  24 ZWBRCA                                    CGL029
+     I                                        1  24 ZKACCN                                    CGL029
+      *
+     ISPOOLU      DS
+      ***  File information data structure
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IWWCOOP      DS
+      ***  Working DS
+     I                                        1   6 WKCOR2
+     I                                        7   80WKOPT2
+      *
+     IWWCOSI      DS
+      ***  Working DS
+     I                                        1   3 WKBRCA
+     I**********                              4   90WKCNUM                                    CSD027
+     I                                        4   9 WKCNUM                                    CSD027
+     I                                       10  13 WKPTFR
+     I                                       14  15 WKCOAT
+     I                                       16  25 WKSESN
+      *
+     I***P@DATA*     DS                            128                                      AR853119
+     IP@DATA      DS                            141                                         AR853119
+      ** Data structure of the parameter passed to and from SEZ010
+     I                                        1   1 P@CLAS
+     I                                        2   2 P@PPRE
+     I                                        3  150P@PAMD
+     I                                       16  280P@PCHA
+     I                                       29  410P@PCAM
+     I                                       42  540P@TASO
+     I                                       55  670P@TAUS
+     I                                       68  808P@PSXR
+     I                                       81  81 P@PMDI
+     I                                       82  84 P@PNCY
+     I                                       85  87 P@PSCU
+     I                                       88 1000P@PSAT
+     I                                      101 1138P@FXMR
+     I                                      114 1260P@MAMT
+     I                                      127 128 P@TDTP
+     I                                      129 1410P@STAM                                  AR853119
+      *
+     IWWINV       DS
+      ***  Working DS for Database Error on LF/INVTP
+     I                                        1   3 WKNMCY
+     I                                        4   6 WKSITP
+      *
+     ILDA       E DSLDA
+      ***  Data structure for database error
+      *
+     IRUNDAT    E DS
+      ***  Standard data area for system flags and rundate
+      *
+     ISCSARD    E DSSCSARDPD
+      ***  Data structure for switchable features file       Prefix - None
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Data structure for bank details                   Prefix - 'BJ'
+      *
+     ISDSTRD    E DSSDSTRDPD
+      ***  Data structure for securities trading details     Prefix - 'BV'
+      *
+     ISDRETL    E DSSDRETLPD
+      ***  Data structure for retail details                 Prefix - 'BM'
+      *
+     ISDMMOD    E DSSDMMODPD                                              144394
+      *                                                                   144394
+      ***  External data structure for Module details                     144394
+      *                                                                   144394
+     ISDSECS    E DSSDSECSPD
+     I              QQACCD                          QQACD1                                    CGL029
+      ***  Data structure for securities customer details    Prefix - 'BF'
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ***  Data structure for branch details                 Prefix - 'A8'
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  Data structure for currency details               Prefix - 'A6'
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+      ***  Data structure for customer details               Prefix - 'BB'
+      *
+     ISDNOST    E DSSDNOSTPD
+     I              QQACCD                          QQACD2                                    CGL029
+      ***  Data structure for nostro details                 Prefix - 'A7'
+      *
+     ISECBTX    E DSSECBTXPD
+      ***  SE Country to Branch tax rate details             Prefix - 'TB'
+      *
+     ISECNTR    E DSSECNTRPD
+      ***  SE Country tax rate details                       Prefix - 'TX'
+      *
+     IDSSDY     E DSDSSDY
+      ***  Long data structure for access objects
+      *
+     IDSFDY     E DSDSFDY
+      ***  Short data structure for access objects
+      *
+     ICPYR@#      DS
+      ***  Data structure for compilation - Copyright insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                M A I N     P R O C E S S I N G                *
+      *****************************************************************
+      *
+      ***  Access first record (By read) In CO Reference Rtv Idx
+      *
+     C           *LOVAL    SETLLSECORFL2
+     C                     READ SECORFL2                 88
+      *
+      ***  Do while end of file is not reached
+      *
+     C           *IN88     DOWEQ*OFF
+      *
+      ***  BYPASS REVERSED RECORDS
+      *
+     C           MACHTP    IFNE 'R'
+      *
+     C                     MOVELMACORF    KWCORF    P      CO Reference Number
+      *
+      ***  Access LF/SECODRL0 with reference in order to obtain
+      ***  the depots linked to the Corporate Action
+      *
+     C           KWCORF    SETLLSECODRL0
+     C           KWCORF    READESECODRL0                 87
+      *
+      ***  Do while end of file is not reached
+      *
+     C           *IN87     DOWEQ*OFF
+      *
+      ***  For each record with status 'X'
+      ***     Process all depot records and all customer records
+      *
+     C           MSCOST    IFEQ 'X'
+      *
+      ***  If "Security Shortname" is not equal to "Saved Security"
+      ***  Access to Security Details
+      *
+     C           MASESN    IFNE WOSESN
+     C                     MOVELMASESN    WOSESN 10 P
+     C                     MOVELMASESN    WKSESN    P
+     C                     EXSR #SECTO
+     C                     ENDIF
+      *
+      ***  Process depot records for processing type
+      *
+     C                     EXSR #PDPRD
+     C                     ENDIF                           Statu='X'
+      *
+      ***  Read Next Corporate Action Reference
+      *
+     C           KWCORF    READESECODRL0                 87
+     C                     ENDDO
+     C                     ENDIF                           Record Reversed
+      *
+      ***  Access next record in CO References file
+      *
+     C                     READ SECORFL2                 88
+     C                     ENDDO
+      *
+      ***  Termination processing
+      *
+     C                     EXSR #TERPR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PDPRD -  Process Depot records for processing types         *
+      *  ------                                                       *
+      *  Called by : Main processing                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #PDPRD    BEGSR
+      *
+      ***********************
+      ***  Process Depot  ***
+      ***********************
+      *
+     C                     MOVELMSCORF    WKCORF    P      Reference
+     C                     MOVE MSBRCD    WKBRCD           Branch
+     C**********           Z-ADDMSDDPT    WKDDPT           Depot                              CSD027
+     C                     MOVE MSDDPT    WKDDPT           Depot                              CSD027
+      *
+      ***  Access first depot record for current CO Reference
+      *
+     C           KWCODP    SETLLSECODPL2
+     C           KWCODP    READESECODPL2                 86
+      *
+      ***  Do while same reference, same branch and same depot
+      *
+     C           *IN86     DOWEQ*OFF
+      *
+      ***  Access to logical file depends on processing type
+      *
+     C                     MOVE 'D'       WWDPCU  1        Gen. Pos. Sett 137885
+     C                     EXSR #SELLF
+      *
+     C*****                MOVE 'D'       WWDPCU  1        Gen. Pos. Sett 137885
+      *
+      ***  Check the processing type
+      *
+     C                     SELEC
+      *
+      ***  Processing type is 'DV'
+      *
+     C           MAPTYP    WHEQ 'DV'
+     C                     EXSR #PRDV
+      *
+      ***  Processing type is 'FR'
+      ***  or Processing type is 'RG' (Average Price Option 'Z')
+      *
+     C           MAPTYP    WHEQ 'FR'
+     C           MAPTYP    OREQ 'RG'
+     C           MFAVOP    ANDEQ'Z'
+     C                     EXSR #PRFR
+      *
+      ***  Processing type is 'CR'
+      ***  or Processing type is 'CC'                                     CEU017
+      ***  or Processing type is 'CE'
+      ***  or Processing type is 'OF' Exchange Offers
+      ***  or Processing type is 'RG' (Average Price Option 'M','C')
+      *                                                  OR     'I'       161746
+      *
+     C           MAPTYP    WHEQ 'CR'
+     C           MAPTYP    OREQ 'CC'                                      CEU017
+     C           MAPTYP    OREQ 'CE'
+     C           MAPTYP    OREQ 'OF'
+     C           MIOFTY    ANDEQ'E'
+     C           MAPTYP    OREQ 'RG'
+     C           MFAVOP    ANDEQ'M'
+     C           MAPTYP    OREQ 'RG'
+     C           MFAVOP    ANDEQ'C'
+     C           MAPTYP    OREQ 'RG'                                      161746
+     C           MFAVOP    ANDEQ'I'                                       161746
+     C                     EXSR #PRCR
+      *
+      ***  Processing type is 'OF' Purchase Offers
+      ***  or Processing type is 'OF' Subscription Offers
+      *
+     C           MAPTYP    WHEQ 'OF'
+     C           MIOFTY    ANDEQ'P'
+     C           MAPTYP    OREQ 'OF'
+     C           MIOFTY    ANDEQ'S'
+     C                     EXSR #PROF
+      *
+      ***  Processing type is 'EX'
+      *
+     C           MAPTYP    WHEQ 'EX'
+     C                     EXSR #PREX
+      *
+      ***  Processing type is 'NF'
+      *
+     C           MAPTYP    WHEQ 'NF'
+     C                     EXSR #PRNF
+     C                     ENDSL
+      *
+      ***  Read next record with same Reference, same brach and same depot
+      *
+     C           KWCODP    READESECODPL2                 86
+     C                     ENDDO                           *IN86=*OFF
+      *
+      *******************************
+      ***  Process Customer/Book  ***
+      *******************************
+      *
+     C                     MOVELMSCORF    WKCORF    P      Reference
+     C                     MOVE MSBRCD    WKBRCD           Branch
+     C**********           Z-ADDMSDDPT    WKDDPT           Depot                              CSD027
+     C                     MOVE MSDDPT    WKDDPT           Depot                              CSD027
+      *
+      ***  Access first allocation record for current CO Reference
+      *
+     C           KWCODP    SETLLSECOALL4
+     C           KWCODP    READESECOALL4                 86
+      *
+      ***  Do while same reference, same branch and same depot
+      *
+     C           *IN86     DOWEQ*OFF
+      *
+      ***  Retrieve only Customer record
+      *
+     C           MCCOTP    IFEQ 'C'
+      *
+      ***  Access to logical file depends on processing type
+      *
+     C                     MOVE 'C'       WWDPCU           Gen. Pos. Sett 137885
+     C                     EXSR #SELLF
+      *
+     C*****                MOVE 'C'       WWDPCU           Gen. Pos. Sett 137885
+      *
+      ***  Check the processing type
+      *
+     C                     SELEC
+      *
+      ***  Processing type is 'DV'
+      *
+     C           MAPTYP    WHEQ 'DV'
+     C                     EXSR #PRDV
+      *
+      ***  Processing type is 'FR'
+      ***  or Processing type is 'RG' (Average Price Option 'Z')
+      *
+     C           MAPTYP    WHEQ 'FR'
+     C           MAPTYP    OREQ 'RG'
+     C           MFAVOP    ANDEQ'Z'
+     C                     EXSR #PRFR
+      *
+      ***  Processing type is 'CR'
+      ***  or Processing type is 'CC'                                     CEU017
+      ***  or Processing type is 'CE'
+      ***  or Processing type is 'OF' Exchange Offers
+      ***  or Processing type is 'RG' (Average Price Option 'M','C')
+      *                                                  OR     'I'       161746
+      *
+     C           MAPTYP    WHEQ 'CR'
+     C           MAPTYP    OREQ 'CC'                                      CEU017
+     C           MAPTYP    OREQ 'CE'
+     C           MAPTYP    OREQ 'OF'
+     C           MIOFTY    ANDEQ'E'
+     C           MAPTYP    OREQ 'RG'
+     C           MFAVOP    ANDEQ'M'
+     C           MAPTYP    OREQ 'RG'
+     C           MFAVOP    ANDEQ'C'
+     C           MAPTYP    OREQ 'RG'                                      161746
+     C           MFAVOP    ANDEQ'I'                                       161746
+     C                     EXSR #PRCR
+      *
+      ***  Processing type is 'OF' Purchase Offers
+      ***  or Processing type is 'OF' Subscription Offers
+      *
+     C           MAPTYP    WHEQ 'OF'
+     C           MIOFTY    ANDEQ'P'
+     C           MAPTYP    OREQ 'OF'
+     C           MIOFTY    ANDEQ'S'
+     C                     EXSR #PROF
+      *
+      ***  Processing type is 'EX'
+      *
+     C           MAPTYP    WHEQ 'EX'
+     C                     EXSR #PREX
+      *
+      ***  Processing type is 'NF'
+      *
+     C           MAPTYP    WHEQ 'NF'
+     C                     EXSR #PRNF
+     C                     ENDSL
+     C                     ENDIF                           Customer Record
+      *
+      ***  Read next record with same Reference, same brach and same depot
+      *
+     C           KWCODP    READESECOALL4                 86
+     C                     ENDDO                           *IN86=*OFF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #SELLF -  Select Logical file from the processing type       *
+      *  ------                                                       *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #SELLF    BEGSR
+      *
+     C           WWDPCU    IFEQ 'C'                                       137885
+     C                     MOVE MCCORF    WKCOR2
+     C                     MOVE MCOPTN    WKOPT2
+     C                     ELSE                                           137885
+     C                     MOVE MBCORF    WKCOR2                          137885
+     C                     MOVE MBOPTN    WKOPT2                          137885
+     C                     ENDIF                                          137885
+      *
+     C                     SELEC
+      *
+      ***  Processing type 'DV'
+      ***  Access to CO Dividends Events file
+      *
+     C           MAPTYP    WHEQ 'DV'
+     C           KWCOOP    CHAINSECODVL0             47
+     C                     MOVE MDRECI    WWRECI  1
+     C                     MOVEL'SECODVL0'WWFILE 10
+      *
+      ***  Processing type 'RG'
+      ***  Access to CO
+      *
+     C           MAPTYP    WHEQ 'RG'
+     C           KWCOOP    CHAINSECORGL0             47
+     C                     MOVE MFRECI    WWRECI  1
+     C                     MOVEL'SECORGL0'WWFILE 10
+      *
+      ***  Processing type 'OF'
+      ***  Access to CO
+      *
+     C           MAPTYP    WHEQ 'OF'
+     C           KWCOOP    CHAINSECOOFL0             47
+     C                     MOVE MIRECI    WWRECI  1
+     C                     MOVEL'SECOOFL0'WWFILE 10
+     C                     ENDSL
+      *
+     C           *IN47     IFEQ *ON
+     C           WWRECI    OREQ '*'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 02 *
+     C                     MOVELWWFILE    DBFILE    P      ***************
+     C                     MOVELWWCOOP    DBKEY     P
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PRDV -  Generate Depot/Customer position event record       *
+      *  -----    for processing type 'DV'                            *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #PRDV     BEGSR
+      *
+      ***  Check Depot/Customer indicator
+      *
+     C                     SELEC
+      *
+      ***  If Depot/Customer indicator is 'D'
+      ***  Generate a depot position event record
+      *
+     C           WWDPCU    WHEQ 'D'
+      *
+      ***  Setup specific field for this processing type
+      *
+     C                     MOVE 'R'       WWPPRE           Receive
+     C                     Z-ADDMBEXPO    WWEXPO           Ex-Date Position
+      *
+      ***  Total Cash = Actual Cash Allocation + Cash Rounding
+      *
+     C                     Z-ADDMBACAA    WWPAMD 170
+     C                     ADD  MBACAR    WWPAMD           Total Cash
+     C                     Z-ADDMBACAA    WWACAA           Actual Cash Allocation
+     C                     Z-ADDMBACAR    WWACAR           Cash Rounding
+      *
+     C                     EXSR #GNPOD
+      *
+     C           WWDPCU    WHEQ 'C'
+      *
+      ***  If Depot/Customer indicator 'C'
+      ***  Generate a Customer position event record
+      *
+      ***  Setup specific field for this processing type
+      *
+     C                     MOVE 'R'       WWPPRE           Receive
+     C                     Z-ADDMCEXPO    WWEXPO           Ex-Date Position
+      *
+      ***  Total Cash = Actual Cash Allocation + Cash Rounding
+      *
+     C                     Z-ADDMCACAA    WWPAMD
+     C                     ADD  MCACAR    WWPAMD           Total Cash
+     C                     Z-ADDMCACAA    WWACAA           Actual Cash Allocation
+     C                     Z-ADDMCACAR    WWACAR           Cash Rounding
+      *
+     C                     EXSR #GNPOC
+     C                     ENDSL                           Check Depot/Customer ind.
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PRFR -  Generate Depot/Customer position event record       *
+      *  -----    for processing type 'FR' or 'RG' (Average Price 'Z')*
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #PRFR     BEGSR
+      *
+      ***  Check Depot/Customer indicator
+      *
+     C                     SELEC
+      *
+      ***  If Depot/Customer indicator is 'D'
+      ***  Generate a Depot position event record
+      *
+     C           WWDPCU    WHEQ 'D'
+      *
+      ***  Setup specific field for this processing type
+      *
+     C                     Z-ADDMBEXPO    WWEXPO           Ex-Date Position
+      *
+      ***  Total Cash = Actual Cash Allocation + Cash Rounding
+      *
+     C                     Z-ADDMBACAA    WWPAMD
+     C                     ADD  MBACAR    WWPAMD           Total Cash
+     C                     Z-ADDMBACAA    WWACAA           Actual Cash Allocation
+     C                     Z-ADDMBACAR    WWACAR           Cash Rounding
+      *
+     C           WWPAMD    IFGE *ZERO
+     C                     MOVE 'R'       WWPPRE           Receive
+     C                     ELSE
+     C                     MOVE 'P'       WWPPRE           Pay
+     C                     ENDIF
+      *
+     C                     EXSR #GNPOD
+      *
+     C           WWDPCU    WHEQ 'C'
+      *
+      ***  If Depot/Customer indicator 'C'
+      ***  Generate a Customer position event record
+      *
+      ***  Setup specific field for this processing type
+      *
+     C                     Z-ADDMCEXPO    WWEXPO           Ex-Date Position
+     C                     Z-ADDMCACAA    WWACAA           Actual Cash Allocation
+     C                     Z-ADDMCACAR    WWACAR           Cash Rounding
+      *
+      ***  Total Cash = Actual Cash Allocation + Cash Rounding
+      *
+     C                     Z-ADDMCACAA    WWPAMD
+     C                     ADD  MCACAR    WWPAMD           Total Cash
+      *
+     C           WWPAMD    IFGE *ZERO
+     C                     MOVE 'R'       WWPPRE           Receive
+     C                     ELSE
+     C                     MOVE 'P'       WWPPRE           Pay
+     C                     ENDIF
+      *
+     C                     EXSR #GNPOC
+     C                     ENDSL                           Check Depot/Customer ind.
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PRCR -  Generate Depot/Customer position event record       *
+      *  -----    for processing type 'CR' or 'RG' (Average Price M,C)*
+      *        or for processing type 'CE' or 'OF' (Exchange Offers)  *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #PRCR     BEGSR
+      *
+      ***  Check Depot/Customer indicator
+      *
+     C                     SELEC
+      *
+      ***  If Depot/Customer indicator is 'D'
+      ***  Generate a Depot position event record
+      *
+     C           WWDPCU    WHEQ 'D'
+      *
+      ***  Setup specific field for this processing type
+      *
+     C                     MOVE 'R'       WWPPRE           Receive
+     C                     Z-ADDMBEXPO    WWEXPO           Ex-Date Position
+     C                     Z-ADDMBACAA    WWACAA           Actual Cash Allocation
+     C                     Z-ADDMBACAR    WWACAR           Cash Rounding
+      *
+      ***  Total Cash = Actual Cash Allocation + Cash Rounding
+      *
+     C                     Z-ADDMBACAA    WWPAMD
+     C                     ADD  MBACAR    WWPAMD           Total Cash
+      *
+     C                     EXSR #GNPOD
+      *
+     C           WWDPCU    WHEQ 'C'
+      *
+      ***  If Depot/Customer indicator 'C'
+      ***  Generate a Customer position event record
+      *
+      ***  Setup specific field for this processing type
+      *
+     C                     MOVE 'R'       WWPPRE           Receive
+     C                     Z-ADDMCEXPO    WWEXPO           Ex-Date Position
+     C                     Z-ADDMCACAA    WWACAA           Actual Cash Allocation
+     C                     Z-ADDMCACAR    WWACAR           Cash Rounding
+      *
+      ***  Total Cash = Actual Cash Allocation + Cash Rounding
+      *
+     C                     Z-ADDMCACAA    WWPAMD
+     C                     ADD  MCACAR    WWPAMD           Total Cash
+      *
+     C                     EXSR #GNPOC
+     C                     ENDSL                           Check Depot/Customer ind.
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PROF -  Generate Depot/Customer position event record       *
+      *  -----    for processing type 'OF' (Purchase Offers)          *
+      *        or for processing type 'OF' (Subscription Offers)      *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #PROF     BEGSR
+      *
+      ***  Check Depot/Customer indicator
+      *
+     C                     SELEC
+      *
+      ***  If Depot/Customer indicator is 'D'
+      ***  Generate a Depot position event record
+      *
+     C           WWDPCU    WHEQ 'D'
+      *
+      ***  Setup specific field for this processing type
+      *
+     C                     MOVE 'R'       WWPPRE           Receive
+     C                     Z-ADDMBEXPO    WWEXPO           Ex-Date Position
+     C                     Z-ADDMBACAA    WWACAA           Actual Cash Allocation
+     C                     Z-ADDMBACAR    WWACAR           Cash Rounding
+      *
+      ***  Total Cash = Actual Cash Allocation + Cash Rounding
+      *
+     C                     Z-ADDMBACAA    WWPAMD
+     C                     ADD  MBACAR    WWPAMD           Total Cash
+      *
+     C                     EXSR #GNPOD
+      *
+     C           WWDPCU    WHEQ 'C'
+      *
+      ***  If Depot/Customer indicator 'C'
+      ***  Generate a customer position event record
+      *
+      ***  Setup specific field for this processing type
+      *
+     C                     Z-ADDMCEXPO    WWEXPO           Ex-Date Position
+     C                     Z-ADDMCACAA    WWACAA           Actual Cash Allocation
+     C                     Z-ADDMCACAR    WWACAR           Cash Rounding
+      *
+      ***  Total Cash = Actual Cash Allocation + Cash Rounding
+      *
+     C                     Z-ADDMCACAA    WWPAMD
+     C                     ADD  MCACAR    WWPAMD           Total Cash
+      *
+     C           MIOFTY    IFEQ 'P'
+      *
+     C           WWPAMD    IFGE *ZERO
+     C                     MOVE 'P'       WWPPRE           Pay
+     C                     ELSE
+     C                     MOVE 'R'       WWPPRE           Receive
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           WWPAMD    IFGE *ZERO
+     C                     MOVE 'R'       WWPPRE           Pay
+     C                     ELSE
+     C                     MOVE 'P'       WWPPRE           Receive
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     EXSR #GNPOC
+     C                     ENDSL                           Check Depot/Customer ind.
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PREX -  Generate Depot/Customer position event record       *
+      *  -----    for processing type 'EX'                            *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #PREX     BEGSR
+      *
+      ***  Check Depot/Customer indicator
+      *
+     C                     SELEC
+      *
+      ***  If Depot/Customer indicator is 'D'
+      ***  Generate a Depot position event record
+      *
+     C           WWDPCU    WHEQ 'D'
+      *
+      ***  Setup specific field for this processing type
+      *
+     C                     MOVE 'P'       WWPPRE           Pay
+     C                     Z-ADDMBEXPO    WWEXPO           Ex-Date Position
+     C                     Z-ADDMBACAA    WWACAA           Actual Cash Allocation
+     C                     Z-ADDMBACAR    WWACAR           Cash Rounding
+      *
+      ***  Total Cash = Actual Cash Allocation + Cash Rounding
+      *
+     C                     Z-ADDMBACAA    WWPAMD
+     C                     ADD  MBACAR    WWPAMD           Total Cash
+      *
+     C                     EXSR #GNPOD
+      *
+     C           WWDPCU    WHEQ 'C'
+      *
+      ***  If Depot/Customer indicator 'C'
+      ***  Generate a Customer position event record
+      *
+      ***  Setup specific field for this processing type
+      *
+     C                     MOVE 'P'       WWPPRE           Pay
+     C                     Z-ADDMCEXPO    WWEXPO           Ex-Date Position
+     C                     Z-ADDMCACAA    WWACAA           Actual Cash Allocation
+     C                     Z-ADDMCACAR    WWACAR           Cash Rounding
+      *
+      ***  Total Cash = Actual Cash Allocation + Cash Rounding
+      *
+     C                     Z-ADDMCACAA    WWPAMD
+     C                     ADD  MCACAR    WWPAMD           Total Cash
+      *
+     C                     EXSR #GNPOC
+     C                     ENDSL                           Check Depot/Customer ind.
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PRNF -  Generate Depot/Customer position event record       *
+      *  -----    for processing type 'NF'                            *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #PRNF     BEGSR
+      *
+      ***  Check Depot/Customer indicator
+      *
+     C                     SELEC
+      *
+     C           WWDPCU    WHEQ 'C'
+      *
+      ***  If Depot/Customer indicator 'C'
+      ***  Generate a Customer position event record
+      *
+      ***  Setup specific field for this processing type
+      *
+     C                     MOVE 'P'       WWPPRE           Pay
+     C                     Z-ADDMCEXPO    WWEXPO           Ex-Date Position
+     C                     Z-ADD*ZERO     WWPAMD           PAMD=*zero
+      *
+     C                     EXSR #GNPOC
+     C                     ENDSL                           Check Depot/Customer ind.
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #GNPOD - Write a Depot position event record                 *
+      *  ------                                                       *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #GNPOD    BEGSR
+      *
+     C                     CLEARDPEVEDF
+      ** .. Branch Code
+     C                     MOVE MBBRCD    CCBA
+      ** .. Origination branch
+     C                     MOVE MBBRCD    ORBR
+      ** .. Depot
+     C**********           Z-ADDMBDDPT    CCDP                                                CSD027
+     C                     MOVE MBDDPT    CCDP                                                CSD027
+      ** .. Security
+     C                     MOVELMASESN    CCSS      P
+      ** .. Event type
+     C                     MOVE MACOAT    CCET
+      ** .. Event date
+     C                     Z-ADDMAEVDT    CCDT
+      ** .. Event currency
+     C                     MOVE WONMCY    CCEC
+      ** .. Event amount
+      *
+      ***   Retrieve Event amount based from RPG/SE7561 field PSAT
+      *
+     C                     EXSR #REVMT
+     C                     Z-ADDP@PSAT    CCEA
+      *
+      ** .. Nom Ccy eq. event amount
+     C                     Z-ADDCCEA      CCNA
+      ** .. Nom Ccy
+     C                     MOVE CCEC      CCNC
+      ** .. Nom position
+     C                     Z-ADDMBEXPO    CCNP
+      ** .. Ex coupon nom position
+     C                     Z-ADDMBEXPO    CCEP
+      *
+      ***  Retrieve Settlement fields from PF/SECOSIPD
+      *
+     C                     EXSR #COSI
+      *
+     C           *IN89     IFEQ *OFF
+     C           MORECI    ANDEQ'D'
+      *
+      ** .. Settlement method
+     C                     Z-ADDMOSMET    CCSM
+      ** .. Settlement account
+     C                     MOVELMOSACC    CCSA
+      ** .. Settlement branch
+     C                     MOVE MOSBRC    CCTA
+     C                     ELSE
+      ** .. Settlement method
+     C                     Z-ADD*ZEROS    CCSM
+      ** .. Settlement account
+     C                     MOVE *BLANKS   CCSA
+      ** .. Settlement branch
+     C                     MOVE *BLANKS   CCTA
+     C                     ENDIF
+      *
+     C           CCTA      IFEQ *BLANKS
+      ** .. Settlement branch
+     C                     MOVE CCBA      CCTA
+     C                     ENDIF
+      ** .. Clearance type
+     C                     MOVE *BLANKS   CCTC
+      *
+      ***  If CCNA < 0, than 'T' else 'F'
+      *
+     C           CCNA      IFLT 0
+      ** .. Due to or from depot
+     C                     MOVE 'T'       CCFD
+      ** .. I/O indicator
+     C                     MOVE 'O'       CCIO
+     C                     ELSE
+      ** .. Due to or from depot
+     C                     MOVE 'F'       CCFD
+      ** .. I/O indicator
+     C                     MOVE 'I'       CCIO
+     C                     ENDIF
+      *
+      ** .. Event code
+     C           MAPTYP    IFEQ 'DV'
+     C                     MOVE '31D3'    CCCE
+     C                     ELSE
+     C                     MOVE '39D1'    CCCE
+     C                     ENDIF
+      *
+      ** .. coupon amount - settl. ccy
+     C                     Z-ADD*ZEROS    CCAS
+      ** .. coupon amount - nom. ccy
+     C                     Z-ADD*ZEROS    CCAN
+      ** .. Payment date
+     C                     Z-ADDMACOPD    CCPD
+      *
+     C                     MOVE PCPY      KDDPT   6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY  '  WLOPTN
+     C                     PARM KDDPT     WLCUST 10
+     C                     PARM *BLANKS   WLKYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 03 *
+     C                     MOVELKDDPT     DBKEY     P      ***************
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** .. depot report name
+     C                     MOVE BBCRNM    CCDN
+      ** .. depot report town
+     C                     MOVE BBCRTN    CCTW
+      ** .. Maturity date
+     C                     MOVE *BLANKS   MDTI
+      ** .. Company book branch
+     C                     MOVE PBCA      WKBRCA
+     C                     EXSR #AOBRC
+     C                     MOVE A8CMCD    COBB
+      ** .. Company orig. branch
+     C                     MOVE ORBR      WKBRCA
+     C                     EXSR #AOBRC
+     C                     MOVE A8CMCD    COOB
+      ** .. Company event branch
+     C                     MOVE CCBA      WKBRCA
+     C                     EXSR #AOBRC
+     C                     MOVE A8CMCD    ECPY
+      ** .. Entity code
+     C                     MOVE *BLANKS   EXEI
+      ** .. Branch entity code
+     C                     MOVE 'B'       ELVB
+      ** .. Company entity code
+     C                     MOVE 'C'       ELVC
+      ** .. System entity code
+     C                     MOVE 'S'       ELVS
+      ** .. Event branch
+     C                     MOVE MBBRCD    EBRC
+      ** .. Multibranch. event
+     C                     MOVE 'N'       IBRE
+      ** .. Inter company branch
+     C                     MOVE 'Y'       ICYE
+      ** .. Our settl. branch
+     C                     MOVE *BLANKS   OSBR
+      ** .. Due to Early Redemp.
+     C                     MOVE 'N'       EARL
+      ** .. Coporate Action Flag
+     C                     MOVE 'Y'       COAF
+      ** .. Record Id
+     C                     MOVE 'D'       RECI
+      *                                                                   141303
+     C********** CEU011    IFEQ 'Y'                                                    141303 241795
+     C                     Z-ADD1         A                               141303
+     C           CCEC      LOKUPCUR,A                    89               141303
+      *                                                                   141303
+     C           *IN89     IFEQ *ON                                       141303
+     C                     Z-ADDSRT,A     ECSS                            141303
+     C                     ELSE                                           141303
+      *                                                                   141303
+     C           *LOCK     IN   LDA                                       141303
+     C                     Z-ADD20        DBASE            ***************141303
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 20 *141303
+     C                     MOVE 'SDCURRPD'DBFILE           ***************141303
+     C                     MOVELCCEC      DBKEY                           141303
+     C                     MOVEL'SE7591'  DBPGM     P                     141303
+     C                     OUT  LDA                                       141303
+     C                     EXSR *PSSR                                     141303
+     C                     ENDIF                                          141303
+     C**********           ENDIF                                                       141303 241795
+      *
+      ***  Write a record to the events file
+      *
+     C                     WRITEDPEVEDF
+     C                     ADD  1         OUTRDP
+     C                     ADD  CCEA      WTOTDP
+      *
+      ***  Generate second and third event records if a multibranch event
+      ***  There are the two Events for the Settlement Branch.
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C           CCBA      ANDNECCTA
+     C           CCTA      ANDNE*BLANKS
+      *
+      ***  Second record
+      ***   Between Settlement Branch and Depot.
+      *
+      ** .. Event Branch
+     C                     MOVE CCTA      EBRC
+      ** .. Multibranch. event
+     C                     MOVE 'Y'       IBRE
+      ** .. Inter company branch
+     C           COBB      IFNE ECPY
+     C                     MOVE 'Y'       ICYE
+     C                     ELSE
+     C                     MOVE 'N'       ICYE
+     C                     ENDIF
+      *
+      ***  Write a record to the events file
+      *
+     C                     WRITEDPEVEDF
+     C                     ADD  1         OUTRDP
+     C                     ADD  CCEA      WTOTDP
+      *
+      ***  Third record
+      ***  Between Settlement Branch and Booking Branch.
+      *
+      *
+      ** .. I/O Indicator
+     C           CCIO      IFEQ 'I'
+     C                     MOVE 'O'       CCIO
+     C                     ELSE
+     C                     MOVE 'I'       CCIO
+     C                     ENDIF
+      ** .. Depot
+      *
+      ***  Depot is now the settlement branch internal customer number
+      *
+     C                     MOVE CCTA      WKBRCA
+     C                     EXSR #AOBRC
+     C                     MOVE A8BICN    CCDP
+      *
+      ***  Blank the settlement account and method
+      *
+     C                     MOVE *BLANKS   CCSM
+     C                     MOVE *BLANKS   CCSA
+      *
+      ***  Write a record to the event's file
+      *
+     C                     WRITEDPEVEDF
+     C                     ADD  1         OUTRDP
+     C                     ADD  CCEA      WTOTDP
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #GNPOC - Write a customer position event record              *
+      *  ------                                                       *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #GNPOC    BEGSR
+      *
+     C                     CLEARCPEVEDF
+      ** .. Branch Code
+     C                     MOVE MCBRCD    CCBA
+      ** .. Customer Number
+     C**********           Z-ADDMCCNUM    CCCN                                                CSD027
+     C                     MOVE MCCNUM    CCCN                                                CSD027
+      ** .. Origination branch
+     C                     MOVE MCBRCD    ORBR
+      ** .. Security
+     C                     MOVELMASESN    CCSS      P
+      ** .. Event type
+     C                     MOVE MACOAT    CCET
+      ** .. Event date
+     C                     Z-ADDMAEVDT    CCDT
+      ** .. Event currency
+     C                     MOVE WONMCY    CCEC
+      ** .. Event amount
+      *
+      ***   Retrieve Event amount based from RPG/SE7561 field PSAT
+      *
+     C                     EXSR #REVMT
+     C                     Z-ADDP@PSAT    CCEA
+      *
+      ** .. Nom Ccy eq. event amount
+     C                     Z-ADDCCEA      CCNA
+      ** .. Nom Ccy
+     C                     MOVE CCEC      CCNC
+      ** .. Nom position
+     C                     Z-ADDMCEXPO    CCNP
+      ** .. Ex coupon nom position
+     C                     Z-ADDMCEXPO    CCEP
+      *
+      ***  Retrieve Settlement fields from PF/SECOSIPD
+      *
+     C                     EXSR #COSI
+      *
+     C           *IN89     IFEQ *OFF
+     C           MORECI    ANDEQ'D'
+      *
+      ** .. Settlement method
+     C                     Z-ADDMOSMET    CCSM
+      ** .. Settlement account
+     C                     MOVELMOSACC    CCSA
+      ** .. Settlement branch
+     C                     MOVE MOSBRC    CCTA
+     C                     ELSE
+      ** .. Settlement method
+     C                     Z-ADD*ZEROS    CCSM
+      ** .. Settlement account
+     C                     MOVE *BLANKS   CCSA
+      ** .. Settlement branch
+     C                     MOVE *BLANKS   CCTA
+     C                     ENDIF
+      *
+     C           CCTA      IFEQ *BLANKS
+      ** .. Settlement branch
+     C                     MOVE CCBA      CCTA
+     C                     ENDIF
+      ** .. Clearance type
+     C                     MOVE *BLANKS   CCTC
+      *
+      ***  If CCNA < 0, than 'T' else 'F'
+      *
+     C           CCNA      IFLT 0
+      ** .. Due to or from customer
+     C                     MOVE 'T'       CCFC
+      ** .. I/O indicator
+     C                     MOVE 'O'       CCIO
+     C                     ELSE
+      ** .. Due to or from customer
+     C                     MOVE 'F'       CCFC
+      ** .. I/O indicator
+     C                     MOVE 'I'       CCIO
+     C                     ENDIF
+      *
+      ** .. Event code
+     C           MAPTYP    IFEQ 'DV'
+     C                     MOVE '31D3'    CCCE
+     C                     ELSE
+     C                     MOVE '39D1'    CCCE
+     C                     ENDIF
+      *
+      ** .. coupon amount - settl. ccy
+     C                     Z-ADD*ZEROS    CCAS
+      ** .. coupon amount - nom. ccy
+     C                     Z-ADD*ZEROS    CCAN
+      ** .. Payment date
+     C                     Z-ADDMACOPD    CPYD
+      *
+     C                     MOVE PCPY      KDDPT   6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY  '  WLOPTN
+     C                     PARM KDDPT     WLCUST 10
+     C                     PARM *BLANKS   WLKYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 04 *
+     C                     MOVELKDDPT     DBKEY     P      ***************
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** .. customer report name
+     C                     MOVE BBCRNM    CCRN
+      ** .. customer report town
+     C                     MOVE BBCRTN    CCTR
+      ** .. Maturity date
+     C                     MOVE *BLANKS   MDTI
+      ** .. Company book branch
+     C                     MOVE PBCA      WKBRCA
+     C                     EXSR #AOBRC
+     C                     MOVE A8CMCD    COBB
+      ** .. Company orig. branch
+     C                     MOVE ORBR      WKBRCA
+     C                     EXSR #AOBRC
+     C                     MOVE A8CMCD    COOB
+      ** .. Company event branch
+     C                     MOVE CCBA      WKBRCA
+     C                     EXSR #AOBRC
+     C                     MOVE A8CMCD    ECPY
+      ** .. Entity code
+     C                     MOVE *BLANKS   EXEI
+      ** .. Branch entity code
+     C                     MOVE 'B'       ELVB
+      ** .. Company entity code
+     C                     MOVE 'C'       ELVC
+      ** .. System entity code
+     C                     MOVE 'S'       ELVS
+      ** .. Event branch
+     C                     MOVE MCBRCD    EBRC
+      ** .. Multibranch. event
+     C                     MOVE 'N'       IBRE
+      ** .. Inter company branch
+     C                     MOVE 'Y'       ICYE
+      ** .. Our settl. branch
+     C                     MOVE *BLANKS   OSBR
+      ** .. Customer Confirmation produced
+     C                     MOVE *BLANKS   CPCF
+      ** .. Due to Early Redemp.
+     C                     MOVE 'N'       EARL
+      ** .. Coporate Action Flag
+     C                     MOVE 'Y'       COAF
+      ** .. Record Id
+     C                     MOVE 'D'       RECI
+      *                                                                   141303
+     C********** CEU011    IFEQ 'Y'                                                    141303 241795
+     C                     Z-ADD1         A                               141303
+     C           CCEC      LOKUPCUR,A                    89               141303
+      *                                                                   141303
+     C           *IN89     IFEQ *ON                                       141303
+     C                     Z-ADDSRT,A     ECSS                            141303
+     C                     ELSE                                           141303
+      *                                                                   141303
+     C           *LOCK     IN   LDA                                       141303
+     C                     Z-ADD21        DBASE            ***************141303
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 21 *141303
+     C                     MOVE 'SDCURRPD'DBFILE           ***************141303
+     C                     MOVELCCEC      DBKEY                           141303
+     C                     MOVEL'SE7591'  DBPGM     P                     141303
+     C                     OUT  LDA                                       141303
+     C                     EXSR *PSSR                                     141303
+     C                     ENDIF                                          141303
+     C**********           ENDIF                                                       141303 241795
+      *
+      ***  Write a record to the events file
+      *
+     C                     WRITECPEVEDF
+     C                     ADD  1         OUTRCP
+     C                     ADD  CCEA      WTOTCP
+      *
+      ***  Generate second and third event records if a multibranch event
+      ***  There are the two Events for the Settlement Branch.
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C           CCBA      ANDNECCTA
+     C           CCTA      ANDNE*BLANKS
+      *
+      ***  Second record
+      ***   Between Settlement Branch and Depot.
+      *
+      ** .. Event Branch
+     C                     MOVE CCTA      EBRC
+      ** .. Multibranch. event
+     C                     MOVE 'Y'       IBRE
+      ** .. Inter company branch
+     C           COBB      IFNE ECPY
+     C                     MOVE 'Y'       ICYE
+     C                     ELSE
+     C                     MOVE 'N'       ICYE
+     C                     ENDIF
+      *
+      ***  Write a record to the events file
+      *
+     C                     WRITECPEVEDF
+     C                     ADD  1         OUTRCP
+     C                     ADD  CCEA      WTOTCP
+      *
+      ***  Third record
+      ***  Between Settlement Branch and Booking Branch.
+      *
+      *
+      ** .. I/O Indicator
+     C           CCIO      IFEQ 'I'
+     C                     MOVE 'O'       CCIO
+     C                     ELSE
+     C                     MOVE 'I'       CCIO
+     C                     ENDIF
+      ** .. Depot
+      *
+      ***  Depot is now the settlement branch internal customer number
+      *
+     C                     MOVE CCTA      WKBRCA
+     C                     EXSR #AOBRC
+     C                     MOVE A8BICN    CCDP
+      *
+      ***  Blank the settlement account and method
+      *
+     C                     MOVE *BLANKS   CCSM
+     C                     MOVE *BLANKS   CCSA
+      *
+      ***  Write a record to the event's file
+      *
+     C                     WRITECPEVEDF
+     C                     ADD  1         OUTRCP
+     C                     ADD  CCEA      WTOTCP
+      *
+     C                     ENDIF                           Multibranching
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #REVMT - Subroutine to retrieve Event amount based from      *
+      *           RPG/SE7561 field PSAT                               *
+      *  ------                                                       *
+      *  Called by :                                                  *
+      *  Calls     : *PSSR                                            *
+      *****************************************************************
+      *
+     C           #REVMT    BEGSR
+      *
+      ***  Check Depot/Customer indicator
+      *
+     C                     SELEC
+      *
+      ***  If Depot/Customer indicator is 'D'
+      *
+     C           WWDPCU    WHEQ 'D'
+      ***  Counterparty
+     C                     MOVELMBDDPT    PCPY
+      ** .. Booking branch
+     C                     MOVE MBBRCD    PBCA    3
+      ** .. Event Type
+     C                     MOVE MBCOAT    PEVT    2
+      ** .. Book Code
+     C                     MOVELBVDMBC    PBCD    3
+      ** .. Portfolio Reference
+     C                     MOVEL*BLANKS   PTFR    4
+      *
+      ***  If Depot/Customer indicator is 'C'
+      *
+     C           WWDPCU    WHEQ 'C'
+      ***  Counterparty
+     C                     MOVELMCCNUM    PCPY
+      ** .. Event Type
+     C                     MOVE MCCOAT    PEVT
+      ** .. Booking branch
+     C                     MOVE MCBRCD    PBCA
+      ** .. Book Code
+     C                     MOVE MCBOOK    PBCD
+      ** .. Portfolio Reference
+     C                     MOVELMCPTFR    PTFR
+     C                     ENDSL
+      *
+     C                     MOVE WONMCY    WKNMCY
+     C                     MOVE WOSITP    WKSITP
+      ***  Retrieve the processing type
+     C           KWINV     CHAININVTP                89
+     C           *IN89     IFEQ *ON
+     C           RECI      OREQ '*'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 05 *
+     C                     MOVE 'INVTP   'DBFILE           ***************
+     C                     MOVELWWINV     DBKEY     P
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      ** .. Value Currency
+     C                     MOVE WONMCY    PNCY    3
+      *
+      ***  Retrieve the classification from the counterparty
+      *
+     C                     MOVE PCPY      WCUST   6
+     C                     EXSR #AOSEC
+      *
+     C           S01496    IFEQ 'Y'
+     C           BVACOP    ANDEQ'Y'
+     C                     MOVE BFPSCG    WKCUGR
+     C                     MOVE *BLANKS   WKCLAS
+     C                     ELSE
+     C                     MOVE *BLANKS   WKCUGR
+     C                     MOVE BFCLAS    WKCLAS
+     C                     ENDIF
+      *                                                                   CEU017
+      ***  If processing type is 'CC' than Charges/Commissions amount is  CEU017
+      ***  not calculated and Charges/Commissions Code is blanks          CEU017
+      *                                                                   CEU017
+     C           MAPTYP    IFEQ 'CC'                                      CEU017
+     C                     Z-ADD*ZERO     PCHA   130                      CEU017
+     C                     Z-ADD*ZERO     PCAM   130                      CEU017
+     C                     ELSE                                           CEU017
+      *
+     C           S01496    IFEQ 'Y'
+     C           BVACOP    ANDEQ'Y'
+      *
+      ***  Retrieve the Commission and the Charge Code on the Corporate Actions Default Charges
+      ***  file with Customer Group, Customer, Investment Type and Corporate Action Type
+      *
+     C                     MOVE PCPY      WKPCPY           Customer
+     C                     MOVE WOSITP    WKSITP           Investment Type
+     C                     MOVE PEVT      WKPEVT  2        Event Type
+     C           KWCOH1    CHAINSECOCHL0             89
+      *
+      ***  If record not found, access with Customer Group, Customer, Investment type
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE *BLANKS   WKPEVT           Event Type
+     C           KWCOH1    CHAINSECOCHL0             89
+      *
+      ***  If record not found, access with Customer Group, Customer
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE *BLANKS   WKSITP           Investment Type
+     C           KWCOH1    CHAINSECOCHL0             89
+      *
+      ***  If record not found, access with Customer Group.
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE *BLANKS   WKPCPY           Customer
+     C           KWCOH1    CHAINSECOCHL0             89
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ***  Retrieve the Commission and the Charge Code on the Corporate Actions Default Charges
+      ***  file with Classification, Customer, Investment Type, and Corporate Action Type
+      *
+     C                     MOVE PCPY      WKPCPY           Customer
+     C                     MOVE WOSITP    WKSITP           Investment Type
+     C                     MOVE PEVT      WKPEVT           Event Type
+     C           KWCOH2    CHAINSECOCHL1             89
+      *
+      ***  If record not found, access with Classification, Customer, Investment type
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE *BLANKS   WKPEVT           Event Type
+     C           KWCOH2    CHAINSECOCHL1             89
+      *
+      ***  If record not found, access with Classification, Customer
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE *BLANKS   WKSITP           Investment Type
+     C           KWCOH2    CHAINSECOCHL1             89
+      *
+      ***  If record not found, access with Classification.
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE *BLANKS   WKPCPY           Customer
+     C           KWCOH2    CHAINSECOCHL1             89
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  If record not found with one access
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Retrieve Charge Basis Indicator on Charge Types file with Charge Code retrieve above
+      ***  and Event Nominal Currency.
+      *
+     C                     MOVE MRCOCH    WKCCOM
+     C           KWSECG    CHAINSECGT                89
+      *
+      ***  If no live record found
+      *
+     C           *IN89     IFEQ *OFF
+     C                     Z-ADD0         ZTCON
+     C                     Z-ADD0         ZNOML
+      *
+      ***  If Processing Type = 'NF', set field ZNOML to Ex-Date Position for Corporate Action
+      *
+     C           MAPTYP    IFEQ 'NF'
+     C                     Z-ADDWWEXPO    ZNOML
+      *
+      ***  Else, if Processing Type not = 'NF'.
+      *
+     C                     ELSE
+      *
+      ***  If Charge Basis Indicator = 'C', set field ZTCON to (Actual Cash Allocation + Actual
+      ***  Cash Rounding).
+      *
+     C           CHGB      IFEQ 'C'
+     C           WWACAA    ADD  WWACAR    ZTCON
+      *
+      ***  Else, if Processing Type not = 'NF' and Charge Basis Indicator not = 'C'.
+      *
+     C                     ELSE
+      *
+      ***  If Charge Basis Indicator = 'N', set field ZNOML to Ex-Date.
+      *
+     C           CHGB      IFEQ 'N'
+     C                     Z-ADDWWEXPO    ZNOML
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Calculate Charge Amount.
+      *
+     C                     EXSR CALAM2
+      **  .. Charge Amount
+     C                     Z-ADDZCHGA     PCHA
+      *
+     C                     ENDIF                                                              200789
+      *                                                                                       200789
+     C                     Z-ADD0         ZTCON
+     C                     Z-ADD0         ZNOML
+      *
+      ***  Retrieve Charge Basis Indicator on Charge Types file with Commission Code retrieve
+      ***  above and Event Nominal Currency.
+      *
+     C                     MOVE WONMCY    WKNMCY           Event Nominal Currency
+     C                     MOVE MRCOCO    WKCCOM           Commission Code
+     C           KWSECG    CHAINSECGT                89
+      *
+      ***  If no live record found
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  If Processing Type = 'NF', set field ZNOML to Ex-Date Position for Corporate Action
+      *
+     C           MAPTYP    IFEQ 'NF'
+     C                     Z-ADDWWEXPO    ZNOML
+      *
+      ***  Else, if Processing Type not = 'NF'.
+      *
+     C                     ELSE
+      *
+      ***  If Charge Basis Indicator = 'C', set field ZTCON to (Actual Cash Allocation + Actual
+      ***  Cash Rounding).
+      *
+     C           CHGB      IFEQ 'C'
+     C           WWACAA    ADD  WWACAR    ZTCON
+      *
+      ***  Else, if Processing Type not = 'NF' and Charge Basis Indicator not = 'C'.
+      *
+     C                     ELSE
+      *
+      ***  If Charge Basis Indicator = 'N', set field ZNOML to Ex-Date.
+      *
+     C           CHGB      IFEQ 'N'
+     C                     Z-ADDWWEXPO    ZNOML
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Calculate Commission Amount.
+      *
+     C                     EXSR CALAM2
+     C                     Z-ADDZCHGA     PCAM
+     C                     ENDIF
+     C**********           ENDIF                                                              200789
+     C                     ENDIF
+     C                     ENDIF                           Proc. Type 'CC'CEU017
+      *
+      *** Access security WHT details file
+      *
+     C           MASESN    CHAINSESWHTL0             89
+      *
+     C           S01447    IFEQ 'N'
+     C           *IN89     OREQ *ON
+     C           WWPPRE    OREQ 'R'
+     C           MAPTYP    ORNE 'DV'
+      ** Tax ded source
+     C                     Z-ADD0         TASO   130
+      ** Tax ded user
+     C                     Z-ADD0         TAUS   130
+     C                     ELSE
+     C                     EXSR CALCTX
+     C                     ENDIF
+      *
+      ***  Retrieve the Event amount
+      ***  Set up parameter for call to SEZ010
+      *
+     C                     MOVELBFCLAS    P@CLAS
+     C                     MOVE WWPPRE    P@PPRE
+     C                     Z-ADDWWPAMD    P@PAMD
+     C                     Z-ADDPCHA      P@PCHA
+     C                     Z-ADDPCAM      P@PCAM
+     C                     Z-ADDTASO      P@TASO
+     C                     Z-ADDTAUS      P@TAUS
+     C                     Z-ADD1         P@PSXR
+     C                     MOVEL'M'       P@PMDI
+     C                     MOVELWONMCY    P@PNCY
+     C                     MOVELWONMCY    P@PSCU
+     C           WWPPRE    IFEQ 'R'
+     C                     MOVE 'TS'      P@TDTP
+     C                     ELSE
+     C                     MOVE 'TP'      P@TDTP
+     C                     ENDIF
+     C                     Z-ADD0         P@FXMR
+     C                     Z-ADD0         P@MAMT
+     C                     Z-ADD0         P@STAM                                            AR853119
+      *
+      ***  Call SEZ010 to calculate the settlement amount in settle ccy
+      *
+     C                     CALL 'SEZ010'
+     C                     PARM *BLANKS   P@RCDE  7
+     C                     PARM           P@DATA
+      *
+     C           P@RCDE    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVEL'SEZ010  'DBFILE    P      * DB ERROR 06 *
+     C                     MOVELP@DATA    DBKEY     P      ***************
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  CALAM2 - Calculate Charge amounts                            *
+      *  ------                                                       *
+      *  Called by :                                                  *
+      *  Calls     : *PSSR ZXRATE ZCCAL1                              *
+      *****************************************************************
+      *
+     C           CALAM2    BEGSR
+      *
+      ***  Charge details
+      *
+     C                     MOVE CHGB      ZCHGB
+     C                     MOVE THRI      ZTHRI
+     C                     Z-ADDMNCH      ZMNCH
+     C                     Z-ADDMXCH      ZMXCH
+      *
+      ***  Set up array for upper range limits
+      *
+     C                     Z-ADDSTU1      ZRA,1
+     C                     Z-ADDSTU2      ZRA,2
+     C                     Z-ADDSTU3      ZRA,3
+     C                     Z-ADDSTU4      ZRA,4
+     C                     Z-ADDSTU5      ZRA,5
+     C                     Z-ADDSTU6      ZRA,6
+     C                     Z-ADDSTU7      ZRA,7
+     C                     Z-ADDSTU8      ZRA,8
+     C                     Z-ADDSTU9      ZRA,9
+     C                     Z-ADDST10      ZRA,10
+     C                     Z-ADDST11      ZRA,11
+     C                     Z-ADDST12      ZRA,12
+     C                     Z-ADDST13      ZRA,13
+     C                     Z-ADDST14      ZRA,14
+      *
+      ***  Set up array for percentage levels
+      *
+     C                     Z-ADDPL01      ZPC,1
+     C                     Z-ADDPL02      ZPC,2
+     C                     Z-ADDPL03      ZPC,3
+     C                     Z-ADDPL04      ZPC,4
+     C                     Z-ADDPL05      ZPC,5
+     C                     Z-ADDPL06      ZPC,6
+     C                     Z-ADDPL07      ZPC,7
+     C                     Z-ADDPL08      ZPC,8
+     C                     Z-ADDPL09      ZPC,9
+     C                     Z-ADDPL10      ZPC,10
+     C                     Z-ADDPL11      ZPC,11
+     C                     Z-ADDPL12      ZPC,12
+     C                     Z-ADDPL13      ZPC,13
+     C                     Z-ADDPL14      ZPC,14
+     C                     Z-ADDPL15      ZPC,15
+      *
+      ***  Set up array for flat charges
+      *
+     C                     Z-ADDFC01      ZCG,1
+     C                     Z-ADDFC02      ZCG,2
+     C                     Z-ADDFC03      ZCG,3
+     C                     Z-ADDFC04      ZCG,4
+     C                     Z-ADDFC05      ZCG,5
+     C                     Z-ADDFC06      ZCG,6
+     C                     Z-ADDFC07      ZCG,7
+     C                     Z-ADDFC08      ZCG,8
+     C                     Z-ADDFC09      ZCG,9
+     C                     Z-ADDFC10      ZCG,10
+     C                     Z-ADDFC11      ZCG,11
+     C                     Z-ADDFC12      ZCG,12
+     C                     Z-ADDFC13      ZCG,13
+     C                     Z-ADDFC14      ZCG,14
+     C                     Z-ADDFC15      ZCG,15
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY  '  @OPTN
+     C                     PARM PNCY      @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD7         DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           * DB ERROR 07 *
+     C                     MOVEL'SDCURRPD'DBFILE    P      ***************
+     C                     MOVELPNCY      DBKEY     P
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A6NBDP    ZDECS
+      *
+      ***  Nominal decimal places
+      *
+     C                     Z-ADD0         ZNMDP
+      *
+      ***  Security details
+      *
+     C                     Z-ADD1         ZPRICE
+     C                     Z-ADDWWPAMD    ZNOML
+     C                     Z-ADD0         ZTCFC
+     C                     MOVE 'P'       ZPROT
+     C                     MOVE *BLANKS   ZSPBS
+      *
+     C           S01446    IFEQ 'Y'
+      ***  Purchase interest
+     C                     Z-ADD*ZEROS    ZTPI
+      *
+      ***  Access currencies file to get value currency decimal places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY  '  @OPTN
+     C                     PARM VLCY      @CYCD
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD8         DBASE            ***************
+     C                     MOVE 'SDCURRPD'DBFILE    P      * DB ERROR 08 *
+     C                     MOVELVLCY      DBKEY     P      ***************
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     Z-ADDA6NBDP    WLVDCP  10
+      *
+     C           BVCHRC    IFNE *BLANKS
+     C                     MOVE BVCHRC    ZCCYI
+     C                     Z-ADDWLNBDP    ZCDPI   10
+     C                     MOVE VLCY      ZCCYO
+     C                     Z-ADDWLVDCP    ZCDPO   10
+     C                     Z-ADDWOSPRT    ZRATE2 138
+     C                     MOVE WOMDIN    ZMDI2   1
+     C                     Z-ADDWLSPRT    ZRATE1 138
+     C                     MOVE WLMDIN    ZMDI1   1
+     C                     EXSR ZXRATE
+     C                     MOVE ZRATEX    TRATEX 138
+     C                     MOVE ZMDIX     TMDIX   1
+     C                     MOVE TRATEX    ZEXCH
+     C                     MOVE TMDIX     ZMD
+      *
+     C                     ELSE
+      *
+      ***  Total consideration
+      *
+     C                     Z-ADD*ZEROS    ZTCON
+     C                     MOVE *BLANKS   ZCCYI
+     C                     MOVE *BLANKS   ZCCYO
+     C                     MOVE *BLANKS   ZEXCH
+     C                     MOVE *BLANKS   ZMD
+      *
+     C                     END
+      *                    END
+     C                     END
+      *
+      ***   Total nominal
+      *
+     C                     Z-ADD*ZEROS    ZTNOM  150
+      *
+     C                     EXSR ZCCAL1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  CALCTX - Subroutine to calculate tax amounts for dividends   *
+      *           and Coupons                                         *
+      *  ------                                                       *
+      *  Called by :                                                  *
+      *  Calls     : *PSSR                                            *
+      *****************************************************************
+      *
+     C           CALCTX    BEGSR
+      *
+     C           *LIKE     DEFN CLOC      UBRLOC           brch ctry
+     C           *LIKE     DEFN S1RASO    UTXRSR           src tax rate
+     C           *LIKE     DEFN TBRAUS    UTXRUS           usr tax rate
+     C           *LIKE     DEFN TBDLOR    UDLOR            ded.tax local
+      *
+      *** Initialise work tax rate and amount fields
+      *
+     C                     CLEARUTXRSR
+     C                     CLEARUTXRUS
+     C                     CLEARUDLOR
+      *
+      *** If tax band at source is zero, then take rate from security
+      *** WHT file; Otherwise access SEcountry tax rate file to
+      *** get tax rate at source
+      *
+     C           S1TABD    IFEQ *ZERO
+     C                     Z-ADDS1RASO    UTXRSR
+     C                     ELSE
+      *
+     C                     MOVELS1CTTA    UKEY    3
+     C                     MOVE S1TABD    UKEY
+      *
+     C                     CALL 'AOSCTXR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM S1CTTA    @CTTA   2
+     C                     PARM S1TABD    @TABD   10
+     C           SECNTR    PARM SECNTR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           TXRECI    ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD9         DBASE            ***************
+     C                     MOVEL'SECNTRL0'DBFILE    P      * DB ERROR 09 *
+     C                     MOVELUKEY      DBKEY     P      ***************
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDTXRASO    UTXRSR
+     C                     ENDIF
+      *
+      *** If tax band by user is not zero, then access country to
+      *** branch tax rate file to get tax rate by user
+      *** Otherwise set to zero.
+      *
+     C           S1TABU    IFNE *ZERO
+     C                     CALL 'AOCBTXR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM PBCA      @BRCA   3
+     C                     PARM S1CTTA    @CTTA
+     C                     PARM S1TABU    @TABU   10
+     C           SECBTX    PARM SECBTX    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C           TBRECI    ANDEQ'D'
+     C                     Z-ADDTBRAUS    UTXRUS
+     C                     MOVE TBDLOR    UDLOR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *** calculate amount deducted at source
+      *
+     C           UTXRSR    DIV  100       URATE   54
+     C           WWPAMD    MULT URATE     TASO      H
+      *
+      *** calculate amount deducted by user
+      *
+     C                     CLEARTAUS
+      *
+     C           UTXRUS    IFGT *ZERO
+      *
+     C           UDLOR     IFEQ 'N'
+     C                     MOVE PCPY      WCNUM
+     C           CLKYCB    CHAINCLINT                89
+     C           *IN89     IFEQ *ON
+     C           RECI      OREQ '*'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD10        DBASE            ***************
+     C                     MOVEL'CLINTCB 'DBFILE    P      * DB ERROR 10 *
+     C                     MOVELPCPY      DBKEY     P      ***************
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           UDLOR     IFEQ 'Y'
+     C           UDLOR     OREQ 'N'
+     C           CLOC      ANDNEUBRLOC
+      *
+     C           UTXRUS    DIV  100       URATE
+     C           WWPAMD    MULT URATE     TAUS      H
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #COSI  - Access to CO Instructions                           *
+      *  -----                                                        *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #COSI     BEGSR
+      *
+     C                     MOVE CCBA      WKBRCA
+     C**********           Z-ADDPCPY      WKCNUM                                              CSD027
+     C                     MOVE PCPY      WKCNUM                                              CSD027
+     C                     MOVE PTFR      WKPTFR
+     C                     MOVE CCET      WKCOAT
+     C                     MOVELCCSS      WKSESN    P
+      *
+     C           KWCOSI    SETLLSECOSIL1
+     C           KWCOSI    READESECOSIL1                 89
+      *
+     C           *IN89     IFEQ *ON
+     C           MORECI    ORNE 'D'
+     C                     MOVE *BLANKS   WKSESN
+     C           KWCOSI    SETLLSECOSIL1
+     C           KWCOSI    READESECOSIL1                 89
+     C                     ENDIF
+      *
+     C           *IN89     IFEQ *ON
+     C           MORECI    ORNE 'D'
+     C                     MOVE *BLANKS   WKCOAT
+     C           KWCOSI    SETLLSECOSIL1
+     C           KWCOSI    READESECOSIL1                 89
+     C                     ENDIF
+      *
+     C           *IN89     IFEQ *ON
+     C           MORECI    ORNE 'D'
+     C                     MOVE *BLANKS   WKPTFR
+     C           KWCOSI    SETLLSECOSIL1
+     C           KWCOSI    READESECOSIL1                 89
+     C                     ENDIF
+      *
+     C           *IN89     IFEQ *ON
+     C           MORECI    ORNE 'D'
+     C**********           Z-ADD0         WKCNUM                                              CSD027
+     C                     MOVE *BLANKS   WKCNUM                                              CSD027
+     C           KWCOSI    SETLLSECOSIL1
+     C           KWCOSI    READESECOSIL1                 89
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #AOBRC - Access to Branch Code Details with AO               *
+      *  ------                                                       *
+      *  Called by :                                                  *
+      *  Calls     : AOBRCHR0 *PSSR                                   *
+      *****************************************************************
+      *
+     C           #AOBRC    BEGSR
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY  '  WLOPTN
+     C                     PARM WKBRCA    WLBRCH  3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+      ***  If record not found
+      *
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD12        DBASE            ***************
+     C                     MOVE 'SDBRCHPD'DBFILE           * DB ERROR 12 *
+     C                     MOVELWKBRCA    DBKEY            ***************
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #AOSEC -  Subroutine to Call Access Object:                  *
+      *  ------    Security Customer                                  *
+      *  Called by :                                                  *
+      *  Calls     : AOSECSR0 *PSSR                                   *
+      *****************************************************************
+      *
+     C           #AOSEC    BEGSR
+      *
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WCUST     @SCKY   6
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD13        DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           * DB ERROR 13 *
+     C                     MOVEL'SDSECSPD'DBFILE    P      ***************
+     C                     MOVELWCUST     DBKEY     P
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #SECTO - Access to LF/SECTY to Retrieve fields details       *
+      *  ------   for the old security                                *
+      *  Called by : Main processing                                  *
+      *  Calls     : AOCURRR0 *PSSR                                   *
+      *****************************************************************
+      *
+     C           #SECTO    BEGSR
+      *
+      ***  Chain for security record
+      *
+     C           WKSESN    CHAINSECTY                89
+      *
+     C           *IN89     IFEQ *ON
+     C           RECI      OREQ '*'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD14        DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           * DB ERROR 14 *
+     C                     MOVEL'SECTY   'DBFILE    P      ***************
+     C                     MOVELWKSESN    DBKEY     P
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Security nominal decimal places and price basis
+      *
+     C                     MOVELNMCY      WONMCY  3
+     C                     MOVE SITP      WOSITP  3
+      *
+      ***  Retrieve nomimal currency spot, m/d ind. and dec. places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WONMCY    @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD15        DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           * DB ERROR 15 *
+     C                     MOVEL'SDCURRPD'DBFILE    P      ***************
+     C                     MOVELWONMCY    DBKEY     P
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Save base currency spot, m/d indicator, dec. places for later
+      *
+     C                     Z-ADDA6SPRT    WOSPRT 138
+     C                     MOVE A6MDIN    WOMDIN
+      *
+     C                     ENDSR
+      *
+     ******************************************************************
+      /EJECT
+      *****************************************************************
+      *   *INZSR : Program initialisation Subroutine                  *
+      *  -------                                                      *
+      *  Called by : Automatically at pgm start                       *
+      *  Calls     : AOBANKR0 *PSSR                                   *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ***  Read in data area RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ***  Initialise key and working fields
+      *
+     C           *LIKE     DEFN MACORF    KWCORF           CO Reference
+     C           *LIKE     DEFN MSCORF    WKCORF           CO Reference
+     C           *LIKE     DEFN MSDDPT    WKDDPT           CO Depot
+     C           *LIKE     DEFN A6SPRT    WLSPRT           Spot Rate
+     C           *LIKE     DEFN A6NBDP    WLNBDP           Num. of Dec. Places
+     C           *LIKE     DEFN A6MDIN    WLMDIN           Mult/Div. ind.
+     C           *LIKE     DEFN A6MDIN    WOMDIN           Mult/Div. ind.
+      *
+     C                     Z-ADD*ZEROS    WWACAA 150
+     C                     Z-ADD*ZEROS    WWACAR 150
+     C                     Z-ADD*ZEROS    WWEXPO 150
+     C**********           Z-ADD*ZEROS    PCPY    60       Counterparty                       CSD027
+     C**********           Z-ADD*ZEROS    WKPCPY  60       Counterparty                       CSD027
+     C                     MOVE *BLANKS   PCPY    6        Counterparty                       CSD027
+     C                     MOVE *BLANKS   WKPCPY  6        Counterparty                       CSD027
+     C                     MOVE *BLANKS   WKPBCA  3        Branch
+     C                     MOVE *BLANKS   WKPSSH 10        Security
+     C                     MOVE *BLANKS   WWPPRE  1        Pay/Receiv. ind
+      *
+     C                     Z-ADD*ZEROS    OUTRCP  50
+     C                     Z-ADD*ZEROS    OUTRDP  50
+      *
+     C                     Z-ADD0         WTOTCP 150
+     C                     Z-ADD0         WTOTDP 150
+      *
+     C                     Z-ADD0         CPHRWN 150       Hash Total (Integer)
+     C                     Z-ADD0         CPHRDC  50       Hash Total (Decimal)
+     C                     Z-ADD0         DPHRWN 150       Hash Total (Integer)
+     C                     Z-ADD0         DPHRDC  50       Hash Total (Decimal)
+      *
+      ***  Key fields
+      *
+     C           KWCODP    KLIST
+     C                     KFLD           WKCORF           Reference
+     C                     KFLD           WKBRCD  3        Branch
+     C                     KFLD           WKDDPT           Depot
+      *
+     C           CLKYCB    KLIST
+     C**********           KFLD           WCNUM   60                                          CSD027
+     C                     KFLD           WCNUM   6                                           CSD027
+     C                     KFLD           WRTYP   1
+      *
+     C           KWSECG    KLIST
+     C                     KFLD           WKNMCY           Event Nominal Currency
+     C                     KFLD           WKCCOM  2        Commission Code
+      *
+     C           KWCOSI    KLIST
+     C                     KFLD           WKBRCA           Branch
+     C                     KFLD           WKCNUM           Customer
+     C                     KFLD           WKPTFR           Portfolio
+     C                     KFLD           WKCOAT           CO type
+     C                     KFLD           WKSESN           Security
+      *
+     C           KWINV     KLIST
+     C                     KFLD           WKNMCY
+     C                     KFLD           WKSITP
+      *
+     C           KWCOOP    KLIST
+     C                     KFLD           WKCOR2           Reference
+     C                     KFLD           WKOPT2           Branch
+      *
+     C           KWCOH1    KLIST                           Long key for file SEC
+     C                     KFLD           WKCUGR  2        Customer Group
+     C                     KFLD           WKPCPY           Customer
+     C                     KFLD           WKSITP           Investment Type
+     C                     KFLD           WKPEVT           Event Type
+      *
+     C           KWCOH2    KLIST                           Long key for file SEC
+     C                     KFLD           WKCLAS  1        Classification
+     C                     KFLD           WKPCPY           Customer
+     C                     KFLD           WKSITP           Investment Type
+     C                     KFLD           WKPEVT           Event Type
+     C           KEY1      KLIST
+     C                     KFLD           KSBRH   3
+     C                     KFLD           KCSTM   60
+     C                     KFLD           KCYSI   3
+     C                     KFLD           KITSI   3
+     C*
+     C           KEY2      KLIST
+     C                     KFLD           KSBRH
+     C                     KFLD           KCSTM
+     C                     KFLD           KCYSI
+      *
+     C           ZWACCN    KLIST
+     C                     KFLD           ZWCNUM
+     C                     KFLD           ZWCCY
+     C                     KFLD           ZWACOD
+     C                     KFLD           ZWACSQ
+     C                     KFLD           ZWBRCA
+      *
+      ***   LDA initialization
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVE 'SE7591'  DBPGM     P
+     C                     OUT  LDA
+      *
+      ***  Call ZSFILE for Audit printer file SE7591AU
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  Program Ended abnormally
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            *****************
+     C                     MOVE *BLANKS   DBFILE           ** DB ERROR 01 **
+     C                     MOVEL'SE7591AU'DBFILE    P      *****************
+     C           'ZSFILE R'CAT  'OUTINE'  DBKEY     P
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Access to bank details to retrieve the midas run date
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WLRTCD  7
+     C                     PARM '*FIRST'  WLOPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD16        DBASE            ***************
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 16 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check if feature "Customer Commissions/Courtage" is on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'S01446'  @SARD   6
+     C           SCSARD    PARM SCSARD    DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       S01446
+     C                     ELSE
+     C                     MOVE 'N'       S01446  1
+     C                     ENDIF
+      *
+      ***  If feature "Customer Commissions/Courtage" is on and
+      ***  securities charges currency is not blank, access currencies
+      ***  file to get spot rate, mult/div ind. & no. of decimal places
+      *
+     C           S01446    IFEQ 'Y'
+     C           BVCHRC    ANDNE*BLANKS
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY  '  @OPTN
+     C                     PARM BVCHRC    @CYCD
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD17        DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           * DB ERROR 17 *
+     C                     MOVEL'SDCURRPD'DBFILE    P      ***************
+     C                     MOVELBVCHRC    DBKEY     P
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6SPRT    WLSPRT
+     C                     Z-ADDA6NBDP    WLNBDP
+     C                     MOVE A6MDIN    WLMDIN
+     C                     ENDIF
+      *
+      ***  Check if feature "Jyske Enhancements" is on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'S01496'  @SARD
+     C           SCSARD    PARM SCSARD    DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       S01496
+     C                     ELSE
+     C                     MOVE 'N'       S01496  1
+     C                     ENDIF
+      *
+      ***  Check if feature "Withholding Tax" is on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'S01447'  @SARD
+     C           SCSARD    PARM SCSARD    DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       S01447
+     C                     ELSE
+     C                     MOVE 'N'       S01447  1
+     C                     ENDIF
+      *                                                                   141303
+      ***  Check if CEU011 is installed (EMU Position/Risk Reporting)     141303
+      *                                                                   141303
+     C                     CALL 'AOSARDR0'                                141303
+     C                     PARM *BLANKS   @RTCD                           141303
+     C                     PARM '*VERIFY' @OPTN                           141303
+     C                     PARM 'CEU011'  @SARD                           141303
+      *                                                                   141303
+      ***  Set indicator if installed.                                    141303
+      *                                                                   141303
+     C           @RTCD     IFEQ *BLANK                                    141303
+     C                     MOVE 'Y'       CEU011  1                       141303
+     C                     ELSE                                           141303
+     C                     MOVE 'N'       CEU011                          141303
+     C                     END                                            141303
+      *                                                                   141303
+     C********** CEU011    IFEQ 'Y'                                                    141303 241795
+     C                     Z-ADD1         A       30                      141303
+     C           *LOVAL    SETLLSDCURRL1                                  141303
+     C                     READ SDCURRL1                 89               141303
+      *                                                                   141303
+     C           A         DOWLE200                                       141303
+     C           *IN89     ANDEQ*OFF                                      141303
+      *                                                                   141303
+     C                     MOVE A6CYCD    CUR,A                           141303
+     C                     Z-ADDA6SSNB    SRT,A                           141303
+      *                                                                   141303
+     C                     READ SDCURRL1                 89               141303
+     C                     ADD  1         A                               141303
+     C                     ENDDO                                          141303
+     C**********           ENDIF                                                       141303 241795
+      *
+      ***  Access securities trading details using access object
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*FIRST'  WLOPTN
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD18        DBASE            ***************
+     C                     MOVE 'SDSTRDPD'DBFILE           * DB ERROR 18 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   144394
+      ***  Call Access Program for Module Details                         144394
+      *                                                                   144394
+     C                     CALL 'AOMMODR0'                                144394
+     C                     PARM '*BLANKS' WLRTCD                          144394
+     C                     PARM '*FIRST ' WLOPTN                          144394
+     C           SDMMOD    PARM SDMMOD    DSSDY                           144394
+      *                                                                   144394
+      ***  If record not found, handle database error.                    144394
+      *                                                                   144394
+     C           WLRTCD    IFNE *BLANKS                                   144394
+     C           *LOCK     IN   LDA                                       144394
+     C                     MOVEL'SDMMODPD'DBFILE           ***************144394
+     C                     MOVEL'*FIRST  'DBKEY            * DB ERROR 22 *144394
+     C                     Z-ADD22        DBASE            ***************144394
+     C                     MOVEL'SE7591'  DBPGM     P                     144394
+     C                     OUT  LDA                                       144394
+     C                     EXSR *PSSR                                     144394
+     C                     ENDIF                                          144394
+      *
+      ***  Access to retail ICD
+      *
+     C           BGRTBN    IFEQ 'Y'                                       144394
+     C           BGNXST    OREQ 'Y'                                       144394
+     C                     CALL 'AORETLR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*FIRST'  WLOPTN
+     C           SDRETL    PARM SDRETL    DSSDY
+      *
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD19        DBASE            ***************
+     C                     MOVE 'SDRETLPD'DBFILE           * DB ERROR 19 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'SE7591'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF                                          144394
+      *
+     C/COPY WNCPYSRC,SE7591C001
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #TERPR -  Termination processing                             *
+      *  ------                                                       *
+      *  Called by : Main processing                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #TERPR    BEGSR
+      *
+      ***  Write control report Headings
+      *
+     C                     WRITEHEADAU
+      *
+      ***  If no record output
+      *
+     C           OUTRDP    IFEQ *ZEROS
+     C           OUTRCP    ANDEQ*ZEROS
+     C                     WRITENODTLS
+     C                     ELSE
+      *
+      ***  Write Trade Events Audit Record
+      *
+     C           1         SETLLCPEVEA
+     C                     READ CPEVEA                   89
+      *
+     C           WTOTCP    DIV  1000      CPHRWN
+     C                     MVR            CPHRDC
+      *
+      ***  If record found
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Trailer before running of the program
+      *
+     C                     Z-ADDNORE      CPBEFO
+     C                     Z-ADDHRWN      CPBEF1
+     C                     Z-ADDHRDC      CPBEF2
+      *
+      ***  Trailer added
+      *
+     C                     Z-ADDOUTRCP    CPCALC
+     C                     Z-ADDCPHRWN    CPCAL1
+     C                     Z-ADDCPHRDC    CPCAL2
+      *
+     C                     ADD  OUTRCP    NORE
+     C                     ADD  CPHRWN    HRWN
+     C           HRDC      ADD  CPHRDC    CPHRDC
+      *
+     C           CPHRDC    IFGE 1000
+     C           CPHRDC    SUB  1000      HRDC
+     C                     ADD  1         HRWN
+     C                     ELSE
+     C                     Z-ADDCPHRDC    HRDC
+     C                     ENDIF
+      *
+      ***  Old Trailer + Calculated Trailer = New Trailer for PF/CPEVED
+      *
+     C                     Z-ADDNORE      CPAFTR
+     C                     Z-ADDHRWN      CPAFT1
+     C                     Z-ADDHRDC      CPAFT2
+      *
+     C                     UPDATCPEVEAF
+      *
+      ***  If Trailer does not exist |||
+      *
+     C                     ELSE
+      *
+      ***  Trailer before running of the program
+      *
+     C                     Z-ADD*ZEROS    CPBEFO
+     C                     Z-ADD*ZEROS    CPBEF1
+     C                     Z-ADD*ZEROS    CPBEF2
+      *
+      ***  Trailer added
+      *
+     C                     Z-ADDOUTRCP    CPCALC
+     C                     Z-ADDCPHRWN    CPCAL1
+     C                     Z-ADDCPHRDC    CPCAL2
+      *
+      ***  New Trailer for CPEVED (Same as added)
+      *
+     C                     Z-ADDOUTRCP    CPAFTR
+     C                     Z-ADDCPHRWN    CPAFT1
+     C                     Z-ADDCPHRDC    CPAFT2
+      *
+     C                     Z-ADDOUTRCP    NORE
+     C                     Z-ADDCPHRWN    HRWN
+     C                     Z-ADDCPHRDC    HRDC
+     C                     WRITECPEVEAF
+     C                     ENDIF
+      *
+      ***  Write Portfolio Customer Trade Events audit record
+      *
+     C           1         SETLLDPEVEA
+     C                     READ DPEVEA                   89
+      *
+     C           WTOTDP    DIV  1000      DPHRWN
+     C                     MVR            DPHRDC
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Trailer before running of the program
+      *
+     C                     Z-ADDNORE      DPBEFO
+     C                     Z-ADDHRWN      DPBEF1
+     C                     Z-ADDHRDC      DPBEF2
+      *
+      ***  Trailer added
+      *
+     C                     Z-ADDOUTRDP    DPCALC
+     C                     Z-ADDDPHRWN    DPCAL1
+     C                     Z-ADDDPHRDC    DPCAL2
+      *
+     C                     ADD  OUTRDP    NORE
+     C                     ADD  DPHRWN    HRWN
+     C           HRDC      ADD  DPHRDC    DPHRDC
+      *
+     C           DPHRDC    IFGE 1000
+     C           DPHRDC    SUB  1000      HRDC
+     C                     ADD  1         HRWN
+     C                     ELSE
+     C                     Z-ADDDPHRDC    HRDC
+     C                     ENDIF
+      *
+      ***  Old Trailer + Calculated Trailer = New Trailer of DPEVED
+      *
+     C                     Z-ADDNORE      DPAFTR
+     C                     Z-ADDHRWN      DPAFT1
+     C                     Z-ADDHRDC      DPAFT2
+      *
+     C                     UPDATDPEVEAF
+      *
+      ***  If Trailer does not exist |||
+      *
+     C                     ELSE
+      *
+      ***  Trailer before running of the program
+      *
+     C                     Z-ADD*ZEROS    DPBEFO
+     C                     Z-ADD*ZEROS    DPBEF1
+     C                     Z-ADD*ZEROS    DPBEF2
+      *
+      ***  Trailer added
+      *
+     C                     Z-ADDOUTRDP    DPCALC
+     C                     Z-ADDDPHRWN    DPCAL1
+     C                     Z-ADDDPHRDC    DPCAL2
+      *
+      ***  New Trailer for DPEVED (Same as added)
+      *
+     C                     Z-ADDOUTRDP    DPAFTR
+     C                     Z-ADDDPHRWN    DPAFT1
+     C                     Z-ADDDPHRDC    DPAFT2
+      *
+     C                     Z-ADDOUTRDP    NORE
+     C                     Z-ADDDPHRWN    HRWN
+     C                     Z-ADDDPHRDC    HRDC
+     C                     WRITEDPEVEAF
+     C                     ENDIF
+      *
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+      ***  END OF PROGRAM
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Dump routine in case of error                       *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WWRUN     IFNE 'Y'
+     C                     DUMP
+     C                     MOVE 'Y'       WWRUN   1
+     C                     ENDIF
+      *
+     C           DBASE     IFGT 1
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZCONVZ1
+     C/COPY ZSRSRC,ZXRATEZ1
+     C/COPY ZSRSRC,ZCCAL1Z2
+     C/COPY ZSRSRC,ZCCAL2Z1
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(c) Finastra International Limited 2001

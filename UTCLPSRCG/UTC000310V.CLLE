@@ -1,0 +1,652 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT SRCOBJXCHK validity checker')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000310V - SRCOBJXCHK validity checker                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2007                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CUT011             Date 12Dec07              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUT011 - Rewrite of command.  Make it more flexible and     */
+/*                easier to maintain.                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SRCLIB &GLOBAL &ZONE)
+ 
+             DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLOBAL) TYPE(*CHAR) LEN(91)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(95)
+ 
+             DCL        VAR(&GLOBPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GLOBDBTYPE) TYPE(*CHAR) LEN(16)
+             DCL        VAR(&GLOBDBLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLOBNDTYPE) TYPE(*CHAR) LEN(35)
+             DCL        VAR(&GLOBNDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZONEPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONEDBTYPE) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&ZONEDBLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZONENDTYPE) TYPE(*CHAR) LEN(35)
+             DCL        VAR(&ZONENDLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&GDB) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GND) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZDB) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZND) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BINNO) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NOGDB) TYPE(*INT)
+             DCL        VAR(&NOGND) TYPE(*INT)
+             DCL        VAR(&NOZDB) TYPE(*INT)
+             DCL        VAR(&NOZND) TYPE(*INT)
+             DCL        VAR(&DBPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&EPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&EVAL) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&DBESTART) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&POS) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&COUNT) TYPE(*INT)
+             DCL        VAR(&DBTYPE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&GM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GDEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GCMD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GOAM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GSVP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GPGM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DZ) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZDEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZCMD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZOAM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZSVP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZPGM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CHECKLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBD) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&JOBDUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&PARMLEN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&DUPLICATE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2007')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Find out data about the global element.  As the element contains lists the */
+/*  positions of values can vary.                                             */
+/* Work out the start of the database element; this is actually stored after */
+/*  the non-database data and its position may vary according to the values  */
+/*  in the non-database section.                                             */
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&GLOBAL 3 2))
+             CHGVAR     VAR(&EPOS) VALUE(%BIN(&BINNO))
+             CHGVAR     VAR(&DBESTART) VALUE(&EPOS + 1)
+/* Work out number in database list. */
+             CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 4)
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&GLOBAL &EPOS 2))
+             CHGVAR     VAR(&EVAL) VALUE(%BIN(&BINNO))
+             CHGVAR     VAR(&DBPOS) VALUE(&DBESTART + &EVAL)
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&GLOBAL &DBPOS 2))
+             CHGVAR     VAR(&NOGDB) VALUE(%BIN(&BINNO))
+/* Set flag depending on whether global database requests are found or not. */
+             IF         COND(&NOGDB *EQ 0) THEN(DO)
+                CHGVAR     VAR(&GDB) VALUE('N')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&GDB) VALUE('Y')
+             ENDDO
+ 
+/* The start of the non-database element is a constant (7) so it is easier */
+/*  to work out the number of non-database requests.                       */
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&GLOBAL 21 2))
+             CHGVAR     VAR(&NOGND) VALUE(%BIN(&BINNO))
+/* Set flag depending on whether global non-database requests are found or not. */
+             IF         COND(&NOGND *EQ 0) THEN(DO)
+                CHGVAR     VAR(&GND) VALUE('N')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&GND) VALUE('Y')
+             ENDDO
+ 
+/* Fill in individual parameters for database, if any entered. */
+             IF         COND(&GDB *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 2)
+                CHGVAR     VAR(&GLOBPFX) VALUE(%SST(&GLOBAL &EPOS 2))
+                CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 6)
+                CHGVAR     VAR(&GLOBDBLIB) VALUE(%SST(&GLOBAL &EPOS 10))
+                CHGVAR     VAR(&EPOS) VALUE(&DBPOS + 2)
+                CHGVAR     VAR(&EVAL) VALUE(&NOGDB * 4)
+                CHGVAR     VAR(&GLOBDBTYPE) VALUE(%SST(&GLOBAL &EPOS +
+                             &EVAL))
+             ENDDO
+ 
+/* Fill in individual parameters for non-database, if any entered. */
+             IF         COND(&GND *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&GLOBNDLIB) VALUE(%SST(&GLOBAL 11 10))
+                CHGVAR     VAR(&EVAL) VALUE(&NOGND * 7)
+                CHGVAR     VAR(&GLOBNDTYPE) VALUE(%SST(&GLOBAL 23 &EVAL))
+             ENDDO
+ 
+/* Find out data about the zone element.  As the element contains lists the */
+/*  positions of values can vary.                                           */
+/* Work out the start of the database element; this is actually stored after */
+/*  the non-database data and its position may vary according to the values  */
+/*  in the non-database section.                                             */
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&ZONE 3 2))
+             CHGVAR     VAR(&EPOS) VALUE(%BIN(&BINNO))
+             CHGVAR     VAR(&DBESTART) VALUE(&EPOS + 1)
+/* Work out number in database list. */
+             CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 4)
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&ZONE &EPOS 2))
+             CHGVAR     VAR(&EVAL) VALUE(%BIN(&BINNO))
+             CHGVAR     VAR(&DBPOS) VALUE(&DBESTART + &EVAL)
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&ZONE &DBPOS 2))
+             CHGVAR     VAR(&NOZDB) VALUE(%BIN(&BINNO))
+/* Set flag depending on whether zone database requests are found or not. */
+             IF         COND(&NOZDB *EQ 0) THEN(DO)
+                CHGVAR     VAR(&ZDB) VALUE('N')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&ZDB) VALUE('Y')
+             ENDDO
+ 
+/* The start of the non-database element is a constant (7) so it is easier */
+/*  to work out the number of non-database requests.                       */
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&ZONE 21 2))
+             CHGVAR     VAR(&NOZND) VALUE(%BIN(&BINNO))
+/* Set flag depending on whether zone non-database requests are found or not. */
+             IF         COND(&NOZND *EQ 0) THEN(DO)
+                CHGVAR     VAR(&ZND) VALUE('N')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&ZND) VALUE('Y')
+             ENDDO
+ 
+/* Fill in individual parameters for database, if any entered. */
+             IF         COND(&ZDB *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 2)
+                CHGVAR     VAR(&ZONEPFX) VALUE(%SST(&ZONE &EPOS 2))
+                CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 6)
+                CHGVAR     VAR(&ZONEDBLIB) VALUE(%SST(&ZONE &EPOS 10))
+                CHGVAR     VAR(&EPOS) VALUE(&DBPOS + 2)
+                CHGVAR     VAR(&EVAL) VALUE(&NOZDB * 4)
+                CHGVAR     VAR(&ZONEDBTYPE) VALUE(%SST(&ZONE &EPOS +
+                             &EVAL))
+             ENDDO
+ 
+/* Fill in individual parameters for non-database, if any entered. */
+             IF         COND(&ZND *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&ZONENDLIB) VALUE(%SST(&ZONE 11 10))
+                CHGVAR     VAR(&EVAL) VALUE(&NOZND * 7)
+                CHGVAR     VAR(&ZONENDTYPE) VALUE(%SST(&ZONE 23 &EVAL))
+             ENDDO
+ 
+/* Validity checking. */
+GENERAL:
+/* Check that a cross check has been requested. */
+             IF         COND(&GDB *NE 'Y' *AND &GND *NE 'Y' *AND +
+                          &ZDB *NE 'Y' *AND &ZND *NE 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000No +
+                             checks have been requested.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Check that source library exists. */
+             CHKOBJ     OBJ(&SRCLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Library' *BCAT &SRCLIB *BCAT +
+                             'does not exist.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+GLOBAL:
+/* If database objects have been requested then check the following: */
+/*  1 - If *PFX entered then does prefix have a value?               */
+/*  2 - If a library and a prefix is entered?                        */
+/*  3 - If prefix is valid then do specific libraries exist?         */
+/*  4 - If specific library requested then does it exist?            */
+/*  5 - Check that the same selection isn't specified twice.         */
+             IF         COND(&GDB *EQ 'Y') THEN(DO)
+/* Work out which creations have been requested. */
+                CHGVAR     VAR(&POS) VALUE(1)
+LOOP1:
+                DOFOR      VAR(&COUNT) FROM(1) TO(&NOGDB)
+                   CHGVAR     VAR(&DBTYPE) VALUE(%SST(&GLOBDBTYPE &POS 4))
+                   IF         COND(&DBTYPE *EQ '*GM ') THEN(DO)
+                      CHGVAR     VAR(&GM) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*GP ') THEN(DO)
+                      CHGVAR     VAR(&GP) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*GTA') THEN(DO)
+                      CHGVAR     VAR(&GT) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*GV ') THEN(DO)
+                      CHGVAR     VAR(&GV) VALUE('Y')
+                   ENDDO
+                   CHGVAR     VAR(&POS) VALUE(&POS + 4)
+                ENDDO
+ 
+/* 1 */
+                IF         COND(&GLOBDBLIB *EQ '*PFX' *AND &GLOBPFX *EQ +
+                             ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                                *PFX is specified then a prefix must be +
+                                entered.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+/* 2 */
+                IF         COND(&GLOBDBLIB *NE '*PFX' *AND &GLOBPFX *NE +
+                             ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                                a specific library is requested then a +
+                                prefix cannot be entered.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+/* 3 */
+                IF         COND(&GLOBPFX *NE ' ') THEN(DO)
+                   IF         COND(&GM *EQ 'Y') THEN(DO)
+                      CHGVAR     VAR(&CHECKLIB) VALUE(&GLOBPFX *TCAT 'GMLIB')
+                      CHKOBJ     OBJ(&CHECKLIB) OBJTYPE(*LIB)
+                      MONMSG     MSGID(CPF9801) EXEC(DO)
+                         CHGVAR     VAR(&ERROR) VALUE('Y')
+                      ENDDO
+                   ENDDO
+                   IF         COND(&GP *EQ 'Y') THEN(DO)
+                      CHGVAR     VAR(&CHECKLIB) VALUE(&GLOBPFX *TCAT 'GPLIB')
+                      CHKOBJ     OBJ(&CHECKLIB) OBJTYPE(*LIB)
+                      MONMSG     MSGID(CPF9801) EXEC(DO)
+                         CHGVAR     VAR(&ERROR) VALUE('Y')
+                      ENDDO
+                   ENDDO
+                   IF         COND(&GT *EQ 'Y') THEN(DO)
+                      CHGVAR     VAR(&CHECKLIB) VALUE(&GLOBPFX *TCAT 'GTALIB')
+                      CHKOBJ     OBJ(&CHECKLIB) OBJTYPE(*LIB)
+                      MONMSG     MSGID(CPF9801) EXEC(DO)
+                         CHGVAR     VAR(&ERROR) VALUE('Y')
+                      ENDDO
+                   ENDDO
+                   IF         COND(&GV *EQ 'Y') THEN(DO)
+                      CHGVAR     VAR(&CHECKLIB) VALUE(&GLOBPFX *TCAT 'GVLIB')
+                      CHKOBJ     OBJ(&CHECKLIB) OBJTYPE(*LIB)
+                      MONMSG     MSGID(CPF9801) EXEC(DO)
+                         CHGVAR     VAR(&ERROR) VALUE('Y')
+                      ENDDO
+                   ENDDO
+                   IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000One +
+                                   or more global database libraries does +
+                                    not exist.') MSGTYPE(*DIAG)
+                      GOTO       CMDLBL(ENDPGM)
+                   ENDDO
+                ENDDO
+/* 4 */
+                IF         COND(&GLOBDBLIB *NE '*PFX') THEN(DO)
+                   CHKOBJ     OBJ(&GLOBDBLIB) OBJTYPE(*LIB)
+                   MONMSG     MSGID(CPF9801) EXEC(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                   MSGDTA('0000Library' *BCAT &GLOBDBLIB +
+                                   *BCAT 'does not exist.') MSGTYPE(*DIAG)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ENDPGM)
+                   ENDDO
+                ENDDO
+/* 5 */
+                IF         COND(%SST(&GLOBDBTYPE 1 4) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&GLOBDBTYPE 1 4) *EQ +
+                                %SST(&GLOBDBTYPE 5 4) *OR +
+                                %SST(&GLOBDBTYPE 1 4) *EQ +
+                                %SST(&GLOBDBTYPE 9 4) *OR +
+                                %SST(&GLOBDBTYPE 1 4) *EQ +
+                                %SST(&GLOBDBTYPE 13 4)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(%SST(&GLOBDBTYPE 5 4) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&GLOBDBTYPE 5 4) *EQ +
+                                %SST(&GLOBDBTYPE 9 4) *OR +
+                                %SST(&GLOBDBTYPE 5 4) *EQ +
+                                %SST(&GLOBDBTYPE 13 4)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(%SST(&GLOBDBTYPE 9 4) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&GLOBDBTYPE 9 4) *EQ +
+                                %SST(&GLOBDBTYPE 13 4)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(&DUPLICATE *EQ 'Y') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000There is a duplicate global +
+                                database entry.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+ 
+             ENDDO
+ 
+/* If non-database objects have been requested then check the following: */
+/*  1 - Does object library exist?                                   */
+/*  2 - Check that the same selection isn't specified twice.         */
+             IF         COND(&GND *EQ 'Y') THEN(DO)
+/* 1 */
+                IF         COND(&GLOBNDLIB *EQ ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Global non-database library +
+                                must have an entry if cross check is +
+                                requested.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+                ELSE       CMD(DO)
+                   CHKOBJ     OBJ(&GLOBNDLIB) OBJTYPE(*LIB)
+                   MONMSG     MSGID(CPF9801) EXEC(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                   MSGDTA('0000Library' *BCAT &GLOBNDLIB +
+                                   *BCAT 'does not exist.') MSGTYPE(*DIAG)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ENDPGM)
+                   ENDDO
+                ENDDO
+/* 2 */
+                IF         COND(%SST(&GLOBNDTYPE 1 7) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&GLOBNDTYPE 1 7) *EQ +
+                                %SST(&GLOBNDTYPE 8 7) *OR +
+                                %SST(&GLOBNDTYPE 1 7) *EQ +
+                                %SST(&GLOBNDTYPE 15 7) *OR +
+                                %SST(&GLOBNDTYPE 1 7) *EQ +
+                                %SST(&GLOBNDTYPE 22 7) *OR +
+                                %SST(&GLOBNDTYPE 1 7) *EQ +
+                                %SST(&GLOBNDTYPE 29 7)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(%SST(&GLOBNDTYPE 8 7) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&GLOBNDTYPE 8 7) *EQ +
+                                %SST(&GLOBNDTYPE 15 7) *OR +
+                                %SST(&GLOBNDTYPE 8 7) *EQ +
+                                %SST(&GLOBNDTYPE 22 7) *OR +
+                                %SST(&GLOBNDTYPE 8 7) *EQ +
+                                %SST(&GLOBNDTYPE 29 7)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(%SST(&GLOBNDTYPE 15 7) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&GLOBNDTYPE 15 7) *EQ +
+                                %SST(&GLOBNDTYPE 22 7) *OR +
+                                %SST(&GLOBNDTYPE 15 7) *EQ +
+                                %SST(&GLOBNDTYPE 29 7)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(%SST(&GLOBNDTYPE 22 7) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&GLOBNDTYPE 22 7) *EQ +
+                                %SST(&GLOBNDTYPE 29 7)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(&DUPLICATE *EQ 'Y') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000There is a duplicate global +
+                                non-database entry.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+ 
+             ENDDO
+ 
+ZONE:
+/* If database objects have been requested then check the following: */
+/*  1 - If *PFX entered then does prefix have a value?               */
+/*  2 - If a library and a prefix is entered?                        */
+/*  3 - If prefix is valid then do specific libraries exist?         */
+/*  4 - If specific library requested then does it exist?            */
+/*  5 - Check that the same selection isn't specified twice.         */
+             IF         COND(&ZDB *EQ 'Y') THEN(DO)
+/* Work out which creations have been requested. */
+                CHGVAR     VAR(&POS) VALUE(1)
+LOOP3:
+                DOFOR      VAR(&COUNT) FROM(1) TO(&NOZDB)
+                   CHGVAR     VAR(&DBTYPE) VALUE(%SST(&ZONEDBTYPE &POS 4))
+                   IF         COND(&DBTYPE *EQ '*DM ') THEN(DO)
+                      CHGVAR     VAR(&DM) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*DP ') THEN(DO)
+                      CHGVAR     VAR(&DP) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*DTA') THEN(DO)
+                      CHGVAR     VAR(&DT) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*DV ') THEN(DO)
+                      CHGVAR     VAR(&DV) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*DZ ') THEN(DO)
+                      CHGVAR     VAR(&DZ) VALUE('Y')
+                   ENDDO
+                   CHGVAR     VAR(&POS) VALUE(&POS + 4)
+                ENDDO
+ 
+/* 1 */
+                IF         COND(&ZONEDBLIB *EQ '*PFX' *AND &ZONEPFX *EQ +
+                             ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                                *PFX is specified then a prefix must be +
+                                entered.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+/* 2 */
+                IF         COND(&ZONEDBLIB *NE '*PFX' *AND &ZONEPFX *NE +
+                             ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                                a specific library is requested then a +
+                                prefix cannot be entered.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+/* 3 */
+                IF         COND(&ZONEPFX *NE ' ') THEN(DO)
+                   IF         COND(&DM *EQ 'Y') THEN(DO)
+                      CHGVAR     VAR(&CHECKLIB) VALUE(&ZONEPFX *TCAT 'DMLIB')
+                      CHKOBJ     OBJ(&CHECKLIB) OBJTYPE(*LIB)
+                      MONMSG     MSGID(CPF9801) EXEC(DO)
+                         CHGVAR     VAR(&ERROR) VALUE('Y')
+                      ENDDO
+                   ENDDO
+                   IF         COND(&DP *EQ 'Y') THEN(DO)
+                      CHGVAR     VAR(&CHECKLIB) VALUE(&ZONEPFX *TCAT 'DPLIB')
+                      CHKOBJ     OBJ(&CHECKLIB) OBJTYPE(*LIB)
+                      MONMSG     MSGID(CPF9801) EXEC(DO)
+                         CHGVAR     VAR(&ERROR) VALUE('Y')
+                      ENDDO
+                   ENDDO
+                   IF         COND(&DT *EQ 'Y') THEN(DO)
+                      CHGVAR     VAR(&CHECKLIB) VALUE(&ZONEPFX *TCAT 'DTALIB')
+                      CHKOBJ     OBJ(&CHECKLIB) OBJTYPE(*LIB)
+                      MONMSG     MSGID(CPF9801) EXEC(DO)
+                         CHGVAR     VAR(&ERROR) VALUE('Y')
+                      ENDDO
+                   ENDDO
+                   IF         COND(&DV *EQ 'Y') THEN(DO)
+                      CHGVAR     VAR(&CHECKLIB) VALUE(&ZONEPFX *TCAT 'DVLIB')
+                      CHKOBJ     OBJ(&CHECKLIB) OBJTYPE(*LIB)
+                      MONMSG     MSGID(CPF9801) EXEC(DO)
+                         CHGVAR     VAR(&ERROR) VALUE('Y')
+                      ENDDO
+                   ENDDO
+                   IF         COND(&DZ *EQ 'Y') THEN(DO)
+                      CHGVAR     VAR(&CHECKLIB) VALUE(&ZONEPFX *TCAT 'DZLIB')
+                      CHKOBJ     OBJ(&CHECKLIB) OBJTYPE(*LIB)
+                      MONMSG     MSGID(CPF9801) EXEC(DO)
+                         CHGVAR     VAR(&ERROR) VALUE('Y')
+                      ENDDO
+                   ENDDO
+                   IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000One +
+                                   or more zone database libraries does +
+                                    not exist.') MSGTYPE(*DIAG)
+                      GOTO       CMDLBL(ENDPGM)
+                   ENDDO
+                ENDDO
+/* 4 */
+                IF         COND(&ZONEDBLIB *NE '*PFX') THEN(DO)
+                   CHKOBJ     OBJ(&ZONEDBLIB) OBJTYPE(*LIB)
+                   MONMSG     MSGID(CPF9801) EXEC(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                   MSGDTA('0000Library' *BCAT &ZONEDBLIB +
+                                   *BCAT 'does not exist.') MSGTYPE(*DIAG)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ENDPGM)
+                   ENDDO
+                ENDDO
+/* 5 */
+                IF         COND(%SST(&ZONEDBTYPE 1 4) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&ZONEDBTYPE 1 4) *EQ +
+                                %SST(&ZONEDBTYPE 5 4) *OR +
+                                %SST(&ZONEDBTYPE 1 4) *EQ +
+                                %SST(&ZONEDBTYPE 9 4) *OR +
+                                %SST(&ZONEDBTYPE 1 4) *EQ +
+                                %SST(&ZONEDBTYPE 13 4) *OR +
+                                %SST(&ZONEDBTYPE 1 4) *EQ +
+                                %SST(&ZONEDBTYPE 17 4)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(%SST(&ZONEDBTYPE 5 4) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&ZONEDBTYPE 5 4) *EQ +
+                                %SST(&ZONEDBTYPE 9 4) *OR +
+                                %SST(&ZONEDBTYPE 5 4) *EQ +
+                                %SST(&ZONEDBTYPE 13 4) *OR +
+                                %SST(&ZONEDBTYPE 5 4) *EQ +
+                                %SST(&ZONEDBTYPE 17 4)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(%SST(&ZONEDBTYPE 9 4) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&ZONEDBTYPE 9 4) *EQ +
+                                %SST(&ZONEDBTYPE 13 4) *OR +
+                                %SST(&ZONEDBTYPE 9 4) *EQ +
+                                %SST(&ZONEDBTYPE 17 4)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(%SST(&ZONEDBTYPE 13 4) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&ZONEDBTYPE 13 4) *EQ +
+                                %SST(&ZONEDBTYPE 17 4)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(&DUPLICATE *EQ 'Y') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000There is a duplicate zone +
+                                database entry.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+ 
+             ENDDO
+ 
+/* If non-database objects have been requested then check the following: */
+/*  1 - Does object library exist?                                   */
+/*  2 - Check that the same selection isn't specified twice.         */
+             IF         COND(&ZND *EQ 'Y') THEN(DO)
+/* 1 */
+                IF         COND(&ZONENDLIB *EQ ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Zone non-database library +
+                                must have an entry if cross check is +
+                                requested.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+                ELSE       CMD(DO)
+                   CHKOBJ     OBJ(&ZONENDLIB) OBJTYPE(*LIB)
+                   MONMSG     MSGID(CPF9801) EXEC(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                   MSGDTA('0000Library' *BCAT &ZONENDLIB +
+                                   *BCAT 'does not exist.') MSGTYPE(*DIAG)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ENDPGM)
+                   ENDDO
+                ENDDO
+/* 2 */
+                IF         COND(%SST(&ZONENDTYPE 1 7) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&ZONENDTYPE 1 7) *EQ +
+                                %SST(&ZONENDTYPE 8 7) *OR +
+                                %SST(&ZONENDTYPE 1 7) *EQ +
+                                %SST(&ZONENDTYPE 15 7) *OR +
+                                %SST(&ZONENDTYPE 1 7) *EQ +
+                                %SST(&ZONENDTYPE 22 7) *OR +
+                                %SST(&ZONENDTYPE 1 7) *EQ +
+                                %SST(&ZONENDTYPE 29 7)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(%SST(&ZONENDTYPE 8 7) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&ZONENDTYPE 8 7) *EQ +
+                                %SST(&ZONENDTYPE 15 7) *OR +
+                                %SST(&ZONENDTYPE 8 7) *EQ +
+                                %SST(&ZONENDTYPE 22 7) *OR +
+                                %SST(&ZONENDTYPE 8 7) *EQ +
+                                %SST(&ZONENDTYPE 29 7)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(%SST(&ZONENDTYPE 15 7) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&ZONENDTYPE 15 7) *EQ +
+                                %SST(&ZONENDTYPE 22 7) *OR +
+                                %SST(&ZONENDTYPE 15 7) *EQ +
+                                %SST(&ZONENDTYPE 29 7)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(%SST(&ZONENDTYPE 22 7) *NE ' ') THEN(DO)
+                   IF         COND(%SST(&ZONENDTYPE 22 7) *EQ +
+                                %SST(&ZONENDTYPE 29 7)) THEN(DO)
+                      CHGVAR     VAR(&DUPLICATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+                IF         COND(&DUPLICATE *EQ 'Y') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000There is a duplicate zone +
+                                non-database entry.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+ENDPGM:
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+             ENDPGM

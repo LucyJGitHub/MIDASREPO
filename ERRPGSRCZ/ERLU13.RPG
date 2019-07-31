@@ -1,0 +1,1000 @@
+     H        1
+      *****************************************************************
+/*OVRF*: OVRDBF FILE(ERTIPTZ1) TOFILE(ERTIPTL0) SHARE(*NO)          : *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas TI Product Code/Type Combination Maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting                                   *
+      *                                                               *
+      *  ERLU13 - Midas TI Product Code/Type Combination Maintenance  *
+      *                                                               *
+      *  Function:  This program allows the maintenance of            *
+      *             the TI Product Code/CSSF Product Type combination *
+      *                                                               *
+      *  Called By: ERCLU13 - Midas TI Product Code/Type Combination  *
+      *                       Maintenance                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 ULX024  *CREATE    Date 03Sep99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX024 - Trade Innovation/CSSF Reporting Interface           *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N    O F   I N D I C A T O R S               *
+      *    ============================================               *
+      *                                                               *
+      *  *IN03  -  F3  pressed, exit program                          *
+      *  *IN05  -  F05 pressed, refresh screen                        *
+      *  *IN12  -  F09 pressed => Change Mode                         *
+      *  *IN15  -  Program called in enquiry mode                     *
+      *  *IN16  -  'Add Mode'                                         *
+      *  *IN17  -  No data to display                                 *
+      *  *IN18  -  Record deleted                                     *
+      *  *IN20  -  Error Selection field and Action Code              *
+      *  *IN21  -  Error on TI Product Code field                     *
+      *  *IN22  -  Error on CSSF Product Type field                   *
+      *  *IN23  -  Error on Description field                         *
+      *  *IN35  -  Rollup key pressed                                 *
+      *  *IN45  -  Any valid key                                      *
+      *  *IN60  -  Eof not reached                                    *
+      *  *IN63  -  SFLNXTCHG indicator                                *
+      *  *IN77  -  Working field for scan '?'                         *
+      *  *IN80  -  SFLDSPCTL indicator                                *
+      *  *IN81  -  SFLDSP indicator                                   *
+      *  *IN87  -  Eof in the subfile                                 *
+      *  *IN88  -  Eof in the Master file                             *
+      *  *IN89  -  Working indicator                                  *
+      *                                                               *
+      *  *INLR  -  End processing                                     *
+      *  *INU7  -  Data-base                                          *
+      *  *INU8  -  Error control                                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  SRF9   -  SR executed if F9 pressed                          *
+      *  SRCHCK -  SR To check if changes in subfile                  *
+      *  SRVAL  -  SR To validate                                     *
+      *  INISFL -  Initialize subfile                                 *
+      *  LOASFE -  Load subfile                                       *
+      *  LOASF9 -  Load subfile when F9 Key has been pressed          *
+      *  PRESS  -  SR to move the appropriate values into field WWAID,*
+      *            depending on which function key has been pressed   *
+      *  *INZSR -  Initial Processing                                 *
+      *                                                               *
+      *  ZASNMS -  SR to send message to program's message queue      *
+      *  *PSSR  -  Dump routine in case of error                      *
+      *                                                               *
+      *****************************************************************
+     FERTIPTZ1IF  E           K        DISK         KINFSR *PSSR
+      ***  Midas TI Product Code/Type Combination Table
+      *
+     FERTIPCPDIT  F      39           EDISK
+      *
+     FERTIPTL0UF  E           K        DISK         KCOMIT       A
+      ***  Assets Transaction Types/Guarantee Codes Decision Table
+     F            ERTIPTD0                          KRENAMEUPERTIPT
+      *
+     FERLU13DFCF  E                    WORKSTN      KINFDS INFDS#
+      ***  Assets Transaction Types/Guarantee Codes Display file
+     F                                        SFLRECKSFILE ERLU13S1
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    TXT     1   3 78
+      ***  Bottom lign screen
+      *
+     E                    CPY@    1   1 80
+      ***  Array containing Copyright statement
+     E    ERTIPCPD        CODE    1  30  4   NARR   35
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     IINFDS#      DS
+     I                                    B 378 3790CPFPOS
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+     I                                      282 2870STIME
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     I            DS
+     I                                        1   4 DHTIPC
+     I                                        5   8 DHTIPT
+     I                                        1   8 SELEC1
+      *
+     I            DS
+     I                                        1   4 WWTIPC
+     I                                        5   8 WWTIPT
+     I                                        1   8 SELEC2
+      *
+     I            DS
+     I                                        1   4 WKTIPC
+     I                                        5   8 WKTIPT
+     I                                        9  43 WKTIPD
+     I                                        1  43 WKSELE
+     I            DS
+     I                                        1   4 W2TIPC
+     I                                        5   9 W2TIPT
+     I                                        9  43 W2TIPD
+     I                                        1  43 WWSAV2
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Bank Details
+      *
+     IDSSDY     E DSDSSDY
+      ***  DS for access programs, long data structure
+      *
+     IDSFDY     E DSDSFDY
+      ***  DS for access programs, short data structure
+      *
+     ICPYR@#      DS
+      ***  Data structure for compilation  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                M A I N     P R O C E S S I N G                *
+      *****************************************************************
+      *
+      ***  ' ADD MODE ' on first cycle
+      *
+     C           *IN09     IFNE *ON                        - B1
+     C                     EXSR INISFL                     Init. Subfile
+     C                     EXSR LOASFE                     Load subfile Enquiry
+      *
+     C           CPFPOS    IFNE *ZEROS                     - B2
+     C                     Z-ADDCPFPOS    SFLREC
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+      *
+      ***  Do while not F3 or F12 pressed
+      *
+     C           *INKC     DOWEQ*OFF                       - B1
+     C           *IN12     ANDEQ*OFF
+      *
+     C                     MOVE SELEC1    SELEC2
+      *
+      ***  Reset F9 Indicator
+      *
+     C                     MOVE *OFF      *IN16
+      *
+      ***  Write subfile
+      *
+     C           *IN09     IFNE *ON                        - B2
+      *
+      ***  Set Up Function Key Text - Standard Functions  *
+      *
+     C           *IN15     IFEQ *ON                        - B3
+     C                     MOVEATXT,3     ##CTX1
+     C                     ELSE                            - X3
+     C           *IN16     IFEQ *ON                        - B4
+     C                     MOVEATXT,2     ##CTX1
+     C                     ELSE                            - X4
+     C                     MOVEATXT,1     ##CTX1
+     C                     ENDIF                           - E4
+     C                     ENDIF                           - E3
+      *
+     C                     WRITEERLU13F2                   Bottom
+     C                     WRITE#MSGCTL                    Wrt Msg Scr
+     C                     EXFMTERLU13C1                   Subfile control
+      *
+      ***  Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ***  Which key has been pressed
+      *
+     C                     EXSR PRESS
+      *
+     C           WWAID     IFEQ 'UP'                       - B3
+     C                     Z-ADDWWRRN     SFLREC
+     C                     EXSR LOASFE
+     C                     ENDIF                           - E3
+      *
+     C           CPFPOS    IFNE *ZEROS                     - B3
+     C                     Z-ADDCPFPOS    SFLREC
+     C                     ENDIF                           - E3
+     C                     ENDIF                           - E2
+      *
+      ***  F9 Key has been pressed
+      *
+     C           *IN09     IFEQ *ON                        - B2
+     C                     EXSR SRF9
+     C                     MOVE SELEC1    SELEC2
+      *
+     C           *INKC     IFEQ *ON                        - B3
+     C                     MOVE *OFF      *IN16
+     C                     ENDIF                           - E3
+     C                     ENDIF                           - E2
+      *
+      ***  Enter has been pressed
+      *
+     C           *IN45     IFEQ *OFF                       - B2
+     C           *IN16     ANDEQ*OFF
+      *
+     C           *IN45     IFEQ *OFF                       - B3
+     C           SELEC1    ANDNESELEC2
+     C                     EXSR INISFL
+     C                     EXSR LOASFE
+      *
+      ***  No details in the file
+      *
+     C           SFLREC    IFEQ 0                          - B4
+     C                     MOVEL'ERL0020' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN17
+     C                     EXSR LOASF9
+     C                     MOVE *OFF      *IN17
+     C                     ENDIF                           - E4
+      *
+     C           CPFPOS    IFNE *ZEROS                     - B4
+     C                     Z-ADDCPFPOS    SFLREC
+     C                     ENDIF                           - E4
+      *
+     C                     ENDIF                           - E3
+      *
+      ***  Check if changes in subfile
+      *
+     C                     EXSR SRCHCK
+     C                     ENDIF                           - E2
+      *
+      ***  F5 Key has been pressed : REFRESH PROCESSING ==> REBUILD SUBFILE
+      ***  or back from F9 screen with F9 Key or F12 Key
+      *
+     C                     MOVE *BLANKS   IN16
+      *
+     C           *IN05     IFEQ *ON                        - B2
+     C           *IN16     OREQ *ON
+     C                     MOVE 'Y'       IN16    1
+     C                     MOVE '0'       *IN16
+     C                     MOVE *BLANKS   SELEC1
+      *
+     C                     EXSR INISFL
+     C                     EXSR LOASFE
+      *
+      ***  No details in the file
+      *
+     C           SFLREC    IFEQ 0                          - B3
+     C                     MOVEL'ERL0020' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN17
+     C                     EXSR LOASF9
+     C                     MOVE *OFF      *IN17
+     C                     ENDIF                           - E3
+      *
+     C           CPFPOS    IFNE *ZEROS                     - B3
+     C                     Z-ADDCPFPOS    SFLREC
+     C                     ENDIF                           - E3
+     C                     MOVE *BLANKS   IN16
+     C                     ENDIF                           - E2
+     C                     ENDDO                           - E1
+      *
+      ***  End of program
+      *
+     C                     MOVE *ON       *INLR
+     C                     ROLBK
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SRF9 -  SR executed if F9 pressed                             *
+      * ----                                                          *
+      *   Called by : Main processing                                 *
+      *   Calls     : INISFL LOASF9 ZASNMS SRVAL                      *
+      *****************************************************************
+      *
+     C           SRF9      BEGSR
+      *
+     C                     MOVE *ON       *IN16
+      *
+     C                     EXSR INISFL
+     C                     EXSR LOASF9
+     C                     Z-ADD1         SFLREC
+      *
+     C           *INKC     DOWEQ*OFF                       - B1
+     C           *IN12     ANDEQ*OFF
+      *
+      ***  Write subfile 'F9'
+      *
+      ***  Set Up Function Key Text - Standard Functions  *
+      *
+     C           *IN15     IFEQ *ON                        - B2
+     C                     MOVEATXT,3     ##CTX1
+     C                     ELSE                            - X2
+     C           *IN16     IFEQ *ON                        - B3
+     C                     MOVEATXT,2     ##CTX1
+     C                     ELSE                            - X3
+     C                     MOVEATXT,1     ##CTX1
+     C                     ENDIF                           - E3
+     C                     ENDIF                           - E2
+     C                     WRITEERLU13F2                   Bottom
+     C                     WRITE#MSGCTL                    Wrt Msg Scr
+     C                     EXFMTERLU13C1                   Subfile control
+      *
+      ***  Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ***  F9 Key pressed once again = F12 IS SETON
+      *
+     C           *IN09     IFEQ *ON                        - B2
+     C                     MOVE *ON       *IN12
+     C                     MOVE *OFF      *IN09
+     C                     ENDIF                           - E2
+      *
+      ***  Enter has been pressed on 'F9' Screen
+      *
+     C           *IN45     IFEQ *OFF                       - B2
+     C                     READCERLU13S1                 87
+      *
+     C           *IN87     DOWEQ*OFF                       - B3
+     C                     MOVE *OFF      *IN15
+     C                     MOVEA'000'     *IN,21
+     C                     MOVE *OFF      *IN63
+      *
+      ***  Validate input fields
+      *
+     C                     EXSR SRVAL
+      *
+      ***  No errors
+      *
+     C           WWERR     IFEQ 'N'                        - B4
+      *
+      ***  Check if the new record already exist in the file
+      *
+     C                     MOVE DSTIPC    WKTIPC
+     C                     MOVE DSTIPT    WKTIPT
+      *
+     C           KWAST1    CHAINERTIPTZ1             89
+      *
+      ***  Record already exist in the file
+      *
+     C           *IN89     IFEQ *OFF                       - B5
+     C                     MOVEA'111'     *IN,21
+     C                     MOVEL'ERL1020' ZAMSID
+     C                     MOVE *ON       *IN63
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X5
+     C                     MOVE DSTIPC    ERTIPC                          TI Product Code
+     C                     MOVE DSTIPT    ERTIPT                          TI CSSF Product Type
+     C                     MOVE DSTIPD    ERTIPD                          Description
+     C                     MOVE 'I'       ERTCHT
+     C                     Z-ADDBJRDNB    ERTLCD
+     C                     WRITEUPERTIPT
+      *
+      ***  Write done then protect record
+      *
+     C                     MOVE *ON       *IN15
+     C                     COMIT
+     C                     ENDIF                           - E5
+     C                     ENDIF                           - E4
+      *
+     C                     UPDATERLU13S1
+     C                     MOVE *OFF      *IN15
+     C                     MOVEA'000'     *IN,21
+     C                     MOVE *OFF      *IN63
+      *
+      ***  Read next changed record
+      *
+     C                     READCERLU13S1                 87
+     C                     ENDDO                           - E3
+     C                     ENDIF                           - E2
+      *
+      ***  Refresh on F9 SCREEN
+      *
+     C           *IN05     IFEQ *ON                        - B2
+     C                     EXSR INISFL
+     C                     EXSR LOASF9
+     C*                    Z-ADD1         SFLREC
+     C                     ENDIF                           - E2
+      *
+      ***  Rollup on F9 SCREEN
+      *
+     C           *IN35     IFEQ *ON                        - B2
+     C                     Z-ADDWWRRN2    SFLREC
+     C                     EXSR LOASF9
+     C                     ENDIF                           - E2
+     C                     ENDDO                           - E1
+      *
+     C           *IN12     IFEQ *ON                        - B1
+     C                     MOVE *OFF      *IN12
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SRCHCK - SR To check if changes in subfile                    *
+      * ------                                                        *
+      *   Called by : Main processing                                 *
+      *   Calls     : ZASNMS                                          *
+      *****************************************************************
+      *
+     C           SRCHCK    BEGSR
+      *
+      ***  Retrive all changed records
+      *
+     C                     READCERLU13S1                 87
+      *
+     C           *IN87     DOWEQ*OFF                       - B1
+      *
+      ***  Validation on record subfile
+      *
+     C                     MOVE *OFF      *IN63
+     C                     MOVEA'000'     *IN,20
+      *
+     C           DSSELE    IFNE 'D'                        - B2
+     C           DSSELE    ANDNE*BLANKS
+     C                     MOVE *ON       *IN20
+     C                     MOVE *ON       *IN63
+     C                     MOVEL'ERB3001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E2
+      *
+      ***  Validate input fields
+      *
+     C           DSSELE    IFNE 'D'                        - B2
+     C                     EXSR SRVAL
+     C                     ENDIF                           - E2
+      *
+      ***  NO ERRORS
+      *
+     C           *IN20     IFEQ *OFF                       - B2
+     C           WWERR     ANDEQ'N'
+     C           DSSELE    OREQ 'D'
+      *
+      ***  If no error and 'D' selected ==> DELETE IN FILE
+      *
+     C           DSSELE    IFEQ 'D'                        - B3
+     C                     MOVE DSTIPC    WKTIPC
+      *
+     C                     MOVELDSTIPT    WKTIPT
+      *
+     C           KWAST2    CHAINERTIPTL0             88
+      *
+     C           *IN88     IFEQ *OFF                       - B4
+     C                     DELETUPERTIPT
+     C                     MOVE *ON       *IN15
+     C                     MOVE *ON       *IN18
+      *
+      ***  Record Updated/Deleted by an other workstation
+      *                                                    - X4
+     C                     ELSE
+     C                     MOVEA'111'     *IN,20
+     C                     MOVE *ON       *IN63
+     C                     MOVEL'ERL0022' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E4
+      *
+     C                     ELSE                            - X3
+      *
+      ***  Update file and subfile
+      *
+     C                     MOVE DSTIPC    WKTIPC
+     C                     MOVELDSTIPT    WKTIPT
+      *
+     C           KWAST2    CHAINERTIPTL0             88
+      *
+     C           *IN88     IFEQ *OFF                       - B4
+     C                     MOVE DSTIPC    ERTIPC           Module Id
+     C                     MOVELDSTIPT    ERTIPT
+     C                     MOVE DSTIPD    ERTIPD           Guarantee Code
+     C                     MOVE 'A'       ERTCHT
+     C                     Z-ADDBJRDNB    ERTLCD
+     C                     UPDATUPERTIPT
+      *
+      ***  Record Updated/Deleted by an other workstation
+      *
+     C                     ELSE                            - X4
+     C                     MOVEA'111'     *IN,20
+     C                     MOVE *ON       *IN63
+     C                     MOVEL'ERL0022' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E4
+     C                     ENDIF                           - E3
+     C                     COMIT
+     C                     ENDIF                           - E2
+      *
+     C                     UPDATERLU13S1
+     C                     MOVE *OFF      *IN18
+     C                     MOVE *OFF      *IN63
+     C                     MOVE *OFF      *IN15
+     C                     MOVEA'000'     *IN,20
+      *
+      ***  Read next changed record
+      *
+     C                     READCERLU13S1                 87
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SRVAL - SR To valdidate                                       *
+      * -----                                                         *
+      *   Called by : SRF9 SRCHCK                                     *
+      *   Calls     : ZASNMS AODLSTR0 AOLOANR0 AOACODR0 AOCURRR0      *
+      *               AOCUSTR0                                        *
+      *****************************************************************
+      *
+     C           SRVAL     BEGSR
+      *
+     C                     MOVE 'N'       WWERR   1
+      *
+      *
+      ***  Product code Validation
+      *
+     C                     Z-ADD1         X       20
+     C           DSTIPC    LOKUPCODE,X                   99
+      *
+     C           *IN99     IFEQ '1'                        - B1
+     C                     MOVEANARR,X    DSNARA 35        * TI Narrative
+     C                     ELSE                            - X1
+     C                     MOVE *BLANKS   DSNARA
+     C                     ENDIF                           - E1
+      *
+     C           DSTIPC    IFEQ *BLANKS                    - B1
+     C           *IN99     OREQ *OFF
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'ERL1021' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+      *
+      ***  TI CSSF Product Type
+      *
+     C           DSTIPT    IFEQ *BLANKS                    - B1
+     C                     MOVE *ON       *IN22
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'ERL1022' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+      *
+      ***  Description
+      *
+     C           DSTIPD    IFEQ *BLANKS                    - B1
+     C                     MOVELDSNARA    DSTIPD
+     C                     ENDIF                           - E1
+      *
+     C           DSTIPT    IFEQ *BLANKS                    - B1
+     C                     MOVE *ON       *IN23
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'ERL1023' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INISFL - Initialize subfile                                   *
+      * -----                                                         *
+      *   Called by : Main processing SRF9                            *
+      *   Calls     : None                                            *
+      *****************************************************************
+      *
+     C           INISFL    BEGSR
+      *
+     C                     MOVE *OFF      *IN80
+     C                     MOVE *OFF      *IN81
+     C                     WRITEERLU13C1
+     C                     MOVE *ON       *IN80
+     C                     MOVE *OFF      *IN60
+     C                     Z-ADD0         SFLREC
+     C                     Z-ADD0         WWRRN2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * LOASFE - Load subfile                                         *
+      * ------                                                        *
+      *   Called by : Main processing                                 *
+      ****Calls*******SELEC                                           *
+      *****************************************************************
+      *
+     C           LOASFE    BEGSR
+      *
+      ***  If selection field reset to blank by user ==> SELECT ALL RECORDS
+      *
+     C           SELEC1    IFNE SELEC2                     - B1
+     C           DHTIPC    ANDEQ*BLANKS
+     C           DHTIPT    ANDEQ*BLANKS
+     C                     MOVE SELEC1    SELEC2
+     C                     ENDIF                           - E1
+      *
+      ***  Init screen line number
+      *
+     C                     Z-ADD0         WWCPT   20
+      *
+      ***  Module Id selected
+      *
+     C           SELEC1    IFNE *BLANKS                    - B1
+     C           KPOS      SETLLERTIPTZ1
+     C                     ELSE
+     C           *LOVAL    SETLLERTIPTZ1
+     C                     ENDIF                           - E1
+      *
+      ***  Rollup pressed
+      *
+     C           WWAID     IFEQ 'UP'                       - B1
+     C                     MOVELWWSAV2    WKSELE
+     C           KWAST1    SETLLERTIPTZ1
+     C                     ENDIF                           - E1
+      *
+      ***  Read next record
+      *
+     C                     READ ERTIPTZ1                 87
+      *
+      ***  Load subfile
+      *
+     C                     MOVE *OFF      *IN63
+      *
+     C           *IN87     DOWEQ'0'                        - B1
+     C           WWCPT     ANDLT14
+      *
+     C                     MOVE ERTIPC    DSTIPC
+     C                     MOVE ERTIPT    DSTIPT
+     C                     MOVE ERTIPD    DSTIPD
+      *
+     C                     MOVE *BLANKS   DSSELE
+      *
+      ***  Selection has been enterred and not coming from F9
+      *
+     C           SELEC1    IFNE *BLANKS                    - B2
+     C           IN16      ANDEQ*BLANKS
+      *
+      ***  Record read selected or not ???
+      *
+     C                     MOVE 'Y'       WWSEL   1
+      * Add Specific Selection process if needed (Position <> Selection)
+      *
+      *********************EXSR SELEC
+      *
+     C           WWSEL     IFEQ 'Y'                        - B3
+      *
+      ***  Load fields
+      *
+     C                     ADD  1         SFLREC     81
+     C                     ADD  1         WWCPT            SCREEN LINE MBR
+      *
+      ***  Write in subfile
+      *
+     C                     WRITEERLU13S1
+     C                     ENDIF                           - E3
+      *
+     C                     ELSE                            - X2
+      *
+      ***  Load fields
+      *
+     C                     ADD  1         SFLREC     81
+     C                     ADD  1         WWCPT            SCREEN LINE MBR
+      *
+      ***  Write in subfile
+      *
+     C                     WRITEERLU13S1
+     C                     ENDIF                           - E2
+      *
+      ***  Read next record
+      *
+     C                     READ ERTIPTZ1                 87
+     C                     MOVE ERTIPC    W2TIPC
+     C                     MOVE ERTIPT    W2TIPT
+     C                     MOVE ERTIPD    W2TIPD
+     C                     ENDDO                           - E1
+      *
+     C           *IN87     IFEQ *ON                        - B1
+     C                     MOVE *ON       *IN60
+     C                     ENDIF                           - E1
+      *
+     C                     MOVE DHTIPC    WWTIPC
+     C                     MOVE DHTIPT    WWTIPT
+     C                     Z-ADDSFLREC    WWRRN   40
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * LOASF9 - Load subfile when F9 Key has been pressed            *
+      * ------                                                        *
+      *   Called by : Main processing SRF9                            *
+      *   Calls     : None                                            *
+      *****************************************************************
+      *
+     C           LOASF9    BEGSR
+      *
+     C                     MOVE *OFF      *IN63
+      *
+      ***  Init screen line number
+      *
+     C                     Z-ADD1         CPT     20
+      *
+      ***  Load subfile
+      *
+     C           CPT       DOWLE14                         - B1
+      *
+     C                     MOVE *BLANKS   DSSELE
+     C                     MOVE *BLANKS   DSTIPC
+     C                     MOVE *BLANKS   DSTIPT
+     C                     MOVE *BLANKS   DSTIPD
+      *
+      ***  Load fields
+      *
+     C                     ADD  1         SFLREC     81
+     C                     ADD  1         WWRRN2  40
+     C                     ADD  1         CPT              SCREEN LINE MBR
+      *
+      ***  Write in subfile
+      *
+     C                     WRITEERLU13S1
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SELEC - SR - selection for the record read                    *
+      * ------                                                        *
+      *   Called by : LOANSFE                                         *
+      *   Calls     : None                                            *
+      *                                                               *
+      *****************************************************************
+     C           SELEC     BEGSR
+      *
+     C***********DHTIPC    IFEQ  BLANKS                    - B1
+     C***********DHTIPT    ANDEQ BLANKS
+     C***********          MOVE 'Y'       WWSEL
+     C***********          ENDIF                           - E1
+      *
+      **   Selection process
+      *
+     C***********DHTIPC    IFNE  BLANKS                    - B1
+      *
+     C***********DHTIPC    IFEQ DSTIPC
+     C***********          MOVE 'Y'       WWSEL
+     C***********          ELSE                            - X2
+     C***********          MOVE 'N'       WWSEL
+     C***********          GOTO ENDSEL
+     C***********          ENDIF                           - E2
+     C***********          ENDIF                           - E1
+      *
+     C           ENDSEL    TAG
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * ZASNMS - SR to send message to program's message queue        *
+      * -------                                                       *
+      *   Called by : Main processing SRF9 SRCHCK SRVAL               *
+      *   Calls     : Y2SNMGC                                         *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+      ***  Message file specified use PMSGF
+      *
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ***  Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * PRESS - SR to move the appropriate values into field WWAID,   *
+      * ------- depending on which function key has been pressed      *
+      *   Called by : Main processing                                 *
+      *   Calls     : None                                            *
+      *****************************************************************
+      *
+     C           PRESS     BEGSR
+      *
+      ***  If ENTER pressed, the VLDCMDKEY indicator will be off
+      *
+     C                     MOVE '  '      WWAID
+      *
+     C           *IN45     IFEQ *OFF                       - B1
+     C                     MOVE 'RA'      WWAID   2
+     C                     ENDIF                           - E1
+      *
+      ***  I1 F3 Key
+      *
+     C           *INKC     IFEQ *ON                        - B1
+     C                     MOVE '03'      WWAID
+     C                     ENDIF                           - E1
+      *
+      ***  If F12 Key
+      *
+     C           *INKL     IFEQ *ON                        - B1
+     C                     MOVE '12'      WWAID
+     C                     ENDIF                           - E1
+      *
+      ***  If ROLLUP pressed
+      *
+     C           *IN35     IFEQ *ON                        - B1
+     C                     MOVE 'UP'      WWAID
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   *INZSR - Initial Processing                                 *
+      *   ------                                                      *
+      *   Called by : Main processing                                 *
+      *   Calls     : None.                                           *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTION  1
+      *
+      ***  In mode Enquiry, all the fields are displayed only
+      *
+     C           ACTION    IFEQ 'E'                        - B1
+     C                     MOVE *ON       *IN15
+     C                     ENDIF                           - E1
+      *
+      ***  Select the program MSGQ for error msg.
+      *
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C**********           MOVEL'ERUSRMSG'PMSGF  10                                           CER001
+     C                     MOVEL'STUSRMSG'PMSGF  10                                           CER001
+      *
+      ***  Fill in fields for subroutine ZASNMS
+      *
+     C                     MOVEL'ERLU13'  ZAPGM  10        Message queue
+     C**********           MOVEL'ERUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+      ***  Define necessary KLIST'S
+      *
+      ***  Access to LF/ERTIPTL0
+      *
+     C           KWAST2    KLIST
+     C                     KFLD           WKTIPC  4        TI Product Code
+     C                     KFLD           WKTIPT  4        CSSF Product Type
+      *
+      ***  Access to LF/ERTIPTZ1
+      *
+     C           KWAST1    KLIST
+     C                     KFLD           WKTIPC  4        TI Product Code
+     C                     KFLD           WKTIPT  4        CSSF Product Type
+      *
+      ***  Access to LF/ERTIPTZ1
+      *
+     C           KPOS      KLIST
+     C                     KFLD           DHTIPC           TI Product Code
+     C                     KFLD           DHTIPT           CSSF Product Type
+      *
+      ***  Access the LDA details Data Area
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVE 'ERLU13'  DBPGM     P
+     C                     OUT  LDA
+      *
+      ***  Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WORTCD  7
+     C                     PARM '*FIRST ' WOOPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WORTCD    IFNE *BLANKS                    - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE    P      * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ***************
+     C                     MOVEL'ERLU13'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           - E1
+      *
+     C                     MOVELBJMRDT    SMRDT
+      *
+      *
+      ***  SETUP 'ADD' OR 'AMEND' MODE
+      *
+     C                     READ ERTIPTZ1                 88
+      *
+     C           *IN88     IFEQ *ON                        - B1
+     C                     MOVE *ON       *IN09
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Dump routine in case of error                       *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WWRUN     IFEQ *BLANK                     - B1
+     C                     MOVE 'Y'       WWRUN   1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF                           - E1
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+** TXT
+D=Delete   F3=Exit   F5=Refresh   F9=Go to 'Add' Mode
+           F3=Exit   F5=Refresh   F9=Go to 'Change' Mode
+F3=Exit   F5=Refresh
+**  CPY@
+(c) Finastra International Limited 2005

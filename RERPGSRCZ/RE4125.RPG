@@ -1,0 +1,2832 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Teller/batch totals enquiry/print')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4125 - Teller/Batch Totals Enquiry/Print                   *
+     F*                                                               *
+     F*  Function:  This program enquires into the current currency   *
+     F*  (I/C)      totals for a teller/batch and/or prints the       *
+     F*             teller/batch summary totals slip.                 *
+     F*                                                               *
+     F*  Called By: REC4125 - Teller/Batch Totals Enquiry/Print       *
+     F*                       Control                                 *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 241342             Date 30Aug06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 238046             Date 16Jan06               *
+      *                 BUG7792            Date 21Jul05               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 198269             Date 19Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 097166             Date 22JAN96               *
+     F*                 093509             Date 21SEP95               *
+     F*                 CRT001  *CREATE    DATE 28FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  241342 - Increase display field length. For recompile.       *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  238046 - Error on the enquiry made by BUG7792.  The Number   *
+      *           of Credits and Number of Debits figure were always  *
+      *           zero.  Error during conversion.                     *
+      *  BUG7792 - Error on retail teller total enquiry / print       *
+     F*  198269 - Correctly display sign of Cash Value.               *
+     F*  097166 - Teller's cash position could not be enquired on if  *
+     F*           there are no transactions.                          *
+     F*  093509 - Header does not appear on screen when there are no  *
+     F*           existing transactions for the teller or batch.      *
+     F*  CRT001 - Retail Teller System                                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FTTRNT   UF  E           K        DISK         KINFSR *PSSR
+      ** Teller Controls/Totals
+      *
+     F***RE4125DFCF  E                    WORKSTN      KINFSR *PSSR                          BUG7792
+     FRE7431DFCF  E                    WORKSTN      KINFSR *PSSR                             BUG7792
+     F                                        RRN   KSFILE RE7431S0                          BUG7792
+      ** Display file - Teller/Batch totals Query
+      *
+     FRE4125P1O   E             11     PRINTER      KINFDS SPOOL      UC
+     F** Teller Identifier list
+     F*
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - Message Subfile End Indicator (SFLEND)                *
+     F*   11  - Overflow indicator                                    *
+     F*   14  - Error indicator                                       *
+     F*   20  - Screen indicator                                      *
+     F*   27  - Roll down                                             *
+     F*   28  - Roll up                                               *
+     F*                                                               *
+     F*   31  - Roll down display                                     *                      BUG7792
+     F*   32  - Roll up display                                       *                      BUG7792
+     F*   35  - Multibranching indicator                              *
+     F*                                                               *
+     F*   51  - Input validation indicator                            *
+     F*   52  - Input validation indicator                            *
+     F*   55  - Print setting indicator                               *
+     F*   61  - Overall inout validation indication                   *
+     F*   69  - General error indicator                               *
+     F*                                                               *
+     F*   71  - General Indicator Used For CHAIN                      *
+     F*   72  - Error in chain on TTRNTM2F                            *
+     F*                                                               *
+     F*   LR  - Last record indicator                                 *
+     F*                                                               *
+     F*   KC  - Exit Program                                          *
+     F*   KG  - Roll Down                                             *
+     F*   KH  - Roll Up                                               *
+     F*   KJ  - F10 pressed                                           *
+     F*   KL  - Refresh Screen                                        *
+     F*   KM  - Print Record                                          *
+     F*                                                               *
+     F*   U1  - Teller/Reprint Report                                 *
+     F*   U2  - Batch Report                                          *
+     F* U7+U8 - Set on if database error occurs                       *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  MAIN   - Control Processing                                  *
+     F*  VALF1  - Validate screen input                               *
+     F*  DSPF0  - Display and accept screen format                    *
+     F*  IFLDS  - Initialize screen/work fields                       *
+     F*  INT01  - Initialize Indicators for key Fields                *
+     F*  PRTRTN - Print routine for Teller Slip                       *
+     F*  UPDRTN - Control rtn. for updates                            *
+     F*  FIRST  - Initialize                                          *
+     F*  FINAL  - Terminate                                           *
+     F*  QUERY  - Teller/Batch Totals display                         *
+     F*  GCURR  - Get number of decimal places for currencies         *
+     F*  MSCR   - Moving to Screen                                    *
+     F*  MSCR1  - 1st.  detail line display of slip                   *
+     F*  MSCR2  - 2nd.  detail line display of slip                   *
+     F*  MSCR3  - 3rd.  detail line display of slip                   *
+     F*  MSCR4  - 4th.  detail line display of slip                   *
+     F*  MSCR5  - 5th.  detail line display of slip                   *
+     F*  MSCR6  - 6th.  detail line display of slip                   *
+     F*  MSCR7  - 7th.  detail line display of slip                   *
+     F*  MSCR8  - 8th.  detail line display of slip                   *
+     F*  SCREEN - 9th - 24th detail line display of slip              *
+     F*  SCRWK  - Set fields for display formatting                   *
+     F*  MPRT   - CAS  operation for printing                         *
+     F*  MPRT1  - 1st.  detail line print of slip                     *
+     F*  MPRT2  - 2nd.  detail line print of slip                     *
+     F*  MPRT3  - 3rd.  detail line print of slip                     *
+     F*  MPRT4  - 4th.  detail line print of slip                     *
+     F*  MPRT5  - 5th.  detail line print of slip                     *
+     F*  MPRT6  - 6th.  detail line print of slip                     *
+     F*  MPRT7  - 7th.  detail line print of slip                     *
+     F*  MPRT8  - 8th.  detail line print of slip                     *
+     F*  PRINT  - 9th - 24th. detail line print of slip               *
+     F*  PRTWK  - Set fields for print formatting                     *
+     F*  SNDMSG - Subroutine for calling SCC0240                      *
+     F*  DBERR  - Database Error Handling                             *
+     F*  *PSSR  - Program error                                       *
+     F*                                                               *
+     F*  Standard MIDAS Subroutines                                   *
+     F*                                                               *
+     F*  ZTNLU1 - Get Next Available Tran.Number                      *
+     F*  ZFRPED - Edit numeric field                                  *
+     F*                                                               *
+     F*  External Routines                                            *
+     F*                                                               *
+     F*  SCC0250 - Clear Message Queue                                *
+     F*  SCC0240 - Send Message                                       *
+     F*                                                               *
+     F*  DBERRCTL Program error                                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E*
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+     E*
+     E/COPY ZSRSRC,ZFRPEDZ1
+      ** Array for SR.ZFRPED
+      *
+     E                    CCY        24  3
+     E                    NCR        24  3
+     E                    NDR        24  3
+     E                    VCR        24  8
+     E                    VDR        24  8
+     E                    VCA        24  8
+     E                    VCK        24  8
+      *
+      /EJECT
+     I@CCDS       DS                         24
+      ** Data structure to initialise arrays
+     I                                        1   3 @CCY
+      *
+     I            DS                              5
+      ** Data structure to hold key fields of LF/TTRNT
+     I                                        1   5 @TTRNT
+     I                                        1   1 KTBRI
+     I                                        2   4 KTBID
+     I                                        5   5 KRCTP
+     IENUM        DS                             19
+      ** Data structure for splitting the edited numeric which
+      ** has a value with 2 spaces to the right (CR,-)
+      *
+     I                                        1  17 @EN
+     I                                       18  19 @FL
+     ISPOOL       DS
+     I                                        9   9 OPEN
+     I/COPY ZSRSRC,ZTNLU1Z1
+      **  Data structure to update last transaction number
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      ** Data structure for SR.ZFRPED
+      *
+     I            DS
+      **  Data structure to split 72 char NCRA
+      *
+     I                                        1  72 NCR
+     I                                    P   1   30NCR1
+     I                                    P   4   60NCR2
+     I                                    P   7   90NCR3
+     I                                    P  10  120NCR4
+     I                                    P  13  150NCR5
+     I                                    P  16  180NCR6
+     I                                    P  19  210NCR7
+     I                                    P  22  240NCR8
+     I                                    P  25  270NCR9
+     I                                    P  28  300NCR10
+     I                                    P  32  330NCR11
+     I                                    P  35  360NCR12
+     I                                    P  38  390NCR13
+     I                                    P  40  420NCR14
+     I                                    P  43  450NCR15
+     I                                    P  46  480NCR16
+     I                                    P  49  510NCR17
+     I                                    P  52  540NCR18
+     I                                    P  55  570NCR19
+     I                                    P  58  600NCR20
+     I                                    P  61  630NCR21
+     I                                    P  64  660NCR22
+     I                                    P  67  690NCR23
+     I                                    P  69  720NCR24
+      *
+     I            DS
+      **  Data structure to convert char NCRA to numeric
+      *
+     I                                        1   3 @NCR
+     I                                    P   1   30@NCRN
+      *
+     I            DS
+      **  Data structure to split 72 char NDRA
+      *
+     I                                        1  72 NDR
+     I                                    P   1   30NDR1
+     I                                    P   4   60NDR2
+     I                                    P   7   90NDR3
+     I                                    P  10  120NDR4
+     I                                    P  13  150NDR5
+     I                                    P  16  180NDR6
+     I                                    P  19  210NDR7
+     I                                    P  22  240NDR8
+     I                                    P  25  270NDR9
+     I                                    P  28  300NDR10
+     I                                    P  32  330NDR11
+     I                                    P  35  360NDR12
+     I                                    P  38  390NDR13
+     I                                    P  40  420NDR14
+     I                                    P  43  450NDR15
+     I                                    P  46  480NDR16
+     I                                    P  49  510NDR17
+     I                                    P  52  540NDR18
+     I                                    P  55  570NDR19
+     I                                    P  58  600NDR20
+     I                                    P  61  630NDR21
+     I                                    P  64  660NDR22
+     I                                    P  67  690NDR23
+     I                                    P  69  720NDR24
+      *
+     I            DS
+      **  Data structure to convert char NDRA to numeric
+      *
+     I                                        1   3 @NDR
+     I                                    P   1   30@NDRN
+      *
+     I            DS
+      **  Data structure to split 192 char VCRA
+      *
+     I                                        1 192 VCR
+     I                                    P   1   80VCR1
+     I                                    P   9  160VCR2
+     I                                    P  17  240VCR3
+     I                                    P  25  320VCR4
+     I                                    P  33  400VCR5
+     I                                    P  41  480VCR6
+     I                                    P  49  560VCR7
+     I                                    P  57  640VCR8
+     I                                    P  65  720VCR9
+     I                                    P  73  800VCR10
+     I                                    P  81  880VCR11
+     I                                    P  89  960VCR12
+     I                                    P  97 1040VCR13
+     I                                    P 105 1120VCR14
+     I                                    P 113 1200VCR15
+     I                                    P 121 1280VCR16
+     I                                    P 129 1360VCR17
+     I                                    P 137 1440VCR18
+     I                                    P 145 1520VCR19
+     I                                    P 153 1600VCR20
+     I                                    P 161 1680VCR21
+     I                                    P 169 1760VCR22
+     I                                    P 177 1840VCR23
+     I                                    P 185 1920VCR24
+      *
+     I            DS
+      **  Data structure to convert char VCRA to numeric
+      *
+     I                                        1   8 @VCRA
+     I                                    P   1   80@VCRAN
+      *
+     I            DS
+      **  Data structure to split 192 char VDRA
+      *
+     I                                        1 192 VDR
+     I                                    P   1   80VDR1
+     I                                    P   9  160VDR2
+     I                                    P  17  240VDR3
+     I                                    P  25  320VDR4
+     I                                    P  33  400VDR5
+     I                                    P  41  480VDR6
+     I                                    P  49  560VDR7
+     I                                    P  57  640VDR8
+     I                                    P  65  720VDR9
+     I                                    P  73  800VDR10
+     I                                    P  81  880VDR11
+     I                                    P  89  960VDR12
+     I                                    P  97 1040VDR13
+     I                                    P 105 1120VDR14
+     I                                    P 113 1200VDR15
+     I                                    P 121 1280VDR16
+     I                                    P 129 1360VDR17
+     I                                    P 137 1440VDR18
+     I                                    P 145 1520VDR19
+     I                                    P 153 1600VDR20
+     I                                    P 161 1680VDR21
+     I                                    P 169 1760VDR22
+     I                                    P 177 1840VDR23
+     I                                    P 185 1920VDR24
+      *
+     I            DS
+      **  Data structure to convert char VDRA to numeric
+      *
+     I                                        1   8 @VDRA
+     I                                    P   1   80@VDRAN
+      *
+     I            DS
+      **  Data structure to split 192 char VCAA
+      *
+     I                                        1 192 VCA
+     I                                    P   1   80VCA1
+     I                                    P   9  160VCA2
+     I                                    P  17  240VCA3
+     I                                    P  25  320VCA4
+     I                                    P  33  400VCA5
+     I                                    P  41  480VCA6
+     I                                    P  49  560VCA7
+     I                                    P  57  640VCA8
+     I                                    P  65  720VCA9
+     I                                    P  73  800VCA10
+     I                                    P  81  880VCA11
+     I                                    P  89  960VCA12
+     I                                    P  97 1040VCA13
+     I                                    P 105 1120VCA14
+     I                                    P 113 1200VCA15
+     I                                    P 121 1280VCA16
+     I                                    P 129 1360VCA17
+     I                                    P 137 1440VCA18
+     I                                    P 145 1520VCA19
+     I                                    P 153 1600VCA20
+     I                                    P 161 1680VCA21
+     I                                    P 169 1760VCA22
+     I                                    P 177 1840VCA23
+     I                                    P 185 1920VCA24
+      *
+     I            DS
+      **  Data structure to convert char VCAA to numeric
+      *
+     I                                        1   8 @VCAA
+     I                                    P   1   80@VCAAN
+      *
+     I            DS
+      **  Data structure to split 192 char VCKA
+      *
+     I                                        1 192 VCK
+     I                                    P   1   80VCK1
+     I                                    P   9  160VCK2
+     I                                    P  17  240VCK3
+     I                                    P  25  320VCK4
+     I                                    P  33  400VCK5
+     I                                    P  41  480VCK6
+     I                                    P  49  560VCK7
+     I                                    P  57  640VCK8
+     I                                    P  65  720VCK9
+     I                                    P  73  800VCK10
+     I                                    P  81  880VCK11
+     I                                    P  89  960VCK12
+     I                                    P  97 1040VCK13
+     I                                    P 105 1120VCK14
+     I                                    P 113 1200VCK15
+     I                                    P 121 1280VCK16
+     I                                    P 129 1360VCK17
+     I                                    P 137 1440VCK18
+     I                                    P 145 1520VCK19
+     I                                    P 153 1600VCK20
+     I                                    P 161 1680VCK21
+     I                                    P 169 1760VCK22
+     I                                    P 177 1840VCK23
+     I                                    P 185 1920VCK24
+      *
+     I            DS
+      **  Data structure to convert char VCKA to numeric
+      *
+     I                                        1   8 @VCKA
+     I                                    P   1   80@VCKAN
+      *
+     IPSDS       SDS
+      **  Program Status Data Structure
+      *
+     I                                        1  10 @PGM
+      **  Field containing Program name
+     I                                      244 253 @JOB
+      **  Field containing Workstation ID
+     I                                      254 263 SUSER
+      **  Field Containing User ID
+      *
+     ILDA         DS                            256
+      **  Field combining the following fields
+     I                                      134 183 DBLOT
+      **  Name of database file in error
+     I                                      134 141 DBFILE
+      **  Key value causing database error
+     I                                      142 170 DBKEY
+      **  Name of program causing database error
+     I                                      171 180 DBPGM
+      **  Number of database error
+     I                                      181 1830DBASE
+     I*
+     IRUNDAT    E DS
+     I**  Standard Data Area Layout for Multibranching Indicator
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** External data structure for Bank Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** External data structure for Currency Codes
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for access programs, Short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I** Second DS for access programs, Long data structure
+     I*
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * MAIN              - Control Processing                        *
+      *                                                               *
+      * CALLS      FIRST  - Initialize                                *
+      *            FINAL  - Terminate                                 *
+      *            DSPF0  - Display and accept screen format          *
+      *            VALF1  - Validate screen input                     *
+      *            QUERY  - Teller/Batch Totals display               *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Initial processing
+     C                     EXSR FIRST
+      *
+      ** Do while cmd/3 is not pressed
+     C           *INKC     DOWEQ'0'
+      *
+      ** Display & accept initial screen
+     C                     EXSR DSPF0
+      *
+      ** If Enter key is pressed, validate screen input
+     C           *INKC     IFNE '1'
+      *
+     C                     EXSR VALF1
+      *
+      ** If no input validation errors
+     C           *IN61     IFEQ '0'
+      *
+      ** Display Total/Batch information screen
+     C                     EXSR QUERY
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      **  Final Processing
+     C                     EXSR FINAL
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DSPF0             - Display Initial Screen                    *
+      *                                                               *
+      * CALLS             - SCC0250 - clear message queue             *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DSPF0     BEGSR                           ** DSPF0  **
+      *
+      ** Initialise all the screen and print variables and DS
+     C                     Z-ADD0         SNDRA
+     C                     Z-ADD0         SNCRA
+     C                     Z-ADD0         NCR1
+     C                     Z-ADD0         NCR2
+     C                     Z-ADD0         NCR3
+     C                     Z-ADD0         NCR4
+     C                     Z-ADD0         NCR5
+     C                     Z-ADD0         NCR6
+     C                     Z-ADD0         NCR7
+     C                     Z-ADD0         NCR8
+     C                     Z-ADD0         NDR9
+     C                     Z-ADD0         NDR10
+     C                     Z-ADD0         NDR11
+     C                     Z-ADD0         NDR12
+     C                     Z-ADD0         NDR13
+     C                     Z-ADD0         NDR14
+     C                     Z-ADD0         NDR15
+     C                     Z-ADD0         NDR16
+     C                     Z-ADD0         NDR17
+     C                     Z-ADD0         NDR18
+     C                     Z-ADD0         NDR19
+     C                     Z-ADD0         NDR20
+     C                     Z-ADD0         NDR21
+     C                     Z-ADD0         NDR22
+     C                     Z-ADD0         NDR23
+     C                     Z-ADD0         NDR24
+      *
+     C                     Z-ADD0         VCR1
+     C                     Z-ADD0         VCR2
+     C                     Z-ADD0         VCR3
+     C                     Z-ADD0         VCR4
+     C                     Z-ADD0         VCR5
+     C                     Z-ADD0         VCR6
+     C                     Z-ADD0         VCR7
+     C                     Z-ADD0         VCR8
+     C                     Z-ADD0         VCR9
+     C                     Z-ADD0         VCR10
+     C                     Z-ADD0         VCR11
+     C                     Z-ADD0         VCR12
+     C                     Z-ADD0         VCR13
+     C                     Z-ADD0         VCR14
+     C                     Z-ADD0         VCR15
+     C                     Z-ADD0         VCR16
+     C                     Z-ADD0         VCR17
+     C                     Z-ADD0         VCR18
+     C                     Z-ADD0         VCR19
+     C                     Z-ADD0         VCR20
+     C                     Z-ADD0         VCR21
+     C                     Z-ADD0         VCR22
+     C                     Z-ADD0         VCR23
+     C                     Z-ADD0         VCR24
+      *
+     C                     MOVEANCR       NDR
+     C                     MOVEAVCR       VDR
+     C                     MOVEAVCR       VCA
+     C                     MOVEAVCR       VCK
+      *
+     C           *IN61     IFEQ '0'
+     C           *INKM     OREQ '1'
+     C           *INKL     OREQ '1'
+     C                     MOVEL*BLANKS   SENQY
+     C                     END
+     C**********           MOVEL*BLANKS   SVCRA                                              BUG7792
+     C**********           MOVEL*BLANKS   SVDRA                                              BUG7792
+     C**********           MOVEL*BLANKS   SVCAA                                              BUG7792
+     C**********           MOVEL*BLANKS   SVCKA                                              BUG7792
+      *
+     C                     MOVEL*BLANKS   PVCRA
+     C                     MOVEL*BLANKS   PVDRA
+     C                     MOVEL*BLANKS   PVCAA
+     C                     MOVEL*BLANKS   PVCKA
+     C**  Setting up of screen format depending on query asked for
+     C**  a Teller or a Batch
+     C   U1                MOVEL'Teller ' SPMPT  10
+     C   U1                MOVE 'ID'      SPMPT
+     C   U2                MOVEL'Batch '  SPMPT
+     C   U2                MOVE 'No.'     SPMPT
+     C                     MOVE 'N'       SSCRN1  1                                          BUG7792
+     C                     Z-ADD0         Y       20                                         BUG7792
+     C                     Z-ADD0         @ARR    20                                         BUG7792
+      *
+      ** If Cmd/3 is not pressed
+     C           *INKC     IFEQ '0'
+      *
+      ** Display and accept screen format
+     C**********           WRITERE4125C0                                                     BUG7792
+     C**********           EXFMTRE4125F0                                                     BUG7792
+     C                     WRITERE7431C1                                                     BUG7792
+     C                     EXFMTRE7431F0                                                     BUG7792
+      *
+      ** Clear program message queue
+     C                     CALL 'SCC0250'
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * QUERY             - Teller/Batch display                      *
+      *                                                               *
+      * CALLS      SCC0250- clear message queue                       *
+      *            PRTRTN - Print routine for Teller Slip             *
+      *            UPDRTN - Control rtn. for updates                  *
+      *            MSCR   - Moving to Screen                          *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           QUERY     BEGSR                           ** QUERY  **
+      *
+     C           *INU1     IFEQ '1'
+     C                     MOVE SFTN      FRMTRN
+     C           NATN      SUB  1         TOTRN
+      *
+     C           NATN      IFLE SFTN
+     C                     SETON                     55
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVE 1         FRMTRN
+     C                     MOVE BITU      TOTRN
+     C                     END
+      *
+     C                     SETOF                     20
+     C                     SETOF                     272881                                  BUG7792
+     C                     SETOF                     3132                                    BUG7792
+     C           CCY,13    IFNE ' '                                                          BUG7792
+     C                     MOVE 'N'       SSCRN1                                             BUG7792
+     C                     MOVE *ON       *IN32                                              BUG7792
+     C                     MOVE *ON       *IN28                                              BUG7792
+     C                     ELSE                                                              BUG7792
+     C                     MOVE 'Y'       SSCRN1                                             BUG7792
+     C                     ENDIF                                                             BUG7792
+      *
+      * Allow rollup/down
+     C           *INKG     DOUEQ'0'
+     C           *INKH     ANDEQ'0'
+      *
+     C                     WRITERE7431F0                                                     BUG7792
+     C                     WRITERE7431C1                                                     BUG7792
+     C                     WRITERE7431F1                                                     BUG7792
+      *                                                                                      BUG7792
+      **   Clear Screen Subfile                                                              BUG7792
+      *                                                                                      BUG7792
+     C                     MOVE '1'       *IN80                                              BUG7792
+     C                     WRITERE7431C0                                                     BUG7792
+     C                     MOVE '0'       *IN80                                              BUG7792
+     C**********           SETOF                     2728                                    BUG7792
+      *
+      * Set work fields for 1st or 2nd screen
+      * Clear screen if 2nd screen
+     C           *INKH     IFEQ '0'
+     C                     Z-ADD1         @A      20
+     C                     Z-ADD12        @B      20
+     C                     MOVE *OFF      *IN27                                              BUG7792
+     C                     MOVE *OFF      *IN32                                              BUG7792
+     C                     MOVE *ON       *IN81                                              BUG7792
+     C           SSCRN1    IFEQ 'N'                                                          BUG7792
+     C                     MOVE *ON       *IN28                                              BUG7792
+     C                     MOVE *ON       *IN31                                              BUG7792
+     C                     ELSE                                                              BUG7792
+     C                     MOVE *OFF      *IN28                                              BUG7792
+     C                     MOVE *OFF      *IN31                                              BUG7792
+     C                     MOVE *OFF      *IN32                                              BUG7792
+     C                     ENDIF                                                             BUG7792
+     C                     WRITERE7431F1                                                     BUG7792
+     C                     ELSE
+     C                     Z-ADD13        @A
+     C                     Z-ADD24        @B
+     C                     SETON                     27
+     C                     MOVE *ON       *IN32                                              BUG7792
+     C                     MOVE *OFF      *IN28                                              BUG7792
+     C                     MOVE *OFF      *IN31                                              BUG7792
+     C**********           WRITERE4125C0                                                     BUG7792
+     C**********           WRITERE4125F0                                                     BUG7792
+     C                     WRITERE7431F1                                                     BUG7792
+     C                     END
+      *
+      *
+     C********** @A        DO   @B        @ARR    20                                         BUG7792
+      *
+     C********** CCY,@ARR  IFNE '   '                                                        BUG7792
+      *
+     C**********           EXSR MSCR                                                         BUG7792
+      *
+     C**********           END                                                               BUG7792
+      *
+     C**********           END  1                                                            BUG7792
+      *
+     C           @A        DO   @B        Y                                                  BUG7792
+     C           CCY,Y     IFNE '   '                                                        BUG7792
+      ** Get decimal digits for the currency                                                 BUG7792
+     C                     EXSR GCURR                                                        BUG7792
+     C                     MOVE CCY,Y     CCYR                                               BUG7792
+     C**********           MOVE NCR,Y     NCRA                                        BUG7792 238046
+     C**********           MOVE NDR,Y     NDRA                                        BUG7792 238046
+     C                     MOVE NCR,Y     @NCR                                                238046
+     C                     Z-ADD@NCRN     NCRA                                                238046
+     C                     MOVE NDR,Y     @NDR                                                238046
+     C                     Z-ADD@NDRN     NDRA                                                238046
+     C                     EXSR SRCVT                                                        BUG7792
+      *                                                                                      BUG7792
+     C                     Z-ADDY         RRN                                                BUG7792
+     C                     WRITERE7431S0                                                     BUG7792
+     C                     ENDIF                                                             BUG7792
+     C                     ENDDO                                                             BUG7792
+     C                     SETON                     20
+     C**********           WRITERE4125FD                                                     BUG7792
+     C**********           WRITERE4125C0                                                     BUG7792
+     C**********           EXFMTRE4125C0                                                     BUG7792
+     C                     EXFMTRE7431C0                                                     BUG7792
+      *
+     C                     END
+      *
+      ** If Cmd/13 is pressed, perform print teller slip
+     C           *INKM     IFEQ '1'
+     C                     EXSR PRTRTN
+      *
+     C           *INU1     IFEQ '1'
+      *
+      ** Update next available transaction number
+     C                     EXSR UPDRTN
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C*                    END
+      *
+     C                     ENDSR
+      *****************************************************************                      BUG7792
+      /EJECT                                                                                 BUG7792
+      *****************************************************************                      BUG7792
+      *                                                               *                      BUG7792
+      *  SRCVT     - Convert fields in array for display              *                      BUG7792
+      *                                                               *                      BUG7792
+      *  Called by - QUERY                                            *                      BUG7792
+      *                                                               *                      BUG7792
+      *  Calls     - ZFRPED                                           *                      BUG7792
+      *                                                               *                      BUG7792
+      *****************************************************************                      BUG7792
+     C           SRCVT     BEGSR                                                             BUG7792
+      *                                                                                      BUG7792
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to                                  BUG7792
+      ** edited numerics with decimal point                                                  BUG7792
+      *                                                                                      BUG7792
+     C                     Z-ADD0         ZFLD15                                             BUG7792
+     C                     MOVE *BLANKS   ENUM                                               BUG7792
+     C                     MOVE *BLANKS   VDRA                                               BUG7792
+     C                     MOVE VDR,Y     @VDRA                                              BUG7792
+     C                     Z-ADD@VDRAN    ZFLD15                                             BUG7792
+     C                     MOVE 'L'       ZECODE                                             BUG7792
+     C                     MOVE A6NBDP    ZDECS                                              BUG7792
+     C                     EXSR ZFRPED                                                       BUG7792
+     C                     MOVE ZOUT22    ENUM                                               BUG7792
+     C                     MOVE @EN       VDRA                                               BUG7792
+      *                                                                                      BUG7792
+     C                     Z-ADD0         ZFLD15                                             BUG7792
+     C                     MOVE *BLANKS   ENUM                                               BUG7792
+     C                     MOVE *BLANKS   VCRA                                               BUG7792
+     C                     MOVE VCR,Y     @VCRA                                              BUG7792
+     C                     Z-ADD@VCRAN    ZFLD15                                             BUG7792
+     C                     MOVE 'L'       ZECODE                                             BUG7792
+     C                     MOVE A6NBDP    ZDECS                                              BUG7792
+     C                     EXSR ZFRPED                                                       BUG7792
+     C                     MOVE ZOUT22    ENUM                                               BUG7792
+     C                     MOVE @EN       VCRA                                               BUG7792
+      *                                                                                      BUG7792
+     C                     Z-ADD0         ZFLD15                                             BUG7792
+     C                     MOVE *BLANKS   ENUM                                               BUG7792
+     C                     MOVE *BLANKS   VCAA                                               BUG7792
+     C                     MOVE VCA,Y     @VCAA                                              BUG7792
+     C                     Z-ADD@VCAAN    ZFLD15                                             BUG7792
+     C                     MOVE 'C'       ZECODE                                             BUG7792
+     C                     MOVE A6NBDP    ZDECS                                              BUG7792
+     C                     EXSR ZFRPED                                                       BUG7792
+     C                     MOVE ZOUT22    ENUM                                               BUG7792
+      *                                                                                      BUG7792
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')                               BUG7792
+      *                                                                                      BUG7792
+     C                     MOVE VCA,Y     @VCAA                                              BUG7792
+     C           @VCAAN    IFGT 0                                                            BUG7792
+     C                     MOVE 'DR'      @FL                                                BUG7792
+     C                     END                                                               BUG7792
+     C                     MOVE ENUM      VCAA                                               BUG7792
+      *                                                                                      BUG7792
+     C                     Z-ADD0         ZFLD15                                             BUG7792
+     C                     MOVE *BLANKS   ENUM                                               BUG7792
+     C                     MOVE *BLANKS   VCKA                                               BUG7792
+     C                     MOVE VCK,Y     @VCKA                                              BUG7792
+     C                     Z-ADD@VCKAN    ZFLD15                                             BUG7792
+     C                     MOVE 'L'       ZECODE                                             BUG7792
+     C                     MOVE A6NBDP    ZDECS                                              BUG7792
+     C                     EXSR ZFRPED                                                       BUG7792
+     C                     MOVE ZOUT22    ENUM                                               BUG7792
+     C                     MOVE @EN       VCKA                                               BUG7792
+      *                                                                                      BUG7792
+     C                     ENDSR                                                             BUG7792
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MSCR              - Moving to Screen                          *
+      *                                                               *
+      * CALLED BY  QUERY  - Teller/Batch display                      *
+      *                                                               *
+      * CALLS      MSCR1  - 1st.  detail line display of slip         *
+      *            MSCR2  - 2nd.  detail line display of slip         *
+      *            MSCR3  - 3rd.  detail line display of slip         *
+      *            MSCR4  - 4th.  detail line display of slip         *
+      *            MSCR5  - 5th.  detail line display of slip         *
+      *            MSCR6  - 6th.  detail line display of slip         *
+      *            MSCR7  - 7th.  detail line display of slip         *
+      *            MSCR8  - 8th.  detail line display of slip         *
+      *            SCREEN - 9th - 24 detail line display of slip      *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C********** MSCR      BEGSR                           ** MSCR   **                      BUG7792
+      *
+     C********** @ARR      CASEQ1         MSCR1                                              BUG7792
+      *
+     C********** @ARR      CASEQ2         MSCR2                                              BUG7792
+      *
+     C********** @ARR      CASEQ3         MSCR3                                              BUG7792
+      *
+     C********** @ARR      CASEQ4         MSCR4                                              BUG7792
+      *
+     C********** @ARR      CASEQ5         MSCR5                                              BUG7792
+      *
+     C********** @ARR      CASEQ6         MSCR6                                              BUG7792
+      *
+     C********** @ARR      CASEQ7         MSCR7                                              BUG7792
+      *
+     C********** @ARR      CASEQ8         MSCR8                                              BUG7792
+      *
+     C**********           CAS            SCREEN                                             BUG7792
+      *
+     C**********           END                                                               BUG7792
+      *
+     C**********           ENDSR                                                             BUG7792
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MSCR1             - Moving to Screen                          *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY  MSCR   - Moving to screen                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C********** MSCR1     BEGSR                           ** MSCR1  **                      BUG7792
+      *
+      ** Get decimal digits for the currency
+     C**********           EXSR GCURR                                                        BUG7792
+      *
+     C**********           MOVE CCY,@ARR  SCCYR                                              BUG7792
+     C**********           Z-ADDNCR1      SNCRA                                              BUG7792
+     C**********           Z-ADDNDR1      SNDRA                                              BUG7792
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVDRA                                              BUG7792
+     C**********           Z-ADDVDR1      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVDRA                                              BUG7792
+      **********                                                                             BUG7792
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCRA                                              BUG7792
+     C**********           Z-ADDVCR1      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+      **********                                                                             BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCAA                                              BUG7792
+     C**********           Z-ADDVCA1      ZFLD15                                             BUG7792
+     C**********           MOVE 'C'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C********** VCA1      IFGT 0                                                            BUG7792
+     C**********           MOVE 'DR'      @FL                                                BUG7792
+     C**********           END                                                               BUG7792
+     C**********           MOVE ENUM      SVCAA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCKA                                              BUG7792
+     C**********           Z-ADDVCK1      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCKA                                              BUG7792
+      *
+     C**********           WRITERE4125F1                                                     BUG7792
+      *
+     C**********           ENDSR                                                             BUG7792
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MSCR2             - Moving to Screen                          *
+      *                                                               *
+      * CALLS     ZFRPED  - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY MSCR    - Moving to screen                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C********** MSCR2     BEGSR                           ** MSCR2  **                      BUG7792
+      *
+      ** Get decimal digits for the currency
+     C**********           EXSR GCURR                                                        BUG7792
+      *
+     C**********           MOVE CCY,@ARR  SCCYR                                              BUG7792
+     C**********           Z-ADDNCR2      SNCRA                                              BUG7792
+     C**********           Z-ADDNDR2      SNDRA                                              BUG7792
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVDRA                                              BUG7792
+     C**********           Z-ADDVDR2      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVDRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCRA                                              BUG7792
+     C**********           Z-ADDVCR2      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCAA                                              BUG7792
+     C**********           Z-ADDVCA2      ZFLD15                                             BUG7792
+     C**********           MOVE 'C'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C********** VCA2      IFGT 0                                                            BUG7792
+     C**********           MOVE 'DR'      @FL                                                BUG7792
+     C**********           END                                                               BUG7792
+     C**********           MOVE ENUM      SVCAA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCKA                                              BUG7792
+     C**********           Z-ADDVCK2      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCKA                                              BUG7792
+      *
+     C**********           WRITERE4125F2                                                     BUG7792
+      *
+     C**********           ENDSR                                                             BUG7792
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MSCR3             - Moving to Screen                          *
+      *                                                               *
+      * CALLS     ZFRPED  - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY MSCR    - Moving to screen                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C********** MSCR3     BEGSR                           ** MSCR3  **                      BUG7792
+      *
+      ** Get decimal digits for the currency
+     C**********           EXSR GCURR                                                        BUG7792
+      *
+     C**********           MOVE CCY,@ARR  SCCYR                                              BUG7792
+     C**********           Z-ADDNCR3      SNCRA                                              BUG7792
+     C**********           Z-ADDNDR3      SNDRA                                              BUG7792
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVDRA                                              BUG7792
+     C**********           Z-ADDVDR3      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVDRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCRA                                              BUG7792
+     C**********           Z-ADDVCR3      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCAA                                              BUG7792
+     C**********           Z-ADDVCA3      ZFLD15                                             BUG7792
+     C**********           MOVE 'C'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C********** VCA3      IFGT 0                                                            BUG7792
+     C**********           MOVE 'DR'      @FL                                                BUG7792
+     C**********           END                                                               BUG7792
+     C**********           MOVE ENUM      SVCAA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCKA                                              BUG7792
+     C**********           Z-ADDVCK3      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCKA                                              BUG7792
+      *
+     C**********           WRITERE4125F3                                                     BUG7792
+      *
+     C**********           ENDSR                                                             BUG7792
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MSCR4             - Moving to Screen                          *
+      *                                                               *
+      * CALLS     ZFRPED  - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY MSCR    - Moving to screen                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C********** MSCR4     BEGSR                           ** MSCR4  **                      BUG7792
+      *
+      ** Get decimal digits for the currency
+     C**********           EXSR GCURR                                                        BUG7792
+      *
+     C**********           MOVE CCY,@ARR  SCCYR                                              BUG7792
+     C**********           Z-ADDNCR4      SNCRA                                              BUG7792
+     C**********           Z-ADDNDR4      SNDRA                                              BUG7792
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVDRA                                              BUG7792
+     C**********           Z-ADDVDR4      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVDRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCRA                                              BUG7792
+     C**********           Z-ADDVCR4      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCAA                                              BUG7792
+     C**********           Z-ADDVCA4      ZFLD15                                             BUG7792
+     C**********           MOVE 'C'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C********** VCA4      IFGT 0                                                            BUG7792
+     C**********           MOVE 'DR'      @FL                                                BUG7792
+     C**********           END                                                               BUG7792
+     C**********           MOVE ENUM      SVCAA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCKA                                              BUG7792
+     C**********           Z-ADDVCK4      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCKA                                              BUG7792
+      *
+     C**********           WRITERE4125F4                                                     BUG7792
+      *
+     C**********           ENDSR                                                             BUG7792
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MSCR5             - Moving to Screen                          *
+      *                                                               *
+      * CALLS     ZFRPED  - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY MSCR    - Moving to screen                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C********** MSCR5     BEGSR                           ** MSCR5  **                      BUG7792
+      *
+      ** Get decimal digits for the currency
+     C**********           EXSR GCURR                                                        BUG7792
+      *
+     C**********           MOVE CCY,@ARR  SCCYR                                              BUG7792
+     C**********           Z-ADDNCR5      SNCRA                                              BUG7792
+     C**********           Z-ADDNDR5      SNDRA                                              BUG7792
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVDRA                                              BUG7792
+     C**********           Z-ADDVDR5      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVDRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCRA                                              BUG7792
+     C**********           Z-ADDVCR5      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCAA                                              BUG7792
+     C**********           Z-ADDVCA5      ZFLD15                                             BUG7792
+     C**********           MOVE 'C'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C********** VCA5      IFGT 0                                                            BUG7792
+     C**********           MOVE 'DR'      @FL                                                BUG7792
+     C**********           END                                                               BUG7792
+     C**********           MOVE ENUM      SVCAA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCKA                                              BUG7792
+     C**********           Z-ADDVCK5      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCKA                                              BUG7792
+      *
+     C**********           WRITERE4125F5                                                     BUG7792
+      *
+     C**********           ENDSR                                                             BUG7792
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MSCR6             - Moving to Screen                          *
+      *                                                               *
+      * CALLS     ZFRPED  - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY MSCR    - Moving to screen                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C********** MSCR6     BEGSR                           ** MSCR6  **                      BUG7792
+      *
+      ** Get decimal digits for the currency
+     C**********           EXSR GCURR                                                        BUG7792
+      *
+     C**********           MOVE CCY,@ARR  SCCYR                                              BUG7792
+     C**********           Z-ADDNCR6      SNCRA                                              BUG7792
+     C**********           Z-ADDNDR6      SNDRA                                              BUG7792
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVDRA                                              BUG7792
+     C**********           Z-ADDVDR6      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVDRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCRA                                              BUG7792
+     C**********           Z-ADDVCR6      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   SVCAA                                              BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           Z-ADDVCA6      ZFLD15                                             BUG7792
+     C**********           MOVE 'C'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C********** VCA6      IFGT 0                                                            BUG7792
+     C**********           MOVE 'DR'      @FL                                                BUG7792
+     C**********           END                                                               BUG7792
+     C**********           MOVE ENUM      SVCAA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCKA                                              BUG7792
+     C**********           Z-ADDVCK6      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCKA                                              BUG7792
+      *
+     C**********           WRITERE4125F6                                                     BUG7792
+      *
+     C**********           ENDSR                                                             BUG7792
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MSCR7             - Moving to Screen                          *
+      *                                                               *
+      * CALLS     ZFRPED  - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY MSCR    - Moving to screen                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C********** MSCR7     BEGSR                           ** MSCR7  **                      BUG7792
+      *
+      ** Get decimal digits for the currency
+     C**********           EXSR GCURR                                                        BUG7792
+      *
+     C**********           MOVE CCY,@ARR  SCCYR                                              BUG7792
+     C**********           Z-ADDNCR7      SNCRA                                              BUG7792
+     C**********           Z-ADDNDR7      SNDRA                                              BUG7792
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVDRA                                              BUG7792
+     C**********           Z-ADDVDR7      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVDRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCRA                                              BUG7792
+     C**********           Z-ADDVCR7      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCAA                                              BUG7792
+     C**********           Z-ADDVCA7      ZFLD15                                             BUG7792
+     C**********           MOVE 'C'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C********** VCA7      IFGT 0                                                            BUG7792
+     C**********           MOVE 'DR'      @FL                                                BUG7792
+     C**********           ELSE                                                              BUG7792
+     C********** VCA7      IFEQ 0                                                            BUG7792
+     C**********           MOVE *BLANKS   @FL                                                BUG7792
+     C**********           END                                                               BUG7792
+     C**********           END                                                               BUG7792
+     C**********           MOVE ENUM      SVCAA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCKA                                              BUG7792
+     C**********           Z-ADDVCK7      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCKA                                              BUG7792
+      *
+     C**********           WRITERE4125F7                                                     BUG7792
+      *
+     C**********           ENDSR                                                             BUG7792
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MSCR8             - Moving to Screen                          *
+      *                                                               *
+      * CALLS     ZFRPED  - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY MSCR    - Moving to screen                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C********** MSCR8     BEGSR                           ** MSCR8  **                      BUG7792
+      *
+      ** Get decimal digits for the currency
+     C**********           EXSR GCURR                                                        BUG7792
+      *
+     C**********           MOVE CCY,@ARR  SCCYR                                              BUG7792
+     C**********           Z-ADDNCR8      SNCRA                                              BUG7792
+     C**********           Z-ADDNDR8      SNDRA                                              BUG7792
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVDRA                                              BUG7792
+     C**********           Z-ADDVDR8      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVDRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCRA                                              BUG7792
+     C**********           Z-ADDVCR8      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCRA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCAA                                              BUG7792
+     C**********           Z-ADDVCA8      ZFLD15                                             BUG7792
+     C**********           MOVE 'C'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C********** VCA8      IFGT 0                                                            BUG7792
+     C**********           MOVE 'DR'      @FL                                                BUG7792
+     C**********           ELSE                                                              BUG7792
+     C********** VCA8      IFEQ 0                                                            BUG7792
+     C**********           MOVE *BLANKS   @FL                                                BUG7792
+     C**********           END                                                               BUG7792
+     C**********           END                                                               BUG7792
+     C**********           MOVE ENUM      SVCAA                                              BUG7792
+      *
+     C**********           Z-ADD0         ZFLD15                                             BUG7792
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE *BLANKS   SVCKA                                              BUG7792
+     C**********           Z-ADDVCK8      ZFLD15                                             BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+     C**********           MOVE @EN       SVCKA                                              BUG7792
+      *
+     C**********           WRITERE4125F8                                                     BUG7792
+      *
+     C**********           ENDSR                                                             BUG7792
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SCRWK             - set fields for display                    *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY  SCREEN - detail line display routine for 9 to 24   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C********** SCRWK     BEGSR                           ** SCRWK  **                      BUG7792
+      *
+     C**********           MOVE *BLANKS   ENUM                                               BUG7792
+     C**********           MOVE 'L'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                     SARCCY                   BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+      *
+     C**********           ENDSR                                                             BUG7792
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SCREEN            - Moving to Screen                          *
+      *                                                               *
+      * CALLS     ZFRPED  - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY MSCR    - Moving to screen                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C********** SCREEN    BEGSR                           ** SCREEN **                      BUG7792
+      *
+      ** Set roll up indicator if 1st screen & > 12 currencies
+     C********** @ARR      IFEQ 12                                                           BUG7792
+     C********** CCY,@ARR  ANDNE*BLANKS                                                      BUG7792
+     C**********           SETON                     28                                      BUG7792
+     C**********           END                                                               BUG7792
+      *
+      ** Get decimal digits for the currency
+     C**********           EXSR GCURR                                                        BUG7792
+      *
+     C**********           Z-ADD@ARR      @I                                                 BUG7792
+     C**********           MOVE CCY,@I    SCCYR                                              BUG7792
+     C**********           MOVE NCR,@I    @NCR                                               BUG7792
+     C**********           Z-ADD@NCRN     SNCRA                                              BUG7792
+     C**********           MOVE NDR,@I    @NDR                                               BUG7792
+     C**********           Z-ADD@NDRN     SNDRA                                              BUG7792
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C**********           MOVE VDR,@I    @VDRA                                              BUG7792
+     C**********           Z-ADD@VDRAN    ZFLD15                                             BUG7792
+     C**********           EXSR SCRWK                                                        BUG7792
+     C**********           MOVE *BLANKS   SVDRA                                              BUG7792
+     C**********           MOVE @EN       SVDRA                                              BUG7792
+      *
+     C**********           MOVE VCR,@I    @VCRA                                              BUG7792
+     C**********           Z-ADD@VCRAN    ZFLD15                                             BUG7792
+     C**********           EXSR SCRWK                                                        BUG7792
+     C**********           MOVE *BLANKS   SVCRA                                              BUG7792
+     C**********           MOVE @EN       SVCRA                                              BUG7792
+      *
+     C**********           MOVE VCA,@I    @VCAA                                              BUG7792
+     C**********           Z-ADD@VCAAN    ZFLD15                                             BUG7792
+     C**********           MOVE 'C'       ZECODE                                             BUG7792
+     C**********           MOVE A6NBDP    ZDECS                                              BUG7792
+     C**********           EXSR ZFRPED                                                       BUG7792
+     C**********           MOVE *BLANKS   SVCAA                                              BUG7792
+     C**********           MOVE ZOUT22    ENUM                                               BUG7792
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C********** VCA8      IFGT 0                                         198269
+     C**********           MOVE 'DR'      @FL                             198269
+     C**********           END                                            198269
+     C**********           MOVE '  '      @FL                             198269             BUG7792
+     C********** @VCAAN    IFGT 0                                         198269             BUG7792
+     C**********           MOVE 'DR'      @FL                             198269             BUG7792
+     C**********           END                                            198269             BUG7792
+     C********** @VCAAN    IFLT 0                                         198269             BUG7792
+     C**********           MOVE 'CR'      @FL                             198269             BUG7792
+     C**********           END                                            198269             BUG7792
+     C**********           MOVE ENUM      SVCAA                                              BUG7792
+      *
+     C**********           MOVE VCK,@I    @VCKA                                              BUG7792
+     C**********           Z-ADD@VCKAN    ZFLD15                                             BUG7792
+     C**********           EXSR SCRWK                                                        BUG7792
+     C**********           MOVE *BLANKS   SVCKA                                              BUG7792
+     C**********           MOVE @EN       SVCKA                                              BUG7792
+      *
+      ** Display currency values
+     C********** @I        IFGT 12                                                           BUG7792
+     C**********           SUB  12        @I                                                 BUG7792
+     C**********           END                                                               BUG7792
+      *
+     C********** @I        IFEQ 1                                                            BUG7792
+     C**********           WRITERE4125F1                                                     BUG7792
+     C**********           ELSE                                                              BUG7792
+     C********** @I        IFEQ 2                                                            BUG7792
+     C**********           WRITERE4125F2                                                     BUG7792
+     C**********           ELSE                                                              BUG7792
+     C********** @I        IFEQ 3                                                            BUG7792
+     C**********           WRITERE4125F3                                                     BUG7792
+     C**********           ELSE                                                              BUG7792
+     C********** @I        IFEQ 4                                                            BUG7792
+     C**********           WRITERE4125F4                                                     BUG7792
+     C**********           ELSE                                                              BUG7792
+     C********** @I        IFEQ 5                                                            BUG7792
+     C**********           WRITERE4125F5                                                     BUG7792
+     C**********           ELSE                                                              BUG7792
+     C********** @I        IFEQ 6                                                            BUG7792
+     C**********           WRITERE4125F6                                                     BUG7792
+     C**********           ELSE                                                              BUG7792
+     C********** @I        IFEQ 7                                                            BUG7792
+     C**********           WRITERE4125F7                                                     BUG7792
+     C**********           ELSE                                                              BUG7792
+     C********** @I        IFEQ 8                                                            BUG7792
+     C**********           WRITERE4125F8                                                     BUG7792
+     C**********           ELSE                                                              BUG7792
+     C********** @I        IFEQ 9                                                            BUG7792
+     C**********           WRITERE4125F9                                                     BUG7792
+     C**********           ELSE                                                              BUG7792
+     C********** @I        IFEQ 10                                                           BUG7792
+     C**********           WRITERE4125FA                                                     BUG7792
+     C**********           ELSE                                                              BUG7792
+     C********** @I        IFEQ 11                                                           BUG7792
+     C**********           WRITERE4125FB                                                     BUG7792
+     C**********           ELSE                                                              BUG7792
+     C********** @I        IFEQ 12                                                           BUG7792
+     C**********           WRITERE4125FC                                                     BUG7792
+     C**********           END                                                               BUG7792
+     C**********           END                                                               BUG7792
+     C**********           END                                                               BUG7792
+     C**********           END                                                               BUG7792
+     C**********           END                                                               BUG7792
+     C**********           END                                                               BUG7792
+     C**********           END                                                               BUG7792
+     C**********           END                                                               BUG7792
+     C**********           END                                                               BUG7792
+     C**********           END                                                               BUG7792
+     C**********           END                                                               BUG7792
+     C**********           END                                                               BUG7792
+      *
+     C**********           ENDSR                                                             BUG7792
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * PRTRTN            - Print routine for Teller slip             *
+      *                                                               *
+      * CALLS     MPRT    - CAS for print fields                      *
+      *                                                               *
+      * CALLED BY QUERY   - Teller/Batch display                      *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRTRTN    BEGSR                           ** PRTRTN **
+      *
+     C                     Z-ADD0         PAGE
+     C           *INU1     IFEQ '1'
+      *
+     C                     MOVEL'TELLER T'HD1
+     C                     MOVEL'OTALS SL'HD2
+     C                     MOVEL'IP'      HD3
+     C                     MOVEL'TELLER I'DT1
+     C                     MOVEL'DENTITY' DT2
+      *
+     C                     ELSE
+      *
+     C                     MOVEL'BATCH TO'HD1
+     C                     MOVEL'TALS SLI'HD2
+     C                     MOVEL'P'       HD3
+     C                     MOVEL'BATCH NU'DT1
+     C                     MOVEL'MBER'    DT2
+      *
+     C                     END
+      *
+     C                     SETON                     11
+      *
+     C                     OPEN RE4125P1
+     C                     WRITEHEADNG
+     C                     SETOF                     11
+      *
+     C********** 1         DO   24        @ARR                                               BUG7792
+     C           1         DO   24        Y                                                  BUG7792
+      *
+     C********** CCY,@ARR  IFNE '   '                                                        BUG7792
+     C           CCY,Y     IFNE '   '                                                        BUG7792
+      *
+     C                     Z-ADDY         @ARR                                               BUG7792
+     C                     EXSR MPRT
+      *
+     C                     WRITEDETAIL1
+      *
+     C                     END
+      *
+     C                     END  1
+      *
+     C                     WRITELAST
+     C                     CLOSERE4125P1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MPRT              - CAS operation for printing                *
+      *                                                               *
+      * CALLS      MPRT1  - 1st.  detail line print of slip           *
+      *            MPRT2  - 2nd.  detail line print of slip           *
+      *            MPRT3  - 3rd.  detail line print of slip           *
+      *            MPRT4  - 4th.  detail line print of slip           *
+      *            MPRT5  - 5th.  detail line print of slip           *
+      *            MPRT6  - 6th.  detail line print of slip           *
+      *            MPRT7  - 7th.  detail line print of slip           *
+      *            MPRT8  - 8th.  detail line print of slip           *
+      *            PRINT  - 9th-24th detail line print of slip        *
+      *                                                               *
+      * CALLED BY  PRTRTN - Print routine for Teller Slip             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MPRT      BEGSR                           ** MPRT   **
+      *
+     C           @ARR      CASEQ1         MPRT1
+      *
+     C           @ARR      CASEQ2         MPRT2
+      *
+     C           @ARR      CASEQ3         MPRT3
+      *
+     C           @ARR      CASEQ4         MPRT4
+      *
+     C           @ARR      CASEQ5         MPRT5
+      *
+     C           @ARR      CASEQ6         MPRT6
+      *
+     C           @ARR      CASEQ7         MPRT7
+      *
+     C           @ARR      CASEQ8         MPRT8
+      *
+     C                     CAS            PRINT
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MPRT1             - 1st.  detail line print of slip           *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *            GCURR  - Get decimals for currencies               *
+      *                                                               *
+      * CALLED BY  MPRT   - CAS  operation for printing               *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MPRT1     BEGSR                           ** MPRT1  **
+      *
+      ** Get decimal digits for the currency
+     C                     EXSR GCURR
+      *
+     C                     MOVE CCY,@ARR  SCCYR
+     C                     Z-ADDNCR1      SNCRA
+     C                     Z-ADDNDR1      SNDRA
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVDRA
+     C                     Z-ADDVDR1      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVDRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCRA
+     C                     Z-ADDVCR1      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCAA
+     C                     Z-ADDVCA1      ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C           VCA1      IFGT 0
+     C                     MOVE 'DR'      @FL
+     C                     END
+     C                     MOVE ENUM      PVCAA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCKA
+     C                     Z-ADDVCK1      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCKA
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MPRT2             - 2nd.  detail line print of slip           *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *            GCURR  - Get decimals for currencies               *
+      *                                                               *
+      * CALLED BY  MPRT   - CAS  operation for printing               *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MPRT2     BEGSR                           ** MPRT2  **
+      *
+      ** Get decimal digits for the currency
+     C                     EXSR GCURR
+      *
+     C                     MOVE CCY,@ARR  SCCYR
+     C                     Z-ADDNCR2      SNCRA
+     C                     Z-ADDNDR2      SNDRA
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVDRA
+     C                     Z-ADDVDR2      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVDRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCRA
+     C                     Z-ADDVCR2      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCAA
+     C                     Z-ADDVCA2      ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C           VCA2      IFGT 0
+     C                     MOVE 'DR'      @FL
+     C                     END
+     C                     MOVE ENUM      PVCAA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCKA
+     C                     Z-ADDVCK2      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCKA
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MPRT3             - 3rd.  detail line print of slip           *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *            GCURR  - Get decimals for currencies               *
+      *                                                               *
+      * CALLED BY  MPRT   - CAS  operation for printing               *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MPRT3     BEGSR                           ** MPRT3  **
+      *
+      ** Get decimal digits for the currency
+     C                     EXSR GCURR
+      *
+     C                     MOVE CCY,@ARR  SCCYR
+     C                     Z-ADDNCR3      SNCRA
+     C                     Z-ADDNDR3      SNDRA
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVDRA
+     C                     Z-ADDVDR3      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVDRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCRA
+     C                     Z-ADDVCR3      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCAA
+     C                     Z-ADDVCA3      ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C           VCA3      IFGT 0
+     C                     MOVE 'DR'      @FL
+     C                     END
+     C                     MOVE ENUM      PVCAA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCKA
+     C                     Z-ADDVCK3      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCKA
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MPRT4             - 4th.  detail line print of slip           *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *            GCURR  - Get decimals for currencies               *
+      *                                                               *
+      * CALLED BY  MPRT   - CAS  operation for printing               *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MPRT4     BEGSR                           ** MPRT4  **
+      *
+      ** Get decimal digits for the currency
+     C                     EXSR GCURR
+      *
+     C                     MOVE CCY,@ARR  SCCYR
+     C                     Z-ADDNCR4      SNCRA
+     C                     Z-ADDNDR4      SNDRA
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVDRA
+     C                     Z-ADDVDR4      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVDRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCRA
+     C                     Z-ADDVCR4      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCAA
+     C                     Z-ADDVCA4      ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C           VCA4      IFGT 0
+     C                     MOVE 'DR'      @FL
+     C                     END
+     C                     MOVE ENUM      PVCAA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCKA
+     C                     Z-ADDVCK4      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCKA
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MPRT5             - 5th.  detail line print of slip           *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *            GCURR  - Get decimals for currencies               *
+      *                                                               *
+      * CALLED BY  MPRT   - CAS  operation for printing               *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MPRT5     BEGSR                           ** MPRT5  **
+      *
+      ** Get decimal digits for the currency
+     C                     EXSR GCURR
+      *
+     C                     MOVE CCY,@ARR  SCCYR
+     C                     Z-ADDNCR5      SNCRA
+     C                     Z-ADDNDR5      SNDRA
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVDRA
+     C                     Z-ADDVDR5      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVDRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCRA
+     C                     Z-ADDVCR5      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCAA
+     C                     Z-ADDVCA5      ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C           VCA5      IFGT 0
+     C                     MOVE 'DR'      @FL
+     C                     END
+     C                     MOVE ENUM      PVCAA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCKA
+     C                     Z-ADDVCK5      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCKA
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MPRT6             - 6th.  detail line print of slip           *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *            GCURR  - Get decimals for currencies               *
+      *                                                               *
+      * CALLED BY  MPRT   - CAS  operation for printing               *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MPRT6     BEGSR                           ** MPRT6  **
+      *
+      ** Get decimal digits for the currency
+     C                     EXSR GCURR
+      *
+     C                     MOVE CCY,@ARR  SCCYR
+     C                     Z-ADDNCR6      SNCRA
+     C                     Z-ADDNDR6      SNDRA
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVDRA
+     C                     Z-ADDVDR6      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVDRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCRA
+     C                     Z-ADDVCR6      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCAA
+     C                     Z-ADDVCA6      ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C           VCA6      IFGT 0
+     C                     MOVE 'DR'      @FL
+     C                     END
+     C                     MOVE ENUM      PVCAA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCKA
+     C                     Z-ADDVCK6      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCKA
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MPRT7             - 7th.  detail line print of slip           *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *            GCURR  - Get decimals for currencies               *
+      *                                                               *
+      * CALLED BY  MPRT   - CAS  operation for printing               *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MPRT7     BEGSR                           ** MPRT7  **
+      *
+      ** Get decimal digits for the currency
+     C                     EXSR GCURR
+      *
+     C                     MOVE CCY,@ARR  SCCYR
+     C                     Z-ADDNCR7      SNCRA
+     C                     Z-ADDNDR7      SNDRA
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVDRA
+     C                     Z-ADDVDR7      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVDRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCRA
+     C                     Z-ADDVCR7      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCAA
+     C                     Z-ADDVCA7      ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C           VCA7      IFGT 0
+     C                     MOVE 'DR'      @FL
+     C                     END
+     C                     MOVE ENUM      PVCAA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCKA
+     C                     Z-ADDVCK7      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCKA
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MPRT8             - 8th.  detail line print of slip           *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *            GCURR  - Get decimals for currencies               *
+      *                                                               *
+      * CALLED BY  MPRT   - CAS  operation for printing               *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MPRT8     BEGSR                           ** MPRT8  **
+      *
+      ** Get decimal digits for the currency
+     C                     EXSR GCURR
+      *
+     C                     MOVE CCY,@ARR  SCCYR
+     C                     Z-ADDNCR8      SNCRA
+     C                     Z-ADDNDR8      SNDRA
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVDRA
+     C                     Z-ADDVDR8      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVDRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCRA
+     C                     Z-ADDVCR8      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCAA
+     C                     Z-ADDVCA8      ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C********** VCA8      IFGT 0                                         198269
+     C**********           MOVE 'DR'      @FL                             198269
+     C**********           END                                            198269
+     C                     MOVE '  '      @FL                             198269
+     C           @VCAAN    IFGT 0                                         198269
+     C                     MOVE 'DR'      @FL                             198269
+     C                     END                                            198269
+     C           @VCAAN    IFLT 0                                         198269
+     C                     MOVE 'CR'      @FL                             198269
+     C                     END                                            198269
+     C                     MOVE ENUM      PVCAA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCKA
+     C                     Z-ADDVCK8      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCKA
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * PRTWK             - set fields for print                      *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY  MPRTn  - detail line print routines 9 to 24        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRTWK     BEGSR                           ** PRTWK  **
+      *
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * PRINT             - detail line print of slip                 *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *            GCURR  - Get decimals for currencies               *
+      *            PRTWK  - set fields for print                      *
+      *                                                               *
+      * CALLED BY  MPRT   - CAS  operation for printing               *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRINT     BEGSR                           ** PRINT  **
+      *
+      ** Get decimal digits for the currency
+     C                     EXSR GCURR
+      *
+      ** Set up currency, number of credits & number of debits
+     C                     Z-ADD@ARR      @I      20
+     C                     MOVE CCY,@I    SCCYR
+     C                     MOVE NCR,@I    @NCR
+     C                     Z-ADD@NCRN     SNCRA
+     C                     MOVE NDR,@I    @NDR
+     C                     Z-ADD@NDRN     SNDRA
+      *
+      ** Convert amount fields (VDRA1,VCRA1,VCAA1,VCKA1) to
+      ** edited numerics with decimal point
+     C                     MOVE VDR,@I    @VDRA
+     C                     Z-ADD@VDRAN    ZFLD15
+     C                     EXSR PRTWK
+     C                     MOVE @EN       PVDRA
+      *
+     C                     MOVE *BLANKS   PVCRA
+     C                     MOVE VCR,@I    @VCRA
+     C                     Z-ADD@VCRAN    ZFLD15
+     C                     EXSR PRTWK
+     C                     MOVE @EN       PVCRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCAA
+     C                     MOVE VCA,@I    @VCAA
+     C                     Z-ADD@VCAAN    ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C           VCA8      IFGT 0
+     C                     MOVE 'DR'      @FL
+     C                     END
+     C                     MOVE ENUM      PVCAA
+      *
+     C                     MOVE *BLANKS   PVCKA
+     C                     MOVE VCK,@I    @VCKA
+     C                     Z-ADD@VCKAN    ZFLD15
+     C                     EXSR PRTWK
+     C                     MOVE @EN       PVCKA
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * FIRST             - Initialize                                *
+      *                                                               *
+      * CALLS -    IFLDS  - Initialize Work/Screen Flds.              *
+      *                                                               *
+      * CALLED BY  MAIN  - Control Processing                         *
+      *                                                               *
+      * FLDS USED        -                                            *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+     C*
+     C** Copyright statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define program work fields
+     C           *LIKE     DEFN TNLU      @TNLU
+      *
+      * Prepare LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     OUT  LDA
+     C*
+     C**  Read in DTAARA/RUNDAT to get multibranching indicator
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN35
+     C                     ELSE
+     C                     MOVE '0'       *IN35
+     C                     END
+      *
+      ** initialize parameters for SCC0240- build program message queue
+     C                     MOVE *BLANKS   @MSGID  7
+     C                     MOVEL'RTSMSGF' @MSGF  10
+      *
+      ** Initialize screen message queue
+     C                     MOVEL'*'       SPGMQ
+      *
+      ** Seton  message subfile end indicator
+     C                     MOVE '1'       *IN10
+      *
+     C                     MOVEL@JOB      SWSID
+     C                     MOVE *BLANKS   SRUNA
+      *
+      * Initialize program work fields
+     C                     EXSR IFLDS
+     C*
+     C** Access bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            ** DBERR 001 *
+     C                     Z-ADD01        DBASE            ***************
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+     C                     MOVELBJSUC     @SCI    1
+      *
+     C                     END
+      *
+      ** Move midas run date to screen field
+     C                     MOVELBJMRDT    SRUNA
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * IFLDS             - Initialize work/screen fields             *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY         - FIRST
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           IFLDS     BEGSR                           ** IFLDS  **
+      *
+     C                     MOVE *BLANKS   SPMPT
+     C                     MOVE *BLANKS   SENQY
+     C                     MOVE *BLANKS   CCY
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INT01             - Initialize indicators for key fields      *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY         - VALF1                                     *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           INT01     BEGSR                           ** INT01  **
+      *
+     C                     SETOF                     145152
+     C                     SETOF                     717255
+     C                     SETOF                     61
+     C                     SETOF                     2728
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * VALF1             - Validations of screen inputs              *
+      *                                                               *
+      * CALLS -    SNDMSG - Send message to queue                     *
+      *            INT01  - Initialize Indicators                     *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           VALF1     BEGSR                           ** VALF1  **
+      *
+      ** Initialize validation indicators for key fields
+     C                     EXSR INT01
+      *
+      *
+      * Define Keylist.
+     C           KLTRNT    KLIST
+     C                     KFLD           KTBRI
+     C                     KFLD           KTBID
+     C                     KFLD           KRCTP
+      *
+      ** Check if screen input is blanks or zeros for Teller query
+      ** message - Teller identifier must not be blanks or zeros
+     C           *INU1     IFEQ '1'
+      *
+     C           SENQY     IFEQ *BLANKS
+     C           SENQY     OREQ *ZEROS
+     C                     SETON                     1461
+     C                     MOVEL'USR0032' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+      ** Check if SENQY is numeric
+     C                     TESTN          SENQY      51
+      *
+      ** Check if screen input is numeric and non blank for batch query
+      ** message - Batch number must be numeric and non blanks
+     C           *INU2     IFEQ '1'
+      *
+     C           *IN51     IFEQ '0'
+     C                     SETON                     61
+     C                     MOVEL'USR0046' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+      * Move fields to key list.
+     C           *INU1     IFEQ '1'
+     C                     MOVEL'T'       KTBRI
+     C                     ELSE
+     C                     MOVEL'B'       KTBRI
+     C                     END
+     C                     MOVELSENQY     KTBID
+     C                     MOVEL'1'       KRCTP
+      *
+      ** Check if record of both Controls and Totals type
+      ** exists in TTRNT file
+     C           KLTRNT    CHAINTTRNTM2F             71
+     C                     MOVEL'2'       KRCTP
+     C           KLTRNT    CHAINTTRNTM3F             72
+      *
+      ** If record does not exist in either Controls or Totals
+     C           *IN71     IFEQ '1'
+     C           *IN72     OREQ '1'
+     C                     SETON                     1461
+      *
+     C           *INU1     IFEQ '1'
+      *
+      ** message - Teller identifier not found
+     C                     MOVEL'USR0030' @MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+      *
+      ** Message for 'Batch no not found'
+     C                     MOVEL'USR0045' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+     C*
+     C** Check if user is authorised to booking branch
+     C*
+     C           *IN35     IFEQ '1'
+     C                     CALL 'ZVBBU'
+     C                     PARM TLBC      P@BRCH  3
+     C                     PARM *ZEROS    P@ERR   10
+     C*
+     C                     SELEC
+     C           P@ERR     WHEQ 1
+     C                     MOVEL'USR1205' @MSGID
+     C                     SETON                     61
+     C                     EXSR SNDMSG
+     C           P@ERR     WHEQ 2
+     C                     MOVEL'USR1206' @MSGID
+     C                     SETON                     61
+     C                     EXSR SNDMSG
+     C                     ENDSL
+     C*
+     C                     END
+      *
+     C           *IN72     IFEQ '0'
+      *
+      ** Move file fields of TTRNT/M3 to DS
+     C                     MOVEANCRA1     NCR
+     C                     MOVEANDRA1     NDR
+     C                     MOVEAVCRA1     VCR
+     C                     MOVEAVDRA1     VDR
+     C                     MOVEAVCAA1     VCA
+     C                     MOVEAVCKA1     VCK
+      *
+      ** Release TTRNTM3
+     C                     EXCPT@RLT3
+     C                     END
+      *
+      ** Access Controls record in the TTRNT file
+     C                     MOVEL'1'       KRCTP
+     C           KLTRNT    CHAINTTRNTM2F             71
+     C           *IN71     IFNE '1'
+      *
+      ** For Teller enquiry check no. of transactions not < 1
+     C           *INU1     IFEQ '1'
+     C           NATN      ANDLE1
+     C                     SETON                     52
+     C                     ELSE
+     C           *INU2     IFEQ '1'
+     C           BITU      ANDEQ0
+     C                     SETON                     5261
+     C                     END
+      *
+     C                     END
+      *
+      ** Move file fields of TTRNT/M2 to DS
+     C                     MOVEACCYR1     CCY
+     C           CCY,1     IFEQ ' '                                                          BUG7792
+     C                     SETON                     5261                                    BUG7792
+     C                     ENDIF                                                             BUG7792
+      *
+      ** Release TTRNTM2
+     C                     EXCPT@RLT2
+      *
+     C                     END
+      *
+      ** Message - No transaction for this Teller/Batch
+     C           *IN52     IFEQ '1'
+     C*********************MOVE '1'       *IN61                     093509097166
+     C                     MOVEL'USR0047' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ** Check if F10 is pressed - which is not valid at this stage
+      ** message - Function key not allowed
+     C           *INKJ     IFEQ '1'
+     C                     SETON                     61
+     C                     MOVEL'USR0004' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SNDMSG  - Sends parameters of SNDPGMMSG command to be executed*
+      *                                                               *
+      * CALLS     SCC0240 - Send message to program queue             *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED  @MSGID - Message id                                *
+      *            @MSGF  - Message file                              *
+      *                                                               *
+      *****************************************************************
+     C           SNDMSG    BEGSR                           ** SNDMSG **
+      *
+     C                     SETON                     69
+      *
+     C                     CALL 'SCC0240'
+     C                     PARM           @MSGID
+     C                     PARM           @MSGF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DBERR    - Database Error Handling                            *
+      *                                                               *
+      * CALLS      *PSSR  - Program  error                            *
+      *                                                               *
+      * CALLED BY  GCURR  - Get decimals for currencies               *
+      *            UPDTRN - Control rtn. for update                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C           OPEN      IFEQ '1'
+     C                     WRITEERRLINE
+     C                     CLOSERE4125P1
+     C                     END
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR             - Program error                             *
+      *                                                               *
+      * CALLS      DBERRCTL                                           *
+      *                                                               *
+      * CALLED BY  DBERR  - Database Error Handling                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+     C*
+     C** Check to see that *PSSR has not been called yet
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*
+     C** Call standard database error program
+     C*
+     C                     CALL 'DBERRCTL'
+     C*
+     C                     END
+     C*
+     C** If *PSSR already run, then just end the program here
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * FINAL             - Terminate                                 *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY   Main  - Control process                           *
+      *                                                               *
+      *****************************************************************
+     C           FINAL     BEGSR                           ** FINAL  **
+      *
+     C                     MOVE '1'       *INLR
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * UPDRTN            - Controls rtn. for updates                 *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling                   *
+      *                                                               *
+      * CALLED BY   Main  - Control process                           *
+      *                                                               *
+      *****************************************************************
+     C           UPDRTN    BEGSR                           ** UPDRTN **
+      *
+     C                     EXSR ZTNLU1
+     C                     MOVEL'1'       KRCTP
+      *
+     C           KLTRNT    CHAINTTRNTM2F             71
+      *
+     C           *IN71     IFNE '1'
+      *
+     C                     MOVE NATN      SFTN
+     C                     UPDATTTRNTM2F
+      *
+     C                     ELSE
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TTRNTM2F'DBFILE           ***************
+     C                     Z-ADD3         DBASE            ** DB ERR 03 **
+     C                     MOVEL@TTRNT    DBKEY            ***************
+     C                     EXSR DBERR
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * GCURR             - Get decimals for currencies               *
+      *                                                               *
+      * CALLS      DBERR  - Database error routine                    *
+      *                                                               *
+      * CALLED BY  MSCR1  - 1st.  detail line display of slip         *
+      *            MSCR2  - 2nd.  detail line display of slip         *
+      *            MSCR3  - 3rd.  detail line display of slip         *
+      *            MSCR4  - 4th.  detail line display of slip         *
+      *            MSCR5  - 5th.  detail line display of slip         *
+      *            MSCR6  - 6th.  detail line display of slip         *
+      *            MSCR7  - 7th.  detail line display of slip         *
+      *            MSCR8  - 8th.  detail line display of slip         *
+      *            MPRT1  - 1st.  detail line print of slip           *
+      *            MPRT2  - 2nd.  detail line print of slip           *
+      *            MPRT3  - 3rd.  detail line print of slip           *
+      *            MPRT4  - 4th.  detail line print of slip           *
+      *            MPRT5  - 5th.  detail line print of slip           *
+      *            MPRT6  - 6th.  detail line print of slip           *
+      *            MPRT7  - 7th.  detail line print of slip           *
+      *            MPRT8  - 8th.  detail line print of slip           *
+      *                                                               *
+      *****************************************************************
+     C           GCURR     BEGSR                           ** GCURR  **
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C**********           PARM CCY,@ARR  @CYCD   3                                          BUG7792
+     C                     PARM CCY,Y     @CYCD   3                                          BUG7792
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C**********           MOVELCCY,@ARR  DBKEY                                              BUG7792
+     C                     MOVELCCY,Y     DBKEY                                              BUG7792
+     C                     Z-ADD02        DBASE
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      ** SR.ZTNLU1 subroutine
+     C/COPY ZSRSRC,ZTNLU1Z2
+      *
+      *****************************************************************
+     C/EJECT
+      ** SR.ZFRPED Subroutine
+     C/COPY ZSRSRC,ZFRPEDZ3
+      *
+      ** Release both TTRNTM2 and TTRNTM3 record
+     OTTRNTM2FE                @RLT2
+      *
+     OTTRNTM3FE                @RLT3
+      *
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

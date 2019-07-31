@@ -1,0 +1,174 @@
+     H        1                                                           S01117
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Check for type pf COB proc. reqd')
+0002 F********************************************************************
+     F*  Midas - System Control Module
+0004 F*                                                                  *
+0005 F*    EODCHK - CHECK FOR TYPE OF END OF DAY PROCESSING REQUIRED     *
+0006 F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+0008 F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01314             Date 07Mar91               *
+      *                 E20929             Date 25Jul90               *
+     F*                  S01194            DATE 23JAN90                   S01194
+0009 F*                  S01160            DATE 10/05/88                 *
+0010 F*                                                                  *
+0011 F********************************************************************
+0010 F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*    S01314 - CHANGES FOR PTF INCORPORATION PROJECT (FIELD         *
+     F*             NAME CHANGE REQUIRED FOLLOWING S01194)               *
+     F*    E20929 - MANIPULATION OF ACCRUAL PROFIT DATE                  *
+     F*             IS NOT PRODUCING REQUIRED RESULTS. PROCESSING        *
+     F*             ON DATE HAS BEEN MODIFIED. METHOD OF PROCESSING      *
+     F*             NON-WORKING DAYS (ANWI) NOW IMPACTS ON DATE.         *
+     F*    S01194 - NEW STANDING DATA FILES                               S01194
+0010 F*    S01160 - CLOSE OF BUSINESS ENHANCEMENTS                       *
+0010 F*                                                                  *
+0011 F********************************************************************
+0012 F**
+     F***TABSDM  IF  E           K        DISK                            S01194
+     F**   FUNCTION OF INDICATORS:-
+     F**
+     F**   01 - END OF DAY IS - NORMAL
+     F**   02 -               - ACCRUAL FOLLOWED BY WORKING DAY
+     F**   03 -               - ACCRUAL FOLLOWED BY NON-WORKING DAY
+     F*****99*-*ERROR                                                     S01194
+     F**
+     E                    CPY@    1   1 80
+     ILDA        UDS                            256                       S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+     I**     LOCAL DATA AREA                                              S01194
+     I*                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** EXTERNAL DATA STRUCTURE FOR ACCESS PROGRAM FORMAT                S01194
+     I*                                                                   S01194
+     ISDGELR    E DSSDGELRPD                                              S01194
+     I** EXTERNAL DATA STRUCTURE FOR ACCESS PROGRAM FORMAT                S01194
+     I*                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I** FIRST DATA STRUCTURE FOR ACCESS PROGRAM, SHORT DATA STRUCTURE    S01194
+     I*                                                                   S01194
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C                     MOVEACPY@      BIS@   80
+     C           *ENTRY    PLIST
+     C**   ACCR IS THE ONLY PARAMETER:-
+     C**   UPON RETURN FROM THIS PROGRAM IT WILL = 1 FOR A NORMAL EOD,
+     C**   OR 2 FOR ACCRUAL FOLLOWED BY A WORKING DAY, OR 3 FOR
+     C**   ACCRUAL FOLLOWED BY A NON-WORKING DAY.
+     C                     PARM           ACCR    10
+     C/SPACE 3
+     C           *NAMVAR   DEFN           LDA                             S01194
+     C**   INPUT ACCRUAL/PROFIT DATE & DATE OF NEXT WORKING DAY
+     C*****                MOVEL'01'      KEY    12                       S01194
+     C*****                MOVE '11'      KEY                             S01194
+     C*****      KEY       CHAINTABSDM               99                   S01194
+     C**N99      RECI      COMP 'D'                  9999                 S01194
+     C***99                SETON                     LRU8                 S01194
+     C***99                RETRN                                          S01194
+     C*                                                                   S01194
+     C*    USE ACCESS PROGRAM TO OBTAIN RECORDS FROM                      S01194
+     C*    SDBANKPD AND SDGELRPD                                          S01194
+     C*                                                                   S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' P@RTCD  7                       S01194
+     C                     PARM '*FIRST ' P@OPTN  7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C*                                                                   S01194
+     C           P@RTCD    IFNE *BLANKS                                   S01194
+     C           *LOCK     IN   LDA                                       S01194
+     C                     MOVEL'SDBANKPD'DBFILE           ***************S01194
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *S01194
+     C                     MOVEL'EODCHK'  DBPGM            ***************S01194
+     C                     OUT  LDA                                       S01194
+     C                     EXSR DBERR                                     S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C**********           CALL 'AOGELRR0'                                             S01194 CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' P@RTCD  7                       S01194
+     C                     PARM '*FIRST ' P@OPTN  7                       S01194
+     C********** SDGELR    PARM SDGELR    DSFDY                                        S01194 CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*                                                                   S01194
+     C           P@RTCD    IFNE *BLANKS                                   S01194
+     C           *LOCK     IN   LDA                                       S01194
+     C                     MOVEL'SDGELRPD'DBFILE           ***************S01194
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *S01194
+     C                     MOVEL'EODCHK'  DBPGM            ***************S01194
+     C                     OUT  LDA                                       S01194
+     C                     EXSR DBERR                                     S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C/SPACE 3
+     C**
+     C**   DETERMINE TYPE OF EOD
+     C**                                                                  S01160
+     C*****      ANWI      COMP '2'                      02         S01160S01194
+     C*****      BKANWD    COMP '2'                      02         S01194E20929
+     C**                                                                  S01160
+     C*****      DNWD      SUB  1         DNWD                            S01194
+     C           BJDNWD    SUB  1         BJDNWD                          S01194
+     C***********DNWD      COMP APDA                 030102               S01160
+     C**N02      DNWD      COMP APDA                 030102         S01160S01194
+     C**N02      BJDNWD    COMP BKAPDT               030102         S01194E29092
+     C           BJDNWD    COMP BKAPDT               030102               E29092
+     C   01                Z-ADD1         ACCR
+     C   02                Z-ADD2         ACCR
+     C***03****************Z-ADD3         ACCR                            E20929
+     C*
+     C*
+     C***        CHANGE MODE FROM 3 TO 2 IF REQUIRED.
+     C*                                                                   E20929
+     C           *IN03     IFEQ '1'                         IF 03 ON      E20929
+     C*
+     C***********ANWI      IFEQ '2'                         MODE 2  E20929S01314
+     C           BKANWD    IFEQ '2'                         MODE 2 REQRD. S01314
+     C                     Z-ADD2         ACCR                            E20929
+     C                     ELSE                             ELSE....      E20929
+     C                     Z-ADD3         ACCR                            E20929
+     C                     END                              END IF..      E20929
+     C*
+     C                     END                              END IF....    E20929
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT                                                              S01194
+     C*************************************************************       S01194
+     C*                                                                   S01194
+      ** S/R DBERR TO PERFORM DATABASE ERROR EXIT FROM PROGRAM            S01194
+      *                                                                   S01194
+      ** CALLED FROM MAIN CYCLE                                           S01194
+      *                                                                   S01194
+      ** CALLS NO OTHER SUBROUTINES                                       S01194
+     C*                                                                   S01194
+     C*************************************************************       S01194
+     C*                                                                   S01194
+     C           DBERR     BEGSR                                          S01194
+     C*                                                                   S01194
+     C** SETON INDICATORS U7 U8 LR                                        S01194
+     C** AND RETURN TO CALLING PROGRAM                                    S01194
+     C*                                                                   S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     RETRN                                          S01194
+     C*                                                                   S01194
+     C                     ENDSR                                          S01194
+     C*                                                                   S01194
+     C********************************************************************S01194
+      /EJECT                                                              S01194
+**  CPY@
+(c) Finastra International Limited 2001

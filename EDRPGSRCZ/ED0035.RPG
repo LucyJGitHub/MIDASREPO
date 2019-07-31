@@ -1,0 +1,314 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  GENOPT(*OPTIMIZE)                                            *
+/*EXI *  TEXT('Midas ED Bulk transfer audit report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas Export Data Interface Module                   *
+      *                                                               *
+      *  ED0035 - BULK TRANSFER AUDIT REPORT                          *
+      *                                                               *
+      *  Function: Program produces a report detailing the files      *
+      *            copied in the current Bulk Transfer run.           *
+      *                                                               *
+      *  Called By: EDC0030 - Bulk Transfer Audit Report component    *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Access Object for Bank Details ICD     *
+      *             ZSFILE   - Log Spool File                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  PREV AMEND NO. S01493 *CREATE     DATE 31MAY94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  S01493  - Midas Export Data Interface Module.                *
+      *                                                               *
+      *****************************************************************
+     FEDBUAUL1IF  E           K        DISK         KINFSR *PSSR
+      *
+     FED0035AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+      *
+     FED0035P1O   E             22     PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+      *
+      /TITLE FUNCTION OF INCICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    01  - READ OF EDBUAUL1                                     *
+      *    22  - OVERFLOW INDICATOR ON ED0035P1                       *
+      *    41  - ED0035AU HEADER PRINTED                              *
+      *                                                               *
+      *    98  - Date Format: DDMMYY (off); MMDDYY (on)               *
+      *  90-99 - Used by Standard Subroutines                         *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #INIT   - Initial Processing                                 *
+      *  #DETL   - Perform Detail Processing                          *
+      *  *PSSR   - Program error handling routine                     *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     I/TITLE I-SPECIFICATIONS
+      *
+     ISPOOL1      DS
+      ***  File Information Data Structure for ED0035P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for ED0035AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** PROGRAM STATUS DATA STRUCTURE
+     I           SDS
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR #INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR #DETL
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+     C                     RETRN
+      *                                                               *
+      *================================================================
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  #INIT  - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      ***  Copyright Statement.
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      * Input parameters
+      *
+      *** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ELSE
+     C                     SETOF                     98
+     C                     END
+      *
+      ***  Audit report
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C                     WRITEHEADAU
+     C                     SETON                     41
+      *
+      ***  Initialisations
+      *
+     C                     Z-ADD*ZERO     RRPROG
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  #DETL  - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #DETL     BEGSR
+      *
+     C                     READ EDBUAUL1                 01
+      *
+      *** If no records read then output Audit Report only
+      *
+     C           *IN01     IFEQ *ON                        B1
+     C                     WRITEDETAILAU
+     C                     WRITENULLAU
+      *
+     C                     ELSE                            X1
+      *
+      *** RCF
+      *
+      *** Open printer file
+      *
+     C                     OPEN ED0035P1
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'                        B2
+     C                     EXSR *PSSR
+     C                     ENDIF                           E2
+     C*
+      *
+      ***  Print page heading
+      *
+     C                     WRITEHEADP1
+      *
+      ***  Process until End of valid records.
+      *
+     C           *IN01     DOWEQ*OFF                       B2
+      *
+      *** INCREMENT COUNT
+      *
+     C                     ADD  1         RRPROG
+      *
+      *** PRINT HEADER IF NECESSARY
+      *
+     C           *IN22     IFEQ *ON                        B3
+     C                     WRITEHEADP1
+     C                     SETOF                     22
+     C                     ENDIF                           E3
+      *
+      *** OUPUT DETAIL LINE
+      *
+     C                     WRITEDETAIL1
+     C                     CLEARDETAIL1
+      *
+      ** READ NEXT RECORD
+     C                     READ EDBUAUL1                 01
+      *
+     C                     ENDDO                           E2
+      *
+      ** Write 'End of Report'
+      *
+     C           *IN22     IFEQ *ON                        B2
+     C                     WRITEHEADP1
+     C                     ENDIF                           E2
+     C                     WRITETRAILP1
+     C                     CLOSEED0035P1
+      *
+     C                     WRITEDETAILAU
+      *
+     C                     ENDIF                           E1
+      *
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'ED0035'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+      ***  ERROR REPORT  ED0035AU
+      *
+     C           *IN41     IFEQ *OFF
+     C                     WRITEHEADAU
+     C                     SETON                     41
+     C                     ENDIF
+      *
+     C                     WRITEDBERROR
+      *
+     C                     DUMP
+     C                     END
+      *
+      ** Exit program
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,70 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas GP Exit program for HA switchover')             */
+/*********************************************************************/
+/*                                                                   */
+/*       MidasPlus - System Control Module                           */
+/*                                                                   */
+/*       GPHAEXIT - Exit program for High Availability Switchover    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2005                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CSC025 *CREATE     DATE 03May05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*  MD046248 - Finastra Rebranding                                   */
+/*  CSC025 - Exit program for MidasPlus high availability switchover */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&CURGRCV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CURGSEQ) TYPE(*DEC) LEN(10 0)
+/*/COPY WNCPYSRC,GPH00003                                            */
+             DCLF       FILE(GPZONEPD)
+/**/
+/* Global monitor message.                                                                        */
+/**/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDER))
+eLOOPER:
+/**/
+/* Read a record from the zones file.                                                             */
+/**/
+             RCVF
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(GLOBER))
+/**/
+/* Call SCHAEXIT to perform  processing for the zone.                                             */
+/**/
+             CALL       PGM(SCHAEXIT) PARM(&ZOMSYS)
+/**/
+/* Go back to process the next zone.                                                              */
+/**/
+             GOTO       CMDLBL(eLOOPER)
+GLOBER:
+/*/COPY WNCPYSRC,GPH00004                                            */
+/**/
+/* Determine the most recent global journal sequence number and currently attached receiver.      */
+/**/
+             RTVJRNE    JRN(GPJRN) FROMENT(*LAST) +
+                          RTNSEQNBR(&CURGSEQ) RTNRCV(&CURGRCV)
+/**/
+/* Call UPGPUT to update the file GPUTJSPD.                                                       */
+/**/
+             CALL       PGM(GPUTJSEQ) PARM(&CURGRCV &CURGSEQ)
+/**/
+/* Call GPSETIDCOL to reset 'start from' columns on tables with identity columns.                 */
+/**/
+             CALL       PGM(GPSETIDCOL)
+/**/
+ABNOR:
+/*/COPY WNCPYSRC,GPH00005                                            */
+ENDER:
+             RETURN
+/**/
+             ENDPGM
+/**************************************************************************************************/

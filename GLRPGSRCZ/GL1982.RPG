@@ -1,0 +1,963 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Cust. Serv. Fees - Fees Accrued Today RPT')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1982 - Customer Service Fees - Fees Accrued Today Report   *
+      *                                                               *
+      *  Function:  This program prints details of all customer       *
+      *             service fees accrued today.                       *
+      *                                                               *
+      *  Called By: GLC1982 - Customer Service Fees Accrued           *
+      *                       Today Control.                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008   *CREATE   Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+     FSDCFTPL0IF  E           K        DISK         KINFSR *PSSR
+      **  Fee type details file
+      *
+     FGLTAHQPDIF  E           K        DISK         KINFSR *PSSR
+      **  Customer Fees Accrual Today file
+      *
+     FGL1982AUO   E                    PRINTER      KINFSR *PSSR
+      **  Customer Fees Accrued Today - Audit
+     F                                              KINFDS SPOOLU
+      *
+     FGL1982P1O   E                    PRINTER      KINFSR *PSSR      UC
+      **  Customer Fees Accrued Today - Report
+     F                                              KINFDS SPOOL1
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   89  - End of File indicator                                 *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRRPRT - Process Report Lines                                *
+      *  SRAUDT - Subroutine to Output Audit report                   *
+      *  SRRGPF - Subroutine to register the P1 Printer File via RCF  *
+      *  SRRGAU - Subroutine to register the AU Printer File via RCF  *
+      *                                                               *
+      *  *INZSR - Initialisation routine
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      **  Array containing Copyright statement
+      *
+     E                    #PRO    1   6 20
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     IGLTAHQD0                                                                                CGL029
+     I              QQACAC                          QQACXC                                    CGL029
+      *
+      /COPY ZSRSRC,ZSEDITZ2
+      *
+     ISPOOL1      DS
+      **  File Information Data Structure for GL1982P1.
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure for GL1982AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I            DS                              6
+     I                                        1   20WWDAY
+     I                                        3   40WWMNTH
+     I                                        5   60WWYEAR
+     I                                        1   60ZDATE
+      *
+     IDSDATE      DS                              8
+     I                                        1   2 W2DAY
+     I                                        4   5 W2MNTH
+     I                                        7   8 W2YEAR
+      *
+     ILDA       E DSLDA                         256
+      **  Local data area for database error details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Currency extension file
+      *
+     ISDACOF    E DSSDACOFPD
+      **  Account officer file
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank Details
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS For Access Programs, Long Data Structure
+      *
+      /EJECT
+      *****************************************************************
+      *                M A I N   P R O C E S S I N G                  *
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Read file for record
+      *
+     C                     READ GLTAHQPD                 89
+      *
+      **  Do While End of File not reached.
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      **  If branch code is not equal to old branch code
+      **  Reset old branch code
+      *
+     C           FQBRCA    IFNE WWBRCA
+     C           PENT      ANDEQ'ALL'
+     C           FQBRCA    ORNE WWBRCA
+     C           FQBRCA    ANDEQPENT
+      *
+      **  If old branch code is not blank
+      **  Close spool file
+      *
+     C           WWBRCA    IFNE *BLANKS
+      *
+      **  If RCOUNT >< 0, Then Print Trailer
+      *
+     C           RCOUNT    IFNE 0
+      *
+     C                     EXSR SRAUDT
+      *
+      **  Check that sufficient lines remain for the Format. If not,
+      **  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+     C                     WRITETRAILP1
+     C                     ENDIF
+     C                     CLOSEGL1982P1
+     C                     MOVE 'N'       WWOPEN  1
+     C                     ENDIF
+     C                     MOVE *BLANKS   WWBRCA
+     C                     MOVE *BLANKS   WWACOC
+     C                     MOVE *BLANKS   WWFEPT
+     C                     MOVE *BLANKS   WWFETP
+     C                     MOVE *BLANKS   WWCUST
+     C                     MOVE *BLANKS   WWPTFR
+     C                     ENDIF
+      *
+     C           PENT      IFEQ 'ALL'
+     C           PENT      OREQ FQBRCA
+     C                     EXSR SRRPRT
+     C                     ENDIF
+      *
+      **  Read next record.
+      *
+     C                     READ GLTAHQPD                 89
+      *
+      ** Stop when branch is over
+      *
+     C           PENT      IFNE 'ALL'
+     C           FQBRCA    ANDGTPENT
+     C                     MOVE *ON       *IN89
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      **  If RCOUNT >< 0, Then Print Trailer
+      *
+     C           RCOUNT    IFNE 0
+     C           WWOPEN    ANDEQ'Y'
+      *
+      **  Check that sufficient lines remain for the Format. If not,
+      **  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDIF
+      *
+      **  Close Output file
+      *
+     C                     CLOSEGL1982P1
+      *
+      **  Perform audit report
+      *
+     C                     EXSR SRAUDT
+      *
+      **  Normal End of Program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *         E N D   O F   M A I N   P R O C E S S I N G           *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRRPRT - Process Report Lines.                               *
+      *  ------                                                       *
+      *  Called By : Main processing                                  *
+      *  Calls     : AOACOFR0  AOCURRR0                               *
+      *****************************************************************
+      *
+     C           SRRPRT    BEGSR
+      *
+      **  If old Branch code is not blank
+      **  Open the printer file and setup old Branch code
+      *
+     C           WWBRCA    IFEQ *BLANKS
+     C                     EXSR SRRGPF
+     C                     MOVE FQBRCA    WWBRCA
+     C                     MOVE FQBRCA    RBRCA
+     C                     ENDIF
+      *
+      *
+      **  If Account officer is not equal to old Account officer
+      **  or If Fee Processing is not equal to old Fee processing
+      **  or If Fee Type is not equal to old Fee type
+      **  Reset Account officer, fee processing and fee type printer
+      **  fields
+      *
+      *
+     C           FQACOC    IFNE WWACOC
+     C           FQFEPT    ORNE WWFEPT
+     C           FQFETP    ORNE WWFETP
+     C           FQCUST    ORNE WWCUST
+     C           FQPTFR    ORNE WWPTFR
+     C                     Z-ADD*ZERO     WWCONT
+     C                     MOVE FQCUST    WWCUST
+     C                     MOVE FQPTFR    WWPTFR
+      *
+     C           FQACOC    IFNE WWACOC
+     C                     MOVE FQACOC    RACOC
+     C                     MOVE FQACOC    WWACOC
+      *
+      **  Access to Account officer file to retrieve the account
+      **  officer name
+      *
+     C                     CALL 'AOACOFR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM FQACOC    PCKEY2  2
+     C           SDACOF    PARM SDACOF    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE AZACON    RACON
+     C                     ELSE
+     C                     MOVE *BLANKS   RACON
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Retrieve the processing narrative from the table
+      *
+     C           FQFEPT    IFNE WWFEPT
+     C                     MOVE *BLANKS   RPRTN
+      *
+     C                     SELEC
+     C           FQFEPT    WHEQ 'SC'
+     C                     Z-ADD1         WRTC    10
+     C           FQFEPT    WHEQ 'MG'
+     C                     Z-ADD2         WRTC
+     C           FQFEPT    WHEQ 'FI'
+     C                     Z-ADD3         WRTC
+     C           FQFEPT    WHEQ 'HM'
+     C                     Z-ADD4         WRTC
+     C           FQFEPT    WHEQ 'NA'
+     C                     Z-ADD5         WRTC
+     C                     OTHER
+     C                     Z-ADD6         WRTC
+     C                     ENDSL
+      *
+     C                     MOVE FQFEPT    RFEPT
+     C                     MOVE FQFEPT    WWFEPT
+     C                     MOVEA#PRO,WRTC RPRTN
+     C                     ENDIF
+      *
+      **  Access to Fee type file to retrieve the fee narrative
+      *
+     C           FQFETP    IFNE WWFETP
+     C                     MOVE FQFETP    RFETP
+     C                     MOVE FQFETP    WKFETP  2
+     C                     MOVE FQFETP    WWFETP
+     C                     MOVE *BLANKS   RNARR
+     C           WKFETP    CHAINSDCFTPL0             89
+      *
+     C           *IN89     IFEQ *OFF
+     C                     MOVE F1NARR    RNARR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      **  Check the overflow on printer file
+      **  Record type = '1' : Holding Details (charging amount)
+      **              = '2' : Posting of Adjustements
+      **              = '3' : Total of Accruals Generated
+      **              = '4' : Settlemenst Generation Accruals (Outst.)
+      **              = '5' : "Out of Settlement range" Accruals
+      **              = '6' : Outstanding Settlements Adjustments
+      **                      Accruals
+      **              = '7' : Total of REVERAL(S)  Accruals Generated
+      *
+     C                     SELEC
+      *
+     C           FQRECI    WHEQ '3'
+     C           FQRECI    OREQ '4'
+     C           FQRECI    OREQ '5'
+     C           FQRECI    OREQ '6'
+     C           FQRECI    OREQ '7'
+     C                     Z-ADD7         WWNUM   20
+      *
+     C                     OTHER
+     C           PPARM     IFNE 'Y'
+     C                     Z-ADD3         WWNUM   20
+     C                     ELSE
+     C                     Z-ADD10        WWNUM   20
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     Z-ADDWWNUM     RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     SELEC
+     C           FQRECI    WHEQ '1'
+      *
+      **  Report Holding Details (Charging Amount)
+      *
+     C                     MOVELFQCUST    RCUST     P
+     C                     MOVELFQPTFR    RPTFR     P
+     C                     MOVE FQCHGR    RCHGR     P
+     C                     MOVE FQINST    RINST     P
+     C                     MOVE FQHORF    RHORF     P
+     C                     MOVE FQHCCY    RHCCY     P
+     C                     MOVE FQSHSN    RSHSN     P
+      *
+     C           FQHCCY    IFEQ WWCCY
+     C                     Z-ADDWWDEC     ZDECS
+     C                     ELSE
+      *
+     C           FQHCCY    IFNE *BLANKS
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM FQHCCY    PCKEY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDA6NBDP    WWDEC
+     C                     MOVE FQHCCY    WWCCY
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE    P      * DBERR 02 *
+     C                     MOVELFQHCCY    DBKEY     P      ************
+     C                     MOVEL'GL1982'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   RHOAM
+     C           FQHOAM    IFNE *ZEROS
+     C                     Z-ADDFQHOAM    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RHOAM
+     C                     ENDIF
+      *
+     C           FQFRAT    IFNE 0
+     C                     MOVE FQFRAT    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C           9         SUB  7         ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE *BLANKS   RFRAT
+     C                     MOVE ZFIELD    RFRAT
+     C                     ELSE
+     C                     MOVE *BLANKS   RFRAT
+     C                     ENDIF
+      *
+     C                     MOVE FQCCCY    RCCCY
+     C                     MOVE FQCCCY    WWCCCY  3
+     C           FQCCCY    IFEQ WCCCY
+     C                     Z-ADDWCDEC     ZDECS
+     C                     ELSE
+      *
+     C           FQCCCY    IFNE *BLANKS
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM FQCCCY    PCKEY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDA6NBDP    WCDEC
+     C                     MOVE FQCCCY    WCCCY
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE    P      * DBERR 03 *
+     C                     MOVELFQCCCY    DBKEY     P      ************
+     C                     MOVEL'GL1982'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   RHACH
+     C           FQHACH    IFNE *ZEROS
+     C                     Z-ADDFQHACH    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RHACH
+     C                     ENDIF
+      *
+     C                     Z-ADDFQCHAM    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RCHAM
+     C                     MOVE ZOUT21    RCHAM
+      *
+      **  Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         RCOUNT
+     C                     ADD  1         WWCONT
+      *
+      **  If calculation detail parameters is 'Y' print Selection
+      **  Criteria
+      *
+     C           PPARM     IFEQ 'Y'
+     C                     MOVE FQDPRF    RDPRF     P
+     C                     MOVE FQFERC    RFERC     P
+     C                     MOVE FQSHSN    RSHSN     P
+     C                     MOVE FQTHTI    RTHTI
+     C                     MOVE FQINVT    RINVT
+     C                     Z-ADDFQMINA    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RMINA
+     C                     MOVE ZOUT21    RMINA
+     C                     Z-ADDFQMAXA    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RMAXA
+     C                     MOVE ZOUT21    RMAXA
+     C                     MOVE FQSCCY    RSCCY
+     C                     MOVE FQNORM    RNORM
+     C                     Z-ADDFQRANG    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRANG
+     C                     MOVE ZOUT21    RRANG
+     C                     MOVE FQCPHI    RCPHI
+     C           FQFRAT    IFEQ *ZERO
+     C                     MOVE 'F'       RPERF
+     C                     ELSE
+     C                     MOVE 'P'       RPERF
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C           FQRECI    WHEQ '2'
+      *
+      **  Posting of Adjustment details
+      *
+      **  If there are no Holding Details for this customer/portfolio
+      **  Generate a blank record
+      *
+     C           WWCONT    IFEQ *ZERO
+     C                     MOVELFQCUST    RCUST     P
+     C                     MOVELFQPTFR    RPTFR     P
+     C                     MOVE FQCHGR    RCHGR     P
+     C                     MOVE FQINST    RINST     P
+     C                     MOVE FQHORF    RHORF     P
+     C                     MOVE *BLANKS   RHCCY     P
+     C                     MOVE *BLANKS   RSHSN     P
+     C                     MOVE *BLANKS   RHOAM
+     C                     MOVE *BLANKS   RFRAT
+     C                     MOVE *BLANKS   RCCCY
+     C                     MOVE *BLANKS   RHACH
+     C                     MOVE *BLANKS   RCHAM
+      *
+      **  Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         WWCONT
+     C                     ENDIF
+      *
+     C                     ADD  1         RCOUNT
+     C                     MOVELFQADAC    RADAC
+     C                     MOVELWWCCCY    RADCY
+     C                     Z-ADDFQADAM    WWADAM 150
+     C                     Z-ADDFQADAM    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RADAM
+     C                     MOVE ZOUT21    RADAM
+      *
+     C           FQRECI    WHEQ '3'
+      *
+      **  Fill Fee period :
+      *
+     C                     MOVEL'  /  /  'DSDATE
+     C                     Z-ADDFQFRPE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE WWDAY     W2DAY
+     C                     MOVE WWMNTH    W2MNTH
+     C                     MOVE WWYEAR    W2YEAR
+     C                     MOVELDSDATE    RFRPE
+      *
+     C                     MOVEL'  /  /  'DSDATE
+     C                     Z-ADDFQTOPE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE WWDAY     W2DAY
+     C                     MOVE WWMNTH    W2MNTH
+     C                     MOVE WWYEAR    W2YEAR
+     C                     MOVELDSDATE    RTOPE
+      *
+      **  Posting of Accrual
+      *
+     C                     MOVELFQACAC    RACAC
+     C                     MOVELWWCCCY    RACCY
+     C                     Z-ADDFQACAM    WWACAM 150
+     C                     Z-ADDFQACAM    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RACAM
+     C                     MOVE ZOUT21    RACAM
+      *
+      **  Calculate the total amount = Accrual + Adjustment
+      *
+     C                     MOVELWWCCCY    RTOCY
+     C                     Z-ADD*ZERO     WWTOTA 150
+     C           WWADAM    ADD  WWACAM    WWTOTA
+     C                     Z-ADDWWTOTA    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RTOTA
+     C                     MOVE ZOUT21    RTOTA
+      *
+     C                     ADD  1         RCOUNT
+     C                     WRITETOTAL
+      *
+     C           FQRECI    WHEQ '4'
+      *
+      **  Accrual due to settlement generation
+      *
+      **  If there are no Holding Details for this customer/portfolio
+      **  Generate a blank record
+      *
+     C           WWCONT    IFEQ *ZERO
+     C                     MOVELFQCUST    RCUST     P
+     C                     MOVELFQPTFR    RPTFR     P
+     C                     MOVE FQCHGR    RCHGR     P
+     C                     MOVE FQINST    RINST     P
+     C                     MOVE FQHORF    RHORF     P
+     C                     MOVE *BLANKS   RHCCY     P
+     C                     MOVE *BLANKS   RHOAM
+     C                     MOVE *BLANKS   RFRAT
+     C                     MOVE *BLANKS   RCCCY
+     C                     MOVE *BLANKS   RHACH
+     C                     MOVE *BLANKS   RCHAM
+      *
+      **  Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         WWCONT
+     C                     ENDIF
+     C                     ADD  1         RCOUNT
+      *
+     C                     MOVELFQADAC    RADAC
+     C                     MOVELWWCCCY    RADCY
+     C                     Z-ADDFQADAM    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RADAM
+     C                     MOVE ZOUT21    RADAM
+     C                     WRITEACSEGEN
+      *
+     C           FQRECI    WHEQ '5'
+      *
+      **  "Out of Settlement range" Accruals
+      *
+      **  If there are no Holding Details for this customer/portfolio
+      **  Generate a blank record
+      *
+     C           WWCONT    IFEQ *ZERO
+     C                     MOVELFQCUST    RCUST     P
+     C                     MOVELFQPTFR    RPTFR     P
+     C                     MOVE FQCHGR    RCHGR     P
+     C                     MOVE FQINST    RINST     P
+     C                     MOVE FQHORF    RHORF     P
+     C                     MOVE *BLANKS   RHCCY     P
+     C                     MOVE *BLANKS   RHOAM
+     C                     MOVE *BLANKS   RFRAT
+     C                     MOVE *BLANKS   RCCCY
+     C                     MOVE *BLANKS   RHACH
+     C                     MOVE *BLANKS   RCHAM
+      *
+      **  Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         WWCONT
+     C                     ENDIF
+      *
+     C                     ADD  1         RCOUNT
+     C                     MOVELFQADAC    RADAC
+     C                     MOVELWWCCCY    RADCY
+     C                     Z-ADDFQADAM    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RADAM
+     C                     MOVE ZOUT21    RADAM
+     C                     WRITEACOTADJ
+      *
+     C           FQRECI    WHEQ '6'
+      *
+      **  Outstanding Settlement Adjustment Accruals
+      *
+      **  If there are no Holding Details for this customer/portfolio
+      **  Generate a blank record
+      *
+     C           WWCONT    IFEQ *ZERO
+     C                     MOVELFQCUST    RCUST     P
+     C                     MOVELFQPTFR    RPTFR     P
+     C                     MOVE FQCHGR    RCHGR     P
+     C                     MOVE FQINST    RINST     P
+     C                     MOVE FQHORF    RHORF     P
+     C                     MOVE *BLANKS   RHCCY     P
+     C                     MOVE *BLANKS   RHOAM
+     C                     MOVE *BLANKS   RFRAT
+     C                     MOVE *BLANKS   RCCCY
+     C                     MOVE *BLANKS   RHACH
+     C                     MOVE *BLANKS   RCHAM
+      *
+      **  Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         WWCONT
+     C                     ENDIF
+      *
+     C                     ADD  1         RCOUNT
+     C                     MOVELFQADAC    RADAC
+     C                     MOVELWWCCCY    RADCY
+     C                     Z-ADDFQADAM    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RADAM
+     C                     MOVE ZOUT21    RADAM
+     C                     WRITEACSTADJ
+      *
+      *
+     C           FQRECI    WHEQ '7'
+      *
+      **  Reversal(s) of Adjustment Accruals
+      *
+      **  If there are no Holding Details for this customer/portfolio
+      **  Generate a blank record
+      *
+     C           WWCONT    IFEQ *ZERO
+     C                     MOVELFQCUST    RCUST     P
+     C                     MOVELFQPTFR    RPTFR     P
+     C                     MOVE FQCHGR    RCHGR     P
+     C                     MOVE FQINST    RINST     P
+     C                     MOVE FQHORF    RHORF     P
+     C                     MOVE *BLANKS   RHCCY     P
+     C                     MOVE *BLANKS   RHOAM
+     C                     MOVE *BLANKS   RFRAT
+     C                     MOVE *BLANKS   RCCCY
+     C                     MOVE *BLANKS   RHACH
+     C                     MOVE *BLANKS   RCHAM
+      *
+      **  Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         WWCONT
+     C                     ENDIF
+      *
+     C                     ADD  1         RCOUNT
+     C                     MOVELFQADAC    RADAC
+     C                     MOVELWWCCCY    RADCY
+     C                     Z-ADDFQADAM    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RADAM
+     C                     MOVE ZOUT21    RADAM
+     C                     WRITEACSTADJ
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report                   *
+      *                                                               *
+      *  Called By : Main Processing, *PSSR                           *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      **  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      **  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      **  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ELSE
+      *
+      **  Normal audit  exit
+      *
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADD0         RCOUNT
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRRGPF - Subroutine to register the P1 Printer File via RCF. *
+      *  ------                                                       *
+      *  Called By : SRRPRT                                           *
+      *  Calls     : ZSFILE                                           *
+      *****************************************************************
+      *
+     C           SRRGPF    BEGSR
+      *
+      **  Open Report file
+      *
+     C                     OPEN GL1982P1
+     C                     MOVE 'Y'       WWOPEN
+      *
+      **  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    PSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM PENT      PSENTY  3
+     C                     PARM           SFILE1
+     C                     PARM           PSNUM
+     C                     PARM           PSERR   1
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           PSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRRGAU - Subroutine to register the AU Printer File via RCF. *
+      *  ------                                                       *
+      *  Called By : SRRPRT                                           *
+      *  Calls     : ZSFILE                                           *
+      *****************************************************************
+      *
+     C           SRRGAU    BEGSR
+      *
+     C                     MOVE 'N'       WWRCF   1
+      *
+      **  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    PSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   PSENTY
+     C                     PARM           SFILEU
+     C                     PARM           PSNUMU
+     C                     PARM *BLANK    PSERR
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           PSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WWRCF   1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *   *INZSR - Initial Processing                                 *
+      *                                                               *
+      *   Called by : Main processing                                 *
+      *   Calls     : AOBANKR0  SRRGAU                                *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PENT    3
+     C                     PARM           PPARM   6
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR SRRGAU
+      *
+     C                     MOVE PENT      RBRCA
+      *
+      ***  Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVEL'SDBANKPD'DBFILE    P      * DBERR 01 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ************
+     C                     MOVEL'GL1982'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Set indicator 98 for date format used in ZDATE2
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     END
+      *
+      **  Report Work fields.
+      *
+     C                     Z-ADD0         RCOUNT
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     MOVE *BLANKS   WWCCY   3
+     C                     MOVE *BLANKS   WCCCY   3
+     C                     MOVE *BLANKS   WWCUST  6
+     C                     MOVE *BLANKS   WWPTFR  4
+     C                     MOVE *BLANKS   WWBRCA  3
+     C                     MOVE *BLANKS   WWACOC  2
+     C                     MOVE *BLANKS   WWFEPT  2
+     C                     MOVE *BLANKS   WWFETP  2
+     C                     MOVE *BLANKS   WWCHGR  2
+     C                     Z-ADD*ZERO     WWDEC   20
+     C                     Z-ADD*ZERO     WCDEC   20
+     C                     MOVE *BLANKS   WWCCY   3
+     C                     MOVE *BLANKS   WKFETP  2
+     C                     MOVE 'L'       ZECODE
+     C                     Z-ADD*ZERO     WWCONT  50
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Error control subroutine                            *
+      *  -----                                                        *
+      *  Called By : *INZSR                                           *
+      *  Calls     : SRAUDT                                           *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INU7
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+      *
+     C                     ENDIF
+      *
+     C           WWRCF     IFEQ 'Y'
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      **  If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/COPY ZSRSRC,ZEDITZ2
+**  CPY@
+(c) Finastra International Limited 2001
+**  #PRO
+Safe Custody
+Management
+Fixed
+Hold Mail
+Numbered  Account
+ 
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
